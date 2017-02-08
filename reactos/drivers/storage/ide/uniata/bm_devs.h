@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2002-2011 Alexandr A. Telyatnikov (Alter)
+Copyright (c) 2002-2012 Alexandr A. Telyatnikov (Alter)
 
 Module Name:
     bm_devs.h
@@ -41,44 +41,6 @@ Revision History:
 
 #define MAX_QUEUE_STAT        8
 
-//
-// values for TransferMode
-//
-#define         ATA_PIO                 0x00
-#define 	ATA_PIO_NRDY            0x01
-
-#define         ATA_PIO0                0x08
-#define         ATA_PIO1                0x09
-#define         ATA_PIO2                0x0a
-#define         ATA_PIO3                0x0b
-#define         ATA_PIO4                0x0c
-#define         ATA_PIO5                0x0d
-
-#define         ATA_DMA                 0x10
-#define         ATA_SDMA                0x10
-#define         ATA_SDMA0               0x10
-#define         ATA_SDMA1               0x11
-#define         ATA_SDMA2               0x12
-
-#define         ATA_WDMA                0x20
-#define         ATA_WDMA0               0x20
-#define         ATA_WDMA1               0x21
-#define         ATA_WDMA2               0x22
-
-#define         ATA_UDMA                0x40
-#define         ATA_UDMA0               0x40 // ATA-16
-#define         ATA_UDMA1               0x41 // ATA-25
-#define         ATA_UDMA2               0x42 // ATA-33
-#define         ATA_UDMA3               0x43 // ATA-44
-#define         ATA_UDMA4               0x44 // ATA-66
-#define         ATA_UDMA5               0x45 // ATA-100
-#define         ATA_UDMA6               0x46 // ATA-133
-//#define         ATA_UDMA7               0x47 // ATA-166
-
-#define         ATA_SA150               0x47 /*0x80*/
-#define         ATA_SA300               0x48 /*0x81*/
-#define         ATA_SA600               0x49 /*0x82*/
-
 // define PIO timings in nanoseconds
 #define         PIO0_TIMING             600
 
@@ -88,16 +50,23 @@ Revision History:
 #ifndef __IDE_BUSMASTER_DEVICES_H__
 #define __IDE_BUSMASTER_DEVICES_H__
 
+/*#ifdef USER_MODE
+#define PVEN_STR    PCSTR
+#else // USER_MODE
+#define PVEN_STR    PCHAR
+#endif // USER_MODE*/
+#define PVEN_STR    PCSTR
+
 typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
-    PCHAR   VendorId;
+    PVEN_STR VendorId;
     ULONG   VendorIdLength;
     ULONG   nVendorId;
-    PCHAR   DeviceId;
+    PVEN_STR DeviceId;
     ULONG   DeviceIdLength;
     ULONG   nDeviceId;
     ULONG   nRevId;
     ULONG   MaxTransferMode;
-    PCHAR   FullDevName;
+    PVEN_STR FullDevName;
     ULONG   RaidFlags;
     CHAR    VendorIdStr[4];
     CHAR    DeviceIdStr[4];
@@ -108,15 +77,18 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
     CHAR    MasterDev;
     BOOLEAN Known;
 #ifndef USER_MODE
-    CHAR    ChanInitOk;             // 0x01 - primary,  0x02 - secondary
+    UCHAR   ChanInitOk;             // 0x01 - primary,  0x02 - secondary, 0x80 - PciIde claimed
     BOOLEAN Isr2Enable;
-    PDEVICE_OBJECT Isr2DevObj;
+    union {
+        PDEVICE_OBJECT Isr2DevObj;
+        PDEVICE_OBJECT PciIdeDevObj;
+    };
     KIRQL      Isr2Irql;
     KAFFINITY  Isr2Affinity;
     ULONG      Isr2Vector;
     PKINTERRUPT Isr2InterruptObject;
     CHAR    AltInitMasterDev;       // 0xff - uninitialized,  0x00 - normal,  0x01 - change ISA to PCI
-	CHAR    NeedAltInit;            // 0x01 - try change ISA to PCI
+    CHAR    NeedAltInit;            // 0x01 - try change ISA to PCI
 #endif
 
 }BUSMASTER_CONTROLLER_INFORMATION, *PBUSMASTER_CONTROLLER_INFORMATION;
@@ -666,7 +638,8 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
 #define ICH5            0x0200
 #define I6CH            0x0400
 #define I6CH2           0x0800
-#define I1CH            0x1000
+//#define I1CH            0x1000  // obsolete
+#define ICH7            0x1000
 
 #define NV4OFF          0x0100
 #define NVQ             0x0200
@@ -692,10 +665,10 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
 
 #ifdef USER_MODE
   #define PCI_DEV_HW_SPEC_BM(idhi, idlo, rev, mode, name, flags) \
-    { #idlo, 4, 0x##idlo, #idhi, 4, 0x##idhi, rev, mode, name, flags}
+    { (PVEN_STR) #idlo, 4, 0x##idlo, (PVEN_STR) #idhi, 4, 0x##idhi, rev, mode, (PVEN_STR)name, flags}
 #else
   #define PCI_DEV_HW_SPEC_BM(idhi, idlo, rev, mode, name, flags) \
-    { (PCHAR) #idlo, 4, 0x##idlo, (PCHAR) #idhi, 4, 0x##idhi, rev, mode, NULL, flags}
+    { (PVEN_STR) #idlo, 4, 0x##idlo, (PVEN_STR) #idhi, 4, 0x##idhi, rev, mode, NULL, flags}
 #endif
 
 #define BMLIST_TERMINATOR   (0xffffffffL)
@@ -749,7 +722,7 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
 
     PCI_DEV_HW_SPEC_BM( 1230, 8086, 0x00, ATA_WDMA2, "Intel PIIX"       , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 7010, 8086, 0x00, ATA_WDMA2, "Intel PIIX3"      , 0                                       ),
-    PCI_DEV_HW_SPEC_BM( 7111, 8086, 0x00, ATA_UDMA3, "Intel PIIX4"      , 0                                       ),
+    PCI_DEV_HW_SPEC_BM( 7111, 8086, 0x00, ATA_UDMA2, "Intel PIIX3"      , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 7199, 8086, 0x00, ATA_UDMA2, "Intel PIIX4"      , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 84ca, 8086, 0x00, ATA_UDMA2, "Intel PIIX4"      , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 7601, 8086, 0x00, ATA_UDMA2, "Intel ICH0"       , 0                                       ),
@@ -779,15 +752,15 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 2652, 8086, 0x00, ATA_SA150, "Intel ICH6"       , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 2653, 8086, 0x00, ATA_SA150, "Intel ICH6M"      , UNIATA_SATA | UNIATA_AHCI               ),
 
-    PCI_DEV_HW_SPEC_BM( 27df, 8086, 0x00, ATA_UDMA5, "Intel ICH7"       , I1CH                                    ),
-    PCI_DEV_HW_SPEC_BM( 27c0, 8086, 0x00, ATA_SA300, "Intel ICH7 S1"    , UNIATA_SATA                             ),
+    PCI_DEV_HW_SPEC_BM( 27df, 8086, 0x00, ATA_UDMA5, "Intel ICH7"       , 0                                       ),
+    PCI_DEV_HW_SPEC_BM( 27c0, 8086, 0x00, ATA_SA300, "Intel ICH7 S1"    , ICH7 | UNIATA_SATA                      ),
     PCI_DEV_HW_SPEC_BM( 27c1, 8086, 0x00, ATA_SA300, "Intel ICH7"       , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 27c3, 8086, 0x00, ATA_SA300, "Intel ICH7"       , UNIATA_SATA                             ),
-    PCI_DEV_HW_SPEC_BM( 27c4, 8086, 0x00, ATA_SA150, "Intel ICH7M R1"   , UNIATA_SATA                             ),
+    PCI_DEV_HW_SPEC_BM( 27c4, 8086, 0x00, ATA_SA150, "Intel ICH7M R1"   , ICH7 | UNIATA_SATA                      ),
     PCI_DEV_HW_SPEC_BM( 27c5, 8086, 0x00, ATA_SA150, "Intel ICH7M"      , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 27c6, 8086, 0x00, ATA_SA150, "Intel ICH7M"      , UNIATA_SATA                             ),
 
-    PCI_DEV_HW_SPEC_BM( 269e, 8086, 0x00, ATA_UDMA5, "Intel 63XXESB2"   , I1CH                                    ),
+    PCI_DEV_HW_SPEC_BM( 269e, 8086, 0x00, ATA_UDMA5, "Intel 63XXESB2"   , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 2680, 8086, 0x00, ATA_SA300, "Intel 63XXESB2"   , UNIATA_SATA                             ),
     PCI_DEV_HW_SPEC_BM( 2681, 8086, 0x00, ATA_SA300, "Intel 63XXESB2"   , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 2682, 8086, 0x00, ATA_SA300, "Intel 63XXESB2"   , UNIATA_SATA | UNIATA_AHCI               ),
@@ -801,7 +774,7 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 2828, 8086, 0x00, ATA_SA300, "Intel ICH8M"      , I6CH | UNIATA_SATA                      ),
     PCI_DEV_HW_SPEC_BM( 2829, 8086, 0x00, ATA_SA300, "Intel ICH8M"      , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 282a, 8086, 0x00, ATA_SA300, "Intel ICH8M"      , UNIATA_SATA | UNIATA_AHCI               ),
-    PCI_DEV_HW_SPEC_BM( 2850, 8086, 0x00, ATA_UDMA5, "Intel ICH8M"      , I1CH                                    ),
+    PCI_DEV_HW_SPEC_BM( 2850, 8086, 0x00, ATA_UDMA5, "Intel ICH8M"      , 0                                       ),
 
     PCI_DEV_HW_SPEC_BM( 2920, 8086, 0x00, ATA_SA300, "Intel ICH9"       , I6CH | UNIATA_SATA                      ),
     PCI_DEV_HW_SPEC_BM( 2926, 8086, 0x00, ATA_SA300, "Intel ICH9"       , I6CH2 | UNIATA_SATA                     ),
@@ -811,10 +784,10 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 2923, 8086, 0x00, ATA_SA300, "Intel ICH9"       , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 2925, 8086, 0x00, ATA_SA300, "Intel ICH9"       , UNIATA_SATA | UNIATA_AHCI               ),
 
-    PCI_DEV_HW_SPEC_BM( 2928, 8086, 0x00, ATA_SA300, "Intel ICH9M"       , I6CH2 | UNIATA_SATA                     ),
-    PCI_DEV_HW_SPEC_BM( 2929, 8086, 0x00, ATA_SA300, "Intel ICH9M"       , UNIATA_SATA | UNIATA_AHCI               ),
-    PCI_DEV_HW_SPEC_BM( 292a, 8086, 0x00, ATA_SA300, "Intel ICH9M"       , UNIATA_SATA | UNIATA_AHCI               ),
-    PCI_DEV_HW_SPEC_BM( 292d, 8086, 0x00, ATA_SA300, "Intel ICH9M"       , I6CH2 | UNIATA_SATA                     ),
+    PCI_DEV_HW_SPEC_BM( 2928, 8086, 0x00, ATA_SA300, "Intel ICH9M"      , I6CH2 | UNIATA_SATA                     ),
+    PCI_DEV_HW_SPEC_BM( 2929, 8086, 0x00, ATA_SA300, "Intel ICH9M"      , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 292a, 8086, 0x00, ATA_SA300, "Intel ICH9M"      , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 292d, 8086, 0x00, ATA_SA300, "Intel ICH9M"      , I6CH2 | UNIATA_SATA                     ),
     
     PCI_DEV_HW_SPEC_BM( 3a20, 8086, 0x00, ATA_SA300, "Intel ICH10"      , I6CH | UNIATA_SATA                      ),
     PCI_DEV_HW_SPEC_BM( 3a26, 8086, 0x00, ATA_SA300, "Intel ICH10"      , I6CH2 | UNIATA_SATA                     ),
@@ -874,7 +847,7 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 1e0f, 8086, 0x00, ATA_SA300, "Intel Panther Point" , UNIATA_SATA | UNIATA_AHCI               ),
 
 //    PCI_DEV_HW_SPEC_BM( 3200, 8086, 0x00, ATA_SA150, "Intel 31244"      , UNIATA_SATA                             ),
-    PCI_DEV_HW_SPEC_BM( 811a, 8086, 0x00, ATA_UDMA5, "Intel SCH"        , I1CH                                       ),
+    PCI_DEV_HW_SPEC_BM( 811a, 8086, 0x00, ATA_UDMA5, "Intel SCH"        , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 2323, 8086, 0x00, ATA_SA300, "Intel DH98xxCC"   , UNIATA_SATA | UNIATA_AHCI                  ),
 
     PCI_DEV_HW_SPEC_BM( 2360, 197b, 0x00, ATA_SA300, "JMB360"           , UNIATA_SATA | UNIATA_AHCI               ),

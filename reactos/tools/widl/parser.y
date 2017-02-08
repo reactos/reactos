@@ -620,7 +620,10 @@ enum_list: enum					{ if (!$1->eval)
 	| enum_list ',' enum			{ if (!$3->eval)
                                                   {
                                                     var_t *last = LIST_ENTRY( list_tail($$), var_t, entry );
-                                                    $3->eval = make_exprl(EXPR_NUM, last->eval->cval + 1);
+                                                    enum expr_type type = EXPR_NUM;
+                                                    if (last->eval->type == EXPR_HEXNUM) type = EXPR_HEXNUM;
+                                                    if (last->eval->cval + 1 < 0) type = EXPR_HEXNUM;
+                                                    $3->eval = make_exprl(type, last->eval->cval + 1);
                                                   }
                                                   $$ = append_var( $1, $3 );
 						}
@@ -739,6 +742,10 @@ union_field:
 s_field:  m_attributes decl_spec declarator	{ $$ = declare_var(check_field_attrs($3->var->name, $1),
 						                $2, $3, FALSE);
 						  free($3);
+						}
+	| m_attributes structdef		{ var_t *v = make_var(NULL);
+						  v->type = $2; v->attrs = $1;
+						  $$ = v;
 						}
 	;
 
@@ -1607,7 +1614,8 @@ static var_t *declare_var(attr_list_t *attrs, decl_spec_t *decl_spec, const decl
     for (ft = v->type; is_ptr(ft); ft = type_pointer_get_ref(ft))
       ;
     assert(type_get_type_detect_alias(ft) == TYPE_FUNCTION);
-    ft->details.function->rettype = return_type;
+    ft->details.function->retval = make_var(xstrdup("_RetVal"));
+    ft->details.function->retval->type = return_type;
     /* move calling convention attribute, if present, from pointer nodes to
      * function node */
     for (t = v->type; is_ptr(t); t = type_pointer_get_ref(t))

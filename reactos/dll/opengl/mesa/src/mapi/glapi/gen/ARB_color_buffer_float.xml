@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!DOCTYPE OpenGLAPI SYSTEM "gl_API.dtd">
+
+<!-- Note: no GLX protocol info yet. -->
+
+
+<OpenGLAPI>
+
+<category name="GL_ARB_color_buffer_float" number="39">
+
+  <enum name="RGBA_FLOAT_MODE_ARB"              value="0x8820"/>
+  <enum name="CLAMP_VERTEX_COLOR_ARB"           value="0x891A"/>
+  <enum name="CLAMP_FRAGMENT_COLOR_ARB"         value="0x891B"/>
+  <enum name="CLAMP_READ_COLOR_ARB"             value="0x891C"/>
+  <enum name="FIXED_ONLY_ARB"                   value="0x891D"/>
+
+  <function name="ClampColorARB" offset="assign">
+    <param name="target" type="GLenum"/>
+    <param name="clamp" type="GLenum"/>
+    <glx rop="234"/>
+  </function>
+
+</category>
+
+</OpenGLAPI>

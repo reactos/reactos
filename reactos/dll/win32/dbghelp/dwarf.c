@@ -22,36 +22,36 @@
 
 #define NONAMELESSUNION
 
-#include "config.h"
+#include <config.h>
 
-#include <sys/types.h>
-#include <fcntl.h>
+//#include <sys/types.h>
+//#include <fcntl.h>
 #ifdef HAVE_SYS_STAT_H
 # include <sys/stat.h>
 #endif
 #ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>
 #endif
-#include <limits.h>
-#include <stdlib.h>
-#include <string.h>
+//#include <limits.h>
+//#include <stdlib.h>
+//#include <string.h>
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
-#include <stdio.h>
+//#include <stdio.h>
 #include <assert.h>
-#include <stdarg.h>
+//#include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "ole2.h"
-#include "oleauto.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winuser.h"
+//#include "ole2.h"
+//#include "oleauto.h"
 
 #include "dbghelp_private.h"
 #include "image_private.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_dwarf);
 

@@ -19,7 +19,7 @@
  */
 
 #include "precomp.h"
-#include "debug.h"
+#include <debug.h>
 
 HINSTANCE hLibModule;
 

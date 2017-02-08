@@ -16,6 +16,7 @@ NTSTATUS FileOpenAddress(
   PTDI_REQUEST Request,
   PTA_IP_ADDRESS AddrList,
   USHORT Protocol,
+  BOOLEAN Shared,
   PVOID Options);
 
 NTSTATUS FileCloseAddress(

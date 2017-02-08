@@ -32,25 +32,29 @@
  */
 
 #include <assert.h>
-#include <math.h>
 
 #include "jscript.h"
+#include "regexp.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
-#define JSREG_FOLD      0x01    /* fold uppercase to lowercase */
-#define JSREG_GLOB      0x02    /* global exec, creates array of matches */
-#define JSREG_MULTILINE 0x04    /* treat ^ and $ as begin and end of line */
-#define JSREG_STICKY    0x08    /* only match starting at lastIndex */
+/* FIXME: Better error handling */
+#define ReportRegExpError(a,b,c)
+#define ReportRegExpErrorHelper(a,b,c,d)
+#define JS_ReportErrorNumber(a,b,c,d)
+#define JS_ReportErrorFlagsAndNumber(a,b,c,d,e,f)
+#define js_ReportOutOfScriptQuota(a)
+#define JS_ReportOutOfMemory(a)
+#define JS_COUNT_OPERATION(a,b)
+
 
 typedef BYTE JSPackedBool;
-typedef BYTE jsbytecode;
 
 /*
  * This struct holds a bitmap representation of a class from a regexp.
- * There's a list of these referenced by the classList field in the JSRegExp
+ * There's a list of these referenced by the classList field in the regexp_t
  * struct below. The initial state has startIndex set to the offset in the
  * original regexp source of the beginning of the class contents. The first
  * use of the class converts the source representation into a bitmap.
@@ -68,50 +72,6 @@ typedef struct RECharSet {
         } src;
     } u;
 } RECharSet;
-
-typedef struct {
-    WORD         flags;         /* flags, see jsapi.h's JSREG_* defines */
-    size_t       parenCount;    /* number of parenthesized submatches */
-    size_t       classCount;    /* count [...] bitmaps */
-    RECharSet    *classList;    /* list of [...] bitmaps */
-    BSTR         source;        /* locked source string, sans // */
-    jsbytecode   program[1];    /* regular expression bytecode */
-} JSRegExp;
-
-typedef struct {
-    DispatchEx dispex;
-
-    JSRegExp *jsregexp;
-    BSTR str;
-    INT last_index;
-    VARIANT last_index_var;
-} RegExpInstance;
-
-static const WCHAR sourceW[] = {'s','o','u','r','c','e',0};
-static const WCHAR globalW[] = {'g','l','o','b','a','l',0};
-static const WCHAR ignoreCaseW[] = {'i','g','n','o','r','e','C','a','s','e',0};
-static const WCHAR multilineW[] = {'m','u','l','t','i','l','i','n','e',0};
-static const WCHAR lastIndexW[] = {'l','a','s','t','I','n','d','e','x',0};
-static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
-static const WCHAR execW[] = {'e','x','e','c',0};
-static const WCHAR testW[] = {'t','e','s','t',0};
-
-static const WCHAR leftContextW[] =
-    {'l','e','f','t','C','o','n','t','e','x','t',0};
-static const WCHAR rightContextW[] =
-    {'r','i','g','h','t','C','o','n','t','e','x','t',0};
-
-static const WCHAR undefinedW[] = {'u','n','d','e','f','i','n','e','d',0};
-static const WCHAR emptyW[] = {0};
-
-/* FIXME: Better error handling */
-#define ReportRegExpError(a,b,c)
-#define ReportRegExpErrorHelper(a,b,c,d)
-#define JS_ReportErrorNumber(a,b,c,d)
-#define JS_ReportErrorFlagsAndNumber(a,b,c,d,e,f)
-#define js_ReportOutOfScriptQuota(a)
-#define JS_ReportOutOfMemory(a)
-#define JS_COUNT_OPERATION(a,b)
 
 #define JSMSG_MIN_TOO_BIG 47
 #define JSMSG_MAX_TOO_BIG 48
@@ -239,17 +199,6 @@ static const char *reop_names[] = {
     NULL
 };
 
-typedef struct RECapture {
-    ptrdiff_t index;           /* start of contents, -1 for empty  */
-    size_t length;             /* length of capture */
-} RECapture;
-
-typedef struct REMatchState {
-    const WCHAR *cp;
-    RECapture parens[1];      /* first of 're->parenCount' captures,
-                                 allocated at end of this struct */
-} REMatchState;
-
 typedef struct REProgState {
     jsbytecode *continue_pc;        /* current continuation data */
     jsbytecode continue_op;
@@ -283,8 +232,8 @@ typedef struct REBackTrackData {
 #define INITIAL_BACKTRACK   8000
 
 typedef struct REGlobalData {
-    script_ctx_t *cx;
-    JSRegExp *regexp;               /* the RE in execution */
+    void *cx;
+    regexp_t *regexp;               /* the RE in execution */
     BOOL ok;                        /* runtime error (out_of_memory only?) */
     size_t start;                   /* offset to start at */
     ptrdiff_t skipped;              /* chars skipped anchoring this r.e. */
@@ -302,7 +251,7 @@ typedef struct REGlobalData {
     size_t backTrackCount;          /* how many times we've backtracked */
     size_t backTrackLimit;          /* upper limit on backtrack states */
 
-    jsheap_t *pool;                 /* It's faster to use one malloc'd pool
+    heap_pool_t *pool;              /* It's faster to use one malloc'd pool
                                        than to malloc/free the three items
                                        that are allocated from this pool */
 } REGlobalData;
@@ -343,7 +292,7 @@ struct RENode {
 #define CLASS_CACHE_SIZE    4
 
 typedef struct CompilerState {
-    script_ctx_t    *context;
+    void            *context;
     const WCHAR     *cpbegin;
     const WCHAR     *cpend;
     const WCHAR     *cp;
@@ -359,6 +308,9 @@ typedef struct CompilerState {
         size_t index;
     } classCache[CLASS_CACHE_SIZE];
     WORD          flags;
+
+    heap_pool_t *pool;              /* It's faster to use one malloc'd pool
+                                       than to malloc/free */
 } CompilerState;
 
 typedef struct EmitStateStackEntry {
@@ -458,7 +410,7 @@ NewRENode(CompilerState *state, REOp op)
 {
     RENode *ren;
 
-    ren = jsheap_alloc(&state->context->tmp_heap, sizeof(*ren));
+    ren = heap_pool_alloc(state->pool, sizeof(*ren));
     if (!ren) {
         /* js_ReportOutOfScriptQuota(cx); */
         return NULL;
@@ -520,7 +472,7 @@ SetForwardJumpOffset(jsbytecode *jump, jsbytecode *target)
  * of recursion.
  */
 static jsbytecode *
-EmitREBytecode(CompilerState *state, JSRegExp *re, size_t treeDepth,
+EmitREBytecode(CompilerState *state, regexp_t *re, size_t treeDepth,
                jsbytecode *pc, RENode *t)
 {
     EmitStateStackEntry *emitStateSP, *emitStateStack;
@@ -710,14 +662,14 @@ EmitREBytecode(CompilerState *state, JSRegExp *re, size_t treeDepth,
                 }
             }
             if (t->kid && t->u.flat.length > 1) {
-                pc[-1] = (state->flags & JSREG_FOLD) ? REOP_FLATi : REOP_FLAT;
+                pc[-1] = (state->flags & REG_FOLD) ? REOP_FLATi : REOP_FLAT;
                 pc = WriteCompactIndex(pc, (WCHAR*)t->kid - state->cpbegin);
                 pc = WriteCompactIndex(pc, t->u.flat.length);
             } else if (t->u.flat.chr < 256) {
-                pc[-1] = (state->flags & JSREG_FOLD) ? REOP_FLAT1i : REOP_FLAT1;
+                pc[-1] = (state->flags & REG_FOLD) ? REOP_FLAT1i : REOP_FLAT1;
                 *pc++ = (jsbytecode) t->u.flat.chr;
             } else {
-                pc[-1] = (state->flags & JSREG_FOLD)
+                pc[-1] = (state->flags & REG_FOLD)
                          ? REOP_UCFLAT1i
                          : REOP_UCFLAT1;
                 SET_ARG(pc, t->u.flat.chr);
@@ -876,7 +828,7 @@ ProcessOp(CompilerState *state, REOpData *opData, RENode **operandStack,
          */
         if (((RENode *) result->kid)->op == REOP_FLAT &&
             ((RENode *) result->u.kid2)->op == REOP_FLAT &&
-            (state->flags & JSREG_FOLD) == 0) {
+            (state->flags & REG_FOLD) == 0) {
             result->op = REOP_ALTPREREQ;
             result->u.altprereq.ch1 = ((RENode *) result->kid)->u.flat.chr;
             result->u.altprereq.ch2 = ((RENode *) result->u.kid2)->u.flat.chr;
@@ -888,7 +840,7 @@ ProcessOp(CompilerState *state, REOpData *opData, RENode **operandStack,
         if (((RENode *) result->kid)->op == REOP_CLASS &&
             ((RENode *) result->kid)->u.ucclass.index < 256 &&
             ((RENode *) result->u.kid2)->op == REOP_FLAT &&
-            (state->flags & JSREG_FOLD) == 0) {
+            (state->flags & REG_FOLD) == 0) {
             result->op = REOP_ALTPREREQ2;
             result->u.altprereq.ch1 = ((RENode *) result->u.kid2)->u.flat.chr;
             result->u.altprereq.ch2 = ((RENode *) result->kid)->u.ucclass.index;
@@ -900,7 +852,7 @@ ProcessOp(CompilerState *state, REOpData *opData, RENode **operandStack,
         if (((RENode *) result->kid)->op == REOP_FLAT &&
             ((RENode *) result->u.kid2)->op == REOP_CLASS &&
             ((RENode *) result->u.kid2)->u.ucclass.index < 256 &&
-            (state->flags & JSREG_FOLD) == 0) {
+            (state->flags & REG_FOLD) == 0) {
             result->op = REOP_ALTPREREQ2;
             result->u.altprereq.ch1 = ((RENode *) result->kid)->u.flat.chr;
             result->u.altprereq.ch2 =
@@ -1180,11 +1132,11 @@ lexHex:
                     continue;
                 }
             }
-            if (state->flags & JSREG_FOLD)
+            if (state->flags & REG_FOLD)
                 rangeStart = localMax;   /* one run of the uc/dc loop below */
         }
 
-        if (state->flags & JSREG_FOLD) {
+        if (state->flags & REG_FOLD) {
             WCHAR maxch = localMax;
 
             for (i = rangeStart; i <= localMax; i++) {
@@ -1968,7 +1920,7 @@ out:
  */
 static REBackTrackData *
 PushBackTrackState(REGlobalData *gData, REOp op,
-                   jsbytecode *target, REMatchState *x, const WCHAR *cp,
+                   jsbytecode *target, match_state_t *x, const WCHAR *cp,
                    size_t parenIndex, size_t parenCount)
 {
     size_t i;
@@ -1991,7 +1943,7 @@ PushBackTrackState(REGlobalData *gData, REOp op,
 
         JS_COUNT_OPERATION(gData->cx, JSOW_ALLOCATION);
         btincr = ((btincr+btsize-1)/btsize)*btsize;
-        gData->backTrackStack = jsheap_grow(gData->pool, gData->backTrackStack, btsize, btincr);
+        gData->backTrackStack = heap_pool_grow(gData->pool, gData->backTrackStack, btsize, btincr);
         if (!gData->backTrackStack) {
             js_ReportOutOfScriptQuota(gData->cx);
             gData->ok = FALSE;
@@ -2027,8 +1979,8 @@ PushBackTrackState(REGlobalData *gData, REOp op,
     return result;
 }
 
-static inline REMatchState *
-FlatNIMatcher(REGlobalData *gData, REMatchState *x, WCHAR *matchChars,
+static inline match_state_t *
+FlatNIMatcher(REGlobalData *gData, match_state_t *x, const WCHAR *matchChars,
               size_t length)
 {
     size_t i;
@@ -2066,8 +2018,8 @@ FlatNIMatcher(REGlobalData *gData, REMatchState *x, WCHAR *matchChars,
  *     9. Let y be the State (f, cap).
  *     10. Call c(y) and return its result.
  */
-static REMatchState *
-BackrefMatcher(REGlobalData *gData, REMatchState *x, size_t parenIndex)
+static match_state_t *
+BackrefMatcher(REGlobalData *gData, match_state_t *x, size_t parenIndex)
 {
     size_t len, i;
     const WCHAR *parenContent;
@@ -2081,7 +2033,7 @@ BackrefMatcher(REGlobalData *gData, REMatchState *x, size_t parenIndex)
         return NULL;
 
     parenContent = &gData->cpbegin[cap->index];
-    if (gData->regexp->flags & JSREG_FOLD) {
+    if (gData->regexp->flags & REG_FOLD) {
         for (i = 0; i < len; i++) {
             if (toupperW(parenContent[i]) != toupperW(x->cp[i]))
                 return NULL;
@@ -2147,10 +2099,9 @@ ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
      * source string.
      */
     assert(1 <= charSet->u.src.startIndex);
-    assert(charSet->u.src.startIndex
-              < SysStringLen(gData->regexp->source));
-    assert(charSet->u.src.length <= SysStringLen(gData->regexp->source)
-                                       - 1 - charSet->u.src.startIndex);
+    assert(charSet->u.src.startIndex < gData->regexp->source_len);
+    assert(charSet->u.src.length <= gData->regexp->source_len
+            - 1 - charSet->u.src.startIndex);
 
     charSet->converted = TRUE;
     src = gData->regexp->source + charSet->u.src.startIndex;
@@ -2306,9 +2257,7 @@ ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
 
         }
         if (inRange) {
-            if (gData->regexp->flags & JSREG_FOLD) {
-                int i;
-
+            if (gData->regexp->flags & REG_FOLD) {
                 assert(rangeStart <= thisCh);
                 for (i = rangeStart; i <= thisCh; i++) {
                     WCHAR uch, dch;
@@ -2326,7 +2275,7 @@ ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
             }
             inRange = FALSE;
         } else {
-            if (gData->regexp->flags & JSREG_FOLD) {
+            if (gData->regexp->flags & REG_FOLD) {
                 AddCharacterToCharSet(charSet, toupperW(thisCh));
                 AddCharacterToCharSet(charSet, tolowerW(thisCh));
             } else {
@@ -2350,7 +2299,7 @@ ReallocStateStack(REGlobalData *gData)
     size_t limit = gData->stateStackLimit;
     size_t sz = sizeof(REProgState) * limit;
 
-    gData->stateStack = jsheap_grow(gData->pool, gData->stateStack, sz, sz);
+    gData->stateStack = heap_pool_grow(gData->pool, gData->stateStack, sz, sz);
     if (!gData->stateStack) {
         js_ReportOutOfScriptQuota(gData->cx);
         gData->ok = FALSE;
@@ -2375,16 +2324,16 @@ ReallocStateStack(REGlobalData *gData)
  * true, then update the current state's cp. Always update startpc to the next
  * op.
  */
-static inline REMatchState *
-SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
+static inline match_state_t *
+SimpleMatch(REGlobalData *gData, match_state_t *x, REOp op,
             jsbytecode **startpc, BOOL updatecp)
 {
-    REMatchState *result = NULL;
+    match_state_t *result = NULL;
     WCHAR matchCh;
     size_t parenIndex;
     size_t offset, length, index;
     jsbytecode *pc = *startpc;  /* pc has already been incremented past op */
-    WCHAR *source;
+    const WCHAR *source;
     const WCHAR *startcp = x->cp;
     WCHAR ch;
     RECharSet *charSet;
@@ -2400,7 +2349,7 @@ SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
       case REOP_BOL:
         if (x->cp != gData->cpbegin) {
             if (/*!gData->cx->regExpStatics.multiline &&  FIXME !!! */
-                !(gData->regexp->flags & JSREG_MULTILINE)) {
+                !(gData->regexp->flags & REG_MULTILINE)) {
                 break;
             }
             if (!RE_IS_LINE_TERM(x->cp[-1]))
@@ -2411,7 +2360,7 @@ SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
       case REOP_EOL:
         if (x->cp != gData->cpend) {
             if (/*!gData->cx->regExpStatics.multiline &&*/
-                !(gData->regexp->flags & JSREG_MULTILINE)) {
+                !(gData->regexp->flags & REG_MULTILINE)) {
                 break;
             }
             if (!RE_IS_LINE_TERM(*x->cp))
@@ -2480,10 +2429,10 @@ SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
         break;
       case REOP_FLAT:
         pc = ReadCompactIndex(pc, &offset);
-        assert(offset < SysStringLen(gData->regexp->source));
+        assert(offset < gData->regexp->source_len);
         pc = ReadCompactIndex(pc, &length);
         assert(1 <= length);
-        assert(length <= SysStringLen(gData->regexp->source) - offset);
+        assert(length <= gData->regexp->source_len - offset);
         if (length <= (size_t)(gData->cpend - x->cp)) {
             source = gData->regexp->source + offset;
             TRACE("%s\n", debugstr_wn(source, length));
@@ -2505,10 +2454,10 @@ SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
         break;
       case REOP_FLATi:
         pc = ReadCompactIndex(pc, &offset);
-        assert(offset < SysStringLen(gData->regexp->source));
+        assert(offset < gData->regexp->source_len);
         pc = ReadCompactIndex(pc, &length);
         assert(1 <= length);
-        assert(length <= SysStringLen(gData->regexp->source) - offset);
+        assert(length <= gData->regexp->source_len - offset);
         source = gData->regexp->source;
         result = FlatNIMatcher(gData, x, source + offset, length);
         break;
@@ -2583,10 +2532,10 @@ SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
     return NULL;
 }
 
-static inline REMatchState *
-ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
+static inline match_state_t *
+ExecuteREBytecode(REGlobalData *gData, match_state_t *x)
 {
-    REMatchState *result = NULL;
+    match_state_t *result = NULL;
     REBackTrackData *backTrackData;
     jsbytecode *nextpc, *testpc;
     REOp nextop;
@@ -2607,7 +2556,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
      * If the first node is a simple match, step the index into the string
      * until that match is made, or fail if it can't be found at all.
      */
-    if (REOP_IS_SIMPLE(op) && !(gData->regexp->flags & JSREG_STICKY)) {
+    if (REOP_IS_SIMPLE(op) && !(gData->regexp->flags & REG_STICKY)) {
         anchor = FALSE;
         while (x->cp <= gData->cpend) {
             nextpc = pc;    /* reset back to start each time */
@@ -2678,7 +2627,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                     result = NULL;
                     break;
                 }
-                /* else false thru... */
+                /* else fall through... */
 
               case REOP_ALT:
               doAlt:
@@ -2994,7 +2943,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 TRACE("{%d,%d}\n", curState->u.quantifier.min, curState->u.quantifier.max);
 #define PREPARE_REPEAT()                                                      \
     do {                                                                      \
-        curState->index = x->cp - gData->cpbegin;                             \
+        curState->index = x->cp - gData->cpbegin;                          \
         curState->continue_op = REOP_MINIMALREPEAT;                           \
         curState->continue_pc = pc;                                           \
         pc += ARG_LEN;                                                        \
@@ -3121,9 +3070,9 @@ good:
     return x;
 }
 
-static REMatchState *MatchRegExp(REGlobalData *gData, REMatchState *x)
+static match_state_t *MatchRegExp(REGlobalData *gData, match_state_t *x)
 {
-    REMatchState *result;
+    match_state_t *result;
     const WCHAR *cp = x->cp;
     const WCHAR *cp2;
     UINT j;
@@ -3138,7 +3087,7 @@ static REMatchState *MatchRegExp(REGlobalData *gData, REMatchState *x)
         for (j = 0; j < gData->regexp->parenCount; j++)
             x->parens[j].index = -1;
         result = ExecuteREBytecode(gData, x);
-        if (!gData->ok || result || (gData->regexp->flags & JSREG_STICKY))
+        if (!gData->ok || result || (gData->regexp->flags & REG_STICKY))
             return result;
         gData->backTrackSP = gData->backTrackStack;
         gData->cursz = 0;
@@ -3148,15 +3097,12 @@ static REMatchState *MatchRegExp(REGlobalData *gData, REMatchState *x)
     return NULL;
 }
 
-#define MIN_BACKTRACK_LIMIT 400000
-
-static REMatchState *InitMatch(script_ctx_t *cx, REGlobalData *gData, JSRegExp *re, size_t length)
+static HRESULT InitMatch(regexp_t *re, void *cx, heap_pool_t *pool, REGlobalData *gData)
 {
-    REMatchState *result;
     UINT i;
 
     gData->backTrackStackSize = INITIAL_BACKTRACK;
-    gData->backTrackStack = jsheap_alloc(gData->pool, INITIAL_BACKTRACK);
+    gData->backTrackStack = heap_pool_alloc(gData->pool, INITIAL_BACKTRACK);
     if (!gData->backTrackStack)
         goto bad;
 
@@ -3166,36 +3112,73 @@ static REMatchState *InitMatch(script_ctx_t *cx, REGlobalData *gData, JSRegExp *
     gData->backTrackLimit = 0;
 
     gData->stateStackLimit = INITIAL_STATESTACK;
-    gData->stateStack = jsheap_alloc(gData->pool, sizeof(REProgState) * INITIAL_STATESTACK);
+    gData->stateStack = heap_pool_alloc(gData->pool, sizeof(REProgState) * INITIAL_STATESTACK);
     if (!gData->stateStack)
         goto bad;
 
     gData->stateStackTop = 0;
     gData->cx = cx;
+    gData->pool = pool;
     gData->regexp = re;
     gData->ok = TRUE;
 
-    result = jsheap_alloc(gData->pool, offsetof(REMatchState, parens) + re->parenCount * sizeof(RECapture));
-    if (!result)
-        goto bad;
-
     for (i = 0; i < re->classCount; i++) {
         if (!re->classList[i].converted &&
-            !ProcessCharSet(gData, &re->classList[i])) {
-            return NULL;
+                !ProcessCharSet(gData, &re->classList[i])) {
+            return E_FAIL;
         }
     }
 
-    return result;
+    return S_OK;
 
 bad:
     js_ReportOutOfScriptQuota(cx);
     gData->ok = FALSE;
-    return NULL;
+    return E_OUTOFMEMORY;
 }
 
-static void
-js_DestroyRegExp(JSRegExp *re)
+HRESULT regexp_execute(regexp_t *regexp, void *cx, heap_pool_t *pool,
+        const WCHAR *str, DWORD str_len, match_state_t *result)
+{
+    match_state_t *res;
+    REGlobalData gData;
+    heap_pool_t *mark = heap_pool_mark(pool);
+    const WCHAR *str_beg = result->cp;
+    HRESULT hres;
+
+    assert(result->cp != NULL);
+
+    gData.cpbegin = str;
+    gData.cpend = str+str_len;
+    gData.start = result->cp-str;
+    gData.skipped = 0;
+    gData.pool = pool;
+
+    hres = InitMatch(regexp, cx, pool, &gData);
+    if(FAILED(hres)) {
+        WARN("InitMatch failed\n");
+        heap_pool_clear(mark);
+        return hres;
+    }
+
+    res = MatchRegExp(&gData, result);
+    heap_pool_clear(mark);
+    if(!gData.ok) {
+        WARN("MatchRegExp failed\n");
+        return E_FAIL;
+    }
+
+    if(!res) {
+        result->match_len = 0;
+        return S_FALSE;
+    }
+
+    result->match_len = (result->cp-str_beg) - gData.skipped;
+    result->paren_count = regexp->parenCount;
+    return S_OK;
+}
+
+void regexp_destroy(regexp_t *re)
 {
     if (re->classList) {
         UINT i;
@@ -3209,11 +3192,11 @@ js_DestroyRegExp(JSRegExp *re)
     heap_free(re);
 }
 
-static JSRegExp *
-js_NewRegExp(script_ctx_t *cx, BSTR str, UINT flags, BOOL flat)
+regexp_t* regexp_new(void *cx, heap_pool_t *pool, const WCHAR *str,
+        DWORD str_len, WORD flags, BOOL flat)
 {
-    JSRegExp *re;
-    jsheap_t *mark;
+    regexp_t *re;
+    heap_pool_t *mark;
     CompilerState state;
     size_t resize;
     jsbytecode *endPC;
@@ -3221,10 +3204,11 @@ js_NewRegExp(script_ctx_t *cx, BSTR str, UINT flags, BOOL flat)
     size_t len;
 
     re = NULL;
-    mark = jsheap_mark(&cx->tmp_heap);
-    len = SysStringLen(str);
+    mark = heap_pool_mark(pool);
+    len = str_len;
 
     state.context = cx;
+    state.pool = pool;
     state.cp = str;
     if (!state.cp)
         goto out;
@@ -3253,7 +3237,7 @@ js_NewRegExp(script_ctx_t *cx, BSTR str, UINT flags, BOOL flat)
         if (!ParseRegExp(&state))
             goto out;
     }
-    resize = offsetof(JSRegExp, program) + state.progLength + 1;
+    resize = offsetof(regexp_t, program) + state.progLength + 1;
     re = heap_alloc(resize);
     if (!re)
         goto out;
@@ -3263,7 +3247,7 @@ js_NewRegExp(script_ctx_t *cx, BSTR str, UINT flags, BOOL flat)
     if (re->classCount) {
         re->classList = heap_alloc(re->classCount * sizeof(RECharSet));
         if (!re->classList) {
-            js_DestroyRegExp(re);
+            regexp_destroy(re);
             re = NULL;
             goto out;
         }
@@ -3274,7 +3258,7 @@ js_NewRegExp(script_ctx_t *cx, BSTR str, UINT flags, BOOL flat)
     }
     endPC = EmitREBytecode(&state, re, state.treeDepth, re->program, state.result);
     if (!endPC) {
-        js_DestroyRegExp(re);
+        regexp_destroy(re);
         re = NULL;
         goto out;
     }
@@ -3285,9 +3269,9 @@ js_NewRegExp(script_ctx_t *cx, BSTR str, UINT flags, BOOL flat)
      * besides re exist here.
      */
     if ((size_t)(endPC - re->program) != state.progLength + 1) {
-        JSRegExp *tmp;
+        regexp_t *tmp;
         assert((size_t)(endPC - re->program) < state.progLength + 1);
-        resize = offsetof(JSRegExp, program) + (endPC - re->program);
+        resize = offsetof(regexp_t, program) + (endPC - re->program);
         tmp = heap_realloc(re, resize);
         if (tmp)
             re = tmp;
@@ -3296,875 +3280,9 @@ js_NewRegExp(script_ctx_t *cx, BSTR str, UINT flags, BOOL flat)
     re->flags = flags;
     re->parenCount = state.parenCount;
     re->source = str;
+    re->source_len = str_len;
 
 out:
-    jsheap_clear(mark);
+    heap_pool_clear(mark);
     return re;
-}
-
-static inline RegExpInstance *regexp_from_vdisp(vdisp_t *vdisp)
-{
-    return (RegExpInstance*)vdisp->u.jsdisp;
-}
-
-static void set_last_index(RegExpInstance *This, DWORD last_index)
-{
-    This->last_index = last_index;
-    VariantClear(&This->last_index_var);
-    num_set_val(&This->last_index_var, last_index);
-}
-
-static HRESULT do_regexp_match_next(script_ctx_t *ctx, RegExpInstance *regexp, DWORD rem_flags,
-        const WCHAR *str, DWORD len, const WCHAR **cp, match_result_t **parens, DWORD *parens_size,
-        DWORD *parens_cnt, match_result_t *ret)
-{
-    REMatchState *x, *result;
-    REGlobalData gData;
-    DWORD matchlen;
-
-    gData.cpbegin = *cp;
-    gData.cpend = str + len;
-    gData.start = *cp-str;
-    gData.skipped = 0;
-    gData.pool = &ctx->tmp_heap;
-
-    x = InitMatch(NULL, &gData, regexp->jsregexp, gData.cpend - gData.cpbegin);
-    if(!x) {
-        WARN("InitMatch failed\n");
-        return E_FAIL;
-    }
-
-    x->cp = *cp;
-    result = MatchRegExp(&gData, x);
-    if(!gData.ok) {
-        WARN("MatchRegExp failed\n");
-        return E_FAIL;
-    }
-
-    if(!result) {
-        if(rem_flags & REM_RESET_INDEX)
-            set_last_index(regexp, 0);
-        return S_FALSE;
-    }
-
-    if(parens) {
-        if(regexp->jsregexp->parenCount > *parens_size) {
-            match_result_t *new_parens;
-
-            if(*parens)
-                new_parens = heap_realloc(*parens, sizeof(match_result_t)*regexp->jsregexp->parenCount);
-            else
-                new_parens = heap_alloc(sizeof(match_result_t)*regexp->jsregexp->parenCount);
-            if(!new_parens)
-                return E_OUTOFMEMORY;
-
-            *parens = new_parens;
-        }
-    }
-
-    /* FIXME: We often already have a copy of input string that we could use to store last match */
-    if(!(rem_flags & REM_NO_CTX_UPDATE) &&
-       (!ctx->last_match || len != SysStringLen(ctx->last_match) || strncmpW(ctx->last_match, str, len))) {
-        BSTR last_match;
-
-        last_match = SysAllocStringLen(str, len);
-        if(!last_match)
-            return E_OUTOFMEMORY;
-        SysFreeString(ctx->last_match);
-        ctx->last_match = last_match;
-    }
-
-    if(parens) {
-        DWORD i;
-
-        *parens_cnt = regexp->jsregexp->parenCount;
-
-        for(i=0; i < regexp->jsregexp->parenCount; i++) {
-            if(result->parens[i].index == -1) {
-                (*parens)[i].str = NULL;
-                (*parens)[i].len = 0;
-            }else {
-                (*parens)[i].str = *cp + result->parens[i].index;
-                (*parens)[i].len = result->parens[i].length;
-            }
-        }
-    }
-
-    matchlen = (result->cp-*cp) - gData.skipped;
-    *cp = result->cp;
-    ret->str = result->cp-matchlen;
-    ret->len = matchlen;
-    set_last_index(regexp, result->cp-str);
-
-    if(!(rem_flags & REM_NO_CTX_UPDATE)) {
-        ctx->last_match_index = ret->str-str;
-        ctx->last_match_length = matchlen;
-    }
-
-    return S_OK;
-}
-
-HRESULT regexp_match_next(script_ctx_t *ctx, DispatchEx *dispex, DWORD rem_flags, const WCHAR *str,
-        DWORD len, const WCHAR **cp, match_result_t **parens, DWORD *parens_size, DWORD *parens_cnt,
-        match_result_t *ret)
-{
-    RegExpInstance *regexp = (RegExpInstance*)dispex;
-    jsheap_t *mark;
-    HRESULT hres;
-
-    if((rem_flags & REM_CHECK_GLOBAL) && !(regexp->jsregexp->flags & JSREG_GLOB))
-        return S_FALSE;
-
-    mark = jsheap_mark(&ctx->tmp_heap);
-
-    hres = do_regexp_match_next(ctx, regexp, rem_flags, str, len, cp, parens, parens_size, parens_cnt, ret);
-
-    jsheap_clear(mark);
-    return hres;
-}
-
-HRESULT regexp_match(script_ctx_t *ctx, DispatchEx *dispex, const WCHAR *str, DWORD len, BOOL gflag,
-        match_result_t **match_result, DWORD *result_cnt)
-{
-    RegExpInstance *This = (RegExpInstance*)dispex;
-    match_result_t *ret = NULL, cres;
-    const WCHAR *cp = str;
-    DWORD i=0, ret_size = 0;
-    jsheap_t *mark;
-    HRESULT hres;
-
-    mark = jsheap_mark(&ctx->tmp_heap);
-
-    while(1) {
-        hres = do_regexp_match_next(ctx, This, 0, str, len, &cp, NULL, NULL, NULL, &cres);
-        if(hres == S_FALSE) {
-            hres = S_OK;
-            break;
-        }
-
-        if(FAILED(hres))
-            break;
-
-        if(ret_size == i) {
-            if(ret)
-                ret = heap_realloc(ret, (ret_size <<= 1) * sizeof(match_result_t));
-            else
-                ret = heap_alloc((ret_size=4) * sizeof(match_result_t));
-            if(!ret) {
-                hres = E_OUTOFMEMORY;
-                break;
-            }
-        }
-
-        ret[i++] = cres;
-
-        if(!gflag && !(This->jsregexp->flags & JSREG_GLOB)) {
-            hres = S_OK;
-            break;
-        }
-    }
-
-    jsheap_clear(mark);
-    if(FAILED(hres)) {
-        heap_free(ret);
-        return hres;
-    }
-
-    *match_result = ret;
-    *result_cnt = i;
-    return S_OK;
-}
-
-static HRESULT RegExp_source(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    TRACE("\n");
-
-    switch(flags) {
-    case DISPATCH_PROPERTYGET: {
-        RegExpInstance *This = regexp_from_vdisp(jsthis);
-
-        V_VT(retv) = VT_BSTR;
-        V_BSTR(retv) = SysAllocString(This->str);
-        if(!V_BSTR(retv))
-            return E_OUTOFMEMORY;
-        break;
-    }
-    default:
-        FIXME("Unimplemnted flags %x\n", flags);
-        return E_NOTIMPL;
-    }
-
-    return S_OK;
-}
-
-static HRESULT RegExp_global(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT RegExp_ignoreCase(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT RegExp_multiline(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static INT index_from_var(script_ctx_t *ctx, VARIANT *v)
-{
-    jsexcept_t ei;
-    VARIANT num;
-    HRESULT hres;
-
-    memset(&ei, 0, sizeof(ei));
-    hres = to_number(ctx, v, &ei, &num);
-    if(FAILED(hres)) { /* FIXME: Move ignoring exceptions to to_promitive */
-        VariantClear(&ei.var);
-        return 0;
-    }
-
-    if(V_VT(&num) == VT_R8) {
-        DOUBLE d = floor(V_R8(&num));
-        return (DOUBLE)(INT)d == d ? d : 0;
-    }
-
-    return V_I4(&num);
-}
-
-static HRESULT RegExp_lastIndex(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    TRACE("\n");
-
-    switch(flags) {
-    case DISPATCH_PROPERTYGET: {
-        RegExpInstance *regexp = regexp_from_vdisp(jsthis);
-
-        V_VT(retv) = VT_EMPTY;
-        return VariantCopy(retv, &regexp->last_index_var);
-    }
-    case DISPATCH_PROPERTYPUT: {
-        RegExpInstance *regexp = regexp_from_vdisp(jsthis);
-        VARIANT *arg;
-        HRESULT hres;
-
-        arg = get_arg(dp,0);
-        hres = VariantCopy(&regexp->last_index_var, arg);
-        if(FAILED(hres))
-            return hres;
-
-        regexp->last_index = index_from_var(ctx, arg);
-        break;
-    }
-    default:
-        FIXME("unimplemented flags: %x\n", flags);
-        return E_NOTIMPL;
-    }
-
-    return S_OK;
-}
-
-static HRESULT RegExp_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT create_match_array(script_ctx_t *ctx, BSTR input, const match_result_t *result,
-        const match_result_t *parens, DWORD parens_cnt, jsexcept_t *ei, IDispatch **ret)
-{
-    DispatchEx *array;
-    VARIANT var;
-    int i;
-    HRESULT hres = S_OK;
-
-    static const WCHAR indexW[] = {'i','n','d','e','x',0};
-    static const WCHAR inputW[] = {'i','n','p','u','t',0};
-    static const WCHAR zeroW[] = {'0',0};
-
-    hres = create_array(ctx, parens_cnt+1, &array);
-    if(FAILED(hres))
-        return hres;
-
-    for(i=0; i < parens_cnt; i++) {
-        V_VT(&var) = VT_BSTR;
-        V_BSTR(&var) = SysAllocStringLen(parens[i].str, parens[i].len);
-        if(!V_BSTR(&var)) {
-            hres = E_OUTOFMEMORY;
-            break;
-        }
-
-        hres = jsdisp_propput_idx(array, i+1, &var, ei, NULL/*FIXME*/);
-        SysFreeString(V_BSTR(&var));
-        if(FAILED(hres))
-            break;
-    }
-
-    while(SUCCEEDED(hres)) {
-        V_VT(&var) = VT_I4;
-        V_I4(&var) = result->str-input;
-        hres = jsdisp_propput_name(array, indexW, &var, ei, NULL/*FIXME*/);
-        if(FAILED(hres))
-            break;
-
-        V_VT(&var) = VT_BSTR;
-        V_BSTR(&var) = input;
-        hres = jsdisp_propput_name(array, inputW, &var, ei, NULL/*FIXME*/);
-        if(FAILED(hres))
-            break;
-
-        V_BSTR(&var) = SysAllocStringLen(result->str, result->len);
-        if(!V_BSTR(&var)) {
-            hres = E_OUTOFMEMORY;
-            break;
-        }
-        hres = jsdisp_propput_name(array, zeroW, &var, ei, NULL/*FIXME*/);
-        SysFreeString(V_BSTR(&var));
-        break;
-    }
-
-    if(FAILED(hres)) {
-        jsdisp_release(array);
-        return hres;
-    }
-
-    *ret = (IDispatch*)_IDispatchEx_(array);
-    return S_OK;
-}
-
-static HRESULT run_exec(script_ctx_t *ctx, vdisp_t *jsthis, VARIANT *arg, jsexcept_t *ei, BSTR *input,
-        match_result_t *match, match_result_t **parens, DWORD *parens_cnt, VARIANT_BOOL *ret)
-{
-    RegExpInstance *regexp;
-    DWORD parens_size = 0, last_index = 0, length;
-    const WCHAR *cp;
-    BSTR string;
-    HRESULT hres;
-
-    if(!is_vclass(jsthis, JSCLASS_REGEXP)) {
-        FIXME("Not a RegExp\n");
-        return E_NOTIMPL;
-    }
-
-    regexp = regexp_from_vdisp(jsthis);
-
-    if(arg) {
-        hres = to_string(ctx, arg, ei, &string);
-        if(FAILED(hres))
-            return hres;
-        length = SysStringLen(string);
-    }else {
-        string = NULL;
-        length = 0;
-    }
-
-    if(regexp->jsregexp->flags & JSREG_GLOB) {
-        if(regexp->last_index < 0) {
-            SysFreeString(string);
-            set_last_index(regexp, 0);
-            *ret = VARIANT_FALSE;
-            if(input) {
-                *input = NULL;
-            }
-            return S_OK;
-        }
-
-        last_index = regexp->last_index;
-    }
-
-    cp = string + last_index;
-    hres = regexp_match_next(ctx, &regexp->dispex, REM_RESET_INDEX, string, length, &cp, parens,
-            parens ? &parens_size : NULL, parens_cnt, match);
-    if(FAILED(hres)) {
-        SysFreeString(string);
-        return hres;
-    }
-
-    *ret = hres == S_OK ? VARIANT_TRUE : VARIANT_FALSE;
-    if(input) {
-        *input = string;
-    }else {
-        SysFreeString(string);
-    }
-    return S_OK;
-}
-
-static HRESULT RegExp_exec(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    match_result_t *parens = NULL, match;
-    DWORD parens_cnt = 0;
-    VARIANT_BOOL b;
-    BSTR string;
-    HRESULT hres;
-
-    TRACE("\n");
-
-    hres = run_exec(ctx, jsthis, arg_cnt(dp) ? get_arg(dp,0) : NULL, ei, &string, &match, &parens, &parens_cnt, &b);
-    if(FAILED(hres))
-        return hres;
-
-    if(retv) {
-        if(b) {
-            IDispatch *ret;
-
-            hres = create_match_array(ctx, string, &match, parens, parens_cnt, ei, &ret);
-            if(SUCCEEDED(hres)) {
-                V_VT(retv) = VT_DISPATCH;
-                V_DISPATCH(retv) = ret;
-            }
-        }else {
-            V_VT(retv) = VT_NULL;
-        }
-    }
-
-    heap_free(parens);
-    SysFreeString(string);
-    return hres;
-}
-
-static HRESULT RegExp_test(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    match_result_t match;
-    VARIANT undef_var;
-    VARIANT_BOOL b;
-    DWORD argc;
-    HRESULT hres;
-
-    TRACE("\n");
-
-    argc = arg_cnt(dp);
-    if(!argc) {
-        V_VT(&undef_var) = VT_BSTR;
-        V_BSTR(&undef_var) = SysAllocString(undefinedW);
-        if(!V_BSTR(&undef_var))
-            return E_OUTOFMEMORY;
-    }
-
-    hres = run_exec(ctx, jsthis, argc ? get_arg(dp,0) : &undef_var, ei, NULL, &match, NULL, NULL, &b);
-    if(!argc)
-        SysFreeString(V_BSTR(&undef_var));
-    if(FAILED(hres))
-        return hres;
-
-    if(retv) {
-        V_VT(retv) = VT_BOOL;
-        V_BOOL(retv) = b;
-    }
-    return S_OK;
-}
-
-static HRESULT RegExp_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    TRACE("\n");
-
-    switch(flags) {
-    case INVOKE_FUNC:
-        return throw_type_error(ctx, ei, IDS_NOT_FUNC, NULL);
-    default:
-        FIXME("unimplemented flags %x\n", flags);
-        return E_NOTIMPL;
-    }
-
-    return S_OK;
-}
-
-static void RegExp_destructor(DispatchEx *dispex)
-{
-    RegExpInstance *This = (RegExpInstance*)dispex;
-
-    if(This->jsregexp)
-        js_DestroyRegExp(This->jsregexp);
-    VariantClear(&This->last_index_var);
-    SysFreeString(This->str);
-    heap_free(This);
-}
-
-static const builtin_prop_t RegExp_props[] = {
-    {execW,                  RegExp_exec,                  PROPF_METHOD|1},
-    {globalW,                RegExp_global,                0},
-    {ignoreCaseW,            RegExp_ignoreCase,            0},
-    {lastIndexW,             RegExp_lastIndex,             0},
-    {multilineW,             RegExp_multiline,             0},
-    {sourceW,                RegExp_source,                0},
-    {testW,                  RegExp_test,                  PROPF_METHOD|1},
-    {toStringW,              RegExp_toString,              PROPF_METHOD}
-};
-
-static const builtin_info_t RegExp_info = {
-    JSCLASS_REGEXP,
-    {NULL, RegExp_value, 0},
-    sizeof(RegExp_props)/sizeof(*RegExp_props),
-    RegExp_props,
-    RegExp_destructor,
-    NULL
-};
-
-static HRESULT alloc_regexp(script_ctx_t *ctx, DispatchEx *object_prototype, RegExpInstance **ret)
-{
-    RegExpInstance *regexp;
-    HRESULT hres;
-
-    regexp = heap_alloc_zero(sizeof(RegExpInstance));
-    if(!regexp)
-        return E_OUTOFMEMORY;
-
-    if(object_prototype)
-        hres = init_dispex(&regexp->dispex, ctx, &RegExp_info, object_prototype);
-    else
-        hres = init_dispex_from_constr(&regexp->dispex, ctx, &RegExp_info, ctx->regexp_constr);
-
-    if(FAILED(hres)) {
-        heap_free(regexp);
-        return hres;
-    }
-
-    *ret = regexp;
-    return S_OK;
-}
-
-HRESULT create_regexp(script_ctx_t *ctx, const WCHAR *exp, int len, DWORD flags, DispatchEx **ret)
-{
-    RegExpInstance *regexp;
-    HRESULT hres;
-
-    TRACE("%s %x\n", debugstr_w(exp), flags);
-
-    hres = alloc_regexp(ctx, NULL, &regexp);
-    if(FAILED(hres))
-        return hres;
-
-    if(len == -1)
-        regexp->str = SysAllocString(exp);
-    else
-        regexp->str = SysAllocStringLen(exp, len);
-    if(!regexp->str) {
-        jsdisp_release(&regexp->dispex);
-        return E_OUTOFMEMORY;
-    }
-
-    regexp->jsregexp = js_NewRegExp(ctx, regexp->str, flags, FALSE);
-    if(!regexp->jsregexp) {
-        WARN("js_NewRegExp failed\n");
-        jsdisp_release(&regexp->dispex);
-        return E_FAIL;
-    }
-
-    V_VT(&regexp->last_index_var) = VT_I4;
-    V_I4(&regexp->last_index_var) = 0;
-
-    *ret = &regexp->dispex;
-    return S_OK;
-}
-
-HRESULT create_regexp_var(script_ctx_t *ctx, VARIANT *src_arg, VARIANT *flags_arg, DispatchEx **ret)
-{
-    const WCHAR *opt = emptyW, *src;
-    DWORD flags;
-    HRESULT hres;
-
-    if(V_VT(src_arg) == VT_DISPATCH) {
-        DispatchEx *obj;
-
-        obj = iface_to_jsdisp((IUnknown*)V_DISPATCH(src_arg));
-        if(obj) {
-            if(is_class(obj, JSCLASS_REGEXP)) {
-                RegExpInstance *regexp = (RegExpInstance*)obj;
-
-                hres = create_regexp(ctx, regexp->str, -1, regexp->jsregexp->flags, ret);
-                jsdisp_release(obj);
-                return hres;
-            }
-
-            jsdisp_release(obj);
-        }
-    }
-
-    if(V_VT(src_arg) != VT_BSTR) {
-        FIXME("flags_arg = %s\n", debugstr_variant(flags_arg));
-        return E_NOTIMPL;
-    }
-
-    src = V_BSTR(src_arg);
-
-    if(flags_arg) {
-        if(V_VT(flags_arg) != VT_BSTR) {
-            FIXME("unimplemented for vt %d\n", V_VT(flags_arg));
-            return E_NOTIMPL;
-        }
-
-        opt = V_BSTR(flags_arg);
-    }
-
-    hres = parse_regexp_flags(opt, strlenW(opt), &flags);
-    if(FAILED(hres))
-        return hres;
-
-    return create_regexp(ctx, src, -1, flags, ret);
-}
-
-HRESULT regexp_string_match(script_ctx_t *ctx, DispatchEx *re, BSTR str,
-        VARIANT *retv, jsexcept_t *ei)
-{
-    RegExpInstance *regexp = (RegExpInstance*)re;
-    match_result_t *match_result;
-    DWORD match_cnt, i, length;
-    DispatchEx *array;
-    VARIANT var;
-    HRESULT hres;
-
-    length = SysStringLen(str);
-
-    if(!(regexp->jsregexp->flags & JSREG_GLOB)) {
-        match_result_t match, *parens = NULL;
-        DWORD parens_cnt, parens_size = 0;
-        const WCHAR *cp = str;
-
-        hres = regexp_match_next(ctx, &regexp->dispex, 0, str, length, &cp, &parens, &parens_size, &parens_cnt, &match);
-        if(FAILED(hres))
-            return hres;
-
-        if(retv) {
-            if(hres == S_OK) {
-                IDispatch *ret;
-
-                hres = create_match_array(ctx, str, &match, parens, parens_cnt, ei, &ret);
-                if(SUCCEEDED(hres)) {
-                    V_VT(retv) = VT_DISPATCH;
-                    V_DISPATCH(retv) = ret;
-                }
-            }else {
-                V_VT(retv) = VT_NULL;
-            }
-        }
-
-        heap_free(parens);
-        return S_OK;
-    }
-
-    hres = regexp_match(ctx, &regexp->dispex, str, length, FALSE, &match_result, &match_cnt);
-    if(FAILED(hres))
-        return hres;
-
-    if(!match_cnt) {
-        TRACE("no match\n");
-
-        if(retv)
-            V_VT(retv) = VT_NULL;
-        return S_OK;
-    }
-
-    hres = create_array(ctx, match_cnt, &array);
-    if(FAILED(hres))
-        return hres;
-
-    V_VT(&var) = VT_BSTR;
-
-    for(i=0; i < match_cnt; i++) {
-        V_BSTR(&var) = SysAllocStringLen(match_result[i].str, match_result[i].len);
-        if(!V_BSTR(&var)) {
-            hres = E_OUTOFMEMORY;
-            break;
-        }
-
-        hres = jsdisp_propput_idx(array, i, &var, ei, NULL/*FIXME*/);
-        SysFreeString(V_BSTR(&var));
-        if(FAILED(hres))
-            break;
-    }
-
-    heap_free(match_result);
-
-    if(SUCCEEDED(hres) && retv) {
-        V_VT(retv) = VT_DISPATCH;
-        V_DISPATCH(retv) = (IDispatch*)_IDispatchEx_(array);
-    }else {
-        jsdisp_release(array);
-    }
-    return hres;
-}
-
-static HRESULT RegExpConstr_leftContext(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
-         DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    TRACE("\n");
-
-    switch(flags) {
-    case DISPATCH_PROPERTYGET: {
-        BSTR ret;
-
-        ret = SysAllocStringLen(ctx->last_match, ctx->last_match_index);
-        if(!ret)
-            return E_OUTOFMEMORY;
-
-        V_VT(retv) = VT_BSTR;
-        V_BSTR(retv) = ret;
-    }
-    case DISPATCH_PROPERTYPUT:
-        return S_OK;
-    default:
-        FIXME("unsupported flags\n");
-        return E_NOTIMPL;
-    }
-
-    return S_OK;
-}
-
-static HRESULT RegExpConstr_rightContext(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
-         DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    TRACE("\n");
-
-    switch(flags) {
-    case DISPATCH_PROPERTYGET: {
-        BSTR ret;
-
-        ret = SysAllocString(ctx->last_match+ctx->last_match_index+ctx->last_match_length);
-        if(!ret)
-            return E_OUTOFMEMORY;
-
-        V_VT(retv) = VT_BSTR;
-        V_BSTR(retv) = ret;
-    }
-    case DISPATCH_PROPERTYPUT:
-        return S_OK;
-    default:
-        FIXME("unsupported flags\n");
-        return E_NOTIMPL;
-    }
-
-    return S_OK;
-}
-
-static HRESULT RegExpConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    TRACE("\n");
-
-    switch(flags) {
-    case DISPATCH_METHOD:
-        if(arg_cnt(dp)) {
-            VARIANT *arg = get_arg(dp,0);
-            if(V_VT(arg) == VT_DISPATCH) {
-                DispatchEx *jsdisp = iface_to_jsdisp((IUnknown*)V_DISPATCH(arg));
-                if(jsdisp) {
-                    if(is_class(jsdisp, JSCLASS_REGEXP)) {
-                        if(arg_cnt(dp) > 1 && V_VT(get_arg(dp,1)) != VT_EMPTY) {
-                            jsdisp_release(jsdisp);
-                            return throw_regexp_error(ctx, ei, IDS_REGEXP_SYNTAX_ERROR, NULL);
-                        }
-
-                        if(retv) {
-                            V_VT(retv) = VT_DISPATCH;
-                            V_DISPATCH(retv) = (IDispatch*)_IDispatchEx_(jsdisp);
-                        }else {
-                            jsdisp_release(jsdisp);
-                        }
-                        return S_OK;
-                    }
-                    jsdisp_release(jsdisp);
-                }
-            }
-        }
-        /* fall through */
-    case DISPATCH_CONSTRUCT: {
-        DispatchEx *ret;
-        HRESULT hres;
-
-        if(!arg_cnt(dp)) {
-            FIXME("no args\n");
-            return E_NOTIMPL;
-        }
-
-        hres = create_regexp_var(ctx, get_arg(dp,0), arg_cnt(dp) > 1 ? get_arg(dp,1) : NULL, &ret);
-        if(FAILED(hres))
-            return hres;
-
-        if(retv) {
-            V_VT(retv) = VT_DISPATCH;
-            V_DISPATCH(retv) = (IDispatch*)_IDispatchEx_(ret);
-        }else {
-            jsdisp_release(ret);
-        }
-        return S_OK;
-    }
-    default:
-        FIXME("unimplemented flags: %x\n", flags);
-        return E_NOTIMPL;
-    }
-
-    return S_OK;
-}
-
-static const builtin_prop_t RegExpConstr_props[] = {
-    {leftContextW,    RegExpConstr_leftContext,    0},
-    {rightContextW,   RegExpConstr_rightContext,   0}
-};
-
-static const builtin_info_t RegExpConstr_info = {
-    JSCLASS_FUNCTION,
-    {NULL, Function_value, 0},
-    sizeof(RegExpConstr_props)/sizeof(*RegExpConstr_props),
-    RegExpConstr_props,
-    NULL,
-    NULL
-};
-
-HRESULT create_regexp_constr(script_ctx_t *ctx, DispatchEx *object_prototype, DispatchEx **ret)
-{
-    RegExpInstance *regexp;
-    HRESULT hres;
-
-    static const WCHAR RegExpW[] = {'R','e','g','E','x','p',0};
-
-    hres = alloc_regexp(ctx, object_prototype, &regexp);
-    if(FAILED(hres))
-        return hres;
-
-    hres = create_builtin_function(ctx, RegExpConstr_value, RegExpW, &RegExpConstr_info,
-            PROPF_CONSTR|2, &regexp->dispex, ret);
-
-    jsdisp_release(&regexp->dispex);
-    return hres;
-}
-
-HRESULT parse_regexp_flags(const WCHAR *str, DWORD str_len, DWORD *ret)
-{
-    const WCHAR *p;
-    DWORD flags = 0;
-
-    for (p = str; p < str+str_len; p++) {
-        switch (*p) {
-        case 'g':
-            flags |= JSREG_GLOB;
-            break;
-        case 'i':
-            flags |= JSREG_FOLD;
-            break;
-        case 'm':
-            flags |= JSREG_MULTILINE;
-            break;
-        case 'y':
-            flags |= JSREG_STICKY;
-            break;
-        default:
-            WARN("wrong flag %c\n", *p);
-            return E_FAIL;
-        }
-    }
-
-    *ret = flags;
-    return S_OK;
 }

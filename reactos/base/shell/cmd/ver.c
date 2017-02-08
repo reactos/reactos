@@ -21,7 +21,7 @@
  *        New version info and some output changes.
  */
 
-#include <precomp.h>
+#include "precomp.h"
 #include <reactos/buildno.h>
 #include <reactos/version.h>
 

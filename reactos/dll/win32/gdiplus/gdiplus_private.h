@@ -19,19 +19,24 @@
 #ifndef __WINE_GP_PRIVATE_H_
 #define __WINE_GP_PRIVATE_H_
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <math.h>
 #include <stdarg.h>
 
-#include "windef.h"
-#include "wingdi.h"
-#include "winbase.h"
-#include "winuser.h"
+#include <windef.h>
+#include <wingdi.h>
+#include <winbase.h>
+//#include "winuser.h"
 
-#include "objbase.h"
-#include "ocidl.h"
-#include "wine/list.h"
+#include <objbase.h>
+//#include "ocidl.h"
+#include <wincodecsdk.h>
+#include <wine/list.h>
 
-#include "gdiplus.h"
+#include <gdiplus.h>
 
 #define GP_DEFAULT_PENSTYLE (PS_GEOMETRIC | PS_SOLID | PS_ENDCAP_FLAT | PS_JOIN_MITER)
 #define MAX_ARC_PTS (13)
@@ -47,7 +52,9 @@ extern INT arc2polybezier(GpPointF * points, REAL x1, REAL y1, REAL x2, REAL y2,
     REAL startAngle, REAL sweepAngle) DECLSPEC_HIDDEN;
 extern REAL gdiplus_atan2(REAL dy, REAL dx) DECLSPEC_HIDDEN;
 extern GpStatus hresult_to_status(HRESULT res) DECLSPEC_HIDDEN;
-extern REAL convert_unit(REAL logpixels, GpUnit unit) DECLSPEC_HIDDEN;
+extern REAL units_to_pixels(REAL units, GpUnit unit, REAL dpi) DECLSPEC_HIDDEN;
+extern REAL pixels_to_units(REAL pixels, GpUnit unit, REAL dpi) DECLSPEC_HIDDEN;
+extern REAL units_scale(GpUnit from, GpUnit to, REAL dpi) DECLSPEC_HIDDEN;
 
 extern GpStatus graphics_from_image(GpImage *image, GpGraphics **graphics) DECLSPEC_HIDDEN;
 
@@ -55,6 +62,7 @@ extern GpStatus METAFILE_GetGraphicsContext(GpMetafile* metafile, GpGraphics **r
 extern GpStatus METAFILE_GetDC(GpMetafile* metafile, HDC *hdc) DECLSPEC_HIDDEN;
 extern GpStatus METAFILE_ReleaseDC(GpMetafile* metafile, HDC hdc) DECLSPEC_HIDDEN;
 extern GpStatus METAFILE_GraphicsDeleted(GpMetafile* metafile) DECLSPEC_HIDDEN;
+extern MetafileType METAFILE_GetEmfType(HENHMETAFILE hemf) DECLSPEC_HIDDEN;
 
 extern void calc_curve_bezier(CONST GpPointF *pts, REAL tension, REAL *x1,
     REAL *y1, REAL *x2, REAL *y2) DECLSPEC_HIDDEN;
@@ -62,8 +70,6 @@ extern void calc_curve_bezier_endp(REAL xend, REAL yend, REAL xadj, REAL yadj,
     REAL tension, REAL *x, REAL *y) DECLSPEC_HIDDEN;
 
 extern void free_installed_fonts(void) DECLSPEC_HIDDEN;
-
-extern void get_font_hfont(GpGraphics *graphics, GDIPCONST GpFont *font, HFONT *hfont) DECLSPEC_HIDDEN;
 
 extern BOOL lengthen_path(GpPath *path, INT len) DECLSPEC_HIDDEN;
 
@@ -74,7 +80,7 @@ extern void delete_element(region_element *element) DECLSPEC_HIDDEN;
 
 extern GpStatus get_hatch_data(HatchStyle hatchstyle, const char **result) DECLSPEC_HIDDEN;
 
-static inline INT roundr(REAL x)
+static inline INT gdip_round(REAL x)
 {
     return (INT) floorf(x + 0.5);
 }
@@ -121,7 +127,11 @@ extern void convert_32bppARGB_to_32bppPARGB(UINT width, UINT height,
 
 extern GpStatus convert_pixels(INT width, INT height,
     INT dst_stride, BYTE *dst_bits, PixelFormat dst_format,
-    INT src_stride, const BYTE *src_bits, PixelFormat src_format, ARGB *src_palette) DECLSPEC_HIDDEN;
+    INT src_stride, const BYTE *src_bits, PixelFormat src_format, ColorPalette *palette) DECLSPEC_HIDDEN;
+
+struct GpMatrix{
+    REAL matrix[6];
+};
 
 struct GpPen{
     UINT style;
@@ -146,6 +156,7 @@ struct GpGraphics{
     HDC hdc;
     HWND hwnd;
     BOOL owndc;
+    BOOL alpha_hdc;
     GpImage *image;
     SmoothingMode smoothing;
     CompositingQuality compqual;
@@ -155,7 +166,8 @@ struct GpGraphics{
     TextRenderingHint texthint;
     GpUnit unit;    /* page unit */
     REAL scale;     /* page scale */
-    GpMatrix * worldtrans; /* world transform */
+    REAL xres, yres;
+    GpMatrix worldtrans; /* world transform */
     BOOL busy;      /* hdc handle obtained by GdipGetDC */
     GpRegion *clip;
     UINT textcontrast; /* not used yet. get/set only */
@@ -202,7 +214,7 @@ struct GpPathGradient{
     ARGB* pblendcolor; /* preset blend colors */
     REAL* pblendpos; /* preset blend positions */
     INT pblendcount;
-    GpMatrix *transform;
+    GpMatrix transform;
 };
 
 struct GpLineGradient{
@@ -224,7 +236,7 @@ struct GpLineGradient{
 
 struct GpTexture{
     GpBrush brush;
-    GpMatrix *transform;
+    GpMatrix transform;
     GpImage *image;
     GpImageAttributes *imageattributes;
     BYTE *bitmap_bits; /* image bits converted to ARGB and run through imageattributes */
@@ -235,10 +247,6 @@ struct GpPath{
     GpPathData pathdata;
     BOOL newfigure; /* whether the next drawing action starts a new figure */
     INT datalen; /* size of the arrays in pathdata */
-};
-
-struct GpMatrix{
-    REAL matrix[6];
 };
 
 struct GpPathIterator{
@@ -262,14 +270,13 @@ struct GpAdustableArrowCap{
 };
 
 struct GpImage{
-    IPicture* picture;
+    IPicture *picture;
+    IStream *stream; /* source stream */
     ImageType type;
     GUID format;
     UINT flags;
-    UINT palette_flags;
-    UINT palette_count;
-    UINT palette_size;
-    ARGB *palette_entries;
+    UINT frame_count, current_frame;
+    ColorPalette *palette;
     REAL xres, yres;
 };
 
@@ -279,6 +286,7 @@ struct GpMetafile{
     GpUnit unit;
     MetafileType metafile_type;
     HENHMETAFILE hemf;
+    int preserve_hemf; /* if true, hemf belongs to the app and should not be deleted */
 
     /* recording */
     HDC record_dc;
@@ -309,6 +317,9 @@ struct GpBitmap{
     INT stride; /* stride of bits if this is a DIB */
     BYTE *own_bits; /* image bits that need to be freed with this object */
     INT lockx, locky; /* X and Y coordinates of the rect when a bitmap is locked for writing. */
+    IWICMetadataReader *metadata_reader; /* NULL if there is no metadata */
+    UINT prop_count;
+    PropertyItem *prop_item; /* cached image properties */
 };
 
 struct GpCachedBitmap{
@@ -366,6 +377,7 @@ struct GpStringFormat{
     REAL *tabs;
     CharacterRange *character_ranges;
     INT range_count;
+    BOOL generic_typographic;
 };
 
 struct GpFontCollection{
@@ -435,5 +447,7 @@ GpStatus gdip_format_string(HDC hdc,
     GDIPCONST WCHAR *string, INT length, GDIPCONST GpFont *font,
     GDIPCONST RectF *rect, GDIPCONST GpStringFormat *format,
     gdip_format_string_callback callback, void *user_data) DECLSPEC_HIDDEN;
+
+void get_log_fontW(const GpFont *, GpGraphics *, LOGFONTW *) DECLSPEC_HIDDEN;
 
 #endif

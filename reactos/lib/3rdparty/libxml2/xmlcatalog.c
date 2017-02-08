@@ -47,16 +47,16 @@ static char *filename = NULL;
 #endif
 
 /************************************************************************
- * 									*
- * 			Shell Interface					*
- * 									*
+ *									*
+ *			Shell Interface					*
+ *									*
  ************************************************************************/
 /**
  * xmlShellReadline:
  * @prompt:  the prompt value
  *
  * Read a string
- * 
+ *
  * Returns a pointer to it or NULL on EOF the caller is expected to
  *     free the returned string.
  */
@@ -157,7 +157,7 @@ static void usershell(void) {
 		    i++;
 		    cur++;
 		}
-	    } else if (*cur == '"') { 
+	    } else if (*cur == '"') {
 		cur++;
 		argv[i] = cur;
 		while ((*cur != 0) && (*cur != '"')) cur++;
@@ -296,15 +296,15 @@ static void usershell(void) {
 	    printf("\tdebug: increase the verbosity level\n");
 	    printf("\tquiet: decrease the verbosity level\n");
 	    printf("\texit:  quit the shell\n");
-	} 
+	}
 	free(cmdline); /* not xmlFree here ! */
     }
 }
 
 /************************************************************************
- * 									*
- * 			Main						*
- * 									*
+ *									*
+ *			Main						*
+ *									*
  ************************************************************************/
 static void usage(const char *name) {
     /* split into 2 printf's to avoid overly long string (gcc warning) */
@@ -507,7 +507,7 @@ int main(int argc, char **argv) {
 				exit_value = 2;
 				noout = 0;
 			    } else {
-				
+
 				xmlACatalogDump(super, out);
 				fclose(out);
 			    }
@@ -544,14 +544,14 @@ int main(int argc, char **argv) {
 		}
 	    }
 	}
-	
+
     } else if (shell) {
 	usershell();
     } else {
 	for (i++; i < argc; i++) {
 	    xmlURIPtr uri;
 	    xmlChar *ans;
-	    
+
 	    uri = xmlParseURI(argv[i]);
 	    if (uri == NULL) {
 		ans = xmlCatalogResolvePublic((const xmlChar *) argv[i]);

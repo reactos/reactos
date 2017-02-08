@@ -37,7 +37,7 @@
 
 #if CHAP_SUPPORT || MD5_SUPPORT
 
-#include "ppp.h"
+#include "ppp_impl.h"
 #include "pppdebug.h"
 
 #include "md5.h"

@@ -31,7 +31,6 @@ GetTextFromListView(PMAIN_WND_INFO Info,
     return NumChars;
 }
 
-
 static BOOL
 SaveServicesToFile(PMAIN_WND_INFO Info,
                    LPCTSTR pszFileName)
@@ -94,7 +93,6 @@ SaveServicesToFile(PMAIN_WND_INFO Info,
 
     return bSuccess;
 }
-
 
 VOID ExportFile(PMAIN_WND_INFO Info)
 {

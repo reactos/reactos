@@ -36,9 +36,9 @@
 #endif
 
 /************************************************************************
- * 									*
- * 		Hooks for the document loader				*
- * 									*
+ *									*
+ *		Hooks for the document loader				*
+ *									*
  ************************************************************************/
 
 /**
@@ -116,7 +116,7 @@ xsltDocLoaderFunc xsltDocDefaultLoader = xsltDocDefaultLoaderFunc;
  * Set the new function to load document, if NULL it resets it to the
  * default function.
  */
- 
+
 void
 xsltSetLoaderFunc(xsltDocLoaderFunc f) {
     if (f == NULL)
@@ -140,7 +140,7 @@ xsltSetLoaderFunc(xsltDocLoaderFunc f) {
  *
  * Returns a handler to the document
  */
-xsltDocumentPtr	
+xsltDocumentPtr
 xsltNewDocument(xsltTransformContextPtr ctxt, xmlDocPtr doc) {
     xsltDocumentPtr cur;
 
@@ -179,7 +179,7 @@ xsltNewDocument(xsltTransformContextPtr ctxt, xmlDocPtr doc) {
  *
  * Returns a handler to the document
  */
-xsltDocumentPtr	
+xsltDocumentPtr
 xsltNewStyleDocument(xsltStylesheetPtr style, xmlDocPtr doc) {
     xsltDocumentPtr cur;
 
@@ -204,15 +204,15 @@ xsltNewStyleDocument(xsltStylesheetPtr style, xmlDocPtr doc) {
  *
  * Frees the node-trees (and xsltDocument structures) of all
  * stylesheet-modules of the stylesheet-level represented by
- * the given @style. 
+ * the given @style.
  */
-void	
+void
 xsltFreeStyleDocuments(xsltStylesheetPtr style) {
     xsltDocumentPtr doc, cur;
 #ifdef XSLT_REFACTORED_XSLT_NSCOMP
     xsltNsMapPtr nsMap;
 #endif
-    
+
     if (style == NULL)
 	return;
 
@@ -220,8 +220,8 @@ xsltFreeStyleDocuments(xsltStylesheetPtr style) {
     if (XSLT_HAS_INTERNAL_NSMAP(style))
 	nsMap = XSLT_GET_INTERNAL_NSMAP(style);
     else
-	nsMap = NULL;    
-#endif   
+	nsMap = NULL;
+#endif
 
     cur = style->docList;
     while (cur != NULL) {
@@ -247,7 +247,7 @@ xsltFreeStyleDocuments(xsltStylesheetPtr style) {
  *
  * Free up all the space used by the loaded documents
  */
-void	
+void
 xsltFreeDocuments(xsltTransformContextPtr ctxt) {
     xsltDocumentPtr doc, cur;
 
@@ -281,7 +281,7 @@ xsltFreeDocuments(xsltTransformContextPtr ctxt) {
  *
  * Returns the new xsltDocumentPtr or NULL in case of error
  */
-xsltDocumentPtr	
+xsltDocumentPtr
 xsltLoadDocument(xsltTransformContextPtr ctxt, const xmlChar *URI) {
     xsltDocumentPtr ret;
     xmlDocPtr doc;
@@ -294,7 +294,7 @@ xsltLoadDocument(xsltTransformContextPtr ctxt, const xmlChar *URI) {
      */
     if (ctxt->sec != NULL) {
 	int res;
-	
+
 	res = xsltCheckRead(ctxt->sec, ctxt, URI);
 	if (res == 0) {
 	    xsltTransformError(ctxt, NULL, NULL,
@@ -355,7 +355,7 @@ xsltLoadDocument(xsltTransformContextPtr ctxt, const xmlChar *URI) {
  *
  * Returns the new xsltDocumentPtr or NULL in case of error
  */
-xsltDocumentPtr	
+xsltDocumentPtr
 xsltLoadStyleDocument(xsltStylesheetPtr style, const xmlChar *URI) {
     xsltDocumentPtr ret;
     xmlDocPtr doc;

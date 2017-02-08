@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 
 typedef struct
@@ -353,8 +353,8 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
     RUNFILEDLGPARAMS *prfdp = (RUNFILEDLGPARAMS *)GetWindowLongPtrW(hwnd, DWLP_USER);
 
     switch (message)
-        {
-        case WM_INITDIALOG :
+    {
+        case WM_INITDIALOG:
             prfdp = (RUNFILEDLGPARAMS *)lParam ;
             SetWindowLongPtrW(hwnd, DWLP_USER, (LONG_PTR)prfdp);
 
@@ -379,29 +379,29 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
             SendMessageW(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)prfdp->hIcon);
             SendMessageW(GetDlgItem(hwnd, IDC_RUNDLG_ICON), STM_SETICON, (WPARAM)prfdp->hIcon, 0);
 
-            FillList (GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH), NULL, (prfdp->uFlags & RFF_NODEFAULT) == 0) ;
-            SetFocus (GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH)) ;
-            return TRUE ;
+            FillList (GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH), NULL, (prfdp->uFlags & RFF_NODEFAULT) == 0);
+            SetFocus (GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH));
+            return TRUE;
 
-        case WM_COMMAND :
+        case WM_COMMAND:
             switch (LOWORD (wParam))
             {
-                case IDOK :
+                case IDOK:
                 {
-                    int ic ;
+                    int ic;
                     HWND htxt = GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH);
                     if ((ic = GetWindowTextLengthW (htxt)))
                     {
-                        WCHAR *psz, *parent=NULL ;
-                        SHELLEXECUTEINFOW sei ;
+                        WCHAR *psz, *parent = NULL;
+                        SHELLEXECUTEINFOW sei;
 
-                        ZeroMemory (&sei, sizeof(sei)) ;
-                        sei.cbSize = sizeof(sei) ;
-                        psz = (WCHAR *)HeapAlloc( GetProcessHeap(), 0, (ic + 1)*sizeof(WCHAR) );
+                        ZeroMemory (&sei, sizeof(sei));
+                        sei.cbSize = sizeof(sei);
+                        psz = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, (ic + 1)*sizeof(WCHAR));
 
                         if (psz)
                         {
-                            GetWindowTextW (htxt, psz, ic + 1) ;
+                            GetWindowTextW(htxt, psz, ic + 1);
 
                             /* according to http://www.codeproject.com/KB/shell/runfiledlg.aspx we should send a
                              * WM_NOTIFY before execution */
@@ -415,17 +415,17 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                             else
                                 sei.lpDirectory = parent = RunDlg_GetParentDir(sei.lpFile);
 
-                            if (!ShellExecuteExW( &sei ))
+                            if (!ShellExecuteExW(&sei))
                             {
                                 HeapFree(GetProcessHeap(), 0, psz);
                                 HeapFree(GetProcessHeap(), 0, parent);
-                                SendMessageA (htxt, CB_SETEDITSEL, 0, MAKELPARAM (0, -1)) ;
-                                return TRUE ;
+                                SendMessageA (htxt, CB_SETEDITSEL, 0, MAKELPARAM (0, -1));
+                                return TRUE;
                             }
 
                             /* FillList is still ANSI */
-                            GetWindowTextA (htxt, (LPSTR)psz, ic + 1) ;
-                            FillList (htxt, (LPSTR)psz, FALSE) ;
+                            GetWindowTextA (htxt, (LPSTR)psz, ic + 1);
+                            FillList (htxt, (LPSTR)psz, FALSE);
 
                             HeapFree(GetProcessHeap(), 0, psz);
                             HeapFree(GetProcessHeap(), 0, parent);
@@ -434,14 +434,14 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     }
                 }
 
-                case IDCANCEL :
-                    EndDialog (hwnd, 0) ;
-                    return TRUE ;
+                case IDCANCEL:
+                    EndDialog (hwnd, 0);
+                    return TRUE;
 
-                case IDC_RUNDLG_BROWSE :
-                    {
-                    HMODULE hComdlg = NULL ;
-                    LPFNOFN ofnProc = NULL ;
+                case IDC_RUNDLG_BROWSE:
+                {
+                    HMODULE hComdlg = NULL;
+                    LPFNOFN ofnProc = NULL;
                     static const WCHAR comdlg32W[] = L"comdlg32";
                     WCHAR szFName[1024] = {0};
                     WCHAR filter[MAX_PATH], szCaption[MAX_PATH];
@@ -465,26 +465,26 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     {
                         ERR("Couldn't get GetOpenFileName function entry (lib=%p, proc=%p)\n", hComdlg, ofnProc);
                         ShellMessageBoxW(shell32_hInstance, hwnd, MAKEINTRESOURCEW(IDS_RUNDLG_BROWSE_ERROR), NULL, MB_OK | MB_ICONERROR);
-                        return TRUE ;
+                        return TRUE;
                     }
 
                     if (ofnProc(&ofn))
                     {
-                        SetFocus (GetDlgItem (hwnd, IDOK)) ;
-                        SetWindowTextW (GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH), szFName) ;
-                        SendMessageW (GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH), CB_SETEDITSEL, 0, MAKELPARAM (0, -1)) ;
-                        SetFocus (GetDlgItem (hwnd, IDOK)) ;
+                        SetFocus (GetDlgItem (hwnd, IDOK));
+                        SetWindowTextW (GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH), szFName);
+                        SendMessageW (GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH), CB_SETEDITSEL, 0, MAKELPARAM (0, -1));
+                        SetFocus (GetDlgItem (hwnd, IDOK));
                     }
 
-                    FreeLibrary (hComdlg) ;
+                    FreeLibrary (hComdlg);
 
-                    return TRUE ;
-                    }
+                    return TRUE;
                 }
-            return TRUE ;
-        }
-    return FALSE ;
+            }
+            return TRUE;
     }
+    return FALSE;
+}
 
 /* This grabs the MRU list from the registry and fills the combo for the "Run" dialog above */
 /* fShowDefault ignored if pszLatest != NULL */

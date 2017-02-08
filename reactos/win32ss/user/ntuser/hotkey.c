@@ -8,8 +8,8 @@
 
 /*
  * FIXME: Hotkey notifications are triggered by keyboard input (physical or programatically)
- * and since only desktops on WinSta0 can recieve input in seems very wrong to allow
- * windows/threads on destops not belonging to WinSta0 to set hotkeys (recieve notifications).
+ * and since only desktops on WinSta0 can receive input in seems very wrong to allow
+ * windows/threads on destops not belonging to WinSta0 to set hotkeys (receive notifications).
  *     -- Gunnar
  */
 
@@ -25,6 +25,7 @@ HOT_KEY hkShiftF12 = {NULL, NULL, MOD_SHIFT, VK_F12, IDHK_SHIFTF12, &hkF12};
 HOT_KEY hkWinKey =   {NULL, NULL, MOD_WIN,   0,      IDHK_WINKEY,   &hkShiftF12};
 
 PHOT_KEY gphkFirst = &hkWinKey;
+BOOL bWinHotkeyActive = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -143,40 +144,6 @@ IsHotKey(UINT fsModifiers, WORD wVk)
 }
 
 /*
- * SendSysCmdMsg
- *
- * Sends syscommand to specified window
- */
-static
-VOID NTAPI
-SendSysCmdMsg(HWND hWnd, WPARAM Cmd, LPARAM lParam)
-{
-    PWND pWnd;
-    MSG Msg;
-    LARGE_INTEGER LargeTickCount;
-
-    /* Get ptr to given window */
-    pWnd = UserGetWindowObject(hWnd);
-    if (!pWnd)
-    {
-        WARN("Invalid window!\n");
-        return;
-    }
-
-    /* Prepare WM_SYSCOMMAND message */
-    Msg.hwnd = hWnd;
-    Msg.message = WM_SYSCOMMAND;
-    Msg.wParam = Cmd;
-    Msg.lParam = lParam;
-    KeQueryTickCount(&LargeTickCount);
-    Msg.time = MsqCalculateMessageTime(&LargeTickCount);
-    Msg.pt = gpsi->ptCursor;
-
-    /* Post message to window */
-    MsqPostMessage(pWnd->head.pti->MessageQueue, &Msg, FALSE, QS_POSTMESSAGE);
-}
-
-/*
  * co_UserProcessHotKeys
  *
  * Sends WM_HOTKEY message if given keys are hotkey
@@ -206,21 +173,39 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
 
             /* WIN and F12 keys are hardcoded here. See: http://ivanlef0u.fr/repo/windoz/VI20051005.html */
             if (pHotKey == &hkWinKey)
-                SendSysCmdMsg(InputWindowStation->ShellWindow, SC_TASKLIST, 0);
+            {
+                if(bWinHotkeyActive == TRUE)
+                {
+                    UserPostMessage(InputWindowStation->ShellWindow, WM_SYSCOMMAND, SC_TASKLIST, 0);
+                    bWinHotkeyActive = FALSE;
+                }
+            }
             else if (pHotKey == &hkF12 || pHotKey == &hkShiftF12)
             {
                 //co_ActivateDebugger(); // FIXME
             }
             else if (pHotKey->id == IDHK_REACTOS && !pHotKey->pThread) // FIXME: Those hotkeys doesn't depend on RegisterHotKey
             {
-                SendSysCmdMsg(pHotKey->hWnd, SC_HOTKEY, (LPARAM)pHotKey->hWnd);
+                UserPostMessage(pHotKey->hWnd, WM_SYSCOMMAND, SC_HOTKEY, (LPARAM)pHotKey->hWnd);
             }
             else
             {
+                /* If a hotkey with the WIN modifier was activated, do not treat the release of the WIN key as a hotkey*/
+                if((pHotKey->fsModifiers & MOD_WIN) != 0)
+                    bWinHotkeyActive = FALSE;
+
                 MsqPostHotKeyMessage(pHotKey->pThread,
                                      pHotKey->hWnd,
                                      (WPARAM)pHotKey->id,
                                      MAKELPARAM((WORD)fModifiers, wVk));
+            }
+        }
+        else
+        {
+            if (pHotKey == &hkWinKey)
+            {
+               /* The user pressed the win key */
+                bWinHotkeyActive = TRUE;
             }
         }
 

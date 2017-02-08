@@ -84,6 +84,8 @@ FsRecCreate(IN PDEVICE_OBJECT DeviceObject,
     NTSTATUS Status;
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     /* Make sure we have a file name */
     if (IoStack->FileObject->FileName.Length)
     {
@@ -110,6 +112,8 @@ FsRecClose(IN PDEVICE_OBJECT DeviceObject,
            IN PIRP Irp)
 {
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     /* Just complete the IRP and return success */
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -295,6 +299,8 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     NTSTATUS Status;
     PDEVICE_OBJECT UdfsObject;
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER(RegistryPath);
 
     /* Page the entire driver */
     MmPageEntireDriver(DriverEntry);

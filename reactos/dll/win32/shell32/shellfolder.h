@@ -21,14 +21,6 @@
 #ifndef __WINE_SHELLFOLDER_HELP_H
 #define __WINE_SHELLFOLDER_HELP_H
 
-#include <stdarg.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-
-#include "shlobj.h"
-
 /*****************************************************************************
  * Predeclare the interfaces
  */

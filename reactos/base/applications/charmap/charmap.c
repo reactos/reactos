@@ -13,9 +13,11 @@
 
 HINSTANCE hInstance;
 HWND      hAdvancedDlg;
+HWND      hCharmapDlg;
 HWND      hStatusWnd;
 HICON     hSmIcon;
 HICON     hBgIcon;
+SETTINGS  Settings;
 
 /* Font-enumeration callback */
 static

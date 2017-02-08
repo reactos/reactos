@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 static const IDropTargetVtbl IDropTargetImpl_Vtbl;
 
@@ -62,6 +62,9 @@ static VOID
 IDropTargetImpl_Free(IDropTargetImpl *This)
 {
     IDropTargetHelper_Release(This->DropTargetHelper);
+    HeapFree(hProcessHeap,
+             0,
+             This);
 }
 
 static ULONG STDMETHODCALLTYPE
@@ -127,15 +130,12 @@ CreateDropTarget(IN HWND hwndTarget,
     IDropTargetImpl *This;
     HRESULT hr;
 
-    This = (IDropTargetImpl *)HeapAlloc(hProcessHeap,
-                                        0,
-                                        FIELD_OFFSET(IDropTargetImpl,
-                                                     Formats[nSupportedFormats]));
+    This = HeapAlloc(hProcessHeap,
+                     HEAP_ZERO_MEMORY,
+                     FIELD_OFFSET(IDropTargetImpl,
+                                  Formats[nSupportedFormats]));
     if (This != NULL)
     {
-        ZeroMemory(This,
-                   sizeof(*This));
-
         This->lpVtbl = &IDropTargetImpl_Vtbl;
         This->Ref = 1;
         This->hwndTarget = hwndTarget;
@@ -159,7 +159,7 @@ CreateDropTarget(IN HWND hwndTarget,
                               NULL,
                               CLSCTX_INPROC_SERVER,
                               &IID_IDropTargetHelper,
-                              (PVOID)&This->DropTargetHelper);
+                              (PVOID *)&This->DropTargetHelper);
 
         if (!SUCCEEDED(hr))
         {

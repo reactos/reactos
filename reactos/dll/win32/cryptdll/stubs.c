@@ -1,5 +1,4 @@
-
-#include <windows.h>
+#include <windef.h>
 #define NDEBUG
 #include <reactos/debug.h>
 
@@ -68,4 +67,3 @@ CDRegisterRng(DWORD Unknown1)
 {
     UNIMPLEMENTED;
 }
-

@@ -37,6 +37,10 @@ VOID NoUiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr)
 {
 }
 
+VOID NoUiDrawText2(ULONG X, ULONG Y, ULONG MaxNumChars, PCSTR Text, UCHAR Attr)
+{
+}
+
 VOID NoUiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr)
 {
 }
@@ -109,7 +113,7 @@ VOID NoUiFadeOut(VOID)
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-BOOLEAN NoUiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
+BOOLEAN NoUiDisplayMenu(PCSTR MenuHeader, PCSTR MenuFooter, BOOLEAN ShowBootOptions, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
 {
 	*SelectedMenuItem = DefaultMenuItem;
 	return TRUE;

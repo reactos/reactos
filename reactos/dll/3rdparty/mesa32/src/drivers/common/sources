@@ -1,2 +1,0 @@
-MESA_DRIVER_COMMON_SOURCES = \
-driverfuncs.c

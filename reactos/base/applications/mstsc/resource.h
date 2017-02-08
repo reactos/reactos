@@ -1,3 +1,5 @@
+#pragma once
+
 #define IDC_STATIC                      -1
 
 #define IDS_256COLORS                   8

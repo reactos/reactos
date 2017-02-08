@@ -24,16 +24,20 @@
 #ifndef __WINE_COMCTL32_H
 #define __WINE_COMCTL32_H
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #ifndef RC_INVOKED
 #include <stdarg.h>
 #endif
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "commctrl.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+//#include "winnls.h"
+#include <commctrl.h>
 
 extern HMODULE COMCTL32_hModule DECLSPEC_HIDDEN;
 extern HBRUSH  COMCTL32_hPattern55AABrush DECLSPEC_HIDDEN;
@@ -231,6 +235,7 @@ extern void UPDOWN_Unregister(void) DECLSPEC_HIDDEN;
 
 int MONTHCAL_MonthLength(int month, int year) DECLSPEC_HIDDEN;
 int MONTHCAL_CalculateDayOfWeek(SYSTEMTIME *date, BOOL inplace) DECLSPEC_HIDDEN;
+LONG MONTHCAL_CompareSystemTime(const SYSTEMTIME *first, const SYSTEMTIME *second) DECLSPEC_HIDDEN;
 
 extern void THEMING_Initialize(void) DECLSPEC_HIDDEN;
 extern void THEMING_Uninitialize(void) DECLSPEC_HIDDEN;

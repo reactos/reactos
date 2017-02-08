@@ -3,8 +3,6 @@ include_directories(
     include
     ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-set_rc_compiler()
-
 spec2def(msgina.dll msgina.spec)
 
 list(APPEND SOURCE

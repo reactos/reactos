@@ -1394,6 +1394,7 @@ typedef struct _SHChangeNotifyEntry
 void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID dwItem2);
 
 typedef enum {
+    SLDF_DEFAULT = 0x00000000,
     SLDF_HAS_ID_LIST = 0x00000001,
     SLDF_HAS_LINK_INFO = 0x00000002,
     SLDF_HAS_NAME = 0x00000004,
@@ -1414,8 +1415,23 @@ typedef enum {
     SLDF_RUN_WITH_SHIMLAYER = 0x00020000,
     SLDF_FORCE_NO_LINKTRACK = 0x00040000,
     SLDF_ENABLE_TARGET_METADATA = 0x00080000,
+    SLDF_DISABLE_LINK_PATH_TRACKING = 0x00100000,
     SLDF_DISABLE_KNOWNFOLDER_RELATIVE_TRACKING = 0x00200000,
-    SLDF_VALID = 0x003ff7ff,
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    SLDF_NO_KF_ALIAS = 0x00400000,
+    SLDF_ALLOW_LINK_TO_LINK = 0x00800000,
+    SLDF_UNALIAS_ON_SAVE = 0x01000000,
+    SLDF_PREFER_ENVIRONMENT_PATH = 0x02000000,
+    SLDF_KEEP_LOCAL_IDLIST_FOR_UNC_TARGET = 0x04000000,
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+    SLDF_PERSIST_VOLUME_ID_RELATIVE = 0x08000000,
+    SLDF_VALID = 0x0ffff7ff, /* Windows 8 */
+#else
+    SLDF_VALID = 0x07fff7ff, /* Windows 7 */
+#endif
+#else
+    SLDF_VALID = 0x003ff7ff, /* Windows Vista */
+#endif
     SLDF_RESERVED = 0x80000000,
 } SHELL_LINK_DATA_FLAGS;
 
@@ -1433,7 +1449,7 @@ typedef struct {
 
 typedef struct {
     DWORD cbSize;
-    DWORD cbSignature;
+    DWORD dwSignature;
     CHAR szTarget[MAX_PATH];
     WCHAR szwTarget[MAX_PATH];
 } EXP_SZ_LINK, *LPEXP_SZ_LINK;
@@ -1451,14 +1467,45 @@ typedef struct {
     BYTE abPropertyStorage[1];
 } EXP_PROPERTYSTORAGE;
 
-#define EXP_SZ_LINK_SIG         0xa0000001
-#define NT_CONSOLE_PROPS_SIG    0xa0000002
-#define NT_FE_CONSOLE_PROPS_SIG 0xa0000004
-#define EXP_SPECIAL_FOLDER_SIG  0xa0000005
-#define EXP_DARWIN_ID_SIG       0xa0000006
-#define EXP_SZ_ICON_SIG         0xa0000007
+#ifdef LF_FACESIZE
+typedef struct {
+    DATABLOCK_HEADER dbh;
+    WORD wFillAttribute;
+    WORD wPopupFillAttribute;
+    COORD dwScreenBufferSize;
+    COORD dwWindowSize;
+    COORD dwWindowOrigin;
+    DWORD nFont;
+    DWORD nInputBufferSize;
+    COORD dwFontSize;
+    UINT uFontFamily;
+    UINT uFontWeight;
+    WCHAR FaceName[LF_FACESIZE];
+    UINT uCursorSize;
+    BOOL bFullScreen;
+    BOOL bQuickEdit;
+    BOOL bInsertMode;
+    BOOL bAutoPosition;
+    UINT uHistoryBufferSize;
+    UINT uNumberOfHistoryBuffers;
+    BOOL bHistoryNoDup;
+    COLORREF ColorTable[16];
+} NT_CONSOLE_PROPS, *LPNT_CONSOLE_PROPS;
+#endif
+
+typedef struct {
+    DATABLOCK_HEADER dbh;
+    UINT uCodePage;
+} NT_FE_CONSOLE_PROPS, *LPNT_FE_CONSOLE_PROPS;
+
+#define EXP_SZ_LINK_SIG         0xa0000001 /* EXP_SZ_LINK */
+#define NT_CONSOLE_PROPS_SIG    0xa0000002 /* NT_CONSOLE_PROPS */
+#define NT_FE_CONSOLE_PROPS_SIG 0xa0000004 /* NT_FE_CONSOLE_PROPS */
+#define EXP_SPECIAL_FOLDER_SIG  0xa0000005 /* EXP_SPECIAL_FOLDER */
+#define EXP_DARWIN_ID_SIG       0xa0000006 /* EXP_DARWIN_LINK */
+#define EXP_SZ_ICON_SIG         0xa0000007 /* EXP_SZ_LINK */
 #define EXP_LOGO3_ID_SIG        EXP_SZ_ICON_SIG /* Old SDKs only */
-#define EXP_PROPERTYSTORAGE_SIG 0xa0000009
+#define EXP_PROPERTYSTORAGE_SIG 0xa0000009 /* EXP_PROPERTYSTORAGE */
 
 typedef struct _SHChangeDWORDAsIDList {
     USHORT   cb;
@@ -1726,6 +1773,23 @@ BOOL         WINAPI DAD_DragMove(POINT);
 BOOL         WINAPI DAD_DragLeave(void);
 BOOL         WINAPI DAD_AutoScroll(HWND,AUTO_SCROLL_DATA*,const POINT*);
 HRESULT      WINAPI SHDoDragDrop(HWND,IDataObject*,IDropSource*,DWORD,LPDWORD);
+
+/****************************************************************************
+ * Internet shortcut properties
+ */
+
+#define PID_IS_URL         2
+#define PID_IS_NAME        4
+#define PID_IS_WORKINGDIR  5
+#define PID_IS_HOTKEY      6
+#define PID_IS_SHOWCMD     7
+#define PID_IS_ICONINDEX   8
+#define PID_IS_ICONFILE    9
+#define PID_IS_WHATSNEW    10
+#define PID_IS_AUTHOR      11
+#define PID_IS_DESCRIPTION 12
+#define PID_IS_COMMENT     13
+
 
 LPITEMIDLIST WINAPI ILAppendID(LPITEMIDLIST,LPCSHITEMID,BOOL);
 LPITEMIDLIST WINAPI ILClone(LPCITEMIDLIST);

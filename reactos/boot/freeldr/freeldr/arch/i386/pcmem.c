@@ -29,15 +29,13 @@ DBG_DEFAULT_CHANNEL(MEMORY);
 
 #define MAX_BIOS_DESCRIPTORS 32
 #define FREELDR_BASE_PAGE  (FREELDR_BASE / PAGE_SIZE)
-#define FILEBUF_BASE_PAGE  (FILESYSBUFFER / PAGE_SIZE)
 #define DISKBUF_BASE_PAGE  (DISKREADBUFFER / PAGE_SIZE)
-#define STACK_BASE_PAGE    (DISKBUF_BASE_PAGE + 1)
+#define STACK_BASE_PAGE    (STACKLOWLIMIT / PAGE_SIZE)
 #define STACK_END_PAGE     (STACK32ADDR / PAGE_SIZE)
 #define BIOSBUF_BASE_PAGE  (BIOSCALLBUFFER / PAGE_SIZE)
 
-#define FREELDR_PAGE_COUNT (FILEBUF_BASE_PAGE - FREELDR_BASE_PAGE)
-#define FILEBUF_PAGE_COUNT (DISKBUF_BASE_PAGE - FILEBUF_BASE_PAGE)
-#define DISKBUF_PAGE_COUNT (1)
+#define FREELDR_PAGE_COUNT (DISKBUF_BASE_PAGE - FREELDR_BASE_PAGE)
+#define DISKBUF_PAGE_COUNT (STACK_BASE_PAGE - DISKBUF_BASE_PAGE)
 #define STACK_PAGE_COUNT   (STACK_END_PAGE - STACK_BASE_PAGE)
 #define BIOSBUF_PAGE_COUNT (1)
 
@@ -49,7 +47,6 @@ FREELDR_MEMORY_DESCRIPTOR PcMemoryMap[MAX_BIOS_DESCRIPTORS + 1] =
  { LoaderFirmwarePermanent, 0x00,               1 }, // realmode int vectors
  { LoaderFirmwareTemporary, 0x01,               FREELDR_BASE_PAGE - 1 }, // freeldr stack + cmdline
  { LoaderLoadedProgram,     FREELDR_BASE_PAGE,  FREELDR_PAGE_COUNT }, // freeldr image
- { LoaderFirmwareTemporary, FILEBUF_BASE_PAGE,  FILEBUF_PAGE_COUNT }, // File system read buffer. FILESYSBUFFER
  { LoaderFirmwareTemporary, DISKBUF_BASE_PAGE,  DISKBUF_PAGE_COUNT }, // Disk read buffer for int 13h. DISKREADBUFFER
  { LoaderOsloaderStack,     STACK_BASE_PAGE,    STACK_PAGE_COUNT }, // prot mode stack.
  { LoaderFirmwareTemporary, BIOSBUF_BASE_PAGE,  BIOSBUF_PAGE_COUNT }, // BIOSCALLBUFFER
@@ -288,8 +285,8 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
         /* Add the descriptor */
         MapCount = AddMemoryDescriptor(PcMemoryMap,
                                        MAX_BIOS_DESCRIPTORS,
-                                       RealBaseAddress / MM_PAGE_SIZE,
-                                       RealSize / MM_PAGE_SIZE,
+                                       (PFN_NUMBER)(RealBaseAddress / MM_PAGE_SIZE),
+                                       (PFN_NUMBER)(RealSize / MM_PAGE_SIZE),
                                        MemoryType);
       }
 

@@ -15,7 +15,9 @@ free(void *mem);
 void *
 realloc(void *mem, size_t size);
 
-#define mem_trim(_m_, _s_) realloc(_m_, _s_)
+/* mem_trim() must trim the buffer without relocating it.
+ * Since we can't do that, we just return the buffer passed in unchanged */
+#define mem_trim(_m_, _s_) (_m_)
 
 /* Unsigned int types */
 typedef unsigned char u8_t;

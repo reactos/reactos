@@ -89,8 +89,7 @@ struct autoip
 };
 
 
-/** Init srand, has to be called before entering mainloop */
-void autoip_init(void);
+#define autoip_init() /* Compatibility define, no init needed. */
 
 /** Set a struct autoip allocated by the application to work with */
 void autoip_set_struct(struct netif *netif, struct autoip *autoip);

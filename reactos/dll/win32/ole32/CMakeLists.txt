@@ -9,10 +9,10 @@ add_definitions(-D_WIN32_WINNT=0x600)
 add_definitions(
     -D__WINESRC__
     -D_OLE32_
+    -DCOM_NO_WINDOWS_H
     -DENTRY_PREFIX=OLE32_
     -DPROXY_CLSID=CLSID_PSFactoryBuffer
-    -DWINE_REGISTER_DLL
-    -DCOM_NO_WINDOWS_H)
+    -DWINE_REGISTER_DLL)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -71,9 +71,17 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/ole32.def)
 
+if(MSVC)
+    if(ARCH STREQUAL "i386")
+        list(APPEND SOURCE msvc-thiscall.c)
+    endif()
+    set_source_files_properties(stg_prop.c PROPERTIES COMPILE_FLAGS "/FImsvc.h")
+endif()
+
 add_library(ole32 SHARED ${SOURCE})
 set_module_type(ole32 win32dll)
 target_link_libraries(ole32 wine uuid ${PSEH_LIB})
 add_importlibs(ole32 advapi32 user32 gdi32 rpcrt4 msvcrt kernel32 ntdll)
+add_delay_importlibs(ole32 oleaut32)
 add_dependencies(ole32 ole32idl)
 add_cd_file(TARGET ole32 DESTINATION reactos/system32 FOR all)

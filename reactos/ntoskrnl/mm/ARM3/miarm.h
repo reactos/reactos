@@ -94,8 +94,8 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #endif
 
 //
-// Protection Bits part of the internal memory manager Protection Mask
-// Taken from http://www.reactos.org/wiki/Techwiki:Memory_management_in_the_Windows_XP_kernel
+// Protection Bits part of the internal memory manager Protection Mask, from:
+// http://reactos.org/wiki/Techwiki:Memory_management_in_the_Windows_XP_kernel
 // and public assertions.
 //
 #define MM_ZERO_ACCESS         0
@@ -266,7 +266,19 @@ extern const ULONG MmProtectToValue[32];
 //
 #define MiProtoPteToPte(x)                  \
     (PMMPTE)((ULONG_PTR)MmPagedPoolStart +  \
-             (((x)->u.Proto.ProtoAddressHigh << 7) | (x)->u.Proto.ProtoAddressLow))
+             (((x)->u.Proto.ProtoAddressHigh << 9) | (x)->u.Proto.ProtoAddressLow << 2))
+
+//
+// Decodes a Prototype PTE into the underlying PTE
+//
+#define MiSubsectionPteToSubsection(x)                              \
+    ((x)->u.Subsect.WhichPool == PagedPool) ?                       \
+        (PMMPTE)((ULONG_PTR)MmSubsectionBase +                      \
+                 (((x)->u.Subsect.SubsectionAddressHigh << 7) |     \
+                   (x)->u.Subsect.SubsectionAddressLow << 3)) :     \
+        (PMMPTE)((ULONG_PTR)MmNonPagedPoolEnd -                     \
+                (((x)->u.Subsect.SubsectionAddressHigh << 7) |      \
+                  (x)->u.Subsect.SubsectionAddressLow << 3))
 #endif
 
 //
@@ -295,6 +307,13 @@ extern const ULONG MmProtectToValue[32];
 #define MI_SESSION_DATA_PAGES_MAXIMUM (MM_ALLOCATION_GRANULARITY / PAGE_SIZE)
 #define MI_SESSION_TAG_PAGES_MAXIMUM  (MM_ALLOCATION_GRANULARITY / PAGE_SIZE)
 
+//
+// Used by MiCheckSecuredVad
+//
+#define MM_READ_WRITE_ALLOWED   11
+#define MM_READ_ONLY_ALLOWED    10
+#define MM_NO_ACCESS_ALLOWED    01
+#define MM_DELETE_CHECK         85
 
 //
 // System views are binned into 64K chunks
@@ -631,7 +650,6 @@ extern PVOID MmSystemCacheStart;
 extern PVOID MmSystemCacheEnd;
 extern MMSUPPORT MmSystemCacheWs;
 extern SIZE_T MmAllocatedNonPagedPool;
-extern ULONG_PTR MmSubsectionBase;
 extern ULONG MmSpecialPoolTag;
 extern PVOID MmHyperSpaceEnd;
 extern PMMWSL MmSystemCacheWorkingSetList;
@@ -687,11 +705,15 @@ extern PVOID MiSystemViewStart;
 extern PVOID MiSessionPoolEnd;     // 0xBE000000
 extern PVOID MiSessionPoolStart;   // 0xBD000000
 extern PVOID MiSessionViewStart;   // 0xBE000000
+extern PVOID MiSessionSpaceWs;
 extern ULONG MmMaximumDeadKernelStacks;
 extern SLIST_HEADER MmDeadStackSListHead;
 extern MM_AVL_TABLE MmSectionBasedRoot;
 extern KGUARDED_MUTEX MmSectionBasedMutex;
 extern PVOID MmHighSectionBase;
+extern SIZE_T MmSystemLockPagesCount;
+extern ULONG_PTR MmSubsectionBase;
+extern LARGE_INTEGER MmCriticalSectionTimeout;
 
 BOOLEAN
 FORCEINLINE
@@ -873,15 +895,58 @@ MI_MAKE_PROTOTYPE_PTE(IN PMMPTE NewPte,
 
     /*
      * Prototype PTEs are only valid in paged pool by design, this little trick
-     * lets us only use 28 bits for the adress of the PTE
+     * lets us only use 30 bits for the adress of the PTE, as long as the area
+     * stays 1024MB At most.
      */
     Offset = (ULONG_PTR)PointerPte - (ULONG_PTR)MmPagedPoolStart;
 
-    /* 7 bits go in the "low", and the other 21 bits go in the "high" */
-    NewPte->u.Proto.ProtoAddressLow = Offset & 0x7F;
-    NewPte->u.Proto.ProtoAddressHigh = (Offset & 0xFFFFFF80) >> 7;
-    ASSERT(MiProtoPteToPte(NewPte) == PointerPte);
+    /*
+     * 7 bits go in the "low" (but we assume the bottom 2 are zero)
+     * and the other 21 bits go in the "high"
+     */
+    NewPte->u.Proto.ProtoAddressLow = (Offset & 0x1FC) >> 2;
+    NewPte->u.Proto.ProtoAddressHigh = (Offset & 0x3FFFFE00) >> 9;
 }
+
+//
+// Builds a Subsection PTE for the address of the Segment
+//
+FORCEINLINE
+VOID
+MI_MAKE_SUBSECTION_PTE(IN PMMPTE NewPte,
+                       IN PVOID Segment)
+{
+    ULONG_PTR Offset;
+
+    /* Mark this as a prototype */
+    NewPte->u.Long = 0;
+    NewPte->u.Subsect.Prototype = 1;
+
+    /*
+     * Segments are only valid either in nonpaged pool. We store the 20 bit
+     * difference either from the top or bottom of nonpaged pool, giving a
+     * maximum of 128MB to each delta, meaning nonpaged pool cannot exceed
+     * 256MB.
+     */
+    if ((ULONG_PTR)Segment < ((ULONG_PTR)MmSubsectionBase + (128 * _1MB)))
+    {
+        Offset = (ULONG_PTR)Segment - (ULONG_PTR)MmSubsectionBase;
+        NewPte->u.Subsect.WhichPool = PagedPool;
+    }
+    else
+    {
+        Offset = (ULONG_PTR)MmNonPagedPoolEnd - (ULONG_PTR)Segment;
+        NewPte->u.Subsect.WhichPool = NonPagedPool;
+    }
+
+    /*
+     * 4 bits go in the "low" (but we assume the bottom 3 are zero)
+     * and the other 20 bits go in the "high"
+     */
+    NewPte->u.Subsect.SubsectionAddressLow = (Offset & 0x78) >> 3;
+    NewPte->u.Subsect.SubsectionAddressHigh = (Offset & 0xFFFFF80) >> 7;
+}
+
 #endif
 
 //
@@ -977,9 +1042,61 @@ BOOLEAN
 MI_WS_OWNER(IN PEPROCESS Process)
 {
     /* Check if this process is the owner, and that the thread owns the WS */
+    if (PsGetCurrentThread()->OwnsProcessWorkingSetExclusive == 0)
+    {
+        DPRINT1("Thread: %p is not an owner\n", PsGetCurrentThread());
+    }
+    if (KeGetCurrentThread()->ApcState.Process != &Process->Pcb)
+    {
+        DPRINT1("Current thread %p is attached to another process %p\n", PsGetCurrentThread(), Process);
+    }
     return ((KeGetCurrentThread()->ApcState.Process == &Process->Pcb) &&
             ((PsGetCurrentThread()->OwnsProcessWorkingSetExclusive) ||
              (PsGetCurrentThread()->OwnsProcessWorkingSetShared)));
+}
+
+//
+// New ARM3<->RosMM PAGE Architecture
+//
+BOOLEAN
+FORCEINLINE
+MiIsRosSectionObject(IN PVOID Section)
+{
+    PROS_SECTION_OBJECT RosSection = Section;
+    if ((RosSection->Type == 'SC') && (RosSection->Size == 'TN')) return TRUE;
+    return FALSE;
+}
+
+#ifdef _WIN64
+// HACK ON TOP OF HACK ALERT!!!
+#define MI_GET_ROS_DATA(x) \
+    (((x)->RosMmData == 0) ? NULL : ((PMMROSPFN)((ULONG64)(ULONG)((x)->RosMmData) | \
+                                    ((ULONG64)MmNonPagedPoolStart & 0xffffffff00000000ULL))))
+#else
+#define MI_GET_ROS_DATA(x)   ((PMMROSPFN)(x->RosMmData))
+#endif
+#define MI_IS_ROS_PFN(x)     (((x)->u4.AweAllocation == TRUE) && (MI_GET_ROS_DATA(x) != NULL))
+#define ASSERT_IS_ROS_PFN(x) ASSERT(MI_IS_ROS_PFN(x) == TRUE);
+typedef struct _MMROSPFN
+{
+    PMM_RMAP_ENTRY RmapListHead;
+    SWAPENTRY SwapEntry;
+} MMROSPFN, *PMMROSPFN;
+
+#define RosMmData            AweReferenceCount
+
+VOID
+NTAPI
+MiDecrementReferenceCount(
+    IN PMMPFN Pfn1,
+    IN PFN_NUMBER PageFrameIndex
+);
+
+FORCEINLINE
+BOOLEAN
+MI_IS_WS_UNSAFE(IN PEPROCESS Process)
+{
+    return (Process->Vm.Flags.AcquiredUnsafe == TRUE);
 }
 
 //
@@ -998,12 +1115,57 @@ MiLockProcessWorkingSet(IN PEPROCESS Process,
     KeEnterGuardedRegion();
     ASSERT(!MM_ANY_WS_LOCK_HELD(Thread));
 
-    /* FIXME: Actually lock it (we can't because Vm is used by MAREAs) */
+    /* Lock the working set */
+    ExAcquirePushLockExclusive(&Process->Vm.WorkingSetMutex);
 
-    /* FIXME: This also can't be checked because Vm is used by MAREAs) */
-    //ASSERT(Process->Vm.Flags.AcquiredUnsafe == 0);
+    /* Now claim that we own the lock */
+    ASSERT(!MI_IS_WS_UNSAFE(Process));
+    ASSERT(Thread->OwnsProcessWorkingSetExclusive == FALSE);
+    Thread->OwnsProcessWorkingSetExclusive = TRUE;
+}
 
-    /* Okay, now we can own it exclusively */
+FORCEINLINE
+VOID
+MiLockProcessWorkingSetShared(IN PEPROCESS Process,
+                              IN PETHREAD Thread)
+{
+    /* Shouldn't already be owning the process working set */
+    ASSERT(Thread->OwnsProcessWorkingSetShared == FALSE);
+    ASSERT(Thread->OwnsProcessWorkingSetExclusive == FALSE);
+
+    /* Block APCs, make sure that still nothing is already held */
+    KeEnterGuardedRegion();
+    ASSERT(!MM_ANY_WS_LOCK_HELD(Thread));
+
+    /* Lock the working set */
+    ExAcquirePushLockShared(&Process->Vm.WorkingSetMutex);
+
+    /* Now claim that we own the lock */
+    ASSERT(!MI_IS_WS_UNSAFE(Process));
+    ASSERT(Thread->OwnsProcessWorkingSetShared == FALSE);
+    ASSERT(Thread->OwnsProcessWorkingSetExclusive == FALSE);
+    Thread->OwnsProcessWorkingSetShared = TRUE;
+}
+
+FORCEINLINE
+VOID
+MiLockProcessWorkingSetUnsafe(IN PEPROCESS Process,
+                              IN PETHREAD Thread)
+{
+    /* Shouldn't already be owning the process working set */
+    ASSERT(Thread->OwnsProcessWorkingSetExclusive == FALSE);
+
+    /* APCs must be blocked, make sure that still nothing is already held */
+    ASSERT(KeAreAllApcsDisabled() == TRUE);
+    ASSERT(!MM_ANY_WS_LOCK_HELD(Thread));
+
+    /* Lock the working set */
+    ExAcquirePushLockExclusive(&Process->Vm.WorkingSetMutex);
+
+    /* Now claim that we own the lock */
+    ASSERT(!MI_IS_WS_UNSAFE(Process));
+    Process->Vm.Flags.AcquiredUnsafe = 1;
+    ASSERT(Thread->OwnsProcessWorkingSetExclusive == FALSE);
     Thread->OwnsProcessWorkingSetExclusive = TRUE;
 }
 
@@ -1015,19 +1177,43 @@ VOID
 MiUnlockProcessWorkingSet(IN PEPROCESS Process,
                           IN PETHREAD Thread)
 {
-    /* Make sure this process really is owner, and it was a safe acquisition */
+    /* Make sure we are the owner of a safe acquisition */
     ASSERT(MI_WS_OWNER(Process));
-    /* This can't be checked because Vm is used by MAREAs) */
-    //ASSERT(Process->Vm.Flags.AcquiredUnsafe == 0);
+    ASSERT(!MI_IS_WS_UNSAFE(Process));
 
     /* The thread doesn't own it anymore */
     ASSERT(Thread->OwnsProcessWorkingSetExclusive == TRUE);
     Thread->OwnsProcessWorkingSetExclusive = FALSE;
 
-    /* FIXME: Actually release it (we can't because Vm is used by MAREAs) */
-
-    /* Unblock APCs */
+    /* Release the lock and re-enable APCs */
+    ExReleasePushLockExclusive(&Process->Vm.WorkingSetMutex);
     KeLeaveGuardedRegion();
+}
+
+//
+// Unlocks the working set for the given process
+//
+FORCEINLINE
+VOID
+MiUnlockProcessWorkingSetUnsafe(IN PEPROCESS Process,
+                                IN PETHREAD Thread)
+{
+    /* Make sure we are the owner of an unsafe acquisition */
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+    ASSERT(KeAreAllApcsDisabled() == TRUE);
+    ASSERT(MI_WS_OWNER(Process));
+    ASSERT(MI_IS_WS_UNSAFE(Process));
+
+    /* No longer unsafe */
+    Process->Vm.Flags.AcquiredUnsafe = 0;
+
+    /* The thread doesn't own it anymore */
+    ASSERT(Thread->OwnsProcessWorkingSetExclusive == TRUE);
+    Thread->OwnsProcessWorkingSetExclusive = FALSE;
+
+    /* Release the lock but don't touch APC state */
+    ExReleasePushLockExclusive(&Process->Vm.WorkingSetMutex);
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 }
 
 //
@@ -1047,7 +1233,8 @@ MiLockWorkingSet(IN PETHREAD Thread,
     /* Thread shouldn't already be owning something */
     ASSERT(!MM_ANY_WS_LOCK_HELD(Thread));
 
-    /* FIXME: Actually lock it (we can't because Vm is used by MAREAs) */
+    /* Lock this working set */
+    ExAcquirePushLockExclusive(&WorkingSet->WorkingSetMutex);
 
     /* Which working set is this? */
     if (WorkingSet == &MmSystemCacheWs)
@@ -1059,9 +1246,10 @@ MiLockWorkingSet(IN PETHREAD Thread,
     }
     else if (WorkingSet->Flags.SessionSpace)
     {
-        /* We don't implement this yet */
-        UNIMPLEMENTED;
-        while (TRUE);
+        /* Own the session working set */
+        ASSERT((Thread->OwnsSessionWorkingSetExclusive == FALSE) &&
+               (Thread->OwnsSessionWorkingSetShared == FALSE));
+        Thread->OwnsSessionWorkingSetExclusive = TRUE;
     }
     else
     {
@@ -1093,9 +1281,10 @@ MiUnlockWorkingSet(IN PETHREAD Thread,
     }
     else if (WorkingSet->Flags.SessionSpace)
     {
-        /* We don't implement this yet */
-        UNIMPLEMENTED;
-        while (TRUE);
+        /* Release the session working set */
+        ASSERT((Thread->OwnsSessionWorkingSetExclusive == TRUE) ||
+               (Thread->OwnsSessionWorkingSetShared == TRUE));
+        Thread->OwnsSessionWorkingSetExclusive = 0;
     }
     else
     {
@@ -1105,10 +1294,66 @@ MiUnlockWorkingSet(IN PETHREAD Thread,
         Thread->OwnsProcessWorkingSetExclusive = FALSE;
     }
 
-    /* FIXME: Actually release it (we can't because Vm is used by MAREAs) */
+    /* Release the working set lock */
+    ExReleasePushLockExclusive(&WorkingSet->WorkingSetMutex);
 
     /* Unblock APCs */
     KeLeaveGuardedRegion();
+}
+
+FORCEINLINE
+VOID
+MiUnlockProcessWorkingSetForFault(IN PEPROCESS Process,
+                                  IN PETHREAD Thread,
+                                  IN BOOLEAN Safe,
+                                  IN BOOLEAN Shared)
+{
+    ASSERT(MI_WS_OWNER(Process));
+
+    /* Check if the current owner is unsafe */
+    if (MI_IS_WS_UNSAFE(Process))
+    {
+        /* Release unsafely */
+        MiUnlockProcessWorkingSetUnsafe(Process, Thread);
+        Safe = FALSE;
+        Shared = FALSE;
+    }
+    else if (Thread->OwnsProcessWorkingSetExclusive == 1)
+    {
+        /* Owner is safe and exclusive, release normally */
+        MiUnlockProcessWorkingSet(Process, Thread);
+        Safe = TRUE;
+        Shared = FALSE;
+    }
+    else
+    {
+        /* Owner is shared (implies safe), release normally */
+        ASSERT(FALSE);
+        Safe = TRUE;
+        Shared = TRUE;
+    }
+}
+
+FORCEINLINE
+VOID
+MiLockProcessWorkingSetForFault(IN PEPROCESS Process,
+                                IN PETHREAD Thread,
+                                IN BOOLEAN Safe,
+                                IN BOOLEAN Shared)
+{
+    ASSERT(Shared == FALSE);
+
+    /* Check if this was a safe lock or not */
+    if (Safe)
+    {
+        /* Reacquire safely */
+        MiLockProcessWorkingSet(Process, Thread);
+    }
+    else
+    {
+        /* Reacquire unsafely */
+        MiLockProcessWorkingSetUnsafe(Process, Thread);
+    }
 }
 
 //
@@ -1138,6 +1383,277 @@ MI_PFN_ELEMENT(IN PFN_NUMBER Pfn)
     /* Get the entry */
     return &MmPfnDatabase[Pfn];
 };
+
+//
+// Drops a locked page without dereferencing it
+//
+FORCEINLINE
+VOID
+MiDropLockCount(IN PMMPFN Pfn1)
+{
+    /* This page shouldn't be locked, but it should be valid */
+    ASSERT(Pfn1->u3.e2.ReferenceCount != 0);
+    ASSERT(Pfn1->u2.ShareCount == 0);
+
+    /* Is this the last reference to the page */
+    if (Pfn1->u3.e2.ReferenceCount == 1)
+    {
+        /* It better not be valid */
+        ASSERT(Pfn1->u3.e1.PageLocation != ActiveAndValid);
+
+        /* Is it a prototype PTE? */
+        if ((Pfn1->u3.e1.PrototypePte == 1) &&
+            (Pfn1->OriginalPte.u.Soft.Prototype == 1))
+        {
+            /* FIXME: We should return commit */
+            DPRINT1("Not returning commit for prototype PTE\n");
+        }
+
+        /* Update the counter */
+        InterlockedDecrementSizeT(&MmSystemLockPagesCount);
+    }
+}
+
+//
+// Drops a locked page and dereferences it
+//
+FORCEINLINE
+VOID
+MiDereferencePfnAndDropLockCount(IN PMMPFN Pfn1)
+{
+    USHORT RefCount, OldRefCount;
+    PFN_NUMBER PageFrameIndex;
+
+    /* Loop while we decrement the page successfully */
+    do
+    {
+        /* There should be at least one reference */
+        OldRefCount = Pfn1->u3.e2.ReferenceCount;
+        ASSERT(OldRefCount != 0);
+
+        /* Are we the last one */
+        if (OldRefCount == 1)
+        {
+            /* The page shoudln't be shared not active at this point */
+            ASSERT(Pfn1->u3.e2.ReferenceCount == 1);
+            ASSERT(Pfn1->u3.e1.PageLocation != ActiveAndValid);
+            ASSERT(Pfn1->u2.ShareCount == 0);
+
+            /* Is it a prototype PTE? */
+            if ((Pfn1->u3.e1.PrototypePte == 1) &&
+                (Pfn1->OriginalPte.u.Soft.Prototype == 1))
+            {
+                /* FIXME: We should return commit */
+                DPRINT1("Not returning commit for prototype PTE\n");
+            }
+
+            /* Update the counter, and drop a reference the long way */
+            InterlockedDecrementSizeT(&MmSystemLockPagesCount);
+            PageFrameIndex = MiGetPfnEntryIndex(Pfn1);
+            MiDecrementReferenceCount(Pfn1, PageFrameIndex);
+            return;
+        }
+
+        /* Drop a reference the short way, and that's it */
+        RefCount = InterlockedCompareExchange16((PSHORT)&Pfn1->u3.e2.ReferenceCount,
+                                                OldRefCount - 1,
+                                                OldRefCount);
+        ASSERT(RefCount != 0);
+    } while (OldRefCount != RefCount);
+
+    /* If we got here, there should be more than one reference */
+    ASSERT(RefCount > 1);
+    if (RefCount == 2)
+    {
+        /* Is it still being shared? */
+        if (Pfn1->u2.ShareCount >= 1)
+        {
+            /* Then it should be valid */
+            ASSERT(Pfn1->u3.e1.PageLocation == ActiveAndValid);
+
+            /* Is it a prototype PTE? */
+            if ((Pfn1->u3.e1.PrototypePte == 1) &&
+                (Pfn1->OriginalPte.u.Soft.Prototype == 1))
+            {
+                /* We don't handle ethis */
+                ASSERT(FALSE);
+            }
+
+            /* Update the counter */
+            InterlockedDecrementSizeT(&MmSystemLockPagesCount);
+        }
+    }
+}
+
+//
+// References a locked page and updates the counter
+// Used in MmProbeAndLockPages to handle different edge cases
+//
+FORCEINLINE
+VOID
+MiReferenceProbedPageAndBumpLockCount(IN PMMPFN Pfn1)
+{
+    USHORT RefCount, OldRefCount;
+
+    /* Sanity check */
+    ASSERT(Pfn1->u3.e2.ReferenceCount != 0);
+
+    /* Does ARM3 own the page? */
+    if (MI_IS_ROS_PFN(Pfn1))
+    {
+        /* ReactOS Mm doesn't track share count */
+        ASSERT(Pfn1->u3.e1.PageLocation == ActiveAndValid);
+    }
+    else
+    {
+        /* On ARM3 pages, we should see a valid share count */
+        ASSERT((Pfn1->u2.ShareCount != 0) && (Pfn1->u3.e1.PageLocation == ActiveAndValid));
+
+        /* Is it a prototype PTE? */
+        if ((Pfn1->u3.e1.PrototypePte == 1) &&
+            (Pfn1->OriginalPte.u.Soft.Prototype == 1))
+        {
+            /* FIXME: We should charge commit */
+            DPRINT1("Not charging commit for prototype PTE\n");
+        }
+    }
+
+    /* More locked pages! */
+    InterlockedIncrementSizeT(&MmSystemLockPagesCount);
+
+    /* Loop trying to update the reference count */
+    do
+    {
+        /* Get the current reference count, make sure it's valid */
+        OldRefCount = Pfn1->u3.e2.ReferenceCount;
+        ASSERT(OldRefCount != 0);
+        ASSERT(OldRefCount < 2500);
+
+        /* Bump it up by one */
+        RefCount = InterlockedCompareExchange16((PSHORT)&Pfn1->u3.e2.ReferenceCount,
+                                                OldRefCount + 1,
+                                                OldRefCount);
+        ASSERT(RefCount != 0);
+    } while (OldRefCount != RefCount);
+
+    /* Was this the first lock attempt? If not, undo our bump */
+    if (OldRefCount != 1) InterlockedDecrementSizeT(&MmSystemLockPagesCount);
+}
+
+//
+// References a locked page and updates the counter
+// Used in all other cases except MmProbeAndLockPages
+//
+FORCEINLINE
+VOID
+MiReferenceUsedPageAndBumpLockCount(IN PMMPFN Pfn1)
+{
+    USHORT NewRefCount;
+
+    /* Is it a prototype PTE? */
+    if ((Pfn1->u3.e1.PrototypePte == 1) &&
+        (Pfn1->OriginalPte.u.Soft.Prototype == 1))
+    {
+        /* FIXME: We should charge commit */
+        DPRINT1("Not charging commit for prototype PTE\n");
+    }
+
+    /* More locked pages! */
+    InterlockedIncrementSizeT(&MmSystemLockPagesCount);
+
+    /* Update the reference count */
+    NewRefCount = InterlockedIncrement16((PSHORT)&Pfn1->u3.e2.ReferenceCount);
+    if (NewRefCount == 2)
+    {
+        /* Is it locked or shared? */
+        if (Pfn1->u2.ShareCount)
+        {
+            /* It's shared, so make sure it's active */
+            ASSERT(Pfn1->u3.e1.PageLocation == ActiveAndValid);
+        }
+        else
+        {
+            /* It's locked, so we shouldn't lock again */
+            InterlockedDecrementSizeT(&MmSystemLockPagesCount);
+        }
+    }
+    else
+    {
+        /* Someone had already locked the page, so undo our bump */
+        ASSERT(NewRefCount < 2500);
+        InterlockedDecrementSizeT(&MmSystemLockPagesCount);
+    }
+}
+
+//
+// References a locked page and updates the counter
+// Used in all other cases except MmProbeAndLockPages
+//
+FORCEINLINE
+VOID
+MiReferenceUnusedPageAndBumpLockCount(IN PMMPFN Pfn1)
+{
+    USHORT NewRefCount;
+
+    /* Make sure the page isn't used yet */
+    ASSERT(Pfn1->u2.ShareCount == 0);
+    ASSERT(Pfn1->u3.e1.PageLocation != ActiveAndValid);
+
+    /* Is it a prototype PTE? */
+    if ((Pfn1->u3.e1.PrototypePte == 1) &&
+        (Pfn1->OriginalPte.u.Soft.Prototype == 1))
+    {
+        /* FIXME: We should charge commit */
+        DPRINT1("Not charging commit for prototype PTE\n");
+    }
+
+    /* More locked pages! */
+    InterlockedIncrementSizeT(&MmSystemLockPagesCount);
+
+    /* Update the reference count */
+    NewRefCount = InterlockedIncrement16((PSHORT)&Pfn1->u3.e2.ReferenceCount);
+    if (NewRefCount != 1)
+    {
+        /* Someone had already locked the page, so undo our bump */
+        ASSERT(NewRefCount < 2500);
+        InterlockedDecrementSizeT(&MmSystemLockPagesCount);
+    }
+}
+
+FORCEINLINE
+VOID
+MiIncrementPageTableReferences(IN PVOID Address)
+{
+    PUSHORT RefCount;
+
+    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
+
+    *RefCount += 1;
+    ASSERT(*RefCount <= PTE_PER_PAGE);
+}
+
+FORCEINLINE
+VOID
+MiDecrementPageTableReferences(IN PVOID Address)
+{
+    PUSHORT RefCount;
+
+    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
+
+    *RefCount -= 1;
+    ASSERT(*RefCount < PTE_PER_PAGE);
+}
+
+FORCEINLINE
+USHORT
+MiQueryPageTableReferences(IN PVOID Address)
+{
+    PUSHORT RefCount;
+
+    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
+
+    return *RefCount;
+}
 
 BOOLEAN
 NTAPI
@@ -1426,13 +1942,6 @@ MiDecrementShareCount(
     IN PFN_NUMBER PageFrameIndex
 );
 
-VOID
-NTAPI
-MiDecrementReferenceCount(
-    IN PMMPFN Pfn1,
-    IN PFN_NUMBER PageFrameIndex
-);
-
 PFN_NUMBER
 NTAPI
 MiRemoveAnyPage(
@@ -1547,6 +2056,15 @@ MiFindEmptyAddressRangeInTree(
     OUT PULONG_PTR Base
 );
 
+NTSTATUS
+NTAPI
+MiCheckSecuredVad(
+    IN PMMVAD Vad,
+    IN PVOID Base,
+    IN SIZE_T Size,
+    IN ULONG ProtectionMask
+);
+
 VOID
 NTAPI
 MiInsertVad(
@@ -1610,6 +2128,24 @@ MiInitializeSystemSpaceMap(
     IN PMMSESSION InputSession OPTIONAL
 );
 
+VOID
+NTAPI
+MiSessionRemoveProcess(
+    VOID
+);
+
+VOID
+NTAPI
+MiReleaseProcessReferenceToSessionDataPage(
+    IN PMM_SESSION_SPACE SessionGlobal
+);
+
+VOID
+NTAPI
+MiSessionAddProcess(
+    IN PEPROCESS NewProcess
+);
+
 NTSTATUS
 NTAPI
 MiSessionCommitPageTables(
@@ -1671,20 +2207,6 @@ MiQueryMemorySectionName(
 
 NTSTATUS
 NTAPI
-MiRosAllocateVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN PEPROCESS Process,
-    IN PMEMORY_AREA MemoryArea,
-    IN PMMSUPPORT AddressSpace,
-    IN OUT PVOID* UBaseAddress,
-    IN BOOLEAN Attached,
-    IN OUT PSIZE_T URegionSize,
-    IN ULONG AllocationType,
-    IN ULONG Protect
-);
-
-NTSTATUS
-NTAPI
 MiRosUnmapViewInSystemSpace(
     IN PVOID MappedBase
 );
@@ -1717,35 +2239,5 @@ MiRemoveZeroPageSafe(IN ULONG Color)
     if (MmFreePagesByColor[ZeroedPageList][Color].Flink != LIST_HEAD) return MiRemoveZeroPage(Color);
     return 0;
 }
-
-//
-// New ARM3<->RosMM PAGE Architecture
-//
-BOOLEAN
-FORCEINLINE
-MiIsRosSectionObject(IN PVOID Section)
-{
-    PROS_SECTION_OBJECT RosSection = Section;
-    if ((RosSection->Type == 'SC') && (RosSection->Size == 'TN')) return TRUE;
-    return FALSE;
-}
-
-#ifdef _WIN64
-// HACK ON TOP OF HACK ALERT!!!
-#define MI_GET_ROS_DATA(x) \
-    (((x)->RosMmData == 0) ? NULL : ((PMMROSPFN)((ULONG64)(ULONG)((x)->RosMmData) | \
-                                    ((ULONG64)MmNonPagedPoolStart & 0xffffffff00000000ULL))))
-#else
-#define MI_GET_ROS_DATA(x)   ((PMMROSPFN)(x->RosMmData))
-#endif
-#define MI_IS_ROS_PFN(x)     (((x)->u4.AweAllocation == TRUE) && (MI_GET_ROS_DATA(x) != NULL))
-#define ASSERT_IS_ROS_PFN(x) ASSERT(MI_IS_ROS_PFN(x) == TRUE);
-typedef struct _MMROSPFN
-{
-    PMM_RMAP_ENTRY RmapListHead;
-    SWAPENTRY SwapEntry;
-} MMROSPFN, *PMMROSPFN;
-
-#define RosMmData            AweReferenceCount
 
 /* EOF */

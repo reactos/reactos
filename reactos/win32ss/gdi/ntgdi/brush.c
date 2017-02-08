@@ -142,57 +142,56 @@ BRUSH_Cleanup(PVOID ObjectBody)
 
 INT
 FASTCALL
-BRUSH_GetObject(PBRUSH pbrush, INT Count, LPLOGBRUSH Buffer)
+BRUSH_GetObject(PBRUSH pbrush, INT cjSize, LPLOGBRUSH plogbrush)
 {
-    if (Buffer == NULL) return sizeof(LOGBRUSH);
-    if (Count == 0) return 0;
+    /* Check if only size is requested */
+    if (plogbrush == NULL) return sizeof(LOGBRUSH);
+
+    /* Check if size is ok */
+    if (cjSize == 0) return 0;
 
     /* Set colour */
-    Buffer->lbColor = pbrush->BrushAttr.lbColor;
+    plogbrush->lbColor = pbrush->BrushAttr.lbColor;
 
-    /* Set Hatch */
-    if ((pbrush->flAttrs & BR_IS_HATCH)!=0)
+    /* Default to 0 */
+    plogbrush->lbHatch = 0;
+
+    /* Get the type of style */
+    if (pbrush->flAttrs & BR_IS_SOLID)
     {
-        /* FIXME: This is not the right value */
-        Buffer->lbHatch = (LONG)pbrush->hbmPattern;
+        plogbrush->lbStyle = BS_SOLID;
+    }
+    else if (pbrush->flAttrs & BR_IS_NULL)
+    {
+        plogbrush->lbStyle = BS_NULL; // BS_HOLLOW
+    }
+    else if (pbrush->flAttrs & BR_IS_HATCH)
+    {
+        plogbrush->lbStyle = BS_HATCHED;
+        plogbrush->lbHatch = pbrush->ulStyle;
+    }
+    else if (pbrush->flAttrs & BR_IS_DIB)
+    {
+        plogbrush->lbStyle = BS_DIBPATTERN;
+        plogbrush->lbHatch = (ULONG_PTR)pbrush->hbmClient;
+    }
+    else if (pbrush->flAttrs & BR_IS_BITMAP)
+    {
+        plogbrush->lbStyle = BS_PATTERN;
     }
     else
     {
-        Buffer->lbHatch = 0;
-    }
-
-    Buffer->lbStyle = 0;
-
-    /* Get the type of style */
-    if ((pbrush->flAttrs & BR_IS_SOLID)!=0)
-    {
-        Buffer->lbStyle = BS_SOLID;
-    }
-    else if ((pbrush->flAttrs & BR_IS_NULL)!=0)
-    {
-        Buffer->lbStyle = BS_NULL; // BS_HOLLOW
-    }
-    else if ((pbrush->flAttrs & BR_IS_HATCH)!=0)
-    {
-        Buffer->lbStyle = BS_HATCHED;
-    }
-    else if ((pbrush->flAttrs & BR_IS_BITMAP)!=0)
-    {
-        Buffer->lbStyle = BS_PATTERN;
-    }
-    else if ((pbrush->flAttrs & BR_IS_DIB)!=0)
-    {
-        Buffer->lbStyle = BS_DIBPATTERN;
+        plogbrush->lbStyle = 0; // ???
     }
 
     /* FIXME
-    else if ((pbrush->flAttrs & )!=0)
+    else if (pbrush->flAttrs & )
     {
-        Buffer->lbStyle = BS_INDEXED;
+        plogbrush->lbStyle = BS_INDEXED;
     }
-    else if ((pbrush->flAttrs & )!=0)
+    else if (pbrush->flAttrs & )
     {
-        Buffer->lbStyle = BS_DIBPATTERNPT;
+        plogbrush->lbStyle = BS_DIBPATTERNPT;
     }
     */
 
@@ -245,6 +244,7 @@ IntGdiCreateDIBBrush(
 
     pbrush->flAttrs |= BR_IS_BITMAP | BR_IS_DIB;
     pbrush->hbmPattern = hPattern;
+    pbrush->hbmClient = (HBITMAP)PackedDIB;
     /* FIXME: Fill in the rest of fields!!! */
 
     GreSetObjectOwner(hPattern, GDI_OBJ_HMGR_PUBLIC);

@@ -1,8 +1,9 @@
 
-if((ARCH MATCHES i386) OR (ARCH MATCHES amd64))
+project(HAL)
+if((ARCH STREQUAL "i386") OR (ARCH STREQUAL "amd64"))
     add_subdirectory(halx86)
-elseif(ARCH MATCHES arm)
+elseif(ARCH STREQUAL "arm")
 #    add_subdirectory(halarm)
-elseif(ARCH MATCHES powerpc)
+elseif(ARCH STREQUAL "powerpc")
 #    add_subdirectory(halppc)
 endif()

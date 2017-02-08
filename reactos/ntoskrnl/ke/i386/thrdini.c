@@ -332,7 +332,6 @@ KiSwapContextExit(IN PKTHREAD OldThread,
 {
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
     PKPROCESS OldProcess, NewProcess;
-    PKGDTENTRY GdtEntry;
     PKTHREAD NewThread;
 
     /* We are on the new thread stack now */
@@ -347,7 +346,7 @@ KiSwapContextExit(IN PKTHREAD OldThread,
         if (*(PULONGLONG)&OldProcess->LdtDescriptor != *(PULONGLONG)&NewProcess->LdtDescriptor)
         {
             DPRINT1("LDT switch not implemented\n");
-            ASSERT(FALSE);            
+            ASSERT(FALSE);
         }
 
         /* Switch address space and flush TLB */
@@ -358,11 +357,7 @@ KiSwapContextExit(IN PKTHREAD OldThread,
     Ke386SetGs(0);
 
     /* Set the TEB */
-    Pcr->NtTib.Self = (PVOID)NewThread->Teb;
-    GdtEntry = &Pcr->GDT[KGDT_R3_TEB / sizeof(KGDTENTRY)];
-    GdtEntry->BaseLow = (USHORT)((ULONG_PTR)NewThread->Teb & 0xFFFF);
-    GdtEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)NewThread->Teb >> 16);
-    GdtEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)NewThread->Teb >> 24);
+    KiSetTebBase((PKPCR)Pcr, NewThread->Teb);
 
     /* Set new TSS fields */
     Pcr->TSS->Esp0 = (ULONG_PTR)NewThread->InitialStack;
@@ -491,7 +486,7 @@ KiDispatchInterrupt(VOID)
         KiQuantumEnd();
     }
     else if (Prcb->NextThread)
-    {       
+    {
         /* Capture current thread data */
         OldThread = Prcb->CurrentThread;
         NewThread = Prcb->NextThread;

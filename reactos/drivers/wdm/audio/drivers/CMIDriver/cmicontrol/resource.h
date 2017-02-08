@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2006-2007 dogbert <dogber1@gmail.com>
+Copyright (c) 2006-2008 dogbert <dogber1@gmail.com>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -38,14 +38,12 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define IDT_SWAPJACKS                           104
 
 #define IDD_TAB1                                200
-#define IDC_EN_PCMDAC                           201
-#define IDC_EXCH_FB                             202
-#define IDC_EN_REAR2LINE                        203
-#define IDC_EN_BASS2LINE                        204
-#define IDC_EN_CENTER2LINE                      205
-#define IDC_NOROUTE_LINE                        206
-#define IDC_EN_CENTER2MIC                       207
-#define IDC_NOROUTE_MIC                         208
+#define IDC_EXCH_FB                             201
+#define IDC_EN_REAR2LINE                        202
+#define IDC_EN_CLFE2LINE                        203
+#define IDC_NOROUTE_LINE                        205
+#define IDC_EN_CENTER2MIC                       206
+#define IDC_NOROUTE_MIC                         207
 #define IDCB_CHANNELCONFIG                      210
 #define IDC_LEFT                                211
 #define IDC_CLEFT                               212
@@ -67,6 +65,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define IDC_POLVALID                            312
 #define IDC_LOOP_SPDF                           313
 #define IDC_EN_SPDI                             314
+#define IDC_EN_SPDIMONITOR                      315
 
 #define IDD_TAB3                                400
 #define IDC_FMT_441_PCM                         401

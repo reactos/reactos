@@ -1,14 +1,13 @@
 
-
 add_definitions(-DWIN32)
-
-set_rc_compiler()
 
 list(APPEND SOURCE
     desktop.c
     dragdrop.c
     explorer.c
+    settings.c
     startmnu.c
+    startup.c
     taskband.c
     taskswnd.c
     tbsite.c
@@ -18,9 +17,7 @@ list(APPEND SOURCE
     explorer.rc)
 
 add_executable(explorer_new ${SOURCE})
-
 target_link_libraries(explorer_new uuid)
-
 set_module_type(explorer_new win32gui UNICODE)
 add_importlibs(explorer_new
     advapi32
@@ -32,9 +29,9 @@ add_importlibs(explorer_new
     shell32
     shlwapi
     version
+    uxtheme
     msvcrt
     kernel32
     ntdll)
 add_pch(explorer_new precomp.h)
-
 add_cd_file(TARGET explorer_new DESTINATION reactos FOR all)

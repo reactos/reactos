@@ -1,8 +1,8 @@
 /*
- *	Rebar band site
+ *  Rebar band site
  *
- *	Copyright 2007	Hervé Poussineau
- *	Copyright 2009	Andrew Hill
+ *  Copyright 2007  Hervé Poussineau
+ *  Copyright 2009  Andrew Hill
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -67,7 +67,7 @@ void CBandSiteBase::FreeBand(struct BandObject *Band)
 
 DWORD CBandSiteBase::GetBandSiteViewMode()
 {
-    DWORD									dwStyle;
+    DWORD                                   dwStyle;
 
     /* FIXME: What about DBIF_VIEWMODE_FLOATING and DBIF_VIEWMODE_TRANSPARENT? */
     dwStyle = GetWindowLongPtr(fRebarWindow, GWL_STYLE);
@@ -80,7 +80,7 @@ DWORD CBandSiteBase::GetBandSiteViewMode()
 
 VOID CBandSiteBase::BuildRebarBandInfo(struct BandObject *Band, REBARBANDINFOW *prbi)
 {
-    memset(prbi, 0, sizeof(*prbi));
+    ZeroMemory(prbi, sizeof(*prbi));
     prbi->cbSize = sizeof(*prbi);
 
     prbi->fMask = RBBIM_ID;
@@ -156,12 +156,12 @@ VOID CBandSiteBase::BuildRebarBandInfo(struct BandObject *Band, REBARBANDINFOW *
 
 HRESULT CBandSiteBase::UpdateSingleBand(struct BandObject *Band)
 {
-    REBARBANDINFOW							rbi;
-    DWORD									dwViewMode;
-    UINT									uBand;
-    HRESULT									hRet;
+    REBARBANDINFOW                          rbi;
+    DWORD                                   dwViewMode;
+    UINT                                    uBand;
+    HRESULT                                 hRet;
 
-    memset(&Band->dbi, 0, sizeof(Band->dbi));
+    ZeroMemory(&Band->dbi, sizeof(Band->dbi));
     Band->dbi.dwMask = DBIM_MINSIZE | DBIM_MAXSIZE | DBIM_INTEGRAL |
         DBIM_ACTUAL | DBIM_TITLE | DBIM_MODEFLAGS | DBIM_BKCOLOR;
 
@@ -181,7 +181,7 @@ HRESULT CBandSiteBase::UpdateSingleBand(struct BandObject *Band)
         uBand = (UINT)SendMessageW(fRebarWindow, RB_IDTOINDEX, (WPARAM)rbi.wID, 0);
         if (uBand != (UINT)-1)
         {
-            if (!SendMessageW(fRebarWindow, RB_SETBANDINFOW, (WPARAM)uBand, (LPARAM)&rbi))
+            if (!SendMessageW(fRebarWindow, RB_SETBANDINFOW, (WPARAM)uBand, reinterpret_cast<LPARAM>(&rbi)))
             {
                 WARN("Failed to update the rebar band!\n");
             }
@@ -196,15 +196,15 @@ HRESULT CBandSiteBase::UpdateSingleBand(struct BandObject *Band)
 
 HRESULT CBandSiteBase::UpdateAllBands()
 {
-    LONG									i;
-    HRESULT									hRet;
+    LONG                                    i;
+    HRESULT                                 hRet;
 
     for (i = 0; i < fBandsAllocated; i++)
     {
         if (fBands[i].DeskBand != NULL)
         {
             hRet = UpdateSingleBand(&fBands[i]);
-            if (!SUCCEEDED(hRet))
+            if (FAILED(hRet))
                 return hRet;
         }
     }
@@ -214,7 +214,7 @@ HRESULT CBandSiteBase::UpdateAllBands()
 
 HRESULT CBandSiteBase::UpdateBand(DWORD dwBandID)
 {
-    struct BandObject						*Band;
+    struct BandObject                       *Band;
 
     Band = GetBandByID(dwBandID);
     if (Band == NULL)
@@ -225,9 +225,9 @@ HRESULT CBandSiteBase::UpdateBand(DWORD dwBandID)
 
 struct CBandSiteBase::BandObject *CBandSiteBase::GetBandFromHwnd(HWND hwnd)
 {
-    HRESULT									hRet;
-    HWND									hWndBand;
-    LONG									i;
+    HRESULT                                 hRet;
+    HWND                                    hWndBand;
+    LONG                                    i;
 
     for (i = 0; i < fBandsAllocated; i++)
     {
@@ -258,8 +258,7 @@ CBandSiteBase::~CBandSiteBase()
 
     if (fBands != NULL)
     {
-        int i;
-        for (i = 0; i < fBandsAllocated; i++)
+        for (INT i = 0; i < fBandsAllocated; i++)
         {
             if (fBands[i].DeskBand != NULL)
                 FreeBand(&fBands[i]);
@@ -271,32 +270,31 @@ CBandSiteBase::~CBandSiteBase()
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::AddBand(IUnknown *punk)
 {
-    INT										i;
-    LONG									NewAllocated;
-    struct BandObject						*NewBand = NULL;
-    CComPtr<IDeskBand>						DeskBand;
-    CComPtr<IObjectWithSite>				ObjWithSite;
-    CComPtr<IOleWindow>						OleWindow;
-    CComPtr<IWinEventHandler>				WndEvtHandler;
-    REBARBANDINFOW							rbi;
-    HRESULT									hRet;
-    UINT									uBand;
+    LONG                                    NewAllocated;
+    struct BandObject                       *NewBand = NULL;
+    CComPtr<IDeskBand>                      DeskBand;
+    CComPtr<IObjectWithSite>                ObjWithSite;
+    CComPtr<IOleWindow>                     OleWindow;
+    CComPtr<IWinEventHandler>               WndEvtHandler;
+    REBARBANDINFOW                          rbi;
+    HRESULT                                 hRet;
+    UINT                                    uBand;
 
     TRACE("(%p, %p)\n", this, punk);
 
     if (punk == NULL || fRebarWindow == NULL)
         return E_FAIL;
 
-    hRet = punk->QueryInterface(IID_IDeskBand, (PVOID *)&DeskBand);
+    hRet = punk->QueryInterface(IID_IDeskBand, reinterpret_cast<PVOID *>(&DeskBand));
     if (!SUCCEEDED(hRet) || DeskBand == NULL)
         goto Cleanup;
-    hRet = punk->QueryInterface(IID_IObjectWithSite, (PVOID *)&ObjWithSite);
+    hRet = punk->QueryInterface(IID_IObjectWithSite, reinterpret_cast<PVOID *>(&ObjWithSite));
     if (!SUCCEEDED(hRet) || ObjWithSite == NULL)
         goto Cleanup;
-    hRet = punk->QueryInterface(IID_IOleWindow, (PVOID *)&OleWindow);
+    hRet = punk->QueryInterface(IID_IOleWindow, reinterpret_cast<PVOID *>(&OleWindow));
     if (!SUCCEEDED(hRet) || OleWindow == NULL)
         goto Cleanup;
-    hRet = punk->QueryInterface(IID_IWinEventHandler, (PVOID *)&WndEvtHandler);
+    hRet = punk->QueryInterface(IID_IWinEventHandler, reinterpret_cast<PVOID *>(&WndEvtHandler));
     if (!SUCCEEDED(hRet) || WndEvtHandler == NULL)
         goto Cleanup;
 
@@ -304,7 +302,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::AddBand(IUnknown *punk)
     if (fBandsAllocated > fBandsCount)
     {
         /* Search for a free band object */
-        for (i = 0; i < fBandsAllocated; i++)
+        for (INT i = 0; i < fBandsAllocated; i++)
         {
             if (fBands[i].DeskBand == NULL)
             {
@@ -326,9 +324,9 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::AddBand(IUnknown *punk)
             hRet = E_OUTOFMEMORY;
             goto Cleanup;
         }
-        
 
-        NewBand = reinterpret_cast<struct BandObject *>(CoTaskMemAlloc(NewAllocated * sizeof(struct BandObject)));
+
+        NewBand = static_cast<struct BandObject *>(CoTaskMemAlloc(NewAllocated * sizeof(struct BandObject)));
         if (NewBand == NULL)
         {
             hRet = E_OUTOFMEMORY;
@@ -353,7 +351,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::AddBand(IUnknown *punk)
         ASSERT(fBandsCount == 0);
 
         /* Allocate new array */
-        fBands = reinterpret_cast<struct BandObject *>(CoTaskMemAlloc(8 * sizeof(struct BandObject)));
+        fBands = static_cast<struct BandObject *>(CoTaskMemAlloc(8 * sizeof(struct BandObject)));
         if (fBands == NULL)
         {
             hRet = E_OUTOFMEMORY;
@@ -377,7 +375,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::AddBand(IUnknown *punk)
         NewBand->WndEvtHandler = WndEvtHandler.Detach();
 
         /* Create the ReBar band */
-        hRet = ObjWithSite->SetSite((IOleWindow *)this);
+        hRet = ObjWithSite->SetSite(static_cast<IOleWindow *>(this));
         if (SUCCEEDED(hRet))
         {
             uBand = 0xffffffff;
@@ -399,7 +397,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::AddBand(IUnknown *punk)
                 WARN ("ReBar band uses child window 0x%p\n", rbi.hwndChild);
             }
 
-            if (!SendMessageW(fRebarWindow, RB_INSERTBANDW, (WPARAM)uBand, (LPARAM)&rbi))
+            if (!SendMessageW(fRebarWindow, RB_INSERTBANDW, (WPARAM)uBand, reinterpret_cast<LPARAM>(&rbi)))
                 return E_FAIL;
 
             hRet = (HRESULT)((USHORT)GetBandID(NewBand));
@@ -433,7 +431,7 @@ Cleanup:
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::EnumBands(UINT uBand, DWORD *pdwBandID)
 {
-    DWORD									i;
+    DWORD                                   i;
 
     TRACE("(%p, %u, %p)\n", this, uBand, pdwBandID);
 
@@ -460,9 +458,10 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::EnumBands(UINT uBand, DWORD *pdwBandID)
     return E_FAIL;
 }
 
-HRESULT STDMETHODCALLTYPE CBandSiteBase::QueryBand(DWORD dwBandID, IDeskBand **ppstb, DWORD *pdwState, LPWSTR pszName, int cchName)
+HRESULT STDMETHODCALLTYPE CBandSiteBase::QueryBand(DWORD dwBandID, IDeskBand **ppstb,
+    DWORD *pdwState, LPWSTR pszName, int cchName)
 {
-    struct BandObject						*Band;
+    struct BandObject                       *Band;
 
     TRACE("(%p, %u, %p, %p, %p, %d)\n", this, dwBandID, ppstb, pdwState, pszName, cchName);
 
@@ -492,7 +491,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::QueryBand(DWORD dwBandID, IDeskBand **p
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::SetBandState(DWORD dwBandID, DWORD dwMask, DWORD dwState)
 {
-    struct BandObject						*Band;
+    struct BandObject                       *Band;
 
     TRACE("(%p, %u, %x, %x)\n", this, dwBandID, dwMask, dwState);
 
@@ -506,8 +505,8 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::SetBandState(DWORD dwBandID, DWORD dwMa
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::RemoveBand(DWORD dwBandID)
 {
-    struct BandObject						*Band;
-    UINT									uBand;
+    struct BandObject                       *Band;
+    UINT                                    uBand;
 
     TRACE("(%p, %u)\n", this, dwBandID);
 
@@ -535,7 +534,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::RemoveBand(DWORD dwBandID)
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::GetBandObject(DWORD dwBandID, REFIID riid, VOID **ppv)
 {
-    struct BandObject						*Band;
+    struct BandObject                       *Band;
 
     TRACE("(%p, %u, %s, %p)\n", this, dwBandID, debugstr_guid(&riid), ppv);
 
@@ -563,7 +562,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::GetBandSiteInfo(BANDSITEINFO *pbsinfo)
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plrResult)
 {
-    struct BandObject						*Band;
+    struct BandObject                       *Band;
 
     TRACE("(%p, %p, %u, %p, %p, %p)\n", this, hWnd, uMsg, wParam, lParam, plrResult);
 
@@ -589,7 +588,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::IsWindowOwner(HWND hWnd)
 {
-    struct BandObject						*Band;
+    struct BandObject                       *Band;
 
     TRACE("(%p, %p)\n", this, hWnd);
 
@@ -622,36 +621,34 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::ContextSensitiveHelp(BOOL fEnterMode)
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::SetDeskBarSite(IUnknown *pUnk)
 {
-    HWND									hWndParent;
-    HRESULT									hRet;
+    HWND                                    hWndParent;
+    HRESULT                                 hRet;
+    DWORD                                   style;
 
     TRACE("(%p, %p)\n", this, pUnk);
 
     fOleWindow.Release();
 
     hRet = pUnk->QueryInterface(IID_IOleWindow, (PVOID *)&fOleWindow);
-    if (!SUCCEEDED(hRet))
+    if (FAILED(hRet))
         return E_FAIL;
 
     hRet = fOleWindow->GetWindow(&hWndParent);
-    if (!SUCCEEDED(hRet))
+    if (FAILED(hRet))
         return E_FAIL;
 
+    style = WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | RBS_VARHEIGHT |
+        RBS_BANDBORDERS | CCS_NODIVIDER | CCS_NORESIZE | CCS_NOPARENTALIGN;
+
     fRebarWindow = CreateWindowExW(WS_EX_TOOLWINDOW,
-                                      REBARCLASSNAMEW,
-                                      NULL,
-                                      WS_CHILD | WS_CLIPSIBLINGS |
-                                          WS_CLIPCHILDREN | RBS_VARHEIGHT |
-                                          RBS_BANDBORDERS | CCS_NODIVIDER |
-                                          CCS_NORESIZE | CCS_NOPARENTALIGN,
-                                      0,
-                                      0,
-                                      0,
-                                      0,
-                                      hWndParent,
-                                      NULL,
-                                      _AtlBaseModule.GetModuleInstance(),
-                                      NULL);
+                                   REBARCLASSNAMEW,
+                                   NULL,
+                                   style,
+                                   0, 0, 0, 0,
+                                   hWndParent,
+                                   NULL,
+                                   _AtlBaseModule.GetModuleInstance(),
+                                   NULL);
     if (fRebarWindow == NULL)
     {
         fOleWindow.Release();
@@ -664,8 +661,8 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::SetDeskBarSite(IUnknown *pUnk)
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::SetModeDBC(DWORD dwMode)
 {
-    LONG									dwStyle;
-	LONG									dwPrevStyle;
+    LONG                                    dwStyle;
+    LONG                                    dwPrevStyle;
 
     TRACE("(%p, %x)\n", this, dwMode);
 
@@ -683,7 +680,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::SetModeDBC(DWORD dwMode)
     {
         SetWindowLongPtr(fRebarWindow, GWL_STYLE, dwPrevStyle);
     }
-    
+
     return S_OK;
 }
 
@@ -705,15 +702,17 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::GetSize(DWORD unknown1, LPRECT unknown2
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CBandSiteBase::QueryStatus(const GUID *pguidCmdGroup, DWORD cCmds, OLECMD *prgCmds, OLECMDTEXT *pCmdText)
+HRESULT STDMETHODCALLTYPE CBandSiteBase::QueryStatus(const GUID *pguidCmdGroup,
+    DWORD cCmds, OLECMD *prgCmds, OLECMDTEXT *pCmdText)
 {
     FIXME("(%p, %p, %u, %p, %p)\n", this, pguidCmdGroup, cCmds, prgCmds, pCmdText);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CBandSiteBase::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdExecOpt, VARIANTARG *pvaIn, VARIANTARG *pvaOut)
+HRESULT STDMETHODCALLTYPE CBandSiteBase::Exec(const GUID *pguidCmdGroup, DWORD nCmdID,
+    DWORD nCmdExecOpt, VARIANTARG *pvaIn, VARIANTARG *pvaOut)
 {
-    HRESULT									hRet = S_OK;
+    HRESULT                                 hRet = S_OK;
 
     TRACE("(%p, %p, %u, %u, %p, %p)\n", this, pguidCmdGroup, nCmdID, nCmdExecOpt, pvaIn, pvaOut);
 
@@ -755,80 +754,81 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::Exec(const GUID *pguidCmdGroup, DWORD n
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::UIActivateIO(BOOL fActivate, LPMSG lpMsg)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::HasFocusIO()
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::OnFocusChangeIS(struct IUnknown *paramC, int param10)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::GetClassID(CLSID *pClassID)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::IsDirty()
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::Load(IStream *pStm)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::Save(IStream *pStm, BOOL fClearDirty)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::GetSizeMax(ULARGE_INTEGER *pcbSize)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CBandSiteBase::DragEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
+HRESULT STDMETHODCALLTYPE CBandSiteBase::DragEnter(
+    IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::DragLeave()
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::LoadFromStreamBS(IStream *, const GUID &, void **)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::SaveToStreamBS(IUnknown *, IStream *)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }

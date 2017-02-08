@@ -165,6 +165,8 @@ ChangeServiceConfig2A(SC_HANDLE hService,
 
     TRACE("ChangeServiceConfig2A() called\n");
 
+    if (lpInfo == NULL) return TRUE;
+
     /* Fill relevent field of the Info structure */
     Info.dwInfoLevel = dwInfoLevel;
     switch (dwInfoLevel)
@@ -183,9 +185,6 @@ ChangeServiceConfig2A(SC_HANDLE hService,
             SetLastError(ERROR_INVALID_PARAMETER);
             return FALSE;
     }
-
-    if (lpInfo == NULL)
-        return TRUE;
 
     RpcTryExcept
     {
@@ -224,6 +223,8 @@ ChangeServiceConfig2W(SC_HANDLE hService,
 
     TRACE("ChangeServiceConfig2W() called\n");
 
+    if (lpInfo == NULL) return TRUE;
+
     /* Fill relevent field of the Info structure */
     Info.dwInfoLevel = dwInfoLevel;
     switch (dwInfoLevel)
@@ -241,9 +242,6 @@ ChangeServiceConfig2W(SC_HANDLE hService,
             SetLastError(ERROR_INVALID_PARAMETER);
             return FALSE;
     }
-
-    if (lpInfo == NULL)
-        return TRUE;
 
     RpcTryExcept
     {
@@ -287,8 +285,10 @@ ChangeServiceConfigA(SC_HANDLE hService,
 {
     DWORD dwError;
     DWORD dwDependenciesLength = 0;
-    DWORD dwLength;
+    SIZE_T cchLength;
     LPCSTR lpStr;
+    DWORD dwPasswordLength = 0;
+    LPBYTE lpEncryptedPassword = NULL;
 
     TRACE("ChangeServiceConfigA() called\n");
 
@@ -298,14 +298,16 @@ ChangeServiceConfigA(SC_HANDLE hService,
         lpStr = lpDependencies;
         while (*lpStr)
         {
-            dwLength = strlen(lpStr) + 1;
-            dwDependenciesLength += dwLength;
-            lpStr = lpStr + dwLength;
+            cchLength = strlen(lpStr) + 1;
+            dwDependenciesLength += (DWORD)cchLength;
+            lpStr = lpStr + cchLength;
         }
         dwDependenciesLength++;
     }
 
     /* FIXME: Encrypt the password */
+    lpEncryptedPassword = (LPBYTE)lpPassword;
+    dwPasswordLength = (DWORD)(lpPassword ? (strlen(lpPassword) + 1) * sizeof(CHAR) : 0);
 
     RpcTryExcept
     {
@@ -317,11 +319,11 @@ ChangeServiceConfigA(SC_HANDLE hService,
                                         (LPSTR)lpBinaryPathName,
                                         (LPSTR)lpLoadOrderGroup,
                                         lpdwTagId,
-                                        (LPSTR)lpDependencies,
+                                        (LPBYTE)lpDependencies,
                                         dwDependenciesLength,
                                         (LPSTR)lpServiceStartName,
-                                        NULL,              /* FIXME: lpPassword */
-                                        0,                 /* FIXME: dwPasswordLength */
+                                        lpEncryptedPassword,
+                                        dwPasswordLength,
                                         (LPSTR)lpDisplayName);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -361,8 +363,10 @@ ChangeServiceConfigW(SC_HANDLE hService,
 {
     DWORD dwError;
     DWORD dwDependenciesLength = 0;
-    DWORD dwLength;
+    SIZE_T cchLength;
     LPCWSTR lpStr;
+    DWORD dwPasswordLength = 0;
+    LPBYTE lpEncryptedPassword = NULL;
 
     TRACE("ChangeServiceConfigW() called\n");
 
@@ -372,14 +376,17 @@ ChangeServiceConfigW(SC_HANDLE hService,
         lpStr = lpDependencies;
         while (*lpStr)
         {
-            dwLength = wcslen(lpStr) + 1;
-            dwDependenciesLength += dwLength;
-            lpStr = lpStr + dwLength;
+            cchLength = wcslen(lpStr) + 1;
+            dwDependenciesLength += (DWORD)cchLength;
+            lpStr = lpStr + cchLength;
         }
         dwDependenciesLength++;
+        dwDependenciesLength *= sizeof(WCHAR);
     }
 
     /* FIXME: Encrypt the password */
+    lpEncryptedPassword = (LPBYTE)lpPassword;
+    dwPasswordLength = (lpPassword ? (wcslen(lpPassword) + 1) * sizeof(WCHAR) : 0);
 
     RpcTryExcept
     {
@@ -394,8 +401,8 @@ ChangeServiceConfigW(SC_HANDLE hService,
                                         (LPBYTE)lpDependencies,
                                         dwDependenciesLength,
                                         (LPWSTR)lpServiceStartName,
-                                        NULL,              /* FIXME: lpPassword */
-                                        0,                 /* FIXME: dwPasswordLength */
+                                        lpEncryptedPassword,
+                                        dwPasswordLength,
                                         (LPWSTR)lpDisplayName);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -539,8 +546,10 @@ CreateServiceA(SC_HANDLE hSCManager,
     SC_HANDLE hService = NULL;
     DWORD dwDependenciesLength = 0;
     DWORD dwError;
-    DWORD dwLength;
+    SIZE_T cchLength;
     LPCSTR lpStr;
+    DWORD dwPasswordLength = 0;
+    LPBYTE lpEncryptedPassword = NULL;
 
     TRACE("CreateServiceA() called\n");
     TRACE("%p %s %s\n", hSCManager,
@@ -558,14 +567,16 @@ CreateServiceA(SC_HANDLE hSCManager,
         lpStr = lpDependencies;
         while (*lpStr)
         {
-            dwLength = strlen(lpStr) + 1;
-            dwDependenciesLength += dwLength;
-            lpStr = lpStr + dwLength;
+            cchLength = strlen(lpStr) + 1;
+            dwDependenciesLength += (DWORD)cchLength;
+            lpStr = lpStr + cchLength;
         }
         dwDependenciesLength++;
     }
 
     /* FIXME: Encrypt the password */
+    lpEncryptedPassword = (LPBYTE)lpPassword;
+    dwPasswordLength = (DWORD)(lpPassword ? (strlen(lpPassword) + 1) * sizeof(CHAR) : 0);
 
     RpcTryExcept
     {
@@ -583,8 +594,8 @@ CreateServiceA(SC_HANDLE hSCManager,
                                   (LPBYTE)lpDependencies,
                                   dwDependenciesLength,
                                   (LPSTR)lpServiceStartName,
-                                  NULL,              /* FIXME: lpPassword */
-                                  0,                 /* FIXME: dwPasswordLength */
+                                  lpEncryptedPassword,
+                                  dwPasswordLength,
                                   (SC_RPC_HANDLE *)&hService);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -627,8 +638,10 @@ CreateServiceW(SC_HANDLE hSCManager,
     SC_HANDLE hService = NULL;
     DWORD dwDependenciesLength = 0;
     DWORD dwError;
-    DWORD dwLength;
+    SIZE_T cchLength;
     LPCWSTR lpStr;
+    DWORD dwPasswordLength = 0;
+    LPBYTE lpEncryptedPassword = NULL;
 
     TRACE("CreateServiceW() called\n");
     TRACE("%p %S %S\n", hSCManager,
@@ -646,16 +659,17 @@ CreateServiceW(SC_HANDLE hSCManager,
         lpStr = lpDependencies;
         while (*lpStr)
         {
-            dwLength = wcslen(lpStr) + 1;
-            dwDependenciesLength += dwLength;
-            lpStr = lpStr + dwLength;
+            cchLength = wcslen(lpStr) + 1;
+            dwDependenciesLength += (DWORD)cchLength;
+            lpStr = lpStr + cchLength;
         }
         dwDependenciesLength++;
-
         dwDependenciesLength *= sizeof(WCHAR);
     }
 
     /* FIXME: Encrypt the password */
+    lpEncryptedPassword = (LPBYTE)lpPassword;
+    dwPasswordLength = (DWORD)(lpPassword ? (wcslen(lpPassword) + 1) * sizeof(WCHAR) : 0);
 
     RpcTryExcept
     {
@@ -673,8 +687,8 @@ CreateServiceW(SC_HANDLE hSCManager,
                                   (LPBYTE)lpDependencies,
                                   dwDependenciesLength,
                                   lpServiceStartName,
-                                  NULL,              /* FIXME: lpPassword */
-                                  0,                 /* FIXME: dwPasswordLength */
+                                  lpEncryptedPassword,
+                                  dwPasswordLength,
                                   (SC_RPC_HANDLE *)&hService);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -910,6 +924,12 @@ EnumServiceGroupW(SC_HANDLE hSCManager,
         return FALSE;
     }
 
+    if (pcbBytesNeeded == NULL || lpServicesReturned == NULL)
+    {
+        SetLastError(ERROR_INVALID_ADDRESS);
+        return FALSE;
+    }
+
     if (lpServices == NULL || cbBufSize < sizeof(ENUM_SERVICE_STATUSW))
     {
         lpStatusPtr = &ServiceStatus;
@@ -1011,6 +1031,12 @@ EnumServicesStatusA(SC_HANDLE hSCManager,
         return FALSE;
     }
 
+    if (pcbBytesNeeded == NULL || lpServicesReturned == NULL)
+    {
+        SetLastError(ERROR_INVALID_ADDRESS);
+        return FALSE;
+    }
+
     if (lpServices == NULL || cbBufSize < sizeof(ENUM_SERVICE_STATUSA))
     {
         lpStatusPtr = &ServiceStatus;
@@ -1094,6 +1120,12 @@ EnumServicesStatusW(SC_HANDLE hSCManager,
     if (!hSCManager)
     {
         SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    if (pcbBytesNeeded == NULL || lpServicesReturned == NULL)
+    {
+        SetLastError(ERROR_INVALID_ADDRESS);
         return FALSE;
     }
 
@@ -1191,8 +1223,13 @@ EnumServicesStatusExA(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    if (lpServices == NULL ||
-        cbBufSize < sizeof(ENUM_SERVICE_STATUS_PROCESSA))
+    if (pcbBytesNeeded == NULL || lpServicesReturned == NULL)
+    {
+        SetLastError(ERROR_INVALID_ADDRESS);
+        return FALSE;
+    }
+
+    if (lpServices == NULL || cbBufSize < sizeof(ENUM_SERVICE_STATUS_PROCESSA))
     {
         lpStatusPtr = &ServiceStatus;
         dwBufferSize = sizeof(ENUM_SERVICE_STATUS_PROCESSA);
@@ -1291,8 +1328,13 @@ EnumServicesStatusExW(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    if (lpServices == NULL ||
-        cbBufSize < sizeof(ENUM_SERVICE_STATUS_PROCESSW))
+    if (pcbBytesNeeded == NULL || lpServicesReturned == NULL)
+    {
+        SetLastError(ERROR_INVALID_ADDRESS);
+        return FALSE;
+    }
+
+    if (lpServices == NULL || cbBufSize < sizeof(ENUM_SERVICE_STATUS_PROCESSW))
     {
         lpStatusPtr = &ServiceStatus;
         dwBufferSize = sizeof(ENUM_SERVICE_STATUS_PROCESSW);
@@ -1631,28 +1673,14 @@ WaitForSCManager(VOID)
     TRACE("WaitForSCManager() called\n");
 
     /* Try to open the existing event */
-    hEvent = OpenEventW(SYNCHRONIZE,
-                        FALSE,
-                        L"SvcctrlStartEvent_A3752DX");
+    hEvent = OpenEventW(SYNCHRONIZE, FALSE, SCM_START_EVENT);
     if (hEvent == NULL)
     {
-        if (GetLastError() != ERROR_FILE_NOT_FOUND)
-            return;
+        if (GetLastError() != ERROR_FILE_NOT_FOUND) return;
 
         /* Try to create a new event */
-        hEvent = CreateEventW(NULL,
-                              TRUE,
-                              FALSE,
-                              L"SvcctrlStartEvent_A3752DX");
-        if (hEvent == NULL)
-        {
-            /* Try to open the existing event again */
-            hEvent = OpenEventW(SYNCHRONIZE,
-                                FALSE,
-                                L"SvcctrlStartEvent_A3752DX");
-            if (hEvent == NULL)
-                return;
-        }
+        hEvent = CreateEventW(NULL, TRUE, FALSE, SCM_START_EVENT);
+        if (hEvent == NULL) return;
     }
 
     /* Wait for 3 minutes */

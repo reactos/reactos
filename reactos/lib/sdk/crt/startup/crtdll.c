@@ -13,7 +13,7 @@
 #include <oscalls.h>
 #include <internal.h>
 #include <stdlib.h>
-#include <windows.h>
+//#include <windows.h>
 #define _DECL_DLLMAIN
 #include <process.h>
 #include <crtdbg.h>

@@ -42,7 +42,7 @@ static DRVFN gadrvfn[] =
 *
 \**************************************************************************/
 
-BOOL DrvEnableDriver(
+BOOL NTAPI DrvEnableDriver(
 ULONG iEngineVersion,
 ULONG cj,
 PDRVENABLEDATA pded)
@@ -82,7 +82,7 @@ PDRVENABLEDATA pded)
 *
 \**************************************************************************/
 
-DHPDEV DrvEnablePDEV(
+DHPDEV NTAPI DrvEnablePDEV(
 DEVMODEW   *pDevmode,       // Pointer to DEVMODE
 PWSTR       pwszLogAddress, // Logical address
 ULONG       cPatterns,      // number of patterns
@@ -166,7 +166,7 @@ error_free:
 *
 \**************************************************************************/
 
-VOID DrvCompletePDEV(
+VOID NTAPI DrvCompletePDEV(
 DHPDEV dhpdev,
 HDEV  hdev)
 {
@@ -181,7 +181,7 @@ HDEV  hdev)
 *
 \**************************************************************************/
 
-VOID DrvDisablePDEV(
+VOID NTAPI DrvDisablePDEV(
 DHPDEV dhpdev)
 {
     vDisablePalette((PPDEV) dhpdev);
@@ -197,7 +197,7 @@ DHPDEV dhpdev)
 *
 \**************************************************************************/
 
-HSURF DrvEnableSurface(
+HSURF NTAPI DrvEnableSurface(
 DHPDEV dhpdev)
 {
     PPDEV ppdev;
@@ -284,7 +284,7 @@ DHPDEV dhpdev)
 *
 \**************************************************************************/
 
-VOID DrvDisableSurface(
+VOID NTAPI DrvDisableSurface(
 DHPDEV dhpdev)
 {
     EngDeleteSurface(((PPDEV) dhpdev)->hsurfEng);
@@ -299,7 +299,7 @@ DHPDEV dhpdev)
 *
 \**************************************************************************/
 
-BOOL DrvAssertMode(
+BOOL NTAPI DrvAssertMode(
 DHPDEV dhpdev,
 BOOL bEnable)
 {
@@ -371,7 +371,7 @@ BOOL bEnable)
 *
 \**************************************************************************/
 
-ULONG DrvGetModes(
+ULONG NTAPI DrvGetModes(
 HANDLE hDriver,
 ULONG cjSize,
 DEVMODEW *pdm)

@@ -20,11 +20,93 @@
 #include <freeldr.h>
 
 ARC_DISK_SIGNATURE reactos_arc_disk_info[32]; // ARC Disk Information
-unsigned long reactos_disk_count = 0;
-char reactos_arc_hardware_data[HW_MAX_ARC_HEAP_SIZE] = {0};
-char reactos_arc_strings[32][256];
+ULONG reactos_disk_count = 0;
+CHAR reactos_arc_strings[32][256];
 
-ULONG	 GetDefaultOperatingSystem(OperatingSystemItem* OperatingSystemList, ULONG	 OperatingSystemCount)
+typedef
+VOID
+(*OS_LOADING_METHOD)(IN OperatingSystemItem* OperatingSystem,
+                     IN USHORT OperatingSystemVersion);
+
+struct
+{
+    CHAR BootType[80];
+    USHORT OperatingSystemVersion;
+    OS_LOADING_METHOD Load;
+} OSLoadingMethods[] =
+{
+#ifdef FREELDR_REACTOS_SETUP
+    {"ReactOSSetup", 0                , LoadReactOSSetup     },
+#endif
+
+#ifdef _M_IX86
+    {"BootSector"  , 0                , LoadAndBootBootSector},
+    {"Drive"       , 0                , LoadAndBootDrive     },
+    {"Partition"   , 0                , LoadAndBootPartition },
+
+    {"Linux"       , 0                , LoadAndBootLinux     },
+
+    {"Windows"     , 0                , LoadAndBootWindows   },
+    {"WindowsNT40" , _WIN32_WINNT_NT4 , LoadAndBootWindows   },
+#endif
+    {"Windows2003" , _WIN32_WINNT_WS03, LoadAndBootWindows   },
+
+//  {"Not found"   , 0                , NULL                 }
+};
+
+VOID LoadOperatingSystem(IN OperatingSystemItem* OperatingSystem)
+{
+    ULONG_PTR SectionId;
+    PCSTR SectionName = OperatingSystem->SystemPartition;
+    CHAR BootType[80];
+    ULONG i;
+
+    // Try to open the operating system section in the .ini file
+    if (IniOpenSection(SectionName, &SectionId))
+    {
+        // Try to read the boot type
+        IniReadSettingByName(SectionId, "BootType", BootType, sizeof(BootType));
+    }
+    else
+    {
+        BootType[0] = ANSI_NULL;
+    }
+
+    if (BootType[0] == ANSI_NULL && SectionName[0] != ANSI_NULL)
+    {
+        // Try to infere the boot type value
+#ifdef _M_IX86
+        ULONG FileId;
+        if (ArcOpen((PSTR)SectionName, OpenReadOnly, &FileId) == ESUCCESS)
+        {
+            ArcClose(FileId);
+            strcpy(BootType, "BootSector");
+        }
+        else
+#endif
+        {
+            strcpy(BootType, "Windows");
+        }
+    }
+
+    // Install the drive mapper according to this section drive mappings
+#if defined(_M_IX86) && !defined(_MSC_VER)
+    DriveMapMapDrivesInSection(SectionName);
+#endif
+
+    // Loop through the OS loading method table and find a suitable OS to boot
+    for (i = 0; i < sizeof(OSLoadingMethods) / sizeof(OSLoadingMethods[0]); ++i)
+    {
+        if (_stricmp(BootType, OSLoadingMethods[i].BootType) == 0)
+        {
+            OSLoadingMethods[i].Load(OperatingSystem,
+                                     OSLoadingMethods[i].OperatingSystemVersion);
+            return;
+        }
+    }
+}
+
+ULONG GetDefaultOperatingSystem(OperatingSystemItem* OperatingSystemList, ULONG OperatingSystemCount)
 {
 	CHAR	DefaultOSText[80];
 	PCSTR	DefaultOSName;
@@ -105,20 +187,16 @@ BOOLEAN MainBootMenuKeyPressFilter(ULONG KeyPress)
 
 VOID RunLoader(VOID)
 {
-	CHAR	SettingValue[80];
-	CHAR BootType[80];
 	ULONG_PTR	SectionId;
 	ULONG		OperatingSystemCount;
 	OperatingSystemItem*	OperatingSystemList;
-	PCSTR	*OperatingSystemDisplayNames;
-	PCSTR SectionName;
-	ULONG	i;
+	PCSTR*		OperatingSystemDisplayNames;
 	ULONG		DefaultOperatingSystem;
 	LONG		TimeOut;
 	ULONG		SelectedOperatingSystem;
+	ULONG	i;
 
-	// FIXME: if possible, only detect and register ARC devices...
-	if (!MachHwDetect())
+	if (!MachInitializeBootDevices())
 	{
 		UiMessageBoxCritical("Error when detecting hardware");
 		return;
@@ -186,12 +264,21 @@ VOID RunLoader(VOID)
 
 	for (;;)
 	{
-
 		// Redraw the backdrop
 		UiDrawBackdrop();
 
 		// Show the operating system list menu
-		if (!UiDisplayMenu(OperatingSystemDisplayNames, OperatingSystemCount, DefaultOperatingSystem, TimeOut, &SelectedOperatingSystem, FALSE, MainBootMenuKeyPressFilter))
+		if (!UiDisplayMenu("Please select the operating system to start:",
+		                   "For troubleshooting and advanced startup options for "
+		                       "ReactOS, press F8.",
+		                   TRUE,
+		                   OperatingSystemDisplayNames,
+		                   OperatingSystemCount,
+		                   DefaultOperatingSystem,
+		                   TimeOut,
+		                   &SelectedOperatingSystem,
+		                   FALSE,
+		                   MainBootMenuKeyPressFilter))
 		{
 			UiMessageBox("Press ENTER to reboot.");
 			goto reboot;
@@ -199,78 +286,8 @@ VOID RunLoader(VOID)
 
 		TimeOut = -1;
 
-		// Try to open the operating system section in the .ini file
-		SettingValue[0] = ANSI_NULL;
-		SectionName = OperatingSystemList[SelectedOperatingSystem].SystemPartition;
-		if (IniOpenSection(SectionName, &SectionId))
-		{
-			// Try to read the boot type
-			IniReadSettingByName(SectionId, "BootType", BootType, sizeof(BootType));
-		}
-		else
-			BootType[0] = ANSI_NULL;
-
-		if (BootType[0] == ANSI_NULL && SectionName[0] != ANSI_NULL)
-		{
-			// Try to infere boot type value
-#ifdef _M_IX86
-			ULONG FileId;
-			if (ArcOpen((CHAR*)SectionName, OpenReadOnly, &FileId) == ESUCCESS)
-			{
-				ArcClose(FileId);
-				strcpy(BootType, "BootSector");
-			}
-			else
-#endif
-			{
-				strcpy(BootType, "Windows");
-			}
-		}
-
-		// Get OS setting value
-		IniOpenSection("Operating Systems", &SectionId);
-		IniReadSettingByName(SectionId, SectionName, SettingValue, sizeof(SettingValue));
-
-		// Install the drive mapper according to this sections drive mappings
-#if defined(_M_IX86) && !defined(_MSC_VER)
-		DriveMapMapDrivesInSection(SectionName);
-#endif
-
-#ifdef FREELDR_REACTOS_SETUP
-        // WinLdr-style boot
-        LoadReactOSSetup();
-#elif defined(_M_IX86)
-		if (_stricmp(BootType, "Windows") == 0)
-		{
-			LoadAndBootWindows(SectionName, SettingValue, 0);
-		}
-		else if (_stricmp(BootType, "WindowsNT40") == 0)
-		{
-			LoadAndBootWindows(SectionName, SettingValue, _WIN32_WINNT_NT4);
-		}
-		else if (_stricmp(BootType, "Windows2003") == 0)
-		{
-			LoadAndBootWindows(SectionName, SettingValue, _WIN32_WINNT_WS03);
-		}
-		else if (_stricmp(BootType, "Linux") == 0)
-		{
-			LoadAndBootLinux(SectionName, OperatingSystemDisplayNames[SelectedOperatingSystem]);
-		}
-		else if (_stricmp(BootType, "BootSector") == 0)
-		{
-			LoadAndBootBootSector(SectionName);
-		}
-		else if (_stricmp(BootType, "Partition") == 0)
-		{
-			LoadAndBootPartition(SectionName);
-		}
-		else if (_stricmp(BootType, "Drive") == 0)
-		{
-			LoadAndBootDrive(SectionName);
-		}
-#else
-		LoadAndBootWindows(SectionName, SettingValue, _WIN32_WINNT_WS03);
-#endif
+		// Load the chosen operating system
+		LoadOperatingSystem(&OperatingSystemList[SelectedOperatingSystem]);
 	}
 
 reboot:

@@ -29,7 +29,7 @@
  * Up to date as of SHELL32 v5.00 (W2K)
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 

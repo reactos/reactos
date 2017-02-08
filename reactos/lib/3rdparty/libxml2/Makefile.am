@@ -2,23 +2,25 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = include . doc example xstc @PYTHON_SUBDIR@
+SUBDIRS = include . doc example xstc $(PYTHON_SUBDIR)
 
 DIST_SUBDIRS = include . doc example python xstc
 
-INCLUDES = -I$(top_builddir)/include -I@srcdir@/include @THREAD_CFLAGS@ @Z_CFLAGS@ 
+AM_CPPFLAGS = -I$(top_builddir)/include -I$(srcdir)/include
+
+AM_CFLAGS = $(THREAD_CFLAGS) $(Z_CFLAGS) $(LZMA_CFLAGS)
 
 noinst_PROGRAMS=testSchemas testRelax testSAX testHTML testXPath testURI \
                 testThreads testC14N testAutomata testRegexp \
                 testReader testapi testModule runtest runsuite testchar \
-		testdict runxmlconf testrecurse
+		testdict runxmlconf testrecurse testlimits
 
 bin_PROGRAMS = xmllint xmlcatalog
 
 bin_SCRIPTS=xml2-config
 
 lib_LTLIBRARIES = libxml2.la
-libxml2_la_LIBADD = @THREAD_LIBS@ @Z_LIBS@ $(ICONV_LIBS) @M_LIBS@ @WIN32_EXTRA_LIBADD@
+libxml2_la_LIBADD = $(ICU_LIBS) $(THREAD_LIBS) $(Z_LIBS) $(LZMA_LIBS) $(ICONV_LIBS) $(M_LIBS) $(WIN32_EXTRA_LIBADD)
 
 if USE_VERSION_SCRIPT
 LIBXML2_VERSION_SCRIPT = $(VERSION_SCRIPT_FLAGS)$(srcdir)/libxml2.syms
@@ -26,35 +28,37 @@ else
 LIBXML2_VERSION_SCRIPT =
 endif
 
-libxml2_la_LDFLAGS = @CYGWIN_EXTRA_LDFLAGS@ @WIN32_EXTRA_LDFLAGS@ \
-                     $(LIBXML2_VERSION_SCRIPT) \
-		     -version-info @LIBXML_VERSION_INFO@ \
-		     @MODULE_PLATFORM_LIBS@
+libxml2_la_LDFLAGS = $(CYGWIN_EXTRA_LDFLAGS) $(WIN32_EXTRA_LDFLAGS) \
+		     $(LIBXML2_VERSION_SCRIPT) \
+		     -version-info $(LIBXML_VERSION_INFO) \
+		     $(MODULE_PLATFORM_LIBS)
 
-if WITH_TRIO_SOURCES
-libxml2_la_SOURCES = SAX.c entities.c encoding.c error.c parserInternals.c  \
-		parser.c tree.c hash.c list.c xmlIO.c xmlmemory.c uri.c  \
-		valid.c xlink.c HTMLparser.c HTMLtree.c debugXML.c xpath.c  \
-		xpointer.c xinclude.c nanohttp.c nanoftp.c DOCBparser.c \
-		catalog.c globals.c threads.c c14n.c xmlstring.c \
-		xmlregexp.c xmlschemas.c xmlschemastypes.c xmlunicode.c \
-		triostr.c trio.c xmlreader.c relaxng.c dict.c SAX2.c \
-		xmlwriter.c legacy.c chvalid.c pattern.c xmlsave.c \
-		xmlmodule.c schematron.c
+if WITH_SAX1_SOURCES
+docb_sources = DOCBparser.c
 else
-libxml2_la_SOURCES = SAX.c entities.c encoding.c error.c parserInternals.c  \
-		parser.c tree.c hash.c list.c xmlIO.c xmlmemory.c uri.c  \
-		valid.c xlink.c HTMLparser.c HTMLtree.c debugXML.c xpath.c  \
-		xpointer.c xinclude.c nanohttp.c nanoftp.c DOCBparser.c \
-		catalog.c globals.c threads.c c14n.c xmlstring.c \
-		xmlregexp.c xmlschemas.c xmlschemastypes.c xmlunicode.c \
-		xmlreader.c relaxng.c dict.c SAX2.c \
-		xmlwriter.c legacy.c chvalid.c pattern.c xmlsave.c \
-		xmlmodule.c schematron.c
+docb_sources =
 endif
 
+if WITH_TRIO_SOURCES
+trio_sources = triostr.c trio.c
+else
+trio_sources =
+endif
+
+libxml2_la_SOURCES = SAX.c entities.c encoding.c error.c parserInternals.c  \
+		parser.c tree.c hash.c list.c xmlIO.c xmlmemory.c uri.c  \
+		valid.c xlink.c HTMLparser.c HTMLtree.c debugXML.c xpath.c  \
+		xpointer.c xinclude.c nanohttp.c nanoftp.c \
+		$(docb_sources) \
+		catalog.c globals.c threads.c c14n.c xmlstring.c buf.c \
+		xmlregexp.c xmlschemas.c xmlschemastypes.c xmlunicode.c \
+		$(trio_sources) \
+		xmlreader.c relaxng.c dict.c SAX2.c \
+		xmlwriter.c legacy.c chvalid.c pattern.c xmlsave.c \
+		xmlmodule.c schematron.c xzlib.c
+
 DEPS = $(top_builddir)/libxml2.la
-LDADDS = @STATIC_BINARIES@ $(top_builddir)/libxml2.la @THREAD_LIBS@ @Z_LIBS@ $(ICONV_LIBS) @M_LIBS@ @WIN32_EXTRA_LIBADD@
+LDADDS = $(STATIC_BINARIES) $(top_builddir)/libxml2.la $(THREAD_LIBS) $(Z_LIBS) $(LZMA_LIBS) $(ICONV_LIBS) $(M_LIBS) $(WIN32_EXTRA_LIBADD)
 
 
 man_MANS = xml2-config.1 libxml.3
@@ -65,32 +69,37 @@ m4data_DATA = libxml.m4
 runtest_SOURCES=runtest.c
 runtest_LDFLAGS = 
 runtest_DEPENDENCIES = $(DEPS)
-runtest_LDADD= @BASE_THREAD_LIBS@ @RDL_LIBS@ $(LDADDS)
+runtest_LDADD= $(BASE_THREAD_LIBS) $(RDL_LIBS) $(LDADDS)
 
 testrecurse_SOURCES=testrecurse.c
 testrecurse_LDFLAGS = 
 testrecurse_DEPENDENCIES = $(DEPS)
-testrecurse_LDADD= @BASE_THREAD_LIBS@ @RDL_LIBS@ $(LDADDS)
+testrecurse_LDADD= $(BASE_THREAD_LIBS) $(RDL_LIBS) $(LDADDS)
+
+testlimits_SOURCES=testlimits.c
+testlimits_LDFLAGS = 
+testlimits_DEPENDENCIES = $(DEPS)
+testlimits_LDADD= $(BASE_THREAD_LIBS) $(RDL_LIBS) $(LDADDS)
 
 testchar_SOURCES=testchar.c
 testchar_LDFLAGS = 
 testchar_DEPENDENCIES = $(DEPS)
-testchar_LDADD= @RDL_LIBS@ $(LDADDS)
+testchar_LDADD= $(RDL_LIBS) $(LDADDS)
 
 testdict_SOURCES=testdict.c
 testdict_LDFLAGS = 
 testdict_DEPENDENCIES = $(DEPS)
-testdict_LDADD= @RDL_LIBS@ $(LDADDS)
+testdict_LDADD= $(RDL_LIBS) $(LDADDS)
 
 runsuite_SOURCES=runsuite.c
 runsuite_LDFLAGS = 
 runsuite_DEPENDENCIES = $(DEPS)
-runsuite_LDADD= @RDL_LIBS@ $(LDADDS)
+runsuite_LDADD= $(RDL_LIBS) $(LDADDS)
 
 xmllint_SOURCES=xmllint.c
 xmllint_LDFLAGS = 
 xmllint_DEPENDENCIES = $(DEPS)
-xmllint_LDADD=  @RDL_LIBS@ $(LDADDS)
+xmllint_LDADD=  $(RDL_LIBS) $(LDADDS)
 
 testSAX_SOURCES=testSAX.c
 testSAX_LDFLAGS = 
@@ -105,7 +114,7 @@ testHTML_LDADD= $(LDADDS)
 xmlcatalog_SOURCES=xmlcatalog.c
 xmlcatalog_LDFLAGS = 
 xmlcatalog_DEPENDENCIES = $(DEPS)
-xmlcatalog_LDADD= @RDL_LIBS@ $(LDADDS)
+xmlcatalog_LDADD = $(RDL_LIBS) $(LDADDS)
 
 testXPath_SOURCES=testXPath.c
 testXPath_LDFLAGS = 
@@ -117,10 +126,14 @@ testC14N_LDFLAGS =
 testC14N_DEPENDENCIES = $(DEPS)
 testC14N_LDADD= $(LDADDS)
 
-testThreads_SOURCES=testThreads@THREADS_W32@.c
+if THREADS_W32
+testThreads_SOURCES = testThreadsWin32.c
+else
+testThreads_SOURCES = testThreads.c
+endif
 testThreads_LDFLAGS = 
 testThreads_DEPENDENCIES = $(DEPS)
-testThreads_LDADD= @BASE_THREAD_LIBS@  $(LDADDS)
+testThreads_LDADD= $(BASE_THREAD_LIBS) $(LDADDS)
 
 testURI_SOURCES=testURI.c
 testURI_LDFLAGS = 
@@ -172,6 +185,8 @@ testapi.c: $(srcdir)/gentest.py
 	-@(if [ "$(PYTHON)" != "" ] ; then \
 	    $(PYTHON) $(srcdir)/gentest.py $(srcdir) ; fi )
 
+BUILT_SOURCES = testapi.c
+
 testapi_SOURCES=testapi.c
 testapi_LDFLAGS = 
 testapi_DEPENDENCIES = $(DEPS)
@@ -188,28 +203,25 @@ runxmlconf_LDADD= $(LDADDS)
 #testOOM_LDADD= $(LDADDS)
 
 runtests:
+	[ -d test   ] || $(LN_S) $(srcdir)/test   .
+	[ -d result ] || $(LN_S) $(srcdir)/result .
 	$(CHECKER) ./runtest$(EXEEXT) && $(CHECKER) ./testrecurse$(EXEEXT) &&$(CHECKER) ./testapi$(EXEEXT) && $(CHECKER) ./testchar$(EXEEXT)&& $(CHECKER) ./testdict$(EXEEXT) && $(CHECKER) ./runxmlconf$(EXEEXT)
-	@(if [ "@PYTHON_SUBDIR@" != "" ] ; then cd python ; \
-	    $(MAKE) MAKEFLAGS+=--silent tests ; fi)
+	@(if [ "$(PYTHON_SUBDIR)" != "" ] ; then cd python ; \
+	    $(MAKE) tests ; fi)
 
 check: all runtests
 
-check-valgrind: all
+check-valgrind valgrind: all
 	@echo '## Running the regression tests under Valgrind'
 	@echo '## Go get a cup of coffee it is gonna take a while ...'
-	$(MAKE) CHECKER='valgrind -q' check
+	$(MAKE) CHECKER='valgrind -q' runtests
 
 testall : tests SVGtests SAXtests
 
-tests: XMLtests XMLenttests NStests IDtests Errtests APItests @READER_TEST@ @TEST_SAX@ @TEST_PUSH@ @TEST_HTML@ @TEST_PHTML@  @TEST_VALID@ URItests @TEST_PATTERN@ @TEST_XPATH@ @TEST_XPTR@ @TEST_XINCLUDE@ @TEST_C14N@ @TEST_DEBUG@ @TEST_CATALOG@ @TEST_REGEXPS@ @TEST_SCHEMAS@ @TEST_SCHEMATRON@ @TEST_THREADS@ Timingtests @TEST_VTIME@ @PYTHON_TESTS@ @TEST_MODULES@
-	@(if [ "@PYTHON_SUBDIR@" != "" ] ; then cd python ; \
-	    $(MAKE) MAKEFLAGS+=--silent tests ; fi)
-	@(cd doc/examples ; $(MAKE) MAKEFLAGS+=--silent tests)
-
-valgrind:
-	@echo '## Running the regression tests under Valgrind'
-	@echo '## Go get a cup of coffee it is gonna take a while ...'
-	$(MAKE) CHECKER='valgrind -q' tests
+tests: XMLtests XMLenttests NStests IDtests Errtests APItests $(READER_TEST) $(TEST_SAX) $(TEST_PUSH) $(TEST_HTML) $(TEST_PHTML) $(TEST_VALID) URItests $(TEST_PATTERN) $(TEST_XPATH) $(TEST_XPTR) $(TEST_XINCLUDE) $(TEST_C14N) $(TEST_DEBUG) $(TEST_CATALOG) $(TEST_REGEXPS) $(TEST_SCHEMAS) $(TEST_SCHEMATRON) $(TEST_THREADS) Timingtests $(TEST_VTIME) $(PYTHON_TESTS) $(TEST_MODULES)
+	@(if [ "$(PYTHON_SUBDIR)" != "" ] ; then cd python ; \
+	    $(MAKE) tests ; fi)
+	@(cd doc/examples ; $(MAKE) tests)
 
 APItests: testapi$(EXEEXT)
 	@echo "## Running the API regression tests this may take a little while"
@@ -1115,7 +1127,7 @@ SchemasPythonTests:
 	    echo "## It is normal to see 11 errors reported" ; \
 	    $(CHECKER) $(PYTHON) $(srcdir)/check-xsddata-test-suite.py ; \
 	  fi)
-	@(if [ -x $(PYTHON) -a -d xstc ] ; then cd xstc ; $(MAKE) CHECKER="$(CHECKER)" MAKEFLAGS+=--silent pytests ; fi)
+	@(if [ -x $(PYTHON) -a -d xstc ] ; then cd xstc ; $(MAKE) CHECKER="$(CHECKER)" pytests ; fi)
 
 Patterntests: xmllint$(EXEEXT)
 	@(echo > .memdump)
@@ -1147,19 +1159,19 @@ ModuleTests: testModule$(EXEEXT) testdso.la
 
 cleanup:
 	-@(find . -name .\#\* -exec rm {} \;)
-	-@(find . -name \*.gcda -o *.gcno -exec rm {} \;)
-	-@(find . -name \*.orig -o -name \*.rej -o -name \*.old -exec rm {} \;)
+	-@(find . -name \*.gcda -o -name \*.gcno -exec rm -f {} \;)
+	-@(find . -name \*.orig -o -name \*.rej -o -name \*.old -exec rm -f {} \;)
 
 dist-hook: cleanup libxml2.spec
 	-cp libxml2.spec $(distdir)
-	(cd $(srcdir) ; tar -cf - --exclude CVS --exclude .svn win32 macos vms VxWorks bakefile test result) | (cd $(distdir); tar xf -)
+	(cd $(srcdir) ; tar -cf - --exclude CVS --exclude .svn --exclude .git win32 macos vms VxWorks bakefile test result) | (cd $(distdir); tar xf -)
 
 dist-source: distdir
 	$(AMTAR) -chof - --exclude Tests --exclude test --exclude result $(distdir) | GZIP=$(GZIP_ENV) gzip -c >`echo "$(distdir)" | sed "s+libxml2+libxml2-sources+"`.tar.gz
 
 dist-test: distdir
 	(mkdir -p $(distdir))
-	(cd $(srcdir) ; tar -cf - --exclude CVS --exclude .svn xstc/Tests) | (cd $(distdir); tar xf -)
+	(cd $(srcdir) ; tar -cf - --exclude CVS --exclude .svn --exclude .git xstc/Tests) | (cd $(distdir); tar xf -)
 	tar -cf - $(distdir)/test $(distdir)/result $(distdir)/xstc/Tests  $(distdir)/Makefile.tests $(distdir)/README $(distdir)/README.tests $(distdir)/AUTHORS $(distdir)/testapi.c $(distdir)/runtest.c $(distdir)/runsuite.c | GZIP=$(GZIP_ENV) gzip -c >`echo "$(distdir)" | sed "s+libxml2+libxml2-tests+"`.tar.gz
 	@(rm -rf $(distdir)/xstc/Test)
 
@@ -1183,7 +1195,8 @@ xml2Conf.sh: xml2Conf.sh.in Makefile
 	       < $(srcdir)/xml2Conf.sh.in > xml2Conf.tmp \
 	&& mv xml2Conf.tmp xml2Conf.sh
 
-CLEANFILES=xml2Conf.sh *.gcda *.gcno
+CLEANFILES = runxmlconf.log test.out xml2Conf.sh *.gcda *.gcno *.res
+DISTCLEANFILES = COPYING missing.lst
 
 confexecdir=$(libdir)
 confexec_DATA = xml2Conf.sh
@@ -1195,10 +1208,10 @@ EXTRA_DIST = xml2-config.in xml2Conf.sh.in libxml.spec.in libxml2.spec \
              example/Makefile.am example/gjobread.c example/gjobs.xml \
 	     $(man_MANS) libxml-2.0.pc.in libxml-2.0-uninstalled.pc.in \
 	     trionan.c trionan.h triostr.c triostr.h trio.c trio.h \
-	     triop.h triodef.h libxml.h elfgcchack.h \
-	     testThreadsWin32.c genUnicode.py TODO_SCHEMAS \
+	     triop.h triodef.h libxml.h elfgcchack.h xzlib.h buf.h \
+	     enc.h save.h testThreadsWin32.c genUnicode.py TODO_SCHEMAS \
 	     dbgen.pl dbgenattr.pl regressions.py regressions.xml \
-	     README.tests Makefile.tests libxml2.syms \
+	     README.tests Makefile.tests libxml2.syms timsort.h \
 	     $(CVS_EXTRA_DIST)
 
 
@@ -1213,13 +1226,13 @@ DOC_MODULE=libxml2-$(VERSION)
 EXAMPLES_DIR=$(BASE_DIR)/$(DOC_MODULE)/examples
 
 install-data-local: 
-	@MKDIR_P@ $(DESTDIR)$(BASE_DIR)/$(DOC_MODULE)
-	-@INSTALL@ -m 0644 $(srcdir)/Copyright $(DESTDIR)$(BASE_DIR)/$(DOC_MODULE)
-	@MKDIR_P@ $(DESTDIR)$(EXAMPLES_DIR)
-	-@INSTALL@ -m 0644 $(srcdir)/xmllint.c $(DESTDIR)$(EXAMPLES_DIR)
-	-@INSTALL@ -m 0644 $(srcdir)/testSAX.c $(DESTDIR)$(EXAMPLES_DIR)
-	-@INSTALL@ -m 0644 $(srcdir)/testHTML.c $(DESTDIR)$(EXAMPLES_DIR)
-	-@INSTALL@ -m 0644 $(srcdir)/testXPath.c $(DESTDIR)$(EXAMPLES_DIR)
+	$(MKDIR_P) $(DESTDIR)$(BASE_DIR)/$(DOC_MODULE)
+	-$(INSTALL) -m 0644 $(srcdir)/Copyright $(DESTDIR)$(BASE_DIR)/$(DOC_MODULE)
+	$(MKDIR_P) $(DESTDIR)$(EXAMPLES_DIR)
+	-$(INSTALL) -m 0644 $(srcdir)/xmllint.c $(DESTDIR)$(EXAMPLES_DIR)
+	-$(INSTALL) -m 0644 $(srcdir)/testSAX.c $(DESTDIR)$(EXAMPLES_DIR)
+	-$(INSTALL) -m 0644 $(srcdir)/testHTML.c $(DESTDIR)$(EXAMPLES_DIR)
+	-$(INSTALL) -m 0644 $(srcdir)/testXPath.c $(DESTDIR)$(EXAMPLES_DIR)
 
 uninstall-local:
 	rm -f $(DESTDIR)$(EXAMPLES_DIR)/testXPath.c
@@ -1231,7 +1244,7 @@ uninstall-local:
 	rm -rf $(DESTDIR)$(BASE_DIR)/$(DOC_MODULE)
 
 tst: tst.c
-	$(CC) $(CFLAGS) -Iinclude -o tst tst.c .libs/libxml2.a -lpthread -lm -lz
+	$(CC) $(CFLAGS) -Iinclude -o tst tst.c .libs/libxml2.a -lpthread -lm -lz -llzma
 
 sparse: clean
 	$(MAKE) CC=cgcc

@@ -376,6 +376,10 @@ TranslateNtStatusError(NTSTATUS Status)
           DbgPrint("MSAFD: STATUS_REMOTE_DISCONNECT\n");
           return WSAECONNRESET;
 
+       case STATUS_ACCESS_VIOLATION:
+          DbgPrint("MSAFD: STATUS_ACCESS_VIOLATION\n");
+          return WSAEFAULT;
+
        default:
           DbgPrint("MSAFD: Unhandled NTSTATUS value: 0x%x\n", Status);
           return WSAENETDOWN;
@@ -405,7 +409,7 @@ WSPCloseSocket(IN SOCKET Handle,
 
     /* Create the Wait Event */
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);
@@ -611,7 +615,7 @@ WSPBind(SOCKET Handle,
     }
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);
@@ -733,7 +737,7 @@ WSPListen(SOCKET Handle,
         return 0;
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);
@@ -859,7 +863,7 @@ WSPSelect(IN int nfds,
     }
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);
@@ -1058,7 +1062,7 @@ WSPAccept(SOCKET Handle,
     HANDLE                      SockEvent;
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);
@@ -1443,7 +1447,7 @@ WSPConnect(SOCKET Handle,
     int                     SocketDataLength;
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);
@@ -1678,7 +1682,7 @@ WSPShutdown(SOCKET Handle,
     HANDLE                  SockEvent;
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);
@@ -1760,7 +1764,7 @@ WSPGetSockName(IN SOCKET Handle,
     HANDLE                  SockEvent;
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);
@@ -1842,6 +1846,8 @@ WSPGetSockName(IN SOCKET Handle,
         }
     }
 
+    HeapFree(GlobalHeap, 0, TdiAddress);
+
     return MsafdReturnWithErrno ( Status, lpErrno, 0, NULL );
 }
 
@@ -1861,7 +1867,7 @@ WSPGetPeerName(IN SOCKET s,
     HANDLE                  SockEvent;
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);
@@ -1933,7 +1939,7 @@ WSPGetPeerName(IN SOCKET s,
                            SocketAddress->Address[0].Address,
                            SocketAddress->Address[0].AddressLength);
             *NameLength = Socket->SharedData.SizeOfRemoteAddress;
-            AFD_DbgPrint (MID_TRACE, ("NameLength %d Address: %s Port %x\n",
+            AFD_DbgPrint (MID_TRACE, ("NameLength %d Address: %x Port %x\n",
                           *NameLength, ((struct sockaddr_in *)Name)->sin_addr.s_addr,
                           ((struct sockaddr_in *)Name)->sin_port));
             HeapFree(GlobalHeap, 0, SocketAddress);
@@ -1946,6 +1952,8 @@ WSPGetPeerName(IN SOCKET s,
             return SOCKET_ERROR;
         }
     }
+
+    HeapFree(GlobalHeap, 0, SocketAddress);
 
     return MsafdReturnWithErrno ( Status, lpErrno, 0, NULL );
 }
@@ -2013,6 +2021,19 @@ WSPIoctl(IN  SOCKET Handle,
 				*lpcbBytesReturned = sizeof(ULONG);
 				return NO_ERROR;
 			}
+        case SIOCATMARK:
+            if (cbOutBuffer < sizeof(BOOL) || IS_INTRESOURCE(lpvOutBuffer))
+            {
+                *lpErrno = WSAEFAULT;
+                return SOCKET_ERROR;
+            }
+
+            /* FIXME: Return false for now */
+            *(BOOL*)lpvOutBuffer = FALSE;
+
+            *lpcbBytesReturned = sizeof(BOOL);
+            *lpErrno = NO_ERROR;
+            return NO_ERROR;
         case SIO_GET_EXTENSION_FUNCTION_POINTER:
             *lpErrno = WSAEINVAL;
             return SOCKET_ERROR;
@@ -2052,6 +2073,7 @@ WSPGetSockOpt(IN SOCKET Handle,
     PVOID Buffer;
     INT BufferSize;
     BOOL BoolBuffer;
+    INT IntBuffer;
 
     /* Get the Socket Structure associate to this Socket*/
     Socket = GetSocketStructure(Handle);
@@ -2112,21 +2134,52 @@ WSPGetSockOpt(IN SOCKET Handle,
                     BufferSize = sizeof(struct linger);
                     break;
 
-                /* case SO_CONDITIONAL_ACCEPT: */
+                case SO_OOBINLINE:
+                    BoolBuffer = (Socket->SharedData.OobInline != 0);
+                    Buffer = &BoolBuffer;
+                    BufferSize = sizeof(BOOL);
+                    break;
+
+                case SO_KEEPALIVE:
                 case SO_DONTROUTE:
+                   /* These guys go directly to the helper */
+                   goto SendToHelper;
+
+                case SO_CONDITIONAL_ACCEPT:
+                    BoolBuffer = (Socket->SharedData.UseDelayedAcceptance != 0);
+                    Buffer = &BoolBuffer;
+                    BufferSize = sizeof(BOOL);
+                    break;
+
+                case SO_REUSEADDR:
+                    BoolBuffer = (Socket->SharedData.ReuseAddresses != 0);
+                    Buffer = &BoolBuffer;
+                    BufferSize = sizeof(BOOL);
+                    break;
+
+                case SO_EXCLUSIVEADDRUSE:
+                    BoolBuffer = (Socket->SharedData.ExclusiveAddressUse != 0);
+                    Buffer = &BoolBuffer;
+                    BufferSize = sizeof(BOOL);
+                    break;
+
                 case SO_ERROR:
+                    /* HACK: This needs to be properly tracked */
+                    IntBuffer = 0;
+                    DbgPrint("MSAFD: Hacked SO_ERROR returning error %d\n", IntBuffer);
+
+                    Buffer = &IntBuffer;
+                    BufferSize = sizeof(INT);
+                    break;
+
                 case SO_GROUP_ID:
                 case SO_GROUP_PRIORITY:
-                case SO_KEEPALIVE:
                 case SO_MAX_MSG_SIZE:
-                case SO_OOBINLINE:
                 case SO_PROTOCOL_INFO:
-                case SO_REUSEADDR:
-                    AFD_DbgPrint(MID_TRACE, ("Unimplemented option (%x)\n",
-                                 OptionName));
 
                 default:
-                    *lpErrno = WSAEINVAL;
+                    DbgPrint("MSAFD: Get unknown optname %x\n", OptionName);
+                    *lpErrno = WSAENOPROTOOPT;
                     return SOCKET_ERROR;
             }
 
@@ -2140,18 +2193,20 @@ WSPGetSockOpt(IN SOCKET Handle,
 
             return 0;
 
-        case IPPROTO_TCP: /* FIXME */
         default:
-            *lpErrno = Socket->HelperData->WSHGetSocketInformation(Socket->HelperContext,
-                                                                   Handle,
-                                                                   Socket->TdiAddressHandle,
-                                                                   Socket->TdiConnectionHandle,
-                                                                   Level,
-                                                                   OptionName,
-                                                                   OptionValue,
-                                                                   (LPINT)OptionLength);
-            return (*lpErrno == 0) ? 0 : SOCKET_ERROR;
+            break;
     }
+
+SendToHelper:
+    *lpErrno = Socket->HelperData->WSHGetSocketInformation(Socket->HelperContext,
+                                                           Handle,
+                                                           Socket->TdiAddressHandle,
+                                                           Socket->TdiConnectionHandle,
+                                                           Level,
+                                                           OptionName,
+                                                           OptionValue,
+                                                           (LPINT)OptionLength);
+    return (*lpErrno == 0) ? 0 : SOCKET_ERROR;
 }
 
 INT
@@ -2198,6 +2253,24 @@ WSPSetSockOpt(
               Socket->SharedData.LingerData.l_onoff = (*optval != 0) ? 0 : 1;
               return 0;
 
+           case SO_REUSEADDR:
+              if (optlen < sizeof(BOOL))
+              {
+                  *lpErrno = WSAEFAULT;
+                  return SOCKET_ERROR;
+              }
+              Socket->SharedData.ReuseAddresses = (*optval != 0) ? 1 : 0;
+              return 0;
+
+           case SO_EXCLUSIVEADDRUSE:
+              if (optlen < sizeof(BOOL))
+              {
+                  *lpErrno = WSAEFAULT;
+                  return SOCKET_ERROR;
+              }
+              Socket->SharedData.ExclusiveAddressUse = (*optval != 0) ? 1 : 0;
+              return 0;
+
            case SO_LINGER:
               if (optlen < sizeof(struct linger))
               {
@@ -2220,13 +2293,43 @@ WSPSetSockOpt(
               AFD_DbgPrint(MIN_TRACE,("Setting send buf to %x is not implemented yet\n", optval));
               return 0;
 
+           case SO_SNDTIMEO:
+              if (optlen < sizeof(DWORD))
+              {
+                  *lpErrno = WSAEFAULT;
+                  return SOCKET_ERROR;
+              }
+
+              RtlCopyMemory(&Socket->SharedData.SendTimeout,
+                            optval,
+                            sizeof(DWORD));
+              return 0;
+
+           case SO_RCVTIMEO:
+              if (optlen < sizeof(DWORD))
+              {
+                  *lpErrno = WSAEFAULT;
+                  return SOCKET_ERROR;
+              }
+
+              RtlCopyMemory(&Socket->SharedData.RecvTimeout,
+                            optval,
+                            sizeof(DWORD));
+              return 0;
+
+           case SO_KEEPALIVE:
+           case SO_DONTROUTE:
+              /* These go directly to the helper dll */
+              goto SendToHelper;
+
            default:
-              AFD_DbgPrint(MIN_TRACE,("Unknown optname %x\n", optname));
-              break;
+              /* Obviously this is a hack */
+              DbgPrint("MSAFD: Set unknown optname %x\n", optname);
+              return 0;
         }
     }
 
-
+SendToHelper:
     *lpErrno = Socket->HelperData->WSHSetSocketInformation(Socket->HelperContext,
                                                            s,
                                                            Socket->TdiAddressHandle,
@@ -2340,7 +2443,7 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
     HANDLE              SockEvent;
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);
@@ -2407,7 +2510,7 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
     HANDLE              SockEvent;
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);
@@ -2489,7 +2592,7 @@ int CreateContext(PSOCKET_INFORMATION Socket)
     HANDLE              SockEvent;
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);

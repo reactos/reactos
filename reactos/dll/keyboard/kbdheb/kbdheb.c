@@ -8,7 +8,10 @@
  * and http://win.tue.nl/~aeb/linux/kbd/scancodes-1.html
  */
 
-#include <windows.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winuser.h>
 #include <ndk/kbd.h>
 
 #ifdef _MSC_VER
@@ -329,7 +332,7 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   { 'E',         0, {QOF, QOF, 0x05, 0x05} },
   { 'F',         0, {KAF, KAF, 0x06, 0x06} },
   { 'G',         0, {AYIN, AYIN, 0x07, 0x07} },
-  { 'H',         0, {QOF, QOF, 0x08, 0x08} },
+  { 'H',         0, {YUD, YUD, 0x08, 0x08} },
   { 'I',         0, {NUN_SOFIT, NUN_SOFIT, 0x09, 0x09} },
   { 'J',         0, {HET, HET, 0x0a, 0x0a} },
   { 'K',         0, {LAMED, LAMED, 0x0b, 0x0b} },

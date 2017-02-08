@@ -18,15 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "lmcons.h"
-#include "lmapibuf.h"
-#include "lmerr.h"
-#include "winerror.h"
-#include "wine/debug.h"
+#include "netapi32.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
 
@@ -62,19 +54,20 @@ NET_API_STATUS WINAPI NetApiBufferReallocate(LPVOID OldBuffer, DWORD NewByteCoun
                                              LPVOID* NewBuffer)
 {
     TRACE("(%p, %d, %p)\n", OldBuffer, NewByteCount, NewBuffer);
-    if (NewByteCount) 
+    if (NewByteCount)
     {
         if (OldBuffer)
             *NewBuffer = HeapReAlloc(GetProcessHeap(), 0, OldBuffer, NewByteCount);
         else
             *NewBuffer = HeapAlloc(GetProcessHeap(), 0, NewByteCount);
-	return *NewBuffer ? NERR_Success : GetLastError();
-    } 
-    else 
+        return *NewBuffer ? NERR_Success : GetLastError();
+    }
+    else
     {
-	if (!HeapFree(GetProcessHeap(), 0, OldBuffer)) return GetLastError();
-	*NewBuffer = 0;
-	return NERR_Success;
+        if (!HeapFree(GetProcessHeap(), 0, OldBuffer))
+            return GetLastError();
+        *NewBuffer = 0;
+        return NERR_Success;
     }
 }
 

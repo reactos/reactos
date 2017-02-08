@@ -29,111 +29,111 @@ TODO:
 */
 
 class CToolsBand :
-	public CWindowImpl<CToolsBand, CWindow, CControlWinTraits>,
-	public CComObjectRootEx<CComMultiThreadModelNoCS>,
-	public IDeskBand,
-	public IObjectWithSite,
-	public IInputObject,
-	public IPersistStream
+    public CWindowImpl<CToolsBand, CWindow, CControlWinTraits>,
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IDeskBand,
+    public IObjectWithSite,
+    public IInputObject,
+    public IPersistStream
 {
 private:
-	IDockingWindowSite			*fDockSite;
-	GUID						fExecCommandCategory;
-	CComPtr<IOleCommandTarget>	fExecCommandTarget;
+    IDockingWindowSite          *fDockSite;
+    GUID                        fExecCommandCategory;
+    CComPtr<IOleCommandTarget>  fExecCommandTarget;
 public:
-	CToolsBand();
-	~CToolsBand();
+    CToolsBand();
+    ~CToolsBand();
 public:
-	// *** IDeskBand methods ***
-	virtual HRESULT STDMETHODCALLTYPE GetBandInfo(DWORD dwBandID, DWORD dwViewMode, DESKBANDINFO* pdbi);
+    // *** IDeskBand methods ***
+    virtual HRESULT STDMETHODCALLTYPE GetBandInfo(DWORD dwBandID, DWORD dwViewMode, DESKBANDINFO* pdbi);
 
-	// *** IObjectWithSite methods ***
-	virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown* pUnkSite);
-	virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, void **ppvSite);
+    // *** IObjectWithSite methods ***
+    virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown* pUnkSite);
+    virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, void **ppvSite);
 
-	// *** IOleWindow methods ***
-	virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *lphwnd);
-	virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode);
+    // *** IOleWindow methods ***
+    virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *lphwnd);
+    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode);
 
-	// *** IDockingWindow methods ***
-	virtual HRESULT STDMETHODCALLTYPE CloseDW(DWORD dwReserved);
-	virtual HRESULT STDMETHODCALLTYPE ResizeBorderDW(const RECT* prcBorder, IUnknown* punkToolbarSite, BOOL fReserved);
-	virtual HRESULT STDMETHODCALLTYPE ShowDW(BOOL fShow);
+    // *** IDockingWindow methods ***
+    virtual HRESULT STDMETHODCALLTYPE CloseDW(DWORD dwReserved);
+    virtual HRESULT STDMETHODCALLTYPE ResizeBorderDW(const RECT* prcBorder, IUnknown* punkToolbarSite, BOOL fReserved);
+    virtual HRESULT STDMETHODCALLTYPE ShowDW(BOOL fShow);
 
-	// *** IInputObject methods ***
-	virtual HRESULT STDMETHODCALLTYPE HasFocusIO();
-	virtual HRESULT STDMETHODCALLTYPE TranslateAcceleratorIO(LPMSG lpMsg);
-	virtual HRESULT STDMETHODCALLTYPE UIActivateIO(BOOL fActivate, LPMSG lpMsg);
+    // *** IInputObject methods ***
+    virtual HRESULT STDMETHODCALLTYPE HasFocusIO();
+    virtual HRESULT STDMETHODCALLTYPE TranslateAcceleratorIO(LPMSG lpMsg);
+    virtual HRESULT STDMETHODCALLTYPE UIActivateIO(BOOL fActivate, LPMSG lpMsg);
 
-	// *** IPersist methods ***
-	virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *pClassID);
+    // *** IPersist methods ***
+    virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *pClassID);
 
-	// *** IPersistStream methods ***
-	virtual HRESULT STDMETHODCALLTYPE IsDirty();
-	virtual HRESULT STDMETHODCALLTYPE Load(IStream *pStm);
-	virtual HRESULT STDMETHODCALLTYPE Save(IStream *pStm, BOOL fClearDirty);
-	virtual HRESULT STDMETHODCALLTYPE GetSizeMax(ULARGE_INTEGER *pcbSize);
+    // *** IPersistStream methods ***
+    virtual HRESULT STDMETHODCALLTYPE IsDirty();
+    virtual HRESULT STDMETHODCALLTYPE Load(IStream *pStm);
+    virtual HRESULT STDMETHODCALLTYPE Save(IStream *pStm, BOOL fClearDirty);
+    virtual HRESULT STDMETHODCALLTYPE GetSizeMax(ULARGE_INTEGER *pcbSize);
 
-	// message handlers
-	LRESULT OnGetButtonInfo(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled);
+    // message handlers
+    LRESULT OnGetButtonInfo(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled);
 
 BEGIN_MSG_MAP(CToolsBand)
-//	MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
-//	MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
-	NOTIFY_HANDLER(0, TBN_GETBUTTONINFOW, OnGetButtonInfo)
+//    MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
+//    MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
+    NOTIFY_HANDLER(0, TBN_GETBUTTONINFOW, OnGetButtonInfo)
 END_MSG_MAP()
 
 BEGIN_COM_MAP(CToolsBand)
-	COM_INTERFACE_ENTRY_IID(IID_IDeskBand, IDeskBand)
-	COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
-	COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
-	COM_INTERFACE_ENTRY_IID(IID_IDockingWindow, IDockingWindow)
-	COM_INTERFACE_ENTRY_IID(IID_IInputObject, IInputObject)
-	COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
-	COM_INTERFACE_ENTRY_IID(IID_IPersistStream, IPersistStream)
+    COM_INTERFACE_ENTRY_IID(IID_IDeskBand, IDeskBand)
+    COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
+    COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
+    COM_INTERFACE_ENTRY_IID(IID_IDockingWindow, IDockingWindow)
+    COM_INTERFACE_ENTRY_IID(IID_IInputObject, IInputObject)
+    COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
+    COM_INTERFACE_ENTRY_IID(IID_IPersistStream, IPersistStream)
 END_COM_MAP()
 };
 
 CToolsBand::CToolsBand()
 {
-	fDockSite = NULL;
+    fDockSite = NULL;
 }
 
 CToolsBand::~CToolsBand()
 {
-	if (fDockSite)
-		fDockSite->Release();
+    if (fDockSite)
+        fDockSite->Release();
 }
 
 HRESULT STDMETHODCALLTYPE CToolsBand::GetBandInfo(DWORD dwBandID, DWORD dwViewMode, DESKBANDINFO* pdbi)
 {
-	if (pdbi->dwMask & DBIM_MINSIZE)
-	{
-		pdbi->ptMinSize.x = 400;
-		pdbi->ptMinSize.y = 38;
-	}
-	if (pdbi->dwMask & DBIM_MAXSIZE)
-	{
-		pdbi->ptMaxSize.x = 0;
-		pdbi->ptMaxSize.y = 0;
-	}
-	if (pdbi->dwMask & DBIM_INTEGRAL)
-	{
-		pdbi->ptIntegral.x = 0;
-		pdbi->ptIntegral.y = 0;
-	}
-	if (pdbi->dwMask & DBIM_ACTUAL)
-	{
-		pdbi->ptActual.x = 400;
-		pdbi->ptActual.y = 38;
-	}
-	if (pdbi->dwMask & DBIM_TITLE)
-		wcscpy(pdbi->wszTitle, L"");
-	if (pdbi->dwMask & DBIM_MODEFLAGS)
-		pdbi->dwModeFlags = DBIMF_UNDELETEABLE;
-	if (pdbi->dwMask & DBIM_BKCOLOR)
-		pdbi->crBkgnd = 0;
-	return S_OK;
+    if (pdbi->dwMask & DBIM_MINSIZE)
+    {
+        pdbi->ptMinSize.x = 400;
+        pdbi->ptMinSize.y = 38;
+    }
+    if (pdbi->dwMask & DBIM_MAXSIZE)
+    {
+        pdbi->ptMaxSize.x = 0;
+        pdbi->ptMaxSize.y = 0;
+    }
+    if (pdbi->dwMask & DBIM_INTEGRAL)
+    {
+        pdbi->ptIntegral.x = 0;
+        pdbi->ptIntegral.y = 0;
+    }
+    if (pdbi->dwMask & DBIM_ACTUAL)
+    {
+        pdbi->ptActual.x = 400;
+        pdbi->ptActual.y = 38;
+    }
+    if (pdbi->dwMask & DBIM_TITLE)
+        wcscpy(pdbi->wszTitle, L"");
+    if (pdbi->dwMask & DBIM_MODEFLAGS)
+        pdbi->dwModeFlags = DBIMF_UNDELETEABLE;
+    if (pdbi->dwMask & DBIM_BKCOLOR)
+        pdbi->crBkgnd = 0;
+    return S_OK;
 }
 
 static const int backImageIndex = 0;
@@ -168,13 +168,13 @@ static const int upImageIndex = 28;
 static const int mapDriveImageIndex = 29;
 static const int disconnectImageIndex = 30;
 // 31
-static const int viewsAltImageIndex = 32;		// same image as viewsImageIndex
+static const int viewsAltImageIndex = 32;       // same image as viewsImageIndex
 // 33
 // 34
 // 35
 // 36
 // 37
-static const int viewsAlt2ImageIndex = 38;		// same image as viewsAltImageIndex & viewsImageIndex
+static const int viewsAlt2ImageIndex = 38;      // same image as viewsAltImageIndex & viewsImageIndex
 // 39
 // 40
 // 41
@@ -186,110 +186,113 @@ static const int folderOptionsImageIndex = 46;
 
 const int numShownButtons = 13;
 const int numHiddenButtons = 13;
-TBBUTTON tbButtonsAdd[numShownButtons + numHiddenButtons] = 
+TBBUTTON tbButtonsAdd[numShownButtons + numHiddenButtons] =
 {
-	{backImageIndex, gBackCommandID, TBSTATE_ENABLED, BTNS_DROPDOWN | BTNS_SHOWTEXT, {0}, 0, (INT_PTR)_T("Back")},
-	{forwardImageIndex, gForwardCommandID, TBSTATE_ENABLED, BTNS_DROPDOWN, {0}, 0, (INT_PTR)_T("Forward")},
-	{upImageIndex, gUpLevelCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Up")},
-	{6, -1, TBSTATE_ENABLED, BTNS_SEP},
-	{searchImageIndex, gSearchCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, {0}, 0, (INT_PTR)_T("Search")},
-	{foldersImageIndex, gFoldersCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, {0}, 0, (INT_PTR)_T("Folders")},
-	{6, -1, TBSTATE_ENABLED, BTNS_SEP},
-	{moveToImageIndex, gMoveToCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Move To")},
-	{copyToImageIndex, gCopyToCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Copy To")},
-	{deleteImageIndex, gDeleteCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Delete")},
-	{undoImageIndex, gUndoCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Undo")},
-	{6, -1, TBSTATE_ENABLED, BTNS_SEP},
-	{viewsImageIndex, gViewsCommandID, TBSTATE_ENABLED, BTNS_WHOLEDROPDOWN, {0}, 0, (INT_PTR)_T("Views")},
+    {backImageIndex, gBackCommandID, TBSTATE_ENABLED, BTNS_DROPDOWN | BTNS_SHOWTEXT, {0}, 0, (INT_PTR)_T("Back")},
+    {forwardImageIndex, gForwardCommandID, TBSTATE_ENABLED, BTNS_DROPDOWN, {0}, 0, (INT_PTR)_T("Forward")},
+    {upImageIndex, gUpLevelCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Up")},
+    {6, -1, TBSTATE_ENABLED, BTNS_SEP},
+    {searchImageIndex, gSearchCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, {0}, 0, (INT_PTR)_T("Search")},
+    {foldersImageIndex, gFoldersCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, {0}, 0, (INT_PTR)_T("Folders")},
+    {6, -1, TBSTATE_ENABLED, BTNS_SEP},
+    {moveToImageIndex, gMoveToCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Move To")},
+    {copyToImageIndex, gCopyToCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Copy To")},
+    {deleteImageIndex, gDeleteCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Delete")},
+    {undoImageIndex, gUndoCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Undo")},
+    {6, -1, TBSTATE_ENABLED, BTNS_SEP},
+    {viewsImageIndex, gViewsCommandID, TBSTATE_ENABLED, BTNS_WHOLEDROPDOWN, {0}, 0, (INT_PTR)_T("Views")},
 
-	{0, gStopCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Stop")},
-	{0, gRefreshCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Refresh")},
-	{0, gHomeCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Home")},
-	{mapDriveImageIndex, gMapDriveCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Map Drive")},
-	{disconnectImageIndex, gDisconnectCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Disconnect")},
-	{favoritesImageIndex, gFavoritesCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, {0}, 0, (INT_PTR)_T("Favorites")},
-	{0, gHistoryCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("History")},
-	{0, gFullScreenCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Full Screen")},
-	{propertiesImageIndex, gPropertiesCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Properties")},
-	{cutImageIndex, gCutCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Cut")},
-	{copyImageIndex, gCopyCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Copy")},
-	{pasteImageIndex, gPasteCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Paste")},
-	{folderOptionsImageIndex, gFolderOptionsCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Folder Options")},
+    {0, gStopCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Stop")},
+    {0, gRefreshCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Refresh")},
+    {0, gHomeCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Home")},
+    {mapDriveImageIndex, gMapDriveCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Map Drive")},
+    {disconnectImageIndex, gDisconnectCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Disconnect")},
+    {favoritesImageIndex, gFavoritesCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, {0}, 0, (INT_PTR)_T("Favorites")},
+    {0, gHistoryCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("History")},
+    {0, gFullScreenCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Full Screen")},
+    {propertiesImageIndex, gPropertiesCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Properties")},
+    {cutImageIndex, gCutCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Cut")},
+    {copyImageIndex, gCopyCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Copy")},
+    {pasteImageIndex, gPasteCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Paste")},
+    {folderOptionsImageIndex, gFolderOptionsCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Folder Options")},
 };
 
 HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite)
 {
-	HWND					parentWindow;
-	IOleWindow				*oleWindow;
-	HWND					toolbar;
-	HRESULT					hResult;
+    HWND                    parentWindow;
+    IOleWindow              *oleWindow;
+    HWND                    toolbar;
+    HRESULT                 hResult;
 
-	if (fDockSite != NULL)
-		fDockSite->Release();
-	if (pUnkSite == NULL)
-		return S_OK;
-	hResult = pUnkSite->QueryInterface(IID_IDockingWindowSite, (void **)&fDockSite);
-	if (FAILED(hResult))
-		return hResult;
-	parentWindow = NULL;
-	hResult = pUnkSite->QueryInterface(IID_IOleWindow, (void **)&oleWindow);
-	if (SUCCEEDED(hResult))
-	{
-		oleWindow->GetWindow(&parentWindow);
-		oleWindow->Release();
-	}
-	if (!::IsWindow(parentWindow))
-		return E_FAIL;
+    if (fDockSite != NULL)
+        fDockSite->Release();
+    if (pUnkSite == NULL)
+        return S_OK;
+    hResult = pUnkSite->QueryInterface(IID_IDockingWindowSite, reinterpret_cast<void **>(&fDockSite));
+    if (FAILED(hResult))
+        return hResult;
+    parentWindow = NULL;
+    hResult = pUnkSite->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
+    if (SUCCEEDED(hResult))
+    {
+        oleWindow->GetWindow(&parentWindow);
+        oleWindow->Release();
+    }
+    if (!::IsWindow(parentWindow))
+        return E_FAIL;
 
-	toolbar = CreateWindowEx(TBSTYLE_EX_DOUBLEBUFFER, TOOLBARCLASSNAMEW, _T(""), WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
-					WS_CLIPCHILDREN | TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT | TBSTYLE_REGISTERDROP | TBSTYLE_LIST | TBSTYLE_FLAT |
-					CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NORESIZE | CCS_TOP, 0, 0, 500, 20, parentWindow, NULL,
-					_AtlBaseModule.GetModuleInstance(), 0);
-	if (toolbar == NULL)
-		return E_FAIL;
-	SubclassWindow(toolbar);
+    toolbar = CreateWindowEx(TBSTYLE_EX_DOUBLEBUFFER, TOOLBARCLASSNAMEW, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
+                    WS_CLIPCHILDREN | TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT | TBSTYLE_REGISTERDROP | TBSTYLE_LIST | TBSTYLE_FLAT |
+                    CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NORESIZE | CCS_TOP, 0, 0, 500, 20, parentWindow, NULL,
+                    _AtlBaseModule.GetModuleInstance(), 0);
+    if (toolbar == NULL)
+        return E_FAIL;
+    SubclassWindow(toolbar);
 
-	SendMessage(WM_USER + 100, GetSystemMetrics(SM_CXEDGE) / 2, 0);
-	SendMessage(TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
-	SendMessage(TB_SETMAXTEXTROWS, 1, 0);
-	SendMessage(TB_SETEXTENDEDSTYLE, TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_MIXEDBUTTONS | TBSTYLE_EX_DRAWDDARROWS, TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_MIXEDBUTTONS | TBSTYLE_EX_DRAWDDARROWS);
+    SendMessage(WM_USER + 100, GetSystemMetrics(SM_CXEDGE) / 2, 0);
+    SendMessage(TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
+    SendMessage(TB_SETMAXTEXTROWS, 1, 0);
+    SendMessage(TB_SETEXTENDEDSTYLE, TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_MIXEDBUTTONS | TBSTYLE_EX_DRAWDDARROWS,
+        TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_MIXEDBUTTONS | TBSTYLE_EX_DRAWDDARROWS);
 
-	HINSTANCE shell32Instance = GetModuleHandle(_T("shell32.dll"));
-	HBITMAP imageBitmap = (HBITMAP)LoadImage(shell32Instance, MAKEINTRESOURCE(214), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_CREATEDIBSECTION);
+    HINSTANCE shell32Instance = GetModuleHandle(_T("shell32.dll"));
+    HBITMAP imageBitmap = reinterpret_cast<HBITMAP>(
+        LoadImage(shell32Instance, MAKEINTRESOURCE(214),
+            IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_CREATEDIBSECTION));
 
-	DIBSECTION bitmapInfo;
-	GetObjectW(imageBitmap, sizeof(bitmapInfo), &bitmapInfo);
-	HIMAGELIST imageList = ImageList_Create(bitmapInfo.dsBm.bmHeight, bitmapInfo.dsBm.bmHeight, ILC_COLOR32, 4, 4);
+    DIBSECTION bitmapInfo;
+    GetObjectW(imageBitmap, sizeof(bitmapInfo), &bitmapInfo);
+    HIMAGELIST imageList = ImageList_Create(bitmapInfo.dsBm.bmHeight, bitmapInfo.dsBm.bmHeight, ILC_COLOR32, 4, 4);
 
-	ImageList_Add(imageList, imageBitmap, NULL);
-	DeleteObject(imageBitmap);
+    ImageList_Add(imageList, imageBitmap, NULL);
+    DeleteObject(imageBitmap);
 
-	SendMessage(TB_SETIMAGELIST, 0, (LPARAM)imageList);
+    SendMessage(TB_SETIMAGELIST, 0, (LPARAM)imageList);
 
-	SendMessage(TB_ADDBUTTONSW, numShownButtons, (LPARAM)&tbButtonsAdd);
+    SendMessage(TB_ADDBUTTONSW, numShownButtons, (LPARAM)&tbButtonsAdd);
 
-	return hResult;
+    return hResult;
 }
 
 HRESULT STDMETHODCALLTYPE CToolsBand::GetSite(REFIID riid, void **ppvSite)
 {
-	if (fDockSite == NULL)
-		return E_FAIL;
-	return fDockSite->QueryInterface(riid, ppvSite);
+    if (fDockSite == NULL)
+        return E_FAIL;
+    return fDockSite->QueryInterface(riid, ppvSite);
 }
 
 HRESULT STDMETHODCALLTYPE CToolsBand::GetWindow(HWND *lphwnd)
 {
-	if (lphwnd == NULL)
-		return E_POINTER;
-	*lphwnd = m_hWnd;
-	return S_OK;
+    if (lphwnd == NULL)
+        return E_POINTER;
+    *lphwnd = m_hWnd;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CToolsBand::ContextSensitiveHelp(BOOL fEnterMode)
 {
-	
-	return E_NOTIMPL;
+
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CToolsBand::CloseDW(DWORD dwReserved)
@@ -306,7 +309,7 @@ HRESULT STDMETHODCALLTYPE CToolsBand::CloseDW(DWORD dwReserved)
 
 HRESULT STDMETHODCALLTYPE CToolsBand::ResizeBorderDW(const RECT* prcBorder, IUnknown* punkToolbarSite, BOOL fReserved)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CToolsBand::ShowDW(BOOL fShow)
@@ -323,75 +326,75 @@ HRESULT STDMETHODCALLTYPE CToolsBand::ShowDW(BOOL fShow)
 
 HRESULT STDMETHODCALLTYPE CToolsBand::HasFocusIO()
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CToolsBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CToolsBand::UIActivateIO(BOOL fActivate, LPMSG lpMsg)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CToolsBand::GetClassID(CLSID *pClassID)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CToolsBand::IsDirty()
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CToolsBand::Load(IStream *pStm)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CToolsBand::Save(IStream *pStm, BOOL fClearDirty)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CToolsBand::GetSizeMax(ULARGE_INTEGER *pcbSize)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 LRESULT CToolsBand::OnGetButtonInfo(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled)
 {
-	TBNOTIFYW *pTBntf = (TBNOTIFYW *)pNMHDR;
+    TBNOTIFYW *pTBntf = reinterpret_cast<TBNOTIFYW *>(pNMHDR);
 
-	if (pTBntf->iItem >= 0 && pTBntf->iItem < (numShownButtons + numHiddenButtons))
-	{
-		pTBntf->tbButton = tbButtonsAdd[pTBntf->iItem];
-		return TRUE;
-	}
-	else
-		return FALSE;
-	return 0;
+    if (pTBntf->iItem >= 0 && pTBntf->iItem < (numShownButtons + numHiddenButtons))
+    {
+        pTBntf->tbButton = tbButtonsAdd[pTBntf->iItem];
+        return TRUE;
+    }
+    else
+        return FALSE;
+    return 0;
 }
 
 HRESULT CreateToolsBar(REFIID riid, void **ppv)
 {
-	CComObject<CToolsBand>					*theMenuBar;
-	HRESULT									hResult;
+    CComObject<CToolsBand>                  *theMenuBar;
+    HRESULT                                 hResult;
 
-	if (ppv == NULL)
-		return E_POINTER;
-	*ppv = NULL;
-	ATLTRY (theMenuBar = new CComObject<CToolsBand>);
-	if (theMenuBar == NULL)
-		return E_OUTOFMEMORY;
-	hResult = theMenuBar->QueryInterface (riid, (void **)ppv);
-	if (FAILED (hResult))
-	{
-		delete theMenuBar;
-		return hResult;
-	}
-	return S_OK;
+    if (ppv == NULL)
+        return E_POINTER;
+    *ppv = NULL;
+    ATLTRY (theMenuBar = new CComObject<CToolsBand>);
+    if (theMenuBar == NULL)
+        return E_OUTOFMEMORY;
+    hResult = theMenuBar->QueryInterface(riid, reinterpret_cast<void **>(ppv));
+    if (FAILED(hResult))
+    {
+        delete theMenuBar;
+        return hResult;
+    }
+    return S_OK;
 }
 

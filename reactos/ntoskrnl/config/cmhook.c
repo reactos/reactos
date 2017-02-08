@@ -116,31 +116,31 @@ CmRegisterCallback(IN PEX_CALLBACK_FUNCTION Function,
     ASSERT(Function && Cookie);
 
     Callback = ExAllocatePoolWithTag(PagedPool,
-                                   sizeof(REGISTRY_CALLBACK),
-                                   'bcMC');
-    if (Callback != NULL)
+                                     sizeof(REGISTRY_CALLBACK),
+                                     'bcMC');
+    if (Callback == NULL)
     {
-        /* initialize the callback */
-        ExInitializeRundownProtection(&Callback->RundownRef);
-        Callback->Function = Function;
-        Callback->Context = Context;
-        Callback->PendingDelete = FALSE;
-
-        /* add it to the callback list and receive a cookie for the callback */
-        ExAcquireFastMutex(&CmiCallbackLock);
-
-        /* FIXME - to receive a unique cookie we'll just return the pointer to the
-           callback object */
-        Callback->Cookie.QuadPart = (ULONG_PTR)Callback;
-        InsertTailList(&CmiCallbackHead, &Callback->ListEntry);
-
-        ExReleaseFastMutex(&CmiCallbackLock);
-
-        *Cookie = Callback->Cookie;
-        return STATUS_SUCCESS;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    return STATUS_INSUFFICIENT_RESOURCES;
+    /* initialize the callback */
+    ExInitializeRundownProtection(&Callback->RundownRef);
+    Callback->Function = Function;
+    Callback->Context = Context;
+    Callback->PendingDelete = FALSE;
+
+    /* add it to the callback list and receive a cookie for the callback */
+    ExAcquireFastMutex(&CmiCallbackLock);
+
+    /* FIXME - to receive a unique cookie we'll just return the pointer to the
+       callback object */
+    Callback->Cookie.QuadPart = (ULONG_PTR)Callback;
+    InsertTailList(&CmiCallbackHead, &Callback->ListEntry);
+
+    ExReleaseFastMutex(&CmiCallbackLock);
+
+    *Cookie = Callback->Cookie;
+    return STATUS_SUCCESS;
 }
 
 /*

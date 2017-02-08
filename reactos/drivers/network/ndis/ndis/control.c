@@ -12,7 +12,6 @@
 
 #include "ndissys.h"
 
-
 /*
  * @implemented
  */
@@ -33,7 +32,6 @@ NdisInitializeReadWriteLock(
   KeInitializeSpinLock(&Lock->SpinLock);
 }
 
-
 /*
  * @implemented
  */
@@ -94,7 +92,6 @@ NdisAcquireReadWriteLock(
   }
 }
 
-
 /*
  * @implemented
  */
@@ -129,7 +126,6 @@ NdisReleaseReadWriteLock(
   }
 }
 
-
 /*
  * @implemented
  */
@@ -147,7 +143,6 @@ NdisAcquireSpinLock(
   KeAcquireSpinLock(&SpinLock->SpinLock, &SpinLock->OldIrql);
 }
 
-
 /*
  * @implemented
  */
@@ -165,7 +160,6 @@ NdisAllocateSpinLock(
   KeInitializeSpinLock(&SpinLock->SpinLock);
 }
 
-
 /*
  * @implemented
  */
@@ -184,7 +178,6 @@ NdisDprAcquireSpinLock(
   SpinLock->OldIrql = DISPATCH_LEVEL;
 }
 
-
 /*
  * @implemented
  */
@@ -202,7 +195,6 @@ NdisDprReleaseSpinLock(
   KeReleaseSpinLockFromDpcLevel(&SpinLock->SpinLock);
 }
 
-
 /*
  * @implemented
  */

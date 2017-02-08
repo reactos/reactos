@@ -40,7 +40,7 @@
  * Enterprises, see ``http://www.vix.com''.
  */
 
-#include "rosdhcp.h"
+#include <rosdhcp.h>
 
 struct string_list *
 new_string_list(size_t size)

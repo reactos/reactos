@@ -41,7 +41,6 @@ void ME_PaintContent(ME_TextEditor *editor, HDC hDC, const RECT *rcUpdate)
   IntersectClipRect(hDC, rcUpdate->left, rcUpdate->top,
                      rcUpdate->right, rcUpdate->bottom);
 
-  editor->nSequence++;
   ME_InitContext(&c, editor, hDC);
   SetBkMode(hDC, TRANSPARENT);
   ME_MoveCaret(editor);
@@ -1275,32 +1274,29 @@ ME_InvalidateSelection(ME_TextEditor *editor)
    * they can point past the end of the document */
   if (editor->nLastSelStart > len || editor->nLastSelEnd > len) {
     repaint_start = ME_FindItemFwd(editor->pBuffer->pFirst, diParagraph);
-    repaint_end = editor->pBuffer->pLast;
-    ME_MarkForPainting(editor, repaint_start, repaint_end);
+    repaint_end = editor->pBuffer->pLast->member.para.prev_para;
   } else {
     /* if the start part of selection is being expanded or contracted... */
     if (nStart < editor->nLastSelStart) {
       repaint_start = sel_start;
-      repaint_end = editor->pLastSelStartPara->member.para.next_para;
+      repaint_end = editor->pLastSelStartPara;
     } else if (nStart > editor->nLastSelStart) {
       repaint_start = editor->pLastSelStartPara;
-      repaint_end = sel_start->member.para.next_para;
+      repaint_end = sel_start;
     }
-    ME_MarkForPainting(editor, repaint_start, repaint_end);
 
     /* if the end part of selection is being contracted or expanded... */
     if (nEnd < editor->nLastSelEnd) {
       if (!repaint_start) repaint_start = sel_end;
-      repaint_end = editor->pLastSelEndPara->member.para.next_para;
-      ME_MarkForPainting(editor, sel_end, repaint_end);
+      repaint_end = editor->pLastSelEndPara;
     } else if (nEnd > editor->nLastSelEnd) {
       if (!repaint_start) repaint_start = editor->pLastSelEndPara;
-      repaint_end = sel_end->member.para.next_para;
-      ME_MarkForPainting(editor, editor->pLastSelEndPara, repaint_end);
+      repaint_end = sel_end;
     }
   }
 
-  ME_InvalidateMarkedParagraphs(editor, repaint_start, repaint_end);
+  if (repaint_start)
+    ME_InvalidateParagraphRange(editor, repaint_start, repaint_end);
   /* remember the last invalidated position */
   ME_GetSelectionOfs(editor, &editor->nLastSelStart, &editor->nLastSelEnd);
   ME_GetSelectionParas(editor, &editor->pLastSelStartPara, &editor->pLastSelEndPara);

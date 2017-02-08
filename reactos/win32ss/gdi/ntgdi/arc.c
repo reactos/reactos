@@ -57,12 +57,17 @@ IntArc( DC *dc,
     {
        INT tmp = Bottom; Bottom = Top; Top = tmp;
     }
-    if ((Left == Right) ||
-        (Top == Bottom) ||
-        (((arctype != GdiTypeArc) || (arctype != GdiTypeArcTo)) &&
-        ((Right - Left == 1) ||
-        (Bottom - Top == 1))))
-       return TRUE;
+
+    /* Check if the target rect is empty */
+    if ((Left == Right) || (Top == Bottom)) return TRUE;
+
+    // FIXME: this needs to be verified
+    if ((arctype == GdiTypeChord ) || (arctype == GdiTypePie))
+    {
+        if ((Right - Left == 1) || (Bottom - Top == 1))
+           return TRUE;
+    }
+
 
     pdcattr = dc->pdcattr;
 
@@ -125,6 +130,12 @@ IntArc( DC *dc,
     CenterY = (RectBounds.bottom + RectBounds.top) / 2;
     AngleEnd   = atan2((RectSEpts.bottom - CenterY), RectSEpts.right - CenterX)*(360.0/(M_PI*2));
     AngleStart = atan2((RectSEpts.top - CenterY), RectSEpts.left - CenterX)*(360.0/(M_PI*2));
+
+    /* Edge Case: Check if the start segments overlaps(is equal) the end segment */
+    if (AngleEnd == AngleStart)
+    {
+        AngleStart = AngleEnd + 360.0; // Arc(), ArcTo(), Pie() and Chord() are counterclockwise APIs.
+    }
 
     SfCx = (LONG)(Rcos(AngleStart) * RadiusX);
     SfCy = (LONG)(Rsin(AngleStart) * RadiusY);

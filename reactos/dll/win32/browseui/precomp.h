@@ -1,22 +1,30 @@
-#include <windows.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <winnls.h>
+#include <wincon.h>
+#include <shellapi.h>
 #include <shlobj.h>
 #include <shlobj_undoc.h>
-#include <shlguid.h>
 #include <shlguid_undoc.h>
 #include <tchar.h>
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlwin.h>
 #include <perhist.h>
-#include <exdisp.h>
 #include <exdispid.h>
 #include <shlwapi.h>
 #include <shlwapi_undoc.h>
-#include <objbase.h>
 #include <htiframe.h>
+#include <wine/debug.h>
 
 #include "resource.h"
-#include "wine/debug.h"
+
 #include "aclmulti.h"
 #include "addressband.h"
 #include "addresseditbox.h"
@@ -29,4 +37,4 @@
 #include "globalfoldersettings.h"
 #include "regtreeoptions.h"
 #include "newatlinterfaces.h"
-#include "utility.h"
+//#include "utility.h"

@@ -95,7 +95,7 @@ typedef struct _NPFS_CCB
     ULONG PipeState;
     ULONG ReadDataAvailable;
     ULONG WriteQuotaAvailable;
-    ULONG RefCount;
+    volatile LONG RefCount;
 
     LIST_ENTRY ReadRequestListHead;
 

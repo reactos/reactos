@@ -27,4 +27,28 @@ void set_ldids(HINF hInf, LPCWSTR pszInstallSection, LPCWSTR pszWorkingDir) DECL
 
 HRESULT launch_exe(LPCWSTR cmd, LPCWSTR dir, HANDLE *phEXE) DECLSPEC_HIDDEN;
 
+static inline void *heap_alloc(size_t len)
+{
+    return HeapAlloc(GetProcessHeap(), 0, len);
+}
+
+static inline BOOL heap_free(void *mem)
+{
+    return HeapFree(GetProcessHeap(), 0, mem);
+}
+
+static inline char *heap_strdupWtoA(const WCHAR *str)
+{
+    char *ret = NULL;
+
+    if(str) {
+        size_t size = WideCharToMultiByte(CP_ACP, 0, str, -1, NULL, 0, NULL, NULL);
+        ret = heap_alloc(size);
+        if(ret)
+            WideCharToMultiByte(CP_ACP, 0, str, -1, ret, size, NULL, NULL);
+    }
+
+    return ret;
+}
+
 #endif /* __ADVPACK_PRIVATE_H */

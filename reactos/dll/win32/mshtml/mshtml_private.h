@@ -16,23 +16,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wingdi.h"
-#include "docobj.h"
-#include "comcat.h"
-#include "mshtml.h"
-#include "mshtmhst.h"
-#include "hlink.h"
-#include "perhist.h"
-#include "dispex.h"
+#include <wingdi.h>
+//#include "docobj.h"
+#include <comcat.h>
+#include <mshtml.h>
+#include <mshtmhst.h>
+#include <hlink.h>
+#include <perhist.h>
+#include <dispex.h>
 
-#include "wine/list.h"
-#include "wine/unicode.h"
+#include <wine/list.h>
+#include <wine/unicode.h>
 
 #ifdef INIT_GUID
-#include "initguid.h"
+#include <initguid.h>
 #endif
 
-#include "nsiface.h"
+#include <nsiface.h>
 
 #define NS_OK                     ((nsresult)0x00000000L)
 #define NS_ERROR_FAILURE          ((nsresult)0x80004005L)

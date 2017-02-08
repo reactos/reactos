@@ -69,23 +69,129 @@ extern "C" {
 
 #ifndef _CRT_ALLOCATION_DEFINED
 #define _CRT_ALLOCATION_DEFINED
-  void *__cdecl calloc(size_t _NumOfElements,size_t _SizeOfElements);
-  void __cdecl free(void *_Memory);
-  void *__cdecl malloc(size_t _Size);
-  void *__cdecl realloc(void *_Memory,size_t _NewSize);
-  _CRTIMP void *__cdecl _recalloc(void *_Memory,size_t _Count,size_t _Size);
+
+  _Check_return_
+  _Ret_maybenull_
+  _Post_writable_byte_size_(_NumOfElements * _SizeOfElements)
+  void*
+  __cdecl
+  calloc(
+    _In_ size_t _NumOfElements,
+    _In_ size_t _SizeOfElements);
+
+  void
+  __cdecl
+  free(
+    _Pre_maybenull_ _Post_invalid_ void *_Memory);
+
+  _Check_return_
+  _Ret_maybenull_
+  _Post_writable_byte_size_(_Size)
+  void*
+  __cdecl
+  malloc(
+    _In_ size_t _Size);
+
+  _Check_return_
+  _Ret_maybenull_
+  _Post_writable_byte_size_(_NewSize)
+  void*
+  __cdecl
+  realloc(
+    _Pre_maybenull_ _Post_invalid_ void *_Memory,
+    _In_ size_t _NewSize);
+
+  _Check_return_
+  _Ret_maybenull_
+  _Post_writable_byte_size_(_Count * _Size)
+  _CRTIMP
+  void*
+  __cdecl
+  _recalloc(
+    _Pre_maybenull_ _Post_invalid_ void *_Memory,
+    _In_ size_t _Count,
+    _In_ size_t _Size);
 
 #ifdef __DO_ALIGN_DEFINES
-  _CRTIMP void __cdecl _aligned_free(void *_Memory);
-  _CRTIMP void *__cdecl _aligned_malloc(size_t _Size,size_t _Alignment);
-#endif
 
-  _CRTIMP void *__cdecl _aligned_offset_malloc(size_t _Size,size_t _Alignment,size_t _Offset);
-  _CRTIMP void *__cdecl _aligned_realloc(void *_Memory,size_t _Size,size_t _Alignment);
-  _CRTIMP void *__cdecl _aligned_recalloc(void *_Memory,size_t _Count,size_t _Size,size_t _Alignment);
-  _CRTIMP void *__cdecl _aligned_offset_realloc(void *_Memory,size_t _Size,size_t _Alignment,size_t _Offset);
-  _CRTIMP void *__cdecl _aligned_offset_recalloc(void *_Memory,size_t _Count,size_t _Size,size_t _Alignment,size_t _Offset);
-#endif
+  _CRTIMP
+  void
+  __cdecl
+  _aligned_free(
+    _Pre_maybenull_ _Post_invalid_ void *_Memory);
+
+  _Check_return_
+  _Ret_maybenull_
+  _Post_writable_byte_size_(_Size)
+  _CRTIMP
+  void*
+  __cdecl
+  _aligned_malloc(
+    _In_ size_t _Size,
+    _In_ size_t _Alignment);
+
+#endif /* __DO_ALIGN_DEFINES */
+
+  _Check_return_
+  _Ret_maybenull_
+  _Post_writable_byte_size_(_Size)
+  _CRTIMP
+  void*
+  __cdecl
+  _aligned_offset_malloc(
+    _In_ size_t _Size,
+    _In_ size_t _Alignment,
+    _In_ size_t _Offset);
+
+  _Check_return_
+  _Ret_maybenull_
+  _Post_writable_byte_size_(_Size)
+  _CRTIMP
+  void*
+  __cdecl
+  _aligned_realloc(
+    _Pre_maybenull_ _Post_invalid_ void *_Memory,
+    _In_ size_t _Size,
+    _In_ size_t _Alignment);
+
+  _Check_return_
+  _Ret_maybenull_
+  _Post_writable_byte_size_(_Count * _Size)
+  _CRTIMP
+  void*
+  __cdecl
+  _aligned_recalloc(
+    _Pre_maybenull_ _Post_invalid_ void *_Memory,
+    _In_ size_t _Count,
+    _In_ size_t _Size,
+    _In_ size_t _Alignment);
+
+  _Check_return_
+  _Ret_maybenull_
+  _Post_writable_byte_size_(_Size)
+  _CRTIMP
+  void*
+  __cdecl
+  _aligned_offset_realloc(
+    _Pre_maybenull_ _Post_invalid_ void *_Memory,
+    _In_ size_t _Size,
+    _In_ size_t _Alignment,
+    _In_ size_t _Offset);
+
+  _Check_return_
+  _Ret_maybenull_
+  _Post_writable_byte_size_(_Count * _Size)
+  _CRTIMP
+  void*
+  __cdecl
+  _aligned_offset_recalloc(
+    _Pre_maybenull_ _Post_invalid_ void *_Memory,
+    _In_ size_t _Count,
+    _In_ size_t _Size,
+    _In_ size_t _Alignment,
+    _In_ size_t _Offset);
+
+#endif /* _CRT_ALLOCATION_DEFINED */
 
 #ifdef __DO_ALIGN_DEFINES
 #undef __DO_ALIGN_DEFINES
@@ -98,27 +204,109 @@ extern "C" {
 #define _MAX_WAIT_MALLOC_CRT 60000
 
   _CRTIMP int __cdecl _resetstkoflw (void);
-  _CRTIMP unsigned long __cdecl _set_malloc_crt_max_wait(unsigned long _NewValue);
 
-  _CRTIMP void *__cdecl _expand(void *_Memory,size_t _NewSize);
-  _CRTIMP size_t __cdecl _msize(void *_Memory);
+  _CRTIMP
+  unsigned long
+  __cdecl
+  _set_malloc_crt_max_wait(
+    _In_ unsigned long _NewValue);
+
+  _Check_return_
+  _Ret_maybenull_
+  _Post_writable_byte_size_(_NewSize)
+  _CRTIMP
+  void*
+  __cdecl
+  _expand(
+    _In_opt_ void *_Memory,
+    _In_ size_t _NewSize);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _msize(
+    _In_ void *_Memory);
+
 #ifdef __GNUC__
 #undef _alloca
 #define _alloca(x) __builtin_alloca((x))
 #else
-  void *__cdecl _alloca(size_t _Size);
+  _Ret_notnull_
+  _Post_writable_byte_size_(_Size)
+  void*
+  __cdecl
+  _alloca(
+    _In_ size_t _Size);
 #endif
-  _CRTIMP size_t __cdecl _get_sbh_threshold(void);
-  _CRTIMP int __cdecl _set_sbh_threshold(size_t _NewValue);
-  _CRTIMP errno_t __cdecl _set_amblksiz(size_t _Value);
-  _CRTIMP errno_t __cdecl _get_amblksiz(size_t *_Value);
-  _CRTIMP int __cdecl _heapadd(void *_Memory,size_t _Size);
-  _CRTIMP int __cdecl _heapchk(void);
-  _CRTIMP int __cdecl _heapmin(void);
-  _CRTIMP int __cdecl _heapset(unsigned int _Fill);
-  _CRTIMP int __cdecl _heapwalk(_HEAPINFO *_EntryInfo);
-  _CRTIMP size_t __cdecl _heapused(size_t *_Used,size_t *_Commit);
-  _CRTIMP intptr_t __cdecl _get_heap_handle(void);
+
+  _Check_return_
+  _CRTIMP
+  size_t
+  __cdecl
+  _get_sbh_threshold(void);
+
+  _CRTIMP
+  int
+  __cdecl
+  _set_sbh_threshold(
+    _In_ size_t _NewValue);
+
+  _CRTIMP
+  errno_t
+  __cdecl
+  _set_amblksiz(
+    _In_ size_t _Value);
+
+  _CRTIMP
+  errno_t
+  __cdecl
+  _get_amblksiz(
+    _Out_ size_t *_Value);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _heapadd(
+    _In_ void *_Memory,
+    _In_ size_t _Size);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _heapchk(void);
+
+  _Check_return_
+  _CRTIMP
+  int
+  __cdecl
+  _heapmin(void);
+
+  _CRTIMP
+  int
+  __cdecl
+  _heapset(
+    _In_ unsigned int _Fill);
+
+  _CRTIMP
+  int
+  __cdecl
+  _heapwalk(
+    _Inout_ _HEAPINFO *_EntryInfo);
+
+  _CRTIMP
+  size_t
+  __cdecl
+  _heapused(
+    size_t *_Used,
+    size_t *_Commit);
+
+  _CRTIMP
+  intptr_t
+  __cdecl
+  _get_heap_handle(void);
 
 #define _ALLOCA_S_THRESHOLD 1024
 #define _ALLOCA_S_STACK_MARKER 0xCCCC
@@ -179,14 +367,18 @@ extern "C" {
   typedef int (__cdecl *_HEAPHOOK)(int,size_t,void *,void **);
 #endif
 
-  _CRTIMP _HEAPHOOK __cdecl _setheaphook(_HEAPHOOK _NewHook);
+  _CRTIMP
+  _HEAPHOOK
+  __cdecl
+  _setheaphook(
+    _In_opt_ _HEAPHOOK _NewHook);
 
-#define _HEAP_MALLOC 1
-#define _HEAP_CALLOC 2
-#define _HEAP_FREE 3
+#define _HEAP_MALLOC  1
+#define _HEAP_CALLOC  2
+#define _HEAP_FREE    3
 #define _HEAP_REALLOC 4
-#define _HEAP_MSIZE 5
-#define _HEAP_EXPAND 6
+#define _HEAP_MSIZE   5
+#define _HEAP_EXPAND  6
 #endif
 
 #ifdef __cplusplus

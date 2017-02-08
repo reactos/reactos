@@ -18,19 +18,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#include <config.h>
 
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wine/debug.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(xmllite);
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-    TRACE("(0x%p, %d, %p)\n", hinstDLL, fdwReason, lpvReserved);
+    TRACE("(%p, %u, %p)\n", hinstDLL, fdwReason, lpvReserved);
 
     switch (fdwReason)
     {

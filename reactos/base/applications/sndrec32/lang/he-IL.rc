@@ -1,0 +1,54 @@
+LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
+
+IDC_REACTOS_SNDREC32 ACCELERATORS
+BEGIN
+    "?",            IDM_ABOUT,              ASCII,  ALT
+    "/",            IDM_ABOUT,              ASCII,  ALT
+END
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "אודות הרשמקול של ReactOS"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDI_SNDREC32,-1,19,14,21,20
+    LTEXT           "רשמקול של ReactOS גרסה 1.0",IDC_STATIC,56,16,114,8,SS_NOPREFIX
+    LTEXT           "זכויות יוצרים (C) 2009",IDC_STATIC,55,25,114,8
+    DEFPUSHBUTTON   "אישור",IDOK,139,54,50,14,WS_GROUP
+END
+
+IDR_MENU1 MENU
+BEGIN
+    POPUP "קובץ"
+    BEGIN
+        MENUITEM "חדש",                         ID_NEW
+        MENUITEM "פתח...",                     ID_FILE_OPEN
+        MENUITEM "שמור",                        ID_FILE_SAVE, GRAYED
+        MENUITEM "שמור בשם...",                  ID_FILE_SAVEAS, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "יציאה",                        ID_EXIT
+    END
+    MENUITEM "todo1",                       0
+    MENUITEM "todo2",                       0
+    POPUP "?"
+    BEGIN
+        MENUITEM "אודות...",                    ID__ABOUT
+    END
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_APP_TITLE           "רשמקול"
+    IDC_REACTOS_SNDREC32    "REACTOS_SNDREC32"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_STRPOS              "מיקום: %.2f s"
+    IDS_STRDUR              "אורך: %.2f s"
+    IDS_STRBUF              "מתווך: %.2f kb"
+    IDS_STRFMT              "%.1f kHz %u bits"
+    IDS_STRMONO             "מונו"
+    IDS_STRSTEREO           "סטריאו"
+    IDS_STRCHAN             "%s"
+END

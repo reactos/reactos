@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2008-2011 Alexandr A. Telyatnikov (Alter)
+Copyright (c) 2008-2012 Alexandr A. Telyatnikov (Alter)
 
 Module Name:
     id_probe.cpp
@@ -68,15 +68,31 @@ UniataSataConnect(
         if(SStatus.SPD == SStatus_SPD_Gen1 ||
            SStatus.SPD == SStatus_SPD_Gen2 ||
            SStatus.SPD == SStatus_SPD_Gen3) {
+            // SATA sets actual transfer rate in LunExt on init.
+            // There is no run-time SATA rate adjustment yet.
+            // On the other hand, we may turn SATA device in PIO mode
+            // TODO: make separate states for interface speed and transfer mode (DMA vs PIO)
+            chan->lun[0]->LimitedTransferMode =
+            chan->lun[0]->PhyTransferMode =
             chan->lun[0]->TransferMode = ATA_SA150 + (UCHAR)(SStatus.SPD - 1);
+
             KdPrint2((PRINT_PREFIX "SATA TransferMode %#x\n", chan->lun[0]->TransferMode));
+            if(chan->MaxTransferMode < chan->lun[0]->TransferMode) {
+                KdPrint2((PRINT_PREFIX "SATA upd chan TransferMode\n"));
+                chan->MaxTransferMode = chan->lun[0]->TransferMode;
+            }
+            if(deviceExtension->MaxTransferMode < chan->lun[0]->TransferMode) {
+                KdPrint2((PRINT_PREFIX "SATA upd controller TransferMode\n"));
+                deviceExtension->MaxTransferMode = chan->lun[0]->TransferMode;
+            }
+
             break;
         }
         AtapiStallExecution(10000);
     }
     if(i >= 100) {
         KdPrint2((PRINT_PREFIX "UniataSataConnect: SStatus %8.8x\n", SStatus.Reg));
-        return 0xff;
+        return IDE_STATUS_WRONG;
     }
     /* clear SATA error register */
     UniataSataWritePort4(chan, IDX_SATA_SError,
@@ -156,7 +172,7 @@ UniataSataPhyEnable(
     }
 
     KdPrint2((PRINT_PREFIX "UniataSataPhyEnable: failed\n"));
-    return 0xff;
+    return IDE_STATUS_WRONG;
 } // end UniataSataPhyEnable()
 
 BOOLEAN
@@ -200,6 +216,7 @@ UniataSataClearErr(
                     return TRUE;
                 }
             }
+            //return TRUE;
         }
     }
     return FALSE;
@@ -285,6 +302,24 @@ UniataSataReadPort4(
                 SetPciConfig4(0xa0, offs);
                 GetPciConfig4(0xa4, offs);
                 return offs;
+            } else 
+            if(deviceExtension->HwFlags & ICH7) {
+                offs = 0x100+chan->lun[p]->SATA_lun_map*0x80;
+                KdPrint3((PRINT_PREFIX "  ICH7 way, offs %#x\n", offs));
+                switch(io_port_ndx) {
+                case IDX_SATA_SStatus:
+                    offs += IDX_AHCI_P_SStatus;
+                    break;
+                case IDX_SATA_SError:
+                    offs += IDX_AHCI_P_SError;
+                    break;
+                case IDX_SATA_SControl:
+                    offs += IDX_AHCI_P_SControl;
+                    break;
+                default:
+                    return -1;
+                }
+                return AtapiReadPortEx4(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressSATA_0), offs);
             } else {
                 offs = ((deviceExtension->Channel+chan->lChannel)*2+p) * 0x100;
                 KdPrint3((PRINT_PREFIX "  def way, offs %#x\n", offs));
@@ -355,6 +390,25 @@ UniataSataWritePort4(
                 SetPciConfig4(0xa0, offs);
                 SetPciConfig4(0xa4, data);
                 return;
+            } else 
+            if(deviceExtension->HwFlags & ICH7) {
+                offs = 0x100+chan->lun[p]->SATA_lun_map*0x80;
+                KdPrint3((PRINT_PREFIX "  ICH7 way, offs %#x\n", offs));
+                switch(io_port_ndx) {
+                case IDX_SATA_SStatus:
+                    offs += IDX_AHCI_P_SStatus;
+                    break;
+                case IDX_SATA_SError:
+                    offs += IDX_AHCI_P_SError;
+                    break;
+                case IDX_SATA_SControl:
+                    offs += IDX_AHCI_P_SControl;
+                    break;
+                default:
+                    return;
+                }
+                AtapiWritePortEx4(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressSATA_0), offs, data);
+                return;
             } else {
                 offs = ((deviceExtension->Channel+chan->lChannel)*2+p) * 0x100;
                 KdPrint3((PRINT_PREFIX "  def way, offs %#x\n", offs));
@@ -408,7 +462,7 @@ UniataSataWritePM(
     if(chan->DeviceExtension->HwFlags & UNIATA_AHCI) {
         return UniataAhciWritePM(chan, DeviceNumber, Reg, value);
     }
-    return 0xff;
+    return IDE_STATUS_WRONG;
 } // end UniataSataWritePM()
 
 ULONG
@@ -591,7 +645,9 @@ UniataAhciInit(
     PHW_CHANNEL chan;
     ULONG offs;
     ULONG BaseMemAddress;
+#ifdef DBG
     ULONG PI;
+#endif //DBG
     ULONG CAP;
     ULONG GHC;
     BOOLEAN MemIo = FALSE;
@@ -602,7 +658,26 @@ UniataAhciInit(
     UniataDumpAhciRegs(deviceExtension);
 #endif //DBG
 
-    /* reset AHCI controller */
+    /* disable AHCI interrupts, for MSI compatibility issue
+       see http://www.intel.com/Assets/PDF/specupdate/307014.pdf
+       26. AHCI Reset and MSI Request
+    */
+
+    KdPrint2((PRINT_PREFIX "  get GHC\n"));
+    /* enable AHCI mode */
+    GHC = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_GHC);
+    if(!(GHC & AHCI_GHC_AE)) {
+        KdPrint2((PRINT_PREFIX "  enable AHCI mode, disable intr, GHC %#x\n", GHC));
+        UniataAhciWriteHostPort4(deviceExtension, IDX_AHCI_GHC,
+            (GHC | AHCI_GHC_AE) & ~AHCI_GHC_IE);
+    } else {
+        KdPrint2((PRINT_PREFIX "  disable intr, GHC %#x\n", GHC));
+        UniataAhciWriteHostPort4(deviceExtension, IDX_AHCI_GHC,
+            GHC & ~AHCI_GHC_IE);
+    }
+    AtapiStallExecution(100);
+
+    /* read GHC again and reset AHCI controller */
     GHC = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_GHC);
     KdPrint2((PRINT_PREFIX "  reset AHCI controller, GHC %#x\n", GHC));
     UniataAhciWriteHostPort4(deviceExtension, IDX_AHCI_GHC,
@@ -621,17 +696,22 @@ UniataAhciInit(
         return FALSE;
     }
 
-    /* enable AHCI mode */
+    /* re-enable AHCI mode */
     GHC = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_GHC);
-    KdPrint2((PRINT_PREFIX "  enable AHCI mode, GHC %#x\n", GHC));
-    UniataAhciWriteHostPort4(deviceExtension, IDX_AHCI_GHC,
-        GHC | AHCI_GHC_AE);
-    GHC = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_GHC);
+    if(!(GHC & AHCI_GHC_AE)) {
+        KdPrint2((PRINT_PREFIX "  re-enable AHCI mode, GHC %#x\n", GHC));
+        UniataAhciWriteHostPort4(deviceExtension, IDX_AHCI_GHC,
+            GHC | AHCI_GHC_AE);
+        GHC = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_GHC);
+    }
     KdPrint2((PRINT_PREFIX "  AHCI GHC %#x\n", GHC));
+    if(!(GHC & AHCI_GHC_AE)) {
+        KdPrint2((PRINT_PREFIX "  Can't enable AHCI mode\n"));
+        return FALSE;
+    }
 
     deviceExtension->AHCI_CAP =
       CAP = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_CAP);
-    PI = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_PI);
     KdPrint2((PRINT_PREFIX "  AHCI CAP %#x\n", CAP));
     if(CAP & AHCI_CAP_S64A) {
         KdPrint2((PRINT_PREFIX "  AHCI 64bit\n"));
@@ -644,9 +724,11 @@ UniataAhciInit(
     if(CAP & AHCI_CAP_SAM) {
         KdPrint2((PRINT_PREFIX "  AHCI legasy SATA\n"));
     }
+#ifdef DBG
     /* get the number of HW channels */
     PI = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_PI);
     KdPrint2((PRINT_PREFIX "  AHCI PI %#x\n", PI));
+#endif //DBG
 
     /* clear interrupts */
     UniataAhciWriteHostPort4(deviceExtension, IDX_AHCI_IS,
@@ -659,11 +741,16 @@ UniataAhciInit(
     BaseMemAddress = deviceExtension->BaseIoAHCI_0.Addr;
     MemIo          = deviceExtension->BaseIoAHCI_0.MemIo;
 
+    deviceExtension->MaxTransferMode = ATA_SA150+(((CAP & AHCI_CAP_ISS_MASK) >> 20)-1);
+    KdPrint2((PRINT_PREFIX "  SATA Gen %d\n", ((CAP & AHCI_CAP_ISS_MASK) >> 20) ));
+
     for(c=0; c<deviceExtension->NumberChannels; c++) {
         chan = &deviceExtension->chan[c];
         offs = sizeof(IDE_AHCI_REGISTERS) + c*sizeof(IDE_AHCI_PORT_REGISTERS);
 
         KdPrint2((PRINT_PREFIX "  chan %d, offs %#x\n", c, offs));
+
+        chan->MaxTransferMode = deviceExtension->MaxTransferMode;
 
         AtapiSetupLunPtrs(chan, deviceExtension, c);
 
@@ -695,6 +782,11 @@ UniataAhciInit(
 
         AtapiDmaAlloc(HwDeviceExtension, NULL, c);
 
+        if(!UniataAhciChanImplemented(deviceExtension, c)) {
+            KdPrint2((PRINT_PREFIX "  chan %d not implemented\n", c));
+            continue;
+        }
+
         UniataAhciResume(chan);
 
         chan->ChannelCtrlFlags |= CTRFLAGS_NO_SLAVE;
@@ -702,6 +794,35 @@ UniataAhciInit(
 
     return TRUE;
 } // end UniataAhciInit()
+
+BOOLEAN
+NTAPI
+UniAtaAhciValidateVersion(
+    IN PHW_DEVICE_EXTENSION deviceExtension,
+    IN ULONG version,
+    IN BOOLEAN Strict
+    )
+{
+    switch(version) {
+    case 0x00000000:
+    case 0xffffffff:
+        KdPrint(("  wrong AHCI revision %#x\n", version));
+        return FALSE;
+    case 0x00000905:
+    case 0x00010000:
+    case 0x00010100:
+    case 0x00010200:
+    case 0x00010300:
+        break;
+    default:
+        KdPrint2((PRINT_PREFIX "  Unknown AHCI revision\n"));
+        if(AtapiRegCheckDevValue(deviceExtension, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"CheckAhciRevision", Strict)) {
+            KdPrint(("  AHCI revision excluded\n"));
+            return FALSE;
+        }
+    }
+    return TRUE;
+} // end UniAtaAhciValidateVersion()
 
 BOOLEAN
 NTAPI
@@ -718,15 +839,20 @@ UniataAhciDetect(
     ULONG i, n;
     ULONG PI;
     ULONG CAP;
-    ULONG GHC;
-    ULONG NumberChannels;
+    ULONG CAP2;
+    ULONG GHC, GHC0;
+#ifdef DBG
+    ULONG BOHC;
     ULONG v_Mn, v_Mj;
+#endif //DBG
+    ULONG NumberChannels;
     ULONG BaseMemAddress;
-    BOOLEAN MemIo;
+    BOOLEAN MemIo = FALSE;
+    BOOLEAN found = FALSE;
 
     KdPrint2((PRINT_PREFIX "  UniataAhciDetect:\n"));
 
-    if(AtapiRegCheckDevValue(deviceExtension, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"IgnoreAhci", 1 /* DEBUG */)) {
+    if(AtapiRegCheckDevValue(deviceExtension, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"IgnoreAhci", 0)) {
         KdPrint(("  AHCI excluded\n"));
         return FALSE;
     }
@@ -736,7 +862,7 @@ UniataAhciDetect(
         KdPrint2((PRINT_PREFIX "  AHCI init failed - no IoRange\n"));
         return FALSE;
     }
-    if(BaseMemAddress && (*ConfigInfo->AccessRanges)[5].RangeInMemory) {
+    if((*ConfigInfo->AccessRanges)[5].RangeInMemory) {
         KdPrint2((PRINT_PREFIX "MemIo\n"));
         MemIo = TRUE;
     }
@@ -753,28 +879,64 @@ UniataAhciDetect(
         return FALSE;
     }
 
-    /* enable AHCI mode */
+    /* check AHCI mode. Save state and try enable */
+    GHC0 = 
     GHC = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_GHC);
     KdPrint2((PRINT_PREFIX "  check AHCI mode, GHC %#x\n", GHC));
+
+    version = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_VS);
+
     if(!(GHC & AHCI_GHC_AE)) {
-        KdPrint2((PRINT_PREFIX "  Non-AHCI GHC (!AE)\n"));
-        return FALSE;
+        KdPrint2((PRINT_PREFIX "  Non-AHCI GHC (!AE), check revision %#x\n", version));
+        if(!UniAtaAhciValidateVersion(deviceExtension, version, FALSE)) {
+            KdPrint2((PRINT_PREFIX "  Non-AHCI\n"));
+            goto exit_detect;
+        }
+        KdPrint2((PRINT_PREFIX "  try enable\n"));
+        UniataAhciWriteHostPort4(deviceExtension, IDX_AHCI_GHC,
+            (GHC | AHCI_GHC_AE) & ~AHCI_GHC_IE);
+        GHC = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_GHC);
+
+        KdPrint2((PRINT_PREFIX "  re-check AHCI mode, GHC %#x\n", GHC));
+        if(!(GHC & AHCI_GHC_AE)) {
+            KdPrint2((PRINT_PREFIX "  Non-AHCI GHC (!AE)\n"));
+            goto exit_detect;
+        }
     }
 
     CAP = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_CAP);
-    KdPrint2((PRINT_PREFIX "  AHCI CAP %#x\n", CAP));
+    CAP2 = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_CAP2);
+    KdPrint2((PRINT_PREFIX "  AHCI CAP %#x, CAP2 %#x\n", CAP, CAP2));
     if(CAP & AHCI_CAP_S64A) {
-        KdPrint2((PRINT_PREFIX "  AHCI 64bit\n"));
-        //deviceExtension->Host64 = TRUE;
+        KdPrint2((PRINT_PREFIX "  64bit"));
+        //deviceExtension->Host64 = TRUE; // this is just DETECT, do not update anything
     }
+#ifdef DBG
+    if(CAP2 & AHCI_CAP2_BOH) {
+        BOHC = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_BOHC);
+        KdPrint2((PRINT_PREFIX "  BOHC %#x", BOHC));
+    }
+#endif //DBG
+    if(CAP & AHCI_CAP_NCQ) {
+        KdPrint2((PRINT_PREFIX "  NCQ"));
+    }
+    if(CAP & AHCI_CAP_SNTF) {
+        KdPrint2((PRINT_PREFIX "  SNTF"));
+    }
+    if(CAP & AHCI_CAP_CCC) {
+        KdPrint2((PRINT_PREFIX "  CCC"));
+    }
+    KdPrint2((PRINT_PREFIX "\n"));
 
     /* get the number of HW channels */
     PI = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_PI);
+    deviceExtension->AHCI_PI = PI;
     KdPrint2((PRINT_PREFIX "  AHCI PI %#x\n", PI));
     for(i=PI, n=0; i; n++, i=i>>1);
     NumberChannels =
         max((CAP & AHCI_CAP_NOP_MASK)+1, n);
 
+    KdPrint2((PRINT_PREFIX "  CommandSlots %d\n", (CAP & AHCI_CAP_NCS_MASK)>>8 ));
     KdPrint2((PRINT_PREFIX "  Channels %d\n", n));
 
     switch(deviceExtension->DevID) {
@@ -792,22 +954,25 @@ UniataAhciDetect(
 
     if(!NumberChannels) {
         KdPrint2((PRINT_PREFIX "  Non-AHCI - NumberChannels=0\n"));
-        return FALSE;
+        found = FALSE;
+        goto exit_detect;
     }
 
-    version = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_VS);
+#ifdef DBG
     v_Mj = ((version >> 20) & 0xf0) + ((version >> 16) & 0x0f);
     v_Mn = ((version >> 4) & 0xf0) + (version & 0x0f);
 
     KdPrint2((PRINT_PREFIX "  AHCI version %#x.%02x controller with %d ports (mask %#x) detected\n",
 		  v_Mj, v_Mn,
 		  NumberChannels, PI));
+    KdPrint(("  AHCI SATA Gen %d\n", (((CAP & AHCI_CAP_ISS_MASK) >> 20)) ));
+#endif //DBG
 
     if(CAP & AHCI_CAP_SPM) {
         KdPrint2((PRINT_PREFIX "  PM supported\n"));
         if(AtapiRegCheckDevValue(deviceExtension, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"IgnoreAhciPM", 1 /* DEBUG */)) {
             KdPrint2((PRINT_PREFIX "SATA/AHCI w/o PM, max luns 1\n"));
-            deviceExtension->NumberLuns = 2;
+            deviceExtension->NumberLuns = 1;
             //chan->ChannelCtrlFlags |= CTRFLAGS_NO_SLAVE;
         } else {
             KdPrint2((PRINT_PREFIX "SATA/AHCI -> possible PM, max luns %d\n", SATA_MAX_PM_UNITS));
@@ -819,21 +984,27 @@ UniataAhciDetect(
         deviceExtension->NumberLuns = 1;
     }
 
-    if((v_Mj != 0x01) || (v_Mn > 0x20)) {
-        KdPrint2((PRINT_PREFIX "  Unknown AHCI revision\n"));
-        if(AtapiRegCheckDevValue(deviceExtension, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"CheckAhciRevision", 1)) {
-            KdPrint(("  AHCI revision excluded\n"));
-            return FALSE;
-        }
+    if(!UniAtaAhciValidateVersion(deviceExtension, version, TRUE)) {
+        goto exit_detect;
     }
 
-    deviceExtension->HwFlags |= UNIATA_SATA;
-    deviceExtension->HwFlags |= UNIATA_AHCI;
+    deviceExtension->HwFlags |= UNIATA_SATA | UNIATA_AHCI;
     if(deviceExtension->NumberChannels < NumberChannels) {
         deviceExtension->NumberChannels = NumberChannels;
     }
+    deviceExtension->DmaSegmentLength = 0x3fffff+1; // 4MB
+    deviceExtension->DmaSegmentAlignmentMask = -1; // no restrictions
 
-    return TRUE;
+    deviceExtension->BusMaster = DMA_MODE_AHCI;
+    deviceExtension->MaxTransferMode = max(deviceExtension->MaxTransferMode, ATA_SA150+(((CAP & AHCI_CAP_ISS_MASK) >> 20)-1) );
+
+    found = TRUE;
+
+exit_detect:
+    UniataAhciWriteHostPort4(deviceExtension, IDX_AHCI_GHC, GHC0);
+    KdPrint(("  AHCI detect status %d\n", found));
+
+    return found;
 } // end UniataAhciDetect()
 
 UCHAR
@@ -848,14 +1019,14 @@ UniataAhciStatus(
     PHW_CHANNEL chan = &deviceExtension->chan[lChannel];
     ULONG Channel = deviceExtension->Channel + lChannel;
     ULONG            hIS;
-    ULONG            CI;
+    ULONG            CI, ACT;
     AHCI_IS_REG      IS;
     SATA_SSTATUS_REG SStatus;
     SATA_SERROR_REG  SError;
     //ULONG offs = sizeof(IDE_AHCI_REGISTERS) + Channel*sizeof(IDE_AHCI_PORT_REGISTERS);
     ULONG tag=0;
 
-    KdPrint(("UniataAhciStatus:\n"));
+    KdPrint(("UniataAhciStatus(%d-%d):\n", lChannel, Channel));
 
     hIS = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_IS);
     KdPrint((" hIS %#x\n", hIS));
@@ -865,6 +1036,7 @@ UniataAhciStatus(
     }
     IS.Reg      = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_IS);
     CI          = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_CI);
+    ACT         = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_ACT);
     SStatus.Reg = AtapiReadPort4(chan, IDX_SATA_SStatus);
     SError.Reg  = AtapiReadPort4(chan, IDX_SATA_SError); 
 
@@ -873,8 +1045,8 @@ UniataAhciStatus(
     UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_IS, IS.Reg);
     AtapiWritePort4(chan, IDX_SATA_SError, SError.Reg);
 
-    KdPrint((" AHCI: status=%08x sstatus=%08x error=%08x CI=%08x\n",
-	   IS.Reg, SStatus.Reg, SError.Reg, CI));
+    KdPrint((" AHCI: is=%08x ss=%08x serror=%08x CI=%08x, ACT=%08x\n",
+	   IS.Reg, SStatus.Reg, SError.Reg, CI, ACT));
 
     /* do we have cold connect surprise */
     if(IS.CPDS) {
@@ -887,13 +1059,62 @@ UniataAhciStatus(
     if(IS.PRCS) {
         UniataSataEvent(HwDeviceExtension, lChannel, UNIATA_SATA_EVENT_DETACH);
     }
+    chan->AhciCompleteCI = (chan->AhciPrevCI ^ CI) & chan->AhciPrevCI; // only 1->0 states
+    chan->AhciPrevCI = CI;
+    KdPrint((" AHCI: complete mask %#x\n", chan->AhciCompleteCI));
+    chan->AhciLastIS = IS.Reg;
     if(CI & (1 << tag)) {
-        return INTERRUPT_REASON_OUR;
+#ifdef DBG
+        UniataDumpAhciPortRegs(chan);
+#endif //DBG
+        //deviceExtension->ExpectingInterrupt++; // will be updated in ISR on ReturnEnableInterrupts
+        if(IS.Reg &
+            (ATA_AHCI_P_IX_OF | ATA_AHCI_P_IX_INF | ATA_AHCI_P_IX_IF |
+             ATA_AHCI_P_IX_HBD | ATA_AHCI_P_IX_HBF | ATA_AHCI_P_IX_TFE)) {
+            KdPrint((" AHCI: unexpected, error\n"));
+        } else {
+            KdPrint((" AHCI: unexpected, incomplete command or error ?\n"));
+/*
+            ULONG TFD;
+
+            TFD = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_TFD);
+            KdPrint2(("  TFD %#x\n", TFD));
+            if(TFD & IDE_STATUS_BUSY) {
+                KdPrint2(("  Seems to be interrupt on error\n"));
+                return INTERRUPT_REASON_OUR;
+            }
+*/
+            return INTERRUPT_REASON_UNEXPECTED;
+        }
     }
-    KdPrint((" AHCI: unexpected\n"));
-    return INTERRUPT_REASON_UNEXPECTED;
+    return INTERRUPT_REASON_OUR;
 
 } // end UniataAhciStatus()
+
+VOID
+NTAPI
+UniataAhciSnapAtaRegs(
+    IN PHW_CHANNEL chan,
+    IN ULONG DeviceNumber,
+ IN OUT PIDEREGS_EX regs
+    )
+{
+    ULONG TFD, SIG;
+
+    regs->bDriveHeadReg    = IDE_DRIVE_SELECT_1;
+    TFD = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_TFD);
+    regs->bCommandReg = (UCHAR)(TFD & 0xff);
+    regs->bFeaturesReg = (UCHAR)((TFD >> 8) & 0xff);
+
+    SIG = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_SIG);
+    regs->bSectorCountReg  = (UCHAR)(SIG & 0xff);
+    regs->bSectorNumberReg = (UCHAR)((SIG >> 8) & 0xff);
+    regs->bCylLowReg       = (UCHAR)((SIG >> 16) & 0xff);
+    regs->bCylHighReg      = (UCHAR)((SIG >> 24) & 0xff);
+    regs->bOpFlags = 0;
+
+    return;
+} // end UniataAhciSnapAtaRegs()
 
 ULONG
 NTAPI
@@ -905,35 +1126,42 @@ UniataAhciSetupFIS_H2D(
     IN UCHAR command,
     IN ULONGLONG lba,
     IN USHORT count,
-    IN USHORT feature,
-    IN ULONG flags
+    IN USHORT feature
     )
 {
-    ULONG i;
+    //ULONG i;
     PUCHAR plba;
     BOOLEAN need48;
     PHW_CHANNEL chan = &deviceExtension->chan[lChannel];
 
-    KdPrint2((PRINT_PREFIX "  AHCI setup FIS ch %d, dev %d\n", lChannel, DeviceNumber));
-    i = 0;
+    KdPrint2((PRINT_PREFIX "  AHCI setup FIS %x, ch %d, dev %d\n", fis, lChannel, DeviceNumber));
+    //i = 0;
     plba = (PUCHAR)&lba;
+
+    RtlZeroMemory(fis, 20);
 
     fis[0] = AHCI_FIS_TYPE_ATA_H2D;  /* host to device */
     fis[1] = 0x80 | ((UCHAR)DeviceNumber & 0x0f);  /* command FIS (note PM goes here) */
-    fis[7] = IDE_USE_LBA;
-    fis[15] = IDE_DC_A_4BIT;
+    fis[IDX_AHCI_o_DriveSelect] = IDE_DRIVE_SELECT_1 |
+             ((AtaCommandFlags[command] & (ATA_CMD_FLAG_LBAIOsupp | ATA_CMD_FLAG_48)) ? IDE_USE_LBA : 0);
+    fis[IDX_AHCI_o_Control] = IDE_DC_A_4BIT;
 
-    if(chan->lun[DeviceNumber]->DeviceFlags & DFLAGS_ATAPI_DEVICE) {
-        fis[2] = IDE_COMMAND_ATAPI_PACKET;
+    // IDE_COMMAND_ATAPI_IDENTIFY should be processed as regular ATA command,
+    // the rest of ATAPI requests are processed via IDE_COMMAND_ATAPI_PACKET
+    if(/*(chan->lun[DeviceNumber]->DeviceFlags & DFLAGS_ATAPI_DEVICE) && 
+        */
+        command == IDE_COMMAND_ATAPI_PACKET) { 
+        fis[IDX_AHCI_o_Command] = IDE_COMMAND_ATAPI_PACKET;
         if(feature & ATA_F_DMA) {
-            fis[3] = (UCHAR)(feature & 0xff);
+            fis[IDX_AHCI_o_Feature] = (UCHAR)(feature & 0xff);
         } else {
-            fis[5] = (UCHAR)(count & 0xff);
-            fis[6] = (UCHAR)(count>>8) & 0xff;
+            fis[IDX_AHCI_o_CylinderLow] = (UCHAR)(count & 0xff);
+            fis[IDX_AHCI_o_CylinderHigh] = (UCHAR)(count>>8) & 0xff;
         }
+        //fis[IDX_AHCI_o_Control] |= IDE_DC_A_4BIT;
     } else {
 
-        if((AtaCommandFlags[command] & ATA_CMD_FLAG_LBAIOsupp) &&
+        if(((AtaCommandFlags[command] & (ATA_CMD_FLAG_LBAIOsupp|ATA_CMD_FLAG_FUA)) == ATA_CMD_FLAG_LBAIOsupp) &&
            CheckIfBadBlock(chan->lun[DeviceNumber], lba, count)) {
             KdPrint3((PRINT_PREFIX ": artificial bad block, lba %#I64x count %#x\n", lba, count));
             //return IDE_STATUS_ERROR;
@@ -954,32 +1182,40 @@ UniataAhciSetupFIS_H2D(
             }
         }
 
-        fis[2] = command;
-        fis[3] = (UCHAR)feature;
+        fis[IDX_AHCI_o_Command] = command;
+        fis[IDX_AHCI_o_Feature] = (UCHAR)feature;
 
-        fis[4] = plba[0];
-        fis[5] = plba[1];
-        fis[6] = plba[2];
+        fis[IDX_AHCI_o_BlockNumber] = plba[0];
+        fis[IDX_AHCI_o_CylinderLow] = plba[1];
+        fis[IDX_AHCI_o_CylinderHigh] = plba[2];
+
+        fis[IDX_AHCI_o_BlockCount] = (UCHAR)count & 0xff;
+
         if(need48) {
-            i++;
+            //i++;
+            fis[IDX_AHCI_o_Control] |= IDE_DC_USE_HOB;
+
+            fis[IDX_AHCI_o_BlockNumberExp] = plba[3];
+            fis[IDX_AHCI_o_CylinderLowExp] = plba[4];
+            fis[IDX_AHCI_o_CylinderHighExp] = plba[5]; 
+
+            fis[IDX_AHCI_o_BlockCountExp] = (UCHAR)(count>>8) & 0xff;
+
+            fis[IDX_AHCI_o_FeatureExp] = (UCHAR)(feature>>8) & 0xff;
+
+            chan->ChannelCtrlFlags |= CTRFLAGS_LBA48;
         } else {
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4333) // right shift by too large amount, data loss
-#endif
-            fis[7] |= IDE_DRIVE_1 | ((plba[3] >> 24) & 0x0f);
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
+//#ifdef _MSC_VER
+//#pragma warning(push)
+//#pragma warning(disable:4333) // right shift by too large amount, data loss
+//#endif
+            fis[IDX_AHCI_o_DriveSelect] |= /*IDE_DRIVE_1 |*/ (plba[3] & 0x0f);
+            chan->ChannelCtrlFlags &= ~CTRFLAGS_LBA48;
+//#ifdef _MSC_VER
+//#pragma warning(pop)
+//#endif
         }
 
-        fis[8] = plba[3];
-        fis[9] = plba[4];
-        fis[10] = plba[5]; 
-        fis[11] = (UCHAR)(feature>>8) & 0xff;
-
-        fis[12] = (UCHAR)count & 0xff;
-        fis[13] = (UCHAR)(count>>8) & 0xff;
         //fis[14] = 0x00;
 
     }
@@ -989,50 +1225,133 @@ UniataAhciSetupFIS_H2D(
     return 20;
 } // end UniataAhciSetupFIS_H2D()
 
+ULONG
+NTAPI
+UniataAhciSetupFIS_H2D_Direct(
+    IN PHW_DEVICE_EXTENSION deviceExtension,
+    IN ULONG DeviceNumber,
+    IN ULONG lChannel,
+   OUT PUCHAR fis,
+    IN PIDEREGS_EX regs
+    )
+{
+    //ULONG i;
+    //PUCHAR plba;
+    BOOLEAN need48;
+    PHW_CHANNEL chan = &deviceExtension->chan[lChannel];
+    UCHAR command;
+
+    command = regs->bCommandReg;
+
+    KdPrint2((PRINT_PREFIX "  AHCI setup FIS Direct %x, ch %d, dev %d\n", fis, lChannel, DeviceNumber));
+    //i = 0;
+    //plba = (PUCHAR)&lba;
+
+    RtlZeroMemory(fis, 20);
+
+    fis[0] = AHCI_FIS_TYPE_ATA_H2D;  /* host to device */
+    fis[1] = 0x80 | ((UCHAR)DeviceNumber & 0x0f);  /* command FIS (note PM goes here) */
+    fis[IDX_AHCI_o_DriveSelect] = IDE_DRIVE_SELECT_1 |
+             ((AtaCommandFlags[command] & (ATA_CMD_FLAG_LBAIOsupp | ATA_CMD_FLAG_48)) ? IDE_USE_LBA : 0);
+    fis[IDX_AHCI_o_Control] = IDE_DC_A_4BIT;
+
+    // IDE_COMMAND_ATAPI_IDENTIFY should be processed as regular ATA command,
+    // the rest of ATAPI requests are processed via IDE_COMMAND_ATAPI_PACKET
+    if(/*(chan->lun[DeviceNumber]->DeviceFlags & DFLAGS_ATAPI_DEVICE) && 
+        */
+        command == IDE_COMMAND_ATAPI_PACKET) { 
+/*        fis[IDX_AHCI_o_Command] = IDE_COMMAND_ATAPI_PACKET;
+        if(feature & ATA_F_DMA) {
+            fis[IDX_AHCI_o_Feature] = (UCHAR)(feature & 0xff);
+        } else {
+            fis[IDX_AHCI_o_CylinderLow] = (UCHAR)(count & 0xff);
+            fis[IDX_AHCI_o_CylinderHigh] = (UCHAR)(count>>8) & 0xff;
+        }*/
+        return 0;
+        //fis[IDX_AHCI_o_Control] |= IDE_DC_A_4BIT;
+    } else {
+
+        need48 = (regs->bOpFlags & ATA_FLAGS_48BIT_COMMAND) &&
+            chan->lun[DeviceNumber]->IdentifyData.FeaturesSupport.Address48;
+
+        /* translate command into 48bit version */
+        if(need48) {
+            if(AtaCommandFlags[command] & ATA_CMD_FLAG_48supp) {
+                command = AtaCommands48[command];
+            } else {
+                KdPrint2((PRINT_PREFIX "  unhandled LBA48 command\n"));
+                return 0;
+            }
+        }
+
+        fis[IDX_AHCI_o_Command] = command;
+        fis[IDX_AHCI_o_Feature] = regs->bFeaturesReg;
+
+        fis[IDX_AHCI_o_BlockNumber]  = regs->bSectorNumberReg;
+        fis[IDX_AHCI_o_CylinderLow]  = regs->bCylLowReg;
+        fis[IDX_AHCI_o_CylinderHigh] = regs->bCylHighReg;
+
+        fis[IDX_AHCI_o_BlockCount]   = regs->bSectorCountReg;
+
+        if(need48) {
+            //i++;
+            fis[IDX_AHCI_o_Control] |= IDE_DC_USE_HOB;
+
+            fis[IDX_AHCI_o_BlockNumberExp]  = regs->bSectorNumberRegH;
+            fis[IDX_AHCI_o_CylinderLowExp]  = regs->bCylLowRegH;
+            fis[IDX_AHCI_o_CylinderHighExp] = regs->bCylHighRegH;
+
+            fis[IDX_AHCI_o_BlockCountExp]   = regs->bSectorCountRegH;
+
+            fis[IDX_AHCI_o_FeatureExp] = regs->bFeaturesRegH;
+
+            chan->ChannelCtrlFlags |= CTRFLAGS_LBA48;
+        } else {
+            //fis[IDX_AHCI_o_DriveSelect] |= /*IDE_DRIVE_1 |*/ (plba[3] & 0x0f);
+            chan->ChannelCtrlFlags &= ~CTRFLAGS_LBA48;
+        }
+        fis[IDX_AHCI_o_DriveSelect] |= regs->bDriveHeadReg & 0x0f;
+    }
+
+    KdDump(fis, 20);
+
+    return 20;
+} // end UniataAhciSetupFIS_H2D_Direct()
+
 UCHAR
 NTAPI
-UniataAhciSendCommand(
-    IN PVOID HwDeviceExtension,
-    IN ULONG lChannel,
-    IN ULONG DeviceNumber,
-    IN ULONG flags,
+UniataAhciWaitCommandReady(
+    IN PHW_CHANNEL chan,
     IN ULONG timeout
     )
 {
-    PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
-    PHW_CHANNEL chan = &deviceExtension->chan[lChannel];
-    //ULONG Channel = deviceExtension->Channel + lChannel;
-    //ULONG            hIS;
-    ULONG            CI = 0;
     AHCI_IS_REG      IS;
-    ULONG            SError;
-    //SATA_SSTATUS_REG SStatus;
-    //SATA_SERROR_REG  SError;
-    //ULONG offs = sizeof(IDE_AHCI_REGISTERS) + Channel*sizeof(IDE_AHCI_PORT_REGISTERS);
-    //ULONGIO_PTR base;
-    ULONG tag=0;
+    //ULONG            ACT;
+    ULONG            CI=0;
     ULONG i;
+    ULONG SError;
+    ULONG tag=0;
 
-    PIDE_AHCI_CMD_LIST AHCI_CL = &(chan->AhciCtlBlock->cmd_list[tag]);
-
-    KdPrint(("UniataAhciSendCommand: lChan %d\n", chan->lChannel));
-
-    AHCI_CL->prd_length = 0;
-    AHCI_CL->cmd_flags = (20 / sizeof(ULONG)) | flags | (DeviceNumber << 12);
-    AHCI_CL->bytecount = 0;
-    AHCI_CL->cmd_table_phys = chan->AHCI_CTL_PhAddr + FIELD_OFFSET(IDE_AHCI_CHANNEL_CTL_BLOCK, cmd);
-    if(AHCI_CL->cmd_table_phys & AHCI_CMD_ALIGNEMENT_MASK) {
-        KdPrint2((PRINT_PREFIX "  AHCI CMD address is not aligned (mask %#x)\n", (ULONG)AHCI_CMD_ALIGNEMENT_MASK));
-    }
-
-    UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_CI, ATA_AHCI_P_CMD_ST);
+    timeout *= 5;
 
     for (i=0; i<timeout; i++) {
-        AtapiStallExecution(1000);
         CI = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_CI);
-        if (!(CI & ATA_AHCI_P_CMD_ST)) {
+        //ACT = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_ACT);
+        if (!(( CI >> tag) & 0x01)) {
             break;
         }
+        IS.Reg      = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_IS);
+        //KdPrint(("  IS %#x\n", IS.Reg));
+        if(IS.Reg) {
+            break;
+        }
+        SError = AtapiReadPort4(chan, IDX_SATA_SError);
+        if(SError) {
+            KdPrint((" AHCI: error %#x\n", SError));
+            i = timeout;
+            break;
+        }
+        AtapiStallExecution(200);
     }
     KdPrint(("  CI %#x\n", CI));
 
@@ -1045,6 +1364,7 @@ UniataAhciSendCommand(
     UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_IS, IS.Reg);
 
     if (timeout && (i >= timeout)) {
+#ifdef DBG
         ULONG TFD;
 
         SError = AtapiReadPort4(chan, IDX_SATA_SError);
@@ -1052,13 +1372,304 @@ UniataAhciSendCommand(
 
         TFD = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_TFD);
         KdPrint2(("  TFD %#x\n", TFD));
+#endif //DBG
         
-        return 0xff;
+        return IDE_STATUS_WRONG;
     }
 
     return IDE_STATUS_IDLE;
+} // end UniataAhciWaitCommandReady()
+
+UCHAR
+NTAPI
+UniataAhciSendCommand(
+    IN PVOID HwDeviceExtension,
+    IN ULONG lChannel,
+    IN ULONG DeviceNumber,
+    IN USHORT ahci_flags,
+    IN ULONG timeout
+    )
+{
+    PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
+    PHW_CHANNEL chan = &deviceExtension->chan[lChannel];
+    //ULONG Channel = deviceExtension->Channel + lChannel;
+    //ULONG            hIS;
+    //ULONG            SError;
+    //SATA_SSTATUS_REG SStatus;
+    //SATA_SERROR_REG  SError;
+    //ULONG offs = sizeof(IDE_AHCI_REGISTERS) + Channel*sizeof(IDE_AHCI_PORT_REGISTERS);
+    //ULONGIO_PTR base;
+    ULONG tag=0;
+
+    PIDE_AHCI_CMD_LIST AHCI_CL = &(chan->AhciCtlBlock->cmd_list[tag]);
+
+    KdPrint(("UniataAhciSendCommand: lChan %d\n", chan->lChannel));
+
+    AHCI_CL->prd_length = 0;
+    //AHCI_CL->cmd_flags = (20 / sizeof(ULONG)) | ahci_flags | (DeviceNumber << 12);
+    AHCI_CL->cmd_flags = UniAtaAhciAdjustIoFlags(0, ahci_flags, 20, DeviceNumber);
+
+    AHCI_CL->bytecount = 0;
+    AHCI_CL->cmd_table_phys = chan->AHCI_CTL_PhAddr + FIELD_OFFSET(IDE_AHCI_CHANNEL_CTL_BLOCK, cmd);
+    if(AHCI_CL->cmd_table_phys & AHCI_CMD_ALIGNEMENT_MASK) {
+        KdPrint2((PRINT_PREFIX "  AHCI CMD address is not aligned (mask %#x)\n", (ULONG)AHCI_CMD_ALIGNEMENT_MASK));
+    }
+
+    //UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_ACT, 0x01 << tag);
+    UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_CI, 1 << tag);
+
+    return UniataAhciWaitCommandReady(chan, timeout);
 
 } // end UniataAhciSendCommand()
+
+UCHAR
+NTAPI
+UniataAhciSendPIOCommand(
+    IN PVOID HwDeviceExtension,
+    IN ULONG lChannel,
+    IN ULONG DeviceNumber,
+    IN PSCSI_REQUEST_BLOCK Srb,
+    IN PUCHAR data,
+    IN ULONG length, /* bytes */
+    IN UCHAR command,
+    IN ULONGLONG lba,
+    IN USHORT bcount, /* block count, just ATA register */
+    IN USHORT feature,
+    IN USHORT ahci_flags,
+    IN ULONG wait_flags,
+    IN ULONG timeout
+    )
+{
+    PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
+    PHW_CHANNEL chan = &deviceExtension->chan[lChannel];
+    UCHAR statusByte;
+    PATA_REQ AtaReq;
+    ULONG fis_size;
+    //ULONG tag=0;
+    //PIDE_AHCI_CMD  AHCI_CMD = &(chan->AhciCtlBlock->cmd);
+    PIDE_AHCI_CMD  AHCI_CMD = NULL;
+
+    //PIDE_AHCI_CMD_LIST AHCI_CL = &(chan->AhciCtlBlock->cmd_list[tag]);
+
+    KdPrint2((PRINT_PREFIX "UniataAhciSendPIOCommand: cntrlr %#x:%#x dev %#x, cmd %#x, lba %#I64x bcount %#x feature %#x, buff %#x, len %#x, WF %#x \n",
+                 deviceExtension->DevIndex, lChannel, DeviceNumber, command, lba, bcount, feature, data, length, wait_flags ));
+
+    if(length/DEV_BSIZE != bcount) {
+        KdPrint(("  length/DEV_BSIZE != bcount\n"));
+    }
+
+#ifdef DBG
+    //UniataDumpAhciPortRegs(chan);
+#endif // DBG
+
+    if(!Srb) {
+        Srb = BuildAhciInternalSrb(HwDeviceExtension, DeviceNumber, lChannel, data, length);
+        if(!Srb) {
+            KdPrint(("  !Srb\n"));
+            return IDE_STATUS_WRONG;
+        }
+        //UniataAhciSetupCmdPtr(AtaReq); // must be called before DMA setup
+        //should be already called on init
+    }
+    AtaReq = (PATA_REQ)(Srb->SrbExtension);
+    //KdPrint(("  Srb %#x, AtaReq %#x\n", Srb, AtaReq));
+
+    AHCI_CMD = AtaReq->ahci.ahci_cmd_ptr;
+
+    fis_size = UniataAhciSetupFIS_H2D(deviceExtension, DeviceNumber, lChannel,
+           &(AHCI_CMD->cfis[0]),
+            command,
+            lba,
+            bcount,
+            feature
+            );
+
+    if(!fis_size) {
+        KdPrint2(("!fis_size\n"));
+        return IDE_STATUS_WRONG;
+    }
+
+    //KdPrint2(("UniAtaAhciAdjustIoFlags(command, ahci_flags, fis_size, DeviceNumber)\n"));
+    ahci_flags = UniAtaAhciAdjustIoFlags(command, ahci_flags, fis_size, DeviceNumber);
+    KdPrint2(("ahci_flags %#x\n", ahci_flags));
+
+    if(data) {
+        if(ahci_flags & ATA_AHCI_CMD_WRITE) {
+            AtaReq->Flags &= ~REQ_FLAG_READ;
+            Srb->SrbFlags |= SRB_FLAGS_DATA_OUT;
+            KdPrint(("  assume OUT\n"));
+        } else {
+            AtaReq->Flags |= REQ_FLAG_READ;
+            Srb->SrbFlags |= SRB_FLAGS_DATA_IN;
+            KdPrint(("  assume IN\n"));
+        }
+        if(!AtapiDmaSetup(HwDeviceExtension,
+                            DeviceNumber,
+                            lChannel,          // logical channel,
+                            Srb,
+                            data,
+                            length)) {
+            KdPrint2(("  can't setup buffer\n"));
+            return IDE_STATUS_WRONG;
+        }
+    }
+
+    AtaReq->ahci.io_cmd_flags = ahci_flags;
+
+#ifdef DBG
+    //UniataDumpAhciPortRegs(chan);
+#endif // DBG
+
+    UniataAhciBeginTransaction(HwDeviceExtension, lChannel, DeviceNumber, Srb);
+
+#ifdef DBG
+    //UniataDumpAhciPortRegs(chan);
+#endif // DBG
+
+    if(wait_flags == ATA_IMMEDIATE) {
+        statusByte = 0;
+        KdPrint2(("  return imemdiately\n"));
+    } else {
+        statusByte = UniataAhciWaitCommandReady(chan, timeout);
+        UniataAhciStatus(HwDeviceExtension, lChannel, DeviceNumber);
+        UniataAhciEndTransaction(HwDeviceExtension, lChannel, DeviceNumber, Srb);
+    }
+
+    return statusByte;
+
+} // end UniataAhciSendPIOCommand()
+
+UCHAR
+NTAPI
+UniataAhciSendPIOCommandDirect(
+    IN PVOID HwDeviceExtension,
+    IN ULONG lChannel,
+    IN ULONG DeviceNumber,
+    IN PSCSI_REQUEST_BLOCK Srb,
+    IN PIDEREGS_EX regs,
+    IN ULONG wait_flags,
+    IN ULONG timeout
+    )
+{
+    PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
+    PHW_CHANNEL chan = &deviceExtension->chan[lChannel];
+    UCHAR statusByte;
+    PATA_REQ AtaReq;
+    ULONG fis_size;
+    //ULONG tag=0;
+    //PIDE_AHCI_CMD  AHCI_CMD = &(chan->AhciCtlBlock->cmd);
+    PIDE_AHCI_CMD  AHCI_CMD = NULL;
+    USHORT ahci_flags=0;
+//    USHORT bcount=0;
+
+    //PIDE_AHCI_CMD_LIST AHCI_CL = &(chan->AhciCtlBlock->cmd_list[tag]);
+
+    KdPrint2((PRINT_PREFIX "UniataAhciSendPIOCommand: cntrlr %#x:%#x dev %#x, buff %#x, len %#x, WF %#x \n",
+                 deviceExtension->DevIndex, lChannel, DeviceNumber, Srb->DataBuffer, Srb->DataTransferLength, wait_flags ));
+
+//    if(Srb->DataTransferLength/DEV_BSIZE != bcount) {
+//        KdPrint(("  length/DEV_BSIZE != bcount\n"));
+//    }
+
+#ifdef DBG
+    //UniataDumpAhciPortRegs(chan);
+#endif // DBG
+
+    if(!Srb) {
+        KdPrint(("  !Srb\n"));
+        return IDE_STATUS_WRONG;
+        //UniataAhciSetupCmdPtr(AtaReq); // must be called before DMA setup
+        //should be already called on init
+    }
+    AtaReq = (PATA_REQ)(Srb->SrbExtension);
+    //KdPrint(("  Srb %#x, AtaReq %#x\n", Srb, AtaReq));
+
+    AHCI_CMD = AtaReq->ahci.ahci_cmd_ptr;
+    if(!AHCI_CMD) {
+        KdPrint(("  !AHCI_CMD\n"));
+        return IDE_STATUS_WRONG;
+    }
+
+    if(Srb->DataTransferLength) {
+        if(Srb->SrbFlags & SRB_FLAGS_DATA_OUT) {
+            ahci_flags |= ATA_AHCI_CMD_WRITE;
+            AtaReq->Flags &= ~REQ_FLAG_READ;
+        } else {
+            AtaReq->Flags |= REQ_FLAG_READ;
+        }
+    }
+
+    fis_size = UniataAhciSetupFIS_H2D_Direct(deviceExtension, DeviceNumber, lChannel,
+           &(AHCI_CMD->cfis[0]),
+            regs);
+
+    if(!fis_size) {
+        KdPrint2(("!fis_size\n"));
+        return IDE_STATUS_WRONG;
+    }
+
+    //KdPrint2(("UniAtaAhciAdjustIoFlags(command, ahci_flags, fis_size, DeviceNumber)\n"));
+    ahci_flags = UniAtaAhciAdjustIoFlags(regs->bCommandReg, ahci_flags, fis_size, DeviceNumber);
+    KdPrint2(("ahci_flags %#x\n", ahci_flags));
+
+    if(Srb->DataTransferLength) {
+        if(!AtapiDmaSetup(HwDeviceExtension,
+                            DeviceNumber,
+                            lChannel,          // logical channel,
+                            Srb,
+                            (PUCHAR)(Srb->DataBuffer),
+                            Srb->DataTransferLength)) {
+            KdPrint2(("  can't setup buffer\n"));
+            return IDE_STATUS_WRONG;
+        }
+    }
+
+    AtaReq->ahci.io_cmd_flags = ahci_flags;
+
+#ifdef DBG
+    //UniataDumpAhciPortRegs(chan);
+#endif // DBG
+
+    UniataAhciBeginTransaction(HwDeviceExtension, lChannel, DeviceNumber, Srb);
+
+#ifdef DBG
+    //UniataDumpAhciPortRegs(chan);
+#endif // DBG
+
+    if(wait_flags == ATA_IMMEDIATE) {
+        statusByte = 0;
+        KdPrint2(("  return imemdiately\n"));
+    } else {
+        statusByte = UniataAhciWaitCommandReady(chan, timeout);
+        UniataAhciStatus(HwDeviceExtension, lChannel, DeviceNumber);
+        UniataAhciEndTransaction(HwDeviceExtension, lChannel, DeviceNumber, Srb);
+    }
+
+    return statusByte;
+
+} // end UniataAhciSendPIOCommandDirect()
+
+BOOLEAN
+NTAPI
+UniataAhciAbortOperation(
+    IN PHW_CHANNEL chan
+    )
+{
+    /* kick controller into sane state */
+    if(!UniataAhciStop(chan)) {
+        return FALSE;
+    }
+    if(!UniataAhciStopFR(chan)) {
+        return FALSE;
+    }
+    if(!UniataAhciCLO(chan)) {
+        return FALSE;
+    }
+    UniataAhciStartFR(chan);
+    UniataAhciStart(chan);
+
+    return TRUE;
+} // end UniataAhciAbortOperation()
 
 ULONG
 NTAPI
@@ -1081,18 +1692,11 @@ UniataAhciSoftReset(
     PIDE_AHCI_CMD  AHCI_CMD = &(chan->AhciCtlBlock->cmd);
     PUCHAR         RCV_FIS = &(chan->AhciCtlBlock->rcv_fis.rfis[0]);
 
-#ifdef DBG
-    UniataDumpAhciPortRegs(chan);
-#endif // DBG
-
     /* kick controller into sane state */
-    UniataAhciStop(chan);
-    UniataAhciCLO(chan);
-    UniataAhciStart(chan);
-
-#ifdef DBG
-    UniataDumpAhciPortRegs(chan);
-#endif // DBG
+    if(!UniataAhciAbortOperation(chan)) {
+        KdPrint2(("  abort failed\n"));
+        return (ULONG)(-1);
+    }
 
     /* pull reset active */
     RtlZeroMemory(AHCI_CMD->cfis, sizeof(AHCI_CMD->cfis));
@@ -1101,7 +1705,7 @@ UniataAhciSoftReset(
     //AHCI_CMD->cfis[7] = IDE_USE_LBA | IDE_DRIVE_SELECT;
     AHCI_CMD->cfis[15] = (IDE_DC_A_4BIT | IDE_DC_RESET_CONTROLLER);
 
-    if(UniataAhciSendCommand(HwDeviceExtension, lChannel, DeviceNumber, ATA_AHCI_CMD_RESET | ATA_AHCI_CMD_CLR_BUSY, 100) == 0xff) {
+    if(UniataAhciSendCommand(HwDeviceExtension, lChannel, DeviceNumber, ATA_AHCI_CMD_RESET | ATA_AHCI_CMD_CLR_BUSY, 100) == IDE_STATUS_WRONG) {
         KdPrint2(("  timeout\n"));
         return (ULONG)(-1);
     }
@@ -1113,7 +1717,7 @@ UniataAhciSoftReset(
     AHCI_CMD->cfis[1] = (UCHAR)DeviceNumber & 0x0f;
     //AHCI_CMD->cfis[7] = IDE_USE_LBA | IDE_DRIVE_SELECT;
     AHCI_CMD->cfis[15] = (IDE_DC_A_4BIT);
-    if(UniataAhciSendCommand(HwDeviceExtension, lChannel, DeviceNumber, 0, 3000) == 0xff) {
+    if(UniataAhciSendCommand(HwDeviceExtension, lChannel, DeviceNumber, 0, 3000) == IDE_STATUS_WRONG) {
         KdPrint2(("  timeout (2)\n"));
         return (ULONG)(-1);
     }
@@ -1172,9 +1776,9 @@ UniataAhciHardReset(
     (*signature) = 0xffffffff;
 
     UniataAhciStop(chan);
-    if(UniataSataPhyEnable(HwDeviceExtension, lChannel, 0/* dev0*/, UNIATA_SATA_RESET_ENABLE) == 0xff) {
+    if(UniataSataPhyEnable(HwDeviceExtension, lChannel, 0/* dev0*/, UNIATA_SATA_RESET_ENABLE) == IDE_STATUS_WRONG) {
         KdPrint(("  no PHY\n"));
-        return 0xff;
+        return IDE_STATUS_WRONG;
     }
 
     /* Wait for clearing busy status. */
@@ -1314,7 +1918,7 @@ UniataAhciStartFR(
     return;
 } // end UniataAhciStartFR()
 
-VOID
+BOOLEAN
 NTAPI
 UniataAhciStopFR(
     IN PHW_CHANNEL chan
@@ -1333,14 +1937,14 @@ UniataAhciStopFR(
         CMD = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_CMD);
         if(!(CMD & ATA_AHCI_P_CMD_FR)) {
             KdPrint2(("  final CMD %#x\n", CMD));
-            return;
+            return TRUE;
         }
         AtapiStallExecution(1000);
     }
     KdPrint2(("  CMD %#x\n", CMD));
     KdPrint(("   SError %#x\n", AtapiReadPort4(chan, IDX_SATA_SError)));
     KdPrint2(("UniataAhciStopFR: timeout\n"));
-    return;
+    return FALSE;
 } // end UniataAhciStopFR()
 
 VOID
@@ -1373,7 +1977,7 @@ UniataAhciStart(
     return;
 } // end UniataAhciStart()
 
-VOID
+BOOLEAN
 NTAPI
 UniataAhciCLO(
     IN PHW_CHANNEL chan
@@ -1391,7 +1995,7 @@ UniataAhciCLO(
     //CAP = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_CAP);
     CAP = chan->DeviceExtension->AHCI_CAP; 
     if(!(CAP & AHCI_CAP_SCLO)) {
-        return;
+        return TRUE;
     }
     KdPrint2(("  send CLO\n"));
     CMD = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_CMD);
@@ -1402,16 +2006,16 @@ UniataAhciCLO(
         CMD = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_CMD);
         if(!(CMD & ATA_AHCI_P_CMD_CLO)) {
             KdPrint2(("  final CMD %#x\n", CMD));
-            return;
+            return TRUE;
         }
         AtapiStallExecution(1000);
     }
     KdPrint2(("  CMD %#x\n", CMD));
     KdPrint2(("UniataAhciCLO: timeout\n"));
-    return;
+    return FALSE;
 } // end UniataAhciCLO()
 
-VOID
+BOOLEAN
 NTAPI
 UniataAhciStop(
     IN PHW_CHANNEL chan
@@ -1432,14 +2036,14 @@ UniataAhciStop(
         CMD = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_CMD);
         if(!(CMD & ATA_AHCI_P_CMD_CR)) {
             KdPrint2(("  final CMD %#x\n", CMD));
-            return;
+            return TRUE;
         }
         AtapiStallExecution(1000);
     }
     KdPrint2(("  CMD %#x\n", CMD));
     KdPrint(("   SError %#x\n", AtapiReadPort4(chan, IDX_SATA_SError)));
     KdPrint2(("UniataAhciStop: timeout\n"));
-    return;
+    return FALSE;
 } // end UniataAhciStop()
 
 UCHAR
@@ -1455,7 +2059,7 @@ UniataAhciBeginTransaction(
     PHW_CHANNEL chan = &deviceExtension->chan[lChannel];
     //ULONG Channel = deviceExtension->Channel + lChannel;
     //ULONG            hIS;
-    ULONG            CMD;
+    ULONG            CMD, CMD0;
     //AHCI_IS_REG      IS;
     PATA_REQ AtaReq = (PATA_REQ)(Srb->SrbExtension);
     //SATA_SSTATUS_REG SStatus;
@@ -1467,31 +2071,64 @@ UniataAhciBeginTransaction(
 
     PIDE_AHCI_CMD_LIST AHCI_CL = &(chan->AhciCtlBlock->cmd_list[tag]);
 
-    KdPrint2(("UniataAhciBeginTransaction: lChan %d\n", chan->lChannel));
+    KdPrint2(("UniataAhciBeginTransaction: lChan %d, AtaReq %#x\n", chan->lChannel, AtaReq));
 
-    if(AtaReq->dma_entries > (USHORT)0xffff) {
-        KdPrint2(("UniataAhciBeginTransaction too long DMA tab\n"));
+    if(Srb->DataTransferLength && (!AtaReq->dma_entries || AtaReq->dma_entries >= (USHORT)0xffff)) {
+        KdPrint2(("UniataAhciBeginTransaction wrong DMA tab len %x\n", AtaReq->dma_entries));
         return 0;
     }
 
-    AHCI_CL->prd_length = (USHORT)AtaReq->dma_entries;
+    AHCI_CL->prd_length = (USHORT)(AtaReq->dma_entries);
     AHCI_CL->cmd_flags  = AtaReq->ahci.io_cmd_flags;
     AHCI_CL->bytecount = 0;
-    AHCI_CL->cmd_table_phys = AtaReq->ahci.ahci_base64;
+    if(AtaReq->ahci.ahci_base64) {
+        KdPrint2((PRINT_PREFIX "  AHCI AtaReq CMD %#x (ph %#x)\n", AtaReq->ahci.ahci_cmd_ptr, (ULONG)(AtaReq->ahci.ahci_base64)));
+        AHCI_CL->cmd_table_phys = AtaReq->ahci.ahci_base64;
+    } else
+    if(AtaReq->ahci.ahci_cmd_ptr) {
+        KdPrint2((PRINT_PREFIX "  AHCI AtaReq->Chan CMD %#x (ph %#x) -> %#x (ph %#x)\n",
+            AtaReq->ahci.ahci_cmd_ptr, (ULONG)(AtaReq->ahci.ahci_base64),
+            &(chan->AhciCtlBlock->cmd), chan->AHCI_CTL_PhAddr + FIELD_OFFSET(IDE_AHCI_CHANNEL_CTL_BLOCK, cmd) ));
+        RtlCopyMemory(&(chan->AhciCtlBlock->cmd), AtaReq->ahci.ahci_cmd_ptr, 
+            FIELD_OFFSET(IDE_AHCI_CMD, prd_tab)+AHCI_CL->prd_length*sizeof(IDE_AHCI_PRD_ENTRY));
+        AHCI_CL->cmd_table_phys = chan->AHCI_CTL_PhAddr + FIELD_OFFSET(IDE_AHCI_CHANNEL_CTL_BLOCK, cmd);
+    } else {
+        KdPrint2((PRINT_PREFIX "  no AHCI CMD\n"));
+        //AHCI_CL->cmd_table_phys = chan->AHCI_CTL_PhAddr + FIELD_OFFSET(IDE_AHCI_CHANNEL_CTL_BLOCK, cmd);
+        return 0;
+    }
     if(AHCI_CL->cmd_table_phys & AHCI_CMD_ALIGNEMENT_MASK) {
         KdPrint2((PRINT_PREFIX "  AHCI CMD address is not aligned (mask %#x)\n", (ULONG)AHCI_CMD_ALIGNEMENT_MASK));
+        return 0;
     }
 
-    CMD = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_CMD);
+#ifdef DBG
+    KdPrint2(("  prd_length %#x, flags %#x, base %I64x\n", AHCI_CL->prd_length, AHCI_CL->cmd_flags, 
+            AHCI_CL->cmd_table_phys));
+#endif // DBG
+
+    CMD0 = CMD = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_CMD);
     KdPrint2(("  CMD %#x\n", CMD));
-    CMD &= ~ATA_AHCI_P_CMD_ATAPI;
-    KdPrint2(("  send CMD %#x\n", CMD));
-    UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_CMD, CMD);
+    // switch controller to ATAPI mode for ATA_PACKET commands only
+    if(ATAPI_DEVICE(chan, DeviceNumber) &&
+       AtaReq->ahci.ahci_cmd_ptr->cfis[2] == IDE_COMMAND_ATAPI_PACKET) {
+        KdPrint2(("  ATAPI\n"));
+        CMD |= ATA_AHCI_P_CMD_ATAPI;
+        KdDump(&(AtaReq->ahci.ahci_cmd_ptr->acmd), 16);
+    } else {
+        CMD &= ~ATA_AHCI_P_CMD_ATAPI;
+    }
+    if(CMD0 != CMD) {
+        KdPrint2(("  send CMD %#x, entries %#x\n", CMD, AHCI_CL->prd_length));
+        UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_CMD, CMD);
+    }
 
     /* issue command to controller */
-    UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_CI, ATA_AHCI_P_CMD_ST);
+    //UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_ACT, 0x01 << tag);
+    UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_CI, 0x01 << tag);
+    chan->AhciPrevCI |= 0x01 << tag;
 
-    if(!(chan->lun[DeviceNumber]->DeviceFlags & DFLAGS_ATAPI_DEVICE)) {
+    if(!ATAPI_DEVICE(chan, DeviceNumber)) {
         // TODO: check if we send ATA_RESET and wait for ready of so.
         if(AtaReq->ahci.ahci_cmd_ptr->cfis[2] == IDE_COMMAND_ATAPI_RESET) {
             ULONG  TFD;
@@ -1511,7 +2148,7 @@ UniataAhciBeginTransaction(
             }
             AtaReq->ahci.in_status = TFD;
 
-            return 0x00;
+            return IDE_STATUS_SUCCESS;
         }
     }
 
@@ -1532,17 +2169,27 @@ UniataAhciEndTransaction(
     PHW_CHANNEL chan = &deviceExtension->chan[lChannel];
     //ULONG Channel = deviceExtension->Channel + lChannel;
     //ULONG            hIS;
+    ULONG            CI, ACT;
     PATA_REQ AtaReq = (PATA_REQ)(Srb->SrbExtension);
     ULONG            TFD;
     PUCHAR         RCV_FIS = &(chan->AhciCtlBlock->rcv_fis.rfis[0]);
+    ULONG tag=0;
+    //ULONG i;
+    PIDE_AHCI_CMD_LIST AHCI_CL = &(chan->AhciCtlBlock->cmd_list[tag]);
+    //PHW_LU_EXTENSION     LunExt;
 
     KdPrint2(("UniataAhciEndTransaction: lChan %d\n", chan->lChannel));
+
+    //LunExt = chan->lun[DeviceNumber];
 
     TFD = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_TFD);
     KdPrint2(("  TFD %#x\n", TFD));
 
     if(TFD & IDE_STATUS_ERROR) {
-        KdPrint2(("  ERROR %#x\n", (UCHAR)(TFD >> 8)));
+        AtaReq->ahci.in_error = (UCHAR)(TFD >> 8);
+        KdPrint2(("  ERROR %#x\n", AtaReq->ahci.in_error));
+    } else {
+        AtaReq->ahci.in_error = 0;
     }
     AtaReq->ahci.in_status = TFD;
 
@@ -1560,7 +2207,44 @@ UniataAhciEndTransaction(
                                 ((ULONGLONG)(RCV_FIS[9]) << 32) |
                                 ((ULONGLONG)(RCV_FIS[7] & 0x0f) << 24);
     }
+    AtaReq->WordsTransfered = AHCI_CL->bytecount/2;
+/*
+    if(LunExt->DeviceFlags & DFLAGS_ATAPI_DEVICE) {
+        KdPrint2(("RCV:\n"));
+        KdDump(RCV_FIS, 24);
+        KdPrint2(("PIO:\n"));
+        KdDump(&(chan->AhciCtlBlock->rcv_fis.psfis[0]), 24);
 
+        KdPrint2(("len: %d vs %d\n", AHCI_CL->bytecount, (ULONG)RCV_FIS[5] | ((ULONG)RCV_FIS[6] << 8) ));
+        if(!AHCI_CL->bytecount) {
+            AtaReq->WordsTransfered = ((ULONG)RCV_FIS[5] | ((ULONG)RCV_FIS[6] << 8)) / 2;
+        }
+    }
+*/
+    ACT = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_ACT);
+    CI = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_CI);
+    if(CI & (1 << tag)) {
+        // clear CI
+        KdPrint2(("  Incomplete command, CI %#x, ACT %#x\n", CI, ACT));
+        KdPrint2(("  FIS status %#x, error %#x\n", RCV_FIS[2], RCV_FIS[3]));
+
+#if DBG
+        UniataDumpAhciPortRegs(chan);
+#endif
+        if(!UniataAhciAbortOperation(chan)) {
+            KdPrint2(("  Abort failed, need RESET\n"));
+        }
+#if DBG
+        UniataDumpAhciPortRegs(chan);
+#endif
+        chan->AhciPrevCI = CI & ~((ULONG)1 << tag);
+        if(chan->AhciPrevCI) {
+            KdPrint2(("  Need command list restart, CI %#x\n", chan->AhciPrevCI));
+        }
+    } else {
+        chan->AhciPrevCI &= ~((ULONG)1 << tag);
+        RtlZeroMemory(AHCI_CL, sizeof(IDE_AHCI_CMD_LIST));
+    }
     //}
 
     return 0;
@@ -1578,7 +2262,7 @@ UniataAhciResume(
     KdPrint2(("UniataAhciResume: lChan %d\n", chan->lChannel));
 
 #ifdef DBG
-    UniataDumpAhciPortRegs(chan);
+    //UniataDumpAhciPortRegs(chan);
 #endif // DBG
 
     /* Disable port interrupts */
@@ -1617,7 +2301,7 @@ UniataAhciResume(
 	     );
 
 #ifdef DBG
-    UniataDumpAhciPortRegs(chan);
+    //UniataDumpAhciPortRegs(chan);
 #endif // DBG
 
     UniataAhciStartFR(chan);
@@ -1710,7 +2394,7 @@ UniataAhciReadPM(
     AHCI_CMD->cfis[7] = (UCHAR)(IDE_USE_LBA | DeviceNumber);
     AHCI_CMD->cfis[15] = IDE_DC_A_4BIT;
 
-    if(UniataAhciSendCommand(chan->DeviceExtension, chan->lChannel, DeviceNumber, 0, 10) == 0xff) {
+    if(UniataAhciSendCommand(chan->DeviceExtension, chan->lChannel, DeviceNumber, 0, 10) == IDE_STATUS_WRONG) {
         KdPrint2(("  PM read failed\n"));
         return FALSE;
     }
@@ -1755,7 +2439,7 @@ UniataAhciWritePM(
         case IDX_SATA_SControl:
             Reg = 2; break;
         default:
-            return 0xff;
+            return IDE_STATUS_WRONG;
         }
     }
 
@@ -1773,9 +2457,9 @@ UniataAhciWritePM(
 
     AHCI_CMD->cfis[15] = IDE_DC_A_4BIT;
 
-    if(UniataAhciSendCommand(chan->DeviceExtension, chan->lChannel, DeviceNumber, 0, 100) == 0xff) {
+    if(UniataAhciSendCommand(chan->DeviceExtension, chan->lChannel, DeviceNumber, 0, 100) == IDE_STATUS_WRONG) {
         KdPrint2(("  PM write failed\n"));
-        return 0xff;
+        return IDE_STATUS_WRONG;
     }
 
     TFD = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_TFD);
@@ -1800,17 +2484,92 @@ IN OUT PATA_REQ AtaReq
         PUCHAR prd_base0;
         ULONGLONG prd_base64_0;
     };
+#ifdef DBG
     ULONG d;
+#endif // DBG
 
     prd_base64_0 = prd_base64 = 0;
     prd_base = (PUCHAR)(&AtaReq->ahci_cmd0);
     prd_base0 = prd_base;
 
-    prd_base64 = (prd_base64 + max(FIELD_OFFSET(ATA_REQ, ahci_cmd0), AHCI_CMD_ALIGNEMENT_MASK)) & ~AHCI_CMD_ALIGNEMENT_MASK;
+    prd_base64 = (prd_base64 + max(FIELD_OFFSET(ATA_REQ, ahci_cmd0), AHCI_CMD_ALIGNEMENT_MASK+1)) & ~AHCI_CMD_ALIGNEMENT_MASK;
 
+#ifdef DBG
     d = (ULONG)(prd_base64 - prd_base64_0);
-    KdPrint2((PRINT_PREFIX "  aligned %I64x, d=%x\n", prd_base64, d));
+    KdPrint2((PRINT_PREFIX "  AtaReq %#x: cmd aligned %I64x, d=%x\n", AtaReq, prd_base64, d));
+#endif // DBG
 
     AtaReq->ahci.ahci_cmd_ptr = (PIDE_AHCI_CMD)prd_base64;
     KdPrint2((PRINT_PREFIX "  ahci_cmd_ptr %#x\n", AtaReq->ahci.ahci_cmd_ptr));
 } // end UniataAhciSetupCmdPtr()
+
+PSCSI_REQUEST_BLOCK
+NTAPI
+BuildAhciInternalSrb (
+    IN PVOID HwDeviceExtension,
+    IN ULONG DeviceNumber,
+    IN ULONG lChannel,
+    IN PUCHAR Buffer,
+    IN ULONG Length
+    )
+{
+    PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
+    PHW_CHANNEL          chan = &deviceExtension->chan[lChannel];
+    PSCSI_REQUEST_BLOCK srb;
+//    PCDB cdb;
+    PATA_REQ AtaReq = chan->AhciInternalAtaReq;
+
+    KdPrint(("BuildAhciInternalSrb: lChan %d [%#x]\n", lChannel, DeviceNumber));
+
+    if(!AtaReq) {
+        KdPrint2((PRINT_PREFIX "  !chan->AhciInternalAtaReq\n"));
+        return NULL;
+    }
+
+    //RtlZeroMemory((PCHAR) AtaReq, sizeof(ATA_REQ));
+    //RtlZeroMemory((PCHAR) AtaReq, FIELD_OFFSET(ATA_REQ, ahci));
+    UniAtaClearAtaReq(AtaReq);
+
+    srb = chan->AhciInternalSrb;
+
+    RtlZeroMemory((PCHAR) srb, sizeof(SCSI_REQUEST_BLOCK));
+
+    srb->PathId     = (UCHAR)lChannel;
+    srb->TargetId   = (UCHAR)DeviceNumber;
+    srb->Function   = SRB_FUNCTION_EXECUTE_SCSI;
+    srb->Length     = sizeof(SCSI_REQUEST_BLOCK);
+
+    // Set flags to disable synchronous negociation.
+    //srb->SrbFlags = SRB_FLAGS_DATA_IN | SRB_FLAGS_DISABLE_SYNCH_TRANSFER;
+
+    // Set timeout to 4 seconds.
+    srb->TimeOutValue = 4;
+
+    srb->CdbLength          = 6;
+    srb->DataBuffer         = Buffer;
+    srb->DataTransferLength = Length;
+    srb->SrbExtension       = AtaReq;
+
+    AtaReq->Srb = srb;
+    AtaReq->DataBuffer = (PUSHORT)Buffer;
+    AtaReq->TransferLength = Length;
+
+    //if(!AtaReq->ahci.ahci_cmd_ptr) {
+        //UniataAhciSetupCmdPtr(AtaReq);
+        //AtaReq->ahci.ahci_cmd_ptr = &(chan->AhciCtlBlock->cmd);
+        //AtaReq->ahci.ahci_base64 = chan->AHCI_CTL_PhAddr + FIELD_OFFSET(IDE_AHCI_CHANNEL_CTL_BLOCK, cmd);
+    //}
+    //AtaReq->ahci.ahci_cmd_ptr = &(AtaReq->ahci_cmd0);
+    //AtaReq->ahci.ahci_base64 = NULL; // indicate that we should copy command to proper place
+
+    KdPrint2((PRINT_PREFIX "  Srb %#x, AtaReq %#x, CMD %#x ph %I64x\n", srb, AtaReq,
+        AtaReq->ahci.ahci_cmd_ptr, AtaReq->ahci.ahci_base64));
+
+/*    // Set CDB operation code.
+    cdb = (PCDB)srb->Cdb;
+    cdb->CDB6INQUIRY.OperationCode    = SCSIOP_REQUEST_SENSE;
+    cdb->CDB6INQUIRY.AllocationLength = sizeof(SENSE_DATA);
+*/
+    return srb;
+} // end BuildAhciInternalSrb()
+

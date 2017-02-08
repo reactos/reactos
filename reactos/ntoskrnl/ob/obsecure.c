@@ -217,7 +217,7 @@ ObCheckCreateObjectAccess(IN PVOID Object,
 {
     POBJECT_HEADER ObjectHeader;
     POBJECT_TYPE ObjectType;
-    PSECURITY_DESCRIPTOR SecurityDescriptor;
+    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
     BOOLEAN SdAllocated;
     BOOLEAN Result = TRUE;
     ACCESS_MASK GrantedAccess = 0;
@@ -280,7 +280,7 @@ ObpCheckTraverseAccess(IN PVOID Object,
 {
     POBJECT_HEADER ObjectHeader;
     POBJECT_TYPE ObjectType;
-    PSECURITY_DESCRIPTOR SecurityDescriptor;
+    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
     BOOLEAN SdAllocated;
     BOOLEAN Result;
     ACCESS_MASK GrantedAccess = 0;
@@ -299,6 +299,20 @@ ObpCheckTraverseAccess(IN PVOID Object,
         /* We failed */
         *AccessStatus = Status;
         return FALSE;
+    }
+
+    /* First try to perform a fast traverse check
+     * If it fails, then the entire access check will
+     * have to be done.
+     */
+    Result = SeFastTraverseCheck(SecurityDescriptor,
+                                 AccessState,
+                                 FILE_WRITE_DATA,
+                                 AccessMode);
+    if (Result)
+    {
+        ObReleaseObjectSecurity(SecurityDescriptor, SdAllocated);
+        return TRUE;
     }
 
     /* Lock the security context */
@@ -338,7 +352,7 @@ ObpCheckObjectReference(IN PVOID Object,
 {
     POBJECT_HEADER ObjectHeader;
     POBJECT_TYPE ObjectType;
-    PSECURITY_DESCRIPTOR SecurityDescriptor;
+    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
     BOOLEAN SdAllocated;
     BOOLEAN Result;
     ACCESS_MASK GrantedAccess = 0;

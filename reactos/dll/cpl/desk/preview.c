@@ -12,6 +12,8 @@ static const TCHAR szPreviewWndClass[] = TEXT("PreviewWndClass");
 
 typedef struct _PREVIEW_DATA
 {
+    HDC hdcPreview;
+
     HWND hwndParent;
 
     COLOR_SCHEME Scheme;
@@ -80,27 +82,27 @@ static VOID UpdatePreviewTheme(HWND hwnd, PPREVIEW_DATA pPreviewData, COLOR_SCHE
         DeleteObject(pPreviewData->hbrWindow);
     pPreviewData->hbrWindow = CreateSolidBrush(scheme->crColor[COLOR_WINDOW]);
 
-    pPreviewData->cxEdge = scheme->Size[SIZE_EDGE_X] - 2;        /* SM_CXEDGE */
-    pPreviewData->cyEdge = scheme->Size[SIZE_EDGE_Y] - 2;        /* SM_CYEDGE */
+    pPreviewData->cxEdge = 2;                                       /* SM_CXEDGE */
+    pPreviewData->cyEdge = 2;                                       /* SM_CYEDGE */
 
-    pPreviewData->cySizeFrame = scheme->Size[SIZE_FRAME_Y] - 1;  /* SM_CYSIZEFRAME */
+    pPreviewData->cySizeFrame = scheme->ncMetrics.iBorderWidth;     /* SM_CYSIZEFRAME */
 
-    pPreviewData->cyCaption = scheme->Size[SIZE_CAPTION_Y];      /* SM_CYCAPTION */
-    pPreviewData->cyMenu = scheme->Size[SIZE_MENU_Y];            /* SM_CYMENU */
-    pPreviewData->cxScrollbar = scheme->Size[SIZE_SCROLL_X];     /* SM_CXVSCROLL */
-    pPreviewData->cyBorder = scheme->Size[SIZE_BORDER_Y];        /* SM_CYBORDER */
+    pPreviewData->cyCaption = scheme->ncMetrics.iCaptionHeight+1;   /* SM_CYCAPTION */
+    pPreviewData->cyMenu = scheme->ncMetrics.iMenuHeight -1;        /* SM_CYMENU */
+    pPreviewData->cxScrollbar = scheme->ncMetrics.iScrollWidth;     /* SM_CXVSCROLL */
+    pPreviewData->cyBorder = scheme->ncMetrics.iBorderWidth;        /* SM_CYBORDER */
 
     if (pPreviewData->hCaptionFont != NULL)
         DeleteObject(pPreviewData->hCaptionFont);
-    pPreviewData->hCaptionFont = CreateFontIndirect(&scheme->lfFont[FONT_CAPTION]);
+    pPreviewData->hCaptionFont = CreateFontIndirect(&scheme->ncMetrics.lfCaptionFont);
 
     if (pPreviewData->hMenuFont != NULL)
         DeleteObject(pPreviewData->hMenuFont);
-    pPreviewData->hMenuFont = CreateFontIndirect(&scheme->lfFont[FONT_MENU]);
+    pPreviewData->hMenuFont = CreateFontIndirect(&scheme->ncMetrics.lfMenuFont);
 
     if (pPreviewData->hMessageFont != NULL)
         DeleteObject(pPreviewData->hMessageFont);
-    pPreviewData->hMessageFont = CreateFontIndirect(&scheme->lfFont[FONT_DIALOG]);
+    pPreviewData->hMessageFont = CreateFontIndirect(&scheme->ncMetrics.lfMessageFont);
 
     pPreviewData->Scheme = *scheme;
     InvalidateRect(hwnd, NULL, FALSE);
@@ -258,18 +260,25 @@ OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
 
     hdc = BeginPaint(hwnd, &ps);
 
+    if(pPreviewData->hdcPreview)
+    {
+        BitBlt(hdc,0,0, pPreviewData->rcDesktop.right, pPreviewData->rcDesktop.bottom, pPreviewData->hdcPreview, 0,0, SRCCOPY);
+        EndPaint(hwnd, &ps);
+        return;
+    }
+
     /* Desktop */
     FillRect(hdc, &pPreviewData->rcDesktop, pPreviewData->hbrDesktop);
 
     /* Inactive Window */
-    MyDrawEdge(hdc, &pPreviewData->rcInactiveFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE, scheme);
+    MyDrawEdge(hdc, &pPreviewData->rcInactiveFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE | MY_BF_INACTIVEBORDER, scheme);
     SetTextColor(hdc, scheme->crColor[COLOR_INACTIVECAPTIONTEXT]);
     MyDrawCaptionTemp(NULL, hdc, &pPreviewData->rcInactiveCaption,  pPreviewData->hCaptionFont,
                       NULL, pPreviewData->lpInAct, DC_GRADIENT | DC_ICON | DC_TEXT, scheme);
     MyDrawCaptionButtons(hdc, &pPreviewData->rcInactiveCaption, TRUE, pPreviewData->cyCaption - 2, scheme);
 
     /* Active Window */
-    MyDrawEdge(hdc, &pPreviewData->rcActiveFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE, scheme);
+    MyDrawEdge(hdc, &pPreviewData->rcActiveFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE | MY_BF_ACTIVEBORDER, scheme);
     SetTextColor(hdc, scheme->crColor[COLOR_CAPTIONTEXT]);
     MyDrawCaptionTemp(NULL, hdc, &pPreviewData->rcActiveCaption, pPreviewData->hCaptionFont,
                       NULL, pPreviewData->lpAct, DC_ACTIVE | DC_GRADIENT | DC_ICON | DC_TEXT, scheme);
@@ -308,7 +317,7 @@ OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
     CopyRect(&rc, &pPreviewData->rcDialogClient);
     rc.left += 4;
     rc.top += 2;
-    SetTextColor(hdc, scheme->crColor[COLOR_BTNTEXT]);
+    SetTextColor(hdc, scheme->crColor[COLOR_WINDOWTEXT]);
     hOldFont = SelectObject(hdc, pPreviewData->hMessageFont);
     DrawText(hdc, pPreviewData->lpMessText, -1, &rc, DT_LEFT);
     SelectObject(hdc, hOldFont);
@@ -445,56 +454,78 @@ PreviewWndProc(HWND hwnd,
             HeapFree(GetProcessHeap(), 0, pPreviewData);
             break;
 
-        case PVM_GETCYCAPTION:
-            return pPreviewData->cyCaption;
-
-        case PVM_SETCYCAPTION:
-            if ((INT)lParam > 0)
-            {
-                pPreviewData->cyCaption = (INT)lParam;
-                CalculateItemSize(pPreviewData);
-                InvalidateRect(hwnd, NULL, FALSE);
-            }
-            break;
-
-        case PVM_GETCYMENU:
-            return pPreviewData->cyMenu;
-
-        case PVM_SETCYMENU:
-            if ((INT)lParam > 0)
-            {
-                pPreviewData->cyMenu = (INT)lParam;
-                CalculateItemSize(pPreviewData);
-                InvalidateRect(hwnd, NULL, FALSE);
-            }
-            break;
-
-        case PVM_GETCXSCROLLBAR:
-            return pPreviewData->cxScrollbar;
-
-        case PVM_SETCXSCROLLBAR:
-            if ((INT)lParam > 0)
-            {
-                pPreviewData->cxScrollbar = (INT)lParam;
-                CalculateItemSize(pPreviewData);
-                InvalidateRect(hwnd, NULL, FALSE);
-            }
-            break;
-
-        case PVM_GETCYSIZEFRAME:
-            return pPreviewData->cySizeFrame;
-
-        case PVM_SETCYSIZEFRAME:
-            if ((INT)lParam > 0)
-            {
-                pPreviewData->cySizeFrame = (INT)lParam;
-                CalculateItemSize(pPreviewData);
-                InvalidateRect(hwnd, NULL, FALSE);
-            }
-            break;
-
         case PVM_UPDATETHEME:
             UpdatePreviewTheme(hwnd, pPreviewData, (COLOR_SCHEME *)lParam);
+            CalculateItemSize(pPreviewData);
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+
+        case PVM_SETSIZE:
+            SchemeSetMetric(&pPreviewData->Scheme, wParam, lParam);
+            pPreviewData->cySizeFrame = pPreviewData->Scheme.ncMetrics.iBorderWidth;  /* SM_CYSIZEFRAME */
+            pPreviewData->cyCaption = pPreviewData->Scheme.ncMetrics.iCaptionHeight+1;      /* SM_CYCAPTION */
+            pPreviewData->cyMenu = pPreviewData->Scheme.ncMetrics.iMenuHeight -1;            /* SM_CYMENU */
+            pPreviewData->cxScrollbar = pPreviewData->Scheme.ncMetrics.iScrollWidth;     /* SM_CXVSCROLL */
+            pPreviewData->cyBorder = pPreviewData->Scheme.ncMetrics.iBorderWidth;        /* SM_CYBORDER */
+            CalculateItemSize(pPreviewData);
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        
+        case PVM_SETFONT:
+        {
+            PLOGFONTW plfFont;
+            HFONT* phFont;
+
+            switch(wParam)
+            {
+            case FONT_CAPTION:   phFont = &pPreviewData->hCaptionFont; break;
+            case FONT_MENU:      phFont = &pPreviewData->hMenuFont; break;
+            case FONT_MESSAGE:   phFont = &pPreviewData->hMessageFont; break;
+            default:  return TRUE;
+            }
+
+            plfFont = SchemeGetFont(&pPreviewData->Scheme, wParam);
+            memcpy(plfFont, (PVOID)lParam, sizeof(LOGFONTW));
+
+            DeleteObject(*phFont);
+            *phFont = CreateFontIndirect(plfFont);
+
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        }
+
+        case PVM_SETCOLOR:
+            pPreviewData->Scheme.crColor[wParam] = lParam;
+            switch(wParam)
+            {
+                case COLOR_SCROLLBAR: 
+                    DeleteObject(pPreviewData->hbrScrollbar);
+                    pPreviewData->hbrScrollbar = CreateSolidBrush(pPreviewData->Scheme.crColor[wParam]);
+                    break;
+                case COLOR_DESKTOP: 
+                    DeleteObject(pPreviewData->hbrDesktop);
+                    pPreviewData->hbrDesktop = CreateSolidBrush(pPreviewData->Scheme.crColor[wParam]);
+                    break;
+                case COLOR_WINDOW: 
+                    DeleteObject(pPreviewData->hbrWindow);
+                    pPreviewData->hbrWindow = CreateSolidBrush(pPreviewData->Scheme.crColor[wParam]);
+                    break;
+            }
+
+            CalculateItemSize(pPreviewData);
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+
+        case PVM_GETSIZE:
+            return SchemeGetMetric(&pPreviewData->Scheme, wParam);
+        case PVM_GETFONT:
+            return (LRESULT)SchemeGetFont(&pPreviewData->Scheme, wParam);
+        case PVM_GETCOLOR:
+            return pPreviewData->Scheme.crColor[wParam];
+
+        case PVM_SET_HDC_PREVIEW:
+            pPreviewData->hdcPreview = (HDC)lParam;
+            InvalidateRect(hwnd, NULL, FALSE);
             break;
 
         default:

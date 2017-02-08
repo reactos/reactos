@@ -18,30 +18,34 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "msi.h"
+#include <windef.h>
+//#include "winbase.h"
+#include <wingdi.h>
+//#include "winuser.h"
+//#include "winnls.h"
+//#include "msi.h"
 #include "msipriv.h"
-#include "msidefs.h"
-#include "ocidl.h"
-#include "olectl.h"
-#include "richedit.h"
-#include "commctrl.h"
-#include "winreg.h"
-#include "shlwapi.h"
-#include "msiserver.h"
+//#include "msidefs.h"
+//#include "ocidl.h"
+#include <olectl.h>
+#include <richedit.h>
+#include <commctrl.h>
+#include <winreg.h>
+#include <shlwapi.h>
+#include <msiserver.h>
 
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -309,7 +313,7 @@ static UINT msi_dialog_add_font( MSIRECORD *rec, LPVOID param )
 
     /* create a font and add it to the list */
     name = MSI_RecordGetString( rec, 1 );
-    font = msi_alloc( sizeof *font + strlenW( name )*sizeof (WCHAR) );
+    font = msi_alloc( FIELD_OFFSET( msi_font, name[strlenW( name ) + 1] ));
     strcpyW( font->name, name );
     list_add_head( &dialog->fonts, &font->entry );
 
@@ -414,7 +418,7 @@ static msi_control *msi_dialog_create_window( msi_dialog *dialog,
 
     style |= WS_CHILD;
 
-    control = msi_alloc( sizeof *control + strlenW(name)*sizeof(WCHAR) );
+    control = msi_alloc( FIELD_OFFSET( msi_control, name[strlenW( name ) + 1] ));
     if (!control)
         return NULL;
 
@@ -583,7 +587,7 @@ static void msi_dialog_update_controls( msi_dialog *dialog, LPCWSTR property )
 
 static void msi_dialog_set_property( MSIPACKAGE *package, LPCWSTR property, LPCWSTR value )
 {
-    UINT r = msi_set_property( package->db, property, value );
+    UINT r = msi_set_property( package->db, property, value, -1 );
     if (r == ERROR_SUCCESS && !strcmpW( property, szSourceDir ))
         msi_reset_folders( package, TRUE );
 }
@@ -644,11 +648,11 @@ void msi_dialog_handle_event( msi_dialog* dialog, LPCWSTR control,
 
         TRACE("progress: func %u val1 %u val2 %u\n", func, val1, val2);
 
+        units = val1 / 512;
         switch (func)
         {
         case 0: /* init */
             SendMessageW( ctrl->hwnd, PBM_SETRANGE, 0, MAKELPARAM(0,100) );
-            units = val1 / 512;
             if (val2)
             {
                 ctrl->progress_max = units ? units : 100;
@@ -664,10 +668,11 @@ void msi_dialog_handle_event( msi_dialog* dialog, LPCWSTR control,
                 SendMessageW( ctrl->hwnd, PBM_SETPOS, 0, 0 );
             }
             break;
-        case 1: /* FIXME: not sure what this is supposed to do */
+        case 1: /* action data increment */
+            if (val2) dialog->package->action_progress_increment = val1;
+            else dialog->package->action_progress_increment = 0;
             break;
         case 2: /* move */
-            units = val1 / 512;
             if (ctrl->progress_backwards)
             {
                 if (units >= ctrl->progress_current) ctrl->progress_current -= units;
@@ -680,6 +685,9 @@ void msi_dialog_handle_event( msi_dialog* dialog, LPCWSTR control,
             }
             SendMessageW( ctrl->hwnd, PBM_SETPOS, MulDiv(100, ctrl->progress_current, ctrl->progress_max), 0 );
             break;
+        case 3: /* add */
+            ctrl->progress_max += units;
+            break;
         default:
             FIXME("Unknown progress message %u\n", func);
             break;
@@ -688,7 +696,7 @@ void msi_dialog_handle_event( msi_dialog* dialog, LPCWSTR control,
     else if ( !strcmpW( attribute, szProperty ) )
     {
         MSIFEATURE *feature = msi_seltree_get_selected_feature( ctrl );
-        msi_dialog_set_property( dialog->package, ctrl->property, feature->Directory );
+        if (feature) msi_dialog_set_property( dialog->package, ctrl->property, feature->Directory );
     }
     else if ( !strcmpW( attribute, szSelectionPath ) )
     {
@@ -1131,7 +1139,7 @@ static UINT msi_dialog_line_control( msi_dialog *dialog, MSIRECORD *rec )
 
     msi_dialog_map_events(dialog, name);
 
-    control = msi_alloc( sizeof(*control) + strlenW(name) * sizeof(WCHAR) );
+    control = msi_alloc( FIELD_OFFSET(msi_control, name[strlenW( name ) + 1] ));
     if (!control)
         return ERROR_OUTOFMEMORY;
 
@@ -1800,7 +1808,6 @@ static void msi_mask_control_change( struct msi_maskedit_info *info )
     if( i == info->num_groups )
     {
         TRACE("Set property %s to %s\n", debugstr_w(info->prop), debugstr_w(val));
-        CharUpperBuffW( val, info->num_chars );
         msi_dialog_set_property( info->dialog->package, info->prop, val );
         msi_dialog_evaluate_control_conditions( info->dialog );
     }
@@ -3731,7 +3738,7 @@ msi_dialog *msi_dialog_create( MSIPACKAGE* package,
         msi_dialog_register_class();
 
     /* allocate the structure for the dialog to use */
-    dialog = msi_alloc_zero( sizeof *dialog + sizeof(WCHAR)*strlenW(szDialogName) );
+    dialog = msi_alloc_zero( FIELD_OFFSET( msi_dialog, name[strlenW( szDialogName ) + 1] ));
     if( !dialog )
         return NULL;
     strcpyW( dialog->name, szDialogName );
@@ -3935,7 +3942,7 @@ static UINT error_dialog_handler(MSIPACKAGE *package, LPCWSTR event,
     if ( !strcmpW( argument, error_abort ) || !strcmpW( argument, error_cancel ) ||
          !strcmpW( argument, error_no ) )
     {
-         msi_set_property( package->db, result_prop, error_abort );
+         msi_set_property( package->db, result_prop, error_abort, -1 );
     }
 
     ControlEvent_CleanupSubscriptions(package);

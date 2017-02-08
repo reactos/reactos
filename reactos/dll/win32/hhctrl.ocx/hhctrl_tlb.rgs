@@ -1,0 +1,83 @@
+HKCR
+{
+    NoRemove Typelib
+    {
+        NoRemove '{ADB880A2-D8FF-11CF-9377-00AA003B7A11}'
+        {
+            '4.0' = s 'HHCtrl 4.0 Type Library'
+            {
+                '0' { win32 = s '%MODULE%' }
+                FLAGS = s '0'
+            }
+        }
+    }
+    NoRemove Interface
+    {
+        '{ADB880A1-D8FF-11CF-9377-00AA003B7A11}' = s 'IHHCtrl'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{ADB880A2-D8FF-11CF-9377-00AA003B7A11}' { val Version = s '4.0' }
+        }
+        '{ADB880A3-D8FF-11CF-9377-00AA003B7A11}' = s '_HHCtrlEvents'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{ADB880A2-D8FF-11CF-9377-00AA003B7A11}' { val Version = s '4.0' }
+        }
+    }
+    NoRemove CLSID
+    {
+        '{ADB880A6-D8FF-11CF-9377-00AA003B7A11}' = s 'HHCtrl Object'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            ProgId = s 'Internet.HHCtrl.1'
+            TypeLib = s '{ADB880A2-D8FF-11CF-9377-00AA003B7A11}'
+            Version = s '1.0'
+            VersionIndependentProgId = s 'Internet.HHCtrl'
+        }
+        '{41B23C28-488E-4E5C-ACE2-BB0BBABE99E8}' = s 'HHCtrl Object'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            ProgId = s 'Internet.HHCtrl.1'
+            TypeLib = s '{ADB880A2-D8FF-11CF-9377-00AA003B7A11}'
+            Version = s '1.0'
+            VersionIndependentProgId = s 'Internet.HHCtrl'
+        }
+        '{52A2AAAE-085D-4187-97EA-8C30DB990436}' = s 'HHCtrl Object'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            ProgId = s 'Internet.HHCtrl.1'
+            TypeLib = s '{ADB880A2-D8FF-11CF-9377-00AA003B7A11}'
+            Version = s '1.0'
+            VersionIndependentProgId = s 'Internet.HHCtrl'
+        }
+    }
+    'Internet.HHCtrl.1' = s 'HHCtrl Object'
+    {
+        CLSID = s '{ADB880A6-D8FF-11CF-9377-00AA003B7A11}'
+    }
+    'Internet.HHCtrl' = s 'HHCtrl Object'
+    {
+        CLSID = s '{ADB880A6-D8FF-11CF-9377-00AA003B7A11}'
+        CurVer = s 'Internet.HHCtrl.1'
+    }
+    'Internet.HHCtrl.1' = s 'HHCtrl Object'
+    {
+        CLSID = s '{41B23C28-488E-4E5C-ACE2-BB0BBABE99E8}'
+    }
+    'Internet.HHCtrl' = s 'HHCtrl Object'
+    {
+        CLSID = s '{41B23C28-488E-4E5C-ACE2-BB0BBABE99E8}'
+        CurVer = s 'Internet.HHCtrl.1'
+    }
+    'Internet.HHCtrl.1' = s 'HHCtrl Object'
+    {
+        CLSID = s '{52A2AAAE-085D-4187-97EA-8C30DB990436}'
+    }
+    'Internet.HHCtrl' = s 'HHCtrl Object'
+    {
+        CLSID = s '{52A2AAAE-085D-4187-97EA-8C30DB990436}'
+        CurVer = s 'Internet.HHCtrl.1'
+    }
+}

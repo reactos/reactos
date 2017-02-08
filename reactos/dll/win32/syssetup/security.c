@@ -38,7 +38,7 @@ SetAccountDomain(LPCWSTR DomainName,
 
     Status = LsaOpenPolicy(NULL,
                            &ObjectAttributes,
-                           POLICY_TRUST_ADMIN,
+                           POLICY_VIEW_LOCAL_INFORMATION | POLICY_TRUST_ADMIN,
                            &PolicyHandle);
     if (Status != STATUS_SUCCESS)
     {

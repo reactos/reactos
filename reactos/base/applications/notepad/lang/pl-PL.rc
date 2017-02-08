@@ -185,7 +185,7 @@ STRING_ERROR,                                   "Błąd"
 STRING_WARNING,                                 "OSTRZEŻENIE"
 STRING_INFO,                                    "Informacja"
 
-STRING_UNTITLED,                                "(bez tytułu)"
+STRING_UNTITLED,                                "Bez tytułu"
 
 STRING_ALL_FILES,                               "Wszystkie pliki (*.*)"
 STRING_TEXT_FILES_TXT,                  "Pliki tekstowe (*.txt)"

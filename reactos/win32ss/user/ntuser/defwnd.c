@@ -69,7 +69,7 @@ IntClientShutdown(
              lResult = MCSR_SHUTDOWNFINISHED;
           }
       }
-      ExFreePool(List);
+      ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
    }
    if (List && (lResult == MCSR_DONOTSHUTDOWN)) return lResult;
 /*
@@ -230,6 +230,40 @@ IntDefWindowProc(
          return GetNCHitEx(Wnd, Point);
       }
 
+      case WM_SYNCPAINT:
+      {
+         HRGN hRgn;
+         Wnd->state &= ~WNDS_SYNCPAINTPENDING;
+         ERR("WM_SYNCPAINT\n");
+         hRgn = IntSysCreateRectRgn(0, 0, 0, 0);
+         if (co_UserGetUpdateRgn(Wnd, hRgn, FALSE) != NULLREGION)
+         {
+            if (!wParam) wParam = (RDW_ERASENOW | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN);
+            co_UserRedrawWindow(Wnd, NULL, hRgn, wParam);
+         }
+         GreDeleteObject(hRgn);
+         return 0;
+      }
+
+      case WM_SETREDRAW:
+          if (wParam)
+          {
+             if (!(Wnd->style & WS_VISIBLE))
+             {
+                IntSetStyle( Wnd, WS_VISIBLE, 0 );
+                Wnd->state |= WNDS_SENDNCPAINT;
+             }
+          }
+          else
+          {
+             if (Wnd->style & WS_VISIBLE)
+             {
+                co_UserRedrawWindow( Wnd, NULL, NULL, RDW_ALLCHILDREN | RDW_VALIDATE );
+                IntSetStyle( Wnd, 0, WS_VISIBLE );
+             }
+          }
+          return 0;
+
       /* ReactOS only. */
       case WM_CBT:
       {
@@ -373,8 +407,7 @@ GetNCHitEx(PWND pWnd, POINT pt)
             rcWindow.top += UserGetSystemMetrics(SM_CYCAPTION) - 1;
         if (!RECTL_bPointInRect( &rcWindow, pt.x, pt.y ))
         {
-            BOOL min_or_max_box = (Style & WS_MAXIMIZEBOX) ||
-                                  (Style & WS_MINIMIZEBOX);
+            BOOL min_or_max_box = (Style & WS_SYSMENU) && (Style & (WS_MINIMIZEBOX|WS_MAXIMIZEBOX));
             if (ExStyle & WS_EX_LAYOUTRTL)
             {
                 /* Check system menu */

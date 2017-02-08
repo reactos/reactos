@@ -19,10 +19,10 @@
 DWORD
 ScmLoadDriver(PSERVICE lpService)
 {
+    NTSTATUS Status = STATUS_SUCCESS;
+    BOOLEAN WasPrivilegeEnabled = FALSE;
     PWSTR pszDriverPath;
     UNICODE_STRING DriverPath;
-    NTSTATUS Status;
-    DWORD dwError = ERROR_SUCCESS;
 
     /* Build the driver path */
     /* 52 = wcslen(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\") */
@@ -40,31 +40,41 @@ ScmLoadDriver(PSERVICE lpService)
     RtlInitUnicodeString(&DriverPath,
                          pszDriverPath);
 
-    /* FIXME: Acquire privilege */
-
     DPRINT("  Path: %wZ\n", &DriverPath);
-    Status = NtLoadDriver(&DriverPath);
 
-    /* FIXME: Release privilege */
-
+    /* Acquire driver-loading privilege */
+    Status = RtlAdjustPrivilege(SE_LOAD_DRIVER_PRIVILEGE,
+                                TRUE,
+                                FALSE,
+                                &WasPrivilegeEnabled);
     if (!NT_SUCCESS(Status))
     {
-        dwError = RtlNtStatusToDosError(Status);
+        /* We encountered a failure, exit properly */
+        DPRINT1("SERVICES: Cannot acquire driver-loading privilege, Status = 0x%08lx\n", Status);
+        goto done;
     }
 
-    HeapFree(GetProcessHeap(), 0, pszDriverPath);
+    Status = NtLoadDriver(&DriverPath);
 
-    return dwError;
+    /* Release driver-loading privilege */
+    RtlAdjustPrivilege(SE_LOAD_DRIVER_PRIVILEGE,
+                       WasPrivilegeEnabled,
+                       FALSE,
+                       &WasPrivilegeEnabled);
+
+done:
+    HeapFree(GetProcessHeap(), 0, pszDriverPath);
+    return RtlNtStatusToDosError(Status);
 }
 
 
 DWORD
 ScmUnloadDriver(PSERVICE lpService)
 {
+    NTSTATUS Status = STATUS_SUCCESS;
+    BOOLEAN WasPrivilegeEnabled = FALSE;
     PWSTR pszDriverPath;
     UNICODE_STRING DriverPath;
-    NTSTATUS Status;
-    DWORD dwError = ERROR_SUCCESS;
 
     /* Build the driver path */
     /* 52 = wcslen(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\") */
@@ -82,20 +92,31 @@ ScmUnloadDriver(PSERVICE lpService)
     RtlInitUnicodeString(&DriverPath,
                          pszDriverPath);
 
-    /* FIXME: Acquire privilege */
+    DPRINT("  Path: %wZ\n", &DriverPath);
+
+    /* Acquire driver-unloading privilege */
+    Status = RtlAdjustPrivilege(SE_LOAD_DRIVER_PRIVILEGE,
+                                TRUE,
+                                FALSE,
+                                &WasPrivilegeEnabled);
+    if (!NT_SUCCESS(Status))
+    {
+        /* We encountered a failure, exit properly */
+        DPRINT1("SERVICES: Cannot acquire driver-unloading privilege, Status = 0x%08lx\n", Status);
+        goto done;
+    }
 
     Status = NtUnloadDriver(&DriverPath);
 
-    /* FIXME: Release privilege */
+    /* Release driver-unloading privilege */
+    RtlAdjustPrivilege(SE_LOAD_DRIVER_PRIVILEGE,
+                       WasPrivilegeEnabled,
+                       FALSE,
+                       &WasPrivilegeEnabled);
 
-    if (!NT_SUCCESS(Status))
-    {
-        dwError = RtlNtStatusToDosError(Status);
-    }
-
+done:
     HeapFree(GetProcessHeap(), 0, pszDriverPath);
-
-    return dwError;
+    return RtlNtStatusToDosError(Status);
 }
 
 
@@ -120,13 +141,12 @@ ScmGetDriverStatus(PSERVICE lpService,
 
     if (lpService->Status.dwServiceType == SERVICE_KERNEL_DRIVER)
     {
-        RtlInitUnicodeString(&DirName,
-                             L"\\Driver");
+        RtlInitUnicodeString(&DirName, L"\\Driver");
     }
-    else
+    else // if (lpService->Status.dwServiceType == SERVICE_FILE_SYSTEM_DRIVER)
     {
-        RtlInitUnicodeString(&DirName,
-                             L"\\FileSystem");
+        ASSERT(lpService->Status.dwServiceType == SERVICE_FILE_SYSTEM_DRIVER);
+        RtlInitUnicodeString(&DirName, L"\\FileSystem");
     }
 
     InitializeObjectAttributes(&ObjectAttributes,

@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <string.h>
+//#include <string.h>
 #include "private_mciavi.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+//#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mciavi);
 

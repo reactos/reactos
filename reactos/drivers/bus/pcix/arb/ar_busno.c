@@ -33,6 +33,7 @@ NTSTATUS
 NTAPI
 arbusno_Initializer(IN PVOID Instance)
 {
+    UNREFERENCED_PARAMETER(Instance);
     /* Not yet implemented */
     UNIMPLEMENTED;
     //while (TRUE);
@@ -51,6 +52,11 @@ arbusno_Constructor(IN PVOID DeviceExtension,
     PPCI_FDO_EXTENSION FdoExtension = (PPCI_FDO_EXTENSION)DeviceExtension;
     NTSTATUS Status;
     PAGED_CODE();
+
+    UNREFERENCED_PARAMETER(PciInterface);
+    UNREFERENCED_PARAMETER(Version);
+    UNREFERENCED_PARAMETER(Size);
+    UNREFERENCED_PARAMETER(Interface);
 
     /* Make sure it's the expected interface */
     if ((ULONG)InterfaceData != CmResourceTypeBusNumber)

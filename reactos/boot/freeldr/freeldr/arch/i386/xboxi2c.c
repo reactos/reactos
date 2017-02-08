@@ -1,5 +1,4 @@
-/* $Id: xboxhw.c 19190 2005-11-13 04:50:55Z fireball $
- *
+/*
  *  FreeLoader
  *
  *  This program is free software; you can redistribute it and/or modify

@@ -8,9 +8,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include "wlansvc_s.h"
+#include <wlansvc_s.h>
 
 //#define NDEBUG
 #include <debug.h>

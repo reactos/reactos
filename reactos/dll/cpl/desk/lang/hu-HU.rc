@@ -1,9 +1,9 @@
-// Hungarian resource file by Peter Lukacs
+Ôªø// Hungarian resource file by Peter Lukacs
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 IDD_BACKGROUND DIALOGEX DISCARDABLE 0, 0, 246, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "H·ttÈr"
+CAPTION "H√°tt√©r"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW,
@@ -11,11 +11,11 @@ BEGIN
     CONTROL         "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT |
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP, 7, 99, 174, 71
-    LTEXT           "V·lasszon ki egy kÈpet az asztala h·tterÈnek",
+    LTEXT           "V√°lasszon ki egy k√©pet az asztala h√°tter√©nek",
                     IDC_STATIC, 8, 103, 180, 8
-    PUSHBUTTON      "&Kiv·laszt·s...", IDC_BROWSE_BUTTON, 188, 114, 50, 15
-    PUSHBUTTON      "&SzÌnek...", IDC_COLOR_BUTTON, 188, 177, 50, 15
-    LTEXT           "ElrendezÈs", IDC_STATIC, 188, 138, 36, 9
+    PUSHBUTTON      "&Kiv√°laszt√°s...", IDC_BROWSE_BUTTON, 188, 114, 50, 15
+    PUSHBUTTON      "&Sz√≠nek...", IDC_COLOR_BUTTON, 188, 177, 50, 15
+    LTEXT           "Elrendez√©s", IDC_STATIC, 188, 138, 36, 9
     COMBOBOX        IDC_PLACEMENT_COMBO, 188, 149, 50, 54,
                     CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
@@ -45,9 +45,9 @@ BEGIN
     PUSHBUTTON      "P&ower...", IDC_SCREENS_POWER_BUTTON, 165, 171, 61, 13
 END
 
-IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 204
+IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "MegjelenÈs"
+CAPTION "Megjelen√©s"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
@@ -56,6 +56,8 @@ BEGIN
     COMBOBOX        IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Colorscheme", IDC_STATIC, 7, 160, 64, 7
     COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 170, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Size", IDC_STATIC, 7, 190, 64, 7
+    COMBOBOX        IDC_APPEARANCE_SIZE, 7, 200, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "&Effects...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
     PUSHBUTTON      "Advanced", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
 END
@@ -124,24 +126,24 @@ END
 
 IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Be·llÌt·sok"
+CAPTION "Be√°ll√≠t√°sok"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Drag the monitor icons to match the physical arrangement of your monitors.",-1,3,3,240,10
     CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,23,240,82,WS_EX_CLIENTEDGE
-    LTEXT           "&KÈpernyı",1820,3,107,30,8
+    LTEXT           "&K√©perny≈ë",1820,3,107,30,8
     LTEXT           "<nincs>",IDC_SETTINGS_DEVICE,9,116,224,8
-    GROUPBOX        "KÈ&pmÈret",1818,3,127,115,43
+    GROUPBOX        "K√©&pm√©ret",1818,3,127,115,43
     CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
                     TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
     LTEXT           "Kisebb",1815,9,137,15,8,NOT WS_GROUP
     LTEXT           "Nagyobb",1816,93,137,21,8,NOT WS_GROUP
     LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,157,100,10,NOT WS_GROUP | SS_CENTER
-	GROUPBOX        "&SzÌnek",1817,125,127,115,43
+    GROUPBOX        "&Sz√≠nek",1817,125,127,115,43
     COMBOBOX        IDC_SETTINGS_BPP,131,137,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "",IDC_SETTINGS_SPECTRUM,"Static",SS_OWNERDRAW | SS_SUNKEN,131,155,103,9
-    PUSHBUTTON      "&HaladÛknak...",IDC_SETTINGS_ADVANCED,170,174,70,14
+    PUSHBUTTON      "&Halad√≥knak...",IDC_SETTINGS_ADVANCED,170,174,70,14
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX DISCARDABLE 0, 0, 253, 204
@@ -200,27 +202,27 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "KÈpernyı"
-    IDS_CPLDESCRIPTION "A kÈpernyı Ès a kÈpernyıvÈdı tulajdons·gainak testreszab·sa."
+    IDS_CPLNAME "K√©perny≈ë"
+    IDS_CPLDESCRIPTION "A k√©perny≈ë √©s a k√©perny≈ëv√©d≈ë tulajdons√°gainak testreszab√°sa."
     IDS_NONE "(Nincs)"
-    IDS_CENTER "KˆzÈpen"
-    IDS_STRETCH "SzÈth˙zva"
-    IDS_TILE "Mozaikszer˚en"
+    IDS_CENTER "K√∂z√©pen"
+    IDS_STRETCH "Sz√©th√∫zva"
+    IDS_TILE "Mozaikszer≈±en"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_COLOR_4BIT "16 szÌn˚"
-    IDS_COLOR_8BIT "256 szÌn˚"
-    IDS_COLOR_16BIT "65 ezer szÌn (16 bit)"
-    IDS_COLOR_24BIT "16 milliÛ szÌn (24 bit)"
-    IDS_COLOR_32BIT "16 milliÛ szÌn (32 bit)"
-    IDS_PIXEL "%lux%lu KÈppont"
+    IDS_COLOR_4BIT "16 sz√≠n≈±"
+    IDS_COLOR_8BIT "256 sz√≠n≈±"
+    IDS_COLOR_16BIT "65 ezer sz√≠n (16 bit)"
+    IDS_COLOR_24BIT "16 milli√≥ sz√≠n (24 bit)"
+    IDS_COLOR_32BIT "16 milli√≥ sz√≠n (32 bit)"
+    IDS_PIXEL "%lux%lu K√©ppont"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_BACKGROUND_COMDLG_FILTER "KÈpek (*.bmp;*.dib)\0*.bmp;*.dib\0"
+    IDS_BACKGROUND_COMDLG_FILTER "K√©pek (*.bmp;*.dib)\0*.bmp;*.dib\0"
     IDS_SUPPORTED_EXT "*.bmp;*.dib"
 END
 
@@ -232,6 +234,7 @@ BEGIN
     IDS_MESSBOX  "Message Box"
     IDS_MESSTEXT "Message Text"
     IDS_BUTTEXT  "OK"
+    IDS_CLASSIC_THEME   "Classic Theme"
 END
 
 STRINGTABLE DISCARDABLE

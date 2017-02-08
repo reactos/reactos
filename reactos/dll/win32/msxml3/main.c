@@ -19,28 +19,93 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
+#include <config.h>
+#include <wine/port.h>
 
 #define COBJMACROS
 
-#include <stdarg.h>
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "ole2.h"
-#include "msxml.h"
-#include "msxml2.h"
+//#include <stdarg.h>
+#ifdef HAVE_LIBXML2
+//# include <libxml/parser.h>
+//# include <libxml/xmlerror.h>
+# ifdef SONAME_LIBXSLT
+#  ifdef HAVE_LIBXSLT_PATTERN_H
+#   include <libxslt/pattern.h>
+#  endif
+#  ifdef HAVE_LIBXSLT_TRANSFORM_H
+#   include <libxslt/transform.h>
+#  endif
+#  include <libxslt/xsltutils.h>
+#  include <libxslt/xsltInternals.h>
+# endif
+#endif
 
-#include "wine/unicode.h"
-#include "wine/debug.h"
-#include "wine/library.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+#include <ole2.h>
+#include <rpcproxy.h>
+//#include "msxml.h"
+#include <msxml6.h>
+
+//#include "wine/unicode.h"
+#include <wine/debug.h>
+#include <wine/library.h>
 
 #include "msxml_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
+HINSTANCE MSXML_hInstance = NULL;
+
 #ifdef HAVE_LIBXML2
+
+void wineXmlCallbackLog(char const* caller, xmlErrorLevel lvl, char const* msg, va_list ap)
+{
+    enum __wine_debug_class dbcl;
+    char buff[200];
+    static const int max_size = sizeof(buff) / sizeof(buff[0]);
+    int len;
+
+    switch (lvl)
+    {
+        case XML_ERR_NONE:
+            dbcl = __WINE_DBCL_TRACE;
+            break;
+        case XML_ERR_WARNING:
+            dbcl = __WINE_DBCL_WARN;
+            break;
+        default:
+            dbcl = __WINE_DBCL_ERR;
+            break;
+    }
+
+    len = vsnprintf(buff, max_size, msg, ap);
+    if (len == -1 || len >= max_size) buff[max_size-1] = 0;
+
+    wine_dbg_log(dbcl, &__wine_dbch_msxml, caller, "%s", buff);
+}
+
+void wineXmlCallbackError(char const* caller, xmlErrorPtr err)
+{
+    enum __wine_debug_class dbcl;
+
+    switch (err->level)
+    {
+    case XML_ERR_NONE:    dbcl = __WINE_DBCL_TRACE; break;
+    case XML_ERR_WARNING: dbcl = __WINE_DBCL_WARN; break;
+    default:              dbcl = __WINE_DBCL_ERR; break;
+    }
+
+    wine_dbg_log(dbcl, &__wine_dbch_msxml, caller, "error code %d", err->code);
+    if (err->message)
+        wine_dbg_log(dbcl, &__wine_dbch_msxml, caller, ": %s", err->message);
+    else
+        wine_dbg_log(dbcl, &__wine_dbch_msxml, caller, "\n");
+}
 
 /* Support for loading xml files from a Wine Windows drive */
 static int wineXmlMatchCallback (char const * filename)
@@ -115,7 +180,7 @@ DECL_FUNCPTR(xsltApplyStylesheet);
 DECL_FUNCPTR(xsltCleanupGlobals);
 DECL_FUNCPTR(xsltFreeStylesheet);
 DECL_FUNCPTR(xsltParseStylesheetDoc);
-# undef MAKE_FUNCPTR
+# undef DECL_FUNCPTR
 #endif
 
 static void init_libxslt(void)
@@ -127,7 +192,9 @@ static void init_libxslt(void)
     if (!libxslt_handle)
         return;
 
-#define LOAD_FUNCPTR(f, needed) if ((p##f = wine_dlsym(libxslt_handle, #f, NULL, 0)) == NULL && needed) { WARN("Can't find symbol %s\n", #f); goto sym_not_found; }
+#define LOAD_FUNCPTR(f, needed) \
+    if ((p##f = wine_dlsym(libxslt_handle, #f, NULL, 0)) == NULL) \
+        if (needed) { WARN("Can't find symbol %s\n", #f); goto sym_not_found; }
     LOAD_FUNCPTR(xsltInit, 0);
     LOAD_FUNCPTR(xsltApplyStylesheet, 1);
     LOAD_FUNCPTR(xsltCleanupGlobals, 1);
@@ -145,9 +212,10 @@ static void init_libxslt(void)
 #endif
 }
 
-
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
 {
+    MSXML_hInstance = hInstDLL;
+
     switch(fdwReason)
     {
     case DLL_PROCESS_ATTACH:
@@ -164,6 +232,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
                             wineXmlReadCallback, wineXmlFileCloseCallback) == -1)
             WARN("Failed to register callbacks\n");
 
+        schemasInit();
 #endif
         init_libxslt();
         DisableThreadLibraryCalls(hInstDLL);
@@ -183,9 +252,70 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
         xmlRegisterDefaultInputCallbacks();
 
         xmlCleanupParser();
+        schemasCleanup();
 #endif
         release_typelib();
         break;
     }
     return TRUE;
+}
+
+const char *debugstr_variant(const VARIANT *v)
+{
+    if(!v)
+        return "(null)";
+
+    switch(V_VT(v)) {
+    case VT_EMPTY:
+        return "{VT_EMPTY}";
+    case VT_NULL:
+        return "{VT_NULL}";
+    case VT_I1:
+        return wine_dbg_sprintf("{VT_I1: %d}", V_I1(v));
+    case VT_I2:
+        return wine_dbg_sprintf("{VT_I2: %d}", V_I2(v));
+    case VT_I4:
+        return wine_dbg_sprintf("{VT_I4: %d}", V_I4(v));
+    case VT_INT:
+        return wine_dbg_sprintf("{VT_INT: %d}", V_INT(v));
+    case VT_R8:
+        return wine_dbg_sprintf("{VT_R8: %lf}", V_R8(v));
+    case VT_BSTR:
+        return wine_dbg_sprintf("{VT_BSTR: %s}", debugstr_w(V_BSTR(v)));
+    case VT_DISPATCH:
+        return wine_dbg_sprintf("{VT_DISPATCH: %p}", V_DISPATCH(v));
+    case VT_BOOL:
+        return wine_dbg_sprintf("{VT_BOOL: %x}", V_BOOL(v));
+    case VT_UNKNOWN:
+        return wine_dbg_sprintf("{VT_UNKNOWN: %p}", V_UNKNOWN(v));
+    case VT_UINT:
+        return wine_dbg_sprintf("{VT_UINT: %u}", V_UINT(v));
+    case VT_BSTR|VT_BYREF:
+        return wine_dbg_sprintf("{VT_BSTR|VT_BYREF: ptr %p, data %s}",
+            V_BSTRREF(v), debugstr_w(V_BSTRREF(v) ? *V_BSTRREF(v) : NULL));
+    case VT_ERROR:
+        return wine_dbg_sprintf("{VT_ERROR: 0x%08x}", V_ERROR(v));
+    case VT_VARIANT|VT_BYREF:
+        return wine_dbg_sprintf("{VT_VARIANT|VT_BYREF: %s}", debugstr_variant(V_VARIANTREF(v)));
+    case VT_UI1|VT_ARRAY:
+        return "{VT_UI1|VT_ARRAY}";
+    default:
+        return wine_dbg_sprintf("{vt %d}", V_VT(v));
+    }
+}
+
+/***********************************************************************
+ *		DllRegisterServer (MSXML3.@)
+ */
+HRESULT WINAPI DllRegisterServer(void)
+{
+    return __wine_register_resources( MSXML_hInstance );
+}
+
+/***********************************************************************
+ *		DllUnregisterServer (MSXML3.@)
+ */
+HRESULT WINAPI DllUnregisterServer(void)
+{
+    return __wine_unregister_resources( MSXML_hInstance );
 }

@@ -24,20 +24,20 @@ template<class T>
 class IProfferServiceImpl : public IProfferService
 {
 public:
-	STDMETHODIMP ProfferService(REFGUID rguidService, IServiceProvider *psp, DWORD *pdwCookie)
-	{
-		return E_NOTIMPL;
-	}
+    STDMETHODIMP ProfferService(REFGUID rguidService, IServiceProvider *psp, DWORD *pdwCookie)
+    {
+        return E_NOTIMPL;
+    }
 
-	STDMETHODIMP RevokeService(DWORD dwCookie)
-	{
-		return E_NOTIMPL;
-	}
+    STDMETHODIMP RevokeService(DWORD dwCookie)
+    {
+        return E_NOTIMPL;
+    }
 
-	HRESULT QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
-	{
-		return E_FAIL;
-	}
+    HRESULT QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
+    {
+        return E_FAIL;
+    }
 };
 
 /*
@@ -50,38 +50,38 @@ template<class T, const IID *piid, class CDV = CComDynamicUnkArray>
 class MyIConnectionPointImpl : public IConnectionPointImpl<T, piid, CDV>
 {
 public:
-	STDMETHODIMP Advise(IUnknown *pUnkSink, DWORD *pdwCookie)
-	{
-		IConnectionPointImpl<T, piid, CDV>	*pThisCPImpl;
-		T									*pThis;
-		IUnknown							*adviseSink;
-		DWORD								newCookie;
-		HRESULT								hResult;
+    STDMETHODIMP Advise(IUnknown *pUnkSink, DWORD *pdwCookie)
+    {
+        IConnectionPointImpl<T, piid, CDV>  *pThisCPImpl;
+        T                                   *pThis;
+        IUnknown                            *adviseSink;
+        DWORD                               newCookie;
+        HRESULT                             hResult;
 
-		pThis = static_cast<T *>(this);
-		pThisCPImpl = static_cast<IConnectionPointImpl<T, piid, CDV> *>(this);
-		if (pdwCookie != NULL)
-			*pdwCookie = 0;
-		if (pUnkSink == NULL || pdwCookie == NULL)
-			return E_POINTER;
-		hResult = pUnkSink->QueryInterface(IID_IDispatch, (void **)&adviseSink);
-		if (FAILED(hResult))
-		{
-			if (hResult == E_NOINTERFACE)
-				return CONNECT_E_CANNOTCONNECT;
-			return hResult;
-		}
-		pThis->Lock();
-		newCookie = pThisCPImpl->m_vec.Add(adviseSink);
-		pThis->Unlock();
-		*pdwCookie = newCookie;
-		if (newCookie != 0)
-			hResult = S_OK;
-		else
-		{
-			adviseSink->Release();
-			hResult = CONNECT_E_ADVISELIMIT;
-		}
-		return hResult;
-	}
+        pThis = static_cast<T *>(this);
+        pThisCPImpl = static_cast<IConnectionPointImpl<T, piid, CDV> *>(this);
+        if (pdwCookie != NULL)
+            *pdwCookie = 0;
+        if (pUnkSink == NULL || pdwCookie == NULL)
+            return E_POINTER;
+        hResult = pUnkSink->QueryInterface(IID_IDispatch, reinterpret_cast<void **>(&adviseSink));
+        if (FAILED(hResult))
+        {
+            if (hResult == E_NOINTERFACE)
+                return CONNECT_E_CANNOTCONNECT;
+            return hResult;
+        }
+        pThis->Lock();
+        newCookie = pThisCPImpl->m_vec.Add(adviseSink);
+        pThis->Unlock();
+        *pdwCookie = newCookie;
+        if (newCookie != 0)
+            hResult = S_OK;
+        else
+        {
+            adviseSink->Release();
+            hResult = CONNECT_E_ADVISELIMIT;
+        }
+        return hResult;
+    }
 };

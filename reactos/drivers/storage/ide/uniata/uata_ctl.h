@@ -85,7 +85,7 @@ typedef struct _GETTRANSFERMODE {
     ULONG MaxMode;
     ULONG OrigMode;
     ULONG CurrentMode;
-    ULONG Reserved;
+    ULONG PhyMode; // since v0.42i6
 } GETTRANSFERMODE, *PGETTRANSFERMODE;
 
 typedef struct _GETDRVVERSION {
@@ -100,14 +100,13 @@ typedef struct _GETDRVVERSION {
 typedef struct _CHANINFO {
     ULONG               MaxTransferMode; // may differ from Controller's value due to 40-pin cable
     ULONG               ChannelCtrlFlags;
-//#ifdef QUEUE_STATISTICS
     LONGLONG QueueStat[MAX_QUEUE_STAT];
     LONGLONG ReorderCount;
     LONGLONG IntersectCount;
     LONGLONG TryReorderCount;
     LONGLONG TryReorderHeadCount;
     LONGLONG TryReorderTailCount; /* in-order requests */
-//#endif //QUEUE_STATISTICS
+//    ULONG               opt_MaxTransferMode; // user-specified
 } CHANINFO, *PCHANINFO;
 
 typedef struct _ADAPTERINFO {
@@ -143,13 +142,15 @@ typedef struct _ADAPTERINFO {
     ULONG NumberChannels;
     BOOLEAN ChanInfoValid;
 
-    UCHAR   NumberLuns;
+    UCHAR   NumberLuns;  // per channel
     BOOLEAN LunInfoValid;
-    CHAR    Reserved;
+    BOOLEAN ChanHeaderLengthValid; // since v0.42i8
 
     ULONG   AdapterInterfaceType;
+    ULONG   ChanHeaderLength;
+    ULONG   LunHeaderLength;
 
-    CHANINFO Chan[AHCI_MAX_PORT];
+    //CHANINFO Chan[0];
 
 } ADAPTERINFO, *PADAPTERINFO;
 
@@ -203,8 +204,14 @@ typedef struct _ATA_PASS_THROUGH_DIRECT {
   ULONG  TimeOutValue;
   ULONG  ReservedAsUlong;
   PVOID  DataBuffer;
-  UCHAR  PreviousTaskFile[8];
-  UCHAR  CurrentTaskFile[8];
+  union {
+      UCHAR  PreviousTaskFile[8];
+      IDEREGS Regs;
+  };
+  union {
+      UCHAR  CurrentTaskFile[8];
+      IDEREGS RegsH;
+  };
 } ATA_PASS_THROUGH_DIRECT, *PATA_PASS_THROUGH_DIRECT;
 
 #define    ATA_FLAGS_DRDY_REQUIRED 0x01 // Wait for DRDY status from the device before sending the command to the device.
@@ -213,18 +220,28 @@ typedef struct _ATA_PASS_THROUGH_DIRECT {
 #define    ATA_FLAGS_48BIT_COMMAND 0x08 // The ATA command to be send uses the 48 bit LBA feature set.
                                         //   When this flag is set, the contents of the PreviousTaskFile member in the
                                         //   ATA_PASS_THROUGH_DIRECT structure should be valid.
+#define    ATA_FLAGS_USE_DMA       0x10 // Set the transfer mode to DMA.
+#define    ATA_FLAGS_NO_MULTIPLE   0x20 // Read single sector only.
 
 #endif //ATA_FLAGS_DRDY_REQUIRED
 
-#pragma pack(1)
+#pragma pack(pop)
+
+#pragma pack(push, 1)
 typedef struct _IDEREGS_EX {
-        UCHAR    bFeaturesReg;           // Used for specifying SMART "commands".
+    union {
+        UCHAR    bFeaturesReg;           // Used for specifying SMART "commands" on input.
+        UCHAR    bErrorReg;              // Error on output.
+    };
         UCHAR    bSectorCountReg;        // IDE sector count register
         UCHAR    bSectorNumberReg;       // IDE sector number register
         UCHAR    bCylLowReg;             // IDE low order cylinder value
         UCHAR    bCylHighReg;            // IDE high order cylinder value
         UCHAR    bDriveHeadReg;          // IDE drive/head register
+    union {
         UCHAR    bCommandReg;            // Actual IDE command.
+        UCHAR    bStatusReg;             // Status register.
+    };
         UCHAR    bOpFlags;               // 00 - send
                                          // 01 - read regs
                                          // 08 - lba48
@@ -233,9 +250,12 @@ typedef struct _IDEREGS_EX {
 #define UNIATA_SPTI_EX_SND               0x00
 #define UNIATA_SPTI_EX_RCV               0x01
 #define UNIATA_SPTI_EX_LBA48             0x08
-#define UNIATA_SPTI_EX_SPEC_TO           0x10
+//#define UNIATA_SPTI_EX_SPEC_TO           0x10
 //#define UNIATA_SPTI_EX_FREEZE_TO         0x20 // do not reset device on timeout and keep interrupts disabled
-#define UNIATA_SPTI_EX_USE_DMA 	         0x20 // Force DMA transfer mode
+#define UNIATA_SPTI_EX_USE_DMA 	         0x10 // Force DMA transfer mode
+
+// use 'invalid' combination to specify special TO options
+#define UNIATA_SPTI_EX_SPEC_TO           (ATA_FLAGS_DATA_OUT | ATA_FLAGS_DATA_IN)
 
         UCHAR    bFeaturesRegH;          // feature (high part for LBA48 mode)
         UCHAR    bSectorCountRegH;       // IDE sector count register (high part for LBA48 mode)
@@ -263,11 +283,15 @@ typedef struct _UNIATA_REG_IO_HDR {
     ULONG          ItemCount;
     UNIATA_REG_IO  r[1];
 } UNIATA_REG_IO_HDR, *PUNIATA_REG_IO_HDR;
-#pragma pack()
+
+#pragma pack(pop)
+
+#pragma pack(push, 1)
 
 typedef struct _UNIATA_CTL {
     SRB_IO_CONTROL hdr;
     SCSI_ADDRESS   addr;
+    ULONG Reserved;
     union {
         UCHAR                   RawData[1];
         ADDREMOVEDEV            FindDelDev;
@@ -280,6 +304,19 @@ typedef struct _UNIATA_CTL {
         UNIATA_REG_IO_HDR       RegIo;
     };
 } UNIATA_CTL, *PUNIATA_CTL;
+
+typedef struct _SCSI_PASS_THROUGH_WITH_BUFFERS {
+    SCSI_PASS_THROUGH spt;
+    ULONG             Filler;      // realign buffers to double word boundary
+    UCHAR             ucSenseBuf[32];
+    UCHAR             ucDataBuf[512]; // recommended minimum
+} SCSI_PASS_THROUGH_WITH_BUFFERS, *PSCSI_PASS_THROUGH_WITH_BUFFERS;
+
+typedef struct _SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER {
+    SCSI_PASS_THROUGH_DIRECT sptd;
+    ULONG             Filler;      // realign buffer to double word boundary
+    UCHAR             ucSenseBuf[32];
+} SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER, *PSCSI_PASS_THROUGH_DIRECT_WITH_BUFFER;
 
 #endif //UNIATA_CORE
 

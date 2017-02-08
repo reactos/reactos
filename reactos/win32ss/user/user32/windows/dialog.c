@@ -751,9 +751,9 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
  *           DEFDLG_SetFocus
  *
  * Set the focus to a control of the dialog, selecting the text if
- * the control is an edit dialog.
+ * the control is an edit dialog that has DLGC_HASSETSEL.
  */
-static void DEFDLG_SetFocus( HWND hwndDlg, HWND hwndCtrl )
+static void DEFDLG_SetFocus( HWND hwndCtrl )
 {
     if (SendMessageW( hwndCtrl, WM_GETDLGCODE, 0, 0 ) & DLGC_HASSETSEL)
         SendMessageW( hwndCtrl, EM_SETSEL, 0, -1 );
@@ -779,7 +779,7 @@ static void DEFDLG_SaveFocus( HWND hwnd )
 /***********************************************************************
  *           DEFDLG_RestoreFocus
  */
-static void DEFDLG_RestoreFocus( HWND hwnd )
+static void DEFDLG_RestoreFocus( HWND hwnd, BOOL justActivate )
 {
     DIALOGINFO *infoPtr;
 
@@ -788,12 +788,19 @@ static void DEFDLG_RestoreFocus( HWND hwnd )
     /* Don't set the focus back to controls if EndDialog is already called.*/
     if (infoPtr->flags & DF_END) return;
     if (!IsWindow(infoPtr->hwndFocus) || infoPtr->hwndFocus == hwnd) {
+        if (justActivate) return;
         /* If no saved focus control exists, set focus to the first visible,
            non-disabled, WS_TABSTOP control in the dialog */
         infoPtr->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE );
+        /* If there are no WS_TABSTOP controls, set focus to the first visible,
+           non-disabled control in the dialog */
+        if (!infoPtr->hwndFocus) infoPtr->hwndFocus = GetNextDlgGroupItem( hwnd, 0, FALSE );
         if (!IsWindow( infoPtr->hwndFocus )) return;
     }
-    DEFDLG_SetFocus( hwnd, infoPtr->hwndFocus );
+    if (justActivate)
+        SetFocus( infoPtr->hwndFocus );
+    else
+        DEFDLG_SetFocus( infoPtr->hwndFocus );
 
     /* This used to set infoPtr->hwndFocus to NULL for no apparent reason,
        sometimes losing focus when receiving WM_SETFOCUS messages. */
@@ -1229,12 +1236,12 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
                dwSetFlag = wParam ? DF_DIALOGACTIVE : 0;
                if (hwndparent != hwnd) NtUserSetThreadState(dwSetFlag, DF_DIALOGACTIVE);
             }
-            if (wParam) DEFDLG_RestoreFocus( hwnd );
+            if (wParam) DEFDLG_RestoreFocus( hwnd, TRUE );
             else DEFDLG_SaveFocus( hwnd );
             return 0;
 
         case WM_SETFOCUS:
-            DEFDLG_RestoreFocus( hwnd );
+            DEFDLG_RestoreFocus( hwnd, FALSE );
             return 0;
 
         case DM_SETDEFID:
@@ -1259,7 +1266,7 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
                 HWND hwndDest = (HWND)wParam;
                 if (!lParam)
                     hwndDest = GetNextDlgTabItem(hwnd, GetFocus(), wParam);
-                if (hwndDest) DEFDLG_SetFocus( hwnd, hwndDest );
+                if (hwndDest) DEFDLG_SetFocus( hwndDest );
                 DEFDLG_SetDefButton( hwnd, dlgInfo, hwndDest );
             }
             return 0;
@@ -2155,7 +2162,7 @@ GetDlgItemInt(
         result = strtol( str, &endptr, 10 );
         if (!endptr || (endptr == str))  /* Conversion was unsuccessful */
             return 0;
-        if (((result == LONG_MIN) || (result == LONG_MAX)) && (errno == ERANGE) )
+        if (((result == LONG_MIN) || (result == LONG_MAX)))
             return 0;
     }
     else
@@ -2163,7 +2170,7 @@ GetDlgItemInt(
         result = strtoul( str, &endptr, 10 );
         if (!endptr || (endptr == str))  /* Conversion was unsuccessful */
             return 0;
-        if ((result == ULONG_MAX) && (errno == ERANGE) ) return 0;
+        if (result == ULONG_MAX) return 0;
     }
     if (lpTranslated) *lpTranslated = TRUE;
     return (UINT)result;

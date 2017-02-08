@@ -21,60 +21,10 @@
 /* IDirect3DVertexDeclaration8 is internal to our implementation.
  * It's not visible in the API. */
 
-#include "config.h"
+#include <config.h>
 #include "d3d8_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
-
-/* IUnknown */
-static HRESULT WINAPI IDirect3DVertexDeclaration8Impl_QueryInterface(IDirect3DVertexDeclaration8 *iface, REFIID riid, void **obj_ptr)
-{
-    TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), obj_ptr);
-
-    if (IsEqualGUID(riid, &IID_IUnknown)
-            || IsEqualGUID(riid, &IID_IDirect3DVertexDeclaration8))
-    {
-        IUnknown_AddRef(iface);
-        *obj_ptr = iface;
-        return S_OK;
-    }
-
-    *obj_ptr = NULL;
-    return E_NOINTERFACE;
-}
-
-static ULONG WINAPI IDirect3DVertexDeclaration8Impl_AddRef(IDirect3DVertexDeclaration8 *iface)
-{
-    IDirect3DVertexDeclaration8Impl *This = (IDirect3DVertexDeclaration8Impl *)iface;
-    ULONG ref_count = InterlockedIncrement(&This->ref_count);
-
-    TRACE("%p increasing refcount to %u.\n", iface, ref_count);
-
-    if (ref_count == 1)
-    {
-        wined3d_mutex_lock();
-        wined3d_vertex_declaration_incref(This->wined3d_vertex_declaration);
-        wined3d_mutex_unlock();
-    }
-
-    return ref_count;
-}
-
-static ULONG WINAPI IDirect3DVertexDeclaration8Impl_Release(IDirect3DVertexDeclaration8 *iface)
-{
-    IDirect3DVertexDeclaration8Impl *This = (IDirect3DVertexDeclaration8Impl *)iface;
-    ULONG ref_count = InterlockedDecrement(&This->ref_count);
-
-    TRACE("%p decreasing refcount to %u.\n", iface, ref_count);
-
-    if (!ref_count) {
-        wined3d_mutex_lock();
-        wined3d_vertex_declaration_decref(This->wined3d_vertex_declaration);
-        wined3d_mutex_unlock();
-    }
-
-    return ref_count;
-}
 
 static const char *debug_d3dvsdt_type(D3DVSDT_TYPE d3dvsdt_type)
 {
@@ -276,29 +226,30 @@ static const enum wined3d_format_id wined3d_format_lookup[] =
     /*WINED3DDECLTYPE_FLOAT16_4*/ WINED3DFMT_R16G16B16A16_FLOAT,
 };
 
-typedef struct {
+static const struct
+{
     BYTE usage;
     BYTE usage_idx;
-} wined3d_usage_t;
-
-static const wined3d_usage_t wined3d_usage_lookup[] = {
-    /*D3DVSDE_POSITION*/     {WINED3DDECLUSAGE_POSITION,     0},
-    /*D3DVSDE_BLENDWEIGHT*/  {WINED3DDECLUSAGE_BLENDWEIGHT,  0},
-    /*D3DVSDE_BLENDINDICES*/ {WINED3DDECLUSAGE_BLENDINDICES, 0},
-    /*D3DVSDE_NORMAL*/       {WINED3DDECLUSAGE_NORMAL,       0},
-    /*D3DVSDE_PSIZE*/        {WINED3DDECLUSAGE_PSIZE,        0},
-    /*D3DVSDE_DIFFUSE*/      {WINED3DDECLUSAGE_COLOR,        0},
-    /*D3DVSDE_SPECULAR*/     {WINED3DDECLUSAGE_COLOR,        1},
-    /*D3DVSDE_TEXCOORD0*/    {WINED3DDECLUSAGE_TEXCOORD,     0},
-    /*D3DVSDE_TEXCOORD1*/    {WINED3DDECLUSAGE_TEXCOORD,     1},
-    /*D3DVSDE_TEXCOORD2*/    {WINED3DDECLUSAGE_TEXCOORD,     2},
-    /*D3DVSDE_TEXCOORD3*/    {WINED3DDECLUSAGE_TEXCOORD,     3},
-    /*D3DVSDE_TEXCOORD4*/    {WINED3DDECLUSAGE_TEXCOORD,     4},
-    /*D3DVSDE_TEXCOORD5*/    {WINED3DDECLUSAGE_TEXCOORD,     5},
-    /*D3DVSDE_TEXCOORD6*/    {WINED3DDECLUSAGE_TEXCOORD,     6},
-    /*D3DVSDE_TEXCOORD7*/    {WINED3DDECLUSAGE_TEXCOORD,     7},
-    /*D3DVSDE_POSITION2*/    {WINED3DDECLUSAGE_POSITION,     1},
-    /*D3DVSDE_NORMAL2*/      {WINED3DDECLUSAGE_NORMAL,       1},
+}
+wined3d_usage_lookup[] =
+{
+    /* D3DVSDE_POSITION */      {WINED3D_DECL_USAGE_POSITION,      0},
+    /* D3DVSDE_BLENDWEIGHT */   {WINED3D_DECL_USAGE_BLEND_WEIGHT,  0},
+    /* D3DVSDE_BLENDINDICES */  {WINED3D_DECL_USAGE_BLEND_INDICES, 0},
+    /* D3DVSDE_NORMAL */        {WINED3D_DECL_USAGE_NORMAL,        0},
+    /* D3DVSDE_PSIZE */         {WINED3D_DECL_USAGE_PSIZE,         0},
+    /* D3DVSDE_DIFFUSE */       {WINED3D_DECL_USAGE_COLOR,         0},
+    /* D3DVSDE_SPECULAR */      {WINED3D_DECL_USAGE_COLOR,         1},
+    /* D3DVSDE_TEXCOORD0 */     {WINED3D_DECL_USAGE_TEXCOORD,      0},
+    /* D3DVSDE_TEXCOORD1 */     {WINED3D_DECL_USAGE_TEXCOORD,      1},
+    /* D3DVSDE_TEXCOORD2 */     {WINED3D_DECL_USAGE_TEXCOORD,      2},
+    /* D3DVSDE_TEXCOORD3 */     {WINED3D_DECL_USAGE_TEXCOORD,      3},
+    /* D3DVSDE_TEXCOORD4 */     {WINED3D_DECL_USAGE_TEXCOORD,      4},
+    /* D3DVSDE_TEXCOORD5 */     {WINED3D_DECL_USAGE_TEXCOORD,      5},
+    /* D3DVSDE_TEXCOORD6 */     {WINED3D_DECL_USAGE_TEXCOORD,      6},
+    /* D3DVSDE_TEXCOORD7 */     {WINED3D_DECL_USAGE_TEXCOORD,      7},
+    /* D3DVSDE_POSITION2 */     {WINED3D_DECL_USAGE_POSITION,      1},
+    /* D3DVSDE_NORMAL2 */       {WINED3D_DECL_USAGE_NORMAL,        1},
 };
 
 /* TODO: find out where rhw (or positionT) is for declaration8 */
@@ -335,7 +286,7 @@ static UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3
             element->input_slot = stream;
             element->offset = offset;
             element->output_slot = reg;
-            element->method = WINED3DDECLMETHOD_DEFAULT;
+            element->method = WINED3D_DECL_METHOD_DEFAULT;
             element->usage = wined3d_usage_lookup[reg].usage;
             element->usage_idx = wined3d_usage_lookup[reg].usage_idx;
 
@@ -358,18 +309,20 @@ static UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3
     return element_count;
 }
 
-static const IDirect3DVertexDeclaration8Vtbl Direct3DVertexDeclaration8_Vtbl =
-{
-    IDirect3DVertexDeclaration8Impl_QueryInterface,
-    IDirect3DVertexDeclaration8Impl_AddRef,
-    IDirect3DVertexDeclaration8Impl_Release
-};
-
 static void STDMETHODCALLTYPE d3d8_vertexdeclaration_wined3d_object_destroyed(void *parent)
 {
-    IDirect3DVertexDeclaration8Impl *declaration = parent;
+    struct d3d8_vertex_declaration *declaration = parent;
     HeapFree(GetProcessHeap(), 0, declaration->elements);
     HeapFree(GetProcessHeap(), 0, declaration);
+}
+
+void d3d8_vertex_declaration_destroy(struct d3d8_vertex_declaration *declaration)
+{
+    TRACE("declaration %p.\n", declaration);
+
+    wined3d_mutex_lock();
+    wined3d_vertex_declaration_decref(declaration->wined3d_vertex_declaration);
+    wined3d_mutex_unlock();
 }
 
 static const struct wined3d_parent_ops d3d8_vertexdeclaration_wined3d_parent_ops =
@@ -377,15 +330,13 @@ static const struct wined3d_parent_ops d3d8_vertexdeclaration_wined3d_parent_ops
     d3d8_vertexdeclaration_wined3d_object_destroyed,
 };
 
-HRESULT vertexdeclaration_init(IDirect3DVertexDeclaration8Impl *declaration,
-        IDirect3DDevice8Impl *device, const DWORD *elements, DWORD shader_handle)
+HRESULT d3d8_vertex_declaration_init(struct d3d8_vertex_declaration *declaration,
+        struct d3d8_device *device, const DWORD *elements, DWORD shader_handle)
 {
     struct wined3d_vertex_element *wined3d_elements;
     UINT wined3d_element_count;
     HRESULT hr;
 
-    declaration->lpVtbl = &Direct3DVertexDeclaration8_Vtbl;
-    declaration->ref_count = 1;
     declaration->shader_handle = shader_handle;
 
     wined3d_element_count = convert_to_wined3d_declaration(elements, &declaration->elements_size, &wined3d_elements);
@@ -414,13 +365,11 @@ HRESULT vertexdeclaration_init(IDirect3DVertexDeclaration8Impl *declaration,
     return D3D_OK;
 }
 
-HRESULT vertexdeclaration_init_fvf(IDirect3DVertexDeclaration8Impl *declaration,
-        IDirect3DDevice8Impl *device, DWORD fvf)
+HRESULT d3d8_vertex_declaration_init_fvf(struct d3d8_vertex_declaration *declaration,
+        struct d3d8_device *device, DWORD fvf)
 {
     HRESULT hr;
 
-    declaration->ref_count = 1;
-    declaration->lpVtbl = &Direct3DVertexDeclaration8_Vtbl;
     declaration->elements = NULL;
     declaration->elements_size = 0;
     declaration->shader_handle = fvf;

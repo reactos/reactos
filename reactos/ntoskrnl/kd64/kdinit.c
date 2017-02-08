@@ -193,7 +193,7 @@ KdInitSystem(IN ULONG BootPhase,
                             /* Check if this is a comma, a space or a tab */
                             if ((*DebugOptionEnd == ',') ||
                                 (*DebugOptionEnd == ' ') ||
-                                (*DebugOptionEnd == '	'))
+                                (*DebugOptionEnd == '\t'))
                             {
                                 /*
                                  * We reached the end of the option or
@@ -366,7 +366,7 @@ KdInitSystem(IN ULONG BootPhase,
             }
         }
 
-        /* Check for incoming breakin and break on symbol load if we have it*/
+        /* Check for incoming breakin and break on symbol load if we have it */
         KdBreakAfterSymbolLoad = KdPollBreakIn();
     }
     else

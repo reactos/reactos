@@ -1,6 +1,6 @@
-/* $Id: slayer.rc 24931 2006-11-28 19:35:42Z janderwald $ */
+#include <windef.h>
+#include <winuser.h>
 
-#include <windows.h>
 #include "resource.h"
 
 #define REACTOS_VERSION_DLL

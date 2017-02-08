@@ -20,23 +20,42 @@ extern "C" {
 #define ABE_BOTTOM	3
 #define ABS_AUTOHIDE	1
 #define ABS_ALWAYSONTOP	2
-#define SEE_MASK_CLASSNAME	1
-#define SEE_MASK_CLASSKEY	3
-#define SEE_MASK_IDLIST	4
-#define SEE_MASK_INVOKEIDLIST   12
-#define SEE_MASK_ICON	0x10
-#define SEE_MASK_HOTKEY	0x20
-#define SEE_MASK_NOCLOSEPROCESS	0x40
-#define SEE_MASK_CONNECTNETDRV	0x80
+
+#define SEE_MASK_DEFAULT	0x00000000
+#define SEE_MASK_CLASSNAME	0x00000001
+#define SEE_MASK_CLASSKEY	0x00000003
+#define SEE_MASK_IDLIST	0x00000004
+#define SEE_MASK_INVOKEIDLIST	0x0000000C
+#define SEE_MASK_ICON	0x00000010
+#define SEE_MASK_HOTKEY	0x00000020
+#define SEE_MASK_NOCLOSEPROCESS	0x00000040
+#define SEE_MASK_CONNECTNETDRV	0x00000080
 #define SEE_MASK_NOASYNC	0x00000100
 #define SEE_MASK_FLAG_DDEWAIT	SEE_MASK_NOASYNC
-#define SEE_MASK_DOENVSUBST	0x200
-#define SEE_MASK_FLAG_NO_UI	0x400
-#define SEE_MASK_NO_CONSOLE	0x8000
-#define SEE_MASK_UNICODE	0x10000
-#define SEE_MASK_ASYNCOK	0x100000
-#define SEE_MASK_HMONITOR	0x200000
-#define SEE_MASK_NOZONECHECKS   0x00800000
+#define SEE_MASK_DOENVSUBST	0x00000200
+#define SEE_MASK_FLAG_NO_UI	0x00000400
+#define SEE_MASK_UNICODE	0x00004000
+#define SEE_MASK_NO_CONSOLE	0x00008000
+/*
+ * NOTE: The following three flags are undocumented and are not present in the
+ * official Windows SDK. However they are used in shobjidl.idl to define some
+ * CMIC_MASK_* flags, these ones being mentioned in the MSDN documentation of
+ * the CMINVOKECOMMANDINFOEX structure.
+ * I affect them this range of values which seems to be strangely empty. Of
+ * course their values may differ from the real ones, however I have no way
+ * of discovering them. If somebody else can verify them, it would be great.
+ */
+#define SEE_MASK_HASLINKNAME	0x00010000
+#define SEE_MASK_HASTITLE	0x00020000
+#define SEE_MASK_FLAG_SEPVDM	0x00040000
+/* END NOTE */
+#define SEE_MASK_ASYNCOK	0x00100000
+#define SEE_MASK_HMONITOR	0x00200000
+#define SEE_MASK_NOZONECHECKS	0x00800000
+#define SEE_MASK_NOQUERYCLASSSTORE	0x01000000
+#define SEE_MASK_WAITFORINPUTIDLE	0x02000000
+#define SEE_MASK_FLAG_LOG_USAGE	0x04000000
+
 #define ABM_NEW	0
 #define ABM_REMOVE	1
 #define ABM_QUERYPOS	2
@@ -391,6 +410,18 @@ HRESULT WINAPI SHEmptyRecycleBinA(HWND,LPCSTR,DWORD);
 HRESULT WINAPI SHEmptyRecycleBinW(HWND,LPCWSTR,DWORD);
 BOOL WINAPI SHCreateProcessAsUserW(PSHCREATEPROCESSINFOW);
 
+DWORD
+WINAPI
+DoEnvironmentSubstA(
+    _Inout_updates_(cchSrc) LPSTR pszSrc,
+    UINT cchSrc);
+
+DWORD
+WINAPI
+DoEnvironmentSubstW(
+    _Inout_updates_(cchSrc) LPWSTR pszSrc,
+    UINT cchSrc);
+
 #ifdef UNICODE
 #define NOTIFYICONDATA_V1_SIZE NOTIFYICONDATAW_V1_SIZE
 #define NOTIFYICONDATA_V2_SIZE NOTIFYICONDATAW_V2_SIZE
@@ -417,6 +448,7 @@ typedef LPSHNAMEMAPPINGW LPSHNAMEMAPPING;
 #define SHQueryRecycleBin SHQueryRecycleBinW
 #define SHEmptyRecycleBin SHEmptyRecycleBinW
 #define SHGetNewLinkInfo SHGetNewLinkInfoW
+#define DoEnvironmentSubst DoEnvironmentSubstW
 
 #else
 #define NOTIFYICONDATA_V1_SIZE NOTIFYICONDATAA_V1_SIZE
@@ -444,6 +476,7 @@ typedef LPSHNAMEMAPPINGA LPSHNAMEMAPPING;
 #define SHQueryRecycleBin SHQueryRecycleBinA
 #define SHEmptyRecycleBin SHEmptyRecycleBinA
 #define SHGetNewLinkInfo SHGetNewLinkInfoA
+#define DoEnvironmentSubst DoEnvironmentSubstA
 #endif
 
 #if !defined(_WIN64)

@@ -9,7 +9,6 @@
 
 #include "precomp.h"
 
-
 static VOID
 InitPropSheetPage(PROPSHEETPAGE *psp,
                   PSERVICEPROPSHEET dlgInfo,
@@ -24,7 +23,6 @@ InitPropSheetPage(PROPSHEETPAGE *psp,
   psp->pfnDlgProc = DlgProc;
   psp->lParam = (LPARAM)dlgInfo;
 }
-
 
 LONG APIENTRY
 OpenPropSheet(PMAIN_WND_INFO Info)
@@ -69,4 +67,3 @@ OpenPropSheet(PMAIN_WND_INFO Info)
 
     return Ret;
 }
-

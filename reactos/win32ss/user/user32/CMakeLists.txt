@@ -7,8 +7,6 @@ include_directories(
     include
     ${REACTOS_SOURCE_DIR}/win32ss/include)
 
-set_rc_compiler()
-
 list(APPEND SOURCE
     controls/appswitch.c
     controls/button.c
@@ -41,7 +39,7 @@ list(APPEND SOURCE
     windows/caret.c
     windows/class.c
     windows/clipboard.c
-    windows/cursoricon.c
+#   windows/cursoricon.c
     windows/dc.c
     windows/defwnd.c
     windows/dialog.c
@@ -64,17 +62,22 @@ list(APPEND SOURCE
     user32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/user32.def)
 
-add_library(user32 SHARED ${SOURCE})
-set_module_type(user32 win32dll UNICODE)
+if(USE_NEW_CURSORICON)
+    list(APPEND SOURCE windows/cursoricon_new.c)
+else()
+    list(APPEND SOURCE windows/cursoricon.c)
+endif()
 
-target_link_libraries(user32
-    user32_wsprintf
-    wine
-    win32ksys
-    ${PSEH_LIB})
+add_library(user32 SHARED ${SOURCE})
+set_module_type(user32 win32dll ENTRYPOINT DllMain 12 UNICODE)
+target_link_libraries(user32 user32_wsprintf wine win32ksys ${PSEH_LIB})
+
+if(MSVC)
+    # for __ftol2_sse, float to int cast helper
+    target_link_libraries(user32 msvcrtex)
+endif()
 
 add_delay_importlibs(user32 imm32 usp10)
-add_importlibs(user32 gdi32 advapi32 msvcrt kernel32 ntdll)
+add_importlibs(user32 gdi32 advapi32 kernel32 ntdll)
 add_pch(user32 include/user32.h)
 add_cd_file(TARGET user32 DESTINATION reactos/system32 FOR all)
-

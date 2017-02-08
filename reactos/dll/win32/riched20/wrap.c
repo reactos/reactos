@@ -589,8 +589,7 @@ static void ME_MarkRepaintEnd(ME_DisplayItem *para,
 {
     if (!*repaint_start)
       *repaint_start = para;
-    *repaint_end = para->member.para.next_para;
-    para->member.para.nFlags |= MEPF_REPAINT;
+    *repaint_end = para;
 }
 
 BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor)
@@ -738,42 +737,35 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor)
   ME_DestroyContext(&c);
 
   if (repaint_start || editor->nTotalLength < editor->nLastTotalLength)
-  {
-    if (!repaint_start) repaint_start = editor->pBuffer->pFirst;
-    ME_InvalidateMarkedParagraphs(editor, repaint_start, repaint_end);
-  }
+    ME_InvalidateParagraphRange(editor, repaint_start, repaint_end);
   return !!repaint_start;
 }
 
-void ME_InvalidateMarkedParagraphs(ME_TextEditor *editor,
-                                   ME_DisplayItem *start_para,
-                                   ME_DisplayItem *end_para)
+void ME_InvalidateParagraphRange(ME_TextEditor *editor,
+                                 ME_DisplayItem *start_para,
+                                 ME_DisplayItem *last_para)
 {
   ME_Context c;
   RECT rc;
   int ofs;
-  ME_DisplayItem *item;
 
   ME_InitContext(&c, editor, ITextHost_TxGetDC(editor->texthost));
   rc = c.rcView;
   ofs = editor->vert_si.nPos;
 
-  item = start_para;
-  while(item && item != end_para) {
-    if (item->member.para.nFlags & MEPF_REPAINT) {
-      rc.top = c.rcView.top + item->member.para.pt.y - ofs;
-      rc.bottom = max(rc.top + item->member.para.nHeight, c.rcView.bottom);
-      ITextHost_TxInvalidateRect(editor->texthost, &rc, TRUE);
-      item->member.para.nFlags &= ~MEPF_REPAINT;
-    }
-    item = item->member.para.next_para;
+  if (start_para) {
+    start_para = ME_GetOuterParagraph(start_para);
+    last_para = ME_GetOuterParagraph(last_para);
+    rc.top = c.rcView.top + start_para->member.para.pt.y - ofs;
+  } else {
+    rc.top = c.rcView.top + editor->nTotalLength - ofs;
   }
   if (editor->nTotalLength < editor->nLastTotalLength)
-  {
-    rc.top = c.rcView.top + editor->nTotalLength - ofs;
     rc.bottom = c.rcView.top + editor->nLastTotalLength - ofs;
-    ITextHost_TxInvalidateRect(editor->texthost, &rc, TRUE);
-  }
+  else
+    rc.bottom = c.rcView.top + last_para->member.para.pt.y + last_para->member.para.nHeight - ofs;
+  ITextHost_TxInvalidateRect(editor->texthost, &rc, TRUE);
+
   ME_DestroyContext(&c);
 }
 

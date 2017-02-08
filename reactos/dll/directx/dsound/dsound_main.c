@@ -34,71 +34,70 @@
 
 #include <stdarg.h>
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 #define NONAMELESSSTRUCT
 #define NONAMELESSUNION
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "winreg.h"
-#include "mmsystem.h"
-#include "winternl.h"
-#include "mmddk.h"
-#include "wine/debug.h"
-#include "dsound.h"
-#include "dsconf.h"
-#include "ks.h"
-#include "initguid.h"
-#include "ksmedia.h"
-#include "dsdriver.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+#include <winnls.h>
+#include <winreg.h>
+//#include "mmsystem.h"
+#include <winternl.h>
+#include <mmddk.h>
+#include <wine/debug.h>
+#include <dsound.h>
+#include <dsconf.h>
+//#include "ks.h"
+#include <rpcproxy.h>
+//#include "rpc.h"
+//#include "rpcndr.h"
+//#include "unknwn.h"
+//#include "oleidl.h"
+//#include "shobjidl.h"
+
+#include <initguid.h>
+//#include "ksmedia.h"
+//#include "propkey.h"
+#include <devpkey.h>
 
 #include "dsound_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dsound);
 
-DirectSoundDevice*	DSOUND_renderer[MAXWAVEDRIVERS];
+struct list DSOUND_renderers = LIST_INIT(DSOUND_renderers);
+CRITICAL_SECTION DSOUND_renderers_lock;
+static CRITICAL_SECTION_DEBUG DSOUND_renderers_lock_debug =
+{
+    0, 0, &DSOUND_renderers_lock,
+    { &DSOUND_renderers_lock_debug.ProcessLocksList, &DSOUND_renderers_lock_debug.ProcessLocksList },
+      0, 0, { (DWORD_PTR)(__FILE__ ": DSOUND_renderers_lock") }
+};
+CRITICAL_SECTION DSOUND_renderers_lock = { &DSOUND_renderers_lock_debug, -1, 0, 0, 0, 0 };
+
+struct list DSOUND_capturers = LIST_INIT(DSOUND_capturers);
+CRITICAL_SECTION DSOUND_capturers_lock;
+static CRITICAL_SECTION_DEBUG DSOUND_capturers_lock_debug =
+{
+    0, 0, &DSOUND_capturers_lock,
+    { &DSOUND_capturers_lock_debug.ProcessLocksList, &DSOUND_capturers_lock_debug.ProcessLocksList },
+      0, 0, { (DWORD_PTR)(__FILE__ ": DSOUND_capturers_lock") }
+};
+CRITICAL_SECTION DSOUND_capturers_lock = { &DSOUND_capturers_lock_debug, -1, 0, 0, 0, 0 };
+
 GUID                    DSOUND_renderer_guids[MAXWAVEDRIVERS];
 GUID                    DSOUND_capture_guids[MAXWAVEDRIVERS];
 
-HRESULT mmErr(UINT err)
-{
-	switch(err) {
-	case MMSYSERR_NOERROR:
-		return DS_OK;
-	case MMSYSERR_ALLOCATED:
-		return DSERR_ALLOCATED;
-	case MMSYSERR_ERROR:
-	case MMSYSERR_INVALHANDLE:
-	case WAVERR_STILLPLAYING:
-		return DSERR_GENERIC; /* FIXME */
-	case MMSYSERR_NODRIVER:
-		return DSERR_NODRIVER;
-	case MMSYSERR_NOMEM:
-		return DSERR_OUTOFMEMORY;
-	case MMSYSERR_INVALPARAM:
-	case WAVERR_BADFORMAT:
-	case WAVERR_UNPREPARED:
-		return DSERR_INVALIDPARAM;
-	case MMSYSERR_NOTSUPPORTED:
-		return DSERR_UNSUPPORTED;
-	default:
-		FIXME("Unknown MMSYS error %d\n",err);
-		return DSERR_GENERIC;
-	}
-}
+WCHAR wine_vxd_drv[] = { 'w','i','n','e','m','m','.','v','x','d', 0 };
 
 /* All default settings, you most likely don't want to touch these, see wiki on UsefulRegistryKeys */
-int ds_emuldriver = 0;
 int ds_hel_buflen = 32768 * 2;
 int ds_snd_queue_max = 10;
-int ds_snd_queue_min = 6;
-int ds_snd_shadow_maxsize = 2;
-int ds_hw_accel = DS_HW_ACCEL_FULL;
-int ds_default_sample_rate = 44100;
-int ds_default_bits_per_sample = 16;
-static int ds_default_playback;
-static int ds_default_capture;
+static HINSTANCE instance;
 
 /*
  * Get a config key from either the app-specific or the default config
@@ -147,62 +146,18 @@ void setup_dsound_options(void)
 
     /* get options */
 
-    if (!get_config_key( hkey, appkey, "EmulDriver", buffer, MAX_PATH ))
-        ds_emuldriver = strcmp(buffer, "N");
-
     if (!get_config_key( hkey, appkey, "HelBuflen", buffer, MAX_PATH ))
         ds_hel_buflen = atoi(buffer);
 
     if (!get_config_key( hkey, appkey, "SndQueueMax", buffer, MAX_PATH ))
         ds_snd_queue_max = atoi(buffer);
 
-    if (!get_config_key( hkey, appkey, "SndQueueMin", buffer, MAX_PATH ))
-        ds_snd_queue_min = atoi(buffer);
-
-    if (!get_config_key( hkey, appkey, "HardwareAcceleration", buffer, MAX_PATH )) {
-	if (strcmp(buffer, "Full") == 0)
-	    ds_hw_accel = DS_HW_ACCEL_FULL;
-	else if (strcmp(buffer, "Standard") == 0)
-	    ds_hw_accel = DS_HW_ACCEL_STANDARD;
-	else if (strcmp(buffer, "Basic") == 0)
-	    ds_hw_accel = DS_HW_ACCEL_BASIC;
-	else if (strcmp(buffer, "Emulation") == 0)
-	    ds_hw_accel = DS_HW_ACCEL_EMULATION;
-    }
-
-    if (!get_config_key( hkey, appkey, "DefaultPlayback", buffer, MAX_PATH ))
-        ds_default_playback = atoi(buffer);
-
-    if (!get_config_key( hkey, appkey, "MaxShadowSize", buffer, MAX_PATH ))
-        ds_snd_shadow_maxsize = atoi(buffer);
-
-    if (!get_config_key( hkey, appkey, "DefaultCapture", buffer, MAX_PATH ))
-        ds_default_capture = atoi(buffer);
-
-    if (!get_config_key( hkey, appkey, "DefaultSampleRate", buffer, MAX_PATH ))
-        ds_default_sample_rate = atoi(buffer);
-
-    if (!get_config_key( hkey, appkey, "DefaultBitsPerSample", buffer, MAX_PATH ))
-        ds_default_bits_per_sample = atoi(buffer);
 
     if (appkey) RegCloseKey( appkey );
     if (hkey) RegCloseKey( hkey );
 
-    TRACE("ds_emuldriver = %d\n", ds_emuldriver);
     TRACE("ds_hel_buflen = %d\n", ds_hel_buflen);
     TRACE("ds_snd_queue_max = %d\n", ds_snd_queue_max);
-    TRACE("ds_snd_queue_min = %d\n", ds_snd_queue_min);
-    TRACE("ds_hw_accel = %s\n",
-        ds_hw_accel==DS_HW_ACCEL_FULL ? "Full" :
-        ds_hw_accel==DS_HW_ACCEL_STANDARD ? "Standard" :
-        ds_hw_accel==DS_HW_ACCEL_BASIC ? "Basic" :
-        ds_hw_accel==DS_HW_ACCEL_EMULATION ? "Emulation" :
-        "Unknown");
-    TRACE("ds_default_playback = %d\n", ds_default_playback);
-    TRACE("ds_default_capture = %d\n", ds_default_playback);
-    TRACE("ds_default_sample_rate = %d\n", ds_default_sample_rate);
-    TRACE("ds_default_bits_per_sample = %d\n", ds_default_bits_per_sample);
-    TRACE("ds_snd_shadow_maxsize = %d\n", ds_snd_shadow_maxsize);
 }
 
 static const char * get_device_id(LPCGUID pGuid)
@@ -216,6 +171,63 @@ static const char * get_device_id(LPCGUID pGuid)
     else if (IsEqualGUID(&DSDEVID_DefaultVoiceCapture, pGuid))
         return "DSDEVID_DefaultVoiceCapture";
     return debugstr_guid(pGuid);
+}
+
+static HRESULT get_mmdevenum(IMMDeviceEnumerator **devenum)
+{
+    HRESULT hr, init_hr;
+
+    init_hr = CoInitialize(NULL);
+
+    hr = CoCreateInstance(&CLSID_MMDeviceEnumerator, NULL,
+            CLSCTX_INPROC_SERVER, &IID_IMMDeviceEnumerator, (void**)devenum);
+    if(FAILED(hr)){
+        CoUninitialize();
+        *devenum = NULL;
+        ERR("CoCreateInstance failed: %08x\n", hr);
+        return hr;
+    }
+
+    return init_hr;
+}
+
+static void release_mmdevenum(IMMDeviceEnumerator *devenum, HRESULT init_hr)
+{
+    IMMDeviceEnumerator_Release(devenum);
+    if(SUCCEEDED(init_hr))
+        CoUninitialize();
+}
+
+static HRESULT get_mmdevice_guid(IMMDevice *device, IPropertyStore *ps,
+        GUID *guid)
+{
+    PROPVARIANT pv;
+    HRESULT hr;
+
+    if(!ps){
+        hr = IMMDevice_OpenPropertyStore(device, STGM_READ, &ps);
+        if(FAILED(hr)){
+            WARN("OpenPropertyStore failed: %08x\n", hr);
+            return hr;
+        }
+    }else
+        IPropertyStore_AddRef(ps);
+
+    PropVariantInit(&pv);
+
+    hr = IPropertyStore_GetValue(ps, &PKEY_AudioEndpoint_GUID, &pv);
+    if(FAILED(hr)){
+        IPropertyStore_Release(ps);
+        WARN("GetValue(GUID) failed: %08x\n", hr);
+        return hr;
+    }
+
+    CLSIDFromString(pv.u.pwszVal, guid);
+
+    PropVariantClear(&pv);
+    IPropertyStore_Release(ps);
+
+    return S_OK;
 }
 
 /***************************************************************************
@@ -240,38 +252,76 @@ static const char * get_device_id(LPCGUID pGuid)
  */
 HRESULT WINAPI GetDeviceID(LPCGUID pGuidSrc, LPGUID pGuidDest)
 {
+    IMMDeviceEnumerator *devenum;
+    EDataFlow flow = (EDataFlow)-1;
+    ERole role = (ERole)-1;
+    HRESULT hr, init_hr;
+
     TRACE("(%s,%p)\n", get_device_id(pGuidSrc),pGuidDest);
 
-    if ( pGuidSrc == NULL) {
-	WARN("invalid parameter: pGuidSrc == NULL\n");
-	return DSERR_INVALIDPARAM;
+    if(!pGuidSrc || !pGuidDest)
+        return DSERR_INVALIDPARAM;
+
+    init_hr = get_mmdevenum(&devenum);
+    if(!devenum)
+        return init_hr;
+
+    if(IsEqualGUID(&DSDEVID_DefaultPlayback, pGuidSrc)){
+        role = eMultimedia;
+        flow = eRender;
+    }else if(IsEqualGUID(&DSDEVID_DefaultVoicePlayback, pGuidSrc)){
+        role = eCommunications;
+        flow = eRender;
+    }else if(IsEqualGUID(&DSDEVID_DefaultCapture, pGuidSrc)){
+        role = eMultimedia;
+        flow = eCapture;
+    }else if(IsEqualGUID(&DSDEVID_DefaultVoiceCapture, pGuidSrc)){
+        role = eCommunications;
+        flow = eCapture;
     }
 
-    if ( pGuidDest == NULL ) {
-	WARN("invalid parameter: pGuidDest == NULL\n");
-	return DSERR_INVALIDPARAM;
+    if(role != (ERole)-1 && flow != (EDataFlow)-1){
+        IMMDevice *device;
+
+        hr = IMMDeviceEnumerator_GetDefaultAudioEndpoint(devenum,
+                flow, role, &device);
+        if(FAILED(hr)){
+            WARN("GetDefaultAudioEndpoint failed: %08x\n", hr);
+            release_mmdevenum(devenum, init_hr);
+            return DSERR_NODRIVER;
+        }
+
+        hr = get_mmdevice_guid(device, NULL, pGuidDest);
+        IMMDevice_Release(device);
+
+        release_mmdevenum(devenum, init_hr);
+
+        return (hr == S_OK) ? DS_OK : hr;
     }
 
-    if ( IsEqualGUID( &DSDEVID_DefaultPlayback, pGuidSrc ) ||
-    	 IsEqualGUID( &DSDEVID_DefaultVoicePlayback, pGuidSrc ) ) {
-	*pGuidDest = DSOUND_renderer_guids[ds_default_playback];
-        TRACE("returns %s\n", get_device_id(pGuidDest));
-	return DS_OK;
-    }
-
-    if ( IsEqualGUID( &DSDEVID_DefaultCapture, pGuidSrc ) ||
-    	 IsEqualGUID( &DSDEVID_DefaultVoiceCapture, pGuidSrc ) ) {
-	*pGuidDest = DSOUND_capture_guids[ds_default_capture];
-        TRACE("returns %s\n", get_device_id(pGuidDest));
-	return DS_OK;
-    }
+    release_mmdevenum(devenum, init_hr);
 
     *pGuidDest = *pGuidSrc;
-    TRACE("returns %s\n", get_device_id(pGuidDest));
 
     return DS_OK;
 }
 
+struct morecontext
+{
+    LPDSENUMCALLBACKA callA;
+    LPVOID data;
+};
+
+static BOOL CALLBACK a_to_w_callback(LPGUID guid, LPCWSTR descW, LPCWSTR modW, LPVOID data)
+{
+    struct morecontext *context = data;
+    char descA[MAXPNAMELEN], modA[MAXPNAMELEN];
+
+    WideCharToMultiByte(CP_ACP, 0, descW, -1, descA, sizeof(descA), NULL, NULL);
+    WideCharToMultiByte(CP_ACP, 0, modW, -1, modA, sizeof(modA), NULL, NULL);
+
+    return context->callA(guid, descA, modA, context->data);
+}
 
 /***************************************************************************
  * DirectSoundEnumerateA [DSOUND.2]
@@ -290,46 +340,198 @@ HRESULT WINAPI DirectSoundEnumerateA(
     LPDSENUMCALLBACKA lpDSEnumCallback,
     LPVOID lpContext)
 {
-    unsigned devs, wod;
-    DSDRIVERDESC desc;
-    GUID guid;
-    int err;
-
-    TRACE("lpDSEnumCallback = %p, lpContext = %p\n",
-	lpDSEnumCallback, lpContext);
+    struct morecontext context;
 
     if (lpDSEnumCallback == NULL) {
-	WARN("invalid parameter: lpDSEnumCallback == NULL\n");
-	return DSERR_INVALIDPARAM;
+        WARN("invalid parameter: lpDSEnumCallback == NULL\n");
+        return DSERR_INVALIDPARAM;
     }
 
-    devs = waveOutGetNumDevs();
-    if (devs > 0) {
-	if (GetDeviceID(&DSDEVID_DefaultPlayback, &guid) == DS_OK) {
-	    for (wod = 0; wod < devs; ++wod) {
-                if (IsEqualGUID( &guid, &DSOUND_renderer_guids[wod]) ) {
-                    err = mmErr(waveOutMessage(UlongToHandle(wod),DRV_QUERYDSOUNDDESC,(DWORD_PTR)&desc,0));
-                    if (err == DS_OK) {
-                        TRACE("calling lpDSEnumCallback(NULL,\"%s\",\"%s\",%p)\n",
-                              "Primary Sound Driver","",lpContext);
-                        if (lpDSEnumCallback(NULL, "Primary Sound Driver", "", lpContext) == FALSE)
-                            return DS_OK;
-		    }
-		}
-	    }
-	}
+    context.callA = lpDSEnumCallback;
+    context.data = lpContext;
+
+    return DirectSoundEnumerateW(a_to_w_callback, &context);
+}
+
+HRESULT get_mmdevice(EDataFlow flow, const GUID *tgt, IMMDevice **device)
+{
+    IMMDeviceEnumerator *devenum;
+    IMMDeviceCollection *coll;
+    UINT count, i;
+    HRESULT hr, init_hr;
+
+    init_hr = get_mmdevenum(&devenum);
+    if(!devenum)
+        return init_hr;
+
+    hr = IMMDeviceEnumerator_EnumAudioEndpoints(devenum, flow,
+            DEVICE_STATE_ACTIVE, &coll);
+    if(FAILED(hr)){
+        WARN("EnumAudioEndpoints failed: %08x\n", hr);
+        release_mmdevenum(devenum, init_hr);
+        return hr;
     }
 
-    for (wod = 0; wod < devs; ++wod) {
-        err = mmErr(waveOutMessage(UlongToHandle(wod),DRV_QUERYDSOUNDDESC,(DWORD_PTR)&desc,0));
-	if (err == DS_OK) {
-            TRACE("calling lpDSEnumCallback(%s,\"%s\",\"%s\",%p)\n",
-                  debugstr_guid(&DSOUND_renderer_guids[wod]),desc.szDesc,desc.szDrvname,lpContext);
-            if (lpDSEnumCallback(&DSOUND_renderer_guids[wod], desc.szDesc, desc.szDrvname, lpContext) == FALSE)
-                return DS_OK;
-	}
+    hr = IMMDeviceCollection_GetCount(coll, &count);
+    if(FAILED(hr)){
+        IMMDeviceCollection_Release(coll);
+        release_mmdevenum(devenum, init_hr);
+        WARN("GetCount failed: %08x\n", hr);
+        return hr;
     }
-    return DS_OK;
+
+    for(i = 0; i < count; ++i){
+        GUID guid;
+
+        hr = IMMDeviceCollection_Item(coll, i, device);
+        if(FAILED(hr))
+            continue;
+
+        hr = get_mmdevice_guid(*device, NULL, &guid);
+        if(FAILED(hr)){
+            IMMDevice_Release(*device);
+            continue;
+        }
+
+        if(IsEqualGUID(&guid, tgt)){
+            IMMDeviceCollection_Release(coll);
+            release_mmdevenum(devenum, init_hr);
+            return DS_OK;
+        }
+
+        IMMDevice_Release(*device);
+    }
+
+    WARN("No device with GUID %s found!\n", wine_dbgstr_guid(tgt));
+
+    IMMDeviceCollection_Release(coll);
+    release_mmdevenum(devenum, init_hr);
+
+    return DSERR_INVALIDPARAM;
+}
+
+static BOOL send_device(IMMDevice *device, GUID *guid,
+        LPDSENUMCALLBACKW cb, void *user)
+{
+    IPropertyStore *ps;
+    PROPVARIANT pv;
+    BOOL keep_going;
+    HRESULT hr;
+
+    PropVariantInit(&pv);
+
+    hr = IMMDevice_OpenPropertyStore(device, STGM_READ, &ps);
+    if(FAILED(hr)){
+        WARN("OpenPropertyStore failed: %08x\n", hr);
+        return TRUE;
+    }
+
+    hr = get_mmdevice_guid(device, ps, guid);
+    if(FAILED(hr)){
+        IPropertyStore_Release(ps);
+        return TRUE;
+    }
+
+    hr = IPropertyStore_GetValue(ps,
+            (const PROPERTYKEY *)&DEVPKEY_Device_FriendlyName, &pv);
+    if(FAILED(hr)){
+        IPropertyStore_Release(ps);
+        WARN("GetValue(FriendlyName) failed: %08x\n", hr);
+        return TRUE;
+    }
+
+    TRACE("Calling back with %s (%s)\n", wine_dbgstr_guid(guid),
+            wine_dbgstr_w(pv.u.pwszVal));
+
+    keep_going = cb(guid, pv.u.pwszVal, wine_vxd_drv, user);
+
+    PropVariantClear(&pv);
+    IPropertyStore_Release(ps);
+
+    return keep_going;
+}
+
+/* S_FALSE means the callback returned FALSE at some point
+ * S_OK means the callback always returned TRUE */
+HRESULT enumerate_mmdevices(EDataFlow flow, GUID *guids,
+        LPDSENUMCALLBACKW cb, void *user)
+{
+    IMMDeviceEnumerator *devenum;
+    IMMDeviceCollection *coll;
+    IMMDevice *defdev = NULL;
+    UINT count, i, n;
+    BOOL keep_going;
+    HRESULT hr, init_hr;
+
+    static const WCHAR primary_desc[] = {'P','r','i','m','a','r','y',' ',
+        'S','o','u','n','d',' ','D','r','i','v','e','r',0};
+    static const WCHAR empty_drv[] = {0};
+
+    init_hr = get_mmdevenum(&devenum);
+    if(!devenum)
+        return init_hr;
+
+    hr = IMMDeviceEnumerator_EnumAudioEndpoints(devenum, flow,
+            DEVICE_STATE_ACTIVE, &coll);
+    if(FAILED(hr)){
+        release_mmdevenum(devenum, init_hr);
+        WARN("EnumAudioEndpoints failed: %08x\n", hr);
+        return DS_OK;
+    }
+
+    hr = IMMDeviceCollection_GetCount(coll, &count);
+    if(FAILED(hr)){
+        IMMDeviceCollection_Release(coll);
+        release_mmdevenum(devenum, init_hr);
+        WARN("GetCount failed: %08x\n", hr);
+        return DS_OK;
+    }
+
+    if(count == 0){
+        release_mmdevenum(devenum, init_hr);
+        return DS_OK;
+    }
+
+    TRACE("Calling back with NULL (%s)\n", wine_dbgstr_w(primary_desc));
+    keep_going = cb(NULL, primary_desc, empty_drv, user);
+
+    /* always send the default device first */
+    if(keep_going){
+        hr = IMMDeviceEnumerator_GetDefaultAudioEndpoint(devenum, flow,
+                eMultimedia, &defdev);
+        if(FAILED(hr)){
+            defdev = NULL;
+            n = 0;
+        }else{
+            keep_going = send_device(defdev, &guids[0], cb, user);
+            n = 1;
+        }
+    }
+
+    for(i = 0; keep_going && i < count; ++i){
+        IMMDevice *device;
+
+        hr = IMMDeviceCollection_Item(coll, i, &device);
+        if(FAILED(hr)){
+            WARN("Item failed: %08x\n", hr);
+            continue;
+        }
+
+        if(device != defdev){
+            send_device(device, &guids[n], cb, user);
+            ++n;
+        }
+
+        IMMDevice_Release(device);
+    }
+
+    if(defdev)
+        IMMDevice_Release(defdev);
+    IMMDeviceCollection_Release(coll);
+
+    release_mmdevenum(devenum, init_hr);
+
+    return (keep_going == TRUE) ? S_OK : S_FALSE;
 }
 
 /***************************************************************************
@@ -349,55 +551,84 @@ HRESULT WINAPI DirectSoundEnumerateW(
 	LPDSENUMCALLBACKW lpDSEnumCallback,
 	LPVOID lpContext )
 {
-    unsigned devs, wod;
-    DSDRIVERDESC desc;
-    GUID guid;
-    int err;
-    WCHAR wDesc[MAXPNAMELEN];
-    WCHAR wName[MAXPNAMELEN];
+    HRESULT hr;
 
-    TRACE("lpDSEnumCallback = %p, lpContext = %p\n",
-	lpDSEnumCallback, lpContext);
+    TRACE("(%p,%p)\n", lpDSEnumCallback, lpContext);
 
     if (lpDSEnumCallback == NULL) {
-	WARN("invalid parameter: lpDSEnumCallback == NULL\n");
-	return DSERR_INVALIDPARAM;
+        WARN("invalid parameter: lpDSEnumCallback == NULL\n");
+        return DSERR_INVALIDPARAM;
     }
 
-    devs = waveOutGetNumDevs();
-    if (devs > 0) {
-	if (GetDeviceID(&DSDEVID_DefaultPlayback, &guid) == DS_OK) {
-            static const WCHAR empty[] = { 0 };
-	    for (wod = 0; wod < devs; ++wod) {
-                if (IsEqualGUID( &guid, &DSOUND_renderer_guids[wod] ) ) {
-                    err = mmErr(waveOutMessage(UlongToHandle(wod),DRV_QUERYDSOUNDDESC,(DWORD_PTR)&desc,0));
-                    if (err == DS_OK) {
-                        TRACE("calling lpDSEnumCallback(NULL,\"%s\",\"%s\",%p)\n",
-                              "Primary Sound Driver",desc.szDrvname,lpContext);
-                        MultiByteToWideChar( CP_ACP, 0, "Primary Sound Driver", -1,
-                                             wDesc, sizeof(wDesc)/sizeof(WCHAR) );
-                        if (lpDSEnumCallback(NULL, wDesc, empty, lpContext) == FALSE)
-                            return DS_OK;
-		    }
-		}
-	    }
-	}
+    setup_dsound_options();
+
+    hr = enumerate_mmdevices(eRender, DSOUND_renderer_guids,
+            lpDSEnumCallback, lpContext);
+    return SUCCEEDED(hr) ? DS_OK : hr;
+}
+
+/***************************************************************************
+ * DirectSoundCaptureEnumerateA [DSOUND.7]
+ *
+ * Enumerate all DirectSound drivers installed in the system.
+ *
+ * PARAMS
+ *    lpDSEnumCallback  [I] Address of callback function.
+ *    lpContext         [I] Address of user defined context passed to callback function.
+ *
+ * RETURNS
+ *    Success: DS_OK
+ *    Failure: DSERR_INVALIDPARAM
+ */
+HRESULT WINAPI DirectSoundCaptureEnumerateA(
+    LPDSENUMCALLBACKA lpDSEnumCallback,
+    LPVOID lpContext)
+{
+    struct morecontext context;
+
+    if (lpDSEnumCallback == NULL) {
+        WARN("invalid parameter: lpDSEnumCallback == NULL\n");
+        return DSERR_INVALIDPARAM;
     }
 
-    for (wod = 0; wod < devs; ++wod) {
-        err = mmErr(waveOutMessage(UlongToHandle(wod),DRV_QUERYDSOUNDDESC,(DWORD_PTR)&desc,0));
-	if (err == DS_OK) {
-            TRACE("calling lpDSEnumCallback(%s,\"%s\",\"%s\",%p)\n",
-                  debugstr_guid(&DSOUND_renderer_guids[wod]),desc.szDesc,desc.szDrvname,lpContext);
-            MultiByteToWideChar( CP_ACP, 0, desc.szDesc, -1,
-                                 wDesc, sizeof(wDesc)/sizeof(WCHAR) );
-            MultiByteToWideChar( CP_ACP, 0, desc.szDrvname, -1,
-                                 wName, sizeof(wName)/sizeof(WCHAR) );
-            if (lpDSEnumCallback(&DSOUND_renderer_guids[wod], wDesc, wName, lpContext) == FALSE)
-                return DS_OK;
-	}
+    context.callA = lpDSEnumCallback;
+    context.data = lpContext;
+
+    return DirectSoundCaptureEnumerateW(a_to_w_callback, &context);
+}
+
+/***************************************************************************
+ * DirectSoundCaptureEnumerateW [DSOUND.8]
+ *
+ * Enumerate all DirectSound drivers installed in the system.
+ *
+ * PARAMS
+ *    lpDSEnumCallback  [I] Address of callback function.
+ *    lpContext         [I] Address of user defined context passed to callback function.
+ *
+ * RETURNS
+ *    Success: DS_OK
+ *    Failure: DSERR_INVALIDPARAM
+ */
+HRESULT WINAPI
+DirectSoundCaptureEnumerateW(
+    LPDSENUMCALLBACKW lpDSEnumCallback,
+    LPVOID lpContext)
+{
+    HRESULT hr;
+
+    TRACE("(%p,%p)\n", lpDSEnumCallback, lpContext );
+
+    if (lpDSEnumCallback == NULL) {
+        WARN("invalid parameter: lpDSEnumCallback == NULL\n");
+        return DSERR_INVALIDPARAM;
     }
-    return DS_OK;
+
+    setup_dsound_options();
+
+    hr = enumerate_mmdevices(eCapture, DSOUND_capture_guids,
+            lpDSEnumCallback, lpContext);
+    return SUCCEEDED(hr) ? DS_OK : hr;
 }
 
 /*******************************************************************************
@@ -407,16 +638,20 @@ HRESULT WINAPI DirectSoundEnumerateW(
 typedef  HRESULT (*FnCreateInstance)(REFIID riid, LPVOID *ppobj);
  
 typedef struct {
-    const IClassFactoryVtbl *lpVtbl;
-    LONG ref;
+    IClassFactory IClassFactory_iface;
     REFCLSID rclsid;
     FnCreateInstance pfnCreateInstance;
 } IClassFactoryImpl;
 
-static HRESULT WINAPI
-DSCF_QueryInterface(LPCLASSFACTORY iface, REFIID riid, LPVOID *ppobj)
+static inline IClassFactoryImpl *impl_from_IClassFactory(IClassFactory *iface)
 {
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+    return CONTAINING_RECORD(iface, IClassFactoryImpl, IClassFactory_iface);
+}
+
+static HRESULT WINAPI
+DSCF_QueryInterface(IClassFactory *iface, REFIID riid, LPVOID *ppobj)
+{
+    IClassFactoryImpl *This = impl_from_IClassFactory(iface);
     TRACE("(%p, %s, %p)\n", This, debugstr_guid(riid), ppobj);
     if (ppobj == NULL)
         return E_POINTER;
@@ -424,7 +659,7 @@ DSCF_QueryInterface(LPCLASSFACTORY iface, REFIID riid, LPVOID *ppobj)
         IsEqualIID(riid, &IID_IClassFactory))
     {
         *ppobj = iface;
-        IUnknown_AddRef(iface);
+        IClassFactory_AddRef(iface);
         return S_OK;
     }
     *ppobj = NULL;
@@ -433,19 +668,13 @@ DSCF_QueryInterface(LPCLASSFACTORY iface, REFIID riid, LPVOID *ppobj)
 
 static ULONG WINAPI DSCF_AddRef(LPCLASSFACTORY iface)
 {
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
-    ULONG ref = InterlockedIncrement(&(This->ref));
-    TRACE("(%p) ref was %d\n", This, ref - 1);
-    return ref;
+    return 2;
 }
 
 static ULONG WINAPI DSCF_Release(LPCLASSFACTORY iface)
 {
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
-    ULONG ref = InterlockedDecrement(&(This->ref));
-    TRACE("(%p) ref was %d\n", This, ref + 1);
     /* static class, won't be freed */
-    return ref;
+    return 1;
 }
 
 static HRESULT WINAPI DSCF_CreateInstance(
@@ -454,7 +683,7 @@ static HRESULT WINAPI DSCF_CreateInstance(
     REFIID riid,
     LPVOID *ppobj)
 {
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+    IClassFactoryImpl *This = impl_from_IClassFactory(iface);
     TRACE("(%p, %p, %s, %p)\n", This, pOuter, debugstr_guid(riid), ppobj);
 
     if (pOuter)
@@ -470,7 +699,7 @@ static HRESULT WINAPI DSCF_CreateInstance(
  
 static HRESULT WINAPI DSCF_LockServer(LPCLASSFACTORY iface, BOOL dolock)
 {
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+    IClassFactoryImpl *This = impl_from_IClassFactory(iface);
     FIXME("(%p, %d) stub!\n", This, dolock);
     return S_OK;
 }
@@ -484,13 +713,13 @@ static const IClassFactoryVtbl DSCF_Vtbl = {
 };
 
 static IClassFactoryImpl DSOUND_CF[] = {
-    { &DSCF_Vtbl, 1, &CLSID_DirectSound, (FnCreateInstance)DSOUND_Create },
-    { &DSCF_Vtbl, 1, &CLSID_DirectSound8, (FnCreateInstance)DSOUND_Create8 },
-    { &DSCF_Vtbl, 1, &CLSID_DirectSoundCapture, (FnCreateInstance)DSOUND_CaptureCreate },
-    { &DSCF_Vtbl, 1, &CLSID_DirectSoundCapture8, (FnCreateInstance)DSOUND_CaptureCreate8 },
-    { &DSCF_Vtbl, 1, &CLSID_DirectSoundFullDuplex, (FnCreateInstance)DSOUND_FullDuplexCreate },
-    { &DSCF_Vtbl, 1, &CLSID_DirectSoundPrivate, (FnCreateInstance)IKsPrivatePropertySetImpl_Create },
-    { NULL, 0, NULL, NULL }
+    { { &DSCF_Vtbl }, &CLSID_DirectSound, DSOUND_Create },
+    { { &DSCF_Vtbl }, &CLSID_DirectSound8, DSOUND_Create8 },
+    { { &DSCF_Vtbl }, &CLSID_DirectSoundCapture, DSOUND_CaptureCreate },
+    { { &DSCF_Vtbl }, &CLSID_DirectSoundCapture8, DSOUND_CaptureCreate8 },
+    { { &DSCF_Vtbl }, &CLSID_DirectSoundFullDuplex, DSOUND_FullDuplexCreate },
+    { { &DSCF_Vtbl }, &CLSID_DirectSoundPrivate, IKsPrivatePropertySetImpl_Create },
+    { { NULL }, NULL, NULL }
 };
 
 /*******************************************************************************
@@ -530,7 +759,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 
     while (NULL != DSOUND_CF[i].rclsid) {
         if (IsEqualGUID(rclsid, DSOUND_CF[i].rclsid)) {
-            DSCF_AddRef((IClassFactory*) &DSOUND_CF[i]);
+            DSCF_AddRef(&DSOUND_CF[i].IClassFactory_iface);
             *ppv = &DSOUND_CF[i];
             return S_OK;
         }
@@ -548,12 +777,11 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
  * Determines whether the DLL is in use.
  *
  * RETURNS
- *    Success: S_OK
- *    Failure: S_FALSE
+ *    Can unload now: S_OK
+ *    Cannot unload now (the DLL is still active): S_FALSE
  */
 HRESULT WINAPI DllCanUnloadNow(void)
 {
-    FIXME("(void): stub\n");
     return S_FALSE;
 }
 
@@ -568,28 +796,40 @@ HRESULT WINAPI DllCanUnloadNow(void)
  */
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-    int i;
     TRACE("(%p %d %p)\n", hInstDLL, fdwReason, lpvReserved);
 
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
         TRACE("DLL_PROCESS_ATTACH\n");
-        for (i = 0; i < MAXWAVEDRIVERS; i++) {
-            DSOUND_renderer[i] = NULL;
-            DSOUND_capture[i] = NULL;
-            INIT_GUID(DSOUND_renderer_guids[i], 0xbd6dd71a, 0x3deb, 0x11d1, 0xb1, 0x71, 0x00, 0xc0, 0x4f, 0xc2, 0x00, 0x00 + i);
-            INIT_GUID(DSOUND_capture_guids[i],  0xbd6dd71b, 0x3deb, 0x11d1, 0xb1, 0x71, 0x00, 0xc0, 0x4f, 0xc2, 0x00, 0x00 + i);
-        }
+        instance = hInstDLL;
         DisableThreadLibraryCalls(hInstDLL);
         /* Increase refcount on dsound by 1 */
         GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCWSTR)hInstDLL, &hInstDLL);
         break;
     case DLL_PROCESS_DETACH:
         TRACE("DLL_PROCESS_DETACH\n");
+        DeleteCriticalSection(&DSOUND_renderers_lock);
+        DeleteCriticalSection(&DSOUND_capturers_lock);
         break;
     default:
         TRACE("UNKNOWN REASON\n");
         break;
     }
     return TRUE;
+}
+
+/***********************************************************************
+ *		DllRegisterServer (DSOUND.@)
+ */
+HRESULT WINAPI DllRegisterServer(void)
+{
+    return __wine_register_resources( instance );
+}
+
+/***********************************************************************
+ *		DllUnregisterServer (DSOUND.@)
+ */
+HRESULT WINAPI DllUnregisterServer(void)
+{
+    return __wine_unregister_resources( instance );
 }

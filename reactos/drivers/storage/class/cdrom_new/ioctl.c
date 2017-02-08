@@ -51,9 +51,8 @@ Revision History:
 #define DEFAULT_CDROM_SECTORS_PER_TRACK 32
 #define DEFAULT_TRACKS_PER_CYLINDER     64
 
-
-
 NTSTATUS
+NTAPI
 CdRomDeviceControlDispatch(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -86,10 +85,10 @@ Return Value:
     BOOLEAN            use6Byte = TEST_FLAG(cdData->XAFlags, XA_USE_6_BYTE);
     SCSI_REQUEST_BLOCK srb;
     PCDB cdb = (PCDB)srb.Cdb;
-    PVOID outputBuffer;
+    //PVOID outputBuffer;
     ULONG bytesTransferred = 0;
     NTSTATUS status;
-    NTSTATUS status2;
+    //NTSTATUS status2;
     KIRQL    irql;
 
     ULONG ioctlCode;
@@ -274,7 +273,7 @@ RetryControl:
         ULONGLONG      transferBytes;
         ULONGLONG      endOffset;
         ULONGLONG      mdlBytes;
-        ULONG          startingSector;
+        //ULONG          startingSector;
         PRAW_READ_INFO rawReadInfo = (PRAW_READ_INFO)irpStack->Parameters.DeviceIoControl.Type3InputBuffer;
 
         //
@@ -344,8 +343,8 @@ RetryControl:
         }
 
         startingOffset.QuadPart = rawReadInfo->DiskOffset.QuadPart;
-        startingSector = (ULONG)(rawReadInfo->DiskOffset.QuadPart >>
-                                 fdoExtension->SectorShift);
+        /* startingSector = (ULONG)(rawReadInfo->DiskOffset.QuadPart >>
+                                 fdoExtension->SectorShift); */
         transferBytes = (ULONGLONG)rawReadInfo->SectorCount * RAW_SECTOR_SIZE;
         
         endOffset = (ULONGLONG)rawReadInfo->SectorCount * COOKED_SECTOR_SIZE;
@@ -932,7 +931,7 @@ RetryControl:
     case IOCTL_DVD_SEND_KEY2: {
 
         PDVD_COPY_PROTECT_KEY key = Irp->AssociatedIrp.SystemBuffer;
-        ULONG keyLength;
+        //ULONG keyLength;
 
         TraceLog((CdromDebugTrace,
                     "DvdDeviceControl: [%p] IOCTL_DVD_SEND_KEY\n", Irp));
@@ -1042,7 +1041,7 @@ RetryControl:
 
                 } else {
 
-                    ULONG i;
+                    //ULONG i;
                     UCHAR mask;
                     ULONG bufferLen;
                     PDVD_READ_STRUCTURE dvdReadStructure;
@@ -1866,11 +1865,11 @@ RetryControl:
 
             } else {
 
-                PIO_STACK_LOCATION currentStack;
+                //PIO_STACK_LOCATION currentStack;
 
                 KeInitializeEvent(deviceControlEvent, NotificationEvent, FALSE);
 
-                currentStack = IoGetCurrentIrpStackLocation(Irp);
+                //currentStack = IoGetCurrentIrpStackLocation(Irp);
                 nextStack = IoGetNextIrpStackLocation(Irp);
 
                 //
@@ -2017,9 +2016,9 @@ RetryControl:
     return status;
 
 } // end CdRomDeviceControl()
-
 
 NTSTATUS
+NTAPI
 CdRomClassIoctlCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -2061,9 +2060,9 @@ Return Value:
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
-
 
 NTSTATUS
+NTAPI
 CdRomDeviceControlCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -2423,9 +2422,9 @@ CdRomDeviceControlCompletion(
 
             PDVD_DESCRIPTOR_HEADER header = realIrp->AssociatedIrp.SystemBuffer;
 
-            FOUR_BYTE fourByte;
-            PTWO_BYTE twoByte;
-            UCHAR tmp;
+            //FOUR_BYTE fourByte;
+            //PTWO_BYTE twoByte;
+            //UCHAR tmp;
 
             TraceLog((CdromDebugTrace,
                         "DvdDeviceControlCompletion - IOCTL_DVD_READ_STRUCTURE: completing irp %p (buddy %p)\n",
@@ -2834,9 +2833,9 @@ CdRomDeviceControlCompletion(
     CdRomCompleteIrpAndStartNextPacketSafely(DeviceObject, realIrp);
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
-
 
 NTSTATUS
+NTAPI
 CdRomSetVolumeIntermediateCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -3180,8 +3179,9 @@ SafeExit:
     CdRomCompleteIrpAndStartNextPacketSafely(DeviceObject, realIrp);
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
-
+
 NTSTATUS
+NTAPI
 CdRomDvdEndAllSessionsCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -3220,7 +3220,7 @@ Return Value:
 
     PDVD_SESSION_ID sessionId = Irp->AssociatedIrp.SystemBuffer;
 
-    NTSTATUS status;
+    //NTSTATUS status;
 
     if(++(*sessionId) > MAX_COPY_PROTECT_AGID) {
 
@@ -3253,8 +3253,9 @@ Return Value:
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
-
+
 NTSTATUS
+NTAPI
 CdRomDvdReadDiskKeyCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -3328,8 +3329,9 @@ Return Value:
 
     return STATUS_SUCCESS;
 }
-
+
 NTSTATUS
+NTAPI
 CdRomXACompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -3509,9 +3511,9 @@ Return Value:
     
     return status;
 }
-
 
 VOID
+NTAPI
 CdRomDeviceControlDvdReadStructure(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP OriginalIrp,
@@ -3630,9 +3632,9 @@ CdRomDeviceControlDvdReadStructure(
 
     return;
 }
-
 
 VOID
+NTAPI
 CdRomDeviceControlDvdEndSession(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP OriginalIrp,
@@ -3659,9 +3661,9 @@ CdRomDeviceControlDvdEndSession(
     return;
 
 }
-
 
 VOID
+NTAPI
 CdRomDeviceControlDvdStartSessionReadKey(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP OriginalIrp,
@@ -3822,9 +3824,9 @@ CdRomDeviceControlDvdStartSessionReadKey(
     }
     return;
 }
-
 
 VOID
+NTAPI
 CdRomDeviceControlDvdSendKey(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP OriginalIrp,
@@ -3965,8 +3967,8 @@ CdRomDeviceControlDvdSendKey(
     return;
 }
 
-
 VOID
+NTAPI
 CdRomInterpretReadCapacity(
     IN PDEVICE_OBJECT Fdo,
     IN PREAD_CAPACITY_DATA ReadCapacityBuffer
@@ -4073,5 +4075,3 @@ CdRomInterpretReadCapacity(
 
     return;
 }
-
-

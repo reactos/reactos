@@ -1,11 +1,22 @@
 #define COBJMACROS
-#include <windows.h>
-#include <commctrl.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <wincon.h>
+#include <shellapi.h>
 #include <commdlg.h>
 #include <cpl.h>
 #include <tchar.h>
 #include <setupapi.h>
-#include <stdio.h>
+#include <assert.h>
+#include <shlwapi.h>
 #include <shlobj.h>
 #include <regstr.h>
 #include <cplext.h>
@@ -13,6 +24,7 @@
 #include <cfgmgr32.h>
 #include <uxtheme.h>
 #include <uxundoc.h>
+#include <vssym32.h>
 
 #include "appearance.h"
 #include "preview.h"
@@ -61,42 +73,43 @@ ULONG __cdecl DbgPrint(PCCH Format,...);
  */
 typedef struct _RESOLUTION_INFO
 {
-	DWORD dmPelsWidth;
-	DWORD dmPelsHeight;
+    DWORD dmPelsWidth;
+    DWORD dmPelsHeight;
 } RESOLUTION_INFO, *PRESOLUTION_INFO;
 
 typedef struct _SETTINGS_ENTRY
 {
-	struct _SETTINGS_ENTRY *Blink;
-	struct _SETTINGS_ENTRY *Flink;
-	DWORD dmBitsPerPel;
-	DWORD dmPelsWidth;
-	DWORD dmPelsHeight;
-	DWORD dmDisplayFrequency;
+    struct _SETTINGS_ENTRY *Blink;
+    struct _SETTINGS_ENTRY *Flink;
+    DWORD dmBitsPerPel;
+    DWORD dmPelsWidth;
+    DWORD dmPelsHeight;
+    DWORD dmDisplayFrequency;
 } SETTINGS_ENTRY, *PSETTINGS_ENTRY;
 
 typedef struct _DISPLAY_DEVICE_ENTRY
 {
-	struct _DISPLAY_DEVICE_ENTRY *Flink;
-	LPTSTR DeviceDescription;
-	LPTSTR DeviceName;
-	LPTSTR DeviceKey;
-	LPTSTR DeviceID;
-	DWORD DeviceStateFlags;
-	PSETTINGS_ENTRY Settings; /* Sorted by increasing dmPelsHeight, BPP */
-	DWORD SettingsCount;
-	PRESOLUTION_INFO Resolutions;
-	DWORD ResolutionsCount;
-	PSETTINGS_ENTRY CurrentSettings; /* Points into Settings list */
-	SETTINGS_ENTRY InitialSettings;
+    struct _DISPLAY_DEVICE_ENTRY *Flink;
+    LPTSTR DeviceDescription;
+    LPTSTR DeviceName;
+    LPTSTR DeviceKey;
+    LPTSTR DeviceID;
+    DWORD DeviceStateFlags;
+    PSETTINGS_ENTRY Settings; /* Sorted by increasing dmPelsHeight, BPP */
+    DWORD SettingsCount;
+    PRESOLUTION_INFO Resolutions;
+    DWORD ResolutionsCount;
+    PSETTINGS_ENTRY CurrentSettings; /* Points into Settings list */
+    SETTINGS_ENTRY InitialSettings;
 } DISPLAY_DEVICE_ENTRY, *PDISPLAY_DEVICE_ENTRY;
 
 typedef struct _GLOBAL_DATA
 {
-	COLORREF desktop_color;
+    COLORREF desktop_color;
 } GLOBAL_DATA, *PGLOBAL_DATA;
 
 extern GLOBAL_DATA g_GlobalData;
+extern HWND hCPLWindow;
 
 BOOL
 DisplayAdvancedSettings(HWND hWndParent, PDISPLAY_DEVICE_ENTRY DisplayDevice);
@@ -108,3 +121,13 @@ HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY,LPCWSTR,UINT,IDataObject*);
 
 INT_PTR CALLBACK
 AdvGeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+LONG 
+RegLoadMUIStringW(IN HKEY hKey,
+                  IN LPCWSTR pszValue  OPTIONAL,
+                  OUT LPWSTR pszOutBuf,
+                  IN DWORD cbOutBuf,
+                  OUT LPDWORD pcbData OPTIONAL,
+                  IN DWORD Flags,
+                  IN LPCWSTR pszDirectory  OPTIONAL);
+

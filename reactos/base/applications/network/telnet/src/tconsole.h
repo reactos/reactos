@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tnconfig.h"
+//#include "tnconfig.h"
 
 /* A diagram of the following values:
  *

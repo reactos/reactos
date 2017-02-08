@@ -17,25 +17,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+//#include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winnls.h"
-#include "winreg.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "wingdi.h"
+//#include "winnls.h"
+//#include "winreg.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL (gdiplus);
 
-#include "objbase.h"
+//#include "objbase.h"
 
-#include "gdiplus.h"
+//#include "gdiplus.h"
 #include "gdiplus_private.h"
 
 /* PANOSE is 10 bytes in size, need to pack the structure properly */
-#include "pshpack2.h"
+#include <pshpack2.h>
 typedef struct
 {
     USHORT version;
@@ -100,7 +100,7 @@ typedef struct
     SHORT metricDataFormat;
     USHORT numberOfHMetrics;
 } TT_HHEA;
-#include "poppack.h"
+#include <poppack.h>
 
 #ifdef WORDS_BIGENDIAN
 #define GET_BE_WORD(x) (x)
@@ -116,40 +116,9 @@ typedef struct
 #define MS_OS2_TAG MS_MAKE_TAG('O','S','/','2')
 #define MS_HHEA_TAG MS_MAKE_TAG('h','h','e','a')
 
-static const REAL mm_per_inch = 25.4;
-static const REAL inch_per_point = 1.0/72.0;
+static GpStatus clone_font_family(const GpFontFamily *, GpFontFamily **);
 
 static GpFontCollection installedFontCollection = {0};
-
-static LONG em_size_to_pixel(REAL em_size, Unit unit, LONG dpi)
-{
-    switch (unit)
-    {
-    default:
-        FIXME("Unhandled unit type: %d\n", unit);
-        return 0;
-
-    case UnitPixel:
-    case UnitWorld:
-        /* FIXME: Figure out when World != Pixel */
-        return em_size;
-    case UnitDisplay:
-        FIXME("Unknown behavior for UnitDisplay! Please report!\n");
-        /* FIXME: Figure out how this works...
-         * MSDN says that if "DISPLAY" is a monitor, then pixel should be
-         * used. That's not what I got. Tests on Windows revealed no output,
-         * and the tests in tests/font crash windows */
-        return 0;
-    case UnitPoint:
-        return em_size * dpi * inch_per_point;
-    case UnitInch:
-        return em_size * dpi;
-    case UnitDocument:
-        return em_size * dpi / 300.0; /* Per MSDN */
-    case UnitMillimeter:
-        return em_size * dpi / mm_per_inch;
-    }
-}
 
 /*******************************************************************************
  * GdipCreateFont [GDIPLUS.@]
@@ -193,7 +162,7 @@ GpStatus WINGDIPAPI GdipCreateFont(GDIPCONST GpFontFamily *fontFamily,
     stat = GdipGetFamilyName(fontFamily, lfw.lfFaceName, LANG_NEUTRAL);
     if (stat != Ok) return stat;
 
-    lfw.lfHeight = -em_size_to_pixel(emSize, unit, fontFamily->dpi);
+    lfw.lfHeight = -units_to_pixels(emSize, unit, fontFamily->dpi);
     lfw.lfWeight = style & FontStyleBold ? FW_BOLD : FW_REGULAR;
     lfw.lfItalic = style & FontStyleItalic;
     lfw.lfUnderline = style & FontStyleUnderline;
@@ -216,7 +185,7 @@ GpStatus WINGDIPAPI GdipCreateFont(GDIPCONST GpFontFamily *fontFamily,
     (*font)->emSize = emSize;
     (*font)->otm = otm;
 
-    stat = GdipCloneFontFamily((GpFontFamily *)fontFamily, &(*font)->family);
+    stat = clone_font_family(fontFamily, &(*font)->family);
     if (stat != Ok)
     {
         GdipFree(*font);
@@ -236,6 +205,7 @@ GpStatus WINGDIPAPI GdipCreateFontFromLogfontW(HDC hdc,
 {
     HFONT hfont, oldfont;
     OUTLINETEXTMETRICW otm;
+    WCHAR facename[LF_FACESIZE];
     GpStatus stat;
     int ret;
 
@@ -248,6 +218,7 @@ GpStatus WINGDIPAPI GdipCreateFontFromLogfontW(HDC hdc,
     oldfont = SelectObject(hdc, hfont);
     otm.otmSize = sizeof(otm);
     ret = GetOutlineTextMetricsW(hdc, otm.otmSize, &otm);
+    GetTextFaceW(hdc, LF_FACESIZE, facename);
     SelectObject(hdc, oldfont);
     DeleteObject(hfont);
 
@@ -260,7 +231,7 @@ GpStatus WINGDIPAPI GdipCreateFontFromLogfontW(HDC hdc,
     (*font)->emSize = otm.otmTextMetrics.tmAscent;
     (*font)->otm = otm;
 
-    stat = GdipCreateFontFamilyFromName(logfont->lfFaceName, NULL, &(*font)->family);
+    stat = GdipCreateFontFamilyFromName(facename, NULL, &(*font)->family);
     if (stat != Ok)
     {
         GdipFree(*font);
@@ -355,6 +326,11 @@ GpStatus WINGDIPAPI GdipGetFamily(GpFont *font, GpFontFamily **family)
     return GdipCloneFontFamily(font->family, family);
 }
 
+static REAL get_font_size(const GpFont *font)
+{
+    return font->emSize;
+}
+
 /******************************************************************************
  * GdipGetFontSize [GDIPLUS.@]
  *
@@ -377,10 +353,28 @@ GpStatus WINGDIPAPI GdipGetFontSize(GpFont *font, REAL *size)
 
     if (!(font && size)) return InvalidParameter;
 
-    *size = font->emSize;
+    *size = get_font_size(font);
     TRACE("%s,%d => %f\n", debugstr_w(font->family->FamilyName), font->otm.otmTextMetrics.tmHeight, *size);
 
     return Ok;
+}
+
+static INT get_font_style(const GpFont *font)
+{
+    INT style;
+
+    if (font->otm.otmTextMetrics.tmWeight > FW_REGULAR)
+        style = FontStyleBold;
+    else
+        style = FontStyleRegular;
+    if (font->otm.otmTextMetrics.tmItalic)
+        style |= FontStyleItalic;
+    if (font->otm.otmTextMetrics.tmUnderlined)
+        style |= FontStyleUnderline;
+    if (font->otm.otmTextMetrics.tmStruckOut)
+        style |= FontStyleStrikeout;
+
+    return style;
 }
 
 /*******************************************************************************
@@ -403,16 +397,8 @@ GpStatus WINGDIPAPI GdipGetFontStyle(GpFont *font, INT *style)
     if (!(font && style))
         return InvalidParameter;
 
-    if (font->otm.otmTextMetrics.tmWeight > FW_REGULAR)
-        *style = FontStyleBold;
-    else
-        *style = FontStyleRegular;
-    if (font->otm.otmTextMetrics.tmItalic)
-        *style |= FontStyleItalic;
-    if (font->otm.otmTextMetrics.tmUnderlined)
-        *style |= FontStyleUnderline;
-    if (font->otm.otmTextMetrics.tmStruckOut)
-        *style |= FontStyleStrikeout;
+    *style = get_font_style(font);
+    TRACE("%s,%d => %d\n", debugstr_w(font->family->FamilyName), font->otm.otmTextMetrics.tmHeight, *style);
 
     return Ok;
 }
@@ -466,31 +452,64 @@ GpStatus WINGDIPAPI GdipGetLogFontA(GpFont *font, GpGraphics *graphics,
 /*******************************************************************************
  * GdipGetLogFontW [GDIPLUS.@]
  */
-GpStatus WINGDIPAPI GdipGetLogFontW(GpFont *font, GpGraphics *graphics,
-    LOGFONTW *lfw)
+GpStatus WINGDIPAPI GdipGetLogFontW(GpFont *font, GpGraphics *graphics, LOGFONTW *lf)
 {
-    TRACE("(%p, %p, %p)\n", font, graphics, lfw);
+    REAL angle, rel_height, height;
+    GpMatrix matrix;
+    GpPointF pt[3];
 
-    /* FIXME: use graphics */
-    if(!font || !graphics || !lfw)
+    TRACE("(%p, %p, %p)\n", font, graphics, lf);
+
+    if (!font || !graphics || !lf)
         return InvalidParameter;
 
-    lfw->lfHeight = -font->otm.otmTextMetrics.tmAscent;
-    lfw->lfWidth = 0;
-    lfw->lfEscapement = 0;
-    lfw->lfOrientation = 0;
-    lfw->lfWeight = font->otm.otmTextMetrics.tmWeight;
-    lfw->lfItalic = font->otm.otmTextMetrics.tmItalic ? 1 : 0;
-    lfw->lfUnderline = font->otm.otmTextMetrics.tmUnderlined ? 1 : 0;
-    lfw->lfStrikeOut = font->otm.otmTextMetrics.tmStruckOut ? 1 : 0;
-    lfw->lfCharSet = font->otm.otmTextMetrics.tmCharSet;
-    lfw->lfOutPrecision = OUT_DEFAULT_PRECIS;
-    lfw->lfClipPrecision = CLIP_DEFAULT_PRECIS;
-    lfw->lfQuality = DEFAULT_QUALITY;
-    lfw->lfPitchAndFamily = 0;
-    strcpyW(lfw->lfFaceName, font->family->FamilyName);
+    matrix = graphics->worldtrans;
 
-    TRACE("=> %s,%d\n", debugstr_w(lfw->lfFaceName), lfw->lfHeight);
+    if (font->unit == UnitPixel)
+    {
+        height = units_to_pixels(font->emSize, graphics->unit, graphics->yres);
+        if (graphics->unit != UnitDisplay)
+            GdipScaleMatrix(&matrix, graphics->scale, graphics->scale, MatrixOrderAppend);
+    }
+    else
+    {
+        if (graphics->unit == UnitDisplay || graphics->unit == UnitPixel)
+            height = units_to_pixels(font->emSize, font->unit, graphics->xres);
+        else
+            height = units_to_pixels(font->emSize, font->unit, graphics->yres);
+    }
+
+    pt[0].X = 0.0;
+    pt[0].Y = 0.0;
+    pt[1].X = 1.0;
+    pt[1].Y = 0.0;
+    pt[2].X = 0.0;
+    pt[2].Y = 1.0;
+    GdipTransformMatrixPoints(&matrix, pt, 3);
+    angle = -gdiplus_atan2((pt[1].Y - pt[0].Y), (pt[1].X - pt[0].X));
+    rel_height = sqrt((pt[2].Y - pt[0].Y) * (pt[2].Y - pt[0].Y)+
+                      (pt[2].X - pt[0].X) * (pt[2].X - pt[0].X));
+
+    lf->lfHeight = -gdip_round(height * rel_height);
+    lf->lfWidth = 0;
+    lf->lfEscapement = lf->lfOrientation = gdip_round((angle / M_PI) * 1800.0);
+    if (lf->lfEscapement < 0)
+    {
+        lf->lfEscapement += 3600;
+        lf->lfOrientation += 3600;
+    }
+    lf->lfWeight = font->otm.otmTextMetrics.tmWeight;
+    lf->lfItalic = font->otm.otmTextMetrics.tmItalic ? 1 : 0;
+    lf->lfUnderline = font->otm.otmTextMetrics.tmUnderlined ? 1 : 0;
+    lf->lfStrikeOut = font->otm.otmTextMetrics.tmStruckOut ? 1 : 0;
+    lf->lfCharSet = font->otm.otmTextMetrics.tmCharSet;
+    lf->lfOutPrecision = OUT_DEFAULT_PRECIS;
+    lf->lfClipPrecision = CLIP_DEFAULT_PRECIS;
+    lf->lfQuality = DEFAULT_QUALITY;
+    lf->lfPitchAndFamily = 0;
+    strcpyW(lf->lfFaceName, font->family->FamilyName);
+
+    TRACE("=> %s,%d\n", debugstr_w(lf->lfFaceName), lf->lfHeight);
 
     return Ok;
 }
@@ -535,18 +554,29 @@ GpStatus WINGDIPAPI GdipGetFontHeight(GDIPCONST GpFont *font,
 {
     REAL dpi;
     GpStatus stat;
+    REAL font_height;
 
     TRACE("%p %p %p\n", font, graphics, height);
 
-    if (graphics)
-    {
-        stat = GdipGetDpiY((GpGraphics*)graphics, &dpi);
-        if (stat != Ok) return stat;
-    }
-    else
-        dpi = font->family->dpi;
+    stat = GdipGetFontHeightGivenDPI(font, font->family->dpi, &font_height);
+    if (stat != Ok) return stat;
 
-    return GdipGetFontHeightGivenDPI(font, dpi, height);
+    if (!graphics)
+    {
+        *height = font_height;
+        TRACE("%s,%d => %f\n",
+              debugstr_w(font->family->FamilyName), font->otm.otmTextMetrics.tmHeight, *height);
+        return Ok;
+    }
+
+    stat = GdipGetDpiY((GpGraphics *)graphics, &dpi);
+    if (stat != Ok) return stat;
+
+    *height = pixels_to_units(font_height, graphics->unit, dpi);
+
+    TRACE("%s,%d(unit %d) => %f\n",
+          debugstr_w(font->family->FamilyName), font->otm.otmTextMetrics.tmHeight, graphics->unit, *height);
+    return Ok;
 }
 
 /*******************************************************************************
@@ -569,49 +599,24 @@ GpStatus WINGDIPAPI GdipGetFontHeightGivenDPI(GDIPCONST GpFont *font, REAL dpi, 
     GpStatus stat;
     INT style;
     UINT16 line_spacing, em_height;
-    REAL font_height, font_size;
+    REAL font_size;
 
     if (!font || !height) return InvalidParameter;
 
     TRACE("%p (%s), %f, %p\n", font,
             debugstr_w(font->family->FamilyName), dpi, height);
 
-    stat = GdipGetFontSize((GpFont *)font, &font_size);
-    if (stat != Ok) return stat;
-    stat = GdipGetFontStyle((GpFont *)font, &style);
-    if (stat != Ok) return stat;
+    font_size = units_to_pixels(get_font_size(font), font->unit, dpi);
+    style = get_font_style(font);
     stat = GdipGetLineSpacing(font->family, style, &line_spacing);
     if (stat != Ok) return stat;
     stat = GdipGetEmHeight(font->family, style, &em_height);
     if (stat != Ok) return stat;
 
-    font_height = (REAL)line_spacing * font_size / (REAL)em_height;
+    *height = (REAL)line_spacing * font_size / (REAL)em_height;
 
-    switch (font->unit)
-    {
-        case UnitPixel:
-        case UnitWorld:
-            *height = font_height;
-            break;
-        case UnitPoint:
-            *height = font_height * dpi * inch_per_point;
-            break;
-        case UnitInch:
-            *height = font_height * dpi;
-            break;
-        case UnitDocument:
-            *height = font_height * (dpi / 300.0);
-            break;
-        case UnitMillimeter:
-            *height = font_height * (dpi / mm_per_inch);
-            break;
-        default:
-            FIXME("Unhandled unit type: %d\n", font->unit);
-            return NotImplemented;
-    }
-
-    TRACE("%s,%d(unit %d) => %f\n",
-          debugstr_w(font->family->FamilyName), font->otm.otmTextMetrics.tmHeight, font->unit, *height);
+    TRACE("%s,%d => %f\n",
+          debugstr_w(font->family->FamilyName), font->otm.otmTextMetrics.tmHeight, *height);
 
     return Ok;
 }
@@ -625,7 +630,7 @@ GpStatus WINGDIPAPI GdipGetFontHeightGivenDPI(GDIPCONST GpFont *font, REAL dpi, 
 static INT CALLBACK is_font_installed_proc(const LOGFONTW *elf,
                             const TEXTMETRICW *ntm, DWORD type, LPARAM lParam)
 {
-    if (type != TRUETYPE_FONTTYPE)
+    if (type & RASTER_FONTTYPE)
         return 1;
 
     *(LOGFONTW *)lParam = *elf;
@@ -635,6 +640,7 @@ static INT CALLBACK is_font_installed_proc(const LOGFONTW *elf,
 
 struct font_metrics
 {
+    WCHAR facename[LF_FACESIZE];
     UINT16 em_height, ascent, descent, line_spacing; /* in font units */
     int dpi;
 };
@@ -649,6 +655,8 @@ static BOOL get_font_metrics(HDC hdc, struct font_metrics *fm)
 
     otm.otmSize = sizeof(otm);
     if (!GetOutlineTextMetricsW(hdc, otm.otmSize, &otm)) return FALSE;
+
+    GetTextFaceW(hdc, LF_FACESIZE, fm->facename);
 
     fm->em_height = otm.otmEMSquare;
     fm->dpi = GetDeviceCaps(hdc, LOGPIXELSY);
@@ -750,7 +758,7 @@ GpStatus WINGDIPAPI GdipCreateFontFamilyFromName(GDIPCONST WCHAR *name,
     ffamily = GdipAlloc(sizeof (GpFontFamily));
     if (!ffamily) return OutOfMemory;
 
-    lstrcpynW(ffamily->FamilyName, name, LF_FACESIZE);
+    lstrcpyW(ffamily->FamilyName, fm.facename);
     ffamily->em_height = fm.em_height;
     ffamily->ascent = fm.ascent;
     ffamily->descent = fm.descent;
@@ -760,6 +768,16 @@ GpStatus WINGDIPAPI GdipCreateFontFamilyFromName(GDIPCONST WCHAR *name,
     *FontFamily = ffamily;
 
     TRACE("<-- %p\n", ffamily);
+
+    return Ok;
+}
+
+static GpStatus clone_font_family(const GpFontFamily *family, GpFontFamily **clone)
+{
+    *clone = GdipAlloc(sizeof(GpFontFamily));
+    if (!*clone) return OutOfMemory;
+
+    **clone = *family;
 
     return Ok;
 }
@@ -778,16 +796,15 @@ GpStatus WINGDIPAPI GdipCreateFontFamilyFromName(GDIPCONST WCHAR *name,
  */
 GpStatus WINGDIPAPI GdipCloneFontFamily(GpFontFamily* FontFamily, GpFontFamily** clonedFontFamily)
 {
+    GpStatus status;
+
     if (!(FontFamily && clonedFontFamily)) return InvalidParameter;
 
     TRACE("%p (%s), %p\n", FontFamily,
             debugstr_w(FontFamily->FamilyName), clonedFontFamily);
 
-    *clonedFontFamily = GdipAlloc(sizeof(GpFontFamily));
-    if (!*clonedFontFamily) return OutOfMemory;
-
-    **clonedFontFamily = *FontFamily;
-    lstrcpyW((*clonedFontFamily)->FamilyName, FontFamily->FamilyName);
+    status = clone_font_family(FontFamily, clonedFontFamily);
+    if (status != Ok) return status;
 
     TRACE("<-- %p\n", *clonedFontFamily);
 

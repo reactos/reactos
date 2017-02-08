@@ -176,7 +176,7 @@ STRING_ERROR,                                   "Fejl"
 STRING_WARNING,                                 "Advarsel"
 STRING_INFO,                                    "Information"
 
-STRING_UNTITLED,                                "(ikke-navngivet)"
+STRING_UNTITLED,                                "Ikke-navngivet"
 
 STRING_ALL_FILES,                               "Alle filer (*.*)"
 STRING_TEXT_FILES_TXT,                  "Tekst filer (*.txt)"

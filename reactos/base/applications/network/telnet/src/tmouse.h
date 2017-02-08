@@ -1,7 +1,7 @@
 #pragma once
 
 #include "tnclip.h"
-#include <windows.h>
+//#include <windows.h>
 
 class TMouse {
 private:

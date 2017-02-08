@@ -9,7 +9,6 @@
 
 #include "precomp.h"
 
-
 static BOOL
 StopService(PMAIN_WND_INFO pInfo,
             LPWSTR lpServiceName,
@@ -145,7 +144,6 @@ StopDependantServices(PMAIN_WND_INFO pInfo,
 
     return bRet;
 }
-
 
 BOOL
 DoStop(PMAIN_WND_INFO pInfo)

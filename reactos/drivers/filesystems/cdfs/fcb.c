@@ -1,30 +1,29 @@
 /*
-*  ReactOS kernel
-*  Copyright (C) 2002, 2004 ReactOS Team
-*
-*  This program is free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  This program is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  You should have received a copy of the GNU General Public License along
-*  with this program; if not, write to the Free Software Foundation, Inc.,
-*  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-*/
-/* $Id$
-*
-* COPYRIGHT:        See COPYING in the top level directory
-* PROJECT:          ReactOS kernel
-* FILE:             services/fs/cdfs/fcb.c
-* PURPOSE:          CDROM (ISO 9660) filesystem driver
-* PROGRAMMER:       Art Yerkes
-* UPDATE HISTORY:
-*/
+ *  ReactOS kernel
+ *  Copyright (C) 2002, 2004 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+/*
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PROJECT:          ReactOS kernel
+ * FILE:             services/fs/cdfs/fcb.c
+ * PURPOSE:          CDROM (ISO 9660) filesystem driver
+ * PROGRAMMER:       Art Yerkes
+ * UPDATE HISTORY:
+ */
 
 /* INCLUDES *****************************************************************/
 
@@ -140,7 +139,7 @@ CdfsGrabFCB(PDEVICE_EXTENSION Vcb,
 {
     KIRQL  oldIrql;
 
-    DPRINT("grabbing FCB at %x: %S, refCount:%d\n",
+    DPRINT("grabbing FCB at %p: %S, refCount:%d\n",
         Fcb,
         Fcb->PathName,
         Fcb->RefCount);
@@ -157,7 +156,7 @@ CdfsReleaseFCB(PDEVICE_EXTENSION Vcb,
 {
     KIRQL  oldIrql;
 
-    DPRINT("releasing FCB at %x: %S, refCount:%d\n",
+    DPRINT("releasing FCB at %p: %S, refCount:%d\n",
         Fcb,
         Fcb->PathName,
         Fcb->RefCount);
@@ -364,8 +363,9 @@ CdfsMakeFCBFromDirEntry(PVCB Vcb,
     PFCB rcFCB;
     ULONG Size;
 
-    if (LongName [0] != 0 && wcslen (DirectoryFCB->PathName) +
-        sizeof(WCHAR) + wcslen (LongName) > MAX_PATH)
+    /* Check if the full string would overflow the pathName buffer (the additional characters are for '\\' and '\0') */
+    if ((LongName[0] != 0) &&
+        (wcslen(DirectoryFCB->PathName) + 1 + wcslen(LongName) + 1 > MAX_PATH))
     {
         return(STATUS_OBJECT_NAME_INVALID);
     }
@@ -412,7 +412,7 @@ CdfsMakeFCBFromDirEntry(PVCB Vcb,
     CdfsAddFCBToTable(Vcb, rcFCB);
     *fileFCB = rcFCB;
 
-    DPRINT("%S %d %I64d\n", LongName, Size, rcFCB->RFCB.AllocationSize.QuadPart);
+    DPRINT("%S %u %I64d\n", LongName, Size, rcFCB->RFCB.AllocationSize.QuadPart);
 
     return(STATUS_SUCCESS);
 }
@@ -451,7 +451,7 @@ CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
         Fcb->Flags |= FCB_CACHE_INITIALIZED;
     }
 
-    DPRINT("file open: fcb:%x file size: %d\n", Fcb, Fcb->Entry.DataLengthL);
+    DPRINT("file open: fcb:%p file size: %u\n", Fcb, Fcb->Entry.DataLengthL);
 
     return(STATUS_SUCCESS);
 }
@@ -617,7 +617,7 @@ CdfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
     PFCB  FCB;
     PFCB  parentFCB;
 
-    DPRINT("CdfsGetFCBForFile(%x, %x, %x, '%wZ')\n",
+    DPRINT("CdfsGetFCBForFile(%p, %p, %p, '%wZ')\n",
         Vcb,
         pParentFCB,
         pFCB,
@@ -653,7 +653,7 @@ CdfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
         }
 
         DPRINT("Parsing, currentElement:%S\n", currentElement);
-        DPRINT("  parentFCB:%x FCB:%x\n", parentFCB, FCB);
+        DPRINT("  parentFCB:%p FCB:%p\n", parentFCB, FCB);
 
         /* Descend to next directory level */
         if (parentFCB)

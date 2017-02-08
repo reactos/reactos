@@ -1,7 +1,5 @@
 #pragma once
 
-#include <commctrl.h>
-
 /* metrics */
 #define PROPSHEETWIDTH      246
 #define PROPSHEETHEIGHT     228

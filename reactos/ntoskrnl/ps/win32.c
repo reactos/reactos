@@ -23,6 +23,8 @@ extern PKWIN32_DELETEMETHOD_CALLOUT ExpWindowStationObjectDelete;
 extern PKWIN32_OKTOCLOSEMETHOD_CALLOUT ExpWindowStationObjectOkToClose;
 extern PKWIN32_OKTOCLOSEMETHOD_CALLOUT ExpDesktopObjectOkToClose;
 extern PKWIN32_DELETEMETHOD_CALLOUT ExpDesktopObjectDelete;
+extern PKWIN32_OPENMETHOD_CALLOUT ExpDesktopObjectOpen;
+extern PKWIN32_CLOSEMETHOD_CALLOUT ExpDesktopObjectClose;
 extern PKWIN32_POWEREVENT_CALLOUT PopEventCallout;
 
 /* PRIVATE FUNCTIONS *********************************************************/
@@ -121,6 +123,8 @@ PsEstablishWin32Callouts(IN PWIN32_CALLOUTS_FPNS CalloutData)
     ExpWindowStationObjectOkToClose = CalloutData->WindowStationOkToCloseProcedure;
     ExpDesktopObjectOkToClose = CalloutData->DesktopOkToCloseProcedure;
     ExpDesktopObjectDelete = CalloutData->DesktopDeleteProcedure;
+    ExpDesktopObjectOpen = CalloutData->DesktopOpenProcedure;
+    ExpDesktopObjectClose = CalloutData->DesktopCloseProcedure;
     PopEventCallout = CalloutData->PowerEventCallout;
     KeGdiFlushUserBatch = CalloutData->BatchFlushRoutine;
 }

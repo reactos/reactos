@@ -1288,7 +1288,7 @@ Return Value:
                 //
 
                 cddata->XAFlags &= ~XA_USE_6_BYTE;
-                cddata->XAFlags = XA_USE_READ_CD | XA_USE_10_BYTE;
+                cddata->XAFlags |= XA_USE_READ_CD | XA_USE_10_BYTE;
             } else {
 
                 RtlCopyMemory(&cddata->u1.Header, buffer, sizeof(ERROR_RECOVERY_DATA10));

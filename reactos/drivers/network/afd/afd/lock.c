@@ -1,4 +1,4 @@
-/* $Id$
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/lock.c
@@ -12,12 +12,18 @@
 PVOID GetLockedData(PIRP Irp, PIO_STACK_LOCATION IrpSp)
 {
     ASSERT(Irp->MdlAddress);
+    ASSERT(Irp->Tail.Overlay.DriverContext[0]);
 
-    return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
+    UNREFERENCED_PARAMETER(IrpSp);
+
+    return Irp->Tail.Overlay.DriverContext[0];
 }
 
 /* Lock a method_neither request so it'll be available from DISPATCH_LEVEL */
-PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
+PVOID LockRequest( PIRP Irp,
+                   PIO_STACK_LOCATION IrpSp,
+                   BOOLEAN Output,
+                   KPROCESSOR_MODE *LockMode) {
     BOOLEAN LockFailed = FALSE;
 
     ASSERT(!Irp->MdlAddress);
@@ -49,7 +55,46 @@ PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
                     Irp->MdlAddress = NULL;
                     return NULL;
                 }
-            } else return NULL;
+
+                /* The mapped address goes in index 1 */
+                Irp->Tail.Overlay.DriverContext[1] = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
+                if (!Irp->Tail.Overlay.DriverContext[1])
+                {
+                    AFD_DbgPrint(MIN_TRACE,("Failed to get mapped address\n"));
+                    MmUnlockPages(Irp->MdlAddress);
+                    IoFreeMdl( Irp->MdlAddress );
+                    Irp->MdlAddress = NULL;
+                    return NULL;
+                }
+
+                /* The allocated address goes in index 0 */
+                Irp->Tail.Overlay.DriverContext[0] = ExAllocatePool(NonPagedPool, MmGetMdlByteCount(Irp->MdlAddress));
+                if (!Irp->Tail.Overlay.DriverContext[0])
+                {
+                    AFD_DbgPrint(MIN_TRACE,("Failed to allocate memory\n"));
+                    MmUnlockPages(Irp->MdlAddress);
+                    IoFreeMdl( Irp->MdlAddress );
+                    Irp->MdlAddress = NULL;
+                    return NULL;
+                }
+
+                RtlCopyMemory(Irp->Tail.Overlay.DriverContext[0],
+                              Irp->Tail.Overlay.DriverContext[1],
+                              MmGetMdlByteCount(Irp->MdlAddress));
+
+                /* If we don't want a copy back, we zero the mapped address pointer */
+                if (!Output)
+                {
+                    Irp->Tail.Overlay.DriverContext[1] = NULL;
+                }
+
+                /* We're using a user-mode buffer directly */
+                if (LockMode != NULL)
+                {
+                    *LockMode = UserMode;
+                }
+            }
+            else return NULL;
             break;
 
         case IRP_MJ_READ:
@@ -64,6 +109,8 @@ PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
                           FALSE,
                           NULL );
             if( Irp->MdlAddress ) {
+                PAFD_RECV_INFO AfdInfo;
+
                 _SEH2_TRY {
                     MmProbeAndLockPages( Irp->MdlAddress, Irp->RequestorMode, IoModifyAccess );
                 } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
@@ -76,7 +123,43 @@ PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
                     Irp->MdlAddress = NULL;
                     return NULL;
                 }
-            } else return NULL;
+
+                /* We need to create the info struct that AFD expects for all send/recv requests */
+                AfdInfo = ExAllocatePool(NonPagedPool, sizeof(AFD_RECV_INFO) + sizeof(AFD_WSABUF));
+                if (!AfdInfo)
+                {
+                    AFD_DbgPrint(MIN_TRACE,("Failed to allocate memory\n"));
+                    MmUnlockPages(Irp->MdlAddress);
+                    IoFreeMdl( Irp->MdlAddress );
+                    Irp->MdlAddress = NULL;
+                    return NULL;
+                }
+
+                /* We'll append the buffer array to this struct */
+                AfdInfo->BufferArray = (PAFD_WSABUF)(AfdInfo + 1);
+                AfdInfo->BufferCount = 1;
+
+                /* Setup the default flags values */
+                AfdInfo->AfdFlags = 0;
+                AfdInfo->TdiFlags = 0;
+
+                /* Now build the buffer array */
+                AfdInfo->BufferArray[0].buf = MmGetSystemAddressForMdl(Irp->MdlAddress);
+                AfdInfo->BufferArray[0].len = MmGetMdlByteCount(Irp->MdlAddress);
+
+                /* Store the struct where AFD expects */
+                Irp->Tail.Overlay.DriverContext[0] = AfdInfo;
+
+                /* Don't copy anything out */
+                Irp->Tail.Overlay.DriverContext[1] = NULL;
+
+                /* We're using a placeholder buffer that we allocated */
+                if (LockMode != NULL)
+                {
+                    *LockMode = KernelMode;
+                }
+            }
+            else return NULL;
             break;
 
         default:
@@ -90,6 +173,19 @@ PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
 VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp )
 {
     ASSERT(Irp->MdlAddress);
+    ASSERT(Irp->Tail.Overlay.DriverContext[0]);
+
+    UNREFERENCED_PARAMETER(IrpSp);
+
+    /* Check if we need to copy stuff back */
+    if (Irp->Tail.Overlay.DriverContext[1] != NULL)
+    {
+        RtlCopyMemory(Irp->Tail.Overlay.DriverContext[1],
+                      Irp->Tail.Overlay.DriverContext[0],
+                      MmGetMdlByteCount(Irp->MdlAddress));
+    }
+
+    ExFreePool(Irp->Tail.Overlay.DriverContext[0]);
     MmUnlockPages( Irp->MdlAddress );
     IoFreeMdl( Irp->MdlAddress );
     Irp->MdlAddress = NULL;
@@ -101,19 +197,20 @@ VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp )
 
 PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
                          PVOID AddressBuf, PINT AddressLen,
-                         BOOLEAN Write, BOOLEAN LockAddress ) {
+                         BOOLEAN Write, BOOLEAN LockAddress,
+                         KPROCESSOR_MODE LockMode) {
     UINT i;
     /* Copy the buffer array so we don't lose it */
     UINT Lock = LockAddress ? 2 : 0;
-    UINT Size = sizeof(AFD_WSABUF) * (Count + Lock);
-    PAFD_WSABUF NewBuf = ExAllocatePool( PagedPool, Size * 2 );
+    UINT Size = (sizeof(AFD_WSABUF) + sizeof(AFD_MAPBUF)) * (Count + Lock);
+    PAFD_WSABUF NewBuf = ExAllocatePool( PagedPool, Size );
     BOOLEAN LockFailed = FALSE;
     PAFD_MAPBUF MapBuf;
 
-    AFD_DbgPrint(MID_TRACE,("Called(%08x)\n", NewBuf));
+    AFD_DbgPrint(MID_TRACE,("Called(%p)\n", NewBuf));
 
     if( NewBuf ) {
-        RtlZeroMemory(NewBuf, Size * 2);
+        RtlZeroMemory(NewBuf, Size);
 
         MapBuf = (PAFD_MAPBUF)(NewBuf + Count + Lock);
 
@@ -130,14 +227,14 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
             }
         } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
             AFD_DbgPrint(MIN_TRACE,("Access violation copying buffer info "
-                                    "from userland (%x %x)\n",
+                                    "from userland (%p %p)\n",
                                     Buf, AddressLen));
             ExFreePool( NewBuf );
             _SEH2_YIELD(return NULL);
         } _SEH2_END;
 
         for( i = 0; i < Count; i++ ) {
-            AFD_DbgPrint(MID_TRACE,("Locking buffer %d (%x:%d)\n",
+            AFD_DbgPrint(MID_TRACE,("Locking buffer %u (%p:%u)\n",
                                     i, NewBuf[i].buf, NewBuf[i].len));
 
             if( NewBuf[i].buf && NewBuf[i].len ) {
@@ -151,12 +248,12 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
                 continue;
             }
 
-            AFD_DbgPrint(MID_TRACE,("NewMdl @ %x\n", MapBuf[i].Mdl));
+            AFD_DbgPrint(MID_TRACE,("NewMdl @ %p\n", MapBuf[i].Mdl));
 
             if( MapBuf[i].Mdl ) {
                 AFD_DbgPrint(MID_TRACE,("Probe and lock pages\n"));
                 _SEH2_TRY {
-                    MmProbeAndLockPages( MapBuf[i].Mdl, UserMode,
+                    MmProbeAndLockPages( MapBuf[i].Mdl, LockMode,
                                          Write ? IoModifyAccess : IoReadAccess );
                 } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
                     LockFailed = TRUE;
@@ -177,7 +274,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
         }
     }
 
-    AFD_DbgPrint(MID_TRACE,("Leaving %x\n", NewBuf));
+    AFD_DbgPrint(MID_TRACE,("Leaving %p\n", NewBuf));
 
     return NewBuf;
 }

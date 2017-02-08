@@ -1,8 +1,8 @@
-#include <windows.h>
+#include <windef.h>
+#include <winuser.h>
 #include <commctrl.h>
 
 #include "resource.h"
-
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
@@ -15,5 +15,3 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDI_APPICON   ICON "res/msconfig.ico"
 
 #include "rsrc.rc"
-
-

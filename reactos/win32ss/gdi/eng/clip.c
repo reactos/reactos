@@ -188,13 +188,15 @@ CompareSpans(
     return Cmp;
 }
 
-VOID FASTCALL
+VOID
+FASTCALL
 IntEngDeleteClipRegion(CLIPOBJ *ClipObj)
 {
     EngFreeMem(ObjToGDI(ClipObj, CLIP));
 }
 
-CLIPOBJ* FASTCALL
+CLIPOBJ*
+FASTCALL
 IntEngCreateClipRegion(ULONG count, PRECTL pRect, PRECTL rcBounds)
 {
     CLIPGDI *Clip;
@@ -250,7 +252,8 @@ IntEngCreateClipRegion(ULONG count, PRECTL pRect, PRECTL rcBounds)
 /*
  * @implemented
  */
-CLIPOBJ * APIENTRY
+CLIPOBJ *
+APIENTRY
 EngCreateClip(VOID)
 {
     CLIPGDI *Clip = EngAllocMem(FL_ZERO_MEMORY, sizeof(CLIPGDI), GDITAG_CLIPOBJ);
@@ -265,32 +268,35 @@ EngCreateClip(VOID)
 /*
  * @implemented
  */
-VOID APIENTRY
-EngDeleteClip(CLIPOBJ *ClipRegion)
+VOID
+APIENTRY
+EngDeleteClip(
+    _In_ _Post_ptr_invalid_ CLIPOBJ *pco)
 {
-    EngFreeMem(ObjToGDI(ClipRegion, CLIP));
+    EngFreeMem(ObjToGDI(pco, CLIP));
 }
 
 /*
  * @implemented
  */
-ULONG APIENTRY
+ULONG
+APIENTRY
 CLIPOBJ_cEnumStart(
-    IN CLIPOBJ* ClipObj,
-    IN BOOL ShouldDoAll,
-    IN ULONG ClipType,
-    IN ULONG BuildOrder,
-    IN ULONG MaxRects)
+    _Inout_ CLIPOBJ *pco,
+    _In_ BOOL bAll,
+    _In_ ULONG iType,
+    _In_ ULONG iDirection,
+    _In_ ULONG cMaxRects)
 {
-    CLIPGDI *ClipGDI = ObjToGDI(ClipObj, CLIP);
+    CLIPGDI *ClipGDI = ObjToGDI(pco, CLIP);
     SORTCOMP CompareFunc;
 
     ClipGDI->EnumPos = 0;
-    ClipGDI->EnumMax = (MaxRects > 0) ? MaxRects : ClipGDI->EnumRects.c;
+    ClipGDI->EnumMax = (cMaxRects > 0) ? cMaxRects : ClipGDI->EnumRects.c;
 
-    if (CD_ANY != BuildOrder && ClipGDI->EnumOrder != BuildOrder)
+    if (CD_ANY != iDirection && ClipGDI->EnumOrder != iDirection)
     {
-        switch (BuildOrder)
+        switch (iDirection)
         {
             case CD_RIGHTDOWN:
                 CompareFunc = (SORTCOMP) CompareRightDown;
@@ -309,8 +315,8 @@ CLIPOBJ_cEnumStart(
                 break;
 
             default:
-                DPRINT1("Invalid BuildOrder %d\n", BuildOrder);
-                BuildOrder = ClipGDI->EnumOrder;
+                DPRINT1("Invalid iDirection %lu\n", iDirection);
+                iDirection = ClipGDI->EnumOrder;
                 CompareFunc = NULL;
                 break;
         }
@@ -320,11 +326,11 @@ CLIPOBJ_cEnumStart(
             EngSort((PBYTE) ClipGDI->EnumRects.arcl, sizeof(RECTL), ClipGDI->EnumRects.c, CompareFunc);
         }
 
-        ClipGDI->EnumOrder = BuildOrder;
+        ClipGDI->EnumOrder = iDirection;
     }
 
     /* Return the number of rectangles enumerated */
-    if ((MaxRects > 0) && (ClipGDI->EnumRects.c > MaxRects))
+    if ((cMaxRects > 0) && (ClipGDI->EnumRects.c > cMaxRects))
     {
         return 0xFFFFFFFF;
     }
@@ -335,21 +341,22 @@ CLIPOBJ_cEnumStart(
 /*
  * @implemented
  */
-BOOL APIENTRY
+BOOL
+APIENTRY
 CLIPOBJ_bEnum(
-    IN CLIPOBJ* ClipObj,
-    IN ULONG ObjSize,
-    OUT ULONG *EnumRects)
+    _In_ CLIPOBJ *pco,
+    _In_ ULONG cj,
+    _Out_bytecap_(cj) ULONG *pulEnumRects)
 {
     RECTL *dest, *src;
-    CLIPGDI *ClipGDI = ObjToGDI(ClipObj, CLIP);
+    CLIPGDI *ClipGDI = ObjToGDI(pco, CLIP);
     ULONG nCopy, i;
-    ENUMRECTS* pERects = (ENUMRECTS*)EnumRects;
+    ENUMRECTS* pERects = (ENUMRECTS*)pulEnumRects;
 
     // Calculate how many rectangles we should copy
     nCopy = min( ClipGDI->EnumMax - ClipGDI->EnumPos,
             min( ClipGDI->EnumRects.c - ClipGDI->EnumPos,
-            (ObjSize - sizeof(ULONG)) / sizeof(RECTL)));
+            (cj - sizeof(ULONG)) / sizeof(RECTL)));
 
     if(nCopy == 0)
     {

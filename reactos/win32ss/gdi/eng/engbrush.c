@@ -50,11 +50,15 @@ InitBrushImpl(VOID)
 
 VOID
 NTAPI
-EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
+EBRUSHOBJ_vInit(EBRUSHOBJ *pebo,
+    PBRUSH pbrush,
+    PSURFACE psurf,
+    COLORREF crBackgroundClr,
+    COLORREF crForegroundClr,
+    PPALETTE ppalDC)
 {
     ASSERT(pebo);
     ASSERT(pbrush);
-    ASSERT(pdc);
 
     pebo->BrushObject.flColorType = 0;
     pebo->BrushObject.pvRbrush = NULL;
@@ -63,20 +67,24 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
     pebo->flattrs = pbrush->flAttrs;
 
     /* Initialize 1 bpp fore and back colors */
-    pebo->crCurrentBack = pdc->pdcattr->crBackgroundClr;
-    pebo->crCurrentText = pdc->pdcattr->crForegroundClr;
+    pebo->crCurrentBack = crBackgroundClr;
+    pebo->crCurrentText = crForegroundClr;
 
-    pebo->psurfTrg = pdc->dclevel.pSurface;
+    pebo->psurfTrg = psurf;
     /* We are initializing for a new memory DC */
     if(!pebo->psurfTrg)
         pebo->psurfTrg = psurfDefaultBitmap;
     ASSERT(pebo->psurfTrg);
     ASSERT(pebo->psurfTrg->ppal);
 
+    /* Initialize palettes */
     pebo->ppalSurf = pebo->psurfTrg->ppal;
     GDIOBJ_vReferenceObjectByPointer(&pebo->ppalSurf->BaseObject);
-    pebo->ppalDC = pdc->dclevel.ppal;
+    pebo->ppalDC = ppalDC;
+    if(!pebo->ppalDC)
+        pebo->ppalDC = gppalDefault;
     GDIOBJ_vReferenceObjectByPointer(&pebo->ppalDC->BaseObject);
+    pebo->ppalDIB = NULL;
 
     if (pbrush->flAttrs & BR_IS_NULL)
     {
@@ -97,6 +105,16 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
         if (pbrush->flAttrs & BR_IS_HATCH)
             pebo->crCurrentText = pbrush->BrushAttr.lbColor;
     }
+}
+
+VOID
+NTAPI
+EBRUSHOBJ_vInitFromDC(EBRUSHOBJ *pebo,
+    PBRUSH pbrush, PDC pdc)
+{
+    EBRUSHOBJ_vInit(pebo, pbrush, pdc->dclevel.pSurface,
+        pdc->pdcattr->crBackgroundClr, pdc->pdcattr->crForegroundClr,
+        pdc->dclevel.ppal);
 }
 
 VOID
@@ -157,13 +175,15 @@ EBRUSHOBJ_vCleanup(EBRUSHOBJ *pebo)
 
 VOID
 NTAPI
-EBRUSHOBJ_vUpdate(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
+EBRUSHOBJ_vUpdateFromDC(EBRUSHOBJ *pebo,
+    PBRUSH pbrush,
+    PDC pdc)
 {
     /* Cleanup the brush */
     EBRUSHOBJ_vCleanup(pebo);
 
     /* Reinitialize */
-    EBRUSHOBJ_vInit(pebo, pbrush, pdc);
+    EBRUSHOBJ_vInitFromDC(pebo, pbrush, pdc);
 }
 
 /**
@@ -267,7 +287,7 @@ NTAPI
 EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
 {
     BOOL bResult;
-    PFN_DrvRealizeBrush pfnRealzizeBrush = NULL;
+    PFN_DrvRealizeBrush pfnRealizeBrush = NULL;
     PSURFACE psurfPattern, psurfMask;
     PPDEVOBJ ppdev;
     EXLATEOBJ exlo;
@@ -283,10 +303,10 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
     if (!ppdev) ppdev = gppdevPrimary;
 
     if (bCallDriver)
-        pfnRealzizeBrush = ppdev->DriverFunctions.RealizeBrush;
+        pfnRealizeBrush = ppdev->DriverFunctions.RealizeBrush;
 
-    if (!pfnRealzizeBrush)
-        pfnRealzizeBrush = EngRealizeBrush;
+    if (!pfnRealizeBrush)
+        pfnRealizeBrush = EngRealizeBrush;
 
     /* Check if this is a hatch brush */
     if (pbr->flAttrs & BR_IS_HATCH)
@@ -331,12 +351,12 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
                           pebo->crCurrentText);
 
     /* Create the realization */
-    bResult = pfnRealzizeBrush(&pebo->BrushObject,
-                               &pebo->psurfTrg->SurfObj,
-                               &psurfPattern->SurfObj,
-                               psurfMask ? &psurfMask->SurfObj : NULL,
-                               &exlo.xlo,
-                               iHatch);
+    bResult = pfnRealizeBrush(&pebo->BrushObject,
+                              &pebo->psurfTrg->SurfObj,
+                              &psurfPattern->SurfObj,
+                              psurfMask ? &psurfMask->SurfObj : NULL,
+                              &exlo.xlo,
+                              iHatch);
 
     /* Cleanup the XLATEOBJ */
     EXLATEOBJ_vCleanup(&exlo);

@@ -17,6 +17,17 @@ WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
 
 static HANDLE SecurityKeyHandle = NULL;
 
+SID_IDENTIFIER_AUTHORITY NullSidAuthority    = {SECURITY_NULL_SID_AUTHORITY};
+SID_IDENTIFIER_AUTHORITY WorldSidAuthority   = {SECURITY_WORLD_SID_AUTHORITY};
+SID_IDENTIFIER_AUTHORITY LocalSidAuthority   = {SECURITY_LOCAL_SID_AUTHORITY};
+SID_IDENTIFIER_AUTHORITY CreatorSidAuthority = {SECURITY_CREATOR_SID_AUTHORITY};
+SID_IDENTIFIER_AUTHORITY NtAuthority         = {SECURITY_NT_AUTHORITY};
+
+PSID BuiltinDomainSid = NULL;
+PSID AccountDomainSid = NULL;
+UNICODE_STRING BuiltinDomainName = {0, 0, NULL};
+UNICODE_STRING AccountDomainName = {0, 0, NULL};
+
 
 /* FUNCTIONS ***************************************************************/
 
@@ -202,14 +213,13 @@ Done:
 static NTSTATUS
 LsapCreateRandomDomainSid(OUT PSID *Sid)
 {
-    SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
     LARGE_INTEGER SystemTime;
     PULONG Seed;
 
     NtQuerySystemTime(&SystemTime);
     Seed = &SystemTime.u.LowPart;
 
-    return RtlAllocateAndInitializeSid(&SystemAuthority,
+    return RtlAllocateAndInitializeSid(&NtAuthority,
                                        4,
                                        SECURITY_NT_NON_UNIQUE,
                                        RtlUniform(Seed),
@@ -226,20 +236,74 @@ LsapCreateRandomDomainSid(OUT PSID *Sid)
 static NTSTATUS
 LsapCreateDatabaseObjects(VOID)
 {
+    PLSAP_POLICY_AUDIT_EVENTS_DATA AuditEventsInfo = NULL;
+    POLICY_DEFAULT_QUOTA_INFO QuotaInfo;
+    POLICY_MODIFICATION_INFO ModificationInfo;
+    POLICY_AUDIT_FULL_QUERY_INFO AuditFullInfo = {FALSE, FALSE};
+    POLICY_AUDIT_LOG_INFO AuditLogInfo;
+    GUID DnsDomainGuid;
     PLSA_DB_OBJECT PolicyObject = NULL;
     PSID AccountDomainSid = NULL;
+    PSECURITY_DESCRIPTOR PolicySd = NULL;
+    ULONG PolicySdSize = 0;
+    ULONG AuditEventsCount;
+    ULONG AuditEventsSize;
+    ULONG i;
     NTSTATUS Status;
+
+    /* Initialize the default quota limits */
+    QuotaInfo.QuotaLimits.PagedPoolLimit = 0x2000000;
+    QuotaInfo.QuotaLimits.NonPagedPoolLimit = 0x100000;
+    QuotaInfo.QuotaLimits.MinimumWorkingSetSize = 0x10000;
+    QuotaInfo.QuotaLimits.MaximumWorkingSetSize = 0xF000000;
+    QuotaInfo.QuotaLimits.PagefileLimit = 0;
+    QuotaInfo.QuotaLimits.TimeLimit.QuadPart = 0;
+
+    /* Initialize the audit log attribute */
+    AuditLogInfo.AuditLogPercentFull = 0;
+    AuditLogInfo.MaximumLogSize = 0;			// DWORD
+    AuditLogInfo.AuditRetentionPeriod.QuadPart = 0;	// LARGE_INTEGER
+    AuditLogInfo.AuditLogFullShutdownInProgress = 0;	// BYTE
+    AuditLogInfo.TimeToShutdown.QuadPart = 0;		// LARGE_INTEGER
+    AuditLogInfo.NextAuditRecordId = 0;			// DWORD
+
+    /* Initialize the Audit Events attribute */
+    AuditEventsCount = AuditCategoryAccountLogon - AuditCategorySystem + 1;
+    AuditEventsSize = sizeof(LSAP_POLICY_AUDIT_EVENTS_DATA) + AuditEventsCount * sizeof(DWORD);
+    AuditEventsInfo = RtlAllocateHeap(RtlGetProcessHeap(),
+                                      HEAP_ZERO_MEMORY,
+                                      AuditEventsSize);
+    if (AuditEventsInfo == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    AuditEventsInfo->AuditingMode = FALSE;
+    AuditEventsInfo->MaximumAuditEventCount = AuditEventsCount;
+    for (i = 0; i < AuditEventsCount; i++)
+        AuditEventsInfo->AuditEvents[i] = 0;
+
+    /* Initialize the DNS Domain GUID attribute */
+    memset(&DnsDomainGuid, 0, sizeof(GUID));
+
+    /* Initialize the modification attribute */
+    ModificationInfo.ModifiedId.QuadPart = 0;
+    NtQuerySystemTime(&ModificationInfo.DatabaseCreationTime);
 
     /* Create a random domain SID */
     Status = LsapCreateRandomDomainSid(&AccountDomainSid);
     if (!NT_SUCCESS(Status))
-        return Status;
+        goto done;
+
+    Status = LsapCreatePolicySd(&PolicySd, &PolicySdSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
     /* Open the 'Policy' object */
     Status = LsapOpenDbObject(NULL,
+                              NULL,
                               L"Policy",
                               LsaDbPolicyObject,
                               0,
+                              TRUE,
                               &PolicyObject);
     if (!NT_SUCCESS(Status))
         goto done;
@@ -264,12 +328,72 @@ LsapCreateDatabaseObjects(VOID)
                            AccountDomainSid,
                            RtlLengthSid(AccountDomainSid));
 
+    /* Set the default quota limits attribute */
+    LsapSetObjectAttribute(PolicyObject,
+                           L"DefQuota",
+                           &QuotaInfo,
+                           sizeof(POLICY_DEFAULT_QUOTA_INFO));
+
+    /* Set the modification attribute */
+    LsapSetObjectAttribute(PolicyObject,
+                           L"PolMod",
+                           &ModificationInfo,
+                           sizeof(POLICY_MODIFICATION_INFO));
+
+    /* Set the audit full attribute */
+    LsapSetObjectAttribute(PolicyObject,
+                           L"PolAdtFl",
+                           &AuditFullInfo,
+                           sizeof(POLICY_AUDIT_FULL_QUERY_INFO));
+
+    /* Set the audit log attribute */
+    LsapSetObjectAttribute(PolicyObject,
+                           L"PolAdtLg",
+                           &AuditLogInfo,
+                           sizeof(POLICY_AUDIT_LOG_INFO));
+
+    /* Set the audit events attribute */
+    LsapSetObjectAttribute(PolicyObject,
+                           L"PolAdtEv",
+                           AuditEventsInfo,
+                           AuditEventsSize);
+
+    /* Set the DNS Domain Name attribute */
+    LsapSetObjectAttribute(PolicyObject,
+                           L"PolDnDDN",
+                           NULL,
+                           0);
+
+    /* Set the DNS Forest Name attribute */
+    LsapSetObjectAttribute(PolicyObject,
+                           L"PolDnTrN",
+                           NULL,
+                           0);
+
+    /* Set the DNS Domain GUID attribute */
+    LsapSetObjectAttribute(PolicyObject,
+                           L"PolDnDmG",
+                           &DnsDomainGuid,
+                           sizeof(GUID));
+
+    /* Set the Sceurity Descriptor */
+    LsapSetObjectAttribute(PolicyObject,
+                           L"SecDesc",
+                           PolicySd,
+                           PolicySdSize);
+
 done:
+    if (AuditEventsInfo != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, AuditEventsInfo);
+
     if (PolicyObject != NULL)
         LsapCloseDbObject(PolicyObject);
 
     if (AccountDomainSid != NULL)
         RtlFreeSid(AccountDomainSid);
+
+    if (PolicySd != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, PolicySd);
 
     return Status;
 }
@@ -279,6 +403,138 @@ static NTSTATUS
 LsapUpdateDatabase(VOID)
 {
     return STATUS_SUCCESS;
+}
+
+
+static NTSTATUS
+LsapGetDomainInfo(VOID)
+{
+    PLSA_DB_OBJECT PolicyObject = NULL;
+    PUNICODE_STRING DomainName = NULL;
+    ULONG AttributeSize;
+    LPWSTR SidString = NULL;
+    NTSTATUS Status;
+
+    /* Get the built-in domain SID and name */
+    Status = RtlAllocateAndInitializeSid(&NtAuthority,
+                                         1,
+                                         SECURITY_BUILTIN_DOMAIN_RID,
+                                         0, 0, 0, 0, 0, 0, 0,
+                                         &BuiltinDomainSid);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /**/
+    RtlInitUnicodeString(&BuiltinDomainName,
+                         L"BUILTIN");
+
+    /* Open the 'Policy' object */
+    Status = LsapOpenDbObject(NULL,
+                              NULL,
+                              L"Policy",
+                              LsaDbPolicyObject,
+                              0,
+                              TRUE,
+                              &PolicyObject);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Get the account domain SID */
+    AttributeSize = 0;
+    Status = LsapGetObjectAttribute(PolicyObject,
+                                    L"PolAcDmS",
+                                    NULL,
+                                    &AttributeSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    if (AttributeSize > 0)
+    {
+        AccountDomainSid = RtlAllocateHeap(RtlGetProcessHeap(),
+                                           HEAP_ZERO_MEMORY,
+                                           AttributeSize);
+        if (AccountDomainSid == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        Status = LsapGetObjectAttribute(PolicyObject,
+                                        L"PolAcDmS",
+                                        AccountDomainSid,
+                                        &AttributeSize);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    /* Get the account domain name */
+    AttributeSize = 0;
+    Status = LsapGetObjectAttribute(PolicyObject,
+                                    L"PolAcDmN",
+                                    NULL,
+                                    &AttributeSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    if (AttributeSize > 0)
+    {
+        DomainName = RtlAllocateHeap(RtlGetProcessHeap(),
+                                     HEAP_ZERO_MEMORY,
+                                     AttributeSize);
+        if (DomainName == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        Status = LsapGetObjectAttribute(PolicyObject,
+                                        L"PolAcDmN",
+                                        DomainName,
+                                        &AttributeSize);
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        DomainName->Buffer = (LPWSTR)((ULONG_PTR)DomainName + (ULONG_PTR)DomainName->Buffer);
+
+        AccountDomainName.Length = DomainName->Length;
+        AccountDomainName.MaximumLength = DomainName->Length + sizeof(WCHAR);
+        AccountDomainName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                   HEAP_ZERO_MEMORY,
+                                                   AccountDomainName.MaximumLength);
+        if (AccountDomainName.Buffer == NULL)
+        {
+            ERR("Failed to allocate the account domain name buffer\n");
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        RtlCopyMemory(AccountDomainName.Buffer,
+                      DomainName->Buffer,
+                      DomainName->Length);
+    }
+
+    ConvertSidToStringSidW(BuiltinDomainSid, &SidString);
+    TRACE("Builtin Domain SID: %S\n", SidString);
+    LocalFree(SidString);
+    SidString = NULL;
+
+    TRACE("Builtin Domain Name: %wZ\n", &BuiltinDomainName);
+
+    ConvertSidToStringSidW(AccountDomainSid, &SidString);
+    TRACE("Account Domain SID: %S\n", SidString);
+    LocalFree(SidString);
+    SidString = NULL;
+
+    TRACE("Account Domain Name: %wZ\n", &AccountDomainName);
+
+done:
+    if (DomainName != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, DomainName);
+
+    if (PolicyObject != NULL)
+        LsapCloseDbObject(PolicyObject);
+
+    return Status;
 }
 
 
@@ -322,6 +578,13 @@ LsapInitDatabase(VOID)
         }
     }
 
+    Status = LsapGetDomainInfo();
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Failed to get the domain information (Status: 0x%08lx)\n", Status);
+        return Status;
+    }
+
     TRACE("LsapInitDatabase() done\n");
 
     return STATUS_SUCCESS;
@@ -330,16 +593,19 @@ LsapInitDatabase(VOID)
 
 NTSTATUS
 LsapCreateDbObject(IN PLSA_DB_OBJECT ParentObject,
+                   IN LPWSTR ContainerName,
                    IN LPWSTR ObjectName,
                    IN LSA_DB_OBJECT_TYPE ObjectType,
                    IN ACCESS_MASK DesiredAccess,
+                   IN BOOLEAN Trusted,
                    OUT PLSA_DB_OBJECT *DbObject)
 {
     PLSA_DB_OBJECT NewObject;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
     HANDLE ParentKeyHandle;
-    HANDLE ObjectKeyHandle;
+    HANDLE ContainerKeyHandle = NULL;
+    HANDLE ObjectKeyHandle = NULL;
     NTSTATUS Status;
 
     if (DbObject == NULL)
@@ -350,25 +616,73 @@ LsapCreateDbObject(IN PLSA_DB_OBJECT ParentObject,
     else
         ParentKeyHandle = ParentObject->KeyHandle;
 
-    RtlInitUnicodeString(&KeyName,
-                         ObjectName);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               ParentKeyHandle,
-                               NULL);
-
-    Status = NtCreateKey(&ObjectKeyHandle,
-                         KEY_ALL_ACCESS,
-                         &ObjectAttributes,
-                         0,
-                         NULL,
-                         0,
-                         NULL);
-    if (!NT_SUCCESS(Status))
+    if (ContainerName != NULL)
     {
-        return Status;
+        /* Open the container key */
+        RtlInitUnicodeString(&KeyName,
+                             ContainerName);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   ParentKeyHandle,
+                                   NULL);
+
+        Status = NtOpenKey(&ContainerKeyHandle,
+                           KEY_ALL_ACCESS,
+                           &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+
+        /* Open the object key */
+        RtlInitUnicodeString(&KeyName,
+                             ObjectName);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   ContainerKeyHandle,
+                                   NULL);
+
+        Status = NtCreateKey(&ObjectKeyHandle,
+                             KEY_ALL_ACCESS,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             0,
+                             NULL);
+
+        NtClose(ContainerKeyHandle);
+
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+    }
+    else
+    {
+        RtlInitUnicodeString(&KeyName,
+                             ObjectName);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   ParentKeyHandle,
+                                   NULL);
+
+        Status = NtCreateKey(&ObjectKeyHandle,
+                             KEY_ALL_ACCESS,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             0,
+                             NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
     }
 
     NewObject = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -386,6 +700,7 @@ LsapCreateDbObject(IN PLSA_DB_OBJECT ParentObject,
     NewObject->Access = DesiredAccess;
     NewObject->KeyHandle = ObjectKeyHandle;
     NewObject->ParentObject = ParentObject;
+    NewObject->Trusted = Trusted;
 
     if (ParentObject != NULL)
         ParentObject->RefCount++;
@@ -398,16 +713,19 @@ LsapCreateDbObject(IN PLSA_DB_OBJECT ParentObject,
 
 NTSTATUS
 LsapOpenDbObject(IN PLSA_DB_OBJECT ParentObject,
+                 IN LPWSTR ContainerName,
                  IN LPWSTR ObjectName,
                  IN LSA_DB_OBJECT_TYPE ObjectType,
                  IN ACCESS_MASK DesiredAccess,
+                 IN BOOLEAN Trusted,
                  OUT PLSA_DB_OBJECT *DbObject)
 {
     PLSA_DB_OBJECT NewObject;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
     HANDLE ParentKeyHandle;
-    HANDLE ObjectKeyHandle;
+    HANDLE ContainerKeyHandle = NULL;
+    HANDLE ObjectKeyHandle = NULL;
     NTSTATUS Status;
 
     if (DbObject == NULL)
@@ -418,26 +736,71 @@ LsapOpenDbObject(IN PLSA_DB_OBJECT ParentObject,
     else
         ParentKeyHandle = ParentObject->KeyHandle;
 
-    RtlInitUnicodeString(&KeyName,
-                         ObjectName);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               ParentKeyHandle,
-                               NULL);
-
-    Status = NtOpenKey(&ObjectKeyHandle,
-                       KEY_ALL_ACCESS,
-                       &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
+    if (ContainerName != NULL)
     {
-        return Status;
+        /* Open the container key */
+        RtlInitUnicodeString(&KeyName,
+                             ContainerName);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   ParentKeyHandle,
+                                   NULL);
+
+        Status = NtOpenKey(&ContainerKeyHandle,
+                           KEY_ALL_ACCESS,
+                           &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+
+        /* Open the object key */
+        RtlInitUnicodeString(&KeyName,
+                             ObjectName);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   ContainerKeyHandle,
+                                   NULL);
+
+        Status = NtOpenKey(&ObjectKeyHandle,
+                           KEY_ALL_ACCESS,
+                           &ObjectAttributes);
+
+        NtClose(ContainerKeyHandle);
+
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+    }
+    else
+    {
+        /* Open the object key */
+        RtlInitUnicodeString(&KeyName,
+                             ObjectName);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   ParentKeyHandle,
+                                   NULL);
+
+        Status = NtOpenKey(&ObjectKeyHandle,
+                           KEY_ALL_ACCESS,
+                           &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
     }
 
     NewObject = RtlAllocateHeap(RtlGetProcessHeap(),
-                                  0,
-                                  sizeof(LSA_DB_OBJECT));
+                                0,
+                                sizeof(LSA_DB_OBJECT));
     if (NewObject == NULL)
     {
         NtClose(ObjectKeyHandle);
@@ -450,6 +813,7 @@ LsapOpenDbObject(IN PLSA_DB_OBJECT ParentObject,
     NewObject->Access = DesiredAccess;
     NewObject->KeyHandle = ObjectKeyHandle;
     NewObject->ParentObject = ParentObject;
+    NewObject->Trusted = Trusted;
 
     if (ParentObject != NULL)
         ParentObject->RefCount++;
@@ -537,6 +901,66 @@ LsapCloseDbObject(PLSA_DB_OBJECT DbObject)
 
 
 NTSTATUS
+LsapDeleteDbObject(IN PLSA_DB_OBJECT DbObject)
+{
+    PLSA_DB_OBJECT ParentObject = NULL;
+    WCHAR KeyName[64];
+    ULONG Index;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    DbObject->RefCount--;
+
+    if (DbObject->RefCount > 0)
+        return STATUS_SUCCESS;
+
+    if (DbObject->KeyHandle != NULL)
+    {
+        Index = 0;
+
+        while (TRUE)
+        {
+            Status = LsapRegEnumerateSubKey(DbObject->KeyHandle,
+                                            Index,
+                                            64 * sizeof(WCHAR),
+                                            KeyName);
+            if (!NT_SUCCESS(Status))
+                break;
+
+            TRACE("Index: %lu\n", Index);
+            TRACE("Key name: %S\n", KeyName);
+
+            Status = LsapRegDeleteSubKey(DbObject->KeyHandle,
+                                         KeyName);
+            if (!NT_SUCCESS(Status))
+                break;
+        }
+
+        if (Status == STATUS_NO_MORE_ENTRIES)
+            Status = STATUS_SUCCESS;
+
+        LsapRegDeleteKey(DbObject->KeyHandle);
+
+        NtClose(DbObject->KeyHandle);
+    }
+
+    if (DbObject->ParentObject != NULL)
+        ParentObject = DbObject->ParentObject;
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, DbObject);
+
+    if (ParentObject != NULL)
+    {
+        ParentObject->RefCount--;
+
+        if (ParentObject->RefCount == 0)
+            Status = LsapCloseDbObject(ParentObject);
+    }
+
+    return Status;
+}
+
+
+NTSTATUS
 LsapSetObjectAttribute(PLSA_DB_OBJECT DbObject,
                        LPWSTR AttributeName,
                        LPVOID AttributeData,
@@ -565,7 +989,8 @@ LsapSetObjectAttribute(PLSA_DB_OBJECT DbObject,
                          NULL);
     if (!NT_SUCCESS(Status))
     {
-
+        ERR("NtCreateKey failed for '%S' with status 0x%lx\n", 
+            AttributeName, Status);
         return Status;
     }
 
@@ -575,6 +1000,12 @@ LsapSetObjectAttribute(PLSA_DB_OBJECT DbObject,
                                AttributeSize);
 
     NtClose(AttributeKey);
+
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("RtlpNtSetValueKey failed for '%S' with status 0x%lx\n", 
+            AttributeName, Status);
+    }
 
     return Status;
 }
@@ -647,6 +1078,15 @@ Done:
     NtClose(AttributeKey);
 
     return Status;
+}
+
+
+NTSTATUS
+LsapDeleteObjectAttribute(PLSA_DB_OBJECT DbObject,
+                          LPWSTR AttributeName)
+{
+    return LsapRegDeleteSubKey(DbObject->KeyHandle,
+                               AttributeName);
 }
 
 /* EOF */

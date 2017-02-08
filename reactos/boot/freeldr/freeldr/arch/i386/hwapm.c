@@ -59,15 +59,20 @@ VOID
 DetectApmBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 {
     PCONFIGURATION_COMPONENT_DATA BiosKey;
-    CM_PARTIAL_RESOURCE_LIST PartialResourceList;
+    PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
+    ULONG Size;
+
+    Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
+           sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
 
     if (FindApmBios())
     {
         /* Create 'Configuration Data' value */
-        memset(&PartialResourceList, 0, sizeof(CM_PARTIAL_RESOURCE_LIST));
-        PartialResourceList.Version = 0;
-        PartialResourceList.Revision = 0;
-        PartialResourceList.Count = 0;
+        PartialResourceList = MmHeapAlloc(Size);
+        memset(PartialResourceList, 0, Size);
+        PartialResourceList->Version = 0;
+        PartialResourceList->Revision = 0;
+        PartialResourceList->Count = 0;
 
         /* Create new bus key */
         FldrCreateComponentKey(SystemKey,
@@ -77,9 +82,8 @@ DetectApmBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                                0x0,
                                0xFFFFFFFF,
                                "APM",
-                               &PartialResourceList,
-                               sizeof(CM_PARTIAL_RESOURCE_LIST) -
-                                   sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR),
+                               PartialResourceList,
+                               Size,
                                &BiosKey);
 
         /* Increment bus number */

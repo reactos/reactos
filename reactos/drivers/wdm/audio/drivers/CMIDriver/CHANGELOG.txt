@@ -1,3 +1,52 @@
+1.2.6:
+- small bug in cmicontrol eradicated (thanks, doujinshi)
+
+1.2.5:
+- bugfix for cmicontrol (thanks, ian)
+
+1.2.4:
+- manifest for installer (thanks, martin)
+- half-assed workaround for WaveRT version (DirectSound error code 88780096)
+- some fixes for recording (thanks, gazsi222 and reesharr)
+
+1.2.3:
+- installer checks for administrative rights and warns user when not present
+- small fix for cmicontrol (thanks, personaldustbin)
+
+1.2.2:
+- uninstaller fix (thanks, yroggy)
+
+1.2.1:
+- implement toggle switch for loop through mode in cmicontrol.exe
+- disable 88.2 kHz / 96 kHz on 8738 chips by default
+
+1.2.0:
+- Analog-in mute control for recording was inverted - fixed (thanks, mechman)
+- CD-in mute control fixed (thanks again, mechman)
+
+1.1.9:
+- workaround for WASAPI "bug" which caused random noise to be played - thanks, hanssatink
+
+1.1.8:
+- the checkboxes corresponding to the speakers in cmicontrol.exe were too small - fixed
+- some other minor fixes 
+
+1.1.7:
+- make "select secondary S/PDIF-in" stick after a reload (thanks, Marcin)
+- the "enable PCM DAC" setting in the control panel was somewhat broken - fixed (thanks, Marcin)
+- stupid hibernation bug fixed (thanks, Leto)
+
+1.1.6:
+- lots of installer bugs fixed
+
+1.1.5:
+- big improvements to the installer
+- minor fixes for cmicontrol.exe
+
+1.1.4:
+- preliminary support for WMA Pro passthrough (the MCE of Vista is still buggy)
+- UART support has been disabled due to stability issues on motherboards with ULi chipsets
+
 1.1.3:
 - power management fixes for Vista
 - user friendly default values

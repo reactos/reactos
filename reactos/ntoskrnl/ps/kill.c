@@ -205,6 +205,52 @@ PspReapRoutine(IN PVOID Context)
                                                (PVOID)1) != (PVOID)1);
 }
 
+#if DBG
+VOID
+NTAPI
+PspCheckProcessList()
+{
+    PLIST_ENTRY Entry;
+
+    KeAcquireGuardedMutex(&PspActiveProcessMutex);
+    DbgPrint("# checking PsActiveProcessHead @ %p\n", &PsActiveProcessHead);
+    for (Entry = PsActiveProcessHead.Flink;
+         Entry != &PsActiveProcessHead;
+         Entry = Entry->Flink)
+    {
+        PEPROCESS Process = CONTAINING_RECORD(Entry, EPROCESS, ActiveProcessLinks);
+        POBJECT_HEADER Header;
+        PVOID Info, HeaderLocation;
+
+        /* Get the header and assume this is what we'll free */
+        Header = OBJECT_TO_OBJECT_HEADER(Process);
+        HeaderLocation = Header;
+
+        /* To find the header, walk backwards from how we allocated */
+        if ((Info = OBJECT_HEADER_TO_CREATOR_INFO(Header)))
+        {
+            HeaderLocation = Info;
+        }
+        if ((Info = OBJECT_HEADER_TO_NAME_INFO(Header)))
+        {
+            HeaderLocation = Info;
+        }
+        if ((Info = OBJECT_HEADER_TO_HANDLE_INFO(Header)))
+        {
+            HeaderLocation = Info;
+        }
+        if ((Info = OBJECT_HEADER_TO_QUOTA_INFO(Header)))
+        {
+            HeaderLocation = Info;
+        }
+
+        ExpCheckPoolAllocation(HeaderLocation, NonPagedPool, 'corP');
+    }
+
+    KeReleaseGuardedMutex(&PspActiveProcessMutex);
+}
+#endif
+
 VOID
 NTAPI
 PspDeleteProcess(IN PVOID ObjectBody)
@@ -221,6 +267,8 @@ PspDeleteProcess(IN PVOID ObjectBody)
         /* Remove it from the Active List */
         KeAcquireGuardedMutex(&PspActiveProcessMutex);
         RemoveEntryList(&Process->ActiveProcessLinks);
+        Process->ActiveProcessLinks.Flink = NULL;
+        Process->ActiveProcessLinks.Blink = NULL;
         KeReleaseGuardedMutex(&PspActiveProcessMutex);
     }
 
@@ -1006,7 +1054,7 @@ PspTerminateThreadByPointer(IN PETHREAD Thread,
     }
 
     /* We failed, free the APC */
-    ExFreePool(Apc);
+    ExFreePoolWithTag(Apc, TAG_TERMINATE_APC);
 
     /* Return Status */
     return Status;

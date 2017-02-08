@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2006-2007 dogbert <dogber1@gmail.com>
+Copyright (c) 2006-2008 dogbert <dogber1@gmail.com>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -28,20 +28,19 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _COMMON_HPP_
 #define _COMMON_HPP_
 
-#include "ntddk.h"
 #include "stdunk.h"
 #include "portcls.h"
 #include "dmusicks.h"
 #include "ksdebug.h"
 #include "kcom.h"
-#include "ksmedia.h"
 
 #include "interfaces.hpp"
 #include "debug.hpp"
 #include "cmireg.hpp"
 
 class CCMIAdapter : public ICMIAdapter,
-                    public IAdapterPowerManagement
+                    public IAdapterPowerManagement,
+                    public CUnknown
 {
 private:
     PDEVICE_OBJECT		DeviceObject;
@@ -55,25 +54,8 @@ private:
     void resetController();
 
 public:
-    STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
-
-    CCMIAdapter(IUnknown *OuterUnknown){}
+    DECLARE_STD_UNKNOWN();
+    DEFINE_STD_CONSTRUCTOR(CCMIAdapter);
     ~CCMIAdapter();
 
     IMP_IAdapterPowerManagement;
@@ -104,7 +86,7 @@ public:
 
     STDMETHODIMP_(void)		resetMixer();
 
-    static NTSTATUS NTAPI			InterruptServiceRoutine(PINTERRUPTSYNC InterruptSync, PVOID StaticContext);
+    static NTSTATUS NTAPI InterruptServiceRoutine(PINTERRUPTSYNC InterruptSync, PVOID StaticContext);
 
     STDMETHODIMP_(PCMI8738Info) getCMI8738Info(void)
     {
@@ -121,9 +103,6 @@ public:
     };
 
     friend NTSTATUS NewCCMIAdapter(PCMIADAPTER* OutCMIAdapter, PRESOURCELIST ResourceList);
-
-    LONG m_Ref;
-
 };
 
 NTSTATUS NewCMIAdapter(PUNKNOWN* Unknown, REFCLSID, PUNKNOWN UnknownOuter, POOL_TYPE PoolType);

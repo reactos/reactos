@@ -1,4 +1,5 @@
-#include <windows.h>
+#include <windef.h>
+
 #include "resource.h"
 
 extern HINSTANCE hDllInstance;

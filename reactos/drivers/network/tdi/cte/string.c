@@ -1,6 +1,4 @@
-/* $Id$
- *
- */
+
 #include "precomp.h"
 
 /*

@@ -1,10 +1,6 @@
 
-set_rc_compiler()
-
 spec2def(devcpux.dll devcpux.spec)
-
 add_library(devcpux SHARED processor.c processor.rc ${CMAKE_CURRENT_BINARY_DIR}/devcpux.def)
-
 set_module_type(devcpux win32dll UNICODE)
 
 add_importlibs(devcpux

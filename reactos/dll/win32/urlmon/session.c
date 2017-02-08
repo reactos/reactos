@@ -17,31 +17,31 @@
  */
 
 #include "urlmon_main.h"
-#include "winreg.h"
+//#include "winreg.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
-typedef struct name_space {
+typedef struct {
     LPWSTR protocol;
     IClassFactory *cf;
     CLSID clsid;
     BOOL urlmon;
 
-    struct name_space *next;
+    struct list entry;
 } name_space;
 
-typedef struct mime_filter {
+typedef struct {
     IClassFactory *cf;
     CLSID clsid;
     LPWSTR mime;
 
-    struct mime_filter *next;
+    struct list entry;
 } mime_filter;
 
-static name_space *name_space_list = NULL;
-static mime_filter *mime_filter_list = NULL;
+static struct list name_space_list = LIST_INIT(name_space_list);
+static struct list mime_filter_list = LIST_INIT(mime_filter_list);
 
 static CRITICAL_SECTION session_cs;
 static CRITICAL_SECTION_DEBUG session_cs_dbg =
@@ -63,8 +63,8 @@ static name_space *find_name_space(LPCWSTR protocol)
 {
     name_space *iter;
 
-    for(iter = name_space_list; iter; iter = iter->next) {
-        if(!strcmpW(iter->protocol, protocol))
+    LIST_FOR_EACH_ENTRY(iter, &name_space_list, name_space, entry) {
+        if(!strcmpiW(iter->protocol, protocol))
             return iter;
     }
 
@@ -119,7 +119,7 @@ static HRESULT get_protocol_cf(LPCWSTR schema, DWORD schema_len, CLSID *pclsid, 
     return SUCCEEDED(hres) ? S_OK : MK_E_SYNTAX;
 }
 
-static HRESULT register_namespace(IClassFactory *cf, REFIID clsid, LPCWSTR protocol, BOOL urlmon_protocol)
+HRESULT register_namespace(IClassFactory *cf, REFIID clsid, LPCWSTR protocol, BOOL urlmon_protocol)
 {
     name_space *new_name_space;
 
@@ -134,8 +134,7 @@ static HRESULT register_namespace(IClassFactory *cf, REFIID clsid, LPCWSTR proto
 
     EnterCriticalSection(&session_cs);
 
-    new_name_space->next = name_space_list;
-    name_space_list = new_name_space;
+    list_add_head(&name_space_list, &new_name_space->entry);
 
     LeaveCriticalSection(&session_cs);
 
@@ -144,42 +143,26 @@ static HRESULT register_namespace(IClassFactory *cf, REFIID clsid, LPCWSTR proto
 
 static HRESULT unregister_namespace(IClassFactory *cf, LPCWSTR protocol)
 {
-    name_space *iter, *last = NULL;
+    name_space *iter;
 
     EnterCriticalSection(&session_cs);
 
-    for(iter = name_space_list; iter; iter = iter->next) {
-        if(iter->cf == cf && !strcmpW(iter->protocol, protocol))
-            break;
-        last = iter;
-    }
+    LIST_FOR_EACH_ENTRY(iter, &name_space_list, name_space, entry) {
+        if(iter->cf == cf && !strcmpiW(iter->protocol, protocol)) {
+            list_remove(&iter->entry);
 
-    if(iter) {
-        if(last)
-            last->next = iter->next;
-        else
-            name_space_list = iter->next;
+            LeaveCriticalSection(&session_cs);
+
+            if(!iter->urlmon)
+                IClassFactory_Release(iter->cf);
+            heap_free(iter->protocol);
+            heap_free(iter);
+            return S_OK;
+        }
     }
 
     LeaveCriticalSection(&session_cs);
-
-    if(iter) {
-        if(!iter->urlmon)
-            IClassFactory_Release(iter->cf);
-        heap_free(iter->protocol);
-        heap_free(iter);
-    }
-
     return S_OK;
-}
-
-
-void register_urlmon_namespace(IClassFactory *cf, REFIID clsid, LPCWSTR protocol, BOOL do_register)
-{
-    if(do_register)
-        register_namespace(cf, clsid, protocol, TRUE);
-    else
-        unregister_namespace(cf, protocol);
 }
 
 BOOL is_registered_protocol(LPCWSTR url)
@@ -277,14 +260,22 @@ HRESULT get_protocol_handler(IUri *uri, CLSID *clsid, BOOL *urlmon_protocol, ICl
 
 IInternetProtocol *get_mime_filter(LPCWSTR mime)
 {
+    static const WCHAR filtersW[] = {'P','r','o','t','o','c','o','l','s',
+        '\\','F','i','l','t','e','r',0 };
+    static const WCHAR CLSIDW[] = {'C','L','S','I','D',0};
+
     IClassFactory *cf = NULL;
     IInternetProtocol *ret;
     mime_filter *iter;
+    HKEY hlist, hfilter;
+    WCHAR clsidw[64];
+    CLSID clsid;
+    DWORD res, type, size;
     HRESULT hres;
 
     EnterCriticalSection(&session_cs);
 
-    for(iter = mime_filter_list; iter; iter = iter->next) {
+    LIST_FOR_EACH_ENTRY(iter, &mime_filter_list, mime_filter, entry) {
         if(!strcmpW(iter->mime, mime)) {
             cf = iter->cf;
             break;
@@ -293,12 +284,44 @@ IInternetProtocol *get_mime_filter(LPCWSTR mime)
 
     LeaveCriticalSection(&session_cs);
 
-    if(!cf)
+    if(cf) {
+        hres = IClassFactory_CreateInstance(cf, NULL, &IID_IInternetProtocol, (void**)&ret);
+        if(FAILED(hres)) {
+            WARN("CreateInstance failed: %08x\n", hres);
+            return NULL;
+        }
+
+        return ret;
+    }
+
+    res = RegOpenKeyW(HKEY_CLASSES_ROOT, filtersW, &hlist);
+    if(res != ERROR_SUCCESS) {
+        TRACE("Could not open MIME filters key\n");
+        return NULL;
+    }
+
+    res = RegOpenKeyW(hlist, mime, &hfilter);
+    CloseHandle(hlist);
+    if(res != ERROR_SUCCESS)
         return NULL;
 
-    hres = IClassFactory_CreateInstance(cf, NULL, &IID_IInternetProtocol, (void**)&ret);
+    size = sizeof(clsidw);
+    res = RegQueryValueExW(hfilter, CLSIDW, NULL, &type, (LPBYTE)clsidw, &size);
+    CloseHandle(hfilter);
+    if(res!=ERROR_SUCCESS || type!=REG_SZ) {
+        WARN("Could not get filter CLSID for %s\n", debugstr_w(mime));
+        return NULL;
+    }
+
+    hres = CLSIDFromString(clsidw, &clsid);
     if(FAILED(hres)) {
-        WARN("CreateInstance failed: %08x\n", hres);
+        WARN("CLSIDFromString failed for %s (%x)\n", debugstr_w(mime), hres);
+        return NULL;
+    }
+
+    hres = CoCreateInstance(&clsid, NULL, CLSCTX_INPROC_SERVER, &IID_IInternetProtocol, (void**)&ret);
+    if(FAILED(hres)) {
+        WARN("CoCreateInstance failed: %08x\n", hres);
         return NULL;
     }
 
@@ -379,8 +402,7 @@ static HRESULT WINAPI InternetSession_RegisterMimeFilter(IInternetSession *iface
 
     EnterCriticalSection(&session_cs);
 
-    filter->next = mime_filter_list;
-    mime_filter_list = filter;
+    list_add_head(&mime_filter_list, &filter->entry);
 
     LeaveCriticalSection(&session_cs);
 
@@ -390,33 +412,26 @@ static HRESULT WINAPI InternetSession_RegisterMimeFilter(IInternetSession *iface
 static HRESULT WINAPI InternetSession_UnregisterMimeFilter(IInternetSession *iface,
         IClassFactory *pCF, LPCWSTR pwzType)
 {
-    mime_filter *iter, *prev = NULL;
+    mime_filter *iter;
 
     TRACE("(%p %s)\n", pCF, debugstr_w(pwzType));
 
     EnterCriticalSection(&session_cs);
 
-    for(iter = mime_filter_list; iter; iter = iter->next) {
-        if(iter->cf == pCF && !strcmpW(iter->mime, pwzType))
-            break;
-        prev = iter;
-    }
+    LIST_FOR_EACH_ENTRY(iter, &mime_filter_list, mime_filter, entry) {
+        if(iter->cf == pCF && !strcmpW(iter->mime, pwzType)) {
+            list_remove(&iter->entry);
 
-    if(iter) {
-        if(prev)
-            prev->next = iter->next;
-        else
-            mime_filter_list = iter->next;
+            LeaveCriticalSection(&session_cs);
+
+            IClassFactory_Release(iter->cf);
+            heap_free(iter->mime);
+            heap_free(iter);
+            return S_OK;
+        }
     }
 
     LeaveCriticalSection(&session_cs);
-
-    if(iter) {
-        IClassFactory_Release(iter->cf);
-        heap_free(iter->mime);
-        heap_free(iter);
-    }
-
     return S_OK;
 }
 
@@ -517,31 +532,38 @@ static LPWSTR user_agent;
 
 static void ensure_useragent(void)
 {
-    DWORD size = sizeof(DWORD), res, type;
-    HKEY hkey;
+    OSVERSIONINFOW info = {sizeof(info)};
+    const WCHAR *os_type, *is_nt;
+    WCHAR buf[512];
+    BOOL is_wow;
 
-    static const WCHAR user_agentW[] = {'U','s','e','r',' ','A','g','e','n','t',0};
+    static const WCHAR formatW[] =
+        {'M','o','z','i','l','l','a','/','4','.','0',
+         ' ','(','c','o','m','p','a','t','i','b','l','e',';',
+         ' ','M','S','I','E',' ','8','.','0',';',
+         ' ','W','i','n','d','o','w','s',' ','%','s','%','d','.','%','d',';',
+         ' ','%','s',';',' ','T','r','i','d','e','n','t','/','5','.','0',')',0};
+    static const WCHAR ntW[] = {'N','T',' ',0};
+    static const WCHAR win32W[] = {'W','i','n','3','2',0};
+    static const WCHAR win64W[] = {'W','i','n','6','4',0};
+    static const WCHAR wow64W[] = {'W','O','W','6','4',0};
+    static const WCHAR emptyW[] = {0};
 
     if(user_agent)
         return;
 
-    res = RegOpenKeyW(HKEY_CURRENT_USER, internet_settings_keyW, &hkey);
-    if(res != ERROR_SUCCESS)
-        return;
+    GetVersionExW(&info);
+    is_nt = info.dwPlatformId == VER_PLATFORM_WIN32_NT ? ntW : emptyW;
 
-    res = RegQueryValueExW(hkey, user_agentW, NULL, &type, NULL, &size);
-    if(res == ERROR_SUCCESS && type == REG_SZ) {
-        user_agent = heap_alloc(size);
-        res = RegQueryValueExW(hkey, user_agentW, NULL, &type, (LPBYTE)user_agent, &size);
-        if(res != ERROR_SUCCESS) {
-            heap_free(user_agent);
-            user_agent = NULL;
-        }
-    }else {
-        WARN("Could not find User Agent value: %u\n", res);
-    }
+    if(sizeof(void*) == 8)
+        os_type = win64W;
+    else if(IsWow64Process(GetCurrentProcess(), &is_wow) && is_wow)
+        os_type = wow64W;
+    else
+        os_type = win32W;
 
-    RegCloseKey(hkey);
+    sprintfW(buf, formatW, is_nt, info.dwMajorVersion, info.dwMinorVersion, os_type);
+    user_agent = heap_strdupW(buf);
 }
 
 LPWSTR get_useragent(void)
@@ -691,5 +713,21 @@ HRESULT WINAPI ObtainUserAgentString(DWORD dwOption, LPSTR pcszUAOut, DWORD *cbS
 
 void free_session(void)
 {
+    name_space *ns_iter, *ns_last;
+    mime_filter *mf_iter, *mf_last;
+
+    LIST_FOR_EACH_ENTRY_SAFE(ns_iter, ns_last, &name_space_list, name_space, entry) {
+            if(!ns_iter->urlmon)
+                IClassFactory_Release(ns_iter->cf);
+            heap_free(ns_iter->protocol);
+            heap_free(ns_iter);
+    }
+
+    LIST_FOR_EACH_ENTRY_SAFE(mf_iter, mf_last, &mime_filter_list, mime_filter, entry) {
+            IClassFactory_Release(mf_iter->cf);
+            heap_free(mf_iter->mime);
+            heap_free(mf_iter);
+    }
+
     heap_free(user_agent);
 }

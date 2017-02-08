@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!DOCTYPE OpenGLAPI SYSTEM "gl_API.dtd">
+
+<!-- Note: no GLX protocol info yet. -->
+
+
+<OpenGLAPI>
+
+<category name="GL_ARB_draw_buffers_blend" number="69">
+
+    <function name="BlendEquationiARB" offset="assign">
+        <param name="buf" type="GLuint"/>
+        <param name="mode" type="GLenum"/>
+    </function>
+
+    <function name="BlendEquationSeparateiARB" offset="assign">
+        <param name="buf" type="GLuint"/>
+        <param name="modeRGB" type="GLenum"/>
+        <param name="modeA" type="GLenum"/>
+    </function>
+
+    <function name="BlendFunciARB" offset="assign">
+        <param name="buf" type="GLuint"/>
+        <param name="src" type="GLenum"/>
+        <param name="dst" type="GLenum"/>
+    </function>
+
+    <function name="BlendFuncSeparateiARB" offset="assign">
+        <param name="buf" type="GLuint"/>
+        <param name="srcRGB" type="GLenum"/>
+        <param name="dstRGB" type="GLenum"/>
+        <param name="srcA" type="GLenum"/>
+        <param name="dstA" type="GLenum"/>
+    </function>
+
+</category>
+
+</OpenGLAPI>

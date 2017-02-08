@@ -630,6 +630,9 @@ PPBridge_GetAdditionalResourceDescriptors(IN PPCI_CONFIGURATOR_CONTEXT Context,
                                           IN PPCI_COMMON_HEADER PciData,
                                           IN PIO_RESOURCE_DESCRIPTOR IoDescriptor)
 {
+
+    UNREFERENCED_PARAMETER(Context);
+
     /* Does this bridge have VGA decodes on it? */
     if (PciData->u.type1.BridgeControl & PCI_ENABLE_BRIDGE_VGA)
     {
@@ -671,8 +674,9 @@ NTAPI
 PPBridge_ResetDevice(IN PPCI_PDO_EXTENSION PdoExtension,
                      IN PPCI_COMMON_HEADER PciData)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNREFERENCED_PARAMETER(PdoExtension);
+    UNREFERENCED_PARAMETER(PciData);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 VOID

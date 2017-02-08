@@ -18,21 +18,22 @@ VOID
 WINAPI
 NotifySoundSentry(VOID)
 {
-    CSR_API_MESSAGE ApiMessage;
+    BASE_API_MESSAGE ApiMessage;
+    PBASE_SOUND_SENTRY SoundSentryRequest = &ApiMessage.Data.SoundSentryRequest;
 
     /* Get the video mode */
-    if (!GetConsoleDisplayMode(&ApiMessage.Data.SoundSentryRequest.VideoMode))
+    if (!GetConsoleDisplayMode(&SoundSentryRequest->VideoMode))
     {
-        ApiMessage.Data.SoundSentryRequest.VideoMode = 0;
+        SoundSentryRequest->VideoMode = 0;
     }
 
     /* Make sure it's not fullscreen, and send the message if not */
-    if (ApiMessage.Data.SoundSentryRequest.VideoMode == 0)
+    if (SoundSentryRequest->VideoMode == 0)
     {
-        CsrClientCallServer(&ApiMessage,
+        CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                             NULL,
-                            MAKE_CSR_API(SOUND_SENTRY, CSR_NATIVE),
-                            sizeof(CSR_API_MESSAGE));
+                            CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepSoundSentryNotification),
+                            sizeof(BASE_SOUND_SENTRY));
     }
 }
 

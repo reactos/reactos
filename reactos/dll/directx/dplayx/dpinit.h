@@ -13,25 +13,25 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_DPINIT_H
 #define __WINE_DPINIT_H
 
-#include <stdarg.h>
+//#include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wtypes.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "wtypes.h"
 #include "dplay_global.h"
 
-extern HRESULT DP_CreateInterface( REFIID riid, LPVOID* ppvObj );
-extern HRESULT DPL_CreateInterface( REFIID riid, LPVOID* ppvObj );
+extern HRESULT DP_CreateInterface( REFIID riid, LPVOID* ppvObj ) DECLSPEC_HIDDEN;
+extern HRESULT DPL_CreateInterface( REFIID riid, LPVOID* ppvObj ) DECLSPEC_HIDDEN;
 extern HRESULT DPSP_CreateInterface( REFIID riid, LPVOID* ppvObj,
-                                     IDirectPlay2Impl* dp );
+                                     IDirectPlay2Impl* dp ) DECLSPEC_HIDDEN;
 extern HRESULT DPLSP_CreateInterface( REFIID riid, LPVOID* ppvObj,
-                                      IDirectPlay2Impl* dp );
+                                      IDirectPlay2Impl* dp ) DECLSPEC_HIDDEN;
 
 
 #endif

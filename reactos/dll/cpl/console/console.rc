@@ -6,8 +6,9 @@
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@student.tugraz.at)
  */
 
+#include <windef.h>
+#include <winuser.h>
 
-#include <windows.h>
 #include "resource.h"
 
 #define REACTOS_VERSION_DLL
@@ -15,5 +16,7 @@
 #define REACTOS_STR_INTERNAL_NAME		"console\0"
 #define REACTOS_STR_ORIGINAL_FILENAME	"console.dll\0"
 #include <reactos/version.rc>
+
+IDC_CPLICON ICON    DISCARDABLE "res/terminal.ico"
 
 #include "rsrc.rc"

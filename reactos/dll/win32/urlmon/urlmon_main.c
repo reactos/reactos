@@ -18,28 +18,32 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+//#include <stdarg.h>
 
 #include "urlmon_main.h"
 
-#include "winreg.h"
+//#include "winreg.h"
 
 #define NO_SHLWAPI_REG
-#include "shlwapi.h"
-#include "advpub.h"
+//#include "shlwapi.h"
+#include <advpub.h>
+#include <initguid.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 #include "urlmon.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
+DEFINE_GUID(CLSID_CUri, 0xDF2FCE13, 0x25EC, 0x45BB, 0x9D,0x4C, 0xCE,0xCD,0x47,0xC2,0x43,0x0C);
+
 LONG URLMON_refCount = 0;
+HINSTANCE urlmon_instance;
 
 static HMODULE hCabinet = NULL;
 static DWORD urlmon_tls = TLS_OUT_OF_INDEXES;
 
-static void init_session(BOOL);
+static void init_session(void);
 
 static struct list tls_list = LIST_INIT(tls_list);
 
@@ -133,7 +137,6 @@ static void process_detach(void)
     if (hCabinet)
         FreeLibrary(hCabinet);
 
-    init_session(FALSE);
     free_session();
     free_tls_list();
 }
@@ -149,11 +152,13 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 
     switch(fdwReason) {
     case DLL_PROCESS_ATTACH:
-        init_session(TRUE);
+        urlmon_instance = hinstDLL;
+        init_session();
         break;
 
     case DLL_PROCESS_DETACH:
         process_detach();
+        DeleteCriticalSection(&tls_cs);
         break;
 
     case DLL_THREAD_DETACH:
@@ -163,6 +168,67 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
     return TRUE;
 }
 
+const char *debugstr_bindstatus(ULONG status)
+{
+    switch(status) {
+#define X(x) case x: return #x
+    X(BINDSTATUS_FINDINGRESOURCE);
+    X(BINDSTATUS_CONNECTING);
+    X(BINDSTATUS_REDIRECTING);
+    X(BINDSTATUS_BEGINDOWNLOADDATA);
+    X(BINDSTATUS_DOWNLOADINGDATA);
+    X(BINDSTATUS_ENDDOWNLOADDATA);
+    X(BINDSTATUS_BEGINDOWNLOADCOMPONENTS);
+    X(BINDSTATUS_INSTALLINGCOMPONENTS);
+    X(BINDSTATUS_ENDDOWNLOADCOMPONENTS);
+    X(BINDSTATUS_USINGCACHEDCOPY);
+    X(BINDSTATUS_SENDINGREQUEST);
+    X(BINDSTATUS_CLASSIDAVAILABLE);
+    X(BINDSTATUS_MIMETYPEAVAILABLE);
+    X(BINDSTATUS_CACHEFILENAMEAVAILABLE);
+    X(BINDSTATUS_BEGINSYNCOPERATION);
+    X(BINDSTATUS_ENDSYNCOPERATION);
+    X(BINDSTATUS_BEGINUPLOADDATA);
+    X(BINDSTATUS_UPLOADINGDATA);
+    X(BINDSTATUS_ENDUPLOADINGDATA);
+    X(BINDSTATUS_PROTOCOLCLASSID);
+    X(BINDSTATUS_ENCODING);
+    X(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE);
+    X(BINDSTATUS_CLASSINSTALLLOCATION);
+    X(BINDSTATUS_DECODING);
+    X(BINDSTATUS_LOADINGMIMEHANDLER);
+    X(BINDSTATUS_CONTENTDISPOSITIONATTACH);
+    X(BINDSTATUS_FILTERREPORTMIMETYPE);
+    X(BINDSTATUS_CLSIDCANINSTANTIATE);
+    X(BINDSTATUS_IUNKNOWNAVAILABLE);
+    X(BINDSTATUS_DIRECTBIND);
+    X(BINDSTATUS_RAWMIMETYPE);
+    X(BINDSTATUS_PROXYDETECTING);
+    X(BINDSTATUS_ACCEPTRANGES);
+    X(BINDSTATUS_COOKIE_SENT);
+    X(BINDSTATUS_COMPACT_POLICY_RECEIVED);
+    X(BINDSTATUS_COOKIE_SUPPRESSED);
+    X(BINDSTATUS_COOKIE_STATE_UNKNOWN);
+    X(BINDSTATUS_COOKIE_STATE_ACCEPT);
+    X(BINDSTATUS_COOKIE_STATE_REJECT);
+    X(BINDSTATUS_COOKIE_STATE_PROMPT);
+    X(BINDSTATUS_COOKIE_STATE_LEASH);
+    X(BINDSTATUS_COOKIE_STATE_DOWNGRADE);
+    X(BINDSTATUS_POLICY_HREF);
+    X(BINDSTATUS_P3P_HEADER);
+    X(BINDSTATUS_SESSION_COOKIE_RECEIVED);
+    X(BINDSTATUS_PERSISTENT_COOKIE_RECEIVED);
+    X(BINDSTATUS_SESSION_COOKIES_ALLOWED);
+    X(BINDSTATUS_CACHECONTROL);
+    X(BINDSTATUS_CONTENTDISPOSITIONFILENAME);
+    X(BINDSTATUS_MIMETEXTPLAINMISMATCH);
+    X(BINDSTATUS_PUBLISHERAVAILABLE);
+    X(BINDSTATUS_DISPLAYNAMEAVAILABLE);
+#undef X
+    default:
+        return wine_dbg_sprintf("(invalid status %u)", status);
+    }
+}
 
 /***********************************************************************
  *		DllInstall (URLMON.@)
@@ -291,6 +357,8 @@ static ClassFactory StdURLMonikerCF =
     { { &ClassFactoryVtbl }, StdURLMoniker_Construct};
 static ClassFactory MimeFilterCF =
     { { &ClassFactoryVtbl }, MimeFilter_Construct};
+static ClassFactory CUriCF =
+    { { &ClassFactoryVtbl }, Uri_Construct};
 
 struct object_creation_info
 {
@@ -317,18 +385,18 @@ static const struct object_creation_info object_creation[] =
     { &CLSID_InternetSecurityManager, &SecurityManagerCF.IClassFactory_iface, NULL    },
     { &CLSID_InternetZoneManager,     &ZoneManagerCF.IClassFactory_iface,     NULL    },
     { &CLSID_StdURLMoniker,           &StdURLMonikerCF.IClassFactory_iface,   NULL    },
-    { &CLSID_DeCompMimeFilter,        &MimeFilterCF.IClassFactory_iface,      NULL    }
+    { &CLSID_DeCompMimeFilter,        &MimeFilterCF.IClassFactory_iface,      NULL    },
+    { &CLSID_CUri,                    &CUriCF.IClassFactory_iface,            NULL    }
 };
 
-static void init_session(BOOL init)
+static void init_session(void)
 {
     unsigned int i;
 
     for(i=0; i < sizeof(object_creation)/sizeof(object_creation[0]); i++) {
-
         if(object_creation[i].protocol)
-            register_urlmon_namespace(object_creation[i].cf, object_creation[i].clsid,
-                                      object_creation[i].protocol, init);
+            register_namespace(object_creation[i].cf, object_creation[i].clsid,
+                                      object_creation[i].protocol, TRUE);
     }
 }
 
@@ -526,6 +594,8 @@ HRESULT WINAPI CopyStgMedium(const STGMEDIUM *src, STGMEDIUM *dst)
         if(src->u.lpszFileName && !src->pUnkForRelease) {
             DWORD size = (strlenW(src->u.lpszFileName)+1)*sizeof(WCHAR);
             dst->u.lpszFileName = CoTaskMemAlloc(size);
+            if(!dst->u.lpszFileName)
+                return E_OUTOFMEMORY;
             memcpy(dst->u.lpszFileName, src->u.lpszFileName, size);
         }
         break;
@@ -537,12 +607,91 @@ HRESULT WINAPI CopyStgMedium(const STGMEDIUM *src, STGMEDIUM *dst)
         if(dst->u.pstg)
             IStorage_AddRef(dst->u.pstg);
         break;
+    case TYMED_HGLOBAL:
+        if(dst->u.hGlobal) {
+            SIZE_T size = GlobalSize(src->u.hGlobal);
+            char *src_ptr, *dst_ptr;
+
+            dst->u.hGlobal = GlobalAlloc(GMEM_FIXED, size);
+            if(!dst->u.hGlobal)
+                return E_OUTOFMEMORY;
+            dst_ptr = GlobalLock(dst->u.hGlobal);
+            src_ptr = GlobalLock(src->u.hGlobal);
+            memcpy(dst_ptr, src_ptr, size);
+            GlobalUnlock(src_ptr);
+            GlobalUnlock(dst_ptr);
+        }
+        break;
     default:
         FIXME("Unimplemented tymed %d\n", src->tymed);
     }
 
     if(dst->pUnkForRelease)
         IUnknown_AddRef(dst->pUnkForRelease);
+
+    return S_OK;
+}
+
+/***********************************************************************
+ *           CopyBindInfo (URLMON.@)
+ */
+HRESULT WINAPI CopyBindInfo(const BINDINFO *pcbiSrc, BINDINFO *pcbiDest)
+{
+    DWORD size;
+    HRESULT hres;
+
+    TRACE("(%p %p)\n", pcbiSrc, pcbiDest);
+
+    if(!pcbiSrc || !pcbiDest)
+        return E_POINTER;
+    if(!pcbiSrc->cbSize || !pcbiDest->cbSize)
+        return E_INVALIDARG;
+
+    size = pcbiDest->cbSize;
+    if(size > pcbiSrc->cbSize) {
+        memcpy(pcbiDest, pcbiSrc, pcbiSrc->cbSize);
+        memset((char*)pcbiDest+pcbiSrc->cbSize, 0, size-pcbiSrc->cbSize);
+    } else {
+        memcpy(pcbiDest, pcbiSrc, size);
+    }
+    pcbiDest->cbSize = size;
+
+    size = FIELD_OFFSET(BINDINFO, szExtraInfo)+sizeof(void*);
+    if(pcbiSrc->cbSize>=size && pcbiDest->cbSize>=size && pcbiSrc->szExtraInfo) {
+        size = (strlenW(pcbiSrc->szExtraInfo)+1)*sizeof(WCHAR);
+        pcbiDest->szExtraInfo = CoTaskMemAlloc(size);
+        if(!pcbiDest->szExtraInfo)
+            return E_OUTOFMEMORY;
+        memcpy(pcbiDest->szExtraInfo, pcbiSrc->szExtraInfo, size);
+    }
+
+    size = FIELD_OFFSET(BINDINFO, stgmedData)+sizeof(STGMEDIUM);
+    if(pcbiSrc->cbSize>=size && pcbiDest->cbSize>=size) {
+        hres = CopyStgMedium(&pcbiSrc->stgmedData, &pcbiDest->stgmedData);
+        if(FAILED(hres)) {
+            CoTaskMemFree(pcbiDest->szExtraInfo);
+            return hres;
+        }
+    }
+
+    size = FIELD_OFFSET(BINDINFO, szCustomVerb)+sizeof(void*);
+    if(pcbiSrc->cbSize>=size && pcbiDest->cbSize>=size && pcbiSrc->szCustomVerb) {
+        size = (strlenW(pcbiSrc->szCustomVerb)+1)*sizeof(WCHAR);
+        pcbiDest->szCustomVerb = CoTaskMemAlloc(size);
+        if(!pcbiDest->szCustomVerb) {
+            CoTaskMemFree(pcbiDest->szExtraInfo);
+            ReleaseStgMedium(&pcbiDest->stgmedData);
+            return E_OUTOFMEMORY;
+        }
+        memcpy(pcbiDest->szCustomVerb, pcbiSrc->szCustomVerb, size);
+    }
+
+    size = FIELD_OFFSET(BINDINFO, securityAttributes)+sizeof(SECURITY_ATTRIBUTES);
+    if(pcbiDest->cbSize >= size)
+        memset(&pcbiDest->securityAttributes, 0, sizeof(SECURITY_ATTRIBUTES));
+
+    if(pcbiSrc->pUnk)
+        IUnknown_AddRef(pcbiDest->pUnk);
 
     return S_OK;
 }
@@ -554,19 +703,33 @@ static BOOL text_richtext_filter(const BYTE *b, DWORD size)
 
 static BOOL text_html_filter(const BYTE *b, DWORD size)
 {
-    DWORD i;
-
-    if(size < 5)
+    if(size < 6)
         return FALSE;
 
-    for(i=0; i < size-5; i++) {
-        if(b[i] == '<'
-           && (b[i+1] == 'h' || b[i+1] == 'H')
-           && (b[i+2] == 't' || b[i+2] == 'T')
-           && (b[i+3] == 'm' || b[i+3] == 'M')
-           && (b[i+4] == 'l' || b[i+4] == 'L'))
-            return TRUE;
-    }
+    if((b[0] == '<'
+                && (b[1] == 'h' || b[1] == 'H')
+                && (b[2] == 't' || b[2] == 'T')
+                && (b[3] == 'm' || b[3] == 'M')
+                && (b[4] == 'l' || b[4] == 'L'))
+            || (b[0] == '<'
+                && (b[1] == 'h' || b[1] == 'H')
+                && (b[2] == 'e' || b[2] == 'E')
+                && (b[3] == 'a' || b[3] == 'A')
+                && (b[4] == 'd' || b[4] == 'D'))) return TRUE;
+
+    return FALSE;
+}
+
+static BOOL text_xml_filter(const BYTE *b, DWORD size)
+{
+    if(size < 7)
+        return FALSE;
+
+    if(b[0] == '<' && b[1] == '?'
+            && (b[2] == 'x' || b[2] == 'X')
+            && (b[3] == 'm' || b[3] == 'M')
+            && (b[4] == 'l' || b[4] == 'L')
+            && b[5] == ' ') return TRUE;
 
     return FALSE;
 }
@@ -602,7 +765,10 @@ static BOOL image_pjpeg_filter(const BYTE *b, DWORD size)
 
 static BOOL image_tiff_filter(const BYTE *b, DWORD size)
 {
-    return size > 2 && b[0] == 0x4d && b[1] == 0x4d;
+    static const BYTE magic1[] = {0x4d,0x4d,0x00,0x2a};
+    static const BYTE magic2[] = {0x49,0x49,0x2a,0xff};
+
+    return size >= 4 && (!memcmp(b, magic1, 4) || !memcmp(b, magic2, 4));
 }
 
 static BOOL image_xpng_filter(const BYTE *b, DWORD size)
@@ -662,12 +828,19 @@ static BOOL application_xmsdownload(const BYTE *b, DWORD size)
     return size > 2 && b[0] == 'M' && b[1] == 'Z';
 }
 
+static inline BOOL is_text_plain_char(BYTE b)
+{
+    if(b < 0x20 && b != '\n' && b != '\r' && b != '\t')
+        return FALSE;
+    return TRUE;
+}
+
 static BOOL text_plain_filter(const BYTE *b, DWORD size)
 {
     const BYTE *ptr;
 
     for(ptr = b; ptr < b+size-1; ptr++) {
-        if(*ptr < 0x20 && *ptr != '\n' && *ptr != '\r' && *ptr != '\t')
+        if(!is_text_plain_char(*ptr))
             return FALSE;
     }
 
@@ -682,10 +855,11 @@ static BOOL application_octet_stream_filter(const BYTE *b, DWORD size)
 static HRESULT find_mime_from_buffer(const BYTE *buf, DWORD size, const WCHAR *proposed_mime, WCHAR **ret_mime)
 {
     LPCWSTR ret = NULL;
-    DWORD len, i;
+    int len, i, any_pos_mime = -1;
 
     static const WCHAR text_htmlW[] = {'t','e','x','t','/','h','t','m','l',0};
     static const WCHAR text_richtextW[] = {'t','e','x','t','/','r','i','c','h','t','e','x','t',0};
+    static const WCHAR text_xmlW[] = {'t','e','x','t','/','x','m','l',0};
     static const WCHAR audio_basicW[] = {'a','u','d','i','o','/','b','a','s','i','c',0};
     static const WCHAR audio_wavW[] = {'a','u','d','i','o','/','w','a','v',0};
     static const WCHAR image_gifW[] = {'i','m','a','g','e','/','g','i','f',0};
@@ -713,8 +887,10 @@ static HRESULT find_mime_from_buffer(const BYTE *buf, DWORD size, const WCHAR *p
     static const struct {
         LPCWSTR mime;
         BOOL (*filter)(const BYTE *,DWORD);
-    } mime_filters[] = {
+    } mime_filters_any_pos[] = {
         {text_htmlW,       text_html_filter},
+        {text_xmlW,        text_xml_filter}
+    }, mime_filters[] = {
         {text_richtextW,   text_richtext_filter},
      /* {audio_xaiffW,     audio_xaiff_filter}, */
         {audio_basicW,     audio_basic_filter},
@@ -756,20 +932,47 @@ static HRESULT find_mime_from_buffer(const BYTE *buf, DWORD size, const WCHAR *p
         return S_OK;
     }
 
-    if(proposed_mime && strcmpW(proposed_mime, app_octetstreamW)) {
-        for(i=0; i < sizeof(mime_filters)/sizeof(*mime_filters); i++) {
-            if(!strcmpW(proposed_mime, mime_filters[i].mime))
+    if(proposed_mime && (!strcmpW(proposed_mime, app_octetstreamW)
+                || !strcmpW(proposed_mime, text_plainW)))
+        proposed_mime = NULL;
+
+    if(proposed_mime) {
+        ret = proposed_mime;
+
+        for(i=0; i < sizeof(mime_filters_any_pos)/sizeof(*mime_filters_any_pos); i++) {
+            if(!strcmpW(proposed_mime, mime_filters_any_pos[i].mime)) {
+                any_pos_mime = i;
+                for(len=size; len>0; len--) {
+                    if(mime_filters_any_pos[i].filter(buf+size-len, len))
+                        break;
+                }
+                if(!len)
+                    ret = NULL;
                 break;
+            }
         }
 
-        if(i == sizeof(mime_filters)/sizeof(*mime_filters) || mime_filters[i].filter(buf, size)) {
-            len = strlenW(proposed_mime)+1;
-            *ret_mime = CoTaskMemAlloc(len*sizeof(WCHAR));
-            if(!*ret_mime)
-                return E_OUTOFMEMORY;
+        if(i == sizeof(mime_filters_any_pos)/sizeof(*mime_filters_any_pos)) {
+            for(i=0; i < sizeof(mime_filters)/sizeof(*mime_filters); i++) {
+                if(!strcmpW(proposed_mime, mime_filters[i].mime)) {
+                    if(!mime_filters[i].filter(buf, size))
+                        ret = NULL;
+                    break;
+                }
+            }
+        }
+    }
 
-            memcpy(*ret_mime, proposed_mime, len*sizeof(WCHAR));
-            return S_OK;
+    /* Looks like a bug in native implementation, html and xml mimes
+     * are not looked for if none of them was proposed */
+    if(!proposed_mime || any_pos_mime!=-1) {
+        for(len=size; !ret && len>0; len--) {
+            for(i=0; i<sizeof(mime_filters_any_pos)/sizeof(*mime_filters_any_pos); i++) {
+                if(mime_filters_any_pos[i].filter(buf+size-len, len)) {
+                    ret = mime_filters_any_pos[i].mime;
+                    break;
+                }
+            }
         }
     }
 
@@ -780,16 +983,24 @@ static HRESULT find_mime_from_buffer(const BYTE *buf, DWORD size, const WCHAR *p
         i++;
     }
 
-    TRACE("found %s for %s\n", debugstr_w(ret), debugstr_an((const char*)buf, min(32, size)));
+    if(any_pos_mime!=-1 && ret==text_plainW)
+        ret = mime_filters_any_pos[any_pos_mime].mime;
+    else if(proposed_mime && ret==app_octetstreamW) {
+        for(len=size; ret==app_octetstreamW && len>0; len--) {
+            if(!is_text_plain_char(buf[size-len]))
+                break;
+            for(i=0; i<sizeof(mime_filters_any_pos)/sizeof(*mime_filters_any_pos); i++) {
+                if(mime_filters_any_pos[i].filter(buf+size-len, len)) {
+                    ret = text_plainW;
+                    break;
+                }
+            }
+        }
 
-    if(proposed_mime) {
-        if(i == sizeof(mime_filters)/sizeof(*mime_filters))
+        if(ret == app_octetstreamW)
             ret = proposed_mime;
-
-        /* text/html is a special case */
-        if(!strcmpW(proposed_mime, text_htmlW) && !strcmpW(ret, text_plainW))
-            ret = text_htmlW;
     }
+    TRACE("found %s for %s\n", debugstr_w(ret), debugstr_an((const char*)buf, min(32, size)));
 
     len = strlenW(ret)+1;
     *ret_mime = CoTaskMemAlloc(len*sizeof(WCHAR));
@@ -865,9 +1076,8 @@ HRESULT WINAPI GetClassFileOrMime(LPBC pBC, LPCWSTR pszFilename,
         LPVOID pBuffer, DWORD cbBuffer, LPCWSTR pszMimeType, DWORD dwReserved,
         CLSID *pclsid)
 {
-    FIXME("(%p, %s, %p, %d, %p, 0x%08x, %p): stub\n", pBC,
-        debugstr_w(pszFilename), pBuffer, cbBuffer, debugstr_w(pszMimeType),
-        dwReserved, pclsid);
+    FIXME("(%p, %s, %p, %d, %s, 0x%08x, %p): stub\n", pBC, debugstr_w(pszFilename), pBuffer,
+            cbBuffer, debugstr_w(pszMimeType), dwReserved, pclsid);
     return E_NOTIMPL;
 }
 
@@ -907,21 +1117,69 @@ BOOL WINAPI IsLoggingEnabledW(LPCWSTR url)
 }
 
 /***********************************************************************
- *           URLMON_410 (URLMON.410)
- *    Undocumented, added in IE8
+ *           IsProtectedModeURL (URLMON.111)
+ *    Undocumented, added in IE7
  */
-BOOL WINAPI URLMON_410(DWORD unknown1, DWORD unknown2)
+BOOL WINAPI IsProtectedModeURL(const WCHAR *url)
 {
-    FIXME("stub: %d %d\n", unknown1, unknown2);
-    return FALSE;
+    FIXME("stub: %s\n", debugstr_w(url));
+    return TRUE;
 }
 
 /***********************************************************************
- *           URLMON_423 (URLMON.423)
+ *           LogSqmBits (URLMON.410)
  *    Undocumented, added in IE8
  */
-BOOL WINAPI URLMON_423(DWORD unknown1, DWORD unknown2, DWORD unknown3, DWORD unknown4)
+int WINAPI LogSqmBits(DWORD unk1, DWORD unk2)
 {
-    FIXME("stub: %d %d %d %d\n", unknown1, unknown2, unknown3, unknown4);
-    return FALSE;
+    FIXME("stub: %d %d\n", unk1, unk2);
+    return 0;
+}
+
+/***********************************************************************
+ *           LogSqmUXCommandOffsetInternal (URLMON.423)
+ *    Undocumented, added in IE8
+ */
+void WINAPI LogSqmUXCommandOffsetInternal(DWORD unk1, DWORD unk2, DWORD unk3, DWORD unk4)
+{
+    FIXME("stub: %d %d %d %d\n", unk1, unk2, unk3, unk4);
+}
+
+/***********************************************************************
+ *           MapUriToBrowserEmulationState (URLMON.444)
+ *    Undocumented, added in IE8
+ */
+int WINAPI MapUriToBrowserEmulationState(DWORD unk1, DWORD unk2, DWORD unk3)
+{
+    FIXME("stub: %d %d %d\n", unk1, unk2, unk3);
+    return 0;
+}
+
+/***********************************************************************
+ *           MapBrowserEmulationModeToUserAgent (URLMON.445)
+ *    Undocumented, added in IE8
+ */
+int WINAPI MapBrowserEmulationModeToUserAgent(DWORD unk1, DWORD unk2)
+{
+    FIXME("stub: %d %d\n", unk1, unk2);
+    return 0;
+}
+
+/***********************************************************************
+ *           FlushUrlmonZonesCache (URLMON.455)
+ *    Undocumented, added in IE8
+ */
+void WINAPI FlushUrlmonZonesCache(void)
+{
+    FIXME("stub\n");
+}
+
+/***********************************************************************
+ *            RegisterMediaTypes
+ *    Added in IE3, registers known MIME-type strings.
+ */
+HRESULT WINAPI RegisterMediaTypes(UINT types, LPCSTR *szTypes, CLIPFORMAT *cfTypes)
+{
+   FIXME("stub: %u %p %p\n", types, szTypes, cfTypes);
+   return E_INVALIDARG;
 }

@@ -1,4 +1,3 @@
-/* $Id$ */
 /* A Linked-List Memory Sort
    by Philip J. Erdelsky
    pje@acm.org

@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<!DOCTYPE OpenGLAPI SYSTEM "gl_API.dtd">
+
+<!-- Note: no GLX protocol info yet. -->
+
+<OpenGLAPI>
+
+<category name="GL_ARB_sampler_objects" number="81">
+
+    <function name="GenSamplers" offset="assign">
+      <param name="count" type="GLsizei"/>
+      <param name="samplers" type="GLuint *"/>
+    </function>
+
+    <function name="DeleteSamplers" offset="assign">
+      <param name="count" type="GLsizei"/>
+      <param name="samplers" type="const GLuint *"/>
+    </function>
+
+    <function name="IsSampler" offset="assign">
+      <param name="sampler" type="GLuint"/>
+      <return type="GLboolean"/>
+    </function>
+
+    <function name="BindSampler" offset="assign">
+      <param name="unit" type="GLuint"/>
+      <param name="sampler" type="GLuint"/>
+    </function>
+
+    <function name="SamplerParameteri" offset="assign">
+      <param name="sampler" type="GLuint"/>
+      <param name="pname" type="GLenum"/>
+      <param name="param" type="GLint"/>
+    </function>
+
+    <function name="SamplerParameterf" offset="assign">
+      <param name="sampler" type="GLuint"/>
+      <param name="pname" type="GLenum"/>
+      <param name="param" type="GLfloat"/>
+    </function>
+
+    <function name="SamplerParameteriv" offset="assign">
+      <param name="sampler" type="GLuint"/>
+      <param name="pname" type="GLenum"/>
+      <param name="params" type="const GLint *"/>
+    </function>
+
+    <function name="SamplerParameterfv" offset="assign">
+      <param name="sampler" type="GLuint"/>
+      <param name="pname" type="GLenum"/>
+      <param name="params" type="const GLfloat *"/>
+    </function>
+
+    <function name="SamplerParameterIiv" offset="assign">
+      <param name="sampler" type="GLuint"/>
+      <param name="pname" type="GLenum"/>
+      <param name="params" type="const GLint *"/>
+    </function>
+
+    <function name="SamplerParameterIuiv" offset="assign">
+      <param name="sampler" type="GLuint"/>
+      <param name="pname" type="GLenum"/>
+      <param name="params" type="const GLuint *"/>
+    </function>
+
+    <function name="GetSamplerParameteriv" offset="assign">
+      <param name="sampler" type="GLuint"/>
+      <param name="pname" type="GLenum"/>
+      <param name="params" type="GLint *"/>
+    </function>
+
+    <function name="GetSamplerParameterfv" offset="assign">
+      <param name="sampler" type="GLuint"/>
+      <param name="pname" type="GLenum"/>
+      <param name="params" type="GLfloat *"/>
+    </function>
+
+    <function name="GetSamplerParameterIiv" offset="assign">
+      <param name="sampler" type="GLuint"/>
+      <param name="pname" type="GLenum"/>
+      <param name="params" type="GLint *"/>
+    </function>
+
+    <function name="GetSamplerParameterIuiv" offset="assign">
+      <param name="sampler" type="GLuint"/>
+      <param name="pname" type="GLenum"/>
+      <param name="params" type="GLuint *"/>
+    </function>
+
+    <enum name="SAMPLER_BINDING" count="1"  value="0x8919">
+        <size name="Get" mode="get"/>
+    </enum>
+
+</category>
+
+</OpenGLAPI>

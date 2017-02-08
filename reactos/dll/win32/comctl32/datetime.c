@@ -4,6 +4,7 @@
  * Copyright 1998, 1999 Eric Kohl
  * Copyright 1999, 2000 Alex Priem <alexp@sci.kun.nl>
  * Copyright 2000 Chris Morgan <cmorgan@wpi.edu>
+ * Copyright 2012 Owen Rudge for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -39,20 +40,20 @@
  */
 
 #include <math.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <limits.h>
+//#include <string.h>
+//#include <stdarg.h>
+//#include <stdio.h>
+//#include <limits.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "commctrl.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "wingdi.h"
+//#include "winuser.h"
+//#include "winnls.h"
+//#include "commctrl.h"
 #include "comctl32.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(datetime);
 
@@ -138,6 +139,9 @@ static BOOL DATETIME_SendDateTimeChangeNotify (const DATETIME_INFO *infoPtr);
 static const WCHAR allowedformatchars[] = {'d', 'h', 'H', 'm', 'M', 's', 't', 'y', 'X', 0};
 static const int maxrepetition [] = {4,2,2,2,4,2,2,4,-1};
 
+/* valid date limits */
+static const SYSTEMTIME max_allowed_date = { /* wYear */ 9999, /* wMonth */ 12, /* wDayOfWeek */ 0, /* wDay */ 31 };
+static const SYSTEMTIME min_allowed_date = { /* wYear */ 1752, /* wMonth */ 9,  /* wDayOfWeek */ 0, /* wDay */ 14 };
 
 static DWORD
 DATETIME_GetSystemTime (const DATETIME_INFO *infoPtr, SYSTEMTIME *systime)
@@ -153,6 +157,43 @@ DATETIME_GetSystemTime (const DATETIME_INFO *infoPtr, SYSTEMTIME *systime)
     return GDT_VALID;
 }
 
+/* Checks value is within configured date range
+ *
+ * PARAMETERS
+ *
+ *  [I] infoPtr : valid pointer to control data
+ *  [I] date    : pointer to valid date data to check
+ *
+ * RETURN VALUE
+ *
+ *  TRUE  - date within configured range
+ *  FALSE - date is outside configured range
+ */
+static BOOL DATETIME_IsDateInValidRange(const DATETIME_INFO *infoPtr, const SYSTEMTIME *date)
+{
+    SYSTEMTIME range[2];
+    DWORD limits;
+
+    if ((MONTHCAL_CompareSystemTime(date, &max_allowed_date) == 1) ||
+        (MONTHCAL_CompareSystemTime(date, &min_allowed_date) == -1))
+        return FALSE;
+
+    limits = SendMessageW (infoPtr->hMonthCal, MCM_GETRANGE, 0, (LPARAM)range);
+
+    if (limits & GDTR_MAX)
+    {
+        if (MONTHCAL_CompareSystemTime(date, &range[1]) == 1)
+           return FALSE;
+    }
+
+    if (limits & GDTR_MIN)
+    {
+        if (MONTHCAL_CompareSystemTime(date, &range[0]) == -1)
+           return FALSE;
+    }
+
+    return TRUE;
+}
 
 static BOOL
 DATETIME_SetSystemTime (DATETIME_INFO *infoPtr, DWORD flag, const SYSTEMTIME *systime)
@@ -164,16 +205,20 @@ DATETIME_SetSystemTime (DATETIME_INFO *infoPtr, DWORD flag, const SYSTEMTIME *sy
           systime->wHour, systime->wMinute, systime->wSecond);
 
     if (flag == GDT_VALID) {
-      if (systime->wYear < 1601 || systime->wYear > 30827 ||
-          systime->wMonth < 1 || systime->wMonth > 12 ||
-          systime->wDay < 1 ||
-          systime->wDay > MONTHCAL_MonthLength(systime->wMonth, systime->wYear) ||
-          systime->wHour > 23 ||
-          systime->wMinute > 59 ||
-          systime->wSecond > 59 ||
-          systime->wMilliseconds > 999
-          )
-        return FALSE;
+        if (systime->wYear == 0 ||
+            systime->wMonth < 1 || systime->wMonth > 12 ||
+            systime->wDay < 1 ||
+            systime->wDay > MONTHCAL_MonthLength(systime->wMonth, systime->wYear) ||
+            systime->wHour > 23 ||
+            systime->wMinute > 59 ||
+            systime->wSecond > 59 ||
+            systime->wMilliseconds > 999
+           )
+            return FALSE;
+
+        /* Windows returns true if the date is valid but outside the limits set */
+        if (DATETIME_IsDateInValidRange(infoPtr, systime) == FALSE)
+            return TRUE;
 
         infoPtr->dateValid = TRUE;
         infoPtr->date = *systime;
@@ -462,6 +507,9 @@ static void
 DATETIME_IncreaseField (DATETIME_INFO *infoPtr, int number, int delta)
 {
     SYSTEMTIME *date = &infoPtr->date;
+    SYSTEMTIME range[2];
+    DWORD limits;
+    BOOL min;
 
     TRACE ("%d\n", number);
     if ((number > infoPtr->nrFields) || (number < 0)) return;
@@ -472,7 +520,13 @@ DATETIME_IncreaseField (DATETIME_INFO *infoPtr, int number, int delta)
 	case ONEDIGITYEAR:
 	case TWODIGITYEAR:
 	case FULLYEAR:
-	    date->wYear = wrap(date->wYear, delta, 1752, 9999);
+            if (delta == INT_MIN)
+                date->wYear = 1752;
+            else if (delta == INT_MAX)
+                date->wYear = 9999;
+            else
+                date->wYear = max(min(date->wYear + delta, 9999), 1752);
+
 	    if (date->wDay > MONTHCAL_MonthLength(date->wMonth, date->wYear))
 	        /* This can happen when moving away from a leap year. */
 	        date->wDay = MONTHCAL_MonthLength(date->wMonth, date->wYear);
@@ -529,8 +583,28 @@ DATETIME_IncreaseField (DATETIME_INFO *infoPtr, int number, int delta)
 	date->wMinute = 0;
 	date->wHour = 0;
     }
-}
 
+    /* Ensure time is within bounds */
+    limits = SendMessageW (infoPtr->hMonthCal, MCM_GETRANGE, 0, (LPARAM)range);
+    min = delta < 0;
+
+    if (limits & (min ? GDTR_MIN : GDTR_MAX))
+    {
+        int i = (min ? 0 : 1);
+
+        if (MONTHCAL_CompareSystemTime(date, &range[i]) == (min ? -1 : 1))
+        {
+            date->wYear = range[i].wYear;
+            date->wMonth = range[i].wMonth;
+            date->wDayOfWeek = range[i].wDayOfWeek;
+            date->wDay = range[i].wDay;
+            date->wHour = range[i].wHour;
+            date->wMinute = range[i].wMinute;
+            date->wSecond = range[i].wSecond;
+            date->wMilliseconds = range[i].wMilliseconds;
+        }
+    }
+}
 
 static void
 DATETIME_ReturnFieldWidth (const DATETIME_INFO *infoPtr, HDC hdc, int count, SHORT *width)
@@ -774,25 +848,43 @@ DATETIME_ApplySelectedField (DATETIME_INFO *infoPtr)
     int fieldNum = infoPtr->select & DTHT_DATEFIELD;
     int i, val=0, clamp_day=0;
     SYSTEMTIME date = infoPtr->date;
+    int oldyear;
 
     if (infoPtr->select == -1 || infoPtr->nCharsEntered == 0)
         return;
 
-    for (i=0; i<infoPtr->nCharsEntered; i++)
-        val = val * 10 + infoPtr->charsEntered[i] - '0';
+    if ((infoPtr->fieldspec[fieldNum] == ONELETTERAMPM) ||
+        (infoPtr->fieldspec[fieldNum] == TWOLETTERAMPM))
+        val = infoPtr->charsEntered[0];
+    else {
+        for (i=0; i<infoPtr->nCharsEntered; i++)
+            val = val * 10 + infoPtr->charsEntered[i] - '0';
+    }
 
     infoPtr->nCharsEntered = 0;
 
     switch (infoPtr->fieldspec[fieldNum]) {
         case ONEDIGITYEAR:
         case TWODIGITYEAR:
+            oldyear = date.wYear;
             date.wYear = date.wYear - (date.wYear%100) + val;
-            clamp_day = 1;
+
+            if (DATETIME_IsDateInValidRange(infoPtr, &date))
+                clamp_day = 1;
+            else
+                date.wYear = oldyear;
+
             break;
         case INVALIDFULLYEAR:
         case FULLYEAR:
+            oldyear = date.wYear;
             date.wYear = val;
-            clamp_day = 1;
+
+            if (DATETIME_IsDateInValidRange(infoPtr, &date))
+                clamp_day = 1;
+            else
+                date.wYear = oldyear;
+
             break;
         case ONEDIGITMONTH:
         case TWODIGITMONTH:
@@ -805,9 +897,20 @@ DATETIME_ApplySelectedField (DATETIME_INFO *infoPtr)
             break;
         case ONEDIGIT12HOUR:
         case TWODIGIT12HOUR:
+            if (val >= 24)
+                val -= 20;
+
+            if (val >= 13)
+                date.wHour = val;
+            else if (val != 0) {
+                if (date.wHour >= 12) /* preserve current AM/PM state */
+                    date.wHour = (val == 12 ? 12 : val + 12);
+                else
+                    date.wHour = (val == 12 ? 0 : val);
+            }
+            break;
         case ONEDIGIT24HOUR:
         case TWODIGIT24HOUR:
-            /* FIXME: Preserve AM/PM for 12HOUR? */
             date.wHour = val;
             break;
         case ONEDIGITMINUTE:
@@ -817,6 +920,16 @@ DATETIME_ApplySelectedField (DATETIME_INFO *infoPtr)
         case ONEDIGITSECOND:
         case TWODIGITSECOND:
             date.wSecond = val;
+            break;
+        case ONELETTERAMPM:
+        case TWOLETTERAMPM:
+            if (val == 'a' || val == 'A') {
+                if (date.wHour >= 12)
+                    date.wHour -= 12;
+            } else if (val == 'p' || val == 'P') {
+                if (date.wHour < 12)
+                    date.wHour += 12;
+            }
             break;
     }
 
@@ -1111,24 +1224,40 @@ DATETIME_KeyDown (DATETIME_INFO *infoPtr, DWORD vkCode)
 static LRESULT
 DATETIME_Char (DATETIME_INFO *infoPtr, WPARAM vkCode)
 {
-    int fieldNum = infoPtr->select & DTHT_DATEFIELD;
+    int fieldNum, fieldSpec;
 
-    if (vkCode >= '0' && vkCode <= '9') {
+    fieldNum = infoPtr->select & DTHT_DATEFIELD;
+    fieldSpec = infoPtr->fieldspec[fieldNum];
+
+    if (fieldSpec == ONELETTERAMPM || fieldSpec == TWOLETTERAMPM) {
+        infoPtr->charsEntered[0] = vkCode;
+        infoPtr->nCharsEntered = 1;
+
+        DATETIME_ApplySelectedField(infoPtr);
+    } else if (vkCode >= '0' && vkCode <= '9') {
         int maxChars;
-        int fieldSpec;
 
         infoPtr->charsEntered[infoPtr->nCharsEntered++] = vkCode;
-
-        fieldSpec = infoPtr->fieldspec[fieldNum];
 
         if (fieldSpec == INVALIDFULLYEAR || fieldSpec == FULLYEAR)
             maxChars = 4;
         else
             maxChars = 2;
 
+        if ((fieldSpec == ONEDIGIT12HOUR ||
+             fieldSpec == TWODIGIT12HOUR ||
+             fieldSpec == ONEDIGIT24HOUR ||
+             fieldSpec == TWODIGIT24HOUR) &&
+            (infoPtr->nCharsEntered == 1))
+        {
+            if (vkCode >= '3')
+                 maxChars = 1;
+        }
+
         if (maxChars == infoPtr->nCharsEntered)
             DATETIME_ApplySelectedField(infoPtr);
     }
+
     return 0;
 }
 
@@ -1316,7 +1445,7 @@ DATETIME_StyleChanged(DATETIME_INFO *infoPtr, WPARAM wStyleType, const STYLESTRU
         infoPtr->hwndCheckbut = CreateWindowExW (0, WC_BUTTONW, 0, WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
          					 2, 2, 13, 13, infoPtr->hwndSelf, 0, 
 						(HINSTANCE)GetWindowLongPtrW (infoPtr->hwndSelf, GWLP_HINSTANCE), 0);
-        SendMessageW (infoPtr->hwndCheckbut, BM_SETCHECK, 1, 0);
+        SendMessageW (infoPtr->hwndCheckbut, BM_SETCHECK, infoPtr->dateValid ? 1 : 0, 0);
     }
     if ( (lpss->styleOld & DTS_SHOWNONE) && !(lpss->styleNew & DTS_SHOWNONE) ) {
         DestroyWindow(infoPtr->hwndCheckbut);

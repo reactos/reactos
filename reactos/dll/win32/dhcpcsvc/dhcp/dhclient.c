@@ -53,7 +53,7 @@
  * purpose.
  */
 
-#include "rosdhcp.h"
+#include <rosdhcp.h>
 
 #define	PERIOD 0x2e
 #define	hyphenchar(c) ((c) == 0x2d)

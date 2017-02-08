@@ -10,9 +10,19 @@ BEGIN
     PUSHBUTTON "&Predefinito", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "&Aggiungi...", IDC_ADD_BUTTON, 27, 142, 70, 14
     PUSHBUTTON "&Rimuovi...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
-    PUSHBUTTON "&Propriet‡...", IDC_PROP_BUTTON, 175, 142, 70, 14
+    PUSHBUTTON "&Propriet√†...", IDC_PROP_BUTTON, 175, 142, 70, 14
     GROUPBOX "Preferenze", -1, 7, 185, 240, 36
     PUSHBUTTON "&Impostazioni tasti...", IDC_KEY_SET_BTN, 14, 198, 110, 14
+END
+
+IDD_PROPPAGEADVANCEDSETTINGS DIALOGEX 0, 0, 254, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Advanced Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "System Configuration", -1, 7, 7, 240, 70
+    AUTOCHECKBOX "&Turn off advanced text services", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 130, 12
+    LTEXT "Select this check box to turn off advanced text services in all programs.\nThis is not recommended for East Asian users because this closes the language bar.", -1, 14, 40, 230, 35
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163
@@ -67,7 +77,7 @@ END
 
 IDD_INPUT_LANG_PROP DIALOGEX 20, 20, 227, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Propriet‡ della lingua"
+CAPTION "Propriet√† della lingua"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Lingua:", -1, 7, 7, 61, 8
@@ -86,13 +96,13 @@ BEGIN
     IDS_NONE                 "(Nessuno)"
     IDS_UNKNOWN              "(Sconosciuto)"
     IDS_RESTART              "Volete riavviare il computer adesso?"
-    IDS_WHATS_THIS           "Cosa Ë questo?"
+    IDS_WHATS_THIS           "Cosa √® questo?"
     IDS_LANGUAGE             "Lingua"
     IDS_LAYOUT               "Layout di tastiera"
     IDS_REM_QUESTION         "Volete rimuovere il Layout di tastiera selezionato?"
     IDS_CONFIRMATION         "Conferma"
-    IDS_LAYOUT_EXISTS        "Questo Layout di tastiera esite gi‡."
-    IDS_LAYOUT_EXISTS2       "Questo Layout di tastiera esite gi‡ e non puÚ essere aggiunto."
+    IDS_LAYOUT_EXISTS        "Questo Layout di tastiera esite gi√†."
+    IDS_LAYOUT_EXISTS2       "Questo Layout di tastiera esite gi√† e non pu√≤ essere aggiunto."
     IDS_CTRL_SHIFT           "Ctrl+Shift"
     IDS_LEFT_ALT_SHIFT       "Alt sinistro+Shift"
     IDS_SWITCH_BET_INLANG    "Cambia lingua di digitazione"

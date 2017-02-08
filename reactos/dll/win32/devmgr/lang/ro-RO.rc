@@ -1,4 +1,4 @@
-// Romanian language resource file (Petru Dimitriu, 2009-07-15)
+﻿// Romanian language resource file (Petru Dimitriu, 2009-07-15)
 //2011.12.04 - Fulea Ștefan: minor changes
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -35,26 +35,26 @@ STRINGTABLE
 BEGIN
     IDS_DEV_NO_PROBLEM                  "Acest dispozitiv funcționează corect."
     IDS_DEV_NOT_CONFIGURED              "Acest dispozitiv nu este configurat corect."
-    IDS_DEV_DEVLOADER_FAILED            "Nu s-a putut încărca modulul pilot deoarece calculatorul indică două tipuri de magistrale $1."
-    IDS_DEV_DEVLOADER_FAILED2           "S-a eșuat la încărcarea modulelor pilot pentru dispozitivul $1."
+    IDS_DEV_DEVLOADER_FAILED            "Nu s-a putut încărca modulul pilot deoarece calculatorul indică două tipuri de magistrale %1."
+    IDS_DEV_DEVLOADER_FAILED2           "S-a eșuat la încărcarea modulelor pilot pentru dispozitivul %1."
     IDS_DEV_OUT_OF_MEMORY               "Fie modulul pilot este defect, fie sistemul are carențe de memorie sau de alte resurse."
     IDS_DEV_ENTRY_IS_WRONG_TYPE         "Acest dispozitiv nu funcționează corect deoarece fie modulul pilot nu este corect, fie registrul de sistem este deteriorat."
     IDS_DEV_LACKED_ARBITRATOR           "Modulul pilot al acestui dispozitiv solicită o resursă necunoscută în actualul sistem de operare."
     IDS_DEV_BOOT_CONFIG_CONFLICT        "Resursele necesare pentru acest dispozitiv sunt ocupate de un alt dispozitiv."
     IDS_DEV_FAILED_FILTER               "Modulele pilot pentru acest dispozitiv necesită reinstalare."
-    IDS_DEV_DEVLOADER_NOT_FOUND         "Acest dispozitiv nu funcționează corect deoarece nu se poate porni mecanismul (ce conține fișierul $1), necesar pentru încărcarea modulelor pilot."
-    IDS_DEV_DEVLOADER_NOT_FOUND2        "Acest dispozitiv nu funcționează corect deoare fișierul $1 care încarcă modulele pilot pentru acest dispozitiv, este deteriorat."
+    IDS_DEV_DEVLOADER_NOT_FOUND         "Acest dispozitiv nu funcționează corect deoarece nu se poate porni mecanismul (ce conține fișierul %1), necesar pentru încărcarea modulelor pilot."
+    IDS_DEV_DEVLOADER_NOT_FOUND2        "Acest dispozitiv nu funcționează corect deoare fișierul %1 care încarcă modulele pilot pentru acest dispozitiv, este deteriorat."
     IDS_DEV_DEVLOADER_NOT_FOUND3        "Defecțiune dispozitiv: Încercați alte module pilot pentru acest dispozitiv. Dacă problema persistă, consultați documentația din dotare."
     IDS_DEV_INVALID_DATA                "Acest dispozitiv nu funcționează corect, deoarece BIOS din calculator nu raportează corect resursele dispozitivului."
     IDS_DEV_INVALID_DATA2               "Acest dispozitiv nu funcționează corect, deoarece BIOS din dispozitiv nu raportează corect resursele dispozitivului. "
     IDS_DEV_FAILED_START                "Acest dispozitiv fie nu este prezent, fie nu funcționează corect, fie nu are instalate toate modulele pilot."
     IDS_DEV_LIAR                        "Încercarea de a activa acest dispozitiv a provocat un blocaj în sistem. Prin urmare, nu mai este recomandată reactivarea acestui dispozitiv."
-    IDS_DEV_NORMAL_CONFLICT             "Acest dispozitiv nu are la dispoziție resursele $1 necesare pentru a funcționa."
+    IDS_DEV_NORMAL_CONFLICT             "Acest dispozitiv nu are la dispoziție resursele %1 necesare pentru a funcționa."
     IDS_DEV_NOT_VERIFIED                "Acest dispozitiv fie nu este prezent, fie nu funcționează corect, fie nu are instalate toate modulele pilot."
     IDS_DEV_NEED_RESTART                "Funcționarea corectă a acestui dispozitiv necesită repornirea sistemului."
     IDS_DEV_REENUMERATION               "Acest dispoztiv provoacă un conflict de resurse."
     IDS_DEV_PARTIAL_LOG_CONF            "Nu au putut fi identificate toate resursele utilizate de către acest dispozitiv."
-    IDS_DEV_UNKNOWN_RESOURCE            "Fișierul de informații $1 cere acestui sub-dispozitiv folosirea unei resurse pe care dispozitivul-parinte nu o are sau nu o recunoaște."
+    IDS_DEV_UNKNOWN_RESOURCE            "Fișierul de informații %1 cere acestui sub-dispozitiv folosirea unei resurse pe care dispozitivul-parinte nu o are sau nu o recunoaște."
     IDS_DEV_REINSTALL                   "Este necesară reinstalarea modulelor pilot ale acestui dispozitiv."
     IDS_DEV_REGISTRY                    "Este posibil ca registrul să fie deteriorat."
     IDS_DEV_WILL_BE_REMOVED             "Acest dispozitiv este pregătit pentru a fi deconectat."
@@ -70,7 +70,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL              "Modulele pilot ale acestui dispozitiv nu sunt instalate."
     IDS_DEV_HARDWARE_DISABLED           "Acest dispozitiv este dezactivat deoarece BIOS nu i-a alocat resursele necesare."
     IDS_DEV_CANT_SHARE_IRQ              "Acest dispozitiv necesită o cerere de întrerupere (IRQ) care este folosită deja de alt dispozitiv și care nu poate fi folosită în comun.\nFie modificați configurația dispozitivelor pentru a rezolva problema gestiunii cererilor de întreruperi, fie eliminați modulul pilot de mod-real care provoacă acest conflict."
-    IDS_DEV_FAILED_ADD                  "Acest dispozitiv nu funcționează corect deoarcere $1 nu funcționează corect."
+    IDS_DEV_FAILED_ADD                  "Acest dispozitiv nu funcționează corect deoarcere %1 nu funcționează corect."
     IDS_DEV_DISABLED_SERVICE            "Nu se pot instala modulele pilot pentru acest dispozitiv deoarece nu se poate accesa locația de stocare a fișierelor necesare pentru instalare."
     IDS_DEV_TRANSLATION_FAILED          "Acest dispozitiv nu răspunde la comenzile modulului pilot."
     IDS_DEV_NO_SOFTCONFIG               "Nu se poate determina configurația acestui dispozitiv. Consultați-i documentația din dotare și utilizați compartimentul „Resurse” pentru a-i stabili configurația corectă."

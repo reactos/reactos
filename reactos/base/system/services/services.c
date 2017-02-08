@@ -8,10 +8,6 @@
  *
  */
 
-/* NOTE:
- * - Services.exe is NOT a native application, it is a GUI app.
- */
-
 /* INCLUDES *****************************************************************/
 
 #include "services.h"
@@ -26,6 +22,12 @@ int WINAPI RegisterServicesProcess(DWORD ServicesProcessId);
 #define PIPE_BUFSIZE 1024
 #define PIPE_TIMEOUT 1000
 
+/* Defined in include/reactos/services/services.h */
+// #define SCM_START_EVENT             L"SvcctrlStartEvent_A3752DX"
+#define SCM_AUTOSTARTCOMPLETE_EVENT L"SC_AutoStartComplete"
+#define LSA_RPC_SERVER_ACTIVE       L"LSA_RPC_SERVER_ACTIVE"
+
+BOOL ScmInitialize = FALSE;
 BOOL ScmShutdown = FALSE;
 static HANDLE hScmShutdownEvent = NULL;
 
@@ -59,7 +61,7 @@ ScmLogError(DWORD dwEventId,
                                 L"Service Control Manager");
     if (hLog == NULL)
     {
-        DPRINT1("ScmLogEvent: RegisterEventSourceW failed %d\n", GetLastError());
+        DPRINT1("ScmLogEvent: RegisterEventSourceW failed %lu\n", GetLastError());
         return;
     }
 
@@ -73,79 +75,28 @@ ScmLogError(DWORD dwEventId,
                       lpStrings,
                       NULL))
     {
-        DPRINT1("ScmLogEvent: ReportEventW failed %d\n", GetLastError());
+        DPRINT1("ScmLogEvent: ReportEventW failed %lu\n", GetLastError());
     }
 
     DeregisterEventSource(hLog);
 }
 
 
-BOOL
-ScmCreateStartEvent(PHANDLE StartEvent)
-{
-    HANDLE hEvent;
-
-    hEvent = CreateEventW(NULL,
-                          TRUE,
-                          FALSE,
-                          L"SvcctrlStartEvent_A3752DX");
-    if (hEvent == NULL)
-    {
-        if (GetLastError() == ERROR_ALREADY_EXISTS)
-        {
-            hEvent = OpenEventW(EVENT_ALL_ACCESS,
-                                FALSE,
-                                L"SvcctrlStartEvent_A3752DX");
-            if (hEvent == NULL)
-            {
-                return FALSE;
-            }
-        }
-        else
-        {
-            return FALSE;
-        }
-    }
-
-    *StartEvent = hEvent;
-
-    return TRUE;
-}
-
-
 VOID
 ScmWaitForLsa(VOID)
 {
-    HANDLE hEvent;
-    DWORD dwError;
-
-    hEvent = CreateEventW(NULL,
-                          TRUE,
-                          FALSE,
-                          L"LSA_RPC_SERVER_ACTIVE");
+    HANDLE hEvent = CreateEventW(NULL, TRUE, FALSE, LSA_RPC_SERVER_ACTIVE);
     if (hEvent == NULL)
     {
-        dwError = GetLastError();
-        DPRINT1("Failed to create the notication event (Error %lu)\n", dwError);
-
-        if (dwError == ERROR_ALREADY_EXISTS)
-        {
-            hEvent = OpenEventW(SYNCHRONIZE,
-                                FALSE,
-                                L"LSA_RPC_SERVER_ACTIVE");
-            if (hEvent == NULL)
-            {
-               DPRINT1("Could not open the notification event (Error %lu)\n", GetLastError());
-               return;
-            }
-        }
+        DPRINT1("Failed to create the notification event (Error %lu)\n", GetLastError());
     }
-
-    DPRINT("Wait for the LSA server!\n");
-    WaitForSingleObject(hEvent, INFINITE);
-    DPRINT("LSA server running!\n");
-
-    CloseHandle(hEvent);
+    else
+    {
+        DPRINT("Wait for the LSA server!\n");
+        WaitForSingleObject(hEvent, INFINITE);
+        DPRINT("LSA server running!\n");
+        CloseHandle(hEvent);
+    }
 
     DPRINT("ScmWaitForLsa() done\n");
 }
@@ -157,7 +108,7 @@ ScmNamedPipeHandleRequest(PVOID Request,
                           PVOID Reply,
                           LPDWORD ReplySize)
 {
-    DbgPrint("SCM READ: %s\n", Request);
+    DbgPrint("SCM READ: %p\n", Request);
 
     *ReplySize = 0;
     return FALSE;
@@ -177,7 +128,7 @@ ScmNamedPipeThread(LPVOID Context)
 
     hPipe = (HANDLE)Context;
 
-    DPRINT("ScmNamedPipeThread(%x) - Accepting SCM commands through named pipe\n", hPipe);
+    DPRINT("ScmNamedPipeThread(%p) - Accepting SCM commands through named pipe\n", hPipe);
 
     for (;;)
     {
@@ -205,13 +156,13 @@ ScmNamedPipeThread(LPVOID Context)
         }
     }
 
-    DPRINT("ScmNamedPipeThread(%x) - Disconnecting named pipe connection\n", hPipe);
+    DPRINT("ScmNamedPipeThread(%p) - Disconnecting named pipe connection\n", hPipe);
 
     FlushFileBuffers(hPipe);
     DisconnectNamedPipe(hPipe);
     CloseHandle(hPipe);
 
-    DPRINT("ScmNamedPipeThread(%x) - Done.\n", hPipe);
+    DPRINT("ScmNamedPipeThread(%p) - Done.\n", hPipe);
 
     return ERROR_SUCCESS;
 }
@@ -237,11 +188,11 @@ ScmCreateNamedPipe(VOID)
               NULL);
     if (hPipe == INVALID_HANDLE_VALUE)
     {
-        DPRINT("CreateNamedPipe() failed (%d)\n", GetLastError());
+        DPRINT("CreateNamedPipe() failed (%lu)\n", GetLastError());
         return FALSE;
     }
 
-    DPRINT("CreateNamedPipe() - calling ConnectNamedPipe(%x)\n", hPipe);
+    DPRINT("CreateNamedPipe() - calling ConnectNamedPipe(%p)\n", hPipe);
     bConnected = ConnectNamedPipe(hPipe,
                                   NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);
     DPRINT("CreateNamedPipe() - ConnectNamedPipe() returned %d\n", bConnected);
@@ -257,7 +208,7 @@ ScmCreateNamedPipe(VOID)
                                &dwThreadId);
         if (!hThread)
         {
-            DPRINT("Could not create thread (%d)\n", GetLastError());
+            DPRINT("Could not create thread (%lu)\n", GetLastError());
             DisconnectNamedPipe(hPipe);
             CloseHandle(hPipe);
             DPRINT("CreateNamedPipe() - returning FALSE\n");
@@ -282,7 +233,7 @@ DWORD WINAPI
 ScmNamedPipeListenerThread(LPVOID Context)
 {
 //    HANDLE hPipe;
-    DPRINT("ScmNamedPipeListenerThread(%x) - aka SCM.\n", Context);
+    DPRINT("ScmNamedPipeListenerThread(%p) - aka SCM.\n", Context);
 
 //    hPipe = (HANDLE)Context;
     for (;;)
@@ -298,7 +249,7 @@ ScmNamedPipeListenerThread(LPVOID Context)
         DPRINT("\nSCM: named pipe session created.\n");
         Sleep(10);
     }
-    DPRINT("\n\nWARNING: ScmNamedPipeListenerThread(%x) - Aborted.\n\n", Context);
+    DPRINT("\n\nWARNING: ScmNamedPipeListenerThread(%p) - Aborted.\n\n", Context);
     return ERROR_SUCCESS;
 }
 
@@ -324,28 +275,6 @@ StartScmNamedPipeThreadListener(VOID)
     CloseHandle(hThread);
 
     return TRUE;
-}
-
-
-VOID FASTCALL
-AcquireLoadDriverPrivilege(VOID)
-{
-    HANDLE hToken;
-    TOKEN_PRIVILEGES tkp;
-
-    /* Get a token for this process */
-    if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
-    {
-        /* Get the LUID for the debug privilege */
-        LookupPrivilegeValue(NULL, SE_LOAD_DRIVER_NAME, &tkp.Privileges[0].Luid);
-
-        /* One privilege to set */
-        tkp.PrivilegeCount = 1;
-        tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-
-        /* Get the debug privilege for this process */
-        AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES)NULL, 0);
-    }
 }
 
 
@@ -377,28 +306,45 @@ wWinMain(HINSTANCE hInstance,
          int nShowCmd)
 {
     HANDLE hScmStartEvent = NULL;
+    HANDLE hScmAutoStartCompleteEvent = NULL;
     SC_RPC_LOCK Lock = NULL;
-    BOOL bDeleteCriticalSection = FALSE;
+    BOOL bCanDeleteNamedPipeCriticalSection = FALSE;
     DWORD dwError;
 
     DPRINT("SERVICES: Service Control Manager\n");
 
-    /* Create start event */
-    if (!ScmCreateStartEvent(&hScmStartEvent))
+    /* We are initializing ourselves */
+    ScmInitialize = TRUE;
+
+    /* Create the start event */
+    hScmStartEvent = CreateEventW(NULL, TRUE, FALSE, SCM_START_EVENT);
+    if (hScmStartEvent == NULL)
     {
-        DPRINT1("SERVICES: Failed to create start event\n");
+        DPRINT1("SERVICES: Failed to create the start event\n");
         goto done;
     }
+    DPRINT("SERVICES: Created start event with handle %p.\n", hScmStartEvent);
 
-    DPRINT("SERVICES: created start event with handle %p.\n", hScmStartEvent);
+    /* Create the auto-start complete event */
+    hScmAutoStartCompleteEvent = CreateEventW(NULL, TRUE, FALSE, SCM_AUTOSTARTCOMPLETE_EVENT);
+    if (hScmAutoStartCompleteEvent == NULL)
+    {
+        DPRINT1("SERVICES: Failed to create the auto-start complete event\n");
+        goto done;
+    }
+    DPRINT("SERVICES: created auto-start complete event with handle %p.\n", hScmAutoStartCompleteEvent);
 
     /* Create the shutdown event */
-    hScmShutdownEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    hScmShutdownEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
     if (hScmShutdownEvent == NULL)
     {
-        DPRINT1("SERVICES: Failed to create shutdown event\n");
+        DPRINT1("SERVICES: Failed to create the shutdown event\n");
         goto done;
     }
+
+    /* Initialize our communication named pipe's critical section */
+    ScmInitNamedPipeCriticalSection();
+    bCanDeleteNamedPipeCriticalSection = TRUE;
 
 //    ScmInitThreadManager();
 
@@ -407,59 +353,66 @@ wWinMain(HINSTANCE hInstance,
     /* Read the control set values */
     if (!ScmGetControlSetValues())
     {
-        DPRINT1("SERVICES: failed to read the control set values\n");
+        DPRINT1("SERVICES: Failed to read the control set values\n");
         goto done;
     }
 
-    /* Create the service database */
+    /* Create the services database */
     dwError = ScmCreateServiceDatabase();
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("SERVICES: failed to create SCM database (Error %lu)\n", dwError);
+        DPRINT1("SERVICES: Failed to create SCM database (Error %lu)\n", dwError);
         goto done;
     }
-
-    /* Update service database */
-    ScmGetBootAndSystemDriverState();
-
-    /* Start the RPC server */
-    ScmStartRpcServer();
-
-    /* Register service process with CSRSS */
-    RegisterServicesProcess(GetCurrentProcessId());
-
-    DPRINT("SERVICES: Initialized.\n");
-
-    /* Signal start event */
-    SetEvent(hScmStartEvent);
-
-    /* Register event handler (used for system shutdown) */
-    SetConsoleCtrlHandler(ShutdownHandlerRoutine, TRUE);
 
     /* Wait for the LSA server */
     ScmWaitForLsa();
 
-    /* Acquire privileges to load drivers */
-    AcquireLoadDriverPrivilege();
+    /* Update the services database */
+    ScmGetBootAndSystemDriverState();
 
-    ScmInitNamedPipeCriticalSection();
-    bDeleteCriticalSection = TRUE;
-
-    /* Acquire the service start lock until autostart services have been started */
-    dwError = ScmAcquireServiceStartLock(TRUE, &Lock);
-    if (dwError != ERROR_SUCCESS)
+    /* Register the Service Control Manager process with the ReactOS Subsystem */
+    if (!RegisterServicesProcess(GetCurrentProcessId()))
     {
-        DPRINT1("SERVICES: failed to acquire the service start lock (Error %lu)\n", dwError);
+        DPRINT1("SERVICES: Could not register SCM process\n");
         goto done;
     }
 
+    /*
+     * Acquire the user service start lock until
+     * auto-start services have been started.
+     */
+    dwError = ScmAcquireServiceStartLock(TRUE, &Lock);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("SERVICES: Failed to acquire the service start lock (Error %lu)\n", dwError);
+        goto done;
+    }
+
+    /* Start the RPC server */
+    ScmStartRpcServer();
+
+    /* Signal start event */
+    SetEvent(hScmStartEvent);
+
+    DPRINT("SERVICES: Initialized.\n");
+
+    /* Register event handler (used for system shutdown) */
+    SetConsoleCtrlHandler(ShutdownHandlerRoutine, TRUE);
+
     /* Start auto-start services */
     ScmAutoStartServices();
+
+    /* Signal auto-start complete event */
+    SetEvent(hScmAutoStartCompleteEvent);
 
     /* FIXME: more to do ? */
 
     /* Release the service start lock */
     ScmReleaseServiceStartLock(&Lock);
+
+    /* Initialization finished */
+    ScmInitialize = FALSE;
 
     DPRINT("SERVICES: Running.\n");
 
@@ -467,12 +420,17 @@ wWinMain(HINSTANCE hInstance,
     WaitForSingleObject(hScmShutdownEvent, INFINITE);
 
 done:
-    if (bDeleteCriticalSection == TRUE)
+    /* Delete our communication named pipe's critical section */
+    if (bCanDeleteNamedPipeCriticalSection == TRUE)
         ScmDeleteNamedPipeCriticalSection();
 
     /* Close the shutdown event */
     if (hScmShutdownEvent != NULL)
         CloseHandle(hScmShutdownEvent);
+
+    /* Close the auto-start complete event */
+    if (hScmAutoStartCompleteEvent != NULL)
+        CloseHandle(hScmAutoStartCompleteEvent);
 
     /* Close the start event */
     if (hScmStartEvent != NULL)
@@ -481,7 +439,6 @@ done:
     DPRINT("SERVICES: Finished.\n");
 
     ExitThread(0);
-
     return 0;
 }
 

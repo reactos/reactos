@@ -66,12 +66,12 @@ Author:
 //
 // Flags for ProcessExecutionOptions
 //
-#define MEM_EXECUTE_OPTION_DISABLE                          0x1 
+#define MEM_EXECUTE_OPTION_DISABLE                          0x1
 #define MEM_EXECUTE_OPTION_ENABLE                           0x2
 #define MEM_EXECUTE_OPTION_DISABLE_THUNK_EMULATION          0x4
 #define MEM_EXECUTE_OPTION_PERMANENT                        0x8
 #define MEM_EXECUTE_OPTION_EXECUTE_DISPATCH_ENABLE          0x10
-#define MEM_EXECUTE_OPTION_IMAGE_DISPATCH_ENABLE            0x20 
+#define MEM_EXECUTE_OPTION_IMAGE_DISPATCH_ENABLE            0x20
 #define MEM_EXECUTE_OPTION_VALID_FLAGS                      0x3F
 
 #ifndef NTOS_MODE_USER
@@ -415,6 +415,21 @@ typedef struct _SEGMENT
     PMMPTE PrototypePte;
     MMPTE ThePtes[1];
 } SEGMENT, *PSEGMENT;
+
+typedef struct _MAPPED_FILE_SEGMENT
+{
+    struct _CONTROL_AREA *ControlArea;
+    ULONG TotalNumberOfPtes;
+    ULONG NonExtendedPtes;
+    ULONG Spare0;
+    UINT64 SizeOfSegment;
+    MMPTE SegmentPteTemplate;
+    SIZE_T NumberOfCommittedPages;
+    PMMEXTEND_INFO ExtendInfo;
+    SEGMENT_FLAGS SegmentFlags;
+    PVOID BasedAddress;
+    struct _MSUBSECTION *LastSubsectionHint;
+} MAPPED_FILE_SEGMENT, *PMAPPED_FILE_SEGMENT;
 
 //
 // Event Counter Structure
@@ -974,6 +989,10 @@ typedef struct _DRIVER_SPECIFIED_VERIFIER_THUNKS
     ULONG NumberOfThunks;
 } DRIVER_SPECIFIED_VERIFIER_THUNKS, *PDRIVER_SPECIFIED_VERIFIER_THUNKS;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //
 // Default heap size values.  For user mode, these values are copied to a new
 // process's PEB by the kernel in MmCreatePeb.  In kernel mode, RtlCreateHeap
@@ -991,6 +1010,10 @@ extern SIZE_T MmHeapDeCommitFreeBlockThreshold;
 // Section Object Type
 //
 extern POBJECT_TYPE NTSYSAPI MmSectionObjectType;
+
+#ifdef __cplusplus
+}; // extern "C"
+#endif
 
 #endif // !NTOS_MODE_USER
 

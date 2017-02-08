@@ -96,6 +96,29 @@ IntGdiSetTextColor(HDC hDC,
     return  crOldColor;
 }
 
+int
+FASTCALL
+GreSetStretchBltMode(HDC hDC, int iStretchMode)
+{
+    PDC pdc;
+    PDC_ATTR pdcattr;
+    INT oSMode = 0;
+
+    pdc = DC_LockDc(hDC);
+    if (pdc)
+    {
+       pdcattr = pdc->pdcattr;
+       oSMode = pdcattr->lStretchBltMode;
+       pdcattr->lStretchBltMode = iStretchMode;
+
+       // Wine returns an error here. We set the default.
+       if ((iStretchMode <= 0) || (iStretchMode > MAXSTRETCHBLTMODE)) iStretchMode = WHITEONBLACK;
+
+       pdcattr->jStretchBltMode = iStretchMode;
+    }
+    return oSMode;
+}
+
 VOID
 FASTCALL
 DCU_SetDcUndeletable(HDC  hDC)
@@ -332,13 +355,14 @@ NtGdiGetDCDword(
     return Ret;
 }
 
+_Success_(return != FALSE)
 BOOL
 APIENTRY
 NtGdiGetAndSetDCDword(
-    HDC hDC,
-    UINT u,
-    DWORD dwIn,
-    DWORD *Result)
+    _In_ HDC hdc,
+    _In_ UINT u,
+    _In_ DWORD dwIn,
+    _Out_ DWORD *pdwResult)
 {
     BOOL Ret = TRUE;
     PDC pdc;
@@ -347,13 +371,13 @@ NtGdiGetAndSetDCDword(
     DWORD SafeResult = 0;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    if (!Result)
+    if (!pdwResult)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
-    pdc = DC_LockDc(hDC);
+    pdc = DC_LockDc(hdc);
     if (!pdc)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
@@ -442,8 +466,8 @@ NtGdiGetAndSetDCDword(
     {
         _SEH2_TRY
         {
-            ProbeForWrite(Result, sizeof(DWORD), 1);
-            *Result = SafeResult;
+            ProbeForWrite(pdwResult, sizeof(DWORD), 1);
+            *pdwResult = SafeResult;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -551,3 +575,81 @@ NtGdiSetBoundsRect(
     DC_UnlockDc(pdc);
     return ret;
 }
+
+/* Translates a COLORREF to the right color in the specified DC color space */
+ULONG
+TranslateCOLORREF(PDC pdc, COLORREF crColor)
+{
+    PSURFACE psurfDC;
+    PPALETTE ppalDC;
+    ULONG index, ulColor, iBitmapFormat;
+    EXLATEOBJ exlo;
+
+    /* Get the DC surface */
+    psurfDC = pdc->dclevel.pSurface;
+
+    /* If no surface is selected, use the default bitmap */
+    if (!psurfDC)
+        psurfDC = psurfDefaultBitmap;
+
+    /* Check what color type this is */
+    switch (crColor >> 24)
+    {
+        case 0x00: /* RGB color */
+            break;
+
+        case 0x01: /* PALETTEINDEX */
+            index = crColor & 0xFFFFFF;
+            ppalDC = pdc->dclevel.ppal;
+            if (index >= ppalDC->NumColors) index = 0;
+
+            /* Get the RGB value */
+            crColor = PALETTE_ulGetRGBColorFromIndex(ppalDC, index);
+            break;
+
+        case 0x02: /* PALETTERGB */
+
+            if (pdc->dclevel.hpal != StockObjects[DEFAULT_PALETTE])
+            {
+                /* First find the nearest index in the dc palette */
+                ppalDC = pdc->dclevel.ppal;
+                index = PALETTE_ulGetNearestIndex(ppalDC, crColor & 0xFFFFFF);
+
+                /* Get the RGB value */
+                crColor = PALETTE_ulGetRGBColorFromIndex(ppalDC, index);
+            }
+            else
+            {
+                /* Use the pure color */
+                crColor = crColor & 0x00FFFFFF;
+            }
+            break;
+
+        case 0x10: /* DIBINDEX */
+            /* Mask the value to match the target bpp */
+            iBitmapFormat = psurfDC->SurfObj.iBitmapFormat;
+            if (iBitmapFormat == BMF_1BPP) index = crColor & 0x1;
+            else if (iBitmapFormat == BMF_4BPP) index = crColor & 0xf;
+            else if (iBitmapFormat == BMF_8BPP) index = crColor & 0xFF;
+            else if (iBitmapFormat == BMF_16BPP) index = crColor & 0xFFFF;
+            else index = crColor & 0xFFFFFF;
+            return index;
+
+        default:
+            DPRINT("Unsupported color type %u passed\n", crColor >> 24);
+            crColor &= 0xFFFFFF;
+    }
+
+    /* Initialize an XLATEOBJ from RGB to the target surface */
+    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, psurfDC->ppal, 0xFFFFFF, 0, 0);
+
+    /* Translate the color to the target format */
+    ulColor = XLATEOBJ_iXlate(&exlo.xlo, crColor);
+
+    /* Cleanup the XLATEOBJ */
+    EXLATEOBJ_vCleanup(&exlo);
+
+    return ulColor;
+}
+
+

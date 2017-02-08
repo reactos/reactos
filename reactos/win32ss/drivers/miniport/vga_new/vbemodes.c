@@ -168,7 +168,7 @@ InitializeModeTable(IN PHW_DEVICE_EXTENSION VgaExtension)
     ULONG Size, ScreenSize;
     PVIDEOMODE VgaMode;
     PVOID BaseAddress;
-    ULONG ScreenStride = 0;
+    ULONG ScreenStride;
     PHYSICAL_ADDRESS PhysicalAddress;
 
     /* Enable only default vga modes if no vesa */
@@ -345,7 +345,8 @@ InitializeModeTable(IN PHW_DEVICE_EXTENSION VgaExtension)
             {
                 /* Read the screen stride (scanline size) */
                 ScreenStride = RaiseToPower2(VbeModeInfo->BytesPerScanLine);
-                VgaMode->wbytes = ScreenStride;
+                //ASSERT(ScreenStride <= MAX_USHORT);
+                VgaMode->wbytes = (USHORT)ScreenStride;
                 //VideoPortDebugPrint(0, "ScanLines: %lx Stride: %lx\n", VbeModeInfo->BytesPerScanLine, VgaMode->Stride);
 
                 /* Size of frame buffer is Height X ScanLine, align to bank/page size */
@@ -372,7 +373,8 @@ InitializeModeTable(IN PHW_DEVICE_EXTENSION VgaExtension)
                 //VideoPortDebugPrint(0, "LINEAR MODE!!!\n");
                 ScreenStride = (VbeVersion >= 0x300) ? VbeModeInfo->LinBytesPerScanLine : 0;
                 if (!ScreenStride) ScreenStride = VbeModeInfo->BytesPerScanLine;
-                VgaMode->wbytes = ScreenStride;
+                //ASSERT(ScreenStride <= MAX_USHORT);
+                VgaMode->wbytes = (USHORT)ScreenStride;
                 //VideoPortDebugPrint(0, "ScanLines: %lx Stride: %lx\n", VbeModeInfo->BytesPerScanLine, VgaMode->Stride);
 
                 /* Size of frame buffer is Height X ScanLine, align to page size */

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <precomp.h>
+#include "precomp.h"
 #include "shell32_version.h"
 #include <reactos/version.h>
 
@@ -38,33 +38,31 @@ const char * const SHELL_Authors[] = { "Copyright 1993-"COPYRIGHT_YEAR" WINE tea
  *   '"a b"'   -> 'a b'
  * - escaped quotes must be converted back to '"'
  *   '\"'      -> '"'
- * - an odd number of '\'s followed by '"' correspond to half that number
- *   of '\' followed by a '"' (extension of the above)
- *   '\\\"'    -> '\"'
- *   '\\\\\"'  -> '\\"'
- * - an even number of '\'s followed by a '"' correspond to half that number
- *   of '\', plus a regular quote serving as an argument delimiter (which
- *   means it does not appear in the result)
- *   'a\\"b c"'   -> 'a\b c'
- *   'a\\\\"b c"' -> 'a\\b c'
- * - '\' that are not followed by a '"' are copied literally
+ * - consecutive backslashes preceding a quote see their number halved with
+ *   the remainder escaping the quote:
+ *   2n   backslashes + quote -> n backslashes + quote as an argument delimiter
+ *   2n+1 backslashes + quote -> n backslashes + literal quote
+ * - backslashes that are not followed by a quote are copied literally:
  *   'a\b'     -> 'a\b'
  *   'a\\b'    -> 'a\\b'
- *
- * Note:
- * '\t' == 0x0009
- * ' '  == 0x0020
- * '"'  == 0x0022
- * '\\' == 0x005c
+ * - in quoted strings, consecutive quotes see their number divided by three
+ *   with the remainder modulo 3 deciding whether to close the string or not.
+ *   Note that the opening quote must be counted in the consecutive quotes,
+ *   that's the (1+) below:
+ *   (1+) 3n   quotes -> n quotes
+ *   (1+) 3n+1 quotes -> n quotes plus closes the quoted string
+ *   (1+) 3n+2 quotes -> n+1 quotes plus closes the quoted string
+ * - in unquoted strings, the first quote opens the quoted string and the
+ *   remaining consecutive quotes follow the above rule.
  */
 LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
 {
     DWORD argc;
     LPWSTR  *argv;
-    LPCWSTR cs;
-    LPWSTR arg,s,d;
+    LPCWSTR s;
+    LPWSTR d;
     LPWSTR cmdline;
-    int in_quotes,bcount;
+    int qcount,bcount;
 
     if(!numargs)
     {
@@ -98,92 +96,155 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
         return argv;
     }
 
-    /* to get a writable copy */
-    argc=0;
-    bcount=0;
-    in_quotes=0;
-    cs=lpCmdline;
-    while (1)
+    /* --- First count the arguments */
+    argc=1;
+    s=lpCmdline;
+    /* The first argument, the executable path, follows special rules */
+    if (*s=='"')
     {
-        if (*cs==0 || ((*cs==0x0009 || *cs==0x0020) && !in_quotes))
-        {
-            /* space */
-            argc++;
-            /* skip the remaining spaces */
-            while (*cs==0x0009 || *cs==0x0020)
-            {
-                cs++;
-            }
-            if (*cs==0)
+        /* The executable path ends at the next quote, no matter what */
+        s++;
+        while (*s)
+            if (*s++=='"')
                 break;
+    }
+    else
+    {
+        /* The executable path ends at the next space, no matter what */
+        while (*s && *s!=' ' && *s!='\t')
+            s++;
+    }
+    /* skip to the first argument, if any */
+    while (*s==' ' || *s=='\t')
+        s++;
+    if (*s)
+        argc++;
+
+    /* Analyze the remaining arguments */
+    qcount=bcount=0;
+    while (*s)
+    {
+        if ((*s==' ' || *s=='\t') && qcount==0)
+        {
+            /* skip to the next argument and count it if any */
+            while (*s==' ' || *s=='\t')
+                s++;
+            if (*s)
+                argc++;
             bcount=0;
-            continue;
         }
-        else if (*cs==0x005c)
+        else if (*s=='\\')
         {
             /* '\', count them */
             bcount++;
+            s++;
         }
-        else if ((*cs==0x0022) && ((bcount & 1)==0))
+        else if (*s=='"')
         {
-            /* unescaped '"' */
-            in_quotes=!in_quotes;
+            /* '"' */
+            if ((bcount & 1)==0)
+                qcount++; /* unescaped '"' */
+            s++;
             bcount=0;
+            /* consecutive quotes, see comment in copying code below */
+            while (*s=='"')
+            {
+                qcount++;
+                s++;
+            }
+            qcount=qcount % 3;
+            if (qcount==2)
+                qcount=0;
         }
         else
         {
             /* a regular character */
             bcount=0;
+            s++;
         }
-        cs++;
     }
-    /* Allocate in a single lump, the string array, and the strings that go with it.
-     * This way the caller can make a single GlobalFree call to free both, as per MSDN.
+
+    /* Allocate in a single lump, the string array, and the strings that go
+     * with it. This way the caller can make a single LocalFree() call to free
+     * both, as per MSDN.
      */
-    argv=(LPWSTR *)LocalAlloc(LMEM_FIXED, argc*sizeof(LPWSTR)+(wcslen(lpCmdline)+1)*sizeof(WCHAR));
+    argv=(LPWSTR *)LocalAlloc(LMEM_FIXED, argc*sizeof(LPWSTR)+(strlenW(lpCmdline)+1)*sizeof(WCHAR));
     if (!argv)
         return NULL;
     cmdline=(LPWSTR)(argv+argc);
-    wcscpy(cmdline, lpCmdline);
+    strcpyW(cmdline, lpCmdline);
 
-    argc=0;
-    bcount=0;
-    in_quotes=0;
-    arg=d=s=cmdline;
+    /* --- Then split and copy the arguments */
+    argv[0]=d=cmdline;
+    argc=1;
+    /* The first argument, the executable path, follows special rules */
+    if (*d=='"')
+    {
+        /* The executable path ends at the next quote, no matter what */
+        s=d+1;
+        while (*s)
+        {
+            if (*s=='"')
+            {
+                s++;
+                break;
+            }
+            *d++=*s++;
+        }
+    }
+    else
+    {
+        /* The executable path ends at the next space, no matter what */
+        while (*d && *d!=' ' && *d!='\t')
+            d++;
+        s=d;
+        if (*s)
+            s++;
+    }
+    /* close the executable path */
+    *d++=0;
+    /* skip to the first argument and initialize it if any */
+    while (*s==' ' || *s=='\t')
+        s++;
+    if (!*s)
+    {
+        /* There are no parameters so we are all done */
+        *numargs=argc;
+        return argv;
+    }
+
+    /* Split and copy the remaining arguments */
+    argv[argc++]=d;
+    qcount=bcount=0;
     while (*s)
     {
-        if ((*s==0x0009 || *s==0x0020) && !in_quotes)
+        if ((*s==' ' || *s=='\t') && qcount==0)
         {
-            /* Close the argument and copy it */
-            *d=0;
-            argv[argc++]=arg;
+            /* close the argument */
+            *d++=0;
+            bcount=0;
 
-            /* skip the remaining spaces */
+            /* skip to the next one and initialize it if any */
             do {
                 s++;
-            } while (*s==0x0009 || *s==0x0020);
-
-            /* Start with a new argument */
-            arg=d=s;
-            bcount=0;
+            } while (*s==' ' || *s=='\t');
+            if (*s)
+                argv[argc++]=d;
         }
-        else if (*s==0x005c)
+        else if (*s=='\\')
         {
-            /* '\\' */
             *d++=*s++;
             bcount++;
         }
-        else if (*s==0x0022)
+        else if (*s=='"')
         {
-            /* '"' */
             if ((bcount & 1)==0)
             {
                 /* Preceded by an even number of '\', this is half that
                  * number of '\', plus a quote which we erase.
                  */
                 d-=bcount/2;
-                in_quotes=!in_quotes;
-                s++;
+                qcount++;
             }
             else
             {
@@ -192,9 +253,24 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
                  */
                 d=d-bcount/2-1;
                 *d++='"';
+            }
+            s++;
+            bcount=0;
+            /* Now count the number of consecutive quotes. Note that qcount
+             * already takes into account the opening quote if any, as well as
+             * the quote that lead us here.
+             */
+            while (*s=='"')
+            {
+                if (++qcount==3)
+                {
+                    *d++='"';
+                    qcount=0;
+                }
                 s++;
             }
-            bcount=0;
+            if (qcount==2)
+                qcount=0;
         }
         else
         {
@@ -203,11 +279,7 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
             bcount=0;
         }
     }
-    if (*arg)
-    {
-        *d='\0';
-        argv[argc++]=arg;
-    }
+    *d='\0';
     *numargs=argc;
 
     return argv;
@@ -1278,24 +1350,24 @@ public:
 
 
 BEGIN_OBJECT_MAP(ObjectMap)
-OBJECT_ENTRY(CLSID_ShellFSFolder, CFSFolder)
-OBJECT_ENTRY(CLSID_MyComputer, CDrivesFolder)
-OBJECT_ENTRY(CLSID_ShellDesktop, CDesktopFolder)
-OBJECT_ENTRY(CLSID_ShellItem, CShellItem)
-OBJECT_ENTRY(CLSID_ShellLink, CShellLink)
-OBJECT_ENTRY(CLSID_DragDropHelper, CDropTargetHelper)
-OBJECT_ENTRY(CLSID_ControlPanel, CControlPanelFolder)
-OBJECT_ENTRY(CLSID_AutoComplete, CAutoComplete)
-OBJECT_ENTRY(CLSID_MyDocuments, CMyDocsFolder)
-OBJECT_ENTRY(CLSID_NetworkPlaces, CNetFolder)
-OBJECT_ENTRY(CLSID_FontsFolderShortcut, CFontsFolder)
-OBJECT_ENTRY(CLSID_Printers, CPrinterFolder)
-OBJECT_ENTRY(CLSID_AdminFolderShortcut, CAdminToolsFolder)
-OBJECT_ENTRY(CLSID_RecycleBin, CRecycleBin)
-OBJECT_ENTRY(CLSID_OpenWithMenu, COpenWithMenu)
-OBJECT_ENTRY(CLSID_NewMenu, CNewMenu)
-OBJECT_ENTRY(CLSID_StartMenu, CStartMenu)
-OBJECT_ENTRY(CLSID_MenuBandSite, CMenuBandSite)
+    OBJECT_ENTRY(CLSID_ShellFSFolder, CFSFolder)
+    OBJECT_ENTRY(CLSID_MyComputer, CDrivesFolder)
+    OBJECT_ENTRY(CLSID_ShellDesktop, CDesktopFolder)
+    OBJECT_ENTRY(CLSID_ShellItem, CShellItem)
+    OBJECT_ENTRY(CLSID_ShellLink, CShellLink)
+    OBJECT_ENTRY(CLSID_DragDropHelper, CDropTargetHelper)
+    OBJECT_ENTRY(CLSID_ControlPanel, CControlPanelFolder)
+    OBJECT_ENTRY(CLSID_AutoComplete, CAutoComplete)
+    OBJECT_ENTRY(CLSID_MyDocuments, CMyDocsFolder)
+    OBJECT_ENTRY(CLSID_NetworkPlaces, CNetFolder)
+    OBJECT_ENTRY(CLSID_FontsFolderShortcut, CFontsFolder)
+    OBJECT_ENTRY(CLSID_Printers, CPrinterFolder)
+    OBJECT_ENTRY(CLSID_AdminFolderShortcut, CAdminToolsFolder)
+    OBJECT_ENTRY(CLSID_RecycleBin, CRecycleBin)
+    OBJECT_ENTRY(CLSID_OpenWithMenu, COpenWithMenu)
+    OBJECT_ENTRY(CLSID_NewMenu, CNewMenu)
+    OBJECT_ENTRY(CLSID_StartMenu, CStartMenu)
+    OBJECT_ENTRY(CLSID_MenuBandSite, CMenuBandSite)
 END_OBJECT_MAP()
 
 CShell32Module                                gModule;

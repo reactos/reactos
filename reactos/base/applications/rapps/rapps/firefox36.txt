@@ -23,6 +23,10 @@ URLSite = http://www.mozilla-europe.org/es/
 Description = Le navigateur web gratuit le plus populaire et l'un des meilleurs.
 URLSite = http://www.mozilla-europe.org/fr/
 
+[Section.0413]
+Description = De meest populaire en een van de beste gratis Web browsers.
+URLSite = http://www.mozilla-europe.org/nl/
+
 [Section.0414]
 Description = Mest populære og best også gratis nettleserene der ute.
 URLSite = http://www.mozilla-europe.org/no/
@@ -33,6 +37,7 @@ URLSite = http://www.mozilla-europe.org/pl/
 
 [Section.0418]
 Description = Cel mai popular și unul dintre cele mai bune navigatoare web gratuite existente.
+Size = 8,22 Mo
 URLSite = http://www.mozilla-europe.org/ro/
 
 [Section.0419]
@@ -46,3 +51,7 @@ URLSite = http://www.mozilla-europe.org/sk/
 [Section.0422]
 Description = Найпопулярніший та один з кращих безплатних веб-браузерів.
 URLSite = http://www.mozilla-europe.org/uk/
+
+[Section.0813]
+Description = De meest populaire en een van de beste gratis Web browsers.
+URLSite = http://www.mozilla-europe.org/nl/

@@ -19,13 +19,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
 #include <stdarg.h>
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "wincrypt.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winerror.h"
+#include <wincrypt.h>
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
@@ -827,7 +828,7 @@ BOOL WINAPI CryptStringToBinaryA(LPCSTR pszString,
     ret = decoder(pszString, cchString, pbBinary, pcbBinary, pdwSkip, pdwFlags);
     if (ret)
         SetLastError(ret);
-    return (ret == ERROR_SUCCESS) ? TRUE : FALSE;
+    return ret == ERROR_SUCCESS;
 }
 
 static LONG decodeBase64BlockW(const WCHAR *in_buf, int in_len,
@@ -1159,5 +1160,5 @@ BOOL WINAPI CryptStringToBinaryW(LPCWSTR pszString,
     ret = decoder(pszString, cchString, pbBinary, pcbBinary, pdwSkip, pdwFlags);
     if (ret)
         SetLastError(ret);
-    return (ret == ERROR_SUCCESS) ? TRUE : FALSE;
+    return ret == ERROR_SUCCESS;
 }

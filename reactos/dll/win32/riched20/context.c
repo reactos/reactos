@@ -22,12 +22,10 @@
 
 void ME_InitContext(ME_Context *c, ME_TextEditor *editor, HDC hDC)
 {
-  c->nSequence = editor->nSequence++;
   c->hDC = hDC;
   c->editor = editor;
   c->pt.x = 0;
   c->pt.y = 0;
-  c->hbrMargin = CreateSolidBrush(RGB(224,224,224));
   c->rcView = editor->rcFormat;
   if (hDC) {
       c->dpi.cx = GetDeviceCaps(hDC, LOGPIXELSX);
@@ -44,5 +42,4 @@ void ME_InitContext(ME_Context *c, ME_TextEditor *editor, HDC hDC)
 void ME_DestroyContext(ME_Context *c)
 {
   if (c->hDC) ITextHost_TxReleaseDC(c->editor->texthost, c->hDC);
-  DeleteObject(c->hbrMargin);
 }

@@ -19,15 +19,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
 #define COBJMACROS
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "objbase.h"
-#include "shlwapi.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <objbase.h>
+#include <shlwapi.h>
+#include <wine/debug.h>
+#include <wine/unicode.h>
 #include "msipriv.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
@@ -225,7 +229,7 @@ static UINT patch_set_media_source_prop( MSIPACKAGE *package )
     {
         property = MSI_RecordGetString( rec, 1 );
         patch = msi_dup_property( package->db, szPatch );
-        msi_set_property( package->db, property, patch );
+        msi_set_property( package->db, property, patch, -1 );
         msi_free( patch );
         msiobj_release( &rec->hdr );
     }

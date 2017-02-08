@@ -2,6 +2,7 @@
  * ReactOS ATL
  *
  * Copyright 2009 Andrew Hill <ash77@reactos.org>
+ * Copyright 2013 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -134,39 +135,28 @@ public:
 
 	virtual ~CComObject()
 	{
-		CComObject<Base>					*pThis;
-
-		pThis = reinterpret_cast<CComObject<Base> *>(this);
-		pThis->FinalRelease();
+		this->FinalRelease();
 		_pAtlModule->Unlock();
 	}
 
 	STDMETHOD_(ULONG, AddRef)()
 	{
-		CComObject<Base>					*pThis;
-
-		pThis = reinterpret_cast<CComObject<Base> *>(this);
-		return pThis->InternalAddRef();
+		return this->InternalAddRef();
 	}
 
 	STDMETHOD_(ULONG, Release)()
 	{
-		CComObject<Base>					*pThis;
-		ULONG								l;
+		ULONG								newRefCount;
 
-		pThis = reinterpret_cast<CComObject<Base> *>(this);
-		l = pThis->InternalRelease();
-		if (l == 0)
+		newRefCount = this->InternalRelease();
+		if (newRefCount == 0)
 			delete this;
-		return l;
+		return newRefCount;
 	}
 
 	STDMETHOD(QueryInterface)(REFIID iid, void **ppvObject)
 	{
-		CComObject<Base>					*pThis;
-
-		pThis = reinterpret_cast<CComObject<Base> *>(this);
-		return pThis->_InternalQueryInterface(iid, ppvObject);
+		return this->_InternalQueryInterface(iid, ppvObject);
 	}
 
 	static HRESULT WINAPI CreateInstance(CComObject<Base> **pp)
@@ -283,11 +273,9 @@ public:
 
 	STDMETHOD_(ULONG, AddRef)()
 	{
-		CComObjectCached<Base>				*pThis;
 		ULONG								newRefCount;
 
-		pThis = reinterpret_cast<CComObjectCached<Base>*>(this);
-		newRefCount = pThis->InternalAddRef();
+		newRefCount = this->InternalAddRef();
 		if (newRefCount == 2)
 			_pAtlModule->Lock();
 		return newRefCount;
@@ -295,11 +283,9 @@ public:
 
 	STDMETHOD_(ULONG, Release)()
 	{
-		CComObjectCached<Base>				*pThis;
 		ULONG								newRefCount;
 
-		pThis = reinterpret_cast<CComObjectCached<Base>*>(this);
-		newRefCount = pThis->InternalRelease();
+		newRefCount = this->InternalRelease();
 		if (newRefCount == 0)
 			delete this;
 		else if (newRefCount == 1)
@@ -309,10 +295,7 @@ public:
 
 	STDMETHOD(QueryInterface)(REFIID iid, void **ppvObject)
 	{
-		CComObjectCached<Base>				*pThis;
-
-		pThis = reinterpret_cast<CComObjectCached<Base>*>(this);
-		return pThis->_InternalQueryInterface(iid, ppvObject);
+		return this->_InternalQueryInterface(iid, ppvObject);
 	}
 };
 
@@ -436,6 +419,11 @@ class CComClassFactory :
 {
 public:
 	_ATL_CREATORFUNC						*m_pfnCreateInstance;
+
+	virtual ~CComClassFactory()
+	{
+	}
+
 public:
 	STDMETHOD(CreateInstance)(LPUNKNOWN pUnkOuter, REFIID riid, void **ppvObj)
 	{

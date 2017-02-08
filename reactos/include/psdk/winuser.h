@@ -222,7 +222,7 @@ extern "C" {
 #define DESKTOP_READOBJECTS	1
 #define DESKTOP_SWITCHDESKTOP	256
 #define DESKTOP_WRITEOBJECTS	128
-#define CW_USEDEFAULT	0x80000000
+#define CW_USEDEFAULT	((int)0x80000000)
 #define WS_BORDER	0x800000
 #define WS_CAPTION	0xc00000
 #define WS_CHILD	0x40000000
@@ -613,13 +613,16 @@ extern "C" {
 #define ISOLATIONAWARE_MANIFEST_RESOURCE_ID 2
 #define ISOLATIONAWARE_NOSTATICIMPORT_MANIFEST_RESOURCE_ID 3
 #endif
-#define EWX_FORCE 4
+#define EWX_FORCE 0x00000004
 #define EWX_LOGOFF 0
-#define EWX_POWEROFF 8
-#define EWX_REBOOT 2
-#define EWX_SHUTDOWN 1
+#define EWX_POWEROFF 0x00000008
+#define EWX_REBOOT 0x00000002
+#define EWX_SHUTDOWN 0x00000001
 #if (_WIN32_WINNT >= 0x0500)
-#define EWX_FORCEIFHUNG 16
+#define EWX_FORCEIFHUNG 0x00000010
+#endif
+#if (_WIN32_WINNT > 0x06010000)
+#define EWX_HYBRID_SHUTDOWN 0x00400000
 #endif
 #define CS_BYTEALIGNCLIENT 4096
 #define CS_BYTEALIGNWINDOW 8192
@@ -1830,17 +1833,24 @@ extern "C" {
 #define WM_APP 32768
 #define WM_GETTITLEBARINFOEX 0x033F
 
-#define XBUTTON1      0x0001
-#define XBUTTON2      0x0002
-
 #if (_WIN32_WINNT >= 0x0400)
 #define WHEEL_DELTA 120
-#define GET_WHEEL_DELTA_WPARAM(wparam) ((short)HIWORD (wparam))
+#define GET_WHEEL_DELTA_WPARAM(wParam)  ((short)HIWORD(wParam))
 #define WHEEL_PAGESCROLL UINT_MAX
 #endif
+
+#if (_WIN32_WINNT >= 0x0500)
+#define GET_KEYSTATE_WPARAM(wParam)     (LOWORD(wParam))
+#define GET_NCHITTEST_WPARAM(wParam)    ((short)LOWORD(wParam))
+#define GET_XBUTTON_WPARAM(wParam)      (HIWORD(wParam))
+#define XBUTTON1    0x0001
+#define XBUTTON2    0x0002
+#endif
+
 #if (_WIN32_WINNT >= 0x0501)
 #define WM_THEMECHANGED 794
 #endif
+
 #define BM_CLICK 245
 #define BM_GETCHECK 240
 #define BM_GETIMAGE 246
@@ -2498,6 +2508,9 @@ extern "C" {
 #define SW_SCROLLCHILDREN 1
 #define SW_INVALIDATE 2
 #define SW_ERASE 4
+#if(WINVER >= 0x0500)
+#define SW_SMOOTHSCROLL 16
+#endif
 #define SC_SIZE 0xF000
 #define SC_MOVE 0xF010
 #define SC_MINIMIZE 0xF020
@@ -2812,8 +2825,8 @@ typedef BOOL(CALLBACK *GRAYSTRINGPROC)(HDC,LPARAM,int);
 typedef LRESULT(CALLBACK *HOOKPROC)(int,WPARAM,LPARAM);
 typedef BOOL(CALLBACK *PROPENUMPROCA)(HWND,LPCSTR,HANDLE);
 typedef BOOL(CALLBACK *PROPENUMPROCW)(HWND,LPCWSTR,HANDLE);
-typedef BOOL(CALLBACK *PROPENUMPROCEXA)(HWND,LPSTR,HANDLE,DWORD);
-typedef BOOL(CALLBACK *PROPENUMPROCEXW)(HWND,LPWSTR,HANDLE,DWORD);
+typedef BOOL(CALLBACK *PROPENUMPROCEXA)(HWND,LPSTR,HANDLE,ULONG_PTR);
+typedef BOOL(CALLBACK *PROPENUMPROCEXW)(HWND,LPWSTR,HANDLE,ULONG_PTR);
 typedef int(CALLBACK *EDITWORDBREAKPROCA)(LPSTR,int,int,int);
 typedef int(CALLBACK *EDITWORDBREAKPROCW)(LPWSTR,int,int,int);
 typedef LRESULT(CALLBACK *WNDPROC)(HWND,UINT,WPARAM,LPARAM);
@@ -2826,7 +2839,7 @@ typedef NAMEENUMPROCA DESKTOPENUMPROCA;
 typedef NAMEENUMPROCW DESKTOPENUMPROCW;
 typedef NAMEENUMPROCA WINSTAENUMPROCA;
 typedef NAMEENUMPROCW WINSTAENUMPROCW;
-typedef void(CALLBACK *SENDASYNCPROC)(HWND,UINT,DWORD,LRESULT);
+typedef void(CALLBACK *SENDASYNCPROC)(HWND,UINT,ULONG_PTR,LRESULT);
 DECLARE_HANDLE(HHOOK);
 DECLARE_HANDLE(HDWP);
 DECLARE_HANDLE(HDEVNOTIFY);
@@ -4264,20 +4277,22 @@ DWORD WINAPI DrawMenuBarTemp(HWND,HDC,LPRECT,HMENU,HFONT);
 BOOL WINAPI DrawStateA(_In_ HDC, _In_opt_ HBRUSH, _In_opt_ DRAWSTATEPROC, _In_ LPARAM, _In_ WPARAM, _In_ int, _In_ int, _In_ int, _In_ int, _In_ UINT);
 BOOL WINAPI DrawStateW(_In_ HDC, _In_opt_ HBRUSH, _In_opt_ DRAWSTATEPROC, _In_ LPARAM, _In_ WPARAM, _In_ int, _In_ int, _In_ int, _In_ int, _In_ UINT);
 
+_Success_(return)
 int
 WINAPI
 DrawTextA(
   _In_ HDC hdc,
-  _Inout_updates_opt_(cchText) LPCSTR lpchText,
+  _At_((LPSTR)lpchText, _Inout_updates_opt_(cchText)) LPCSTR lpchText,
   _In_ int cchText,
   _Inout_ LPRECT lprc,
   _In_ UINT format);
 
+_Success_(return)
 int
 WINAPI
 DrawTextW(
   _In_ HDC hdc,
-  _Inout_updates_opt_(cchText) LPCWSTR lpchText,
+  _At_((LPWSTR)lpchText, _Inout_updates_opt_(cchText)) LPCWSTR lpchText,
   _In_ int cchText,
   _Inout_ LPRECT lprc,
   _In_ UINT format);
@@ -4350,7 +4365,6 @@ BOOL WINAPI FlashWindow(_In_ HWND, _In_ BOOL);
 BOOL WINAPI FlashWindowEx(_In_ PFLASHWINFO);
 #endif
 int WINAPI FrameRect(_In_ HDC, _In_ LPCRECT, _In_ HBRUSH);
-BOOL WINAPI FrameRgn(HDC,HRGN,HBRUSH,int,int);
 HWND WINAPI GetActiveWindow(void);
 HWND WINAPI GetAncestor(_In_ HWND, _In_ UINT);
 SHORT WINAPI GetAsyncKeyState(_In_ int);
@@ -4670,7 +4684,6 @@ GetUserObjectSecurity(
 HWND WINAPI GetWindow(_In_ HWND, _In_ UINT);
 DWORD WINAPI GetWindowContextHelpId(_In_ HWND);
 HDC WINAPI GetWindowDC(_In_opt_ HWND);
-BOOL WINAPI GetWindowExtEx(HDC,LPSIZE);
 BOOL WINAPI GetWindowPlacement(_In_ HWND, _Inout_ WINDOWPLACEMENT*);
 BOOL WINAPI GetWindowRect(_In_ HWND, _Out_ LPRECT);
 int WINAPI GetWindowRgn(_In_ HWND, _In_ HRGN);

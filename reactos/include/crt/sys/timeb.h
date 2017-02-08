@@ -55,13 +55,41 @@ extern "C" {
 
 #endif /* !_TIMEB_DEFINED */
 
-  _CRTIMP void __cdecl _ftime(struct _timeb *_Time);
-  _CRT_INSECURE_DEPRECATE(_ftime32_s) _CRTIMP void __cdecl _ftime32(struct __timeb32 *_Time);
-  _CRTIMP errno_t __cdecl _ftime32_s(struct __timeb32 *_Time);
+  _CRTIMP
+  void
+  __cdecl
+  _ftime(
+    _Out_ struct _timeb *_Time);
+
+  _CRT_INSECURE_DEPRECATE(_ftime32_s)
+  _CRTIMP
+  void
+  __cdecl
+  _ftime32(
+    _Out_ struct __timeb32 *_Time);
+
+  _CRTIMP
+  errno_t
+  __cdecl
+  _ftime32_s(
+    _Out_ struct __timeb32 *_Time);
+
 #if _INTEGRAL_MAX_BITS >= 64
-  _CRT_INSECURE_DEPRECATE(_ftime64_s) _CRTIMP void __cdecl _ftime64(struct __timeb64 *_Time);
-  _CRTIMP errno_t __cdecl _ftime64_s(struct __timeb64 *_Time);
-#endif
+
+  _CRT_INSECURE_DEPRECATE(_ftime64_s)
+  _CRTIMP
+  void
+  __cdecl
+  _ftime64(
+    _Out_ struct __timeb64 *_Time);
+
+  _CRTIMP
+  errno_t
+  __cdecl
+  _ftime64_s(
+    _Out_ struct __timeb64 *_Time);
+
+#endif /* _INTEGRAL_MAX_BITS >= 64 */
 
 #ifndef NO_OLDNAMES
 #if !defined (RC_INVOKED)

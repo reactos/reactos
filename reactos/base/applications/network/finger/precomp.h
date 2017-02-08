@@ -1,19 +1,11 @@
-
+#define WIN32_NO_STATUS
+#include <windef.h>
+#define _INC_WINDOWS
 #include <winsock2.h>
-#include "err.h"
-#include <errno.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <time.h>
-#include <ctype.h>
 
-#ifdef __STDC__
-#include <stdarg.h>
-#else
-#include <varargs.h>
-#endif
-
-#include "various.h"
+#include "err.h"
 #include "getopt.h"
+#include "various.h"

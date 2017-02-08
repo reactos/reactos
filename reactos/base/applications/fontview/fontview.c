@@ -104,14 +104,14 @@ WinMain (HINSTANCE hThisInstance,
 		OPENFILENAMEW fontOpen;
 		WCHAR szFileName[MAX_PATH] = L"";
 		HLOCAL dialogTitle = NULL;
-		
+
 		/* Gets the title for the dialog box ready */
 		FormatString(FORMAT_MESSAGE_ALLOCATE_BUFFER,
 		          NULL, IDS_OPEN, 0, (LPWSTR)&dialogTitle, 0, NULL);
-		
+
 		/* Clears out any values of fontOpen before we use it */
 		ZeroMemory(&fontOpen, sizeof(fontOpen));
-		
+
 		/* Sets up the open dialog box */
 		fontOpen.lStructSize = sizeof(fontOpen);
 		fontOpen.hwndOwner = NULL;
@@ -122,7 +122,7 @@ WinMain (HINSTANCE hThisInstance,
 		fontOpen.nMaxFile = MAX_PATH;
 		fontOpen.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
 		fontOpen.lpstrDefExt = L"ttf";
-		
+
 		/* Opens up the Open File dialog box in order to chose a font file. */
 		if(GetOpenFileNameW(&fontOpen))
 		{
@@ -133,7 +133,7 @@ WinMain (HINSTANCE hThisInstance,
 			exiting the program altogether */
 			return 0;
 		}
-		
+
 		LocalFree(dialogTitle);
 	}
 	else
@@ -142,7 +142,7 @@ WinMain (HINSTANCE hThisInstance,
 		fileName = argv[1];
 		g_fileName = fileName;
 	}
-	
+
 	if (!AddFontResourceW(fileName))
 	{
 		ErrorMsgBox(0, IDS_ERROR, IDS_ERROR_NOFONT, fileName);
@@ -221,7 +221,7 @@ WinMain (HINSTANCE hThisInstance,
 
 	RemoveFontResourceW(argv[1]);
 
-	return msg.wParam;
+	return (int)msg.wParam;
 }
 
 static LRESULT
@@ -326,7 +326,7 @@ static LRESULT
 MainWnd_OnInstall(HWND hwnd)
 {
 	DWORD fontExists;
-	
+
 	/* First, we have to find out if the font still exists. */
 	fontExists = GetFileAttributes((LPCSTR)g_fileName);
 	if (fontExists != 0xFFFFFFFF) /* If the file does not exist */
@@ -334,11 +334,11 @@ MainWnd_OnInstall(HWND hwnd)
 		ErrorMsgBox(0, IDS_ERROR, IDS_ERROR_NOFONT, g_fileName);
 		return -1;
 	}
-	
+
 	//CopyFile(g_fileName, NULL, TRUE);
-	
+
 	MessageBox(hwnd, TEXT("This function is unimplemented"), TEXT("Unimplemented"), MB_OK);
-	
+
 	return 0;
 }
 

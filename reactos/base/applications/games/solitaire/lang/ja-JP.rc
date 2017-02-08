@@ -19,8 +19,8 @@ BEGIN
     AUTORADIOBUTTON "1 枚ずつ取る(&O)", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "3 枚ずつ取る(&T)", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
 
-    AUTOCHECKBOX    "時間を表 示する(&S)", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
-    AUTOCHECKBOX    "ステータスバーを表 示する(&T)", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "時間を表示する(&S)", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "ステータスバーを表示する(&T)", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
     DEFPUSHBUTTON   "OK", IDOK, 35, 97, 50, 14
     PUSHBUTTON      "キャンセル", IDCANCEL, 101, 97, 50, 14
@@ -53,8 +53,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SOL_NAME    "ソ リティア"
-    IDS_SOL_ABOUT   "J Brown によるソ リティア\n\nCardLib バージョン 1.0。"
+    IDS_SOL_NAME    "ソリティア"
+    IDS_SOL_ABOUT   "J Brown によるソリティア\n\nCardLib バージョン 1.0。"
     IDS_SOL_QUIT    "現在のゲームを終了しますか?"
     IDS_SOL_WIN     "おめでとう、あなたの勝ちです!"
     IDS_SOL_DEAL    "もう一度カードを配りますか?"

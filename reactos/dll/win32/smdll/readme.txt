@@ -1,4 +1,3 @@
-$Id$
 
 This is SMDLL: a helper library to talk to the ReactOS session manager (SM).
 

@@ -107,7 +107,7 @@ incoming connections or be explicitly connected to another host.
   Creates a new connection identifier (PCB). If memory is not
   available for creating the new pcb, NULL is returned.
 
-- err_t tcp_bind(struct tcp_pcb *pcb, struct ip_addr *ipaddr,
+- err_t tcp_bind(struct tcp_pcb *pcb, ip_addr_t *ipaddr,
                  u16_t port)
 
   Binds the pcb to a local IP address and port number. The IP address
@@ -147,6 +147,8 @@ incoming connections or be explicitly connected to another host.
   usually be called from the accept callback. This allows lwIP to perform
   housekeeping tasks, such as allowing further incoming connections to be
   queued in the listen backlog.
+  ATTENTION: the PCB passed in must be the listening pcb, not the pcb passed
+  into the accept callback!
 
 - void tcp_accept(struct tcp_pcb *pcb,
                   err_t (* accept)(void *arg, struct tcp_pcb *newpcb,
@@ -154,8 +156,8 @@ incoming connections or be explicitly connected to another host.
 
   Specified the callback function that should be called when a new
   connection arrives on a listening connection.
-      
-- err_t tcp_connect(struct tcp_pcb *pcb, struct ip_addr *ipaddr,
+
+- err_t tcp_connect(struct tcp_pcb *pcb, ip_addr_t *ipaddr,
                     u16_t port, err_t (* connected)(void *arg,
                                                     struct tcp_pcb *tpcb,
                                                     err_t err));
@@ -176,7 +178,7 @@ incoming connections or be explicitly connected to another host.
   available for enqueueing the SYN segment. If the SYN indeed was
   enqueued successfully, the tcp_connect() function returns ERR_OK.
 
-  
+
 --- Sending TCP data
 
 TCP data is sent by enqueueing the data with a call to
@@ -184,15 +186,19 @@ tcp_write(). When the data is successfully transmitted to the remote
 host, the application will be notified with a call to a specified
 callback function.
 
-- err_t tcp_write(struct tcp_pcb *pcb, void *dataptr, u16_t len,
-                  u8_t copy)
+- err_t tcp_write(struct tcp_pcb *pcb, const void *dataptr, u16_t len,
+                  u8_t apiflags)
 
   Enqueues the data pointed to by the argument dataptr. The length of
-  the data is passed as the len parameter. The copy argument is either
-  0 or 1 and indicates whether the new memory should be allocated for
-  the data to be copied into. If the argument is 0, no new memory
-  should be allocated and the data should only be referenced by
-  pointer.
+  the data is passed as the len parameter. The apiflags can be one or more of:
+  - TCP_WRITE_FLAG_COPY: indicates whether the new memory should be allocated
+    for the data to be copied into. If this flag is not given, no new memory
+    should be allocated and the data should only be referenced by pointer. This
+    also means that the memory behind dataptr must not change until the data is
+    ACKed by the remote host
+  - TCP_WRITE_FLAG_MORE: indicates that more data follows. If this is given,
+    the PSH flag is set in the last segment created by this call to tcp_write.
+    If this flag is given, the PSH flag is not set.
 
   The tcp_write() function will fail and return ERR_MEM if the length
   of the data exceeds the current send buffer size or if the length of
@@ -238,7 +244,7 @@ window.
 
   Must be called when the application has received the data. The len
   argument indicates the length of the received data.
-    
+
 
 --- Application polling
 
@@ -253,7 +259,7 @@ again when the connection has been idle for a while.
 
 - void tcp_poll(struct tcp_pcb *pcb, 
                 err_t (* poll)(void *arg, struct tcp_pcb *tpcb),
-				u8_t interval)
+                u8_t interval)
 
   Specifies the polling interval and the callback function that should
   be called to poll the application. The interval is specified in
@@ -322,14 +328,14 @@ level of complexity of UDP, the interface is significantly simpler.
 
   Removes and deallocates the pcb.  
   
-- err_t udp_bind(struct udp_pcb *pcb, struct ip_addr *ipaddr,
+- err_t udp_bind(struct udp_pcb *pcb, ip_addr_t *ipaddr,
                  u16_t port)
 
   Binds the pcb to a local address. The IP-address argument "ipaddr"
   can be IP_ADDR_ANY to indicate that it should listen to any local IP
   address. The function currently always return ERR_OK.
 
-- err_t udp_connect(struct udp_pcb *pcb, struct ip_addr *ipaddr,
+- err_t udp_connect(struct udp_pcb *pcb, ip_addr_t *ipaddr,
                     u16_t port)
 
   Sets the remote end of the pcb. This function does not generate any
@@ -347,7 +353,7 @@ level of complexity of UDP, the interface is significantly simpler.
 - void udp_recv(struct udp_pcb *pcb,
                 void (* recv)(void *arg, struct udp_pcb *upcb,
                                          struct pbuf *p,
-                                         struct ip_addr *addr,
+                                         ip_addr_t *addr,
                                          u16_t port),
                               void *recv_arg)
 
@@ -408,8 +414,8 @@ Call these functions in the order of appearance:
   Note: you must call tcp_fasttmr() and tcp_slowtmr() at the
   predefined regular intervals after this initialization. 
   
-- netif_add(struct netif *netif, struct ip_addr *ipaddr,
-            struct ip_addr *netmask, struct ip_addr *gw,
+- netif_add(struct netif *netif, ip_addr_t *ipaddr,
+            ip_addr_t *netmask, ip_addr_t *gw,
             void *state, err_t (* init)(struct netif *netif),
             err_t (* input)(struct pbuf *p, struct netif *netif))
 

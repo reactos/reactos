@@ -133,6 +133,7 @@ ExpDeleteTimer(IN PVOID ObjectBody)
     KeFlushQueuedDpcs();
 }
 
+_Function_class_(KDEFERRED_ROUTINE)
 VOID
 NTAPI
 ExpTimerDpcRoutine(IN PKDPC Dpc,
@@ -216,13 +217,14 @@ ExpTimerApcKernelRoutine(IN PKAPC Apc,
     ObDereferenceObjectEx(Timer, DerefsToDo);
 }
 
-VOID
+BOOLEAN
 INIT_FUNCTION
 NTAPI
 ExpInitializeTimerImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
+    NTSTATUS Status;
 
     /* Create the Timer Object Type */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
@@ -234,11 +236,13 @@ ExpInitializeTimerImplementation(VOID)
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.ValidAccessMask = TIMER_ALL_ACCESS;
     ObjectTypeInitializer.DeleteProcedure = ExpDeleteTimer;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExTimerType);
+    Status = ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExTimerType);
+    if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Initialize the Wait List and Lock */
     KeInitializeSpinLock(&ExpWakeListLock);
     InitializeListHead(&ExpWakeList);
+    return TRUE;
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
@@ -352,7 +356,8 @@ NtCancelTimer(IN HANDLE TimerHandle,
             }
             _SEH2_EXCEPT(ExSystemExceptionFilter())
             {
-
+                /* Do nothing */
+                (void)0;
             }
             _SEH2_END;
         }
@@ -442,7 +447,8 @@ NtCreateTimer(OUT PHANDLE TimerHandle,
             }
             _SEH2_EXCEPT(ExSystemExceptionFilter())
             {
-
+                /* Do nothing */
+                (void)0;
             }
             _SEH2_END;
         }
@@ -497,7 +503,8 @@ NtOpenTimer(OUT PHANDLE TimerHandle,
         }
         _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-
+            /* Do nothing */
+            (void)0;
         }
         _SEH2_END;
     }
@@ -626,9 +633,9 @@ NtSetTimer(IN HANDLE TimerHandle,
                                        (PVOID*)&Timer,
                                        NULL);
 
-    /* 
+    /*
      * Tell the user we don't support Wake Timers...
-     * when we have the ability to use/detect the Power Management 
+     * when we have the ability to use/detect the Power Management
      * functionality required to support them, make this check dependent
      * on the actual PM capabilities
      */
@@ -737,7 +744,8 @@ NtSetTimer(IN HANDLE TimerHandle,
             }
             _SEH2_EXCEPT(ExSystemExceptionFilter())
             {
-
+                /* Do nothing */
+                (void)0;
             }
             _SEH2_END;
         }

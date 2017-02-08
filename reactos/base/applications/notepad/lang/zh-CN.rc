@@ -176,7 +176,7 @@ STRING_ERROR,                                   "错误"
 STRING_WARNING,                                 "警告"
 STRING_INFO,                                    "信息"
 
-STRING_UNTITLED,                                "(未命名)"
+STRING_UNTITLED,                                "未命名"
 
 STRING_ALL_FILES,                               "所有文件 (*.*)"
 STRING_TEXT_FILES_TXT,                  "文本文件 (*.txt)"

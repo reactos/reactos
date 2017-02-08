@@ -1,11 +1,14 @@
-
-#include <windows.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winuser.h>
 #include <commctrl.h>
 #include <tchar.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cardlib.h>
+
 #include "resource.h"
-#include "cardlib.h"
 
 extern CardWindow SolWnd;
 extern TCHAR szAppName[];

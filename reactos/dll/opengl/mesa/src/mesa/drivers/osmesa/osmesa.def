@@ -1,0 +1,15 @@
+;DESCRIPTION 'Mesa OSMesa lib for Win32'
+VERSION 4.1
+
+EXPORTS
+	OSMesaColorClamp
+	OSMesaCreateContext
+	OSMesaCreateContextExt
+	OSMesaDestroyContext
+	OSMesaMakeCurrent
+	OSMesaGetCurrentContext
+	OSMesaPixelStore
+	OSMesaGetIntegerv
+	OSMesaGetDepthBuffer
+	OSMesaGetColorBuffer
+	OSMesaGetProcAddress

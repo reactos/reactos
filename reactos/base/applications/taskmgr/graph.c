@@ -20,7 +20,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 int      nlastBarsUsed = 0;
 
@@ -102,7 +102,7 @@ Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         hdc = BeginPaint(hWnd, &ps);
 
-        WindowId = GetWindowLongPtrW(hWnd, GWL_ID);
+        WindowId = GetWindowLongPtrW(hWnd, GWLP_ID);
 
         switch (WindowId)
         {

@@ -7,7 +7,12 @@
  */
 
 
-#include <windows.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winuser.h>
 #include <setupapi.h>
 
 #define NDEBUG

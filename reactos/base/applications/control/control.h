@@ -6,8 +6,13 @@
  *                  Colin Finck (mail@colinfinck.de)
  */
 
-#include <windows.h>
 #include <tchar.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <winreg.h>
+#include <shellapi.h>
+
 #include "resource.h"
 
 #define CCH_UINT_MAX   11

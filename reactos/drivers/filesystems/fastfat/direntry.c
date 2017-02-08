@@ -294,7 +294,7 @@ FATGetNextDirEntry(PVOID *pContext,
             {
                 if (dirMap == 0)
                 {
-                    DPRINT ("  long name entry found at %d\n", DirContext->DirIndex);
+                    DPRINT ("  long name entry found at %u\n", DirContext->DirIndex);
                     RtlZeroMemory(DirContext->LongNameU.Buffer, DirContext->LongNameU.MaximumLength);
                     CheckSum = longNameEntry->alias_checksum;
                     Valid = TRUE;
@@ -416,6 +416,8 @@ NTSTATUS FATXGetNextDirEntry(PVOID * pContext,
    ULONG DirIndex = DirContext->DirIndex;
 
    FileOffset.u.HighPart = 0;
+
+   UNREFERENCED_PARAMETER(First);
 
    if (!vfatFCBIsRoot(pDirFcb))
    {

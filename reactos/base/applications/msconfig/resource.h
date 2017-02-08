@@ -1,3 +1,5 @@
+#pragma once
+
 #define IDD_MSCONFIG_DIALOG              101
 #define IDD_TOOLS_PAGE                   102
 #define IDD_SERVICES_PAGE                103

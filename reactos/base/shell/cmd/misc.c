@@ -32,8 +32,7 @@
  *        Remove all hardcode string to En.rc
  */
 
-#include <precomp.h>
-
+#include "precomp.h"
 
 /*
  * get a character out-of-band and honor Ctrl-Break characters

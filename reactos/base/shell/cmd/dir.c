@@ -134,7 +134,7 @@
  *		  Removed already commented out code of old pagination
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 #ifdef INCLUDE_CMD_DIR
 

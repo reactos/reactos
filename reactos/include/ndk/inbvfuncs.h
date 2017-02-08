@@ -44,7 +44,7 @@ InbvCheckDisplayOwnership(
 VOID
 NTAPI
 InbvNotifyDisplayOwnershipLost(
-    IN INBV_RESET_DISPLAY_PARAMETERS Callback
+    _In_ INBV_RESET_DISPLAY_PARAMETERS Callback
 );
 
 //
@@ -53,13 +53,13 @@ InbvNotifyDisplayOwnershipLost(
 VOID
 NTAPI
 InbvEnableBootDriver(
-    IN BOOLEAN Enable
+    _In_ BOOLEAN Enable
 );
 
 VOID
 NTAPI
 InbvInstallDisplayStringFilter(
-    IN INBV_DISPLAY_STRING_FILTER DisplayFilter
+    _In_ INBV_DISPLAY_STRING_FILTER DisplayFilter
 );
 
 BOOLEAN
@@ -74,13 +74,13 @@ InbvIsBootDriverInstalled(
 BOOLEAN
 NTAPI
 InbvDisplayString(
-    IN PCHAR String
+    _In_ PCHAR String
 );
 
 BOOLEAN
 NTAPI
 InbvEnableDisplayString(
-    IN BOOLEAN Enable
+    _In_ BOOLEAN Enable
 );
 
 BOOLEAN
@@ -92,33 +92,33 @@ InbvResetDisplay(
 VOID
 NTAPI
 InbvSetScrollRegion(
-    IN ULONG Left,
-    IN ULONG Top,
-    IN ULONG Width,
-    IN ULONG Height
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Width,
+    _In_ ULONG Height
 );
 
 VOID
 NTAPI
 InbvSetTextColor(
-    IN ULONG Color
+    _In_ ULONG Color
 );
 
 VOID
 NTAPI
 InbvSolidColorFill(
-    IN ULONG Left,
-    IN ULONG Top,
-    IN ULONG Width,
-    IN ULONG Height,
-    IN ULONG Color
+    _In_ ULONG Left,
+    _In_ ULONG Top,
+    _In_ ULONG Width,
+    _In_ ULONG Height,
+    _In_ ULONG Color
 );
 
 VOID
 NTAPI
 InbvSetProgressBarSubset(
-    IN ULONG Floor,
-    IN ULONG Ceiling
+    _In_ ULONG Floor,
+    _In_ ULONG Ceiling
 );
 
 #endif

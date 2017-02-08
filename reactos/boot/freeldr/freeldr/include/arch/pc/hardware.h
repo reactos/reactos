@@ -25,12 +25,6 @@
 
 
 //
-// Static heap for ARC Hardware Component Tree
-// 16KB oughta be enough for anyone.
-//
-#define HW_MAX_ARC_HEAP_SIZE 16 * 1024
-
-//
 // ARC Component Configuration Routines
 //
 VOID

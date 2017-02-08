@@ -1,4 +1,4 @@
-#include <windows.h>
+#include <windef.h>
 #include "resource.h"
 
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Control ACLs Program\0"

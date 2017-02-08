@@ -191,8 +191,8 @@ PciSetPowerManagedDevicePowerState(IN PPCI_PDO_EXTENSION DeviceExtension,
         if (DeviceState < DeviceExtension->PowerState.CurrentDeviceState)
         {
             /* We would normally re-assign resources after powerup */
-            UNIMPLEMENTED;
-            while (TRUE);
+            UNIMPLEMENTED_DBGBREAK();
+            Status = STATUS_NOT_IMPLEMENTED;
         }
     }
 
@@ -206,6 +206,10 @@ PciFdoWaitWake(IN PIRP Irp,
                IN PIO_STACK_LOCATION IoStackLocation,
                IN PPCI_FDO_EXTENSION DeviceExtension)
 {
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(IoStackLocation);
+    UNREFERENCED_PARAMETER(DeviceExtension);
+
     UNIMPLEMENTED;
     while (TRUE);
     return STATUS_NOT_SUPPORTED;
@@ -217,6 +221,10 @@ PciFdoSetPowerState(IN PIRP Irp,
                     IN PIO_STACK_LOCATION IoStackLocation,
                     IN PPCI_FDO_EXTENSION DeviceExtension)
 {
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(IoStackLocation);
+    UNREFERENCED_PARAMETER(DeviceExtension);
+
     UNIMPLEMENTED;
     while (TRUE);
     return STATUS_NOT_SUPPORTED;
@@ -228,6 +236,10 @@ PciFdoIrpQueryPower(IN PIRP Irp,
                     IN PIO_STACK_LOCATION IoStackLocation,
                     IN PPCI_FDO_EXTENSION DeviceExtension)
 {
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(IoStackLocation);
+    UNREFERENCED_PARAMETER(DeviceExtension);
+
     UNIMPLEMENTED;
     while (TRUE);
     return STATUS_NOT_SUPPORTED;

@@ -19,98 +19,95 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#include <config.h>
 #include "d3d9_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
 
-static inline IDirect3DVolume9Impl *impl_from_IDirect3DVolume9(IDirect3DVolume9 *iface)
+static inline struct d3d9_volume *impl_from_IDirect3DVolume9(IDirect3DVolume9 *iface)
 {
-    return CONTAINING_RECORD(iface, IDirect3DVolume9Impl, IDirect3DVolume9_iface);
+    return CONTAINING_RECORD(iface, struct d3d9_volume, IDirect3DVolume9_iface);
 }
 
-static HRESULT WINAPI IDirect3DVolume9Impl_QueryInterface(IDirect3DVolume9 *iface, REFIID riid,
-        void **ppobj)
+static HRESULT WINAPI d3d9_volume_QueryInterface(IDirect3DVolume9 *iface, REFIID riid, void **out)
 {
-    IDirect3DVolume9Impl *This = impl_from_IDirect3DVolume9(iface);
+    TRACE("iface %p, riid %s, out %p.\n", iface, debugstr_guid(riid), out);
 
-    TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), ppobj);
-
-    if (IsEqualGUID(riid, &IID_IUnknown)
-        || IsEqualGUID(riid, &IID_IDirect3DVolume9)) {
+    if (IsEqualGUID(riid, &IID_IDirect3DVolume9)
+            || IsEqualGUID(riid, &IID_IUnknown))
+    {
         IDirect3DVolume9_AddRef(iface);
-        *ppobj = This;
+        *out = iface;
         return S_OK;
     }
 
-    WARN("(%p)->(%s,%p),not found\n", This, debugstr_guid(riid), ppobj);
-    *ppobj = NULL;
+    WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(riid));
+
+    *out = NULL;
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI IDirect3DVolume9Impl_AddRef(IDirect3DVolume9 *iface)
+static ULONG WINAPI d3d9_volume_AddRef(IDirect3DVolume9 *iface)
 {
-    IDirect3DVolume9Impl *This = impl_from_IDirect3DVolume9(iface);
+    struct d3d9_volume *volume = impl_from_IDirect3DVolume9(iface);
+    ULONG refcount;
 
     TRACE("iface %p.\n", iface);
 
-    if (This->forwardReference) {
-        /* Forward refcounting */
-        TRACE("(%p) : Forwarding to %p\n", This, This->forwardReference);
-        return IUnknown_AddRef(This->forwardReference);
-    } else {
-        /* No container, handle our own refcounting */
-        ULONG ref = InterlockedIncrement(&This->ref);
-
-        TRACE("%p increasing refcount to %u.\n", iface, ref);
-
-        if (ref == 1)
-        {
-            wined3d_mutex_lock();
-            wined3d_volume_incref(This->wined3d_volume);
-            wined3d_mutex_unlock();
-        }
-
-        return ref;
+    if (volume->forwardReference)
+    {
+        TRACE("Forwarding to %p.\n", volume->forwardReference);
+        return IUnknown_AddRef(volume->forwardReference);
     }
+
+    refcount = InterlockedIncrement(&volume->refcount);
+    TRACE("%p increasing refcount to %u.\n", iface, refcount);
+
+    if (refcount == 1)
+    {
+        wined3d_mutex_lock();
+        wined3d_volume_incref(volume->wined3d_volume);
+        wined3d_mutex_unlock();
+    }
+
+    return refcount;
 }
 
-static ULONG WINAPI IDirect3DVolume9Impl_Release(IDirect3DVolume9 *iface)
+static ULONG WINAPI d3d9_volume_Release(IDirect3DVolume9 *iface)
 {
-    IDirect3DVolume9Impl *This = impl_from_IDirect3DVolume9(iface);
+    struct d3d9_volume *volume = impl_from_IDirect3DVolume9(iface);
+    ULONG refcount;
 
     TRACE("iface %p.\n", iface);
 
-    if (This->forwardReference) {
-        /* Forward refcounting */
-        TRACE("(%p) : Forwarding to %p\n", This, This->forwardReference);
-        return IUnknown_Release(This->forwardReference);
-    } else {
-        /* No container, handle our own refcounting */
-        ULONG ref = InterlockedDecrement(&This->ref);
-
-        TRACE("%p decreasing refcount to %u.\n", iface, ref);
-
-        if (ref == 0) {
-            wined3d_mutex_lock();
-            wined3d_volume_decref(This->wined3d_volume);
-            wined3d_mutex_unlock();
-        }
-
-        return ref;
+    if (volume->forwardReference)
+    {
+        TRACE("Forwarding to %p.\n", volume->forwardReference);
+        return IUnknown_Release(volume->forwardReference);
     }
+
+    refcount = InterlockedDecrement(&volume->refcount);
+    TRACE("%p decreasing refcount to %u.\n", iface, refcount);
+
+    if (!refcount)
+    {
+        wined3d_mutex_lock();
+        wined3d_volume_decref(volume->wined3d_volume);
+        wined3d_mutex_unlock();
+    }
+
+    return refcount;
 }
 
-static HRESULT WINAPI IDirect3DVolume9Impl_GetDevice(IDirect3DVolume9 *iface,
-        IDirect3DDevice9 **device)
+static HRESULT WINAPI d3d9_volume_GetDevice(IDirect3DVolume9 *iface, IDirect3DDevice9 **device)
 {
-    IDirect3DVolume9Impl *This = impl_from_IDirect3DVolume9(iface);
+    struct d3d9_volume *volume = impl_from_IDirect3DVolume9(iface);
     IDirect3DResource9 *resource;
     HRESULT hr;
 
     TRACE("iface %p, device %p.\n", iface, device);
 
-    hr = IUnknown_QueryInterface(This->forwardReference, &IID_IDirect3DResource9, (void **)&resource);
+    hr = IUnknown_QueryInterface(volume->forwardReference, &IID_IDirect3DResource9, (void **)&resource);
     if (SUCCEEDED(hr))
     {
         hr = IDirect3DResource9_GetDevice(resource, device);
@@ -122,85 +119,85 @@ static HRESULT WINAPI IDirect3DVolume9Impl_GetDevice(IDirect3DVolume9 *iface,
     return hr;
 }
 
-static HRESULT WINAPI IDirect3DVolume9Impl_SetPrivateData(IDirect3DVolume9 *iface, REFGUID refguid,
-        const void *pData, DWORD SizeOfData, DWORD Flags)
+static HRESULT WINAPI d3d9_volume_SetPrivateData(IDirect3DVolume9 *iface, REFGUID guid,
+        const void *data, DWORD data_size, DWORD flags)
 {
-    IDirect3DVolume9Impl *This = impl_from_IDirect3DVolume9(iface);
+    struct d3d9_volume *volume = impl_from_IDirect3DVolume9(iface);
     struct wined3d_resource *resource;
     HRESULT hr;
 
     TRACE("iface %p, guid %s, data %p, data_size %u, flags %#x.\n",
-            iface, debugstr_guid(refguid), pData, SizeOfData, Flags);
+            iface, debugstr_guid(guid), data, data_size, flags);
 
     wined3d_mutex_lock();
-    resource = wined3d_volume_get_resource(This->wined3d_volume);
-    hr = wined3d_resource_set_private_data(resource, refguid, pData, SizeOfData, Flags);
+    resource = wined3d_volume_get_resource(volume->wined3d_volume);
+    hr = wined3d_resource_set_private_data(resource, guid, data, data_size, flags);
     wined3d_mutex_unlock();
 
     return hr;
 }
 
-static HRESULT WINAPI IDirect3DVolume9Impl_GetPrivateData(IDirect3DVolume9 *iface, REFGUID  refguid,
-        void *pData, DWORD *pSizeOfData)
+static HRESULT WINAPI d3d9_volume_GetPrivateData(IDirect3DVolume9 *iface, REFGUID guid,
+        void *data, DWORD *data_size)
 {
-    IDirect3DVolume9Impl *This = impl_from_IDirect3DVolume9(iface);
+    struct d3d9_volume *volume = impl_from_IDirect3DVolume9(iface);
     struct wined3d_resource *resource;
     HRESULT hr;
 
     TRACE("iface %p, guid %s, data %p, data_size %p.\n",
-            iface, debugstr_guid(refguid), pData, pSizeOfData);
+            iface, debugstr_guid(guid), data, data_size);
 
     wined3d_mutex_lock();
-    resource = wined3d_volume_get_resource(This->wined3d_volume);
-    hr = wined3d_resource_get_private_data(resource, refguid, pData, pSizeOfData);
+    resource = wined3d_volume_get_resource(volume->wined3d_volume);
+    hr = wined3d_resource_get_private_data(resource, guid, data, data_size);
     wined3d_mutex_unlock();
 
     return hr;
 }
 
-static HRESULT WINAPI IDirect3DVolume9Impl_FreePrivateData(IDirect3DVolume9 *iface, REFGUID refguid)
+static HRESULT WINAPI d3d9_volume_FreePrivateData(IDirect3DVolume9 *iface, REFGUID guid)
 {
-    IDirect3DVolume9Impl *This = impl_from_IDirect3DVolume9(iface);
+    struct d3d9_volume *volume = impl_from_IDirect3DVolume9(iface);
     struct wined3d_resource *resource;
     HRESULT hr;
 
-    TRACE("iface %p, guid %s.\n", iface, debugstr_guid(refguid));
+    TRACE("iface %p, guid %s.\n", iface, debugstr_guid(guid));
 
     wined3d_mutex_lock();
-    resource = wined3d_volume_get_resource(This->wined3d_volume);
-    hr = wined3d_resource_free_private_data(resource, refguid);
+    resource = wined3d_volume_get_resource(volume->wined3d_volume);
+    hr = wined3d_resource_free_private_data(resource, guid);
     wined3d_mutex_unlock();
 
     return hr;
 }
 
-static HRESULT WINAPI IDirect3DVolume9Impl_GetContainer(IDirect3DVolume9 *iface, REFIID riid,
-        void **ppContainer)
+static HRESULT WINAPI d3d9_volume_GetContainer(IDirect3DVolume9 *iface, REFIID riid, void **container)
 {
-    IDirect3DVolume9Impl *This = impl_from_IDirect3DVolume9(iface);
-    HRESULT res;
+    struct d3d9_volume *volume = impl_from_IDirect3DVolume9(iface);
+    HRESULT hr;
 
-    TRACE("iface %p, riid %s, container %p.\n", iface, debugstr_guid(riid), ppContainer);
+    TRACE("iface %p, riid %s, container %p.\n", iface, debugstr_guid(riid), container);
 
-    if (!This->container) return E_NOINTERFACE;
+    if (!volume->container)
+        return E_NOINTERFACE;
 
-    res = IUnknown_QueryInterface(This->container, riid, ppContainer);
+    hr = IUnknown_QueryInterface(volume->container, riid, container);
 
-    TRACE("Returning ppContainer %p, *ppContainer %p\n", ppContainer, *ppContainer);
+    TRACE("Returning %p,\n", *container);
 
-    return res;
+    return hr;
 }
 
-static HRESULT WINAPI IDirect3DVolume9Impl_GetDesc(IDirect3DVolume9 *iface, D3DVOLUME_DESC *desc)
+static HRESULT WINAPI d3d9_volume_GetDesc(IDirect3DVolume9 *iface, D3DVOLUME_DESC *desc)
 {
-    IDirect3DVolume9Impl *This = impl_from_IDirect3DVolume9(iface);
+    struct d3d9_volume *volume = impl_from_IDirect3DVolume9(iface);
     struct wined3d_resource_desc wined3d_desc;
     struct wined3d_resource *wined3d_resource;
 
     TRACE("iface %p, desc %p.\n", iface, desc);
 
     wined3d_mutex_lock();
-    wined3d_resource = wined3d_volume_get_resource(This->wined3d_volume);
+    wined3d_resource = wined3d_volume_get_resource(volume->wined3d_volume);
     wined3d_resource_get_desc(wined3d_resource, &wined3d_desc);
     wined3d_mutex_unlock();
 
@@ -215,52 +212,56 @@ static HRESULT WINAPI IDirect3DVolume9Impl_GetDesc(IDirect3DVolume9 *iface, D3DV
     return D3D_OK;
 }
 
-static HRESULT WINAPI IDirect3DVolume9Impl_LockBox(IDirect3DVolume9 *iface,
-        D3DLOCKED_BOX *pLockedVolume, const D3DBOX *pBox, DWORD Flags)
+static HRESULT WINAPI d3d9_volume_LockBox(IDirect3DVolume9 *iface,
+        D3DLOCKED_BOX *locked_box, const D3DBOX *box, DWORD flags)
 {
-    IDirect3DVolume9Impl *This = impl_from_IDirect3DVolume9(iface);
+    struct d3d9_volume *volume = impl_from_IDirect3DVolume9(iface);
+    struct wined3d_map_desc map_desc;
     HRESULT hr;
 
     TRACE("iface %p, locked_box %p, box %p, flags %#x.\n",
-            iface, pLockedVolume, pBox, Flags);
+            iface, locked_box, box, flags);
 
     wined3d_mutex_lock();
-    hr = wined3d_volume_map(This->wined3d_volume, (struct wined3d_mapped_box *)pLockedVolume,
-            (const struct wined3d_box *)pBox, Flags);
+    hr = wined3d_volume_map(volume->wined3d_volume, &map_desc, (const struct wined3d_box *)box, flags);
     wined3d_mutex_unlock();
+
+    locked_box->RowPitch = map_desc.row_pitch;
+    locked_box->SlicePitch = map_desc.slice_pitch;
+    locked_box->pBits = map_desc.data;
 
     return hr;
 }
 
-static HRESULT WINAPI IDirect3DVolume9Impl_UnlockBox(IDirect3DVolume9 *iface)
+static HRESULT WINAPI d3d9_volume_UnlockBox(IDirect3DVolume9 *iface)
 {
-    IDirect3DVolume9Impl *This = impl_from_IDirect3DVolume9(iface);
+    struct d3d9_volume *volume = impl_from_IDirect3DVolume9(iface);
     HRESULT hr;
 
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    hr = wined3d_volume_unmap(This->wined3d_volume);
+    hr = wined3d_volume_unmap(volume->wined3d_volume);
     wined3d_mutex_unlock();
 
     return hr;
 }
 
-static const IDirect3DVolume9Vtbl Direct3DVolume9_Vtbl =
+static const struct IDirect3DVolume9Vtbl d3d9_volume_vtbl =
 {
     /* IUnknown */
-    IDirect3DVolume9Impl_QueryInterface,
-    IDirect3DVolume9Impl_AddRef,
-    IDirect3DVolume9Impl_Release,
+    d3d9_volume_QueryInterface,
+    d3d9_volume_AddRef,
+    d3d9_volume_Release,
     /* IDirect3DVolume9 */
-    IDirect3DVolume9Impl_GetDevice,
-    IDirect3DVolume9Impl_SetPrivateData,
-    IDirect3DVolume9Impl_GetPrivateData,
-    IDirect3DVolume9Impl_FreePrivateData,
-    IDirect3DVolume9Impl_GetContainer,
-    IDirect3DVolume9Impl_GetDesc,
-    IDirect3DVolume9Impl_LockBox,
-    IDirect3DVolume9Impl_UnlockBox
+    d3d9_volume_GetDevice,
+    d3d9_volume_SetPrivateData,
+    d3d9_volume_GetPrivateData,
+    d3d9_volume_FreePrivateData,
+    d3d9_volume_GetContainer,
+    d3d9_volume_GetDesc,
+    d3d9_volume_LockBox,
+    d3d9_volume_UnlockBox,
 };
 
 static void STDMETHODCALLTYPE volume_wined3d_object_destroyed(void *parent)
@@ -273,13 +274,13 @@ static const struct wined3d_parent_ops d3d9_volume_wined3d_parent_ops =
     volume_wined3d_object_destroyed,
 };
 
-HRESULT volume_init(IDirect3DVolume9Impl *volume, IDirect3DDevice9Impl *device, UINT width, UINT height,
+HRESULT volume_init(struct d3d9_volume *volume, struct d3d9_device *device, UINT width, UINT height,
         UINT depth, DWORD usage, enum wined3d_format_id format, enum wined3d_pool pool)
 {
     HRESULT hr;
 
-    volume->IDirect3DVolume9_iface.lpVtbl = &Direct3DVolume9_Vtbl;
-    volume->ref = 1;
+    volume->IDirect3DVolume9_iface.lpVtbl = &d3d9_volume_vtbl;
+    volume->refcount = 1;
 
     hr = wined3d_volume_create(device->wined3d_device, width, height, depth, usage & WINED3DUSAGE_MASK,
             format, pool, volume, &d3d9_volume_wined3d_parent_ops, &volume->wined3d_volume);

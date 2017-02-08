@@ -29,7 +29,7 @@
  * NOTES:            Adapted from Wine
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 #include <debug.h>
 

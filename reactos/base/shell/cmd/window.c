@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * WINDOW.C - activate & window internal commands.
  *
  * clone from 4nt activate command
@@ -16,7 +15,7 @@
  */
 
 
-#include <precomp.h>
+#include "precomp.h"
 
 #if (  defined(INCLUDE_CMD_WINDOW) ||  defined(INCLUDE_CMD_ACTIVATE)  )
 

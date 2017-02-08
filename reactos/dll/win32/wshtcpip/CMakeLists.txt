@@ -11,9 +11,9 @@ list(APPEND SOURCE
 
 add_library(wshtcpip SHARED ${SOURCE})
 
-set_module_type(wshtcpip win32dll UNICODE ENTRYPOINT 0)
+set_module_type(wshtcpip win32dll UNICODE)
 
 target_link_libraries(wshtcpip tdilib)
-add_importlibs(wshtcpip ws2_32 kernel32 ntdll)
+add_importlibs(wshtcpip ws2_32 msvcrt kernel32 ntdll)
 add_dependencies(wshtcpip psdk)
 add_cd_file(TARGET wshtcpip DESTINATION reactos/system32 FOR all)

@@ -7,83 +7,13 @@
  */
 
 #include <win32k.h>
-
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(GdiBlt);
 
 #define ROP_USES_SOURCE(Rop)  (((((Rop) & 0xCC0000) >> 2) != ((Rop) & 0x330000)) || ((((Rop) & 0xCC000000) >> 2) != ((Rop) & 0x33000000)))
 #define ROP_USES_MASK(Rop)    (((Rop) & 0xFF000000) != (((Rop) & 0xff0000) << 8))
 
 #define FIXUP_ROP(Rop) if(((Rop) & 0xFF000000) == 0) Rop = MAKEROP4((Rop), (Rop))
 #define ROP_TO_ROP4(Rop) ((Rop) >> 16)
-
-ULONG
-TranslateCOLORREF(PDC pdc, COLORREF crColor)
-{
-    PPALETTE ppalDC, ppalSurface;
-    ULONG index, ulColor, iBitmapFormat;
-    EXLATEOBJ exlo;
-
-    switch (crColor >> 24)
-    {
-        case 0x00: /* RGB color */
-            break;
-
-        case 0x01: /* PALETTEINDEX */
-            index = crColor & 0xFFFFFF;
-            ppalDC = pdc->dclevel.ppal;
-            if (index >= ppalDC->NumColors) index = 0;
-
-            /* Get the RGB value */
-            crColor = PALETTE_ulGetRGBColorFromIndex(ppalDC, index);
-            break;
-
-        case 0x02: /* PALETTERGB */
-
-            if (pdc->dclevel.hpal != StockObjects[DEFAULT_PALETTE])
-            {
-                /* First find the nearest index in the dc palette */
-                ppalDC = pdc->dclevel.ppal;
-                index = PALETTE_ulGetNearestIndex(ppalDC, crColor & 0xFFFFFF);
-
-                /* Get the RGB value */
-                crColor = PALETTE_ulGetRGBColorFromIndex(ppalDC, index);
-            }
-            else
-            {
-                /* Use the pure color */
-                crColor = crColor & 0x00FFFFFF;
-            }
-            break;
-
-        case 0x10: /* DIBINDEX */
-            /* Mask the value to match the target bpp */
-            iBitmapFormat = pdc->dclevel.pSurface->SurfObj.iBitmapFormat;
-            if (iBitmapFormat == BMF_1BPP) index = crColor & 0x1;
-            else if (iBitmapFormat == BMF_4BPP) index = crColor & 0xf;
-            else if (iBitmapFormat == BMF_8BPP) index = crColor & 0xFF;
-            else if (iBitmapFormat == BMF_16BPP) index = crColor & 0xFFFF;
-            else index = crColor & 0xFFFFFF;
-            return index;
-
-        default:
-            DPRINT("Unsupported color type %d passed\n", crColor >> 24);
-            crColor &= 0xFFFFFF;
-    }
-
-    /* Initialize an XLATEOBJ from RGB to the target surface */
-    ppalSurface = pdc->dclevel.pSurface->ppal;
-    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, ppalSurface, 0xFFFFFF, 0, 0);
-
-    /* Translate the color to the target format */
-    ulColor = XLATEOBJ_iXlate(&exlo.xlo, crColor);
-
-    /* Cleanup the XLATEOBJ */
-    EXLATEOBJ_vCleanup(&exlo);
-
-    return ulColor;
-}
-
 
 BOOL APIENTRY
 NtGdiAlphaBlend(
@@ -117,12 +47,12 @@ NtGdiAlphaBlend(
         return FALSE;
     }
 
-    DPRINT("Locking DCs\n");
+    TRACE("Locking DCs\n");
     ahDC[0] = hDCDest;
     ahDC[1] = hDCSrc ;
     if (!GDIOBJ_bLockMultipleObjects(2, (HGDIOBJ*)ahDC, apObj, GDIObjType_DC_TYPE))
     {
-        DPRINT1("Invalid dc handle (dest=0x%08x, src=0x%08x) passed to NtGdiAlphaBlend\n", hDCDest, hDCSrc);
+        WARN("Invalid dc handle (dest=0x%p, src=0x%p) passed to NtGdiAlphaBlend\n", hDCDest, hDCSrc);
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
@@ -170,7 +100,7 @@ NtGdiAlphaBlend(
     }
 
     /* Prepare DCs for blit */
-    DPRINT("Preparing DCs for blit\n");
+    TRACE("Preparing DCs for blit\n");
     DC_vPrepareDCsForBlit(DCDest, DestRect, DCSrc, SourceRect);
 
     /* Determine surfaces to be used in the bitblt */
@@ -192,7 +122,7 @@ NtGdiAlphaBlend(
     EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
 
     /* Perform the alpha blend operation */
-    DPRINT("Performing the alpha blend\n");
+    TRACE("Performing the alpha blend\n");
     bResult = IntEngAlphaBlend(&BitmapDest->SurfObj,
                                &BitmapSrc->SurfObj,
                                DCDest->rosdc.CombinedClip,
@@ -203,7 +133,7 @@ NtGdiAlphaBlend(
 
     EXLATEOBJ_vCleanup(&exlo);
 leave :
-    DPRINT("Finishing blit\n");
+    TRACE("Finishing blit\n");
     DC_vFinishBlit(DCDest, DCSrc);
     GDIOBJ_vUnlockObject(&DCSrc->BaseObject);
     GDIOBJ_vUnlockObject(&DCDest->BaseObject);
@@ -265,12 +195,12 @@ NtGdiTransparentBlt(
     BOOL Ret = FALSE;
     EXLATEOBJ exlo;
 
-    DPRINT("Locking DCs\n");
+    TRACE("Locking DCs\n");
     ahDC[0] = hdcDst;
     ahDC[1] = hdcSrc ;
     if (!GDIOBJ_bLockMultipleObjects(2, (HGDIOBJ*)ahDC, apObj, GDIObjType_DC_TYPE))
     {
-        DPRINT1("Invalid dc handle (dest=0x%08x, src=0x%08x) passed to NtGdiAlphaBlend\n", hdcDst, hdcSrc);
+        WARN("Invalid dc handle (dest=0x%p, src=0x%p) passed to NtGdiAlphaBlend\n", hdcDst, hdcSrc);
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
@@ -411,7 +341,7 @@ NtGdiMaskBlt(
     }
     else if(psurfMask)
     {
-        DPRINT1("Getting Mask bitmap without needing it?\n");
+        WARN("Getting Mask bitmap without needing it?\n");
         SURFACE_ShareUnlockSurface(psurfMask);
         psurfMask = NULL;
     }
@@ -419,12 +349,12 @@ NtGdiMaskBlt(
     MaskPoint.y = yMask;
 
     /* Take care of source and destination bitmap */
-    DPRINT("Locking DCs\n");
+    TRACE("Locking DCs\n");
     ahDC[0] = hdcDest;
     ahDC[1] = UsesSource ? hdcSrc : NULL;
     if (!GDIOBJ_bLockMultipleObjects(2, (HGDIOBJ*)ahDC, apObj, GDIObjType_DC_TYPE))
     {
-        DPRINT1("Invalid dc handle (dest=0x%08x, src=0x%08x) passed to NtGdiAlphaBlend\n", hdcDest, hdcSrc);
+        WARN("Invalid dc handle (dest=0x%p, src=0x%p) passed to NtGdiAlphaBlend\n", hdcDest, hdcSrc);
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
@@ -435,7 +365,7 @@ NtGdiMaskBlt(
     if (NULL == DCDest)
     {
         if(DCSrc) DC_UnlockDc(DCSrc);
-        DPRINT("Invalid destination dc handle (0x%08x) passed to NtGdiBitBlt\n", hdcDest);
+        WARN("Invalid destination dc handle (0x%p) passed to NtGdiBitBlt\n", hdcDest);
         return FALSE;
     }
 
@@ -486,6 +416,13 @@ NtGdiMaskBlt(
         SourceRect.top = SourcePoint.y;
         SourceRect.right = SourcePoint.x + DestRect.right - DestRect.left;
         SourceRect.bottom = SourcePoint.y + DestRect.bottom - DestRect.top ;
+    }
+    else
+    {
+        SourceRect.left = 0;
+        SourceRect.top = 0;
+        SourceRect.right = 0;
+        SourceRect.bottom = 0;
     }
 
     /* Prepare blit */
@@ -558,7 +495,7 @@ NtGdiPlgBlt(
     IN INT yMask,
     IN DWORD crBackColor)
 {
-    UNIMPLEMENTED;
+    FIXME("NtGdiPlgBlt: unimplemented.\n");
     return FALSE;
 }
 
@@ -619,7 +556,7 @@ GreStretchBltMask(
     ahDC[2] = UsesMask ? hDCMask : NULL;
     if (!GDIOBJ_bLockMultipleObjects(3, (HGDIOBJ*)ahDC, apObj, GDIObjType_DC_TYPE))
     {
-        DPRINT1("Invalid dc handle (dest=0x%08x, src=0x%08x) passed to NtGdiAlphaBlend\n", hDCDest, hDCSrc);
+        WARN("Invalid dc handle (dest=0x%p, src=0x%p) passed to GreStretchBltMask\n", hDCDest, hDCSrc);
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
@@ -712,7 +649,7 @@ GreStretchBltMask(
             (BitmapMask->SurfObj.sizlBitmap.cx < WidthSrc ||
              BitmapMask->SurfObj.sizlBitmap.cy < HeightSrc))
         {
-            DPRINT1("%dx%d mask is smaller than %dx%d bitmap\n",
+            WARN("%dx%d mask is smaller than %dx%d bitmap\n",
                     BitmapMask->SurfObj.sizlBitmap.cx, BitmapMask->SurfObj.sizlBitmap.cy,
                     WidthSrc, HeightSrc);
             EXLATEOBJ_vCleanup(&exlo);
@@ -728,10 +665,11 @@ GreStretchBltMask(
 
     /* Perform the bitblt operation */
     Status = IntEngStretchBlt(&BitmapDest->SurfObj,
-                              &BitmapSrc->SurfObj,
+                              BitmapSrc ? &BitmapSrc->SurfObj : NULL,
                               BitmapMask ? &BitmapMask->SurfObj : NULL,
                               DCDest->rosdc.CombinedClip,
                               XlateObj,
+                              &DCDest->dclevel.ca,
                               &DestRect,
                               &SourceRect,
                               BitmapMask ? &MaskPoint : NULL,
@@ -913,7 +851,7 @@ IntGdiPolyPatBlt(
         if (pbrush != NULL)
         {
             /* Initialize a brush object */
-            EBRUSHOBJ_vInit(&eboFill, pbrush, pdc);
+            EBRUSHOBJ_vInitFromDC(&eboFill, pbrush, pdc);
 
             IntPatBlt(
                 pdc,

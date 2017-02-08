@@ -21,8 +21,8 @@
  *
  */
 
-#include "config.h"
-#include "initguid.h"
+#include <config.h>
+#include <initguid.h>
 #include "d3d9_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
@@ -33,40 +33,46 @@ void WINAPI DebugSetMute(void) {
     /* nothing to do */
 }
 
-IDirect3D9* WINAPI DECLSPEC_HOTPATCH Direct3DCreate9(UINT SDKVersion) {
-    IDirect3D9Impl* object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirect3D9Impl));
+IDirect3D9 * WINAPI DECLSPEC_HOTPATCH Direct3DCreate9(UINT sdk_version)
+{
+    struct d3d9 *object;
 
-    object->IDirect3D9Ex_iface.lpVtbl = &Direct3D9_Vtbl;
-    object->ref = 1;
+    TRACE("sdk_version %#x.\n", sdk_version);
 
-    wined3d_mutex_lock();
-    object->WineD3D = wined3d_create(9, 0, object);
-    wined3d_mutex_unlock();
+    if (!(object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object))))
+        return NULL;
 
-    TRACE("SDKVersion = %x, Created Direct3D object @ %p, WineObj @ %p\n", SDKVersion, object, object->WineD3D);
-
-    if (!object->WineD3D)
+    if (!d3d9_init(object, FALSE))
     {
-        HeapFree( GetProcessHeap(), 0, object );
-        object = NULL;
+        WARN("Failed to initialize d3d9.\n");
+        HeapFree(GetProcessHeap(), 0, object);
+        return NULL;
     }
-    return (IDirect3D9*) object;
+
+    TRACE("Created d3d9 object %p.\n", object);
+
+    return (IDirect3D9 *)&object->IDirect3D9Ex_iface;
 }
 
-HRESULT WINAPI DECLSPEC_HOTPATCH Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex **direct3d9ex) {
-    IDirect3D9 *ret;
-    IDirect3D9Impl* object;
+HRESULT WINAPI DECLSPEC_HOTPATCH Direct3DCreate9Ex(UINT sdk_version, IDirect3D9Ex **d3d9ex)
+{
+    struct d3d9 *object;
 
-    TRACE("Calling Direct3DCreate9\n");
-    ret = Direct3DCreate9(SDKVersion);
-    if(!ret) {
-        *direct3d9ex = NULL;
+    TRACE("sdk_version %#x, d3d9ex %p.\n", sdk_version, d3d9ex);
+
+    if (!(object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object))))
+        return E_OUTOFMEMORY;
+
+    if (!d3d9_init(object, TRUE))
+    {
+        WARN("Failed to initialize d3d9.\n");
+        HeapFree(GetProcessHeap(), 0, object);
         return D3DERR_NOTAVAILABLE;
     }
 
-    object = (IDirect3D9Impl *) ret;
-    object->extended = TRUE; /* Enables QI for extended interfaces */
-    *direct3d9ex = &object->IDirect3D9Ex_iface;
+    TRACE("Created d3d9 object %p.\n", object);
+    *d3d9ex = &object->IDirect3D9Ex_iface;
+
     return D3D_OK;
 }
 

@@ -20,37 +20,42 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include <stdarg.h>
+#include <config.h>
+//#include "wine/port.h"
+
+//#include <stdarg.h>
 #include <stdio.h>
-#include <string.h>
+//#include <string.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "winreg.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winver.h"
-#include "winnetwk.h"
-#include "mmsystem.h"
-#include "objbase.h"
-#include "exdisp.h"
-#include "shdeprecated.h"
-#include "shlobj.h"
-#include "shlwapi.h"
-#include "shellapi.h"
-#include "commdlg.h"
-#include "mlang.h"
-#include "mshtmhst.h"
-#include "wine/unicode.h"
-#include "wine/debug.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winnls.h"
+#include <winreg.h>
+#include <wingdi.h>
+//#include "winuser.h"
+#include <winver.h>
+#include <winnetwk.h>
+#include <wincon.h>
+#include <mmsystem.h>
+//#include "objbase.h"
+//#include "exdisp.h"
+//#include "shdeprecated.h"
+#include <shlobj.h>
+#include <shlwapi.h>
+#include <shellapi.h>
+#include <commdlg.h>
+#include <mlang.h>
+#include <mshtmhst.h>
+#include <wine/unicode.h>
+#include <wine/debug.h>
 
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -76,7 +81,7 @@ BOOL    WINAPI SHAboutInfoW(LPWSTR,DWORD);
 /*************************************************************************
  * SHLWAPI_DupSharedHandle
  *
- * Internal implemetation of SHLWAPI_11.
+ * Internal implementation of SHLWAPI_11.
  */
 static HANDLE SHLWAPI_DupSharedHandle(HANDLE hShared, DWORD dwDstProcId,
                                       DWORD dwSrcProcId, DWORD dwAccess,
@@ -144,7 +149,7 @@ static HANDLE SHLWAPI_DupSharedHandle(HANDLE hShared, DWORD dwDstProcId,
  * the view pointer returned by this size.
  *
  */
-HANDLE WINAPI SHAllocShared(LPVOID lpvData, ULONG dwSize, DWORD dwProcId)
+HANDLE WINAPI SHAllocShared(LPCVOID lpvData, DWORD dwSize, DWORD dwProcId)
 {
   HANDLE hMap;
   LPVOID pMapped;
@@ -446,7 +451,7 @@ HRESULT WINAPI RegisterDefaultAcceptHeaders(LPBC lpBC, IUnknown *lpUnknown)
         IEnumFORMATETC_Release(pClone);
       }
 
-      IEnumFORMATETC_Release(pIUnknown);
+      IUnknown_Release(pIUnknown);
     }
     IUnknown_Release(V_UNKNOWN(&var));
   }
@@ -635,25 +640,6 @@ INT WINAPI SHStringFromGUIDW(REFGUID guid, LPWSTR lpszDest, INT cchMax)
     return 0;
   memcpy(lpszDest, xguid, iLen*sizeof(WCHAR));
   return iLen;
-}
-
-/*************************************************************************
- *      @	[SHLWAPI.29]
- *
- * Determine if a Unicode character is a space.
- *
- * PARAMS
- *  wc [I] Character to check.
- *
- * RETURNS
- *  TRUE, if wc is a space,
- *  FALSE otherwise.
- */
-BOOL WINAPI IsCharSpaceW(WCHAR wc)
-{
-    WORD CharType;
-
-    return GetStringTypeW(CT_CTYPE1, &wc, 1, &CharType) && (CharType & C1_SPACE);
 }
 
 /*************************************************************************
@@ -1136,14 +1122,14 @@ HWND WINAPI SHSetParentHwnd(HWND hWnd, HWND hWndParent)
   TRACE("%p, %p\n", hWnd, hWndParent);
 
   if(GetParent(hWnd) == hWndParent)
-    return 0;
+    return NULL;
 
   if(hWndParent)
-    SHSetWindowBits(hWnd, GWL_STYLE, WS_CHILD, WS_CHILD);
+    SHSetWindowBits(hWnd, GWL_STYLE, WS_CHILD | WS_POPUP, WS_CHILD);
   else
-    SHSetWindowBits(hWnd, GWL_STYLE, WS_POPUP, WS_POPUP);
+    SHSetWindowBits(hWnd, GWL_STYLE, WS_CHILD | WS_POPUP, WS_POPUP);
 
-  return SetParent(hWnd, hWndParent);
+  return hWndParent ? SetParent(hWnd, hWndParent) : NULL;
 }
 
 /*************************************************************************
@@ -1202,7 +1188,7 @@ HRESULT WINAPI ConnectToConnectionPoint(IUnknown* lpUnkSink, REFIID riid, BOOL f
         IConnectionPoint_Release(lpCP); /* Release it */
     }
 
-    IUnknown_Release(lpContainer);
+    IConnectionPointContainer_Release(lpContainer);
   }
   return hRet;
 }
@@ -1334,7 +1320,7 @@ HRESULT WINAPI IUnknown_GetWindow(IUnknown *lpUnknown, HWND *lphWnd)
 
   if (SUCCEEDED(hRet))
   {
-    /* Lazyness here - Since GetWindow() is the first method for the above 3
+    /* Laziness here - Since GetWindow() is the first method for the above 3
      * interfaces, we use the same call for them all.
      */
     hRet = IOleWindow_GetWindow((IOleWindow*)lpOle, lphWnd);
@@ -1400,7 +1386,7 @@ HRESULT WINAPI IUnknown_SetSite(
     {
 	hr = IObjectWithSite_SetSite(iobjwithsite, site);
 	TRACE("done IObjectWithSite_SetSite ret=%08x\n", hr);
-	IUnknown_Release(iobjwithsite);
+	IObjectWithSite_Release(iobjwithsite);
     }
     else
     {
@@ -1410,7 +1396,7 @@ HRESULT WINAPI IUnknown_SetSite(
 
 	hr = IInternetSecurityManager_SetSecuritySite(isecmgr, (IInternetSecurityMgrSite *)site);
 	TRACE("done IInternetSecurityManager_SetSecuritySite ret=%08x\n", hr);
-	IUnknown_Release(isecmgr);
+	IInternetSecurityManager_Release(isecmgr);
     }
     return hr;
 }
@@ -1435,7 +1421,7 @@ HRESULT WINAPI IUnknown_GetClassID(IUnknown *lpUnknown, CLSID* lpClassId)
   IPersist* lpPersist;
   HRESULT hRet = E_FAIL;
 
-  TRACE("(%p,%p)\n", lpUnknown, debugstr_guid(lpClassId));
+  TRACE("(%p,%s)\n", lpUnknown, debugstr_guid(lpClassId));
 
   if (lpUnknown)
   {
@@ -1493,7 +1479,7 @@ HRESULT WINAPI IUnknown_QueryService(IUnknown* lpUnknown, REFGUID sid, REFIID ri
 
     TRACE("(IServiceProvider*)%p returned (IUnknown*)%p\n", pService, *lppOut);
 
-    IUnknown_Release(pService);
+    IServiceProvider_Release(pService);
   }
   return hRet;
 }
@@ -1571,7 +1557,10 @@ HRESULT WINAPI IUnknown_ProfferService(IUnknown *lpUnknown, REFGUID service, ISe
         if (pService)
             hr = IProfferService_ProfferService(proffer, service, pService, pCookie);
         else
+        {
             hr = IProfferService_RevokeService(proffer, *pCookie);
+            *pCookie = 0;
+        }
 
         IProfferService_Release(proffer);
     }
@@ -1610,7 +1599,7 @@ HRESULT WINAPI IUnknown_UIActivateIO(IUnknown *unknown, BOOL activate, LPMSG msg
     if (ret == S_OK)
     {
         ret = IInputObject_UIActivateIO(object, activate, msg);
-        IUnknown_Release(object);
+        IInputObject_Release(object);
     }
 
     return ret;
@@ -2673,7 +2662,7 @@ DWORD WINAPI SHGetRestriction(LPCWSTR lpSubKey, LPCWSTR lpSubName, LPCWSTR lpVal
 	  lpSubKey = strRegistryPolicyW;
 
 	retval = RegOpenKeyW(HKEY_LOCAL_MACHINE, lpSubKey, &hKey);
-    if (retval != ERROR_SUCCESS)
+        if (retval != ERROR_SUCCESS)
 	  retval = RegOpenKeyW(HKEY_CURRENT_USER, lpSubKey, &hKey);
 	if (retval != ERROR_SUCCESS)
 	  return 0;
@@ -2721,7 +2710,7 @@ DWORD WINAPI SHRestrictionLookup(
 	    /* we have a known policy */
 
 	    /* check if this policy has been cached */
-		if (*polArr == SHELL_NO_POLICY)
+            if (*polArr == SHELL_NO_POLICY)
 	      *polArr = SHGetRestriction(initial, polTable->appstr, polTable->keystr);
 	    return *polArr;
 	  }
@@ -3735,7 +3724,6 @@ BOOL WINAPI GetOpenFileNameWrapW(LPOPENFILENAMEW ofn)
 /*************************************************************************
  *      @	[SHLWAPI.404]
  */
-#if 1
 HRESULT WINAPI SHIShellFolder_EnumObjects(LPSHELLFOLDER lpFolder, HWND hwnd, SHCONTF flags, IEnumIDList **ppenum)
 {
     /* Windows attempts to get an IPersist interface and, if that fails, an
@@ -3752,29 +3740,6 @@ HRESULT WINAPI SHIShellFolder_EnumObjects(LPSHELLFOLDER lpFolder, HWND hwnd, SHC
 
     return IShellFolder_EnumObjects(lpFolder, hwnd, flags, ppenum);
 }
-#else
-HRESULT WINAPI SHIShellFolder_EnumObjects(LPSHELLFOLDER lpFolder, HWND hwnd, SHCONTF flags, IEnumIDList **ppenum)
-{
-    IPersist *persist;
-    HRESULT hr;
-
-    hr = IShellFolder_QueryInterface(lpFolder, &IID_IPersist, (LPVOID)&persist);
-    if(SUCCEEDED(hr))
-    {
-        CLSID clsid;
-        hr = IPersist_GetClassID(persist, &clsid);
-        if(SUCCEEDED(hr))
-        {
-            if(IsEqualCLSID(&clsid, &CLSID_ShellFSFolder))
-                hr = IShellFolder_EnumObjects(lpFolder, hwnd, flags, ppenum);
-            else
-                hr = E_FAIL;
-        }
-        IPersist_Release(persist);
-    }
-    return hr;
-}
-#endif
 
 /* INTERNAL: Map from HLS color space to RGB */
 static WORD ConvertHue(int wHue, WORD wMid1, WORD wMid2)
@@ -3863,6 +3828,28 @@ DWORD WINAPI SHGetMachineInfo(DWORD dwFlags)
   default:
     return 0;
   }
+}
+
+/*************************************************************************
+ * @    [SHLWAPI.416]
+ *
+ */
+DWORD WINAPI SHWinHelpOnDemandW(HWND hwnd, LPCWSTR helpfile, DWORD flags1, VOID *ptr1, DWORD flags2)
+{
+
+    FIXME("(%p, %s, 0x%x, %p, %d)\n", hwnd, debugstr_w(helpfile), flags1, ptr1, flags2);
+    return 0;
+}
+
+/*************************************************************************
+ * @    [SHLWAPI.417]
+ *
+ */
+DWORD WINAPI SHWinHelpOnDemandA(HWND hwnd, LPCSTR helpfile, DWORD flags1, VOID *ptr1, DWORD flags2)
+{
+
+    FIXME("(%p, %s, 0x%x, %p, %d)\n", hwnd, debugstr_a(helpfile), flags1, ptr1, flags2);
+    return 0;
 }
 
 /*************************************************************************
@@ -4062,8 +4049,11 @@ BOOL WINAPI IsOS(DWORD feature)
     case OS_ANYSERVER:
         ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT)
     case OS_WOW6432:
-        FIXME("(OS_WOW6432) Should we check this?\n");
-        return FALSE;
+        {
+            BOOL is_wow64;
+            IsWow64Process(GetCurrentProcess(), &is_wow64);
+            return is_wow64;
+        }
     case OS_WEBSERVER:
         ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT)
     case OS_SMALLBUSINESSSERVER:
@@ -4425,12 +4415,141 @@ BOOL WINAPI SHSkipJunction(IBindCtx *pbc, const CLSID *pclsid)
 }
 
 /***********************************************************************
- *		SHGetShellKey (SHLWAPI.@)
+ *		SHGetShellKey (SHLWAPI.491)
  */
 HKEY WINAPI SHGetShellKey(DWORD flags, LPCWSTR sub_key, BOOL create)
 {
-    FIXME("(0x%08x, %s, %d): stub\n", flags, debugstr_w(sub_key), create);
-    return (HKEY)0x50;
+    enum _shellkey_flags {
+        SHKEY_Root_HKCU = 0x1,
+        SHKEY_Root_HKLM = 0x2,
+        SHKEY_Key_Explorer  = 0x00,
+        SHKEY_Key_Shell = 0x10,
+        SHKEY_Key_ShellNoRoam = 0x20,
+        SHKEY_Key_Classes = 0x30,
+        SHKEY_Subkey_Default = 0x0000,
+        SHKEY_Subkey_ResourceName = 0x1000,
+        SHKEY_Subkey_Handlers = 0x2000,
+        SHKEY_Subkey_Associations = 0x3000,
+        SHKEY_Subkey_Volatile = 0x4000,
+        SHKEY_Subkey_MUICache = 0x5000,
+        SHKEY_Subkey_FileExts = 0x6000
+    };
+
+    static const WCHAR explorerW[] = {'S','o','f','t','w','a','r','e','\\',
+        'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',
+        'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
+        'E','x','p','l','o','r','e','r','\\'};
+    static const WCHAR shellW[] = {'S','o','f','t','w','a','r','e','\\',
+        'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',
+        'S','h','e','l','l','\\'};
+    static const WCHAR shell_no_roamW[] = {'S','o','f','t','w','a','r','e','\\',
+        'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',
+        'S','h','e','l','l','N','o','R','o','a','m','\\'};
+    static const WCHAR classesW[] = {'S','o','f','t','w','a','r','e','\\',
+        'C','l','a','s','s','e','s','\\'};
+
+    static const WCHAR localized_resource_nameW[] = {'L','o','c','a','l','i','z','e','d',
+        'R','e','s','o','u','r','c','e','N','a','m','e','\\'};
+    static const WCHAR handlersW[] = {'H','a','n','d','l','e','r','s','\\'};
+    static const WCHAR associationsW[] = {'A','s','s','o','c','i','a','t','i','o','n','s','\\'};
+    static const WCHAR volatileW[] = {'V','o','l','a','t','i','l','e','\\'};
+    static const WCHAR mui_cacheW[] = {'M','U','I','C','a','c','h','e','\\'};
+    static const WCHAR file_extsW[] = {'F','i','l','e','E','x','t','s','\\'};
+
+    WCHAR *path;
+    const WCHAR *key, *subkey;
+    int size_key, size_subkey, size_user;
+    HKEY hkey = NULL;
+
+    TRACE("(0x%08x, %s, %d)\n", flags, debugstr_w(sub_key), create);
+
+    /* For compatibility with Vista+ */
+    if(flags == 0x1ffff)
+        flags = 0x21;
+
+    switch(flags&0xff0) {
+    case SHKEY_Key_Explorer:
+        key = explorerW;
+        size_key = sizeof(explorerW);
+        break;
+    case SHKEY_Key_Shell:
+        key = shellW;
+        size_key = sizeof(shellW);
+        break;
+    case SHKEY_Key_ShellNoRoam:
+        key = shell_no_roamW;
+        size_key = sizeof(shell_no_roamW);
+        break;
+    case SHKEY_Key_Classes:
+        key = classesW;
+        size_key = sizeof(classesW);
+        break;
+    default:
+        FIXME("unsupported flags (0x%08x)\n", flags);
+        return NULL;
+    }
+
+    switch(flags&0xff000) {
+    case SHKEY_Subkey_Default:
+        subkey = NULL;
+        size_subkey = 0;
+        break;
+    case SHKEY_Subkey_ResourceName:
+        subkey = localized_resource_nameW;
+        size_subkey = sizeof(localized_resource_nameW);
+        break;
+    case SHKEY_Subkey_Handlers:
+        subkey = handlersW;
+        size_subkey = sizeof(handlersW);
+        break;
+    case SHKEY_Subkey_Associations:
+        subkey = associationsW;
+        size_subkey = sizeof(associationsW);
+        break;
+    case SHKEY_Subkey_Volatile:
+        subkey = volatileW;
+        size_subkey = sizeof(volatileW);
+        break;
+    case SHKEY_Subkey_MUICache:
+        subkey = mui_cacheW;
+        size_subkey = sizeof(mui_cacheW);
+        break;
+    case SHKEY_Subkey_FileExts:
+        subkey = file_extsW;
+        size_subkey = sizeof(file_extsW);
+        break;
+    default:
+        FIXME("unsupported flags (0x%08x)\n", flags);
+        return NULL;
+    }
+
+    if(sub_key)
+        size_user = lstrlenW(sub_key)*sizeof(WCHAR);
+    else
+        size_user = 0;
+
+    path = HeapAlloc(GetProcessHeap(), 0, size_key+size_subkey+size_user+sizeof(WCHAR));
+    if(!path) {
+        ERR("Out of memory\n");
+        return NULL;
+    }
+
+    memcpy(path, key, size_key);
+    if(subkey)
+        memcpy(path+size_key/sizeof(WCHAR), subkey, size_subkey);
+    if(sub_key)
+        memcpy(path+(size_key+size_subkey)/sizeof(WCHAR), sub_key, size_user);
+    path[(size_key+size_subkey+size_user)/sizeof(WCHAR)] = '\0';
+
+    if(create)
+        RegCreateKeyExW((flags&0xf)==SHKEY_Root_HKLM?HKEY_LOCAL_MACHINE:HKEY_CURRENT_USER,
+                path, 0, NULL, 0, MAXIMUM_ALLOWED, NULL, &hkey, NULL);
+    else
+        RegOpenKeyExW((flags&0xf)==SHKEY_Root_HKLM?HKEY_LOCAL_MACHINE:HKEY_CURRENT_USER,
+                path, 0, MAXIMUM_ALLOWED, &hkey);
+
+    HeapFree(GetProcessHeap(), 0, path);
+    return hkey;
 }
 
 /***********************************************************************
@@ -4499,12 +4618,104 @@ HRESULT WINAPI IUnknown_OnFocusChangeIS(LPUNKNOWN lpUnknown, LPUNKNOWN pFocusObj
 }
 
 /***********************************************************************
- *		SHGetValueW (SHLWAPI.@)
+ *		SKAllocValueW (SHLWAPI.519)
  */
-HRESULT WINAPI SKGetValueW(DWORD a, LPWSTR b, LPWSTR c, DWORD d, DWORD e, DWORD f)
+HRESULT WINAPI SKAllocValueW(DWORD flags, LPCWSTR subkey, LPCWSTR value, DWORD *type,
+        LPVOID *data, DWORD *count)
 {
-    FIXME("(%x, %s, %s, %x, %x, %x): stub\n", a, debugstr_w(b), debugstr_w(c), d, e, f);
-    return E_FAIL;
+    DWORD ret, size;
+    HKEY hkey;
+
+    TRACE("(0x%x, %s, %s, %p, %p, %p)\n", flags, debugstr_w(subkey),
+        debugstr_w(value), type, data, count);
+
+    hkey = SHGetShellKey(flags, subkey, FALSE);
+    if (!hkey)
+        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+
+    ret = SHQueryValueExW(hkey, value, NULL, type, NULL, &size);
+    if (ret) {
+        RegCloseKey(hkey);
+        return HRESULT_FROM_WIN32(ret);
+    }
+
+    size += 2;
+    *data = LocalAlloc(0, size);
+    if (!*data) {
+        RegCloseKey(hkey);
+        return E_OUTOFMEMORY;
+    }
+
+    ret = SHQueryValueExW(hkey, value, NULL, type, *data, &size);
+    if (count)
+        *count = size;
+
+    RegCloseKey(hkey);
+    return HRESULT_FROM_WIN32(ret);
+}
+
+/***********************************************************************
+ *		SKDeleteValueW (SHLWAPI.518)
+ */
+HRESULT WINAPI SKDeleteValueW(DWORD flags, LPCWSTR subkey, LPCWSTR value)
+{
+    DWORD ret;
+    HKEY hkey;
+
+    TRACE("(0x%x, %s %s)\n", flags, debugstr_w(subkey), debugstr_w(value));
+
+    hkey = SHGetShellKey(flags, subkey, FALSE);
+    if (!hkey)
+        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+
+    ret = RegDeleteValueW(hkey, value);
+
+    RegCloseKey(hkey);
+    return HRESULT_FROM_WIN32(ret);
+}
+
+/***********************************************************************
+ *		SKGetValueW (SHLWAPI.516)
+ */
+HRESULT WINAPI SKGetValueW(DWORD flags, LPCWSTR subkey, LPCWSTR value, DWORD *type,
+    void *data, DWORD *count)
+{
+    DWORD ret;
+    HKEY hkey;
+
+    TRACE("(0x%x, %s, %s, %p, %p, %p)\n", flags, debugstr_w(subkey),
+        debugstr_w(value), type, data, count);
+
+    hkey = SHGetShellKey(flags, subkey, FALSE);
+    if (!hkey)
+        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+
+    ret = SHQueryValueExW(hkey, value, NULL, type, data, count);
+
+    RegCloseKey(hkey);
+    return HRESULT_FROM_WIN32(ret);
+}
+
+/***********************************************************************
+ *		SKSetValueW (SHLWAPI.516)
+ */
+HRESULT WINAPI SKSetValueW(DWORD flags, LPCWSTR subkey, LPCWSTR value,
+        DWORD type, void *data, DWORD count)
+{
+    DWORD ret;
+    HKEY hkey;
+
+    TRACE("(0x%x, %s, %s, %x, %p, %d)\n", flags, debugstr_w(subkey),
+            debugstr_w(value), type, data, count);
+
+    hkey = SHGetShellKey(flags, subkey, TRUE);
+    if (!hkey)
+        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+
+    ret = RegSetValueExW(hkey, value, 0, type, data, count);
+
+    RegCloseKey(hkey);
+    return HRESULT_FROM_WIN32(ret);
 }
 
 typedef HRESULT (WINAPI *DllGetVersion_func)(DLLVERSIONINFO *);

@@ -100,7 +100,7 @@ GdiPoolDeleteSection(PGDI_POOL pPool, PGDI_POOL_SECTION pSection)
     /* Should not have any allocations */
     if (pSection->cAllocCount != 0)
     {
-        DPRINT1("There are %ld allocations left, section=%p, pool=%p\n",
+        DPRINT1("There are %lu allocations left, section=%p, pool=%p\n",
                 pSection->cAllocCount, pSection, pPool);
         DBG_DUMP_EVENT_LIST(&pPool->slhLog);
         ASSERT(FALSE);
@@ -127,6 +127,7 @@ GdiPoolAllocate(
     PLIST_ENTRY ple;
     PVOID pvAlloc, pvBaseAddress;
     SIZE_T cjSize;
+    NTSTATUS status;
 
     /* Disable APCs and acquire the pool lock */
     KeEnterCriticalRegion();
@@ -140,7 +141,7 @@ GdiPoolAllocate(
         pSection = CONTAINING_RECORD(ple, GDI_POOL_SECTION, leReadyLink);
         if (pSection->cAllocCount >= pPool->cSlotsPerSection)
         {
-            DPRINT1("pSection->cAllocCount=%ld, pPool->cSlotsPerSection=%ld\n",
+            DPRINT1("pSection->cAllocCount=%lu, pPool->cSlotsPerSection=%lu\n",
                     pSection->cAllocCount, pPool->cSlotsPerSection);
             DBG_DUMP_EVENT_LIST(&pPool->slhLog);
             ASSERT(FALSE);
@@ -155,6 +156,8 @@ GdiPoolAllocate(
             /* Yes, remove it from the empty list */
             ple = RemoveHeadList(&pPool->leEmptyList);
             pSection = CONTAINING_RECORD(ple, GDI_POOL_SECTION, leInUseLink);
+            pPool->cEmptySections--;
+            ASSERT(pSection->cAllocCount == 0);
         }
         else
         {
@@ -166,13 +169,11 @@ GdiPoolAllocate(
                 pvAlloc = NULL;
                 goto done;
             }
-
-            /* Insert it into the ready list */
-            InsertHeadList(&pPool->leReadyList, &pSection->leReadyLink);
         }
 
-        /* Insert it into the in-use list */
+        /* Insert it into the in-use and ready list */
         InsertHeadList(&pPool->leInUseList, &pSection->leInUseLink);
+        InsertHeadList(&pPool->leReadyList, &pSection->leReadyLink);
     }
 
     /* Find and set a single bit */
@@ -191,18 +192,24 @@ GdiPoolAllocate(
         /* Commit the pages */
         pvBaseAddress = PAGE_ALIGN(pvAlloc);
         cjSize = ADDRESS_AND_SIZE_TO_SPAN_PAGES(pvAlloc, pPool->cjAllocSize) * PAGE_SIZE;
-        ZwAllocateVirtualMemory(NtCurrentProcess(),
-                                &pvBaseAddress,
-                                0,
-                                &cjSize,
-                                MEM_COMMIT,
-                                PAGE_READWRITE);
+        status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+                                         &pvBaseAddress,
+                                         0,
+                                         &cjSize,
+                                         MEM_COMMIT,
+                                         PAGE_READWRITE);
+        if (!NT_SUCCESS(status))
+        {
+            pvAlloc = NULL;
+            goto done;
+        }
 
         pSection->ulCommitBitmap |= ulPageBit;
     }
 
     /* Increase alloc count */
     pSection->cAllocCount++;
+    ASSERT(RtlNumberOfSetBits(&pSection->bitmap) == pSection->cAllocCount);
     DBG_LOGEVENT(&pPool->slhLog, EVENT_ALLOCATE, pvAlloc);
 
     /* Check if section is now busy */
@@ -260,6 +267,7 @@ GdiPoolFree(
 
             /* Decrease allocation count */
             pSection->cAllocCount--;
+            ASSERT(RtlNumberOfSetBits(&pSection->bitmap) == pSection->cAllocCount);
             DBG_LOGEVENT(&pPool->slhLog, EVENT_FREE, pvAlloc);
 
             /* Check if the section got valid now */
@@ -275,7 +283,7 @@ GdiPoolFree(
                 RemoveEntryList(&pSection->leInUseLink);
                 RemoveEntryList(&pSection->leReadyLink);
 
-                if (pPool->cEmptySections > 1)
+                if (pPool->cEmptySections >= 1)
                 {
                     /* Delete the section */
                     GdiPoolDeleteSection(pPool, pSection);
@@ -293,7 +301,7 @@ GdiPoolFree(
     }
 
     DbgPrint("failed to free. pvAlloc=%p, base=%p, size=%lx\n",
-             pvAlloc, pSection->pvBaseAddress, pPool->cjSectionSize);
+             pvAlloc, pSection ? pSection->pvBaseAddress : NULL, pPool->cjSectionSize);
     ASSERT(FALSE);
     // KeBugCheck()
 

@@ -3,6 +3,10 @@
 #define __MINGW_IMPORT
 #include <ctype.h>
 
+#ifndef _LIBCNT_
+#include <precomp.h>
+#endif
+
 #undef _pctype
 #undef _pwctype
 
@@ -548,21 +552,11 @@ const unsigned short _wctype[] = {
 	0x0100 | _LOWER,		/* 0xfe */
 	0x0100 | _LOWER			/* 0xff */
 };
+
 const unsigned short *_pctype = _ctype + 1;
 const unsigned short *_pwctype = _wctype + 1;
 
-/*
- * @implemented
- */
-const unsigned short **__p__pctype(void)
-{
-   return &_pctype;
-}
-
-const unsigned short* __cdecl __pctype_func(void)
-{
-   return _pctype;
-}
+extern const unsigned short wine_wctype_table[];
 
 /*
  * @implemented
@@ -577,28 +571,50 @@ const unsigned short* __cdecl __pwctype_func(void)
    return _pwctype;
 }
 
-int _isctype (int c, int ctypeFlags)
+#ifdef _LIBCNT_
+int __cdecl _isctype (int c, int ctypeFlags)
 {
   return (_pctype[(unsigned char)(c & 0xFF)] & ctypeFlags);
 }
-
-/*
- * @implemented
+#else
+/*********************************************************************
+ *         _isctype_l (MSVCRT.@)
  */
-int iswctype(wint_t wc, wctype_t wctypeFlags)
+int __cdecl _isctype_l(int c, int type, _locale_t locale)
 {
-   return (_pwctype[(unsigned char)(wc & 0xFF)] & wctypeFlags);
+  MSVCRT_pthreadlocinfo locinfo;
+
+  if(!locale)
+    locinfo = get_locinfo();
+  else
+    locinfo = ((MSVCRT__locale_t)locale)->locinfo;
+
+  if (c >= -1 && c <= 255)
+    return locinfo->pctype[c] & type;
+
+  if (locinfo->mb_cur_max != 1 && c > 0)
+  {
+    /* FIXME: Is there a faster way to do this? */
+    WORD typeInfo;
+    char convert[3], *pconv = convert;
+
+    if (locinfo->pctype[(UINT)c >> 8] & _LEADBYTE)
+      *pconv++ = (UINT)c >> 8;
+    *pconv++ = c & 0xff;
+    *pconv = 0;
+
+    if (GetStringTypeExA(locinfo->lc_handle[LC_CTYPE],
+                CT_CTYPE1, convert, convert[1] ? 2 : 1, &typeInfo))
+      return typeInfo & type;
+  }
+  return 0;
 }
 
-/*
- * obsolete
- *
- * @implemented
- */
-int is_wctype(wint_t wc, wctype_t wctypeFlags)
-{
-   return (_pwctype[(unsigned char)(wc & 0xFF)] & wctypeFlags);
+int __cdecl _isctype (int c, int ctypeFlags)
+{ 
+  return _isctype_l(c, ctypeFlags, NULL);
 }
+#endif /* _LIBCNT_ */
 
 /*
  * @implemented

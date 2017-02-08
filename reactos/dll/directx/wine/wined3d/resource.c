@@ -20,7 +20,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#include <config.h>
+#include <wine/port.h>
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
@@ -171,6 +172,9 @@ void resource_cleanup(struct wined3d_resource *resource)
 
 void resource_unload(struct wined3d_resource *resource)
 {
+    if (resource->map_count)
+        ERR("Resource %p is being unloaded while mapped.\n", resource);
+
     context_resource_unloaded(resource->device,
             resource, resource->type);
 }

@@ -2641,7 +2641,7 @@ MenuButtonDown(MTRACKER* Mt, HMENU PtMenu, UINT Flags)
 static INT FASTCALL
 MenuButtonUp(MTRACKER *Mt, HMENU PtMenu, UINT Flags)
 {
-  UINT Id;
+  INT Id;
   ROSMENUINFO MenuInfo;
   ROSMENUITEMINFO ItemInfo;
 
@@ -2754,7 +2754,7 @@ MenuPtMenu(HMENU Menu, POINT Pt)
 static BOOL FASTCALL
 MenuMouseMove(MTRACKER *Mt, HMENU PtMenu, UINT Flags)
 {
-  UINT Index;
+  INT Index;
   ROSMENUINFO MenuInfo;
   ROSMENUITEMINFO ItemInfo;
 
@@ -3241,7 +3241,7 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
     while (! fEndMenu)
     {
         BOOL ErrorExit = FALSE;
-        PVOID menu = ValidateHandle(mt.CurrentMenu, otMenu);
+        PVOID menu = ValidateHandle(mt.CurrentMenu, TYPE_MENU);
         if (!menu) /* sometimes happens if I do a window manager close */
            break;
 
@@ -4219,6 +4219,26 @@ GetMenu(HWND hWnd)
 /*
  * @implemented
  */
+BOOL WINAPI GetMenuBarInfo( HWND hwnd, LONG idObject, LONG idItem, PMENUBARINFO pmbi )
+{
+    BOOL Ret;
+    Ret = NtUserGetMenuBarInfo( hwnd, idObject, idItem, pmbi);
+    // Reason to move to server side!!!!!
+    if (!Ret) return Ret;
+    // EL HAXZO!!!
+    pmbi->fBarFocused = top_popup_hmenu == pmbi->hMenu;
+    if (!idItem)
+    {
+        pmbi->fFocused = pmbi->fBarFocused;
+    }
+
+    return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
 LONG WINAPI
 GetMenuCheckMarkDimensions(VOID)
 {
@@ -4747,7 +4767,7 @@ WINAPI
 IsMenu(
   HMENU Menu)
 {
-  if (ValidateHandle(Menu, otMenu)) return TRUE;
+  if (ValidateHandle(Menu, TYPE_MENU)) return TRUE;
   return FALSE;
 }
 

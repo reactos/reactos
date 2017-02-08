@@ -65,7 +65,7 @@ FillFaceInfo(
         pface->wA = GETVAL(pFontInfo->dfAspace);
         pface->wB = GETVAL(pFontInfo->dfBspace);
         pface->wC = GETVAL(pFontInfo->dfCspace);
-        pface->pCharTable = pface->pFontInfo->dfCharTable;
+        pface->pCharTable = pFontInfo->dfCharTable;
         pface->cjEntrySize = sizeof(GLYPHENTRY30);
     }
     else
@@ -74,7 +74,7 @@ FillFaceInfo(
         pface->wA = 0;
         pface->wB = 0;
         pface->wC = 0;
-        pface->pCharTable = &pface->pFontInfo->dfReserved + 1;
+        pface->pCharTable = &pFontInfo->dfReserved + 1;
         pface->cjEntrySize = sizeof(GLYPHENTRY20);
     }
 

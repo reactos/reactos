@@ -224,7 +224,7 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     // Build the symbolic link name and target
     //
     _snwprintf(SourceString,
-               sizeof(SourceString),
+               sizeof(SourceString)/sizeof(WCHAR),
                L"\\Device\\Ramdisk%wZ",
                &GuidString);
     SymbolicLinkName.Length = 38;

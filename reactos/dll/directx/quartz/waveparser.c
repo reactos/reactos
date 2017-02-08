@@ -22,16 +22,16 @@
 #include "control_private.h"
 #include "pin.h"
 
-#include "uuids.h"
-#include "aviriff.h"
-#include "vfwmsgs.h"
-#include "mmsystem.h"
+//#include "uuids.h"
+#include <aviriff.h>
+//#include "vfwmsgs.h"
+//#include "mmsystem.h"
 
-#include "wine/unicode.h"
-#include "wine/debug.h"
+//#include "wine/unicode.h"
+#include <wine/debug.h>
 
-#include <math.h>
-#include <assert.h>
+//#include <math.h>
+//#include <assert.h>
 
 #include "parser.h"
 

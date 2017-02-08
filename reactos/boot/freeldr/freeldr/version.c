@@ -23,14 +23,11 @@ CHAR	FreeLoaderVersionString[80];
 
 PCHAR GetFreeLoaderVersionString(VOID)
 {
-	if (FREELOADER_PATCH_VERSION == 0)
-	{
-		sprintf(FreeLoaderVersionString, "FreeLoader v%d.%d", FREELOADER_MAJOR_VERSION, FREELOADER_MINOR_VERSION);
-	}
-	else
-	{
-		sprintf(FreeLoaderVersionString, "FreeLoader v%d.%d.%d", FREELOADER_MAJOR_VERSION, FREELOADER_MINOR_VERSION, FREELOADER_PATCH_VERSION);
-	}
+#if (FREELOADER_PATCH_VERSION == 0)
+    sprintf(FreeLoaderVersionString, "FreeLoader v%d.%d", FREELOADER_MAJOR_VERSION, FREELOADER_MINOR_VERSION);
+#else
+    sprintf(FreeLoaderVersionString, "FreeLoader v%d.%d.%d", FREELOADER_MAJOR_VERSION, FREELOADER_MINOR_VERSION, FREELOADER_PATCH_VERSION);
+#endif
 
 	return FreeLoaderVersionString;
 }

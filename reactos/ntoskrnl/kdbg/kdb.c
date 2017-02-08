@@ -1472,12 +1472,12 @@ KdbEnterDebuggerException(
 
         if (BreakPoint->Type == KdbBreakPointSoftware)
         {
-            KdbpPrint("Entered debugger on breakpoint #%d: EXEC 0x%04x:0x%08x\n",
+            KdbpPrint("\nEntered debugger on breakpoint #%d: EXEC 0x%04x:0x%08x\n",
                       KdbLastBreakPointNr, TrapFrame->SegCs & 0xffff, TrapFrame->Eip);
         }
         else if (BreakPoint->Type == KdbBreakPointHardware)
         {
-            KdbpPrint("Entered debugger on breakpoint #%d: %s 0x%08x\n",
+            KdbpPrint("\nEntered debugger on breakpoint #%d: %s 0x%08x\n",
                       KdbLastBreakPointNr,
                      (BreakPoint->Data.Hw.AccessType == KdbAccessRead) ? "READ" :
                      ((BreakPoint->Data.Hw.AccessType == KdbAccessWrite) ? "WRITE" :
@@ -1545,7 +1545,7 @@ KdbEnterDebuggerException(
                 return kdHandleException;
             }
 
-            KdbpPrint("Entered debugger on unexpected debug trap!\n");
+            KdbpPrint("\nEntered debugger on unexpected debug trap!\n");
         }
     }
     else if (ExceptionCode == STATUS_BREAKPOINT)
@@ -1560,7 +1560,7 @@ KdbEnterDebuggerException(
             return kdHandleException;
         }
 
-        KdbpPrint("Entered debugger on embedded INT3 at 0x%04x:0x%08x.\n",
+        KdbpPrint("\nEntered debugger on embedded INT3 at 0x%04x:0x%08x.\n",
                   TrapFrame->SegCs & 0xffff, TrapFrame->Eip - 1);
     }
     else
@@ -1574,7 +1574,7 @@ KdbEnterDebuggerException(
             return ContinueType;
         }
 
-        KdbpPrint("Entered debugger on %s-chance exception (Exception Code: 0x%x) (%s)\n",
+        KdbpPrint("\nEntered debugger on %s-chance exception (Exception Code: 0x%x) (%s)\n",
                   FirstChance ? "first" : "last", ExceptionCode, ExceptionString);
 
         if (ExceptionCode == STATUS_ACCESS_VIOLATION &&
@@ -1705,30 +1705,29 @@ INIT_FUNCTION
 KdbpGetCommandLineSettings(
     PCHAR p1)
 {
-    PCHAR p2;
+#define CONST_STR_LEN(x) (sizeof(x)/sizeof(x[0]) - 1)
 
-    while (p1 && (p2 = strchr(p1, ' ')))
+    while (p1 && (p1 = strchr(p1, ' ')))
     {
-        p2 += 2;
+        /* Skip other spaces */
+        while (*p1 == ' ') ++p1;
 
-        if (!_strnicmp(p2, "KDSERIAL", 8))
+        if (!_strnicmp(p1, "KDSERIAL", CONST_STR_LEN("KDSERIAL")))
         {
-            p2 += 8;
+            p1 += CONST_STR_LEN("KDSERIAL");
             KdbDebugState |= KD_DEBUG_KDSERIAL;
             KdpDebugMode.Serial = TRUE;
         }
-        else if (!_strnicmp(p2, "KDNOECHO", 8))
+        else if (!_strnicmp(p1, "KDNOECHO", CONST_STR_LEN("KDNOECHO")))
         {
-            p2 += 8;
+            p1 += CONST_STR_LEN("KDNOECHO");
             KdbDebugState |= KD_DEBUG_KDNOECHO;
         }
-        else if (!_strnicmp(p2, "FIRSTCHANCE", 11))
+        else if (!_strnicmp(p1, "FIRSTCHANCE", CONST_STR_LEN("FIRSTCHANCE")))
         {
-            p2 += 11;
+            p1 += CONST_STR_LEN("FIRSTCHANCE");
             KdbpSetEnterCondition(-1, TRUE, KdbEnterAlways);
         }
-
-        p1 = p2;
     }
 }
 

@@ -1,8 +1,10 @@
-
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
 #include <commctrl.h>
-#include <shellapi.h>
 #include <tchar.h>
+
 #include "resource.h"
 
 /* console.c */

@@ -1,7 +1,7 @@
 /*
 * COPYRIGHT:  See COPYING in the top level directory
 * PROJECT:    ReactOS kernel
-* FILE:       drivers/fs/np/mount.c
+* FILE:       drivers/filesystems/npfs/npfs.c
 * PURPOSE:    Named pipe filesystem
 * PROGRAMMER: David Welch <welch@cwcom.net>
 */
@@ -24,6 +24,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     PNPFS_VCB Vcb;
     PNPFS_FCB Fcb;
     NTSTATUS Status;
+
+    UNREFERENCED_PARAMETER(RegistryPath);
 
     DPRINT("Named Pipe FSD 0.0.2\n");
 
@@ -65,7 +67,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
         &DeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed to create named pipe device! (Status %x)\n", Status);
+        DPRINT1("Failed to create named pipe device! (Status %lx)\n", Status);
         return Status;
     }
 
@@ -87,6 +89,12 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
     /* Create the device FCB */
     Fcb = ExAllocatePoolWithTag(NonPagedPool, sizeof(NPFS_FCB), TAG_NPFS_FCB);
+    if (!Fcb)
+    {
+        DPRINT1("Out of memory for device FCB!\n");
+        IoDeleteDevice(DeviceObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
     Fcb->Type = FCB_DEVICE;
     Fcb->Vcb = Vcb;
     Fcb->RefCount = 1;
@@ -94,6 +102,13 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
     /* Create the root directory FCB */
     Fcb = ExAllocatePoolWithTag(NonPagedPool, sizeof(NPFS_FCB), TAG_NPFS_FCB);
+    if (!Fcb)
+    {
+        DPRINT1("Out of memory for root FCB!\n");
+        IoDeleteDevice(DeviceObject);
+        ExFreePoolWithTag(Vcb->DeviceFcb, TAG_NPFS_FCB);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
     Fcb->Type = FCB_DIRECTORY;
     Fcb->Vcb = Vcb;
     Fcb->RefCount = 1;

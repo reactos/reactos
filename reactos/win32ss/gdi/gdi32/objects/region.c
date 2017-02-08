@@ -1,4 +1,4 @@
-#include "precomp.h"
+#include <precomp.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -700,7 +700,18 @@ GetClipRgn(
     HRGN    hrgn
 )
 {
-    INT Ret = NtGdiGetRandomRgn(hdc, hrgn, CLIPRGN);
+    INT Ret;
+
+    /* Check if DC handle is valid */
+    if (!GdiGetDcAttr(hdc))
+    {
+        /* Last error code differs from what NtGdiGetRandomRgn returns */
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    Ret = NtGdiGetRandomRgn(hdc, hrgn, CLIPRGN);
+
 //  if (Ret)
 //  {
 //     if(GetLayout(hdc) & LAYOUT_RTL) MirrorRgnDC(hdc,(HRGN)Ret, NULL);

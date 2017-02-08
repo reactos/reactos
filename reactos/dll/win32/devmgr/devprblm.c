@@ -16,8 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-/* $Id: hwpage.c 19599 2005-11-26 02:12:58Z weiden $
- *
+/*
  * PROJECT:         ReactOS devmgr.dll
  * FILE:            lib/devmgr/devprblm.c
  * PURPOSE:         ReactOS Device Manager
@@ -25,7 +24,7 @@
  * UPDATE HISTORY:
  *      04-04-2004  Created
  */
-#include <precomp.h>
+#include "precomp.h"
 
 #define NDEBUG
 #include <debug.h>

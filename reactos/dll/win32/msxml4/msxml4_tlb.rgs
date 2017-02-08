@@ -1,0 +1,519 @@
+HKCR
+{
+    NoRemove Typelib
+    {
+        NoRemove '{F5078F18-C551-11D3-89B9-0000F81FE221}'
+        {
+            '4.0' = s 'Microsoft XML, v4.0'
+            {
+                '0' { win32 = s '%MODULE%' }
+                FLAGS = s '0'
+            }
+        }
+    }
+    NoRemove Interface
+    {
+        '{2933BF80-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMNode'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{2933BF81-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMDocument'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{373984C8-B845-449B-91E7-45AC83036ADE}' = s 'IXMLDOMSchemaCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{50EA08B0-DD1B-4664-9A50-C2F40F4BD79A}' = s 'IXMLDOMSchemaCollection2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{2933BF95-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMDocument2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{2933BF96-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMDocument3'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{2933BF82-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMNodeList'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{AA634FC7-5888-44A7-A257-3A47150D3A0E}' = s 'IXMLDOMSelection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{2933BF83-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMNamedNodeMap'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{3EFAA413-272F-11D2-836F-0000F87A7782}' = s 'IXMLDOMDocumentFragment'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{2933BF84-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMCharacterData'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{2933BF85-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMAttribute'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{2933BF86-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{2933BF87-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMText'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{2933BF88-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMComment'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{2933BF89-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMProcessingInstruction'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{2933BF8A-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMCDATASection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{2933BF8B-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMDocumentType'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{2933BF8C-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMNotation'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{2933BF8D-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMEntity'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{2933BF8E-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMEntityReference'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{2933BF8F-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMImplementation'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{3EFAA425-272F-11D2-836F-0000F87A7782}' = s 'IXTLRuntime'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{3EFAA427-272F-11D2-836F-0000F87A7782}' = s 'XMLDOMDocumentEvents'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{2933BF92-7B36-11D2-B20E-00C04F983E60}' = s 'IXSLProcessor'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{2933BF93-7B36-11D2-B20E-00C04F983E60}' = s 'IXSLTemplate'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{ED8C108D-4349-11D2-91A4-00C04F7969E8}' = s 'IXMLHTTPRequest'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{2E9196BF-13BA-4DD4-91CA-6C571F281495}' = s 'IServerXMLHTTPRequest'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{2E01311B-C322-4B0A-BD77-B90CFDC8DCE7}' = s 'IServerXMLHTTPRequest2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{3EFAA426-272F-11D2-836F-0000F87A7782}' = s 'IXMLDOMParseError'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{3EFAA428-272F-11D2-836F-0000F87A7782}' = s 'IXMLDOMParseError2'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{3EFAA429-272F-11D2-836F-0000F87A7782}' = s 'IXMLDOMParseErrorCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{10DC0586-132B-4CAC-8BB3-DB00AC8B7EE0}' = s 'IVBSAXAttributes'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{2ED7290A-4DD5-4B46-BB26-4E4155E77FAA}' = s 'IVBSAXContentHandler'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{E8917260-7579-4BE1-B5DD-7AFBFA6F077B}' = s 'IVBSAXDeclHandler'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{24FB3297-302D-4620-BA39-3A732D850558}' = s 'IVBSAXDTDHandler'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{0C05D096-F45B-4ACA-AD1A-AA0BC25518DC}' = s 'IVBSAXEntityResolver'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{D963D3FE-173C-4862-9095-B92F66995F52}' = s 'IVBSAXErrorHandler'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{032AAC35-8C0E-4D9D-979F-E3B702935576}' = s 'IVBSAXLexicalHandler'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{796E7AC5-5AA2-4EFF-ACAD-3FAAF01A3288}' = s 'IVBSAXLocator'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{1299EB1B-5B88-433E-82DE-82CA75AD4E04}' = s 'IVBSAXXMLFilter'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{8C033CAA-6CD6-4F73-B728-4531AF74945F}' = s 'IVBSAXXMLReader'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{F10D27CC-3EC0-415C-8ED8-77AB1C5E7262}' = s 'IMXAttributes'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{FA4BB38C-FAF9-4CCA-9302-D1DD0FE520DB}' = s 'IMXSchemaDeclHandler'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{808F4E35-8D5A-4FBE-8466-33A41279ED30}' = s 'IMXReaderControl'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{4D7FF4BA-1565-4EA8-94E1-6E724A46F98D}' = s 'IMXWriter'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{C90352F4-643C-4FBC-BB23-E996EB2D51FD}' = s 'IMXNamespacePrefixes'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{C90352F5-643C-4FBC-BB23-E996EB2D51FD}' = s 'IVBMXNamespaceManager'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{C90352F7-643C-4FBC-BB23-E996EB2D51FD}' = s 'IMXXMLFilter'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{50EA08B1-DD1B-4664-9A50-C2F40F4BD79A}' = s 'ISchemaStringCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{50EA08B2-DD1B-4664-9A50-C2F40F4BD79A}' = s 'ISchemaItemCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{50EA08B3-DD1B-4664-9A50-C2F40F4BD79A}' = s 'ISchemaItem'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{50EA08B4-DD1B-4664-9A50-C2F40F4BD79A}' = s 'ISchema'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{50EA08B5-DD1B-4664-9A50-C2F40F4BD79A}' = s 'ISchemaParticle'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{50EA08B6-DD1B-4664-9A50-C2F40F4BD79A}' = s 'ISchemaAttribute'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{50EA08B7-DD1B-4664-9A50-C2F40F4BD79A}' = s 'ISchemaElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{50EA08B8-DD1B-4664-9A50-C2F40F4BD79A}' = s 'ISchemaType'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{50EA08B9-DD1B-4664-9A50-C2F40F4BD79A}' = s 'ISchemaComplexType'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{50EA08BA-DD1B-4664-9A50-C2F40F4BD79A}' = s 'ISchemaAttributeGroup'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{50EA08BB-DD1B-4664-9A50-C2F40F4BD79A}' = s 'ISchemaModelGroup'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{50EA08BC-DD1B-4664-9A50-C2F40F4BD79A}' = s 'ISchemaAny'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{50EA08BD-DD1B-4664-9A50-C2F40F4BD79A}' = s 'ISchemaIdentityConstraint'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+        '{50EA08BE-DD1B-4664-9A50-C2F40F4BD79A}' = s 'ISchemaNotation'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}' { val Version = s '4.0' }
+        }
+    }
+    NoRemove CLSID
+    {
+        '{88D969C0-F192-11D4-A65F-0040963251E5}' = s 'XML DOM Document 4.0'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            ProgId = s 'Msxml2.DOMDocument.4.0'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}'
+            Version = s '4.0'
+        }
+        '{88D969C1-F192-11D4-A65F-0040963251E5}' = s 'Free threaded XML DOM Document 4.0'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            ProgId = s 'Msxml2.FreeThreadedDOMDocument.4.0'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}'
+            Version = s '4.0'
+        }
+        '{88D969C5-F192-11D4-A65F-0040963251E5}' = s 'XML HTTP 4.0'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            ProgId = s 'Msxml2.XMLHTTP.4.0'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}'
+            Version = s '4.0'
+        }
+        '{88D969C6-F192-11D4-A65F-0040963251E5}' = s 'Server XML HTTP 4.0'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            ProgId = s 'Msxml2.ServerXMLHTTP.4.0'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}'
+            Version = s '4.0'
+        }
+        '{88D969C2-F192-11D4-A65F-0040963251E5}' = s 'XML Schema Cache 4.0'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            ProgId = s 'Msxml2.XMLSchemaCache.4.0'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}'
+            Version = s '4.0'
+        }
+        '{88D969C3-F192-11D4-A65F-0040963251E5}' = s 'XSL Template 4.0'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            ProgId = s 'Msxml2.XSLTemplate.4.0'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}'
+            Version = s '4.0'
+        }
+        '{7C6E29BC-8B8B-4C3D-859E-AF6CD158BE0F}' = s 'SAX XML Reader 4.0'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            ProgId = s 'Msxml2.SAXXMLReader.4.0'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}'
+            Version = s '4.0'
+        }
+        '{88D969C9-F192-11D4-A65F-0040963251E5}' = s 'MXHTMLWriter 4.0'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            ProgId = s 'Msxml2.MXHTMLWriter.4.0'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}'
+            Version = s '4.0'
+        }
+        '{88D969C8-F192-11D4-A65F-0040963251E5}' = s 'MXXMLWriter 4.0'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            ProgId = s 'Msxml2.MXXMLWriter.4.0'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}'
+            Version = s '4.0'
+        }
+        '{88D969D6-F192-11D4-A65F-0040963251E5}' = s 'MXNamespaceManager 4.0'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            ProgId = s 'Msxml2.MXNamespaceManager.4.0'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}'
+            Version = s '4.0'
+        }
+        '{88D969CA-F192-11D4-A65F-0040963251E5}' = s 'SAXAttributes 4.0'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            ProgId = s 'Msxml2.SAXAttributes.4.0'
+            TypeLib = s '{F5078F18-C551-11D3-89B9-0000F81FE221}'
+            Version = s '4.0'
+        }
+    }
+    'Msxml2.DOMDocument.4.0' = s 'XML DOM Document 4.0'
+    {
+        CLSID = s '{88D969C0-F192-11D4-A65F-0040963251E5}'
+    }
+    'Msxml2.FreeThreadedDOMDocument.4.0' = s 'Free threaded XML DOM Document 4.0'
+    {
+        CLSID = s '{88D969C1-F192-11D4-A65F-0040963251E5}'
+    }
+    'Msxml2.XMLHTTP.4.0' = s 'XML HTTP 4.0'
+    {
+        CLSID = s '{88D969C5-F192-11D4-A65F-0040963251E5}'
+    }
+    'Msxml2.ServerXMLHTTP.4.0' = s 'Server XML HTTP 4.0'
+    {
+        CLSID = s '{88D969C6-F192-11D4-A65F-0040963251E5}'
+    }
+    'Msxml2.XMLSchemaCache.4.0' = s 'XML Schema Cache 4.0'
+    {
+        CLSID = s '{88D969C2-F192-11D4-A65F-0040963251E5}'
+    }
+    'Msxml2.XSLTemplate.4.0' = s 'XSL Template 4.0'
+    {
+        CLSID = s '{88D969C3-F192-11D4-A65F-0040963251E5}'
+    }
+    'Msxml2.SAXXMLReader.4.0' = s 'SAX XML Reader 4.0'
+    {
+        CLSID = s '{7C6E29BC-8B8B-4C3D-859E-AF6CD158BE0F}'
+    }
+    'Msxml2.MXHTMLWriter.4.0' = s 'MXHTMLWriter 4.0'
+    {
+        CLSID = s '{88D969C9-F192-11D4-A65F-0040963251E5}'
+    }
+    'Msxml2.MXXMLWriter.4.0' = s 'MXXMLWriter 4.0'
+    {
+        CLSID = s '{88D969C8-F192-11D4-A65F-0040963251E5}'
+    }
+    'Msxml2.MXNamespaceManager.4.0' = s 'MXNamespaceManager 4.0'
+    {
+        CLSID = s '{88D969D6-F192-11D4-A65F-0040963251E5}'
+    }
+    'Msxml2.SAXAttributes.4.0' = s 'SAXAttributes 4.0'
+    {
+        CLSID = s '{88D969CA-F192-11D4-A65F-0040963251E5}'
+    }
+}

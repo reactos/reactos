@@ -20,7 +20,7 @@
 
 #define DEBUG
 
-#include "config.h"
+#include <config.h>
 #include "iphlpapi_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);

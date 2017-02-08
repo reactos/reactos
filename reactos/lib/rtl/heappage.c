@@ -61,7 +61,7 @@ typedef struct _DPH_HEAP_ROOT
 {
      ULONG Signature;
      ULONG HeapFlags;
-     PRTL_CRITICAL_SECTION HeapCritSect;
+     PHEAP_LOCK HeapCritSect;
      ULONG nRemoteLockAcquired;
 
      PDPH_HEAP_BLOCK pVirtualStorageListHead;
@@ -110,11 +110,13 @@ WCHAR RtlpDphTargetDlls[512];
 
 LIST_ENTRY RtlpDphPageHeapList;
 BOOLEAN RtlpDphPageHeapListInitialized;
-RTL_CRITICAL_SECTION RtlpDphPageHeapListLock;
+HEAP_LOCK _RtlpDphPageHeapListLock;
+PHEAP_LOCK RtlpDphPageHeapListLock = &_RtlpDphPageHeapListLock;
 ULONG RtlpDphPageHeapListLength;
 UNICODE_STRING RtlpDphTargetDllsUnicode;
 
-RTL_CRITICAL_SECTION RtlpDphDelayedFreeQueueLock;
+HEAP_LOCK _RtlpDphDelayedFreeQueueLock;
+PHEAP_LOCK RtlpDphDelayedFreeQueueLock = &_RtlpDphDelayedFreeQueueLock;
 LIST_ENTRY RtlpDphDelayedFreeQueue;
 SLIST_HEADER RtlpDphDelayedTemporaryPushList;
 SIZE_T RtlpDphMemoryUsedByDelayedFreeBlocks;
@@ -234,7 +236,7 @@ RtlpDphEnterCriticalSection(PDPH_HEAP_ROOT DphRoot, ULONG Flags)
     if (Flags & HEAP_NO_SERIALIZE)
     {
         /* More complex scenario */
-        if (!RtlTryEnterCriticalSection(DphRoot->HeapCritSect))
+        if (!RtlEnterHeapLock(DphRoot->HeapCritSect, TRUE))
         {
             if (!DphRoot->nRemoteLockAcquired)
             {
@@ -246,13 +248,13 @@ RtlpDphEnterCriticalSection(PDPH_HEAP_ROOT DphRoot, ULONG Flags)
             }
 
             /* Enter the heap's critical section */
-            RtlEnterCriticalSection(DphRoot->HeapCritSect);
+            RtlEnterHeapLock(DphRoot->HeapCritSect, TRUE);
         }
     }
     else
     {
         /* Just enter the heap's critical section */
-        RtlEnterCriticalSection(DphRoot->HeapCritSect);
+        RtlEnterHeapLock(DphRoot->HeapCritSect, TRUE);
     }
 }
 
@@ -260,7 +262,7 @@ VOID NTAPI
 RtlpDphLeaveCriticalSection(PDPH_HEAP_ROOT DphRoot)
 {
     /* Just leave the heap's critical section */
-    RtlLeaveCriticalSection(DphRoot->HeapCritSect);
+    RtlLeaveHeapLock(DphRoot->HeapCritSect);
 }
 
 
@@ -319,7 +321,7 @@ RtlpDphAllocateVm(PVOID *Base, SIZE_T Size, ULONG Type, ULONG Protection)
                                      &Size,
                                      Type,
                                      Protection);
-    DPRINT("Page heap: AllocVm (%p, %p, %x) status %x \n", Base, Size, Type, Status);
+    DPRINT("Page heap: AllocVm (%p, %Ix, %lx) status %lx \n", Base, Size, Type, Status);
     /* Check for failures */
     if (!NT_SUCCESS(Status))
     {
@@ -328,7 +330,7 @@ RtlpDphAllocateVm(PVOID *Base, SIZE_T Size, ULONG Type, ULONG Protection)
             _InterlockedIncrement(&RtlpDphCounter);
             if (RtlpDphBreakOptions & DPH_BREAK_ON_RESERVE_FAIL)
             {
-                DPRINT1("Page heap: AllocVm (%p, %p, %x) failed with %x \n", Base, Size, Type, Status);
+                DPRINT1("Page heap: AllocVm (%p, %Ix, %x) failed with %x \n", Base, Size, Type, Status);
                 DbgBreakPoint();
                 return Status;
             }
@@ -338,7 +340,7 @@ RtlpDphAllocateVm(PVOID *Base, SIZE_T Size, ULONG Type, ULONG Protection)
             _InterlockedIncrement(&RtlpDphAllocFails);
             if (RtlpDphBreakOptions & DPH_BREAK_ON_COMMIT_FAIL)
             {
-                DPRINT1("Page heap: AllocVm (%p, %p, %x) failed with %x \n", Base, Size, Type, Status);
+                DPRINT1("Page heap: AllocVm (%p, %Ix, %x) failed with %x \n", Base, Size, Type, Status);
                 DbgBreakPoint();
                 return Status;
             }
@@ -355,7 +357,7 @@ RtlpDphFreeVm(PVOID Base, SIZE_T Size, ULONG Type)
 
     /* Free the memory */
     Status = RtlpSecMemFreeVirtualMemory(NtCurrentProcess(), &Base, &Size, Type);
-    DPRINT1("Page heap: FreeVm (%p, %p, %x) status %x \n", Base, Size, Type, Status);
+    DPRINT1("Page heap: FreeVm (%p, %Ix, %x) status %x \n", Base, Size, Type, Status);
     /* Log/report failures */
     if (!NT_SUCCESS(Status))
     {
@@ -364,7 +366,7 @@ RtlpDphFreeVm(PVOID Base, SIZE_T Size, ULONG Type)
             _InterlockedIncrement(&RtlpDphReleaseFails);
             if (RtlpDphBreakOptions & DPH_BREAK_ON_RELEASE_FAIL)
             {
-                DPRINT1("Page heap: FreeVm (%p, %p, %x) failed with %x \n", Base, Size, Type, Status);
+                DPRINT1("Page heap: FreeVm (%p, %Ix, %x) failed with %x \n", Base, Size, Type, Status);
                 DbgBreakPoint();
                 return Status;
             }
@@ -374,7 +376,7 @@ RtlpDphFreeVm(PVOID Base, SIZE_T Size, ULONG Type)
             _InterlockedIncrement(&RtlpDphFreeFails);
             if (RtlpDphBreakOptions & DPH_BREAK_ON_FREE_FAIL)
             {
-                DPRINT1("Page heap: FreeVm (%p, %p, %x) failed with %x \n", Base, Size, Type, Status);
+                DPRINT1("Page heap: FreeVm (%p, %Ix, %x) failed with %x \n", Base, Size, Type, Status);
                 DbgBreakPoint();
                 return Status;
             }
@@ -399,7 +401,7 @@ RtlpDphProtectVm(PVOID Base, SIZE_T Size, ULONG Protection)
         _InterlockedIncrement(&RtlpDphProtectFails);
         if (RtlpDphBreakOptions & DPH_BREAK_ON_PROTECT_FAIL)
         {
-            DPRINT1("Page heap: ProtectVm (%p, %p, %x) failed with %x \n", Base, Size, Protection, Status);
+            DPRINT1("Page heap: ProtectVm (%p, %Ix, %x) failed with %x \n", Base, Size, Protection, Status);
             DbgBreakPoint();
             return Status;
         }
@@ -730,7 +732,7 @@ RtlpDphCoalesceFreeIntoAvailable(PDPH_HEAP_ROOT DphRoot,
     /* Make sure requested size is not too big */
     ASSERT(FreeAllocations >= LeaveOnFreeList);
 
-    DPRINT("RtlpDphCoalesceFreeIntoAvailable(%p %d)\n", DphRoot, LeaveOnFreeList);
+    DPRINT("RtlpDphCoalesceFreeIntoAvailable(%p %lu)\n", DphRoot, LeaveOnFreeList);
 
     while (Node)
     {
@@ -1161,7 +1163,7 @@ RtlpDphInitializeDelayedFreeQueue()
 {
     NTSTATUS Status;
 
-    Status = RtlInitializeCriticalSection(&RtlpDphDelayedFreeQueueLock);
+    Status = RtlInitializeHeapLock(&RtlpDphDelayedFreeQueueLock);
     if (!NT_SUCCESS(Status))
     {
         // TODO: Log this error!
@@ -1192,7 +1194,7 @@ RtlpDphFreeDelayedBlocksFromHeap(PDPH_HEAP_ROOT DphRoot,
        then it releases the lock and frees the blocks. But let's make it simple for now */
 
     /* Acquire the delayed free queue lock */
-    RtlEnterCriticalSection(&RtlpDphDelayedFreeQueueLock);
+    RtlEnterHeapLock(RtlpDphDelayedFreeQueueLock, TRUE);
 
     /* Traverse the list */
     Current = RtlpDphDelayedFreeQueue.Flink;
@@ -1230,7 +1232,7 @@ RtlpDphFreeDelayedBlocksFromHeap(PDPH_HEAP_ROOT DphRoot,
     }
 
     /* Release the delayed free queue lock */
-    RtlLeaveCriticalSection(&RtlpDphDelayedFreeQueueLock);
+    RtlLeaveHeapLock(RtlpDphDelayedFreeQueueLock);
 }
 
 NTSTATUS NTAPI
@@ -1391,7 +1393,7 @@ RtlpDphProcessStartupInitialization()
 
     /* Initialize the DPH heap list and its critical section */
     InitializeListHead(&RtlpDphPageHeapList);
-    Status = RtlInitializeCriticalSection(&RtlpDphPageHeapListLock);
+    Status = RtlInitializeHeapLock(&RtlpDphPageHeapListLock);
     if (!NT_SUCCESS(Status))
     {
         ASSERT(FALSE);
@@ -1409,7 +1411,8 @@ RtlpDphProcessStartupInitialization()
     /* Per-process DPH init is done */
     RtlpDphPageHeapListInitialized = TRUE;
 
-    DPRINT1("Page heap: pid 0x%X: page heap enabled with flags 0x%X.\n", Teb->ClientId.UniqueProcess, RtlpDphGlobalFlags);
+    DPRINT1("Page heap: pid 0x%p: page heap enabled with flags 0x%X.\n",
+            Teb->ClientId.UniqueProcess, RtlpDphGlobalFlags);
 
     return Status;
 }
@@ -1485,13 +1488,13 @@ RtlpPageHeapCreate(ULONG Flags,
     /* Initialize the DPH root */
     DphRoot->Signature = DPH_SIGNATURE;
     DphRoot->HeapFlags = Flags;
-    DphRoot->HeapCritSect = (PRTL_CRITICAL_SECTION)((PCHAR)DphRoot + DPH_POOL_SIZE);
+    DphRoot->HeapCritSect = (PHEAP_LOCK)((PCHAR)DphRoot + DPH_POOL_SIZE);
     DphRoot->ExtraFlags = RtlpDphGlobalFlags;
 
     ZwQueryPerformanceCounter(&PerfCounter, NULL);
     DphRoot->Seed = PerfCounter.LowPart;
 
-    RtlInitializeCriticalSection(DphRoot->HeapCritSect);
+    RtlInitializeHeapLock(&DphRoot->HeapCritSect);
     InitializeListHead(&DphRoot->AvailableAllocationHead);
 
     /* Create a normal heap for this paged heap */
@@ -1539,7 +1542,7 @@ RtlpPageHeapCreate(ULONG Flags,
     if (!RtlpDphPageHeapListInitialized) RtlpDphProcessStartupInitialization();
 
     /* Acquire the heap list lock */
-    RtlEnterCriticalSection(&RtlpDphPageHeapListLock);
+    RtlEnterHeapLock(RtlpDphPageHeapListLock, TRUE);
 
     /* Insert this heap to the tail of the global list */
     InsertTailList(&RtlpDphPageHeapList, &DphRoot->NextHeap);
@@ -1548,12 +1551,13 @@ RtlpPageHeapCreate(ULONG Flags,
     RtlpDphPageHeapListLength++;
 
     /* Release the heap list lock */
-    RtlLeaveCriticalSection(&RtlpDphPageHeapListLock);
+    RtlLeaveHeapLock(RtlpDphPageHeapListLock);
 
     if (RtlpDphDebugOptions & DPH_DEBUG_VERBOSE)
     {
-        DPRINT1("Page heap: process 0x%X created heap @ %p (%p, flags 0x%X)\n",
-            NtCurrentTeb()->ClientId.UniqueProcess, (PUCHAR)DphRoot - PAGE_SIZE, DphRoot->NormalHeap, DphRoot->ExtraFlags);
+        DPRINT1("Page heap: process 0x%p created heap @ %p (%p, flags 0x%X)\n",
+                NtCurrentTeb()->ClientId.UniqueProcess, (PUCHAR)DphRoot - PAGE_SIZE,
+                DphRoot->NormalHeap, DphRoot->ExtraFlags);
     }
 
     /* Perform internal validation if required */
@@ -1611,18 +1615,18 @@ RtlpPageHeapDestroy(HANDLE HeapPtr)
     }
 
     /* Acquire the global heap list lock */
-    RtlEnterCriticalSection(&RtlpDphPageHeapListLock);
+    RtlEnterHeapLock(RtlpDphPageHeapListLock, TRUE);
 
     /* Remove the entry and decrement the global counter */
     RemoveEntryList(&DphRoot->NextHeap);
     RtlpDphPageHeapListLength--;
 
     /* Release the global heap list lock */
-    RtlLeaveCriticalSection(&RtlpDphPageHeapListLock);
+    RtlLeaveHeapLock(RtlpDphPageHeapListLock);
 
     /* Leave and delete this heap's critical section */
-    RtlLeaveCriticalSection(DphRoot->HeapCritSect);
-    RtlDeleteCriticalSection(DphRoot->HeapCritSect);
+    RtlLeaveHeapLock(DphRoot->HeapCritSect);
+    RtlDeleteHeapLock(DphRoot->HeapCritSect);
 
     /* Now go through all virtual list nodes and release the VM */
     Node = DphRoot->pVirtualStorageListHead;
@@ -1639,7 +1643,8 @@ RtlpPageHeapDestroy(HANDLE HeapPtr)
 
     /* Report success */
     if (RtlpDphDebugOptions & DPH_DEBUG_VERBOSE)
-        DPRINT1("Page heap: process 0x%X destroyed heap @ %p (%p)\n", NtCurrentTeb()->ClientId.UniqueProcess, HeapPtr, NormalHeap);
+        DPRINT1("Page heap: process 0x%p destroyed heap @ %p (%p)\n",
+                NtCurrentTeb()->ClientId.UniqueProcess, HeapPtr, NormalHeap);
 
     return NULL;
 }

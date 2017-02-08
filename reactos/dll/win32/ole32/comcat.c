@@ -18,21 +18,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <string.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
+//#include <string.h>
 #include <stdarg.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "winerror.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+//#include "winreg.h"
+//#include "winerror.h"
 
-#include "ole2.h"
-#include "comcat.h"
-#include "wine/unicode.h"
-#include "wine/debug.h"
+#include <ole2.h>
+#include <comcat.h>
+#include "compobj_private.h"
+
+#include <wine/unicode.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -93,17 +98,14 @@ static HRESULT COMCAT_RegisterClassCategories(
     if (FAILED(res)) return res;
 
     /* Create (or open) the CLSID key. */
-    res = RegCreateKeyExW(HKEY_CLASSES_ROOT, clsid_keyname, 0, NULL, 0,
-			  KEY_READ | KEY_WRITE, NULL, &clsid_key, NULL);
+    res = create_classes_key(HKEY_CLASSES_ROOT, clsid_keyname, KEY_READ|KEY_WRITE, &clsid_key);
     if (res != ERROR_SUCCESS) return E_FAIL;
 
     /* Create (or open) the class key. */
-    res = RegCreateKeyExW(clsid_key, keyname, 0, NULL, 0,
-			  KEY_READ | KEY_WRITE, NULL, &class_key, NULL);
+    res = create_classes_key(clsid_key, keyname, KEY_READ|KEY_WRITE, &class_key);
     if (res == ERROR_SUCCESS) {
 	/* Create (or open) the category type key. */
-	res = RegCreateKeyExW(class_key, type, 0, NULL, 0,
-			      KEY_READ | KEY_WRITE, NULL, &type_key, NULL);
+	res = create_classes_key(class_key, type, KEY_READ|KEY_WRITE, &type_key);
 	if (res == ERROR_SUCCESS) {
 	    for (; cCategories; --cCategories, ++rgcatid) {
 		HKEY key;
@@ -113,8 +115,7 @@ static HRESULT COMCAT_RegisterClassCategories(
 		if (FAILED(res)) continue;
 
 		/* Do the register. */
-		res = RegCreateKeyExW(type_key, keyname, 0, NULL, 0,
-				      KEY_READ | KEY_WRITE, NULL, &key, NULL);
+		res = create_classes_key(type_key, keyname, KEY_READ|KEY_WRITE, &key);
 		if (res == ERROR_SUCCESS) RegCloseKey(key);
 	    }
 	    res = S_OK;
@@ -148,8 +149,7 @@ static HRESULT COMCAT_UnRegisterClassCategories(
     lstrcpyW(keyname + 45, type);
 
     /* Open the class category type key. */
-    res = RegOpenKeyExW(HKEY_CLASSES_ROOT, keyname, 0,
-			KEY_READ | KEY_WRITE, &type_key);
+    res = open_classes_key(HKEY_CLASSES_ROOT, keyname, KEY_READ|KEY_WRITE, &type_key);
     if (res != ERROR_SUCCESS) return E_FAIL;
 
     for (; cCategories; --cCategories, ++rgcatid) {
@@ -237,11 +237,11 @@ static HRESULT COMCAT_IsClassOfCategories(
 
     /* Check that every given category is implemented by class. */
     if (*categories->impl_strings) {
-	res = RegOpenKeyExW(key, impl_keyname, 0, KEY_READ, &subkey);
+	res = open_classes_key(key, impl_keyname, KEY_READ, &subkey);
 	if (res != ERROR_SUCCESS) return S_FALSE;
 	for (string = categories->impl_strings; *string; string += 39) {
 	    HKEY catkey;
-	    res = RegOpenKeyExW(subkey, string, 0, 0, &catkey);
+	    res = open_classes_key(subkey, string, 0, &catkey);
 	    if (res != ERROR_SUCCESS) {
 		RegCloseKey(subkey);
 		return S_FALSE;
@@ -252,7 +252,7 @@ static HRESULT COMCAT_IsClassOfCategories(
     }
 
     /* Check that all categories required by class are given. */
-    res = RegOpenKeyExW(key, req_keyname, 0, KEY_READ, &subkey);
+    res = open_classes_key(key, req_keyname, KEY_READ, &subkey);
     if (res == ERROR_SUCCESS) {
 	for (index = 0; ; ++index) {
 	    WCHAR keyname[39];
@@ -335,8 +335,7 @@ static HRESULT WINAPI COMCAT_ICatRegister_RegisterCategories(
 	return E_POINTER;
 
     /* Create (or open) the component categories key. */
-    res = RegCreateKeyExW(HKEY_CLASSES_ROOT, comcat_keyname, 0, NULL, 0,
-			  KEY_READ | KEY_WRITE, NULL, &comcat_key, NULL);
+    res = create_classes_key(HKEY_CLASSES_ROOT, comcat_keyname, KEY_READ|KEY_WRITE, &comcat_key);
     if (res != ERROR_SUCCESS) return E_FAIL;
 
     for (; cCategories; --cCategories, ++rgci) {
@@ -347,8 +346,7 @@ static HRESULT WINAPI COMCAT_ICatRegister_RegisterCategories(
 
 	/* Create (or open) the key for this category. */
 	if (!StringFromGUID2(&rgci->catid, keyname, 39)) continue;
-	res = RegCreateKeyExW(comcat_key, keyname, 0, NULL, 0,
-			      KEY_READ | KEY_WRITE, NULL, &cat_key, NULL);
+	res = create_classes_key(comcat_key, keyname, KEY_READ|KEY_WRITE, &cat_key);
 	if (res != ERROR_SUCCESS) continue;
 
 	/* Set the value for this locale's description. */
@@ -381,8 +379,7 @@ static HRESULT WINAPI COMCAT_ICatRegister_UnRegisterCategories(
 	return E_POINTER;
 
     /* Open the component categories key. */
-    res = RegOpenKeyExW(HKEY_CLASSES_ROOT, comcat_keyname, 0,
-			KEY_READ | KEY_WRITE, &comcat_key);
+    res = open_classes_key(HKEY_CLASSES_ROOT, comcat_keyname, KEY_READ|KEY_WRITE, &comcat_key);
     if (res != ERROR_SUCCESS) return E_FAIL;
 
     for (; cCategories; --cCategories, ++rgcatid) {
@@ -523,7 +520,7 @@ static HRESULT WINAPI COMCAT_ICatInformation_GetCategoryDesc(
 
     /* Open the key for this category. */
     if (!StringFromGUID2(rcatid, keyname + 21, 39)) return E_FAIL;
-    res = RegOpenKeyExW(HKEY_CLASSES_ROOT, keyname, 0, KEY_READ, &key);
+    res = open_classes_key(HKEY_CLASSES_ROOT, keyname, KEY_READ, &key);
     if (res != ERROR_SUCCESS) return CAT_E_CATIDNOEXIST;
 
     /* Allocate a sensible amount of memory for the description. */
@@ -616,7 +613,7 @@ static HRESULT WINAPI COMCAT_ICatInformation_IsClassOfCategories(
 					       cRequired, rgcatidReq);
     if (categories == NULL) return E_OUTOFMEMORY;
 
-    res = RegOpenKeyExW(HKEY_CLASSES_ROOT, keyname, 0, KEY_READ, &key);
+    res = open_classes_key(HKEY_CLASSES_ROOT, keyname, KEY_READ, &key);
     if (res == ERROR_SUCCESS) {
 	res = COMCAT_IsClassOfCategories(key, categories);
 	RegCloseKey(key);
@@ -720,7 +717,7 @@ static HRESULT WINAPI COMCAT_IClassFactory_QueryInterface(
 	IsEqualGUID(riid, &IID_IClassFactory))
     {
         *ppvObj = iface;
-        IUnknown_AddRef(iface);
+        IClassFactory_AddRef(iface);
 	return S_OK;
     }
 
@@ -891,7 +888,7 @@ static HRESULT WINAPI COMCAT_IEnumCATEGORYINFO_Next(
 	hr = CLSIDFromString(catid, &rgelt->catid);
 	if (FAILED(hr)) continue;
 
-	res = RegOpenKeyExW(This->key, catid, 0, KEY_READ, &subkey);
+	res = open_classes_key(This->key, catid, KEY_READ, &subkey);
 	if (res != ERROR_SUCCESS) continue;
 
 	hr = COMCAT_GetCategoryDesc(subkey, This->lcid,
@@ -952,7 +949,7 @@ static HRESULT WINAPI COMCAT_IEnumCATEGORYINFO_Clone(
     new_this->ref = 1;
     new_this->lcid = This->lcid;
     /* FIXME: could we more efficiently use DuplicateHandle? */
-    RegOpenKeyExW(HKEY_CLASSES_ROOT, keyname, 0, KEY_READ, &new_this->key);
+    open_classes_key(HKEY_CLASSES_ROOT, keyname, KEY_READ, &new_this->key);
     new_this->next_index = This->next_index;
 
     *ppenum = &new_this->IEnumCATEGORYINFO_iface;
@@ -982,7 +979,7 @@ static IEnumCATEGORYINFO *COMCAT_IEnumCATEGORYINFO_Construct(LCID lcid)
 
         This->IEnumCATEGORYINFO_iface.lpVtbl = &COMCAT_IEnumCATEGORYINFO_Vtbl;
 	This->lcid = lcid;
-	RegOpenKeyExW(HKEY_CLASSES_ROOT, keyname, 0, KEY_READ, &This->key);
+	open_classes_key(HKEY_CLASSES_ROOT, keyname, KEY_READ, &This->key);
     }
     return &This->IEnumCATEGORYINFO_iface;
 }
@@ -1075,7 +1072,7 @@ static HRESULT WINAPI COMCAT_CLSID_IEnumGUID_Next(
 	hr = CLSIDFromString(clsid, rgelt);
 	if (FAILED(hr)) continue;
 
-	res = RegOpenKeyExW(This->key, clsid, 0, KEY_READ, &subkey);
+	res = open_classes_key(This->key, clsid, KEY_READ, &subkey);
 	if (res != ERROR_SUCCESS) continue;
 
 	hr = COMCAT_IsClassOfCategories(subkey, This->categories);
@@ -1140,7 +1137,7 @@ static HRESULT WINAPI COMCAT_CLSID_IEnumGUID_Clone(
     }
     memcpy(new_this->categories, This->categories, size);
     /* FIXME: could we more efficiently use DuplicateHandle? */
-    RegOpenKeyExW(HKEY_CLASSES_ROOT, keyname, 0, KEY_READ, &new_this->key);
+    open_classes_key(HKEY_CLASSES_ROOT, keyname, KEY_READ, &new_this->key);
     new_this->next_index = This->next_index;
 
     *ppenum = (LPENUMGUID)new_this;
@@ -1168,7 +1165,7 @@ static LPENUMGUID COMCAT_CLSID_IEnumGUID_Construct(struct class_categories *cate
 
 	This->lpVtbl = &COMCAT_CLSID_IEnumGUID_Vtbl;
 	This->categories = categories;
-	RegOpenKeyExW(HKEY_CLASSES_ROOT, keyname, 0, KEY_READ, &This->key);
+	open_classes_key(HKEY_CLASSES_ROOT, keyname, KEY_READ, &This->key);
     }
     return (LPENUMGUID)This;
 }
@@ -1308,7 +1305,7 @@ static HRESULT WINAPI COMCAT_CATID_IEnumGUID_Clone(
     new_this->ref = 1;
     lstrcpyW(new_this->keyname, This->keyname);
     /* FIXME: could we more efficiently use DuplicateHandle? */
-    RegOpenKeyExW(HKEY_CLASSES_ROOT, new_this->keyname, 0, KEY_READ, &new_this->key);
+    open_classes_key(HKEY_CLASSES_ROOT, new_this->keyname, KEY_READ, &new_this->key);
     new_this->next_index = This->next_index;
 
     *ppenum = (LPENUMGUID)new_this;
@@ -1339,7 +1336,7 @@ static LPENUMGUID COMCAT_CATID_IEnumGUID_Construct(
 	memcpy(This->keyname, prefix, sizeof(prefix));
 	StringFromGUID2(rclsid, This->keyname + 6, 39);
 	lstrcpyW(This->keyname + 44, postfix);
-	RegOpenKeyExW(HKEY_CLASSES_ROOT, This->keyname, 0, KEY_READ, &This->key);
+	open_classes_key(HKEY_CLASSES_ROOT, This->keyname, KEY_READ, &This->key);
     }
     return (LPENUMGUID)This;
 }

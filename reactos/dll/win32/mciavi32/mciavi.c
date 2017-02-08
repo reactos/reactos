@@ -37,10 +37,10 @@
  *        audio is played... still should be stopped ASAP
  */
 
-#include <string.h>
+//#include <string.h>
 #include "private_mciavi.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(mciavi);
 

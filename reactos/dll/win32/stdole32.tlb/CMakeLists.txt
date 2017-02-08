@@ -4,7 +4,6 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 add_typelib(std_ole_v1.idl)
 
-set_rc_compiler()
 spec2def(stdole32.tlb stdole32.tlb.spec)
 
 list(APPEND SOURCE

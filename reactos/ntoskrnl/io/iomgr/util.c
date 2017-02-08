@@ -171,17 +171,17 @@ IoCheckEaBufferValidity(IN PFILE_FULL_EA_INFORMATION EaBuffer,
 
     PAGED_CODE();
 
-    /* Lenght of the rest. Inital equal to EaLength */
+    /* Length of the rest */
     IntEaLength = EaLength;
-
-    /* Inital EaBuffer equal to EaBuffer */
     EaBufferEnd = EaBuffer;
 
     /* The rest length of the buffer */
     while (IntEaLength >= FIELD_OFFSET(FILE_FULL_EA_INFORMATION, EaName[0]))
     {
-        /* rest of buffer must greater then the
-           sizeof(FILE_FULL_EA_INFORMATION) + buffer */
+        /*
+         * The rest of buffer must greater than
+         * sizeof(FILE_FULL_EA_INFORMATION) + buffer
+         */
         NextEaBufferOffset =
             EaBufferEnd->EaNameLength + EaBufferEnd->EaValueLength +
             FIELD_OFFSET(FILE_FULL_EA_INFORMATION, EaName[0]) + 1;
@@ -203,18 +203,21 @@ IoCheckEaBufferValidity(IN PFILE_FULL_EA_INFORMATION EaBuffer,
                 }
                 else
                 {
-                    /* From the MSDN
-                       http://msdn2.microsoft.com/en-us/library/ms795740.aspx
-                       For all entries except the last, the value of
-                       NextEntryOffset must be greater than zero and
-                       must fall on a ULONG boundary
+                    /*
+                     * From MSDN:
+                     * http://msdn2.microsoft.com/en-us/library/ms795740.aspx
+                     * For all entries except the last one, the value of
+                     * NextEntryOffset must be greater than zero and
+                     * must fall on a ULONG boundary.
                      */
                     NextEaBufferOffset = ((NextEaBufferOffset + 3) & ~3);
                     if ((EaBufferEnd->NextEntryOffset == NextEaBufferOffset) &&
                         ((LONG)EaBufferEnd->NextEntryOffset > 0))
                     {
-                        /* Rest of buffer must be greater then the
-                           next offset */
+                        /*
+                         * The rest of buffer must be greater
+                         * than the following offset.
+                         */
                         IntEaLength =
                             IntEaLength - EaBufferEnd->NextEntryOffset;
 

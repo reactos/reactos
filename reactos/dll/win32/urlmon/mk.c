@@ -17,10 +17,10 @@
  */
 
 #include "urlmon_main.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 #define NO_SHLWAPI_REG
-#include "shlwapi.h"
+#include <shlwapi.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
@@ -57,7 +57,7 @@ static HRESULT WINAPI MkProtocol_QueryInterface(IInternetProtocolEx *iface, REFI
     }
 
     if(*ppv) {
-        IInternetProtocol_AddRef(iface);
+        IInternetProtocolEx_AddRef(iface);
         return S_OK;
     }
 

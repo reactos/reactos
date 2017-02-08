@@ -1,8 +1,8 @@
 /*
- *	Band site menu
+ *  Band site menu
  *
- *	Copyright 2007	Hervé Poussineua
- *	Copyright 2009	Andrew Hill
+ *  Copyright 2007  Hervé Poussineua
+ *  Copyright 2009  Andrew Hill
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -37,7 +37,8 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::SetOwner(IUnknown *pOwner)
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CBandSiteMenu::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
+HRESULT STDMETHODCALLTYPE CBandSiteMenu::QueryContextMenu(
+    HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
 {
     FIXME("(%p, %p, %p, %p, %p, %p)\n", this, hmenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
     return E_NOTIMPL;
@@ -49,7 +50,8 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpi
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CBandSiteMenu::GetCommandString(UINT_PTR idCmd, UINT uType, UINT *pwReserved, LPSTR pszName, UINT cchMax)
+HRESULT STDMETHODCALLTYPE CBandSiteMenu::GetCommandString(UINT_PTR idCmd, UINT uType,
+    UINT *pwReserved, LPSTR pszName, UINT cchMax)
 {
     FIXME("(%p, %p, %p, %p, %p, %p)\n", this, idCmd, uType, pwReserved, pszName, cchMax);
     return E_NOTIMPL;

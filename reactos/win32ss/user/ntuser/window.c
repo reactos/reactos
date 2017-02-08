@@ -9,6 +9,8 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserWnd);
 
+INT gNestedWindowLimit = 50;
+
 /* HELPER FUNCTIONS ***********************************************************/
 
 BOOL FASTCALL UserUpdateUiState(PWND Wnd, WPARAM wParam)
@@ -86,6 +88,12 @@ PWND FASTCALL VerifyWnd(PWND pWnd)
    return pWnd;
 }
 
+PWND FASTCALL ValidateHwndNoErr(HWND hWnd)
+{
+   if (hWnd) return (PWND)UserGetObjectNoErr(gHandleTable, hWnd, TYPE_WINDOW);
+   return NULL;
+}
+
 /* Temp HACK */
 PWND FASTCALL UserGetWindowObject(HWND hWnd)
 {
@@ -97,7 +105,7 @@ PWND FASTCALL UserGetWindowObject(HWND hWnd)
       return NULL;
    }
 
-   Window = (PWND)UserGetObject(gHandleTable, hWnd, otWindow);
+   Window = (PWND)UserGetObject(gHandleTable, hWnd, TYPE_WINDOW);
    if (!Window || 0 != (Window->state & WNDS_DESTROYED))
    {
       EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
@@ -141,7 +149,9 @@ IntIsWindow(HWND hWnd)
    PWND Window;
 
    if (!(Window = UserGetWindowObject(hWnd)))
+   {
       return FALSE;
+   }
 
    return TRUE;
 }
@@ -211,6 +221,7 @@ IntEnableWindow( HWND hWnd, BOOL bEnable )
        /* Remove keyboard focus from that window if it had focus */
        if (hWnd == IntGetThreadFocusWindow())
        {
+          TRACE("IntEnableWindow SF NULL\n");
           co_UserSetFocus(NULL);
        }
        IntSetStyle( pWnd, WS_DISABLED, 0 );
@@ -263,6 +274,39 @@ IntWinListChildren(PWND Window)
    return List;
 }
 
+PWND FASTCALL
+IntGetNonChildAncestor(PWND pWnd)
+{
+   if (pWnd)
+   {
+      while(pWnd && ((pWnd->style & (WS_CHILD | WS_POPUP)) != WS_CHILD))
+         pWnd = pWnd->spwndParent;
+   }
+   return pWnd;
+}
+
+BOOL FASTCALL
+IntIsTopLevelWindow(PWND pWnd)
+{
+   if ( pWnd->spwndParent &&
+        pWnd->spwndParent == co_GetDesktopWindow(pWnd) ) return TRUE;
+   return FALSE;
+}
+
+BOOL FASTCALL
+IntValidateOwnerDepth(PWND Wnd, PWND Owner)
+{
+   INT Depth = 1;
+   for (;;)
+   {
+      if ( !Owner ) return gNestedWindowLimit >= Depth;
+      if (Owner == Wnd) break;
+      Owner = Owner->spwndOwner;
+      Depth++;
+   }
+   return FALSE;
+}
+
 /***********************************************************************
  *           IntSendDestroyMsg
  */
@@ -291,7 +335,7 @@ static void IntSendDestroyMsg(HWND hWnd)
 
       if (!Window->spwndOwner && !IntGetParent(Window))
       {
-         co_IntShellHookNotify(HSHELL_WINDOWDESTROYED, (LPARAM) hWnd);
+         co_IntShellHookNotify(HSHELL_WINDOWDESTROYED, (WPARAM) hWnd, 0);
       }
 
 //      UserDerefObjectCo(Window);
@@ -429,7 +473,7 @@ static LRESULT co_UserFreeWindow(PWND Window,
             UserDereferenceObject(Child);
          }
       }
-      ExFreePool(Children);
+      ExFreePoolWithTag(Children, USERTAG_WINDOWLIST);
    }
 
    if(SendMessages)
@@ -453,6 +497,7 @@ static LRESULT co_UserFreeWindow(PWND Window,
    /* flush the message queue */
    MsqRemoveWindowMessagesFromQueue(Window);
 
+   NT_ASSERT(Window->head.pti);
    IntDereferenceMessageQueue(Window->head.pti->MessageQueue);
 
    /* from now on no messages can be sent to this window anymore */
@@ -510,7 +555,7 @@ static LRESULT co_UserFreeWindow(PWND Window,
    IntUnlinkWindow(Window);
 
    UserReferenceObject(Window);
-   UserDeleteObject(Window->head.h, otWindow);
+   UserDeleteObject(Window->head.h, TYPE_WINDOW);
 
    IntDestroyScrollBars(Window);
 
@@ -617,7 +662,7 @@ IntSetWindowProc(PWND pWnd,
 
    if (IsCallProcHandle(NewWndProc))
    {
-      CallProc = UserGetObject(gHandleTable, NewWndProc, otCallProc);
+      CallProc = UserGetObject(gHandleTable, NewWndProc, TYPE_CALLPROC);
       if (CallProc)
       {  // Reset new WndProc.
          NewWndProc = CallProc->pfnClientPrevious;
@@ -690,6 +735,7 @@ IntSetMenu(
 
    if ((Wnd->style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
    {
+      ERR("SetMenu: Invalid handle 0x%p!\n",UserHMGetHandle(Wnd));
       EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
       return FALSE;
    }
@@ -1031,6 +1077,38 @@ VOID FASTCALL IntLinkHwnd(PWND Wnd, HWND hWndPrev)
             }
         }
     }
+    Wnd->ExStyle2 |= WS_EX2_LINKED;
+}
+
+VOID FASTCALL
+IntProcessOwnerSwap(PWND Wnd, PWND WndNewOwner, PWND WndOldOwner)
+{
+   if (WndOldOwner)
+   {
+      if (Wnd->head.pti != WndOldOwner->head.pti)
+      {
+         if (!WndNewOwner ||
+              Wnd->head.pti == WndNewOwner->head.pti ||
+              WndOldOwner->head.pti != WndNewOwner->head.pti )
+         {
+            ERR("ProcessOwnerSwap Old out.\n");
+            //UserAttachThreadInput(Wnd->head.pti, WndOldOwner->head.pti, FALSE);
+         }
+      }
+   }
+   if (WndNewOwner)
+   {
+      if (Wnd->head.pti != WndNewOwner->head.pti)
+      {
+         if (!WndOldOwner ||
+              WndOldOwner->head.pti != WndNewOwner->head.pti )
+         {
+            ERR("ProcessOwnerSwap New in.\n");
+            //UserAttachThreadInput(Wnd->head.pti, WndNewOwner->head.pti, TRUE);
+         }
+      }
+   }
+   // FIXME: System Tray checks.
 }
 
 HWND FASTCALL
@@ -1045,17 +1123,36 @@ IntSetOwner(HWND hWnd, HWND hWndNewOwner)
 
    WndOldOwner = Wnd->spwndOwner;
 
-   ret = WndOldOwner ? WndOldOwner->head.h : 0;
+   ret = WndOldOwner ? UserHMGetHandle(WndOldOwner) : 0;
+   WndNewOwner = UserGetWindowObject(hWndNewOwner);
 
-   if((WndNewOwner = UserGetWindowObject(hWndNewOwner)))
+   if (!WndNewOwner && hWndNewOwner)
    {
-       Wnd->spwndOwner= WndNewOwner;
+      EngSetLastError(ERROR_INVALID_PARAMETER);
+      ret = NULL;
+      goto Error;
+   }
+
+   IntProcessOwnerSwap(Wnd, WndNewOwner, WndOldOwner);
+
+   if (IntValidateOwnerDepth(Wnd, WndNewOwner))
+   {
+      if (WndNewOwner)
+      {
+         Wnd->spwndOwner= WndNewOwner;
+      }
+      else
+      {
+         Wnd->spwndOwner = NULL;
+      }
    }
    else
    {
-       Wnd->spwndOwner = NULL;
+      IntProcessOwnerSwap(Wnd, WndOldOwner, WndNewOwner);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
+      ret = NULL;
    }
-
+Error:
    UserDereferenceObject(Wnd);
    return ret;
 }
@@ -1110,12 +1207,14 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
 
    WndOldParent = Wnd->spwndParent;
 
-   if ( WndOldParent && 
+   if ( WndOldParent &&
         WndOldParent->ExStyle & WS_EX_LAYOUTRTL)
       pt.x = Wnd->rcWindow.right;
    else
       pt.x = Wnd->rcWindow.left;
    pt.y = Wnd->rcWindow.top;
+
+   IntScreenToClient(WndOldParent, &pt);
 
    if (WndOldParent) UserReferenceObject(WndOldParent); /* Caller must deref */
 
@@ -1123,11 +1222,12 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
    {
       /* Unlink the window from the siblings list */
       IntUnlinkWindow(Wnd);
+      Wnd->ExStyle2 &= ~WS_EX2_LINKED;
 
       /* Set the new parent */
       Wnd->spwndParent = WndNewParent;
 
-      if ( Wnd->style & WS_CHILD && 
+      if ( Wnd->style & WS_CHILD &&
            Wnd->spwndOwner &&
            Wnd->spwndOwner->ExStyle & WS_EX_TOPMOST )
       {
@@ -1140,6 +1240,26 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
                   ((0 == (Wnd->ExStyle & WS_EX_TOPMOST) &&
                     WndNewParent == UserGetDesktopWindow() ) ? HWND_TOP : HWND_TOPMOST ) );
 
+   }
+
+   if ((Wnd->style & (WS_CHILD|WS_POPUP)) == WS_CHILD)
+   {
+      if ( Wnd->spwndParent != co_GetDesktopWindow(Wnd))
+      {
+         if (Wnd->head.pti != WndOldParent->head.pti)
+         {
+            ERR("SetParent Old out.\n");
+            //UserAttachThreadInput(Wnd->head.pti, WndOldParent->head.pti, FALSE);
+         }
+      }
+      if ( WndNewParent != co_GetDesktopWindow(Wnd))
+      {
+         if (Wnd->head.pti != WndNewParent->head.pti)
+         {
+            ERR("SetParent New in.\n");
+            //UserAttachThreadInput(Wnd->head.pti, WndNewParent->head.pti, TRUE);
+         }
+      }
    }
 
    if (WndOldParent == UserGetMessageWindow() || WndNewParent == UserGetMessageWindow())
@@ -1544,7 +1664,8 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
                                         PCLS Class,
                                         PWND ParentWindow,
                                         PWND OwnerWindow,
-                                        PVOID acbiBuffer)
+                                        PVOID acbiBuffer,
+                                        PDESKTOP pdeskCreated)
 {
    PWND pWnd = NULL;
    HWND hWnd;
@@ -1553,7 +1674,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    BOOL MenuChanged;
    BOOL bUnicodeWindow;
 
-   pti = PsGetCurrentThreadWin32Thread();
+   pti = pdeskCreated ? gptiDesktopThread : GetW32ThreadInfo();
 
    if (!(Cs->dwExStyle & WS_EX_LAYOUTRTL))
    {
@@ -1573,8 +1694,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
          */
          if ( Class->fnid != FNID_DIALOG )
          {
-            PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
-            if (ppi->dwLayout & LAYOUT_RTL)
+            if (pti->ppi->dwLayout & LAYOUT_RTL)
             {
                Cs->dwExStyle |= WS_EX_LAYOUTRTL;
             }
@@ -1596,9 +1716,10 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
 
    /* Allocate the new window */
    pWnd = (PWND) UserCreateObject( gHandleTable,
-                                   pti->rpdesk,
+                                   pdeskCreated ? pdeskCreated : pti->rpdesk,
+                                   pti,
                                   (PHANDLE)&hWnd,
-                                   otWindow,
+                                   TYPE_WINDOW,
                                    sizeof(WND) + Class->cbwndExtra);
 
    if (!pWnd)
@@ -1606,13 +1727,14 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
       goto AllocError;
    }
 
-   TRACE("Created object with handle %X\n", hWnd);
+   TRACE("Created window object with handle %X\n", hWnd);
 
-   if (NULL == pti->rpdesk->DesktopWindow)
+   if (pdeskCreated && pdeskCreated->DesktopWindow == NULL )
    {  /* HACK: Helper for win32csr/desktopbg.c */
       /* If there is no desktop window yet, we must be creating it */
-      pti->rpdesk->DesktopWindow = hWnd;
-      pti->rpdesk->pDeskInfo->spwnd = pWnd;
+      TRACE("CreateWindow setting desktop.\n");
+      pdeskCreated->DesktopWindow = hWnd;
+      pdeskCreated->pDeskInfo->spwnd = pWnd;
    }
 
    /*
@@ -1803,6 +1925,32 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    else // Not a child
       pWnd->IDMenu = (UINT) Cs->hMenu;
 
+
+   if ( ParentWindow &&
+        ParentWindow != ParentWindow->head.rpdesk->spwndMessage &&
+        ParentWindow != ParentWindow->head.rpdesk->pDeskInfo->spwnd )
+   {
+       PWND Owner = IntGetNonChildAncestor(ParentWindow);
+
+       if (!IntValidateOwnerDepth(pWnd, Owner))
+       {
+          EngSetLastError(ERROR_INVALID_PARAMETER);
+          goto Error;
+       }
+       if ( pWnd->spwndOwner &&
+            pWnd->spwndOwner->ExStyle & WS_EX_TOPMOST )
+       {
+          pWnd->ExStyle |= WS_EX_TOPMOST;
+       }
+       if ( pWnd->spwndOwner &&
+            Class->atomClassName != gpsi->atomSysClass[ICLS_IME] &&
+            pti != pWnd->spwndOwner->head.pti)
+       {
+          ERR("CreateWindow Owner in.\n");
+          //UserAttachThreadInput(pti, pWnd->spwndOwner->head.pti, TRUE);
+       }
+   }
+
    /* Insert the window into the thread's window list. */
    InsertTailList (&pti->WindowListHead, &pWnd->ThreadListEntry);
 
@@ -1820,10 +1968,10 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
 
 AllocError:
    ERR("IntCreateWindow Allocation Error.\n");
+   SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
+Error:
    if(pWnd)
       UserDereferenceObject(pWnd);
-
-   SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
    return NULL;
 }
 
@@ -1842,7 +1990,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    PWINSTATION_OBJECT WinSta;
    PCLS Class = NULL;
    SIZE Size;
-   POINT MaxPos;
+   POINT MaxSize, MaxPos, MinTrack, MaxTrack;
    CBT_CREATEWNDW * pCbtCreate;
    LRESULT Result;
    USER_REFERENCE_ENTRY ParentRef, Ref;
@@ -1866,7 +2014,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    pCbtCreate = NULL;
 
    /* Get the class and reference it */
-   Class = IntGetAndReferenceClass(ClassName, Cs->hInstance);
+   Class = IntGetAndReferenceClass(ClassName, Cs->hInstance, FALSE);
    if(!Class)
    {
        ERR("Failed to find class %wZ\n", ClassName);
@@ -1874,12 +2022,12 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    }
 
    /* Now find the parent and the owner window */
-   hWndParent = IntGetDesktopWindow();
+   hWndParent = pti->rpdesk->pDeskInfo->spwnd->head.h;
    hWndOwner = NULL;
 
     if (Cs->hwndParent == HWND_MESSAGE)
     {
-        Cs->hwndParent = hWndParent = IntGetMessageWindow();
+        Cs->hwndParent = hWndParent = pti->rpdesk->spwndMessage->head.h;
     }
     else if (Cs->hwndParent)
     {
@@ -1915,7 +2063,8 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
                             Class,
                             ParentWindow,
                             OwnerWindow,
-                            acbiBuffer);
+                            acbiBuffer,
+                            NULL);
    if(!Window)
    {
        ERR("IntCreateWindow failed!\n");
@@ -2044,8 +2193,6 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
 
    if ((Cs->style & WS_THICKFRAME) || !(Cs->style & (WS_POPUP | WS_CHILD)))
    {
-      POINT MaxSize, MaxPos, MinTrack, MaxTrack;
-
       co_WinPosGetMinMaxInfo(Window, &MaxSize, &MaxPos, &MinTrack, &MaxTrack);
       if (Size.cx > MaxTrack.x) Size.cx = MaxTrack.x;
       if (Size.cy > MaxTrack.y) Size.cy = MaxTrack.y;
@@ -2074,6 +2221,18 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
           IntLinkHwnd(Window, HWND_BOTTOM);
       else
           IntLinkHwnd(Window, hwndInsertAfter);
+   }
+
+   if ((Window->style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+   {
+      if ( !IntIsTopLevelWindow(Window) )
+      {
+         if (pti != Window->spwndParent->head.pti)
+         {
+            ERR("CreateWindow Parent in.\n");
+            //UserAttachThreadInput(pti, Window->spwndParent->head.pti, TRUE);
+         }
+      }
    }
 
    /* Send the NCCREATE message */
@@ -2137,7 +2296,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    /* Notify the shell that a new window was created */
    if ((!hWndParent) && (!hWndOwner))
    {
-      co_IntShellHookNotify(HSHELL_WINDOWCREATED, (LPARAM)hWnd);
+      co_IntShellHookNotify(HSHELL_WINDOWCREATED, (WPARAM)hWnd, 0);
    }
 
    /* Initialize and show the window's scrollbars */
@@ -2239,7 +2398,7 @@ ProbeAndCaptureLargeString(
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Cleanup and fail */
-            ExFreePool(pvBuffer);
+            ExFreePoolWithTag(pvBuffer, TAG_STRING);
             _SEH2_YIELD(return _SEH2_GetExceptionCode();)
         }
         _SEH2_END
@@ -2373,6 +2532,7 @@ cleanup:
 BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
 {
    HWND hWnd;
+   PWND pwndTemp;
    PTHREADINFO ti;
    MSG msg;
 
@@ -2384,11 +2544,14 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
    TRACE("co_UserDestroyWindow \n");
 
    /* Check for owner thread */
-   if ( (Window->head.pti->pEThread != PsGetCurrentThread()) ||
-        Window->head.pti != PsGetCurrentThreadWin32Thread() )
+   if ( Window->head.pti != PsGetCurrentThreadWin32Thread())
    {
-      EngSetLastError(ERROR_ACCESS_DENIED);
-      return FALSE;
+       /* Check if we are destroying the desktop window */
+       if (! ((Window->head.rpdesk->dwDTFlags & DF_DESTROYED) && Window == Window->head.rpdesk->pDeskInfo->spwnd))
+       {
+           EngSetLastError(ERROR_ACCESS_DENIED);
+           return FALSE;
+       }
    }
 
    /* If window was created successfully and it is hooked */
@@ -2398,6 +2561,18 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
       {
          ERR("Destroy Window WH_CBT Call Hook return!\n");
          return FALSE;
+      }
+   }
+
+   if (Window->pcls->atomClassName != gpsi->atomSysClass[ICLS_IME])
+   {
+      if ((Window->style & (WS_POPUP|WS_CHILD)) != WS_CHILD)
+      {
+         if (Window->spwndOwner)
+         {
+            ERR("DestroyWindow Owner out.\n");
+            //UserAttachThreadInput(Window->head.pti, Window->spwndOwner->head.pti, FALSE);
+         }
       }
    }
 
@@ -2413,8 +2588,30 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
    if (!co_WinPosShowWindow(Window, SW_HIDE))
    {  // Rule #1.
       if (ti->MessageQueue->spwndActive == Window && ti->MessageQueue == IntGetFocusMessageQueue())
-      {  //ERR("DestroyWindow AOW\n");
+      {
          co_WinPosActivateOtherWindow(Window);
+      }
+   }
+
+   // Adjust last active.
+   if ((pwndTemp = Window->spwndOwner))
+   {
+      while (pwndTemp->spwndOwner)
+         pwndTemp = pwndTemp->spwndOwner;
+
+      if (pwndTemp->spwndLastActive == Window)
+         pwndTemp->spwndLastActive = Window->spwndOwner;
+   }
+
+   if (Window->spwndParent && IntIsWindow(Window->head.h))
+   {
+      if ((Window->style & (WS_POPUP | WS_CHILD)) == WS_CHILD)
+      {
+         if (!IntIsTopLevelWindow(Window))
+         {
+            ERR("DestroyWindow Parent out.\n");
+            //UserAttachThreadInput(Window->head.pti, Window->spwndParent->head.pti, FALSE);
+         }
       }
    }
 
@@ -2424,14 +2621,14 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
       Window->head.pti->MessageQueue->spwndFocus = NULL;
    if (Window->head.pti->MessageQueue->spwndActivePrev == Window)
       Window->head.pti->MessageQueue->spwndActivePrev = NULL;
-   if (Window->head.pti->MessageQueue->CaptureWindow == Window->head.h)
-      Window->head.pti->MessageQueue->CaptureWindow = NULL;
+   if (Window->head.pti->MessageQueue->spwndCapture == Window)
+      Window->head.pti->MessageQueue->spwndCapture = NULL;
 
    /*
     * Check if this window is the Shell's Desktop Window. If so set hShellWindow to NULL
     */
 
-   if ((ti != NULL) & (ti->pDeskInfo != NULL))
+   if ((ti != NULL) && (ti->pDeskInfo != NULL))
    {
       if (ti->pDeskInfo->hShellWindow == hWnd)
       {
@@ -2491,7 +2688,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
                }
 
             }
-            ExFreePool(Children);
+            ExFreePoolWithTag(Children, USERTAG_WINDOWLIST);
          }
          if (! GotOne)
          {
@@ -2603,7 +2800,7 @@ IntFindWindow(PWND Parent,
          }
       }
       }
-      ExFreePool(List);
+      ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
    }
 
    return Ret;
@@ -2796,7 +2993,7 @@ NtUserFindWindowEx(HWND hwndParent,
                 }
 
              }
-             ExFreePool(List);
+             ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
           }
        }
        else
@@ -2878,8 +3075,6 @@ PWND FASTCALL UserGetAncestor(PWND Wnd, UINT Type)
 
             for (;;)
             {
-               PWND Parent;
-
                Parent = IntGetParent(WndAncestor);
 
                if (!Parent)
@@ -3292,12 +3487,6 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
    LONG OldValue;
    STYLESTRUCT Style;
 
-   if (hWnd == IntGetDesktopWindow())
-   {
-      EngSetLastError(STATUS_ACCESS_DENIED);
-      return( 0);
-   }
-
    if (!(Window = UserGetWindowObject(hWnd)))
    {
       return( 0);
@@ -3438,6 +3627,12 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
    TRACE("Enter NtUserSetWindowLong\n");
    UserEnterExclusive();
 
+   if (hWnd == IntGetDesktopWindow())
+   {
+      EngSetLastError(STATUS_ACCESS_DENIED);
+      RETURN( 0);
+   }
+
    RETURN( co_UserSetWindowLong(hWnd, Index, NewValue, Ansi));
 
 CLEANUP:
@@ -3465,6 +3660,12 @@ NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewValue)
    TRACE("Enter NtUserSetWindowWord\n");
    UserEnterExclusive();
 
+   if (hWnd == IntGetDesktopWindow())
+   {
+      EngSetLastError(STATUS_ACCESS_DENIED);
+      RETURN( 0);
+   }
+
    if (!(Window = UserGetWindowObject(hWnd)))
    {
       RETURN( 0);
@@ -3475,7 +3676,7 @@ NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewValue)
       case GWL_ID:
       case GWL_HINSTANCE:
       case GWL_HWNDPARENT:
-         RETURN( (WORD)co_UserSetWindowLong(Window->head.h, Index, (UINT)NewValue, TRUE));
+         RETURN( (WORD)co_UserSetWindowLong(UserHMGetHandle(Window), Index, (UINT)NewValue, TRUE));
       default:
          if (Index < 0)
          {
@@ -3521,6 +3722,10 @@ CLEANUP:
 DWORD APIENTRY
 NtUserQueryWindow(HWND hWnd, DWORD Index)
 {
+/* Console Leader Process CID Window offsets */
+#define GWLP_CONSOLE_LEADER_PID 0
+#define GWLP_CONSOLE_LEADER_TID 4
+
    PWND pWnd;
    DWORD Result;
    DECLARE_RETURN(UINT);
@@ -3536,12 +3741,34 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
    switch(Index)
    {
       case QUERY_WINDOW_UNIQUE_PROCESS_ID:
-         Result = (DWORD)IntGetWndProcessId(pWnd);
+      {
+         if ( (pWnd->head.pti->TIF_flags & TIF_CSRSSTHREAD) &&
+              (pWnd->pcls->atomClassName == gaGuiConsoleWndClass) )
+         {
+            // IntGetWindowLong(offset == GWLP_CONSOLE_LEADER_PID)
+            Result = (DWORD)(*((LONG_PTR*)((PCHAR)(pWnd + 1) + GWLP_CONSOLE_LEADER_PID)));
+         }
+         else
+         {
+            Result = (DWORD)IntGetWndProcessId(pWnd);
+         }
          break;
+      }
 
       case QUERY_WINDOW_UNIQUE_THREAD_ID:
-         Result = (DWORD)IntGetWndThreadId(pWnd);
+      {
+         if ( (pWnd->head.pti->TIF_flags & TIF_CSRSSTHREAD) &&
+              (pWnd->pcls->atomClassName == gaGuiConsoleWndClass) )
+         {
+            // IntGetWindowLong(offset == GWLP_CONSOLE_LEADER_TID)
+            Result = (DWORD)(*((LONG_PTR*)((PCHAR)(pWnd + 1) + GWLP_CONSOLE_LEADER_TID)));
+         }
+         else
+         {
+            Result = (DWORD)IntGetWndThreadId(pWnd);
+         }
          break;
+      }
 
       case QUERY_WINDOW_ACTIVE:
          Result = (DWORD)(pWnd->head.pti->MessageQueue->spwndActive ? UserHMGetHandle(pWnd->head.pti->MessageQueue->spwndActive) : 0);
@@ -3552,7 +3779,7 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
          break;
 
       case QUERY_WINDOW_ISHUNG:
-         Result = (DWORD)MsqIsHung(pWnd->head.pti->MessageQueue);
+         Result = (DWORD)MsqIsHung(pWnd->head.pti);
          break;
 
       case QUERY_WINDOW_REAL_ID:
@@ -3830,7 +4057,7 @@ NtUserDefSetText(HWND hWnd, PLARGE_STRING WindowText)
    /* Send shell notifications */
    if (!Wnd->spwndOwner && !IntGetParent(Wnd))
    {
-      co_IntShellHookNotify(HSHELL_REDRAW, (LPARAM) hWnd);
+      co_IntShellHookNotify(HSHELL_REDRAW, (WPARAM) hWnd, FALSE); // FIXME Flashing?
    }
 
    Ret = TRUE;
@@ -3907,7 +4134,9 @@ CLEANUP:
    END_CLEANUP;
 }
 
-
+/*
+  API Call
+*/
 BOOL
 FASTCALL
 IntShowOwnedPopups(PWND OwnerWnd, BOOL fShow )
@@ -3918,7 +4147,8 @@ IntShowOwnedPopups(PWND OwnerWnd, BOOL fShow )
 
 //   ASSERT(OwnerWnd);
 
-   win_array = IntWinListChildren(UserGetWindowObject(IntGetDesktopWindow()));
+   TRACE("Enter ShowOwnedPopups Show: %s\n", (fShow ? "TRUE" : "FALSE"));
+   win_array = IntWinListChildren(OwnerWnd);
 
    if (!win_array)
       return TRUE;
@@ -3927,7 +4157,7 @@ IntShowOwnedPopups(PWND OwnerWnd, BOOL fShow )
       count++;
    while (--count >= 0)
    {
-      if (!(pWnd = UserGetWindowObject( win_array[count] )))
+      if (!(pWnd = ValidateHwndNoErr( win_array[count] )))
          continue;
       if (pWnd->spwndOwner != OwnerWnd)
          continue;
@@ -3958,7 +4188,8 @@ IntShowOwnedPopups(PWND OwnerWnd, BOOL fShow )
       }
 
    }
-   ExFreePool( win_array );
+   ExFreePoolWithTag(win_array, USERTAG_WINDOWLIST);
+   TRACE("Leave ShowOwnedPopups\n");
    return TRUE;
 }
 

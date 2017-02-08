@@ -16,8 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS Access Control List Editor
  * FILE:            lib/aclui/checklist.c
  * PURPOSE:         Access Control List Editor
@@ -26,7 +25,7 @@
  * UPDATE HISTORY:
  *      07/01/2005  Created
  */
-#include <precomp.h>
+#include "precomp.h"
 
 #define NDEBUG
 #include <debug.h>

@@ -19,24 +19,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
 #include <stdarg.h>
-#include <string.h>
+//#include <string.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winerror.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "wingdi.h"
+//#include "winuser.h"
+//#include "winerror.h"
 
-#include "ole2.h"
-#include "oleauto.h"
-#include "typelib.h"
-#include "ocidl.h"
-#include "wine/debug.h"
+#include <ole2.h>
+//#include "oleauto.h"
+//#include "typelib.h"
+#include <ocidl.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -167,11 +170,12 @@ unsigned char * WINAPI BSTR_UserUnmarshal(ULONG *pFlags, unsigned char *Buffer, 
     if(header->len != header->len2)
         FIXME("len %08x != len2 %08x\n", header->len, header->len2);
 
-    SysFreeString(*pstr);
-    *pstr = NULL;
-
-    if(header->byte_len != 0xffffffff)
-        *pstr = SysAllocStringByteLen((char*)(header + 1), header->byte_len);
+    if (header->byte_len == 0xffffffff)
+    {
+        SysFreeString(*pstr);
+        *pstr = NULL;
+    }
+    else SysReAllocStringLen( pstr, (OLECHAR *)(header + 1), header->len );
 
     if (*pstr) TRACE("string=%s\n", debugstr_w(*pstr));
     return Buffer + sizeof(*header) + sizeof(OLECHAR) * header->len;
@@ -189,7 +193,7 @@ void WINAPI BSTR_UserFree(ULONG *pFlags, BSTR *pstr)
 typedef struct
 {
     DWORD clSize;
-    DWORD rpcReserverd;
+    DWORD rpcReserved;
     USHORT vt;
     USHORT wReserved1;
     USHORT wReserved2;
@@ -458,7 +462,7 @@ unsigned char * WINAPI VARIANT_UserMarshal(ULONG *pFlags, unsigned char *Buffer,
     header = (variant_wire_t *)Buffer; 
 
     header->clSize = 0; /* fixed up at the end */
-    header->rpcReserverd = 0;
+    header->rpcReserved = 0;
     header->vt = pvar->n1.n2.vt;
     header->wReserved1 = pvar->n1.n2.wReserved1;
     header->wReserved2 = pvar->n1.n2.wReserved2;
@@ -898,8 +902,10 @@ unsigned char * WINAPI LPSAFEARRAY_UserMarshal(ULONG *pFlags, unsigned char *Buf
         VARTYPE vt;
         SAFEARRAY *psa = *ppsa;
         ULONG ulCellCount = SAFEARRAY_GetCellCount(psa);
+        SAFEARRAYBOUND *bound;
         SF_TYPE sftype;
         GUID guid;
+        INT i;
 
         sftype = SAFEARRAY_GetUnionType(psa);
 
@@ -932,7 +938,12 @@ unsigned char * WINAPI LPSAFEARRAY_UserMarshal(ULONG *pFlags, unsigned char *Buf
             Buffer += sizeof(guid);
         }
 
-        memcpy(Buffer, psa->rgsabound, sizeof(psa->rgsabound[0]) * psa->cDims);
+        /* bounds are marshaled in opposite order comparing to storage layout */
+        bound = (SAFEARRAYBOUND*)Buffer;
+        for (i = 0; i < psa->cDims; i++)
+        {
+            memcpy(bound++, &psa->rgsabound[psa->cDims-i-1], sizeof(psa->rgsabound[0]));
+        }
         Buffer += sizeof(psa->rgsabound[0]) * psa->cDims;
 
         *(ULONG *)Buffer = ulCellCount;
@@ -1078,7 +1089,7 @@ unsigned char * WINAPI LPSAFEARRAY_UserUnmarshal(ULONG *pFlags, unsigned char *B
     (*ppsa)->fFeatures |= (wiresa->fFeatures & ~(FADF_AUTOSETFLAGS));
     /* FIXME: there should be a limit on how large wiresa->cbElements can be */
     (*ppsa)->cbElements = elem_mem_size(wiresa, sftype);
-    (*ppsa)->cLocks = LOWORD(wiresa->cLocks);
+    (*ppsa)->cLocks = 0;
 
     /* SafeArrayCreateEx allocates the data for us, but
      * SafeArrayAllocDescriptor doesn't */
@@ -1591,8 +1602,9 @@ HRESULT CALLBACK ITypeInfo_GetNames_Proxy(
     UINT cMaxNames,
     UINT* pcNames)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+    TRACE("(%p, %08x, %p, %d, %p)\n", This, memid, rgBstrNames, cMaxNames, pcNames);
+
+    return ITypeInfo_RemoteGetNames_Proxy(This, memid, rgBstrNames, cMaxNames, pcNames);
 }
 
 HRESULT __RPC_STUB ITypeInfo_GetNames_Stub(
@@ -1602,8 +1614,9 @@ HRESULT __RPC_STUB ITypeInfo_GetNames_Stub(
     UINT cMaxNames,
     UINT* pcNames)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+    TRACE("(%p, %08x, %p, %d, %p)\n", This, memid, rgBstrNames, cMaxNames, pcNames);
+
+    return ITypeInfo_GetNames(This, memid, rgBstrNames, cMaxNames, pcNames);
 }
 
 HRESULT CALLBACK ITypeInfo_GetIDsOfNames_Proxy(
@@ -1644,74 +1657,92 @@ HRESULT __RPC_STUB ITypeInfo_Invoke_Stub(
   return E_FAIL;
 }
 
-HRESULT CALLBACK ITypeInfo_GetDocumentation_Proxy(
-    ITypeInfo* This,
-    MEMBERID memid,
-    BSTR* pBstrName,
-    BSTR* pBstrDocString,
-    DWORD* pdwHelpContext,
-    BSTR* pBstrHelpFile)
+HRESULT CALLBACK ITypeInfo_GetDocumentation_Proxy(ITypeInfo *This, MEMBERID memid,
+                                                  BSTR *name, BSTR *doc_string,
+                                                  DWORD *help_context, BSTR *help_file)
 {
-    DWORD help_context;
-    BSTR name, doc_string, help_file;
+    DWORD dummy_help_context, flags = 0;
+    BSTR dummy_name, dummy_doc_string, dummy_help_file;
     HRESULT hr;
-    TRACE("(%p, %08x, %p, %p, %p, %p)\n", This, memid, pBstrName, pBstrDocString, pdwHelpContext, pBstrHelpFile);
+    TRACE("(%p, %08x, %p, %p, %p, %p)\n", This, memid, name, doc_string, help_context, help_file);
 
-    /* FIXME: presumably refPtrFlags is supposed to be a bitmask of which ptrs we actually want? */
-    hr = ITypeInfo_RemoteGetDocumentation_Proxy(This, memid, 0, &name, &doc_string, &help_context, &help_file);
-    if(SUCCEEDED(hr))
-    {
-        if(pBstrName) *pBstrName = name;
-        else SysFreeString(name);
+    if(!name) name = &dummy_name;
+    else flags = 1;
 
-        if(pBstrDocString) *pBstrDocString = doc_string;
-        else SysFreeString(doc_string);
+    if(!doc_string) doc_string = &dummy_doc_string;
+    else flags |= 2;
 
-        if(pBstrHelpFile) *pBstrHelpFile = help_file;
-        else SysFreeString(help_file);
+    if(!help_context) help_context = &dummy_help_context;
+    else flags |= 4;
 
-        if(pdwHelpContext) *pdwHelpContext = help_context;
-    }
+    if(!help_file) help_file = &dummy_help_file;
+    else flags |= 8;
+
+    hr = ITypeInfo_RemoteGetDocumentation_Proxy(This, memid, flags, name, doc_string, help_context, help_file);
+
+    /* We don't need to free the dummy BSTRs since the stub ensures that these will be NULLs. */
+
     return hr;
 }
 
-HRESULT __RPC_STUB ITypeInfo_GetDocumentation_Stub(
-    ITypeInfo* This,
-    MEMBERID memid,
-    DWORD refPtrFlags,
-    BSTR* pBstrName,
-    BSTR* pBstrDocString,
-    DWORD* pdwHelpContext,
-    BSTR* pBstrHelpFile)
+HRESULT __RPC_STUB ITypeInfo_GetDocumentation_Stub(ITypeInfo *This, MEMBERID memid,
+                                                   DWORD flags, BSTR *name, BSTR *doc_string,
+                                                   DWORD *help_context, BSTR *help_file)
 {
-    TRACE("(%p, %08x, %08x, %p, %p, %p, %p)\n", This, memid, refPtrFlags, pBstrName, pBstrDocString,
-          pdwHelpContext, pBstrHelpFile);
-    return ITypeInfo_GetDocumentation(This, memid, pBstrName, pBstrDocString, pdwHelpContext, pBstrHelpFile);
+    TRACE("(%p, %08x, %08x, %p, %p, %p, %p)\n", This, memid, flags, name, doc_string, help_context, help_file);
+
+    *name = *doc_string = *help_file = NULL;
+    *help_context = 0;
+
+    if(!(flags & 1)) name = NULL;
+    if(!(flags & 2)) doc_string = NULL;
+    if(!(flags & 4)) help_context = NULL;
+    if(!(flags & 8)) help_file = NULL;
+
+    return ITypeInfo_GetDocumentation(This, memid, name, doc_string, help_context, help_file);
 }
 
-HRESULT CALLBACK ITypeInfo_GetDllEntry_Proxy(
-    ITypeInfo* This,
-    MEMBERID memid,
-    INVOKEKIND invKind,
-    BSTR* pBstrDllName,
-    BSTR* pBstrName,
-    WORD* pwOrdinal)
+HRESULT CALLBACK ITypeInfo_GetDllEntry_Proxy(ITypeInfo *This, MEMBERID memid,
+                                             INVOKEKIND invkind, BSTR *dll_name,
+                                             BSTR* name, WORD *ordinal)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+    DWORD flags = 0;
+    BSTR dummy_dll_name, dummy_name;
+    WORD dummy_ordinal;
+    HRESULT hr;
+    TRACE("(%p, %08x, %x, %p, %p, %p)\n", This, memid, invkind, dll_name, name, ordinal);
+
+    if(!dll_name) dll_name = &dummy_dll_name;
+    else flags = 1;
+
+    if(!name) name = &dummy_name;
+    else flags |= 2;
+
+    if(!ordinal) ordinal = &dummy_ordinal;
+    else flags |= 4;
+
+    hr = ITypeInfo_RemoteGetDllEntry_Proxy(This, memid, invkind, flags, dll_name, name, ordinal);
+
+    /* We don't need to free the dummy BSTRs since the stub ensures that these will be NULLs. */
+
+    return hr;
 }
 
-HRESULT __RPC_STUB ITypeInfo_GetDllEntry_Stub(
-    ITypeInfo* This,
-    MEMBERID memid,
-    INVOKEKIND invKind,
-    DWORD refPtrFlags,
-    BSTR* pBstrDllName,
-    BSTR* pBstrName,
-    WORD* pwOrdinal)
+HRESULT __RPC_STUB ITypeInfo_GetDllEntry_Stub(ITypeInfo *This, MEMBERID memid,
+                                              INVOKEKIND invkind, DWORD flags,
+                                              BSTR *dll_name, BSTR *name,
+                                              WORD *ordinal)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+    TRACE("(%p, %08x, %x, %p, %p, %p)\n", This, memid, invkind, dll_name, name, ordinal);
+
+    *dll_name = *name = NULL;
+    *ordinal = 0;
+
+    if(!(flags & 1)) dll_name = NULL;
+    if(!(flags & 2)) name = NULL;
+    if(!(flags & 4)) ordinal = NULL;
+
+    return ITypeInfo_GetDllEntry(This, memid, invkind, dll_name, name, ordinal);
 }
 
 HRESULT CALLBACK ITypeInfo_AddressOfMember_Proxy(
@@ -1852,29 +1883,46 @@ HRESULT __RPC_STUB ITypeInfo_ReleaseVarDesc_Stub(
 
 /* ITypeInfo2 */
 
-HRESULT CALLBACK ITypeInfo2_GetDocumentation2_Proxy(
-    ITypeInfo2* This,
-    MEMBERID memid,
-    LCID lcid,
-    BSTR* pbstrHelpString,
-    DWORD* pdwHelpStringContext,
-    BSTR* pbstrHelpStringDll)
+HRESULT CALLBACK ITypeInfo2_GetDocumentation2_Proxy(ITypeInfo2 *This, MEMBERID memid,
+                                                    LCID lcid, BSTR *help_string,
+                                                    DWORD *help_context, BSTR *help_dll)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+    DWORD dummy_help_context, flags = 0;
+    BSTR dummy_help_string, dummy_help_dll;
+    HRESULT hr;
+    TRACE("(%p, %08x, %08x, %p, %p, %p)\n", This, memid, lcid, help_string, help_context, help_dll);
+
+    if(!help_string) help_string = &dummy_help_string;
+    else flags = 1;
+
+    if(!help_context) help_context = &dummy_help_context;
+    else flags |= 2;
+
+    if(!help_dll) help_dll = &dummy_help_dll;
+    else flags |= 4;
+
+    hr = ITypeInfo2_RemoteGetDocumentation2_Proxy(This, memid, lcid, flags, help_string, help_context, help_dll);
+
+    /* We don't need to free the dummy BSTRs since the stub ensures that these will be NULLs. */
+
+    return hr;
 }
 
-HRESULT __RPC_STUB ITypeInfo2_GetDocumentation2_Stub(
-    ITypeInfo2* This,
-    MEMBERID memid,
-    LCID lcid,
-    DWORD refPtrFlags,
-    BSTR* pbstrHelpString,
-    DWORD* pdwHelpStringContext,
-    BSTR* pbstrHelpStringDll)
+HRESULT __RPC_STUB ITypeInfo2_GetDocumentation2_Stub(ITypeInfo2 *This, MEMBERID memid,
+                                                     LCID lcid, DWORD flags,
+                                                     BSTR *help_string, DWORD *help_context,
+                                                     BSTR *help_dll)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+    TRACE("(%p, %08x, %08x, %08x, %p, %p, %p)\n", This, memid, lcid, flags, help_string, help_context, help_dll);
+
+    *help_string = *help_dll = NULL;
+    *help_context = 0;
+
+    if(!(flags & 1)) help_string = NULL;
+    if(!(flags & 2)) help_context = NULL;
+    if(!(flags & 4)) help_dll = NULL;
+
+    return ITypeInfo2_GetDocumentation2(This, memid, lcid, help_string, help_context, help_dll);
 }
 
 /* ITypeLib */
@@ -1932,29 +1980,49 @@ HRESULT __RPC_STUB ITypeLib_GetLibAttr_Stub(
     return hr;
 }
 
-HRESULT CALLBACK ITypeLib_GetDocumentation_Proxy(
-    ITypeLib* This,
-    INT index,
-    BSTR* pBstrName,
-    BSTR* pBstrDocString,
-    DWORD* pdwHelpContext,
-    BSTR* pBstrHelpFile)
+HRESULT CALLBACK ITypeLib_GetDocumentation_Proxy(ITypeLib *This, INT index, BSTR *name,
+                                                 BSTR *doc_string, DWORD *help_context,
+                                                 BSTR *help_file)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+    DWORD dummy_help_context, flags = 0;
+    BSTR dummy_name, dummy_doc_string, dummy_help_file;
+    HRESULT hr;
+    TRACE("(%p, %d, %p, %p, %p, %p)\n", This, index, name, doc_string, help_context, help_file);
+
+    if(!name) name = &dummy_name;
+    else flags = 1;
+
+    if(!doc_string) doc_string = &dummy_doc_string;
+    else flags |= 2;
+
+    if(!help_context) help_context = &dummy_help_context;
+    else flags |= 4;
+
+    if(!help_file) help_file = &dummy_help_file;
+    else flags |= 8;
+
+    hr = ITypeLib_RemoteGetDocumentation_Proxy(This, index, flags, name, doc_string, help_context, help_file);
+
+    /* We don't need to free the dummy BSTRs since the stub ensures that these will be NULLs. */
+
+    return hr;
 }
 
-HRESULT __RPC_STUB ITypeLib_GetDocumentation_Stub(
-    ITypeLib* This,
-    INT index,
-    DWORD refPtrFlags,
-    BSTR* pBstrName,
-    BSTR* pBstrDocString,
-    DWORD* pdwHelpContext,
-    BSTR* pBstrHelpFile)
+HRESULT __RPC_STUB ITypeLib_GetDocumentation_Stub(ITypeLib *This, INT index, DWORD flags,
+                                                  BSTR *name, BSTR *doc_string,
+                                                  DWORD *help_context, BSTR *help_file)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+    TRACE("(%p, %d, %08x, %p, %p, %p, %p)\n", This, index, flags, name, doc_string, help_context, help_file);
+
+    *name = *doc_string = *help_file = NULL;
+    *help_context = 0;
+
+    if(!(flags & 1)) name = NULL;
+    if(!(flags & 2)) doc_string = NULL;
+    if(!(flags & 4)) help_context = NULL;
+    if(!(flags & 8)) help_file = NULL;
+
+    return ITypeLib_GetDocumentation(This, index, name, doc_string, help_context, help_file);
 }
 
 HRESULT CALLBACK ITypeLib_IsName_Proxy(
@@ -2039,29 +2107,45 @@ HRESULT __RPC_STUB ITypeLib2_GetLibStatistics_Stub(
   return E_FAIL;
 }
 
-HRESULT CALLBACK ITypeLib2_GetDocumentation2_Proxy(
-    ITypeLib2* This,
-    INT index,
-    LCID lcid,
-    BSTR* pbstrHelpString,
-    DWORD* pdwHelpStringContext,
-    BSTR* pbstrHelpStringDll)
+HRESULT CALLBACK ITypeLib2_GetDocumentation2_Proxy(ITypeLib2 *This, INT index,
+                                                   LCID lcid, BSTR *help_string,
+                                                   DWORD *help_context, BSTR *help_dll)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+    DWORD dummy_help_context, flags = 0;
+    BSTR dummy_help_string, dummy_help_dll;
+    HRESULT hr;
+    TRACE("(%p, %d, %08x, %p, %p, %p)\n", This, index, lcid, help_string, help_context, help_dll);
+
+    if(!help_string) help_string = &dummy_help_string;
+    else flags = 1;
+
+    if(!help_context) help_context = &dummy_help_context;
+    else flags |= 2;
+
+    if(!help_dll) help_dll = &dummy_help_dll;
+    else flags |= 4;
+
+    hr = ITypeLib2_RemoteGetDocumentation2_Proxy(This, index, lcid, flags, help_string, help_context, help_dll);
+
+    /* We don't need to free the dummy BSTRs since the stub ensures that these will be NULLs. */
+
+    return hr;
 }
 
-HRESULT __RPC_STUB ITypeLib2_GetDocumentation2_Stub(
-    ITypeLib2* This,
-    INT index,
-    LCID lcid,
-    DWORD refPtrFlags,
-    BSTR* pbstrHelpString,
-    DWORD* pdwHelpStringContext,
-    BSTR* pbstrHelpStringDll)
+HRESULT __RPC_STUB ITypeLib2_GetDocumentation2_Stub(ITypeLib2 *This, INT index, LCID lcid,
+                                                    DWORD flags, BSTR *help_string,
+                                                    DWORD *help_context, BSTR *help_dll)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+    TRACE("(%p, %d, %08x, %08x, %p, %p, %p)\n", This, index, lcid, flags, help_string, help_context, help_dll);
+
+    *help_string = *help_dll = NULL;
+    *help_context = 0;
+
+    if(!(flags & 1)) help_string = NULL;
+    if(!(flags & 2)) help_context = NULL;
+    if(!(flags & 4)) help_dll = NULL;
+
+    return ITypeLib2_GetDocumentation2(This, index, lcid, help_string, help_context, help_dll);
 }
 
 HRESULT CALLBACK IPropertyBag_Read_Proxy(
@@ -2110,7 +2194,7 @@ HRESULT __RPC_STUB IPropertyBag_Read_Stub(
     DWORD varType,
     IUnknown *pUnkObj)
 {
-  static const WCHAR emptyWstr[1] = {0};
+  static const WCHAR emptyWstr[] = {0};
   IDispatch *disp;
   HRESULT hr;
   TRACE("(%p, %s, %p, %p, %x, %p)\n", This, debugstr_w(pszPropName), pVar,

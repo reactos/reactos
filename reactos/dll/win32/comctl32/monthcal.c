@@ -39,23 +39,23 @@
  *    -- search for FIXME
  */
 
-#include <math.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+//#include <math.h>
+//#include <stdarg.h>
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <string.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "commctrl.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "wingdi.h"
+//#include "winuser.h"
+//#include "winnls.h"
+//#include "commctrl.h"
 #include "comctl32.h"
-#include "uxtheme.h"
-#include "vssym32.h"
-#include "wine/unicode.h"
-#include "wine/debug.h"
+#include <uxtheme.h>
+#include <vssym32.h>
+#include <wine/unicode.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(monthcal);
 
@@ -185,7 +185,14 @@ static inline void MONTHCAL_NotifySelectionChange(const MONTHCAL_INFO *infoPtr)
     nmsc.nmhdr.idFrom   = GetWindowLongPtrW(infoPtr->hwndSelf, GWLP_ID);
     nmsc.nmhdr.code     = MCN_SELCHANGE;
     nmsc.stSelStart     = infoPtr->minSel;
-    nmsc.stSelEnd       = infoPtr->maxSel;
+    nmsc.stSelStart.wDayOfWeek = 0;
+    if(infoPtr->dwStyle & MCS_MULTISELECT){
+        nmsc.stSelEnd = infoPtr->maxSel;
+        nmsc.stSelEnd.wDayOfWeek = 0;
+    }
+    else
+        nmsc.stSelEnd = st_null;
+
     SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, nmsc.nmhdr.idFrom, (LPARAM)&nmsc);
 }
 
@@ -198,7 +205,13 @@ static inline void MONTHCAL_NotifySelect(const MONTHCAL_INFO *infoPtr)
     nmsc.nmhdr.idFrom   = GetWindowLongPtrW(infoPtr->hwndSelf, GWLP_ID);
     nmsc.nmhdr.code     = MCN_SELECT;
     nmsc.stSelStart     = infoPtr->minSel;
-    nmsc.stSelEnd       = infoPtr->maxSel;
+    nmsc.stSelStart.wDayOfWeek = 0;
+    if(infoPtr->dwStyle & MCS_MULTISELECT){
+        nmsc.stSelEnd = infoPtr->maxSel;
+        nmsc.stSelEnd.wDayOfWeek = 0;
+    }
+    else
+        nmsc.stSelEnd = st_null;
 
     SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, nmsc.nmhdr.idFrom, (LPARAM)&nmsc);
 }
@@ -296,7 +309,7 @@ static void MONTHCAL_CopyDate(const SYSTEMTIME *from, SYSTEMTIME *to)
  *
  *  Note that no date validation performed, already validated values expected.
  */
-static LONG MONTHCAL_CompareSystemTime(const SYSTEMTIME *first, const SYSTEMTIME *second)
+LONG MONTHCAL_CompareSystemTime(const SYSTEMTIME *first, const SYSTEMTIME *second)
 {
   FILETIME ft_first, ft_second;
 
@@ -353,14 +366,17 @@ static BOOL MONTHCAL_IsDateInValidRange(const MONTHCAL_INFO *infoPtr,
   else if(MONTHCAL_CompareSystemTime(date, &min_allowed_date) == -1) {
      fix_st = &min_allowed_date;
   }
-  else if(infoPtr->rangeValid & GDTR_MAX) {
-     if((MONTHCAL_CompareSystemTime(date, &infoPtr->maxDate) == 1)) {
-       fix_st = &infoPtr->maxDate;
+  else {
+     if(infoPtr->rangeValid & GDTR_MAX) {
+        if((MONTHCAL_CompareSystemTime(date, &infoPtr->maxDate) == 1)) {
+           fix_st = &infoPtr->maxDate;
+        }
      }
-  }
-  else if(infoPtr->rangeValid & GDTR_MIN) {
-     if((MONTHCAL_CompareSystemTime(date, &infoPtr->minDate) == -1)) {
-       fix_st = &infoPtr->minDate;
+
+     if(infoPtr->rangeValid & GDTR_MIN) {
+        if((MONTHCAL_CompareSystemTime(date, &infoPtr->minDate) == -1)) {
+           fix_st = &infoPtr->minDate;
+        }
      }
   }
 
@@ -369,7 +385,7 @@ static BOOL MONTHCAL_IsDateInValidRange(const MONTHCAL_INFO *infoPtr,
     date->wMonth = fix_st->wMonth;
   }
 
-  return fix_st ? FALSE : TRUE;
+  return !fix_st;
 }
 
 /* Checks passed range width with configured maximum selection count
@@ -1060,7 +1076,8 @@ static void MONTHCAL_PaintFocusAndCircle(const MONTHCAL_INFO *infoPtr, HDC hdc, 
 /* months before first calendar month and after last calendar month */
 static void MONTHCAL_PaintLeadTrailMonths(const MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRUCT *ps)
 {
-  INT mask, length, index;
+  INT mask, index;
+  UINT length;
   SYSTEMTIME st_max, st;
 
   if (infoPtr->dwStyle & MCS_NOTRAILINGDATES) return;
@@ -1100,7 +1117,8 @@ static void MONTHCAL_PaintLeadTrailMonths(const MONTHCAL_INFO *infoPtr, HDC hdc,
 static void MONTHCAL_PaintCalendar(const MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRUCT *ps, INT calIdx)
 {
   const SYSTEMTIME *date = &infoPtr->calendars[calIdx].month;
-  INT i, j, length;
+  INT i, j;
+  UINT length;
   RECT r, fill_bk_rect;
   SYSTEMTIME st;
   WCHAR buf[80];
@@ -1273,7 +1291,7 @@ MONTHCAL_SetColor(MONTHCAL_INFO *infoPtr, UINT index, COLORREF color)
     infoPtr->pens[PenText] = CreatePen(PS_SOLID, 1, infoPtr->colors[index]);
   }
 
-  InvalidateRect(infoPtr->hwndSelf, NULL, index == MCSC_BACKGROUND ? TRUE : FALSE);
+  InvalidateRect(infoPtr->hwndSelf, NULL, index == MCSC_BACKGROUND);
   return prev;
 }
 

@@ -268,12 +268,12 @@ DC_vInitDc(
 	pdc->dclevel.ptlBrushOrigin.x = 0;
 	pdc->dclevel.ptlBrushOrigin.y = 0;
 	pdc->dcattr.ptlBrushOrigin = pdc->dclevel.ptlBrushOrigin;
-    
+
     /* Initialize EBRUSHOBJs */
-    EBRUSHOBJ_vInit(&pdc->eboFill, pdc->dclevel.pbrFill, pdc);
-    EBRUSHOBJ_vInit(&pdc->eboLine, pdc->dclevel.pbrLine, pdc);
-    EBRUSHOBJ_vInit(&pdc->eboText, pbrDefaultBrush, pdc);
-    EBRUSHOBJ_vInit(&pdc->eboBackground, pbrDefaultBrush, pdc);
+    EBRUSHOBJ_vInitFromDC(&pdc->eboFill, pdc->dclevel.pbrFill, pdc);
+    EBRUSHOBJ_vInitFromDC(&pdc->eboLine, pdc->dclevel.pbrLine, pdc);
+    EBRUSHOBJ_vInitFromDC(&pdc->eboText, pbrDefaultBrush, pdc);
+    EBRUSHOBJ_vInitFromDC(&pdc->eboBackground, pbrDefaultBrush, pdc);
 
     /* Setup fill data */
 	pdc->dcattr.jROP2 = R2_COPYPEN;
@@ -319,7 +319,7 @@ DC_vInitDc(
 	pdc->dcattr.lBreakExtra = 0;
 	pdc->dcattr.cBreak = 0;
     pdc->dcattr.hlfntNew = StockObjects[SYSTEM_FONT];
-//	pdc->dclevel.pFont = LFONT_ShareLockFont(pdc->dcattr.hlfntNew);
+    pdc->dclevel.plfnt = LFONT_ShareLockFont(pdc->dcattr.hlfntNew);
 
     /* Other stuff */
     pdc->hdcNext = NULL;
@@ -337,6 +337,7 @@ DC_vInitDc(
     if (defaultDCstate == NULL)
     {
         defaultDCstate = ExAllocatePoolWithTag(PagedPool, sizeof(DC), TAG_DC);
+        ASSERT(defaultDCstate);
         RtlZeroMemory(defaultDCstate, sizeof(DC));
         defaultDCstate->pdcattr = &defaultDCstate->dcattr;
         DC_vCopyState(pdc, defaultDCstate, TRUE);
@@ -366,6 +367,9 @@ DC_Cleanup(PVOID ObjectBody)
     EBRUSHOBJ_vCleanup(&pdc->eboLine);
     EBRUSHOBJ_vCleanup(&pdc->eboText);
     EBRUSHOBJ_vCleanup(&pdc->eboBackground);
+
+    /* Release font */
+    LFONT_ShareUnlockFont(pdc->dclevel.plfnt);
 
     /*  Free regions */
     if (pdc->rosdc.hClipRgn && GreIsHandleValid(pdc->rosdc.hClipRgn))
@@ -599,7 +603,7 @@ GreOpenDCW(
     PDC pdc;
     HDC hdc;
 
-    DPRINT("GreOpenDCW(%S, iType=%ld)\n",
+    DPRINT("GreOpenDCW(%S, iType=%lu)\n",
            pustrDevice ? pustrDevice->Buffer : NULL, iType);
 
     /* Get a PDEVOBJ for the device */
@@ -725,6 +729,7 @@ NtGdiOpenDCW(
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Ignore error */
+            (void)0;
         }
         _SEH2_END
     }
@@ -848,7 +853,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     }
     else
     {
-        DPRINT1("Attempted to Delete 0x%x currently being destroyed!!!\n", hDC);
+        DPRINT1("Attempted to Delete 0x%p currently being destroyed!!!\n", hDC);
     }
 
     return TRUE;

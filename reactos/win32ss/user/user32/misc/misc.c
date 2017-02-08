@@ -42,7 +42,29 @@ BOOL
 WINAPI
 RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
 {
-  return NtUserxRegisterLogonProcess(dwProcessId,bRegister);
+    gfLogonProcess = NtUserxRegisterLogonProcess(dwProcessId, bRegister);
+
+    if (gfLogonProcess)
+    {
+        NTSTATUS Status;
+        USER_API_MESSAGE ApiMessage;
+
+        ApiMessage.Data.RegisterLogonProcessRequest.ProcessId = dwProcessId;
+        ApiMessage.Data.RegisterLogonProcessRequest.Register = bRegister;
+
+        Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                     NULL,
+                                     CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpRegisterLogonProcess),
+                                     sizeof(USER_REGISTER_LOGON_PROCESS));
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("Failed to register logon process with CSRSS\n");
+            SetLastError(RtlNtStatusToDosError(Status));
+            // return FALSE;
+        }
+    }
+
+    return gfLogonProcess;
 }
 
 /*
@@ -50,27 +72,9 @@ RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
  */
 BOOL
 WINAPI
-SetLogonNotifyWindow (HWND Wnd, HWINSTA WinSta)
+SetLogonNotifyWindow(HWND Wnd, HWINSTA WinSta)
 {
-  /* Maybe we should call NtUserSetLogonNotifyWindow and let that one inform CSRSS??? */
-  CSR_API_MESSAGE Request;
-  ULONG CsrRequest;
-  NTSTATUS Status;
-
-  CsrRequest = MAKE_CSR_API(SET_LOGON_NOTIFY_WINDOW, CSR_GUI);
-  Request.Data.SetLogonNotifyWindowRequest.LogonNotifyWindow = Wnd;
-
-  Status = CsrClientCallServer(&Request,
-			       NULL,
-                   CsrRequest,
-			       sizeof(CSR_API_MESSAGE));
-  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
-    {
-      SetLastError(RtlNtStatusToDosError(Status));
-      return(FALSE);
-    }
-
-  return NtUserSetLogonNotifyWindow(Wnd);
+    return NtUserSetLogonNotifyWindow(Wnd);
 }
 
 /*
@@ -78,10 +82,10 @@ SetLogonNotifyWindow (HWND Wnd, HWINSTA WinSta)
  */
 BOOL WINAPI
 UpdatePerUserSystemParameters(
-   DWORD dwReserved,
-   BOOL bEnable)
+    DWORD dwReserved,
+    BOOL bEnable)
 {
-   return NtUserUpdatePerUserSystemParameters(dwReserved, bEnable);
+    return NtUserUpdatePerUserSystemParameters(dwReserved, bEnable);
 }
 
 PTHREADINFO
@@ -282,6 +286,8 @@ GetUser32Handle(HANDLE handle)
     INT Index;
     USHORT generation;
 
+    if (!handle) return NULL;
+
     Index = (((UINT_PTR)handle & 0xffff) - FIRST_USER_HANDLE) >> 1;
 
     if (Index < 0 || Index >= gHandleTable->nb_handles)
@@ -301,24 +307,30 @@ GetUser32Handle(HANDLE handle)
 /*
  * Decide whether an object is located on the desktop or shared heap
  */
-static const BOOL g_ObjectHeapTypeShared[otEvent + 1] =
+static const BOOL g_ObjectHeapTypeShared[TYPE_CTYPES] =
 {
-    FALSE, /* otFree (not used) */
-    FALSE, /* otWindow */
-    TRUE,  /* otMenu  FALSE */
-    TRUE,  /* otCursorIcon */
-    TRUE,  /* otSMWP */
-    FALSE, /* otHook */
-    FALSE, /* (not used) */
-    FALSE, /* otCallProc */
-    TRUE,  /* otAccel */
-    FALSE, /* (not used) */
-    FALSE, /* (not used) */
-    FALSE, /* (not used) */
-    TRUE,  /* otMonitor */
-    FALSE, /* (not used) */
-    FALSE, /* (not used) */
-    TRUE   /* otEvent */
+    FALSE, /* TYPE_FREE (not used) */
+    FALSE, /* TYPE_WINDOW */
+    TRUE,  /* TYPE_MENU  FALSE */
+    TRUE,  /* TYPE_CURSOR */
+    TRUE,  /* TYPE_SETWINDOWPOS */
+    FALSE, /* TYPE_HOOK */
+    FALSE, /* TYPE_CLIPDATA */
+    FALSE, /* TYPE_CALLPROC */
+    TRUE,  /* TYPE_ACCELTABLE */
+    FALSE, /* TYPE_DDEACCESS */
+    FALSE, /* TYPE_DDECONV */
+    FALSE, /* TYPE_DDEXACT */
+    TRUE,  /* TYPE_MONITOR */
+    FALSE, /* TYPE_KBDLAYOUT */
+    FALSE, /* TYPE_KBDFILE */
+    TRUE,   /* TYPE_WINEVENTHOOK */
+    FALSE, /* TYPE_TIMER */
+    FALSE, /* TYPE_INPUTCONTEXT */
+    FALSE, /* TYPE_HIDDATA */
+    FALSE, /* TYPE_DEVICEINFO */
+    FALSE, /* TYPE_TOUCHINPUTINFO */
+    FALSE, /* TYPE_GESTUREINFOOBJ */
 };
 
 //
@@ -331,7 +343,7 @@ ValidateHandle(HANDLE handle, UINT uType)
   PVOID ret;
   PUSER_HANDLE_ENTRY pEntry;
 
-  ASSERT(uType <= otEvent);
+  ASSERT(uType < TYPE_CTYPES);
 
   pEntry = GetUser32Handle(handle);
 
@@ -346,22 +358,22 @@ ValidateHandle(HANDLE handle, UINT uType)
   {
      switch ( uType )
      {  // Test (with wine too) confirms these results!
-        case otWindow:
+        case TYPE_WINDOW:
           SetLastError(ERROR_INVALID_WINDOW_HANDLE);
           break;
-        case otMenu:
+        case TYPE_MENU:
           SetLastError(ERROR_INVALID_MENU_HANDLE);
           break;
-        case otCursorIcon:
+        case TYPE_CURSOR:
           SetLastError(ERROR_INVALID_CURSOR_HANDLE);
           break;
-        case otSMWP:
+        case TYPE_SETWINDOWPOS:
           SetLastError(ERROR_INVALID_DWP_HANDLE);
           break;
-        case otHook:
+        case TYPE_HOOK:
           SetLastError(ERROR_INVALID_HOOK_HANDLE);
           break;
-        case otAccel:
+        case TYPE_ACCELTABLE:
           SetLastError(ERROR_INVALID_ACCEL_HANDLE);
           break;
         default:
@@ -389,7 +401,7 @@ ValidateHandleNoErr(HANDLE handle, UINT uType)
   PVOID ret;
   PUSER_HANDLE_ENTRY pEntry;
 
-  ASSERT(uType <= otEvent);
+  ASSERT(uType < TYPE_CTYPES);
 
   pEntry = GetUser32Handle(handle);
 
@@ -417,7 +429,7 @@ ValidateCallProc(HANDLE hCallProc)
 {
   PUSER_HANDLE_ENTRY pEntry;
 
-  PCALLPROCDATA CallProc = ValidateHandle(hCallProc, otCallProc);
+  PCALLPROCDATA CallProc = ValidateHandle(hCallProc, TYPE_CALLPROC);
 
   pEntry = GetUser32Handle(hCallProc);
 
@@ -435,21 +447,14 @@ PWND
 FASTCALL
 ValidateHwnd(HWND hwnd)
 {
-    PWND Wnd;
     PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     ASSERT(ClientInfo != NULL);
 
     /* See if the window is cached */
-    if (hwnd == ClientInfo->CallbackWnd.hWnd)
+    if (hwnd && hwnd == ClientInfo->CallbackWnd.hWnd)
         return ClientInfo->CallbackWnd.pWnd;
 
-    Wnd = ValidateHandle((HANDLE)hwnd, otWindow);
-    if (Wnd != NULL)
-    {
-        return Wnd;
-    }
-
-    return NULL;
+    return ValidateHandle((HANDLE)hwnd, TYPE_WINDOW);
 }
 
 //
@@ -467,7 +472,7 @@ ValidateHwndNoErr(HWND hwnd)
     if (hwnd == ClientInfo->CallbackWnd.hWnd)
         return ClientInfo->CallbackWnd.pWnd;
 
-    Wnd = ValidateHandleNoErr((HANDLE)hwnd, otWindow);
+    Wnd = ValidateHandleNoErr((HANDLE)hwnd, TYPE_WINDOW);
     if (Wnd != NULL)
     {
         return Wnd;

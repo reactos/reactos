@@ -20,13 +20,9 @@
 
 #pragma once
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #ifdef _WIN32
-//#include <winsock2.h> /* winsock2.h first */
-#include <windows.h>
-#include <time.h>
+#include <winsock2.h> /* winsock2.h first */
+#include <mmsystem.h>
 #else /* WIN32 */
 #include <dirent.h>
 #include <sys/types.h>
@@ -38,7 +34,7 @@
 #include <unistd.h>
 #endif /* HAVE_SYS_SELECT_H */
 #endif /* WIN32 */
-#include <limits.h>		/* PATH_MAX */
+//#include <limits.h>		/* PATH_MAX */
 
 #define VERSION "1.4.1"
 

@@ -11,7 +11,7 @@
 
 
 
-#include "audio_def.hpp"
+//#include "audio_def.hpp"
 #include "audio_format.hpp"
 #include "audio_receiver.hpp"
 
@@ -229,7 +229,7 @@ class audio_wavein
 
 
             //
-            // Set seconds lenght for each
+            // Set seconds length for each
             // buffer.
             //
 

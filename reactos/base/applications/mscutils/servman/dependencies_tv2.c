@@ -9,7 +9,6 @@
 
 #include "precomp.h"
 
-
 BOOL
 TV2_HasDependantServices(LPWSTR lpServiceName)
 {
@@ -49,7 +48,6 @@ TV2_HasDependantServices(LPWSTR lpServiceName)
 
     return bRet;
 }
-
 
 LPENUM_SERVICE_STATUS
 TV2_GetDependants(LPWSTR lpServiceName,
@@ -116,7 +114,6 @@ TV2_GetDependants(LPWSTR lpServiceName,
 
     return lpDependencies;
 }
-
 
 VOID
 TV2_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,

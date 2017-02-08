@@ -202,6 +202,7 @@ ObInitSystem(VOID)
 
     /* Create the Directory Type */
     RtlInitUnicodeString(&Name, L"Directory");
+    ObjectTypeInitializer.PoolType = PagedPool;
     ObjectTypeInitializer.ValidAccessMask = DIRECTORY_ALL_ACCESS;
     ObjectTypeInitializer.CaseInsensitive = TRUE;
     ObjectTypeInitializer.MaintainTypeList = FALSE;
@@ -209,6 +210,7 @@ ObInitSystem(VOID)
     ObjectTypeInitializer.DeleteProcedure = NULL;
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(OBJECT_DIRECTORY);
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObDirectoryType);
+    ObDirectoryType->TypeInfo.ValidAccessMask &= ~SYNCHRONIZE;
 
     /* Create 'symbolic link' object type */
     RtlInitUnicodeString(&Name, L"SymbolicLink");
@@ -218,6 +220,7 @@ ObInitSystem(VOID)
     ObjectTypeInitializer.ParseProcedure = ObpParseSymbolicLink;
     ObjectTypeInitializer.DeleteProcedure = ObpDeleteSymbolicLink;
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObSymbolicLinkType);
+    ObSymbolicLinkType->TypeInfo.ValidAccessMask &= ~SYNCHRONIZE;
 
     /* Phase 0 initialization complete */
     ObpInitializationPhase++;

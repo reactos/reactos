@@ -408,8 +408,11 @@ MmDeterminePoolType(IN PVOID PoolAddress)
     //
     // Use a simple bounds check
     //
-    return (PoolAddress >= MmPagedPoolStart) && (PoolAddress <= MmPagedPoolEnd) ?
-            PagedPool : NonPagedPool;
+    if (PoolAddress >= MmPagedPoolStart && PoolAddress <= MmPagedPoolEnd)
+        return PagedPool;
+    else if (PoolAddress >= MmNonPagedPoolStart && PoolAddress <= MmNonPagedPoolEnd)
+        return NonPagedPool;
+    KeBugCheckEx(BAD_POOL_CALLER, 0x42, (ULONG_PTR)PoolAddress, 0, 0);
 }
 
 PVOID
@@ -1324,8 +1327,10 @@ MiInitializeSessionPool(VOID)
     /* Initialize the first page table */
     Index = (ULONG_PTR)MmSessionSpace->PagedPoolStart - (ULONG_PTR)MmSessionBase;
     Index >>= 22;
+#ifndef _M_AMD64 // FIXME
     ASSERT(MmSessionSpace->PageTables[Index].u.Long == 0);
     MmSessionSpace->PageTables[Index] = *PointerPde;
+#endif
 
     /* Bump up counters */
     InterlockedIncrementSizeT(&MmSessionSpace->NonPageablePages);

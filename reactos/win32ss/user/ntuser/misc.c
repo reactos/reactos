@@ -2,12 +2,54 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Miscellaneous User functions
- * FILE:             subsystems/win32/win32k/ntuser/misc.c
+ * FILE:             win32ss/user/ntuser/misc.c
  * PROGRAMER:        Ge van Geldorp (ge@gse.nl)
  */
 
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserMisc);
+
+/*
+ * Test the Thread to verify and validate it. Hard to the core tests are required.
+ */
+PTHREADINFO
+FASTCALL
+IntTID2PTI(HANDLE id)
+{
+   NTSTATUS Status;
+   PETHREAD Thread;
+   PTHREADINFO pti;
+   Status = PsLookupThreadByThreadId(id, &Thread);
+   if (!NT_SUCCESS(Status))
+   {
+      return NULL;
+   }
+   if (PsIsThreadTerminating(Thread))
+   {
+      ObDereferenceObject(Thread);
+      return NULL;
+   }
+   pti = PsGetThreadWin32Thread(Thread);
+   if (!pti)
+   {
+      ObDereferenceObject(Thread);
+      return NULL;
+   }
+   // Validate and verify!
+   _SEH2_TRY
+   {
+      if (pti->TIF_flags & TIF_INCLEANUP) pti = NULL;
+      if (pti && !(pti->TIF_flags & TIF_GUITHREADINITIALIZED)) pti = NULL;
+      if (PsGetThreadId(Thread) != id) pti = NULL;
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      pti = NULL;
+   }
+   _SEH2_END
+   ObDereferenceObject(Thread);
+   return pti;
+}
 
 SHORT
 FASTCALL
@@ -188,7 +230,7 @@ NtUserGetThreadState(
            ret = ISMEX_NOSEND;
            if (Message)
            {
-             if (Message->SenderQueue)
+             if (Message->ptiSender)
                 ret = ISMEX_SEND;
              else
              {
@@ -213,7 +255,7 @@ NtUserGetThreadState(
            LARGE_INTEGER LargeTickCount;
            pti = PsGetCurrentThreadWin32Thread();
            KeQueryTickCount(&LargeTickCount);
-           pti->MessageQueue->LastMsgRead = LargeTickCount.u.LowPart;
+           pti->timeLast = LargeTickCount.u.LowPart;
            pti->pcti->tickLastMsgChecked = LargeTickCount.u.LowPart;
          }
          break;
@@ -360,7 +402,7 @@ NtUserGetGUIThreadInfo(
 
    SafeGui.hwndActive = MsgQueue->spwndActive ? UserHMGetHandle(MsgQueue->spwndActive) : 0;
    SafeGui.hwndFocus = MsgQueue->spwndFocus ? UserHMGetHandle(MsgQueue->spwndFocus) : 0;
-   SafeGui.hwndCapture = MsgQueue->CaptureWindow;
+   SafeGui.hwndCapture = MsgQueue->spwndCapture ? UserHMGetHandle(MsgQueue->spwndCapture) : 0;
    SafeGui.hwndMenuOwner = MsgQueue->MenuOwner;
    SafeGui.hwndMoveSize = MsgQueue->MoveSize;
    SafeGui.hwndCaret = CaretInfo->hWnd;

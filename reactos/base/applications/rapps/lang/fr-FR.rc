@@ -184,7 +184,7 @@ BEGIN
 	IDS_AVAILABLEFORINST "Disponible pour installation"
 	IDS_UPDATES "Mises à jour"
 	IDS_APPLICATIONS "Applications"
-	IDS_CHOOSE_FOLDER_TEXT "Choisissez un dossier dans lequel seront téléchargés les programmes :"
+	IDS_CHOOSE_FOLDER_TEXT "Choisissez un dossier dans lequel les programmes seront téléchargés :"
 	IDS_CHOOSE_FOLDER_ERROR "Le dossier que vous avez spécifié n'existe pas. Le créer ?"
 	IDS_USER_NOT_ADMIN "Vous devez être un administrateur pour démarrer ""ReactOS Applications Manager""!"
 	IDS_APP_REG_REMOVE "Etes-vous sûr de vouloir supprimer les données du programme installé du registre ?"

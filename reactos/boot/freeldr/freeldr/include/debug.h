@@ -120,4 +120,19 @@ void	MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 
 #endif // DBG
 
+void
+NTAPI
+FrLdrBugCheck(ULONG BugCode);
+
+/* Bugcheck codes */
+enum _FRLDR_BUGCHECK_CODES
+{
+    TEST_BUGCHECK,
+    MISSING_HARDWARE_REQUIREMENTS,
+    FREELDR_IMAGE_CORRUPTION,
+};
+
+extern char *BugCodeStrings[];
+extern ULONG_PTR BugCheckInfo[5];
+
 #endif // defined __DEBUG_H

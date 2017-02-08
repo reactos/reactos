@@ -10,16 +10,16 @@ BEGIN
     END
     POPUP "オプション(&O)"
     BEGIN
-        MENUITEM "常に手前に表 示(&A)",         ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "常に手前に表示(&A)",         ID_OPTIONS_ALWAYSONTOP
         , CHECKED
         MENUITEM "未使用時に最小化(&M)",        ID_OPTIONS_MINIMIZEONUSE
         , CHECKED
         MENUITEM "最小化時に隠す(&H)",          ID_OPTIONS_HIDEWHENMINIMIZED
         , CHECKED
-        MENUITEM "16 ビット タスクの表 示(&S)", ID_OPTIONS_SHOW16BITTASKS
+        MENUITEM "16 ビット タスクの表示(&S)", ID_OPTIONS_SHOW16BITTASKS
         , CHECKED
     END
-    POPUP "表 示(&V)"
+    POPUP "表示(&V)"
     BEGIN
         MENUITEM "最新の状態に更新(&R)",        ID_VIEW_REFRESH
         POPUP "更新の頻度(&U)"
@@ -43,16 +43,16 @@ BEGIN
             MENUITEM "CPU ごとに 1 グラフ(&P)",     ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
             , CHECKED
         END
-        MENUITEM "カーネル時間を表 示する(&S)",  ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "カーネル時間を表示する(&S)",  ID_VIEW_SHOWKERNELTIMES
     END
     POPUP "ウィンドウ(&W)"
     BEGIN
-        MENUITEM "上下に並べて表 示(&H)",       ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "左右に並べて表 示(&V)",       ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "上下に並べて表示(&H)",       ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "左右に並べて表示(&V)",       ID_WINDOWS_TILEVERTICALLY
         MENUITEM "最小化(&M)",                  ID_WINDOWS_MINIMIZE
         MENUITEM "最大化(&X)",                  ID_WINDOWS_MAXIMIZE
-        MENUITEM "重ねて表 示(&C)",             ID_WINDOWS_CASCADE
-        MENUITEM "手前に表 示(&B)",             ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "重ねて表示(&C)",             ID_WINDOWS_CASCADE
+        MENUITEM "手前に表示(&B)",             ID_WINDOWS_BRINGTOFRONT
     END
     POPUP "ヘルプ(&H)"
     BEGIN
@@ -64,12 +64,12 @@ END
 
 IDR_WINDOWSMENU MENU DISCARDABLE
 BEGIN
-    MENUITEM "上下に並べて表 示(&H)",       ID_WINDOWS_TILEHORIZONTALLY
-    MENUITEM "左右に並べて表 示(&V)",       ID_WINDOWS_TILEVERTICALLY
+    MENUITEM "上下に並べて表示(&H)",       ID_WINDOWS_TILEHORIZONTALLY
+    MENUITEM "左右に並べて表示(&V)",       ID_WINDOWS_TILEVERTICALLY
     MENUITEM "最小化(&M)",                  ID_WINDOWS_MINIMIZE
     MENUITEM "最大化(&X)",                  ID_WINDOWS_MAXIMIZE
-    MENUITEM "重ねて表 示(&C)",             ID_WINDOWS_CASCADE
-    MENUITEM "手前に表 示(&B)",             ID_WINDOWS_BRINGTOFRONT
+    MENUITEM "重ねて表示(&C)",             ID_WINDOWS_CASCADE
+    MENUITEM "手前に表示(&B)",             ID_WINDOWS_BRINGTOFRONT
 END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU DISCARDABLE
@@ -89,16 +89,16 @@ BEGIN
     POPUP "DUMMY"
     BEGIN
         MENUITEM "切り替え(&S)",                ID_APPLICATION_PAGE_SWITCHTO
-        MENUITEM "手前に表 示(&B)",             ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "手前に表示(&B)",             ID_WINDOWS_BRINGTOFRONT
         MENUITEM SEPARATOR
-        MENUITEM "上下に並べて表 示(&H)",       ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "左右に並べて表 示(&V)",       ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "上下に並べて表示(&H)",       ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "左右に並べて表示(&V)",       ID_WINDOWS_TILEVERTICALLY
         MENUITEM "最小化(&M)",                  ID_WINDOWS_MINIMIZE
         MENUITEM "最大化(&X)",                  ID_WINDOWS_MAXIMIZE
-        MENUITEM "重ねて表 示(&C)",             ID_WINDOWS_CASCADE
+        MENUITEM "重ねて表示(&C)",             ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
         MENUITEM "タスクの終了(&E)",            ID_APPLICATION_PAGE_ENDTASK
-        MENUITEM "プロセスの表 示(&G)",         ID_APPLICATION_PAGE_GOTOPROCESS
+        MENUITEM "プロセスの表示(&G)",         ID_APPLICATION_PAGE_GOTOPROCESS
 
     END
 END
@@ -110,7 +110,7 @@ BEGIN
         MENUITEM "元のサイズに戻す(&R)",        ID_RESTORE
         MENUITEM "閉じる(&C)",                  ID_FILE_EXIT
         MENUITEM SEPARATOR
-        MENUITEM "常に手前に表 示(&A)",         ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "常に手前に表示(&A)",         ID_OPTIONS_ALWAYSONTOP
     END
 END
 
@@ -180,7 +180,7 @@ BEGIN
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP,7,7,233,177
     PUSHBUTTON      "プロセスの終了(&E)",IDC_ENDPROCESS,171,189,69,14
-    CONTROL         "全ユーザーのプロセスを表 示する(&S)",IDC_SHOWALLPROCESSES,
+    CONTROL         "全ユーザーのプロセスを表示する(&S)",IDC_SHOWALLPROCESSES,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,111,10
 END
 
@@ -233,8 +233,8 @@ BEGIN
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX        "CPU 使用率の履歴",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "メモリ使用量の履歴",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "CPU 使用率の表 示",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
-    PUSHBUTTON      "メモリ使用量の表 示",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "CPU 使用率の表示",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "メモリ使用量の表示",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "CPU 使用率の履歴",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "メモリ使用量の履歴",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
@@ -334,7 +334,7 @@ FONT 9, "MS UI Gothic"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,84,178,50,14
     PUSHBUTTON      "キャンセル",IDCANCEL,138,178,50,14
-    LTEXT           "タスク マネージャの [プロセス] ページに表 示する列を選択します。",
+    LTEXT           "タスク マネージャの [プロセス] ページに表示する列を選択します。",
                     IDC_STATIC,7,7,181,17
     CONTROL         "イメージ名(&I)",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,7,28,56,10
@@ -517,41 +517,41 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     ID_FILE_NEW             "新しいプログラムを実行します"
-    ID_OPTIONS_ALWAYSONTOP  "最小化されない限り、常にタスク マネージャがほかのすべてのウィンドウよりも手前に表 示されます"
+    ID_OPTIONS_ALWAYSONTOP  "最小化されない限り、常にタスク マネージャがほかのすべてのウィンドウよりも手前に表示されます"
     ID_OPTIONS_MINIMIZEONUSE
                             "[切り替え] 操作を実行すると、タスク マネージャが最小化されます"
     ID_OPTIONS_HIDEWHENMINIMIZED "最小化されたときに、タスク マネージャを隠します"
     ID_VIEW_REFRESH         "[更新の頻度] の設定にかかわらず、今すぐタスク マネージャを更新します"
-    ID_VIEW_LARGE           "大きいアイコンを使ってタスクを表 示します"
-    ID_VIEW_SMALL           "小さいアイコンを使ってタスクを表 示します"
-    ID_VIEW_DETAILS         "各タスクの情報を表 示します"
-    ID_VIEW_UPDATESPEED_HIGH "毎秒 2 回表 示を更新します"
-    ID_VIEW_UPDATESPEED_NORMAL "2 秒に 1 回表 示を更新します"
-    ID_VIEW_UPDATESPEED_LOW "4 秒に 1 回表 示を更新します"
+    ID_VIEW_LARGE           "大きいアイコンを使ってタスクを表示します"
+    ID_VIEW_SMALL           "小さいアイコンを使ってタスクを表示します"
+    ID_VIEW_DETAILS         "各タスクの情報を表示します"
+    ID_VIEW_UPDATESPEED_HIGH "毎秒 2 回表示を更新します"
+    ID_VIEW_UPDATESPEED_NORMAL "2 秒に 1 回表示を更新します"
+    ID_VIEW_UPDATESPEED_LOW "4 秒に 1 回表示を更新します"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_VIEW_UPDATESPEED_PAUSED "表 示を自動的に更新しません"
+    ID_VIEW_UPDATESPEED_PAUSED "表示を自動的に更新しません"
     ID_WINDOWS_TILEHORIZONTALLY
-                            "デスクトップ上でウィンドウを重ならないように上下に並べて表 示します"
-    ID_WINDOWS_TILEVERTICALLY "デスクトップ上でウィンドウを重ならないように左右に並べて表 示します"
+                            "デスクトップ上でウィンドウを重ならないように上下に並べて表示します"
+    ID_WINDOWS_TILEVERTICALLY "デスクトップ上でウィンドウを重ならないように左右に並べて表示します"
     ID_WINDOWS_MINIMIZE     "ウィンドウを最小化します"
     ID_WINDOWS_MAXIMIZE     "ウィンドウを最大化します"
-    ID_WINDOWS_CASCADE      "デスクトップ上でウィンドウを重ねて表 示します"
-    ID_WINDOWS_BRINGTOFRONT "ウィンドウを手前に表 示しますが、切り替えません。"
-    ID_HELP_TOPICS          "タスク マネージャのヘルプ トピックを表 示します"
-    ID_HELP_ABOUT           "プログラム情報、バージョン番号、著作権を表 示します"
+    ID_WINDOWS_CASCADE      "デスクトップ上でウィンドウを重ねて表示します"
+    ID_WINDOWS_BRINGTOFRONT "ウィンドウを手前に表示しますが、切り替えません。"
+    ID_HELP_TOPICS          "タスク マネージャのヘルプ トピックを表示します"
+    ID_HELP_ABOUT           "プログラム情報、バージョン番号、著作権を表示します"
     ID_FILE_EXIT            "タスク マネージャ アプリケーションを終了します"
     ID_OPTIONS_SHOW16BITTASKS
-                            "16 ビット タスクを、関連付けられた ntvdm.exe の下に表 示します"
-    ID_VIEW_SELECTCOLUMNS   "[プロセス] ページに表 示する列を選択します"
-    ID_VIEW_SHOWKERNELTIMES "カーネル時間をパフォーマンス グラフ上に表 示します"
+                            "16 ビット タスクを、関連付けられた ntvdm.exe の下に表示します"
+    ID_VIEW_SELECTCOLUMNS   "[プロセス] ページに表示する列を選択します"
+    ID_VIEW_SHOWKERNELTIMES "カーネル時間をパフォーマンス グラフ上に表示します"
     ID_VIEW_CPUHISTORY_ONEGRAPHALL
-                            "1 つの履歴グラフで CPU 使用率の合計を表 示します"
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "CPU 使用率の履歴を CPU ごとにグラフで表 示します"
+                            "1 つの履歴グラフで CPU 使用率の合計を表示します"
+    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "CPU 使用率の履歴を CPU ごとにグラフで表示します"
     ID_APPLICATION_PAGE_SWITCHTO
-                            "タスクを手前に表 示し、フォーカスを切り替えます"
+                            "タスクを手前に表示し、フォーカスを切り替えます"
 END
 
 STRINGTABLE DISCARDABLE
@@ -611,7 +611,7 @@ BEGIN
     IDS_TAB_IOWRITESBYTES         "I/O 書き込みバイト数"
     IDS_TAB_IOOTHERBYTES          "I/O その他のバイト数"
     IDS_MENU_SELECTCOLUMNS        "列の選択(&S)..."
-    IDS_MENU_16BITTASK            "16 ビット タスクの表 示(&S)"
+    IDS_MENU_16BITTASK            "16 ビット タスクの表示(&S)"
     IDS_MENU_WINDOWS              "ウィンドウ(&W)"
     IDS_MENU_LARGEICONS           "大きいアイコン(&G)"
     IDS_MENU_SMALLICONS           "小さいアイコン(&M)"
@@ -619,19 +619,19 @@ BEGIN
     IDS_MENU_ONEGRAPHALLCPUS      "すべての CPU で 1 グラフ(&O)"
     IDS_MENU_ONEGRAPHPERCPU       "CPU ごとに 1 グラフ(&P)"
     IDS_MENU_CPUHISTORY           "CPU 履歴(&C)"
-    IDS_MENU_SHOWKERNELTIMES      "カーネル時間を表 示する(&S)"
+    IDS_MENU_SHOWKERNELTIMES      "カーネル時間を表示する(&S)"
     IDS_CREATENEWTASK             "新しいタスクの作成"
-    IDS_CREATENEWTASK_DESC        "実行するプログラム名、または開くフォルダやドキュメント名、インターネット リソ ース名を入力してください。"
+    IDS_CREATENEWTASK_DESC        "実行するプログラム名、または開くフォルダやドキュメント名、インターネット リソース名を入力してください。"
     IDS_MSG_ACCESSPROCESSAFF      "プロセスの関係へのアクセスまたは設定ができません"
     IDS_MSG_PROCESSONEPRO         "プロセスは、少なくとも 1 つのプロセッサと関係を持たなければなりません。"
     IDS_MSG_INVALIDOPTION         "無効なオプション"
     IDS_MSG_UNABLEDEBUGPROCESS    "デバッガを添付できません"
-    IDS_MSG_WARNINGDEBUG          "警告: このプロセスをデバッグすると、データが失われる可能 性があります。\nデバッガを添付しますか?"
+    IDS_MSG_WARNINGDEBUG          "警告: このプロセスをデバッグすると、データが失われる可能性があります。\nデバッガを添付しますか?"
     IDS_MSG_TASKMGRWARNING        "タスク マネージャの警告"
-    IDS_MSG_WARNINGTERMINATING    "警告: プロセスを終了すると、データが失われたり、システムが\n不安定になったりするなどの、予 期しない結果になることがあります。\nプロセスを終了する前に、状態またはデータを保存するかどうかの\n確認メッセージは表 示されません。プロセスを終了しますか?"
+    IDS_MSG_WARNINGTERMINATING    "警告: プロセスを終了すると、データが失われたり、システムが\n不安定になったりするなどの、予期しない結果になることがあります。\nプロセスを終了する前に、状態またはデータを保存するかどうかの\n確認メッセージは表示されません。プロセスを終了しますか?"
     IDS_MSG_UNABLETERMINATEPRO    "プロセスを終了できません"
     IDS_MSG_UNABLECHANGEPRIORITY  "優先度を変更できません"
-    IDS_MSG_WARNINGCHANGEPRIORITY "警告: このプロセスの優先度クラスを変更すると、システムが不安定に\nなるなど、予 期しない結果になることがあります。\n優先度クラスを変更しますか?"
+    IDS_MSG_WARNINGCHANGEPRIORITY "警告: このプロセスの優先度クラスを変更すると、システムが不安定に\nなるなど、予期しない結果になることがあります。\n優先度クラスを変更しますか?"
     IDS_MSG_TRAYICONCPUUSAGE      "CPU 使用率: %d%%"
     IDS_STATUS_MEMUSAGE           "メモリ使用量: %dKB / %dKB"
     IDS_STATUS_CPUUSAGE           "CPU 使用率: %3d%%"

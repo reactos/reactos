@@ -30,7 +30,7 @@
  *        Remove all hardcode string to En.rc
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 
 /* FOR is a special command, so this function is only used for showing help now */
@@ -105,9 +105,13 @@ static LPTSTR ReadFileContents(FILE *InputFile, TCHAR *Buffer)
 		ULONG_PTR CharsRead = _tcslen(Buffer);
 		while (Len + CharsRead >= AllocLen)
 		{
+			LPTSTR OldContents = Contents;
 			Contents = cmd_realloc(Contents, (AllocLen *= 2) * sizeof(TCHAR));
 			if (!Contents)
+			{
+				cmd_free(OldContents);
 				return NULL;
+			}
 		}
 		_tcscpy(&Contents[Len], Buffer);
 		Len += CharsRead;

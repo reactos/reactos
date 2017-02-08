@@ -25,23 +25,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdarg.h>
+#include <config.h>
+
+//#include <string.h>
+//#include <stdlib.h>
+//#include <stdarg.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include "windef.h"
-#include "winbase.h"
-#include "wine/unicode.h"
-#include "winerror.h"
+//#include "windef.h"
+//#include "winbase.h"
+#include <wine/unicode.h>
+//#include "winerror.h"
 #include "variant.h"
 #include "resource.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(variant);
 
@@ -526,7 +529,7 @@ static inline HRESULT VARIANT_CoerceArray(VARIANTARG* pd, VARIANTARG* ps, VARTYP
     return BstrFromVector(V_ARRAY(ps), &V_BSTR(pd));
 
   if (V_VT(ps) == VT_BSTR && vt == (VT_ARRAY|VT_UI1))
-    return VectorFromBstr(V_BSTR(ps), &V_ARRAY(ps));
+    return VectorFromBstr(V_BSTR(ps), &V_ARRAY(pd));
 
   if (V_VT(ps) == vt)
     return SafeArrayCopy(V_ARRAY(ps), &V_ARRAY(pd));
@@ -652,7 +655,7 @@ HRESULT VARIANT_ClearInd(VARIANTARG *pVarg)
  */
 HRESULT WINAPI VariantClear(VARIANTARG* pVarg)
 {
-  HRESULT hres = S_OK;
+  HRESULT hres;
 
   TRACE("(%p->(%s%s))\n", pVarg, debugstr_VT(pVarg), debugstr_VF(pVarg));
 
@@ -664,8 +667,7 @@ HRESULT WINAPI VariantClear(VARIANTARG* pVarg)
     {
       if (V_ISARRAY(pVarg) || V_VT(pVarg) == VT_SAFEARRAY)
       {
-        if (V_ARRAY(pVarg))
-          hres = SafeArrayDestroy(V_ARRAY(pVarg));
+        hres = SafeArrayDestroy(V_ARRAY(pVarg));
       }
       else if (V_VT(pVarg) == VT_BSTR)
       {
@@ -873,7 +875,7 @@ HRESULT WINAPI VariantCopyInd(VARIANT* pvargDest, VARIANTARG* pvargSrc)
 
   /* Argument checking is more lax than VariantCopy()... */
   vt = V_TYPE(pvargSrc);
-  if (V_ISARRAY(pvargSrc) ||
+  if (V_ISARRAY(pvargSrc) || (V_VT(pvargSrc) == (VT_RECORD|VT_BYREF)) ||
      (vt > VT_NULL && vt != (VARTYPE)15 && vt < VT_VOID &&
      !(V_VT(pvargSrc) & (VT_VECTOR|VT_RESERVED))))
   {
@@ -1144,8 +1146,11 @@ static HRESULT VARIANT_RollUdate(UDATE *lpUd)
 
   if (iYear > 9999 || iYear < -9999)
     return E_INVALIDARG; /* Invalid value */
-  /* Years < 100 are treated as 1900 + year */
-  if (iYear > 0 && iYear < 100)
+  /* Year 0 to 29 are treated as 2000 + year */
+  if (iYear >= 0 && iYear < 30)
+    iYear += 2000;
+  /* Remaining years < 100 are treated as 1900 + year */
+  else if (iYear >= 30 && iYear < 100)
     iYear += 1900;
 
   iMinute += iSecond / 60;
@@ -1359,7 +1364,7 @@ INT WINAPI VariantTimeToSystemTime(double dateIn, LPSYSTEMTIME lpSt)
 HRESULT WINAPI VarDateFromUdateEx(UDATE *pUdateIn, LCID lcid, ULONG dwFlags, DATE *pDateOut)
 {
   UDATE ud;
-  double dateVal;
+  double dateVal, dateSign;
 
   TRACE("(%p->%d/%d/%d %d:%d:%d:%d %d %d,0x%08x,0x%08x,%p)\n", pUdateIn,
         pUdateIn->st.wMonth, pUdateIn->st.wDay, pUdateIn->st.wYear,
@@ -1381,10 +1386,13 @@ HRESULT WINAPI VarDateFromUdateEx(UDATE *pUdateIn, LCID lcid, ULONG dwFlags, DAT
   /* Date */
   dateVal = VARIANT_DateFromJulian(VARIANT_JulianFromDMY(ud.st.wYear, ud.st.wMonth, ud.st.wDay));
 
+  /* Sign */
+  dateSign = (dateVal < 0.0) ? -1.0 : 1.0;
+
   /* Time */
-  dateVal += ud.st.wHour / 24.0;
-  dateVal += ud.st.wMinute / 1440.0;
-  dateVal += ud.st.wSecond / 86400.0;
+  dateVal += ud.st.wHour / 24.0 * dateSign;
+  dateVal += ud.st.wMinute / 1440.0 * dateSign;
+  dateVal += ud.st.wSecond / 86400.0 * dateSign;
 
   TRACE("Returning %g\n", dateVal);
   *pDateOut = dateVal;
@@ -1447,7 +1455,7 @@ HRESULT WINAPI VarUdateFromDate(DATE dateIn, ULONG dwFlags, UDATE *lpUdate)
 
   datePart = dateIn < 0.0 ? ceil(dateIn) : floor(dateIn);
   /* Compensate for int truncation (always downwards) */
-  timePart = dateIn - datePart + 0.00000000001;
+  timePart = fabs(dateIn - datePart) + 0.00000000001;
   if (timePart >= 1.0)
     timePart -= 0.00000000001;
 
@@ -1605,7 +1613,7 @@ static void VARIANT_GetLocalisedNumberChars(VARIANT_NUMBER_CHARS *lpChars, LCID 
  *            from "oleauto.h".
  *
  * FIXME
- *  - I am unsure if this function should parse non-arabic (e.g. Thai)
+ *  - I am unsure if this function should parse non-Arabic (e.g. Thai)
  *   numerals, so this has not been implemented.
  */
 HRESULT WINAPI VarParseNumFromStr(OLECHAR *lpszStr, LCID lcid, ULONG dwFlags,
@@ -2183,7 +2191,7 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
     /* Convert the integer part of the number into a UI8 */
     for (i = 0; i < wholeNumberDigits; i++)
     {
-      if (ul64 > (UI8_MAX / 10 - rgbDig[i]))
+      if (ul64 > UI8_MAX / 10 || (ul64 == UI8_MAX / 10 && rgbDig[i] > UI8_MAX % 10))
       {
         TRACE("Overflow multiplying digits\n");
         bOverflow = TRUE;
@@ -2247,7 +2255,7 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
     }
 
     /* Zero is not a negative number */
-    bNegative = pNumprs->dwOutFlags & NUMPRS_NEG && ul64 ? TRUE : FALSE;
+    bNegative = pNumprs->dwOutFlags & NUMPRS_NEG && ul64;
 
     TRACE("Integer value is 0x%s, bNeg %d\n", wine_dbgstr_longlong(ul64), bNegative);
 
@@ -2622,7 +2630,7 @@ HRESULT WINAPI VarCat(LPVARIANT left, LPVARIANT right, LPVARIANT out)
             {
                 /* Bools are handled as localized True/False strings instead of 0/-1 as in MSDN */
                 V_VT(&bstrvar_left) = VT_BSTR;
-                if (V_BOOL(left) == TRUE)
+                if (V_BOOL(left))
                     V_BSTR(&bstrvar_left) = SysAllocString(str_true);
                 else
                     V_BSTR(&bstrvar_left) = SysAllocString(str_false);
@@ -2662,7 +2670,7 @@ HRESULT WINAPI VarCat(LPVARIANT left, LPVARIANT right, LPVARIANT out)
             {
                 /* Bools are handled as localized True/False strings instead of 0/-1 as in MSDN */
                 V_VT(&bstrvar_right) = VT_BSTR;
-                if (V_BOOL(right) == TRUE)
+                if (V_BOOL(right))
                     V_BSTR(&bstrvar_right) = SysAllocString(str_true);
                 else
                     V_BSTR(&bstrvar_right) = SysAllocString(str_false);
@@ -2717,15 +2725,10 @@ HRESULT WINAPI VarCat(LPVARIANT left, LPVARIANT right, LPVARIANT out)
 static HRESULT _VarChangeTypeExWrap (VARIANTARG* pvargDest,
                     VARIANTARG* pvargSrc, LCID lcid, USHORT wFlags, VARTYPE vt)
 {
-    HRESULT res;
-    VARTYPE flags;
+    VARIANTARG vtmpsrc = *pvargSrc;
 
-    flags = V_VT(pvargSrc) & ~VT_TYPEMASK;
-    V_VT(pvargSrc) &= ~VT_RESERVED;
-    res = VariantChangeTypeEx(pvargDest,pvargSrc,lcid,wFlags,vt);
-    V_VT(pvargSrc) |= flags;
-
-    return res;
+    V_VT(&vtmpsrc) &= ~VT_RESERVED;
+    return VariantChangeTypeEx(pvargDest,&vtmpsrc,lcid,wFlags,vt);
 }
 
 /**********************************************************************
@@ -2817,7 +2820,7 @@ HRESULT WINAPI VarCmp(LPVARIANT left, LPVARIANT right, LCID lcid, DWORD flags)
     if (xmask == VTBIT_BSTR)
         return VarBstrCmp(V_BSTR(left), V_BSTR(right), lcid, flags);
 
-    /* A BSTR and an other variant; we have to take care of VT_RESERVED */
+    /* A BSTR and another variant; we have to take care of VT_RESERVED */
     if (xmask & VTBIT_BSTR) {
         VARIANT *bstrv, *nonbv;
         VARTYPE nonbvt;
@@ -3131,9 +3134,9 @@ HRESULT WINAPI VarAnd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
             LOCALE_USER_DEFAULT, 0, &d)))
             hres = VariantChangeType(&varLeft,&varLeft,
             VARIANT_LOCALBOOL, VT_BOOL);
-            if (SUCCEEDED(hres) && V_VT(&varLeft) != resvt)
-                hres = VariantChangeType(&varLeft,&varLeft,0,resvt);
-            if (FAILED(hres)) goto VarAnd_Exit;
+        if (SUCCEEDED(hres) && V_VT(&varLeft) != resvt)
+            hres = VariantChangeType(&varLeft,&varLeft,0,resvt);
+        if (FAILED(hres)) goto VarAnd_Exit;
     }
 
     if (resvt == VT_I4 && V_VT(&varRight) == VT_UI4)
@@ -5026,6 +5029,19 @@ HRESULT WINAPI VarNot(LPVARIANT pVarIn, LPVARIANT pVarOut)
         pVarIn = &temp;
     }
 
+    if (V_VT(pVarIn) == VT_BSTR)
+    {
+        V_VT(&varIn) = VT_R8;
+        hRet = VarR8FromStr( V_BSTR(pVarIn), LOCALE_USER_DEFAULT, 0, &V_R8(&varIn) );
+        if (FAILED(hRet))
+        {
+            V_VT(&varIn) = VT_BOOL;
+            hRet = VarBoolFromStr( V_BSTR(pVarIn), LOCALE_USER_DEFAULT, VAR_LOCALBOOL, &V_BOOL(&varIn) );
+        }
+        if (FAILED(hRet)) goto VarNot_Exit;
+        pVarIn = &varIn;
+    }
+
     V_VT(pVarOut) = V_VT(pVarIn);
 
     switch (V_VT(pVarIn))
@@ -5066,12 +5082,6 @@ HRESULT WINAPI VarNot(LPVARIANT pVarIn, LPVARIANT pVarOut)
         V_I4(pVarOut) = ~V_I4(pVarOut);
         V_VT(pVarOut) = VT_I4;
         break;
-    case VT_BSTR:
-        hRet = VarR8FromStr(V_BSTR(pVarIn), LOCALE_USER_DEFAULT, 0, &V_R8(&varIn));
-        if (FAILED(hRet))
-            break;
-        pVarIn = &varIn;
-        /* Fall through ... */
     case VT_DATE:
     case VT_R8:
         hRet = VarI4FromR8(V_R8(pVarIn), &V_I4(pVarOut));

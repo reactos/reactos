@@ -211,4 +211,3 @@ DoStart(PMAIN_WND_INFO Info, LPWSTR lpStartParams)
 
     return bRet;
 }
-

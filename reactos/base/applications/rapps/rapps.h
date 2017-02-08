@@ -1,10 +1,19 @@
-#include <windows.h>
-#include <commctrl.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <winnls.h>
+#include <winuser.h>
+#include <wincon.h>
 #include <richedit.h>
+#include <shellapi.h>
 #include <shlwapi.h>
 #include <shlobj.h>
-#include <wchar.h>
-#include <urlmon.h>
+#include <stdio.h>
 
 #include <rappsmsg.h>
 
@@ -115,7 +124,7 @@ extern HINSTANCE hInst;
 extern INT SelectedEnumType;
 extern SETTINGS_INFO SettingsInfo;
 VOID SaveSettings(HWND hwnd);
-VOID FillDafaultSettings(PSETTINGS_INFO pSettingsInfo);
+VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo);
 
 /* listview.c */
 extern HWND hListView;

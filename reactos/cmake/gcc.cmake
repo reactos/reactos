@@ -10,16 +10,19 @@ if(NOT DEFINED SEPARATE_DBG)
 endif()
 
 # Compiler Core
-add_compile_flags("-pipe -fms-extensions")
+add_compile_flags("-pipe -fms-extensions -fno-strict-aliasing")
+if(GCC_VERSION VERSION_GREATER 4.7)
+    add_compile_flags("-mstackrealign")
+endif()
 
 #bug
 #file(TO_NATIVE_PATH ${REACTOS_SOURCE_DIR} REACTOS_SOURCE_DIR_NATIVE)
 #workaround
 set(REACTOS_SOURCE_DIR_NATIVE ${REACTOS_SOURCE_DIR})
- if(CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
+ if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
 string(REPLACE "/" "\\" REACTOS_SOURCE_DIR_NATIVE ${REACTOS_SOURCE_DIR})
 endif()
-add_compile_flags("-fdebug-prefix-map=${REACTOS_SOURCE_DIR_NATIVE}=ReactOS")
+add_compile_flags("-fdebug-prefix-map=\"${REACTOS_SOURCE_DIR_NATIVE}\"=ReactOS")
 
 # Debugging
 if(SEPARATE_DBG)
@@ -28,23 +31,20 @@ else()
     add_compile_flags("-gstabs+")
 endif()
 
-# Do not allow warnings
-add_compile_flags("-Werror")
-
 # For some reason, cmake sets -fPIC, and we don't want it
 if(DEFINED CMAKE_SHARED_LIBRARY_ASM_FLAGS)
     string(REPLACE "-fPIC" "" CMAKE_SHARED_LIBRARY_ASM_FLAGS ${CMAKE_SHARED_LIBRARY_ASM_FLAGS})
 endif()
 
 # Tuning
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     add_compile_flags("-march=${OARCH} -mtune=${TUNE}")
 else()
     add_compile_flags("-march=${OARCH}")
 endif()
 
 # Warnings
-add_compile_flags("-Wall -Wno-char-subscripts -Wpointer-arith -Wno-multichar -Wno-unused-value")
+add_compile_flags("-Werror -Wall -Wno-char-subscripts -Wpointer-arith -Wno-multichar -Wno-unused-value")
 
 if(GCC_VERSION VERSION_LESS 4.6)
     add_compile_flags("-Wno-error=uninitialized")
@@ -54,23 +54,27 @@ elseif(GCC_VERSION VERSION_EQUAL 4.7 OR GCC_VERSION VERSION_GREATER 4.7)
     add_compile_flags("-Wno-error=unused-but-set-variable -Wno-error=maybe-uninitialized -Wno-error=delete-non-virtual-dtor -Wno-error=narrowing")
 endif()
 
-if(ARCH MATCHES amd64)
+if(ARCH STREQUAL "amd64")
     add_compile_flags("-Wno-format")
-elseif(ARCH MATCHES arm)
+elseif(ARCH STREQUAL "arm")
     add_compile_flags("-Wno-attributes")
 endif()
 
 # Optimizations
 if(OPTIMIZE STREQUAL "1")
-    add_compile_flags("-Os")
+    add_compile_flags("-Os -ftracer")
 elseif(OPTIMIZE STREQUAL "2")
     add_compile_flags("-Os")
 elseif(OPTIMIZE STREQUAL "3")
-    add_compile_flags("-O1")
+    add_compile_flags("-O1 -fno-inline-functions-called-once -fno-tree-sra")
 elseif(OPTIMIZE STREQUAL "4")
-    add_compile_flags("-O2")
+    add_compile_flags("-O1")
 elseif(OPTIMIZE STREQUAL "5")
+    add_compile_flags("-O2")
+elseif(OPTIMIZE STREQUAL "6")
     add_compile_flags("-O3")
+elseif(OPTIMIZE STREQUAL "7")
+    add_compile_flags("-Ofast")
 endif()
 
 # Link-time code generation
@@ -78,28 +82,19 @@ if(LTCG)
     add_compile_flags("-flto -Wno-error=clobbered")
 endif()
 
-add_compile_flags("-fno-strict-aliasing")
-
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     add_compile_flags("-mpreferred-stack-boundary=3 -fno-set-stack-executable -fno-optimize-sibling-calls -fno-omit-frame-pointer")
-    if(OPTIMIZE STREQUAL "1")
-        add_compile_flags("-ftracer -momit-leaf-frame-pointer")
+    if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+        add_compile_flags("-momit-leaf-frame-pointer")
     endif()
-elseif(ARCH MATCHES amd64)
+elseif(ARCH STREQUAL "amd64")
     add_compile_flags("-mpreferred-stack-boundary=4")
-    if(OPTIMIZE STREQUAL "1")
-        add_compile_flags("-ftracer -momit-leaf-frame-pointer")
-    endif()
-elseif(ARCH MATCHES arm)
-    if(OPTIMIZE STREQUAL "1")
-        add_compile_flags("-ftracer")
-    endif()
 endif()
 
 # Other
-if(ARCH MATCHES amd64)
+if(ARCH STREQUAL "amd64")
     add_definitions(-U_X86_ -UWIN32)
-elseif(ARCH MATCHES arm)
+elseif(ARCH STREQUAL "arm")
     add_definitions(-U_UNICODE -UUNICODE)
     add_definitions(-D__MSVCRT__) # DUBIOUS
 endif()
@@ -107,7 +102,7 @@ endif()
 add_definitions(-D_inline=__inline)
 
 # alternative arch name
-if(ARCH MATCHES amd64)
+if(ARCH STREQUAL "amd64")
     set(ARCH2 x86_64)
 else()
     set(ARCH2 ${ARCH})
@@ -117,7 +112,7 @@ if(SEPARATE_DBG)
     # PDB style debug puts all dwarf debug info in a separate dbg file
     message(STATUS "Building separate debug symbols")
     file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/symbols)
-    if(CMAKE_GENERATOR MATCHES "Ninja")
+    if(CMAKE_GENERATOR STREQUAL "Ninja")
         set(SYMBOL_FILE <TARGET_PDB>)
     else()
         set(SYMBOL_FILE <TARGET>.gdb)
@@ -171,13 +166,13 @@ SET(CMAKE_CXX_COMPILE_OBJECT "${CCACHE} <CMAKE_CXX_COMPILER>  <DEFINES> <FLAGS> 
 set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/include/asm -I${REACTOS_BINARY_DIR}/include/asm <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
 
 set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff <FLAGS> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 ${I18N_DEFS} <DEFINES> <SOURCE> <OBJECT>")
-set(CMAKE_DEPFILE_FLAGS_RC "--preprocessor \"<CMAKE_C_COMPILER> -E -xc-header -MMD -MF <DEPFILE> -MT <OBJECT>\"")
+set(CMAKE_DEPFILE_FLAGS_RC "--preprocessor \"${MINGW_TOOLCHAIN_PREFIX}gcc${MINGW_TOOLCHAIN_SUFFIX} -E -xc-header -MMD -MF <DEPFILE> -MT <OBJECT>\" ")
 
 # Optional 3rd parameter: stdcall stack bytes
 function(set_entrypoint MODULE ENTRYPOINT)
     if(${ENTRYPOINT} STREQUAL "0")
         add_target_link_flags(${MODULE} "-Wl,-entry,0")
-    elseif(ARCH MATCHES i386)
+    elseif(ARCH STREQUAL "i386")
         set(_entrysymbol _${ENTRYPOINT})
         if(${ARGC} GREATER 2)
             set(_entrysymbol ${_entrysymbol}@${ARGV2})
@@ -198,15 +193,19 @@ endfunction()
 
 function(set_module_type_toolchain MODULE TYPE)
     if(IS_CPP)
-        target_link_libraries(${MODULE} -lstdc++ -lsupc++ -lgcc -lmingwex)
+        if((${TYPE} STREQUAL "kernelmodedriver") OR (${TYPE} STREQUAL "wdmdriver"))
+            target_link_libraries(${MODULE} -lgcc)
+        else()
+            target_link_libraries(${MODULE} -lstdc++ -lsupc++ -lgcc -lmingwex)
+        endif()
     endif()
 
-    if(${TYPE} STREQUAL kernelmodedriver)
+    if((${TYPE} STREQUAL "kernelmodedriver") OR (${TYPE} STREQUAL "wdmdriver"))
         add_target_link_flags(${MODULE} "-Wl,--exclude-all-symbols,-file-alignment=0x1000,-section-alignment=0x1000")
+        if(${TYPE} STREQUAL "wdmdriver")
+            add_target_link_flags(${MODULE} "-Wl,--wdmdriver")
+        endif()
     endif()
-endfunction()
-
-function(set_rc_compiler)
 endfunction()
 
 function(add_delay_importlibs MODULE)
@@ -216,7 +215,7 @@ function(add_delay_importlibs MODULE)
     target_link_libraries(${MODULE} delayimp)
 endfunction()
 
-if(NOT ARCH MATCHES i386)
+if(NOT ARCH STREQUAL "i386")
     set(DECO_OPTION "-@")
 endif()
 
@@ -368,3 +367,8 @@ endfunction()
 function(allow_warnings __module)
     add_target_compile_flags(${__module} "-Wno-error")
 endfunction()
+
+macro(add_asm_files _target)
+    list(APPEND ${_target} ${ARGN})
+endmacro()
+

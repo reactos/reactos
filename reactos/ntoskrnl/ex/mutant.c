@@ -23,9 +23,9 @@ POBJECT_TYPE ExMutantObjectType = NULL;
 
 GENERIC_MAPPING ExpMutantMapping =
 {
-    STANDARD_RIGHTS_READ    | SYNCHRONIZE | MUTANT_QUERY_STATE,
-    STANDARD_RIGHTS_WRITE   | SYNCHRONIZE,
-    STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE | MUTANT_QUERY_STATE,
+    STANDARD_RIGHTS_READ | MUTANT_QUERY_STATE,
+    STANDARD_RIGHTS_WRITE,
+    STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
     MUTANT_ALL_ACCESS
 };
 
@@ -50,13 +50,14 @@ ExpDeleteMutant(PVOID ObjectBody)
                     FALSE);
 }
 
-VOID
+BOOLEAN
 INIT_FUNCTION
 NTAPI
 ExpInitializeMutantImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
+    NTSTATUS Status;
     DPRINT("Creating Mutant Object Type\n");
 
     /* Create the Event Pair Object Type */
@@ -68,7 +69,9 @@ ExpInitializeMutantImplementation(VOID)
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.DeleteProcedure = ExpDeleteMutant;
     ObjectTypeInitializer.ValidAccessMask = MUTANT_ALL_ACCESS;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExMutantObjectType);
+    Status = ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExMutantObjectType);
+    if (!NT_SUCCESS(Status)) return FALSE;
+    return TRUE;
 }
 
 /*
@@ -120,7 +123,7 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
     /* Check for success */
     if(NT_SUCCESS(Status))
     {
-        /* Initalize the Kernel Mutant */
+        /* Initialize the Kernel Mutant */
         DPRINT("Initializing the Mutant\n");
         KeInitializeMutant(Mutant, InitialOwner);
 

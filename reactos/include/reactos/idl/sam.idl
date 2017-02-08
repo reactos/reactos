@@ -99,11 +99,13 @@ typedef struct _SAMPR_SR_SECURITY_DESCRIPTOR
     [size_is(Length)] unsigned char* SecurityDescriptor;
 } SAMPR_SR_SECURITY_DESCRIPTOR, *PSAMPR_SR_SECURITY_DESCRIPTOR;
 
+cpp_quote("#ifndef _NTSAM_")
 typedef struct _GROUP_MEMBERSHIP
 {
     unsigned long RelativeId;
     unsigned long Attributes;
 } GROUP_MEMBERSHIP, *PGROUP_MEMBERSHIP;
+cpp_quote("#endif")
 
 typedef struct _SAMPR_GET_GROUPS_BUFFER
 {
@@ -141,12 +143,12 @@ typedef enum _DOMAIN_SERVER_ENABLE_STATE
     DomainServerEnabled = 1,
     DomainServerDisabled
 } DOMAIN_SERVER_ENABLE_STATE, *PDOMAIN_SERVER_ENABLE_STATE;
-cpp_quote("#endif")
 
 typedef struct _DOMAIN_STATE_INFORMATION
 {
     DOMAIN_SERVER_ENABLE_STATE DomainServerState;
 } DOMAIN_STATE_INFORMATION, *PDOMAIN_STATE_INFORMATION;
+cpp_quote("#endif")
 
 cpp_quote("#ifndef _NTSAM_")
 typedef enum _DOMAIN_SERVER_ROLE
@@ -156,17 +158,18 @@ typedef enum _DOMAIN_SERVER_ROLE
 } DOMAIN_SERVER_ROLE, *PDOMAIN_SERVER_ROLE;
 cpp_quote("#endif")
 
-cpp_quote("#ifndef _NTSECAPI_H")
+cpp_quote("#if !defined(_NTSECAPI_H) && !defined(_NTSAM_)")
 typedef struct _DOMAIN_PASSWORD_INFORMATION
 {
-    unsigned short MinPasswordLength;
-    unsigned short PasswordHistoryLength;
-    unsigned long PasswordProperties;
+    USHORT MinPasswordLength;
+    USHORT PasswordHistoryLength;
+    ULONG PasswordProperties;
     OLD_LARGE_INTEGER MaxPasswordAge;
     OLD_LARGE_INTEGER MinPasswordAge;
 } DOMAIN_PASSWORD_INFORMATION, *PDOMAIN_PASSWORD_INFORMATION;
 cpp_quote("#endif")
 
+cpp_quote("#ifndef _NTSAM_")
 typedef struct _DOMAIN_LOGOFF_INFORMATION
 {
     OLD_LARGE_INTEGER ForceLogoff;
@@ -189,6 +192,7 @@ typedef struct _DOMAIN_MODIFIED_INFORMATION2
     OLD_LARGE_INTEGER CreationTime;
     OLD_LARGE_INTEGER ModifiedCountAtLastPromotion;
 } DOMAIN_MODIFIED_INFORMATION2, *PDOMAIN_MODIFIED_INFORMATION2;
+cpp_quote("#endif")
 
 cpp_quote("#include <pshpack4.h>")
 typedef struct _SAMPR_DOMAIN_GENERAL_INFORMATION
@@ -445,6 +449,7 @@ typedef struct _SAMPR_ENCRYPTED_USER_PASSWORD_NEW
     unsigned char Buffer[(256 * 2) + 4 + 16];
 } SAMPR_ENCRYPTED_USER_PASSWORD_NEW, *PSAMPR_ENCRYPTED_USER_PASSWORD_NEW;
 
+cpp_quote("#ifndef _NTSAM_")
 typedef struct _USER_PRIMARY_GROUP_INFORMATION
 {
     unsigned long PrimaryGroupId;
@@ -459,12 +464,12 @@ typedef struct _USER_EXPIRES_INFORMATION
 {
     OLD_LARGE_INTEGER AccountExpires;
 } USER_EXPIRES_INFORMATION, *PUSER_EXPIRES_INFORMATION;
+cpp_quote("#endif")
 
 typedef struct _SAMPR_LOGON_HOURS
 {
     unsigned short UnitsPerWeek;
-//    [size_is(1260), length_is((UnitsPerWeek + 7) / 8)] unsigned char *LogonHours; // FIXME
-    [size_is(1260)] unsigned char *LogonHours;
+    [size_is(1260), length_is((UnitsPerWeek + 7) / 8)] unsigned char *LogonHours; // FIXME
 } SAMPR_LOGON_HOURS, *PSAMPR_LOGON_HOURS;
 
 typedef struct _SAMPR_USER_ALL_INFORMATION

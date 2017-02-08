@@ -1,3 +1,5 @@
+#pragma once
+
 #define IDS_QUERY_REBOOT_TEXT       1000
 #define IDS_QUERY_REBOOT_CAPTION    2000
 #define IDS_INF_FILE                2001
@@ -48,4 +50,3 @@
 #define IDI_SETUPAPI_WARN_OVERLAY   500
 #define IDI_SETUPAPI_ERR_OVERLAY    501
 #define IDI_SETUPAPI_INFO_OVERLAY   502
-

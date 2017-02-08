@@ -1,5 +1,3 @@
-/* $Id$
- */
 
 #include "tcscat.inc"
 

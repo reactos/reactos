@@ -27,3 +27,4 @@ EXPORTS
   FT_Set_Pixel_Sizes
   FT_Vector_Transform
   FT_Vector_Unit
+  FT_Set_Transform

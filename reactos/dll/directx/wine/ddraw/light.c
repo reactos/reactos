@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <config.h>
+//#include "wine/port.h"
 
 #include "ddraw_private.h"
 
@@ -32,9 +32,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
  * Updates the Direct3DDevice7 lighting parameters
  *
  *****************************************************************************/
-static void light_update(IDirect3DLightImpl *light)
+static void light_update(struct d3d_light *light)
 {
-    IDirect3DDeviceImpl *device;
+    struct d3d_device *device;
 
     TRACE("light %p.\n", light);
 
@@ -50,9 +50,9 @@ static void light_update(IDirect3DLightImpl *light)
  * Uses the Direct3DDevice7::LightEnable method to active the light
  *
  *****************************************************************************/
-void light_activate(IDirect3DLightImpl *light)
+void light_activate(struct d3d_light *light)
 {
-    IDirect3DDeviceImpl *device;
+    struct d3d_device *device;
 
     TRACE("light %p.\n", light);
 
@@ -74,9 +74,9 @@ void light_activate(IDirect3DLightImpl *light)
  * Uses the Direct3DDevice7::LightEnable method to deactivate the light
  *
  *****************************************************************************/
-void light_deactivate(IDirect3DLightImpl *light)
+void light_deactivate(struct d3d_light *light)
 {
-    IDirect3DDeviceImpl *device;
+    struct d3d_device *device;
 
     TRACE("light %p.\n", light);
 
@@ -91,9 +91,9 @@ void light_deactivate(IDirect3DLightImpl *light)
     }
 }
 
-static inline IDirect3DLightImpl *impl_from_IDirect3DLight(IDirect3DLight *iface)
+static inline struct d3d_light *impl_from_IDirect3DLight(IDirect3DLight *iface)
 {
-    return CONTAINING_RECORD(iface, IDirect3DLightImpl, IDirect3DLight_iface);
+    return CONTAINING_RECORD(iface, struct d3d_light, IDirect3DLight_iface);
 }
 
 /*****************************************************************************
@@ -109,7 +109,7 @@ static inline IDirect3DLightImpl *impl_from_IDirect3DLight(IDirect3DLight *iface
  * Returns:
  *  E_NOINTERFACE, because it's a stub
  *****************************************************************************/
-static HRESULT WINAPI IDirect3DLightImpl_QueryInterface(IDirect3DLight *iface, REFIID riid, void **object)
+static HRESULT WINAPI d3d_light_QueryInterface(IDirect3DLight *iface, REFIID riid, void **object)
 {
     FIXME("iface %p, riid %s, object %p stub!\n", iface, debugstr_guid(riid), object);
 
@@ -117,25 +117,26 @@ static HRESULT WINAPI IDirect3DLightImpl_QueryInterface(IDirect3DLight *iface, R
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI IDirect3DLightImpl_AddRef(IDirect3DLight *iface)
+static ULONG WINAPI d3d_light_AddRef(IDirect3DLight *iface)
 {
-    IDirect3DLightImpl *This = impl_from_IDirect3DLight(iface);
-    ULONG ref = InterlockedIncrement(&This->ref);
+    struct d3d_light *light = impl_from_IDirect3DLight(iface);
+    ULONG ref = InterlockedIncrement(&light->ref);
 
-    TRACE("%p increasing refcount to %u.\n", This, ref);
+    TRACE("%p increasing refcount to %u.\n", light, ref);
 
     return ref;
 }
 
-static ULONG WINAPI IDirect3DLightImpl_Release(IDirect3DLight *iface)
+static ULONG WINAPI d3d_light_Release(IDirect3DLight *iface)
 {
-    IDirect3DLightImpl *This = impl_from_IDirect3DLight(iface);
-    ULONG ref = InterlockedDecrement(&This->ref);
+    struct d3d_light *light = impl_from_IDirect3DLight(iface);
+    ULONG ref = InterlockedDecrement(&light->ref);
 
-    TRACE("%p decreasing refcount to %u.\n", This, ref);
+    TRACE("%p decreasing refcount to %u.\n", light, ref);
 
-    if (!ref) {
-        HeapFree(GetProcessHeap(), 0, This);
+    if (!ref)
+    {
+        HeapFree(GetProcessHeap(), 0, light);
         return 0;
     }
     return ref;
@@ -158,76 +159,52 @@ static ULONG WINAPI IDirect3DLightImpl_Release(IDirect3DLight *iface)
  *  D3D_OK
  *
  *****************************************************************************/
-static HRESULT WINAPI IDirect3DLightImpl_Initialize(IDirect3DLight *iface, IDirect3D *d3d)
+static HRESULT WINAPI d3d_light_Initialize(IDirect3DLight *iface, IDirect3D *d3d)
 {
     TRACE("iface %p, d3d %p.\n", iface, d3d);
 
     return D3D_OK;
 }
 
-/*****************************************************************************
- * IDirect3DLight::SetLight
- *
- * Assigns a lighting value to this object
- *
- * Params:
- *  Light: Lighting parameter to set
- *
- * Returns:
- *  D3D_OK on success
- *  DDERR_INVALIDPARAMS if Light is NULL
- *
- *****************************************************************************/
-static void dump_light(const D3DLIGHT2 *light)
-{
-    TRACE("    - dwSize : %d\n", light->dwSize);
-}
-
 static const float zero_value[] = {
     0.0, 0.0, 0.0, 0.0
 };
 
-static HRESULT WINAPI IDirect3DLightImpl_SetLight(IDirect3DLight *iface, D3DLIGHT *lpLight)
+static HRESULT WINAPI d3d_light_SetLight(IDirect3DLight *iface, D3DLIGHT *data)
 {
-    IDirect3DLightImpl *This = impl_from_IDirect3DLight(iface);
-    LPD3DLIGHT7 light7 = &This->light7;
+    struct d3d_light *light = impl_from_IDirect3DLight(iface);
+    D3DLIGHT7 *light7 = &light->light7;
 
-    TRACE("iface %p, light %p.\n", iface, lpLight);
+    TRACE("iface %p, data %p.\n", iface, data);
 
-    if (TRACE_ON(ddraw))
-    {
-        TRACE("  Light definition :\n");
-        dump_light((LPD3DLIGHT2) lpLight);
-    }
-
-    if ( (lpLight->dltType == 0) || (lpLight->dltType > D3DLIGHT_PARALLELPOINT) )
+    if ((!data->dltType) || (data->dltType > D3DLIGHT_PARALLELPOINT))
          return DDERR_INVALIDPARAMS;
 
-    if ( lpLight->dltType == D3DLIGHT_PARALLELPOINT )
-        FIXME("D3DLIGHT_PARALLELPOINT no supported\n");
+    if (data->dltType == D3DLIGHT_PARALLELPOINT)
+        FIXME("D3DLIGHT_PARALLELPOINT not implemented.\n");
 
-    /* Translate D3DLIGH2 structure to D3DLIGHT7 */
-    light7->dltType        = lpLight->dltType;
-    light7->dcvDiffuse     = lpLight->dcvColor;
-    if ((((LPD3DLIGHT2)lpLight)->dwFlags & D3DLIGHT_NO_SPECULAR) != 0)
-      light7->dcvSpecular    = lpLight->dcvColor;
+    /* Translate D3DLIGHT2 structure to D3DLIGHT7. */
+    light7->dltType = data->dltType;
+    light7->dcvDiffuse = data->dcvColor;
+    if (data->dwSize >= sizeof(D3DLIGHT2) && (((D3DLIGHT2 *)data)->dwFlags & D3DLIGHT_NO_SPECULAR))
+        light7->dcvSpecular = data->dcvColor;
     else
-      light7->dcvSpecular    = *(const D3DCOLORVALUE*)zero_value;
-    light7->dcvAmbient     = lpLight->dcvColor;
-    light7->dvPosition     = lpLight->dvPosition;
-    light7->dvDirection    = lpLight->dvDirection;
-    light7->dvRange        = lpLight->dvRange;
-    light7->dvFalloff      = lpLight->dvFalloff;
-    light7->dvAttenuation0 = lpLight->dvAttenuation0;
-    light7->dvAttenuation1 = lpLight->dvAttenuation1;
-    light7->dvAttenuation2 = lpLight->dvAttenuation2;
-    light7->dvTheta        = lpLight->dvTheta;
-    light7->dvPhi          = lpLight->dvPhi;
+        light7->dcvSpecular = *(const D3DCOLORVALUE *)zero_value;
+    light7->dcvAmbient = data->dcvColor;
+    light7->dvPosition = data->dvPosition;
+    light7->dvDirection = data->dvDirection;
+    light7->dvRange = data->dvRange;
+    light7->dvFalloff = data->dvFalloff;
+    light7->dvAttenuation0 = data->dvAttenuation0;
+    light7->dvAttenuation1 = data->dvAttenuation1;
+    light7->dvAttenuation2 = data->dvAttenuation2;
+    light7->dvTheta = data->dvTheta;
+    light7->dvPhi = data->dvPhi;
 
     wined3d_mutex_lock();
-    memcpy(&This->light, lpLight, lpLight->dwSize);
-    if (This->light.dwFlags & D3DLIGHT_ACTIVE)
-        light_update(This);
+    memcpy(&light->light, data, data->dwSize);
+    if (light->light.dwFlags & D3DLIGHT_ACTIVE)
+        light_update(light);
     wined3d_mutex_unlock();
 
     return D3D_OK;
@@ -245,20 +222,14 @@ static HRESULT WINAPI IDirect3DLightImpl_SetLight(IDirect3DLight *iface, D3DLIGH
  *  D3D_OK on success
  *  DDERR_INVALIDPARAMS if Light is NULL
  *****************************************************************************/
-static HRESULT WINAPI IDirect3DLightImpl_GetLight(IDirect3DLight *iface, D3DLIGHT *lpLight)
+static HRESULT WINAPI d3d_light_GetLight(IDirect3DLight *iface, D3DLIGHT *lpLight)
 {
-    IDirect3DLightImpl *This = impl_from_IDirect3DLight(iface);
+    struct d3d_light *light = impl_from_IDirect3DLight(iface);
 
     TRACE("iface %p, light %p.\n", iface, lpLight);
 
-    if (TRACE_ON(ddraw))
-    {
-        TRACE("  Returning light definition :\n");
-        dump_light(&This->light);
-    }
-
     wined3d_mutex_lock();
-    memcpy(lpLight, &This->light, lpLight->dwSize);
+    memcpy(lpLight, &light->light, lpLight->dwSize);
     wined3d_mutex_unlock();
 
     return DD_OK;
@@ -267,23 +238,23 @@ static HRESULT WINAPI IDirect3DLightImpl_GetLight(IDirect3DLight *iface, D3DLIGH
 static const struct IDirect3DLightVtbl d3d_light_vtbl =
 {
     /*** IUnknown Methods ***/
-    IDirect3DLightImpl_QueryInterface,
-    IDirect3DLightImpl_AddRef,
-    IDirect3DLightImpl_Release,
+    d3d_light_QueryInterface,
+    d3d_light_AddRef,
+    d3d_light_Release,
     /*** IDirect3DLight Methods ***/
-    IDirect3DLightImpl_Initialize,
-    IDirect3DLightImpl_SetLight,
-    IDirect3DLightImpl_GetLight
+    d3d_light_Initialize,
+    d3d_light_SetLight,
+    d3d_light_GetLight
 };
 
-void d3d_light_init(IDirect3DLightImpl *light, IDirectDrawImpl *ddraw)
+void d3d_light_init(struct d3d_light *light, struct ddraw *ddraw)
 {
     light->IDirect3DLight_iface.lpVtbl = &d3d_light_vtbl;
     light->ref = 1;
     light->ddraw = ddraw;
 }
 
-IDirect3DLightImpl *unsafe_impl_from_IDirect3DLight(IDirect3DLight *iface)
+struct d3d_light *unsafe_impl_from_IDirect3DLight(IDirect3DLight *iface)
 {
     if (!iface)
         return NULL;

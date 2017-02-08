@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<!DOCTYPE OpenGLAPI SYSTEM "gl_API.dtd">
+
+<!-- Note: no GLX protocol info yet. -->
+
+
+<OpenGLAPI>
+
+<category name="GL_ARB_draw_instanced" number="44">
+
+  <function name="DrawArraysInstancedARB" offset="assign">
+    <param name="mode" type="GLenum"/>
+    <param name="first" type="GLint"/>
+    <param name="count" type="GLsizei"/>
+    <param name="primcount" type="GLsizei"/>
+  </function>
+
+  <function name="DrawElementsInstancedARB" offset="assign">
+    <param name="mode" type="GLenum"/>
+    <param name="count" type="GLsizei"/>
+    <param name="type" type="GLenum"/>
+    <param name="indices" type="const GLvoid *"/>
+    <param name="primcount" type="GLsizei"/>
+  </function>
+
+</category>
+
+
+<category name="GL_EXT_draw_instanced" number="327">
+
+  <function name="DrawArraysInstancedEXT"  alias="DrawArraysInstancedARB">
+    <param name="mode" type="GLenum"/>
+    <param name="first" type="GLint"/>
+    <param name="count" type="GLsizei"/>
+    <param name="primcount" type="GLsizei"/>
+  </function>
+
+  <function name="DrawElementsInstancedEXT" alias="DrawElementsInstancedARB">
+    <param name="mode" type="GLenum"/>
+    <param name="count" type="GLsizei"/>
+    <param name="type" type="GLenum"/>
+    <param name="indices" type="const GLvoid *"/>
+    <param name="primcount" type="GLsizei"/>
+  </function>
+
+</category>
+
+
+</OpenGLAPI>

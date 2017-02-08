@@ -17,8 +17,7 @@
  *        Unicode ready!
  */
 
-#include <precomp.h>
-
+#include "precomp.h"
 
 /* a list of all the internal commands, associating their command names */
 /* to the functions to process them                                     */

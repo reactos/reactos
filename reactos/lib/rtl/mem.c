@@ -31,28 +31,20 @@
  *
  * @implemented
  */
-SIZE_T NTAPI
+SIZE_T
+NTAPI
 RtlCompareMemory(IN const VOID *Source1,
                  IN const VOID *Source2,
                  IN SIZE_T Length)
 {
-   SIZE_T i;
-   for(i=0; (i<Length) && (((PUCHAR)Source1)[i]==((PUCHAR)Source2)[i]); i++)
-      ;
-   return i;
+    SIZE_T i;
+    for (i = 0; (i < Length) && (((PUCHAR)Source1)[i] == ((PUCHAR)Source2)[i]); i++)
+        ;
+
+    return i;
 }
 
 
-/*
- * @implemented
- */
-SIZE_T
-NTAPI
-RtlCompareMemoryUlong (
-   PVOID Source,
-   SIZE_T Length,
-   ULONG Value
-)
 /*
  * FUNCTION: Compares a block of ULONGs with an ULONG and returns the number of equal bytes
  * ARGUMENTS:
@@ -60,20 +52,28 @@ RtlCompareMemoryUlong (
  *      Length = Number of bytes to compare
  *      Value = Value to compare
  * RETURNS: Number of equal bytes
+ *
+ * @implemented
  */
+SIZE_T
+NTAPI
+RtlCompareMemoryUlong(IN PVOID Source,
+                      IN SIZE_T Length,
+                      IN ULONG Value)
 {
-   PULONG ptr = (PULONG)Source;
-   ULONG_PTR len = Length / sizeof(ULONG);
-   ULONG_PTR i;
+    PULONG ptr = (PULONG)Source;
+    ULONG_PTR len = Length / sizeof(ULONG);
+    ULONG_PTR i;
 
-   for (i = 0; i < len; i++)
-   {
-      if (*ptr != Value)
-         break;
-      ptr++;
-   }
+    for (i = 0; i < len; i++)
+    {
+        if (*ptr != Value)
+            break;
 
-   return (SIZE_T)((PCHAR)ptr - (PCHAR)Source);
+        ptr++;
+    }
+
+    return (SIZE_T)((PCHAR)ptr - (PCHAR)Source);
 }
 
 
@@ -83,13 +83,11 @@ RtlCompareMemoryUlong (
  */
 VOID
 NTAPI
-RtlFillMemory (
-   PVOID Destination,
-   SIZE_T Length,
-   UCHAR Fill
-)
+RtlFillMemory(PVOID Destination,
+              SIZE_T Length,
+              UCHAR Fill)
 {
-   memset(Destination, Fill, Length);
+    memset(Destination, Fill, Length);
 }
 
 
@@ -99,23 +97,40 @@ RtlFillMemory (
  */
 VOID
 NTAPI
-RtlFillMemoryUlong (
-   PVOID Destination,
-   SIZE_T Length,
-   ULONG Fill
-)
+RtlFillMemoryUlong(PVOID Destination,
+                   SIZE_T Length,
+                   ULONG Fill)
 {
-   PULONG Dest  = Destination;
-   SIZE_T Count = Length / sizeof(ULONG);
+    PULONG Dest  = Destination;
+    SIZE_T Count = Length / sizeof(ULONG);
 
-   while (Count > 0)
-   {
-      *Dest = Fill;
-      Dest++;
-      Count--;
-   }
+    while (Count > 0)
+    {
+        *Dest = Fill;
+        Dest++;
+        Count--;
+    }
 }
 
+#ifdef _WIN64
+VOID
+NTAPI
+RtlFillMemoryUlonglong(
+    PVOID Destination,
+    SIZE_T Length,
+    ULONGLONG Fill)
+{
+    PULONGLONG Dest  = Destination;
+    SIZE_T Count = Length / sizeof(ULONGLONG);
+
+    while (Count > 0)
+    {
+        *Dest = Fill;
+        Dest++;
+        Count--;
+    }
+}
+#endif
 
 #undef RtlMoveMemory
 /*
@@ -123,32 +138,25 @@ RtlFillMemoryUlong (
  */
 VOID
 NTAPI
-RtlMoveMemory (
-   PVOID    Destination,
-   CONST VOID  * Source,
-   SIZE_T   Length
-)
+RtlMoveMemory(PVOID Destination,
+              CONST VOID *Source,
+              SIZE_T Length)
 {
-   memmove (
-      Destination,
-      Source,
-      Length
-   );
+    memmove(Destination, Source, Length);
 }
+
 
 /*
 * @implemented
 */
 VOID
 FASTCALL
-RtlPrefetchMemoryNonTemporal(
-	IN PVOID Source,
-	IN SIZE_T Length
-	)
+RtlPrefetchMemoryNonTemporal(IN PVOID Source,
+                             IN SIZE_T Length)
 {
-	/* By nature of prefetch, this is non-portable. */
-	(void)Source;
-	(void)Length;
+    /* By nature of prefetch, this is non-portable. */
+    (void)Source;
+    (void)Length;
 }
 
 
@@ -158,16 +166,10 @@ RtlPrefetchMemoryNonTemporal(
  */
 VOID
 NTAPI
-RtlZeroMemory (
-   PVOID Destination,
-   SIZE_T Length
-)
+RtlZeroMemory(PVOID Destination,
+              SIZE_T Length)
 {
-   RtlFillMemory (
-      Destination,
-      Length,
-      0
-   );
+    RtlFillMemory(Destination, Length, 0);
 }
 
 /* EOF */

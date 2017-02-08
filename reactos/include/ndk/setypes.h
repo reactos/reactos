@@ -66,6 +66,22 @@ Author:
 #define SE_CREATE_GLOBAL_PRIVILEGE        (30L)
 #define SE_MAX_WELL_KNOWN_PRIVILEGE       (SE_CREATE_GLOBAL_PRIVILEGE)
 
+typedef struct _TOKEN_MANDATORY_POLICY {
+  ULONG Policy;
+} TOKEN_MANDATORY_POLICY, *PTOKEN_MANDATORY_POLICY;
+
+typedef struct _TOKEN_ACCESS_INFORMATION
+{
+    struct _SID_AND_ATTRIBUTES_HASH *SidHash;
+    struct _SID_AND_ATTRIBUTES_HASH *RestrictedSidHash;
+    struct _TOKEN_PRIVILEGES *Privileges;
+    LUID AuthenticationId;
+    TOKEN_TYPE TokenType;
+    SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
+    TOKEN_MANDATORY_POLICY MandatoryPolicy;
+    ULONG Flags;
+} TOKEN_ACCESS_INFORMATION, *PTOKEN_ACCESS_INFORMATION;
+
 #else
 
 //

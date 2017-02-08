@@ -18,7 +18,7 @@
 int _ismbbpunct(unsigned int c)
 {
 // (0xA1 <= c <= 0xA6)
-    return (_mbctype[c & 0xff] & _MBPUNCT);
+    return (get_mbcinfo()->mbctype[c & 0xff] & _MBPUNCT);
 }
 
  //iskana()     :(0xA1 <= c <= 0xDF)

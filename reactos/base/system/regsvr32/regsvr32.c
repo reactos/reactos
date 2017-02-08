@@ -9,8 +9,6 @@
  * PROGRAMMER:      ShadowFlare (blakflare@hotmail.com)
  */
 
-#define WIN32_LEAN_AND_MEAN
-
 // Both UNICODE and _UNICODE must be either defined or undefined
 // because some headers use UNICODE and others use _UNICODE
 #ifdef UNICODE
@@ -23,11 +21,13 @@
 #endif
 #endif
 
-#include <windows.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 #include <ole2.h>
-#include <stdio.h>
-#include <string.h>
-#include <malloc.h>
 #include <tchar.h>
 
 typedef HRESULT (WINAPI *DLLREGISTER)(void);
@@ -52,8 +52,6 @@ LPCWSTR tszDllInstall = L"DllInstall";
 #define tszDllInstall szDllInstall
 #endif
 
-
-
 #include "resource.h"
 
 LPCTSTR ModuleTitle = _T("RegSvr32");
@@ -66,7 +64,6 @@ TCHAR DllNotLoaded[RC_STRING_MAX_SIZE];
 TCHAR MissingEntry[RC_STRING_MAX_SIZE];
 TCHAR FailureMessage[RC_STRING_MAX_SIZE];
 TCHAR SuccessMessage[RC_STRING_MAX_SIZE];
-
 
 // The macro CommandLineToArgv maps to a function that converts
 // a command-line string to argc and argv similar to the ones
@@ -482,4 +479,3 @@ int WINAPI _tWinMain(
 	OleUninitialize();
 	return nRetValue;
 }
-

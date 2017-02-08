@@ -22,21 +22,18 @@
 #define WIN32_LEAN_AND_MEAN
 #define _WIN32_IE 0x0400
 
-#include <stdarg.h>
-#include <stdlib.h>
-#include <ctype.h>
 #include <stdio.h>
 #include <assert.h>
-
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include <richedit.h>
 #include <commctrl.h>
 #include <commdlg.h>
 #include <shellapi.h>
-#include <math.h>
-#include <errno.h>
+#include <wine/unicode.h>
 
-#include "wine/unicode.h"
 #include "wordpad.h"
 
 #ifdef NONAMELESSUNION
@@ -583,10 +580,10 @@ static void dialog_choose_font(void)
 
     SendMessageW(hEditorWnd, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&fmt);
     lstrcpyW(cf.lpLogFont->lfFaceName, fmt.szFaceName);
-    cf.lpLogFont->lfItalic = (fmt.dwEffects & CFE_ITALIC) ? TRUE : FALSE;
+    cf.lpLogFont->lfItalic = (fmt.dwEffects & CFE_ITALIC) != 0;
     cf.lpLogFont->lfWeight = (fmt.dwEffects & CFE_BOLD) ? FW_BOLD : FW_NORMAL;
-    cf.lpLogFont->lfUnderline = (fmt.dwEffects & CFE_UNDERLINE) ? TRUE : FALSE;
-    cf.lpLogFont->lfStrikeOut = (fmt.dwEffects & CFE_STRIKEOUT) ? TRUE : FALSE;
+    cf.lpLogFont->lfUnderline = (fmt.dwEffects & CFE_UNDERLINE) != 0;
+    cf.lpLogFont->lfStrikeOut = (fmt.dwEffects & CFE_STRIKEOUT) != 0;
     cf.lpLogFont->lfHeight = -MulDiv(fmt.yHeight / 20, GetDeviceCaps(hDC, LOGPIXELSY), 72);
     cf.rgbColors = fmt.crTextColor;
 
@@ -601,9 +598,9 @@ static void dialog_choose_font(void)
             fmt.dwEffects |= CFE_BOLD;
         if(cf.nFontType & ITALIC_FONTTYPE)
             fmt.dwEffects |= CFE_ITALIC;
-        if(cf.lpLogFont->lfUnderline == TRUE)
+        if(cf.lpLogFont->lfUnderline)
             fmt.dwEffects |= CFE_UNDERLINE;
-        if(cf.lpLogFont->lfStrikeOut == TRUE)
+        if(cf.lpLogFont->lfStrikeOut)
             fmt.dwEffects |= CFE_STRIKEOUT;
 
         fmt.crTextColor = cf.rgbColors;
@@ -686,14 +683,14 @@ static void set_toolbar_state(int bandId, BOOL show)
         rbbinfo.cbSize = REBARBANDINFOW_V6_SIZE;
         rbbinfo.fMask = RBBIM_STYLE;
 
-        SendMessageW(hwndReBar, RB_GETBANDINFO, index, (LPARAM)&rbbinfo);
+        SendMessageW(hwndReBar, RB_GETBANDINFOW, index, (LPARAM)&rbbinfo);
 
         if(!show)
             rbbinfo.fStyle &= ~RBBS_BREAK;
         else
             rbbinfo.fStyle |= RBBS_BREAK;
 
-        SendMessageW(hwndReBar, RB_SETBANDINFO, index, (LPARAM)&rbbinfo);
+        SendMessageW(hwndReBar, RB_SETBANDINFOW, index, (LPARAM)&rbbinfo);
     }
 
     if(bandId == BANDID_TOOLBAR || bandId == BANDID_FORMATBAR || bandId == BANDID_RULER)
@@ -835,7 +832,7 @@ static void ShowWriteError(DWORD Code)
     MessageBoxW(hMainWnd, Message, wszAppTitle, MB_ICONEXCLAMATION | MB_OK);
 }
 
-static void DoSaveFile(LPCWSTR wszSaveFileName, WPARAM format)
+static BOOL DoSaveFile(LPCWSTR wszSaveFileName, WPARAM format)
 {
     HANDLE hFile;
     EDITSTREAM stream;
@@ -847,7 +844,7 @@ static void DoSaveFile(LPCWSTR wszSaveFileName, WPARAM format)
     if(hFile == INVALID_HANDLE_VALUE)
     {
         ShowWriteError(GetLastError());
-        return;
+        return FALSE;
     }
 
     if(format == (SF_TEXT | SF_UNICODE))
@@ -859,7 +856,7 @@ static void DoSaveFile(LPCWSTR wszSaveFileName, WPARAM format)
         if(writeOut != sizeof(unicode))
         {
             CloseHandle(hFile);
-            return;
+            return FALSE;
         }
     }
 
@@ -879,16 +876,18 @@ static void DoSaveFile(LPCWSTR wszSaveFileName, WPARAM format)
         gt.codepage = 1200;
 
         if(SendMessageW(hEditorWnd, EM_GETTEXTLENGTHEX, (WPARAM)&gt, 0))
-            return;
+            return FALSE;
     }
 
     lstrcpyW(wszFileName, wszSaveFileName);
     set_caption(wszFileName);
     SendMessageW(hEditorWnd, EM_SETMODIFY, FALSE, 0);
     set_fileformat(format);
+
+    return TRUE;
 }
 
-static void DialogSaveFile(void)
+static BOOL DialogSaveFile(void)
 {
     OPENFILENAMEW sfn;
 
@@ -912,19 +911,11 @@ static void DialogSaveFile(void)
         {
             if(MessageBoxWithResStringW(hMainWnd, MAKEINTRESOURCEW(STRING_SAVE_LOSEFORMATTING),
                            wszAppTitle, MB_YESNO | MB_ICONEXCLAMATION) != IDYES)
-            {
                 continue;
-            } else
-            {
-                DoSaveFile(sfn.lpstrFile, fileformat_flags(sfn.nFilterIndex-1));
-                break;
-            }
-        } else
-        {
-            DoSaveFile(sfn.lpstrFile, fileformat_flags(sfn.nFilterIndex-1));
-            break;
         }
+        return DoSaveFile(sfn.lpstrFile, fileformat_flags(sfn.nFilterIndex-1));
     }
+    return FALSE;
 }
 
 static BOOL prompt_save_changes(void)
@@ -971,10 +962,8 @@ static BOOL prompt_save_changes(void)
 
             case IDYES:
                 if(wszFileName[0])
-                    DoSaveFile(wszFileName, fileFormat);
-                else
-                    DialogSaveFile();
-                return TRUE;
+                    return DoSaveFile(wszFileName, fileFormat);
+                return DialogSaveFile();
 
             default:
                 return FALSE;
@@ -1251,7 +1240,7 @@ static LRESULT handle_findmsg(LPFINDREPLACEW pFr)
         flags = FR_DOWN | (pFr->Flags & (FR_MATCHCASE | FR_WHOLEWORD));
         ft.lpstrText = pFr->lpstrFindWhat;
 
-        /* Only replace existing selectino if it is an exact match. */
+        /* Only replace the existing selection if it is an exact match. */
         if (sel.cpMin != sel.cpMax &&
             (pFr->Flags & FR_REPLACE || pFr->Flags & FR_REPLACEALL))
         {
@@ -1396,15 +1385,15 @@ static BOOL get_comboexlist_selection(HWND hComboEx, LPWSTR wszBuffer, UINT buff
     HWND hCombo, hList;
     int idx, result;
 
-    hCombo = (HWND)SendMessage(hComboEx, CBEM_GETCOMBOCONTROL, 0, 0);
+    hCombo = (HWND)SendMessageW(hComboEx, CBEM_GETCOMBOCONTROL, 0, 0);
     if (!hCombo)
         return FALSE;
     cbInfo.cbSize = sizeof(COMBOBOXINFO);
-    result = SendMessage(hCombo, CB_GETCOMBOBOXINFO, 0, (LPARAM)&cbInfo);
+    result = SendMessageW(hCombo, CB_GETCOMBOBOXINFO, 0, (LPARAM)&cbInfo);
     if (!result)
         return FALSE;
     hList = cbInfo.hwndList;
-    idx = SendMessage(hList, LB_GETCURSEL, 0, 0);
+    idx = SendMessageW(hList, LB_GETCURSEL, 0, 0);
     if (idx < 0)
         return FALSE;
 
@@ -1709,7 +1698,7 @@ static INT_PTR CALLBACK tabstops_proc(HWND hWnd, UINT message, WPARAM wParam, LP
                         if(SendMessageW(hTabWnd, CB_FINDSTRINGEXACT, -1, (LPARAM)&buffer) == CB_ERR)
                         {
                             float number = 0;
-                            int item_count = SendMessage(hTabWnd, CB_GETCOUNT, 0, 0);
+                            int item_count = SendMessageW(hTabWnd, CB_GETCOUNT, 0, 0);
 
                             if(!number_from_string(buffer, &number, &unit))
                             {
@@ -1856,7 +1845,7 @@ static LRESULT OnCreate( HWND hWnd )
     rbb.cyChild = rbb.cyMinChild = HIWORD(SendMessageW(hToolBarWnd, TB_GETBUTTONSIZE, 0, 0));
     rbb.wID = BANDID_TOOLBAR;
 
-    SendMessageW(hReBarWnd, RB_INSERTBAND, -1, (LPARAM)&rbb);
+    SendMessageW(hReBarWnd, RB_INSERTBANDW, -1, (LPARAM)&rbb);
 
     hFontListWnd = CreateWindowExW(0, WC_COMBOBOXEXW, NULL,
                       WS_BORDER | WS_VISIBLE | WS_CHILD | CBS_DROPDOWN | CBS_SORT,
@@ -1866,7 +1855,7 @@ static LRESULT OnCreate( HWND hWnd )
     rbb.cx = 200;
     rbb.wID = BANDID_FONTLIST;
 
-    SendMessageW(hReBarWnd, RB_INSERTBAND, -1, (LPARAM)&rbb);
+    SendMessageW(hReBarWnd, RB_INSERTBANDW, -1, (LPARAM)&rbb);
 
     hSizeListWnd = CreateWindowExW(0, WC_COMBOBOXEXW, NULL,
                       WS_BORDER | WS_VISIBLE | WS_CHILD | CBS_DROPDOWN,
@@ -1877,7 +1866,7 @@ static LRESULT OnCreate( HWND hWnd )
     rbb.fStyle ^= RBBS_BREAK;
     rbb.wID = BANDID_SIZELIST;
 
-    SendMessageW(hReBarWnd, RB_INSERTBAND, -1, (LPARAM)&rbb);
+    SendMessageW(hReBarWnd, RB_INSERTBANDW, -1, (LPARAM)&rbb);
 
     hFormatBarWnd = CreateToolbarEx(hReBarWnd,
          CCS_NOPARENTALIGN | CCS_NOMOVEY | WS_VISIBLE | TBSTYLE_TOOLTIPS | BTNS_BUTTON,
@@ -1899,7 +1888,7 @@ static LRESULT OnCreate( HWND hWnd )
     rbb.hwndChild = hFormatBarWnd;
     rbb.wID = BANDID_FORMATBAR;
 
-    SendMessageW(hReBarWnd, RB_INSERTBAND, -1, (LPARAM)&rbb);
+    SendMessageW(hReBarWnd, RB_INSERTBANDW, -1, (LPARAM)&rbb);
 
     hRulerWnd = CreateWindowExW(0, WC_STATICW, NULL, WS_VISIBLE | WS_CHILD,
                                 0, 0, 200, 10, hReBarWnd,  (HMENU)IDC_RULER, hInstance, NULL);
@@ -1909,7 +1898,7 @@ static LRESULT OnCreate( HWND hWnd )
     rbb.wID = BANDID_RULER;
     rbb.fStyle |= RBBS_BREAK;
 
-    SendMessageW(hReBarWnd, RB_INSERTBAND, -1, (LPARAM)&rbb);
+    SendMessageW(hReBarWnd, RB_INSERTBANDW, -1, (LPARAM)&rbb);
 
     hDLL = LoadLibraryW(wszRichEditDll);
     if(!hDLL)
@@ -2016,13 +2005,13 @@ static LRESULT OnNotify( HWND hWnd, LPARAM lParam)
     {
         if (pHdr->code == CBEN_ENDEDITW)
         {
-            NMCBEENDEDIT *endEdit = (NMCBEENDEDIT *)lParam;
+            NMCBEENDEDITW *endEdit = (NMCBEENDEDITW *)lParam;
             if(pHdr->hwndFrom == hwndFontList)
             {
-                on_fontlist_modified((LPWSTR)endEdit->szText);
+                on_fontlist_modified(endEdit->szText);
             } else if (pHdr->hwndFrom == hwndSizeList)
             {
-                on_sizelist_modified(hwndFontList,(LPWSTR)endEdit->szText);
+                on_sizelist_modified(hwndFontList,endEdit->szText);
             }
         }
         return 0;
@@ -2040,9 +2029,9 @@ static LRESULT OnNotify( HWND hWnd, LPARAM lParam)
 
         sprintf( buf,"selection = %d..%d, line count=%ld",
                  pSC->chrg.cpMin, pSC->chrg.cpMax,
-                SendMessage(hwndEditor, EM_GETLINECOUNT, 0, 0));
+                SendMessageW(hwndEditor, EM_GETLINECOUNT, 0, 0));
         SetWindowTextA(GetDlgItem(hWnd, IDC_STATUSBAR), buf);
-        SendMessage(hWnd, WM_USER, 0, 0);
+        SendMessageW(hWnd, WM_USER, 0, 0);
         return 1;
     }
     return 0;
@@ -2075,8 +2064,7 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
     case ID_FILE_NEW:
         {
             HINSTANCE hInstance = GetModuleHandleW(0);
-            int ret = DialogBox(hInstance, MAKEINTRESOURCE(IDD_NEWFILE), hWnd,
-                                newfile_proc);
+            int ret = DialogBoxW(hInstance, MAKEINTRESOURCEW(IDD_NEWFILE), hWnd, newfile_proc);
 
             if(ret != ID_NEWFILE_ABORT)
             {
@@ -2216,9 +2204,9 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
         RECT itemrc;
         POINT pt;
         int mid;
-        int itemidx = SendMessage(hFormatBarWnd, TB_COMMANDTOINDEX, ID_FORMAT_COLOR, 0);
+        int itemidx = SendMessageW(hFormatBarWnd, TB_COMMANDTOINDEX, ID_FORMAT_COLOR, 0);
 
-        SendMessage(hFormatBarWnd, TB_GETITEMRECT, itemidx, (LPARAM)&itemrc);
+        SendMessageW(hFormatBarWnd, TB_GETITEMRECT, itemidx, (LPARAM)&itemrc);
         pt.x = itemrc.left;
         pt.y = itemrc.bottom;
         ClientToScreen(hFormatBarWnd, &pt);
@@ -2286,7 +2274,7 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
         tr.chrg.cpMin = 0;
         tr.chrg.cpMax = nLen;
         tr.lpstrText = data;
-        SendMessage (hwndEditor, EM_GETTEXTRANGE, 0, (LPARAM)&tr);
+        SendMessageW(hwndEditor, EM_GETTEXTRANGE, 0, (LPARAM)&tr);
         MessageBoxW(NULL, data, wszAppTitle, MB_OK);
         HeapFree( GetProcessHeap(), 0, data );
 
@@ -2322,9 +2310,9 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
         char buf[128];
         WCHAR *data = NULL;
 
-        SendMessage(hwndEditor, EM_EXGETSEL, 0, (LPARAM)&range);
+        SendMessageW(hwndEditor, EM_EXGETSEL, 0, (LPARAM)&range);
         data = HeapAlloc(GetProcessHeap(), 0, sizeof(*data) * (range.cpMax-range.cpMin+1));
-        SendMessage(hwndEditor, EM_GETSELTEXT, 0, (LPARAM)data);
+        SendMessageW(hwndEditor, EM_GETSELTEXT, 0, (LPARAM)data);
         sprintf(buf, "Start = %d, End = %d", range.cpMin, range.cpMax);
         MessageBoxA(hWnd, buf, "Editor", MB_OK);
         MessageBoxW(hWnd, data, wszAppTitle, MB_OK);
@@ -2335,7 +2323,7 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
 
     case ID_EDIT_READONLY:
         {
-        LONG nStyle = GetWindowLong(hwndEditor, GWL_STYLE);
+        LONG nStyle = GetWindowLongW(hwndEditor, GWL_STYLE);
         if (nStyle & ES_READONLY)
             SendMessageW(hwndEditor, EM_SETREADONLY, 0, 0);
         else
@@ -2495,9 +2483,9 @@ static LRESULT OnInitPopupMenu( HWND hWnd, WPARAM wParam )
     pf.cbSize = sizeof(PARAFORMAT);
     SendMessageW(hwndEditor, EM_GETPARAFORMAT, 0, (LPARAM)&pf);
     CheckMenuItem(hMenu, ID_EDIT_READONLY,
-      MF_BYCOMMAND|(GetWindowLong(hwndEditor, GWL_STYLE)&ES_READONLY ? MF_CHECKED : MF_UNCHECKED));
+      MF_BYCOMMAND|(GetWindowLongW(hwndEditor, GWL_STYLE)&ES_READONLY ? MF_CHECKED : MF_UNCHECKED));
     CheckMenuItem(hMenu, ID_EDIT_MODIFIED,
-      MF_BYCOMMAND|(SendMessage(hwndEditor, EM_GETMODIFY, 0, 0) ? MF_CHECKED : MF_UNCHECKED));
+      MF_BYCOMMAND|(SendMessageW(hwndEditor, EM_GETMODIFY, 0, 0) ? MF_CHECKED : MF_UNCHECKED));
     if (pf.dwMask & PFM_ALIGNMENT)
         nAlignment = pf.wAlignment;
     CheckMenuItem(hMenu, ID_ALIGN_LEFT, MF_BYCOMMAND|(nAlignment == PFA_LEFT) ?
@@ -2683,7 +2671,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPSTR szCmdPar
     wc.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_WORDPAD));
     wc.hIconSm = LoadImageW(hInstance, MAKEINTRESOURCEW(IDI_WORDPAD), IMAGE_ICON,
                             GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
-    wc.hCursor = LoadCursor(NULL, IDC_IBEAM);
+    wc.hCursor = LoadCursorW(NULL, (LPWSTR)IDC_IBEAM);
     wc.hbrBackground = GetSysColorBrush(COLOR_WINDOW);
     wc.lpszMenuName = MAKEINTRESOURCEW(IDM_MAINMENU);
     wc.lpszClassName = wszMainWndClass;
@@ -2696,7 +2684,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPSTR szCmdPar
     wc.hInstance = hInstance;
     wc.hIcon = NULL;
     wc.hIconSm = NULL;
-    wc.hCursor = LoadCursor(NULL, IDC_IBEAM);
+    wc.hCursor = LoadCursorW(NULL, (LPWSTR)IDC_IBEAM);
     wc.hbrBackground = NULL;
     wc.lpszMenuName = NULL;
     wc.lpszClassName = wszPreviewWndClass;
@@ -2727,7 +2715,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPSTR szCmdPar
 
     while(GetMessageW(&msg,0,0,0))
     {
-        if (IsDialogMessage(hFindWnd, &msg))
+        if (IsDialogMessageW(hFindWnd, &msg))
             continue;
 
         if (TranslateAcceleratorW(hMainWnd, hAccel, &msg))

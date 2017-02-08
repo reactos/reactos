@@ -135,6 +135,7 @@ typedef struct _ADDRESS_FILE {
     USHORT Family;                        /* Address family */
     USHORT Protocol;                      /* Protocol number */
     USHORT Port;                          /* Network port (network byte order) */
+    LONG Sharers;                         /* Number of file objects with this addr file */
     UCHAR TTL;                            /* Time to live stored in packets sent from this address file */
     UINT DF;                              /* Don't fragment */
     UINT BCast;                           /* Receive broadcast packets */
@@ -277,6 +278,7 @@ typedef struct _CONNECTION_ENDPOINT {
     /* Socket state */
     BOOLEAN SendShutdown;
     BOOLEAN ReceiveShutdown;
+    NTSTATUS ReceiveShutdownStatus;
 
     struct _CONNECTION_ENDPOINT *Next; /* Next connection in address file list */
 } CONNECTION_ENDPOINT, *PCONNECTION_ENDPOINT;

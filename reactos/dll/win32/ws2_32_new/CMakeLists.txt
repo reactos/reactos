@@ -35,7 +35,7 @@ list(APPEND SOURCE
     src/rasdial.c
     src/recv.c
     src/rnr.c
-    src/scihlpr.c
+    #src/scihlpr.c
     src/select.c
     src/send.c
     src/sockctrl.c

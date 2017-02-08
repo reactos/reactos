@@ -176,7 +176,7 @@ STRING_ERROR,                    "VIRHE"
 STRING_WARNING,                    "VAROITUS"
 STRING_INFO,                    "Tiedoitus"
 
-STRING_UNTITLED,                "(otsikoimaton)"
+STRING_UNTITLED,                "Otsikoimaton"
 
 STRING_ALL_FILES,                "Kaikki tiedostot (*.*)"
 STRING_TEXT_FILES_TXT,            "Teksti tiedostot (*.txt)"

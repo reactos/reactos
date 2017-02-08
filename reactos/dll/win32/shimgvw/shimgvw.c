@@ -9,11 +9,18 @@
  *      28/05/2008  Created
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
 
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <objbase.h>
 #include <commctrl.h>
 #include <gdiplus.h>
 #include <tchar.h>

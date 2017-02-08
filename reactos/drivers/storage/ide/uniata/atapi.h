@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2002-2011 Alexandr A. Telyatnikov (Alter)
+Copyright (c) 2002-2012 Alexandr A. Telyatnikov (Alter)
 
 Module Name:
     atapi.h
@@ -106,7 +106,7 @@ DbgPrint(
 #define PRINT_PREFIX
 
 // Note, that using DbgPrint on raised IRQL will crash w2k
-// tis will not happen immediately, so we shall see some logs
+// ttis will not happen immediately, so we shall see some logs
 //#define LOG_ON_RAISED_IRQL_W2K    TRUE
 //#define LOG_ON_RAISED_IRQL_W2K    FALSE
 
@@ -249,6 +249,7 @@ typedef struct _IDE_REGISTERS_2 {
 #define DFLAGS_REINIT_DMA            0x4000    // 
 #define DFLAGS_HIDDEN                0x8000    // Hidden device, available only with special IOCTLs
                                                // via communication virtual device
+#define DFLAGS_MANUAL_CHS            0x10000   // For devices those have no IDENTIFY commands
 //#define DFLAGS_            0x10000    // 
 //
 // Used to disable 'advanced' features.
@@ -296,9 +297,50 @@ typedef struct _MODE_PARAMETER_HEADER_10 {
 }MODE_PARAMETER_HEADER_10, *PMODE_PARAMETER_HEADER_10;
 
 //
+// values for TransferMode
+//
+#define         ATA_PIO                 0x00
+#define 	ATA_PIO_NRDY            0x01
+
+#define         ATA_PIO0                0x08
+#define         ATA_PIO1                0x09
+#define         ATA_PIO2                0x0a
+#define         ATA_PIO3                0x0b
+#define         ATA_PIO4                0x0c
+#define         ATA_PIO5                0x0d
+
+#define         ATA_DMA                 0x10
+#define         ATA_SDMA                0x10
+#define         ATA_SDMA0               0x10
+#define         ATA_SDMA1               0x11
+#define         ATA_SDMA2               0x12
+
+#define         ATA_WDMA                0x20
+#define         ATA_WDMA0               0x20
+#define         ATA_WDMA1               0x21
+#define         ATA_WDMA2               0x22
+
+#define         ATA_UDMA                0x40
+#define         ATA_UDMA0               0x40 // ATA-16
+#define         ATA_UDMA1               0x41 // ATA-25
+#define         ATA_UDMA2               0x42 // ATA-33
+#define         ATA_UDMA3               0x43 // ATA-44
+#define         ATA_UDMA4               0x44 // ATA-66
+#define         ATA_UDMA5               0x45 // ATA-100
+#define         ATA_UDMA6               0x46 // ATA-133
+//#define         ATA_UDMA7               0x47 // ATA-166
+
+#define         ATA_SA150               0x47 /*0x80*/
+#define         ATA_SA300               0x48 /*0x81*/
+#define         ATA_SA600               0x49 /*0x82*/
+
+#define         ATA_MODE_NOT_SPEC       ((ULONG)(-1)) /*0x82*/
+
+//
 // IDE command definitions
 //
 
+#define IDE_COMMAND_DATA_SET_MGMT    0x06 // TRIM
 #define IDE_COMMAND_ATAPI_RESET      0x08
 #define IDE_COMMAND_RECALIBRATE      0x10
 #define IDE_COMMAND_READ             0x20
@@ -347,7 +389,9 @@ typedef struct _MODE_PARAMETER_HEADER_10 {
 #define IDE_COMMAND_DOOR_LOCK        0xDE
 #define IDE_COMMAND_DOOR_UNLOCK      0xDF
 #define IDE_COMMAND_STANDBY_IMMED    0xE0 // flush and spin down
+#define IDE_COMMAND_IDLE_IMMED       0xE1
 #define IDE_COMMAND_STANDBY          0xE2 // flush and spin down and enable autopowerdown timer
+#define IDE_COMMAND_IDLE             0xE3
 #define IDE_COMMAND_READ_PM          0xE4 // SATA PM
 #define IDE_COMMAND_SLEEP            0xE6 // flush, spin down and deactivate interface
 #define IDE_COMMAND_FLUSH_CACHE      0xE7
@@ -379,6 +423,9 @@ typedef struct _MODE_PARAMETER_HEADER_10 {
 #define IDE_STATUS_DRDY              0x40
 #define IDE_STATUS_IDLE              0x50
 #define IDE_STATUS_BUSY              0x80
+
+#define IDE_STATUS_WRONG             0xff
+#define IDE_STATUS_MASK              0xff
 
 
 //
@@ -488,8 +535,16 @@ typedef union _ATAPI_REGISTERS_2 {
 // ATAPI interrupt reasons
 //
 
+// for IDX_ATAPI_IO1_i_InterruptReason
 #define ATAPI_IR_COD 0x01
-#define ATAPI_IR_IO  0x02
+#define ATAPI_IR_COD_Data   0x0
+#define ATAPI_IR_COD_Cmd    0x1
+
+#define ATAPI_IR_IO        0x02
+#define ATAPI_IR_IO_toDev  0x00
+#define ATAPI_IR_IO_toHost 0x02
+
+#define ATAPI_IR_Mask      0x03
 
 //
 // ATA Features
@@ -497,6 +552,7 @@ typedef union _ATAPI_REGISTERS_2 {
 
 #define         ATA_F_DMA               0x01    /* enable DMA */
 #define         ATA_F_OVL               0x02    /* enable overlap */
+#define         ATA_F_DMAREAD           0x04    /* DMA Packet (ATAPI) read */
 
 #define		ATA_C_F_SETXFER	        0x03	/* set transfer mode */
 
@@ -514,6 +570,25 @@ typedef union _ATAPI_REGISTERS_2 {
 
 #define         ATA_C_F_ENAB_MEDIASTAT  0x95    /* enable media status */
 #define         ATA_C_F_DIS_MEDIASTAT   0x31    /* disable media status */
+
+#define         ATA_C_F_ENAB_APM        0x05    /* enable advanced power management */
+#define         ATA_C_F_DIS_APM         0x85    /* disable advanced power management */
+#define           ATA_C_F_APM_CNT_MAX_PERF        0xfe    /* maximum performance */
+#define           ATA_C_F_APM_CNT_MIN_NO_STANDBY  0x80    /* min. power w/o standby */
+#define           ATA_C_F_APM_CNT_MIN_STANDBY     0x01    /* min. power with standby */
+
+#define         ATA_C_F_ENAB_ACOUSTIC   0x42    /* enable acoustic management */
+#define         ATA_C_F_DIS_ACOUSTIC    0xc2    /* disable acoustic management */
+#define           ATA_C_F_AAM_CNT_MAX_PERF        0xfe    /* maximum performance */
+#define           ATA_C_F_AAM_CNT_MAX_POWER_SAVE  0x80    /* min. power */
+
+// New SMART Feature definitions
+#ifndef READ_LOG_SECTOR
+#define READ_LOG_SECTOR     0xD5
+#define WRITE_LOG_SECTOR    0xD6
+#define WRITE_THRESHOLDS    0xD7
+#define AUTO_OFFLINE        0xDB
+#endif // READ_LOG_SECTOR
 
 //
 // ATAPI interrupt reasons
@@ -615,12 +690,27 @@ typedef struct _IDENTIFY_DATA {
 
     USHORT CurrentMultiSector:8;            //     59
     USHORT CurrentMultiSectorValid:1;
-    USHORT Reserved59_9:7;
+    USHORT Reserved59_9_11:3;
+    USHORT SanitizeSupported:1;
+    USHORT CryptoScrambleExtSupported:1;
+    USHORT OverwriteExtSupported:1;
+    USHORT BlockEraseExtSupported:1;
 
     ULONG  UserAddressableSectors;          //     60-61
 
-    USHORT SingleWordDMASupport : 8;        //     62  \- obsolete
-    USHORT SingleWordDMAActive : 8;         //         /-
+    union {
+        struct {
+            USHORT SingleWordDMASupport : 8;        //     62 ATA, obsolete
+            USHORT SingleWordDMAActive : 8;         //
+        };
+        struct {
+            USHORT UDMASupport : 7;        //     62  ATAPI
+            USHORT MultiWordDMASupport : 3;
+            USHORT DMASupport : 1;         
+            USHORT Reaseved62_11_14 : 4;         
+            USHORT DMADirRequired : 1;         
+        } AtapiDMA;
+    };
 
     USHORT MultiWordDMASupport : 8;         //     63
     USHORT MultiWordDMAActive : 8;
@@ -637,7 +727,20 @@ typedef struct _IDENTIFY_DATA {
     USHORT MinimumPIOCycleTime;             //     67
     USHORT MinimumPIOCycleTimeIORDY;        //     68
 
-    USHORT Reserved69_70[2];                //     69-70
+    USHORT Reserved69_0_4:5;                //     69
+    USHORT ReadZeroAfterTrim:1;
+    USHORT Lba28Support:1;
+    USHORT Reserved69_7_IEEE1667:1;
+    USHORT MicrocodeDownloadDMA:1;
+    USHORT MaxPwdDMA:1;
+    USHORT WriteBufferDMA:1;
+    USHORT ReadBufferDMA:1;
+    USHORT DevConfigDMA:1;
+    USHORT LongSectorErrorReporting:1;
+    USHORT DeterministicReadAfterTrim:1;
+    USHORT CFastSupport:1;
+
+    USHORT Reserved70;                      //     70
     USHORT ReleaseTimeOverlapped;           //     71
     USHORT ReleaseTimeServiceCommand;       //     72
     USHORT Reserved73_74[2];                //     73-74
@@ -651,6 +754,9 @@ typedef struct _IDENTIFY_DATA {
 #define ATA_SATA_GEN3			0x0008
 #define ATA_SUPPORT_NCQ			0x0100
 #define ATA_SUPPORT_IFPWRMNGTRCV	0x0200
+#define ATA_SUPPORT_PHY_EVENT_COUNTER	0x0400
+#define ATA_SUPPORT_NCQ_UNLOAD    	0x0800
+#define ATA_SUPPORT_NCQ_PRI_INFO    	0x1000
 
     USHORT Reserved77;                      //     77
 
@@ -663,6 +769,12 @@ typedef struct _IDENTIFY_DATA {
     USHORT SataEnable;                      //     79
     USHORT MajorRevision;                   //     80
     USHORT MinorRevision;                   //     81
+
+#define ATA_VER_MJ_ATA4 		0x0010
+#define ATA_VER_MJ_ATA5 		0x0020
+#define ATA_VER_MJ_ATA6 		0x0040
+#define ATA_VER_MJ_ATA7 		0x0080
+#define ATA_VER_MJ_ATA8_ASC 		0x0100
 
     struct {
         USHORT Smart:1;                     //     82/85
@@ -724,6 +836,8 @@ typedef struct _IDENTIFY_DATA {
     USHORT HwResCableId : 1;
     USHORT HwResValid : 2;
 
+#define IDENTIFY_CABLE_ID_VALID    0x01
+
     USHORT CurrentAcoustic : 8;             //     94
     USHORT VendorAcoustic : 8;
 
@@ -734,7 +848,8 @@ typedef struct _IDENTIFY_DATA {
 
     ULONGLONG UserAddressableSectors48;     //     100-103
 
-    USHORT Reserved104[2];                  //     104-105
+    USHORT StreamingTransferTimePIO;        //     104
+    USHORT MaxLBARangeDescBlockCount;       //     105  // in 512b blocks
     union {
         USHORT PhysLogSectorSize;               //     106
         struct {
@@ -745,22 +860,102 @@ typedef struct _IDENTIFY_DATA {
             USHORT PLSS_Signature:2; // = 0x01 = 01b
         };
     };
-    USHORT Reserved107[10];                 //     107-116
+    USHORT InterSeekDelay;                 //     107
+    USHORT WorldWideName[4];               //     108-111
+    USHORT Reserved112[5];                 //     112-116
 
     ULONG  LargeSectorSize;                 //     117-118
     
-    USHORT Reserved117[8];                  //     119-126
+    USHORT Reserved119[8];                  //     119-126
     
     USHORT RemovableStatus;                 //     127
     USHORT SecurityStatus;                  //     128
 
-    USHORT FeaturesSupport4;                //     129
-    USHORT Reserved130[30];                 //     130-159
+    USHORT Reserved129[31];                 //     129-159
     USHORT CfAdvPowerMode;                  //     160
-    USHORT Reserved161[14];                 //     161-175
+    USHORT Reserved161[7];                 //     161-167
+    USHORT DeviceNominalFormFactor:4;      //     168
+    USHORT Reserved168_4_15:12;
+    USHORT DataSetManagementSupported:1;   //     169
+    USHORT Reserved169_1_15:15;
+    USHORT AdditionalProdNum[4];           //     170-173
+    USHORT Reserved174[2];                 //     174-175
     USHORT MediaSerial[30];                 //     176-205
-    USHORT Reserved206[49];                 //     205-254
-    USHORT Integrity;                       // 255
+    union {
+        USHORT SCT;                 //     206
+        struct {
+            USHORT SCT_Supported:1;
+            USHORT Reserved:1;
+            USHORT SCT_WriteSame:1;
+            USHORT SCT_ErrorRecovery:1;
+            USHORT SCT_Feature:1;
+            USHORT SCT_DataTables:1;
+            USHORT Reserved_6_15:10;
+        };
+    };
+    USHORT Reserved_CE_ATA[2];              //     207-208
+    USHORT LogicalSectorOffset:14;          //     209
+    USHORT Reserved209_14_One:1;
+    USHORT Reserved209_15_Zero:1;
+
+    USHORT WriteReadVerify_CountMode2[2];   //     210-211
+    USHORT WriteReadVerify_CountMode3[2];   //     212-213
+
+    USHORT NVCache_PM_Supported:1;                  //     214
+    USHORT NVCache_PM_Enabled:1;
+    USHORT NVCache_Reserved_2_3:2;
+    USHORT NVCache_Enabled:1;
+    USHORT NVCache_Reserved_5_7:3;
+    USHORT NVCache_PM_Version:4;
+    USHORT NVCache_Version:4;
+
+    USHORT NVCache_Size_LogicalBlocks[2];   //     215-216
+    USHORT NominalMediaRotationRate;        //     217
+    USHORT Reserved218;                     //     218
+    USHORT NVCache_DeviceSpinUpTime:8;      //     219
+    USHORT NVCache_Reserved219_8_15:8;
+
+    USHORT WriteReadVerify_CurrentMode:8;      //     220
+    USHORT WriteReadVerify_Reserved220_8_15:8;
+
+    USHORT Reserved221;                     //     221
+    union {
+        struct {
+            USHORT VersionFlags:12;
+            USHORT TransportType:4;
+        };
+        struct {
+            USHORT ATA8_APT:1;
+            USHORT ATA_ATAPI7:1;
+            USHORT Reserved:14;
+        } PATA;
+        struct {
+            USHORT ATA8_AST:1;
+            USHORT v10a:1;
+            USHORT II_Ext:1;
+            USHORT v25:1;
+            USHORT v26:1;
+            USHORT v30:1;
+            USHORT Reserved:10;
+        } SATA;
+    } TransportMajor;
+    USHORT TransportMinor;                   //     223
+
+    USHORT Reserved224[10];                 //     224-233
+
+    USHORT MinBlocks_MicrocodeDownload_Mode3; //     234
+    USHORT MaxBlocks_MicrocodeDownload_Mode3; //     235
+
+    USHORT Reserved236[19];                 //     236-254
+
+    union {
+        USHORT Integrity;                       // 255
+        struct {
+#define ATA_ChecksumValid    0xA5
+            USHORT ChecksumValid:8;
+            USHORT Checksum:8;
+        };
+    };
 } IDENTIFY_DATA, *PIDENTIFY_DATA;
 
 //
@@ -813,10 +1008,18 @@ typedef struct _IDENTIFY_DATA {
 
 #define IDENTIFY_DATA_SIZE sizeof(IDENTIFY_DATA)
 
+
 // IDENTIFY DMA timing cycle modes.
 #define IDENTIFY_DMA_CYCLES_MODE_0 0x00
 #define IDENTIFY_DMA_CYCLES_MODE_1 0x01
 #define IDENTIFY_DMA_CYCLES_MODE_2 0x02
+
+// for IDE_COMMAND_DATA_SET_MGMT
+typedef struct _TRIM_DATA {
+    ULONGLONG Lba:48;
+    ULONGLONG BlockCount:16;
+} TRIM_DATA, *PTRIM_DATA;
+
 /*
 #define PCI_DEV_HW_SPEC(idhi, idlo) \
     { #idlo, 4, #idhi, 4}
@@ -1219,6 +1422,12 @@ AtapiDisableInterrupts(
     IN ULONG c
     );
 
+extern VOID
+UniataExpectChannelInterrupt(
+    IN struct _HW_CHANNEL* chan,
+    IN BOOLEAN Expecting
+    );
+
 #define CHAN_NOT_SPECIFIED                  (0xffffffffL)
 #define CHAN_NOT_SPECIFIED_CHECK_CABLE      (0xfffffffeL)
 #define DEVNUM_NOT_SPECIFIED                (0xffffffffL)
@@ -1303,7 +1512,7 @@ UniAtaCalculateLBARegsBack(
     ULONGLONG            lba
     );
 
-BOOLEAN
+ULONG
 NTAPI
 UniataAnybodyHome(
     IN PVOID   HwDeviceExtension,
@@ -1311,10 +1520,18 @@ UniataAnybodyHome(
     IN ULONG   deviceNumber
     );
 
+#define ATA_AT_HOME_HDD        0x01
+#define ATA_AT_HOME_ATAPI      0x02
+#define ATA_AT_HOME_XXX        0x04
+#define ATA_AT_HOME_NOBODY     0x00
+
 #define ATA_CMD_FLAG_LBAIOsupp 0x01
 #define ATA_CMD_FLAG_48supp    0x02
 #define ATA_CMD_FLAG_48        0x04
 #define ATA_CMD_FLAG_DMA       0x08
+#define ATA_CMD_FLAG_FUA       0x10
+#define ATA_CMD_FLAG_In        0x40
+#define ATA_CMD_FLAG_Out       0x80
 
 extern UCHAR AtaCommands48[256];
 extern UCHAR AtaCommandFlags[256];
@@ -1327,6 +1544,15 @@ extern UCHAR AtaCommandFlags[256];
     (  ((AtaCommandFlags[command] & ATA_CMD_FLAG_LBAIOsupp) && (supp48) && (((lba+count) >= ATA_MAX_IOLBA28) || (count > 256)) ) || \
        (lba > ATA_MAX_LBA28) || (count > 255) )
 
+#define UniAtaClearAtaReq(AtaReq) \
+{  \
+        RtlZeroMemory((PCHAR)(AtaReq), FIELD_OFFSET(ATA_REQ, ata)); \
+}
+
+
+//#define ATAPI_DEVICE(de, ldev)    (de->lun[ldev].DeviceFlags & DFLAGS_ATAPI_DEVICE)
+#define ATAPI_DEVICE(chan, dev)    ((chan->lun[dev]->DeviceFlags & DFLAGS_ATAPI_DEVICE) ? TRUE : FALSE)
+
 #ifdef _DEBUG
 #define PrintNtConsole  _PrintNtConsole
 #else //_DEBUG
@@ -1334,6 +1560,93 @@ extern UCHAR AtaCommandFlags[256];
 #endif //_DEBUG
 
 #endif //USER_MODE
+
+__inline
+BOOLEAN
+ata_is_sata(
+    PIDENTIFY_DATA ident
+    )
+{
+    return (ident->SataCapabilities && ident->SataCapabilities != 0xffff);
+} // end ata_is_sata()
+
+#define IDENT_MODE_MAX     FALSE
+#define IDENT_MODE_ACTIVE  TRUE
+
+__inline
+LONG
+ata_cur_mode_from_ident(
+    PIDENTIFY_DATA ident,
+    BOOLEAN Active
+    )
+{
+    USHORT mode;
+    if(ata_is_sata(ident)) {
+        if(ident->SataCapabilities & ATA_SATA_GEN3) {
+            return ATA_SA600;
+        } else
+        if(ident->SataCapabilities & ATA_SATA_GEN2) {
+            return ATA_SA300;
+        } else
+        if(ident->SataCapabilities & ATA_SATA_GEN1) {
+            return ATA_SA150;
+        }
+        return ATA_SA150;
+    }
+
+    if (ident->UdmaModesValid) {
+        mode = Active ? ident->UltraDMAActive : ident->UltraDMASupport;
+        if (mode & 0x40)
+            return ATA_UDMA0+6;
+        if (mode & 0x20)
+            return ATA_UDMA0+5;
+        if (mode & 0x10)
+            return ATA_UDMA0+4;
+        if (mode & 0x08)
+            return ATA_UDMA0+3;
+        if (mode & 0x04)
+            return ATA_UDMA0+2;
+        if (mode & 0x02)
+            return ATA_UDMA0+1;
+        if (mode & 0x01)
+            return ATA_UDMA0+0;
+    }
+
+    mode = Active ? ident->MultiWordDMAActive : ident->MultiWordDMASupport;
+    if (ident->MultiWordDMAActive & 0x04)
+        return ATA_WDMA0+2;
+    if (ident->MultiWordDMAActive & 0x02)
+        return ATA_WDMA0+1;
+    if (ident->MultiWordDMAActive & 0x01)
+        return ATA_WDMA0+0;
+
+    mode = Active ? ident->SingleWordDMAActive : ident->SingleWordDMASupport;
+    if (ident->SingleWordDMAActive & 0x04)
+        return ATA_SDMA0+2;
+    if (ident->SingleWordDMAActive & 0x02)
+        return ATA_SDMA0+1;
+    if (ident->SingleWordDMAActive & 0x01)
+        return ATA_SDMA0+0;
+
+    if (ident->PioTimingsValid) {
+        mode = ident->AdvancedPIOModes;
+        if (mode & AdvancedPIOModes_5)
+            return ATA_PIO0+5;
+        if (mode & AdvancedPIOModes_4)
+            return ATA_PIO0+4;
+        if (mode & AdvancedPIOModes_3) 
+            return ATA_PIO0+3;
+    }
+    mode = ident->PioCycleTimingMode;
+    if (ident->PioCycleTimingMode == 2)
+        return ATA_PIO0+2;
+    if (ident->PioCycleTimingMode == 1)
+        return ATA_PIO0+1;
+    if (ident->PioCycleTimingMode == 0)
+        return ATA_PIO0+0;
+
+    return ATA_PIO;
+} // end ata_cur_mode_from_ident()
 
 #pragma pack(pop)
 

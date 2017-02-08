@@ -18,12 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <regedit.h>
-
+#include "regedit.h"
 
 void ShowAboutBox(HWND hWnd)
 {
-    TCHAR AppStr[255];
-    LoadString(hInst, IDS_APP_TITLE, AppStr, COUNT_OF(AppStr));
-    ShellAbout(hWnd, AppStr, _T(""), LoadIcon(hInst, MAKEINTRESOURCE(IDI_REGEDIT)));
+    WCHAR AppStr[255];
+    LoadStringW(hInst, IDS_APP_TITLE, AppStr, COUNT_OF(AppStr));
+    ShellAboutW(hWnd, AppStr, L"", LoadIconW(hInst, MAKEINTRESOURCEW(IDI_REGEDIT)));
 }
+
+/* EOF */

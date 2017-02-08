@@ -43,7 +43,7 @@
 #define	EXT2_MAGIC		0xEF53
 /* Amount of indirect blocks in an inode.  */
 #define INDIRECT_BLOCKS		12
-/* Maximum lenght of a pathname.  */
+/* Maximum length of a pathname.  */
 #define EXT2_PATH_MAX		4096
 /* Maximum nesting of symlinks, used to prevent a loop.  */
 #define	EXT2_MAX_SYMLINKCNT	8

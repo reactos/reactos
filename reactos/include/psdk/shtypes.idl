@@ -66,7 +66,7 @@ typedef struct _STRRET
     {
     [case(STRRET_WSTR)][string] LPWSTR    pOleStr;        /* OLESTR that will be freed */
     [case(STRRET_OFFSET)]       UINT      uOffset;        /* Offset into SHITEMID (ANSI) */
-    [case(STRRET_CSTR)]         CHAR      cStr[MAX_PATH]; /* ANSI Buffer */
+    [case(STRRET_CSTR)]         char      cStr[MAX_PATH]; /* ANSI Buffer */
     } DUMMYUNIONNAME;
 } STRRET, *LPSTRRET;
 cpp_quote("#include <poppack.h>")
@@ -135,3 +135,28 @@ cpp_quote("#define REFFOLDERTYPEID const FOLDERTYPEID &")
 cpp_quote("#else")
 cpp_quote("#define REFFOLDERTYPEID const FOLDERTYPEID * __MIDL_CONST")
 cpp_quote("#endif")
+
+typedef  [v1_enum] enum tagPERCEIVED {
+  PERCEIVED_TYPE_CUSTOM      = -3,
+  PERCEIVED_TYPE_UNSPECIFIED = -2,
+  PERCEIVED_TYPE_FOLDER      = -1,
+  PERCEIVED_TYPE_UNKNOWN     = 0,
+  PERCEIVED_TYPE_TEXT        = 1,
+  PERCEIVED_TYPE_IMAGE       = 2,
+  PERCEIVED_TYPE_AUDIO       = 3,
+  PERCEIVED_TYPE_VIDEO       = 4,
+  PERCEIVED_TYPE_COMPRESSED  = 5,
+  PERCEIVED_TYPE_DOCUMENT    = 6,
+  PERCEIVED_TYPE_SYSTEM      = 7,
+  PERCEIVED_TYPE_APPLICATION = 8,
+  PERCEIVED_TYPE_GAMEMEDIA   = 9,
+  PERCEIVED_TYPE_CONTACTS    = 10
+} PERCEIVED;
+
+cpp_quote("#define PERCEIVEDFLAG_UNDEFINED     0x0000")
+cpp_quote("#define PERCEIVEDFLAG_SOFTCODED     0x0001")
+cpp_quote("#define PERCEIVEDFLAG_HARDCODED     0x0002")
+cpp_quote("#define PERCEIVEDFLAG_NATIVESUPPORT 0x0004")
+cpp_quote("#define PERCEIVEDFLAG_GDIPLUS       0x0010")
+cpp_quote("#define PERCEIVEDFLAG_WMSDK         0x0020")
+cpp_quote("#define PERCEIVEDFLAG_ZIPFOLDER     0x0040")

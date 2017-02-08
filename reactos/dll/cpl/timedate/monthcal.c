@@ -7,7 +7,7 @@
  *
  */
 
-#include <timedate.h>
+#include "timedate.h"
 
 static const WCHAR szMonthCalWndClass[] = L"MonthCalWnd";
 

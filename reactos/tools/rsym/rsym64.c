@@ -787,7 +787,7 @@ ParsePEHeaders(PFILE_INFO File)
     File->UsedSections = 0;
     File->eh_frame.idx = -1;
 
-    /* Allocate array of chars, specifiying wheter to copy the section */
+    /* Allocate array of chars, specifiying whether to copy the section */
     File->UseSection = malloc(File->AllSections);
 
     for (i = 0; i < File->AllSections; i++)

@@ -15,12 +15,13 @@
  * @implemented
  */
 BOOL APIENTRY
-EngCopyBits(SURFOBJ *psoDest,
-            SURFOBJ *psoSource,
-            CLIPOBJ *Clip,
-            XLATEOBJ *ColorTranslation,
-            RECTL *DestRect,
-            POINTL *SourcePoint)
+EngCopyBits(
+    _In_ SURFOBJ *psoDest,
+    _In_ SURFOBJ *psoSource,
+    _In_opt_ CLIPOBJ *Clip,
+    _In_opt_ XLATEOBJ *ColorTranslation,
+    _In_ RECTL *DestRect,
+    _In_ POINTL *SourcePoint)
 {
     BOOL      ret;
     BYTE      clippingType;
@@ -50,7 +51,7 @@ EngCopyBits(SURFOBJ *psoDest,
         rclDest.bottom = psoDest->sizlBitmap.cy;
     if (RECTL_bIsEmptyRect(&rclDest)) return TRUE;
     DestRect = &rclDest;
-    
+
     // FIXME: Don't punt to the driver's DrvCopyBits immediately. Instead,
     //        mark the copy block function to be DrvCopyBits instead of the
     //        GDI's copy bit function so as to remove clipping from the

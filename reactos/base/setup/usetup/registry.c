@@ -47,6 +47,18 @@
 #define FLG_ADDREG_TYPE_MASK             (0xFFFF0000 | FLG_ADDREG_BINVALUETYPE)
 #endif
 
+#ifdef _M_IX86
+#define Architecture L"x86"
+#elif defined(_M_AMD64)
+#define Architecture L"amd64"
+#elif defined(_M_IA64)
+#define Architecture L"ia64"
+#elif defined(_M_ARM)
+#define Architecture L"arm"
+#elif defined(_M_PPC)
+#define Architecture L"ppc"
+#endif
+
 #include <pshpack1.h>
 
 typedef struct _REG_DISK_MOUNT_INFO
@@ -639,6 +651,11 @@ ImportRegistryFile(PWSTR Filename,
     }
 
   if (!registry_callback (hInf, L"AddReg", FALSE))
+    {
+      DPRINT1("registry_callback() failed\n");
+    }
+
+  if (!registry_callback (hInf, L"AddReg.NT" Architecture, FALSE))
     {
       DPRINT1("registry_callback() failed\n");
     }

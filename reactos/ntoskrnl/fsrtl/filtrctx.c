@@ -368,7 +368,7 @@ NTAPI
 FsRtlTeardownPerStreamContexts(IN PFSRTL_ADVANCED_FCB_HEADER AdvFcbHeader)
 {
     PLIST_ENTRY NextEntry;
-    BOOLEAN IsMutexLocked = FALSE;
+    volatile BOOLEAN IsMutexLocked = FALSE;
     PFSRTL_PER_STREAM_CONTEXT PerStreamContext;
 
     _SEH2_TRY

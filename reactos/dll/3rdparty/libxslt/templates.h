@@ -20,21 +20,21 @@
 extern "C" {
 #endif
 
-XSLTPUBFUN int XSLTCALL		
+XSLTPUBFUN int XSLTCALL
 		xsltEvalXPathPredicate		(xsltTransformContextPtr ctxt,
 						 xmlXPathCompExprPtr comp,
 		                                 xmlNsPtr *nsList,
 						 int nsNr);
-XSLTPUBFUN xmlChar * XSLTCALL	
+XSLTPUBFUN xmlChar * XSLTCALL
 		xsltEvalTemplateString		(xsltTransformContextPtr ctxt,
 						 xmlNodePtr contextNode,
 						 xmlNodePtr inst);
-XSLTPUBFUN xmlChar * XSLTCALL	
+XSLTPUBFUN xmlChar * XSLTCALL
 		xsltEvalAttrValueTemplate	(xsltTransformContextPtr ctxt,
 						 xmlNodePtr node,
 						 const xmlChar *name,
 						 const xmlChar *ns);
-XSLTPUBFUN const xmlChar * XSLTCALL	
+XSLTPUBFUN const xmlChar * XSLTCALL
 		xsltEvalStaticAttrValueTemplate	(xsltStylesheetPtr style,
 						 xmlNodePtr node,
 						 const xmlChar *name,
@@ -42,30 +42,30 @@ XSLTPUBFUN const xmlChar * XSLTCALL
 						 int *found);
 
 /* TODO: this is obviously broken ... the namespaces should be passed too ! */
-XSLTPUBFUN xmlChar * XSLTCALL	
+XSLTPUBFUN xmlChar * XSLTCALL
 		xsltEvalXPathString		(xsltTransformContextPtr ctxt,
 						 xmlXPathCompExprPtr comp);
-XSLTPUBFUN xmlChar * XSLTCALL	
+XSLTPUBFUN xmlChar * XSLTCALL
 		xsltEvalXPathStringNs		(xsltTransformContextPtr ctxt,
 						 xmlXPathCompExprPtr comp,
 						 int nsNr,
 						 xmlNsPtr *nsList);
 
-XSLTPUBFUN xmlNodePtr * XSLTCALL	
+XSLTPUBFUN xmlNodePtr * XSLTCALL
 		xsltTemplateProcess		(xsltTransformContextPtr ctxt,
 						 xmlNodePtr node);
-XSLTPUBFUN xmlAttrPtr XSLTCALL	
+XSLTPUBFUN xmlAttrPtr XSLTCALL
 		xsltAttrListTemplateProcess	(xsltTransformContextPtr ctxt,
 						 xmlNodePtr target,
 						 xmlAttrPtr cur);
-XSLTPUBFUN xmlAttrPtr XSLTCALL	
+XSLTPUBFUN xmlAttrPtr XSLTCALL
 		xsltAttrTemplateProcess		(xsltTransformContextPtr ctxt,
 						 xmlNodePtr target,
 						 xmlAttrPtr attr);
-XSLTPUBFUN xmlChar * XSLTCALL	
+XSLTPUBFUN xmlChar * XSLTCALL
 		xsltAttrTemplateValueProcess	(xsltTransformContextPtr ctxt,
 						 const xmlChar* attr);
-XSLTPUBFUN xmlChar * XSLTCALL	
+XSLTPUBFUN xmlChar * XSLTCALL
 		xsltAttrTemplateValueProcessNode(xsltTransformContextPtr ctxt,
 						 const xmlChar* str,
 						 xmlNodePtr node);

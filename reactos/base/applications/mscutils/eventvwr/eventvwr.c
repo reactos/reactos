@@ -23,11 +23,16 @@
  * PROGRAMMER: Marc Piulachs (marc.piulachs at codexchange [dot] net)
  */
 
-#include "eventvwr.h"
-#include <windows.h>
-#include <commctrl.h>
 #include <stdio.h>
-#include <time.h>
+#include <stdlib.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <winnls.h>
+#include <winreg.h>
+#include <commctrl.h>
+
+#include "resource.h"
 
 #if _MSC_VER
     #pragma warning(disable: 4996)   /* 'strdup' was declared deprecated */
@@ -690,7 +695,7 @@ QueryEventMessages(LPWSTR lpMachineName,
     else
         _snwprintf(szWindowTitle+i, dwMaxLength, L"%s", lpComputerName);
 
-    swprintf(szStatusText, L"%s has %d event(s)", lpLogName, dwTotalRecords);
+    swprintf(szStatusText, L"%s has %lu event(s)", lpLogName, dwTotalRecords);
 
     // Update the status bar
     SendMessageW(hwndStatus, SB_SETTEXT, (WPARAM)0, (LPARAM)szStatusText);

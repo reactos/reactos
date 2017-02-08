@@ -13,7 +13,7 @@
  * \name _ftime_s
  * \brief Get the current time.
  * \param [out] ptimeb Pointer to a structure of type struct _timeb that
- *        recieves the current time.
+ *        receives the current time.
  * \sa http://msdn.microsoft.com/en-us/library/95e68951.aspx
  */
 errno_t
@@ -45,7 +45,7 @@ _ftime_s(struct _timeb *ptimeb)
  * \name _ftime
  * \brief Get the current time.
  * \param [out] ptimeb Pointer to a structure of type struct _timeb that
- *        recieves the current time.
+ *        receives the current time.
  * \note This function is for compatability and simply calls the secure
  *       version _ftime_s().
  * \sa http://msdn.microsoft.com/en-us/library/z54t9z5f.aspx

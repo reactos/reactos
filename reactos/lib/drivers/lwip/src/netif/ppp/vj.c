@@ -32,7 +32,7 @@
 
 #if PPP_SUPPORT /* don't build if not configured for use in lwipopts.h */
 
-#include "ppp.h"
+#include "ppp_impl.h"
 #include "pppdebug.h"
 
 #include "vj.h"
@@ -213,7 +213,7 @@ vj_compress_tcp(struct vjcompress *comp, struct pbuf *pb)
      */
     INCR(vjs_misses);
     comp->last_cs = lcs;
-    hlen += TCPH_OFFSET(th);
+    hlen += TCPH_HDRLEN(th);
     hlen <<= 2;
     /* Check that the IP/TCP headers are contained in the first buffer. */
     if (hlen > pb->len) {
@@ -236,7 +236,7 @@ vj_compress_tcp(struct vjcompress *comp, struct pbuf *pb)
 
   oth = (struct tcp_hdr *)&((long *)&cs->cs_ip)[hlen];
   deltaS = hlen;
-  hlen += TCPH_OFFSET(th);
+  hlen += TCPH_HDRLEN(th);
   hlen <<= 2;
   /* Check that the IP/TCP headers are contained in the first buffer. */
   if (hlen > pb->len) {
@@ -258,9 +258,9 @@ vj_compress_tcp(struct vjcompress *comp, struct pbuf *pb)
   if (((u_short *)ip)[0] != ((u_short *)&cs->cs_ip)[0] 
       || ((u_short *)ip)[3] != ((u_short *)&cs->cs_ip)[3] 
       || ((u_short *)ip)[4] != ((u_short *)&cs->cs_ip)[4] 
-      || TCPH_OFFSET(th) != TCPH_OFFSET(oth) 
+      || TCPH_HDRLEN(th) != TCPH_HDRLEN(oth) 
       || (deltaS > 5 && BCMP(ip + 1, &cs->cs_ip + 1, (deltaS - 5) << 2)) 
-      || (TCPH_OFFSET(th) > 5 && BCMP(th + 1, oth + 1, (TCPH_OFFSET(th) - 5) << 2))) {
+      || (TCPH_HDRLEN(th) > 5 && BCMP(th + 1, oth + 1, (TCPH_HDRLEN(th) - 5) << 2))) {
     goto uncompressed;
   }
 
@@ -434,7 +434,7 @@ vj_uncompress_uncomp(struct pbuf *nb, struct vjcompress *comp)
   hlen = IPH_HL(ip) << 2;
   if (IPH_PROTO(ip) >= MAX_SLOTS
       || hlen + sizeof(struct tcp_hdr) > nb->len
-      || (hlen += TCPH_OFFSET(((struct tcp_hdr *)&((char *)ip)[hlen])) << 2)
+      || (hlen += TCPH_HDRLEN(((struct tcp_hdr *)&((char *)ip)[hlen])) << 2)
           > nb->len
       || hlen > MAX_HDR) {
     PPPDEBUG(LOG_INFO, ("vj_uncompress_uncomp: bad cid=%d, hlen=%d buflen=%d\n", 

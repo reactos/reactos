@@ -21,33 +21,33 @@
 #pragma once
 
 class CRegTreeOptions :
-	public CComCoClass<CRegTreeOptions, &CLSID_ACLMulti>,
-	public CComObjectRootEx<CComMultiThreadModelNoCS>,
-	public IRegTreeOptions,
-	public IObjectWithSite
+    public CComCoClass<CRegTreeOptions, &CLSID_ACLMulti>,
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IRegTreeOptions,
+    public IObjectWithSite
 {
 private:
 public:
-	CRegTreeOptions();
-	~CRegTreeOptions();
+    CRegTreeOptions();
+    ~CRegTreeOptions();
 
-	// *** IRegTreeOptions methods ***
-	virtual HRESULT STDMETHODCALLTYPE InitTree(HWND paramC, HKEY param10, char const *param14, char const *param18);
-	virtual HRESULT STDMETHODCALLTYPE WalkTree(WALK_TREE_CMD paramC);
-	virtual HRESULT STDMETHODCALLTYPE ToggleItem(HTREEITEM paramC);
-	virtual HRESULT STDMETHODCALLTYPE ShowHelp(HTREEITEM paramC, unsigned long param10);
+    // *** IRegTreeOptions methods ***
+    virtual HRESULT STDMETHODCALLTYPE InitTree(HWND paramC, HKEY param10, char const *param14, char const *param18);
+    virtual HRESULT STDMETHODCALLTYPE WalkTree(WALK_TREE_CMD paramC);
+    virtual HRESULT STDMETHODCALLTYPE ToggleItem(HTREEITEM paramC);
+    virtual HRESULT STDMETHODCALLTYPE ShowHelp(HTREEITEM paramC, unsigned long param10);
 
-	// *** IObjectWithSite methods ***
-	virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
-	virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, void **ppvSite);
+    // *** IObjectWithSite methods ***
+    virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
+    virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, void **ppvSite);
 
-DECLARE_REGISTRY_RESOURCEID(IDR_REGTREEOPTIONS)
-DECLARE_NOT_AGGREGATABLE(CRegTreeOptions)
+    DECLARE_REGISTRY_RESOURCEID(IDR_REGTREEOPTIONS)
+    DECLARE_NOT_AGGREGATABLE(CRegTreeOptions)
 
-DECLARE_PROTECT_FINAL_CONSTRUCT()
+    DECLARE_PROTECT_FINAL_CONSTRUCT()
 
-BEGIN_COM_MAP(CRegTreeOptions)
-	COM_INTERFACE_ENTRY_IID(IID_IRegTreeOptions, IRegTreeOptions)
-	COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
-END_COM_MAP()
+    BEGIN_COM_MAP(CRegTreeOptions)
+        COM_INTERFACE_ENTRY_IID(IID_IRegTreeOptions, IRegTreeOptions)
+        COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
+    END_COM_MAP()
 };

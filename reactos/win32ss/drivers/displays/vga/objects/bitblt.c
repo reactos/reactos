@@ -426,6 +426,18 @@ DrvBitBlt(
     UINT i;
     POINTL Pt;
     ULONG Direction;
+    POINTL FinalSourcePoint;
+
+    if (Source && SourcePoint)
+    {
+        FinalSourcePoint.x = SourcePoint->x;
+        FinalSourcePoint.y = SourcePoint->y;
+    }
+    else
+    {
+        FinalSourcePoint.x = 0;
+        FinalSourcePoint.y = 0;
+    }
 
     switch (rop4)
     {
@@ -462,8 +474,8 @@ DrvBitBlt(
         case DC_RECT:
             /* Clip the blt to the clip rectangle */
             VGADDI_IntersectRect(&CombinedRect, DestRect, &(Clip->rclBounds));
-            Pt.x = SourcePoint->x + CombinedRect.left - DestRect->left;
-            Pt.y = SourcePoint->y + CombinedRect.top - DestRect->top;
+            Pt.x = FinalSourcePoint.x + CombinedRect.left - DestRect->left;
+            Pt.y = FinalSourcePoint.y + CombinedRect.top - DestRect->top;
             Ret = (*BltRectFunc)(Dest, Source, Mask, ColorTranslation, &CombinedRect,
                                  &Pt, MaskPoint, Brush, BrushPoint,
                                  rop4);
@@ -472,10 +484,10 @@ DrvBitBlt(
             Ret = TRUE;
             if (Dest == Source)
             {
-                if (DestRect->top <= SourcePoint->y)
-                    Direction = DestRect->left < SourcePoint->x ? CD_RIGHTDOWN : CD_LEFTDOWN;
+                if (DestRect->top <= FinalSourcePoint.y)
+                    Direction = DestRect->left < FinalSourcePoint.y ? CD_RIGHTDOWN : CD_LEFTDOWN;
                 else
-                    Direction = DestRect->left < SourcePoint->x ? CD_RIGHTUP : CD_LEFTUP;
+                    Direction = DestRect->left < FinalSourcePoint.x ? CD_RIGHTUP : CD_LEFTUP;
             }
             else
             {
@@ -489,8 +501,8 @@ DrvBitBlt(
                 for (i = 0; i < RectEnum.c; i++)
                 {
                     VGADDI_IntersectRect(&CombinedRect, DestRect, RectEnum.arcl + i);
-                    Pt.x = SourcePoint->x + CombinedRect.left - DestRect->left;
-                    Pt.y = SourcePoint->y + CombinedRect.top - DestRect->top;
+                    Pt.x = FinalSourcePoint.x + CombinedRect.left - DestRect->left;
+                    Pt.y = FinalSourcePoint.y + CombinedRect.top - DestRect->top;
                     Ret = (*BltRectFunc)(Dest, Source, Mask, ColorTranslation, &CombinedRect,
                                          &Pt, MaskPoint, Brush, BrushPoint, rop4) &&
                                          Ret;

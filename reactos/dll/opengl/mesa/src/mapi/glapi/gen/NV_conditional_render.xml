@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!DOCTYPE OpenGLAPI SYSTEM "gl_API.dtd">
+
+<!-- Note: no GLX protocol info yet. -->
+
+
+<OpenGLAPI>
+
+<category name="GL_NV_condtitional_render" number="346">
+
+    <enum name="QUERY_WAIT_NV"               value="0x8E13"/>
+    <enum name="QUERY_NO_WAIT_NV"            value="0x8E14"/>
+    <enum name="QUERY_BY_REGION_WAIT_NV"     value="0x8E15"/>
+    <enum name="QUERY_BY_REGION_NO_WAIT_NV"  value="0x8E16"/>
+
+    <function name="BeginConditionalRenderNV" offset="assign">
+	<param name="query" type="GLuint"/>
+	<param name="mode" type="GLenum"/>
+    </function>
+
+    <function name="EndConditionalRenderNV" offset="assign">
+    </function>
+
+</category>
+
+</OpenGLAPI>

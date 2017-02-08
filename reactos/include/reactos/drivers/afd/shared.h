@@ -112,6 +112,8 @@ typedef struct _AFD_SEND_INFO_UDP {
     TDI_CONNECTION_INFORMATION		TdiConnection;
 } AFD_SEND_INFO_UDP, *PAFD_SEND_INFO_UDP;
 
+C_ASSERT(sizeof(AFD_RECV_INFO) == sizeof(AFD_SEND_INFO));
+
 typedef struct  _AFD_CONNECT_INFO {
     BOOLEAN				UseSAN;
     ULONG				Root;

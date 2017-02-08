@@ -47,6 +47,7 @@ EngpRegisterGraphicsDevice(
     NTSTATUS Status;
     PWSTR pwsz;
     ULONG i, cj, cModes = 0;
+    SIZE_T cjWritten;
     BOOL bEnable = TRUE;
     PDEVMODEINFO pdminfo;
     PDEVMODEW pdm, pdmEnd;
@@ -77,7 +78,7 @@ EngpRegisterGraphicsDevice(
     }
 
     /* Enable the device */
-    EngFileWrite(pFileObject, &bEnable, sizeof(BOOL), &cj);
+    EngFileWrite(pFileObject, &bEnable, sizeof(BOOL), &cjWritten);
 
     /* Copy the device and file object pointers */
     pGraphicsDevice->DeviceObject = pDeviceObject;
@@ -206,7 +207,7 @@ EngpRegisterGraphicsDevice(
             {
                 pGraphicsDevice->iDefaultMode = i;
                 pGraphicsDevice->iCurrentMode = i;
-                DPRINT("Found default entry: %ld '%ls'\n", i, pdm->dmDeviceName);
+                DPRINT("Found default entry: %lu '%ls'\n", i, pdm->dmDeviceName);
             }
 
             /* Initialize the entry */
@@ -232,7 +233,7 @@ EngpRegisterGraphicsDevice(
 
     /* Unlock loader */
     EngReleaseSemaphore(ghsemGraphicsDeviceList);
-    DPRINT("Prepared %ld modes for %ls\n", cModes, pGraphicsDevice->pwszDescription);
+    DPRINT("Prepared %lu modes for %ls\n", cModes, pGraphicsDevice->pwszDescription);
 
     return pGraphicsDevice;
 }
@@ -248,7 +249,7 @@ EngpFindGraphicsDevice(
     UNICODE_STRING ustrCurrent;
     PGRAPHICS_DEVICE pGraphicsDevice;
     ULONG i;
-    DPRINT("EngpFindGraphicsDevice('%wZ', %ld, 0x%lx)\n",
+    DPRINT("EngpFindGraphicsDevice('%wZ', %lu, 0x%lx)\n",
            pustrDevice, iDevNum, dwFlags);
 
     /* Lock list */
@@ -288,11 +289,11 @@ static
 NTSTATUS
 EngpFileIoRequest(
     PFILE_OBJECT pFileObject,
-    ULONG   ulMajorFunction,
-    LPVOID  lpBuffer,
-    DWORD   nBufferSize,
-    ULONGLONG  ullStartOffset,
-    OUT LPDWORD lpInformation)
+    ULONG ulMajorFunction,
+    LPVOID lpBuffer,
+    SIZE_T nBufferSize,
+    ULONGLONG ullStartOffset,
+    OUT PULONG_PTR lpInformation)
 {
     PDEVICE_OBJECT pDeviceObject;
     KEVENT Event;
@@ -316,7 +317,7 @@ EngpFileIoRequest(
     pIrp = IoBuildSynchronousFsdRequest(ulMajorFunction,
                                         pDeviceObject,
                                         lpBuffer,
-                                        nBufferSize,
+                                        (ULONG)nBufferSize,
                                         &liStartOffset,
                                         &Event,
                                         &Iosb);
@@ -367,7 +368,7 @@ EngFileIoControl(
     IN SIZE_T nInBufferSize,
     OUT PVOID lpOutBuffer,
     IN SIZE_T nOutBufferSize,
-    OUT LPDWORD lpInformation)
+    OUT PULONG_PTR lpInformation)
 {
     PDEVICE_OBJECT pDeviceObject;
     KEVENT Event;
@@ -389,9 +390,9 @@ EngFileIoControl(
     pIrp = IoBuildDeviceIoControlRequest(dwIoControlCode,
                                          pDeviceObject,
                                          lpInBuffer,
-                                         nInBufferSize,
+                                         (ULONG)nInBufferSize,
                                          lpOutBuffer,
-                                         nOutBufferSize,
+                                         (ULONG)nOutBufferSize,
                                          FALSE,
                                          &Event,
                                          &Iosb);
@@ -422,13 +423,13 @@ EngFileIoControl(
  */
 DWORD APIENTRY
 EngDeviceIoControl(
-    HANDLE  hDevice,
-    DWORD   dwIoControlCode,
-    LPVOID  lpInBuffer,
-    DWORD   nInBufferSize,
-    LPVOID  lpOutBuffer,
-    DWORD   nOutBufferSize,
-    DWORD *lpBytesReturned)
+    _In_ HANDLE hDevice,
+    _In_ DWORD dwIoControlCode,
+    _In_opt_bytecount_(cjInBufferSize) LPVOID lpInBuffer,
+    _In_ DWORD cjInBufferSize,
+    _Out_opt_bytecap_(cjOutBufferSize) LPVOID lpOutBuffer,
+    _In_ DWORD cjOutBufferSize,
+    _Out_ LPDWORD lpBytesReturned)
 {
     PIRP Irp;
     NTSTATUS Status;
@@ -445,9 +446,12 @@ EngDeviceIoControl(
     Irp = IoBuildDeviceIoControlRequest(dwIoControlCode,
                                         DeviceObject,
                                         lpInBuffer,
-                                        nInBufferSize,
+                                        cjInBufferSize,
                                         lpOutBuffer,
-                                        nOutBufferSize, FALSE, &Event, &Iosb);
+                                        cjOutBufferSize,
+                                        FALSE,
+                                        &Event,
+                                        &Iosb);
     if (!Irp) return ERROR_NOT_ENOUGH_MEMORY;
 
     Status = IoCallDriver(DeviceObject, Irp);
@@ -462,7 +466,7 @@ EngDeviceIoControl(
            Iosb.Information);
 
     /* Return information to the caller about the operation. */
-    *lpBytesReturned = Iosb.Information;
+    *lpBytesReturned = (DWORD)Iosb.Information;
 
     /* Convert NT status values to win32 error codes. */
     switch (Status)

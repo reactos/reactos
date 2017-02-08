@@ -274,8 +274,7 @@ RtlImageDirectoryEntryToData(
         MappedAsImage = FALSE;
     }
 
-
-    NtHeader = RtlImageNtHeader (BaseAddress);
+    NtHeader = RtlImageNtHeader(BaseAddress);
     if (NtHeader == NULL)
         return NULL;
 
@@ -292,7 +291,7 @@ RtlImageDirectoryEntryToData(
         return (PVOID)((ULONG_PTR)BaseAddress + Va);
 
     /* image mapped as ordinary file, we must find raw pointer */
-    return RtlImageRvaToVa (NtHeader, BaseAddress, Va, NULL);
+    return RtlImageRvaToVa(NtHeader, BaseAddress, Va, NULL);
 }
 
 
@@ -341,13 +340,13 @@ RtlImageRvaToVa(
     if (SectionHeader)
         Section = *SectionHeader;
 
-    if (Section == NULL ||
-            Rva < SWAPD(Section->VirtualAddress) ||
-            Rva >= SWAPD(Section->VirtualAddress) + SWAPD(Section->Misc.VirtualSize))
+    if ((Section == NULL) ||
+        (Rva < SWAPD(Section->VirtualAddress)) ||
+        (Rva >= SWAPD(Section->VirtualAddress) + SWAPD(Section->Misc.VirtualSize)))
     {
         Section = RtlImageRvaToSection (NtHeader, BaseAddress, Rva);
         if (Section == NULL)
-            return 0;
+            return NULL;
 
         if (SectionHeader)
             *SectionHeader = Section;
@@ -418,7 +417,7 @@ LdrProcessRelocationBlockLongLong(
         case IMAGE_REL_BASED_MIPS_JMPADDR:
         default:
             DPRINT1("Unknown/unsupported fixup type %hu.\n", Type);
-            DPRINT1("Address %x, Current %d, Count %d, *TypeOffset %x\n", Address, i, Count, SWAPW(*TypeOffset));
+            DPRINT1("Address %x, Current %u, Count %u, *TypeOffset %x\n", Address, i, Count, SWAPW(*TypeOffset));
             return (PIMAGE_BASE_RELOCATION)NULL;
         }
 

@@ -12,8 +12,16 @@
  *              TODO: Adhere to maximum device name length!
 */
 
-#include <windows.h>
-#include <ntddsnd.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <stdarg.h>
+
+#include <windef.h>
+#include <winuser.h>
+
+//#include <ntddsnd.h>
 #include <sndtypes.h>
 #include <mmddk.h>
 #include <mmebuddy.h>

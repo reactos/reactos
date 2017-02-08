@@ -18,21 +18,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
 
-#include <stdlib.h>
+#include <config.h>
+
+//#include <stdlib.h>
 #include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
+//#include <stdio.h>
+//#include <string.h>
+//#include <assert.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "objbase.h"
+#include <windef.h>
+#include <winbase.h>
+#include <objbase.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 #include "compobj_private.h"
 
@@ -358,7 +361,7 @@ static HRESULT WINAPI FTMarshalCF_QueryInterface(LPCLASSFACTORY iface,
     if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IClassFactory))
     {
         *ppv = iface;
-        IUnknown_AddRef(iface);
+        IClassFactory_AddRef(iface);
         return S_OK;
     }
     return E_NOINTERFACE;

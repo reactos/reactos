@@ -1,14 +1,9 @@
 
-
 add_definitions(
     -DANONYMOUSUNIONS
     -D_DEBUG_MEM)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
-set_rc_compiler()
-
-list(APPEND SOURCE main.c cmd.rc)
 
 list(APPEND SOURCE
     alias.c
@@ -43,6 +38,7 @@ list(APPEND SOURCE
     internal.c
     label.c
     locale.c
+    main.c
     memory.c
     misc.c
     mklink.c
@@ -69,12 +65,11 @@ list(APPEND SOURCE
     verify.c
     vol.c
     where.c
-    window.c)
+    window.c
+    cmd.rc)
 
 add_executable(cmd ${SOURCE})
-
 target_link_libraries(cmd wine)
-
 set_module_type(cmd win32cui UNICODE)
 add_importlibs(cmd advapi32 user32 msvcrt kernel32 ntdll)
 add_pch(cmd precomp.h)

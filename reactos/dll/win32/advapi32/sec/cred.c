@@ -1896,6 +1896,120 @@ BOOL WINAPI CredGetSessionTypes(DWORD persistCount, LPDWORD persists)
     return TRUE;
 }
 
+/******************************************************************************
+ * CredMarshalCredentialA [ADVAPI32.@]
+ */
+BOOL WINAPI CredMarshalCredentialA( CRED_MARSHAL_TYPE type, PVOID cred, LPSTR *out )
+{
+    BOOL ret;
+    WCHAR *outW;
+
+    TRACE("%u, %p, %p\n", type, cred, out);
+
+    if ((ret = CredMarshalCredentialW( type, cred, &outW )))
+    {
+        int len = WideCharToMultiByte( CP_ACP, 0, outW, -1, NULL, 0, NULL, NULL );
+        if (!(*out = HeapAlloc( GetProcessHeap(), 0, len )))
+        {
+            HeapFree( GetProcessHeap(), 0, outW );
+            return FALSE;
+        }
+        WideCharToMultiByte( CP_ACP, 0, outW, -1, *out, len, NULL, NULL );
+        HeapFree( GetProcessHeap(), 0, outW );
+    }
+    return ret;
+}
+
+static UINT cred_encode( const char *bin, unsigned int len, WCHAR *cred )
+{
+    static char enc[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#-";
+    UINT n = 0, x;
+
+    while (len > 0)
+    {
+        cred[n++] = enc[bin[0] & 0x3f];
+        x = (bin[0] & 0xc0) >> 6;
+        if (len == 1)
+        {
+            cred[n++] = enc[x];
+            break;
+        }
+        cred[n++] = enc[((bin[1] & 0xf) << 2) | x];
+        x = (bin[1] & 0xf0) >> 4;
+        if (len == 2)
+        {
+            cred[n++] = enc[x];
+            break;
+        }
+        cred[n++] = enc[((bin[2] & 0x3) << 4) | x];
+        cred[n++] = enc[(bin[2] & 0xfc) >> 2];
+        bin += 3;
+        len -= 3;
+    }
+    return n;
+}
+
+/******************************************************************************
+ * CredMarshalCredentialW [ADVAPI32.@]
+ */
+BOOL WINAPI CredMarshalCredentialW( CRED_MARSHAL_TYPE type, PVOID cred, LPWSTR *out )
+{
+    CERT_CREDENTIAL_INFO *cert = cred;
+    USERNAME_TARGET_CREDENTIAL_INFO *target = cred;
+    DWORD len, size;
+    WCHAR *p;
+
+    TRACE("%u, %p, %p\n", type, cred, out);
+
+    if (!cred || (type == CertCredential && cert->cbSize < sizeof(*cert)) ||
+        (type != CertCredential && type != UsernameTargetCredential && type != BinaryBlobCredential) ||
+        (type == UsernameTargetCredential && (!target->UserName || !target->UserName[0])))
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return FALSE;
+    }
+    switch (type)
+    {
+    case CertCredential:
+    {
+        char hash[CERT_HASH_LENGTH + 2];
+
+        memcpy( hash, cert->rgbHashOfCert, sizeof(cert->rgbHashOfCert) );
+        memset( hash + sizeof(cert->rgbHashOfCert), 0, sizeof(hash) - sizeof(cert->rgbHashOfCert) );
+
+        size = sizeof(hash) * 4 / 3;
+        if (!(p = HeapAlloc( GetProcessHeap(), 0, (size + 4) * sizeof(WCHAR) ))) return FALSE;
+        p[0] = '@';
+        p[1] = '@';
+        p[2] = 'A' + type;
+        len = cred_encode( (const char *)hash, sizeof(hash), p + 3 );
+        p[len] = 0;
+        break;
+    }
+    case UsernameTargetCredential:
+    {
+        len = strlenW( target->UserName );
+        size = (sizeof(DWORD) + len * sizeof(WCHAR) + 2) * 4 / 3;
+        if (!(p = HeapAlloc( GetProcessHeap(), 0, (size + 4) * sizeof(WCHAR) ))) return FALSE;
+        p[0] = '@';
+        p[1] = '@';
+        p[2] = 'A' + type;
+        size = len * sizeof(WCHAR);
+        len = cred_encode( (const char *)&size, sizeof(DWORD), p + 3 );
+        len += cred_encode( (const char *)target->UserName, size, p + 3 + len );
+        p[len + 3] = 0;
+        break;
+    }
+    case BinaryBlobCredential:
+        FIXME("BinaryBlobCredential not implemented\n");
+        return FALSE;
+    default:
+        return FALSE;
+    }
+    *out = p;
+    return TRUE;
+}
+
 BOOL
 WINAPI
 CredWriteDomainCredentialsW(PCREDENTIAL_TARGET_INFORMATIONW TargetInfo,
@@ -1916,22 +2030,218 @@ CredWriteDomainCredentialsA(PCREDENTIAL_TARGET_INFORMATIONA TargetInfo,
     return FALSE;
 }
 
-BOOL
-WINAPI
-CredUnmarshalCredentialW(LPCWSTR MarshaledCredential,
-                         PCRED_MARSHAL_TYPE CredType,
-                         PVOID *Credential)
+static inline char char_decode( WCHAR c )
 {
-    WARN("Not implemented\n");
+    if (c >= 'A' && c <= 'Z') return c - 'A';
+    if (c >= 'a' && c <= 'z') return c - 'a' + 26;
+    if (c >= '0' && c <= '9') return c - '0' + 52;
+    if (c == '#') return 62;
+    if (c == '-') return 63;
+    return 64;
+}
+
+static BOOL cred_decode( const WCHAR *cred, unsigned int len, char *buf )
+{
+    unsigned int i = 0;
+    char c0, c1, c2, c3;
+    const WCHAR *p = cred;
+
+    while (len >= 4)
+    {
+        if ((c0 = char_decode( p[0] )) > 63) return FALSE;
+        if ((c1 = char_decode( p[1] )) > 63) return FALSE;
+        if ((c2 = char_decode( p[2] )) > 63) return FALSE;
+        if ((c3 = char_decode( p[3] )) > 63) return FALSE;
+
+        buf[i + 0] = (c1 << 6) | c0;
+        buf[i + 1] = (c2 << 4) | (c1 >> 2);
+        buf[i + 2] = (c3 << 2) | (c2 >> 4);
+        len -= 4;
+        i += 3;
+        p += 4;
+    }
+    if (len == 3)
+    {
+        if ((c0 = char_decode( p[0] )) > 63) return FALSE;
+        if ((c1 = char_decode( p[1] )) > 63) return FALSE;
+        if ((c2 = char_decode( p[2] )) > 63) return FALSE;
+
+        buf[i + 0] = (c1 << 6) | c0;
+        buf[i + 1] = (c2 << 4) | (c1 >> 2);
+        buf[i + 2] = c2 >> 4;
+    }
+    else if (len == 2)
+    {
+        if ((c0 = char_decode( p[0] )) > 63) return FALSE;
+        if ((c1 = char_decode( p[1] )) > 63) return FALSE;
+
+        buf[i + 0] = (c1 << 6) | c0;
+        buf[i + 1] = c1 >> 2;
+        buf[i + 2] = 0;
+    }
+    else if (len == 1)
+    {
+        if ((c0 = char_decode( p[0] )) > 63) return FALSE;
+
+        buf[i + 0] = c0;
+        buf[i + 1] = 0;
+        buf[i + 2] = 0;
+    }
+    return TRUE;
+}
+
+/******************************************************************************
+ * CredUnmarshalCredentialW [ADVAPI32.@]
+ */
+BOOL WINAPI CredUnmarshalCredentialW( LPCWSTR cred, PCRED_MARSHAL_TYPE type, PVOID *out )
+{
+    unsigned int len, buflen;
+
+    TRACE("%s, %p, %p\n", debugstr_w(cred), type, out);
+
+    if (!cred || cred[0] != '@' || cred[1] != '@' || !cred[2] || !cred[3])
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return FALSE;
+    }
+    len = strlenW( cred + 3 );
+    switch (cred[2] - 'A')
+    {
+    case CertCredential:
+    {
+        char hash[CERT_HASH_LENGTH + 2];
+        CERT_CREDENTIAL_INFO *cert;
+
+        if (len != 27 || !cred_decode( cred + 3, len, hash ))
+        {
+            SetLastError( ERROR_INVALID_PARAMETER );
+            return FALSE;
+        }
+        if (!(cert = HeapAlloc( GetProcessHeap(), 0, sizeof(*cert) ))) return FALSE;
+        memcpy( cert->rgbHashOfCert, hash, sizeof(cert->rgbHashOfCert) );
+        cert->cbSize = sizeof(*cert);
+        *type = CertCredential;
+        *out = cert;
+        break;
+    }
+    case UsernameTargetCredential:
+    {
+        USERNAME_TARGET_CREDENTIAL_INFO *target;
+        ULONGLONG size = 0;
+
+        if (len < 9 || !cred_decode( cred + 3, 6, (char *)&size ) ||
+            !size || size % sizeof(WCHAR) || size > INT_MAX)
+        {
+            SetLastError( ERROR_INVALID_PARAMETER );
+            return FALSE;
+        }
+        buflen = sizeof(*target) + size + sizeof(WCHAR);
+        if (!(target = HeapAlloc( GetProcessHeap(), 0, buflen ))) return FALSE;
+        if (!cred_decode( cred + 9, len - 6, (char *)(target + 1) ))
+        {
+            HeapFree( GetProcessHeap(), 0, target );
+            return FALSE;
+        }
+        target->UserName = (WCHAR *)(target + 1);
+        target->UserName[size / sizeof(WCHAR)] = 0;
+        *type = UsernameTargetCredential;
+        *out = target;
+        break;
+    }
+    case BinaryBlobCredential:
+        FIXME("BinaryBlobCredential not implemented\n");
+        return FALSE;
+    default:
+        WARN("unhandled type %u\n", cred[2] - 'A');
+        return FALSE;
+    }
+    return TRUE;
+}
+
+/******************************************************************************
+ * CredUnmarshalCredentialA [ADVAPI32.@]
+ */
+BOOL WINAPI CredUnmarshalCredentialA( LPCSTR cred, PCRED_MARSHAL_TYPE type, PVOID *out )
+{
+    BOOL ret;
+    WCHAR *credW = NULL;
+
+    TRACE("%s, %p, %p\n", debugstr_a(cred), type, out);
+
+    if (cred)
+    {
+        int len = MultiByteToWideChar( CP_ACP, 0, cred, -1, NULL, 0 );
+        if (!(credW = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) ))) return FALSE;
+        MultiByteToWideChar( CP_ACP, 0, cred, -1, credW, len );
+    }
+    ret = CredUnmarshalCredentialW( credW, type, out );
+    HeapFree( GetProcessHeap(), 0, credW );
+    return ret;
+}
+
+
+/******************************************************************************
+ * CredIsMarshaledCredentialW [ADVAPI32.@]
+ *
+ * Check, if the name parameter is a marshaled credential, hash or binary blob
+ *
+ * PARAMS
+ *  name    the name to check
+ *
+ * RETURNS
+ *  TRUE:  the name parameter is a marshaled credential, hash or binary blob
+ *  FALSE: the name is a plain username
+ */
+BOOL WINAPI CredIsMarshaledCredentialW(LPCWSTR name)
+{
+    TRACE("(%s)\n", debugstr_w(name));
+
+    if (name && name[0] == '@' && name[1] == '@' && name[2] > 'A' && name[3])
+    {
+        char hash[CERT_HASH_LENGTH + 2];
+        int len = strlenW(name + 3 );
+        DWORD size;
+
+        if ((name[2] - 'A') == CertCredential && (len == 27) && cred_decode(name + 3, len, hash))
+            return TRUE;
+
+        if (((name[2] - 'A') == UsernameTargetCredential) &&
+            (len >= 9) && cred_decode(name + 3, 6, (char *)&size) && size)
+            return TRUE;
+
+        if ((name[2] - 'A') == BinaryBlobCredential)
+            FIXME("BinaryBlobCredential not checked\n");
+
+        if ((name[2] - 'A') > BinaryBlobCredential)
+            TRACE("unknown type: %d\n", (name[2] - 'A'));
+    }
+
+    SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
 }
 
-BOOL
-WINAPI
-CredUnmarshalCredentialA(LPCSTR MarshaledCredential,
-                         PCRED_MARSHAL_TYPE CredType,
-                         PVOID *Credential)
+/******************************************************************************
+ * CredIsMarshaledCredentialA [ADVAPI32.@]
+ *
+ * See CredIsMarshaledCredentialW
+ *
+ */
+BOOL WINAPI CredIsMarshaledCredentialA(LPCSTR name)
 {
-    WARN("Not implemented\n");
-    return FALSE;
+    LPWSTR nameW = NULL;
+    BOOL res;
+    int len;
+
+    TRACE("(%s)\n", debugstr_a(name));
+
+    if (name)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, name, -1, NULL, 0);
+        nameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        MultiByteToWideChar(CP_ACP, 0, name, -1, nameW, len);
+    }
+
+    res = CredIsMarshaledCredentialW(nameW);
+    HeapFree(GetProcessHeap(), 0, nameW);
+    return res;
 }

@@ -16,11 +16,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#define WIN32_NO_STATUS
+#include <config.h>
 
-#include "wine/debug.h"
-#include "lm.h"
+#include <wine/debug.h>
+//#include "lm.h"
 #include "netbios.h"
+
+#define NTOS_MODE_USER
+#include <ndk/rtlfuncs.h>
+//#include "netapi32.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(netbios);
 
@@ -209,6 +214,13 @@ DWORD WINAPI NetpNetBiosStatusToApiStatus(DWORD nrc)
             ret = NERR_NetworkError;
     }
     return ret;
+}
+
+NET_API_STATUS
+WINAPI
+NetpNtStatusToApiStatus(NTSTATUS Status)
+{
+    return RtlNtStatusToDosError(Status);
 }
 
 NET_API_STATUS WINAPI NetUseEnum(LMSTR server, DWORD level, LPBYTE* bufptr, DWORD prefmaxsize,

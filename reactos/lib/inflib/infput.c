@@ -11,23 +11,23 @@
 #define NDEBUG
 #include <debug.h>
 
-#define EOL      _T("\r\n")
+#define EOL      L"\r\n"
 #define SIZE_INC 1024
 
 typedef struct _OUTPUTBUFFER
 {
-  PCHAR Buffer;
-  PCHAR Current;
+  PWCHAR Buffer;
+  PWCHAR Current;
   ULONG TotalSize;
   ULONG FreeSize;
   INFSTATUS Status;
 } OUTPUTBUFFER, *POUTPUTBUFFER;
 
 static void
-Output(POUTPUTBUFFER OutBuf, PCTSTR Text)
+Output(POUTPUTBUFFER OutBuf, PCWSTR Text)
 {
   ULONG Length;
-  PCHAR NewBuf;
+  PWCHAR NewBuf;
   ULONG NewSize;
 
   /* Skip mode? */
@@ -37,7 +37,7 @@ Output(POUTPUTBUFFER OutBuf, PCTSTR Text)
     }
 
   /* Doesn't fit? */
-  Length = (ULONG)_tcslen(Text);
+  Length = (ULONG)strlenW(Text) * sizeof(WCHAR);
   if (OutBuf->FreeSize < Length + 1 && INF_SUCCESS(OutBuf->Status))
     {
       DPRINT("Out of free space. TotalSize %u FreeSize %u Length %u\n",
@@ -80,7 +80,7 @@ Output(POUTPUTBUFFER OutBuf, PCTSTR Text)
      possible "conversion" from Unicode to Ansi */
   while (Length--)
     {
-      *OutBuf->Current++ = (char) *Text++;
+      *OutBuf->Current++ = *Text++;
       OutBuf->FreeSize--;
     }
   *OutBuf->Current = '\0';
@@ -88,14 +88,14 @@ Output(POUTPUTBUFFER OutBuf, PCTSTR Text)
 
 INFSTATUS
 InfpBuildFileBuffer(PINFCACHE Cache,
-                    PCHAR *Buffer,
+                    PWCHAR *Buffer,
                     PULONG BufferSize)
 {
   OUTPUTBUFFER OutBuf;
   PINFCACHESECTION CacheSection;
   PINFCACHELINE CacheLine;
   PINFCACHEFIELD CacheField;
-  PTCHAR p;
+  PWCHAR p;
   BOOLEAN NeedQuotes;
 
   OutBuf.Buffer = NULL;
@@ -108,14 +108,14 @@ InfpBuildFileBuffer(PINFCACHE Cache,
   CacheSection = Cache->FirstSection;
   while (CacheSection != NULL)
     {
-      DPRINT("Processing section " STRFMT "\n", CacheSection->Name);
+      DPRINT("Processing section %S\n", CacheSection->Name);
       if (CacheSection != Cache->FirstSection)
         {
           Output(&OutBuf, EOL);
         }
-      Output(&OutBuf, _T("["));
+      Output(&OutBuf, L"[");
       Output(&OutBuf, CacheSection->Name);
-      Output(&OutBuf, _T("]"));
+      Output(&OutBuf, L"]");
       Output(&OutBuf, EOL);
 
       /* Iterate through list of lines */
@@ -124,9 +124,9 @@ InfpBuildFileBuffer(PINFCACHE Cache,
         {
           if (NULL != CacheLine->Key)
             {
-              DPRINT("Line with key " STRFMT "\n", CacheLine->Key);
+              DPRINT("Line with key %S\n", CacheLine->Key);
               Output(&OutBuf, CacheLine->Key);
-              Output(&OutBuf, _T(" = "));
+              Output(&OutBuf, L" = ");
             }
           else
             {
@@ -139,21 +139,21 @@ InfpBuildFileBuffer(PINFCACHE Cache,
             {
               if (CacheField != CacheLine->FirstField)
                 {
-                  Output(&OutBuf, _T(","));
+                  Output(&OutBuf, L",");
                 }
               p = CacheField->Data;
               NeedQuotes = FALSE;
-              while (_T('\0') != *p && ! NeedQuotes)
+              while (L'\0' != *p && ! NeedQuotes)
                 {
-                  NeedQuotes = (BOOLEAN)(_T(',') == *p || _T(';') == *p ||
-                                         _T('\\') == *p);
+                  NeedQuotes = (BOOLEAN)(L',' == *p || L';' == *p ||
+                                         L'\\' == *p);
                   p++;
                 }
               if (NeedQuotes)
                 {
-                  Output(&OutBuf, _T("\""));
+                  Output(&OutBuf, L"\"");
                   Output(&OutBuf, CacheField->Data);
-                  Output(&OutBuf, _T("\""));
+                  Output(&OutBuf, L"\"");
                 }
               else
                 {
@@ -188,10 +188,10 @@ InfpBuildFileBuffer(PINFCACHE Cache,
 
 INFSTATUS
 InfpFindOrAddSection(PINFCACHE Cache,
-                     PCTSTR Section,
+                     PCWSTR Section,
                      PINFCONTEXT *Context)
 {
-  DPRINT("InfpFindOrAddSection section " STRFMT "\n", Section);
+  DPRINT("InfpFindOrAddSection section %S\n", Section);
 
   *Context = MALLOC(sizeof(INFCONTEXT));
   if (NULL == *Context)
@@ -219,7 +219,7 @@ InfpFindOrAddSection(PINFCACHE Cache,
 }
 
 INFSTATUS
-InfpAddLineWithKey(PINFCONTEXT Context, PCTSTR Key)
+InfpAddLineWithKey(PINFCONTEXT Context, PCWSTR Key)
 {
   if (NULL == Context)
     {
@@ -244,7 +244,7 @@ InfpAddLineWithKey(PINFCONTEXT Context, PCTSTR Key)
 }
 
 INFSTATUS
-InfpAddField(PINFCONTEXT Context, PCTSTR Data)
+InfpAddField(PINFCONTEXT Context, PCWSTR Data)
 {
   if (NULL == Context || NULL == Context->Line)
     {

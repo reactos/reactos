@@ -55,3 +55,5 @@ void FASTCALL co_WinPosSendSizeMove(PWND Window);
 PWND FASTCALL co_WinPosWindowFromPoint(PWND ScopeWin, POINT *WinPoint, USHORT* HitTest);
 VOID FASTCALL co_WinPosActivateOtherWindow(PWND);
 PWND FASTCALL IntRealChildWindowFromPoint(PWND,LONG,LONG);
+BOOL FASTCALL IntScreenToClient(PWND,LPPOINT);
+BOOL FASTCALL IntClientToScreen(PWND,LPPOINT);

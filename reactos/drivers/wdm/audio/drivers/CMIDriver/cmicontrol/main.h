@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2006-2007 dogbert <dogber1@gmail.com>
+Copyright (c) 2006-2008 dogbert <dogber1@gmail.com>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -24,8 +24,8 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-#pragma once
+#ifndef _MAIN_H_
+#define _MAIN_H_
 
 #include <math.h>
 
@@ -65,7 +65,6 @@ typedef struct _CMIDEV  {
 
 } CMIDEV;
 
-static LRESULT CALLBACK MainDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static LRESULT CALLBACK TabDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 HINSTANCE hInst;
@@ -79,3 +78,5 @@ HWAVEOUT  hWave;
 WAVEHDR   pwh;
 int       currentChannelCount;
 HFONT     hURLFont;
+
+#endif //_MAIN_H_

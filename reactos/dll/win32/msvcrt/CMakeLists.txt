@@ -1,4 +1,5 @@
 
+include_directories(${REACTOS_SOURCE_DIR}/lib/sdk/crt/include)
 spec2def(msvcrt.dll msvcrt.spec ADD_IMPORTLIB)
 
 add_definitions(
@@ -11,10 +12,6 @@ add_definitions(
     -DCRTDLL
     -D__MINGW_IMPORT="")
 
-include_directories(${REACTOS_SOURCE_DIR}/lib/sdk/crt/include)
-
-set_rc_compiler()
-
 list(APPEND SOURCE
     dllmain.c
     stubs.c
@@ -22,11 +19,8 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/msvcrt.def)
 
 add_library(msvcrt SHARED ${SOURCE})
-
 set_module_type(msvcrt win32dll ENTRYPOINT DllMain 12)
-
 add_dependencies(msvcrt psdk)
-
 target_link_libraries(msvcrt crt wine ${PSEH_LIB})
 
 if(MSVC)
@@ -37,4 +31,3 @@ endif()
 add_importlibs(msvcrt kernel32 ntdll)
 add_pch(msvcrt precomp.h)
 add_cd_file(TARGET msvcrt DESTINATION reactos/system32 FOR all)
-

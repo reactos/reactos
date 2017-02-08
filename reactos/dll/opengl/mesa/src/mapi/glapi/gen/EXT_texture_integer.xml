@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<!DOCTYPE OpenGLAPI SYSTEM "gl_API.dtd">
+
+<OpenGLAPI>
+
+<category name="GL_EXT_texture_integer" number="343">
+
+    <enum name="RGBA_INTEGER_MODE_EXT"                  value="0x8D9E">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="RGBA32UI_EXT"                           value="0x8D70"/>
+    <enum name="RGB32UI_EXT"                            value="0x8D71"/>
+    <enum name="ALPHA32UI_EXT"                          value="0x8D72"/>
+    <enum name="INTENSITY32UI_EXT"                      value="0x8D73"/>
+    <enum name="LUMINANCE32UI_EXT"                      value="0x8D74"/>
+    <enum name="LUMINANCE_ALPHA32UI_EXT"                value="0x8D75"/>
+    <enum name="RGBA16UI_EXT"                           value="0x8D76"/>
+    <enum name="RGB16UI_EXT"                            value="0x8D77"/>
+    <enum name="ALPHA16UI_EXT"                          value="0x8D78"/>
+    <enum name="INTENSITY16UI_EXT"                      value="0x8D79"/>
+    <enum name="LUMINANCE16UI_EXT"                      value="0x8D7A"/>
+    <enum name="LUMINANCE_ALPHA16UI_EXT"                value="0x8D7B"/>
+    <enum name="RGBA8UI_EXT"                            value="0x8D7C"/>
+    <enum name="RGB8UI_EXT"                             value="0x8D7D"/>
+    <enum name="ALPHA8UI_EXT"                           value="0x8D7E"/>
+    <enum name="INTENSITY8UI_EXT"                       value="0x8D7F"/>
+    <enum name="LUMINANCE8UI_EXT"                       value="0x8D80"/>
+    <enum name="LUMINANCE_ALPHA8UI_EXT"                 value="0x8D81"/>
+    <enum name="RGBA32I_EXT"                            value="0x8D82"/>
+    <enum name="RGB32I_EXT"                             value="0x8D83"/>
+    <enum name="ALPHA32I_EXT"                           value="0x8D84"/>
+    <enum name="INTENSITY32I_EXT"                       value="0x8D85"/>
+    <enum name="LUMINANCE32I_EXT"                       value="0x8D86"/>
+    <enum name="LUMINANCE_ALPHA32I_EXT"                 value="0x8D87"/>
+    <enum name="RGBA16I_EXT"                            value="0x8D88"/>
+    <enum name="RGB16I_EXT"                             value="0x8D89"/>
+    <enum name="ALPHA16I_EXT"                           value="0x8D8A"/>
+    <enum name="INTENSITY16I_EXT"                       value="0x8D8B"/>
+    <enum name="LUMINANCE16I_EXT"                       value="0x8D8C"/>
+    <enum name="LUMINANCE_ALPHA16I_EXT"                 value="0x8D8D"/>
+    <enum name="RGBA8I_EXT"                             value="0x8D8E"/>
+    <enum name="RGB8I_EXT"                              value="0x8D8F"/>
+    <enum name="ALPHA8I_EXT"                            value="0x8D90"/>
+    <enum name="INTENSITY8I_EXT"                        value="0x8D91"/>
+    <enum name="LUMINANCE8I_EXT"                        value="0x8D92"/>
+    <enum name="LUMINANCE_ALPHA8I_EXT"                  value="0x8D93"/>
+    <enum name="RED_INTEGER_EXT"                        value="0x8D94"/>
+    <enum name="GREEN_INTEGER_EXT"                      value="0x8D95"/>
+    <enum name="BLUE_INTEGER_EXT"                       value="0x8D96"/>
+    <enum name="ALPHA_INTEGER_EXT"                      value="0x8D97"/>
+    <enum name="RGB_INTEGER_EXT"                        value="0x8D98"/>
+    <enum name="RGBA_INTEGER_EXT"                       value="0x8D99"/>
+    <enum name="BGR_INTEGER_EXT"                        value="0x8D9A"/>
+    <enum name="BGRA_INTEGER_EXT"                       value="0x8D9B"/>
+    <enum name="LUMINANCE_INTEGER_EXT"                  value="0x8D9C"/>
+    <enum name="LUMINANCE_ALPHA_INTEGER_EXT"            value="0x8D9D"/>
+
+    <function name="ClearColorIiEXT" offset="assign">
+        <param name="r" type="GLint"/>
+        <param name="g" type="GLint"/>
+        <param name="b" type="GLint"/>
+        <param name="a" type="GLint"/>
+    </function>
+
+    <function name="ClearColorIuiEXT" offset="assign">
+        <param name="r" type="GLuint"/>
+        <param name="g" type="GLuint"/>
+        <param name="b" type="GLuint"/>
+        <param name="a" type="GLuint"/>
+    </function>
+
+    <function name="TexParameterIivEXT" offset="assign">
+        <param name="target" type="GLenum"/>
+        <param name="pname"  type="GLenum"/>
+        <param name="params" type="const GLint *"/>
+    </function>
+
+    <function name="TexParameterIuivEXT" offset="assign">
+        <param name="target" type="GLenum"/>
+        <param name="pname"  type="GLenum"/>
+        <param name="params" type="const GLuint *"/>
+    </function>
+
+    <function name="GetTexParameterIivEXT" offset="assign">
+        <param name="target" type="GLenum"/>
+        <param name="pname"  type="GLenum"/>
+        <param name="params" type="GLint *"/>
+    </function>
+
+    <function name="GetTexParameterIuivEXT" offset="assign">
+        <param name="target" type="GLenum"/>
+        <param name="pname"  type="GLenum"/>
+        <param name="params" type="GLuint *"/>
+    </function>
+
+</category>
+
+</OpenGLAPI>

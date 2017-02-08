@@ -53,7 +53,7 @@ PciDispatchDeviceControl(
   NTSTATUS Status;
 
   UNREFERENCED_PARAMETER(DeviceObject);
-  DPRINT("Called. IRP is at (0x%X)\n", Irp);
+  DPRINT("Called. IRP is at (0x%p)\n", Irp);
 
   Irp->IoStatus.Information = 0;
 
@@ -68,7 +68,7 @@ PciDispatchDeviceControl(
   if (Status != STATUS_PENDING) {
     Irp->IoStatus.Status = Status;
 
-    DPRINT("Completing IRP at 0x%X\n", Irp);
+    DPRINT("Completing IRP at 0x%p\n", Irp);
 
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
   }
@@ -98,7 +98,7 @@ PciPnpControl(
 
   DeviceExtension = (PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-  DPRINT("IsFDO %d\n", DeviceExtension->IsFDO);
+  DPRINT("IsFDO %u\n", DeviceExtension->IsFDO);
 
   if (DeviceExtension->IsFDO) {
     Status = FdoPnpControl(DeviceObject, Irp);
@@ -180,6 +180,7 @@ PciAddDevice(
   return STATUS_SUCCESS;
 }
 
+DRIVER_UNLOAD PciUnload;
 
 VOID
 NTAPI
@@ -187,6 +188,7 @@ PciUnload(
   IN PDRIVER_OBJECT DriverObject)
 {
     /* The driver object extension is destroyed by the I/O manager */
+    UNREFERENCED_PARAMETER(DriverObject);
 }
 
 NTSTATUS

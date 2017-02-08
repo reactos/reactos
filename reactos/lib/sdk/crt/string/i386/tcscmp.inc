@@ -1,5 +1,3 @@
-/* $Id: tcscmp.inc 49591 2010-11-15 01:29:12Z tkreuzer $
- */
 
 #include "tchar.h"
 #include <asm.inc>

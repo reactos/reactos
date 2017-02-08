@@ -15,15 +15,15 @@
 typedef struct _FIBER                                      /* Field offsets:  */
 {                                                          /* 32 bit   64 bit */
     /* this must be the first field */
-    LPVOID Parameter;                                      /*   0x00     0x00 */
-    struct _EXCEPTION_REGISTRATION_RECORD * ExceptionList; /*   0x04     0x08 */
-    LPVOID StackBase;                                      /*   0x08     0x10 */
-    LPVOID StackLimit;                                     /*   0x0C     0x18 */
-    LPVOID DeallocationStack;                              /*   0x10     0x20 */
+    PVOID Parameter;                                       /*   0x00     0x00 */
+    PEXCEPTION_REGISTRATION_RECORD ExceptionList;          /*   0x04     0x08 */
+    PVOID StackBase;                                       /*   0x08     0x10 */
+    PVOID StackLimit;                                      /*   0x0C     0x18 */
+    PVOID DeallocationStack;                               /*   0x10     0x20 */
     CONTEXT Context;                                       /*   0x14     0x28 */
     ULONG GuaranteedStackBytes;                            /*   0x2E0         */
     PVOID FlsData;                                         /*   0x2E4         */
-    PVOID ActivationContextStack;                          /*   0x2E8         */
+    PACTIVATION_CONTEXT_STACK ActivationContextStack;      /*   0x2E8         */
 } FIBER, *PFIBER;
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -171,7 +171,7 @@ CreateFiberEx(SIZE_T dwStackCommitSize,
     PFIBER Fiber;
     NTSTATUS Status;
     INITIAL_TEB InitialTeb;
-    PVOID ActivationContextStack = NULL;
+    PACTIVATION_CONTEXT_STACK ActivationContextStack = NULL;
     DPRINT("Creating Fiber\n");
 
     /* Check for invalid flags */
@@ -195,6 +195,9 @@ CreateFiberEx(SIZE_T dwStackCommitSize,
     Fiber = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(FIBER));
     if (!Fiber)
     {
+        /* Free the activation context stack */
+        RtlFreeActivationContextStack(ActivationContextStack);
+
         /* Fail */
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
@@ -210,9 +213,8 @@ CreateFiberEx(SIZE_T dwStackCommitSize,
         /* Free the fiber */
         RtlFreeHeap(GetProcessHeap(), 0, Fiber);
 
-        /* Free the activation context */
-        DPRINT1("Leaking activation stack because nobody implemented free");
-        //RtlFreeActivationContextStack(&ActivationContextStack);
+        /* Free the activation context stack */
+        RtlFreeActivationContextStack(ActivationContextStack);
 
         /* Failure */
         BaseSetLastNTError(Status);
@@ -271,9 +273,8 @@ DeleteFiber(LPVOID lpFiber)
     /* Get rid of FLS */
     if (Fiber->FlsData) BaseRundownFls(Fiber->FlsData);
 
-    /* Get rid of the activation stack */
-    DPRINT1("Leaking activation stack because nobody implemented free");
-    //RtlFreeActivationContextStack(Fiber->ActivationContextStack);
+    /* Get rid of the activation context stack */
+    RtlFreeActivationContextStack(Fiber->ActivationContextStack);
 
     /* Free the fiber data */
     RtlFreeHeap(GetProcessHeap(), 0, lpFiber);

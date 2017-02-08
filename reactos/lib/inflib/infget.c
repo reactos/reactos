@@ -13,11 +13,156 @@
 #define NDEBUG
 #include <debug.h>
 
+static unsigned int
+InfpSubstituteString(PINFCACHE Inf,
+                     const WCHAR *text,
+                     WCHAR *buffer,
+                     unsigned int size);
+
+/* retrieve the string substitution for a given string, or NULL if not found */
+/* if found, len is set to the substitution length */
+static PCWSTR
+InfpGetSubstitutionString(PINFCACHE Inf,
+                          PCWSTR str,
+                          unsigned int *len,
+                          BOOL no_trailing_slash)
+{
+    static const WCHAR percent = '%';
+
+    INFSTATUS Status = INF_STATUS_NOT_FOUND;
+    PINFCONTEXT Context = NULL;
+    PWCHAR Data = NULL;
+    WCHAR ValueName[MAX_INF_STRING_LENGTH +1];
+    WCHAR StringLangId[13];
+
+    if (!*len)  /* empty string (%%) is replaced by single percent */
+    {
+        *len = 1;
+        return &percent;
+    }
+
+    memcpy(ValueName, str, *len * sizeof(WCHAR));
+    ValueName[*len] = 0;
+
+    DPRINT("Value name: %S\n", ValueName);
+
+    if (Inf->LanguageId != 0)
+    {
+        swprintf(StringLangId,
+                 L"Strings.%04hx",
+                 Inf->LanguageId);
+
+        Status = InfpFindFirstLine(Inf,
+                                   StringLangId,
+                                   ValueName,
+                                   &Context);
+        if (Status != INF_STATUS_SUCCESS)
+        {
+            swprintf(StringLangId,
+                     L"Strings.%04hx",
+                     MAKELANGID(PRIMARYLANGID(Inf->LanguageId), SUBLANG_NEUTRAL));
+
+            Status = InfpFindFirstLine(Inf,
+                                       StringLangId,
+                                       ValueName,
+                                       &Context);
+            if (Status != INF_STATUS_SUCCESS)
+            {
+                Status = InfpFindFirstLine(Inf,
+                                           L"Strings",
+                                           ValueName,
+                                           &Context);
+            }
+        }
+    }
+    else
+    {
+        Status = InfpFindFirstLine(Inf,
+                                   L"Strings",
+                                   ValueName,
+                                   &Context);
+    }
+
+    if (Status != INF_STATUS_SUCCESS || Context == NULL)
+        return NULL;
+
+    Status = InfpGetData(Context,
+                         NULL,
+                         &Data);
+
+    InfpFreeContext(Context);
+
+    if (Status == STATUS_SUCCESS)
+    {
+        *len = strlenW(Data);
+        DPRINT("Substitute: %S  Length: %ul\n", Data, *len);
+        return Data;
+    }
+
+    return NULL;
+}
+
+
+/* do string substitutions on the specified text */
+/* the buffer is assumed to be large enough */
+/* returns necessary length not including terminating null */
+static unsigned int
+InfpSubstituteString(PINFCACHE Inf,
+                     PCWSTR text,
+                     PWSTR buffer,
+                     unsigned int size)
+{
+    const WCHAR *start, *subst, *p;
+    unsigned int len, total = 0;
+    int inside = 0;
+
+    if (!buffer) size = MAX_INF_STRING_LENGTH + 1;
+    for (p = start = text; *p; p++)
+    {
+        if (*p != '%') continue;
+        inside = !inside;
+        if (inside)  /* start of a %xx% string */
+        {
+            len = (unsigned int)(p - start);
+            if (len > size - 1) len = size - 1;
+            if (buffer) memcpy( buffer + total, start, len * sizeof(WCHAR) );
+            total += len;
+            size -= len;
+            start = p;
+        }
+        else /* end of the %xx% string, find substitution */
+        {
+            len = (unsigned int)(p - start - 1);
+            subst = InfpGetSubstitutionString( Inf, start + 1, &len, p[1] == '\\' );
+            if (!subst)
+            {
+                subst = start;
+                len = (unsigned int)(p - start + 1);
+            }
+            if (len > size - 1) len = size - 1;
+            if (buffer) memcpy( buffer + total, subst, len * sizeof(WCHAR) );
+            total += len;
+            size -= len;
+            start = p + 1;
+        }
+    }
+
+    if (start != p) /* unfinished string, copy it */
+    {
+        len = (unsigned int)(p - start);
+        if (len > size - 1) len = size - 1;
+        if (buffer) memcpy( buffer + total, start, len * sizeof(WCHAR) );
+        total += len;
+    }
+    if (buffer && size) buffer[total] = 0;
+    return total;
+}
+
 
 INFSTATUS
 InfpFindFirstLine(PINFCACHE Cache,
-                  PCTSTR Section,
-                  PCTSTR Key,
+                  PCWSTR Section,
+                  PCWSTR Key,
                   PINFCONTEXT *Context)
 {
   PINFCACHESECTION CacheSection;
@@ -94,7 +239,7 @@ InfpFindNextLine(PINFCONTEXT ContextIn,
 
 INFSTATUS
 InfpFindFirstMatchLine(PINFCONTEXT ContextIn,
-                       PCTSTR Key,
+                       PCWSTR Key,
                        PINFCONTEXT ContextOut)
 {
   PINFCACHELINE CacheLine;
@@ -108,7 +253,7 @@ InfpFindFirstMatchLine(PINFCONTEXT ContextIn,
   CacheLine = ((PINFCACHESECTION)(ContextIn->Section))->FirstLine;
   while (CacheLine != NULL)
     {
-      if (CacheLine->Key != NULL && _tcsicmp (CacheLine->Key, Key) == 0)
+      if (CacheLine->Key != NULL && strcmpiW (CacheLine->Key, Key) == 0)
         {
 
           if (ContextIn != ContextOut)
@@ -130,7 +275,7 @@ InfpFindFirstMatchLine(PINFCONTEXT ContextIn,
 
 INFSTATUS
 InfpFindNextMatchLine(PINFCONTEXT ContextIn,
-                      PCTSTR Key,
+                      PCWSTR Key,
                       PINFCONTEXT ContextOut)
 {
   PINFCACHELINE CacheLine;
@@ -144,7 +289,7 @@ InfpFindNextMatchLine(PINFCONTEXT ContextIn,
   CacheLine = (PINFCACHELINE)ContextIn->Line;
   while (CacheLine != NULL)
     {
-      if (CacheLine->Key != NULL && _tcsicmp (CacheLine->Key, Key) == 0)
+      if (CacheLine->Key != NULL && strcmpiW (CacheLine->Key, Key) == 0)
         {
 
           if (ContextIn != ContextOut)
@@ -166,7 +311,7 @@ InfpFindNextMatchLine(PINFCONTEXT ContextIn,
 
 LONG
 InfpGetLineCount(HINF InfHandle,
-                 PCTSTR Section)
+                 PCWSTR Section)
 {
   PINFCACHE Cache;
   PINFCACHESECTION CacheSection;
@@ -184,7 +329,7 @@ InfpGetLineCount(HINF InfHandle,
   while (CacheSection != NULL)
     {
       /* Are the section names the same? */
-      if (_tcsicmp(CacheSection->Name, Section) == 0)
+      if (strcmpiW(CacheSection->Name, Section) == 0)
         {
           return CacheSection->LineCount;
         }
@@ -257,7 +402,7 @@ InfpGetBinaryField(PINFCONTEXT Context,
       Ptr = ReturnBuffer;
       while (CacheField != NULL)
         {
-          *Ptr = (UCHAR)_tcstoul (CacheField->Data, NULL, 16);
+          *Ptr = (UCHAR)strtoulW(CacheField->Data, NULL, 16);
 
           Ptr++;
           CacheField = CacheField->Next;
@@ -271,12 +416,12 @@ InfpGetBinaryField(PINFCONTEXT Context,
 INFSTATUS
 InfpGetIntField(PINFCONTEXT Context,
                 ULONG FieldIndex,
-                INT* IntegerValue)
+                INT *IntegerValue)
 {
   PINFCACHELINE CacheLine;
   PINFCACHEFIELD CacheField;
   ULONG Index;
-  PTCHAR Ptr;
+  PWCHAR Ptr;
 
   if (Context == NULL || Context->Line == NULL || IntegerValue == NULL)
     {
@@ -305,7 +450,7 @@ InfpGetIntField(PINFCONTEXT Context,
       Ptr = CacheField->Data;
     }
 
-  *IntegerValue = (LONG)_tcstol(Ptr, NULL, 0);
+  *IntegerValue = (LONG)strtolW(Ptr, NULL, 0);
 
   return INF_STATUS_SUCCESS;
 }
@@ -314,7 +459,7 @@ InfpGetIntField(PINFCONTEXT Context,
 INFSTATUS
 InfpGetMultiSzField(PINFCONTEXT Context,
                     ULONG FieldIndex,
-                    PTSTR ReturnBuffer,
+                    PWSTR ReturnBuffer,
                     ULONG ReturnBufferSize,
                     PULONG RequiredSize)
 {
@@ -323,7 +468,7 @@ InfpGetMultiSzField(PINFCONTEXT Context,
   PINFCACHEFIELD FieldPtr;
   ULONG Index;
   ULONG Size;
-  PTCHAR Ptr;
+  PWCHAR Ptr;
 
   if (Context == NULL || Context->Line == NULL || FieldIndex == 0)
     {
@@ -348,7 +493,7 @@ InfpGetMultiSzField(PINFCONTEXT Context,
   Size = 0;
   while (FieldPtr != NULL)
     {
-      Size += ((ULONG)_tcslen (FieldPtr->Data) + 1);
+      Size += ((ULONG)strlenW(FieldPtr->Data) + 1);
       FieldPtr = FieldPtr->Next;
     }
   Size++;
@@ -366,9 +511,9 @@ InfpGetMultiSzField(PINFCONTEXT Context,
       FieldPtr = CacheField;
       while (FieldPtr != NULL)
         {
-          Size = (ULONG)_tcslen (FieldPtr->Data) + 1;
+          Size = (ULONG)strlenW(FieldPtr->Data) + 1;
 
-          _tcscpy (Ptr, FieldPtr->Data);
+          strcpyW(Ptr, FieldPtr->Data);
 
           Ptr = Ptr + Size;
           FieldPtr = FieldPtr->Next;
@@ -383,14 +528,14 @@ InfpGetMultiSzField(PINFCONTEXT Context,
 INFSTATUS
 InfpGetStringField(PINFCONTEXT Context,
                    ULONG FieldIndex,
-                   PTSTR ReturnBuffer,
+                   PWSTR ReturnBuffer,
                    ULONG ReturnBufferSize,
                    PULONG RequiredSize)
 {
   PINFCACHELINE CacheLine;
   PINFCACHEFIELD CacheField;
   ULONG Index;
-  PTCHAR Ptr;
+  PWCHAR Ptr;
   ULONG Size;
 
   if (Context == NULL || Context->Line == NULL || FieldIndex == 0)
@@ -420,17 +565,25 @@ InfpGetStringField(PINFCONTEXT Context,
       Ptr = CacheField->Data;
     }
 
-  Size = (ULONG)_tcslen (Ptr) + 1;
+//  Size = (ULONG)strlenW(Ptr) + 1;
+  Size = InfpSubstituteString(Context->Inf,
+                              Ptr,
+                              NULL,
+                              0);
 
   if (RequiredSize != NULL)
-    *RequiredSize = Size;
+    *RequiredSize = Size + 1;
 
   if (ReturnBuffer != NULL)
     {
-      if (ReturnBufferSize < Size)
+      if (ReturnBufferSize <= Size)
         return INF_STATUS_BUFFER_OVERFLOW;
 
-      _tcscpy (ReturnBuffer, Ptr);
+//      strcpyW(ReturnBuffer, Ptr);
+      InfpSubstituteString(Context->Inf,
+                           Ptr,
+                           ReturnBuffer,
+                           ReturnBufferSize);
     }
 
   return INF_STATUS_SUCCESS;
@@ -439,8 +592,8 @@ InfpGetStringField(PINFCONTEXT Context,
 
 INFSTATUS
 InfpGetData(PINFCONTEXT Context,
-            PTCHAR *Key,
-            PTCHAR *Data)
+            PWCHAR *Key,
+            PWCHAR *Data)
 {
   PINFCACHELINE CacheKey;
 
@@ -473,7 +626,7 @@ InfpGetData(PINFCONTEXT Context,
 INFSTATUS
 InfpGetDataField(PINFCONTEXT Context,
                  ULONG FieldIndex,
-                 PTCHAR *Data)
+                 PWCHAR *Data)
 {
   PINFCACHELINE CacheLine;
   PINFCACHEFIELD CacheField;

@@ -6,6 +6,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #ifndef _MSC_VER
@@ -19,7 +20,8 @@ typedef unsigned __int32 uint32_t;
 #define SW_SHOWNORMAL 1
 #define SW_SHOWMINNOACTIVE 7
 
-typedef struct _GUID {
+typedef struct _GUID
+{
     uint32_t Data1;
     uint16_t  Data2;
     uint16_t  Data3;
@@ -140,7 +142,7 @@ int main(int argc, const char *argv[])
     LNK_HEADER Header;
     uint16_t uhTmp;
     uint32_t dwTmp;
-    
+
     for (i = 1; i < argc; ++i)
     {
         if (argv[i][0] != '-' && argv[i][0] != '/')
@@ -166,8 +168,8 @@ int main(int argc, const char *argv[])
         else if (!strcmp(argv[i] + 1, "g") && i + 1 < argc)
         {
             unsigned Data4Tmp[8], j;
-            
-            sscanf(argv[++i], "{%8lx-%4hx-%4hx-%2x%2x-%2x%2x%2x%2x%2x%2x}",
+
+            sscanf(argv[++i], "{%8x-%4hx-%4hx-%2x%2x-%2x%2x%2x%2x%2x%2x}",
                   &Guid.Data1, &Guid.Data2, &Guid.Data3,
                   &Data4Tmp[0], &Data4Tmp[1], &Data4Tmp[2], &Data4Tmp[3],
                   &Data4Tmp[4], &Data4Tmp[5], &Data4Tmp[6], &Data4Tmp[7]);
@@ -177,7 +179,7 @@ int main(int argc, const char *argv[])
         else
             printf("Invalid option: %s\n", argv[i]);
     }
-    
+
     if (!pszTarget || bHelp)
     {
         printf("Usage: %s [-o path][-d descr][-w path][-c cmd_line_args][-i icon_path [nr]][-h][-g guid] target\n"
@@ -191,14 +193,14 @@ int main(int argc, const char *argv[])
                "target\tAbsolute or relative to guid specified with -g option path\n", argv[0]);
         return 0;
     }
-    
+
     pFile = fopen(pszOutputPath, "wb");
     if (!pFile)
     {
         printf("Failed to open %s\n", pszOutputPath);
         return -1;
     }
-    
+
     // Header
     memset(&Header, 0, sizeof(Header));
     Header.Signature = (uint32_t)'L';
@@ -215,7 +217,7 @@ int main(int argc, const char *argv[])
     Header.IconNr = IconNr;
     Header.Show = bMinimized ? SW_SHOWMINNOACTIVE : SW_SHOWNORMAL;
     fwrite(&Header, sizeof(Header), 1, pFile);
-    
+
     if (Header.Flags & LINK_ID_LIST)
     {
         ID_LIST_FILE IdListFile;
@@ -223,12 +225,12 @@ int main(int argc, const char *argv[])
         ID_LIST_DRIVE IdListDrive;
         unsigned cbListSize = sizeof(IdListGuid) + sizeof(uint16_t), cchName;
         const char *pszName = pszTarget;
-        
+
         // ID list
         // It seems explorer does not accept links without id list. List is relative to desktop.
-        
+
         pszName = pszTarget;
-        
+
         if (pszName[0] && pszName[1] == ':')
         {
             cbListSize += sizeof(IdListDrive);
@@ -236,32 +238,32 @@ int main(int argc, const char *argv[])
             while (*pszName == '\\' || *pszName == '/')
                 ++pszName;
         }
-        
+
         while (*pszName)
         {
             cchName = 0;
             while (pszName[cchName] && pszName[cchName] != '\\' && pszName[cchName] != '/')
                 ++cchName;
-            
+
             if (cchName != 1 || pszName[0] != '.')
                 cbListSize += sizeof(IdListFile) + 2 * (cchName + 1);
-            
+
             pszName += cchName;
             while (*pszName == '\\' || *pszName == '/')
                 ++pszName;
         }
-        
+
         uhTmp = cbListSize;
         fwrite(&uhTmp, sizeof(uhTmp), 1, pFile); // size
-        
+
         IdListGuid.Size = sizeof(IdListGuid);
         IdListGuid.Type = PT_GUID;
         IdListGuid.dummy = 0x50;
         IdListGuid.guid = Guid;
         fwrite(&IdListGuid, sizeof(IdListGuid), 1, pFile);
-        
+
         pszName = pszTarget;
-        
+
         if (isalpha(pszName[0]) && pszName[1] == ':')
         {
             memset(&IdListDrive, 0, sizeof(IdListDrive));
@@ -273,13 +275,13 @@ int main(int argc, const char *argv[])
             while(*pszName == '\\' || *pszName == '/')
                 ++pszName;
         }
-        
+
         while (*pszName)
         {
             cchName = 0;
             while (pszName[cchName] && pszName[cchName] != '\\' && pszName[cchName] != '/')
                 ++cchName;
-            
+
             if (cchName != 1 || pszName[0] != '.')
             {
                 memset(&IdListFile, 0, sizeof(IdListFile));
@@ -294,16 +296,16 @@ int main(int argc, const char *argv[])
                 fwrite(pszName, cchName, 1, pFile);
                 fputc(0, pFile);
             }
-            
+
             pszName += cchName;
             while (*pszName == '\\' || *pszName == '/')
                 ++pszName;
         }
-        
+
         uhTmp = 0; // list end
         fwrite(&uhTmp, sizeof(uhTmp), 1, pFile);
     }
-    
+
     if (Header.Flags & LINK_DESCRIPTION)
     {
         // Dscription
@@ -311,7 +313,7 @@ int main(int argc, const char *argv[])
         fwrite(&uhTmp, sizeof(uhTmp), 1, pFile);
         fputs(pszDescription, pFile);
     }
-    
+
     if (Header.Flags & LINK_RELATIVE_PATH)
     {
         // Relative Path
@@ -319,7 +321,7 @@ int main(int argc, const char *argv[])
         fwrite(&uhTmp, sizeof(uhTmp), 1, pFile);
         fputs(pszTarget, pFile);
     }
-    
+
     if (Header.Flags & LINK_WORKING_DIR)
     {
         // Working Dir
@@ -327,7 +329,7 @@ int main(int argc, const char *argv[])
         fwrite(&uhTmp, sizeof(uhTmp), 1, pFile);
         fputs(pszWorkingDir, pFile);
     }
-    
+
     if (Header.Flags & LINK_CMD_LINE_ARGS)
     {
         // Command line arguments
@@ -335,7 +337,7 @@ int main(int argc, const char *argv[])
         fwrite(&uhTmp, sizeof(uhTmp), 1, pFile);
         fputs(pszCmdLineArgs, pFile);
     }
-    
+
     if (Header.Flags & LINK_ICON)
     {
         // Command line arguments
@@ -343,12 +345,12 @@ int main(int argc, const char *argv[])
         fwrite(&uhTmp, sizeof(uhTmp), 1, pFile);
         fputs(pszIcon, pFile);
     }
-    
+
     // Extra stuff
     dwTmp = 0;
     fwrite(&dwTmp, sizeof(dwTmp), 1, pFile);
-    
+
     fclose(pFile);
-    
+
     return 0;
 }

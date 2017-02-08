@@ -21,23 +21,23 @@
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-#include <stdarg.h>
+//#include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "winerror.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winuser.h"
+//#include "winreg.h"
+//#include "winerror.h"
 
 #include "quartz_private.h"
 
-#include "ole2.h"
-#include "olectl.h"
-#include "strmif.h"
-#include "wine/unicode.h"
-#include "uuids.h"
+//#include "ole2.h"
+//#include "olectl.h"
+//#include "strmif.h"
+#include <wine/unicode.h>
+//#include "uuids.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 

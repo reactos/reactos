@@ -14,11 +14,11 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/pdh.def)
 
 add_library(pdh SHARED ${SOURCE})
-set_module_type(pdh win32dll ENTRYPOINT 0 )
+set_module_type(pdh win32dll)
 
 target_link_libraries(pdh wine)
 
-add_importlibs(pdh kernel32 ntdll msvcrt)
+add_importlibs(pdh msvcrt kernel32 ntdll)
 
 
 add_cd_file(TARGET pdh DESTINATION reactos/system32 FOR all)

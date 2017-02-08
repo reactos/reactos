@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#pragma once
+
 #define ID_REGISTRY_MENU                0
 #define ID_EDIT_MENU                    1
 #define ID_VIEW_MENU                    2
@@ -167,78 +169,80 @@
 #define IDS_FLT_ALLFILES                31007
 #define IDS_FLT_ALLFILES_FLT            31008
 
-#define IDS_ACCESS_FULLCONTROL          31101
-#define IDS_ACCESS_READ                 31102
-#define IDS_ACCESS_QUERYVALUE           31103
-#define IDS_ACCESS_SETVALUE             31104
-#define IDS_ACCESS_CREATESUBKEY         31105
-#define IDS_ACCESS_ENUMERATESUBKEYS     31106
-#define IDS_ACCESS_NOTIFY               31107
-#define IDS_ACCESS_CREATELINK           31108
-#define IDS_ACCESS_DELETE               31109
-#define IDS_ACCESS_WRITEDAC             31110
-#define IDS_ACCESS_WRITEOWNER           31111
-#define IDS_ACCESS_READCONTROL          31112
+#define IDS_ACCESS_FULLCONTROL          31100
+#define IDS_ACCESS_READ                 31101
+#define IDS_ACCESS_QUERYVALUE           31102
+#define IDS_ACCESS_SETVALUE             31103
+#define IDS_ACCESS_CREATESUBKEY         31104
+#define IDS_ACCESS_ENUMERATESUBKEYS     31105
+#define IDS_ACCESS_NOTIFY               31106
+#define IDS_ACCESS_CREATELINK           31107
+#define IDS_ACCESS_DELETE               31108
+#define IDS_ACCESS_WRITEDAC             31109
+#define IDS_ACCESS_WRITEOWNER           31110
+#define IDS_ACCESS_READCONTROL          31111
 
-#define IDS_INHERIT_THISKEYONLY         31121
-#define IDS_INHERIT_THISKEYANDSUBKEYS   31122
-#define IDS_INHERIT_SUBKEYSONLY         31123
-#define IDS_EXPAND                      31124
-#define IDS_COLLAPSE                    31125
-#define IDS_NEW_KEY                     31126
-#define IDS_NEW_VALUE                   31127
-#define IDS_GOTO_SUGGESTED_KEY          31128
+#define IDS_INHERIT_THISKEYONLY         31200
+#define IDS_INHERIT_THISKEYANDSUBKEYS   31201
+#define IDS_INHERIT_SUBKEYSONLY         31202
+#define IDS_EXPAND                      31203
+#define IDS_COLLAPSE                    31204
+#define IDS_NEW_KEY                     31205
+#define IDS_NEW_VALUE                   31206
+#define IDS_GOTO_SUGGESTED_KEY          31207
 
-#define IDS_IMPORT_PROMPT               31129
-#define IDS_IMPORTED_OK                 31130
+#define IDS_IMPORT_PROMPT               31300
+#define IDS_IMPORT_OK                   31301
+#define IDS_IMPORT_ERROR                31302
+#define IDS_EXPORT_ERROR                31303
 
-#define IDS_FINISHEDFIND                31131
+#define IDS_FINISHEDFIND                31304
 
-#define IDS_BUSNUMBER                   31132
-#define IDS_INTERFACE                   31133
+#define IDS_BUSNUMBER                   31400
+#define IDS_INTERFACE                   31401
 
-#define IDS_DMA_CHANNEL                 31134
-#define IDS_DMA_PORT                    31135
-#define IDS_INTERRUPT_VECTOR            31136
-#define IDS_INTERRUPT_LEVEL             31137
-#define IDS_INTERRUPT_AFFINITY          31138
-#define IDS_INTERRUPT_TYPE              31139
-#define IDS_MEMORY_ADDRESS              31140
-#define IDS_MEMORY_LENGTH               31141
-#define IDS_MEMORY_ACCESS               31142
-#define IDS_PORT_ADDRESS                31143
-#define IDS_PORT_LENGTH                 31144
-#define IDS_PORT_ACCESS                 31145
-#define IDS_SPECIFIC_RESERVED1          31146
-#define IDS_SPECIFIC_RESERVED2          31147
-#define IDS_SPECIFIC_DATASIZE           31148
+#define IDS_DMA_CHANNEL                 31500
+#define IDS_DMA_PORT                    31501
+#define IDS_INTERRUPT_VECTOR            31502
+#define IDS_INTERRUPT_LEVEL             31503
+#define IDS_INTERRUPT_AFFINITY          31504
+#define IDS_INTERRUPT_TYPE              31505
+#define IDS_MEMORY_ADDRESS              31506
+#define IDS_MEMORY_LENGTH               31507
+#define IDS_MEMORY_ACCESS               31508
+#define IDS_PORT_ADDRESS                31509
+#define IDS_PORT_LENGTH                 31510
+#define IDS_PORT_ACCESS                 31511
+#define IDS_SPECIFIC_RESERVED1          31512
+#define IDS_SPECIFIC_RESERVED2          31513
+#define IDS_SPECIFIC_DATASIZE           31514
 
-#define IDS_PORT_PORT_IO                31149
-#define IDS_PORT_MEMORY_IO              31150
-#define IDS_INTERRUPT_EDGE_SENSITIVE    31151
-#define IDS_INTERRUPT_LEVEL_SENSITIVE   31152
-#define IDS_MEMORY_READ_ONLY            31153
-#define IDS_MEMORY_WRITE_ONLY           31154
-#define IDS_MEMORY_READ_WRITE           31155
+#define IDS_PORT_PORT_IO                31520
+#define IDS_PORT_MEMORY_IO              31521
+#define IDS_INTERRUPT_EDGE_SENSITIVE    31522
+#define IDS_INTERRUPT_LEVEL_SENSITIVE   31523
+#define IDS_MEMORY_READ_ONLY            31524
+#define IDS_MEMORY_WRITE_ONLY           31525
+#define IDS_MEMORY_READ_WRITE           31526
 
-#define IDS_BUS_UNDEFINED               31156
-#define IDS_BUS_INTERNAL                31157
-#define IDS_BUS_ISA                     31158
-#define IDS_BUS_EISA                    31159
-#define IDS_BUS_MICROCHANNEL            31160
-#define IDS_BUS_TURBOCHANNEL            31161
-#define IDS_BUS_PCIBUS                  31162
-#define IDS_BUS_VMEBUS                  31163
-#define IDS_BUS_NUBUS                   31164
-#define IDS_BUS_PCMCIABUS               31165
-#define IDS_BUS_CBUS                    31166
-#define IDS_BUS_MPIBUS                  31167
-#define IDS_BUS_MPSABUS                 31168
-#define IDS_BUS_PROCESSORINTERNAL       31169
-#define IDS_BUS_INTERNALPOWERBUS        31170
-#define IDS_BUS_PNPISABUS               31171
-#define IDS_BUS_PNPBUS                  31172
-#define IDS_BUS_UNKNOWNTYPE             31173
+#define IDS_BUS_UNDEFINED               31530
+#define IDS_BUS_INTERNAL                31531
+#define IDS_BUS_ISA                     31532
+#define IDS_BUS_EISA                    31533
+#define IDS_BUS_MICROCHANNEL            31534
+#define IDS_BUS_TURBOCHANNEL            31535
+#define IDS_BUS_PCIBUS                  31536
+#define IDS_BUS_VMEBUS                  31537
+#define IDS_BUS_NUBUS                   31538
+#define IDS_BUS_PCMCIABUS               31539
+#define IDS_BUS_CBUS                    31540
+#define IDS_BUS_MPIBUS                  31541
+#define IDS_BUS_MPSABUS                 31542
+#define IDS_BUS_PROCESSORINTERNAL       31543
+#define IDS_BUS_INTERNALPOWERBUS        31544
+#define IDS_BUS_PNPISABUS               31545
+#define IDS_BUS_PNPBUS                  31546
+#define IDS_BUS_UNKNOWNTYPE             31547
 
 #define IDD_EDIT_STRING                  2000
 #define IDC_VALUE_NAME                   2001
@@ -291,6 +295,5 @@
 #define ID_FAVORITES_MAX                 2999
 
 #define ID_ACCEL                         3000
-
 
 #define IDC_STATIC                         -1

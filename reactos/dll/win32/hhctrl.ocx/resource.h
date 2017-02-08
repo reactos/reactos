@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windef.h>
-#include <winbase.h>
+//#include <windef.h>
+//#include <winbase.h>
 #include <wingdi.h>
 #include <htmlhelp.h>
 
@@ -27,3 +27,24 @@
 #define IDS_INDEX       2
 #define IDS_SEARCH      3
 #define IDS_FAVORITES   4
+#define IDS_HIDETABS    5
+#define IDS_SHOWTABS    6
+
+#define MENU_POPUP      1
+
+#define IDB_HHTOOLBAR   1000
+/* IDB_HHTOOLBAR bitmaps: */
+#define HHTB_STOP       0
+#define HHTB_REFRESH    1
+#define HHTB_HOME       2
+#define HHTB_SYNC       3
+#define HHTB_CONTRACT   4
+#define HHTB_EXPAND     5
+#define HHTB_NUMBITMAPS HHTB_EXPAND
+
+#define IDB_HHTREEVIEW  1001
+/* IDB_HHTREEVIEW bitmaps: */
+#define HHTV_DOCUMENT   0
+#define HHTV_FOLDER     1
+#define HHTV_OPENFOLDER 2
+#define HHTV_NUMBITMAPS HHTV_OPENFOLDER

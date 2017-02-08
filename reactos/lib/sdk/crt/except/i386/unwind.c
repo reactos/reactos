@@ -1,6 +1,5 @@
 #define WIN32_NO_STATUS
 #include <precomp.h>
-#include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/umtypes.h>
 #include <ndk/extypes.h>

@@ -5,16 +5,16 @@ list(APPEND SOURCE
     bootvid.rc
     ${CMAKE_CURRENT_BINARY_DIR}/bootvid.def)
 
-if(ARCH MATCHES i386 OR ARCH MATCHES amd64)
+if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
 list(APPEND SOURCE
     i386/bootvid.c
     i386/bootdata.c
     i386/vga.c)
-elseif(ARCH MATCHES arm)
+elseif(ARCH STREQUAL "arm")
 list(APPEND SOURCE
     arm/bootvid.c
     arm/bootdata.c)
-endif(ARCH MATCHES i386 OR ARCH MATCHES amd64)
+endif(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
 
 add_library(bootvid SHARED ${SOURCE})
 

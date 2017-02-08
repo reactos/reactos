@@ -58,8 +58,7 @@
  *        Remove all hardcode string to En.rc
  */
 
-#include <precomp.h>
-
+#include "precomp.h"
 
 /* The stack of current batch contexts.
  * NULL when no batch is active

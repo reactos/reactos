@@ -102,11 +102,12 @@ the page is present.
 
 NTSTATUS
 NTAPI
-MmNotPresentFaultCachePage(PMMSUPPORT AddressSpace,
-                           MEMORY_AREA* MemoryArea,
-                           PVOID Address,
-                           BOOLEAN Locked,
-                           PMM_REQUIRED_RESOURCES Required)
+MmNotPresentFaultCachePage (
+    _In_ PMMSUPPORT AddressSpace,
+    _In_ MEMORY_AREA* MemoryArea,
+    _In_ PVOID Address,
+    _In_ BOOLEAN Locked,
+    _Inout_ PMM_REQUIRED_RESOURCES Required)
 {
     NTSTATUS Status;
     PVOID PAddress;
@@ -188,7 +189,7 @@ MmNotPresentFaultCachePage(PMMSUPPORT AddressSpace,
         }
         else
         {
-            DPRINT("Set %x in address space @ %x\n", Required->Page[0], Address);
+            DPRINT("Set %x in address space @ %p\n", Required->Page[0], Address);
             Status = MmCreateVirtualMapping(Process,
                                             Address,
                                             Attributes,
@@ -317,11 +318,12 @@ In the ultimate form of this code, CoW is reenabled.
 
 NTSTATUS
 NTAPI
-MiCowCacheSectionPage(PMMSUPPORT AddressSpace,
-                      PMEMORY_AREA MemoryArea,
-                      PVOID Address,
-                      BOOLEAN Locked,
-                      PMM_REQUIRED_RESOURCES Required)
+MiCowCacheSectionPage (
+    _In_ PMMSUPPORT AddressSpace,
+    _In_ PMEMORY_AREA MemoryArea,
+    _In_ PVOID Address,
+    _In_ BOOLEAN Locked,
+    _Inout_ PMM_REQUIRED_RESOURCES Required)
 {
     PMM_SECTION_SEGMENT Segment;
     PFN_NUMBER NewPage, OldPage;
@@ -330,7 +332,7 @@ MiCowCacheSectionPage(PMMSUPPORT AddressSpace,
     LARGE_INTEGER Offset;
     PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
 
-    DPRINT("MmAccessFaultSectionView(%x, %x, %x, %x)\n",
+    DPRINT("MmAccessFaultSectionView(%p, %p, %p, %u)\n",
            AddressSpace,
            MemoryArea,
            Address,
@@ -356,11 +358,11 @@ MiCowCacheSectionPage(PMMSUPPORT AddressSpace,
 #endif
         {
             ULONG_PTR Entry;
-            DPRINTC("setting non-cow page %x %x:%x offset %x (%x) to writable\n",
+            DPRINTC("setting non-cow page %p %p:%p offset %I64x (%Ix) to writable\n",
                     Segment,
                     Process,
                     PAddress,
-                    Offset.u.LowPart,
+                    Offset.QuadPart,
                     MmGetPfnForProcess(Process, Address));
             if (Segment->FileObject)
             {
@@ -422,8 +424,8 @@ MiCowCacheSectionPage(PMMSUPPORT AddressSpace,
 
     DPRINT("Allocated page %x\n", NewPage);
 
-   /* Unshare the old page */
-   MmDeleteRmap(OldPage, Process, PAddress);
+    /* Unshare the old page */
+    MmDeleteRmap(OldPage, Process, PAddress);
 
    /* Copy the old page */
     DPRINT("Copying\n");
@@ -448,7 +450,7 @@ MiCowCacheSectionPage(PMMSUPPORT AddressSpace,
     MmReleasePageMemoryConsumer(MC_CACHE, OldPage);
     MmUnlockSectionSegment(Segment);
 
-    DPRINT("Address 0x%.8X\n", Address);
+    DPRINT("Address 0x%p\n", Address);
     return STATUS_SUCCESS;
 }
 
@@ -474,10 +476,13 @@ by fault handling, making recursive fault handling possible when required.
 
 */
 
+_Function_class_(WORKER_THREAD_ROUTINE)
 VOID
 NTAPI
-MmpFaultWorker(PWORK_QUEUE_WITH_CONTEXT WorkItem)
+MmpFaultWorker(PVOID Parameter)
 {
+    PWORK_QUEUE_WITH_CONTEXT WorkItem = Parameter;
+
     DPRINT("Calling work\n");
     WorkItem->Status = WorkItem->Required->DoAcquisition(WorkItem->AddressSpace,
                                                          WorkItem->MemoryArea,
@@ -534,11 +539,11 @@ MmpSectionAccessFaultInner(KPROCESSOR_MODE Mode,
 
     RtlZeroMemory(&Context, sizeof(WORK_QUEUE_WITH_CONTEXT));
 
-    DPRINT("MmAccessFault(Mode %d, Address %x)\n", Mode, Address);
+    DPRINT("MmAccessFault(Mode %d, Address %Ix)\n", Mode, Address);
 
     if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
     {
-        DPRINT1("Page fault at high IRQL was %d\n", KeGetCurrentIrql());
+        DPRINT1("Page fault at high IRQL was %u\n", KeGetCurrentIrql());
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -548,7 +553,7 @@ MmpSectionAccessFaultInner(KPROCESSOR_MODE Mode,
         /* Check permissions */
         if (Mode != KernelMode)
         {
-            DPRINT("MmAccessFault(Mode %d, Address %x)\n", Mode, Address);
+            DPRINT("MmAccessFault(Mode %d, Address %Ix)\n", Mode, Address);
             return STATUS_ACCESS_VIOLATION;
         }
         AddressSpace = MmGetKernelAddressSpace();
@@ -573,11 +578,11 @@ MmpSectionAccessFaultInner(KPROCESSOR_MODE Mode,
             {
                 MmUnlockAddressSpace(AddressSpace);
             }
-            DPRINT("Address: %x\n", Address);
+            DPRINT("Address: %Ix\n", Address);
             return STATUS_ACCESS_VIOLATION;
         }
 
-        DPRINT("Type %x (%x -> %x)\n",
+        DPRINT("Type %x (%p -> %p)\n",
                MemoryArea->Type,
                MemoryArea->StartingAddress,
                MemoryArea->EndingAddress);
@@ -600,9 +605,9 @@ MmpSectionAccessFaultInner(KPROCESSOR_MODE Mode,
         if (Status == STATUS_SUCCESS + 1)
         {
             /* Wait page ... */
-            DPRINT("Waiting for %x\n", Address);
+            DPRINT("Waiting for %Ix\n", Address);
             MiWaitForPageEvent(MmGetAddressSpaceOwner(AddressSpace), Address);
-            DPRINT("Restarting fault %x\n", Address);
+            DPRINT("Restarting fault %Ix\n", Address);
             Status = STATUS_MM_RESTART_OPERATION;
         }
         else if (Status == STATUS_MM_RESTART_OPERATION)
@@ -614,7 +619,7 @@ MmpSectionAccessFaultInner(KPROCESSOR_MODE Mode,
         {
             if (Thread->ActiveFaultCount > 0)
             {
-                DPRINT("Already fault handling ... going to work item (%x)\n",
+                DPRINT("Already fault handling ... going to work item (%Ix)\n",
                        Address);
                 Context.AddressSpace = AddressSpace;
                 Context.MemoryArea = MemoryArea;
@@ -622,7 +627,7 @@ MmpSectionAccessFaultInner(KPROCESSOR_MODE Mode,
                 KeInitializeEvent(&Context.Wait, NotificationEvent, FALSE);
 
                 ExInitializeWorkItem(&Context.WorkItem,
-                                     (PWORKER_THREAD_ROUTINE)MmpFaultWorker,
+                                     MmpFaultWorker,
                                      &Context);
 
                 DPRINT("Queue work item\n");
@@ -652,8 +657,8 @@ MmpSectionAccessFaultInner(KPROCESSOR_MODE Mode,
 
     if (!NT_SUCCESS(Status) && MemoryArea->Type == 1)
     {
-        DPRINT1("Completed page fault handling %x %x\n", Address, Status);
-        DPRINT1("Type %x (%x -> %x)\n",
+        DPRINT1("Completed page fault handling %Ix %x\n", Address, Status);
+        DPRINT1("Type %x (%p -> %p)\n",
                 MemoryArea->Type,
                 MemoryArea->StartingAddress,
                 MemoryArea->EndingAddress);
@@ -688,13 +693,13 @@ MmAccessFaultCacheSection(KPROCESSOR_MODE Mode,
     PMMSUPPORT AddressSpace;
     NTSTATUS Status;
 
-    DPRINT("MmpAccessFault(Mode %d, Address %x)\n", Mode, Address);
+    DPRINT("MmpAccessFault(Mode %d, Address %Ix)\n", Mode, Address);
 
     Thread = PsGetCurrentThread();
 
     if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
     {
-        DPRINT1("Page fault at high IRQL %d, address %x\n",
+        DPRINT1("Page fault at high IRQL %u, address %Ix\n",
                 KeGetCurrentIrql(),
                 Address);
         return STATUS_UNSUCCESSFUL;
@@ -706,7 +711,7 @@ MmAccessFaultCacheSection(KPROCESSOR_MODE Mode,
         /* Check permissions */
         if (Mode != KernelMode)
         {
-            DPRINT1("Address: %x:%x\n", PsGetCurrentProcess(), Address);
+            DPRINT1("Address: %p:%Ix\n", PsGetCurrentProcess(), Address);
             return STATUS_ACCESS_VIOLATION;
         }
         AddressSpace = MmGetKernelAddressSpace();
@@ -775,13 +780,13 @@ MmNotPresentFaultCacheSectionInner(KPROCESSOR_MODE Mode,
             {
                 DPRINT1("No memory area\n");
             }
-            DPRINT1("Process %x, Address %x\n",
+            DPRINT1("Process %p, Address %Ix\n",
                     MmGetAddressSpaceOwner(AddressSpace),
                     Address);
             break;
         }
 
-        DPRINTC("Type %x (%x -> %x -> %x) in %x\n",
+        DPRINTC("Type %x (%p -> %08Ix -> %p) in %p\n",
                 MemoryArea->Type,
                 MemoryArea->StartingAddress,
                 Address,
@@ -811,9 +816,9 @@ MmNotPresentFaultCacheSectionInner(KPROCESSOR_MODE Mode,
         else if (Status == STATUS_SUCCESS + 1)
         {
             /* Wait page ... */
-            DPRINT("Waiting for %x\n", Address);
+            DPRINT("Waiting for %Ix\n", Address);
             MiWaitForPageEvent(MmGetAddressSpaceOwner(AddressSpace), Address);
-            DPRINT("Done waiting for %x\n", Address);
+            DPRINT("Done waiting for %Ix\n", Address);
             Status = STATUS_MM_RESTART_OPERATION;
         }
         else if (Status == STATUS_MM_RESTART_OPERATION)
@@ -826,7 +831,7 @@ MmNotPresentFaultCacheSectionInner(KPROCESSOR_MODE Mode,
         {
             if (Thread->ActiveFaultCount > 2)
             {
-                DPRINTC("Already fault handling ... going to work item (%x)\n", Address);
+                DPRINTC("Already fault handling ... going to work item (%Ix)\n", Address);
                 Context.AddressSpace = AddressSpace;
                 Context.MemoryArea = MemoryArea;
                 Context.Required = &Resources;
@@ -845,13 +850,13 @@ MmNotPresentFaultCacheSectionInner(KPROCESSOR_MODE Mode,
             }
             else
             {
-                DPRINT("DoAcquisition %x\n", Resources.DoAcquisition);
+                DPRINT("DoAcquisition %p\n", Resources.DoAcquisition);
 
                 Status = Resources.DoAcquisition(AddressSpace,
                                                  MemoryArea,
                                                  &Resources);
 
-                DPRINT("DoAcquisition %x -> %x\n",
+                DPRINT("DoAcquisition %p -> %x\n",
                        Resources.DoAcquisition,
                        Status);
             }
@@ -873,7 +878,7 @@ MmNotPresentFaultCacheSectionInner(KPROCESSOR_MODE Mode,
     }
     while (Status == STATUS_MM_RESTART_OPERATION);
 
-    DPRINTC("Completed page fault handling: %x:%x %x\n",
+    DPRINTC("Completed page fault handling: %p:%Ix %x\n",
             MmGetAddressSpaceOwner(AddressSpace),
             Address,
             Status);
@@ -908,13 +913,13 @@ MmNotPresentFaultCacheSection(KPROCESSOR_MODE Mode,
     NTSTATUS Status;
 
     Address &= ~(PAGE_SIZE - 1);
-    DPRINT("MmNotPresentFault(Mode %d, Address %x)\n", Mode, Address);
+    DPRINT("MmNotPresentFault(Mode %d, Address %Ix)\n", Mode, Address);
 
     Thread = PsGetCurrentThread();
 
     if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
     {
-        DPRINT1("Page fault at high IRQL %d, address %x\n",
+        DPRINT1("Page fault at high IRQL %u, address %Ix\n",
                 KeGetCurrentIrql(),
                 Address);
 
@@ -948,7 +953,7 @@ MmNotPresentFaultCacheSection(KPROCESSOR_MODE Mode,
 
     ASSERT(Status != STATUS_UNSUCCESSFUL);
     ASSERT(Status != STATUS_INVALID_PARAMETER);
-    DPRINT("MmAccessFault %x:%x -> %x\n",
+    DPRINT("MmAccessFault %p:%Ix -> %x\n",
            MmGetAddressSpaceOwner(AddressSpace),
            Address,
            Status);

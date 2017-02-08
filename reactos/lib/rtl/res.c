@@ -216,16 +216,17 @@ LdrFindResource_U(PVOID BaseAddress,
 
     _SEH2_TRY
     {
-	if (ResourceInfo)
+        if (ResourceInfo)
         {
-            DPRINT( "module %p type %ws name %ws lang %04lx level %ld\n",
+            DPRINT( "module %p type %ws name %ws lang %04lx level %lu\n",
                      BaseAddress, (LPCWSTR)ResourceInfo->Type,
                      Level > 1 ? (LPCWSTR)ResourceInfo->Name : L"",
                      Level > 2 ? ResourceInfo->Language : 0, Level );
         }
 
         status = find_entry( BaseAddress, ResourceInfo, Level, &res, FALSE );
-        if (status == STATUS_SUCCESS) *ResourceDataEntry = res;
+        if (NT_SUCCESS(status))
+            *ResourceDataEntry = res;
     }
     _SEH2_EXCEPT(page_fault(_SEH2_GetExceptionCode()))
     {
@@ -263,16 +264,17 @@ LdrFindResourceDirectory_U(IN PVOID BaseAddress,
 
     _SEH2_TRY
     {
-	if (info)
+        if (info)
         {
-            DPRINT( "module %p type %ws name %ws lang %04lx level %ld\n",
+            DPRINT( "module %p type %ws name %ws lang %04lx level %lu\n",
                      BaseAddress, (LPCWSTR)info->Type,
                      level > 1 ? (LPCWSTR)info->Name : L"",
                      level > 2 ? info->Language : 0, level );
         }
 
         status = find_entry( BaseAddress, info, level, &res, TRUE );
-        if (status == STATUS_SUCCESS) *addr = res;
+        if (NT_SUCCESS(status))
+            *addr = res;
     }
     _SEH2_EXCEPT(page_fault(_SEH2_GetExceptionCode()))
     {
@@ -283,16 +285,220 @@ LdrFindResourceDirectory_U(IN PVOID BaseAddress,
 }
 
 
-/*
- * @unimplemented
- */
-NTSTATUS NTAPI
-LdrEnumResources(IN PVOID BaseAddress,
-                 IN PLDR_RESOURCE_INFO ResourceInfo,
-                 IN ULONG Level,
-                 IN OUT PULONG ResourceCount,
-                 OUT PVOID Resources  OPTIONAL)
+#define NAME_FROM_RESOURCE_ENTRY(RootDirectory, Entry) \
+    ((Entry)->NameIsString ? (ULONG_PTR)(RootDirectory) + (Entry)->NameOffset : (Entry)->Id)
+
+static
+LONG
+LdrpCompareResourceNames_U(
+    _In_ PUCHAR ResourceData,
+    _In_ PIMAGE_RESOURCE_DIRECTORY_ENTRY Entry,
+    _In_ ULONG_PTR CompareName)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    PIMAGE_RESOURCE_DIR_STRING_U ResourceString;
+    PWSTR String1, String2;
+    USHORT ResourceStringLength;
+    WCHAR Char1, Char2;
+
+    /* Check if the resource name is an ID */
+    if (CompareName <= USHRT_MAX)
+    {
+        /* Just compare the 2 IDs */
+        return (CompareName - Entry->Id);
+    }
+    else
+    {
+        /* Fail if ResourceName2 is an ID */
+        if (Entry->Id <= USHRT_MAX) return -1;
+
+        /* Get the resource string */
+        ResourceString = (PIMAGE_RESOURCE_DIR_STRING_U)(ResourceData +
+                                                        Entry->NameOffset);
+
+        /* Get the string length */
+        ResourceStringLength = ResourceString->Length;
+
+        String1 = ResourceString->NameString;
+        String2 = (PWSTR)CompareName;
+
+        /* Loop all characters of the resource string */
+        while (ResourceStringLength--)
+        {
+            /* Get the next characters */
+            Char1 = *String1++;
+            Char2 = *String2++;
+
+            /* Check if they don't match, or if the compare string ends */
+            if ((Char1 != Char2) || (Char2 == 0))
+            {
+                /* They don't match, fail */
+                return Char2 - Char1;
+            }
+        }
+
+        /* All characters match, check if the compare string ends here */
+        return (*String2 == 0) ? 0 : 1;
+    }
+}
+
+NTSTATUS
+NTAPI
+LdrEnumResources(
+    _In_ PVOID ImageBase,
+    _In_ PLDR_RESOURCE_INFO ResourceInfo,
+    _In_ ULONG Level,
+    _Inout_ ULONG *ResourceCount,
+    _Out_writes_to_(*ResourceCount,*ResourceCount) LDR_ENUM_RESOURCE_INFO *Resources)
+{
+    PUCHAR ResourceData;
+    NTSTATUS Status;
+    ULONG i, j, k;
+    ULONG NumberOfTypeEntries, NumberOfNameEntries, NumberOfLangEntries;
+    ULONG Count, MaxResourceCount;
+    PIMAGE_RESOURCE_DIRECTORY TypeDirectory, NameDirectory, LangDirectory;
+    PIMAGE_RESOURCE_DIRECTORY_ENTRY TypeEntry, NameEntry, LangEntry;
+    PIMAGE_RESOURCE_DATA_ENTRY DataEntry;
+    ULONG Size;
+    LONG Result;
+
+    /* If the caller wants data, get the maximum count of entries */
+    MaxResourceCount = (Resources != NULL) ? *ResourceCount : 0;
+
+    /* Default to 0 */
+    *ResourceCount = 0;
+
+    /* Locate the resource directory */
+    ResourceData = RtlImageDirectoryEntryToData(ImageBase,
+                                                TRUE,
+                                                IMAGE_DIRECTORY_ENTRY_RESOURCE,
+                                                &Size);
+    if (ResourceData == NULL)
+        return STATUS_RESOURCE_DATA_NOT_FOUND;
+
+    /* The type directory is at the root, followed by the entries */
+    TypeDirectory = (PIMAGE_RESOURCE_DIRECTORY)ResourceData;
+    TypeEntry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)(TypeDirectory + 1);
+
+    /* Get the number of entries in the type directory */
+    NumberOfTypeEntries = TypeDirectory->NumberOfNamedEntries +
+                          TypeDirectory->NumberOfIdEntries;
+
+    /* Start with 0 resources and status success */
+    Status = STATUS_SUCCESS;
+    Count = 0;
+
+    /* Loop all entries in the type directory */
+    for (i = 0; i < NumberOfTypeEntries; ++i, ++TypeEntry)
+    {
+        /* Check if comparison of types is requested */
+        if (Level > RESOURCE_TYPE_LEVEL)
+        {
+            /* Compare the type with the requested Type */
+            Result = LdrpCompareResourceNames_U(ResourceData,
+                                                TypeEntry,
+                                                ResourceInfo->Type);
+
+            /* Not equal, continue with next entry */
+            if (Result != 0) continue;
+        }
+
+        /* The entry must point to the name directory */
+        if (!TypeEntry->DataIsDirectory)
+        {
+            return STATUS_INVALID_IMAGE_FORMAT;
+        }
+
+        /* Get a pointer to the name subdirectory and it's first entry */
+        NameDirectory = (PIMAGE_RESOURCE_DIRECTORY)(ResourceData +
+                                                    TypeEntry->OffsetToDirectory);
+        NameEntry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)(NameDirectory + 1);
+
+        /* Get the number of entries in the name directory */
+        NumberOfNameEntries = NameDirectory->NumberOfNamedEntries +
+                              NameDirectory->NumberOfIdEntries;
+
+        /* Loop all entries in the name directory */
+        for (j = 0; j < NumberOfNameEntries; ++j, ++NameEntry)
+        {
+            /* Check if comparison of names is requested */
+            if (Level > RESOURCE_NAME_LEVEL)
+            {
+                /* Compare the name with the requested name */
+                Result = LdrpCompareResourceNames_U(ResourceData,
+                                                    NameEntry,
+                                                    ResourceInfo->Name);
+
+                /* Not equal, continue with next entry */
+                if (Result != 0) continue;
+            }
+
+            /* The entry must point to the language directory */
+            if (!NameEntry->DataIsDirectory)
+            {
+                return STATUS_INVALID_IMAGE_FORMAT;
+            }
+
+            /* Get a pointer to the language subdirectory and it's first entry */
+            LangDirectory = (PIMAGE_RESOURCE_DIRECTORY)(ResourceData +
+                                                        NameEntry->OffsetToDirectory);
+            LangEntry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)(LangDirectory + 1);
+
+            /* Get the number of entries in the language directory */
+            NumberOfLangEntries = LangDirectory->NumberOfNamedEntries +
+                                  LangDirectory->NumberOfIdEntries;
+
+            /* Loop all entries in the language directory */
+            for (k = 0; k < NumberOfLangEntries; ++k, ++LangEntry)
+            {
+                /* Check if comparison of languages is requested */
+                if (Level > RESOURCE_LANGUAGE_LEVEL)
+                {
+                    /* Compare the language with the requested language */
+                    Result = LdrpCompareResourceNames_U(ResourceData,
+                                                        LangEntry,
+                                                        ResourceInfo->Language);
+
+                    /* Not equal, continue with next entry */
+                    if (Result != 0) continue;
+                }
+
+                /* This entry must point to data */
+                if (LangEntry->DataIsDirectory)
+                {
+                    return STATUS_INVALID_IMAGE_FORMAT;
+                }
+
+                /* Get a pointer to the data entry */
+                DataEntry = (PIMAGE_RESOURCE_DATA_ENTRY)(ResourceData +
+                                                         LangEntry->OffsetToData);
+
+                /* Check if there is still space to store the data */
+                if (Count < MaxResourceCount)
+                {
+                    /* There is, fill the entry */
+                    Resources[Count].Type =
+                        NAME_FROM_RESOURCE_ENTRY(ResourceData, TypeEntry);
+                    Resources[Count].Name =
+                        NAME_FROM_RESOURCE_ENTRY(ResourceData, NameEntry);
+                    Resources[Count].Language =
+                        NAME_FROM_RESOURCE_ENTRY(ResourceData, LangEntry);
+                    Resources[Count].Data = (PUCHAR)ImageBase + DataEntry->OffsetToData;
+                    Resources[Count].Reserved = 0;
+                    Resources[Count].Size = DataEntry->Size;
+                }
+                else
+                {
+                    /* There is not enough space, save error status */
+                    Status = STATUS_INFO_LENGTH_MISMATCH;
+                }
+
+                /* Count this resource */
+                ++Count;
+            }
+        }
+    }
+
+    /* Return the number of matching resources */
+    *ResourceCount = Count;
+    return Status;
 }

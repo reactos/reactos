@@ -22,7 +22,7 @@
 #include "hhctrl.h"
 #include "stream.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
 
@@ -193,6 +193,7 @@ static SearchItem *SearchCHM_Storage(SearchItem *item, IStorage *pStorage,
             FIXME("Unhandled IStorage stream element.\n");
         }
     }
+    IEnumSTATSTG_Release(elem);
     return item;
 }
 

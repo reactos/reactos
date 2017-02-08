@@ -1810,6 +1810,42 @@ DECLARE_INTERFACE_(IMiniportWaveRTStream, IUnknown)
 
 typedef IMiniportWaveRTStream *PMINIPORTWAVERTSTREAM;
 
+#define IMP_IMiniportWaveRTStream\
+    STDMETHODIMP_(NTSTATUS) SetFormat\
+    (   IN      PKSDATAFORMAT   DataFormat\
+    );\
+    STDMETHODIMP_(NTSTATUS) SetState\
+    (   IN      KSSTATE         State\
+    );\
+    STDMETHODIMP_(NTSTATUS) GetPosition\
+    (   OUT     PKSAUDIO_POSITION   Position\
+    );\
+    STDMETHODIMP_(NTSTATUS) AllocateAudioBuffer\
+    (\
+        IN      ULONG                   RequestedSize,\
+        OUT     PMDL                    *AudioBufferMdl,\
+        OUT     ULONG                   *ActualSize,\
+        OUT     ULONG                   *OffsetFromFirstPage,\
+        OUT     MEMORY_CACHING_TYPE     *CacheType\
+    );\
+    STDMETHODIMP_(VOID) FreeAudioBuffer\
+    (\
+        IN  PMDL                    AudioBufferMdl,\
+        IN  ULONG                   BufferSize\
+    );\
+    STDMETHODIMP_(VOID) GetHWLatency\
+    (\
+        OUT KSRTAUDIO_HWLATENCY     *hwLatency\
+    );\
+    STDMETHODIMP_(NTSTATUS) GetPositionRegister\
+    (\
+        OUT KSRTAUDIO_HWREGISTER    *Register\
+    );\
+    STDMETHODIMP_(NTSTATUS) GetClockRegister\
+    (\
+        OUT KSRTAUDIO_HWREGISTER    *Register\
+    )
+
 
 /* ===============================================================
     IMiniportWaveRTStreamNotification Interface
@@ -1891,6 +1927,24 @@ DECLARE_INTERFACE_(IMiniportWaveRT, IMiniport)
 };
 
 typedef IMiniportWaveRT *PMINIPORTWAVERT;
+
+#define IMP_IMiniportWaveRT\
+    IMP_IMiniport;\
+    STDMETHODIMP_(NTSTATUS) Init\
+    (   IN      PUNKNOWN            UnknownAdapter,\
+        IN      PRESOURCELIST       ResourceList,\
+        IN      PPORTWAVERT             Port\
+    );\
+    STDMETHODIMP_(NTSTATUS) NewStream\
+    (   OUT     PMINIPORTWAVERTSTREAM *         Stream,\
+        IN      PPORTWAVERTSTREAM               PortStream,\
+        IN      ULONG                       Pin,\
+        IN      BOOLEAN                     Capture,\
+        IN      PKSDATAFORMAT               DataFormat\
+    );\
+    STDMETHODIMP_(NTSTATUS) GetDeviceDescription\
+    (   OUT     PDEVICE_DESCRIPTION     DeviceDescription\
+    )
 
 #endif
 

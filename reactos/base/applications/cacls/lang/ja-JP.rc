@@ -3,7 +3,7 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_HELP, "ファイルのアクセス制御リスト(ACL) を表 示または変更します。n\n\
+IDS_HELP, "ファイルのアクセス制御リスト(ACL) を表示または変更します。\n\n\
 CACLS ファイル名 [/T] [/E] [/C] [/G ユーザー名:アクセス権]\n\
                  [/R ユーザー名 [...]] [/P ユーザー名:アクセス権 [...]]\n\
                  [/D ユーザー名 [...]]\n\

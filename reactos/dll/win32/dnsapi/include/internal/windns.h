@@ -1,7 +1,7 @@
 #ifndef WINDNS_INTERNAL_H
 #define WINDNS_INTERNAL_H
 
-#include "adns.h"
+#include <adns.h>
 
 typedef struct
 {

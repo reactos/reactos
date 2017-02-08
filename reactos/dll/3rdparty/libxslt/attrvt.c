@@ -147,7 +147,7 @@ static xsltAttrVTPtr
 xsltSetAttrVTsegment(xsltAttrVTPtr avt, void *val) {
     if (avt->nb_seg >= avt->max_seg) {
 	avt = (xsltAttrVTPtr) xmlRealloc(avt, sizeof(xsltAttrVT) +
-	    		avt->max_seg * sizeof(void *));
+			avt->max_seg * sizeof(void *));
 	if (avt == NULL) {
 	    return NULL;
 	}
@@ -178,7 +178,7 @@ xsltCompileAttr(xsltStylesheetPtr style, xmlAttrPtr attr) {
 
     if ((style == NULL) || (attr == NULL) || (attr->children == NULL))
         return;
-    if ((attr->children->type != XML_TEXT_NODE) || 
+    if ((attr->children->type != XML_TEXT_NODE) ||
         (attr->children->next != NULL)) {
         xsltTransformError(NULL, style, attr->parent,
 	    "Attribute '%s': The content is expected to be a single text "
@@ -248,7 +248,7 @@ xsltCompileAttr(xsltStylesheetPtr style, xmlAttrPtr attr) {
 		/* Need to check for literal (bug539741) */
 		if ((*cur == '\'') || (*cur == '"')) {
 		    char delim = *(cur++);
-		    while ((*cur != 0) && (*cur != delim)) 
+		    while ((*cur != 0) && (*cur != delim))
 			cur++;
 		    if (*cur != 0)
 			cur++;	/* skip the ending delimiter */

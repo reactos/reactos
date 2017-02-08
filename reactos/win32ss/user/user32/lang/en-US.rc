@@ -45,7 +45,7 @@ BEGIN
   MENUITEM "Mi&nimize", SC_MINIMIZE
   MENUITEM "Ma&ximize", SC_MAXIMIZE
   MENUITEM SEPARATOR
-  MENUITEM "&Close\tAlt-F4", SC_CLOSE
+  MENUITEM "&Close\tAlt+F4", SC_CLOSE
 END
 
 /////////////////////////////////////////////////////////////////////////////

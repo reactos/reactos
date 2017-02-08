@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/secur32/lsa.c
@@ -9,7 +8,7 @@
  */
 
 /* INCLUDES ******************************************************************/
-#include <precomp.h>
+#include "precomp.h"
 
 /* GLOBALS *******************************************************************/
 

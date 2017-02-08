@@ -1,31 +1,30 @@
 /*
-*  ReactOS kernel
-*  Copyright (C) 2002, 2004 ReactOS Team
-*
-*  This program is free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  This program is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  You should have received a copy of the GNU General Public License along
-*  with this program; if not, write to the Free Software Foundation, Inc.,
-*  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-*/
-/* $Id$
-*
-* COPYRIGHT:        See COPYING in the top level directory
-* PROJECT:          ReactOS kernel
-* FILE:             services/fs/cdfs/dirctl.c
-* PURPOSE:          CDROM (ISO 9660) filesystem driver
-* PROGRAMMER:       Art Yerkes
-*                   Eric Kohl
-* UPDATE HISTORY:
-*/
+ *  ReactOS kernel
+ *  Copyright (C) 2002, 2004 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+/*
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PROJECT:          ReactOS kernel
+ * FILE:             services/fs/cdfs/dirctl.c
+ * PURPOSE:          CDROM (ISO 9660) filesystem driver
+ * PROGRAMMER:       Art Yerkes
+ *                   Eric Kohl
+ * UPDATE HISTORY:
+ */
 
 /* INCLUDES *****************************************************************/
 
@@ -178,9 +177,9 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
     PDIR_RECORD Record;
     LARGE_INTEGER StreamOffset, OffsetOfEntry;
 
-    DPRINT("FindFile(Parent %x, FileToFind '%wZ', DirIndex: %d)\n",
+    DPRINT("FindFile(Parent %p, FileToFind '%wZ', DirIndex: %u)\n",
         Parent, FileToFind, pDirIndex ? *pDirIndex : 0);
-    DPRINT("FindFile: old Pathname %x, old Objectname %x)\n",
+    DPRINT("FindFile: old Pathname %p, old Objectname %p)\n",
         Fcb->PathName, Fcb->ObjectName);
 
     IsRoot = FALSE;
@@ -237,7 +236,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
         DirSize = Parent->Entry.DataLengthL;
     }
 
-    DPRINT("StreamOffset %I64u  DirSize %lu\n", StreamOffset.QuadPart, DirSize);
+    DPRINT("StreamOffset %I64d  DirSize %u\n", StreamOffset.QuadPart, DirSize);
 
     if (pDirIndex && (*pDirIndex))
         DirIndex = *pDirIndex;
@@ -339,7 +338,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
             if (pOffset)
                 *pOffset = Offset;
 
-            DPRINT("FindFile: new Pathname %S, new Objectname %S, DirIndex %d\n",
+            DPRINT("FindFile: new Pathname %S, new Objectname %S, DirIndex %u\n",
                 Fcb->PathName, Fcb->ObjectName, DirIndex);
 
             RtlFreeUnicodeString(&FileToFindUpcase);
@@ -376,6 +375,8 @@ CdfsGetNameInformation(PFCB Fcb,
 
     DPRINT("CdfsGetNameInformation() called\n");
 
+    UNREFERENCED_PARAMETER(DeviceExt);
+
     Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
     if ((sizeof(FILE_NAMES_INFORMATION) + Length) > BufferLength)
         return(STATUS_BUFFER_OVERFLOW);
@@ -400,6 +401,8 @@ CdfsGetDirectoryInformation(PFCB Fcb,
     ULONG Length;
 
     DPRINT("CdfsGetDirectoryInformation() called\n");
+
+    UNREFERENCED_PARAMETER(DeviceExt);
 
     Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
     if ((sizeof (FILE_DIRECTORY_INFORMATION) + Length) > BufferLength)
@@ -447,6 +450,8 @@ CdfsGetFullDirectoryInformation(PFCB Fcb,
     ULONG Length;
 
     DPRINT("CdfsGetFullDirectoryInformation() called\n");
+
+    UNREFERENCED_PARAMETER(DeviceExt);
 
     Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
     if ((sizeof (FILE_FULL_DIR_INFORMATION) + Length) > BufferLength)
@@ -496,6 +501,8 @@ CdfsGetBothDirectoryInformation(PFCB Fcb,
     ULONG Length;
 
     DPRINT("CdfsGetBothDirectoryInformation() called\n");
+
+    UNREFERENCED_PARAMETER(DeviceExt);
 
     Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
     if ((sizeof (FILE_BOTH_DIR_INFORMATION) + Length) > BufferLength)
@@ -586,7 +593,15 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
         Buffer = Irp->UserBuffer;
     }
 
-    if (SearchPattern != NULL)
+    /* Allocate search pattern in case:
+     * -> We don't have one already in context
+     * -> We have been given an input pattern
+     * -> The pattern length is not null
+     * -> The pattern buffer is not null
+     * Otherwise, we'll fall later and allocate a match all (*) pattern
+     */
+    if (SearchPattern != NULL &&
+        SearchPattern->Length != 0 && SearchPattern->Buffer != NULL)
     {
         if (Ccb->DirectorySearchPattern.Buffer == NULL)
         {
@@ -757,7 +772,7 @@ CdfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
         break;
 
     default:
-        DPRINT1("CDFS: MinorFunction %d\n", Stack->MinorFunction);
+        DPRINT1("CDFS: MinorFunction %u\n", Stack->MinorFunction);
         Status = STATUS_INVALID_DEVICE_REQUEST;
         break;
     }

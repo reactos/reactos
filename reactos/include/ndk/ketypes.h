@@ -385,9 +385,9 @@ typedef enum _VDMSERVICECLASS
 //
 typedef VOID
 (NTAPI *PKNORMAL_ROUTINE)(
-    IN PVOID NormalContext,
-    IN PVOID SystemArgument1,
-    IN PVOID SystemArgument2
+    _In_ PVOID NormalContext,
+    _In_ PVOID SystemArgument1,
+    _In_ PVOID SystemArgument2
 );
 
 //
@@ -395,9 +395,9 @@ typedef VOID
 //
 typedef VOID
 (NTAPI *PTIMER_APC_ROUTINE)(
-    IN PVOID TimerContext,
-    IN ULONG TimerLowValue,
-    IN LONG TimerHighValue
+    _In_ PVOID TimerContext,
+    _In_ ULONG TimerLowValue,
+    _In_ LONG TimerHighValue
 );
 
 //

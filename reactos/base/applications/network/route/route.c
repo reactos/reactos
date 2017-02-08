@@ -11,9 +11,14 @@
  * Flexible, simple
  */
 
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 #include <stdio.h>
+#include <malloc.h>
+#define _INC_WINDOWS
 #include <winsock2.h>
-#include <windows.h>
 #include <iphlpapi.h>
 #include <tchar.h>
 

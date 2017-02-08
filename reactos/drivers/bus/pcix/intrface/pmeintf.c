@@ -33,6 +33,7 @@ NTSTATUS
 NTAPI
 PciPmeInterfaceInitializer(IN PVOID Instance)
 {
+    UNREFERENCED_PARAMETER(Instance);
     /* PnP Interfaces don't get Initialized */
     ASSERTMSG(FALSE, "PCI PciPmeInterfaceInitializer, unexpected call.");
     return STATUS_UNSUCCESSFUL;
@@ -47,12 +48,18 @@ PciPmeInterfaceConstructor(IN PVOID DeviceExtension,
                            IN USHORT Size,
                            IN PINTERFACE Interface)
 {
+    UNREFERENCED_PARAMETER(DeviceExtension);
+    UNREFERENCED_PARAMETER(Instance);
+    UNREFERENCED_PARAMETER(InterfaceData);
+    UNREFERENCED_PARAMETER(Size);
+    UNREFERENCED_PARAMETER(Interface);
+
     /* Only version 1 is supported */
     if (Version != PCI_PME_INTRF_STANDARD_VER) return STATUS_NOINTERFACE;
 
     /* Not yet implemented */
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

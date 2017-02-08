@@ -576,4 +576,24 @@ RtlComputeImportTableHash(IN HANDLE FileHandle,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+NTSTATUS
+NTAPI
+RtlpSafeCopyMemory(
+   _Out_writes_bytes_all_(Length) VOID UNALIGNED *Destination,
+   _In_reads_bytes_(Length) CONST VOID UNALIGNED *Source,
+   _In_ SIZE_T Length)
+{
+    _SEH2_TRY
+    {
+        RtlCopyMemory(Destination, Source, Length);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
+    return STATUS_SUCCESS;
+}
+
 /* EOF */

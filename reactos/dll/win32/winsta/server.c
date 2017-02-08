@@ -6,7 +6,7 @@
  * 
  */
 
-#include <winsta.h>
+#include "winsta.h"
 
 VOID
 WINSTAAPI WinStationOpenServerA(PVOID A)

@@ -624,9 +624,22 @@ CmCheckRegistry(
 //
 // Hive List Routines
 //
+BOOLEAN
+NTAPI
+CmpGetHiveName(
+    IN  PCMHIVE Hive,
+    OUT PUNICODE_STRING HiveName
+);
+
 NTSTATUS
 NTAPI
 CmpAddToHiveFileList(
+    IN PCMHIVE Hive
+);
+
+VOID
+NTAPI
+CmpRemoveFromHiveFileList(
     IN PCMHIVE Hive
 );
 
@@ -788,10 +801,10 @@ NTAPI
 CmpOpenHiveFiles(
     IN PCUNICODE_STRING BaseName,
     IN PCWSTR Extension OPTIONAL,
-    IN PHANDLE Primary,
-    IN PHANDLE Log,
-    IN PULONG PrimaryDisposition,
-    IN PULONG LogDisposition,
+    OUT PHANDLE Primary,
+    OUT PHANDLE Log,
+    OUT PULONG PrimaryDisposition,
+    OUT PULONG LogDisposition,
     IN BOOLEAN CreateAllowed,
     IN BOOLEAN MarkAsSystemHive,
     IN BOOLEAN NoBuffering,

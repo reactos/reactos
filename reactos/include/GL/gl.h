@@ -88,7 +88,8 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif
-#include <windows.h>
+//#include <windows.h>
+#include <windef.h>
 #endif
 
 #if defined(macintosh) && PRAGMA_IMPORT_SUPPORTED

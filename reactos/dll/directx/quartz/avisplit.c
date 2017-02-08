@@ -33,16 +33,16 @@
 #include "control_private.h"
 #include "pin.h"
 
-#include "uuids.h"
-#include "vfw.h"
-#include "aviriff.h"
-#include "vfwmsgs.h"
-#include "amvideo.h"
+//#include "uuids.h"
+#include <vfw.h>
+#include <aviriff.h>
+//#include "vfwmsgs.h"
+//#include "amvideo.h"
 
-#include "wine/unicode.h"
-#include "wine/debug.h"
+//#include <wine/unicode.h>
+#include <wine/debug.h>
 
-#include <math.h>
+//#include <math.h>
 #include <assert.h>
 
 #include "parser.h"

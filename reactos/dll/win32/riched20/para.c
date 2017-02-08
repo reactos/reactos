@@ -94,15 +94,6 @@ void ME_MarkAllForWrapping(ME_TextEditor *editor)
   ME_MarkForWrapping(editor, editor->pBuffer->pFirst->member.para.next_para, editor->pBuffer->pLast);
 }
 
-void ME_MarkForPainting(ME_TextEditor *editor, ME_DisplayItem *first, const ME_DisplayItem *last)
-{
-  while(first != last && first)
-  {
-    first->member.para.nFlags |= MEPF_REPAINT;
-    first = first->member.para.next_para;
-  }
-}
-
 static void ME_UpdateTableFlags(ME_DisplayItem *para)
 {
   para->member.para.pFmt->dwMask |= PFM_TABLE|PFM_TABLEROWDELIMITER;

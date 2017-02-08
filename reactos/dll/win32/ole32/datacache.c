@@ -43,22 +43,25 @@
  *     header. I was able to figure-out where the extent of the object
  *     was stored and the aspect, but that's about it.
  */
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
 #include <stdarg.h>
-#include <string.h>
+//#include <string.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winerror.h"
-#include "wine/unicode.h"
-#include "ole2.h"
-#include "wine/list.h"
-#include "wine/debug.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+//#include "winuser.h"
+//#include "winerror.h"
+#include <wine/unicode.h>
+#include <ole2.h>
+#include <wine/list.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -2151,7 +2154,7 @@ static void WINAPI DataCache_OnDataChange(IAdviseSink *iface, FORMATETC *fmt, ST
 {
     DataCache *This = impl_from_IAdviseSink(iface);
     TRACE("(%p)->(%s, %p)\n", This, debugstr_formatetc(fmt), med);
-    IOleCache_SetData(&This->IOleCache2_iface, fmt, med, FALSE);
+    IOleCache2_SetData(&This->IOleCache2_iface, fmt, med, FALSE);
 }
 
 static void WINAPI DataCache_OnViewChange(IAdviseSink *iface, DWORD aspect, LONG index)

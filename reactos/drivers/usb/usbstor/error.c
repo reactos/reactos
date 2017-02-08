@@ -42,7 +42,7 @@ USBSTOR_GetEndpointStatus(
     //
     // send the request
     //
-    DPRINT1("Sending Request DeviceObject %x, Urb %x\n", DeviceObject, Urb);
+    DPRINT1("Sending Request DeviceObject %p, Urb %p\n", DeviceObject, Urb);
     Status = USBSTOR_SyncUrbRequest(DeviceObject, Urb);
 
     //
@@ -90,7 +90,7 @@ USBSTOR_ResetPipeWithHandle(
     //
     // send the request
     //
-    DPRINT1("Sending Request DeviceObject %x, Urb %x\n", DeviceObject, Urb);
+    DPRINT1("Sending Request DeviceObject %p, Urb %p\n", DeviceObject, Urb);
     Status = USBSTOR_SyncUrbRequest(DeviceObject, Urb);
 
     //

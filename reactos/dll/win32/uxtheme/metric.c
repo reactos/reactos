@@ -19,7 +19,7 @@
  */
 
 #include "uxthemep.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
 
@@ -35,7 +35,9 @@ BOOL WINAPI GetThemeSysBool(HTHEME hTheme, int iBoolID)
     TRACE("(%p, %d)\n", hTheme, iBoolID);
     SetLastError(0);
     if(hTheme) {
-        if((tp = MSSTYLES_FindMetric(TMT_BOOL, iBoolID))) {
+        PTHEME_CLASS ptc = (PTHEME_CLASS) hTheme;
+
+        if((tp = MSSTYLES_FindMetric(ptc->tf, TMT_BOOL, iBoolID))) {
             hr = MSSTYLES_GetPropertyBool(tp, &ret);
             if(SUCCEEDED(hr))
                 return ret;
@@ -62,10 +64,15 @@ COLORREF WINAPI GetThemeSysColor(HTHEME hTheme, int iColorID)
     HRESULT hr;
     PTHEME_PROPERTY tp;
 
+    // TODO: Check if this is correct
+    if ( iColorID >= 0 && iColorID < 32)
+        iColorID += TMT_SCROLLBAR;
+
     TRACE("(%p, %d)\n", hTheme, iColorID);
     SetLastError(0);
     if(hTheme) {
-        if((tp = MSSTYLES_FindMetric(TMT_COLOR, iColorID))) {
+        PTHEME_CLASS ptc = (PTHEME_CLASS) hTheme;
+        if((tp = MSSTYLES_FindMetric(ptc->tf, TMT_COLOR, iColorID))) {
             COLORREF color;
             hr = MSSTYLES_GetPropertyColor(tp, &color);
             if(SUCCEEDED(hr))
@@ -96,7 +103,8 @@ HRESULT WINAPI GetThemeSysFont(HTHEME hTheme, int iFontID, LOGFONTW *plf)
 
     TRACE("(%p, %d)\n", hTheme, iFontID);
     if(hTheme) {
-        if((tp = MSSTYLES_FindMetric(TMT_FONT, iFontID))) {
+        PTHEME_CLASS ptc = (PTHEME_CLASS) hTheme;
+        if((tp = MSSTYLES_FindMetric(ptc->tf, TMT_FONT, iFontID))) {
             HDC hdc = GetDC(NULL);
             hr = MSSTYLES_GetPropertyFont(tp, hdc, plf);
             ReleaseDC(NULL, hdc);
@@ -134,6 +142,7 @@ HRESULT WINAPI GetThemeSysFont(HTHEME hTheme, int iFontID, LOGFONTW *plf)
 HRESULT WINAPI GetThemeSysInt(HTHEME hTheme, int iIntID, int *piValue)
 {
     PTHEME_PROPERTY tp;
+    PTHEME_CLASS ptc = (PTHEME_CLASS) hTheme;
 
     TRACE("(%p, %d)\n", hTheme, iIntID);
     if(!hTheme)
@@ -142,7 +151,7 @@ HRESULT WINAPI GetThemeSysInt(HTHEME hTheme, int iIntID, int *piValue)
         WARN("Unknown IntID: %d\n", iIntID);
         return STG_E_INVALIDPARAMETER;
     }
-    if((tp = MSSTYLES_FindMetric(TMT_INT, iIntID)))
+    if((tp = MSSTYLES_FindMetric(ptc->tf , TMT_INT, iIntID)))
         return MSSTYLES_GetPropertyInt(tp, piValue);
     return E_PROP_ID_UNSUPPORTED;
 }
@@ -168,6 +177,8 @@ int WINAPI GetThemeSysSize(HTHEME hTheme, int iSizeID)
     };
 
     if(hTheme) {
+        PTHEME_CLASS ptc = (PTHEME_CLASS) hTheme;
+
         for(i=0; i<sizeof(metricMap)/sizeof(metricMap[0]); i+=2) {
             if(metricMap[i] == iSizeID) {
                 id = metricMap[i+1];
@@ -176,7 +187,7 @@ int WINAPI GetThemeSysSize(HTHEME hTheme, int iSizeID)
         }
         SetLastError(0);
         if(id != -1) {
-            if((tp = MSSTYLES_FindMetric(TMT_SIZE, id))) {
+            if((tp = MSSTYLES_FindMetric(ptc->tf, TMT_SIZE, id))) {
                 if(SUCCEEDED(MSSTYLES_GetPropertyInt(tp, &i))) {
                     return i;
                 }
@@ -188,6 +199,12 @@ int WINAPI GetThemeSysSize(HTHEME hTheme, int iSizeID)
             return 0;
         }
     }
+
+
+    // TODO: Check if this is correct
+    // In windows for SM_CXFRAME this function returns what seems to be the non client metric iBorderWidth
+    if (iSizeID == SM_CXFRAME)
+        return GetSystemMetrics(SM_CXFRAME) - GetSystemMetrics(SM_CXDLGFRAME);
     return GetSystemMetrics(iSizeID);
 }
 
@@ -198,6 +215,7 @@ HRESULT WINAPI GetThemeSysString(HTHEME hTheme, int iStringID,
                                  LPWSTR pszStringBuff, int cchMaxStringChars)
 {
     PTHEME_PROPERTY tp;
+    PTHEME_CLASS ptc = (PTHEME_CLASS) hTheme;
 
     TRACE("(%p, %d)\n", hTheme, iStringID);
     if(!hTheme)
@@ -206,7 +224,7 @@ HRESULT WINAPI GetThemeSysString(HTHEME hTheme, int iStringID,
         WARN("Unknown StringID: %d\n", iStringID);
         return STG_E_INVALIDPARAMETER;
     }
-    if((tp = MSSTYLES_FindMetric(TMT_STRING, iStringID)))
+    if((tp = MSSTYLES_FindMetric(ptc->tf, TMT_STRING, iStringID)))
         return MSSTYLES_GetPropertyString(tp, pszStringBuff, cchMaxStringChars);
     return E_PROP_ID_UNSUPPORTED;
 }

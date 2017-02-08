@@ -16,16 +16,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#define WIN32_NO_STATUS
+
+#include <config.h>
 #include <stdarg.h>
-#include <stdlib.h>
-#include "windef.h"
-#include "winbase.h"
-#include "wine/debug.h"
+//#include <stdlib.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(cryptdll);
-
-static HMODULE CRYPTDLL_hModule;
 
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -37,7 +37,6 @@ BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         case DLL_PROCESS_ATTACH:
         {
             DisableThreadLibraryCalls(hinstDLL);
-            CRYPTDLL_hModule = hinstDLL;
             break;
         }
         case DLL_PROCESS_DETACH:

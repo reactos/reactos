@@ -14,13 +14,8 @@ VOID MiniTuiDrawBackdrop(VOID)
 	//
 	// Fill in a black background
 	//
-	TuiFillArea(0,
-	            0,
-	            UiScreenWidth - 1,
-	            UiScreenHeight - 1,
-	            0,
-	            0);
-	
+	TuiFillArea(0, 0, UiScreenWidth - 1, UiScreenHeight - 1, 0, 0);
+
 	//
 	// Update the screen buffer
 	//
@@ -88,21 +83,19 @@ MiniTuiDrawMenu(PUI_MENU_INFO MenuInfo)
     UiDrawBackdrop();
 
     //
-    // No GUI status bar text, just minimal text. first to tell the user to
-    // choose.
+    // No GUI status bar text, just minimal text. Show the menu header.
     //
     UiVtbl.DrawText(0,
                     MenuInfo->Top - 2,
-                    "Please select the operating system to start:",
+                    MenuInfo->MenuHeader,
                     ATTR(UiMenuFgColor, UiMenuBgColor));
 
     //
-    // Now tell him how to choose
+    // Now tell the user how to choose
     //
     UiVtbl.DrawText(0,
                     MenuInfo->Bottom + 1,
-                    "Use the up and down arrow keys to move the highlight to "
-                    "your choice.",
+                    "Use \x18 and \x19 to move the highlight to your choice.",
                     ATTR(UiMenuFgColor, UiMenuBgColor));
     UiVtbl.DrawText(0,
                     MenuInfo->Bottom + 2,
@@ -110,12 +103,11 @@ MiniTuiDrawMenu(PUI_MENU_INFO MenuInfo)
                     ATTR(UiMenuFgColor, UiMenuBgColor));
 
     //
-    // And offer F8 options
+    // And show the menu footer
     //
     UiVtbl.DrawText(0,
                     UiScreenHeight - 4,
-                    "For troubleshooting and advanced startup options for "
-                    "ReactOS, press F8.",
+                    MenuInfo->MenuFooter,
                     ATTR(UiMenuFgColor, UiMenuBgColor));
 
     //
@@ -126,7 +118,19 @@ MiniTuiDrawMenu(PUI_MENU_INFO MenuInfo)
     //
     // Draw each line of the menu
     //
-    for (i = 0; i < MenuInfo->MenuItemCount; i++) TuiDrawMenuItem(MenuInfo, i);
+    for (i = 0; i < MenuInfo->MenuItemCount; i++)
+    {
+        TuiDrawMenuItem(MenuInfo, i);
+    }
+
+    //
+    // Display the boot options if needed
+    //
+    if (MenuInfo->ShowBootOptions)
+    {
+        DisplayBootTimeOptions();
+    }
+
     VideoCopyOffScreenBufferToVRAM();
 }
 
@@ -139,6 +143,7 @@ const UIVTBL MiniTuiVtbl =
 	TuiDrawShadow,
 	TuiDrawBox,
 	TuiDrawText,
+	TuiDrawText2,
 	TuiDrawCenteredText,
 	MiniTuiDrawStatusText,
 	TuiUpdateDateTime,

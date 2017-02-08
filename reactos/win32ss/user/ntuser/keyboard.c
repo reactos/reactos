@@ -385,7 +385,7 @@ IntTranslateChar(WORD wVirtKey,
     /* If nothing has been found in layout, check if this is ASCII control character.
        Note: we could add it to layout table, but windows does not have it there */
     if (wVirtKey >= 'A' && wVirtKey <= 'Z' &&
-        IS_KEY_DOWN(pKeyState, VK_CONTROL) &&
+        pKeyState && IS_KEY_DOWN(pKeyState, VK_CONTROL) &&
         !IS_KEY_DOWN(pKeyState, VK_MENU))
     {
         *pwcTranslatedChar = (wVirtKey - 'A') + 1; /* ASCII control character */
@@ -763,6 +763,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
 {
     WORD wSimpleVk = 0, wFixedVk, wVk2;
     PUSER_MESSAGE_QUEUE pFocusQueue;
+    PTHREADINFO pti;
     BOOL bExt = (dwFlags & KEYEVENTF_EXTENDEDKEY) ? TRUE : FALSE;
     BOOL bIsDown = (dwFlags & KEYEVENTF_KEYUP) ? FALSE : TRUE;
     BOOL bPacket = (dwFlags & KEYEVENTF_UNICODE) ? TRUE : FALSE;
@@ -803,11 +804,20 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
     if (wSimpleVk == VK_SHIFT) /* shift can't be extended */
         bExt = FALSE;
 
+    /* If we have a focus queue, post a keyboard message */
+    pFocusQueue = IntGetFocusMessageQueue();
+    TRACE("ProcessKeyEvent Q 0x%p Active pWnd 0x%p Focus pWnd 0x%p\n",
+           pFocusQueue,
+           (pFocusQueue ?  pFocusQueue->spwndActive : 0),
+           (pFocusQueue ?  pFocusQueue->spwndFocus : 0));
+
     /* If it is F10 or ALT is down and CTRL is up, it's a system key */
-    if (wVk == VK_F10 ||
+    if ( wVk == VK_F10 ||
         (wSimpleVk == VK_MENU && bMenuDownRecently) ||
         (IS_KEY_DOWN(gafAsyncKeyState, VK_MENU) &&
-        !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL)))
+        !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL)) ||
+         // See MSDN WM_SYSKEYDOWN/UP fixes last wine Win test_keyboard_input.
+        (pFocusQueue && !pFocusQueue->spwndFocus) )
     {
         bMenuDownRecently = FALSE; // reset
         if (bIsDown)
@@ -843,24 +853,37 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
        TRACE("Alt-Tab/Esc Pressed wParam %x\n",wVk);
     }
 
-    /* If we have a focus queue, post a keyboard message */
-    pFocusQueue = IntGetFocusMessageQueue();
-    TRACE("ProcessKeyEvent Q 0x%p Focus pWnd 0x%p\n",pFocusQueue, pFocusQueue ?  pFocusQueue->spwndFocus : 0);
     if (bIsDown && wVk == VK_SNAPSHOT)
     {
         if (pFocusQueue &&
             IS_KEY_DOWN(gafAsyncKeyState, VK_MENU) &&
             !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL))
         {
-            SnapWindow(pFocusQueue->spwndFocus ? UserHMGetHandle(pFocusQueue->spwndFocus) : 0);
+            // Snap from Active Window, Focus can be null.
+            SnapWindow(pFocusQueue->spwndActive ? UserHMGetHandle(pFocusQueue->spwndActive) : 0);
         }
         else
-            SnapWindow(NULL);
+            SnapWindow(NULL); // Snap Desktop.
     }
     else if (pFocusQueue && bPostMsg)
     {
+        PWND Wnd = pFocusQueue->spwndFocus;
+        if (!Wnd)
+        {
+           // Focus can be null so going with Active. WM_SYSKEYXXX last wine Win test_keyboard_input.
+           Wnd = pFocusQueue->spwndActive;
+        }
+
+        if ( !Wnd || Wnd->state2 & WNDS2_INDESTROY || Wnd->state & WNDS_DESTROYED )
+        {
+           ERR("ProcessKeyEvent Active Focus window is dead!\n");
+           return FALSE;
+        }
+ 
+        pti = Wnd->head.pti;
+
         /* Init message */
-        Msg.hwnd = pFocusQueue->spwndFocus ? UserHMGetHandle(pFocusQueue->spwndFocus) : 0;
+        Msg.hwnd = UserHMGetHandle(Wnd);
         Msg.wParam = wFixedVk & 0xFF; /* Note: It's simplified by msg queue */
         Msg.lParam = MAKELPARAM(1, wScanCode);
         Msg.time = dwTime;
@@ -886,7 +909,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
 
         /* Post a keyboard message */
         TRACE("Posting keyboard msg %u wParam 0x%x lParam 0x%x\n", Msg.message, Msg.wParam, Msg.lParam);
-        MsqPostMessage(pFocusQueue, &Msg, TRUE, QS_KEY);
+        MsqPostMessage(pti, &Msg, TRUE, QS_KEY, 0);
     }
 
     return TRUE;
@@ -899,7 +922,6 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
     PKL pKl = NULL;
     PKBDTABLES pKbdTbl;
     PUSER_MESSAGE_QUEUE pFocusQueue;
-    struct _ETHREAD *pFocusThread;
     LARGE_INTEGER LargeTickCount;
     DWORD dwTime;
     BOOL bExt = (pKbdInput->dwFlags & KEYEVENTF_EXTENDEDKEY) ? TRUE : FALSE;
@@ -909,11 +931,9 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
     /* Find the target thread whose locale is in effect */
     pFocusQueue = IntGetFocusMessageQueue();
 
-    if (pFocusQueue)
+    if (pFocusQueue && pFocusQueue->ptiOwner)
     {
-        pFocusThread = pFocusQueue->Thread;
-        if (pFocusThread && pFocusThread->Tcb.Win32Thread)
-            pKl = ((PTHREADINFO)pFocusThread->Tcb.Win32Thread)->KeyboardLayout;
+        pKl = pFocusQueue->ptiOwner->KeyboardLayout;
     }
 
     if (!pKl)
@@ -983,7 +1003,6 @@ UserProcessKeyboardInput(
     PKL pKl = NULL;
     PKBDTABLES pKbdTbl;
     PUSER_MESSAGE_QUEUE pFocusQueue;
-    struct _ETHREAD *pFocusThread;
 
     /* Calculate scan code with prefix */
     wScanCode = pKbdInputData->MakeCode & 0x7F;
@@ -995,11 +1014,9 @@ UserProcessKeyboardInput(
     /* Find the target thread whose locale is in effect */
     pFocusQueue = IntGetFocusMessageQueue();
 
-    if (pFocusQueue)
+    if (pFocusQueue && pFocusQueue->ptiOwner)
     {
-        pFocusThread = pFocusQueue->Thread;
-        if (pFocusThread && pFocusThread->Tcb.Win32Thread)
-            pKl = ((PTHREADINFO)pFocusThread->Tcb.Win32Thread)->KeyboardLayout;
+        pKl = pFocusQueue->ptiOwner->KeyboardLayout;
     }
 
     if (!pKl)
@@ -1083,7 +1100,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
     {
        pti->KeyboardLayout = W32kGetDefaultKeyLayout();
        pti->pClientInfo->hKL = pti->KeyboardLayout ? pti->KeyboardLayout->hkl : NULL;
-       pKbdTbl = pti->KeyboardLayout->spkf->pKbdTbl;
+       pKbdTbl = pti->KeyboardLayout ? pti->KeyboardLayout->spkf->pKbdTbl : NULL;
     }
     else
        pKbdTbl = pti->KeyboardLayout->spkf->pKbdTbl;
@@ -1107,7 +1124,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
         NewMsg.message = (lpMsg->message == WM_KEYDOWN) ? WM_CHAR : WM_SYSCHAR;
         NewMsg.wParam = HIWORD(lpMsg->lParam);
         NewMsg.lParam = LOWORD(lpMsg->lParam);
-        MsqPostMessage(pti->MessageQueue, &NewMsg, FALSE, QS_KEY);
+        MsqPostMessage(pti, &NewMsg, FALSE, QS_KEY, 0);
         return TRUE;
     }
 
@@ -1136,7 +1153,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
         {
             TRACE("Msg: %x '%lc' (%04x) %08x\n", NewMsg.message, wch[i], wch[i], NewMsg.lParam);
             NewMsg.wParam = wch[i];
-            MsqPostMessage(pti->MessageQueue, &NewMsg, FALSE, QS_KEY);
+            MsqPostMessage(pti, &NewMsg, FALSE, QS_KEY, 0);
         }
         bResult = TRUE;
     }

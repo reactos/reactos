@@ -692,8 +692,7 @@ static BOOL CRYPT_AsnDecodeArray(const struct AsnArrayDescriptor *arrayDesc,
                                  CryptMemAlloc(
                                  cItems * sizeof(struct AsnArrayItemSize));
                                 if (itemSizes)
-                                    memcpy(itemSizes, &itemSize,
-                                     sizeof(itemSize));
+                                    *itemSizes = itemSize;
                             }
                             if (itemSizes)
                             {
@@ -1310,22 +1309,17 @@ static BOOL CRYPT_AsnDecodeOidIgnoreTag(const BYTE *pbEncoded, DWORD cbEncoded,
 
         if (dataLen)
         {
-            /* The largest possible string for the first two components
-             * is 2.175 (= 2 * 40 + 175 = 255), so this is big enough.
-             */
-            char firstTwo[6];
             const BYTE *ptr;
+            char str[32];
 
-            snprintf(firstTwo, sizeof(firstTwo), "%d.%d",
+            snprintf(str, sizeof(str), "%d.%d",
              pbEncoded[1 + lenBytes] / 40,
              pbEncoded[1 + lenBytes] - (pbEncoded[1 + lenBytes] / 40)
              * 40);
-            bytesNeeded += strlen(firstTwo) + 1;
+            bytesNeeded += strlen(str) + 1;
             for (ptr = pbEncoded + 2 + lenBytes; ret &&
              ptr - pbEncoded - 1 - lenBytes < dataLen; )
             {
-                /* large enough for ".4000000" */
-                char str[9];
                 int val = 0;
 
                 while (ptr - pbEncoded - 1 - lenBytes < dataLen &&
@@ -1917,7 +1911,7 @@ static BOOL WINAPI CRYPT_AsnDecodeName(DWORD dwCertEncodingType,
          sizeof(CERT_NAME_INFO),
          CRYPT_AsnDecodeRdn, sizeof(CERT_RDN), TRUE,
          offsetof(CERT_RDN, rgRDNAttr) };
-        DWORD bytesNeeded;
+        DWORD bytesNeeded = 0;
 
         ret = CRYPT_AsnDecodeArray(&arrayDesc, pbEncoded, cbEncoded,
          dwFlags & ~CRYPT_DECODE_ALLOC_FLAG, NULL, NULL, &bytesNeeded,
@@ -2014,7 +2008,7 @@ static BOOL WINAPI CRYPT_AsnDecodeUnicodeName(DWORD dwCertEncodingType,
          sizeof(CERT_NAME_INFO),
          CRYPT_AsnDecodeUnicodeRdn, sizeof(CERT_RDN), TRUE,
          offsetof(CERT_RDN, rgRDNAttr) };
-        DWORD bytesNeeded;
+        DWORD bytesNeeded = 0;
 
         ret = CRYPT_AsnDecodeArray(&arrayDesc, pbEncoded, cbEncoded,
          dwFlags & ~CRYPT_DECODE_ALLOC_FLAG, NULL, NULL, &bytesNeeded,
@@ -2460,7 +2454,7 @@ static BOOL CRYPT_AsnDecodeNoticeReference(const BYTE *pbEncoded,
        FALSE, TRUE, offsetof(CERT_POLICY_QUALIFIER_NOTICE_REFERENCE,
        rgNoticeNumbers), 0 },
     };
-    DWORD bytesNeeded;
+    DWORD bytesNeeded = 0;
 
     TRACE("%p, %d, %08x, %p, %d\n", pbEncoded, cbEncoded, dwFlags,
      pvStructInfo, pvStructInfo ? *pcbStructInfo : 0);
@@ -2677,7 +2671,7 @@ static BOOL WINAPI CRYPT_AsnDecodePolicyQualifierUserNotice(
 
     __TRY
     {
-        DWORD bytesNeeded;
+        DWORD bytesNeeded = 0;
 
         ret = CRYPT_AsnDecodePolicyQualifierUserNoticeInternal(pbEncoded,
          cbEncoded, dwFlags & ~CRYPT_DECODE_ALLOC_FLAG, NULL, &bytesNeeded,
@@ -2771,7 +2765,7 @@ static BOOL WINAPI CRYPT_AsnDecodePKCSAttribute(DWORD dwCertEncodingType,
 
     __TRY
     {
-        DWORD bytesNeeded;
+        DWORD bytesNeeded = 0;
 
         ret = CRYPT_AsnDecodePKCSAttributeInternal(pbEncoded, cbEncoded,
          dwFlags & ~CRYPT_DECODE_ALLOC_FLAG, NULL, &bytesNeeded, NULL);
@@ -2912,7 +2906,7 @@ static BOOL WINAPI CRYPT_AsnDecodePubKeyInfo(DWORD dwCertEncodingType,
 
     __TRY
     {
-        DWORD bytesNeeded;
+        DWORD bytesNeeded = 0;
 
         if ((ret = CRYPT_AsnDecodePubKeyInfoInternal(pbEncoded, cbEncoded,
          dwFlags & ~CRYPT_DECODE_ALLOC_FLAG, NULL, &bytesNeeded, NULL)))
@@ -2982,7 +2976,7 @@ static BOOL CRYPT_AsnDecodeBool(const BYTE *pbEncoded, DWORD cbEncoded,
     else
     {
         *pcbStructInfo = sizeof(BOOL);
-        *(BOOL *)pvStructInfo = pbEncoded[2] ? TRUE : FALSE;
+        *(BOOL *)pvStructInfo = pbEncoded[2] != 0;
         ret = TRUE;
     }
     TRACE("returning %d (%08x)\n", ret, GetLastError());
@@ -3414,7 +3408,7 @@ static BOOL WINAPI CRYPT_AsnDecodeAltName(DWORD dwCertEncodingType,
 
     __TRY
     {
-        DWORD bytesNeeded;
+        DWORD bytesNeeded = 0;
 
         if ((ret = CRYPT_AsnDecodeAltNameInternal(pbEncoded, cbEncoded,
          dwFlags & ~CRYPT_DECODE_ALLOC_FLAG, NULL, &bytesNeeded, NULL)))
@@ -4002,7 +3996,7 @@ static BOOL WINAPI CRYPT_AsnDecodeOctets(DWORD dwCertEncodingType,
 
     __TRY
     {
-        DWORD bytesNeeded;
+        DWORD bytesNeeded = 0;
 
         if (!cbEncoded)
         {
@@ -4111,7 +4105,7 @@ static BOOL WINAPI CRYPT_AsnDecodeBits(DWORD dwCertEncodingType,
 
     __TRY
     {
-        DWORD bytesNeeded;
+        DWORD bytesNeeded = 0;
 
         if (!cbEncoded)
         {
@@ -4205,7 +4199,7 @@ static BOOL WINAPI CRYPT_AsnDecodeInt(DWORD dwCertEncodingType,
 
     __TRY
     {
-        DWORD bytesNeeded;
+        DWORD bytesNeeded = 0;
 
         if (!cbEncoded)
         {
@@ -4298,7 +4292,7 @@ static BOOL WINAPI CRYPT_AsnDecodeInteger(DWORD dwCertEncodingType,
 
     __TRY
     {
-        DWORD bytesNeeded;
+        DWORD bytesNeeded = 0;
 
         if (pbEncoded[0] != ASN_INTEGER)
         {
@@ -4406,7 +4400,7 @@ static BOOL WINAPI CRYPT_AsnDecodeUnsignedInteger(DWORD dwCertEncodingType,
 
     __TRY
     {
-        DWORD bytesNeeded;
+        DWORD bytesNeeded = 0;
 
         if ((ret = CRYPT_AsnDecodeUnsignedIntegerInternal(pbEncoded, cbEncoded,
          dwFlags & ~CRYPT_ENCODE_ALLOC_FLAG, NULL, &bytesNeeded, NULL)))
@@ -4662,7 +4656,7 @@ static BOOL WINAPI CRYPT_AsnDecodeUtcTime(DWORD dwCertEncodingType,
 
     __TRY
     {
-        DWORD bytesNeeded;
+        DWORD bytesNeeded = 0;
 
         ret = CRYPT_AsnDecodeUtcTimeInternal(pbEncoded, cbEncoded,
          dwFlags & ~CRYPT_DECODE_ALLOC_FLAG, NULL, &bytesNeeded, NULL);
@@ -4793,7 +4787,7 @@ static BOOL WINAPI CRYPT_AsnDecodeChoiceOfTime(DWORD dwCertEncodingType,
 
     __TRY
     {
-        DWORD bytesNeeded;
+        DWORD bytesNeeded = 0;
 
         ret = CRYPT_AsnDecodeChoiceOfTimeInternal(pbEncoded, cbEncoded,
          dwFlags & ~CRYPT_DECODE_ALLOC_FLAG, NULL, &bytesNeeded, NULL);
@@ -4938,7 +4932,7 @@ static BOOL CRYPT_AsnDecodeDistPointName(const BYTE *pbEncoded,
 
     if (pbEncoded[0] == (ASN_CONTEXT | ASN_CONSTRUCTOR | 0))
     {
-        DWORD bytesNeeded, dataLen;
+        DWORD bytesNeeded = 0, dataLen;
 
         if ((ret = CRYPT_GetLen(pbEncoded, cbEncoded, &dataLen)))
         {

@@ -18,25 +18,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdio.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "wine/debug.h"
-#include "objbase.h"
-#include "objidl.h"
-#include "ole2.h"
-#include "atlbase.h"
-#include "atliface.h"
-#include "atlwin.h"
+#include <windef.h>
+#include <winbase.h>
+#include <objbase.h>
+#include <oleauto.h>
 
-#include "wine/unicode.h"
+//#include "objidl.h"
+#include <atlbase.h>
+#include <atlwin.h>
+
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(atl);
 
@@ -179,7 +179,6 @@ HRESULT WINAPI AtlModuleRegisterClassObjects(_ATL_MODULEW *pM, DWORD dwClsContex
                                              DWORD dwFlags)
 {
     _ATL_OBJMAP_ENTRYW_V1 *obj;
-    HRESULT hRes = S_OK;
     int i=0;
 
     TRACE("(%p %i %i)\n",pM, dwClsContext, dwFlags);
@@ -199,88 +198,25 @@ HRESULT WINAPI AtlModuleRegisterClassObjects(_ATL_MODULEW *pM, DWORD dwClsContex
                                    (LPVOID*)&pUnknown);
             if (SUCCEEDED (rc) )
             {
-                CoRegisterClassObject(obj->pclsid, pUnknown, dwClsContext,
-                                      dwFlags, &obj->dwRegister);
+                rc = CoRegisterClassObject(obj->pclsid, pUnknown, dwClsContext,
+                                           dwFlags, &obj->dwRegister);
+
+                if (FAILED (rc) )
+                    WARN("Failed to register object %i: 0x%08x\n", i, rc);
+
                 if (pUnknown)
                     IUnknown_Release(pUnknown);
             }
         }
     }
 
-   return hRes;
+   return S_OK;
 }
 
 HRESULT WINAPI AtlModuleUnregisterServerEx(_ATL_MODULEW* pM, BOOL bUnRegTypeLib, const CLSID* pCLSID)
 {
     FIXME("(%p, %i, %p) stub\n", pM, bUnRegTypeLib, pCLSID);
     return S_OK;
-}
-
-
-IUnknown* WINAPI AtlComPtrAssign(IUnknown** pp, IUnknown *p)
-{
-    TRACE("(%p %p)\n", pp, p);
-
-    if (p) IUnknown_AddRef(p);
-    if (*pp) IUnknown_Release(*pp);
-    *pp = p;
-    return p;
-}
-
-IUnknown* WINAPI AtlComQIPtrAssign(IUnknown** pp, IUnknown *p, REFIID riid)
-{
-    IUnknown *new_p = NULL;
-
-    TRACE("(%p %p %s)\n", pp, p, debugstr_guid(riid));
-
-    if (p) IUnknown_QueryInterface(p, riid, (void **)&new_p);
-    if (*pp) IUnknown_Release(*pp);
-    *pp = new_p;
-    return new_p;
-}
-
-
-HRESULT WINAPI AtlInternalQueryInterface(void* this, const _ATL_INTMAP_ENTRY* pEntries,  REFIID iid, void** ppvObject)
-{
-    int i = 0;
-    HRESULT rc = E_NOINTERFACE;
-    TRACE("(%p, %p, %s, %p)\n",this, pEntries, debugstr_guid(iid), ppvObject);
-
-    if (IsEqualGUID(iid,&IID_IUnknown))
-    {
-        TRACE("Returning IUnknown\n");
-        *ppvObject = ((LPSTR)this+pEntries[0].dw);
-        IUnknown_AddRef((IUnknown*)*ppvObject);
-        return S_OK;
-    }
-
-    while (pEntries[i].pFunc != 0)
-    {
-        TRACE("Trying entry %i (%s %i %p)\n",i,debugstr_guid(pEntries[i].piid),
-              pEntries[i].dw, pEntries[i].pFunc);
-
-        if (!pEntries[i].piid || IsEqualGUID(iid,pEntries[i].piid))
-        {
-            TRACE("MATCH\n");
-            if (pEntries[i].pFunc == (_ATL_CREATORARGFUNC*)1)
-            {
-                TRACE("Offset\n");
-                *ppvObject = ((LPSTR)this+pEntries[i].dw);
-                IUnknown_AddRef((IUnknown*)*ppvObject);
-                return S_OK;
-            }
-            else
-            {
-                TRACE("Function\n");
-                rc = pEntries[i].pFunc(this, iid, ppvObject, pEntries[i].dw);
-                if(rc==S_OK || pEntries[i].piid)
-                    return rc;
-            }
-        }
-        i++;
-    }
-    TRACE("Done returning (0x%x)\n",rc);
-    return rc;
 }
 
 /***********************************************************************
@@ -317,51 +253,6 @@ HRESULT WINAPI AtlModuleRegisterServer(_ATL_MODULEW* pM, BOOL bRegTypeLib, const
     }
 
     return S_OK;
-}
-
-/***********************************************************************
- *           AtlAdvise         [ATL.@]
- */
-HRESULT WINAPI AtlAdvise(IUnknown *pUnkCP, IUnknown *pUnk, const IID *iid, LPDWORD pdw)
-{
-    FIXME("%p %p %p %p\n", pUnkCP, pUnk, iid, pdw);
-    return E_FAIL;
-}
-
-/***********************************************************************
- *           AtlUnadvise         [ATL.@]
- */
-HRESULT WINAPI AtlUnadvise(IUnknown *pUnkCP, const IID *iid, DWORD dw)
-{
-    FIXME("%p %p %d\n", pUnkCP, iid, dw);
-    return S_OK;
-}
-
-/***********************************************************************
- *           AtlFreeMarshalStream         [ATL.@]
- */
-HRESULT WINAPI AtlFreeMarshalStream(IStream *stm)
-{
-    FIXME("%p\n", stm);
-    return S_OK;
-}
-
-/***********************************************************************
- *           AtlMarshalPtrInProc         [ATL.@]
- */
-HRESULT WINAPI AtlMarshalPtrInProc(IUnknown *pUnk, const IID *iid, IStream **pstm)
-{
-    FIXME("%p %p %p\n", pUnk, iid, pstm);
-    return E_FAIL;
-}
-
-/***********************************************************************
- *           AtlUnmarshalPtr              [ATL.@]
- */
-HRESULT WINAPI AtlUnmarshalPtr(IStream *stm, const IID *iid, IUnknown **ppUnk)
-{
-    FIXME("%p %p %p\n", stm, iid, ppUnk);
-    return E_FAIL;
 }
 
 /***********************************************************************
@@ -552,48 +443,6 @@ ATOM WINAPI AtlModuleRegisterWndClassInfoW(_ATL_MODULEW *pm, _ATL_WNDCLASSINFOW 
     return atom;
 }
 
-void WINAPI AtlHiMetricToPixel(const SIZEL* lpHiMetric, SIZEL* lpPix)
-{
-    HDC dc = GetDC(NULL);
-    lpPix->cx = lpHiMetric->cx * GetDeviceCaps( dc, LOGPIXELSX ) / 100;
-    lpPix->cy = lpHiMetric->cy * GetDeviceCaps( dc, LOGPIXELSY ) / 100;
-    ReleaseDC( NULL, dc );
-}
-
-void WINAPI AtlPixelToHiMetric(const SIZEL* lpPix, SIZEL* lpHiMetric)
-{
-    HDC dc = GetDC(NULL);
-    lpHiMetric->cx = 100 * lpPix->cx / GetDeviceCaps( dc, LOGPIXELSX );
-    lpHiMetric->cy = 100 * lpPix->cy / GetDeviceCaps( dc, LOGPIXELSY );
-    ReleaseDC( NULL, dc );
-}
-
-/***********************************************************************
- *           AtlCreateTargetDC         [ATL.@]
- */
-HDC WINAPI AtlCreateTargetDC( HDC hdc, DVTARGETDEVICE *dv )
-{
-    static const WCHAR displayW[] = {'d','i','s','p','l','a','y',0};
-    const WCHAR *driver = NULL, *device = NULL, *port = NULL;
-    DEVMODEW *devmode = NULL;
-
-    TRACE( "(%p, %p)\n", hdc, dv );
-
-    if (dv)
-    {
-        if (dv->tdDriverNameOffset) driver  = (WCHAR *)((char *)dv + dv->tdDriverNameOffset);
-        if (dv->tdDeviceNameOffset) device  = (WCHAR *)((char *)dv + dv->tdDeviceNameOffset);
-        if (dv->tdPortNameOffset)   port    = (WCHAR *)((char *)dv + dv->tdPortNameOffset);
-        if (dv->tdExtDevmodeOffset) devmode = (DEVMODEW *)((char *)dv + dv->tdExtDevmodeOffset);
-    }
-    else
-    {
-        if (hdc) return hdc;
-        driver = displayW;
-    }
-    return CreateDCW( driver, device, port, devmode );
-}
-
 /***********************************************************************
  *           AtlModuleAddCreateWndData          [ATL.@]
  */
@@ -633,34 +482,10 @@ void* WINAPI AtlModuleExtractCreateWndData(_ATL_MODULEW *pM)
     return NULL;
 }
 
-/* FIXME: should be in a header file */
-typedef struct ATL_PROPMAP_ENTRY
-{
-    LPCOLESTR szDesc;
-    DISPID dispid;
-    const CLSID* pclsidPropPage;
-    const IID* piidDispatch;
-    DWORD dwOffsetData;
-    DWORD dwSizeData;
-    VARTYPE vt;
-} ATL_PROPMAP_ENTRY;
-
 /***********************************************************************
- *           AtlIPersistStreamInit_Load      [ATL.@]
+ *           AtlGetVersion              [ATL.@]
  */
-HRESULT WINAPI AtlIPersistStreamInit_Load( LPSTREAM pStm, ATL_PROPMAP_ENTRY *pMap,
-                                           void *pThis, IUnknown *pUnk)
+DWORD WINAPI AtlGetVersion(void *pReserved)
 {
-    FIXME("(%p, %p, %p, %p)\n", pStm, pMap, pThis, pUnk);
-
-    return S_OK;
-}
-
-HRESULT WINAPI AtlIPersistStreamInit_Save(LPSTREAM pStm, BOOL fClearDirty,
-                                          ATL_PROPMAP_ENTRY *pMap, void *pThis,
-                                          IUnknown *pUnk)
-{
-    FIXME("(%p, %d, %p, %p, %p)\n", pStm, fClearDirty, pMap, pThis, pUnk);
-
-    return S_OK;
+   return 0x0300;
 }

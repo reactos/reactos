@@ -9,6 +9,8 @@
 
 #include "private.hpp"
 
+extern
+"C"
 ULONG
 NTAPI
 DllInitialize(ULONG Unknown)

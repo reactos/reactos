@@ -70,7 +70,7 @@ CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Entrez un nom pour votre ordinateur de 15 caractères ou moins. Si vous êtes sur un réseau, le nom saisi doit être unique.",
+    LTEXT "Entrez un nom pour votre ordinateur d'au plus 15 caractères. Si vous êtes sur un réseau, le nom saisi doit être unique.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Nom de l'ordinateur :", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
@@ -92,7 +92,7 @@ CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "La localisation système correspond à la langue souhaitée pour les applications. Elle contrôle la manière dont les nombres, monnaies et dates sont affichées.", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "La localisation système correspond à la langue souhaitée pour les applications. Elle contrôle la manière dont les nombres, monnaies et dates sont affichés.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Pour changer la localisation système, cliquez sur Modifier.",
           IDC_STATIC, 53, 60, 184, 8
@@ -173,7 +173,7 @@ BEGIN
     IDS_ACKTITLE         "Remerciements"
     IDS_ACKSUBTITLE      "Les épaules sur lesquelles repose ReactOS et informations sur la licence"
     IDS_OWNERTITLE       "Personnalisez votre logiciel"
-    IDS_OWNERSUBTITLE    "L'installation utilise ces information sur vous pour personnaliser ReactOS."
+    IDS_OWNERSUBTITLE    "L'installation utilise ces informations sur vous pour personnaliser ReactOS."
     IDS_COMPUTERTITLE    "Nom de l'ordinateur et mot de passe Administrateur"
     IDS_COMPUTERSUBTITLE "Vous devez fournir un nom et un mot de passe Administrateur pour votre ordinateur."
     IDS_LOCALETITLE      "Options régionales"
@@ -209,24 +209,24 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_GAMES		    "Jeux"
-    IDS_CMT_SOLITAIRE	"Solitaire"
-    IDS_CMT_WINEMINE	"WineMine"
-	IDS_CMT_SPIDER      "Spider Solitaire"
+    IDS_GAMES           "Jeux"
+    IDS_CMT_SOLITAIRE   "Solitaire"
+    IDS_CMT_WINEMINE    "WineMine"
+    IDS_CMT_SPIDER      "Spider Solitaire"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_TOOLS        "Outils système"
-	IDS_CMT_CHARMAP      "Table des Caractères"
-	IDS_CMT_KBSWITCH     "Sélecteur de configuration clavier"
+    IDS_SYS_TOOLS        "Outils système"
+    IDS_CMT_CHARMAP      "Table des Caractères"
+    IDS_CMT_KBSWITCH     "Sélecteur de configuration clavier"
     IDS_CMT_DXDIAG       "Lancer le prorgramme de diagnostic ReactX"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_ACCESSIBILITY        "Accessibilité"
-	IDS_CMT_MAGNIFY      	     "Loupe"
+    IDS_SYS_ACCESSIBILITY        "Accessibilité"
+    IDS_CMT_MAGNIFY              "Loupe"
 END
 
 STRINGTABLE
@@ -239,14 +239,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP		    "Installation de ReactOS"
+    IDS_REACTOS_SETUP           "Installation de ReactOS"
     IDS_UNKNOWN_ERROR           "Erreur inconnue"
     IDS_REGISTERING_COMPONENTS  "Enregistrement des composants..."
-    IDS_LOADLIBRARY_FAILED	    "Échec de LoadLibrary : "
-    IDS_GETPROCADDR_FAILED	    "Échec de GetProcAddr : "
+    IDS_LOADLIBRARY_FAILED      "Échec de LoadLibrary : "
+    IDS_GETPROCADDR_FAILED      "Échec de GetProcAddr : "
     IDS_REGSVR_FAILED           "Échec de DllRegisterServer : "
-    IDS_DLLINSTALL_FAILED	    "Échec de DllInstall : "
-    IDS_TIMEOUT			        "Délai dépassé lors de l'enregistrement"
+    IDS_DLLINSTALL_FAILED       "Échec de DllInstall : "
+    IDS_TIMEOUT                 "Délai dépassé lors de l'enregistrement"
     IDS_REASON_UNKNOWN          ""
 END
 

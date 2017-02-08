@@ -17,75 +17,85 @@
 /*
  * @implemented
  */
-NTSTATUS NTAPI
-RtlCreateEnvironment(BOOLEAN Inherit,
-                     PWSTR *Environment)
+NTSTATUS
+NTAPI
+RtlCreateEnvironment(
+    BOOLEAN Inherit,
+    PWSTR *OutEnvironment)
 {
-   MEMORY_BASIC_INFORMATION MemInfo;
-   PVOID EnvPtr = NULL;
-   NTSTATUS Status = STATUS_SUCCESS;
-   SIZE_T RegionSize = PAGE_SIZE;
+    MEMORY_BASIC_INFORMATION MemInfo;
+    PVOID CurrentEnvironment, NewEnvironment = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
+    SIZE_T RegionSize = PAGE_SIZE;
 
-   if (Inherit == TRUE)
-   {
-      RtlAcquirePebLock();
+    /* Check if we should inherit the current environment */
+    if (Inherit)
+    {
+        /* In this case we need to lock the PEB */
+        RtlAcquirePebLock();
 
-      if (NtCurrentPeb()->ProcessParameters->Environment != NULL)
-      {
-         Status = NtQueryVirtualMemory(NtCurrentProcess(),
-                                       NtCurrentPeb()->ProcessParameters->Environment,
-                                       MemoryBasicInformation,
-                                       &MemInfo,
-                                       sizeof(MEMORY_BASIC_INFORMATION),
-                                       NULL);
-         if (!NT_SUCCESS(Status))
-         {
-            RtlReleasePebLock();
-            *Environment = NULL;
-            return(Status);
-         }
+        /* Get a pointer to the current Environment and check if it's not NULL */
+        CurrentEnvironment = NtCurrentPeb()->ProcessParameters->Environment;
+        if (CurrentEnvironment != NULL)
+        {
+            /* Query the size of the current environment allocation */
+            Status = NtQueryVirtualMemory(NtCurrentProcess(),
+                                          CurrentEnvironment,
+                                          MemoryBasicInformation,
+                                          &MemInfo,
+                                          sizeof(MEMORY_BASIC_INFORMATION),
+                                          NULL);
+            if (!NT_SUCCESS(Status))
+            {
+                RtlReleasePebLock();
+                *OutEnvironment = NULL;
+                return Status;
+            }
 
-         RegionSize = MemInfo.RegionSize;
-         Status = NtAllocateVirtualMemory(NtCurrentProcess(),
-                                          &EnvPtr,
-                                          0,
-                                          &RegionSize,
-                                          MEM_RESERVE | MEM_COMMIT,
-                                          PAGE_READWRITE);
-         if (!NT_SUCCESS(Status))
-         {
-            RtlReleasePebLock();
-            *Environment = NULL;
-            return(Status);
-         }
+            /* Allocate a new region of the same size */
+            RegionSize = MemInfo.RegionSize;
+            Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                             &NewEnvironment,
+                                             0,
+                                             &RegionSize,
+                                             MEM_RESERVE | MEM_COMMIT,
+                                             PAGE_READWRITE);
+            if (!NT_SUCCESS(Status))
+            {
+                RtlReleasePebLock();
+                *OutEnvironment = NULL;
+                return Status;
+            }
 
-         memmove(EnvPtr,
-                 NtCurrentPeb ()->ProcessParameters->Environment,
-                 MemInfo.RegionSize);
+            /* Copy the current environment */
+            RtlCopyMemory(NewEnvironment,
+                          CurrentEnvironment,
+                          MemInfo.RegionSize);
+        }
 
-         *Environment = EnvPtr;
-      }
+        /* We are done with the PEB, release the lock */
+        RtlReleasePebLock ();
+    }
 
-      RtlReleasePebLock ();
-   }
-   else
-   {
-      Status = NtAllocateVirtualMemory(NtCurrentProcess(),
-                                       &EnvPtr,
-                                       0,
-                                       &RegionSize,
-                                       MEM_RESERVE | MEM_COMMIT,
-                                       PAGE_READWRITE);
-      if (NT_SUCCESS(Status))
-      {
-         memset(EnvPtr,
-                0,
-                RegionSize);
-         *Environment = EnvPtr;
-      }
-   }
+    /* Check if we still need an environment */
+    if (NewEnvironment == NULL)
+    {
+        /* Allocate a new environment */
+        Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                         &NewEnvironment,
+                                         0,
+                                         &RegionSize,
+                                         MEM_RESERVE | MEM_COMMIT,
+                                         PAGE_READWRITE);
+        if (NT_SUCCESS(Status))
+        {
+            RtlZeroMemory(NewEnvironment, RegionSize);
+        }
+    }
 
-   return(Status);
+    *OutEnvironment = NewEnvironment;
+
+    return Status;
 }
 
 
@@ -315,7 +325,7 @@ RtlSetEnvironmentVariable(PWSTR *Environment,
       while (*env_end);
       env_end++;
       env_len = env_end - env;
-      DPRINT("environment length %ld characters\n", env_len);
+      DPRINT("environment length %lu characters\n", env_len);
 
       /* find where to insert */
       while (*wcs)

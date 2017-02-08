@@ -1,6 +1,3 @@
-/* 
- * $Id$
- */
 
 #include <asm.inc>
 #include <ks386.inc>

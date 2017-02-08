@@ -706,6 +706,7 @@ struct IDirectDrawClipper;
 
 typedef struct IDirectDraw              *LPDIRECTDRAW;
 typedef struct IDirectDraw2             *LPDIRECTDRAW2;
+typedef struct IDirectDraw3             *LPDIRECTDRAW3;
 typedef struct IDirectDraw4             *LPDIRECTDRAW4;
 typedef struct IDirectDraw7             *LPDIRECTDRAW7;
 typedef struct IDirectDrawSurface       *LPDIRECTDRAWSURFACE;
@@ -1213,8 +1214,8 @@ typedef struct _DDRGBA
 
 
 #if (defined (WIN32) || defined( _WIN32 ) ) && !defined( _NO_COM )
-  typedef BOOL (* LPDDENUMCALLBACKA)(GUID *, LPSTR, LPSTR, LPVOID);
-  typedef BOOL (* LPDDENUMCALLBACKW)(GUID *, LPWSTR, LPWSTR, LPVOID);
+  typedef BOOL (WINAPI *LPDDENUMCALLBACKA)(GUID *, LPSTR, LPSTR, LPVOID);
+  typedef BOOL (WINAPI *LPDDENUMCALLBACKW)(GUID *, LPWSTR, LPWSTR, LPVOID);
   extern HRESULT WINAPI DirectDrawEnumerateW( LPDDENUMCALLBACKW lpCallback, LPVOID lpContext );
   extern HRESULT WINAPI DirectDrawEnumerateA( LPDDENUMCALLBACKA lpCallback, LPVOID lpContext );
 
@@ -1223,8 +1224,8 @@ typedef struct _DDRGBA
         DECLARE_HANDLE(HMONITOR);
   #endif
 
-  typedef BOOL (*LPDDENUMCALLBACKEXA)(GUID *, LPSTR, LPSTR, LPVOID, HMONITOR);
-  typedef BOOL (*LPDDENUMCALLBACKEXW)(GUID *, LPWSTR, LPWSTR, LPVOID, HMONITOR);
+  typedef BOOL (WINAPI *LPDDENUMCALLBACKEXA)(GUID *, LPSTR, LPSTR, LPVOID, HMONITOR);
+  typedef BOOL (WINAPI *LPDDENUMCALLBACKEXW)(GUID *, LPWSTR, LPWSTR, LPVOID, HMONITOR);
 
   extern HRESULT WINAPI DirectDrawEnumerateExW( LPDDENUMCALLBACKEXW lpCallback, LPVOID lpContext, DWORD dwFlags);
   extern HRESULT WINAPI DirectDrawEnumerateExA( LPDDENUMCALLBACKEXA lpCallback, LPVOID lpContext, DWORD dwFlags);
@@ -1555,6 +1556,94 @@ typedef struct _DDOVERLAYFX
          #define IDirectDraw2_GetAvailableVidMem(p, a, b, c)  (p)->GetAvailableVidMem(a, b, c)
      #endif
 #endif
+
+#if defined( _WIN32 ) && !defined( _NO_COM )
+    #undef INTERFACE
+    #define INTERFACE IDirectDraw3
+    DECLARE_INTERFACE_(IDirectDraw3,IUnknown)
+    {
+        STDMETHOD(QueryInterface) (THIS_ REFIID riid, LPVOID * ppvObj) PURE;
+        STDMETHOD_(ULONG,AddRef) (THIS)  PURE;
+        STDMETHOD_(ULONG,Release) (THIS) PURE;
+        STDMETHOD(Compact)(THIS) PURE;
+        STDMETHOD(CreateClipper)(THIS_ DWORD, LPDIRECTDRAWCLIPPER *, IUnknown  * ) PURE;
+        STDMETHOD(CreatePalette)(THIS_ DWORD, LPPALETTEENTRY, LPDIRECTDRAWPALETTE *, IUnknown * ) PURE;
+        STDMETHOD(CreateSurface)(THIS_  LPDDSURFACEDESC, LPDIRECTDRAWSURFACE *, IUnknown *) PURE;
+        STDMETHOD(DuplicateSurface)( THIS_ LPDIRECTDRAWSURFACE, LPDIRECTDRAWSURFACE * ) PURE;
+        STDMETHOD(EnumDisplayModes)( THIS_ DWORD, LPDDSURFACEDESC, LPVOID, LPDDENUMMODESCALLBACK ) PURE;
+        STDMETHOD(EnumSurfaces)(THIS_ DWORD, LPDDSURFACEDESC, LPVOID,LPDDENUMSURFACESCALLBACK ) PURE;
+        STDMETHOD(FlipToGDISurface)(THIS) PURE;
+        STDMETHOD(GetCaps)( THIS_ LPDDCAPS, LPDDCAPS) PURE;
+        STDMETHOD(GetDisplayMode)( THIS_ LPDDSURFACEDESC) PURE;
+        STDMETHOD(GetFourCCCodes)(THIS_  LPDWORD, LPDWORD ) PURE;
+        STDMETHOD(GetGDISurface)(THIS_ LPDIRECTDRAWSURFACE *) PURE;
+        STDMETHOD(GetMonitorFrequency)(THIS_ LPDWORD) PURE;
+        STDMETHOD(GetScanLine)(THIS_ LPDWORD) PURE;
+        STDMETHOD(GetVerticalBlankStatus)(THIS_ LPBOOL ) PURE;
+        STDMETHOD(Initialize)(THIS_ GUID *) PURE;
+        STDMETHOD(RestoreDisplayMode)(THIS) PURE;
+        STDMETHOD(SetCooperativeLevel)(THIS_ HWND, DWORD) PURE;
+        STDMETHOD(SetDisplayMode)(THIS_ DWORD, DWORD,DWORD, DWORD, DWORD) PURE;
+        STDMETHOD(WaitForVerticalBlank)(THIS_ DWORD, HANDLE ) PURE;
+        STDMETHOD(GetAvailableVidMem)(THIS_ LPDDSCAPS, LPDWORD, LPDWORD) PURE;
+        STDMETHOD(GetSurfaceFromDC)(THIS_ HDC, LPDIRECTDRAWSURFACE*) PURE;
+};
+
+    #if !defined(__cplusplus) || defined(CINTERFACE)
+        #define IDirectDraw3_QueryInterface(p,a,b)          (p)->lpVtbl->QueryInterface(p,a,b)
+        #define IDirectDraw3_AddRef(p)                      (p)->lpVtbl->AddRef(p)
+        #define IDirectDraw3_Release(p)                     (p)->lpVtbl->Release(p)
+        #define IDirectDraw3_Compact(p)                     (p)->lpVtbl->Compact(p)
+        #define IDirectDraw3_CreateClipper(p,a,b,c)         (p)->lpVtbl->CreateClipper(p,a,b,c)
+        #define IDirectDraw3_CreatePalette(p,a,b,c,d)       (p)->lpVtbl->CreatePalette(p,a,b,c,d)
+        #define IDirectDraw3_CreateSurface(p,a,b,c)         (p)->lpVtbl->CreateSurface(p,a,b,c)
+        #define IDirectDraw3_DuplicateSurface(p,a,b)        (p)->lpVtbl->DuplicateSurface(p,a,b)
+        #define IDirectDraw3_EnumDisplayModes(p,a,b,c,d)    (p)->lpVtbl->EnumDisplayModes(p,a,b,c,d)
+        #define IDirectDraw3_EnumSurfaces(p,a,b,c,d)        (p)->lpVtbl->EnumSurfaces(p,a,b,c,d)
+        #define IDirectDraw3_FlipToGDISurface(p)            (p)->lpVtbl->FlipToGDISurface(p)
+        #define IDirectDraw3_GetCaps(p,a,b)                 (p)->lpVtbl->GetCaps(p,a,b)
+        #define IDirectDraw3_GetDisplayMode(p,a)            (p)->lpVtbl->GetDisplayMode(p,a)
+        #define IDirectDraw3_GetFourCCCodes(p,a,b)          (p)->lpVtbl->GetFourCCCodes(p,a,b)
+        #define IDirectDraw3_GetGDISurface(p,a)             (p)->lpVtbl->GetGDISurface(p,a)
+        #define IDirectDraw3_GetMonitorFrequency(p,a)       (p)->lpVtbl->GetMonitorFrequency(p,a)
+        #define IDirectDraw3_GetScanLine(p,a)               (p)->lpVtbl->GetScanLine(p,a)
+        #define IDirectDraw3_GetVerticalBlankStatus(p,a)    (p)->lpVtbl->GetVerticalBlankStatus(p,a)
+        #define IDirectDraw3_Initialize(p,a)                (p)->lpVtbl->Initialize(p,a)
+        #define IDirectDraw3_RestoreDisplayMode(p)          (p)->lpVtbl->RestoreDisplayMode(p)
+        #define IDirectDraw3_SetCooperativeLevel(p,a,b)     (p)->lpVtbl->SetCooperativeLevel(p,a,b)
+        #define IDirectDraw3_SetDisplayMode(p,a,b,c,d,e)    (p)->lpVtbl->SetDisplayMode(p,a,b,c,d,e)
+        #define IDirectDraw3_WaitForVerticalBlank(p,a,b)    (p)->lpVtbl->WaitForVerticalBlank(p,a,b)
+        #define IDirectDraw3_GetAvailableVidMem(p,a,b,c)    (p)->lpVtbl->GetAvailableVidMem(p,a,b,c)
+        #define IDirectDraw3_GetSurfaceFromDC(p,a,b)        (p)->lpVtbl->GetSurfaceFromDC(p,a,b)
+    #else
+        #define IDirectDraw3_QueryInterface(p,a,b)          (p)->QueryInterface(a,b)
+        #define IDirectDraw3_AddRef(p)                      (p)->AddRef()
+        #define IDirectDraw3_Release(p)                     (p)->Release()
+        #define IDirectDraw3_Compact(p)                     (p)->Compact()
+        #define IDirectDraw3_CreateClipper(p,a,b,c)         (p)->CreateClipper(a,b,c)
+        #define IDirectDraw3_CreatePalette(p,a,b,c,d)       (p)->CreatePalette(a,b,c,d)
+        #define IDirectDraw3_CreateSurface(p,a,b,c)         (p)->CreateSurface(a,b,c)
+        #define IDirectDraw3_DuplicateSurface(p,a,b)        (p)->DuplicateSurface(a,b)
+        #define IDirectDraw3_EnumDisplayModes(p,a,b,c,d)    (p)->EnumDisplayModes(a,b,c,d)
+        #define IDirectDraw3_EnumSurfaces(p,a,b,c,d)        (p)->EnumSurfaces(a,b,c,d)
+        #define IDirectDraw3_FlipToGDISurface(p)            (p)->FlipToGDISurface()
+        #define IDirectDraw3_GetCaps(p,a,b)                 (p)->GetCaps(a,b)
+        #define IDirectDraw3_GetDisplayMode(p,a)            (p)->GetDisplayMode(a)
+        #define IDirectDraw3_GetFourCCCodes(p,a,b)          (p)->GetFourCCCodes(a,b)
+        #define IDirectDraw3_GetGDISurface(p,a)             (p)->GetGDISurface(a)
+        #define IDirectDraw3_GetMonitorFrequency(p,a)       (p)->GetMonitorFrequency(a)
+        #define IDirectDraw3_GetScanLine(p,a)               (p)->GetScanLine(a)
+        #define IDirectDraw3_GetVerticalBlankStatus(p,a)    (p)->GetVerticalBlankStatus(a)
+        #define IDirectDraw3_Initialize(p,a)                (p)->Initialize(a)
+        #define IDirectDraw3_RestoreDisplayMode(p)          (p)->RestoreDisplayMode()
+        #define IDirectDraw3_SetCooperativeLevel(p,a,b)     (p)->SetCooperativeLevel(a,b)
+        #define IDirectDraw3_SetDisplayMode(p,a,b,c,d,e)    (p)->SetDisplayMode(a,b,c,d,e)
+        #define IDirectDraw3_WaitForVerticalBlank(p,a,b)    (p)->WaitForVerticalBlank(a,b)
+        #define IDirectDraw3_GetAvailableVidMem(p,a,b,c)    (p)->GetAvailableVidMem(a,b,c)
+        #define IDirectDraw3_GetSurfaceFromDC(p,a,b)        (p)->GetSurfaceFromDC(a,b)
+    #endif
+#endif
+
 
 #if defined( _WIN32 ) && !defined( _NO_COM )
     #undef INTERFACE

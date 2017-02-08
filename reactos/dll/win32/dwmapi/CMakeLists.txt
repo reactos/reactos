@@ -1,9 +1,6 @@
 
 add_definitions(-D__WINESRC__)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
-set_rc_compiler()
 
 spec2def(dwmapi.dll dwmapi.spec)
 
@@ -14,7 +11,6 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/dwmapi.def)
 
 add_library(dwmapi SHARED ${SOURCE})
-
 set_module_type(dwmapi win32dll)
 target_link_libraries(dwmapi wine)
 add_importlibs(dwmapi msvcrt kernel32 ntdll)

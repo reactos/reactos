@@ -17,14 +17,14 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 #ifndef _M_ARM
+
 #include <freeldr.h>
 #include <debug.h>
-#include <reactos/buildno.h>
 
 DBG_DEFAULT_CHANNEL(UI);
 
-ULONG	UiScreenWidth;							// Screen Width
-ULONG	UiScreenHeight;							// Screen Height
+ULONG	UiScreenWidth;										// Screen Width
+ULONG	UiScreenHeight;										// Screen Height
 
 UCHAR	UiStatusBarFgColor			= COLOR_BLACK;			// Status bar foreground color
 UCHAR	UiStatusBarBgColor			= COLOR_CYAN;			// Status bar background color
@@ -62,6 +62,7 @@ UIVTBL UiVtbl =
 	NoUiDrawShadow,
 	NoUiDrawBox,
 	NoUiDrawText,
+	NoUiDrawText2,
 	NoUiDrawCenteredText,
 	NoUiDrawStatusText,
 	NoUiUpdateDateTime,
@@ -81,13 +82,14 @@ UIVTBL UiVtbl =
 BOOLEAN UiInitialize(BOOLEAN ShowGui)
 {
 	VIDEODISPLAYMODE	UiDisplayMode; // Tells us if we are in text or graphics mode
-	BOOLEAN	UiMinimal = FALSE; // Tells us if we should use a minimal console-like UI
+	BOOLEAN UiMinimal = FALSE; // Tells us if we are using a minimal console-like UI
 	ULONG_PTR SectionId;
 	CHAR	DisplayModeText[260];
 	CHAR	SettingText[260];
 	ULONG	Depth;
 
-	if (!ShowGui) {
+	if (!ShowGui)
+	{
 		if (!UiVtbl.Initialize())
 		{
 			MachVideoSetDisplayMode(NULL, FALSE);
@@ -102,7 +104,7 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 	DisplayModeText[0] = '\0';
 	if (IniOpenSection("Display", &SectionId))
 	{
-		if (! IniReadSettingByName(SectionId, "DisplayMode", DisplayModeText, sizeof(DisplayModeText)))
+		if (!IniReadSettingByName(SectionId, "DisplayMode", DisplayModeText, sizeof(DisplayModeText)))
 		{
 			DisplayModeText[0] = '\0';
 		}
@@ -116,7 +118,7 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 	MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
 
 	if (VideoTextMode == UiDisplayMode)
-		UiVtbl = UiMinimal ? MiniTuiVtbl : TuiVtbl;
+		UiVtbl = (UiMinimal ? MiniTuiVtbl : TuiVtbl);
 	else
 		UiVtbl = GuiVtbl;
 
@@ -225,48 +227,10 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 	return TRUE;
 }
 
-BOOLEAN SetupUiInitialize(VOID)
-{
-	CHAR	DisplayModeText[260];
-	ULONG	Depth;
-	SIZE_T	Length;
-
-
-	DisplayModeText[0] = '\0';
-
-	MachVideoSetDisplayMode(DisplayModeText, TRUE);
-	MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
-
-	UiVtbl = TuiVtbl;
-	UiVtbl.Initialize();
-
-	// Draw the backdrop and fade it in if special effects are enabled
-	UiVtbl.FillArea(0,
-			0,
-			UiScreenWidth - 1,
-			UiScreenHeight - 2,
-			0,
-			ATTR(UiBackdropFgColor, UiBackdropBgColor));
-
-	UiDrawTime = FALSE;
-	UiStatusBarBgColor = 7;
-
-	Length = strlen("ReactOS " KERNEL_VERSION_STR " Setup");
-	memset(DisplayModeText, 0xcd, Length + 2);
-	DisplayModeText[Length + 2] = '\0';
-
-	UiVtbl.DrawText(4, 1, "ReactOS " KERNEL_VERSION_STR " Setup", ATTR(COLOR_GRAY, UiBackdropBgColor));
-	UiVtbl.DrawText(3, 2, DisplayModeText, ATTR(COLOR_GRAY, UiBackdropBgColor));
-
-	TRACE("UiInitialize() returning TRUE.\n");
-
-	return TRUE;
-}
-
 VOID UiUnInitialize(PCSTR BootText)
 {
 	UiDrawBackdrop();
-	UiDrawStatusText("Booting...");
+	UiDrawStatusText(BootText);
 	UiInfoBox(BootText);
 
 	UiVtbl.UnInitialize();
@@ -295,6 +259,11 @@ VOID UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle
 VOID UiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr)
 {
 	UiVtbl.DrawText(X, Y, Text, Attr);
+}
+
+VOID UiDrawText2(ULONG X, ULONG Y, ULONG MaxNumChars, PCSTR Text, UCHAR Attr)
+{
+	UiVtbl.DrawText2(X, Y, MaxNumChars, Text, Attr);
 }
 
 VOID UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr)
@@ -405,7 +374,7 @@ VOID UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG P
 
 VOID UiShowMessageBoxesInSection(PCSTR SectionName)
 {
-	ULONG		Idx;
+	ULONG	Idx;
 	CHAR	SettingName[80];
 	CHAR	SettingValue[80];
 	PCHAR	MessageBoxText;
@@ -455,7 +424,7 @@ VOID UiShowMessageBoxesInSection(PCSTR SectionName)
 
 VOID UiEscapeString(PCHAR String)
 {
-	ULONG		Idx;
+	ULONG	Idx;
 
 	for (Idx=0; Idx<strlen(String); Idx++)
 	{
@@ -479,9 +448,9 @@ VOID UiTruncateStringEllipsis(PCHAR StringText, ULONG MaxChars)
 	}
 }
 
-BOOLEAN UiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
+BOOLEAN UiDisplayMenu(PCSTR MenuHeader, PCSTR MenuFooter, BOOLEAN ShowBootOptions, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
 {
-	return UiVtbl.DisplayMenu(MenuItemList, MenuItemCount, DefaultMenuItem, MenuTimeOut, SelectedMenuItem, CanEscape, KeyPressFilter);
+	return UiVtbl.DisplayMenu(MenuHeader, MenuFooter, ShowBootOptions, MenuItemList, MenuItemCount, DefaultMenuItem, MenuTimeOut, SelectedMenuItem, CanEscape, KeyPressFilter);
 }
 
 VOID UiFadeInBackdrop(VOID)
@@ -498,4 +467,5 @@ BOOLEAN UiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 {
 	return UiVtbl.EditBox(MessageText, EditTextBuffer, Length);
 }
+
 #endif

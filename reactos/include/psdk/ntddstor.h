@@ -435,12 +435,12 @@ typedef struct _STORAGE_PROPERTY_QUERY {
   UCHAR AdditionalParameters[1];
 } STORAGE_PROPERTY_QUERY, *PSTORAGE_PROPERTY_QUERY;
 
-typedef struct _STORAGE_DESCRIPTOR_HEADER {
+typedef _Struct_size_bytes_(Size) struct _STORAGE_DESCRIPTOR_HEADER {
   ULONG Version;
   ULONG Size;
 } STORAGE_DESCRIPTOR_HEADER, *PSTORAGE_DESCRIPTOR_HEADER;
 
-typedef struct _STORAGE_DEVICE_DESCRIPTOR {
+typedef _Struct_size_bytes_(Size) struct _STORAGE_DEVICE_DESCRIPTOR {
   ULONG Version;
   ULONG Size;
   UCHAR DeviceType;
@@ -456,7 +456,7 @@ typedef struct _STORAGE_DEVICE_DESCRIPTOR {
   UCHAR RawDeviceProperties[1];
 } STORAGE_DEVICE_DESCRIPTOR, *PSTORAGE_DEVICE_DESCRIPTOR;
 
-typedef struct _STORAGE_ADAPTER_DESCRIPTOR {
+typedef _Struct_size_bytes_(Size) struct _STORAGE_ADAPTER_DESCRIPTOR {
   ULONG Version;
   ULONG Size;
   ULONG MaximumTransferLength;
@@ -475,7 +475,7 @@ typedef struct _STORAGE_ADAPTER_DESCRIPTOR {
   USHORT BusMinorVersion;
 } STORAGE_ADAPTER_DESCRIPTOR, *PSTORAGE_ADAPTER_DESCRIPTOR;
 
-typedef struct _STORAGE_ACCESS_ALIGNMENT_DESCRIPTOR {
+typedef _Struct_size_bytes_(Size) struct _STORAGE_ACCESS_ALIGNMENT_DESCRIPTOR {
   ULONG Version;
   ULONG Size;
   ULONG BytesPerCacheLine;
@@ -539,7 +539,7 @@ typedef struct _STORAGE_IDENTIFIER {
   UCHAR Identifier[1];
 } STORAGE_IDENTIFIER, *PSTORAGE_IDENTIFIER;
 
-typedef struct _STORAGE_DEVICE_ID_DESCRIPTOR {
+typedef _Struct_size_bytes_(Size) struct _STORAGE_DEVICE_ID_DESCRIPTOR {
   ULONG Version;
   ULONG Size;
   ULONG NumberOfIdentifiers;
@@ -646,7 +646,7 @@ typedef struct _PERSISTENT_RESERVE_COMMAND {
 
 #endif /* defined(_MSC_EXTENSIONS) */
 
-typedef struct _STORAGE_READ_CAPACITY {
+typedef _Struct_size_bytes_(Size) struct _STORAGE_READ_CAPACITY {
   ULONG Version;
   ULONG Size;
   ULONG BlockLength;
@@ -679,7 +679,7 @@ typedef enum _WRITE_THROUGH {
   WriteThroughSupported
 } WRITE_THROUGH;
 
-typedef struct _STORAGE_WRITE_CACHE_PROPERTY {
+typedef _Struct_size_bytes_(Size) struct _STORAGE_WRITE_CACHE_PROPERTY {
   ULONG Version;
   ULONG Size;
   WRITE_CACHE_TYPE WriteCacheType;

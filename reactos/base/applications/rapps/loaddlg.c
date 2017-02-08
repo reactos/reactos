@@ -260,7 +260,7 @@ ThreadFunc(LPVOID Context)
     ShowWindow(Dlg, SW_HIDE);
 
     /* run it */
-    memset(&si, 0, sizeof(si));
+    ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     r = CreateProcessW(path, NULL, NULL, NULL, 0, 0, NULL, NULL, &si, &pi);
     if (0 == r) goto end;

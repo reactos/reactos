@@ -8,8 +8,7 @@
  *   RDD 18/06-2002 Created
  */
 #include "wshirda.h"
-
-#include <debug.h>
+#include "debug.h"
 
 #if DBG
 

@@ -171,14 +171,6 @@ i386PrintExceptionText(ULONG TrapIndex, PKTRAP_FRAME TrapFrame, PKSPECIAL_REGIST
               InstructionPointer[6], InstructionPointer[7]);
 }
 
-char *BugCodeStrings[] =
-{
-    "TEST_BUGCHECK",
-    "MISSING_HARDWARE_REQUIREMENTS",
-};
-
-ULONG_PTR BugCheckInfo[5];
-
 void
 NTAPI
 FrLdrBugCheckEx(

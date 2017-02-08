@@ -673,7 +673,7 @@ Pin_fnFastWrite(
     if (NT_SUCCESS(Status))
         return TRUE;
     else
-        return TRUE;
+        return FALSE;
 }
 
 static KSDISPATCH_TABLE PinTable =

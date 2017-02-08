@@ -1,4 +1,4 @@
-/* 
+/*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Driver Paint Functions
@@ -19,7 +19,7 @@ BOOL APIENTRY FillSolid(SURFOBJ *pso, PRECTL pRect, ULONG iColor)
   ASSERT(pso);
   ASSERT(pRect);
   LineWidth  = pRect->right - pRect->left;
-  DPRINT(" LineWidth: %d, top: %d, bottom: %d\n", LineWidth, pRect->top, pRect->bottom);
+  DPRINT(" LineWidth: %lu, top: %ld, bottom: %ld\n", LineWidth, pRect->top, pRect->bottom);
   for (y = pRect->top; y < pRect->bottom; y++)
   {
     DibFunctionsForBitmapFormat[pso->iBitmapFormat].DIB_HLine(
@@ -39,7 +39,7 @@ EngPaintRgn(SURFOBJ *pso, CLIPOBJ *ClipRegion, ULONG iColor, MIX Mix,
   ASSERT(pso);
   ASSERT(ClipRegion);
 
-  DPRINT("ClipRegion->iMode:%d, ClipRegion->iDComplexity: %d\n Color: %d", ClipRegion->iMode, ClipRegion->iDComplexity, iColor);
+  DPRINT("ClipRegion->iMode:%u, ClipRegion->iDComplexity: %u\n Color: %lu", ClipRegion->iMode, ClipRegion->iDComplexity, iColor);
   switch(ClipRegion->iMode) {
 
     case TC_RECTANGLES:
@@ -99,7 +99,7 @@ IntEngPaint(IN SURFOBJ *pso,
   SURFACE *psurf = CONTAINING_RECORD(pso, SURFACE, SurfObj);
   BOOL ret;
 
-  DPRINT("pso->iType == %d\n", pso->iType);
+  DPRINT("pso->iType == %u\n", pso->iType);
   /* Is the surface's Paint function hooked? */
   if((pso->iType!=STYPE_BITMAP) && (psurf->flags & HOOK_PAINT))
   {

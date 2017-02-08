@@ -30,23 +30,27 @@
  *    When index is missing it works, but index seems to be okay.
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <assert.h>
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "winerror.h"
-#include "mmsystem.h"
-#include "vfw.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+//#include "winuser.h"
+//#include "winnls.h"
+//#include "winerror.h"
+//#include "mmsystem.h"
+#include <vfw.h>
 
 #include "avifile_private.h"
 #include "extrachunk.h"
 
-#include "wine/unicode.h"
-#include "wine/debug.h"
+#include <wine/unicode.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(avifile);
 

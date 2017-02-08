@@ -37,8 +37,8 @@ SmExecPgm(IN HANDLE SmApiPort,
     SmApiMsg.h.u1.s1.DataLength = sizeof(SM_EXEC_PGM_MSG) + 8;
     SmApiMsg.h.u1.s1.TotalLength = sizeof(SmApiMsg);
 
-    /* Initalize this specific API's parameters */
-    SmApiMsg.ApiNumber = SmExecPgmApi;
+    /* Initialize this specific API's parameters */
+    SmApiMsg.ApiNumber = SmpExecPgmApi;
     RtlCopyMemory(&SmApiMsg.u.ExecPgm.ProcessInformation,
                   ProcessInformation,
                   sizeof(SmApiMsg.u.ExecPgm.ProcessInformation));
@@ -144,7 +144,7 @@ SmSessionComplete(IN HANDLE SmApiPort,
     SessionComplete->SessionStatus = SessionStatus;
 
     /* Set the API Message Port Message header */
-    ApiMessage.ApiNumber = SmSessionCompleteApi;
+    ApiMessage.ApiNumber = SmpSessionCompleteApi;
     ApiMessage.h.u1.s1.DataLength = sizeof(SM_SESSION_COMPLETE_MSG) + 8;
     ApiMessage.h.u1.s1.TotalLength = sizeof(SM_API_MSG);
     ApiMessage.h.u2.ZeroInit = 0;

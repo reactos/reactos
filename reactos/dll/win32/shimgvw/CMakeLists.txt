@@ -1,5 +1,4 @@
 
-set_rc_compiler()
 spec2def(shimgvw.dll shimgvw.spec)
 
 list(APPEND SOURCE
@@ -9,9 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/shimgvw.def)
 
 add_library(shimgvw SHARED ${SOURCE})
-
 set_module_type(shimgvw win32dll)
-
 target_link_libraries(shimgvw wine)
 
 add_importlibs(shimgvw

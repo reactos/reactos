@@ -364,6 +364,7 @@ IopInitializePlugPlayServices(VOID)
     ULONG Disposition;
     HANDLE KeyHandle, EnumHandle, ParentHandle, TreeHandle, ControlHandle;
     UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\SYSTEM\\CURRENTCONTROLSET");
+    UNICODE_STRING PnpManagerDriverName = RTL_CONSTANT_STRING(L"\\Driver\\PnpManager");
     PDEVICE_OBJECT Pdo;
     
     /* Initialize locks and such */
@@ -468,7 +469,7 @@ IopInitializePlugPlayServices(VOID)
     }
 
     /* Create the root driver */
-    Status = IoCreateDriver(NULL, PnpRootDriverEntry);
+    Status = IoCreateDriver(&PnpManagerDriverName, PnpRootDriverEntry);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("IoCreateDriverObject() failed\n");

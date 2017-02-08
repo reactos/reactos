@@ -11,11 +11,14 @@
  *
  */
 
-#ifndef WIN32_LEAN_AND_MEAN
+/*#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
-#include <windows.h>
+#include <windows.h>*/
 #include <stdlib.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 
 WINBOOL __mingw_TLScallback (HANDLE hDllHandle, DWORD reason, LPVOID reserved);
 int ___w64_mingwthr_remove_key_dtor (DWORD key);

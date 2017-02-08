@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             services/parallel/parallel.c
@@ -123,7 +122,7 @@ Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 /*
- * FUNCTION: Called by the system to initalize the driver
+ * FUNCTION: Called by the system to initialize the driver
  * ARGUMENTS:
  *           DriverObject = object describing this driver
  *           RegistryPath = path to our configuration entries

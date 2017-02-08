@@ -20,7 +20,7 @@
  */
 
 #define _USE_MATH_DEFINES
-#include <precomp.h>
+#include "precomp.h"
 #include <math.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -236,11 +236,11 @@ CDrvDefExt::PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT pDrawItem)
             pDrawItem->rcItem.left, yCenter);
         SelectObject(pDrawItem->hDC, hbrOld);
 
-        HPEN hOldPen = (HPEN)SelectObject(pDrawItem->hDC, hDarkBluePen);
+        HPEN hOldPen = (HPEN)SelectObject(pDrawItem->hDC, hDarkMagPen);
         for (INT x = pDrawItem->rcItem.left; x < pDrawItem->rcItem.right; ++x)
         {
             if (m_FreeSpacePerc < 50 && x == xRadial)
-                SelectObject(pDrawItem->hDC, hDarkMagPen);
+                SelectObject(pDrawItem->hDC, hDarkBluePen);
 
             double cos_val = (x - xCenter)*2.0f/cx;
             INT y = yCenter+(INT)(sin(acos(cos_val))*cy/2);
@@ -309,7 +309,7 @@ CDrvDefExt::InitGeneralPage(HWND hwndDlg)
             SetDlgItemTextW(hwndDlg, 14006, wszBuf);
 
         /* Total space */
-        if (SH_FormatByteSize(FreeBytesAvailable.QuadPart, wszBuf, _countof(wszBuf)))
+        if (SH_FormatByteSize(TotalNumberOfBytes.QuadPart, wszBuf, _countof(wszBuf)))
             SetDlgItemTextW(hwndDlg, 14007, wszBuf);
 
         if (StrFormatByteSizeW(TotalNumberOfBytes.QuadPart, wszBuf, _countof(wszBuf)))

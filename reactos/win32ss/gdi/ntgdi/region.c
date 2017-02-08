@@ -114,6 +114,7 @@ SOFTWARE.
  */
 
 #include <win32k.h>
+#include <suppress.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -493,7 +494,7 @@ REGION_Complexity( PROSRGNDATA obj )
     if (!obj) return NULLREGION;
     switch(obj->rdh.nCount)
     {
-       DPRINT("Region Complexity -> %d",obj->rdh.nCount);
+       DPRINT("Region Complexity -> %lu",obj->rdh.nCount);
        case 0:  return NULLREGION;
        case 1:  return SIMPLEREGION;
        default: return COMPLEXREGION;
@@ -1782,7 +1783,7 @@ REGION_CreateSimpleFrameRgn(
     RECTL rc[4];
     PRECTL prc;
 
-    if (x != 0 || y != 0)
+    if ((x != 0) || (y != 0))
     {
         prc = rc;
 
@@ -1841,6 +1842,7 @@ REGION_CreateSimpleFrameRgn(
                 return FALSE;
             }
 
+            _PRAGMA_WARNING_SUPPRESS(__WARNING_MAYBE_UNINIT_VAR) // rc is initialized
             COPY_RECTS(rgn->Buffer, rc, rgn->rdh.nCount);
         }
     }
@@ -2162,6 +2164,7 @@ REGION_vSyncRegion(PREGION pRgn)
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
+            (void)0;
         }
         _SEH2_END;
      }
@@ -2210,6 +2213,7 @@ RGNOBJAPI_Unlock(PROSRGNDATA pRgn)
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
+            (void)0;
         }
         _SEH2_END;
      }
@@ -2879,7 +2883,7 @@ REGION_FreeStorage(ScanLineListBlock *pSLLBlock)
     while (pSLLBlock)
     {
         tmpSLLBlock = pSLLBlock->next;
-        ExFreePool(pSLLBlock);
+        ExFreePoolWithTag(pSLLBlock, TAG_REGION);
         pSLLBlock = tmpSLLBlock;
     }
 }
@@ -2907,6 +2911,12 @@ REGION_PtsToRegion(
     extents = &reg->rdh.rcBound;
 
     numRects = ((numFullPtBlocks * NUMPTSTOBUFFER) + iCurPtBlock) >> 1;
+
+    /* Make sure, we have at least one rect */
+    if (numRects == 0)
+    {
+        numRects = 1;
+    }
 
     if (!(temp = ExAllocatePoolWithTag(PagedPool, numRects * sizeof(RECT), TAG_REGION)))
     {
@@ -3829,7 +3839,7 @@ NtGdiOffsetRgn(
     PROSRGNDATA rgn = RGNOBJAPI_Lock(hRgn, NULL);
     INT ret;
 
-    DPRINT("NtGdiOffsetRgn: hRgn %d Xoffs %d Yoffs %d rgn %x\n", hRgn, XOffset, YOffset, rgn );
+    DPRINT("NtGdiOffsetRgn: hRgn %p Xoffs %d Yoffs %d rgn %p\n", hRgn, XOffset, YOffset, rgn );
 
     if (!rgn)
     {
@@ -3978,51 +3988,60 @@ NtGdiUnionRectWithRgn(
  *
  * If the function fails, the return value is zero."
  */
-DWORD APIENTRY
+_Success_(return!=0)
+ULONG
+APIENTRY
 NtGdiGetRegionData(
-    HRGN hrgn,
-    DWORD count,
-    LPRGNDATA rgndata
-)
+    _In_ HRGN hrgn,
+    _In_ ULONG cjBuffer,
+    _Out_opt_bytecap_(cjBuffer) LPRGNDATA lpRgnData)
 {
-    DWORD size;
-    PROSRGNDATA obj = RGNOBJAPI_Lock(hrgn, NULL);
-    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG cjRects, cjSize;
+    PREGION prgn;
 
-    if (!obj)
-        return 0;
-
-    size = obj->rdh.nCount * sizeof(RECT);
-    if (count < (size + sizeof(RGNDATAHEADER)) || rgndata == NULL)
+    /* Lock the region */
+    prgn = RGNOBJAPI_Lock(hrgn, NULL);
+    if (!prgn)
     {
-        RGNOBJAPI_Unlock(obj);
-        if (rgndata) /* Buffer is too small, signal it by return 0 */
-            return 0;
-        else         /* User requested buffer size with rgndata NULL */
-            return size + sizeof(RGNDATAHEADER);
-    }
-
-    _SEH2_TRY
-    {
-        ProbeForWrite(rgndata, count, 1);
-        RtlCopyMemory(rgndata, &obj->rdh, sizeof(RGNDATAHEADER));
-        RtlCopyMemory(rgndata->Buffer, obj->Buffer, size);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        RGNOBJAPI_Unlock(obj);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return 0;
     }
 
-    RGNOBJAPI_Unlock(obj);
-    return size + sizeof(RGNDATAHEADER);
+    /* Calculate the region sizes */
+    cjRects = prgn->rdh.nCount * sizeof(RECT);
+    cjSize = cjRects + sizeof(RGNDATAHEADER);
+
+    /* Check if region data is requested */
+    if (lpRgnData)
+    {
+        /* Check if the buffer is large enough */
+        if (cjBuffer >= cjSize)
+        {
+            /* Probe the buffer and copy the data */
+            _SEH2_TRY
+            {
+                ProbeForWrite(lpRgnData, cjSize, sizeof(ULONG));
+                RtlCopyMemory(lpRgnData, &prgn->rdh, sizeof(RGNDATAHEADER));
+                RtlCopyMemory(lpRgnData->Buffer, prgn->Buffer, cjRects);
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                EngSetLastError(ERROR_INVALID_PARAMETER);
+                cjSize = 0;
+            }
+            _SEH2_END;
+        }
+        else
+        {
+            /* Buffer is too small */
+            EngSetLastError(ERROR_INVALID_PARAMETER);
+            cjSize = 0;
+        }
+    }
+
+    /* Unlock the region and return the size */
+    RGNOBJAPI_Unlock(prgn);
+    return cjSize;
 }
 
 /* EOF */

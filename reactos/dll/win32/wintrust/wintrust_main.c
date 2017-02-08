@@ -17,26 +17,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <config.h>
 
 #include <stdarg.h>
 
 #define NONAMELESSUNION
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "winreg.h"
-#include "guiddef.h"
-#include "wintrust.h"
-#include "softpub.h"
-#include "mscat.h"
-#include "objbase.h"
-#include "winuser.h"
-#include "cryptdlg.h"
-#include "cryptuiapi.h"
-#include "wintrust_priv.h"
-#include "wine/debug.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winerror.h"
+#include <winreg.h>
+//#include "guiddef.h"
+//#include "wintrust.h"
+#include <softpub.h>
+#include <mscat.h>
+#include <objbase.h>
+#include <winuser.h>
+#include <cryptdlg.h>
+#include <cryptuiapi.h>
+//#include "wintrust_priv.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(wintrust);
 

@@ -52,16 +52,16 @@
  *       Robert Shearman <rob@codeweavers.com>
  */
 
-#include <stdarg.h>
-#include <string.h>
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "commctrl.h"
+//#include <stdarg.h>
+//#include <string.h>
+//#include "windef.h"
+//#include "winbase.h"
+//#include "wingdi.h"
+//#include "winuser.h"
+//#include "winnls.h"
+//#include "commctrl.h"
 #include "comctl32.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(pager);
 
@@ -83,9 +83,6 @@ typedef struct
     INT    BRbtnState; /* state of bottom or right btn */
     INT    direction;  /* direction of the scroll, (e.g. PGF_SCROLLUP) */
 } PAGER_INFO;
-
-#define MIN_ARROW_WIDTH  8
-#define MIN_ARROW_HEIGHT 5
 
 #define TIMERID1         1
 #define TIMERID2         2
@@ -116,115 +113,13 @@ PAGER_GetButtonRects(const PAGER_INFO* infoPtr, RECT* prcTopLeft, RECT* prcBotto
     }
 }
 
-/* the horizontal arrows are:
- *
- * 01234    01234
- * 1  *      *
- * 2 **      **
- * 3***      ***
- * 4***      ***
- * 5 **      **
- * 6  *      *
- * 7
- *
- */
 static void
-PAGER_DrawHorzArrow (HDC hdc, RECT r, INT colorRef, BOOL left)
-{
-    INT x, y, w, h;
-    HPEN hPen, hOldPen;
-
-    w = r.right - r.left + 1;
-    h = r.bottom - r.top + 1;
-    if ((h < MIN_ARROW_WIDTH) || (w < MIN_ARROW_HEIGHT))
-        return;  /* refuse to draw partial arrow */
-
-    if (!(hPen = CreatePen( PS_SOLID, 1, GetSysColor( colorRef )))) return;
-    hOldPen = SelectObject ( hdc, hPen );
-    if (left)
-    {
-        x = r.left + ((w - MIN_ARROW_HEIGHT) / 2) + 3;
-        y = r.top + ((h - MIN_ARROW_WIDTH) / 2) + 1;
-        MoveToEx (hdc, x, y, NULL);
-        LineTo (hdc, x--, y+5); y++;
-        MoveToEx (hdc, x, y, NULL);
-        LineTo (hdc, x--, y+3); y++;
-        MoveToEx (hdc, x, y, NULL);
-        LineTo (hdc, x, y+1);
-    }
-    else
-    {
-        x = r.left + ((w - MIN_ARROW_HEIGHT) / 2) + 1;
-        y = r.top + ((h - MIN_ARROW_WIDTH) / 2) + 1;
-        MoveToEx (hdc, x, y, NULL);
-        LineTo (hdc, x++, y+5); y++;
-        MoveToEx (hdc, x, y, NULL);
-        LineTo (hdc, x++, y+3); y++;
-        MoveToEx (hdc, x, y, NULL);
-        LineTo (hdc, x, y+1);
-    }
-
-    SelectObject( hdc, hOldPen );
-    DeleteObject( hPen );
-}
-
-/* the vertical arrows are:
- *
- * 01234567    01234567
- * 1******        **
- * 2 ****        ****
- * 3  **        ******
- * 4
- *
- */
-static void
-PAGER_DrawVertArrow (HDC hdc, RECT r, INT colorRef, BOOL up)
-{
-    INT x, y, w, h;
-    HPEN hPen, hOldPen;
-
-    w = r.right - r.left + 1;
-    h = r.bottom - r.top + 1;
-    if ((h < MIN_ARROW_WIDTH) || (w < MIN_ARROW_HEIGHT))
-        return;  /* refuse to draw partial arrow */
-
-    if (!(hPen = CreatePen( PS_SOLID, 1, GetSysColor( colorRef )))) return;
-    hOldPen = SelectObject ( hdc, hPen );
-    if (up)
-    {
-        x = r.left + ((w - MIN_ARROW_HEIGHT) / 2) + 1;
-        y = r.top + ((h - MIN_ARROW_WIDTH) / 2) + 3;
-        MoveToEx (hdc, x, y, NULL);
-        LineTo (hdc, x+5, y--); x++;
-        MoveToEx (hdc, x, y, NULL);
-        LineTo (hdc, x+3, y--); x++;
-        MoveToEx (hdc, x, y, NULL);
-        LineTo (hdc, x+1, y);
-    }
-    else
-    {
-        x = r.left + ((w - MIN_ARROW_HEIGHT) / 2) + 1;
-        y = r.top + ((h - MIN_ARROW_WIDTH) / 2) + 1;
-        MoveToEx (hdc, x, y, NULL);
-        LineTo (hdc, x+5, y++); x++;
-        MoveToEx (hdc, x, y, NULL);
-        LineTo (hdc, x+3, y++); x++;
-        MoveToEx (hdc, x, y, NULL);
-        LineTo (hdc, x+1, y);
-    }
-
-    SelectObject( hdc, hOldPen );
-    DeleteObject( hPen );
-}
-
-static void
-PAGER_DrawButton(HDC hdc, COLORREF clrBk, RECT arrowRect,
+PAGER_DrawButton(HDC hdc, COLORREF clrBk, RECT rc,
                  BOOL horz, BOOL topLeft, INT btnState)
 {
-    HBRUSH   hBrush, hOldBrush;
-    RECT     rc = arrowRect;
+    UINT flags;
 
-    TRACE("arrowRect = %s, btnState = %d\n", wine_dbgstr_rect(&arrowRect), btnState);
+    TRACE("rc = %s, btnState = %d\n", wine_dbgstr_rect(&rc), btnState);
 
     if (btnState == PGF_INVISIBLE)
         return;
@@ -232,54 +127,26 @@ PAGER_DrawButton(HDC hdc, COLORREF clrBk, RECT arrowRect,
     if ((rc.right - rc.left <= 0) || (rc.bottom - rc.top <= 0))
         return;
 
-    hBrush = CreateSolidBrush(clrBk);
-    hOldBrush = SelectObject(hdc, hBrush);
+    if (horz)
+        flags = topLeft ? DFCS_SCROLLLEFT : DFCS_SCROLLRIGHT;
+    else
+        flags = topLeft ? DFCS_SCROLLUP : DFCS_SCROLLDOWN;
 
-    FillRect(hdc, &rc, hBrush);
-
-    if (btnState == PGF_HOT)
+    switch (btnState)
     {
-       DrawEdge( hdc, &rc, BDR_RAISEDINNER, BF_RECT);
-       if (horz)
-           PAGER_DrawHorzArrow(hdc, rc, COLOR_WINDOWFRAME, topLeft);
-       else
-           PAGER_DrawVertArrow(hdc, rc, COLOR_WINDOWFRAME, topLeft);
+    case PGF_HOT:
+        break;
+    case PGF_NORMAL:
+        flags |= DFCS_FLAT;
+        break;
+    case PGF_DEPRESSED:
+        flags |= DFCS_PUSHED;
+        break;
+    case PGF_GRAYED:
+        flags |= DFCS_INACTIVE | DFCS_FLAT;
+        break;
     }
-    else if (btnState == PGF_NORMAL)
-    {
-       DrawEdge (hdc, &rc, BDR_OUTER, BF_FLAT);
-       if (horz)
-           PAGER_DrawHorzArrow(hdc, rc, COLOR_WINDOWFRAME, topLeft);
-       else
-           PAGER_DrawVertArrow(hdc, rc, COLOR_WINDOWFRAME, topLeft);
-    }
-    else if (btnState == PGF_DEPRESSED)
-    {
-       DrawEdge( hdc, &rc, BDR_SUNKENOUTER, BF_RECT);
-       if (horz)
-           PAGER_DrawHorzArrow(hdc, rc, COLOR_WINDOWFRAME, topLeft);
-       else
-           PAGER_DrawVertArrow(hdc, rc, COLOR_WINDOWFRAME, topLeft);
-    }
-    else if (btnState == PGF_GRAYED)
-    {
-       DrawEdge (hdc, &rc, BDR_OUTER, BF_FLAT);
-       if (horz)
-       {
-           PAGER_DrawHorzArrow(hdc, rc, COLOR_3DHIGHLIGHT, topLeft);
-           rc.left++, rc.top++; rc.right++, rc.bottom++;
-           PAGER_DrawHorzArrow(hdc, rc, COLOR_3DSHADOW, topLeft);
-       }
-       else
-       {
-           PAGER_DrawVertArrow(hdc, rc, COLOR_3DHIGHLIGHT, topLeft);
-           rc.left++, rc.top++; rc.right++, rc.bottom++;
-           PAGER_DrawVertArrow(hdc, rc, COLOR_3DSHADOW, topLeft);
-       }
-    }
-
-    SelectObject( hdc, hOldBrush );
-    DeleteObject(hBrush);
+    DrawFrameControl( hdc, &rc, DFC_SCROLL, flags );
 }
 
 /* << PAGER_GetDropTarget >> */
@@ -338,22 +205,24 @@ PAGER_GetBkColor(const PAGER_INFO *infoPtr)
 }
 
 static void
-PAGER_CalcSize (const PAGER_INFO *infoPtr, INT* size, BOOL getWidth)
+PAGER_CalcSize( PAGER_INFO *infoPtr )
 {
     NMPGCALCSIZE nmpgcs;
     ZeroMemory (&nmpgcs, sizeof (NMPGCALCSIZE));
     nmpgcs.hdr.hwndFrom = infoPtr->hwndSelf;
     nmpgcs.hdr.idFrom   = GetWindowLongPtrW (infoPtr->hwndSelf, GWLP_ID);
     nmpgcs.hdr.code = PGN_CALCSIZE;
-    nmpgcs.dwFlag = getWidth ? PGF_CALCWIDTH : PGF_CALCHEIGHT;
-    nmpgcs.iWidth = getWidth ? *size : 0;
-    nmpgcs.iHeight = getWidth ? 0 : *size;
+    nmpgcs.dwFlag = (infoPtr->dwStyle & PGS_HORZ) ? PGF_CALCWIDTH : PGF_CALCHEIGHT;
+    nmpgcs.iWidth = infoPtr->nWidth;
+    nmpgcs.iHeight = infoPtr->nHeight;
     SendMessageW (infoPtr->hwndNotify, WM_NOTIFY, nmpgcs.hdr.idFrom, (LPARAM)&nmpgcs);
 
-    *size = getWidth ? nmpgcs.iWidth : nmpgcs.iHeight;
+    if (infoPtr->dwStyle & PGS_HORZ)
+        infoPtr->nWidth = nmpgcs.iWidth;
+    else
+        infoPtr->nHeight = nmpgcs.iHeight;
 
-    TRACE("[%p] PGN_CALCSIZE returns %s=%d\n", infoPtr->hwndSelf,
-                  getWidth ? "width" : "height", *size);
+    TRACE("[%p] PGN_CALCSIZE returns %dx%d\n", infoPtr->hwndSelf, nmpgcs.iWidth, nmpgcs.iHeight );
 }
 
 static void
@@ -414,16 +283,15 @@ PAGER_GetScrollRange(PAGER_INFO* infoPtr)
         RECT wndRect;
         GetWindowRect(infoPtr->hwndSelf, &wndRect);
 
+        PAGER_CalcSize(infoPtr);
         if (infoPtr->dwStyle & PGS_HORZ)
         {
             wndSize = wndRect.right - wndRect.left;
-            PAGER_CalcSize(infoPtr, &infoPtr->nWidth, TRUE);
             childSize = infoPtr->nWidth;
         }
         else
         {
             wndSize = wndRect.bottom - wndRect.top;
-            PAGER_CalcSize(infoPtr, &infoPtr->nHeight, FALSE);
             childSize = infoPtr->nHeight;
         }
 
@@ -447,9 +315,10 @@ PAGER_UpdateBtns(PAGER_INFO *infoPtr, INT scrollRange, BOOL hideGrayBtns)
     RECT rcTopLeft, rcBottomRight;
 
     /* get button rects */
-    PAGER_GetButtonRects(infoPtr, &rcTopLeft, &rcBottomRight, FALSE);
+    PAGER_GetButtonRects(infoPtr, &rcTopLeft, &rcBottomRight, TRUE);
 
     GetCursorPos(&pt);
+    ScreenToClient( infoPtr->hwndSelf, &pt );
 
     /* update states based on scroll position */
     if (infoPtr->nPos > 0)
@@ -457,7 +326,7 @@ PAGER_UpdateBtns(PAGER_INFO *infoPtr, INT scrollRange, BOOL hideGrayBtns)
         if (infoPtr->TLbtnState == PGF_INVISIBLE || infoPtr->TLbtnState == PGF_GRAYED)
             infoPtr->TLbtnState = PGF_NORMAL;
     }
-    else if (PtInRect(&rcTopLeft, pt))
+    else if (!hideGrayBtns && PtInRect(&rcTopLeft, pt))
         infoPtr->TLbtnState = PGF_GRAYED;
     else
         infoPtr->TLbtnState = PGF_INVISIBLE;
@@ -472,7 +341,7 @@ PAGER_UpdateBtns(PAGER_INFO *infoPtr, INT scrollRange, BOOL hideGrayBtns)
         if (infoPtr->BRbtnState == PGF_INVISIBLE || infoPtr->BRbtnState == PGF_GRAYED)
             infoPtr->BRbtnState = PGF_NORMAL;
     }
-    else if (PtInRect(&rcBottomRight, pt))
+    else if (!hideGrayBtns && PtInRect(&rcBottomRight, pt))
         infoPtr->BRbtnState = PGF_GRAYED;
     else
         infoPtr->BRbtnState = PGF_INVISIBLE;
@@ -545,68 +414,6 @@ PAGER_WindowPosChanging(PAGER_INFO* infoPtr, WINDOWPOS *winpos)
     }
 
     return DefWindowProcW (infoPtr->hwndSelf, WM_WINDOWPOSCHANGING, 0, (LPARAM)winpos);
-}
-
-static INT
-PAGER_SetFixedWidth(PAGER_INFO* infoPtr)
-{
-  /* Must set the non-scrollable dimension to be less than the full height/width
-   * so that NCCalcSize is called.  The Microsoft docs mention 3/4 factor for button
-   * size, and experimentation shows that the effect is almost right. */
-
-    RECT wndRect;
-    INT delta, h;
-    GetWindowRect(infoPtr->hwndSelf, &wndRect);
-
-    /* see what the app says for btn width */
-    PAGER_CalcSize(infoPtr, &infoPtr->nWidth, TRUE);
-
-    if (infoPtr->dwStyle & CCS_NORESIZE)
-    {
-        delta = wndRect.right - wndRect.left - infoPtr->nWidth;
-        if (delta > infoPtr->nButtonSize)
-            infoPtr->nWidth += 4 * infoPtr->nButtonSize / 3;
-        else if (delta > 0)
-            infoPtr->nWidth +=  infoPtr->nButtonSize / 3;
-    }
-
-    h = wndRect.bottom - wndRect.top + infoPtr->nButtonSize;
-
-    TRACE("[%p] infoPtr->nWidth set to %d\n",
-	       infoPtr->hwndSelf, infoPtr->nWidth);
-
-    return h;
-}
-
-static INT
-PAGER_SetFixedHeight(PAGER_INFO* infoPtr)
-{
-  /* Must set the non-scrollable dimension to be less than the full height/width
-   * so that NCCalcSize is called.  The Microsoft docs mention 3/4 factor for button
-   * size, and experimentation shows that the effect is almost right. */
-
-    RECT wndRect;
-    INT delta, w;
-    GetWindowRect(infoPtr->hwndSelf, &wndRect);
-
-    /* see what the app says for btn height */
-    PAGER_CalcSize(infoPtr, &infoPtr->nHeight, FALSE);
-
-    if (infoPtr->dwStyle & CCS_NORESIZE)
-    {
-        delta = wndRect.bottom - wndRect.top - infoPtr->nHeight;
-        if (delta > infoPtr->nButtonSize)
-            infoPtr->nHeight += infoPtr->nButtonSize;
-        else if (delta > 0)
-            infoPtr->nHeight +=  infoPtr->nButtonSize / 3;
-    }
-
-    w = wndRect.right - wndRect.left + infoPtr->nButtonSize;
-
-    TRACE("[%p] infoPtr->nHeight set to %d\n",
-	       infoPtr->hwndSelf, infoPtr->nHeight);
-
-    return w;
 }
 
 /******************************************************************
@@ -693,28 +500,14 @@ PAGER_SetButtonSize (PAGER_INFO* infoPtr, INT iButtonSize)
 static LRESULT
 PAGER_SetChild (PAGER_INFO* infoPtr, HWND hwndChild)
 {
-    INT hw;
-
     infoPtr->hwndChild = IsWindow (hwndChild) ? hwndChild : 0;
 
     if (infoPtr->hwndChild)
     {
         TRACE("[%p] hwndChild=%p\n", infoPtr->hwndSelf, infoPtr->hwndChild);
 
-        if (infoPtr->dwStyle & PGS_HORZ) {
-            hw = PAGER_SetFixedHeight(infoPtr);
-	    /* adjust non-scrollable dimension to fit the child */
-	    SetWindowPos(infoPtr->hwndSelf, 0, 0, 0, hw, infoPtr->nHeight,
-			 SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOZORDER |
-			 SWP_NOSIZE | SWP_NOACTIVATE);
-	}
-        else {
-            hw = PAGER_SetFixedWidth(infoPtr);
-	    /* adjust non-scrollable dimension to fit the child */
-	    SetWindowPos(infoPtr->hwndSelf, 0, 0, 0, infoPtr->nWidth, hw,
-			 SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOZORDER |
-			 SWP_NOSIZE | SWP_NOACTIVATE);
-	}
+        SetWindowPos(infoPtr->hwndSelf, 0, 0, 0, 0, 0,
+                     SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
 
         /* position child within the page scroller */
         SetWindowPos(infoPtr->hwndChild, HWND_TOP,
@@ -853,11 +646,12 @@ PAGER_NCCalcSize(PAGER_INFO* infoPtr, WPARAM wParam, LPRECT lpRect)
     MapWindowPoints (0, infoPtr->hwndSelf, (LPPOINT)&rcChild, 2); /* FIXME: RECT != 2 POINTS */
     GetWindowRect (infoPtr->hwndSelf, &rcWindow);
 
+    infoPtr->nWidth = lpRect->right - lpRect->left;
+    infoPtr->nHeight = lpRect->bottom - lpRect->top;
+    PAGER_CalcSize( infoPtr );
+
     if (infoPtr->dwStyle & PGS_HORZ)
     {
-	infoPtr->nWidth = lpRect->right - lpRect->left;
-	PAGER_CalcSize (infoPtr, &infoPtr->nWidth, TRUE);
-
 	if (infoPtr->TLbtnState && (lpRect->left + infoPtr->nButtonSize < lpRect->right))
 	    lpRect->left += infoPtr->nButtonSize;
 	if (infoPtr->BRbtnState && (lpRect->right - infoPtr->nButtonSize > lpRect->left))
@@ -865,9 +659,6 @@ PAGER_NCCalcSize(PAGER_INFO* infoPtr, WPARAM wParam, LPRECT lpRect)
     }
     else
     {
-	infoPtr->nHeight = lpRect->bottom - lpRect->top;
-	PAGER_CalcSize (infoPtr, &infoPtr->nHeight, FALSE);
-
 	if (infoPtr->TLbtnState && (lpRect->top + infoPtr->nButtonSize < lpRect->bottom))
 	    lpRect->top += infoPtr->nButtonSize;
 	if (infoPtr->BRbtnState && (lpRect->bottom - infoPtr->nButtonSize > lpRect->top))

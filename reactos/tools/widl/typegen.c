@@ -413,12 +413,12 @@ static int get_padding(const var_list_t *fields)
     return ROUNDING(offset, salign);
 }
 
-static unsigned int get_stack_size( const type_t *type, const attr_list_t *attrs, int *by_value )
+static unsigned int get_stack_size( const var_t *var, int *by_value )
 {
     unsigned int stack_size;
     int by_val;
 
-    switch (typegen_detect_type( type, attrs, TDT_ALL_TYPES ))
+    switch (typegen_detect_type( var->type, var->attrs, TDT_ALL_TYPES ))
     {
     case TGT_BASIC:
     case TGT_ENUM:
@@ -426,7 +426,7 @@ static unsigned int get_stack_size( const type_t *type, const attr_list_t *attrs
     case TGT_STRUCT:
     case TGT_UNION:
     case TGT_USER_TYPE:
-        stack_size = type_memsize( type );
+        stack_size = type_memsize( var->type );
         by_val = (pointer_size < 8 || stack_size <= pointer_size); /* FIXME: should be platform-specific */
         break;
     default:
@@ -899,10 +899,10 @@ static void write_var_init(FILE *file, int indent, const type_t *t, const char *
 
 void write_parameters_init(FILE *file, int indent, const var_t *func, const char *local_var_prefix)
 {
-    const var_t *var;
+    const var_t *var = type_function_get_retval(func->type);
 
-    if (!is_void(type_function_get_rettype(func->type)))
-        write_var_init(file, indent, type_function_get_rettype(func->type), "_RetVal", local_var_prefix);
+    if (!is_void(var->type))
+        write_var_init(file, indent, var->type, var->name, local_var_prefix);
 
     if (!type_get_function_args(func->type))
         return;
@@ -952,35 +952,34 @@ int decl_indirect(const type_t *t)
             type_get_type(t) != TYPE_ARRAY);
 }
 
-static unsigned char get_parameter_fc( const type_t *type, const attr_list_t *attrs, int is_return,
-                                       unsigned short *flags, unsigned int *stack_size,
-                                       unsigned int *typestring_offset )
+static unsigned char get_parameter_fc( const var_t *var, int is_return, unsigned short *flags,
+                                       unsigned int *stack_size, unsigned int *typestring_offset )
 {
     unsigned int alignment, server_size = 0, buffer_size = 0;
     unsigned char fc = 0;
     int is_byval;
-    int is_in = is_attr(attrs, ATTR_IN);
-    int is_out = is_attr(attrs, ATTR_OUT);
+    int is_in = is_attr(var->attrs, ATTR_IN);
+    int is_out = is_attr(var->attrs, ATTR_OUT);
 
     if (is_return) is_out = TRUE;
     else if (!is_in && !is_out) is_in = TRUE;
 
     *flags = 0;
-    *stack_size = get_stack_size( type, attrs, &is_byval );
-    *typestring_offset = type->typestring_offset;
+    *stack_size = get_stack_size( var, &is_byval );
+    *typestring_offset = var->typestring_offset;
 
     if (is_in)     *flags |= IsIn;
     if (is_out)    *flags |= IsOut;
     if (is_return) *flags |= IsReturn;
 
-    if (!is_string_type( attrs, type ))
-        buffer_size = get_required_buffer_size_type( type, NULL, attrs, TRUE, &alignment );
+    if (!is_string_type( var->attrs, var->type ))
+        buffer_size = get_required_buffer_size_type( var->type, NULL, var->attrs, TRUE, &alignment );
 
-    switch (typegen_detect_type( type, attrs, TDT_ALL_TYPES ))
+    switch (typegen_detect_type( var->type, var->attrs, TDT_ALL_TYPES ))
     {
     case TGT_BASIC:
         *flags |= IsBasetype;
-        fc = get_basic_fc_signed( type );
+        fc = get_basic_fc_signed( var->type );
         if (fc == RPC_FC_BIND_PRIMITIVE)
         {
             buffer_size = 4;  /* actually 0 but avoids setting MustSize */
@@ -989,7 +988,7 @@ static unsigned char get_parameter_fc( const type_t *type, const attr_list_t *at
         break;
     case TGT_ENUM:
         *flags |= IsBasetype;
-        fc = get_enum_fc( type );
+        fc = get_enum_fc( var->type );
         break;
     case TGT_RANGE:
         *flags |= IsByValue;
@@ -1004,16 +1003,19 @@ static unsigned char get_parameter_fc( const type_t *type, const attr_list_t *at
         break;
     case TGT_ARRAY:
         *flags |= MustFree;
-        if (type_array_is_decl_as_ptr(type) && type->details.array.ptr_tfsoff &&
-            get_pointer_fc( type, attrs, !is_return ) == RPC_FC_RP)
+        if (type_array_is_decl_as_ptr(var->type) && var->type->details.array.ptr_tfsoff &&
+            get_pointer_fc( var->type, var->attrs, !is_return ) == RPC_FC_RP)
+        {
+            *typestring_offset = var->type->typestring_offset;
             *flags |= IsSimpleRef;
+        }
         break;
     case TGT_STRING:
         *flags |= MustFree;
-        if (is_declptr( type ) && get_pointer_fc( type, attrs, !is_return ) == RPC_FC_RP)
+        if (is_declptr( var->type ) && get_pointer_fc( var->type, var->attrs, !is_return ) == RPC_FC_RP)
         {
             /* skip over pointer description straight to string description */
-            if (is_conformant_array( type )) *typestring_offset += 4;
+            if (is_conformant_array( var->type )) *typestring_offset += 4;
             else *typestring_offset += 2;
             *flags |= IsSimpleRef;
         }
@@ -1026,11 +1028,11 @@ static unsigned char get_parameter_fc( const type_t *type, const attr_list_t *at
         buffer_size = 20;
         break;
     case TGT_POINTER:
-        if (get_pointer_fc( type, attrs, !is_return ) == RPC_FC_RP)
+        if (get_pointer_fc( var->type, var->attrs, !is_return ) == RPC_FC_RP)
         {
-            const type_t *ref = type_pointer_get_ref( type );
+            const type_t *ref = type_pointer_get_ref( var->type );
 
-            if (!is_string_type( attrs, ref ))
+            if (!is_string_type( var->attrs, ref ))
                 buffer_size = get_required_buffer_size_type( ref, NULL, NULL, TRUE, &alignment );
 
             switch (typegen_detect_type( ref, NULL, TDT_ALL_TYPES ))
@@ -1111,14 +1113,14 @@ static unsigned char get_func_oi2_flags( const var_t *func )
 {
     const var_t *var;
     var_list_t *args = type_get_function_args( func->type );
-    type_t *ret_type = type_function_get_rettype( func->type );
+    var_t *retval = type_function_get_retval( func->type );
     unsigned char oi2_flags = 0x40;  /* HasExtensions */
     unsigned short flags;
     unsigned int stack_size, typestring_offset;
 
     if (args) LIST_FOR_EACH_ENTRY( var, args, const var_t, entry )
     {
-        get_parameter_fc( var->type, var->attrs, 0, &flags, &stack_size, &typestring_offset );
+        get_parameter_fc( var, 0, &flags, &stack_size, &typestring_offset );
         if (flags & MustSize)
         {
             if (flags & IsIn) oi2_flags |= 0x02; /* ClientMustSize */
@@ -1126,24 +1128,22 @@ static unsigned char get_func_oi2_flags( const var_t *func )
         }
     }
 
-    if (!is_void( ret_type ))
+    if (!is_void( retval->type ))
     {
         oi2_flags |= 0x04;  /* HasRet */
-        get_parameter_fc( ret_type, NULL, 1, &flags, &stack_size, &typestring_offset );
+        get_parameter_fc( retval, 1, &flags, &stack_size, &typestring_offset );
         if (flags & MustSize) oi2_flags |= 0x01;  /* ServerMustSize */
     }
     return oi2_flags;
 }
 
-static unsigned int write_new_procformatstring_type(FILE *file, int indent,
-                                                    const type_t *type,
-                                                    const attr_list_t *attrs,
+static unsigned int write_new_procformatstring_type(FILE *file, int indent, const var_t *var,
                                                     int is_return, unsigned int *stack_offset)
 {
     char buffer[64];
     unsigned int stack_size, typestring_offset;
     unsigned short flags;
-    unsigned char fc = get_parameter_fc( type, attrs, is_return, &flags, &stack_size, &typestring_offset );
+    unsigned char fc = get_parameter_fc( var, is_return, &flags, &stack_size, &typestring_offset );
 
     strcpy( buffer, "/* flags:" );
     if (flags & MustSize) strcat( buffer, " must size," );
@@ -1172,20 +1172,18 @@ static unsigned int write_new_procformatstring_type(FILE *file, int indent,
     return 6;
 }
 
-static unsigned int write_old_procformatstring_type(FILE *file, int indent,
-                                                    const type_t *type,
-                                                    const attr_list_t *attrs,
+static unsigned int write_old_procformatstring_type(FILE *file, int indent, const var_t *var,
                                                     int is_return, int is_interpreted)
 {
     unsigned int size;
 
-    int is_in = is_attr(attrs, ATTR_IN);
-    int is_out = is_attr(attrs, ATTR_OUT);
+    int is_in = is_attr(var->attrs, ATTR_IN);
+    int is_out = is_attr(var->attrs, ATTR_OUT);
 
     if (!is_in && !is_out) is_in = TRUE;
 
-    if (type_get_type(type) == TYPE_BASIC ||
-        type_get_type(type) == TYPE_ENUM)
+    if (type_get_type(var->type) == TYPE_BASIC ||
+        type_get_type(var->type) == TYPE_ENUM)
     {
         unsigned char fc;
 
@@ -1194,13 +1192,13 @@ static unsigned int write_old_procformatstring_type(FILE *file, int indent,
         else
             print_file(file, indent, "0x4e,    /* FC_IN_PARAM_BASETYPE */\n");
 
-        if (type_get_type(type) == TYPE_ENUM)
+        if (type_get_type(var->type) == TYPE_ENUM)
         {
-            fc = get_enum_fc(type);
+            fc = get_enum_fc(var->type);
         }
         else
         {
-            fc = get_basic_fc_signed(type);
+            fc = get_basic_fc_signed(var->type);
 
             if (fc == RPC_FC_BIND_PRIMITIVE)
                 fc = RPC_FC_IGNORE;
@@ -1212,12 +1210,12 @@ static unsigned int write_old_procformatstring_type(FILE *file, int indent,
     }
     else
     {
-        unsigned short offset = type->typestring_offset;
+        unsigned short offset = var->typestring_offset;
 
-        if (is_interpreted && is_array(type) &&
-            type_array_is_decl_as_ptr(type) &&
-            type->details.array.ptr_tfsoff)
-            offset = type->details.array.ptr_tfsoff;
+        if (!is_interpreted && is_array(var->type) &&
+            type_array_is_decl_as_ptr(var->type) &&
+            var->type->details.array.ptr_tfsoff)
+            offset = var->type->typestring_offset;
 
         if (is_return)
             print_file(file, indent, "0x52,    /* FC_RETURN_PARAM */\n");
@@ -1228,7 +1226,7 @@ static unsigned int write_old_procformatstring_type(FILE *file, int indent,
         else
             print_file(file, indent, "0x4d,    /* FC_IN_PARAM */\n");
 
-        size = get_stack_size( type, attrs, NULL );
+        size = get_stack_size( var, NULL );
         print_file(file, indent, "0x%02x,\n", size / pointer_size );
         print_file(file, indent, "NdrFcShort(0x%x),	/* type offset = %u */\n", offset, offset);
         size = 4; /* includes param type prefix */
@@ -1318,7 +1316,7 @@ static void write_proc_func_header( FILE *file, int indent, const type_t *iface,
             handle_stack_offset = stack_size;
             handle_param_num = param_num;
         }
-        stack_size += get_stack_size( var->type, var->attrs, NULL );
+        stack_size += get_stack_size( var, NULL );
         param_num++;
         nb_args++;
     }
@@ -1425,6 +1423,7 @@ static void write_procformatstring_func( FILE *file, int indent, const type_t *i
     unsigned int stack_offset = is_object( iface ) ? pointer_size : 0;
     int is_interpreted = is_interpreted_func( iface, func );
     int is_new_style = is_interpreted && (get_stub_mode() == MODE_Oif);
+    var_t *retval = type_function_get_retval( func->type );
 
     if (is_interpreted) write_proc_func_header( file, indent, iface, func, offset, num_proc );
 
@@ -1436,16 +1435,14 @@ static void write_procformatstring_func( FILE *file, int indent, const type_t *i
         {
             print_file( file, 0, "/* %u (parameter %s) */\n", *offset, var->name );
             if (is_new_style)
-                *offset += write_new_procformatstring_type(file, indent, var->type, var->attrs,
-                                                           FALSE, &stack_offset);
+                *offset += write_new_procformatstring_type(file, indent, var, FALSE, &stack_offset);
             else
-                *offset += write_old_procformatstring_type(file, indent, var->type, var->attrs,
-                                                           FALSE, is_interpreted);
+                *offset += write_old_procformatstring_type(file, indent, var, FALSE, is_interpreted);
         }
     }
 
     /* emit return value data */
-    if (is_void(type_function_get_rettype(func->type)))
+    if (is_void(retval->type))
     {
         if (!is_new_style)
         {
@@ -1459,11 +1456,9 @@ static void write_procformatstring_func( FILE *file, int indent, const type_t *i
     {
         print_file( file, 0, "/* %u (return value) */\n", *offset );
         if (is_new_style)
-            *offset += write_new_procformatstring_type(file, indent, type_function_get_rettype(func->type),
-                                                       NULL, TRUE, &stack_offset);
+            *offset += write_new_procformatstring_type(file, indent, retval, TRUE, &stack_offset);
         else
-            *offset += write_old_procformatstring_type(file, indent, type_function_get_rettype(func->type),
-                                                       NULL, TRUE, is_interpreted);
+            *offset += write_old_procformatstring_type(file, indent, retval, TRUE, is_interpreted);
     }
 }
 
@@ -1488,8 +1483,6 @@ static void write_procformatstring_stmts(FILE *file, int indent, const statement
                 write_procformatstring_func( file, indent, iface, func, offset, count++ );
             }
         }
-        else if (stmt->type == STMT_LIBRARY)
-            write_procformatstring_stmts(file, indent, stmt->u.lib->stmts, pred, offset);
     }
 }
 
@@ -1661,7 +1654,7 @@ static unsigned int write_conf_or_var_desc(FILE *file, const type_t *cont_type,
                     correlation_variable = var->type;
                     break;
                 }
-                offset += get_stack_size( var->type, var->attrs, NULL );
+                offset += get_stack_size( var, NULL );
             }
         }
         else
@@ -2338,6 +2331,11 @@ static void write_array_element_type(FILE *file, const type_t *type,
                                     ref->typestring_offset, tfsoff);
             return;
         }
+        if (cont_is_complex && is_string_type(NULL, elem))
+        {
+            write_string_tfs(file, NULL, elem, TYPE_CONTEXT_CONTAINER, NULL, tfsoff);
+            return;
+        }
         if (!is_string_type(NULL, elem) &&
             (type_get_type(ref) == TYPE_BASIC || type_get_type(ref) == TYPE_ENUM))
         {
@@ -2345,7 +2343,7 @@ static void write_array_element_type(FILE *file, const type_t *type,
             return;
         }
     }
-    return write_member_type(file, type, cont_is_complex, NULL, elem, NULL, tfsoff);
+    write_member_type(file, type, cont_is_complex, NULL, elem, NULL, tfsoff);
 }
 
 static void write_end(FILE *file, unsigned int *tfsoff)
@@ -2381,8 +2379,8 @@ static void write_descriptors(FILE *file, type_t *type, unsigned int *tfsoff)
             print_file(file, 2, "0x%x,\t/* FIXME: always FC_LONG */\n", RPC_FC_LONG);
             write_conf_or_var_desc(file, current_structure, offset, ft,
                                    get_attrp(f->attrs, ATTR_SWITCHIS));
-            print_file(file, 2, "NdrFcShort(%hd),\t/* Offset= %hd (%u) */\n",
-                       reloff, reloff, absoff);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Offset= %hd (%u) */\n",
+                       (unsigned short)reloff, reloff, absoff);
             *tfsoff += 8;
         }
         offset += size;
@@ -3616,7 +3614,7 @@ static int write_embedded_types(FILE *file, const attr_list_t *attrs, type_t *ty
 static unsigned int process_tfs_stmts(FILE *file, const statement_list_t *stmts,
                                       type_pred_t pred, unsigned int *typeformat_offset)
 {
-    const var_t *var;
+    var_t *var;
     const statement_t *stmt;
 
     if (stmts) LIST_FOR_EACH_ENTRY( stmt, stmts, const statement_t, entry )
@@ -3624,12 +3622,7 @@ static unsigned int process_tfs_stmts(FILE *file, const statement_list_t *stmts,
         const type_t *iface;
         const statement_t *stmt_func;
 
-        if (stmt->type == STMT_LIBRARY)
-        {
-            process_tfs_stmts(file, stmt->u.lib->stmts, pred, typeformat_offset);
-            continue;
-        }
-        else if (stmt->type != STMT_TYPE || type_get_type(stmt->u.type) != TYPE_INTERFACE)
+        if (stmt->type != STMT_TYPE || type_get_type(stmt->u.type) != TYPE_INTERFACE)
             continue;
 
         iface = stmt->u.type;
@@ -3643,16 +3636,16 @@ static unsigned int process_tfs_stmts(FILE *file, const statement_list_t *stmts,
             current_func = func;
             if (is_local(func->attrs)) continue;
 
-            if (!is_void(type_function_get_rettype(func->type)))
-            {
-                write_type_tfs( file, 2, func->attrs, type_function_get_rettype(func->type),
-                                func->name, TYPE_CONTEXT_PARAM, typeformat_offset);
-            }
+            var = type_function_get_retval(func->type);
+            if (!is_void(var->type))
+                var->typestring_offset = write_type_tfs( file, 2, func->attrs, var->type, func->name,
+                                                         TYPE_CONTEXT_PARAM, typeformat_offset);
 
             if (type_get_function_args(func->type))
-                LIST_FOR_EACH_ENTRY( var, type_get_function_args(func->type), const var_t, entry )
-                    write_type_tfs( file, 2, var->attrs, var->type, var->name,
-                                    TYPE_CONTEXT_TOPLEVELPARAM, typeformat_offset );
+                LIST_FOR_EACH_ENTRY( var, type_get_function_args(func->type), var_t, entry )
+                    var->typestring_offset = write_type_tfs( file, 2, var->attrs, var->type, var->name,
+                                                             TYPE_CONTEXT_TOPLEVELPARAM,
+                                                             typeformat_offset );
         }
     }
 
@@ -4153,10 +4146,11 @@ static void write_remoting_arg(FILE *file, int indent, const var_t *func, const 
                 /* if the context_handle attribute appears in the chain of types
                  * without pointers being followed, then the context handle must
                  * be direct, otherwise it is a pointer */
-                int is_ch_ptr = is_aliaschain_attr(type, ATTR_CONTEXTHANDLE) ? FALSE : TRUE;
+                const char *ch_ptr = is_aliaschain_attr(type, ATTR_CONTEXTHANDLE) ? "" : "*";
                 print_file(file, indent, "NdrClientContextMarshall(\n");
                 print_file(file, indent + 1, "&__frame->_StubMsg,\n");
-                print_file(file, indent + 1, "(NDR_CCONTEXT)%s%s%s,\n", is_ch_ptr ? "*" : "", local_var_prefix, var->name);
+                print_file(file, indent + 1, "(NDR_CCONTEXT)%s%s%s,\n", ch_ptr, local_var_prefix,
+                           var->name);
                 print_file(file, indent + 1, "%s);\n", in_attr && out_attr ? "1" : "0");
             }
             else
@@ -4475,12 +4469,8 @@ void write_remoting_arguments(FILE *file, int indent, const var_t *func, const c
 
     if (pass == PASS_RETURN)
     {
-        var_t var;
-        var = *func;
-        var.type = type_function_get_rettype(func->type);
-        var.name = xstrdup( "_RetVal" );
-        write_remoting_arg( file, indent, func, local_var_prefix, pass, phase, &var );
-        free( var.name );
+        write_remoting_arg( file, indent, func, local_var_prefix, pass, phase,
+                            type_function_get_retval(func->type) );
     }
     else
     {
@@ -4510,12 +4500,7 @@ unsigned int get_size_procformatstring(const statement_list_t *stmts, type_pred_
         const type_t *iface;
         const statement_t *stmt_func;
 
-        if (stmt->type == STMT_LIBRARY)
-        {
-            size += get_size_procformatstring(stmt->u.lib->stmts, pred) - 1;
-            continue;
-        }
-        else if (stmt->type != STMT_TYPE || type_get_type(stmt->u.type) != TYPE_INTERFACE)
+        if (stmt->type != STMT_TYPE || type_get_type(stmt->u.type) != TYPE_INTERFACE)
             continue;
 
         iface = stmt->u.type;
@@ -4542,14 +4527,14 @@ void declare_stub_args( FILE *file, int indent, const var_t *func )
 {
     int in_attr, out_attr;
     int i = 0;
-    const var_t *var;
+    const var_t *var = type_function_get_retval(func->type);
 
-    /* declare return value '_RetVal' */
-    if (!is_void(type_function_get_rettype(func->type)))
+    /* declare return value */
+    if (!is_void(var->type))
     {
         print_file(file, indent, "%s", "");
-        write_type_decl_left(file, type_function_get_rettype(func->type));
-        fprintf(file, " _RetVal;\n");
+        write_type_decl(file, var->type, var->name);
+        fprintf(file, ";\n");
     }
 
     if (!type_get_function_args(func->type))
@@ -4604,6 +4589,7 @@ void assign_stub_out_args( FILE *file, int indent, const var_t *func, const char
     int in_attr, out_attr;
     int i = 0, sep = 0;
     const var_t *var;
+    type_t *ref;
 
     if (!type_get_function_args(func->type))
         return;
@@ -4625,7 +4611,7 @@ void assign_stub_out_args( FILE *file, int indent, const var_t *func, const char
                 fprintf(file, " = NdrContextHandleInitialize(\n");
                 print_file(file, indent + 1, "&__frame->_StubMsg,\n");
                 print_file(file, indent + 1, "(PFORMAT_STRING)&__MIDL_TypeFormatString.Format[%d]);\n",
-                           var->type->typestring_offset);
+                           var->typestring_offset);
                 break;
             case TGT_ARRAY:
                 if (type_array_has_conformance(var->type))
@@ -4662,7 +4648,8 @@ void assign_stub_out_args( FILE *file, int indent, const var_t *func, const char
                 break;
             case TGT_POINTER:
                 fprintf(file, " = &%s_W%u;\n", local_var_prefix, i);
-                switch (typegen_detect_type(type_pointer_get_ref(var->type), var->attrs, TDT_IGNORE_STRINGS))
+                ref = type_pointer_get_ref(var->type);
+                switch (typegen_detect_type(ref, var->attrs, TDT_IGNORE_STRINGS))
                 {
                 case TGT_BASIC:
                 case TGT_ENUM:
@@ -4675,9 +4662,20 @@ void assign_stub_out_args( FILE *file, int indent, const var_t *func, const char
                     print_file(file, indent, "memset(&%s_W%u, 0, sizeof(%s_W%u));\n",
                                local_var_prefix, i, local_var_prefix, i);
                     break;
+                case TGT_ARRAY:
+                    if (type_array_is_decl_as_ptr(ref))
+                    {
+                        print_file(file, indent, "%s_W%u = 0;\n", local_var_prefix, i);
+                        break;
+                    }
+                    ref = type_array_get_element(ref);
+                    /* fall through */
                 case TGT_STRUCT:
                 case TGT_UNION:
-                case TGT_ARRAY:
+                    if (type_has_pointers(ref))
+                        print_file(file, indent, "memset(&%s_W%u, 0, sizeof(%s_W%u));\n",
+                                   local_var_prefix, i, local_var_prefix, i);
+                    break;
                 case TGT_CTXT_HANDLE:
                 case TGT_CTXT_HANDLE_POINTER:
                 case TGT_INVALID:
@@ -4702,7 +4700,7 @@ void assign_stub_out_args( FILE *file, int indent, const var_t *func, const char
 void write_func_param_struct( FILE *file, const type_t *iface, const type_t *func,
                               const char *var_decl, int add_retval )
 {
-    type_t *rettype = type_function_get_rettype( func );
+    var_t *retval = type_function_get_retval( func );
     const var_list_t *args = type_get_function_args( func );
     const var_t *arg;
     int needs_packing;
@@ -4734,13 +4732,14 @@ void write_func_param_struct( FILE *file, const type_t *iface, const type_t *fun
         if (align >= pointer_size)
             fprintf( file, "%s;\n", arg->name );
         else
-            fprintf( file, "%s DECLSPEC_ALIGN(%u);\n", arg->name, pointer_size );
+            fprintf( file, "DECLSPEC_ALIGN(%u) %s;\n", pointer_size, arg->name );
     }
-    if (add_retval && !is_void( rettype ))
+    if (add_retval && !is_void( retval->type ))
     {
         print_file(file, 2, "%s", "");
-        write_type_decl( file, rettype, "_RetVal" );
-        if (is_array( rettype ) || is_ptr( rettype ) || type_memsize( rettype ) == pointer_size)
+        write_type_decl( file, retval->type, retval->name );
+        if (is_array( retval->type ) || is_ptr( retval->type ) ||
+            type_memsize( retval->type ) == pointer_size)
             fprintf( file, ";\n" );
         else
             fprintf( file, " DECLSPEC_ALIGN(%u);\n", pointer_size );

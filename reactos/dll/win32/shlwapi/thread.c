@@ -18,23 +18,27 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
-#include <string.h>
+//#include <string.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "winuser.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+//#include "winuser.h"
 #define NO_SHLWAPI_REG
 #define NO_SHLWAPI_PATH
 #define NO_SHLWAPI_GDI
 #define NO_SHLWAPI_STREAM
 #define NO_SHLWAPI_USER
-#include "shlwapi.h"
-#include "shlobj.h"
-#include "wine/debug.h"
+#include <shlwapi.h>
+#include <shlobj.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -122,13 +126,18 @@ typedef struct tagSHLWAPI_THREAD_INFO
 
 typedef struct
 {
-  const IUnknownVtbl* lpVtbl;
+  IUnknown IUnknown_iface;
   LONG  *ref;
 } threadref;
 
+static inline threadref *impl_from_IUnknown(IUnknown *iface)
+{
+  return CONTAINING_RECORD(iface, threadref, IUnknown_iface);
+}
+
 static HRESULT WINAPI threadref_QueryInterface(IUnknown *iface, REFIID riid, LPVOID *ppvObj)
 {
-  threadref * This = (threadref *)iface;
+  threadref * This = impl_from_IUnknown(iface);
 
   TRACE("(%p, %s, %p)\n", This, debugstr_guid(riid), ppvObj);
 
@@ -149,7 +158,7 @@ static HRESULT WINAPI threadref_QueryInterface(IUnknown *iface, REFIID riid, LPV
 
 static ULONG WINAPI threadref_AddRef(IUnknown *iface)
 {
-  threadref * This = (threadref *)iface;
+  threadref * This = impl_from_IUnknown(iface);
 
   TRACE("(%p)\n", This);
   return InterlockedIncrement(This->ref);
@@ -158,7 +167,7 @@ static ULONG WINAPI threadref_AddRef(IUnknown *iface)
 static ULONG WINAPI threadref_Release(IUnknown *iface)
 {
   LONG refcount;
-  threadref * This = (threadref *)iface;
+  threadref * This = impl_from_IUnknown(iface);
 
   TRACE("(%p)\n", This);
 
@@ -199,11 +208,11 @@ HRESULT WINAPI SHCreateThreadRef(LONG *lprefcount, IUnknown **lppUnknown)
     return E_INVALIDARG;
 
   This = HeapAlloc(GetProcessHeap(), 0, sizeof(threadref));
-  This->lpVtbl = &threadref_vt;
+  This->IUnknown_iface.lpVtbl = &threadref_vt;
   This->ref = lprefcount;
 
   *lprefcount = 1;
-  *lppUnknown = (IUnknown *) This;
+  *lppUnknown = &This->IUnknown_iface;
   TRACE("=> returning S_OK with %p\n", This);
   return S_OK;
 }
@@ -360,7 +369,7 @@ BOOL WINAPI SHCreateThread(LPTHREAD_START_ROUTINE pfnThreadProc, VOID *pData,
   ti.pfnThreadProc = pfnThreadProc;
   ti.pfnCallback = pfnCallback;
   ti.pData = pData;
-  ti.bInitCom = dwFlags & CTF_COINIT ? TRUE : FALSE;
+  ti.bInitCom = (dwFlags & CTF_COINIT) != 0;
   ti.hEvent = CreateEventW(NULL,FALSE,FALSE,NULL);
 
   /* Hold references to the current thread and IE process, if desired */
@@ -525,7 +534,7 @@ HANDLE WINAPI SHGlobalCounterCreateNamedA(LPCSTR lpszName, DWORD iInitial)
   TRACE("(%s,%d)\n", debugstr_a(lpszName), iInitial);
 
   if (lpszName)
-    MultiByteToWideChar(0, 0, lpszName, -1, szBuff, MAX_PATH);
+    MultiByteToWideChar(CP_ACP, 0, lpszName, -1, szBuff, MAX_PATH);
   return SHGlobalCounterCreateNamedW(lpszName ? szBuff : NULL, iInitial);
 }
 

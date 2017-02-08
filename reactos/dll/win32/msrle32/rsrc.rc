@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "winbase.h"
+//#include "windef.h"
+//#include "winbase.h"
 
-#include "msrle_private.h"
+//#include "msrle_private.h"
 
 /*
  * Everything specific to any language goes
@@ -80,6 +80,9 @@
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "msrle_Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "msrle_He.rc"
 #endif
 #ifdef LANGUAGE_JA_JP
     #include "msrle_Ja.rc"

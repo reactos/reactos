@@ -20,7 +20,7 @@
  *       Now expands lfn even when trailing " is omitted.
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION
 
@@ -491,9 +491,15 @@ int __cdecl compare(const void *arg1,const void *arg2)
 	INT ret;
 
 	File1 = cmd_alloc(sizeof(FileName));
-	File2 = cmd_alloc(sizeof(FileName));
-	if(!File1 || !File2)
+	if (!File1)
 		return 0;
+
+	File2 = cmd_alloc(sizeof(FileName));
+	if(!File2)
+	{
+		cmd_free(File1);
+		return 0;
+	}
 
 	memcpy(File1,arg1,sizeof(FileName));
 	memcpy(File2,arg2,sizeof(FileName));
@@ -660,14 +666,16 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 	/* aseemble a list of all files names */
 	do
 	{
+		FileName * oldFileList = FileList;
+
  		if(!_tcscmp (file.cFileName, _T(".")) ||
 			!_tcscmp (file.cFileName, _T("..")))
 			continue;
 
 		/* Don't show files when they are doing 'cd' or 'rd' */
 		if(!ShowAll &&
-       file.dwFileAttributes != 0xFFFFFFFF &&
-       !(file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+			file.dwFileAttributes != 0xFFFFFFFF &&
+			!(file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 		{
 				continue;
 		}
@@ -677,6 +685,8 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 
 		if(FileList == NULL)
 		{
+			/* Don't leak old buffer */
+			cmd_free(oldFileList);
 			/* Assemble the orginal string and return */
 			_tcscpy(strOut,szOrginal);
 			FindClose(hFile);
@@ -688,7 +698,7 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 
 	} while(FindNextFile(hFile,&file));
 
-    FindClose(hFile);
+	FindClose(hFile);
 
 	/* Check the size of the list to see if we
 	   found any matches */

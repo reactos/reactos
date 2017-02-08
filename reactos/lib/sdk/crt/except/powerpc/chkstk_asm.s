@@ -1,5 +1,4 @@
-/* $Id: chkstk_asm.s 26099 2007-03-14 20:30:32Z ion $
- *
+/*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Stack checker

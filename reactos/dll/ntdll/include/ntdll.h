@@ -16,13 +16,16 @@
 #define _CTYPE_DISABLE_MACROS
 #define _CRT_SECURE_NO_DEPRECATE
 #define _INC_SWPRINTF_INL_
-#include <limits.h>
 #include <stdio.h>
-#include <ctype.h>
 
 /* SDK/DDK/NDK Headers. */
 #define WIN32_NO_STATUS
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <wincon.h>
+#include <winuser.h>
 #define NTOS_MODE_USER
 #include <ndk/cmfuncs.h>
 #include <ndk/dbgkfuncs.h>
@@ -41,8 +44,9 @@
 /* Internal NTDLL */
 #include "ntdllp.h"
 
-/* CSRSS Header */
-#include <csrss/csrss.h>
+/* CSRSS Headers */
+#include <csr/csrsrv.h>
+#include <csr/csr.h>
 
 /* PSEH */
 #include <pseh/pseh2.h>

@@ -97,7 +97,52 @@ PoVolumeDevice(IN PDEVICE_OBJECT DeviceObject)
         KeReleaseGuardedMutex(&PopVolumeLock);
     }
 }
-    
+
+VOID
+NTAPI
+PoRemoveVolumeDevice(IN PDEVICE_OBJECT DeviceObject)
+{
+    PDEVICE_OBJECT_POWER_EXTENSION Dope;
+    PEXTENDED_DEVOBJ_EXTENSION DeviceExtension;
+    KIRQL OldIrql;
+    PAGED_CODE();
+
+    /* If the device already has the dope, return it */
+    DeviceExtension = IoGetDevObjExtension(DeviceObject);
+    if (!DeviceExtension->Dope)
+    {
+        /* no dope */
+        return;
+    }
+
+    /* Make sure we can flush safely */
+    KeAcquireGuardedMutex(&PopVolumeLock);
+
+    /* Get dope from device */
+    Dope = (PDEVICE_OBJECT_POWER_EXTENSION)DeviceExtension->Dope;
+
+    if (Dope->Volume.Flink)
+    {
+        /* Remove from volume from list */
+        RemoveEntryList(&Dope->Volume);
+    }
+
+    /* Allow flushes to go through */
+    KeReleaseGuardedMutex(&PopVolumeLock);
+
+    /* Now remove dope from device object */
+    KeAcquireSpinLock(&PopDopeGlobalLock, &OldIrql);
+
+    /* remove from dev obj */
+    DeviceExtension->Dope = NULL;
+
+    /* Release lock */
+    KeReleaseSpinLock(&PopDopeGlobalLock, OldIrql);
+
+    /* Free dope */
+    ExFreePoolWithTag(Dope, 'Dope');
+}
+
 VOID
 NTAPI
 PopFlushVolumeWorker(IN PVOID Context)
@@ -254,8 +299,7 @@ PopFlushVolumes(IN BOOLEAN ShuttingDown)
     if (!(FlushPolicy & 2))
     {
         /* ReactOS only implements this routine for shutdown, which requires it */
-        UNIMPLEMENTED;
-        while (TRUE);
+        UNIMPLEMENTED_DBGBREAK();
     }
 
     /* Check if there were no volumes at all */

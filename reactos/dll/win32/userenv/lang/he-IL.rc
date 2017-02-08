@@ -1,0 +1,50 @@
+/*
+ * Copyright (C) 2004 Eric Kohl
+ *
+ * Translated by Baruch Rutman
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_PROFILEPATH    "%SystemDrive%\\מסמכים והגדרות"
+    IDS_APPDATA        "Application Data"
+    IDS_DESKTOP        "שולחן העבודה"
+    IDS_FAVORITES      "מועדפים"
+    IDS_STARTMENU      "תפריט ההתחלה"
+    IDS_PROGRAMS       "תפריט ההתחלה\\תכניות"
+    IDS_ADMINTOOLS     "תפריט ההתחלה\\תכניות\\כלי הניהול"
+    IDS_STARTUP        "תפריט ההתחלה\\תכניות\\הפעלה"
+    IDS_MYDOCUMENTS    "המסמכים שלי"
+    IDS_MYPICTURES     "המסמכים שלי\\התמונות שלי"
+    IDS_MYMUSIC        "המסמכים שלי\\המוסיקה שלי"
+    IDS_MYVIDEOS       "המסמכים שלי\\הוידאו שלי"
+    IDS_TEMPLATES      "תבניות"
+    IDS_RECENT         "אחרונים"
+    IDS_SENDTO         "שלח אל"
+    IDS_PRINTHOOD      "PrintHood"
+    IDS_NETHOOD        "NetHood"
+    IDS_LOCALSETTINGS  "Local Settings"
+    IDS_LOCALAPPDATA   "Local Settings\\Application Data"
+    IDS_TEMP           "Local Settings\\Temp"
+    IDS_CACHE          "Local Settings\\Temporary Internet Files"
+    IDS_HISTORY        "Local Settings\\היסטוריה"
+    IDS_COOKIES        "עוגיות"
+    IDS_PROGRAMFILES   "%SystemDrive%\\Program Files"
+    IDS_COMMONFILES    "Common Files"
+END

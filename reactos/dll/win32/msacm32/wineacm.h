@@ -20,8 +20,8 @@
 #ifndef __WINE_WINEACM_H
 #define __WINE_WINEACM_H
 
-#include <windef.h>
-#include <winuser.h>
+//#include <windef.h>
+//#include <winuser.h>
 
 /***********************************************************************
  * Wine specific - Win32
@@ -149,6 +149,6 @@ LRESULT CALLBACK	PCM_DriverProc(DWORD_PTR dwDevID, HDRVR hDriv, UINT wMsg,
 				       LPARAM dwParam1, LPARAM dwParam2);
 
 /* Dialog box templates */
-#include "msacmdlg.h"
+#include <msacmdlg.h>
 
 #endif /* __WINE_WINEACM_H */

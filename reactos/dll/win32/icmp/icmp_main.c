@@ -33,7 +33,11 @@
  * - Using the winsock functions has not been tested.
  */
 
-#include "config.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <config.h>
 
 #include <sys/types.h>
 #ifdef HAVE_SYS_SOCKET_H
@@ -53,8 +57,8 @@
 # include <sys/time.h>
 #endif
 #include <stdarg.h>
-#include <string.h>
-#include <errno.h>
+//#include <string.h>
+//#include <errno.h>
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
@@ -62,13 +66,13 @@
 # include <arpa/inet.h>
 #endif
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "ipexport.h"
-#include <ws2tcpip.h>
-#include "icmpapi.h"
-#include "wine/debug.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winerror.h"
+#include <ipexport.h>
+//#include <ws2tcpip.h>
+//#include "icmpapi.h"
+#include <wine/debug.h>
 
 /* Set up endiannes macros for the ip and ip_icmp BSD headers */
 #ifndef BIG_ENDIAN

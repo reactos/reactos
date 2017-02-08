@@ -5,9 +5,13 @@
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  */
 
-#include <windows.h>
+#define WIN32_NO_STATUS
+
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 #include <t2embapi.h>
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(t2embed);
 

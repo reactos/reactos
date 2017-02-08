@@ -9,34 +9,60 @@
 #define NDEBUG
 #include "vfat.h"
 
+static FAST_IO_CHECK_IF_POSSIBLE VfatFastIoCheckIfPossible;
+
 static BOOLEAN NTAPI
 VfatFastIoCheckIfPossible(IN PFILE_OBJECT FileObject,
                           IN PLARGE_INTEGER FileOffset,
-                          IN ULONG Lenght,
+                          IN ULONG Length,
                           IN BOOLEAN Wait,
                           IN ULONG LockKey,
                           IN BOOLEAN CheckForReadOperation,
                           OUT PIO_STATUS_BLOCK IoStatus,
                           IN PDEVICE_OBJECT DeviceObject)
 {
-	/* Prevent all Fast I/O requests */
-	DPRINT("VfatFastIoCheckIfPossible(): returning FALSE.\n");
-	return FALSE;
+    /* Prevent all Fast I/O requests */
+    DPRINT("VfatFastIoCheckIfPossible(): returning FALSE.\n");
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(FileOffset);
+    UNREFERENCED_PARAMETER(Length);
+    UNREFERENCED_PARAMETER(Wait);
+    UNREFERENCED_PARAMETER(LockKey);
+    UNREFERENCED_PARAMETER(CheckForReadOperation);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    return FALSE;
 }
+
+static FAST_IO_READ VfatFastIoRead;
 
 static BOOLEAN NTAPI
 VfatFastIoRead(IN PFILE_OBJECT FileObject,
 			   IN PLARGE_INTEGER FileOffset,
-			   IN ULONG	Length,
+			   IN ULONG Length,
 			   IN BOOLEAN Wait,
 			   IN ULONG LockKey,
 			   OUT PVOID Buffer,
-			   OUT PIO_STATUS_BLOCK	IoStatus,
+			   OUT PIO_STATUS_BLOCK IoStatus,
                IN PDEVICE_OBJECT DeviceObject)
 {
-   DPRINT("VfatFastIoRead()\n");
-   return FALSE;
+    DPRINT("VfatFastIoRead()\n");
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(FileOffset);
+    UNREFERENCED_PARAMETER(Length);
+    UNREFERENCED_PARAMETER(Wait);
+    UNREFERENCED_PARAMETER(LockKey);
+    UNREFERENCED_PARAMETER(Buffer);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    return FALSE;
 }
+
+static FAST_IO_WRITE VfatFastIoWrite;
 
 static BOOLEAN NTAPI
 VfatFastIoWrite(IN PFILE_OBJECT FileObject,
@@ -48,9 +74,21 @@ VfatFastIoWrite(IN PFILE_OBJECT FileObject,
 				OUT PIO_STATUS_BLOCK IoStatus,
 				IN PDEVICE_OBJECT DeviceObject)
 {
-   DPRINT("VfatFastIoWrite()\n");
-   return FALSE;
+    DPRINT("VfatFastIoWrite()\n");
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(FileOffset);
+    UNREFERENCED_PARAMETER(Length);
+    UNREFERENCED_PARAMETER(Wait);
+    UNREFERENCED_PARAMETER(LockKey);
+    UNREFERENCED_PARAMETER(Buffer);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    return FALSE;
 }
+
+static FAST_IO_QUERY_BASIC_INFO VfatFastIoQueryBasicInfo;
 
 static BOOLEAN NTAPI
 VfatFastIoQueryBasicInfo(IN PFILE_OBJECT FileObject,
@@ -59,9 +97,18 @@ VfatFastIoQueryBasicInfo(IN PFILE_OBJECT FileObject,
 						 OUT PIO_STATUS_BLOCK IoStatus,
 						 IN PDEVICE_OBJECT DeviceObject)
 {
-   DPRINT("VfatFastIoQueryBasicInfo()\n");
-   return FALSE;
+    DPRINT("VfatFastIoQueryBasicInfo()\n");
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(Wait);
+    UNREFERENCED_PARAMETER(Buffer);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    return FALSE;
 }
+
+static FAST_IO_QUERY_STANDARD_INFO VfatFastIoQueryStandardInfo;
 
 static BOOLEAN NTAPI
 VfatFastIoQueryStandardInfo(IN PFILE_OBJECT FileObject,
@@ -70,9 +117,18 @@ VfatFastIoQueryStandardInfo(IN PFILE_OBJECT FileObject,
 							OUT PIO_STATUS_BLOCK IoStatus,
 							IN PDEVICE_OBJECT DeviceObject)
 {
-   DPRINT("VfatFastIoQueryStandardInfo\n");
-   return FALSE;
+    DPRINT("VfatFastIoQueryStandardInfo\n");
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(Wait);
+    UNREFERENCED_PARAMETER(Buffer);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    return FALSE;
 }
+
+static FAST_IO_LOCK VfatFastIoLock;
 
 static BOOLEAN NTAPI
 VfatFastIoLock(IN PFILE_OBJECT FileObject,
@@ -85,9 +141,22 @@ VfatFastIoLock(IN PFILE_OBJECT FileObject,
 			   OUT PIO_STATUS_BLOCK IoStatus,
 			   IN PDEVICE_OBJECT DeviceObject)
 {
-   DPRINT("VfatFastIoLock\n");
-   return FALSE;
+    DPRINT("VfatFastIoLock\n");
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(FileOffset);
+    UNREFERENCED_PARAMETER(Length);
+    UNREFERENCED_PARAMETER(ProcessId);
+    UNREFERENCED_PARAMETER(Key);
+    UNREFERENCED_PARAMETER(FailImmediately);
+    UNREFERENCED_PARAMETER(ExclusiveLock);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    return FALSE;
 }
+
+static FAST_IO_UNLOCK_SINGLE VfatFastIoUnlockSingle;
 
 static BOOLEAN NTAPI
 VfatFastIoUnlockSingle(IN PFILE_OBJECT FileObject,
@@ -98,9 +167,20 @@ VfatFastIoUnlockSingle(IN PFILE_OBJECT FileObject,
 					   OUT PIO_STATUS_BLOCK IoStatus,
 					   IN PDEVICE_OBJECT DeviceObject)
 {
-   DPRINT("VfatFastIoUnlockSingle\n");
-   return FALSE;
+    DPRINT("VfatFastIoUnlockSingle\n");
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(FileOffset);
+    UNREFERENCED_PARAMETER(Length);
+    UNREFERENCED_PARAMETER(ProcessId);
+    UNREFERENCED_PARAMETER(Key);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    return FALSE;
 }
+
+static FAST_IO_UNLOCK_ALL VfatFastIoUnlockAll;
 
 static BOOLEAN NTAPI
 VfatFastIoUnlockAll(IN PFILE_OBJECT FileObject,
@@ -108,9 +188,17 @@ VfatFastIoUnlockAll(IN PFILE_OBJECT FileObject,
 					OUT PIO_STATUS_BLOCK IoStatus,
 					IN PDEVICE_OBJECT DeviceObject)
 {
-   DPRINT("VfatFastIoUnlockAll\n");
-   return FALSE;
+    DPRINT("VfatFastIoUnlockAll\n");
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(ProcessId);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    return FALSE;
 }
+
+static FAST_IO_UNLOCK_ALL_BY_KEY VfatFastIoUnlockAllByKey;
 
 static BOOLEAN NTAPI
 VfatFastIoUnlockAllByKey(IN PFILE_OBJECT FileObject,
@@ -119,9 +207,18 @@ VfatFastIoUnlockAllByKey(IN PFILE_OBJECT FileObject,
 						 OUT PIO_STATUS_BLOCK IoStatus,
 						 IN PDEVICE_OBJECT DeviceObject)
 {
-   DPRINT("VfatFastIoUnlockAllByKey\n");
-   return FALSE;
+    DPRINT("VfatFastIoUnlockAllByKey\n");
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(ProcessId);
+    UNREFERENCED_PARAMETER(Key);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    return FALSE;
 }
+
+static FAST_IO_DEVICE_CONTROL VfatFastIoDeviceControl;
 
 static BOOLEAN NTAPI
 VfatFastIoDeviceControl(IN PFILE_OBJECT FileObject,
@@ -134,28 +231,51 @@ VfatFastIoDeviceControl(IN PFILE_OBJECT FileObject,
 						OUT PIO_STATUS_BLOCK IoStatus,
 						IN PDEVICE_OBJECT DeviceObject)
 {
-   DPRINT("VfatFastIoDeviceControl\n");
-   return FALSE;
+    DPRINT("VfatFastIoDeviceControl\n");
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(Wait);
+    UNREFERENCED_PARAMETER(InputBuffer);
+    UNREFERENCED_PARAMETER(InputBufferLength);
+    UNREFERENCED_PARAMETER(OutputBuffer);
+    UNREFERENCED_PARAMETER(OutputBufferLength);
+    UNREFERENCED_PARAMETER(IoControlCode);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    return FALSE;
 }
+
+static FAST_IO_ACQUIRE_FILE VfatAcquireFileForNtCreateSection;
 
 static VOID NTAPI
 VfatAcquireFileForNtCreateSection(IN PFILE_OBJECT FileObject)
 {
-   DPRINT("VfatAcquireFileForNtCreateSection\n");
+    DPRINT("VfatAcquireFileForNtCreateSection\n");
+    UNREFERENCED_PARAMETER(FileObject);
 }
+
+static FAST_IO_RELEASE_FILE VfatReleaseFileForNtCreateSection;
 
 static VOID NTAPI
 VfatReleaseFileForNtCreateSection(IN PFILE_OBJECT FileObject)
 {
-   DPRINT("VfatReleaseFileForNtCreateSection\n");
+    DPRINT("VfatReleaseFileForNtCreateSection\n");
+    UNREFERENCED_PARAMETER(FileObject);
 }
+
+static FAST_IO_DETACH_DEVICE VfatFastIoDetachDevice;
 
 static VOID NTAPI
 VfatFastIoDetachDevice(IN PDEVICE_OBJECT SourceDevice,
 					   IN PDEVICE_OBJECT TargetDevice)
 {
-   DPRINT("VfatFastIoDetachDevice\n");
+    DPRINT("VfatFastIoDetachDevice\n");
+    UNREFERENCED_PARAMETER(SourceDevice);
+    UNREFERENCED_PARAMETER(TargetDevice);
 }
+
+static FAST_IO_QUERY_NETWORK_OPEN_INFO VfatFastIoQueryNetworkOpenInfo;
 
 static BOOLEAN NTAPI
 VfatFastIoQueryNetworkOpenInfo(IN PFILE_OBJECT FileObject,
@@ -164,9 +284,18 @@ VfatFastIoQueryNetworkOpenInfo(IN PFILE_OBJECT FileObject,
 							   OUT PIO_STATUS_BLOCK IoStatus,
 							   IN PDEVICE_OBJECT DeviceObject)
 {
-   DPRINT("VfatFastIoQueryNetworkOpenInfo\n");
-   return FALSE;
+    DPRINT("VfatFastIoQueryNetworkOpenInfo\n");
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(Wait);
+    UNREFERENCED_PARAMETER(Buffer);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    return FALSE;
 }
+
+static FAST_IO_ACQUIRE_FOR_MOD_WRITE VfatAcquireForModWrite;
 
 static NTSTATUS NTAPI
 VfatAcquireForModWrite(IN PFILE_OBJECT FileObject,
@@ -174,9 +303,17 @@ VfatAcquireForModWrite(IN PFILE_OBJECT FileObject,
 					   OUT PERESOURCE* ResourceToRelease,
 					   IN PDEVICE_OBJECT DeviceObject)
 {
-   DPRINT("VfatAcquireForModWrite\n");
-   return STATUS_INVALID_DEVICE_REQUEST;
+    DPRINT("VfatAcquireForModWrite\n");
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(EndingOffset);
+    UNREFERENCED_PARAMETER(ResourceToRelease);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    return STATUS_INVALID_DEVICE_REQUEST;
 }
+
+static FAST_IO_MDL_READ VfatMdlRead;
 
 static BOOLEAN NTAPI
 VfatMdlRead(IN PFILE_OBJECT FileObject,
@@ -187,18 +324,36 @@ VfatMdlRead(IN PFILE_OBJECT FileObject,
 			OUT PIO_STATUS_BLOCK IoStatus,
 			IN PDEVICE_OBJECT DeviceObject)
 {
-   DPRINT("VfatMdlRead\n");
-   return FALSE;
+    DPRINT("VfatMdlRead\n");
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(FileOffset);
+    UNREFERENCED_PARAMETER(Length);
+    UNREFERENCED_PARAMETER(LockKey);
+    UNREFERENCED_PARAMETER(MdlChain);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    return FALSE;
 }
+
+static FAST_IO_MDL_READ_COMPLETE VfatMdlReadComplete;
 
 static BOOLEAN NTAPI
 VfatMdlReadComplete(IN PFILE_OBJECT FileObject,
 					IN PMDL MdlChain,
 					IN PDEVICE_OBJECT DeviceObject)
 {
-   DPRINT("VfatMdlReadComplete\n");
-   return FALSE;
+    DPRINT("VfatMdlReadComplete\n");
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(MdlChain);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    return FALSE;
 }
+
+static FAST_IO_PREPARE_MDL_WRITE VfatPrepareMdlWrite;
 
 static BOOLEAN NTAPI
 VfatPrepareMdlWrite(IN PFILE_OBJECT FileObject,
@@ -209,9 +364,20 @@ VfatPrepareMdlWrite(IN PFILE_OBJECT FileObject,
 					OUT PIO_STATUS_BLOCK IoStatus,
 					IN PDEVICE_OBJECT DeviceObject)
 {
-   DPRINT("VfatPrepareMdlWrite\n");
-   return FALSE;
+    DPRINT("VfatPrepareMdlWrite\n");
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(FileOffset);
+    UNREFERENCED_PARAMETER(Length);
+    UNREFERENCED_PARAMETER(LockKey);
+    UNREFERENCED_PARAMETER(MdlChain);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    return FALSE;
 }
+
+static FAST_IO_MDL_WRITE_COMPLETE VfatMdlWriteComplete;
 
 static BOOLEAN NTAPI
 VfatMdlWriteComplete(IN PFILE_OBJECT FileObject,
@@ -219,9 +385,17 @@ VfatMdlWriteComplete(IN PFILE_OBJECT FileObject,
 					 IN PMDL MdlChain,
 					 IN PDEVICE_OBJECT DeviceObject)
 {
-   DPRINT("VfatMdlWriteComplete\n");
-   return FALSE;
+    DPRINT("VfatMdlWriteComplete\n");
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(FileOffset);
+    UNREFERENCED_PARAMETER(MdlChain);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    return FALSE;
 }
+
+static FAST_IO_READ_COMPRESSED VfatFastIoReadCompressed;
 
 static BOOLEAN NTAPI
 VfatFastIoReadCompressed(IN PFILE_OBJECT FileObject,
@@ -235,9 +409,23 @@ VfatFastIoReadCompressed(IN PFILE_OBJECT FileObject,
 						 IN ULONG CompressedDataInfoLength,
 						 IN PDEVICE_OBJECT DeviceObject)
 {
-   DPRINT("VfatFastIoReadCompressed\n");
-   return FALSE;
+    DPRINT("VfatFastIoReadCompressed\n");
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(FileOffset);
+    UNREFERENCED_PARAMETER(Length);
+    UNREFERENCED_PARAMETER(LockKey);
+    UNREFERENCED_PARAMETER(Buffer);
+    UNREFERENCED_PARAMETER(MdlChain);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(CompressedDataInfo);
+    UNREFERENCED_PARAMETER(CompressedDataInfoLength);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    return FALSE;
 }
+
+static FAST_IO_WRITE_COMPRESSED VfatFastIoWriteCompressed;
 
 static BOOLEAN NTAPI
 VfatFastIoWriteCompressed(IN PFILE_OBJECT FileObject,
@@ -251,18 +439,39 @@ VfatFastIoWriteCompressed(IN PFILE_OBJECT FileObject,
 						  IN ULONG CompressedDataInfoLength,
 						  IN PDEVICE_OBJECT DeviceObject)
 {
-   DPRINT("VfatFastIoWriteCompressed\n");
-   return FALSE;
+    DPRINT("VfatFastIoWriteCompressed\n");
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(FileOffset);
+    UNREFERENCED_PARAMETER(Length);
+    UNREFERENCED_PARAMETER(LockKey);
+    UNREFERENCED_PARAMETER(Buffer);
+    UNREFERENCED_PARAMETER(MdlChain);
+    UNREFERENCED_PARAMETER(IoStatus);
+    UNREFERENCED_PARAMETER(CompressedDataInfo);
+    UNREFERENCED_PARAMETER(CompressedDataInfoLength);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    return FALSE;
 }
+
+static FAST_IO_MDL_READ_COMPLETE_COMPRESSED VfatMdlReadCompleteCompressed;
 
 static BOOLEAN NTAPI
 VfatMdlReadCompleteCompressed(IN PFILE_OBJECT FileObject,
 							  IN PMDL MdlChain,
 							  IN PDEVICE_OBJECT DeviceObject)
 {
-   DPRINT("VfatMdlReadCompleteCompressed\n");
-   return FALSE;
+    DPRINT("VfatMdlReadCompleteCompressed\n");
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(MdlChain);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    return FALSE;
 }
+
+static FAST_IO_MDL_WRITE_COMPLETE_COMPRESSED VfatMdlWriteCompleteCompressed;
 
 static BOOLEAN NTAPI
 VfatMdlWriteCompleteCompressed(IN PFILE_OBJECT FileObject,
@@ -270,9 +479,17 @@ VfatMdlWriteCompleteCompressed(IN PFILE_OBJECT FileObject,
 							   IN PMDL MdlChain,
 							   IN PDEVICE_OBJECT DeviceObject)
 {
-   DPRINT("VfatMdlWriteCompleteCompressed\n");
-   return FALSE;
+    DPRINT("VfatMdlWriteCompleteCompressed\n");
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(FileOffset);
+    UNREFERENCED_PARAMETER(MdlChain);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    return FALSE;
 }
+
+static FAST_IO_QUERY_OPEN VfatFastIoQueryOpen;
 
 static BOOLEAN NTAPI
 VfatFastIoQueryOpen(IN PIRP Irp,
@@ -280,17 +497,31 @@ VfatFastIoQueryOpen(IN PIRP Irp,
 					IN PDEVICE_OBJECT DeviceObject)
 {
    DPRINT("VfatFastIoQueryOpen\n");
-   return FALSE;
+
+    UNREFERENCED_PARAMETER(Irp);
+    UNREFERENCED_PARAMETER(NetworkInformation);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    return FALSE;
 }
+
+static FAST_IO_RELEASE_FOR_MOD_WRITE VfatReleaseForModWrite;
 
 static NTSTATUS NTAPI
 VfatReleaseForModWrite(IN PFILE_OBJECT FileObject,
 					   IN PERESOURCE ResourceToRelease,
 					   IN PDEVICE_OBJECT DeviceObject)
 {
-   DPRINT("VfatReleaseForModWrite\n");
-   return STATUS_INVALID_DEVICE_REQUEST;
+    DPRINT("VfatReleaseForModWrite\n");
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(ResourceToRelease);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
+    return STATUS_INVALID_DEVICE_REQUEST;
 }
+
+static FAST_IO_ACQUIRE_FOR_CCFLUSH VfatAcquireForCcFlush;
 
 static NTSTATUS NTAPI
 VfatAcquireForCcFlush(IN PFILE_OBJECT FileObject,
@@ -299,6 +530,8 @@ VfatAcquireForCcFlush(IN PFILE_OBJECT FileObject,
    PVFATFCB Fcb = (PVFATFCB)FileObject->FsContext;
 
    DPRINT("VfatAcquireForCcFlush\n");
+
+   UNREFERENCED_PARAMETER(DeviceObject);
 
    /* Make sure it is not a volume lock */
    ASSERT(!(Fcb->Flags & FCB_IS_VOLUME));
@@ -309,6 +542,8 @@ VfatAcquireForCcFlush(IN PFILE_OBJECT FileObject,
    return STATUS_SUCCESS;
 }
 
+static FAST_IO_RELEASE_FOR_CCFLUSH VfatReleaseForCcFlush;
+
 static NTSTATUS NTAPI
 VfatReleaseForCcFlush(IN PFILE_OBJECT FileObject,
 					  IN PDEVICE_OBJECT DeviceObject)
@@ -316,6 +551,8 @@ VfatReleaseForCcFlush(IN PFILE_OBJECT FileObject,
    PVFATFCB Fcb = (PVFATFCB)FileObject->FsContext;
 
    DPRINT("VfatReleaseForCcFlush\n");
+
+   UNREFERENCED_PARAMETER(DeviceObject);
 
    /* Make sure it is not a volume lock */
    ASSERT(!(Fcb->Flags & FCB_IS_VOLUME));

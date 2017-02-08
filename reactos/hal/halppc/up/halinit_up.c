@@ -1,9 +1,8 @@
-/* $Id: halinit_up.c 24964 2006-11-29 08:28:20Z ion $
- *
+/*
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
  * FILE:          ntoskrnl/hal/x86/halinit.c
- * PURPOSE:       Initalize the x86 hal
+ * PURPOSE:       Initialize the x86 hal
  * PROGRAMMER:    David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *              11/06/98: Created

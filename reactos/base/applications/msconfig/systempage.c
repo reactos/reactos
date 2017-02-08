@@ -6,7 +6,7 @@
  * COPYRIGHT:   Copyright 2005-2006 Christoph von Wittich <Christoph@ApiViewer.de>
  *                        2011      Gregor Schneider <Gregor.Schneider@reactos.org>
  */
-#include <precomp.h>
+#include "precomp.h"
 
 HWND hSystemPage;
 HWND hSystemDialog;

@@ -18,11 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <precomp.h>
-
-/* By default we don't use DrawCaptionTemp() because it causes some minimal
-   drawing glitches with the toolbar custom painting code */
-#define TASK_USE_DRAWCAPTIONTEMP    1
+#include "precomp.h"
 
 /* Set DUMP_TASKS to 1 to enable a dump of the tasks and task groups every
    5 seconds */
@@ -47,14 +43,6 @@ typedef struct _TASK_GROUP
         struct
         {
 
-#if TASK_USE_DRAWCAPTIONTEMP != 0
-
-            /* DisplayTooltip is TRUE when the group button text didn't fit into
-               the button. */
-            DWORD DisplayTooltip : 1;
-
-#endif
-
             DWORD IsCollapsed : 1;
         };
     };
@@ -65,26 +53,15 @@ typedef struct _TASK_ITEM
     HWND hWnd;
     PTASK_GROUP Group;
     INT Index;
-
-#if !(TASK_USE_DRAWCAPTIONTEMP != 0)
-
     INT IconIndex;
 
-#endif
+
 
     union
     {
         DWORD dwFlags;
         struct
         {
-
-#if TASK_USE_DRAWCAPTIONTEMP != 0
-
-            /* DisplayTooltip is TRUE when the window text didn't fit into the
-               button. */
-            DWORD DisplayTooltip : 1;
-
-#endif
 
             /* IsFlashing is TRUE when the task bar item should be flashing. */
             DWORD IsFlashing : 1;
@@ -113,9 +90,11 @@ typedef struct _TASK_SWITCH_WND
     PTASK_ITEM TaskItems;
     PTASK_ITEM ActiveTaskItem;
 
+    HTHEME TaskBandTheme;
     HWND hWndToolbar;
     UINT TbButtonsPerLine;
     WORD ToolbarBtnCount;
+    HIMAGELIST TaskIcons;
 
     union
     {
@@ -139,12 +118,6 @@ typedef struct _TASK_SWITCH_WND
 static VOID TaskSwitchWnd_UpdateButtonsSize(IN OUT PTASK_SWITCH_WND This,
                                             IN BOOL bRedrawDisabled);
 
-#if TASK_USE_DRAWCAPTIONTEMP != 0
-
-#define TaskSwitchWnd_GetWndTextFromTaskItem(a,b) NULL
-
-#else /* !TASK_USE_DRAWCAPTIONTEMP */
-
 static LPTSTR
 TaskSwitchWnd_GetWndTextFromTaskItem(IN OUT PTASK_SWITCH_WND This,
                                      IN PTASK_ITEM TaskItem)
@@ -161,7 +134,6 @@ TaskSwitchWnd_GetWndTextFromTaskItem(IN OUT PTASK_SWITCH_WND This,
     return NULL;
 }
 
-#endif
 
 #if DUMP_TASKS != 0
 static VOID
@@ -408,19 +380,44 @@ TaskSwitchWnd_ExpandTaskGroup(IN OUT PTASK_SWITCH_WND This,
     /* FIXME: Implement */
 }
 
+static HICON
+TaskSwitchWnd_GetWndIcon(HWND hwnd)
+{
+    HICON hIcon = 0;
+
+    SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR)&hIcon);
+
+    if (!hIcon)
+       SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR)&hIcon);
+
+    if (!hIcon)
+       SendMessageTimeout(hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR)&hIcon);
+
+    if (!hIcon)
+       hIcon = (HICON)GetClassLongPtr(hwnd, GCL_HICONSM);
+
+    if (!hIcon)
+       hIcon = (HICON)GetClassLongPtr(hwnd, GCL_HICON);
+
+    return hIcon;
+}
 static INT
 TaskSwitchWnd_UpdateTaskItemButton(IN OUT PTASK_SWITCH_WND This,
                                    IN PTASK_ITEM TaskItem)
 {
     TBBUTTONINFO tbbi;
+    HICON icon;
 
     ASSERT(TaskItem->Index >= 0);
 
     tbbi.cbSize = sizeof(tbbi);
-    tbbi.dwMask = TBIF_BYINDEX | TBIF_STATE | TBIF_TEXT;
+    tbbi.dwMask = TBIF_BYINDEX | TBIF_STATE | TBIF_TEXT | TBIF_IMAGE;
     tbbi.fsState = TBSTATE_ENABLED;
     if (This->ActiveTaskItem == TaskItem)
         tbbi.fsState |= TBSTATE_CHECKED;
+
+    if (TaskItem->RenderFlashed)
+        tbbi.fsState |= TBSTATE_MARKED;
 
     /* Check if we're updating a button that is the last one in the
        line. If so, we need to set the TBSTATE_WRAP flag! */
@@ -433,6 +430,12 @@ TaskSwitchWnd_UpdateTaskItemButton(IN OUT PTASK_SWITCH_WND This,
     tbbi.pszText = TaskSwitchWnd_GetWndTextFromTaskItem(This,
                                                         TaskItem);
 
+    icon = TaskSwitchWnd_GetWndIcon(TaskItem->hWnd);
+    TaskItem->IconIndex = ImageList_ReplaceIcon(This->TaskIcons,
+                                                TaskItem->IconIndex,
+                                                icon);
+    tbbi.iImage = TaskItem->IconIndex;
+
     if (!SendMessage(This->hWndToolbar,
                      TB_SETBUTTONINFO,
                      (WPARAM)TaskItem->Index,
@@ -444,6 +447,39 @@ TaskSwitchWnd_UpdateTaskItemButton(IN OUT PTASK_SWITCH_WND This,
 
     DbgPrint("Updated button %d for hwnd 0x%p\n", TaskItem->Index, TaskItem->hWnd);
     return TaskItem->Index;
+}
+
+static VOID
+TaskSwitchWnd_RemoveIcon(IN OUT PTASK_SWITCH_WND This,
+                         IN PTASK_ITEM TaskItem)
+{
+    TBBUTTONINFO tbbi;
+    PTASK_ITEM currentTaskItem, LastItem;
+
+    if (TaskItem->IconIndex == -1)
+        return;
+
+    tbbi.cbSize = sizeof(tbbi);
+    tbbi.dwMask = TBIF_IMAGE;
+
+    currentTaskItem = This->TaskItems;
+    LastItem = currentTaskItem + This->TaskItemCount;
+    while (currentTaskItem != LastItem)
+    {
+        if (currentTaskItem->IconIndex > TaskItem->IconIndex)
+        {
+            currentTaskItem->IconIndex--;
+            tbbi.iImage = currentTaskItem->IconIndex;
+
+            SendMessage(This->hWndToolbar,
+                        TB_SETBUTTONINFO,
+                        currentTaskItem->Index,
+                        (LPARAM)&tbbi);
+        }
+        currentTaskItem++;
+    }
+
+    ImageList_Remove(This->TaskIcons, TaskItem->IconIndex);
 }
 
 static PTASK_ITEM
@@ -541,6 +577,7 @@ TaskSwitchWnd_AddTaskItemButton(IN OUT PTASK_SWITCH_WND This,
 {
     TBBUTTON tbBtn;
     INT iIndex;
+    HICON icon;
 
     if (TaskItem->Index >= 0)
     {
@@ -556,7 +593,10 @@ TaskSwitchWnd_AddTaskItemButton(IN OUT PTASK_SWITCH_WND This,
                                                    TaskItem->Group);
     }
 
-    tbBtn.iBitmap = 0;
+    icon = TaskSwitchWnd_GetWndIcon(TaskItem->hWnd);
+    TaskItem->IconIndex = ImageList_AddIcon(This->TaskIcons, icon);
+
+    tbBtn.iBitmap = TaskItem->IconIndex;
     tbBtn.fsState = TBSTATE_ENABLED | TBSTATE_ELLIPSES;
     tbBtn.fsStyle = BTNS_CHECK | BTNS_NOPREFIX | BTNS_SHOWTEXT;
     tbBtn.dwData = TaskItem->Index;
@@ -612,6 +652,7 @@ TaskSwitchWnd_DeleteTaskItemButton(IN OUT PTASK_SWITCH_WND This,
         {
             TaskSwitchWnd_BeginUpdate(This);
 
+            TaskSwitchWnd_RemoveIcon(This, TaskItem);
             iIndex = TaskItem->Index;
             if (SendMessage(This->hWndToolbar,
                             TB_DELETEBUTTON,
@@ -668,13 +709,10 @@ TaskSwitchWnd_AddToTaskGroup(IN OUT PTASK_SWITCH_WND This,
 
     /* Allocate a new task group */
     TaskGroup = HeapAlloc(hProcessHeap,
-                          0,
+                          HEAP_ZERO_MEMORY,
                           sizeof(*TaskGroup));
     if (TaskGroup != NULL)
     {
-        ZeroMemory(TaskGroup,
-                   sizeof(*TaskGroup));
-
         TaskGroup->dwTaskCount = 1;
         TaskGroup->dwProcessId = dwProcessId;
         TaskGroup->Index = -1;
@@ -811,7 +849,19 @@ TaskSwitchWnd_AllocTaskItem(IN OUT PTASK_SWITCH_WND This)
 
     ASSERT(This->AllocatedTaskItems >= This->TaskItemCount);
 
-    if (This->TaskItemCount != 0)
+    if (This->TaskItemCount == 0)
+    {
+        This->TaskItems = HeapAlloc(hProcessHeap,
+                                    0,
+                                    TASK_ITEM_ARRAY_ALLOC * sizeof(*This->TaskItems));
+        if (This->TaskItems != NULL)
+        {
+            This->AllocatedTaskItems = TASK_ITEM_ARRAY_ALLOC;
+        }
+        else
+            return NULL;
+    }
+    else if (This->TaskItemCount >= This->AllocatedTaskItems)
     {
         PTASK_ITEM NewArray;
         SIZE_T NewArrayLength, ActiveTaskItemIndex;
@@ -832,18 +882,6 @@ TaskSwitchWnd_AllocTaskItem(IN OUT PTASK_SWITCH_WND This)
             }
             This->AllocatedTaskItems = (WORD)NewArrayLength;
             This->TaskItems = NewArray;
-        }
-        else
-            return NULL;
-    }
-    else
-    {
-        This->TaskItems = HeapAlloc(hProcessHeap,
-                                    0,
-                                    TASK_ITEM_ARRAY_ALLOC * sizeof(*This->TaskItems));
-        if (This->TaskItems != NULL)
-        {
-            This->AllocatedTaskItems = TASK_ITEM_ARRAY_ALLOC;
         }
         else
             return NULL;
@@ -904,58 +942,49 @@ TaskSwitchWnd_CheckActivateTaskItem(IN OUT PTASK_SWITCH_WND This,
     if (TaskItem != NULL)
         TaskGroup = TaskItem->Group;
 
-    if (This->IsGroupingEnabled && TaskGroup != NULL)
+    if (This->IsGroupingEnabled &&
+        TaskGroup != NULL &&
+        TaskGroup->IsCollapsed)
     {
-        if (TaskGroup->IsCollapsed)
+        /* FIXME */
+        return;
+    }
+
+    if (ActiveTaskItem != NULL)
+    {
+        PTASK_GROUP ActiveTaskGroup;
+
+        if (ActiveTaskItem == TaskItem)
+            return;
+
+        ActiveTaskGroup = ActiveTaskItem->Group;
+
+        if (This->IsGroupingEnabled &&
+            ActiveTaskGroup != NULL &&
+            ActiveTaskGroup->IsCollapsed)
         {
+            if (ActiveTaskGroup == TaskGroup)
+                return;
+
             /* FIXME */
         }
         else
-            goto ChangeTaskItemButton;
+        {
+            This->ActiveTaskItem = NULL;
+            if (ActiveTaskItem->Index >= 0)
+            {
+                TaskSwitchWnd_UpdateTaskItemButton(This,
+                                                   ActiveTaskItem);
+            }
+        }
     }
-    else
+
+    This->ActiveTaskItem = TaskItem;
+
+    if (TaskItem != NULL && TaskItem->Index >= 0)
     {
-ChangeTaskItemButton:
-        if (ActiveTaskItem != NULL)
-        {
-            PTASK_GROUP ActiveTaskGroup;
-
-            if (ActiveTaskItem == TaskItem)
-                return;
-
-            ActiveTaskGroup = ActiveTaskItem->Group;
-
-            if (This->IsGroupingEnabled && ActiveTaskGroup != NULL)
-            {
-                if (ActiveTaskGroup->IsCollapsed)
-                {
-                    if (ActiveTaskGroup == TaskGroup)
-                        return;
-
-                    /* FIXME */
-                }
-                else
-                    goto ChangeActiveTaskItemButton;
-            }
-            else
-            {
-ChangeActiveTaskItemButton:
-                This->ActiveTaskItem = NULL;
-                if (ActiveTaskItem->Index >= 0)
-                {
-                    TaskSwitchWnd_UpdateTaskItemButton(This,
-                                                       ActiveTaskItem);
-                }
-            }
-        }
-
-        This->ActiveTaskItem = TaskItem;
-
-        if (TaskItem != NULL && TaskItem->Index >= 0)
-        {
-            TaskSwitchWnd_UpdateTaskItemButton(This,
-                                               TaskItem);
-        }
+        TaskSwitchWnd_UpdateTaskItemButton(This,
+                                           TaskItem);
     }
 }
 
@@ -1107,7 +1136,9 @@ static VOID
 TaskSwitchWnd_FlashTaskItem(IN OUT PTASK_SWITCH_WND This,
                             IN OUT PTASK_ITEM TaskItem)
 {
-    /* FIXME: Implement */
+    TaskItem->RenderFlashed = 1;
+    TaskSwitchWnd_UpdateTaskItemButton(This,
+                                       TaskItem);
 }
 
 static BOOL
@@ -1151,6 +1182,7 @@ TaskSwitchWnd_RedrawTaskItem(IN OUT PTASK_SWITCH_WND This,
     else if (TaskItem->Index >= 0)
     {
 UpdateTaskItem:
+        TaskItem->RenderFlashed = 0;
         TaskSwitchWnd_UpdateTaskItemButton(This,
                                            TaskItem);
     }
@@ -1335,8 +1367,8 @@ TaskSwitchWnd_EnumWindowsProc(IN HWND hWnd,
         /* Don't list popup windows and also no tool windows */
         if (GetWindow(hWnd,
                       GW_OWNER) == NULL &&
-            !(GetWindowLongPtr(hWnd,
-                               GWL_EXSTYLE) & WS_EX_TOOLWINDOW))
+            !(GetWindowLong(hWnd,
+                            GWL_EXSTYLE) & WS_EX_TOOLWINDOW))
         {
             TaskSwitchWnd_AddTask(This,
                                   hWnd);
@@ -1387,6 +1419,18 @@ TaskSwichWnd_ToolbarSubclassedProc(IN HWND hWnd,
 }
 
 static VOID
+TaskSwitchWnd_UpdateTheme(IN OUT PTASK_SWITCH_WND This)
+{
+    if (This->TaskBandTheme)
+        CloseThemeData(This->TaskBandTheme);
+
+    if (IsThemeActive())
+        This->TaskBandTheme = OpenThemeData(This->hWnd, L"TaskBand");
+    else
+        This->TaskBandTheme = NULL;
+}
+
+static VOID
 TaskSwitchWnd_Create(IN OUT PTASK_SWITCH_WND This)
 {
     This->hWndToolbar = CreateWindowEx(0,
@@ -1410,11 +1454,16 @@ TaskSwitchWnd_Create(IN OUT PTASK_SWITCH_WND This)
         HMODULE hShell32;
         SIZE BtnSize;
 
+        SetWindowTheme(This->hWndToolbar, L"TaskBand", NULL);
+        TaskSwitchWnd_UpdateTheme(This);
         /* Identify the version we're using */
         SendMessage(This->hWndToolbar,
                     TB_BUTTONSTRUCTSIZE,
                     sizeof(TBBUTTON),
                     0);
+
+        This->TaskIcons = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 0, 1000);
+        SendMessage(This->hWndToolbar, TB_SETIMAGELIST, 0, (LPARAM)This->TaskIcons);
 
         /* Calculate the default button size. Don't save this in This->ButtonSize.cx so that
            the actual button width gets updated correctly on the first recalculation */
@@ -1497,6 +1546,7 @@ TaskSwitchWnd_NCDestroy(IN OUT PTASK_SWITCH_WND This)
         }
     }
 
+    CloseThemeData(This->TaskBandTheme);
     TaskSwitchWnd_DeleteAllTasks(This);
 }
 
@@ -1729,7 +1779,7 @@ TaskSwitchWnd_HandleTaskItemRightClick(IN OUT PTASK_SWITCH_WND This,
         GetCursorPos(&pt);
         cmd = TrackPopupMenu(hmenu, TPM_LEFTBUTTON|TPM_RIGHTBUTTON|TPM_RETURNCMD, pt.x, pt.y, 0, This->hWndToolbar, NULL);
         if (cmd) {
-            SetForegroundWindow(TaskItem->hWnd);	// reactivate window after the context menu has closed
+            SetForegroundWindow(TaskItem->hWnd);    // reactivate window after the context menu has closed
             PostMessage(TaskItem->hWnd, WM_SYSCOMMAND, cmd, 0);
         }
     }
@@ -1778,16 +1828,10 @@ static LRESULT
 TaskSwichWnd_HandleItemPaint(IN OUT PTASK_SWITCH_WND This,
                              IN OUT NMTBCUSTOMDRAW *nmtbcd)
 {
-    HFONT hCaptionFont, hBoldCaptionFont;
     LRESULT Ret = CDRF_DODEFAULT;
     PTASK_GROUP TaskGroup;
     PTASK_ITEM TaskItem;
 
-#if TASK_USE_DRAWCAPTIONTEMP != 0
-
-    UINT uidctFlags = DC_TEXT | DC_ICON | DC_NOSENDMSG;
-
-#endif
     TaskItem = FindTaskItemByIndex(This,
                                    (INT)nmtbcd->nmcd.dwItemSpec);
     TaskGroup = FindTaskGroupByIndex(This,
@@ -1798,97 +1842,32 @@ TaskSwichWnd_HandleItemPaint(IN OUT PTASK_SWITCH_WND This,
 
         if (TaskItem != NULL && IsWindow(TaskItem->hWnd))
         {
-            hCaptionFont = ITrayWindow_GetCaptionFonts(This->Tray,
-                                                       &hBoldCaptionFont);
-            if (nmtbcd->nmcd.uItemState & CDIS_CHECKED)
-                hCaptionFont = hBoldCaptionFont;
-
-#if TASK_USE_DRAWCAPTIONTEMP != 0
-
-            /* Make sure we don't draw on the button edges */
-            InflateRect(&nmtbcd->nmcd.rc,
-                        -GetSystemMetrics(SM_CXEDGE),
-                        -GetSystemMetrics(SM_CYEDGE));
-
-            if ((nmtbcd->nmcd.uItemState & CDIS_MARKED) && TaskItem->RenderFlashed)
-            {
-                /* This is a slight glitch. We have to move the rectangle so that
-                   the button content appears to be pressed. However, when flashing
-                   is enabled, we can see a light line at the top and left inner
-                   border. We need to fill that area with the flashing color. Note
-                   that since we're using DrawCaptionTemp() the flashing color is
-                   COLOR_ACTIVECAPTION, not COLOR_HIGHLIGHT! */
-                FillRect(nmtbcd->nmcd.hdc,
-                         &nmtbcd->nmcd.rc,
-                         (HBRUSH)(COLOR_ACTIVECAPTION + 1));
-
-                /* Make the button content appear pressed. This however draws a bit
-                   into the right and bottom border of the button edge, making it
-                   look a bit odd. However, selecting a clipping region to prevent
-                   that from happening causes problems with DrawCaptionTemp()! */
-                OffsetRect(&nmtbcd->nmcd.rc,
-                           1,
-                           1);
-
-                /* Render flashed */
-                uidctFlags |= DC_ACTIVE;
-            }
-            else
-            {
-                uidctFlags |= DC_INBUTTON;
-                if (nmtbcd->nmcd.uItemState & CDIS_CHECKED)
-                    uidctFlags |= DC_ACTIVE;
-            }
-
-            if (DrawCapTemp != NULL)
-            {
-                /* Draw the button content */
-                TaskItem->DisplayTooltip = !DrawCapTemp(TaskItem->hWnd,
-                                                        nmtbcd->nmcd.hdc,
-                                                        &nmtbcd->nmcd.rc,
-                                                        hCaptionFont,
-                                                        NULL,
-                                                        NULL,
-                                                        uidctFlags);
-            }
-
-            return CDRF_SKIPDEFAULT;
-
-#else /* !TASK_USE_DRAWCAPTIONTEMP */
-
             /* Make the entire button flashing if neccessary */
             if (nmtbcd->nmcd.uItemState & CDIS_MARKED)
             {
-                if (TaskItem->RenderFlashed)
+                Ret = TBCDRF_NOBACKGROUND;
+                if (!This->TaskBandTheme)
                 {
-                    nmtbcd->hbrMonoDither = GetSysColorBrush(COLOR_HIGHLIGHT);
-                    nmtbcd->clrTextHighlight = GetSysColor(COLOR_HIGHLIGHTTEXT);
-                    nmtbcd->nHLStringBkMode = TRANSPARENT;
-
-                    /* We don't really need to set clrMark because we set the
-                       background mode to TRANSPARENT! */
-                    nmtbcd->clrMark = GetSysColor(COLOR_HIGHLIGHT);
-
-                    Ret |= TBCDRF_USECDCOLORS;
+                    SelectObject(nmtbcd->nmcd.hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
+                    Rectangle(nmtbcd->nmcd.hdc,
+                              nmtbcd->nmcd.rc.left,
+                              nmtbcd->nmcd.rc.top,
+                              nmtbcd->nmcd.rc.right,
+                              nmtbcd->nmcd.rc.bottom);
                 }
                 else
-                    Ret |= TBCDRF_NOMARK;
+                {
+                    DrawThemeBackground(This->TaskBandTheme, nmtbcd->nmcd.hdc, TDP_FLASHBUTTON, 0, &nmtbcd->nmcd.rc, 0);
+                }
+                nmtbcd->clrText = GetSysColor(COLOR_HIGHLIGHTTEXT);
+                return Ret;
             }
-
-            /* Select the font we want to use */
-            SelectObject(nmtbcd->nmcd.hdc,
-                         hCaptionFont);
-            return Ret | CDRF_NEWFONT;
-
-#endif
-
         }
     }
     else if (TaskGroup != NULL)
     {
         /* FIXME: Implement painting for task groups */
     }
-
     return Ret;
 }
 
@@ -1907,22 +1886,7 @@ TaskSwitchWnd_HandleToolbarNotification(IN OUT PTASK_SWITCH_WND This,
             switch (nmtbcd->nmcd.dwDrawStage)
             {
 
-#if TASK_USE_DRAWCAPTIONTEMP != 0
-
                 case CDDS_ITEMPREPAINT:
-                    /* We handle drawing in the post-paint stage so that we
-                       don't have to draw the button edges, etc */
-                    Ret = CDRF_NOTIFYPOSTPAINT;
-                    break;
-
-                case CDDS_ITEMPOSTPAINT:
-
-#else /* !TASK_USE_DRAWCAPTIONTEMP */
-
-                case CDDS_ITEMPREPAINT:
-
-#endif
-
                     Ret = TaskSwichWnd_HandleItemPaint(This,
                                                        nmtbcd);
                     break;
@@ -1940,6 +1904,16 @@ TaskSwitchWnd_HandleToolbarNotification(IN OUT PTASK_SWITCH_WND This,
     }
 
     return Ret;
+}
+
+static VOID
+TaskSwitchWnd_DrawBackground(HWND hwnd,
+                             HDC hdc)
+{
+    RECT rect;
+
+    GetClientRect(hwnd, &rect);
+    DrawThemeParentBackground(hwnd, hdc, &rect);
 }
 
 static LRESULT CALLBACK
@@ -1961,6 +1935,12 @@ TaskSwitchWndProc(IN HWND hwnd,
     {
         switch (uMsg)
         {
+            case WM_THEMECHANGED:
+                TaskSwitchWnd_UpdateTheme(This);
+                break;
+            case WM_ERASEBKGND:
+                TaskSwitchWnd_DrawBackground(hwnd, (HDC)wParam);
+                break;
             case WM_SIZE:
             {
                 SIZE szClient;
@@ -2081,14 +2061,12 @@ ForwardContextMenuMsg:
             case WM_NCCREATE:
             {
                 LPCREATESTRUCT CreateStruct = (LPCREATESTRUCT)lParam;
-                This = (PTASK_SWITCH_WND)HeapAlloc(hProcessHeap,
-                                                   0,
-                                                   sizeof(*This));
+                This = HeapAlloc(hProcessHeap,
+                                 HEAP_ZERO_MEMORY,
+                                 sizeof(*This));
                 if (This == NULL)
                     return FALSE;
 
-                ZeroMemory(This,
-                           sizeof(*This));
                 This->hWnd = hwnd;
                 This->hWndNotify = CreateStruct->hwndParent;
                 This->Tray = (ITrayWindow*)CreateStruct->lpCreateParams;
@@ -2136,7 +2114,7 @@ ForwardContextMenuMsg:
 
 #if DUMP_TASKS != 0
             case WM_TIMER:
-                switch(wParam)
+                switch (wParam)
                 {
                     case 1:
                         TaskSwitchWnd_DumpTasks(This);

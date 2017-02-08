@@ -20,16 +20,18 @@
 
 #include <stdarg.h>
 
-#include "ntstatus.h"
+#include <ntstatus.h>
 #define WIN32_NO_STATUS
-#include "windef.h"
-#include "winbase.h"
-#include "sspi.h"
-#include "ntsecapi.h"
-#include "ntsecpkg.h"
-#include "schannel.h"
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <windef.h>
+#include <winbase.h>
+#include <sspi.h>
+#include <ntsecapi.h>
+#include <ntsecpkg.h>
+#include <schannel.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(schannel);
 

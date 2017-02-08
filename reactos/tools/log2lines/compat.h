@@ -1,6 +1,6 @@
 #pragma once
 
-#if defined (__DJGPP__) || defined (__WIN32__)
+#if defined(_WIN32)
 
 #include <direct.h>
 
@@ -15,12 +15,9 @@
 #define CP_CMD          "copy /Y "
 #define DIR_FMT         "dir /a:-d /s /b %s > %s"
 
-#else /* not defined (__DJGPP__) || defined (__WIN32__) */
-
-#include <limits.h>
+#else /* not defined (_WIN32) */
 #include <sys/stat.h>
 
-#define MAX_PATH        PATH_MAX
 #define POPEN           popen
 #define PCLOSE          pclose
 #define MKDIR(d)        mkdir(d, S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH)
@@ -32,6 +29,6 @@
 #define CP_CMD          "cp -f "
 #define DIR_FMT         "find %s -type f > %s"
 
-#endif /* not defined (__DJGPP__) || defined (__WIN32__) */
+#endif /* not defined (_WIN32) */
 
 /* EOF */

@@ -18,27 +18,31 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+//#include <stdarg.h>
 #include <stdio.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "winnls.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
-#include "msi.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winreg.h"
+//#include "winnls.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
+//#include "msi.h"
 #include "msiquery.h"
-#include "msipriv.h"
-#include "objidl.h"
-#include "objbase.h"
-#include "msiserver.h"
+//#include "msipriv.h"
+//#include "objidl.h"
+#include <objbase.h>
+#include <msiserver.h>
 #include "query.h"
 
-#include "initguid.h"
+//#include "initguid.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -164,7 +168,7 @@ UINT msi_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
 
         if (!(stream = msi_alloc( sizeof(MSISTREAM) ))) return ERROR_NOT_ENOUGH_MEMORY;
         stream->stg = stg;
-        IStream_AddRef( stg );
+        IStorage_AddRef( stg );
         stream->stm = *stm;
         IStream_AddRef( *stm );
         list_add_tail( &db->streams, &stream->entry );
@@ -207,7 +211,7 @@ void msi_destroy_stream( MSIDATABASE *db, const WCHAR *stname )
 
             list_remove( &stream->entry );
             IStream_Release( stream->stm );
-            IStream_Release( stream->stg );
+            IStorage_Release( stream->stg );
             IStorage_DestroyElement( stream->stg, stname );
             msi_free( stream );
             CoTaskMemFree( stat.pwcsName );
@@ -224,7 +228,7 @@ static void free_streams( MSIDATABASE *db )
         MSISTREAM *s = LIST_ENTRY(list_head( &db->streams ), MSISTREAM, entry);
         list_remove( &s->entry );
         IStream_Release( s->stm );
-        IStream_Release( s->stg );
+        IStorage_Release( s->stg );
         msi_free( s );
     }
 }
@@ -2082,7 +2086,7 @@ static HRESULT WINAPI mrd_QueryInterface( IWineMsiRemoteDatabase *iface,
     if( IsEqualCLSID( riid, &IID_IUnknown ) ||
         IsEqualCLSID( riid, &IID_IWineMsiRemoteDatabase ) )
     {
-        IUnknown_AddRef( iface );
+        IWineMsiRemoteDatabase_AddRef( iface );
         *ppobj = iface;
         return S_OK;
     }

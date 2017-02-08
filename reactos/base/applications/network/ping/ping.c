@@ -6,12 +6,18 @@
  * PROGRAMMERS:
  */
 
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <tchar.h>
+#define WIN32_NO_STATUS
 #include <stdarg.h>
-#include <string.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <winnls.h>
+#include <wincon.h>
+#define _INC_WINDOWS
+#include <ws2tcpip.h>
 #include <stdio.h>
+#include <stdlib.h>
+
 #include "resource.h"
 
 #define NDEBUG

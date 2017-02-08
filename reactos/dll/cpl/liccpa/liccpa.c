@@ -1,5 +1,4 @@
-/* $Id: appearance.c 13406 2005-02-04 20:39:10Z weiden $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS License Manager
  * FILE:            dll/cpl/liccpa/liccpa.c

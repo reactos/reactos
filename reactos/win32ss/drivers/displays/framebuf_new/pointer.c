@@ -8,17 +8,17 @@
 
 #include "driver.h"
 
-BOOL bCopyColorPointer(
+BOOL NTAPI bCopyColorPointer(
 PPDEV ppdev,
 SURFOBJ *psoMask,
 SURFOBJ *psoColor,
 XLATEOBJ *pxlo);
 
-BOOL bCopyMonoPointer(
+BOOL NTAPI bCopyMonoPointer(
 PPDEV ppdev,
 SURFOBJ *psoMask);
 
-BOOL bSetHardwarePointerShape(
+BOOL NTAPI bSetHardwarePointerShape(
 SURFOBJ  *pso,
 SURFOBJ  *psoMask,
 SURFOBJ  *psoColor,
@@ -34,7 +34,7 @@ FLONG     fl);
 *
 \**************************************************************************/
 
-VOID DrvMovePointer
+VOID NTAPI DrvMovePointer
 (
     SURFOBJ *pso,
     LONG     x,
@@ -107,7 +107,7 @@ VOID DrvMovePointer
 *
 \**************************************************************************/
 
-ULONG DrvSetPointerShape
+ULONG NTAPI DrvSetPointerShape
 (
     SURFOBJ  *pso,
     SURFOBJ  *psoMask,
@@ -202,7 +202,7 @@ ULONG DrvSetPointerShape
 *
 \**************************************************************************/
 
-BOOL bSetHardwarePointerShape(
+BOOL NTAPI bSetHardwarePointerShape(
 SURFOBJ  *pso,
 SURFOBJ  *psoMask,
 SURFOBJ  *psoColor,
@@ -293,7 +293,7 @@ FLONG     fl)
 *
 \**************************************************************************/
 
-BOOL bCopyMonoPointer(
+BOOL NTAPI bCopyMonoPointer(
     PPDEV    ppdev,
     SURFOBJ *pso)
 {
@@ -380,7 +380,7 @@ BOOL bCopyMonoPointer(
 * FALSE if not.
 *
 \**************************************************************************/
-BOOL bCopyColorPointer(
+BOOL NTAPI bCopyColorPointer(
 PPDEV ppdev,
 SURFOBJ *psoMask,
 SURFOBJ *psoColor,
@@ -397,7 +397,7 @@ XLATEOBJ *pxlo)
 *
 \**************************************************************************/
 
-BOOL bInitPointer(PPDEV ppdev, DEVINFO *pdevinfo)
+BOOL NTAPI bInitPointer(PPDEV ppdev, DEVINFO *pdevinfo)
 {
     DWORD    returnedDataLength;
 

@@ -55,9 +55,10 @@ HMENU APIENTRY co_IntCallLoadMenu(HINSTANCE,PUNICODE_STRING);
 
 NTSTATUS APIENTRY co_IntClientThreadSetup(VOID);
 
-HMODULE
-co_IntClientLoadLibrary(PUNICODE_STRING strLibName, 
-                        PUNICODE_STRING strInitFunc, 
+BOOL
+NTAPI
+co_IntClientLoadLibrary(PUNICODE_STRING strLibName,
+                        PUNICODE_STRING strInitFunc,
                         BOOL Unload,
                         BOOL ApiHook);
 

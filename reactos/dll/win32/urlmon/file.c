@@ -17,10 +17,10 @@
  */
 
 #include "urlmon_main.h"
-#include "winreg.h"
-#include "shlwapi.h"
+//#include "winreg.h"
+#include <shlwapi.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
@@ -68,7 +68,7 @@ static HRESULT WINAPI FileProtocol_QueryInterface(IInternetProtocolEx *iface, RE
     }
 
     if(*ppv) {
-        IInternetProtocol_AddRef(iface);
+        IInternetProtocolEx_AddRef(iface);
         return S_OK;
     }
 
@@ -245,12 +245,13 @@ static HRESULT WINAPI FileProtocol_StartEx(IInternetProtocolEx *iface, IUri *pUr
         DWORD grfPI, HANDLE *dwReserved)
 {
     FileProtocol *This = impl_from_IInternetProtocolEx(iface);
+    WCHAR path[MAX_PATH];
     BINDINFO bindinfo;
     DWORD grfBINDF = 0;
-    DWORD scheme;
+    DWORD scheme, size;
     LPWSTR mime = NULL;
     WCHAR null_char = 0;
-    BSTR path, url;
+    BSTR url;
     HRESULT hres;
 
     TRACE("(%p)->(%p %p %p %08x %p)\n", This, pUri, pOIProtSink,
@@ -288,14 +289,14 @@ static HRESULT WINAPI FileProtocol_StartEx(IInternetProtocolEx *iface, IUri *pUr
 
     IInternetProtocolSink_ReportProgress(pOIProtSink, BINDSTATUS_SENDINGREQUEST, &null_char);
 
-    hres = IUri_GetPath(pUri, &path);
+    size = 0;
+    hres = CoInternetParseIUri(pUri, PARSE_PATH_FROM_URL, 0, path, sizeof(path)/sizeof(WCHAR), &size, 0);
     if(FAILED(hres)) {
-        ERR("GetPath failed: %08x\n", hres);
+        WARN("CoInternetParseIUri failed: %08x\n", hres);
         return report_result(pOIProtSink, hres, 0);
     }
 
     hres = open_file(This, path, pOIProtSink);
-    SysFreeString(path);
     if(FAILED(hres))
         return hres;
 

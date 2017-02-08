@@ -113,7 +113,7 @@ IntCallLowLevelEvent( PEVENTHOOK pEH,
 
    /* FIXME: Should get timeout from
     * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
-   Status = co_MsqSendMessage( pEH->head.pti->MessageQueue,
+   Status = co_MsqSendMessage( pEH->head.pti,
                                hwnd,
                                event,
                                0,
@@ -141,7 +141,7 @@ IntRemoveEvent(PEVENTHOOK pEH)
       RemoveEntryList(&pEH->Chain);
       GlobalEvents->Counts--;
       if (!GlobalEvents->Counts) gpsi->dwInstalledEventHooks = 0;
-      UserDeleteObject(UserHMGetHandle(pEH), otEvent);
+      UserDeleteObject(UserHMGetHandle(pEH), TYPE_WINEVENTHOOK);
       KeLeaveCriticalRegion();
       return TRUE;
    }
@@ -378,7 +378,7 @@ NtUserSetWinEventHook(
       }
    }
    // Creator, pti is set here.
-   pEH = UserCreateObject(gHandleTable, NULL, &Handle, otEvent, sizeof(EVENTHOOK));
+   pEH = UserCreateObject(gHandleTable, NULL, NULL, &Handle, TYPE_WINEVENTHOOK, sizeof(EVENTHOOK));
    if (pEH)
    {
       InsertTailList(&GlobalEvents->Events, &pEH->Chain);
@@ -428,7 +428,7 @@ NtUserUnhookWinEvent(
 
    UserEnterExclusive();
 
-   pEH = (PEVENTHOOK)UserGetObject(gHandleTable, hWinEventHook, otEvent);
+   pEH = (PEVENTHOOK)UserGetObject(gHandleTable, hWinEventHook, TYPE_WINEVENTHOOK);
    if (pEH) 
    {
       Ret = IntRemoveEvent(pEH);

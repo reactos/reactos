@@ -23,8 +23,7 @@ CcSetAdditionalCacheAttributes(IN PFILE_OBJECT FileObject,
                                IN BOOLEAN DisableReadAhead,
                                IN BOOLEAN DisableWriteBehind)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 VOID
@@ -47,17 +46,15 @@ CcGetDirtyPages(IN PVOID LogHandle,
                 IN PVOID Context2)
 {
     LARGE_INTEGER Result = {{0}};
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return Result;
 }
-
+
 BOOLEAN
 NTAPI
 CcIsThereDirtyData(IN PVPB Vpb)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return FALSE;
 }
 
@@ -67,8 +64,7 @@ CcGetLsnForFileObject(IN PFILE_OBJECT FileObject,
                       OUT OPTIONAL PLARGE_INTEGER OldestLsn)
 {
     LARGE_INTEGER Result = {{0}};
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return Result;
 }
 

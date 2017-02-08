@@ -1,6 +1,4 @@
 
-set_rc_compiler()
-
 spec2def(timedate.cpl timedate.spec)
 
 add_library(timedate SHARED

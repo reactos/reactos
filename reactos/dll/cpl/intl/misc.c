@@ -111,7 +111,7 @@ InsSpacesFmt(LPCTSTR szSourceStr, LPCTSTR szFmtStr)
     return pszDestStr;
 }
 
-/* Replace given template in source string with string to replace and return recieved string */
+/* Replace given template in source string with string to replace and return received string */
 LPTSTR
 ReplaceSubStr(LPCTSTR szSourceStr,
               LPCTSTR szStrToReplace,

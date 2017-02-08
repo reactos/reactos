@@ -14,7 +14,10 @@
 /* FUNCTIONS *****************************************************************/
 
 BOOLEAN
-TuiDisplayMenu(PCSTR MenuItemList[],
+TuiDisplayMenu(PCSTR MenuHeader,
+               PCSTR MenuFooter,
+               BOOLEAN ShowBootOptions,
+               PCSTR MenuItemList[],
                ULONG MenuItemCount,
                ULONG DefaultMenuItem,
                LONG MenuTimeOut,
@@ -41,6 +44,9 @@ TuiDisplayMenu(PCSTR MenuItemList[],
     //
     // Setup the MENU_INFO structure
     //
+    MenuInformation.MenuHeader = MenuHeader;
+    MenuInformation.MenuFooter = MenuFooter;
+    MenuInformation.ShowBootOptions = ShowBootOptions;
     MenuInformation.MenuItemList = MenuItemList;
     MenuInformation.MenuItemCount = MenuItemCount;
     MenuInformation.MenuTimeRemaining = MenuTimeOut;
@@ -87,7 +93,7 @@ TuiDisplayMenu(PCSTR MenuItemList[],
         //
         // Check if there is a countdown
         //
-        if (MenuInformation.MenuTimeRemaining)
+        if (MenuInformation.MenuTimeRemaining > 0)
         {
             //
             // Get the updated time, seconds only
@@ -112,7 +118,7 @@ TuiDisplayMenu(PCSTR MenuItemList[],
                 VideoCopyOffScreenBufferToVRAM();
             }
         }
-        else
+        else if (MenuInformation.MenuTimeRemaining == 0)
         {
             //
             // A time out occurred, exit this loop and return default OS
@@ -153,8 +159,11 @@ TuiCalcMenuBoxSize(PUI_MENU_INFO MenuInfo)
         //
         // Get the string length and make it become the new width if necessary
         //
-        Length = (ULONG)strlen(MenuInfo->MenuItemList[i]);
-        if (Length > Width) Width = Length;
+        if (MenuInfo->MenuItemList[i])
+        {
+            Length = (ULONG)strlen(MenuInfo->MenuItemList[i]);
+            if (Length > Width) Width = Length;
+        }
     }
 
     //
@@ -203,7 +212,7 @@ TuiDrawMenu(PUI_MENU_INFO MenuInfo)
     //
     // Update the status bar
     //
-    UiVtbl.DrawStatusText("Use \x18\x19 to select, then press ENTER.");
+    UiVtbl.DrawStatusText("Use \x18 and \x19 to select, then press ENTER.");
 
     //
     // Draw the menu box
@@ -213,7 +222,17 @@ TuiDrawMenu(PUI_MENU_INFO MenuInfo)
     //
     // Draw each line of the menu
     //
-    for (i = 0; i < MenuInfo->MenuItemCount; i++) TuiDrawMenuItem(MenuInfo, i);
+    for (i = 0; i < MenuInfo->MenuItemCount; i++)
+    {
+        TuiDrawMenuItem(MenuInfo, i);
+    }
+
+    /* Display the boot options if needed */
+    if (MenuInfo->ShowBootOptions)
+    {
+        DisplayBootTimeOptions();
+    }
+
     VideoCopyOffScreenBufferToVRAM();
 }
 
@@ -221,8 +240,7 @@ VOID
 NTAPI
 TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
 {
-    CHAR MenuLineText[80];
-    CHAR TempString[80];
+    CHAR MenuLineText[80], TempString[80];
     ULONG i;
 
     //
@@ -237,7 +255,7 @@ TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
                   D_VERT,
                   D_HORZ,
                   FALSE,        // Filled
-                  TRUE,        // Shadow
+                  TRUE,         // Shadow
                   ATTR(UiMenuFgColor, UiMenuBgColor));
     }
 
@@ -284,7 +302,7 @@ TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
             // Display under the menu directly
             //
             UiDrawText(0,
-                       MenuInfo->Bottom + 3,
+                       MenuInfo->Bottom + 4,
                        MenuLineText,
                        ATTR(UiMenuFgColor, UiMenuBgColor));
         }
@@ -313,7 +331,7 @@ TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
         else
         {
             UiDrawText(0,
-                       MenuInfo->Bottom + 3,
+                       MenuInfo->Bottom + 4,
                        MenuLineText,
                        ATTR(UiMenuFgColor, UiMenuBgColor));
         }
@@ -327,7 +345,7 @@ TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
         //
         // Check if it's a separator
         //
-        if (!(_stricmp(MenuInfo->MenuItemList[i], "SEPARATOR")))
+        if (MenuInfo->MenuItemList[i] == NULL)
         {
             //
             // Draw the separator line
@@ -366,7 +384,8 @@ TuiDrawMenuItem(PUI_MENU_INFO MenuInfo,
         // how many spaces will be to the left and right
         //
         SpaceTotal = (MenuInfo->Right - MenuInfo->Left - 2) -
-                     (ULONG)strlen(MenuInfo->MenuItemList[MenuItemNumber]);
+                     (ULONG)(MenuInfo->MenuItemList[MenuItemNumber] ?
+                             strlen(MenuInfo->MenuItemList[MenuItemNumber]) : 0);
         SpaceLeft = (SpaceTotal / 2) + 1;
         SpaceRight = (SpaceTotal - SpaceLeft) + 1;
 
@@ -388,7 +407,8 @@ TuiDrawMenuItem(PUI_MENU_INFO MenuInfo,
     //
     // Now append the text string
     //
-    strcat(MenuLineText, MenuInfo->MenuItemList[MenuItemNumber]);
+    if (MenuInfo->MenuItemList[MenuItemNumber])
+        strcat(MenuLineText, MenuInfo->MenuItemList[MenuItemNumber]);
 
     //
     // Check if using centered menu, and add spaces on the right if so
@@ -398,7 +418,7 @@ TuiDrawMenuItem(PUI_MENU_INFO MenuInfo,
     //
     // If it is a separator
     //
-    if (!(_stricmp(MenuInfo->MenuItemList[MenuItemNumber], "SEPARATOR")))
+    if (MenuInfo->MenuItemList[MenuItemNumber] == NULL)
     {
         //
         // Make it a separator line and use menu colors
@@ -475,7 +495,8 @@ TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo,
         //
         // Process the key
         //
-        if ((KeyEvent == KEY_UP) || (KeyEvent == KEY_DOWN))
+        if ((KeyEvent == KEY_UP  ) || (KeyEvent == KEY_DOWN) ||
+            (KeyEvent == KEY_HOME) || (KeyEvent == KEY_END ))
         {
             //
             // Get the current selected item and count
@@ -484,28 +505,37 @@ TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo,
             Count = MenuInfo->MenuItemCount - 1;
 
             //
-            // Check if this was a key up and there's a selected menu item
+            // Check the key and change the selected menu item
             //
-            if ((KeyEvent == KEY_UP) && (Selected))
+            if ((KeyEvent == KEY_UP) && (Selected > 0))
             {
                 //
-                // Update the menu (Deselect previous item)
+                // Deselect previous item and go up
                 //
                 MenuInfo->SelectedMenuItem--;
                 TuiDrawMenuItem(MenuInfo, Selected);
                 Selected--;
 
                 // Skip past any separators
-                if ((Selected) &&
-                    !(_stricmp(MenuInfo->MenuItemList[Selected], "SEPARATOR")))
+                if ((Selected > 0) &&
+                    (MenuInfo->MenuItemList[Selected] == NULL))
                 {
                     MenuInfo->SelectedMenuItem--;
                 }
             }
+            else if ( ((KeyEvent == KEY_UP) && (Selected == 0)) ||
+                       (KeyEvent == KEY_END) )
+            {
+                //
+                // Go to the end
+                //
+                MenuInfo->SelectedMenuItem = Count;
+                TuiDrawMenuItem(MenuInfo, Selected);
+            }
             else if ((KeyEvent == KEY_DOWN) && (Selected < Count))
             {
                 //
-                // Update the menu (deselect previous item)
+                // Deselect previous item and go down
                 //
                 MenuInfo->SelectedMenuItem++;
                 TuiDrawMenuItem(MenuInfo, Selected);
@@ -513,10 +543,19 @@ TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo,
 
                 // Skip past any separators
                 if ((Selected < Count) &&
-                    !(_stricmp(MenuInfo->MenuItemList[Selected], "SEPARATOR")))
+                    (MenuInfo->MenuItemList[Selected] == NULL))
                 {
                     MenuInfo->SelectedMenuItem++;
                 }
+            }
+            else if ( ((KeyEvent == KEY_DOWN) && (Selected == Count)) ||
+                       (KeyEvent == KEY_HOME) )
+            {
+                //
+                // Go to the beginning
+                //
+                MenuInfo->SelectedMenuItem = 0;
+                TuiDrawMenuItem(MenuInfo, Selected);
             }
 
             //

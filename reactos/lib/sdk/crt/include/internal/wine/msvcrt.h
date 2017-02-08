@@ -15,6 +15,22 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ * NOTES
+ *   Naming conventions
+ *	- Symbols are prefixed with MSVCRT_ if they conflict
+ *        with libc symbols
+ *      - Internal symbols are usually prefixed by msvcrt_.
+ *      - Exported symbols that are not present in the public
+ *        headers are usually kept the same as the original.
+ *   Other conventions
+ *      - To avoid conflicts with the standard C library,
+ *        no msvcrt headers are included in the implementation.
+ *      - Instead, symbols are duplicated here, prefixed with 
+ *        MSVCRT_, as explained above.
+ *      - To avoid inconsistencies, a test for each symbol is
+ *        added into tests/headers.c. Please always add a
+ *        corresponding test when you add a new symbol!
  */
 
 #ifndef __WINE_MSVCRT_H
@@ -25,13 +41,13 @@
 #include "windef.h"
 #include "winbase.h"
 
-extern int __lc_codepage;
+extern unsigned int __lc_codepage;
 extern int __lc_collate_cp;
 extern int __mb_cur_max;
 extern const unsigned short _ctype [257];
 
 void __cdecl _purecall(void);
-void __cdecl _amsg_exit(int errnum);
+__declspec(noreturn) void __cdecl _amsg_exit(int errnum);
 
 extern char **_environ;
 extern wchar_t **_wenviron;
@@ -88,6 +104,15 @@ extern unsigned create_io_inherit_block(WORD*, BYTE**);
 /* _set_abort_behavior codes */
 #define MSVCRT__WRITE_ABORT_MSG    1
 #define MSVCRT__CALL_REPORTFAULT   2
+
+#define MSVCRT_LC_ALL      LC_ALL
+#define MSVCRT_LC_COLLATE  LC_COLLATE
+#define MSVCRT_LC_CTYPE    LC_CTYPE
+#define MSVCRT_LC_MONETARY LC_MONETARY
+#define MSVCRT_LC_NUMERIC  LC_NUMERIC
+#define MSVCRT_LC_TIME     LC_TIME
+#define MSVCRT_LC_MIN      LC_MIN
+#define MSVCRT_LC_MAX      LC_MAX
 
 #define MSVCRT__OUT_TO_DEFAULT 0
 #define MSVCRT__OUT_TO_STDERR  1

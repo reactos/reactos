@@ -1,0 +1,131 @@
+import common
+
+Import('*')
+
+from sys import executable as python_cmd
+
+env = env.Clone()
+
+env.Prepend(CPPPATH = [
+    '#include',
+    '#src/mapi',
+    '#src/mesa',
+    '#src/glsl',
+    '#src/glsl/glcpp',
+])
+
+# Make glcpp/glcpp-parse.h and glsl_parser.h reacheable from the include path
+env.Append(CPPPATH = [Dir('.').abspath])
+
+env.Append(YACCFLAGS = '-d')
+
+parser_env = env.Clone()
+parser_env.Append(YACCFLAGS = [
+    '--defines=%s' % File('glsl_parser.h').abspath,
+    '-p', '_mesa_glsl_',
+])
+
+glcpp_lexer = env.CFile('glcpp/glcpp-lex.c', 'glcpp/glcpp-lex.l')
+glcpp_parser = env.CFile('glcpp/glcpp-parse.c', 'glcpp/glcpp-parse.y')
+glsl_lexer = parser_env.CXXFile('glsl_lexer.cpp', 'glsl_lexer.ll')
+glsl_parser = parser_env.CXXFile('glsl_parser.cpp', 'glsl_parser.yy')
+
+# common generated sources
+glsl_sources = [
+    glcpp_lexer,
+    glcpp_parser[0],
+    glsl_lexer,
+    glsl_parser[0],
+] 
+
+# parse Makefile.sources
+source_lists = env.ParseSourceList('Makefile.sources')
+
+# add non-generated sources
+for l in ('LIBGLCPP_SOURCES', 'LIBGLSL_SOURCES', 'LIBGLSL_CXX_SOURCES'):
+    glsl_sources += source_lists[l]
+
+if env['msvc']:
+    env.Prepend(CPPPATH = ['#/src/getopt'])
+    env.PrependUnique(LIBS = [getopt])
+
+if env['crosscompile'] and not env['embedded']:
+    Import('builtin_glsl_function')
+else:
+    # Copy these files to avoid generation object files into src/mesa/program
+    env.Prepend(CPPPATH = ['#src/mesa/program'])
+    env.Command('hash_table.c', '#src/mesa/program/hash_table.c', Copy('$TARGET', '$SOURCE'))
+    env.Command('symbol_table.c', '#src/mesa/program/symbol_table.c', Copy('$TARGET', '$SOURCE'))
+
+    compiler_objs = env.StaticObject(source_lists['GLSL_COMPILER_CXX_SOURCES'])
+
+    mesa_objs = env.StaticObject([
+        'hash_table.c',
+        'symbol_table.c',
+    ])
+
+    compiler_objs += mesa_objs
+
+    builtin_compiler = env.Program(
+        target = 'builtin_compiler',
+        source = compiler_objs + glsl_sources + \
+            source_lists['BUILTIN_COMPILER_CXX_SOURCES'],
+    )
+
+    # SCons builtin dependency scanner doesn't detect that glsl_lexer.ll
+    # depends on glsl_parser.h
+    env.Depends(builtin_compiler, glsl_parser)
+
+    builtin_glsl_function = env.CodeGenerate(
+        target = 'builtin_function.cpp',
+        script = 'builtins/tools/generate_builtins.py',
+        source = builtin_compiler,
+        command = python_cmd + ' $SCRIPT $SOURCE > $TARGET'
+    )
+
+    env.Depends(builtin_glsl_function, ['builtins/tools/generate_builtins.py', 'builtins/tools/texture_builtins.py'] + Glob('builtins/ir/*'))
+
+    Export('builtin_glsl_function')
+
+    if env['hostonly']:
+        Return()
+
+
+glsl_sources += builtin_glsl_function
+
+glsl = env.ConvenienceLibrary(
+    target = 'glsl',
+    source = glsl_sources,
+)
+
+# SCons builtin dependency scanner doesn't detect that glsl_lexer.ll depends on
+# glsl_parser.h
+env.Depends(glsl, glsl_parser)
+
+Export('glsl')
+
+# Skip building these programs as they will cause SCons error "Two environments
+# with different actions were specified for the same target"
+if env['crosscompile'] or env['embedded']:
+    Return()
+
+env = env.Clone()
+
+if env['platform'] == 'windows':
+    env.PrependUnique(LIBS = [
+        'user32',
+    ])
+
+env.Prepend(LIBS = [glsl])
+
+glsl2 = env.Program(
+    target = 'glsl2',
+    source = compiler_objs,
+)
+env.Alias('glsl2', glsl2)
+
+glcpp = env.Program(
+    target = 'glcpp/glcpp',
+    source = ['glcpp/glcpp.c'] + mesa_objs,
+)
+env.Alias('glcpp', glcpp)

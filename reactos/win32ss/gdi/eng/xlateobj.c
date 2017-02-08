@@ -11,6 +11,13 @@
 #define NDEBUG
 #include <debug.h>
 
+_Post_satisfies_(return==iColor)
+_Function_class_(FN_XLATE)
+ULONG
+FASTCALL
+EXLATEOBJ_iXlateTrivial(
+    _In_ PEXLATEOBJ pexlo,
+    _In_ ULONG iColor);
 
 /** Globals *******************************************************************/
 
@@ -31,20 +38,26 @@ static const BYTE gajXlate6to8[64] =
 
 /** iXlate functions **********************************************************/
 
+_Post_satisfies_(return==iColor)
+_Function_class_(FN_XLATE)
 ULONG
 FASTCALL
-EXLATEOBJ_iXlateTrivial(PEXLATEOBJ pexlo, ULONG iColor)
+EXLATEOBJ_iXlateTrivial(
+    _In_ PEXLATEOBJ pexlo,
+    _In_ ULONG iColor)
 {
     return iColor;
 }
 
+_Function_class_(FN_XLATE)
 ULONG
 FASTCALL
-EXLATEOBJ_iXlateToMono(PEXLATEOBJ pexlo, ULONG iColor)
+EXLATEOBJ_iXlateToMono(_In_ PEXLATEOBJ pexlo, ULONG iColor)
 {
     return (iColor == pexlo->xlo.pulXlate[0]);
 }
 
+_Function_class_(FN_XLATE)
 ULONG
 FASTCALL
 EXLATEOBJ_iXlateTable(PEXLATEOBJ pexlo, ULONG iColor)
@@ -53,6 +66,7 @@ EXLATEOBJ_iXlateTable(PEXLATEOBJ pexlo, ULONG iColor)
     return pexlo->xlo.pulXlate[iColor];
 }
 
+_Function_class_(FN_XLATE)
 ULONG
 FASTCALL
 EXLATEOBJ_iXlateRGBtoBGR(PEXLATEOBJ pxlo, ULONG iColor)
@@ -72,6 +86,7 @@ EXLATEOBJ_iXlateRGBtoBGR(PEXLATEOBJ pxlo, ULONG iColor)
     return iNewColor;
 }
 
+_Function_class_(FN_XLATE)
 ULONG
 FASTCALL
 EXLATEOBJ_iXlateRGBto555(PEXLATEOBJ pxlo, ULONG iColor)
@@ -93,6 +108,7 @@ EXLATEOBJ_iXlateRGBto555(PEXLATEOBJ pxlo, ULONG iColor)
     return iNewColor;
 }
 
+_Function_class_(FN_XLATE)
 ULONG
 FASTCALL
 EXLATEOBJ_iXlateBGRto555(PEXLATEOBJ pxlo, ULONG iColor)
@@ -114,6 +130,7 @@ EXLATEOBJ_iXlateBGRto555(PEXLATEOBJ pxlo, ULONG iColor)
     return iNewColor;
 }
 
+_Function_class_(FN_XLATE)
 ULONG
 FASTCALL
 EXLATEOBJ_iXlateRGBto565(PEXLATEOBJ pxlo, ULONG iColor)
@@ -135,6 +152,7 @@ EXLATEOBJ_iXlateRGBto565(PEXLATEOBJ pxlo, ULONG iColor)
     return iNewColor;
 }
 
+_Function_class_(FN_XLATE)
 ULONG
 FASTCALL
 EXLATEOBJ_iXlateBGRto565(PEXLATEOBJ pxlo, ULONG iColor)
@@ -156,6 +174,7 @@ EXLATEOBJ_iXlateBGRto565(PEXLATEOBJ pxlo, ULONG iColor)
     return iNewColor;
 }
 
+_Function_class_(FN_XLATE)
 ULONG
 FASTCALL
 EXLATEOBJ_iXlateRGBtoPal(PEXLATEOBJ pexlo, ULONG iColor)
@@ -163,6 +182,7 @@ EXLATEOBJ_iXlateRGBtoPal(PEXLATEOBJ pexlo, ULONG iColor)
     return PALETTE_ulGetNearestPaletteIndex(pexlo->ppalDst, iColor);
 }
 
+_Function_class_(FN_XLATE)
 ULONG
 FASTCALL
 EXLATEOBJ_iXlate555toRGB(PEXLATEOBJ pxlo, ULONG iColor)
@@ -183,6 +203,7 @@ EXLATEOBJ_iXlate555toRGB(PEXLATEOBJ pxlo, ULONG iColor)
     return iNewColor;
 }
 
+_Function_class_(FN_XLATE)
 ULONG
 FASTCALL
 EXLATEOBJ_iXlate555toBGR(PEXLATEOBJ pxlo, ULONG iColor)
@@ -203,6 +224,7 @@ EXLATEOBJ_iXlate555toBGR(PEXLATEOBJ pxlo, ULONG iColor)
     return iNewColor;
 }
 
+_Function_class_(FN_XLATE)
 ULONG
 FASTCALL
 EXLATEOBJ_iXlate555to565(PEXLATEOBJ pxlo, ULONG iColor)
@@ -223,6 +245,7 @@ EXLATEOBJ_iXlate555to565(PEXLATEOBJ pxlo, ULONG iColor)
     return iNewColor;
 }
 
+_Function_class_(FN_XLATE)
 ULONG
 FASTCALL
 EXLATEOBJ_iXlate555toPal(PEXLATEOBJ pexlo, ULONG iColor)
@@ -232,6 +255,7 @@ EXLATEOBJ_iXlate555toPal(PEXLATEOBJ pexlo, ULONG iColor)
     return PALETTE_ulGetNearestPaletteIndex(pexlo->ppalDst, iColor);
 }
 
+_Function_class_(FN_XLATE)
 ULONG
 FASTCALL
 EXLATEOBJ_iXlate565to555(PEXLATEOBJ pxlo, ULONG iColor)
@@ -248,6 +272,7 @@ EXLATEOBJ_iXlate565to555(PEXLATEOBJ pxlo, ULONG iColor)
     return iNewColor;
 }
 
+_Function_class_(FN_XLATE)
 ULONG
 FASTCALL
 EXLATEOBJ_iXlate565toRGB(PEXLATEOBJ pexlo, ULONG iColor)
@@ -268,6 +293,7 @@ EXLATEOBJ_iXlate565toRGB(PEXLATEOBJ pexlo, ULONG iColor)
     return iNewColor;
 }
 
+_Function_class_(FN_XLATE)
 ULONG
 FASTCALL
 EXLATEOBJ_iXlate565toBGR(PEXLATEOBJ pexlo, ULONG iColor)
@@ -288,6 +314,7 @@ EXLATEOBJ_iXlate565toBGR(PEXLATEOBJ pexlo, ULONG iColor)
     return iNewColor;
 }
 
+_Function_class_(FN_XLATE)
 ULONG
 FASTCALL
 EXLATEOBJ_iXlate565toPal(EXLATEOBJ *pexlo, ULONG iColor)
@@ -297,6 +324,7 @@ EXLATEOBJ_iXlate565toPal(EXLATEOBJ *pexlo, ULONG iColor)
     return PALETTE_ulGetNearestPaletteIndex(pexlo->ppalDst, iColor);
 }
 
+_Function_class_(FN_XLATE)
 ULONG
 FASTCALL
 EXLATEOBJ_iXlateShiftAndMask(PEXLATEOBJ pexlo, ULONG iColor)
@@ -310,6 +338,7 @@ EXLATEOBJ_iXlateShiftAndMask(PEXLATEOBJ pexlo, ULONG iColor)
     return iNewColor;
 }
 
+_Function_class_(FN_XLATE)
 ULONG
 FASTCALL
 EXLATEOBJ_iXlateBitfieldsToPal(PEXLATEOBJ pexlo, ULONG iColor)
@@ -327,12 +356,12 @@ EXLATEOBJ_iXlateBitfieldsToPal(PEXLATEOBJ pexlo, ULONG iColor)
 VOID
 NTAPI
 EXLATEOBJ_vInitialize(
-    PEXLATEOBJ pexlo,
-    PALETTE *ppalSrc,
-    PALETTE *ppalDst,
-    COLORREF crSrcBackColor,
-    COLORREF crDstBackColor,
-    COLORREF crDstForeColor)
+    _Out_ PEXLATEOBJ pexlo,
+    _In_opt_ PALETTE *ppalSrc,
+    _In_opt_ PALETTE *ppalDst,
+    _In_ COLORREF crSrcBackColor,
+    _In_ COLORREF crDstBackColor,
+    _In_ COLORREF crDstForeColor)
 {
     ULONG cEntries;
     ULONG i, ulColor;
@@ -580,9 +609,9 @@ EXLATEOBJ_vInitialize(
 VOID
 NTAPI
 EXLATEOBJ_vInitXlateFromDCs(
-    EXLATEOBJ* pexlo,
-    PDC pdcSrc,
-    PDC pdcDst)
+    _Out_ EXLATEOBJ* pexlo,
+    _In_ PDC pdcSrc,
+    _In_ PDC pdcDst)
 {
     PSURFACE psurfDst, psurfSrc;
 
@@ -600,9 +629,25 @@ EXLATEOBJ_vInitXlateFromDCs(
     pexlo->ppalDstDc = pdcDst->dclevel.ppal;
 }
 
+VOID NTAPI EXLATEOBJ_vInitSrcMonoXlate(
+    PEXLATEOBJ pexlo,
+    PPALETTE ppalDst,
+    COLORREF crBackgroundClr,
+    COLORREF crForegroundClr)
+{
+    /* Normal initialisation, with mono palette as source */
+    EXLATEOBJ_vInitialize(pexlo,
+                          gppalMono,
+                          ppalDst,
+                          0,
+                          crBackgroundClr,
+                          crForegroundClr);
+}
+
 VOID
 NTAPI
-EXLATEOBJ_vCleanup(PEXLATEOBJ pexlo)
+EXLATEOBJ_vCleanup(
+    _Inout_ PEXLATEOBJ pexlo)
 {
     if (pexlo->xlo.pulXlate != pexlo->aulXlate)
     {
@@ -616,7 +661,9 @@ EXLATEOBJ_vCleanup(PEXLATEOBJ pexlo)
 #undef XLATEOBJ_iXlate
 ULONG
 NTAPI
-XLATEOBJ_iXlate(XLATEOBJ *pxlo, ULONG iColor)
+XLATEOBJ_iXlate(
+    _In_ XLATEOBJ *pxlo,
+    _In_ ULONG iColor)
 {
     PEXLATEOBJ pexlo = (PEXLATEOBJ)pxlo;
 
@@ -629,7 +676,11 @@ XLATEOBJ_iXlate(XLATEOBJ *pxlo, ULONG iColor)
 
 ULONG
 NTAPI
-XLATEOBJ_cGetPalette(XLATEOBJ *pxlo, ULONG iPal, ULONG cPal, ULONG *pPalOut)
+XLATEOBJ_cGetPalette(
+    _In_ XLATEOBJ *pxlo,
+    _In_ ULONG iPal,
+    _In_ ULONG cPal,
+    _Out_cap_(cPal) ULONG *pPalOut)
 {
     PEXLATEOBJ pexlo = (PEXLATEOBJ)pxlo;
     PPALETTE ppal;
@@ -642,7 +693,7 @@ XLATEOBJ_cGetPalette(XLATEOBJ *pxlo, ULONG iPal, ULONG cPal, ULONG *pPalOut)
 
     if (iPal > 5)
     {
-       DPRINT1("XLATEOBJ_cGetPalette called with wrong iPal: %d\n", iPal);
+       DPRINT1("XLATEOBJ_cGetPalette called with wrong iPal: %lu\n", iPal);
        return 0;
     }
 
@@ -699,7 +750,8 @@ XLATEOBJ_cGetPalette(XLATEOBJ *pxlo, ULONG iPal, ULONG cPal, ULONG *pPalOut)
 
 HANDLE
 NTAPI
-XLATEOBJ_hGetColorTransform(XLATEOBJ *pxlo)
+XLATEOBJ_hGetColorTransform(
+    _In_ XLATEOBJ *pxlo)
 {
     PEXLATEOBJ pexlo = (PEXLATEOBJ)pxlo;
     return pexlo->hColorTransform;
@@ -707,7 +759,8 @@ XLATEOBJ_hGetColorTransform(XLATEOBJ *pxlo)
 
 PULONG
 NTAPI
-XLATEOBJ_piVector(XLATEOBJ *pxlo)
+XLATEOBJ_piVector(
+    _In_ XLATEOBJ *pxlo)
 {
     if (pxlo->iSrcType == PAL_INDEXED)
     {

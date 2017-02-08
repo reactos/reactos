@@ -21,7 +21,7 @@ VGA_REGISTERS TextModeRegs;
 static VOID FASTCALL
 vgaSaveRegisters(PVGA_REGISTERS Registers)
 {
-   SIZE_T i;
+   UCHAR i;
 
    for (i = 0; i < sizeof(Registers->CRT); i++)
    {
@@ -54,7 +54,7 @@ vgaSaveRegisters(PVGA_REGISTERS Registers)
 static VOID FASTCALL
 vgaSetRegisters(PVGA_REGISTERS Registers)
 {
-   SIZE_T i;
+   UCHAR i;
 
    /* Update misc output register */
    VideoPortWritePortUchar(MISC, Registers->Misc);

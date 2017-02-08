@@ -98,9 +98,9 @@ ScmWriteDependencies(HKEY hServiceKey,
                      DWORD dwDependenciesLength)
 {
     DWORD dwError = ERROR_SUCCESS;
-    DWORD dwGroupLength = 0;
-    DWORD dwServiceLength = 0;
-    DWORD dwLength;
+    SIZE_T cchGroupLength = 0;
+    SIZE_T cchServiceLength = 0;
+    SIZE_T cchLength;
     LPWSTR lpGroupDeps;
     LPWSTR lpServiceDeps;
     LPCWSTR lpSrc;
@@ -125,46 +125,46 @@ ScmWriteDependencies(HKEY hServiceKey,
         lpDst = lpGroupDeps;
         while (*lpSrc != 0)
         {
-            dwLength = wcslen(lpSrc) + 1;
+            cchLength = wcslen(lpSrc) + 1;
             if (*lpSrc == SC_GROUP_IDENTIFIERW)
             {
                 lpSrc++;
-                dwGroupLength += dwLength;
+                cchGroupLength += cchLength;
                 wcscpy(lpDst, lpSrc);
-                lpDst = lpDst + dwLength;
+                lpDst = lpDst + cchLength;
             }
 
-            lpSrc = lpSrc + dwLength;
+            lpSrc = lpSrc + cchLength;
         }
         *lpDst = 0;
         lpDst++;
-        dwGroupLength++;
+        cchGroupLength++;
 
         lpSrc = lpDependencies;
         lpServiceDeps = lpDst;
         while (*lpSrc != 0)
         {
-            dwLength = wcslen(lpSrc) + 1;
+            cchLength = wcslen(lpSrc) + 1;
             if (*lpSrc != SC_GROUP_IDENTIFIERW)
             {
-                dwServiceLength += dwLength;
+                cchServiceLength += cchLength;
                 wcscpy(lpDst, lpSrc);
-                lpDst = lpDst + dwLength;
+                lpDst = lpDst + cchLength;
             }
 
-            lpSrc = lpSrc + dwLength;
+            lpSrc = lpSrc + cchLength;
         }
         *lpDst = 0;
-        dwServiceLength++;
+        cchServiceLength++;
 
-        if (dwGroupLength > 1)
+        if (cchGroupLength > 1)
         {
             dwError = RegSetValueExW(hServiceKey,
                                      L"DependOnGroup",
                                      0,
                                      REG_MULTI_SZ,
                                      (LPBYTE)lpGroupDeps,
-                                     dwGroupLength * sizeof(WCHAR));
+                                     (DWORD)(cchGroupLength * sizeof(WCHAR)));
         }
         else
         {
@@ -174,14 +174,14 @@ ScmWriteDependencies(HKEY hServiceKey,
 
         if (dwError == ERROR_SUCCESS)
         {
-            if (dwServiceLength > 1)
+            if (cchServiceLength > 1)
             {
                 dwError = RegSetValueExW(hServiceKey,
                                          L"DependOnService",
                                          0,
                                          REG_MULTI_SZ,
                                          (LPBYTE)lpServiceDeps,
-                                         dwServiceLength * sizeof(WCHAR));
+                                         (DWORD)(cchServiceLength * sizeof(WCHAR)));
             }
             else
             {
@@ -246,19 +246,17 @@ ScmIsDeleteFlagSet(HKEY hServiceKey)
 
 DWORD
 ScmReadString(HKEY hServiceKey,
-              LPWSTR lpValueName,
+              LPCWSTR lpValueName,
               LPWSTR *lpValue)
 {
-    DWORD dwError;
-    DWORD dwSize;
-    DWORD dwType;
-    DWORD dwSizeNeeded;
-    LPWSTR expanded = NULL;
+    DWORD dwError = 0;
+    DWORD dwSize = 0;
+    DWORD dwType = 0;
     LPWSTR ptr = NULL;
+    LPWSTR expanded = NULL;
 
     *lpValue = NULL;
 
-    dwSize = 0;
     dwError = RegQueryValueExW(hServiceKey,
                                lpValueName,
                                0,
@@ -268,7 +266,7 @@ ScmReadString(HKEY hServiceKey,
     if (dwError != ERROR_SUCCESS)
         return dwError;
 
-    ptr = HeapAlloc(GetProcessHeap(), 0, dwSize);
+    ptr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSize);
     if (ptr == NULL)
         return ERROR_NOT_ENOUGH_MEMORY;
 
@@ -279,38 +277,46 @@ ScmReadString(HKEY hServiceKey,
                                (LPBYTE)ptr,
                                &dwSize);
     if (dwError != ERROR_SUCCESS)
-        goto done;
+    {
+        HeapFree(GetProcessHeap(), 0, ptr);
+        return dwError;
+    }
 
     if (dwType == REG_EXPAND_SZ)
     {
         /* Expand the value... */
-        dwSizeNeeded = ExpandEnvironmentStringsW((LPCWSTR)ptr, NULL, 0);
-        if (dwSizeNeeded == 0)
+        dwSize = ExpandEnvironmentStringsW(ptr, NULL, 0);
+        if (dwSize > 0)
+        {
+            expanded = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSize * sizeof(WCHAR));
+            if (expanded)
+            {
+                if (dwSize == ExpandEnvironmentStringsW(ptr, expanded, dwSize))
+                {
+                    *lpValue = expanded;
+                    dwError = ERROR_SUCCESS;
+                }
+                else
+                {
+                    dwError = GetLastError();
+                    HeapFree(GetProcessHeap(), 0, expanded);
+                }
+            }
+            else
+            {
+                dwError = ERROR_NOT_ENOUGH_MEMORY;
+            }
+        }
+        else
         {
             dwError = GetLastError();
-            goto done;
         }
-        expanded = HeapAlloc(GetProcessHeap(), 0, dwSizeNeeded * sizeof(WCHAR));
-        if (dwSizeNeeded < ExpandEnvironmentStringsW((LPCWSTR)ptr, expanded, dwSizeNeeded))
-        {
-            dwError = GetLastError();
-            goto done;
-        }
-        *lpValue = expanded;
+
         HeapFree(GetProcessHeap(), 0, ptr);
-        dwError = ERROR_SUCCESS;
     }
     else
     {
         *lpValue = ptr;
-    }
-
-done:
-    if (dwError != ERROR_SUCCESS)
-    {
-        HeapFree(GetProcessHeap(), 0, ptr);
-        if (expanded)
-            HeapFree(GetProcessHeap(), 0, expanded);
     }
 
     return dwError;
@@ -324,12 +330,12 @@ ScmReadDependencies(HKEY hServiceKey,
 {
     LPWSTR lpGroups = NULL;
     LPWSTR lpServices = NULL;
-    DWORD dwGroupsLength = 0;
-    DWORD dwServicesLength = 0;
+    SIZE_T cchGroupsLength = 0;
+    SIZE_T cchServicesLength = 0;
     LPWSTR lpSrc;
     LPWSTR lpDest;
-    DWORD len;
-    DWORD dwTotalLength;
+    SIZE_T cchLength;
+    SIZE_T cchTotalLength;
 
     *lpDependencies = NULL;
     *lpdwDependenciesLength = 0;
@@ -356,10 +362,10 @@ ScmReadDependencies(HKEY hServiceKey,
         {
             DPRINT("  %S\n", lpSrc);
 
-            len = wcslen(lpSrc) + 1;
-            dwGroupsLength += len + 1;
+            cchLength = wcslen(lpSrc) + 1;
+            cchGroupsLength += cchLength + 1;
 
-            lpSrc = lpSrc + len;
+            lpSrc = lpSrc + cchLength;
         }
     }
 
@@ -371,18 +377,18 @@ ScmReadDependencies(HKEY hServiceKey,
         {
             DPRINT("  %S\n", lpSrc);
 
-            len = wcslen(lpSrc) + 1;
-            dwServicesLength += len;
+            cchLength = wcslen(lpSrc) + 1;
+            cchServicesLength += cchLength;
 
-            lpSrc = lpSrc + len;
+            lpSrc = lpSrc + cchLength;
         }
     }
 
-    dwTotalLength = dwGroupsLength + dwServicesLength + 1;
-    DPRINT("dwTotalLength: %lu\n", dwTotalLength);
+    cchTotalLength = cchGroupsLength + cchServicesLength + 1;
+    DPRINT("cchTotalLength: %lu\n", cchTotalLength);
 
     /* Allocate the common buffer for the dependencies */
-    *lpDependencies = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwTotalLength * sizeof(WCHAR));
+    *lpDependencies = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cchTotalLength * sizeof(WCHAR));
     if (*lpDependencies == NULL)
     {
         if (lpGroups)
@@ -395,7 +401,7 @@ ScmReadDependencies(HKEY hServiceKey,
     }
 
     /* Return the allocated buffer length in characters */
-    *lpdwDependenciesLength = dwTotalLength;
+    *lpdwDependenciesLength = (DWORD)cchTotalLength;
 
     /* Copy the service dependencies into the common buffer */
     lpDest = *lpDependencies;
@@ -403,9 +409,9 @@ ScmReadDependencies(HKEY hServiceKey,
     {
         memcpy(lpDest,
                lpServices,
-               dwServicesLength * sizeof(WCHAR));
+               cchServicesLength * sizeof(WCHAR));
 
-        lpDest = lpDest + dwServicesLength;
+        lpDest = lpDest + cchServicesLength;
     }
 
     /* Copy the group dependencies into the common buffer */
@@ -414,15 +420,15 @@ ScmReadDependencies(HKEY hServiceKey,
         lpSrc = lpGroups;
         while (*lpSrc != 0)
         {
-            len = wcslen(lpSrc) + 1;
+            cchLength = wcslen(lpSrc) + 1;
 
             *lpDest = SC_GROUP_IDENTIFIERW;
             lpDest++;
 
             wcscpy(lpDest, lpSrc);
 
-            lpDest = lpDest + len;
-            lpSrc = lpSrc + len;
+            lpDest = lpDest + cchLength;
+            lpSrc = lpSrc + cchLength;
         }
     }
 

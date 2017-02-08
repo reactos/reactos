@@ -1,4 +1,3 @@
-
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS net command
@@ -10,129 +9,66 @@
 
 #include "net.h"
 
-
-
-int main(int argc, char **argv)
+typedef struct _COMMAND
 {
-    if (argc<2)
-	{
-      help();
-      return 1;
-	}
+    WCHAR *name;
+    INT (*func)(INT, WCHAR**);
+//    VOID (*help)(INT, WCHAR**);
+} COMMAND, *PCOMMAND;
 
-    if (_stricmp(argv[1],"ACCOUNTS")==0)
-    {
-		return unimplemented();
-    }
-    if (_stricmp(argv[1],"COMPUTER")==0)
-    {
-		return unimplemented();
-    }
-    if (_stricmp(argv[1],"CONFIG")==0)
-    {
-		return unimplemented();
-    }
-    if (_stricmp(argv[1],"CONTINUE")==0)
-    {
-		return unimplemented();
-    }
+COMMAND cmds[] =
+{
+    {L"accounts",   unimplemented},
+    {L"computer",   unimplemented},
+    {L"config",     unimplemented},
+    {L"continue",   cmdContinue},
+    {L"file",       unimplemented},
+    {L"group",      unimplemented},
+    {L"help",       cmdHelp},
+    {L"helpmsg",    cmdHelpMsg},
+    {L"localgroup", unimplemented},
+    {L"name",       unimplemented},
+    {L"print",      unimplemented},
+    {L"pause",      cmdPause},
+    {L"send",       unimplemented},
+    {L"session",    unimplemented},
+    {L"share",      unimplemented},
+    {L"start",      cmdStart},
+    {L"statistics", unimplemented},
+    {L"stop",       cmdStop},
+    {L"time",       unimplemented},
+    {L"use",        unimplemented},
+    {L"user",       unimplemented},
+    {L"view",       unimplemented},
+    {NULL,          NULL}
+};
 
-    if (_stricmp(argv[1],"FILE")==0)
+int wmain(int argc, WCHAR **argv)
+{
+    PCOMMAND cmdptr;
+
+    if (argc < 2)
     {
-		return unimplemented();
-    }
-    if (_stricmp(argv[1],"GROUP")==0)
-    {
-		return unimplemented();
-    }
-    if (_stricmp(argv[1],"HELP")==0)
-    {
-        return cmdHelp(argc,&argv[1]);
-    }
-    if (_stricmp(argv[1],"HELPMSG")==0)
-    {
-		return unimplemented();
-    }
-    if (_stricmp(argv[1],"LOCALGROUP")==0)
-    {
-		return unimplemented();
-    }
-    if (_stricmp(argv[1],"NAME")==0)
-    {
-		return unimplemented();
-    }
-    if (_stricmp(argv[1],"PRINT")==0)
-    {
-		return unimplemented();
-    }
-    if (_stricmp(argv[1],"SEND")==0)
-    {
-		return unimplemented();
-    }
-    if (_stricmp(argv[1],"SESSION")==0)
-    {
-		return unimplemented();
-    }
-    if (_stricmp(argv[1],"SHARE")==0)
-    {
-		return unimplemented();
+        help();
+        return 1;
     }
 
-    if (_stricmp(argv[1],"START")==0)
+    /* Scan the command table */
+    for (cmdptr = cmds; cmdptr->name; cmdptr++)
     {
-       return cmdStart(argc, &argv[1]);
-    }
-    if (_stricmp(argv[1],"STATISTICS")==0)
-    {
-		return unimplemented();
-    }
-    if (_stricmp(argv[1],"STOP")==0)
-    {
-		return cmdStop(argc, &argv[1]);
-    }
-    if (_stricmp(argv[1],"TIME")==0)
-    {
-		return unimplemented();
-    }
-    if (_stricmp(argv[1],"USE")==0)
-    {
-		return unimplemented();
-    }
-    if (_stricmp(argv[1],"USER")==0)
-    {
-		return unimplemented();
-    }
-    if (_stricmp(argv[1],"VIEW")==0)
-    {
-		return unimplemented();
+        if (_wcsicmp(argv[1], cmdptr->name) == 0)
+        {
+            return cmdptr->func(argc, argv);
+        }
     }
 
     help();
-	return 1;
+
+    return 1;
 }
 
-
-int unimplemented()
+INT unimplemented(INT argc, WCHAR **argv)
 {
-	puts("This command is not implemented yet");
-	return 1;
+    puts("This command is not implemented yet");
+    return 1;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

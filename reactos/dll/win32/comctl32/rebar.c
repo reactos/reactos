@@ -78,21 +78,21 @@
  */
 
 #include <assert.h>
-#include <stdarg.h>
+//#include <stdarg.h>
 #include <stdlib.h>
-#include <string.h>
+//#include <string.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "wine/unicode.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "commctrl.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "wingdi.h"
+//#include "wine/unicode.h"
+//#include "winuser.h"
+//#include "winnls.h"
+//#include "commctrl.h"
 #include "comctl32.h"
-#include "uxtheme.h"
-#include "vssym32.h"
-#include "wine/debug.h"
+#include <uxtheme.h>
+#include <vssym32.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(rebar);
 
@@ -1123,7 +1123,7 @@ REBAR_MoveChildWindows (const REBAR_INFO *infoPtr, UINT start, UINT endplus)
  * or infoPtr->uNumBands if none */
 static int next_visible(const REBAR_INFO *infoPtr, int i)
 {
-    int n;
+    unsigned int n;
     for (n = i + 1; n < infoPtr->uNumBands; n++)
         if (!HIDDENBAND(REBAR_GetBand(infoPtr, n)))
             break;
@@ -2135,8 +2135,10 @@ REBAR_HandleUDDrag (REBAR_INFO *infoPtr, const POINT *ptsmove)
     if(yOff < 0)
     {
         /* Place the band above the current top row */
+        if(iHitBand==0 && (infoPtr->uNumBands==1 || REBAR_GetBand(infoPtr, 1)->fStyle&RBBS_BREAK))
+            return;
         DPA_DeletePtr(infoPtr->bands, iHitBand);
-        hitBand->fStyle &= RBBS_BREAK;
+        hitBand->fStyle &= ~RBBS_BREAK;
         REBAR_GetBand(infoPtr, 0)->fStyle |= RBBS_BREAK;
         infoPtr->iGrabbedBand = DPA_InsertPtr(
             infoPtr->bands, 0, hitBand);
@@ -2144,6 +2146,8 @@ REBAR_HandleUDDrag (REBAR_INFO *infoPtr, const POINT *ptsmove)
     else if(yOff > REBAR_GetBand(infoPtr, infoPtr->uNumBands - 1)->rcBand.bottom)
     {
         /* Place the band below the current bottom row */
+        if(iHitBand == infoPtr->uNumBands-1 && hitBand->fStyle&RBBS_BREAK)
+            return;
         DPA_DeletePtr(infoPtr->bands, iHitBand);
         hitBand->fStyle |= RBBS_BREAK;
         infoPtr->iGrabbedBand = DPA_InsertPtr(

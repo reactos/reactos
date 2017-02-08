@@ -1,5 +1,4 @@
-/* $Id: $
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             subsys/system/dhcp/api.c
@@ -7,7 +6,7 @@
  * PROGRAMMER:       arty
  */
 
-#include "rosdhcp.h"
+#include <rosdhcp.h>
 
 #define NDEBUG
 #include <reactos/debug.h>

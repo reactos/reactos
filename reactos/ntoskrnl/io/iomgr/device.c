@@ -227,11 +227,14 @@ IoShutdownSystem(IN ULONG Phase)
                                                NULL,
                                                &Event,
                                                &StatusBlock);
-            Status = IoCallDriver(DeviceObject, Irp);
-            if (Status == STATUS_PENDING)
+            if (Irp)
             {
-                /* Wait on the driver */
-                KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+                Status = IoCallDriver(DeviceObject, Irp);
+                if (Status == STATUS_PENDING)
+                {
+                    /* Wait on the driver */
+                    KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+                }
             }
 
             /* Remove the flag */
@@ -1031,6 +1034,9 @@ IoDeleteDevice(IN PDEVICE_OBJECT DeviceObject)
 
     /* Set the pending delete flag */
     IoGetDevObjExtension(DeviceObject)->ExtensionFlags |= DOE_DELETE_PENDING;
+
+    /* Unlink with the power manager */
+    if (DeviceObject->Vpb) PoRemoveVolumeDevice(DeviceObject);
 
     /* Check if the device object can be unloaded */
     if (!DeviceObject->ReferenceCount) IopUnloadDevice(DeviceObject);

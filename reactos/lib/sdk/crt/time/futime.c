@@ -46,7 +46,7 @@ HANDLE fdtoh(int fd);
  * \name _futime
  * \brief Set a file's modification time.
  * \param [out] ptimeb Pointer to a structure of type struct _timeb that
- *        recieves the current time.
+ *        receives the current time.
  * \sa http://msdn.microsoft.com/en-us/library/95e68951.aspx
  */
 int

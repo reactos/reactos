@@ -28,6 +28,29 @@ typedef union _DECLSPEC_INTRIN_TYPE _CRT_ALIGN(16) __m128
 extern __m128 _mm_load_ss(float const*);
 extern int _mm_cvt_ss2si(__m128);
 
+#ifdef _MSC_VER
+unsigned int _mm_getcsr(void);
+#pragma intrinsic(_mm_getcsr)
+void _mm_setcsr(unsigned int);
+#pragma intrinsic(_mm_setcsr)
+#else
+/* 
+ * We can't use __builtin_ia32_* functions,
+ * are they are only available with the -msse2 compiler switch
+ */
+__INTRIN_INLINE unsigned int _mm_getcsr(void)
+{
+    unsigned int retval;
+    __asm__ __volatile__("stmxcsr %0" : "=m"(retval));
+    return retval;
+}
+
+__INTRIN_INLINE void _mm_setcsr(unsigned int val)
+{
+    __asm__ __volatile__("ldmxcsr %0" : : "m"(val));
+}
+#endif
+
 /* Alternate names */
 #define _mm_cvtss_si32 _mm_cvt_ss2si
 

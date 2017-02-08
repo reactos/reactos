@@ -18,19 +18,29 @@
 #define OEMRESOURCE
 #define NTOS_MODE_USER
 #define WIN32_NO_STATUS
-#include <windows.h>
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <windef.h>
+#include <winbase.h>
+#include <wincon.h>
+#include <wingdi.h>
+#include <winreg.h>
+#include <winuser.h>
+#include <imm.h>
+#include <ddeml.h>
+#include <dde.h>
 #include <windowsx.h>
 #include <winnls32.h>
 #include <strsafe.h>
-#include <usp10.h>
 #include <ndk/cmfuncs.h>
 #include <ndk/kefuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/umfuncs.h>
 
-/* CSRSS Headers */
-#include <csrss/csrss.h>
+/* CSRSS Header */
+#include <csr/csr.h>
+#include <win/winmsg.h>
 
 /* Public Win32K Headers */
 #include <ntusrtyp.h>

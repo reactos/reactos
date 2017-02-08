@@ -232,29 +232,51 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
     /* Blt the pointer on the screen. */
     if (pgp->psurfColor)
     {
-        IntEngBitBlt(psoDest,
-                     &pgp->psurfMask->SurfObj,
-                     NULL,
-                     NULL,
-                     NULL,
-                     &rclSurf,
-                     (POINTL*)&rclPointer,
-                     NULL,
-                     NULL,
-                     NULL,
-                     ROP4_FROM_INDEX(R3_OPINDEX_SRCAND));
+        if(!(pgp->flags & SPS_ALPHA))
+        {
+            IntEngBitBlt(psoDest,
+                         &pgp->psurfMask->SurfObj,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &rclSurf,
+                         (POINTL*)&rclPointer,
+                         NULL,
+                         NULL,
+                         NULL,
+                         ROP4_SRCAND);
 
-        IntEngBitBlt(psoDest,
-                     &pgp->psurfColor->SurfObj,
-                     NULL,
-                     NULL,
-                     NULL,
-                     &rclSurf,
-                     (POINTL*)&rclPointer,
-                     NULL,
-                     NULL,
-                     NULL,
-                     ROP4_FROM_INDEX(R3_OPINDEX_SRCINVERT));
+            IntEngBitBlt(psoDest,
+                         &pgp->psurfColor->SurfObj,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &rclSurf,
+                         (POINTL*)&rclPointer,
+                         NULL,
+                         NULL,
+                         NULL,
+                         ROP4_SRCINVERT);
+         }
+         else
+         {
+            BLENDOBJ blendobj = { {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA } };
+            EXLATEOBJ exlo;
+            EXLATEOBJ_vInitialize(&exlo,
+                pgp->psurfColor->ppal,
+                ppdev->ppalSurf,
+                0xFFFFFFFF,
+                0xFFFFFFFF,
+                0);
+            IntEngAlphaBlend(psoDest,
+                             &pgp->psurfColor->SurfObj,
+                             NULL,
+                             &exlo.xlo,
+                             &rclSurf,
+                             &rclPointer,
+                             &blendobj);
+            EXLATEOBJ_vCleanup(&exlo);
+        }
     }
     else
     {
@@ -352,7 +374,15 @@ EngSetPointerShape(
     if (psoColor)
     {
         /* Color bitmap must have the same format as the dest surface */
-        if (psoColor->iBitmapFormat != pso->iBitmapFormat) goto failure;
+        if (psoColor->iBitmapFormat != pso->iBitmapFormat)
+        {
+            /* It's OK if we have an alpha bitmap */
+            if(!(fl & SPS_ALPHA))
+            {
+                DPRINT1("Screen surface and cursor color bitmap format don't match!.\n");
+                goto failure;
+            }
+        }
 
         /* Create a bitmap to copy the color bitmap to */
         hbmColor = EngCreateBitmap(psoColor->sizlBitmap,
@@ -452,6 +482,7 @@ EngSetPointerShape(
     pgp->HotSpot.x = xHot;
     pgp->HotSpot.y = yHot;
     pgp->Size = sizel;
+    pgp->flags = fl;
 
     if (x != -1)
     {
@@ -598,12 +629,12 @@ GreSetPointerShape(
     LONG xHot,
     LONG yHot,
     LONG x,
-    LONG y)
+    LONG y,
+    FLONG fl)
 {
     PDC pdc;
     PSURFACE psurf, psurfMask, psurfColor;
     EXLATEOBJ exlo;
-    FLONG fl = 0;
     ULONG ulResult = 0;
 
     pdc = DC_LockDc(hdc);
@@ -629,7 +660,10 @@ GreSetPointerShape(
     if (hbmMask)
         psurfMask = SURFACE_ShareLockSurface(hbmMask);
     else
+    {
+        //ASSERT(fl & SPS_ALPHA);
         psurfMask = NULL;
+    }
 
     /* Check for color bitmap */
     if (hbmColor)
@@ -645,6 +679,9 @@ GreSetPointerShape(
     }
     else
         psurfColor = NULL;
+    
+    /* We must have a valid surface in case of alpha bitmap */
+    ASSERT(((fl & SPS_ALPHA) && psurfColor) || !(fl & SPS_ALPHA)); 
 
     /* Call the driver or eng function */
     ulResult = IntEngSetPointerShape(&psurf->SurfObj,

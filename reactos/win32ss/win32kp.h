@@ -100,7 +100,6 @@ typedef struct _DESKTOP *PDESKTOP;
 #include "user/ntuser/vis.h"
 #include "user/ntuser/userfuncs.h"
 #include "user/ntuser/scroll.h"
-#include "user/ntuser/csr.h"
 #include "user/ntuser/winpos.h"
 #include "user/ntuser/callback.h"
 

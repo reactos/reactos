@@ -73,14 +73,13 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Panel úloh"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "Vzhľad panela úloh", IDC_STATIC, 6,6,240,121
+    GROUPBOX        "Vzhľad panela úloh", IDC_STATIC, 6,6,240,104
     CONTROL         "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13,18,224,21
     AUTOCHECKBOX    "Za&mknúť panel úloh", IDC_TASKBARPROP_LOCK, 13,45,200,10
     AUTOCHECKBOX    "A&utomaticky skývať panel úloh", IDC_TASKBARPROP_HIDE, 13,58,200,10
     AUTOCHECKBOX    "Zo&brazovať panel úloh nad ostatnými oknami", IDC_TASKBARPROP_ONTOP, 13,71,200,10 //Ponechať panel úloh nad ostatnými oknami
     AUTOCHECKBOX    "&Zoskupovať podobné tlačidlá na paneli s nástrojmi", IDC_TASKBARPROP_GROUP, 13,84,200,10
     AUTOCHECKBOX    "Zobraziť panel &Rýchle spustenie", IDC_TASKBARPROP_SHOWQL, 13,97,200,10
-    AUTOCHECKBOX    "Z&obraziť náhľady okien (miniatúry)", IDC_TASKBARPROP_WNDPREV, 13,110,200,10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
@@ -125,6 +124,16 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     LTEXT           "Vyberte, ktoré panely s nástrojmi sa majú pridať do panela úloh.", IDC_STATIC, 7,7,223,12, WS_DISABLED
     CONTROL         "", IDC_TASKBARPROP_DESKBANDLIST, "SysTreeView32",WS_BORDER | WS_TABSTOP | WS_DISABLED, 7,20,236,160, WS_EX_CLIENTEDGE
+END
+
+IDD_TASKBARPROP_ADVANCED DIALOGEX 0, 0, 252, 218
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Advanced"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "Advanced options", IDC_STATIC, 6,6,240,121
+    AUTOCHECKBOX    "Show s&econds", IDC_TASKBARPROP_SECONDS, 13,18,200,10
+    AUTOCHECKBOX    "Z&obraziť náhľady okien (miniatúry)", IDC_TASKBARPROP_WNDPREV, 13,31,200,10
 END
 
 

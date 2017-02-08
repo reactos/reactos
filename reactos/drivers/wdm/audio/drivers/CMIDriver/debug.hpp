@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2006-2007 dogbert <dogber1@gmail.com>
+Copyright (c) 2006-2008 dogbert <dogber1@gmail.com>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -28,12 +28,15 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _DEBUG_HPP_
 #define _DEBUG_HPP_
 
-#define CMIVERSION "1.1.3-debug"
-//#define WAVERT
-#define UART
+#define CMIVERSION "1.2.6"
+#define WAVERT
+//#define UART //disabled for improved stability on ULi motherboards
 
 #if (DBG)
-#define DBGPRINT(msg)
+#define DBGPRINT(msg)             \
+		{                         \
+		    DbgPrint msg;         \
+	    }
 #define DBGBREAK                  \
         _asm int 3;
 #else
@@ -41,5 +44,10 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DBGBREAK
 #endif
 
-#define INFOPRINT(msg)
+#define INFOPRINT(msg)            \
+		{                         \
+		    DbgPrint msg;         \
+	    }
+
+
 #endif

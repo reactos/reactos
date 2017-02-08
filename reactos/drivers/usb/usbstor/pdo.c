@@ -671,14 +671,14 @@ USBSTOR_PdoHandleQueryInstanceId(
         //
         // using serial number from device
         //
-        swprintf(Buffer, L"%s&%d", FDODeviceExtension->SerialNumber->bString, PDODeviceExtension->LUN);
+        swprintf(Buffer, L"%s&%c", FDODeviceExtension->SerialNumber->bString, PDODeviceExtension->LUN);
     }
     else
     {
         //
-        // FIXME: should use some random value
+        // use instance count and LUN
         //
-        swprintf(Buffer, L"%s&%d", L"00000000", PDODeviceExtension->LUN);
+        swprintf(Buffer, L"%04lu&%c", FDODeviceExtension->InstanceCount, PDODeviceExtension->LUN);
     }
 
     //
@@ -897,7 +897,7 @@ USBSTOR_PdoHandlePnp(
                // check if no unique id
                //
                Caps = (PDEVICE_CAPABILITIES)IoStack->Parameters.DeviceCapabilities.Capabilities;
-               Caps->UniqueID = TRUE; //FIXME
+               Caps->UniqueID = FALSE; // no unique id is supported
                Caps->Removable = TRUE; //FIXME
            }
            break;
@@ -926,6 +926,11 @@ USBSTOR_PdoHandlePnp(
            //
            // no-op for PDO
            //
+           Status = STATUS_SUCCESS;
+           break;
+       }
+       case IRP_MN_SURPRISE_REMOVAL:
+       {
            Status = STATUS_SUCCESS;
            break;
        }
@@ -1198,7 +1203,7 @@ USBSTOR_SendInquiryIrp(
     DPRINT1("Version %x\n", Response->Version);
     DPRINT1("Format %x\n", Response->Format);
     DPRINT1("Length %x\n", Response->Length);
-    DPRINT1("Reserved %x\n", Response->Reserved);
+    DPRINT1("Reserved %p\n", Response->Reserved);
     DPRINT1("Vendor %c%c%c%c%c%c%c%c\n", Response->Vendor[0], Response->Vendor[1], Response->Vendor[2], Response->Vendor[3], Response->Vendor[4], Response->Vendor[5], Response->Vendor[6], Response->Vendor[7]);
     DPRINT1("Product %c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\n", Response->Product[0], Response->Product[1], Response->Product[2], Response->Product[3],
                                                           Response->Product[4], Response->Product[5], Response->Product[6], Response->Product[7], 
@@ -1256,13 +1261,19 @@ USBSTOR_SendFormatCapacityIrp(
 NTSTATUS
 USBSTOR_CreatePDO(
     IN PDEVICE_OBJECT DeviceObject,
-    IN UCHAR LUN,
-    OUT PDEVICE_OBJECT *ChildDeviceObject)
+    IN UCHAR LUN)
 {
     PDEVICE_OBJECT PDO;
     NTSTATUS Status;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PUFI_INQUIRY_RESPONSE Response;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+
+    //
+    // get device extension
+    //
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
 
     //
     // create child device object
@@ -1292,7 +1303,7 @@ USBSTOR_CreatePDO(
     RtlZeroMemory(PDODeviceExtension, sizeof(PDO_DEVICE_EXTENSION));
     PDODeviceExtension->Common.IsFDO = FALSE;
     PDODeviceExtension->LowerDeviceObject = DeviceObject;
-    PDODeviceExtension->PDODeviceObject = ChildDeviceObject;
+    PDODeviceExtension->PDODeviceObject = &FDODeviceExtension->ChildPDO[LUN];
     PDODeviceExtension->Self = PDO;
     PDODeviceExtension->LUN = LUN;
 
@@ -1309,7 +1320,7 @@ USBSTOR_CreatePDO(
     //
     // output device object
     //
-    *ChildDeviceObject = PDO;
+    FDODeviceExtension->ChildPDO[LUN] = PDO;
 
     //
     // send inquiry command by irp

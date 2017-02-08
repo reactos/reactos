@@ -167,21 +167,67 @@ const char *get_name(const var_t *v)
     return buffer;
 }
 
-static void write_field(FILE *h, var_t *v)
-{
-  if (!v) return;
-  if (v->type) {
-    indent(h, 0);
-    write_type_def_or_decl(h, v->type, TRUE, v->name);
-    fprintf(h, ";\n");
-  }
-}
-
 static void write_fields(FILE *h, var_list_t *fields)
 {
+    unsigned nameless_struct_cnt = 0, nameless_struct_i = 0, nameless_union_cnt = 0, nameless_union_i = 0;
+    const char *name;
+    char buf[32];
     var_t *v;
+
     if (!fields) return;
-    LIST_FOR_EACH_ENTRY( v, fields, var_t, entry ) write_field(h, v);
+
+    LIST_FOR_EACH_ENTRY( v, fields, var_t, entry ) {
+        if (!v || !v->type) continue;
+
+        switch(type_get_type_detect_alias(v->type)) {
+        case TYPE_STRUCT:
+        case TYPE_ENCAPSULATED_UNION:
+            nameless_struct_cnt++;
+            break;
+        case TYPE_UNION:
+            nameless_union_cnt++;
+            break;
+        default:
+            ;
+        }
+    }
+
+    LIST_FOR_EACH_ENTRY( v, fields, var_t, entry ) {
+        if (!v || !v->type) continue;
+
+        indent(h, 0);
+        name = v->name;
+
+        switch(type_get_type_detect_alias(v->type)) {
+        case TYPE_STRUCT:
+        case TYPE_ENCAPSULATED_UNION:
+            if(!v->name) {
+                fprintf(h, "__C89_NAMELESS ");
+                if(nameless_struct_cnt == 1) {
+                    name = "__C89_NAMELESSSTRUCTNAME";
+                }else if(nameless_struct_i < 5 /* # of supporting macros */) {
+                    sprintf(buf, "__C89_NAMELESSSTRUCTNAME%d", ++nameless_struct_i);
+                    name = buf;
+                }
+            }
+            break;
+        case TYPE_UNION:
+            if(!v->name) {
+                fprintf(h, "__C89_NAMELESS ");
+                if(nameless_union_cnt == 1) {
+                    name = "__C89_NAMELESSUNIONNAME";
+                }else if(nameless_union_i < 8 /* # of supporting macros */ ) {
+                    sprintf(buf, "__C89_NAMELESSUNIONNAME%d", ++nameless_union_i);
+                    name = buf;
+                }
+            }
+            break;
+        default:
+            ;
+        }
+        write_type_def_or_decl(h, v->type, TRUE, name);
+        fprintf(h, ";\n");
+    }
 }
 
 static void write_enums(FILE *h, var_list_t *enums)
@@ -770,6 +816,28 @@ const var_t *is_callas(const attr_list_t *a)
   return get_attrp(a, ATTR_CALLAS);
 }
 
+static int is_inherited_method(const type_t *iface, const var_t *func)
+{
+  while ((iface = type_iface_get_inherit(iface)))
+  {
+    const statement_t *stmt;
+    STATEMENTS_FOR_EACH_FUNC(stmt, type_iface_get_stmts(iface))
+    {
+      const var_t *funccmp = stmt->u.var;
+
+      if (!is_callas(func->attrs))
+      {
+         char inherit_name[256];
+         /* compare full name including property prefix */
+         strcpy(inherit_name, get_name(funccmp));
+         if (!strcmp(inherit_name, get_name(func))) return 1;
+      }
+    }
+  }
+
+  return 0;
+}
+
 static void write_method_macro(FILE *header, const type_t *iface, const char *name)
 {
   const statement_t *stmt;
@@ -788,7 +856,7 @@ static void write_method_macro(FILE *header, const type_t *iface, const char *na
       first_iface = 0;
     }
 
-    if (!is_callas(func->attrs)) {
+    if (!is_callas(func->attrs) && !is_inherited_method(iface, func)) {
       const var_t *arg;
 
       fprintf(header, "#define %s_%s(This", name, get_name(func));
@@ -830,6 +898,13 @@ void write_args(FILE *h, const var_list_t *args, const char *name, int method, i
         else fprintf(h, ",");
     }
     write_type_decl(h, arg->type, arg->name);
+    if (method == 2) {
+        const expr_t *expr = get_attrp(arg->attrs, ATTR_DEFAULTVALUE);
+        if (expr) {
+            fprintf(h, " = ");
+            write_expr( h, expr, 0, 1, NULL, NULL, "" );
+        }
+    }
     count++;
   }
   if (do_indent) indentation--;
@@ -856,6 +931,43 @@ static void write_cpp_method_def(FILE *header, const type_t *iface)
   }
 }
 
+static void write_inline_wrappers(FILE *header, const type_t *iface, const char *name)
+{
+  const statement_t *stmt;
+  int first_iface = 1;
+
+  if (type_iface_get_inherit(iface))
+    write_inline_wrappers(header, type_iface_get_inherit(iface), name);
+
+  STATEMENTS_FOR_EACH_FUNC(stmt, type_iface_get_stmts(iface))
+  {
+    const var_t *func = stmt->u.var;
+
+    if (first_iface)
+    {
+      fprintf(header, "/*** %s methods ***/\n", iface->name);
+      first_iface = 0;
+    }
+
+    if (!is_callas(func->attrs) && !is_inherited_method(iface, func)) {
+      const var_t *arg;
+
+      fprintf(header, "static FORCEINLINE ");
+      write_type_decl_left(header, type_function_get_rettype(func->type));
+      fprintf(header, " %s_%s(", name, get_name(func));
+      write_args(header, type_get_function_args(func->type), name, 1, FALSE);
+      fprintf(header, ") {\n");
+      fprintf(header, "    %s", is_void(type_function_get_rettype(func->type)) ? "" : "return ");
+      fprintf(header, "This->lpVtbl->%s(This", get_name(func));
+      if (type_get_function_args(func->type))
+          LIST_FOR_EACH_ENTRY( arg, type_get_function_args(func->type), const var_t, entry )
+              fprintf(header, ",%s", arg->name);
+      fprintf(header, ");\n");
+      fprintf(header, "}\n");
+    }
+  }
+}
+
 static void do_write_c_method_def(FILE *header, const type_t *iface, const char *name)
 {
   const statement_t *stmt;
@@ -877,7 +989,10 @@ static void do_write_c_method_def(FILE *header, const type_t *iface, const char 
       if (!callconv) callconv = "STDMETHODCALLTYPE";
       indent(header, 0);
       write_type_decl_left(header, type_function_get_rettype(func->type));
-      fprintf(header, " (%s *%s)(\n", callconv, get_name(func));
+      if (is_inherited_method(iface, func))
+        fprintf(header, " (%s *%s_%s)(\n", callconv, iface->name, func->name);
+      else
+        fprintf(header, " (%s *%s)(\n", callconv, get_name(func));
       write_args(header, type_get_function_args(func->type), name, 1, TRUE);
       fprintf(header, ");\n");
       fprintf(header, "\n");
@@ -987,8 +1102,6 @@ static void write_local_stubs_stmts(FILE *local_stubs, const statement_list_t *s
   {
     if (stmt->type == STMT_TYPE && type_get_type(stmt->u.type) == TYPE_INTERFACE)
       write_locals(local_stubs, stmt->u.type, TRUE);
-    else if (stmt->type == STMT_LIBRARY)
-      write_local_stubs_stmts(local_stubs, stmt->u.lib->stmts);
   }
 }
 
@@ -1106,7 +1219,11 @@ static void write_com_interface_end(FILE *header, type_t *iface)
   fprintf(header, "#ifdef COBJMACROS\n");
   /* dispinterfaces don't have real functions, so don't write macros for them,
    * only for the interface this interface inherits from, i.e. IDispatch */
+  fprintf(header, "#ifndef WIDL_C_INLINE_WRAPPERS\n");
   write_method_macro(header, dispinterface ? type_iface_get_inherit(iface) : iface, iface->name);
+  fprintf(header, "#else\n");
+  write_inline_wrappers(header, dispinterface ? type_iface_get_inherit(iface) : iface, iface->name);
+  fprintf(header, "#endif\n");
   fprintf(header, "#endif\n");
   fprintf(header, "\n");
   fprintf(header, "#endif\n");
@@ -1184,7 +1301,11 @@ static void write_coclass_forward(FILE *header, type_t *cocl)
 {
   fprintf(header, "#ifndef __%s_FWD_DEFINED__\n", cocl->name);
   fprintf(header, "#define __%s_FWD_DEFINED__\n", cocl->name);
+  fprintf(header, "#ifdef __cplusplus\n");
+  fprintf(header, "typedef class %s %s;\n", cocl->name, cocl->name);
+  fprintf(header, "#else\n");
   fprintf(header, "typedef struct %s %s;\n", cocl->name, cocl->name);
+  fprintf(header, "#endif /* defined __cplusplus */\n");
   fprintf(header, "#endif /* defined __%s_FWD_DEFINED__ */\n\n", cocl->name );
 }
 
@@ -1360,16 +1481,25 @@ void write_header(const statement_list_t *stmts)
     return;
   }
   fprintf(header, "/*** Autogenerated by WIDL %s from %s - Do not edit ***/\n\n", PACKAGE_VERSION, input_name);
+
+  fprintf(header, "#ifndef __REQUIRED_RPCNDR_H_VERSION__\n");
+  fprintf(header, "#define __REQUIRED_RPCNDR_H_VERSION__ 475\n");
+  fprintf(header, "#endif\n\n");
+
+  fprintf(header, "#ifdef __REACTOS__\n");
+  fprintf(header, "#define WIN32_LEAN_AND_MEAN\n");
+  fprintf(header, "#endif\n\n");
+
   fprintf(header, "#include <rpc.h>\n" );
   fprintf(header, "#include <rpcndr.h>\n\n" );
 
-  fprintf(header, "#if !defined(COM_NO_WINDOWS_H) && !defined(__WINESRC__)\n");
+  fprintf(header, "#ifndef COM_NO_WINDOWS_H\n");
   fprintf(header, "#include <windows.h>\n");
   fprintf(header, "#include <ole2.h>\n");
   fprintf(header, "#endif\n\n");
 
-  fprintf(header, "#ifndef __WIDL_%s\n", header_token);
-  fprintf(header, "#define __WIDL_%s\n\n", header_token);
+  fprintf(header, "#ifndef __%s__\n", header_token);
+  fprintf(header, "#define __%s__\n\n", header_token);
 
   fprintf(header, "/* Forward declarations */\n\n");
   write_forward_decls(header, stmts);
@@ -1391,7 +1521,7 @@ void write_header(const statement_list_t *stmts)
   fprintf(header, "\n");
 
   end_cplusplus_guard(header);
-  fprintf(header, "#endif /* __WIDL_%s */\n", header_token);
+  fprintf(header, "#endif /* __%s__ */\n", header_token);
 
   fclose(header);
 }

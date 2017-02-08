@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS simple TCP/IP services
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        /base/services/tcpsvcs/discard.c
- * PURPOSE:     Recieves input from a client and discards it
+ * PURPOSE:     Receives input from a client and discards it
  * COPYRIGHT:   Copyright 2005 - 2008 Ged Murphy <gedmurphy@reactos.org>
  *
  */
@@ -12,7 +12,7 @@
 #define BUFSIZE 1024
 
 static BOOL
-RecieveIncomingPackets(SOCKET sock)
+ReceiveIncomingPackets(SOCKET sock)
 {
     CHAR readBuffer[BUFSIZE];
     INT readBytes;
@@ -46,9 +46,9 @@ DiscardHandler(VOID* sock_)
     DWORD retVal = 0;
     SOCKET sock = (SOCKET)sock_;
 
-    if (!RecieveIncomingPackets(sock))
+    if (!ReceiveIncomingPackets(sock))
     {
-        LogEvent(L"Discard: RecieveIncomingPackets failed", 0, 0, LOG_FILE);
+        LogEvent(L"Discard: ReceiveIncomingPackets failed", 0, 0, LOG_FILE);
         retVal = 1;
     }
 

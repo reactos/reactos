@@ -4,6 +4,7 @@
  *      Copyright 1998  Juergen Schmied
  *      Copyright 2005  Mike McCormack
  *      Copyright 2009  Andrew Hill
+ *      Copyright 2013  Dominik Hornung
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -33,7 +34,7 @@
  *   in that string is parsed an stored.
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -44,23 +45,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 /* link file formats */
 
 #include "pshpack1.h"
-
-struct LINK_HEADER
-{
-    DWORD        dwSize;         /* 0x00 size of the header - 0x4c */
-    GUID         MagicGuid;      /* 0x04 is CLSID_ShellLink */
-    DWORD        dwFlags;        /* 0x14 describes elements following */
-    DWORD        dwFileAttr;     /* 0x18 attributes of the target file */
-    FILETIME     Time1;          /* 0x1c */
-    FILETIME     Time2;          /* 0x24 */
-    FILETIME     Time3;          /* 0x2c */
-    DWORD        dwFileLength;   /* 0x34 File length */
-    DWORD        nIcon;          /* 0x38 icon number */
-    DWORD        fStartup;       /* 0x3c startup type */
-    DWORD        wHotKey;        /* 0x40 hotkey */
-    DWORD        Unknown5;       /* 0x44 */
-    DWORD        Unknown6;       /* 0x48 */
-};
 
 struct LOCATION_INFO
 {
@@ -491,17 +475,17 @@ HRESULT WINAPI CShellLink::Load(IStream *stm)
     if (!stm)
         return STG_E_INVALIDPOINTER;
 
-    LINK_HEADER hdr;
+    SHELL_LINK_HEADER ShlLnkHeader;
     ULONG dwBytesRead = 0;
-    HRESULT hr = stm->Read(&hdr, sizeof(hdr), &dwBytesRead);
+    HRESULT hr = stm->Read(&ShlLnkHeader, sizeof(ShlLnkHeader), &dwBytesRead);
     if (FAILED(hr))
         return hr;
 
-    if (dwBytesRead != sizeof(hdr))
+    if (dwBytesRead != sizeof(ShlLnkHeader))
         return E_FAIL;
-    if (hdr.dwSize != sizeof(hdr))
+    if (ShlLnkHeader.dwSize != sizeof(ShlLnkHeader))
         return E_FAIL;
-    if (!IsEqualIID(hdr.MagicGuid, CLSID_ShellLink))
+    if (!IsEqualIID(ShlLnkHeader.clsid, CLSID_ShellLink))
         return E_FAIL;
 
     /* free all the old stuff */
@@ -526,12 +510,12 @@ HRESULT WINAPI CShellLink::Load(IStream *stm)
     sComponent = NULL;
 
     BOOL unicode = FALSE;
-    iShowCmd = hdr.fStartup;
-    wHotKey = (WORD)hdr.wHotKey;
-    iIcoNdx = hdr.nIcon;
-    FileTimeToSystemTime (&hdr.Time1, &time1);
-    FileTimeToSystemTime (&hdr.Time2, &time2);
-    FileTimeToSystemTime (&hdr.Time3, &time3);
+    iShowCmd = ShlLnkHeader.nShowCommand;
+    wHotKey = ShlLnkHeader.wHotKey;
+    iIcoNdx = ShlLnkHeader.nIconIndex;
+    FileTimeToSystemTime (&ShlLnkHeader.ftCreationTime, &time1);
+    FileTimeToSystemTime (&ShlLnkHeader.ftLastAccessTime, &time2);
+    FileTimeToSystemTime (&ShlLnkHeader.ftLastWriteTime, &time3);
     if (TRACE_ON(shell))
     {
         WCHAR sTemp[MAX_PATH];
@@ -547,7 +531,7 @@ HRESULT WINAPI CShellLink::Load(IStream *stm)
     }
 
     /* load all the new stuff */
-    if (hdr.dwFlags & SLDF_HAS_ID_LIST)
+    if (ShlLnkHeader.dwFlags & SLDF_HAS_ID_LIST)
     {
         hr = ILLoadFromStream(stm, &pPidl);
         if (FAILED(hr))
@@ -556,15 +540,15 @@ HRESULT WINAPI CShellLink::Load(IStream *stm)
     pdump(pPidl);
 
     /* load the location information */
-    if (hdr.dwFlags & SLDF_HAS_LINK_INFO)
+    if (ShlLnkHeader.dwFlags & SLDF_HAS_LINK_INFO)
         hr = Stream_LoadLocation(stm, &volume, &sPath);
     if (FAILED(hr))
         goto end;
 
-    if (hdr.dwFlags & SLDF_UNICODE)
+    if (ShlLnkHeader.dwFlags & SLDF_UNICODE)
         unicode = TRUE;
 
-    if (hdr.dwFlags & SLDF_HAS_NAME)
+    if (ShlLnkHeader.dwFlags & SLDF_HAS_NAME)
     {
         hr = Stream_LoadString(stm, unicode, &sDescription);
         TRACE("Description  -> %s\n", debugstr_w(sDescription));
@@ -572,7 +556,7 @@ HRESULT WINAPI CShellLink::Load(IStream *stm)
     if (FAILED(hr))
         goto end;
 
-    if (hdr.dwFlags & SLDF_HAS_RELPATH)
+    if (ShlLnkHeader.dwFlags & SLDF_HAS_RELPATH)
     {
         hr = Stream_LoadString(stm, unicode, &sPathRel);
         TRACE("Relative Path-> %s\n", debugstr_w(sPathRel));
@@ -580,7 +564,7 @@ HRESULT WINAPI CShellLink::Load(IStream *stm)
     if (FAILED(hr))
         goto end;
 
-    if (hdr.dwFlags & SLDF_HAS_WORKINGDIR)
+    if (ShlLnkHeader.dwFlags & SLDF_HAS_WORKINGDIR)
     {
         hr = Stream_LoadString(stm, unicode, &sWorkDir);
         PathRemoveBackslash(sWorkDir);
@@ -589,7 +573,7 @@ HRESULT WINAPI CShellLink::Load(IStream *stm)
     if (FAILED(hr))
         goto end;
 
-    if (hdr.dwFlags & SLDF_HAS_ARGS)
+    if (ShlLnkHeader.dwFlags & SLDF_HAS_ARGS)
     {
         hr = Stream_LoadString(stm, unicode, &sArgs);
         TRACE("Arguments    -> %s\n", debugstr_w(sArgs));
@@ -597,7 +581,7 @@ HRESULT WINAPI CShellLink::Load(IStream *stm)
     if (FAILED(hr))
         goto end;
 
-    if (hdr.dwFlags & SLDF_HAS_ICONLOCATION)
+    if (ShlLnkHeader.dwFlags & SLDF_HAS_ICONLOCATION)
     {
         hr = Stream_LoadString(stm, unicode, &sIcoPath);
         TRACE("Icon file    -> %s\n", debugstr_w(sIcoPath));
@@ -606,7 +590,7 @@ HRESULT WINAPI CShellLink::Load(IStream *stm)
         goto end;
 
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
-    if (hdr.dwFlags & SLDF_HAS_LOGO3ID)
+    if (ShlLnkHeader.dwFlags & SLDF_HAS_LOGO3ID)
     {
         hr = Stream_LoadAdvertiseInfo(stm, &sProduct);
         TRACE("Product      -> %s\n", debugstr_w(sProduct));
@@ -615,12 +599,12 @@ HRESULT WINAPI CShellLink::Load(IStream *stm)
         goto end;
 #endif
 
-    if (hdr.dwFlags & SLDF_HAS_DARWINID)
+    if (ShlLnkHeader.dwFlags & SLDF_HAS_DARWINID)
     {
         hr = Stream_LoadAdvertiseInfo(stm, &sComponent);
         TRACE("Component    -> %s\n", debugstr_w(sComponent));
     }
-    if (hdr.dwFlags & SLDF_RUNAS_USER)
+    if (ShlLnkHeader.dwFlags & SLDF_RUNAS_USER)
     {
         bRunAs = TRUE;
     }
@@ -763,43 +747,43 @@ HRESULT WINAPI CShellLink::Save(IStream *stm, BOOL fClearDirty)
 {
     TRACE("%p %p %x\n", this, stm, fClearDirty);
 
-    LINK_HEADER header;
-    memset(&header, 0, sizeof(header));
-    header.dwSize = sizeof(header);
-    header.fStartup = iShowCmd;
-    header.MagicGuid = CLSID_ShellLink;
+    SHELL_LINK_HEADER ShlLnkHeader;
+    memset(&ShlLnkHeader, 0, sizeof(ShlLnkHeader));
+    ShlLnkHeader.dwSize = sizeof(ShlLnkHeader);
+    ShlLnkHeader.nShowCommand = iShowCmd;
+    ShlLnkHeader.clsid = CLSID_ShellLink;
 
-    header.wHotKey = wHotKey;
-    header.nIcon = iIcoNdx;
-    header.dwFlags = SLDF_UNICODE;   /* strings are in unicode */
+    ShlLnkHeader.wHotKey = wHotKey;
+    ShlLnkHeader.nIconIndex = iIcoNdx;
+    ShlLnkHeader.dwFlags = SLDF_UNICODE;   /* strings are in unicode */
     if (pPidl)
-        header.dwFlags |= SLDF_HAS_ID_LIST;
+        ShlLnkHeader.dwFlags |= SLDF_HAS_ID_LIST;
     if (sPath)
-        header.dwFlags |= SLDF_HAS_LINK_INFO;
+        ShlLnkHeader.dwFlags |= SLDF_HAS_LINK_INFO;
     if (sDescription)
-        header.dwFlags |= SLDF_HAS_NAME;
+        ShlLnkHeader.dwFlags |= SLDF_HAS_NAME;
     if (sWorkDir)
-        header.dwFlags |= SLDF_HAS_WORKINGDIR;
+        ShlLnkHeader.dwFlags |= SLDF_HAS_WORKINGDIR;
     if (sArgs)
-        header.dwFlags |= SLDF_HAS_ARGS;
+        ShlLnkHeader.dwFlags |= SLDF_HAS_ARGS;
     if (sIcoPath)
-        header.dwFlags |= SLDF_HAS_ICONLOCATION;
+        ShlLnkHeader.dwFlags |= SLDF_HAS_ICONLOCATION;
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
     if (sProduct)
-        header.dwFlags |= SLDF_HAS_LOGO3ID;
+        ShlLnkHeader.dwFlags |= SLDF_HAS_LOGO3ID;
 #endif
     if (sComponent)
-        header.dwFlags |= SLDF_HAS_DARWINID;
+        ShlLnkHeader.dwFlags |= SLDF_HAS_DARWINID;
     if (bRunAs)
-        header.dwFlags |= SLDF_RUNAS_USER;
+        ShlLnkHeader.dwFlags |= SLDF_RUNAS_USER;
 
-    SystemTimeToFileTime (&time1, &header.Time1);
-    SystemTimeToFileTime (&time2, &header.Time2);
-    SystemTimeToFileTime (&time3, &header.Time3);
+    SystemTimeToFileTime (&time1, &ShlLnkHeader.ftCreationTime);
+    SystemTimeToFileTime (&time2, &ShlLnkHeader.ftLastAccessTime);
+    SystemTimeToFileTime (&time3, &ShlLnkHeader.ftLastWriteTime);
 
     /* write the Shortcut header */
     ULONG count;
-    HRESULT hr = stm->Write(&header, sizeof(header), &count);
+    HRESULT hr = stm->Write(&ShlLnkHeader, sizeof(ShlLnkHeader), &count);
     if (FAILED(hr))
     {
         ERR("Write failed\n");
@@ -1825,10 +1809,10 @@ HRESULT WINAPI CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     else
         path = strdupW(sPath);
 
-    if (lpici->cbSize == sizeof (CMINVOKECOMMANDINFOEX) &&
-            (lpici->fMask & CMIC_MASK_UNICODE))
+    if ( lpici->cbSize == sizeof(CMINVOKECOMMANDINFOEX) &&
+        (lpici->fMask & CMIC_MASK_UNICODE) )
     {
-        LPCMINVOKECOMMANDINFOEX iciex = (LPCMINVOKECOMMANDINFOEX) lpici;
+        LPCMINVOKECOMMANDINFOEX iciex = (LPCMINVOKECOMMANDINFOEX)lpici;
         DWORD len = 2;
 
         if (sArgs)
@@ -1854,8 +1838,10 @@ HRESULT WINAPI CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     SHELLEXECUTEINFOW sei;
     memset(&sei, 0, sizeof sei);
     sei.cbSize = sizeof sei;
-    sei.fMask = SEE_MASK_UNICODE | (lpici->fMask & (SEE_MASK_NOASYNC | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
+    sei.fMask = SEE_MASK_HASLINKNAME | SEE_MASK_UNICODE |
+               (lpici->fMask & (SEE_MASK_NOASYNC | SEE_MASK_ASYNCOK | SEE_MASK_FLAG_NO_UI));
     sei.lpFile = path;
+    sei.lpClass = sLinkPath;
     sei.nShow = iShowCmd;
     sei.lpDirectory = sWorkDir;
     sei.lpParameters = args;

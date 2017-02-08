@@ -516,33 +516,39 @@ void TaskBar::Refresh()
 		for(set<int>::reverse_iterator it=btn_idx_to_delete.rbegin(); it!=btn_idx_to_delete.rend(); ++it) {
 			int idx = *it;
 
-			SendMessage(_htoolbar, TB_DELETEBUTTON, idx, 0);
+			if (!SendMessage(_htoolbar, TB_DELETEBUTTON, idx, 0))
+				MessageBoxW(NULL, L"failed to delete button", NULL, MB_OK);
 
-			for(TaskBarMap::iterator it=_map.begin(); it!=_map.end(); ++it) {
-				TaskBarEntry& entry = it->second;
+			
+			for(TaskBarMap::iterator it2=_map.begin(); it2!=_map.end(); ++it2) {
+				TaskBarEntry& entry = it2->second;
 
 				 // adjust button indexes
 				if (entry._btn_idx > idx) {
 					--entry._btn_idx;
+#if 0
 					--entry._bmp_idx;
-
+					
 					TBBUTTONINFO info;
 
 					info.cbSize = sizeof(TBBUTTONINFO);
 					info.dwMask = TBIF_IMAGE;
 					info.iImage = entry._bmp_idx;
 
-					SendMessage(_htoolbar, TB_SETBUTTONINFO, entry._id, (LPARAM)&info);
+					if (!SendMessage(_htoolbar, TB_SETBUTTONINFO, entry._id, (LPARAM)&info))
+						MessageBoxW(NULL, L"failed to set button info", NULL, MB_OK);
+#endif
 				}
 			}
+			
 		}
 
 		for(set<HBITMAP>::iterator it=hbmp_to_delete.begin(); it!=hbmp_to_delete.end(); ++it) {
 			HBITMAP hbmp = *it;
-
+#if 0
 			TBREPLACEBITMAP tbrepl = {0, (UINT_PTR)hbmp, 0, 0};
 			SendMessage(_htoolbar, TB_REPLACEBITMAP, 0, (LPARAM)&tbrepl);
-
+#endif
 			DeleteObject(hbmp);
 
 			for(TaskBarMap::iterator it=_map.begin(); it!=_map.end(); ++it)

@@ -105,6 +105,8 @@ protected:
     PULONG m_DeviceAddressBitmapBuffer;
     LIST_ENTRY m_UsbDeviceList;
     PIRP m_PendingSCEIrp;
+    LPCSTR m_USBType;
+
 
     //Internal Functions
     BOOLEAN QueryStatusChageEndpoint(PIRP Irp);
@@ -195,8 +197,6 @@ CHubController::Initialize(
     USHORT VendorID, DeviceID;
     ULONG Dummy1;
 
-    DPRINT1("CHubController::Initialize\n");
-
     //
     // initialize members
     //
@@ -205,6 +205,7 @@ CHubController::Initialize(
     m_IsRootHubDevice = IsRootHubDevice;
     m_DeviceAddress = DeviceAddress;
     m_DriverObject = DriverObject;
+    m_USBType = m_Hardware->GetUSBType();
     KeInitializeSpinLock(&m_Lock);
     InitializeListHead(&m_UsbDeviceList);
 
@@ -225,7 +226,6 @@ CHubController::Initialize(
     //
     RtlInitializeBitMap(&m_DeviceAddressBitmap, m_DeviceAddressBitmapBuffer, 128);
     RtlClearAllBits(&m_DeviceAddressBitmap);
-
 
     //
     // create PDO
@@ -310,7 +310,7 @@ CHubController::QueryStatusChageEndpoint(
     // Get the number of ports and check each one for device connected
     //
     m_Hardware->GetDeviceDetails(NULL, NULL, &PortCount, NULL);
-    DPRINT1("[USBLIB] SCE Request %p TransferBufferLength %lu Flags %x MDL %p\n", Urb->UrbBulkOrInterruptTransfer.TransferBuffer, Urb->UrbBulkOrInterruptTransfer.TransferBufferLength, Urb->UrbBulkOrInterruptTransfer.TransferFlags, Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL);
+    DPRINT1("[%s] SCE Request %p TransferBufferLength %lu Flags %x MDL %p\n", m_USBType, Urb->UrbBulkOrInterruptTransfer.TransferBuffer, Urb->UrbBulkOrInterruptTransfer.TransferBufferLength, Urb->UrbBulkOrInterruptTransfer.TransferFlags, Urb->UrbBulkOrInterruptTransfer.TransferBufferMDL);
 
     TransferBuffer = (PUCHAR)Urb->UrbBulkOrInterruptTransfer.TransferBuffer;
 
@@ -321,7 +321,7 @@ CHubController::QueryStatusChageEndpoint(
     {
         m_Hardware->GetPortStatus(PortId, &PortStatus, &PortChange);
 
-        DPRINT1("[USBLIB] Port %d: Status %x, Change %x\n", PortId, PortStatus, PortChange);
+        DPRINT1("[%s] Port %d: Status %x, Change %x\n", m_USBType, PortId, PortStatus, PortChange);
 
 
         //
@@ -329,7 +329,7 @@ CHubController::QueryStatusChageEndpoint(
         //
         if (PortChange != 0)
         {
-            DPRINT1("[USBLIB] Change state on port %d\n", PortId);
+            DPRINT1("[%s] Change state on port %d\n", m_USBType, PortId);
             // Set the value for the port number
              *TransferBuffer = 1 << ((PortId + 1) & 7);
             Changed = TRUE;
@@ -432,7 +432,7 @@ CHubController::HandlePnp(
     {
         case IRP_MN_START_DEVICE:
         {
-            DPRINT("[USBLIB] HandlePnp IRP_MN_START_DEVICE\n");
+            DPRINT("[%s] HandlePnp IRP_MN_START_DEVICE\n", m_USBType);
             //
             // register device interface
             //
@@ -450,7 +450,7 @@ CHubController::HandlePnp(
         }
         case IRP_MN_QUERY_ID:
         {
-            DPRINT("[USBLIB] HandlePnp IRP_MN_QUERY_ID Type %x\n", IoStack->Parameters.QueryId.IdType);
+            DPRINT("[%s] HandlePnp IRP_MN_QUERY_ID Type %x\n", m_USBType, IoStack->Parameters.QueryId.IdType);
 
             if (IoStack->Parameters.QueryId.IdType == BusQueryDeviceID)
             {
@@ -475,8 +475,6 @@ CHubController::HandlePnp(
                         //
                         swprintf(Buffer, L"USB\\ROOT_HUB");
                     }
-
-                    DPRINT("Name %S\n", Buffer);
 
                     //
                     // calculate length
@@ -525,7 +523,7 @@ CHubController::HandlePnp(
 
                     if (!NT_SUCCESS(Status))
                     {
-                         DPRINT1("[USBLIB] HandlePnp> failed to get hardware id %x\n", Status);
+                         DPRINT1("[%s] HandlePnp> failed to get hardware id %x\n", m_USBType, Status);
                          VendorID = 0x8086;
                          DeviceID = 0x3A37;
                     }
@@ -549,11 +547,8 @@ CHubController::HandlePnp(
                         Index += swprintf(&Buffer[Index], L"USB\\ROOT_HUB") + 1;
                     }
 
-                   Buffer[Index] = UNICODE_NULL;
-                   Index++;
-
-
-                    DPRINT1("[USBLIB] Name %S\n", Buffer);
+                    Buffer[Index] = UNICODE_NULL;
+                    Index++;
 
                     //
                     // allocate buffer
@@ -587,7 +582,7 @@ CHubController::HandlePnp(
         }
         case IRP_MN_QUERY_CAPABILITIES:
         {
-            DPRINT("[USBLIB] HandlePnp IRP_MN_QUERY_CAPABILITIES\n");
+            DPRINT("[%s] HandlePnp IRP_MN_QUERY_CAPABILITIES\n", m_USBType);
 
             DeviceCapabilities = (PDEVICE_CAPABILITIES)IoStack->Parameters.DeviceCapabilities.Capabilities;
 
@@ -619,7 +614,7 @@ CHubController::HandlePnp(
         }
         case IRP_MN_QUERY_INTERFACE:
         {
-            DPRINT("[USBLIB] HandlePnp IRP_MN_QUERY_INTERFACE\n");
+            DPRINT("[%s] HandlePnp IRP_MN_QUERY_INTERFACE\n", m_USBType);
 
             //
             // handle device interface requests
@@ -629,7 +624,7 @@ CHubController::HandlePnp(
         }
         case IRP_MN_REMOVE_DEVICE:
         {
-            DPRINT("[USBLIB] HandlePnp IRP_MN_REMOVE_DEVICE\n");
+            DPRINT("[%s] HandlePnp IRP_MN_REMOVE_DEVICE\n", m_USBType);
 
             //
             // deactivate device interface for BUS PDO
@@ -659,7 +654,7 @@ CHubController::HandlePnp(
         }
         case IRP_MN_QUERY_DEVICE_RELATIONS:
         {
-            DPRINT("[USBLIB] HandlePnp IRP_MN_QUERY_DEVICE_RELATIONS Type %x\n", IoStack->Parameters.QueryDeviceRelations.Type);
+            DPRINT("[%s] HandlePnp IRP_MN_QUERY_DEVICE_RELATIONS Type %x\n", m_USBType, IoStack->Parameters.QueryDeviceRelations.Type);
 
             if (IoStack->Parameters.QueryDeviceRelations.Type == TargetDeviceRelation)
             {
@@ -700,7 +695,7 @@ CHubController::HandlePnp(
         }
         case IRP_MN_QUERY_BUS_INFORMATION:
         {
-            DPRINT("[USBLIB] HandlePnp IRP_MN_QUERY_BUS_INFORMATION\n");
+            DPRINT("[%s] HandlePnp IRP_MN_QUERY_BUS_INFORMATION\n", m_USBType);
 
             //
             // allocate buffer for bus information
@@ -733,10 +728,16 @@ CHubController::HandlePnp(
         }
         case IRP_MN_STOP_DEVICE:
         {
-            DPRINT("[USBLIB] HandlePnp IRP_MN_STOP_DEVICE\n");
+            DPRINT("[%s] HandlePnp IRP_MN_STOP_DEVICE\n", m_USBType);
             //
             // stop device
             //
+            Status = STATUS_SUCCESS;
+            break;
+        }
+        case IRP_MN_SURPRISE_REMOVAL:
+        {
+            DPRINT("[%s] HandlePnp IRP_MN_SURPRISE_REMOVAL\n", m_USBType);
             Status = STATUS_SUCCESS;
             break;
         }
@@ -790,7 +791,7 @@ CHubController::HandleIsochronousTransfer(
 
     if (!EndPointDesc)
     {
-        DPRINT1("[USBLIB] Error No EndpointDesc\n");
+        DPRINT1("[%s] Error No EndpointDesc\n", m_USBType);
         Urb->UrbIsochronousTransfer.Hdr.Status = USBD_STATUS_INVALID_PIPE_HANDLE;
         return STATUS_INVALID_PARAMETER;
     }
@@ -799,7 +800,7 @@ CHubController::HandleIsochronousTransfer(
     // sanity checks
     //
     ASSERT(EndPointDesc);
-    DPRINT("HandleIsochronousTransfer EndPointDesc %p Address %x bmAttributes %x\n", EndPointDesc, EndPointDesc->bEndpointAddress, EndPointDesc->bmAttributes);
+    DPRINT("[%s] HandleIsochronousTransfer EndPointDesc %p Address %x bmAttributes %x\n", m_USBType, EndPointDesc, EndPointDesc->bEndpointAddress, EndPointDesc->bmAttributes);
     ASSERT((EndPointDesc->bmAttributes & USB_ENDPOINT_TYPE_MASK) == USB_ENDPOINT_TYPE_ISOCHRONOUS);
 
     //
@@ -807,7 +808,7 @@ CHubController::HandleIsochronousTransfer(
     //
     if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
     {
-        DPRINT1("[USBLIB] HandleIsochronousTransfer invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+        DPRINT1("[%s] HandleIsochronousTransfer invalid device handle %p\n", m_USBType, Urb->UrbHeader.UsbdDeviceHandle);
 
         //
         // invalid device handle
@@ -850,7 +851,7 @@ CHubController::HandleBulkOrInterruptTransfer(
         //
         // Else pend the IRP, to be completed when a device connects or disconnects.
         //
-        DPRINT("[USBLIB] Pending SCE Irp\n");
+        DPRINT("[%s] Pending SCE Irp\n", m_USBType);
         m_PendingSCEIrp = Irp;
         IoMarkIrpPending(Irp);
         return STATUS_PENDING;
@@ -872,7 +873,7 @@ CHubController::HandleBulkOrInterruptTransfer(
     //
     if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
     {
-        DPRINT1("[USBLIB] HandleBulkOrInterruptTransfer invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+        DPRINT1("[%s] HandleBulkOrInterruptTransfer invalid device handle %p\n", m_USBType, Urb->UrbHeader.UsbdDeviceHandle);
 
         //
         // invalid device handle
@@ -899,7 +900,7 @@ CHubController::HandleClassOther(
     ULONG NumPort;
     ULONG PortId;
 
-    DPRINT("[USBLIB] HandleClassOther> Request %x Value %x\n", Urb->UrbControlVendorClassRequest.Request, Urb->UrbControlVendorClassRequest.Value);
+    DPRINT("[%s] HandleClassOther> Request %x Value %x\n", m_USBType, Urb->UrbControlVendorClassRequest.Request, Urb->UrbControlVendorClassRequest.Value);
 
     //
     // get number of ports available
@@ -941,7 +942,7 @@ CHubController::HandleClassOther(
                 //
                 // request contains buffer of 2 ushort which are used from submitting port status and port change status
                 //
-                DPRINT("[USBLIB] PortId %x PortStatus %x PortChange %x\n", PortId, PortStatus, PortChange);
+                DPRINT("[%s] PortId %x PortStatus %x PortChange %x\n", m_USBType, PortId, PortStatus, PortChange);
                 Buffer = (PUSHORT)Urb->UrbControlVendorClassRequest.TransferBuffer;
 
                 //
@@ -968,7 +969,7 @@ CHubController::HandleClassOther(
                     Status = m_Hardware->ClearPortStatus(PortId, C_PORT_RESET);
                     break;
                 default:
-                    DPRINT("[USBLIB] Unknown Value for Clear Feature %x \n", Urb->UrbControlVendorClassRequest.Value);
+                    DPRINT("[%s] Unknown Value for Clear Feature %x \n", m_USBType, Urb->UrbControlVendorClassRequest.Value);
                     break;
            }
 
@@ -1017,13 +1018,13 @@ CHubController::HandleClassOther(
                     break;
                 }
                 default:
-                    DPRINT1("[USBLIB] Unsupported request id %x\n", Urb->UrbControlVendorClassRequest.Value);
+                    DPRINT1("[%s] Unsupported request id %x\n", m_USBType, Urb->UrbControlVendorClassRequest.Value);
                     PC_ASSERT(FALSE);
             }
             break;
         }
         default:
-            DPRINT1("[USBLIB] HandleClassOther Unknown request code %x\n", Urb->UrbControlVendorClassRequest.Request);
+            DPRINT1("[%s] HandleClassOther Unknown request code %x\n", m_USBType, Urb->UrbControlVendorClassRequest.Request);
             PC_ASSERT(0);
             Status = STATUS_INVALID_DEVICE_REQUEST;
     }
@@ -1038,6 +1039,7 @@ CHubController::HandleSelectConfiguration(
 {
     PUSBDEVICE UsbDevice;
     PUSBD_INTERFACE_INFORMATION InterfaceInfo;
+    NTSTATUS Status;
 
     //
     // is the request for the Root Hub
@@ -1088,7 +1090,7 @@ CHubController::HandleSelectConfiguration(
         //
         if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
         {
-            DPRINT1("[USBLIB] HandleSelectConfiguration invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+            DPRINT1("[%s] HandleSelectConfiguration invalid device handle %p\n", m_USBType, Urb->UrbHeader.UsbdDeviceHandle);
 
             //
             // invalid device handle
@@ -1104,7 +1106,13 @@ CHubController::HandleSelectConfiguration(
         //
         // select configuration
         //
-        return UsbDevice->SelectConfiguration(Urb->UrbSelectConfiguration.ConfigurationDescriptor, &Urb->UrbSelectConfiguration.Interface, &Urb->UrbSelectConfiguration.ConfigurationHandle);
+        Status = UsbDevice->SelectConfiguration(Urb->UrbSelectConfiguration.ConfigurationDescriptor, &Urb->UrbSelectConfiguration.Interface, &Urb->UrbSelectConfiguration.ConfigurationHandle);
+        if (NT_SUCCESS(Status)) 
+        {
+            // successfully configured device
+            Urb->UrbSelectConfiguration.Hdr.Status = USBD_STATUS_SUCCESS;
+        }
+        return Status;
     }
 }
 
@@ -1138,7 +1146,7 @@ CHubController::HandleSelectInterface(
         //
         if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
         {
-            DPRINT1("[USBLIB] HandleSelectInterface invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+            DPRINT1("[%s] HandleSelectInterface invalid device handle %p\n", m_USBType, Urb->UrbHeader.UsbdDeviceHandle);
 
             //
             // invalid device handle
@@ -1195,7 +1203,7 @@ CHubController::HandleGetStatusFromDevice(
     //
     if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
     {
-        DPRINT1("[USBLIB] HandleGetStatusFromDevice invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+        DPRINT1("[%s] HandleGetStatusFromDevice invalid device handle %p\n", m_USBType, Urb->UrbHeader.UsbdDeviceHandle);
 
         //
         // invalid device handle
@@ -1239,7 +1247,7 @@ CHubController::HandleGetStatusFromDevice(
     //
     Status = UsbDevice->SubmitSetupPacket(&CtrlSetup, Urb->UrbControlDescriptorRequest.TransferBufferLength, Urb->UrbControlDescriptorRequest.TransferBuffer);
     ASSERT(Status == STATUS_SUCCESS);
-    DPRINT1("[USBLIB] HandleGetStatusFromDevice Status %x Length %lu DeviceStatus %x\n", Status, Urb->UrbControlDescriptorRequest.TransferBufferLength, *DeviceStatus);
+    DPRINT1("[%s] HandleGetStatusFromDevice Status %x Length %lu DeviceStatus %x\n", m_USBType, Status, Urb->UrbControlDescriptorRequest.TransferBufferLength, *DeviceStatus);
 
     //
     // done
@@ -1260,7 +1268,7 @@ CHubController::HandleClassDevice(
     PUSBDEVICE UsbDevice;
     USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
 
-    DPRINT("CHubController::HandleClassDevice Request %x Class %x\n", Urb->UrbControlVendorClassRequest.Request, Urb->UrbControlVendorClassRequest.Value >> 8);
+    DPRINT("[%s] HandleClassDevice Request %x Class %x\n", m_USBType, Urb->UrbControlVendorClassRequest.Request, Urb->UrbControlVendorClassRequest.Value >> 8);
 
     //
     // check class request type
@@ -1274,7 +1282,7 @@ CHubController::HandleClassDevice(
             //
             if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
             {
-                DPRINT1("HandleClassDevice invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+                DPRINT1("[%s] HandleClassDevice invalid device handle %p\n", m_USBType, Urb->UrbHeader.UsbdDeviceHandle);
 
                 //
                 // invalid device handle
@@ -1358,7 +1366,7 @@ CHubController::HandleClassDevice(
                     {
                         if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
                         {
-                            DPRINT1("HandleClassDevice invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+                            DPRINT1("[%s] HandleClassDevice invalid device handle %p\n", m_USBType, Urb->UrbHeader.UsbdDeviceHandle);
                             //
                             // invalid device handle
                             //
@@ -1374,7 +1382,7 @@ CHubController::HandleClassDevice(
                     break;
                }
                default:
-                   DPRINT1("[USBLIB] HandleClassDevice Class %x not implemented\n", Urb->UrbControlVendorClassRequest.Value >> 8);
+                   DPRINT1("[%s] HandleClassDevice Class %x not implemented\n", m_USBType, Urb->UrbControlVendorClassRequest.Value >> 8);
                    break;
             }
             break;
@@ -1386,7 +1394,7 @@ CHubController::HandleClassDevice(
             //
             if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
             {
-                DPRINT1("HandleClassDevice invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+                DPRINT1("[%s] HandleClassDevice invalid device handle %p\n", m_USBType, Urb->UrbHeader.UsbdDeviceHandle);
 
                 //
                 // invalid device handle
@@ -1452,7 +1460,7 @@ CHubController::HandleGetDescriptorFromInterface(
     //
     if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
     {
-        DPRINT1("[USBLIB] HandleGetDescriptorFromInterface invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+        DPRINT1("[%s] HandleGetDescriptorFromInterface invalid device handle %p\n", m_USBType, Urb->UrbHeader.UsbdDeviceHandle);
 
         //
         // invalid device handle
@@ -1479,7 +1487,10 @@ CHubController::HandleGetDescriptorFromInterface(
     // submit setup packet
     //
     Status = UsbDevice->SubmitSetupPacket(&CtrlSetup, Urb->UrbControlDescriptorRequest.TransferBufferLength, Urb->UrbControlDescriptorRequest.TransferBuffer);
-    ASSERT(Status == STATUS_SUCCESS);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("[%s] HandleGetDescriptorFromInterface failed with %x\n", m_USBType, Status);
+    }
 
     //
     // done
@@ -1494,13 +1505,12 @@ CHubController::HandleGetDescriptor(
     IN OUT PURB Urb)
 {
     NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
-    PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;
     USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
     PUCHAR Buffer;
     PUSBDEVICE UsbDevice;
-    ULONG Length;
+    ULONG Length, BufferLength;
 
-    DPRINT("[USBLIB] HandleGetDescriptor\n");
+    DPRINT("[%s] HandleGetDescriptor Type %x\n", m_USBType, Urb->UrbControlDescriptorRequest.DescriptorType);
 
     //
     // check descriptor type
@@ -1521,6 +1531,8 @@ CHubController::HandleGetDescriptor(
                 // copy root hub device descriptor
                 //
                 RtlCopyMemory((PUCHAR)Urb->UrbControlDescriptorRequest.TransferBuffer, &m_DeviceDescriptor, sizeof(USB_DEVICE_DESCRIPTOR));
+                Irp->IoStatus.Information = sizeof(USB_DEVICE_DESCRIPTOR);
+                Urb->UrbControlDescriptorRequest.Hdr.Status = USBD_STATUS_SUCCESS;
                 Status = STATUS_SUCCESS;
             }
             else
@@ -1530,7 +1542,7 @@ CHubController::HandleGetDescriptor(
                 //
                 if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
                 {
-                    DPRINT1("[USBLIB] HandleGetDescriptor invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+                    DPRINT1("[%s] HandleGetDescriptor invalid device handle %p\n", m_USBType, Urb->UrbHeader.UsbdDeviceHandle);
 
                     //
                     // invalid device handle
@@ -1547,6 +1559,8 @@ CHubController::HandleGetDescriptor(
                 // retrieve device descriptor from device
                 //
                 UsbDevice->GetDeviceDescriptor((PUSB_DEVICE_DESCRIPTOR)Urb->UrbControlDescriptorRequest.TransferBuffer);
+                Irp->IoStatus.Information = sizeof(USB_DEVICE_DESCRIPTOR);
+                Urb->UrbControlDescriptorRequest.Hdr.Status = USBD_STATUS_SUCCESS;
                 Status = STATUS_SUCCESS;
             }
             break;
@@ -1557,44 +1571,70 @@ CHubController::HandleGetDescriptor(
             // sanity checks
             //
             PC_ASSERT(Urb->UrbControlDescriptorRequest.TransferBuffer);
-            PC_ASSERT(Urb->UrbControlDescriptorRequest.TransferBufferLength >= sizeof(USB_CONFIGURATION_DESCRIPTOR));
+            //
+            // From MSDN
+            // The caller must allocate a buffer large enough to hold all of this information or the data is truncated without error.
+            //
+            BufferLength = Urb->UrbControlDescriptorRequest.TransferBufferLength;
+            Buffer = (PUCHAR) Urb->UrbControlDescriptorRequest.TransferBuffer;
 
             if (Urb->UrbHeader.UsbdDeviceHandle == PVOID(this))
             {
                 //
                 // request is for the root bus controller
                 //
-                RtlCopyMemory(Urb->UrbControlDescriptorRequest.TransferBuffer, &ROOTHUB2_CONFIGURATION_DESCRIPTOR, sizeof(USB_CONFIGURATION_DESCRIPTOR));
-
+                Length = BufferLength > sizeof(USB_CONFIGURATION_DESCRIPTOR) ?
+                    sizeof(USB_CONFIGURATION_DESCRIPTOR) : BufferLength;
+                RtlCopyMemory(Buffer, &ROOTHUB2_CONFIGURATION_DESCRIPTOR, Length);
+                
                 //
-                // get configuration descriptor, very retarded!
+                // Check if we still have some space left
                 //
-                ConfigurationDescriptor = (PUSB_CONFIGURATION_DESCRIPTOR)Urb->UrbControlDescriptorRequest.TransferBuffer;
-
-                //
-                // check if buffer can hold interface and endpoint descriptor
-                //
-                if (ConfigurationDescriptor->wTotalLength > Urb->UrbControlDescriptorRequest.TransferBufferLength)
+                if(Length == BufferLength)
                 {
                     //
-                    // buffer too small
+                    // We copied all we could
                     //
                     Status = STATUS_SUCCESS;
-                    ASSERT(FALSE);
                     break;
                 }
+                //
+                // Go further
+                //
+                Buffer += Length;
+                BufferLength -= Length;
 
                 //
                 // copy interface descriptor template
                 //
-                Buffer = (PUCHAR)(ConfigurationDescriptor + 1);
-                RtlCopyMemory(Buffer, &ROOTHUB2_INTERFACE_DESCRIPTOR, sizeof(USB_INTERFACE_DESCRIPTOR));
-
+                Length = BufferLength > sizeof(USB_INTERFACE_DESCRIPTOR) ?
+                    sizeof(USB_INTERFACE_DESCRIPTOR) : BufferLength;
+                RtlCopyMemory(Buffer, &ROOTHUB2_INTERFACE_DESCRIPTOR, Length);
+                
+                //
+                // Check if we still have some space left
+                //
+                if(Length == BufferLength)
+                {
+                    //
+                    // We copied all we could
+                    //
+                    Status = STATUS_SUCCESS;
+                    break;
+                }
+                //
+                // Go further
+                //
+                Buffer += Length;
+                BufferLength -= Length;
+                
+                
                 //
                 // copy end point descriptor template
                 //
-                Buffer += sizeof(USB_INTERFACE_DESCRIPTOR);
-                RtlCopyMemory(Buffer, &ROOTHUB2_ENDPOINT_DESCRIPTOR, sizeof(USB_ENDPOINT_DESCRIPTOR));
+                Length = BufferLength > sizeof(USB_ENDPOINT_DESCRIPTOR) ?
+                    sizeof(USB_ENDPOINT_DESCRIPTOR) : BufferLength;
+                RtlCopyMemory(Buffer, &ROOTHUB2_ENDPOINT_DESCRIPTOR, Length);
 
                 //
                 // done
@@ -1609,7 +1649,7 @@ CHubController::HandleGetDescriptor(
                 //
                 if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
                 {
-                    DPRINT1("[USBLIB] USB_CONFIGURATION_DESCRIPTOR_TYPE invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+                    DPRINT1("[%s] USB_CONFIGURATION_DESCRIPTOR_TYPE invalid device handle %p\n", m_USBType, Urb->UrbHeader.UsbdDeviceHandle);
 
                     //
                     // invalid device handle
@@ -1621,30 +1661,41 @@ CHubController::HandleGetDescriptor(
                 // get device
                 //
                 UsbDevice = PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle);
-
-                if (sizeof(USB_CONFIGURATION_DESCRIPTOR) > Urb->UrbControlDescriptorRequest.TransferBufferLength)
+                
+                //
+                // Allocate temporary buffer
+                //
+                BufferLength = UsbDevice->GetConfigurationDescriptorsLength();
+                Buffer = (PUCHAR)ExAllocatePoolWithTag(NonPagedPool, BufferLength, TAG_USBLIB);
+                if(!Buffer)
                 {
-                    //
-                    // buffer too small
-                    //
-                    Urb->UrbControlDescriptorRequest.TransferBufferLength = UsbDevice->GetConfigurationDescriptorsLength();
-
-                    //
-                    // bail out
-                    //
-                    Status = STATUS_SUCCESS;
+                    Status = STATUS_NO_MEMORY;
                     break;
                 }
 
                 //
                 // perform work in IUSBDevice
                 //
-                UsbDevice->GetConfigurationDescriptors((PUSB_CONFIGURATION_DESCRIPTOR)Urb->UrbControlDescriptorRequest.TransferBuffer, Urb->UrbControlDescriptorRequest.TransferBufferLength, &Length);
+                UsbDevice->GetConfigurationDescriptors((PUSB_CONFIGURATION_DESCRIPTOR)Buffer, BufferLength, &Length);
+                
+                //
+                // Copy what we can
+                //
+                Length = Urb->UrbControlDescriptorRequest.TransferBufferLength > Length ? 
+                    Length : Urb->UrbControlDescriptorRequest.TransferBufferLength;
+                RtlCopyMemory(Urb->UrbControlDescriptorRequest.TransferBuffer, Buffer, Length);
+                
+                //
+                // Free temporary buffer
+                //
+                ExFreePoolWithTag(Buffer, TAG_USBLIB);
 
                 //
                 // store result size
                 //
+                Irp->IoStatus.Information = Length;
                 Urb->UrbControlDescriptorRequest.TransferBufferLength = Length;
+                Urb->UrbControlDescriptorRequest.Hdr.Status = USBD_STATUS_SUCCESS;
                 Status = STATUS_SUCCESS;
             }
             break;
@@ -1663,7 +1714,7 @@ CHubController::HandleGetDescriptor(
             //
             if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
             {
-                DPRINT1("[USBLIB] USB_STRING_DESCRIPTOR_TYPE invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+                DPRINT1("[%s] USB_STRING_DESCRIPTOR_TYPE invalid device handle %p\n", m_USBType, Urb->UrbHeader.UsbdDeviceHandle);
 
                 //
                 // invalid device handle
@@ -1693,7 +1744,7 @@ CHubController::HandleGetDescriptor(
             break;
         }
         default:
-            DPRINT1("[USBLIB] CHubController::HandleGetDescriptor DescriptorType %x unimplemented\n", Urb->UrbControlDescriptorRequest.DescriptorType);
+            DPRINT1("[%s] CHubController::HandleGetDescriptor DescriptorType %x unimplemented\n", m_USBType, Urb->UrbControlDescriptorRequest.DescriptorType);
             break;
     }
 
@@ -1725,7 +1776,7 @@ CHubController::HandleClassEndpoint(
     //
     if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
     {
-        DPRINT1("[USBLIB] HandleClassEndpoint invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+        DPRINT1("[%s] HandleClassEndpoint invalid device handle %p\n", m_USBType, Urb->UrbHeader.UsbdDeviceHandle);
 
         //
         // invalid device handle
@@ -1794,7 +1845,7 @@ CHubController::HandleVendorDevice(
     PUSBDEVICE UsbDevice;
     USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
 
-    DPRINT("CHubController::HandleVendorDevice Request %x\n", Urb->UrbControlVendorClassRequest.Request);
+    //DPRINT("CHubController::HandleVendorDevice Request %x\n", Urb->UrbControlVendorClassRequest.Request);
 
     //
     // sanity check
@@ -1806,7 +1857,7 @@ CHubController::HandleVendorDevice(
     //
     if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
     {
-        DPRINT1("[USBLIB] HandleVendorDevice invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+        DPRINT1("[%s] HandleVendorDevice invalid device handle %p\n", m_USBType, Urb->UrbHeader.UsbdDeviceHandle);
 
         //
         // invalid device handle
@@ -1842,7 +1893,12 @@ CHubController::HandleVendorDevice(
     // issue request
     //
     Status = UsbDevice->SubmitSetupPacket(&CtrlSetup, Urb->UrbControlVendorClassRequest.TransferBufferLength, Urb->UrbControlVendorClassRequest.TransferBuffer);
-    PC_ASSERT(NT_SUCCESS(Status));
+    if (NT_SUCCESS(Status))
+    {
+        // success
+        Urb->UrbControlVendorClassRequest.Hdr.Status = USBD_STATUS_SUCCESS;
+        Irp->IoStatus.Information = Urb->UrbControlVendorClassRequest.TransferBufferLength;
+    }
 
     return Status;
 }
@@ -1869,7 +1925,7 @@ CHubController::HandleSyncResetAndClearStall(
     //
     if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
     {
-        DPRINT1("[USBLIB] HandleSyncResetAndClearStall invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+        DPRINT1("[%s] HandleSyncResetAndClearStall invalid device handle %p\n", m_USBType, Urb->UrbHeader.UsbdDeviceHandle);
 
         //
         // invalid device handle
@@ -1886,7 +1942,7 @@ CHubController::HandleSyncResetAndClearStall(
         //
         // failed
         //
-        DPRINT1("[USBLIB] failed to reset pipe %x\n", Status);
+        DPRINT1("[%s] failed to reset pipe %x\n", m_USBType, Status);
     }
 
 
@@ -1906,7 +1962,7 @@ CHubController::HandleSyncResetAndClearStall(
         //
         Status = HandleClearStall(Irp, Urb);
     }
-    DPRINT1("[USBLIB] URB_FUNCTION_SYNC_RESET_PIPE_AND_CLEAR_STALL Status %x\n", Status);
+    DPRINT1("[%s] URB_FUNCTION_SYNC_RESET_PIPE_AND_CLEAR_STALL Status %x\n", m_USBType, Status);
 
     //
     // reset data toggle
@@ -1942,7 +1998,7 @@ CHubController::HandleAbortPipe(
     //
     if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
     {
-        DPRINT1("[USBLIB] HandleAbortPipe invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+        DPRINT1("[%s] HandleAbortPipe invalid device handle %p\n", m_USBType, Urb->UrbHeader.UsbdDeviceHandle);
 
         //
         // invalid device handle
@@ -1965,7 +2021,7 @@ CHubController::HandleAbortPipe(
     // issue request
     //
     Status = UsbDevice->AbortPipe(EndpointDescriptor);
-    DPRINT1("[USBLIB] URB_FUNCTION_ABORT_PIPE Status %x\n", Status);
+    DPRINT1("[%s] URB_FUNCTION_ABORT_PIPE Status %x\n", m_USBType, Status);
 
     //
     // done
@@ -1998,7 +2054,7 @@ CHubController::HandleClearStall(
     //
     if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
     {
-        DPRINT1("[USBLIB] HandleClearStall invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+        DPRINT1("[%s] HandleClearStall invalid device handle %p\n", m_USBType, Urb->UrbHeader.UsbdDeviceHandle);
 
         //
         // invalid device handle
@@ -2015,7 +2071,7 @@ CHubController::HandleClearStall(
     // get device
     //
     UsbDevice = PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle);
-    DPRINT1("[USBLIB] URB_FUNCTION_SYNC_CLEAR_STALL\n");
+    DPRINT1("[%s] URB_FUNCTION_SYNC_CLEAR_STALL\n", m_USBType);
 
     //
     // initialize setup packet
@@ -2032,7 +2088,7 @@ CHubController::HandleClearStall(
     //
     Status = UsbDevice->SubmitSetupPacket(&CtrlSetup, 0, 0);
 
-    DPRINT1("[USBLIB] URB_FUNCTION_CLEAR_STALL Status %x\n", Status);
+    DPRINT1("[%s] URB_FUNCTION_CLEAR_STALL Status %x\n", m_USBType, Status);
 
     //
     // done
@@ -2063,7 +2119,7 @@ CHubController::HandleClassInterface(
     //
     if (!ValidateUsbDevice(PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle)))
     {
-        DPRINT1("[USBLIB] HandleClassInterface invalid device handle %p\n", Urb->UrbHeader.UsbdDeviceHandle);
+        DPRINT1("[%s] HandleClassInterface invalid device handle %p\n", m_USBType, Urb->UrbHeader.UsbdDeviceHandle);
 
         //
         // invalid device handle
@@ -2117,7 +2173,7 @@ CHubController::HandleClassInterface(
         //
         // display error
         //
-        DPRINT1("URB_FUNCTION_CLASS_INTERFACE failed with Urb Status %x\n", Urb->UrbHeader.Status);
+        DPRINT1("[%s] URB_FUNCTION_CLASS_INTERFACE failed with Urb Status %x\n", m_USBType, Urb->UrbHeader.Status);
     }
 
     //
@@ -2211,7 +2267,7 @@ CHubController::HandleDeviceControl(
                     Status = HandleVendorDevice(Irp, Urb);
                     break;
                 default:
-                    DPRINT1("[USBLIB] IOCTL_INTERNAL_USB_SUBMIT_URB Function %x NOT IMPLEMENTED\n", Urb->UrbHeader.Function);
+                    DPRINT1("[%s] IOCTL_INTERNAL_USB_SUBMIT_URB Function %x NOT IMPLEMENTED\n", m_USBType, Urb->UrbHeader.Function);
                     break;
             }
             //
@@ -2221,7 +2277,7 @@ CHubController::HandleDeviceControl(
         }
         case IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE:
         {
-            DPRINT("[USBLIB] IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE %p\n", this);
+            DPRINT("[%s] IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE %p\n", m_USBType, this);
 
             if (IoStack->Parameters.Others.Argument1)
             {
@@ -2246,7 +2302,7 @@ CHubController::HandleDeviceControl(
         }
         case IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO:
         {
-            DPRINT("[USBLIB] IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO\n");
+            DPRINT("[%s] IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO\n", m_USBType);
 
             //
             // this is the first request send, it delivers the PDO to the caller
@@ -2275,7 +2331,7 @@ CHubController::HandleDeviceControl(
         }
         case IOCTL_INTERNAL_USB_GET_HUB_COUNT:
         {
-            DPRINT("[USBLIB] IOCTL_INTERNAL_USB_GET_HUB_COUNT\n");
+            DPRINT("[%s] IOCTL_INTERNAL_USB_GET_HUB_COUNT\n", m_USBType);
 
             //
             // after IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO is delivered, the usbhub driver
@@ -2298,13 +2354,13 @@ CHubController::HandleDeviceControl(
         }
         case IOCTL_INTERNAL_USB_SUBMIT_IDLE_NOTIFICATION:
         {
-            DPRINT1("[USBLIB] IOCTL_INTERNAL_USB_SUBMIT_IDLE_NOTIFICATION UNIMPLEMENTED\n");
+            DPRINT1("[%s] IOCTL_INTERNAL_USB_SUBMIT_IDLE_NOTIFICATION UNIMPLEMENTED\n", m_USBType);
             Status = STATUS_SUCCESS;
             break;
         }
         default:
         {
-            DPRINT1("[USBLIB] HandleDeviceControl>Type: IoCtl %x InputBufferLength %lu OutputBufferLength %lu NOT IMPLEMENTED\n",
+            DPRINT1("[%s] HandleDeviceControl>Type: IoCtl %x InputBufferLength %lu OutputBufferLength %lu NOT IMPLEMENTED\n", m_USBType,
                     IoStack->Parameters.DeviceIoControl.IoControlCode,
                     IoStack->Parameters.DeviceIoControl.InputBufferLength,
                     IoStack->Parameters.DeviceIoControl.OutputBufferLength);
@@ -2736,7 +2792,7 @@ USBHI_InitializeUsbDevice(
     NTSTATUS Status;
     ULONG Index = 0;
 
-    DPRINT1("USBHI_InitializeUsbDevice\n");
+    DPRINT("USBHI_InitializeUsbDevice\n");
 
     //
     // first get controller
@@ -2832,7 +2888,7 @@ USBHI_GetUsbDescriptors(
     PUSBDEVICE UsbDevice;
     CHubController * Controller;
 
-    DPRINT1("USBHI_GetUsbDescriptors\n");
+    DPRINT("USBHI_GetUsbDescriptors\n");
 
     //
     // sanity check
@@ -2901,7 +2957,7 @@ USBHI_RemoveUsbDevice(
     CHubController * Controller;
     NTSTATUS Status;
 
-    DPRINT1("USBHI_RemoveUsbDevice\n");
+    DPRINT("USBHI_RemoveUsbDevice\n");
 
     //
     // first get controller
@@ -2949,7 +3005,6 @@ USBHI_RemoveUsbDevice(
         // invalid device handle
         //
         DPRINT1("USBHI_RemoveUsbDevice Invalid device handle %p\n", UsbDevice);
-        PC_ASSERT(0);
         return STATUS_DEVICE_NOT_CONNECTED;
     }
 
@@ -2974,7 +3029,7 @@ USBHI_RestoreUsbDevice(
     PUSBDEVICE OldUsbDevice, NewUsbDevice;
     CHubController * Controller;
 
-    DPRINT1("USBHI_RestoreUsbDevice\n");
+    DPRINT("USBHI_RestoreUsbDevice\n");
 
     //
     // first get controller
@@ -3020,7 +3075,7 @@ USBHI_QueryDeviceInformation(
     PUSBDEVICE UsbDevice;
     CHubController * Controller;
 
-    DPRINT1("USBHI_QueryDeviceInformation %p\n", BusContext);
+    DPRINT("USBHI_QueryDeviceInformation %p\n", BusContext);
 
     //
     // sanity check
@@ -3142,7 +3197,7 @@ USBHI_GetControllerInformation(
 {
     PUSB_CONTROLLER_INFORMATION_0 ControllerInfo;
 
-    DPRINT1("USBHI_GetControllerInformation\n");
+    DPRINT("USBHI_GetControllerInformation\n");
 
     //
     // sanity checks
@@ -3205,7 +3260,7 @@ USBHI_GetExtendedHubInformation(
     USHORT Dummy1;
     NTSTATUS Status;
 
-    DPRINT1("USBHI_GetExtendedHubInformation\n");
+    DPRINT("USBHI_GetExtendedHubInformation\n");
 
     //
     // sanity checks
@@ -3432,7 +3487,7 @@ USBDI_GetUSBDIVersion(
     ULONG Speed, Dummy2;
     USHORT Dummy1;
 
-    DPRINT1("USBDI_GetUSBDIVersion\n");
+    DPRINT("USBDI_GetUSBDIVersion\n");
 
     //
     // get controller
@@ -3512,7 +3567,7 @@ USBDI_IsDeviceHighSpeed(
     ULONG Speed, Dummy2;
     USHORT Dummy1;
 
-    DPRINT1("USBDI_IsDeviceHighSpeed\n");
+    DPRINT("USBDI_IsDeviceHighSpeed\n");
 
     //
     // get controller

@@ -65,8 +65,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     //
     // Always return success for now
     //
-    DPRINT1("NEVER TELL ME THE ODDS!\n");
-    while (TRUE);
+    UNIMPLEMENTED_FATAL("NEVER TELL ME THE ODDS!\n");
     return STATUS_SUCCESS;
 }
 

@@ -25,6 +25,8 @@ CdfsDeviceControl(PDEVICE_OBJECT DeviceObject,
     PFILE_OBJECT FileObject;
     PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
 
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     FileObject = Stack->FileObject;
     Irp->IoStatus.Information = 0;
 

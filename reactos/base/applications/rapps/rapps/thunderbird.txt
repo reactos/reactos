@@ -23,12 +23,17 @@ URLSite = http://www.mozilla-europe.org/es/products/thunderbird/
 Description = Le plus populaire et l'un des meilleurs clients mail gratuits disponible.
 URLSite = http://www.mozilla-europe.org/fr/products/thunderbird/
 
+[Section.0413]
+Description = De meest populaire en een van de beste gratis e-mail-programma's.
+URLSite = http://www.mozilla-europe.org/nl/products/thunderbird/
+
 [Section.0415]
 Description = Najpopularniejszy i jeden z najlepszych darmowych klientów poczty.
 URLSite = http://www.mozilla-europe.org/pl/products/thunderbird/
 
 [Section.0418]
 Description = Cel mai popular și unul dintre cele mai bune clientele gratuite de poștă electronică.
+Size = 9,06 Mo
 URLSite = http://www.mozilla-europe.org/ro/products/thunderbird/
 
 [Section.0419]
@@ -38,3 +43,7 @@ URLSite = http://www.mozilla-europe.org/ru/products/thunderbird/
 [Section.0422]
 Description = Найпопулярніший та один з кращих поштових клієнтів.
 URLSite = http://www.mozillamessaging.com/uk/thunderbird/
+
+[Section.0813]
+Description = De meest populaire en een van de beste gratis e-mail-programma's.
+URLSite = http://www.mozilla-europe.org/nl/products/thunderbird/

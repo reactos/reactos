@@ -1,4 +1,3 @@
-/* $Id: vfat.h 16656 2005-07-20 02:52:52Z ion $ */
 
 #include <ddk/ntifs.h>
 #include <ddk/ntdddisk.h>

@@ -14,11 +14,11 @@ add_library(disk_new SHARED
     disk.rc)
 
 target_link_libraries(disk_new libcntpr wdmguid)
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     # FIXME: http://www.cmake.org/Bug/view.php?id=12998
     if(NOT MSVC)
-        #add_target_compile_flags(disk_new "-Wno-format -Wno-pointer-sign")
-        set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-format -Wno-pointer-sign")
+        #add_target_compile_flags(disk_new "-Wno-error -Wno-format -Wno-pointer-sign")
+        set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error -Wno-format -Wno-pointer-sign")
     endif()
 endif()
 

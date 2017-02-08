@@ -9,7 +9,6 @@
 
 #include "precomp.h"
 
-
 LPTSTR
 TV1_GetDependants(PSERVICEPROPSHEET pDlgInfo,
                   SC_HANDLE hService)
@@ -179,7 +178,6 @@ TV1_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
         CloseServiceHandle(hSCManager);
     }
 }
-
 
 BOOL
 TV1_Initialize(PSERVICEPROPSHEET pDlgInfo,

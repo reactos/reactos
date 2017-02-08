@@ -9,7 +9,12 @@
 
 struct _EXLATEOBJ;
 
-typedef ULONG (FASTCALL *PFN_XLATE)(struct _EXLATEOBJ *pexlo, ULONG iColor);
+_Function_class_(FN_XLATE)
+typedef
+ULONG
+(FASTCALL *PFN_XLATE)(
+    _In_ struct _EXLATEOBJ *pexlo,
+    _In_ ULONG iColor);
 
 typedef struct _EXLATEOBJ
 {
@@ -38,23 +43,44 @@ typedef struct _EXLATEOBJ
     };
 } EXLATEOBJ, *PEXLATEOBJ;
 
+extern EXLATEOBJ gexloTrivial;
+
+_Notnull_
 PFN_XLATE
 FORCEINLINE
-XLATEOBJ_pfnXlate(XLATEOBJ *pxlo)
+XLATEOBJ_pfnXlate(
+    _In_ XLATEOBJ *pxlo)
 {
     return ((PEXLATEOBJ)pxlo)->pfnXlate;
 }
 
-extern EXLATEOBJ gexloTrivial;
+VOID
+NTAPI
+EXLATEOBJ_vInitialize(
+    _Out_ PEXLATEOBJ pexlo,
+    _In_opt_ PPALETTE ppalSrc,
+    _In_opt_ PPALETTE ppalDst,
+    _In_ COLORREF crSrcBackColor,
+    _In_ COLORREF crDstBackColor,
+    _In_ COLORREF crDstForeColor);
 
-ULONG
-FASTCALL
-EXLATEOBJ_iXlateTrivial(PEXLATEOBJ pexlo, ULONG iColor);
+VOID
+NTAPI
+EXLATEOBJ_vInitXlateFromDCs(
+    _Out_ PEXLATEOBJ pexlo,
+    _In_ PDC pdcSrc,
+    _In_ PDC pdcDst);
 
-void
-DbgCmpXlate(XLATEOBJ *pxlo1, XLATEOBJ *pxlo2);
+VOID
+NTAPI
+EXLATEOBJ_vInitSrcMonoXlate(
+    _Out_ PEXLATEOBJ pexlo,
+    _In_ PPALETTE ppalDst,
+    _In_ COLORREF crBackgroundClr,
+    _In_ COLORREF crForegroundClr);
 
-VOID NTAPI EXLATEOBJ_vInitialize(PEXLATEOBJ pexlo, PPALETTE ppalSrc, PPALETTE ppalDst, ULONG, ULONG, ULONG);
-VOID NTAPI EXLATEOBJ_vInitXlateFromDCs(PEXLATEOBJ pexlo, PDC pdcSrc, PDC pdcDst);
-VOID NTAPI EXLATEOBJ_vInitSrcMonoXlate(PEXLATEOBJ pexlo, PPALETTE ppalDst, ULONG Color0, ULONG Color1);
-VOID NTAPI EXLATEOBJ_vCleanup(PEXLATEOBJ pexlo);
+VOID
+NTAPI
+EXLATEOBJ_vCleanup(
+    _Inout_ PEXLATEOBJ pexlo);
+

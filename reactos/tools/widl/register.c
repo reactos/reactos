@@ -266,7 +266,7 @@ void write_regscript( const statement_list_t *stmts )
     {
         FILE *f = fopen( regscript_name, "w" );
         if (!f) error( "Could not open %s for output\n", regscript_name );
-        if (fwrite( output_buffer, output_buffer_pos, 1, f ) != output_buffer_pos)
+        if (fwrite( output_buffer, 1, output_buffer_pos, f ) != output_buffer_pos)
             error( "Failed to write to %s\n", regscript_name );
         if (fclose( f ))
             error( "Failed to write to %s\n", regscript_name );

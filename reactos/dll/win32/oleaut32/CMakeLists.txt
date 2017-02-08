@@ -2,19 +2,16 @@
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-add_definitions(-DPROXY_CLSID_IS="{0xb196b286,0xbab4,0x101a,{0xb6,0x9c,0x00,0xaa,0x00,0x34,0x1d,0x07}}")
-
 add_definitions(
     -D__WINESRC__
     -DCOM_NO_WINDOWS_H
     -D_OLEAUT32_
     -DPROXY_DELEGATION
-    -DREGISTER_PROXY_DLL
-    -DENTRY_PREFIX=OLEAUTPS_)
+    -DWINE_REGISTER_DLL
+    -DENTRY_PREFIX=OLEAUTPS_
+    -DPROXY_CLSID=CLSID_PSFactoryBuffer)
 
-include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/libs/libjpeg
-    ${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(oleaut32.dll oleaut32.spec ADD_IMPORTLIB)
 
@@ -27,14 +24,12 @@ list(APPEND SOURCE
     oleaut.c
     olefont.c
     olepicture.c
+    olepropframe.c
     recinfo.c
-    regsvr.c
     safearray.c
-    stubs.c
     tmarshal.c
     typelib.c
     typelib2.c
-    ungif.c
     usrmarshal.c
     varformat.c
     variant.c
@@ -47,19 +42,14 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/oleaut32.def)
 
 if(MSVC)
-    list(APPEND SOURCE msvc.S)
+    add_asm_files(oleaut32_asm msvc.S)
 endif()
 
-add_library(oleaut32 SHARED ${SOURCE})
+add_library(oleaut32 SHARED ${SOURCE} ${oleaut32_asm})
+add_idl_headers(oleaut32_idlheader oleaut32_oaidl.idl)
+add_dependencies(oleaut32 oleaut32_idlheader)
 set_module_type(oleaut32 win32dll)
-
-target_link_libraries(oleaut32
-    wine
-    wineldr
-    uuid
-    ${PSEH_LIB})
-
+target_link_libraries(oleaut32 wine wineldr uuid ${PSEH_LIB})
 add_delay_importlibs(oleaut32 comctl32 urlmon windowscodecs)
 add_importlibs(oleaut32 ole32 rpcrt4 user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET oleaut32 DESTINATION reactos/system32 FOR all)
-

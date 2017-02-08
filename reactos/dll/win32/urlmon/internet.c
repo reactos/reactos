@@ -18,10 +18,10 @@
  */
 
 #include "urlmon_main.h"
-#include "winreg.h"
-#include "shlwapi.h"
+//#include "winreg.h"
+#include <shlwapi.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
@@ -549,39 +549,34 @@ static HRESULT set_internet_feature(INTERNETFEATURELIST feature, DWORD flags, BO
 
 static BOOL get_feature_from_reg(HKEY feature_control, LPCWSTR feature_name, LPCWSTR process_name, BOOL *enabled)
 {
-    BOOL ret = FALSE;
+    DWORD type, value, size;
     HKEY feature;
     DWORD res;
 
     static const WCHAR wildcardW[] = {'*',0};
 
     res = RegOpenKeyW(feature_control, feature_name, &feature);
-    if(res == ERROR_SUCCESS) {
-        DWORD type, value, size;
+    if(res != ERROR_SUCCESS)
+        return FALSE;
 
+    size = sizeof(DWORD);
+    res = RegQueryValueExW(feature, process_name, NULL, &type, (BYTE*)&value, &size);
+    if(res != ERROR_SUCCESS || type != REG_DWORD) {
         size = sizeof(DWORD);
-        res = RegQueryValueExW(feature, process_name, NULL, &type, (BYTE*)&value, &size);
-        if(type != REG_DWORD)
-            WARN("Unexpected registry value type %d (expected REG_DWORD) for %s\n", type, debugstr_w(process_name));
-
-        if(res == ERROR_SUCCESS && type == REG_DWORD) {
-            *enabled = value == 1;
-            ret = TRUE;
-        } else {
-            size = sizeof(DWORD);
-            res = RegQueryValueExW(feature, wildcardW, NULL, &type, (BYTE*)&value, &size);
-            if(type != REG_DWORD)
-                WARN("Unexpected registry value type %d (expected REG_DWORD) for %s\n", type, debugstr_w(wildcardW));
-
-            if(res == ERROR_SUCCESS && type == REG_DWORD) {
-                *enabled = value == 1;
-                ret = TRUE;
-            }
-        }
-        RegCloseKey(feature);
+        res = RegQueryValueExW(feature, wildcardW, NULL, &type, (BYTE*)&value, &size);
     }
 
-    return ret;
+    RegCloseKey(feature);
+    if(res != ERROR_SUCCESS)
+        return FALSE;
+
+    if(type != REG_DWORD) {
+        WARN("Unexpected registry value type %d (expected REG_DWORD) for %s\n", type, debugstr_w(wildcardW));
+        return FALSE;
+    }
+
+    *enabled = value == 1;
+    return TRUE;
 }
 
 /* Assumes 'process_features_cs' is held. */
@@ -697,4 +692,103 @@ HRESULT WINAPI CoInternetIsFeatureEnabled(INTERNETFEATURELIST FeatureEntry, DWOR
 {
     TRACE("(%d, %08x)\n", FeatureEntry, dwFlags);
     return get_internet_feature(FeatureEntry, dwFlags);
+}
+
+/***********************************************************************
+ *             CoInternetIsFeatureEnabledForUrl (URLMON.@)
+ */
+HRESULT WINAPI CoInternetIsFeatureEnabledForUrl(INTERNETFEATURELIST FeatureEntry, DWORD dwFlags, LPCWSTR szURL,
+        IInternetSecurityManager *pSecMgr)
+{
+    DWORD urlaction = 0;
+    HRESULT hres;
+
+    TRACE("(%d %08x %s %p)\n", FeatureEntry, dwFlags, debugstr_w(szURL), pSecMgr);
+
+    if(FeatureEntry == FEATURE_MIME_SNIFFING)
+        urlaction = URLACTION_FEATURE_MIME_SNIFFING;
+    else if(FeatureEntry == FEATURE_WINDOW_RESTRICTIONS)
+        urlaction = URLACTION_FEATURE_WINDOW_RESTRICTIONS;
+    else if(FeatureEntry == FEATURE_ZONE_ELEVATION)
+        urlaction = URLACTION_FEATURE_ZONE_ELEVATION;
+
+    if(!szURL || !urlaction || !pSecMgr)
+        return CoInternetIsFeatureEnabled(FeatureEntry, dwFlags);
+
+    switch(dwFlags) {
+    case GET_FEATURE_FROM_THREAD:
+    case GET_FEATURE_FROM_THREAD_LOCALMACHINE:
+    case GET_FEATURE_FROM_THREAD_INTRANET:
+    case GET_FEATURE_FROM_THREAD_TRUSTED:
+    case GET_FEATURE_FROM_THREAD_INTERNET:
+    case GET_FEATURE_FROM_THREAD_RESTRICTED:
+        FIXME("unsupported flags %x\n", dwFlags);
+        return E_NOTIMPL;
+
+    case GET_FEATURE_FROM_PROCESS:
+        hres = CoInternetIsFeatureEnabled(FeatureEntry, dwFlags);
+        if(hres != S_OK)
+            return hres;
+        /* fall through */
+
+    default: {
+        DWORD policy = URLPOLICY_DISALLOW;
+
+        hres = IInternetSecurityManager_ProcessUrlAction(pSecMgr, szURL, urlaction,
+                (BYTE*)&policy, sizeof(DWORD), NULL, 0, PUAF_NOUI, 0);
+        if(hres!=S_OK || policy!=URLPOLICY_ALLOW)
+            return S_OK;
+        return S_FALSE;
+    }
+    }
+}
+
+/***********************************************************************
+ *             CoInternetIsFeatureZoneElevationEnabled (URLMON.@)
+ */
+HRESULT WINAPI CoInternetIsFeatureZoneElevationEnabled(LPCWSTR szFromURL, LPCWSTR szToURL,
+        IInternetSecurityManager *pSecMgr, DWORD dwFlags)
+{
+    HRESULT hres;
+
+    TRACE("(%s %s %p %x)\n", debugstr_w(szFromURL), debugstr_w(szToURL), pSecMgr, dwFlags);
+
+    if(!pSecMgr || !szToURL)
+        return CoInternetIsFeatureEnabled(FEATURE_ZONE_ELEVATION, dwFlags);
+
+    switch(dwFlags) {
+    case GET_FEATURE_FROM_THREAD:
+    case GET_FEATURE_FROM_THREAD_LOCALMACHINE:
+    case GET_FEATURE_FROM_THREAD_INTRANET:
+    case GET_FEATURE_FROM_THREAD_TRUSTED:
+    case GET_FEATURE_FROM_THREAD_INTERNET:
+    case GET_FEATURE_FROM_THREAD_RESTRICTED:
+        FIXME("unsupported flags %x\n", dwFlags);
+        return E_NOTIMPL;
+
+    case GET_FEATURE_FROM_PROCESS:
+        hres = CoInternetIsFeatureEnabled(FEATURE_ZONE_ELEVATION, dwFlags);
+        if(hres != S_OK)
+            return hres;
+        /* fall through */
+
+    default: {
+        DWORD policy = URLPOLICY_DISALLOW;
+
+        hres = IInternetSecurityManager_ProcessUrlAction(pSecMgr, szToURL,
+                URLACTION_FEATURE_ZONE_ELEVATION, (BYTE*)&policy, sizeof(DWORD),
+                NULL, 0, PUAF_NOUI, 0);
+        if(FAILED(hres))
+            return S_OK;
+
+        switch(policy) {
+        case URLPOLICY_ALLOW:
+            return S_FALSE;
+        case URLPOLICY_QUERY:
+            FIXME("Ask user dialog not implemented\n");
+        default:
+            return S_OK;
+        }
+    }
+    }
 }

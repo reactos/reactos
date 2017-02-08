@@ -1,0 +1,227 @@
+// Translated by Baruch Rutman
+LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
+
+IDD_MAIN_DIALOG DIALOGEX DISCARDABLE  0, 0, 478, 280
+STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
+    WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
+    WS_THICKFRAME
+CAPTION "כלי אבחון - ReactX"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Tab1",IDC_TAB_CONTROL,"SysTabControl32",WS_TABSTOP,2,2,474,250
+    PUSHBUTTON "&עזרה", IDC_BUTTON_HELP, 2, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    DEFPUSHBUTTON "&העמוד הבא", IDC_BUTTON_NEXT, 257, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&שמור את כל המידע...", IDC_BUTTON_SAVE_INFO, 311, 261, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&יציאה", IDC_BUTTON_EXIT, 425, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+IDD_SYSTEM_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "כלי זה מדווח על מידע מפורט אודות הרכיבים ומנהלי ההתקנים של ReactX המותקנים במערכת שלך.", -1, 10, 10, 443, 17
+    LTEXT "אם ידוע לך התחום שגורם לבעיה, לחץ על הכרטיסייה המתאימה לעיל. אחרת, באפשרותך להשתמש בלחצן ""העמוד הבא"" להלן, כיד לבקר בכל עמוד לפי סדר", -1, 10, 30, 443, 25
+    GROUPBOX "מידע מערכת", -1, 10, 55, 443, 130, SS_RIGHT
+    LTEXT "תאריך/שעה נוכחיים:", -1, 70, 70, 80, 10, SS_RIGHT
+    LTEXT "שם מחשב:", -1, 70, 80, 80, 10, SS_RIGHT
+    LTEXT "מערכת הפעלה:", -1, 70, 90, 80, 10, SS_RIGHT
+    LTEXT "שפה:", -1, 70, 100, 80, 10, SS_RIGHT
+    LTEXT "יצרן המערכת:", -1, 70, 110, 80, 10, SS_RIGHT
+    LTEXT "דגם המערכת:", -1, 70, 120, 80, 10, SS_RIGHT
+    LTEXT "BIOS:", -1, 70, 130, 80, 10, SS_RIGHT
+    LTEXT "מעבד:", -1, 70, 140, 80, 10, SS_RIGHT
+    LTEXT "זיכרון:", -1, 70, 150, 80, 10, SS_RIGHT
+    LTEXT "קובץ החלפה:", -1, 70, 160, 80, 10, SS_RIGHT
+    LTEXT "גרסת ReactX:", -1, 70, 170, 80, 10, SS_RIGHT
+    LTEXT "", IDC_STATIC_TIME, 155, 70, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_COMPUTER, 155, 80, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_OS, 155, 90, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_LANG, 155, 100, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_MANU, 155, 110, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_MODEL, 155, 120, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_BIOS, 155, 130, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_PROC, 155, 140, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_MEM, 155, 150, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_SWAP, 155, 160, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_VERSION, 155, 170, 195, 10, SS_LEFT
+END
+
+IDD_DISPLAY_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "התקן", -1, 10, 10, 250, 100
+    RTEXT "שם:", -1, 20, 25, 70, 10
+    RTEXT "יצרן:", -1, 20, 35, 70, 10
+    RTEXT "סוג שבב:", -1, 20, 45, 70, 10
+    RTEXT "סוג DAC:", -1, 20, 55, 70, 10
+    RTEXT "זיכרון כולל בקירוב:", -1, 20, 65, 70, 10
+    RTEXT "מצב תצוגה נוכחי:", -1, 20, 75, 70, 10
+    RTEXT "צג:", -1, 20, 85, 70, 10
+    LTEXT "", IDC_STATIC_ADAPTER_ID, 95, 25, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_VENDOR, 95, 35, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_CHIP, 95, 45, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DAC, 95, 55, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MEM, 95, 65, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MODE, 95, 75, 150, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MONITOR, 95, 85, 150, 10
+
+    GROUPBOX "מנהלי התקנים", -1, 270, 10, 190, 100
+    RTEXT "מנהל התקן ראשי:", -1, 275, 25, 55, 10
+    RTEXT "גרסה:", -1, 275, 35, 55, 10
+    RTEXT "תאריך", -1, 275, 45, 55, 10
+    RTEXT "סימול WHQL:", -1, 275, 55, 55, 10
+    RTEXT "Mini-VDD:", -1, 275, 65, 55, 10
+    RTEXT " vvdddVDD:", -1, 275, 75, 55, 10
+    RTEXT "גירסת DD:", -1, 275, 85, 55, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DRIVER, 335, 35, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_VERSION, 335, 35, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DATE, 335, 45, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_LOGO, 335, 55, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MINIVDD, 335, 65, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_VDD, 335, 75, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DDI, 335, 85, 100, 10
+
+    GROUPBOX "תכונות ReactX", -1, 10, 115, 450, 60
+    RTEXT "תאוצת DirectDraw:", -1, 15, 130, 110, 12
+    RTEXT "תאוצת Direct3D:", -1, 15, 145, 110, 12
+    RTEXT "תאוצת AGP Texture:", -1, 15, 160, 110, 12
+    LTEXT "", IDC_STATIC_DDSTATE, 130, 130, 40, 10
+    LTEXT "", IDC_STATIC_D3DSTATE, 130, 145, 40, 10
+    LTEXT "", IDC_STATIC_AGPSTATE, 130, 160, 40, 10
+    PUSHBUTTON "אפשר", IDC_BUTTON_DDRAW, 170, 124, 60, 14, WS_DISABLED
+    PUSHBUTTON "אפשר", IDC_BUTTON_D3D, 170, 140, 60, 14, WS_DISABLED
+    PUSHBUTTON "אפשר", IDC_BUTTON_AGP, 170, 156, 60, 14, WS_DISABLED
+    PUSHBUTTON "בדיקת DirectDraw", IDC_BUTTON_TESTDD, 250, 124, 80, 14
+    PUSHBUTTON "בדיקת Direct3D", IDC_BUTTON_TEST3D, 250, 140, 80, 14
+
+    GROUPBOX "הערות", -1, 10, 180, 450, 40
+    EDITTEXT  IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
+END
+
+
+IDD_SOUND_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "התקן", -1, 10, 10, 250, 100
+    RTEXT "שם:", -1, 20, 25, 70, 10
+    RTEXT "מזהה חומרה:", -1, 20, 35, 70, 10
+    RTEXT "מזהה יצרן:", -1, 20, 45, 70, 10
+    RTEXT "מזהה מוצר:", -1, 20, 55, 70, 10
+    RTEXT "סוג:", -1, 20, 65, 70, 10
+    RTEXT "התקן ברירת מחדל:", -1, 20, 75, 70, 10
+    LTEXT "", IDC_STATIC_DSOUND_NAME, 95, 25, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_DEVICEID, 95, 35, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_VENDORID, 95, 45, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_PRODUCTID, 95, 55, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_TYPE, 95, 65, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_STANDARD, 95, 75, 150, 10
+    GROUPBOX "מנהלי התקנים", -1, 270, 10, 190, 100
+    RTEXT "שם:", -1, 275, 25, 55, 10
+    RTEXT "גרסה:", -1, 275, 35, 55, 10
+    RTEXT "תאריך:", -1, 275, 45, 55, 10
+    RTEXT "סימול WHQL:", -1, 275, 55, 55, 10
+    RTEXT "קבצים אחרים:", -1, 275, 65, 55, 10
+    RTEXT "ספק:", -1, 275, 75, 55, 10
+    LTEXT "", IDC_STATIC_DSOUND_DRIVER, 335, 25, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_VERSION, 335, 35, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_DATE, 335, 45, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_LOGO, 335, 55, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_FILES, 335, 65, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_PROVIDER, 335, 75, 100, 10
+    GROUPBOX "תכונות ReactX", -1, 10, 115, 450, 60
+    CONTROL "", IDC_SLIDER_DSOUND, "msctls_trackbar32", TBS_BOTTOM | TBS_AUTOTICKS | WS_TABSTOP, 120, 135, 80, 17
+    RTEXT "רמת תאוצת קול של חומרה:", -1, 20, 135, 90, 20
+    PUSHBUTTON "בדוק DirectSound", IDC_BUTTON_TESTDSOUND, 270, 134, 80, 14
+    GROUPBOX "הערות", -1, 10, 180, 450, 40
+    EDITTEXT  IDC_TEXT_DSOUNDINFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
+END
+
+IDD_MUSIC_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+
+IDD_INPUT_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "התקני DirectInput", -1, 10, 10, 452, 80
+    CONTROL "", IDC_LIST_DEVICE, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
+    GROUPBOX "התקני קלט", -1, 10, 100, 452, 60
+    CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 20, 112, 432, 40, 0x00000200
+    GROUPBOX "הערות", -1, 10, 170, 452, 50
+    EDITTEXT  IDC_RICH_INFO, 20, 182, 432, 30, WS_DISABLED | WS_TABSTOP
+END
+
+IDD_NETWORK_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "ספקי שירות רשומים של DirectPlay", -1, 10, 10, 452, 80
+    CONTROL "", IDC_LIST_PROVIDER, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
+END
+
+IDD_HELP_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_MAIN_DIALOG "כלי אבחון ReactX"
+	IDS_SYSTEM_DIALOG "מערכת"
+	IDS_DISPLAY_DIALOG "תצוגה"
+	IDS_SOUND_DIALOG "צליל"
+	IDS_MUSIC_DIALOG "מוזיקה"
+	IDS_INPUT_DIALOG "קלט"
+	IDS_NETWORK_DIALOG "רשת"
+	IDS_HELP_DIALOG "עזרה"
+	IDS_FORMAT_MB "%I64uMB RAM"
+	IDS_FORMAT_SWAP "%I64u MB בשימוש, %I64u MB זמין"
+	IDS_FORMAT_UNIPROC "%s (%u CPU)"
+	IDS_FORMAT_MPPROC  "%s (%u CPUs)"
+	IDS_VERSION_UNKNOWN "גרסה לא ידועה"
+	IDS_DEVICE_STATUS_ATTACHED "מחובר"
+	IDS_DEVICE_STATUS_MISSING "מנותק"
+	IDS_DEVICE_STATUS_UNKNOWN "לא ידוע"
+	IDS_DEVICE_NAME "שם התקן"
+	IDS_DEVICE_STATUS "מצב"
+	IDS_DEVICE_CONTROLLER "מזהה בקר"
+	IDS_DEVICE_MANUFACTURER "מזהה ספק"
+	IDS_DEVICE_PRODUCT "מזהה מוצר"
+	IDS_DEVICE_FORCEFEEDBACK "Force Feedback מנהל התקן"
+	IDS_NOT_APPLICABLE "Not applicable"
+	IDS_OPTION_YES "כן"
+	IDS_DIRECTPLAY_COL_NAME1 "שם"
+	IDS_DIRECTPLAY_COL_NAME2 "רשום"
+	IDS_DIRECTPLAY_COL_NAME3 "קובץ"
+	IDS_DIRECTPLAY_COL_NAME4 "גרסה"
+	IDS_DIRECTPLAY8_MODEMSP "ספק שירות מודם של DirectPlay8"
+	IDS_DIRECTPLAY8_SERIALSP "ספק שירות חיבור טורי של DirectPlay8"
+	IDS_DIRECTPLAY8_IPXSP "ספק שירות IPX של DirectPlay8"
+	IDS_DIRECTPLAY8_TCPSP "ספק שירות TCP/IP של DirectPlay8"
+	IDS_DIRECTPLAY_TCPCONN "חיבור רשת TCP/IP עבור DirectPlay"
+	IDS_DIRECTPLAY_IPXCONN "חיבור IPX עבור DirectPlay"
+	IDS_DIRECTPLAY_MODEMCONN "חיבור מודם עבור DirectPlay"
+	IDS_DIRECTPLAY_SERIALCONN "חיבור טורי עבור DirectPlay"
+	IDS_REG_SUCCESS "אישור"
+	IDS_REG_FAIL "שגיאה"
+	IDS_DDTEST_ERROR "הבדיקה נכשלה!"
+	IDS_DDTEST_DESCRIPTION "פעולה זו תבדוק את DirectDraw בהתקן זה. האם להמשיך?"
+	IDS_DDPRIMARY_DESCRIPTION "הבדיקה הבאה תשתמש ב- DirectDraw כדי לצייר על המשטח הראשי במצב רגיל (לא מסך מלא). אתה אמור לראשות מלבנים שחורים ולבנים על המסך."
+	IDS_DDPRIMARY_RESULT "האם ראית מלבנים שחורים ולבנים לחילופין על המסך?"
+	IDS_DDOFFSCREEN_DESCRIPTION "הבדיקה הבאה תשתמש ב- DirectDraw כדי לצייר על המשטח מחוץ למסך במצב רגיל (לא מסך מלא). אתה אמור לראות תיבה לבנה קופצת."
+	IDS_DDOFFSCREEN_RESULT "האם ראית תיבה לבנה קופצת?"
+	IDS_DDFULLSCREEN_DESCRIPTION "הבדיקה הבאה תשתמש ב- DirectDraw כדי לצייר במצב מסך מלא. אתה אמור לראות תיבה לבנה קופצת."
+	IDS_DDFULLSCREEN_RESULT "האם ראית תיבה לבנה קופצת במסך מלא?"
+	IDS_FORMAT_ADAPTER_MEM "%u MB"
+	IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
+	IDS_OPTION_NO "לא"
+	IDS_D3DTEST_DESCRIPTION "פעולה זו תבדוק Direct3D בהתקן זה. האם להמשיך?"
+	IDS_D3DTEST_D3Dx "בדיקה זו תשתמש בממשקי Direct3D %u המואצים באמצעות חומרה."
+END

@@ -17,18 +17,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+//#include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winnls.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "wingdi.h"
+//#include "winnls.h"
 
-#include "objbase.h"
+//#include "objbase.h"
 
-#include "gdiplus.h"
+//#include "gdiplus.h"
 #include "gdiplus_private.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 
@@ -50,6 +50,7 @@ GpStatus WINGDIPAPI GdipCreateStringFormat(INT attr, LANGID lang,
     (*format)->digitsub = StringDigitSubstituteUser;
     (*format)->character_ranges = NULL;
     (*format)->range_count = 0;
+    (*format)->generic_typographic = FALSE;
     /* tabstops */
     (*format)->tabcount = 0;
     (*format)->firsttab = 0.0;
@@ -386,6 +387,9 @@ GpStatus WINGDIPAPI GdipStringFormatGetGenericTypographic(GpStringFormat **forma
     (*format)->hkprefix  = HotkeyPrefixNone;
     (*format)->align     = StringAlignmentNear;
     (*format)->vertalign = StringAlignmentNear;
+    (*format)->generic_typographic = TRUE;
+
+    TRACE("%p => %p\n", format, *format);
 
     return Ok;
 }

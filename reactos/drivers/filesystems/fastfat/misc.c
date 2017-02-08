@@ -212,6 +212,8 @@ PVFAT_IRP_CONTEXT VfatAllocateIrpContext(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return IrpContext;
 }
 
+static WORKER_THREAD_ROUTINE VfatDoRequest;
+
 static VOID NTAPI VfatDoRequest (PVOID IrpContext)
 {
    InterlockedDecrement(&QueueCount);
@@ -273,5 +275,4 @@ NTSTATUS VfatLockUserBuffer(IN PIRP Irp, IN ULONG Length, IN LOCK_OPERATION Oper
 
    return STATUS_SUCCESS;
 }
-
 

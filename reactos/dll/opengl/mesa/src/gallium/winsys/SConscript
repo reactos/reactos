@@ -1,0 +1,35 @@
+Import('*')
+
+
+SConscript([
+    'sw/wrapper/SConscript',
+])
+
+SConscript([
+    'sw/xlib/SConscript',
+])
+
+SConscript([
+    'sw/gdi/SConscript',
+])
+
+SConscript([
+    'i915/sw/SConscript',
+])
+
+if env['dri']:
+    SConscript([
+        'sw/dri/SConscript',
+    ])
+
+    SConscript([
+        'svga/drm/SConscript',
+    ])
+
+    SConscript([
+        'i915/drm/SConscript',
+    ])
+
+    SConscript([
+        'radeon/drm/SConscript',
+    ])

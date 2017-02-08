@@ -355,8 +355,6 @@ typedef struct _CDROM_DATA {
 #define DVD_MAX_REGION_RESET_COUNT  2
 #define DVD_MAX_REGION              8
 
-
-
 #define BAIL_OUT(Irp) \
     DebugPrint((2, "Cdrom: [%p] Bailing with status " \
                 " %lx at line %x file %s\n",          \
@@ -437,8 +435,9 @@ CdRomCompleteIrpAndStartNextPacketSafely(
 
     return;
 }
-
+
 VOID
+NTAPI
 CdRomDeviceControlDvdReadStructure(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP OriginalIrp,
@@ -447,6 +446,7 @@ CdRomDeviceControlDvdReadStructure(
     );
 
 VOID
+NTAPI
 CdRomDeviceControlDvdEndSession(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP OriginalIrp,
@@ -455,6 +455,7 @@ CdRomDeviceControlDvdEndSession(
     );
 
 VOID
+NTAPI
 CdRomDeviceControlDvdStartSessionReadKey(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP OriginalIrp,
@@ -463,45 +464,50 @@ CdRomDeviceControlDvdStartSessionReadKey(
     );
 
 VOID
+NTAPI
 CdRomDeviceControlDvdSendKey(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP OriginalIrp,
     IN PIRP NewIrp,
     IN PSCSI_REQUEST_BLOCK Srb
     );
-
-
 
 NTSTATUS
+NTAPI
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath
     );
 
 VOID
+NTAPI
 CdRomUnload(
     IN PDRIVER_OBJECT DriverObject
     );
 
 NTSTATUS
+NTAPI
 CdRomAddDevice(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT Pdo
     );
 
 NTSTATUS
+NTAPI
 CdRomOpenClose(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
+NTAPI
 CdRomReadWriteVerification(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
+NTAPI
 CdRomSwitchMode(
     IN PDEVICE_OBJECT DeviceObject,
     IN ULONG SectorSize,
@@ -509,12 +515,14 @@ CdRomSwitchMode(
     );
 
 NTSTATUS
+NTAPI
 CdRomDeviceControlDispatch(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
+NTAPI
 CdRomDeviceControlCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -522,6 +530,7 @@ CdRomDeviceControlCompletion(
     );
 
 NTSTATUS
+NTAPI
 CdRomSetVolumeIntermediateCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -529,6 +538,7 @@ CdRomSetVolumeIntermediateCompletion(
     );
 
 NTSTATUS
+NTAPI
 CdRomSwitchModeCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -536,6 +546,7 @@ CdRomSwitchModeCompletion(
     );
 
 NTSTATUS
+NTAPI
 CdRomXACompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -543,6 +554,7 @@ CdRomXACompletion(
     );
 
 NTSTATUS
+NTAPI
 CdRomClassIoctlCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -550,17 +562,20 @@ CdRomClassIoctlCompletion(
     );
 
 VOID
+NTAPI
 CdRomStartIo(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 VOID
+NTAPI
 CdRomTickHandler(
     IN PDEVICE_OBJECT DeviceObject
     );
 
 NTSTATUS
+NTAPI
 CdRomUpdateCapacity(
     IN PFUNCTIONAL_DEVICE_EXTENSION DeviceExtension,
     IN PIRP IrpToComplete,
@@ -568,28 +583,33 @@ CdRomUpdateCapacity(
     );
 
 NTSTATUS
+NTAPI
 CdRomCreateDeviceObject(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT Pdo
     );
 
 VOID
+NTAPI
 ScanForSpecialHandler(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     ULONG_PTR HackFlags
     );
 
 VOID
+NTAPI
 ScanForSpecial(
     PDEVICE_OBJECT DeviceObject
     );
 
 BOOLEAN
+NTAPI
 CdRomIsPlayActive(
     IN PDEVICE_OBJECT DeviceObject
     );
 
 VOID
+NTAPI
 CdRomErrorHandler(
     PDEVICE_OBJECT DeviceObject,
     PSCSI_REQUEST_BLOCK Srb,
@@ -598,6 +618,7 @@ CdRomErrorHandler(
     );
 
 VOID
+NTAPI
 HitachiProcessErrorGD2000(
     PDEVICE_OBJECT DeviceObject,
     PSCSI_REQUEST_BLOCK Srb,
@@ -606,6 +627,7 @@ HitachiProcessErrorGD2000(
     );
 
 VOID
+NTAPI
 HitachiProcessError(
     PDEVICE_OBJECT DeviceObject,
     PSCSI_REQUEST_BLOCK Srb,
@@ -614,6 +636,7 @@ HitachiProcessError(
     );
 
 VOID
+NTAPI
 ToshibaProcessError(
     PDEVICE_OBJECT DeviceObject,
     PSCSI_REQUEST_BLOCK Srb,
@@ -622,6 +645,7 @@ ToshibaProcessError(
     );
 
 NTSTATUS
+NTAPI
 ToshibaProcessErrorCompletion(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -629,34 +653,40 @@ ToshibaProcessErrorCompletion(
     );
 
 VOID
+NTAPI
 CdRomCreateNamedEvent(
     IN PFUNCTIONAL_DEVICE_EXTENSION DeviceExtension,
     IN ULONG DeviceNumber
     );
 
 NTSTATUS
+NTAPI
 CdRomInitDevice(
     IN PDEVICE_OBJECT Fdo
     );
 
 NTSTATUS
+NTAPI
 CdRomStartDevice(
     IN PDEVICE_OBJECT Fdo
     );
 
 NTSTATUS
+NTAPI
 CdRomStopDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN UCHAR Type
     );
 
 NTSTATUS
+NTAPI
 CdRomRemoveDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN UCHAR Type
     );
 
 NTSTATUS
+NTAPI
 CdRomDvdEndAllSessionsCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -664,6 +694,7 @@ CdRomDvdEndAllSessionsCompletion(
     );
 
 NTSTATUS
+NTAPI
 CdRomDvdReadDiskKeyCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -671,21 +702,25 @@ CdRomDvdReadDiskKeyCompletion(
     );
 
 DEVICE_TYPE
+NTAPI
 CdRomGetDeviceType(
     IN PDEVICE_OBJECT DeviceObject
     );
 
 NTSTATUS
+NTAPI
 CdRomCreateWellKnownName(
     IN PDEVICE_OBJECT DeviceObject
     );
 
 VOID
+NTAPI
 CdRomDeleteWellKnownName(
     IN PDEVICE_OBJECT DeviceObject
     );
 
 NTSTATUS
+NTAPI
 CdRomGetDeviceParameter (
     IN     PDEVICE_OBJECT      DeviceObject,
     IN     PWSTR               ParameterName,
@@ -693,6 +728,7 @@ CdRomGetDeviceParameter (
     );
 
 NTSTATUS
+NTAPI
 CdRomSetDeviceParameter (
     IN PDEVICE_OBJECT DeviceObject,
     IN PWSTR          ParameterName,
@@ -700,11 +736,13 @@ CdRomSetDeviceParameter (
     );
 
 VOID
+NTAPI
 CdRomPickDvdRegion (
     IN PDEVICE_OBJECT Fdo
 );
 
 NTSTATUS
+NTAPI
 CdRomRetryRequest(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN PIRP Irp,
@@ -713,6 +751,7 @@ CdRomRetryRequest(
     );
 
 NTSTATUS
+NTAPI
 CdRomRerunRequest(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN OPTIONAL PIRP Irp,
@@ -720,17 +759,20 @@ CdRomRerunRequest(
     );
 
 NTSTATUS
+NTAPI
 CdRomGetRpc0Settings(
     IN PDEVICE_OBJECT Fdo
     );
 
 NTSTATUS
+NTAPI
 CdRomSetRpc0Settings(
     IN PDEVICE_OBJECT Fdo,
     IN UCHAR NewRegion
     );
 
 NTSTATUS
+NTAPI
 CdRomShutdownFlush(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -739,6 +781,7 @@ CdRomShutdownFlush(
 ////////////////////////////////////////////////////////////////////////////////
 
 VOID
+NTAPI
 CdRomIsDeviceMmcDevice(
     IN PDEVICE_OBJECT Fdo,
     OUT PBOOLEAN IsMmc
@@ -754,6 +797,7 @@ CdRomMmcErrorHandler(
     );
 
 PVOID
+NTAPI
 CdRomFindFeaturePage(
     IN PGET_CONFIGURATION_HEADER FeatureBuffer,
     IN ULONG Length,
@@ -761,6 +805,7 @@ CdRomFindFeaturePage(
     );
 
 NTSTATUS
+NTAPI
 CdRomGetConfiguration(
     IN PDEVICE_OBJECT Fdo,
     OUT PGET_CONFIGURATION_HEADER *Buffer,
@@ -770,12 +815,14 @@ CdRomGetConfiguration(
     );
 
 VOID
+NTAPI
 CdRomUpdateMmcDriveCapabilities(
     IN PDEVICE_OBJECT Fdo,
     IN PVOID Context // RESERVED == NULL
     );
 
 VOID
+NTAPI
 CdRomFindProfileInProfiles(
     IN PFEATURE_DATA_PROFILE_LIST ProfileHeader,
     IN FEATURE_PROFILE_TYPE ProfileToFind,
@@ -783,28 +830,33 @@ CdRomFindProfileInProfiles(
     );
 
 NTSTATUS
+NTAPI
 CdRomAllocateMmcResources(
     IN PDEVICE_OBJECT Fdo
     );
 
 VOID
+NTAPI
 CdRomDeAllocateMmcResources(
     IN PDEVICE_OBJECT Fdo
     );
 
 VOID
+NTAPI
 CdromFakePartitionInfo(
     IN PCOMMON_DEVICE_EXTENSION CommonExtension,
     IN PIRP Irp
     );
 
 VOID
+NTAPI
 CdRomInterpretReadCapacity(
     IN PDEVICE_OBJECT Fdo,
     IN PREAD_CAPACITY_DATA ReadCapacityBuffer
     );
 
 NTSTATUS
+NTAPI
 CdRomShutdownFlushCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -812,6 +864,7 @@ CdRomShutdownFlushCompletion(
     );
 
 VOID
+NTAPI
 CdRompFlushDelayedList(
     IN PDEVICE_OBJECT Fdo,
     IN PCDROM_MMC_EXTENSION MmcData,
@@ -820,5 +873,3 @@ CdRompFlushDelayedList(
     );
 
 #endif // __CDROMP_H__
-
-

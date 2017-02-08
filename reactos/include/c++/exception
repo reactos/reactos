@@ -5,61 +5,47 @@
 
 extern "C++" {
 
-namespace std
+class exception
 {
-  /**
-   * @defgroup exceptions Exceptions
-   * @ingroup diagnostics
-   *
-   * Classes and functions for reporting errors via exception classes.
-   * @{
-   */
+public:
+    exception() throw();
+    exception(const char * const &) throw();
+    exception(const char * const &, int) throw();
 
-  /**
-   *  @brief Base class for all library exceptions.
-   *
-   *  This is the base class for all exceptions thrown by the standard
-   *  library, and by certain language expressions.  You are free to derive
-   *  your own %exception classes, or use a different hierarchy, or to
-   *  throw non-class data (e.g., fundamental types).
-   */
-  class exception
-  {
-  public:
-    exception() throw() { }
     virtual ~exception() throw();
 
-    /** Returns a C-style character string describing the general cause
-     *  of the current error.  */
-    virtual const char* what() const throw();
-  };
+    virtual const char *what() const throw();
+private:
+    const char *_name;
+    int _do_free;
+};
 
-  /** If an %exception is thrown which is not listed in a function's
-   *  %exception specification, one of these may be thrown.  */
-  class bad_exception : public exception
-  {
-  public:
-    bad_exception() throw() { }
+class bad_exception : public exception
+{
+public:
+    bad_exception(const char *name = "bad exception") throw()
+        : exception(name) { }
 
-    virtual ~bad_exception() throw();
+    virtual ~bad_exception() throw() { }
+};
 
-    virtual const char* what() const throw();
-  };
+namespace std
+{
+    using ::exception;
+    using ::bad_exception;
 
-  typedef void (*unexpected_handler) ();
+    typedef void (*unexpected_handler) ();
 
-  unexpected_handler set_unexpected(unexpected_handler) throw();
+    unexpected_handler set_unexpected(unexpected_handler) throw();
 
-  DECLSPEC_NORETURN void unexpected();
+    __MINGW_ATTRIB_NORETURN void unexpected();
 
-  bool uncaught_exception() throw();
-
-  // @} group exceptions
+    bool uncaught_exception() throw();
 } // namespace std
 
 typedef void (*terminate_handler) ();
 terminate_handler set_terminate(terminate_handler) throw();
-DECLSPEC_NORETURN void terminate() throw();
+__MINGW_ATTRIB_NORETURN void terminate() throw();
 
 } // extern "C++"
 

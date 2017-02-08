@@ -19,7 +19,6 @@
 
 #include "ndissys.h"
 
-
 /*
  * @implemented
  */
@@ -43,7 +42,6 @@ NdisCancelTimer(
   *TimerCancelled = KeCancelTimer (&Timer->Timer);
 }
 
-
 /*
  * @implemented
  */
@@ -65,7 +63,6 @@ NdisGetCurrentSystemTime (
   KeQuerySystemTime (pSystemTime);
 }
 
-
 /*
  * @implemented
  */
@@ -126,7 +123,6 @@ BOOLEAN DequeueMiniportTimer(PNDIS_MINIPORT_TIMER Timer)
   }
 }
 
-
 /*
  * @implemented
  */
@@ -188,7 +184,6 @@ MiniTimerDpcFunction(PKDPC Dpc,
                                SystemArgument2);
 }
 
-
 /*
  * @implemented
  */
@@ -223,7 +218,6 @@ NdisMInitializeTimer(
   Timer->NextDeferredTimer = NULL;
 }
 
-
 /*
  * @implemented
  */
@@ -269,7 +263,6 @@ NdisMSetPeriodicTimer(
   KeSetTimerEx(&Timer->Timer, Timeout, MillisecondsPeriod, &Timer->Dpc);
 }
 
-
 /*
  * @implemented
  */
@@ -316,7 +309,6 @@ NdisMSetTimer(
   KeSetTimer(&Timer->Timer, Timeout, &Timer->Dpc);
 }
 
-
 /*
  * @implemented
  */

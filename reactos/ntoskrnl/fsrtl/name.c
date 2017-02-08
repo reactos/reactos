@@ -23,10 +23,11 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                                IN BOOLEAN IgnoreCase,
                                IN PWCHAR UpcaseTable OPTIONAL)
 {
-    SHORT StarFound = -1;
-    PUSHORT BackTracking = NULL;
+    SHORT StarFound = -1, DosStarFound = -1;
+    PUSHORT BackTracking = NULL, DosBackTracking = NULL;
     UNICODE_STRING IntExpression;
-    USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars;
+    USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars, LastDot;
+    WCHAR CompareChar;
     PAGED_CODE();
 
     /* Check if we were given strings at all */
@@ -99,17 +100,19 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
         }
     }
 
-    while (NamePosition < Name->Length / sizeof(WCHAR) && ExpressionPosition < Expression->Length / sizeof(WCHAR))
+    while ((NamePosition < Name->Length / sizeof(WCHAR)) &&
+           (ExpressionPosition < Expression->Length / sizeof(WCHAR)))
     {
         /* Basic check to test if chars are equal */
-        if ((Expression->Buffer[ExpressionPosition] == (IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] : Name->Buffer[NamePosition])))
+        CompareChar = IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] :
+                                   Name->Buffer[NamePosition];
+        if (Expression->Buffer[ExpressionPosition] == CompareChar)
         {
             NamePosition++;
             ExpressionPosition++;
         }
         /* Check cases that eat one char */
-        else if (Expression->Buffer[ExpressionPosition] == L'?' || (Expression->Buffer[ExpressionPosition] == DOS_QM) ||
-                 (Expression->Buffer[ExpressionPosition] == DOS_DOT && Name->Buffer[NamePosition] == L'.'))
+        else if (Expression->Buffer[ExpressionPosition] == L'?')
         {
             NamePosition++;
             ExpressionPosition++;
@@ -118,7 +121,8 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
         else if (Expression->Buffer[ExpressionPosition] == L'*')
         {
             /* Skip contigous stars */
-            while (ExpressionPosition + 1 < Expression->Length / sizeof(WCHAR) && Expression->Buffer[ExpressionPosition + 1] == L'*')
+            while ((ExpressionPosition + 1 < (USHORT)(Expression->Length / sizeof(WCHAR))) &&
+                   (Expression->Buffer[ExpressionPosition + 1] == L'*'))
             {
                 ExpressionPosition++;
             }
@@ -138,7 +142,9 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                 NamePosition = Name->Length / sizeof(WCHAR);
                 break;
             }
-            else if (Expression->Buffer[ExpressionPosition] != L'?')
+            /* Allow null matching */
+            else if (Expression->Buffer[ExpressionPosition] != L'?' &&
+                     Expression->Buffer[ExpressionPosition] != Name->Buffer[NamePosition])
             {
                 NamePosition++;
             }
@@ -146,14 +152,74 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
         /* Check DOS_STAR */
         else if (Expression->Buffer[ExpressionPosition] == DOS_STAR)
         {
-            MatchingChars = NamePosition;
+            /* Skip contigous stars */
+            while ((ExpressionPosition + 1 < (USHORT)(Expression->Length / sizeof(WCHAR))) &&
+                   (Expression->Buffer[ExpressionPosition + 1] == DOS_STAR))
+            {
+                ExpressionPosition++;
+            }
+
+            /* Look for last dot */
+            MatchingChars = 0;
+            LastDot = (USHORT)-1;
             while (MatchingChars < Name->Length / sizeof(WCHAR))
             {
                 if (Name->Buffer[MatchingChars] == L'.')
                 {
-                    NamePosition = MatchingChars;
+                    LastDot = MatchingChars;
+                    if (LastDot > NamePosition)
+                        break;
                 }
+
                 MatchingChars++;
+            }
+
+            /* If we don't have dots or we didn't find last yet
+             * start eating everything
+             */
+            if (MatchingChars != Name->Length || LastDot == (USHORT)-1)
+            {
+                if (!DosBackTracking) DosBackTracking = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
+                                                                              (Expression->Length / sizeof(WCHAR)) * sizeof(USHORT),
+                                                                              'nrSF');
+                DosBackTracking[++DosStarFound] = ExpressionPosition++;
+
+                /* Not the same char, start exploring */
+                if (Expression->Buffer[ExpressionPosition] != Name->Buffer[NamePosition])
+                    NamePosition++;
+            }
+            else
+            {
+                /* Else, if we are at last dot, eat it - otherwise, null match */
+                if (Name->Buffer[NamePosition] == '.')
+                    NamePosition++;
+
+                 ExpressionPosition++;
+            }
+        }
+        /* Check DOS_DOT */
+        else if (Expression->Buffer[ExpressionPosition] == DOS_DOT)
+        {
+            /* We only match dots */
+            if (Name->Buffer[NamePosition] == L'.')
+            {
+                NamePosition++;
+            }
+            /* Try to explore later on for null matching */
+            else if ((ExpressionPosition + 1 < (USHORT)(Expression->Length / sizeof(WCHAR))) && 
+                     (Name->Buffer[NamePosition] == Expression->Buffer[ExpressionPosition + 1]))
+            {
+                NamePosition++;
+            }
+            ExpressionPosition++;
+        }
+        /* Check DOS_QM */
+        else if (Expression->Buffer[ExpressionPosition] == DOS_QM)
+        {
+            /* We match everything except dots */
+            if (Name->Buffer[NamePosition] != L'.')
+            {
+                NamePosition++;
             }
             ExpressionPosition++;
         }
@@ -161,6 +227,10 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
         else if (StarFound >= 0)
         {
             ExpressionPosition = BackTracking[StarFound--];
+        }
+        else if (DosStarFound >= 0)
+        {
+            ExpressionPosition = DosBackTracking[DosStarFound--];
         }
         /* Otherwise, fail */
         else
@@ -177,15 +247,28 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
             ExpressionPosition = BackTracking[StarFound--];
         }
     }
-    if (ExpressionPosition + 1 == Expression->Length / sizeof(WCHAR) && NamePosition == Name->Length / sizeof(WCHAR) &&
-        Expression->Buffer[ExpressionPosition] == DOS_DOT)
+    /* If we have nullable matching wc at the end of the string, eat them */
+    if (ExpressionPosition != Expression->Length / sizeof(WCHAR) && NamePosition == Name->Length / sizeof(WCHAR))
     {
-        ExpressionPosition++;
+        while (ExpressionPosition < Expression->Length / sizeof(WCHAR))
+        {
+            if (Expression->Buffer[ExpressionPosition] != DOS_DOT &&
+                Expression->Buffer[ExpressionPosition] != L'*' &&
+                Expression->Buffer[ExpressionPosition] != DOS_STAR)
+            {
+                break;
+            }
+            ExpressionPosition++;
+        }
     }
 
     if (BackTracking)
     {
         ExFreePoolWithTag(BackTracking, 'nrSF');
+    }
+    if (DosBackTracking)
+    {
+        ExFreePoolWithTag(DosBackTracking, 'nrSF');
     }
 
     return (ExpressionPosition == Expression->Length / sizeof(WCHAR) && NamePosition == Name->Length / sizeof(WCHAR));
@@ -409,7 +492,7 @@ FsRtlDoesNameContainWildCards(IN PUNICODE_STRING Name)
  *
  * @param Expression
  *        The string in which we've to find Name. It can contain wildcards.
- *        If IgnoreCase is set to TRUE, this string MUST BE uppercase. 
+ *        If IgnoreCase is set to TRUE, this string MUST BE uppercase.
  *
  * @param Name
  *        The string to find. It cannot contain wildcards
@@ -419,7 +502,7 @@ FsRtlDoesNameContainWildCards(IN PUNICODE_STRING Name)
  *
  * @param UpcaseTable
  *        If not NULL, and if IgnoreCase is set to TRUE, it will be used to
- *        upcase the both strings 
+ *        upcase the both strings
  *
  * @return TRUE if Name is in Expression, FALSE otherwise
  *

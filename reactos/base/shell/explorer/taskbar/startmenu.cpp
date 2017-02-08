@@ -1874,7 +1874,7 @@ void StartMenuRoot::CloseStartMenu(int id)
 
 bool StartMenuRoot::IsStartMenuVisible() const
 {
-    return IsWindowVisible(_hwnd);
+    return IsWindowVisible(_hwnd) != FALSE;
 }
 
 void StartMenuRoot::ProcessKey(int vk)

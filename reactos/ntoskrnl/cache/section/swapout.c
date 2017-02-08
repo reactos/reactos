@@ -348,7 +348,7 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
     PMM_SECTION_SEGMENT Segment = NULL;
     LARGE_INTEGER FileOffset;
     PMEMORY_AREA MemoryArea;
-    PMMSUPPORT AddressSpace = MmGetKernelAddressSpace();
+    PMMSUPPORT AddressSpace = NULL;
     BOOLEAN Dirty = FALSE;
     PVOID Address = NULL;
     PEPROCESS Process = NULL;
@@ -385,7 +385,6 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
         DPRINT("No segment association for %x\n", Page);
     }
 
-
     Dirty = MmIsDirtyPageRmap(Page);
 
     DPRINTC("Trying to unmap all instances of %x\n", Page);
@@ -409,7 +408,8 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
 
         DPRINTC("Process %x Address %x Page %x\n", Process, Address, Page);
 
-        if (RMAP_IS_SEGMENT(Address)) {
+        if (RMAP_IS_SEGMENT(Address))
+        {
             entry = entry->Next;
             continue;
         }
@@ -440,10 +440,10 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
             KeBugCheck(MEMORY_MANAGEMENT);
         }
 
-        MmLockAddressSpace(AddressSpace);
-
         do
         {
+            MmLockAddressSpace(AddressSpace);
+
             MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
             if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
             {
@@ -505,14 +505,13 @@ MmpPageOutPhysicalAddress(PFN_NUMBER Page)
                     DPRINT1("bail\n");
                     goto bail;
                 }
-                else Status = STATUS_MM_RESTART_OPERATION;
+                else
+                {
+                    Status = STATUS_MM_RESTART_OPERATION;
+                }
             }
-
-            MmLockAddressSpace(AddressSpace);
         }
         while (Status == STATUS_MM_RESTART_OPERATION);
-
-        MmUnlockAddressSpace(AddressSpace);
 
         if (ProcRef)
         {

@@ -1,6 +1,15 @@
-#include <windows.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include <windowsx.h>
-#include <stdio.h>
+#define _INC_WINDOWS
+#include <winsock2.h>
+#include <wchar.h>
 #include <math.h>
 #include <commctrl.h>
 #include <cpl.h>

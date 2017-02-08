@@ -17,12 +17,14 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
-#include "wine/debug.h"
+#define WIN32_NO_STATUS
 
-#include "winbase.h"
-#include "bcrypt.h"
+#include <config.h>
+//#include "wine/port.h"
+#include <wine/debug.h>
+
+#include <winbase.h>
+#include <bcrypt.h>
 
 typedef LONG NTSTATUS;
 

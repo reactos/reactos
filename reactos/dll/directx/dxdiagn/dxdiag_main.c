@@ -19,9 +19,9 @@
  *
  */
 
-#include "config.h"
+#include <config.h>
 #include "dxdiag_private.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(dxdiag);
 

@@ -1173,7 +1173,7 @@ PeekNamedPipe(HANDLE hNamedPipe,
     NTSTATUS Status;
 
     /* Calculate the buffer space that we'll need and allocate it */
-    BufferSize = nBufferSize + sizeof(FILE_PIPE_PEEK_BUFFER);
+    BufferSize = FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[nBufferSize]);
     Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferSize);
     if (Buffer == NULL)
     {
@@ -1215,11 +1215,15 @@ PeekNamedPipe(HANDLE hNamedPipe,
 
     /* Check if caller requested bytes available */
     if (lpTotalBytesAvail)
+    {
+        /* Return bytes available */
         *lpTotalBytesAvail = Buffer->ReadDataAvailable;
+    }
 
     /* Calculate the bytes returned, minus our structure overhead */
     BytesRead = (ULONG)(Iosb.Information -
                         FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]));
+    ASSERT(BytesRead <= nBufferSize);
 
     /* Check if caller requested bytes read */
     if (lpBytesRead)

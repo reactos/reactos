@@ -1,14 +1,13 @@
-/* $Id: stubs.c 28709 2007-08-31 15:09:51Z greatlrd $
- *
+/*
  * reactos/lib/gdi32/misc/historic.c
  *
  * GDI32.DLL Stubs
  *
- * Api that does basic nothing, but is here for backwords compatible with older windows
+ * Apis that do basically nothing, but are here for backwards compatibility with older Windows
  *
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 /*
  * @implemented

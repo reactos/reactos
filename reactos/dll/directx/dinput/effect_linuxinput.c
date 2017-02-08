@@ -29,6 +29,7 @@
 #  include <linux/input.h>
 #  undef SW_MAX
 #endif
+#include <limits.h>
 #include <errno.h>
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
@@ -49,9 +50,9 @@ static const IDirectInputEffectVtbl LinuxInputEffectVtbl;
 typedef struct LinuxInputEffectImpl LinuxInputEffectImpl;
 struct LinuxInputEffectImpl
 {
-    const void *lpVtbl;
-    LONG	ref;
-    GUID	guid;
+    IDirectInputEffect  IDirectInputEffect_iface;
+    LONG                ref;
+    GUID                guid;
 
     struct ff_effect    effect; /* Effect data */
     int                 gain;   /* Effect gain */
@@ -60,6 +61,10 @@ struct LinuxInputEffectImpl
     struct list        *entry;  /* Entry into the parent's list of effects */
 };
 
+static inline LinuxInputEffectImpl *impl_from_IDirectInputEffect(IDirectInputEffect *iface)
+{
+    return CONTAINING_RECORD(iface, LinuxInputEffectImpl, IDirectInputEffect_iface);
+}
 
 /******************************************************************************
  *      DirectInputEffect Functional Helper
@@ -168,7 +173,7 @@ static void _dump_DICUSTOMFORCE(LPCDICUSTOMFORCE frc)
     }
 }
 
-static void _dump_DIEFFECT(LPCDIEFFECT eff, REFGUID guid)
+static void _dump_DIEFFECT(LPCDIEFFECT eff, REFGUID guid, DWORD dwFlags)
 {
     unsigned int i;
     DWORD type = _typeFromGUID(guid);
@@ -183,26 +188,38 @@ static void _dump_DIEFFECT(LPCDIEFFECT eff, REFGUID guid)
     _dump_DIEFFECT_flags(eff->dwFlags); 
     TRACE("  - dwDuration: %d\n", eff->dwDuration);
     TRACE("  - dwGain: %d\n", eff->dwGain);
+
     if (eff->dwGain > 10000)
-	WARN("dwGain is out of range (>10,000)\n");
+        WARN("dwGain is out of range (>10,000)\n");
+
     TRACE("  - dwTriggerButton: %d\n", eff->dwTriggerButton);
     TRACE("  - dwTriggerRepeatInterval: %d\n", eff->dwTriggerRepeatInterval);
-    TRACE("  - cAxes: %d\n", eff->cAxes);
-    TRACE("  - rgdwAxes: %p\n", eff->rgdwAxes);
-    if (TRACE_ON(dinput) && eff->rgdwAxes) {
-	TRACE("    ");	
-	for (i = 0; i < eff->cAxes; ++i)
-	    TRACE("%d ", eff->rgdwAxes[i]);
-	TRACE("\n");
-    }
     TRACE("  - rglDirection: %p\n", eff->rglDirection);
-    TRACE("  - lpEnvelope: %p\n", eff->lpEnvelope);
     TRACE("  - cbTypeSpecificParams: %d\n", eff->cbTypeSpecificParams);
     TRACE("  - lpvTypeSpecificParams: %p\n", eff->lpvTypeSpecificParams);
+
+    /* Only trace some members if dwFlags indicates they have data */
+    if (dwFlags & DIEP_AXES) {
+        TRACE("  - cAxes: %d\n", eff->cAxes);
+        TRACE("  - rgdwAxes: %p\n", eff->rgdwAxes);
+
+        if (TRACE_ON(dinput) && eff->rgdwAxes) {
+            TRACE("    ");
+            for (i = 0; i < eff->cAxes; ++i)
+                TRACE("%d ", eff->rgdwAxes[i]);
+            TRACE("\n");
+        }
+    }
+
+    if (dwFlags & DIEP_ENVELOPE) {
+        TRACE("  - lpEnvelope: %p\n", eff->lpEnvelope);
+        if (eff->lpEnvelope != NULL)
+            _dump_DIENVELOPE(eff->lpEnvelope);
+    }
+
     if (eff->dwSize > sizeof(DIEFFECT_DX5))
-    	TRACE("  - dwStartDelay: %d\n", eff->dwStartDelay);
-    if (eff->lpEnvelope != NULL)
-	_dump_DIENVELOPE(eff->lpEnvelope);
+        TRACE("  - dwStartDelay: %d\n", eff->dwStartDelay);
+
     if (type == DIEFT_CONSTANTFORCE) {
 	if (eff->cbTypeSpecificParams != sizeof(DICONSTANTFORCE)) {
 	    WARN("Effect claims to be a constant force but the type-specific params are the wrong size!\n"); 
@@ -244,14 +261,14 @@ static void _dump_DIEFFECT(LPCDIEFFECT eff, REFGUID guid)
 static ULONG WINAPI LinuxInputEffectImpl_AddRef(
 	LPDIRECTINPUTEFFECT iface)
 {
-    LinuxInputEffectImpl *This = (LinuxInputEffectImpl *)iface;
+    LinuxInputEffectImpl *This = impl_from_IDirectInputEffect(iface);
     return InterlockedIncrement(&(This->ref));
 }
 
 static HRESULT WINAPI LinuxInputEffectImpl_Download(
 	LPDIRECTINPUTEFFECT iface)
 {
-    LinuxInputEffectImpl *This = (LinuxInputEffectImpl *)iface;
+    LinuxInputEffectImpl *This = impl_from_IDirectInputEffect(iface);
 
     TRACE("(this=%p)\n", This);
 
@@ -281,12 +298,12 @@ static HRESULT WINAPI LinuxInputEffectImpl_GetEffectGuid(
         LPDIRECTINPUTEFFECT iface,
 	LPGUID pguid)
 {
-    LinuxInputEffectImpl *This = (LinuxInputEffectImpl*)iface;
+    LinuxInputEffectImpl *This = impl_from_IDirectInputEffect(iface);
 
     TRACE("(this=%p,%p)\n", This, pguid);
 
-    pguid = &This->guid;
-    
+    *pguid = This->guid;
+
     return DI_OK;
 }
 
@@ -312,7 +329,7 @@ static HRESULT WINAPI LinuxInputEffectImpl_GetParameters(
 	DWORD dwFlags)
 {
     HRESULT diErr = DI_OK;
-    LinuxInputEffectImpl *This = (LinuxInputEffectImpl *)iface;
+    LinuxInputEffectImpl *This = impl_from_IDirectInputEffect(iface);
     TRACE("(this=%p,%p,%d)\n", This, peff, dwFlags);
 
     /* Major conversion factors are:
@@ -342,8 +359,8 @@ static HRESULT WINAPI LinuxInputEffectImpl_GetParameters(
             return diErr;
         else {
 	    if (peff->dwFlags & DIEFF_CARTESIAN) {
-		peff->rglDirection[0] = (long)(sin(M_PI * 3 * This->effect.direction / 0x7FFF) * 1000);
-		peff->rglDirection[1] = (long)(cos(M_PI * 3 * This->effect.direction / 0x7FFF) * 1000);
+		peff->rglDirection[0] = sin(M_PI * 3 * This->effect.direction / 0x7FFF) * 1000;
+		peff->rglDirection[1] = cos(M_PI * 3 * This->effect.direction / 0x7FFF) * 1000;
 	    } else {
 		/* Polar and spherical coordinates are the same for two or less
 		 * axes.
@@ -474,7 +491,7 @@ static HRESULT WINAPI LinuxInputEffectImpl_QueryInterface(
 	REFIID riid,
 	void **ppvObject)
 {
-    LinuxInputEffectImpl* This = (LinuxInputEffectImpl*)iface;
+    LinuxInputEffectImpl *This = impl_from_IDirectInputEffect(iface);
 
     TRACE("(this=%p,%s,%p)\n", This, debugstr_guid(riid), ppvObject);
 
@@ -495,7 +512,7 @@ static HRESULT WINAPI LinuxInputEffectImpl_Start(
 	DWORD dwFlags)
 {
     struct input_event event;
-    LinuxInputEffectImpl* This = (LinuxInputEffectImpl*)iface;
+    LinuxInputEffectImpl *This = impl_from_IDirectInputEffect(iface);
 
     TRACE("(this=%p,%d,%d)\n", This, dwIterations, dwFlags);
 
@@ -514,7 +531,7 @@ static HRESULT WINAPI LinuxInputEffectImpl_Start(
 
     event.type = EV_FF;
     event.code = This->effect.id;
-    event.value = dwIterations;
+    event.value = min( dwIterations, INT_MAX );
     if (write(*(This->fd), &event, sizeof(event)) == -1) {
 	FIXME("Unable to write event.  Assuming device disconnected.\n");
 	return DIERR_INPUTLOST;
@@ -527,14 +544,14 @@ static HRESULT WINAPI LinuxInputEffectImpl_SetParameters(
         LPDIRECTINPUTEFFECT iface,
         LPCDIEFFECT peff,
         DWORD dwFlags)
-{       
-    LinuxInputEffectImpl* This = (LinuxInputEffectImpl*)iface; 
+{
+    LinuxInputEffectImpl *This = impl_from_IDirectInputEffect(iface);
     DWORD type = _typeFromGUID(&This->guid);
     HRESULT retval = DI_OK;
 
     TRACE("(this=%p,%p,%d)\n", This, peff, dwFlags);
 
-    _dump_DIEFFECT(peff, &This->guid);
+    _dump_DIEFFECT(peff, &This->guid, dwFlags);
 
     if ((dwFlags & ~DIEP_NORESTART & ~DIEP_NODOWNLOAD & ~DIEP_START) == 0) {
 	/* set everything */
@@ -602,13 +619,12 @@ static HRESULT WINAPI LinuxInputEffectImpl_SetParameters(
         else env = NULL; 
 
 	if (peff->lpEnvelope == NULL) {
-	    /* if this type had an envelope, reset it
-	     * note that length can never be zero, so we set it to something minuscule */
+	    /* if this type had an envelope, reset it */
 	    if (env) {
-		env->attack_length = 0x10;
-		env->attack_level = 0x7FFF;
-		env->fade_length = 0x10;
-		env->fade_level = 0x7FFF;
+		env->attack_length = 0;
+		env->attack_level = 0;
+		env->fade_length = 0;
+		env->fade_level = 0;
 	    }
 	} else {
 	    /* did we get passed an envelope for a type that doesn't even have one? */
@@ -669,7 +685,7 @@ static HRESULT WINAPI LinuxInputEffectImpl_SetParameters(
                 return DIERR_INVALIDPARAM;
             tsp = peff->lpvTypeSpecificParams;
 	    This->effect.u.ramp.start_level = (tsp->lStart / 10) * 32;
-	    This->effect.u.ramp.end_level = (tsp->lStart / 10) * 32;
+	    This->effect.u.ramp.end_level = (tsp->lEnd / 10) * 32;
 	} else if (type == DIEFT_CONDITION) {
             LPCDICONDITION tsp = peff->lpvTypeSpecificParams;
             if (peff->cbTypeSpecificParams == sizeof(DICONDITION)) {
@@ -727,7 +743,7 @@ static HRESULT WINAPI LinuxInputEffectImpl_Stop(
         LPDIRECTINPUTEFFECT iface)
 {
     struct input_event event;
-    LinuxInputEffectImpl *This = (LinuxInputEffectImpl *)iface;
+    LinuxInputEffectImpl *This = impl_from_IDirectInputEffect(iface);
 
     TRACE("(this=%p)\n", This);
 
@@ -743,7 +759,7 @@ static HRESULT WINAPI LinuxInputEffectImpl_Stop(
 static HRESULT WINAPI LinuxInputEffectImpl_Unload(
 	LPDIRECTINPUTEFFECT iface)
 {
-    LinuxInputEffectImpl *This = (LinuxInputEffectImpl *)iface;
+    LinuxInputEffectImpl *This = impl_from_IDirectInputEffect(iface);
     TRACE("(this=%p)\n", This);
 
     /* Erase the downloaded effect */
@@ -758,7 +774,7 @@ static HRESULT WINAPI LinuxInputEffectImpl_Unload(
 
 static ULONG WINAPI LinuxInputEffectImpl_Release(LPDIRECTINPUTEFFECT iface)
 {
-    LinuxInputEffectImpl *This = (LinuxInputEffectImpl *)iface;
+    LinuxInputEffectImpl *This = impl_from_IDirectInputEffect(iface);
     ULONG ref = InterlockedDecrement(&(This->ref));
 
     if (ref == 0)
@@ -776,7 +792,7 @@ static ULONG WINAPI LinuxInputEffectImpl_Release(LPDIRECTINPUTEFFECT iface)
  *      LinuxInputEffect
  */
 
-HRESULT linuxinput_create_effect(
+DECLSPEC_HIDDEN HRESULT linuxinput_create_effect(
 	int* fd,
 	REFGUID rguid,
         struct list *parent_list_entry,
@@ -786,7 +802,7 @@ HRESULT linuxinput_create_effect(
 	HEAP_ZERO_MEMORY, sizeof(LinuxInputEffectImpl));
     DWORD type = _typeFromGUID(rguid);
 
-    newEffect->lpVtbl = &LinuxInputEffectVtbl;
+    newEffect->IDirectInputEffect_iface.lpVtbl = &LinuxInputEffectVtbl;
     newEffect->ref = 1;
     newEffect->guid = *rguid;
     newEffect->fd = fd;
@@ -840,7 +856,7 @@ HRESULT linuxinput_create_effect(
 
     newEffect->entry = parent_list_entry;
 
-    *peff = (LPDIRECTINPUTEFFECT)newEffect; 
+    *peff = &newEffect->IDirectInputEffect_iface;
 
     TRACE("Creating linux input system effect (%p) with guid %s\n", 
 	  *peff, _dump_dinput_GUID(rguid));
@@ -848,7 +864,7 @@ HRESULT linuxinput_create_effect(
     return DI_OK;
 }
 
-HRESULT linuxinput_get_info_A(
+DECLSPEC_HIDDEN HRESULT linuxinput_get_info_A(
 	int fd,
 	REFGUID rguid,
 	LPDIEFFECTINFOA info)
@@ -882,7 +898,7 @@ HRESULT linuxinput_get_info_A(
     return DI_OK;
 }
 
-HRESULT linuxinput_get_info_W(
+DECLSPEC_HIDDEN HRESULT linuxinput_get_info_W(
 	int fd,
 	REFGUID rguid,
 	LPDIEFFECTINFOW info)

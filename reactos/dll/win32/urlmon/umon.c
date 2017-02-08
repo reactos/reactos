@@ -22,12 +22,12 @@
 
 #include "urlmon_main.h"
 
-#include "winreg.h"
-#include "shlwapi.h"
-#include "hlink.h"
-#include "shellapi.h"
+//#include "winreg.h"
+#include <shlwapi.h>
+#include <hlink.h>
+//#include "shellapi.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
@@ -37,7 +37,8 @@ typedef struct {
 
     LONG ref;
 
-    LPOLESTR URLName; /* URL string identified by this URLmoniker */
+    IUri *uri;
+    BSTR URLName;
 } URLMoniker;
 
 static inline URLMoniker *impl_from_IMoniker(IMoniker *iface)
@@ -76,7 +77,7 @@ static HRESULT WINAPI URLMoniker_QueryInterface(IMoniker *iface, REFIID riid, vo
         return E_NOINTERFACE;
     }
 
-    IMoniker_AddRef((IUnknown*)*ppv);
+    IUnknown_AddRef((IUnknown*)*ppv);
     return S_OK;
 }
 
@@ -98,7 +99,9 @@ static ULONG WINAPI URLMoniker_Release(IMoniker *iface)
     TRACE("(%p) ref=%u\n",This, refCount);
 
     if (!refCount) {
-        heap_free(This->URLName);
+        if(This->uri)
+            IUri_Release(This->uri);
+        SysFreeString(This->URLName);
         heap_free(This);
 
         URLMON_UnlockModule();
@@ -136,9 +139,12 @@ static HRESULT WINAPI URLMoniker_IsDirty(IMoniker *iface)
 static HRESULT WINAPI URLMoniker_Load(IMoniker* iface,IStream* pStm)
 {
     URLMoniker *This = impl_from_IMoniker(iface);
-    HRESULT res;
+    WCHAR *new_uri_str;
+    IUri *new_uri;
+    BSTR new_url;
     ULONG size;
     ULONG got;
+    HRESULT hres;
 
     TRACE("(%p,%p)\n",This,pStm);
 
@@ -150,23 +156,37 @@ static HRESULT WINAPI URLMoniker_Load(IMoniker* iface,IStream* pStm)
      *  Writes a ULONG containing length of unicode string, followed
      *  by that many unicode characters
      */
-    res = IStream_Read(pStm, &size, sizeof(ULONG), &got);
-    if(SUCCEEDED(res)) {
-        if(got == sizeof(ULONG)) {
-            heap_free(This->URLName);
-            This->URLName = heap_alloc(size);
-            if(!This->URLName)
-                res = E_OUTOFMEMORY;
-            else {
-                res = IStream_Read(pStm, This->URLName, size, NULL);
-                This->URLName[size/sizeof(WCHAR) - 1] = 0;
-            }
-        }
-        else
-            res = E_FAIL;
+    hres = IStream_Read(pStm, &size, sizeof(ULONG), &got);
+    if(FAILED(hres))
+        return hres;
+    if(got != sizeof(ULONG))
+        return E_FAIL;
+
+    new_uri_str = heap_alloc(size+sizeof(WCHAR));
+    if(!new_uri_str)
+        return E_OUTOFMEMORY;
+
+    hres = IStream_Read(pStm, new_uri_str, size, NULL);
+    new_uri_str[size/sizeof(WCHAR)] = 0;
+    if(SUCCEEDED(hres))
+        hres = CreateUri(new_uri_str, 0, 0, &new_uri);
+    heap_free(new_uri_str);
+    if(FAILED(hres))
+        return hres;
+
+    hres = IUri_GetDisplayUri(new_uri, &new_url);
+    if(FAILED(hres)) {
+        IUri_Release(new_uri);
+        return hres;
     }
 
-    return res;
+    SysFreeString(This->URLName);
+    if(This->uri)
+        IUri_Release(This->uri);
+
+    This->uri = new_uri;
+    This->URLName = new_url;
+    return S_OK;
 }
 
 static HRESULT WINAPI URLMoniker_Save(IMoniker *iface, IStream* pStm, BOOL fClearDirty)
@@ -180,7 +200,7 @@ static HRESULT WINAPI URLMoniker_Save(IMoniker *iface, IStream* pStm, BOOL fClea
     if(!pStm)
         return E_INVALIDARG;
 
-    size = (strlenW(This->URLName) + 1)*sizeof(WCHAR);
+    size = (SysStringLen(This->URLName) + 1)*sizeof(WCHAR);
     res=IStream_Write(pStm,&size,sizeof(ULONG),NULL);
     if(SUCCEEDED(res))
         res=IStream_Write(pStm,This->URLName,size,NULL);
@@ -198,7 +218,7 @@ static HRESULT WINAPI URLMoniker_GetSizeMax(IMoniker* iface, ULARGE_INTEGER *pcb
     if(!pcbSize)
         return E_INVALIDARG;
 
-    pcbSize->QuadPart = sizeof(ULONG) + ((strlenW(This->URLName)+1) * sizeof(WCHAR));
+    pcbSize->QuadPart = sizeof(ULONG) + ((SysStringLen(This->URLName)+1) * sizeof(WCHAR));
     return S_OK;
 }
 
@@ -207,10 +227,9 @@ static HRESULT WINAPI URLMoniker_BindToObject(IMoniker *iface, IBindCtx* pbc, IM
 {
     URLMoniker *This = impl_from_IMoniker(iface);
     IRunningObjectTable *obj_tbl;
-    IUri *uri;
     HRESULT hres;
 
-    TRACE("(%p)->(%p,%p,%s,%p): stub\n", This, pbc, pmkToLeft, debugstr_guid(riid), ppv);
+    TRACE("(%p)->(%p,%p,%s,%p)\n", This, pbc, pmkToLeft, debugstr_guid(riid), ppv);
 
     hres = IBindCtx_GetRunningObjectTable(pbc, &obj_tbl);
     if(SUCCEEDED(hres)) {
@@ -218,22 +237,18 @@ static HRESULT WINAPI URLMoniker_BindToObject(IMoniker *iface, IBindCtx* pbc, IM
         IRunningObjectTable_Release(obj_tbl);
     }
 
-    hres = CreateUri(This->URLName, Uri_CREATE_FILE_USE_DOS_PATH, 0, &uri);
-    if(FAILED(hres))
-        return hres;
+    if(!This->uri) {
+        *ppv = NULL;
+        return MK_E_SYNTAX;
+    }
 
-    hres = bind_to_object(iface, uri, pbc, riid, ppv);
-
-    IUri_Release(uri);
-    return hres;
+    return bind_to_object(&This->IMoniker_iface, This->uri, pbc, riid, ppv);
 }
 
 static HRESULT WINAPI URLMoniker_BindToStorage(IMoniker* iface, IBindCtx* pbc,
         IMoniker* pmkToLeft, REFIID riid, void **ppvObject)
 {
     URLMoniker *This = impl_from_IMoniker(iface);
-    IUri *uri;
-    HRESULT hres;
 
     TRACE("(%p)->(%p %p %s %p)\n", This, pbc, pmkToLeft, debugstr_guid(riid), ppvObject);
 
@@ -244,14 +259,10 @@ static HRESULT WINAPI URLMoniker_BindToStorage(IMoniker* iface, IBindCtx* pbc,
     if(pmkToLeft)
         FIXME("Unsupported pmkToLeft\n");
 
-    hres = CreateUri(This->URLName, Uri_CREATE_FILE_USE_DOS_PATH, 0, &uri);
-    if(FAILED(hres))
-        return hres;
+    if(!This->uri)
+        return MK_E_SYNTAX;
 
-    hres = bind_to_storage(uri, pbc, riid, ppvObject);
-
-    IUri_Release(uri);
-    return hres;
+    return bind_to_storage(This->uri, pbc, riid, ppvObject);
 }
 
 static HRESULT WINAPI URLMoniker_Reduce(IMoniker *iface, IBindCtx *pbc,
@@ -320,7 +331,7 @@ static HRESULT WINAPI URLMoniker_IsEqual(IMoniker *iface, IMoniker *pmkOtherMoni
         if(result == 0)
             res = S_OK;
     }
-    IUnknown_Release(bind);
+    IBindCtx_Release(bind);
     return res;
 }
 
@@ -409,7 +420,7 @@ static HRESULT WINAPI URLMoniker_GetDisplayName(IMoniker *iface, IBindCtx *pbc, 
     /* FIXME: If this is a partial URL, try and get a URL moniker from SZ_URLCONTEXT in the bind context,
         then look at pmkToLeft to try and complete the URL
     */
-    len = lstrlenW(This->URLName)+1;
+    len = SysStringLen(This->URLName)+1;
     *ppszDisplayName = CoTaskMemAlloc(len*sizeof(WCHAR));
     if(!*ppszDisplayName)
         return E_OUTOFMEMORY;
@@ -492,10 +503,16 @@ static HRESULT WINAPI UriContainer_GetIUri(IUriContainer *iface, IUri **ppIUri)
 {
     URLMoniker *This = impl_from_IUriContainer(iface);
 
-    FIXME("(%p)->(%p)\n", This, ppIUri);
+    TRACE("(%p)->(%p)\n", This, ppIUri);
 
-    *ppIUri = NULL;
-    return S_FALSE;
+    if(!This->uri) {
+        *ppIUri = NULL;
+        return S_FALSE;
+    }
+
+    IUri_AddRef(This->uri);
+    *ppIUri = This->uri;
+    return S_OK;
 }
 
 static const IUriContainerVtbl UriContainerVtbl = {
@@ -505,60 +522,65 @@ static const IUriContainerVtbl UriContainerVtbl = {
     UriContainer_GetIUri
 };
 
-static URLMoniker *alloc_moniker(void)
+static HRESULT create_moniker(IUri *uri, URLMoniker **ret)
 {
-    URLMoniker *ret;
-
-    ret = heap_alloc(sizeof(URLMoniker));
-    if(!ret)
-        return NULL;
-
-    ret->IMoniker_iface.lpVtbl = &URLMonikerVtbl;
-    ret->IUriContainer_iface.lpVtbl = &UriContainerVtbl;
-    ret->ref = 1;
-    ret->URLName = NULL;
-
-    return ret;
-}
-
-static HRESULT URLMoniker_Init(URLMoniker *This, LPCOLESTR lpszLeftURLName, LPCOLESTR lpszURLName)
-{
+    URLMoniker *mon;
     HRESULT hres;
-    DWORD sizeStr = 0;
 
-    TRACE("(%p,%s,%s)\n",This,debugstr_w(lpszLeftURLName),debugstr_w(lpszURLName));
+    mon = heap_alloc(sizeof(*mon));
+    if(!mon)
+        return E_OUTOFMEMORY;
 
-    This->URLName = heap_alloc(INTERNET_MAX_URL_LENGTH*sizeof(WCHAR));
+    mon->IMoniker_iface.lpVtbl = &URLMonikerVtbl;
+    mon->IUriContainer_iface.lpVtbl = &UriContainerVtbl;
+    mon->ref = 1;
 
-    if(lpszLeftURLName)
-        hres = CoInternetCombineUrl(lpszLeftURLName, lpszURLName, URL_FILE_USE_PATHURL,
-                This->URLName, INTERNET_MAX_URL_LENGTH, &sizeStr, 0);
-    else
-        hres = CoInternetParseUrl(lpszURLName, PARSE_CANONICALIZE, URL_FILE_USE_PATHURL,
-                This->URLName, INTERNET_MAX_URL_LENGTH, &sizeStr, 0);
+    if(uri) {
+        /* FIXME: try to avoid it */
+        hres = IUri_GetDisplayUri(uri, &mon->URLName);
+        if(FAILED(hres)) {
+            heap_free(mon);
+            return hres;
+        }
 
-    if(FAILED(hres)) {
-        heap_free(This->URLName);
-        return hres;
+        IUri_AddRef(uri);
+        mon->uri = uri;
+    }else {
+        mon->URLName = NULL;
+        mon->uri = NULL;
     }
 
     URLMON_LockModule();
-
-    if(sizeStr != INTERNET_MAX_URL_LENGTH)
-        This->URLName = heap_realloc(This->URLName, (sizeStr+1)*sizeof(WCHAR));
-
-    TRACE("URLName = %s\n", debugstr_w(This->URLName));
-
+    *ret = mon;
     return S_OK;
 }
 
 HRESULT StdURLMoniker_Construct(IUnknown *outer, void **ppv)
 {
+    URLMoniker *mon;
+    HRESULT hres;
+
     TRACE("(%p %p)\n", outer, ppv);
 
-    *ppv = alloc_moniker();
-    return *ppv ? S_OK : E_OUTOFMEMORY;
+    hres = create_moniker(NULL, &mon);
+    if(FAILED(hres))
+        return hres;
+
+    *ppv = &mon->IMoniker_iface;
+    return S_OK;
 }
+
+static const DWORD create_flags_map[3] = {
+    Uri_CREATE_FILE_USE_DOS_PATH,  /* URL_MK_LEGACY */
+    0,                             /* URL_MK_UNIFORM */
+    Uri_CREATE_NO_CANONICALIZE     /* URL_MK_NO_CANONICALIZE */
+};
+
+static const DWORD combine_flags_map[3] = {
+    URL_FILE_USE_PATHURL,  /* URL_MK_LEGACY */
+    0,                     /* URL_MK_UNIFORM */
+    URL_DONT_SIMPLIFY      /* URL_MK_NO_CANONICALIZE */
+};
 
 /***********************************************************************
  *           CreateURLMonikerEx (URLMON.@)
@@ -578,9 +600,9 @@ HRESULT StdURLMoniker_Construct(IUnknown *outer, void **ppv)
  */
 HRESULT WINAPI CreateURLMonikerEx(IMoniker *pmkContext, LPCWSTR szURL, IMoniker **ppmk, DWORD dwFlags)
 {
+    IUri *uri, *base_uri = NULL;
     URLMoniker *obj;
     HRESULT hres;
-    LPOLESTR lefturl = NULL;
 
     TRACE("(%p, %s, %p, %08x)\n", pmkContext, debugstr_w(szURL), ppmk, dwFlags);
 
@@ -590,28 +612,91 @@ HRESULT WINAPI CreateURLMonikerEx(IMoniker *pmkContext, LPCWSTR szURL, IMoniker 
     if (!szURL || !ppmk)
         return E_INVALIDARG;
 
-    if (dwFlags & URL_MK_UNIFORM) FIXME("ignoring flag URL_MK_UNIFORM\n");
-
-    if(!(obj = alloc_moniker()))
-	return E_OUTOFMEMORY;
+    if(dwFlags >= sizeof(create_flags_map)/sizeof(*create_flags_map)) {
+        FIXME("Unsupported flags %x\n", dwFlags);
+        return E_INVALIDARG;
+    }
 
     if(pmkContext) {
-        IBindCtx* bind;
-        DWORD dwMksys = 0;
-        IMoniker_IsSystemMoniker(pmkContext, &dwMksys);
-        if(dwMksys == MKSYS_URLMONIKER && SUCCEEDED(CreateBindCtx(0, &bind))) {
-            IMoniker_GetDisplayName(pmkContext, bind, NULL, &lefturl);
-            TRACE("lefturl = %s\n", debugstr_w(lefturl));
-            IBindCtx_Release(bind);
+        IUriContainer *uri_container;
+
+        hres = IMoniker_QueryInterface(pmkContext, &IID_IUriContainer, (void**)&uri_container);
+        if(SUCCEEDED(hres)) {
+            hres = IUriContainer_GetIUri(uri_container, &base_uri);
+            IUriContainer_Release(uri_container);
+            if(FAILED(hres))
+                return hres;
         }
     }
-        
-    hres = URLMoniker_Init(obj, lefturl, szURL);
-    CoTaskMemFree(lefturl);
-    if(SUCCEEDED(hres))
-        hres = URLMoniker_QueryInterface(&obj->IMoniker_iface, &IID_IMoniker, (void**)ppmk);
-    IMoniker_Release(&obj->IMoniker_iface);
-    return hres;
+
+    if(base_uri) {
+        hres = CoInternetCombineUrlEx(base_uri, szURL, combine_flags_map[dwFlags], &uri, 0);
+        IUri_Release(base_uri);
+    }else {
+        hres = CreateUri(szURL, Uri_CREATE_ALLOW_RELATIVE|Uri_CREATE_ALLOW_IMPLICIT_FILE_SCHEME|create_flags_map[dwFlags], 0, &uri);
+    }
+    if(FAILED(hres))
+        return hres;
+
+    hres = create_moniker(uri, &obj);
+    IUri_Release(uri);
+    if(FAILED(hres))
+	return hres;
+
+    *ppmk = &obj->IMoniker_iface;
+    return S_OK;
+}
+
+/***********************************************************************
+ *           CreateURLMonikerEx2 (URLMON.@)
+ */
+HRESULT WINAPI CreateURLMonikerEx2(IMoniker *pmkContext, IUri *pUri, IMoniker **ppmk, DWORD dwFlags)
+{
+    IUri *context_uri = NULL, *uri;
+    IUriContainer *uri_container;
+    URLMoniker *ret;
+    HRESULT hres;
+
+    TRACE("(%p %p %p %x)\n", pmkContext, pUri, ppmk, dwFlags);
+
+    if (ppmk)
+        *ppmk = NULL;
+
+    if (!pUri || !ppmk)
+        return E_INVALIDARG;
+
+    if(dwFlags >= sizeof(create_flags_map)/sizeof(*create_flags_map)) {
+        FIXME("Unsupported flags %x\n", dwFlags);
+        return E_INVALIDARG;
+    }
+
+    if(pmkContext) {
+        hres = IMoniker_QueryInterface(pmkContext, &IID_IUriContainer, (void**)&uri_container);
+        if(SUCCEEDED(hres)) {
+            hres = IUriContainer_GetIUri(uri_container, &context_uri);
+            if(FAILED(hres))
+                context_uri = NULL;
+            IUriContainer_Release(uri_container);
+        }
+    }
+
+    if(context_uri) {
+        hres = CoInternetCombineIUri(context_uri, pUri, combine_flags_map[dwFlags], &uri, 0);
+        IUri_Release(context_uri);
+        if(FAILED(hres))
+            return hres;
+    }else {
+        uri = pUri;
+        IUri_AddRef(uri);
+    }
+
+    hres = create_moniker(uri, &ret);
+    IUri_Release(uri);
+    if(FAILED(hres))
+        return hres;
+
+    *ppmk = &ret->IMoniker_iface;
+    return S_OK;
 }
 
 /**********************************************************************
@@ -864,15 +949,4 @@ HRESULT WINAPI GetSoftwareUpdateInfo( LPCWSTR szDistUnit, LPSOFTDISTINFO psdi )
 {
     FIXME("%s %p\n", debugstr_w(szDistUnit), psdi );
     return E_FAIL;
-}
-
-/***********************************************************************
- *           AsyncInstallDistributionUnit (URLMON.@)
- */
-HRESULT WINAPI AsyncInstallDistributionUnit( LPCWSTR szDistUnit, LPCWSTR szTYPE,
-                            LPCWSTR szExt, DWORD dwFileVersionMS, DWORD dwFileVersionLS,
-                            LPCWSTR szURL, IBindCtx *pbc, LPVOID pvReserved, DWORD flags )
-{
-    FIXME(": stub\n");
-    return E_NOTIMPL;
 }

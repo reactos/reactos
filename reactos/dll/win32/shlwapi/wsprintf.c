@@ -22,16 +22,18 @@
  * to change it in user32 too.
  */
 
-#include <stdarg.h>
-#include <string.h>
-#include <stdio.h>
+#define WIN32_NO_STATUS
 
-#include "windef.h"
-#include "winbase.h"
+//#include <stdarg.h>
+//#include <string.h>
+//#include <stdio.h>
+
+//#include "windef.h"
+//#include "winbase.h"
 #define NO_SHLWAPI_REG
-#include "shlwapi.h"
+//#include "shlwapi.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(string);
 
@@ -43,6 +45,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(string);
 #define WPRINTF_SHORT       0x0010  /* Short arg ('h' prefix) */
 #define WPRINTF_UPPER_HEX   0x0020  /* Upper-case hex ('X' specifier) */
 #define WPRINTF_WIDE        0x0040  /* Wide arg ('w' prefix) */
+#define WPRINTF_INTPTR      0x0080  /* Pointer-size arg ('I' prefix) */
+#define WPRINTF_I64         0x0100  /* 64-bit arg ('I64' prefix) */
 
 typedef enum
 {
@@ -65,11 +69,11 @@ typedef struct
 } WPRINTF_FORMAT;
 
 typedef union {
-    WCHAR   wchar_view;
-    CHAR    char_view;
-    LPCSTR  lpcstr_view;
-    LPCWSTR lpcwstr_view;
-    INT     int_view;
+    WCHAR    wchar_view;
+    CHAR     char_view;
+    LPCSTR   lpcstr_view;
+    LPCWSTR  lpcwstr_view;
+    LONGLONG int_view;
 } WPRINTF_DATA;
 
 static const CHAR null_stringA[] = "(null)";
@@ -111,6 +115,12 @@ static INT WPRINTF_ParseFormatA( LPCSTR format, WPRINTF_FORMAT *res )
     if (*p == 'l') { res->flags |= WPRINTF_LONG; p++; }
     else if (*p == 'h') { res->flags |= WPRINTF_SHORT; p++; }
     else if (*p == 'w') { res->flags |= WPRINTF_WIDE; p++; }
+    else if (*p == 'I')
+    {
+        if (p[1] == '6' && p[2] == '4') { res->flags |= WPRINTF_I64; p += 3; }
+        else if (p[1] == '3' && p[2] == '2') p += 3;
+        else { res->flags |= WPRINTF_INTPTR; p++; }
+    }
     switch(*p)
     {
     case 'c':
@@ -132,6 +142,10 @@ static INT WPRINTF_ParseFormatA( LPCSTR format, WPRINTF_FORMAT *res )
     case 'u':
         res->type = WPR_UNSIGNED;
         break;
+    case 'p':
+        res->width = 2 * sizeof(void *);
+        res->flags |= WPRINTF_ZEROPAD | WPRINTF_INTPTR;
+        /* fall through */
     case 'X':
         res->flags |= WPRINTF_UPPER_HEX;
         /* fall through */
@@ -183,7 +197,13 @@ static INT WPRINTF_ParseFormatW( LPCWSTR format, WPRINTF_FORMAT *res )
     if (*p == 'l') { res->flags |= WPRINTF_LONG; p++; }
     else if (*p == 'h') { res->flags |= WPRINTF_SHORT; p++; }
     else if (*p == 'w') { res->flags |= WPRINTF_WIDE; p++; }
-    switch((CHAR)*p)
+    else if (*p == 'I')
+    {
+        if (p[1] == '6' && p[2] == '4') { res->flags |= WPRINTF_I64; p += 3; }
+        else if (p[1] == '3' && p[2] == '2') p += 3;
+        else { res->flags |= WPRINTF_INTPTR; p++; }
+    }
+    switch(*p)
     {
     case 'c':
         res->type = (res->flags & WPRINTF_SHORT) ? WPR_CHAR : WPR_WCHAR;
@@ -204,6 +224,10 @@ static INT WPRINTF_ParseFormatW( LPCWSTR format, WPRINTF_FORMAT *res )
     case 'u':
         res->type = WPR_UNSIGNED;
         break;
+    case 'p':
+        res->width = 2 * sizeof(void *);
+        res->flags |= WPRINTF_ZEROPAD | WPRINTF_INTPTR;
+        /* fall through */
     case 'X':
         res->flags |= WPRINTF_UPPER_HEX;
         /* fall through */
@@ -247,16 +271,32 @@ static UINT WPRINTF_GetLen( WPRINTF_FORMAT *format, WPRINTF_DATA *arg,
         if (len > maxlen) len = maxlen;
         return (format->precision = len);
     case WPR_SIGNED:
-        len = sprintf( number, "%d", arg->int_view );
-        break;
     case WPR_UNSIGNED:
-        len = sprintf( number, "%u", (UINT)arg->int_view );
-        break;
     case WPR_HEXA:
-        len = sprintf( number,
-                       (format->flags & WPRINTF_UPPER_HEX) ? "%X" : "%x",
-                       (UINT)arg->int_view);
+    {
+        const char *digits = (format->flags & WPRINTF_UPPER_HEX) ? "0123456789ABCDEF" : "0123456789abcdef";
+        ULONGLONG num = arg->int_view;
+        int base = format->type == WPR_HEXA ? 16 : 10;
+        char buffer[20], *p = buffer, *dst = number;
+
+        if (format->type == WPR_SIGNED && arg->int_view < 0)
+        {
+            *dst++ = '-';
+            num = -arg->int_view;
+        }
+        if (format->flags & WPRINTF_INTPTR) num = (UINT_PTR)num;
+        else if (!(format->flags & WPRINTF_I64)) num = (UINT)num;
+
+        do
+        {
+            *p++ = digits[num % base];
+            num /= base;
+        } while (num);
+        while (p > buffer) *dst++ = *(--p);
+        *dst = 0;
+        len = dst - number;
         break;
+    }
     default:
         return 0;
     }
@@ -318,7 +358,9 @@ INT WINAPI wvnsprintfA( LPSTR buffer, INT maxlen, LPCSTR spec, __ms_va_list args
         case WPR_HEXA:
         case WPR_SIGNED:
         case WPR_UNSIGNED:
-            argData.int_view = va_arg( args, INT );
+            if (format.flags & WPRINTF_INTPTR) argData.int_view = va_arg(args, INT_PTR);
+            else if (format.flags & WPRINTF_I64) argData.int_view = va_arg(args, LONGLONG);
+            else argData.int_view = va_arg(args, INT);
             break;
         default:
             argData.wchar_view = 0;
@@ -423,7 +465,9 @@ INT WINAPI wvnsprintfW( LPWSTR buffer, INT maxlen, LPCWSTR spec, __ms_va_list ar
         case WPR_HEXA:
         case WPR_SIGNED:
         case WPR_UNSIGNED:
-            argData.int_view = va_arg( args, INT );
+            if (format.flags & WPRINTF_INTPTR) argData.int_view = va_arg(args, INT_PTR);
+            else if (format.flags & WPRINTF_I64) argData.int_view = va_arg(args, LONGLONG);
+            else argData.int_view = va_arg(args, INT);
             break;
         default:
             argData.wchar_view = 0;
@@ -446,7 +490,7 @@ INT WINAPI wvnsprintfW( LPWSTR buffer, INT maxlen, LPCWSTR spec, __ms_va_list ar
         case WPR_STRING:
             {
                 LPCSTR ptr = argData.lpcstr_view;
-                for (i = 0; i < len; i++) *p++ = (WCHAR)*ptr++;
+                for (i = 0; i < len; i++) *p++ = (BYTE)*ptr++;
             }
             break;
         case WPR_WSTRING:
@@ -472,7 +516,7 @@ INT WINAPI wvnsprintfW( LPWSTR buffer, INT maxlen, LPCWSTR spec, __ms_va_list ar
             /* fall through */
         case WPR_UNSIGNED:
             for (i = len; i < format.precision; i++, maxlen--) *p++ = '0';
-            for (i = sign; i < len; i++) *p++ = (WCHAR)number[i];
+            for (i = sign; i < len; i++) *p++ = (BYTE)number[i];
             break;
         case WPR_UNKNOWN:
             continue;

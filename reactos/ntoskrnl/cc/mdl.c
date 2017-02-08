@@ -20,19 +20,19 @@
  */
 VOID
 NTAPI
-CcMdlRead(
-	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	ULONG			Length,
-	OUT	PMDL			* MdlChain,
-	OUT	PIO_STATUS_BLOCK	IoStatus
-	)
+CcMdlRead (
+    IN PFILE_OBJECT FileObject,
+    IN PLARGE_INTEGER FileOffset,
+    IN ULONG Length,
+    OUT PMDL * MdlChain,
+    OUT PIO_STATUS_BLOCK IoStatus
+    )
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 /*
- * NAME							INTERNAL
+ * NAME                            INTERNAL
  * CcMdlReadComplete2@8
  *
  * DESCRIPTION
@@ -45,13 +45,14 @@ CcMdlRead(
  *  None.
  *
  * NOTE
- * 	Used by CcMdlReadComplete@8 and FsRtl
+ *     Used by CcMdlReadComplete@8 and FsRtl
  *
  */
 VOID
 NTAPI
-CcMdlReadComplete2(IN PMDL MemoryDescriptorList,
-                     IN PFILE_OBJECT FileObject)
+CcMdlReadComplete2 (
+    IN PMDL MemoryDescriptorList,
+    IN PFILE_OBJECT FileObject)
 {
     PMDL Mdl;
 
@@ -82,8 +83,9 @@ CcMdlReadComplete2(IN PMDL MemoryDescriptorList,
  */
 VOID
 NTAPI
-CcMdlReadComplete(IN PFILE_OBJECT FileObject,
-                  IN PMDL MdlChain)
+CcMdlReadComplete (
+    IN PFILE_OBJECT FileObject,
+    IN PMDL MdlChain)
 {
     PDEVICE_OBJECT DeviceObject = NULL;
     PFAST_IO_DISPATCH FastDispatch;
@@ -110,9 +112,10 @@ CcMdlReadComplete(IN PFILE_OBJECT FileObject,
  */
 VOID
 NTAPI
-CcMdlWriteComplete(IN PFILE_OBJECT FileObject,
-                   IN PLARGE_INTEGER FileOffset,
-                   IN PMDL MdlChain)
+CcMdlWriteComplete (
+    IN PFILE_OBJECT FileObject,
+    IN PLARGE_INTEGER FileOffset,
+    IN PMDL MdlChain)
 {
     PDEVICE_OBJECT DeviceObject = NULL;
     PFAST_IO_DISPATCH FastDispatch;
@@ -137,11 +140,10 @@ CcMdlWriteComplete(IN PFILE_OBJECT FileObject,
 
 VOID
 NTAPI
-CcMdlWriteComplete2(
+CcMdlWriteComplete2 (
     IN PFILE_OBJECT FileObject,
     IN PLARGE_INTEGER FileOffset,
-    IN PMDL MdlChain
-)
+    IN PMDL MdlChain)
 {
     UNIMPLEMENTED;
 }
@@ -153,10 +155,9 @@ VOID
 NTAPI
 CcMdlWriteAbort (
     IN PFILE_OBJECT FileObject,
-    IN PMDL MdlChain
-    )
+    IN PMDL MdlChain)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 /*
@@ -165,12 +166,11 @@ CcMdlWriteAbort (
 VOID
 NTAPI
 CcPrepareMdlWrite (
-	IN	PFILE_OBJECT		FileObject,
-	IN	PLARGE_INTEGER		FileOffset,
-	IN	ULONG			Length,
-	OUT	PMDL			* MdlChain,
-	OUT	PIO_STATUS_BLOCK	IoStatus
-	)
+    IN PFILE_OBJECT FileObject,
+    IN PLARGE_INTEGER FileOffset,
+    IN ULONG Length,
+    OUT PMDL * MdlChain,
+    OUT PIO_STATUS_BLOCK IoStatus)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }

@@ -1,4 +1,17 @@
 
+if(MSVC)
+    add_definitions(
+        -Dsnprintf=_snprintf)
+
+    # Add this definition for WDK only, VS 9 doesn't like that
+    if (DEFINED ENV{DDKBUILDENV})
+        add_definitions(
+            -Dvsnprintf=_vsnprintf)
+    endif()
+
+    list(APPEND SOURCE getopt.c)
+endif()
+
 list(APPEND SOURCE
     client.c
     expr.c

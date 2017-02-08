@@ -6,13 +6,13 @@ CAPTION "Regionale Einstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Standards und Formate", -1, 5, 5, 234, 162
-    LTEXT "Diese Einstellungen beeinflussen, wie einige Programme Zahlen, Währung, Datum, und Zeit formatieren.", -1, 14, 17, 220, 25
-    LTEXT "Wählen Sie ein Element, um dessen Einstellungen anzuzeigen, oder wählen Sie ""Anpassen..."", um Ihr eigenes Format zu wählen:", -1, 14, 37, 220, 22
+    LTEXT "Diese Einstellungen beeinflussen, wie einige Programme Zahlen, WÃ¤hrung, Datum, und Zeit formatieren.", -1, 14, 17, 220, 25
+    LTEXT "WÃ¤hlen Sie ein Element, um dessen Einstellungen anzuzeigen, oder wÃ¤hlen Sie ""Anpassen..."", um Ihr eigenes Format zu wÃ¤hlen:", -1, 14, 37, 220, 22
     COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "&Anpassen...", IDC_SETUP_BUTTON, 178, 56, 52, 13
     LTEXT "Beispiele", -1, 14, 73, 70, 10
     LTEXT "Zahl:", -1, 16, 86, 48, 10
-    LTEXT "Währung:", -1, 16, 101, 48, 10
+    LTEXT "WÃ¤hrung:", -1, 16, 101, 48, 10
     LTEXT "Zeit:", -1, 16, 116, 48, 10
     LTEXT "Kurzes Datum:", -1, 16, 131, 48, 10
     LTEXT "Langes Datum:", -1, 16, 146, 55, 10
@@ -22,7 +22,7 @@ BEGIN
     EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     GROUPBOX "Geografische Lage", -1, 5, 172, 234, 55
-    LTEXT "Wählen Sie Ihren Standort, so dass Dienste Sie mit lokalen Informationen, wie Nachrichten und Wettervorhersagen, versorgen können.", -1, 14, 184, 210, 24
+    LTEXT "WÃ¤hlen Sie Ihren Standort, so dass Dienste Sie mit lokalen Informationen, wie Nachrichten und Wettervorhersagen, versorgen kÃ¶nnen.", -1, 14, 184, 210, 24
     COMBOBOX IDC_LOCATION_COMBO, 14, 210, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
@@ -32,12 +32,12 @@ CAPTION "Sprachen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Eingabesprachen und Textdienste", -1, 5, 5, 234, 52
-    LTEXT "Um Ihre Sprache einsehen oder ändern zu können wählen Sie ""Details...""", -1, 12, 15, 220, 18
+    LTEXT "Um Ihre Sprache einsehen oder Ã¤ndern zu kÃ¶nnen wÃ¤hlen Sie ""Details...""", -1, 12, 15, 220, 18
     PUSHBUTTON "&Details...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
-    GROUPBOX "Zusätzliche Sprachunterstützung", -1, 5, 62, 234, 82
-    LTEXT "Die meisten Sprachen sind standardmäßig installiert. Um weitere Sprachen zu installieren, aktivieren Sie die unteren Kontollkästchen.", -1, 12, 72, 220, 18
-    CHECKBOX "Dateien für Sprachen mit &komplexer Schrift und Rechts-nach-Links-Schreibstil installieren.", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
-    CHECKBOX "Dateien für &ostasiatische Sprachen installieren.", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
+    GROUPBOX "ZusÃ¤tzliche SprachunterstÃ¼tzung", -1, 5, 62, 234, 82
+    LTEXT "Die meisten Sprachen sind standardmÃ¤ÃŸig installiert. Um weitere Sprachen zu installieren, aktivieren Sie die unteren KontollkÃ¤stchen.", -1, 12, 72, 220, 18
+    CHECKBOX "Dateien fÃ¼r Sprachen mit &komplexer Schrift und Rechts-nach-Links-Schreibstil installieren.", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
+    CHECKBOX "Dateien fÃ¼r &ostasiatische Sprachen installieren.", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -45,13 +45,13 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Erweitert"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Sprache für Unicode-Inkompatible Programme", -1, 5, 5, 234, 90
+    GROUPBOX "Sprache fÃ¼r Unicode-Inkompatible Programme", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT "Diese Einstellung ermöglicht es, Unicode-Inkompatiblen Programmen, Menüs und Dialoge in der örtlichen Sprache darzustellen. Dies beeinflusst Unicode-Kompatible Programme nicht, wird aber für alle Nutzer des Computers angewendet.", -1, 14, 18, 223, 33
-    LTEXT "Wählen Sie eine Sprache aus, die der Sprachversion des Programmes entspricht, das Sie nutzen wollen:", -1, 14, 55, 223, 18
+    LTEXT "Diese Einstellung ermÃ¶glicht es, Unicode-Inkompatiblen Programmen, MenÃ¼s und Dialoge in der Ã¶rtlichen Sprache darzustellen. Dies beeinflusst Unicode-Kompatible Programme nicht, wird aber fÃ¼r alle Nutzer des Computers angewendet.", -1, 14, 18, 223, 33
+    LTEXT "WÃ¤hlen Sie eine Sprache aus, die der Sprachversion des Programmes entspricht, das Sie nutzen wollen:", -1, 14, 55, 223, 18
     GROUPBOX "Codepage Konvertierungstabellen", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
-    GROUPBOX "Standardeinstellungen für Benutzerkonten", -1, 5, 193, 234, 30
+    GROUPBOX "Standardeinstellungen fÃ¼r Benutzerkonten", -1, 5, 193, 234, 30
     CHECKBOX "Einstellungen &auf das aktive und das Standardkonto anwenden.", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
 END
 
@@ -75,20 +75,20 @@ BEGIN
     COMBOBOX IDC_NUMBERSDGROUPING, 137, 113, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "N&egatives Vorzeichen:", -1, 8, 134, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSNSIGNSYM, 137, 129, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Format für negative Zahlen:", -1, 8, 149, 100, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Format fÃ¼r negative Zahlen:", -1, 8, 149, 100, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSNNUMFORMAT, 137, 145, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Füh&rende Nullen anzeigen:", -1, 8, 166, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "FÃ¼h&rende Nullen anzeigen:", -1, 8, 166, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSDISPLEADZER, 137, 161, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "&Listentrennzeichen:", -1, 8, 181, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSLSEP, 137, 177, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Maßsystem:", -1, 8, 197, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&MaÃŸsystem:", -1, 8, 197, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSMEASSYS, 137, 193, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
 
 IDD_CURRENCYPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Währung"
+CAPTION "WÃ¤hrung"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Darstellung", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
@@ -96,17 +96,17 @@ BEGIN
     EDITTEXT IDC_CURRENCYPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     LTEXT "Negativ:", -1, 120, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_CURRENCYNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "&Währungssymbol:", -1, 20, 51, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&WÃ¤hrungssymbol:", -1, 20, 51, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYSYMBOL, 124, 49, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Format für &positive Beträge:", -1, 20, 68, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Format fÃ¼r &positive BetrÃ¤ge:", -1, 20, 68, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYPOSVALUE, 124, 66, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Format für &negative Beträge:", -1, 20, 85, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Format fÃ¼r &negative BetrÃ¤ge:", -1, 20, 85, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYNEGVALUE, 124, 83, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "&Dezimaltrennzeichen:", -1, 20, 111, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYDECSEP, 124, 109, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "&Anzahl der Dezimalstellen:", -1, 20, 128, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYDECNUM, 124, 126, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Symbol für Zifferngruppierung:", -1, 20, 156, 100, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Symbol fÃ¼r Zifferngruppierung:", -1, 20, 156, 100, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYGRPSEP, 124, 154, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "&Zifferngruppierung:", -1, 20, 173, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYGRPNUM, 124, 171, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
@@ -125,15 +125,15 @@ BEGIN
     COMBOBOX IDC_TIMEFORMAT, 149, 50, 84, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "&Trennzeichen:", -1, 13, 70, 54, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMESEPARATOR, 149, 68, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Symbol für &Vormittag:", -1, 13, 88, 100, 10, WS_VISIBLE | WS_GROUP
+    LTEXT "Symbol fÃ¼r &Vormittag:", -1, 13, 88, 100, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEAMSYMBOL, 149, 86, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Symbol für &Nachmittag:", -1, 13, 106, 100, 10, WS_VISIBLE | WS_GROUP
+    LTEXT "Symbol fÃ¼r &Nachmittag:", -1, 13, 106, 100, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEPMSYMBOL, 149, 104, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "", -1, 7, 140, 230, 80, WS_VISIBLE
     LTEXT "Zeitformat\n\n\
 h = Stunde    m = Minute    s = Sekunde    t = Vor-/Nachmittag\n\
 h = 12 Stunden   H = 24 Stunden\n\n\
-hh, mm, ss = führende Null   h, m, s = keine führende Null",
+hh, mm, ss = fÃ¼hrende Null   h, m, s = keine fÃ¼hrende Null",
         -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
 END
 
@@ -178,8 +178,8 @@ CAPTION "Sortierung"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Sortierung", -1, 7, 7, 230, 74
-    LTEXT "Sortiermethoden definieren die Sortierreihenfolge von Zeichen, Wörtern, Dateien und Ordnern.", -1, 14, 17, 220, 25
-    LTEXT "Wählen Sie eine Sortiermethode für Ihre Sprache aus:", -1, 14, 37, 220, 22
+    LTEXT "Sortiermethoden definieren die Sortierreihenfolge von Zeichen, WÃ¶rtern, Dateien und Ordnern.", -1, 14, 17, 220, 25
+    LTEXT "WÃ¤hlen Sie eine Sortiermethode fÃ¼r Ihre Sprache aus:", -1, 14, 37, 220, 22
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
@@ -189,11 +189,11 @@ BEGIN
     IDS_CUSTOMIZE_TITLE "Regionale Einstellungen bearbeiten"
     IDS_SPAIN "Spanisch (Spanien)"
     IDS_METRIC "Metrisch"
-    IDS_IMPERIAL "US-Maße"
+    IDS_IMPERIAL "US-MaÃŸe"
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Regionale Einstellungen"
-    IDS_CPLDESCRIPTION "Wählen Sie Anzeigeeinstellungen für Sprache, Zahlen, Währung, Uhrzeit und Datum aus."
+    IDS_CPLDESCRIPTION "WÃ¤hlen Sie Anzeigeeinstellungen fÃ¼r Sprache, Zahlen, WÃ¤hrung, Uhrzeit und Datum aus."
 END

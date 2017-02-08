@@ -1,0 +1,13 @@
+HKCR
+{
+    NoRemove Interface
+    {
+    }
+    NoRemove CLSID
+    {
+        '{9A02E012-6303-4E1E-B9A1-630F802592C5}' = s 'Packed Property Storage Object'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+        }
+    }
+}

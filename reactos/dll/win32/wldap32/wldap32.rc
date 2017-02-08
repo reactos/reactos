@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winuser.h"
 
 #ifdef LANGUAGE_DA_DK
     #include "wldap32_Da.rc"
@@ -56,6 +56,9 @@
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "wldap32_Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "wldap32_He.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
     #include "wldap32_Hu.rc"

@@ -121,8 +121,7 @@ CcFastCopyRead(IN PFILE_OBJECT FileObject,
                OUT PVOID Buffer,
                OUT PIO_STATUS_BLOCK IoStatus)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 BOOLEAN
@@ -208,8 +207,7 @@ CcFastCopyWrite(IN PFILE_OBJECT FileObject,
                 IN ULONG Length,
                 IN PVOID Buffer)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 BOOLEAN
@@ -219,8 +217,7 @@ CcCanIWrite(IN PFILE_OBJECT FileObject,
             IN BOOLEAN Wait,
             IN UCHAR Retrying)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return FALSE;
 }
 
@@ -233,8 +230,7 @@ CcDeferWrite(IN PFILE_OBJECT FileObject,
              IN ULONG BytesToWrite,
              IN BOOLEAN Retrying)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 /* EOF */

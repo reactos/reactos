@@ -72,6 +72,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <hal.h>
+#include <suppress.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -552,6 +554,7 @@ HalpDmaInitializeEisaAdapter(IN PADAPTER_OBJECT AdapterObject,
         if (Controller == 1)
         {
             /* Set the Request Data */
+            _PRAGMA_WARNING_SUPPRESS(__WARNING_DEREF_NULL_PTR)
             WRITE_PORT_UCHAR(&((PDMA1_CONTROL)AdapterBaseVa)->Mode, DmaMode.Byte);
 
             /* Unmask DMA Channel */
@@ -1847,7 +1850,7 @@ IoMapTransfer(IN PADAPTER_OBJECT AdapterObject,
      *             transfer start.
      * PhysicalAddress is physical address corresponding to the transfer
      *                 start page and offset.
-     * TransferLength is the inital length of the transfer, which is reminder
+     * TransferLength is the initial length of the transfer, which is reminder
      *                of the first page. The actual value is calculated below.
      *
      * Note that all the variables can change during the processing which

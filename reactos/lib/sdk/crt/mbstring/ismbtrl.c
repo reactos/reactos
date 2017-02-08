@@ -22,7 +22,7 @@ size_t _mbclen2(const unsigned int s);
  */
 int _ismbbtrail(unsigned int c)
 {
-  return (_mbctype[(c&0xff) + 1] & _M2) != 0;
+  return (get_mbcinfo()->mbctype[(c&0xff) + 1] & _M2) != 0;
 }
 
 

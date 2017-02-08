@@ -61,8 +61,24 @@ extern "C" {
 #define SERVICE_USER_DEFINED_CONTROL 256
 #define SERVICE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED|SERVICE_QUERY_CONFIG|SERVICE_CHANGE_CONFIG|SERVICE_QUERY_STATUS|SERVICE_ENUMERATE_DEPENDENTS|SERVICE_START|SERVICE_STOP|SERVICE_PAUSE_CONTINUE|SERVICE_INTERROGATE|SERVICE_USER_DEFINED_CONTROL)
 #define SERVICE_RUNS_IN_SYSTEM_PROCESS 1
-#define SERVICE_CONFIG_DESCRIPTION     1
-#define SERVICE_CONFIG_FAILURE_ACTIONS 2
+
+#define SERVICE_CONFIG_DESCRIPTION              1
+#define SERVICE_CONFIG_FAILURE_ACTIONS          2
+#define SERVICE_CONFIG_DELAYED_AUTO_START_INFO  3
+#define SERVICE_CONFIG_FAILURE_ACTIONS_FLAG     4
+#define SERVICE_CONFIG_SERVICE_SID_INFO         5
+#define SERVICE_CONFIG_REQUIRED_PRIVILEGES_INFO 6
+#define SERVICE_CONFIG_PRESHUTDOWN_INFO         7
+#define SERVICE_CONFIG_TRIGGER_INFO             8
+#define SERVICE_CONFIG_PREFERRED_NODE           9
+#define SERVICE_CONFIG_RUNLEVEL_INFO            10
+
+#ifndef _SERVICE_PRESHUTDOWN_INFO_DEFINED_
+#define _SERVICE_PRESHUTDOWN_INFO_DEFINED_
+typedef struct _SERVICE_PRESHUTDOWN_INFO {
+    DWORD dwPreshutdownTimeout;
+} SERVICE_PRESHUTDOWN_INFO, *LPSERVICE_PRESHUTDOWN_INFO;
+#endif
 
 typedef struct _SERVICE_STATUS {
 	DWORD dwServiceType;
@@ -189,51 +205,253 @@ typedef struct _SERVICE_FAILURE_ACTIONSW {
 	SC_ACTION * lpsaActions;
 } SERVICE_FAILURE_ACTIONSW,*LPSERVICE_FAILURE_ACTIONSW;
 
-BOOL WINAPI ChangeServiceConfigA(SC_HANDLE,DWORD,DWORD,DWORD,LPCSTR,LPCSTR,LPDWORD,LPCSTR,LPCSTR,LPCSTR,LPCSTR);
-BOOL WINAPI ChangeServiceConfigW(SC_HANDLE,DWORD,DWORD,DWORD,LPCWSTR,LPCWSTR,LPDWORD,LPCWSTR,LPCWSTR,LPCWSTR,LPCWSTR);
-BOOL WINAPI ChangeServiceConfig2A(SC_HANDLE,DWORD,LPVOID);
-BOOL WINAPI ChangeServiceConfig2W(SC_HANDLE,DWORD,LPVOID);
-BOOL WINAPI CloseServiceHandle(SC_HANDLE);
-BOOL WINAPI ControlService(SC_HANDLE,DWORD,LPSERVICE_STATUS);
-SC_HANDLE WINAPI CreateServiceA(SC_HANDLE,LPCSTR,LPCSTR,DWORD,DWORD,DWORD,DWORD,LPCSTR,LPCSTR,PDWORD,LPCSTR,LPCSTR,LPCSTR);
-SC_HANDLE WINAPI CreateServiceW(SC_HANDLE,LPCWSTR,LPCWSTR,DWORD,DWORD,DWORD,DWORD,LPCWSTR,LPCWSTR,PDWORD,LPCWSTR,LPCWSTR,LPCWSTR);
-BOOL WINAPI DeleteService(SC_HANDLE);
-BOOL WINAPI EnumDependentServicesA(SC_HANDLE,DWORD,LPENUM_SERVICE_STATUSA,DWORD,PDWORD,PDWORD);
-BOOL WINAPI EnumDependentServicesW(SC_HANDLE,DWORD,LPENUM_SERVICE_STATUSW,DWORD,PDWORD,PDWORD);
-BOOL WINAPI EnumServicesStatusA(SC_HANDLE,DWORD,DWORD,LPENUM_SERVICE_STATUSA,DWORD,PDWORD,PDWORD,PDWORD);
-BOOL WINAPI EnumServicesStatusW(SC_HANDLE,DWORD,DWORD,LPENUM_SERVICE_STATUSW,DWORD,PDWORD,PDWORD,PDWORD);
-BOOL WINAPI EnumServicesStatusExA(SC_HANDLE,SC_ENUM_TYPE,DWORD,DWORD,LPBYTE,DWORD,LPDWORD,LPDWORD,LPDWORD,LPCSTR);
-BOOL WINAPI EnumServicesStatusExW(SC_HANDLE,SC_ENUM_TYPE,DWORD,DWORD,LPBYTE,DWORD,LPDWORD,LPDWORD,LPDWORD,LPCWSTR);
-BOOL WINAPI GetServiceDisplayNameA(SC_HANDLE,LPCSTR,LPSTR,PDWORD);
-BOOL WINAPI GetServiceDisplayNameW(SC_HANDLE,LPCWSTR,LPWSTR,PDWORD);
-BOOL WINAPI GetServiceKeyNameA(SC_HANDLE,LPCSTR,LPSTR,PDWORD);
-BOOL WINAPI GetServiceKeyNameW(SC_HANDLE,LPCWSTR,LPWSTR,PDWORD);
-SC_LOCK WINAPI LockServiceDatabase(SC_HANDLE);
-BOOL WINAPI NotifyBootConfigStatus(BOOL);
-SC_HANDLE WINAPI OpenSCManagerA(LPCSTR,LPCSTR,DWORD);
-SC_HANDLE WINAPI OpenSCManagerW(LPCWSTR,LPCWSTR,DWORD);
-SC_HANDLE WINAPI OpenServiceA(SC_HANDLE,LPCSTR,DWORD);
-SC_HANDLE WINAPI OpenServiceW(SC_HANDLE,LPCWSTR,DWORD);
-BOOL WINAPI QueryServiceConfigA(SC_HANDLE,LPQUERY_SERVICE_CONFIGA,DWORD,PDWORD);
-BOOL WINAPI QueryServiceConfigW(SC_HANDLE,LPQUERY_SERVICE_CONFIGW,DWORD,PDWORD);
-BOOL WINAPI QueryServiceConfig2A(SC_HANDLE,DWORD,LPBYTE,DWORD,LPDWORD);
-BOOL WINAPI QueryServiceConfig2W(SC_HANDLE,DWORD,LPBYTE,DWORD,LPDWORD);
-BOOL WINAPI QueryServiceLockStatusA(SC_HANDLE,LPQUERY_SERVICE_LOCK_STATUSA,DWORD,PDWORD);
-BOOL WINAPI QueryServiceLockStatusW(SC_HANDLE,LPQUERY_SERVICE_LOCK_STATUSW,DWORD,PDWORD);
-BOOL WINAPI QueryServiceObjectSecurity(SC_HANDLE,SECURITY_INFORMATION,PSECURITY_DESCRIPTOR,DWORD,LPDWORD);
-BOOL WINAPI QueryServiceStatus(SC_HANDLE,LPSERVICE_STATUS);
-BOOL WINAPI QueryServiceStatusEx(SC_HANDLE,SC_STATUS_TYPE,LPBYTE,DWORD,LPDWORD);
-SERVICE_STATUS_HANDLE WINAPI RegisterServiceCtrlHandlerA(LPCSTR,LPHANDLER_FUNCTION);
-SERVICE_STATUS_HANDLE WINAPI RegisterServiceCtrlHandlerW(LPCWSTR,LPHANDLER_FUNCTION);
-SERVICE_STATUS_HANDLE WINAPI RegisterServiceCtrlHandlerExA(LPCSTR,LPHANDLER_FUNCTION_EX,LPVOID);
-SERVICE_STATUS_HANDLE WINAPI RegisterServiceCtrlHandlerExW(LPCWSTR,LPHANDLER_FUNCTION_EX,LPVOID);
-BOOL WINAPI SetServiceObjectSecurity(SC_HANDLE,SECURITY_INFORMATION,PSECURITY_DESCRIPTOR);
-BOOL WINAPI SetServiceStatus(SERVICE_STATUS_HANDLE,LPSERVICE_STATUS);
-BOOL WINAPI StartServiceA(SC_HANDLE,DWORD,LPCSTR*);
-BOOL WINAPI StartServiceCtrlDispatcherA(const SERVICE_TABLE_ENTRYA*);
-BOOL WINAPI StartServiceCtrlDispatcherW(const SERVICE_TABLE_ENTRYW*);
-BOOL WINAPI StartServiceW(SC_HANDLE,DWORD,LPCWSTR*);
-BOOL WINAPI UnlockServiceDatabase(SC_LOCK);
+typedef struct _SERVICE_REQUIRED_PRIVILEGES_INFOA {
+  LPSTR pmszRequiredPrivileges;
+} SERVICE_REQUIRED_PRIVILEGES_INFOA, *LPSERVICE_REQUIRED_PRIVILEGES_INFOA;
+
+typedef struct _SERVICE_REQUIRED_PRIVILEGES_INFOW {
+  LPWSTR pmszRequiredPrivileges;
+} SERVICE_REQUIRED_PRIVILEGES_INFOW, *LPSERVICE_REQUIRED_PRIVILEGES_INFOW;
+
+BOOL WINAPI ChangeServiceConfigA(_In_ SC_HANDLE, _In_ DWORD, _In_ DWORD, _In_ DWORD, _In_opt_ LPCSTR, _In_opt_ LPCSTR, _Out_opt_ LPDWORD, _In_opt_ LPCSTR, _In_opt_ LPCSTR, _In_opt_ LPCSTR, _In_opt_ LPCSTR);
+BOOL WINAPI ChangeServiceConfigW(_In_ SC_HANDLE, _In_ DWORD, _In_ DWORD, _In_ DWORD, _In_opt_ LPCWSTR, _In_opt_ LPCWSTR, _Out_opt_ LPDWORD, _In_opt_ LPCWSTR, _In_opt_ LPCWSTR, _In_opt_ LPCWSTR, _In_opt_ LPCWSTR);
+BOOL WINAPI ChangeServiceConfig2A(_In_ SC_HANDLE, _In_ DWORD, _In_opt_ LPVOID);
+BOOL WINAPI ChangeServiceConfig2W(_In_ SC_HANDLE, _In_ DWORD, _In_opt_ LPVOID);
+BOOL WINAPI CloseServiceHandle(_In_ SC_HANDLE);
+BOOL WINAPI ControlService(_In_ SC_HANDLE, _In_ DWORD, _Out_ LPSERVICE_STATUS);
+_Must_inspect_result_ SC_HANDLE WINAPI CreateServiceA(_In_ SC_HANDLE, _In_ LPCSTR, _In_opt_ LPCSTR, _In_ DWORD, _In_ DWORD, _In_ DWORD, _In_ DWORD, _In_opt_ LPCSTR, _In_opt_ LPCSTR, _Out_opt_ PDWORD, _In_opt_ LPCSTR, _In_opt_ LPCSTR, _In_opt_ LPCSTR);
+_Must_inspect_result_ SC_HANDLE WINAPI CreateServiceW(_In_ SC_HANDLE, _In_ LPCWSTR, _In_opt_ LPCWSTR, _In_ DWORD, _In_ DWORD, _In_ DWORD, _In_ DWORD, _In_opt_ LPCWSTR, _In_opt_ LPCWSTR, _Out_opt_ PDWORD, _In_opt_ LPCWSTR, _In_opt_ LPCWSTR, _In_opt_ LPCWSTR);
+BOOL WINAPI DeleteService(_In_ SC_HANDLE);
+
+_Must_inspect_result_
+BOOL
+WINAPI
+EnumDependentServicesA(
+  _In_ SC_HANDLE hService,
+  _In_ DWORD dwServiceState,
+  _Out_writes_bytes_opt_(cbBufSize) LPENUM_SERVICE_STATUSA lpServices,
+  _In_ DWORD cbBufSize,
+  _Out_ LPDWORD pcbBytesNeeded,
+  _Out_ LPDWORD lpServicesReturned);
+
+_Must_inspect_result_
+BOOL
+WINAPI
+EnumDependentServicesW(
+  _In_ SC_HANDLE hService,
+  _In_ DWORD dwServiceState,
+  _Out_writes_bytes_opt_(cbBufSize) LPENUM_SERVICE_STATUSW lpServices,
+  _In_ DWORD cbBufSize,
+  _Out_ LPDWORD pcbBytesNeeded,
+  _Out_ LPDWORD lpServicesReturned);
+
+_Must_inspect_result_
+BOOL
+WINAPI
+EnumServicesStatusA(
+  _In_ SC_HANDLE hSCManager,
+  _In_ DWORD dwServiceType,
+  _In_ DWORD dwServiceState,
+  _Out_writes_bytes_opt_(cbBufSize) LPENUM_SERVICE_STATUSA lpServices,
+  _In_ DWORD cbBufSize,
+  _Out_ LPDWORD pcbBytesNeeded,
+  _Out_ LPDWORD lpServicesReturned,
+  _Inout_opt_ LPDWORD lpResumeHandle);
+
+_Must_inspect_result_
+BOOL
+WINAPI
+EnumServicesStatusW(
+  _In_ SC_HANDLE hSCManager,
+  _In_ DWORD dwServiceType,
+  _In_ DWORD dwServiceState,
+  _Out_writes_bytes_opt_(cbBufSize) LPENUM_SERVICE_STATUSW lpServices,
+  _In_ DWORD cbBufSize,
+  _Out_ LPDWORD pcbBytesNeeded,
+  _Out_ LPDWORD lpServicesReturned,
+  _Inout_opt_ LPDWORD lpResumeHandle);
+
+_Must_inspect_result_
+BOOL
+WINAPI
+EnumServicesStatusExA(
+  _In_ SC_HANDLE hSCManager,
+  _In_ SC_ENUM_TYPE InfoLevel,
+  _In_ DWORD dwServiceType,
+  _In_ DWORD dwServiceState,
+  _Out_writes_bytes_opt_(cbBufSize) LPBYTE lpServices,
+  _In_ DWORD cbBufSize,
+  _Out_ LPDWORD pcbBytesNeeded,
+  _Out_ LPDWORD lpServicesReturned,
+  _Inout_opt_ LPDWORD lpResumeHandle,
+  _In_opt_ LPCSTR pszGroupName);
+
+_Must_inspect_result_
+BOOL
+WINAPI
+EnumServicesStatusExW(
+  _In_ SC_HANDLE hSCManager,
+  _In_ SC_ENUM_TYPE InfoLevel,
+  _In_ DWORD dwServiceType,
+  _In_ DWORD dwServiceState,
+  _Out_writes_bytes_opt_(cbBufSize) LPBYTE lpServices,
+  _In_ DWORD cbBufSize,
+  _Out_ LPDWORD pcbBytesNeeded,
+  _Out_ LPDWORD lpServicesReturned,
+  _Inout_opt_ LPDWORD lpResumeHandle,
+  _In_opt_ LPCWSTR pszGroupName);
+
+_Must_inspect_result_
+BOOL
+WINAPI
+GetServiceDisplayNameA(
+  _In_ SC_HANDLE hSCManager,
+  _In_ LPCSTR lpServiceName,
+  _Out_writes_opt_(*lpcchBuffer) LPSTR lpDisplayName,
+  _Inout_ LPDWORD lpcchBuffer);
+
+_Must_inspect_result_
+BOOL
+WINAPI
+GetServiceDisplayNameW(
+  _In_ SC_HANDLE hSCManager,
+  _In_ LPCWSTR lpServiceName,
+  _Out_writes_opt_(*lpcchBuffer) LPWSTR lpDisplayName,
+  _Inout_ LPDWORD lpcchBuffer);
+
+_Must_inspect_result_
+BOOL
+WINAPI
+GetServiceKeyNameA(
+  _In_ SC_HANDLE hSCManager,
+  _In_ LPCSTR lpDisplayName,
+  _Out_writes_opt_(*lpcchBuffer) LPSTR lpServiceName,
+  _Inout_ LPDWORD lpcchBuffer);
+
+_Must_inspect_result_
+BOOL
+WINAPI
+GetServiceKeyNameW(
+  _In_ SC_HANDLE hSCManager,
+  _In_ LPCWSTR lpDisplayName,
+  _Out_writes_opt_(*lpcchBuffer) LPWSTR lpServiceName,
+  _Inout_ LPDWORD lpcchBuffer);
+
+SC_LOCK WINAPI LockServiceDatabase(_In_ SC_HANDLE);
+BOOL WINAPI NotifyBootConfigStatus(_In_ BOOL);
+_Must_inspect_result_ SC_HANDLE WINAPI OpenSCManagerA(_In_opt_ LPCSTR, _In_opt_ LPCSTR, _In_ DWORD);
+_Must_inspect_result_ SC_HANDLE WINAPI OpenSCManagerW(_In_opt_ LPCWSTR, _In_opt_ LPCWSTR, _In_ DWORD);
+_Must_inspect_result_ SC_HANDLE WINAPI OpenServiceA(_In_ SC_HANDLE, _In_ LPCSTR, _In_ DWORD);
+_Must_inspect_result_ SC_HANDLE WINAPI OpenServiceW(_In_ SC_HANDLE, _In_ LPCWSTR, _In_ DWORD);
+
+_Must_inspect_result_
+BOOL
+WINAPI
+QueryServiceConfigA(
+  _In_ SC_HANDLE hService,
+  _Out_writes_bytes_opt_(cbBufSize) LPQUERY_SERVICE_CONFIGA lpServiceConfig,
+  _In_ DWORD cbBufSize,
+  _Out_ LPDWORD pcbBytesNeeded);
+
+_Must_inspect_result_
+BOOL
+WINAPI
+QueryServiceConfigW(
+  _In_ SC_HANDLE hService,
+  _Out_writes_bytes_opt_(cbBufSize) LPQUERY_SERVICE_CONFIGW lpServiceConfig,
+  _In_ DWORD cbBufSize,
+  _Out_ LPDWORD pcbBytesNeeded);
+
+_When_(dwInfoLevel == SERVICE_CONFIG_DESCRIPTION, _At_(cbBufSize, _In_range_(>=, sizeof(LPSERVICE_DESCRIPTIONA))))
+_When_(dwInfoLevel == SERVICE_CONFIG_FAILURE_ACTIONS, _At_(cbBufSize, _In_range_(>=, sizeof(LPSERVICE_FAILURE_ACTIONSA))))
+_When_(dwInfoLevel == SERVICE_CONFIG_REQUIRED_PRIVILEGES_INFO, _At_(cbBufSize, _In_range_(>=, sizeof(LPSERVICE_REQUIRED_PRIVILEGES_INFOA))))
+_Must_inspect_result_
+BOOL
+WINAPI
+QueryServiceConfig2A(
+  _In_ SC_HANDLE hService,
+  _In_ DWORD dwInfoLevel,
+  _Out_writes_bytes_opt_(cbBufSize) LPBYTE lpBuffer,
+  _In_ DWORD cbBufSize,
+  _Out_ LPDWORD pcbBytesNeeded);
+
+_When_(dwInfoLevel == SERVICE_CONFIG_DESCRIPTION, _At_(cbBufSize, _In_range_(>=, sizeof(LPSERVICE_DESCRIPTIONW))))
+_When_(dwInfoLevel == SERVICE_CONFIG_FAILURE_ACTIONS, _At_(cbBufSize, _In_range_(>=, sizeof(LPSERVICE_FAILURE_ACTIONSW))))
+_When_(dwInfoLevel == SERVICE_CONFIG_REQUIRED_PRIVILEGES_INFO, _At_(cbBufSize, _In_range_(>=, sizeof(LPSERVICE_REQUIRED_PRIVILEGES_INFOW))))
+_Must_inspect_result_
+BOOL
+WINAPI
+QueryServiceConfig2W(
+  _In_ SC_HANDLE hService,
+  _In_ DWORD dwInfoLevel,
+  _Out_writes_bytes_opt_(cbBufSize) LPBYTE lpBuffer,
+  _In_ DWORD cbBufSize,
+  _Out_ LPDWORD pcbBytesNeeded);
+
+_Must_inspect_result_
+BOOL
+WINAPI
+QueryServiceLockStatusA(
+  _In_ SC_HANDLE hSCManager,
+  _Out_writes_bytes_opt_(cbBufSize) LPQUERY_SERVICE_LOCK_STATUSA lpLockStatus,
+  _In_ DWORD cbBufSize,
+  _Out_ LPDWORD pcbBytesNeeded);
+
+_Must_inspect_result_
+BOOL
+WINAPI
+QueryServiceLockStatusW(
+  _In_ SC_HANDLE hSCManager,
+  _Out_writes_bytes_opt_(cbBufSize) LPQUERY_SERVICE_LOCK_STATUSW lpLockStatus,
+  _In_ DWORD cbBufSize,
+  _Out_ LPDWORD pcbBytesNeeded);
+
+_Must_inspect_result_
+BOOL
+WINAPI
+QueryServiceObjectSecurity(
+  _In_ SC_HANDLE hService,
+  _In_ SECURITY_INFORMATION dwSecurityInformation,
+  _Out_writes_bytes_opt_(cbBufSize) PSECURITY_DESCRIPTOR lpSecurityDescriptor,
+  _In_ DWORD cbBufSize,
+  _Out_ LPDWORD pcbBytesNeeded);
+
+_Must_inspect_result_ BOOL WINAPI QueryServiceStatus(_In_ SC_HANDLE, _Out_ LPSERVICE_STATUS);
+
+_Must_inspect_result_
+BOOL
+WINAPI
+QueryServiceStatusEx(
+  _In_ SC_HANDLE hService,
+  _In_ SC_STATUS_TYPE InfoLevel,
+  _Out_writes_bytes_opt_(cbBufSize) LPBYTE lpBuffer,
+  _In_ DWORD cbBufSize,
+  _Out_ LPDWORD pcbBytesNeeded);
+
+_Must_inspect_result_ SERVICE_STATUS_HANDLE WINAPI RegisterServiceCtrlHandlerA(_In_ LPCSTR, _In_ LPHANDLER_FUNCTION);
+_Must_inspect_result_ SERVICE_STATUS_HANDLE WINAPI RegisterServiceCtrlHandlerW(_In_ LPCWSTR, _In_ LPHANDLER_FUNCTION);
+_Must_inspect_result_ SERVICE_STATUS_HANDLE WINAPI RegisterServiceCtrlHandlerExA(_In_ LPCSTR, _In_ LPHANDLER_FUNCTION_EX, _In_opt_ LPVOID);
+_Must_inspect_result_ SERVICE_STATUS_HANDLE WINAPI RegisterServiceCtrlHandlerExW(_In_ LPCWSTR, _In_ LPHANDLER_FUNCTION_EX, _In_opt_ LPVOID);
+BOOL WINAPI SetServiceObjectSecurity(_In_ SC_HANDLE, _In_ SECURITY_INFORMATION, _In_ PSECURITY_DESCRIPTOR);
+BOOL WINAPI SetServiceStatus(_In_ SERVICE_STATUS_HANDLE, _In_ LPSERVICE_STATUS);
+
+BOOL
+WINAPI
+StartServiceA(
+  _In_ SC_HANDLE hService,
+  _In_ DWORD dwNumServiceArgs,
+  _In_reads_opt_(dwNumServiceArgs) LPCSTR *lpServiceArgVectors);
+
+BOOL
+WINAPI
+StartServiceW(
+  _In_ SC_HANDLE hService,
+  _In_ DWORD dwNumServiceArgs,
+  _In_reads_opt_(dwNumServiceArgs) LPCWSTR *lpServiceArgVectors);
+
+BOOL WINAPI StartServiceCtrlDispatcherA(_In_ const SERVICE_TABLE_ENTRYA*);
+BOOL WINAPI StartServiceCtrlDispatcherW(_In_ const SERVICE_TABLE_ENTRYW*);
+BOOL WINAPI UnlockServiceDatabase(_In_ SC_LOCK);
 
 #ifdef UNICODE
 typedef ENUM_SERVICE_STATUSW ENUM_SERVICE_STATUS,*LPENUM_SERVICE_STATUS;
@@ -247,6 +465,8 @@ typedef SERVICE_DESCRIPTIONW SERVICE_DESCRIPTION;
 typedef LPSERVICE_DESCRIPTIONW LPSERVICE_DESCRIPTION;
 typedef SERVICE_FAILURE_ACTIONSW SERVICE_FAILURE_ACTIONS;
 typedef LPSERVICE_FAILURE_ACTIONSW LPSERVICE_FAILURE_ACTIONS;
+typedef SERVICE_REQUIRED_PRIVILEGES_INFOW SERVICE_REQUIRED_PRIVILEGES_INFO;
+typedef LPSERVICE_REQUIRED_PRIVILEGES_INFOW LPSERVICE_REQUIRED_PRIVILEGES_INFO;
 #define SERVICES_ACTIVE_DATABASE SERVICES_ACTIVE_DATABASEW
 #define SERVICES_FAILED_DATABASE SERVICES_FAILED_DATABASEW
 #define SC_GROUP_IDENTIFIER SC_GROUP_IDENTIFIERW
@@ -279,6 +499,8 @@ typedef SERVICE_DESCRIPTIONA SERVICE_DESCRIPTION;
 typedef LPSERVICE_DESCRIPTIONA LPSERVICE_DESCRIPTION;
 typedef SERVICE_FAILURE_ACTIONSA SERVICE_FAILURE_ACTIONS;
 typedef LPSERVICE_FAILURE_ACTIONSA LPSERVICE_FAILURE_ACTIONS;
+typedef SERVICE_REQUIRED_PRIVILEGES_INFOA SERVICE_REQUIRED_PRIVILEGES_INFO;
+typedef LPSERVICE_REQUIRED_PRIVILEGES_INFOA LPSERVICE_REQUIRED_PRIVILEGES_INFO;
 #define SERVICES_ACTIVE_DATABASE SERVICES_ACTIVE_DATABASEA
 #define SERVICES_FAILED_DATABASE SERVICES_FAILED_DATABASEA
 #define SC_GROUP_IDENTIFIER SC_GROUP_IDENTIFIERA

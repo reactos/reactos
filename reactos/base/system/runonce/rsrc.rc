@@ -12,6 +12,9 @@
 #ifdef LANGUAGE_FR_FR
     #include "lang/fr-FR.rc"
 #endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/he-IL.rc"
+#endif
 #ifdef LANGUAGE_JA_JP
     #include "lang/ja-JP.rc"
 #endif

@@ -74,8 +74,15 @@ extern "C"
 
 #include <stdlib.h>
 #include <stdio.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <windef.h>
+#include <winbase.h>
+#include <objbase.h>
 #include <winsock2.h>
-#include <windows.h>
+//#include <windows.h>
 #include <sys/types.h>
 #include <time.h>
 #include <errno.h>

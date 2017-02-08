@@ -1,4 +1,4 @@
-README for libpng version 1.5.2 - March 31, 2011 (shared library 15.0)
+README for libpng version 1.5.14 - January 24, 2013 (shared library 15.0)
 See the note about version numbers near the top of png.h
 
 See INSTALL for instructions on how to install libpng.
@@ -114,19 +114,16 @@ given in previous versions of this document.  He and Andreas will
 read mail addressed to the png-implement list, however.
 
 Please do not send general questions about PNG.  Send them to
-the (png-list at ccrc.wustl.edu, subscription required, write to
-majordomo at ccrc.wustl.edu with "subscribe png-list" in your message).
-On the other hand,
-please do not send libpng questions to that address, send them to me
-or to the png-implement list.  I'll
-get them in the end anyway.  If you have a question about something
+png-mng-misc at lists.sf.net (subscription required; visit
+https://lists.sourceforge.net/lists/listinfo/png-mng-misc to
+subscribe).  If you have a question about something
 in the PNG specification that is related to using libpng, send it
 to me.  Send me any questions that start with "I was using libpng,
 and ...".  If in doubt, send questions to me.  I'll bounce them
 to others, if necessary.
 
 Please do not send suggestions on how to change PNG.  We have
-been discussing PNG for nine years now, and it is official and
+been discussing PNG for sixteen years now, and it is official and
 finished.  If you have suggestions for libpng, however, I'll
 gladly listen.  Even if your suggestion is not used immediately,
 it may be used later.

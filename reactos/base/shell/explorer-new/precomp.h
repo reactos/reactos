@@ -1,27 +1,32 @@
 #ifndef _EXPLORER_PRECOMP__H_
 #define _EXPLORER_PRECOMP__H_
 #define COBJMACROS
-#include <windows.h>
-#include <commctrl.h>
-#include <oleidl.h>
-#include <ole2.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <winnls.h>
+#include <winver.h>
+#include <wincon.h>
+#include <shellapi.h>
 #include <shlobj.h>
 #include <shlobj_undoc.h>
 #include <shlwapi.h>
-#include <servprov.h>
-#include <shlguid.h>
 #include <shlguid_undoc.h>
-#include <ocidl.h>
-#include <objidl.h>
-#include <docobj.h>
 #include <tchar.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <uxtheme.h>
 
+#include "tmschema.h"
 #include "resource.h"
 #include "comcsup.h"
-#include "todo.h"
-#include "initguid.h"
+//#include "todo.h"
+//#include "initguid.h"
 #include "undoc.h"
 
 /* dynamic imports due to lack of support in msvc linker libs */
@@ -75,12 +80,12 @@ Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 }
 
 #define ASSERT(cond) \
-    if (!(cond)) { \
+    do if (!(cond)) { \
         Win32DbgPrint(__FILE__, __LINE__, "ASSERTION %s FAILED!\n", #cond); \
-    }
+    } while (0)
 
 #define DbgPrint(fmt, ...) \
-    Win32DbgPrint(__FILE__, __LINE__, fmt, ##__VA_ARGS__);
+    Win32DbgPrint(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
 
 extern HINSTANCE hExplorerInstance;
 extern HMODULE hUser32;
@@ -126,6 +131,8 @@ CreateDropTarget(IN HWND hwndTarget,
  * explorer.c
  */
 
+#define IDHK_RUN 1 /* Win+R */
+
 LONG
 SetWindowStyle(IN HWND hWnd,
                IN LONG dwStyleMask,
@@ -163,6 +170,8 @@ GetExplorerRegValueSet(IN HKEY hKey,
 /*
  * traywnd.c
  */
+
+#define TWM_OPENSTARTMENU (WM_USER + 260)
 
 typedef HMENU (*PCREATECTXMENU)(IN HWND hWndOwner,
                                 IN PVOID *ppcmContext,
@@ -233,11 +242,38 @@ VOID
 TrayMessageLoop(IN OUT ITrayWindow *Tray);
 
 /*
+ * settings.c
+ */
+
+/* Structure to hold non-default options*/
+typedef struct _ADVANCED_SETTINGS {
+    BOOL bShowSeconds;
+} ADVANCED_SETTINGS, *PADVANCED_SETTINGS;
+
+extern ADVANCED_SETTINGS AdvancedSettings;
+extern const TCHAR szAdvancedSettingsKey[];
+
+VOID
+LoadAdvancedSettings(VOID);
+
+BOOL
+SaveSettingDword(IN PCTSTR pszKeyName,
+                 IN PCTSTR pszValueName,
+                 IN DWORD dwValue);
+
+/*
+ * startup.c
+ */
+
+int
+ProcessStartupItems(VOID);
+
+/*
  * trayprop.h
  */
 
-HWND
-DisplayTrayProperties(ITrayWindow *Tray);
+VOID
+DisplayTrayProperties(IN HWND hwndOwner);
 
 /*
  * desktop.c
@@ -384,11 +420,20 @@ HWND
 CreateTrayNotifyWnd(IN OUT ITrayWindow *TrayWindow,
                     IN BOOL bHideClock);
 
+VOID
+TrayNotify_NotifyMsg(IN HWND hwnd,
+                     IN WPARAM wParam,
+                     IN LPARAM lParam);
+
+BOOL
+TrayNotify_GetClockRect(IN HWND hwnd,
+                        OUT PRECT rcClock);
+
 /*
  * taskswnd.c
  */
 
-#define TSWM_ENABLEGROUPING (WM_USER + 1)
+#define TSWM_ENABLEGROUPING     (WM_USER + 1)
 #define TSWM_UPDATETASKBARPOS   (WM_USER + 2)
 
 BOOL

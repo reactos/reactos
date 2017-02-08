@@ -1,6 +1,7 @@
 /* DirectSound format conversion and mixing routines
  *
  * Copyright 2007 Maarten Lankhorst
+ * Copyright 2011 Owen Rudge for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -33,19 +34,23 @@
  * Sound is LITTLE endian
  */
 
-#include "config.h"
+#include <config.h>
 
 #include <stdarg.h>
+#include <math.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
 #define NONAMELESSSTRUCT
 #define NONAMELESSUNION
-#include "windef.h"
-#include "winbase.h"
-#include "mmsystem.h"
-#include "winternl.h"
-#include "wine/debug.h"
-#include "dsound.h"
-#include "dsdriver.h"
+#include <windef.h>
+#include <winbase.h>
+#include <mmsystem.h>
+#include <winternl.h>
+#include <wine/debug.h>
+#include <dsound.h>
 #include "dsound_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dsound);
@@ -58,378 +63,205 @@ WINE_DEFAULT_DEBUG_CHANNEL(dsound);
 #define le32(x) (x)
 #endif
 
-static inline void src_advance(const void **src, UINT stride, INT *count, UINT *freqAcc, UINT adj)
+/* This is an inlined version of lrintf. */
+#if defined(_M_IX86) && defined(_MSC_VER)
+FORCEINLINE
+int
+lrintf(float f)
 {
-    *freqAcc += adj;
-    if (*freqAcc >= (1 << DSOUND_FREQSHIFT))
+    int result;
+    __asm
     {
-        ULONG adv = (*freqAcc >> DSOUND_FREQSHIFT);
-        *freqAcc &= (1 << DSOUND_FREQSHIFT) - 1;
-        *(const char **)src += adv * stride;
-        *count -= adv;
+        fld f;
+        fistp result;
     }
 }
+#endif
 
-static void convert_8_to_8 (const void *src, void *dst, UINT src_stride,
-        UINT dst_stride, INT count, UINT freqAcc, UINT adj)
+static float get8(const IDirectSoundBufferImpl *dsb, DWORD pos, DWORD channel)
 {
-    while (count > 0)
-    {
-        *(BYTE *)dst = *(const BYTE *)src;
-
-        dst = (char *)dst + dst_stride;
-        src_advance(&src, src_stride, &count, &freqAcc, adj);
-    }
+    const BYTE* buf = dsb->buffer->memory;
+    buf += pos + channel;
+    return (buf[0] - 0x80) / (float)0x80;
 }
 
-static void convert_8_to_16 (const void *src, void *dst, UINT src_stride,
-        UINT dst_stride, INT count, UINT freqAcc, UINT adj)
+static float get16(const IDirectSoundBufferImpl *dsb, DWORD pos, DWORD channel)
 {
-    while (count > 0)
-    {
-        WORD dest = *(const BYTE *)src, *dest16 = dst;
-        *dest16 = le16(dest * 257 - 32768);
-
-        dst = (char *)dst + dst_stride;
-        src_advance(&src, src_stride, &count, &freqAcc, adj);
-    }
+    const BYTE* buf = dsb->buffer->memory;
+    const SHORT *sbuf = (const SHORT*)(buf + pos + 2 * channel);
+    SHORT sample = (SHORT)le16(*sbuf);
+    return sample / (float)0x8000;
 }
 
-static void convert_8_to_24 (const void *src, void *dst, UINT src_stride,
-        UINT dst_stride, INT count, UINT freqAcc, UINT adj)
+static float get24(const IDirectSoundBufferImpl *dsb, DWORD pos, DWORD channel)
 {
-    while (count > 0)
-    {
-        BYTE dest = *(const BYTE *)src;
-        BYTE *dest24 = dst;
-        dest24[0] = dest;
-        dest24[1] = dest;
-        dest24[2] = dest - 0x80;
-
-        dst = (char *)dst + dst_stride;
-        src_advance(&src, src_stride, &count, &freqAcc, adj);
-    }
+    LONG sample;
+    const BYTE* buf = dsb->buffer->memory;
+    buf += pos + 3 * channel;
+    /* The next expression deliberately has an overflow for buf[2] >= 0x80,
+       this is how negative values are made.
+     */
+    sample = (buf[0] << 8) | (buf[1] << 16) | (buf[2] << 24);
+    return sample / (float)0x80000000U;
 }
 
-static void convert_8_to_32 (const void *src, void *dst, UINT src_stride,
-        UINT dst_stride, INT count, UINT freqAcc, UINT adj)
+static float get32(const IDirectSoundBufferImpl *dsb, DWORD pos, DWORD channel)
 {
-    while (count > 0)
-    {
-        DWORD dest = *(const BYTE *)src, *dest32 = dst;
-        *dest32 = le32(dest * 16843009 - 2147483648U);
-
-        dst = (char *)dst + dst_stride;
-        src_advance(&src, src_stride, &count, &freqAcc, adj);
-    }
+    const BYTE* buf = dsb->buffer->memory;
+    const LONG *sbuf = (const LONG*)(buf + pos + 4 * channel);
+    LONG sample = le32(*sbuf);
+    return sample / (float)0x80000000U;
 }
 
-static void convert_16_to_8 (const void *src, void *dst, UINT src_stride,
-        UINT dst_stride, INT count, UINT freqAcc, UINT adj)
+static float getieee32(const IDirectSoundBufferImpl *dsb, DWORD pos, DWORD channel)
 {
-    while (count > 0)
-    {
-        BYTE *dst8 = dst;
-        *dst8 = (le16(*(const WORD *)src)) / 256;
-        *dst8 -= 0x80;
-
-        dst = (char *)dst + dst_stride;
-        src_advance(&src, src_stride, &count, &freqAcc, adj);
-    }
+    const BYTE* buf = dsb->buffer->memory;
+    const float *sbuf = (const float*)(buf + pos + 4 * channel);
+    /* The value will be clipped later, when put into some non-float buffer */
+    return *sbuf;
 }
 
-static void convert_16_to_16 (const void *src, void *dst, UINT src_stride,
-        UINT dst_stride, INT count, UINT freqAcc, UINT adj)
-{
-    while (count > 0)
-    {
-        *(WORD *)dst = *(const WORD *)src;
+const bitsgetfunc getbpp[5] = {get8, get16, get24, get32, getieee32};
 
-        dst = (char *)dst + dst_stride;
-        src_advance(&src, src_stride, &count, &freqAcc, adj);
-    }
+float get_mono(const IDirectSoundBufferImpl *dsb, DWORD pos, DWORD channel)
+{
+    DWORD channels = dsb->pwfx->nChannels;
+    DWORD c;
+    float val = 0;
+    /* XXX: does Windows include LFE into the mix? */
+    for (c = 0; c < channels; c++)
+        val += dsb->get_aux(dsb, pos, c);
+    val /= channels;
+    return val;
 }
 
-static void convert_16_to_24 (const void *src, void *dst, UINT src_stride,
-        UINT dst_stride, INT count, UINT freqAcc, UINT adj)
+static inline unsigned char f_to_8(float value)
 {
-    while (count > 0)
-    {
-        WORD dest = le16(*(const WORD *)src);
-        BYTE *dest24 = dst;
-
-        dest24[0] = dest / 256;
-        dest24[1] = dest;
-        dest24[2] = dest / 256;
-
-        dst = (char *)dst + dst_stride;
-        src_advance(&src, src_stride, &count, &freqAcc, adj);
-    }
+    if(value <= -1.f)
+        return 0;
+    if(value >= 1.f * 0x7f / 0x80)
+        return 0xFF;
+    return lrintf((value + 1.f) * 0x80);
 }
 
-static void convert_16_to_32 (const void *src, void *dst, UINT src_stride,
-        UINT dst_stride, INT count, UINT freqAcc, UINT adj)
+static inline SHORT f_to_16(float value)
 {
-    while (count > 0)
-    {
-        DWORD dest = *(const WORD *)src, *dest32 = dst;
-        *dest32 = dest * 65537;
-
-        dst = (char *)dst + dst_stride;
-        src_advance(&src, src_stride, &count, &freqAcc, adj);
-    }
+    if(value <= -1.f)
+        return 0x8000;
+    if(value >= 1.f * 0x7FFF / 0x8000)
+        return 0x7FFF;
+    return le16(lrintf(value * 0x8000));
 }
 
-static void convert_24_to_8 (const void *src, void *dst, UINT src_stride,
-        UINT dst_stride, INT count, UINT freqAcc, UINT adj)
+static LONG f_to_24(float value)
 {
-    while (count > 0)
-    {
-        BYTE *dst8 = dst;
-        *dst8 = ((const BYTE *)src)[2];
-
-        dst = (char *)dst + dst_stride;
-        src_advance(&src, src_stride, &count, &freqAcc, adj);
-    }
+    if(value <= -1.f)
+        return 0x80000000;
+    if(value >= 1.f * 0x7FFFFF / 0x800000)
+        return 0x7FFFFF00;
+    return lrintf(value * 0x80000000U);
 }
 
-static void convert_24_to_16 (const void *src, void *dst, UINT src_stride,
-        UINT dst_stride, INT count, UINT freqAcc, UINT adj)
+static inline LONG f_to_32(float value)
 {
-    while (count > 0)
-    {
-        WORD *dest16 = dst;
-        const BYTE *source = src;
-        *dest16 = le16(source[2] * 256 + source[1]);
-
-        dst = (char *)dst + dst_stride;
-        src_advance(&src, src_stride, &count, &freqAcc, adj);
-    }
+    if(value <= -1.f)
+        return 0x80000000;
+    if(value >= 1.f * 0x7FFFFFFF / 0x80000000U)  /* this rounds to 1.f */
+        return 0x7FFFFFFF;
+    return le32(lrintf(value * 0x80000000U));
 }
 
-static void convert_24_to_24 (const void *src, void *dst, UINT src_stride,
-        UINT dst_stride, INT count, UINT freqAcc, UINT adj)
+void putieee32(const IDirectSoundBufferImpl *dsb, DWORD pos, DWORD channel, float value)
 {
-    while (count > 0)
-    {
-        BYTE *dest24 = dst;
-        const BYTE *src24 = src;
-
-        dest24[0] = src24[0];
-        dest24[1] = src24[1];
-        dest24[2] = src24[2];
-
-        dst = (char *)dst + dst_stride;
-        src_advance(&src, src_stride, &count, &freqAcc, adj);
-    }
+    BYTE *buf = (BYTE *)dsb->device->tmp_buffer;
+    float *fbuf = (float*)(buf + pos + sizeof(float) * channel);
+    *fbuf = value;
 }
 
-static void convert_24_to_32 (const void *src, void *dst, UINT src_stride,
-        UINT dst_stride, INT count, UINT freqAcc, UINT adj)
+void put_mono2stereo(const IDirectSoundBufferImpl *dsb, DWORD pos, DWORD channel, float value)
 {
-    while (count > 0)
-    {
-        DWORD *dest32 = dst;
-        const BYTE *source = src;
-        *dest32 = le32(source[2] * 16777217 + source[1] * 65536 + source[0] * 256);
-
-        dst = (char *)dst + dst_stride;
-        src_advance(&src, src_stride, &count, &freqAcc, adj);
-    }
+    dsb->put_aux(dsb, pos, 0, value);
+    dsb->put_aux(dsb, pos, 1, value);
 }
 
-static void convert_32_to_8 (const void *src, void *dst, UINT src_stride,
-        UINT dst_stride, INT count, UINT freqAcc, UINT adj)
+void mixieee32(float *src, float *dst, unsigned samples)
 {
-    while (count > 0)
-    {
-        BYTE *dst8 = dst;
-        *dst8 = (le32(*(const DWORD *)src) / 16777216);
-        *dst8 -= 0x80;
-
-        dst = (char *)dst + dst_stride;
-        src_advance(&src, src_stride, &count, &freqAcc, adj);
-    }
+    TRACE("%p - %p %d\n", src, dst, samples);
+    while (samples--)
+        *(dst++) += *(src++);
 }
 
-static void convert_32_to_16 (const void *src, void *dst, UINT src_stride,
-        UINT dst_stride, INT count, UINT freqAcc, UINT adj)
-{
-    while (count > 0)
-    {
-        WORD *dest16 = dst;
-        *dest16 = le16(le32(*(const DWORD *)src) / 65536);
-
-        dst = (char *)dst + dst_stride;
-        src_advance(&src, src_stride, &count, &freqAcc, adj);
-    }
-}
-
-static void convert_32_to_24 (const void *src, void *dst, UINT src_stride,
-        UINT dst_stride, INT count, UINT freqAcc, UINT adj)
-{
-    while (count > 0)
-    {
-        DWORD dest = le32(*(const DWORD *)src);
-        BYTE *dest24 = dst;
-
-        dest24[0] = dest / 256;
-        dest24[1] = dest / 65536;
-        dest24[2] = dest / 16777216;
-
-        dst = (char *)dst + dst_stride;
-        src_advance(&src, src_stride, &count, &freqAcc, adj);
-    }
-}
-
-static void convert_32_to_32 (const void *src, void *dst, UINT src_stride,
-        UINT dst_stride, INT count, UINT freqAcc, UINT adj)
-{
-    while (count > 0)
-    {
-        DWORD *dest = dst;
-        *dest = *(const DWORD *)src;
-
-        dst = (char *)dst + dst_stride;
-        src_advance(&src, src_stride, &count, &freqAcc, adj);
-    }
-}
-
-const bitsconvertfunc convertbpp[4][4] = {
-    { convert_8_to_8, convert_8_to_16, convert_8_to_24, convert_8_to_32 },
-    { convert_16_to_8, convert_16_to_16, convert_16_to_24, convert_16_to_32 },
-    { convert_24_to_8, convert_24_to_16, convert_24_to_24, convert_24_to_32 },
-    { convert_32_to_8, convert_32_to_16, convert_32_to_24, convert_32_to_32 },
-};
-
-static void mix8(signed char *src, INT *dst, unsigned len)
+static void norm8(float *src, unsigned char *dst, unsigned len)
 {
     TRACE("%p - %p %d\n", src, dst, len);
     while (len--)
-        /* 8-bit WAV is unsigned, it's here converted to signed, normalize function will convert it back again */
-        *(dst++) += (signed char)((BYTE)*(src++) - (BYTE)0x80);
+    {
+        *dst = f_to_8(*src);
+        ++dst;
+        ++src;
+    }
 }
 
-static void mix16(SHORT *src, INT *dst, unsigned len)
+static void norm16(float *src, SHORT *dst, unsigned len)
 {
     TRACE("%p - %p %d\n", src, dst, len);
     len /= 2;
     while (len--)
     {
-        *dst += le16(*src);
-        ++dst; ++src;
+        *dst = f_to_16(*src);
+        ++dst;
+        ++src;
     }
 }
 
-static void mix24(BYTE *src, INT *dst, unsigned len)
+static void norm24(float *src, BYTE *dst, unsigned len)
 {
     TRACE("%p - %p %d\n", src, dst, len);
     len /= 3;
     while (len--)
     {
-        DWORD field;
-        field = ((DWORD)src[2] << 16) + ((DWORD)src[1] << 8) + (DWORD)src[0];
-        if (src[2] & 0x80)
-            field |= 0xFF000000U;
-        *(dst++) += field;
+        LONG t = f_to_24(*src);
+        dst[0] = (t >> 8) & 0xFF;
+        dst[1] = (t >> 16) & 0xFF;
+        dst[2] = t >> 24;
+        dst += 3;
         ++src;
     }
 }
 
-static void mix32(INT *src, LONGLONG *dst, unsigned len)
+static void norm32(float *src, INT *dst, unsigned len)
 {
     TRACE("%p - %p %d\n", src, dst, len);
     len /= 4;
     while (len--)
-        *(dst++) += le32(*(src++));
-}
-
-const mixfunc mixfunctions[4] = {
-    (mixfunc)mix8,
-    (mixfunc)mix16,
-    (mixfunc)mix24,
-    (mixfunc)mix32
-};
-
-static void norm8(INT *src, signed char *dst, unsigned len)
-{
-    TRACE("%p - %p %d\n", src, dst, len);
-    while (len--)
     {
-        *dst = (*src) + 0x80;
-        if (*src < -0x80)
-            *dst = 0;
-        else if (*src > 0x7f)
-            *dst = 0xff;
+        *dst = f_to_32(*src);
         ++dst;
         ++src;
     }
 }
 
-static void norm16(INT *src, SHORT *dst, unsigned len)
+static void normieee32(float *src, float *dst, unsigned len)
 {
     TRACE("%p - %p %d\n", src, dst, len);
-    len /= 2;
+    len /= 4;
     while (len--)
     {
-        *dst = le16(*src);
-        if (*src <= -0x8000)
-            *dst = le16(0x8000);
-        else if (*src > 0x7fff)
-            *dst = le16(0x7fff);
-        ++dst;
-        ++src;
-    }
-}
-
-static void norm24(INT *src, BYTE *dst, unsigned len)
-{
-    TRACE("%p - %p %d\n", src, dst, len);
-    len /= 3;
-    while (len--)
-    {
-        if (*src <= -0x800000)
-        {
-            dst[0] = 0;
-            dst[1] = 0;
-            dst[2] = 0x80;
-        }
-        else if (*src > 0x7fffff)
-        {
-            dst[0] = 0xff;
-            dst[1] = 0xff;
-            dst[2] = 0x7f;
-        }
+        if(*src > 1)
+            *dst = 1;
+        else if(*src < -1)
+            *dst = -1;
         else
-        {
-            dst[0] = *src;
-            dst[1] = *src >> 8;
-            dst[2] = *src >> 16;
-        }
+            *dst = *src;
         ++dst;
         ++src;
     }
 }
 
-static void norm32(LONGLONG *src, INT *dst, unsigned len)
-{
-    TRACE("%p - %p %d\n", src, dst, len);
-    len /= 4;
-    while (len--)
-    {
-        *dst = le32(*src);
-        if (*src <= -(LONGLONG)0x80000000)
-            *dst = le32(0x80000000);
-        else if (*src > 0x7fffffff)
-            *dst = le32(0x7fffffff);
-        ++dst;
-        ++src;
-    }
-}
-
-const normfunc normfunctions[4] = {
+const normfunc normfunctions[5] = {
     (normfunc)norm8,
     (normfunc)norm16,
     (normfunc)norm24,
     (normfunc)norm32,
+    (normfunc)normieee32
 };

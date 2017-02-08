@@ -287,12 +287,12 @@ DWORD getNthInterfaceEntity( HANDLE tcpFile, DWORD index, TDIEntityID *ent ) {
     TRACE("Index %d is entity #%d - %04x:%08x\n", index, i,
            entitySet[i].tei_entity, entitySet[i].tei_instance );
 
-    tdiFreeThingSet( entitySet );
-
     if( numInterfaces == index && i < numEntities ) {
         memcpy( ent, &entitySet[i], sizeof(*ent) );
+        tdiFreeThingSet( entitySet );
         return STATUS_SUCCESS;
     } else {
+        tdiFreeThingSet( entitySet );
         return STATUS_UNSUCCESSFUL;
     }
 }

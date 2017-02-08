@@ -9,7 +9,6 @@
 
 #include "precomp.h"
 
-
 static LPWSTR
 AddServiceToList(LPWSTR *lpServiceList,
                  LPWSTR lpServiceToAdd)
@@ -134,7 +133,6 @@ GetListOfServicesToStop(LPWSTR lpServiceName)
         return NULL;
 }
 
-
 static VOID
 AddServiceNamesToStop(HWND hServiceListBox,
                       LPWSTR lpServiceList)
@@ -257,7 +255,6 @@ DoInitDependsDialog(PMAIN_WND_INFO pInfo,
 
     return bRet;
 }
-
 
 INT_PTR CALLBACK
 StopDependsDialogProc(HWND hDlg,

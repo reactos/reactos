@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTES
  *  o Linked list implementation for dplay/dplobby. Based off of the BSD
@@ -26,10 +26,10 @@
 #ifndef __WINE_DPLAYX_QUEUE_H
 #define __WINE_DPLAYX_QUEUE_H
 
-#include <stdarg.h>
+//#include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
+//#include "windef.h"
+//#include "winbase.h"
 
 #define DPQ_INSERT(a,b,c) DPQ_INSERT_IN_TAIL(a,b,c)
 
@@ -122,7 +122,7 @@ do {                                                           \
  * elm  - how to find the next element
  * field - to be concatenated to rc to compare with fieldToCompare
  * fieldToCompare - The value that we're comparing against
- * compare_cb - Callback to invoke to determine if comparision should continue.
+ * compare_cb - Callback to invoke to determine if comparison should continue.
  *              Callback must be defined with DPQ_DECL_COMPARECB.
  * rc - Variable to put the return code. Same type as (head).lpQHFirst
  */
@@ -174,7 +174,7 @@ do {                                                           \
  * elm  - how to find the next element
  * field - to be concatenated to rc to compare with fieldToCompare
  * fieldToCompare - The value that we're comparing against
- * compare_cb - Callback to invoke to determine if comparision should continue.
+ * compare_cb - Callback to invoke to determine if comparison should continue.
  *              Callback must be defined with DPQ_DECL_COMPARECB.
  * rc - Variable to put the return code. Same type as (head).lpQHFirst
  */
@@ -211,6 +211,6 @@ do                                               \
 #define DPQ_DECL_DELETECB( name, type ) void name( type elem )
 
 /* Prototype of a method which just performs a HeapFree on the elem */
-DPQ_DECL_DELETECB( cbDeleteElemFromHeap, LPVOID );
+DPQ_DECL_DELETECB( cbDeleteElemFromHeap, LPVOID ) DECLSPEC_HIDDEN;
 
 #endif /* __WINE_DPLAYX_QUEUE_H */

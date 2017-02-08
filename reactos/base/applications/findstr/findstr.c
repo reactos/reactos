@@ -27,15 +27,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <windows.h>
-
-#include <io.h>
+//#include <string.h>
+//#include <ctype.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+//#include <io.h>
 #include <dos.h>
 
 #include "resource.h"
-
 
 /* Symbol definition */
 #define MAX_STR 1024

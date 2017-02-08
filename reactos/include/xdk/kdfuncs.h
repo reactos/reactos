@@ -168,7 +168,7 @@ NTSYSAPI
 VOID
 NTAPI
 DbgBreakPointWithStatus(
-  IN ULONG Status);
+    _In_ ULONG Status);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 

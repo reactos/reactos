@@ -23,14 +23,20 @@
  *
  */
 
-#include "config.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
 
-#include <stdarg.h>
+#include <config.h>
+
+//#include <stdarg.h>
 #include <stdio.h>
-#include <string.h>
+//#include <string.h>
 #include <assert.h>
-#include <stdlib.h>
-#include <sys/types.h>
+//#include <stdlib.h>
+//#include <sys/types.h>
+
+#include <windef.h>
+#include <winbase.h>
 
 #if defined(__MINGW32__) || defined (_MSC_VER)
 # include <ws2tcpip.h>
@@ -76,20 +82,18 @@
 # define ioctlsocket ioctl
 #endif /* defined(__MINGW32__) || defined (_MSC_VER) */
 
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "winerror.h"
-#include "wininet.h"
-#include "winternl.h"
-#include "wine/unicode.h"
+//#include "winnls.h"
+//#include "winerror.h"
+#include <wininet.h>
+#include <winternl.h>
+#include <wine/unicode.h>
 
-#include "rpc.h"
-#include "rpcndr.h"
+#include <rpc.h>
+//#include "rpcndr.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
-#include "rpc_binding.h"
+//#include "rpc_binding.h"
 #include "rpc_assoc.h"
 #include "rpc_message.h"
 #include "rpc_server.h"
@@ -430,7 +434,7 @@ static int rpcrt4_conn_np_read(RpcConnection *Connection,
   BOOL ret = TRUE;
   unsigned int bytes_left = count;
   OVERLAPPED ovl;
-  
+
   ZeroMemory(&ovl, sizeof(ovl));
   ovl.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
 
@@ -438,10 +442,11 @@ static int rpcrt4_conn_np_read(RpcConnection *Connection,
   {
     DWORD bytes_read;
     ret = ReadFile(npc->pipe, buf, bytes_left, &bytes_read, &ovl);
-	if ((!ret || !bytes_read) && (GetLastError() != ERROR_IO_PENDING))
-        break;
-    ret = GetOverlappedResult(npc->pipe, &ovl, &bytes_read, TRUE);
-    if (!ret && (GetLastError() != ERROR_MORE_DATA))
+    if (!ret && GetLastError() == ERROR_IO_PENDING)
+        ret = GetOverlappedResult(npc->pipe, &ovl, &bytes_read, TRUE);
+    if (!ret && GetLastError() == ERROR_MORE_DATA)
+        ret = TRUE;
+    if (!ret || !bytes_read)
         break;
     bytes_left -= bytes_read;
     buf += bytes_read;
@@ -458,7 +463,7 @@ static int rpcrt4_conn_np_write(RpcConnection *Connection,
   BOOL ret = TRUE;
   unsigned int bytes_left = count;
   OVERLAPPED ovl;
-  
+
   ZeroMemory(&ovl, sizeof(ovl));
   ovl.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
 
@@ -466,11 +471,9 @@ static int rpcrt4_conn_np_write(RpcConnection *Connection,
   {
     DWORD bytes_written;
     ret = WriteFile(npc->pipe, buf, bytes_left, &bytes_written, &ovl);
-    if ((!ret || !bytes_written) && (GetLastError() != ERROR_IO_PENDING))
-        break;
-
-    ret = GetOverlappedResult(npc->pipe, &ovl, &bytes_written, TRUE);
-    if (!ret && (GetLastError() != ERROR_MORE_DATA))
+    if (!ret && GetLastError() == ERROR_IO_PENDING)
+        ret = GetOverlappedResult(npc->pipe, &ovl, &bytes_written, TRUE);
+    if (!ret || !bytes_written)
         break;
     bytes_left -= bytes_written;
     buf += bytes_written;

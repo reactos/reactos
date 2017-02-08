@@ -1,5 +1,3 @@
-/* $Id$
- */
 
 #include "tcsrchr.inc"
 

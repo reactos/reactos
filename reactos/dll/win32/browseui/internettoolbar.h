@@ -45,196 +45,196 @@ static const int gPasteCommandID = 0x701a;
 static const int gFolderOptionsCommandID = 41251;
 
 class CMenuCallback :
-	public CComObjectRootEx<CComMultiThreadModelNoCS>,
-	public IShellMenuCallback
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IShellMenuCallback
 {
 private:
-	CComPtr<IShellMenu>				fFavoritesMenu;
+    CComPtr<IShellMenu>             fFavoritesMenu;
 public:
-	CMenuCallback();
-	~CMenuCallback();
+    CMenuCallback();
+    ~CMenuCallback();
 
-	HRESULT STDMETHODCALLTYPE GetObject(LPSMDATA psmd, REFIID riid, void **ppvObject);
+    HRESULT STDMETHODCALLTYPE GetObject(LPSMDATA psmd, REFIID riid, void **ppvObject);
 public:
-	// *** IShellMenuCallback methods ***
-	virtual HRESULT STDMETHODCALLTYPE CallbackSM(LPSMDATA psmd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    // *** IShellMenuCallback methods ***
+    virtual HRESULT STDMETHODCALLTYPE CallbackSM(LPSMDATA psmd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 BEGIN_COM_MAP(CMenuCallback)
-	COM_INTERFACE_ENTRY_IID(IID_IShellMenuCallback, IShellMenuCallback)
+    COM_INTERFACE_ENTRY_IID(IID_IShellMenuCallback, IShellMenuCallback)
 END_COM_MAP()
 };
 
 class CInternetToolbar :
-	public CWindowImpl<CInternetToolbar, CWindow, CControlWinTraits>,
-	public CComCoClass<CInternetToolbar, &CLSID_InternetToolbar>,
-	public CComObjectRootEx<CComMultiThreadModelNoCS>,
-	public IInputObject,
-	public IDockingWindow,
-	public IPersistStreamInit,
-	public IOleCommandTarget,
-	public IDispatch,
-	public IExplorerToolbar,
-	public IShellChangeNotify,
-	public IObjectWithSite,
-	public IServiceProvider,
-	public IWinEventHandler,
-	public IBandSite
+    public CWindowImpl<CInternetToolbar, CWindow, CControlWinTraits>,
+    public CComCoClass<CInternetToolbar, &CLSID_InternetToolbar>,
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IInputObject,
+    public IDockingWindow,
+    public IPersistStreamInit,
+    public IOleCommandTarget,
+    public IDispatch,
+    public IExplorerToolbar,
+    public IShellChangeNotify,
+    public IObjectWithSite,
+    public IServiceProvider,
+    public IWinEventHandler,
+    public IBandSite
 {
 public:
-	CComPtr<IUnknown>						fSite;				// our site
-	HWND									fMainReBar;			// rebar for top of window
-	bool									fLocked;			// is bar locked to prevent changes?
-	CComPtr<IShellMenu>						fMenuBar;			// the menu rebar
-	HWND									fMenuBandWindow;
-	HWND									fNavigationWindow;
-	CComPtr<IUnknown>						fLogoBar;			// the reactos logo
-	CComPtr<IUnknown>						fControlsBar;		// navigation controls
-	CComPtr<IUnknown>						fNavigationBar;		// address bar
-	CComObject<CMenuCallback>				fMenuCallback;
-	CComPtr<IOleCommandTarget>				fCommandTarget;
-	GUID									fCommandCategory;
-	HWND									fToolbarWindow;
-	DWORD									fAdviseCookie;
-	CComPtr<IBandProxy>						fBandProxy;
+    CComPtr<IUnknown>                       fSite;              // our site
+    HWND                                    fMainReBar;         // rebar for top of window
+    bool                                    fLocked;            // is bar locked to prevent changes?
+    CComPtr<IShellMenu>                     fMenuBar;           // the menu rebar
+    HWND                                    fMenuBandWindow;
+    HWND                                    fNavigationWindow;
+    CComPtr<IUnknown>                       fLogoBar;           // the reactos logo
+    CComPtr<IUnknown>                       fControlsBar;       // navigation controls
+    CComPtr<IUnknown>                       fNavigationBar;     // address bar
+    CComObject<CMenuCallback>               fMenuCallback;
+    CComPtr<IOleCommandTarget>              fCommandTarget;
+    GUID                                    fCommandCategory;
+    HWND                                    fToolbarWindow;
+    DWORD                                   fAdviseCookie;
+    CComPtr<IBandProxy>                     fBandProxy;
 public:
-	CInternetToolbar();
-	~CInternetToolbar();
-	void AddDockItem(IUnknown *newItem, int bandID, int flags);
-	HRESULT ReserveBorderSpace();
-	HRESULT CreateMenuBar(IShellMenu **menuBar);
-	HRESULT CreateBrandBand(IUnknown **logoBar);
-	HRESULT CreateToolsBar(IUnknown **toolsBar);
-	HRESULT CreateAddressBand(IUnknown **toolsBar);
-	HRESULT LockUnlockToolbars(bool locked);
-	HRESULT CommandStateChanged(bool newValue, int commandID);
-	HRESULT CreateAndInitBandProxy();
+    CInternetToolbar();
+    ~CInternetToolbar();
+    void AddDockItem(IUnknown *newItem, int bandID, int flags);
+    HRESULT ReserveBorderSpace();
+    HRESULT CreateMenuBar(IShellMenu **menuBar);
+    HRESULT CreateBrandBand(IUnknown **logoBar);
+    HRESULT CreateToolsBar(IUnknown **toolsBar);
+    HRESULT CreateAddressBand(IUnknown **toolsBar);
+    HRESULT LockUnlockToolbars(bool locked);
+    HRESULT CommandStateChanged(bool newValue, int commandID);
+    HRESULT CreateAndInitBandProxy();
 public:
     // *** IInputObject specific methods ***
     virtual HRESULT STDMETHODCALLTYPE UIActivateIO(BOOL fActivate, LPMSG lpMsg);
     virtual HRESULT STDMETHODCALLTYPE HasFocusIO();
     virtual HRESULT STDMETHODCALLTYPE TranslateAcceleratorIO(LPMSG lpMsg);
 
-	// *** IOleWindow methods ***
-	virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *lphwnd);
-	virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode);
+    // *** IOleWindow methods ***
+    virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *lphwnd);
+    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(BOOL fEnterMode);
 
-	// *** IDockingWindow methods ***
-	virtual HRESULT STDMETHODCALLTYPE ShowDW(BOOL fShow);
-	virtual HRESULT STDMETHODCALLTYPE CloseDW(DWORD dwReserved);
-	virtual HRESULT STDMETHODCALLTYPE ResizeBorderDW(LPCRECT prcBorder, IUnknown *punkToolbarSite, BOOL fReserved);
+    // *** IDockingWindow methods ***
+    virtual HRESULT STDMETHODCALLTYPE ShowDW(BOOL fShow);
+    virtual HRESULT STDMETHODCALLTYPE CloseDW(DWORD dwReserved);
+    virtual HRESULT STDMETHODCALLTYPE ResizeBorderDW(LPCRECT prcBorder, IUnknown *punkToolbarSite, BOOL fReserved);
 
-	// *** IPersist methods ***
-	virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *pClassID);
+    // *** IPersist methods ***
+    virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *pClassID);
 
-	// *** IPersistStreamInit methods ***
-	virtual HRESULT STDMETHODCALLTYPE IsDirty();
-	virtual HRESULT STDMETHODCALLTYPE Load(IStream *pStm);
-	virtual HRESULT STDMETHODCALLTYPE Save(IStream *pStm, BOOL fClearDirty);
-	virtual HRESULT STDMETHODCALLTYPE GetSizeMax(ULARGE_INTEGER *pcbSize);
-	virtual HRESULT STDMETHODCALLTYPE InitNew();
+    // *** IPersistStreamInit methods ***
+    virtual HRESULT STDMETHODCALLTYPE IsDirty();
+    virtual HRESULT STDMETHODCALLTYPE Load(IStream *pStm);
+    virtual HRESULT STDMETHODCALLTYPE Save(IStream *pStm, BOOL fClearDirty);
+    virtual HRESULT STDMETHODCALLTYPE GetSizeMax(ULARGE_INTEGER *pcbSize);
+    virtual HRESULT STDMETHODCALLTYPE InitNew();
 
-	// *** IOleCommandTarget methods ***
-	virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[  ], OLECMDTEXT *pCmdText);
-	virtual HRESULT STDMETHODCALLTYPE Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+    // *** IOleCommandTarget methods ***
+    virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[  ], OLECMDTEXT *pCmdText);
+    virtual HRESULT STDMETHODCALLTYPE Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
 
-	// *** IDispatch methods ***
-	virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(UINT *pctinfo);
-	virtual HRESULT STDMETHODCALLTYPE GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo);
-	virtual HRESULT STDMETHODCALLTYPE GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId);
-	virtual HRESULT STDMETHODCALLTYPE Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
+    // *** IDispatch methods ***
+    virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(UINT *pctinfo);
+    virtual HRESULT STDMETHODCALLTYPE GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo);
+    virtual HRESULT STDMETHODCALLTYPE GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId);
+    virtual HRESULT STDMETHODCALLTYPE Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
 
-	// *** IExplorerToolbar methods ***
-	virtual HRESULT STDMETHODCALLTYPE SetCommandTarget(IUnknown *theTarget, GUID *category, long param14);
-	virtual HRESULT STDMETHODCALLTYPE Unknown1();
-	virtual HRESULT STDMETHODCALLTYPE AddButtons(const GUID *pguidCmdGroup, long buttonCount, TBBUTTON *buttons);
-	virtual HRESULT STDMETHODCALLTYPE AddString(const GUID *pguidCmdGroup, HINSTANCE param10, LPCTSTR param14, long *param18);
-	virtual HRESULT STDMETHODCALLTYPE GetButton(const GUID *pguidCmdGroup, long param10, long param14);
-	virtual HRESULT STDMETHODCALLTYPE GetState(const GUID *pguidCmdGroup, long commandID, long *theState);
-	virtual HRESULT STDMETHODCALLTYPE SetState(const GUID *pguidCmdGroup, long commandID, long theState);
-	virtual HRESULT STDMETHODCALLTYPE AddBitmap(const GUID *pguidCmdGroup, long param10, long buttonCount, TBADDBITMAP *lParam, long *newIndex, COLORREF param20);
-	virtual HRESULT STDMETHODCALLTYPE GetBitmapSize(long *paramC);
-	virtual HRESULT STDMETHODCALLTYPE SendToolbarMsg(const GUID *pguidCmdGroup, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *result);
-	virtual HRESULT STDMETHODCALLTYPE SetImageList(const GUID *pguidCmdGroup, HIMAGELIST param10, HIMAGELIST param14, HIMAGELIST param18);
-	virtual HRESULT STDMETHODCALLTYPE ModifyButton(const GUID *pguidCmdGroup, long param10, long param14);
+    // *** IExplorerToolbar methods ***
+    virtual HRESULT STDMETHODCALLTYPE SetCommandTarget(IUnknown *theTarget, GUID *category, long param14);
+    virtual HRESULT STDMETHODCALLTYPE Unknown1();
+    virtual HRESULT STDMETHODCALLTYPE AddButtons(const GUID *pguidCmdGroup, long buttonCount, TBBUTTON *buttons);
+    virtual HRESULT STDMETHODCALLTYPE AddString(const GUID *pguidCmdGroup, HINSTANCE param10, LPCTSTR param14, long *param18);
+    virtual HRESULT STDMETHODCALLTYPE GetButton(const GUID *pguidCmdGroup, long param10, long param14);
+    virtual HRESULT STDMETHODCALLTYPE GetState(const GUID *pguidCmdGroup, long commandID, long *theState);
+    virtual HRESULT STDMETHODCALLTYPE SetState(const GUID *pguidCmdGroup, long commandID, long theState);
+    virtual HRESULT STDMETHODCALLTYPE AddBitmap(const GUID *pguidCmdGroup, long param10, long buttonCount, TBADDBITMAP *lParam, long *newIndex, COLORREF param20);
+    virtual HRESULT STDMETHODCALLTYPE GetBitmapSize(long *paramC);
+    virtual HRESULT STDMETHODCALLTYPE SendToolbarMsg(const GUID *pguidCmdGroup, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *result);
+    virtual HRESULT STDMETHODCALLTYPE SetImageList(const GUID *pguidCmdGroup, HIMAGELIST param10, HIMAGELIST param14, HIMAGELIST param18);
+    virtual HRESULT STDMETHODCALLTYPE ModifyButton(const GUID *pguidCmdGroup, long param10, long param14);
 
     // *** IShellChangeNotify methods ***
     virtual HRESULT STDMETHODCALLTYPE OnChange(LONG lEvent, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
 
-	// *** IObjectWithSite methods ***
-	virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
-	virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, void **ppvSite);
+    // *** IObjectWithSite methods ***
+    virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
+    virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, void **ppvSite);
 
-	// *** IServiceProvider methods ***
-	virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void **ppvObject);
+    // *** IServiceProvider methods ***
+    virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void **ppvObject);
 
-	// *** IWinEventHandler methods ***
-	virtual HRESULT STDMETHODCALLTYPE OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult);
-	virtual HRESULT STDMETHODCALLTYPE IsWindowOwner(HWND hWnd);
+    // *** IWinEventHandler methods ***
+    virtual HRESULT STDMETHODCALLTYPE OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult);
+    virtual HRESULT STDMETHODCALLTYPE IsWindowOwner(HWND hWnd);
 
-	// *** IBandSite specific methods ***
-	virtual HRESULT STDMETHODCALLTYPE AddBand(IUnknown *punk);
-	virtual HRESULT STDMETHODCALLTYPE EnumBands(UINT uBand, DWORD *pdwBandID);
-	virtual HRESULT STDMETHODCALLTYPE QueryBand(DWORD dwBandID, IDeskBand **ppstb, DWORD *pdwState, LPWSTR pszName, int cchName);
-	virtual HRESULT STDMETHODCALLTYPE SetBandState(DWORD dwBandID, DWORD dwMask, DWORD dwState);
-	virtual HRESULT STDMETHODCALLTYPE RemoveBand(DWORD dwBandID);
-	virtual HRESULT STDMETHODCALLTYPE GetBandObject(DWORD dwBandID, REFIID riid, void **ppv);
-	virtual HRESULT STDMETHODCALLTYPE SetBandSiteInfo(const BANDSITEINFO *pbsinfo);
-	virtual HRESULT STDMETHODCALLTYPE GetBandSiteInfo(BANDSITEINFO *pbsinfo);
+    // *** IBandSite specific methods ***
+    virtual HRESULT STDMETHODCALLTYPE AddBand(IUnknown *punk);
+    virtual HRESULT STDMETHODCALLTYPE EnumBands(UINT uBand, DWORD *pdwBandID);
+    virtual HRESULT STDMETHODCALLTYPE QueryBand(DWORD dwBandID, IDeskBand **ppstb, DWORD *pdwState, LPWSTR pszName, int cchName);
+    virtual HRESULT STDMETHODCALLTYPE SetBandState(DWORD dwBandID, DWORD dwMask, DWORD dwState);
+    virtual HRESULT STDMETHODCALLTYPE RemoveBand(DWORD dwBandID);
+    virtual HRESULT STDMETHODCALLTYPE GetBandObject(DWORD dwBandID, REFIID riid, void **ppv);
+    virtual HRESULT STDMETHODCALLTYPE SetBandSiteInfo(const BANDSITEINFO *pbsinfo);
+    virtual HRESULT STDMETHODCALLTYPE GetBandSiteInfo(BANDSITEINFO *pbsinfo);
 
-	// message handlers
-	LRESULT OnTravelBack(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
-	LRESULT OnTravelForward(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
-	LRESULT OnUpLevel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
-	LRESULT OnSearch(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
-	LRESULT OnFolders(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
-	LRESULT OnForwardToCommandTarget(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
-	LRESULT OnMenuDropDown(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled);
-	LRESULT OnQueryInsert(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled);
-	LRESULT OnQueryDelete(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled);
-	LRESULT OnNavigateCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-	LRESULT OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-	LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-	LRESULT OnSetCursor(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-	LRESULT OnTipText(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled);
-	LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    // message handlers
+    LRESULT OnTravelBack(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnTravelForward(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnUpLevel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnSearch(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnFolders(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnForwardToCommandTarget(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnMenuDropDown(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled);
+    LRESULT OnQueryInsert(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled);
+    LRESULT OnQueryDelete(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled);
+    LRESULT OnNavigateCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnSetCursor(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnTipText(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled);
+    LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
-BEGIN_MSG_MAP(CInternetToolbar)
-	COMMAND_ID_HANDLER(gBackCommandID, OnTravelBack)
-	COMMAND_ID_HANDLER(gForwardCommandID, OnTravelForward)
-	COMMAND_ID_HANDLER(gUpLevelCommandID, OnUpLevel)
-	COMMAND_ID_HANDLER(gSearchCommandID, OnSearch)
-	COMMAND_ID_HANDLER(gFoldersCommandID, OnFolders)
-	COMMAND_RANGE_HANDLER(0x7000, 0x7fff, OnForwardToCommandTarget)
-	NOTIFY_HANDLER(0, TBN_DROPDOWN, OnMenuDropDown)
-	NOTIFY_HANDLER(0, TBN_QUERYINSERT, OnQueryInsert)
-	NOTIFY_HANDLER(0, TBN_QUERYDELETE, OnQueryDelete)
-	MESSAGE_HANDLER(WM_COMMAND, OnNavigateCommand)
-	MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
-	MESSAGE_HANDLER(WM_SIZE, OnSize)
-	MESSAGE_HANDLER(WM_SETCURSOR, OnSetCursor)
-	NOTIFY_CODE_HANDLER(TTN_NEEDTEXTW, OnTipText)
-	MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
-END_MSG_MAP()
+    BEGIN_MSG_MAP(CInternetToolbar)
+        COMMAND_ID_HANDLER(gBackCommandID, OnTravelBack)
+        COMMAND_ID_HANDLER(gForwardCommandID, OnTravelForward)
+        COMMAND_ID_HANDLER(gUpLevelCommandID, OnUpLevel)
+        COMMAND_ID_HANDLER(gSearchCommandID, OnSearch)
+        COMMAND_ID_HANDLER(gFoldersCommandID, OnFolders)
+        COMMAND_RANGE_HANDLER(0x7000, 0x7fff, OnForwardToCommandTarget)
+        NOTIFY_HANDLER(0, TBN_DROPDOWN, OnMenuDropDown)
+        NOTIFY_HANDLER(0, TBN_QUERYINSERT, OnQueryInsert)
+        NOTIFY_HANDLER(0, TBN_QUERYDELETE, OnQueryDelete)
+        MESSAGE_HANDLER(WM_COMMAND, OnNavigateCommand)
+        MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
+        MESSAGE_HANDLER(WM_SIZE, OnSize)
+        MESSAGE_HANDLER(WM_SETCURSOR, OnSetCursor)
+        NOTIFY_CODE_HANDLER(TTN_NEEDTEXTW, OnTipText)
+        MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
+    END_MSG_MAP()
 
-DECLARE_REGISTRY_RESOURCEID(IDR_INTERNETTOOLBAR)
-DECLARE_NOT_AGGREGATABLE(CInternetToolbar)
+    DECLARE_REGISTRY_RESOURCEID(IDR_INTERNETTOOLBAR)
+    DECLARE_NOT_AGGREGATABLE(CInternetToolbar)
 
-DECLARE_PROTECT_FINAL_CONSTRUCT()
+    DECLARE_PROTECT_FINAL_CONSTRUCT()
 
-BEGIN_COM_MAP(CInternetToolbar)
-	COM_INTERFACE_ENTRY_IID(IID_IInputObject, IInputObject)
-	COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
-	COM_INTERFACE_ENTRY_IID(IID_IDockingWindow, IDockingWindow)
-	COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
-//	COM_INTERFACE_ENTRY_IID(IID_IPersistStream, IPersistStream)
-	COM_INTERFACE_ENTRY_IID(IID_IPersistStreamInit, IPersistStreamInit)
-	COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
-	COM_INTERFACE_ENTRY_IID(IID_IDispatch, IDispatch)
-	COM_INTERFACE_ENTRY_IID(IID_IExplorerToolbar, IExplorerToolbar)
-	COM_INTERFACE_ENTRY_IID(IID_IShellChangeNotify, IShellChangeNotify)
-	COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
-	COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
-	COM_INTERFACE_ENTRY_IID(IID_IWinEventHandler, IWinEventHandler)
-	COM_INTERFACE_ENTRY_IID(IID_IBandSite, IBandSite)
-END_COM_MAP()
+    BEGIN_COM_MAP(CInternetToolbar)
+        COM_INTERFACE_ENTRY_IID(IID_IInputObject, IInputObject)
+        COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
+        COM_INTERFACE_ENTRY_IID(IID_IDockingWindow, IDockingWindow)
+        COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
+//        COM_INTERFACE_ENTRY_IID(IID_IPersistStream, IPersistStream)
+        COM_INTERFACE_ENTRY_IID(IID_IPersistStreamInit, IPersistStreamInit)
+        COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
+        COM_INTERFACE_ENTRY_IID(IID_IDispatch, IDispatch)
+        COM_INTERFACE_ENTRY_IID(IID_IExplorerToolbar, IExplorerToolbar)
+        COM_INTERFACE_ENTRY_IID(IID_IShellChangeNotify, IShellChangeNotify)
+        COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
+        COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
+        COM_INTERFACE_ENTRY_IID(IID_IWinEventHandler, IWinEventHandler)
+        COM_INTERFACE_ENTRY_IID(IID_IBandSite, IBandSite)
+    END_COM_MAP()
 };

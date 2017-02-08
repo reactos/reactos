@@ -10,3 +10,7 @@ BOOL
 MyDrawCaptionTemp(HWND hwnd, HDC hdc, const RECT *rect, HFONT hFont, HICON hIcon, LPCWSTR str, UINT uFlags, COLOR_SCHEME *scheme);
 DWORD
 MyDrawMenuBarTemp(HWND Wnd, HDC DC, LPRECT Rect, HMENU Menu, HFONT Font, COLOR_SCHEME *scheme);
+
+#define MY_BF_ACTIVEBORDER 0x1000000
+#define MY_BF_INACTIVEBORDER 0x2000000
+

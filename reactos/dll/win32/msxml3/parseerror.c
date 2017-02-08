@@ -18,85 +18,100 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
 
 #define COBJMACROS
 
-#include "config.h"
+#include <config.h>
 
-#include <stdarg.h>
-#include <assert.h>
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "winuser.h"
-#include "ole2.h"
-#include "msxml2.h"
+//#include <stdarg.h>
+#ifdef HAVE_LIBXML2
+# include <libxml/parser.h>
+//# include <libxml/xmlerror.h>
+#endif
+
+#include <windef.h>
+#include <winbase.h>
+//#include "winerror.h"
+//#include "winuser.h"
+#include <ole2.h>
+#include <msxml6.h>
 
 #include "msxml_private.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 typedef struct
 {
-    const struct IXMLDOMParseErrorVtbl *lpVtbl;
+    DispatchEx dispex;
+    IXMLDOMParseError2 IXMLDOMParseError2_iface;
     LONG ref;
     LONG code, line, linepos, filepos;
     BSTR url, reason, srcText;
 } parse_error_t;
 
-static inline parse_error_t *impl_from_IXMLDOMParseError( IXMLDOMParseError *iface )
+static inline parse_error_t *impl_from_IXMLDOMParseError2( IXMLDOMParseError2 *iface )
 {
-    return (parse_error_t *)((char*)iface - FIELD_OFFSET(parse_error_t, lpVtbl));
+    return CONTAINING_RECORD(iface, parse_error_t, IXMLDOMParseError2_iface);
 }
 
 static HRESULT WINAPI parseError_QueryInterface(
-    IXMLDOMParseError *iface,
+    IXMLDOMParseError2 *iface,
     REFIID riid,
     void** ppvObject )
 {
-    TRACE("(%p)->(%s %p)\n", iface, debugstr_guid(riid), ppvObject);
+    parse_error_t *This = impl_from_IXMLDOMParseError2( iface );
+
+    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppvObject);
 
     if ( IsEqualGUID( riid, &IID_IUnknown ) ||
          IsEqualGUID( riid, &IID_IDispatch ) ||
-         IsEqualGUID( riid, &IID_IXMLDOMParseError ) )
+         IsEqualGUID( riid, &IID_IXMLDOMParseError ) ||
+         IsEqualGUID( riid, &IID_IXMLDOMParseError2 ) )
     {
         *ppvObject = iface;
+    }
+    else if (dispex_query_interface(&This->dispex, riid, ppvObject))
+    {
+        return *ppvObject ? S_OK : E_NOINTERFACE;
     }
     else
     {
         FIXME("interface %s not implemented\n", debugstr_guid(riid));
+        *ppvObject = NULL;
         return E_NOINTERFACE;
     }
 
-    IXMLDOMParseError_AddRef( iface );
+    IXMLDOMParseError2_AddRef( iface );
 
     return S_OK;
 }
 
 static ULONG WINAPI parseError_AddRef(
-    IXMLDOMParseError *iface )
+    IXMLDOMParseError2 *iface )
 {
-    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
+    parse_error_t *This = impl_from_IXMLDOMParseError2( iface );
     ULONG ref = InterlockedIncrement( &This->ref );
-    TRACE("(%p) ref now %d\n", This, ref);
+    TRACE("(%p)->(%d)\n", This, ref);
     return ref;
 }
 
 static ULONG WINAPI parseError_Release(
-    IXMLDOMParseError *iface )
+    IXMLDOMParseError2 *iface )
 {
-    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
-    ULONG ref;
+    parse_error_t *This = impl_from_IXMLDOMParseError2( iface );
+    ULONG ref = InterlockedDecrement( &This->ref );
 
-    ref = InterlockedDecrement( &This->ref );
-    TRACE("(%p) ref now %d\n", This, ref);
+    TRACE("(%p)->(%d)\n", This, ref);
     if ( ref == 0 )
     {
         SysFreeString(This->url);
         SysFreeString(This->reason);
         SysFreeString(This->srcText);
+        release_dispex(&This->dispex);
         heap_free( This );
     }
 
@@ -104,64 +119,39 @@ static ULONG WINAPI parseError_Release(
 }
 
 static HRESULT WINAPI parseError_GetTypeInfoCount(
-    IXMLDOMParseError *iface,
+    IXMLDOMParseError2 *iface,
     UINT* pctinfo )
 {
-    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
-
-    TRACE("(%p)->(%p)\n", This, pctinfo);
-
-    *pctinfo = 1;
-
-    return S_OK;
+    parse_error_t *This = impl_from_IXMLDOMParseError2( iface );
+    return IDispatchEx_GetTypeInfoCount(&This->dispex.IDispatchEx_iface, pctinfo);
 }
 
 static HRESULT WINAPI parseError_GetTypeInfo(
-    IXMLDOMParseError *iface,
+    IXMLDOMParseError2 *iface,
     UINT iTInfo,
     LCID lcid,
     ITypeInfo** ppTInfo )
 {
-    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
-    HRESULT hr;
-
-    TRACE("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
-
-    hr = get_typeinfo(IXMLDOMParseError_tid, ppTInfo);
-
-    return hr;
+    parse_error_t *This = impl_from_IXMLDOMParseError2( iface );
+    return IDispatchEx_GetTypeInfo(&This->dispex.IDispatchEx_iface,
+        iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI parseError_GetIDsOfNames(
-    IXMLDOMParseError *iface,
+    IXMLDOMParseError2 *iface,
     REFIID riid,
     LPOLESTR* rgszNames,
     UINT cNames,
     LCID lcid,
     DISPID* rgDispId )
 {
-    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
-    ITypeInfo *typeinfo;
-    HRESULT hr;
-
-    TRACE("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
-          lcid, rgDispId);
-
-    if(!rgszNames || cNames == 0 || !rgDispId)
-        return E_INVALIDARG;
-
-    hr = get_typeinfo(IXMLDOMParseError_tid, &typeinfo);
-    if(SUCCEEDED(hr))
-    {
-        hr = ITypeInfo_GetIDsOfNames(typeinfo, rgszNames, cNames, rgDispId);
-        ITypeInfo_Release(typeinfo);
-    }
-
-    return hr;
+    parse_error_t *This = impl_from_IXMLDOMParseError2( iface );
+    return IDispatchEx_GetIDsOfNames(&This->dispex.IDispatchEx_iface,
+        riid, rgszNames, cNames, lcid, rgDispId);
 }
 
 static HRESULT WINAPI parseError_Invoke(
-    IXMLDOMParseError *iface,
+    IXMLDOMParseError2 *iface,
     DISPID dispIdMember,
     REFIID riid,
     LCID lcid,
@@ -171,29 +161,16 @@ static HRESULT WINAPI parseError_Invoke(
     EXCEPINFO* pExcepInfo,
     UINT* puArgErr )
 {
-    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
-    ITypeInfo *typeinfo;
-    HRESULT hr;
-
-    TRACE("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
-          lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
-
-    hr = get_typeinfo(IXMLDOMParseError_tid, &typeinfo);
-    if(SUCCEEDED(hr))
-    {
-        hr = ITypeInfo_Invoke(typeinfo, &(This->lpVtbl), dispIdMember, wFlags, pDispParams,
-                pVarResult, pExcepInfo, puArgErr);
-        ITypeInfo_Release(typeinfo);
-    }
-
-    return hr;
+    parse_error_t *This = impl_from_IXMLDOMParseError2( iface );
+    return IDispatchEx_Invoke(&This->dispex.IDispatchEx_iface,
+        dispIdMember, riid, lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
 static HRESULT WINAPI parseError_get_errorCode(
-    IXMLDOMParseError *iface,
+    IXMLDOMParseError2 *iface,
     LONG *code )
 {
-    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
+    parse_error_t *This = impl_from_IXMLDOMParseError2( iface );
     TRACE("(%p)->(%p)\n", This, code);
 
     *code = This->code;
@@ -205,19 +182,19 @@ static HRESULT WINAPI parseError_get_errorCode(
 }
 
 static HRESULT WINAPI parseError_get_url(
-    IXMLDOMParseError *iface,
+    IXMLDOMParseError2 *iface,
     BSTR *url )
 {
-    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
+    parse_error_t *This = impl_from_IXMLDOMParseError2( iface );
     FIXME("(%p)->(%p)\n", This, url);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI parseError_get_reason(
-    IXMLDOMParseError *iface,
+    IXMLDOMParseError2 *iface,
     BSTR *reason )
 {
-    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
+    parse_error_t *This = impl_from_IXMLDOMParseError2( iface );
     TRACE("(%p)->(%p)\n", This, reason);
     
     if(!This->reason)
@@ -230,42 +207,95 @@ static HRESULT WINAPI parseError_get_reason(
 }
 
 static HRESULT WINAPI parseError_get_srcText(
-    IXMLDOMParseError *iface,
+    IXMLDOMParseError2 *iface,
     BSTR *srcText )
 {
-    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
-    FIXME("(%p)->(%p)\n", This, srcText);
-    return E_NOTIMPL;
+    parse_error_t *This = impl_from_IXMLDOMParseError2( iface );
+
+    TRACE("(%p)->(%p)\n", This, srcText);
+
+    if (!srcText) return E_INVALIDARG;
+
+    *srcText = SysAllocString(This->srcText);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI parseError_get_line(
-    IXMLDOMParseError *iface,
+    IXMLDOMParseError2 *iface,
     LONG *line )
 {
-    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
-    FIXME("(%p)->(%p)\n", This, line);
-    return E_NOTIMPL;
+    parse_error_t *This = impl_from_IXMLDOMParseError2( iface );
+
+    TRACE("(%p)->(%p): stub\n", This, line);
+
+    if (!line) return E_INVALIDARG;
+
+    *line = This->line;
+    return S_OK;
 }
 
 static HRESULT WINAPI parseError_get_linepos(
-    IXMLDOMParseError *iface,
+    IXMLDOMParseError2 *iface,
     LONG *linepos )
 {
-    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
-    FIXME("(%p)->(%p)\n", This, linepos);
-    return E_NOTIMPL;
+    parse_error_t *This = impl_from_IXMLDOMParseError2( iface );
+
+    TRACE("(%p)->(%p)\n", This, linepos);
+
+    if (!linepos) return E_INVALIDARG;
+
+    *linepos = This->linepos;
+    return S_OK;
 }
 
 static HRESULT WINAPI parseError_get_filepos(
-    IXMLDOMParseError *iface,
+    IXMLDOMParseError2 *iface,
     LONG *filepos )
 {
-    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
+    parse_error_t *This = impl_from_IXMLDOMParseError2( iface );
     FIXME("(%p)->(%p)\n", This, filepos);
     return E_NOTIMPL;
 }
 
-static const struct IXMLDOMParseErrorVtbl parseError_vtbl =
+static HRESULT WINAPI parseError_get_errorXPath(
+    IXMLDOMParseError2 *iface,
+    BSTR *xpathexpr)
+{
+    parse_error_t *This = impl_from_IXMLDOMParseError2( iface );
+    FIXME("(%p)->(%p)\n", This, xpathexpr);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI parseError_get_AllErrors(
+    IXMLDOMParseError2 *iface,
+    IXMLDOMParseErrorCollection **allErrors)
+{
+    parse_error_t *This = impl_from_IXMLDOMParseError2( iface );
+    FIXME("(%p)->(%p)\n", This, allErrors);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI parseError_errorParameters(
+    IXMLDOMParseError2 *iface,
+    LONG index,
+    BSTR *param)
+{
+    parse_error_t *This = impl_from_IXMLDOMParseError2( iface );
+    FIXME("(%p)->(%p)\n", This, param);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI parseError_get_errorParametersCount(
+    IXMLDOMParseError2 *iface,
+    LONG *count)
+{
+    parse_error_t *This = impl_from_IXMLDOMParseError2( iface );
+    FIXME("(%p)->(%p)\n", This, count);
+    return E_NOTIMPL;
+}
+
+static const struct IXMLDOMParseError2Vtbl XMLDOMParseError2Vtbl =
 {
     parseError_QueryInterface,
     parseError_AddRef,
@@ -280,7 +310,23 @@ static const struct IXMLDOMParseErrorVtbl parseError_vtbl =
     parseError_get_srcText,
     parseError_get_line,
     parseError_get_linepos,
-    parseError_get_filepos
+    parseError_get_filepos,
+    parseError_get_errorXPath,
+    parseError_get_AllErrors,
+    parseError_errorParameters,
+    parseError_get_errorParametersCount
+};
+
+static const tid_t parseError_iface_tids[] = {
+    IXMLDOMParseError2_tid,
+    0
+};
+
+static dispex_static_data_t parseError_dispex = {
+    NULL,
+    IXMLDOMParseError2_tid,
+    NULL,
+    parseError_iface_tids
 };
 
 IXMLDOMParseError *create_parseError( LONG code, BSTR url, BSTR reason, BSTR srcText,
@@ -292,7 +338,7 @@ IXMLDOMParseError *create_parseError( LONG code, BSTR url, BSTR reason, BSTR src
     if ( !This )
         return NULL;
 
-    This->lpVtbl = &parseError_vtbl;
+    This->IXMLDOMParseError2_iface.lpVtbl = &XMLDOMParseError2Vtbl;
     This->ref = 1;
 
     This->code = code;
@@ -303,5 +349,7 @@ IXMLDOMParseError *create_parseError( LONG code, BSTR url, BSTR reason, BSTR src
     This->linepos = linepos;
     This->filepos = filepos;
 
-    return (IXMLDOMParseError*) &This->lpVtbl;
+    init_dispex(&This->dispex, (IUnknown*)&This->IXMLDOMParseError2_iface, &parseError_dispex);
+
+    return (IXMLDOMParseError*)&This->IXMLDOMParseError2_iface;
 }

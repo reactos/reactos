@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!DOCTYPE OpenGLAPI SYSTEM "gl_API.dtd">
+
+<OpenGLAPI>
+<category name="GL_APPLE_object_purgeable" number="371">
+    <enum name="RELEASED_APPLE"               value="0x8A19"/>
+    <enum name="VOLATILE_APPLE"               value="0x8A1A"/>
+    <enum name="RETAINED_APPLE"               value="0x8A1B"/>
+    <enum name="UNDEFINED_APPLE"              value="0x8A1C"/>
+    <enum name="PURGEABLE_APPLE"    count="1" value="0x8A1D">
+       <size name="GetObjectParameterivAPPLE" count="1" mode="get"/>
+    </enum>
+
+    <enum name="BUFFER_OBJECT_APPLE"          value="0x85B3"/>
+
+    <function name="ObjectPurgeableAPPLE" offset="assign">
+        <param name="objectType" type="GLenum"/>
+        <param name="name" type="GLuint"/>
+        <param name="option" type="GLenum"/>
+	<return type="GLenum"/>
+    </function>
+
+    <function name="ObjectUnpurgeableAPPLE" offset="assign">
+        <param name="objectType" type="GLenum"/>
+        <param name="name" type="GLuint"/>
+        <param name="option" type="GLenum"/>
+	<return type="GLenum"/>
+    </function>
+
+    <function name="GetObjectParameterivAPPLE" offset="assign">
+        <param name="objectType" type="GLenum"/>
+        <param name="name" type="GLuint"/>
+        <param name="pname" type="GLenum"/>
+        <param name="value" type="GLint *" output="true"/>
+    </function>
+</category>
+</OpenGLAPI>

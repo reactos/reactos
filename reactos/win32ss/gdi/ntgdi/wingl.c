@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            subsystems/win32/win32k/objects/wingl.c
  * PURPOSE:         WinGL API
- * PROGRAMMER:      
+ * PROGRAMMER:
  */
 
 #include <win32k.h>
@@ -38,23 +38,23 @@ IntGetipfdDevMax(PDC pdc)
   return Ret;
 }
 
-
+ _Success_(return != 0)
 INT
 APIENTRY
-NtGdiDescribePixelFormat(HDC  hDC,
-                             INT  PixelFormat,
-                             UINT  BufSize,
-                             LPPIXELFORMATDESCRIPTOR  pfd)
+NtGdiDescribePixelFormat(
+    _In_ HDC hdc,
+    _In_ INT ipfd,
+    _In_ UINT cjpfd,
+    _When_(cjpfd != 0, _Out_) PPIXELFORMATDESCRIPTOR ppfd)
 {
   PDC pdc;
   PPDEVOBJ ppdev;
   INT Ret = 0;
   PIXELFORMATDESCRIPTOR pfdSafe;
-  NTSTATUS Status = STATUS_SUCCESS;
 
-  if (!BufSize) return 0;
+  if ((ppfd == NULL) && (cjpfd != 0)) return 0;
 
-  pdc = DC_LockDc(hDC);
+  pdc = DC_LockDc(hdc);
   if (!pdc)
   {
      EngSetLastError(ERROR_INVALID_HANDLE);
@@ -63,10 +63,8 @@ NtGdiDescribePixelFormat(HDC  hDC,
 
   if (!pdc->ipfdDevMax) IntGetipfdDevMax(pdc);
 
-  if ( BufSize < sizeof(PIXELFORMATDESCRIPTOR) ||
-       PixelFormat < 1 ||
-       PixelFormat > pdc->ipfdDevMax )
-  {  
+  if ((ipfd < 1) || (ipfd > pdc->ipfdDevMax))
+  {
      EngSetLastError(ERROR_INVALID_PARAMETER);
      goto Exit;
   }
@@ -83,25 +81,25 @@ NtGdiDescribePixelFormat(HDC  hDC,
   {
      Ret = ppdev->DriverFunctions.DescribePixelFormat(
                                                 ppdev->dhpdev,
-                                                PixelFormat,
-                                                sizeof(PIXELFORMATDESCRIPTOR),
+                                                ipfd,
+                                                sizeof(pfdSafe),
                                                 &pfdSafe);
   }
 
-  _SEH2_TRY
+  if (Ret && cjpfd)
   {
-     ProbeForWrite( pfd,
-                    sizeof(PIXELFORMATDESCRIPTOR),
-                    1);
-     RtlCopyMemory(&pfdSafe, pfd, sizeof(PIXELFORMATDESCRIPTOR));
+      _SEH2_TRY
+      {
+         cjpfd = min(cjpfd, sizeof(PIXELFORMATDESCRIPTOR));
+         ProbeForWrite(ppfd, cjpfd, 1);
+         RtlCopyMemory(ppfd, &pfdSafe, cjpfd);
+      }
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+      {
+         SetLastNtError(_SEH2_GetExceptionCode());
+      }
+      _SEH2_END;
   }
-  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-  {
-     Status = _SEH2_GetExceptionCode();
-  }
-  _SEH2_END;
-
-  if (!NT_SUCCESS(Status)) SetLastNtError(Status);
 
 Exit:
   DC_UnlockDc(pdc);
@@ -133,7 +131,7 @@ NtGdiSetPixelFormat(
 
   if ( ipfd < 1 ||
        ipfd > pdc->ipfdDevMax )
-  {  
+  {
      EngSetLastError(ERROR_INVALID_PARAMETER);
      goto Exit;
   }

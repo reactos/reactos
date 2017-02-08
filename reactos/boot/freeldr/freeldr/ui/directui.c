@@ -52,11 +52,11 @@ BOOLEAN
 UiInitialize(IN BOOLEAN ShowGui)
 {
 	ULONG Depth;
-    
-    /* Nothing to do */
-    if (!ShowGui) return TRUE;
 
-    /* Set mode and query size */
+	/* Nothing to do */
+	if (!ShowGui) return TRUE;
+
+	/* Set mode and query size */
 	MachVideoSetDisplayMode(NULL, TRUE);
 	MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
 	return TRUE;
@@ -84,11 +84,28 @@ UiDrawText(IN ULONG X,
 {
 	ULONG i, j;
 
-    /* Draw the text character by character, but don't exceed the width */
+	/* Draw the text character by character, but don't exceed the width */
 	for (i = X, j = 0; Text[j] && i < UiScreenWidth; i++, j++)
 	{
-	    /* Write the character */
-        MachVideoPutChar(Text[j], Attr, i, Y);
+		/* Write the character */
+		MachVideoPutChar(Text[j], Attr, i, Y);
+	}
+}
+
+VOID
+UiDrawText2(IN ULONG X,
+            IN ULONG Y,
+            IN ULONG MaxNumChars,
+            IN PCSTR Text,
+            IN UCHAR Attr)
+{
+	ULONG i, j;
+
+	/* Draw the text character by character, but don't exceed the width */
+	for (i = X, j = 0; Text[j] && i < UiScreenWidth && (MaxNumChars > 0 ? j < MaxNumChars : TRUE); i++, j++)
+	{
+		/* Write the character */
+		MachVideoPutChar(Text[j], Attr, i, Y);
 	}
 }
 
@@ -245,7 +262,7 @@ UiTruncateStringEllipsis(IN PCHAR StringText,
                          IN ULONG MaxChars)
 {
     /* If it's too large, just add some ellipsis past the maximum */
-	if (strlen(StringText) > MaxChars) strcpy(&StringText[MaxChars - 3], "...");
+    if (strlen(StringText) > MaxChars) strcpy(&StringText[MaxChars - 3], "...");
 }
 
 VOID
@@ -273,7 +290,7 @@ UiDrawMenuBox(IN PUI_MENU_INFO MenuInfo)
 
         /* Display under the menu directly */
         UiDrawText(0,
-                   MenuInfo->Bottom + 3,
+                   MenuInfo->Bottom + 4,
                    MenuLineText,
                    ATTR(UiMenuFgColor, UiMenuBgColor));
     }
@@ -288,7 +305,7 @@ UiDrawMenuBox(IN PUI_MENU_INFO MenuInfo)
 
         /* Draw this "empty" string to erase */
         UiDrawText(0,
-                   MenuInfo->Bottom + 3,
+                   MenuInfo->Bottom + 4,
                    MenuLineText,
                    ATTR(UiMenuFgColor, UiMenuBgColor));
     }
@@ -297,7 +314,7 @@ UiDrawMenuBox(IN PUI_MENU_INFO MenuInfo)
     for (i = 0; i < MenuInfo->MenuItemCount; i++)
     {
         /* Check if it's a separator */
-        if (!(_stricmp(MenuInfo->MenuItemList[i], "SEPARATOR")))
+        if (MenuInfo->MenuItemList[i] == NULL)
         {
             /* Draw the separator line */
             UiDrawText(MenuInfo->Left,
@@ -325,10 +342,11 @@ UiDrawMenuItem(IN PUI_MENU_INFO MenuInfo,
     strcat(MenuLineText, "    ");
 
     /* Now append the text string */
-    strcat(MenuLineText, MenuInfo->MenuItemList[MenuItemNumber]);
+    if (MenuInfo->MenuItemList[MenuItemNumber])
+        strcat(MenuLineText, MenuInfo->MenuItemList[MenuItemNumber]);
 
     /* If it is a separator */
-    if (!(_stricmp(MenuInfo->MenuItemList[MenuItemNumber], "SEPARATOR")))
+    if (MenuInfo->MenuItemList[MenuItemNumber] == NULL)
     {
         /* Make it a separator line and use menu colors */
         memset(MenuLineText, 0, 80);
@@ -353,35 +371,42 @@ UiDrawMenu(IN PUI_MENU_INFO MenuInfo)
 {
     ULONG i;
 
-    /* No GUI status bar text, just minimal text. first to tell the user to choose */
+    /* No GUI status bar text, just minimal text. Show the menu header. */
     UiDrawText(0,
                MenuInfo->Top - 2,
-               "Please select the operating system to start:",
+               MenuInfo->MenuHeader,
                ATTR(UiMenuFgColor, UiMenuBgColor));
 
-    /* Now tell him how to choose */
+    /* Now tell the user how to choose */
     UiDrawText(0,
                MenuInfo->Bottom + 1,
-               "Use the up and down arrow keys to move the highlight to "
-               "your choice.",
+               "Use \x18 and \x19 to move the highlight to your choice.",
                ATTR(UiMenuFgColor, UiMenuBgColor));
     UiDrawText(0,
                MenuInfo->Bottom + 2,
                "Press ENTER to choose.",
                ATTR(UiMenuFgColor, UiMenuBgColor));
 
-    /* And offer F8 options */
+    /* And show the menu footer */
     UiDrawText(0,
                UiScreenHeight - 4,
-               "For troubleshooting and advanced startup options for "
-               "ReactOS, press F8.",
+               MenuInfo->MenuFooter,
                ATTR(UiMenuFgColor, UiMenuBgColor));
 
     /* Draw the menu box */
     UiDrawMenuBox(MenuInfo);
 
     /* Draw each line of the menu */
-    for (i = 0; i < MenuInfo->MenuItemCount; i++) UiDrawMenuItem(MenuInfo, i);
+    for (i = 0; i < MenuInfo->MenuItemCount; i++)
+    {
+        UiDrawMenuItem(MenuInfo, i);
+    }
+
+    /* Display the boot options if needed */
+    if (MenuInfo->ShowBootOptions)
+    {
+        DisplayBootTimeOptions();
+    }
 }
 
 ULONG
@@ -389,7 +414,8 @@ NTAPI
 UiProcessMenuKeyboardEvent(IN PUI_MENU_INFO MenuInfo,
                            IN UiMenuKeyPressFilterCallback KeyPressFilter)
 {
-    ULONG KeyEvent = 0, Selected, Count;
+    ULONG KeyEvent = 0;
+    ULONG Selected, Count;
 
     /* Check for a keypress */
     if (MachConsKbHit())
@@ -397,9 +423,7 @@ UiProcessMenuKeyboardEvent(IN PUI_MENU_INFO MenuInfo,
         /* Check if the timeout is not already complete */
         if (MenuInfo->MenuTimeRemaining != -1)
         {
-            //
-            // Cancel it and remove it
-            //
+            /* Cancel it and remove it */
             MenuInfo->MenuTimeRemaining = -1;
             UiDrawMenuBox(MenuInfo);
         }
@@ -410,7 +434,10 @@ UiProcessMenuKeyboardEvent(IN PUI_MENU_INFO MenuInfo,
         /* Is it extended? Then get the extended key */
         if (!KeyEvent) KeyEvent = MachConsGetCh();
 
-        /* Call the supplied key filter callback function to see if it is going to handle this keypress. */
+        /*
+         * Call the supplied key filter callback function to see
+         * if it is going to handle this keypress.
+         */
         if ((KeyPressFilter) && (KeyPressFilter(KeyEvent)))
         {
             /* It processed the key character, so redraw and exit */
@@ -419,40 +446,55 @@ UiProcessMenuKeyboardEvent(IN PUI_MENU_INFO MenuInfo,
         }
 
         /* Process the key */
-        if ((KeyEvent == KEY_UP) || (KeyEvent == KEY_DOWN))
+        if ((KeyEvent == KEY_UP  ) || (KeyEvent == KEY_DOWN) ||
+            (KeyEvent == KEY_HOME) || (KeyEvent == KEY_END ))
         {
             /* Get the current selected item and count */
             Selected = MenuInfo->SelectedMenuItem;
             Count = MenuInfo->MenuItemCount - 1;
 
-            /* Check if this was a key up and there's a selected menu item */
-            if ((KeyEvent == KEY_UP) && (Selected))
+            /* Check the key and change the selected menu item */
+            if ((KeyEvent == KEY_UP) && (Selected > 0))
             {
-                /* Update the menu (Deselect previous item) */
+                /* Deselect previous item and go up */
                 MenuInfo->SelectedMenuItem--;
                 UiDrawMenuItem(MenuInfo, Selected);
                 Selected--;
 
-                /* Skip past any separators */
-                if ((Selected) &&
-                    !(_stricmp(MenuInfo->MenuItemList[Selected], "SEPARATOR")))
+                // Skip past any separators
+                if ((Selected > 0) &&
+                    (MenuInfo->MenuItemList[Selected] == NULL))
                 {
                     MenuInfo->SelectedMenuItem--;
                 }
             }
+            else if ( ((KeyEvent == KEY_UP) && (Selected == 0)) ||
+                       (KeyEvent == KEY_END) )
+            {
+                /* Go to the end */
+                MenuInfo->SelectedMenuItem = Count;
+                UiDrawMenuItem(MenuInfo, Selected);
+            }
             else if ((KeyEvent == KEY_DOWN) && (Selected < Count))
             {
-                /* Update the menu (deselect previous item) */
+                /* Deselect previous item and go down */
                 MenuInfo->SelectedMenuItem++;
                 UiDrawMenuItem(MenuInfo, Selected);
                 Selected++;
 
-                /* Skip past any separators */
+                // Skip past any separators
                 if ((Selected < Count) &&
-                    !(_stricmp(MenuInfo->MenuItemList[Selected], "SEPARATOR")))
+                    (MenuInfo->MenuItemList[Selected] == NULL))
                 {
                     MenuInfo->SelectedMenuItem++;
                 }
+            }
+            else if ( ((KeyEvent == KEY_DOWN) && (Selected == Count)) ||
+                       (KeyEvent == KEY_HOME) )
+            {
+                /* Go to the beginning */
+                MenuInfo->SelectedMenuItem = 0;
+                UiDrawMenuItem(MenuInfo, Selected);
             }
 
             /* Select new item and update video buffer */
@@ -478,8 +520,11 @@ UiCalcMenuBoxSize(IN PUI_MENU_INFO MenuInfo)
     for (i = 0; i < MenuInfo->MenuItemCount; i++)
     {
         /* Get the string length and make it become the new width if necessary */
-        Length = strlen(MenuInfo->MenuItemList[i]);
-        if (Length > Width) Width = Length;
+        if (MenuInfo->MenuItemList[i])
+        {
+            Length = (ULONG)strlen(MenuInfo->MenuItemList[i]);
+            if (Length > Width) Width = Length;
+        }
     }
 
     /* Allow room for left & right borders, plus 8 spaces on each side */
@@ -495,7 +540,10 @@ UiCalcMenuBoxSize(IN PUI_MENU_INFO MenuInfo)
 }
 
 BOOLEAN
-UiDisplayMenu(IN PCSTR MenuItemList[],
+UiDisplayMenu(IN PCSTR MenuHeader,
+              IN PCSTR MenuFooter,
+              IN BOOLEAN ShowBootOptions,
+              IN PCSTR MenuItemList[],
               IN ULONG MenuItemCount,
               IN ULONG DefaultMenuItem,
               IN LONG MenuTimeOut,
@@ -517,6 +565,9 @@ UiDisplayMenu(IN PCSTR MenuItemList[],
     }
 
     /* Setup the MENU_INFO structure */
+    MenuInformation.MenuHeader = MenuHeader;
+    MenuInformation.MenuFooter = MenuFooter;
+    MenuInformation.ShowBootOptions = ShowBootOptions;
     MenuInformation.MenuItemList = MenuItemList;
     MenuInformation.MenuItemCount = MenuItemCount;
     MenuInformation.MenuTimeRemaining = MenuTimeOut;
@@ -543,7 +594,7 @@ UiDisplayMenu(IN PCSTR MenuItemList[],
         if (CanEscape && KeyPress == KEY_ESC) return FALSE;
 
         /* Check if there is a countdown */
-        if (MenuInformation.MenuTimeRemaining)
+        if (MenuInformation.MenuTimeRemaining > 0)
         {
             /* Get the updated time, seconds only */
             CurrentClockSecond = ArcGetTime()->Second;
@@ -559,7 +610,7 @@ UiDisplayMenu(IN PCSTR MenuItemList[],
                 UiDrawMenuBox(&MenuInformation);
             }
         }
-        else
+        else if (MenuInformation.MenuTimeRemaining == 0)
         {
             /* A time out occurred, exit this loop and return default OS */
             break;

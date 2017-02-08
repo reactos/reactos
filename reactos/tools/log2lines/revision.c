@@ -154,8 +154,8 @@ int
 regscan(FILE *outFile)
 {
     int res = 0;
-    char logname[MAX_PATH];
-    char inxname[MAX_PATH];
+    char logname[PATH_MAX];
+    char inxname[PATH_MAX];
     char line[LINESIZE + 1];
     char line2[LINESIZE + 1];
     FILE *flog = NULL;
@@ -189,8 +189,8 @@ regscan(FILE *outFile)
         if (!res)
         {
             char flag[2];
-            char path[MAX_PATH];
-            char path2[MAX_PATH];
+            char path[PATH_MAX];
+            char path2[PATH_MAX];
             int wflag = 0;
             clilog(outFile, "Regression candidates:\n");
             while (( pos = findRev(finx, &r) ))
@@ -257,8 +257,8 @@ int
 updateSvnlog(void)
 {
     int res = 0;
-    char logname[MAX_PATH];
-    char inxname[MAX_PATH];
+    char logname[PATH_MAX];
+    char inxname[PATH_MAX];
     char line[LINESIZE + 1];
     FILE *flog = NULL;
     FILE *finx = NULL;

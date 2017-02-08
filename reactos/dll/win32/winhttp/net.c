@@ -16,14 +16,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <errno.h>
+#include <config.h>
+//#include "wine/port.h"
 
-#include <sys/types.h>
+//#include <stdarg.h>
+//#include <stdio.h>
+//#include <errno.h>
+
+//#include <sys/types.h>
 #ifdef HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
 #endif
@@ -45,19 +49,19 @@
 
 #define NONAMELESSUNION
 
-#include "wine/debug.h"
-#include "wine/library.h"
+#include <wine/debug.h>
+#include <wine/library.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winhttp.h"
-#include "wincrypt.h"
+//#include "windef.h"
+//#include "winbase.h"
+#include <winhttp.h>
+//#include "wincrypt.h"
 
 #include "winhttp_private.h"
 
 /* to avoid conflicts with the Unix socket headers */
 #define USE_WS_PREFIX
-#include "winsock2.h"
+//#include "winsock2.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(winhttp);
 

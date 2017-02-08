@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 HINSTANCE hExplorerInstance;
 HMODULE hUser32;
@@ -41,17 +41,17 @@ SetWindowStyle(IN HWND hWnd,
 
     ASSERT((~dwStyleMask & dwStyle) == 0);
 
-    PrevStyle = GetWindowLongPtr(hWnd,
-                                 GWL_STYLE);
+    PrevStyle = GetWindowLong(hWnd,
+                              GWL_STYLE);
     if (PrevStyle != 0 &&
         (PrevStyle & dwStyleMask) != dwStyle)
     {
         Style = PrevStyle & ~dwStyleMask;
         Style |= dwStyle;
 
-        PrevStyle = SetWindowLongPtr(hWnd,
-                                     GWL_STYLE,
-                                     Style);
+        PrevStyle = SetWindowLong(hWnd,
+                                  GWL_STYLE,
+                                  Style);
     }
 
     return PrevStyle;
@@ -66,17 +66,17 @@ SetWindowExStyle(IN HWND hWnd,
 
     ASSERT((~dwStyleMask & dwStyle) == 0);
 
-    PrevStyle = GetWindowLongPtr(hWnd,
-                                 GWL_EXSTYLE);
+    PrevStyle = GetWindowLong(hWnd,
+                              GWL_EXSTYLE);
     if (PrevStyle != 0 &&
         (PrevStyle & dwStyleMask) != dwStyle)
     {
         Style = PrevStyle & ~dwStyleMask;
         Style |= dwStyle;
 
-        PrevStyle = SetWindowLongPtr(hWnd,
-                                     GWL_EXSTYLE,
-                                     Style);
+        PrevStyle = SetWindowLong(hWnd,
+                                  GWL_EXSTYLE,
+                                  Style);
     }
 
     return PrevStyle;
@@ -291,11 +291,11 @@ GetVersionInfoString(IN TCHAR *szFileName,
     BOOL bRet = FALSE;
     unsigned int i;
 
-    dwLen = GetFileVersionInfoSize(szFileName,&dwHandle);
+    dwLen = GetFileVersionInfoSize(szFileName, &dwHandle);
 
     if (dwLen > 0)
     {
-        lpData = HeapAlloc(hProcessHeap,0,dwLen);
+        lpData = HeapAlloc(hProcessHeap, 0, dwLen);
 
         if (lpData != NULL)
         {
@@ -311,7 +311,7 @@ GetVersionInfoString(IN TCHAR *szFileName,
                     (LPVOID *)&lpTranslate,
                     &cbTranslate);
 
-                for (i = 0;i < (cbTranslate / sizeof(LANGCODEPAGE));i++)
+                for (i = 0; i < cbTranslate / sizeof(LANGCODEPAGE); i++)
                 {
                     /* If the bottom eight bits of the language id's
                     match, use this version information (since this
@@ -324,14 +324,15 @@ GetVersionInfoString(IN TCHAR *szFileName,
                             sizeof(szSubBlock) / sizeof(szSubBlock[0]),
                             TEXT("\\StringFileInfo\\%04X%04X\\%s"),
                             lpTranslate[i].wLanguage,
-                            lpTranslate[i].wCodePage,szVersionInfo);
+                            lpTranslate[i].wCodePage,
+                            szVersionInfo);
 
                         if (VerQueryValue(lpData,
                             szSubBlock,
                             (LPVOID *)&lpszLocalBuf,
                             &cbLen) != 0)
                         {
-                            wcsncpy(szBuffer,lpszLocalBuf,cbBufLen);
+                            _tcsncpy(szBuffer, lpszLocalBuf, cbBufLen / sizeof(*szBuffer));
 
                             bRet = TRUE;
                             break;
@@ -339,12 +340,31 @@ GetVersionInfoString(IN TCHAR *szFileName,
                     }
                 }
             }
-            HeapFree(hProcessHeap,0,lpData);
+            HeapFree(hProcessHeap, 0, lpData);
             lpData = NULL;
         }
     }
 
     return bRet;
+}
+
+static VOID
+HideMinimizedWindows(IN BOOL bHide)
+{
+    MINIMIZEDMETRICS mm;
+
+    mm.cbSize = sizeof(mm);
+    if (!SystemParametersInfo(SPI_GETMINIMIZEDMETRICS, sizeof(mm), &mm, 0))
+    {
+        DbgPrint("SystemParametersInfo failed with %lu\n", GetLastError());
+        return;
+    }
+    if (bHide)
+        mm.iArrange |= ARW_HIDE;
+    else
+        mm.iArrange &= ~ARW_HIDE;
+    if (!SystemParametersInfo(SPI_SETMINIMIZEDMETRICS, sizeof(mm), &mm, 0))
+        DbgPrint("SystemParametersInfo failed with %lu\n", GetLastError());
 }
 
 INT WINAPI
@@ -369,6 +389,7 @@ _tWinMain(IN HINSTANCE hInstance,
 
     hExplorerInstance = hInstance;
     hProcessHeap = GetProcessHeap();
+    LoadAdvancedSettings();
 
     hUser32 = GetModuleHandle(TEXT("USER32.DLL"));
     if (hUser32 != NULL)
@@ -380,6 +401,8 @@ _tWinMain(IN HINSTANCE hInstance,
     InitCommonControls();
     OleInitialize(NULL);
 
+    ProcessStartupItems();
+
     if (GetShellWindow() == NULL)
         CreateShellDesktop = TRUE;
 
@@ -390,6 +413,11 @@ _tWinMain(IN HINSTANCE hInstance,
         if (RegisterTrayWindowClass() && RegisterTaskSwitchWndClass())
         {
             Tray = CreateTrayWindow();
+            /* This not only hides the minimized window captions in the bottom
+               left screen corner, but is also needed in order to receive
+               HSHELL_* notification messages (which are required for taskbar
+               buttons to work right) */
+            HideMinimizedWindows(TRUE);
 
             if (Tray != NULL)
                 hShellDesktop = DesktopCreateWindow(Tray);
@@ -408,7 +436,13 @@ _tWinMain(IN HINSTANCE hInstance,
     }
 
     if (Tray != NULL)
+    {
+        RegisterHotKey(NULL, IDHK_RUN, MOD_WIN, 'R');
         TrayMessageLoop(Tray);
+        HideMinimizedWindows(FALSE);
+        ITrayWindow_Release(Tray);
+        UnregisterTrayWindowClass();
+    }
 
     if (hShellDesktop != NULL)
         DesktopDestroyShellWindow(hShellDesktop);

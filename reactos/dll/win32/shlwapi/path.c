@@ -19,23 +19,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include <stdarg.h>
-#include <string.h>
-#include <stdlib.h>
+#include <config.h>
+//#include "wine/port.h"
 
-#include "wine/unicode.h"
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "winternl.h"
+//#include <stdarg.h>
+//#include <string.h>
+//#include <stdlib.h>
+
+#include <wine/unicode.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <winreg.h>
+#include <winternl.h>
 #define NO_SHLWAPI_STREAM
-#include "shlwapi.h"
-#include "wine/debug.h"
+#include <shlwapi.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -760,6 +764,10 @@ void WINAPI PathRemoveArgsW(LPWSTR lpszPath)
  * PARAMS
  *  lpszPath [I/O] Path to remove the extension from
  *
+ * NOTES
+ *  The NUL terminator must be written only if extension exists
+ *  and if the pointed character is not already NUL.
+ *
  * RETURNS
  *  Nothing.
  */
@@ -770,7 +778,8 @@ void WINAPI PathRemoveExtensionA(LPSTR lpszPath)
   if (lpszPath)
   {
     lpszPath = PathFindExtensionA(lpszPath);
-    *lpszPath = '\0';
+    if (lpszPath && *lpszPath != '\0')
+      *lpszPath = '\0';
   }
 }
 
@@ -786,7 +795,8 @@ void WINAPI PathRemoveExtensionW(LPWSTR lpszPath)
   if (lpszPath)
   {
     lpszPath = PathFindExtensionW(lpszPath);
-    *lpszPath = '\0';
+    if (lpszPath && *lpszPath != '\0')
+      *lpszPath = '\0';
   }
 }
 
@@ -1074,7 +1084,7 @@ int WINAPI PathParseIconLocationW(LPWSTR lpszPath)
  */
 BOOL WINAPI PathFileExistsDefExtW(LPWSTR lpszPath,DWORD dwWhich)
 {
-  static const WCHAR pszExts[7][5] = { { '.', 'p', 'i', 'f', 0},
+  static const WCHAR pszExts[][5]  = { { '.', 'p', 'i', 'f', 0},
                                        { '.', 'c', 'o', 'm', 0},
                                        { '.', 'e', 'x', 'e', 0},
                                        { '.', 'b', 'a', 't', 0},
@@ -1708,7 +1718,7 @@ BOOL WINAPI PathFileExistsA(LPCSTR lpszPath)
   iPrevErrMode = SetErrorMode(SEM_FAILCRITICALERRORS);
   dwAttr = GetFileAttributesA(lpszPath);
   SetErrorMode(iPrevErrMode);
-  return dwAttr == INVALID_FILE_ATTRIBUTES ? FALSE : TRUE;
+  return dwAttr != INVALID_FILE_ATTRIBUTES;
 }
 
 /*************************************************************************
@@ -1729,7 +1739,7 @@ BOOL WINAPI PathFileExistsW(LPCWSTR lpszPath)
   iPrevErrMode = SetErrorMode(SEM_FAILCRITICALERRORS);
   dwAttr = GetFileAttributesW(lpszPath);
   SetErrorMode(iPrevErrMode);
-  return dwAttr == INVALID_FILE_ATTRIBUTES ? FALSE : TRUE;
+  return dwAttr != INVALID_FILE_ATTRIBUTES;
 }
 
 /*************************************************************************
@@ -2416,7 +2426,7 @@ BOOL WINAPI PathCanonicalizeW(LPWSTR lpszBuf, LPCWSTR lpszPath)
       else if (lpszSrc[1] == '.' && (lpszDst == lpszBuf || lpszDst[-1] == '\\'))
       {
         /* \.. backs up a directory, over the root if it has no \ following X:.
-         * .. is ignored if it would remove a UNC server name or inital \\
+         * .. is ignored if it would remove a UNC server name or initial \\
          */
         if (lpszDst != lpszBuf)
         {
@@ -2974,7 +2984,7 @@ UINT WINAPI PathGetCharTypeW(WCHAR ch)
   {
      if (ch < 126)
      {
-       if ((ch & 0x1 && ch != ';') || !ch || isalnum(ch) || ch == '$' || ch == '&' || ch == '(' ||
+         if (((ch & 0x1) && ch != ';') || !ch || isalnum(ch) || ch == '$' || ch == '&' || ch == '(' ||
             ch == '.' || ch == '@' || ch == '^' ||
             ch == '\'' || ch == 130 || ch == '`')
          flags |= GCT_SHORTCHAR; /* All these are valid for DOS */
@@ -3236,6 +3246,9 @@ HRESULT WINAPI PathCreateFromUrlA(LPCSTR pszUrl, LPSTR pszPath,
     HRESULT ret;
     DWORD lenW = sizeof(bufW)/sizeof(WCHAR), lenA;
 
+    if (!pszUrl || !pszPath || !pcchPath || !*pcchPath)
+        return E_INVALIDARG;
+
     if(!RtlCreateUnicodeStringFromAsciiz(&urlW, pszUrl))
         return E_INVALIDARG;
     if((ret = PathCreateFromUrlW(urlW.Buffer, pathW, &lenW, dwReserved)) == E_POINTER) {
@@ -3277,61 +3290,156 @@ HRESULT WINAPI PathCreateFromUrlW(LPCWSTR pszUrl, LPWSTR pszPath,
                                   LPDWORD pcchPath, DWORD dwReserved)
 {
     static const WCHAR file_colon[] = { 'f','i','l','e',':',0 };
-    HRESULT hr;
-    DWORD nslashes = 0;
-    WCHAR *ptr;
+    static const WCHAR localhost[] = { 'l','o','c','a','l','h','o','s','t',0 };
+    DWORD nslashes, unescape, len;
+    const WCHAR *src;
+    WCHAR *tpath, *dst;
+    HRESULT ret;
 
     TRACE("(%s,%p,%p,0x%08x)\n", debugstr_w(pszUrl), pszPath, pcchPath, dwReserved);
 
     if (!pszUrl || !pszPath || !pcchPath || !*pcchPath)
         return E_INVALIDARG;
 
-
-    if (strncmpW(pszUrl, file_colon, 5))
+    if (CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, pszUrl, 5,
+                       file_colon, 5) != CSTR_EQUAL)
         return E_INVALIDARG;
     pszUrl += 5;
+    ret = S_OK;
 
-    while(*pszUrl == '/' || *pszUrl == '\\') {
+    src = pszUrl;
+    nslashes = 0;
+    while (*src == '/' || *src == '\\') {
         nslashes++;
-        pszUrl++;
+        src++;
     }
 
-    if(isalphaW(*pszUrl) && (pszUrl[1] == ':' || pszUrl[1] == '|') && (pszUrl[2] == '/' || pszUrl[2] == '\\'))
-        nslashes = 0;
+    /* We need a temporary buffer so we can compute what size to ask for.
+     * We know that the final string won't be longer than the current pszUrl
+     * plus at most two backslashes. All the other transformations make it
+     * shorter.
+     */
+    len = 2 + lstrlenW(pszUrl) + 1;
+    if (*pcchPath < len)
+        tpath = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    else
+        tpath = pszPath;
 
-    switch(nslashes) {
-    case 2:
-        pszUrl -= 2;
-        break;
+    len = 0;
+    dst = tpath;
+    unescape = 1;
+    switch (nslashes)
+    {
     case 0:
+        /* 'file:' + escaped DOS path */
         break;
+    case 1:
+        /* 'file:/' + escaped DOS path */
+        /* fall through */
+    case 3:
+        /* 'file:///' (implied localhost) + escaped DOS path */
+        if (!isalphaW(*src) || (src[1] != ':' && src[1] != '|'))
+            src -= 1;
+        break;
+    case 2:
+        if (CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, src, 9,
+                           localhost, 9) == CSTR_EQUAL &&
+            (src[9] == '/' || src[9] == '\\'))
+        {
+            /* 'file://localhost/' + escaped DOS path */
+            src += 10;
+        }
+        else if (isalphaW(*src) && (src[1] == ':' || src[1] == '|'))
+        {
+            /* 'file://' + unescaped DOS path */
+            unescape = 0;
+        }
+        else
+        {
+            /*    'file://hostname:port/path' (where path is escaped)
+             * or 'file:' + escaped UNC path (\\server\share\path)
+             * The second form is clearly specific to Windows and it might
+             * even be doing a network lookup to try to figure it out.
+             */
+            while (*src && *src != '/' && *src != '\\')
+                src++;
+            len = src - pszUrl;
+            StrCpyNW(dst, pszUrl, len + 1);
+            dst += len;
+            if (isalphaW(src[1]) && (src[2] == ':' || src[2] == '|'))
+            {
+                /* 'Forget' to add a trailing '/', just like Windows */
+                src++;
+            }
+        }
+        break;
+    case 4:
+        /* 'file://' + unescaped UNC path (\\server\share\path) */
+        unescape = 0;
+        if (isalphaW(*src) && (src[1] == ':' || src[1] == '|'))
+            break;
+        /* fall through */
     default:
-        pszUrl -= 1;
-        break;
+        /* 'file:/...' + escaped UNC path (\\server\share\path) */
+        src -= 2;
     }
 
-    hr = UrlUnescapeW((LPWSTR)pszUrl, pszPath, pcchPath, 0);
-    if(hr != S_OK) return hr;
+    /* Copy the remainder of the path */
+    len += lstrlenW(src);
+    StrCpyW(dst, src);
 
-    for(ptr = pszPath; *ptr; ptr++)
-        if(*ptr == '/') *ptr = '\\';
+     /* First do the Windows-specific path conversions */
+    for (dst = tpath; *dst; dst++)
+        if (*dst == '/') *dst = '\\';
+    if (isalphaW(*tpath) && tpath[1] == '|')
+        tpath[1] = ':'; /* c| -> c: */
 
-    while(*pszPath == '\\')
-        pszPath++;
- 
-    if(isalphaW(*pszPath) && pszPath[1] == '|' && pszPath[2] == '\\') /* c|\ -> c:\ */
-        pszPath[1] = ':';
-
-    if(nslashes == 2 && (ptr = strchrW(pszPath, '\\'))) { /* \\host\c:\ -> \\hostc:\ */
-        ptr++;
-        if(isalphaW(*ptr) && (ptr[1] == ':' || ptr[1] == '|') && ptr[2] == '\\') {
-            memmove(ptr - 1, ptr, (strlenW(ptr) + 1) * sizeof(WCHAR));
-            (*pcchPath)--;
+    /* And only then unescape the path (i.e. escaped slashes are left as is) */
+    if (unescape)
+    {
+        ret = UrlUnescapeW(tpath, NULL, &len, URL_UNESCAPE_INPLACE);
+        if (ret == S_OK)
+        {
+            /* When working in-place UrlUnescapeW() does not set len */
+            len = lstrlenW(tpath);
         }
     }
 
-    TRACE("Returning %s\n",debugstr_w(pszPath));
+    if (*pcchPath < len + 1)
+    {
+        ret = E_POINTER;
+        *pcchPath = len + 1;
+    }
+    else
+    {
+        *pcchPath = len;
+        if (tpath != pszPath)
+            StrCpyW(pszPath, tpath);
+    }
+    if (tpath != pszPath)
+      HeapFree(GetProcessHeap(), 0, tpath);
 
+    TRACE("Returning (%u) %s\n", *pcchPath, debugstr_w(pszPath));
+    return ret;
+}
+
+/*************************************************************************
+ * PathCreateFromUrlAlloc   [SHLWAPI.@]
+ */
+HRESULT WINAPI PathCreateFromUrlAlloc(LPCWSTR pszUrl, LPWSTR *pszPath,
+                                      DWORD dwReserved)
+{
+    WCHAR pathW[MAX_PATH];
+    DWORD size;
+    HRESULT hr;
+
+    size = MAX_PATH;
+    hr = PathCreateFromUrlW(pszUrl, pathW, &size, dwReserved);
+    if (SUCCEEDED(hr))
+    {
+        /* Yes, this is supposed to crash if pszPath is NULL */
+        *pszPath = StrDupW(pathW);
+    }
     return hr;
 }
 

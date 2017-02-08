@@ -30,6 +30,12 @@ URLSite = http://fr.openoffice.org/
 Size = 114MB
 URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/fr/2.4.2/OOo_2.4.2_Win32Intel_install_fr.exe
 
+[Section.0413]
+URLSite = http://nl.openoffice.org/
+Description = Open-bron Office Pakket.
+URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/nl/2.4.2/OOo_2.4.2_Win32Intel_install_nl.exe
+Size = 113.92MB
+
 [Section.0415]
 URLSite = http://pl.openoffice.org/
 Description = Otwarty pakiet biurowy.
@@ -38,10 +44,16 @@ Size = 113.92MB
 
 [Section.0418]
 Description = Suita de aplicații de birotică open-source.
-Size = 113Mo
+Size = 113 Mo
 
 [Section.0422]
 URLSite = http://ua.openoffice.org/
 Description = Відкритий офісний пакет.
 URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/ru/2.4.3/OOo_2.4.3_Win32Intel_install_ru.exe
 Size = 114.76MB
+
+[Section.0813]
+URLSite = http://nl.openoffice.org/
+Description = Open-bron Office Pakket.
+URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/nl/2.4.2/OOo_2.4.2_Win32Intel_install_nl.exe
+Size = 113.92MB

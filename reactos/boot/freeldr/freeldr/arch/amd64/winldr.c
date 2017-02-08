@@ -183,13 +183,16 @@ MempSetupPaging(IN PFN_NUMBER StartPage,
     }
 
     /* Kernel mapping */
-    if (MempMapRangeOfPages(StartPage * PAGE_SIZE + KSEG0_BASE,
-                            StartPage * PAGE_SIZE,
-                            NumberOfPages) != NumberOfPages)
+    if (KernelMapping)
     {
-        ERR("Failed to map pages %ld, %ld\n",
-                StartPage, NumberOfPages);
-        return FALSE;
+        if (MempMapRangeOfPages(StartPage * PAGE_SIZE + KSEG0_BASE,
+                                StartPage * PAGE_SIZE,
+                                NumberOfPages) != NumberOfPages)
+        {
+            ERR("Failed to map pages %ld, %ld\n",
+                    StartPage, NumberOfPages);
+            return FALSE;
+        }
     }
 
 	return TRUE;
@@ -269,6 +272,7 @@ Amd64SetupGdt(PVOID GdtBase, ULONG64 TssBase)
 {
 	PKGDTENTRY64 Entry;
 	KDESCRIPTOR GdtDesc;
+	TRACE("Amd64SetupGdt(GdtBase = %p, TssBase = %p)\n", GdtBase, TssBase);
 
 	/* Setup KGDT64_NULL */
 	Entry = KiGetGdtEntry(GdtBase, KGDT64_NULL);
@@ -308,20 +312,22 @@ Amd64SetupGdt(PVOID GdtBase, ULONG64 TssBase)
 
 	/* Set the new Gdt */
 	__lgdt(&GdtDesc.Limit);
-	TRACE("Gdtr.Base = %p, num = %ld\n", GdtDesc.Base, NUM_GDT);
-
+	TRACE("Leave Amd64SetupGdt()\n");
 }
 
 VOID
 Amd64SetupIdt(PVOID IdtBase)
 {
 	KDESCRIPTOR IdtDesc, OldIdt;
+	ULONG Size;
+	TRACE("Amd64SetupIdt(IdtBase = %p)\n", IdtBase);
 
     /* Get old IDT */
-	__sidt(&OldIdt);
+	__sidt(&OldIdt.Limit);
 
 	/* Copy the old IDT */
-	RtlCopyMemory(IdtBase, (PVOID)OldIdt.Base, OldIdt.Limit + 1);
+	Size =  min(OldIdt.Limit + 1, NUM_IDT * sizeof(KIDTENTRY));
+	//RtlCopyMemory(IdtBase, (PVOID)OldIdt.Base, Size);
 
 	/* Setup the new IDT descriptor */
 	IdtDesc.Base = IdtBase;
@@ -329,8 +335,7 @@ Amd64SetupIdt(PVOID IdtBase)
 
 	/* Set the new IDT */
 	__lidt(&IdtDesc.Limit);
-	TRACE("Idtr.Base = %p\n", IdtDesc.Base);
-
+	TRACE("Leave Amd64SetupIdt()\n");
 }
 
 VOID
@@ -354,7 +359,7 @@ WinLdrSetProcessorContext(void)
     Amd64SetupGdt(GdtIdt, KSEG0_BASE | (TssBasePage << MM_PAGE_SHIFT));
 
     /* Copy old Idt and set idtr */
-    Amd64SetupIdt((PVOID)((ULONG64)GdtIdt + 2048)); // HACK!
+    Amd64SetupIdt((PVOID)((ULONG64)GdtIdt + NUM_GDT * sizeof(KGDTENTRY)));
 
     /* LDT is unused */
 //    __lldt(0);
@@ -390,7 +395,7 @@ void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
 	TssBasePage = Tss >> MM_PAGE_SHIFT;
 
 	/* Allocate space for new GDT + IDT */
-	BlockSize = NUM_GDT*sizeof(KGDTENTRY) + NUM_IDT*sizeof(KIDTENTRY);//FIXME: Use GDT/IDT limits here?
+	BlockSize = NUM_GDT * sizeof(KGDTENTRY) + NUM_IDT * sizeof(KIDTENTRY);
 	NumPages = (BlockSize + MM_PAGE_SIZE - 1) >> MM_PAGE_SHIFT;
 	GdtIdt = (PKGDTENTRY)MmAllocateMemoryWithType(NumPages * MM_PAGE_SIZE, LoaderMemoryData);
 	if (GdtIdt == NULL)

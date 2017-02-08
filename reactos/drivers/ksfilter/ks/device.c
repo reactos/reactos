@@ -218,7 +218,7 @@ IKsDevice_fnCheckIoCapability(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-static IKsDeviceVtbl vt_IKsDevice = 
+static IKsDeviceVtbl vt_IKsDevice =
 {
     IKsDevice_fnQueryInterface,
     IKsDevice_fnAddRef,
@@ -631,12 +631,16 @@ IKsDevice_Create(
         ASSERT(ObjectHeader);
 
         /* find a matching a create item */
-        Status = FindMatchingCreateItem(&ObjectHeader->ItemList, IoStack->FileObject->FileName.Length, IoStack->FileObject->FileName.Buffer, &CreateItemEntry);
+        Status = FindMatchingCreateItem(&ObjectHeader->ItemList,
+                                        &IoStack->FileObject->FileName,
+                                        &CreateItemEntry);
     }
     else
     {
         /* request to create a filter */
-        Status = FindMatchingCreateItem(&DeviceHeader->ItemList, IoStack->FileObject->FileName.Length, IoStack->FileObject->FileName.Buffer, &CreateItemEntry);
+        Status = FindMatchingCreateItem(&DeviceHeader->ItemList,
+                                        &IoStack->FileObject->FileName,
+                                        &CreateItemEntry);
     }
 
     if (NT_SUCCESS(Status))

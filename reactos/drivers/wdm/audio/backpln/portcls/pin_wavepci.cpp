@@ -501,8 +501,6 @@ CPortPinWavePci::HandleKsProperty(
     //UNICODE_STRING GuidString;
     PIO_STACK_LOCATION IoStack;
 
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
     //DPRINT("IPortPinWave_HandleKsProperty entered\n");
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -559,7 +557,7 @@ CPortPinWavePci::HandleKsStream(
         if (m_Capture)
             m_Position.WriteOffset += Data;
         else
-            m_Position.WriteOffset += Data;
+            m_Position.PlayOffset += Data;
 
         if (bFailed)
         {

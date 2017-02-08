@@ -20,30 +20,33 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
+#include <config.h>
+//#include "wine/port.h"
 
 #include <stdarg.h>
-#include <string.h>
+//#include <string.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winsvc.h"
-#include "objbase.h"
-#include "ole2.h"
-#include "rpc.h"
-#include "winerror.h"
-#include "winreg.h"
-#include "wine/unicode.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+#include <winsvc.h>
+//#include "objbase.h"
+#include <ole2.h>
+//#include "rpc.h"
+//#include "winerror.h"
+//#include "winreg.h"
+#include <wine/unicode.h>
 
 #include "compobj_private.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -94,8 +97,11 @@ static inline void get_rpc_endpoint(LPWSTR endpoint, const OXID *oxid)
 
 typedef struct
 {
-    const IRpcChannelBufferVtbl *lpVtbl;
-    LONG                  refs;
+    IRpcChannelBuffer IRpcChannelBuffer_iface;
+    LONG refs;
+
+    DWORD dest_context; /* returned from GetDestCtx */
+    void *dest_context_data; /* returned from GetDestCtx */
 } RpcChannelBuffer;
 
 typedef struct
@@ -105,8 +111,6 @@ typedef struct
     RPC_BINDING_HANDLE     bind; /* handle to the remote server */
     OXID                   oxid; /* apartment in which the channel is valid */
     DWORD                  server_pid; /* id of server process */
-    DWORD                  dest_context; /* returned from GetDestCtx */
-    LPVOID                 dest_context_data; /* returned from GetDestCtx */
     HANDLE                 event; /* cached event handle */
 } ClientRpcChannelBuffer;
 
@@ -459,13 +463,13 @@ void RPC_UnregisterAllChannelHooks(void)
 
 /* RPC Channel Buffer Functions */
 
-static HRESULT WINAPI RpcChannelBuffer_QueryInterface(LPRPCCHANNELBUFFER iface, REFIID riid, LPVOID *ppv)
+static HRESULT WINAPI RpcChannelBuffer_QueryInterface(IRpcChannelBuffer *iface, REFIID riid, LPVOID *ppv)
 {
     *ppv = NULL;
     if (IsEqualIID(riid,&IID_IRpcChannelBuffer) || IsEqualIID(riid,&IID_IUnknown))
     {
         *ppv = iface;
-        IUnknown_AddRef(iface);
+        IRpcChannelBuffer_AddRef(iface);
         return S_OK;
     }
     return E_NOINTERFACE;
@@ -1041,20 +1045,20 @@ static HRESULT WINAPI ClientRpcChannelBuffer_GetDestCtx(LPRPCCHANNELBUFFER iface
 
     TRACE("(%p,%p)\n", pdwDestContext, ppvDestContext);
 
-    *pdwDestContext = This->dest_context;
-    *ppvDestContext = This->dest_context_data;
+    *pdwDestContext = This->super.dest_context;
+    *ppvDestContext = This->super.dest_context_data;
 
     return S_OK;
 }
 
-static HRESULT WINAPI ServerRpcChannelBuffer_GetDestCtx(LPRPCCHANNELBUFFER iface, DWORD* pdwDestContext, void** ppvDestContext)
+static HRESULT WINAPI ServerRpcChannelBuffer_GetDestCtx(LPRPCCHANNELBUFFER iface, DWORD* dest_context, void** dest_context_data)
 {
-    WARN("(%p,%p), stub!\n", pdwDestContext, ppvDestContext);
+    RpcChannelBuffer *This = (RpcChannelBuffer *)iface;
 
-    /* FIXME: implement this by storing the dwDestContext and pvDestContext
-     * values passed into IMarshal_MarshalInterface and returning them here */
-    *pdwDestContext = MSHCTX_DIFFERENTMACHINE;
-    *ppvDestContext = NULL;
+    TRACE("(%p,%p)\n", dest_context, dest_context_data);
+
+    *dest_context = This->dest_context;
+    *dest_context_data = This->dest_context_data;
     return S_OK;
 }
 
@@ -1142,30 +1146,32 @@ HRESULT RPC_CreateClientChannel(const OXID *oxid, const IPID *ipid,
         return E_OUTOFMEMORY;
     }
 
-    This->super.lpVtbl = &ClientRpcChannelBufferVtbl;
+    This->super.IRpcChannelBuffer_iface.lpVtbl = &ClientRpcChannelBufferVtbl;
     This->super.refs = 1;
+    This->super.dest_context = dest_context;
+    This->super.dest_context_data = dest_context_data;
     This->bind = bind;
     apartment_getoxid(COM_CurrentApt(), &This->oxid);
     This->server_pid = oxid_info->dwPid;
-    This->dest_context = dest_context;
-    This->dest_context_data = dest_context_data;
     This->event = NULL;
 
-    *chan = (IRpcChannelBuffer*)This;
+    *chan = &This->super.IRpcChannelBuffer_iface;
 
     return S_OK;
 }
 
-HRESULT RPC_CreateServerChannel(IRpcChannelBuffer **chan)
+HRESULT RPC_CreateServerChannel(DWORD dest_context, void *dest_context_data, IRpcChannelBuffer **chan)
 {
     RpcChannelBuffer *This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
     if (!This)
         return E_OUTOFMEMORY;
 
-    This->lpVtbl = &ServerRpcChannelBufferVtbl;
+    This->IRpcChannelBuffer_iface.lpVtbl = &ServerRpcChannelBufferVtbl;
     This->refs = 1;
+    This->dest_context = dest_context;
+    This->dest_context_data = dest_context_data;
     
-    *chan = (IRpcChannelBuffer*)This;
+    *chan = &This->IRpcChannelBuffer_iface;
 
     return S_OK;
 }
@@ -1677,7 +1683,7 @@ static HRESULT create_server(REFCLSID rclsid, HANDLE *process)
 
     /* FIXME: Win2003 supports a ServerExecutable value that is passed into
      * CreateProcess */
-    if (!CreateProcessW(NULL, command, NULL, NULL, FALSE, 0, NULL, NULL, &sinfo, &pinfo)) {
+    if (!CreateProcessW(NULL, command, NULL, NULL, FALSE, DETACHED_PROCESS, NULL, NULL, &sinfo, &pinfo)) {
         WARN("failed to run local server %s\n", debugstr_w(command));
         return HRESULT_FROM_WIN32(GetLastError());
     }
@@ -1874,7 +1880,7 @@ struct local_server_params
 {
     CLSID clsid;
     IStream *stream;
-    HANDLE ready_event;
+    HANDLE pipe;
     HANDLE stop_event;
     HANDLE thread;
     BOOL multi_use;
@@ -1895,7 +1901,7 @@ static DWORD WINAPI local_server_thread(LPVOID param)
     ULONG		res;
     BOOL multi_use = lsp->multi_use;
     OVERLAPPED ovl;
-    HANDLE pipe_event, hPipe, new_pipe;
+    HANDLE pipe_event, hPipe = lsp->pipe, new_pipe;
     DWORD  bytes;
 
     TRACE("Starting threader for %s.\n",debugstr_guid(&lsp->clsid));
@@ -1903,18 +1909,6 @@ static DWORD WINAPI local_server_thread(LPVOID param)
     memset(&ovl, 0, sizeof(ovl));
     get_localserver_pipe_name(pipefn, &lsp->clsid);
     ovl.hEvent = pipe_event = CreateEventW(NULL, FALSE, FALSE, NULL);
-
-    hPipe = CreateNamedPipeW( pipefn, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
-                              PIPE_TYPE_BYTE|PIPE_WAIT, PIPE_UNLIMITED_INSTANCES,
-                              4096, 4096, 500 /* 0.5 second timeout */, NULL );
-    if (hPipe == INVALID_HANDLE_VALUE)
-    {
-        FIXME("pipe creation failed for %s, le is %u\n", debugstr_w(pipefn), GetLastError());
-        CloseHandle(pipe_event);
-        return 1;
-    }
-
-    SetEvent(lsp->ready_event);
 
     while (1) {
         if (!ConnectNamedPipe(hPipe, &ovl))
@@ -2005,8 +1999,9 @@ static DWORD WINAPI local_server_thread(LPVOID param)
 /* starts listening for a local server */
 HRESULT RPC_StartLocalServer(REFCLSID clsid, IStream *stream, BOOL multi_use, void **registration)
 {
-    DWORD tid;
+    DWORD tid, err;
     struct local_server_params *lsp;
+    WCHAR pipefn[100];
 
     lsp = HeapAlloc(GetProcessHeap(), 0, sizeof(*lsp));
     if (!lsp)
@@ -2015,33 +2010,35 @@ HRESULT RPC_StartLocalServer(REFCLSID clsid, IStream *stream, BOOL multi_use, vo
     lsp->clsid = *clsid;
     lsp->stream = stream;
     IStream_AddRef(stream);
-    lsp->ready_event = CreateEventW(NULL, FALSE, FALSE, NULL);
-    if (!lsp->ready_event)
-    {
-        HeapFree(GetProcessHeap(), 0, lsp);
-        return HRESULT_FROM_WIN32(GetLastError());
-    }
     lsp->stop_event = CreateEventW(NULL, FALSE, FALSE, NULL);
     if (!lsp->stop_event)
     {
-        CloseHandle(lsp->ready_event);
         HeapFree(GetProcessHeap(), 0, lsp);
         return HRESULT_FROM_WIN32(GetLastError());
     }
     lsp->multi_use = multi_use;
 
+    get_localserver_pipe_name(pipefn, &lsp->clsid);
+    lsp->pipe = CreateNamedPipeW(pipefn, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
+                                 PIPE_TYPE_BYTE|PIPE_WAIT, PIPE_UNLIMITED_INSTANCES,
+                                 4096, 4096, 500 /* 0.5 second timeout */, NULL);
+    if (lsp->pipe == INVALID_HANDLE_VALUE)
+    {
+        err = GetLastError();
+        FIXME("pipe creation failed for %s, le is %u\n", debugstr_w(pipefn), GetLastError());
+        CloseHandle(lsp->stop_event);
+        HeapFree(GetProcessHeap(), 0, lsp);
+        return HRESULT_FROM_WIN32(err);
+    }
+
     lsp->thread = CreateThread(NULL, 0, local_server_thread, lsp, 0, &tid);
     if (!lsp->thread)
     {
-        CloseHandle(lsp->ready_event);
+        CloseHandle(lsp->pipe);
         CloseHandle(lsp->stop_event);
         HeapFree(GetProcessHeap(), 0, lsp);
         return HRESULT_FROM_WIN32(GetLastError());
     }
-
-    WaitForSingleObject(lsp->ready_event, INFINITE);
-    CloseHandle(lsp->ready_event);
-    lsp->ready_event = NULL;
 
     *registration = lsp;
     return S_OK;

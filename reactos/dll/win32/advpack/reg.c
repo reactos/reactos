@@ -18,16 +18,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+
 #include <stdarg.h>
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "winerror.h"
-#include "winuser.h"
-#include "winternl.h"
-#include "advpub.h"
-#include "wine/unicode.h"
-#include "wine/debug.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+//#include "winerror.h"
+#include <winuser.h>
+#include <winternl.h>
+#include <advpub.h>
+#include <wine/unicode.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(advpack);
 

@@ -1,4 +1,5 @@
-/* IReferenceClock Implementation
+/*
+ * IReferenceClock Implementation
  *
  * Copyright (C) 2003-2004 Rok Mandeljc
  *
@@ -21,9 +22,15 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(dmusic);
 
+static inline IReferenceClockImpl *impl_from_IReferenceClock(IReferenceClock *iface)
+{
+    return CONTAINING_RECORD(iface, IReferenceClockImpl, IReferenceClock_iface);
+}
+
 /* IReferenceClockImpl IUnknown part: */
-static HRESULT WINAPI IReferenceClockImpl_QueryInterface (IReferenceClock *iface, REFIID riid, LPVOID *ppobj) {
-	IReferenceClockImpl *This = (IReferenceClockImpl *)iface;
+static HRESULT WINAPI IReferenceClockImpl_QueryInterface(IReferenceClock *iface, REFIID riid, LPVOID *ppobj)
+{
+	IReferenceClockImpl *This = impl_from_IReferenceClock(iface);
 	TRACE("(%p, %s, %p)\n", This, debugstr_dmguid(riid), ppobj);
 
 	if (IsEqualIID (riid, &IID_IUnknown) || 
@@ -36,56 +43,70 @@ static HRESULT WINAPI IReferenceClockImpl_QueryInterface (IReferenceClock *iface
 	return E_NOINTERFACE;
 }
 
-static ULONG WINAPI IReferenceClockImpl_AddRef (IReferenceClock *iface) {
-	IReferenceClockImpl *This = (IReferenceClockImpl *)iface;
-	ULONG refCount = InterlockedIncrement(&This->ref);
+static ULONG WINAPI IReferenceClockImpl_AddRef(IReferenceClock *iface)
+{
+    IReferenceClockImpl *This = impl_from_IReferenceClock(iface);
+    ULONG ref = InterlockedIncrement(&This->ref);
 
-	TRACE("(%p)->(ref before=%u)\n", This, refCount - 1);
+    TRACE("(%p)->(): new ref = %u\n", This, ref);
 
-	DMUSIC_LockModule();
+    DMUSIC_LockModule();
 
-	return refCount;
+    return ref;
 }
 
-static ULONG WINAPI IReferenceClockImpl_Release (IReferenceClock *iface) {
-	IReferenceClockImpl *This = (IReferenceClockImpl *)iface;
-	ULONG refCount = InterlockedDecrement(&This->ref);
+static ULONG WINAPI IReferenceClockImpl_Release(IReferenceClock *iface)
+{
+    IReferenceClockImpl *This = impl_from_IReferenceClock(iface);
+    ULONG ref = InterlockedDecrement(&This->ref);
 
-	TRACE("(%p)->(ref before=%u)\n", This, refCount + 1);
+    TRACE("(%p)->(): new ref = %u\n", This, ref);
 
-	if (!refCount) {
-		HeapFree(GetProcessHeap(), 0, This);
-	}
+    if (!ref)
+        HeapFree(GetProcessHeap(), 0, This);
 
-	DMUSIC_UnlockModule();
+    DMUSIC_UnlockModule();
 
-	return refCount;
+    return ref;
 }
 
 /* IReferenceClockImpl IReferenceClock part: */
-static HRESULT WINAPI IReferenceClockImpl_GetTime (IReferenceClock *iface, REFERENCE_TIME* pTime) {
-	IReferenceClockImpl *This = (IReferenceClockImpl *)iface;
-	TRACE("(%p, %p)\n", This, pTime);
-	*pTime = This->rtTime;
-	return S_OK;
+static HRESULT WINAPI IReferenceClockImpl_GetTime(IReferenceClock *iface, REFERENCE_TIME* pTime)
+{
+    IReferenceClockImpl *This = impl_from_IReferenceClock(iface);
+
+    TRACE("(%p)->(%p)\n", This, pTime);
+
+    *pTime = This->rtTime;
+
+    return S_OK;
 }
 
-static HRESULT WINAPI IReferenceClockImpl_AdviseTime (IReferenceClock *iface, REFERENCE_TIME baseTime, REFERENCE_TIME streamTime, HANDLE hEvent, DWORD* pdwAdviseCookie) {
-	IReferenceClockImpl *This = (IReferenceClockImpl *)iface;
-	FIXME("(%p, 0x%s, 0x%s, %p, %p): stub\n", This, wine_dbgstr_longlong(baseTime), wine_dbgstr_longlong(streamTime), hEvent, pdwAdviseCookie);
-	return S_OK;
+static HRESULT WINAPI IReferenceClockImpl_AdviseTime(IReferenceClock *iface, REFERENCE_TIME baseTime, REFERENCE_TIME streamTime, HANDLE hEvent, DWORD* pdwAdviseCookie)
+{
+    IReferenceClockImpl *This = impl_from_IReferenceClock(iface);
+
+    FIXME("(%p)->(0x%s, 0x%s, %p, %p): stub\n", This, wine_dbgstr_longlong(baseTime), wine_dbgstr_longlong(streamTime), hEvent, pdwAdviseCookie);
+
+    return S_OK;
 }
 
-static HRESULT WINAPI IReferenceClockImpl_AdvisePeriodic (IReferenceClock *iface, REFERENCE_TIME startTime, REFERENCE_TIME periodTime, HANDLE hSemaphore, DWORD* pdwAdviseCookie) {
-	IReferenceClockImpl *This = (IReferenceClockImpl *)iface;
-	FIXME("(%p, 0x%s, 0x%s, %p, %p): stub\n", This, wine_dbgstr_longlong(startTime), wine_dbgstr_longlong(periodTime), hSemaphore, pdwAdviseCookie);
-	return S_OK;
+static HRESULT WINAPI IReferenceClockImpl_AdvisePeriodic(IReferenceClock *iface, REFERENCE_TIME startTime, REFERENCE_TIME periodTime, HANDLE hSemaphore, DWORD* pdwAdviseCookie)
+{
+    IReferenceClockImpl *This = impl_from_IReferenceClock(iface);
+
+    FIXME("(%p)->(0x%s, 0x%s, %p, %p): stub\n", This, wine_dbgstr_longlong(startTime), wine_dbgstr_longlong(periodTime), hSemaphore, pdwAdviseCookie);
+
+    return S_OK;
 }
 
-static HRESULT WINAPI IReferenceClockImpl_Unadvise (IReferenceClock *iface, DWORD dwAdviseCookie) {
-	IReferenceClockImpl *This = (IReferenceClockImpl *)iface;
-	FIXME("(%p, %d): stub\n", This, dwAdviseCookie);
-	return S_OK;
+static HRESULT WINAPI IReferenceClockImpl_Unadvise(IReferenceClock *iface, DWORD dwAdviseCookie)
+{
+    IReferenceClockImpl *This = impl_from_IReferenceClock(iface);
+
+    FIXME("(%p)->(%d): stub\n", This, dwAdviseCookie);
+
+    return S_OK;
 }
 
 static const IReferenceClockVtbl ReferenceClock_Vtbl = {
@@ -99,18 +120,22 @@ static const IReferenceClockVtbl ReferenceClock_Vtbl = {
 };
 
 /* for ClassFactory */
-HRESULT WINAPI DMUSIC_CreateReferenceClockImpl (LPCGUID lpcGUID, LPVOID* ppobj, LPUNKNOWN pUnkOuter) {
-	IReferenceClockImpl* clock;
+HRESULT DMUSIC_CreateReferenceClockImpl(LPCGUID riid, LPVOID* ret_iface, LPUNKNOWN unkouter)
+{
+    IReferenceClockImpl* clock;
 
-	clock = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IReferenceClockImpl));
-	if (NULL == clock) {
-		*ppobj = NULL;
-		return E_OUTOFMEMORY;
-	}
-	clock->lpVtbl = &ReferenceClock_Vtbl;
-	clock->ref = 0; /* will be inited by QueryInterface */
-	clock->rtTime = 0;
-	clock->pClockInfo.dwSize = sizeof (DMUS_CLOCKINFO);
-		
-	return IReferenceClockImpl_QueryInterface ((IReferenceClock *)clock, lpcGUID, ppobj);
+    TRACE("(%p,%p,%p)\n", riid, ret_iface, unkouter);
+
+    clock = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IReferenceClockImpl));
+    if (!clock) {
+        *ret_iface = NULL;
+        return E_OUTOFMEMORY;
+    }
+
+    clock->IReferenceClock_iface.lpVtbl = &ReferenceClock_Vtbl;
+    clock->ref = 0; /* Will be inited by QueryInterface */
+    clock->rtTime = 0;
+    clock->pClockInfo.dwSize = sizeof (DMUS_CLOCKINFO);
+
+    return IReferenceClockImpl_QueryInterface((IReferenceClock*)clock, riid, ret_iface);
 }

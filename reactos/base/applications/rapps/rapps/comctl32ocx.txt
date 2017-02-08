@@ -23,6 +23,10 @@ Description = X es necesario para varias aplicaciones.
 Licence = Inconnue
 Description = Fichier nécessaire pour certaines applications.
 
+[Section.0413]
+Licence = Ongekend
+Description = Gebruikt door bepaalde applicaties. Bevat: comctl32.ocx, mscomctl.ocx, advpack.dll.
+
 [Section.0415]
 Licence = Nieznana
 Description = Microsoft Visual Basic 6.0 Common Controls jest używany przez część aplikacji.
@@ -30,8 +34,12 @@ Description = Microsoft Visual Basic 6.0 Common Controls jest używany przez cz�
 [Section.0418]
 Licence = Nespecificată
 Description = Modul logic necesar unor aplicații. Conține: comctl32.ocx, mscomctl.ocx, advpack.dll.
-Size = 913.73ko
+Size = 913,73 ko
 
 [Section.0422]
 Licence = Невідома
 Description = Файл потрібен декотрим програмам.
+
+[Section.0813]
+Licence = Ongekend
+Description = Gebruikt door bepaalde applicaties. Bevat: comctl32.ocx, mscomctl.ocx, advpack.dll.

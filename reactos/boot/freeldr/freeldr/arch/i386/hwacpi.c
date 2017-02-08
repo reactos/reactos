@@ -115,8 +115,6 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
         /* Increment bus number */
         (*BusNumber)++;
-
-        MmHeapFree(PartialResourceList);
     }
 }
 

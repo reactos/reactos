@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id: zutil.c 47933 2010-07-03 22:34:05Z dreimer $ */
+/* @(#) $Id$ */
 
 #include "zutil.h"
 #ifndef Z_SOLO

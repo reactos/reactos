@@ -29,19 +29,23 @@
  *     http://members.ozemail.com.au/~geoffch/samples/win32/shell/comctl32  
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 
 #include <stdarg.h>
-#include <limits.h>
+//#include <limits.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "commctrl.h"
-#include "objbase.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+//#include "commctrl.h"
+#include <objbase.h>
 
 #include "comctl32.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(dpa);
 
@@ -455,7 +459,7 @@ BOOL WINAPI DPA_Grow (HDPA hdpa, INT nGrow)
 /**************************************************************************
  * DPA_Clone [COMCTL32.331]
  *
- * Copies a pointer array to an other one or creates a copy
+ * Copies a pointer array to another one or creates a copy
  *
  * PARAMS
  *     hdpa    [I] handle (pointer) to the existing (source) pointer array

@@ -31,7 +31,7 @@ BOOL
 IntLoadHookModule(int iHookID, HHOOK hHook, BOOL Unload)
 {
    PPROCESSINFO ppi;
-   HMODULE hmod;
+   BOOL bResult;
 
    ppi = PsGetCurrentProcessWin32Process();
 
@@ -49,26 +49,24 @@ IntLoadHookModule(int iHookID, HHOOK hHook, BOOL Unload)
             ppi->W32PF_flags |= W32PF_APIHOOKLOADED;
 
             /* Call ClientLoadLibrary in user32 */
-            hmod = co_IntClientLoadLibrary(&strUahModule, &strUahInitFunc, Unload, TRUE);
-            TRACE("co_IntClientLoadLibrary returned %d\n", hmod );
-            if(hmod == 0)
+            bResult = co_IntClientLoadLibrary(&strUahModule, &strUahInitFunc, Unload, TRUE);
+            TRACE("co_IntClientLoadLibrary returned %d\n", bResult );
+            if (!bResult)
             {
                 /* Remove the flag we set before */
                 ppi->W32PF_flags &= ~W32PF_APIHOOKLOADED;
-                return FALSE;
             }
-            return TRUE;
+            return bResult;
         }
         else if(Unload && (ppi->W32PF_flags & W32PF_APIHOOKLOADED))
         {
             /* Call ClientLoadLibrary in user32 */
-            hmod = co_IntClientLoadLibrary(NULL, NULL, Unload, TRUE);
-            if(hmod != 0)
+            bResult = co_IntClientLoadLibrary(NULL, NULL, Unload, TRUE);
+            if (bResult)
             {
                 ppi->W32PF_flags &= ~W32PF_APIHOOKLOADED;
-                return TRUE;
             }
-            return FALSE;
+            return bResult;
         }
 
         return TRUE;
@@ -96,7 +94,7 @@ IntHookModuleUnloaded(PDESKTOP pdesk, int iHookID, HHOOK hHook)
 
     ERR("IntHookModuleUnloaded: iHookID=%d\n", iHookID);
 
-    ppiCsr = PsGetProcessWin32Process(CsrProcess);
+    ppiCsr = PsGetProcessWin32Process(gpepCSRSS);
 
     ListEntry = pdesk->PtiList.Flink;
     while(ListEntry != &pdesk->PtiList)
@@ -131,7 +129,7 @@ IntHookModuleUnloaded(PDESKTOP pdesk, int iHookID, HHOOK hHook)
 
 BOOL
 FASTCALL
-UserLoadApiHook()
+UserLoadApiHook(VOID)
 {
     return IntLoadHookModule(WH_APIHOOK, 0, FALSE);
 }
@@ -149,7 +147,7 @@ UserRegisterUserApiHook(
     PPROCESSINFO ppiCsr;
 
     pti = PsGetCurrentThreadWin32Thread();
-    ppiCsr = PsGetProcessWin32Process(CsrProcess);
+    ppiCsr = PsGetProcessWin32Process(gpepCSRSS);
 
     /* Fail if the api hook is already registered */
     if(gpsi->dwSRVIFlags & SRVINFO_APIHOOK)
@@ -206,7 +204,7 @@ UserRegisterUserApiHook(
 
 BOOL
 FASTCALL
-UserUnregisterUserApiHook()
+UserUnregisterUserApiHook(VOID)
 {
     PTHREADINFO pti;
 
@@ -252,8 +250,8 @@ co_IntCallLowLevelHook(PHOOK Hook,
     BOOL Block = FALSE;
     ULONG_PTR uResult = 0;
 
-    if (Hook->Thread)
-       pti = Hook->Thread->Tcb.Win32Thread;
+    if (Hook->ptiHooked)
+       pti = Hook->ptiHooked;
     else
        pti = Hook->head.pti;
 
@@ -297,7 +295,7 @@ co_IntCallLowLevelHook(PHOOK Hook,
 
     /* FIXME: Should get timeout from
      * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
-    Status = co_MsqSendMessage( pti->MessageQueue,
+    Status = co_MsqSendMessage( pti,
                                 IntToPtr(Code), // hWnd
                                 Hook->HookId,   // Msg
                                 wParam,
@@ -500,7 +498,7 @@ co_IntCallDebugHook(PHOOK Hook,
         if (BadChk)
         {
             ERR("HOOK WH_DEBUG read from Debug.lParam ERROR!\n");
-            ExFreePool(HooklParam);
+            ExFreePoolWithTag(HooklParam, TAG_HOOK);
             return lResult;
         }
     }
@@ -939,7 +937,7 @@ IntGetHookObject(HHOOK hHook)
        return NULL;
     }
 
-    Hook = (PHOOK)UserGetObject(gHandleTable, hHook, otHook);
+    Hook = (PHOOK)UserGetObject(gHandleTable, hHook, TYPE_HOOK);
     if (!Hook)
     {
        EngSetLastError(ERROR_INVALID_HOOK_HANDLE);
@@ -992,9 +990,9 @@ IntGetNextHook(PHOOK Hook)
     PLIST_ENTRY pLastHead, pElem;
     PTHREADINFO pti;
 
-    if (Hook->Thread)
+    if (Hook->ptiHooked)
     {
-       pti = ((PTHREADINFO)Hook->Thread->Tcb.Win32Thread);
+       pti = Hook->ptiHooked;
        pLastHead = &pti->aphkStart[HOOKID_TO_INDEX(HookId)];
     }
     else
@@ -1022,7 +1020,7 @@ IntFreeHook(PHOOK Hook)
        Hook->ModuleName.Buffer = NULL;
     }
     /* Close handle */
-    UserDeleteObject(UserHMGetHandle(Hook), otHook);
+    UserDeleteObject(UserHMGetHandle(Hook), TYPE_HOOK);
 }
 
 /* Remove a hook, freeing it from the chain */
@@ -1037,9 +1035,9 @@ IntRemoveHook(PHOOK Hook)
 
     HookId = Hook->HookId;
 
-    if (Hook->Thread) // Local
+    if (Hook->ptiHooked) // Local
     {
-       pti = ((PTHREADINFO)Hook->Thread->Tcb.Win32Thread);
+       pti = Hook->ptiHooked;
 
        IntFreeHook( Hook);
 
@@ -1052,6 +1050,8 @@ IntRemoveHook(PHOOK Hook)
           }
           _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
           {
+              /* Do nothing */
+              (void)0;
           }
           _SEH2_END;
        }
@@ -1243,6 +1243,8 @@ co_HOOK_CallHooks( INT HookId,
           }
           _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
           {
+              /* Do nothing */
+              (void)0;
           }
           _SEH2_END;
        }
@@ -1268,7 +1270,7 @@ co_HOOK_CallHooks( INT HookId,
        */
        for(i = 0; pHookHandles[i]; ++i)
        {
-          Hook = (PHOOK)UserGetObject(gHandleTable, pHookHandles[i], otHook);
+          Hook = (PHOOK)UserGetObject(gHandleTable, pHookHandles[i], TYPE_HOOK);
           if(!Hook)
           {
               ERR("Invalid hook!\n");
@@ -1454,7 +1456,6 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     UNICODE_STRING ModuleName;
     NTSTATUS Status;
     HHOOK Handle;
-    PETHREAD Thread = NULL;
     PTHREADINFO pti, ptiHook = NULL;
     DECLARE_RETURN(HHOOK);
 
@@ -1489,16 +1490,12 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
            RETURN( NULL);
        }
 
-       if (!NT_SUCCESS(PsLookupThreadByThreadId((HANDLE)(DWORD_PTR) ThreadId, &Thread)))
+       if ( !(ptiHook = IntTID2PTI( (HANDLE)ThreadId )))
        {
           ERR("Invalid thread id 0x%x\n", ThreadId);
           EngSetLastError(ERROR_INVALID_PARAMETER);
           RETURN( NULL);
        }
-
-       ptiHook = Thread->Tcb.Win32Thread;
-
-       ObDereferenceObject(Thread);
 
        if ( ptiHook->rpdesk != pti->rpdesk) // gptiCurrent->rpdesk)
        {
@@ -1507,7 +1504,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
           RETURN( NULL);
        }
 
-       if (Thread->ThreadsProcess != PsGetCurrentProcess())
+       if (ptiHook->ppi != pti->ppi)
        {
           if ( !Mod &&
               (HookId == WH_GETMESSAGE ||
@@ -1571,7 +1568,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     }
     ObDereferenceObject(WinStaObj);
 
-    Hook = UserCreateObject(gHandleTable, NULL, (PHANDLE)&Handle, otHook, sizeof(HOOK));
+    Hook = UserCreateObject(gHandleTable, NULL, NULL, (PHANDLE)&Handle, TYPE_HOOK, sizeof(HOOK));
 
     if (!Hook)
     {
@@ -1579,7 +1576,6 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     }
 
     Hook->ihmod   = (INT)Mod; // Module Index from atom table, Do this for now.
-    Hook->Thread  = Thread; /* Set Thread, Null is Global. */
     Hook->HookId  = HookId;
     Hook->rpdesk  = ptiHook->rpdesk;
     Hook->phkNext = NULL; /* Dont use as a chain! Use link lists for chaining. */
@@ -1675,6 +1671,9 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
        }
 
        Hook->ModuleName.Length = ModuleName.Length;
+       //// FIXME: Need to load from user32 to verify hMod before calling hook with hMod set!!!!
+       //// Mod + offPfn == new HookProc Justin Case module is from another process.
+       FIXME("NtUserSetWindowsHookEx Setting process hMod instance addressing.\n");
        /* Make proc relative to the module base */
        Hook->offPfn = (ULONG_PTR)((char *)HookProc - (char *)Mod);
     }

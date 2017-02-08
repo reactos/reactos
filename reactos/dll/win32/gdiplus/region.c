@@ -16,17 +16,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+//#include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "wingdi.h"
 
-#include "objbase.h"
+//#include "objbase.h"
 
-#include "gdiplus.h"
+//#include "gdiplus.h"
 #include "gdiplus_private.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 
@@ -151,15 +151,15 @@ static inline GpStatus clone_element(const region_element* element,
     {
         case RegionDataRect:
             (*element2)->elementdata.rect = element->elementdata.rect;
-            break;
+            return Ok;
         case RegionDataEmptyRect:
         case RegionDataInfiniteRect:
-            break;
+            return Ok;
         case RegionDataPath:
             (*element2)->elementdata.pathdata.pathheader = element->elementdata.pathdata.pathheader;
             stat = GdipClonePath(element->elementdata.pathdata.path,
                     &(*element2)->elementdata.pathdata.path);
-            if (stat != Ok) goto clone_out;
+            if (stat == Ok) return Ok;
             break;
         default:
             (*element2)->elementdata.combine.left  = NULL;
@@ -167,16 +167,15 @@ static inline GpStatus clone_element(const region_element* element,
 
             stat = clone_element(element->elementdata.combine.left,
                     &(*element2)->elementdata.combine.left);
-            if (stat != Ok) goto clone_out;
-            stat = clone_element(element->elementdata.combine.right,
-                    &(*element2)->elementdata.combine.right);
-            if (stat != Ok) goto clone_out;
+            if (stat == Ok)
+            {
+                stat = clone_element(element->elementdata.combine.right,
+                        &(*element2)->elementdata.combine.right);
+                if (stat == Ok) return Ok;
+            }
             break;
     }
 
-    return Ok;
-
-clone_out:
     delete_element(*element2);
     *element2 = NULL;
     return stat;
@@ -254,20 +253,20 @@ GpStatus WINGDIPAPI GdipCombineRegionPath(GpRegion *region, GpPath *path, Combin
     }
 
     left = GdipAlloc(sizeof(region_element));
-    if (!left)
-        goto out;
-    *left = region->node;
+    if (left)
+    {
+        *left = region->node;
+        stat = clone_element(&path_region->node, &right);
+        if (stat == Ok)
+        {
+            fuse_region(region, left, right, mode);
+            GdipDeleteRegion(path_region);
+            return Ok;
+        }
+    }
+    else
+        stat = OutOfMemory;
 
-    stat = clone_element(&path_region->node, &right);
-    if (stat != Ok)
-        goto out;
-
-    fuse_region(region, left, right, mode);
-
-    GdipDeleteRegion(path_region);
-    return Ok;
-
-out:
     GdipFree(left);
     GdipDeleteRegion(path_region);
     return stat;
@@ -301,20 +300,20 @@ GpStatus WINGDIPAPI GdipCombineRegionRect(GpRegion *region,
     }
 
     left = GdipAlloc(sizeof(region_element));
-    if (!left)
-        goto out;
-    memcpy(left, &region->node, sizeof(region_element));
+    if (left)
+    {
+        memcpy(left, &region->node, sizeof(region_element));
+        stat = clone_element(&rect_region->node, &right);
+        if (stat == Ok)
+        {
+            fuse_region(region, left, right, mode);
+            GdipDeleteRegion(rect_region);
+            return Ok;
+        }
+    }
+    else
+        stat = OutOfMemory;
 
-    stat = clone_element(&rect_region->node, &right);
-    if (stat != Ok)
-        goto out;
-
-    fuse_region(region, left, right, mode);
-
-    GdipDeleteRegion(rect_region);
-    return Ok;
-
-out:
     GdipFree(left);
     GdipDeleteRegion(rect_region);
     return stat;
@@ -398,6 +397,8 @@ GpStatus WINGDIPAPI GdipCreateRegion(GpRegion **region)
     *region = GdipAlloc(sizeof(GpRegion));
     if(!*region)
         return OutOfMemory;
+
+    TRACE("=> %p\n", *region);
 
     return init_region(*region, RegionDataInfiniteRect);
 }
@@ -680,6 +681,7 @@ GpStatus WINGDIPAPI GdipGetRegionBounds(GpRegion *region, GpGraphics *graphics, 
     if(!hrgn){
         rect->X = rect->Y = -(REAL)(1 << 22);
         rect->Width = rect->Height = (REAL)(1 << 23);
+        TRACE("%p => infinite\n", region);
         return Ok;
     }
 
@@ -688,6 +690,7 @@ GpStatus WINGDIPAPI GdipGetRegionBounds(GpRegion *region, GpGraphics *graphics, 
         rect->Y = r.top;
         rect->Width  = r.right  - r.left;
         rect->Height = r.bottom - r.top;
+        TRACE("%p => %s\n", region, debugstr_rectf(rect));
     }
     else
         status = GenericError;
@@ -712,10 +715,10 @@ GpStatus WINGDIPAPI GdipGetRegionBoundsI(GpRegion *region, GpGraphics *graphics,
 
     status = GdipGetRegionBounds(region, graphics, &rectf);
     if(status == Ok){
-        rect->X = roundr(rectf.X);
-        rect->Y = roundr(rectf.X);
-        rect->Width  = roundr(rectf.Width);
-        rect->Height = roundr(rectf.Height);
+        rect->X = gdip_round(rectf.X);
+        rect->Y = gdip_round(rectf.X);
+        rect->Width  = gdip_round(rectf.Width);
+        rect->Height = gdip_round(rectf.Height);
     }
 
     return status;
@@ -1080,12 +1083,19 @@ GpStatus WINGDIPAPI GdipGetRegionHRgn(GpRegion *region, GpGraphics *graphics, HR
 
 GpStatus WINGDIPAPI GdipIsEmptyRegion(GpRegion *region, GpGraphics *graphics, BOOL *res)
 {
+    GpStatus status;
+    GpRectF rect;
+
     TRACE("(%p, %p, %p)\n", region, graphics, res);
 
     if(!region || !graphics || !res)
         return InvalidParameter;
 
-    *res = (region->node.type == RegionDataEmptyRect);
+    status = GdipGetRegionBounds(region, graphics, &rect);
+    if (status != Ok) return status;
+
+    *res = rect.Width == 0.0 && rect.Height == 0.0;
+    TRACE("=> %d\n", *res);
 
     return Ok;
 }
@@ -1210,7 +1220,7 @@ GpStatus WINGDIPAPI GdipIsVisibleRegionPoint(GpRegion* region, REAL x, REAL y, G
         return Ok;
     }
 
-    *res = PtInRegion(hrgn, roundr(x), roundr(y));
+    *res = PtInRegion(hrgn, gdip_round(x), gdip_round(y));
 
     DeleteObject(hrgn);
 

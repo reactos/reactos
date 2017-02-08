@@ -1137,7 +1137,7 @@ NTAPI
 INIT_FUNCTION
 KiI386PentiumLockErrataFixup(VOID)
 {
-    KDESCRIPTOR IdtDescriptor;
+    KDESCRIPTOR IdtDescriptor = {0, 0, 0};
     PKIDTENTRY NewIdt, NewIdt2;
 
     /* Allocate memory for a new IDT */

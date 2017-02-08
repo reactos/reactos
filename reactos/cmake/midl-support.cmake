@@ -1,8 +1,8 @@
 
 #idl files support
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     set(IDL_FLAGS /nologo /win32 /no_def_idir)
-elseif(ARCH MATCHES amd64)
+elseif(ARCH STREQUAL "amd64")
     set(IDL_FLAGS /nologo /amd64 /no_def_idir)
 else()
     set(IDL_FLAGS /nologo /no_def_idir)
@@ -55,11 +55,11 @@ function(add_rpc_files _type)
     get_includes(_includes)
     get_defines(_defines)
     # Is it a client or server module?
-    if(_type STREQUAL server)
+    if(_type STREQUAL "server")
         set(_server_client /sstub)
         set(_suffix _s)
         set(_prevent_second_type /client none)
-    elseif(_type STREQUAL client)
+    elseif(_type STREQUAL "client")
         set(_server_client /cstub)
         set(_suffix _c)
         set(_prevent_second_type /server none)
@@ -79,20 +79,22 @@ function(add_rpc_files _type)
     endforeach()
 endfunction()
 
-function(generate_idl_iids _idl_file)
-    get_includes(_includes)
-    get_defines(_defines)
+function(generate_idl_iids)
+    foreach(_idl_file ${ARGN})
+        get_includes(_includes)
+        get_defines(_defines)
 
-    if(NOT IS_ABSOLUTE ${_idl_file})
-        set(_idl_file "${CMAKE_CURRENT_SOURCE_DIR}/${_idl_file}")
-    endif()
+        if(NOT IS_ABSOLUTE ${_idl_file})
+            set(_idl_file "${CMAKE_CURRENT_SOURCE_DIR}/${_idl_file}")
+        endif()
 
-    get_filename_component(_name_we ${_idl_file} NAME_WE)
-    add_custom_command(
-        OUTPUT ${_name_we}_i.c ${_name_we}_i.h
-        COMMAND midl ${_includes} ${_defines} ${IDL_FLAGS} /h ${_name_we}_i.h /client none /server none /iid ${_name_we}_i.c /proxy ${_name_we}_dummy_p.c ${_idl_file}
-        DEPENDS ${_idl_file})
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_name_we}_i.c PROPERTIES GENERATED TRUE)
+        get_filename_component(_name_we ${_idl_file} NAME_WE)
+        add_custom_command(
+            OUTPUT ${_name_we}_i.c ${_name_we}_i.h
+            COMMAND midl ${_includes} ${_defines} ${IDL_FLAGS} /h ${_name_we}_i.h /client none /server none /iid ${_name_we}_i.c /proxy ${_name_we}_dummy_p.c ${_idl_file}
+            DEPENDS ${_idl_file})
+        set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_name_we}_i.c PROPERTIES GENERATED TRUE)
+    endforeach()
 endfunction()
 
 function(add_iid_library _target)
@@ -105,7 +107,7 @@ function(add_iid_library _target)
     add_library(${_target} ${_iid_sources})
 
     # for wtypes.h
-	add_dependencies(${_target} psdk)
+    add_dependencies(${_target} psdk)
 
     set_target_properties(${_target} PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endfunction()

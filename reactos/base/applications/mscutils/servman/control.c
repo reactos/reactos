@@ -133,7 +133,6 @@ DoControl(PMAIN_WND_INFO Info,
     return bRet;
 }
 
-
 BOOL
 DoPause(PMAIN_WND_INFO Info)
 {
@@ -157,7 +156,6 @@ DoPause(PMAIN_WND_INFO Info)
 
     return bRet;
 }
-
 
 BOOL
 DoResume(PMAIN_WND_INFO Info)

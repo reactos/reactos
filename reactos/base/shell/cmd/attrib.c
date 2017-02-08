@@ -32,10 +32,9 @@
  *        Remove all hardcode string to En.rc
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 #ifdef INCLUDE_CMD_ATTRIB
-
 
 static VOID
 PrintAttribute (LPTSTR pszPath, LPTSTR pszFile, BOOL bRecurse)

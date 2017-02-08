@@ -10,7 +10,7 @@
  *
  * daniel@veillard.com
  */
- 
+
 #define NEED_SOCKETS
 #define IN_LIBXML
 #include "libxml.h"
@@ -46,7 +46,7 @@
 #include <resolv.h>
 #endif
 #ifdef HAVE_FCNTL_H
-#include <fcntl.h> 
+#include <fcntl.h>
 #endif
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
@@ -64,9 +64,6 @@
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
-#ifdef SUPPORT_IP6
-#include <resolv.h>
-#endif
 #ifdef HAVE_ZLIB_H
 #include <zlib.h>
 #endif
@@ -78,9 +75,9 @@
 #endif
 
 #if defined(__MINGW32__) || defined(_WIN32_WCE)
-#ifndef _WINSOCKAPI_
+/*#ifndef _WINSOCKAPI_
 #define _WINSOCKAPI_
-#endif
+#endif*/
 #include <wsockcompat.h>
 #include <winsock2.h>
 #undef XML_SOCKLEN_T
@@ -216,7 +213,7 @@ void
 xmlNanoHTTPInit(void) {
     const char *env;
 #ifdef _WINSOCKAPI_
-    WSADATA wsaData;    
+    WSADATA wsaData;
 #endif
 
     if (initialized)
@@ -282,19 +279,19 @@ xmlNanoHTTPScanURL(xmlNanoHTTPCtxtPtr ctxt, const char *URL) {
     /*
      * Clear any existing data from the context
      */
-    if (ctxt->protocol != NULL) { 
+    if (ctxt->protocol != NULL) {
         xmlFree(ctxt->protocol);
 	ctxt->protocol = NULL;
     }
-    if (ctxt->hostname != NULL) { 
+    if (ctxt->hostname != NULL) {
         xmlFree(ctxt->hostname);
 	ctxt->hostname = NULL;
     }
-    if (ctxt->path != NULL) { 
+    if (ctxt->path != NULL) {
         xmlFree(ctxt->path);
 	ctxt->path = NULL;
     }
-    if (ctxt->query != NULL) { 
+    if (ctxt->query != NULL) {
         xmlFree(ctxt->query);
 	ctxt->query = NULL;
     }
@@ -308,7 +305,7 @@ xmlNanoHTTPScanURL(xmlNanoHTTPCtxtPtr ctxt, const char *URL) {
 	xmlFreeURI(uri);
 	return;
     }
-    
+
     ctxt->protocol = xmlMemStrdup(uri->scheme);
     ctxt->hostname = xmlMemStrdup(uri->server);
     if (uri->path != NULL)
@@ -337,7 +334,7 @@ void
 xmlNanoHTTPScanProxy(const char *URL) {
     xmlURIPtr uri;
 
-    if (proxy != NULL) { 
+    if (proxy != NULL) {
         xmlFree(proxy);
 	proxy = NULL;
     }
@@ -361,7 +358,7 @@ xmlNanoHTTPScanProxy(const char *URL) {
 	    xmlFreeURI(uri);
 	return;
     }
-    
+
     proxy = xmlMemStrdup(uri->server);
     if (uri->port != 0)
 	proxyPort = uri->port;
@@ -647,7 +644,7 @@ xmlNanoHTTPReadLine(xmlNanoHTTPCtxtPtr ctxt) {
     char buf[4096];
     char *bp = buf;
     int	rc;
-    
+
     while (bp - buf < 4095) {
 	if (ctxt->inrptr == ctxt->inptr) {
 	    if ( (rc = xmlNanoHTTPRecv(ctxt)) == 0) {
@@ -784,9 +781,9 @@ xmlNanoHTTPScanAnswer(xmlNanoHTTPCtxtPtr ctxt, const char *line) {
 	    xmlFree(ctxt->location);
 	if (*cur == '/') {
 	    xmlChar *tmp_http = xmlStrdup(BAD_CAST "http://");
-	    xmlChar *tmp_loc = 
+	    xmlChar *tmp_loc =
 	        xmlStrcat(tmp_http, (const xmlChar *) ctxt->hostname);
-	    ctxt->location = 
+	    ctxt->location =
 	        (char *) xmlStrcat (tmp_loc, (const xmlChar *) cur);
 	} else {
 	    ctxt->location = xmlMemStrdup(cur);
@@ -1140,10 +1137,12 @@ xmlNanoHTTPConnectHost(const char *host, int port)
 			"Non-recoverable errors:  FORMERR, REFUSED, or NOTIMP.";
 		    break;
 
+#ifdef NO_ADDRESS
 		case NO_ADDRESS:
 		    h_err_txt =
 			"Valid name, no data record of requested type.";
 		    break;
+#endif
 
 		default:
 		    h_err_txt = "No error text defined.";
@@ -1166,7 +1165,7 @@ xmlNanoHTTPConnectHost(const char *host, int port)
 		memcpy (&ia, h->h_addr_list[i], h->h_length);
 		sockin.sin_family = h->h_addrtype;
 		sockin.sin_addr = ia;
-		sockin.sin_port = (u_short)htons ((unsigned short)port);
+		sockin.sin_port = (unsigned short)htons ((unsigned short)port);
 		addr = (struct sockaddr *) &sockin;
 #ifdef SUPPORT_IP6
 	    } else if (have_ipv6 () && (h->h_addrtype == AF_INET6)) {
@@ -1268,7 +1267,7 @@ xmlNanoHTTPRead(void *ctx, void *dest, int len) {
 #ifdef HAVE_ZLIB_H
     if (ctxt->usesGzip == 1) {
         if (ctxt->strm == NULL) return(0);
- 
+
         ctxt->strm->next_out = dest;
         ctxt->strm->avail_out = len;
 	ctxt->strm->avail_in = ctxt->inptr - ctxt->inrptr;
@@ -1347,7 +1346,7 @@ xmlNanoHTTPMethodRedir(const char *URL, const char *method, const char *input,
 #ifdef DEBUG_HTTP
     int xmt_bytes;
 #endif
-    
+
     if (URL == NULL) return(NULL);
     if (method == NULL) method = "GET";
     xmlNanoHTTPInit();
@@ -1428,13 +1427,13 @@ retry:
 
     if (proxy) {
 	if (ctxt->port != 80) {
-	    p += snprintf( p, blen - (p - bp), "%s http://%s:%d%s", 
+	    p += snprintf( p, blen - (p - bp), "%s http://%s:%d%s",
 			method, ctxt->hostname,
-		 	ctxt->port, ctxt->path );
+			ctxt->port, ctxt->path );
 	}
-	else 
+	else
 	    p += snprintf( p, blen - (p - bp), "%s http://%s%s", method,
-	    		ctxt->hostname, ctxt->path);
+			ctxt->hostname, ctxt->path);
     }
     else
 	p += snprintf( p, blen - (p - bp), "%s %s", method, ctxt->path);
@@ -1443,7 +1442,7 @@ retry:
 	p += snprintf( p, blen - (p - bp), "?%s", ctxt->query);
 
     if (ctxt->port == 80) {
-        p += snprintf( p, blen - (p - bp), " HTTP/1.0\r\nHost: %s\r\n", 
+        p += snprintf( p, blen - (p - bp), " HTTP/1.0\r\nHost: %s\r\n",
 		    ctxt->hostname);
     } else {
         p += snprintf( p, blen - (p - bp), " HTTP/1.0\r\nHost: %s:%d\r\n",
@@ -1454,7 +1453,7 @@ retry:
     p += snprintf(p, blen - (p - bp), "Accept-Encoding: gzip\r\n");
 #endif
 
-    if (contentType != NULL && *contentType) 
+    if (contentType != NULL && *contentType)
 	p += snprintf(p, blen - (p - bp), "Content-Type: %s\r\n", *contentType);
 
     if (headers != NULL)
@@ -1493,7 +1492,7 @@ retry:
 
 	if ( xmt_bytes != ilen )
 	    xmlGenericError( xmlGenericErrorContext,
-	    		"xmlNanoHTTPMethodRedir:  Only %d of %d %s %s\n",
+			"xmlNanoHTTPMethodRedir:  Only %d of %d %s %s\n",
 			xmt_bytes, ilen,
 			"bytes of HTTP content sent to host",
 			ctxt->hostname );
@@ -1615,12 +1614,13 @@ xmlNanoHTTPFetch(const char *URL, const char *filename, char **contentType) {
     char *buf = NULL;
     int fd;
     int len;
-    
+    int ret = 0;
+
     if (filename == NULL) return(-1);
     ctxt = xmlNanoHTTPOpen(URL, contentType);
     if (ctxt == NULL) return(-1);
 
-    if (!strcmp(filename, "-")) 
+    if (!strcmp(filename, "-"))
         fd = 0;
     else {
         fd = open(filename, O_CREAT | O_WRONLY, 00644);
@@ -1636,12 +1636,14 @@ xmlNanoHTTPFetch(const char *URL, const char *filename, char **contentType) {
 
     xmlNanoHTTPFetchContent( ctxt, &buf, &len );
     if ( len > 0 ) {
-	write(fd, buf, len);
+	if (write(fd, buf, len) == -1) {
+	    ret = -1;
+	}
     }
 
     xmlNanoHTTPClose(ctxt);
     close(fd);
-    return(0);
+    return(ret);
 }
 
 #ifdef LIBXML_OUTPUT_ENABLED
@@ -1660,10 +1662,11 @@ xmlNanoHTTPSave(void *ctxt, const char *filename) {
     char *buf = NULL;
     int fd;
     int len;
-    
+    int ret = 0;
+
     if ((ctxt == NULL) || (filename == NULL)) return(-1);
 
-    if (!strcmp(filename, "-")) 
+    if (!strcmp(filename, "-"))
         fd = 0;
     else {
         fd = open(filename, O_CREAT | O_WRONLY, 0666);
@@ -1675,12 +1678,14 @@ xmlNanoHTTPSave(void *ctxt, const char *filename) {
 
     xmlNanoHTTPFetchContent( ctxt, &buf, &len );
     if ( len > 0 ) {
-	write(fd, buf, len);
+	if (write(fd, buf, len) == -1) {
+	    ret = -1;
+	}
     }
 
     xmlNanoHTTPClose(ctxt);
     close(fd);
-    return(0);
+    return(ret);
 }
 #endif /* LIBXML_OUTPUT_ENABLED */
 
@@ -1790,7 +1795,7 @@ xmlNanoHTTPMimeType( void * ctx ) {
  * Check if all the content was read
  *
  * Returns 0 if all the content was read and available, returns
- * -1 if received content length was less than specified or an error 
+ * -1 if received content length was less than specified or an error
  * occurred.
  */
 static int
@@ -1844,7 +1849,7 @@ int main(int argc, char **argv) {
     char *contentType = NULL;
 
     if (argv[1] != NULL) {
-	if (argv[2] != NULL) 
+	if (argv[2] != NULL)
 	    xmlNanoHTTPFetch(argv[1], argv[2], &contentType);
         else
 	    xmlNanoHTTPFetch(argv[1], "-", &contentType);

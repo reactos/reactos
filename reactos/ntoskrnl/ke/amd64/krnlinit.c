@@ -30,7 +30,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 
 VOID
 NTAPI
-KiInitalizeHandBuiltThread(
+KiInitializeHandBuiltThread(
     IN PKTHREAD Thread,
     IN PKPROCESS Process,
     IN PVOID Stack)
@@ -92,7 +92,7 @@ KiSystemStartupBootStack(VOID)
     else
     {
         /* Initialize the startup thread */
-        KiInitalizeHandBuiltThread(Thread, Process, KernelStack);
+        KiInitializeHandBuiltThread(Thread, Process, KernelStack);
 
         /* Initialize cpu with HAL */
         if (!HalInitSystem(0, LoaderBlock))
@@ -212,7 +212,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     InitProcess->QuantumReset = MAXCHAR;
 
     /* Initialize the startup thread */
-    KiInitalizeHandBuiltThread(InitThread, InitProcess, IdleStack);
+    KiInitializeHandBuiltThread(InitThread, InitProcess, IdleStack);
 
     /* Initialize the Kernel Executive */
     ExpInitializeExecutive(0, LoaderBlock);

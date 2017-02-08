@@ -18,14 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "lmcons.h"
-#include "lmbrowsr.h"
-#include "lmshare.h"
+#include "netapi32.h"
 
 /************************************************************
  *                I_BrowserSetNetlogonState  (NETAPI32.@)

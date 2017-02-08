@@ -34,6 +34,7 @@ typedef struct _GDIPOINTER /* should stay private to ENG? No, part of PDEVOBJ ak
   SURFACE  *psurfColor;
   SURFACE  *psurfMask;
   SURFACE  *psurfSave;
+  FLONG    flags;
 
   /* Public pointer information */
   RECTL    Exclude; /* Required publicly for SPS_ACCEPT_EXCLUDE */
@@ -159,22 +160,24 @@ extern PPDEVOBJ gppdevPrimary;
 
 PPDEVOBJ
 NTAPI
-EngpGetPDEV(PUNICODE_STRING pustrDevice);
+EngpGetPDEV(
+    _In_opt_ PUNICODE_STRING pustrDevice);
 
 VOID
 NTAPI
-PDEVOBJ_vRelease(PPDEVOBJ ppdev);
+PDEVOBJ_vRelease(
+    _Inout_ PPDEVOBJ ppdev);
 
 PSURFACE
 NTAPI
 PDEVOBJ_pSurface(
-    PPDEVOBJ ppdev);
+    _In_ PPDEVOBJ ppdev);
 
 VOID
 NTAPI
 PDEVOBJ_vGetDeviceCaps(
-    PPDEVOBJ ppdev,
-    PDEVCAPS pDevCaps);
+    _In_ PPDEVOBJ ppdev,
+    _Out_ PDEVCAPS pDevCaps);
 
 INIT_FUNCTION
 NTSTATUS
@@ -183,6 +186,8 @@ InitPDEVImpl(VOID);
 
 PSIZEL
 FASTCALL
-PDEVOBJ_sizl(PPDEVOBJ, PSIZEL);
+PDEVOBJ_sizl(
+    _In_ PPDEVOBJ ppdev,
+    _Out_ PSIZEL psizl);
 
 #endif /* !__WIN32K_PDEVOBJ_H */

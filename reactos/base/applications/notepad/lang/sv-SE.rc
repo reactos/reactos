@@ -178,7 +178,7 @@ STRING_ERROR,                                   "FEL"
 STRING_WARNING,                                 "VARNING"
 STRING_INFO,                                    "Information"
 
-STRING_UNTITLED,                                "(namnlös)"
+STRING_UNTITLED,                                "Namnlös"
 
 STRING_ALL_FILES,                               "Alla filer (*.*)"
 STRING_TEXT_FILES_TXT,                  "Textfiler (*.txt)"

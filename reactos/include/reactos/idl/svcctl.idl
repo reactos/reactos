@@ -4,7 +4,7 @@
 
 #include <ms-dtyp.idl>
 
-const unsigned int MAX_SERVICE_NAME_LENGTH = 255;
+const unsigned int MAX_SERVICE_NAME_LENGTH = 256;
 const unsigned short SC_MAX_DEPEND_SIZE = 4 * 1024;
 const unsigned short SC_MAX_NAME_LENGTH = MAX_SERVICE_NAME_LENGTH + 1;
 const unsigned short SC_MAX_PATH_LENGTH = 32 * 1024;
@@ -174,9 +174,12 @@ typedef struct _SERVICE_RPC_REQUIRED_PRIVILEGES_INFO {
     [size_is(cbRequiredPrivileges)] PBYTE pRequiredPrivileges;
 } SERVICE_RPC_REQUIRED_PRIVILEGES_INFO, *LPSERVICE_RPC_REQUIRED_PRIVILEGES_INFO;
 
+cpp_quote("#ifndef _SERVICE_PRESHUTDOWN_INFO_DEFINED_")
+cpp_quote("#define _SERVICE_PRESHUTDOWN_INFO_DEFINED_")
 typedef struct _SERVICE_PRESHUTDOWN_INFO {
     DWORD dwPreshutdownTimeout;
 } SERVICE_PRESHUTDOWN_INFO, *LPSERVICE_PRESHUTDOWN_INFO;
+cpp_quote("#endif")
 
 typedef struct _SC_RPC_CONFIG_INFOA {
     DWORD dwInfoLevel;
@@ -485,7 +488,7 @@ interface svcctl
         [in, string, unique] LPSTR lpBinaryPathName,
         [in, string, unique] LPSTR lpLoadOrderGroup,
         [in, out, unique] LPDWORD lpdwTagId,
-        [in, unique, size_is(dwDependSize)] LPSTR lpDependencies,
+        [in, unique, size_is(dwDependSize)] LPBYTE lpDependencies,
         [in, range(0, SC_MAX_DEPEND_SIZE)] DWORD dwDependSize,
         [in, string, unique] LPSTR lpServiceStartName,
         [in, unique, size_is(dwPwSize)] LPBYTE lpPassword,

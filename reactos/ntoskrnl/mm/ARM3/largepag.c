@@ -58,8 +58,7 @@ MiSyncCachedRanges(VOID)
     /* Scan every range */
     for (i = 0; i < MiLargePageRangeIndex; i++)
     {
-        DPRINT1("No support for large pages\n");
-        while (TRUE);
+        UNIMPLEMENTED_DBGBREAK("No support for large pages\n");
     }
 }
 

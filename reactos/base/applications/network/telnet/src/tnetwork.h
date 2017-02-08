@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <windows.h>
+//#include <windows.h>
 
 enum NetworkType {TN_NETSOCKET, TN_NETPIPE};
 

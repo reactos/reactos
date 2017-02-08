@@ -294,7 +294,7 @@ CmiAddSubKey(
 			NewKeyCell->Flags = 0;
 		}
 		KeQuerySystemTime(&NewKeyCell->LastWriteTime);
-		NewKeyCell->Parent = HCELL_NIL;
+		NewKeyCell->Parent = ParentKeyCellOffset;
 		NewKeyCell->SubKeyCounts[Stable] = 0;
 		NewKeyCell->SubKeyCounts[Volatile] = 0;
 		NewKeyCell->SubKeyLists[Stable] = HCELL_NIL;

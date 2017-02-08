@@ -8,7 +8,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <rtl.h>
-
 #define NDEBUG
 #include <debug.h>
 
@@ -19,11 +18,13 @@
  */
 BOOLEAN
 NTAPI
-RtlAreAllAccessesGranted(ACCESS_MASK GrantedAccess,
-                         ACCESS_MASK DesiredAccess)
+RtlAreAllAccessesGranted(IN ACCESS_MASK GrantedAccess,
+                         IN ACCESS_MASK DesiredAccess)
 {
-  PAGED_CODE_RTL();
-  return ((GrantedAccess & DesiredAccess) == DesiredAccess);
+    PAGED_CODE_RTL();
+
+    /* Return if there's no leftover bits after granting all of them */
+    return !(~GrantedAccess & DesiredAccess);
 }
 
 /*
@@ -31,10 +32,12 @@ RtlAreAllAccessesGranted(ACCESS_MASK GrantedAccess,
  */
 BOOLEAN
 NTAPI
-RtlAreAnyAccessesGranted(ACCESS_MASK GrantedAccess,
-                         ACCESS_MASK DesiredAccess)
+RtlAreAnyAccessesGranted(IN ACCESS_MASK GrantedAccess,
+                         IN ACCESS_MASK DesiredAccess)
 {
     PAGED_CODE_RTL();
+
+    /* Return if there's any leftover bits after granting all of them */
     return ((GrantedAccess & DesiredAccess) != 0);
 }
 
@@ -43,19 +46,18 @@ RtlAreAnyAccessesGranted(ACCESS_MASK GrantedAccess,
  */
 VOID
 NTAPI
-RtlMapGenericMask(PACCESS_MASK AccessMask,
-                  PGENERIC_MAPPING GenericMapping)
+RtlMapGenericMask(IN OUT PACCESS_MASK AccessMask,
+                  IN PGENERIC_MAPPING GenericMapping)
 {
     PAGED_CODE_RTL();
 
+    /* Convert mappings */
     if (*AccessMask & GENERIC_READ) *AccessMask |= GenericMapping->GenericRead;
-
     if (*AccessMask & GENERIC_WRITE) *AccessMask |= GenericMapping->GenericWrite;
-
     if (*AccessMask & GENERIC_EXECUTE) *AccessMask |= GenericMapping->GenericExecute;
-
     if (*AccessMask & GENERIC_ALL) *AccessMask |= GenericMapping->GenericAll;
 
+    /* Clear generic flags */
     *AccessMask &= ~(GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE | GENERIC_ALL);
 }
 

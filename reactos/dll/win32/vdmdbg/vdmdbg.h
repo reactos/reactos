@@ -1,4 +1,6 @@
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 
 #define MAX_PATH16 255
 #define MAX_MODULE_NAME 9

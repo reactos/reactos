@@ -8,6 +8,13 @@
 #define __WSHTCPIP_H
 
 #define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <stdarg.h>
+
+#include <windef.h>
+#include <winbase.h>
 #include <wsahelp.h>
 #include <tdiinfo.h>
 #include <tcpioctl.h>
@@ -42,6 +49,7 @@ typedef struct _SOCKET_CONTEXT {
     DWORD AddrFileInstance;
     SOCKET_STATE SocketState;
     PQUEUED_REQUEST RequestQueue;
+    BOOL DontRoute;
 } SOCKET_CONTEXT, *PSOCKET_CONTEXT;
 
 #endif /* __WSHTCPIP_H */

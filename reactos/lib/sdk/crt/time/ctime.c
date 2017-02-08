@@ -7,12 +7,11 @@
  */
 #define MINGW_HAS_SECURE_API 1
 
+#include <errno.h>
 #define RC_INVOKED 1 // to prevent inline functions
 #include <tchar.h>
 #include <time.h>
 #include "bitsfixup.h"
-
-#define EINVAL -1
 
 /* Doesn't really exist, but we need it here */
 _CRTIMP errno_t __cdecl localtime_s(struct tm *_Tm,const time_t *_Time);

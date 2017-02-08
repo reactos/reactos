@@ -38,8 +38,8 @@ enum parser_state
 
 struct parser
 {
-  const CHAR        *start;       /* start position of item being parsed */
-  const CHAR        *end;         /* end of buffer */
+  const WCHAR       *start;       /* start position of item being parsed */
+  const WCHAR       *end;         /* end of buffer */
   PINFCACHE         file;         /* file being built */
   enum parser_state state;        /* current parser state */
   enum parser_state stack[4];     /* state stack */
@@ -50,21 +50,21 @@ struct parser
   unsigned int     line_pos;      /* current line position in file */
   INFSTATUS        error;         /* error code */
   unsigned int     token_len;     /* current token len */
-  TCHAR token[MAX_FIELD_LEN+1];   /* current token */
+  WCHAR token[MAX_FIELD_LEN+1];   /* current token */
 };
 
-typedef const CHAR * (*parser_state_func)( struct parser *parser, const CHAR *pos );
+typedef const WCHAR * (*parser_state_func)( struct parser *parser, const WCHAR *pos );
 
 /* parser state machine functions */
-static const CHAR *line_start_state( struct parser *parser, const CHAR *pos );
-static const CHAR *section_name_state( struct parser *parser, const CHAR *pos );
-static const CHAR *key_name_state( struct parser *parser, const CHAR *pos );
-static const CHAR *value_name_state( struct parser *parser, const CHAR *pos );
-static const CHAR *eol_backslash_state( struct parser *parser, const CHAR *pos );
-static const CHAR *quotes_state( struct parser *parser, const CHAR *pos );
-static const CHAR *leading_spaces_state( struct parser *parser, const CHAR *pos );
-static const CHAR *trailing_spaces_state( struct parser *parser, const CHAR *pos );
-static const CHAR *comment_state( struct parser *parser, const CHAR *pos );
+static const WCHAR *line_start_state( struct parser *parser, const WCHAR *pos );
+static const WCHAR *section_name_state( struct parser *parser, const WCHAR *pos );
+static const WCHAR *key_name_state( struct parser *parser, const WCHAR *pos );
+static const WCHAR *value_name_state( struct parser *parser, const WCHAR *pos );
+static const WCHAR *eol_backslash_state( struct parser *parser, const WCHAR *pos );
+static const WCHAR *quotes_state( struct parser *parser, const WCHAR *pos );
+static const WCHAR *leading_spaces_state( struct parser *parser, const WCHAR *pos );
+static const WCHAR *trailing_spaces_state( struct parser *parser, const WCHAR *pos );
+static const WCHAR *comment_state( struct parser *parser, const WCHAR *pos );
 
 static const parser_state_func parser_funcs[NB_PARSER_STATES] =
 {
@@ -141,7 +141,7 @@ InfpFreeSection (PINFCACHESECTION Section)
 
 PINFCACHESECTION
 InfpFindSection(PINFCACHE Cache,
-                PCTSTR Name)
+                PCWSTR Name)
 {
   PINFCACHESECTION Section = NULL;
 
@@ -154,7 +154,7 @@ InfpFindSection(PINFCACHE Cache,
   Section = Cache->FirstSection;
   while (Section != NULL)
     {
-      if (_tcsicmp (Section->Name, Name) == 0)
+      if (strcmpiW(Section->Name, Name) == 0)
         {
           return Section;
         }
@@ -169,7 +169,7 @@ InfpFindSection(PINFCACHE Cache,
 
 PINFCACHESECTION
 InfpAddSection(PINFCACHE Cache,
-               PCTSTR Name)
+               PCWSTR Name)
 {
   PINFCACHESECTION Section = NULL;
   ULONG Size;
@@ -182,8 +182,8 @@ InfpAddSection(PINFCACHE Cache,
 
   /* Allocate and initialize the new section */
   Size = (ULONG)FIELD_OFFSET(INFCACHESECTION,
-                             Name[_tcslen (Name) + 1]);
-  Section = (PINFCACHESECTION)MALLOC (Size);
+                             Name[strlenW(Name) + 1]);
+  Section = (PINFCACHESECTION)MALLOC(Size);
   if (Section == NULL)
     {
       DPRINT("MALLOC() failed\n");
@@ -193,7 +193,7 @@ InfpAddSection(PINFCACHE Cache,
               Size);
 
   /* Copy section name */
-  _tcscpy (Section->Name, Name);
+  strcpyW(Section->Name, Name);
 
   /* Append section */
   if (Cache->FirstSection == NULL)
@@ -223,7 +223,7 @@ InfpAddLine(PINFCACHESECTION Section)
       return NULL;
     }
 
-  Line = (PINFCACHELINE)MALLOC (sizeof(INFCACHELINE));
+  Line = (PINFCACHELINE)MALLOC(sizeof(INFCACHELINE));
   if (Line == NULL)
     {
       DPRINT("MALLOC() failed\n");
@@ -252,7 +252,7 @@ InfpAddLine(PINFCACHESECTION Section)
 
 PVOID
 InfpAddKeyToLine(PINFCACHELINE Line,
-                 PCTSTR Key)
+                 PCWSTR Key)
 {
   if (Line == NULL)
     {
@@ -266,14 +266,14 @@ InfpAddKeyToLine(PINFCACHELINE Line,
       return NULL;
     }
 
-  Line->Key = (PTCHAR)MALLOC((_tcslen(Key) + 1) * sizeof(TCHAR));
+  Line->Key = (PWCHAR)MALLOC((strlenW(Key) + 1) * sizeof(WCHAR));
   if (Line->Key == NULL)
     {
       DPRINT1("MALLOC() failed\n");
       return NULL;
     }
 
-  _tcscpy(Line->Key, Key);
+  strcpyW(Line->Key, Key);
 
   return (PVOID)Line->Key;
 }
@@ -281,13 +281,13 @@ InfpAddKeyToLine(PINFCACHELINE Line,
 
 PVOID
 InfpAddFieldToLine(PINFCACHELINE Line,
-                   PCTSTR Data)
+                   PCWSTR Data)
 {
   PINFCACHEFIELD Field;
   ULONG Size;
 
   Size = (ULONG)FIELD_OFFSET(INFCACHEFIELD,
-                             Data[_tcslen(Data) + 1]);
+                             Data[strlenW(Data) + 1]);
   Field = (PINFCACHEFIELD)MALLOC(Size);
   if (Field == NULL)
     {
@@ -296,7 +296,7 @@ InfpAddFieldToLine(PINFCACHELINE Line,
     }
   ZEROMEMORY (Field,
               Size);
-  _tcscpy (Field->Data, Data);
+  strcpyW(Field->Data, Data);
 
   /* Append key */
   if (Line->FirstField == NULL)
@@ -318,14 +318,14 @@ InfpAddFieldToLine(PINFCACHELINE Line,
 
 PINFCACHELINE
 InfpFindKeyLine(PINFCACHESECTION Section,
-                PCTSTR Key)
+                PCWSTR Key)
 {
   PINFCACHELINE Line;
 
   Line = Section->FirstLine;
   while (Line != NULL)
     {
-      if (Line->Key != NULL && _tcsicmp (Line->Key, Key) == 0)
+      if (Line->Key != NULL && strcmpiW(Line->Key, Key) == 0)
         {
           return Line;
         }
@@ -363,28 +363,29 @@ __inline static enum parser_state set_state( struct parser *parser, enum parser_
 
 
 /* check if the pointer points to an end of file */
-__inline static int is_eof( struct parser *parser, const CHAR *ptr )
+__inline static int is_eof( struct parser *parser, const WCHAR *ptr )
 {
-  return (ptr >= parser->end || *ptr == CONTROL_Z);
+  return (ptr >= parser->end || *ptr == CONTROL_Z || *ptr == 0);
 }
 
 
 /* check if the pointer points to an end of line */
-__inline static int is_eol( struct parser *parser, const CHAR *ptr )
+__inline static int is_eol( struct parser *parser, const WCHAR *ptr )
 {
   return (ptr >= parser->end ||
           *ptr == CONTROL_Z ||
           *ptr == '\n' ||
-          (*ptr == '\r' && *(ptr + 1) == '\n'));
+          (*ptr == '\r' && *(ptr + 1) == '\n') ||
+          *ptr == 0);
 }
 
 
 /* push data from current token start up to pos into the current token */
-static int push_token( struct parser *parser, const CHAR *pos )
+static int push_token( struct parser *parser, const WCHAR *pos )
 {
   UINT len = (UINT)(pos - parser->start);
-  const CHAR *src = parser->start;
-  TCHAR *dst = parser->token + parser->token_len;
+  const WCHAR *src = parser->start;
+  WCHAR *dst = parser->token + parser->token_len;
 
   if (len > MAX_FIELD_LEN - parser->token_len)
     len = MAX_FIELD_LEN - parser->token_len;
@@ -398,7 +399,7 @@ static int push_token( struct parser *parser, const CHAR *pos )
     }
     else
     {
-      *dst = _T(' ');
+      *dst = ' ';
     }
   }
 
@@ -494,9 +495,9 @@ static void close_current_line( struct parser *parser )
 
 
 /* handler for parser LINE_START state */
-static const CHAR *line_start_state( struct parser *parser, const CHAR *pos )
+static const WCHAR *line_start_state( struct parser *parser, const WCHAR *pos )
 {
-  const CHAR *p;
+  const WCHAR *p;
 
   for (p = pos; !is_eof( parser, p ); p++)
     {
@@ -521,7 +522,7 @@ static const CHAR *line_start_state( struct parser *parser, const CHAR *pos )
             return p + 1;
 
           default:
-            if (!isspace(*p))
+            if (!isspaceW(*p))
               {
                 parser->start = p;
                 set_state( parser, KEY_NAME );
@@ -536,9 +537,9 @@ static const CHAR *line_start_state( struct parser *parser, const CHAR *pos )
 
 
 /* handler for parser SECTION_NAME state */
-static const CHAR *section_name_state( struct parser *parser, const CHAR *pos )
+static const WCHAR *section_name_state( struct parser *parser, const WCHAR *pos )
 {
-  const CHAR *p;
+  const WCHAR *p;
 
   for (p = pos; !is_eol( parser, p ); p++)
     {
@@ -558,9 +559,9 @@ static const CHAR *section_name_state( struct parser *parser, const CHAR *pos )
 
 
 /* handler for parser KEY_NAME state */
-static const CHAR *key_name_state( struct parser *parser, const CHAR *pos )
+static const WCHAR *key_name_state( struct parser *parser, const WCHAR *pos )
 {
-    const CHAR *p, *token_end = parser->start;
+    const WCHAR *p, *token_end = parser->start;
 
     for (p = pos; !is_eol( parser, p ); p++)
     {
@@ -594,7 +595,7 @@ static const CHAR *key_name_state( struct parser *parser, const CHAR *pos )
             set_state( parser, EOL_BACKSLASH );
             return p;
         default:
-            if (!isspace(*p)) token_end = p + 1;
+            if (!isspaceW(*p)) token_end = p + 1;
             else
             {
                 push_token( parser, p );
@@ -612,9 +613,9 @@ static const CHAR *key_name_state( struct parser *parser, const CHAR *pos )
 
 
 /* handler for parser VALUE_NAME state */
-static const CHAR *value_name_state( struct parser *parser, const CHAR *pos )
+static const WCHAR *value_name_state( struct parser *parser, const WCHAR *pos )
 {
-    const CHAR *p, *token_end = parser->start;
+    const WCHAR *p, *token_end = parser->start;
 
     for (p = pos; !is_eol( parser, p ); p++)
     {
@@ -646,7 +647,7 @@ static const CHAR *value_name_state( struct parser *parser, const CHAR *pos )
             set_state( parser, EOL_BACKSLASH );
             return p;
         default:
-            if (!isspace(*p)) token_end = p + 1;
+            if (!isspaceW(*p)) token_end = p + 1;
             else
             {
                 push_token( parser, p );
@@ -665,9 +666,9 @@ static const CHAR *value_name_state( struct parser *parser, const CHAR *pos )
 
 
 /* handler for parser EOL_BACKSLASH state */
-static const CHAR *eol_backslash_state( struct parser *parser, const CHAR *pos )
+static const WCHAR *eol_backslash_state( struct parser *parser, const WCHAR *pos )
 {
-  const CHAR *p;
+  const WCHAR *p;
 
   for (p = pos; !is_eof( parser, p ); p++)
     {
@@ -691,7 +692,7 @@ static const CHAR *eol_backslash_state( struct parser *parser, const CHAR *pos )
             return p + 1;
 
           default:
-            if (isspace(*p))
+            if (isspaceW(*p))
               continue;
             push_token( parser, p );
             pop_state( parser );
@@ -706,9 +707,9 @@ static const CHAR *eol_backslash_state( struct parser *parser, const CHAR *pos )
 
 
 /* handler for parser QUOTES state */
-static const CHAR *quotes_state( struct parser *parser, const CHAR *pos )
+static const WCHAR *quotes_state( struct parser *parser, const WCHAR *pos )
 {
-  const CHAR *p, *token_end = parser->start;
+  const WCHAR *p, *token_end = parser->start;
 
   for (p = pos; !is_eol( parser, p ); p++)
     {
@@ -736,9 +737,9 @@ static const CHAR *quotes_state( struct parser *parser, const CHAR *pos )
 
 
 /* handler for parser LEADING_SPACES state */
-static const CHAR *leading_spaces_state( struct parser *parser, const CHAR *pos )
+static const WCHAR *leading_spaces_state( struct parser *parser, const WCHAR *pos )
 {
-  const CHAR *p;
+  const WCHAR *p;
 
   for (p = pos; !is_eol( parser, p ); p++)
     {
@@ -748,7 +749,7 @@ static const CHAR *leading_spaces_state( struct parser *parser, const CHAR *pos 
           set_state( parser, EOL_BACKSLASH );
           return p;
         }
-      if (!isspace(*p))
+      if (!isspaceW(*p))
         break;
     }
   parser->start = p;
@@ -758,9 +759,9 @@ static const CHAR *leading_spaces_state( struct parser *parser, const CHAR *pos 
 
 
 /* handler for parser TRAILING_SPACES state */
-static const CHAR *trailing_spaces_state( struct parser *parser, const CHAR *pos )
+static const WCHAR *trailing_spaces_state( struct parser *parser, const WCHAR *pos )
 {
-  const CHAR *p;
+  const WCHAR *p;
 
   for (p = pos; !is_eol( parser, p ); p++)
     {
@@ -769,7 +770,7 @@ static const CHAR *trailing_spaces_state( struct parser *parser, const CHAR *pos
           set_state( parser, EOL_BACKSLASH );
           return p;
         }
-      if (!isspace(*p))
+      if (!isspaceW(*p))
         break;
     }
   pop_state( parser );
@@ -778,9 +779,9 @@ static const CHAR *trailing_spaces_state( struct parser *parser, const CHAR *pos
 
 
 /* handler for parser COMMENT state */
-static const CHAR *comment_state( struct parser *parser, const CHAR *pos )
+static const WCHAR *comment_state( struct parser *parser, const WCHAR *pos )
 {
-  const CHAR *p = pos;
+  const WCHAR *p = pos;
 
   while (!is_eol( parser, p ))
      p++;
@@ -792,12 +793,12 @@ static const CHAR *comment_state( struct parser *parser, const CHAR *pos )
 /* parse a complete buffer */
 INFSTATUS
 InfpParseBuffer (PINFCACHE file,
-                 const CHAR *buffer,
-                 const CHAR *end,
+                 const WCHAR *buffer,
+                 const WCHAR *end,
                  PULONG error_line)
 {
   struct parser parser;
-  const CHAR *pos = buffer;
+  const WCHAR *pos = buffer;
 
   parser.start       = buffer;
   parser.end         = end;
@@ -823,7 +824,7 @@ InfpParseBuffer (PINFCACHE file,
 
   /* find the [strings] section */
   file->StringsSection = InfpFindSection(file,
-                                         _T("Strings"));
+                                         L"Strings");
 
   return INF_STATUS_SUCCESS;
 }

@@ -27,6 +27,7 @@
 @ stdcall CoGetContextToken(ptr)
 @ stdcall CoGetCurrentLogicalThreadId(ptr)
 @ stdcall CoGetCurrentProcess()
+@ stdcall CoGetDefaultContext(long ptr ptr)
 @ stub CoGetInstanceFromFile      #@ stdcall (ptr ptr ptr long wstr long ptr) return 0,ERR_NOTIMPLEMENTED
 @ stub CoGetInstanceFromIStorage  #@ stdcall (ptr ptr ptr long ptr long ptr) return 0,ERR_NOTIMPLEMENTED
 @ stdcall CoGetInterfaceAndReleaseStream(ptr ptr ptr)
@@ -253,6 +254,8 @@
 @ stdcall SetConvertStg(ptr long)
 @ stub SetDocumentBitStg
 @ stdcall SetErrorInfo(long ptr)
+@ stdcall StgConvertPropertyToVariant(ptr long ptr ptr)
+@ stdcall StgConvertVariantToProperty(ptr long ptr ptr long long ptr)
 @ stdcall StgCreateDocfile(wstr long long ptr)
 @ stdcall StgCreateDocfileOnILockBytes(ptr long long ptr)
 @ stdcall StgCreatePropSetStg(ptr long ptr)

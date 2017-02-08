@@ -13,14 +13,18 @@
  * command line parser needs more work
  */
 
-#include <windows.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#define _INC_WINDOWS
 #include <winsock2.h>
 #include <tchar.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <iphlpapi.h>
-#include "netstat.h"
 
+#include "netstat.h"
 
 enum ProtoType {IP, TCP, UDP, ICMP} Protocol;
 DWORD Interval; /* time to pause between printing output */
@@ -41,7 +45,6 @@ TCHAR TcpState[][32] = {
     _T("TIME_WAIT"),
     _T("DELETE_TCB")
 };
-
 
 /*
  * format message string and display output
@@ -72,7 +75,6 @@ DWORD DoFormatMessage(DWORD ErrorCode)
     else
         return 0;
 }
-
 
 /*
  *
@@ -163,7 +165,6 @@ BOOL ParseCmdline(int argc, char* argv[])
     return EXIT_SUCCESS;
 }
 
-
 /*
  * Simulate Microsofts netstat utility output
  */
@@ -248,9 +249,6 @@ BOOL DisplayOutput()
     return EXIT_SUCCESS;
 }
 
-
-
-
 VOID ShowIpStatistics()
 {
     PMIB_IPSTATS pIpStats;
@@ -261,13 +259,13 @@ VOID ShowIpStatistics()
     if ((dwRetVal = GetIpStatistics(pIpStats)) == NO_ERROR)
     {
         _tprintf(_T("\nIPv4 Statistics\n\n"));
-        _tprintf(_T("  %-34s = %lu\n"), _T("Packets Recieved"), pIpStats->dwInReceives);
+        _tprintf(_T("  %-34s = %lu\n"), _T("Packets Received"), pIpStats->dwInReceives);
         _tprintf(_T("  %-34s = %lu\n"), _T("Received Header Errors"), pIpStats->dwInHdrErrors);
         _tprintf(_T("  %-34s = %lu\n"), _T("Received Address Errors"), pIpStats->dwInAddrErrors);
         _tprintf(_T("  %-34s = %lu\n"), _T("Datagrams Forwarded"), pIpStats->dwForwDatagrams);
-        _tprintf(_T("  %-34s = %lu\n"), _T("Unknown Protocols Recieved"), pIpStats->dwInUnknownProtos);
+        _tprintf(_T("  %-34s = %lu\n"), _T("Unknown Protocols Received"), pIpStats->dwInUnknownProtos);
         _tprintf(_T("  %-34s = %lu\n"), _T("Received Packets Discarded"), pIpStats->dwInDiscards);
-        _tprintf(_T("  %-34s = %lu\n"), _T("Recieved Packets Delivered"), pIpStats->dwInDelivers);
+        _tprintf(_T("  %-34s = %lu\n"), _T("Received Packets Delivered"), pIpStats->dwInDelivers);
         _tprintf(_T("  %-34s = %lu\n"), _T("Output Requests"), pIpStats->dwOutRequests);
         _tprintf(_T("  %-34s = %lu\n"), _T("Routing Discards"), pIpStats->dwRoutingDiscards);
         _tprintf(_T("  %-34s = %lu\n"), _T("Discarded Output Packets"), pIpStats->dwOutDiscards);
@@ -345,7 +343,7 @@ VOID ShowTcpStatistics()
         _tprintf(_T("  %-35s = %lu\n"), _T("Failed Connection Attempts"), pTcpStats->dwAttemptFails);
         _tprintf(_T("  %-35s = %lu\n"), _T("Reset Connections"), pTcpStats->dwEstabResets);
         _tprintf(_T("  %-35s = %lu\n"), _T("Current Connections"), pTcpStats->dwCurrEstab);
-        _tprintf(_T("  %-35s = %lu\n"), _T("Segments Recieved"), pTcpStats->dwInSegs);
+        _tprintf(_T("  %-35s = %lu\n"), _T("Segments Received"), pTcpStats->dwInSegs);
         _tprintf(_T("  %-35s = %lu\n"), _T("Segments Sent"), pTcpStats->dwOutSegs);
         _tprintf(_T("  %-35s = %lu\n"), _T("Segments Retransmitted"), pTcpStats->dwRetransSegs);
     }
@@ -365,9 +363,9 @@ VOID ShowUdpStatistics()
     if ((dwRetVal = GetUdpStatistics(pUdpStats)) == NO_ERROR)
     {
         _tprintf(_T("\nUDP Statistics for IPv4\n\n"));
-        _tprintf(_T("  %-21s = %lu\n"), _T("Datagrams Recieved"), pUdpStats->dwInDatagrams);
+        _tprintf(_T("  %-21s = %lu\n"), _T("Datagrams Received"), pUdpStats->dwInDatagrams);
         _tprintf(_T("  %-21s = %lu\n"), _T("No Ports"), pUdpStats->dwNoPorts);
-        _tprintf(_T("  %-21s = %lu\n"), _T("Recieve Errors"), pUdpStats->dwInErrors);
+        _tprintf(_T("  %-21s = %lu\n"), _T("Receive Errors"), pUdpStats->dwInErrors);
         _tprintf(_T("  %-21s = %lu\n"), _T("Datagrams Sent"), pUdpStats->dwOutDatagrams);
     }
     else
@@ -467,7 +465,6 @@ VOID ShowTcpTable()
     HeapFree(GetProcessHeap(), 0, tcpTable);
 }
 
-
 VOID ShowUdpTable()
 {
     PMIB_UDPTABLE udpTable;
@@ -511,7 +508,6 @@ VOID ShowUdpTable()
     HeapFree(GetProcessHeap(), 0, udpTable);
 }
 
-
 /*
  * Translate port numbers into their text equivalent if there is one
  */
@@ -532,7 +528,6 @@ GetPortName(UINT Port, PCSTR Proto, CHAR Name[], INT NameLen)
         sprintf(Name, "%d", htons((WORD)Port));
     return Name;
 }
-
 
 /*
  * convert addresses into dotted decimal or hostname
@@ -606,8 +601,6 @@ VOID Usage()
     "                Press CTRL+C to stop redisplaying. By default netstat will\n"
     "                print the current information only once.\n"));
 }
-
-
 
 /*
  *

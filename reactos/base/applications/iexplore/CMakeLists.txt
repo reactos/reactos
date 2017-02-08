@@ -1,6 +1,7 @@
 
-set_rc_compiler()
 add_executable(iexplore main.c iexplore.rc)
-set_module_type(iexplore win32gui)
-add_importlibs(iexplore shdocvw msvcrt kernel32)
+target_link_libraries(iexplore wine)
+set_module_type(iexplore win32gui UNICODE)
+add_importlibs(iexplore ieframe msvcrt kernel32 ntdll)
+add_delay_importlibs(iexplore advpack version)
 add_cd_file(TARGET iexplore DESTINATION reactos FOR all)

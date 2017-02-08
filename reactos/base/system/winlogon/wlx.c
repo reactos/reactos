@@ -12,8 +12,6 @@
 
 #include "winlogon.h"
 
-#include <wine/debug.h>
-
 WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
 
 #define DESKTOP_ALL (DESKTOP_READOBJECTS | DESKTOP_CREATEWINDOW | \
@@ -1126,12 +1124,6 @@ CreateWindowStationAndDesktops(
 		ERR("WL: Failed to create Screen-Saver desktop (%lu)\n", GetLastError());
 		goto cleanup;
 	}
-
-	/* FIXME: big HACK */
-	CloseDesktop(Session->WinlogonDesktop);
-	CloseDesktop(Session->ScreenSaverDesktop);
-	Session->WinlogonDesktop = OpenDesktopW(L"Default", 0, FALSE, GENERIC_ALL);
-	Session->ScreenSaverDesktop = OpenDesktopW(L"Default", 0, FALSE, GENERIC_ALL);
 
 	/*
 	 * Switch to winlogon desktop

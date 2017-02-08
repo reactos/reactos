@@ -1,10 +1,10 @@
 The Independent JPEG Group's JPEG software
 ==========================================
 
-README for release 8b of 16-May-2010
-====================================
+README for release 9 of 13-Jan-2013
+===================================
 
-This distribution contains the eighth public release of the Independent JPEG
+This distribution contains the ninth public release of the Independent JPEG
 Group's free JPEG software.  You are welcome to redistribute this software and
 to use it for any purpose, subject to the conditions under LEGAL ISSUES, below.
 
@@ -13,7 +13,8 @@ Bill Allombert, Jim Boucher, Lee Crocker, Bob Friesenhahn, Ben Jackson,
 Julian Minguillon, Luis Ortiz, George Phillips, Davide Rossi, Ge' Weijers,
 and other members of the Independent JPEG Group.
 
-IJG is not affiliated with the official ISO JPEG standards committee.
+IJG is not affiliated with the ISO/IEC JTC1/SC29/WG1 standards committee
+(also known as JPEG, together with ITU-T SG16).
 
 
 DOCUMENTATION ROADMAP
@@ -114,7 +115,7 @@ with respect to this software, its quality, accuracy, merchantability, or
 fitness for a particular purpose.  This software is provided "AS IS", and you,
 its user, assume the entire risk as to its quality and accuracy.
 
-This software is copyright (C) 1991-2010, Thomas G. Lane, Guido Vollbeding.
+This software is copyright (C) 1991-2013, Thomas G. Lane, Guido Vollbeding.
 All Rights Reserved except as specified below.
 
 Permission is hereby granted to use, copy, modify, and distribute this
@@ -144,15 +145,6 @@ We specifically permit and encourage the use of this software as the basis of
 commercial products, provided that all warranty or liability claims are
 assumed by the product vendor.
 
-
-ansi2knr.c is included in this distribution by permission of L. Peter Deutsch,
-sole proprietor of its copyright holder, Aladdin Enterprises of Menlo Park, CA.
-ansi2knr.c is NOT covered by the above copyright and conditions, but instead
-by the usual distribution terms of the Free Software Foundation; principally,
-that you must include source code if you redistribute it.  (See the file
-ansi2knr.c for full details.)  However, since ansi2knr.c is not needed as part
-of any program generated from the IJG code, this does not limit you more than
-the foregoing paragraphs do.
 
 The Unix configuration script "configure" was produced with GNU Autoconf.
 It is copyright by the Free Software Foundation but is freely distributable.
@@ -221,10 +213,16 @@ Part 1: Requirements and guidelines" and has document numbers ISO/IEC IS
 10918-1, ITU-T T.81.  Part 2 is titled "Digital Compression and Coding of
 Continuous-tone Still Images, Part 2: Compliance testing" and has document
 numbers ISO/IEC IS 10918-2, ITU-T T.83.
-IJG JPEG 8 introduces an implementation of the JPEG SmartScale extension
-which is specified in a contributed document at ITU and ISO with title "ITU-T
-JPEG-Plus Proposal for Extending ITU-T T.81 for Advanced Image Coding", April
-2006, Geneva, Switzerland.  The latest version of the document is Revision 3.
+IJG JPEG 8 introduced an implementation of the JPEG SmartScale extension
+which is specified in two documents:  A contributed document at ITU and ISO
+with title "ITU-T JPEG-Plus Proposal for Extending ITU-T T.81 for Advanced
+Image Coding", April 2006, Geneva, Switzerland.  The latest version of this
+document is Revision 3.  And a contributed document ISO/IEC JTC1/SC29/WG1 N
+5799 with title "Evolution of JPEG", June/July 2011, Berlin, Germany.
+IJG JPEG 9 introduces a reversible color transform for improved lossless
+compression which is described in a contributed document ISO/IEC JTC1/SC29/
+WG1 N 6080 with title "JPEG 9 Lossless Coding", June/July 2012, Paris,
+France.
 
 The JPEG standard does not specify all details of an interchangeable file
 format.  For the omitted details we follow the "JFIF" conventions, revision
@@ -254,8 +252,8 @@ ARCHIVE LOCATIONS
 The "official" archive site for this software is www.ijg.org.
 The most recent released version can always be found there in
 directory "files".  This particular version will be archived as
-http://www.ijg.org/files/jpegsrc.v8b.tar.gz, and in Windows-compatible
-"zip" archive format as http://www.ijg.org/files/jpegsr8b.zip.
+http://www.ijg.org/files/jpegsrc.v9.tar.gz, and in Windows-compatible
+"zip" archive format as http://www.ijg.org/files/jpegsr9.zip.
 
 The JPEG FAQ (Frequently Asked Questions) article is a source of some
 general information about JPEG.
@@ -281,12 +279,16 @@ ITU JPEG (Study Group 16) meeting in Geneva, Switzerland.
 Thank to Thomas Wiegand and Gary Sullivan for inviting me to the
 Joint Video Team (MPEG & ITU) meeting in Geneva, Switzerland.
 
+Thank to Thomas Richter and Daniel Lee for inviting me to the
+ISO/IEC JTC1/SC29/WG1 (also known as JPEG, together with ITU-T SG16)
+meeting in Berlin, Germany.
+
 Thank to John Korejwa and Massimo Ballerini for inviting me to
 fruitful consultations in Boston, MA and Milan, Italy.
 
 Thank to Hendrik Elstner, Roland Fassauer, Simone Zuck, Guenther
-Maier-Gerber, Walter Stoeber, and Fred Schmitz for corresponding
-business development.
+Maier-Gerber, Walter Stoeber, Fred Schmitz, and Norbert Braunagel
+for corresponding business development.
 
 Thank to Nico Zschach and Dirk Stelling of the technical support team
 at the Digital Images company in Halle for providing me with extra
@@ -304,23 +306,45 @@ design and development of this singular software package.
 FILE FORMAT WARS
 ================
 
-The ISO JPEG standards committee actually promotes different formats like
-"JPEG 2000" or "JPEG XR" which are incompatible with original DCT-based
-JPEG and which are based on faulty technologies.  IJG therefore does not
-and will not support such momentary mistakes (see REFERENCES).
-We have little or no sympathy for the promotion of these formats.  Indeed,
-one of the original reasons for developing this free software was to help
-force convergence on common, interoperable format standards for JPEG files.
+The ISO/IEC JTC1/SC29/WG1 standards committee (also known as JPEG, together
+with ITU-T SG16) currently promotes different formats containing the name
+"JPEG" which is misleading because these formats are incompatible with
+original DCT-based JPEG and are based on faulty technologies.
+IJG therefore does not and will not support such momentary mistakes
+(see REFERENCES).
+There exist also distributions under the name "OpenJPEG" promoting such
+kind of formats which is misleading because they don't support original
+JPEG images.
+We have no sympathy for the promotion of inferior formats.  Indeed, one of
+the original reasons for developing this free software was to help force
+convergence on common, interoperable format standards for JPEG files.
 Don't use an incompatible file format!
 (In any case, our decoder will remain capable of reading existing JPEG
 image files indefinitely.)
+
+Furthermore, the ISO committee pretends to be "responsible for the popular
+JPEG" in their public reports which is not true because they don't respond to
+actual requirements for the maintenance of the original JPEG specification.
+
+There are currently different distributions in circulation containing the
+name "libjpeg" which is misleading because they don't have the features and
+are incompatible with formats supported by actual IJG libjpeg distributions.
+One of those fakes is released by members of the ISO committee and just uses
+the name of libjpeg for misdirection of people, similar to the abuse of the
+name JPEG as described above, while having nothing in common with actual IJG
+libjpeg distributions.
+The other one claims to be a "derivative" or "fork" of the original libjpeg
+and violates the license conditions as described under LEGAL ISSUES above.
+We have no sympathy for the release of misleading and illegal distributions
+derived from obsolete code bases.
+Don't use an obsolete code base!
 
 
 TO DO
 =====
 
-Version 8 is the first release of a new generation JPEG standard
+Version 9 is the second release of a new generation JPEG standard
 to overcome the limitations of the original JPEG specification.
 More features are being prepared for coming releases...
 
-Please send bug reports, offers of help, etc. to jpeg-info@uc.ag.
+Please send bug reports, offers of help, etc. to jpeg-info@jpegclub.org.

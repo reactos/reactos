@@ -36,16 +36,16 @@
  * any purpose whatsoever.
  */
 
-#include <stdio.h>
-#include <ctype.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <assert.h>
+//#include <stdio.h>
+//#include <ctype.h>
+//#include <string.h>
+//#include <stdarg.h>
+//#include <stdlib.h>
+//#include <assert.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wine/debug.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "wine/debug.h"
 
 #include "editor.h"
 #include "rtf.h"
@@ -2397,8 +2397,11 @@ CharAttr(RTF_Info *info)
                 font = RTFGetFont(info, info->rtfParam);
                 if (font)
                 {
-                        if (info->ansiCodePage != CP_UTF8)
+                        if (info->ansiCodePage != CP_UTF8 && info->codePage != font->rtfFCodePage)
+                        {
+                                RTFFlushOutputBuffer(info);
                                 info->codePage = font->rtfFCodePage;
+                        }
                         TRACE("font %d codepage %d\n", info->rtfParam, info->codePage);
                 }
                 else

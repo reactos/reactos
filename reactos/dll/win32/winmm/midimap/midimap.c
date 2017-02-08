@@ -24,17 +24,17 @@
  */
 
 #include <stdarg.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "mmddk.h"
-#include "winreg.h"
-#include "wine/unicode.h"
-#include "wine/debug.h"
+//#include <string.h>
+//#include <stdlib.h>
+//#include <ctype.h>
+#include <windef.h>
+//#include "winbase.h"
+//#include "wingdi.h"
+#include <winuser.h>
+#include <mmddk.h>
+#include <winreg.h>
+#include <wine/unicode.h>
+#include <wine/debug.h>
 
 /*
  * Here's how Windows stores the midiOut mapping information.

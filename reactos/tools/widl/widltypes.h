@@ -26,7 +26,9 @@
 #define E_OUTOFMEMORY  ((HRESULT)0x8007000EL)
 #define TYPE_E_IOERROR ((HRESULT)0x80028CA2L)
 
+#ifndef max
 #define max(a, b) ((a) > (b) ? a : b)
+#endif
 
 #include <stdarg.h>
 #include <assert.h>
@@ -336,7 +338,7 @@ struct enumeration_details
 struct func_details
 {
   var_list_t *args;
-  struct _type_t *rettype;
+  struct _var_t *retval;
   int idx;
 };
 
@@ -443,6 +445,7 @@ struct _var_t {
   expr_t *eval;
   enum storage_class stgclass;
   unsigned int procstring_offset;
+  unsigned int typestring_offset;
 
   struct _loc_info_t loc_info;
 

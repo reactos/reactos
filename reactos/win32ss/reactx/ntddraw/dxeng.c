@@ -286,7 +286,7 @@ DxEngGetHdevData(HDEV hDev,
     DPRINT1("ReactX Calling : DxEngGetHdevData DXEGSHDEVDATA : %ld\n", Type);
 
 #if 1
-    DPRINT1("HDEV hDev %08lx\n", hDev);
+    DPRINT1("HDEV hDev %p\n", hDev);
 #endif
 
     switch ( Type )
@@ -454,7 +454,7 @@ DxEngGetDCState(HDC hDC,
     PDC pDC = DC_LockDc(hDC);
     DWORD_PTR retVal = 0;
 
-    DPRINT1("ReactX Calling : DxEngGetDCState type : %ld\n", type);
+    DPRINT1("ReactX Calling : DxEngGetDCState type : %lu\n", type);
 
     if (pDC)
     {
@@ -474,7 +474,7 @@ DxEngGetDCState(HDC hDC,
             }
             default:
                 /* If a valid type is not found, zero is returned */
-                DPRINT1("Warning: did not find type %d\n",type);
+                DPRINT1("Warning: did not find type %lu\n", type);
                 break;
         }
         DC_UnlockDc(pDC);
@@ -531,7 +531,7 @@ DxEngLockHdev(HDEV hDev)
 
     DPRINT1("ReactX Calling : DxEngLockHdev \n");
 
-    DPRINT1("hDev                   : 0x%08lx\n",hDev);
+    DPRINT1("hDev                   : 0x%p\n",hDev);
 
     Resource = (PERESOURCE)ppdev->hsemDevLock;
 

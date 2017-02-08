@@ -359,9 +359,9 @@ CmpSetSystemValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                            CmpLoadOptions.Length);
     if (!NT_SUCCESS(Status)) goto Quickie;
 
-    /* Setup value name for system boot device */
+    /* Setup value name for system boot device in ARC format */
     RtlInitUnicodeString(&KeyName, L"SystemBootDevice");
-    RtlCreateUnicodeStringFromAsciiz(&ValueName, LoaderBlock->NtBootPathName);
+    RtlCreateUnicodeStringFromAsciiz(&ValueName, LoaderBlock->ArcBootDeviceName);
     Status = NtSetValueKey(KeyHandle,
                            &KeyName,
                            0,
@@ -866,6 +866,7 @@ CmpCreateObjectTypes(VOID)
     ObjectTypeInitializer.QueryNameProcedure = CmpQueryKeyName;
     ObjectTypeInitializer.CloseProcedure = CmpCloseKeyObject;
     ObjectTypeInitializer.SecurityRequired = TRUE;
+    ObjectTypeInitializer.InvalidAttributes = OBJ_EXCLUSIVE | OBJ_PERMANENT;
 
     /* Create it */
     return ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &CmpKeyObjectType);
@@ -1103,7 +1104,7 @@ CmpLoadHiveThread(IN PVOID StartContext)
     //ULONG RegStart;
     ULONG PrimaryDisposition, SecondaryDisposition, ClusterSize;
     PCMHIVE CmHive;
-    HANDLE PrimaryHandle, LogHandle;
+    HANDLE PrimaryHandle = NULL, LogHandle = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID ErrorParameters;
     PAGED_CODE();
@@ -1380,7 +1381,8 @@ CmpInitializeHiveList(IN USHORT Flag)
         /* Check if we created a new hive */
         if (CmpMachineHiveList[i].CmHive2)
         {
-            /* TODO: Add to HiveList key */
+            /* Add to HiveList key */
+            CmpAddToHiveFileList(CmpMachineHiveList[i].CmHive2);
         }
     }
 
@@ -1568,7 +1570,8 @@ CmInitSystem1(VOID)
         KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 12, Status, 0);
     }
 
-    /* FIXME: Add to HiveList key */
+    /* Add to HiveList key */
+    CmpAddToHiveFileList(HardwareHive);
 
     /* Free the security descriptor */
     ExFreePoolWithTag(SecurityDescriptor, TAG_CM);

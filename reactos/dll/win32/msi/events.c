@@ -18,18 +18,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <stdio.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "winreg.h"
-#include "msi.h"
+//#include <stdarg.h>
+//#include <stdio.h>
+
+//#include <windef.h>
+//#include "winbase.h"
+//#include "winerror.h"
+//#include "winreg.h"
+//#include "msi.h"
 #include "msipriv.h"
 
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -173,7 +177,7 @@ static UINT ControlEvent_AddLocal( MSIPACKAGE *package, LPCWSTR argument, msi_di
         if (!strcmpW( argument, feature->Feature ) || !strcmpW( argument, szAll ))
         {
             if (feature->ActionRequest != INSTALLSTATE_LOCAL)
-                msi_set_property( package->db, szPreselected, szOne );
+                msi_set_property( package->db, szPreselected, szOne, -1 );
             MSI_SetFeatureStateW( package, feature->Feature, INSTALLSTATE_LOCAL );
         }
     }
@@ -189,7 +193,7 @@ static UINT ControlEvent_Remove( MSIPACKAGE *package, LPCWSTR argument, msi_dial
         if (!strcmpW( argument, feature->Feature ) || !strcmpW( argument, szAll ))
         {
             if (feature->ActionRequest != INSTALLSTATE_ABSENT)
-                msi_set_property( package->db, szPreselected, szOne );
+                msi_set_property( package->db, szPreselected, szOne, -1 );
             MSI_SetFeatureStateW( package, feature->Feature, INSTALLSTATE_ABSENT );
         }
     }
@@ -205,7 +209,7 @@ static UINT ControlEvent_AddSource( MSIPACKAGE *package, LPCWSTR argument, msi_d
         if (!strcmpW( argument, feature->Feature ) || !strcmpW( argument, szAll ))
         {
             if (feature->ActionRequest != INSTALLSTATE_SOURCE)
-                msi_set_property( package->db, szPreselected, szOne );
+                msi_set_property( package->db, szPreselected, szOne, -1 );
             MSI_SetFeatureStateW( package, feature->Feature, INSTALLSTATE_SOURCE );
         }
     }
@@ -377,13 +381,13 @@ static UINT ControlEvent_DirectoryListUp(MSIPACKAGE *package, LPCWSTR argument,
 static UINT ControlEvent_ReinstallMode(MSIPACKAGE *package, LPCWSTR argument,
                                        msi_dialog *dialog)
 {
-    return msi_set_property( package->db, szReinstallMode, argument );
+    return msi_set_property( package->db, szReinstallMode, argument, -1 );
 }
 
 static UINT ControlEvent_Reinstall( MSIPACKAGE *package, LPCWSTR argument,
                                     msi_dialog *dialog )
 {
-    return msi_set_property( package->db, szReinstall, argument );
+    return msi_set_property( package->db, szReinstall, argument, -1 );
 }
 
 static UINT ControlEvent_ValidateProductID(MSIPACKAGE *package, LPCWSTR argument,

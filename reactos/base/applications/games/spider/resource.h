@@ -1,3 +1,5 @@
+#pragma once
+
 /* Icon */
 #define IDI_SPIDER                      100
 
@@ -37,4 +39,3 @@
 #define IDS_SPI_QUIT                    1302
 #define IDS_SPI_WIN                     1303
 #define IDS_SPI_DEAL                    1304
-

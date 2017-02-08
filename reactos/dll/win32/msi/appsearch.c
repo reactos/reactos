@@ -17,20 +17,24 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "msi.h"
-#include "msiquery.h"
-#include "msidefs.h"
-#include "winver.h"
-#include "shlwapi.h"
-#include "wine/unicode.h"
-#include "wine/debug.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+//#include "msi.h"
+//#include "msiquery.h"
+//#include "msidefs.h"
+//#include "winver.h"
+#include <shlwapi.h>
+#include <wine/unicode.h>
+#include <wine/debug.h>
 #include "msipriv.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
@@ -1093,7 +1097,7 @@ static UINT iterate_appsearch(MSIRECORD *row, LPVOID param)
     r = ACTION_AppSearchSigName(package, sigName, &sig, &value);
     if (value)
     {
-        r = msi_set_property( package->db, propName, value );
+        r = msi_set_property( package->db, propName, value, -1 );
         if (r == ERROR_SUCCESS && !strcmpW( propName, szSourceDir ))
             msi_reset_folders( package, TRUE );
 
@@ -1153,7 +1157,7 @@ static UINT ITERATE_CCPSearch(MSIRECORD *row, LPVOID param)
     if (value)
     {
         TRACE("Found signature %s\n", debugstr_w(signature));
-        msi_set_property(package->db, success, szOne);
+        msi_set_property( package->db, success, szOne, -1 );
         msi_free(value);
         r = ERROR_NO_MORE_ITEMS;
     }

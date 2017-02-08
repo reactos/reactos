@@ -175,7 +175,7 @@ STRING_ERROR,                                   "FOUT"
 STRING_WARNING,                                 "WAARSCHUWING"
 STRING_INFO,                                    "Informatie"
 
-STRING_UNTITLED,                                "(naamloos)"
+STRING_UNTITLED,                                "Naamloos"
 
 STRING_ALL_FILES,                               "Alle bestanden (*.*)"
 STRING_TEXT_FILES_TXT,                          "Tekstbestanden (*.txt)"

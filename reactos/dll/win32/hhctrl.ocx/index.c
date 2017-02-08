@@ -23,7 +23,7 @@
 #include "hhctrl.h"
 #include "stream.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
 
@@ -54,6 +54,15 @@ static void fill_index_tree(HWND hwnd, IndexItem *item)
     }
 }
 
+static void item_realloc(IndexItem *item, int num_items)
+{
+    item->nItems = num_items;
+    item->items = heap_realloc(item->items, sizeof(IndexSubItem)*item->nItems);
+    item->items[item->nItems-1].name = NULL;
+    item->items[item->nItems-1].local = NULL;
+    item->itemFlags = 0x00;
+}
+
 /* Parse the attributes correspond to a list item, including sub-topics.
  *
  * Each list item has, at minimum, a param of type "keyword" and two
@@ -62,11 +71,11 @@ static void fill_index_tree(HWND hwnd, IndexItem *item)
  * sub-topic then there isn't really a sub-topic, the index will jump
  * directly to the requested item.
  */
-static void parse_index_obj_node_param(IndexItem *item, const char *text)
+static void parse_index_obj_node_param(IndexItem *item, const char *text, UINT code_page)
 {
     const char *ptr;
     LPWSTR *param;
-    int len, wlen;
+    int len;
 
     ptr = get_attr(text, "name", &len);
     if(!ptr) {
@@ -77,19 +86,14 @@ static void parse_index_obj_node_param(IndexItem *item, const char *text)
     /* Allocate a new sub-item, either on the first run or whenever a
      * sub-topic has filled out both the "name" and "local" params.
      */
-    if(item->itemFlags == 0x11 && (!strncasecmp("name", ptr, len) || !strncasecmp("local", ptr, len))) {
-        item->nItems++;
-        item->items = heap_realloc(item->items, sizeof(IndexSubItem)*item->nItems);
-        item->items[item->nItems-1].name = NULL;
-        item->items[item->nItems-1].local = NULL;
-        item->itemFlags = 0x00;
-    }
+    if(item->itemFlags == 0x11 && (!strncasecmp("name", ptr, len) || !strncasecmp("local", ptr, len)))
+        item_realloc(item, item->nItems+1);
     if(!strncasecmp("keyword", ptr, len)) {
         param = &item->keyword;
     }else if(!item->keyword && !strncasecmp("name", ptr, len)) {
         /* Some HTML Help index files use an additional "name" parameter
          * rather than the "keyword" parameter.  In this case, the first
-         * occurance of the "name" parameter is the keyword.
+         * occurrence of the "name" parameter is the keyword.
          */
         param = &item->keyword;
     }else if(!strncasecmp("name", ptr, len)) {
@@ -109,10 +113,7 @@ static void parse_index_obj_node_param(IndexItem *item, const char *text)
         return;
     }
 
-    wlen = MultiByteToWideChar(CP_ACP, 0, ptr, len, NULL, 0);
-    *param = heap_alloc((wlen+1)*sizeof(WCHAR));
-    MultiByteToWideChar(CP_ACP, 0, ptr, len, *param, wlen);
-    (*param)[wlen] = 0;
+    *param = decode_html(ptr, len, code_page);
 }
 
 /* Parse the object tag corresponding to a list item.
@@ -140,7 +141,7 @@ static IndexItem *parse_index_sitemap_object(HHInfo *info, stream_t *stream)
         TRACE("%s\n", node.buf);
 
         if(!strcasecmp(node_name.buf, "param")) {
-            parse_index_obj_node_param(item, node.buf);
+            parse_index_obj_node_param(item, node.buf, info->pCHMInfo->codePage);
         }else if(!strcasecmp(node_name.buf, "/object")) {
             break;
         }else {
@@ -194,6 +195,8 @@ static IndexItem *parse_li(HHInfo *info, stream_t *stream)
 
         strbuf_zero(&node);
     }
+    if(!ret)
+        FIXME("Failed to parse <li> tag!\n");
 
     strbuf_free(&node);
     strbuf_free(&node_name);
@@ -229,10 +232,23 @@ static void parse_hhindex(HHInfo *info, IStream *str, IndexItem *item)
         TRACE("%s\n", node.buf);
 
         if(!strcasecmp(node_name.buf, "li")) {
-            item->next = parse_li(info, &stream);
-            item->next->merge = item->merge;
-            item = item->next;
-            item->indentLevel = indent_level;
+            IndexItem *new_item;
+
+            new_item = parse_li(info, &stream);
+            if(new_item && item->keyword && strcmpW(new_item->keyword, item->keyword) == 0) {
+                int num_items = item->nItems;
+
+                item_realloc(item, num_items+1);
+                memcpy(&item->items[num_items], &new_item->items[0], sizeof(IndexSubItem));
+                heap_free(new_item->keyword);
+                heap_free(new_item->items);
+                heap_free(new_item);
+            } else if(new_item) {
+                item->next = new_item;
+                item->next->merge = item->merge;
+                item = item->next;
+                item->indentLevel = indent_level;
+            }
         }else if(!strcasecmp(node_name.buf, "ul")) {
             indent_level++;
         }else if(!strcasecmp(node_name.buf, "/ul")) {
@@ -277,6 +293,7 @@ void ReleaseIndex(HHInfo *info)
     IndexItem *item = info->index, *next;
     int i;
 
+    if(!item) return;
     /* Note: item->merge is identical for all items, only free once */
     heap_free(item->merge.chm_file);
     heap_free(item->merge.chm_index);

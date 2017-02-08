@@ -23,9 +23,9 @@ POBJECT_TYPE _ExSemaphoreObjectType;
 
 GENERIC_MAPPING ExSemaphoreMapping =
 {
-    STANDARD_RIGHTS_READ    | SEMAPHORE_QUERY_STATE,
-    STANDARD_RIGHTS_WRITE   | SEMAPHORE_MODIFY_STATE,
-    STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE | SEMAPHORE_QUERY_STATE,
+    STANDARD_RIGHTS_READ | SEMAPHORE_QUERY_STATE,
+    STANDARD_RIGHTS_WRITE | SEMAPHORE_MODIFY_STATE,
+    STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
     SEMAPHORE_ALL_ACCESS
 };
 
@@ -37,13 +37,14 @@ static const INFORMATION_CLASS_INFO ExSemaphoreInfoClass[] =
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
+BOOLEAN
 INIT_FUNCTION
 NTAPI
 ExpInitializeSemaphoreImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
+    NTSTATUS Status;
     DPRINT("Creating Semaphore Object Type\n");
 
     /* Create the Event Pair Object Type */
@@ -55,7 +56,9 @@ ExpInitializeSemaphoreImplementation(VOID)
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.InvalidAttributes = OBJ_OPENLINK;
     ObjectTypeInitializer.ValidAccessMask = SEMAPHORE_ALL_ACCESS;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExSemaphoreObjectType);
+    Status = ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExSemaphoreObjectType);
+    if (!NT_SUCCESS(Status)) return FALSE;
+    return TRUE;
 }
 
 /*

@@ -16,10 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "winuser.h"
-#include "commctrl.h"
-#include "mshtmcid.h"
+//#include "windef.h"
+#include <winuser.h>
+#include <commctrl.h>
+//#include "mshtmcid.h"
 
 #include "resource.h"
 
@@ -31,7 +31,7 @@
 #define WINE_PRODUCTVERSION 6,0,2800,1106
 #define WINE_PRODUCTVERSION_STR "6.0.2800.1106"
 
-#include "wine/wine_common_ver.rc"
+#include <wine/wine_common_ver.rc>
 
 #ifdef LANGUAGE_BG_BG
     #include "Bg.rc"
@@ -70,6 +70,9 @@
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "He.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
     #include "Hu.rc"

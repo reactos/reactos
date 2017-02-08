@@ -8,10 +8,17 @@
 #define _WIN32_WINNT 0x502
 #define _CRT_SECURE_NO_DEPRECATE
 #define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <stdarg.h>
 
 /* PSDK Headers */
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
 #include <winsock2.h>
-#include <wsipx.h>
+//#include <wsipx.h>
 #include <wsnetbs.h>
 #include <wininet.h>
 

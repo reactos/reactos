@@ -163,7 +163,7 @@ STRING_ERROR,                    "CHYBA"
 STRING_WARNING,                    "UPOZORNENIE"
 STRING_INFO,                    "Informácie"
 
-STRING_UNTITLED,                "(bez názvu)"
+STRING_UNTITLED,                "Bez názvu"
 
 STRING_ALL_FILES,                "Všetky súbory (*.*)"
 STRING_TEXT_FILES_TXT,            "Textové súbory (*.txt)"

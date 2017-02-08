@@ -433,24 +433,20 @@ NtGdiSetDIBitsToDeviceInternal(
         goto Exit2;
     }
 
+    ScanLines = min(ScanLines, abs(bmi->bmiHeader.biHeight) - StartScan);
+
     pDC = DC_LockDc(hDC);
     if (!pDC)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
         goto Exit2;
     }
+
     if (pDC->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(pDC);
-        goto Exit2;
+        goto Exit;
     }
-
-    pSurf = pDC->dclevel.pSurface;
-    if(!pSurf) pSurf = psurfDefaultBitmap;
-
-    pDestSurf = pSurf ? &pSurf->SurfObj : NULL;
-
-    ScanLines = min(ScanLines, abs(bmi->bmiHeader.biHeight) - StartScan);
 
     rcDest.left = XDest;
     rcDest.top = YDest;
@@ -496,8 +492,6 @@ NtGdiSetDIBitsToDeviceInternal(
         goto Exit;
     }
 
-    ASSERT(pSurf->ppal);
-
     /* Create a palette for the DIB */
     ppalDIB = CreateDIBPalette(bmi, pDC, ColorUse);
     if (!ppalDIB)
@@ -507,6 +501,18 @@ NtGdiSetDIBitsToDeviceInternal(
         goto Exit;
     }
 
+    /* This is actually a blit */
+    DC_vPrepareDCsForBlit(pDC, rcDest, NULL, rcDest);
+    pSurf = pDC->dclevel.pSurface;
+    if (!pSurf)
+    {
+        DC_vFinishBlit(pDC, NULL);
+        ret = ScanLines;
+        goto Exit;
+    }
+
+    ASSERT(pSurf->ppal);
+
     /* Initialize EXLATEOBJ */
     EXLATEOBJ_vInitialize(&exlo,
                           ppalDIB,
@@ -514,6 +520,8 @@ NtGdiSetDIBitsToDeviceInternal(
                           RGB(0xff, 0xff, 0xff),
                           pDC->pdcattr->crBackgroundClr,
                           pDC->pdcattr->crForegroundClr);
+
+    pDestSurf = &pSurf->SurfObj;
 
     /* Copy the bits */
     DPRINT("BitsToDev with dstsurf=(%d|%d) (%d|%d), src=(%d|%d) w=%d h=%d\n",
@@ -534,6 +542,9 @@ NtGdiSetDIBitsToDeviceInternal(
     /* Cleanup EXLATEOBJ */
     EXLATEOBJ_vCleanup(&exlo);
 
+    /* We're done */
+    DC_vFinishBlit(pDC, NULL);
+
 Exit:
     if (NT_SUCCESS(Status))
     {
@@ -546,7 +557,7 @@ Exit:
     if (hSourceBitmap) EngDeleteSurface((HSURF)hSourceBitmap);
     DC_UnlockDc(pDC);
 Exit2:
-    ExFreePool(pbmiSafe);
+    ExFreePoolWithTag(pbmiSafe, 'pmTG');
     return ret;
 }
 
@@ -554,7 +565,7 @@ Exit2:
 /* Converts a device-dependent bitmap to a DIB */
 INT
 APIENTRY
-NtGdiGetDIBitsInternal(
+GreGetDIBitsInternal(
     HDC hDC,
     HBITMAP hBitmap,
     UINT StartScan,
@@ -573,36 +584,15 @@ NtGdiGetDIBitsInternal(
     DWORD compr, size ;
     USHORT i;
     int bitmap_type;
-    RGBTRIPLE* rgbTriples;
     RGBQUAD* rgbQuads;
     VOID* colorPtr;
-    NTSTATUS Status = STATUS_SUCCESS;
 
     DPRINT("Entered NtGdiGetDIBitsInternal()\n");
 
     if ((Usage && Usage != DIB_PAL_COLORS) || !Info || !hBitmap)
         return 0;
 
-    _SEH2_TRY
-    {
-        /* Probe for read and write */
-        ProbeForRead(Info, MaxInfo, 1);
-        ProbeForWrite(Info, MaxInfo, 1);
-        if (Bits) ProbeForWrite(Bits, MaxBits, 1);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END
-
-    if (!NT_SUCCESS(Status))
-    {
-        return 0;
-    }
-
     colorPtr = (LPBYTE)Info + Info->bmiHeader.biSize;
-    rgbTriples = colorPtr;
     rgbQuads = colorPtr;
 
     bitmap_type = DIB_GetBitmapInfo(&Info->bmiHeader,
@@ -651,15 +641,6 @@ NtGdiGetDIBitsInternal(
     switch(bpp)
     {
     case 0: /* Only info */
-        if(pbmci)
-        {
-            pbmci->bmciHeader.bcWidth = (WORD)psurf->SurfObj.sizlBitmap.cx;
-            pbmci->bmciHeader.bcHeight = (WORD)((psurf->SurfObj.fjBitmap & BMF_TOPDOWN) ?
-                                         -psurf->SurfObj.sizlBitmap.cy :
-                                         psurf->SurfObj.sizlBitmap.cy);
-            pbmci->bmciHeader.bcPlanes = 1;
-            pbmci->bmciHeader.bcBitCount = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
-        }
         Info->bmiHeader.biWidth = psurf->SurfObj.sizlBitmap.cx;
         Info->bmiHeader.biHeight = (psurf->SurfObj.fjBitmap & BMF_TOPDOWN) ?
                                    -psurf->SurfObj.sizlBitmap.cy :
@@ -710,31 +691,19 @@ NtGdiGetDIBitsInternal(
             if(Usage == DIB_RGB_COLORS)
             {
                 ULONG colors = min(psurf->ppal->NumColors, 256);
-
-                if(pbmci)
-                {
-                    for(i = 0; i < colors; i++)
-                    {
-                        rgbTriples[i].rgbtRed = psurf->ppal->IndexedColors[i].peRed;
-                        rgbTriples[i].rgbtGreen = psurf->ppal->IndexedColors[i].peGreen;
-                        rgbTriples[i].rgbtBlue = psurf->ppal->IndexedColors[i].peBlue;
-                    }
-                }
                 if(colors != 256) Info->bmiHeader.biClrUsed = colors;
                 for(i = 0; i < colors; i++)
                 {
                     rgbQuads[i].rgbRed = psurf->ppal->IndexedColors[i].peRed;
                     rgbQuads[i].rgbGreen = psurf->ppal->IndexedColors[i].peGreen;
                     rgbQuads[i].rgbBlue = psurf->ppal->IndexedColors[i].peBlue;
+                    rgbQuads[i].rgbReserved = 0;
                 }
             }
             else
             {
                 for(i = 0; i < 256; i++)
-                {
-                    if(pbmci) ((WORD*)rgbTriples)[i] = i;
                     ((WORD*)rgbQuads)[i] = i;
-                }
             }
         }
         else
@@ -743,7 +712,6 @@ NtGdiGetDIBitsInternal(
             {
                 for(i = 0; i < 256; i++)
                 {
-                    if(pbmci) ((WORD*)rgbTriples)[i] = i;
                     ((WORD*)rgbQuads)[i] = i;
                 }
             }
@@ -760,13 +728,6 @@ NtGdiGetDIBitsInternal(
                 }
                 for (i = 0; i < pDcPal->NumColors; i++)
                 {
-                    if (pbmci)
-                    {
-                        rgbTriples[i].rgbtRed   = pDcPal->IndexedColors[i].peRed;
-                        rgbTriples[i].rgbtGreen = pDcPal->IndexedColors[i].peGreen;
-                        rgbTriples[i].rgbtBlue  = pDcPal->IndexedColors[i].peBlue;
-                    }
-
                     rgbQuads[i].rgbRed      = pDcPal->IndexedColors[i].peRed;
                     rgbQuads[i].rgbGreen    = pDcPal->IndexedColors[i].peGreen;
                     rgbQuads[i].rgbBlue     = pDcPal->IndexedColors[i].peBlue;
@@ -779,55 +740,20 @@ NtGdiGetDIBitsInternal(
                 switch (bpp)
                 {
                 case 1:
-                    if (pbmci)
-                    {
-                        rgbTriples[0].rgbtRed = rgbTriples[0].rgbtGreen =
-                                                    rgbTriples[0].rgbtBlue = 0;
-                        rgbTriples[1].rgbtRed = rgbTriples[1].rgbtGreen =
-                                                    rgbTriples[1].rgbtBlue = 0xff;
-                    }
-                    rgbQuads[0].rgbRed = rgbQuads[0].rgbGreen =
-                                             rgbQuads[0].rgbBlue = 0;
+                    rgbQuads[0].rgbRed = rgbQuads[0].rgbGreen = rgbQuads[0].rgbBlue = 0;
                     rgbQuads[0].rgbReserved = 0;
-                    rgbQuads[1].rgbRed = rgbQuads[1].rgbGreen =
-                                             rgbQuads[1].rgbBlue = 0xff;
+                    rgbQuads[1].rgbRed = rgbQuads[1].rgbGreen = rgbQuads[1].rgbBlue = 0xff;
                     rgbQuads[1].rgbReserved = 0;
                     break;
 
                 case 4:
-                    if (pbmci)
-                        RtlCopyMemory(rgbTriples, EGAColorsTriples, sizeof(EGAColorsTriples));
                     RtlCopyMemory(rgbQuads, EGAColorsQuads, sizeof(EGAColorsQuads));
-
                     break;
 
                 case 8:
                 {
                     INT r, g, b;
                     RGBQUAD *color;
-                    if (pbmci)
-                    {
-                        RGBTRIPLE *colorTriple;
-
-                        RtlCopyMemory(rgbTriples, DefLogPaletteTriples,
-                                      10 * sizeof(RGBTRIPLE));
-                        RtlCopyMemory(rgbTriples + 246, DefLogPaletteTriples + 10,
-                                      10 * sizeof(RGBTRIPLE));
-                        colorTriple = rgbTriples + 10;
-                        for(r = 0; r <= 5; r++) /* FIXME */
-                        {
-                            for(g = 0; g <= 5; g++)
-                            {
-                                for(b = 0; b <= 5; b++)
-                                {
-                                    colorTriple->rgbtRed =   (r * 0xff) / 5;
-                                    colorTriple->rgbtGreen = (g * 0xff) / 5;
-                                    colorTriple->rgbtBlue =  (b * 0xff) / 5;
-                                    color++;
-                                }
-                            }
-                        }
-                    }
                     memcpy(rgbQuads, DefLogPaletteQuads,
                            10 * sizeof(RGBQUAD));
                     memcpy(rgbQuads + 246, DefLogPaletteQuads + 10,
@@ -942,10 +868,7 @@ NtGdiGetDIBitsInternal(
 
         psurfDest = SURFACE_ShareLockSurface(hBmpDest);
 
-        rcDest.left = 0;
-        rcDest.top = 0;
-        rcDest.bottom = ScanLines;
-        rcDest.right = psurf->SurfObj.sizlBitmap.cx;
+        RECTL_vSetRect(&rcDest, 0, 0, psurf->SurfObj.sizlBitmap.cx, ScanLines);
 
         srcPoint.x = 0;
 
@@ -983,22 +906,7 @@ NtGdiGetDIBitsInternal(
             ScanLines = 0;
         else
         {
-            Status = STATUS_SUCCESS;
-            _SEH2_TRY
-            {
-                RtlCopyMemory(Bits, pDIBits, DIB_GetDIBImageBytes (width, ScanLines, bpp));
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                Status = _SEH2_GetExceptionCode();
-            }
-            _SEH2_END
-
-            if(!NT_SUCCESS(Status))
-            {
-                DPRINT1("Unable to copy bits to the user provided pointer\n");
-                ScanLines = 0;
-            }
+            RtlCopyMemory(Bits, pDIBits, DIB_GetDIBImageBytes (width, ScanLines, bpp));
         }
 
         GreDeleteObject(hBmpDest);
@@ -1010,10 +918,119 @@ done:
 
     if(pDC) DC_UnlockDc(pDC);
     if(psurf) SURFACE_ShareUnlockSurface(psurf);
-    if(pbmci) DIB_FreeConvertedBitmapInfo(Info, (BITMAPINFO*)pbmci);
+    if(pbmci) DIB_FreeConvertedBitmapInfo(Info, (BITMAPINFO*)pbmci, Usage);
 
     return ScanLines;
 }
+
+INT
+APIENTRY
+NtGdiGetDIBitsInternal(
+    _In_ HDC hdc,
+    _In_ HBITMAP hbm,
+    _In_ UINT iStartScan,
+    _In_ UINT cScans,
+    _Out_opt_ LPBYTE pjBits,
+    _Inout_ LPBITMAPINFO pbmiUser,
+    _In_ UINT iUsage,
+    _In_ UINT cjMaxBits,
+    _In_ UINT cjMaxInfo)
+{
+    PBITMAPINFO pbmi;
+    HANDLE hSecure = NULL;
+    INT iResult = 0;
+    UINT cjAlloc;
+
+    /* Check for bad iUsage */
+    if (iUsage > 2) return 0;
+
+    /* Check if the size of the bitmap info is large enough */
+    if (cjMaxInfo < sizeof(BITMAPCOREHEADER))
+    {
+        return 0;
+    }
+
+    /* Use maximum size */
+    cjMaxInfo = min(cjMaxInfo, sizeof(BITMAPV5HEADER) + 256 * sizeof(RGBQUAD));
+
+    // HACK: the underlying code sucks and doesn't care for the size, so we
+    // give it the maximum ever needed
+    cjAlloc = sizeof(BITMAPV5HEADER) + 256 * sizeof(RGBQUAD);
+
+    /* Allocate a buffer the bitmapinfo */
+    pbmi = ExAllocatePoolWithTag(PagedPool, cjAlloc, 'imBG');
+    if (!pbmi)
+    {
+        /* Fail */
+        return 0;
+    }
+
+    /* Use SEH */
+    _SEH2_TRY
+    {
+        /* Probe and copy the BITMAPINFO */
+        ProbeForRead(pbmiUser, cjMaxInfo, 1);
+        RtlCopyMemory(pbmi, pbmiUser, cjMaxInfo);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(goto cleanup;)
+    }
+    _SEH2_END;
+
+    /* Check if the header size is large enough */
+    if ((pbmi->bmiHeader.biSize < sizeof(BITMAPCOREHEADER)) ||
+        (pbmi->bmiHeader.biSize > cjMaxInfo))
+    {
+        goto cleanup;
+    }
+
+    /* Check if the caller provided bitmap bits */
+    if (pjBits)
+    {
+        /* Secure the user mode memory */
+        hSecure = EngSecureMem(pjBits, cjMaxBits);
+        if (!hSecure)
+        {
+            goto cleanup;
+        }
+    }
+
+    /* Now call the internal function */
+    iResult = GreGetDIBitsInternal(hdc,
+                                   hbm,
+                                   iStartScan,
+                                   cScans,
+                                   pjBits,
+                                   pbmi,
+                                   iUsage,
+                                   cjMaxBits,
+                                   cjMaxInfo);
+
+    /* Check for success */
+    if (iResult)
+    {
+        /* Use SEH to copy back to user mode */
+        _SEH2_TRY
+        {
+            /* Copy the data back */
+            ProbeForWrite(pbmiUser, cjMaxInfo, 1);
+            RtlCopyMemory(pbmiUser, pbmi, cjMaxInfo);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Ignore */
+        }
+        _SEH2_END;
+    }
+
+cleanup:
+    if (hSecure) EngUnsecureMem(hSecure);
+    ExFreePoolWithTag(pbmi, 'imBG');
+
+    return iResult;
+}
+
 
 #define ROP_TO_ROP4(Rop) ((Rop) >> 16)
 
@@ -1054,6 +1071,14 @@ NtGdiStretchDIBitsInternal(
         return 0;
     }
 
+    /* Check for info / mem DC without surface */
+    if (!pdc->dclevel.pSurface)
+    {
+        DC_UnlockDc(pdc);
+        // CHECKME
+        return TRUE;
+    }
+
     /* Transform dest size */
     sizel.cx = cxDst;
     sizel.cy = cyDst;
@@ -1082,36 +1107,36 @@ NtGdiStretchDIBitsInternal(
                                               hcmXform);
     }
 
-    pvBits = ExAllocatePoolWithTag(PagedPool, cjMaxBits, 'pmeT');
-    if (!pvBits)
+    if (pjInit && (cjMaxBits > 0))
     {
-        return 0;
-    }
+        pvBits = ExAllocatePoolWithTag(PagedPool, cjMaxBits, 'pmeT');
+        if (!pvBits)
+        {
+            return 0;
+        }
 
-    _SEH2_TRY
-    {
-        ProbeForRead(pjInit, cjMaxBits, 1);
-        RtlCopyMemory(pvBits, pjInit, cjMaxBits);
+        _SEH2_TRY
+        {
+            ProbeForRead(pjInit, cjMaxBits, 1);
+            RtlCopyMemory(pvBits, pjInit, cjMaxBits);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            ExFreePoolWithTag(pvBits, 'pmeT');
+            _SEH2_YIELD(return 0);
+        }
+        _SEH2_END
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    else
     {
-        _SEH2_YIELD(return 0);
+        pvBits = NULL;
     }
-    _SEH2_END
 
     /* FIXME: Locking twice is cheesy, coord tranlation in UM will fix it */
     if (!(pdc = DC_LockDc(hdc)))
     {
         DPRINT1("Could not lock dc\n");
         EngSetLastError(ERROR_INVALID_HANDLE);
-        goto cleanup;
-    }
-
-    psurfDst = pdc->dclevel.pSurface;
-    if (!psurfDst)
-    {
-        // CHECKME
-        bResult = TRUE;
         goto cleanup;
     }
 
@@ -1158,6 +1183,11 @@ NtGdiStretchDIBitsInternal(
         goto cleanup;
     }
 
+    /* Prepare DC for blit */
+    DC_vPrepareDCsForBlit(pdc, rcDst, NULL, rcSrc);
+
+    psurfDst = pdc->dclevel.pSurface;
+
     /* Initialize XLATEOBJ */
     EXLATEOBJ_vInitialize(&exlo,
                           ppalDIB,
@@ -1166,15 +1196,13 @@ NtGdiStretchDIBitsInternal(
                           pdc->pdcattr->crBackgroundClr,
                           pdc->pdcattr->crForegroundClr);
 
-    /* Prepare DC for blit */
-    DC_vPrepareDCsForBlit(pdc, rcDst, NULL, rcSrc);
-
     /* Perform the stretch operation */
     bResult = IntEngStretchBlt(&psurfDst->SurfObj,
                                &psurfTmp->SurfObj,
                                NULL,
                                pdc->rosdc.CombinedClip,
                                &exlo.xlo,
+                               &pdc->dclevel.ca,
                                &rcDst,
                                &rcSrc,
                                NULL,
@@ -1190,7 +1218,7 @@ cleanup:
     if (psurfTmp) SURFACE_ShareUnlockSurface(psurfTmp);
     if (hbmTmp) GreDeleteObject(hbmTmp);
     if (pdc) DC_UnlockDc(pdc);
-    ExFreePoolWithTag(pvBits, 'pmeT');
+    if (pvBits) ExFreePoolWithTag(pvBits, 'pmeT');
 
     return bResult;
 }
@@ -1464,7 +1492,7 @@ DIB_CreateDIBSection(
     HBITMAP res = 0;
     SURFACE *bmp = NULL;
     void *mapBits = NULL;
-    PPALETTE ppalDIB;
+    PPALETTE ppalDIB = NULL;
 
     // Fill BITMAP32 structure with DIB data
     CONST BITMAPINFOHEADER *bi = &bmi->bmiHeader;
@@ -1474,7 +1502,7 @@ DIB_CreateDIBSection(
     //SIZEL Size;
     HANDLE hSecure;
 
-    DPRINT("format (%ld,%ld), planes %d, bpp %d, size %ld, colors %ld (%s)\n",
+    DPRINT("format (%ld,%ld), planes %u, bpp %u, size %lu, colors %lu (%s)\n",
            bi->biWidth, bi->biHeight, bi->biPlanes, bi->biBitCount,
            bi->biSizeImage, bi->biClrUsed, usage == DIB_PAL_COLORS? "PAL" : "RGB");
 
@@ -1598,17 +1626,12 @@ DIB_CreateDIBSection(
 
     /* Create a palette for the DIB */
     ppalDIB = CreateDIBPalette(bmi, dc, usage);
-    if (ppalDIB)
-    {
-        SURFACE_vSetPalette(bmp, ppalDIB);
-        PALETTE_ShareUnlockPalette(ppalDIB);
-    }
 
     // Clean up in case of errors
 cleanup:
-    if (!res || !bmp || !bm.bmBits)
+    if (!res || !bmp || !bm.bmBits || !ppalDIB)
     {
-        DPRINT("Got an error res=%08x, bmp=%p, bm.bmBits=%p\n", res, bmp, bm.bmBits);
+        DPRINT("Got an error res=%p, bmp=%p, bm.bmBits=%p\n", res, bmp, bm.bmBits);
         if (bm.bmBits)
         {
             // MmUnsecureVirtualMemory(hSecure); // FIXME: Implement this!
@@ -1622,17 +1645,28 @@ cleanup:
         }
 
         if (bmp)
+        {
+            SURFACE_ShareUnlockSurface(bmp);
             bmp = NULL;
+        }
 
         if (res)
         {
             GreDeleteObject(res);
             res = 0;
         }
+
+        if(ppalDIB)
+        {
+            PALETTE_ShareUnlockPalette(ppalDIB);
+        }
     }
 
     if (bmp)
     {
+        /* If we're here, everything went fine */
+        SURFACE_vSetPalette(bmp, ppalDIB);
+        PALETTE_ShareUnlockPalette(ppalDIB);
         SURFACE_ShareUnlockSurface(bmp);
     }
 
@@ -1677,7 +1711,7 @@ DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, LONG *width,
         *size   = header->biSizeImage;
         return 1;
     }
-    DPRINT1("(%d): unknown/wrong size for header\n", header->biSize );
+    DPRINT1("(%u): unknown/wrong size for header\n", header->biSize );
     return -1;
 }
 
@@ -1832,10 +1866,51 @@ DIB_ConvertBitmapInfo (CONST BITMAPINFO* pbmi, DWORD Usage)
 /* Frees a BITMAPINFO created with DIB_ConvertBitmapInfo */
 VOID
 FASTCALL
-DIB_FreeConvertedBitmapInfo(BITMAPINFO* converted, BITMAPINFO* orig)
+DIB_FreeConvertedBitmapInfo(BITMAPINFO* converted, BITMAPINFO* orig, DWORD usage)
 {
-    if(converted != orig)
+    BITMAPCOREINFO* pbmci;
+    if(converted == orig)
+        return;
+
+    if(usage == -1)
+    {
+        /* Caller don't want any conversion */
         ExFreePoolWithTag(converted, TAG_DIB);
+        return;
+    }
+
+    /* Perform inverse conversion */
+    pbmci = (BITMAPCOREINFO*)orig;
+
+    ASSERT(pbmci->bmciHeader.bcSize == sizeof(BITMAPCOREHEADER));
+    pbmci->bmciHeader.bcBitCount = converted->bmiHeader.biBitCount;
+    pbmci->bmciHeader.bcWidth = converted->bmiHeader.biWidth;
+    pbmci->bmciHeader.bcHeight = converted->bmiHeader.biHeight;
+    pbmci->bmciHeader.bcPlanes = converted->bmiHeader.biPlanes;
+
+    if(pbmci->bmciHeader.bcBitCount <= 8)
+    {
+        UINT numColors = converted->bmiHeader.biClrUsed;
+        if(!numColors) numColors = 1 << pbmci->bmciHeader.bcBitCount;
+        if(usage == DIB_PAL_COLORS)
+        {
+            RtlZeroMemory(pbmci->bmciColors, (1 << pbmci->bmciHeader.bcBitCount) * sizeof(WORD));
+            RtlCopyMemory(pbmci->bmciColors, converted->bmiColors, numColors * sizeof(WORD));
+        }
+        else
+        {
+            UINT i;
+            RtlZeroMemory(pbmci->bmciColors, (1 << pbmci->bmciHeader.bcBitCount) * sizeof(RGBTRIPLE));
+            for(i=0; i<numColors; i++)
+            {
+                pbmci->bmciColors[i].rgbtRed = converted->bmiColors[i].rgbRed;
+                pbmci->bmciColors[i].rgbtGreen = converted->bmiColors[i].rgbGreen;
+                pbmci->bmciColors[i].rgbtBlue = converted->bmiColors[i].rgbBlue;
+            }
+        }
+    }
+    /* Now free it, it's not needed anymore */
+    ExFreePoolWithTag(converted, TAG_DIB);
 }
 
 /* EOF */

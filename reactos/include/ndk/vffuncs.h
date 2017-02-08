@@ -33,20 +33,20 @@ Author:
 BOOLEAN
 NTAPI
 VfIsVerificationEnabled(
-    IN VF_OBJECT_TYPE VfObjectType,
-    IN PVOID Object OPTIONAL
+    _In_ VF_OBJECT_TYPE VfObjectType,
+    _In_opt_ PVOID Object
 );
-    
+
 VOID
 NTAPI
 VfFailDeviceNode(
-    IN PDEVICE_OBJECT PhysicalDeviceObject,
-    IN ULONG BugCheckMajorCode,
-    IN ULONG BugCheckMinorCode,
-    IN VF_FAILURE_CLASS FailureClass,
-    IN OUT PULONG AssertionControl,
-    IN PSTR DebuggerMessageText,
-    IN PSTR ParameterFormatString,
+    _In_ PDEVICE_OBJECT PhysicalDeviceObject,
+    _In_ ULONG BugCheckMajorCode,
+    _In_ ULONG BugCheckMinorCode,
+    _In_ VF_FAILURE_CLASS FailureClass,
+    _Inout_ PULONG AssertionControl,
+    _In_ PSTR DebuggerMessageText,
+    _In_ PSTR ParameterFormatString,
     ...
 );
 #endif

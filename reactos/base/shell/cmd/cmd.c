@@ -141,7 +141,7 @@
  *        handling for memmory handling need to be improve
  */
 
-#include <precomp.h>
+#include "precomp.h"
 #include <reactos/buildno.h>
 #include <reactos/version.h>
 

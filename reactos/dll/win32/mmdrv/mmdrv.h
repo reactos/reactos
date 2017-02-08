@@ -14,10 +14,13 @@
 #ifndef MMDRV_H
 #define MMDRV_H
 
-#include <mmioctl.h>
-#include <mmddk.h>
+#define WIN32_NO_STATUS
+#define WIN32_LEAN_AND_MEAN
 
-#include <stdio.h>
+#include "mmioctl.h"
+#include "mmddk.h"
+
+//#include <stdio.h>
 #include <debug.h>
 
 /* Need to check these */

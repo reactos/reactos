@@ -235,8 +235,9 @@ void Desktops::ToggleMinimize()
 	if (minimized.empty()) {
 		EnumWindows(MinimizeDesktopEnumFct, (LPARAM)&minimized);
 	} else {
-		for(list<MinimizeStruct>::const_reverse_iterator it=minimized.rbegin(); 
-															it!=minimized.rend(); ++it) {
+		const list<MinimizeStruct>& cminimized = minimized;
+		for(list<MinimizeStruct>::const_reverse_iterator it=cminimized.rbegin(); 
+															it!=cminimized.rend(); ++it) {
 			ShowWindowAsync(it->first, it->second&WS_MAXIMIZE? SW_MAXIMIZE: SW_RESTORE);
 			Sleep(20);
 		}
@@ -478,6 +479,26 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
       case WM_SETTINGCHANGE:
         SendMessage(g_Globals._hwndShellView, nmsg, wparam, lparam);
         break;
+
+      case PM_TRANSLATE_MSG:
+      {
+            /* TranslateAccelerator is called for all explorer windows that are open 
+               so we have to decide if this is the correct recipient */
+            LPMSG lpmsg = (LPMSG)lparam;
+            HWND hwnd = lpmsg->hwnd;
+
+            while(hwnd)
+            {
+                if(hwnd == _hwnd)
+                    break;
+
+                hwnd = GetParent(hwnd);
+            }
+
+            if (hwnd)
+                return _pShellView->TranslateAccelerator(lpmsg) == S_OK;
+            return false;
+      }
 
 	  default: def:
 		return super::WndProc(nmsg, wparam, lparam);

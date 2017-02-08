@@ -84,7 +84,7 @@ BOOL help_main(INT argc, WCHAR **argv)
     /* Scan internal command table */
     for (cmdptr = cmds; cmdptr->name; cmdptr++)
     {
-        if (_wcsicmp(argv[0], cmdptr->name) == 0 && cmdptr->help != NULL)
+        if (_wcsicmp(argv[1], cmdptr->name) == 0 && cmdptr->help != NULL)
         {
             cmdptr->help(argc, argv);
             return TRUE;

@@ -13,11 +13,62 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(samsrv);
 
+
 /* GLOBALS *****************************************************************/
+
+#define TICKS_PER_SECOND 10000000LL
 
 SID_IDENTIFIER_AUTHORITY SecurityNtAuthority = {SECURITY_NT_AUTHORITY};
 
+
 /* FUNCTIONS ***************************************************************/
+
+static INT
+SampLoadString(HINSTANCE hInstance,
+               UINT uId,
+               LPWSTR lpBuffer,
+               INT nBufferMax)
+{
+    HGLOBAL hmem;
+    HRSRC hrsrc;
+    WCHAR *p;
+    int string_num;
+    int i;
+
+    /* Use loword (incremented by 1) as resourceid */
+    hrsrc = FindResourceW(hInstance,
+                          MAKEINTRESOURCEW((LOWORD(uId) >> 4) + 1),
+                          (LPWSTR)RT_STRING);
+    if (!hrsrc)
+        return 0;
+
+    hmem = LoadResource(hInstance, hrsrc);
+    if (!hmem)
+        return 0;
+
+    p = LockResource(hmem);
+    string_num = uId & 0x000f;
+    for (i = 0; i < string_num; i++)
+        p += *p + 1;
+
+    i = min(nBufferMax - 1, *p);
+    if (i > 0)
+    {
+        memcpy(lpBuffer, p + 1, i * sizeof(WCHAR));
+        lpBuffer[i] = 0;
+    }
+    else
+    {
+        if (nBufferMax > 1)
+        {
+            lpBuffer[0] = 0;
+            return 0;
+        }
+    }
+
+    return i;
+}
+
 
 BOOL
 SampIsSetupRunning(VOID)
@@ -218,22 +269,51 @@ SampCreateAliasAccount(HKEY hDomainKey,
 }
 
 
+#if 0
+static BOOL
+SampCreateGroupAccount(HKEY hDomainKey,
+                       LPCWSTR lpAccountName,
+                       ULONG ulRelativeId)
+{
+
+    return FALSE;
+}
+#endif
+
+
 static BOOL
 SampCreateUserAccount(HKEY hDomainKey,
                       LPCWSTR lpAccountName,
-                      ULONG ulRelativeId)
+                      LPCWSTR lpComment,
+                      ULONG ulRelativeId,
+                      ULONG UserAccountControl)
 {
     SAM_USER_FIXED_DATA FixedUserData;
+    UCHAR LogonHours[23];
+    LPWSTR lpEmptyString = L"";
     DWORD dwDisposition;
     WCHAR szAccountKeyName[32];
     HKEY hAccountKey = NULL;
     HKEY hNamesKey = NULL;
 
     /* Initialize fixed user data */
-    memset(&FixedUserData, 0, sizeof(SAM_USER_FIXED_DATA));
     FixedUserData.Version = 1;
-
+    FixedUserData.Reserved = 0;
+    FixedUserData.LastLogon.QuadPart = 0;
+    FixedUserData.LastLogoff.QuadPart = 0;
+    FixedUserData.PasswordLastSet.QuadPart = 0;
+    FixedUserData.AccountExpires.LowPart = MAXULONG;
+    FixedUserData.AccountExpires.HighPart = MAXLONG;
+    FixedUserData.LastBadPasswordTime.QuadPart = 0;
     FixedUserData.UserId = ulRelativeId;
+    FixedUserData.PrimaryGroupId = DOMAIN_GROUP_RID_USERS;
+    FixedUserData.UserAccountControl = UserAccountControl;
+    FixedUserData.CountryCode = 0;
+    FixedUserData.CodePage = 0;
+    FixedUserData.BadPasswordCount = 0;
+    FixedUserData.LogonCount = 0;
+    FixedUserData.AdminCount = 0;
+    FixedUserData.OperatorCount = 0;
 
     swprintf(szAccountKeyName, L"Users\\%08lX", ulRelativeId);
 
@@ -260,6 +340,116 @@ SampCreateUserAccount(HKEY hDomainKey,
                       REG_SZ,
                       (LPVOID)lpAccountName,
                       (wcslen(lpAccountName) + 1) * sizeof(WCHAR));
+
+        RegSetValueEx(hAccountKey,
+                      L"FullName",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpEmptyString,
+                      sizeof(WCHAR));
+
+        RegSetValueEx(hAccountKey,
+                      L"HomeDirectory",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpEmptyString,
+                      sizeof(WCHAR));
+
+        RegSetValueEx(hAccountKey,
+                      L"HomeDirectoryDrive",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpEmptyString,
+                      sizeof(WCHAR));
+
+        RegSetValueEx(hAccountKey,
+                      L"ScriptPath",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpEmptyString,
+                      sizeof(WCHAR));
+
+        RegSetValueEx(hAccountKey,
+                      L"ProfilePath",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpEmptyString,
+                      sizeof(WCHAR));
+
+        RegSetValueEx(hAccountKey,
+                      L"AdminComment",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpComment,
+                      (wcslen(lpComment) + 1) * sizeof(WCHAR));
+
+        RegSetValueEx(hAccountKey,
+                      L"UserComment",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpEmptyString,
+                      sizeof(WCHAR));
+
+        RegSetValueEx(hAccountKey,
+                      L"WorkStations",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpEmptyString,
+                      sizeof(WCHAR));
+
+        RegSetValueEx(hAccountKey,
+                      L"Parameters",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpEmptyString,
+                      sizeof(WCHAR));
+
+        /* Set LogonHours attribute*/
+        *((PUSHORT)LogonHours) = 168;
+        memset(&(LogonHours[2]), 0xff, 21);
+
+        RegSetValueEx(hAccountKey,
+                      L"LogonHours",
+                      0,
+                      REG_BINARY,
+                      (LPVOID)LogonHours,
+                      sizeof(LogonHours));
+
+        /* FIXME: Set Groups attribute*/
+
+        /* Set LMPwd attribute*/
+        RegSetValueEx(hAccountKey,
+                      L"LMPwd",
+                      0,
+                      REG_BINARY,
+                      NULL,
+                      0);
+
+        /* Set NTPwd attribute*/
+        RegSetValueEx(hAccountKey,
+                      L"NTPwd",
+                      0,
+                      REG_BINARY,
+                      NULL,
+                      0);
+
+        /* Set LMPwdHistory attribute*/
+        RegSetValueEx(hAccountKey,
+                      L"LMPwdHistory",
+                      0,
+                      REG_BINARY,
+                      NULL,
+                      0);
+
+        /* Set NTPwdHistory attribute*/
+        RegSetValueEx(hAccountKey,
+                      L"NTPwdHistory",
+                      0,
+                      REG_BINARY,
+                      NULL,
+                      0);
+
+        /* FIXME: Set SecDesc attribute*/
 
         RegCloseKey(hAccountKey);
     }
@@ -308,11 +498,11 @@ SampCreateDomain(IN HKEY hDomainsKey,
     FixedData.Version = 1;
     NtQuerySystemTime(&FixedData.CreationTime);
     FixedData.DomainModifiedCount.QuadPart = 0;
-//    FixedData.MaxPasswordAge                 // 6 Weeks
-    FixedData.MinPasswordAge.QuadPart = 0;     // Now
-//    FixedData.ForceLogoff
-//    FixedData.LockoutDuration                // 30 minutes
-//    FixedData.LockoutObservationWindow       // 30 minutes
+    FixedData.MaxPasswordAge.QuadPart = -(6LL * 7LL * 24LL * 60LL * 60LL * TICKS_PER_SECOND); /* 6 weeks */
+    FixedData.MinPasswordAge.QuadPart = 0;                                                    /* right now */
+//    FixedData.ForceLogoff.QuadPart = // very far in the future aka never
+    FixedData.LockoutDuration.QuadPart = -(30LL * 60LL * TICKS_PER_SECOND);                   /* 30 minutes */
+    FixedData.LockoutObservationWindow.QuadPart = -(30LL * 60LL * TICKS_PER_SECOND);          /* 30 minutes */
     FixedData.ModifiedCountAtLastPromotion.QuadPart = 0;
     FixedData.NextRid = 1000;
     FixedData.PasswordProperties = 0;
@@ -471,7 +661,7 @@ SampGetAccountDomainInfo(PPOLICY_ACCOUNT_DOMAIN_INFO *AccountDomainInfo)
 
     Status = LsaOpenPolicy(NULL,
                            &ObjectAttributes,
-                           POLICY_TRUST_ADMIN,
+                           POLICY_VIEW_LOCAL_INFORMATION,
                            &PolicyHandle);
     if (Status != STATUS_SUCCESS)
     {
@@ -500,9 +690,14 @@ SampInitializeSAM(VOID)
     PSID pBuiltinSid = NULL;
     BOOL bResult = TRUE;
     PSID pSid;
+    HINSTANCE hInstance;
+    WCHAR szComment[256];
+    WCHAR szName[80];
     NTSTATUS Status;
 
     TRACE("SampInitializeSAM() called\n");
+
+    hInstance = GetModuleHandleW(L"samsrv.dll");
 
     if (RegCreateKeyExW(HKEY_LOCAL_MACHINE,
                         L"SAM\\SAM",
@@ -557,31 +752,45 @@ SampInitializeSAM(VOID)
         goto done;
     }
 
+    SampLoadString(hInstance, IDS_DOMAIN_BUILTIN_NAME, szName, 80);
+
     /* Create the Builtin domain */
     if (SampCreateDomain(hDomainsKey,
                          L"Builtin",
-                         L"Builtin",
+                         szName, //L"Builtin", // SampGetResourceString(hInstance, IDS_DOMAIN_BUILTIN_NAME),
                          pBuiltinSid,
                          &hDomainKey))
     {
+        SampLoadString(hInstance, IDS_ALIAS_ADMINISTRATORS_NAME, szName, 80);
+        SampLoadString(hInstance, IDS_ALIAS_ADMINISTRATORS_COMMENT, szComment, 256);
+
         SampCreateAliasAccount(hDomainKey,
-                               L"Administrators",
-                               L"Testabc1234567890",
+                               szName,
+                               szComment,
                                DOMAIN_ALIAS_RID_ADMINS);
 
+        SampLoadString(hInstance, IDS_ALIAS_USERS_NAME, szName, 80);
+        SampLoadString(hInstance, IDS_ALIAS_USERS_COMMENT, szComment, 256);
+
         SampCreateAliasAccount(hDomainKey,
-                               L"Users",
-                               L"Users Group",
+                               szName,
+                               szComment,
                                DOMAIN_ALIAS_RID_USERS);
 
-        SampCreateAliasAccount(hDomainKey,
-                               L"Guests",
-                               L"Guests Group",
-                               DOMAIN_ALIAS_RID_GUESTS);
+        SampLoadString(hInstance, IDS_ALIAS_GUESTS_NAME, szName, 80);
+        SampLoadString(hInstance, IDS_ALIAS_GUESTS_COMMENT, szComment, 256);
 
         SampCreateAliasAccount(hDomainKey,
-                               L"Power Users",
-                               L"Power Users Group",
+                               szName,
+                               szComment,
+                               DOMAIN_ALIAS_RID_GUESTS);
+
+        SampLoadString(hInstance, IDS_ALIAS_POWER_USERS_NAME, szName, 80);
+        SampLoadString(hInstance, IDS_ALIAS_POWER_USERS_COMMENT, szComment, 256);
+
+        SampCreateAliasAccount(hDomainKey,
+                               szName,
+                               szComment,
                                DOMAIN_ALIAS_RID_POWER_USERS);
 
 
@@ -607,13 +816,23 @@ SampInitializeSAM(VOID)
                          AccountDomainInfo->DomainSid,
                          &hDomainKey))
     {
-        SampCreateUserAccount(hDomainKey,
-                              L"Administrator",
-                              DOMAIN_USER_RID_ADMIN);
+        SampLoadString(hInstance, IDS_USER_ADMINISTRATOR_NAME, szName, 80);
+        SampLoadString(hInstance, IDS_USER_ADMINISTRATOR_COMMENT, szComment, 256);
 
         SampCreateUserAccount(hDomainKey,
-                              L"Guest",
-                              DOMAIN_USER_RID_GUEST);
+                              szName,
+                              szComment,
+                              DOMAIN_USER_RID_ADMIN,
+                              USER_DONT_EXPIRE_PASSWORD | USER_NORMAL_ACCOUNT);
+
+        SampLoadString(hInstance, IDS_USER_GUEST_NAME, szName, 80);
+        SampLoadString(hInstance, IDS_USER_GUEST_COMMENT, szComment, 256);
+
+        SampCreateUserAccount(hDomainKey,
+                              szName,
+                              szComment,
+                              DOMAIN_USER_RID_GUEST,
+                              USER_ACCOUNT_DISABLED | USER_DONT_EXPIRE_PASSWORD | USER_NORMAL_ACCOUNT);
 
         RegCloseKey(hDomainKey);
     }

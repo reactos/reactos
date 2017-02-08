@@ -33,32 +33,32 @@ VOID
 NTAPI
 Cardbus_SaveCurrentSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNREFERENCED_PARAMETER(Context);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 VOID
 NTAPI
 Cardbus_SaveLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNREFERENCED_PARAMETER(Context);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 VOID
 NTAPI
 Cardbus_MassageHeaderForLimitsDetermination(IN PPCI_CONFIGURATOR_CONTEXT Context)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNREFERENCED_PARAMETER(Context);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 VOID
 NTAPI
 Cardbus_RestoreCurrent(IN PPCI_CONFIGURATOR_CONTEXT Context)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNREFERENCED_PARAMETER(Context);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 VOID
@@ -67,8 +67,10 @@ Cardbus_GetAdditionalResourceDescriptors(IN PPCI_CONFIGURATOR_CONTEXT Context,
                                          IN PPCI_COMMON_HEADER PciData,
                                          IN PIO_RESOURCE_DESCRIPTOR IoDescriptor)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNREFERENCED_PARAMETER(Context);
+    UNREFERENCED_PARAMETER(PciData);
+    UNREFERENCED_PARAMETER(IoDescriptor);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 VOID
@@ -76,8 +78,9 @@ NTAPI
 Cardbus_ResetDevice(IN PPCI_PDO_EXTENSION PdoExtension,
                     IN PPCI_COMMON_HEADER PciData)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNREFERENCED_PARAMETER(PdoExtension);
+    UNREFERENCED_PARAMETER(PciData);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 VOID
@@ -85,14 +88,16 @@ NTAPI
 Cardbus_ChangeResourceSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                                IN PPCI_COMMON_HEADER PciData)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNREFERENCED_PARAMETER(PdoExtension);
+    UNREFERENCED_PARAMETER(PciData);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 NTSTATUS
 NTAPI
 pcicbintrf_Initializer(IN PVOID Instance)
 {
+    UNREFERENCED_PARAMETER(Instance);
     /* PnP Interfaces don't get Initialized */
     ASSERTMSG(FALSE, "PCI pcicbintrf_Initializer, unexpected call.");
     return STATUS_UNSUCCESSFUL;
@@ -107,9 +112,16 @@ pcicbintrf_Constructor(IN PVOID DeviceExtension,
                        IN USHORT Size,
                        IN PINTERFACE Interface)
 {
+    UNREFERENCED_PARAMETER(DeviceExtension);
+    UNREFERENCED_PARAMETER(Instance);
+    UNREFERENCED_PARAMETER(InterfaceData);
+    UNREFERENCED_PARAMETER(Version);
+    UNREFERENCED_PARAMETER(Size);
+    UNREFERENCED_PARAMETER(Interface);
+
     /* Not yet implemented */
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

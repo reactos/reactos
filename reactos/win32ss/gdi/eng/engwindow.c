@@ -45,7 +45,7 @@ IntEngWndCallChangeProc(
       pwo = NULL;
     }
 
-  DPRINT("Calling WNDOBJCHANGEPROC (0x%x), Changed = 0x%x\n",
+  DPRINT("Calling WNDOBJCHANGEPROC (0x%p), Changed = 0x%x\n",
          WndObjInt->ChangeProc, flChanged);
   WndObjInt->ChangeProc(pwo, flChanged);
 }
@@ -77,7 +77,7 @@ IntEngWndUpdateClipObj(
       {
         ClipObj = IntEngCreateClipRegion(visRgn->rdh.nCount, visRgn->Buffer,
                                          &visRgn->rdh.rcBound);
-        DPRINT("Created visible region with %d rects\n", visRgn->rdh.nCount);
+        DPRINT("Created visible region with %lu rects\n", visRgn->rdh.nCount);
         DPRINT("  BoundingRect: %d, %d  %d, %d\n",
                visRgn->rdh.rcBound.left, visRgn->rdh.rcBound.top,
                visRgn->rdh.rcBound.right, visRgn->rdh.rcBound.bottom);
@@ -85,7 +85,7 @@ IntEngWndUpdateClipObj(
           ULONG i;
           for (i = 0; i < visRgn->rdh.nCount; i++)
           {
-            DPRINT("  Rect #%d: %d,%d  %d,%d\n", i+1,
+            DPRINT("  Rect #%lu: %ld,%ld  %ld,%ld\n", i+1,
                    visRgn->Buffer[i].left, visRgn->Buffer[i].top,
                    visRgn->Buffer[i].right, visRgn->Buffer[i].bottom);
           }
@@ -195,7 +195,7 @@ EngCreateWnd(
   BOOL calledFromUser;
   DECLARE_RETURN(WNDOBJ*);
 
-  DPRINT("EngCreateWnd: pso = 0x%x, hwnd = 0x%x, pfn = 0x%x, fl = 0x%x, pixfmt = %d\n",
+  DPRINT("EngCreateWnd: pso = 0x%p, hwnd = 0x%p, pfn = 0x%p, fl = 0x%lx, pixfmt = %d\n",
          pso, hWnd, pfn, fl, iPixelFormat);
 
   calledFromUser = UserIsEntered();
@@ -267,7 +267,7 @@ EngDeleteWnd(
   PWND Window;
   BOOL calledFromUser;
 
-  DPRINT("EngDeleteWnd: pwo = 0x%x\n", pwo);
+  DPRINT("EngDeleteWnd: pwo = 0x%p\n", pwo);
 
   calledFromUser = UserIsEntered();
   if (!calledFromUser){
@@ -310,7 +310,7 @@ WNDOBJ_bEnum(
   WNDGDI *WndObjInt = ObjToGDI(pwo, WND);
   BOOL Ret;
 
-  DPRINT("WNDOBJ_bEnum: pwo = 0x%x, cj = %d, pul = 0x%x\n", pwo, cj, pul);
+  DPRINT("WNDOBJ_bEnum: pwo = 0x%p, cj = %lu, pul = 0x%p\n", pwo, cj, pul);
   Ret = CLIPOBJ_bEnum(WndObjInt->ClientClipObj, cj, pul);
 
   DPRINT("WNDOBJ_bEnum: Returning %s\n", Ret ? "True" : "False");
@@ -332,13 +332,13 @@ WNDOBJ_cEnumStart(
   WNDGDI *WndObjInt = ObjToGDI(pwo, WND);
   ULONG Ret;
 
-  DPRINT("WNDOBJ_cEnumStart: pwo = 0x%x, iType = %d, iDirection = %d, cLimit = %d\n",
+  DPRINT("WNDOBJ_cEnumStart: pwo = 0x%p, iType = %lu, iDirection = %lu, cLimit = %lu\n",
          pwo, iType, iDirection, cLimit);
 
   /* FIXME: Should we enumerate all rectangles or not? */
   Ret = CLIPOBJ_cEnumStart(WndObjInt->ClientClipObj, FALSE, iType, iDirection, cLimit);
 
-  DPRINT("WNDOBJ_cEnumStart: Returning 0x%x\n", Ret);
+  DPRINT("WNDOBJ_cEnumStart: Returning 0x%lx\n", Ret);
   return Ret;
 }
 
@@ -354,7 +354,7 @@ WNDOBJ_vSetConsumer(
 {
   BOOL Hack;
 
-  DPRINT("WNDOBJ_vSetConsumer: pwo = 0x%x, pvConsumer = 0x%x\n", pwo, pvConsumer);
+  DPRINT("WNDOBJ_vSetConsumer: pwo = 0x%p, pvConsumer = 0x%p\n", pwo, pvConsumer);
 
   Hack = (pwo->pvConsumer == NULL);
   pwo->pvConsumer = pvConsumer;

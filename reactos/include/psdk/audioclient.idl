@@ -1,0 +1,327 @@
+/*
+ * Core Audio audioclient definitions
+ *
+ * Copyright 2009 Maarten Lankhorst
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ */
+
+import "wtypes.idl";
+import "unknwn.idl";
+import "audiosessiontypes.h";
+
+/* Forward declarations */
+interface IAudioClient;
+interface IAudioRenderClient;
+interface IAudioCaptureClient;
+interface IAudioClock;
+interface IAudioClock2;
+interface IAudioClockAdjustment;
+interface ISimpleAudioVolume;
+interface IAudioStreamVolume;
+interface IChannelAudioVolume;
+
+cpp_quote("#if 0")
+typedef struct WAVEFORMATEX /*[hidden,restricted]*/
+{
+    WORD wFormatTag;
+    WORD nChannels;
+    DWORD nSamplesPerSec;
+    DWORD nAvgBytesPerSec;
+    WORD nBlockAlign;
+    WORD wBitsPerSample;
+    WORD cbSize;
+} WAVEFORMATEX;
+cpp_quote("#else")
+cpp_quote("#include <mmreg.h>")
+cpp_quote("#endif")
+
+cpp_quote("#if 0")
+typedef LONGLONG /*[hidden,restricted]*/ REFERENCE_TIME;
+cpp_quote("#else")
+cpp_quote("#define _IKsControl_")
+cpp_quote("#include <ks.h>")
+cpp_quote("#include <ksmedia.h>")
+cpp_quote("#endif")
+
+enum _AUDCLNT_BUFFERFLAGS
+{
+    AUDCLNT_BUFFERFLAGS_DATA_DISCONTINUITY = 0x1,
+    AUDCLNT_BUFFERFLAGS_SILENT = 0x2,
+    AUDCLNT_BUFFERFLAGS_TIMESTAMP_ERROR = 0x4
+};
+
+[
+    local,
+    pointer_default(unique),
+    uuid(1cb9ad4c-dbfa-4c32-b178-c2f568a703b2),
+    object,
+]
+interface IAudioClient : IUnknown
+{
+    HRESULT Initialize(
+        [in] AUDCLNT_SHAREMODE ShareMode,
+        [in] DWORD StreamFlags,
+        [in] REFERENCE_TIME hnsBufferDuration,
+        [in] REFERENCE_TIME hnsPeriodicity,
+        [in] const WAVEFORMATEX *pFormat,
+        [in] LPCGUID AudioSessionGuid
+    );
+    HRESULT GetBufferSize(
+        [out] UINT32 *pNumBufferFrames
+    );
+    HRESULT GetStreamLatency(
+        [out] REFERENCE_TIME *phnsLatency
+    );
+    HRESULT GetCurrentPadding(
+        [out] UINT32 *pNumPaddingFrames
+    );
+    HRESULT IsFormatSupported(
+        [in] AUDCLNT_SHAREMODE ShareMode,
+        [in] const WAVEFORMATEX *pFormat,
+        [out,unique] WAVEFORMATEX **ppClosestMatch
+    );
+    HRESULT GetMixFormat(
+        [out] WAVEFORMATEX **ppDeviceFormat
+    );
+    HRESULT GetDevicePeriod(
+        [out] REFERENCE_TIME *phnsDefaultDevicePeriod,
+        [out] REFERENCE_TIME *phnsMinimumDevicePeriod
+    );
+    HRESULT Start(void);
+    HRESULT Stop(void);
+    HRESULT Reset(void);
+    HRESULT SetEventHandle([in] HANDLE eventHandle);
+    HRESULT GetService(
+        [in] REFIID riid,
+        [iid_is(riid),out] void **ppv
+    );
+}
+
+[
+    local,
+    pointer_default(unique),
+    uuid(f294acfc-3146-4483-a7bf-addca7c260e2),
+    object,
+]
+interface IAudioRenderClient : IUnknown
+{
+    HRESULT GetBuffer(
+        [in] UINT32 NumFramesRequested,
+        [out] BYTE **ppData
+    );
+    HRESULT ReleaseBuffer(
+        [in] UINT32 NumFramesWritten,
+        [in] DWORD dwFlags
+    );
+}
+
+[
+    local,
+    pointer_default(unique),
+    uuid(c8adbd64-e71e-48a0-a4de-185c395cd317),
+    object,
+]
+interface IAudioCaptureClient : IUnknown
+{
+    HRESULT GetBuffer(
+        [out] BYTE **ppData,
+        [out] UINT32 *pNumFramesToRead,
+        [out] DWORD *pdwFlags,
+        [unique,out] UINT64 *pu64DevicePosition,
+        [unique,out] UINT64 *pu64QPCPosition
+    );
+    HRESULT ReleaseBuffer(
+        [in] UINT32 NumFramesRead
+    );
+    HRESULT GetNextPacketSize(
+        [out] UINT32 *pNumFramesInNextPacket
+    );
+}
+
+cpp_quote("#define AUDIOCLOCK_CHARACTERISTIC_FIXED_FREQ 0x00000001")
+
+[
+    local,
+    pointer_default(unique),
+    uuid("cd63314f-3fba-4a1b-812c-ef96358728e7"),
+    object,
+]
+interface IAudioClock : IUnknown
+{
+    HRESULT GetFrequency(
+        [out] UINT64 *pu64Frequency
+    );
+    HRESULT GetPosition(
+        [out] UINT64 *pu64Position,
+        [out,unique] UINT64 *pu64QPCPosition
+    );
+    HRESULT GetCharacteristics(
+        [out] DWORD *pdwCharacteristics
+    );
+}
+
+[
+    local,
+    pointer_default(unique),
+    uuid("6f49ff73-6727-49ac-a008-d98cf5e70048"),
+    object,
+]
+interface IAudioClock2 : IUnknown
+{
+    HRESULT GetPosition(
+        [out] UINT64 *DevicePosition,
+        [out,unique] UINT64 *QPCPosition
+    );
+}
+
+[
+    local,
+    pointer_default(unique),
+    uuid("f6e4c0a0-46d9-4fb9-be21-57a3ef2b626c"),
+    object,
+]
+interface IAudioClockAdjustment : IUnknown
+{
+    HRESULT SetSampleRate(
+        [in] float flSampleRate
+    );
+}
+
+[
+    local,
+    pointer_default(unique),
+    uuid("87ce5498-68d6-44e5-9215-6da47ef883d8"),
+    object,
+]
+interface ISimpleAudioVolume : IUnknown
+{
+    HRESULT SetMasterVolume(
+        [in] float fLevel,
+        [unique,in] LPCGUID EventContext
+    );
+    HRESULT GetMasterVolume(
+        [out] float *pfLevel
+    );
+    HRESULT SetMute(
+        [in] const BOOL bMute,
+        [unique,in] LPCGUID EventContext
+    );
+    HRESULT GetMute(
+        [out] BOOL *pbMute
+    );
+}
+
+[
+    local,
+    pointer_default(unique),
+    uuid("93014887-242d-4068-8a15-cf5e93b90fe3"),
+    object,
+]
+interface IAudioStreamVolume : IUnknown
+{
+    HRESULT GetChannelCount(
+        [out] UINT32 *pdwCount
+    );
+    HRESULT SetChannelVolume(
+        [in] UINT32 dwIndex,
+        [in] const float fLevel
+    );
+    HRESULT GetChannelVolume(
+        [in] UINT32 dwIndex,
+        [out] float *pfLevel
+    );
+    HRESULT SetAllVolumes(
+        [in] UINT32 dwCount,
+        [size_is(dwCount),in] const float *pfVolumes
+    );
+    HRESULT GetAllVolumes(
+        [in] UINT32 dwCount,
+        [size_is(dwCount),out] float *pfVolumes
+    );
+}
+
+[
+    local,
+    pointer_default(unique),
+    uuid("1c158861-b533-4b30-b1cf-e853e51c59b8"),
+    object,
+]
+interface IChannelAudioVolume : IUnknown
+{
+    HRESULT GetChannelCount(
+        [out] UINT32 *pdwCount
+    );
+    HRESULT SetChannelVolume(
+        [in] UINT32 dwIndex,
+        [in] const float fLevel,
+        [unique,in] LPCGUID EventContext
+    );
+    HRESULT GetChannelVolume(
+        [in] UINT32 dwIndex,
+        [out] float *pfLevel
+    );
+    HRESULT SetAllVolumes(
+        [in] UINT32 dwCount,
+        [size_is(dwCount),in] const float *pfVolumes,
+        [unique,in] LPCGUID EventContext
+    );
+    HRESULT GetAllVolumes(
+        [in] UINT32 dwCount,
+        [size_is(dwCount),out] float *pfVolumes
+    );
+}
+
+cpp_quote("#define FACILIY_AUDCLNT 0x889")
+cpp_quote("#define AUDCLNT_ERR(n) MAKE_HRESULT(SEVERITY_ERROR, FACILIY_AUDCLNT, n)")
+cpp_quote("#define AUDCLNT_SUCCESS(n) MAKE_SCODE(SEVERITY_SUCCESS, FACILIY_AUDCLNT, n)")
+cpp_quote("#define AUDCLNT_E_NOT_INITIALIZED AUDCLNT_ERR(1)")
+cpp_quote("#define AUDCLNT_E_ALREADY_INITIALIZED AUDCLNT_ERR(2)")
+cpp_quote("#define AUDCLNT_E_WRONG_ENDPOINT_TYPE AUDCLNT_ERR(3)")
+cpp_quote("#define AUDCLNT_E_DEVICE_INVALIDATED AUDCLNT_ERR(4)")
+cpp_quote("#define AUDCLNT_E_NOT_STOPPED AUDCLNT_ERR(5)")
+cpp_quote("#define AUDCLNT_E_BUFFER_TOO_LARGE AUDCLNT_ERR(6)")
+cpp_quote("#define AUDCLNT_E_OUT_OF_ORDER AUDCLNT_ERR(7)")
+cpp_quote("#define AUDCLNT_E_UNSUPPORTED_FORMAT AUDCLNT_ERR(8)")
+cpp_quote("#define AUDCLNT_E_INVALID_SIZE AUDCLNT_ERR(9)")
+cpp_quote("#define AUDCLNT_E_DEVICE_IN_USE AUDCLNT_ERR(0x0a)")
+cpp_quote("#define AUDCLNT_E_BUFFER_OPERATION_PENDING AUDCLNT_ERR(0x0b)")
+cpp_quote("#define AUDCLNT_E_THREAD_NOT_REGISTERED AUDCLNT_ERR(0x0c)")
+/* Not defined? cpp_quote("#define AUDCLNT_E_UNKNOWN_XXX1 AUDCLNT_ERR(0x0d)") */
+cpp_quote("#define AUDCLNT_E_EXCLUSIVE_MODE_NOT_ALLOWED AUDCLNT_ERR(0x0e)")
+cpp_quote("#define AUDCLNT_E_ENDPOINT_CREATE_FAILED AUDCLNT_ERR(0x0f)")
+cpp_quote("#define AUDCLNT_E_SERVICE_NOT_RUNNING AUDCLNT_ERR(0x10)")
+cpp_quote("#define AUDCLNT_E_EVENTHANDLE_NOT_EXPECTED AUDCLNT_ERR(0x11)")
+cpp_quote("#define AUDCLNT_E_EXCLUSIVE_MODE_ONLY AUDCLNT_ERR(0x12)")
+cpp_quote("#define AUDCLNT_E_BUFDURATION_PERIOD_NOT_EQUAL AUDCLNT_ERR(0x13)")
+cpp_quote("#define AUDCLNT_E_EVENTHANDLE_NOT_SET AUDCLNT_ERR(0x14)")
+cpp_quote("#define AUDCLNT_E_INCORRECT_BUFFER_SIZE AUDCLNT_ERR(0x15)")
+cpp_quote("#define AUDCLNT_E_BUFFER_SIZE_ERROR AUDCLNT_ERR(0x16)")
+cpp_quote("#define AUDCLNT_E_CPUUSAGE_EXCEEDED AUDCLNT_ERR(0x17)")
+cpp_quote("#define AUDCLNT_E_BUFFER_ERROR AUDCLNT_ERR(0x18)")
+cpp_quote("#define AUDCLNT_E_BUFFER_SIZE_NOT_ALIGNED AUDCLNT_ERR(0x19)")
+/* Hex fail */
+cpp_quote("#define AUDCLNT_E_INVALID_DEVICE_PERIOD AUDCLNT_ERR(0x20)")
+cpp_quote("#define AUDCLNT_E_INVALID_STREAM_FLAG AUDCLNT_ERR(0x021)")
+cpp_quote("#define AUDCLNT_E_ENDPOINT_OFFLOAD_NOT_CAPABLE AUDCLNT_ERR(0x022)")
+cpp_quote("#define AUDCLNT_E_OUT_OF_OFFLOAD_RESOURCES AUDCLNT_ERR(0x023)")
+cpp_quote("#define AUDCLNT_E_OFFLOAD_MODE_ONLY AUDCLNT_ERR(0x024)")
+cpp_quote("#define AUDCLNT_E_NONOFFLOAD_MODE_ONLY AUDCLNT_ERR(0x025)")
+cpp_quote("#define AUDCLNT_E_RESOURCES_INVALIDATED AUDCLNT_ERR(0x026)")
+
+cpp_quote("#define AUDCLNT_S_BUFFER_EMPTY AUDCLNT_SUCCESS(0x1)")
+cpp_quote("#define AUDCLNT_S_THREAD_ALREADY_REGISTERED AUDCLNT_SUCCESS(0x2)")
+cpp_quote("#define AUDCLNT_S_POSITION_STALLED AUDCLNT_SUCCESS(0x3)")

@@ -36,12 +36,12 @@
 #define SEC_CACHE                           (0x20000000)
 
 #define MiWaitForPageEvent(Process,Address) do {                         \
-    DPRINT("MiWaitForPageEvent %x:%x #\n", Process, Address);            \
+    DPRINT("MiWaitForPageEvent %p:%Ix #\n", Process, Address);            \
     KeWaitForSingleObject(&MmWaitPageEvent, 0, KernelMode, FALSE, NULL); \
 } while(0)
 
 #define MiSetPageEvent(Process,Address) do {              \
-    DPRINT("MiSetPageEvent %x:%x #\n",Process, Address);  \
+    DPRINT("MiSetPageEvent %p:%p #\n",Process, (PVOID)(Address));  \
     KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE); \
 } while(0)
 
@@ -251,13 +251,16 @@ NTAPI
 MiFreeSegmentPage(PMM_SECTION_SEGMENT Segment,
                   PLARGE_INTEGER FileOffset);
 
+_Success_(1)
+_When_(return==STATUS_MORE_PROCESSING_REQUIRED, _At_(Required->DoAcquisition, _Post_notnull_))
 NTSTATUS
 NTAPI
-MiCowCacheSectionPage(PMMSUPPORT AddressSpace,
-                      PMEMORY_AREA MemoryArea,
-                      PVOID Address,
-                      BOOLEAN Locked,
-                      PMM_REQUIRED_RESOURCES Required);
+MiCowCacheSectionPage (
+    _In_ PMMSUPPORT AddressSpace,
+    _In_ PMEMORY_AREA MemoryArea,
+    _In_ PVOID Address,
+    _In_ BOOLEAN Locked,
+    _Inout_ PMM_REQUIRED_RESOURCES Required);
 
 NTSTATUS
 NTAPI
@@ -344,13 +347,16 @@ NTSTATUS
 NTAPI
 MmUnmapCacheViewInSystemSpace(PVOID Address);
 
+_Success_(1)
+_When_(return==STATUS_MORE_PROCESSING_REQUIRED, _At_(Required->DoAcquisition, _Post_notnull_))
 NTSTATUS
 NTAPI
-MmNotPresentFaultCachePage(PMMSUPPORT AddressSpace,
-                           PMEMORY_AREA MemoryArea,
-                           PVOID Address,
-                           BOOLEAN Locked,
-                           PMM_REQUIRED_RESOURCES Required);
+MmNotPresentFaultCachePage (
+    _In_ PMMSUPPORT AddressSpace,
+    _In_ MEMORY_AREA* MemoryArea,
+    _In_ PVOID Address,
+    _In_ BOOLEAN Locked,
+    _Inout_ PMM_REQUIRED_RESOURCES Required);
 
 NTSTATUS
 NTAPI

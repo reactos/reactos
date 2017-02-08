@@ -4,16 +4,19 @@
 
 #include <stdio.h>
 #include <time.h>
+
 #define WIN32_NO_STATUS
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winsvc.h>
 #include <netevent.h>
 #define NTOS_MODE_USER
 #include <ndk/iofuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
+#include <ndk/setypes.h>
 #include <services/services.h>
-#include "svcctl_s.h"
-
+#include <svcctl_s.h>
 
 typedef struct _SERVICE_GROUP
 {
@@ -83,6 +86,7 @@ typedef struct _START_LOCK
 extern LIST_ENTRY ServiceListHead;
 extern LIST_ENTRY GroupListHead;
 extern LIST_ENTRY ImageListHead;
+extern BOOL ScmInitialize;
 extern BOOL ScmShutdown;
 
 
@@ -106,7 +110,7 @@ DWORD ScmMarkServiceForDelete(PSERVICE pService);
 BOOL ScmIsDeleteFlagSet(HKEY hServiceKey);
 
 DWORD ScmReadString(HKEY hServiceKey,
-                    LPWSTR lpValueName,
+                    LPCWSTR lpValueName,
                     LPWSTR *lpValue);
 
 DWORD
@@ -188,4 +192,3 @@ VOID ScmLogError(DWORD dwEventId,
 VOID ScmWaitForLsa(VOID);
 
 /* EOF */
-

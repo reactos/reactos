@@ -59,6 +59,9 @@ public:                      // Opening and closing files.
   bool _M_open(const char*, ios_base::openmode, long __protection);
   bool _M_open(const char*, ios_base::openmode);
   bool _M_open(int __id, ios_base::openmode = ios_base::__default_mode);
+#if defined (_STLP_USE_STDIO_IO)
+  bool _M_open(FILE *file, ios_base::openmode = ios_base::__default_mode);
+#endif /* _STLP_USE_STDIO_IO */
 #if defined (_STLP_USE_WIN32_IO)
   bool _M_open(_STLP_fd __id, ios_base::openmode = ios_base::__default_mode);
 #endif /* _STLP_USE_WIN32_IO */
@@ -181,6 +184,12 @@ public:                         // Opening and closing files.
   _Self* open(int __id, ios_base::openmode _Init_mode = ios_base::__default_mode) {
     return this->_M_open(__id, _Init_mode);
   }
+
+#  if defined (_STLP_USE_STDIO_IO)
+  _Self* open(FILE *file, ios_base::openmode _Init_mode = ios_base::__default_mode) {
+    return _M_base._M_open(file, _Init_mode) ? this : 0;
+  }
+#  endif /* _STLP_USE_STDIO_IO */
 
 #  if defined (_STLP_USE_WIN32_IO)
   _Self* open(_STLP_fd __id, ios_base::openmode _Init_mode = ios_base::__default_mode) {

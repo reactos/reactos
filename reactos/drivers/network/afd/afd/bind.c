@@ -1,4 +1,4 @@
-/* $Id$
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/bind.c
@@ -10,10 +10,10 @@
 
 #include "afd.h"
 
-NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
+NTSTATUS WarmSocketForBind( PAFD_FCB FCB, ULONG ShareType ) {
     NTSTATUS Status;
 
-    AFD_DbgPrint(MID_TRACE,("Called (AF %d)\n",
+    AFD_DbgPrint(MID_TRACE,("Called (AF %u)\n",
                             FCB->LocalAddress->Address[0].AddressType));
 
     if( !FCB->TdiDeviceName.Length || !FCB->TdiDeviceName.Buffer ) {
@@ -27,6 +27,7 @@ NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
 
     Status = TdiOpenAddressFile(&FCB->TdiDeviceName,
                                 FCB->LocalAddress,
+                                ShareType,
                                 &FCB->AddressFile.Handle,
                                 &FCB->AddressFile.Object );
     if (!NT_SUCCESS(Status))
@@ -77,10 +78,12 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_FCB FCB = FileObject->FsContext;
     PAFD_BIND_DATA BindReq;
 
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
-    if( !(BindReq = LockRequest( Irp, IrpSp )) )
+    if( !(BindReq = LockRequest( Irp, IrpSp, FALSE, NULL )) )
         return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
                                        Irp, 0 );
 
@@ -92,7 +95,7 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                          FCB->LocalAddress );
 
     if( NT_SUCCESS(Status) )
-        Status = WarmSocketForBind( FCB );
+        Status = WarmSocketForBind( FCB, BindReq->ShareType );
     AFD_DbgPrint(MID_TRACE,("FCB->Flags %x\n", FCB->Flags));
 
     if (NT_SUCCESS(Status))

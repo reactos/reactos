@@ -1,13 +1,14 @@
 #pragma once
 
-#include <stdlib.h>
-#include <process.h>
-#include "tncon.h"
-#include "tnclass.h"
-#include "ttelhndl.h"
-#include "tnerror.h"
+//#include <stdlib.h>
+//#include <process.h>
+
+//#include "tncon.h"
+//#include "tnclass.h"
+//#include "ttelhndl.h"
+//#include "tnerror.h"
 // Paul Brannan 5/25/98
-#include "tnconfig.h"
+//#include "tnconfig.h"
 
 struct cmdHistory {
 	char cmd[80];

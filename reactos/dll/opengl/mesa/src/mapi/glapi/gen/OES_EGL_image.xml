@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!DOCTYPE OpenGLAPI SYSTEM "gl_API.dtd">
+
+<OpenGLAPI>
+
+<category name="GL_OES_EGL_image">
+
+    <function name="EGLImageTargetTexture2DOES" offset="assign">
+        <param name="target" type="GLenum"/>
+        <param name="writeOffset" type="GLvoid *"/>
+    </function>
+
+    <function name="EGLImageTargetRenderbufferStorageOES" offset="assign">
+        <param name="target" type="GLenum"/>
+        <param name="writeOffset" type="GLvoid *"/>
+    </function>
+
+</category>
+
+</OpenGLAPI>

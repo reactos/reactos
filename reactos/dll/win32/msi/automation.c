@@ -18,23 +18,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 
-#include <stdarg.h>
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "msidefs.h"
+//#include <stdarg.h>
+#include <windef.h>
+//#include "winbase.h"
+//#include "winerror.h"
+//#include "winuser.h"
+#include <winreg.h>
+//#include "msidefs.h"
 #include "msipriv.h"
-#include "activscp.h"
-#include "oleauto.h"
-#include "shlwapi.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <activscp.h>
+#include <oleauto.h>
+#include <shlwapi.h>
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
-#include "msiserver.h"
+#include <msiserver.h>
 #include "msiserver_dispids.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
@@ -42,36 +46,116 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 #define REG_INDEX_CLASSES_ROOT 0
 #define REG_INDEX_DYN_DATA 6
 
+typedef struct AutomationObject AutomationObject;
+
+/* function that is called from AutomationObject::Invoke, specific to this type of object */
+typedef HRESULT (*auto_invoke_func)(AutomationObject* This,
+    DISPID dispIdMember, REFIID riid, LCID lcid, WORD flags, DISPPARAMS* pDispParams,
+    VARIANT* result, EXCEPINFO* ei, UINT* arg_err);
+/* function that is called from AutomationObject::Release when the object is being freed
+   to free any private data structures (or NULL) */
+typedef void (*auto_free_func)(AutomationObject* This);
+
+typedef struct {
+    REFIID riid;
+    auto_invoke_func fn_invoke;
+    auto_free_func fn_free;
+} tid_id_t;
+
+
+static HRESULT database_invoke(AutomationObject*,DISPID,REFIID,LCID,WORD,DISPPARAMS*,VARIANT*,EXCEPINFO*,UINT*);
+static HRESULT installer_invoke(AutomationObject*,DISPID,REFIID,LCID,WORD,DISPPARAMS*,VARIANT*,EXCEPINFO*,UINT*);
+static HRESULT record_invoke(AutomationObject*,DISPID,REFIID,LCID,WORD,DISPPARAMS*,VARIANT*,EXCEPINFO*,UINT*);
+static HRESULT session_invoke(AutomationObject*,DISPID,REFIID,LCID,WORD,DISPPARAMS*,VARIANT*,EXCEPINFO*,UINT*);
+static HRESULT list_invoke(AutomationObject*,DISPID,REFIID,LCID,WORD,DISPPARAMS*,VARIANT*,EXCEPINFO*,UINT*);
+static void    list_free(AutomationObject*);
+static HRESULT summaryinfo_invoke(AutomationObject*,DISPID,REFIID,LCID,WORD,DISPPARAMS*,VARIANT*,EXCEPINFO*,UINT*);
+static HRESULT view_invoke(AutomationObject*,DISPID,REFIID,LCID,WORD,DISPPARAMS*,VARIANT*,EXCEPINFO*,UINT*);
+
+static tid_id_t tid_ids[] = {
+    { &DIID_Database,    database_invoke },
+    { &DIID_Installer,   installer_invoke },
+    { &DIID_Record,      record_invoke },
+    { &DIID_Session,     session_invoke },
+    { &DIID_StringList,  list_invoke, list_free },
+    { &DIID_SummaryInfo, summaryinfo_invoke },
+    { &DIID_View,        view_invoke }
+};
+
+static ITypeLib  *typelib;
+static ITypeInfo *typeinfos[LAST_tid];
+
+static const IID *get_riid_from_tid(tid_t tid)
+{
+    return tid_ids[tid].riid;
+}
+
+HRESULT get_typeinfo(tid_t tid, ITypeInfo **typeinfo)
+{
+    HRESULT hr;
+
+    if (!typelib)
+    {
+        ITypeLib *lib;
+
+        hr = LoadRegTypeLib(&LIBID_WindowsInstaller, 1, 0, LOCALE_NEUTRAL, &lib);
+        if (FAILED(hr)) {
+            static const WCHAR msiserverW[] = {'m','s','i','s','e','r','v','e','r','.','t','l','b',0};
+            hr = LoadTypeLib(msiserverW, &lib);
+            if (FAILED(hr)) {
+                ERR("Could not load msiserver.tlb\n");
+                return hr;
+            }
+        }
+
+        if (InterlockedCompareExchangePointer((void**)&typelib, lib, NULL))
+            ITypeLib_Release(lib);
+    }
+
+    if (!typeinfos[tid])
+    {
+        ITypeInfo *ti;
+
+        hr = ITypeLib_GetTypeInfoOfGuid(typelib, get_riid_from_tid(tid), &ti);
+        if (FAILED(hr)) {
+            ERR("Could not load ITypeInfo for %s\n", debugstr_guid(get_riid_from_tid(tid)));
+            return hr;
+        }
+
+        if(InterlockedCompareExchangePointer((void**)(typeinfos+tid), ti, NULL))
+            ITypeInfo_Release(ti);
+    }
+
+    *typeinfo = typeinfos[tid];
+    return S_OK;
+}
+
+void release_typelib(void)
+{
+    unsigned i;
+
+    for (i = 0; i < sizeof(typeinfos)/sizeof(*typeinfos); i++)
+        if (typeinfos[i])
+            ITypeInfo_Release(typeinfos[i]);
+
+    if (typelib)
+        ITypeLib_Release(typelib);
+}
+
 /*
  * AutomationObject - "base" class for all automation objects. For each interface, we implement Invoke function
  *                    called from AutomationObject::Invoke.
  */
-
-typedef struct AutomationObject AutomationObject;
-
-typedef HRESULT (*autoInvokeFunc)(AutomationObject* This,
-    DISPID dispIdMember, REFIID riid, LCID lcid, WORD flags, DISPPARAMS* pDispParams,
-    VARIANT* result, EXCEPINFO* ei, UINT* arg_err);
-
-typedef void (*autoFreeFunc)(AutomationObject* This);
-
 struct AutomationObject {
     IDispatch IDispatch_iface;
     IProvideMultipleClassInfo IProvideMultipleClassInfo_iface;
     LONG ref;
 
-    /* Clsid for this class and it's appropriate ITypeInfo object */
-    LPCLSID clsid;
-    ITypeInfo *iTypeInfo;
+    /* type id for this class */
+    tid_t tid;
 
     /* The MSI handle of the current object */
     MSIHANDLE msiHandle;
-
-    /* A function that is called from AutomationObject::Invoke, specific to this type of object. */
-    autoInvokeFunc funcInvoke;
-    /* A function that is called from AutomationObject::Release when the object is being freed to free any private
-     * data structures (or NULL) */
-    autoFreeFunc funcFree;
 };
 
 typedef struct {
@@ -110,37 +194,6 @@ static inline AutomationObject *impl_from_IDispatch( IDispatch *iface )
     return CONTAINING_RECORD(iface, AutomationObject, IDispatch_iface);
 }
 
-/* Load type info so we don't have to process GetIDsOfNames */
-HRESULT load_type_info(IDispatch *iface, ITypeInfo **pptinfo, REFIID clsid, LCID lcid)
-{
-    static const WCHAR msiserverW[] = {'m','s','i','s','e','r','v','e','r','.','t','l','b',0};
-    ITypeInfo *ti = NULL;
-    ITypeLib *lib = NULL;
-    HRESULT hr;
-
-    TRACE("(%p)->(%s, %d)\n", iface, debugstr_guid(clsid), lcid);
-
-    /* Load registered type library */
-    hr = LoadRegTypeLib(&LIBID_WindowsInstaller, 1, 0, lcid, &lib);
-    if (FAILED(hr)) {
-        hr = LoadTypeLib(msiserverW, &lib);
-        if (FAILED(hr)) {
-            ERR("Could not load msiserver.tlb\n");
-            return hr;
-        }
-    }
-
-    /* Get type information for object */
-    hr = ITypeLib_GetTypeInfoOfGuid(lib, clsid, &ti);
-    ITypeLib_Release(lib);
-    if (FAILED(hr)) {
-        ERR("Could not load ITypeInfo for %s\n", debugstr_guid(clsid));
-        return hr;
-    }
-    *pptinfo = ti;
-    return S_OK;
-}
-
 /* AutomationObject methods */
 static HRESULT WINAPI AutomationObject_QueryInterface(IDispatch* iface, REFIID riid, void** ppvObject)
 {
@@ -155,7 +208,7 @@ static HRESULT WINAPI AutomationObject_QueryInterface(IDispatch* iface, REFIID r
 
     if (IsEqualGUID(riid, &IID_IUnknown)  ||
         IsEqualGUID(riid, &IID_IDispatch) ||
-        IsEqualGUID(riid, This->clsid))
+        IsEqualGUID(riid, get_riid_from_tid(This->tid)))
         *ppvObject = &This->IDispatch_iface;
     else if (IsEqualGUID(riid, &IID_IProvideClassInfo) ||
              IsEqualGUID(riid, &IID_IProvideClassInfo2) ||
@@ -190,8 +243,7 @@ static ULONG WINAPI AutomationObject_Release(IDispatch* iface)
 
     if (!ref)
     {
-        if (This->funcFree) This->funcFree(This);
-        ITypeInfo_Release(This->iTypeInfo);
+        if (tid_ids[This->tid].fn_free) tid_ids[This->tid].fn_free(This);
         MsiCloseHandle(This->msiHandle);
         msi_free(This);
     }
@@ -217,11 +269,16 @@ static HRESULT WINAPI AutomationObject_GetTypeInfo(
         ITypeInfo** ppTInfo)
 {
     AutomationObject *This = impl_from_IDispatch(iface);
+    HRESULT hr;
+
     TRACE("(%p/%p)->(%d,%d,%p)\n", iface, This, iTInfo, lcid, ppTInfo);
 
-    ITypeInfo_AddRef(This->iTypeInfo);
-    *ppTInfo = This->iTypeInfo;
-    return S_OK;
+    hr = get_typeinfo(This->tid, ppTInfo);
+    if (FAILED(hr))
+        return hr;
+
+    ITypeInfo_AddRef(*ppTInfo);
+    return hr;
 }
 
 static HRESULT WINAPI AutomationObject_GetIDsOfNames(
@@ -233,18 +290,25 @@ static HRESULT WINAPI AutomationObject_GetIDsOfNames(
         DISPID* rgDispId)
 {
     AutomationObject *This = impl_from_IDispatch(iface);
+    ITypeInfo *ti;
     HRESULT hr;
+
     TRACE("(%p/%p)->(%p,%p,%d,%d,%p)\n", iface, This, riid, rgszNames, cNames, lcid, rgDispId);
 
     if (!IsEqualGUID(riid, &IID_NULL)) return E_INVALIDARG;
-    hr = ITypeInfo_GetIDsOfNames(This->iTypeInfo, rgszNames, cNames, rgDispId);
+
+    hr = get_typeinfo(This->tid, &ti);
+    if (FAILED(hr))
+        return hr;
+
+    hr = ITypeInfo_GetIDsOfNames(ti, rgszNames, cNames, rgDispId);
     if (hr == DISP_E_UNKNOWNNAME)
     {
         UINT idx;
         for (idx=0; idx<cNames; idx++)
         {
             if (rgDispId[idx] == DISPID_UNKNOWN)
-                FIXME("Unknown member %s, clsid %s\n", debugstr_w(rgszNames[idx]), debugstr_guid(This->clsid));
+                FIXME("Unknown member %s, clsid %s\n", debugstr_w(rgszNames[idx]), debugstr_guid(get_riid_from_tid(This->tid)));
         }
     }
     return hr;
@@ -270,6 +334,7 @@ static HRESULT WINAPI AutomationObject_Invoke(
     unsigned int uArgErr;
     VARIANT varResultDummy;
     BSTR bstrName = NULL;
+    ITypeInfo *ti;
 
     TRACE("(%p/%p)->(%d,%p,%d,%d,%p,%p,%p,%p)\n", iface, This, dispIdMember, riid, lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 
@@ -289,21 +354,26 @@ static HRESULT WINAPI AutomationObject_Invoke(
     if (puArgErr == NULL) puArgErr = &uArgErr;
     if (pVarResult == NULL) pVarResult = &varResultDummy;
 
+    hr = get_typeinfo(This->tid, &ti);
+    if (FAILED(hr))
+        return hr;
+
     /* Assume return type is void unless determined otherwise */
     VariantInit(pVarResult);
 
     /* If we are tracing, we want to see the name of the member we are invoking */
     if (TRACE_ON(msi))
     {
-        ITypeInfo_GetDocumentation(This->iTypeInfo, dispIdMember, &bstrName, NULL, NULL, NULL);
+        ITypeInfo_GetDocumentation(ti, dispIdMember, &bstrName, NULL, NULL, NULL);
         TRACE("Method %d, %s\n", dispIdMember, debugstr_w(bstrName));
     }
 
-    hr = This->funcInvoke(This,dispIdMember,riid,lcid,wFlags,pDispParams,pVarResult,pExcepInfo,puArgErr);
+    hr = tid_ids[This->tid].fn_invoke(This,dispIdMember,riid,lcid,wFlags,pDispParams,pVarResult,pExcepInfo,puArgErr);
 
     if (hr == DISP_E_MEMBERNOTFOUND) {
-        if (bstrName == NULL) ITypeInfo_GetDocumentation(This->iTypeInfo, dispIdMember, &bstrName, NULL, NULL, NULL);
-        FIXME("Method %d, %s wflags %d not implemented, clsid %s\n", dispIdMember, debugstr_w(bstrName), wFlags, debugstr_guid(This->clsid));
+        if (bstrName == NULL) ITypeInfo_GetDocumentation(ti, dispIdMember, &bstrName, NULL, NULL, NULL);
+        FIXME("Method %d, %s wflags %d not implemented, clsid %s\n", dispIdMember, debugstr_w(bstrName), wFlags,
+            debugstr_guid(get_riid_from_tid(This->tid)));
     }
     else if (pExcepInfo &&
              (hr == DISP_E_PARAMNOTFOUND ||
@@ -315,7 +385,7 @@ static HRESULT WINAPI AutomationObject_Invoke(
         unsigned namesNo, i;
         BOOL bFirst = TRUE;
 
-        if (FAILED(ITypeInfo_GetNames(This->iTypeInfo, dispIdMember, bstrParamNames,
+        if (FAILED(ITypeInfo_GetNames(ti, dispIdMember, bstrParamNames,
                                       MAX_FUNC_PARAMS, &namesNo)))
         {
             TRACE("Failed to retrieve names for dispIdMember %d\n", dispIdMember);
@@ -391,8 +461,15 @@ static ULONG WINAPI ProvideMultipleClassInfo_Release(IProvideMultipleClassInfo* 
 static HRESULT WINAPI ProvideMultipleClassInfo_GetClassInfo(IProvideMultipleClassInfo* iface, ITypeInfo** ppTI)
 {
     AutomationObject *This = impl_from_IProvideMultipleClassInfo(iface);
+    HRESULT hr;
+
     TRACE("(%p/%p)->(%p)\n", iface, This, ppTI);
-    return load_type_info(&This->IDispatch_iface, ppTI, This->clsid, 0);
+
+    hr = get_typeinfo(This->tid, ppTI);
+    if (SUCCEEDED(hr))
+        ITypeInfo_AddRef(*ppTI);
+
+    return hr;
 }
 
 static HRESULT WINAPI ProvideMultipleClassInfo_GetGUID(IProvideMultipleClassInfo* iface, DWORD dwGuidKind, GUID* pGUID)
@@ -403,7 +480,7 @@ static HRESULT WINAPI ProvideMultipleClassInfo_GetGUID(IProvideMultipleClassInfo
     if (dwGuidKind != GUIDKIND_DEFAULT_SOURCE_DISP_IID)
         return E_INVALIDARG;
     else {
-        *pGUID = *This->clsid;
+        *pGUID = *get_riid_from_tid(This->tid);
         return S_OK;
     }
 }
@@ -420,7 +497,7 @@ static HRESULT WINAPI ProvideMultipleClassInfo_GetMultiTypeInfoCount(IProvideMul
 static HRESULT WINAPI ProvideMultipleClassInfo_GetInfoOfIndex(IProvideMultipleClassInfo* iface,
         ULONG iti,
         DWORD dwFlags,
-        ITypeInfo** pptiCoClass,
+        ITypeInfo** ti,
         DWORD* pdwTIFlags,
         ULONG* pcdispidReserved,
         IID* piidPrimary,
@@ -428,13 +505,19 @@ static HRESULT WINAPI ProvideMultipleClassInfo_GetInfoOfIndex(IProvideMultipleCl
 {
     AutomationObject *This = impl_from_IProvideMultipleClassInfo(iface);
 
-    TRACE("(%p/%p)->(%d,%d,%p,%p,%p,%p,%p)\n", iface, This, iti, dwFlags, pptiCoClass, pdwTIFlags, pcdispidReserved, piidPrimary, piidSource);
+    TRACE("(%p/%p)->(%d,%d,%p,%p,%p,%p,%p)\n", iface, This, iti, dwFlags, ti, pdwTIFlags, pcdispidReserved, piidPrimary, piidSource);
 
     if (iti != 0)
         return E_INVALIDARG;
 
     if (dwFlags & MULTICLASSINFO_GETTYPEINFO)
-        load_type_info(&This->IDispatch_iface, pptiCoClass, This->clsid, 0);
+    {
+        HRESULT hr = get_typeinfo(This->tid, ti);
+        if (FAILED(hr))
+            return hr;
+
+        ITypeInfo_AddRef(*ti);
+    }
 
     if (dwFlags & MULTICLASSINFO_GETNUMRESERVEDDISPIDS)
     {
@@ -442,13 +525,11 @@ static HRESULT WINAPI ProvideMultipleClassInfo_GetInfoOfIndex(IProvideMultipleCl
         *pcdispidReserved = 0;
     }
 
-    if (dwFlags & MULTICLASSINFO_GETIIDPRIMARY){
-        *piidPrimary = *This->clsid;
-    }
+    if (dwFlags & MULTICLASSINFO_GETIIDPRIMARY)
+        *piidPrimary = *get_riid_from_tid(This->tid);
 
-    if (dwFlags & MULTICLASSINFO_GETIIDSOURCE){
-        *piidSource = *This->clsid;
-    }
+    if (dwFlags & MULTICLASSINFO_GETIIDSOURCE)
+        *piidSource = *get_riid_from_tid(This->tid);
 
     return S_OK;
 }
@@ -464,23 +545,18 @@ static const IProvideMultipleClassInfoVtbl ProvideMultipleClassInfoVtbl =
     ProvideMultipleClassInfo_GetInfoOfIndex
 };
 
-static HRESULT init_automation_object(AutomationObject *This, MSIHANDLE msiHandle, REFIID clsid,
-        autoInvokeFunc invokeFunc, autoFreeFunc freeFunc)
+static HRESULT init_automation_object(AutomationObject *This, MSIHANDLE msiHandle, tid_t tid)
 {
-    TRACE("(%p, %d, %s, %p, %p)\n", This, msiHandle, debugstr_guid(clsid), invokeFunc, freeFunc);
+    TRACE("(%p, %d, %s)\n", This, msiHandle, debugstr_guid(get_riid_from_tid(tid)));
 
     This->IDispatch_iface.lpVtbl = &AutomationObjectVtbl;
     This->IProvideMultipleClassInfo_iface.lpVtbl = &ProvideMultipleClassInfoVtbl;
     This->ref = 1;
 
     This->msiHandle = msiHandle;
-    This->clsid = (LPCLSID)clsid;
-    This->funcInvoke = invokeFunc;
-    This->funcFree   = freeFunc;
+    This->tid = tid;
 
-    /* Load our TypeInfo so we don't have to process GetIDsOfNames */
-    This->iTypeInfo = NULL;
-    return load_type_info(&This->IDispatch_iface, &This->iTypeInfo, clsid, 0);
+    return S_OK;
 }
 
 /*
@@ -609,8 +685,7 @@ static HRESULT WINAPI ListEnumerator_Clone(IEnumVARIANT* iface, IEnumVARIANT **p
     hr = create_list_enumerator(This->list, (LPVOID *)ppEnum);
     if (FAILED(hr))
     {
-        if (*ppEnum)
-            IUnknown_Release(*ppEnum);
+        if (*ppEnum) IEnumVARIANT_Release(*ppEnum);
         return hr;
     }
 
@@ -683,7 +758,7 @@ static HRESULT DispGetParam_CopyOnly(
                         &pdispparams->rgvarg[pos]);
 }
 
-static HRESULT SummaryInfoImpl_Invoke(
+static HRESULT summaryinfo_invoke(
         AutomationObject* This,
         DISPID dispIdMember,
         REFIID riid,
@@ -835,7 +910,7 @@ static HRESULT SummaryInfoImpl_Invoke(
     return S_OK;
 }
 
-static HRESULT RecordImpl_Invoke(
+static HRESULT record_invoke(
         AutomationObject* This,
         DISPID dispIdMember,
         REFIID riid,
@@ -847,7 +922,7 @@ static HRESULT RecordImpl_Invoke(
         UINT* puArgErr)
 {
     WCHAR *szString;
-    DWORD dwLen;
+    DWORD dwLen = 0;
     UINT ret;
     VARIANTARG varg0, varg1;
     HRESULT hr;
@@ -934,7 +1009,7 @@ static HRESULT create_record(MSIHANDLE msiHandle, IDispatch **disp)
     record = msi_alloc(sizeof(*record));
     if (!record) return E_OUTOFMEMORY;
 
-    hr = init_automation_object(record, msiHandle, &DIID_Record, RecordImpl_Invoke, NULL);
+    hr = init_automation_object(record, msiHandle, Record_tid);
     if (hr != S_OK)
     {
         msi_free(record);
@@ -946,7 +1021,7 @@ static HRESULT create_record(MSIHANDLE msiHandle, IDispatch **disp)
     return hr;
 }
 
-static HRESULT ListImpl_Invoke(
+static HRESULT list_invoke(
         AutomationObject* This,
         DISPID dispIdMember,
         REFIID riid,
@@ -1003,7 +1078,7 @@ static HRESULT ListImpl_Invoke(
     return S_OK;
 }
 
-static void ListImpl_Free(AutomationObject *This)
+static void list_free(AutomationObject *This)
 {
     ListObject *list = (ListObject*)This;
     int i;
@@ -1050,7 +1125,7 @@ static HRESULT create_list(const WCHAR *product, IDispatch **dispatch)
     list = msi_alloc_zero(sizeof(ListObject));
     if (!list) return E_OUTOFMEMORY;
 
-    hr = init_automation_object(&list->autoobj, 0, &DIID_StringList, ListImpl_Invoke, ListImpl_Free);
+    hr = init_automation_object(&list->autoobj, 0, StringList_tid);
     if (hr != S_OK)
     {
         msi_free(list);
@@ -1093,7 +1168,7 @@ static HRESULT create_list(const WCHAR *product, IDispatch **dispatch)
     return S_OK;
 }
 
-static HRESULT ViewImpl_Invoke(
+static HRESULT view_invoke(
         AutomationObject* This,
         DISPID dispIdMember,
         REFIID riid,
@@ -1132,11 +1207,7 @@ static HRESULT ViewImpl_Invoke(
                 V_VT(pVarResult) = VT_DISPATCH;
                 if ((ret = MsiViewFetch(This->msiHandle, &msiHandle)) == ERROR_SUCCESS)
                 {
-                    IDispatch *dispatch = NULL;
-
-                    if (SUCCEEDED(hr = create_record(msiHandle, &dispatch)))
-                        V_DISPATCH(pVarResult) = dispatch;
-                    else
+                    if (FAILED(hr = create_record(msiHandle, &V_DISPATCH(pVarResult))))
                         ERR("Failed to create Record object, hresult 0x%08x\n", hr);
                 }
                 else if (ret == ERROR_NO_MORE_ITEMS)
@@ -1201,7 +1272,7 @@ static HRESULT DatabaseImpl_LastErrorRecord(WORD wFlags,
     return S_OK;
 }
 
-static HRESULT DatabaseImpl_Invoke(
+HRESULT database_invoke(
         AutomationObject* This,
         DISPID dispIdMember,
         REFIID riid,
@@ -1286,7 +1357,7 @@ static HRESULT DatabaseImpl_Invoke(
     return S_OK;
 }
 
-static HRESULT SessionImpl_Invoke(
+static HRESULT session_invoke(
         AutomationObject* This,
         DISPID dispIdMember,
         REFIID riid,
@@ -1545,7 +1616,7 @@ static HRESULT SessionImpl_Invoke(
 static void variant_from_registry_value(VARIANT *pVarResult, DWORD dwType, LPBYTE lpData, DWORD dwSize)
 {
     static const WCHAR szREG_BINARY[] = { '(','R','E','G','_','B','I','N','A','R','Y',')',0 };
-    static const WCHAR szREG_[] = { '(','R','E','G','_',']',0 };
+    static const WCHAR szREG_[] = { '(','R','E','G','_','?','?',')',0 };
     WCHAR *szString = (WCHAR *)lpData;
     LPWSTR szNewString = NULL;
     DWORD dwNewSize = 0;
@@ -1613,7 +1684,6 @@ static HRESULT InstallerImpl_CreateRecord(WORD wFlags,
     HRESULT hr;
     VARIANTARG varg0;
     MSIHANDLE hrec;
-    IDispatch* dispatch;
 
     if (!(wFlags & DISPATCH_METHOD))
         return DISP_E_MEMBERNOTFOUND;
@@ -1629,11 +1699,7 @@ static HRESULT InstallerImpl_CreateRecord(WORD wFlags,
     if (!hrec)
         return DISP_E_EXCEPTION;
 
-    hr = create_record(hrec, &dispatch);
-    if (SUCCEEDED(hr))
-        V_DISPATCH(pVarResult) = dispatch;
-
-    return hr;
+    return create_record(hrec, &V_DISPATCH(pVarResult));
 }
 
 static HRESULT InstallerImpl_OpenPackage(AutomationObject* This,
@@ -2251,7 +2317,7 @@ static HRESULT InstallerImpl_RelatedProducts(WORD flags,
     return hr;
 }
 
-static HRESULT InstallerImpl_Invoke(
+static HRESULT installer_invoke(
         AutomationObject* This,
         DISPID dispIdMember,
         REFIID riid,
@@ -2364,7 +2430,7 @@ HRESULT create_msiserver(IUnknown *outer, void **ppObj)
     installer = msi_alloc(sizeof(AutomationObject));
     if (!installer) return E_OUTOFMEMORY;
 
-    hr = init_automation_object(installer, 0, &DIID_Installer, InstallerImpl_Invoke, NULL);
+    hr = init_automation_object(installer, 0, Installer_tid);
     if (hr != S_OK)
     {
         msi_free(installer);
@@ -2384,7 +2450,7 @@ HRESULT create_session(MSIHANDLE msiHandle, IDispatch *installer, IDispatch **di
     session = msi_alloc(sizeof(SessionObject));
     if (!session) return E_OUTOFMEMORY;
 
-    hr = init_automation_object(&session->autoobj, msiHandle, &DIID_Session, SessionImpl_Invoke, NULL);
+    hr = init_automation_object(&session->autoobj, msiHandle, Session_tid);
     if (hr != S_OK)
     {
         msi_free(session);
@@ -2407,7 +2473,7 @@ static HRESULT create_database(MSIHANDLE msiHandle, IDispatch **dispatch)
     database = msi_alloc(sizeof(AutomationObject));
     if (!database) return E_OUTOFMEMORY;
 
-    hr = init_automation_object(database, msiHandle, &DIID_Database, DatabaseImpl_Invoke, NULL);
+    hr = init_automation_object(database, msiHandle, Database_tid);
     if (hr != S_OK)
     {
         msi_free(database);
@@ -2429,7 +2495,7 @@ static HRESULT create_view(MSIHANDLE msiHandle, IDispatch **dispatch)
     view = msi_alloc(sizeof(AutomationObject));
     if (!view) return E_OUTOFMEMORY;
 
-    hr = init_automation_object(view, msiHandle, &DIID_View, ViewImpl_Invoke, NULL);
+    hr = init_automation_object(view, msiHandle, View_tid);
     if (hr != S_OK)
     {
         msi_free(view);
@@ -2449,7 +2515,7 @@ static HRESULT create_summaryinfo(MSIHANDLE msiHandle, IDispatch **disp)
     info = msi_alloc(sizeof(*info));
     if (!info) return E_OUTOFMEMORY;
 
-    hr = init_automation_object(info, msiHandle, &DIID_SummaryInfo, SummaryInfoImpl_Invoke, NULL);
+    hr = init_automation_object(info, msiHandle, SummaryInfo_tid);
     if (hr != S_OK)
     {
         msi_free(info);

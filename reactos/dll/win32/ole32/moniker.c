@@ -21,29 +21,32 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
+#include <config.h>
+//#include "wine/port.h"
 
 #include <stdarg.h>
-#include <string.h>
+//#include <string.h>
 
 #define COBJMACROS
 
-#include "winerror.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "wtypes.h"
-#include "ole2.h"
+//#include "winerror.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+//#include "wtypes.h"
+#include <ole2.h>
 
-#include "wine/list.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
-#include "wine/exception.h"
+//#include "wine/list.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
+#include <wine/exception.h>
 
 #include "compobj_private.h"
 #include "moniker.h"
-#include "irot.h"
+#include <irot.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -146,7 +149,7 @@ static BOOL start_rpcss(void)
     strcatW( cmd, rpcss );
 
     Wow64DisableWow64FsRedirection( &redir );
-    rslt = CreateProcessW( cmd, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi );
+    rslt = CreateProcessW( cmd, cmd, NULL, NULL, FALSE, DETACHED_PROCESS, NULL, NULL, &si, &pi );
     Wow64RevertWow64FsRedirection( redir );
 
     if (rslt)
@@ -192,7 +195,7 @@ static void rot_entry_delete(struct rot_entry *rot_entry)
             if (hr == S_OK)
             {
                 CoReleaseMarshalData(stream);
-                IUnknown_Release(stream);
+                IStream_Release(stream);
             }
         }
         MIDL_user_free(moniker);
@@ -205,7 +208,7 @@ static void rot_entry_delete(struct rot_entry *rot_entry)
         if (hr == S_OK)
         {
             CoReleaseMarshalData(stream);
-            IUnknown_Release(stream);
+            IStream_Release(stream);
         }
     }
     HeapFree(GetProcessHeap(), 0, rot_entry->object);

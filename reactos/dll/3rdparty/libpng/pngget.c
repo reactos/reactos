@@ -1,7 +1,7 @@
 
 /* pngget.c - retrieval of values from info struct
  *
- * Last changed in libpng 1.5.7 [December 15, 2011]
+ * Last changed in libpng 1.5.14 [January 24, 2013]
  * Copyright (c) 1998-2011 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -175,6 +175,9 @@ png_get_pixel_aspect_ratio(png_const_structp png_ptr, png_const_infop info_ptr)
          return ((float)((float)info_ptr->y_pixels_per_unit
              /(float)info_ptr->x_pixels_per_unit));
    }
+#else
+   PNG_UNUSED(png_ptr)
+   PNG_UNUSED(info_ptr)
 #endif
 
    return ((float)0.0);
@@ -203,6 +206,9 @@ png_get_pixel_aspect_ratio_fixed(png_const_structp png_ptr,
           (png_int_32)info_ptr->x_pixels_per_unit))
          return res;
    }
+#else
+   PNG_UNUSED(png_ptr)
+   PNG_UNUSED(info_ptr)
 #endif
 
    return 0;

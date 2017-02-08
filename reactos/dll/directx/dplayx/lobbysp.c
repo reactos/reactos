@@ -15,14 +15,14 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "winerror.h"
-#include "wine/debug.h"
+//#include "winerror.h"
+#include <wine/debug.h>
 
-#include "lobbysp.h"
-#include "dplay_global.h"
+//#include "lobbysp.h"
+//#include "dplay_global.h"
 #include "dpinit.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dplay);
@@ -76,7 +76,7 @@ HRESULT DPLSP_CreateInterface( REFIID riid, LPVOID* ppvObj, IDirectPlay2Impl* dp
 
   if( IsEqualGUID( &IID_IDPLobbySP, riid ) )
   {
-    IDPLobbySPImpl *This = (IDPLobbySPImpl *)*ppvObj;
+    IDPLobbySPImpl *This = *ppvObj;
     This->lpVtbl = &dpLobbySPVT;
   }
   else
@@ -109,7 +109,7 @@ HRESULT DPLSP_CreateInterface( REFIID riid, LPVOID* ppvObj, IDirectPlay2Impl* dp
 
 static BOOL DPLSP_CreateIUnknown( LPVOID lpSP )
 {
-  IDPLobbySPImpl *This = (IDPLobbySPImpl *)lpSP;
+  IDPLobbySPImpl *This = lpSP;
 
   This->unk = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof( *(This->unk) ) );
 
@@ -119,14 +119,16 @@ static BOOL DPLSP_CreateIUnknown( LPVOID lpSP )
   }
 
   InitializeCriticalSection( &This->unk->DPLSP_lock );
+  This->unk->DPLSP_lock.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": IDPLobbySPImpl*->DPLobbySPIUnknownData*->DPLSP_lock");
 
   return TRUE;
 }
 
 static BOOL DPLSP_DestroyIUnknown( LPVOID lpSP )
 {
-  IDPLobbySPImpl *This = (IDPLobbySPImpl *)lpSP;
+  IDPLobbySPImpl *This = lpSP;
 
+  This->unk->DPLSP_lock.DebugInfo->Spare[0] = 0;
   DeleteCriticalSection( &This->unk->DPLSP_lock );
   HeapFree( GetProcessHeap(), 0, This->unk );
 
@@ -135,7 +137,7 @@ static BOOL DPLSP_DestroyIUnknown( LPVOID lpSP )
 
 static BOOL DPLSP_CreateDPLobbySP( LPVOID lpSP, IDirectPlay2Impl* dp )
 {
-  IDPLobbySPImpl *This = (IDPLobbySPImpl *)lpSP;
+  IDPLobbySPImpl *This = lpSP;
 
   This->sp = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof( *(This->sp) ) );
 
@@ -167,7 +169,7 @@ static BOOL DPLSP_CreateDPLobbySP( LPVOID lpSP, IDirectPlay2Impl* dp )
 
 static BOOL DPLSP_DestroyDPLobbySP( LPVOID lpSP )
 {
-  IDPLobbySPImpl *This = (IDPLobbySPImpl *)lpSP;
+  IDPLobbySPImpl *This = lpSP;
 
   HeapFree( GetProcessHeap(), 0, This->sp );
 
@@ -197,7 +199,7 @@ HRESULT WINAPI DPLSP_QueryInterface
 
   if( IsEqualGUID( &IID_IDPLobbySP, riid ) )
   {
-    IDPLobbySPImpl *This = (IDPLobbySPImpl *)*ppvObj;
+    IDPLobbySPImpl *This = *ppvObj;
     This->lpVtbl = &dpLobbySPVT;
   }
   else
@@ -224,7 +226,7 @@ ULONG WINAPI DPLSP_AddRef
   ulObjRefCount       = InterlockedIncrement( &This->unk->ulObjRef );
   ulInterfaceRefCount = InterlockedIncrement( &This->ulInterfaceRef );
 
-  TRACE( "ref count incremented to %lu:%lu for %p\n",
+  TRACE( "ref count incremented to %u:%u for %p\n",
          ulInterfaceRefCount, ulObjRefCount, This );
 
   return ulObjRefCount;
@@ -240,7 +242,7 @@ ULONG WINAPI DPLSP_Release
   ulObjRefCount       = InterlockedDecrement( &This->unk->ulObjRef );
   ulInterfaceRefCount = InterlockedDecrement( &This->ulInterfaceRef );
 
-  TRACE( "ref count decremented to %lu:%lu for %p\n",
+  TRACE( "ref count decremented to %u:%u for %p\n",
          ulInterfaceRefCount, ulObjRefCount, This );
 
   /* Deallocate if this is the last reference to the object */

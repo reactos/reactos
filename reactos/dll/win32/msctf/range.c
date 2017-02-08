@@ -18,25 +18,29 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include <stdarg.h>
+#include <config.h>
+
+//#include <stdarg.h>
 
 #define COBJMACROS
 
-#include "wine/debug.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "winuser.h"
-#include "shlwapi.h"
-#include "winerror.h"
-#include "objbase.h"
+#include <wine/debug.h>
+//#include "windef.h"
+#include <winbase.h>
+//#include "winreg.h"
+//#include "winuser.h"
+//#include "shlwapi.h"
+//#include "winerror.h"
+#include <objbase.h>
 
-#include "wine/unicode.h"
+//#include "wine/unicode.h"
 
-#include "msctf.h"
-#include "msctf_internal.h"
+#include <msctf.h>
+//#include "msctf_internal.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 

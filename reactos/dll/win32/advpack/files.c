@@ -18,20 +18,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <stdlib.h>
+#define WIN32_NO_STATUS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "winver.h"
-#include "winternl.h"
-#include "setupapi.h"
-#include "advpub.h"
-#include "fdi.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <stdarg.h>
+//#include <stdlib.h>
+
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <winreg.h>
+#include <winver.h>
+#include <winternl.h>
+//#include "setupapi.h"
+#include <advpub.h>
+#include <fdi.h>
+#include <wine/debug.h>
+#include <wine/unicode.h>
 #include "advpack_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(advpack);
@@ -779,11 +781,39 @@ done:
 HRESULT WINAPI ExtractFilesW(LPCWSTR CabName, LPCWSTR ExpandDir, DWORD Flags,
                              LPCWSTR FileList, LPVOID LReserved, DWORD Reserved)
 {
+    char *cab_name = NULL, *expand_dir = NULL, *file_list = NULL;
+    HRESULT hres = S_OK;
 
-    FIXME("(%s, %s, %d, %s, %p, %d) stub!\n", debugstr_w(CabName), debugstr_w(ExpandDir),
+    TRACE("(%s, %s, %d, %s, %p, %d)\n", debugstr_w(CabName), debugstr_w(ExpandDir),
           Flags, debugstr_w(FileList), LReserved, Reserved);
 
-    return E_FAIL;
+    if(CabName) {
+        cab_name = heap_strdupWtoA(CabName);
+        if(!cab_name)
+            return E_OUTOFMEMORY;
+    }
+
+    if(ExpandDir) {
+        expand_dir = heap_strdupWtoA(ExpandDir);
+        if(!expand_dir)
+            hres = E_OUTOFMEMORY;
+    }
+
+    if(SUCCEEDED(hres) && FileList) {
+        file_list = heap_strdupWtoA(FileList);
+        if(!file_list)
+            hres = E_OUTOFMEMORY;
+    }
+
+    /* cabinet.dll, which does the real job of extracting files, doesn't have UNICODE API,
+       so we need W->A conversion at some point anyway. */
+    if(SUCCEEDED(hres))
+        hres = ExtractFilesA(cab_name, expand_dir, Flags, file_list, LReserved, Reserved);
+
+    heap_free(cab_name);
+    heap_free(expand_dir);
+    heap_free(file_list);
+    return hres;
 }
 
 /***********************************************************************

@@ -1,5 +1,4 @@
 /*
- *
  * PROJECT:         input.dll
  * FILE:            dll/win32/input/input.c
  * PURPOSE:         input.dll
@@ -11,7 +10,7 @@
 
 #include "input.h"
 
-#define NUM_APPLETS	(1)
+#define NUM_APPLETS    (1)
 
 LONG CALLBACK SystemApplet(VOID);
 HINSTANCE hApplet = 0;
@@ -42,7 +41,7 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
 LONG CALLBACK
 SystemApplet(VOID)
 {
-    PROPSHEETPAGE psp[1];
+    PROPSHEETPAGE psp[2];
     PROPSHEETHEADER psh;
     TCHAR Caption[1024];
 
@@ -60,7 +59,11 @@ SystemApplet(VOID)
     psh.ppsp = psp;
     psh.pfnCallback = NULL;
 
-    InitPropSheetPage(&psp[0], IDD_PROPPAGESETTINGS, (DLGPROC) SettingPageProc);
+    /* Settings */
+    InitPropSheetPage(&psp[0], IDD_PROPPAGESETTINGS, (DLGPROC)SettingsPageProc);
+
+    /* Advanced Settings */
+    InitPropSheetPage(&psp[1], IDD_PROPPAGEADVANCEDSETTINGS, (DLGPROC)AdvancedSettingsPageProc);
 
     return (LONG)(PropertySheet(&psh) != -1);
 }

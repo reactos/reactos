@@ -18,17 +18,17 @@ WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 BOOL WINAPI
 AddAuditAccessAceEx(PACL pAcl,
-		    DWORD dwAceRevision,
-		    DWORD AceFlags,
-		    DWORD dwAccessMask,
-		    PSID pSid,
-		    BOOL bAuditSuccess,
-		    BOOL bAuditFailure);
+                    DWORD dwAceRevision,
+                    DWORD AceFlags,
+                    DWORD dwAccessMask,
+                    PSID pSid,
+                    BOOL bAuditSuccess,
+                    BOOL bAuditFailure);
 
 typedef struct RECORD
 {
-	LPCWSTR key;
-	DWORD value;
+    LPCWSTR key;
+    DWORD value;
 } RECORD;
 
 
@@ -299,67 +299,6 @@ static __inline BOOL set_ntstatus( NTSTATUS status )
     return !status;
 }
 
-/************************************************************
- *                ADVAPI_GetComputerSid
- *
- * Reads the computer SID from the registry.
- */
-BOOL ADVAPI_GetComputerSid(PSID sid)
-{
-    HKEY key;
-    LONG ret;
-    BOOL retval = FALSE;
-    static const WCHAR Account[] = { 'S','E','C','U','R','I','T','Y','\\','S','A','M','\\','D','o','m','a','i','n','s','\\','A','c','c','o','u','n','t',0 };
-    static const WCHAR V[] = { 'V',0 };
-
-    if ((ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE, Account, 0,
-        KEY_READ, &key)) == ERROR_SUCCESS)
-    {
-        DWORD size = 0;
-        ret = RegQueryValueExW(key, V, NULL, NULL, NULL, &size);
-        if (ret == ERROR_MORE_DATA || ret == ERROR_SUCCESS)
-        {
-            BYTE * data = HeapAlloc(GetProcessHeap(), 0, size);
-            if (data)
-            {
-                if ((ret = RegQueryValueExW(key, V, NULL, NULL,
-                     data, &size)) == ERROR_SUCCESS)
-                {
-                    /* the SID is in the last 24 bytes of the binary data */
-                    CopyMemory(sid, &data[size-24], 24);
-                    retval = TRUE;
-                }
-                HeapFree(GetProcessHeap(), 0, data);
-            }
-        }
-        RegCloseKey(key);
-    }
-
-    if(retval == TRUE) return retval;
-
-    /* create a new random SID */
-    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE, Account,
-        0, NULL, 0, KEY_ALL_ACCESS, NULL, &key, NULL) == ERROR_SUCCESS)
-    {
-        PSID new_sid;
-        SID_IDENTIFIER_AUTHORITY identifierAuthority = {SECURITY_NT_AUTHORITY};
-        DWORD id[3];
-
-        if (RtlGenRandom(id, sizeof(id)))
-        {
-            if (AllocateAndInitializeSid(&identifierAuthority, 4, SECURITY_NT_NON_UNIQUE, id[0], id[1], id[2], 0, 0, 0, 0, &new_sid))
-            {
-                if (RegSetValueExW(key, V, 0, REG_BINARY, new_sid, GetLengthSid(new_sid)) == ERROR_SUCCESS)
-                    retval = CopySid(GetLengthSid(new_sid), sid, new_sid);
-
-                FreeSid(new_sid);
-            }
-        }
-        RegCloseKey(key);
-    }
-
-    return retval;
-}
 
 /* Exported functions */
 
@@ -794,6 +733,7 @@ ConvertSecurityDescriptorToStringSecurityDescriptorA(PSECURITY_DESCRIPTOR Securi
 {
     LPWSTR wstr;
     ULONG len;
+
     if (ConvertSecurityDescriptorToStringSecurityDescriptorW(SecurityDescriptor, SDRevision, Information, &wstr, &len))
     {
         int lenA;
@@ -971,15 +911,15 @@ static DWORD ParseAclStringFlags(LPCWSTR* StringAcl)
     while (*szAcl != '(')
     {
         if (*szAcl == 'P')
-	{
+        {
             flags |= SE_DACL_PROTECTED;
-	}
+        }
         else if (*szAcl == 'A')
         {
             szAcl++;
             if (*szAcl == 'R')
                 flags |= SE_DACL_AUTO_INHERIT_REQ;
-	    else if (*szAcl == 'I')
+            else if (*szAcl == 'I')
                 flags |= SE_DACL_AUTO_INHERITED;
         }
         szAcl++;
@@ -1059,7 +999,7 @@ static BYTE ParseAceStringFlags(LPCWSTR* StringAcl)
         if (!lpaf->wstr)
             return 0;
 
-	flags |= lpaf->value;
+        flags |= lpaf->value;
         szAcl += len;
     }
 
@@ -1081,15 +1021,15 @@ static DWORD ParseAceStringRights(LPCWSTR* StringAcl)
     {
         LPCWSTR p = szAcl;
 
-	while (*p && *p != ';')
+        while (*p && *p != ';')
             p++;
 
-	if (p - szAcl <= 10 /* 8 hex digits + "0x" */ )
-	{
-	    rights = strtoulW(szAcl, NULL, 16);
-	    szAcl = p;
-	}
-	else
+        if (p - szAcl <= 10 /* 8 hex digits + "0x" */ )
+        {
+            rights = strtoulW(szAcl, NULL, 16);
+            szAcl = p;
+        }
+        else
             WARN("Invalid rights string format: %s\n", debugstr_wn(szAcl, p - szAcl));
     }
     else
@@ -1099,16 +1039,16 @@ static DWORD ParseAceStringRights(LPCWSTR* StringAcl)
             const ACEFLAG *lpaf = AceRights;
 
             while (lpaf->wstr &&
-               (len = strlenW(lpaf->wstr)) &&
-               strncmpW(lpaf->wstr, szAcl, len))
-	    {
-               lpaf++;
-	    }
+                   (len = strlenW(lpaf->wstr)) &&
+                   strncmpW(lpaf->wstr, szAcl, len))
+            {
+                lpaf++;
+            }
 
             if (!lpaf->wstr)
                 return 0;
 
-	    rights |= lpaf->value;
+            rights |= lpaf->value;
             szAcl += len;
         }
     }
@@ -1123,8 +1063,11 @@ static DWORD ParseAceStringRights(LPCWSTR* StringAcl)
  * 
  * dacl_flags(string_ace1)(string_ace2)... (string_acen) 
  */
-static BOOL ParseStringAclToAcl(LPCWSTR StringAcl, LPDWORD lpdwFlags, 
-    PACL pAcl, LPDWORD cBytes)
+static BOOL
+ParseStringAclToAcl(LPCWSTR StringAcl,
+                    LPDWORD lpdwFlags, 
+                    PACL pAcl,
+                    LPDWORD cBytes)
 {
     DWORD val;
     DWORD sidlen;
@@ -1136,7 +1079,7 @@ static BOOL ParseStringAclToAcl(LPCWSTR StringAcl, LPDWORD lpdwFlags,
     TRACE("%s\n", debugstr_w(StringAcl));
 
     if (!StringAcl)
-	return FALSE;
+        return FALSE;
 
     if (pAcl) /* pAce is only useful if we're setting values */
         pAce = (PACCESS_ALLOWED_ACE) (pAcl + 1);
@@ -1151,23 +1094,23 @@ static BOOL ParseStringAclToAcl(LPCWSTR StringAcl, LPDWORD lpdwFlags,
 
         /* Parse ACE type */
         val = ParseAceStringType(&StringAcl);
-	if (pAce)
+        if (pAce)
             pAce->Header.AceType = (BYTE) val;
         if (*StringAcl != ';')
             goto lerr;
         StringAcl++;
 
         /* Parse ACE flags */
-	val = ParseAceStringFlags(&StringAcl);
-	if (pAce)
+        val = ParseAceStringFlags(&StringAcl);
+        if (pAce)
             pAce->Header.AceFlags = (BYTE) val;
         if (*StringAcl != ';')
             goto lerr;
         StringAcl++;
 
         /* Parse ACE rights */
-	val = ParseAceStringRights(&StringAcl);
-	if (pAce)
+        val = ParseAceStringRights(&StringAcl);
+        if (pAce)
             pAce->Mask = val;
         if (*StringAcl != ';')
             goto lerr;
@@ -1191,10 +1134,10 @@ static BOOL ParseStringAclToAcl(LPCWSTR StringAcl, LPDWORD lpdwFlags,
 
         /* Parse ACE account sid */
         if (ParseStringSidToSid(StringAcl, pAce ? &pAce->SidStart : NULL, &sidlen))
-	{
+        {
             while (*StringAcl && *StringAcl != ')')
                 StringAcl++;
-	}
+        }
 
         if (*StringAcl != ')')
             goto lerr;
@@ -1238,10 +1181,10 @@ lerr:
 /******************************************************************************
  * ParseStringSecurityDescriptorToSecurityDescriptor
  */
-static BOOL ParseStringSecurityDescriptorToSecurityDescriptor(
-    LPCWSTR StringSecurityDescriptor,
-    SECURITY_DESCRIPTOR_RELATIVE* SecurityDescriptor,
-    LPDWORD cBytes)
+static BOOL
+ParseStringSecurityDescriptorToSecurityDescriptor(LPCWSTR StringSecurityDescriptor,
+                                                  SECURITY_DESCRIPTOR_RELATIVE* SecurityDescriptor,
+                                                  LPDWORD cBytes)
 {
     BOOL bret = FALSE;
     WCHAR toktype;
@@ -1259,21 +1202,21 @@ static BOOL ParseStringSecurityDescriptorToSecurityDescriptor(
     {
         toktype = *StringSecurityDescriptor;
 
-	/* Expect char identifier followed by ':' */
-	StringSecurityDescriptor++;
+        /* Expect char identifier followed by ':' */
+        StringSecurityDescriptor++;
         if (*StringSecurityDescriptor != ':')
         {
             SetLastError(ERROR_INVALID_PARAMETER);
             goto lend;
         }
-	StringSecurityDescriptor++;
+        StringSecurityDescriptor++;
 
-	/* Extract token */
-	lptoken = StringSecurityDescriptor;
-	while (*lptoken && *lptoken != ':')
+        /* Extract token */
+        lptoken = StringSecurityDescriptor;
+        while (*lptoken && *lptoken != ':')
             lptoken++;
 
-	if (*lptoken)
+        if (*lptoken)
             lptoken--;
 
         len = lptoken - StringSecurityDescriptor;
@@ -1281,7 +1224,7 @@ static BOOL ParseStringSecurityDescriptorToSecurityDescriptor(
         tok[len] = 0;
 
         switch (toktype)
-	{
+        {
             case 'O':
             {
                 DWORD bytes;
@@ -1295,7 +1238,7 @@ static BOOL ParseStringSecurityDescriptorToSecurityDescriptor(
                     lpNext += bytes; /* Advance to next token */
                 }
 
-		*cBytes += bytes;
+                *cBytes += bytes;
 
                 break;
             }
@@ -1313,13 +1256,13 @@ static BOOL ParseStringSecurityDescriptorToSecurityDescriptor(
                     lpNext += bytes; /* Advance to next token */
                 }
 
-		*cBytes += bytes;
+                *cBytes += bytes;
 
                 break;
             }
 
             case 'D':
-	    {
+            {
                 DWORD flags;
                 DWORD bytes;
 
@@ -1331,11 +1274,11 @@ static BOOL ParseStringSecurityDescriptorToSecurityDescriptor(
                     SecurityDescriptor->Control |= SE_DACL_PRESENT | flags;
                     SecurityDescriptor->Dacl = lpNext - (LPBYTE)SecurityDescriptor;
                     lpNext += bytes; /* Advance to next token */
-		}
+                }
 
-		*cBytes += bytes;
+                *cBytes += bytes;
 
-		break;
+                break;
             }
 
             case 'S':
@@ -1351,18 +1294,18 @@ static BOOL ParseStringSecurityDescriptorToSecurityDescriptor(
                     SecurityDescriptor->Control |= SE_SACL_PRESENT | flags;
                     SecurityDescriptor->Sacl = lpNext - (LPBYTE)SecurityDescriptor;
                     lpNext += bytes; /* Advance to next token */
-		}
+                }
 
-		*cBytes += bytes;
+                *cBytes += bytes;
 
-		break;
+                break;
             }
 
             default:
                 FIXME("Unknown token\n");
                 SetLastError(ERROR_INVALID_PARAMETER);
-		goto lend;
-	}
+                goto lend;
+        }
 
         StringSecurityDescriptor = lptoken;
     }
@@ -1378,11 +1321,11 @@ lend:
  * ConvertStringSecurityDescriptorToSecurityDescriptorW [ADVAPI32.@]
  * @implemented
  */
-BOOL WINAPI ConvertStringSecurityDescriptorToSecurityDescriptorW(
-        LPCWSTR StringSecurityDescriptor,
-        DWORD StringSDRevision,
-        PSECURITY_DESCRIPTOR* SecurityDescriptor,
-        PULONG SecurityDescriptorSize)
+BOOL WINAPI
+ConvertStringSecurityDescriptorToSecurityDescriptorW(LPCWSTR StringSecurityDescriptor,
+                                                     DWORD StringSDRevision,
+                                                     PSECURITY_DESCRIPTOR* SecurityDescriptor,
+                                                     PULONG SecurityDescriptorSize)
 {
     DWORD cBytes;
     SECURITY_DESCRIPTOR* psd;
@@ -1403,13 +1346,13 @@ BOOL WINAPI ConvertStringSecurityDescriptorToSecurityDescriptorW(
     else if (StringSDRevision != SID_REVISION)
     {
         SetLastError(ERROR_UNKNOWN_REVISION);
-	goto lend;
+        goto lend;
     }
 
     /* Compute security descriptor length */
     if (!ParseStringSecurityDescriptorToSecurityDescriptor(StringSecurityDescriptor,
         NULL, &cBytes))
-	goto lend;
+        goto lend;
 
     psd = *SecurityDescriptor = LocalAlloc(GMEM_ZEROINIT, cBytes);
     if (!psd) goto lend;
@@ -1421,14 +1364,14 @@ BOOL WINAPI ConvertStringSecurityDescriptorToSecurityDescriptorW(
              (SECURITY_DESCRIPTOR_RELATIVE *)psd, &cBytes))
     {
         LocalFree(psd);
-	goto lend;
+        goto lend;
     }
 
     if (SecurityDescriptorSize)
         *SecurityDescriptorSize = cBytes;
 
     bret = TRUE;
- 
+
 lend:
     TRACE(" ret=%d\n", bret);
     return bret;
@@ -1440,11 +1383,12 @@ lend:
  * ConvertStringSecurityDescriptorToSecurityDescriptorA [ADVAPI32.@]
  * @implemented
  */
-BOOL WINAPI ConvertStringSecurityDescriptorToSecurityDescriptorA(
-        LPCSTR StringSecurityDescriptor,
-        DWORD StringSDRevision,
-        PSECURITY_DESCRIPTOR* SecurityDescriptor,
-        PULONG SecurityDescriptorSize)
+BOOL
+WINAPI
+ConvertStringSecurityDescriptorToSecurityDescriptorA(LPCSTR StringSecurityDescriptor,
+                                                     DWORD StringSDRevision,
+                                                     PSECURITY_DESCRIPTOR* SecurityDescriptor,
+                                                     PULONG SecurityDescriptorSize)
 {
     UINT len;
     BOOL ret = FALSE;
@@ -1469,7 +1413,8 @@ BOOL WINAPI ConvertStringSecurityDescriptorToSecurityDescriptorA(
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
 EqualPrefixSid(PSID pSid1,
                PSID pSid2)
 {
@@ -1480,7 +1425,8 @@ EqualPrefixSid(PSID pSid1,
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
 EqualSid(PSID pSid1,
          PSID pSid2)
 {
@@ -1495,7 +1441,8 @@ EqualSid(PSID pSid1,
  *  Docs says this function does NOT return a value
  *  even thou it's defined to return a PVOID...
  */
-PVOID WINAPI
+PVOID
+WINAPI
 FreeSid(PSID pSid)
 {
     return RtlFreeSid(pSid);
@@ -1505,7 +1452,8 @@ FreeSid(PSID pSid)
 /*
  * @implemented
  */
-DWORD WINAPI
+DWORD
+WINAPI
 GetLengthSid(PSID pSid)
 {
     return (DWORD)RtlLengthSid(pSid);
@@ -1515,7 +1463,8 @@ GetLengthSid(PSID pSid)
 /*
  * @implemented
  */
-PSID_IDENTIFIER_AUTHORITY WINAPI
+PSID_IDENTIFIER_AUTHORITY
+WINAPI
 GetSidIdentifierAuthority(PSID pSid)
 {
     return RtlIdentifierAuthoritySid(pSid);
@@ -1525,7 +1474,8 @@ GetSidIdentifierAuthority(PSID pSid)
 /*
  * @implemented
  */
-DWORD WINAPI
+DWORD
+WINAPI
 GetSidLengthRequired(UCHAR nSubAuthorityCount)
 {
     return (DWORD)RtlLengthRequiredSid(nSubAuthorityCount);
@@ -1535,7 +1485,8 @@ GetSidLengthRequired(UCHAR nSubAuthorityCount)
 /*
  * @implemented
  */
-PDWORD WINAPI
+PDWORD
+WINAPI
 GetSidSubAuthority(PSID pSid,
                    DWORD nSubAuthority)
 {
@@ -1546,7 +1497,8 @@ GetSidSubAuthority(PSID pSid,
 /*
  * @implemented
  */
-PUCHAR WINAPI
+PUCHAR
+WINAPI
 GetSidSubAuthorityCount(PSID pSid)
 {
     return RtlSubAuthorityCountSid(pSid);
@@ -1556,7 +1508,8 @@ GetSidSubAuthorityCount(PSID pSid)
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
 InitializeSid(PSID Sid,
               PSID_IDENTIFIER_AUTHORITY pIdentifierAuthority,
               BYTE nSubAuthorityCount)
@@ -1579,7 +1532,8 @@ InitializeSid(PSID Sid,
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
 IsValidSid(PSID pSid)
 {
     return (BOOL)RtlValidSid(pSid);
@@ -1589,7 +1543,8 @@ IsValidSid(PSID pSid)
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
 ConvertSidToStringSidW(PSID Sid,
                        LPWSTR *StringSid)
 {
@@ -1643,7 +1598,8 @@ ConvertSidToStringSidW(PSID Sid,
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
 ConvertSidToStringSidA(PSID Sid,
                        LPSTR *StringSid)
 {
@@ -1687,7 +1643,8 @@ ConvertSidToStringSidA(PSID Sid,
 /*
  * @unimplemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
 EqualDomainSid(IN PSID pSid1,
                IN PSID pSid2,
                OUT BOOL* pfEqual)
@@ -1700,7 +1657,8 @@ EqualDomainSid(IN PSID pSid1,
 /*
  * @unimplemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
 GetWindowsAccountDomainSid(IN PSID pSid,
                            OUT PSID ppDomainSid,
                            IN OUT DWORD* cbSid)
@@ -1713,7 +1671,8 @@ GetWindowsAccountDomainSid(IN PSID pSid,
 /*
  * @unimplemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
 CreateWellKnownSid(IN WELL_KNOWN_SID_TYPE WellKnownSidType,
                    IN PSID DomainSid  OPTIONAL,
                    OUT PSID pSid,
@@ -1787,7 +1746,8 @@ CreateWellKnownSid(IN WELL_KNOWN_SID_TYPE WellKnownSidType,
 /*
  * @unimplemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
 IsWellKnownSid(IN PSID pSid,
                IN WELL_KNOWN_SID_TYPE WellKnownSidType)
 {
@@ -1810,7 +1770,8 @@ IsWellKnownSid(IN PSID pSid,
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
 ConvertStringSidToSidA(IN LPCSTR StringSid,
                        OUT PSID* sid)
 {
@@ -1879,7 +1840,8 @@ static const RECORD SidTable[] =
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
 ConvertStringSidToSidW(IN LPCWSTR StringSid,
                        OUT PSID* sid)
 {
@@ -1890,43 +1852,43 @@ ConvertStringSidToSidW(IN LPCWSTR StringSid,
 
     TRACE("%s %p\n", debugstr_w(StringSid), sid);
 
-	if (!StringSid)
-	{
-		SetLastError(ERROR_INVALID_SID);
-		return FALSE;
-	}
-	for (i = 0; i < sizeof(SidTable) / sizeof(SidTable[0]) - 1; i++)
-	{
-		if (wcscmp(StringSid, SidTable[i].key) == 0)
-		{
-			WELL_KNOWN_SID_TYPE knownSid = (WELL_KNOWN_SID_TYPE)SidTable[i].value;
-			size = SECURITY_MAX_SID_SIZE;
-			*sid = LocalAlloc(0, size);
-			if (!*sid)
-			{
-				SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-				return FALSE;
-			}
-			ret = CreateWellKnownSid(
-				knownSid,
-				NULL,
-				*sid,
-				&size);
-			if (!ret)
-			{
-				SetLastError(ERROR_INVALID_SID);
-				LocalFree(*sid);
-			}
-			return ret;
-		}
-	}
+    if (!StringSid)
+    {
+        SetLastError(ERROR_INVALID_SID);
+        return FALSE;
+    }
 
-	/* That's probably a string S-R-I-S-S... */
-	if (StringSid[0] != 'S' || StringSid[1] != '-')
-	{
-		SetLastError(ERROR_INVALID_SID);
-		return FALSE;
-	}
+    for (i = 0; i < sizeof(SidTable) / sizeof(SidTable[0]) - 1; i++)
+    {
+        if (wcscmp(StringSid, SidTable[i].key) == 0)
+        {
+            WELL_KNOWN_SID_TYPE knownSid = (WELL_KNOWN_SID_TYPE)SidTable[i].value;
+            size = SECURITY_MAX_SID_SIZE;
+            *sid = LocalAlloc(0, size);
+            if (!*sid)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                return FALSE;
+            }
+            ret = CreateWellKnownSid(knownSid,
+                                     NULL,
+                                     *sid,
+                                     &size);
+            if (!ret)
+            {
+                SetLastError(ERROR_INVALID_SID);
+                LocalFree(*sid);
+            }
+            return ret;
+        }
+    }
+
+    /* That's probably a string S-R-I-S-S... */
+    if (StringSid[0] != 'S' || StringSid[1] != '-')
+    {
+        SetLastError(ERROR_INVALID_SID);
+        return FALSE;
+    }
 
     cBytes = ComputeStringSidSize(StringSid);
     pisid = (SID*)LocalAlloc( 0, cBytes );
@@ -2004,6 +1966,5 @@ lend:
     TRACE("returning %s\n", ret ? "TRUE" : "FALSE");
     return ret;
 }
-
 
 /* EOF */

@@ -16,8 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS welcome/autorun application
  * FILE:        subsys/system/welcome/welcome.c
@@ -30,15 +29,15 @@
  *   utility but change the resources!
  */
 
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include <reactos/version.h>
-#include <windows.h>
-#include <string.h>
-#include <stdio.h>
 #include <tchar.h>
 
 #include "resource.h"
-
-
 
 #define LIGHT_BLUE 0x00F7EFD6
 #define DARK_BLUE  0x008C7B6B
@@ -261,8 +260,8 @@ RunApplication(int nTopic)
       _tcscat(AppName, CurrentDir);
     }
 
-  memset(&StartupInfo, 0, sizeof(STARTUPINFO));
-  StartupInfo.cb = sizeof(STARTUPINFO);
+  ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+  StartupInfo.cb = sizeof(StartupInfo);
   StartupInfo.lpTitle = TEXT("Test");
   StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
   StartupInfo.wShowWindow = SW_SHOWNORMAL;

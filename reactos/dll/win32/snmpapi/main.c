@@ -19,16 +19,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#define WIN32_NO_STATUS
+
+#include <config.h>
 
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "snmp.h"
+#include <windef.h>
+#include <winbase.h>
+#include <snmp.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(snmpapi);
 

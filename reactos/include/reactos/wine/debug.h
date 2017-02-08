@@ -91,7 +91,7 @@ struct __wine_debug_channel
        __WINE_DBG_LOG
 
 #define __WINE_DBG_LOG(args...) \
-    wine_dbg_log( __dbcl, __dbch, __FILE__, __FUNCTION__, __LINE__, args); } } while(0)
+    wine_dbg_log( __dbcl, __dbch, __FUNCTION__, args); } } while(0)
 
 #define __WINE_PRINTF_ATTR(fmt,args) /*__attribute__((format (printf,fmt,args)))*/
 
@@ -137,7 +137,7 @@ struct __wine_debug_channel
 
 #define __WINE_DPRINTF(dbcl,dbch) \
     (!__WINE_GET_DEBUGGING(dbcl,(dbch)) || \
-     (wine_dbg_log(__WINE_DBCL##dbcl,(dbch),__FILE__,"",__LINE__,"") == -1)) ? \
+     (wine_dbg_log(__WINE_DBCL##dbcl,(dbch),__FILE__,"%d: ",__LINE__) == -1)) ? \
      (void)0 : (void)wine_dbg_printf
 
 #define __WINE_PRINTF_ATTR(fmt, args)
@@ -152,7 +152,7 @@ struct __wine_debug_functions
     const char * (*dbgstr_wn)( const WCHAR *s, int n );
     int (*dbg_vprintf)( const char *format, va_list args );
     int (*dbg_vlog)( enum __wine_debug_class cls, struct __wine_debug_channel *channel,
-                     const char *file, const char *function, const int line, const char *format, va_list args );
+                     const char *function, const char *format, va_list args );
 };
 
 extern unsigned char __wine_dbg_get_channel_flags( struct __wine_debug_channel *channel );
@@ -173,8 +173,8 @@ extern const char *wine_dbgstr_wn( const WCHAR *s, int n );
 extern const char *wine_dbg_sprintf( const char *format, ... ) __WINE_PRINTF_ATTR(1,2);
 
 extern int wine_dbg_printf( const char *format, ... ) __WINE_PRINTF_ATTR(1,2);
-extern int wine_dbg_log( enum __wine_debug_class cls, struct __wine_debug_channel *ch, const char *file,
-                         const char *func, const int line, const char *format, ... ) __WINE_PRINTF_ATTR(6,7);
+extern int wine_dbg_log( enum __wine_debug_class cls, struct __wine_debug_channel *ch, const char *func,
+                         const char *format, ... ) __WINE_PRINTF_ATTR(4,5);
 
 static __inline const char *wine_dbgstr_a( const char *s )
 {
@@ -245,9 +245,9 @@ static __inline const char *wine_dbgstr_longlong( ULONGLONG ll )
 #define WINE_ERR_ON(ch)            __WINE_IS_DEBUG_ON(_ERR,&__wine_dbch_##ch)
 
 #define WINE_DECLARE_DEBUG_CHANNEL(ch) \
-    static struct __wine_debug_channel __wine_dbch_##ch = { ~0, #ch }
+    static struct __wine_debug_channel __wine_dbch_##ch = { (unsigned char)~0, #ch }
 #define WINE_DEFAULT_DEBUG_CHANNEL(ch) \
-    static struct __wine_debug_channel __wine_dbch_##ch = { ~0, #ch }; \
+    static struct __wine_debug_channel __wine_dbch_##ch = { (unsigned char)~0, #ch }; \
     static struct __wine_debug_channel * const __wine_dbch___default = &__wine_dbch_##ch
 
 #define WINE_DPRINTF               wine_dbg_printf

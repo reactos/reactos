@@ -16,11 +16,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-import "wtypes.idl";
-import "ocidl.idl";
-
 #include <idispids.h>
 #include <xmldsodid.h>
+
+#if !defined(progid) && !defined(__WIDL__)
+#define threading(model)
+#define progid(str)
+#define vi_progid(str)
+#endif
+
+import "oaidl.idl";
 
 interface IXMLDOMDocument;
 
@@ -52,7 +57,12 @@ interface IXMLDSOControl : IDispatch
 }
 
 [
-uuid(550dda30-0541-11d2-9ca9-0060b0ec3d39)
+    helpstring("XML Data Source Object"),
+    progid("Microsoft.XMLDSO.1.0"),
+    vi_progid("Microsoft.XMLDSO"),
+    threading(apartment),
+    version(1.0),
+    uuid(550dda30-0541-11d2-9ca9-0060b0ec3d39)
 ]
 coclass XMLDSOControl
 {

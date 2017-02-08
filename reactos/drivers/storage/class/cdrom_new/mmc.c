@@ -28,9 +28,8 @@ Revision History:
 #include "classpnp.h"
 #include "cdrom.h"
 
-
-
 NTSTATUS
+NTAPI
 CdRomGetConfiguration(
     IN PDEVICE_OBJECT Fdo,
     OUT PGET_CONFIGURATION_HEADER *Buffer,
@@ -38,18 +37,24 @@ CdRomGetConfiguration(
     IN FEATURE_NUMBER StartingFeature,
     IN ULONG RequestedType
     );
+
 VOID
+NTAPI
 CdRompPrintAllFeaturePages(
     IN PGET_CONFIGURATION_HEADER Buffer,
     IN ULONG Usable
     );
+
 NTSTATUS
+NTAPI
 CdRomUpdateMmcDriveCapabilitiesCompletion(
     IN PDEVICE_OBJECT Unused,
     IN PIRP Irp,
     IN PDEVICE_OBJECT Fdo
     );
+
 VOID
+NTAPI
 CdRomPrepareUpdateCapabilitiesIrp(
     PDEVICE_OBJECT Fdo
     );
@@ -62,6 +67,7 @@ CdRomPrepareUpdateCapabilitiesIrp(
     
 --*/
 VOID
+NTAPI
 CdRomFindProfileInProfiles(
     IN PFEATURE_DATA_PROFILE_LIST ProfileHeader,
     IN FEATURE_PROFILE_TYPE ProfileToFind,
@@ -107,6 +113,7 @@ CdRomFindProfileInProfiles(
     
 --*/
 PVOID
+NTAPI
 CdRomFindFeaturePage(
     IN PGET_CONFIGURATION_HEADER FeatureBuffer,
     IN ULONG Length,
@@ -189,13 +196,14 @@ CdRomFindFeaturePage(
     }
     return NULL;
 }
-
+
 /*++
 
 Private so we can later expose to someone wanting to use a preallocated buffer
 
 --*/
 NTSTATUS
+NTAPI
 CdRompGetConfiguration(
     IN PDEVICE_OBJECT Fdo,
     IN PGET_CONFIGURATION_HEADER Buffer,
@@ -270,7 +278,7 @@ CdRompGetConfiguration(
     ASSERT(FALSE);
     return STATUS_UNSUCCESSFUL;
 }
-
+
 /*++
 
     Allocates buffer with configuration info, returns STATUS_SUCCESS
@@ -282,6 +290,7 @@ CdRompGetConfiguration(
 
 --*/
 NTSTATUS
+NTAPI
 CdRomGetConfiguration(
     IN PDEVICE_OBJECT Fdo,
     OUT PGET_CONFIGURATION_HEADER *Buffer,
@@ -290,7 +299,7 @@ CdRomGetConfiguration(
     IN ULONG RequestedType
     )
 {
-    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension;
+    //PFUNCTIONAL_DEVICE_EXTENSION fdoExtension;
     GET_CONFIGURATION_HEADER header;  // eight bytes, not a lot
     PGET_CONFIGURATION_HEADER buffer;
     ULONG returned;
@@ -301,7 +310,7 @@ CdRomGetConfiguration(
     PAGED_CODE();
 
 
-    fdoExtension = Fdo->DeviceExtension;
+    //fdoExtension = Fdo->DeviceExtension;
     *Buffer = NULL;
     *BytesReturned = 0;
 
@@ -411,8 +420,9 @@ CdRomGetConfiguration(
                "information\n", i));
     return STATUS_IO_DEVICE_ERROR;
 }
-
+
 VOID
+NTAPI
 CdRomIsDeviceMmcDevice(
     IN PDEVICE_OBJECT Fdo,
     OUT PBOOLEAN IsMmc
@@ -541,6 +551,7 @@ CdRomIsDeviceMmcDevice(
 }
 
 VOID
+NTAPI
 CdRompPrintAllFeaturePages(
     IN PGET_CONFIGURATION_HEADER Buffer,
     IN ULONG Usable
@@ -835,7 +846,7 @@ CdRompPrintAllFeaturePages(
     }
     return;
 }
-
+
 NTSTATUS
 NTAPI
 CdRomUpdateMmcDriveCapabilitiesCompletion(
@@ -851,7 +862,7 @@ CdRomUpdateMmcDriveCapabilitiesCompletion(
     PSCSI_REQUEST_BLOCK srb = &(mmcData->CapabilitiesSrb);
     PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation(Irp);
     NTSTATUS status = STATUS_UNSUCCESSFUL;
-    PIRP delayedIrp;
+    //PIRP delayedIrp;
     ULONG retryCount;
     LARGE_INTEGER delay;
 
@@ -964,8 +975,8 @@ CdRomUpdateMmcDriveCapabilitiesCompletion(
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
-
 VOID
+NTAPI
 CdRomPrepareUpdateCapabilitiesIrp(
     PDEVICE_OBJECT Fdo
     )
@@ -1058,8 +1069,9 @@ CdRomPrepareUpdateCapabilitiesIrp(
     return;
 
 }
-
+
 VOID
+NTAPI
 CdRomUpdateMmcDriveCapabilities(
     IN PDEVICE_OBJECT Fdo,
     IN PVOID Context
@@ -1214,8 +1226,8 @@ FinishDriveUpdate:
     return;
 }
 
-
 VOID
+NTAPI
 CdRompFlushDelayedList(
     IN PDEVICE_OBJECT Fdo,
     IN PCDROM_MMC_EXTENSION MmcData,
@@ -1315,8 +1327,9 @@ CdRompFlushDelayedList(
     return;
 
 }
-
+
 VOID
+NTAPI
 CdRomDeAllocateMmcResources(
     IN PDEVICE_OBJECT Fdo
     )
@@ -1324,7 +1337,7 @@ CdRomDeAllocateMmcResources(
     PCOMMON_DEVICE_EXTENSION commonExtension = Fdo->DeviceExtension;
     PCDROM_DATA cddata = commonExtension->DriverData;
     PCDROM_MMC_EXTENSION mmcData = &cddata->Mmc;
-    NTSTATUS status;
+    //NTSTATUS status;
 
     if (mmcData->CapabilitiesWorkItem) {
         IoFreeWorkItem(mmcData->CapabilitiesWorkItem);
@@ -1350,6 +1363,7 @@ CdRomDeAllocateMmcResources(
 }
 
 NTSTATUS
+NTAPI
 CdRomAllocateMmcResources(
     IN PDEVICE_OBJECT Fdo
     )

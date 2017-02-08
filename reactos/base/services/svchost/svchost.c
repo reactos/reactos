@@ -13,11 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#ifdef _MSC_VER
-#undef DPRINT1
-#define DPRINT1
-#endif
-
 /* DEFINES *******************************************************************/
 
 static LPCTSTR SVCHOST_REG_KEY	= _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SvcHost");

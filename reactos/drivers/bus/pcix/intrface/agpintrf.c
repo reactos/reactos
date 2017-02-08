@@ -33,6 +33,7 @@ NTSTATUS
 NTAPI
 agpintrf_Initializer(IN PVOID Instance)
 {
+    UNREFERENCED_PARAMETER(Instance);
     /* PnP Interfaces don't get Initialized */
     ASSERTMSG(FALSE, "PCI agpintrf_Initializer, unexpected call.");
     return STATUS_UNSUCCESSFUL;
@@ -49,6 +50,12 @@ agpintrf_Constructor(IN PVOID DeviceExtension,
 {
     PPCI_PDO_EXTENSION PdoExtension = (PPCI_PDO_EXTENSION)DeviceExtension;
 
+    UNREFERENCED_PARAMETER(Instance);
+    UNREFERENCED_PARAMETER(InterfaceData);
+    UNREFERENCED_PARAMETER(Version);
+    UNREFERENCED_PARAMETER(Size);
+    UNREFERENCED_PARAMETER(Interface);
+
     /* Only AGP bridges are supported (which are PCI-to-PCI Bridge Devices) */
     if ((PdoExtension->BaseClass != PCI_CLASS_BRIDGE_DEV) ||
         (PdoExtension->SubClass != PCI_SUBCLASS_BR_PCI_TO_PCI))
@@ -58,8 +65,8 @@ agpintrf_Constructor(IN PVOID DeviceExtension,
     }
 
     /* Not yet implemented */
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

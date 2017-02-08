@@ -1,5 +1,3 @@
-/* $Id$
- */
 
 #include "tcscpy.inc"
 

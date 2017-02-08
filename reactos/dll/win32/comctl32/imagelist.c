@@ -37,23 +37,27 @@
  *    - Thread-safe locking
  */
 
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
+//#include <stdlib.h>
+//#include <string.h>
 
 #define COBJMACROS
 
-#include "winerror.h"
-#include "windef.h"
-#include "winbase.h"
-#include "objbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "commctrl.h"
+//#include "winerror.h"
+#include <windef.h>
+#include <winbase.h>
+#include <objbase.h>
+//#include "wingdi.h"
+#include <winnls.h>
+//#include "winuser.h"
+//#include "commctrl.h"
 #include "comctl32.h"
-#include "commoncontrols.h"
-#include "wine/debug.h"
-#include "wine/exception.h"
+#include <commoncontrols.h>
+#include <wine/debug.h>
+#include <wine/exception.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(imagelist);
 
@@ -114,6 +118,7 @@ typedef struct
 {
     HWND	hwnd;
     HIMAGELIST	himl;
+    HIMAGELIST	himlNoCursor;
     /* position of the drag image relative to the window */
     INT		x;
     INT		y;
@@ -126,7 +131,7 @@ typedef struct
     HBITMAP	hbmBg;
 } INTERNALDRAG;
 
-static INTERNALDRAG InternalDrag = { 0, 0, 0, 0, 0, 0, FALSE, 0 };
+static INTERNALDRAG InternalDrag = { 0, 0, 0, 0, 0, 0, 0, FALSE, 0 };
 
 static HBITMAP ImageList_CreateImage(HDC hdc, HIMAGELIST himl, UINT count);
 static HRESULT ImageListImpl_CreateInstance(const IUnknown *pUnkOuter, REFIID iid, void** ppv);
@@ -607,7 +612,7 @@ ImageList_BeginDrag (HIMAGELIST himlTrack, INT iTrack,
     cx = himlTrack->cx;
     cy = himlTrack->cy;
 
-    InternalDrag.himl = ImageList_Create (cx, cy, himlTrack->flags, 1, 1);
+    InternalDrag.himlNoCursor = InternalDrag.himl = ImageList_Create (cx, cy, himlTrack->flags, 1, 1);
     if (InternalDrag.himl == NULL) {
         WARN("Error creating drag image list!\n");
         return FALSE;
@@ -1186,7 +1191,7 @@ ImageList_Draw (HIMAGELIST himl, INT i, HDC hdc, INT x, INT y, UINT fStyle)
 /*************************************************************************
  * ImageList_DrawEx [COMCTL32.@]
  *
- * Draws an image and allows to use extended drawing features.
+ * Draws an image and allows using extended drawing features.
  *
  * PARAMS
  *     himl   [I] handle to image list
@@ -1635,8 +1640,10 @@ ImageList_EndDrag (void)
 {
     /* cleanup the InternalDrag struct */
     InternalDrag.hwnd = 0;
+    if (InternalDrag.himl != InternalDrag.himlNoCursor)
+        ImageList_Destroy (InternalDrag.himlNoCursor);
     ImageList_Destroy (InternalDrag.himl);
-    InternalDrag.himl = 0;
+    InternalDrag.himlNoCursor = InternalDrag.himl = 0;
     InternalDrag.x= 0;
     InternalDrag.y= 0;
     InternalDrag.dxHotspot = 0;
@@ -2079,6 +2086,7 @@ ImageList_Merge (HIMAGELIST himl1, INT i1, HIMAGELIST himl2, INT i2,
     INT      cxDst, cyDst;
     INT      xOff1, yOff1, xOff2, yOff2;
     POINT    pt1, pt2;
+    INT      newFlags;
 
     TRACE("(himl1=%p i1=%d himl2=%p i2=%d dx=%d dy=%d)\n", himl1, i1, himl2,
 	   i2, dx, dy);
@@ -2118,7 +2126,10 @@ ImageList_Merge (HIMAGELIST himl1, INT i1, HIMAGELIST himl2, INT i2,
         yOff2 = 0;
     }
 
-    himlDst = ImageList_Create (cxDst, cyDst, ILC_MASK | ILC_COLOR, 1, 1);
+    newFlags = (himl1->flags > himl2->flags ? himl1->flags : himl2->flags) & ILC_COLORDDB;
+    if (newFlags == ILC_COLORDDB && (himl1->flags & ILC_COLORDDB) == ILC_COLOR16)
+        newFlags = ILC_COLOR16; /* this is what native (at least v5) does, don't know why */
+    himlDst = ImageList_Create (cxDst, cyDst, ILC_MASK | newFlags, 1, 1);
 
     if (himlDst)
     {
@@ -2131,8 +2142,13 @@ ImageList_Merge (HIMAGELIST himl1, INT i1, HIMAGELIST himl2, INT i2,
             BitBlt (himlDst->hdcImage, xOff1, yOff1, himl1->cx, himl1->cy, himl1->hdcImage, pt1.x, pt1.y, SRCCOPY);
         if (i2 >= 0 && i2 < himl2->cCurImage)
         {
-            BitBlt (himlDst->hdcImage, xOff2, yOff2, himl2->cx, himl2->cy, himl2->hdcMask , pt2.x, pt2.y, SRCAND);
-            BitBlt (himlDst->hdcImage, xOff2, yOff2, himl2->cx, himl2->cy, himl2->hdcImage, pt2.x, pt2.y, SRCPAINT);
+            if (himl2->flags & ILC_MASK)
+            {
+                BitBlt (himlDst->hdcImage, xOff2, yOff2, himl2->cx, himl2->cy, himl2->hdcMask , pt2.x, pt2.y, SRCAND);
+                BitBlt (himlDst->hdcImage, xOff2, yOff2, himl2->cx, himl2->cy, himl2->hdcImage, pt2.x, pt2.y, SRCPAINT);
+            }
+            else
+                BitBlt (himlDst->hdcImage, xOff2, yOff2, himl2->cx, himl2->cy, himl2->hdcImage, pt2.x, pt2.y, SRCCOPY);
         }
 
         /* copy mask */
@@ -2235,7 +2251,7 @@ HIMAGELIST WINAPI ImageList_Read (LPSTREAM pstm)
     void *image_bits, *mask_bits = NULL;
     ILHEAD	ilHead;
     HIMAGELIST	himl;
-    int		i;
+    unsigned int i;
 
     TRACE("%p\n", pstm);
 
@@ -2699,7 +2715,7 @@ ImageList_SetDragCursorImage (HIMAGELIST himlDrag, INT iDrag,
 
     visible = InternalDrag.bShow;
 
-    himlTemp = ImageList_Merge (InternalDrag.himl, 0, himlDrag, iDrag,
+    himlTemp = ImageList_Merge (InternalDrag.himlNoCursor, 0, himlDrag, iDrag,
                                 dxHotspot, dyHotspot);
 
     if (visible) {
@@ -2713,7 +2729,8 @@ ImageList_SetDragCursorImage (HIMAGELIST himlDrag, INT iDrag,
 	InternalDrag.hbmBg = 0;
     }
 
-    ImageList_Destroy (InternalDrag.himl);
+    if (InternalDrag.himl != InternalDrag.himlNoCursor)
+        ImageList_Destroy (InternalDrag.himl);
     InternalDrag.himl = himlTemp;
 
     if (visible) {
@@ -3366,7 +3383,7 @@ static HRESULT WINAPI ImageListImpl_Copy(IImageList *iface, int iDst,
         return E_FAIL;
 
     /* TODO: Add test for IID_ImageList2 too */
-    if (FAILED(IImageList_QueryInterface(punkSrc, &IID_IImageList,
+    if (FAILED(IUnknown_QueryInterface(punkSrc, &IID_IImageList,
             (void **) &src)))
         return E_FAIL;
 
@@ -3390,7 +3407,7 @@ static HRESULT WINAPI ImageListImpl_Merge(IImageList *iface, int i1,
     TRACE("(%p)->(%d %p %d %d %d %s %p)\n", iface, i1, punk2, i2, dx, dy, debugstr_guid(riid), ppv);
 
     /* TODO: Add test for IID_ImageList2 too */
-    if (FAILED(IImageList_QueryInterface(punk2, &IID_IImageList,
+    if (FAILED(IUnknown_QueryInterface(punk2, &IID_IImageList,
             (void **) &iml2)))
         return E_FAIL;
 
@@ -3523,7 +3540,7 @@ static HRESULT WINAPI ImageListImpl_SetDragCursorImage(IImageList *iface,
         return E_FAIL;
 
     /* TODO: Add test for IID_ImageList2 too */
-    if (FAILED(IImageList_QueryInterface(punk, &IID_IImageList,
+    if (FAILED(IUnknown_QueryInterface(punk, &IID_IImageList,
             (void **) &iml2)))
         return E_FAIL;
 

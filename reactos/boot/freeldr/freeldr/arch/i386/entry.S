@@ -198,10 +198,10 @@ _PxeCallApi:
     ret
 
 
-PUBLIC _SoftReboot
-_SoftReboot:
+PUBLIC _Reboot
+_Reboot:
     /* Set the function ID */
-    mov bx, FNID_SoftReboot
+    mov bx, FNID_Reboot
 
     /*Switch to real mode (We don't return) */
     jmp SwitchToReal

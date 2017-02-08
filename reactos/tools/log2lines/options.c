@@ -39,10 +39,10 @@ int   opt_undo       = 0;        // -u
 int   opt_redo       = 0;        // -U
 char *opt_Revision   = NULL;     // -R
 int   opt_Revision_check = 0;    // -R check
-char  opt_dir[MAX_PATH];         // -d <opt_dir>
-char  opt_logFile[MAX_PATH];     // -l|L <opt_logFile>
+char  opt_dir[PATH_MAX];         // -d <opt_dir>
+char  opt_logFile[PATH_MAX];     // -l|L <opt_logFile>
 char *opt_mod        = NULL;     // -mod for opt_logFile
-char  opt_7z[MAX_PATH];          // -z <opt_7z>
+char  opt_7z[PATH_MAX];          // -z <opt_7z>
 char  opt_scanned[LINESIZE];     // all scanned options
 char  opt_SourcesPath[LINESIZE]; //sources path
 

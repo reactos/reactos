@@ -2,7 +2,7 @@
 add_definitions(-DMKHIVE_HOST)
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/lib/newinflib
+    ${REACTOS_SOURCE_DIR}/lib/inflib
     ${REACTOS_SOURCE_DIR}/lib/cmlib
     ${REACTOS_SOURCE_DIR}/lib/rtl)
 

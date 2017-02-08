@@ -163,7 +163,7 @@ static BOOL CRYPT_MemAddCert(PWINECRYPT_CERTSTORE store, void *cert,
         if (ppStoreContext)
             *ppStoreContext = CertDuplicateCertificateContext(context);
     }
-    return context ? TRUE : FALSE;
+    return context != 0;
 }
 
 static void *CRYPT_MemEnumCert(PWINECRYPT_CERTSTORE store, void *pPrev)
@@ -208,7 +208,7 @@ static BOOL CRYPT_MemAddCrl(PWINECRYPT_CERTSTORE store, void *crl,
         if (ppStoreContext)
             *ppStoreContext = CertDuplicateCRLContext(context);
     }
-    return context ? TRUE : FALSE;
+    return context != 0;
 }
 
 static void *CRYPT_MemEnumCrl(PWINECRYPT_CERTSTORE store, void *pPrev)
@@ -253,7 +253,7 @@ static BOOL CRYPT_MemAddCtl(PWINECRYPT_CERTSTORE store, void *ctl,
         if (ppStoreContext)
             *ppStoreContext = CertDuplicateCTLContext(context);
     }
-    return context ? TRUE : FALSE;
+    return context != 0;
 }
 
 static void *CRYPT_MemEnumCtl(PWINECRYPT_CERTSTORE store, void *pPrev)

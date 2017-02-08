@@ -27,19 +27,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#if defined(__MINGW32__) || defined (_MSC_VER)
-#include <ws2tcpip.h>
-#endif
+#include <config.h>
+//#include "wine/port.h"
 
-#include <errno.h>
-#include <stdarg.h>
+//#include <errno.h>
+//#include <stdarg.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
+//#include <stdlib.h>
+//#include <string.h>
+//#include <sys/types.h>
 #ifdef HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
 #endif
@@ -52,21 +52,25 @@
 #ifdef HAVE_SYS_IOCTL_H
 # include <sys/ioctl.h>
 #endif
-#include <time.h>
+//#include <time.h>
 #include <assert.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "wininet.h"
-#include "winnls.h"
-#include "winerror.h"
-#include "winreg.h"
-#include "winternl.h"
-#include "shlwapi.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "wingdi.h"
+//#include "winuser.h"
+#include <wininet.h>
+//#include "winnls.h"
+//#include "winerror.h"
+#include <winreg.h>
+//#include "winternl.h"
+#include <shlwapi.h>
 
-#include "wine/debug.h"
+#if defined(__MINGW32__) || defined (_MSC_VER)
+#include <ws2tcpip.h>
+#endif
+
+#include <wine/debug.h>
 #include "internet.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wininet);

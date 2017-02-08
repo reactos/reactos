@@ -468,12 +468,12 @@ DestroyMenu(HMENU hMenu)
     return NtUserDestroyMenu(hMenu);
 }
 
-EXTINLINE BOOL WINAPI
+/*EXTINLINE BOOL WINAPI
 GetMenuBarInfo(HWND hwnd, LONG idObject, LONG idItem, PMENUBARINFO pmbi)
 {
     return NtUserGetMenuBarInfo(hwnd, idObject, idItem, pmbi);
 }
-
+*/
 EXTINLINE BOOL WINAPI
 GetMenuItemRect(HWND hWnd, HMENU hMenu, UINT uItem, LPRECT lprcItem)
 {
@@ -806,7 +806,7 @@ EXTINLINE PVOID NtUserxGetDesktopMapping(PVOID ptr)
 
 EXTINLINE BOOL NtUserxGetCursorPos(POINT* lpPoint)
 {
-    return (BOOL)NtUserCallOneParam((DWORD_PTR)lpPoint, ONEPARAM_ROUTINE_GETCURSORPOSITION);
+    return (BOOL)NtUserCallOneParam((DWORD_PTR)lpPoint, ONEPARAM_ROUTINE_GETCURSORPOS);
 }
 
 EXTINLINE BOOL NtUserxSetMenuBarHeight(HMENU menu, INT height)

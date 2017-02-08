@@ -15,7 +15,7 @@
 #include "tconsole.h"
 #include "keytrans.h"
 #include "tscroll.h"
-#include "tnetwork.h"
+//#include "tnetwork.h"
 #include "tcharmap.h"
 
 class TParser {

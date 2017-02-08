@@ -1,4 +1,4 @@
-#include "precomp.h"
+#include <precomp.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -13,7 +13,7 @@
  * 11/16/1999 (RJJ) lifted from wine
  */
 
-INT FASTCALL DIB_BitmapInfoSize(const BITMAPINFO * info, WORD coloruse)
+INT FASTCALL DIB_BitmapInfoSize(const BITMAPINFO * info, WORD coloruse, BOOL max)
 {
     unsigned int colors, size, masks = 0;
 
@@ -26,7 +26,7 @@ INT FASTCALL DIB_BitmapInfoSize(const BITMAPINFO * info, WORD coloruse)
     }
     else  /* assume BITMAPINFOHEADER */
     {
-        colors = info->bmiHeader.biClrUsed;
+        colors = max ? 1 << info->bmiHeader.biBitCount : info->bmiHeader.biClrUsed;
         if (colors > 256) colors = 256;
         if (!colors && (info->bmiHeader.biBitCount <= 8))
             colors = 1 << info->bmiHeader.biBitCount;
@@ -362,8 +362,14 @@ CreateCompatibleBitmap(
     else
     {
         HBITMAP hBmp = NULL;
-        char buffer[sizeof(DIBSECTION) + 256*sizeof(RGBQUAD)];
-        DIBSECTION* pDIBs = (DIBSECTION*)buffer;
+        struct
+        {
+            BITMAP bitmap;
+            BITMAPINFOHEADER bmih;
+            RGBQUAD rgbquad[256];
+        } buffer;
+        DIBSECTION* pDIBs = (DIBSECTION*)&buffer;
+        BITMAPINFO* pbmi = (BITMAPINFO*)&buffer.bmih;
 
         hBmp = NtGdiGetDCObject(hDC, GDI_OBJECT_TYPE_BITMAP);
 
@@ -371,12 +377,12 @@ CreateCompatibleBitmap(
             return NULL;
 
         if ( pDIBs->dsBm.bmBitsPixel <= 8 )
-            GetDIBColorTable(hDC, 0, 256, (RGBQUAD *)&pDIBs->dsBitfields[0]);
+            GetDIBColorTable(hDC, 0, 256, buffer.rgbquad);
 
         pDIBs->dsBmih.biWidth = Width;
         pDIBs->dsBmih.biHeight = Height;
 
-        return CreateDIBSection(hDC, (CONST BITMAPINFO *)&pDIBs->dsBmih, 0, NULL, NULL, 0);
+        return CreateDIBSection(hDC, pbmi, DIB_RGB_COLORS, NULL, NULL, 0);
     }
     return NULL;
 }
@@ -403,7 +409,8 @@ GetDIBits(
     }
 
     cjBmpScanSize = DIB_BitmapMaxBitsSize(lpbmi, cScanLines);
-    cjInfoSize = DIB_BitmapInfoSize(lpbmi, uUsage);
+    /* Caller must provide maximum size possible */
+    cjInfoSize = DIB_BitmapInfoSize(lpbmi, uUsage, TRUE);
 
     if ( lpvBits )
     {
@@ -449,13 +456,52 @@ CreateDIBitmap( HDC hDC,
     HBITMAP hBmp;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    if (!Header) return 0;
+    /* Check for CBM_CREATDIB */
+    if (Init & CBM_CREATDIB)
+    {
+        /* CBM_CREATDIB needs Data. */
+        if (!Data)
+        {
+            return 0;
+        }
 
+        /* It only works with PAL or RGB */
+        if (ColorUse > DIB_PAL_COLORS)
+        {
+            GdiSetLastError(ERROR_INVALID_PARAMETER);
+            return 0;
+        }
+    }
+
+    /* Header is required */
+    if (!Header)
+    {
+        GdiSetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    /* Get the bitmap format and dimensions */
     if (DIB_GetBitmapInfo(Header, &width, &height, &planes, &bpp, &compr, &dibsize) == -1)
     {
         GdiSetLastError(ERROR_INVALID_PARAMETER);
         return NULL;
     }
+
+    /* Check if the Compr is incompatible */
+    if ((compr == BI_JPEG) || (compr == BI_PNG) || (compr == BI_BITFIELDS)) return 0;
+
+    /* Only DIB_RGB_COLORS (0), DIB_PAL_COLORS (1) and 2 are valid. */
+    if (ColorUse > DIB_PAL_COLORS + 1)
+    {
+        GdiSetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    /* Negative width is not allowed */
+    if (width < 0) return 0;
+
+    /* Top-down DIBs have a negative height. */
+    height = abs(height);
 
 // For Icm support.
 // GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID)&pDc_Attr))

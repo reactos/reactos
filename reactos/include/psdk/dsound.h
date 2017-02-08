@@ -13,17 +13,11 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-
-
-#ifndef __WINE_DSOUND_H
-#define __WINE_DSOUND_H
-
-// hack
+#ifndef __DSOUND_INCLUDED__
 #define __DSOUND_INCLUDED__
-
 
 #ifndef DIRECTSOUND_VERSION
 #define DIRECTSOUND_VERSION 0x0900
@@ -59,8 +53,6 @@ typedef struct _D3DVECTOR {
 typedef D3DVECTOR *LPD3DVECTOR;
 #define LPD3DVECTOR_DEFINED
 #endif
-
-
 
 #define DX_SHARED_DEFINES
 #endif /* DX_SHARED_DEFINES */
@@ -240,6 +232,8 @@ typedef const DSCAPS *LPCDSCAPS;
 #define DSBFREQUENCY_MAX            200000
 #define DSBFREQUENCY_ORIGINAL       0
 
+#define DSBNOTIFICATIONS_MAX        100000U
+
 typedef struct _DSBCAPS
 {
     DWORD	dwSize;
@@ -307,13 +301,18 @@ typedef struct _DSBPOSITIONNOTIFY
 } DSBPOSITIONNOTIFY,*LPDSBPOSITIONNOTIFY;
 typedef const DSBPOSITIONNOTIFY *LPCDSBPOSITIONNOTIFY;
 
+#define DSSPEAKER_DIRECTOUT     0
 #define DSSPEAKER_HEADPHONE     1
 #define DSSPEAKER_MONO          2
 #define DSSPEAKER_QUAD          3
 #define DSSPEAKER_STEREO        4
 #define DSSPEAKER_SURROUND      5
 #define DSSPEAKER_5POINT1       6
+#define DSSPEAKER_5POINT1_BACK  6
 #define DSSPEAKER_7POINT1       7
+#define DSSPEAKER_7POINT1_WIDE  7
+#define DSSPEAKER_7POINT1_SURROUND  8
+#define DSSPEAKER_5POINT1_SURROUND  9
 
 #define DSSPEAKER_GEOMETRY_MIN      0x00000005  /* 5 degrees */
 #define DSSPEAKER_GEOMETRY_NARROW   0x0000000A  /* 10 degrees */
@@ -404,14 +403,16 @@ typedef const GUID *LPCGUID;
 
 typedef BOOL (CALLBACK *LPDSENUMCALLBACKW)(LPGUID,LPCWSTR,LPCWSTR,LPVOID);
 typedef BOOL (CALLBACK *LPDSENUMCALLBACKA)(LPGUID,LPCSTR,LPCSTR,LPVOID);
+DECL_WINELIB_TYPE_AW(LPDSENUMCALLBACK)
 
 extern HRESULT WINAPI DirectSoundCreate(LPCGUID lpGUID,LPDIRECTSOUND *ppDS,LPUNKNOWN pUnkOuter);
 extern HRESULT WINAPI DirectSoundEnumerateA(LPDSENUMCALLBACKA, LPVOID);
 extern HRESULT WINAPI DirectSoundEnumerateW(LPDSENUMCALLBACKW, LPVOID);
-
+#define DirectSoundEnumerate WINELIB_NAME_AW(DirectSoundEnumerate)
 extern HRESULT WINAPI DirectSoundCaptureCreate(LPCGUID lpGUID, LPDIRECTSOUNDCAPTURE *ppDSC, LPUNKNOWN pUnkOuter);
 extern HRESULT WINAPI DirectSoundCaptureEnumerateA(LPDSENUMCALLBACKA, LPVOID);
 extern HRESULT WINAPI DirectSoundCaptureEnumerateW(LPDSENUMCALLBACKW, LPVOID);
+#define DirectSoundCaptureEnumerate WINELIB_NAME_AW(DirectSoundCaptureEnumerate)
 
 extern HRESULT WINAPI DirectSoundCreate8(LPCGUID lpGUID,LPDIRECTSOUND8 *ppDS8,LPUNKNOWN pUnkOuter);
 extern HRESULT WINAPI DirectSoundCaptureCreate8(LPCGUID lpGUID, LPDIRECTSOUNDCAPTURE8 *ppDSC8, LPUNKNOWN pUnkOuter);
@@ -553,7 +554,7 @@ DECLARE_INTERFACE_(IDirectSoundBuffer,IUnknown)
     STDMETHOD(GetFrequency)(THIS_ LPDWORD lpdwFrequency) PURE;
     STDMETHOD(GetStatus)(THIS_ LPDWORD lpdwStatus) PURE;
     STDMETHOD(Initialize)(THIS_ LPDIRECTSOUND lpDirectSound, LPCDSBUFFERDESC lpcDSBufferDesc) PURE;
-    STDMETHOD(Lock)(THIS_ DWORD dwWriteCursor, DWORD dwWriteBytes, LPVOID *lplpvAudioPtr1, LPDWORD lpdwAudioBytes1, LPVOID *lplpvAudioPtr2, LPDWORD lpdwAudioBytes2, DWORD dwFlags) PURE;
+    STDMETHOD(Lock)(THIS_ DWORD dwOffset, DWORD dwBytes, LPVOID *ppvAudioPtr1, LPDWORD pdwAudioBytes1, LPVOID *ppvAudioPtr2, LPDWORD pdwAudioBytes2, DWORD dwFlags) PURE;
     STDMETHOD(Play)(THIS_ DWORD dwReserved1, DWORD dwReserved2, DWORD dwFlags) PURE;
     STDMETHOD(SetCurrentPosition)(THIS_ DWORD dwNewPosition) PURE;
     STDMETHOD(SetFormat)(THIS_ LPCWAVEFORMATEX lpcfxFormat) PURE;
@@ -561,7 +562,7 @@ DECLARE_INTERFACE_(IDirectSoundBuffer,IUnknown)
     STDMETHOD(SetPan)(THIS_ LONG lPan) PURE;
     STDMETHOD(SetFrequency)(THIS_ DWORD dwFrequency) PURE;
     STDMETHOD(Stop)(THIS) PURE;
-    STDMETHOD(Unlock)(THIS_ LPVOID lpvAudioPtr1, DWORD dwAudioBytes1, LPVOID lpvAudioPtr2, DWORD dwAudioPtr2) PURE;
+    STDMETHOD(Unlock)(THIS_ LPVOID pvAudioPtr1, DWORD dwAudioBytes1, LPVOID pvAudioPtr2, DWORD dwAudioPtr2) PURE;
     STDMETHOD(Restore)(THIS) PURE;
 };
 #undef INTERFACE
@@ -636,7 +637,7 @@ DECLARE_INTERFACE_(IDirectSoundBuffer8,IUnknown)
     STDMETHOD(GetFrequency)(THIS_ LPDWORD lpdwFrequency) PURE;
     STDMETHOD(GetStatus)(THIS_ LPDWORD lpdwStatus) PURE;
     STDMETHOD(Initialize)(THIS_ LPDIRECTSOUND lpDirectSound, LPCDSBUFFERDESC lpcDSBufferDesc) PURE;
-    STDMETHOD(Lock)(THIS_ DWORD dwWriteCursor, DWORD dwWriteBytes, LPVOID *lplpvAudioPtr1, LPDWORD lpdwAudioBytes1, LPVOID *lplpvAudioPtr2, LPDWORD lpdwAudioBytes2, DWORD dwFlags) PURE;
+    STDMETHOD(Lock)(THIS_ DWORD dwOffset, DWORD dwBytes, LPVOID *ppvAudioPtr1, LPDWORD pdwAudioBytes1, LPVOID *ppvAudioPtr2, LPDWORD pdwAudioBytes2, DWORD dwFlags) PURE;
     STDMETHOD(Play)(THIS_ DWORD dwReserved1, DWORD dwReserved2, DWORD dwFlags) PURE;
     STDMETHOD(SetCurrentPosition)(THIS_ DWORD dwNewPosition) PURE;
     STDMETHOD(SetFormat)(THIS_ LPCWAVEFORMATEX lpcfxFormat) PURE;
@@ -644,7 +645,7 @@ DECLARE_INTERFACE_(IDirectSoundBuffer8,IUnknown)
     STDMETHOD(SetPan)(THIS_ LONG lPan) PURE;
     STDMETHOD(SetFrequency)(THIS_ DWORD dwFrequency) PURE;
     STDMETHOD(Stop)(THIS) PURE;
-    STDMETHOD(Unlock)(THIS_ LPVOID lpvAudioPtr1, DWORD dwAudioBytes1, LPVOID lpvAudioPtr2, DWORD dwAudioPtr2) PURE;
+    STDMETHOD(Unlock)(THIS_ LPVOID pvAudioPtr1, DWORD dwAudioBytes1, LPVOID pvAudioPtr2, DWORD dwAudioPtr2) PURE;
     STDMETHOD(Restore)(THIS) PURE;
     STDMETHOD(SetFX)(THIS_ DWORD dwEffectsCount, LPDSEFFECTDESC pDSFXDesc, LPDWORD pdwResultCodes) PURE;
     STDMETHOD(AcquireResources)(THIS_ DWORD dwFlags, DWORD dwEffectsCount, LPDWORD pdwResultCodes) PURE;
@@ -873,7 +874,6 @@ DECLARE_INTERFACE_(IDirectSoundCaptureBuffer8,IDirectSoundCaptureBuffer)
 #define WINE_NOBUFFER                   0x80000000
 
 #define DSBPN_OFFSETSTOP		-1
-#define DSBNOTIFICATIONS_MAX        100000UL
 
 #define INTERFACE IDirectSoundNotify
 DECLARE_INTERFACE_(IDirectSoundNotify,IUnknown)
@@ -1082,7 +1082,7 @@ DECLARE_INTERFACE_(IDirectSound3DBuffer,IUnknown)
 #define IDirectSound3DBuffer_GetPosition(p,a)              (p)->lpVtbl->GetPosition(p,a)
 #define IDirectSound3DBuffer_GetVelocity(p,a)              (p)->lpVtbl->GetVelocity(p,a)
 #define IDirectSound3DBuffer_SetAllParameters(p,a,b)       (p)->lpVtbl->SetAllParameters(p,a,b)
-#define IDirectSound3DBuffer_SetConeAngles(p,a,b)          (p)->lpVtbl->SetConeAngles(p,a,b)
+#define IDirectSound3DBuffer_SetConeAngles(p,a,b,c)        (p)->lpVtbl->SetConeAngles(p,a,b,c)
 #define IDirectSound3DBuffer_SetConeOrientation(p,a,b,c,d) (p)->lpVtbl->SetConeOrientation(p,a,b,c,d)
 #define IDirectSound3DBuffer_SetConeOutsideVolume(p,a,b)   (p)->lpVtbl->SetConeOutsideVolume(p,a,b)
 #define IDirectSound3DBuffer_SetMaxDistance(p,a,b)         (p)->lpVtbl->SetMaxDistance(p,a,b)
@@ -1106,7 +1106,7 @@ DECLARE_INTERFACE_(IDirectSound3DBuffer,IUnknown)
 #define IDirectSound3DBuffer_GetPosition(p,a)              (p)->GetPosition(a)
 #define IDirectSound3DBuffer_GetVelocity(p,a)              (p)->GetVelocity(a)
 #define IDirectSound3DBuffer_SetAllParameters(p,a,b)       (p)->SetAllParameters(a,b)
-#define IDirectSound3DBuffer_SetConeAngles(p,a,b)          (p)->SetConeAngles(a,b)
+#define IDirectSound3DBuffer_SetConeAngles(p,a,b,c)        (p)->SetConeAngles(a,b,c)
 #define IDirectSound3DBuffer_SetConeOrientation(p,a,b,c,d) (p)->SetConeOrientation(a,b,c,d)
 #define IDirectSound3DBuffer_SetConeOutsideVolume(p,a,b)   (p)->SetConeOutsideVolume(a,b)
 #define IDirectSound3DBuffer_SetMaxDistance(p,a,b)         (p)->SetMaxDistance(a,b)
@@ -1200,4 +1200,4 @@ DECLARE_INTERFACE_(IDirectSoundFullDuplex,IUnknown)
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
 
-#endif /* __WINE_DSOUND_H */
+#endif /* __DSOUND_INCLUDED__ */

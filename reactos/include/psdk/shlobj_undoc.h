@@ -2,6 +2,7 @@
  * ReactOS undocumented shell interface
  *
  * Copyright 2009 Andrew Hill <ash77 at domain reactos.org>
+ * Copyright 2013 Dominik Hornung
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -835,6 +836,221 @@ HWND WINAPI SHCreateWorkerWindowW(LONG wndProc, HWND hWndParent, DWORD dwExStyle
 #else
 #define SHCreateWorkerWindow SHCreateWorkerWindowA
 #endif
+
+/*****************************************************************************
+ * Shell Link
+ */
+#include <pshpack1.h>
+
+typedef struct tagSHELL_LINK_HEADER
+{
+    /* The size of this structure (always 0x0000004C) */
+    DWORD dwSize;
+    /* CLSID = class identifier (always 00021401-0000-0000-C000-000000000046) */
+    CLSID clsid;
+    /* Flags (SHELL_LINK_DATA_FLAGS) */
+    DWORD dwFlags;
+    /* Informations about the link target: */
+    DWORD dwFileAttributes;
+    FILETIME ftCreationTime;
+    FILETIME ftLastAccessTime;
+    FILETIME ftLastWriteTime;
+    DWORD nFileSizeLow; /* only the least significant 32 bits */
+    /* The index of an icon (signed?) */
+    DWORD nIconIndex;
+    /* The expected window state of an application launched by the link */
+    DWORD nShowCommand;
+    /* The keystrokes used to launch the application */
+    WORD wHotKey;
+    /* Reserved (must be zero) */
+    WORD wReserved1;
+    DWORD dwReserved2;
+    DWORD dwReserved3;
+} SHELL_LINK_HEADER, *LPSHELL_LINK_HEADER;
+
+/*****************************************************************************
+ * SHELL_LINK_INFOA/W
+ * If cbHeaderSize == 0x0000001C then use SHELL_LINK_INFOA
+ * If cbHeaderSize >= 0x00000024 then use SHELL_LINK_INFOW
+ */
+typedef struct tagSHELL_LINK_INFOA
+{
+    /* Size of the link info data */
+    DWORD cbSize;
+    /* Size of this structure (ANSI: = 0x0000001C) */
+    DWORD cbHeaderSize;
+    /* Specifies which fields are present/populated (SLI_*) */
+    DWORD dwFlags;
+    /* Offset of the VolumeID field (SHELL_LINK_INFO_VOLUME_ID) */
+    DWORD cbVolumeIDOffset;
+    /* Offset of the LocalBasePath field (ANSI, NULL-terminated string) */
+    DWORD cbLocalBasePathOffset;
+    /* Offset of the CommonNetworkRelativeLink field (SHELL_LINK_INFO_CNR_LINK) */
+    DWORD cbCommonNetworkRelativeLinkOffset;
+    /* Offset of the CommonPathSuffix field (ANSI, NULL-terminated string) */
+    DWORD cbCommonPathSuffixOffset;
+} SHELL_LINK_INFOA, *LPSHELL_LINK_INFOA;
+
+typedef struct tagSHELL_LINK_INFOW
+{
+    /* Size of the link info data */
+    DWORD cbSize;
+    /* Size of this structure (Unicode: >= 0x00000024) */
+    DWORD cbHeaderSize;
+    /* Specifies which fields are present/populated (SLI_*) */
+    DWORD dwFlags;
+    /* Offset of the VolumeID field (SHELL_LINK_INFO_VOLUME_ID) */
+    DWORD cbVolumeIDOffset;
+    /* Offset of the LocalBasePath field (ANSI, NULL-terminated string) */
+    DWORD cbLocalBasePathOffset;
+    /* Offset of the CommonNetworkRelativeLink field (SHELL_LINK_INFO_CNR_LINK) */
+    DWORD cbCommonNetworkRelativeLinkOffset;
+    /* Offset of the CommonPathSuffix field (ANSI, NULL-terminated string) */
+    DWORD cbCommonPathSuffixOffset;
+    /* Offset of the LocalBasePathUnicode field (Unicode, NULL-terminated string) */
+    DWORD cbLocalBasePathUnicodeOffset;
+    /* Offset of the CommonPathSuffixUnicode field (Unicode, NULL-terminated string) */
+    DWORD cbCommonPathSuffixUnicodeOffset;
+} SHELL_LINK_INFOW, *LPSHELL_LINK_INFOW;
+
+/* VolumeID, LocalBasePath, LocalBasePathUnicode(cbHeaderSize >= 0x24) are present */
+#define SLI_VALID_LOCAL   0x00000001
+/* CommonNetworkRelativeLink is present */
+#define SLI_VALID_NETWORK 0x00000002
+
+/*****************************************************************************
+ * SHELL_LINK_INFO_VOLUME_IDA/W
+ * If cbVolumeLabelOffset != 0x00000014 (should be 0x00000010) then use 
+ * SHELL_LINK_INFO_VOLUME_IDA
+ * If cbVolumeLabelOffset == 0x00000014 then use SHELL_LINK_INFO_VOLUME_IDW
+ */
+typedef struct tagSHELL_LINK_INFO_VOLUME_IDA
+{
+    /* Size of the VolumeID field (> 0x00000010) */
+    DWORD cbSize;
+    /* Drive type of the drive the link target is stored on (DRIVE_*) */
+    DWORD dwDriveType;
+    /* Serial number of the volume the link target is stored on */
+    DWORD nDriveSerialNumber;
+    /* Offset of the volume label (ANSI, NULL-terminated string).
+       Must be != 0x00000014 (see tagSHELL_LINK_INFO_VOLUME_IDW) */
+    DWORD cbVolumeLabelOffset;
+} SHELL_LINK_INFO_VOLUME_IDA, *LPSHELL_LINK_INFO_VOLUME_IDA;
+
+typedef struct tagSHELL_LINK_INFO_VOLUME_IDW
+{
+    /* Size of the VolumeID field (> 0x00000010) */
+    DWORD cbSize;
+    /* Drive type of the drive the link target is stored on (DRIVE_*) */
+    DWORD dwDriveType;
+    /* Serial number of the volume the link target is stored on */
+    DWORD nDriveSerialNumber;
+    /* Offset of the volume label (ANSI, NULL-terminated string).
+       If the value of this field is 0x00000014, ignore it and use
+       cbVolumeLabelUnicodeOffset! */
+    DWORD cbVolumeLabelOffset;
+    /* Offset of the volume label (Unicode, NULL-terminated string).
+       If the value of the VolumeLabelOffset field is not 0x00000014,
+       this field must be ignored (==> it doesn't exists ==> ANSI). */
+    DWORD cbVolumeLabelUnicodeOffset;
+} SHELL_LINK_INFO_VOLUME_IDW, *LPSHELL_LINK_INFO_VOLUME_IDW;
+
+/*****************************************************************************
+ * SHELL_LINK_INFO_CNR_LINKA/W (CNR = Common Network Relative)
+ * If cbNetNameOffset == 0x00000014 then use SHELL_LINK_INFO_CNR_LINKA
+ * If cbNetNameOffset > 0x00000014 then use SHELL_LINK_INFO_CNR_LINKW
+ */
+typedef struct tagSHELL_LINK_INFO_CNR_LINKA
+{
+    /* Size of the CommonNetworkRelativeLink field (>= 0x00000014) */
+    DWORD cbSize;
+    /* Specifies which fields are present/populated (SLI_CNR_*) */
+    DWORD dwFlags;
+    /* Offset of the NetName field (ANSI, NULL–terminated string) */
+    DWORD cbNetNameOffset;
+    /* Offset of the DeviceName field (ANSI, NULL–terminated string) */
+    DWORD cbDeviceNameOffset;
+    /* Type of the network provider (WNNC_NET_* defined in winnetwk.h) */
+    DWORD dwNetworkProviderType;
+} SHELL_LINK_INFO_CNR_LINKA, *LPSHELL_LINK_INFO_CNR_LINKA;
+
+typedef struct tagSHELL_LINK_INFO_CNR_LINKW
+{
+    /* Size of the CommonNetworkRelativeLink field (>= 0x00000014) */
+    DWORD cbSize;
+    /* Specifies which fields are present/populated (SLI_CNR_*) */
+    DWORD dwFlags;
+    /* Offset of the NetName field (ANSI, NULL–terminated string) */
+    DWORD cbNetNameOffset;
+    /* Offset of the DeviceName field (ANSI, NULL–terminated string) */
+    DWORD cbDeviceNameOffset;
+    /* Type of the network provider (WNNC_NET_* defined in winnetwk.h) */
+    DWORD dwNetworkProviderType;
+    /* Offset of the NetNameUnicode field (Unicode, NULL–terminated string) */
+    DWORD cbNetNameUnicodeOffset;
+    /* Offset of the DeviceNameUnicode field (Unicode, NULL–terminated string) */
+    DWORD cbDeviceNameUnicodeOffset;
+} SHELL_LINK_INFO_CNR_LINKW, *LPSHELL_LINK_INFO_CNR_LINKW;
+
+/* DeviceName is present */
+#define SLI_CNR_VALID_DEVICE   0x00000001
+/* NetworkProviderType is present */
+#define SLI_CNR_VALID_NET_TYPE 0x00000002
+
+/*****************************************************************************
+ * Shell Link Extra Data (IShellLinkDataList)
+ */
+typedef struct tagEXP_TRACKER
+{
+    /* .cbSize = 0x00000060, .dwSignature = 0xa0000003 */
+    DATABLOCK_HEADER dbh;
+    /* Length >= 0x00000058 */
+    DWORD nLength;
+    /* Must be 0x00000000 */
+    DWORD nVersion;
+    /* NetBIOS name (ANSI, unused bytes are set to zero) */
+    CHAR szMachineID[16]; /* "variable" >= 16 (?) */
+    /* Some GUIDs for the Link Tracking service (from the FS?) */
+    GUID guidDroidVolume;
+    GUID guidDroidObject;
+    GUID guidDroidBirthVolume;
+    GUID guidDroidBirthObject;
+} EXP_TRACKER, *LPEXP_TRACKER;
+
+typedef struct tagEXP_SHIM
+{
+    /* .cbSize >= 0x00000088, .dwSignature = 0xa0000008 */
+    DATABLOCK_HEADER dbh;
+    /* Name of a shim layer to apply (Unicode, unused bytes are set to zero) */
+    WCHAR szwLayerName[64]; /* "variable" >= 64 */
+} EXP_SHIM, *LPEXP_SHIM;
+
+typedef struct tagEXP_KNOWN_FOLDER
+{
+    /* .cbSize = 0x0000001c, .dwSignature = 0xa000000b */
+    DATABLOCK_HEADER dbh;
+    /* A GUID value that identifies a known folder */
+    GUID guidKnownFolder;
+    /* Specifies the location of the ItemID of the first child
+       segment of the IDList specified by guidKnownFolder */
+    DWORD cbOffset;
+} EXP_KNOWN_FOLDER, *LPEXP_KNOWN_FOLDER;
+
+typedef struct tagEXP_VISTA_ID_LIST
+{
+    /* .cbSize >= 0x0000000a, .dwSignature = 0xa000000c */
+    DATABLOCK_HEADER dbh;
+    /* Specifies an alternate IDList that can be used instead 
+       of the "normal" IDList (SLDF_HAS_ID_LIST) */
+    /* LPITEMIDLIST pIDList; (variable) */
+} EXP_VISTA_ID_LIST, *LPEXP_VISTA_ID_LIST;
+
+#define EXP_TRACKER_SIG       0xa0000003
+#define EXP_SHIM_SIG          0xa0000008
+#define EXP_KNOWN_FOLDER_SIG  0xa000000b
+#define EXP_VISTA_ID_LIST_SIG 0xa000000c
+
+#include <poppack.h>
 
 #ifdef __cplusplus
 } /* extern "C" */

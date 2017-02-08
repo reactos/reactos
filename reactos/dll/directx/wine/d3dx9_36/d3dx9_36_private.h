@@ -22,13 +22,19 @@
 #ifndef __WINE_D3DX9_36_PRIVATE_H
 #define __WINE_D3DX9_36_PRIVATE_H
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
 
 #define COBJMACROS
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "d3dx9.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winnls.h>
+#include <winuser.h>
+#include <d3dx9.h>
 
 /* for internal use */
 typedef enum _FormatType {

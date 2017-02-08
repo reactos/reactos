@@ -14,57 +14,6 @@
 
 /* FUNCTIONS ******************************************************************/
 
-VOID
-NTAPI
-SetRosSpecificInfo(IN LPOSVERSIONINFOEXW VersionInformation)
-{
-    CHAR Buffer[sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(DWORD)];
-    PKEY_VALUE_PARTIAL_INFORMATION kvpInfo = (PVOID)Buffer;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    DWORD ReportAsWorkstation = 0;
-    HANDLE hKey;
-    DWORD dwSize;
-    NTSTATUS Status;
-    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version");
-    UNICODE_STRING ValName = RTL_CONSTANT_STRING(L"ReportAsWorkstation");
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_OPENIF | OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    /* Don't change anything if the key doesn't exist */
-    Status = NtOpenKey(&hKey, KEY_READ, &ObjectAttributes);
-    if (NT_SUCCESS(Status))
-    {
-        /* Get the value from the registry and make sure it's a 32-bit value */
-        Status = NtQueryValueKey(hKey,
-                                 &ValName,
-                                 KeyValuePartialInformation,
-                                 kvpInfo,
-                                 sizeof(Buffer),
-                                 &dwSize);
-        if ((NT_SUCCESS(Status)) &&
-            (kvpInfo->Type == REG_DWORD) &&
-            (kvpInfo->DataLength == sizeof(DWORD)))
-        {
-            /* Is the value set? */
-            ReportAsWorkstation = *(PULONG)kvpInfo->Data;
-            if ((VersionInformation->wProductType == VER_NT_SERVER) &&
-                (ReportAsWorkstation))
-            {
-                /* It is, modify the product type to report a workstation */
-                VersionInformation->wProductType = VER_NT_WORKSTATION;
-                DPRINT1("We modified the reported OS from NtProductServer to NtProductWinNt\n");
-            }
-        }
-
-        /* Close the handle */
-        NtClose(hKey);
-     }
-}
-
 /*
  * @implemented
  */
@@ -73,12 +22,11 @@ WINAPI
 GetVersion(VOID)
 {
     PPEB Peb = NtCurrentPeb();
-    DWORD Result;
 
-    Result = MAKELONG(MAKEWORD(Peb->OSMajorVersion, Peb->OSMinorVersion),
-                      (Peb->OSPlatformId ^ 2) << 14);
-    Result |= LOWORD(Peb->OSBuildNumber) << 16;
-    return Result;
+    return (DWORD)( ((Peb->OSPlatformId ^ 2) << 30) |
+                     (Peb->OSBuildNumber     << 16) |
+                     (Peb->OSMinorVersion    << 8 ) |
+                      Peb->OSMajorVersion );
 }
 
 /*
@@ -105,9 +53,6 @@ GetVersionExW(IN LPOSVERSIONINFOW lpVersionInformation)
         {
             lpVersionInformationEx = (PVOID)lpVersionInformation;
             lpVersionInformationEx->wReserved = 0;
-
-            /* ReactOS specific changes */
-            SetRosSpecificInfo(lpVersionInformationEx);
         }
 
         return TRUE;

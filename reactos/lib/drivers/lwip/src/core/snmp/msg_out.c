@@ -145,14 +145,7 @@ snmp_send_response(struct snmp_msg_pstat *m_stat)
 
     /* pass 1, size error, encode packet ino the pbuf(s) */
     ofs = snmp_resp_header_enc(m_stat, p);
-    if (m_stat->error_status == SNMP_ES_TOOBIG)
-    {
-      snmp_varbind_list_enc(&emptyvb, p, ofs);
-    }
-    else
-    {
-      snmp_varbind_list_enc(&m_stat->outvb, p, ofs);
-    }
+    snmp_varbind_list_enc(&m_stat->outvb, p, ofs);
 
     switch (m_stat->error_status)
     {

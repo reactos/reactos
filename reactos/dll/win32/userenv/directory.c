@@ -16,8 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/userenv/directory.c
@@ -25,7 +24,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -35,301 +34,301 @@
 
 BOOL WINAPI
 CopyProfileDirectoryA(LPCSTR lpSourcePath,
-		      LPCSTR lpDestinationPath,
-		      DWORD dwFlags)
+                      LPCSTR lpDestinationPath,
+                      DWORD dwFlags)
 {
-  UNICODE_STRING SrcPath;
-  UNICODE_STRING DstPath;
-  NTSTATUS Status;
-  BOOL bResult;
+    UNICODE_STRING SrcPath;
+    UNICODE_STRING DstPath;
+    NTSTATUS Status;
+    BOOL bResult;
 
-  Status = RtlCreateUnicodeStringFromAsciiz(&SrcPath,
-                                            (LPSTR)lpSourcePath);
-  if (!NT_SUCCESS(Status))
+    Status = RtlCreateUnicodeStringFromAsciiz(&SrcPath,
+             (LPSTR)lpSourcePath);
+    if (!NT_SUCCESS(Status))
     {
-      SetLastError (RtlNtStatusToDosError (Status));
-      return FALSE;
+        SetLastError (RtlNtStatusToDosError (Status));
+        return FALSE;
     }
 
-  Status = RtlCreateUnicodeStringFromAsciiz(&DstPath,
-                                            (LPSTR)lpDestinationPath);
-  if (!NT_SUCCESS(Status))
+    Status = RtlCreateUnicodeStringFromAsciiz(&DstPath,
+             (LPSTR)lpDestinationPath);
+    if (!NT_SUCCESS(Status))
     {
-      RtlFreeUnicodeString(&SrcPath);
-      SetLastError (RtlNtStatusToDosError (Status));
-      return FALSE;
+        RtlFreeUnicodeString(&SrcPath);
+        SetLastError (RtlNtStatusToDosError (Status));
+        return FALSE;
     }
 
-  bResult = CopyProfileDirectoryW(SrcPath.Buffer,
-                                  DstPath.Buffer,
-                                  dwFlags);
+    bResult = CopyProfileDirectoryW(SrcPath.Buffer,
+                                    DstPath.Buffer,
+                                    dwFlags);
 
-  RtlFreeUnicodeString(&DstPath);
-  RtlFreeUnicodeString(&SrcPath);
+    RtlFreeUnicodeString(&DstPath);
+    RtlFreeUnicodeString(&SrcPath);
 
-  return bResult;
+    return bResult;
 }
 
 
 BOOL WINAPI
 CopyProfileDirectoryW(LPCWSTR lpSourcePath,
-		      LPCWSTR lpDestinationPath,
-		      DWORD dwFlags)
+                      LPCWSTR lpDestinationPath,
+                      DWORD dwFlags)
 {
-  /* FIXME: dwFlags are ignored! */
-  return CopyDirectory(lpDestinationPath, lpSourcePath);
+    /* FIXME: dwFlags are ignored! */
+    return CopyDirectory(lpDestinationPath, lpSourcePath);
 }
 
 
 BOOL
 CopyDirectory (LPCWSTR lpDestinationPath,
-	       LPCWSTR lpSourcePath)
+               LPCWSTR lpSourcePath)
 {
-  WCHAR szFileName[MAX_PATH];
-  WCHAR szFullSrcName[MAX_PATH];
-  WCHAR szFullDstName[MAX_PATH];
-  WIN32_FIND_DATAW FindFileData;
-  LPWSTR lpSrcPtr;
-  LPWSTR lpDstPtr;
-  HANDLE hFind;
+    WCHAR szFileName[MAX_PATH];
+    WCHAR szFullSrcName[MAX_PATH];
+    WCHAR szFullDstName[MAX_PATH];
+    WIN32_FIND_DATAW FindFileData;
+    LPWSTR lpSrcPtr;
+    LPWSTR lpDstPtr;
+    HANDLE hFind;
 
-  DPRINT ("CopyDirectory (%S, %S) called\n",
-	  lpDestinationPath, lpSourcePath);
+    DPRINT ("CopyDirectory (%S, %S) called\n",
+            lpDestinationPath, lpSourcePath);
 
-  wcscpy (szFileName, lpSourcePath);
-  wcscat (szFileName, L"\\*.*");
+    wcscpy (szFileName, lpSourcePath);
+    wcscat (szFileName, L"\\*.*");
 
-  hFind = FindFirstFileW (szFileName,
-			  &FindFileData);
-  if (hFind == INVALID_HANDLE_VALUE)
+    hFind = FindFirstFileW (szFileName,
+                            &FindFileData);
+    if (hFind == INVALID_HANDLE_VALUE)
     {
-      DPRINT1 ("Error: %lu\n", GetLastError());
-      return FALSE;
+        DPRINT1 ("Error: %lu\n", GetLastError());
+        return FALSE;
     }
 
-  wcscpy (szFullSrcName, lpSourcePath);
-  lpSrcPtr = AppendBackslash (szFullSrcName);
+    wcscpy (szFullSrcName, lpSourcePath);
+    lpSrcPtr = AppendBackslash (szFullSrcName);
 
-  wcscpy (szFullDstName, lpDestinationPath);
-  lpDstPtr = AppendBackslash (szFullDstName);
+    wcscpy (szFullDstName, lpDestinationPath);
+    lpDstPtr = AppendBackslash (szFullDstName);
 
-  for (;;)
+    for (;;)
     {
-      if (wcscmp (FindFileData.cFileName, L".") &&
-	  wcscmp (FindFileData.cFileName, L".."))
-	{
-	  wcscpy (lpSrcPtr, FindFileData.cFileName);
-	  wcscpy (lpDstPtr, FindFileData.cFileName);
+        if (wcscmp (FindFileData.cFileName, L".") &&
+                wcscmp (FindFileData.cFileName, L".."))
+        {
+            wcscpy (lpSrcPtr, FindFileData.cFileName);
+            wcscpy (lpDstPtr, FindFileData.cFileName);
 
-	  if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-	    {
-	      DPRINT ("Create directory: %S\n", szFullDstName);
-	      if (!CreateDirectoryExW (szFullSrcName, szFullDstName, NULL))
-		{
-		  if (GetLastError () != ERROR_ALREADY_EXISTS)
-		    {
-		      DPRINT1 ("Error: %lu\n", GetLastError());
+            if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            {
+                DPRINT ("Create directory: %S\n", szFullDstName);
+                if (!CreateDirectoryExW (szFullSrcName, szFullDstName, NULL))
+                {
+                    if (GetLastError () != ERROR_ALREADY_EXISTS)
+                    {
+                        DPRINT1 ("Error: %lu\n", GetLastError());
 
-		      FindClose (hFind);
-		      return FALSE;
-		    }
-		}
+                        FindClose (hFind);
+                        return FALSE;
+                    }
+                }
 
-	      if (!CopyDirectory (szFullDstName, szFullSrcName))
-		{
-		  DPRINT1 ("Error: %lu\n", GetLastError());
+                if (!CopyDirectory (szFullDstName, szFullSrcName))
+                {
+                    DPRINT1 ("Error: %lu\n", GetLastError());
 
-		  FindClose (hFind);
-		  return FALSE;
-		}
-	    }
-	  else
-	    {
-	      DPRINT ("Copy file: %S -> %S\n", szFullSrcName, szFullDstName);
-	      if (!CopyFileW (szFullSrcName, szFullDstName, FALSE))
-		{
-		  DPRINT1 ("Error: %lu\n", GetLastError());
+                    FindClose (hFind);
+                    return FALSE;
+                }
+            }
+            else
+            {
+                DPRINT ("Copy file: %S -> %S\n", szFullSrcName, szFullDstName);
+                if (!CopyFileW (szFullSrcName, szFullDstName, FALSE))
+                {
+                    DPRINT1 ("Error: %lu\n", GetLastError());
 
-		  FindClose (hFind);
-		  return FALSE;
-		}
-	    }
-	}
+                    FindClose (hFind);
+                    return FALSE;
+                }
+            }
+        }
 
-      if (!FindNextFileW (hFind, &FindFileData))
-	{
-	  if (GetLastError () != ERROR_NO_MORE_FILES)
-	    {
-	      DPRINT1 ("Error: %lu\n", GetLastError());
-	    }
+        if (!FindNextFileW (hFind, &FindFileData))
+        {
+            if (GetLastError () != ERROR_NO_MORE_FILES)
+            {
+                DPRINT1 ("Error: %lu\n", GetLastError());
+            }
 
-	  break;
-	}
+            break;
+        }
     }
 
-  FindClose (hFind);
+    FindClose (hFind);
 
-  DPRINT ("CopyDirectory() done\n");
+    DPRINT ("CopyDirectory() done\n");
 
-  return TRUE;
+    return TRUE;
 }
 
 
 BOOL
 CreateDirectoryPath (LPCWSTR lpPathName,
-		     LPSECURITY_ATTRIBUTES lpSecurityAttributes)
+                     LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
-  WCHAR szPath[MAX_PATH];
-  LPWSTR Ptr;
-  DWORD dwError;
+    WCHAR szPath[MAX_PATH];
+    LPWSTR Ptr;
+    DWORD dwError;
 
-  DPRINT ("CreateDirectoryPath() called\n");
+    DPRINT ("CreateDirectoryPath() called\n");
 
-  if (lpPathName == NULL || *lpPathName == 0)
-    return TRUE;
+    if (lpPathName == NULL || *lpPathName == 0)
+        return TRUE;
 
-  if (CreateDirectoryW (lpPathName,
-			lpSecurityAttributes))
-    return TRUE;
+    if (CreateDirectoryW (lpPathName,
+                          lpSecurityAttributes))
+        return TRUE;
 
-  dwError = GetLastError ();
-  if (dwError == ERROR_ALREADY_EXISTS)
-    return TRUE;
+    dwError = GetLastError ();
+    if (dwError == ERROR_ALREADY_EXISTS)
+        return TRUE;
 
-  wcscpy (szPath, lpPathName);
+    wcscpy (szPath, lpPathName);
 
-  if (wcslen(szPath) > 3 && szPath[1] == ':' && szPath[2] == '\\')
+    if (wcslen(szPath) > 3 && szPath[1] == ':' && szPath[2] == '\\')
     {
-      Ptr = &szPath[3];
+        Ptr = &szPath[3];
     }
-  else
+    else
     {
-      Ptr = szPath;
-    }
-
-  while (Ptr != NULL)
-    {
-      Ptr = wcschr (Ptr, L'\\');
-      if (Ptr != NULL)
-        *Ptr = 0;
-
-      DPRINT ("CreateDirectory(%S)\n", szPath);
-      if (!CreateDirectoryW (szPath,
-			     lpSecurityAttributes))
-	{
-	  dwError = GetLastError ();
-	  if (dwError != ERROR_ALREADY_EXISTS)
-	    return FALSE;
-	}
-
-      if (Ptr != NULL)
-	{
-	  *Ptr = L'\\';
-	  Ptr++;
-	}
+        Ptr = szPath;
     }
 
-  DPRINT ("CreateDirectoryPath() done\n");
+    while (Ptr != NULL)
+    {
+        Ptr = wcschr (Ptr, L'\\');
+        if (Ptr != NULL)
+            *Ptr = 0;
 
-  return TRUE;
+        DPRINT ("CreateDirectory(%S)\n", szPath);
+        if (!CreateDirectoryW (szPath,
+                               lpSecurityAttributes))
+        {
+            dwError = GetLastError ();
+            if (dwError != ERROR_ALREADY_EXISTS)
+                return FALSE;
+        }
+
+        if (Ptr != NULL)
+        {
+            *Ptr = L'\\';
+            Ptr++;
+        }
+    }
+
+    DPRINT ("CreateDirectoryPath() done\n");
+
+    return TRUE;
 }
 
 
 static BOOL
 RecursiveRemoveDir (LPCWSTR lpPath)
 {
-  WCHAR szPath[MAX_PATH];
-  WIN32_FIND_DATAW FindData;
-  HANDLE hFind;
-  BOOL bResult;
+    WCHAR szPath[MAX_PATH];
+    WIN32_FIND_DATAW FindData;
+    HANDLE hFind;
+    BOOL bResult;
 
-  wcscpy (szPath, lpPath);
-  wcscat (szPath, L"\\*.*");
-  DPRINT ("Search path: '%S'\n", szPath);
+    wcscpy (szPath, lpPath);
+    wcscat (szPath, L"\\*.*");
+    DPRINT ("Search path: '%S'\n", szPath);
 
-  hFind = FindFirstFileW (szPath,
-			  &FindData);
-  if (hFind == INVALID_HANDLE_VALUE)
-    return FALSE;
+    hFind = FindFirstFileW (szPath,
+                            &FindData);
+    if (hFind == INVALID_HANDLE_VALUE)
+        return FALSE;
 
-  bResult = TRUE;
-  while (TRUE)
+    bResult = TRUE;
+    while (TRUE)
     {
-      if (wcscmp (FindData.cFileName, L".") &&
-	  wcscmp (FindData.cFileName, L".."))
-	{
-	  wcscpy (szPath, lpPath);
-	  wcscat (szPath, L"\\");
-	  wcscat (szPath, FindData.cFileName);
-	  DPRINT ("File name: '%S'\n", szPath);
+        if (wcscmp (FindData.cFileName, L".") &&
+                wcscmp (FindData.cFileName, L".."))
+        {
+            wcscpy (szPath, lpPath);
+            wcscat (szPath, L"\\");
+            wcscat (szPath, FindData.cFileName);
+            DPRINT ("File name: '%S'\n", szPath);
 
-	  if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-	    {
-	      DPRINT ("Delete directory: '%S'\n", szPath);
+            if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            {
+                DPRINT ("Delete directory: '%S'\n", szPath);
 
-	      if (!RecursiveRemoveDir (szPath))
-		{
-		  bResult = FALSE;
-		  break;
-		}
+                if (!RecursiveRemoveDir (szPath))
+                {
+                    bResult = FALSE;
+                    break;
+                }
 
-	      if (FindData.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
-		{
-		  SetFileAttributesW (szPath,
-				      FindData.dwFileAttributes & ~FILE_ATTRIBUTE_READONLY);
-		}
+                if (FindData.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
+                {
+                    SetFileAttributesW (szPath,
+                                        FindData.dwFileAttributes & ~FILE_ATTRIBUTE_READONLY);
+                }
 
-	      if (!RemoveDirectoryW (szPath))
-		{
-		  bResult = FALSE;
-		  break;
-		}
-	    }
-	  else
-	    {
-	      DPRINT ("Delete file: '%S'\n", szPath);
+                if (!RemoveDirectoryW (szPath))
+                {
+                    bResult = FALSE;
+                    break;
+                }
+            }
+            else
+            {
+                DPRINT ("Delete file: '%S'\n", szPath);
 
-	      if (FindData.dwFileAttributes & (FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM))
-		{
-		  SetFileAttributesW (szPath,
-				      FILE_ATTRIBUTE_NORMAL);
-		}
+                if (FindData.dwFileAttributes & (FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM))
+                {
+                    SetFileAttributesW (szPath,
+                                        FILE_ATTRIBUTE_NORMAL);
+                }
 
-	      if (!DeleteFileW (szPath))
-		{
-		  bResult = FALSE;
-		  break;
-		}
-	    }
-	}
+                if (!DeleteFileW (szPath))
+                {
+                    bResult = FALSE;
+                    break;
+                }
+            }
+        }
 
-      if (!FindNextFileW (hFind, &FindData))
-	{
-	  if (GetLastError () != ERROR_NO_MORE_FILES)
-	    {
-	      DPRINT1 ("Error: %lu\n", GetLastError());
-	      bResult = FALSE;
-	      break;
-	    }
+        if (!FindNextFileW (hFind, &FindData))
+        {
+            if (GetLastError () != ERROR_NO_MORE_FILES)
+            {
+                DPRINT1 ("Error: %lu\n", GetLastError());
+                bResult = FALSE;
+                break;
+            }
 
-	  break;
-	}
+            break;
+        }
     }
 
-  FindClose (hFind);
+    FindClose (hFind);
 
-  return bResult;
+    return bResult;
 }
 
 
 BOOL
 RemoveDirectoryPath (LPCWSTR lpPathName)
 {
-  if (!RecursiveRemoveDir (lpPathName))
-    return FALSE;
+    if (!RecursiveRemoveDir (lpPathName))
+        return FALSE;
 
-  DPRINT ("Delete directory: '%S'\n", lpPathName);
-  return RemoveDirectoryW (lpPathName);
+    DPRINT ("Delete directory: '%S'\n", lpPathName);
+    return RemoveDirectoryW (lpPathName);
 }
 
 /* EOF */

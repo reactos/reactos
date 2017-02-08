@@ -13,10 +13,11 @@
 #include <debug.h>
 
 int
-InfHostWriteFile(HINF InfHandle, const CHAR *FileName,
+InfHostWriteFile(HINF InfHandle,
+                 const CHAR *FileName,
                  const CHAR *HeaderComment)
 {
-  CHAR *Buffer;
+  WCHAR *Buffer;
   ULONG BufferSize;
   INFSTATUS Status;
   FILE *File;
@@ -40,7 +41,7 @@ InfHostWriteFile(HINF InfHandle, const CHAR *FileName,
 
   if (NULL != HeaderComment && '\0' != *HeaderComment)
     {
-      fprintf(File, "; %s\r\n\r\n", HeaderComment);
+//      fprintf(File, "; %s\r\n\r\n", HeaderComment);
     }
 
   if (BufferSize != fwrite(Buffer, (size_t)1, (size_t)BufferSize, File))
@@ -60,7 +61,7 @@ InfHostWriteFile(HINF InfHandle, const CHAR *FileName,
 
 int
 InfHostFindOrAddSection(HINF InfHandle,
-                        const CHAR *Section,
+                        const WCHAR *Section,
                         PINFCONTEXT *Context)
 {
   INFSTATUS Status;
@@ -78,7 +79,7 @@ InfHostFindOrAddSection(HINF InfHandle,
 }
 
 int
-InfHostAddLine(PINFCONTEXT Context, const CHAR *Key)
+InfHostAddLine(PINFCONTEXT Context, const WCHAR *Key)
 {
   INFSTATUS Status;
 
@@ -95,7 +96,7 @@ InfHostAddLine(PINFCONTEXT Context, const CHAR *Key)
 }
 
 int
-InfHostAddField(PINFCONTEXT Context, const CHAR *Data)
+InfHostAddField(PINFCONTEXT Context, const WCHAR *Data)
 {
   INFSTATUS Status;
 

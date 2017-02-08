@@ -439,10 +439,10 @@ EnableUserModePnpManager(VOID)
     bRet = TRUE;
 
 cleanup:
-    if (hSCManager != NULL)
-        CloseServiceHandle(hSCManager);
     if (hService != NULL)
         CloseServiceHandle(hService);
+    if (hSCManager != NULL)
+        CloseServiceHandle(hSCManager);
     return bRet;
 }
 
@@ -558,7 +558,7 @@ IsConsoleBoot(VOID)
     if (rc != ERROR_SUCCESS)
         goto cleanup;
 
-    /* Check for CMDCONS in SystemStartOptions */
+    /* Check for CONSOLE switch in SystemStartOptions */
     pwszCurrentOption = pwszSystemStartOptions;
     while (pwszCurrentOption)
     {
@@ -678,13 +678,8 @@ InstallLiveCD(IN HINSTANCE hInstance)
     SetupCloseInfFile(hSysSetupInf);
 
     /* Run the shell */
-    StartupInfo.cb = sizeof(STARTUPINFOW);
-    StartupInfo.lpReserved = NULL;
-    StartupInfo.lpDesktop = NULL;
-    StartupInfo.lpTitle = NULL;
-    StartupInfo.dwFlags = 0;
-    StartupInfo.cbReserved2 = 0;
-    StartupInfo.lpReserved2 = 0;
+    ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+    StartupInfo.cb = sizeof(StartupInfo);
     bRes = CreateProcessW(
         L"userinit.exe",
         NULL,

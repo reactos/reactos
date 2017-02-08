@@ -19,14 +19,14 @@
 
 #include "jscript.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 typedef struct {
-    DispatchEx dispex;
+    jsdisp_t dispex;
 
-    VARIANT_BOOL val;
+    BOOL val;
 } BoolInstance;
 
 static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
@@ -38,8 +38,7 @@ static inline BoolInstance *bool_this(vdisp_t *jsthis)
 }
 
 /* ECMA-262 3rd Edition    15.6.4.2 */
-static HRESULT Bool_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT Bool_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv, jsval_t *r)
 {
     BoolInstance *bool;
 
@@ -49,51 +48,44 @@ static HRESULT Bool_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DIS
     TRACE("\n");
 
     if(!(bool = bool_this(jsthis)))
-        return throw_type_error(ctx, ei, IDS_NOT_BOOL, NULL);
+        return throw_type_error(ctx, JS_E_BOOLEAN_EXPECTED, NULL);
 
-    if(retv) {
-        BSTR val;
+    if(r) {
+        jsstr_t *val;
 
-        if(bool->val) val = SysAllocString(trueW);
-        else val = SysAllocString(falseW);
-
+        val = jsstr_alloc(bool->val ? trueW : falseW);
         if(!val)
             return E_OUTOFMEMORY;
 
-        V_VT(retv) = VT_BSTR;
-        V_BSTR(retv) = val;
+        *r = jsval_string(val);
     }
 
     return S_OK;
 }
 
 /* ECMA-262 3rd Edition    15.6.4.3 */
-static HRESULT Bool_valueOf(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT Bool_valueOf(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv, jsval_t *r)
 {
     BoolInstance *bool;
 
     TRACE("\n");
 
     if(!(bool = bool_this(jsthis)))
-        return throw_type_error(ctx, ei, IDS_NOT_BOOL, NULL);
+        return throw_type_error(ctx, JS_E_BOOLEAN_EXPECTED, NULL);
 
-    if(retv) {
-        V_VT(retv) = VT_BOOL;
-        V_BOOL(retv) = bool->val;
-    }
-
+    if(r)
+        *r = jsval_bool(bool->val);
     return S_OK;
 }
 
-static HRESULT Bool_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT Bool_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
     TRACE("\n");
 
     switch(flags) {
     case INVOKE_FUNC:
-        return throw_type_error(ctx, ei, IDS_NOT_FUNC, NULL);
+        return throw_type_error(ctx, JS_E_FUNCTION_EXPECTED, NULL);
     default:
         FIXME("unimplemented flags %x\n", flags);
         return E_NOTIMPL;
@@ -117,36 +109,41 @@ static const builtin_info_t Bool_info = {
     NULL
 };
 
-static HRESULT BoolConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    HRESULT hres;
-    VARIANT_BOOL value = VARIANT_FALSE;
+static const builtin_info_t BoolInst_info = {
+    JSCLASS_BOOLEAN,
+    {NULL, Bool_value, 0},
+    0, NULL,
+    NULL,
+    NULL
+};
 
-    if(arg_cnt(dp)) {
-        hres = to_boolean(get_arg(dp,0), &value);
+static HRESULT BoolConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
+{
+    BOOL value = FALSE;
+    HRESULT hres;
+
+    if(argc) {
+        hres = to_boolean(argv[0], &value);
         if(FAILED(hres))
             return hres;
     }
 
     switch(flags) {
     case DISPATCH_CONSTRUCT: {
-        DispatchEx *bool;
+        jsdisp_t *bool;
 
         hres = create_bool(ctx, value, &bool);
         if(FAILED(hres))
             return hres;
 
-        V_VT(retv) = VT_DISPATCH;
-        V_DISPATCH(retv) = (IDispatch*)_IDispatchEx_(bool);
+        *r = jsval_obj(bool);
         return S_OK;
     }
 
     case INVOKE_FUNC:
-        if(retv) {
-            V_VT(retv) = VT_BOOL;
-            V_BOOL(retv) = value;
-        }
+        if(r)
+            *r = jsval_bool(value);
         return S_OK;
 
     default:
@@ -157,7 +154,7 @@ static HRESULT BoolConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, 
     return S_OK;
 }
 
-static HRESULT alloc_bool(script_ctx_t *ctx, DispatchEx *object_prototype, BoolInstance **ret)
+static HRESULT alloc_bool(script_ctx_t *ctx, jsdisp_t *object_prototype, BoolInstance **ret)
 {
     BoolInstance *bool;
     HRESULT hres;
@@ -169,7 +166,7 @@ static HRESULT alloc_bool(script_ctx_t *ctx, DispatchEx *object_prototype, BoolI
     if(object_prototype)
         hres = init_dispex(&bool->dispex, ctx, &Bool_info, object_prototype);
     else
-        hres = init_dispex_from_constr(&bool->dispex, ctx, &Bool_info, ctx->bool_constr);
+        hres = init_dispex_from_constr(&bool->dispex, ctx, &BoolInst_info, ctx->bool_constr);
 
     if(FAILED(hres)) {
         heap_free(bool);
@@ -180,7 +177,7 @@ static HRESULT alloc_bool(script_ctx_t *ctx, DispatchEx *object_prototype, BoolI
     return S_OK;
 }
 
-HRESULT create_bool_constr(script_ctx_t *ctx, DispatchEx *object_prototype, DispatchEx **ret)
+HRESULT create_bool_constr(script_ctx_t *ctx, jsdisp_t *object_prototype, jsdisp_t **ret)
 {
     BoolInstance *bool;
     HRESULT hres;
@@ -191,14 +188,14 @@ HRESULT create_bool_constr(script_ctx_t *ctx, DispatchEx *object_prototype, Disp
     if(FAILED(hres))
         return hres;
 
-    hres = create_builtin_function(ctx, BoolConstr_value, BooleanW, NULL,
+    hres = create_builtin_constructor(ctx, BoolConstr_value, BooleanW, NULL,
             PROPF_CONSTR|1, &bool->dispex, ret);
 
     jsdisp_release(&bool->dispex);
     return hres;
 }
 
-HRESULT create_bool(script_ctx_t *ctx, VARIANT_BOOL b, DispatchEx **ret)
+HRESULT create_bool(script_ctx_t *ctx, BOOL b, jsdisp_t **ret)
 {
     BoolInstance *bool;
     HRESULT hres;

@@ -29,7 +29,8 @@ list(APPEND SOURCE
     handle.c
     heap.c
     heapdbg.c
-	heappage.c
+    heappage.c
+    heapuser.c
     image.c
     interlck.c
     message.c
@@ -39,6 +40,7 @@ list(APPEND SOURCE
     nls.c
     path.c
     ppb.c
+    priv.c
     process.c
     propvar.c
     random.c
@@ -63,41 +65,46 @@ list(APPEND SOURCE
     wait.c
     workitem.c)
 
-if(ARCH MATCHES i386)
-    list(APPEND SOURCE
+if(ARCH STREQUAL "i386")
+    list(APPEND ASM_SOURCE
         i386/debug_asm.S
         i386/except_asm.s
-        i386/except.c
         i386/interlck.S
         i386/rtlmem.s
         i386/rtlswap.S
-        i386/res_asm.s
-        i386/thread.c)
-elseif(ARCH MATCHES amd64)
+        i386/res_asm.s)
     list(APPEND SOURCE
-        byteswap.c
+        i386/except.c
+        i386/thread.c)
+elseif(ARCH STREQUAL "amd64")
+    list(APPEND ASM_SOURCE
         amd64/debug_asm.S
         amd64/except_asm.S
-        amd64/slist.S
+        amd64/slist.S)
+    list(APPEND SOURCE
+        bitmap64.c
+        byteswap.c
         amd64/unwind.c
         amd64/stubs.c
         mem.c)
-elseif(ARCH MATCHES arm)
+elseif(ARCH STREQUAL "arm")
+    list(APPEND ASM_SOURCE arm/debug_asm.S)
     list(APPEND SOURCE
         byteswap.c
-        arm/debug_asm.S
         mem.c)
-elseif(ARCH MATCHES powerpc)
+elseif(ARCH STREQUAL "powerpc")
+    list(APPEND ASM_SOURCE
+        powerpc/rtlmem.s
+        powerpc/rtlswap.s)
     list(APPEND SOURCE
         byteswap.c
         powerpc/debug.c
         powerpc/except.c
         powerpc/interlocked.c
-        powerpc/rtlmem.s
-        powerpc/rtlswap.s
         powerpc/thread.c)
 endif()
 
-add_library(rtl ${SOURCE})
+add_asm_files(rtl_asm ${ASM_SOURCE})
+add_library(rtl ${SOURCE} ${rtl_asm})
 add_pch(rtl rtl.h)
 add_dependencies(rtl psdk asm)

@@ -38,7 +38,7 @@
 #include "md5.h"
 #include "randm.h"
 
-#include "ppp.h"
+#include "ppp_impl.h"
 #include "pppdebug.h"
 
 #include <string.h>

@@ -5,13 +5,13 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "&Adjust Date/Time", ID_SHELL_CMD_ADJUST_DAT
-        MENUITEM "&Customize Notifications...", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM "&Modifica Data/Ora", ID_SHELL_CMD_ADJUST_DAT
+        MENUITEM "&Personalizza Notifiche...", ID_SHELL_CMD_CUST_NOTIF
         MENUITEM SEPARATOR
-        MENUITEM "Ca&scade Windows", ID_SHELL_CMD_CASCADE_WND
-        MENUITEM "Tile Windows &Horizontally", ID_SHELL_CMD_TILE_WND_H
-        MENUITEM "Tile Windows V&ertically", ID_SHELL_CMD_TILE_WND_V
-        MENUITEM "&Show the Desktop", ID_SHELL_CMD_SHOW_DESKTOP
+        MENUITEM "Finestre a cascata", ID_SHELL_CMD_CASCADE_WND
+        MENUITEM "Affianca Finestre &Orizzontalmente", ID_SHELL_CMD_TILE_WND_H
+        MENUITEM "Affianca Finestre V&erticalmente", ID_SHELL_CMD_TILE_WND_V
+        MENUITEM "&Mostra Desktop", ID_SHELL_CMD_SHOW_DESKTOP
         MENUITEM "&Undo", ID_SHELL_CMD_UNDO_ACTION
         MENUITEM SEPARATOR
         MENUITEM "Task Manager", ID_SHELL_CMD_OPEN_TASKMGR
@@ -56,8 +56,8 @@ BEGIN
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
         MENUITEM "&Sincronizza", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
         MENUITEM "&Fine sessione %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
-        MENUITEM "S&collega...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
-        MENUITEM "&Disancora il computer", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
+        MENUITEM "Disconnetti...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Sblocca il computer", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
         MENUITEM "Spegnere il computer...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
     END
 END
@@ -68,14 +68,13 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Barra delle applicazioni"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "Aspetto della Barra delle applicazioni", IDC_STATIC, 6,6,240,121
+    GROUPBOX        "Aspetto della Barra delle applicazioni", IDC_STATIC, 6,6,240,104
     CONTROL         "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13,18,224,21
     AUTOCHECKBOX    "&Bloccare la Barra delle applicazioni", IDC_TASKBARPROP_LOCK, 13,45,200,10
     AUTOCHECKBOX    "N&ascondere automaticamente", IDC_TASKBARPROP_HIDE, 13,58,200,10
     AUTOCHECKBOX    "Mantenere la Barra delle applicazioni in &primo piano", IDC_TASKBARPROP_ONTOP, 13,71,200,10
     AUTOCHECKBOX    "&Raggruppare pulsanti simili", IDC_TASKBARPROP_GROUP, 13,84,200,10
     AUTOCHECKBOX    "Mostrare Avvio &veloce", IDC_TASKBARPROP_SHOWQL, 13,97,200,10
-    AUTOCHECKBOX    "&Mostrare anteprima delle finestre (miniature)", IDC_TASKBARPROP_WNDPREV, 13,110,200,10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
@@ -84,7 +83,7 @@ CAPTION "Menù avvio"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     AUTORADIOBUTTON "&Menù avvio", IDC_TASKBARPROP_STARTMENU, 7,7,105,10
-    LTEXT           "This menu style gives you easy access to your folders, favorite programs, and search.", IDC_STATIC, 20,17,150,24, WS_DISABLED
+    LTEXT           "Questo stile di menu consente di accedere facilmente alle cartelle, ai programmi preferiti e alla ricerca.", IDC_STATIC, 20,17,150,24, WS_DISABLED
     PUSHBUTTON      "&Personalizzare...", IDC_TASKBARPROP_STARTMENUCUST, 192,4,53,14, WS_DISABLED
     AUTORADIOBUTTON "Menù avvio &classico", IDC_TASKBARPROP_STARTMENUCLASSIC, 7,47,105,10, WS_DISABLED
     LTEXT           "Questo stile di menù ha funzionalità e aspetto classici",-1,20,57,150,24, WS_DISABLED
@@ -120,6 +119,16 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     LTEXT           "Scegliere che barre degli strumenti aggiungere alla Barra delle applicazioni.", IDC_STATIC, 7,7,223,12, WS_DISABLED
     CONTROL         "", IDC_TASKBARPROP_DESKBANDLIST, "SysTreeView32",WS_BORDER | WS_TABSTOP | WS_DISABLED, 7,20,236,160, WS_EX_CLIENTEDGE
+END
+
+IDD_TASKBARPROP_ADVANCED DIALOGEX 0, 0, 252, 218
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Avanzate"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "Opzioni Avanzate", IDC_STATIC, 6,6,240,121
+    AUTOCHECKBOX    "Mostra s&econdi", IDC_TASKBARPROP_SECONDS, 13,18,200,10
+    AUTOCHECKBOX    "&Mostrare anteprima delle finestre (miniature)", IDC_TASKBARPROP_WNDPREV, 13,31,200,10
 END
 
 

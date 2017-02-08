@@ -904,8 +904,18 @@ BOOLEAN FatGetFatEntry(PFAT_VOLUME_INFO Volume, ULONG Cluster, ULONG* ClusterPoi
 	UINT32		FatOffset;
 	UINT32		ThisFatSecNum;
 	UINT32		ThisFatEntOffset;
+	ULONG SectorCount;
+	PUCHAR ReadBuffer;
+	BOOLEAN status = TRUE;
 
 	//TRACE("FatGetFatEntry() Retrieving FAT entry for cluster %d.\n", Cluster);
+
+	// We need a buffer for 2 secors
+	ReadBuffer = HeapAllocate(FrLdrTempHeap, 2 * Volume->BytesPerSector, 'xTAF');
+	if (!ReadBuffer)
+	{
+		return FALSE;
+	}
 
 	switch(Volume->FatType)
 	{
@@ -921,20 +931,20 @@ BOOLEAN FatGetFatEntry(PFAT_VOLUME_INFO Volume, ULONG Cluster, ULONG* ClusterPoi
 
 		if (ThisFatEntOffset == (Volume->BytesPerSector - 1))
 		{
-			if (!FatReadVolumeSectors(Volume, ThisFatSecNum, 2, (PVOID)FILESYSBUFFER))
-			{
-				return FALSE;
-			}
+		    SectorCount = 2;
 		}
 		else
 		{
-			if (!FatReadVolumeSectors(Volume, ThisFatSecNum, 1, (PVOID)FILESYSBUFFER))
-			{
-				return FALSE;
-			}
+		    SectorCount = 1;
 		}
 
-		fat = *((USHORT *) ((ULONG_PTR)FILESYSBUFFER + ThisFatEntOffset));
+		if (!FatReadVolumeSectors(Volume, ThisFatSecNum, SectorCount, ReadBuffer))
+		{
+			status = FALSE;
+			break;
+		}
+
+		fat = *((USHORT *) (ReadBuffer + ThisFatEntOffset));
 		fat = SWAPW(fat);
 		if (Cluster & 0x0001)
 			fat = fat >> 4;	/* Cluster number is ODD */
@@ -950,12 +960,13 @@ BOOLEAN FatGetFatEntry(PFAT_VOLUME_INFO Volume, ULONG Cluster, ULONG* ClusterPoi
 		ThisFatSecNum = Volume->ActiveFatSectorStart + (FatOffset / Volume->BytesPerSector);
 		ThisFatEntOffset = (FatOffset % Volume->BytesPerSector);
 
-		if (!FatReadVolumeSectors(Volume, ThisFatSecNum, 1, (PVOID)FILESYSBUFFER))
+		if (!FatReadVolumeSectors(Volume, ThisFatSecNum, 1, ReadBuffer))
 		{
-			return FALSE;
+			status = FALSE;
+			break;
 		}
 
-		fat = *((USHORT *) ((ULONG_PTR)FILESYSBUFFER + ThisFatEntOffset));
+		fat = *((USHORT *) (ReadBuffer + ThisFatEntOffset));
 		fat = SWAPW(fat);
 
 		break;
@@ -967,28 +978,30 @@ BOOLEAN FatGetFatEntry(PFAT_VOLUME_INFO Volume, ULONG Cluster, ULONG* ClusterPoi
 		ThisFatSecNum = Volume->ActiveFatSectorStart + (FatOffset / Volume->BytesPerSector);
 		ThisFatEntOffset = (FatOffset % Volume->BytesPerSector);
 
-		if (!FatReadVolumeSectors(Volume, ThisFatSecNum, 1, (PVOID)FILESYSBUFFER))
+		if (!FatReadVolumeSectors(Volume, ThisFatSecNum, 1, ReadBuffer))
 		{
 			return FALSE;
 		}
 
 		// Get the fat entry
-		fat = (*((ULONG *) ((ULONG_PTR)FILESYSBUFFER + ThisFatEntOffset))) & 0x0FFFFFFF;
+		fat = (*((ULONG *) (ReadBuffer + ThisFatEntOffset))) & 0x0FFFFFFF;
 		fat = SWAPD(fat);
 
 		break;
 
 	default:
-		TRACE("Unknown FAT type %d\n", Volume->FatType);
-		return FALSE;
-
+		ERR("Unknown FAT type %d\n", Volume->FatType);
+		status = FALSE;
+		break;
 	}
 
 	//TRACE("FAT entry is 0x%x.\n", fat);
 
+	HeapFree(FrLdrTempHeap, ReadBuffer, 'xTAF');
+
 	*ClusterPointer = fat;
 
-	return TRUE;
+	return status;
 }
 
 ULONG FatCountClustersInChain(PFAT_VOLUME_INFO Volume, ULONG StartCluster)
@@ -1106,12 +1119,10 @@ BOOLEAN FatReadClusterChain(PFAT_VOLUME_INFO Volume, ULONG StartClusterNumber, U
 		//
 		// Read cluster into memory
 		//
-		if (!FatReadVolumeSectors(Volume, ClusterStartSector, Volume->SectorsPerCluster, (PVOID)FILESYSBUFFER))
+		if (!FatReadVolumeSectors(Volume, ClusterStartSector, Volume->SectorsPerCluster, Buffer))
 		{
 			return FALSE;
 		}
-
-		memcpy(Buffer, (PVOID)FILESYSBUFFER, Volume->SectorsPerCluster * Volume->BytesPerSector);
 
 		//
 		// Decrement count of clusters left to read
@@ -1152,19 +1163,39 @@ BOOLEAN FatReadClusterChain(PFAT_VOLUME_INFO Volume, ULONG StartClusterNumber, U
 BOOLEAN FatReadPartialCluster(PFAT_VOLUME_INFO Volume, ULONG ClusterNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer)
 {
 	ULONG		ClusterStartSector;
+	ULONG SectorOffset, ReadSize, SectorCount;
+	PUCHAR ReadBuffer;
+	BOOLEAN status = FALSE;
 
 	//TRACE("FatReadPartialCluster() ClusterNumber = %d StartingOffset = %d Length = %d Buffer = 0x%x\n", ClusterNumber, StartingOffset, Length, Buffer);
 
 	ClusterStartSector = ((ClusterNumber - 2) * Volume->SectorsPerCluster) + Volume->DataSectorStart;
 
-	if (!FatReadVolumeSectors(Volume, ClusterStartSector, Volume->SectorsPerCluster, (PVOID)FILESYSBUFFER))
+    // This is the offset of the data in sectors
+    SectorOffset = (StartingOffset / Volume->BytesPerSector);
+    StartingOffset %= Volume->BytesPerSector;
+
+    // Calculate how many sectors we need to read
+    SectorCount = (StartingOffset + Length + Volume->BytesPerSector - 1) / Volume->BytesPerSector;
+
+    // Calculate rounded up read size
+    ReadSize = SectorCount * Volume->BytesPerSector;
+
+    ReadBuffer = HeapAllocate(FrLdrTempHeap, ReadSize, 'xTAF');
+    if (!ReadBuffer)
+    {
+        return FALSE;
+    }
+
+	if (FatReadVolumeSectors(Volume, ClusterStartSector + SectorOffset, SectorCount, ReadBuffer))
 	{
-		return FALSE;
+		memcpy(Buffer, ReadBuffer + StartingOffset, Length);
+		status = TRUE;
 	}
 
-	memcpy(Buffer, (PVOID)((ULONG_PTR)FILESYSBUFFER + StartingOffset), Length);
+	HeapFree(FrLdrTempHeap, ReadBuffer, 'xTAF');
 
-	return TRUE;
+	return status;
 }
 
 /*
@@ -1338,8 +1369,7 @@ BOOLEAN FatReadVolumeSectors(PFAT_VOLUME_INFO Volume, ULONG SectorNumber, ULONG 
 	//
 	// Seek to right position
 	//
-	Position.HighPart = SectorNumber >> 23;
-	Position.LowPart = SectorNumber << 9;
+	Position.QuadPart = (ULONGLONG)SectorNumber * 512;
 	ret = ArcSeek(Volume->DeviceId, &Position, SeekAbsolute);
 	if (ret != ESUCCESS)
 	{

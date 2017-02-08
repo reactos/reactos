@@ -31,17 +31,21 @@
  * if it's present, then the data is PAL8; RGB555 otherwise.
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h" 
-#include "commdlg.h"
-#include "vfw.h"
-#include "mmsystem.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+//#include "winuser.h" 
+//#include "commdlg.h"
+#include <vfw.h>
+//#include "mmsystem.h"
 #include "msvidc32_private.h"
  
-#include "wine/debug.h"
+#include <wine/debug.h>
  
 WINE_DEFAULT_DEBUG_CHANNEL(msvidc32); 
 

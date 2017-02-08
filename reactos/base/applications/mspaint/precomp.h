@@ -1,9 +1,16 @@
-
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <winnls.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <windowsx.h>
+#include <commdlg.h>
+#include <shellapi.h>
 #include <commctrl.h>
 #include <tchar.h>
-#include <windowsx.h>
-#include <stdio.h>
+#include <stdlib.h>
 
 #include "definitions.h"
 #include "drawing.h"

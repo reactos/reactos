@@ -1,4 +1,4 @@
-#include "precomp.h"
+#include <precomp.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -320,27 +320,28 @@ BOOL
 WINAPI
 DeleteObject(HGDIOBJ hObject)
 {
-    UINT Type = 0;
+    DWORD dwType = 0;
 
     /* From Wine: DeleteObject does not SetLastError() on a null object */
     if(!hObject) return FALSE;
 
-    if (0 != ((DWORD) hObject & GDI_HANDLE_STOCK_MASK))
+    if ((DWORD)hObject & GDI_HANDLE_STOCK_MASK)
     {
         // Relax! This is a normal return!
         DPRINT("Trying to delete system object 0x%x\n", hObject);
         return TRUE;
     }
+
     // If you dont own it?! Get OUT!
     if(!GdiIsHandleValid(hObject)) return FALSE;
 
-    Type = GDI_HANDLE_GET_TYPE(hObject);
+    dwType = GDI_HANDLE_GET_TYPE(hObject);
 
-    if ((Type == GDI_OBJECT_TYPE_METAFILE) ||
-            (Type == GDI_OBJECT_TYPE_ENHMETAFILE))
+    if ((dwType == GDI_OBJECT_TYPE_METAFILE) ||
+        (dwType == GDI_OBJECT_TYPE_ENHMETAFILE))
         return FALSE;
 
-    switch (Type)
+    switch (dwType)
     {
     case GDI_OBJECT_TYPE_DC:
         return DeleteDC((HDC) hObject);
@@ -367,33 +368,30 @@ DeleteObject(HGDIOBJ hObject)
     {
         PBRUSH_ATTR Brh_Attr;
         PTEB pTeb;
+        PGDIBSOBJECT pgO;
 
-        if ((!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &Brh_Attr)) ||
-                (Brh_Attr == NULL) ) break;
+        if ((!GdiGetHandleUserData(hObject, dwType, (PVOID) &Brh_Attr)) ||
+            (Brh_Attr == NULL)) break;
 
         pTeb = NtCurrentTeb();
 
         if (pTeb->Win32ThreadInfo == NULL) break;
 
-        if ((pTeb->GdiTebBatch.Offset + sizeof(GDIBSOBJECT)) <= GDIBATCHBUFSIZE)
+        pgO = GdiAllocBatchCommand(NULL, GdiBCDelObj);
+        if (pgO)
         {
-            PGDIBSOBJECT pgO = (PGDIBSOBJECT)(&pTeb->GdiTebBatch.Buffer[0] +
-                                              pTeb->GdiTebBatch.Offset);
-            pgO->gbHdr.Cmd = GdiBCDelObj;
-            pgO->gbHdr.Size = sizeof(GDIBSOBJECT);
             pgO->hgdiobj = hObject;
-
-            pTeb->GdiTebBatch.Offset += sizeof(GDIBSOBJECT);
-            pTeb->GdiBatchCount++;
-            if (pTeb->GdiBatchCount >= GDI_BatchLimit) NtGdiFlush();
             return TRUE;
         }
+
         break;
     }
+
     case GDI_OBJECT_TYPE_BITMAP:
     default:
         break;
     }
+
     return NtGdiDeleteObjectApp(hObject);
 }
 

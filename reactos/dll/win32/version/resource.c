@@ -20,30 +20,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#include <config.h>
 
-#include <stdarg.h>
+//#include <stdarg.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
+//#include <stdlib.h>
+//#include <string.h>
+//#include <sys/types.h>
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-#include "windef.h"
-#include "winbase.h"
-#include "lzexpand.h"
-#include "winuser.h"
-#include "winver.h"
+#include <windef.h>
+#include <winbase.h>
+#include <lzexpand.h>
+//#include "winuser.h"
+#include <winver.h>
 #undef VS_FILE_INFO
 #define VS_FILE_INFO 16
 
-#include "wine/unicode.h"
+//#include "wine/unicode.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 typedef struct
 {

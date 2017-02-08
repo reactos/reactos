@@ -21,13 +21,6 @@
 #ifndef __WINE_SHELL32_DEBUGHLP_H
 #define __WINE_SHELL32_DEBUGHLP_H
 
-#include <stdarg.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "shlobj.h"
-
 extern void pdump (LPCITEMIDLIST pidl);
 extern BOOL pcheck (LPCITEMIDLIST pidl);
 extern const char * shdebugstr_guid( const struct _GUID *id );

@@ -52,23 +52,23 @@
  *     o PSP_USEREFPARENT
  */
 
-#include <stdarg.h>
-#include <string.h>
+//#include <stdarg.h>
+//#include <string.h>
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "commctrl.h"
-#include "prsht.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "wingdi.h"
+//#include "winuser.h"
+//#include "winnls.h"
+//#include "commctrl.h"
+//#include "prsht.h"
 #include "comctl32.h"
-#include "uxtheme.h"
+#include <uxtheme.h>
 
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 /******************************************************************************
  * Data structures
@@ -168,9 +168,10 @@ static BOOL PROPSHEET_SetCurSel(HWND hwndDlg,
                                 int index,
                                 int skipdir,
                                 HPROPSHEETPAGE hpage);
-static int PROPSHEET_GetPageIndex(HPROPSHEETPAGE hpage, const PropSheetInfo* psInfo);
+static int PROPSHEET_GetPageIndex(HPROPSHEETPAGE hpage, const PropSheetInfo* psInfo, int original_index);
 static PADDING_INFO PROPSHEET_GetPaddingInfoWizard(HWND hwndDlg, const PropSheetInfo* psInfo);
 static BOOL PROPSHEET_DoCommand(HWND hwnd, WORD wID);
+static BOOL PROPSHEET_RemovePage(HWND hwndDlg, int index, HPROPSHEETPAGE hpage);
 
 static INT_PTR CALLBACK
 PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -554,13 +555,12 @@ static BOOL PROPSHEET_CollectPageInfo(LPCPROPSHEETPAGEW lppsp,
 
     if (IS_INTRESOURCE( lppsp->pszTitle ))
     {
-      if (!LoadStringW( lppsp->hInstance, (DWORD_PTR)lppsp->pszTitle,szTitle,sizeof(szTitle)/sizeof(szTitle[0]) ))
-      {
-        pTitle = pszNull;
-	FIXME("Could not load resource #%04x?\n",LOWORD(lppsp->pszTitle));
-      }
-      else
+      if (LoadStringW( lppsp->hInstance, (DWORD_PTR)lppsp->pszTitle, szTitle, sizeof(szTitle)/sizeof(szTitle[0]) ))
         pTitle = szTitle;
+      else if (*p)
+        pTitle = p;
+      else
+        pTitle = pszNull;
     }
     else
       pTitle = lppsp->pszTitle;
@@ -1173,7 +1173,7 @@ static BOOL PROPSHEET_CreateTabControl(HWND hwndParent,
     SendMessageW(hwndTabCtrl, TCM_SETIMAGELIST, 0, (LPARAM)psInfo->hImageList);
   }
 
-  SendMessageW(GetDlgItem(hwndTabCtrl, IDC_TABCONTROL), WM_SETREDRAW, 0, 0);
+  SendMessageW(hwndTabCtrl, WM_SETREDRAW, 0, 0);
   for (i = 0; i < nTabs; i++)
   {
     if ( psInfo->proppage[i].hasIcon )
@@ -1189,7 +1189,7 @@ static BOOL PROPSHEET_CreateTabControl(HWND hwndParent,
     item.pszText = (LPWSTR) psInfo->proppage[i].pszText;
     SendMessageW(hwndTabCtrl, TCM_INSERTITEMW, i, (LPARAM)&item);
   }
-  SendMessageW(GetDlgItem(hwndTabCtrl, IDC_TABCONTROL), WM_SETREDRAW, 1, 0);
+  SendMessageW(hwndTabCtrl, WM_SETREDRAW, 1, 0);
 
   return TRUE;
 }
@@ -1473,6 +1473,9 @@ static BOOL PROPSHEET_CreatePage(HWND hwndParent,
 					(LPARAM)ppshpage);
   /* Free a no more needed copy */
   Free(pTemplateCopy);
+
+  if(!hwndPage)
+      return FALSE;
 
   psInfo->proppage[index].hwndPage = hwndPage;
 
@@ -1995,9 +1998,8 @@ static BOOL PROPSHEET_SetCurSel(HWND hwndDlg,
   HWND hwndTabControl = GetDlgItem(hwndDlg, IDC_TABCONTROL);
 
   TRACE("index %d, skipdir %d, hpage %p\n", index, skipdir, hpage);
-  /* hpage takes precedence over index */
-  if (hpage != NULL)
-    index = PROPSHEET_GetPageIndex(hpage, psInfo);
+
+  index = PROPSHEET_GetPageIndex(hpage, psInfo, index);
 
   if (index < 0 || index >= psInfo->nPages)
   {
@@ -2025,7 +2027,14 @@ static BOOL PROPSHEET_SetCurSel(HWND hwndDlg,
     psn.lParam       = 0;
 
     if (!psInfo->proppage[index].hwndPage) {
-      PROPSHEET_CreatePage(hwndDlg, index, psInfo, ppshpage);
+      if(!PROPSHEET_CreatePage(hwndDlg, index, psInfo, ppshpage)) {
+        PROPSHEET_RemovePage(hwndDlg, index, NULL);
+        if(index >= psInfo->nPages)
+          index--;
+        if(index < 0)
+            return FALSE;
+        continue;
+      }
     }
 
     /* Resize the property sheet page to the fit in the Tab control
@@ -2273,7 +2282,8 @@ static BOOL PROPSHEET_AddPage(HWND hwndDlg,
   if (ppsp->dwFlags & PSP_PREMATURE)
   {
      /* Create the page but don't show it */
-     PROPSHEET_CreatePage(hwndDlg, psInfo->nPages, psInfo, ppsp);
+     if(!PROPSHEET_CreatePage(hwndDlg, psInfo->nPages, psInfo, ppsp))
+         return FALSE;
   }
 
   /*
@@ -2320,13 +2330,8 @@ static BOOL PROPSHEET_RemovePage(HWND hwndDlg,
   if (!psInfo) {
     return FALSE;
   }
-  /*
-   * hpage takes precedence over index.
-   */
-  if (hpage != 0)
-  {
-    index = PROPSHEET_GetPageIndex(hpage, psInfo);
-  }
+
+  index = PROPSHEET_GetPageIndex(hpage, psInfo, index);
 
   /* Make sure that index is within range */
   if (index < 0 || index >= psInfo->nPages)
@@ -2564,16 +2569,11 @@ static LRESULT PROPSHEET_IndexToHwnd(HWND hwndDlg, int iPageIndex)
  */
 static LRESULT PROPSHEET_PageToIndex(HWND hwndDlg, HPROPSHEETPAGE hPage)
 {
-    int index;
     PropSheetInfo * psInfo = GetPropW(hwndDlg, PropSheetInfoStr);
 
     TRACE("(%p, %p)\n", hwndDlg, hPage);
 
-    for (index = 0; index < psInfo->nPages; index++)
-        if (psInfo->proppage[index].hpage == hPage)
-            return index;
-    WARN("%p not found\n", hPage);
-    return -1;
+    return PROPSHEET_GetPageIndex(hPage, psInfo, -1);
 }
 
 /******************************************************************************
@@ -2649,26 +2649,20 @@ static BOOL PROPSHEET_RecalcPageSizes(HWND hwndDlg)
  *            PROPSHEET_GetPageIndex
  *
  * Given a HPROPSHEETPAGE, returns the index of the corresponding page from
- * the array of PropPageInfo.
+ * the array of PropPageInfo. If page is not found original index is used
+ * (page takes precedence over index).
  */
-static int PROPSHEET_GetPageIndex(HPROPSHEETPAGE hpage, const PropSheetInfo* psInfo)
+static int PROPSHEET_GetPageIndex(HPROPSHEETPAGE page, const PropSheetInfo* psInfo, int original_index)
 {
-  BOOL found = FALSE;
-  int index = 0;
+    int index;
 
-  TRACE("hpage %p\n", hpage);
-  while ((index < psInfo->nPages) && (found == FALSE))
-  {
-    if (psInfo->proppage[index].hpage == hpage)
-      found = TRUE;
-    else
-      index++;
-  }
+    TRACE("page %p index %d\n", page, original_index);
 
-  if (found == FALSE)
-    index = -1;
+    for (index = 0; index < psInfo->nPages; index++)
+        if (psInfo->proppage[index].hpage == page)
+            return index;
 
-  return index;
+    return original_index;
 }
 
 /******************************************************************************

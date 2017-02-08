@@ -8,7 +8,7 @@ list(APPEND SOURCE
     isinf.c
     isnan.c
     loader.c
-    wctype.c
+    ${REACTOS_SOURCE_DIR}/lib/sdk/crt/string/wctype.c
     register.c
 #    string.c implements _stricmp, already shipped with crt
 )

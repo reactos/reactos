@@ -1,5 +1,4 @@
-/* $Id: dma.c 24759 2006-11-14 20:59:48Z ion $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/hal/x86/dma.c
@@ -1689,7 +1688,7 @@ IoMapTransfer(
     *             transfer start.
     * PhysicalAddress is physical address corresponding to the transfer
     *                 start page and offset.
-    * TransferLength is the inital length of the transfer, which is reminder
+    * TransferLength is the initial length of the transfer, which is reminder
     *                of the first page. The actual value is calculated below.
     *
     * Note that all the variables can change during the processing which

@@ -35,6 +35,7 @@ VOID	TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar
 VOID	TuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);	// Draws a shadow on the bottom and right sides of the area specified
 VOID	TuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOLEAN Fill, BOOLEAN Shadow, UCHAR Attr);	// Draws a box around the area specified
 VOID	TuiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr);	// Draws text at coordinates specified
+VOID	TuiDrawText2(ULONG X, ULONG Y, ULONG MaxNumChars, PCSTR Text, UCHAR Attr);	// Draws text at coordinates specified
 VOID	TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr);	// Draws centered text at the coordinates specified and clips the edges
 VOID	TuiDrawStatusText(PCSTR StatusText);					// Draws text at the very bottom line on the screen
 VOID	TuiUpdateDateTime(VOID);								// Updates the date and time
@@ -58,26 +59,12 @@ VOID	TuiFadeOut(VOID);										// Fades the screen out
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-struct tagUI_MENU_INFO
-{
-	PCSTR		*MenuItemList;
-	ULONG		MenuItemCount;
-	LONG		MenuTimeRemaining;
-	ULONG		SelectedMenuItem;
-
-	ULONG		Left;
-	ULONG		Top;
-	ULONG		Right;
-	ULONG		Bottom;
-
-};
-
 VOID	NTAPI TuiCalcMenuBoxSize(PUI_MENU_INFO MenuInfo);
 VOID	TuiDrawMenu(PUI_MENU_INFO MenuInfo);
 VOID	NTAPI TuiDrawMenuBox(PUI_MENU_INFO MenuInfo);
 VOID	NTAPI TuiDrawMenuItem(PUI_MENU_INFO MenuInfo, ULONG MenuItemNumber);
 ULONG	NTAPI TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterCallback KeyPressFilter);
-BOOLEAN TuiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
+BOOLEAN	TuiDisplayMenu(PCSTR MenuHeader, PCSTR MenuFooter, BOOLEAN ShowBootOptions, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
 
 /* Definitions for corners, depending on HORIZ and VERT */
 #define UL		(0xda)

@@ -4,7 +4,7 @@
  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
 
-#include <windows.h>
+//#include <windows.h>
 #include <stdlib.h>
 #include <setjmp.h>
 

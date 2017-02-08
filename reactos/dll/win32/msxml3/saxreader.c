@@ -18,24 +18,34 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
 #define COBJMACROS
 
-#include "config.h"
+#include <config.h>
 
-#include <stdarg.h>
-#include <assert.h>
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "ole2.h"
-#include "msxml2.h"
-#include "wininet.h"
-#include "urlmon.h"
-#include "winreg.h"
-#include "shlwapi.h"
+//#include <stdarg.h>
+#ifdef HAVE_LIBXML2
+//# include <libxml/parser.h>
+//# include <libxml/xmlerror.h>
+//# include <libxml/SAX2.h>
+# include <libxml/parserInternals.h>
+#endif
 
-#include "wine/debug.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+//#include "winnls.h"
+#include <ole2.h>
+#include <msxml6.h>
+//#include "wininet.h"
+//#include "urlmon.h"
+//#include "winreg.h"
+//#include "shlwapi.h"
+
+#include <wine/debug.h>
+#include <wine/list.h>
 
 #include "msxml_private.h"
 
@@ -43,116 +53,550 @@ WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 #ifdef HAVE_LIBXML2
 
-#include <libxml/SAX2.h>
-#include <libxml/parserInternals.h>
-
-typedef struct _saxreader
+typedef enum
 {
-    const struct IVBSAXXMLReaderVtbl *lpVBSAXXMLReaderVtbl;
-    const struct ISAXXMLReaderVtbl *lpSAXXMLReaderVtbl;
+    FeatureUnknown               = 0,
+    ExhaustiveErrors             = 1 << 1,
+    ExternalGeneralEntities      = 1 << 2,
+    ExternalParameterEntities    = 1 << 3,
+    ForcedResync                 = 1 << 4,
+    NamespacePrefixes            = 1 << 5,
+    Namespaces                   = 1 << 6,
+    ParameterEntities            = 1 << 7,
+    PreserveSystemIndentifiers   = 1 << 8,
+    ProhibitDTD                  = 1 << 9,
+    SchemaValidation             = 1 << 10,
+    ServerHttpRequest            = 1 << 11,
+    SuppressValidationfatalError = 1 << 12,
+    UseInlineSchema              = 1 << 13,
+    UseSchemaLocation            = 1 << 14,
+    LexicalHandlerParEntities    = 1 << 15
+} saxreader_feature;
+
+/* feature names */
+static const WCHAR FeatureExternalGeneralEntitiesW[] = {
+    'h','t','t','p',':','/','/','x','m','l','.','o','r','g','/','s','a','x','/',
+    'f','e','a','t','u','r','e','s','/','e','x','t','e','r','n','a','l','-','g','e','n','e','r','a','l',
+    '-','e','n','t','i','t','i','e','s',0
+};
+
+static const WCHAR FeatureExternalParameterEntitiesW[] = {
+    'h','t','t','p',':','/','/','x','m','l','.','o','r','g','/','s','a','x','/','f','e','a','t','u','r','e','s',
+    '/','e','x','t','e','r','n','a','l','-','p','a','r','a','m','e','t','e','r','-','e','n','t','i','t','i','e','s',0
+};
+
+static const WCHAR FeatureLexicalHandlerParEntitiesW[] = {
+    'h','t','t','p',':','/','/','x','m','l','.','o','r','g','/','s','a','x','/','f','e','a','t','u','r','e','s',
+    '/','l','e','x','i','c','a','l','-','h','a','n','d','l','e','r','/','p','a','r','a','m','e','t','e','r','-','e','n','t','i','t','i','e','s',0
+};
+
+static const WCHAR FeatureProhibitDTDW[] = {
+    'p','r','o','h','i','b','i','t','-','d','t','d',0
+};
+
+static const WCHAR FeatureNamespacesW[] = {
+    'h','t','t','p',':','/','/','x','m','l','.','o','r','g','/','s','a','x','/','f','e','a','t','u','r','e','s',
+    '/','n','a','m','e','s','p','a','c','e','s',0
+};
+
+static const WCHAR FeatureNamespacePrefixesW[] = {
+    'h','t','t','p',':','/','/','x','m','l','.','o','r','g','/','s','a','x','/','f','e','a','t','u','r','e','s',
+    '/','n','a','m','e','s','p','a','c','e','-','p','r','e','f','i','x','e','s',0
+};
+
+struct saxreader_feature_pair
+{
+    saxreader_feature feature;
+    const WCHAR *name;
+};
+
+static const struct saxreader_feature_pair saxreader_feature_map[] = {
+    { ExternalGeneralEntities, FeatureExternalGeneralEntitiesW },
+    { ExternalParameterEntities, FeatureExternalParameterEntitiesW },
+    { LexicalHandlerParEntities, FeatureLexicalHandlerParEntitiesW },
+    { NamespacePrefixes, FeatureNamespacePrefixesW },
+    { Namespaces, FeatureNamespacesW },
+    { ProhibitDTD, FeatureProhibitDTDW }
+};
+
+static saxreader_feature get_saxreader_feature(const WCHAR *name)
+{
+    int min, max, n, c;
+
+    min = 0;
+    max = sizeof(saxreader_feature_map)/sizeof(struct saxreader_feature_pair) - 1;
+
+    while (min <= max)
+    {
+        n = (min+max)/2;
+
+        c = strcmpW(saxreader_feature_map[n].name, name);
+        if (!c)
+            return saxreader_feature_map[n].feature;
+
+        if (c > 0)
+            max = n-1;
+        else
+            min = n+1;
+    }
+
+    return FeatureUnknown;
+}
+
+struct bstrpool
+{
+    BSTR *pool;
+    unsigned int index;
+    unsigned int len;
+};
+
+typedef struct
+{
+    BSTR prefix;
+    BSTR uri;
+} ns;
+
+typedef struct
+{
+    struct list entry;
+    BSTR prefix;
+    BSTR local;
+    BSTR qname;
+    ns *ns; /* namespaces defined in this particular element */
+    int ns_count;
+} element_entry;
+
+enum saxhandler_type
+{
+    SAXContentHandler = 0,
+    SAXDeclHandler,
+    SAXDTDHandler,
+    SAXEntityResolver,
+    SAXErrorHandler,
+    SAXLexicalHandler,
+    SAXHandler_Last
+};
+
+struct saxanyhandler_iface
+{
+    IUnknown *handler;
+    IUnknown *vbhandler;
+};
+
+struct saxcontenthandler_iface
+{
+    ISAXContentHandler *handler;
+    IVBSAXContentHandler *vbhandler;
+};
+
+struct saxerrorhandler_iface
+{
+    ISAXErrorHandler *handler;
+    IVBSAXErrorHandler *vbhandler;
+};
+
+struct saxlexicalhandler_iface
+{
+    ISAXLexicalHandler *handler;
+    IVBSAXLexicalHandler *vbhandler;
+};
+
+struct saxentityresolver_iface
+{
+    ISAXEntityResolver *handler;
+    IVBSAXEntityResolver *vbhandler;
+};
+
+struct saxhandler_iface
+{
+    union {
+        struct saxcontenthandler_iface content;
+        struct saxentityresolver_iface entityresolver;
+        struct saxerrorhandler_iface error;
+        struct saxlexicalhandler_iface lexical;
+        struct saxanyhandler_iface anyhandler;
+    } u;
+};
+
+typedef struct
+{
+    DispatchEx dispex;
+    IVBSAXXMLReader IVBSAXXMLReader_iface;
+    ISAXXMLReader ISAXXMLReader_iface;
     LONG ref;
-    struct ISAXContentHandler *contentHandler;
-    struct IVBSAXContentHandler *vbcontentHandler;
-    struct ISAXErrorHandler *errorHandler;
-    struct IVBSAXErrorHandler *vberrorHandler;
-    struct ISAXLexicalHandler *lexicalHandler;
-    struct IVBSAXLexicalHandler *vblexicalHandler;
-    struct ISAXDeclHandler *declHandler;
-    struct IVBSAXDeclHandler *vbdeclHandler;
+
+    struct saxhandler_iface saxhandlers[SAXHandler_Last];
     xmlSAXHandler sax;
     BOOL isParsing;
+    struct bstrpool pool;
+    saxreader_feature features;
+    BSTR xmldecl_version;
+    MSXML_VERSION version;
 } saxreader;
 
-typedef struct _saxlocator
+static HRESULT saxreader_put_handler(saxreader *reader, enum saxhandler_type type, void *ptr, BOOL vb)
 {
-    const struct IVBSAXLocatorVtbl *lpVBSAXLocatorVtbl;
-    const struct ISAXLocatorVtbl *lpSAXLocatorVtbl;
-    LONG ref;
-    saxreader *saxreader;
-    HRESULT ret;
-    xmlParserCtxtPtr pParserCtxt;
-    WCHAR *publicId;
-    WCHAR *systemId;
-    xmlChar *lastCur;
-    int line;
-    int realLine;
-    int column;
-    int realColumn;
-    BOOL vbInterface;
-    int nsStackSize;
-    int nsStackLast;
-    int *nsStack;
-} saxlocator;
+    struct saxanyhandler_iface *iface = &reader->saxhandlers[type].u.anyhandler;
+    IUnknown *unk = (IUnknown*)ptr;
 
-typedef struct _saxattributes
-{
-    const struct IVBSAXAttributesVtbl *lpVBSAXAttributesVtbl;
-    const struct ISAXAttributesVtbl *lpSAXAttributesVtbl;
-    LONG ref;
-    int nb_attributes;
-    BSTR *szLocalname;
-    BSTR *szURI;
-    BSTR *szValue;
-    BSTR *szQName;
-} saxattributes;
+    if (unk)
+        IUnknown_AddRef(unk);
 
-static inline saxreader *impl_from_IVBSAXXMLReader( IVBSAXXMLReader *iface )
-{
-    return (saxreader *)((char*)iface - FIELD_OFFSET(saxreader, lpVBSAXXMLReaderVtbl));
-}
+    if ((vb && iface->vbhandler) || (!vb && iface->handler))
+        IUnknown_Release(vb ? iface->vbhandler : iface->handler);
 
-static inline saxreader *impl_from_ISAXXMLReader( ISAXXMLReader *iface )
-{
-    return (saxreader *)((char*)iface - FIELD_OFFSET(saxreader, lpSAXXMLReaderVtbl));
-}
-
-static inline saxlocator *impl_from_IVBSAXLocator( IVBSAXLocator *iface )
-{
-    return (saxlocator *)((char*)iface - FIELD_OFFSET(saxlocator, lpVBSAXLocatorVtbl));
-}
-
-static inline saxlocator *impl_from_ISAXLocator( ISAXLocator *iface )
-{
-    return (saxlocator *)((char*)iface - FIELD_OFFSET(saxlocator, lpSAXLocatorVtbl));
-}
-
-static inline saxattributes *impl_from_IVBSAXAttributes( IVBSAXAttributes *iface )
-{
-    return (saxattributes *)((char*)iface - FIELD_OFFSET(saxattributes, lpVBSAXAttributesVtbl));
-}
-
-static inline saxattributes *impl_from_ISAXAttributes( ISAXAttributes *iface )
-{
-    return (saxattributes *)((char*)iface - FIELD_OFFSET(saxattributes, lpSAXAttributesVtbl));
-}
-
-static inline BOOL has_content_handler(const saxlocator *locator)
-{
-    return  (locator->vbInterface && locator->saxreader->vbcontentHandler) ||
-           (!locator->vbInterface && locator->saxreader->contentHandler);
-}
-
-static HRESULT namespacePush(saxlocator *locator, int ns)
-{
-    if(locator->nsStackLast>=locator->nsStackSize)
-    {
-        int *new_stack;
-
-        new_stack = HeapReAlloc(GetProcessHeap(), 0,
-                locator->nsStack, sizeof(int)*locator->nsStackSize*2);
-        if(!new_stack) return E_OUTOFMEMORY;
-        locator->nsStack = new_stack;
-        locator->nsStackSize *= 2;
-    }
-    locator->nsStack[locator->nsStackLast++] = ns;
+    if (vb)
+        iface->vbhandler = unk;
+    else
+        iface->handler = unk;
 
     return S_OK;
 }
 
-static int namespacePop(saxlocator *locator)
+static HRESULT saxreader_get_handler(const saxreader *reader, enum saxhandler_type type, BOOL vb, void **ret)
 {
-    if(locator->nsStackLast == 0) return 0;
-    return locator->nsStack[--locator->nsStackLast];
+    const struct saxanyhandler_iface *iface = &reader->saxhandlers[type].u.anyhandler;
+
+    if (!ret) return E_POINTER;
+
+    if ((vb && iface->vbhandler) || (!vb && iface->handler))
+    {
+        if (vb)
+            IUnknown_AddRef(iface->vbhandler);
+        else
+            IUnknown_AddRef(iface->handler);
+    }
+
+    *ret = vb ? iface->vbhandler : iface->handler;
+
+    return S_OK;
+}
+
+static struct saxcontenthandler_iface *saxreader_get_contenthandler(saxreader *reader)
+{
+    return &reader->saxhandlers[SAXContentHandler].u.content;
+}
+
+static struct saxerrorhandler_iface *saxreader_get_errorhandler(saxreader *reader)
+{
+    return &reader->saxhandlers[SAXErrorHandler].u.error;
+}
+
+static struct saxlexicalhandler_iface *saxreader_get_lexicalhandler(saxreader *reader)
+{
+    return &reader->saxhandlers[SAXLexicalHandler].u.lexical;
+}
+
+typedef struct
+{
+    IVBSAXLocator IVBSAXLocator_iface;
+    ISAXLocator ISAXLocator_iface;
+    IVBSAXAttributes IVBSAXAttributes_iface;
+    ISAXAttributes ISAXAttributes_iface;
+    LONG ref;
+    saxreader *saxreader;
+    HRESULT ret;
+    xmlParserCtxtPtr pParserCtxt;
+    BSTR publicId;
+    BSTR systemId;
+    int line;
+    int column;
+    BOOL vbInterface;
+    struct list elements;
+
+    BSTR namespaceUri;
+    int attributesSize;
+    int nb_attributes;
+    struct _attributes
+    {
+        BSTR szLocalname;
+        BSTR szURI;
+        BSTR szValue;
+        BSTR szQName;
+    } *attributes;
+} saxlocator;
+
+static inline saxreader *impl_from_IVBSAXXMLReader( IVBSAXXMLReader *iface )
+{
+    return CONTAINING_RECORD(iface, saxreader, IVBSAXXMLReader_iface);
+}
+
+static inline saxreader *impl_from_ISAXXMLReader( ISAXXMLReader *iface )
+{
+    return CONTAINING_RECORD(iface, saxreader, ISAXXMLReader_iface);
+}
+
+static inline saxlocator *impl_from_IVBSAXLocator( IVBSAXLocator *iface )
+{
+    return CONTAINING_RECORD(iface, saxlocator, IVBSAXLocator_iface);
+}
+
+static inline saxlocator *impl_from_ISAXLocator( ISAXLocator *iface )
+{
+    return CONTAINING_RECORD(iface, saxlocator, ISAXLocator_iface);
+}
+
+static inline saxlocator *impl_from_IVBSAXAttributes( IVBSAXAttributes *iface )
+{
+    return CONTAINING_RECORD(iface, saxlocator, IVBSAXAttributes_iface);
+}
+
+static inline saxlocator *impl_from_ISAXAttributes( ISAXAttributes *iface )
+{
+    return CONTAINING_RECORD(iface, saxlocator, ISAXAttributes_iface);
+}
+
+static inline int saxreader_has_handler(const saxlocator *locator, enum saxhandler_type type)
+{
+    struct saxanyhandler_iface *iface = &locator->saxreader->saxhandlers[type].u.anyhandler;
+    return (locator->vbInterface && iface->vbhandler) || (!locator->vbInterface && iface->handler);
+}
+
+static HRESULT saxreader_saxcharacters(saxlocator *locator, BSTR chars)
+{
+    struct saxcontenthandler_iface *content = saxreader_get_contenthandler(locator->saxreader);
+    HRESULT hr;
+
+    if (!saxreader_has_handler(locator, SAXContentHandler)) return S_OK;
+
+    if (locator->vbInterface)
+        hr = IVBSAXContentHandler_characters(content->vbhandler, &chars);
+    else
+        hr = ISAXContentHandler_characters(content->handler, chars, SysStringLen(chars));
+
+    return hr;
+}
+
+/* property names */
+static const WCHAR PropertyCharsetW[] = {
+    'c','h','a','r','s','e','t',0
+};
+static const WCHAR PropertyXmlDeclVersionW[] = {
+    'x','m','l','d','e','c','l','-','v','e','r','s','i','o','n',0
+};
+static const WCHAR PropertyDeclHandlerW[] = {
+    'h','t','t','p',':','/','/','x','m','l','.','o','r','g','/',
+    's','a','x','/','p','r','o','p','e','r','t','i','e','s','/',
+    'd','e','c','l','a','r','a','t','i','o','n',
+    '-','h','a','n','d','l','e','r',0
+};
+static const WCHAR PropertyDomNodeW[] = {
+    'h','t','t','p',':','/','/','x','m','l','.','o','r','g','/',
+    's','a','x','/','p','r','o','p','e','r','t','i','e','s','/',
+    'd','o','m','-','n','o','d','e',0
+};
+static const WCHAR PropertyInputSourceW[] = {
+    'i','n','p','u','t','-','s','o','u','r','c','e',0
+};
+static const WCHAR PropertyLexicalHandlerW[] = {
+    'h','t','t','p',':','/','/','x','m','l','.','o','r','g','/',
+    's','a','x','/','p','r','o','p','e','r','t','i','e','s','/',
+    'l','e','x','i','c','a','l','-','h','a','n','d','l','e','r',0
+};
+static const WCHAR PropertyMaxElementDepthW[] = {
+    'm','a','x','-','e','l','e','m','e','n','t','-','d','e','p','t','h',0
+};
+static const WCHAR PropertyMaxXMLSizeW[] = {
+    'm','a','x','-','x','m','l','-','s','i','z','e',0
+};
+static const WCHAR PropertySchemaDeclHandlerW[] = {
+    's','c','h','e','m','a','-','d','e','c','l','a','r','a','t','i','o','n','-',
+    'h','a','n','d','l','e','r',0
+};
+static const WCHAR PropertyXMLDeclEncodingW[] = {
+    'x','m','l','d','e','c','l','-','e','n','c','o','d','i','n','g',0
+};
+static const WCHAR PropertyXMLDeclStandaloneW[] = {
+    'x','m','l','d','e','c','l','-','s','t','a','n','d','a','l','o','n','e',0
+};
+static const WCHAR PropertyXMLDeclVersionW[] = {
+    'x','m','l','d','e','c','l','-','v','e','r','s','i','o','n',0
+};
+
+static inline HRESULT set_feature_value(saxreader *reader, saxreader_feature feature, VARIANT_BOOL value)
+{
+    /* handling of non-VARIANT_* values is version dependent */
+    if ((reader->version <  MSXML4) && (value != VARIANT_TRUE))
+        value = VARIANT_FALSE;
+    if ((reader->version >= MSXML4) && (value != VARIANT_FALSE))
+        value = VARIANT_TRUE;
+
+    if (value == VARIANT_TRUE)
+        reader->features |=  feature;
+    else
+        reader->features &= ~feature;
+
+    return S_OK;
+}
+
+static inline HRESULT get_feature_value(const saxreader *reader, saxreader_feature feature, VARIANT_BOOL *value)
+{
+    *value = reader->features & feature ? VARIANT_TRUE : VARIANT_FALSE;
+    return S_OK;
+}
+
+static BOOL is_namespaces_enabled(const saxreader *reader)
+{
+    return (reader->version < MSXML4) || (reader->features & Namespaces);
+}
+
+static BSTR build_qname(BSTR prefix, BSTR local)
+{
+    if (prefix && *prefix)
+    {
+        BSTR qname = SysAllocStringLen(NULL, SysStringLen(prefix) + SysStringLen(local) + 1);
+        WCHAR *ptr;
+
+        ptr = qname;
+        strcpyW(ptr, prefix);
+        ptr += SysStringLen(prefix);
+        *ptr++ = ':';
+        strcpyW(ptr, local);
+        return qname;
+    }
+    else
+        return SysAllocString(local);
+}
+
+static element_entry* alloc_element_entry(const xmlChar *local, const xmlChar *prefix, int nb_ns,
+    const xmlChar **namespaces)
+{
+    element_entry *ret;
+    int i;
+
+    ret = heap_alloc(sizeof(*ret));
+    if (!ret) return ret;
+
+    ret->local  = bstr_from_xmlChar(local);
+    ret->prefix = bstr_from_xmlChar(prefix);
+    ret->qname  = build_qname(ret->prefix, ret->local);
+    ret->ns = nb_ns ? heap_alloc(nb_ns*sizeof(ns)) : NULL;
+    ret->ns_count = nb_ns;
+
+    for (i=0; i < nb_ns; i++)
+    {
+        ret->ns[i].prefix = bstr_from_xmlChar(namespaces[2*i]);
+        ret->ns[i].uri = bstr_from_xmlChar(namespaces[2*i+1]);
+    }
+
+    return ret;
+}
+
+static void free_element_entry(element_entry *element)
+{
+    int i;
+
+    for (i=0; i<element->ns_count;i++)
+    {
+        SysFreeString(element->ns[i].prefix);
+        SysFreeString(element->ns[i].uri);
+    }
+
+    SysFreeString(element->prefix);
+    SysFreeString(element->local);
+
+    heap_free(element->ns);
+    heap_free(element);
+}
+
+static void push_element_ns(saxlocator *locator, element_entry *element)
+{
+    list_add_head(&locator->elements, &element->entry);
+}
+
+static element_entry * pop_element_ns(saxlocator *locator)
+{
+    element_entry *element = LIST_ENTRY(list_head(&locator->elements), element_entry, entry);
+
+    if (element)
+        list_remove(&element->entry);
+
+    return element;
+}
+
+static BSTR find_element_uri(saxlocator *locator, const xmlChar *uri)
+{
+    element_entry *element;
+    BSTR uriW;
+    int i;
+
+    if (!uri) return NULL;
+
+    uriW = bstr_from_xmlChar(uri);
+
+    LIST_FOR_EACH_ENTRY(element, &locator->elements, element_entry, entry)
+    {
+        for (i=0; i < element->ns_count; i++)
+            if (!strcmpW(uriW, element->ns[i].uri))
+            {
+                SysFreeString(uriW);
+                return element->ns[i].uri;
+            }
+    }
+
+    SysFreeString(uriW);
+    ERR("namespace uri not found, %s\n", debugstr_a((char*)uri));
+    return NULL;
+}
+
+/* used to localize version dependent error check behaviour */
+static inline BOOL sax_callback_failed(saxlocator *This, HRESULT hr)
+{
+    return This->saxreader->version >= MSXML4 ? FAILED(hr) : hr != S_OK;
+}
+
+/* index value -1 means it tries to loop for a first time */
+static inline BOOL iterate_endprefix_index(saxlocator *This, const element_entry *element, int *i)
+{
+    if (This->saxreader->version >= MSXML4)
+    {
+        if (*i == -1) *i = 0; else ++*i;
+        return *i < element->ns_count;
+    }
+    else
+    {
+        if (*i == -1) *i = element->ns_count-1; else --*i;
+        return *i >= 0;
+    }
+}
+
+static BOOL bstr_pool_insert(struct bstrpool *pool, BSTR pool_entry)
+{
+    if (!pool->pool)
+    {
+        pool->pool = HeapAlloc(GetProcessHeap(), 0, 16 * sizeof(*pool->pool));
+        if (!pool->pool)
+            return FALSE;
+
+        pool->index = 0;
+        pool->len = 16;
+    }
+    else if (pool->index == pool->len)
+    {
+        BSTR *realloc = HeapReAlloc(GetProcessHeap(), 0, pool->pool, pool->len * 2 * sizeof(*realloc));
+
+        if (!realloc)
+            return FALSE;
+
+        pool->pool = realloc;
+        pool->len *= 2;
+    }
+
+    pool->pool[pool->index++] = pool_entry;
+    return TRUE;
+}
+
+static void free_bstr_pool(struct bstrpool *pool)
+{
+    unsigned int i;
+
+    for (i = 0; i < pool->index; i++)
+        SysFreeString(pool->pool[i]);
+
+    HeapFree(GetProcessHeap(), 0, pool->pool);
+
+    pool->pool = NULL;
+    pool->index = pool->len = 0;
 }
 
 static BSTR bstr_from_xmlCharN(const xmlChar *buf, int len)
@@ -176,34 +620,54 @@ static BSTR bstr_from_xmlCharN(const xmlChar *buf, int len)
 
 static BSTR QName_from_xmlChar(const xmlChar *prefix, const xmlChar *name)
 {
-    DWORD dLen, dLast;
+    xmlChar *qname;
     BSTR bstr;
 
     if(!name) return NULL;
 
-    if(!prefix || *prefix=='\0')
+    if(!prefix || !*prefix)
         return bstr_from_xmlChar(name);
 
-    dLen = MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)prefix, -1, NULL, 0)
-        + MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)name, -1, NULL, 0);
-    bstr = SysAllocStringLen(NULL, dLen-1);
-    if(!bstr)
-        return NULL;
-
-    dLast = MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)prefix, -1, bstr, dLen);
-    bstr[dLast-1] = ':';
-    MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)name, -1, &bstr[dLast], dLen-dLast);
+    qname = xmlBuildQName(name, prefix, NULL, 0);
+    bstr = bstr_from_xmlChar(qname);
+    xmlFree(qname);
 
     return bstr;
 }
 
+static BSTR pooled_bstr_from_xmlChar(struct bstrpool *pool, const xmlChar *buf)
+{
+    BSTR pool_entry = bstr_from_xmlChar(buf);
+
+    if (pool_entry && !bstr_pool_insert(pool, pool_entry))
+    {
+        SysFreeString(pool_entry);
+        return NULL;
+    }
+
+    return pool_entry;
+}
+
+static BSTR pooled_bstr_from_xmlCharN(struct bstrpool *pool, const xmlChar *buf, int len)
+{
+    BSTR pool_entry = bstr_from_xmlCharN(buf, len);
+
+    if (pool_entry && !bstr_pool_insert(pool, pool_entry))
+    {
+        SysFreeString(pool_entry);
+        return NULL;
+    }
+
+    return pool_entry;
+}
+
 static void format_error_message_from_id(saxlocator *This, HRESULT hr)
 {
+    struct saxerrorhandler_iface *handler = saxreader_get_errorhandler(This->saxreader);
     xmlStopParser(This->pParserCtxt);
     This->ret = hr;
 
-    if((This->vbInterface && This->saxreader->vberrorHandler)
-            || (!This->vbInterface && This->saxreader->errorHandler))
+    if (saxreader_has_handler(This, SAXErrorHandler))
     {
         WCHAR msg[1024];
         if(!FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM,
@@ -216,63 +680,31 @@ static void format_error_message_from_id(saxlocator *This, HRESULT hr)
         if(This->vbInterface)
         {
             BSTR bstrMsg = SysAllocString(msg);
-            IVBSAXErrorHandler_fatalError(This->saxreader->vberrorHandler,
-                    (IVBSAXLocator*)&This->lpVBSAXLocatorVtbl, &bstrMsg, hr);
+            IVBSAXErrorHandler_fatalError(handler->vbhandler,
+                    &This->IVBSAXLocator_iface, &bstrMsg, hr);
+            SysFreeString(bstrMsg);
         }
         else
-            ISAXErrorHandler_fatalError(This->saxreader->errorHandler,
-                    (ISAXLocator*)&This->lpSAXLocatorVtbl, msg, hr);
+            ISAXErrorHandler_fatalError(handler->handler,
+                    &This->ISAXLocator_iface, msg, hr);
     }
 }
 
-static void update_position(saxlocator *This, xmlChar *end)
+static void update_position(saxlocator *This, BOOL fix_column)
 {
-    if(This->lastCur == NULL)
+    const xmlChar *p = This->pParserCtxt->input->cur-1;
+
+    This->line = xmlSAX2GetLineNumber(This->pParserCtxt);
+    if(fix_column)
     {
-        This->lastCur = (xmlChar*)This->pParserCtxt->input->base;
-        This->realLine = 1;
-        This->realColumn = 1;
+        This->column = 1;
+        for(; *p!='\n' && *p!='\r' && p>=This->pParserCtxt->input->base; p--)
+            This->column++;
     }
-    else if(This->lastCur < This->pParserCtxt->input->base)
+    else
     {
-        This->lastCur = (xmlChar*)This->pParserCtxt->input->base;
-        This->realLine = 1;
-        This->realColumn = 1;
+        This->column = xmlSAX2GetColumnNumber(This->pParserCtxt);
     }
-
-    if(This->pParserCtxt->input->cur<This->lastCur)
-    {
-        This->lastCur = (xmlChar*)This->pParserCtxt->input->base;
-        This->realLine -= 1;
-        This->realColumn = 1;
-    }
-
-    if(!end) end = (xmlChar*)This->pParserCtxt->input->cur;
-
-    while(This->lastCur < end)
-    {
-        if(*(This->lastCur) == '\n')
-        {
-            This->realLine++;
-            This->realColumn = 1;
-        }
-        else if(*(This->lastCur) == '\r' &&
-                (This->lastCur==This->pParserCtxt->input->end ||
-                 *(This->lastCur+1)!='\n'))
-        {
-            This->realLine++;
-            This->realColumn = 1;
-        }
-        else This->realColumn++;
-
-        This->lastCur++;
-
-        /* Count multibyte UTF8 encoded characters once */
-        while((*(This->lastCur)&0xC0) == 0x80) This->lastCur++;
-    }
-
-    This->line = This->realLine;
-    This->column = This->realColumn;
 }
 
 /*** IVBSAXAttributes interface ***/
@@ -282,45 +714,27 @@ static HRESULT WINAPI ivbsaxattributes_QueryInterface(
         REFIID riid,
         void **ppvObject)
 {
-    saxattributes *This = impl_from_IVBSAXAttributes(iface);
-
+    saxlocator *This = impl_from_IVBSAXAttributes(iface);
     TRACE("%p %s %p\n", This, debugstr_guid(riid), ppvObject);
-
-    *ppvObject = NULL;
-
-    if (IsEqualGUID(riid, &IID_IUnknown) ||
-            IsEqualGUID(riid, &IID_IDispatch) ||
-            IsEqualGUID(riid, &IID_IVBSAXAttributes))
-    {
-        *ppvObject = iface;
-    }
-    else
-    {
-        FIXME("interface %s not implemented\n", debugstr_guid(riid));
-        return E_NOINTERFACE;
-    }
-
-    IVBSAXAttributes_AddRef(iface);
-
-    return S_OK;
+    return IVBSAXLocator_QueryInterface(&This->IVBSAXLocator_iface, riid, ppvObject);
 }
 
 static ULONG WINAPI ivbsaxattributes_AddRef(IVBSAXAttributes* iface)
 {
-    saxattributes *This = impl_from_IVBSAXAttributes(iface);
-    return ISAXAttributes_AddRef((ISAXAttributes*)&This->lpSAXAttributesVtbl);
+    saxlocator *This = impl_from_IVBSAXAttributes(iface);
+    return ISAXLocator_AddRef(&This->ISAXLocator_iface);
 }
 
 static ULONG WINAPI ivbsaxattributes_Release(IVBSAXAttributes* iface)
 {
-    saxattributes *This = impl_from_IVBSAXAttributes(iface);
-    return ISAXAttributes_Release((ISAXAttributes*)&This->lpSAXAttributesVtbl);
+    saxlocator *This = impl_from_IVBSAXAttributes(iface);
+    return ISAXLocator_Release(&This->ISAXLocator_iface);
 }
 
 /*** IDispatch methods ***/
 static HRESULT WINAPI ivbsaxattributes_GetTypeInfoCount( IVBSAXAttributes *iface, UINT* pctinfo )
 {
-    saxattributes *This = impl_from_IVBSAXAttributes( iface );
+    saxlocator *This = impl_from_IVBSAXAttributes( iface );
 
     TRACE("(%p)->(%p)\n", This, pctinfo);
 
@@ -333,7 +747,7 @@ static HRESULT WINAPI ivbsaxattributes_GetTypeInfo(
     IVBSAXAttributes *iface,
     UINT iTInfo, LCID lcid, ITypeInfo** ppTInfo )
 {
-    saxattributes *This = impl_from_IVBSAXAttributes( iface );
+    saxlocator *This = impl_from_IVBSAXAttributes( iface );
     HRESULT hr;
 
     TRACE("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
@@ -351,7 +765,7 @@ static HRESULT WINAPI ivbsaxattributes_GetIDsOfNames(
     LCID lcid,
     DISPID* rgDispId)
 {
-    saxattributes *This = impl_from_IVBSAXAttributes( iface );
+    saxlocator *This = impl_from_IVBSAXAttributes( iface );
     ITypeInfo *typeinfo;
     HRESULT hr;
 
@@ -382,7 +796,7 @@ static HRESULT WINAPI ivbsaxattributes_Invoke(
     EXCEPINFO* pExcepInfo,
     UINT* puArgErr)
 {
-    saxattributes *This = impl_from_IVBSAXAttributes( iface );
+    saxlocator *This = impl_from_IVBSAXAttributes( iface );
     ITypeInfo *typeinfo;
     HRESULT hr;
 
@@ -392,8 +806,8 @@ static HRESULT WINAPI ivbsaxattributes_Invoke(
     hr = get_typeinfo(IVBSAXAttributes_tid, &typeinfo);
     if(SUCCEEDED(hr))
     {
-        hr = ITypeInfo_Invoke(typeinfo, &(This->lpVBSAXAttributesVtbl), dispIdMember, wFlags, pDispParams,
-                pVarResult, pExcepInfo, puArgErr);
+        hr = ITypeInfo_Invoke(typeinfo, &This->IVBSAXAttributes_iface, dispIdMember, wFlags,
+                pDispParams, pVarResult, pExcepInfo, puArgErr);
         ITypeInfo_Release(typeinfo);
     }
 
@@ -405,10 +819,8 @@ static HRESULT WINAPI ivbsaxattributes_get_length(
         IVBSAXAttributes* iface,
         int *nLength)
 {
-    saxattributes *This = impl_from_IVBSAXAttributes( iface );
-    return ISAXAttributes_getLength(
-            (ISAXAttributes*)&This->lpSAXAttributesVtbl,
-            nLength);
+    saxlocator *This = impl_from_IVBSAXAttributes( iface );
+    return ISAXAttributes_getLength(&This->ISAXAttributes_iface, nLength);
 }
 
 static HRESULT WINAPI ivbsaxattributes_getURI(
@@ -417,10 +829,8 @@ static HRESULT WINAPI ivbsaxattributes_getURI(
         BSTR *uri)
 {
     int len;
-    saxattributes *This = impl_from_IVBSAXAttributes( iface );
-    return ISAXAttributes_getURI(
-            (ISAXAttributes*)&This->lpSAXAttributesVtbl,
-            nIndex, (const WCHAR**)uri, &len);
+    saxlocator *This = impl_from_IVBSAXAttributes( iface );
+    return ISAXAttributes_getURI(&This->ISAXAttributes_iface, nIndex, (const WCHAR**)uri, &len);
 }
 
 static HRESULT WINAPI ivbsaxattributes_getLocalName(
@@ -429,10 +839,9 @@ static HRESULT WINAPI ivbsaxattributes_getLocalName(
         BSTR *localName)
 {
     int len;
-    saxattributes *This = impl_from_IVBSAXAttributes( iface );
-    return ISAXAttributes_getLocalName(
-            (ISAXAttributes*)&This->lpSAXAttributesVtbl,
-            nIndex, (const WCHAR**)localName, &len);
+    saxlocator *This = impl_from_IVBSAXAttributes( iface );
+    return ISAXAttributes_getLocalName(&This->ISAXAttributes_iface, nIndex,
+            (const WCHAR**)localName, &len);
 }
 
 static HRESULT WINAPI ivbsaxattributes_getQName(
@@ -441,10 +850,8 @@ static HRESULT WINAPI ivbsaxattributes_getQName(
         BSTR *QName)
 {
     int len;
-    saxattributes *This = impl_from_IVBSAXAttributes( iface );
-    return ISAXAttributes_getQName(
-            (ISAXAttributes*)&This->lpSAXAttributesVtbl,
-            nIndex, (const WCHAR**)QName, &len);
+    saxlocator *This = impl_from_IVBSAXAttributes( iface );
+    return ISAXAttributes_getQName(&This->ISAXAttributes_iface, nIndex, (const WCHAR**)QName, &len);
 }
 
 static HRESULT WINAPI ivbsaxattributes_getIndexFromName(
@@ -453,9 +860,8 @@ static HRESULT WINAPI ivbsaxattributes_getIndexFromName(
         BSTR localName,
         int *index)
 {
-    saxattributes *This = impl_from_IVBSAXAttributes( iface );
-    return ISAXAttributes_getIndexFromName(
-            (ISAXAttributes*)&This->lpSAXAttributesVtbl, uri, SysStringLen(uri),
+    saxlocator *This = impl_from_IVBSAXAttributes( iface );
+    return ISAXAttributes_getIndexFromName(&This->ISAXAttributes_iface, uri, SysStringLen(uri),
             localName, SysStringLen(localName), index);
 }
 
@@ -464,9 +870,8 @@ static HRESULT WINAPI ivbsaxattributes_getIndexFromQName(
         BSTR QName,
         int *index)
 {
-    saxattributes *This = impl_from_IVBSAXAttributes( iface );
-    return ISAXAttributes_getIndexFromQName(
-            (ISAXAttributes*)&This->lpSAXAttributesVtbl, QName,
+    saxlocator *This = impl_from_IVBSAXAttributes( iface );
+    return ISAXAttributes_getIndexFromQName(&This->ISAXAttributes_iface, QName,
             SysStringLen(QName), index);
 }
 
@@ -476,10 +881,8 @@ static HRESULT WINAPI ivbsaxattributes_getType(
         BSTR *type)
 {
     int len;
-    saxattributes *This = impl_from_IVBSAXAttributes( iface );
-    return ISAXAttributes_getType(
-            (ISAXAttributes*)&This->lpSAXAttributesVtbl,
-            nIndex, (const WCHAR**)type, &len);
+    saxlocator *This = impl_from_IVBSAXAttributes( iface );
+    return ISAXAttributes_getType(&This->ISAXAttributes_iface, nIndex, (const WCHAR**)type, &len);
 }
 
 static HRESULT WINAPI ivbsaxattributes_getTypeFromName(
@@ -489,9 +892,8 @@ static HRESULT WINAPI ivbsaxattributes_getTypeFromName(
         BSTR *type)
 {
     int len;
-    saxattributes *This = impl_from_IVBSAXAttributes( iface );
-    return ISAXAttributes_getTypeFromName(
-            (ISAXAttributes*)&This->lpSAXAttributesVtbl, uri, SysStringLen(uri),
+    saxlocator *This = impl_from_IVBSAXAttributes( iface );
+    return ISAXAttributes_getTypeFromName(&This->ISAXAttributes_iface, uri, SysStringLen(uri),
             localName, SysStringLen(localName), (const WCHAR**)type, &len);
 }
 
@@ -501,10 +903,9 @@ static HRESULT WINAPI ivbsaxattributes_getTypeFromQName(
         BSTR *type)
 {
     int len;
-    saxattributes *This = impl_from_IVBSAXAttributes( iface );
-    return ISAXAttributes_getTypeFromQName(
-            (ISAXAttributes*)&This->lpSAXAttributesVtbl, QName,
-            SysStringLen(QName), (const WCHAR**)type, &len);
+    saxlocator *This = impl_from_IVBSAXAttributes( iface );
+    return ISAXAttributes_getTypeFromQName(&This->ISAXAttributes_iface, QName, SysStringLen(QName),
+            (const WCHAR**)type, &len);
 }
 
 static HRESULT WINAPI ivbsaxattributes_getValue(
@@ -513,10 +914,8 @@ static HRESULT WINAPI ivbsaxattributes_getValue(
         BSTR *value)
 {
     int len;
-    saxattributes *This = impl_from_IVBSAXAttributes( iface );
-    return ISAXAttributes_getValue(
-            (ISAXAttributes*)&This->lpSAXAttributesVtbl,
-            nIndex, (const WCHAR**)value, &len);
+    saxlocator *This = impl_from_IVBSAXAttributes( iface );
+    return ISAXAttributes_getValue(&This->ISAXAttributes_iface, nIndex, (const WCHAR**)value, &len);
 }
 
 static HRESULT WINAPI ivbsaxattributes_getValueFromName(
@@ -526,9 +925,8 @@ static HRESULT WINAPI ivbsaxattributes_getValueFromName(
         BSTR *value)
 {
     int len;
-    saxattributes *This = impl_from_IVBSAXAttributes( iface );
-    return ISAXAttributes_getValueFromName(
-            (ISAXAttributes*)&This->lpSAXAttributesVtbl, uri, SysStringLen(uri),
+    saxlocator *This = impl_from_IVBSAXAttributes( iface );
+    return ISAXAttributes_getValueFromName(&This->ISAXAttributes_iface, uri, SysStringLen(uri),
             localName, SysStringLen(localName), (const WCHAR**)value, &len);
 }
 
@@ -538,9 +936,8 @@ static HRESULT WINAPI ivbsaxattributes_getValueFromQName(
         BSTR *value)
 {
     int len;
-    saxattributes *This = impl_from_IVBSAXAttributes( iface );
-    return ISAXAttributes_getValueFromQName(
-            (ISAXAttributes*)&This->lpSAXAttributesVtbl, QName,
+    saxlocator *This = impl_from_IVBSAXAttributes( iface );
+    return ISAXAttributes_getValueFromQName(&This->ISAXAttributes_iface, QName,
             SysStringLen(QName), (const WCHAR**)value, &len);
 }
 
@@ -574,63 +971,24 @@ static HRESULT WINAPI isaxattributes_QueryInterface(
         REFIID riid,
         void **ppvObject)
 {
-    saxattributes *This = impl_from_ISAXAttributes(iface);
-
+    saxlocator *This = impl_from_ISAXAttributes(iface);
     TRACE("%p %s %p\n", This, debugstr_guid(riid), ppvObject);
-
-    *ppvObject = NULL;
-
-    if (IsEqualGUID(riid, &IID_IUnknown) ||
-            IsEqualGUID(riid, &IID_ISAXAttributes))
-    {
-        *ppvObject = iface;
-    }
-    else
-    {
-        FIXME("interface %s not implemented\n", debugstr_guid(riid));
-        return E_NOINTERFACE;
-    }
-
-    ISAXAttributes_AddRef(iface);
-
-    return S_OK;
+    return ISAXLocator_QueryInterface(&This->ISAXLocator_iface, riid, ppvObject);
 }
 
 static ULONG WINAPI isaxattributes_AddRef(ISAXAttributes* iface)
 {
-    saxattributes *This = impl_from_ISAXAttributes(iface);
+    saxlocator *This = impl_from_ISAXAttributes(iface);
     TRACE("%p\n", This);
-    return InterlockedIncrement(&This->ref);
+    return ISAXLocator_AddRef(&This->ISAXLocator_iface);
 }
 
 static ULONG WINAPI isaxattributes_Release(ISAXAttributes* iface)
 {
-    saxattributes *This = impl_from_ISAXAttributes(iface);
-    LONG ref;
+    saxlocator *This = impl_from_ISAXAttributes(iface);
 
     TRACE("%p\n", This);
-
-    ref = InterlockedDecrement(&This->ref);
-    if (ref==0)
-    {
-        int index;
-        for(index=0; index<This->nb_attributes; index++)
-        {
-            SysFreeString(This->szLocalname[index]);
-            SysFreeString(This->szURI[index]);
-            SysFreeString(This->szValue[index]);
-            SysFreeString(This->szQName[index]);
-        }
-
-        heap_free(This->szLocalname);
-        heap_free(This->szURI);
-        heap_free(This->szValue);
-        heap_free(This->szQName);
-
-        heap_free(This);
-    }
-
-    return ref;
+    return ISAXLocator_Release(&This->ISAXLocator_iface);
 }
 
 /*** ISAXAttributes methods ***/
@@ -638,7 +996,7 @@ static HRESULT WINAPI isaxattributes_getLength(
         ISAXAttributes* iface,
         int *length)
 {
-    saxattributes *This = impl_from_ISAXAttributes( iface );
+    saxlocator *This = impl_from_ISAXAttributes( iface );
 
     *length = This->nb_attributes;
     TRACE("Length set to %d\n", *length);
@@ -647,18 +1005,20 @@ static HRESULT WINAPI isaxattributes_getLength(
 
 static HRESULT WINAPI isaxattributes_getURI(
         ISAXAttributes* iface,
-        int nIndex,
-        const WCHAR **pUrl,
-        int *pUriSize)
+        int index,
+        const WCHAR **url,
+        int *size)
 {
-    saxattributes *This = impl_from_ISAXAttributes( iface );
-    TRACE("(%p)->(%d)\n", This, nIndex);
+    saxlocator *This = impl_from_ISAXAttributes( iface );
+    TRACE("(%p)->(%d)\n", This, index);
 
-    if(nIndex>=This->nb_attributes || nIndex<0) return E_INVALIDARG;
-    if(!pUrl || !pUriSize) return E_POINTER;
+    if(index >= This->nb_attributes || index < 0) return E_INVALIDARG;
+    if(!url || !size) return E_POINTER;
 
-    *pUriSize = SysStringLen(This->szURI[nIndex]);
-    *pUrl = This->szURI[nIndex];
+    *size = SysStringLen(This->attributes[index].szURI);
+    *url = This->attributes[index].szURI;
+
+    TRACE("(%s:%d)\n", debugstr_w(This->attributes[index].szURI), *size);
 
     return S_OK;
 }
@@ -669,14 +1029,14 @@ static HRESULT WINAPI isaxattributes_getLocalName(
         const WCHAR **pLocalName,
         int *pLocalNameLength)
 {
-    saxattributes *This = impl_from_ISAXAttributes( iface );
+    saxlocator *This = impl_from_ISAXAttributes( iface );
     TRACE("(%p)->(%d)\n", This, nIndex);
 
     if(nIndex>=This->nb_attributes || nIndex<0) return E_INVALIDARG;
     if(!pLocalName || !pLocalNameLength) return E_POINTER;
 
-    *pLocalNameLength = SysStringLen(This->szLocalname[nIndex]);
-    *pLocalName = This->szLocalname[nIndex];
+    *pLocalNameLength = SysStringLen(This->attributes[nIndex].szLocalname);
+    *pLocalName = This->attributes[nIndex].szLocalname;
 
     return S_OK;
 }
@@ -687,41 +1047,43 @@ static HRESULT WINAPI isaxattributes_getQName(
         const WCHAR **pQName,
         int *pQNameLength)
 {
-    saxattributes *This = impl_from_ISAXAttributes( iface );
+    saxlocator *This = impl_from_ISAXAttributes( iface );
     TRACE("(%p)->(%d)\n", This, nIndex);
 
     if(nIndex>=This->nb_attributes || nIndex<0) return E_INVALIDARG;
     if(!pQName || !pQNameLength) return E_POINTER;
 
-    *pQNameLength = SysStringLen(This->szQName[nIndex]);
-    *pQName = This->szQName[nIndex];
+    *pQNameLength = SysStringLen(This->attributes[nIndex].szQName);
+    *pQName = This->attributes[nIndex].szQName;
 
     return S_OK;
 }
 
 static HRESULT WINAPI isaxattributes_getName(
         ISAXAttributes* iface,
-        int nIndex,
-        const WCHAR **pUri,
+        int index,
+        const WCHAR **uri,
         int *pUriLength,
-        const WCHAR **pLocalName,
+        const WCHAR **localName,
         int *pLocalNameSize,
-        const WCHAR **pQName,
+        const WCHAR **QName,
         int *pQNameLength)
 {
-    saxattributes *This = impl_from_ISAXAttributes( iface );
-    TRACE("(%p)->(%d)\n", This, nIndex);
+    saxlocator *This = impl_from_ISAXAttributes( iface );
+    TRACE("(%p)->(%d)\n", This, index);
 
-    if(nIndex>=This->nb_attributes || nIndex<0) return E_INVALIDARG;
-    if(!pUri || !pUriLength || !pLocalName || !pLocalNameSize
-            || !pQName || !pQNameLength) return E_POINTER;
+    if(index>=This->nb_attributes || index<0) return E_INVALIDARG;
+    if(!uri || !pUriLength || !localName || !pLocalNameSize
+            || !QName || !pQNameLength) return E_POINTER;
 
-    *pUriLength = SysStringLen(This->szURI[nIndex]);
-    *pUri = This->szURI[nIndex];
-    *pLocalNameSize = SysStringLen(This->szLocalname[nIndex]);
-    *pLocalName = This->szLocalname[nIndex];
-    *pQNameLength = SysStringLen(This->szQName[nIndex]);
-    *pQName = This->szQName[nIndex];
+    *pUriLength = SysStringLen(This->attributes[index].szURI);
+    *uri = This->attributes[index].szURI;
+    *pLocalNameSize = SysStringLen(This->attributes[index].szLocalname);
+    *localName = This->attributes[index].szLocalname;
+    *pQNameLength = SysStringLen(This->attributes[index].szQName);
+    *QName = This->attributes[index].szQName;
+
+    TRACE("(%s, %s, %s)\n", debugstr_w(*uri), debugstr_w(*localName), debugstr_w(*QName));
 
     return S_OK;
 }
@@ -734,7 +1096,7 @@ static HRESULT WINAPI isaxattributes_getIndexFromName(
         int cocalNameLength,
         int *index)
 {
-    saxattributes *This = impl_from_ISAXAttributes( iface );
+    saxlocator *This = impl_from_ISAXAttributes( iface );
     int i;
     TRACE("(%p)->(%s, %d, %s, %d)\n", This, debugstr_w(pUri), cUriLength,
             debugstr_w(pLocalName), cocalNameLength);
@@ -743,13 +1105,13 @@ static HRESULT WINAPI isaxattributes_getIndexFromName(
 
     for(i=0; i<This->nb_attributes; i++)
     {
-        if(cUriLength!=SysStringLen(This->szURI[i])
-                || cocalNameLength!=SysStringLen(This->szLocalname[i]))
+        if(cUriLength!=SysStringLen(This->attributes[i].szURI)
+                || cocalNameLength!=SysStringLen(This->attributes[i].szLocalname))
             continue;
-        if(cUriLength && memcmp(pUri, This->szURI[i],
+        if(cUriLength && memcmp(pUri, This->attributes[i].szURI,
                     sizeof(WCHAR)*cUriLength))
             continue;
-        if(cocalNameLength && memcmp(pLocalName, This->szLocalname[i],
+        if(cocalNameLength && memcmp(pLocalName, This->attributes[i].szLocalname,
                     sizeof(WCHAR)*cocalNameLength))
             continue;
 
@@ -766,7 +1128,7 @@ static HRESULT WINAPI isaxattributes_getIndexFromQName(
         int nQNameLength,
         int *index)
 {
-    saxattributes *This = impl_from_ISAXAttributes( iface );
+    saxlocator *This = impl_from_ISAXAttributes( iface );
     int i;
     TRACE("(%p)->(%s, %d)\n", This, debugstr_w(pQName), nQNameLength);
 
@@ -775,8 +1137,8 @@ static HRESULT WINAPI isaxattributes_getIndexFromQName(
 
     for(i=0; i<This->nb_attributes; i++)
     {
-        if(nQNameLength!=SysStringLen(This->szQName[i])) continue;
-        if(memcmp(pQName, This->szQName, sizeof(WCHAR)*nQNameLength)) continue;
+        if(nQNameLength!=SysStringLen(This->attributes[i].szQName)) continue;
+        if(memcmp(pQName, This->attributes[i].szQName, sizeof(WCHAR)*nQNameLength)) continue;
 
         *index = i;
         return S_OK;
@@ -791,7 +1153,7 @@ static HRESULT WINAPI isaxattributes_getType(
         const WCHAR **pType,
         int *pTypeLength)
 {
-    saxattributes *This = impl_from_ISAXAttributes( iface );
+    saxlocator *This = impl_from_ISAXAttributes( iface );
 
     FIXME("(%p)->(%d) stub\n", This, nIndex);
     return E_NOTIMPL;
@@ -806,7 +1168,7 @@ static HRESULT WINAPI isaxattributes_getTypeFromName(
         const WCHAR **pType,
         int *nType)
 {
-    saxattributes *This = impl_from_ISAXAttributes( iface );
+    saxlocator *This = impl_from_ISAXAttributes( iface );
 
     FIXME("(%p)->(%s, %d, %s, %d) stub\n", This, debugstr_w(pUri), nUri,
             debugstr_w(pLocalName), nLocalName);
@@ -820,7 +1182,7 @@ static HRESULT WINAPI isaxattributes_getTypeFromQName(
         const WCHAR **pType,
         int *nType)
 {
-    saxattributes *This = impl_from_ISAXAttributes( iface );
+    saxlocator *This = impl_from_ISAXAttributes( iface );
 
     FIXME("(%p)->(%s, %d) stub\n", This, debugstr_w(pQName), nQName);
     return E_NOTIMPL;
@@ -828,18 +1190,20 @@ static HRESULT WINAPI isaxattributes_getTypeFromQName(
 
 static HRESULT WINAPI isaxattributes_getValue(
         ISAXAttributes* iface,
-        int nIndex,
-        const WCHAR **pValue,
+        int index,
+        const WCHAR **value,
         int *nValue)
 {
-    saxattributes *This = impl_from_ISAXAttributes( iface );
-    TRACE("(%p)->(%d)\n", This, nIndex);
+    saxlocator *This = impl_from_ISAXAttributes( iface );
+    TRACE("(%p)->(%d)\n", This, index);
 
-    if(nIndex>=This->nb_attributes || nIndex<0) return E_INVALIDARG;
-    if(!pValue || !nValue) return E_POINTER;
+    if(index>=This->nb_attributes || index<0) return E_INVALIDARG;
+    if(!value || !nValue) return E_POINTER;
 
-    *nValue = SysStringLen(This->szValue[nIndex]);
-    *pValue = This->szValue[nIndex];
+    *nValue = SysStringLen(This->attributes[index].szValue);
+    *value = This->attributes[index].szValue;
+
+    TRACE("(%s:%d)\n", debugstr_w(*value), *nValue);
 
     return S_OK;
 }
@@ -855,7 +1219,7 @@ static HRESULT WINAPI isaxattributes_getValueFromName(
 {
     HRESULT hr;
     int index;
-    saxattributes *This = impl_from_ISAXAttributes( iface );
+    saxlocator *This = impl_from_ISAXAttributes( iface );
     TRACE("(%p)->(%s, %d, %s, %d)\n", This, debugstr_w(pUri), nUri,
             debugstr_w(pLocalName), nLocalName);
 
@@ -875,7 +1239,7 @@ static HRESULT WINAPI isaxattributes_getValueFromQName(
 {
     HRESULT hr;
     int index;
-    saxattributes *This = impl_from_ISAXAttributes( iface );
+    saxlocator *This = impl_from_ISAXAttributes( iface );
     TRACE("(%p)->(%s, %d)\n", This, debugstr_w(pQName), nQName);
 
     hr = ISAXAttributes_getIndexFromQName(iface, pQName, nQName, &index);
@@ -904,64 +1268,63 @@ static const struct ISAXAttributesVtbl isaxattributes_vtbl =
     isaxattributes_getValueFromQName
 };
 
-static HRESULT SAXAttributes_create(saxattributes **attr,
+static HRESULT SAXAttributes_populate(saxlocator *locator,
         int nb_namespaces, const xmlChar **xmlNamespaces,
         int nb_attributes, const xmlChar **xmlAttributes)
 {
-    saxattributes *attributes;
-    int index;
     static const xmlChar xmlns[] = "xmlns";
+    static const WCHAR xmlnsW[] = { 'x','m','l','n','s',0 };
 
-    attributes = heap_alloc(sizeof(*attributes));
-    if(!attributes)
-        return E_OUTOFMEMORY;
+    struct _attributes *attrs;
+    int i;
 
-    attributes->lpVBSAXAttributesVtbl = &ivbsaxattributes_vtbl;
-    attributes->lpSAXAttributesVtbl = &isaxattributes_vtbl;
-    attributes->ref = 1;
+    /* skip namespace definitions */
+    if ((locator->saxreader->features & NamespacePrefixes) == 0)
+        nb_namespaces = 0;
 
-    attributes->nb_attributes = nb_namespaces+nb_attributes;
-
-    attributes->szLocalname = heap_alloc(sizeof(BSTR)*attributes->nb_attributes);
-    attributes->szURI = heap_alloc(sizeof(BSTR)*attributes->nb_attributes);
-    attributes->szValue = heap_alloc(sizeof(BSTR)*attributes->nb_attributes);
-    attributes->szQName = heap_alloc(sizeof(BSTR)*attributes->nb_attributes);
-
-    if(!attributes->szLocalname || !attributes->szURI
-            || !attributes->szValue || !attributes->szQName)
+    locator->nb_attributes = nb_namespaces + nb_attributes;
+    if(locator->nb_attributes > locator->attributesSize)
     {
-        heap_free(attributes->szLocalname);
-        heap_free(attributes->szURI);
-        heap_free(attributes->szValue);
-        heap_free(attributes->szQName);
-        heap_free(attributes);
-        return E_FAIL;
+        attrs = heap_realloc(locator->attributes, sizeof(struct _attributes)*locator->nb_attributes*2);
+        if(!attrs)
+        {
+            locator->nb_attributes = 0;
+            return E_OUTOFMEMORY;
+        }
+        locator->attributes = attrs;
+    }
+    else
+    {
+        attrs = locator->attributes;
     }
 
-    for(index=0; index<nb_namespaces; index++)
+    for (i = 0; i < nb_namespaces; i++)
     {
-        attributes->szLocalname[index] = SysAllocStringLen(NULL, 0);
-        attributes->szURI[index] = SysAllocStringLen(NULL, 0);
-        attributes->szValue[index] = bstr_from_xmlChar(xmlNamespaces[2*index+1]);
-        attributes->szQName[index] = QName_from_xmlChar(xmlns, xmlNamespaces[2*index]);
+        attrs[nb_attributes+i].szLocalname = SysAllocStringLen(NULL, 0);
+        attrs[nb_attributes+i].szURI = locator->namespaceUri;
+        attrs[nb_attributes+i].szValue = bstr_from_xmlChar(xmlNamespaces[2*i+1]);
+        if(!xmlNamespaces[2*i])
+            attrs[nb_attributes+i].szQName = SysAllocString(xmlnsW);
+        else
+            attrs[nb_attributes+i].szQName = QName_from_xmlChar(xmlns, xmlNamespaces[2*i]);
     }
 
-    for(index=0; index<nb_attributes; index++)
+    for (i = 0; i < nb_attributes; i++)
     {
-        attributes->szLocalname[nb_namespaces+index] =
-            bstr_from_xmlChar(xmlAttributes[index*5]);
-        attributes->szURI[nb_namespaces+index] =
-            bstr_from_xmlChar(xmlAttributes[index*5+2]);
-        attributes->szValue[nb_namespaces+index] =
-            bstr_from_xmlCharN(xmlAttributes[index*5+3],
-                    xmlAttributes[index*5+4]-xmlAttributes[index*5+3]);
-        attributes->szQName[nb_namespaces+index] =
-            QName_from_xmlChar(xmlAttributes[index*5+1], xmlAttributes[index*5]);
+        static const xmlChar xmlA[] = "xml";
+
+        if (xmlStrEqual(xmlAttributes[i*5+1], xmlA))
+            attrs[i].szURI = bstr_from_xmlChar(xmlAttributes[i*5+2]);
+        else
+            /* that's an important feature to keep same uri pointer for every reported attribute */
+            attrs[i].szURI = find_element_uri(locator, xmlAttributes[i*5+2]);
+
+        attrs[i].szLocalname = bstr_from_xmlChar(xmlAttributes[i*5]);
+        attrs[i].szValue = bstr_from_xmlCharN(xmlAttributes[i*5+3],
+                xmlAttributes[i*5+4]-xmlAttributes[i*5+3]);
+        attrs[i].szQName = QName_from_xmlChar(xmlAttributes[i*5+1],
+                xmlAttributes[i*5]);
     }
-
-    *attr = attributes;
-
-    TRACE("returning %p\n", *attr);
 
     return S_OK;
 }
@@ -970,40 +1333,69 @@ static HRESULT SAXAttributes_create(saxattributes **attr,
 static void libxmlStartDocument(void *ctx)
 {
     saxlocator *This = ctx;
+    struct saxcontenthandler_iface *handler = saxreader_get_contenthandler(This->saxreader);
     HRESULT hr;
 
-    if(has_content_handler(This))
+    if (This->saxreader->version >= MSXML4)
     {
-        if(This->vbInterface)
-            hr = IVBSAXContentHandler_startDocument(This->saxreader->vbcontentHandler);
-        else
-            hr = ISAXContentHandler_startDocument(This->saxreader->contentHandler);
-
-        if(hr != S_OK)
-            format_error_message_from_id(This, hr);
+        const xmlChar *p = This->pParserCtxt->input->cur-1;
+        update_position(This, FALSE);
+        while(p>This->pParserCtxt->input->base && *p!='>')
+        {
+            if(*p=='\n' || (*p=='\r' && *(p+1)!='\n'))
+                This->line--;
+            p--;
+        }
+        This->column = 0;
+        for(; p>=This->pParserCtxt->input->base && *p!='\n' && *p!='\r'; p--)
+            This->column++;
     }
 
-    update_position(This, NULL);
+    /* store version value, declaration has to contain version attribute */
+    if (This->pParserCtxt->standalone != -1)
+    {
+        SysFreeString(This->saxreader->xmldecl_version);
+        This->saxreader->xmldecl_version = bstr_from_xmlChar(This->pParserCtxt->version);
+    }
+
+    if (saxreader_has_handler(This, SAXContentHandler))
+    {
+        if(This->vbInterface)
+            hr = IVBSAXContentHandler_startDocument(handler->vbhandler);
+        else
+            hr = ISAXContentHandler_startDocument(handler->handler);
+
+        if (sax_callback_failed(This, hr))
+            format_error_message_from_id(This, hr);
+    }
 }
 
 static void libxmlEndDocument(void *ctx)
 {
     saxlocator *This = ctx;
+    struct saxcontenthandler_iface *handler = saxreader_get_contenthandler(This->saxreader);
     HRESULT hr;
 
-    This->column = 0;
-    This->line = 0;
+    if (This->saxreader->version >= MSXML4) {
+        update_position(This, FALSE);
+        if(This->column > 1)
+            This->line++;
+        This->column = 0;
+    } else {
+        This->column = 0;
+        This->line = 0;
+    }
 
     if(This->ret != S_OK) return;
 
-    if(has_content_handler(This))
+    if (saxreader_has_handler(This, SAXContentHandler))
     {
         if(This->vbInterface)
-            hr = IVBSAXContentHandler_endDocument(This->saxreader->vbcontentHandler);
+            hr = IVBSAXContentHandler_endDocument(handler->vbhandler);
         else
-            hr = ISAXContentHandler_endDocument(This->saxreader->contentHandler);
+            hr = ISAXContentHandler_endDocument(handler->handler);
 
-        if(hr != S_OK)
+        if (sax_callback_failed(This, hr))
             format_error_message_from_id(This, hr);
     }
 }
@@ -1019,75 +1411,72 @@ static void libxmlStartElementNS(
         int nb_defaulted,
         const xmlChar **attributes)
 {
-    BSTR NamespaceUri, LocalName, QName, Prefix, Uri;
     saxlocator *This = ctx;
-    HRESULT hr;
-    saxattributes *attr;
-    int index;
+    struct saxcontenthandler_iface *handler = saxreader_get_contenthandler(This->saxreader);
+    element_entry *element;
+    HRESULT hr = S_OK;
+    BSTR uri;
 
+    update_position(This, TRUE);
     if(*(This->pParserCtxt->input->cur) == '/')
-        update_position(This, (xmlChar*)This->pParserCtxt->input->cur+2);
-    else
-        update_position(This, (xmlChar*)This->pParserCtxt->input->cur+1);
+        This->column++;
+    if(This->saxreader->version < MSXML4)
+        This->column++;
 
-    hr = namespacePush(This, nb_namespaces);
-    if(hr==S_OK && has_content_handler(This))
+    element = alloc_element_entry(localname, prefix, nb_namespaces, namespaces);
+    push_element_ns(This, element);
+
+    if (is_namespaces_enabled(This->saxreader))
     {
-        for(index=0; index<nb_namespaces; index++)
-        {
-            Prefix = bstr_from_xmlChar(namespaces[2*index]);
-            Uri = bstr_from_xmlChar(namespaces[2*index+1]);
+        int i;
 
-            if(This->vbInterface)
+        for (i = 0; i < nb_namespaces && saxreader_has_handler(This, SAXContentHandler); i++)
+        {
+            if (This->vbInterface)
                 hr = IVBSAXContentHandler_startPrefixMapping(
-                        This->saxreader->vbcontentHandler,
-                        &Prefix, &Uri);
+                        handler->vbhandler,
+                        &element->ns[i].prefix,
+                        &element->ns[i].uri);
             else
                 hr = ISAXContentHandler_startPrefixMapping(
-                        This->saxreader->contentHandler,
-                        Prefix, SysStringLen(Prefix),
-                        Uri, SysStringLen(Uri));
+                        handler->handler,
+                        element->ns[i].prefix,
+                        SysStringLen(element->ns[i].prefix),
+                        element->ns[i].uri,
+                        SysStringLen(element->ns[i].uri));
 
-            SysFreeString(Prefix);
-            SysFreeString(Uri);
-
-            if(hr != S_OK)
+            if (sax_callback_failed(This, hr))
             {
                 format_error_message_from_id(This, hr);
                 return;
             }
         }
-
-        NamespaceUri = bstr_from_xmlChar(URI);
-        LocalName = bstr_from_xmlChar(localname);
-        QName = QName_from_xmlChar(prefix, localname);
-
-        hr = SAXAttributes_create(&attr, nb_namespaces, namespaces, nb_attributes, attributes);
-        if(hr == S_OK)
-        {
-            if(This->vbInterface)
-                hr = IVBSAXContentHandler_startElement(
-                        This->saxreader->vbcontentHandler,
-                        &NamespaceUri, &LocalName, &QName,
-                        (IVBSAXAttributes*)&attr->lpVBSAXAttributesVtbl);
-            else
-                hr = ISAXContentHandler_startElement(
-                        This->saxreader->contentHandler,
-                        NamespaceUri, SysStringLen(NamespaceUri),
-                        LocalName, SysStringLen(LocalName),
-                        QName, SysStringLen(QName),
-                        (ISAXAttributes*)&attr->lpSAXAttributesVtbl);
-
-            ISAXAttributes_Release((ISAXAttributes*)&attr->lpSAXAttributesVtbl);
-        }
-
-        SysFreeString(NamespaceUri);
-        SysFreeString(LocalName);
-        SysFreeString(QName);
     }
 
-    if(hr != S_OK)
-        format_error_message_from_id(This, hr);
+    uri = find_element_uri(This, URI);
+    hr = SAXAttributes_populate(This, nb_namespaces, namespaces, nb_attributes, attributes);
+    if (hr == S_OK && saxreader_has_handler(This, SAXContentHandler))
+    {
+        BSTR local;
+
+        if (is_namespaces_enabled(This->saxreader))
+            local = element->local;
+        else
+            uri = local = NULL;
+
+        if (This->vbInterface)
+            hr = IVBSAXContentHandler_startElement(handler->vbhandler,
+                    &uri, &local, &element->qname, &This->IVBSAXAttributes_iface);
+        else
+            hr = ISAXContentHandler_startElement(handler->handler,
+                    uri, SysStringLen(uri),
+                    local, SysStringLen(local),
+                    element->qname, SysStringLen(element->qname),
+                    &This->ISAXAttributes_iface);
+
+       if (sax_callback_failed(This, hr))
+           format_error_message_from_id(This, hr);
+    }
 }
 
 static void libxmlEndElementNS(
@@ -1096,73 +1485,96 @@ static void libxmlEndElementNS(
         const xmlChar *prefix,
         const xmlChar *URI)
 {
-    BSTR NamespaceUri, LocalName, QName, Prefix;
     saxlocator *This = ctx;
+    struct saxcontenthandler_iface *handler = saxreader_get_contenthandler(This->saxreader);
+    element_entry *element;
+    const xmlChar *p;
+    BSTR uri, local;
     HRESULT hr;
-    xmlChar *end;
-    int nsNr, index;
 
-    end = (xmlChar*)This->pParserCtxt->input->cur;
-    if(*(end-1) != '>' || *(end-2) != '/')
-        while(end-2>=This->pParserCtxt->input->base
-                && *(end-2)!='<' && *(end-1)!='/') end--;
+    update_position(This, FALSE);
+    p = This->pParserCtxt->input->cur;
 
-    update_position(This, end);
-
-    nsNr = namespacePop(This);
-
-    if(has_content_handler(This))
+    if (This->saxreader->version >= MSXML4)
     {
-        NamespaceUri = bstr_from_xmlChar(URI);
-        LocalName = bstr_from_xmlChar(localname);
-        QName = QName_from_xmlChar(prefix, localname);
-
-        if(This->vbInterface)
-            hr = IVBSAXContentHandler_endElement(
-                    This->saxreader->vbcontentHandler,
-                    &NamespaceUri, &LocalName, &QName);
-        else
-            hr = ISAXContentHandler_endElement(
-                    This->saxreader->contentHandler,
-                    NamespaceUri, SysStringLen(NamespaceUri),
-                    LocalName, SysStringLen(LocalName),
-                    QName, SysStringLen(QName));
-
-        SysFreeString(NamespaceUri);
-        SysFreeString(LocalName);
-        SysFreeString(QName);
-
-        if(hr != S_OK)
+        p--;
+        while(p>This->pParserCtxt->input->base && *p!='>')
         {
-            format_error_message_from_id(This, hr);
-            return;
-        }
-
-        for(index=This->pParserCtxt->nsNr-2;
-                index>=This->pParserCtxt->nsNr-nsNr*2; index-=2)
-        {
-            Prefix = bstr_from_xmlChar(This->pParserCtxt->nsTab[index]);
-
-            if(This->vbInterface)
-                hr = IVBSAXContentHandler_endPrefixMapping(
-                        This->saxreader->vbcontentHandler, &Prefix);
-            else
-                hr = ISAXContentHandler_endPrefixMapping(
-                        This->saxreader->contentHandler,
-                        Prefix, SysStringLen(Prefix));
-
-            SysFreeString(Prefix);
-
-            if(hr != S_OK)
-            {
-                format_error_message_from_id(This, hr);
-                return;
-            }
-
+            if(*p=='\n' || (*p=='\r' && *(p+1)!='\n'))
+                This->line--;
+            p--;
         }
     }
+    else if(*(p-1)!='>' || *(p-2)!='/')
+    {
+        p--;
+        while(p-2>=This->pParserCtxt->input->base
+                && *(p-2)!='<' && *(p-1)!='/')
+        {
+            if(*p=='\n' || (*p=='\r' && *(p+1)!='\n'))
+                This->line--;
+            p--;
+        }
+    }
+    This->column = 0;
+    for(; p>=This->pParserCtxt->input->base && *p!='\n' && *p!='\r'; p--)
+        This->column++;
 
-    update_position(This, NULL);
+    uri = find_element_uri(This, URI);
+    element = pop_element_ns(This);
+
+    if (!saxreader_has_handler(This, SAXContentHandler))
+    {
+        This->nb_attributes = 0;
+        free_element_entry(element);
+        return;
+    }
+
+    if (is_namespaces_enabled(This->saxreader))
+        local = element->local;
+    else
+        uri = local = NULL;
+
+    if (This->vbInterface)
+        hr = IVBSAXContentHandler_endElement(
+                handler->vbhandler,
+                &uri, &local, &element->qname);
+    else
+        hr = ISAXContentHandler_endElement(
+                handler->handler,
+                uri, SysStringLen(uri),
+                local, SysStringLen(local),
+                element->qname, SysStringLen(element->qname));
+
+    This->nb_attributes = 0;
+
+    if (sax_callback_failed(This, hr))
+    {
+        format_error_message_from_id(This, hr);
+        free_element_entry(element);
+        return;
+    }
+
+    if (is_namespaces_enabled(This->saxreader))
+    {
+        int i = -1;
+        while (iterate_endprefix_index(This, element, &i) && saxreader_has_handler(This, SAXContentHandler))
+        {
+            if (This->vbInterface)
+                hr = IVBSAXContentHandler_endPrefixMapping(
+                        handler->vbhandler, &element->ns[i].prefix);
+            else
+                hr = ISAXContentHandler_endPrefixMapping(
+                        handler->handler, element->ns[i].prefix, SysStringLen(element->ns[i].prefix));
+
+            if (sax_callback_failed(This, hr)) break;
+       }
+
+       if (sax_callback_failed(This, hr))
+           format_error_message_from_id(This, hr);
+    }
+
+    free_element_entry(element);
 }
 
 static void libxmlCharacters(
@@ -1173,53 +1585,77 @@ static void libxmlCharacters(
     saxlocator *This = ctx;
     BSTR Chars;
     HRESULT hr;
-    xmlChar *cur;
-    xmlChar *end;
+    xmlChar *cur, *end;
     BOOL lastEvent = FALSE;
 
-    if(!(has_content_handler(This))) return;
+    if (!saxreader_has_handler(This, SAXContentHandler)) return;
+
+    update_position(This, FALSE);
+    cur = (xmlChar*)This->pParserCtxt->input->cur;
+    while(cur>=This->pParserCtxt->input->base && *cur!='>')
+    {
+        if(*cur=='\n' || (*cur=='\r' && *(cur+1)!='\n'))
+            This->line--;
+        cur--;
+    }
+    This->column = 1;
+    for(; cur>=This->pParserCtxt->input->base && *cur!='\n' && *cur!='\r'; cur--)
+        This->column++;
 
     cur = (xmlChar*)ch;
     if(*(ch-1)=='\r') cur--;
     end = cur;
-
-    if(ch<This->pParserCtxt->input->base || ch>This->pParserCtxt->input->end)
-        This->column++;
 
     while(1)
     {
         while(end-ch<len && *end!='\r') end++;
         if(end-ch==len)
         {
-            end--;
             lastEvent = TRUE;
         }
-
-        if(!lastEvent) *end = '\n';
-
-        Chars = bstr_from_xmlCharN(cur, end-cur+1);
-        if(This->vbInterface)
-            hr = IVBSAXContentHandler_characters(
-                    This->saxreader->vbcontentHandler, &Chars);
         else
-            hr = ISAXContentHandler_characters(
-                    This->saxreader->contentHandler,
-                    Chars, SysStringLen(Chars));
-        SysFreeString(Chars);
+        {
+            *end = '\n';
+            end++;
+        }
 
-        if(hr != S_OK)
+        if (This->saxreader->version >= MSXML4)
+        {
+            xmlChar *p;
+
+            for(p=cur; p!=end; p++)
+            {
+                if(*p=='\n')
+                {
+                    This->line++;
+                    This->column = 1;
+                }
+                else
+                {
+                    This->column++;
+                }
+            }
+
+            if(!lastEvent)
+                This->column = 0;
+        }
+
+        Chars = pooled_bstr_from_xmlCharN(&This->saxreader->pool, cur, end-cur);
+        hr = saxreader_saxcharacters(This, Chars);
+
+        if (sax_callback_failed(This, hr))
         {
             format_error_message_from_id(This, hr);
             return;
         }
 
-        This->column += end-cur+1;
+        if (This->saxreader->version < MSXML4)
+            This->column += end-cur;
 
         if(lastEvent)
             break;
 
-        *end = '\r';
-        end++;
+        *(end-1) = '\r';
         if(*end == '\n')
         {
             end++;
@@ -1229,10 +1665,6 @@ static void libxmlCharacters(
 
         if(end-ch == len) break;
     }
-
-    if(ch<This->pParserCtxt->input->base || ch>This->pParserCtxt->input->end)
-        This->column = This->realColumn
-            +This->pParserCtxt->input->cur-This->lastCur;
 }
 
 static void libxmlSetDocumentLocator(
@@ -1240,16 +1672,17 @@ static void libxmlSetDocumentLocator(
         xmlSAXLocatorPtr loc)
 {
     saxlocator *This = ctx;
-    HRESULT hr;
+    struct saxcontenthandler_iface *handler = saxreader_get_contenthandler(This->saxreader);
+    HRESULT hr = S_OK;
 
-    if(This->vbInterface)
-        hr = IVBSAXContentHandler_putref_documentLocator(
-                This->saxreader->vbcontentHandler,
-                (IVBSAXLocator*)&This->lpVBSAXLocatorVtbl);
-    else
-        hr = ISAXContentHandler_putDocumentLocator(
-                This->saxreader->contentHandler,
-                (ISAXLocator*)&This->lpSAXLocatorVtbl);
+    if (saxreader_has_handler(This, SAXContentHandler))
+    {
+        if(This->vbInterface)
+            hr = IVBSAXContentHandler_putref_documentLocator(handler->vbhandler,
+                    &This->IVBSAXLocator_iface);
+        else
+            hr = ISAXContentHandler_putDocumentLocator(handler->handler, &This->ISAXLocator_iface);
+    }
 
     if(FAILED(hr))
         format_error_message_from_id(This, hr);
@@ -1258,155 +1691,208 @@ static void libxmlSetDocumentLocator(
 static void libxmlComment(void *ctx, const xmlChar *value)
 {
     saxlocator *This = ctx;
+    struct saxlexicalhandler_iface *handler = saxreader_get_lexicalhandler(This->saxreader);
     BSTR bValue;
     HRESULT hr;
-    xmlChar *beg = (xmlChar*)This->pParserCtxt->input->cur;
+    const xmlChar *p = This->pParserCtxt->input->cur;
 
-    while(beg-4>=This->pParserCtxt->input->base
-            && memcmp(beg-4, "<!--", sizeof(char[4]))) beg--;
-    update_position(This, beg);
+    update_position(This, FALSE);
+    while(p-4>=This->pParserCtxt->input->base
+            && memcmp(p-4, "<!--", sizeof(char[4])))
+    {
+        if(*p=='\n' || (*p=='\r' && *(p+1)!='\n'))
+            This->line--;
+        p--;
+    }
 
-    if(!This->vbInterface && !This->saxreader->lexicalHandler) return;
-    if(This->vbInterface && !This->saxreader->vblexicalHandler) return;
+    This->column = 0;
+    for(; p>=This->pParserCtxt->input->base && *p!='\n' && *p!='\r'; p--)
+        This->column++;
 
-    bValue = bstr_from_xmlChar(value);
+    if (!saxreader_has_handler(This, SAXLexicalHandler)) return;
 
-    if(This->vbInterface)
-        hr = IVBSAXLexicalHandler_comment(
-                This->saxreader->vblexicalHandler, &bValue);
+    bValue = pooled_bstr_from_xmlChar(&This->saxreader->pool, value);
+
+    if (This->vbInterface)
+        hr = IVBSAXLexicalHandler_comment(handler->vbhandler, &bValue);
     else
-        hr = ISAXLexicalHandler_comment(
-                This->saxreader->lexicalHandler,
-                bValue, SysStringLen(bValue));
-
-    SysFreeString(bValue);
+        hr = ISAXLexicalHandler_comment(handler->handler, bValue, SysStringLen(bValue));
 
     if(FAILED(hr))
         format_error_message_from_id(This, hr);
-
-    update_position(This, NULL);
 }
 
 static void libxmlFatalError(void *ctx, const char *msg, ...)
 {
     saxlocator *This = ctx;
+    struct saxerrorhandler_iface *handler = saxreader_get_errorhandler(This->saxreader);
     char message[1024];
-    WCHAR *wszError;
+    WCHAR *error;
     DWORD len;
     va_list args;
 
-    if((This->vbInterface && !This->saxreader->vberrorHandler)
-            || (!This->vbInterface && !This->saxreader->errorHandler))
-    {
+    if(This->ret != S_OK) {
         xmlStopParser(This->pParserCtxt);
-        This->ret = E_FAIL;
         return;
     }
-
-    FIXME("Error handling is not compatible.\n");
 
     va_start(args, msg);
     vsprintf(message, msg, args);
     va_end(args);
 
     len = MultiByteToWideChar(CP_UNIXCP, 0, message, -1, NULL, 0);
-    wszError = heap_alloc(sizeof(WCHAR)*len);
-    if(wszError)
-        MultiByteToWideChar(CP_UNIXCP, 0, message, -1, wszError, len);
+    error = heap_alloc(sizeof(WCHAR)*len);
+    if(error)
+    {
+        MultiByteToWideChar(CP_UNIXCP, 0, message, -1, error, len);
+        TRACE("fatal error for %p: %s\n", This, debugstr_w(error));
+    }
+
+    if (!saxreader_has_handler(This, SAXErrorHandler))
+    {
+        xmlStopParser(This->pParserCtxt);
+        This->ret = E_FAIL;
+        heap_free(error);
+        return;
+    }
+
+    FIXME("Error handling is not compatible.\n");
 
     if(This->vbInterface)
     {
-        BSTR bstrError = SysAllocString(wszError);
-        IVBSAXErrorHandler_fatalError(This->saxreader->vberrorHandler,
-                (IVBSAXLocator*)&This->lpVBSAXLocatorVtbl, &bstrError, E_FAIL);
+        BSTR bstrError = SysAllocString(error);
+        IVBSAXErrorHandler_fatalError(handler->vbhandler, &This->IVBSAXLocator_iface,
+                &bstrError, E_FAIL);
+        SysFreeString(bstrError);
     }
     else
-        ISAXErrorHandler_fatalError(This->saxreader->errorHandler,
-                (ISAXLocator*)&This->lpSAXLocatorVtbl, wszError, E_FAIL);
+        ISAXErrorHandler_fatalError(handler->handler, &This->ISAXLocator_iface, error, E_FAIL);
 
-    heap_free(wszError);
+    heap_free(error);
 
     xmlStopParser(This->pParserCtxt);
     This->ret = E_FAIL;
 }
 
-static void libxmlCDataBlock(void *ctx, const xmlChar *value, int len)
+/* The only reason this helper exists is that CDATA section are reported by chunks,
+   newlines are used as delimiter. More than that, reader even alters input data before reporting.
+
+   This helper should be called for substring with trailing newlines.
+*/
+static BSTR saxreader_get_cdata_chunk(const xmlChar *str, int len)
 {
-    saxlocator *This = ctx;
+    BSTR bstr = bstr_from_xmlCharN(str, len), ret;
+    WCHAR *ptr;
+
+    ptr = bstr + len - 1;
+    while ((*ptr == '\r' || *ptr == '\n') && ptr >= bstr)
+        ptr--;
+
+    while (*++ptr)
+    {
+        /* replace returns as:
+
+           - "\r<char>" -> "\n<char>"
+           - "\r\r" -> "\r"
+           - "\r\n" -> "\n"
+        */
+        if (*ptr == '\r')
+        {
+            if (*(ptr+1) == '\r' || *(ptr+1) == '\n')
+            {
+                /* shift tail */
+                memmove(ptr, ptr+1, len-- - (ptr-bstr));
+            }
+            else
+                *ptr = '\n';
+        }
+    }
+
+    ret = SysAllocStringLen(bstr, len);
+    SysFreeString(bstr);
+    return ret;
+}
+
+static void libxml_cdatablock(void *ctx, const xmlChar *value, int len)
+{
+    const xmlChar *start, *end;
+    saxlocator *locator = ctx;
+    struct saxlexicalhandler_iface *lexical = saxreader_get_lexicalhandler(locator->saxreader);
     HRESULT hr = S_OK;
-    xmlChar *beg = (xmlChar*)This->pParserCtxt->input->cur-len;
-    xmlChar *cur, *end;
-    int realLen;
-    BSTR Chars;
-    BOOL lastEvent = FALSE, change;
+    BSTR chars;
+    int i;
 
-    while(beg-9>=This->pParserCtxt->input->base
-            && memcmp(beg-9, "<![CDATA[", sizeof(char[9]))) beg--;
-    update_position(This, beg);
-
-    if(This->vbInterface && This->saxreader->vblexicalHandler)
-        hr = IVBSAXLexicalHandler_startCDATA(This->saxreader->vblexicalHandler);
-    if(!This->vbInterface && This->saxreader->lexicalHandler)
-        hr = ISAXLexicalHandler_startCDATA(This->saxreader->lexicalHandler);
+    update_position(locator, FALSE);
+    if (saxreader_has_handler(locator, SAXLexicalHandler))
+    {
+       if (locator->vbInterface)
+           hr = IVBSAXLexicalHandler_startCDATA(lexical->vbhandler);
+       else
+           hr = ISAXLexicalHandler_startCDATA(lexical->handler);
+    }
 
     if(FAILED(hr))
     {
-        format_error_message_from_id(This, hr);
+        format_error_message_from_id(locator, hr);
         return;
     }
 
-    realLen = This->pParserCtxt->input->cur-beg-3;
-    cur = beg;
-    end = beg;
+    start = value;
+    end = NULL;
+    i = 0;
 
-    while(1)
+    while (i < len)
     {
-        while(end-beg<realLen && *end!='\r') end++;
-        if(end-beg==realLen)
+        /* scan for newlines */
+        if (value[i] == '\r' || value[i] == '\n')
         {
-            end--;
-            lastEvent = TRUE;
+            /* skip newlines/linefeeds */
+            while (i < len)
+            {
+                if (value[i] != '\r' && value[i] != '\n') break;
+                    i++;
+            }
+            end = &value[i];
+
+            /* report */
+            chars = saxreader_get_cdata_chunk(start, end-start);
+            TRACE("(chunk %s)\n", debugstr_w(chars));
+            hr = saxreader_saxcharacters(locator, chars);
+            SysFreeString(chars);
+
+            start = &value[i];
+            end = NULL;
         }
-        else if(end-beg==realLen-1 && *end=='\r' && *(end+1)=='\n')
-            lastEvent = TRUE;
-
-        if(*end == '\r') change = TRUE;
-        else change = FALSE;
-
-        if(change) *end = '\n';
-
-        if(has_content_handler(This))
-        {
-            Chars = bstr_from_xmlCharN(cur, end-cur+1);
-            if(This->vbInterface)
-                hr = IVBSAXContentHandler_characters(
-                        This->saxreader->vbcontentHandler, &Chars);
-            else
-                hr = ISAXContentHandler_characters(
-                        This->saxreader->contentHandler,
-                        Chars, SysStringLen(Chars));
-            SysFreeString(Chars);
-        }
-
-        if(change) *end = '\r';
-
-        if(lastEvent)
-            break;
-
-        This->column += end-cur+2;
-        end += 2;
-        cur = end;
+        i++;
+        locator->column++;
     }
 
-    if(This->vbInterface && This->saxreader->vblexicalHandler)
-        hr = IVBSAXLexicalHandler_endCDATA(This->saxreader->vblexicalHandler);
-    if(!This->vbInterface && This->saxreader->lexicalHandler)
-        hr = ISAXLexicalHandler_endCDATA(This->saxreader->lexicalHandler);
+    /* no newline chars (or last chunk) report as a whole */
+    if (!end && start == value)
+    {
+        /* report */
+        chars = bstr_from_xmlCharN(start, len-(start-value));
+        TRACE("(%s)\n", debugstr_w(chars));
+        hr = saxreader_saxcharacters(locator, chars);
+        SysFreeString(chars);
+    }
+
+    if (saxreader_has_handler(locator, SAXLexicalHandler))
+    {
+        if (locator->vbInterface)
+            hr = IVBSAXLexicalHandler_endCDATA(lexical->vbhandler);
+        else
+            hr = ISAXLexicalHandler_endCDATA(lexical->handler);
+    }
 
     if(FAILED(hr))
-        format_error_message_from_id(This, hr);
+        format_error_message_from_id(locator, hr);
+}
 
-    This->column += 4+end-cur;
+static xmlParserInputPtr libxmlresolveentity(void *ctx, const xmlChar *publicid, const xmlChar *systemid)
+{
+    FIXME("entity resolving not implemented, %s, %s\n", publicid, systemid);
+    return xmlSAX2ResolveEntity(ctx, publicid, systemid);
 }
 
 /*** IVBSAXLocator interface ***/
@@ -1424,6 +1910,10 @@ static HRESULT WINAPI ivbsaxlocator_QueryInterface(IVBSAXLocator* iface, REFIID 
             IsEqualGUID( riid, &IID_IVBSAXLocator ))
     {
         *ppvObject = iface;
+    }
+    else if ( IsEqualGUID( riid, &IID_IVBSAXAttributes ))
+    {
+        *ppvObject = &This->IVBSAXAttributes_iface;
     }
     else
     {
@@ -1447,7 +1937,7 @@ static ULONG WINAPI ivbsaxlocator_Release(
         IVBSAXLocator* iface)
 {
     saxlocator *This = impl_from_IVBSAXLocator( iface );
-    return ISAXLocator_Release((ISAXLocator*)&This->lpVBSAXLocatorVtbl);
+    return ISAXLocator_Release((ISAXLocator*)&This->IVBSAXLocator_iface);
 }
 
 /*** IDispatch methods ***/
@@ -1525,8 +2015,8 @@ static HRESULT WINAPI ivbsaxlocator_Invoke(
     hr = get_typeinfo(IVBSAXLocator_tid, &typeinfo);
     if(SUCCEEDED(hr))
     {
-        hr = ITypeInfo_Invoke(typeinfo, &(This->lpVBSAXLocatorVtbl), dispIdMember, wFlags, pDispParams,
-                pVarResult, pExcepInfo, puArgErr);
+        hr = ITypeInfo_Invoke(typeinfo, &This->IVBSAXLocator_iface, dispIdMember, wFlags,
+                pDispParams, pVarResult, pExcepInfo, puArgErr);
         ITypeInfo_Release(typeinfo);
     }
 
@@ -1539,9 +2029,7 @@ static HRESULT WINAPI ivbsaxlocator_get_columnNumber(
         int *pnColumn)
 {
     saxlocator *This = impl_from_IVBSAXLocator( iface );
-    return ISAXLocator_getColumnNumber(
-            (ISAXLocator*)&This->lpVBSAXLocatorVtbl,
-            pnColumn);
+    return ISAXLocator_getColumnNumber((ISAXLocator*)&This->IVBSAXLocator_iface, pnColumn);
 }
 
 static HRESULT WINAPI ivbsaxlocator_get_lineNumber(
@@ -1549,9 +2037,7 @@ static HRESULT WINAPI ivbsaxlocator_get_lineNumber(
         int *pnLine)
 {
     saxlocator *This = impl_from_IVBSAXLocator( iface );
-    return ISAXLocator_getLineNumber(
-            (ISAXLocator*)&This->lpVBSAXLocatorVtbl,
-            pnLine);
+    return ISAXLocator_getLineNumber((ISAXLocator*)&This->IVBSAXLocator_iface, pnLine);
 }
 
 static HRESULT WINAPI ivbsaxlocator_get_publicId(
@@ -1559,8 +2045,7 @@ static HRESULT WINAPI ivbsaxlocator_get_publicId(
         BSTR* publicId)
 {
     saxlocator *This = impl_from_IVBSAXLocator( iface );
-    return ISAXLocator_getPublicId(
-            (ISAXLocator*)&This->lpVBSAXLocatorVtbl,
+    return ISAXLocator_getPublicId((ISAXLocator*)&This->IVBSAXLocator_iface,
             (const WCHAR**)publicId);
 }
 
@@ -1569,12 +2054,11 @@ static HRESULT WINAPI ivbsaxlocator_get_systemId(
         BSTR* systemId)
 {
     saxlocator *This = impl_from_IVBSAXLocator( iface );
-    return ISAXLocator_getSystemId(
-            (ISAXLocator*)&This->lpVBSAXLocatorVtbl,
+    return ISAXLocator_getSystemId((ISAXLocator*)&This->IVBSAXLocator_iface,
             (const WCHAR**)systemId);
 }
 
-static const struct IVBSAXLocatorVtbl ivbsaxlocator_vtbl =
+static const struct IVBSAXLocatorVtbl VBSAXLocatorVtbl =
 {
     ivbsaxlocator_QueryInterface,
     ivbsaxlocator_AddRef,
@@ -1604,9 +2088,13 @@ static HRESULT WINAPI isaxlocator_QueryInterface(ISAXLocator* iface, REFIID riid
     {
         *ppvObject = iface;
     }
+    else if ( IsEqualGUID( riid, &IID_ISAXAttributes ))
+    {
+        *ppvObject = &This->ISAXAttributes_iface;
+    }
     else
     {
-        FIXME("interface %s not implemented\n", debugstr_guid(riid));
+        WARN("interface %s not implemented\n", debugstr_guid(riid));
         return E_NOINTERFACE;
     }
 
@@ -1618,26 +2106,44 @@ static HRESULT WINAPI isaxlocator_QueryInterface(ISAXLocator* iface, REFIID riid
 static ULONG WINAPI isaxlocator_AddRef(ISAXLocator* iface)
 {
     saxlocator *This = impl_from_ISAXLocator( iface );
-    TRACE("%p\n", This );
-    return InterlockedIncrement( &This->ref );
+    ULONG ref = InterlockedIncrement( &This->ref );
+    TRACE("(%p)->(%d)\n", This, ref);
+    return ref;
 }
 
 static ULONG WINAPI isaxlocator_Release(
         ISAXLocator* iface)
 {
     saxlocator *This = impl_from_ISAXLocator( iface );
-    LONG ref;
+    LONG ref = InterlockedDecrement( &This->ref );
 
-    TRACE("%p\n", This );
+    TRACE("(%p)->(%d)\n", This, ref );
 
-    ref = InterlockedDecrement( &This->ref );
-    if ( ref == 0 )
+    if (ref == 0)
     {
+        element_entry *element, *element2;
+        int index;
+
         SysFreeString(This->publicId);
         SysFreeString(This->systemId);
-        heap_free(This->nsStack);
+        SysFreeString(This->namespaceUri);
 
-        ISAXXMLReader_Release((ISAXXMLReader*)&This->saxreader->lpSAXXMLReaderVtbl);
+        for(index=0; index<This->nb_attributes; index++)
+        {
+            SysFreeString(This->attributes[index].szLocalname);
+            SysFreeString(This->attributes[index].szValue);
+            SysFreeString(This->attributes[index].szQName);
+        }
+        heap_free(This->attributes);
+
+        /* element stack */
+        LIST_FOR_EACH_ENTRY_SAFE(element, element2, &This->elements, element_entry, entry)
+        {
+            list_remove(&element->entry);
+            free_element_entry(element);
+        }
+
+        ISAXXMLReader_Release(&This->saxreader->ISAXXMLReader_iface);
         heap_free( This );
     }
 
@@ -1676,7 +2182,7 @@ static HRESULT WINAPI isaxlocator_getPublicId(
 
     publicId = bstr_from_xmlChar(xmlSAX2GetPublicId(This->pParserCtxt));
     if(SysStringLen(publicId))
-        This->publicId = (WCHAR*)&publicId;
+        This->publicId = publicId;
     else
     {
         SysFreeString(publicId);
@@ -1698,7 +2204,7 @@ static HRESULT WINAPI isaxlocator_getSystemId(
 
     systemId = bstr_from_xmlChar(xmlSAX2GetSystemId(This->pParserCtxt));
     if(SysStringLen(systemId))
-        This->systemId = (WCHAR*)&systemId;
+        This->systemId = systemId;
     else
     {
         SysFreeString(systemId);
@@ -1709,7 +2215,7 @@ static HRESULT WINAPI isaxlocator_getSystemId(
     return S_OK;
 }
 
-static const struct ISAXLocatorVtbl isaxlocator_vtbl =
+static const struct ISAXLocatorVtbl SAXLocatorVtbl =
 {
     isaxlocator_QueryInterface,
     isaxlocator_AddRef,
@@ -1722,36 +2228,54 @@ static const struct ISAXLocatorVtbl isaxlocator_vtbl =
 
 static HRESULT SAXLocator_create(saxreader *reader, saxlocator **ppsaxlocator, BOOL vbInterface)
 {
+    static const WCHAR w3xmlns[] = { 'h','t','t','p',':','/','/', 'w','w','w','.','w','3','.',
+        'o','r','g','/','2','0','0','0','/','x','m','l','n','s','/',0 };
+
     saxlocator *locator;
 
     locator = heap_alloc( sizeof (*locator) );
     if( !locator )
         return E_OUTOFMEMORY;
 
-    locator->lpVBSAXLocatorVtbl = &ivbsaxlocator_vtbl;
-    locator->lpSAXLocatorVtbl = &isaxlocator_vtbl;
+    locator->IVBSAXLocator_iface.lpVtbl = &VBSAXLocatorVtbl;
+    locator->ISAXLocator_iface.lpVtbl = &SAXLocatorVtbl;
+    locator->IVBSAXAttributes_iface.lpVtbl = &ivbsaxattributes_vtbl;
+    locator->ISAXAttributes_iface.lpVtbl = &isaxattributes_vtbl;
     locator->ref = 1;
     locator->vbInterface = vbInterface;
 
     locator->saxreader = reader;
-    ISAXXMLReader_AddRef((ISAXXMLReader*)&reader->lpSAXXMLReaderVtbl);
+    ISAXXMLReader_AddRef(&reader->ISAXXMLReader_iface);
 
     locator->pParserCtxt = NULL;
     locator->publicId = NULL;
     locator->systemId = NULL;
-    locator->lastCur = NULL;
-    locator->line = 0;
+    locator->line = reader->version < MSXML4 ? 0 : 1;
     locator->column = 0;
     locator->ret = S_OK;
-    locator->nsStackSize = 8;
-    locator->nsStackLast = 0;
-    locator->nsStack = heap_alloc(sizeof(int)*locator->nsStackSize);
-    if(!locator->nsStack)
+    if (locator->saxreader->version >= MSXML6)
+        locator->namespaceUri = SysAllocString(w3xmlns);
+    else
+        locator->namespaceUri = SysAllocStringLen(NULL, 0);
+    if(!locator->namespaceUri)
     {
-        ISAXXMLReader_Release((ISAXXMLReader*)&reader->lpSAXXMLReaderVtbl);
+        ISAXXMLReader_Release(&reader->ISAXXMLReader_iface);
         heap_free(locator);
         return E_OUTOFMEMORY;
     }
+
+    locator->attributesSize = 8;
+    locator->nb_attributes = 0;
+    locator->attributes = heap_alloc(sizeof(struct _attributes)*locator->attributesSize);
+    if(!locator->attributes)
+    {
+        ISAXXMLReader_Release(&reader->ISAXXMLReader_iface);
+        SysFreeString(locator->namespaceUri);
+        heap_free(locator);
+        return E_OUTOFMEMORY;
+    }
+
+    list_init(&locator->elements);
 
     *ppsaxlocator = locator;
 
@@ -1763,18 +2287,63 @@ static HRESULT SAXLocator_create(saxreader *reader, saxlocator **ppsaxlocator, B
 /*** SAXXMLReader internal functions ***/
 static HRESULT internal_parseBuffer(saxreader *This, const char *buffer, int size, BOOL vbInterface)
 {
+    xmlCharEncoding encoding = XML_CHAR_ENCODING_NONE;
+    xmlChar *enc_name = NULL;
     saxlocator *locator;
     HRESULT hr;
 
+    TRACE("(%p)->(%p %d)\n", This, buffer, size);
+
     hr = SAXLocator_create(This, &locator, vbInterface);
-    if(FAILED(hr))
+    if (FAILED(hr))
         return hr;
 
-    locator->pParserCtxt = xmlCreateMemoryParserCtxt(buffer, size);
-    if(!locator->pParserCtxt)
+    if (size >= 4)
     {
-        ISAXLocator_Release((ISAXLocator*)&locator->lpSAXLocatorVtbl);
+        const unsigned char *buff = (unsigned char*)buffer;
+
+        encoding = xmlDetectCharEncoding((xmlChar*)buffer, 4);
+        enc_name = (xmlChar*)xmlGetCharEncodingName(encoding);
+        TRACE("detected encoding: %s\n", enc_name);
+        /* skip BOM, parser won't switch encodings and so won't skip it on its own */
+        if ((encoding == XML_CHAR_ENCODING_UTF8) &&
+            buff[0] == 0xEF && buff[1] == 0xBB && buff[2] == 0xBF)
+        {
+            buffer += 3;
+            size -= 3;
+        }
+    }
+
+    /* if libxml2 detection failed try to guess */
+    if (encoding == XML_CHAR_ENCODING_NONE)
+    {
+        const WCHAR *ptr = (WCHAR*)buffer;
+        /* xml declaration with possibly specfied encoding will be still handled by parser */
+        if ((size >= 2) && *ptr == '<' && ptr[1] != '?')
+        {
+            enc_name = (xmlChar*)xmlGetCharEncodingName(XML_CHAR_ENCODING_UTF16LE);
+            encoding = XML_CHAR_ENCODING_UTF16LE;
+        }
+    }
+    else if (encoding == XML_CHAR_ENCODING_UTF8)
+        enc_name = (xmlChar*)xmlGetCharEncodingName(encoding);
+    else
+        enc_name = NULL;
+
+    locator->pParserCtxt = xmlCreateMemoryParserCtxt(buffer, size);
+    if (!locator->pParserCtxt)
+    {
+        ISAXLocator_Release(&locator->ISAXLocator_iface);
         return E_FAIL;
+    }
+
+    if (enc_name)
+    {
+        locator->pParserCtxt->encoding = xmlStrdup(enc_name);
+        if (encoding == XML_CHAR_ENCODING_UTF16LE) {
+            TRACE("switching to %s\n", enc_name);
+            xmlSwitchEncoding(locator->pParserCtxt, encoding);
+        }
     }
 
     xmlFree(locator->pParserCtxt->sax);
@@ -1782,8 +2351,10 @@ static HRESULT internal_parseBuffer(saxreader *This, const char *buffer, int siz
     locator->pParserCtxt->userData = locator;
 
     This->isParsing = TRUE;
-    if(xmlParseDocument(locator->pParserCtxt)) hr = E_FAIL;
-    else hr = locator->ret;
+    if(xmlParseDocument(locator->pParserCtxt) == -1 && locator->ret == S_OK)
+        hr = E_FAIL;
+    else
+        hr = locator->ret;
     This->isParsing = FALSE;
 
     if(locator->pParserCtxt)
@@ -1793,199 +2364,69 @@ static HRESULT internal_parseBuffer(saxreader *This, const char *buffer, int siz
         locator->pParserCtxt = NULL;
     }
 
-    ISAXLocator_Release((ISAXLocator*)&locator->lpSAXLocatorVtbl);
+    ISAXLocator_Release(&locator->ISAXLocator_iface);
     return hr;
 }
 
-static HRESULT internal_parseStream(saxreader *This, IStream *stream, BOOL vbInterface)
+static HRESULT internal_parseStream(saxreader *This, ISequentialStream *stream, BOOL vbInterface)
 {
     saxlocator *locator;
     HRESULT hr;
     ULONG dataRead;
     char data[1024];
+    int ret;
 
-    hr = IStream_Read(stream, data, sizeof(data), &dataRead);
-    if(hr != S_OK)
-        return hr;
+    dataRead = 0;
+    hr = ISequentialStream_Read(stream, data, sizeof(data), &dataRead);
+    if(FAILED(hr)) return hr;
 
     hr = SAXLocator_create(This, &locator, vbInterface);
-    if(FAILED(hr))
-        return hr;
+    if(FAILED(hr)) return hr;
 
     locator->pParserCtxt = xmlCreatePushParserCtxt(
             &locator->saxreader->sax, locator,
             data, dataRead, NULL);
     if(!locator->pParserCtxt)
     {
-        ISAXLocator_Release((ISAXLocator*)&locator->lpSAXLocatorVtbl);
+        ISAXLocator_Release(&locator->ISAXLocator_iface);
         return E_FAIL;
     }
 
     This->isParsing = TRUE;
-    while(1)
+
+    if(dataRead != sizeof(data))
     {
-        hr = IStream_Read(stream, data, sizeof(data), &dataRead);
-        if(hr != S_OK)
-            break;
-
-        if(xmlParseChunk(locator->pParserCtxt, data, dataRead, 0)) hr = E_FAIL;
-        else hr = locator->ret;
-
-        if(hr != S_OK) break;
-
-        if(dataRead != sizeof(data))
+        ret = xmlParseChunk(locator->pParserCtxt, data, 0, 1);
+        hr = ret!=XML_ERR_OK && locator->ret==S_OK ? E_FAIL : locator->ret;
+    }
+    else
+    {
+        while(1)
         {
-            if(xmlParseChunk(locator->pParserCtxt, data, 0, 1)) hr = E_FAIL;
-            else hr = locator->ret;
+            dataRead = 0;
+            hr = ISequentialStream_Read(stream, data, sizeof(data), &dataRead);
+            if (FAILED(hr)) break;
 
-            break;
+            ret = xmlParseChunk(locator->pParserCtxt, data, dataRead, 0);
+            hr = ret!=XML_ERR_OK && locator->ret==S_OK ? E_FAIL : locator->ret;
+
+            if (hr != S_OK) break;
+
+            if (dataRead != sizeof(data))
+            {
+                ret = xmlParseChunk(locator->pParserCtxt, data, 0, 1);
+                hr = ret!=XML_ERR_OK && locator->ret==S_OK ? E_FAIL : locator->ret;
+                break;
+            }
         }
     }
+
     This->isParsing = FALSE;
 
     xmlFreeParserCtxt(locator->pParserCtxt);
     locator->pParserCtxt = NULL;
-    ISAXLocator_Release((ISAXLocator*)&locator->lpSAXLocatorVtbl);
+    ISAXLocator_Release(&locator->ISAXLocator_iface);
     return hr;
-}
-
-static HRESULT internal_getEntityResolver(
-        saxreader *This,
-        void *pEntityResolver,
-        BOOL vbInterface)
-{
-    FIXME("(%p)->(%p) stub\n", This, pEntityResolver);
-    return E_NOTIMPL;
-}
-
-static HRESULT internal_putEntityResolver(
-        saxreader *This,
-        void *pEntityResolver,
-        BOOL vbInterface)
-{
-    FIXME("(%p)->(%p) stub\n", This, pEntityResolver);
-    return E_NOTIMPL;
-}
-
-static HRESULT internal_getContentHandler(
-        saxreader* This,
-        void *pContentHandler,
-        BOOL vbInterface)
-{
-    TRACE("(%p)->(%p)\n", This, pContentHandler);
-    if(pContentHandler == NULL)
-        return E_POINTER;
-    if((vbInterface && This->vbcontentHandler)
-            || (!vbInterface && This->contentHandler))
-    {
-        if(vbInterface)
-            IVBSAXContentHandler_AddRef(This->vbcontentHandler);
-        else
-            ISAXContentHandler_AddRef(This->contentHandler);
-    }
-    if(vbInterface) *(IVBSAXContentHandler**)pContentHandler =
-        This->vbcontentHandler;
-    else *(ISAXContentHandler**)pContentHandler = This->contentHandler;
-
-    return S_OK;
-}
-
-static HRESULT internal_putContentHandler(
-        saxreader* This,
-        void *contentHandler,
-        BOOL vbInterface)
-{
-    TRACE("(%p)->(%p)\n", This, contentHandler);
-    if(contentHandler)
-    {
-        if(vbInterface)
-            IVBSAXContentHandler_AddRef((IVBSAXContentHandler*)contentHandler);
-        else
-            ISAXContentHandler_AddRef((ISAXContentHandler*)contentHandler);
-    }
-    if((vbInterface && This->vbcontentHandler)
-            || (!vbInterface && This->contentHandler))
-    {
-        if(vbInterface)
-            IVBSAXContentHandler_Release(This->vbcontentHandler);
-        else
-            ISAXContentHandler_Release(This->contentHandler);
-    }
-    if(vbInterface)
-        This->vbcontentHandler = contentHandler;
-    else
-        This->contentHandler = contentHandler;
-
-    return S_OK;
-}
-
-static HRESULT internal_getDTDHandler(
-        saxreader* This,
-        void *pDTDHandler,
-        BOOL vbInterface)
-{
-    FIXME("(%p)->(%p) stub\n", This, pDTDHandler);
-    return E_NOTIMPL;
-}
-
-static HRESULT internal_putDTDHandler(
-        saxreader* This,
-        void *pDTDHandler,
-        BOOL vbInterface)
-{
-    FIXME("(%p)->(%p) stub\n", This, pDTDHandler);
-    return E_NOTIMPL;
-}
-
-static HRESULT internal_getErrorHandler(
-        saxreader* This,
-        void *pErrorHandler,
-        BOOL vbInterface)
-{
-    TRACE("(%p)->(%p)\n", This, pErrorHandler);
-    if(pErrorHandler == NULL)
-        return E_POINTER;
-
-    if(vbInterface && This->vberrorHandler)
-        IVBSAXErrorHandler_AddRef(This->vberrorHandler);
-    else if(!vbInterface && This->errorHandler)
-        ISAXErrorHandler_AddRef(This->errorHandler);
-
-    if(vbInterface)
-        *(IVBSAXErrorHandler**)pErrorHandler = This->vberrorHandler;
-    else
-        *(ISAXErrorHandler**)pErrorHandler = This->errorHandler;
-
-    return S_OK;
-
-}
-
-static HRESULT internal_putErrorHandler(
-        saxreader* This,
-        void *errorHandler,
-        BOOL vbInterface)
-{
-    TRACE("(%p)->(%p)\n", This, errorHandler);
-    if(errorHandler)
-    {
-        if(vbInterface)
-            IVBSAXErrorHandler_AddRef((IVBSAXErrorHandler*)errorHandler);
-        else
-            ISAXErrorHandler_AddRef((ISAXErrorHandler*)errorHandler);
-    }
-
-    if(vbInterface && This->vberrorHandler)
-        IVBSAXErrorHandler_Release(This->vberrorHandler);
-    else if(!vbInterface && This->errorHandler)
-        ISAXErrorHandler_Release(This->errorHandler);
-
-    if(vbInterface)
-        This->vberrorHandler = errorHandler;
-    else
-        This->errorHandler = errorHandler;
-
-    return S_OK;
-
 }
 
 static HRESULT internal_parse(
@@ -1995,14 +2436,16 @@ static HRESULT internal_parse(
 {
     HRESULT hr;
 
-    TRACE("(%p)\n", This);
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&varInput));
 
-    hr = S_OK;
+    /* Dispose of the BSTRs in the pool from a prior run, if any. */
+    free_bstr_pool(&This->pool);
+
     switch(V_VT(&varInput))
     {
         case VT_BSTR:
             hr = internal_parseBuffer(This, (const char*)V_BSTR(&varInput),
-                    SysStringByteLen(V_BSTR(&varInput)), vbInterface);
+                    strlenW(V_BSTR(&varInput))*sizeof(WCHAR), vbInterface);
             break;
         case VT_ARRAY|VT_UI1: {
             void *pSAData;
@@ -2023,7 +2466,7 @@ static HRESULT internal_parse(
         case VT_UNKNOWN:
         case VT_DISPATCH: {
             IPersistStream *persistStream;
-            IStream *stream = NULL;
+            ISequentialStream *stream = NULL;
             IXMLDOMDocument *xmlDoc;
 
             if(IUnknown_QueryInterface(V_UNKNOWN(&varInput),
@@ -2038,20 +2481,48 @@ static HRESULT internal_parse(
                 SysFreeString(bstrData);
                 break;
             }
+
             if(IUnknown_QueryInterface(V_UNKNOWN(&varInput),
                         &IID_IPersistStream, (void**)&persistStream) == S_OK)
             {
-                hr = IPersistStream_Save(persistStream, stream, TRUE);
+                IStream *stream_copy;
+
+                hr = CreateStreamOnHGlobal(NULL, TRUE, &stream_copy);
+                if(hr != S_OK)
+                {
+                    IPersistStream_Release(persistStream);
+                    return hr;
+                }
+
+                hr = IPersistStream_Save(persistStream, stream_copy, TRUE);
                 IPersistStream_Release(persistStream);
-                if(hr != S_OK) break;
+                if(hr == S_OK)
+                    IStream_QueryInterface(stream_copy, &IID_ISequentialStream, (void**)&stream);
+
+                IStream_Release(stream_copy);
             }
-            if(stream || IUnknown_QueryInterface(V_UNKNOWN(&varInput),
-                        &IID_IStream, (void**)&stream) == S_OK)
+
+            /* try base interface first */
+            if(!stream)
+            {
+                IUnknown_QueryInterface(V_UNKNOWN(&varInput), &IID_ISequentialStream, (void**)&stream);
+                if (!stream)
+                    /* this should never happen if IStream is implemented properly, but just in case */
+                    IUnknown_QueryInterface(V_UNKNOWN(&varInput), &IID_IStream, (void**)&stream);
+            }
+
+            if(stream)
             {
                 hr = internal_parseStream(This, stream, vbInterface);
-                IStream_Release(stream);
-                break;
+                ISequentialStream_Release(stream);
             }
+            else
+            {
+                WARN("IUnknown* input doesn't support any of expected interfaces\n");
+                hr = E_INVALIDARG;
+            }
+
+            break;
         }
         default:
             WARN("vt %d not implemented\n", V_VT(&varInput));
@@ -2080,157 +2551,174 @@ static HRESULT internal_parseURL(
         const WCHAR *url,
         BOOL vbInterface)
 {
+    IMoniker *mon;
     bsc_t *bsc;
     HRESULT hr;
 
     TRACE("(%p)->(%s)\n", This, debugstr_w(url));
 
-    if(vbInterface) hr = bind_url(url, internal_vbonDataAvailable, This, &bsc);
-    else hr = bind_url(url, internal_onDataAvailable, This, &bsc);
+    hr = create_moniker_from_url(url, &mon);
+    if(FAILED(hr))
+        return hr;
+
+    if(vbInterface) hr = bind_url(mon, internal_vbonDataAvailable, This, &bsc);
+    else hr = bind_url(mon, internal_onDataAvailable, This, &bsc);
+    IMoniker_Release(mon);
 
     if(FAILED(hr))
         return hr;
 
-    detach_bsc(bsc);
-
-    return S_OK;
+    return detach_bsc(bsc);
 }
 
 static HRESULT internal_putProperty(
     saxreader* This,
-    const WCHAR *pProp,
+    const WCHAR *prop,
     VARIANT value,
     BOOL vbInterface)
 {
-    static const WCHAR wszCharset[] = {
-        'c','h','a','r','s','e','t',0
-    };
-    static const WCHAR wszDeclarationHandler[] = {
-        'h','t','t','p',':','/','/','x','m','l','.','o','r','g','/',
-        's','a','x','/','p','r','o','p','e','r','t','i','e','s','/',
-        'd','e','c','l','a','r','a','t','i','o','n',
-        '-','h','a','n','d','l','e','r',0
-    };
-    static const WCHAR wszDomNode[] = {
-        'h','t','t','p',':','/','/','x','m','l','.','o','r','g','/',
-        's','a','x','/','p','r','o','p','e','r','t','i','e','s','/',
-        'd','o','m','-','n','o','d','e',0
-    };
-    static const WCHAR wszInputSource[] = {
-        'i','n','p','u','t','-','s','o','u','r','c','e',0
-    };
-    static const WCHAR wszLexicalHandler[] = {
-        'h','t','t','p',':','/','/','x','m','l','.','o','r','g','/',
-        's','a','x','/','p','r','o','p','e','r','t','i','e','s','/',
-        'l','e','x','i','c','a','l','-','h','a','n','d','l','e','r',0
-    };
-    static const WCHAR wszMaxElementDepth[] = {
-        'm','a','x','-','e','l','e','m','e','n','t','-','d','e','p','t','h',0
-    };
-    static const WCHAR wszMaxXMLSize[] = {
-        'm','a','x','-','x','m','l','-','s','i','z','e',0
-    };
-    static const WCHAR wszSchemaDeclarationHandler[] = {
-        's','c','h','e','m','a','-',
-        'd','e','c','l','a','r','a','t','i','o','n','-',
-        'h','a','n','d','l','e','r',0
-    };
-    static const WCHAR wszXMLDeclEncoding[] = {
-        'x','m','l','d','e','c','l','-','e','n','c','o','d','i','n','g',0
-    };
-    static const WCHAR wszXMLDeclStandalone[] = {
-        'x','m','l','d','e','c','l',
-        '-','s','t','a','n','d','a','l','o','n','e',0
-    };
-    static const WCHAR wszXMLDeclVersion[] = {
-        'x','m','l','d','e','c','l','-','v','e','r','s','i','o','n',0
-    };
+    TRACE("(%p)->(%s %s)\n", This, debugstr_w(prop), debugstr_variant(&value));
 
-    FIXME("(%p)->(%s): semi-stub\n", This, debugstr_w(pProp));
-
-    if(!memcmp(pProp, wszCharset, sizeof(wszCharset)))
-        return E_NOTIMPL;
-
-    if(!memcmp(pProp, wszDeclarationHandler, sizeof(wszDeclarationHandler)))
+    if(!memcmp(prop, PropertyDeclHandlerW, sizeof(PropertyDeclHandlerW)))
     {
         if(This->isParsing) return E_FAIL;
 
-        if(V_UNKNOWN(&value))
+        switch (V_VT(&value))
         {
-            if(vbInterface)
-                IVBSAXDeclHandler_AddRef((IVBSAXDeclHandler*)V_UNKNOWN(&value));
-            else
-                ISAXDeclHandler_AddRef((ISAXDeclHandler*)V_UNKNOWN(&value));
-        }
-        if((vbInterface && This->vbdeclHandler)
-                || (!vbInterface && This->declHandler))
+        case VT_EMPTY:
+            saxreader_put_handler(This, SAXDeclHandler, NULL, vbInterface);
+            break;
+        case VT_UNKNOWN:
         {
-            if(vbInterface)
-                IVBSAXDeclHandler_Release(This->vbdeclHandler);
-            else
-                ISAXDeclHandler_Release(This->declHandler);
+            IUnknown *handler = NULL;
+
+            if (V_UNKNOWN(&value))
+            {
+                HRESULT hr;
+
+                if (vbInterface)
+                    hr = IUnknown_QueryInterface(V_UNKNOWN(&value), &IID_IVBSAXDeclHandler, (void**)&handler);
+                else
+                    hr = IUnknown_QueryInterface(V_UNKNOWN(&value), &IID_ISAXDeclHandler, (void**)&handler);
+                if (FAILED(hr)) return hr;
+            }
+
+            saxreader_put_handler(This, SAXDeclHandler, handler, vbInterface);
+            if (handler) IUnknown_Release(handler);
+            break;
         }
-        if(vbInterface)
-            This->vbdeclHandler = (IVBSAXDeclHandler*)V_UNKNOWN(&value);
-        else
-            This->declHandler = (ISAXDeclHandler*)V_UNKNOWN(&value);
+        default:
+            return E_INVALIDARG;
+        }
+
         return S_OK;
     }
 
-    if(!memcmp(pProp, wszDomNode, sizeof(wszDomNode)))
-        return E_FAIL;
-
-    if(!memcmp(pProp, wszInputSource, sizeof(wszInputSource)))
-        return E_NOTIMPL;
-
-    if(!memcmp(pProp, wszLexicalHandler, sizeof(wszLexicalHandler)))
+    if(!memcmp(prop, PropertyLexicalHandlerW, sizeof(PropertyLexicalHandlerW)))
     {
         if(This->isParsing) return E_FAIL;
 
-        if(V_UNKNOWN(&value))
+        switch (V_VT(&value))
         {
-            if(vbInterface)
-                IVBSAXLexicalHandler_AddRef(
-                        (IVBSAXLexicalHandler*)V_UNKNOWN(&value));
-            else
-                ISAXLexicalHandler_AddRef(
-                        (ISAXLexicalHandler*)V_UNKNOWN(&value));
-        }
-        if((vbInterface && This->vblexicalHandler)
-                || (!vbInterface && This->lexicalHandler))
+        case VT_EMPTY:
+            saxreader_put_handler(This, SAXLexicalHandler, NULL, vbInterface);
+            break;
+        case VT_UNKNOWN:
         {
-            if(vbInterface)
-                IVBSAXLexicalHandler_Release(This->vblexicalHandler);
-            else
-                ISAXLexicalHandler_Release(This->lexicalHandler);
+            IUnknown *handler = NULL;
+
+            if (V_UNKNOWN(&value))
+            {
+                HRESULT hr;
+
+                if (vbInterface)
+                    hr = IUnknown_QueryInterface(V_UNKNOWN(&value), &IID_IVBSAXLexicalHandler, (void**)&handler);
+                else
+                    hr = IUnknown_QueryInterface(V_UNKNOWN(&value), &IID_ISAXLexicalHandler, (void**)&handler);
+                if (FAILED(hr)) return hr;
+            }
+
+            saxreader_put_handler(This, SAXLexicalHandler, handler, vbInterface);
+            if (handler) IUnknown_Release(handler);
+            break;
         }
-        if(vbInterface)
-            This->vblexicalHandler = (IVBSAXLexicalHandler*)V_UNKNOWN(&value);
-        else
-            This->lexicalHandler = (ISAXLexicalHandler*)V_UNKNOWN(&value);
+        default:
+            return E_INVALIDARG;
+        }
+
         return S_OK;
     }
 
-    if(!memcmp(pProp, wszMaxElementDepth, sizeof(wszMaxElementDepth)))
+    if(!memcmp(prop, PropertyMaxXMLSizeW, sizeof(PropertyMaxXMLSizeW)))
+    {
+        if (V_VT(&value) == VT_I4 && V_I4(&value) == 0) return S_OK;
+        FIXME("(%p)->(%s): max-xml-size unsupported\n", This, debugstr_variant(&value));
+        return E_NOTIMPL;
+    }
+
+    if(!memcmp(prop, PropertyMaxElementDepthW, sizeof(PropertyMaxElementDepthW)))
+    {
+        if (V_VT(&value) == VT_I4 && V_I4(&value) == 0) return S_OK;
+        FIXME("(%p)->(%s): max-element-depth unsupported\n", This, debugstr_variant(&value));
+        return E_NOTIMPL;
+    }
+
+    FIXME("(%p)->(%s:%s): unsupported property\n", This, debugstr_w(prop), debugstr_variant(&value));
+
+    if(!memcmp(prop, PropertyCharsetW, sizeof(PropertyCharsetW)))
         return E_NOTIMPL;
 
-    if(!memcmp(pProp, wszMaxXMLSize, sizeof(wszMaxXMLSize)))
-        return E_NOTIMPL;
-
-    if(!memcmp(pProp, wszSchemaDeclarationHandler,
-                sizeof(wszSchemaDeclarationHandler)))
-        return E_NOTIMPL;
-
-    if(!memcmp(pProp, wszXMLDeclEncoding, sizeof(wszXMLDeclEncoding)))
+    if(!memcmp(prop, PropertyDomNodeW, sizeof(PropertyDomNodeW)))
         return E_FAIL;
 
-    if(!memcmp(pProp, wszXMLDeclStandalone, sizeof(wszXMLDeclStandalone)))
+    if(!memcmp(prop, PropertyInputSourceW, sizeof(PropertyInputSourceW)))
+        return E_NOTIMPL;
+
+    if(!memcmp(prop, PropertySchemaDeclHandlerW, sizeof(PropertySchemaDeclHandlerW)))
+        return E_NOTIMPL;
+
+    if(!memcmp(prop, PropertyXMLDeclEncodingW, sizeof(PropertyXMLDeclEncodingW)))
         return E_FAIL;
 
-    if(!memcmp(pProp, wszXMLDeclVersion, sizeof(wszXMLDeclVersion)))
+    if(!memcmp(prop, PropertyXMLDeclStandaloneW, sizeof(PropertyXMLDeclStandaloneW)))
+        return E_FAIL;
+
+    if(!memcmp(prop, PropertyXMLDeclVersionW, sizeof(PropertyXMLDeclVersionW)))
         return E_FAIL;
 
     return E_INVALIDARG;
+}
+
+static HRESULT internal_getProperty(const saxreader* This, const WCHAR *prop, VARIANT *value, BOOL vb)
+{
+    TRACE("(%p)->(%s)\n", This, debugstr_w(prop));
+
+    if (!value) return E_POINTER;
+
+    if (!memcmp(PropertyLexicalHandlerW, prop, sizeof(PropertyLexicalHandlerW)))
+    {
+        V_VT(value) = VT_UNKNOWN;
+        saxreader_get_handler(This, SAXLexicalHandler, vb, (void**)&V_UNKNOWN(value));
+        return S_OK;
+    }
+
+    if (!memcmp(PropertyDeclHandlerW, prop, sizeof(PropertyDeclHandlerW)))
+    {
+        V_VT(value) = VT_UNKNOWN;
+        saxreader_get_handler(This, SAXDeclHandler, vb, (void**)&V_UNKNOWN(value));
+        return S_OK;
+    }
+
+    if (!memcmp(PropertyXmlDeclVersionW, prop, sizeof(PropertyXmlDeclVersionW)))
+    {
+        V_VT(value) = VT_BSTR;
+        V_BSTR(value) = SysAllocString(This->xmldecl_version);
+        return S_OK;
+    }
+
+    FIXME("(%p)->(%s) unsupported property\n", This, debugstr_w(prop));
+
+    return E_NOTIMPL;
 }
 
 /*** IVBSAXXMLReader interface ***/
@@ -2251,7 +2739,11 @@ static HRESULT WINAPI saxxmlreader_QueryInterface(IVBSAXXMLReader* iface, REFIID
     }
     else if( IsEqualGUID( riid, &IID_ISAXXMLReader ))
     {
-        *ppvObject = &This->lpSAXXMLReaderVtbl;
+        *ppvObject = &This->ISAXXMLReader_iface;
+    }
+    else if (dispex_query_interface(&This->dispex, riid, ppvObject))
+    {
+        return *ppvObject ? S_OK : E_NOINTERFACE;
     }
     else
     {
@@ -2282,30 +2774,23 @@ static ULONG WINAPI saxxmlreader_Release(
     ref = InterlockedDecrement( &This->ref );
     if ( ref == 0 )
     {
-        if(This->contentHandler)
-            ISAXContentHandler_Release(This->contentHandler);
+        int i;
 
-        if(This->vbcontentHandler)
-            IVBSAXContentHandler_Release(This->vbcontentHandler);
+        for (i = 0; i < SAXHandler_Last; i++)
+        {
+            struct saxanyhandler_iface *iface = &This->saxhandlers[i].u.anyhandler;
 
-        if(This->errorHandler)
-            ISAXErrorHandler_Release(This->errorHandler);
+            if (iface->handler)
+                IUnknown_Release(iface->handler);
 
-        if(This->vberrorHandler)
-            IVBSAXErrorHandler_Release(This->vberrorHandler);
+            if (iface->vbhandler)
+                IUnknown_Release(iface->vbhandler);
+        }
 
-        if(This->lexicalHandler)
-            ISAXLexicalHandler_Release(This->lexicalHandler);
+        SysFreeString(This->xmldecl_version);
+        free_bstr_pool(&This->pool);
 
-        if(This->vblexicalHandler)
-            IVBSAXLexicalHandler_Release(This->vblexicalHandler);
-
-        if(This->declHandler)
-            ISAXDeclHandler_Release(This->declHandler);
-
-        if(This->vbdeclHandler)
-            IVBSAXDeclHandler_Release(This->vbdeclHandler);
-
+        release_dispex(&This->dispex);
         heap_free( This );
     }
 
@@ -2315,12 +2800,7 @@ static ULONG WINAPI saxxmlreader_Release(
 static HRESULT WINAPI saxxmlreader_GetTypeInfoCount( IVBSAXXMLReader *iface, UINT* pctinfo )
 {
     saxreader *This = impl_from_IVBSAXXMLReader( iface );
-
-    TRACE("(%p)->(%p)\n", This, pctinfo);
-
-    *pctinfo = 1;
-
-    return S_OK;
+    return IDispatchEx_GetTypeInfoCount(&This->dispex.IDispatchEx_iface, pctinfo);
 }
 
 static HRESULT WINAPI saxxmlreader_GetTypeInfo(
@@ -2328,13 +2808,8 @@ static HRESULT WINAPI saxxmlreader_GetTypeInfo(
     UINT iTInfo, LCID lcid, ITypeInfo** ppTInfo )
 {
     saxreader *This = impl_from_IVBSAXXMLReader( iface );
-    HRESULT hr;
-
-    TRACE("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
-
-    hr = get_typeinfo(IVBSAXXMLReader_tid, ppTInfo);
-
-    return hr;
+    return IDispatchEx_GetTypeInfo(&This->dispex.IDispatchEx_iface,
+        iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI saxxmlreader_GetIDsOfNames(
@@ -2346,23 +2821,8 @@ static HRESULT WINAPI saxxmlreader_GetIDsOfNames(
     DISPID* rgDispId)
 {
     saxreader *This = impl_from_IVBSAXXMLReader( iface );
-    ITypeInfo *typeinfo;
-    HRESULT hr;
-
-    TRACE("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
-          lcid, rgDispId);
-
-    if(!rgszNames || cNames == 0 || !rgDispId)
-        return E_INVALIDARG;
-
-    hr = get_typeinfo(IVBSAXXMLReader_tid, &typeinfo);
-    if(SUCCEEDED(hr))
-    {
-        hr = ITypeInfo_GetIDsOfNames(typeinfo, rgszNames, cNames, rgDispId);
-        ITypeInfo_Release(typeinfo);
-    }
-
-    return hr;
+    return IDispatchEx_GetIDsOfNames(&This->dispex.IDispatchEx_iface,
+        riid, rgszNames, cNames, lcid, rgDispId);
 }
 
 static HRESULT WINAPI saxxmlreader_Invoke(
@@ -2377,55 +2837,67 @@ static HRESULT WINAPI saxxmlreader_Invoke(
     UINT* puArgErr)
 {
     saxreader *This = impl_from_IVBSAXXMLReader( iface );
-    ITypeInfo *typeinfo;
-    HRESULT hr;
-
-    TRACE("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
-          lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
-
-    hr = get_typeinfo(IVBSAXXMLReader_tid, &typeinfo);
-    if(SUCCEEDED(hr))
-    {
-        hr = ITypeInfo_Invoke(typeinfo, &(This->lpVBSAXXMLReaderVtbl), dispIdMember, wFlags, pDispParams,
-                pVarResult, pExcepInfo, puArgErr);
-        ITypeInfo_Release(typeinfo);
-    }
-
-    return hr;
+    return IDispatchEx_Invoke(&This->dispex.IDispatchEx_iface,
+        dispIdMember, riid, lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
 /*** IVBSAXXMLReader methods ***/
 static HRESULT WINAPI saxxmlreader_getFeature(
     IVBSAXXMLReader* iface,
-    const WCHAR *pFeature,
-    VARIANT_BOOL *pValue)
+    const WCHAR *feature_name,
+    VARIANT_BOOL *value)
 {
     saxreader *This = impl_from_IVBSAXXMLReader( iface );
+    saxreader_feature feature;
 
-    FIXME("(%p)->(%s %p) stub\n", This, debugstr_w(pFeature), pValue);
+    TRACE("(%p)->(%s %p)\n", This, debugstr_w(feature_name), value);
+
+    feature = get_saxreader_feature(feature_name);
+    if (feature == Namespaces || feature == NamespacePrefixes)
+        return get_feature_value(This, feature, value);
+
+    FIXME("(%p)->(%s %p) stub\n", This, debugstr_w(feature_name), value);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI saxxmlreader_putFeature(
     IVBSAXXMLReader* iface,
-    const WCHAR *pFeature,
-    VARIANT_BOOL vfValue)
+    const WCHAR *feature_name,
+    VARIANT_BOOL value)
 {
     saxreader *This = impl_from_IVBSAXXMLReader( iface );
+    saxreader_feature feature;
 
-    FIXME("(%p)->(%s %x) stub\n", This, debugstr_w(pFeature), vfValue);
+    TRACE("(%p)->(%s %x)\n", This, debugstr_w(feature_name), value);
+
+    feature = get_saxreader_feature(feature_name);
+
+    /* accepted cases */
+    if ((feature == ExternalGeneralEntities   && value == VARIANT_FALSE) ||
+        (feature == ExternalParameterEntities && value == VARIANT_FALSE) ||
+         feature == Namespaces ||
+         feature == NamespacePrefixes)
+    {
+        return set_feature_value(This, feature, value);
+    }
+
+    if (feature == LexicalHandlerParEntities || feature == ProhibitDTD)
+    {
+        FIXME("(%p)->(%s %x) stub\n", This, debugstr_w(feature_name), value);
+        return set_feature_value(This, feature, value);
+    }
+
+    FIXME("(%p)->(%s %x) stub\n", This, debugstr_w(feature_name), value);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI saxxmlreader_getProperty(
     IVBSAXXMLReader* iface,
-    const WCHAR *pProp,
-    VARIANT *pValue)
+    const WCHAR *prop,
+    VARIANT *value)
 {
     saxreader *This = impl_from_IVBSAXXMLReader( iface );
-
-    FIXME("(%p)->(%s %p) stub\n", This, debugstr_w(pProp), pValue);
-    return E_NOTIMPL;
+    return internal_getProperty(This, prop, value, TRUE);
 }
 
 static HRESULT WINAPI saxxmlreader_putProperty(
@@ -2439,66 +2911,66 @@ static HRESULT WINAPI saxxmlreader_putProperty(
 
 static HRESULT WINAPI saxxmlreader_get_entityResolver(
     IVBSAXXMLReader* iface,
-    IVBSAXEntityResolver **pEntityResolver)
+    IVBSAXEntityResolver **resolver)
 {
     saxreader *This = impl_from_IVBSAXXMLReader( iface );
-    return internal_getEntityResolver(This, pEntityResolver, TRUE);
+    return saxreader_get_handler(This, SAXEntityResolver, TRUE, (void**)resolver);
 }
 
 static HRESULT WINAPI saxxmlreader_put_entityResolver(
     IVBSAXXMLReader* iface,
-    IVBSAXEntityResolver *pEntityResolver)
+    IVBSAXEntityResolver *resolver)
 {
     saxreader *This = impl_from_IVBSAXXMLReader( iface );
-    return internal_putEntityResolver(This, pEntityResolver, TRUE);
+    return saxreader_put_handler(This, SAXEntityResolver, resolver, TRUE);
 }
 
 static HRESULT WINAPI saxxmlreader_get_contentHandler(
     IVBSAXXMLReader* iface,
-    IVBSAXContentHandler **ppContentHandler)
+    IVBSAXContentHandler **handler)
 {
     saxreader *This = impl_from_IVBSAXXMLReader( iface );
-    return internal_getContentHandler(This, ppContentHandler, TRUE);
+    return saxreader_get_handler(This, SAXContentHandler, TRUE, (void**)handler);
 }
 
 static HRESULT WINAPI saxxmlreader_put_contentHandler(
     IVBSAXXMLReader* iface,
-    IVBSAXContentHandler *contentHandler)
+    IVBSAXContentHandler *handler)
 {
     saxreader *This = impl_from_IVBSAXXMLReader( iface );
-    return internal_putContentHandler(This, contentHandler, TRUE);
+    return saxreader_put_handler(This, SAXContentHandler, handler, TRUE);
 }
 
 static HRESULT WINAPI saxxmlreader_get_dtdHandler(
     IVBSAXXMLReader* iface,
-    IVBSAXDTDHandler **pDTDHandler)
+    IVBSAXDTDHandler **handler)
 {
     saxreader *This = impl_from_IVBSAXXMLReader( iface );
-    return internal_getDTDHandler(This, pDTDHandler, TRUE);
+    return saxreader_get_handler(This, SAXDTDHandler, TRUE, (void**)handler);
 }
 
 static HRESULT WINAPI saxxmlreader_put_dtdHandler(
     IVBSAXXMLReader* iface,
-    IVBSAXDTDHandler *pDTDHandler)
+    IVBSAXDTDHandler *handler)
 {
     saxreader *This = impl_from_IVBSAXXMLReader( iface );
-    return internal_putDTDHandler(This, pDTDHandler, TRUE);
+    return saxreader_put_handler(This, SAXDTDHandler, handler, TRUE);
 }
 
 static HRESULT WINAPI saxxmlreader_get_errorHandler(
     IVBSAXXMLReader* iface,
-    IVBSAXErrorHandler **pErrorHandler)
+    IVBSAXErrorHandler **handler)
 {
     saxreader *This = impl_from_IVBSAXXMLReader( iface );
-    return internal_getErrorHandler(This, pErrorHandler, TRUE);
+    return saxreader_get_handler(This, SAXErrorHandler, TRUE, (void**)handler);
 }
 
 static HRESULT WINAPI saxxmlreader_put_errorHandler(
     IVBSAXXMLReader* iface,
-    IVBSAXErrorHandler *errorHandler)
+    IVBSAXErrorHandler *handler)
 {
     saxreader *This = impl_from_IVBSAXXMLReader( iface );
-    return internal_putErrorHandler(This, errorHandler, TRUE);
+    return saxreader_put_handler(This, SAXErrorHandler, handler, TRUE);
 }
 
 static HRESULT WINAPI saxxmlreader_get_baseURL(
@@ -2558,7 +3030,7 @@ static HRESULT WINAPI saxxmlreader_parseURL(
     return internal_parseURL(This, url, TRUE);
 }
 
-static const struct IVBSAXXMLReaderVtbl saxreader_vtbl =
+static const struct IVBSAXXMLReaderVtbl VBSAXXMLReaderVtbl =
 {
     saxxmlreader_QueryInterface,
     saxxmlreader_AddRef,
@@ -2592,19 +3064,19 @@ static const struct IVBSAXXMLReaderVtbl saxreader_vtbl =
 static HRESULT WINAPI isaxxmlreader_QueryInterface(ISAXXMLReader* iface, REFIID riid, void **ppvObject)
 {
     saxreader *This = impl_from_ISAXXMLReader( iface );
-    return saxxmlreader_QueryInterface((IVBSAXXMLReader*)&This->lpVBSAXXMLReaderVtbl, riid, ppvObject);
+    return saxxmlreader_QueryInterface(&This->IVBSAXXMLReader_iface, riid, ppvObject);
 }
 
 static ULONG WINAPI isaxxmlreader_AddRef(ISAXXMLReader* iface)
 {
     saxreader *This = impl_from_ISAXXMLReader( iface );
-    return saxxmlreader_AddRef((IVBSAXXMLReader*)&This->lpVBSAXXMLReaderVtbl);
+    return saxxmlreader_AddRef(&This->IVBSAXXMLReader_iface);
 }
 
 static ULONG WINAPI isaxxmlreader_Release(ISAXXMLReader* iface)
 {
     saxreader *This = impl_from_ISAXXMLReader( iface );
-    return saxxmlreader_Release((IVBSAXXMLReader*)&This->lpVBSAXXMLReaderVtbl);
+    return saxxmlreader_Release(&This->IVBSAXXMLReader_iface);
 }
 
 /*** ISAXXMLReader methods ***/
@@ -2614,9 +3086,7 @@ static HRESULT WINAPI isaxxmlreader_getFeature(
         VARIANT_BOOL *pValue)
 {
     saxreader *This = impl_from_ISAXXMLReader( iface );
-    return IVBSAXXMLReader_getFeature(
-            (IVBSAXXMLReader*)&This->lpVBSAXXMLReaderVtbl,
-            pFeature, pValue);
+    return IVBSAXXMLReader_getFeature(&This->IVBSAXXMLReader_iface, pFeature, pValue);
 }
 
 static HRESULT WINAPI isaxxmlreader_putFeature(
@@ -2625,20 +3095,16 @@ static HRESULT WINAPI isaxxmlreader_putFeature(
         VARIANT_BOOL vfValue)
 {
     saxreader *This = impl_from_ISAXXMLReader( iface );
-    return IVBSAXXMLReader_putFeature(
-            (IVBSAXXMLReader*)&This->lpVBSAXXMLReaderVtbl,
-            pFeature, vfValue);
+    return IVBSAXXMLReader_putFeature(&This->IVBSAXXMLReader_iface, pFeature, vfValue);
 }
 
 static HRESULT WINAPI isaxxmlreader_getProperty(
         ISAXXMLReader* iface,
-        const WCHAR *pProp,
-        VARIANT *pValue)
+        const WCHAR *prop,
+        VARIANT *value)
 {
     saxreader *This = impl_from_ISAXXMLReader( iface );
-    return IVBSAXXMLReader_getProperty(
-            (IVBSAXXMLReader*)&This->lpVBSAXXMLReaderVtbl,
-            pProp, pValue);
+    return internal_getProperty(This, prop, value, FALSE);
 }
 
 static HRESULT WINAPI isaxxmlreader_putProperty(
@@ -2652,66 +3118,64 @@ static HRESULT WINAPI isaxxmlreader_putProperty(
 
 static HRESULT WINAPI isaxxmlreader_getEntityResolver(
         ISAXXMLReader* iface,
-        ISAXEntityResolver **ppEntityResolver)
+        ISAXEntityResolver **resolver)
 {
     saxreader *This = impl_from_ISAXXMLReader( iface );
-    return internal_getEntityResolver(This, ppEntityResolver, FALSE);
+    return saxreader_get_handler(This, SAXEntityResolver, FALSE, (void**)resolver);
 }
 
 static HRESULT WINAPI isaxxmlreader_putEntityResolver(
         ISAXXMLReader* iface,
-        ISAXEntityResolver *pEntityResolver)
+        ISAXEntityResolver *resolver)
 {
     saxreader *This = impl_from_ISAXXMLReader( iface );
-    return internal_putEntityResolver(This, pEntityResolver, FALSE);
+    return saxreader_put_handler(This, SAXEntityResolver, resolver, FALSE);
 }
 
 static HRESULT WINAPI isaxxmlreader_getContentHandler(
         ISAXXMLReader* iface,
-        ISAXContentHandler **pContentHandler)
+        ISAXContentHandler **handler)
 {
     saxreader *This = impl_from_ISAXXMLReader( iface );
-    return internal_getContentHandler(This, pContentHandler, FALSE);
+    return saxreader_get_handler(This, SAXContentHandler, FALSE, (void**)handler);
 }
 
 static HRESULT WINAPI isaxxmlreader_putContentHandler(
-        ISAXXMLReader* iface,
-        ISAXContentHandler *contentHandler)
+    ISAXXMLReader* iface,
+    ISAXContentHandler *handler)
 {
     saxreader *This = impl_from_ISAXXMLReader( iface );
-    return internal_putContentHandler(This, contentHandler, FALSE);
+    return saxreader_put_handler(This, SAXContentHandler, handler, FALSE);
 }
 
 static HRESULT WINAPI isaxxmlreader_getDTDHandler(
         ISAXXMLReader* iface,
-        ISAXDTDHandler **pDTDHandler)
+        ISAXDTDHandler **handler)
 {
     saxreader *This = impl_from_ISAXXMLReader( iface );
-    return internal_getDTDHandler(This, pDTDHandler, FALSE);
+    return saxreader_get_handler(This, SAXDTDHandler, FALSE, (void**)handler);
 }
 
 static HRESULT WINAPI isaxxmlreader_putDTDHandler(
         ISAXXMLReader* iface,
-        ISAXDTDHandler *pDTDHandler)
+        ISAXDTDHandler *handler)
 {
     saxreader *This = impl_from_ISAXXMLReader( iface );
-    return internal_putDTDHandler(This, pDTDHandler, FALSE);
+    return saxreader_put_handler(This, SAXDTDHandler, handler, FALSE);
 }
 
 static HRESULT WINAPI isaxxmlreader_getErrorHandler(
         ISAXXMLReader* iface,
-        ISAXErrorHandler **pErrorHandler)
+        ISAXErrorHandler **handler)
 {
     saxreader *This = impl_from_ISAXXMLReader( iface );
-    return internal_getErrorHandler(This, pErrorHandler, FALSE);
+    return saxreader_get_handler(This, SAXErrorHandler, FALSE, (void**)handler);
 }
 
-static HRESULT WINAPI isaxxmlreader_putErrorHandler(
-        ISAXXMLReader* iface,
-        ISAXErrorHandler *errorHandler)
+static HRESULT WINAPI isaxxmlreader_putErrorHandler(ISAXXMLReader* iface, ISAXErrorHandler *handler)
 {
     saxreader *This = impl_from_ISAXXMLReader( iface );
-    return internal_putErrorHandler(This, errorHandler, FALSE);
+    return saxreader_put_handler(This, SAXErrorHandler, handler, FALSE);
 }
 
 static HRESULT WINAPI isaxxmlreader_getBaseURL(
@@ -2719,9 +3183,7 @@ static HRESULT WINAPI isaxxmlreader_getBaseURL(
         const WCHAR **pBaseUrl)
 {
     saxreader *This = impl_from_ISAXXMLReader( iface );
-    return IVBSAXXMLReader_get_baseURL(
-            (IVBSAXXMLReader*)&This->lpVBSAXXMLReaderVtbl,
-            pBaseUrl);
+    return IVBSAXXMLReader_get_baseURL(&This->IVBSAXXMLReader_iface, pBaseUrl);
 }
 
 static HRESULT WINAPI isaxxmlreader_putBaseURL(
@@ -2729,9 +3191,7 @@ static HRESULT WINAPI isaxxmlreader_putBaseURL(
         const WCHAR *pBaseUrl)
 {
     saxreader *This = impl_from_ISAXXMLReader( iface );
-    return IVBSAXXMLReader_put_baseURL(
-            (IVBSAXXMLReader*)&This->lpVBSAXXMLReaderVtbl,
-            pBaseUrl);
+    return IVBSAXXMLReader_put_baseURL(&This->IVBSAXXMLReader_iface, pBaseUrl);
 }
 
 static HRESULT WINAPI isaxxmlreader_getSecureBaseURL(
@@ -2739,9 +3199,7 @@ static HRESULT WINAPI isaxxmlreader_getSecureBaseURL(
         const WCHAR **pSecureBaseUrl)
 {
     saxreader *This = impl_from_ISAXXMLReader( iface );
-    return IVBSAXXMLReader_get_secureBaseURL(
-            (IVBSAXXMLReader*)&This->lpVBSAXXMLReaderVtbl,
-            pSecureBaseUrl);
+    return IVBSAXXMLReader_get_secureBaseURL(&This->IVBSAXXMLReader_iface, pSecureBaseUrl);
 }
 
 static HRESULT WINAPI isaxxmlreader_putSecureBaseURL(
@@ -2749,9 +3207,7 @@ static HRESULT WINAPI isaxxmlreader_putSecureBaseURL(
         const WCHAR *secureBaseUrl)
 {
     saxreader *This = impl_from_ISAXXMLReader( iface );
-    return IVBSAXXMLReader_put_secureBaseURL(
-            (IVBSAXXMLReader*)&This->lpVBSAXXMLReaderVtbl,
-            secureBaseUrl);
+    return IVBSAXXMLReader_put_secureBaseURL(&This->IVBSAXXMLReader_iface, secureBaseUrl);
 }
 
 static HRESULT WINAPI isaxxmlreader_parse(
@@ -2770,7 +3226,7 @@ static HRESULT WINAPI isaxxmlreader_parseURL(
     return internal_parseURL(This, url, FALSE);
 }
 
-static const struct ISAXXMLReaderVtbl isaxreader_vtbl =
+static const struct ISAXXMLReaderVtbl SAXXMLReaderVtbl =
 {
     isaxxmlreader_QueryInterface,
     isaxxmlreader_AddRef,
@@ -2795,28 +3251,40 @@ static const struct ISAXXMLReaderVtbl isaxreader_vtbl =
     isaxxmlreader_parseURL
 };
 
-HRESULT SAXXMLReader_create(IUnknown *pUnkOuter, LPVOID *ppObj)
+static const tid_t saxreader_iface_tids[] = {
+    IVBSAXXMLReader_tid,
+    0
+};
+static dispex_static_data_t saxreader_dispex = {
+    NULL,
+    IVBSAXXMLReader_tid,
+    NULL,
+    saxreader_iface_tids
+};
+
+HRESULT SAXXMLReader_create(MSXML_VERSION version, IUnknown *outer, LPVOID *ppObj)
 {
     saxreader *reader;
 
-    TRACE("(%p,%p)\n", pUnkOuter, ppObj);
+    TRACE("(%p, %p)\n", outer, ppObj);
 
     reader = heap_alloc( sizeof (*reader) );
     if( !reader )
         return E_OUTOFMEMORY;
 
-    reader->lpVBSAXXMLReaderVtbl = &saxreader_vtbl;
-    reader->lpSAXXMLReaderVtbl = &isaxreader_vtbl;
+    reader->IVBSAXXMLReader_iface.lpVtbl = &VBSAXXMLReaderVtbl;
+    reader->ISAXXMLReader_iface.lpVtbl = &SAXXMLReaderVtbl;
     reader->ref = 1;
-    reader->contentHandler = NULL;
-    reader->vbcontentHandler = NULL;
-    reader->errorHandler = NULL;
-    reader->vberrorHandler = NULL;
-    reader->lexicalHandler = NULL;
-    reader->vblexicalHandler = NULL;
-    reader->declHandler = NULL;
-    reader->vbdeclHandler = NULL;
+    memset(reader->saxhandlers, 0, sizeof(reader->saxhandlers));
     reader->isParsing = FALSE;
+    reader->xmldecl_version = NULL;
+    reader->pool.pool = NULL;
+    reader->pool.index = 0;
+    reader->pool.len = 0;
+    reader->features = Namespaces | NamespacePrefixes;
+    reader->version = version;
+
+    init_dispex(&reader->dispex, (IUnknown*)&reader->IVBSAXXMLReader_iface, &saxreader_dispex);
 
     memset(&reader->sax, 0, sizeof(xmlSAXHandler));
     reader->sax.initialized = XML_SAX2_MAGIC;
@@ -2829,9 +3297,10 @@ HRESULT SAXXMLReader_create(IUnknown *pUnkOuter, LPVOID *ppObj)
     reader->sax.comment = libxmlComment;
     reader->sax.error = libxmlFatalError;
     reader->sax.fatalError = libxmlFatalError;
-    reader->sax.cdataBlock = libxmlCDataBlock;
+    reader->sax.cdataBlock = libxml_cdatablock;
+    reader->sax.resolveEntity = libxmlresolveentity;
 
-    *ppObj = &reader->lpVBSAXXMLReaderVtbl;
+    *ppObj = &reader->IVBSAXXMLReader_iface;
 
     TRACE("returning iface %p\n", *ppObj);
 
@@ -2840,7 +3309,7 @@ HRESULT SAXXMLReader_create(IUnknown *pUnkOuter, LPVOID *ppObj)
 
 #else
 
-HRESULT SAXXMLReader_create(IUnknown *pUnkOuter, LPVOID *ppObj)
+HRESULT SAXXMLReader_create(MSXML_VERSION version, IUnknown *pUnkOuter, LPVOID *ppObj)
 {
     MESSAGE("This program tried to use a SAX XML Reader object, but\n"
             "libxml2 support was not present at compile time.\n");

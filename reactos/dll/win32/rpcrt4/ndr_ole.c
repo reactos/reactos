@@ -22,27 +22,30 @@
  *  - finish RpcStream_Vtbl
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
 #include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
+//#include <stdio.h>
+//#include <string.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winerror.h"
 
-#include "objbase.h"
+#include <objbase.h>
 
 #include "ndr_misc.h"
-#include "rpcndr.h"
-#include "rpcproxy.h"
-#include "wine/rpcfc.h"
-#include "cpsf.h"
+//#include "rpcndr.h"
+//#include "rpcproxy.h"
+#include <wine/rpcfc.h>
+//#include "cpsf.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 

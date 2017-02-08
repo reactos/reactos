@@ -1,4 +1,4 @@
-// Norwegain language resource file (Sebastian Gasiorek, 2005-11-13)
+﻿// Norwegain language resource file (Sebastian Gasiorek, 2005-11-13)
 
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
@@ -34,26 +34,26 @@ STRINGTABLE
 BEGIN
     IDS_DEV_NO_PROBLEM "Denne enheten fungerer som den skal."
     IDS_DEV_NOT_CONFIGURED "Denne enheten er ikke riktig konfigurert."
-    IDS_DEV_DEVLOADER_FAILED "ReactOS kunne ikke laste driver for denne enheten fordi datamaskinen rapporterer to $1 buss typer."
-    IDS_DEV_DEVLOADER_FAILED2 "$1 enhetslaster(e) for denne enheten kunne ikke laste enhetsdriveren."
+    IDS_DEV_DEVLOADER_FAILED "ReactOS kunne ikke laste driver for denne enheten fordi datamaskinen rapporterer to %1 buss typer."
+    IDS_DEV_DEVLOADER_FAILED2 "%1 enhetslaster(e) for denne enheten kunne ikke laste enhetsdriveren."
     IDS_DEV_OUT_OF_MEMORY "Driveren for denne enheten kan være dårlig, eller så kan systemet ditt ha for lite minne eller ha for andre resusser."
     IDS_DEV_ENTRY_IS_WRONG_TYPE "Denne enheten virker ikke fordi en av driverene kan være dårlig, eller at ditt register kan være dårlig."
     IDS_DEV_LACKED_ARBITRATOR "Driveren for denne enheter trenger en ressurs som ReactOS ikke vet hvordan skal brukes."
     IDS_DEV_BOOT_CONFIG_CONFLICT "En annen enhet bruker ressurs som denne enheten trenger å bruke."
     IDS_DEV_FAILED_FILTER "Driveren for denne enheten trenger å bli installert på nytt."
-    IDS_DEV_DEVLOADER_NOT_FOUND "Denne enheten fungerer ikke som den skal fordi ReactOS kan ikke laste filen $1 som laster driveren for denne enheten."
-    IDS_DEV_DEVLOADER_NOT_FOUND2 "Denne enheten fungerer ikke som den skal fordi filen $1 som laster driveren for denne enheten er dårlig."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Denne enheten fungerer ikke som den skal fordi ReactOS kan ikke laste filen %1 som laster driveren for denne enheten."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Denne enheten fungerer ikke som den skal fordi filen %1 som laster driveren for denne enheten er dårlig."
     IDS_DEV_DEVLOADER_NOT_FOUND3 "Enhet mislykket: Prøv å bytt driveren for denne enheten. Hvis dette ikke virker, se på din maskinvare dokumentasjon."
     IDS_DEV_INVALID_DATA "Denne enheten fungerer ikke som den skal fordi BIOS på din datamaskin rapporterer at ressursen for denne enheten er feil."
     IDS_DEV_INVALID_DATA2 "Denne enheten fungerer ikke som den skal fordi BIOS på enheten rapporterer at ressursen for denne enheten er feil. "
     IDS_DEV_FAILED_START "Denne enheten er heller ikke valgt, eller vil ikke fungere riktig, eller så har den ikke de driverene som trengs."
     IDS_DEV_LIAR "ReactOS har stoppet reaksjon mens attempting for å starte denne enheten, og derfor vil den aldri forsøke å starte denne enheten igjen."
-    IDS_DEV_NORMAL_CONFLICT "Denne enheten kan ikke finne noen ledige $1 ressurser for å kunne brukes."
+    IDS_DEV_NORMAL_CONFLICT "Denne enheten kan ikke finne noen ledige %1 ressurser for å kunne brukes."
     IDS_DEV_NOT_VERIFIED "Denne enheten er heller ikke valgt, eller vil ikke fungere riktig, eller så har den ikke alle driverene som trengs."
     IDS_DEV_NEED_RESTART "Denne enheten vil ikke fungere som den skal før du startet datamaskinen på nytt."
     IDS_DEV_REENUMERATION "Denne enheten har krasjet på grunn av en ressurs konflikt."
     IDS_DEV_PARTIAL_LOG_CONF "ReactOS kunne ikke finne alle ressurser som denne enheten bruker."
-    IDS_DEV_UNKNOWN_RESOURCE "Driver informasjon filen $1 forteller at denne barne enheten, for å bruke en ressurs som denne foreldre enheten ikke har eller kjenne igjen."
+    IDS_DEV_UNKNOWN_RESOURCE "Driver informasjon filen %1 forteller at denne barne enheten, for å bruke en ressurs som denne foreldre enheten ikke har eller kjenne igjen."
     IDS_DEV_REINSTALL "Driveren for denne enheten trenger å bli installert på nytt."
     IDS_DEV_REGISTRY "Det kan være noe feil med registeret."
     IDS_DEV_WILL_BE_REMOVED "ReactOS fjerner denne enheten."
@@ -69,7 +69,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Driveren for denne enheten er ikke installert."
     IDS_DEV_HARDWARE_DISABLED "Denne enheten er deaktivert fordi BIOS for enheten gir ikke andre ressurser."
     IDS_DEV_CANT_SHARE_IRQ "Denne enheten bruker en Interrupt Request (IRQ) ressurs som er i bruk av en annen enhet og kan ikke bli delt.\nDu må endre konflikt innstillingen eller fjerne ekte-modus driver som forårsaker konflikten."
-    IDS_DEV_FAILED_ADD "Denne enheten vil ikke fungere som den skal fordi $1 vil ikke fungere som den skal."
+    IDS_DEV_FAILED_ADD "Denne enheten vil ikke fungere som den skal fordi %1 vil ikke fungere som den skal."
     IDS_DEV_DISABLED_SERVICE "ReactOS kan ikke installere driveren for denne enheten, fordi den får ikke tilgang til driveren eller nettverks plasseringen som har installering filen."
     IDS_DEV_TRANSLATION_FAILED "Denne enheten vil ikke svare på grunn av driveren."
     IDS_DEV_NO_SOFTCONFIG "ReactOS kan ikke oppdage innstillingene for denne enheten. Ta hensyn til dokumentasjon som kommer med denne enheten og bruker ressursen tab for å sette konfigurasjonen."

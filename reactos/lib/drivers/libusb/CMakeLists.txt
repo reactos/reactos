@@ -19,3 +19,11 @@ list(APPEND SOURCE
 add_library(libusb ${SOURCE})
 add_dependencies(libusb bugcodes)
 
+# FIXME: http://www.cmake.org/Bug/view.php?id=12998
+if(MSVC)
+    #add_target_compile_flags(libusb "/GR-")
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "/GR-")
+else()
+    #add_target_compile_flags(libusb "-fno-exceptions -fno-rtti")
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti")
+endif()

@@ -48,7 +48,7 @@ LIST_ENTRY LdrpTlsList;
 ULONG LdrpNumberOfTlsEntries;
 ULONG LdrpNumberOfProcessors;
 PVOID NtDllBase;
-LARGE_INTEGER RtlpTimeout;
+extern LARGE_INTEGER RtlpTimeout;
 BOOLEAN RtlpTimeoutDisable;
 LIST_ENTRY LdrpHashTable[LDR_HASH_TABLE_ENTRIES];
 LIST_ENTRY LdrpDllNotificationList;
@@ -80,7 +80,7 @@ ULONG LdrpActiveUnloadCount;
 
 VOID RtlpInitializeVectoredExceptionHandling(VOID);
 VOID NTAPI RtlpInitDeferedCriticalSection(VOID);
-VOID RtlInitializeHeapManager(VOID);
+VOID NTAPI RtlInitializeHeapManager(VOID);
 extern BOOLEAN RtlpPageHeapEnabled;
 
 ULONG RtlpDisableHeapLookaside; // TODO: Move to heap.c
@@ -508,7 +508,7 @@ LdrpInitializeThread(IN PCONTEXT Context)
 
     /* Allocate an Activation Context Stack */
     DPRINT("ActivationContextStack %p\n", NtCurrentTeb()->ActivationContextStackPointer);
-    Status = RtlAllocateActivationContextStack((PVOID*)&NtCurrentTeb()->ActivationContextStackPointer);
+    Status = RtlAllocateActivationContextStack(&NtCurrentTeb()->ActivationContextStackPointer);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Warning: Unable to allocate ActivationContextStack\n");
@@ -1479,7 +1479,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     ULONG HeapFlags;
     PIMAGE_NT_HEADERS NtHeader;
     LPWSTR NtDllName = NULL;
-    NTSTATUS Status;
+    NTSTATUS Status, ImportStatus;
     NLSTABLEINFO NlsTable;
     PIMAGE_LOAD_CONFIG_DIRECTORY LoadConfig;
     PTEB Teb = NtCurrentTeb();
@@ -1709,7 +1709,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     }
 
     /* Allocate an Activation Context Stack */
-    Status = RtlAllocateActivationContextStack((PVOID *)&Teb->ActivationContextStackPointer);
+    Status = RtlAllocateActivationContextStack(&Teb->ActivationContextStackPointer);
     if (!NT_SUCCESS(Status)) return Status;
 
     // FIXME: Loader private heap is missing
@@ -1989,7 +1989,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     }
 
     /* Walk the IAT and load all the DLLs */
-    LdrpWalkImportDescriptor(LdrpDefaultPath.Buffer, LdrpImageEntry);
+    ImportStatus = LdrpWalkImportDescriptor(LdrpDefaultPath.Buffer, LdrpImageEntry);
 
     /* Check if relocation is needed */
     if (Peb->ImageBaseAddress != (PVOID)NtHeader->OptionalHeader.ImageBase)
@@ -2039,6 +2039,9 @@ LdrpInitializeProcess(IN PCONTEXT Context,
 
     /* Phase 0 is done */
     LdrpLdrDatabaseIsSetup = TRUE;
+
+    /* Check whether all static imports were properly loaded and return here */
+    if (!NT_SUCCESS(ImportStatus)) return ImportStatus;
 
     /* Initialize TLS */
     Status = LdrpInitializeTls();

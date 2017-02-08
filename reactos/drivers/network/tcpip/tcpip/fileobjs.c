@@ -99,6 +99,40 @@ BOOLEAN AddrReceiveMatch(
    return FALSE;
 }
 
+PADDRESS_FILE AddrFindShared(
+    PIP_ADDRESS BindAddress,
+    USHORT Port,
+    USHORT Protocol)
+{
+    PLIST_ENTRY CurrentEntry;
+    KIRQL OldIrql;
+    PADDRESS_FILE Current = NULL;
+
+    TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
+
+    CurrentEntry = AddressFileListHead.Flink;
+    while (CurrentEntry != &AddressFileListHead) {
+        Current = CONTAINING_RECORD(CurrentEntry, ADDRESS_FILE, ListEntry);
+
+        /* See if this address matches the search criteria */
+        if ((Current->Port == Port) &&
+            (Current->Protocol == Protocol))
+        {
+            /* Increase the sharer count */
+            ASSERT(Current->Sharers != 0);
+            InterlockedIncrement(&Current->Sharers);
+            break;
+        }
+
+        CurrentEntry = CurrentEntry->Flink;
+        Current = NULL;
+    }
+
+    TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
+
+    return Current;
+}
+
 /*
  * FUNCTION: Searches through address file entries to find next match
  * ARGUMENTS:
@@ -254,6 +288,7 @@ VOID ControlChannelFree(
  *     Request  = Pointer to TDI request structure for this request
  *     Address  = Pointer to address to be opened
  *     Protocol = Protocol on which to open the address
+ *     Shared   = Specifies if the address is opened for shared access
  *     Options  = Pointer to option buffer
  * RETURNS:
  *     Status of operation
@@ -262,11 +297,23 @@ NTSTATUS FileOpenAddress(
   PTDI_REQUEST Request,
   PTA_IP_ADDRESS Address,
   USHORT Protocol,
+  BOOLEAN Shared,
   PVOID Options)
 {
   PADDRESS_FILE AddrFile;
 
   TI_DbgPrint(MID_TRACE, ("Called (Proto %d).\n", Protocol));
+
+  /* If it's shared and has a port specified, look for a match */
+  if ((Shared != FALSE) && (Address->Address[0].Address[0].sin_port != 0))
+  {
+    AddrFile = AddrFindShared(NULL, Address->Address[0].Address[0].sin_port, Protocol);
+    if (AddrFile != NULL)
+    {
+        Request->Handle.AddressHandle = AddrFile;
+        return STATUS_SUCCESS;
+    }
+  }
 
   AddrFile = ExAllocatePoolWithTag(NonPagedPool, sizeof(ADDRESS_FILE),
                                    ADDR_FILE_TAG);
@@ -279,6 +326,7 @@ NTSTATUS FileOpenAddress(
 
   AddrFile->RefCount = 1;
   AddrFile->Free = AddrFileFree;
+  AddrFile->Sharers = 1;
 
   /* Set our default options */
   AddrFile->TTL = 128;
@@ -294,8 +342,8 @@ NTSTATUS FileOpenAddress(
 
   if (!AddrIsUnspecified(&AddrFile->Address) &&
       !AddrLocateInterface(&AddrFile->Address)) {
-	  ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
 	  TI_DbgPrint(MIN_TRACE, ("Non-local address given (0x%X).\n", A2S(&AddrFile->Address)));
+	  ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
 	  return STATUS_INVALID_ADDRESS;
   }
 
@@ -430,6 +478,13 @@ NTSTATUS FileCloseAddress(
   if (!Request->Handle.AddressHandle) return STATUS_INVALID_PARAMETER;
 
   LockObject(AddrFile, &OldIrql);
+
+  if (InterlockedDecrement(&AddrFile->Sharers) != 0)
+  {
+      /* Still other guys have open handles to this, so keep it around */
+      UnlockObject(AddrFile, OldIrql);
+      return STATUS_SUCCESS;
+  }
 
   /* We have to close this listener because we started it */
   if( AddrFile->Listener )

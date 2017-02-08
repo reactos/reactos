@@ -1,6 +1,4 @@
 
-set_rc_compiler()
-
 add_definitions(
     -D__WINESRC__
     -D_WINE
@@ -10,7 +8,6 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 spec2def(comctl32.dll comctl32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -69,4 +66,3 @@ add_importlibs(comctl32
 
 add_pch(comctl32 comctl32.h)
 add_cd_file(TARGET comctl32 DESTINATION reactos/system32 FOR all)
-

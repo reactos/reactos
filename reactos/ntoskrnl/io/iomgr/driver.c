@@ -237,10 +237,12 @@ IopDisplayLoadingMessage(PUNICODE_STRING ServiceName)
  *    The input image path isn't freed on error.
  */
 
-NTSTATUS FASTCALL
+NTSTATUS
+FASTCALL
 IopNormalizeImagePath(
-   IN OUT PUNICODE_STRING ImagePath,
-   IN PUNICODE_STRING ServiceName)
+   _Inout_ _When_(return>=0, _At_(ImagePath->Buffer, _Post_notnull_ __drv_allocatesMem(Mem)))
+        PUNICODE_STRING ImagePath,
+   _In_ PUNICODE_STRING ServiceName)
 {
    UNICODE_STRING InputImagePath;
 
@@ -434,7 +436,7 @@ MmFreeDriverInitialization(IN PLDR_DATA_TABLE_ENTRY LdrEntry);
 /*
  * IopInitializeDriverModule
  *
- * Initalize a loaded driver.
+ * Initialize a loaded driver.
  *
  * Parameters
  *    DeviceNode
@@ -795,6 +797,11 @@ LdrProcessDriverModule(PLDR_DATA_TABLE_ENTRY LdrEntry,
                                       &MissingApiName,
                                       &MissingDriverName,
                                       &LoadedImports);
+
+    /* Free the temporary buffer */
+    ExFreePoolWithTag(Buffer, TAG_LDR_WSTR);
+
+    /* Check the result of the imports resolution */
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Return */
@@ -1765,7 +1772,7 @@ IoAllocateDriverObjectExtension(IN PDRIVER_OBJECT DriverObject,
     if (!Inserted)
     {
         /* Free the entry and fail */
-        ExFreePool(NewDriverExtension);
+        ExFreePoolWithTag(NewDriverExtension, TAG_DRIVER_EXTENSION);
         return STATUS_OBJECT_NAME_COLLISION;
     }
 

@@ -435,14 +435,14 @@
 ;@ stdcall RtlAddCompoundAce
 ;@ stdcall RtlAddRange ; 5.0 and 5.1 only
 @ stdcall -arch=x86_64 RtlAddFunctionTable(ptr long long)
-@ stdcall RtlAddMandatoryAce(ptr long long long long ptr)
+;@ stdcall RtlAddMandatoryAce(ptr long long long long ptr)
 @ stdcall RtlAddRefActivationContext(ptr)
 ;@ stdcall RtlAddRefMemoryStream
 @ stdcall RtlAddVectoredContinueHandler(long ptr)
 @ stdcall RtlAddVectoredExceptionHandler(long ptr)
 ;@ stdcall RtlAddressInSectionTable
 @ stdcall RtlAdjustPrivilege(long long long ptr)
-@ stdcall RtlAllocateActivationContextStack(ptr) ; CHEKME
+@ stdcall RtlAllocateActivationContextStack(ptr) ; CHECKME
 @ stdcall RtlAllocateAndInitializeSid(ptr long long long long long long long long long ptr)
 @ stdcall RtlAllocateHandle(ptr ptr)
 @ stdcall RtlAllocateHeap(ptr long ptr)
@@ -491,7 +491,7 @@
 ;@ stdcall RtlConvertPropertyToVariant
 @ stdcall RtlConvertSharedToExclusive(ptr)
 @ stdcall RtlConvertSidToUnicodeString(ptr ptr long)
-;@ stdcall RtlConvertToAutoInheritSecurityObject
+@ stdcall RtlConvertToAutoInheritSecurityObject(ptr ptr ptr ptr long ptr)
 ;@ stdcall RtlConvertUiListToApiList
 @ stdcall -arch=win32 -ret64 RtlConvertUlongToLargeInteger(long)
 ;@ stdcall RtlConvertVariantToProperty
@@ -508,7 +508,7 @@
 @ stdcall RtlCopyUnicodeString(ptr ptr)
 @ stdcall RtlCreateAcl(ptr long long)
 @ stdcall RtlCreateActivationContext(ptr ptr)
-;@ stdcall RtlCreateAndSetSD
+@ stdcall RtlCreateAndSetSD(ptr long ptr ptr ptr)
 @ stdcall RtlCreateAtomTable(long ptr)
 @ stdcall RtlCreateBootStatusDataFile()
 @ stdcall RtlCreateEnvironment(long ptr)
@@ -525,7 +525,7 @@
 @ stdcall RtlCreateUnicodeString(ptr wstr)
 @ stdcall RtlCreateUnicodeStringFromAsciiz(ptr str)
 @ stdcall RtlCreateUserProcess(ptr long ptr ptr ptr ptr long ptr ptr ptr)
-;@ stdcall RtlCreateUserSecurityObject
+@ stdcall RtlCreateUserSecurityObject(ptr long ptr ptr long ptr ptr)
 @ stdcall RtlCreateUserThread(long ptr long ptr long long ptr ptr ptr ptr)
 @ stdcall RtlCustomCPToUnicodeN(ptr wstr long ptr str long)
 @ stdcall RtlCutoverTimeToSystemTime(ptr ptr ptr long)
@@ -635,7 +635,7 @@
 @ stdcall RtlFormatCurrentUserKeyPath(ptr)
 @ stdcall RtlFormatMessage(ptr long long long long ptr ptr long)
 ;@ stdcall RtlFormatMessageEx
-;@ stdcall RtlFreeActivationContextStack
+@ stdcall RtlFreeActivationContextStack(ptr)
 @ stdcall RtlFreeAnsiString(long)
 @ stdcall RtlFreeHandle(ptr ptr)
 @ stdcall RtlFreeHeap(long long long)
@@ -788,11 +788,11 @@
 ;@ stdcall RtlMultiAppendUnicodeStringBuffer
 @ stdcall RtlMultiByteToUnicodeN(ptr long ptr ptr long)
 @ stdcall RtlMultiByteToUnicodeSize(ptr str long)
-;@ stdcall RtlNewInstanceSecurityObject
-;@ stdcall RtlNewSecurityGrantedAccess
+@ stdcall RtlNewInstanceSecurityObject(long long ptr ptr ptr ptr ptr long ptr ptr)
+@ stdcall RtlNewSecurityGrantedAccess(long ptr ptr ptr ptr ptr)
 @ stdcall RtlNewSecurityObject(ptr ptr ptr long ptr ptr)
-;@ stdcall RtlNewSecurityObjectEx
-;@ stdcall RtlNewSecurityObjectWithMultipleInheritance
+@ stdcall RtlNewSecurityObjectEx(ptr ptr ptr ptr long long ptr ptr)
+@ stdcall RtlNewSecurityObjectWithMultipleInheritance(ptr ptr ptr ptr long long long ptr ptr)
 @ stdcall RtlNormalizeProcessParams(ptr)
 @ stdcall RtlNtPathNameToDosPathName(ptr ptr ptr ptr) ; CHECKME
 @ stdcall RtlNtStatusToDosError(long)
@@ -893,7 +893,7 @@
 @ stdcall RtlSetSaclSecurityDescriptor(ptr long ptr long)
 @ stdcall RtlSetSecurityDescriptorRMControl(ptr ptr)
 @ stdcall RtlSetSecurityObject(long ptr ptr ptr ptr)
-;@ stdcall RtlSetSecurityObjectEx
+@ stdcall RtlSetSecurityObjectEx(long ptr ptr long ptr ptr)
 @ stdcall RtlSetThreadErrorMode(long ptr)
 @ stdcall RtlSetThreadIsCritical(long ptr long)
 @ stdcall RtlSetThreadPoolStartFunc(ptr ptr)

@@ -1,0 +1,123 @@
+/*
+ * PROJECT:     ReactOS Event Viewer
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/mscutils/eventvwr/lang/he-IL.rc
+ * PURPOSE:     Hebrew Language File for ReactOS Event Viewer
+ * TRANSLATORS: Baruch Rutman
+ */
+
+LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
+
+IDC_EVENTVWR MENU
+BEGIN
+	POPUP "מציג האירועים (מקומי)"
+	BEGIN
+		MENUITEM "יישום",              ID_LOG_APPLICATION
+		MENUITEM "אבטחה",                 ID_LOG_SECURITY
+		MENUITEM "מערכת",                   ID_LOG_SYSTEM
+		MENUITEM SEPARATOR
+		MENUITEM "יציאה",                     IDM_EXIT
+	END
+	POPUP "תצוגה"
+	BEGIN
+		MENUITEM "רענן",                  IDM_REFRESH
+	END
+	MENUITEM "אפשרויות",                          ID_OPTIONS
+	POPUP "עזרה"
+	BEGIN
+		MENUITEM "עזרה",                     IDM_HELP
+		MENUITEM SEPARATOR
+		MENUITEM "אודות...",                 IDM_ABOUT
+	END
+END
+
+IDC_EVENTVWR ACCELERATORS
+BEGIN
+	"?",            IDM_ABOUT,              ASCII,  ALT
+	"/",            IDM_ABOUT,              ASCII,  ALT
+END
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 230, 75
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "אודות"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	ICON            IDI_EVENTVWR,IDC_MYICON,14,9,21,20
+	LTEXT           "מציג האירועים של ReactOS גרסה 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
+	LTEXT           "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,49,20,119,22
+	DEFPUSHBUTTON   "אישור",IDOK,90,48,42,16,WS_GROUP
+END
+
+IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER
+CAPTION "נא להמתין..."
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	CTEXT           "טוען יומני אירועים, נא להמתין...",IDC_STATIC,0,15,230,8,SS_NOPREFIX
+END
+
+IDD_EVENTDETAILDIALOG DIALOGEX 0, 0, 276, 282
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "מאפייני אירוע"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+	DEFPUSHBUTTON   "סגור",IDOK,12,258,50,14
+	PUSHBUTTON      "הקודם",IDPREVIOUS,78,258,50,14
+	PUSHBUTTON      "הבא",IDNEXT,144,258,50,14
+	PUSHBUTTON      "עזרה",IDHELP,210,258,50,14
+	EDITTEXT        IDC_EVENTTEXTEDIT,14,81,247,108,ES_MULTILINE | ES_READONLY
+	LTEXT           "תיאור",IDC_STATIC,15,70,39,8
+	LTEXT           "תאריך:",IDC_STATIC,14,14,36,8
+	LTEXT           "Static",IDC_EVENTDATESTATIC,56,14,72,8
+	LTEXT           "זמן:",IDC_STATIC,14,27,36,8
+	LTEXT           "Static",IDC_EVENTTIMESTATIC,56,27,72,8
+	LTEXT           "משתמש:",IDC_STATIC,14,41,36,8
+	LTEXT           "Static",IDC_EVENTUSERSTATIC,56,41,72,8
+	LTEXT           "מחשב:",IDC_STATIC,14,54,36,8
+	LTEXT           "Static",IDC_EVENTCOMPUTERSTATIC,56,54,72,8
+	LTEXT           "מזהה אירוע:",IDC_STATIC,133,15,36,8
+	LTEXT           "Static",IDC_EVENTIDSTATIC,175,15,87,8
+	LTEXT           "מקור:",IDC_STATIC,133,28,36,8
+	LTEXT           "Static",IDC_EVENTSOURCESTATIC,175,28,87,8
+	LTEXT           "סוג:",IDC_STATIC,133,42,36,8
+	LTEXT           "Static",IDC_EVENTTYPESTATIC,175,42,87,8
+	LTEXT           "קטגוריה:",IDC_STATIC,133,55,36,8
+	LTEXT           "Static",IDC_EVENTCATEGORYSTATIC,175,55,87,8
+	EDITTEXT        IDC_EVENTDATAEDIT,14,204,247,44,ES_MULTILINE | ES_READONLY
+	LTEXT           "נתונים:",IDC_STATIC,14,194,20,8
+	CONTROL         "בתים",IDC_BYTESRADIO,"Button",BS_AUTORADIOBUTTON,39,194,34,10
+	CONTROL         "מילים",IDC_WORDRADIO,"Button",BS_AUTORADIOBUTTON,77,194,33,10
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE                  "יומן האירועים"
+    IDS_EVENTSTRINGIDNOTFOUND      "The description for Event ID ( %lu ) in Source ( %s ) cannot be found. The local computer may not have the necessary registry information or message DLL files to display messages from a remote computer."
+    IDS_EVENTLOG_ERROR_TYPE        "שגיאה"
+    IDS_EVENTLOG_WARNING_TYPE      "אזהרה"
+    IDS_EVENTLOG_INFORMATION_TYPE  "מידע"
+    IDS_EVENTLOG_AUDIT_SUCCESS     "Audit Success"
+    IDS_EVENTLOG_AUDIT_FAILURE     "Audit Failure"
+    IDS_EVENTLOG_SUCCESS           "הצלחה"
+    IDS_EVENTLOG_UNKNOWN_TYPE      "אירוע לא ידוע"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_COLUMNTYPE      "סוג"
+    IDS_COLUMNDATE      "תאריך"
+    IDS_COLUMNTIME      "זמן"
+    IDS_COLUMNSOURCE    "מקור"
+    IDS_COLUMNCATEGORY  "קטגוריה"
+    IDS_COLUMNEVENT     "אירוע"
+    IDS_COLUMNUSER      "משתמש"
+    IDS_COLUMNCOMPUTER  "מחשב"
+    IDS_COLUMNEVENTDATA "מידע יומן"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NONE          "ללא"
+    IDS_NOT_AVAILABLE "לא זמין"
+END

@@ -1,6 +1,3 @@
-#include <windows.h>
-#include "resource.h"
-
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 // Shared icons
@@ -28,6 +25,9 @@ IDI_ERRORICON           ICON  "res/error.ico"
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/fr-FR.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/he-IL.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/it-IT.rc"

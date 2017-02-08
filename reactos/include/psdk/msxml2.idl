@@ -25,6 +25,12 @@ import "unknwn.idl";
 import "objidl.idl";
 import "oaidl.idl";
 
+#if !defined(progid) && !defined(__WIDL__)
+#define threading(model)
+#define progid(str)
+#define vi_progid(str)
+#endif
+
 [
     uuid(f5078f18-c551-11d3-89b9-0000f81fe221),
     version(3.0),
@@ -107,9 +113,10 @@ interface ISchemaNotation;
 cpp_quote("#define DOMDocument DOMDocument2")
 cpp_quote("#define CLSID_DOMDocument CLSID_DOMDocument2")
 
-cpp_quote("#if !defined(__WIDL_XMLDOM_H) && !defined(__xmldom_h__)")
-typedef enum tagDOMNodeType
-{
+cpp_quote("#ifndef __MSXML_DOMNODETYPE_DEFINED")
+cpp_quote("#define __MSXML_DOMNODETYPE_DEFINED")
+typedef enum tagDOMNodeType 
+{  
     NODE_INVALID  		= 0,
     NODE_ELEMENT  		= 1,
     NODE_ATTRIBUTE		= 2,
@@ -124,7 +131,7 @@ typedef enum tagDOMNodeType
     NODE_DOCUMENT_FRAGMENT 	= 11,
     NODE_NOTATION 		= 12
 } DOMNodeType;
-cpp_quote("#endif   /* __WIDL_XMLDOM_H */")
+cpp_quote("#endif")
 
 typedef enum _SOMITEMTYPE
 {
@@ -253,6 +260,85 @@ typedef enum _SCHEMATYPEVARIETY
     SCHEMATYPEVARIETY_LIST      =  1,
     SCHEMATYPEVARIETY_UNION     =  2,
 } SCHEMATYPEVARIETY;
+
+[
+local,
+object,
+odl,
+dual,
+oleautomation,
+uuid(65725580-9b5d-11d0-9bfe-00c04fc99c8e)
+]
+interface IXMLElementCollection : IDispatch
+{
+    [propput, id(DISPID_XMLELEMENTCOLLECTION_LENGTH)]
+    HRESULT length( [in] LONG v );
+
+    [propget, id(DISPID_XMLELEMENTCOLLECTION_LENGTH)]
+    HRESULT length( [retval, out] LONG *p );
+
+    [propget, id(DISPID_XMLELEMENTCOLLECTION_NEWENUM)]
+    HRESULT _newEnum( [retval, out] IUnknown ** ppUnk );
+
+    [id(DISPID_XMLELEMENTCOLLECTION_ITEM)]
+    HRESULT item(
+            [optional, in] VARIANT var1,
+            [optional, in] VARIANT var2,
+            [retval, out] IDispatch ** ppDisp );
+}
+
+[
+local,
+object,
+uuid(3f7f31ac-e15f-11d0-9c25-00c04fc99c8e)
+]
+interface IXMLElement : IDispatch
+{
+    [propget, id(DISPID_XMLELEMENT_TAGNAME)]
+    HRESULT tagName( [retval, out] BSTR *p);
+
+    [propput, id(DISPID_XMLELEMENT_TAGNAME)]
+    HRESULT tagName( [in] BSTR p );
+
+    [propget, id(DISPID_XMLELEMENT_PARENT)]
+    HRESULT parent( [retval, out] IXMLElement **parent );
+
+    [id(DISPID_XMLELEMENT_SETATTRIBUTE)]
+    HRESULT setAttribute(
+            [in] BSTR strPropertyName,
+            [in] VARIANT PropertyValue );
+
+    [id(DISPID_XMLELEMENT_GETATTRIBUTE)]
+    HRESULT getAttribute(
+            [in] BSTR strPropertyName,
+            [retval, out] VARIANT *PropertyValue );
+
+    [id(DISPID_XMLELEMENT_REMOVEATTRIBUTE)]
+    HRESULT removeAttribute(
+            [in] BSTR strPropertyName );
+
+    [propget, id(DISPID_XMLELEMENT_CHILDREN)]
+    HRESULT children( [retval, out] IXMLElementCollection **p );
+
+    [propget, id(DISPID_XMLELEMENT_TYPE)]
+    HRESULT type( [retval, out] LONG *p );
+
+    [propget, id(DISPID_XMLELEMENT_TEXT)]
+    HRESULT text( [retval, out] BSTR *p );
+
+    [propput, id(DISPID_XMLELEMENT_TEXT)]
+    HRESULT text( [in] BSTR p );
+
+    [id(DISPID_XMLELEMENT_ADDCHILD)]
+    HRESULT addChild(
+            [in] IXMLElement *pChildElem,
+            [in] LONG lIndex,
+            [in] LONG lreserved );
+
+    [id(DISPID_XMLELEMENT_REMOVECHILD)]
+    HRESULT removeChild(
+            [in] IXMLElement *pChildElem );
+}
 
 [
 local,
@@ -1111,6 +1197,33 @@ interface IXTLRuntime : IXMLDOMNode
 }
 
 [
+local,
+object,
+odl,
+dual,
+oleautomation,
+uuid(310afa62-0575-11d2-9ca9-0060b0ec3d39),
+pointer_default(unique)
+]
+interface IDSOControl : IDispatch
+{
+	[propget,id(DISPID_XMLDSO_DOCUMENT)]
+        HRESULT XMLDocument([out, retval] IXMLDOMDocument** ppDoc);
+
+	[propput,id(DISPID_XMLDSO_DOCUMENT)]
+        HRESULT XMLDocument([in] IXMLDOMDocument* ppDoc);
+
+	[propget,id(DISPID_XMLDSO_JAVADSOCOMPATIBLE)]
+        HRESULT JavaDSOCompatible([out, retval] BOOL* fJavaDSOCompatible);
+
+	[propput,id(DISPID_XMLDSO_JAVADSOCOMPATIBLE)]
+        HRESULT JavaDSOCompatible([in]  BOOL fJavaDSOCompatible);
+
+	[propget, id(DISPID_READYSTATE)]
+        HRESULT readyState([out, retval] long *state);
+}
+
+[
     uuid(3efaa427-272f-11d2-836f-0000f87a7782)
 ]
 dispinterface XMLDOMDocumentEvents 
@@ -1409,15 +1522,6 @@ interface IXMLDOMParseErrorCollection : IDispatch
 }
 
 [
-    uuid(F6D90F11-9C73-11D3-B32E-00C04F990BB4)
-]
-coclass DOMDocument
-{
-    [default] interface IXMLDOMDocument2;
-    [default, source] dispinterface XMLDOMDocumentEvents;
-}
-
-[
     uuid(f5078f1b-c551-11d3-89b9-0000f81fe221)
 ]
 coclass DOMDocument26
@@ -1427,6 +1531,10 @@ coclass DOMDocument26
 }
 
 [
+    helpstring("XML DOM Document 3.0"),
+    progid("Msxml2.DOMDocument.3.0"),
+    vi_progid("Msxml2.DOMDocument"),
+    threading(both),
     uuid(f5078f32-c551-11d3-89b9-0000f81fe221)
 ]
 coclass DOMDocument30
@@ -1454,9 +1562,13 @@ coclass DOMDocument60
 }
 
 [
-    uuid(F6D90F12-9C73-11D3-B32E-00C04F990BB4)
+    helpstring("XML DOM Document"),
+    progid("Msxml2.DOMDocument"),
+    vi_progid("Msxml2.DOMDocument"),
+    threading(both),
+    uuid(f6d90f11-9c73-11d3-b32e-00c04f990bb4)
 ]
-coclass FreeThreadedDOMDocument
+coclass DOMDocument
 {
     [default] interface IXMLDOMDocument2;
     [default, source] dispinterface XMLDOMDocumentEvents;
@@ -1472,6 +1584,10 @@ coclass FreeThreadedDOMDocument26
 }
 
 [
+    helpstring("Free threaded XML DOM Document 3.0"),
+    progid("Msxml2.FreeThreadedDOMDocument.3.0"),
+    vi_progid("Msxml2.FreeThreadedDOMDocument"),
+    threading(both),
     uuid(f5078f33-c551-11d3-89b9-0000f81fe221)
 ]
 coclass FreeThreadedDOMDocument30
@@ -1499,11 +1615,16 @@ coclass FreeThreadedDOMDocument60
 }
 
 [
-    uuid(f6d90f16-9c73-11d3-b32e-00c04f990bb4)
+    helpstring("Free threaded XML DOM Document"),
+    progid("Msxml2.FreeThreadedDOMDocument"),
+    vi_progid("Msxml2.FreeThreadedDOMDocument"),
+    threading(both),
+    uuid(f6d90f12-9c73-11d3-b32e-00c04f990bb4)
 ]
-coclass XMLHTTP
+coclass FreeThreadedDOMDocument
 {
-    [default] interface IXMLHTTPRequest;
+    [default] interface IXMLDOMDocument2;
+    [default, source] dispinterface XMLDOMDocumentEvents;
 }
 
 [
@@ -1515,6 +1636,10 @@ coclass XMLHTTP26
 }
 
 [
+    helpstring("XML HTTP 3.0"),
+    progid("Msxml2.XMLHTTP.3.0"),
+    vi_progid("Msxml2.XMLHTTP"),
+    threading(apartment),
     uuid(f5078f35-c551-11d3-89b9-0000f81fe221)
 ]
 coclass XMLHTTP30
@@ -1539,14 +1664,22 @@ coclass XMLHTTP60
 }
 
 [
-    uuid(afba6b42-5692-48ea-8141-dc517dcf0ef1)
+    helpstring("XML HTTP"),
+    progid("Msxml2.XMLHTTP"),
+    vi_progid("Msxml2.XMLHTTP"),
+    threading(apartment),
+    uuid(f6d90f16-9c73-11d3-b32e-00c04f990bb4)
 ]
-coclass ServerXMLHTTP
+coclass XMLHTTP
 {
-    [default] interface IServerXMLHTTPRequest;
+    [default] interface IXMLHTTPRequest;
 }
 
 [
+    helpstring("Server XML HTTP 3.0"),
+    progid("Msxml2.ServerXMLHTTP.3.0"),
+    vi_progid("Msxml2.ServerXMLHTTP"),
+    threading(apartment),
     uuid(afb40ffd-b609-40a3-9828-f88bbe11e4e3)
 ]
 coclass ServerXMLHTTP30
@@ -1571,11 +1704,15 @@ coclass ServerXMLHTTP60
 }
 
 [
-    uuid(373984c9-b845-449b-91e7-45ac83036ade)
+    helpstring("Server XML HTTP"),
+    progid("Msxml2.ServerXMLHTTP"),
+    vi_progid("Msxml2.ServerXMLHTTP"),
+    threading(apartment),
+    uuid(afba6b42-5692-48ea-8141-dc517dcf0ef1)
 ]
-coclass XMLSchemaCache
+coclass ServerXMLHTTP
 {
-    [default] interface IXMLDOMSchemaCollection;
+    [default] interface IServerXMLHTTPRequest;
 }
 
 [
@@ -1587,6 +1724,10 @@ coclass XMLSchemaCache26
 }
 
 [
+    helpstring("XML Schema Cache 3.0"),
+    progid("Msxml2.XMLSchemaCache.3.0"),
+    vi_progid("Msxml2.XMLSchemaCache"),
+    threading(both),
     uuid(f5078f34-c551-11d3-89b9-0000f81fe221)
 ]
 coclass XMLSchemaCache30
@@ -1611,11 +1752,15 @@ coclass XMLSchemaCache60
 }
 
 [
-    uuid(2933BF94-7B36-11d2-B20E-00C04F983E60)
+    helpstring("XML Schema Cache"),
+    progid("Msxml2.XMLSchemaCache"),
+    vi_progid("Msxml2.XMLSchemaCache"),
+    threading(both),
+    uuid(373984c9-b845-449b-91e7-45ac83036ade)
 ]
-coclass XSLTemplate
+coclass XMLSchemaCache
 {
-    [default] interface IXSLTemplate;
+    [default] interface IXMLDOMSchemaCollection;
 }
 
 [
@@ -1627,6 +1772,10 @@ coclass XSLTemplate26
 }
 
 [
+    helpstring("XSL Template 3.0"),
+    progid("Msxml2.XSLTemplate.3.0"),
+    vi_progid("Msxml2.XSLTemplate"),
+    threading(both),
     uuid(f5078f36-c551-11d3-89b9-0000f81fe221)
 ]
 coclass XSLTemplate30
@@ -1646,6 +1795,18 @@ coclass XSLTemplate40
     uuid(88d96a08-f192-11d4-a65f-0040963251e5)
 ]
 coclass XSLTemplate60
+{
+    [default] interface IXSLTemplate;
+}
+
+[
+    helpstring("XSL Template"),
+    progid("Msxml2.XSLTemplate"),
+    vi_progid("Msxml2.XSLTemplate"),
+    threading(both),
+    uuid(2933BF94-7B36-11d2-B20E-00C04F983E60)
+]
+coclass XSLTemplate
 {
     [default] interface IXSLTemplate;
 }
@@ -3107,16 +3268,10 @@ interface ISchemaNotation : ISchemaItem
 
 
 [
-    uuid(079aa557-4a18-424a-8eee-e39f0a8d41b9)
-]
-coclass SAXXMLReader
-{
-    [default] interface IVBSAXXMLReader;
-    interface ISAXXMLReader;
-    interface IMXReaderControl;
-};
-
-[
+    helpstring("SAX XML Reader 3.0"),
+    progid("Msxml2.SAXXMLReader.3.0"),
+    vi_progid("Msxml2.SAXXMLReader"),
+    threading(both),
     uuid(3124c396-fb13-4836-a6ad-1317f1713688)
 ]
 coclass SAXXMLReader30
@@ -3142,6 +3297,20 @@ coclass SAXXMLReader60
 {
     [default] interface IVBSAXXMLReader;
     interface ISAXXMLReader;
+}
+
+[
+    helpstring("SAX XML Reader"),
+    progid("Msxml2.SAXXMLReader"),
+    vi_progid("Msxml2.SAXXMLReader"),
+    threading(both),
+    uuid(079aa557-4a18-424a-8eee-e39f0a8d41b9)
+]
+coclass SAXXMLReader
+{
+    [default] interface IVBSAXXMLReader;
+    interface ISAXXMLReader;
+    interface IMXReaderControl;
 }
 
 [
@@ -3225,26 +3394,10 @@ coclass MXHTMLWriter60
 }
 
 [
-    uuid(fc220ad8-a72a-4ee8-926e-0b7ad152a020)
-]
-coclass MXXMLWriter
-{
-    [default] interface IMXWriter;
-
-    interface ISAXContentHandler;
-    interface ISAXErrorHandler;
-    interface ISAXDTDHandler;
-    interface ISAXLexicalHandler;
-    interface ISAXDeclHandler;
-
-    interface IVBSAXContentHandler;
-    interface IVBSAXDeclHandler;
-    interface IVBSAXDTDHandler;
-    interface IVBSAXErrorHandler;
-    interface IVBSAXLexicalHandler;
-};
-
-[
+    helpstring("MXXMLWriter 3.0"),
+    progid("Msxml2.MXXMLWriter.3.0"),
+    vi_progid("Msxml2.MXXMLWriter"),
+    threading(both),
     uuid(3d813dfe-6c91-4a4e-8f41-04346a841d9c)
 ]
 coclass MXXMLWriter30
@@ -3305,6 +3458,30 @@ coclass MXXMLWriter60
 }
 
 [
+    helpstring("MXXMLWriter"),
+    progid("Msxml2.MXXMLWriter"),
+    vi_progid("Msxml2.MXXMLWriter"),
+    threading(both),
+    uuid(fc220ad8-a72a-4ee8-926e-0b7ad152a020)
+]
+coclass MXXMLWriter
+{
+    [default] interface IMXWriter;
+
+    interface ISAXContentHandler;
+    interface ISAXErrorHandler;
+    interface ISAXDTDHandler;
+    interface ISAXLexicalHandler;
+    interface ISAXDeclHandler;
+
+    interface IVBSAXContentHandler;
+    interface IVBSAXDeclHandler;
+    interface IVBSAXDTDHandler;
+    interface IVBSAXErrorHandler;
+    interface IVBSAXLexicalHandler;
+}
+
+[
     uuid(88d969d5-f192-11d4-a65f-0040963251e5)
 ]
 coclass MXNamespaceManager
@@ -3332,16 +3509,10 @@ coclass MXNamespaceManager60
 }
 
 [
-    uuid(4dd441ad-526d-4a77-9f1b-9841ed802fb0)
-]
-coclass SAXAttributes
-{
-    [default] interface IMXAttributes;
-    interface IVBSAXAttributes;
-    interface ISAXAttributes;
-}
-
-[
+    helpstring("SAXAttributes 3.0"),
+    progid("Msxml2.SAXAttributes.3.0"),
+    vi_progid("Msxml2.SAXAttributes"),
+    threading(both),
     uuid(3e784a01-f3ae-4dc0-9354-9526b9370eba)
 ]
 coclass SAXAttributes30
@@ -3365,6 +3536,20 @@ coclass SAXAttributes40
     uuid(88d96a0e-f192-11d4-a65f-0040963251e5)
 ]
 coclass SAXAttributes60
+{
+    [default] interface IMXAttributes;
+    interface IVBSAXAttributes;
+    interface ISAXAttributes;
+}
+
+[
+    helpstring("SAXAttributes"),
+    progid("Msxml2.SAXAttributes"),
+    vi_progid("Msxml2.SAXAttributes"),
+    threading(both),
+    uuid(4dd441ad-526d-4a77-9f1b-9841ed802fb0)
+]
+coclass SAXAttributes
 {
     [default] interface IMXAttributes;
     interface IVBSAXAttributes;

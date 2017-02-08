@@ -48,8 +48,8 @@ int TuiPrintf(const char *Format, ...)
 
 BOOLEAN TuiInitialize(VOID)
 {
-	MachVideoClearScreen(ATTR(COLOR_WHITE, COLOR_BLACK));
 	MachVideoHideShowTextCursor(FALSE);
+	MachVideoClearScreen(ATTR(COLOR_GRAY, COLOR_BLACK));
 
 	TextVideoBuffer = VideoAllocateOffScreenBuffer();
 	if (TextVideoBuffer == NULL)
@@ -71,7 +71,7 @@ VOID TuiUnInitialize(VOID)
 		MachVideoSetDisplayMode(NULL, FALSE);
 	}
 
-	//VideoClearScreen();
+	MachVideoClearScreen(ATTR(COLOR_GRAY, COLOR_BLACK));
 	MachVideoHideShowTextCursor(TRUE);
 }
 
@@ -128,15 +128,10 @@ VOID TuiDrawBackdrop(VOID)
 	//
 	// Draw title text
 	//
-	TuiDrawText( (UiScreenWidth / 2) - ((ULONG)strlen(UiTitleBoxTitleText) / 2),
+	TuiDrawText((UiScreenWidth - (ULONG)strlen(UiTitleBoxTitleText)) / 2,
 			2,
 			UiTitleBoxTitleText,
 			ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
-
-	//
-	// Draw status bar
-	//
-	TuiDrawStatusText("Welcome to FreeLoader!");
 
 	//
 	// Update the date & time
@@ -153,7 +148,7 @@ VOID TuiDrawBackdrop(VOID)
 VOID TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */)
 {
 	PUCHAR	ScreenMemory = (PUCHAR)TextVideoBuffer;
-	ULONG		i, j;
+	ULONG	i, j;
 
 	// Clip the area to the screen
 	if ((Left >= UiScreenWidth) || (Top >= UiScreenHeight))
@@ -188,7 +183,7 @@ VOID TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar
 VOID TuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
 {
 	PUCHAR	ScreenMemory = (PUCHAR)TextVideoBuffer;
-	ULONG		Idx;
+	ULONG	Idx;
 
 	// Shade the bottom of the area
 	if (Bottom < (UiScreenHeight - 1))
@@ -320,10 +315,29 @@ VOID TuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyl
 VOID TuiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr)
 {
 	PUCHAR	ScreenMemory = (PUCHAR)TextVideoBuffer;
-	ULONG		i, j;
+	ULONG	i, j;
 
 	// Draw the text
-	for (i=X, j=0; Text[j]  && i<UiScreenWidth; i++,j++)
+	for (i = X, j = 0; Text[j] && i < UiScreenWidth; i++, j++)
+	{
+		ScreenMemory[((Y*2)*UiScreenWidth)+(i*2)] = (UCHAR)Text[j];
+		ScreenMemory[((Y*2)*UiScreenWidth)+(i*2)+1] = Attr;
+	}
+}
+
+/*
+ * DrawText2()
+ * This function assumes coordinates are zero-based.
+ * MaxNumChars is the maximum number of characters to display.
+ * If MaxNumChars == 0, then display the whole string.
+ */
+VOID TuiDrawText2(ULONG X, ULONG Y, ULONG MaxNumChars, PCSTR Text, UCHAR Attr)
+{
+	PUCHAR	ScreenMemory = (PUCHAR)TextVideoBuffer;
+	ULONG	i, j;
+
+	// Draw the text
+	for (i = X, j = 0; Text[j] && i < UiScreenWidth && (MaxNumChars > 0 ? j < MaxNumChars : TRUE); i++, j++)
 	{
 		ScreenMemory[((Y*2)*UiScreenWidth)+(i*2)] = (UCHAR)Text[j];
 		ScreenMemory[((Y*2)*UiScreenWidth)+(i*2)+1] = Attr;
@@ -332,16 +346,16 @@ VOID TuiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr)
 
 VOID TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr)
 {
-	SIZE_T		TextLength;
-	ULONG		BoxWidth;
-	ULONG		BoxHeight;
-	ULONG		LineBreakCount;
-	SIZE_T		Index;
-	SIZE_T		LastIndex;
-	ULONG		RealLeft;
-	ULONG		RealTop;
-	ULONG		X;
-	ULONG		Y;
+	SIZE_T	TextLength;
+	ULONG	BoxWidth;
+	ULONG	BoxHeight;
+	ULONG	LineBreakCount;
+	SIZE_T	Index;
+	SIZE_T	LastIndex;
+	ULONG	RealLeft;
+	ULONG	RealTop;
+	ULONG	X;
+	ULONG	Y;
 	CHAR	Temp[2];
 
 	TextLength = strlen(TextString);
@@ -393,7 +407,7 @@ VOID TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR
 
 VOID TuiDrawStatusText(PCSTR StatusText)
 {
-	SIZE_T		i;
+	SIZE_T	i;
 
 	TuiDrawText(0, UiScreenHeight-1, " ", ATTR(UiStatusBarFgColor, UiStatusBarBgColor));
 	TuiDrawText(1, UiScreenHeight-1, StatusText, ATTR(UiStatusBarFgColor, UiStatusBarBgColor));
@@ -504,7 +518,7 @@ VOID TuiUpdateDateTime(VOID)
 VOID TuiSaveScreen(PUCHAR Buffer)
 {
 	PUCHAR	ScreenMemory = (PUCHAR)TextVideoBuffer;
-	ULONG		i;
+	ULONG	i;
 
 	for (i=0; i < (UiScreenWidth * UiScreenHeight * 2); i++)
 	{
@@ -515,7 +529,7 @@ VOID TuiSaveScreen(PUCHAR Buffer)
 VOID TuiRestoreScreen(PUCHAR Buffer)
 {
 	PUCHAR	ScreenMemory = (PUCHAR)TextVideoBuffer;
-	ULONG		i;
+	ULONG	i;
 
 	for (i=0; i < (UiScreenWidth * UiScreenHeight * 2); i++)
 	{
@@ -630,12 +644,11 @@ VOID TuiMessageBoxCritical(PCSTR MessageText)
 
 }
 
-
 VOID TuiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText)
 {
-	ULONG		Left, Top, Right, Bottom;
-	ULONG		Width = 50; // Allow for 50 "bars"
-	ULONG		Height = 2;
+	ULONG	Left, Top, Right, Bottom;
+	ULONG	Width = 50; // Allow for 50 "bars"
+	ULONG	Height = 2;
 
 	Left = (UiScreenWidth - Width - 4) / 2;
 	Right = Left + Width + 3;
@@ -648,8 +661,8 @@ VOID TuiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText)
 
 VOID TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText)
 {
-	ULONG		i;
-	ULONG		ProgressBarWidth = (Right - Left) - 3;
+	ULONG	i;
+	ULONG	ProgressBarWidth = (Right - Left) - 3;
 
 	// First make sure the progress bar text fits
 	UiTruncateStringEllipsis(ProgressText, ProgressBarWidth - 4);
@@ -795,19 +808,20 @@ VOID TuiFadeOut(VOID)
 
 BOOLEAN TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 {
-	int		width = 8;
-	unsigned int	height = 1;
-	int		curline = 0;
-	int		k;
-	size_t		i , j;
-	int		x1, x2, y1, y2;
-	char	temp[260];
-	char	key;
-	int		EditBoxLine;
-	ULONG		EditBoxStartX, EditBoxEndX;
-	int		EditBoxCursorX;
-	unsigned int	EditBoxTextCount;
-	int		EditBoxTextDisplayIndex;
+	INT		width = 8;
+	ULONG	height = 1;
+	INT		curline = 0;
+	INT		k;
+	size_t	i , j;
+	INT		x1, x2, y1, y2;
+	CHAR	temp[260];
+	CHAR	key;
+	BOOLEAN	Extended;
+	INT		EditBoxLine;
+	ULONG	EditBoxStartX, EditBoxEndX;
+	INT		EditBoxCursorX;
+	ULONG	EditBoxTextLength, EditBoxTextPosition;
+	INT		EditBoxTextDisplayIndex;
 	BOOLEAN	ReturnCode;
 	PVOID	ScreenBuffer;
 
@@ -861,7 +875,8 @@ BOOLEAN TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 			temp[j++] = MessageText[i];
 	}
 
-	EditBoxTextCount = 0;
+	EditBoxTextLength = 0;
+	EditBoxTextPosition = 0;
 	EditBoxLine = y2 - 2;
 	EditBoxStartX = x1 + 3;
 	EditBoxEndX = x2 - 3;
@@ -877,13 +892,20 @@ BOOLEAN TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 
 	VideoCopyOffScreenBufferToVRAM();
 
+	//
+	// Enter the text. Please keep in mind that the default input mode
+	// of the edit boxes is in insertion mode, that is, you can insert
+	// text without erasing the existing one.
+	//
 	for (;;)
 	{
 		if (MachConsKbHit())
 		{
+			Extended = FALSE;
 			key = MachConsGetCh();
 			if(key == KEY_EXTENDED)
 			{
+				Extended = TRUE;
 				key = MachConsGetCh();
 			}
 
@@ -899,23 +921,71 @@ BOOLEAN TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 			}
 			else if (key == KEY_BACKSPACE) // Remove a character
 			{
-				if (EditBoxTextCount)
+				if ( (EditBoxTextLength > 0) && (EditBoxTextPosition > 0) &&
+				     (EditBoxTextPosition <= EditBoxTextLength) )
 				{
-					EditBoxTextCount--;
-					EditTextBuffer[EditBoxTextCount] = 0;
+					EditBoxTextPosition--;
+					memmove(EditTextBuffer + EditBoxTextPosition,
+					        EditTextBuffer + EditBoxTextPosition + 1,
+					        EditBoxTextLength - EditBoxTextPosition);
+					EditBoxTextLength--;
+					EditTextBuffer[EditBoxTextLength] = 0;
 				}
 				else
 				{
 					MachBeep();
 				}
 			}
+			else if (Extended && key == KEY_DELETE) // Remove a character
+			{
+				if ( (EditBoxTextLength > 0) &&
+				     (EditBoxTextPosition < EditBoxTextLength) )
+				{
+					memmove(EditTextBuffer + EditBoxTextPosition,
+					        EditTextBuffer + EditBoxTextPosition + 1,
+					        EditBoxTextLength - EditBoxTextPosition);
+					EditBoxTextLength--;
+					EditTextBuffer[EditBoxTextLength] = 0;
+				}
+				else
+				{
+					MachBeep();
+				}
+			}
+			else if (key == KEY_HOME) // Go to the start of the buffer
+			{
+				EditBoxTextPosition = 0;
+			}
+			else if (key == KEY_END) // Go to the end of the buffer
+			{
+				EditBoxTextPosition = EditBoxTextLength;
+			}
+			else if (key == KEY_RIGHT) // Go right
+			{
+				if (EditBoxTextPosition < EditBoxTextLength)
+					EditBoxTextPosition++;
+				else
+					MachBeep();
+			}
+			else if (key == KEY_LEFT) // Go left
+			{
+				if (EditBoxTextPosition > 0)
+					EditBoxTextPosition--;
+				else
+					MachBeep();
+			}
 			else // Add this key to the buffer
 			{
-				if (EditBoxTextCount < Length - 1)
+				if ( (EditBoxTextLength   < Length - 1) &&
+				     (EditBoxTextPosition < Length - 1) )
 				{
-					EditTextBuffer[EditBoxTextCount] = key;
-					EditBoxTextCount++;
-					EditTextBuffer[EditBoxTextCount] = 0;
+					memmove(EditTextBuffer + EditBoxTextPosition + 1,
+					        EditTextBuffer + EditBoxTextPosition,
+					        EditBoxTextLength - EditBoxTextPosition);
+					EditTextBuffer[EditBoxTextPosition] = key;
+					EditBoxTextPosition++;
+					EditBoxTextLength++;
+					EditTextBuffer[EditBoxTextLength] = 0;
 				}
 				else
 				{
@@ -928,17 +998,17 @@ BOOLEAN TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 		UiFillArea(EditBoxStartX, EditBoxLine, EditBoxEndX, EditBoxLine, ' ', ATTR(UiEditBoxTextColor, UiEditBoxBgColor));
 
 		// Fill the text in
-		if (EditBoxTextCount > (EditBoxEndX - EditBoxStartX))
+		if (EditBoxTextPosition > (EditBoxEndX - EditBoxStartX))
 		{
-			EditBoxTextDisplayIndex = EditBoxTextCount - (EditBoxEndX - EditBoxStartX);
+			EditBoxTextDisplayIndex = EditBoxTextPosition - (EditBoxEndX - EditBoxStartX);
 			EditBoxCursorX = EditBoxEndX;
 		}
 		else
 		{
 			EditBoxTextDisplayIndex = 0;
-			EditBoxCursorX = EditBoxStartX + EditBoxTextCount;
+			EditBoxCursorX = EditBoxStartX + EditBoxTextPosition;
 		}
-		UiDrawText(EditBoxStartX, EditBoxLine, &EditTextBuffer[EditBoxTextDisplayIndex], ATTR(UiEditBoxTextColor, UiEditBoxBgColor));
+		UiDrawText2(EditBoxStartX, EditBoxLine, EditBoxEndX - EditBoxStartX + 1, &EditTextBuffer[EditBoxTextDisplayIndex], ATTR(UiEditBoxTextColor, UiEditBoxBgColor));
 
 		// Move the cursor
 		MachVideoSetTextCursorPosition(EditBoxCursorX, EditBoxLine);
@@ -969,6 +1039,7 @@ const UIVTBL TuiVtbl =
 	TuiDrawShadow,
 	TuiDrawBox,
 	TuiDrawText,
+	TuiDrawText2,
 	TuiDrawCenteredText,
 	TuiDrawStatusText,
 	TuiUpdateDateTime,

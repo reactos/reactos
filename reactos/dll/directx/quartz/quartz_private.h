@@ -23,17 +23,23 @@
 #ifndef __QUARTZ_PRIVATE_INCLUDED__
 #define __QUARTZ_PRIVATE_INCLUDED__
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "wtypes.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "dshow.h"
-#include "wine/list.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wtypes.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <objbase.h>
+#include <oleauto.h>
+#include <dshow.h>
+#include <wine/list.h>
 
 #define MEDIATIME_FROM_BYTES(x) ((LONGLONG)(x) * 10000000)
 #define SEC_FROM_MEDIATIME(time) ((time) / 10000000)

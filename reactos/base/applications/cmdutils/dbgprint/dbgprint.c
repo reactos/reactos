@@ -1,5 +1,4 @@
-/* $Id: dbgprint.c 24720 2006-11-11 16:07:35Z janderwald $
- *
+/*
  * PROJECT:         ReactOS DbgPrint Utility
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            tools/dbgprint/dbgprint.c
@@ -8,9 +7,11 @@
  *                  Christoph von Wittich (Christoph_vW@ReactOS.org)
  */
 
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 #include <tchar.h>
-#include <debug.h>
+//#include <debug.h>
 #include <stdio.h>
 
 int _tmain(int argc, TCHAR ** argv)

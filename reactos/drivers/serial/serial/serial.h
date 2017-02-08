@@ -106,25 +106,25 @@ typedef struct _WORKITEM_DATA
 #define CLOCKS_PER_BIT  16
 
 /* UART registers and bits */
-#define   SER_RBR(x)   ((x)+0) /* Receive Register */
-#define   SER_THR(x)   ((x)+0) /* Transmit Register */
-#define   SER_DLL(x)   ((x)+0) /* Baud Rate Divisor LSB */
-#define   SER_IER(x)   ((x)+1) /* Interrupt Enable Register */
+#define   SER_RBR(x)   ((PUCHAR)(x)+0) /* Receive Register */
+#define   SER_THR(x)   ((PUCHAR)(x)+0) /* Transmit Register */
+#define   SER_DLL(x)   ((PUCHAR)(x)+0) /* Baud Rate Divisor LSB */
+#define   SER_IER(x)   ((PUCHAR)(x)+1) /* Interrupt Enable Register */
 #define     SR_IER_DATA_RECEIVED  0x01
 #define     SR_IER_THR_EMPTY      0x02
 #define     SR_IER_LSR_CHANGE     0x04
 #define     SR_IER_MSR_CHANGE     0x08
 #define     SR_IER_SLEEP_MODE     0x10 /* Uart >= 16750 */
 #define     SR_IER_LOW_POWER      0x20 /* Uart >= 16750 */
-#define   SER_DLM(x)   ((x)+1) /* Baud Rate Divisor MSB */
-#define   SER_IIR(x)   ((x)+2) /* Interrupt Identification Register */
+#define   SER_DLM(x)   ((PUCHAR)(x)+1) /* Baud Rate Divisor MSB */
+#define   SER_IIR(x)   ((PUCHAR)(x)+2) /* Interrupt Identification Register */
 #define     SR_IIR_SELF           0x00
 #define     SR_IIR_ID_MASK        0x07
 #define     SR_IIR_MSR_CHANGE     SR_IIR_SELF
 #define     SR_IIR_THR_EMPTY     (SR_IIR_SELF | 2)
 #define     SR_IIR_DATA_RECEIVED (SR_IIR_SELF | 4)
 #define     SR_IIR_ERROR         (SR_IIR_SELF | 6)
-#define   SER_FCR(x)   ((x)+2) /* FIFO Control Register (Uart >= 16550A) */
+#define   SER_FCR(x)   ((PUCHAR)(x)+2) /* FIFO Control Register (Uart >= 16550A) */
 #define     SR_FCR_ENABLE_FIFO    0x01
 #define     SR_FCR_CLEAR_RCVR    (0x02 | SR_FCR_ENABLE_FIFO)
 #define     SR_FCR_CLEAR_XMIT    (0x04 | SR_FCR_ENABLE_FIFO)
@@ -132,7 +132,7 @@ typedef struct _WORKITEM_DATA
 #define     SR_FCR_4_BYTES       (0x40 | SR_FCR_ENABLE_FIFO)
 #define     SR_FCR_8_BYTES       (0x80 | SR_FCR_ENABLE_FIFO)
 #define     SR_FCR_14_BYTES      (0xC0 | SR_FCR_ENABLE_FIFO)
-#define   SER_LCR(x)   ((x)+3) /* Line Control Register */
+#define   SER_LCR(x)   ((PUCHAR)(x)+3) /* Line Control Register */
 #define     SR_LCR_CS5            0x00
 #define     SR_LCR_CS6            0x01
 #define     SR_LCR_CS7            0x02
@@ -146,10 +146,10 @@ typedef struct _WORKITEM_DATA
 #define     SR_LCR_PSP            0x38
 #define     SR_LCR_BRK            0x40
 #define     SR_LCR_DLAB           0x80
-#define   SER_MCR(x)   ((x)+4) /* Modem Control Register */
+#define   SER_MCR(x)   ((PUCHAR)(x)+4) /* Modem Control Register */
 #define     SR_MCR_DTR            SERIAL_DTR_STATE
 #define     SR_MCR_RTS            SERIAL_RTS_STATE
-#define   SER_LSR(x)   ((x)+5) /* Line Status Register */
+#define   SER_LSR(x)   ((PUCHAR)(x)+5) /* Line Status Register */
 #define     SR_LSR_DATA_RECEIVED  0x01
 #define     SR_LSR_OVERRUN_ERROR  0x02
 #define     SR_LSR_PARITY_ERROR   0x04
@@ -158,7 +158,7 @@ typedef struct _WORKITEM_DATA
 #define     SR_LSR_THR_EMPTY      0x20
 #define     SR_LSR_TSR_EMPTY      0x40
 #define     SR_LSR_ERROR_IN_FIFO  0x80 /* Uart >= 16550A */
-#define   SER_MSR(x)   ((x)+6) /* Modem Status Register */
+#define   SER_MSR(x)   ((PUCHAR)(x)+6) /* Modem Status Register */
 #define     SR_MSR_CTS_CHANGED    0x01
 #define     SR_MSR_DSR_CHANGED    0x02
 #define     SR_MSR_RI_CHANGED     0x04
@@ -167,7 +167,7 @@ typedef struct _WORKITEM_DATA
 #define     SR_MSR_DSR            SERIAL_DSR_STATE /* Data Set Ready */
 #define     SI_MSR_RI             SERIAL_RI_STATE  /* Ring Indicator */
 #define     SR_MSR_DCD            SERIAL_DCD_STATE /* Data Carrier Detect */
-#define   SER_SCR(x)   ((x)+7) /* Scratch Pad Register, Uart >= Uart16450 */
+#define   SER_SCR(x)   ((PUCHAR)(x)+7) /* Scratch Pad Register, Uart >= Uart16450 */
 
 /************************************ circularbuffer.c */
 

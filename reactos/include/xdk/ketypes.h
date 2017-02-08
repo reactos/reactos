@@ -200,10 +200,6 @@ typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX {
 #endif
 #define MAXIMUM_PROCESSORS          MAXIMUM_PROC_PER_GROUP
 
-/* Exception Records */
-#define EXCEPTION_NONCONTINUABLE     1
-#define EXCEPTION_MAXIMUM_PARAMETERS 15
-
 #define EXCEPTION_DIVIDED_BY_ZERO       0
 #define EXCEPTION_DEBUG                 1
 #define EXCEPTION_NMI                   2
@@ -220,39 +216,6 @@ typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX {
 #define EXCEPTION_RESERVED_TRAP         0x0F
 #define EXCEPTION_NPX_ERROR             0x010
 #define EXCEPTION_ALIGNMENT_CHECK       0x011
-
-typedef struct _EXCEPTION_RECORD {
-  NTSTATUS ExceptionCode;
-  ULONG ExceptionFlags;
-  struct _EXCEPTION_RECORD *ExceptionRecord;
-  PVOID ExceptionAddress;
-  ULONG NumberParameters;
-  ULONG_PTR ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
-} EXCEPTION_RECORD, *PEXCEPTION_RECORD;
-
-typedef struct _EXCEPTION_RECORD32 {
-  NTSTATUS ExceptionCode;
-  ULONG ExceptionFlags;
-  ULONG ExceptionRecord;
-  ULONG ExceptionAddress;
-  ULONG NumberParameters;
-  ULONG ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
-} EXCEPTION_RECORD32, *PEXCEPTION_RECORD32;
-
-typedef struct _EXCEPTION_RECORD64 {
-  NTSTATUS ExceptionCode;
-  ULONG ExceptionFlags;
-  ULONG64 ExceptionRecord;
-  ULONG64 ExceptionAddress;
-  ULONG NumberParameters;
-  ULONG __unusedAlignment;
-  ULONG64 ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
-} EXCEPTION_RECORD64, *PEXCEPTION_RECORD64;
-
-typedef struct _EXCEPTION_POINTERS {
-  PEXCEPTION_RECORD ExceptionRecord;
-  PCONTEXT ContextRecord;
-} EXCEPTION_POINTERS, *PEXCEPTION_POINTERS;
 
 typedef enum _KBUGCHECK_CALLBACK_REASON {
   KbCallbackInvalid,
@@ -1028,6 +991,45 @@ extern PCCHAR KeNumberProcessors;
 
 $endif (_WDMDDK_)
 $if (_NTDDK_)
+
+typedef struct _NT_TIB {
+  struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
+  PVOID StackBase;
+  PVOID StackLimit;
+  PVOID SubSystemTib;
+  _ANONYMOUS_UNION union {
+    PVOID FiberData;
+    ULONG Version;
+  } DUMMYUNIONNAME;
+  PVOID ArbitraryUserPointer;
+  struct _NT_TIB *Self;
+} NT_TIB, *PNT_TIB;
+
+typedef struct _NT_TIB32 {
+  ULONG ExceptionList;
+  ULONG StackBase;
+  ULONG StackLimit;
+  ULONG SubSystemTib;
+  _ANONYMOUS_UNION union {
+    ULONG FiberData;
+    ULONG Version;
+  } DUMMYUNIONNAME;
+  ULONG ArbitraryUserPointer;
+  ULONG Self;
+} NT_TIB32,*PNT_TIB32;
+
+typedef struct _NT_TIB64 {
+  ULONG64 ExceptionList;
+  ULONG64 StackBase;
+  ULONG64 StackLimit;
+  ULONG64 SubSystemTib;
+  _ANONYMOUS_UNION union {
+    ULONG64 FiberData;
+    ULONG Version;
+  } DUMMYUNIONNAME;
+  ULONG64 ArbitraryUserPointer;
+  ULONG64 Self;
+} NT_TIB64,*PNT_TIB64;
 
 #define NX_SUPPORT_POLICY_ALWAYSOFF 0
 #define NX_SUPPORT_POLICY_ALWAYSON  1

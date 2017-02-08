@@ -32,7 +32,7 @@ static
 PMONITOR
 IntCreateMonitorObject()
 {
-    return UserCreateObject(gHandleTable, NULL, NULL, otMonitor, sizeof(MONITOR));
+    return UserCreateObject(gHandleTable, NULL, NULL, NULL, TYPE_MONITOR, sizeof(MONITOR));
 }
 
 /* IntDestroyMonitorObject
@@ -58,7 +58,7 @@ IntDestroyMonitorObject(IN PMONITOR pMonitor)
 
     /* Destroy monitor object */
     UserDereferenceObject(pMonitor);
-    UserDeleteObject(UserHMGetHandle(pMonitor), otMonitor);
+    UserDeleteObject(UserHMGetHandle(pMonitor), TYPE_MONITOR);
 }
 
 /* UserGetMonitorObject
@@ -81,7 +81,7 @@ UserGetMonitorObject(IN HMONITOR hMonitor)
         return NULL;
     }
 
-    pMonitor = (PMONITOR)UserGetObject(gHandleTable, hMonitor, otMonitor);
+    pMonitor = (PMONITOR)UserGetObject(gHandleTable, hMonitor, TYPE_MONITOR);
     if (!pMonitor)
     {
         EngSetLastError(ERROR_INVALID_MONITOR_HANDLE);
@@ -139,7 +139,7 @@ UserAttachMonitor(IN HDEV hDev)
         TRACE("Couldnt create monitor object\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-    
+
     pMonitor->hDev = hDev;
     pMonitor->cWndStack = 0;
 
@@ -185,7 +185,7 @@ UserDetachMonitor(IN HDEV hDev)
     {
         if (pMonitor->hDev == hDev)
             break;
-    
+
         pLink = &pMonitor->pMonitorNext;
         pMonitor = pMonitor->pMonitorNext;
     }
@@ -673,7 +673,7 @@ cleanup:
  *      from MONITORINFO will be filled.
  *
  *   pDevice
- *      Pointer to a UNICODE_STRING which will recieve the device's name. The
+ *      Pointer to a UNICODE_STRING which will receive the device's name. The
  *      length should be CCHDEVICENAME
  *      Can be NULL
  *

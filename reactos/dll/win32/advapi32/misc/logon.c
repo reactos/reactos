@@ -130,9 +130,18 @@ CreateProcessAsUserW(HANDLE hToken,
 /*
  * @unimplemented
  */
-BOOL WINAPI CreateProcessWithLogonW( LPCWSTR lpUsername, LPCWSTR lpDomain, LPCWSTR lpPassword, DWORD dwLogonFlags,
-    LPCWSTR lpApplicationName, LPWSTR lpCommandLine, DWORD dwCreationFlags, LPVOID lpEnvironment,
-    LPCWSTR lpCurrentDirectory, LPSTARTUPINFOW lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation )
+BOOL WINAPI
+CreateProcessWithLogonW(LPCWSTR lpUsername,
+                        LPCWSTR lpDomain,
+                        LPCWSTR lpPassword,
+                        DWORD dwLogonFlags,
+                        LPCWSTR lpApplicationName,
+                        LPWSTR lpCommandLine,
+                        DWORD dwCreationFlags,
+                        LPVOID lpEnvironment,
+                        LPCWSTR lpCurrentDirectory,
+                        LPSTARTUPINFOW lpStartupInfo,
+                        LPPROCESS_INFORMATION lpProcessInformation)
 {
     FIXME("%s %s %s 0x%08x %s %s 0x%08x %p %s %p %p stub\n", debugstr_w(lpUsername), debugstr_w(lpDomain),
     debugstr_w(lpPassword), dwLogonFlags, debugstr_w(lpApplicationName),
@@ -301,145 +310,72 @@ static BOOL WINAPI
 GetUserSid(LPCWSTR UserName,
            PSID *Sid)
 {
-#if 0
-    PSID lpSid;
-    DWORD dwLength;
-    HKEY hUsersKey;
-    HKEY hUserKey;
+    PSID SidBuffer = NULL;
+    PWSTR DomainBuffer = NULL;
+    DWORD cbSidSize = 0;
+    DWORD cchDomSize = 0;
+    SID_NAME_USE Use;
+    BOOL res = TRUE;
 
-    if (Sid != NULL)
-        *Sid = NULL;
+    *Sid = NULL;
 
-    /* Open the Users key */
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                      L"SAM\\SAM\\Domains\\Account\\Users",
-                      0,
-                      KEY_READ,
-                      &hUsersKey))
-    {
-        ERR("Failed to open Users key! (Error %lu)\n", GetLastError());
+    LookupAccountNameW(NULL,
+                       UserName,
+                       NULL,
+                       &cbSidSize,
+                       NULL,
+                       &cchDomSize,
+                       &Use);
+
+    if (cbSidSize == 0 || cchDomSize == 0)
         return FALSE;
-    }
 
-    /* Open the user key */
-    if (RegOpenKeyExW(hUsersKey,
-                      UserName,
-                      0,
-                      KEY_READ,
-                      &hUserKey))
-    {
-        if (GetLastError() == ERROR_FILE_NOT_FOUND)
-        {
-            ERR("Invalid user name!\n");
-            SetLastError(ERROR_NO_SUCH_USER);
-        }
-        else
-        {
-            ERR("Failed to open user key! (Error %lu)\n", GetLastError());
-        }
-
-        RegCloseKey(hUsersKey);
+    SidBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                HEAP_ZERO_MEMORY,
+                                cbSidSize);
+    if (SidBuffer == NULL)
         return FALSE;
-    }
 
-    RegCloseKey (hUsersKey);
-
-    /* Get SID size */
-    dwLength = 0;
-    if (RegQueryValueExW(hUserKey,
-                         L"Sid",
-                         NULL,
-                         NULL,
-                         NULL,
-                         &dwLength))
+    DomainBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                   HEAP_ZERO_MEMORY,
+                                   cchDomSize * sizeof(WCHAR));
+    if (DomainBuffer == NULL)
     {
-        ERR("Failed to read the SID size! (Error %lu)\n", GetLastError());
-        RegCloseKey(hUserKey);
-        return FALSE;
-    }
-
-    /* Allocate sid buffer */
-    TRACE("Required SID buffer size: %lu\n", dwLength);
-    lpSid = (PSID)RtlAllocateHeap(RtlGetProcessHeap(),
-                                  0,
-                                  dwLength);
-    if (lpSid == NULL)
-    {
-        ERR("Failed to allocate SID buffer!\n");
-        RegCloseKey(hUserKey);
-        return FALSE;
-    }
-
-    /* Read sid */
-    if (RegQueryValueExW(hUserKey,
-                         L"Sid",
-                         NULL,
-                         NULL,
-                         (LPBYTE)lpSid,
-                         &dwLength))
-    {
-        ERR("Failed to read the SID! (Error %lu)\n", GetLastError());
-        RtlFreeHeap(RtlGetProcessHeap(),
-                    0,
-                    lpSid);
-        RegCloseKey(hUserKey);
-        return FALSE;
-    }
-
-    RegCloseKey(hUserKey);
-
-    *Sid = lpSid;
-
-    return TRUE;
-#endif
-
-    PSID AccountDomainSid = NULL;
-    ULONG ulUserRid;
-    DWORD dwLength;
-    HKEY hNamesKey = NULL;
-    BOOL bResult = TRUE;
-
-    if (!GetAccountDomainSid(&AccountDomainSid))
-    {
-        return FALSE;
-    }
-
-    /* Open the Users\Names key */
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                      L"SAM\\SAM\\Domains\\Account\\Users\\Names",
-                      0,
-                      KEY_READ,
-                      &hNamesKey))
-    {
-        ERR("Failed to open Users\\Names key! (Error %lu)\n", GetLastError());
-        bResult = FALSE;
+        res = FALSE;
         goto done;
     }
 
-    /* Read the user RID */
-    dwLength = sizeof(ULONG);
-    if (RegQueryValueExW(hNamesKey,
-                         UserName,
-                         NULL,
-                         NULL,
-                        (LPBYTE)&ulUserRid,
-                        &dwLength))
+    if (!LookupAccountNameW(NULL,
+                            UserName,
+                            SidBuffer,
+                            &cbSidSize,
+                            DomainBuffer,
+                            &cchDomSize,
+                            &Use))
     {
-        ERR("Failed to read the SID! (Error %ld)\n", GetLastError());
-        bResult = FALSE;
+        res = FALSE;
         goto done;
     }
 
-    *Sid = AppendRidToSid(AccountDomainSid, ulUserRid);
+    if (Use != SidTypeUser)
+    {
+        res = FALSE;
+        goto done;
+    }
+
+    *Sid = SidBuffer;
 
 done:
-    if (hNamesKey != NULL)
-        RegCloseKey(hNamesKey);
+    if (DomainBuffer != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, DomainBuffer);
 
-    if (AccountDomainSid != NULL)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, AccountDomainSid);
+    if (res == FALSE)
+    {
+        if (SidBuffer != NULL)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, SidBuffer);
+    }
 
-    return bResult;
+    return res;
 }
 
 
@@ -676,8 +612,8 @@ LogonUserW(LPWSTR lpszUsername,
     TOKEN_USER TokenUser;
     TOKEN_OWNER TokenOwner;
     TOKEN_PRIMARY_GROUP TokenPrimaryGroup;
-    PTOKEN_GROUPS TokenGroups;
-    PTOKEN_PRIVILEGES TokenPrivileges;
+    PTOKEN_GROUPS TokenGroups = NULL;
+    PTOKEN_PRIVILEGES TokenPrivileges = NULL;
     TOKEN_DEFAULT_DACL TokenDefaultDacl;
     LARGE_INTEGER ExpirationTime;
     LUID AuthenticationId;
@@ -686,10 +622,10 @@ LogonUserW(LPWSTR lpszUsername,
     PSID PrimaryGroupSid = NULL;
     PSID OwnerSid = NULL;
     PSID LocalSystemSid;
-    PACL Dacl;
-    NTSTATUS Status;
+    PACL Dacl = NULL;
     SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
     unsigned i;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     Qos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
     Qos.ImpersonationLevel = SecurityAnonymous;
@@ -724,11 +660,10 @@ LogonUserW(LPWSTR lpszUsername,
     /* Allocate and initialize token groups */
     TokenGroups = AllocateGroupSids(&PrimaryGroupSid,
                                     &OwnerSid);
-    if (NULL == TokenGroups)
+    if (TokenGroups == NULL)
     {
-        RtlFreeSid(UserSid);
-        SetLastError(ERROR_OUTOFMEMORY);
-        return FALSE;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
     }
 
     /* Allocate and initialize token privileges */
@@ -736,12 +671,10 @@ LogonUserW(LPWSTR lpszUsername,
                                       sizeof(TOKEN_PRIVILEGES)
                                     + sizeof(DefaultPrivs) / sizeof(DefaultPrivs[0])
                                       * sizeof(LUID_AND_ATTRIBUTES));
-    if (NULL == TokenPrivileges)
+    if (TokenPrivileges == NULL)
     {
-        FreeGroupSids(TokenGroups);
-        RtlFreeSid(UserSid);
-        SetLastError(ERROR_OUTOFMEMORY);
-        return FALSE;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
     }
 
     TokenPrivileges->PrivilegeCount = 0;
@@ -766,21 +699,13 @@ LogonUserW(LPWSTR lpszUsername,
     Dacl = RtlAllocateHeap(GetProcessHeap(), 0, 1024);
     if (Dacl == NULL)
     {
-        FreeGroupSids(TokenGroups);
-        RtlFreeSid(UserSid);
-        SetLastError(ERROR_OUTOFMEMORY);
-        return FALSE;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
     }
 
     Status = RtlCreateAcl(Dacl, 1024, ACL_REVISION);
     if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(GetProcessHeap(), 0, Dacl);
-        FreeGroupSids(TokenGroups);
-        RtlFreeHeap(GetProcessHeap(), 0, TokenPrivileges);
-        RtlFreeSid(UserSid);
-        return FALSE;
-    }
+        goto done;
 
     RtlAddAccessAllowedAce(Dacl,
                            ACL_REVISION,
@@ -837,10 +762,18 @@ LogonUserW(LPWSTR lpszUsername,
                            &TokenDefaultDacl,
                            &TokenSource);
 
-    RtlFreeHeap(GetProcessHeap(), 0, Dacl);
-    FreeGroupSids(TokenGroups);
-    RtlFreeHeap(GetProcessHeap(), 0, TokenPrivileges);
-    RtlFreeSid(UserSid);
+done:
+    if (Dacl != NULL)
+        RtlFreeHeap(GetProcessHeap(), 0, Dacl);
+
+    if (TokenGroups != NULL)
+        FreeGroupSids(TokenGroups);
+
+    if (TokenPrivileges != NULL)
+        RtlFreeHeap(GetProcessHeap(), 0, TokenPrivileges);
+
+    if (UserSid != NULL)
+        RtlFreeHeap(GetProcessHeap(), 0, UserSid);
 
     return NT_SUCCESS(Status);
 }

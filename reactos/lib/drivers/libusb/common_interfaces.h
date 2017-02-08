@@ -182,7 +182,9 @@ struct IUSBQueue;
                                                                             \
      STDMETHOD_(VOID, SetStatusChangeEndpointCallBack)( THIS_               \
         IN PVOID CallBack,                                                  \
-        IN PVOID Context) PURE;
+        IN PVOID Context) PURE;                                             \
+                                                                            \
+     STDMETHOD_(LPCSTR, GetUSBType)(THIS) PURE;
 
 
 #define IMP_IUSBHARDWAREDEVICE                                              \
@@ -228,7 +230,9 @@ struct IUSBQueue;
                                                                             \
      STDMETHODIMP_(VOID) SetStatusChangeEndpointCallBack(                   \
         IN PVOID CallBack,                                                  \
-        IN PVOID Context);
+        IN PVOID Context);                                                  \
+                                                                            \
+     STDMETHODIMP_(LPCSTR) GetUSBType();
 
 DECLARE_INTERFACE_(IUSBHardwareDevice, IUnknown)
 {

@@ -1,12 +1,7 @@
 
-set_rc_compiler()
-
 spec2def(telephon.cpl telephon.spec)
-
 add_library(telephon SHARED telephon.c telephon.rc ${CMAKE_CURRENT_BINARY_DIR}/telephon.def)
-
 set_module_type(telephon cpl UNICODE)
-
 target_link_libraries(telephon uuid)
 
 add_importlibs(telephon

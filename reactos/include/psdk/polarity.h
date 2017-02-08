@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:            This file is in the public domain.
  * PROJECT:              ReactOS kernel
  * FILE:

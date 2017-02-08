@@ -236,8 +236,7 @@ BasepComputeProcessPath(IN PBASE_SEARCH_PATH_TYPE PathOrder,
                 if (NtCurrentTeb()->NtTib.SubSystemTib)
                 {
                     /* This means someone added RTL_PERTHREAD_CURDIR */
-                    UNIMPLEMENTED;
-                    while (TRUE);
+                    UNIMPLEMENTED_DBGBREAK();
                 }
 
                 /* We do not. Do we have the LDR_ENTRY for the executable? */
@@ -1431,14 +1430,14 @@ SearchPathW(IN LPCWSTR lpPath,
     }
 
 Quickie:
-    /* Check if there was a dynamic path stirng to free */
+    /* Check if there was a dynamic path string to free */
     if ((PathString.Buffer != lpPath) && (PathString.Buffer))
     {
         /* And free it */
         RtlFreeHeap(RtlGetProcessHeap(), 0, PathString.Buffer);
     }
 
-    /* Return the final result lenght */
+    /* Return the final result length */
     return Result;
 }
 

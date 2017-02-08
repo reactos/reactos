@@ -1,5 +1,4 @@
-/* $Id: acpienum.c 21698 2006-04-22 05:55:17Z tretiakov $
- *
+/*
  * PROJECT:         ReactOS ACPI bus driver
  * FILE:            acpi/ospm/acpienum.c
  * PURPOSE:         ACPI namespace enumerator

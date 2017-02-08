@@ -19,6 +19,18 @@
 
 #pragma once
 
+extern char __ImageBase;
+#ifdef __GNUC__
+#define FREELDR_SECTION_COUNT 3
+#else
+#ifdef _M_AMD64
+/* .text and .pdata */
+#define FREELDR_SECTION_COUNT 2
+#else
+#define FREELDR_SECTION_COUNT 1
+#endif
+#endif
+
 typedef struct _FREELDR_MEMORY_DESCRIPTOR
 {
     TYPE_OF_MEMORY MemoryType;
@@ -123,6 +135,10 @@ HeapDestroy(
 
 VOID
 HeapRelease(
+    PVOID HeapHandle);
+
+VOID
+HeapVerify(
     PVOID HeapHandle);
 
 VOID

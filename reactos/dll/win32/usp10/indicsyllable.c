@@ -3,7 +3,7 @@
 /*       and from http://www.unicode.org/Public/6.0.0/ucd/IndicMatraCategory.txt */
 /* DO NOT EDIT!! */
 
-#include "wine/unicode.h"
+//#include "wine/unicode.h"
 
 const unsigned short indic_syllabic_table[2624] =
 {

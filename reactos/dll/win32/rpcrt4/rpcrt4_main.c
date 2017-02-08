@@ -28,35 +28,36 @@
  *   NT-based native rpcrt4's.  Commonly-used transport for self-to-self RPC's.
  */
 
-#include "config.h"
+#include <config.h>
 
 #include <stdarg.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+//#include <stdlib.h>
+//#include <string.h>
 
 #include "ntstatus.h"
 #define WIN32_NO_STATUS
-#include "windef.h"
-#include "winerror.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winnt.h"
-#include "winternl.h"
-#include "ntsecapi.h"
-#include "iptypes.h"
-#include "iphlpapi.h"
-#include "wine/unicode.h"
-#include "rpc.h"
+#define _INC_WINDOWS
+#include <windef.h>
+//#include "winerror.h"
+#include <winbase.h>
+//#include "winuser.h"
+//#include "winnt.h"
+#include <winternl.h>
+#include <ntsecapi.h>
+//#include "iptypes.h"
+#include <iphlpapi.h>
+#include <wine/unicode.h>
+#include <rpc.h>
 
-#include "ole2.h"
-#include "rpcndr.h"
-#include "rpcproxy.h"
+//#include "ole2.h"
+//#include "rpcndr.h"
+//#include "rpcproxy.h"
 
-#include "rpc_binding.h"
+//#include "rpc_binding.h"
 #include "rpc_server.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 

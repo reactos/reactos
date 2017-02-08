@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  *  FreeLoader
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -52,6 +51,7 @@ XboxMachInit(const char *CmdLine)
   MachVtbl.DiskGetDriveGeometry = XboxDiskGetDriveGeometry;
   MachVtbl.DiskGetCacheableBlockCount = XboxDiskGetCacheableBlockCount;
   MachVtbl.GetTime = XboxGetTime;
+  MachVtbl.InitializeBootDevices = XboxInitializeBootDevices;
   MachVtbl.HwDetect = XboxHwDetect;
   MachVtbl.HwIdle = XboxHwIdle;
 

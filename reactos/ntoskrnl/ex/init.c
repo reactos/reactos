@@ -211,7 +211,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PLIST_ENTRY ListHead, NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
     ULONG NlsTablesEncountered = 0;
-    SIZE_T NlsTableSizes[3]; /* 3 NLS tables */
+    SIZE_T NlsTableSizes[3] = {0, 0, 0}; /* 3 NLS tables */
 
     /* Check if this is boot-time phase 0 initialization */
     if (!ExpInitializationPhase)
@@ -405,12 +405,11 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
     if (!NT_SUCCESS(Status))
     {
         /* Failed, display error */
-        p = InitBuffer->DebugBuffer;
-        _snwprintf(p,
-                   256 * sizeof(WCHAR),
+        _snwprintf(InitBuffer->DebugBuffer,
+                   sizeof(InitBuffer->DebugBuffer)/sizeof(WCHAR),
                    L"INIT: Unable to allocate Process Parameters. 0x%lx",
                    Status);
-        RtlInitUnicodeString(&DebugString, p);
+        RtlInitUnicodeString(&DebugString, InitBuffer->DebugBuffer);
         ZwDisplayString(&DebugString);
 
         /* Bugcheck the system */
@@ -434,12 +433,11 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
     if (!NT_SUCCESS(Status))
     {
         /* Failed, display error */
-        p = InitBuffer->DebugBuffer;
-        _snwprintf(p,
-                   256 * sizeof(WCHAR),
+        _snwprintf(InitBuffer->DebugBuffer,
+                   sizeof(InitBuffer->DebugBuffer)/sizeof(WCHAR),
                    L"INIT: Unable to allocate Process Environment. 0x%lx",
                    Status);
-        RtlInitUnicodeString(&DebugString, p);
+        RtlInitUnicodeString(&DebugString, InitBuffer->DebugBuffer);
         ZwDisplayString(&DebugString);
 
         /* Bugcheck the system */
@@ -560,12 +558,11 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
     if (!NT_SUCCESS(Status))
     {
         /* Failed, display error */
-        p = InitBuffer->DebugBuffer;
-        _snwprintf(p,
-                   256 * sizeof(WCHAR),
+        _snwprintf(InitBuffer->DebugBuffer,
+                   sizeof(InitBuffer->DebugBuffer)/sizeof(WCHAR),
                    L"INIT: Unable to create Session Manager. 0x%lx",
                    Status);
-        RtlInitUnicodeString(&DebugString, p);
+        RtlInitUnicodeString(&DebugString, InitBuffer->DebugBuffer);
         ZwDisplayString(&DebugString);
 
         /* Bugcheck the system */
@@ -577,12 +574,11 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
     if (!NT_SUCCESS(Status))
     {
         /* Failed, display error */
-        p = InitBuffer->DebugBuffer;
-        _snwprintf(p,
-                   256 * sizeof(WCHAR),
+        _snwprintf(InitBuffer->DebugBuffer,
+                   sizeof(InitBuffer->DebugBuffer)/sizeof(WCHAR),
                    L"INIT: Unable to resume Session Manager. 0x%lx",
                    Status);
-        RtlInitUnicodeString(&DebugString, p);
+        RtlInitUnicodeString(&DebugString, InitBuffer->DebugBuffer);
         ZwDisplayString(&DebugString);
 
         /* Bugcheck the system */
@@ -662,30 +658,68 @@ ExpInitSystemPhase1(VOID)
     ExpInitializePushLocks();
 
     /* Initialize events and event pairs */
-    ExpInitializeEventImplementation();
-    ExpInitializeEventPairImplementation();
-    ExpInitializeKeyedEventImplementation();
-
-    /* Initialize callbacks */
-    ExpInitializeCallbacks();
-
+    if (ExpInitializeEventImplementation() == FALSE)
+    {
+        DPRINT1("Executive: Event initialization failed\n");
+        return FALSE;
+    }
+    if (ExpInitializeEventPairImplementation() == FALSE)
+    {
+        DPRINT1("Executive: Event Pair initialization failed\n");
+        return FALSE;
+    }
+    
     /* Initialize mutants */
-    ExpInitializeMutantImplementation();
-
+    if (ExpInitializeMutantImplementation() == FALSE)
+    {
+        DPRINT1("Executive: Mutant initialization failed\n");
+        return FALSE;
+    }
+    
+    /* Initialize callbacks */
+    if (ExpInitializeCallbacks() == FALSE)
+    {
+        DPRINT1("Executive: Callback initialization failed\n");
+        return FALSE;
+    }
+    
     /* Initialize semaphores */
-    ExpInitializeSemaphoreImplementation();
-
+    if (ExpInitializeSemaphoreImplementation() == FALSE)
+    {
+        DPRINT1("Executive: Semaphore initialization failed\n");
+        return FALSE;
+    }
+    
     /* Initialize timers */
-    ExpInitializeTimerImplementation();
-
+    if (ExpInitializeTimerImplementation() == FALSE)
+    {
+        DPRINT1("Executive: Timer initialization failed\n");
+        return FALSE;
+    }
+    
     /* Initialize profiling */
-    ExpInitializeProfileImplementation();
-
+    if (ExpInitializeProfileImplementation() == FALSE)
+    {
+        DPRINT1("Executive: Profile initialization failed\n");
+        return FALSE;
+    }
+    
     /* Initialize UUIDs */
     ExpInitUuids();
-
+    
+    /* Initialize keyed events */
+    if (ExpInitializeKeyedEventImplementation() == FALSE)
+    {
+        DPRINT1("Executive: Keyed event initialization failed\n");
+        return FALSE;
+    }
+    
     /* Initialize Win32K */
-    ExpWin32kInit();
+    if (ExpWin32kInit() == FALSE)
+    {
+        DPRINT1("Executive: Win32 initialization failed\n");
+        return FALSE;
+    }
     return TRUE;
 }
 
@@ -1039,15 +1073,16 @@ ExpInitializeExecutive(IN ULONG Cpu,
     CmGetSystemControlValues(LoaderBlock->RegistryBase, CmControlVector);
 
     /* Load static defaults for Service Pack 1 and add our SVN revision */
+    /* Format of CSD : SPMajor - SPMinor */
     CmNtCSDVersion = 0x100 | (KERNEL_VERSION_BUILD_HEX << 16);
     CmNtCSDReleaseType = 0;
 
     /* Set Service Pack data for Service Pack 1 */
-    CmNtSpBuildNumber = 1830;
+    CmNtSpBuildNumber = VER_PRODUCTBUILD_QFE;
     if (!(CmNtCSDVersion & 0xFFFF0000))
     {
         /* Check the release type */
-        if (CmNtCSDReleaseType == 1) CmNtSpBuildNumber |= 1830 << 16;
+        if (CmNtCSDReleaseType == 1) CmNtSpBuildNumber |= VER_PRODUCTBUILD_QFE << 16;
     }
 
     /* Add loaded CmNtGlobalFlag value */
@@ -1186,7 +1221,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
         /* Add the version format string */
         Status = RtlStringCbPrintfA(RcEnd,
                                     Remaining,
-                                    "v. %u",
+                                    "r%u",
                                     (CmNtCSDVersion & 0xFFFF0000) >> 16);
         if (!NT_SUCCESS(Status))
         {

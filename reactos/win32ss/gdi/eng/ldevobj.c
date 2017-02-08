@@ -142,7 +142,7 @@ LDEVOBJ_pdmiGetModes(
     if (!cbSize)
     {
         /* Could not get modes */
-        DPRINT1("returned size %ld(%ld)\n", cbSize, pdminfo->cbdevmode);
+        DPRINT1("returned size %lu(%lu)\n", cbSize, pdminfo->cbdevmode);
         ExFreePoolWithTag(pdminfo, GDITAG_DEVMODE);
         pdminfo = NULL;
     }
@@ -324,10 +324,10 @@ EngLoadImageEx(
     WCHAR acwBuffer[MAX_PATH];
     PLDEVOBJ pldev;
     UNICODE_STRING strDriverName;
-    ULONG cwcLength;
+    SIZE_T cwcLength;
     LPWSTR pwsz;
 
-    DPRINT("EngLoadImageEx(%ls, %ld)\n", pwszDriverName, ldevtype);
+    DPRINT("EngLoadImageEx(%ls, %lu)\n", pwszDriverName, ldevtype);
     ASSERT(pwszDriverName);
 
     /* Initialize buffer for the the driver name */
@@ -442,7 +442,7 @@ leave:
 HANDLE
 APIENTRY
 EngLoadImage(
-    LPWSTR pwszDriverName)
+    _In_ LPWSTR pwszDriverName)
 {
     return (HANDLE)EngLoadImageEx(pwszDriverName, LDEV_IMAGE);
 }
@@ -451,7 +451,7 @@ EngLoadImage(
 VOID
 APIENTRY
 EngUnloadImage(
-    IN HANDLE hModule)
+    _In_ HANDLE hModule)
 {
     PLDEVOBJ pldev = (PLDEVOBJ)hModule;
 
@@ -486,8 +486,8 @@ EngUnloadImage(
 PVOID
 APIENTRY
 EngFindImageProcAddress(
-    IN HANDLE hModule,
-    IN LPSTR  lpProcName)
+    _In_ HANDLE hModule,
+    _In_ LPSTR  lpProcName)
 {
     PLDEVOBJ pldev = (PLDEVOBJ)hModule;
 

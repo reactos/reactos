@@ -27,51 +27,54 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#if defined(__MINGW32__) || defined (_MSC_VER)
-#include <ws2tcpip.h>
-#endif
+#include <config.h>
+//#include "wine/port.h"
 
-#include <sys/types.h>
+//#include <sys/types.h>
 #ifdef HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
 #endif
 #ifdef HAVE_ARPA_INET_H
 # include <arpa/inet.h>
 #endif
-#include <stdarg.h>
+//#include <stdarg.h>
 #include <stdio.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
-#include <time.h>
+//#include <time.h>
 #include <assert.h>
 #ifdef HAVE_ZLIB
 #  include <zlib.h>
 #endif
 
-#include "windef.h"
-#include "winbase.h"
-#include "wininet.h"
-#include "winerror.h"
-#include "winternl.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wininet.h>
+//#include "winerror.h"
+#include <winternl.h>
 #define NO_SHLWAPI_STREAM
 #define NO_SHLWAPI_REG
 #define NO_SHLWAPI_STRFCNS
 #define NO_SHLWAPI_GDI
-#include "shlwapi.h"
-#include "sspi.h"
-#include "wincrypt.h"
-#include "winuser.h"
-#include "cryptuiapi.h"
+#include <shlwapi.h>
+#include <sspi.h>
+//#include "wincrypt.h"
+#include <winuser.h>
+#include <cryptuiapi.h>
+
+#if defined(__MINGW32__) || defined (_MSC_VER)
+#include <ws2tcpip.h>
+#endif
 
 #include "internet.h"
-#include "wine/debug.h"
-#include "wine/exception.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+#include <wine/exception.h>
+//#include "wine/unicode.h"
 
 // ReactOS
 #include "inet_ntop.c"
@@ -2317,7 +2320,7 @@ static BOOL end_of_read_data( http_request_t *req )
 /* fetch some more data into the read buffer (the read section must be held) */
 static DWORD refill_read_buffer(http_request_t *req, read_mode_t read_mode, DWORD *read_bytes)
 {
-    DWORD res, read=0;
+    DWORD res, read=0, want;
 
     if(req->read_size == sizeof(req->read_buf))
         return ERROR_SUCCESS;
@@ -2328,8 +2331,10 @@ static DWORD refill_read_buffer(http_request_t *req, read_mode_t read_mode, DWOR
         req->read_pos = 0;
     }
 
+    want = sizeof(req->read_buf) - req->read_size;
     res = req->data_stream->vtbl->read(req->data_stream, req, req->read_buf+req->read_size,
-            sizeof(req->read_buf)-req->read_size, &read, read_mode);
+            want, &read, read_mode);
+    assert(read <= want);
     req->read_size += read;
 
     TRACE("read %u bytes, read_size %u\n", read, req->read_size);
@@ -2370,8 +2375,11 @@ static DWORD netconn_read(data_stream_t *stream, http_request_t *req, BYTE *buf,
 
     size = min(size, netconn_stream->content_length-netconn_stream->content_read);
 
-    if(read_mode == READMODE_NOBLOCK)
-        size = min(size, netconn_get_avail_data(stream, req));
+    if(read_mode == READMODE_NOBLOCK) {
+        DWORD avail = netconn_get_avail_data(stream, req);
+        if (size > avail)
+            size = avail;
+    }
 
     if(size && req->netconn) {
         if(NETCON_recv(req->netconn, buf, size, read_mode == READMODE_SYNC ? MSG_WAITALL : 0, &len) != ERROR_SUCCESS)

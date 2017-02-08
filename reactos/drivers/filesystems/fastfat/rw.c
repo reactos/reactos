@@ -139,7 +139,7 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext,
   ASSERT(IrpContext->FileObject->FsContext2 != NULL);
 
   DPRINT("VfatReadFileData(DeviceExt %p, FileObject %p, "
-	 "Length %d, ReadOffset 0x%I64x)\n", DeviceExt,
+	 "Length %u, ReadOffset 0x%I64x)\n", DeviceExt,
 	 IrpContext->FileObject, Length, ReadOffset.QuadPart);
 
   *LengthRead = 0;
@@ -283,7 +283,7 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext,
       Status = NextCluster(DeviceExt, FirstCluster, &CurrentCluster, FALSE);
     }
     while (StartCluster + ClusterCount == CurrentCluster && NT_SUCCESS(Status) && Length > BytesDone);
-    DPRINT("start %08x, next %08x, count %d\n",
+    DPRINT("start %08x, next %08x, count %u\n",
            StartCluster, CurrentCluster, ClusterCount);
 
     ExAcquireFastMutex(&Fcb->LastMutex);
@@ -354,7 +354,7 @@ VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
    BytesPerSector = DeviceExt->FatInfo.BytesPerSector;
 
    DPRINT("VfatWriteFileData(DeviceExt %p, FileObject %p, "
-	  "Length %d, WriteOffset 0x%I64x), '%wZ'\n", DeviceExt,
+	  "Length %u, WriteOffset 0x%I64x), '%wZ'\n", DeviceExt,
 	  IrpContext->FileObject, Length, WriteOffset.QuadPart,
 	  &Fcb->PathNameU);
 
@@ -491,7 +491,7 @@ VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
          Status = NextCluster(DeviceExt, FirstCluster, &CurrentCluster, FALSE);
       }
       while (StartCluster + ClusterCount == CurrentCluster && NT_SUCCESS(Status) && Length > BytesDone);
-      DPRINT("start %08x, next %08x, count %d\n",
+      DPRINT("start %08x, next %08x, count %u\n",
              StartCluster, CurrentCluster, ClusterCount);
 
       ExAcquireFastMutex(&Fcb->LastMutex);
@@ -583,7 +583,7 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
    }
 
 
-   DPRINT("'%wZ', Offset: %d, Length %d\n", &Fcb->PathNameU, ByteOffset.u.LowPart, Length);
+   DPRINT("'%wZ', Offset: %u, Length %u\n", &Fcb->PathNameU, ByteOffset.u.LowPart, Length);
 
    if (ByteOffset.u.HighPart && !(Fcb->Flags & FCB_IS_VOLUME))
    {
@@ -600,7 +600,7 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
    {
       if (ByteOffset.u.LowPart % BytesPerSector != 0 || Length % BytesPerSector != 0)
       {
-         DPRINT("%d %d\n", ByteOffset.u.LowPart, Length);
+         DPRINT("%u %u\n", ByteOffset.u.LowPart, Length);
          // non cached read must be sector aligned
          Status = STATUS_INVALID_PARAMETER;
          goto ByeBye;
@@ -1042,5 +1042,4 @@ ByeBye:
    DPRINT("%x\n", Status);
    return Status;
 }
-
 

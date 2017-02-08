@@ -150,7 +150,7 @@ typedef struct _CRegKeySecurity
     SI_OBJECT_INFO ObjectInfo;
     BOOL *Btn;
     HKEY hRootKey;
-    TCHAR szRegKey[1];
+    WCHAR szRegKey[1];
 } CRegKeySecurity, *PCRegKeySecurity;
 
 /* EOF */

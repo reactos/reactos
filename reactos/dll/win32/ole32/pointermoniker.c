@@ -19,20 +19,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
 #include <stdarg.h>
-#include <string.h>
+//#include <string.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "winuser.h"
-#include "objbase.h"
-#include "oleidl.h"
-#include "wine/debug.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winerror.h"
+//#include "winuser.h"
+#include <objbase.h>
+#include <oleidl.h>
+#include <wine/debug.h>
 #include "moniker.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
@@ -596,7 +599,7 @@ static HRESULT WINAPI PointerMonikerCF_QueryInterface(LPCLASSFACTORY iface,
     if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IClassFactory))
     {
         *ppv = iface;
-        IUnknown_AddRef(iface);
+        IClassFactory_AddRef(iface);
         return S_OK;
     }
     return E_NOINTERFACE;
@@ -629,7 +632,7 @@ static HRESULT WINAPI PointerMonikerCF_CreateInstance(LPCLASSFACTORY iface,
     if (FAILED(hr))
         return hr;
 
-	hr = IMoniker_QueryInterface(pMoniker, riid, ppv);
+    hr = IMoniker_QueryInterface(pMoniker, riid, ppv);
 
     if (FAILED(hr))
         IMoniker_Release(pMoniker);

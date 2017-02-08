@@ -7,6 +7,7 @@
  *
  */
 
+/* TODO: AppBar */
 #include "magnifier.h"
 
 const TCHAR szWindowClass[] = TEXT("MAGNIFIER");
@@ -118,18 +119,21 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
  */
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
+   RECT rcWorkArea;
    hInst = hInstance; // Store instance handle in our global variable
 
-    // Create the Window
+   SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWorkArea, 0);
+
+   /* Create the Window */
    hMainWnd = CreateWindowEx(
-        WS_EX_TOPMOST,
+        WS_EX_TOPMOST | WS_EX_PALETTEWINDOW,
         szWindowClass,
         szTitle,
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT,
         CW_USEDEFAULT,
-        CW_USEDEFAULT,
-        CW_USEDEFAULT,
+        (rcWorkArea.right - rcWorkArea.left) * 2 / 3,
+        200,
         NULL,
         NULL,
         hInstance,

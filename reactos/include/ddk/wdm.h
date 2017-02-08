@@ -41,6 +41,7 @@
 #include <excpt.h>
 #include <ntdef.h>
 #include <ntstatus.h>
+#include <kernelspecs.h>
 #include <ntiologc.h>
 
 #ifndef GUID_DEFINED
@@ -116,7 +117,7 @@ extern "C" {
 #pragma warning(disable:4115) /* Named type definition in parentheses */
 #pragma warning(disable:4201) /* Nameless unions and structs */
 #pragma warning(disable:4214) /* Bit fields of other types than int */
-#pragma warning(disable:4820) /* Padding added, due to alignemnet requirement */
+#pragma warning(disable:4820) /* Padding added, due to alignment requirement */
 
 /* Indicate if #pragma alloc_text() is supported */
 #if defined(_M_IX86) || defined(_M_AMD64) || defined(_M_IA64)
@@ -547,6 +548,57 @@ typedef SLIST_HEADER SLIST_HEADER32, *PSLIST_HEADER32;
 
 #endif /* _SLIST_HEADER_ */
 
+/* Exception record flags */
+#define EXCEPTION_NONCONTINUABLE  0x01
+#define EXCEPTION_UNWINDING       0x02
+#define EXCEPTION_EXIT_UNWIND     0x04
+#define EXCEPTION_STACK_INVALID   0x08
+#define EXCEPTION_NESTED_CALL     0x10
+#define EXCEPTION_TARGET_UNWIND   0x20
+#define EXCEPTION_COLLIDED_UNWIND 0x40
+#define EXCEPTION_UNWIND (EXCEPTION_UNWINDING | EXCEPTION_EXIT_UNWIND | \
+                          EXCEPTION_TARGET_UNWIND | EXCEPTION_COLLIDED_UNWIND)
+
+#define IS_UNWINDING(Flag) ((Flag & EXCEPTION_UNWIND) != 0)
+#define IS_DISPATCHING(Flag) ((Flag & EXCEPTION_UNWIND) == 0)
+#define IS_TARGET_UNWIND(Flag) (Flag & EXCEPTION_TARGET_UNWIND)
+
+#define EXCEPTION_MAXIMUM_PARAMETERS 15
+
+/* Exception records */
+typedef struct _EXCEPTION_RECORD {
+  NTSTATUS ExceptionCode;
+  ULONG ExceptionFlags;
+  struct _EXCEPTION_RECORD *ExceptionRecord;
+  PVOID ExceptionAddress;
+  ULONG NumberParameters;
+  ULONG_PTR ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+} EXCEPTION_RECORD, *PEXCEPTION_RECORD;
+
+typedef struct _EXCEPTION_RECORD32 {
+  NTSTATUS ExceptionCode;
+  ULONG ExceptionFlags;
+  ULONG ExceptionRecord;
+  ULONG ExceptionAddress;
+  ULONG NumberParameters;
+  ULONG ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+} EXCEPTION_RECORD32, *PEXCEPTION_RECORD32;
+
+typedef struct _EXCEPTION_RECORD64 {
+  NTSTATUS ExceptionCode;
+  ULONG ExceptionFlags;
+  ULONG64 ExceptionRecord;
+  ULONG64 ExceptionAddress;
+  ULONG NumberParameters;
+  ULONG __unusedAlignment;
+  ULONG64 ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+} EXCEPTION_RECORD64, *PEXCEPTION_RECORD64;
+
+typedef struct _EXCEPTION_POINTERS {
+  PEXCEPTION_RECORD ExceptionRecord;
+  PCONTEXT ContextRecord;
+} EXCEPTION_POINTERS, *PEXCEPTION_POINTERS;
+
 /* MS definition is broken! */
 extern BOOLEAN NTSYSAPI NlsMbCodePageTag;
 extern BOOLEAN NTSYSAPI NlsMbOemCodePageTag;
@@ -570,6 +622,68 @@ typedef BOOLEAN
 typedef BOOLEAN
 (*PFN_RTL_IS_SERVICE_PACK_VERSION_INSTALLED)(
   _In_ ULONG Version);
+
+typedef struct _OSVERSIONINFOA {
+  ULONG dwOSVersionInfoSize;
+  ULONG dwMajorVersion;
+  ULONG dwMinorVersion;
+  ULONG dwBuildNumber;
+  ULONG dwPlatformId;
+  CHAR szCSDVersion[128];
+} OSVERSIONINFOA, *POSVERSIONINFOA, *LPOSVERSIONINFOA;
+
+typedef struct _OSVERSIONINFOW {
+  ULONG dwOSVersionInfoSize;
+  ULONG dwMajorVersion;
+  ULONG dwMinorVersion;
+  ULONG dwBuildNumber;
+  ULONG dwPlatformId;
+  WCHAR szCSDVersion[128];
+} OSVERSIONINFOW, *POSVERSIONINFOW, *LPOSVERSIONINFOW, RTL_OSVERSIONINFOW, *PRTL_OSVERSIONINFOW;
+
+typedef struct _OSVERSIONINFOEXA {
+  ULONG dwOSVersionInfoSize;
+  ULONG dwMajorVersion;
+  ULONG dwMinorVersion;
+  ULONG dwBuildNumber;
+  ULONG dwPlatformId;
+  CHAR szCSDVersion[128];
+  USHORT wServicePackMajor;
+  USHORT wServicePackMinor;
+  USHORT wSuiteMask;
+  UCHAR wProductType;
+  UCHAR wReserved;
+} OSVERSIONINFOEXA, *POSVERSIONINFOEXA, *LPOSVERSIONINFOEXA;
+
+typedef struct _OSVERSIONINFOEXW {
+  ULONG dwOSVersionInfoSize;
+  ULONG dwMajorVersion;
+  ULONG dwMinorVersion;
+  ULONG dwBuildNumber;
+  ULONG dwPlatformId;
+  WCHAR szCSDVersion[128];
+  USHORT wServicePackMajor;
+  USHORT wServicePackMinor;
+  USHORT wSuiteMask;
+  UCHAR wProductType;
+  UCHAR wReserved;
+} OSVERSIONINFOEXW, *POSVERSIONINFOEXW, *LPOSVERSIONINFOEXW, RTL_OSVERSIONINFOEXW, *PRTL_OSVERSIONINFOEXW;
+
+#ifdef UNICODE
+typedef OSVERSIONINFOEXW OSVERSIONINFOEX;
+typedef POSVERSIONINFOEXW POSVERSIONINFOEX;
+typedef LPOSVERSIONINFOEXW LPOSVERSIONINFOEX;
+typedef OSVERSIONINFOW OSVERSIONINFO;
+typedef POSVERSIONINFOW POSVERSIONINFO;
+typedef LPOSVERSIONINFOW LPOSVERSIONINFO;
+#else
+typedef OSVERSIONINFOEXA OSVERSIONINFOEX;
+typedef POSVERSIONINFOEXA POSVERSIONINFOEX;
+typedef LPOSVERSIONINFOEXA LPOSVERSIONINFOEX;
+typedef OSVERSIONINFOA OSVERSIONINFO;
+typedef POSVERSIONINFOA POSVERSIONINFO;
+typedef LPOSVERSIONINFOA LPOSVERSIONINFO;
+#endif /* UNICODE */
 
 /******************************************************************************
  *                              Kernel Types                                  *
@@ -772,10 +886,6 @@ typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX {
 #endif
 #define MAXIMUM_PROCESSORS          MAXIMUM_PROC_PER_GROUP
 
-/* Exception Records */
-#define EXCEPTION_NONCONTINUABLE     1
-#define EXCEPTION_MAXIMUM_PARAMETERS 15
-
 #define EXCEPTION_DIVIDED_BY_ZERO       0
 #define EXCEPTION_DEBUG                 1
 #define EXCEPTION_NMI                   2
@@ -792,39 +902,6 @@ typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX {
 #define EXCEPTION_RESERVED_TRAP         0x0F
 #define EXCEPTION_NPX_ERROR             0x010
 #define EXCEPTION_ALIGNMENT_CHECK       0x011
-
-typedef struct _EXCEPTION_RECORD {
-  NTSTATUS ExceptionCode;
-  ULONG ExceptionFlags;
-  struct _EXCEPTION_RECORD *ExceptionRecord;
-  PVOID ExceptionAddress;
-  ULONG NumberParameters;
-  ULONG_PTR ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
-} EXCEPTION_RECORD, *PEXCEPTION_RECORD;
-
-typedef struct _EXCEPTION_RECORD32 {
-  NTSTATUS ExceptionCode;
-  ULONG ExceptionFlags;
-  ULONG ExceptionRecord;
-  ULONG ExceptionAddress;
-  ULONG NumberParameters;
-  ULONG ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
-} EXCEPTION_RECORD32, *PEXCEPTION_RECORD32;
-
-typedef struct _EXCEPTION_RECORD64 {
-  NTSTATUS ExceptionCode;
-  ULONG ExceptionFlags;
-  ULONG64 ExceptionRecord;
-  ULONG64 ExceptionAddress;
-  ULONG NumberParameters;
-  ULONG __unusedAlignment;
-  ULONG64 ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
-} EXCEPTION_RECORD64, *PEXCEPTION_RECORD64;
-
-typedef struct _EXCEPTION_POINTERS {
-  PEXCEPTION_RECORD ExceptionRecord;
-  PCONTEXT ContextRecord;
-} EXCEPTION_POINTERS, *PEXCEPTION_POINTERS;
 
 typedef enum _KBUGCHECK_CALLBACK_REASON {
   KbCallbackInvalid,
@@ -8033,7 +8110,7 @@ RtlAssert(
   _In_ PVOID FailedAssertion,
   _In_ PVOID FileName,
   _In_ ULONG LineNumber,
-  _In_opt_ PSTR Message);
+  _In_opt_z_ PSTR Message);
 
 /* VOID
  * RtlCopyMemory(
@@ -8105,14 +8182,18 @@ RtlGUIDFromString(
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 _At_(DestinationString->Buffer, _Post_equal_to_(SourceString))
-//_At_(DestinationString->Length, _Post_equal_to_(_String_length_(SourceString) * sizeof(WCHAR)))
-_At_(DestinationString->MaximumLength, _Post_equal_to_(DestinationString->Length + sizeof(WCHAR)))
+_When_(SourceString != NULL,
+_At_(DestinationString->Length, _Post_equal_to_(_String_length_(SourceString) * sizeof(WCHAR)))
+_At_(DestinationString->MaximumLength, _Post_equal_to_(DestinationString->Length + sizeof(WCHAR))))
+_When_(SourceString == NULL,
+_At_(DestinationString->Length, _Post_equal_to_(0))
+_At_(DestinationString->MaximumLength, _Post_equal_to_(0)))
 NTSYSAPI
 VOID
 NTAPI
 RtlInitUnicodeString(
-  _Out_ PUNICODE_STRING DestinationString,
-  _In_opt_z_ __drv_aliasesMem PCWSTR SourceString);
+    _Out_ PUNICODE_STRING DestinationString,
+    _In_opt_z_ __drv_aliasesMem PCWSTR SourceString);
 
 /* VOID
  * RtlMoveMemory(
@@ -8459,13 +8540,15 @@ RtlInitAnsiString(
   _Out_ PANSI_STRING DestinationString,
   _In_opt_z_ __drv_aliasesMem PCSZ SourceString);
 
+_At_(BitMapHeader->SizeOfBitMap, _Post_equal_to_(SizeOfBitMap))
+_At_(BitMapHeader->Buffer, _Post_equal_to_(BitMapBuffer))
 NTSYSAPI
 VOID
 NTAPI
 RtlInitializeBitMap(
   _Out_ PRTL_BITMAP BitMapHeader,
-  _In_ __drv_aliasesMem PULONG BitMapBuffer,
-  _In_ ULONG SizeOfBitMap);
+  _In_opt_ __drv_aliasesMem PULONG BitMapBuffer,
+  _In_opt_ ULONG SizeOfBitMap);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 NTSYSAPI
@@ -8534,12 +8617,12 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlQueryRegistryValues(
-  _In_ ULONG RelativeTo,
-  _In_ PCWSTR Path,
-  _Inout_ _At_(*(*QueryTable).EntryContext, _Post_valid_)
-    PRTL_QUERY_REGISTRY_TABLE QueryTable,
-  _In_opt_ PVOID Context,
-  _In_opt_ PVOID Environment);
+    _In_ ULONG RelativeTo,
+    _In_ PCWSTR Path,
+    _Inout_ _At_(*(*QueryTable).EntryContext, _Pre_unknown_)
+        PRTL_QUERY_REGISTRY_TABLE QueryTable,
+    _In_opt_ PVOID Context,
+    _In_opt_ PVOID Environment);
 
 #define SHORT_SIZE  (sizeof(USHORT))
 #define SHORT_MASK  (SHORT_SIZE - 1)
@@ -8689,13 +8772,14 @@ RtlSetDaclSecurityDescriptor(
 #define RtlStoreUlongPtr(Address,Value) RtlStoreUlong(Address,Value)
 #endif /* _WIN64 */
 
-_Success_(return != 0)
+_Success_(return!=FALSE)
+_Must_inspect_result_
 NTSYSAPI
 BOOLEAN
 NTAPI
 RtlTimeFieldsToTime(
-  _In_ PTIME_FIELDS TimeFields,
-  _Out_ PLARGE_INTEGER Time);
+    _In_ PTIME_FIELDS TimeFields,
+    _Out_ PLARGE_INTEGER Time);
 
 NTSYSAPI
 VOID
@@ -8786,6 +8870,27 @@ BOOLEAN
 NTAPI
 RtlValidSecurityDescriptor(
   _In_ PSECURITY_DESCRIPTOR SecurityDescriptor);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetVersion(
+    _Out_
+    _At_(lpVersionInformation->dwOSVersionInfoSize, _Pre_ _Valid_)
+    _When_(lpVersionInformation->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOEXW),
+        _At_((PRTL_OSVERSIONINFOEXW)lpVersionInformation, _Out_))
+        PRTL_OSVERSIONINFOW lpVersionInformation);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlVerifyVersionInfo(
+    _In_ PRTL_OSVERSIONINFOEXW VersionInfo,
+    _In_ ULONG TypeMask,
+    _In_ ULONGLONG ConditionMask);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
@@ -9295,59 +9400,56 @@ RtlCheckBit(
 
 #if DBG
 
-#define ASSERT(exp) \
-  (VOID)((!(exp)) ? \
+#define RTL_VERIFY(exp) \
+  ((!(exp)) ? \
     RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ), FALSE : TRUE)
 
-#define ASSERTMSG(msg, exp) \
-  (VOID)((!(exp)) ? \
+#define RTL_VERIFYMSG(msg, exp) \
+  ((!(exp)) ? \
     RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, (PCHAR)msg ), FALSE : TRUE)
 
-#define RTL_SOFT_ASSERT(exp) \
-  (VOID)((!(exp)) ? \
+#define RTL_SOFT_VERIFY(exp) \
+  ((!(exp)) ? \
     DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n", __FILE__, __LINE__, #exp), FALSE : TRUE)
 
-#define RTL_SOFT_ASSERTMSG(msg, exp) \
+#define RTL_SOFT_VERIFYMSG(msg, exp) \
   (VOID)((!(exp)) ? \
     DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n   Message: %s\n", __FILE__, __LINE__, #exp, (msg)), FALSE : TRUE)
 
-#define RTL_VERIFY(exp) ASSERT(exp)
-#define RTL_VERIFYMSG(msg, exp) ASSERTMSG(msg, exp)
+#define ASSERT(exp) ((void)RTL_VERIFY(exp))
+#define ASSERTMSG(msg, exp) ((void)RTL_VERIFYMSG(msg, exp))
 
-#define RTL_SOFT_VERIFY(exp) RTL_SOFT_ASSERT(exp)
-#define RTL_SOFT_VERIFYMSG(msg, exp) RTL_SOFT_ASSERTMSG(msg, exp)
+#define RTL_SOFT_ASSERT(exp) ((void)RTL_SOFT_VERIFY(exp))
+#define RTL_SOFT_ASSERTMSG(msg, exp) ((void)RTL_SOFT_VERIFYMSG(msg, exp))
 
 #if defined(_MSC_VER)
+# define __assert_annotationA(msg) __annotation(L"Debug", L"AssertFail", L ## msg)
+# define __assert_annotationW(msg) __annotation(L"Debug", L"AssertFail", msg)
+#else
+# define __assert_annotationA(msg) \
+    DbgPrint("Assertion %s(%d): %s", __FILE__, __LINE__, msg)
+# define __assert_annotationW(msg) \
+    DbgPrint("Assertion %s(%d): %S", __FILE__, __LINE__, msg)
+#endif
 
-#define NT_ASSERT(exp) \
+#define NT_VERIFY(exp) \
    ((!(exp)) ? \
-      (__annotation(L"Debug", L"AssertFail", L#exp), \
+      (__assert_annotationA(#exp), \
        DbgRaiseAssertionFailure(), FALSE) : TRUE)
 
-#define NT_ASSERTMSG(msg, exp) \
+#define NT_VERIFYMSG(msg, exp) \
    ((!(exp)) ? \
-      (__annotation(L"Debug", L"AssertFail", L##msg), \
+      (__assert_annotationA(msg), \
       DbgRaiseAssertionFailure(), FALSE) : TRUE)
 
-#define NT_ASSERTMSGW(msg, exp) \
+#define NT_VERIFYMSGW(msg, exp) \
     ((!(exp)) ? \
-        (__annotation(L"Debug", L"AssertFail", msg), \
+        (__assert_annotationW(msg), \
          DbgRaiseAssertionFailure(), FALSE) : TRUE)
 
-#define NT_VERIFY     NT_ASSERT
-#define NT_VERIFYMSG  NT_ASSERTMSG
-#define NT_VERIFYMSGW NT_ASSERTMSGW
-
-#else
-
-/* GCC doesn't support __annotation (nor PDB) */
-#define NT_ASSERT(exp) \
-   (VOID)((!(exp)) ? (DbgRaiseAssertionFailure(), FALSE) : TRUE)
-
-#define NT_ASSERTMSG NT_ASSERT
-#define NT_ASSERTMSGW NT_ASSERT
-
-#endif
+#define NT_ASSERT(exp) ((void)NT_VERIFY(exp))
+#define NT_ASSERTMSG(msg, exp) ((void)NT_VERIFYMSG(msg, exp))
+#define NT_ASSERTMSGW(msg, exp) ((void)NT_VERIFYMSGW(msg, exp))
 
 #else /* !DBG */
 
@@ -10102,7 +10204,7 @@ NTKERNELAPI
 VOID
 NTAPI
 ProbeForWrite(
-  __in_data_source(USER_MODE) _Inout_updates_bytes_(Length) PVOID Address,
+  __in_data_source(USER_MODE) _Out_writes_bytes_(Length) PVOID Address,
   _In_ SIZE_T Length,
   _In_ ULONG Alignment);
 
@@ -10504,8 +10606,8 @@ KeSynchronizeExecution(
   _In_opt_ __drv_aliasesMem PVOID SynchronizeContext);
 
 _IRQL_requires_min_(PASSIVE_LEVEL)
-_When_((Timeout==NULL || *Timeout!=0), _IRQL_requires_max_(APC_LEVEL))
-_When_((Timeout!=NULL && *Timeout==0), _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_((Timeout==NULL || Timeout->QuadPart!=0), _IRQL_requires_max_(APC_LEVEL))
+_When_((Timeout!=NULL && Timeout->QuadPart==0), _IRQL_requires_max_(DISPATCH_LEVEL))
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -10522,8 +10624,8 @@ KeWaitForMultipleObjects(
 #define KeWaitForMutexObject KeWaitForSingleObject
 
 _IRQL_requires_min_(PASSIVE_LEVEL)
-_When_((Timeout==NULL || *Timeout!=0), _IRQL_requires_max_(APC_LEVEL))
-_When_((Timeout!=NULL && *Timeout==0), _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_((Timeout==NULL || Timeout->QuadPart!=0), _IRQL_requires_max_(APC_LEVEL))
+_When_((Timeout!=NULL && Timeout->QuadPart==0), _IRQL_requires_max_(DISPATCH_LEVEL))
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -11146,36 +11248,38 @@ void __PREfastPagedCodeLocked(void);
 
 /* ULONG
  * BYTE_OFFSET(
- *   IN PVOID Va)
+ *     _In_ PVOID Va)
  */
 #define BYTE_OFFSET(Va) \
   ((ULONG) ((ULONG_PTR) (Va) & (PAGE_SIZE - 1)))
 
 /* ULONG
  * BYTES_TO_PAGES(
- *   IN ULONG Size)
+ *     _In_ ULONG Size)
+ *
+ * Note: This needs to be like this to avoid overflows!
  */
 #define BYTES_TO_PAGES(Size) \
-  (((Size) + PAGE_SIZE - 1) >> PAGE_SHIFT)
+  (((Size) >> PAGE_SHIFT) + (((Size) & (PAGE_SIZE - 1)) != 0))
 
 /* PVOID
  * PAGE_ALIGN(
- *   IN PVOID Va)
+ *     _In_ PVOID Va)
  */
 #define PAGE_ALIGN(Va) \
   ((PVOID) ((ULONG_PTR)(Va) & ~(PAGE_SIZE - 1)))
 
 /* ULONG_PTR
  * ROUND_TO_PAGES(
- *   IN ULONG_PTR Size)
+ *     _In_ ULONG_PTR Size)
  */
 #define ROUND_TO_PAGES(Size) \
   (((ULONG_PTR) (Size) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1))
 
 /* ULONG
  * ADDRESS_AND_SIZE_TO_SPAN_PAGES(
- *   IN PVOID Va,
- *   IN ULONG Size)
+ *     _In_ PVOID Va,
+ *     _In_ ULONG Size)
  */
 #define ADDRESS_AND_SIZE_TO_SPAN_PAGES(_Va, _Size) \
   ((ULONG) ((((ULONG_PTR) (_Va) & (PAGE_SIZE - 1)) \
@@ -11187,7 +11291,7 @@ void __PREfastPagedCodeLocked(void);
 /*
  * ULONG
  * MmGetMdlByteCount(
- *   IN PMDL  Mdl)
+ *     _In_ PMDL  Mdl)
  */
 #define MmGetMdlByteCount(_Mdl) \
   ((_Mdl)->ByteCount)
@@ -11205,7 +11309,7 @@ void __PREfastPagedCodeLocked(void);
 /*
  * PPFN_NUMBER
  * MmGetMdlPfnArray(
- *   IN PMDL  Mdl)
+ *     _In_ PMDL  Mdl)
  */
 #define MmGetMdlPfnArray(_Mdl) \
   ((PPFN_NUMBER) ((_Mdl) + 1))
@@ -11213,7 +11317,7 @@ void __PREfastPagedCodeLocked(void);
 /*
  * PVOID
  * MmGetMdlVirtualAddress(
- *   IN PMDL  Mdl)
+ *     _In_ PMDL  Mdl)
  */
 #define MmGetMdlVirtualAddress(_Mdl) \
   ((PVOID) ((PCHAR) ((_Mdl)->StartVa) + (_Mdl)->ByteOffset))
@@ -11222,7 +11326,7 @@ void __PREfastPagedCodeLocked(void);
 #define MmLockPagableCodeSection(Address) MmLockPagableDataSection(Address)
 
 /* PVOID MmGetSystemAddressForMdl(
- *     IN PMDL Mdl);
+ *     _In_ PMDL Mdl);
  */
 #define MmGetSystemAddressForMdl(Mdl) \
   (((Mdl)->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA | \
@@ -11232,8 +11336,8 @@ void __PREfastPagedCodeLocked(void);
 
 /* PVOID
  * MmGetSystemAddressForMdlSafe(
- *     IN PMDL Mdl,
- *     IN MM_PAGE_PRIORITY Priority)
+ *     _In_ PMDL Mdl,
+ *     _In_ MM_PAGE_PRIORITY Priority)
  */
 #define MmGetSystemAddressForMdlSafe(_Mdl, _Priority) \
   (((_Mdl)->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA \
@@ -11245,9 +11349,9 @@ void __PREfastPagedCodeLocked(void);
 /*
  * VOID
  * MmInitializeMdl(
- *   IN PMDL  MemoryDescriptorList,
- *   IN PVOID  BaseVa,
- *   IN SIZE_T  Length)
+ *     _In_ PMDL MemoryDescriptorList,
+ *     _In_ PVOID BaseVa,
+ *     _In_ SIZE_T Length)
  */
 #define MmInitializeMdl(_MemoryDescriptorList, \
                         _BaseVa, \
@@ -11265,7 +11369,7 @@ void __PREfastPagedCodeLocked(void);
 /*
  * VOID
  * MmPrepareMdlForReuse(
- *   IN PMDL  Mdl)
+ *     _In_ PMDL Mdl)
  */
 #define MmPrepareMdlForReuse(_Mdl) \
 { \
@@ -11385,8 +11489,8 @@ MmMapIoSpace(
   _In_ MEMORY_CACHING_TYPE CacheType);
 
 _Must_inspect_result_
-_When_(AccessMode==0, _IRQL_requires_max_(DISPATCH_LEVEL))
-_When_(AccessMode==1, _Maybe_raises_SEH_exception_ _IRQL_requires_max_(APC_LEVEL))
+_When_(AccessMode==KernelMode, _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_(AccessMode==UserMode, _Maybe_raises_SEH_exception_ _IRQL_requires_max_(APC_LEVEL))
 NTKERNELAPI
 PVOID
 NTAPI
@@ -12499,7 +12603,7 @@ IoBuildDeviceIoControlRequest(
   _Out_opt_ PVOID OutputBuffer,
   _In_ ULONG OutputBufferLength,
   _In_ BOOLEAN InternalDeviceIoControl,
-  _In_ PKEVENT Event,
+  _In_opt_ PKEVENT Event,
   _Out_ PIO_STATUS_BLOCK IoStatusBlock);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -12604,8 +12708,8 @@ IoCreateDevice(
   _Outptr_result_nullonfailure_
   _At_(*DeviceObject,
     __drv_allocatesMem(Mem)
-    _When_((((_In_function_class_(DRIVER_INITIALIZE))
-      ||(_In_function_class_(DRIVER_DISPATCH)))),
+    _When_(((_In_function_class_(DRIVER_INITIALIZE))
+      ||(_In_function_class_(DRIVER_DISPATCH))),
       __drv_aliasesMem))
     PDEVICE_OBJECT *DeviceObject);
 
@@ -14447,6 +14551,7 @@ _When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE))
 _When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE)) != 0,
   _Post_notnull_)
 _Post_writable_byte_size_(NumberOfBytes)
+_Function_class_(ALLOCATE_FUNCTION)
 NTKERNELAPI
 PVOID
 NTAPI
@@ -14517,6 +14622,7 @@ ExDeleteResourceLite(
   _Inout_ PERESOURCE Resource);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
+_Function_class_(FREE_FUNCTION)
 NTKERNELAPI
 VOID
 NTAPI
@@ -15682,7 +15788,7 @@ NTSYSAPI
 VOID
 NTAPI
 DbgBreakPointWithStatus(
-  IN ULONG Status);
+    _In_ ULONG Status);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
@@ -16570,17 +16676,18 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateFile(
-  _Out_ PHANDLE FileHandle,
-  _In_ ACCESS_MASK DesiredAccess,
-  _In_ POBJECT_ATTRIBUTES ObjectAttributes,
-  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
-  _In_opt_ PLARGE_INTEGER AllocationSize,
-  _In_ ULONG FileAttributes,
-  _In_ ULONG ShareAccess,
-  _In_ ULONG CreateDisposition,
-  _In_ ULONG CreateOptions,
-  _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,
-  _In_ ULONG EaLength);
+    _Out_ PHANDLE FileHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+    _In_opt_ PLARGE_INTEGER AllocationSize,
+    _In_ ULONG FileAttributes,
+    _In_ ULONG ShareAccess,
+    _In_ ULONG CreateDisposition,
+    _In_ ULONG CreateOptions,
+    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,
+    _In_ ULONG EaLength
+);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
@@ -17211,8 +17318,8 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwRollbackComplete(
-  IN HANDLE EnlistmentHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 
 NTSYSCALLAPI
 NTSTATUS
@@ -17248,29 +17355,29 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwNotifyChangeMultipleKeys(
-  IN HANDLE MasterKeyHandle,
-  IN ULONG Count OPTIONAL,
-  IN OBJECT_ATTRIBUTES SubordinateObjects[] OPTIONAL,
-  IN HANDLE Event OPTIONAL,
-  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-  IN PVOID ApcContext OPTIONAL,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN ULONG CompletionFilter,
-  IN BOOLEAN WatchTree,
-  OUT PVOID Buffer OPTIONAL,
-  IN ULONG BufferSize,
-  IN BOOLEAN Asynchronous);
+  _In_ HANDLE MasterKeyHandle,
+  _In_opt_ ULONG Count,
+  _In_opt_ OBJECT_ATTRIBUTES SubordinateObjects[],
+  _In_opt_ HANDLE Event,
+  _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+  _In_opt_ PVOID ApcContext,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_ ULONG CompletionFilter,
+  _In_ BOOLEAN WatchTree,
+  _Out_opt_ PVOID Buffer,
+  _In_ ULONG BufferSize,
+  _In_ BOOLEAN Asynchronous);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryMultipleValueKey(
-  IN HANDLE KeyHandle,
-  IN OUT PKEY_VALUE_ENTRY ValueEntries,
-  IN ULONG EntryCount,
-  OUT PVOID ValueBuffer,
-  IN OUT PULONG BufferLength,
-  OUT PULONG RequiredBufferLength OPTIONAL);
+  _In_ HANDLE KeyHandle,
+  _Inout_ PKEY_VALUE_ENTRY ValueEntries,
+  _In_ ULONG EntryCount,
+  _Out_ PVOID ValueBuffer,
+  _Inout_ PULONG BufferLength,
+  _Out_opt_ PULONG RequiredBufferLength);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI

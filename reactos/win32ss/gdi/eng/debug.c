@@ -1,4 +1,4 @@
-/* 
+/*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           
@@ -14,10 +14,12 @@
 /*
  * @implemented
  */
-VOID APIENTRY
-EngDebugPrint(PCHAR StandardPrefix,
-	      PCHAR DebugMessage,
-	      va_list ap)
+VOID
+APIENTRY
+EngDebugPrint(
+    _In_z_ PCHAR StandardPrefix,
+    _In_z_ PCHAR DebugMessage,
+    _In_ va_list ap)
 {
     vDbgPrintExWithPrefix(StandardPrefix,
                           -1,

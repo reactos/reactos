@@ -17,10 +17,10 @@
  */
 
 #include "urlmon_main.h"
-#include "winreg.h"
-#include "shlwapi.h"
+//#include "winreg.h"
+#include <shlwapi.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
@@ -92,6 +92,7 @@ typedef struct {
     BOOL use_cache_file;
     DWORD state;
     HRESULT hres;
+    CLSID clsid;
     download_state_t download_state;
     IUnknown *obj;
     IMoniker *mon;
@@ -107,7 +108,7 @@ static void read_protocol_data(stgmed_buf_t *stgmed_buf)
     DWORD read;
     HRESULT hres;
 
-    do hres = IInternetProtocol_Read(stgmed_buf->protocol, buf, sizeof(buf), &read);
+    do hres = IInternetProtocolEx_Read(stgmed_buf->protocol, buf, sizeof(buf), &read);
     while(hres == S_OK);
 }
 
@@ -178,8 +179,8 @@ static void stop_binding(Binding *binding, HRESULT hres, LPCWSTR str)
     if(!(binding->state & BINDING_STOPPED)) {
         binding->state |= BINDING_STOPPED;
 
-        IBindStatusCallback_OnStopBinding(binding->callback, hres, str);
         binding->hres = hres;
+        IBindStatusCallback_OnStopBinding(binding->callback, hres, str);
     }
 }
 
@@ -310,6 +311,7 @@ static void create_object(Binding *binding)
     heap_free(clsid_str);
 
     IBindStatusCallback_OnProgress(binding->callback, 0, 0, BINDSTATUS_ENDSYNCOPERATION, NULL);
+    binding->clsid = CLSID_NULL;
 
     stop_binding(binding, hres, NULL);
     if(FAILED(hres))
@@ -372,7 +374,7 @@ static ULONG WINAPI StgMedUnk_Release(IUnknown *iface)
     if(!ref) {
         if(This->file != INVALID_HANDLE_VALUE)
             CloseHandle(This->file);
-        IInternetProtocol_Release(This->protocol);
+        IInternetProtocolEx_Release(This->protocol);
         heap_free(This->cache_file);
         heap_free(This);
 
@@ -398,7 +400,7 @@ static stgmed_buf_t *create_stgmed_buf(IInternetProtocolEx *protocol)
     ret->hres = S_OK;
     ret->cache_file = NULL;
 
-    IInternetProtocol_AddRef(protocol);
+    IInternetProtocolEx_AddRef(protocol);
     ret->protocol = protocol;
 
     URLMON_LockModule();
@@ -484,7 +486,7 @@ static HRESULT WINAPI ProtocolStream_Read(IStream *iface, void *pv,
     TRACE("(%p)->(%p %d %p)\n", This, pv, cb, pcbRead);
 
     if(This->buf->file == INVALID_HANDLE_VALUE) {
-        hres = This->buf->hres = IInternetProtocol_Read(This->buf->protocol, (PBYTE)pv, cb, &read);
+        hres = This->buf->hres = IInternetProtocolEx_Read(This->buf->protocol, (PBYTE)pv, cb, &read);
     }else {
         hres = ReadFile(This->buf->file, pv, cb, &read, NULL) ? S_OK : INET_E_DOWNLOAD_FAILURE;
     }
@@ -881,8 +883,23 @@ static HRESULT WINAPI Binding_GetBindResult(IBinding *iface, CLSID *pclsidProtoc
         DWORD *pdwResult, LPOLESTR *pszResult, DWORD *pdwReserved)
 {
     Binding *This = impl_from_IBinding(iface);
-    FIXME("(%p)->(%p %p %p %p)\n", This, pclsidProtocol, pdwResult, pszResult, pdwReserved);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p %p %p %p)\n", This, pclsidProtocol, pdwResult, pszResult, pdwReserved);
+
+    if(!pdwResult || !pszResult || pdwReserved)
+        return E_INVALIDARG;
+
+    if(!(This->state & BINDING_STOPPED)) {
+        *pclsidProtocol = CLSID_NULL;
+        *pdwResult = 0;
+        *pszResult = NULL;
+        return S_OK;
+    }
+
+    *pclsidProtocol = This->hres==S_OK ? CLSID_NULL : This->clsid;
+    *pdwResult = This->hres;
+    *pszResult = NULL;
+    return S_OK;
 }
 
 static const IBindingVtbl BindingVtbl = {
@@ -963,7 +980,7 @@ static HRESULT WINAPI InternetProtocolSink_ReportProgress(IInternetProtocolSink 
 {
     Binding *This = impl_from_IInternetProtocolSink(iface);
 
-    TRACE("(%p)->(%u %s)\n", This, ulStatusCode, debugstr_w(szStatusText));
+    TRACE("(%p)->(%s %s)\n", This, debugstr_bindstatus(ulStatusCode), debugstr_w(szStatusText));
 
     switch(ulStatusCode) {
     case BINDSTATUS_FINDINGRESOURCE:
@@ -983,6 +1000,7 @@ static HRESULT WINAPI InternetProtocolSink_ReportProgress(IInternetProtocolSink 
         on_progress(This, 0, 0, BINDSTATUS_SENDINGREQUEST, szStatusText);
         break;
     case BINDSTATUS_PROTOCOLCLASSID:
+        CLSIDFromString(szStatusText, &This->clsid);
         break;
     case BINDSTATUS_MIMETYPEAVAILABLE:
     case BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE:
@@ -1077,8 +1095,19 @@ static void report_data(Binding *This, DWORD bscf, ULONG progress, ULONG progres
         formatetc.tymed = stgmed.tymed;
         formatetc.cfFormat = This->clipboard_format;
 
-        IBindStatusCallback_OnDataAvailable(This->callback, bscf, progress,
+        hres = IBindStatusCallback_OnDataAvailable(This->callback, bscf, progress,
                 &formatetc, &stgmed);
+        if(hres != S_OK) {
+            if(This->download_state != END_DOWNLOAD) {
+                This->download_state = END_DOWNLOAD;
+                IBindStatusCallback_OnProgress(This->callback, progress, progress_max,
+                        BINDSTATUS_ENDDOWNLOADDATA, This->url);
+            }
+
+            WARN("OnDataAvailable returned %x\n", hres);
+            stop_binding(This, hres, NULL);
+            return;
+        }
 
         if(This->download_state == END_DOWNLOAD)
             stop_binding(This, S_OK, NULL);
@@ -1104,6 +1133,7 @@ static HRESULT WINAPI InternetProtocolSink_ReportResult(IInternetProtocolSink *i
     TRACE("(%p)->(%08x %d %s)\n", This, hrResult, dwError, debugstr_w(szResult));
 
     stop_binding(This, hrResult, szResult);
+
     IInternetProtocolEx_Terminate(&This->protocol->IInternetProtocolEx_iface, 0);
     return S_OK;
 }
@@ -1150,19 +1180,7 @@ static HRESULT WINAPI InternetBindInfo_GetBindInfo(IInternetBindInfo *iface,
     TRACE("(%p)->(%p %p)\n", This, grfBINDF, pbindinfo);
 
     *grfBINDF = This->bindf;
-
-    *pbindinfo = This->bindinfo;
-
-    if(pbindinfo->szExtraInfo || pbindinfo->szCustomVerb)
-        FIXME("copy strings\n");
-
-    if(pbindinfo->stgmedData.pUnkForRelease)
-        IUnknown_AddRef(pbindinfo->stgmedData.pUnkForRelease);
-
-    if(pbindinfo->pUnk)
-        IUnknown_AddRef(pbindinfo->pUnk);
-
-    return S_OK;
+    return CopyBindInfo(&This->bindinfo, pbindinfo);
 }
 
 static HRESULT WINAPI InternetBindInfo_GetBindString(IInternetBindInfo *iface,

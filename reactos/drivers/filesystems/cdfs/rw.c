@@ -1,30 +1,29 @@
 /*
-*  ReactOS kernel
-*  Copyright (C) 2002, 2003 ReactOS Team
-*
-*  This program is free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  This program is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  You should have received a copy of the GNU General Public License along
-*  with this program; if not, write to the Free Software Foundation, Inc.,
-*  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-*/
-/* $Id$
-*
-* COPYRIGHT:        See COPYING in the top level directory
-* PROJECT:          ReactOS kernel
-* FILE:             drivers/fs/cdfs/rw.c
-* PURPOSE:          CDROM (ISO 9660) filesystem driver
-* PROGRAMMER:       Art Yerkes
-*                   Eric Kohl
-*/
+ *  ReactOS kernel
+ *  Copyright (C) 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+/*
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PROJECT:          ReactOS kernel
+ * FILE:             drivers/fs/cdfs/rw.c
+ * PURPOSE:          CDROM (ISO 9660) filesystem driver
+ * PROGRAMMER:       Art Yerkes
+ *                   Eric Kohl
+ */
 
 /* INCLUDES *****************************************************************/
 
@@ -72,7 +71,7 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
     if (ReadOffset + Length > Fcb->Entry.DataLengthL)
         ToRead = Fcb->Entry.DataLengthL - ReadOffset;
 
-    DPRINT("Reading %d bytes at %d\n", Length, ReadOffset);
+    DPRINT("Reading %u bytes at %u\n", Length, ReadOffset);
 
     if (!(IrpFlags & (IRP_NOCACHE|IRP_PAGING_IO)))
     {
@@ -169,7 +168,7 @@ CdfsRead(PDEVICE_OBJECT DeviceObject,
     ULONG ReturnedReadLength = 0;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT("CdfsRead(DeviceObject %x, Irp %x)\n",DeviceObject,Irp);
+    DPRINT("CdfsRead(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
 
     DeviceExt = DeviceObject->DeviceExtension;
     Stack = IoGetCurrentIrpStackLocation(Irp);
@@ -211,7 +210,7 @@ NTSTATUS NTAPI
 CdfsWrite(PDEVICE_OBJECT DeviceObject,
           PIRP Irp)
 {
-    DPRINT("CdfsWrite(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
+    DPRINT("CdfsWrite(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
     Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
     Irp->IoStatus.Information = 0;

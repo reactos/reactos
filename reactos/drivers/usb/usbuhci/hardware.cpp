@@ -145,6 +145,14 @@ CUSBHardwareDevice::QueryInterface(
     return STATUS_UNSUCCESSFUL;
 }
 
+LPCSTR
+STDMETHODCALLTYPE
+CUSBHardwareDevice::GetUSBType()
+{
+    return "USBUHCI";
+}
+
+
 NTSTATUS
 CUSBHardwareDevice::Initialize(
     PDRIVER_OBJECT DriverObject,
@@ -561,7 +569,7 @@ CUSBHardwareDevice::GlobalReset()
     // delay is 10 ms
     //
     Timeout.QuadPart = 10;
-    DPRINT1("Waiting %d milliseconds for global reset\n", Timeout.LowPart);
+    DPRINT1("Waiting %lu milliseconds for global reset\n", Timeout.LowPart);
 
     //
     // convert to 100 ns units (absolute)
@@ -715,7 +723,7 @@ CUSBHardwareDevice::InitializeController()
         }
     }
 
-            DPRINT1("Index %lu QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %x NextElementDescriptor %x\n",
+            DPRINT1("Index %d QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %p NextElementDescriptor %p\n",
                 0,
                 m_QueueHead[0], 
                 m_QueueHead[0]->LinkPhysical,
@@ -723,7 +731,7 @@ CUSBHardwareDevice::InitializeController()
                 m_QueueHead[0]->PhysicalAddress, 
                 m_QueueHead[0]->Request, 
                 m_QueueHead[0]->NextElementDescriptor);
-            DPRINT1("Index %lu QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %x NextElementDescriptor %x\n",
+            DPRINT1("Index %d QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %p NextElementDescriptor %p\n",
                 1,
                 m_QueueHead[1], 
                 m_QueueHead[1]->LinkPhysical,
@@ -732,7 +740,7 @@ CUSBHardwareDevice::InitializeController()
                 m_QueueHead[1]->Request, 
                 m_QueueHead[1]->NextElementDescriptor);
 
-            DPRINT1("Index %lu QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %x NextElementDescriptor %x\n",
+            DPRINT1("Index %d QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %p NextElementDescriptor %p\n",
                 2,
                 m_QueueHead[2], 
                 m_QueueHead[2]->LinkPhysical,
@@ -740,7 +748,7 @@ CUSBHardwareDevice::InitializeController()
                 m_QueueHead[2]->PhysicalAddress, 
                 m_QueueHead[2]->Request, 
                 m_QueueHead[2]->NextElementDescriptor);
-            DPRINT1("Index %lu QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %x NextElementDescriptor %x\n",
+            DPRINT1("Index %d QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %p NextElementDescriptor %p\n",
                 3,
                 m_QueueHead[3], 
                 m_QueueHead[3]->LinkPhysical,
@@ -748,7 +756,7 @@ CUSBHardwareDevice::InitializeController()
                 m_QueueHead[3]->PhysicalAddress, 
                 m_QueueHead[3]->Request, 
                 m_QueueHead[3]->NextElementDescriptor);
-            DPRINT1("Index %lu QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %x NextElementDescriptor %x\n",
+            DPRINT1("Index %d QueueHead %p LinkPhysical %x ElementPhysical %x PhysicalAddress %x Request %p NextElementDescriptor %p\n",
                 4,
                 m_QueueHead[4], 
                 m_QueueHead[4]->LinkPhysical,
@@ -926,7 +934,7 @@ CUSBHardwareDevice::ResetPort(
     // delay is 20 ms for port reset
     //
     Timeout.QuadPart = 20;
-    DPRINT1("Waiting %d milliseconds for port reset\n", Timeout.LowPart);
+    DPRINT1("Waiting %lu milliseconds for port reset\n", Timeout.LowPart);
 
     //
     // convert to 100 ns units (absolute)

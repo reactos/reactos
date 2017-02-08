@@ -18,20 +18,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <config.h>
+//#include "wine/port.h"
 
 #define NONAMELESSSTRUCT
 #define NONAMELESSUNION
 #define COBJMACROS
 
 #include "editor.h"
-#include "ole2.h"
-#include "richole.h"
-#include "imm.h"
-#include "textserv.h"
-#include "wine/debug.h"
-#include "editstr.h"
+//#include "ole2.h"
+//#include "richole.h"
+//#include "imm.h"
+//#include "textserv.h"
+//#include "wine/debug.h"
+//#include "editstr.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
@@ -141,8 +141,7 @@ DECLSPEC_HIDDEN BOOL WINAPI ITextHostImpl_TxSetScrollRange(ITextHost *iface, INT
 DECLSPEC_HIDDEN BOOL WINAPI ITextHostImpl_TxSetScrollPos(ITextHost *iface, INT fnBar, INT nPos, BOOL fRedraw)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
-    int pos = SetScrollPos(This->hWnd, fnBar, nPos, fRedraw);
-    return (pos ? TRUE : FALSE);
+    return SetScrollPos(This->hWnd, fnBar, nPos, fRedraw) != 0;
 }
 
 DECLSPEC_HIDDEN void WINAPI ITextHostImpl_TxInvalidateRect(ITextHost *iface, LPCRECT prc, BOOL fMode)

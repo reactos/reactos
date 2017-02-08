@@ -34,6 +34,13 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 
 #define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
 
+NTSTATUS
+NTAPI
+RtlpSafeCopyMemory(
+   _Out_writes_bytes_all_(Length) VOID UNALIGNED *Destination,
+   _In_reads_bytes_(Length) CONST VOID UNALIGNED *Source,
+   _In_ SIZE_T Length);
+
 VOID
 NTAPI
 RtlpGetStackLimits(PULONG_PTR LowLimit,
@@ -187,5 +194,18 @@ extern HANDLE TimerThreadHandle;
 
 NTSTATUS
 RtlpInitializeTimerThread(VOID);
+
+/* bitmap64.c */
+typedef struct _RTL_BITMAP64
+{
+    ULONG64 SizeOfBitMap;
+    PULONG64 Buffer;
+} RTL_BITMAP64, *PRTL_BITMAP64;
+
+typedef struct _RTL_BITMAP_RUN64
+{
+    ULONG64 StartingIndex;
+    ULONG64 NumberOfBits;
+} RTL_BITMAP_RUN64, *PRTL_BITMAP_RUN64;
 
 /* EOF */

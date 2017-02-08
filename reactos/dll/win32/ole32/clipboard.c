@@ -58,24 +58,27 @@
  *
  */
 
-#include <assert.h>
-#include <stdarg.h>
-#include <string.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
+//#include <assert.h>
+//#include <stdarg.h>
+//#include <string.h>
 #include <stdio.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winerror.h"
-#include "winnls.h"
-#include "ole2.h"
-#include "wine/debug.h"
-#include "olestd.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+//#include "winuser.h"
+//#include "winerror.h"
+#include <winnls.h>
+#include <ole2.h>
+#include <wine/debug.h>
+//#include "olestd.h"
 
 #include "storage32.h"
 
@@ -662,8 +665,9 @@ static HRESULT render_embed_source_hack(IDataObject *data, LPFORMATETC fmt)
             ProgIDFromCLSID(&clsID, &strProgID);
 
             WideCharToMultiByte( CP_ACP, 0, strProgID, -1, strOleTypeName, sizeof(strOleTypeName), NULL, NULL );
-            OLECONVERT_CreateOleStream(std.u.pstg);
+            STORAGE_CreateOleStream(std.u.pstg, 0);
             OLECONVERT_CreateCompObjStream(std.u.pstg, strOleTypeName);
+            CoTaskMemFree(strProgID);
         }
     }
 

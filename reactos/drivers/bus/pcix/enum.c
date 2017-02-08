@@ -147,14 +147,12 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                     {
                         /* Not used in the driver yet */
                         case 1:
-                            UNIMPLEMENTED;
-                            while (TRUE);
+                            UNIMPLEMENTED_DBGBREAK();
                             break;
 
                         /* Not used in the driver yet */
                         case 2:
-                            UNIMPLEMENTED;
-                            while (TRUE);
+                            UNIMPLEMENTED_DBGBREAK();
                             break;
 
                         /* A drain request */
@@ -539,9 +537,12 @@ NTAPI
 PciQueryEjectionRelations(IN PPCI_PDO_EXTENSION PdoExtension,
                           IN OUT PDEVICE_RELATIONS *pDeviceRelations)
 {
+    UNREFERENCED_PARAMETER(PdoExtension);
+    UNREFERENCED_PARAMETER(pDeviceRelations);
+
     /* Not yet implemented */
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -551,6 +552,10 @@ PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
                          OUT PIO_RESOURCE_REQUIREMENTS_LIST* Buffer)
 {
     PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
+
+    UNREFERENCED_PARAMETER(PdoExtension);
+    UNREFERENCED_PARAMETER(PciData);
+
     {
         /* There aren't, so use the zero descriptor */
         RequirementsList = PciZeroIoResourceRequirements;
@@ -598,8 +603,7 @@ PciQueryRequirements(IN PPCI_PDO_EXTENSION PdoExtension,
             (ExIsProcessorFeaturePresent(PF_PAE_ENABLED)))
         {
             /* Have not tested this on eVb's machine yet */
-            UNIMPLEMENTED;
-            while (TRUE);
+            UNIMPLEMENTED_DBGBREAK();
         }
 
         /* Check if the requirements are actually the zero list */
@@ -795,6 +799,8 @@ PciApplyHacks(IN PPCI_FDO_EXTENSION DeviceExtension,
     ULONG LegacyBaseAddress;
     USHORT Command;
     UCHAR RegValue;
+
+    UNREFERENCED_PARAMETER(SlotNumber);
 
     /* Check what kind of hack operation this is */
     switch (OperationType)
@@ -1296,6 +1302,8 @@ PciWriteLimitsAndRestoreCurrent(IN PVOID Reserved,
     PPCI_COMMON_HEADER PciData, Current;
     PPCI_PDO_EXTENSION PdoExtension;
 
+    UNREFERENCED_PARAMETER(Reserved);
+
     /* Grab all parameters from the context */
     PdoExtension = Context->PdoExtension;
     Current = Context->Current;
@@ -1521,8 +1529,7 @@ PciProcessBus(IN PPCI_FDO_EXTENSION DeviceExtension)
     if (!PCI_IS_ROOT_FDO(DeviceExtension))
     {
         /* Not really handling this year */
-        UNIMPLEMENTED;
-        while (TRUE);
+        UNIMPLEMENTED_DBGBREAK();
 
         /* Check for PCI bridges with the ISA bit set, or required */
         if ((PdoExtension) &&
@@ -1531,8 +1538,7 @@ PciProcessBus(IN PPCI_FDO_EXTENSION DeviceExtension)
              (PdoExtension->Dependent.type1.IsaBitSet)))
         {
             /* We'll need to do some legacy support */
-            UNIMPLEMENTED;
-            while (TRUE);
+            UNIMPLEMENTED_DBGBREAK();
         }
     }
     else
@@ -1546,8 +1552,7 @@ PciProcessBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             if (PdoExtension->Dependent.type1.VgaBitSet)
             {
                 /* Again, some more legacy support we'll have to do */
-                UNIMPLEMENTED;
-                while (TRUE);
+                UNIMPLEMENTED_DBGBREAK();
             }
         }
     }
@@ -1556,8 +1561,7 @@ PciProcessBus(IN PPCI_FDO_EXTENSION DeviceExtension)
     if (PciAssignBusNumbers)
     {
         /* Not yet supported */
-        UNIMPLEMENTED;
-        while (TRUE);
+        UNIMPLEMENTED_DBGBREAK();
     }
 }
 
@@ -1584,7 +1588,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
     USHORT SubVendorId, SubSystemId;
     PCI_CAPABILITIES_HEADER CapHeader, PcixCapHeader;
     UCHAR SecondaryBus;
-    DPRINT1("PCI Scan Bus: FDO Extension @ 0x%x, Base Bus = 0x%x\n",
+    DPRINT1("PCI Scan Bus: FDO Extension @ 0x%p, Base Bus = 0x%x\n",
             DeviceExtension, DeviceExtension->BaseBus);
 
     /* Is this the root FDO? */
@@ -1604,9 +1608,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                             sizeof(UCHAR));
         if (SecondaryBus != PdoExtension->Dependent.type1.SecondaryBus)
         {
-            DPRINT1("PCI: Bus numbers have been changed!  Restoring originals.\n");
-            UNIMPLEMENTED;
-            while (TRUE);
+            UNIMPLEMENTED_DBGBREAK("PCI: Bus numbers have been changed!  Restoring originals.\n");
         }
     }
 
@@ -1667,8 +1669,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             if (WdTable)
             {
                 /* Check if this PCI device is the ACPI Watchdog Device... */
-                UNIMPLEMENTED;
-                while (TRUE);
+                UNIMPLEMENTED_DBGBREAK();
             }
 
             /* Check for non-simple devices */
@@ -1733,8 +1734,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             if (PdoExtension)
             {
                 /* Rescan scenarios are not yet implemented */
-                UNIMPLEMENTED;
-                while (TRUE);
+                UNIMPLEMENTED_DBGBREAK();
             }
 
             /* Bus processing will need to happen */
@@ -2007,7 +2007,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                         ((TempOffset) && (PciData->LatencyTimer == 64)))
                     {
                         /* Keep track of the fact that it needs configuration */
-                        DPRINT1("PCI - ScanBus, PDOx %x found unconfigured\n",
+                        DPRINT1("PCI - ScanBus, PDOx %p found unconfigured\n",
                                 NewExtension);
                         NewExtension->NeedsHotPlugConfiguration = TRUE;
                     }
@@ -2071,7 +2071,7 @@ PciQueryDeviceRelations(IN PPCI_FDO_EXTENSION DeviceExtension,
         {
             /* This means this PDO existed before, but not anymore */
             PdoExtension->ReportedMissing = TRUE;
-            DPRINT1("PCI - Old device (pdox) %08x not found on rescan.\n",
+            DPRINT1("PCI - Old device (pdox) %p not found on rescan.\n",
                     PdoExtension);
         }
         else
@@ -2109,7 +2109,7 @@ PciQueryDeviceRelations(IN PPCI_FDO_EXTENSION DeviceExtension,
     }
 
     /* Print out that we're ready to dump relations */
-    DPRINT1("PCI QueryDeviceRelations/BusRelations FDOx %08x (bus 0x%02x)\n",
+    DPRINT1("PCI QueryDeviceRelations/BusRelations FDOx %p (bus 0x%02x)\n",
             DeviceExtension,
             DeviceExtension->BaseBus);
 
@@ -2119,7 +2119,7 @@ PciQueryDeviceRelations(IN PPCI_FDO_EXTENSION DeviceExtension,
     while (PdoExtension)
     {
         /* Dump this relation */
-        DPRINT1("  QDR PDO %08x (x %08x)%s\n",
+        DPRINT1("  QDR PDO %p (x %p)%s\n",
                 PdoExtension->PhysicalDeviceObject,
                 PdoExtension,
                 PdoExtension->NotPresent ?
@@ -2139,7 +2139,7 @@ PciQueryDeviceRelations(IN PPCI_FDO_EXTENSION DeviceExtension,
     }
 
     /* Terminate dumping the relations */
-    DPRINT1("  QDR Total PDO count = %d (%d already in list)\n",
+    DPRINT1("  QDR Total PDO count = %u (%u already in list)\n",
             NewRelations->Count + PdoCount,
             NewRelations->Count);
 
@@ -2160,6 +2160,8 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
     PCI_COMMON_HEADER PciData;
     BOOLEAN Native;
     PPCI_CONFIGURATOR Configurator;
+
+    UNREFERENCED_PARAMETER(SomethingSomethingDarkSide);
 
     /* Get the FDO and read the configuration data */
     FdoExtension = PdoExtension->ParentFdoExtension;
@@ -2196,8 +2198,7 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
         (FdoExtension->HotPlugParameters.Acquired))
     {
         /* Don't have hotplug devices to test with yet, QEMU 0.14 should */
-        UNIMPLEMENTED;
-        while (TRUE);
+        UNIMPLEMENTED_DBGBREAK();
     }
 
     /* Locate the correct resource configurator for this type of device */
@@ -2222,7 +2223,7 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
     if (PciData.LatencyTimer != NewLatencyTimer)
     {
         /* Debug notification */
-        DPRINT1("PCI (pdox %08x) changing latency from %02x to %02x.\n",
+        DPRINT1("PCI (pdox %p) changing latency from %02x to %02x.\n",
                 PdoExtension,
                 PciData.LatencyTimer,
                 NewLatencyTimer);
@@ -2233,7 +2234,7 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
     if (PciData.CacheLineSize != NewCacheLineSize)
     {
         /* Debug notification */
-        DPRINT1("PCI (pdox %08x) changing cache line size from %02x to %02x.\n",
+        DPRINT1("PCI (pdox %p) changing cache line size from %02x to %02x.\n",
                 PdoExtension,
                 PciData.CacheLineSize,
                 NewCacheLineSize);

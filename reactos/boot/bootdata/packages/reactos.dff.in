@@ -21,12 +21,15 @@ Signature = "$ReactOS$"
 5 = system32\drivers\etc
 6 = inf
 7 = bin
-8 = media
-9 = Microsoft.NET
-10 = Microsoft.NET\Framework
-11 = Microsoft.NET\Framework\v1.0.3705
-12 = Microsoft.NET\Framework\v1.1.4322
-13 = Microsoft.NET\Framework\v2.0.50727
+8 = bin\data
+9 = media
+10 = Microsoft.NET
+11 = Microsoft.NET\Framework
+12 = Microsoft.NET\Framework\v1.0.3705
+13 = Microsoft.NET\Framework\v1.1.4322
+14 = Microsoft.NET\Framework\v2.0.50727
+15 = Resources
+16 = Resources\Themes
 
 .InfEnd
 
@@ -59,4 +62,4 @@ modules\optional\vmx_svga.sys                       2  optional
 modules\optional\wine_gecko-1.0.0-x86.cab           4  optional
 boot\bootdata\bootcdregtest\AHKAppTests.cmd         7  optional
 
-modules\wallpaper\Angelus_02_ROSWP.bmp                                     4   optional
+modules\wallpaper\Angelus_02_ROSWP.bmp              4   optional

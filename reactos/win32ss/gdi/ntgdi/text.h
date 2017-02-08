@@ -56,7 +56,7 @@ typedef struct _STRGDI
 #define TEXTOBJECT_INIT 0x00010000
 
 /* GDI logical font object */
-typedef struct
+typedef struct _LFONT
 {
   /* Header for all gdi objects in the handle table.
      Do not (re)move this. */
@@ -70,16 +70,38 @@ typedef struct
    DWORD         dwOffsetEndArray;
 // Fixed:
    ENUMLOGFONTEXDVW logfont;
-} TEXTOBJ, *PTEXTOBJ;
+   EX_PUSH_LOCK lock;
+} TEXTOBJ, *PTEXTOBJ, LFONT, *PLFONT;
 
 /*  Internal interface  */
 
-#define  TEXTOBJ_AllocText()       ((PTEXTOBJ) GDIOBJ_AllocObj(GDIObjType_LFONT_TYPE))
-#define  TEXTOBJ_AllocTextWithHandle() ((PTEXTOBJ) GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_FONT, sizeof(TEXTOBJ)))
-#define  TEXTOBJ_FreeText(pBMObj)  GDIOBJ_FreeObj((POBJ) pBMObj, GDILoObjType_LO_FONT_TYPE)
-#define  TEXTOBJ_FreeTextByHandle(hBMObj)  GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_FONT)
-#define  TEXTOBJ_LockText(hBMObj) ((PTEXTOBJ) GDIOBJ_LockObject((HGDIOBJ) hBMObj, GDIObjType_LFONT_TYPE))
-#define  TEXTOBJ_UnlockText(pBMObj) GDIOBJ_vUnlockObject ((POBJ)pBMObj)
+#define LFONT_AllocFontWithHandle() ((PLFONT)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_FONT, sizeof(TEXTOBJ)))
+#define LFONT_ShareLockFont(hfont) (PLFONT)GDIOBJ_ReferenceObjectByHandle(hfont, GDIObjType_LFONT_TYPE)
+#define LFONT_ShareUnlockFont(plfnt) GDIOBJ_vDereferenceObject((POBJ)plfnt)
+#define LFONT_UnlockFont(plfnt) GDIOBJ_vUnlockObject((POBJ)plfnt)
+
+PTEXTOBJ
+FORCEINLINE
+TEXTOBJ_LockText(HFONT hfont)
+{
+    PLFONT plfnt = LFONT_ShareLockFont(hfont);
+    if (plfnt != 0)
+    {
+        KeEnterCriticalRegion();
+        ExAcquirePushLockExclusive(&plfnt->lock);
+    }
+    return plfnt;
+}
+
+VOID
+FORCEINLINE
+TEXTOBJ_UnlockText(PLFONT plfnt)
+{
+    ExReleasePushLockExclusive(&plfnt->lock);
+    KeLeaveCriticalRegion();
+    LFONT_ShareUnlockFont(plfnt);
+}
+
 
 PTEXTOBJ FASTCALL RealizeFontInit(HFONT);
 NTSTATUS FASTCALL TextIntRealizeFont(HFONT,PTEXTOBJ);

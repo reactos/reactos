@@ -43,6 +43,7 @@ extern "C" {
 #include <stddef.h> /* for size_t */
 
 typedef size_t mem_size_t;
+#define MEM_SIZE_F SZT_F
 
 /* aliases for C library malloc() */
 #define mem_init()

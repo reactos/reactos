@@ -7,44 +7,54 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDD_PROPPAGESETTINGS DIALOGEX 0, 0, 254, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "NastavenÌ"
+CAPTION "Nastaven√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Zvolte sluûby pro kaûd˝ vstupnÌ jazyk v seznamu.\nSeznam lze mÏnit pomocÌ tlaËÌtek P¯idat a Odebrat.", -1, 9, 6, 238, 25
+    LTEXT "Zvolte slu≈æby pro ka≈æd√Ω vstupn√≠ jazyk v seznamu.\nSeznam lze mƒõnit pomoc√≠ tlaƒç√≠tek P≈ôidat a Odebrat.", -1, 9, 6, 238, 25
     CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
-    PUSHBUTTON "Nas&tavit v˝chozÌ", IDC_SET_DEFAULT, 101, 159, 144, 14
-    PUSHBUTTON "&P¯idat...", IDC_ADD_BUTTON, 27, 142, 70, 14
+    PUSHBUTTON "Nas&tavit v√Ωchoz√≠", IDC_SET_DEFAULT, 101, 159, 144, 14
+    PUSHBUTTON "&P≈ôidat...", IDC_ADD_BUTTON, 27, 142, 70, 14
     PUSHBUTTON "&Odebrat...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
     PUSHBUTTON "&Vlastnosti...", IDC_PROP_BUTTON, 175, 142, 70, 14
-    GROUPBOX "P¯edvolby", -1, 7, 185, 240, 36
-    PUSHBUTTON "&NastavenÌ kl·ves...", IDC_KEY_SET_BTN, 14, 198, 110, 14
+    GROUPBOX "P≈ôedvolby", -1, 7, 185, 240, 36
+    PUSHBUTTON "&Nastaven√≠ kl√°ves...", IDC_KEY_SET_BTN, 14, 198, 110, 14
+END
+
+IDD_PROPPAGEADVANCEDSETTINGS DIALOGEX 0, 0, 254, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Advanced Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "System Configuration", -1, 7, 7, 240, 70
+    AUTOCHECKBOX "&Turn off advanced text services", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 130, 12
+    LTEXT "Select this check box to turn off advanced text services in all programs.\nThis is not recommended for East Asian users because this closes the language bar.", -1, 14, 40, 230, 35
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "PokroËilÈ nastavenÌ kl·ves"
+CAPTION "Pokroƒçil√© nastaven√≠ kl√°ves"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Caps Lock vypnout", -1, 7, 7, 258, 26
-    AUTORADIOBUTTON "StisknutÌm kl·vesy &CAPS LOCK", IDC_PRESS_CL_KEY_RB, 14, 17, 120, 11, WS_GROUP
-    AUTORADIOBUTTON "StisknutÌm kl·vesy &SHIFT", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
-    GROUPBOX "Kl·vesovÈ zkratky pro vstupnÌ jazyky", -1, 7, 37, 258, 95
+    AUTORADIOBUTTON "Stisknut√≠m kl√°vesy &CAPS LOCK", IDC_PRESS_CL_KEY_RB, 14, 17, 120, 11, WS_GROUP
+    AUTORADIOBUTTON "Stisknut√≠m kl√°vesy &SHIFT", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
+    GROUPBOX "Kl√°vesov√© zkratky pro vstupn√≠ jazyky", -1, 7, 37, 258, 95
     LTEXT "Akce", -1, 14, 47, 60, 9
-    RTEXT "&Posloupnost kl·ves", -1, 177, 47, 79, 9
+    RTEXT "&Posloupnost kl√°ves", -1, 177, 47, 79, 9
     CONTROL "", IDC_KEY_LISTVIEW, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_AUTOARRANGE | LVS_SINGLESEL, 14, 57, 244, 52, WS_EX_CLIENTEDGE
-    PUSHBUTTON "&ZmÏnit posloupnost kl·ves...", IDC_CHANGE_KEY_SEQ_BTN, 152, 113, 106, 14, WS_GROUP
+    PUSHBUTTON "&Zmƒõnit posloupnost kl√°ves...", IDC_CHANGE_KEY_SEQ_BTN, 152, 113, 106, 14, WS_GROUP
     DEFPUSHBUTTON "OK", IDOK, 66, 140, 70, 14
     PUSHBUTTON "Storno", IDCANCEL, 146, 140, 70, 14
 END
 
 IDD_ADD DIALOGEX 20, 20, 227, 90
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "P¯idat vstupnÌ jazyk"
+CAPTION "P≈ôidat vstupn√≠ jazyk"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&VstupnÌ jazyk:", -1, 7, 7, 61, 10
+    LTEXT "&Vstupn√≠ jazyk:", -1, 7, 7, 61, 10
     COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    LTEXT "&RozloûenÌ kl·ves/IME:", -1, 7, 36, 110, 10
+    LTEXT "&Rozlo≈æen√≠ kl√°ves/IME:", -1, 7, 36, 110, 10
     COMBOBOX IDC_KEYBOARD_LO_COMBO, 7, 47, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     DEFPUSHBUTTON "OK", IDOK, 116, 68, 50, 14
     PUSHBUTTON "Storno", IDCANCEL, 169, 68, 50, 14
@@ -52,32 +62,32 @@ END
 
 IDD_CHANGE_KEY_SEQ DIALOGEX 5, 100, 230, 125
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "ZmÏnit posloupnost kl·ves"
+CAPTION "Zmƒõnit posloupnost kl√°ves"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "", -1, 9, 5, 155, 110
-    AUTOCHECKBOX "&P¯epnout vstupnÌ jazyky", IDC_SWITCH_INPUT_LANG_CB, 15, 15, 105, 12
+    AUTOCHECKBOX "&P≈ôepnout vstupn√≠ jazyky", IDC_SWITCH_INPUT_LANG_CB, 15, 15, 105, 12
     LTEXT "Shift", -1, 73, 37, 27, 12
     CTEXT "+", -1, 62, 37, 8, 9
     AUTORADIOBUTTON "&CTRL", IDC_CTRL_LANG, 29, 31, 30, 11
-    AUTORADIOBUTTON "Lev˝ &ALT", IDC_LEFT_ALT_LANG, 29, 45, 46, 12
-    AUTOCHECKBOX "P¯epnout &rozloûenÌ kl·ves", IDC_SWITCH_KBLAYOUTS_CB, 16, 65, 141, 12
+    AUTORADIOBUTTON "Lev√Ω &ALT", IDC_LEFT_ALT_LANG, 29, 45, 46, 12
+    AUTOCHECKBOX "P≈ôepnout &rozlo≈æen√≠ kl√°ves", IDC_SWITCH_KBLAYOUTS_CB, 16, 65, 141, 12
     LTEXT "Shift", -1, 74, 87, 27, 12
     CTEXT "+", -1, 63, 87, 8, 9
     AUTORADIOBUTTON "C&TRL", IDC_CTRL_LAYOUT, 30, 81, 30, 11
-    AUTORADIOBUTTON "Lev˝ A&LT", IDC_LEFT_ALT_LAYOUT, 30, 95, 44, 12
+    AUTORADIOBUTTON "Lev√Ω A&LT", IDC_LEFT_ALT_LAYOUT, 30, 95, 44, 12
     DEFPUSHBUTTON "OK", IDOK, 172, 9, 50, 14
     PUSHBUTTON "Storno", IDCANCEL, 172, 27, 50, 14
 END
 
 IDD_INPUT_LANG_PROP DIALOGEX 20, 20, 227, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Vlastnosti vstupnÌch jazyk˘"
+CAPTION "Vlastnosti vstupn√≠ch jazyk≈Ø"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "VstupnÌ jazyk:", -1, 7, 7, 61, 8
+    LTEXT "Vstupn√≠ jazyk:", -1, 7, 7, 61, 8
     LTEXT "", IDC_INPUT_LANG_STR, 73, 7, 129, 8
-    LTEXT "&RozloûenÌ kl·ves/IME:", -1, 7, 21, 110, 10
+    LTEXT "&Rozlo≈æen√≠ kl√°ves/IME:", -1, 7, 21, 110, 10
     COMBOBOX IDC_KB_LAYOUT_IME_COMBO, 7, 32, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     DEFPUSHBUTTON "OK", IDOK, 116, 53, 52, 14
     PUSHBUTTON "Storno", IDCANCEL, 169, 53, 52, 14
@@ -85,162 +95,162 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLSYSTEMNAME        "Sluûby textu a vstupnÌ jazyky"
-    IDS_CPLSYSTEMDESCRIPTION "Upravuje nastavenÌ pro textov˝ vstup jazyk˘."
-    IDS_KEYBOARD             "Kl·vesnice"
-    IDS_NONE                 "(é·dnÈ)"
-    IDS_UNKNOWN              "(Nezn·mÈ)"
-    IDS_RESTART              "Restartovat poËÌtaË nynÌ?"
+    IDS_CPLSYSTEMNAME        "Slu≈æby textu a vstupn√≠ jazyky"
+    IDS_CPLSYSTEMDESCRIPTION "Upravuje nastaven√≠ pro textov√Ω vstup jazyk≈Ø."
+    IDS_KEYBOARD             "Kl√°vesnice"
+    IDS_NONE                 "(≈Ω√°dn√©)"
+    IDS_UNKNOWN              "(Nezn√°m√©)"
+    IDS_RESTART              "Restartovat poƒç√≠taƒç nyn√≠?"
     IDS_WHATS_THIS           "Co je tohle?"
     IDS_LANGUAGE             "Jazyk"
-    IDS_LAYOUT               "RozloûenÌ kl·ves"
-    IDS_REM_QUESTION         "Odebrat zvolenÈ rozloûenÌ kl·ves?"
-    IDS_CONFIRMATION         "PotvrzenÌ"
-    IDS_LAYOUT_EXISTS        "Toto rozloûenÌ jiû existuje."
-    IDS_LAYOUT_EXISTS2       "Toto rozloûenÌ jiû existuje a nem˘ûe b˝t p¯id·no."
+    IDS_LAYOUT               "Rozlo≈æen√≠ kl√°ves"
+    IDS_REM_QUESTION         "Odebrat zvolen√© rozlo≈æen√≠ kl√°ves?"
+    IDS_CONFIRMATION         "Potvrzen√≠"
+    IDS_LAYOUT_EXISTS        "Toto rozlo≈æen√≠ ji≈æ existuje."
+    IDS_LAYOUT_EXISTS2       "Toto rozlo≈æen√≠ ji≈æ existuje a nem≈Ø≈æe b√Ωt p≈ôid√°no."
     IDS_CTRL_SHIFT           "Ctrl+Shift"
-    IDS_LEFT_ALT_SHIFT       "Lev˝ Alt+Shift"
-    IDS_SWITCH_BET_INLANG    "P¯epnout mezi vstupnÌmi jazyky"
+    IDS_LEFT_ALT_SHIFT       "Lev√Ω Alt+Shift"
+    IDS_SWITCH_BET_INLANG    "P≈ôepnout mezi vstupn√≠mi jazyky"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ALBANIAN_LAYOUT,                            "Alb·nötina"
-    IDS_ARABIC_101_LAYOUT,                          "Arabötina (101)"
-    IDS_ARABIC_102_LAYOUT,                          "Arabötina (102)"
-    IDS_ARABIC_102_AZERTY_LAYOUT,                   "Arabötina (102) AZERTY"
-    IDS_ARMENIAN_EASTERN_LAYOUT,                    "ArmÈnötina (V˝chodnÌ)"
-    IDS_ARMENIAN_WESTERN_LAYOUT,                    "ArmÈnötina (Z·padnÌ)"
-    IDS_ASSAMESE_LAYOUT,                            "¡s·mötina"
-    IDS_AZERI_CYRILLIC_LAYOUT,                      "Azerötina (Cyrilice)"
-    IDS_AZERI_LATIN_LAYOUT,                         "Azerötina (Latinka)"
-    IDS_BELARUSIAN_LAYOUT,                          "BÏloruötina"
-    IDS_BELGIAN_COMMA_LAYOUT,                       "Belgick· (»·rka)"
-    IDS_BELGIAN_FRENCH_LAYOUT,                      "Belgick· (Francouzötina)"
-    IDS_BELGIAN_LAYOUT,                             "Belgick· (TeËka)"
-    IDS_BENGALI_LAYOUT,                             "Beng·lötina"
-    IDS_BULGARIAN_LAYOUT,                           "Bulharötina"
-    IDS_BULGARIAN_BDS_LAYOUT,                       "Bulharötina (BDS 5237-1978)"
-    IDS_BULGARIAN_LATIN_LAYOUT,                     "Bulharötina (Latinka)"
-    IDS_BULGARIAN_PHONETIC_BDS_LAYOUT,              "Bulharötina (Fonetick·) (BDS 5237-1978)"
-    IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT,          "Bulharötina (Fonetick·) (Klasick·)"
-    IDS_BURMESE_LAYOUT,                             "Barmötina"
-    IDS_CANADIAN_FRENCH_LAYOUT,                     "KanadskÈ (Francouzötina)"
-    IDS_CANADIAN_FRENCH_LEGACY_LAYOUT,              "KanadskÈ (Francouzötina) (StarÈ)"
-    IDS_CANADIAN_MULTILINGUAL_STD_LAYOUT,           "KanadskÈ (VÌcejazyËnÈ standardnÌ)"
-    IDS_CANTONESE_PHONETIC_LAYOUT,                  "Kantonötina (Fonetick·)"
-    IDS_CHINESE_SIMPLIFIED_MSPINYINIME30_LAYOUT,    "»Ìnötina (Zjednoduöen·) - Microsoft Pinyin IME 3.0"
-    IDS_CHINESE_SIMPLIFIED_NEIMA_LAYOUT,            "»Ìnötina (Zjednoduöen·) - NeiMa"
-    IDS_CHINESE_SIMPLIFIED_QUANPIN_LAYOUT,          "»Ìnötina (Zjednoduöen·) - QuanPin"
-    IDS_CHINESE_SIMPLIFIED_SHUANGPIN_LAYOUT,        "»Ìnötina (Zjednoduöen·) - ShuangPin"
-    IDS_CHINESE_SIMPLIFIED_USKEYBOARD_LAYOUT,       "»Ìnötina (Zjednoduöen·) - US kl·vesnice"
-    IDS_CHINESE_SIMPLIFIED_ZHENGMA_LAYOUT,          "»Ìnötina (Zjednoduöen·) - ZhengMa"
-    IDS_CHINESE_TRADITIONAL_ALPHANUMERIC_LAYOUT,    "»Ìnötina (TradiËnÌ) - Alfanumerick·"
-    IDS_CHINESE_TRADITIONAL_ARRAY_LAYOUT,           "»Ìnötina (TradiËnÌ) - Array"
-    IDS_CHINESE_TRADITIONAL_BIG5CODE_LAYOUT,        "»Ìnötina (TradiËnÌ) - Big5 Code"
-    IDS_CHINESE_TRADITIONAL_CHANGJIE_LAYOUT,        "»Ìnötina (TradiËnÌ) - ChangJie"
-    IDS_CHINESE_TRADITIONAL_DAYI_LAYOUT,            "»Ìnötina (TradiËnÌ) - DaYi"
-    IDS_CHINESE_TRADITIONAL_NEWCHANGJIE_LAYOUT,     "»Ìnötina (TradiËnÌ) - Nov· ChangJie"
-    IDS_CHINESE_TRADITIONAL_NEWPHONETIC_LAYOUT,     "»Ìnötina (TradiËnÌ) - Nov· fonetick·"
-    IDS_CHINESE_TRADITIONAL_PHONETIC_LAYOUT,        "»Ìnötina (TradiËnÌ) - Fonetick·"
-    IDS_CHINESE_TRADITIONAL_QUICK_LAYOUT,           "»Ìnötina (TradiËnÌ) - Rychl·"
-    IDS_CHINESE_TRADITIONAL_UNICODE_LAYOUT,         "»Ìnötina (TradiËnÌ) - Unicode"
-    IDS_CHINESE_TRADITIONAL_USKEYBOARD_LAYOUT,      "»Ìnötina (TradiËnÌ) - US Kl·vesnice"
-    IDS_CROATIAN_LAYOUT,                            "Chorvatötina"
-    IDS_CZECH_LAYOUT,                               "»eötina"
-    IDS_CZECH_PROGRAMMERS_LAYOUT,                   "»eötina (Program·torsk·)"
-    IDS_CZECH_QWERTY_LAYOUT,                        "»eötina (QWERTY)"
-    IDS_DANISH_LAYOUT,                              "D·nötina"
-    IDS_DEVANAGARI_INSCRIPT_LAYOUT,                 "DÈvan·garÌ - INSCRIPT"
-    IDS_DIVEHI_PHONETIC_LAYOUT,                     "Divehötina (Fonetick·)"
-    IDS_DIVEHI_TYPEWRITER_LAYOUT,                   "Divehötina (PsacÌ stroj)"
-    IDS_DUTCH_LAYOUT,                               "Holandötina"
-    IDS_ESTONIAN_LAYOUT,                            "Estonötina"
-    IDS_FAEROESE_LAYOUT,                            "Faerötina"
-    IDS_FARSI_LAYOUT,                               "F·rsÌ"
-    IDS_FINNISH_LAYOUT,                             "Finötina"
-    IDS_FRENCH_LAYOUT,                              "Francouzötina"
-    IDS_GAELIC_LAYOUT,                              "Galicijötina"
-    IDS_GEORGIAN_LAYOUT,                            "GruzÌnötina"
-    IDS_GERMAN_LAYOUT,                              "NÏmËima"
-    IDS_GERMAN_DE_ERGO_LAYOUT,                      "NÏmËima (de_ergo)"
-    IDS_GERMAN_IBM_LAYOUT,                          "NÏmËima (IBM)"
-    IDS_GERMAN_NEO_11_LAYOUT,                       "NÏmËima (NEO-1.1)"
-    IDS_GERMAN_RISTOME_LAYOUT,                      "NÏmËima (RISTOME)"
-    IDS_GREEK_LAYOUT,                               "ÿeËtina"
-    IDS_GREEK_220_LAYOUT,                           "ÿeËtina (220)"
-    IDS_GREEK_220_LATIN_LAYOUT,                     "ÿeËtina (220) (Latinka)"
-    IDS_GREEK_319_LAYOUT,                           "ÿeËtina (319)"
-    IDS_GREEK_319_LATIN_LAYOUT,                     "ÿeËtina (319) (Latinka)"
-    IDS_GREEK_LATIN_LAYOUT,                         "ÿeËtina (Latinka)"
-    IDS_GREEK_POLYTONIC_LAYOUT,                     "ÿeËtina (Polytonick·)"
-    IDS_GUJARATI_LAYOUT,                            "Gudûar·tötina"
-    IDS_HEBREW_LAYOUT,                              "Hebrejötina"
-    IDS_HINDI_TRADITIONAL_LAYOUT,                   "Hindötina (TradiËnÌ)"
-    IDS_HUNGARIAN_LAYOUT,                           "MaÔarötina"
-    IDS_HUNGARIAN_101_KEY_LAYOUT,                   "MaÔarötina (101 kl·ves)"
-    IDS_ICELANDIC_LAYOUT,                           "Islandötina"
-    IDS_IRISH_LAYOUT,                               "Irötina"
-    IDS_ITALIAN_LAYOUT,                             "Italötina"
-    IDS_ITALIAN_142_LAYOUT,                         "Italötina (142)"
-    IDS_JAPANESE_LAYOUT,                            "Japonötina"
-    IDS_JAPANESE_INPUT_SYSTEM_MSIME2002_LAYOUT,     "Japonsk˝ vstupnÌ systÈm (MS-IME2002)"
-    IDS_KANNADA_LAYOUT,                             "Kannadötina"
-    IDS_KAZAKH_LAYOUT,                              "Kazaötina"
-    IDS_KOREAN_LAYOUT,                              "Korejötina"
-    IDS_KOREAN_INPUT_SYSTEM_MSIME2002_LAYOUT,       "Korjsk˝ vstupnÌ systÈm (MS-IME2002)"
-    IDS_KYRGYZ_CYRILLIC_LAYOUT,                     "Kyrgyzötina (Cyrilice)"
-    IDS_LATIN_AMERICAN_LAYOUT,                      "Latinsk· Amerika"
-    IDS_LATVIAN_LAYOUT,                             "Lotyötina"
-    IDS_LATVIAN_QWERTY_LAYOUT,                      "Lotyötina (QWERTY)"
-    IDS_LITHUANIAN_LAYOUT,                          "Litevötina"
-    IDS_LITHUANIAN_IBM_LAYOUT,                      "Litevötina (IBM)"
-    IDS_FYRO_MACEDONIAN_LAYOUT,                     "FYRO Makedonötina"
-    IDS_MALAYALAM_LAYOUT,                           "Malaj·mötina"
-    IDS_MARATHI_LAYOUT,                             "Mar·thötina"
-    IDS_MONGOLIAN_CYRILLIC_LAYOUT,                  "Mongolötina (Cyrilice)"
-    IDS_NORWEGIAN_LAYOUT,                           "Norötina"
-    IDS_ORIYA_LAYOUT,                               "Orijötina"
-    IDS_POLISH_214_LAYOUT,                          "Polötina (214)"
-    IDS_POLISH_LAYOUT,                              "Polötina (Program·torsk·)"
-    IDS_PORTUGUESE_LAYOUT,                          "Portugalötina"
-    IDS_PORTUGUESE_BRAZILIAN_ABNT_LAYOUT,           "Portugalötina (Brazilsk· ABNT)"
-    IDS_PORTUGUESE_BRAZIL_ABNT2_LAYOUT,             "Portugalötina (Brazilsk· ABNT2)"
-    IDS_PUNJABI_LAYOUT,                             "PaÚdû·bötina"
-    IDS_ROMANIAN_LAYOUT,                            "Rumunötina"
-    IDS_RUSSIAN_LAYOUT,                             "Ruötina"
-    IDS_RUSSIAN_TYPEWRITER_LAYOUT,                  "Ruötina (PsacÌ stroj)"
-    IDS_SERBIAN_CYRILLIC_LAYOUT,                    "Srbötina (Cyrilice)"
-    IDS_SERBIAN_LATIN_LAYOUT,                       "Srbötina (Latinka)"
-    IDS_SLOVAK_LAYOUT,                              "Slovenötina"
-    IDS_SLOVAK_QWERTY_LAYOUT,                       "Slovenötina (QWERTY)"
-    IDS_SLOVENIAN_LAYOUT,                           "Slovinötina"
-    IDS_SPANISH_LAYOUT,                             "äpanÏlötina"
-    IDS_SPANISH_VARIANTION_LAYOUT,                  "äpanÏlötina (Variace)"
-    IDS_SWEDISH_LAYOUT,                             "ävÈdötina"
-    IDS_SWISS_FRENCH_LAYOUT,                        "äv˝carsk· francouzötina"
-    IDS_SWISS_GERMAN_LAYOUT,                        "äv˝carsk· nÏmËina"
-    IDS_SYRIAC_LAYOUT,                              "Syrötina"
-    IDS_SYRIAC_PHONETIC_LAYOUT,                     "Syrötina (Fonetick·)"
-    IDS_TAMIL_LAYOUT,                               "Tamilötina"
-    IDS_TATAR_LAYOUT,                               "Tatarötina"
-    IDS_TELUGU_LAYOUT,                              "Telugötina"
-    IDS_THAI_KEDMANEE_LAYOUT,                       "Thajötina Kedmanee"
-    IDS_THAI_KEDMANEE_NONSHIFTLOCK_LAYOUT,          "Thajötina Kedmanee (non-ShiftLock)"
-    IDS_THAI_PATTACHOTE_LAYOUT,                     "Thajötina Pattachote"
-    IDS_THAI_PATTACHOTE_NONSHIFTLOCK_LAYOUT,        "Thajötina Pattachote (non-ShiftLock)"
-    IDS_TURKISH_F_LAYOUT,                           "TureËtina F"
-    IDS_TURKISH_Q_LAYOUT,                           "TureËtina Q"
-    IDS_UKRAINIAN_LAYOUT,                           "Ukrajinötina"
-    IDS_UKRAINIAN_STUDENT_LAYOUT,                   "Ukrajinötina (Student)"
-    IDS_UNITED_KINGDOM_LAYOUT,                      "SpojenÈ kr·lovstvÌ"
-    IDS_UNITED_STATES_DVIRAK_LAYOUT,                "SpojenÈ st·ty-Dvorak"
-    IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT,  "SpojenÈ st·ty-Dvorak pro levou ruku"
-    IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT, "SpojenÈ st·ty-Dvorak pro pravou ruku"
-    IDS_UNITED_STATES_INTERNATIONAL_LAYOUT,         "SpojenÈ st·ty-Mezin·rodnÌ"
-    IDS_URDU_LAYOUT,                                "Urdötina"
+    IDS_ALBANIAN_LAYOUT,                            "Alb√°n≈°tina"
+    IDS_ARABIC_101_LAYOUT,                          "Arab≈°tina (101)"
+    IDS_ARABIC_102_LAYOUT,                          "Arab≈°tina (102)"
+    IDS_ARABIC_102_AZERTY_LAYOUT,                   "Arab≈°tina (102) AZERTY"
+    IDS_ARMENIAN_EASTERN_LAYOUT,                    "Arm√©n≈°tina (V√Ωchodn√≠)"
+    IDS_ARMENIAN_WESTERN_LAYOUT,                    "Arm√©n≈°tina (Z√°padn√≠)"
+    IDS_ASSAMESE_LAYOUT,                            "√Ås√°m≈°tina"
+    IDS_AZERI_CYRILLIC_LAYOUT,                      "Azer≈°tina (Cyrilice)"
+    IDS_AZERI_LATIN_LAYOUT,                         "Azer≈°tina (Latinka)"
+    IDS_BELARUSIAN_LAYOUT,                          "Bƒõloru≈°tina"
+    IDS_BELGIAN_COMMA_LAYOUT,                       "Belgick√° (ƒå√°rka)"
+    IDS_BELGIAN_FRENCH_LAYOUT,                      "Belgick√° (Francouz≈°tina)"
+    IDS_BELGIAN_LAYOUT,                             "Belgick√° (Teƒçka)"
+    IDS_BENGALI_LAYOUT,                             "Beng√°l≈°tina"
+    IDS_BULGARIAN_LAYOUT,                           "Bulhar≈°tina"
+    IDS_BULGARIAN_BDS_LAYOUT,                       "Bulhar≈°tina (BDS 5237-1978)"
+    IDS_BULGARIAN_LATIN_LAYOUT,                     "Bulhar≈°tina (Latinka)"
+    IDS_BULGARIAN_PHONETIC_BDS_LAYOUT,              "Bulhar≈°tina (Fonetick√°) (BDS 5237-1978)"
+    IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT,          "Bulhar≈°tina (Fonetick√°) (Klasick√°)"
+    IDS_BURMESE_LAYOUT,                             "Barm≈°tina"
+    IDS_CANADIAN_FRENCH_LAYOUT,                     "Kanadsk√© (Francouz≈°tina)"
+    IDS_CANADIAN_FRENCH_LEGACY_LAYOUT,              "Kanadsk√© (Francouz≈°tina) (Star√©)"
+    IDS_CANADIAN_MULTILINGUAL_STD_LAYOUT,           "Kanadsk√© (V√≠cejazyƒçn√© standardn√≠)"
+    IDS_CANTONESE_PHONETIC_LAYOUT,                  "Kanton≈°tina (Fonetick√°)"
+    IDS_CHINESE_SIMPLIFIED_MSPINYINIME30_LAYOUT,    "ƒå√≠n≈°tina (Zjednodu≈°en√°) - Microsoft Pinyin IME 3.0"
+    IDS_CHINESE_SIMPLIFIED_NEIMA_LAYOUT,            "ƒå√≠n≈°tina (Zjednodu≈°en√°) - NeiMa"
+    IDS_CHINESE_SIMPLIFIED_QUANPIN_LAYOUT,          "ƒå√≠n≈°tina (Zjednodu≈°en√°) - QuanPin"
+    IDS_CHINESE_SIMPLIFIED_SHUANGPIN_LAYOUT,        "ƒå√≠n≈°tina (Zjednodu≈°en√°) - ShuangPin"
+    IDS_CHINESE_SIMPLIFIED_USKEYBOARD_LAYOUT,       "ƒå√≠n≈°tina (Zjednodu≈°en√°) - US kl√°vesnice"
+    IDS_CHINESE_SIMPLIFIED_ZHENGMA_LAYOUT,          "ƒå√≠n≈°tina (Zjednodu≈°en√°) - ZhengMa"
+    IDS_CHINESE_TRADITIONAL_ALPHANUMERIC_LAYOUT,    "ƒå√≠n≈°tina (Tradiƒçn√≠) - Alfanumerick√°"
+    IDS_CHINESE_TRADITIONAL_ARRAY_LAYOUT,           "ƒå√≠n≈°tina (Tradiƒçn√≠) - Array"
+    IDS_CHINESE_TRADITIONAL_BIG5CODE_LAYOUT,        "ƒå√≠n≈°tina (Tradiƒçn√≠) - Big5 Code"
+    IDS_CHINESE_TRADITIONAL_CHANGJIE_LAYOUT,        "ƒå√≠n≈°tina (Tradiƒçn√≠) - ChangJie"
+    IDS_CHINESE_TRADITIONAL_DAYI_LAYOUT,            "ƒå√≠n≈°tina (Tradiƒçn√≠) - DaYi"
+    IDS_CHINESE_TRADITIONAL_NEWCHANGJIE_LAYOUT,     "ƒå√≠n≈°tina (Tradiƒçn√≠) - Nov√° ChangJie"
+    IDS_CHINESE_TRADITIONAL_NEWPHONETIC_LAYOUT,     "ƒå√≠n≈°tina (Tradiƒçn√≠) - Nov√° fonetick√°"
+    IDS_CHINESE_TRADITIONAL_PHONETIC_LAYOUT,        "ƒå√≠n≈°tina (Tradiƒçn√≠) - Fonetick√°"
+    IDS_CHINESE_TRADITIONAL_QUICK_LAYOUT,           "ƒå√≠n≈°tina (Tradiƒçn√≠) - Rychl√°"
+    IDS_CHINESE_TRADITIONAL_UNICODE_LAYOUT,         "ƒå√≠n≈°tina (Tradiƒçn√≠) - Unicode"
+    IDS_CHINESE_TRADITIONAL_USKEYBOARD_LAYOUT,      "ƒå√≠n≈°tina (Tradiƒçn√≠) - US Kl√°vesnice"
+    IDS_CROATIAN_LAYOUT,                            "Chorvat≈°tina"
+    IDS_CZECH_LAYOUT,                               "ƒåe≈°tina"
+    IDS_CZECH_PROGRAMMERS_LAYOUT,                   "ƒåe≈°tina (Program√°torsk√°)"
+    IDS_CZECH_QWERTY_LAYOUT,                        "ƒåe≈°tina (QWERTY)"
+    IDS_DANISH_LAYOUT,                              "D√°n≈°tina"
+    IDS_DEVANAGARI_INSCRIPT_LAYOUT,                 "D√©van√°gar√≠ - INSCRIPT"
+    IDS_DIVEHI_PHONETIC_LAYOUT,                     "Diveh≈°tina (Fonetick√°)"
+    IDS_DIVEHI_TYPEWRITER_LAYOUT,                   "Diveh≈°tina (Psac√≠ stroj)"
+    IDS_DUTCH_LAYOUT,                               "Holand≈°tina"
+    IDS_ESTONIAN_LAYOUT,                            "Eston≈°tina"
+    IDS_FAEROESE_LAYOUT,                            "Faer≈°tina"
+    IDS_FARSI_LAYOUT,                               "F√°rs√≠"
+    IDS_FINNISH_LAYOUT,                             "Fin≈°tina"
+    IDS_FRENCH_LAYOUT,                              "Francouz≈°tina"
+    IDS_GAELIC_LAYOUT,                              "Galicij≈°tina"
+    IDS_GEORGIAN_LAYOUT,                            "Gruz√≠n≈°tina"
+    IDS_GERMAN_LAYOUT,                              "Nƒõmƒçima"
+    IDS_GERMAN_DE_ERGO_LAYOUT,                      "Nƒõmƒçima (de_ergo)"
+    IDS_GERMAN_IBM_LAYOUT,                          "Nƒõmƒçima (IBM)"
+    IDS_GERMAN_NEO_11_LAYOUT,                       "Nƒõmƒçima (NEO-1.1)"
+    IDS_GERMAN_RISTOME_LAYOUT,                      "Nƒõmƒçima (RISTOME)"
+    IDS_GREEK_LAYOUT,                               "≈òeƒçtina"
+    IDS_GREEK_220_LAYOUT,                           "≈òeƒçtina (220)"
+    IDS_GREEK_220_LATIN_LAYOUT,                     "≈òeƒçtina (220) (Latinka)"
+    IDS_GREEK_319_LAYOUT,                           "≈òeƒçtina (319)"
+    IDS_GREEK_319_LATIN_LAYOUT,                     "≈òeƒçtina (319) (Latinka)"
+    IDS_GREEK_LATIN_LAYOUT,                         "≈òeƒçtina (Latinka)"
+    IDS_GREEK_POLYTONIC_LAYOUT,                     "≈òeƒçtina (Polytonick√°)"
+    IDS_GUJARATI_LAYOUT,                            "Gud≈æar√°t≈°tina"
+    IDS_HEBREW_LAYOUT,                              "Hebrej≈°tina"
+    IDS_HINDI_TRADITIONAL_LAYOUT,                   "Hind≈°tina (Tradiƒçn√≠)"
+    IDS_HUNGARIAN_LAYOUT,                           "Maƒèar≈°tina"
+    IDS_HUNGARIAN_101_KEY_LAYOUT,                   "Maƒèar≈°tina (101 kl√°ves)"
+    IDS_ICELANDIC_LAYOUT,                           "Island≈°tina"
+    IDS_IRISH_LAYOUT,                               "Ir≈°tina"
+    IDS_ITALIAN_LAYOUT,                             "Ital≈°tina"
+    IDS_ITALIAN_142_LAYOUT,                         "Ital≈°tina (142)"
+    IDS_JAPANESE_LAYOUT,                            "Japon≈°tina"
+    IDS_JAPANESE_INPUT_SYSTEM_MSIME2002_LAYOUT,     "Japonsk√Ω vstupn√≠ syst√©m (MS-IME2002)"
+    IDS_KANNADA_LAYOUT,                             "Kannad≈°tina"
+    IDS_KAZAKH_LAYOUT,                              "Kaza≈°tina"
+    IDS_KOREAN_LAYOUT,                              "Korej≈°tina"
+    IDS_KOREAN_INPUT_SYSTEM_MSIME2002_LAYOUT,       "Korjsk√Ω vstupn√≠ syst√©m (MS-IME2002)"
+    IDS_KYRGYZ_CYRILLIC_LAYOUT,                     "Kyrgyz≈°tina (Cyrilice)"
+    IDS_LATIN_AMERICAN_LAYOUT,                      "Latinsk√° Amerika"
+    IDS_LATVIAN_LAYOUT,                             "Loty≈°tina"
+    IDS_LATVIAN_QWERTY_LAYOUT,                      "Loty≈°tina (QWERTY)"
+    IDS_LITHUANIAN_LAYOUT,                          "Litev≈°tina"
+    IDS_LITHUANIAN_IBM_LAYOUT,                      "Litev≈°tina (IBM)"
+    IDS_FYRO_MACEDONIAN_LAYOUT,                     "FYRO Makedon≈°tina"
+    IDS_MALAYALAM_LAYOUT,                           "Malaj√°m≈°tina"
+    IDS_MARATHI_LAYOUT,                             "Mar√°th≈°tina"
+    IDS_MONGOLIAN_CYRILLIC_LAYOUT,                  "Mongol≈°tina (Cyrilice)"
+    IDS_NORWEGIAN_LAYOUT,                           "Nor≈°tina"
+    IDS_ORIYA_LAYOUT,                               "Orij≈°tina"
+    IDS_POLISH_214_LAYOUT,                          "Pol≈°tina (214)"
+    IDS_POLISH_LAYOUT,                              "Pol≈°tina (Program√°torsk√°)"
+    IDS_PORTUGUESE_LAYOUT,                          "Portugal≈°tina"
+    IDS_PORTUGUESE_BRAZILIAN_ABNT_LAYOUT,           "Portugal≈°tina (Brazilsk√° ABNT)"
+    IDS_PORTUGUESE_BRAZIL_ABNT2_LAYOUT,             "Portugal≈°tina (Brazilsk√° ABNT2)"
+    IDS_PUNJABI_LAYOUT,                             "Pa≈àd≈æ√°b≈°tina"
+    IDS_ROMANIAN_LAYOUT,                            "Rumun≈°tina"
+    IDS_RUSSIAN_LAYOUT,                             "Ru≈°tina"
+    IDS_RUSSIAN_TYPEWRITER_LAYOUT,                  "Ru≈°tina (Psac√≠ stroj)"
+    IDS_SERBIAN_CYRILLIC_LAYOUT,                    "Srb≈°tina (Cyrilice)"
+    IDS_SERBIAN_LATIN_LAYOUT,                       "Srb≈°tina (Latinka)"
+    IDS_SLOVAK_LAYOUT,                              "Sloven≈°tina"
+    IDS_SLOVAK_QWERTY_LAYOUT,                       "Sloven≈°tina (QWERTY)"
+    IDS_SLOVENIAN_LAYOUT,                           "Slovin≈°tina"
+    IDS_SPANISH_LAYOUT,                             "≈†panƒõl≈°tina"
+    IDS_SPANISH_VARIANTION_LAYOUT,                  "≈†panƒõl≈°tina (Variace)"
+    IDS_SWEDISH_LAYOUT,                             "≈†v√©d≈°tina"
+    IDS_SWISS_FRENCH_LAYOUT,                        "≈†v√Ωcarsk√° francouz≈°tina"
+    IDS_SWISS_GERMAN_LAYOUT,                        "≈†v√Ωcarsk√° nƒõmƒçina"
+    IDS_SYRIAC_LAYOUT,                              "Syr≈°tina"
+    IDS_SYRIAC_PHONETIC_LAYOUT,                     "Syr≈°tina (Fonetick√°)"
+    IDS_TAMIL_LAYOUT,                               "Tamil≈°tina"
+    IDS_TATAR_LAYOUT,                               "Tatar≈°tina"
+    IDS_TELUGU_LAYOUT,                              "Telug≈°tina"
+    IDS_THAI_KEDMANEE_LAYOUT,                       "Thaj≈°tina Kedmanee"
+    IDS_THAI_KEDMANEE_NONSHIFTLOCK_LAYOUT,          "Thaj≈°tina Kedmanee (non-ShiftLock)"
+    IDS_THAI_PATTACHOTE_LAYOUT,                     "Thaj≈°tina Pattachote"
+    IDS_THAI_PATTACHOTE_NONSHIFTLOCK_LAYOUT,        "Thaj≈°tina Pattachote (non-ShiftLock)"
+    IDS_TURKISH_F_LAYOUT,                           "Tureƒçtina F"
+    IDS_TURKISH_Q_LAYOUT,                           "Tureƒçtina Q"
+    IDS_UKRAINIAN_LAYOUT,                           "Ukrajin≈°tina"
+    IDS_UKRAINIAN_STUDENT_LAYOUT,                   "Ukrajin≈°tina (Student)"
+    IDS_UNITED_KINGDOM_LAYOUT,                      "Spojen√© kr√°lovstv√≠"
+    IDS_UNITED_STATES_DVIRAK_LAYOUT,                "Spojen√© st√°ty-Dvorak"
+    IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT,  "Spojen√© st√°ty-Dvorak pro levou ruku"
+    IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT, "Spojen√© st√°ty-Dvorak pro pravou ruku"
+    IDS_UNITED_STATES_INTERNATIONAL_LAYOUT,         "Spojen√© st√°ty-Mezin√°rodn√≠"
+    IDS_URDU_LAYOUT,                                "Urd≈°tina"
     IDS_US_LAYOUT,                                  "US"
-    IDS_USENG_TABLE_IBM_ARABIC238L_LAYOUT,          "US anglick· tabulka pro IBM arabötinu 238_L"
-    IDS_UZBEK_CYRILLIC_LAYOUT,                      "UzbeËtina (Cyrilice)"
-    IDS_VIETNAMESE_LAYOUT,                          "Vietnamötina"
+    IDS_USENG_TABLE_IBM_ARABIC238L_LAYOUT,          "US anglick√° tabulka pro IBM arab≈°tinu 238_L"
+    IDS_UZBEK_CYRILLIC_LAYOUT,                      "Uzbeƒçtina (Cyrilice)"
+    IDS_VIETNAMESE_LAYOUT,                          "Vietnam≈°tina"
 END

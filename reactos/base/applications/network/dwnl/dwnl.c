@@ -1,4 +1,3 @@
-#include <stdio.h>
 #define COBJMACROS
 #include <urlmon.h>
 #include <wininet.h>

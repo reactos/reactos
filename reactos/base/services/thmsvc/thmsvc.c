@@ -8,11 +8,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#define WIN32_NO_STATUS
 #include <windows.h>
+#include <uxtheme.h>
 #include <uxundoc.h>
+#include <wine/debug.h>
 
-#include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(thmsvc);
 
 

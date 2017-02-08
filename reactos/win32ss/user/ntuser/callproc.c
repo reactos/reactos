@@ -21,7 +21,7 @@ VOID
 DestroyCallProc(IN PDESKTOPINFO Desktop,
                 IN OUT PCALLPROCDATA CallProc)
 {
-    UserDeleteObject(UserHMGetHandle(CallProc), otCallProc);
+    UserDeleteObject(UserHMGetHandle(CallProc), TYPE_CALLPROC);
 }
 
 PCALLPROCDATA
@@ -35,8 +35,9 @@ CreateCallProc(IN PDESKTOP Desktop,
 
     NewCallProc = (PCALLPROCDATA)UserCreateObject(gHandleTable,
                                              Desktop,
+                                             NULL,
                                              &Handle,
-                                             otCallProc,
+                                             TYPE_CALLPROC,
                                              sizeof(CALLPROCDATA));
     if (NewCallProc != NULL)
     {
@@ -44,6 +45,9 @@ CreateCallProc(IN PDESKTOP Desktop,
         NewCallProc->wType |= Unicode ? UserGetCPDA2U : UserGetCPDU2A ;
         NewCallProc->spcpdNext = NULL;
     }
+
+    /* Release the extra reference (UserCreateObject added 2 references) */
+    UserDereferenceObject(NewCallProc);
 
     return NewCallProc;
 }
@@ -56,7 +60,7 @@ UserGetCallProcInfo(IN HANDLE hCallProc,
 
     CallProc = UserGetObject(gHandleTable,
                              hCallProc,
-                             otCallProc);
+                             TYPE_CALLPROC);
     if (CallProc == NULL)
     {
         return FALSE;

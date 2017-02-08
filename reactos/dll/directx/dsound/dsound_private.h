@@ -23,58 +23,41 @@
 #define DS_TIME_RES 2  /* Resolution of multimedia timer */
 #define DS_TIME_DEL 10  /* Delay of multimedia timer callback, and duration of HEL fragment */
 
+#include "wingdi.h"
+#include "mmdeviceapi.h"
+#include "audioclient.h"
+#include "mmsystem.h"
+
 #include "wine/list.h"
 
-/* direct sound hardware acceleration levels */
-#define DS_HW_ACCEL_FULL        0	/* default on Windows 98 */
-#define DS_HW_ACCEL_STANDARD    1	/* default on Windows 2000 */
-#define DS_HW_ACCEL_BASIC       2
-#define DS_HW_ACCEL_EMULATION   3
-
-extern int ds_emuldriver;
-extern int ds_hel_buflen;
-extern int ds_snd_queue_max;
-extern int ds_snd_queue_min;
-extern int ds_snd_shadow_maxsize;
-extern int ds_hw_accel;
-extern int ds_default_sample_rate;
-extern int ds_default_bits_per_sample;
+extern int ds_hel_buflen DECLSPEC_HIDDEN;
+extern int ds_snd_queue_max DECLSPEC_HIDDEN;
 
 /*****************************************************************************
  * Predeclare the interface implementation structures
  */
-typedef struct IDirectSoundImpl              IDirectSoundImpl;
-typedef struct IDirectSound_IUnknown         IDirectSound_IUnknown;
-typedef struct IDirectSound_IDirectSound     IDirectSound_IDirectSound;
-typedef struct IDirectSound8_IUnknown        IDirectSound8_IUnknown;
-typedef struct IDirectSound8_IDirectSound    IDirectSound8_IDirectSound;
-typedef struct IDirectSound8_IDirectSound8   IDirectSound8_IDirectSound8;
 typedef struct IDirectSoundBufferImpl        IDirectSoundBufferImpl;
-typedef struct IDirectSoundCaptureImpl       IDirectSoundCaptureImpl;
-typedef struct IDirectSoundCaptureBufferImpl IDirectSoundCaptureBufferImpl;
-typedef struct IDirectSoundFullDuplexImpl    IDirectSoundFullDuplexImpl;
-typedef struct IDirectSoundFullDuplex_IUnknown IDirectSoundFullDuplex_IUnknown;
-typedef struct IDirectSoundFullDuplex_IDirectSound IDirectSoundFullDuplex_IDirectSound;
-typedef struct IDirectSoundFullDuplex_IDirectSound8 IDirectSoundFullDuplex_IDirectSound8;
-typedef struct IDirectSoundFullDuplex_IDirectSoundCapture IDirectSoundFullDuplex_IDirectSoundCapture;
-typedef struct IDirectSoundNotifyImpl        IDirectSoundNotifyImpl;
-typedef struct IDirectSoundCaptureNotifyImpl IDirectSoundCaptureNotifyImpl;
-typedef struct IDirectSound3DListenerImpl    IDirectSound3DListenerImpl;
-typedef struct IDirectSound3DBufferImpl      IDirectSound3DBufferImpl;
-typedef struct IKsBufferPropertySetImpl      IKsBufferPropertySetImpl;
-typedef struct IKsPrivatePropertySetImpl     IKsPrivatePropertySetImpl;
-typedef struct PrimaryBufferImpl             PrimaryBufferImpl;
-typedef struct SecondaryBufferImpl           SecondaryBufferImpl;
 typedef struct DirectSoundDevice             DirectSoundDevice;
-typedef struct DirectSoundCaptureDevice      DirectSoundCaptureDevice;
 
 /* dsound_convert.h */
-typedef void (*bitsconvertfunc)(const void *, void *, UINT, UINT, INT, UINT, UINT);
-extern const bitsconvertfunc convertbpp[4][4];
-typedef void (*mixfunc)(const void *, void *, unsigned);
-extern const mixfunc mixfunctions[4];
+typedef float (*bitsgetfunc)(const IDirectSoundBufferImpl *, DWORD, DWORD);
+typedef void (*bitsputfunc)(const IDirectSoundBufferImpl *, DWORD, DWORD, float);
+extern const bitsgetfunc getbpp[5] DECLSPEC_HIDDEN;
+void putieee32(const IDirectSoundBufferImpl *dsb, DWORD pos, DWORD channel, float value) DECLSPEC_HIDDEN;
+void mixieee32(float *src, float *dst, unsigned samples) DECLSPEC_HIDDEN;
 typedef void (*normfunc)(const void *, void *, unsigned);
-extern const normfunc normfunctions[4];
+extern const normfunc normfunctions[5] DECLSPEC_HIDDEN;
+
+typedef struct _DSVOLUMEPAN
+{
+    DWORD	dwTotalLeftAmpFactor;
+    DWORD	dwTotalRightAmpFactor;
+    LONG	lVolume;
+    DWORD	dwVolAmpFactor;
+    LONG	lPan;
+    DWORD	dwPanLeftAmpFactor;
+    DWORD	dwPanRightAmpFactor;
+} DSVOLUMEPAN,*PDSVOLUMEPAN;
 
 /*****************************************************************************
  * IDirectSoundDevice implementation structure
@@ -84,37 +67,38 @@ struct DirectSoundDevice
     LONG                        ref;
 
     GUID                        guid;
-    PIDSDRIVER                  driver;
-    DSDRIVERDESC                drvdesc;
-    DSDRIVERCAPS                drvcaps;
-    DWORD                       priolevel;
-    PWAVEFORMATEX               pwfx;
-    HWAVEOUT                    hwo;
-    LPWAVEHDR                   pwave;
-    UINT                        timerID, pwplay, pwqueue, prebuf, helfrags;
+    DSCAPS                      drvcaps;
+    DWORD                       priolevel, sleeptime;
+    PWAVEFORMATEX               pwfx, primary_pwfx;
+    UINT                        playing_offs_bytes, in_mmdev_bytes, prebuf;
     DWORD                       fraglen;
-    PIDSDRIVERBUFFER            hwbuf;
     LPBYTE                      buffer;
     DWORD                       writelead, buflen, state, playpos, mixpos;
     int                         nrofbuffers;
     IDirectSoundBufferImpl**    buffers;
     RTL_RWLOCK                  buffer_list_lock;
     CRITICAL_SECTION            mixlock;
-    PrimaryBufferImpl*          primary;
-    DSBUFFERDESC                dsbd;
+    IDirectSoundBufferImpl     *primary;
     DWORD                       speaker_config;
-    LPBYTE                      tmp_buffer, mix_buffer;
+    float *mix_buffer, *tmp_buffer;
     DWORD                       tmp_buffer_len, mix_buffer_len;
 
     DSVOLUMEPAN                 volpan;
 
-    mixfunc mixfunction;
     normfunc normfunction;
 
     /* DirectSound3DListener fields */
-    IDirectSound3DListenerImpl*	listener;
     DS3DLISTENER                ds3dl;
     BOOL                        ds3dl_need_recalc;
+
+    IMMDevice *mmdevice;
+    IAudioClient *client;
+    IAudioClock *clock;
+    IAudioStreamVolume *volume;
+    IAudioRenderClient *render;
+
+    HANDLE sleepev, thread;
+    struct list entry;
 };
 
 /* reference counted buffer memory for duplicated buffer memory */
@@ -125,356 +109,135 @@ typedef struct BufferMemory
     struct list buffers;
 } BufferMemory;
 
-ULONG DirectSoundDevice_Release(DirectSoundDevice * device);
+ULONG DirectSoundDevice_Release(DirectSoundDevice * device) DECLSPEC_HIDDEN;
 HRESULT DirectSoundDevice_Initialize(
     DirectSoundDevice ** ppDevice,
-    LPCGUID lpcGUID);
+    LPCGUID lpcGUID) DECLSPEC_HIDDEN;
 HRESULT DirectSoundDevice_AddBuffer(
     DirectSoundDevice * device,
-    IDirectSoundBufferImpl * pDSB);
-HRESULT DirectSoundDevice_RemoveBuffer(
-    DirectSoundDevice * device,
-    IDirectSoundBufferImpl * pDSB);
-HRESULT DirectSoundDevice_GetCaps(DirectSoundDevice * device, LPDSCAPS lpDSCaps);
+    IDirectSoundBufferImpl * pDSB) DECLSPEC_HIDDEN;
+void DirectSoundDevice_RemoveBuffer(DirectSoundDevice * device, IDirectSoundBufferImpl * pDSB) DECLSPEC_HIDDEN;
 HRESULT DirectSoundDevice_CreateSoundBuffer(
     DirectSoundDevice * device,
     LPCDSBUFFERDESC dsbd,
     LPLPDIRECTSOUNDBUFFER ppdsb,
     LPUNKNOWN lpunk,
-    BOOL from8);
+    BOOL from8) DECLSPEC_HIDDEN;
 HRESULT DirectSoundDevice_DuplicateSoundBuffer(
     DirectSoundDevice * device,
     LPDIRECTSOUNDBUFFER psb,
-    LPLPDIRECTSOUNDBUFFER ppdsb);
-HRESULT DirectSoundDevice_SetCooperativeLevel(
-    DirectSoundDevice * devcie,
-    HWND hwnd,
-    DWORD level);
-HRESULT DirectSoundDevice_Compact(DirectSoundDevice * device);
-HRESULT DirectSoundDevice_GetSpeakerConfig(
-    DirectSoundDevice * device,
-    LPDWORD lpdwSpeakerConfig);
-HRESULT DirectSoundDevice_SetSpeakerConfig(
-    DirectSoundDevice * device,
-    DWORD config);
+    LPLPDIRECTSOUNDBUFFER ppdsb) DECLSPEC_HIDDEN;
 
 /*****************************************************************************
  * IDirectSoundBuffer implementation structure
  */
 struct IDirectSoundBufferImpl
 {
-    /* FIXME: document */
-    /* IUnknown fields */
-    const IDirectSoundBuffer8Vtbl *lpVtbl;
-    LONG                        ref;
+    IDirectSoundBuffer8         IDirectSoundBuffer8_iface;
+    IDirectSoundNotify          IDirectSoundNotify_iface;
+    IDirectSound3DListener      IDirectSound3DListener_iface; /* only primary buffer */
+    IDirectSound3DBuffer        IDirectSound3DBuffer_iface; /* only secondary buffer */
+    IKsPropertySet              IKsPropertySet_iface;
+    LONG                        numIfaces; /* "in use interfaces" refcount */
+    LONG                        ref, refn, ref3D, refiks;
     /* IDirectSoundBufferImpl fields */
-    SecondaryBufferImpl*        secondary;
     DirectSoundDevice*          device;
     RTL_RWLOCK                  lock;
-    PIDSDRIVERBUFFER            hwbuf;
     PWAVEFORMATEX               pwfx;
     BufferMemory*               buffer;
-    LPBYTE                      tmp_buffer;
     DWORD                       playflags,state,leadin;
     DWORD                       writelead,buflen;
     DWORD                       nAvgBytesPerSec;
-    DWORD                       freq, tmp_buffer_len, max_buffer_len;
+    DWORD                       freq;
     DSVOLUMEPAN                 volpan;
     DSBUFFERDESC                dsbd;
     /* used for frequency conversion (PerfectPitch) */
-    ULONG                       freqneeded, freqAdjust, freqAcc, freqAccNext, resampleinmixer;
+    ULONG                       freqneeded;
+    DWORD                       firstep;
+    float freqAcc, freqAdjust, firgain;
     /* used for mixing */
-    DWORD                       primary_mixpos, buf_mixpos, sec_mixpos;
+    DWORD                       sec_mixpos;
 
-    /* IDirectSoundNotifyImpl fields */
-    IDirectSoundNotifyImpl*     notify;
+    /* IDirectSoundNotify fields */
     LPDSBPOSITIONNOTIFY         notifies;
     int                         nrofnotifies;
-    PIDSDRIVERNOTIFY            hwnotify;
-
     /* DirectSound3DBuffer fields */
-    IDirectSound3DBufferImpl*   ds3db;
     DS3DBUFFER                  ds3db_ds3db;
     LONG                        ds3db_lVolume;
     BOOL                        ds3db_need_recalc;
+    /* Used for bit depth conversion */
+    int                         mix_channels;
+    bitsgetfunc get, get_aux;
+    bitsputfunc put, put_aux;
 
-    /* IKsPropertySet fields */
-    IKsBufferPropertySetImpl*   iks;
-    bitsconvertfunc convert;
     struct list entry;
 };
+
+float get_mono(const IDirectSoundBufferImpl *dsb, DWORD pos, DWORD channel) DECLSPEC_HIDDEN;
+void put_mono2stereo(const IDirectSoundBufferImpl *dsb, DWORD pos, DWORD channel, float value) DECLSPEC_HIDDEN;
 
 HRESULT IDirectSoundBufferImpl_Create(
     DirectSoundDevice *device,
     IDirectSoundBufferImpl **ppdsb,
-    LPCDSBUFFERDESC dsbd);
-HRESULT IDirectSoundBufferImpl_Destroy(
-    IDirectSoundBufferImpl *pdsb);
+    LPCDSBUFFERDESC dsbd) DECLSPEC_HIDDEN;
 HRESULT IDirectSoundBufferImpl_Duplicate(
     DirectSoundDevice *device,
     IDirectSoundBufferImpl **ppdsb,
-    IDirectSoundBufferImpl *pdsb);
+    IDirectSoundBufferImpl *pdsb) DECLSPEC_HIDDEN;
+void secondarybuffer_destroy(IDirectSoundBufferImpl *This) DECLSPEC_HIDDEN;
+const IDirectSound3DListenerVtbl ds3dlvt DECLSPEC_HIDDEN;
+const IDirectSound3DBufferVtbl ds3dbvt DECLSPEC_HIDDEN;
+const IKsPropertySetVtbl iksbvt DECLSPEC_HIDDEN;
 
-/*****************************************************************************
- * SecondaryBuffer implementation structure
- */
-struct SecondaryBufferImpl
-{
-    const IDirectSoundBuffer8Vtbl *lpVtbl;
-    LONG                        ref;
-    IDirectSoundBufferImpl*     dsb;
-};
-
-HRESULT SecondaryBufferImpl_Create(
-    IDirectSoundBufferImpl *dsb,
-    SecondaryBufferImpl **pdsb);
-
-/*****************************************************************************
- * PrimaryBuffer implementation structure
- */
-struct PrimaryBufferImpl
-{
-    const IDirectSoundBufferVtbl *lpVtbl;
-    LONG                        ref;
-    DirectSoundDevice*          device;
-};
-
-HRESULT PrimaryBufferImpl_Create(
-    DirectSoundDevice * device,
-    PrimaryBufferImpl **ppdsb,
-    LPCDSBUFFERDESC dsbd);
-
-/*****************************************************************************
- * DirectSoundCaptureDevice implementation structure
- */
-struct DirectSoundCaptureDevice
-{
-    /* IDirectSoundCaptureImpl fields */
-    GUID                               guid;
-    LONG                               ref;
-
-    /* DirectSound driver stuff */
-    PIDSCDRIVER                        driver;
-    DSDRIVERDESC                       drvdesc;
-    DSCDRIVERCAPS                      drvcaps;
-    PIDSCDRIVERBUFFER                  hwbuf;
-
-    /* wave driver info */
-    HWAVEIN                            hwi;
-
-    /* more stuff */
-    LPBYTE                             buffer;
-    DWORD                              buflen;
-
-    PWAVEFORMATEX                      pwfx;
-
-    IDirectSoundCaptureBufferImpl*     capture_buffer;
-    DWORD                              state;
-    LPWAVEHDR                          pwave;
-    int                                nrofpwaves;
-    int                                index;
-    CRITICAL_SECTION                   lock;
-};
-
-HRESULT DirectSoundCaptureDevice_Initialize(
-    DirectSoundCaptureDevice ** ppDevice,
-    LPCGUID lpcGUID);
-ULONG DirectSoundCaptureDevice_Release(
-    DirectSoundCaptureDevice * device);
-
-/*****************************************************************************
- * IDirectSoundCaptureBuffer implementation structure
- */
-struct IDirectSoundCaptureBufferImpl
-{
-    /* IUnknown fields */
-    const IDirectSoundCaptureBuffer8Vtbl *lpVtbl;
-    LONG                                ref;
-
-    /* IDirectSoundCaptureBufferImpl fields */
-    DirectSoundCaptureDevice*           device;
-    /* FIXME: don't need this */
-    LPDSCBUFFERDESC                     pdscbd;
-    DWORD                               flags;
-
-    /* IDirectSoundCaptureNotifyImpl fields */
-    IDirectSoundCaptureNotifyImpl*      notify;
-    LPDSBPOSITIONNOTIFY                 notifies;
-    int                                 nrofnotifies;
-    PIDSDRIVERNOTIFY                    hwnotify;
-};
-
-HRESULT IDirectSoundCaptureBufferImpl_Create(
-    DirectSoundCaptureDevice *device,
-    IDirectSoundCaptureBufferImpl ** ppobj,
-    LPCDSCBUFFERDESC lpcDSCBufferDesc);
-
-/*****************************************************************************
- * IDirectSoundFullDuplex implementation structure
- */
-struct IDirectSoundFullDuplexImpl
-{
-    /* IUnknown fields */
-    const IDirectSoundFullDuplexVtbl *lpVtbl;
-    LONG                              ref;
-
-    /* IDirectSoundFullDuplexImpl fields */
-    DirectSoundDevice                *renderer_device;
-    DirectSoundCaptureDevice         *capture_device;
-
-    LPUNKNOWN                         pUnknown;
-    LPDIRECTSOUND                     pDS;
-    LPDIRECTSOUND8                    pDS8;
-    LPDIRECTSOUNDCAPTURE              pDSC;
-};
-
-/*****************************************************************************
- * IDirectSoundFullDuplex COM components
- */
-struct IDirectSoundFullDuplex_IUnknown {
-    const IUnknownVtbl         *lpVtbl;
-    LONG                        ref;
-    IDirectSoundFullDuplexImpl *pdsfd;
-};
-
-struct IDirectSoundFullDuplex_IDirectSound {
-    const IDirectSoundVtbl     *lpVtbl;
-    LONG                        ref;
-    IDirectSoundFullDuplexImpl *pdsfd;
-};
-
-struct IDirectSoundFullDuplex_IDirectSound8 {
-    const IDirectSound8Vtbl    *lpVtbl;
-    LONG                        ref;
-    IDirectSoundFullDuplexImpl *pdsfd;
-};
-
-struct IDirectSoundFullDuplex_IDirectSoundCapture {
-    const IDirectSoundCaptureVtbl *lpVtbl;
-    LONG                           ref;
-    IDirectSoundFullDuplexImpl    *pdsfd;
-};
-
-/*****************************************************************************
- *  IDirectSound3DListener implementation structure
- */
-struct IDirectSound3DListenerImpl
-{
-    /* IUnknown fields */
-    const IDirectSound3DListenerVtbl *lpVtbl;
-    LONG                        ref;
-    /* IDirectSound3DListenerImpl fields */
-    DirectSoundDevice*          device;
-};
-
-HRESULT IDirectSound3DListenerImpl_Create(
-    DirectSoundDevice           *device,
-    IDirectSound3DListenerImpl **pdsl);
-
-/*****************************************************************************
- *  IKsBufferPropertySet implementation structure
- */
-struct IKsBufferPropertySetImpl
-{
-    /* IUnknown fields */
-    const IKsPropertySetVtbl   *lpVtbl;
-    LONG 			ref;
-    /* IKsPropertySetImpl fields */
-    IDirectSoundBufferImpl*	dsb;
-};
-
-HRESULT IKsBufferPropertySetImpl_Create(
-    IDirectSoundBufferImpl *dsb,
-    IKsBufferPropertySetImpl **piks);
-HRESULT IKsBufferPropertySetImpl_Destroy(
-    IKsBufferPropertySetImpl *piks);
-
-/*****************************************************************************
- *  IKsPrivatePropertySet implementation structure
- */
-struct IKsPrivatePropertySetImpl
-{
-    /* IUnknown fields */
-    const IKsPropertySetVtbl   *lpVtbl;
-    LONG 			ref;
-};
-
-HRESULT IKsPrivatePropertySetImpl_Create(
-    REFIID riid,
-    IKsPrivatePropertySetImpl **piks);
-
-/*****************************************************************************
- * IDirectSound3DBuffer implementation structure
- */
-struct IDirectSound3DBufferImpl
-{
-    /* IUnknown fields */
-    const IDirectSound3DBufferVtbl *lpVtbl;
-    LONG                        ref;
-    /* IDirectSound3DBufferImpl fields */
-    IDirectSoundBufferImpl*     dsb;
-};
-
-HRESULT IDirectSound3DBufferImpl_Create(
-    IDirectSoundBufferImpl *dsb,
-    IDirectSound3DBufferImpl **pds3db);
-HRESULT IDirectSound3DBufferImpl_Destroy(
-    IDirectSound3DBufferImpl *pds3db);
+HRESULT IKsPrivatePropertySetImpl_Create(REFIID riid, void **ppv) DECLSPEC_HIDDEN;
 
 /*******************************************************************************
  */
 
 /* dsound.c */
 
-HRESULT DSOUND_Create(REFIID riid, LPDIRECTSOUND *ppDS);
-HRESULT DSOUND_Create8(REFIID riid, LPDIRECTSOUND8 *ppDS);
+HRESULT DSOUND_Create(REFIID riid, void **ppv) DECLSPEC_HIDDEN;
+HRESULT DSOUND_Create8(REFIID riid, void **ppv) DECLSPEC_HIDDEN;
+HRESULT IDirectSoundImpl_Create(IUnknown *outer_unk, REFIID riid, void **ppv, BOOL has_ds8) DECLSPEC_HIDDEN;
 
 /* primary.c */
 
-DWORD DSOUND_fraglen(DWORD nSamplesPerSec, DWORD nBlockAlign);
-HRESULT DSOUND_PrimaryCreate(DirectSoundDevice *device);
-HRESULT DSOUND_PrimaryDestroy(DirectSoundDevice *device);
-HRESULT DSOUND_PrimaryPlay(DirectSoundDevice *device);
-HRESULT DSOUND_PrimaryStop(DirectSoundDevice *device);
-HRESULT DSOUND_PrimaryGetPosition(DirectSoundDevice *device, LPDWORD playpos, LPDWORD writepos);
-HRESULT DSOUND_PrimarySetFormat(DirectSoundDevice *device, LPCWAVEFORMATEX wfex, BOOL forced);
-HRESULT DSOUND_ReopenDevice(DirectSoundDevice *device, BOOL forcewave);
+HRESULT DSOUND_PrimaryCreate(DirectSoundDevice *device) DECLSPEC_HIDDEN;
+HRESULT DSOUND_PrimaryDestroy(DirectSoundDevice *device) DECLSPEC_HIDDEN;
+HRESULT DSOUND_PrimaryPlay(DirectSoundDevice *device) DECLSPEC_HIDDEN;
+HRESULT DSOUND_PrimaryStop(DirectSoundDevice *device) DECLSPEC_HIDDEN;
+HRESULT DSOUND_PrimaryGetPosition(DirectSoundDevice *device, LPDWORD playpos, LPDWORD writepos) DECLSPEC_HIDDEN;
+LPWAVEFORMATEX DSOUND_CopyFormat(LPCWAVEFORMATEX wfex) DECLSPEC_HIDDEN;
+HRESULT DSOUND_ReopenDevice(DirectSoundDevice *device, BOOL forcewave) DECLSPEC_HIDDEN;
+HRESULT DSOUND_PrimaryOpen(DirectSoundDevice *device) DECLSPEC_HIDDEN;
+HRESULT primarybuffer_create(DirectSoundDevice *device, IDirectSoundBufferImpl **ppdsb,
+    const DSBUFFERDESC *dsbd) DECLSPEC_HIDDEN;
+void primarybuffer_destroy(IDirectSoundBufferImpl *This) DECLSPEC_HIDDEN;
+HRESULT primarybuffer_SetFormat(DirectSoundDevice *device, LPCWAVEFORMATEX wfex) DECLSPEC_HIDDEN;
+LONG capped_refcount_dec(LONG *ref) DECLSPEC_HIDDEN;
 
 /* duplex.c */
- 
-HRESULT DSOUND_FullDuplexCreate(REFIID riid, LPDIRECTSOUNDFULLDUPLEX* ppDSFD);
+
+HRESULT DSOUND_FullDuplexCreate(REFIID riid, void **ppv) DECLSPEC_HIDDEN;
 
 /* mixer.c */
-DWORD DSOUND_bufpos_to_mixpos(const DirectSoundDevice* device, DWORD pos);
-void DSOUND_CheckEvent(const IDirectSoundBufferImpl *dsb, DWORD playpos, int len);
-void DSOUND_RecalcVolPan(PDSVOLUMEPAN volpan);
-void DSOUND_AmpFactorToVolPan(PDSVOLUMEPAN volpan);
-void DSOUND_RecalcFormat(IDirectSoundBufferImpl *dsb);
-void DSOUND_MixToTemporary(const IDirectSoundBufferImpl *dsb, DWORD writepos, DWORD mixlen, BOOL inmixer);
-DWORD DSOUND_secpos_to_bufpos(const IDirectSoundBufferImpl *dsb, DWORD secpos, DWORD secmixpos, DWORD* overshot);
+void DSOUND_CheckEvent(const IDirectSoundBufferImpl *dsb, DWORD playpos, int len) DECLSPEC_HIDDEN;
+void DSOUND_RecalcVolPan(PDSVOLUMEPAN volpan) DECLSPEC_HIDDEN;
+void DSOUND_AmpFactorToVolPan(PDSVOLUMEPAN volpan) DECLSPEC_HIDDEN;
+void DSOUND_RecalcFormat(IDirectSoundBufferImpl *dsb) DECLSPEC_HIDDEN;
+DWORD DSOUND_secpos_to_bufpos(const IDirectSoundBufferImpl *dsb, DWORD secpos, DWORD secmixpos, float *overshot) DECLSPEC_HIDDEN;
 
-void CALLBACK DSOUND_timer(UINT timerID, UINT msg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2);
-void CALLBACK DSOUND_callback(HWAVEOUT hwo, UINT msg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2);
+DWORD CALLBACK DSOUND_mixthread(void *ptr) DECLSPEC_HIDDEN;
 
 /* sound3d.c */
 
-void DSOUND_Calc3DBuffer(IDirectSoundBufferImpl *dsb);
+void DSOUND_Calc3DBuffer(IDirectSoundBufferImpl *dsb) DECLSPEC_HIDDEN;
 
 /* capture.c */
  
-HRESULT DSOUND_CaptureCreate(REFIID riid, LPDIRECTSOUNDCAPTURE *ppDSC);
-HRESULT DSOUND_CaptureCreate8(REFIID riid, LPDIRECTSOUNDCAPTURE8 *ppDSC8);
-HRESULT WINAPI IDirectSoundCaptureImpl_CreateCaptureBuffer(
-    LPDIRECTSOUNDCAPTURE iface,
-    LPCDSCBUFFERDESC lpcDSCBufferDesc,
-    LPDIRECTSOUNDCAPTUREBUFFER* lplpDSCaptureBuffer,
-    LPUNKNOWN pUnk);
-HRESULT WINAPI IDirectSoundCaptureImpl_GetCaps(
-    LPDIRECTSOUNDCAPTURE iface,
-    LPDSCCAPS lpDSCCaps);
-HRESULT WINAPI IDirectSoundCaptureImpl_Initialize(
-    LPDIRECTSOUNDCAPTURE iface,
-    LPCGUID lpcGUID);
+HRESULT DSOUND_CaptureCreate(REFIID riid, void **ppv) DECLSPEC_HIDDEN;
+HRESULT DSOUND_CaptureCreate8(REFIID riid, void **ppv) DECLSPEC_HIDDEN;
+HRESULT IDirectSoundCaptureImpl_Create(IUnknown *outer_unk, REFIID riid, void **ppv, BOOL has_dsc8) DECLSPEC_HIDDEN;
 
 #define STATE_STOPPED   0
 #define STATE_STARTING  1
@@ -482,14 +245,22 @@ HRESULT WINAPI IDirectSoundCaptureImpl_Initialize(
 #define STATE_CAPTURING 2
 #define STATE_STOPPING  3
 
-#define DSOUND_FREQSHIFT (20)
+extern CRITICAL_SECTION DSOUND_renderers_lock DECLSPEC_HIDDEN;
+extern CRITICAL_SECTION DSOUND_capturers_lock DECLSPEC_HIDDEN;
+extern struct list DSOUND_capturers DECLSPEC_HIDDEN;
+extern struct list DSOUND_renderers DECLSPEC_HIDDEN;
 
-extern DirectSoundDevice* DSOUND_renderer[MAXWAVEDRIVERS];
-extern GUID DSOUND_renderer_guids[MAXWAVEDRIVERS];
+extern GUID DSOUND_renderer_guids[MAXWAVEDRIVERS] DECLSPEC_HIDDEN;
+extern GUID DSOUND_capture_guids[MAXWAVEDRIVERS] DECLSPEC_HIDDEN;
 
-extern DirectSoundCaptureDevice * DSOUND_capture[MAXWAVEDRIVERS];
-extern GUID DSOUND_capture_guids[MAXWAVEDRIVERS];
+extern WCHAR wine_vxd_drv[] DECLSPEC_HIDDEN;
 
-HRESULT mmErr(UINT err);
-void setup_dsound_options(void);
-const char * dumpCooperativeLevel(DWORD level);
+void setup_dsound_options(void) DECLSPEC_HIDDEN;
+
+HRESULT get_mmdevice(EDataFlow flow, const GUID *tgt, IMMDevice **device) DECLSPEC_HIDDEN;
+
+BOOL DSOUND_check_supported(IAudioClient *client, DWORD rate,
+        DWORD depth, WORD channels) DECLSPEC_HIDDEN;
+UINT DSOUND_create_timer(LPTIMECALLBACK cb, DWORD_PTR user) DECLSPEC_HIDDEN;
+HRESULT enumerate_mmdevices(EDataFlow flow, GUID *guids,
+        LPDSENUMCALLBACKW cb, void *user) DECLSPEC_HIDDEN;

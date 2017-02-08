@@ -1,5 +1,12 @@
 @echo off
 
+:: This is needed so as to avoid static expansion of environment variables
+:: inside if (...) conditionals.
+:: See http://stackoverflow.com/questions/305605/weird-scope-issue-in-bat-file
+:: for more explanation.
+:: Precisely needed for configuring Visual Studio Environment.
+setlocal enabledelayedexpansion
+
 :: Special case %1 = arm_hosttools %2 = vcvarsall.bat %3 = %CMAKE_GENERATOR%
 if /I "%1" == "arm_hosttools" (
     echo Configuring x86 host tools for ARM cross build
@@ -46,7 +53,7 @@ if defined ROS_ARCH (
     set USE_WDK_HEADERS=0
 
 ) else if defined VCINSTALLDIR (
-    :: VS command prompt does not put this in enviroment vars
+    :: VS command prompt does not put this in environment vars
     cl 2>&1 | find "x86" > NUL && set ARCH=i386
     cl 2>&1 | find "x64" > NUL && set ARCH=amd64
     cl 2>&1 | find "ARM" > NUL && set ARCH=arm
@@ -59,30 +66,30 @@ if defined ROS_ARCH (
         exit /b
     )
 
-    echo Detected Visual Studio Environment %BUILD_ENVIRONMENT%-%ARCH%
+    echo Detected Visual Studio Environment !BUILD_ENVIRONMENT!-!ARCH!
     if /I "%1" == "VSSolution" (
-        if "%BUILD_ENVIRONMENT%" == "VS8" (
-            if "%ARCH%" == "amd64" (
+        if "!BUILD_ENVIRONMENT!" == "VS8" (
+            if "!ARCH!" == "amd64" (
                 set CMAKE_GENERATOR="Visual Studio 8 2005 Win64"
             ) else (
                 set CMAKE_GENERATOR="Visual Studio 8 2005"
             )
-        ) else if "%BUILD_ENVIRONMENT%" == "VS9" (
-            if "%ARCH%" == "amd64" (
+        ) else if "!BUILD_ENVIRONMENT!" == "VS9" (
+            if "!ARCH!" == "amd64" (
                 set CMAKE_GENERATOR="Visual Studio 9 2008 Win64"
             ) else (
                 set CMAKE_GENERATOR="Visual Studio 9 2008"
             )
-        ) else if "%BUILD_ENVIRONMENT%" == "VS10" (
-            if "%ARCH%" == "amd64" (
+        ) else if "!BUILD_ENVIRONMENT!" == "VS10" (
+            if "!ARCH!" == "amd64" (
                 set CMAKE_GENERATOR="Visual Studio 10 Win64"
             ) else (
                 set CMAKE_GENERATOR="Visual Studio 10"
             )
-        ) else if "%BUILD_ENVIRONMENT%" == "VS11" (
-            if "%ARCH%" == "amd64" (
+        ) else if "!BUILD_ENVIRONMENT!" == "VS11" (
+            if "!ARCH!" == "amd64" (
                 set CMAKE_GENERATOR="Visual Studio 11 Win64"
-            ) else if "%ARCH%" == "arm" (
+            ) else if "!ARCH!" == "arm" (
                 set CMAKE_GENERATOR="Visual Studio 11 ARM"
             ) else (
                 set CMAKE_GENERATOR="Visual Studio 11"
@@ -111,7 +118,7 @@ if defined ROS_ARCH (
 
 :: Checkpoint
 if not defined ARCH (
-    echo unknown build architecture
+    echo Unknown build architecture
     exit /b
 )
 
@@ -160,7 +167,7 @@ if "%ARCH%" == "arm" (
     :: Launch new script instance for x86 host tools configuration
     start "Preparing host tools for ARM cross build..." /I /B /WAIT %~dp0configure.cmd arm_hosttools "%VSINSTALLDIR%VC\vcvarsall.bat" %CMAKE_GENERATOR%
 ) else (
-    cmake -G %CMAKE_GENERATOR% -DARCH=%ARCH% %REACTOS_SOURCE_DIR%
+    cmake -G %CMAKE_GENERATOR% -DARCH=%ARCH% "%REACTOS_SOURCE_DIR%"
 )
 
 cd..
@@ -172,11 +179,11 @@ if EXIST CMakeCache.txt (
 )
 
 if "%BUILD_ENVIRONMENT%" == "MinGW" (
-    cmake -G %CMAKE_GENERATOR% -DENABLE_CCACHE=0 -DPCH=0 -DCMAKE_TOOLCHAIN_FILE=toolchain-gcc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
+    cmake -G %CMAKE_GENERATOR% -DENABLE_CCACHE=0 -DPCH=0 -DCMAKE_TOOLCHAIN_FILE=toolchain-gcc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" "%REACTOS_SOURCE_DIR%"
 ) else if "%BUILD_ENVIRONMENT%" == "WDK" (
-    cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DUSE_WDK_HEADERS=%USE_WDK_HEADERS% -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
+    cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DUSE_WDK_HEADERS=%USE_WDK_HEADERS% -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" "%REACTOS_SOURCE_DIR%"
 ) else (
-    cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" %REACTOS_SOURCE_DIR%
+    cmake -G %CMAKE_GENERATOR% -DCMAKE_TOOLCHAIN_FILE=toolchain-msvc.cmake -DARCH=%ARCH% -DREACTOS_BUILD_TOOLS_DIR:DIR="%REACTOS_BUILD_TOOLS_DIR%" "%REACTOS_SOURCE_DIR%"
 )
 
 cd..

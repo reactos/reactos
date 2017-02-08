@@ -10,7 +10,7 @@ list(APPEND SOURCE
 
 add_library(imaadp32.acm SHARED ${SOURCE})
 
-set_module_type(imaadp32.acm win32dll ENTRYPOINT 0 )
+set_module_type(imaadp32.acm win32dll)
 set_target_properties(imaadp32.acm PROPERTIES SUFFIX "")
 target_link_libraries(imaadp32.acm wine)
 add_importlibs(imaadp32.acm winmm user32 msvcrt kernel32 ntdll)

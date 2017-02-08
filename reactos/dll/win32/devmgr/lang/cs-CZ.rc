@@ -1,4 +1,4 @@
-/* FILE:        dll/win32/devmgr/lang/cs-CZ.rc
+﻿/* FILE:        dll/win32/devmgr/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
  * UPDATED:     2010-01-07
  */
@@ -37,26 +37,26 @@ STRINGTABLE
 BEGIN
     IDS_DEV_NO_PROBLEM "Toto zařízení funguje správně."
     IDS_DEV_NOT_CONFIGURED "Toto zařízení není správně nastaveno."
-    IDS_DEV_DEVLOADER_FAILED "ReactOS nemohl načíst ovladač pro toto zařízení, protože počítač hlásí dva typy sběrnice $1."
-    IDS_DEV_DEVLOADER_FAILED2 "Device loader $1 nemohl načíst ovladač tohoto zařízení."
+    IDS_DEV_DEVLOADER_FAILED "ReactOS nemohl načíst ovladač pro toto zařízení, protože počítač hlásí dva typy sběrnice %1."
+    IDS_DEV_DEVLOADER_FAILED2 "Device loader %1 nemohl načíst ovladač tohoto zařízení."
     IDS_DEV_OUT_OF_MEMORY "Ovladač tohoto zařízení je poškozený nebo má systém málo paměti či jiných zdrojů."
     IDS_DEV_ENTRY_IS_WRONG_TYPE "Toto zařízení nefunguje správně, protože je špatný některý z jeho ovladačů nebo registr."
     IDS_DEV_LACKED_ARBITRATOR "Ovladač tohoto zařízení požaduje zdroj, který ReactOS neumí zpracovat."
     IDS_DEV_BOOT_CONFIG_CONFLICT "Zdroje, které toto zařízení vyžaduje, jsou už používány jiným zařízením."
     IDS_DEV_FAILED_FILTER "Ovladače tohoto zařízení musí být přeinstalovány."
-    IDS_DEV_DEVLOADER_NOT_FOUND "Toto zařízení nefunguje správně, protože ReactOS nedokáže načíst soubor $1, který načítá ovladače pro toto zařízení."
-    IDS_DEV_DEVLOADER_NOT_FOUND2 "Toto zařízení nefunguje správně, protože soubor $1, který načítá ovladače pro toto zařízení, je poškozený."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Toto zařízení nefunguje správně, protože ReactOS nedokáže načíst soubor %1, který načítá ovladače pro toto zařízení."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Toto zařízení nefunguje správně, protože soubor %1, který načítá ovladače pro toto zařízení, je poškozený."
     IDS_DEV_DEVLOADER_NOT_FOUND3 "Selhání zařízení: Zkuste změnit ovladač tohoto zařízení nebo konzultujte manuál."
     IDS_DEV_INVALID_DATA "Toto zařízení nefunguje správně, protože BIOS v počítači nesprávně hlásí zdroje zařízení."
     IDS_DEV_INVALID_DATA2 "Toto zařízení nefunguje správně, protože BIOS v zařízení nesprávně hlásí zdroje zařízení."
     IDS_DEV_FAILED_START "Zařízení není přítomno, nepracuje správně nebo nemá nainstalované všechny ovladače."
     IDS_DEV_LIAR "ReactOS přestal odpovídat při pokusu o spuštění tohoto zařízení, a proto se nebude znovu pokoušet spustit zařízení."
-    IDS_DEV_NORMAL_CONFLICT "Toto zařízení nedokáže nalézt volné $1 zdroje."
+    IDS_DEV_NORMAL_CONFLICT "Toto zařízení nedokáže nalézt volné %1 zdroje."
     IDS_DEV_NOT_VERIFIED "Zařízení není přítomno, nepracuje správně nebo nemá nainstalované všechny ovladače."
     IDS_DEV_NEED_RESTART "Toto zařízení nebude pracovat správně, dokud nebude počítač zrestartován."
     IDS_DEV_REENUMERATION "Toto zařízení způsobuje konflikt zdrojů."
     IDS_DEV_PARTIAL_LOG_CONF "ReactOS nedokázal identifikovat všechny zdroje, které toto zařízení užívá."
-    IDS_DEV_UNKNOWN_RESOURCE "Informační soubor ovladače $1 požaduje po tomto zařízení použití zdroje, který jeho rodičovské zařízení nemá nebo nepoznává."
+    IDS_DEV_UNKNOWN_RESOURCE "Informační soubor ovladače %1 požaduje po tomto zařízení použití zdroje, který jeho rodičovské zařízení nemá nebo nepoznává."
     IDS_DEV_REINSTALL "Ovladače tohoto zařízení musí být přeinstalovány."
     IDS_DEV_REGISTRY "Registry jsou možná poškozeny."
     IDS_DEV_WILL_BE_REMOVED "ReactOS odstraňuje toto zařízení."
@@ -72,7 +72,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Ovladače tohoto zařízení nejsou naintalovány."
     IDS_DEV_HARDWARE_DISABLED "Toto zařízení je vypnuto, protože mu BIOS nepřiřadil žádné zdroje."
     IDS_DEV_CANT_SHARE_IRQ "Toto zařízení využívá IRQ, které je využíváno jiným zařízením a nemůže být sdíleno.\nJe potřeba změnit konfliktní nastavení nebo odebrat ovladač způsobující konflikt."
-    IDS_DEV_FAILED_ADD "Toto zařízení nepracuje správně, protože $1 nepracuje správně."
+    IDS_DEV_FAILED_ADD "Toto zařízení nepracuje správně, protože %1 nepracuje správně."
     IDS_DEV_DISABLED_SERVICE "ReactOS nemůže nainstalovat ovladače tohoto zařízení, protože nemá přístup na disk nebo síťové umístění, na kterém se nacházejí instalační soubory."
     IDS_DEV_TRANSLATION_FAILED "Toto zařízení neodpovídá svému ovladači."
     IDS_DEV_NO_SOFTCONFIG "ReactOS nedokáže určit nastavení tohoto zařízení. Konzultujte manuál, který byl přibalen k zařízení a použijte záložku ""Zdroje"" k vybrání nastavení."

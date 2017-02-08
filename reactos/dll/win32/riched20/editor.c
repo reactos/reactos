@@ -225,12 +225,12 @@
  */
 
 #include "editor.h"
-#include "commdlg.h"
-#include "winreg.h"
+#include <commdlg.h>
+//#include "winreg.h"
 #define NO_SHLWAPI_STREAM 
-#include "shlwapi.h"
+//#include "shlwapi.h"
 #include "rtf.h"
-#include "imm.h"
+//#include "imm.h"
 #include "res.h"
 
 #define STACK_SIZE_DEFAULT  100
@@ -283,14 +283,16 @@ static ME_TextBuffer *ME_MakeText(void) {
 
 static LRESULT ME_StreamInText(ME_TextEditor *editor, DWORD dwFormat, ME_InStream *stream, ME_Style *style)
 {
-  WCHAR wszText[STREAMIN_BUFFER_SIZE+1];
   WCHAR *pText;
   LRESULT total_bytes_read = 0;
+  BOOL is_read = FALSE;
+  static const char bom_utf8[] = {0xEF, 0xBB, 0xBF};
 
   TRACE("%08x %p\n", dwFormat, stream);
 
   do {
     LONG nWideChars = 0;
+    WCHAR wszText[STREAMIN_BUFFER_SIZE+1];
 
     if (!stream->dwSize)
     {
@@ -304,8 +306,22 @@ static LRESULT ME_StreamInText(ME_TextEditor *editor, DWORD dwFormat, ME_InStrea
 
     if (!(dwFormat & SF_UNICODE))
     {
-      /* FIXME? this is doomed to fail on true MBCS like UTF-8, luckily they're unlikely to be used as CP_ACP */
-      nWideChars = MultiByteToWideChar(CP_ACP, 0, stream->buffer, stream->dwSize, wszText, STREAMIN_BUFFER_SIZE);
+      char * buf = stream->buffer;
+      DWORD size = stream->dwSize;
+      DWORD cp = CP_ACP;
+
+      if (!is_read)
+      {
+        is_read = TRUE;
+        if (stream->dwSize >= 3 && !memcmp(stream->buffer, bom_utf8, 3))
+        {
+          cp = CP_UTF8;
+          buf += 3;
+          size -= 3;
+        }
+      }
+
+      nWideChars = MultiByteToWideChar(cp, 0, buf, size, wszText, STREAMIN_BUFFER_SIZE);
       pText = wszText;
     }
     else
@@ -2687,7 +2703,6 @@ ME_TextEditor *ME_MakeEditor(ITextHost *texthost, BOOL bEmulateVersion10)
   ed->nLastTotalLength = ed->nTotalLength = 0;
   ed->nLastTotalWidth = ed->nTotalWidth = 0;
   ed->nUDArrowX = -1;
-  ed->nSequence = 0;
   ed->rgbBackColor = -1;
   ed->hbrBackground = GetSysColorBrush(COLOR_WINDOW);
   ed->bCaretAtEnd = FALSE;
@@ -2794,8 +2809,8 @@ static void ME_DestroyEditor(ME_TextEditor *editor)
   if (editor->rgbBackColor != -1)
     DeleteObject(editor->hbrBackground);
   if(editor->lpOleCallback)
-    IUnknown_Release(editor->lpOleCallback);
-  IUnknown_Release(editor->texthost);
+    IRichEditOleCallback_Release(editor->lpOleCallback);
+  ITextHost_Release(editor->texthost);
   OleUninitialize();
 
   FREE_OBJ(editor->pBuffer);
@@ -3592,6 +3607,7 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     return FALSE;
   }
   case WM_PASTE:
+  case WM_MBUTTONDOWN:
     ME_Paste(editor);
     return 0;
   case WM_CUT:
@@ -4311,10 +4327,10 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
   }
   case EM_SETOLECALLBACK:
     if(editor->lpOleCallback)
-      IUnknown_Release(editor->lpOleCallback);
-    editor->lpOleCallback = (LPRICHEDITOLECALLBACK)lParam;
+      IRichEditOleCallback_Release(editor->lpOleCallback);
+    editor->lpOleCallback = (IRichEditOleCallback*)lParam;
     if(editor->lpOleCallback)
-      IUnknown_AddRef(editor->lpOleCallback);
+      IRichEditOleCallback_AddRef(editor->lpOleCallback);
     return TRUE;
   case EM_GETWORDBREAKPROC:
     return (LRESULT)editor->pfnWordBreak;

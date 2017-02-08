@@ -30,30 +30,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(icon);
 
-#include "pshpack1.h"
-
-typedef struct
-{
-    BYTE        bWidth;          /* Width, in pixels, of the image	*/
-    BYTE        bHeight;         /* Height, in pixels, of the image	*/
-    BYTE        bColorCount;     /* Number of colors in image (0 if >=8bpp) */
-    BYTE        bReserved;       /* Reserved ( must be 0)		*/
-    WORD        wPlanes;         /* Color Planes			*/
-    WORD        wBitCount;       /* Bits per pixel			*/
-    DWORD       dwBytesInRes;    /* How many bytes in this resource?	*/
-    DWORD       dwImageOffset;   /* Where in the file is this image?	*/
-} icoICONDIRENTRY, *LPicoICONDIRENTRY;
-
-typedef struct
-{
-    WORD            idReserved;   /* Reserved (must be 0) */
-    WORD            idType;       /* Resource Type (RES_ICON or RES_CURSOR) */
-    WORD            idCount;      /* How many images */
-    icoICONDIRENTRY idEntries[1]; /* An entry for each image (idCount of 'em) */
-} icoICONDIR, *LPicoICONDIR;
-
-#include "poppack.h"
-
 #if 0
 static void dumpIcoDirEnty ( LPicoICONDIRENTRY entry )
 {

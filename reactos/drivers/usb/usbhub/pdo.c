@@ -280,7 +280,7 @@ USBHUB_PdoHandleInternalDeviceControl(
                     DPRINT1("URB_FUNCTION_CLASS_INTERFACE\n");
                     break;
                 case URB_FUNCTION_VENDOR_DEVICE:
-                    DPRINT1("URB_FUNCTION_VENDOR_DEVICE\n");
+                    DPRINT("URB_FUNCTION_VENDOR_DEVICE\n");
                     break;
                 default:
                     DPRINT1("IOCTL_INTERNAL_USB_SUBMIT_URB Function %x NOT IMPLEMENTED\n", Urb->UrbHeader.Function);
@@ -558,6 +558,7 @@ USBHUB_PdoHandlePnp(
     ULONG Index;
     ULONG bFound;
     PDEVICE_RELATIONS DeviceRelation;
+    PDEVICE_OBJECT ParentDevice;
 
     UsbChildExtension = (PHUB_CHILDDEVICE_EXTENSION)DeviceObject->DeviceExtension;
     Stack = IoGetCurrentIrpStackLocation(Irp);
@@ -645,6 +646,7 @@ USBHUB_PdoHandlePnp(
         {
             PHUB_DEVICE_EXTENSION HubDeviceExtension = (PHUB_DEVICE_EXTENSION)UsbChildExtension->ParentDeviceObject->DeviceExtension;
             PUSB_BUS_INTERFACE_HUB_V5 HubInterface = &HubDeviceExtension->HubInterface;
+            ParentDevice = UsbChildExtension->ParentDeviceObject;
 
             DPRINT("IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
 
@@ -671,10 +673,13 @@ USBHUB_PdoHandlePnp(
             Irp->IoStatus.Status = STATUS_SUCCESS;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
+            /* delete device */
+            IoDeleteDevice(DeviceObject);
+
             if (bFound)
             {
-                /* Delete the device object */
-                IoDeleteDevice(DeviceObject);
+                /* invalidate device relations */
+                IoInvalidateDeviceRelations(ParentDevice, BusRelations);
             }
 
             return STATUS_SUCCESS;
@@ -730,6 +735,12 @@ USBHUB_PdoHandlePnp(
             // pass irp down
             IoSkipCurrentIrpStackLocation(Irp);
             return IoCallDriver(UsbChildExtension->ParentDeviceObject, Irp);
+        }
+        case IRP_MN_SURPRISE_REMOVAL:
+        {
+            DPRINT("[USBHUB] HandlePnp IRP_MN_SURPRISE_REMOVAL\n");
+            Status = STATUS_SUCCESS;
+            break;
         }
         default:
         {

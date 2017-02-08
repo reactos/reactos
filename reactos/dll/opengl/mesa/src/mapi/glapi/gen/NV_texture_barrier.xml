@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!DOCTYPE OpenGLAPI SYSTEM "gl_API.dtd">
+
+<!-- Note: no GLX protocol info yet. -->
+
+
+<OpenGLAPI>
+
+<category name="GL_NV_texture_barrier" number="381">
+    <function name="TextureBarrierNV" offset="assign" />
+</category>
+
+</OpenGLAPI>

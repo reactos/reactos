@@ -1,6 +1,4 @@
 
-set_rc_compiler()
-
 list(APPEND SOURCE
     about.c
     affinity.c
@@ -23,7 +21,6 @@ list(APPEND SOURCE
     taskmgr.rc)
 
 add_executable(taskmgr ${SOURCE})
-
 set_module_type(taskmgr win32gui UNICODE)
 add_importlibs(taskmgr advapi32 user32 gdi32 shell32 comctl32 msvcrt kernel32 ntdll)
 add_pch(taskmgr precomp.h)

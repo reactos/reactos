@@ -30,7 +30,7 @@ static MUI_ENTRY frFRLanguagePageEntries[] =
     {
         8,
         11,
-        "   et appuyer sur ENTER.",
+        "   et appuyer sur ENTRêE.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -42,7 +42,7 @@ static MUI_ENTRY frFRLanguagePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continuer  F3 = Quitter",
+        "   ENTRêE = Continuer  F3 = Quitter",
         TEXT_TYPE_STATUS
     },
     {
@@ -82,7 +82,7 @@ static MUI_ENTRY frFRWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Appuyer sur ENTER pour installer ReactOS.",
+        "\x07  Appuyer sur ENTRêE pour installer ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -118,7 +118,7 @@ static MUI_ENTRY frFRWelcomePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continuer  R = RÇparer F3 = Quitter",
+        "   ENTRêE = Continuer  R = RÇparer F3 = Quitter",
         TEXT_TYPE_STATUS
     },
     {
@@ -206,7 +206,7 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         8,
         23,
-        "\x07  Appuyer sur ENTER pour installer ReactOS.",
+        "\x07  Appuyer sur ENTRêE pour installer ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -218,7 +218,7 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continuer   F3 = Quitter",
+        "   ENTRêE = Continuer   F3 = Quitter",
         TEXT_TYPE_STATUS
     },
     {
@@ -342,7 +342,7 @@ static MUI_ENTRY frFRLicensePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Retour",
+        "   ENTRêE = Retour",
         TEXT_TYPE_STATUS
     },
     {
@@ -417,7 +417,7 @@ static MUI_ENTRY frFRDevicePageEntries[] =
     {
         6,
         21,
-        "Appuyer sur ENTER pour choisir un autre rÇglage.",
+        "Appuyer sur ENTRêE pour choisir un autre rÇglage.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -429,13 +429,13 @@ static MUI_ENTRY frFRDevicePageEntries[] =
     {
         6,
         24,
-        "ces rÇglages matÇriels\" et appuyer sur ENTER.",
+        "ces rÇglages matÇriels\" et appuyer sur ENTRêE.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continuer   F3 = Quitter",
+        "   ENTRêE = Continuer   F3 = Quitter",
         TEXT_TYPE_STATUS
     },
     {
@@ -493,19 +493,19 @@ static MUI_ENTRY frFRRepairPageEntries[] =
     {
         8,
         19,
-        "\x07  Appuyer sur ESC pour retourner Ö la page principale.",
+        "\x07  Appuyer sur êCHAP pour retourner Ö la page principale.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Appuyer sur ENTER pour redÇmarrer votre ordinateur.",
+        "\x07  Appuyer sur ENTRêE pour redÇmarrer votre ordinateur.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ESC = Page principale  ENTER = RedÇmarrer",
+        "   êCHAP = Page principale  ENTRêE = RedÇmarrer",
         TEXT_TYPE_STATUS
     },
     {
@@ -538,13 +538,13 @@ static MUI_ENTRY frFRComputerPageEntries[] =
     {
         8,
         11,
-        "   Puis appuyer sur ENTER.",
+        "   Puis appuyer sur ENTRêE.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Appuyer sur ESC pour revenir Ö la page prÇcÇdente sans changer",
+        "\x07  Appuyer sur êCHAP pour revenir Ö la page prÇcÇdente sans changer",
         TEXT_STYLE_NORMAL
     },
     {
@@ -556,7 +556,7 @@ static MUI_ENTRY frFRComputerPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continuer   ESC = Annuler   F3 = Quitter",
+        "   ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
         TEXT_TYPE_STATUS
     },
     {
@@ -636,7 +636,7 @@ static MUI_ENTRY frFRQuitPageEntries[] =
     {
         10,
         11,
-        "Appuyer sur ENTER pour redÇmarrer votre ordinateur.",
+        "Appuyer sur ENTRêE pour redÇmarrer votre ordinateur.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -675,13 +675,13 @@ static MUI_ENTRY frFRDisplayPageEntries[] =
     {
         8,
         11,
-        "   Appuyer sur ENTER.",
+        "   Appuyer sur ENTRêE.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Appuyer sur ESC pour revenir Ö la page prÇcÇdente sans changer",
+        "\x07  Appuyer sur êCHAP pour revenir Ö la page prÇcÇdente sans changer",
         TEXT_STYLE_NORMAL
     },
     {
@@ -693,7 +693,7 @@ static MUI_ENTRY frFRDisplayPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continuer   ESC = Annuler   F3 = Quitter",
+        "   ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
         TEXT_TYPE_STATUS
     },
     {
@@ -733,13 +733,13 @@ static MUI_ENTRY frFRSuccessPageEntries[] =
     {
         10,
         11,
-        "Appuyer sur ENTER pour redÇmarrer votre ordinateur.",
+        "Appuyer sur ENTRêE pour redÇmarrer votre ordinateur.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = RedÇmarrer l'ordinateur",
+        "   ENTRêE = RedÇmarrer l'ordinateur",
         TEXT_TYPE_STATUS
     },
     {
@@ -779,13 +779,13 @@ static MUI_ENTRY frFRBootPageEntries[] =
     {
         6,
         14,
-        "appuyer sur ENTER.",
+        "appuyer sur ENTRêE.",
         TEXT_STYLE_NORMAL,
     },
     {
         0,
         0,
-        "   ENTER = Continuer   F3 = Quitter",
+        "   ENTRêE = Continuer   F3 = Quitter",
         TEXT_TYPE_STATUS
     },
     {
@@ -826,7 +826,7 @@ static MUI_ENTRY frFRSelectPartitionEntries[] =
     {
         8,
         13,
-        "\x07  Appuyer sur ENTER pour installer ReactOS sur la partition choisie.",
+        "\x07  Appuyer sur ENTRêE pour installer ReactOS sur la partition choisie.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -872,13 +872,13 @@ static MUI_ENTRY frFRFormatPartitionEntries[] =
     {
         6,
         10,
-        "Setup va formater la partition. Appuyer sur ENTER pour continuer.",
+        "Setup va formater la partition. Appuyer sur ENTRêE pour continuer.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continuer   F3 = Quitter",
+        "   ENTRêE = Continuer   F3 = Quitter",
         TEXT_TYPE_STATUS
     },
     {
@@ -930,7 +930,7 @@ static MUI_ENTRY frFRInstallDirectoryEntries[] =
     {
         0,
         0,
-        "   ENTER = Continuer   F3 = Quitter",
+        "   ENTRêE = Continuer   F3 = Quitter",
         TEXT_TYPE_STATUS
     },
     {
@@ -1022,7 +1022,7 @@ static MUI_ENTRY frFRBootLoaderEntries[] =
     {
         0,
         0,
-        "   ENTER = Continuer   F3 = Quitter",
+        "   ENTRêE = Continuer   F3 = Quitter",
         TEXT_TYPE_STATUS
     },
     {
@@ -1056,13 +1056,13 @@ static MUI_ENTRY frFRKeyboardSettingsEntries[] =
     {
         8,
         11,
-        "   puis appuyez sur ENTER.",
+        "   puis appuyez sur ENTRêE.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Appuyez sur ESC pour revenir a la page prÇcÇdente sans changer",
+        "\x07  Appuyez sur êCHAP pour revenir a la page prÇcÇdente sans changer",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1074,7 +1074,7 @@ static MUI_ENTRY frFRKeyboardSettingsEntries[] =
     {
         0,
         0,
-        "   ENTER = Continuer   ESC = Annuler   F3 = Quitter",
+        "   ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
         TEXT_TYPE_STATUS
     },
     {
@@ -1108,13 +1108,13 @@ static MUI_ENTRY frFRLayoutSettingsEntries[] =
     {
         8,
         11,
-        "    choisie. Puis appuyez sur ENTER.",
+        "    choisie. Puis appuyez sur ENTRêE.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Appuyez sur ESC pour revenir a la page prÇcÇdente sans changer",
+        "\x07  Appuyez sur êCHAP pour revenir a la page prÇcÇdente sans changer",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1126,7 +1126,7 @@ static MUI_ENTRY frFRLayoutSettingsEntries[] =
     {
         0,
         0,
-        "   ENTER = Continuer   ESC = Annuler   F3 = Quitter",
+        "   ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
         TEXT_TYPE_STATUS
     },
     {
@@ -1190,19 +1190,19 @@ static MUI_ENTRY frFRSelectFSEntries[] =
     {
         8,
         21,
-        "\x07  Appuyez sur ENTER pour formater la partition.",
+        "\x07  Appuyez sur ENTRêE pour formater la partition.",
         0
     },
     {
         8,
         23,
-        "\x07  Appuyez sur ESC pour sÇlectionner une autre partition.",
+        "\x07  Appuyez sur êCHAP pour sÇlectionner une autre partition.",
         0
     },
     {
         0,
         0,
-        "   ENTER = Continuer   ESC = Annuler   F3 = Quitter",
+        "   ENTRêE = Continuer   êCHAP = Annuler   F3 = Quitter",
         TEXT_TYPE_STATUS
     },
 
@@ -1243,13 +1243,13 @@ static MUI_ENTRY frFRDeletePartitionEntries[] =
     {
         8,
         21,
-        "\x07  Appuyez sur ESC pour annuler.",
+        "\x07  Appuyez sur êCHAP pour annuler.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   D = Supprimer la Partition   ESC = Annuler   F3 = Quitter",
+        "   D = Supprimer la Partition   êCHAP = Annuler   F3 = Quitter",
         TEXT_TYPE_STATUS
     },
     {
@@ -1265,7 +1265,7 @@ static MUI_ENTRY frFRRegistryEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Installation de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -1297,64 +1297,64 @@ MUI_ERROR frFRErrorEntries[] =
         "ordinateur. Si vous quittez Setup maintenant, vous devrez\n"
         "lancer Setup de nouveau pour installer ReactOS.\n"
         "\n"
-        "  \x07  Appuyer sur ENTER pour continuer Setup.\n"
+        "  \x07  Appuyer sur ENTRêE pour continuer Setup.\n"
         "  \x07  Appuyer sur F3 pour quitter Setup.",
-        "F3= Quitter  ENTER = Continuer"
+        "F3= Quitter  ENTRêE = Continuer"
     },
     {
         //ERROR_NO_HDD
         "Setup n'a pu trouver un disque dur.\n",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_NO_SOURCE_DRIVE
         "Setup n'a pu trouver son lecteur source.\n",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_LOAD_TXTSETUPSIF
         "Setup n'a pas rÇussi Ö charger le fichier TXTSETUP.SIF.\n",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_CORRUPT_TXTSETUPSIF
         "Setup a trouvÇ un fichier TXTSETUP.SIF corrompu.\n",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_SIGNATURE_TXTSETUPSIF,
         "Setup a trouvÇ une signature invalide dans TXTSETUP.SIF.\n",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_DRIVE_INFORMATION
         "Setup n'a pu rÇcupÇrer les informations du disque systäme.\n",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_WRITE_BOOT,
         "Echec de l'installation du code de dÇmarrage FAT sur la partition systäme.",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_LOAD_COMPUTER,
         "Setup n'a pu charger la liste de type d'ordinateurs.\n",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_LOAD_DISPLAY,
         "Setup n'a pu charger la liste de rÇglages des Çcrans.\n",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_LOAD_KEYBOARD,
         "Setup n'a pu charger la liste de types de claviers.\n",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_LOAD_KBLAYOUT,
         "Setup n'a pu charger la liste de dispositions de claviers.\n",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_WARN_PARTITION,
@@ -1364,8 +1364,8 @@ MUI_ERROR frFRErrorEntries[] =
         "CrÇer ou effacer des partitions peut dÇtruire la table de partition.\n"
         "\n"
         "  \x07  Appuyer sur F3 pour quitter Setup."
-        "  \x07  Appuyer sur ENTER pour continuer Setup.",
-        "F3= Quitter  ENTER = Continuer"
+        "  \x07  Appuyer sur ENTRêE pour continuer Setup.",
+        "F3= Quitter  ENTRêE = Continuer"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1385,115 +1385,115 @@ MUI_ERROR frFRErrorEntries[] =
     {
         //ERROR_INSTALL_BOOTCODE,
         "Echec de l'installation du code de dÇmarrage FAT sur la partition systäme.",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_NO_FLOPPY,
         "Pas de disque dans le lecteur A:.",
-        "ENTER = Continuer"
+        "ENTRêE = Continuer"
     },
     {
         //ERROR_UPDATE_KBSETTINGS,
         "Setup n'a pu mettre Ö jour les rÇglages de disposition du clavier.",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_UPDATE_DISPLAY_SETTINGS,
         "Setup n'a pu mettre Ö jour les rÇglages de l'Çcran.",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_IMPORT_HIVE,
         "Setup n'a pu importer un fichier ruche.",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_FIND_REGISTRY
         "Setup n'a pu trouver les fichiers de la base de registres.",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_CREATE_HIVE,
         "Setup n'a pu crÇer les ruches de la base de registres.",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
         "Setup n'a pu initialiser la base de registres.",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_INVALID_CABINET_INF,
         "Le Cabinet n'a pas de fichier inf valide.\n",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_CABINET_MISSING,
         "Cabinet non trouvÇ.\n",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_CABINET_SCRIPT,
         "Cabinet n'a pas de script de setup.\n",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_COPY_QUEUE,
         "Setup n'a pu ouvrir la file d'attente de copie de fichiers.\n",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_CREATE_DIR,
         "Setup n'a pu crÇer les rÇpertoires d'installation.",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_TXTSETUP_SECTION,
         "Setup n'a pu trouver la section 'Directories'\n"
         "dans TXTSETUP.SIF.\n",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_CABINET_SECTION,
         "Setup n'a pu trouver la section 'Directories\n"
         "dans le cabinet.\n",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_CREATE_INSTALL_DIR
         "Setup n'a pu crÇer le rÇpertoire d'installation.",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_FIND_SETUPDATA,
         "Setup n'a pu trouver la section 'SetupData'\n"
         "dans TXTSETUP.SIF.\n",
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_WRITE_PTABLE,
         "Setup n'a pu Çcrire les tables de partition.\n"
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_ADDING_CODEPAGE,
         "Setup n'a pu ajouter la page de codes Ö la base de registres.\n"
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_UPDATE_LOCALESETTINGS,
         "Setup n'a pu changer la langue systäme.\n"
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
         "Setup n'a pas pu ajouter les dispositions de clavier au registre.\n"
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_UPDATE_GEOID,
         "Setup n'a pas pu dÇfinir la geo id.\n"
-        "ENTER = RedÇmarrer l'ordinateur"
+        "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
         //ERROR_INSUFFICIENT_DISKSPACE,
@@ -1613,9 +1613,9 @@ MUI_STRING frFRStrings[] =
     {STRING_PLEASEWAIT,
      "   Veuillez patienter..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Installer   C = CrÇer Partition   F3 = Quitter"},
+     "   ENTRêE = Installer   C = CrÇer Partition   F3 = Quitter"},
     {STRING_INSTALLDELETEPARTITION,
-     "   ENTER = Installer   D = Supprimer Partition   F3 = Quitter"},
+     "   ENTRêE = Installer   D = Supprimer Partition   F3 = Quitter"},
     {STRING_PARTITIONSIZE,
      "Taille de la nouvelle partition :"},
     {STRING_CHOOSENEWPARTITION,
@@ -1623,7 +1623,7 @@ MUI_STRING frFRStrings[] =
     {STRING_HDDSIZE,
     "Veuillez entrer la taille de la nouvelle partition en mÇgaoctets."},
     {STRING_CREATEPARTITION,
-     "   ENTER = CrÇer Partition   ESC = Annuler   F3 = Quitter"},
+     "   ENTRêE = CrÇer Partition   êCHAP = Annuler   F3 = Quitter"},
     {STRING_PARTFORMAT,
     "Cette Partition sera ensuite formatÇe."},
     {STRING_NONFORMATTEDPART,
@@ -1633,9 +1633,9 @@ MUI_STRING frFRStrings[] =
     {STRING_CHECKINGPART,
     "Setup vÇrifie la partition sÇlectionnÇe."},
     {STRING_QUITCONTINUE,
-    "F3= Quitter  ENTER = Continuer"},
+    "F3= Quitter  ENTRêE = Continuer"},
     {STRING_REBOOTCOMPUTER,
-    "ENTER = RedÇmarrer l'ordinateur"},
+    "ENTRêE = RedÇmarrer l'ordinateur"},
     {STRING_TXTSETUPFAILED,
     "Setup n'a pu trouver la section '%S'\ndans TXTSETUP.SIF.\n"},
     {STRING_COPYING,
@@ -1657,7 +1657,7 @@ MUI_STRING frFRStrings[] =
     {STRING_DONE,
     "   TerminÇ..."},
     {STRING_REBOOTCOMPUTER2,
-    "   ENTER = RedÇmarrer l'ordinateur"},
+    "   ENTRêE = RedÇmarrer l'ordinateur"},
     {STRING_CONSOLEFAIL1,
     "Impossible d'ouvrir la console\n\n"},
     {STRING_CONSOLEFAIL2,

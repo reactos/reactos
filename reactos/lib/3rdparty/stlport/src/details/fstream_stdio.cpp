@@ -300,6 +300,41 @@ bool _Filebuf_base::_M_open( int file_no, ios_base::openmode )
   return true;
 }
 
+bool _Filebuf_base::_M_open(FILE *file, ios_base::openmode openmode)
+{
+  _STLP_fd file_no;
+
+  if (_M_is_open)
+    return false;
+
+  _M_file = file;
+
+  if (_M_file) {
+    file_no = fileno(_M_file);
+  } else {
+    return false;
+  }
+
+  // unset buffering immediately
+  setbuf(_M_file, 0);
+
+  _M_is_open = true;
+
+  if (openmode & ios_base::ate) {
+    if (FSEEK(_M_file, 0, SEEK_END) != 0)
+      _M_is_open = false;
+  }
+
+  _M_file_id = file_no;
+  _M_should_close = _M_is_open;
+  _M_openmode = openmode;
+
+  if (_M_is_open)
+    _M_regular_file = _STLP_PRIV __is_regular_file(_M_file_id);
+
+  return (_M_is_open != 0);
+}
+
 bool _Filebuf_base::_M_close()
 {
   if (!_M_is_open)

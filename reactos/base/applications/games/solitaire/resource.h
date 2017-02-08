@@ -1,3 +1,4 @@
+#pragma once
 
 /* Icon */
 #define IDI_SOLITAIRE                   100

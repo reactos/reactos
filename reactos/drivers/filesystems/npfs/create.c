@@ -1,7 +1,7 @@
 /*
 * COPYRIGHT:  See COPYING in the top level directory
 * PROJECT:    ReactOS kernel
-* FILE:       drivers/fs/np/create.c
+* FILE:       drivers/filesystems/npfs/create.c
 * PURPOSE:    Named pipe filesystem
 * PROGRAMMER: David Welch <welch@cwcom.net>
 */
@@ -49,6 +49,7 @@ NpfsAllocateCcb(CCB_TYPE Type, PNPFS_FCB Fcb)
 
     Ccb->RefCount = 1;
     Ccb->Type = Type;
+    // FIXME: why does this function not reference Fcb?
     Ccb->Fcb = Fcb;
     Ccb->OtherSide = NULL;
 
@@ -60,7 +61,7 @@ VOID
 NpfsReferenceCcb(PNPFS_CCB Ccb)
 {
     ASSERT(Ccb->RefCount > 0);
-    InterlockedIncrement((PLONG)&Ccb->RefCount);
+    InterlockedIncrement(&Ccb->RefCount);
 }
 
 static
@@ -69,7 +70,7 @@ NpfsDereferenceCcb(PNPFS_CCB Ccb)
 {
     /* Decrement reference count */
     ASSERT(Ccb->RefCount > 0);
-    if (InterlockedDecrement((PLONG)&Ccb->RefCount) == 0)
+    if (InterlockedDecrement(&Ccb->RefCount) == 0)
     {
         /* Its zero, delete CCB */
         ExFreePoolWithTag(Ccb, TAG_NPFS_CCB);
@@ -249,9 +250,9 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
     PNPFS_CCB ClientCcb;
     PNPFS_CCB ServerCcb = NULL;
     PNPFS_VCB Vcb;
-    ACCESS_MASK DesiredAccess;
     NTSTATUS Status;
 #ifndef USING_PROPER_NPFS_WAIT_SEMANTICS
+    ACCESS_MASK DesiredAccess;
     BOOLEAN SpecialAccess;
 #endif
 
@@ -262,7 +263,9 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
     FileObject = IoStack->FileObject;
     RelatedFileObject = FileObject->RelatedFileObject;
     FileName = &FileObject->FileName;
+#ifndef USING_PROPER_NPFS_WAIT_SEMANTICS
     DesiredAccess = IoStack->Parameters.CreatePipe.SecurityContext->DesiredAccess;
+#endif
 
     DPRINT("FileObject %p\n", FileObject);
     DPRINT("FileName %wZ\n", &FileObject->FileName);
@@ -444,9 +447,9 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
                 NpfsDereferenceCcb(ClientCcb);
                 KeUnlockMutex(&Fcb->CcbListLock);
                 NpfsDereferenceFcb(Fcb);
-                Irp->IoStatus.Status = STATUS_OBJECT_PATH_NOT_FOUND;
+                Irp->IoStatus.Status = STATUS_OBJECT_NAME_NOT_FOUND;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
-                return STATUS_OBJECT_PATH_NOT_FOUND;
+                return STATUS_OBJECT_NAME_NOT_FOUND;
             }
         }
         else

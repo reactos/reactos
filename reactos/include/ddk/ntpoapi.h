@@ -150,9 +150,11 @@ typedef struct _PROCESSOR_IDLE_TIMES {
   ULONG IdleHandlerReserved[4];
 } PROCESSOR_IDLE_TIMES, *PPROCESSOR_IDLE_TIMES;
 
-typedef BOOLEAN
-(FASTCALL*PPROCESSOR_IDLE_HANDLER)(
-  IN OUT PPROCESSOR_IDLE_TIMES IdleTimes);
+_Function_class_(PROCESSOR_IDLE_HANDLER)
+typedef NTSTATUS
+(FASTCALL *PPROCESSOR_IDLE_HANDLER)(
+  _In_ ULONG_PTR Context,
+  _Inout_ PPROCESSOR_IDLE_TIMES IdleTimes);
 
 typedef struct _PROCESSOR_IDLE_HANDLER_INFO {
   ULONG HardwareLatency;
@@ -188,17 +190,21 @@ typedef enum _POWER_STATE_HANDLER_TYPE {
   PowerStateMaximum
 } POWER_STATE_HANDLER_TYPE, *PPOWER_STATE_HANDLER_TYPE;
 
+_Function_class_(ENTER_STATE_SYSTEM_HANDLER)
+_IRQL_requires_same_
 typedef NTSTATUS
-(NTAPI*PENTER_STATE_SYSTEM_HANDLER)(
-  IN PVOID SystemContext);
+(NTAPI *PENTER_STATE_SYSTEM_HANDLER)(
+  _In_ PVOID SystemContext);
 
+_Function_class_(ENTER_STATE_HANDLER)
+_IRQL_requires_same_
 typedef NTSTATUS
-(NTAPI*PENTER_STATE_HANDLER)(
-  IN PVOID Context,
-  IN PENTER_STATE_SYSTEM_HANDLER SystemHandler OPTIONAL,
-  IN PVOID SystemContext,
-  IN LONG NumberProcessors,
-  IN LONG volatile *Number);
+(NTAPI *PENTER_STATE_HANDLER)(
+  _In_opt_ PVOID Context,
+  _In_opt_ PENTER_STATE_SYSTEM_HANDLER SystemHandler,
+  _In_opt_ PVOID SystemContext,
+  _In_ LONG NumberProcessors,
+  _In_opt_ LONG volatile *Number);
 
 typedef struct _POWER_STATE_HANDLER {
   POWER_STATE_HANDLER_TYPE Type;
@@ -208,26 +214,30 @@ typedef struct _POWER_STATE_HANDLER {
   PVOID Context;
 } POWER_STATE_HANDLER, *PPOWER_STATE_HANDLER;
 
+_Function_class_(ENTER_STATE_NOTIFY_HANDLER)
+_IRQL_requires_same_
 typedef NTSTATUS
-(NTAPI*PENTER_STATE_NOTIFY_HANDLER)(
-  IN POWER_STATE_HANDLER_TYPE State,
-  IN PVOID Context,
-  IN BOOLEAN Entering);
+(NTAPI *PENTER_STATE_NOTIFY_HANDLER)(
+  _In_ POWER_STATE_HANDLER_TYPE State,
+  _In_ PVOID Context,
+  _In_ BOOLEAN Entering);
 
 typedef struct _POWER_STATE_NOTIFY_HANDLER {
   PENTER_STATE_NOTIFY_HANDLER Handler;
   PVOID Context;
 } POWER_STATE_NOTIFY_HANDLER, *PPOWER_STATE_NOTIFY_HANDLER;
 
+_IRQL_requires_max_(APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtPowerInformation(
-  IN POWER_INFORMATION_LEVEL InformationLevel,
-  IN PVOID InputBuffer OPTIONAL,
-  IN ULONG InputBufferLength,
-  OUT PVOID OutputBuffer OPTIONAL,
-  IN ULONG OutputBufferLength);
+  _In_ POWER_INFORMATION_LEVEL InformationLevel,
+  _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,
+  _In_ ULONG InputBufferLength,
+  _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,
+  _In_ ULONG OutputBufferLength);
 
 #define PROCESSOR_STATE_TYPE_PERFORMANCE  1
 #define PROCESSOR_STATE_TYPE_THROTTLE     2
@@ -261,49 +271,59 @@ typedef struct _PROCESSOR_STATE_HANDLER2 {
   PROCESSOR_PERF_LEVEL PerfLevel[1];
 } PROCESSOR_STATE_HANDLER2, *PPROCESSOR_STATE_HANDLER2;
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetThreadExecutionState(
-  IN EXECUTION_STATE esFlags,
-  OUT EXECUTION_STATE *PreviousFlags);
+  _In_ EXECUTION_STATE esFlags,
+  _Out_ EXECUTION_STATE *PreviousFlags);
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRequestWakeupLatency(
-  IN LATENCY_TIME latency);
+  _In_ LATENCY_TIME latency);
 
+_IRQL_requires_max_(APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtInitiatePowerAction(
-  IN POWER_ACTION SystemAction,
-  IN SYSTEM_POWER_STATE MinSystemState,
-  IN ULONG Flags,
-  IN BOOLEAN Asynchronous);
+  _In_ POWER_ACTION SystemAction,
+  _In_ SYSTEM_POWER_STATE MinSystemState,
+  _In_ ULONG Flags,
+  _In_ BOOLEAN Asynchronous);
 
+_IRQL_requires_max_(APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetSystemPowerState(
-  IN POWER_ACTION SystemAction,
-  IN SYSTEM_POWER_STATE MinSystemState,
-  IN ULONG Flags);
+  _In_ POWER_ACTION SystemAction,
+  _In_ SYSTEM_POWER_STATE MinSystemState,
+  _In_ ULONG Flags);
 
+_IRQL_requires_max_(APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtGetDevicePowerState(
-  IN HANDLE Device,
-  OUT DEVICE_POWER_STATE *State);
+  _In_ HANDLE Device,
+  _Out_ DEVICE_POWER_STATE *State);
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCancelDeviceWakeupRequest(
-  IN HANDLE Device);
+  _In_ HANDLE Device);
 
+_IRQL_requires_max_(APC_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 BOOLEAN
 NTAPI
@@ -313,7 +333,7 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRequestDeviceWakeup(
-  IN HANDLE Device);
+  _In_ HANDLE Device);
 
 #define WINLOGON_LOCK_ON_SLEEP            0x00000001
 

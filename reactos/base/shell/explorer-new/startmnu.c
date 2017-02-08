@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 /*
  * Start menu button context menu
@@ -59,10 +59,10 @@ CreateContextMenuFromShellFolderPidl(IN HWND hWndOwner,
     hRet = IShellFolder_GetUIObjectOf(psf,
                                       hWndOwner,
                                       1,
-                                      (LPCITEMIDLIST*)&pidl, /* FIXME: shouldn't need a typecast! */
+                                      (LPCITEMIDLIST *)&pidl,
                                       &IID_IContextMenu,
                                       NULL,
-                                      (PVOID*)&pcm);
+                                      (PVOID *)&pcm);
     if (SUCCEEDED(hRet))
     {
         hPopup = CreatePopupMenu();
@@ -82,9 +82,10 @@ CreateContextMenuFromShellFolderPidl(IN HWND hWndOwner,
                 return hPopup;
             }
 
-            IContextMenu_Release(pcm);
             DestroyMenu(hPopup);
         }
+
+        IContextMenu_Release(pcm);
     }
 
     return NULL;
@@ -96,7 +97,7 @@ OnStartContextMenuCommand(IN HWND hWndOwner,
                           IN PVOID pcmContext  OPTIONAL,
                           IN PVOID Context  OPTIONAL)
 {
-    PSTARTMNU_CTMENU_CTX psmcmc = (PSTARTMNU_CTMENU_CTX)pcmContext;
+    PSTARTMNU_CTMENU_CTX psmcmc = pcmContext;
 
     if (uiCmdId != 0)
     {
@@ -231,7 +232,7 @@ CreateStartContextMenu(IN HWND hWndOwner,
                 hRet = IShellFolder_BindToObject(psfDesktop,
                                                  pidlStart,
                                                  NULL,
-                                                 (REFIID)&IID_IShellFolder, /* FIXME: Shouldn't require a typecast */
+                                                 &IID_IShellFolder,
                                                  (PVOID*)&psfStart);
                 if (SUCCEEDED(hRet))
                 {
@@ -255,7 +256,7 @@ CreateStartContextMenu(IN HWND hWndOwner,
                             AddStartContextMenuItems(hWndOwner,
                                                      hPopup);
 
-                            *((PSTARTMNU_CTMENU_CTX*)ppcmContext) = psmcmc;
+                            *ppcmContext = psmcmc;
                             return hPopup;
                         }
                         else
@@ -772,13 +773,10 @@ IStartMenuSiteImpl_Construct(IN ITrayWindow *Tray)
     IStartMenuSiteImpl *This;
 
     This = HeapAlloc(hProcessHeap,
-                     0,
+                     HEAP_ZERO_MEMORY,
                      sizeof(*This));
     if (This == NULL)
         return NULL;
-
-    ZeroMemory(This,
-               sizeof(*This));
 
     This->lpVtbl = &IStartMenuSiteImpl_Vtbl;
     This->lpServiceProviderVtbl = &IServiceProviderImpl_Vtbl;
@@ -815,11 +813,10 @@ UpdateStartMenu(IN OUT IMenuPopup *pMenuPopup,
 
     hRet = IMenuPopup_QueryInterface(pMenuPopup,
                                      &IID_IBanneredBar,
-                                     (PVOID)&pbb);
+                                     (PVOID *)&pbb);
     if (SUCCEEDED(hRet))
     {
         hRet = IBanneredBar_SetBitmap(pbb, hbmBanner);
-
 
         /* Update the icon size */
         hRet = IBanneredBar_SetIconSize(pbb,
@@ -831,7 +828,7 @@ UpdateStartMenu(IN OUT IMenuPopup *pMenuPopup,
     return hRet;
 }
 
-IMenuPopup*
+IMenuPopup *
 CreateStartMenu(IN ITrayWindow *Tray,
                 OUT IMenuBand **ppMenuBand,
                 IN HBITMAP hbmBanner  OPTIONAL,
@@ -855,7 +852,7 @@ CreateStartMenu(IN ITrayWindow *Tray,
                           NULL,
                           CLSCTX_INPROC_SERVER,
                           &IID_IMenuPopup,
-                          (PVOID*)&pMp);
+                          (PVOID *)&pMp);
     if (FAILED(hr))
     {
         DbgPrint("CoCreateInstance failed: %x\n", hr);
@@ -864,7 +861,7 @@ CreateStartMenu(IN ITrayWindow *Tray,
 
     hr = IMenuPopup_QueryInterface(pMp,
                                    &IID_IObjectWithSite,
-                                   (PVOID*)&pOws);
+                                   (PVOID *)&pOws);
     if (FAILED(hr))
     {
         DbgPrint("IMenuPopup_QueryInterface failed: %x\n", hr);
@@ -872,7 +869,7 @@ CreateStartMenu(IN ITrayWindow *Tray,
     }
 
     /* Set the menu site so we can handle messages */
-    hr = IObjectWithSite_SetSite(pOws, (IUnknown*)pSms);
+    hr = IObjectWithSite_SetSite(pOws, (IUnknown *)pSms);
     if (FAILED(hr))
     {
         DbgPrint("IObjectWithSite_SetSite failed: %x\n", hr);
@@ -903,7 +900,7 @@ CreateStartMenu(IN ITrayWindow *Tray,
         goto cleanup;
     }
 
-    hr = IUnknown_QueryInterface(pUnk, &IID_IBandSite, (PVOID*)&pBs);
+    hr = IUnknown_QueryInterface(pUnk, &IID_IBandSite, (PVOID *)&pBs);
     if (FAILED(hr))
     {
         DbgPrint("IUnknown_QueryInterface pBs failed: %x\n", hr);
@@ -919,7 +916,7 @@ CreateStartMenu(IN ITrayWindow *Tray,
         goto cleanup;
     }
 
-    hr = IBandSite_GetBandObject(pBs, dwBandId, &IID_IMenuBand, (PVOID*)&pMb);
+    hr = IBandSite_GetBandObject(pBs, dwBandId, &IID_IMenuBand, (PVOID *)&pMb);
     if (FAILED(hr))
     {
         DbgPrint("IBandSite_GetBandObject failed: %x\n", hr);

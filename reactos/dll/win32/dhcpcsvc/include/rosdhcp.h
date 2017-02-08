@@ -2,15 +2,22 @@
 #define ROSDHCP_H
 
 #define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winsvc.h>
 #include <winsock2.h>
 #define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
-#include <iprtrmib.h>
-#include <iphlpapi.h>
+//#include <iprtrmib.h>
+//#include <iphlpapi.h>
 #include <dhcpcsdk.h>
 #include <dhcp/rosdhcp_public.h>
-#include <stdio.h>
-#include <time.h>
+//#include <stdio.h>
+//#include <time.h>
 #include "debug.h"
 #define IFNAMSIZ MAX_INTERFACE_NAME_LEN
 #undef interface /* wine/objbase.h -- Grrr */

@@ -32,6 +32,14 @@ Author:
 #endif
 
 //
+// Use dummy macros, if SAL 2 is not available
+//
+#include <sal.h>
+#if (_SAL_VERSION < 20)
+#include <no_sal2.h>
+#endif
+
+//
 // Headers needed for NDK
 //
 #include <stdio.h>          // C Standard Header

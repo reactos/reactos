@@ -20,20 +20,20 @@
 
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "winnls.h"
-#include "objbase.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winerror.h"
+#include <winuser.h>
+#include <winreg.h>
+#include <winnls.h>
+//#include "objbase.h"
 
-#include "guiddef.h"
-#include "wintrust.h"
-#include "softpub.h"
-#include "mssip.h"
+//#include "guiddef.h"
+//#include "wintrust.h"
+#include <softpub.h>
+#include <mssip.h>
 #include "wintrust_priv.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(wintrust);
 

@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 static const TRAYWINDOW_CTXMENU TrayWindowCtxMenu;
 
@@ -43,6 +43,7 @@ typedef struct
     const IShellDesktopTrayVtbl *lpVtblShellDesktopTray;
     LONG Ref;
 
+    HTHEME TaskbarTheme;
     HWND hWnd;
     HWND hWndDesktop;
 
@@ -91,7 +92,8 @@ typedef struct
     IMenuPopup *StartMenuPopup;
     HBITMAP hbmStartMenu;
 
-    HWND hWndTrayProperties;
+    HWND hwndTrayPropertiesOwner;
+    HWND hwndRunFileDlgOwner;
 } ITrayWindowImpl;
 
 BOOL LaunchCPanel(HWND hwnd, LPCTSTR applet)
@@ -371,11 +373,11 @@ ITrayWindowImpl_GetMinimumWindowSize(IN OUT ITrayWindowImpl *This,
     RECT rcMin = {0};
 
     AdjustWindowRectEx(&rcMin,
-                       GetWindowLongPtr(This->hWnd,
-                                        GWL_STYLE),
+                       GetWindowLong(This->hWnd,
+                                     GWL_STYLE),
                        FALSE,
-                       GetWindowLongPtr(This->hWnd,
-                                        GWL_EXSTYLE));
+                       GetWindowLong(This->hWnd,
+                                     GWL_EXSTYLE));
 
     *pRect = rcMin;
 }
@@ -654,7 +656,7 @@ ITrayWindowImpl_ResizeWorkArea(IN OUT ITrayWindowImpl *This)
     RECT rcTray,rcWorkArea;
 
     /* If monitor has changed then fix the previous monitors work area */
-    if(This->PreviousMonitor!=This->Monitor)
+    if (This->PreviousMonitor != This->Monitor)
     {
         ITrayWindowImpl_GetScreenRect(This,
                                     This->PreviousMonitor,
@@ -670,25 +672,25 @@ ITrayWindowImpl_ResizeWorkArea(IN OUT ITrayWindowImpl *This)
     ITrayWindowImpl_GetScreenRect(This,
                                   This->Monitor,
                                   &rcWorkArea);
-    This->PreviousMonitor=This->Monitor;
+    This->PreviousMonitor = This->Monitor;
 
     /* If AutoHide is false then change the workarea to exclude the area that
        the taskbar covers. */
-    if(!This->AutoHide)
+    if (!This->AutoHide)
     {
-        switch(This->Position)
+        switch (This->Position)
         {
             case ABE_TOP:
-                rcWorkArea.top=rcTray.bottom;
+                rcWorkArea.top = rcTray.bottom;
                 break;
             case ABE_LEFT:
-                rcWorkArea.left=rcTray.right;
+                rcWorkArea.left = rcTray.right;
                 break;
             case ABE_RIGHT:
-                rcWorkArea.right=rcTray.left;
+                rcWorkArea.right = rcTray.left;
                 break;
             case ABE_BOTTOM:
-                rcWorkArea.bottom=rcTray.top;
+                rcWorkArea.bottom = rcTray.top;
                 break;
         }
     }
@@ -1027,6 +1029,12 @@ ITrayWindowImpl_Destroy(ITrayWindowImpl *This)
         This->TrayBandSite = NULL;
     }
 
+    if (This->TaskbarTheme)
+    {
+        CloseThemeData(This->TaskbarTheme);
+        This->TaskbarTheme = NULL;
+    }
+
     ITrayWindowImpl_Release(ITrayWindow_from_impl(This));
 
     if (InterlockedDecrement(&TrayWndCount) == 0)
@@ -1113,6 +1121,7 @@ ITrayWindowImpl_AlignControls(IN OUT ITrayWindowImpl *This,
     BOOL Horizontal;
     HDWP dwp;
 
+    ITrayWindowImpl_UpdateStartButton(This, NULL);
     if (prcClient != NULL)
     {
         rcClient = *prcClient;
@@ -1402,9 +1411,24 @@ Cleanup:
 }
 
 static VOID
+ITrayWindowImpl_UpdateTheme(IN OUT ITrayWindowImpl *This)
+{
+    if (This->TaskbarTheme)
+        CloseThemeData(This->TaskbarTheme);
+
+    if (IsThemeActive())
+        This->TaskbarTheme = OpenThemeData(This->hWnd, L"Taskbar");
+    else
+        This->TaskbarTheme = 0;
+}
+
+static VOID
 ITrayWindowImpl_Create(IN OUT ITrayWindowImpl *This)
 {
     TCHAR szStartCaption[32];
+
+    SetWindowTheme(This->hWnd, L"TaskBar", NULL);
+    ITrayWindowImpl_UpdateTheme(This);
 
     InterlockedIncrement(&TrayWndCount);
 
@@ -1458,6 +1482,7 @@ ITrayWindowImpl_Create(IN OUT ITrayWindowImpl *This)
                                      NULL);
     if (This->hwndStart)
     {
+        SetWindowTheme(This->hwndStart, L"Start", NULL);
         SendMessage(This->hwndStart,
                     WM_SETFONT,
                     (WPARAM)This->hStartBtnFont,
@@ -1538,6 +1563,7 @@ SetStartBtnImage:
     This->TrayBandSite = CreateTrayBandSite(ITrayWindow_from_impl(This),
                                             &This->hwndRebar,
                                             &This->hwndTaskSwitch);
+    SetWindowTheme(This->hwndRebar, L"TaskBar", NULL);
 
     /* Create the tray notification window */
     This->hwndTrayNotify = CreateTrayNotifyWnd(ITrayWindow_from_impl(This),
@@ -1594,13 +1620,11 @@ ITrayWindowImpl_Construct(VOID)
     ITrayWindowImpl *This;
 
     This = HeapAlloc(hProcessHeap,
-                     0,
+                     HEAP_ZERO_MEMORY,
                      sizeof(*This));
     if (This == NULL)
         return NULL;
 
-    ZeroMemory(This,
-               sizeof(*This));
     This->lpVtbl = &ITrayWindowImpl_Vtbl;
     This->lpVtblShellDesktopTray = &IShellDesktopTrayImpl_Vtbl;
     This->Ref = 1;
@@ -1724,19 +1748,56 @@ ITrayWIndowImpl_GetCaptionFonts(IN OUT ITrayWindow *iface,
     return This->hCaptionFont;
 }
 
+static DWORD WINAPI
+TrayPropertiesThread(IN OUT PVOID pParam)
+{
+    ITrayWindowImpl *This = pParam;
+    HWND hwnd;
+    RECT posRect;
+
+    GetWindowRect(This->hwndStart, &posRect);
+    hwnd = CreateWindowEx(0,
+                          WC_STATIC,
+                          NULL,
+                          WS_OVERLAPPED | WS_DISABLED | WS_CLIPSIBLINGS | WS_BORDER | SS_LEFT,
+                          posRect.left,
+                          posRect.top,
+                          posRect.right - posRect.left,
+                          posRect.bottom - posRect.top,
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL);
+
+    This->hwndTrayPropertiesOwner = hwnd;
+
+    DisplayTrayProperties(hwnd);
+
+    This->hwndTrayPropertiesOwner = NULL;
+    DestroyWindow(hwnd);
+
+    return 0;
+}
+
 static HWND STDMETHODCALLTYPE
 ITrayWindowImpl_DisplayProperties(IN OUT ITrayWindow *iface)
 {
     ITrayWindowImpl *This = impl_from_ITrayWindow(iface);
+    HWND hTrayProp;
 
-    if (This->hWndTrayProperties != NULL)
+    if (This->hwndTrayPropertiesOwner)
     {
-        BringWindowToTop(This->hWndTrayProperties);
-        return This->hWndTrayProperties;
+        hTrayProp = GetLastActivePopup(This->hwndTrayPropertiesOwner);
+        if (hTrayProp != NULL &&
+            hTrayProp != This->hwndTrayPropertiesOwner)
+        {
+            SetForegroundWindow(hTrayProp);
+            return NULL;
+        }
     }
 
-    This->hWndTrayProperties = DisplayTrayProperties(ITrayWindow_from_impl(This));
-    return This->hWndTrayProperties;
+    CloseHandle(CreateThread(NULL, 0, TrayPropertiesThread, This, 0, NULL));
+    return NULL;
 }
 
 static VOID
@@ -1883,6 +1944,129 @@ static const ITrayWindowVtbl ITrayWindowImpl_Vtbl =
     ITrayWindowImpl_Lock
 };
 
+static int
+ITrayWindowImpl_DrawBackground(IN ITrayWindowImpl *This,
+                               IN HDC dc)
+{
+    int backoundPart;
+    RECT rect;
+
+    GetClientRect(This->hWnd, &rect);
+    switch (This->Position)
+    {
+        case ABE_LEFT:
+            backoundPart = TBP_BACKGROUNDLEFT;
+            break;
+        case ABE_TOP:
+            backoundPart = TBP_BACKGROUNDTOP;
+            break;
+        case ABE_RIGHT:
+            backoundPart = TBP_BACKGROUNDRIGHT;
+            break;
+        case ABE_BOTTOM:
+        default:
+            backoundPart = TBP_BACKGROUNDBOTTOM;
+            break;
+    }
+    DrawThemeBackground(This->TaskbarTheme, dc, backoundPart, 0, &rect, 0);
+    return 0;
+}
+
+static int
+ITrayWindowImpl_DrawSizer(IN ITrayWindowImpl *This,
+                          IN HRGN hRgn)
+{
+    HDC hdc;
+    RECT rect;
+    int backoundPart;
+
+    GetWindowRect(This->hWnd, &rect);
+    OffsetRect(&rect, -rect.left, -rect.top);
+
+    hdc = GetDCEx(This->hWnd, hRgn, DCX_WINDOW | DCX_INTERSECTRGN | DCX_PARENTCLIP);
+
+    switch (This->Position)
+    {
+        case ABE_LEFT:
+            backoundPart = TBP_SIZINGBARLEFT;
+            rect.left = rect.right - GetSystemMetrics(SM_CXSIZEFRAME);
+            break;
+        case ABE_TOP:
+            backoundPart = TBP_SIZINGBARTOP;
+            rect.top = rect.bottom - GetSystemMetrics(SM_CYSIZEFRAME);
+            break;
+        case ABE_RIGHT:
+            backoundPart = TBP_SIZINGBARRIGHT;
+            rect.right = rect.left + GetSystemMetrics(SM_CXSIZEFRAME);
+            break;
+        case ABE_BOTTOM:
+        default:
+            backoundPart = TBP_SIZINGBARBOTTOM;
+            rect.bottom = rect.top + GetSystemMetrics(SM_CYSIZEFRAME);
+            break;
+    }
+
+    DrawThemeBackground(This->TaskbarTheme, hdc, backoundPart, 0, &rect, 0);
+
+    ReleaseDC(This->hWnd, hdc);
+    return 0;
+}
+
+static DWORD WINAPI
+RunFileDlgThread(IN OUT PVOID pParam)
+{
+    ITrayWindowImpl *This = pParam;
+    HANDLE hShell32;
+    RUNFILEDLG RunFileDlg;
+    HWND hwnd;
+    RECT posRect;
+
+    GetWindowRect(This->hwndStart,&posRect);
+
+    hwnd = CreateWindowEx(0,
+                          WC_STATIC,
+                          NULL,
+                          WS_OVERLAPPED | WS_DISABLED | WS_CLIPSIBLINGS | WS_BORDER | SS_LEFT,
+                          posRect.left,
+                          posRect.top,
+                          posRect.right - posRect.left,
+                          posRect.bottom - posRect.top,
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL);
+
+    This->hwndRunFileDlgOwner = hwnd;
+
+    hShell32 = GetModuleHandle(TEXT("SHELL32.DLL"));
+    RunFileDlg = (RUNFILEDLG)GetProcAddress(hShell32, (LPCSTR)61);
+
+    RunFileDlg(hwnd, NULL, NULL, NULL, NULL, RFF_CALCDIRECTORY);
+
+    This->hwndRunFileDlgOwner = NULL;
+    DestroyWindow(hwnd);
+
+    return 0;
+}
+
+static void
+ITrayWindowImpl_DisplayRunFileDlg(IN ITrayWindowImpl *This)
+{
+    HWND hRunDlg;
+    if (This->hwndRunFileDlgOwner)
+    {
+        hRunDlg = GetLastActivePopup(This->hwndRunFileDlgOwner);
+        if (hRunDlg != NULL &&
+            hRunDlg != This->hwndRunFileDlgOwner)
+        {
+            SetForegroundWindow(hRunDlg);
+            return;
+        }
+    }
+
+    CloseHandle(CreateThread(NULL, 0, RunFileDlgThread, This, 0, NULL));
+}
+
 static LRESULT CALLBACK
 TrayWndProc(IN HWND hwnd,
             IN UINT uMsg,
@@ -1923,6 +2107,32 @@ TrayWndProc(IN HWND hwnd,
 
         switch (uMsg)
         {
+            case WM_COPYDATA:
+            {
+                if (This->hwndTrayNotify)
+                {
+                    TrayNotify_NotifyMsg(This->hwndTrayNotify,
+                                         wParam,
+                                         lParam);
+                }
+                return TRUE;
+            }
+            case WM_THEMECHANGED:
+                ITrayWindowImpl_UpdateTheme(This);
+                return 0;
+            case WM_NCPAINT:
+                if (!This->TaskbarTheme)
+                    goto DefHandler;
+                return ITrayWindowImpl_DrawSizer(This,
+                                                 (HRGN)wParam);
+            case WM_ERASEBKGND:
+                if (!This->TaskbarTheme)
+                    goto DefHandler;
+                return ITrayWindowImpl_DrawBackground(This,
+                                                      (HDC)wParam);
+            case WM_CTLCOLORBTN:
+                SetBkMode((HDC)wParam, TRANSPARENT);
+                return (LRESULT)GetStockObject(HOLLOW_BRUSH);
             case WM_NCHITTEST:
             {
                 RECT rcClient;
@@ -1936,12 +2146,13 @@ TrayWndProc(IN HWND hwnd,
                     return HTBORDER;
                 }
 
+                SetLastError(ERROR_SUCCESS);
                 if (GetClientRect(hwnd,
                                   &rcClient) &&
-                    MapWindowPoints(hwnd,
-                                    NULL,
-                                    (LPPOINT)&rcClient,
-                                    2) != 0)
+                    (MapWindowPoints(hwnd,
+                                     NULL,
+                                     (LPPOINT)&rcClient,
+                                     2) != 0 || GetLastError() == ERROR_SUCCESS))
                 {
                     pt.x = (SHORT)LOWORD(lParam);
                     pt.y = (SHORT)HIWORD(lParam);
@@ -1961,30 +2172,23 @@ TrayWndProc(IN HWND hwnd,
                             if (pt.y > rcClient.bottom)
                                 return HTBOTTOM;
                             break;
-
-                        case ABE_BOTTOM:
-                            if (pt.y < rcClient.top)
-                                return HTTOP;
-                            break;
-
                         case ABE_LEFT:
                             if (pt.x > rcClient.right)
                                 return HTRIGHT;
                             break;
-
                         case ABE_RIGHT:
                             if (pt.x < rcClient.left)
                                 return HTLEFT;
                             break;
-
+                        case ABE_BOTTOM:
                         default:
+                            if (pt.y < rcClient.top)
+                                return HTTOP;
                             break;
                     }
                 }
-
                 return HTBORDER;
             }
-
             case WM_MOVING:
             {
                 POINT ptCursor;
@@ -2037,7 +2241,7 @@ TrayWndProc(IN HWND hwnd,
             case WM_SIZE:
             {
                 RECT rcClient;
-
+                InvalidateRect(This->hWnd, NULL, TRUE);
                 if (wParam == SIZE_RESTORED && lParam == 0)
                 {
                     ITrayWindowImpl_ResizeWorkArea(This);
@@ -2290,9 +2494,23 @@ HandleTrayContextMenu:
             }
 
             case WM_NCLBUTTONDBLCLK:
+            {
                 /* We "handle" this message so users can't cause a weird maximize/restore
                    window animation when double-clicking the tray window! */
+
+                /* We should forward mouse messages to child windows here.
+                   Right now, this is only clock double-click */
+                RECT rcClock;
+                if (TrayNotify_GetClockRect(This->hwndTrayNotify, &rcClock))
+                {
+                    POINT ptClick;
+                    ptClick.x = MAKEPOINTS(lParam).x;
+                    ptClick.y = MAKEPOINTS(lParam).y;
+                    if (PtInRect(&rcClock, ptClick))
+                        LaunchCPanel(NULL, TEXT("timedate.cpl"));
+                }
                 break;
+            }
 
             case WM_NCCREATE:
             {
@@ -2324,6 +2542,10 @@ HandleTrayContextMenu:
 
             case WM_APP_TRAYDESTROY:
                 DestroyWindow(hwnd);
+                break;
+
+            case TWM_OPENSTARTMENU:
+                SendMessage(This->hWnd, WM_COMMAND, MAKEWPARAM(BN_CLICKED, IDC_STARTBTN), (LPARAM)This->hwndStart);
                 break;
 
             case WM_COMMAND:
@@ -2372,7 +2594,7 @@ HandleTrayContextMenu:
                                                             lParam,
                                                             &Ret)))
                 {
-                    switch(LOWORD(wParam))
+                    switch (LOWORD(wParam))
                     {
                         /* FIXME: Handle these commands as well */
                         case IDM_TASKBARANDSTARTMENU:
@@ -2382,13 +2604,7 @@ HandleTrayContextMenu:
 
                         case IDM_RUN:
                         {
-                            HANDLE hShell32;
-                            RUNFILEDLG RunFileDlg;
-
-                            hShell32 = GetModuleHandle(TEXT("SHELL32.DLL"));
-                            RunFileDlg = (RUNFILEDLG)GetProcAddress(hShell32, (LPCSTR)61);
-
-                            RunFileDlg(hwnd, NULL, NULL, NULL, NULL, RFF_CALCDIRECTORY);
+                            ITrayWindowImpl_DisplayRunFileDlg(This);
                             break;
                         }
 
@@ -2622,23 +2838,30 @@ TrayMessageLoop(IN OUT ITrayWindow *Tray)
 
     while (1)
     {
-        Ret = (GetMessage(&Msg,
-                          NULL,
-                          0,
-                          0) != 0);
+        Ret = GetMessage(&Msg,
+                         NULL,
+                         0,
+                         0);
 
-        if (Ret != -1)
+        if (!Ret || Ret == -1)
+            break;
+
+        if (Msg.message == WM_HOTKEY)
         {
-            if (!Ret)
-                break;
-
-            if (This->StartMenuBand == NULL ||
-                IMenuBand_IsMenuMessage(This->StartMenuBand,
-                                        &Msg) != S_OK)
+            switch (Msg.wParam)
             {
-                TranslateMessage(&Msg);
-                DispatchMessage(&Msg);
+                case IDHK_RUN: /* Win+R */
+                    ITrayWindowImpl_DisplayRunFileDlg(This);
+                    break;
             }
+        }
+
+        if (This->StartMenuBand == NULL ||
+            IMenuBand_IsMenuMessage(This->StartMenuBand,
+                                    &Msg) != S_OK)
+        {
+            TranslateMessage(&Msg);
+            DispatchMessage(&Msg);
         }
     }
 }

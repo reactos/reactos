@@ -26,7 +26,7 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "プロパティ...",   ID_PROP, GRAYED
   END
-  POPUP "表 示"
+  POPUP "表示"
   BEGIN
     MENUITEM "大きいアイコン",  ID_VIEW_LARGE
     MENUITEM "小さいアイコン",  ID_VIEW_SMALL
@@ -89,7 +89,7 @@ BEGIN
   PUSHBUTTON "一時停止", IDC_PAUSE , 130, 155, 54, 15, WS_DISABLED
   PUSHBUTTON "再開", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
   LTEXT "サービス名:", IDC_STATIC, 4, 11, 53, 11
-  LTEXT "表 示名:", IDC_STATIC, 4, 29, 53, 11
+  LTEXT "表示名:", IDC_STATIC, 4, 29, 53, 11
   LTEXT "説明:", IDC_STATIC, 4, 51, 53, 11
   LTEXT "実行ファイルのパス:", IDC_STATIC, 6, 73, 82, 9
   LTEXT "スタートアップの種類:", IDC_STATIC, 6, 108, 53, 11
@@ -124,7 +124,7 @@ BEGIN
   EDITTEXT IDC_CREATE_DESC, 10, 97, 210, 48, WS_CHILD | WS_VISIBLE
   EDITTEXT IDC_CREATE_OPTIONS, 10, 162, 210, 13, WS_CHILD | WS_VISIBLE
   LTEXT "*サービス名 :", IDC_STATIC, 12, 12, 54, 9
-  LTEXT "*表 示名 :", IDC_STATIC, 12, 33, 54, 9
+  LTEXT "*表示名 :", IDC_STATIC, 12, 33, 54, 9
   LTEXT "*実行ファイルのパス :", IDC_STATIC, 10, 51, 68, 9
   LTEXT "説明 :", IDC_STATIC, 12, 86, 44, 9
   PUSHBUTTON "OK", IDOK, 126, 192, 44, 13
@@ -258,14 +258,14 @@ BEGIN
   IDS_HINT_DELETE       " 選択したサービスを削除します。"
   IDS_HINT_PROP         " 現在選択されている項目のプロパティ シートを開きます。"
 
-  IDS_HINT_LARGE        " アイテムを大きいアイコンで表 示します。"
-  IDS_HINT_SMALL        " アイテムを小さいアイコンで表 示します。"
-  IDS_HINT_LIST         " アイテムを一覧で表 示します。"
-  IDS_HINT_DETAILS      " 各アイテムの情報をウィンドウに表 示します。"
-  IDS_HINT_CUST         " 表 示をカスタマイズします。"
+  IDS_HINT_LARGE        " アイテムを大きいアイコンで表示します。"
+  IDS_HINT_SMALL        " アイテムを小さいアイコンで表示します。"
+  IDS_HINT_LIST         " アイテムを一覧で表示します。"
+  IDS_HINT_DETAILS      " 各アイテムの情報をウィンドウに表示します。"
+  IDS_HINT_CUST         " 表示をカスタマイズします。"
 
-  IDS_HINT_HELP         " ヘルプ ウィンドウを表 示します。"
-  IDS_HINT_ABOUT        " ReactOS サービス マネージャについて表 示します。"
+  IDS_HINT_HELP         " ヘルプ ウィンドウを表示します。"
+  IDS_HINT_ABOUT        " ReactOS サービス マネージャについて表示します。"
 
   IDS_HINT_SYS_RESTORE  " このウィンドウを通常の大きさに復元します。"
   IDS_HINT_SYS_MOVE     " このウィンドウを移動します。"

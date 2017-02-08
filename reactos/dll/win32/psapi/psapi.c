@@ -1,5 +1,3 @@
-/* $Id$
- */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * LICENSE:     See LGPL.txt in the top level directory

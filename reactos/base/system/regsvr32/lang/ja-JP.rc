@@ -4,9 +4,9 @@ BEGIN
 
 IDS_UsageMessage, "%s\n\n使用法: regsvr32 [/u] [/s] [/c] [/n] [/i[:コマンド ライン]] DLL名\n\
 /u -	サーバーを登録解除する\n\
-/s -	サイレント; メッセージ ボックスを表 示しない\n\
-/c -	コンソ ール出力\n\
-/i -	省略可能 な [コマンド ライン] を引数として DllInstall を呼び出す; /u と併用した場合は dll uninstall を呼び出す\n\
+/s -	サイレント; メッセージ ボックスを表示しない\n\
+/c -	コンソール出力\n\
+/i -	省略可能な [コマンド ライン] を引数として DllInstall を呼び出す; /u と併用した場合は dll uninstall を呼び出す\n\
 /n -	DllRegisterServer を呼び出さない; このオプションは /i と併用する必要がある"
 
 IDS_NoDllSpecified,  "DLL 名が指定されていません。"
@@ -18,7 +18,7 @@ IDS_SwitchN_NoI,     "フラグを認識できません: /n を指定する場�
 IDS_DllNotLoaded,    "LoadLibrary('%s') に失敗しました。\nGetLastError は 0x%08x を返しました。"
 
 IDS_MissingEntry,    "%s を読み込みましたが、%s エントリ ポイントが見つかりませんでした。\n\n\
-%s はエクスポートされていないか、%s の不正なバージョンがメモリ上にある可能 性があります。検出や削除をするため、PView の使用を検討してください。"
+%s はエクスポートされていないか、%s の不正なバージョンがメモリ上にある可能性があります。検出や削除をするため、PView の使用を検討してください。"
 
 IDS_FailureMessage,  "%s (%s の) に失敗しました。\n返ってきたコード: 0x%08x"
 

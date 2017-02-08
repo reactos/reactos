@@ -2,7 +2,7 @@
  * jctrans.c
  *
  * Copyright (C) 1995-1998, Thomas G. Lane.
- * Modified 2000-2009 by Guido Vollbeding.
+ * Modified 2000-2012 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -85,7 +85,10 @@ jpeg_copy_critical_parameters (j_decompress_ptr srcinfo,
   jpeg_set_defaults(dstinfo);
   /* jpeg_set_defaults may choose wrong colorspace, eg YCbCr if input is RGB.
    * Fix it to get the right header markers for the image colorspace.
+   * Note: Entropy table assignment in jpeg_set_colorspace depends
+   * on color_transform.
    */
+  dstinfo->color_transform = srcinfo->color_transform;
   jpeg_set_colorspace(dstinfo, srcinfo->jpeg_color_space);
   dstinfo->data_precision = srcinfo->data_precision;
   dstinfo->CCIR601_sampling = srcinfo->CCIR601_sampling;
@@ -130,7 +133,7 @@ jpeg_copy_critical_parameters (j_decompress_ptr srcinfo,
 	  ERREXIT1(dstinfo, JERR_MISMATCHED_QUANT_TABLE, tblno);
       }
     }
-    /* Note: we do not copy the source's Huffman table assignments;
+    /* Note: we do not copy the source's entropy table assignments;
      * instead we rely on jpeg_set_colorspace to have made a suitable choice.
      */
   }
@@ -364,7 +367,7 @@ transencode_coef_controller (j_compress_ptr cinfo,
   coef = (my_coef_ptr)
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
 				SIZEOF(my_coef_controller));
-  cinfo->coef = (struct jpeg_c_coef_controller *) coef;
+  cinfo->coef = &coef->pub;
   coef->pub.start_pass = start_pass_coef;
   coef->pub.compress_data = compress_output;
 
@@ -375,7 +378,7 @@ transencode_coef_controller (j_compress_ptr cinfo,
   buffer = (JBLOCKROW)
     (*cinfo->mem->alloc_large) ((j_common_ptr) cinfo, JPOOL_IMAGE,
 				C_MAX_BLOCKS_IN_MCU * SIZEOF(JBLOCK));
-  jzero_far((void FAR *) buffer, C_MAX_BLOCKS_IN_MCU * SIZEOF(JBLOCK));
+  FMEMZERO((void FAR *) buffer, C_MAX_BLOCKS_IN_MCU * SIZEOF(JBLOCK));
   for (i = 0; i < C_MAX_BLOCKS_IN_MCU; i++) {
     coef->dummy_buffer[i] = buffer + i;
   }

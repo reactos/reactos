@@ -172,6 +172,20 @@ ME_DisplayItem* ME_GetTableRowStart(ME_DisplayItem *para)
   return para;
 }
 
+ME_DisplayItem* ME_GetOuterParagraph(ME_DisplayItem *para)
+{
+  if (para->member.para.nFlags & MEPF_ROWEND)
+    para = para->member.para.prev_para;
+  while (para->member.para.pCell)
+  {
+    para = ME_GetTableRowStart(para);
+    if (!para->member.para.pCell)
+      break;
+    para = ME_FindItemBack(para->member.para.pCell, diParagraph);
+  }
+  return para;
+}
+
 /* Make a bunch of assertions to make sure tables haven't been corrupted.
  *
  * These invariants may not hold true in the middle of streaming in rich text

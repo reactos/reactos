@@ -18,9 +18,9 @@
 #ifndef __CRYPTUIRES_H_
 #define __CRYPTUIRES_H_
 
-#include <windef.h>
-#include <winuser.h>
-#include <commctrl.h>
+//#include <windef.h>
+//#include <winuser.h>
+//#include <commctrl.h>
 
 #define IDS_CERTIFICATE 1000
 #define IDS_CERTIFICATEINFORMATION 1001

@@ -614,7 +614,7 @@ AddFontsSettingsToRegistry(IN const MUI_SUBFONT * MuiSubFonts)
     ULONG uIndex = 0;
 
     RtlInitUnicodeString(&KeyName,
-                         L"\\Registry\\Machine\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SysFontSubstitutes");
+                         L"\\Registry\\Machine\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,

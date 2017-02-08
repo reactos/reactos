@@ -1,10 +1,10 @@
-General Overview of How THings Work
+General Overview of How Things Work
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 First it comes into _main in cmd.c(1811).  The command line params are taking in and if it is unicode it uses CommandLineToArgvW.  
 This can cause a problem on older machines and that is why we have our own custom _CommandLineToArgvW to help this along.  
-We pull in the launch directory as the inital dir and set that in _tchdir.  We make a handle to the default console out using CreateFile.  
+We pull in the launch directory as the initial dir and set that in _tchdir.  We make a handle to the default console out using CreateFile.  
 
-Then we call Initialize().  Here we need to load ntdll.dll if it isnt loaded(windows 9x machines). 
+Then we call Initialize().  Here we need to load ntdll.dll if it isn't loaded (windows 9x machines). 
 We also setup some global vars like default io handles and nErrorLevel and set %prompt% to $P$G.  
 This is where all command lines switches given to cmd on startup are done.
 
@@ -15,7 +15,7 @@ Currently there is some stuff for set /a in there, which might stay there or see
 
 Once there is input taken in from the command line it is sent into ParseCommandLine().  
 In here we fist check for aliases and convert if need be.  
-THen we look for redirections using GetRedirection() which will remove any redirection symbols.  
+Then we look for redirections using GetRedirection() which will remove any redirection symbols.  
 and pass back info about where to redirect.  
 from this info it will do some switching around with the handles for where things go and send them as need be.  
 personally i dont like this code and i tried to chnage it before but failed.  
@@ -32,7 +32,7 @@ It calls a function called SearchForExecuteable() to find the full path name and
 
 Some useful functions that are used a lot:
 
-split() - splits a string into an array of string on spaces that arent inside quotes. which you need to call freep() on later t clean up.
+split() - splits a string into an array of string on spaces that aren't inside quotes. which you need to call freep() on later t clean up.
 //Split it´s used to take the Arguments from Command Line,it´s the best option for almost all the cases.
 //If the Command has special needs as Dir, it´s better to make a Parser INSIDE that Command(as DIR has)
 //Dont get mad(as i did): Split() can be find in Misc.c file.Really easy to follow.

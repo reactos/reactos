@@ -231,7 +231,7 @@ CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
         return Status;
     }
 
-    DPRINT("FirstSession %d, LastSession %d, FirstTrack %d\n",
+    DPRINT("FirstSession %u, LastSession %u, FirstTrack %u\n",
         Toc.FirstSession, Toc.LastSession, Toc.TrackData.TrackNumber);
 
     Offset = 0;
@@ -241,7 +241,7 @@ CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     }
     CdInfo->VolumeOffset = Offset;
 
-    DPRINT("Offset of first track in last session %d\n", Offset);
+    DPRINT("Offset of first track in last session %u\n", Offset);
 
     CdInfo->JolietLevel = 0;
     VdHeader = (PVD_HEADER)Buffer;
@@ -540,6 +540,8 @@ CdfsSetCompression(
     PIO_STACK_LOCATION Stack;
     USHORT CompressionState;
 
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     Stack = IoGetCurrentIrpStackLocation(Irp);
 
     if (Stack->Parameters.DeviceIoControl.InputBufferLength != sizeof(CompressionState))
@@ -593,7 +595,7 @@ CdfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
         break;
 
     default:
-        DPRINT1("CDFS FSC: MinorFunction %d\n", Stack->MinorFunction);
+        DPRINT1("CDFS FSC: MinorFunction %u\n", Stack->MinorFunction);
         Status = STATUS_INVALID_DEVICE_REQUEST;
         break;
     }

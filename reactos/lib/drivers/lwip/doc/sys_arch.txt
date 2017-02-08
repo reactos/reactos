@@ -34,26 +34,36 @@ in the sys_arch.h file. Mailboxes are equivalently represented by the
 type "sys_mbox_t". lwIP does not place any restrictions on how
 sys_sem_t or sys_mbox_t are represented internally.
 
+Since lwIP 1.4.0, semaphore and mailbox functions are prototyped in a way that
+allows both using pointers or actual OS structures to be used. This way, memory
+required for such types can be either allocated in place (globally or on the
+stack) or on the heap (allocated internally in the "*_new()" functions).
+
 The following functions must be implemented by the sys_arch:
 
 - void sys_init(void)
 
   Is called to initialize the sys_arch layer.
 
-- sys_sem_t sys_sem_new(u8_t count)
+- err_t sys_sem_new(sys_sem_t *sem, u8_t count)
 
-  Creates and returns a new semaphore. The "count" argument specifies
-  the initial state of the semaphore.
+  Creates a new semaphore. The semaphore is allocated to the memory that 'sem'
+  points to (which can be both a pointer or the actual OS structure).
+  The "count" argument specifies the initial state of the semaphore (which is
+  either 0 or 1).
+  If the semaphore has been created, ERR_OK should be returned. Returning any
+  other error will provide a hint what went wrong, but except for assertions,
+  no real error handling is implemented.
 
-- void sys_sem_free(sys_sem_t sem)
+- void sys_sem_free(sys_sem_t *sem)
 
   Deallocates a semaphore.
 
-- void sys_sem_signal(sys_sem_t sem)
+- void sys_sem_signal(sys_sem_t *sem)
 
   Signals a semaphore.
 
-- u32_t sys_arch_sem_wait(sys_sem_t sem, u32_t timeout)
+- u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
 
   Blocks the thread while waiting for the semaphore to be
   signaled. If the "timeout" argument is non-zero, the thread should
@@ -70,30 +80,47 @@ The following functions must be implemented by the sys_arch:
   Notice that lwIP implements a function with a similar name,
   sys_sem_wait(), that uses the sys_arch_sem_wait() function.
 
-- sys_mbox_t sys_mbox_new(int size)
+- int sys_sem_valid(sys_sem_t *sem)
+
+  Returns 1 if the semaphore is valid, 0 if it is not valid.
+  When using pointers, a simple way is to check the pointer for != NULL.
+  When directly using OS structures, implementing this may be more complex.
+  This may also be a define, in which case the function is not prototyped.
+
+- void sys_sem_set_invalid(sys_sem_t *sem)
+
+  Invalidate a semaphore so that sys_sem_valid() returns 0.
+  ATTENTION: This does NOT mean that the semaphore shall be deallocated:
+  sys_sem_free() is always called before calling this function!
+  This may also be a define, in which case the function is not prototyped.
+
+- err_t sys_mbox_new(sys_mbox_t *mbox, int size)
 
   Creates an empty mailbox for maximum "size" elements. Elements stored
   in mailboxes are pointers. You have to define macros "_MBOX_SIZE"
   in your lwipopts.h, or ignore this parameter in your implementation
   and use a default size.
+  If the mailbox has been created, ERR_OK should be returned. Returning any
+  other error will provide a hint what went wrong, but except for assertions,
+  no real error handling is implemented.
 
-- void sys_mbox_free(sys_mbox_t mbox)
+- void sys_mbox_free(sys_mbox_t *mbox)
 
   Deallocates a mailbox. If there are messages still present in the
   mailbox when the mailbox is deallocated, it is an indication of a
   programming error in lwIP and the developer should be notified.
 
-- void sys_mbox_post(sys_mbox_t mbox, void *msg)
+- void sys_mbox_post(sys_mbox_t *mbox, void *msg)
 
   Posts the "msg" to the mailbox. This function have to block until
   the "msg" is really posted.
 
-- err_t sys_mbox_trypost(sys_mbox_t mbox, void *msg)
+- err_t sys_mbox_trypost(sys_mbox_t *mbox, void *msg)
 
   Try to post the "msg" to the mailbox. Returns ERR_MEM if this one
   is full, else, ERR_OK if the "msg" is posted.
 
-- u32_t sys_arch_mbox_fetch(sys_mbox_t mbox, void **msg, u32_t timeout)
+- u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
 
   Blocks the thread until a message arrives in the mailbox, but does
   not block the thread longer than "timeout" milliseconds (similar to
@@ -110,7 +137,7 @@ The following functions must be implemented by the sys_arch:
   Note that a function with a similar name, sys_mbox_fetch(), is
   implemented by lwIP. 
 
-- u32_t sys_arch_mbox_tryfetch(sys_mbox_t mbox, void **msg)
+- u32_t sys_arch_mbox_tryfetch(sys_mbox_t *mbox, void **msg)
 
   This is similar to sys_arch_mbox_fetch, however if a message is not
   present in the mailbox, it immediately returns with the code
@@ -122,7 +149,21 @@ The following functions must be implemented by the sys_arch:
     #define sys_arch_mbox_tryfetch(mbox,msg) \
       sys_arch_mbox_fetch(mbox,msg,1)
   although this would introduce unnecessary delays.
-  
+
+- int sys_mbox_valid(sys_mbox_t *mbox)
+
+  Returns 1 if the mailbox is valid, 0 if it is not valid.
+  When using pointers, a simple way is to check the pointer for != NULL.
+  When directly using OS structures, implementing this may be more complex.
+  This may also be a define, in which case the function is not prototyped.
+
+- void sys_mbox_set_invalid(sys_mbox_t *mbox)
+
+  Invalidate a mailbox so that sys_mbox_valid() returns 0.
+  ATTENTION: This does NOT mean that the mailbox shall be deallocated:
+  sys_mbox_free() is always called before calling this function!
+  This may also be a define, in which case the function is not prototyped.
+
 If threads are supported by the underlying operating system and if
 such functionality is needed in lwIP, the following function will have
 to be implemented as well:
@@ -155,6 +196,16 @@ to be implemented as well:
   value specified by pval. See the documentation for sys_arch_protect() for
   more information. This function is only required if your port is supporting
   an operating system.
+
+For some configurations, you also need:
+
+- u32_t sys_now(void)
+
+  This optional function returns the current time in milliseconds (don't care
+  for wraparound, this is only used for time diffs).
+  Not implementing this function means you cannot use some modules (e.g. TCP
+  timestamps, internal timeouts for NO_SYS==1).
+
 
 Note:
 

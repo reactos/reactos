@@ -20,17 +20,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+//#include <stdarg.h>
 #include <stdio.h>
-#include <string.h>
+//#include <string.h>
+#include <windef.h>
+//#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <wine/debug.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
 #include "winhelp.h"
-
-#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(winhelp);
 
@@ -712,7 +711,7 @@ static BOOL HLPFILE_RtfAddText(struct RtfData* rd, const char* str)
     }
     for (last = p = str; *p; p++)
     {
-        if (*p < 0) /* escape non ASCII chars */
+        if (*p & 0x80) /* escape non-ASCII chars */
         {
             static char         xx[8];
             rlen = sprintf(xx, "\\'%x", *(const BYTE*)p);
@@ -902,7 +901,7 @@ static BOOL HLPFILE_RtfAddTransparentBitmap(struct RtfData* rd, const BITMAPINFO
     DeleteDC(hdcMem);
 
     /* we create the bitmap on the fly */
-    hdcEMF = CreateEnhMetaFile(NULL, NULL, NULL, NULL);
+    hdcEMF = CreateEnhMetaFileW(NULL, NULL, NULL, NULL);
     hdcMem = CreateCompatibleDC(hdcEMF);
 
     /* sets to RGB(0,0,0) the transparent bits in final bitmap */
@@ -1367,14 +1366,14 @@ static BOOL HLPFILE_BrowseParagraph(HLPFILE_PAGE* page, struct RtfData* rd,
             BYTE        brdr = *format++;
             short       w;
 
-            if (brdr & 0x01 && !HLPFILE_RtfAddControl(rd, "\\box")) goto done;
-            if (brdr & 0x02 && !HLPFILE_RtfAddControl(rd, "\\brdrt")) goto done;
-            if (brdr & 0x04 && !HLPFILE_RtfAddControl(rd, "\\brdrl")) goto done;
-            if (brdr & 0x08 && !HLPFILE_RtfAddControl(rd, "\\brdrb")) goto done;
-            if (brdr & 0x10 && !HLPFILE_RtfAddControl(rd, "\\brdrr")) goto done;
-            if (brdr & 0x20 && !HLPFILE_RtfAddControl(rd, "\\brdrth")) goto done;
+            if ((brdr & 0x01) && !HLPFILE_RtfAddControl(rd, "\\box")) goto done;
+            if ((brdr & 0x02) && !HLPFILE_RtfAddControl(rd, "\\brdrt")) goto done;
+            if ((brdr & 0x04) && !HLPFILE_RtfAddControl(rd, "\\brdrl")) goto done;
+            if ((brdr & 0x08) && !HLPFILE_RtfAddControl(rd, "\\brdrb")) goto done;
+            if ((brdr & 0x10) && !HLPFILE_RtfAddControl(rd, "\\brdrr")) goto done;
+            if ((brdr & 0x20) && !HLPFILE_RtfAddControl(rd, "\\brdrth")) goto done;
             if (!(brdr & 0x20) && !HLPFILE_RtfAddControl(rd, "\\brdrs")) goto done;
-            if (brdr & 0x40 && !HLPFILE_RtfAddControl(rd, "\\brdrdb")) goto done;
+            if ((brdr & 0x40) && !HLPFILE_RtfAddControl(rd, "\\brdrdb")) goto done;
             /* 0x80: unknown */
 
             w = GET_SHORT(format, 0); format += 2;
@@ -1527,7 +1526,6 @@ static BOOL HLPFILE_BrowseParagraph(HLPFILE_PAGE* page, struct RtfData* rd,
 	    case 0x88:
                 {
                     BYTE    type = format[1];
-                    LONG    size;
 
                     /* FIXME: we don't use 'BYTE    pos = (*format - 0x86);' for the image position */
                     format += 2;
@@ -1537,7 +1535,7 @@ static BOOL HLPFILE_BrowseParagraph(HLPFILE_PAGE* page, struct RtfData* rd,
                     {
                     case 0x22:
                         fetch_ushort(&format); /* hot spot */
-                        /* fall thru */
+                        /* fall through */
                     case 0x03:
                         switch (GET_SHORT(format, 0))
                         {
@@ -1585,7 +1583,7 @@ static BOOL HLPFILE_BrowseParagraph(HLPFILE_PAGE* page, struct RtfData* rd,
 
             case 0x8C:
                 if (!HLPFILE_RtfAddControl(rd, "\\_")) goto done;
-                /* FIXME: it could be that hypen is also in input stream !! */
+                /* FIXME: it could be that hyphen is also in input stream !! */
                 format += 1;
                 rd->char_pos++;
                 break;
@@ -1874,9 +1872,9 @@ static BOOL HLPFILE_ReadFont(HLPFILE* hlpfile)
         hlpfile->fonts[i].LogFont.lfEscapement = 0;
         hlpfile->fonts[i].LogFont.lfOrientation = 0;
         hlpfile->fonts[i].LogFont.lfWeight = (flag & 1) ? 700 : 400;
-        hlpfile->fonts[i].LogFont.lfItalic = (flag & 2) ? TRUE : FALSE;
-        hlpfile->fonts[i].LogFont.lfUnderline = (flag & 4) ? TRUE : FALSE;
-        hlpfile->fonts[i].LogFont.lfStrikeOut = (flag & 8) ? TRUE : FALSE;
+        hlpfile->fonts[i].LogFont.lfItalic = (flag & 2) != 0;
+        hlpfile->fonts[i].LogFont.lfUnderline = (flag & 4) != 0;
+        hlpfile->fonts[i].LogFont.lfStrikeOut = (flag & 8) != 0;
         hlpfile->fonts[i].LogFont.lfCharSet = hlpfile->charset;
         hlpfile->fonts[i].LogFont.lfOutPrecision = OUT_DEFAULT_PRECIS;
         hlpfile->fonts[i].LogFont.lfClipPrecision = CLIP_DEFAULT_PRECIS;
@@ -2014,7 +2012,7 @@ static BOOL HLPFILE_SystemCommands(HLPFILE* hlpfile)
 
         hlpfile->lpszTitle = HeapAlloc(GetProcessHeap(), 0, strlen(str) + 1);
         if (!hlpfile->lpszTitle) return FALSE;
-        lstrcpy(hlpfile->lpszTitle, str);
+        strcpy(hlpfile->lpszTitle, str);
         WINE_TRACE("Title: %s\n", hlpfile->lpszTitle);
         /* Nothing more to parse */
         return TRUE;
@@ -2028,7 +2026,7 @@ static BOOL HLPFILE_SystemCommands(HLPFILE* hlpfile)
             if (hlpfile->lpszTitle) {WINE_WARN("title\n"); break;}
             hlpfile->lpszTitle = HeapAlloc(GetProcessHeap(), 0, strlen(str) + 1);
             if (!hlpfile->lpszTitle) return FALSE;
-            lstrcpy(hlpfile->lpszTitle, str);
+            strcpy(hlpfile->lpszTitle, str);
             WINE_TRACE("Title: %s\n", hlpfile->lpszTitle);
             break;
 
@@ -2036,7 +2034,7 @@ static BOOL HLPFILE_SystemCommands(HLPFILE* hlpfile)
             if (hlpfile->lpszCopyright) {WINE_WARN("copyright\n"); break;}
             hlpfile->lpszCopyright = HeapAlloc(GetProcessHeap(), 0, strlen(str) + 1);
             if (!hlpfile->lpszCopyright) return FALSE;
-            lstrcpy(hlpfile->lpszCopyright, str);
+            strcpy(hlpfile->lpszCopyright, str);
             WINE_TRACE("Copyright: %s\n", hlpfile->lpszCopyright);
             break;
 
@@ -2047,10 +2045,10 @@ static BOOL HLPFILE_SystemCommands(HLPFILE* hlpfile)
             break;
 
 	case 4:
-            macro = HeapAlloc(GetProcessHeap(), 0, sizeof(HLPFILE_MACRO) + lstrlen(str) + 1);
+            macro = HeapAlloc(GetProcessHeap(), 0, sizeof(HLPFILE_MACRO) + strlen(str) + 1);
             if (!macro) break;
             p = (char*)macro + sizeof(HLPFILE_MACRO);
-            lstrcpy(p, str);
+            strcpy(p, str);
             macro->lpszMacro = p;
             macro->next = 0;
             for (m = &hlpfile->first_macro; *m; m = &(*m)->next);
@@ -2078,9 +2076,9 @@ static BOOL HLPFILE_SystemCommands(HLPFILE* hlpfile)
 	    
             if (hlpfile->windows)
             {
-                unsigned flags = GET_USHORT(ptr, 4);
                 HLPFILE_WINDOWINFO* wi = &hlpfile->windows[hlpfile->numWindows - 1];
 
+                flags = GET_USHORT(ptr, 4);
                 if (flags & 0x0001) strcpy(wi->type, &str[2]);
                 else wi->type[0] = '\0';
                 if (flags & 0x0002) strcpy(wi->name, &str[12]);
@@ -2358,14 +2356,14 @@ static BOOL HLPFILE_Uncompress_Phrases40(HLPFILE* hlpfile)
     INT dec_size, cpr_size;
     BYTE *buf_idx, *end_idx;
     BYTE *buf_phs, *end_phs;
-    LONG* ptr, mask = 0;
+    ULONG* ptr, mask = 0;
     unsigned int i;
     unsigned short bc, n;
 
     if (!HLPFILE_FindSubFile(hlpfile, "|PhrIndex", &buf_idx, &end_idx) ||
         !HLPFILE_FindSubFile(hlpfile, "|PhrImage", &buf_phs, &end_phs)) return FALSE;
 
-    ptr = (LONG*)(buf_idx + 9 + 28);
+    ptr = (ULONG*)(buf_idx + 9 + 28);
     bc = GET_USHORT(buf_idx, 9 + 24) & 0x0F;
     num = hlpfile->num_phrases = GET_USHORT(buf_idx, 9 + 4);
 
@@ -2400,9 +2398,10 @@ static BOOL HLPFILE_Uncompress_Phrases40(HLPFILE* hlpfile)
         return FALSE;
     }
 
-#define getbit() (ptr += (mask < 0), mask = mask*2 + (mask<=0), (*ptr & mask) != 0)
+#define getbit() ((mask <<= 1) ? (*ptr & mask) != 0: (*++ptr & (mask=1)) != 0)
 
     hlpfile->phrases_offsets[0] = 0;
+    ptr--; /* as we'll first increment ptr because mask is 0 on first getbit() call */
     for (i = 0; i < num; i++)
     {
         for (n = 1; getbit(); n += 1 << bc);
@@ -2646,7 +2645,6 @@ static BOOL HLPFILE_DoReadHlpFile(HLPFILE *hlpfile, LPCSTR lpszPath)
     if (!HLPFILE_Uncompress_Topic(hlpfile)) return FALSE;
     if (!HLPFILE_ReadFont(hlpfile)) return FALSE;
 
-    buf = hlpfile->topic_map[0];
     old_index = -1;
     offs = 0;
     do
@@ -2734,7 +2732,7 @@ HLPFILE *HLPFILE_ReadHlpFile(LPCSTR lpszPath)
     }
 
     hlpfile = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                        sizeof(HLPFILE) + lstrlen(lpszPath) + 1);
+                        sizeof(HLPFILE) + strlen(lpszPath) + 1);
     if (!hlpfile) return 0;
 
     hlpfile->lpszPath           = (char*)hlpfile + sizeof(HLPFILE);

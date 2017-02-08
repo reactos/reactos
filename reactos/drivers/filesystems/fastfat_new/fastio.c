@@ -17,7 +17,7 @@ BOOLEAN
 NTAPI
 FatFastIoCheckIfPossible(IN PFILE_OBJECT FileObject,
                           IN PLARGE_INTEGER FileOffset,
-                          IN ULONG Lenght,
+                          IN ULONG Length,
                           IN BOOLEAN Wait,
                           IN ULONG LockKey,
                           IN BOOLEAN CheckForReadOperation,

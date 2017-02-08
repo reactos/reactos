@@ -16,8 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS GUI first stage setup application
  * FILE:        base/setup/reactos/reactos.c
@@ -26,11 +25,14 @@
  *              Dmitry Chapyshev (dmitry@reactos.org)
  */
 
-#include <windows.h>
-#include <commctrl.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include <tchar.h>
 #include <setupapi.h>
-#include <initguid.h>
 #include <devguid.h>
 #include <wine/unicode.h>
 

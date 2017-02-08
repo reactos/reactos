@@ -9,7 +9,6 @@
 
 #include "precomp.h"
 
-
 VOID
 SetListViewStyle(HWND hListView,
                  DWORD View)
@@ -23,7 +22,6 @@ SetListViewStyle(HWND hListView,
                          (Style & ~LVS_TYPEMASK) | View);
     }
 }
-
 
 VOID
 ListViewSelectionChanged(PMAIN_WND_INFO Info,
@@ -81,7 +79,6 @@ ListViewSelectionChanged(PMAIN_WND_INFO Info,
                 ID_PROP,
                 (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
 }
-
 
 VOID
 ChangeListViewText(PMAIN_WND_INFO Info,
@@ -227,7 +224,6 @@ ChangeListViewText(PMAIN_WND_INFO Info,
     }
 }
 
-
 BOOL
 RefreshServiceList(PMAIN_WND_INFO Info)
 {
@@ -280,7 +276,6 @@ RefreshServiceList(PMAIN_WND_INFO Info)
 
     return TRUE;
 }
-
 
 static VOID
 InitListViewImage(PMAIN_WND_INFO Info)
@@ -337,7 +332,6 @@ InitListViewImage(PMAIN_WND_INFO Info)
         }
     }
 }
-
 
 BOOL
 CreateListView(PMAIN_WND_INFO Info)

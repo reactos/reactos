@@ -16,8 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-/* $Id: aclui.c 19715 2005-11-28 01:10:49Z weiden $
- *
+/*
  * PROJECT:         ReactOS Access Control List Editor
  * FILE:            lib/aclui/sidcache.c
  * PURPOSE:         Access Control List Editor
@@ -26,7 +25,7 @@
  * UPDATE HISTORY:
  *      12/10/2005  Created
  */
-#include <precomp.h>
+#include "precomp.h"
 
 #define NDEBUG
 #include <debug.h>

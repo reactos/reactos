@@ -16,73 +16,72 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-
-#include <regedit.h>
+#include "regedit.h"
 
 #define RSF_WHOLESTRING    0x00000001
-#define RSF_LOOKATKEYS	   0x00000002
+#define RSF_LOOKATKEYS     0x00000002
 #define RSF_LOOKATVALUES   0x00000004
 #define RSF_LOOKATDATA     0x00000008
 #define RSF_MATCHCASE      0x00010000
 
-static TCHAR s_szFindWhat[256];
-static const TCHAR s_szFindFlags[] = _T("FindFlags");
-static const TCHAR s_szFindFlagsR[] = _T("FindFlagsReactOS");
+static WCHAR s_szFindWhat[256];
+static const WCHAR s_szFindFlags[] = L"FindFlags";
+static const WCHAR s_szFindFlagsR[] = L"FindFlagsReactOS";
 static HWND s_hwndAbortDialog;
 static BOOL s_bAbort;
 
 static DWORD s_dwFlags;
-static TCHAR s_szName[MAX_PATH];
+static WCHAR s_szName[MAX_PATH];
 static DWORD s_cbName;
-static const TCHAR s_empty[] = {0};
-static const TCHAR s_backslash[] = {'\\', 0};
+static const WCHAR s_empty[] = L"";
+static const WCHAR s_backslash[] = L"\\";
 
-extern VOID SetValueName(HWND hwndLV, LPCTSTR pszValueName);
+extern VOID SetValueName(HWND hwndLV, LPCWSTR pszValueName);
 
 BOOL DoEvents(VOID)
 {
     MSG msg;
-    if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+    if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
     {
         if (msg.message == WM_QUIT)
             s_bAbort = TRUE;
-        if (!IsDialogMessage(s_hwndAbortDialog, &msg))
+        if (!IsDialogMessageW(s_hwndAbortDialog, &msg))
         {
             TranslateMessage(&msg);
-            DispatchMessage(&msg);
+            DispatchMessageW(&msg);
         }
     }
     return s_bAbort;
 }
 
-static LPTSTR lstrstri(LPCTSTR psz1, LPCTSTR psz2)
+static LPWSTR lstrstri(LPCWSTR psz1, LPCWSTR psz2)
 {
     INT i, cch1, cch2;
 
-    cch1 = lstrlen(psz1);
-    cch2 = lstrlen(psz2);
+    cch1 = wcslen(psz1);
+    cch2 = wcslen(psz2);
     for(i = 0; i <= cch1 - cch2; i++)
     {
-        if (CompareString(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE,
-                          psz1 + i, cch2, psz2, cch2) == 2)
-            return (LPTSTR) (psz1 + i);
+        if (CompareStringW(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE,
+                           psz1 + i, cch2, psz2, cch2) == 2)
+            return (LPWSTR) (psz1 + i);
     }
     return NULL;
 }
 
-static BOOL CompareName(LPCTSTR pszName1, LPCTSTR pszName2)
+static BOOL CompareName(LPCWSTR pszName1, LPCWSTR pszName2)
 {
     if (s_dwFlags & RSF_WHOLESTRING)
     {
         if (s_dwFlags & RSF_MATCHCASE)
-            return lstrcmp(pszName1, pszName2) == 0;
+            return wcscmp(pszName1, pszName2) == 0;
         else
-            return lstrcmpi(pszName1, pszName2) == 0;
+            return _wcsicmp(pszName1, pszName2) == 0;
     }
     else
     {
         if (s_dwFlags & RSF_MATCHCASE)
-            return _tcsstr(pszName1, pszName2) != NULL;
+            return wcsstr(pszName1, pszName2) != NULL;
         else
             return lstrstri(pszName1, pszName2) != NULL;
     }
@@ -91,19 +90,19 @@ static BOOL CompareName(LPCTSTR pszName1, LPCTSTR pszName2)
 static BOOL
 CompareData(
     DWORD   dwType,
-    LPCTSTR psz1,
-    LPCTSTR psz2)
+    LPCWSTR psz1,
+    LPCWSTR psz2)
 {
-    INT i, cch1 = lstrlen(psz1), cch2 = lstrlen(psz2);
+    INT i, cch1 = wcslen(psz1), cch2 = wcslen(psz2);
     if (dwType == REG_SZ || dwType == REG_EXPAND_SZ)
     {
         if (s_dwFlags & RSF_WHOLESTRING)
         {
             if (s_dwFlags & RSF_MATCHCASE)
-                return 2 == CompareString(LOCALE_SYSTEM_DEFAULT, 0,
+                return 2 == CompareStringW(LOCALE_SYSTEM_DEFAULT, 0,
                                           psz1, cch1, psz2, cch2);
             else
-                return 2 == CompareString(LOCALE_SYSTEM_DEFAULT,
+                return 2 == CompareStringW(LOCALE_SYSTEM_DEFAULT,
                                           NORM_IGNORECASE, psz1, cch1, psz2, cch2);
         }
 
@@ -111,13 +110,13 @@ CompareData(
         {
             if (s_dwFlags & RSF_MATCHCASE)
             {
-                if (2 == CompareString(LOCALE_SYSTEM_DEFAULT, 0,
+                if (2 == CompareStringW(LOCALE_SYSTEM_DEFAULT, 0,
                                        psz1 + i, cch2, psz2, cch2))
                     return TRUE;
             }
             else
             {
-                if (2 == CompareString(LOCALE_SYSTEM_DEFAULT,
+                if (2 == CompareStringW(LOCALE_SYSTEM_DEFAULT,
                                        NORM_IGNORECASE, psz1 + i, cch2, psz2, cch2))
                     return TRUE;
             }
@@ -128,55 +127,55 @@ CompareData(
 
 int compare(const void *x, const void *y)
 {
-    const LPCTSTR *a = (const LPCTSTR *)x;
-    const LPCTSTR *b = (const LPCTSTR *)y;
-    return lstrcmpi(*a, *b);
+    const LPCWSTR *a = (const LPCWSTR *)x;
+    const LPCWSTR *b = (const LPCWSTR *)y;
+    return _wcsicmp(*a, *b);
 }
 
 BOOL RegFindRecurse(
     HKEY    hKey,
-    LPCTSTR pszSubKey,
-    LPCTSTR pszValueName,
-    LPTSTR *ppszFoundSubKey,
-    LPTSTR *ppszFoundValueName)
+    LPCWSTR pszSubKey,
+    LPCWSTR pszValueName,
+    LPWSTR *ppszFoundSubKey,
+    LPWSTR *ppszFoundValueName)
 {
     HKEY hSubKey;
     LONG lResult;
-    TCHAR szSubKey[MAX_PATH];
+    WCHAR szSubKey[MAX_PATH];
     DWORD i, c, cb, type;
     BOOL fPast = FALSE;
-    LPTSTR *ppszNames = NULL;
+    LPWSTR *ppszNames = NULL;
     LPBYTE pb = NULL;
 
     if (DoEvents())
         return FALSE;
 
-    lstrcpy(szSubKey, pszSubKey);
+    wcscpy(szSubKey, pszSubKey);
     hSubKey = NULL;
 
-    lResult = RegOpenKeyEx(hKey, szSubKey, 0, KEY_ALL_ACCESS, &hSubKey);
+    lResult = RegOpenKeyExW(hKey, szSubKey, 0, KEY_ALL_ACCESS, &hSubKey);
     if (lResult != ERROR_SUCCESS)
         return FALSE;
 
     if (pszValueName == NULL)
         pszValueName = s_empty;
 
-    lResult = RegQueryInfoKey(hSubKey, NULL, NULL, NULL, NULL, NULL, NULL,
+    lResult = RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, NULL, NULL, NULL,
                               &c, NULL, NULL, NULL, NULL);
     if (lResult != ERROR_SUCCESS)
         goto err;
-    ppszNames = (LPTSTR *) malloc(c * sizeof(LPTSTR));
+    ppszNames = (LPWSTR *) malloc(c * sizeof(LPWSTR));
     if (ppszNames == NULL)
         goto err;
-    ZeroMemory(ppszNames, c * sizeof(LPTSTR));
+    ZeroMemory(ppszNames, c * sizeof(LPWSTR));
 
     for(i = 0; i < c; i++)
     {
         if (DoEvents())
             goto err;
 
-        s_cbName = MAX_PATH * sizeof(TCHAR);
-        lResult = RegEnumValue(hSubKey, i, s_szName, &s_cbName, NULL, NULL,
+        s_cbName = MAX_PATH * sizeof(WCHAR);
+        lResult = RegEnumValueW(hSubKey, i, s_szName, &s_cbName, NULL, NULL,
                                NULL, &cb);
         if (lResult == ERROR_NO_MORE_ITEMS)
         {
@@ -185,20 +184,20 @@ BOOL RegFindRecurse(
         }
         if (lResult != ERROR_SUCCESS)
             goto err;
-        if (s_cbName >= MAX_PATH * sizeof(TCHAR))
+        if (s_cbName >= MAX_PATH * sizeof(WCHAR))
             continue;
 
-        ppszNames[i] = _tcsdup(s_szName);
+        ppszNames[i] = _wcsdup(s_szName);
     }
 
-    qsort(ppszNames, c, sizeof(LPTSTR), compare);
+    qsort(ppszNames, c, sizeof(LPWSTR), compare);
 
     for(i = 0; i < c; i++)
     {
         if (DoEvents())
             goto err;
 
-        if (!fPast && lstrcmpi(ppszNames[i], pszValueName) == 0)
+        if (!fPast && _wcsicmp(ppszNames[i], pszValueName) == 0)
         {
             fPast = TRUE;
             continue;
@@ -209,34 +208,34 @@ BOOL RegFindRecurse(
         if ((s_dwFlags & RSF_LOOKATVALUES) &&
                 CompareName(ppszNames[i], s_szFindWhat))
         {
-            *ppszFoundSubKey = _tcsdup(szSubKey);
+            *ppszFoundSubKey = _wcsdup(szSubKey);
             if (ppszNames[i][0] == 0)
                 *ppszFoundValueName = NULL;
             else
-                *ppszFoundValueName = _tcsdup(ppszNames[i]);
+                *ppszFoundValueName = _wcsdup(ppszNames[i]);
             goto success;
         }
 
-        lResult = RegQueryValueEx(hSubKey, ppszNames[i], NULL, &type,
+        lResult = RegQueryValueExW(hSubKey, ppszNames[i], NULL, &type,
                                   NULL, &cb);
         if (lResult != ERROR_SUCCESS)
             goto err;
         pb = malloc(cb);
         if (pb == NULL)
             goto err;
-        lResult = RegQueryValueEx(hSubKey, ppszNames[i], NULL, &type,
+        lResult = RegQueryValueExW(hSubKey, ppszNames[i], NULL, &type,
                                   pb, &cb);
         if (lResult != ERROR_SUCCESS)
             goto err;
 
         if ((s_dwFlags & RSF_LOOKATDATA) &&
-                CompareData(type, (LPTSTR) pb, s_szFindWhat))
+                CompareData(type, (LPWSTR) pb, s_szFindWhat))
         {
-            *ppszFoundSubKey = _tcsdup(szSubKey);
+            *ppszFoundSubKey = _wcsdup(szSubKey);
             if (ppszNames[i][0] == 0)
                 *ppszFoundValueName = NULL;
             else
-                *ppszFoundValueName = _tcsdup(ppszNames[i]);
+                *ppszFoundValueName = _wcsdup(ppszNames[i]);
             goto success;
         }
         free(pb);
@@ -251,22 +250,22 @@ BOOL RegFindRecurse(
     }
     ppszNames = NULL;
 
-    lResult = RegQueryInfoKey(hSubKey, NULL, NULL, NULL, &c, NULL, NULL,
+    lResult = RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, &c, NULL, NULL,
                               NULL, NULL, NULL, NULL, NULL);
     if (lResult != ERROR_SUCCESS)
         goto err;
-    ppszNames = (LPTSTR *) malloc(c * sizeof(LPTSTR));
+    ppszNames = (LPWSTR *) malloc(c * sizeof(LPWSTR));
     if (ppszNames == NULL)
         goto err;
-    ZeroMemory(ppszNames, c * sizeof(LPTSTR));
+    ZeroMemory(ppszNames, c * sizeof(LPWSTR));
 
     for(i = 0; i < c; i++)
     {
         if (DoEvents())
             goto err;
 
-        s_cbName = MAX_PATH * sizeof(TCHAR);
-        lResult = RegEnumKeyEx(hSubKey, i, s_szName, &s_cbName, NULL, NULL,
+        s_cbName = MAX_PATH * sizeof(WCHAR);
+        lResult = RegEnumKeyExW(hSubKey, i, s_szName, &s_cbName, NULL, NULL,
                                NULL, NULL);
         if (lResult == ERROR_NO_MORE_ITEMS)
         {
@@ -275,13 +274,13 @@ BOOL RegFindRecurse(
         }
         if (lResult != ERROR_SUCCESS)
             goto err;
-        if (s_cbName >= MAX_PATH * sizeof(TCHAR))
+        if (s_cbName >= MAX_PATH * sizeof(WCHAR))
             continue;
 
-        ppszNames[i] = _tcsdup(s_szName);
+        ppszNames[i] = _wcsdup(s_szName);
     }
 
-    qsort(ppszNames, c, sizeof(LPTSTR), compare);
+    qsort(ppszNames, c, sizeof(LPWSTR), compare);
 
     for(i = 0; i < c; i++)
     {
@@ -292,18 +291,18 @@ BOOL RegFindRecurse(
                 CompareName(ppszNames[i], s_szFindWhat))
         {
             *ppszFoundSubKey = malloc(
-                                   (lstrlen(szSubKey) + lstrlen(ppszNames[i]) + 2) *
-                                   sizeof(TCHAR));
+                                   (wcslen(szSubKey) + wcslen(ppszNames[i]) + 2) *
+                                   sizeof(WCHAR));
             if (*ppszFoundSubKey == NULL)
                 goto err;
             if (szSubKey[0])
             {
-                lstrcpy(*ppszFoundSubKey, szSubKey);
-                lstrcatW(*ppszFoundSubKey, s_backslash);
+                wcscpy(*ppszFoundSubKey, szSubKey);
+                wcscat(*ppszFoundSubKey, s_backslash);
             }
             else
                 **ppszFoundSubKey = 0;
-            lstrcatW(*ppszFoundSubKey, ppszNames[i]);
+            wcscat(*ppszFoundSubKey, ppszNames[i]);
             *ppszFoundValueName = NULL;
             goto success;
         }
@@ -311,19 +310,19 @@ BOOL RegFindRecurse(
         if (RegFindRecurse(hSubKey, ppszNames[i], NULL, ppszFoundSubKey,
                            ppszFoundValueName))
         {
-            LPTSTR psz = *ppszFoundSubKey;
+            LPWSTR psz = *ppszFoundSubKey;
             *ppszFoundSubKey = malloc(
-                                   (lstrlen(szSubKey) + lstrlen(psz) + 2) * sizeof(TCHAR));
+                                   (wcslen(szSubKey) + wcslen(psz) + 2) * sizeof(WCHAR));
             if (*ppszFoundSubKey == NULL)
                 goto err;
             if (szSubKey[0])
             {
-                lstrcpy(*ppszFoundSubKey, szSubKey);
-                lstrcatW(*ppszFoundSubKey, s_backslash);
+                wcscpy(*ppszFoundSubKey, szSubKey);
+                wcscat(*ppszFoundSubKey, s_backslash);
             }
             else
                 **ppszFoundSubKey = 0;
-            lstrcatW(*ppszFoundSubKey, psz);
+            wcscat(*ppszFoundSubKey, psz);
             free(psz);
             goto success;
         }
@@ -353,67 +352,67 @@ success:
 
 BOOL RegFindWalk(
     HKEY *  phKey,
-    LPCTSTR pszSubKey,
-    LPCTSTR pszValueName,
-    LPTSTR *ppszFoundSubKey,
-    LPTSTR *ppszFoundValueName)
+    LPCWSTR pszSubKey,
+    LPCWSTR pszValueName,
+    LPWSTR *ppszFoundSubKey,
+    LPWSTR *ppszFoundValueName)
 {
     LONG lResult;
     DWORD i, c;
     HKEY hBaseKey, hSubKey;
-    TCHAR szKeyName[MAX_PATH];
-    TCHAR szSubKey[MAX_PATH];
-    LPTSTR pch;
+    WCHAR szKeyName[MAX_PATH];
+    WCHAR szSubKey[MAX_PATH];
+    LPWSTR pch;
     BOOL fPast;
-    LPTSTR *ppszNames = NULL;
+    LPWSTR *ppszNames = NULL;
 
     hBaseKey = *phKey;
     if (RegFindRecurse(hBaseKey, pszSubKey, pszValueName, ppszFoundSubKey,
                        ppszFoundValueName))
         return TRUE;
 
-    if (lstrlen(pszSubKey) >= MAX_PATH)
+    if (wcslen(pszSubKey) >= MAX_PATH)
         return FALSE;
 
-    lstrcpy(szSubKey, pszSubKey);
+    wcscpy(szSubKey, pszSubKey);
     while(szSubKey[0] != 0)
     {
         if (DoEvents())
             return FALSE;
 
-        pch = _tcsrchr(szSubKey, _T('\\'));
+        pch = wcsrchr(szSubKey, L'\\');
         if (pch == NULL)
         {
-            lstrcpy(szKeyName, szSubKey);
+            wcscpy(szKeyName, szSubKey);
             szSubKey[0] = 0;
             hSubKey = hBaseKey;
         }
         else
         {
-            lstrcpyn(szKeyName, pch + 1, MAX_PATH);
+            lstrcpynW(szKeyName, pch + 1, MAX_PATH);
             *pch = 0;
-            lResult = RegOpenKeyEx(hBaseKey, szSubKey, 0, KEY_ALL_ACCESS,
+            lResult = RegOpenKeyExW(hBaseKey, szSubKey, 0, KEY_ALL_ACCESS,
                                    &hSubKey);
             if (lResult != ERROR_SUCCESS)
                 return FALSE;
         }
 
-        lResult = RegQueryInfoKey(hSubKey, NULL, NULL, NULL, &c, NULL, NULL,
+        lResult = RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, &c, NULL, NULL,
                                   NULL, NULL, NULL, NULL, NULL);
         if (lResult != ERROR_SUCCESS)
             goto err;
 
-        ppszNames = (LPTSTR *) malloc(c * sizeof(LPTSTR));
+        ppszNames = (LPWSTR *) malloc(c * sizeof(LPWSTR));
         if (ppszNames == NULL)
             goto err;
-        ZeroMemory(ppszNames, c * sizeof(LPTSTR));
+        ZeroMemory(ppszNames, c * sizeof(LPWSTR));
 
         for(i = 0; i < c; i++)
         {
             if (DoEvents())
                 goto err;
 
-            s_cbName = MAX_PATH * sizeof(TCHAR);
+            s_cbName = MAX_PATH * sizeof(WCHAR);
             lResult = RegEnumKeyExW(hSubKey, i, s_szName, &s_cbName,
                                     NULL, NULL, NULL, NULL);
             if (lResult == ERROR_NO_MORE_ITEMS)
@@ -423,10 +422,10 @@ BOOL RegFindWalk(
             }
             if (lResult != ERROR_SUCCESS)
                 break;
-            ppszNames[i] = _tcsdup(s_szName);
+            ppszNames[i] = _wcsdup(s_szName);
         }
 
-        qsort(ppszNames, c, sizeof(LPTSTR), compare);
+        qsort(ppszNames, c, sizeof(LPWSTR), compare);
 
         fPast = FALSE;
         for(i = 0; i < c; i++)
@@ -434,7 +433,7 @@ BOOL RegFindWalk(
             if (DoEvents())
                 goto err;
 
-            if (!fPast && lstrcmpi(ppszNames[i], szKeyName) == 0)
+            if (!fPast && _wcsicmp(ppszNames[i], szKeyName) == 0)
             {
                 fPast = TRUE;
                 continue;
@@ -446,18 +445,18 @@ BOOL RegFindWalk(
                     CompareName(ppszNames[i], s_szFindWhat))
             {
                 *ppszFoundSubKey = malloc(
-                                       (lstrlen(szSubKey) + lstrlen(ppszNames[i]) + 2) *
-                                       sizeof(TCHAR));
+                                       (wcslen(szSubKey) + wcslen(ppszNames[i]) + 2) *
+                                       sizeof(WCHAR));
                 if (*ppszFoundSubKey == NULL)
                     goto err;
                 if (szSubKey[0])
                 {
-                    lstrcpy(*ppszFoundSubKey, szSubKey);
-                    lstrcatW(*ppszFoundSubKey, s_backslash);
+                    wcscpy(*ppszFoundSubKey, szSubKey);
+                    wcscat(*ppszFoundSubKey, s_backslash);
                 }
                 else
                     **ppszFoundSubKey = 0;
-                lstrcatW(*ppszFoundSubKey, ppszNames[i]);
+                wcscat(*ppszFoundSubKey, ppszNames[i]);
                 *ppszFoundValueName = NULL;
                 goto success;
             }
@@ -465,20 +464,20 @@ BOOL RegFindWalk(
             if (RegFindRecurse(hSubKey, ppszNames[i], NULL,
                                ppszFoundSubKey, ppszFoundValueName))
             {
-                LPTSTR psz = *ppszFoundSubKey;
+                LPWSTR psz = *ppszFoundSubKey;
                 *ppszFoundSubKey = malloc(
-                                       (lstrlen(szSubKey) + lstrlen(psz) + 2) *
-                                       sizeof(TCHAR));
+                                       (wcslen(szSubKey) + wcslen(psz) + 2) *
+                                       sizeof(WCHAR));
                 if (*ppszFoundSubKey == NULL)
                     goto err;
                 if (szSubKey[0])
                 {
-                    lstrcpy(*ppszFoundSubKey, szSubKey);
-                    lstrcatW(*ppszFoundSubKey, s_backslash);
+                    wcscpy(*ppszFoundSubKey, szSubKey);
+                    wcscat(*ppszFoundSubKey, s_backslash);
                 }
                 else
                     **ppszFoundSubKey = 0;
-                lstrcatW(*ppszFoundSubKey, psz);
+                wcscat(*ppszFoundSubKey, psz);
                 free(psz);
                 goto success;
             }
@@ -557,11 +556,11 @@ static DWORD GetFindFlags(void)
     DWORD dwType, dwValue, cbData;
     DWORD dwFlags = RSF_LOOKATKEYS | RSF_LOOKATVALUES | RSF_LOOKATDATA;
 
-    if (RegOpenKey(HKEY_CURRENT_USER, g_szGeneralRegKey, &hKey) == ERROR_SUCCESS)
+    if (RegOpenKeyW(HKEY_CURRENT_USER, g_szGeneralRegKey, &hKey) == ERROR_SUCCESS)
     {
         /* Retrieve flags from registry key */
         cbData = sizeof(dwValue);
-        if (RegQueryValueEx(hKey, s_szFindFlags, NULL, &dwType, (LPBYTE) &dwValue, &cbData) == ERROR_SUCCESS)
+        if (RegQueryValueExW(hKey, s_szFindFlags, NULL, &dwType, (LPBYTE) &dwValue, &cbData) == ERROR_SUCCESS)
         {
             if (dwType == REG_DWORD)
                 dwFlags = (dwFlags & ~0x0000FFFF) | ((dwValue & 0x0000FFFF) << 0);
@@ -569,7 +568,7 @@ static DWORD GetFindFlags(void)
 
         /* Retrieve ReactOS Regedit specific flags from registry key */
         cbData = sizeof(dwValue);
-        if (RegQueryValueEx(hKey, s_szFindFlagsR, NULL, &dwType, (LPBYTE) &dwValue, &cbData) == ERROR_SUCCESS)
+        if (RegQueryValueExW(hKey, s_szFindFlagsR, NULL, &dwType, (LPBYTE) &dwValue, &cbData) == ERROR_SUCCESS)
         {
             if (dwType == REG_DWORD)
                 dwFlags = (dwFlags & ~0xFFFF0000) | ((dwValue & 0x0000FFFF) << 16);
@@ -586,13 +585,13 @@ static void SetFindFlags(DWORD dwFlags)
     DWORD dwDisposition;
     DWORD dwData;
 
-    if (RegCreateKeyEx(HKEY_CURRENT_USER, g_szGeneralRegKey, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, g_szGeneralRegKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
     {
         dwData = (dwFlags >> 0) & 0x0000FFFF;
-        RegSetValueEx(hKey, s_szFindFlags, 0, REG_DWORD, (const BYTE *) &dwData, sizeof(dwData));
+        RegSetValueExW(hKey, s_szFindFlags, 0, REG_DWORD, (const BYTE *) &dwData, sizeof(dwData));
 
         dwData = (dwFlags >> 16) & 0x0000FFFF;
-        RegSetValueEx(hKey, s_szFindFlagsR, 0, REG_DWORD, (const BYTE *) &dwData, sizeof(dwData));
+        RegSetValueExW(hKey, s_szFindFlagsR, 0, REG_DWORD, (const BYTE *) &dwData, sizeof(dwData));
 
         RegCloseKey(hKey);
     }
@@ -629,13 +628,13 @@ static INT_PTR CALLBACK AbortFindDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 BOOL FindNext(HWND hWnd)
 {
     HKEY hKeyRoot;
-    LPCTSTR pszKeyPath;
+    LPCWSTR pszKeyPath;
     BOOL fSuccess;
-    TCHAR szFullKey[512];
-    LPCTSTR pszValueName;
-    LPTSTR pszFoundSubKey, pszFoundValueName;
+    WCHAR szFullKey[512];
+    LPCWSTR pszValueName;
+    LPWSTR pszFoundSubKey, pszFoundValueName;
 
-    if (_tcslen(s_szFindWhat) == 0)
+    if (wcslen(s_szFindWhat) == 0)
     {
         FindDialog(hWnd);
         return TRUE;
@@ -651,8 +650,8 @@ BOOL FindNext(HWND hWnd)
     }
 
     /* Create abort find dialog */
-    s_hwndAbortDialog = CreateDialog(GetModuleHandle(NULL),
-                                     MAKEINTRESOURCE(IDD_FINDING), hWnd, AbortFindDialogProc);
+    s_hwndAbortDialog = CreateDialogW(GetModuleHandle(NULL),
+                                     MAKEINTRESOURCEW(IDD_FINDING), hWnd, AbortFindDialogProc);
     if (s_hwndAbortDialog)
     {
         ShowWindow(s_hwndAbortDialog, SW_SHOW);
@@ -699,7 +698,7 @@ static INT_PTR CALLBACK FindDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
     HWND hControl;
     LONG lStyle;
     DWORD dwFlags;
-    static TCHAR s_szSavedFindValue[256];
+    static WCHAR s_szSavedFindValue[256];
 
     switch(uMsg)
     {
@@ -708,32 +707,32 @@ static INT_PTR CALLBACK FindDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 
         hControl = GetDlgItem(hDlg, IDC_LOOKAT_KEYS);
         if (hControl)
-            SendMessage(hControl, BM_SETCHECK, (dwFlags & RSF_LOOKATKEYS) ? TRUE : FALSE, 0);
+            SendMessageW(hControl, BM_SETCHECK, (dwFlags & RSF_LOOKATKEYS) ? TRUE : FALSE, 0);
 
         hControl = GetDlgItem(hDlg, IDC_LOOKAT_VALUES);
         if (hControl)
-            SendMessage(hControl, BM_SETCHECK, (dwFlags & RSF_LOOKATVALUES) ? TRUE : FALSE, 0);
+            SendMessageW(hControl, BM_SETCHECK, (dwFlags & RSF_LOOKATVALUES) ? TRUE : FALSE, 0);
 
         hControl = GetDlgItem(hDlg, IDC_LOOKAT_DATA);
         if (hControl)
-            SendMessage(hControl, BM_SETCHECK, (dwFlags & RSF_LOOKATDATA) ? TRUE : FALSE, 0);
+            SendMessageW(hControl, BM_SETCHECK, (dwFlags & RSF_LOOKATDATA) ? TRUE : FALSE, 0);
 
         /* Match whole string */
         hControl = GetDlgItem(hDlg, IDC_MATCHSTRING);
         if (hControl)
-            SendMessage(hControl, BM_SETCHECK, (dwFlags & RSF_WHOLESTRING) ? TRUE : FALSE, 0);
+            SendMessageW(hControl, BM_SETCHECK, (dwFlags & RSF_WHOLESTRING) ? TRUE : FALSE, 0);
 
         /* Case sensitivity */
         hControl = GetDlgItem(hDlg, IDC_MATCHCASE);
         if (hControl)
-            SendMessage(hControl, BM_SETCHECK, (dwFlags & RSF_MATCHCASE) ? TRUE : FALSE, 0);
+            SendMessageW(hControl, BM_SETCHECK, (dwFlags & RSF_MATCHCASE) ? TRUE : FALSE, 0);
 
         hControl = GetDlgItem(hDlg, IDC_FINDWHAT);
         if (hControl)
         {
-            SetWindowText(hControl, s_szSavedFindValue);
+            SetWindowTextW(hControl, s_szSavedFindValue);
             SetFocus(hControl);
-            SendMessage(hControl, EM_SETSEL, 0, -1);
+            SendMessageW(hControl, EM_SETSEL, 0, -1);
         }
         break;
 
@@ -751,30 +750,30 @@ static INT_PTR CALLBACK FindDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
                 dwFlags = 0;
 
                 hControl = GetDlgItem(hDlg, IDC_LOOKAT_KEYS);
-                if (hControl && (SendMessage(hControl, BM_GETCHECK, 0, 0) == BST_CHECKED))
+                if (hControl && (SendMessageW(hControl, BM_GETCHECK, 0, 0) == BST_CHECKED))
                     dwFlags |= RSF_LOOKATKEYS;
 
                 hControl = GetDlgItem(hDlg, IDC_LOOKAT_VALUES);
-                if (hControl && (SendMessage(hControl, BM_GETCHECK, 0, 0) == BST_CHECKED))
+                if (hControl && (SendMessageW(hControl, BM_GETCHECK, 0, 0) == BST_CHECKED))
                     dwFlags |= RSF_LOOKATVALUES;
 
                 hControl = GetDlgItem(hDlg, IDC_LOOKAT_DATA);
-                if (hControl && (SendMessage(hControl, BM_GETCHECK, 0, 0) == BST_CHECKED))
+                if (hControl && (SendMessageW(hControl, BM_GETCHECK, 0, 0) == BST_CHECKED))
                     dwFlags |= RSF_LOOKATDATA;
 
                 hControl = GetDlgItem(hDlg, IDC_MATCHSTRING);
-                if (hControl && (SendMessage(hControl, BM_GETCHECK, 0, 0) == BST_CHECKED))
+                if (hControl && (SendMessageW(hControl, BM_GETCHECK, 0, 0) == BST_CHECKED))
                     dwFlags |= RSF_WHOLESTRING;
 
                 hControl = GetDlgItem(hDlg, IDC_MATCHCASE);
-                if (hControl && (SendMessage(hControl, BM_GETCHECK, 0, 0) == BST_CHECKED))
+                if (hControl && (SendMessageW(hControl, BM_GETCHECK, 0, 0) == BST_CHECKED))
                     dwFlags |= RSF_MATCHCASE;
 
                 SetFindFlags(dwFlags);
 
                 hControl = GetDlgItem(hDlg, IDC_FINDWHAT);
                 if (hControl)
-                    GetWindowText(hControl, s_szFindWhat, COUNT_OF(s_szFindWhat));
+                    GetWindowTextW(hControl, s_szFindWhat, COUNT_OF(s_szFindWhat));
                 EndDialog(hDlg, 1);
                 break;
 
@@ -788,7 +787,7 @@ static INT_PTR CALLBACK FindDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
             switch(LOWORD(wParam))
             {
             case IDC_FINDWHAT:
-                GetWindowText((HWND) lParam, s_szSavedFindValue, COUNT_OF(s_szSavedFindValue));
+                GetWindowTextW((HWND) lParam, s_szSavedFindValue, COUNT_OF(s_szSavedFindValue));
                 hControl = GetDlgItem(hDlg, IDOK);
                 if (hControl)
                 {
@@ -810,17 +809,16 @@ static INT_PTR CALLBACK FindDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 
 void FindDialog(HWND hWnd)
 {
-    if (DialogBoxParam(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_FIND),
+    if (DialogBoxParamW(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDD_FIND),
                        hWnd, FindDialogProc, 0) != 0)
     {
         if (!FindNext(hWnd))
         {
-            TCHAR msg[128], caption[128];
+            WCHAR msg[128], caption[128];
 
-            LoadString(hInst, IDS_FINISHEDFIND, msg, COUNT_OF(msg));
-            LoadString(hInst, IDS_APP_TITLE, caption, COUNT_OF(caption));
-            MessageBox(0, msg, caption, MB_ICONINFORMATION);
+            LoadStringW(hInst, IDS_FINISHEDFIND, msg, COUNT_OF(msg));
+            LoadStringW(hInst, IDS_APP_TITLE, caption, COUNT_OF(caption));
+            MessageBoxW(0, msg, caption, MB_ICONINFORMATION);
         }
     }
 }
-

@@ -1,5 +1,4 @@
 /*
- *
  * PROJECT:         input.dll
  * FILE:            dll/win32/input/keysettings.c
  * PURPOSE:         input.dll

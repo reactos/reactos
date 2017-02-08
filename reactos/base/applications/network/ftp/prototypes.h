@@ -1,3 +1,4 @@
+#pragma once
 
 int fgetcSocket(int s);
 const char *fputsSocket(const char *format, int s);

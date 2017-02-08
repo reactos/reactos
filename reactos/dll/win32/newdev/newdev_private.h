@@ -1,13 +1,23 @@
 #ifndef __NEWDEV_PRIVATE_H
 #define __NEWDEV_PRIVATE_H
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
-#include <windows.h>
+
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <winnls.h>
 #include <windowsx.h>
-#include <commctrl.h>
+#include <wincon.h>
 #include <newdev.h>
 #include <regstr.h>
-#include <setupapi.h>
 #include <cfgmgr32.h>
 #include <shlobj.h>
 #include <wine/debug.h>

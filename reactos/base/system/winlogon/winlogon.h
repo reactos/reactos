@@ -29,8 +29,9 @@
 #define USE_GETLASTINPUTINFO
 
 #define WIN32_NO_STATUS
-#include <stdio.h>
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <mmsystem.h>
 #include <userenv.h>
 #include <winwlx.h>
 #include <cmfuncs.h>
@@ -38,13 +39,13 @@
 #include <exfuncs.h>
 #include <setypes.h>
 #include <sefuncs.h>
-#include <ntsecapi.h>
-#include <accctrl.h>
 #include <aclapi.h>
 #include <strsafe.h>
 
 #include <reactos/undocuser.h>
 #include <reactos/winlogon.h>
+
+#include <wine/debug.h>
 
 #include "setup.h"
 #include "resource.h"
@@ -78,90 +79,166 @@ typedef BOOL (WINAPI * PFWLXREMOVESTATUSMESSAGE) (PVOID);
 
 typedef struct _GINAFUNCTIONS
 {
-	/* Functions always available for a valid GINA */
-	PFWLXNEGOTIATE            WlxNegotiate; /* optional */
-	PFWLXINITIALIZE           WlxInitialize;
+    /* Functions always available for a valid GINA */
+    PFWLXNEGOTIATE            WlxNegotiate; /* optional */
+    PFWLXINITIALIZE           WlxInitialize;
 
-	/* Functions available if WlxVersion >= WLX_VERSION_1_0 (MS Windows 3.5.0) */
-	PFWLXDISPLAYSASNOTICE     WlxDisplaySASNotice;
-	PFWLXLOGGEDOUTSAS         WlxLoggedOutSAS;
-	PFWLXACTIVATEUSERSHELL    WlxActivateUserShell;
-	PFWLXLOGGEDONSAS          WlxLoggedOnSAS;
-	PFWLXDISPLAYLOCKEDNOTICE  WlxDisplayLockedNotice;
-	PFWLXWKSTALOCKEDSAS       WlxWkstaLockedSAS;
-	PFWLXISLOCKOK             WlxIsLockOk;
-	PFWLXISLOGOFFOK           WlxIsLogoffOk;
-	PFWLXLOGOFF               WlxLogoff;
-	PFWLXSHUTDOWN             WlxShutdown;
+    /* Functions available if WlxVersion >= WLX_VERSION_1_0 (MS Windows 3.5.0) */
+    PFWLXDISPLAYSASNOTICE     WlxDisplaySASNotice;
+    PFWLXLOGGEDOUTSAS         WlxLoggedOutSAS;
+    PFWLXACTIVATEUSERSHELL    WlxActivateUserShell;
+    PFWLXLOGGEDONSAS          WlxLoggedOnSAS;
+    PFWLXDISPLAYLOCKEDNOTICE  WlxDisplayLockedNotice;
+    PFWLXWKSTALOCKEDSAS       WlxWkstaLockedSAS;
+    PFWLXISLOCKOK             WlxIsLockOk;
+    PFWLXISLOGOFFOK           WlxIsLogoffOk;
+    PFWLXLOGOFF               WlxLogoff;
+    PFWLXSHUTDOWN             WlxShutdown;
 
-	/* Functions available if WlxVersion >= WLX_VERSION_1_1 (MS Windows 3.5.1) */
-	PFWLXSCREENSAVERNOTIFY    WlxScreenSaverNotify; /* optional */
-	PFWLXSTARTAPPLICATION     WlxStartApplication; /* optional */
+    /* Functions available if WlxVersion >= WLX_VERSION_1_1 (MS Windows 3.5.1) */
+    PFWLXSCREENSAVERNOTIFY    WlxScreenSaverNotify; /* optional */
+    PFWLXSTARTAPPLICATION     WlxStartApplication; /* optional */
 
-	/* Functions available if WlxVersion >= WLX_VERSION_1_2 (MS Windows NT 4.0) */
+    /* Functions available if WlxVersion >= WLX_VERSION_1_2 (MS Windows NT 4.0) */
 
-	/* Functions available if WlxVersion >= WLX_VERSION_1_3 (MS Windows 2000) */
-	PFWLXNETWORKPROVIDERLOAD  WlxNetworkProviderLoad; /* not called ATM */
-	PFWLXDISPLAYSTATUSMESSAGE WlxDisplayStatusMessage;
-	PFWLXGETSTATUSMESSAGE     WlxGetStatusMessage; /* doesn't need to be called */
-	PFWLXREMOVESTATUSMESSAGE  WlxRemoveStatusMessage;
+    /* Functions available if WlxVersion >= WLX_VERSION_1_3 (MS Windows 2000) */
+    PFWLXNETWORKPROVIDERLOAD  WlxNetworkProviderLoad; /* not called ATM */
+    PFWLXDISPLAYSTATUSMESSAGE WlxDisplayStatusMessage;
+    PFWLXGETSTATUSMESSAGE     WlxGetStatusMessage; /* doesn't need to be called */
+    PFWLXREMOVESTATUSMESSAGE  WlxRemoveStatusMessage;
 
-	/* Functions available if WlxVersion >= WLX_VERSION_1_4 (MS Windows XP) */
+    /* Functions available if WlxVersion >= WLX_VERSION_1_4 (MS Windows XP) */
 } GINAFUNCTIONS, *PGINAFUNCTIONS;
 
 typedef struct _GINAINSTANCE
 {
-	HMODULE hDllInstance;
-	GINAFUNCTIONS Functions;
-	PVOID Context;
-	DWORD Version;
-	BOOL UseCtrlAltDelete;
+    HMODULE hDllInstance;
+    GINAFUNCTIONS Functions;
+    PVOID Context;
+    DWORD Version;
+    BOOL UseCtrlAltDelete;
 } GINAINSTANCE, *PGINAINSTANCE;
 
-/* FIXME: put in an enum */
-/* See http://msdn.microsoft.com/library/default.asp?url=/library/en-us/secauthn/security/winlogon_states.asp */
-#define WKSTA_IS_LOGGED_OFF 0
-#define WKSTA_IS_LOGGED_ON  1
-#define WKSTA_IS_LOCKED     2
+
+/*
+ * The picture Microsoft is trying to paint here
+ * (http://msdn.microsoft.com/en-us/library/windows/desktop/aa380547%28v=vs.85%29.aspx)
+ * about the Winlogon states is a little too simple.
+ *
+ * The real picture should look more like this:
+ * 
+ * STATE_INIT
+ *    Initial state. Required for session initialization. After intialization,
+ *    the state will automatically change to STATE_LOGGED_OFF.
+ *
+ * STATE_LOGGED_OFF
+ *    User is logged off. Winlogon shows the "Press Ctrl-Alt-Del for logon"
+ *    dialog. The state changes to STATE_LOGGED_OFF_SAS when the user presses
+ *    "Ctrl-Alt-Del". If DisableCAD is true, the state will automatically
+ *    change to STATE_LOGGED_OFF_SAS without showing the dialog.
+ *
+ * STATE_LOGGED_OFF_SAS
+ *    State shows the logon dialog. Entering the right credentials and pressing
+ *    "OK" changes the state to STATE_LOGGED_ON. Pressing "Cancel" or a timeout
+ *    changes the state back to STATE_LOGGED_OFF.
+ *
+ * STATE_LOGGED_ON
+ *    User is logged on. Winlogon does not show any dialog. Pressing
+ *    "Ctrl-Alt-Del" changes the state to STATE_LOGGED_ON_SAS and user
+ *    inactivity changes the state to STATE_SCREENSAVER.
+ *
+ * STATE_LOGGED_ON_SAS
+ *    Winlogon shows the security dialog. Pressing "Cancel" or "Task Manager"
+ *    or a timeout change the state back to STATE_LOGGED_ON. Pressing "Change
+ *    Password" does not change the state, because the security dialog is still
+ *    visible behind the change password dialog. Pressing "Log off" changes the
+ *    state to STATE_LOGGING_OFF. Pressing "Lock Computer" changes the state to
+ *    STATE_LOCKED. Pressing "Shutdown" changes the state to
+ *    STATE_SHUTTING_DOWN.
+ *
+ * STATE_SCREENSAVER
+ *    Winlogon runs the screen saver. Upon user activity, the screensaver
+ *    terminates and the state changes back to STATE_LOGGED_ON if the secure
+ *    screen saver option is off. Otherwise, the state changes to STATE_LOCKED.
+ *
+ * STATE_LOGGING_OFF
+ *    Winlogon shows the logoff dialog. Pressing "Cancel" or a timeout changes
+ *    the state back to STATE_LOGGED_ON_SAS. Pressing "OK" logs off the user
+ *    and changes the state to STATE_LOGGED_OFF.
+ *
+ * STATE_LOCKED
+ *    Winlogon shows the locked message dialog. When the user presses "Ctrl-
+ *    Alt-Del" the state changes to STATE_LOCKED_SAS. If DisableCAD is true,
+ *    the state will automatically change to STATE_LOCKED_SAS without showing
+ *    the dialog.
+ *
+ * STATE_LOCKED_SAS
+ *    Winlogon shows the unlock dialog. Presing "Cancel" or a timeout will
+ *    change the state back to STATE_LOCKED. Entering the right credentials and
+ *    pressing "OK" unlocks the computer and changes the state to
+ *    STATE_LOGGED_ON.
+ *
+ * STATE_SHUTTING_DOWN
+ *    Winlogon shows the shutdown dialog. Presing "Cancel" or a timeout will
+ *    change the state back to STATE_LOGGED_ON_SAS. Pressing "OK" will change
+ *    the state to STATE_SHUT_DOWN.
+ *
+ * STATE_SHUT_DOWN
+ *    Terminates Winlogon and initiates shut-down.
+ */
+typedef enum _LOGON_STATE
+{
+    STATE_INIT,            // not user yet
+    STATE_LOGGED_OFF,
+    STATE_LOGGED_OFF_SAS,  // not user yet
+    STATE_LOGGED_ON,
+    STATE_LOGGED_ON_SAS,   // not user yet
+    STATE_SCREENSAVER,     // not user yet
+    STATE_LOCKED,
+    STATE_LOCKED_SAS,      // not user yet
+    STATE_LOGGING_OFF,     // not user yet
+    STATE_SHUTTING_DOWN,   // not user yet
+    STATE_SHUT_DOWN        // not user yet
+} LOGON_STATE, *PLOGON_STATE;
 
 #define LockWorkstation(Session)
 #define UnlockWorkstation(Session)
 
 typedef struct _WLSESSION
 {
-  GINAINSTANCE Gina;
-  DWORD SASAction;
-  BOOL SuppressStatus;
-  BOOL TaskManHotkey;
-  HWND SASWindow;
-  HWINSTA InteractiveWindowStation;
-  LPWSTR InteractiveWindowStationName;
-  HDESK ApplicationDesktop;
-  HDESK WinlogonDesktop;
-  HDESK ScreenSaverDesktop;
-  LUID LogonId;
-  HANDLE UserToken;
-  HANDLE hProfileInfo;
-  DWORD LogonStatus;
-  DWORD DialogTimeout; /* Timeout for dialog boxes, in seconds */
+    GINAINSTANCE Gina;
+    DWORD SASAction;
+    BOOL SuppressStatus;
+    BOOL TaskManHotkey;
+    HWND SASWindow;
+    HWINSTA InteractiveWindowStation;
+    LPWSTR InteractiveWindowStationName;
+    HDESK ApplicationDesktop;
+    HDESK WinlogonDesktop;
+    HDESK ScreenSaverDesktop;
+    LUID LogonId;
+    HANDLE UserToken;
+    HANDLE hProfileInfo;
+    LOGON_STATE LogonState;
+    DWORD DialogTimeout; /* Timeout for dialog boxes, in seconds */
 
-  /* Screen-saver informations */
+    /* Screen-saver informations */
 #ifndef USE_GETLASTINPUTINFO
-  HHOOK KeyboardHook;
-  HHOOK MouseHook;
+    HHOOK KeyboardHook;
+    HHOOK MouseHook;
 #endif
-  HANDLE hEndOfScreenSaverThread;
-  HANDLE hScreenSaverParametersChanged;
-  HANDLE hUserActivity;
-  HANDLE hEndOfScreenSaver;
+    HANDLE hEndOfScreenSaverThread;
+    HANDLE hScreenSaverParametersChanged;
+    HANDLE hUserActivity;
+    HANDLE hEndOfScreenSaver;
 #ifndef USE_GETLASTINPUTINFO
-  DWORD LastActivity;
+    DWORD LastActivity;
 #endif
 
-  /* Logon informations */
-  DWORD Options;
-  WLX_MPR_NOTIFY_INFO MprNotifyInfo;
-  WLX_PROFILE_V2_0 *Profile;
+    /* Logon informations */
+    DWORD Options;
+    WLX_MPR_NOTIFY_INFO MprNotifyInfo;
+    WLX_PROFILE_V2_0 *Profile;
 } WLSESSION, *PWLSESSION;
 
 extern HINSTANCE hAppInstance;
@@ -185,52 +262,43 @@ CreateUserEnvironment(IN PWLSESSION Session);
 
 /* sas.c */
 BOOL
-SetDefaultLanguage(
-	IN BOOL UserProfile);
+SetDefaultLanguage(IN BOOL UserProfile);
 
 BOOL
-InitializeSAS(
-	IN OUT PWLSESSION Session);
+InitializeSAS(IN OUT PWLSESSION Session);
 
 /* screensaver.c */
 BOOL
-InitializeScreenSaver(
-	IN OUT PWLSESSION Session);
+InitializeScreenSaver(IN OUT PWLSESSION Session);
 
 VOID
-StartScreenSaver(
-	IN PWLSESSION Session);
+StartScreenSaver(IN PWLSESSION Session);
 
 /* winlogon.c */
 
 BOOL
-PlaySoundRoutine(
-	IN LPCWSTR FileName,
-	IN UINT Logon,
-	IN UINT Flags);
+PlaySoundRoutine(IN LPCWSTR FileName,
+                 IN UINT Logon,
+                 IN UINT Flags);
 
 BOOL
-DisplayStatusMessage(
-	IN PWLSESSION Session,
-	IN HDESK hDesktop,
-	IN UINT ResourceId);
+DisplayStatusMessage(IN PWLSESSION Session,
+                     IN HDESK hDesktop,
+                     IN UINT ResourceId);
 
 BOOL
-RemoveStatusMessage(
-	IN PWLSESSION Session);
+RemoveStatusMessage(IN PWLSESSION Session);
 
 /* wlx.c */
 BOOL
-GinaInit(
-	IN OUT PWLSESSION Session);
+GinaInit(IN OUT PWLSESSION Session);
+
 BOOL
-CreateWindowStationAndDesktops(
-	IN OUT PWLSESSION Session);
+CreateWindowStationAndDesktops(IN OUT PWLSESSION Session);
 
 NTSTATUS
-HandleShutdown(
-	IN OUT PWLSESSION Session,
-	IN DWORD wlxAction);
+HandleShutdown(IN OUT PWLSESSION Session,
+               IN DWORD wlxAction);
 
 VOID WINAPI WlxUseCtrlAltDel(HANDLE hWlx);
 VOID WINAPI WlxSetContextPointer(HANDLE hWlx, PVOID pWlxContext);

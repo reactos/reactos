@@ -196,7 +196,7 @@ FindFile (
 	UNICODE_STRING FileToFindUpcase;
 	BOOLEAN WildCard;
 
-	DPRINT ("FindFile(Parent %p, FileToFind '%wZ', DirIndex: %d)\n",
+	DPRINT ("FindFile(Parent %p, FileToFind '%wZ', DirIndex: %u)\n",
 		Parent, FileToFindU, DirContext->DirIndex);
 	DPRINT ("FindFile: Path %wZ\n",&Parent->PathNameU);
 
@@ -242,7 +242,7 @@ FindFile (
 				RtlCopyMemory(&DirContext->DirEntry, &rcFcb->entry, sizeof(DIR_ENTRY));
 				DirContext->StartIndex = rcFcb->startIndex;
 				DirContext->DirIndex = rcFcb->dirIndex;
-				DPRINT("FindFile: new Name %wZ, DirIndex %d (%d)\n",
+				DPRINT("FindFile: new Name %wZ, DirIndex %u (%u)\n",
 					&DirContext->LongNameU, DirContext->DirIndex, DirContext->StartIndex);
 				Status = STATUS_SUCCESS;
 			}
@@ -309,8 +309,8 @@ FindFile (
 					vfatReleaseFCB(DeviceExt, rcFcb);
 				}
 			}
-			DPRINT("%d\n", DirContext->LongNameU.Length);
-			DPRINT("FindFile: new Name %wZ, DirIndex %d\n",
+			DPRINT("%u\n", DirContext->LongNameU.Length);
+			DPRINT("FindFile: new Name %wZ, DirIndex %u\n",
 				&DirContext->LongNameU, DirContext->DirIndex);
 
 			if (Context)
@@ -545,11 +545,12 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 		    RequestedDisposition == FILE_SUPERSEDE)
 		{
 			ULONG Attributes;
-			Attributes = Stack->Parameters.Create.FileAttributes & ~FILE_ATTRIBUTE_NORMAL;
+			Attributes = Stack->Parameters.Create.FileAttributes;
+			Attributes &= (FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_ARCHIVE);
 
 			vfatSplitPathName(&PathNameU, NULL, &FileNameU);
 			Status = VfatAddEntry (DeviceExt, &FileNameU, &pFcb, ParentFcb, RequestedOptions,
-				(UCHAR)(Attributes & FILE_ATTRIBUTE_VALID_FLAGS));
+				(UCHAR)(Attributes | FILE_ATTRIBUTE_ARCHIVE));
 			vfatReleaseFCB (DeviceExt, ParentFcb);
 			if (NT_SUCCESS (Status))
 			{

@@ -21,6 +21,7 @@ static LIST_ENTRY RtlCriticalSectionList;
 static BOOLEAN RtlpCritSectInitialized = FALSE;
 static RTL_CRITICAL_SECTION_DEBUG RtlpStaticDebugInfo[MAX_STATIC_CS_DEBUG_OBJECTS];
 static BOOLEAN RtlpDebugInfoFreeList[MAX_STATIC_CS_DEBUG_OBJECTS];
+LARGE_INTEGER RtlpTimeout;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -39,6 +40,7 @@ static BOOLEAN RtlpDebugInfoFreeList[MAX_STATIC_CS_DEBUG_OBJECTS];
  *     None
  *
  *--*/
+_At_(CriticalSection->LockSemaphore, _Post_notnull_)
 VOID
 NTAPI
 RtlpCreateCriticalSectionSem(PRTL_CRITICAL_SECTION CriticalSection)
@@ -47,31 +49,38 @@ RtlpCreateCriticalSectionSem(PRTL_CRITICAL_SECTION CriticalSection)
     HANDLE hNewEvent;
     NTSTATUS Status;
 
-    /* Chevk if we have an event */
-    if (!hEvent) {
+    /* Check if we have an event */
+    if (!hEvent)
+    {
 
         /* No, so create it */
-        if (!NT_SUCCESS(Status = NtCreateEvent(&hNewEvent,
-                                               EVENT_ALL_ACCESS,
-                                               NULL,
-                                               SynchronizationEvent,
-                                               FALSE))) {
-
-                /* We failed, this is bad... */
+        Status = NtCreateEvent(&hNewEvent,
+                               EVENT_ALL_ACCESS,
+                               NULL,
+                               SynchronizationEvent,
+                               FALSE);
+        if (!NT_SUCCESS(Status))
+        {
                 DPRINT1("Failed to Create Event!\n");
-                InterlockedDecrement(&CriticalSection->LockCount);
-                RtlRaiseStatus(Status);
-                return;
+
+                /* Use INVALID_HANDLE_VALUE (-1) to signal that the global
+                   keyed event must be used */
+                hNewEvent = INVALID_HANDLE_VALUE;
         }
+
         DPRINT("Created Event: %p \n", hNewEvent);
 
+        /* Exchange the LockSemaphore field with the new handle, if it is still 0 */
         if (InterlockedCompareExchangePointer((PVOID*)&CriticalSection->LockSemaphore,
                                               (PVOID)hNewEvent,
-                                               0)) {
-
-            /* Some just created an event */
-            DPRINT("Closing already created event: %p\n", hNewEvent);
-            NtClose(hNewEvent);
+                                               NULL) != NULL)
+        {
+            /* Someone else just created an event */
+            if (hEvent != INVALID_HANDLE_VALUE)
+            {
+                DPRINT("Closing already created event: %p\n", hNewEvent);
+                NtClose(hNewEvent);
+            }
         }
     }
 
@@ -100,13 +109,6 @@ RtlpWaitForCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
     NTSTATUS Status;
     EXCEPTION_RECORD ExceptionRecord;
     BOOLEAN LastChance = FALSE;
-    LARGE_INTEGER Timeout;
-
-    /* Wait 2.5 minutes */
-    Timeout.QuadPart = 150000L * (ULONGLONG)10000;
-    Timeout.QuadPart = -Timeout.QuadPart;
-    /* ^^ HACK HACK HACK. Good way:
-    Timeout = &NtCurrentPeb()->CriticalSectionTimeout   */
 
     /* Do we have an Event yet? */
     if (!CriticalSection->LockSemaphore) {
@@ -127,10 +129,22 @@ RtlpWaitForCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
         if (CriticalSection->DebugInfo)
             CriticalSection->DebugInfo->ContentionCount++;
 
-        /* Wait on the Event */
-        Status = NtWaitForSingleObject(CriticalSection->LockSemaphore,
-                                       FALSE,
-                                       &Timeout);
+        /* Check if allocating the event failed */
+        if (CriticalSection->LockSemaphore == INVALID_HANDLE_VALUE)
+        {
+            /* Use the global keyed event (NULL as keyed event handle) */
+            Status = NtWaitForKeyedEvent(NULL,
+                                         CriticalSection,
+                                         FALSE,
+                                         &RtlpTimeout);
+        }
+        else
+        {
+            /* Wait on the Event */
+            Status = NtWaitForSingleObject(CriticalSection->LockSemaphore,
+                                           FALSE,
+                                           &RtlpTimeout);
+        }
 
         /* We have Timed out */
         if (Status == STATUS_TIMEOUT) {
@@ -192,7 +206,18 @@ RtlpUnWaitCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
     DPRINT("Signaling Critical Section Event: %p, %p\n",
             CriticalSection,
             CriticalSection->LockSemaphore);
-    Status = NtSetEvent(CriticalSection->LockSemaphore, NULL);
+
+    /* Check if this critical section needs to use the keyed event */
+    if (CriticalSection->LockSemaphore == INVALID_HANDLE_VALUE)
+    {
+        /* Release keyed event */
+        Status = NtReleaseKeyedEvent(NULL, CriticalSection, FALSE, &RtlpTimeout);
+    }
+    else
+    {
+        /* Set the event */
+        Status = NtSetEvent(CriticalSection->LockSemaphore, NULL);
+    }
 
     if (!NT_SUCCESS(Status)) {
 

@@ -6,7 +6,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/lib/drivers/lwip/src/include
     ${REACTOS_SOURCE_DIR}/lib/drivers/lwip/src/include/ipv4)
 
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     list(APPEND SOURCE network/i386/checksum.S)
 endif()
 

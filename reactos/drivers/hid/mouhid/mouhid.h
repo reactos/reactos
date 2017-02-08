@@ -25,7 +25,7 @@ typedef struct
     PIRP Irp;
 
     //
-    // event 
+    // event
     //
     KEVENT ReadCompletionEvent;
 
@@ -48,6 +48,11 @@ typedef struct
     // wheel usage page
     //
     USHORT WheelUsagePage;
+
+    //
+    // buffer for the four usage lists below
+    //
+    PVOID UsageListBuffer;
 
     //
     // usage list length
@@ -109,10 +114,27 @@ typedef struct
     //
     UCHAR StopReadReport;
 
-}MOUHID_DEVICE_EXTENSION, *PMOUHID_DEVICE_EXTENSION;
+    //
+    // mouse absolute
+    //
+    UCHAR MouseAbsolute;
+
+    //
+    // value caps x
+    //
+    HIDP_VALUE_CAPS ValueCapsX;
+
+    //
+    // value caps y button
+    //
+    HIDP_VALUE_CAPS ValueCapsY;
+
+} MOUHID_DEVICE_EXTENSION, *PMOUHID_DEVICE_EXTENSION;
 
 #define WHEEL_DELTA 120
 
 NTSTATUS
 MouHid_InitiateRead(
     IN PMOUHID_DEVICE_EXTENSION DeviceExtension);
+
+#define MOUHID_TAG 'diHM'

@@ -235,10 +235,10 @@ HvpRemoveFree(
    /* Something bad happened, print a useful trace info and bugcheck */
    CMLTRACE(CMLIB_HCELL_DEBUG, "-- beginning of HvpRemoveFree trace --\n");
    CMLTRACE(CMLIB_HCELL_DEBUG, "block we are about to free: %08x\n", CellIndex);
-   CMLTRACE(CMLIB_HCELL_DEBUG, "chosen free list index: %d\n", Index);
+   CMLTRACE(CMLIB_HCELL_DEBUG, "chosen free list index: %u\n", Index);
    for (FreeListIndex = 0; FreeListIndex < 24; FreeListIndex++)
    {
-      CMLTRACE(CMLIB_HCELL_DEBUG, "free list [%d]: ", FreeListIndex);
+      CMLTRACE(CMLIB_HCELL_DEBUG, "free list [%u]: ", FreeListIndex);
       pFreeCellOffset = &RegistryHive->Storage[Storage].FreeDisplay[FreeListIndex];
       while (*pFreeCellOffset != HCELL_NIL)
       {
@@ -548,8 +548,7 @@ HvTrackCellRef(PHV_TRACK_CELL_REF CellRef,
     }
 
     /* FIXME: TODO */
-    DPRINT1("ERROR: Too many references\n");
-    while (TRUE);
+    ASSERTMSG(FALSE, "ERROR: Too many references\n");
     return FALSE;
 }
 

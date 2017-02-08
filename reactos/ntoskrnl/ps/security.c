@@ -86,7 +86,7 @@ PspInitializeProcessSecurity(IN PEPROCESS Process,
         Status = SeSubProcessToken(ParentToken,
                                    &NewToken,
                                    TRUE,
-                                   0);//MmGetSessionId(Process));
+                                   MmGetSessionId(Process));
 
         /* Dereference the Parent */
         ObFastDereferenceObject(&Parent->Token, ParentToken);
@@ -221,7 +221,7 @@ PspSetPrimaryToken(IN PEPROCESS Process,
     PACCESS_TOKEN NewToken = Token;
     NTSTATUS Status, AccessStatus;
     BOOLEAN Result, SdAllocated;
-    PSECURITY_DESCRIPTOR SecurityDescriptor;
+    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
     SECURITY_SUBJECT_CONTEXT SubjectContext;
     PSTRACE(PS_SECURITY_DEBUG, "Process: %p Token: %p\n", Process, Token);
 
@@ -638,7 +638,7 @@ PsImpersonateClient(IN PETHREAD Thread,
             if (OldData)
             {
                 /* Someone beat us to it, free our copy */
-                ExFreePool(Impersonation);
+                ExFreePoolWithTag(Impersonation, TAG_PS_IMPERSONATION);
                 Impersonation = OldData;
             }
         }

@@ -1,6 +1,8 @@
 #ifndef INCLUDE_REACTOS_CAPTURE_H
 #define INCLUDE_REACTOS_CAPTURE_H
 
+#include <suppress.h>
+
 #if ! defined(_NTOSKRNL_) && ! defined(_WIN32K_)
 #error Header intended for use by NTOSKRNL/WIN32K only!
 #endif
@@ -109,7 +111,7 @@ ProbeArrayForRead(IN const VOID *ArrayPtr,
     }
 
     /* Probe the array */
-    _PRAGMA_WARNING_SUPPRESS(28125) /* Must be inside __try / __except block */
+    _PRAGMA_WARNING_SUPPRESS(__WARNING_PROBE_NO_TRY) /* Must be inside __try / __except block */
     ProbeForRead(ArrayPtr, ArraySize, Alignment);
 }
 
@@ -130,7 +132,7 @@ ProbeArrayForWrite(IN OUT PVOID ArrayPtr,
     }
 
     /* Probe the array */
-    _PRAGMA_WARNING_SUPPRESS(28125) /* Must be inside __try / __except block */
+    _PRAGMA_WARNING_SUPPRESS(__WARNING_PROBE_NO_TRY) /* Must be inside __try / __except block */
     ProbeForWrite(ArrayPtr, ArraySize, Alignment);
 }
 #endif /* _WIN32K_ */

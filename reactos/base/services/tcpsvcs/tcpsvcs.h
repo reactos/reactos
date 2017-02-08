@@ -1,4 +1,10 @@
-#include <stdio.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winsvc.h>
+#include <stdlib.h>
+#define _INC_WINDOWS
 #include <winsock2.h>
 #include <tchar.h>
 #include <time.h>

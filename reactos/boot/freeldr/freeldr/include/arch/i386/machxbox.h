@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  *  FreeLoader
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -58,6 +57,7 @@ ULONG XboxDiskGetCacheableBlockCount(UCHAR DriveNumber);
 
 TIMEINFO* XboxGetTime(VOID);
 
+BOOLEAN XboxInitializeBootDevices(VOID);
 PCONFIGURATION_COMPONENT_DATA XboxHwDetect(VOID);
 VOID XboxHwIdle(VOID);
 

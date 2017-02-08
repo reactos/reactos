@@ -563,6 +563,102 @@ HidParser_UsesReportId(
 
 }
 
+HIDPARSER_STATUS
+HidParser_GetUsageValueWithReport(
+    IN PHID_PARSER Parser,
+    IN PVOID CollectionContext,
+    IN UCHAR ReportType,
+    IN USAGE UsagePage,
+    IN USAGE  Usage,
+    OUT PULONG UsageValue,
+    IN PCHAR ReportDescriptor,
+    IN ULONG ReportDescriptorLength)
+{
+    ULONG Index;
+    PHID_REPORT Report;
+    USHORT CurrentUsagePage;
+    PHID_REPORT_ITEM ReportItem;
+    ULONG Data;
+
+    //
+    // get report
+    //
+    Report = HidParser_GetReportInCollection(CollectionContext, ReportType);
+    if (!Report)
+    {
+        //
+        // no such report
+        //
+        return HIDPARSER_STATUS_REPORT_NOT_FOUND;
+    }
+
+    if (Report->ReportSize / 8 != (ReportDescriptorLength - 1))
+    {
+        //
+        // invalid report descriptor length
+        //
+        return HIDPARSER_STATUS_INVALID_REPORT_LENGTH;
+    }
+
+    for(Index = 0; Index < Report->ItemCount; Index++)
+    {
+        //
+        // get report item
+        //
+        ReportItem = &Report->Items[Index];
+
+        //
+        // check usage page
+        //
+        CurrentUsagePage = (ReportItem->UsageMinimum >> 16);
+
+        //
+        // does usage page match
+        //
+        if (UsagePage != CurrentUsagePage)
+            continue;
+
+        //
+        // does the usage match
+        //
+        if (Usage != (ReportItem->UsageMinimum & 0xFFFF))
+            continue;
+
+        //
+        // check if the specified usage is activated
+        //
+        ASSERT(ReportItem->ByteOffset < ReportDescriptorLength);
+
+        //
+        // FIXME: support items with variable bitlength
+        //
+        ASSERT(ReportItem->BitCount == 16);
+        Data = (ReportDescriptor[ReportItem->ByteOffset +1] & 0xFF) | (ReportDescriptor[ReportItem->ByteOffset +2] & 0xFF) << 8;
+
+        //
+        // shift data
+        //
+        Data >>= ReportItem->Shift;
+
+        //
+        // clear unwanted bits
+        //
+        Data &= ReportItem->Mask;
+
+        //
+        // store result
+        //
+        *UsageValue = Data;
+        return HIDPARSER_STATUS_SUCCESS;
+    }
+
+    //
+    // usage not found
+    //
+    return HIDPARSER_STATUS_USAGE_NOT_FOUND;
+}
+
+
 
 HIDPARSER_STATUS
 HidParser_GetScaledUsageValueWithReport(
@@ -652,10 +748,17 @@ HidParser_GetScaledUsageValueWithReport(
             //
             // logical boundaries are signed values
             //
+
+            // FIXME: scale with physical min/max
             if ((Data & ~(ReportItem->Mask >> 1)) != 0)
             {
                 Data |= ~ReportItem->Mask;
             }
+        }
+        else
+        {
+            // HACK: logical boundaries are absolute values
+            return HIDPARSER_STATUS_BAD_LOG_PHY_VALUES;
         }
 
         //

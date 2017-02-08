@@ -185,7 +185,6 @@ NdisIPnPCancelStopDevice(
   return ProSendAndFreePnPEvent(Adapter, PnPEvent, Irp);
 }
 
-
 /*
  * @implemented
  */
@@ -240,7 +239,6 @@ NdisCompleteUnbindAdapter(
   ExInterlockedRemoveEntryList(&Protocol->ListEntry, &ProtocolListLock);
 }
 
-
 NDIS_STATUS
 ProIndicatePacket(
     PLOGICAL_ADAPTER Adapter,
@@ -306,7 +304,6 @@ ProIndicatePacket(
   return NDIS_STATUS_SUCCESS;
 }
 
-
 NDIS_STATUS NTAPI
 ProRequest(
     IN  NDIS_HANDLE     MacBindingHandle,
@@ -427,6 +424,10 @@ proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet)
                 NdisStatus = NDIS_STATUS_PENDING;
             }
         }
+        
+        if (NdisStatus != NDIS_STATUS_PENDING) {
+            MiniWorkItemComplete(Adapter, NdisWorkItemSend);
+        }
 
         return NdisStatus;
    } else {
@@ -450,13 +451,16 @@ proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet)
                 NdisStatus = NDIS_STATUS_PENDING;
             }
         }
+        
+        if (NdisStatus != NDIS_STATUS_PENDING) {
+            MiniWorkItemComplete(Adapter, NdisWorkItemSend);
+        }
 
         return NdisStatus;
    }
 #endif
 }
 
-
 NDIS_STATUS NTAPI
 ProSend(
     IN  NDIS_HANDLE     MacBindingHandle,
@@ -561,7 +565,6 @@ ProSend(
     }
 }
 
-
 VOID NTAPI
 ProSendPackets(
     IN  NDIS_HANDLE     NdisBindingHandle,
@@ -624,7 +627,6 @@ ProSendPackets(
      }
 }
 
-
 NDIS_STATUS NTAPI
 ProTransferData(
     IN  NDIS_HANDLE         MacBindingHandle,
@@ -1221,7 +1223,6 @@ NdisRegisterProtocol(
   }
 }
 
-
 /*
  * @implemented
  */
@@ -1242,7 +1243,6 @@ NdisRequest(
     *Status = ProRequest(NdisBindingHandle, NdisRequest);
 }
 
-
 /*
  * @implemented
  */
@@ -1255,7 +1255,6 @@ NdisReset(
     *Status = ProReset(NdisBindingHandle);
 }
 
-
 /*
  * @implemented
  */
@@ -1277,7 +1276,6 @@ NdisSend(
     *Status = ProSend(NdisBindingHandle, Packet);
 }
 
-
 /*
  * @implemented
  */
@@ -1292,7 +1290,6 @@ NdisSendPackets(
     ProSendPackets(NdisBindingHandle, PacketArray, NumberOfPackets);
 }
 
-
 /*
  * @implemented
  */

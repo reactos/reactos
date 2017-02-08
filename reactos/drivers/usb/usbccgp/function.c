@@ -465,7 +465,7 @@ USBCCGP_EnumWithAssociationDescriptor(
     // allocate function descriptor array
     //
     FDODeviceExtension->FunctionDescriptor = AllocateItem(NonPagedPool, sizeof(USBC_FUNCTION_DESCRIPTOR) * DescriptorCount);
-    if (!FDODeviceExtension->FunctionDescriptorCount)
+    if (!FDODeviceExtension->FunctionDescriptor)
     {
         //
         // no memory

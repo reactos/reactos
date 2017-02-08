@@ -1,12 +1,14 @@
-#include <windows.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include <commctrl.h>
 #include <cpl.h>
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
 #include <tchar.h>
-#include <process.h>
 
 #include "resource.h"
 
@@ -35,13 +37,17 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc);
 
 /* settings.c */
 INT_PTR CALLBACK
-SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
+SettingsPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
 BOOL
 GetLayoutName(LPCTSTR szLCID, LPTSTR szName);
 VOID
 UpdateLayoutsList(VOID);
 BOOL
 IsLayoutExists(LPTSTR szLayoutID, LPTSTR szLangID);
+
+/* advsettings.c */
+INT_PTR CALLBACK
+AdvancedSettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /* keysettings.c */
 INT_PTR CALLBACK

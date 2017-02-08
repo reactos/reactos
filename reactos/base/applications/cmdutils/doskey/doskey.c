@@ -1,8 +1,13 @@
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <wincon.h>
 #include <stdio.h>
 #include <wchar.h>
 #include <assert.h>
 #include <locale.h>
+
 #include "doskey.h"
 
 #define MAX_STRING 2000
@@ -72,19 +77,19 @@ static INT SetMacro(LPWSTR definition)
         temp = *nameend;
         *nameend = L'\0';
         /* Don't allow spaces in the name, since such a macro would be unusable */
-        if (!wcschr(name, L' ') && AddConsoleAlias(name, text, pszExeName))
+        if (!wcschr(name, L' ') && AddConsoleAliasW(name, text, pszExeName))
             return 0;
         *nameend = temp;
     }
 
-    LoadString(GetModuleHandle(NULL), IDS_INVALID_MACRO_DEF, szStringBuf, MAX_STRING);
+    LoadStringW(GetModuleHandle(NULL), IDS_INVALID_MACRO_DEF, szStringBuf, MAX_STRING);
     wprintf(szStringBuf, definition);
     return 1;
 }
 
 static VOID PrintMacros(LPWSTR pszExeName, LPWSTR Indent)
 {
-    DWORD Length = GetConsoleAliasesLength(pszExeName);
+    DWORD Length = GetConsoleAliasesLengthW(pszExeName);
     PBYTE AliasBuf;
     WCHAR *Alias;
     WCHAR *AliasEnd;
@@ -96,7 +101,7 @@ static VOID PrintMacros(LPWSTR pszExeName, LPWSTR Indent)
     Alias = (WCHAR *)AliasBuf;
     AliasEnd = (WCHAR *)&AliasBuf[Length];
 
-    if (GetConsoleAliases(Alias, Length * sizeof(BYTE), pszExeName))
+    if (GetConsoleAliasesW(Alias, Length * sizeof(BYTE), pszExeName))
         for (; Alias < AliasEnd; Alias += wcslen(Alias) + 1)
             wprintf(L"%s%s\n", Indent, Alias);
 
@@ -117,7 +122,7 @@ static VOID PrintAllMacros(VOID)
     ExeName = (WCHAR *)ExeNameBuf;
     ExeNameEnd = (WCHAR *)&ExeNameBuf[Length];
 
-    if (GetConsoleAliasExes(ExeName, Length * sizeof(BYTE)))
+    if (GetConsoleAliasExesW(ExeName, Length * sizeof(BYTE)))
     {
         for (; ExeName < ExeNameEnd; ExeName += wcslen(ExeName) + 1)
         {
@@ -199,7 +204,7 @@ wmain(VOID)
 
     /* Get the full command line using GetCommandLine(). We can't just use argv,
      * because then a parameter like "gotoroot=cd \" wouldn't be passed completely. */
-    pArgEnd = GetCommandLine();
+    pArgEnd = GetCommandLineW();
 	hKernel32 = LoadLibraryW(L"kernel32.dll");
 
 	/* Get function pointers */
@@ -222,7 +227,7 @@ wmain(VOID)
 
         if (!wcscmp(pArgStart, L"/?"))
         {
-            LoadString(GetModuleHandle(NULL), IDS_HELP, szStringBuf, MAX_STRING);
+            LoadStringW(GetModuleHandle(NULL), IDS_HELP, szStringBuf, MAX_STRING);
             wprintf(szStringBuf);
             break;
         }

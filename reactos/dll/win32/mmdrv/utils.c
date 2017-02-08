@@ -9,7 +9,7 @@
  *                       Jan 30, 2004: Imported into ReactOS tree
  */
 
-#include "mmdrv.h"
+//#include "mmdrv.h"
 
 #define NDEBUG
 #include <debug.h>

@@ -18,24 +18,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#include <config.h>
 
-#include "wine/port.h"
-#include "wine/debug.h"
+//#include "wine/port.h"
+#include <wine/debug.h>
 
-#include <stdio.h>
-#include <stdarg.h>
+//#include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winnls.h"
 
 #ifdef HAVE_LDAP_H
 #include <ldap.h>
 #endif
 
 #include "winldap_private.h"
-#include "wldap32.h"
+//#include "wldap32.h"
 
 #ifdef HAVE_LDAP
 /* Should eventually be determined by the algorithm documented on MSDN. */

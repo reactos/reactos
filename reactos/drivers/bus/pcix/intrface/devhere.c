@@ -33,6 +33,7 @@ NTSTATUS
 NTAPI
 devpresent_Initializer(IN PVOID Instance)
 {
+    UNREFERENCED_PARAMETER(Instance);
     /* PnP Interfaces don't get Initialized */
     ASSERTMSG(FALSE, "PCI devpresent_Initializer, unexpected call.");
     return STATUS_UNSUCCESSFUL;
@@ -49,9 +50,16 @@ devpresent_Constructor(IN PVOID DeviceExtension,
 {
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER(DeviceExtension);
+    UNREFERENCED_PARAMETER(Instance);
+    UNREFERENCED_PARAMETER(InterfaceData);
+    UNREFERENCED_PARAMETER(Version);
+    UNREFERENCED_PARAMETER(Size);
+    UNREFERENCED_PARAMETER(Interface);
+
     /* Not yet implemented */
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

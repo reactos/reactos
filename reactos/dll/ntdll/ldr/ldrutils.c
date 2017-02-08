@@ -1985,7 +1985,7 @@ LdrpCheckForLoadedDll(IN PWSTR DllPath,
 
     /* FIXME: Warning, "Flag" is used as magic instead of "Static" */
     /* FIXME: Warning, code does not support redirection at all */
-    
+
     /* Look in the hash table if flag was set */
 lookinhash:
     if (Flag)
@@ -2077,7 +2077,7 @@ lookinhash:
         Flag = TRUE;
         goto lookinhash;
     }
-    
+
     /* FIXME: Warning, activation context missing */
     /* NOTE: From here on down, everything looks good */
 
@@ -2192,7 +2192,7 @@ lookinhash:
 
         /* Check if it's in the process of being unloaded */
         if (!CurEntry->InMemoryOrderModuleList.Flink) continue;
-        
+
         /* The header is untrusted, use SEH */
         _SEH2_TRY
         {
@@ -2415,37 +2415,38 @@ LdrpLoadDll(IN BOOLEAN Redirected,
 {
     PPEB Peb = NtCurrentPeb();
     NTSTATUS Status = STATUS_SUCCESS;
-    PWCHAR p1, p2;
+    const WCHAR *p;
+    BOOLEAN GotExtension;
     WCHAR c;
-    WCHAR NameBuffer[266];
-    LPWSTR RawDllName;
-    UNICODE_STRING RawDllNameString;
+    WCHAR NameBuffer[MAX_PATH + 6];
+    UNICODE_STRING RawDllName;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     BOOLEAN InInit = LdrpInLdrInit;
 
-    /* Find the name without the extension */
-    p1 = DllName->Buffer;
-    p2 = NULL;
-    while (*p1)
+    /* Save the Raw DLL Name */
+    if (DllName->Length >= sizeof(NameBuffer)) return STATUS_NAME_TOO_LONG;
+    RtlInitEmptyUnicodeString(&RawDllName, NameBuffer, sizeof(NameBuffer));
+    RtlCopyUnicodeString(&RawDllName, DllName);
+
+    /* Find the extension, if present */
+    p = DllName->Buffer + DllName->Length / sizeof(WCHAR) - 1;
+    GotExtension = FALSE;
+    while (p >= DllName->Buffer)
     {
-        c = *p1++;
+        c = *p--;
         if (c == L'.')
         {
-            p2 = p1;
+            GotExtension = TRUE;
+            break;
         }
         else if (c == L'\\')
         {
-            p2 = NULL;
+            break;
         }
     }
 
-    /* Save the Raw DLL Name */
-    RawDllName = NameBuffer;
-    if (DllName->Length >= sizeof(NameBuffer)) return STATUS_NAME_TOO_LONG;
-    RtlMoveMemory(RawDllName, DllName->Buffer, DllName->Length);
-
-    /* Check if no extension was found or if we got a slash */
-    if (!(p2) || (*p2 == '\\'))
+    /* If no extension was found, add the default extension */
+    if (!GotExtension)
     {
         /* Check that we have space to add one */
         if ((DllName->Length + LdrApiDefaultExtension.Length + sizeof(UNICODE_NULL)) >=
@@ -2465,30 +2466,10 @@ LdrpLoadDll(IN BOOLEAN Redirected,
             return STATUS_NAME_TOO_LONG;
         }
 
-        /* FIXME: CLEAN THIS UP WITH Rtl String Functions */
-        /* Add it */
-        RtlMoveMemory((PVOID)((ULONG_PTR)RawDllName + DllName->Length),
-                      LdrApiDefaultExtension.Buffer,
-                      LdrApiDefaultExtension.Length);
-
-        /* Save the length to a unicode string */
-        RawDllNameString.Length = DllName->Length + LdrApiDefaultExtension.Length;
-
-        /* Null terminate it */
-        RawDllName[RawDllNameString.Length / sizeof(WCHAR)] = 0;
+        /* Add it. Needs to be null terminated, thus the length check above */
+        (VOID)RtlAppendUnicodeStringToString(&RawDllName,
+                                             &LdrApiDefaultExtension);
     }
-    else
-    {
-        /* Null terminate it */
-        RawDllName[DllName->Length / sizeof(WCHAR)] = 0;
-
-        /* Save the length to a unicode string */
-        RawDllNameString.Length = DllName->Length;
-    }
-
-    /* Now create a unicode string for the DLL's name */
-    RawDllNameString.MaximumLength = sizeof(NameBuffer);
-    RawDllNameString.Buffer = NameBuffer;
 
     /* Check for init flag and acquire lock */
     if (!InInit) RtlEnterCriticalSection(&LdrpLoaderLock);
@@ -2496,14 +2477,14 @@ LdrpLoadDll(IN BOOLEAN Redirected,
     /* Show debug message */
     if (ShowSnaps)
     {
-        DPRINT1("LDR: LdrLoadDll, loading %ws from %ws\n",
-                 RawDllName,
+        DPRINT1("LDR: LdrLoadDll, loading %wZ from %ws\n",
+                 &RawDllName,
                  DllPath ? DllPath : L"");
     }
 
     /* Check if the DLL is already loaded */
     if (!LdrpCheckForLoadedDll(DllPath,
-                               &RawDllNameString,
+                               &RawDllName,
                                FALSE,
                                Redirected,
                                &LdrEntry))
@@ -2517,7 +2498,7 @@ LdrpLoadDll(IN BOOLEAN Redirected,
                             Redirected,
                             &LdrEntry);
         if (!NT_SUCCESS(Status)) goto Quickie;
-        
+
         /* FIXME: Need to mark the DLL range for the stack DB */
         //RtlpStkMarkDllRange(LdrEntry);
 
@@ -2554,7 +2535,7 @@ LdrpLoadDll(IN BOOLEAN Redirected,
 
                 /* Cancel the load */
                 LdrpClearLoadInProgress();
-                
+
                 /* Unload the DLL */
                 if (ShowSnaps)
                 {
@@ -2589,7 +2570,7 @@ LdrpLoadDll(IN BOOLEAN Redirected,
                 //ShimLoadCallback = RtlDecodeSystemPointer(g_pfnSE_DllLoaded);
                 //ShimLoadCallback(LdrEntry);
             }
-            
+
             /* Run the init routine */
             Status = LdrpRunInitializeRoutines(NULL);
             if (!NT_SUCCESS(Status))

@@ -67,30 +67,21 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                    PFN_NUMBER PageCount,
                    ULONG Type)
 {
-	BOOLEAN Status = TRUE;
-
     TRACE("MempAddMemoryBlock(BasePage=0x%lx, PageCount=0x%lx, Type=%ld)\n",
           BasePage, PageCount, Type);
-	//
-	// Check for memory block after 4GB - we don't support it yet
-	// Note: Even last page before 4GB limit is not supported
-	//
+
+	/* Check for memory block after 4GB - we don't support it yet
+	   Note: Even last page before 4GB limit is not supported */
 	if (BasePage >= MM_MAX_PAGE)
 	{
-		//
-		// Just skip this, without even adding to MAD list
-		//
+		/* Just skip this, without even adding to MAD list */
 		return;
 	}
 
-    //
-    // Check if last page is after 4GB limit and shorten this block if needed
-    //
+    /* Check if last page is after 4GB limit and shorten this block if needed */
     if (BasePage + PageCount > MM_MAX_PAGE)
     {
-        //
-        // shorten this block
-        //
+        /* Shorten this block */
         PageCount = MM_MAX_PAGE - BasePage;
     }
 
@@ -101,35 +92,29 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 		return;
 	}
 
-    /* Get rid of the loader heap */
-    //if (Type == LoaderOsloaderHeap) Type = LoaderFirmwareTemporary;
-
-	//
-	// Set Base page, page count and type
-	//
+	/* Set Base page, page count and type */
 	Mad[MadCount].BasePage = BasePage;
 	Mad[MadCount].PageCount = PageCount;
 	Mad[MadCount].MemoryType = Type;
 
-	//
-	// Add descriptor
-	//
+	/* Add descriptor */
 	WinLdrInsertDescriptor(LoaderBlock, &Mad[MadCount]);
 	MadCount++;
+}
+
+VOID
+MempSetupPagingForRegion(
+    PFN_NUMBER BasePage,
+    PFN_NUMBER PageCount,
+    ULONG Type)
+{
+    BOOLEAN Status = TRUE;
+
+    TRACE("MempSetupPagingForRegion(BasePage=0x%lx, PageCount=0x%lx, Type=%ld)\n",
+          BasePage, PageCount, Type);
 
     /* Make sure we don't map too high */
     if (BasePage + PageCount > LoaderPagesSpanned) return;
-
-    /* Special handling for page 0 */
-    if (BasePage == 0)
-    {
-        /* If its only one page, ignore it! */
-        if (PageCount == 1) return;
-
-        /* Otherwise, skip first page */
-        BasePage++;
-        PageCount--;
-    }
 
     switch (Type)
     {
@@ -253,6 +238,21 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 		return FALSE;
 	}
 #endif
+
+    /* Before creating the map, we need to map pages to kernel mode */
+	LastPageIndex = 1;
+	LastPageType = MemoryMap[1].PageAllocated;
+    for (i = 2; i < NoEntries; i++)
+	{
+	    if ((MemoryMap[i].PageAllocated != LastPageType) ||
+            (i == NoEntries - 1))
+        {
+            MempSetupPagingForRegion(LastPageIndex, i - LastPageIndex, LastPageType);
+            LastPageIndex = i;
+            LastPageType = MemoryMap[i].PageAllocated;
+        }
+	}
+
 	// Construct a good memory map from what we've got,
 	// but mark entries which the memory allocation bitmap takes
 	// as free entries (this is done in order to have the ability

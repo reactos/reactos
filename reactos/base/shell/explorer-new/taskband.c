@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 /*****************************************************************************
  ** ITaskBand ****************************************************************
@@ -506,7 +506,7 @@ ITaskBandImpl_SetSite(IN OUT IObjectWithSite *iface,
         /* Check if the site supports IOleWindow */
         hRet = IUnknown_QueryInterface(pUnkSite,
                                        &IID_IOleWindow,
-                                       (PVOID*)&OleWindow);
+                                       (PVOID *)&OleWindow);
         if (SUCCEEDED(hRet))
         {
             HWND hWndParent = NULL;
@@ -629,13 +629,11 @@ ITaskBandImpl_Construct(IN OUT ITrayWindow *Tray)
     ITaskBandImpl *This;
 
     This = HeapAlloc(hProcessHeap,
-                     0,
+                     HEAP_ZERO_MEMORY,
                      sizeof(*This));
     if (This == NULL)
         return NULL;
 
-    ZeroMemory(This,
-               sizeof(*This));
     This->lpVtbl = &ITaskBandImpl_Vtbl;
     This->lpDeskBandVtbl = &IDeskBandImpl_Vtbl;
     This->lpObjectWithSiteVtbl = &IObjectWithSiteImpl_Vtbl;

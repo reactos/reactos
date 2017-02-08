@@ -4,9 +4,11 @@
 #ifdef _UNICODE
  #define _TS S
  #define sT "S"
+ #define access_dirT access_dirW
 #else
  #define _TS s
  #define sT "s"
+ #define access_dirT access_dirA
 #endif
 
 #define MK_STR(s) #s

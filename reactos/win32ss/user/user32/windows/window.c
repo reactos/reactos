@@ -1900,9 +1900,10 @@ ScrollWindow(HWND hWnd,
                                 prcClip,
                                 0,
                                 NULL,
-                                (lpRect ? 0 : SW_SCROLLCHILDREN) | SW_INVALIDATE) != ERROR;
+                                (lpRect ? 0 : SW_SCROLLCHILDREN) | (SW_ERASE|SW_INVALIDATE|SW_SCROLLWNDDCE)) != ERROR;
 }
 
+/* ScrollWindow uses the window DC, ScrollWindowEx doesn't */
 
 /*
  * @implemented
@@ -1917,6 +1918,11 @@ ScrollWindowEx(HWND hWnd,
                LPRECT prcUpdate,
                UINT flags)
 {
+    if (flags & SW_SMOOTHSCROLL)
+    {
+       FIXME("SW_SMOOTHSCROLL not supported.");
+       // Fall through....
+    }
     return NtUserScrollWindowEx(hWnd,
                                 dx,
                                 dy,

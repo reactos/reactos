@@ -21,31 +21,31 @@
 #pragma once
 
 class CBandProxy :
-	public CComCoClass<CBandProxy, &CLSID_BandProxy>,
-	public CComObjectRootEx<CComMultiThreadModelNoCS>,
-	public IBandProxy
+    public CComCoClass<CBandProxy, &CLSID_BandProxy>,
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IBandProxy
 {
 private:
-	CComPtr<IUnknown>						fSite;
+    CComPtr<IUnknown>                       fSite;
 public:
-	CBandProxy();
-	~CBandProxy();
-	HRESULT FindBrowserWindow(IUnknown **browser);
+    CBandProxy();
+    ~CBandProxy();
+    HRESULT FindBrowserWindow(IUnknown **browser);
 
-	// *** IBandProxy methods ***
-	virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *paramC);
-	virtual HRESULT STDMETHODCALLTYPE CreateNewWindow(long paramC);
-	virtual HRESULT STDMETHODCALLTYPE GetBrowserWindow(IUnknown **paramC);
-	virtual HRESULT STDMETHODCALLTYPE IsConnected();
-	virtual HRESULT STDMETHODCALLTYPE NavigateToPIDL(LPCITEMIDLIST pidl);
-	virtual HRESULT STDMETHODCALLTYPE NavigateToURL(long paramC, long param10);
+    // *** IBandProxy methods ***
+    virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *paramC);
+    virtual HRESULT STDMETHODCALLTYPE CreateNewWindow(long paramC);
+    virtual HRESULT STDMETHODCALLTYPE GetBrowserWindow(IUnknown **paramC);
+    virtual HRESULT STDMETHODCALLTYPE IsConnected();
+    virtual HRESULT STDMETHODCALLTYPE NavigateToPIDL(LPCITEMIDLIST pidl);
+    virtual HRESULT STDMETHODCALLTYPE NavigateToURL(long paramC, long param10);
 
-DECLARE_REGISTRY_RESOURCEID(IDR_BANDPROXY)
-DECLARE_NOT_AGGREGATABLE(CBandProxy)
+    DECLARE_REGISTRY_RESOURCEID(IDR_BANDPROXY)
+    DECLARE_NOT_AGGREGATABLE(CBandProxy)
 
-DECLARE_PROTECT_FINAL_CONSTRUCT()
+    DECLARE_PROTECT_FINAL_CONSTRUCT()
 
-BEGIN_COM_MAP(CBandProxy)
-	COM_INTERFACE_ENTRY_IID(IID_IBandProxy, IBandProxy)
-END_COM_MAP()
+    BEGIN_COM_MAP(CBandProxy)
+        COM_INTERFACE_ENTRY_IID(IID_IBandProxy, IBandProxy)
+    END_COM_MAP()
 };

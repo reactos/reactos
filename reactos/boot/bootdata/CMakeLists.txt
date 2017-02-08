@@ -1,20 +1,21 @@
 
 add_subdirectory(packages)
 
+#common hives
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/txtsetup.sif DESTINATION reactos NO_CAB FOR bootcd regtest)
-add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/hivecls_${ARCH}.inf DESTINATION reactos NO_CAB NAME_ON_CD hivecls.inf FOR bootcd regtest)
-add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/hivedef_${ARCH}.inf DESTINATION reactos NO_CAB NAME_ON_CD hivedef.inf FOR bootcd regtest)
-add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/hivesft_${ARCH}.inf DESTINATION reactos NO_CAB NAME_ON_CD hivesft.inf FOR bootcd regtest)
-add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/hivesys_${ARCH}.inf DESTINATION reactos NO_CAB NAME_ON_CD hivesys.inf FOR bootcd regtest)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/hivecls.inf DESTINATION reactos NO_CAB FOR bootcd regtest)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/hivedef.inf DESTINATION reactos NO_CAB FOR bootcd regtest)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/hivesft.inf DESTINATION reactos NO_CAB FOR bootcd regtest)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/hivesys.inf DESTINATION reactos NO_CAB FOR bootcd regtest)
 
 # livecd hives
 list(APPEND CD_HIVES
-    ${CMAKE_CURRENT_SOURCE_DIR}/hivecls_${ARCH}.inf
-    ${CMAKE_CURRENT_SOURCE_DIR}/hivedef_${ARCH}.inf
-    ${CMAKE_CURRENT_SOURCE_DIR}/hivesft_${ARCH}.inf
-    ${CMAKE_CURRENT_SOURCE_DIR}/hivesys_${ARCH}.inf
+    ${CMAKE_CURRENT_SOURCE_DIR}/hivecls.inf
+    ${CMAKE_CURRENT_SOURCE_DIR}/hivedef.inf
+    ${CMAKE_CURRENT_SOURCE_DIR}/hivesft.inf
+    ${CMAKE_CURRENT_SOURCE_DIR}/hivesys.inf
     ${CMAKE_CURRENT_SOURCE_DIR}/livecd.inf
-    ${CMAKE_CURRENT_SOURCE_DIR}/hiveinst_${ARCH}.inf)
+    ${CMAKE_CURRENT_SOURCE_DIR}/hiveinst.inf)
 
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/sam
@@ -44,6 +45,16 @@ add_cd_file(
 
 #regtest
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/bootcdregtest/regtest.cmd DESTINATION reactos/bin FOR all)
+
+#autorun.inf
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/autorun.inf DESTINATION root NO_CAB FOR all)
+
+#icon.ico
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/icon.ico DESTINATION root NO_CAB FOR all)
+
+#readme.txt
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/readme.txt DESTINATION root NO_CAB FOR all)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/readme.txt DESTINATION reactos FOR all)
 
 #freeldr.ini
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/bootcd.ini DESTINATION root NO_CAB NAME_ON_CD freeldr.ini FOR bootcd regtest)

@@ -12,7 +12,8 @@ GreSetPointerShape(
     LONG xHot,
     LONG yHot,
     LONG x,
-    LONG y);
+    LONG y,
+    FLONG fl);
 
 VOID
 NTAPI

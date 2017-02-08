@@ -149,7 +149,7 @@ ServiceMain(DWORD argc, LPWSTR argv)
         return;
     }
 
-    logmsg("* Service started");
+    logmsg("* Service started\n");
     /* Tell SCM we are now running, and we may be stopped */
     service_status.dwCurrentState = SERVICE_RUNNING;
     service_status.dwControlsAccepted = SERVICE_ACCEPT_STOP;

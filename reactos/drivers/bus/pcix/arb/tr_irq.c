@@ -33,6 +33,7 @@ NTSTATUS
 NTAPI
 tranirq_Initializer(IN PVOID Instance)
 {
+    UNREFERENCED_PARAMETER(Instance);
     /* PnP Interfaces don't get Initialized */
     ASSERTMSG(FALSE, "PCI tranirq_Initializer, unexpected call.");
     return STATUS_UNSUCCESSFUL;
@@ -52,11 +53,15 @@ tranirq_Constructor(IN PVOID DeviceExtension,
     INTERFACE_TYPE ParentInterface;
     ASSERT_FDO(FdoExtension);
 
+    UNREFERENCED_PARAMETER(Instance);
+    UNREFERENCED_PARAMETER(Version);
+    UNREFERENCED_PARAMETER(Size);
+
     /* Make sure it's the right resource type */
     if ((ULONG)InterfaceData != CmResourceTypeInterrupt)
     {
         /* Fail this invalid request */
-        DPRINT1("PCI - IRQ trans constructor doesn't like %x in InterfaceSpecificData\n",
+        DPRINT1("PCI - IRQ trans constructor doesn't like %p in InterfaceSpecificData\n",
                 InterfaceData);
         return STATUS_INVALID_PARAMETER_3;
     }

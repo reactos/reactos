@@ -2,13 +2,13 @@
 
 [Section]
 Name = BitTorrent
-Version = 7.6.1
+Version = 7.8
 Licence = Freeware for non-commercial uses
 Description = The Original BitTorrent Client.
-Size = 5.78MB
+Size = 1012KB
 Category = 5
 URLSite = http://www.bittorrent.com/
-URLDownload = http://download.bittorrent.com/7.6.1/BitTorrent3.exe
+URLDownload = http://download.bittorrent.com/7.8/BitTorrent.exe
 CDPath = none
 
 [Section.0407]
@@ -18,7 +18,10 @@ Description = Der Original BitTorrent Client.
 [Section.0410]
 Description = L'originale Client BitTorrent
 
+[Section.0415]
+Description = Oryginalny klient BitTorrent
+
 [Section.0418]
 Licence = Gratuită pentru uz necomercial
 Description = Originalul client BitTorrent.
-Size = 5.4Mo
+Size = 5,4 Mo

@@ -19,8 +19,8 @@
  */
 
 #include "uxthemep.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
 
@@ -30,7 +30,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
 
 static BOOL MSSTYLES_GetNextInteger(LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LPCWSTR *lpValEnd, int *value);
 static BOOL MSSTYLES_GetNextToken(LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LPCWSTR *lpValEnd, LPWSTR lpBuff, DWORD buffSize);
-static void MSSTYLES_ParseThemeIni(PTHEME_FILE tf, BOOL setMetrics);
 static HRESULT MSSTYLES_GetFont (LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LPCWSTR *lpValEnd, LOGFONTW* logfont);
 
 extern HINSTANCE hDllInst;
@@ -41,8 +40,6 @@ extern int alphaBlendMode;
 static const WCHAR szThemesIniResource[] = {
     't','h','e','m','e','s','_','i','n','i','\0'
 };
-
-static PTHEME_FILE tfActiveTheme;
 
 /***********************************************************************/
 
@@ -214,21 +211,13 @@ void MSSTYLES_CloseThemeFile(PTHEME_FILE tf)
 }
 
 /***********************************************************************
- *      MSSTYLES_SetActiveTheme
+ *      MSSTYLES_ReferenceTheme
  *
- * Set the current active theme
+ * Increase the reference count of the theme file
  */
-HRESULT MSSTYLES_SetActiveTheme(PTHEME_FILE tf, BOOL setMetrics)
+HRESULT MSSTYLES_ReferenceTheme(PTHEME_FILE tf)
 {
-    if(tfActiveTheme)
-        MSSTYLES_CloseThemeFile(tfActiveTheme);
-    tfActiveTheme = tf;
-    if (tfActiveTheme)
-    {
-	tfActiveTheme->dwRefCount++;
-	if(!tfActiveTheme->classes)
-	    MSSTYLES_ParseThemeIni(tfActiveTheme, setMetrics);
-    }
+    tf->dwRefCount++;
     return S_OK;
 }
 
@@ -545,7 +534,7 @@ static inline PTHEME_PROPERTY MSSTYLES_PSFindProperty(PTHEME_PARTSTATE ps, int i
 }
 
 /***********************************************************************
- *      MSSTYLES_FFindMetric
+ *      MSSTYLES_FindMetric
  *
  * Find a metric property for a theme file
  *
@@ -557,28 +546,9 @@ static inline PTHEME_PROPERTY MSSTYLES_PSFindProperty(PTHEME_PARTSTATE ps, int i
  * RETURNS
  *  The property found, or NULL
  */
-static inline PTHEME_PROPERTY MSSTYLES_FFindMetric(PTHEME_FILE tf, int iPropertyPrimitive, int iPropertyId)
+PTHEME_PROPERTY MSSTYLES_FindMetric(PTHEME_FILE tf, int iPropertyPrimitive, int iPropertyId)
 {
     return MSSTYLES_LFindProperty(tf->metrics, iPropertyPrimitive, iPropertyId);
-}
-
-/***********************************************************************
- *      MSSTYLES_FindMetric
- *
- * Find a metric property for the current installed theme
- *
- * PARAMS
- *     tf                  Theme file
- *     iPropertyPrimitive  Type of value expected
- *     iPropertyId         ID of the required value
- *
- * RETURNS
- *  The property found, or NULL
- */
-PTHEME_PROPERTY MSSTYLES_FindMetric(int iPropertyPrimitive, int iPropertyId)
-{
-    if(!tfActiveTheme) return NULL;
-    return MSSTYLES_FFindMetric(tfActiveTheme, iPropertyPrimitive, iPropertyId);
 }
 
 /***********************************************************************
@@ -639,7 +609,7 @@ static PTHEME_PROPERTY MSSTYLES_AddProperty(PTHEME_PARTSTATE ps, int iPropertyPr
  */
 static PTHEME_PROPERTY MSSTYLES_AddMetric(PTHEME_FILE tf, int iPropertyPrimitive, int iPropertyId, LPCWSTR lpValue, DWORD dwValueLen)
 {
-    PTHEME_PROPERTY cur = MSSTYLES_FFindMetric(tf, iPropertyPrimitive, iPropertyId);
+    PTHEME_PROPERTY cur = MSSTYLES_FindMetric(tf, iPropertyPrimitive, iPropertyId);
     /* Should duplicate properties overwrite the original, or be ignored? */
     if(cur) return cur;
 
@@ -656,185 +626,6 @@ static PTHEME_PROPERTY MSSTYLES_AddMetric(PTHEME_FILE tf, int iPropertyPrimitive
     return cur;
 }
 
-/* Color-related state for theme ini parsing */
-struct PARSECOLORSTATE
-{
-    int colorCount;
-    int colorElements[TMT_LASTCOLOR-TMT_FIRSTCOLOR];
-    COLORREF colorRgb[TMT_LASTCOLOR-TMT_FIRSTCOLOR];
-    int captionColors;
-};
-
-static inline void parse_init_color (struct PARSECOLORSTATE* state)
-{
-    memset (state, 0, sizeof (*state));
-}
-
-static BOOL parse_handle_color_property (struct PARSECOLORSTATE* state, 
-                                         int iPropertyId, LPCWSTR lpValue,
-                                         DWORD dwValueLen)
-{
-    int r,g,b;
-    LPCWSTR lpValueEnd = lpValue + dwValueLen;
-    if(MSSTYLES_GetNextInteger(lpValue, lpValueEnd, &lpValue, &r) &&
-    MSSTYLES_GetNextInteger(lpValue, lpValueEnd, &lpValue, &g) &&
-    MSSTYLES_GetNextInteger(lpValue, lpValueEnd, &lpValue, &b)) {
-	state->colorElements[state->colorCount] = iPropertyId - TMT_FIRSTCOLOR;
-	state->colorRgb[state->colorCount++] = RGB(r,g,b);
-	switch (iPropertyId)
-	{
-	  case TMT_ACTIVECAPTION: 
-	    state->captionColors |= 0x1; 
-	    break;
-	  case TMT_INACTIVECAPTION: 
-	    state->captionColors |= 0x2; 
-	    break;
-	  case TMT_GRADIENTACTIVECAPTION: 
-	    state->captionColors |= 0x4; 
-	    break;
-	  case TMT_GRADIENTINACTIVECAPTION: 
-	    state->captionColors |= 0x8; 
-	    break;
-	}
-	return TRUE;
-    }
-    else {
-	return FALSE;
-    }
-}
-
-static void parse_apply_color (struct PARSECOLORSTATE* state)
-{
-    if (state->colorCount > 0)
-	SetSysColors(state->colorCount, state->colorElements, state->colorRgb);
-    if (state->captionColors == 0xf)
-	SystemParametersInfoW (SPI_SETGRADIENTCAPTIONS, 0, (PVOID)TRUE, 0);
-}
-
-/* Non-client-metrics-related state for theme ini parsing */
-struct PARSENONCLIENTSTATE
-{
-    NONCLIENTMETRICSW metrics;
-    BOOL metricsDirty;
-    LOGFONTW iconTitleFont;
-};
-
-static inline void parse_init_nonclient (struct PARSENONCLIENTSTATE* state)
-{
-    memset (state, 0, sizeof (*state));
-    state->metrics.cbSize = sizeof (NONCLIENTMETRICSW);
-    SystemParametersInfoW (SPI_GETNONCLIENTMETRICS, sizeof (NONCLIENTMETRICSW),
-        &state->metrics, 0);
-    SystemParametersInfoW (SPI_GETICONTITLELOGFONT, sizeof (LOGFONTW),
-        &state->iconTitleFont, 0);
-}
-
-static BOOL parse_handle_nonclient_font (struct PARSENONCLIENTSTATE* state, 
-                                         int iPropertyId, LPCWSTR lpValue,
-                                         DWORD dwValueLen)
-{
-    LOGFONTW font;
-    
-    memset (&font, 0, sizeof (font));
-    if (SUCCEEDED (MSSTYLES_GetFont (lpValue, lpValue + dwValueLen, &lpValue,
-        &font)))
-    {
-        switch (iPropertyId)
-        {
-	  case TMT_CAPTIONFONT:
-	      state->metrics.lfCaptionFont = font;
-	      state->metricsDirty = TRUE;
-	      break;
-	  case TMT_SMALLCAPTIONFONT:
-	      state->metrics.lfSmCaptionFont = font;
-	      state->metricsDirty = TRUE;
-	      break;
-	  case TMT_MENUFONT:
-	      state->metrics.lfMenuFont = font;
-	      state->metricsDirty = TRUE;
-	      break;
-	  case TMT_STATUSFONT:
-	      state->metrics.lfStatusFont = font;
-	      state->metricsDirty = TRUE;
-	      break;
-	  case TMT_MSGBOXFONT:
-	      state->metrics.lfMessageFont = font;
-	      state->metricsDirty = TRUE;
-	      break;
-	  case TMT_ICONTITLEFONT:
-	      state->iconTitleFont = font;
-	      state->metricsDirty = TRUE;
-	      break;
-        }
-        return TRUE;
-    }
-    else
-        return FALSE;
-}
-
-static BOOL parse_handle_nonclient_size (struct PARSENONCLIENTSTATE* state, 
-                                         int iPropertyId, LPCWSTR lpValue,
-                                         DWORD dwValueLen)
-{
-    int size;
-    LPCWSTR lpValueEnd = lpValue + dwValueLen;
-    if(MSSTYLES_GetNextInteger(lpValue, lpValueEnd, &lpValue, &size)) {
-        switch (iPropertyId)
-        {
-            case TMT_SIZINGBORDERWIDTH:
-                state->metrics.iBorderWidth = size;
-                state->metricsDirty = TRUE;
-                break;
-            case TMT_SCROLLBARWIDTH:
-                state->metrics.iScrollWidth = size;
-                state->metricsDirty = TRUE;
-                break;
-            case TMT_SCROLLBARHEIGHT:
-                state->metrics.iScrollHeight = size;
-                state->metricsDirty = TRUE;
-                break;
-            case TMT_CAPTIONBARWIDTH:
-                state->metrics.iCaptionWidth = size;
-                state->metricsDirty = TRUE;
-                break;
-            case TMT_CAPTIONBARHEIGHT:
-                state->metrics.iCaptionHeight = size;
-                state->metricsDirty = TRUE;
-                break;
-            case TMT_SMCAPTIONBARWIDTH:
-                state->metrics.iSmCaptionWidth = size;
-                state->metricsDirty = TRUE;
-                break;
-            case TMT_SMCAPTIONBARHEIGHT:
-                state->metrics.iSmCaptionHeight = size;
-                state->metricsDirty = TRUE;
-                break;
-            case TMT_MENUBARWIDTH:
-                state->metrics.iMenuWidth = size;
-                state->metricsDirty = TRUE;
-                break;
-            case TMT_MENUBARHEIGHT:
-                state->metrics.iMenuHeight = size;
-                state->metricsDirty = TRUE;
-                break;
-        }
-        return TRUE;
-    }
-    else
-        return FALSE;
-}
-
-static void parse_apply_nonclient (struct PARSENONCLIENTSTATE* state)
-{
-    if (state->metricsDirty)
-    {
-        SystemParametersInfoW (SPI_SETNONCLIENTMETRICS, sizeof (state->metrics),
-            &state->metrics, 0);
-        SystemParametersInfoW (SPI_SETICONTITLELOGFONT, sizeof (state->iconTitleFont),
-            &state->iconTitleFont, 0);
-    }
-}
-
 /***********************************************************************
  *      MSSTYLES_ParseThemeIni
  *
@@ -843,7 +634,7 @@ static void parse_apply_nonclient (struct PARSENONCLIENTSTATE* state)
  * PARAMS
  *     tf                  Theme to parse
  */
-static void MSSTYLES_ParseThemeIni(PTHEME_FILE tf, BOOL setMetrics)
+void MSSTYLES_ParseThemeIni(PTHEME_FILE tf)
 {
     static const WCHAR szSysMetrics[] = {'S','y','s','M','e','t','r','i','c','s','\0'};
     static const WCHAR szGlobals[] = {'g','l','o','b','a','l','s','\0'};
@@ -863,73 +654,50 @@ static void MSSTYLES_ParseThemeIni(PTHEME_FILE tf, BOOL setMetrics)
     DWORD dwValueLen;
     LPCWSTR lpValue;
 
+    if(tf->classes)
+        return;
+
     ini = MSSTYLES_GetActiveThemeIni(tf);
 
-    while((lpName=UXINI_GetNextSection(ini, &dwLen))) {
-        if(CompareStringW(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE, lpName, dwLen, szSysMetrics, -1) == CSTR_EQUAL) {
-            struct PARSECOLORSTATE colorState;
-            struct PARSENONCLIENTSTATE nonClientState;
-            
-            parse_init_color (&colorState);
-            parse_init_nonclient (&nonClientState);
-
-            while((lpName=UXINI_GetNextValue(ini, &dwLen, &lpValue, &dwValueLen))) {
+    while((lpName=UXINI_GetNextSection(ini, &dwLen))) 
+    {
+        if(CompareStringW(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE, lpName, dwLen, szSysMetrics, -1) == CSTR_EQUAL) 
+        {
+            while((lpName=UXINI_GetNextValue(ini, &dwLen, &lpValue, &dwValueLen))) 
+            {
                 lstrcpynW(szPropertyName, lpName, min(dwLen+1, sizeof(szPropertyName)/sizeof(szPropertyName[0])));
-                if(MSSTYLES_LookupProperty(szPropertyName, &iPropertyPrimitive, &iPropertyId)) {
-                    if(iPropertyId >= TMT_FIRSTCOLOR && iPropertyId <= TMT_LASTCOLOR) {
-                        if (!parse_handle_color_property (&colorState, iPropertyId, 
-                            lpValue, dwValueLen))
-                            FIXME("Invalid color value for %s\n", 
-                                debugstr_w(szPropertyName)); 
-                    }
-		    else if (setMetrics && (iPropertyId == TMT_FLATMENUS)) {
-			BOOL flatMenus = (*lpValue == 'T') || (*lpValue == 't');
-			SystemParametersInfoW (SPI_SETFLATMENU, 0, (PVOID)(INT_PTR)flatMenus, 0);
-		    }
-		    else if ((iPropertyId >= TMT_FIRSTFONT) 
-			&& (iPropertyId <= TMT_LASTFONT))
-		    {
-		        if (!parse_handle_nonclient_font (&nonClientState,
-		            iPropertyId, lpValue, dwValueLen))
-                            FIXME("Invalid font value for %s\n", 
-                                debugstr_w(szPropertyName)); 
-		    }
-		    else if ((iPropertyId >= TMT_FIRSTSIZE)
-			&& (iPropertyId <= TMT_LASTSIZE))
-		    {
-		        if (!parse_handle_nonclient_size (&nonClientState,
-		            iPropertyId, lpValue, dwValueLen))
-                            FIXME("Invalid size value for %s\n", 
-                                debugstr_w(szPropertyName)); 
-		    }
-                    /* Catch all metrics, including colors */
-                    MSSTYLES_AddMetric(tf, iPropertyPrimitive, iPropertyId, lpValue, dwValueLen);
+                if(MSSTYLES_LookupProperty(szPropertyName, &iPropertyPrimitive, &iPropertyId)) 
+                {
+                   /* Catch all metrics, including colors */
+                   MSSTYLES_AddMetric(tf, iPropertyPrimitive, iPropertyId, lpValue, dwValueLen);
                 }
-                else {
+                else 
+                {
                     TRACE("Unknown system metric %s\n", debugstr_w(szPropertyName));
                 }
             }
-            if (setMetrics) 
-            {
-                parse_apply_color (&colorState);
-		parse_apply_nonclient (&nonClientState);
-	    }
             continue;
         }
-        if(MSSTYLES_ParseIniSectionName(lpName, dwLen, szAppName, szClassName, &iPartId, &iStateId)) {
+
+        if(MSSTYLES_ParseIniSectionName(lpName, dwLen, szAppName, szClassName, &iPartId, &iStateId)) 
+        {
             BOOL isGlobal = FALSE;
-            if(!lstrcmpiW(szClassName, szGlobals)) {
+            if(!lstrcmpiW(szClassName, szGlobals)) 
+            {
                 isGlobal = TRUE;
             }
             cls = MSSTYLES_AddClass(tf, szAppName, szClassName);
             ps = MSSTYLES_AddPartState(cls, iPartId, iStateId);
 
-            while((lpName=UXINI_GetNextValue(ini, &dwLen, &lpValue, &dwValueLen))) {
+            while((lpName=UXINI_GetNextValue(ini, &dwLen, &lpValue, &dwValueLen))) 
+            {
                 lstrcpynW(szPropertyName, lpName, min(dwLen+1, sizeof(szPropertyName)/sizeof(szPropertyName[0])));
-                if(MSSTYLES_LookupProperty(szPropertyName, &iPropertyPrimitive, &iPropertyId)) {
+                if(MSSTYLES_LookupProperty(szPropertyName, &iPropertyPrimitive, &iPropertyId)) 
+                {
                     MSSTYLES_AddProperty(ps, iPropertyPrimitive, iPropertyId, lpValue, dwValueLen, isGlobal);
                 }
-                else {
+                else 
+                {
                     TRACE("Unknown property %s\n", debugstr_w(szPropertyName));
                 }
             }
@@ -939,19 +707,25 @@ static void MSSTYLES_ParseThemeIni(PTHEME_FILE tf, BOOL setMetrics)
     /* App/Class combos override values defined by the base class, map these overrides */
     globals = MSSTYLES_FindClass(tf, NULL, szGlobals);
     cls = tf->classes;
-    while(cls) {
-        if(*cls->szAppName) {
+    while(cls) 
+    {
+        if(*cls->szAppName) 
+        {
             cls->overrides = MSSTYLES_FindClass(tf, NULL, cls->szClassName);
-            if(!cls->overrides) {
+            if(!cls->overrides) 
+            {
                 TRACE("No overrides found for app %s class %s\n", debugstr_w(cls->szAppName), debugstr_w(cls->szClassName));
             }
-            else {
+            else 
+            {
                 cls->overrides = globals;
             }
         }
-        else {
+        else 
+        {
             /* Everything overrides globals..except globals */
-            if(cls != globals) cls->overrides = globals;
+            if(cls != globals) 
+                cls->overrides = globals;
         }
         cls = cls->next;
     }
@@ -972,7 +746,7 @@ static void MSSTYLES_ParseThemeIni(PTHEME_FILE tf, BOOL setMetrics)
  *                         to a particular application
  *     pszClassList        List of requested classes, semicolon delimited
  */
-PTHEME_CLASS MSSTYLES_OpenThemeClass(LPCWSTR pszAppName, LPCWSTR pszClassList)
+PTHEME_CLASS MSSTYLES_OpenThemeClass(PTHEME_FILE tf, LPCWSTR pszAppName, LPCWSTR pszClassList)
 {
     PTHEME_CLASS cls = NULL;
     WCHAR szClassName[MAX_THEME_CLASS_NAME];
@@ -980,12 +754,8 @@ PTHEME_CLASS MSSTYLES_OpenThemeClass(LPCWSTR pszAppName, LPCWSTR pszClassList)
     LPCWSTR end;
     DWORD len;
 
-    if(!tfActiveTheme) {
-        TRACE("there is no active theme\n");
+    if(!tf->classes) {
         return NULL;
-    }
-    if(!tfActiveTheme->classes) {
-	return NULL;
     }
 
     start = pszClassList;
@@ -993,16 +763,16 @@ PTHEME_CLASS MSSTYLES_OpenThemeClass(LPCWSTR pszAppName, LPCWSTR pszClassList)
         len = end-start;
         lstrcpynW(szClassName, start, min(len+1, sizeof(szClassName)/sizeof(szClassName[0])));
         start = end+1;
-        cls = MSSTYLES_FindClass(tfActiveTheme, pszAppName, szClassName);
+        cls = MSSTYLES_FindClass(tf, pszAppName, szClassName);
         if(cls) break;
     }
     if(!cls && *start) {
         lstrcpynW(szClassName, start, sizeof(szClassName)/sizeof(szClassName[0]));
-        cls = MSSTYLES_FindClass(tfActiveTheme, pszAppName, szClassName);
+        cls = MSSTYLES_FindClass(tf, pszAppName, szClassName);
     }
     if(cls) {
         TRACE("Opened app %s, class %s from list %s\n", debugstr_w(cls->szAppName), debugstr_w(cls->szClassName), debugstr_w(pszClassList));
-	cls->tf = tfActiveTheme;
+	cls->tf = tf;
 	cls->tf->dwRefCount++;
     }
     return cls;

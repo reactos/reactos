@@ -382,7 +382,7 @@ FtfdQueryFontTree(
         return NULL;
     }
 
-    /* Get inital value for cGlyphs from ftface */
+    /* Get initial value for cGlyphs from ftface */
     cGlyphs = ftface->num_glyphs + 1;
 
     /* Allocate a buffer for the char codes and glyph indexes */

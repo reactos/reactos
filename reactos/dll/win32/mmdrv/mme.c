@@ -10,7 +10,7 @@
  *                       Jan 14, 2007: Rewritten and tidied up
  */
 
-#include <mmdrv.h>
+#include "mmdrv.h"
 
 /*
     Sends a message to the client (application), such as WOM_DONE. This

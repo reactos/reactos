@@ -16,27 +16,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <math.h>
+//#include <stdarg.h>
+//#include <math.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "wine/unicode.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "wingdi.h"
+//#include "wine/unicode.h"
 
 #define COBJMACROS
-#include "objbase.h"
-#include "ocidl.h"
-#include "olectl.h"
-#include "ole2.h"
+//#include "objbase.h"
+//#include "ocidl.h"
+//#include "olectl.h"
+//#include "ole2.h"
 
-#include "winreg.h"
-#include "shlwapi.h"
+//#include "winreg.h"
+//#include "shlwapi.h"
 
-#include "gdiplus.h"
+//#include "gdiplus.h"
 #include "gdiplus_private.h"
-#include "wine/debug.h"
-#include "wine/list.h"
+#include <wine/debug.h>
+//#include "wine/list.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 
@@ -232,10 +232,7 @@ GpStatus WINGDIPAPI GdipRecordMetafile(HDC hdc, EmfType type, GDIPCONST GpRectF 
     (*metafile)->image.type = ImageTypeMetafile;
     (*metafile)->image.picture = NULL;
     (*metafile)->image.flags   = ImageFlagsNone;
-    (*metafile)->image.palette_flags = 0;
-    (*metafile)->image.palette_count = 0;
-    (*metafile)->image.palette_size = 0;
-    (*metafile)->image.palette_entries = NULL;
+    (*metafile)->image.palette = NULL;
     (*metafile)->bounds = *frameRect;
     (*metafile)->unit = frameUnit;
     (*metafile)->metafile_type = type;
@@ -550,4 +547,42 @@ GpStatus WINGDIPAPI GdipEnumerateMetafileSrcRectDestPoints(GpGraphics *graphics,
     real_metafile->playback_graphics = NULL;
 
     return stat;
+}
+
+static int CALLBACK get_metafile_type_proc(HDC hDC, HANDLETABLE *lpHTable, const ENHMETARECORD *lpEMFR,
+    int nObj, LPARAM lpData)
+{
+    MetafileType *result = (MetafileType*)lpData;
+
+    if (lpEMFR->iType == EMR_GDICOMMENT)
+    {
+        const EMRGDICOMMENT *comment = (const EMRGDICOMMENT*)lpEMFR;
+
+        if (comment->cbData >= 4 && memcmp(comment->Data, "EMF+", 4) == 0)
+        {
+            const EmfPlusRecordHeader *header = (const EmfPlusRecordHeader*)&comment->Data[4];
+
+            if (4 + sizeof(EmfPlusRecordHeader) <= comment->cbData &&
+                header->Type == EmfPlusRecordTypeHeader)
+            {
+                if ((header->Flags & 1) == 1)
+                    *result = MetafileTypeEmfPlusDual;
+                else
+                    *result = MetafileTypeEmfPlusOnly;
+            }
+        }
+        else
+            *result = MetafileTypeEmf;
+    }
+    else
+        *result = MetafileTypeEmf;
+
+    return FALSE;
+}
+
+MetafileType METAFILE_GetEmfType(HENHMETAFILE hemf)
+{
+    MetafileType result = MetafileTypeInvalid;
+    EnumEnhMetaFile(NULL, hemf, get_metafile_type_proc, &result, NULL);
+    return result;
 }

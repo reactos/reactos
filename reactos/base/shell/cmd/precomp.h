@@ -5,25 +5,17 @@
 #pragma warning ( disable : 4103 ) /* use #pragma pack to change alignment */
 #undef _CRT_SECURE_NO_DEPRECATE
 #define _CRT_SECURE_NO_DEPRECATE
-#endif//_MSC_VER
+#endif /*_MSC_VER */
 
 #include <stdlib.h>
 #include <malloc.h>
+
 #define WIN32_NO_STATUS
-#include <windows.h>
-#include <winnt.h>
-#include <shellapi.h>
-
-#include <tchar.h>
-#include <direct.h>
-
-#include <ctype.h>
-#include <string.h>
-#include <stdio.h>
 #include <stdarg.h>
-#include <math.h>
-#include <time.h>
-#include <assert.h>
+#include <windef.h>
+#include <winbase.h>
+#include <shellapi.h>
+#include <stdio.h>
 
 #define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>

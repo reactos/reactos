@@ -20,76 +20,122 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#include <config.h>
 
-#include <stdarg.h>
-#include <stdio.h>
+//#include <stdarg.h>
+//#include <stdio.h>
 
-#include "wine/unicode.h"
-#include "wine/debug.h"
+//#include "wine/unicode.h"
+#include <wine/debug.h>
 
 #include "shdocvw.h"
 
-#include "winreg.h"
-#include "shlwapi.h"
-#include "wininet.h"
+#include <winreg.h>
+#include <shlwapi.h>
+#include <wininet.h>
+//#include "isguids.h"
 
-#include "initguid.h"
+//#include "initguid.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
 LONG SHDOCVW_refCount = 0;
 
-HINSTANCE shdocvw_hinstance = 0;
 static HMODULE SHDOCVW_hshell32 = 0;
-static ITypeInfo *wb_typeinfo = NULL;
+static HINSTANCE ieframe_instance;
 
-HRESULT get_typeinfo(ITypeInfo **typeinfo)
+static HINSTANCE get_ieframe_instance(void)
 {
-    ITypeLib *typelib;
-    HRESULT hres;
+    static const WCHAR ieframe_dllW[] = {'i','e','f','r','a','m','e','.','d','l','l',0};
 
-    if(wb_typeinfo) {
-        *typeinfo = wb_typeinfo;
-        return S_OK;
-    }
+    if(!ieframe_instance)
+        ieframe_instance = LoadLibraryW(ieframe_dllW);
 
-    hres = LoadRegTypeLib(&LIBID_SHDocVw, 1, 1, LOCALE_SYSTEM_DEFAULT, &typelib);
-    if(FAILED(hres)) {
-        ERR("LoadRegTypeLib failed: %08x\n", hres);
-        return hres;
-    }
-
-    hres = ITypeLib_GetTypeInfoOfGuid(typelib, &IID_IWebBrowser2, &wb_typeinfo);
-    ITypeLib_Release(typelib);
-
-    *typeinfo = wb_typeinfo;
-    return hres;
+    return ieframe_instance;
 }
 
-const char *debugstr_variant(const VARIANT *v)
+static HRESULT get_ieframe_object(REFCLSID rclsid, REFIID riid, void **ppv)
 {
-    if(!v)
-        return "(null)";
+    HINSTANCE ieframe_instance;
 
-    switch(V_VT(v)) {
-    case VT_EMPTY:
-        return "{VT_EMPTY}";
-    case VT_NULL:
-        return "{VT_NULL}";
-    case VT_I4:
-        return wine_dbg_sprintf("{VT_I4: %d}", V_I4(v));
-    case VT_R8:
-        return wine_dbg_sprintf("{VT_R8: %lf}", V_R8(v));
-    case VT_BSTR:
-        return wine_dbg_sprintf("{VT_BSTR: %s}", debugstr_w(V_BSTR(v)));
-    case VT_DISPATCH:
-        return wine_dbg_sprintf("{VT_DISPATCH: %p}", V_DISPATCH(v));
-    case VT_BOOL:
-        return wine_dbg_sprintf("{VT_BOOL: %x}", V_BOOL(v));
-    default:
-        return wine_dbg_sprintf("{vt %d}", V_VT(v));
+    static HRESULT (WINAPI *ieframe_DllGetClassObject)(REFCLSID,REFIID,void**);
+
+    if(!ieframe_DllGetClassObject) {
+        ieframe_instance = get_ieframe_instance();
+        if(!ieframe_instance)
+            return CLASS_E_CLASSNOTAVAILABLE;
+
+        ieframe_DllGetClassObject = (void*)GetProcAddress(ieframe_instance, "DllGetClassObject");
+        if(!ieframe_DllGetClassObject)
+            return CLASS_E_CLASSNOTAVAILABLE;
     }
+
+    return ieframe_DllGetClassObject(rclsid, riid, ppv);
+}
+
+/*************************************************************************
+ *              DllGetClassObject (SHDOCVW.@)
+ */
+HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
+{
+    TRACE("\n");
+
+    if(IsEqualGUID(&CLSID_WebBrowser, rclsid)
+       || IsEqualGUID(&CLSID_WebBrowser_V1, rclsid)
+       || IsEqualGUID(&CLSID_InternetShortcut, rclsid)
+       || IsEqualGUID(&CLSID_CUrlHistory, rclsid)
+       || IsEqualGUID(&CLSID_TaskbarList, rclsid))
+        return get_ieframe_object(rclsid, riid, ppv);
+
+    /* As a last resort, figure if the CLSID belongs to a 'Shell Instance Object' */
+    return SHDOCVW_GetShellInstanceObjectClassObject(rclsid, riid, ppv);
+}
+
+/***********************************************************************
+ *          DllRegisterServer (shdocvw.@)
+ */
+HRESULT WINAPI DllRegisterServer(void)
+{
+    TRACE("\n");
+    return S_OK;
+}
+
+/***********************************************************************
+ *          DllUnregisterServer (shdocvw.@)
+ */
+HRESULT WINAPI DllUnregisterServer(void)
+{
+    TRACE("\n");
+    return S_OK;
+}
+
+/******************************************************************
+ *             IEWinMain            (SHDOCVW.101)
+ *
+ * Only returns on error.
+ */
+DWORD WINAPI IEWinMain(LPSTR szCommandLine, int nShowWindow)
+{
+    DWORD (WINAPI *pIEWinMain)(const WCHAR*,int);
+    WCHAR *cmdline;
+    DWORD ret, len;
+
+    TRACE("%s %d\n", debugstr_a(szCommandLine), nShowWindow);
+
+    pIEWinMain = (void*)GetProcAddress(get_ieframe_instance(), MAKEINTRESOURCEA(101));
+    if(!pIEWinMain)
+        ExitProcess(1);
+
+    len = MultiByteToWideChar(CP_ACP, 0, szCommandLine, -1, NULL, 0);
+    cmdline = heap_alloc(len*sizeof(WCHAR));
+    if(!cmdline)
+        ExitProcess(1);
+    MultiByteToWideChar(CP_ACP, 0, szCommandLine, -1, cmdline, len);
+
+    ret = pIEWinMain(cmdline, nShowWindow);
+
+    heap_free(cmdline);
+    return ret;
 }
 
 /*************************************************************************
@@ -101,14 +147,11 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
     switch (fdwReason)
     {
         case DLL_PROCESS_ATTACH:
-        shdocvw_hinstance = hinst;
-        register_iewindow_class();
         break;
     case DLL_PROCESS_DETACH:
         if (SHDOCVW_hshell32) FreeLibrary(SHDOCVW_hshell32);
-        unregister_iewindow_class();
-        if(wb_typeinfo)
-            ITypeInfo_Release(wb_typeinfo);
+        if(ieframe_instance)
+            FreeLibrary(ieframe_instance);
         break;
     }
     return TRUE;
@@ -204,6 +247,17 @@ BOOL WINAPI ShellDDEInit(BOOL start)
  * parameters.
  */
 DWORD WINAPI RunInstallUninstallStubs(void)
+{
+    FIXME("(), stub!\n");
+    return 0x0deadbee;
+}
+
+/***********************************************************************
+ *              @ (SHDOCVW.130)
+ *
+ * Called by Emerge Desktop (alternative Windows Shell).
+ */
+DWORD WINAPI RunInstallUninstallStubs2(void)
 {
     FIXME("(), stub!\n");
     return 0x0deadbee;
@@ -333,14 +387,8 @@ DWORD WINAPI ParseURLFromOutsideSourceW(LPCWSTR url, LPWSTR out, LPDWORD plen, L
     if (!PathIsURLW(ptr)) {
         len = sizeof(buffer_in) / sizeof(buffer_in[0]);
         buffer_in[0] = 0;
-        hr = UrlApplySchemeW(ptr, buffer_in, &len, URL_APPLY_GUESSSCHEME);
+        hr = UrlApplySchemeW(ptr, buffer_in, &len, URL_APPLY_GUESSSCHEME | URL_APPLY_DEFAULT);
         TRACE("got 0x%x with %s\n", hr, debugstr_w(buffer_in));
-        if (hr != S_OK) {
-            /* when we can't guess the scheme, use the default scheme */
-            len = sizeof(buffer_in) / sizeof(buffer_in[0]);
-            hr = UrlApplySchemeW(ptr, buffer_in, &len, URL_APPLY_DEFAULT);
-        }
-
         if (hr == S_OK) {
             /* we parsed the url to buffer_in */
             ptr = buffer_in;

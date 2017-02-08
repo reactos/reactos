@@ -14,28 +14,28 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 /* NOTE: Methods with the NS_ prefix are name server methods */
 
-#include <stdarg.h>
-#include <string.h>
+//#include <stdarg.h>
+//#include <string.h>
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "wine/unicode.h"
-#include "wine/debug.h"
-#include "mmsystem.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winnls.h"
+#include <wine/unicode.h>
+#include <wine/debug.h>
+#include <mmsystem.h>
 
-#include "dplayx_global.h"
+//#include "dplayx_global.h"
 #include "name_server.h"
-#include "dplaysp.h"
-#include "dplayx_messages.h"
-#include "dplayx_queue.h"
+//#include "dplaysp.h"
+//#include "dplayx_messages.h"
+//#include "dplayx_queue.h"
 
 /* FIXME: Need to create a crit section, store and use it */
 
@@ -67,27 +67,16 @@ struct NSCache
 typedef struct NSCache NSCache, *lpNSCache;
 
 /* Function prototypes */
-DPQ_DECL_DELETECB( cbDeleteNSNodeFromHeap, lpNSCacheData );
+static DPQ_DECL_DELETECB( cbDeleteNSNodeFromHeap, lpNSCacheData );
 
 /* Name Server functions
  * ---------------------
  */
 void NS_SetLocalComputerAsNameServer( LPCDPSESSIONDESC2 lpsd, LPVOID lpNSInfo )
 {
-#if 0
-  /* FIXME: Remove this method? */
-  DPLAYX_SetLocalSession( lpsd );
-#endif
   lpNSCache lpCache = (lpNSCache)lpNSInfo;
 
   lpCache->bNsIsLocal = TRUE;
-}
-
-void NS_SetRemoteComputerAsNameServer( LPCDPSESSIONDESC2 lpsd, LPVOID lpNSInfo )
-{
-  lpNSCache lpCache = (lpNSCache)lpNSInfo;
-
-  lpCache->bNsIsLocal = FALSE;
 }
 
 static DPQ_DECL_COMPARECB( cbUglyPig, GUID )
@@ -96,21 +85,20 @@ static DPQ_DECL_COMPARECB( cbUglyPig, GUID )
 }
 
 /* Store the given NS remote address for future reference */
-/* FIXME: LPDPMSG_ENUMSESSIONSREPLY should be const */
-void NS_AddRemoteComputerAsNameServer( LPCVOID                   lpcNSAddrHdr,
-                                       DWORD                     dwHdrSize,
-                                       LPDPMSG_ENUMSESSIONSREPLY lpMsg,
-                                       LPVOID                    lpNSInfo )
+void NS_AddRemoteComputerAsNameServer( LPCVOID                      lpcNSAddrHdr,
+                                       DWORD                        dwHdrSize,
+                                       LPCDPMSG_ENUMSESSIONSREPLY   lpcMsg,
+                                       LPVOID                       lpNSInfo )
 {
   DWORD len;
   lpNSCache     lpCache = (lpNSCache)lpNSInfo;
   lpNSCacheData lpCacheNode;
 
-  TRACE( "%p, %p, %p\n", lpcNSAddrHdr, lpMsg, lpNSInfo );
+  TRACE( "%p, %p, %p\n", lpcNSAddrHdr, lpcMsg, lpNSInfo );
 
   /* See if we can find this session. If we can, remove it as it's a dup */
   DPQ_REMOVE_ENTRY_CB( lpCache->first, next, data->guidInstance, cbUglyPig,
-                       lpMsg->sd.guidInstance, lpCacheNode );
+                       lpcMsg->sd.guidInstance, lpCacheNode );
 
   if( lpCacheNode != NULL )
   {
@@ -137,15 +125,16 @@ void NS_AddRemoteComputerAsNameServer( LPCVOID                   lpcNSAddrHdr,
   if( lpCacheNode->data == NULL )
   {
     ERR( "no memory for SESSIONDESC2\n" );
+    HeapFree( GetProcessHeap(), 0, lpCacheNode );
     return;
   }
 
-  CopyMemory( lpCacheNode->data, &lpMsg->sd, sizeof( *lpCacheNode->data ) );
-  len = WideCharToMultiByte( CP_ACP, 0, (LPWSTR)(lpMsg+1), -1, NULL, 0, NULL, NULL );
-  if ((lpCacheNode->data->lpszSessionNameA = HeapAlloc( GetProcessHeap(), 0, len )))
+  *lpCacheNode->data = lpcMsg->sd;
+  len = WideCharToMultiByte( CP_ACP, 0, (LPCWSTR)(lpcMsg+1), -1, NULL, 0, NULL, NULL );
+  if ((lpCacheNode->data->u1.lpszSessionNameA = HeapAlloc( GetProcessHeap(), 0, len )))
   {
-      WideCharToMultiByte( CP_ACP, 0, (LPWSTR)(lpMsg+1), -1,
-                           lpCacheNode->data->lpszSessionNameA, len, NULL, NULL );
+      WideCharToMultiByte( CP_ACP, 0, (LPCWSTR)(lpcMsg+1), -1,
+                           lpCacheNode->data->u1.lpszSessionNameA, len, NULL, NULL );
   }
 
   lpCacheNode->dwTime = timeGetTime();
@@ -169,7 +158,7 @@ LPVOID NS_GetNSAddr( LPVOID lpNSInfo )
   /* Ok. Cheat and don't search for the correct stuff just take the first.
    * FIXME: In the future how are we to know what is _THE_ enum we used?
    *        This is going to have to go into dplay somehow. Perhaps it
-   *        comes back with app server id for the join command! Oh...that
+   *        comes back with app server id for the join command! Oh... that
    *        must be it. That would make this method obsolete once that's
    *        in place.
    */
@@ -185,17 +174,9 @@ LPVOID NS_GetNSAddr( LPVOID lpNSInfo )
 /* Get the magic number associated with the Name Server */
 DWORD NS_GetNsMagic( LPVOID lpNSInfo )
 {
-  LPDWORD lpHdrInfo = (LPDWORD)NS_GetNSAddr( lpNSInfo );
+  LPDWORD lpHdrInfo = NS_GetNSAddr( lpNSInfo );
 
   return lpHdrInfo[1];
-}
-
-/* Get the magic number associated with the non NS end */
-DWORD NS_GetOtherMagic( LPVOID lpNSInfo )
-{
-  lpNSCache lpCache = (lpNSCache)lpNSInfo;
-
-  return ((LPDWORD)lpCache->lpLocalAddrHdr)[1];
 }
 
 void NS_SetLocalAddr( LPVOID lpNSInfo, LPCVOID lpHdr, DWORD dwHdrSize )
@@ -212,7 +193,7 @@ void NS_SetLocalAddr( LPVOID lpNSInfo, LPCVOID lpHdr, DWORD dwHdrSize )
  */
 HRESULT NS_SendSessionRequestBroadcast( LPCGUID lpcGuid,
                                         DWORD dwFlags,
-                                        LPSPINITDATA lpSpData )
+                                        const SPINITDATA *lpSpData )
 
 {
   DPSP_ENUMSESSIONSDATA data;
@@ -227,7 +208,7 @@ HRESULT NS_SendSessionRequestBroadcast( LPCGUID lpcGuid,
   data.lpMessage = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY,
                               data.dwMessageSize );
   data.lpISP = lpSpData->lpISP;
-  data.bReturnStatus = (dwFlags & DPENUMSESSIONS_RETURNSTATUS) ? TRUE : FALSE;
+  data.bReturnStatus = (dwFlags & DPENUMSESSIONS_RETURNSTATUS) != 0;
 
 
   lpMsg = (LPDPMSG_ENUMSESSIONSREQUEST)(((BYTE*)data.lpMessage)+lpSpData->dwSPHeaderSize);
@@ -240,13 +221,13 @@ HRESULT NS_SendSessionRequestBroadcast( LPCGUID lpcGuid,
   lpMsg->dwPasswordSize = 0; /* FIXME: If enumerating passwords..? */
   lpMsg->dwFlags        = dwFlags;
 
-  CopyMemory( &lpMsg->guidApplication, lpcGuid, sizeof( *lpcGuid ) );
+  lpMsg->guidApplication = *lpcGuid;
 
   return (lpSpData->lpCB->EnumSessions)( &data );
 }
 
 /* Delete a name server node which has been allocated on the heap */
-DPQ_DECL_DELETECB( cbDeleteNSNodeFromHeap, lpNSCacheData )
+static DPQ_DECL_DELETECB( cbDeleteNSNodeFromHeap, lpNSCacheData )
 {
   /* NOTE: This proc doesn't deal with the walking pointer */
 
@@ -381,21 +362,13 @@ void NS_ReplyToEnumSessionsRequest( LPCVOID lpcMsg,
   DWORD dwVariableSize;
   DWORD dwVariableLen;
   /* LPCDPMSG_ENUMSESSIONSREQUEST msg = (LPDPMSG_ENUMSESSIONSREQUEST)lpcMsg; */
-  BOOL bAnsi = TRUE; /* FIXME: This needs to be in the DPLAY interface */
 
-  FIXME( ": few fixed + need to check request for response\n" );
+  /* FIXME: Should handle ANSI or WIDECHAR input. Currently just ANSI input */
+  FIXME( ": few fixed + need to check request for response, might need UNICODE input ability.\n" );
 
-  if (bAnsi)
-  {
-      dwVariableLen = MultiByteToWideChar( CP_ACP, 0,
-                                           lpDP->dp2->lpSessionDesc->lpszSessionNameA,
-                                           -1, NULL, 0 );
-  }
-  else
-  {
-      dwVariableLen = strlenW( lpDP->dp2->lpSessionDesc->lpszSessionName ) + 1;
-  }
-
+  dwVariableLen = MultiByteToWideChar( CP_ACP, 0,
+                                       lpDP->dp2->lpSessionDesc->u1.lpszSessionNameA,
+                                       -1, NULL, 0 );
   dwVariableSize = dwVariableLen * sizeof( WCHAR );
 
   *lpdwReplySize = lpDP->dp2->spData.dwSPHeaderSize +
@@ -411,15 +384,8 @@ void NS_ReplyToEnumSessionsRequest( LPCVOID lpcMsg,
   rmsg->envelope.wVersion   = DPMSGVER_DP6;
 
   CopyMemory( &rmsg->sd, lpDP->dp2->lpSessionDesc,
-              sizeof( lpDP->dp2->lpSessionDesc->dwSize ) );
+              lpDP->dp2->lpSessionDesc->dwSize );
   rmsg->dwUnknown = 0x0000005c;
-  if( bAnsi )
-  {
-      MultiByteToWideChar( CP_ACP, 0, lpDP->dp2->lpSessionDesc->lpszSessionNameA, -1,
-                           (LPWSTR)(rmsg+1), dwVariableLen );
-  }
-  else
-  {
-      strcpyW( (LPWSTR)(rmsg+1), lpDP->dp2->lpSessionDesc->lpszSessionName );
-  }
+  MultiByteToWideChar( CP_ACP, 0, lpDP->dp2->lpSessionDesc->u1.lpszSessionNameA, -1,
+                       (LPWSTR)(rmsg+1), dwVariableLen );
 }

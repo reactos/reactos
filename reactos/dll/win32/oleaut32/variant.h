@@ -19,10 +19,10 @@
  */
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-#include "windef.h"
-#include "winerror.h"
-#include "objbase.h"
-#include "oleauto.h"
+//#include "windef.h"
+//#include "winerror.h"
+#include <objbase.h>
+#include <oleauto.h>
 #include <math.h>
 
 /* Get just the type from a variant pointer */
@@ -48,12 +48,12 @@
 #define VTBIT_VARIANT   (1 << VT_VARIANT)
 #define VTBIT_15        (1 << 15)        /* no variant type with this number */
 
-extern const char * const wine_vtypes[];
+extern const char * const wine_vtypes[] DECLSPEC_HIDDEN;
 #define debugstr_vt(v) (((v)&VT_TYPEMASK) <= VT_CLSID ? wine_vtypes[((v)&VT_TYPEMASK)] : \
   ((v)&VT_TYPEMASK) == VT_BSTR_BLOB ? "VT_BSTR_BLOB": "Invalid")
 #define debugstr_VT(v) (!(v) ? "(null)" : debugstr_vt(V_TYPE((v))))
 
-extern const char * const wine_vflags[];
+extern const char * const wine_vflags[] DECLSPEC_HIDDEN;
 #define debugstr_vf(v) (wine_vflags[((v)&VT_EXTRA_TYPE)>>12])
 #define debugstr_VF(v) (!(v) ? "(null)" : debugstr_vf(V_EXTRA_TYPE(v)))
 
@@ -125,5 +125,7 @@ typedef struct tagVARIANT_NUMBER_CHARS
 } VARIANT_NUMBER_CHARS;
 
 
-BOOL VARIANT_GetLocalisedText(LANGID, DWORD, WCHAR *);
-HRESULT VARIANT_ClearInd(VARIANTARG *);
+BOOL VARIANT_GetLocalisedText(LANGID, DWORD, WCHAR *) DECLSPEC_HIDDEN;
+HRESULT VARIANT_ClearInd(VARIANTARG *) DECLSPEC_HIDDEN;
+BOOL get_date_format(LCID, DWORD, const SYSTEMTIME *,
+        const WCHAR *, WCHAR *, int) DECLSPEC_HIDDEN;

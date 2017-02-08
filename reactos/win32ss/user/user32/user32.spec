@@ -302,7 +302,7 @@
 @ stdcall GetLayeredWindowAttributes(long ptr ptr ptr) NtUserGetLayeredWindowAttributes
 @ stdcall GetListBoxInfo(long) NtUserGetListBoxInfo
 @ stdcall GetMenu(long)
-@ stdcall GetMenuBarInfo(long long long ptr) NtUserGetMenuBarInfo
+@ stdcall GetMenuBarInfo(long long long ptr) ; tempo haxzo NtUserGetMenuBarInfo
 @ stdcall GetMenuCheckMarkDimensions()
 @ stdcall GetMenuContextHelpId(long)
 @ stdcall GetMenuDefaultItem(long long long)

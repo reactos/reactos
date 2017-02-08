@@ -80,9 +80,9 @@ extern const FLOATOBJ gef16;
 #define FLOATOBJ_16 16.
 #define FLOATOBJ_1_16 (1./16.)
 
-#define gef0 FLOATOBJ_0
-#define gef1 FLOATOBJ_1
-#define gef16 FLOATOBJ_16
+static const FLOATOBJ gef0 = 0.;
+static const FLOATOBJ gef1 = 1.;
+static const FLOATOBJ gef16 = 16.;
 
 #define FLOATOBJ_Set0(fo) *(fo) = 0;
 #define FLOATOBJ_Set1(fo) *(fo) = 1;

@@ -24,11 +24,6 @@ cpp_quote("#if 0    /* ole32_objidl.idl hack */")
 #include "objidl.idl"
 cpp_quote("#endif   /* ole32_objidl.idl hack */")
 
-#ifndef __WIDL__
-#define threading(model)
-#define progid(str)
-#endif
-
 [
     threading(both),
     uuid(00000300-0000-0000-c000-000000000046)
@@ -78,7 +73,6 @@ coclass CompositeMoniker { interface IMoniker; }
 ]
 coclass DfMarshal { interface IMarshal; }
 
-#ifdef __WIDL__
 [
     helpstring("Picture (Metafile)"),
     threading(both),
@@ -94,7 +88,6 @@ coclass Picture_Metafile { interface IPicture; }
     uuid(00000316-0000-0000-c000-000000000046)
 ]
 coclass Picture_Dib { interface IPicture; }
-#endif
 
 [
     threading(both),
@@ -103,13 +96,11 @@ coclass Picture_Dib { interface IPicture; }
 ]
 coclass ClassMoniker { interface IMoniker; }
 
-#ifdef __WIDL__
 [
     threading(both),
     uuid(00000320-0000-0000-c000-000000000046)
 ]
 coclass PSFactoryBuffer { interface IFactoryBuffer; }
-#endif
 
 [
     threading(apartment),
@@ -117,11 +108,9 @@ coclass PSFactoryBuffer { interface IFactoryBuffer; }
 ]
 coclass StdGlobalInterfaceTable { interface IGlobalInterfaceTable; }
 
-#ifdef __WIDL__
 [
     helpstring("Component Categories Manager"),
     threading(both),
     uuid(0002e005-0000-0000-c000-000000000046)
 ]
 coclass StdComponentCategoriesMgr { interface ICatRegister; interface ICatInformation; }
-#endif

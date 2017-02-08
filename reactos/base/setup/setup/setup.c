@@ -23,19 +23,16 @@
  * PURPOSE:         Second stage setup
  * PROGRAMMER:      Eric Kohl
  */
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <tchar.h>
-#include <syssetup/syssetup.h>
-#include <userenv.h>
+
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 #include <tchar.h>
 
 #define NDEBUG
 #include <debug.h>
 
-
 typedef DWORD (WINAPI *PINSTALL_REACTOS)(HINSTANCE hInstance);
-
 
 /* FUNCTIONS ****************************************************************/
 

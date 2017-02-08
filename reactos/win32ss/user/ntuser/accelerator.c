@@ -28,7 +28,7 @@ PACCELERATOR_TABLE FASTCALL UserGetAccelObject(HACCEL hAccel)
         return NULL;
     }
 
-    Accel = UserGetObject(gHandleTable, hAccel, otAccel);
+    Accel = UserGetObject(gHandleTable, hAccel, TYPE_ACCELTABLE);
     if (!Accel)
     {
         EngSetLastError(ERROR_INVALID_ACCEL_HANDLE);
@@ -57,7 +57,7 @@ co_IntTranslateAccelerator(
 
     hWnd = Window->head.h;
 
-    TRACE("IntTranslateAccelerator(hwnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x)\n",
+    TRACE("IntTranslateAccelerator(hwnd %p, message %x, wParam %x, lParam %x, fVirt 0x%x, key %x, cmd %x)\n",
           hWnd, pMsg->message, pMsg->wParam, pMsg->lParam, pAccel->fVirt, pAccel->key, pAccel->cmd);
 
     if (UserGetKeyState(VK_CONTROL) & 0x8000) Mask |= FCONTROL;
@@ -143,7 +143,7 @@ co_IntTranslateAccelerator(
         if (hSubMenu)
         {
             nPos = IntFindSubMenu(&hMenu, hSubMenu);
-            TRACE("hSysMenu = %p, hSubMenu = %p, nPos = %d\n", hMenu, hSubMenu, nPos);
+            TRACE("hSysMenu = %p, hSubMenu = %p, nPos = %u\n", hMenu, hSubMenu, nPos);
             co_IntSendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hSubMenu, MAKELPARAM(nPos, TRUE));
         }
     }
@@ -247,7 +247,7 @@ NtUserCreateAcceleratorTable(
     NTSTATUS Status = STATUS_SUCCESS;
     DECLARE_RETURN(HACCEL);
 
-    TRACE("Enter NtUserCreateAcceleratorTable(Entries %p, EntriesCount %d)\n",
+    TRACE("Enter NtUserCreateAcceleratorTable(Entries %p, EntriesCount %u)\n",
           Entries, EntriesCount);
     UserEnterExclusive();
 
@@ -257,7 +257,7 @@ NtUserCreateAcceleratorTable(
         RETURN( (HACCEL) NULL );
     }
 
-    Accel = UserCreateObject(gHandleTable, NULL, (PHANDLE)&hAccel, otAccel, sizeof(ACCELERATOR_TABLE));
+    Accel = UserCreateObject(gHandleTable, NULL, NULL, (PHANDLE)&hAccel, TYPE_ACCELTABLE, sizeof(ACCELERATOR_TABLE));
 
     if (Accel == NULL)
     {
@@ -270,7 +270,7 @@ NtUserCreateAcceleratorTable(
     if (Accel->Table == NULL)
     {
         UserDereferenceObject(Accel);
-        UserDeleteObject(hAccel, otAccel);
+        UserDeleteObject(hAccel, TYPE_ACCELTABLE);
         SetLastNtError(STATUS_NO_MEMORY);
         RETURN( (HACCEL) NULL);
     }
@@ -308,7 +308,7 @@ NtUserCreateAcceleratorTable(
     {
         ExFreePoolWithTag(Accel->Table, USERTAG_ACCEL);
         UserDereferenceObject(Accel);
-        UserDeleteObject(hAccel, otAccel);
+        UserDeleteObject(hAccel, TYPE_ACCELTABLE);
         SetLastNtError(Status);
         RETURN( (HACCEL) NULL);
     }
@@ -318,7 +318,7 @@ NtUserCreateAcceleratorTable(
     RETURN(hAccel);
 
 CLEANUP:
-    TRACE("Leave NtUserCreateAcceleratorTable(Entries %p, EntriesCount %d) = %x\n",
+    TRACE("Leave NtUserCreateAcceleratorTable(Entries %p, EntriesCount %u) = %p\n",
           Entries, EntriesCount, _ret_);
     UserLeave();
     END_CLEANUP;
@@ -337,7 +337,7 @@ NtUserDestroyAcceleratorTable(
     FIXME: Destroy only tables created using CreateAcceleratorTable.
      */
 
-    TRACE("NtUserDestroyAcceleratorTable(Table %x)\n", hAccel);
+    TRACE("NtUserDestroyAcceleratorTable(Table %p)\n", hAccel);
     UserEnterExclusive();
 
     if (!(Accel = UserGetAccelObject(hAccel)))
@@ -351,12 +351,12 @@ NtUserDestroyAcceleratorTable(
         Accel->Table = NULL;
     }
 
-    UserDeleteObject(hAccel, otAccel);
+    UserDeleteObject(hAccel, TYPE_ACCELTABLE);
 
     RETURN( TRUE);
 
 CLEANUP:
-    TRACE("Leave NtUserDestroyAcceleratorTable(Table %x) = %i\n", hAccel, _ret_);
+    TRACE("Leave NtUserDestroyAcceleratorTable(Table %p) = %u\n", hAccel, _ret_);
     UserLeave();
     END_CLEANUP;
 }
@@ -375,7 +375,7 @@ NtUserTranslateAccelerator(
     USER_REFERENCE_ENTRY AccelRef, WindowRef;
     DECLARE_RETURN(int);
 
-    TRACE("NtUserTranslateAccelerator(hWnd %x, Table %x, Message %p)\n",
+    TRACE("NtUserTranslateAccelerator(hWnd %p, hAccel %p, Message %p)\n",
           hWnd, hAccel, pUnsafeMessage);
     UserEnterShared();
 

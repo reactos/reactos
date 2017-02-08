@@ -7,7 +7,7 @@ _strtoi64(const char *nptr, char **endptr, int base)
     BOOL negative = FALSE;
     __int64 ret = 0;
 
-   while(isspace(*nptr)) nptr++;
+   while(isspace((unsigned char)*nptr)) nptr++;
 
     if(*nptr == '-') {
         negative = TRUE;
@@ -31,7 +31,7 @@ _strtoi64(const char *nptr, char **endptr, int base)
         char cur = tolower(*nptr);
         int v;
 
-        if(isdigit(cur)) {
+        if(isdigit((unsigned char)cur)) {
             if(cur >= '0'+base)
                 break;
             v = cur-'0';

@@ -22,7 +22,6 @@
  * convert long filename to iso9660 file name by Magnus Olsen
  * magnus@greatlord.com
  *
- * $Id$
  */
 
 /* According to his website, this file was released into the public domain by Phillip J. Erdelsky */
@@ -529,7 +528,7 @@ static int check_for_punctuation(int c, const char *name)
   return c;
 }
 
-#if _WIN32
+#if defined(_WIN32) && !defined(strcasecmp)
 #define strcasecmp stricmp
 #endif//_WIN32
 
@@ -1098,6 +1097,20 @@ static void get_file_specifications(PDIR_RECORD d)
   }
 }
 
+static void get_time_string(char *str)
+{
+    struct tm *current;
+    time_t timestamp = time(NULL);
+    current = gmtime(&timestamp);
+    sprintf(str, "%04d%02d%02d%02d%02d%02d00", 
+            current->tm_year + 1900,
+            current->tm_mon,
+            current->tm_mday,
+            current->tm_hour,
+            current->tm_min,
+            current->tm_sec);
+}
+
 static void pass(void)
 {
   PDIR_RECORD d;
@@ -1111,6 +1124,9 @@ static void pass(void)
   char *old_end_source;
   int n;
   FILE *file;
+  char timestring[17];
+
+  get_time_string(timestring);
 
   // first 16 sectors are zeros
 
@@ -1145,9 +1161,9 @@ static void pass(void)
   write_block(37, ' ');       // copyright file identifier
   write_block(37, ' ');       // abstract file identifier
   write_block(37, ' ');       // bibliographic file identifier
-  write_string("0000000000000000");  // volume creation
+  write_string(timestring);  // volume creation
   write_byte(0);
-  write_string("0000000000000000");  // most recent modification
+  write_string(timestring);  // most recent modification
   write_byte(0);
   write_string("0000000000000000");  // volume expires
   write_byte(0);
@@ -1204,9 +1220,9 @@ static void pass(void)
     write_block(37, ' ');       // copyright file identifier
     write_block(37, ' ');       // abstract file identifier
     write_block(37, ' ');       // bibliographic file identifier
-    write_string("0000000000000000");  // volume creation
+    write_string(timestring);  // volume creation
     write_byte(0);
-    write_string("0000000000000000");  // most recent modification
+    write_string(timestring);  // most recent modification
     write_byte(0);
     write_string("0000000000000000");  // volume expires
     write_byte(0);
@@ -1500,6 +1516,8 @@ Program execution starts here.
 
 int main(int argc, char **argv)
 {
+  struct tm *current_time;
+  time_t timestamp = time(NULL);
   BOOL q_option = FALSE;
   BOOL v_option = FALSE;
   int i;
@@ -1521,8 +1539,15 @@ int main(int argc, char **argv)
     error_exit("Insufficient memory");
 
   memset(&root, 0, sizeof(root));
+  current_time = gmtime(&timestamp);
   root.level = 1;
   root.flags = DIRECTORY_FLAG;
+  root.date_and_time.year = current_time->tm_year + 1900;
+  root.date_and_time.month = current_time->tm_mon;
+  root.date_and_time.day = current_time->tm_mday;
+  root.date_and_time.hour = current_time->tm_hour;
+  root.date_and_time.minute = current_time->tm_min;
+  root.date_and_time.second = current_time->tm_sec;
 
   // initialize CD-ROM write buffer
 

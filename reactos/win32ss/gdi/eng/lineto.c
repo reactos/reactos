@@ -316,15 +316,16 @@ SEtoNW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
  * @implemented
  */
 BOOL APIENTRY
-EngLineTo(SURFOBJ *DestObj,
-          CLIPOBJ *Clip,
-          BRUSHOBJ *pbo,
-          LONG x1,
-          LONG y1,
-          LONG x2,
-          LONG y2,
-          RECTL *RectBounds,
-          MIX mix)
+EngLineTo(
+    _Inout_ SURFOBJ *DestObj,
+    _In_ CLIPOBJ *Clip,
+    _In_ BRUSHOBJ *pbo,
+    _In_ LONG x1,
+    _In_ LONG y1,
+    _In_ LONG x2,
+    _In_ LONG y2,
+    _In_opt_ RECTL *RectBounds,
+    _In_ MIX mix)
 {
     LONG x, y, deltax, deltay, xchange, ychange, hx, vy;
     ULONG i;

@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <regedit.h>
+#include "regedit.h"
 typedef struct
 {
     HWND hWndSelf;
@@ -49,17 +49,17 @@ typedef struct
     INT SelEnd;
 } HEXEDIT_DATA, *PHEXEDIT_DATA;
 
-static const TCHAR ClipboardFormatName[] = TEXT("RegEdit_HexData");
+static const WCHAR ClipboardFormatName[] = L"RegEdit_HexData";
 static UINT ClipboardFormatID = 0;
 
 /* hit test codes */
-#define HEHT_LEFTMARGIN	(0x1)
-#define HEHT_ADDRESS	(0x2)
-#define HEHT_ADDRESSSPACING	(0x3)
-#define HEHT_HEXDUMP	(0x4)
-#define HEHT_HEXDUMPSPACING	(0x5)
-#define HEHT_ASCIIDUMP	(0x6)
-#define HEHT_RIGHTMARGIN	(0x7)
+#define HEHT_LEFTMARGIN     (0x1)
+#define HEHT_ADDRESS        (0x2)
+#define HEHT_ADDRESSSPACING (0x3)
+#define HEHT_HEXDUMP        (0x4)
+#define HEHT_HEXDUMPSPACING (0x5)
+#define HEHT_ASCIIDUMP      (0x6)
+#define HEHT_RIGHTMARGIN    (0x7)
 
 INT_PTR CALLBACK HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -67,17 +67,17 @@ ATOM
 WINAPI
 RegisterHexEditorClass(HINSTANCE hInstance)
 {
-    WNDCLASSEX WndClass;
+    WNDCLASSEXW WndClass;
 
-    ClipboardFormatID = RegisterClipboardFormat(ClipboardFormatName);
+    ClipboardFormatID = RegisterClipboardFormatW(ClipboardFormatName);
 
-    ZeroMemory(&WndClass, sizeof(WNDCLASSEX));
-    WndClass.cbSize = sizeof(WNDCLASSEX);
+    ZeroMemory(&WndClass, sizeof(WNDCLASSEXW));
+    WndClass.cbSize = sizeof(WNDCLASSEXW);
     WndClass.style = CS_DBLCLKS;
     WndClass.lpfnWndProc = (WNDPROC)HexEditWndProc;
     WndClass.cbWndExtra = sizeof(PHEXEDIT_DATA);
     WndClass.hInstance = hInstance;
-    WndClass.hCursor = LoadCursor(0, IDC_IBEAM);
+    WndClass.hCursor = LoadCursorW(NULL, IDC_IBEAM);
     WndClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     WndClass.lpszClassName = HEX_EDIT_CLASS_NAME;
 
@@ -88,7 +88,7 @@ BOOL
 WINAPI
 UnregisterHexEditorClass(HINSTANCE hInstance)
 {
-    return UnregisterClass(HEX_EDIT_CLASS_NAME, hInstance);
+    return UnregisterClassW(HEX_EDIT_CLASS_NAME, hInstance);
 }
 
 /*** Helper functions *********************************************************/
@@ -192,7 +192,7 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
     INT i, isave, i0, i1, x;
     PBYTE buf, current, end, line;
     size_t bufsize;
-    TCHAR hex[3], addr[17];
+    WCHAR hex[3], addr[17];
     RECT rct, rct2;
 
     FillRect(hDC, rc, (HBRUSH)(COLOR_WINDOW + 1));
@@ -222,8 +222,8 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
         if(ScrollPos + First == 0)
         {
             /* draw address */
-            wsprintf(addr, TEXT("%04X"), 0);
-            TextOut(hDC, hed->LeftMargin, First * hed->LineHeight, addr, 4);
+            wsprintf(addr, L"%04X", 0);
+            TextOutW(hDC, hed->LeftMargin, First * hed->LineHeight, addr, 4);
         }
     }
 
@@ -244,8 +244,8 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
             dx = hed->LeftMargin;
 
             /* draw address */
-            wsprintf(addr, TEXT("%04lX"), linestart);
-            TextOut(hDC, dx, dy, addr, 4);
+            wsprintf(addr, L"%04lX", linestart);
+            TextOutW(hDC, dx, dy, addr, 4);
 
             dx += ((4 + hed->AddressSpacing) * hed->CharWidth);
             dh = (3 * hed->CharWidth);
@@ -264,7 +264,7 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
                 rct.left += dh;
                 rct.right += dh;
 
-                wsprintf(hex, TEXT("%02X"), *(current++));
+                wsprintf(hex, L"%02X", *(current++));
                 if (i0 <= i && i < i1)
                 {
                     rct2.left = dx;
@@ -274,11 +274,11 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
                     InflateRect(&rct2, hed->CharWidth / 2, 0);
                     FillRect(hDC, &rct2, (HBRUSH)(COLOR_HIGHLIGHT + 1));
                     SetTextColor(hDC, GetSysColor(COLOR_HIGHLIGHTTEXT));
-                    ExtTextOut(hDC, dx, dy, 0, &rct, hex, 2, NULL);
+                    ExtTextOutW(hDC, dx, dy, 0, &rct, hex, 2, NULL);
                     SetTextColor(hDC, GetSysColor(COLOR_WINDOWTEXT));
                 }
                 else
-                    ExtTextOut(hDC, dx, dy, ETO_OPAQUE, &rct, hex, 2, NULL);
+                    ExtTextOutW(hDC, dx, dy, ETO_OPAQUE, &rct, hex, 2, NULL);
                 dx += dh;
                 i++;
             }
@@ -289,8 +289,8 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
             i = isave;
             for(x = 0; x < hed->ColumnsPerLine && current < end; x++)
             {
-                wsprintf(hex, _T("%C"), *(current++));
-                hex[0] = ((hex[0] & _T('\x007f')) >= _T(' ') ? hex[0] : _T('.'));
+                wsprintf(hex, L"%C", *(current++));
+                hex[0] = ((hex[0] & L'\x007f') >= L' ' ? hex[0] : L'.');
                 if (i0 <= i && i < i1)
                 {
                     rct2.left = dx;
@@ -299,11 +299,11 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
                     rct2.bottom = dy + hed->LineHeight;
                     FillRect(hDC, &rct2, (HBRUSH)(COLOR_HIGHLIGHT + 1));
                     SetTextColor(hDC, GetSysColor(COLOR_HIGHLIGHTTEXT));
-                    TextOut(hDC, dx, dy, hex, 1);
+                    TextOutW(hDC, dx, dy, hex, 1);
                     SetTextColor(hDC, GetSysColor(COLOR_WINDOWTEXT));
                 }
                 else
-                    TextOut(hDC, dx, dy, hex, 1);
+                    TextOutW(hDC, dx, dy, hex, 1);
                 dx += hed->CharWidth;
                 i++;
             }
@@ -1048,7 +1048,7 @@ HEXEDIT_WM_KEYDOWN(PHEXEDIT_DATA hed, INT VkCode)
     {
     case 'X':
         if (GetAsyncKeyState(VK_SHIFT) >= 0 &&
-                GetAsyncKeyState(VK_CONTROL) < 0 && hed->SelStart != hed->SelEnd)
+            GetAsyncKeyState(VK_CONTROL) < 0 && hed->SelStart != hed->SelEnd)
             HEXEDIT_Cut(hed);
         else
             return TRUE;
@@ -1056,7 +1056,7 @@ HEXEDIT_WM_KEYDOWN(PHEXEDIT_DATA hed, INT VkCode)
 
     case 'C':
         if (GetAsyncKeyState(VK_SHIFT) >= 0 &&
-                GetAsyncKeyState(VK_CONTROL) < 0 && hed->SelStart != hed->SelEnd)
+            GetAsyncKeyState(VK_CONTROL) < 0 && hed->SelStart != hed->SelEnd)
             HEXEDIT_Copy(hed);
         else
             return TRUE;
@@ -1088,7 +1088,7 @@ HEXEDIT_WM_KEYDOWN(PHEXEDIT_DATA hed, INT VkCode)
 
     case VK_DELETE:
         if (GetAsyncKeyState(VK_SHIFT) < 0 && GetAsyncKeyState(VK_CONTROL) >= 0 &&
-                hed->SelStart != hed->SelEnd)
+            hed->SelStart != hed->SelEnd)
             HEXEDIT_Copy(hed);
         if (i0 != i1)
         {
@@ -1256,9 +1256,10 @@ HEXEDIT_WM_KEYDOWN(PHEXEDIT_DATA hed, INT VkCode)
 }
 
 static BOOL
-HEXEDIT_WM_CHAR(PHEXEDIT_DATA hed, WCHAR ch)
+HEXEDIT_WM_CHAR(PHEXEDIT_DATA hed, WCHAR wch)
 {
     size_t bufsize;
+    CHAR ch = (CHAR)wch; // keep the lowest octet.
     PBYTE buf;
     INT i0, i1;
 
@@ -1410,7 +1411,7 @@ HEXEDIT_WM_CONTEXTMENU(PHEXEDIT_DATA hed, INT x, INT y)
 
     SetForegroundWindow(hed->hWndSelf);
     TrackPopupMenu(hMenu, TPM_RIGHTBUTTON, x, y, 0, hed->hWndSelf, NULL);
-    PostMessage(hed->hWndSelf, WM_NULL, 0, 0);
+    PostMessageW(hed->hWndSelf, WM_NULL, 0, 0);
 }
 
 INT_PTR CALLBACK
@@ -1548,6 +1549,5 @@ HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         break;
     }
 
-    return DefWindowProc(hWnd, uMsg, wParam, lParam);
+    return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 }
-

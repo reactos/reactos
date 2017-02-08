@@ -16,9 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "twain.h"
-#include "twain_i.h"
-#include "wine/debug.h"
+#include <twain.h>
+//#include "twain_i.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(twain);
 

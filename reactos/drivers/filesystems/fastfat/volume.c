@@ -411,7 +411,7 @@ NTSTATUS VfatSetVolumeInformation(PVFAT_IRP_CONTEXT IrpContext)
   SystemBuffer = IrpContext->Irp->AssociatedIrp.SystemBuffer;
 
   DPRINT ("FsInformationClass %d\n", FsInformationClass);
-  DPRINT ("BufferLength %d\n", BufferLength);
+  DPRINT ("BufferLength %u\n", BufferLength);
   DPRINT ("SystemBuffer %p\n", SystemBuffer);
 
   switch(FsInformationClass)

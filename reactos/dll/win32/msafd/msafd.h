@@ -7,12 +7,14 @@
 #ifndef __MSAFD_H
 #define __MSAFD_H
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #define WIN32_NO_STATUS
-#include <winsock2.h>
-#include <windows.h>
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <winreg.h>
 #include <ws2spi.h>
 #define NTOS_MODE_USER
 #include <ndk/exfuncs.h>

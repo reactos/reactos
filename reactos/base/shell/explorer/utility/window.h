@@ -283,12 +283,27 @@ struct MenuInfo
 
 
  /**
+	PreTranslateWindow is used to register windows to be called by Window::pretranslate_msg().
+	This way you get PM_TRANSLATE_MSG messages before the message loop dispatches messages.
+	You can then for example use TranslateAccelerator() to implement key shortcuts.
+ */
+struct PreTranslateWindow : public Window
+{
+	typedef Window super;
+
+	PreTranslateWindow(HWND);
+	~PreTranslateWindow();
+};
+
+
+
+ /**
 	Class ChildWindow represents MDI child windows.
 	It is used with class MainFrame.
  */
-struct ChildWindow : public Window
+struct ChildWindow : public PreTranslateWindow
 {
-	typedef Window super;
+	typedef PreTranslateWindow super;
 
 	ChildWindow(HWND hwnd, const ChildWndInfo& info);
 
@@ -323,20 +338,6 @@ protected:
 };
 
 #define	PM_SETSTATUSTEXT		(WM_APP+0x1E)
-
-
- /**
-	PreTranslateWindow is used to register windows to be called by Window::pretranslate_msg().
-	This way you get PM_TRANSLATE_MSG messages before the message loop dispatches messages.
-	You can then for example use TranslateAccelerator() to implement key shortcuts.
- */
-struct PreTranslateWindow : public Window
-{
-	typedef Window super;
-
-	PreTranslateWindow(HWND);
-	~PreTranslateWindow();
-};
 
 
  /**

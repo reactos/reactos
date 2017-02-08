@@ -18,21 +18,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+//#include <stdarg.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "msi.h"
-#include "msiquery.h"
-#include "objbase.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winerror.h"
+//#include "msi.h"
+//#include "msiquery.h"
+//#include "objbase.h"
 #include "msipriv.h"
-#include "query.h"
+//#include "query.h"
 
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+//#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 
@@ -200,6 +204,7 @@ static UINT STREAMS_set_row(struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, U
     if (FAILED(hr))
     {
         WARN("failed to open stream: %08x\n", hr);
+        msi_free(stream);
         goto done;
     }
 
@@ -299,7 +304,7 @@ static UINT streams_find_row(MSISTREAMSVIEW *sv, MSIRECORD *rec, UINT *row)
     UINT r, i, id, data;
 
     str = MSI_RecordGetString(rec, 1);
-    r = msi_string2idW(sv->db->strings, str, &id);
+    r = msi_string2id(sv->db->strings, str, -1, &id);
     if (r != ERROR_SUCCESS)
         return r;
 

@@ -18,13 +18,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_LEAN_AND_MEAN
-
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winuser.h>
 #include <stdio.h>
-#include <string.h>
-#include <windows.h>
 #include <lzexpand.h>
 #include <setupapi.h>
+
+static int myprintf(const char* format, ...)
+{
+    va_list     va;
+    char        tmp[8192];
+    DWORD       w = 0;
+    int         len;
+
+    va_start(va, format);
+    len = vsnprintf(tmp, sizeof(tmp), format, va);
+    if (len > 0)
+        WriteFile(GetStdHandle(STD_ERROR_HANDLE), tmp, len, &w, NULL);
+    va_end(va);
+    return w;
+}
 
 static UINT CALLBACK set_outfile( PVOID context, UINT notification, UINT_PTR param1, UINT_PTR param2 )
 {
@@ -83,9 +100,9 @@ int main(int argc, char *argv[])
 
     if (argc < 3)
     {
-        fprintf( stderr, "Usage:\n" );
-        fprintf( stderr, "\t%s infile outfile\n", argv[0] );
-        fprintf( stderr, "\t%s /r infile\n", argv[0] );
+        myprintf( "Usage:\n" );
+        myprintf( "\t%s infile outfile\n", argv[0] );
+        myprintf( "\t%s /r infile\n", argv[0] );
         return 1;
     }
 
@@ -96,7 +113,7 @@ int main(int argc, char *argv[])
 
     if (!SetupGetFileCompressionInfoExA( infile, actual_name, sizeof(actual_name), NULL, NULL, NULL, &comp ))
     {
-        fprintf( stderr, "%s: can't open input file %s\n", argv[0], infile );
+        myprintf( "%s: can't open input file %s\n", argv[0], infile );
         return 1;
     }
 
@@ -105,28 +122,22 @@ int main(int argc, char *argv[])
         switch (comp)
         {
         case FILE_COMPRESSION_MSZIP:
-        {
             outfile_basename[0] = 0;
             if (!SetupIterateCabinetA( infile, 0, set_outfile, outfile_basename ))
             {
-                fprintf( stderr, "%s: can't determine original name\n", argv[0] );
+                myprintf( "%s: can't determine original name\n", argv[0] );
                 return 1;
             }
             GetFullPathNameA( infile, sizeof(outfile), outfile, &basename_index );
             *basename_index = 0;
             strcat( outfile, outfile_basename );
             break;
-        }
         case FILE_COMPRESSION_WINLZA:
-        {
             GetExpandedNameA( infile, outfile_basename );
             break;
-        }
         default:
-        {
-            fprintf( stderr, "%s: can't determine original\n", argv[0] );
+            myprintf( "%s: can't determine original\n", argv[0] );
             return 1;
-        }
         }
     }
     else
@@ -134,21 +145,19 @@ int main(int argc, char *argv[])
 
     if (!lstrcmpiA( infile, outfile ))
     {
-        fprintf( stderr, "%s: can't expand file to itself\n", argv[0] );
+        myprintf( "%s: can't expand file to itself\n", argv[0] );
         return 1;
     }
 
     switch (comp)
     {
     case FILE_COMPRESSION_MSZIP:
-    {
         if (!SetupIterateCabinetA( infile, 0, extract_callback, outfile ))
         {
-            fprintf( stderr, "%s: cabinet extraction failed\n", argv[0] );
+            myprintf( "%s: cabinet extraction failed\n", argv[0] );
             return 1;
         }
         break;
-    }
     case FILE_COMPRESSION_WINLZA:
     {
         INT hin, hout;
@@ -157,13 +166,13 @@ int main(int argc, char *argv[])
 
         if ((hin = LZOpenFileA( infile, &ofin, OF_READ )) < 0)
         {
-            fprintf( stderr, "%s: can't open input file %s\n", argv[0], infile );
+            myprintf( "%s: can't open input file %s\n", argv[0], infile );
             return 1;
         }
         if ((hout = LZOpenFileA( outfile, &ofout, OF_CREATE | OF_WRITE )) < 0)
         {
             LZClose( hin );
-            fprintf( stderr, "%s: can't open output file %s\n", argv[0], outfile );
+            myprintf( "%s: can't open output file %s\n", argv[0], outfile );
             return 1;
         }
         error = LZCopy( hin, hout );
@@ -173,20 +182,18 @@ int main(int argc, char *argv[])
 
         if (error < 0)
         {
-            fprintf( stderr, "%s: LZCopy failed, error is %ld\n", argv[0], error );
+            myprintf( "%s: LZCopy failed, error is %d\n", argv[0], error );
             return 1;
         }
         break;
     }
     default:
-    {
         if (!CopyFileA( infile, outfile, FALSE ))
         {
-            fprintf( stderr, "%s: CopyFileA failed\n", argv[0] );
+            myprintf( "%s: CopyFileA failed\n", argv[0] );
             return 1;
         }
         break;
-    }
     }
     return ret;
 }

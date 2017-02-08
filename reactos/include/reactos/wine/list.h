@@ -24,7 +24,7 @@
 #ifdef __cplusplus
 #define __WINE_SERVER_LIST_INLINE inline
 #else
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(__clang__)
 #define __WINE_SERVER_LIST_INLINE extern __inline__ __attribute__((__always_inline__))
 #elif defined(_MSC_VER)
 #define __WINE_SERVER_LIST_INLINE __inline

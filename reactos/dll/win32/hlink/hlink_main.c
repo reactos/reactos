@@ -20,11 +20,11 @@
 
 #include "hlink_private.h"
 
-#include "winreg.h"
-#include "rpcproxy.h"
-#include "hlguids.h"
+#include <winreg.h>
+#include <rpcproxy.h>
+#include <hlguids.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(hlink);
 

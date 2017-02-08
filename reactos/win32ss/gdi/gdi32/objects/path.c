@@ -1,5 +1,4 @@
-/* $Id: stubs.c 18897 2005-12-08 23:10:33Z cwittich $
- *
+/*
  * reactos/lib/gdi32/objects/path.c
  *
  * GDI32.DLL Path
@@ -9,7 +8,7 @@
  *
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 /*
  * @implemented

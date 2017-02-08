@@ -14,7 +14,6 @@
 CHAR cHostname[256];            // target hostname
 CHAR cDestIP[18];               // target IP
 
-
 static VOID
 DebugPrint(LPTSTR lpString, ...)
 {
@@ -27,7 +26,6 @@ DebugPrint(LPTSTR lpString, ...)
     UNREFERENCED_PARAMETER(lpString);
 #endif
 }
-
 
 static VOID
 Usage(VOID)
@@ -46,7 +44,6 @@ Usage(VOID)
            "  results. Use -d to force it not to resolve IP's.\n"
            "- For testing purposes, all should work as normal in a Windows environment\n\n"));
 }
-
 
 static BOOL
 ParseCmdline(int argc,
@@ -101,7 +98,6 @@ ParseCmdline(int argc,
     return TRUE;
 }
 
-
 static WORD
 CheckSum(PUSHORT data,
          UINT size)
@@ -122,7 +118,6 @@ CheckSum(PUSHORT data,
 
     return (USHORT)(~dwSum);
 }
-
 
 static VOID
 SetupTimingMethod(PAPPINFO pInfo)
@@ -147,7 +142,6 @@ SetupTimingMethod(PAPPINFO pInfo)
         pInfo->TicksPerUs.QuadPart = 1;
     }
 }
-
 
 static BOOL
 ResolveHostname(PAPPINFO pInfo)
@@ -183,7 +177,6 @@ ResolveHostname(PAPPINFO pInfo)
     return TRUE;
 }
 
-
 static LONGLONG
 GetTime(PAPPINFO pInfo)
 {
@@ -205,7 +198,6 @@ GetTime(PAPPINFO pInfo)
     return (LONGLONG)Time.u.LowPart;
 }
 
-
 static BOOL
 SetTTL(SOCKET sock,
        INT iTTL)
@@ -222,7 +214,6 @@ SetTTL(SOCKET sock,
 
     return TRUE;
 }
-
 
 static BOOL
 CreateSocket(PAPPINFO pInfo)
@@ -250,7 +241,6 @@ CreateSocket(PAPPINFO pInfo)
     return TRUE;
 }
 
-
 static VOID
 PreparePacket(PAPPINFO pInfo,
               USHORT iSeqNum)
@@ -266,7 +256,6 @@ PreparePacket(PAPPINFO pInfo,
     pInfo->SendPacket->icmpheader.checksum  = CheckSum((PUSHORT)&pInfo->SendPacket->icmpheader,
                                                        sizeof(ICMP_HEADER) + PACKET_SIZE);
 }
-
 
 static INT
 SendPacket(PAPPINFO pInfo)
@@ -307,7 +296,6 @@ SendPacket(PAPPINFO pInfo)
 
     return iSockRet;
 }
-
 
 static BOOL
 ReceivePacket(PAPPINFO pInfo)
@@ -355,7 +343,7 @@ ReceivePacket(PAPPINFO pInfo)
 
         if (iSockRet != SOCKET_ERROR)
         {
-            /* get time packet was recieved */
+            /* get time packet was received */
             pInfo->lTimeEnd = GetTime(pInfo);
             DebugPrint(_T("reveived %d bytes\n"), iSockRet);
             bRet = TRUE;
@@ -369,13 +357,12 @@ ReceivePacket(PAPPINFO pInfo)
     return bRet;
 }
 
-
 static INT
 DecodeResponse(PAPPINFO pInfo)
 {
     unsigned short header_len = pInfo->RecvPacket->h_len * 4;
 
-    /* cast the recieved packet into an ECHO reply and a TTL Exceed and check the ID*/
+    /* cast the received packet into an ECHO reply and a TTL Exceed and check the ID*/
     ECHO_REPLY_HEADER *IcmpHdr = (ECHO_REPLY_HEADER *)((char*)pInfo->RecvPacket + header_len);
 
     /* Make sure the reply is ok */
@@ -410,7 +397,6 @@ DecodeResponse(PAPPINFO pInfo)
     return -3;
 }
 
-
 static BOOL
 AllocateBuffers(PAPPINFO pInfo)
 {
@@ -435,13 +421,12 @@ AllocateBuffers(PAPPINFO pInfo)
     return TRUE;
 }
 
-
 static INT
 Driver(PAPPINFO pInfo)
 {
     INT iHopCount = 1;              // hop counter. default max is 30
     BOOL bFoundTarget = FALSE;      // Have we reached our destination yet
-    INT iRecieveReturn;             // RecieveReturn return value
+    INT iReceiveReturn;             // ReceiveReturn return value
     PECHO_REPLY_HEADER icmphdr;
     INT iTTL = 1;
 
@@ -485,14 +470,14 @@ Driver(PAPPINFO pInfo)
 
                 if (SendPacket(pInfo) != SOCKET_ERROR)
                 {
-                    BOOL bAwaitPacket = FALSE; // indicates whether we have recieved a good packet
+                    BOOL bAwaitPacket = FALSE; // indicates whether we have received a good packet
 
                     do
                     {
                         /* Receive replies until we get a successful read, or a fatal error */
-                        if ((iRecieveReturn = ReceivePacket(pInfo)) < 0)
+                        if ((iReceiveReturn = ReceivePacket(pInfo)) < 0)
                         {
-                            /* FIXME: consider moving this into RecievePacket */
+                            /* FIXME: consider moving this into ReceivePacket */
                             /* check the seq num in the packet, if it's bad wait for another */
                             WORD hdrLen = pInfo->RecvPacket->h_len * 4;
                             icmphdr = (ECHO_REPLY_HEADER *)((char*)&pInfo->RecvPacket + hdrLen);
@@ -503,7 +488,7 @@ Driver(PAPPINFO pInfo)
                             }
                         }
 
-                        if (iRecieveReturn)
+                        if (iReceiveReturn)
                         {
                             if (DecodeResponse(pInfo) < 0)
                                 bAwaitPacket = TRUE;
@@ -575,7 +560,6 @@ Driver(PAPPINFO pInfo)
     return ret;
 }
 
-
 static VOID
 Cleanup(PAPPINFO pInfo)
 {
@@ -594,7 +578,6 @@ Cleanup(PAPPINFO pInfo)
                  0,
                  pInfo->RecvPacket);
 }
-
 
 #if defined(_UNICODE) && defined(__GNUC__)
 static
@@ -634,7 +617,6 @@ int _tmain(int argc, LPCTSTR argv[])
 
     return ret;
 }
-
 
 #if defined(_UNICODE) && defined(__GNUC__)
 /* HACK - MINGW HAS NO OFFICIAL SUPPORT FOR wmain()!!! */

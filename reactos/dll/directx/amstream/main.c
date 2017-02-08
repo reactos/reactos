@@ -18,23 +18,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <string.h>
+#define WIN32_NO_STATUS
+#define WIN32_LEAN_AND_MEAN
+
+//#include <stdarg.h>
+//#include <string.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winerror.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winuser.h"
+//#include "winerror.h"
 
-#include "ole2.h"
-#include "rpcproxy.h"
+//#include <ole2.h>
+#include <objbase.h>
+#include <rpcproxy.h>
 
 #include "amstream_private.h"
-#include "amstream.h"
+#include <amstream.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(amstream);
 

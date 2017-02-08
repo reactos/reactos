@@ -8,10 +8,10 @@
 9  stdcall -noname EnumThemeColors(wstr wstr long ptr)
 10 stdcall -noname EnumThemeSizes(wstr wstr long ptr)
 11 stdcall -noname ParseThemeIniFile(wstr wstr ptr ptr)
-13 stub -noname DrawNCPreview
+13 stdcall -noname DrawNCPreview(ptr long ptr wstr wstr wstr ptr ptr)
 14 stub -noname RegisterDefaultTheme
 15 stub -noname DumpLoadedThemeToTextFile
-16 stub -noname OpenThemeDataFromFile
+16 stdcall -noname OpenThemeDataFromFile(ptr ptr wstr long)
 17 stub -noname OpenThemeFileFromData
 18 stub -noname GetThemeSysSize96
 19 stub -noname GetThemeSysFont96

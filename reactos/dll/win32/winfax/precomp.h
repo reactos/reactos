@@ -1,4 +1,6 @@
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 #include <winfax.h>
 
 /* INTERNAL *******************************************************************/

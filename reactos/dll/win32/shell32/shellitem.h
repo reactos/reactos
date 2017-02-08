@@ -23,30 +23,31 @@
 #define _SHELLITEM_H_
 
 class CShellItem :
-	public CComCoClass<CShellItem, &CLSID_ShellItem>,
-	public CComObjectRootEx<CComMultiThreadModelNoCS>,
-	public IShellItem,
-	public IPersistIDList
+    public CComCoClass<CShellItem, &CLSID_ShellItem>,
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IShellItem,
+    public IPersistIDList
 {
 private:
-    LPITEMIDLIST            pidl;
+    LPITEMIDLIST        m_pidl;
+
 public:
-	CShellItem();
-	~CShellItem();
-	HRESULT get_parent_pidl(LPITEMIDLIST *parent_pidl);
-	HRESULT get_parent_shellfolder(IShellFolder **ppsf);
+    CShellItem();
+    ~CShellItem();
+    HRESULT get_parent_pidl(LPITEMIDLIST *parent_pidl);
+    HRESULT get_parent_shellfolder(IShellFolder **ppsf);
 
-	// IShellItem
-	virtual HRESULT WINAPI BindToHandler(IBindCtx *pbc, REFGUID rbhid, REFIID riid, void **ppvOut);
-	virtual HRESULT WINAPI GetParent(IShellItem **ppsi);
-	virtual HRESULT WINAPI GetDisplayName(SIGDN sigdnName, LPWSTR *ppszName);
-	virtual HRESULT WINAPI GetAttributes(SFGAOF sfgaoMask, SFGAOF *psfgaoAttribs);
-	virtual HRESULT WINAPI Compare(IShellItem *oth, SICHINTF hint, int *piOrder);
+    // IShellItem
+    virtual HRESULT WINAPI BindToHandler(IBindCtx *pbc, REFGUID rbhid, REFIID riid, void **ppvOut);
+    virtual HRESULT WINAPI GetParent(IShellItem **ppsi);
+    virtual HRESULT WINAPI GetDisplayName(SIGDN sigdnName, LPWSTR *ppszName);
+    virtual HRESULT WINAPI GetAttributes(SFGAOF sfgaoMask, SFGAOF *psfgaoAttribs);
+    virtual HRESULT WINAPI Compare(IShellItem *oth, SICHINTF hint, int *piOrder);
 
-	// IPersistIDList
-	virtual HRESULT WINAPI GetClassID(CLSID *pClassID);
-	virtual HRESULT WINAPI SetIDList(LPCITEMIDLIST pidl);
-	virtual HRESULT WINAPI GetIDList(LPITEMIDLIST *ppidl);
+    // IPersistIDList
+    virtual HRESULT WINAPI GetClassID(CLSID *pClassID);
+    virtual HRESULT WINAPI SetIDList(LPCITEMIDLIST pidl);
+    virtual HRESULT WINAPI GetIDList(LPITEMIDLIST *ppidl);
 
 DECLARE_NO_REGISTRY()
 DECLARE_NOT_AGGREGATABLE(CShellItem)
@@ -54,8 +55,8 @@ DECLARE_NOT_AGGREGATABLE(CShellItem)
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
 BEGIN_COM_MAP(CShellItem)
-	COM_INTERFACE_ENTRY_IID(IID_IShellItem, IShellItem)
-	COM_INTERFACE_ENTRY_IID(IID_IPersistIDList, IPersistIDList)
+    COM_INTERFACE_ENTRY_IID(IID_IShellItem, IShellItem)
+    COM_INTERFACE_ENTRY_IID(IID_IPersistIDList, IPersistIDList)
 END_COM_MAP()
 };
 

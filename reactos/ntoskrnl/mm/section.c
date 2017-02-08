@@ -677,6 +677,7 @@ l_ReadHeaderFromFile:
             pssSegments[i].Length.QuadPart = pishSectionHeaders[i].Misc.VirtualSize;
 
         pssSegments[i].Length.LowPart = ALIGN_UP_BY(pssSegments[i].Length.LowPart, nSectionAlignment);
+        /* FIXME: always false */
         if (pssSegments[i].Length.QuadPart < pssSegments[i].Length.QuadPart)
             DIE(("Cannot align the virtual size of section %u\n", i));
 
@@ -1394,52 +1395,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
    }
 
    /*
-    * Map anonymous memory for BSS sections
-    */
-   if (Segment->Image.Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA)
-   {
-      /* We'll be unlocking the address space below.  Prevent us from being preempted
-       * in faulting in the page. */
-      MmCreatePageFileMapping(Process, Address, MM_WAIT_ENTRY);
-      MmUnlockSectionSegment(Segment);
-      MI_SET_USAGE(MI_USAGE_SECTION);
-      if (Process) MI_SET_PROCESS2(Process->ImageFileName);
-      if (!Process) MI_SET_PROCESS2("Kernel Section");
-      Status = MmRequestPageMemoryConsumer(MC_USER, FALSE, &Page);
-      if (!NT_SUCCESS(Status))
-      {
-          MmUnlockAddressSpace(AddressSpace);
-          Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
-          MmLockAddressSpace(AddressSpace);
-      }
-      if (!NT_SUCCESS(Status))
-      {
-          KeBugCheck(MEMORY_MANAGEMENT);
-      }
-      /* Remove the wait entry we placed, so that we can map the page */
-      MmDeletePageFileMapping(Process, PAddress, &SwapEntry);
-      Status = MmCreateVirtualMapping(Process,
-                                      PAddress,
-                                      Region->Protect,
-                                      &Page,
-                                      1);
-      if (!NT_SUCCESS(Status))
-      {
-          DPRINT("MmCreateVirtualMapping failed, not out of memory\n");
-          KeBugCheck(MEMORY_MANAGEMENT);
-          return(Status);
-      }
-      MmInsertRmap(Page, Process, Address);
-
-      /*
-       * Cleanup and release locks
-       */
-      MiSetPageEvent(Process, Address);
-      DPRINT("Address 0x%.8X\n", Address);
-      return(STATUS_SUCCESS);
-   }
-
-   /*
     * Get the entry corresponding to the offset within the section
     */
    Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
@@ -1508,7 +1463,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       MmUnlockSectionSegment(Segment);
 
       MmDeletePageFileMapping(Process, PAddress, &FakeSwapEntry);
-      DPRINT("CreateVirtualMapping Page %x Process %p PAddress %p Attributes %x\n", 
+      DPRINT("CreateVirtualMapping Page %x Process %p PAddress %p Attributes %x\n",
               Page, Process, PAddress, Attributes);
       Status = MmCreateVirtualMapping(Process,
                                       PAddress,
@@ -1761,17 +1716,12 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
                                    Region->Protect,
                                    &NewPage,
                                    1);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("MmCreateVirtualMapping failed, not out of memory\n");
-       KeBugCheck(MEMORY_MANAGEMENT);
-      return(Status);
-   }
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT1("Unable to create virtual mapping\n");
-       KeBugCheck(MEMORY_MANAGEMENT);
-   }
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("MmCreateVirtualMapping failed, unable to create virtual mapping, not out of memory\n");
+        KeBugCheck(MEMORY_MANAGEMENT);
+        return(Status);
+    }
 
    /*
     * Unshare the old page.
@@ -2063,7 +2013,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
                  Address);
          KeBugCheckEx(MEMORY_MANAGEMENT, SwapEntry, Page, (ULONG_PTR)Process, (ULONG_PTR)Address);
       }
-      MmReleasePageMemoryConsumer(MC_USER, Page); 
+      MmReleasePageMemoryConsumer(MC_USER, Page);
       MiSetPageEvent(NULL, NULL);
       return(STATUS_SUCCESS);
    }
@@ -2716,7 +2666,7 @@ MmCreatePhysicalMemorySection(VOID)
                             &Obj,
                             &SectionSize,
                             PAGE_EXECUTE_READWRITE,
-                            0,
+                            SEC_PHYSICALMEMORY,
                             NULL,
                             NULL);
    if (!NT_SUCCESS(Status))
@@ -2766,6 +2716,7 @@ MmInitSectionImplementation(VOID)
    ObjectTypeInitializer.DeleteProcedure = MmpDeleteSection;
    ObjectTypeInitializer.CloseProcedure = MmpCloseSection;
    ObjectTypeInitializer.ValidAccessMask = SECTION_ALL_ACCESS;
+   ObjectTypeInitializer.InvalidAttributes = OBJ_OPENLINK;
    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &MmSectionObjectType);
 
    MmCreatePhysicalMemorySection();
@@ -3785,7 +3736,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
          if(ImageSectionObject->Segments != NULL)
             ExFreePool(ImageSectionObject->Segments);
 
-         ExFreePool(ImageSectionObject);
+         ExFreePoolWithTag(ImageSectionObject, TAG_MM_SECTION_SEGMENT);
          ObDereferenceObject(Section);
          ObDereferenceObject(FileObject);
          return(StatusExeFmt);
@@ -4860,17 +4811,19 @@ MmCreateSection (OUT PVOID  * Section,
     PROS_SECTION_OBJECT *SectionObject = (PROS_SECTION_OBJECT *)Section;
 
     /* Check if an ARM3 section is being created instead */
-    if (AllocationAttributes & 1)
+    if (!(AllocationAttributes & (SEC_IMAGE | SEC_PHYSICALMEMORY)))
     {
-        DPRINT1("Creating ARM3 section\n");
-        return MmCreateArm3Section(Section,
-                                   DesiredAccess,
-                                   ObjectAttributes,
-                                   MaximumSize,
-                                   SectionPageProtection,
-                                   AllocationAttributes &~ 1,
-                                   FileHandle,
-                                   FileObject);
+        if (!(FileObject) && !(FileHandle))
+        {
+            return MmCreateArm3Section(Section,
+                                       DesiredAccess,
+                                       ObjectAttributes,
+                                       MaximumSize,
+                                       SectionPageProtection,
+                                       AllocationAttributes &~ 1,
+                                       FileHandle,
+                                       FileObject);
+        }
     }
 
     /*
@@ -4984,6 +4937,11 @@ MmCreateSection (OUT PVOID  * Section,
 #endif
     else
     {
+        if ((AllocationAttributes & SEC_PHYSICALMEMORY) == 0)
+        {
+            DPRINT1("Invalid path: %lx %p %p\n", AllocationAttributes, FileObject, FileHandle);
+        }
+//        ASSERT(AllocationAttributes & SEC_PHYSICALMEMORY);
         Status = MmCreatePageFileSection(SectionObject,
                                          DesiredAccess,
                                          ObjectAttributes,
@@ -4991,135 +4949,6 @@ MmCreateSection (OUT PVOID  * Section,
                                          SectionPageProtection,
                                          AllocationAttributes);
     }
-
-    return Status;
-}
-
-VOID
-MmModifyAttributes(IN PMMSUPPORT AddressSpace,
-                   IN PVOID BaseAddress,
-                   IN SIZE_T RegionSize,
-                   IN ULONG OldType,
-                   IN ULONG OldProtect,
-                   IN ULONG NewType,
-                   IN ULONG NewProtect)
-{
-    //
-    // This function is deprecated but remains in order to support VirtualAlloc
-    // calls with MEM_COMMIT on top of MapViewOfFile calls with SEC_RESERVE.
-    //
-    // Win32k's shared user heap, for example, uses that mechanism. The two
-    // conditions when this function needs to do something are ASSERTed for,
-    // because they should not arise.
-    //
-    if (NewType == MEM_RESERVE && OldType == MEM_COMMIT)
-    {
-        ASSERT(FALSE);
-    }
-
-    if ((NewType == MEM_COMMIT) && (OldType == MEM_COMMIT))
-    {
-        ASSERT(OldProtect == NewProtect);
-    }
-}
-
-NTSTATUS
-NTAPI
-MiRosAllocateVirtualMemory(IN HANDLE ProcessHandle,
-                           IN PEPROCESS Process,
-                           IN PMEMORY_AREA MemoryArea,
-                           IN PMMSUPPORT AddressSpace,
-                           IN OUT PVOID* UBaseAddress,
-                           IN BOOLEAN Attached,
-                           IN OUT PSIZE_T URegionSize,
-                           IN ULONG AllocationType,
-                           IN ULONG Protect)
-{
-    ULONG_PTR PRegionSize;
-    ULONG Type, RegionSize;
-    NTSTATUS Status;
-    PVOID PBaseAddress, BaseAddress;
-    KAPC_STATE ApcState;
-
-    PBaseAddress = *UBaseAddress;
-    PRegionSize = *URegionSize;
-
-    BaseAddress = (PVOID)PAGE_ROUND_DOWN(PBaseAddress);
-    RegionSize = PAGE_ROUND_UP((ULONG_PTR)PBaseAddress + PRegionSize) -
-    PAGE_ROUND_DOWN(PBaseAddress);
-    Type = (AllocationType & MEM_COMMIT) ? MEM_COMMIT : MEM_RESERVE;
-
-    ASSERT(PBaseAddress != 0);
-    ASSERT(Type == MEM_COMMIT);
-    ASSERT(MemoryArea->Type == MEMORY_AREA_SECTION_VIEW);
-    ASSERT(((ULONG_PTR)BaseAddress + RegionSize) <= (ULONG_PTR)MemoryArea->EndingAddress);
-    ASSERT(((ULONG_PTR)MemoryArea->EndingAddress - (ULONG_PTR)MemoryArea->StartingAddress) >= RegionSize);
-    ASSERT(MemoryArea->Data.SectionData.RegionListHead.Flink);
-
-    Status = MmAlterRegion(AddressSpace,
-                           MemoryArea->StartingAddress,
-                           &MemoryArea->Data.SectionData.RegionListHead,
-                           BaseAddress,
-                           RegionSize,
-                           Type,
-                           Protect,
-                           MmModifyAttributes);
-
-    MmUnlockAddressSpace(AddressSpace);
-    if (Attached) KeUnstackDetachProcess(&ApcState);
-    if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
-    if (NT_SUCCESS(Status))
-    {
-        *UBaseAddress = BaseAddress;
-        *URegionSize = RegionSize;
-    }
-
-    return Status;
-}
-
-NTSTATUS
-NTAPI
-MiRosProtectVirtualMemory(IN PEPROCESS Process,
-                          IN OUT PVOID *BaseAddress,
-                          IN OUT PSIZE_T NumberOfBytesToProtect,
-                          IN ULONG NewAccessProtection,
-                          OUT PULONG OldAccessProtection OPTIONAL)
-{
-    PMEMORY_AREA MemoryArea;
-    PMMSUPPORT AddressSpace;
-    ULONG OldAccessProtection_;
-    NTSTATUS Status;
-
-    *NumberOfBytesToProtect = PAGE_ROUND_UP((ULONG_PTR)(*BaseAddress) + (*NumberOfBytesToProtect)) - PAGE_ROUND_DOWN(*BaseAddress);
-    *BaseAddress = (PVOID)PAGE_ROUND_DOWN(*BaseAddress);
-
-    AddressSpace = &Process->Vm;
-    MmLockAddressSpace(AddressSpace);
-    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, *BaseAddress);
-    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
-    {
-        MmUnlockAddressSpace(AddressSpace);
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    if (OldAccessProtection == NULL) OldAccessProtection = &OldAccessProtection_;
-
-    if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
-    {
-        Status = MmProtectSectionView(AddressSpace,
-                                      MemoryArea,
-                                      *BaseAddress,
-                                      *NumberOfBytesToProtect,
-                                      NewAccessProtection,
-                                      OldAccessProtection);
-    }
-    else
-    {
-        /* FIXME: Should we return failure or success in this case? */
-        Status = STATUS_CONFLICTING_ADDRESSES;
-    }
-
-    MmUnlockAddressSpace(AddressSpace);
 
     return Status;
 }

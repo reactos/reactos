@@ -17,9 +17,9 @@
 /* Mapping for Callback Object */
 GENERIC_MAPPING ExpCallbackMapping =
 {
-    CALLBACK_READ,
-    CALLBACK_WRITE,
-    CALLBACK_EXECUTE,
+    STANDARD_RIGHTS_READ,
+    STANDARD_RIGHTS_WRITE | CALLBACK_MODIFY_STATE,
+    STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
     CALLBACK_ALL_ACCESS
 };
 
@@ -433,7 +433,10 @@ ExCreateCallback(OUT PCALLBACK_OBJECT *CallbackObject,
     }
 
     /* Everything went fine, so return a pointer to the Object */
-    if (NT_SUCCESS(Status)) *CallbackObject = Callback;
+    if (NT_SUCCESS(Status))
+    {
+        *CallbackObject = Callback;
+    }
     return Status;
 }
 

@@ -2,13 +2,13 @@
 
 [Section]
 Name = LibreOffice
-Version = 3.5.5
+Version = 4.0.1
 Licence = LGPL
 Description = Former called OpenOffice. Open Source Office Suite.
-Size = 201.6MB
+Size = 200.0MB
 Category = 6
 URLSite = http://www.documentfoundation.org/
-URLDownload = http://download.documentfoundation.org/libreoffice/stable/3.5.5/win/x86/LibO_3.5.5_Win_x86_install_multi.msi
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.0.1/win/x86/LibreOffice_4.0.1_Win_x86.msi
 CDPath = none
 
 [Section.0407]
@@ -20,12 +20,18 @@ Description = La suite de ofimática de código abierto.
 [Section.040c]
 Description = Précédemment appelé OpenOffice. Suite bureautique open source.
 
+[Section.0413]
+Description = Voorheen OpenOffice. Open-bron Office pakket.
+
 [Section.0415]
 Description = Otwarty pakiet biurowy.
 
 [Section.0418]
 Description = Fostul OpenOffice. Suita de aplicații de birotică open-source.
-Size = 201.6Mo
+Size = 201,6 Mo
 
 [Section.0422]
 Description = Відкритий офісний пакет.
+
+[Section.0813]
+Description = Voorheen OpenOffice. Open-bron Office pakket.

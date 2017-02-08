@@ -19,7 +19,13 @@
 #include <xmldomdid.h>
 #include <idispids.h>
 
-import "ocidl.idl";
+#if !defined(progid) && !defined(__WIDL__)
+#define threading(model)
+#define progid(str)
+#define vi_progid(str)
+#endif
+
+import "oaidl.idl";
 
 interface IXMLDOMImplementation;
 interface IXMLDOMNode;
@@ -39,8 +45,9 @@ interface IXMLDOMNotation;
 interface IXMLDOMEntity;
 interface IXMLDOMEntityReference;
 interface IXMLDOMParseError;
-interface IXTLRuntime;
 
+cpp_quote("#ifndef __MSXML_DOMNODETYPE_DEFINED")
+cpp_quote("#define __MSXML_DOMNODETYPE_DEFINED")
 typedef enum tagDOMNodeType {
     NODE_INVALID,
     NODE_ELEMENT,
@@ -56,6 +63,7 @@ typedef enum tagDOMNodeType {
     NODE_DOCUMENT_FRAGMENT,
     NODE_NOTATION
 } DOMNodeType;
+cpp_quote("#endif")
 
 [
 local,
@@ -736,7 +744,12 @@ dispinterface XMLDOMDocumentEvents
 }
 
 [
-uuid(2933bf90-7b36-11d2-b20e-00c04f983e60)
+    helpstring("XML DOM Document"),
+    progid("Microsoft.XMLDOM.1.0"),
+    vi_progid("Microsoft.XMLDOM"),
+    threading(both),
+    version(1.0),
+    uuid(2933bf90-7b36-11d2-b20e-00c04f983e60)
 ]
 coclass DOMDocument
 {
@@ -745,7 +758,12 @@ coclass DOMDocument
 }
 
 [
-uuid(2933bf91-7b36-11d2-b20e-00c04f983e60)
+    helpstring("Free Threaded XML DOM Document"),
+    progid("Microsoft.FreeThreadedXMLDOM.1.0"),
+    vi_progid("Microsoft.FreeThreadedXMLDOM"),
+    threading(both),
+    version(1.0),
+    uuid(2933bf91-7b36-11d2-b20e-00c04f983e60)
 ]
 coclass DOMFreeThreadedDocument
 {
@@ -809,7 +827,12 @@ interface IXMLHttpRequest : IDispatch
 }
 
 [
-uuid(ed8c108e-4349-11d2-91a4-00c04f7969e8)
+    helpstring("XML HTTP Request"),
+    progid("Microsoft.XMLHTTP.1.0"),
+    vi_progid("Microsoft.XMLHTTP"),
+    threading(apartment),
+    version(1.0),
+    uuid(ed8c108e-4349-11d2-91a4-00c04f7969e8)
 ]
 coclass XMLHTTPRequest
 {

@@ -63,7 +63,7 @@ PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu)
       return NULL;
    }
 
-   Menu = (PMENU_OBJECT)UserGetObject(gHandleTable, hMenu, otMenu);
+   Menu = (PMENU_OBJECT)UserGetObject(gHandleTable, hMenu, TYPE_MENU);
    if (!Menu)
    {
       EngSetLastError(ERROR_INVALID_MENU_HANDLE);
@@ -152,7 +152,7 @@ IntFreeMenuItem(PMENU_OBJECT Menu, PMENU_ITEM MenuItem, BOOL bRecurse)
    }
 
    /* Free memory */
-   ExFreePool(MenuItem);
+   ExFreePoolWithTag(MenuItem, TAG_MENUITEM);
 
    return TRUE;
 }
@@ -234,7 +234,7 @@ IntDestroyMenuObject(PMENU_OBJECT Menu,
             }
          }
 //         UserDereferenceObject(Menu);
-         ret = UserDeleteObject(Menu->MenuInfo.Self, otMenu);
+         ret = UserDeleteObject(Menu->MenuInfo.Self, TYPE_MENU);
          ObDereferenceObject(WindowStation);
          return ret;
       }
@@ -250,8 +250,9 @@ IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
 
    Menu = (PMENU_OBJECT)UserCreateObject( gHandleTable,
                                           NULL,
+                                          NULL,
                                           Handle,
-                                          otMenu,
+                                          TYPE_MENU,
                                           sizeof(MENU_OBJECT));
    if(!Menu)
    {
@@ -361,8 +362,9 @@ IntCloneMenu(PMENU_OBJECT Source)
 
    Menu = (PMENU_OBJECT)UserCreateObject( gHandleTable,
                                           NULL,
-                                         &hMenu,
-                                          otMenu,
+                                          NULL,
+                                          &hMenu,
+                                          TYPE_MENU,
                                           sizeof(MENU_OBJECT));
    if(!Menu)
       return NULL;
@@ -801,12 +803,17 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
 }
 
 BOOL FASTCALL
-IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
-                  PROSMENUITEMINFO ItemInfo)
+IntInsertMenuItem(
+    _In_ PMENU_OBJECT MenuObject,
+    UINT uItem,
+    BOOL fByPosition,
+    PROSMENUITEMINFO ItemInfo)
 {
    int pos;
    PMENU_ITEM MenuItem;
    PMENU_OBJECT SubMenu = NULL;
+
+   NT_ASSERT(MenuObject != NULL);
 
    if (MAX_MENU_ITEMS <= MenuObject->MenuInfo.MenuItemCount)
    {
@@ -1520,14 +1527,13 @@ HMENU FASTCALL UserCreateMenu(BOOL PopupMenu)
    NTSTATUS Status;
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
 
-   if (CsrProcess != CurrentProcess)
+   if (gpepCSRSS != CurrentProcess)
    {
       /*
-       * CsrProcess does not have a Win32WindowStation
-	   *
-	   */
+       * gpepCSRSS does not have a Win32WindowStation
+       */
 
-      Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
+      Status = IntValidateWindowStationHandle(CurrentProcess->Win32WindowStation,
                      KernelMode,
                      0,
                      &WinStaObject);
@@ -1814,14 +1820,29 @@ NtUserGetMenuBarInfo(
            }
          if (MenuObject->MenuInfo.FocusedItem != NO_SELECTED_ITEM)
                kmbi.fBarFocused = TRUE;
+
+         if (MenuObject->MenuItemList)
+         {
          SubMenuObject = UserGetMenuObject(MenuObject->MenuItemList->hSubMenu);
          if(SubMenuObject) kmbi.hwndMenu = SubMenuObject->MenuInfo.Wnd;
+         }
          TRACE("OBJID_MENU, idItem = %d\n",idItem);
          break;
       }
       case OBJID_CLIENT:
       {
          PMENU_OBJECT SubMenuObject, XSubMenuObject;
+         HMENU hMenuChk;
+         // Windows does this! Wine checks for Atom and uses GetWindowLongPtrW.
+         hMenuChk = (HMENU)co_IntSendMessage(hwnd, MN_GETHMENU, 0, 0);
+
+         if (!(MenuObject = UserGetMenuObject(hMenuChk)))
+         {
+            ERR("Window does not have a Popup Menu!\n");
+            EngSetLastError(ERROR_INVALID_MENU_HANDLE);
+            RETURN(FALSE);
+         }
+
          SubMenuObject = UserGetMenuObject(MenuObject->MenuItemList->hSubMenu);
          if(SubMenuObject) kmbi.hMenu = SubMenuObject->MenuInfo.Self;
          else

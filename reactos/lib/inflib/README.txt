@@ -1,5 +1,7 @@
 Routines to handle .inf files.
 
+This is the UNICODE-enabled version of inflib. It will be used by usetup and mkhive.
+
 This library is used to share .inf handling code between build tools and
 ReactOS code. Two versions are built, "inflib_host" (for use by build tools)
 and "inflib" (for use by ReactOS code). Both depend on the same core source,

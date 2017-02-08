@@ -1,4 +1,4 @@
-/* 
+/*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Driver Gradient Functions
@@ -443,16 +443,16 @@ IntEngIsNULLTriangle(TRIVERTEX  *pVertex, GRADIENT_TRIANGLE *gt)
 
 BOOL APIENTRY
 EngGradientFill(
-    IN SURFOBJ  *psoDest,
-    IN CLIPOBJ  *pco,
-    IN XLATEOBJ  *pxlo,
-    IN TRIVERTEX  *pVertex,
-    IN ULONG  nVertex,
-    IN PVOID  pMesh,
-    IN ULONG  nMesh,
-    IN RECTL  *prclExtents,
-    IN POINTL  *pptlDitherOrg,
-    IN ULONG  ulMode)
+    _Inout_ SURFOBJ *psoDest,
+    _In_ CLIPOBJ *pco,
+    _In_opt_ XLATEOBJ *pxlo,
+    _In_ TRIVERTEX *pVertex,
+    _In_ ULONG nVertex,
+    _In_ PVOID pMesh,
+    _In_ ULONG nMesh,
+    _In_ RECTL *prclExtents,
+    _In_ POINTL *pptlDitherOrg,
+    _In_ ULONG ulMode)
 {
   ULONG i;
   BOOL ret = FALSE;

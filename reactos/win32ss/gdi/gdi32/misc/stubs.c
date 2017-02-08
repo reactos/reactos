@@ -8,7 +8,7 @@
  *
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include <debug.h>
 
 #define SIZEOF_DEVMODEA_300 124
@@ -241,6 +241,8 @@ SetMetaFileBitsEx(
     if (!size || mh_in->mtType != METAFILE_MEMORY || mh_in->mtVersion != 0x300 ||
             mh_in->mtHeaderSize != sizeof(METAHEADER) / 2)
     {
+        DPRINT1("SetMetaFileBitsEx failed: %lu,%lu,0x&lx,%lu\n",
+                size, mh_in->mtType, mh_in->mtVersion, mh_in->mtHeaderSize);
         SetLastError(ERROR_INVALID_DATA);
         return 0;
     }

@@ -18,6 +18,8 @@
  */
 
 #include <msxmldid.h>
+#include <msxml2did.h>
+#include <idispids.h>
 
 #ifndef DO_NO_IMPORTS
 import "unknwn.idl";
@@ -25,6 +27,19 @@ import "wtypes.idl";
 import "objidl.idl";
 import "oaidl.idl";
 #endif
+
+[
+    uuid(d63e0ce2-a0a2-11d0-9c02-00c04fc99c8e),
+    version(2.0),
+    helpstring("Microsoft XML, v2.0")
+]
+library MSXML
+{
+
+importlib("stdole2.tlb");
+
+#include <xmldom.idl>
+#include <xmldso.idl>
 
 [
 local,
@@ -328,9 +343,15 @@ interface IXMLElementNotificationSink : IDispatch
 }
 
 [
-uuid(cfc399af-d876-11d0-9c10-00c04fc99c8e)
+    helpstring("Msxml"),
+    progid("Msxml"),
+    threading(both),
+    version(1.0),
+    uuid(cfc399af-d876-11d0-9c10-00c04fc99c8e)
 ]
 coclass XMLDocument
 {
     [default] interface IXMLDocument;
 }
+
+} /* Library MSXML */

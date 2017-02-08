@@ -9,6 +9,7 @@
  */
 
 #include <win32k.h>
+#include <suppress.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -1166,9 +1167,11 @@ PATH_PathToRegion ( PPATH pPath, INT nPolyFillMode, HRGN *pHrgn )
     if((pPath->pFlags[i] & ~PT_CLOSEFIGURE) == PT_MOVETO)
     {
       iStroke++;
+      _PRAGMA_WARNING_SUPPRESS(__WARNING_WRITE_OVERRUN)
       pNumPointsInStroke[iStroke]=0;
     }
 
+    _PRAGMA_WARNING_SUPPRESS(__WARNING_READ_OVERRUN)
     pNumPointsInStroke[iStroke]++;
   }
 
@@ -1684,6 +1687,10 @@ PATH_WidenPath(DC *dc)
                 }
                 if (!pStrokes) return FALSE;
                 pStrokes[numStrokes - 1] = ExAllocatePoolWithTag(PagedPool, sizeof(PATH), TAG_PATH);
+                if (!pStrokes[numStrokes - 1])
+                {
+                    ASSERT(FALSE); // FIXME
+                }
 
                 PATH_InitGdiPath(pStrokes[numStrokes - 1]);
                 pStrokes[numStrokes - 1]->state = PATH_Open;
@@ -1704,6 +1711,10 @@ PATH_WidenPath(DC *dc)
     }
 
     pNewPath = ExAllocatePoolWithTag(PagedPool, sizeof(PATH), TAG_PATH);
+    if (!pNewPath)
+    {
+        ASSERT(FALSE); // FIXME
+    }
     PATH_InitGdiPath(pNewPath);
     pNewPath->state = PATH_Open;
 
@@ -2021,7 +2032,7 @@ PATH_add_outline(PDC dc, INT x, INT y, TTPOLYGONHEADER *header, DWORD size)
 
      if (header->dwType != TT_POLYGON_TYPE)
      {
-        DPRINT1("Unknown header type %d\n", header->dwType);
+        DPRINT1("Unknown header type %lu\n", header->dwType);
         goto cleanup;
      }
 
@@ -2219,7 +2230,7 @@ NtGdiBeginPath( HDC  hDC )
 
   if ( dc->dclevel.hPath )
   {
-     DPRINT("BeginPath 1 0x%x\n", dc->dclevel.hPath);
+     DPRINT("BeginPath 1 0x%p\n", dc->dclevel.hPath);
      if ( !(dc->dclevel.flPath & DCPATH_SAVE) )
      {  // Remove previous handle.
         if (!PATH_Delete(dc->dclevel.hPath))
@@ -2244,7 +2255,7 @@ NtGdiBeginPath( HDC  hDC )
 
   dc->dclevel.hPath = pPath->BaseObject.hHmgr;
 
-  DPRINT("BeginPath 2 h 0x%x p 0x%x\n", dc->dclevel.hPath, pPath);
+  DPRINT("BeginPath 2 h 0x%p p 0x%p\n", dc->dclevel.hPath, pPath);
   // Path handles are shared. Also due to recursion with in the same thread.
   GDIOBJ_vUnlockObject((POBJ)pPath);       // Unlock
   pPath = PATH_LockPath(dc->dclevel.hPath); // Share Lock.
@@ -2323,14 +2334,14 @@ NtGdiEndPath(HDC  hDC)
   /* Check that path is currently being constructed */
   if ( (pPath->state != PATH_Open) || !(dc->dclevel.flPath & DCPATH_ACTIVE) )
   {
-    DPRINT1("EndPath ERROR! 0x%x\n", dc->dclevel.hPath);
+    DPRINT1("EndPath ERROR! 0x%p\n", dc->dclevel.hPath);
     EngSetLastError(ERROR_CAN_NOT_COMPLETE);
     ret = FALSE;
   }
   /* Set flag to indicate that path is finished */
   else
   {
-     DPRINT("EndPath 0x%x\n", dc->dclevel.hPath);
+     DPRINT("EndPath 0x%p\n", dc->dclevel.hPath);
      pPath->state = PATH_Closed;
      dc->dclevel.flPath &= ~DCPATH_ACTIVE;
   }
@@ -2418,16 +2429,15 @@ NtGdiFlattenPath(HDC  hDC)
    return Ret;
 }
 
-
+_Success_(return != FALSE)
 BOOL
 APIENTRY
 NtGdiGetMiterLimit(
-    IN HDC hdc,
-    OUT PDWORD pdwOut)
+    _In_ HDC hdc,
+    _Out_ PDWORD pdwOut)
 {
   DC *pDc;
-  gxf_long worker;
-  NTSTATUS Status = STATUS_SUCCESS;
+  BOOL bResult = TRUE;
 
   if (!(pDc = DC_LockDc(hdc)))
   {
@@ -2435,32 +2445,20 @@ NtGdiGetMiterLimit(
      return FALSE;
   }
 
-  worker.f = pDc->dclevel.laPath.eMiterLimit;
-
-  if (pdwOut)
+  _SEH2_TRY
   {
-      _SEH2_TRY
-      {
-          ProbeForWrite(pdwOut,
-                 sizeof(DWORD),
-                             1);
-          *pdwOut = worker.l;
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-          Status = _SEH2_GetExceptionCode();
-      }
-       _SEH2_END;
-      if (!NT_SUCCESS(Status))
-      {
-         SetLastNtError(Status);
-         DC_UnlockDc(pDc);
-         return FALSE;
-      }
+      ProbeForWrite(pdwOut, sizeof(DWORD), 1);
+      *pdwOut = pDc->dclevel.laPath.eMiterLimit;
   }
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+  {
+      SetLastNtError(_SEH2_GetExceptionCode());
+      bResult = FALSE;
+  }
+   _SEH2_END;
 
   DC_UnlockDc(pDc);
-  return TRUE;
+  return bResult;
 
 }
 
@@ -2587,7 +2585,7 @@ NtGdiSetMiterLimit(
 {
   DC *pDc;
   gxf_long worker, worker1;
-  NTSTATUS Status = STATUS_SUCCESS;
+  BOOL bResult = TRUE;
 
   if (!(pDc = DC_LockDc(hdc)))
   {
@@ -2603,26 +2601,19 @@ NtGdiSetMiterLimit(
   {
       _SEH2_TRY
       {
-          ProbeForWrite(pdwOut,
-                 sizeof(DWORD),
-                             1);
+          ProbeForWrite(pdwOut, sizeof(DWORD), 1);
           *pdwOut = worker1.l;
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-          Status = _SEH2_GetExceptionCode();
+          SetLastNtError(_SEH2_GetExceptionCode());
+          bResult = FALSE;
       }
        _SEH2_END;
-      if (!NT_SUCCESS(Status))
-      {
-         SetLastNtError(Status);
-         DC_UnlockDc(pDc);
-         return FALSE;
-      }
   }
 
   DC_UnlockDc(pDc);
-  return TRUE;
+  return bResult;
 }
 
 BOOL

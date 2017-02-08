@@ -1,4 +1,4 @@
-/* 
+/*
  *  FreeLoader
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -68,6 +68,7 @@ typedef struct tagMACHVTBL
   TIMEINFO* (*GetTime)(VOID);
   ULONG (*GetRelativeTime)(VOID);
 
+  BOOLEAN (*InitializeBootDevices)(VOID);
   PCONFIGURATION_COMPONENT_DATA (*HwDetect)(VOID);
   VOID (*HwIdle)(VOID);
 } MACHVTBL, *PMACHVTBL;
@@ -122,6 +123,7 @@ VOID MachHwIdle(VOID);
 #define MachDiskReadLogicalSectors(Drive, Start, Count, Buf)	MachVtbl.DiskReadLogicalSectors((Drive), (Start), (Count), (Buf))
 #define MachDiskGetDriveGeometry(Drive, Geom)	MachVtbl.DiskGetDriveGeometry((Drive), (Geom))
 #define MachDiskGetCacheableBlockCount(Drive)	MachVtbl.DiskGetCacheableBlockCount(Drive)
+#define MachInitializeBootDevices()	MachVtbl.InitializeBootDevices()
 #define MachHwDetect()				MachVtbl.HwDetect()
 #define MachHwIdle()				MachVtbl.HwIdle()
 

@@ -7,6 +7,7 @@
  *                  Andrew Greenwood
  */
 
+#include <initguid.h>
 #include "private.hpp"
 
 

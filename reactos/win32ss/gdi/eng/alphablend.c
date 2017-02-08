@@ -17,13 +17,14 @@
  */
 BOOL
 APIENTRY
-EngAlphaBlend(IN SURFOBJ *psoDest,
-              IN SURFOBJ *psoSource,
-              IN CLIPOBJ *ClipRegion,
-              IN XLATEOBJ *ColorTranslation,
-              IN PRECTL DestRect,
-              IN PRECTL SourceRect,
-              IN BLENDOBJ *BlendObj)
+EngAlphaBlend(
+    _Inout_ SURFOBJ *psoDest,
+    _In_ SURFOBJ *psoSource,
+    _In_opt_ CLIPOBJ *ClipRegion,
+    _In_opt_ XLATEOBJ *ColorTranslation,
+    _In_ RECTL *DestRect,
+    _In_ RECTL *SourceRect,
+    _In_ BLENDOBJ *BlendObj)
 {
     RECTL              InputRect;
     RECTL              OutputRect;
@@ -141,7 +142,7 @@ EngAlphaBlend(IN SURFOBJ *psoDest,
                 Rect.top = InputRect.top + (CombinedRect.top - OutputRect.top) * (InputRect.bottom - InputRect.top) / (OutputRect.bottom - OutputRect.top);
                 Rect.bottom = InputRect.bottom + (CombinedRect.bottom - OutputRect.bottom) * (InputRect.bottom - InputRect.top) / (OutputRect.bottom - OutputRect.top);
                 ASSERT(InputRect.left < InputRect.right && InputRect.top < InputRect.bottom);
-                
+
                 /* Aplha blend one rect */
                 Ret = DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_AlphaBlend(
                           OutputObj, InputObj, &CombinedRect, &Rect, ClipRegion, ColorTranslation, BlendObj);
@@ -170,7 +171,7 @@ EngAlphaBlend(IN SURFOBJ *psoDest,
                         Rect.top = InputRect.top + (CombinedRect.top - OutputRect.top) * (InputRect.bottom - InputRect.top) / (OutputRect.bottom - OutputRect.top);
                         Rect.bottom = InputRect.bottom + (CombinedRect.bottom - OutputRect.bottom) * (InputRect.bottom - InputRect.top) / (OutputRect.bottom - OutputRect.top);
                         ASSERT(InputRect.left < InputRect.right && InputRect.top < InputRect.bottom);
-                        
+
                         /* Alpha blend one rect */
                         Ret = DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_AlphaBlend(
                                   OutputObj, InputObj, &CombinedRect, &Rect, ClipRegion, ColorTranslation, BlendObj) && Ret;
@@ -192,49 +193,51 @@ EngAlphaBlend(IN SURFOBJ *psoDest,
     return Ret;
 }
 
-BOOL APIENTRY
-IntEngAlphaBlend(IN SURFOBJ *psoDest,
-                 IN SURFOBJ *psoSource,
-                 IN CLIPOBJ *ClipRegion,
-                 IN XLATEOBJ *ColorTranslation,
-                 IN PRECTL DestRect,
-                 IN PRECTL SourceRect,
-                 IN BLENDOBJ *BlendObj)
+BOOL
+APIENTRY
+IntEngAlphaBlend(
+    _Inout_ SURFOBJ *psoDest,
+    _In_ SURFOBJ *psoSource,
+    _In_opt_ CLIPOBJ *pco,
+    _In_opt_ XLATEOBJ *pxlo,
+    _In_ RECTL *prclDest,
+    _In_ RECTL *prclSrc,
+    _In_ BLENDOBJ *pBlendObj)
 {
     BOOL ret = FALSE;
     SURFACE *psurfDest;
-    //SURFACE *psurfSource;
 
     ASSERT(psoDest);
-    psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
-
     ASSERT(psoSource);
-    //psurfSource = CONTAINING_RECORD(psoSource, SURFACE, SurfObj);
+    ASSERT(prclDest);
+    ASSERT(prclSrc);
+    //ASSERT(pBlendObj);
 
-    ASSERT(DestRect);
-    ASSERT(SourceRect);
+    /* If no clip object is given, use trivial one */
+    if (!pco) pco = &gxcoTrivial.ClipObj;
 
     /* Check if there is anything to draw */
-    if (ClipRegion != NULL &&
-            (ClipRegion->rclBounds.left >= ClipRegion->rclBounds.right ||
-             ClipRegion->rclBounds.top >= ClipRegion->rclBounds.bottom))
+    if ((pco->rclBounds.left >= pco->rclBounds.right) ||
+        (pco->rclBounds.top >= pco->rclBounds.bottom))
     {
         /* Nothing to do */
         return TRUE;
     }
 
+    psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
+
     /* Call the driver's DrvAlphaBlend if available */
     if (psurfDest->flags & HOOK_ALPHABLEND)
     {
         ret = GDIDEVFUNCS(psoDest).AlphaBlend(
-                  psoDest, psoSource, ClipRegion, ColorTranslation,
-                  DestRect, SourceRect, BlendObj);
+                  psoDest, psoSource, pco, pxlo,
+                  prclDest, prclSrc, pBlendObj);
     }
 
-    if (! ret)
+    if (!ret)
     {
-        ret = EngAlphaBlend(psoDest, psoSource, ClipRegion, ColorTranslation,
-                            DestRect, SourceRect, BlendObj);
+        ret = EngAlphaBlend(psoDest, psoSource, pco, pxlo,
+                            prclDest, prclSrc, pBlendObj);
     }
 
     return ret;

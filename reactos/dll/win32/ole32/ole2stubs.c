@@ -19,16 +19,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "ole2.h"
-#include "objidl.h"
-#include "wine/debug.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+#include <ole2.h>
+//#include "objidl.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -41,15 +44,6 @@ HRESULT WINAPI  OleCreateLinkToFile(LPCOLESTR lpszFileName, REFIID riid,
 {
     FIXME("(%p,%p,%i,%p,%p,%p,%p), stub!\n",lpszFileName, riid, renderopt, lpFormatEtc, pClientSite, pStg, ppvObj);
     return E_NOTIMPL;
-}
-
-/******************************************************************************
- *              SetConvertStg        [OLE32.@]
- */
-HRESULT WINAPI SetConvertStg(LPSTORAGE pStg, BOOL fConvert)
-{
-  FIXME("(%p,%x), stub!\n", pStg, fConvert);
-  return E_NOTIMPL;
 }
 
 /******************************************************************************
@@ -80,32 +74,6 @@ HGLOBAL WINAPI OleGetIconOfClass(REFCLSID rclsid, LPOLESTR lpszLabel, BOOL fUseT
 {
   FIXME("(%p,%p,%x), stub!\n", rclsid, lpszLabel, fUseTypeAsLabel);
   return NULL;
-}
-
-
-/******************************************************************************
- *              OleCreateStaticFromData        [OLE32.@]
- */
-HRESULT     WINAPI OleCreateStaticFromData(LPDATAOBJECT pSrcDataObj, REFIID iid,
-                DWORD renderopt, LPFORMATETC pFormatEtc, LPOLECLIENTSITE pClientSite,
-                LPSTORAGE pStg, LPVOID* ppvObj)
-{
-  FIXME("(srcdata=%p, refiid=%s, renderopt=%x, formatetc=%p, client=%p, storage=%p, ppv=%p), stub!\n",
-        pSrcDataObj,debugstr_guid(iid),renderopt,pFormatEtc,pClientSite,pStg,ppvObj );
-  return E_NOTIMPL;
-}
-
-/******************************************************************************
- *              OleCreateLinkFromData        [OLE32.@]
- */
-
-HRESULT WINAPI  OleCreateLinkFromData(LPDATAOBJECT pSrcDataObj, REFIID riid,
-                DWORD renderopt, LPFORMATETC pFormatEtc,
-                LPOLECLIENTSITE pClientSite, LPSTORAGE pStg,
-                LPVOID* ppvObj)
-{
-  FIXME("(not shown), stub!\n");
-  return E_NOTIMPL;
 }
 
 /***********************************************************************

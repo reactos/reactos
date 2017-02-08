@@ -1,34 +1,34 @@
 
 set(SARCH "pc" CACHE STRING
-"Sub-architecture to build for. Specify one of: xbox")
+"Sub-architecture to build for. Specify one of:
+ pc xbox")
 
 set(OARCH "pentium" CACHE STRING
 "Generate instructions for this CPU type. Specify one of:
- native, i386, i486, pentium, pentium-mmx, pentiumpro, i686,
- pentium2, pentium3, pentium-m, pentium4, prescott, nocona,
- core2, k6, k6-2, athlon, athlon-xp, opteron, opteron-sse3,
- barcelona, winchip-c6, winchip2, c3, c3-2, geode")
+ pentium, pentiumpro")
 
 set(TUNE "i686" CACHE STRING
 "Which CPU ReactOS should be optimized for.")
 
 set(OPTIMIZE "1" CACHE STRING
-"What level of optimisation to use.
-  0 = off
-  1 = Default option, optimize for size (-Os) with some additional options
-  2 = -Os
-  3 = -O1
-  4 = -O2
-  5 = -O3")
+"What level of optimization to use.
+ 0 = off
+ 1 = Default option, optimize for size (-Os) with some additional options
+ 2 = Optimize for size (-Os)
+ 3 = Optimize debugging experience (-Og)
+ 4 = Optimize (-O1)
+ 5 = Optimize even more (-O2)
+ 6 = Optimize yet more (-O3)
+ 7 = Disregard strict standards compliance (-Ofast)")
 
 set(LTCG FALSE CACHE BOOL
 "Whether to build with link-time code generation")
 
 set(GDB FALSE CACHE BOOL
 "Whether to compile for debugging with GDB.
-If you don't use GDB, don't	enable this.")
+If you don't use GDB, don't enable this.")
 
-if(${CMAKE_BUILD_TYPE} MATCHES Release)
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
     set(DBG FALSE CACHE BOOL
 "Whether to compile for debugging.")
 else()
@@ -39,17 +39,19 @@ endif()
 if(MSVC)
     set(KDBG FALSE CACHE BOOL
 "Whether to compile in the integrated kernel debugger.")
-    if(${CMAKE_BUILD_TYPE} MATCHES Release)
+    if(CMAKE_BUILD_TYPE STREQUAL "Release")
         set(_WINKD_ FALSE CACHE BOOL "Whether to compile with the KD protocol.")
     else()
         set(_WINKD_ TRUE CACHE BOOL "Whether to compile with the KD protocol.")
     endif()
-    
+
 else()
-    set(KDBG TRUE CACHE BOOL
-"Whether to compile in the integrated kernel debugger.")
-    set(_WINKD_ FALSE CACHE BOOL
-"Whether to compile with the KD protocol.")
+    if(CMAKE_BUILD_TYPE STREQUAL "Release")
+        set(KDBG FALSE CACHE BOOL "Whether to compile in the integrated kernel debugger.")
+    else()
+        set(KDBG TRUE CACHE BOOL "Whether to compile in the integrated kernel debugger.")
+    endif()
+    set(_WINKD_ FALSE CACHE BOOL "Whether to compile with the KD protocol.")
 endif()
 
 set(_ELF_ FALSE CACHE BOOL
@@ -74,5 +76,10 @@ set(_PREFAST_ FALSE CACHE BOOL
 "Whether to enable PREFAST while compiling.")
 set(_VS_ANALYZE_ FALSE CACHE BOOL
 "Whether to enable static analysis while compiling.")
+
+else()
+
+set(USE_PSEH3 FALSE CACHE BOOL
+"Whether to use the new PSEH3 library (requires GCC 4.5 and newer).")
 
 endif()

@@ -8,10 +8,15 @@
  *
  */
 
-#include <windows.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
 #include <tchar.h>
 #include <lm.h>
 #include <prsht.h>
+
 #include "resource.h"
 
 static INT_PTR CALLBACK

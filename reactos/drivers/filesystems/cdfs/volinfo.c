@@ -1,30 +1,29 @@
 /*
-*  ReactOS kernel
-*  Copyright (C) 2002, 2003 ReactOS Team
-*
-*  This program is free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  This program is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  You should have received a copy of the GNU General Public License along
-*  with this program; if not, write to the Free Software Foundation, Inc.,
-*  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-*/
-/* $Id$
-*
-* COPYRIGHT:        See COPYING in the top level directory
-* PROJECT:          ReactOS kernel
-* FILE:             services/fs/vfat/volume.c
-* PURPOSE:          CDROM (ISO 9660) filesystem driver
-* PROGRAMMER:       Art Yerkes
-*                   Eric Kohl
-*/
+ *  ReactOS kernel
+ *  Copyright (C) 2002, 2003 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+/*
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PROJECT:          ReactOS kernel
+ * FILE:             services/fs/vfat/volume.c
+ * PURPOSE:          CDROM (ISO 9660) filesystem driver
+ * PROGRAMMER:       Art Yerkes
+ *                   Eric Kohl
+ */
 
 /* INCLUDES *****************************************************************/
 
@@ -86,6 +85,8 @@ CdfsGetFsAttributeInformation(PDEVICE_EXTENSION DeviceExt,
     DPRINT("FsAttributeInfo = %p\n", FsAttributeInfo);
     DPRINT("BufferLength %lu\n", *BufferLength);
     DPRINT("Required length %lu\n", (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 8));
+
+    UNREFERENCED_PARAMETER(DeviceExt);
 
     if (*BufferLength < sizeof (FILE_FS_ATTRIBUTE_INFORMATION))
         return STATUS_INFO_LENGTH_MISMATCH;
@@ -184,7 +185,7 @@ CdfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
     SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
 
     DPRINT("FsInformationClass %d\n", FsInformationClass);
-    DPRINT("SystemBuffer %x\n", SystemBuffer);
+    DPRINT("SystemBuffer %p\n", SystemBuffer);
 
     switch (FsInformationClass)
     {
@@ -233,6 +234,8 @@ CdfsSetVolumeInformation(PDEVICE_OBJECT DeviceObject,
                          PIRP Irp)
 {
     DPRINT("CdfsSetVolumeInformation() called\n");
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
     Irp->IoStatus.Information = 0;

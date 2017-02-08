@@ -35,13 +35,6 @@
 #ifndef __WINE_PIDL_H
 #define __WINE_PIDL_H
 
-#include <stdarg.h>
-
-#include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
-#include <shlobj.h>
-
 /*
 * the pidl does cache fileattributes to speed up SHGetAttributes when
 * displaying a big number of files.

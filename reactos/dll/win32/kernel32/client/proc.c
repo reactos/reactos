@@ -1,10 +1,9 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/proc/proc.c
  * PURPOSE:         Process functions
- * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+ * PROGRAMMERS:     Ariadne (ariadne@xs4all.nl)
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
@@ -494,26 +493,26 @@ WINAPI
 BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
                        IN PCLIENT_ID ClientId)
 {
-    ULONG Request = CREATE_THREAD;
-    CSR_API_MESSAGE CsrRequest;
     NTSTATUS Status;
+    BASE_API_MESSAGE ApiMessage;
+    PBASE_CREATE_THREAD CreateThreadRequest = &ApiMessage.Data.CreateThreadRequest;
 
     DPRINT("BasepNotifyCsrOfThread: Thread: %lx, Handle %lx\n",
             ClientId->UniqueThread, ThreadHandle);
 
     /* Fill out the request */
-    CsrRequest.Data.CreateThreadRequest.ClientId = *ClientId;
-    CsrRequest.Data.CreateThreadRequest.ThreadHandle = ThreadHandle;
+    CreateThreadRequest->ClientId = *ClientId;
+    CreateThreadRequest->ThreadHandle = ThreadHandle;
 
     /* Call CSR */
-    Status = CsrClientCallServer(&CsrRequest,
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
-                                 MAKE_CSR_API(Request, CSR_NATIVE),
-                                 sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
+                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepCreateThread),
+                                 sizeof(BASE_CREATE_THREAD));
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to tell csrss about new thread: %lx %lx\n", Status, CsrRequest.Status);
-        return CsrRequest.Status;
+        DPRINT1("Failed to tell CSRSS about new thread: %lx\n", Status);
+        return Status;
     }
 
     /* Return Success */
@@ -529,17 +528,17 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
                        LPSECURITY_ATTRIBUTES lpThreadAttributes,
                        PSECTION_IMAGE_INFORMATION SectionImageInfo,
                        PCLIENT_ID ClientId,
-                       BOOLEAN InheritHandles,
                        DWORD dwCreationFlags)
 {
+    NTSTATUS Status;
     OBJECT_ATTRIBUTES LocalObjectAttributes;
     POBJECT_ATTRIBUTES ObjectAttributes;
     CONTEXT Context;
     INITIAL_TEB InitialTeb;
-    NTSTATUS Status;
     HANDLE hThread;
-    ULONG Request = CREATE_PROCESS;
-    CSR_API_MESSAGE CsrRequest;
+    BASE_API_MESSAGE ApiMessage;
+    PBASE_CREATE_PROCESS CreateProcessRequest = &ApiMessage.Data.CreateProcessRequest;
+
     DPRINT("BasepCreateFirstThread. hProcess: %lx\n", ProcessHandle);
 
     /* Create the Thread's Stack */
@@ -575,20 +574,29 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
     }
 
     /* Fill out the request to notify CSRSS */
-    CsrRequest.Data.CreateProcessRequest.ClientId = *ClientId;
-    CsrRequest.Data.CreateProcessRequest.ProcessHandle = ProcessHandle;
-    CsrRequest.Data.CreateProcessRequest.ThreadHandle = hThread;
-    CsrRequest.Data.CreateProcessRequest.CreationFlags = dwCreationFlags;
-    CsrRequest.Data.CreateProcessRequest.bInheritHandles = InheritHandles;
+    CreateProcessRequest->ClientId = *ClientId;
+    CreateProcessRequest->ProcessHandle = ProcessHandle;
+    CreateProcessRequest->ThreadHandle = hThread;
+    CreateProcessRequest->CreationFlags = dwCreationFlags;
+
+    /*
+     * For GUI applications we turn on the 2nd bit. This also allows
+     * us to know whether or not this is a GUI or a TUI application.
+     */
+    if (IMAGE_SUBSYSTEM_WINDOWS_GUI == SectionImageInfo->SubSystemType)
+    {
+        CreateProcessRequest->ProcessHandle = (HANDLE)
+            ((ULONG_PTR)CreateProcessRequest->ProcessHandle | 2);
+    }
 
     /* Call CSR */
-    Status = CsrClientCallServer(&CsrRequest,
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
-                                 MAKE_CSR_API(Request, CSR_NATIVE),
-                                 sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
+                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepCreateProcess),
+                                 sizeof(BASE_CREATE_PROCESS));
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to tell csrss about new process: %lx %lx\n", Status, CsrRequest.Status);
+        DPRINT1("Failed to tell CSRSS about new process: %lx\n", Status);
         return NULL;
     }
 
@@ -936,18 +944,18 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
         ProcessParameters->StandardError = StartupInfo->hStdError;
     }
 
-    /* Use Special Flags for ConDllInitialize in Kernel32 */
+    /* Use Special Flags for BasepInitConsole in Kernel32 */
     if (CreationFlags & DETACHED_PROCESS)
     {
         ProcessParameters->ConsoleHandle = HANDLE_DETACHED_PROCESS;
     }
-    else if (CreationFlags & CREATE_NO_WINDOW)
-    {
-        ProcessParameters->ConsoleHandle = HANDLE_CREATE_NO_WINDOW;
-    }
     else if (CreationFlags & CREATE_NEW_CONSOLE)
     {
         ProcessParameters->ConsoleHandle = HANDLE_CREATE_NEW_CONSOLE;
+    }
+    else if (CreationFlags & CREATE_NO_WINDOW)
+    {
+        ProcessParameters->ConsoleHandle = HANDLE_CREATE_NO_WINDOW;
     }
     else
     {
@@ -1176,24 +1184,25 @@ WINAPI
 GetProcessShutdownParameters(OUT LPDWORD lpdwLevel,
                              OUT LPDWORD lpdwFlags)
 {
-    CSR_API_MESSAGE CsrRequest;
     NTSTATUS Status;
+    BASE_API_MESSAGE ApiMessage;
+    PBASE_GET_PROCESS_SHUTDOWN_PARAMS GetShutdownParametersRequest = &ApiMessage.Data.GetShutdownParametersRequest;
 
     /* Ask CSRSS for shutdown information */
-    Status = CsrClientCallServer(&CsrRequest,
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
-                                 MAKE_CSR_API(GET_SHUTDOWN_PARAMETERS, CSR_NATIVE),
-                                 sizeof(CSR_API_MESSAGE));
-    if (!(NT_SUCCESS(Status)) || !(NT_SUCCESS(CsrRequest.Status)))
+                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetProcessShutdownParam),
+                                 sizeof(BASE_GET_PROCESS_SHUTDOWN_PARAMS));
+    if (!NT_SUCCESS(Status))
     {
         /* Return the failure from CSRSS */
-        BaseSetLastNTError(CsrRequest.Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
-    /* Get the data out of the LCP reply */
-    *lpdwLevel = CsrRequest.Data.GetShutdownParametersRequest.Level;
-    *lpdwFlags = CsrRequest.Data.GetShutdownParametersRequest.Flags;
+    /* Get the data back */
+    *lpdwLevel = GetShutdownParametersRequest->Level;
+    *lpdwFlags = GetShutdownParametersRequest->Flags;
     return TRUE;
 }
 
@@ -1205,20 +1214,21 @@ WINAPI
 SetProcessShutdownParameters(IN DWORD dwLevel,
                              IN DWORD dwFlags)
 {
-    CSR_API_MESSAGE CsrRequest;
     NTSTATUS Status;
+    BASE_API_MESSAGE ApiMessage;
+    PBASE_SET_PROCESS_SHUTDOWN_PARAMS SetShutdownParametersRequest = &ApiMessage.Data.SetShutdownParametersRequest;
 
     /* Write the data into the CSRSS request and send it */
-    CsrRequest.Data.SetShutdownParametersRequest.Level = dwLevel;
-    CsrRequest.Data.SetShutdownParametersRequest.Flags = dwFlags;
-    Status = CsrClientCallServer(&CsrRequest,
+    SetShutdownParametersRequest->Level = dwLevel;
+    SetShutdownParametersRequest->Flags = dwFlags;
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
-                                 MAKE_CSR_API(SET_SHUTDOWN_PARAMETERS, CSR_NATIVE),
-                                 sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
+                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepSetProcessShutdownParam),
+                                 sizeof(BASE_SET_PROCESS_SHUTDOWN_PARAMS));
+    if (!NT_SUCCESS(Status))
     {
         /* Return the failure from CSRSS */
-        BaseSetLastNTError(CsrRequest.Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1742,7 +1752,9 @@ VOID
 WINAPI
 ExitProcess(IN UINT uExitCode)
 {
-    CSR_API_MESSAGE CsrRequest;
+    BASE_API_MESSAGE ApiMessage;
+    PBASE_EXIT_PROCESS ExitProcessRequest = &ApiMessage.Data.ExitProcessRequest;
+
     ASSERT(!BaseRunningInServerProcess);
 
     _SEH2_TRY
@@ -1757,11 +1769,11 @@ ExitProcess(IN UINT uExitCode)
         LdrShutdownProcess();
 
         /* Notify Base Server of process termination */
-        CsrRequest.Data.TerminateProcessRequest.uExitCode = uExitCode;
-        CsrClientCallServer(&CsrRequest,
+        ExitProcessRequest->uExitCode = uExitCode;
+        CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                             NULL,
-                            MAKE_CSR_API(TERMINATE_PROCESS, CSR_NATIVE),
-                            sizeof(CSR_API_MESSAGE));
+                            CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepExitProcess),
+                            sizeof(BASE_EXIT_PROCESS));
 
         /* Now do it again */
         NtTerminateProcess(NtCurrentProcess(), uExitCode);
@@ -1844,7 +1856,7 @@ FatalAppExitW(IN UINT uAction,
     ULONG Response;
     NTSTATUS Status;
 
-    /* Setup the stirng to print out */
+    /* Setup the string to print out */
     RtlInitUnicodeString(&UnicodeString, lpMessageText);
 
     /* Display the hard error no matter what */
@@ -2625,7 +2637,7 @@ CreateProcessInternalW(HANDLE hToken,
         while (NULL != (ScanString = wcschr(ScanString, L'^')))
         {
             ScanString++;
-            if (*ScanString == L'\"' || *ScanString == L'^' || *ScanString == L'\"')
+            if (*ScanString == L'\"' || *ScanString == L'^' || *ScanString == L'\\')
             {
                 Escape = TRUE;
                 break;
@@ -2976,7 +2988,11 @@ GetAppName:
         IMAGE_SUBSYSTEM_WINDOWS_CUI != SectionImageInfo.SubSystemType)
     {
         DPRINT1("Invalid subsystem %d\n", SectionImageInfo.SubSystemType);
-        SetLastError(ERROR_BAD_EXE_FORMAT);
+        /*
+         * Despite the name of the error code suggests, it corresponds to the
+         * well-known "The %1 application cannot be run in Win32 mode" message.
+         */
+        SetLastError(ERROR_CHILD_NOT_COMPLETE);
         goto Cleanup;
     }
 
@@ -3232,7 +3248,6 @@ GetAppName:
                                      lpThreadAttributes,
                                      &SectionImageInfo,
                                      &ClientId,
-                                     bInheritHandles,
                                      dwCreationFlags);
 
     if (hThread == NULL)
@@ -3269,7 +3284,7 @@ Cleanup:
     if (hSection) NtClose(hSection);
     if (hThread)
     {
-        /* We don't know any more details then this */
+        /* We don't know any more details than this */
         NtTerminateProcess(hProcess, STATUS_UNSUCCESSFUL);
         NtClose(hThread);
     }

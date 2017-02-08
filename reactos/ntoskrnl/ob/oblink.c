@@ -595,7 +595,12 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
             ExAllocatePoolWithTag(PagedPool,
                                   CapturedLinkTarget.MaximumLength,
                                   TAG_SYMLINK_TARGET);
-        if (!SymbolicLink->LinkTarget.Buffer) return STATUS_NO_MEMORY;
+        if (!SymbolicLink->LinkTarget.Buffer)
+        {
+            /* Dereference the symbolic link object and fail */
+            ObDereferenceObject(SymbolicLink);
+            return STATUS_NO_MEMORY;
+        }
 
         /* Copy it */
         RtlCopyMemory(SymbolicLink->LinkTarget.Buffer,

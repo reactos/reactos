@@ -21,14 +21,21 @@
 #ifndef __QMGR_H__
 #define __QMGR_H__
 
-#include "windef.h"
-#include "objbase.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <stdarg.h>
+
+#include <windef.h>
+#include <winbase.h>
+#include <objbase.h>
 
 #define COBJMACROS
-#include "bits1_5.h"
+#include <bits1_5.h>
 
-#include <string.h>
-#include "wine/list.h"
+//#include <string.h>
+#include <wine/list.h>
 
 /* Background copy job vtbl and related data */
 typedef struct

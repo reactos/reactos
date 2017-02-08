@@ -74,9 +74,9 @@ static void write_function_stub( const type_t *iface, const var_t *func,
 {
     unsigned char explicit_fc, implicit_fc;
     int has_full_pointer = is_full_pointer_function(func);
-    type_t *rettype = type_function_get_rettype(func->type);
+    var_t *retval = type_function_get_retval(func->type);
     const var_t *handle_var = get_func_handle_var( iface, func, &explicit_fc, &implicit_fc );
-    int has_ret = !is_void(rettype);
+    int has_ret = !is_void(retval->type);
 
     if (is_interpreted_func( iface, func ))
     {
@@ -97,9 +97,9 @@ static void write_function_stub( const type_t *iface, const var_t *func,
         print_client("RPC_BINDING_HANDLE _Handle;\n");
     }
 
-    if (has_ret && decl_indirect(rettype))
+    if (has_ret && decl_indirect(retval->type))
     {
-        print_client("void *_p_%s;\n", "_RetVal" );
+        print_client("void *_p_%s;\n", retval->name);
     }
     indent--;
     print_client( "};\n\n" );
@@ -132,12 +132,12 @@ static void write_function_stub( const type_t *iface, const var_t *func,
     indent++;
     print_client( "struct __frame_%s%s __f, * const __frame = &__f;\n", prefix_client, get_name(func) );
 
-    /* declare return value '_RetVal' */
+    /* declare return value */
     if (has_ret)
     {
         print_client("%s", "");
-        write_type_decl_left(client, rettype);
-        fprintf(client, " _RetVal;\n");
+        write_type_decl(client, retval->type, retval->name);
+        fprintf(client, ";\n");
     }
     print_client("RPC_MESSAGE _RpcMessage;\n");
 
@@ -147,10 +147,9 @@ static void write_function_stub( const type_t *iface, const var_t *func,
         if (explicit_fc == RPC_FC_BIND_GENERIC)
             print_client("__frame->%s = %s;\n", handle_var->name, handle_var->name );
     }
-    if (has_ret && decl_indirect(rettype))
+    if (has_ret && decl_indirect(retval->type))
     {
-        print_client("__frame->_p_%s = &%s;\n",
-                     "_RetVal", "_RetVal");
+        print_client("__frame->_p_%s = &%s;\n", retval->name, retval->name);
     }
     fprintf(client, "\n");
 
@@ -258,10 +257,10 @@ static void write_function_stub( const type_t *iface, const var_t *func,
     /* unmarshal return value */
     if (has_ret)
     {
-        if (decl_indirect(rettype))
-            print_client("MIDL_memset(&%s, 0, sizeof(%s));\n", "_RetVal", "_RetVal");
-        else if (is_ptr(rettype) || is_array(rettype))
-            print_client("%s = 0;\n", "_RetVal");
+        if (decl_indirect(retval->type))
+            print_client("MIDL_memset(&%s, 0, sizeof(%s));\n", retval->name, retval->name);
+        else if (is_ptr(retval->type) || is_array(retval->type))
+            print_client("%s = 0;\n", retval->name);
         write_remoting_arguments(client, indent, func, "", PASS_RETURN, PHASE_UNMARSHAL);
     }
 
@@ -280,7 +279,7 @@ static void write_function_stub( const type_t *iface, const var_t *func,
     if (has_ret)
     {
         fprintf(client, "\n");
-        print_client("return _RetVal;\n");
+        print_client("return %s;\n", retval->name);
     }
 
     indent--;
@@ -472,8 +471,6 @@ static void write_client_ifaces(const statement_list_t *stmts, int expr_eval_rou
                 write_stubdescriptor(iface, expr_eval_routines);
             }
         }
-        else if (stmt->type == STMT_LIBRARY)
-            write_client_ifaces(stmt->u.lib->stmts, expr_eval_routines, proc_offset);
     }
 }
 

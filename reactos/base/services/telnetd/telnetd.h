@@ -1,12 +1,14 @@
 #pragma once
 
 #define _CRT_SECURE_NO_WARNINGS
-
 #define WIN32_NO_STATUS
 #include <stdio.h>
+#include <stdlib.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wincon.h>
+#define _INC_WINDOWS
 #include <winsock2.h>
-#include <tchar.h>
-#include <time.h>
 
 /*
 ** macro definitions

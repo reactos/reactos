@@ -21,12 +21,12 @@
 
 #include "urlmon_main.h"
 
-#include "winreg.h"
-#include "winternl.h"
-#include "wininet.h"
-#include "shlwapi.h"
+//#include "winreg.h"
+//#include "winternl.h"
+//#include "wininet.h"
+//#include "shlwapi.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
@@ -48,7 +48,7 @@ static HRESULT WINAPI ProxyBindStatusCallback_QueryInterface(IBindStatusCallback
         IsEqualGUID(&IID_IUnknown, riid))
     {
         *ppv = iface;
-        IUnknown_AddRef(iface);
+        IBindStatusCallback_AddRef(iface);
         return S_OK;
     }
 

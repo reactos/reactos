@@ -30,116 +30,122 @@ DBG_DEFAULT_CHANNEL(REGISTRY);
 
 /* FUNCTIONS ****************************************************************/
 
-static PVOID
+static
+PVOID
 NTAPI
 CmpAllocate (SIZE_T Size, BOOLEAN Paged, ULONG Tag)
 {
-  return MmHeapAlloc(Size);
+    return MmHeapAlloc(Size);
 }
 
 
-static VOID
+static
+VOID
 NTAPI
 CmpFree (PVOID Ptr, IN ULONG Quota)
 {
-  MmHeapFree(Ptr);
+    MmHeapFree(Ptr);
 }
 
-static BOOLEAN
-RegImportValue (PHHIVE Hive,
-        PCM_KEY_VALUE ValueCell,
-        FRLDRHKEY Key)
+static
+BOOLEAN
+RegImportValue (
+    PHHIVE Hive,
+    PCM_KEY_VALUE ValueCell,
+    FRLDRHKEY Key)
 {
-  PVOID DataCell;
-  PWCHAR wName;
-  LONG Error;
-  ULONG DataLength;
-  ULONG i;
+    PVOID DataCell;
+    PWCHAR wName;
+    LONG Error;
+    ULONG DataLength;
+    ULONG i;
 
-  if (ValueCell->Signature != CM_KEY_VALUE_SIGNATURE)
+    if (ValueCell->Signature != CM_KEY_VALUE_SIGNATURE)
     {
-      ERR("Invalid key cell!\n");
-      return FALSE;
+        ERR("Invalid key cell!\n");
+        return FALSE;
     }
 
-  if (ValueCell->Flags & VALUE_COMP_NAME)
+    if (ValueCell->Flags & VALUE_COMP_NAME)
     {
-      wName = MmHeapAlloc ((ValueCell->NameLength + 1)*sizeof(WCHAR));
-      for (i = 0; i < ValueCell->NameLength; i++)
+        wName = MmHeapAlloc ((ValueCell->NameLength + 1) * sizeof(WCHAR));
+        for (i = 0; i < ValueCell->NameLength; i++)
         {
-          wName[i] = ((PCHAR)ValueCell->Name)[i];
+            wName[i] = ((PCHAR)ValueCell->Name)[i];
         }
-      wName[ValueCell->NameLength] = 0;
+        wName[ValueCell->NameLength] = 0;
     }
-  else
+    else
     {
-      wName = MmHeapAlloc (ValueCell->NameLength + sizeof(WCHAR));
-      memcpy (wName,
-      ValueCell->Name,
-      ValueCell->NameLength);
-      wName[ValueCell->NameLength / sizeof(WCHAR)] = 0;
+        wName = MmHeapAlloc(ValueCell->NameLength + sizeof(WCHAR));
+        memcpy(wName, ValueCell->Name, ValueCell->NameLength);
+        wName[ValueCell->NameLength / sizeof(WCHAR)] = 0;
     }
 
-  DataLength = ValueCell->DataLength & REG_DATA_SIZE_MASK;
+    DataLength = ValueCell->DataLength & REG_DATA_SIZE_MASK;
 
-  TRACE("ValueName: '%S'\n", wName);
-  TRACE("DataLength: %u\n", DataLength);
+    TRACE("ValueName: '%S'\n", wName);
+    TRACE("DataLength: %u\n", DataLength);
 
-  if (DataLength <= sizeof(HCELL_INDEX) && (ValueCell->DataLength & REG_DATA_IN_OFFSET))
+    if (DataLength <= sizeof(HCELL_INDEX) && (ValueCell->DataLength & REG_DATA_IN_OFFSET))
     {
-      Error = RegSetValue(Key,
-                          wName,
-                          ValueCell->Type,
-                          (PCHAR)&ValueCell->Data,
-                          DataLength);
-      if (Error != ERROR_SUCCESS)
+        Error = RegSetValue(Key,
+                            wName,
+                            ValueCell->Type,
+                            (PCHAR)&ValueCell->Data,
+                            DataLength);
+        if (Error != ERROR_SUCCESS)
         {
             ERR("RegSetValue() failed!\n");
-            MmHeapFree (wName);
+            MmHeapFree(wName);
             return FALSE;
         }
     }
-  else
+    else
     {
-      DataCell = (PVOID)HvGetCell (Hive, ValueCell->Data);
-      TRACE("DataCell: %x\n", DataCell);
+        DataCell = (PVOID)HvGetCell(Hive, ValueCell->Data);
+        TRACE("DataCell: %x\n", DataCell);
 
-      Error = RegSetValue (Key,
-                           wName,
-                           ValueCell->Type,
-                           DataCell,
-                           DataLength);
+        Error = RegSetValue(Key,
+                            wName,
+                            ValueCell->Type,
+                            DataCell,
+                            DataLength);
 
-      if (Error != ERROR_SUCCESS)
+        if (Error != ERROR_SUCCESS)
         {
-          ERR("RegSetValue() failed!\n");
-          MmHeapFree (wName);
-          return FALSE;
+            ERR("RegSetValue() failed!\n");
+            MmHeapFree(wName);
+            return FALSE;
         }
     }
 
-  MmHeapFree (wName);
+    MmHeapFree(wName);
 
-  return TRUE;
+    return TRUE;
 }
 
-static BOOLEAN
-RegImportSubKey(PHHIVE Hive,
-                PCM_KEY_NODE KeyCell,
-                FRLDRHKEY ParentKey);
+static
+BOOLEAN
+RegImportSubKey(
+    PHHIVE Hive,
+    PCM_KEY_NODE KeyCell,
+    FRLDRHKEY ParentKey);
 
-static BOOLEAN
-RegImportIndexSubKey(PHHIVE Hive,
-                PCM_KEY_INDEX IndexCell,
-                FRLDRHKEY ParentKey)
+static
+BOOLEAN
+RegImportIndexSubKey(
+    PHHIVE Hive,
+    PCM_KEY_INDEX IndexCell,
+    FRLDRHKEY ParentKey)
 {
     ULONG i;
 
     TRACE("IndexCell: %x\n", IndexCell);
 
     /* Enumerate and add subkeys */
-    if (IndexCell->Signature == CM_KEY_INDEX_ROOT ||
-        IndexCell->Signature == CM_KEY_INDEX_LEAF)
+    if ((IndexCell->Signature == CM_KEY_INDEX_ROOT) ||
+        (IndexCell->Signature == CM_KEY_INDEX_LEAF))
     {
         for (i = 0; i < IndexCell->Count; i++)
         {
@@ -148,8 +154,8 @@ RegImportIndexSubKey(PHHIVE Hive,
                 return FALSE;
         }
     }
-    else if (IndexCell->Signature == CM_KEY_FAST_LEAF ||
-        IndexCell->Signature == CM_KEY_HASH_LEAF)
+    else if ((IndexCell->Signature == CM_KEY_FAST_LEAF) ||
+             (IndexCell->Signature == CM_KEY_HASH_LEAF))
     {
         PCM_KEY_FAST_INDEX HashCell = (PCM_KEY_FAST_INDEX)IndexCell;
         for (i = 0; i < HashCell->Count; i++)
@@ -168,10 +174,12 @@ RegImportIndexSubKey(PHHIVE Hive,
 }
 
 
-static BOOLEAN
-RegImportSubKey(PHHIVE Hive,
-                PCM_KEY_NODE KeyCell,
-                FRLDRHKEY ParentKey)
+static
+BOOLEAN
+RegImportSubKey(
+    PHHIVE Hive,
+    PCM_KEY_NODE KeyCell,
+    FRLDRHKEY ParentKey)
 {
     PCM_KEY_INDEX IndexCell;
     PVALUE_LIST_CELL ValueListCell;
@@ -180,7 +188,6 @@ RegImportSubKey(PHHIVE Hive,
     FRLDRHKEY SubKey;
     LONG Error;
     ULONG i;
-
 
     TRACE("KeyCell: %x\n", KeyCell);
     TRACE("KeyCell->Signature: %x\n", KeyCell->Signature);
@@ -192,7 +199,7 @@ RegImportSubKey(PHHIVE Hive,
 
     if (KeyCell->Flags & KEY_COMP_NAME)
     {
-        wName = MmHeapAlloc ((KeyCell->NameLength + 1) * sizeof(WCHAR));
+        wName = MmHeapAlloc((KeyCell->NameLength + 1) * sizeof(WCHAR));
         for (i = 0; i < KeyCell->NameLength; i++)
         {
             wName[i] = ((PCHAR)KeyCell->Name)[i];
@@ -201,20 +208,16 @@ RegImportSubKey(PHHIVE Hive,
     }
     else
     {
-        wName = MmHeapAlloc (KeyCell->NameLength + sizeof(WCHAR));
-        memcpy (wName,
-            KeyCell->Name,
-            KeyCell->NameLength);
-        wName[KeyCell->NameLength/sizeof(WCHAR)] = 0;
+        wName = MmHeapAlloc(KeyCell->NameLength + sizeof(WCHAR));
+        memcpy(wName, KeyCell->Name, KeyCell->NameLength);
+        wName[KeyCell->NameLength / sizeof(WCHAR)] = 0;
     }
 
     TRACE("KeyName: '%S'\n", wName);
 
     /* Create new sub key */
-    Error = RegCreateKey (ParentKey,
-        wName,
-        &SubKey);
-    MmHeapFree (wName);
+    Error = RegCreateKey(ParentKey, wName, &SubKey);
+    MmHeapFree(wName);
     if (Error != ERROR_SUCCESS)
     {
         ERR("RegCreateKey() failed!\n");
@@ -226,7 +229,7 @@ RegImportSubKey(PHHIVE Hive,
     /* Enumerate and add values */
     if (KeyCell->ValueList.Count > 0)
     {
-        ValueListCell = (PVALUE_LIST_CELL) HvGetCell (Hive, KeyCell->ValueList.List);
+        ValueListCell = (PVALUE_LIST_CELL)HvGetCell(Hive, KeyCell->ValueList.List);
         TRACE("ValueListCell: %x\n", ValueListCell);
 
         for (i = 0; i < KeyCell->ValueList.Count; i++)
@@ -256,86 +259,85 @@ RegImportSubKey(PHHIVE Hive,
 
 
 BOOLEAN
-RegImportBinaryHive(PCHAR ChunkBase,
-		    ULONG ChunkSize)
+RegImportBinaryHive(
+    PCHAR ChunkBase,
+    ULONG ChunkSize)
 {
-  PCM_KEY_NODE KeyCell;
-  PCM_KEY_FAST_INDEX HashCell;
-  PCM_KEY_NODE SubKeyCell;
-  FRLDRHKEY SystemKey;
-  ULONG i;
-  LONG Error;
-  PCMHIVE CmHive;
-  PHHIVE Hive;
-  NTSTATUS Status;
+    PCM_KEY_NODE KeyCell;
+    PCM_KEY_FAST_INDEX HashCell;
+    PCM_KEY_NODE SubKeyCell;
+    FRLDRHKEY SystemKey;
+    ULONG i;
+    LONG Error;
+    PCMHIVE CmHive;
+    PHHIVE Hive;
+    NTSTATUS Status;
 
-  TRACE("RegImportBinaryHive(%x, %u) called\n",ChunkBase,ChunkSize);
+    TRACE("RegImportBinaryHive(%x, %u) called\n", ChunkBase, ChunkSize);
 
-  CmHive = CmpAllocate(sizeof(CMHIVE), TRUE, 0);
-  Status = HvInitialize (&CmHive->Hive,
-                         HINIT_FLAT,
-                         0,
-                         0,
-                         ChunkBase, 
-                         CmpAllocate,
-                         CmpFree,
-                         NULL,
-                         NULL,
-                         NULL,
-                         NULL,
-                         1,
-                         NULL);
-  if (!NT_SUCCESS(Status))
+    CmHive = CmpAllocate(sizeof(CMHIVE), TRUE, 0);
+    Status = HvInitialize(&CmHive->Hive,
+                          HINIT_FLAT,
+                          0,
+                          0,
+                          ChunkBase,
+                          CmpAllocate,
+                          CmpFree,
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL,
+                          1,
+                          NULL);
+    if (!NT_SUCCESS(Status))
     {
-      CmpFree(CmHive, 0);
-      ERR("Invalid hive Signature!\n");
-      return FALSE;
+        CmpFree(CmHive, 0);
+        ERR("Invalid hive Signature!\n");
+        return FALSE;
     }
 
-  Hive = &CmHive->Hive;
-  KeyCell = (PCM_KEY_NODE)HvGetCell (Hive, Hive->BaseBlock->RootCell);
-  TRACE("KeyCell: %x\n", KeyCell);
-  TRACE("KeyCell->Signature: %x\n", KeyCell->Signature);
-  if (KeyCell->Signature != CM_KEY_NODE_SIGNATURE)
+    Hive = &CmHive->Hive;
+    KeyCell = (PCM_KEY_NODE)HvGetCell(Hive, Hive->BaseBlock->RootCell);
+    TRACE("KeyCell: %x\n", KeyCell);
+    TRACE("KeyCell->Signature: %x\n", KeyCell->Signature);
+    if (KeyCell->Signature != CM_KEY_NODE_SIGNATURE)
     {
-      ERR("Invalid key cell Signature!\n");
-      return FALSE;
+        ERR("Invalid key cell Signature!\n");
+        return FALSE;
     }
 
-  TRACE("Subkeys: %u\n", KeyCell->SubKeyCounts);
-  TRACE("Values: %u\n", KeyCell->ValueList.Count);
+    TRACE("Subkeys: %u\n", KeyCell->SubKeyCounts);
+    TRACE("Values: %u\n", KeyCell->ValueList.Count);
 
-  /* Open 'System' key */
-  Error = RegOpenKey(NULL,
-             L"\\Registry\\Machine\\SYSTEM",
-             &SystemKey);
-  if (Error != ERROR_SUCCESS)
+    /* Open 'System' key */
+    Error = RegOpenKey(NULL, L"\\Registry\\Machine\\SYSTEM", &SystemKey);
+    if (Error != ERROR_SUCCESS)
     {
-      ERR("Failed to open 'system' key!\n");
-      return FALSE;
+        ERR("Failed to open 'system' key!\n");
+        return FALSE;
     }
 
-  /* Enumerate and add subkeys */
-  if (KeyCell->SubKeyCounts[Stable] > 0)
+    /* Enumerate and add subkeys */
+    if (KeyCell->SubKeyCounts[Stable] > 0)
     {
-      HashCell = (PCM_KEY_FAST_INDEX)HvGetCell (Hive, KeyCell->SubKeyLists[Stable]);
-      TRACE("HashCell: %x\n", HashCell);
-      TRACE("SubKeyCounts: %x\n", KeyCell->SubKeyCounts[Stable]);
+        HashCell = (PCM_KEY_FAST_INDEX)HvGetCell(Hive, KeyCell->SubKeyLists[Stable]);
+        TRACE("HashCell: %x\n", HashCell);
+        TRACE("SubKeyCounts: %x\n", KeyCell->SubKeyCounts[Stable]);
 
-      for (i = 0; i < KeyCell->SubKeyCounts[Stable]; i++)
+        for (i = 0; i < KeyCell->SubKeyCounts[Stable]; i++)
         {
-          TRACE("Cell[%d]: %x\n", i, HashCell->List[i].Cell);
+            TRACE("Cell[%d]: %x\n", i, HashCell->List[i].Cell);
 
-          SubKeyCell = (PCM_KEY_NODE)HvGetCell (Hive, HashCell->List[i].Cell);
+            SubKeyCell = (PCM_KEY_NODE)HvGetCell(Hive, HashCell->List[i].Cell);
 
-          TRACE("SubKeyCell[%d]: %x\n", i, SubKeyCell);
+            TRACE("SubKeyCell[%d]: %x\n", i, SubKeyCell);
 
-          if (!RegImportSubKey(Hive, SubKeyCell, SystemKey))
-            return FALSE;
+            if (!RegImportSubKey(Hive, SubKeyCell, SystemKey))
+                return FALSE;
         }
     }
 
-  return TRUE;
+    return TRUE;
 }
 
 /* EOF */

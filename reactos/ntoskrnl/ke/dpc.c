@@ -779,8 +779,7 @@ KeInsertQueueDpc(IN PKDPC Dpc,
             if (!(Prcb->DpcThreadActive) && !(Prcb->DpcThreadRequested))
             {
                 /* FIXME: Setup Threaded DPC */
-                DPRINT1("Threaded DPC not supported\n");
-                while (TRUE);
+                UNIMPLEMENTED_FATAL("Threaded DPC not supported\n");
             }
         }
         else

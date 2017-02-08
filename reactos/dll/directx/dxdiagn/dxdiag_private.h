@@ -21,16 +21,20 @@
 #ifndef __WINE_DXDIAG_PRIVATE_H
 #define __WINE_DXDIAG_PRIVATE_H
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "objbase.h"
-#include "oleauto.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "wingdi.h"
+//#include "winuser.h"
+//#include "objbase.h"
+//#include "oleauto.h"
 
-#include "dxdiag.h"
+#include <dxdiag.h>
 
 /* DXDiag Interfaces: */
 typedef struct IDxDiagProviderImpl  IDxDiagProviderImpl;

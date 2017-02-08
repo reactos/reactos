@@ -5,9 +5,10 @@
 
 /* The definitions look so crappy, because the code doesn't care 
    whether the source is an array or an integer */
-#define MOV_DD_SWP(a,b) ((a) = RtlUlongByteSwap(*(PULONG)&(b)))
-#define MOV_DW_SWP(a,b) ((a) = RtlUshortByteSwap(*(PUSHORT)&(b)))
+#define MOV_DD_SWP(a,b) ( ((PULONG)&(a))[0] = RtlUlongByteSwap(*(PULONG)&(b)))
+#define MOV_DW_SWP(a,b) ( ((PUSHORT)&(a))[0] = RtlUshortByteSwap(*(PUSHORT)&(b)))
 #define MOV_SWP_DW2DD(a,b) ((a) = RtlUshortByteSwap(*(PUSHORT)&(b)))
+#define MOV_QD_SWP(a,b) { ((PULONG)&(a))[0] = RtlUlongByteSwap( ((PULONG)&(b))[1]); ((PULONG)&(a))[1] = RtlUlongByteSwap( ((PULONG)&(b))[0]); }
 
 #else
 
@@ -34,6 +35,32 @@ _MOV_DD_SWP_i386(
     void* b  // EDX
     );
 #define MOV_DD_SWP(a,b) _MOV_DD_SWP(&(a),&(b))
+
+/********************/
+
+typedef void
+(__fastcall *ptrMOV_QD_SWP)(
+    void* a, // ECX
+    void* b  // EDX
+    );
+extern "C" ptrMOV_QD_SWP _MOV_QD_SWP;
+
+extern "C"
+void
+__fastcall
+_MOV_QD_SWP_i486(
+    void* a, // ECX
+    void* b  // EDX
+    );
+
+extern "C"
+void
+__fastcall
+_MOV_QD_SWP_i386(
+    void* a, // ECX
+    void* b  // EDX
+    );
+#define MOV_QD_SWP(a,b) _MOV_QD_SWP(&(a),&(b))
 
 /********************/
 

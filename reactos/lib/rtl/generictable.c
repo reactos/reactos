@@ -34,7 +34,6 @@ RtlpFindGenericTableNodeOrParent(IN PRTL_GENERIC_TABLE Table,
     /* Quick check to see if the table is empty */
     if (RtlIsGenericTableEmpty(Table))
     {
-        *NodeOrParent = NULL;
         return TableEmptyTree;
     }
 
@@ -338,13 +337,14 @@ RtlEnumerateGenericTable(IN PRTL_GENERIC_TABLE Table,
     {
         /* Then find the leftmost element */
         FoundNode = Table->TableRoot;
-        do
+        while(RtlLeftChild(FoundNode))
         {
             /* Get the left child */
             FoundNode = RtlLeftChild(FoundNode);
-        } while(RtlLeftChild(FoundNode));
+        }
 
         /* Splay it */
+        _Analysis_assume_(FoundNode != NULL);
         Table->TableRoot = RtlSplay(FoundNode);
     }
     else
@@ -376,11 +376,11 @@ RtlEnumerateGenericTableWithoutSplaying(IN PRTL_GENERIC_TABLE Table,
     {
         /* Then find the leftmost element */
         FoundNode = Table->TableRoot;
-        do
+        while(RtlLeftChild(FoundNode))
         {
             /* Get the left child */
             FoundNode = RtlLeftChild(FoundNode);
-        } while(RtlLeftChild(FoundNode));
+        }
 
         /* Splay it */
         *RestartKey = FoundNode;
@@ -451,21 +451,23 @@ RtlGetElementGenericTable(IN PRTL_GENERIC_TABLE Table,
         {
             /* Do the search backwards, since this takes less iterations */
             DeltaDown = OrderedElement - NextI;
-            do
+            while (DeltaDown)
             {
                 /* Get next node */
                 OrderedNode = OrderedNode->Blink;
-            } while (--DeltaDown);
+                DeltaDown--;
+            }
         }
         else
         {
             /* Follow the list directly instead */
             OrderedNode = &Table->InsertOrderList;
-            do
+            while (NextI)
             {
                 /* Get next node */
                 OrderedNode = OrderedNode->Flink;
-            } while (--NextI);
+                NextI--;
+            }
         }
     }
     else
@@ -478,21 +480,23 @@ RtlGetElementGenericTable(IN PRTL_GENERIC_TABLE Table,
         if (DeltaUp <= DeltaDown)
         {
             /* Do the search forwards, since this takes less iterations */
-            do
+            while (DeltaUp)
             {
                 /* Get next node */
                 OrderedNode = OrderedNode->Blink;
-            } while (--DeltaUp);
+                DeltaUp--;
+            }
         }
         else
         {
             /* Do the search downwards, since this takes less iterations */
             OrderedNode = &Table->InsertOrderList;
-            do
+            while (DeltaDown)
             {
                 /* Get next node */
                 OrderedNode = OrderedNode->Blink;
-            } while (--DeltaDown);
+                DeltaDown--;
+            }
         }
     }
 

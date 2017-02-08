@@ -397,6 +397,8 @@ PciQueryDeviceText(IN PPCI_PDO_EXTENSION PdoExtension,
     ULONG Length;
     NTSTATUS Status;
     
+    UNREFERENCED_PARAMETER(Locale);
+
     /* Check what the caller is requesting */
     switch (QueryType)
     {

@@ -23,8 +23,6 @@
 #define NDEBUG
 #include <debug.h>
 
-RTL_CRITICAL_SECTION RtlpProcessHeapsListLock;
-
 /* Bitmaps stuff */
 
 /* How many least significant bits are clear */
@@ -543,7 +541,7 @@ RtlpInsertUnCommittedPages(PHEAP_SEGMENT Segment,
     PLIST_ENTRY Current;
     PHEAP_UCR_DESCRIPTOR UcrDescriptor;
 
-    DPRINT("RtlpInsertUnCommittedPages(%p %p %x)\n", Segment, Address, Size);
+    DPRINT("RtlpInsertUnCommittedPages(%p %08Ix %Ix)\n", Segment, Address, Size);
 
     /* Go through the list of UCR descriptors, they are sorted from lowest address
        to the highest */
@@ -598,7 +596,7 @@ RtlpInsertUnCommittedPages(PHEAP_SEGMENT Segment,
     /* "Current" is the descriptor before which our one should go */
     InsertTailList(Current, &UcrDescriptor->SegmentEntry);
 
-    DPRINT("Added segment UCR with base %p, size 0x%x\n", Address, Size);
+    DPRINT("Added segment UCR with base %08Ix, size 0x%x\n", Address, Size);
 
     /* Increase counters */
     Segment->NumberOfUnCommittedRanges++;
@@ -616,7 +614,7 @@ RtlpFindAndCommitPages(PHEAP Heap,
     PHEAP_ENTRY FirstEntry, LastEntry;
     NTSTATUS Status;
 
-    DPRINT("RtlpFindAndCommitPages(%p %p %x %p)\n", Heap, Segment, *Size, Address);
+    DPRINT("RtlpFindAndCommitPages(%p %p %Ix %08Ix)\n", Heap, Segment, *Size, Address);
 
     /* Go through UCRs in a segment */
     Current = Segment->UCRSegmentList.Flink;
@@ -646,7 +644,7 @@ RtlpFindAndCommitPages(PHEAP Heap,
                                                  PAGE_READWRITE);
             }
 
-            DPRINT("Committed %d bytes at base %p, UCR size is %d\n", *Size, Address, UcrDescriptor->Size);
+            DPRINT("Committed %Iu bytes at base %08Ix, UCR size is %lu\n", *Size, Address, UcrDescriptor->Size);
 
             /* Fail in unsuccessful case */
             if (!NT_SUCCESS(Status))
@@ -681,7 +679,7 @@ RtlpFindAndCommitPages(PHEAP Heap,
             UcrDescriptor->Address = (PVOID)((ULONG_PTR)UcrDescriptor->Address + *Size);
             UcrDescriptor->Size -= *Size;
 
-            DPRINT("Updating UcrDescriptor %p, new Address %p, size %d\n",
+            DPRINT("Updating UcrDescriptor %p, new Address %p, size %lu\n",
                 UcrDescriptor, UcrDescriptor->Address, UcrDescriptor->Size);
 
             /* Set various first entry fields */
@@ -966,98 +964,6 @@ RtlpDestroyHeapSegment(PHEAP_SEGMENT Segment)
     }
 }
 
-/* Usermode only! */
-VOID NTAPI
-RtlpAddHeapToProcessList(PHEAP Heap)
-{
-    PPEB Peb;
-
-    /* Get PEB */
-    Peb = RtlGetCurrentPeb();
-
-    /* Acquire the lock */
-    RtlEnterCriticalSection(&RtlpProcessHeapsListLock);
-
-    //_SEH2_TRY {
-    /* Check if max number of heaps reached */
-    if (Peb->NumberOfHeaps == Peb->MaximumNumberOfHeaps)
-    {
-        // TODO: Handle this case
-        ASSERT(FALSE);
-    }
-
-    /* Add the heap to the process heaps */
-    Peb->ProcessHeaps[Peb->NumberOfHeaps] = Heap;
-    Peb->NumberOfHeaps++;
-    Heap->ProcessHeapsListIndex = (USHORT)Peb->NumberOfHeaps;
-    // } _SEH2_FINALLY {
-
-    /* Release the lock */
-    RtlLeaveCriticalSection(&RtlpProcessHeapsListLock);
-
-    // } _SEH2_END
-}
-
-/* Usermode only! */
-VOID NTAPI
-RtlpRemoveHeapFromProcessList(PHEAP Heap)
-{
-    PPEB Peb;
-    PHEAP *Current, *Next;
-    ULONG Count;
-
-    /* Get PEB */
-    Peb = RtlGetCurrentPeb();
-
-    /* Acquire the lock */
-    RtlEnterCriticalSection(&RtlpProcessHeapsListLock);
-
-    /* Check if we don't need anything to do */
-    if ((Heap->ProcessHeapsListIndex == 0) ||
-        (Heap->ProcessHeapsListIndex > Peb->NumberOfHeaps) ||
-        (Peb->NumberOfHeaps == 0))
-    {
-        /* Release the lock */
-        RtlLeaveCriticalSection(&RtlpProcessHeapsListLock);
-
-        return;
-    }
-
-    /* The process actually has more than one heap.
-       Use classic, lernt from university times algorithm for removing an entry
-       from a static array */
-
-    Current = (PHEAP *)&Peb->ProcessHeaps[Heap->ProcessHeapsListIndex - 1];
-    Next = Current + 1;
-
-    /* How many items we need to shift to the left */
-    Count = Peb->NumberOfHeaps - (Heap->ProcessHeapsListIndex - 1);
-
-    /* Move them all in a loop */
-    while (--Count)
-    {
-        /* Copy it and advance next pointer */
-        *Current = *Next;
-
-        /* Update its index */
-        (*Current)->ProcessHeapsListIndex -= 1;
-
-        /* Advance pointers */
-        Current++;
-        Next++;
-    }
-
-    /* Decrease total number of heaps */
-    Peb->NumberOfHeaps--;
-
-    /* Zero last unused item */
-    Peb->ProcessHeaps[Peb->NumberOfHeaps] = NULL;
-    Heap->ProcessHeapsListIndex = 0;
-
-    /* Release the lock */
-    RtlLeaveCriticalSection(&RtlpProcessHeapsListLock);
-}
-
 PHEAP_FREE_ENTRY NTAPI
 RtlpCoalesceHeap(PHEAP Heap)
 {
@@ -1174,7 +1080,7 @@ RtlpExtendHeap(PHEAP Heap,
     {
         Segment = Heap->Segments[Index];
 
-        if (Segment) DPRINT("Segment[%d] %p with NOUCP %x\n", Index, Segment, Segment->NumberOfUnCommittedPages);
+        if (Segment) DPRINT("Segment[%u] %p with NOUCP %x\n", Index, Segment, Segment->NumberOfUnCommittedPages);
 
         /* Check if its size suits us */
         if (Segment &&
@@ -1256,7 +1162,7 @@ RtlpExtendHeap(PHEAP Heap,
                                              MEM_COMMIT,
                                              PAGE_READWRITE);
 
-            DPRINT("Committed %d bytes at base %p\n", CommitSize, Segment);
+            DPRINT("Committed %lu bytes at base %p\n", CommitSize, Segment);
 
             /* Initialize heap segment if commit was successful */
             if (NT_SUCCESS(Status))
@@ -1573,7 +1479,7 @@ RtlCreateHeap(ULONG Flags,
                                          MEM_COMMIT,
                                          PAGE_READWRITE);
 
-        DPRINT("Committed %d bytes at base %p\n", CommitSize, CommittedAddress);
+        DPRINT("Committed %Iu bytes at base %p\n", CommitSize, CommittedAddress);
 
         if (!NT_SUCCESS(Status))
         {
@@ -2761,7 +2667,7 @@ RtlReAllocateHeap(HANDLE HeapPtr,
         if (InUseEntry->Flags & HEAP_ENTRY_VIRTUAL_ALLOC)
         {
             /* Simple in case of a virtual alloc - just an unused size */
-            InUseEntry->Size = (USHORT)(AllocationSize - Size);
+            InUseEntry->Size = (USHORT)((AllocationSize - Size) >> HEAP_ENTRY_SHIFT);
         }
         else if (InUseEntry->Flags & HEAP_ENTRY_EXTRA_PRESENT)
         {
@@ -3397,7 +3303,8 @@ RtlpValidateHeapSegment(
 
             if (CurrentEntry->SegmentOffset != SegmentOffset)
             {
-                DPRINT1("HEAP: Heap entry %p SegmentOffset is incorrect %x (should be %x)\n", CurrentEntry, SegmentOffset, CurrentEntry->SegmentOffset);
+                DPRINT1("HEAP: Heap entry %p SegmentOffset is incorrect %x (should be %x)\n",
+                        CurrentEntry, SegmentOffset, CurrentEntry->SegmentOffset);
                 return FALSE;
             }
 
@@ -3411,7 +3318,8 @@ RtlpValidateHeapSegment(
                     /* Check if it's not really the last one */
                     if (CurrentEntry != Segment->LastValidEntry)
                     {
-                        DPRINT1("HEAP: Heap entry %p is not last block in segment (%x)\n", CurrentEntry, Segment->LastValidEntry);
+                        DPRINT1("HEAP: Heap entry %p is not last block in segment (%p)\n",
+                                CurrentEntry, Segment->LastValidEntry);
                         return FALSE;
                     }
                 }
@@ -3533,24 +3441,24 @@ RtlpValidateHeap(PHEAP Heap,
             /* If there is an in-use entry in a free list - that's quite a big problem */
             if (FreeEntry->Flags & HEAP_ENTRY_BUSY)
             {
-                DPRINT1("HEAP: %x-dedicated list free element %x is marked in-use\n", Size, FreeEntry);
+                DPRINT1("HEAP: %Ix-dedicated list free element %p is marked in-use\n", Size, FreeEntry);
                 return FALSE;
             }
 
             /* Check sizes according to that specific list's size */
             if ((Size == 0) && (FreeEntry->Size < HEAP_FREELISTS))
             {
-                DPRINT1("HEAP: Non dedicated list free element %x has size %x which would fit a dedicated list\n", FreeEntry, FreeEntry->Size);
+                DPRINT1("HEAP: Non dedicated list free element %p has size %x which would fit a dedicated list\n", FreeEntry, FreeEntry->Size);
                 return FALSE;
             }
             else if (Size && (FreeEntry->Size != Size))
             {
-                DPRINT1("HEAP: %x-dedicated list free element %x has incorrect size %x\n", Size, FreeEntry, FreeEntry->Size);
+                DPRINT1("HEAP: %Ix-dedicated list free element %p has incorrect size %x\n", Size, FreeEntry, FreeEntry->Size);
                 return FALSE;
             }
             else if ((Size == 0) && (FreeEntry->Size < PreviousSize))
             {
-                DPRINT1("HEAP: Non dedicated list free element %x is not put in order\n", FreeEntry);
+                DPRINT1("HEAP: Non dedicated list free element %p is not put in order\n", FreeEntry);
                 return FALSE;
             }
 
@@ -3608,13 +3516,13 @@ RtlpValidateHeap(PHEAP Heap,
 
     if (FreeListEntriesCount != FreeBlocksCount)
     {
-        DPRINT1("HEAP: Free blocks count in arena (%d) does not match free blocks number in the free lists (%d)\n", FreeBlocksCount, FreeListEntriesCount);
+        DPRINT1("HEAP: Free blocks count in arena (%lu) does not match free blocks number in the free lists (%lu)\n", FreeBlocksCount, FreeListEntriesCount);
         return FALSE;
     }
 
     if (Heap->TotalFreeSize != TotalFreeSize)
     {
-        DPRINT1("HEAP: Total size of free blocks in arena (%d) does not equal to the one in heap header (%d)\n", TotalFreeSize, Heap->TotalFreeSize);
+        DPRINT1("HEAP: Total size of free blocks in arena (%Iu) does not equal to the one in heap header (%Iu)\n", TotalFreeSize, Heap->TotalFreeSize);
         return FALSE;
     }
 
@@ -3656,7 +3564,7 @@ BOOLEAN NTAPI RtlValidateHeap(
     /* Check signature */
     if (Heap->Signature != HEAP_SIGNATURE)
     {
-        DPRINT1("HEAP: Signature %x is invalid for heap %p\n", Heap->Signature, Heap);
+        DPRINT1("HEAP: Signature %lx is invalid for heap %p\n", Heap->Signature, Heap);
         return FALSE;
     }
 
@@ -3684,22 +3592,6 @@ BOOLEAN NTAPI RtlValidateHeap(
 
     return HeapValid;
 }
-
-VOID
-RtlInitializeHeapManager(VOID)
-{
-    PPEB Peb;
-
-    /* Get PEB */
-    Peb = RtlGetCurrentPeb();
-
-    /* Initialize heap-related fields of PEB */
-    Peb->NumberOfHeaps = 0;
-
-    /* Initialize the process heaps list protecting lock */
-    RtlInitializeCriticalSection(&RtlpProcessHeapsListLock);
-}
-
 
 /*
  * @implemented
@@ -3920,11 +3812,11 @@ RtlGetUserInfoHeap(IN PVOID HeapHandle,
         /* Pass user value */
         if (UserValue)
             *UserValue = (PVOID)Extra->Settable;
-
-        /* Decode and return user flags */
-        if (UserFlags)
-            *UserFlags = (HeapEntry->Flags & HEAP_ENTRY_SETTABLE_FLAGS) << 4;
     }
+
+    /* Decode and return user flags */
+    if (UserFlags)
+        *UserFlags = (HeapEntry->Flags & HEAP_ENTRY_SETTABLE_FLAGS) << 4;
 
     /* Release the heap lock if it was acquired */
     if (HeapLocked)
@@ -4010,53 +3902,59 @@ RtlSetHeapInformation(IN HANDLE HeapHandle OPTIONAL,
                       IN SIZE_T HeapInformationLength)
 {
     /* Setting heap information is not really supported except for enabling LFH */
-    if (HeapInformationClass == 0) return STATUS_SUCCESS;
-
-    /* Check buffer length */
-    if (HeapInformationLength < sizeof(ULONG))
+    if (HeapInformationClass == HeapCompatibilityInformation)
     {
-        /* The provided buffer is too small */
-        return STATUS_BUFFER_TOO_SMALL;
-    }
+        /* Check buffer length */
+        if (HeapInformationLength < sizeof(ULONG))
+        {
+            /* The provided buffer is too small */
+            return STATUS_BUFFER_TOO_SMALL;
+        }
 
-    /* Check for a special magic value for enabling LFH */
-    if (*(PULONG)HeapInformation == 2)
-    {
+        /* Check for a special magic value for enabling LFH */
+        if (*(PULONG)HeapInformation != 2)
+        {
+            return STATUS_UNSUCCESSFUL;
+        }
+
         DPRINT1("RtlSetHeapInformation() needs to enable LFH\n");
         return STATUS_SUCCESS;
     }
 
-    return STATUS_UNSUCCESSFUL;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
 RtlQueryHeapInformation(HANDLE HeapHandle,
                         HEAP_INFORMATION_CLASS HeapInformationClass,
-                        PVOID HeapInformation OPTIONAL,
-                        SIZE_T HeapInformationLength OPTIONAL,
+                        PVOID HeapInformation,
+                        SIZE_T HeapInformationLength,
                         PSIZE_T ReturnLength OPTIONAL)
 {
     PHEAP Heap = (PHEAP)HeapHandle;
 
     /* Only HeapCompatibilityInformation is supported */
-    if (HeapInformationClass != HeapCompatibilityInformation)
-        return STATUS_UNSUCCESSFUL;
-
-    /* Set result length */
-    if (ReturnLength) *ReturnLength = sizeof(ULONG);
-
-    /* Check buffer length */
-    if (HeapInformationLength < sizeof(ULONG))
+    if (HeapInformationClass == HeapCompatibilityInformation)
     {
-        /* It's too small, return needed length */
-        return STATUS_BUFFER_TOO_SMALL;
+        /* Set result length */
+        if (ReturnLength)
+            *ReturnLength = sizeof(ULONG);
+
+        /* Check buffer length */
+        if (HeapInformationLength < sizeof(ULONG))
+        {
+            /* It's too small, return needed length */
+            return STATUS_BUFFER_TOO_SMALL;
+        }
+
+        /* Return front end heap type */
+        *(PULONG)HeapInformation = Heap->FrontEndHeapType;
+
+        return STATUS_SUCCESS;
     }
 
-    /* Return front end heap type */
-    *(PULONG)HeapInformation = Heap->FrontEndHeapType;
-
-    return STATUS_SUCCESS;
+    return STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS

@@ -7,7 +7,7 @@
  * REVISIONS:
  *   CSH 01/09-2000 Created
  */
-#include <wshtcpip.h>
+#include "wshtcpip.h"
 #define NDEBUG
 #include <debug.h>
 
@@ -161,6 +161,18 @@ GetAddressOption(INT Level, INT OptionName)
 {
     switch (Level)
     {
+       case SOL_SOCKET:
+          switch (OptionName)
+          {
+             case SO_KEEPALIVE:
+                /* FIXME: Return proper option */
+                ASSERT(FALSE);
+                break;
+             default:
+                break;
+          }
+          break;
+
        case IPPROTO_IP:
           switch (OptionName)
           {
@@ -179,19 +191,26 @@ GetAddressOption(INT Level, INT OptionName)
                 return AO_OPTION_IP_HDRINCL;
 
              default:
-                DPRINT1("Unknown option name for IPPROTO_IP: %d\n", OptionName);
-                return 0;
+                break;
           }
           break;
 
-       case SOL_SOCKET:
-          DPRINT1("SOL_SOCKET option %d\n", OptionName);
-          break;
+       case IPPROTO_TCP:
+          switch (OptionName)
+          {
+             case TCP_NODELAY:
+                 /* FIXME: Return proper option */
+                 ASSERT(FALSE);
+                 break;
+             default:
+                 break;
+          }
 
        default:
-          DPRINT1("Unknown level: %d\n", Level);
           break;
     }
+
+    DPRINT1("Unknown level/option name: %d %d\n", Level, OptionName);
     return 0;
 }
 
@@ -208,6 +227,10 @@ WSHGetSocketInformation(
     OUT LPINT OptionLength)
 {
     UNIMPLEMENTED
+
+    DPRINT1("Get: Unknown level/option name: %d %d\n", Level, OptionName);
+
+    *OptionLength = 0;
 
     return NO_ERROR;
 }
@@ -317,6 +340,8 @@ WSHIoctl(
     OUT LPBOOL NeedsCompletion)
 {
     UNIMPLEMENTED
+
+    DPRINT1("Ioctl: Unknown IOCTL code: %d\n", IoControlCode);
 
     return NO_ERROR;
 }
@@ -626,11 +651,71 @@ WSHSetSocketInformation(
 
     /* FIXME: We only handle address file object here */
 
-    RealOptionName = GetAddressOption(Level, OptionName);
+    switch (Level)
+    {
+        case SOL_SOCKET:
+            switch (OptionName)
+            {
+                case SO_DONTROUTE:
+                    if (OptionLength < sizeof(BOOL))
+                    {
+                        return WSAEFAULT;
+                    }
+                    Context->DontRoute = *(BOOL*)OptionValue;
+                    /* This is silently ignored on Windows */
+                    return 0;
 
-    /* FIXME: Support all options */
-    if (!RealOptionName)
-        return 0; /* return WSAEINVAL; */
+                case SO_KEEPALIVE:
+                    /* FIXME -- We'll send this to TCPIP */
+                    DPRINT1("Set: SO_KEEPALIVE not yet supported\n");
+                    return 0;
+
+                default:
+                    /* Invalid option */
+                    DPRINT1("Set: Received unexpected SOL_SOCKET option %d\n", OptionName);
+                    return WSAENOPROTOOPT;
+            }
+            break;
+
+        case IPPROTO_IP:
+            switch (OptionName)
+            {
+                case IP_TTL:
+                case IP_DONTFRAGMENT:
+                case IP_HDRINCL:
+                    /* Send these to TCPIP */
+                    break;
+
+                default:
+                    /* Invalid option -- FIXME */
+                    DPRINT1("Set: Received unsupported IPPROTO_IP option %d\n", OptionName);
+                    return 0;
+            }
+            break;
+
+        case IPPROTO_TCP:
+            switch (OptionName)
+            {
+                case TCP_NODELAY:
+                    /* FIXME -- Send this to TCPIP */
+                    DPRINT1("Set: TCP_NODELAY not yet supported\n");
+                    return 0;
+
+                default:
+                    /* Invalid option */
+                    DPRINT1("Set: Received unexpected IPPROTO_TCP option %d\n", OptionName);
+                    return 0;
+            }
+            break;
+
+        default:
+            DPRINT1("Set: Received unexpected %d option %d\n", Level, OptionName);
+            return 0;
+    }
+
+    /* If we get here, GetAddressOption must return something valid */
+    RealOptionName = GetAddressOption(Level, OptionName);
+    ASSERT(RealOptionName != 0);
 
     Info = HeapAlloc(GetProcessHeap(), 0, sizeof(*Info) + OptionLength);
     if (!Info)

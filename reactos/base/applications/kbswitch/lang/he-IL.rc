@@ -1,0 +1,11 @@
+LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
+
+IDR_POPUP MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&העדפות...",  ID_PREFERENCES
+        MENUITEM SEPARATOR
+        MENUITEM "&יציאה",            ID_EXIT
+    END
+END

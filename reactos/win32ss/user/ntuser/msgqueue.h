@@ -6,23 +6,14 @@
 #define MSQ_ISEVENT     2
 #define MSQ_INJECTMODULE 3
 
-#define QSIDCOUNTS 6
-
-typedef enum _QS_ROS_TYPES
-{
-    QSRosKey = 0,
-    QSRosMouseMove,
-    QSRosMouseButton,
-    QSRosPostMessage,
-    QSRosSendMessage,
-    QSRosHotKey,
-}QS_ROS_TYPES,*PQS_ROS_TYPES;
-
 typedef struct _USER_MESSAGE
 {
   LIST_ENTRY ListEntry;
   MSG Msg;
   DWORD QS_Flags;
+  LONG_PTR ExtraInfo;
+  DWORD dwQEvent;
+  PTHREADINFO pti;
 } USER_MESSAGE, *PUSER_MESSAGE;
 
 struct _USER_MESSAGE_QUEUE;
@@ -35,9 +26,10 @@ typedef struct _USER_SENT_MESSAGE
   PKEVENT CompletionEvent;
   LRESULT* Result;
   LRESULT lResult;
-  struct _USER_MESSAGE_QUEUE* SenderQueue;
-  struct _USER_MESSAGE_QUEUE* CallBackSenderQueue;
+  PTHREADINFO ptiSender;
+  PTHREADINFO ptiReceiver;
   SENDASYNCPROC CompletionCallback;
+  PTHREADINFO ptiCallBackSender;
   ULONG_PTR CompletionCallbackContext;
   /* entry in the dispatching list of the sender's message queue */
   LIST_ENTRY DispatchingListEntry;
@@ -50,12 +42,14 @@ typedef struct _USER_MESSAGE_QUEUE
   /* Reference counter, only access this variable with interlocked functions! */
   LONG References;
 
-  /* Owner of the message queue */
-  struct _ETHREAD *Thread;
-  /* Queue of messages sent to the queue. */
-  LIST_ENTRY SentMessagesListHead;
-  /* Queue of messages posted to the queue. */
-  LIST_ENTRY PostedMessagesListHead;
+  PTHREADINFO ptiOwner; // temp..
+  /* Desktop that the message queue is attached to */
+  struct _DESKTOP *Desktop;
+
+  PTHREADINFO ptiSysLock;
+  PTHREADINFO ptiMouse;
+  PTHREADINFO ptiKeyboard;
+
   /* Queue for hardware messages for the queue. */
   LIST_ENTRY HardwareMessagesListHead;
   /* True if a WM_MOUSEMOVE is pending */
@@ -64,18 +58,7 @@ typedef struct _USER_MESSAGE_QUEUE
   MSG MouseMoveMsg;
   /* Last click message for translating double clicks */
   MSG msgDblClk;
-  /* True if a WM_QUIT message is pending. */
-  BOOLEAN QuitPosted;
-  /* The quit exit code. */
-  ULONG QuitExitCode;
-  /* Set if there are new messages specified by WakeMask in any of the queues. */
-  PKEVENT NewMessages;
-  /* Handle for the above event (in the context of the process owning the queue). */
-  HANDLE NewMessagesHandle;
-  /* Last time PeekMessage() was called. */
-  ULONG LastMsgRead;
   /* Current capture window for this queue. */
-  HWND CaptureWindow;
   PWND spwndCapture;
   /* Current window with focus (ie. receives keyboard input) for this queue. */
   PWND spwndFocus;
@@ -94,13 +77,6 @@ typedef struct _USER_MESSAGE_QUEUE
   DWORD QF_flags;
   DWORD cThreads; // Shared message queue counter.
 
-  /* Queue state tracking */
-  // Send list QS_SENDMESSAGE
-  // Post list QS_POSTMESSAGE|QS_HOTKEY|QS_PAINT|QS_TIMER|QS_KEY
-  // Hard list QS_MOUSE|QS_KEY only
-  // Accounting of queue bit sets, the rest are flags. QS_TIMER QS_PAINT counts are handled in thread information.
-  DWORD nCntsQBits[QSIDCOUNTS]; // QS_KEY QS_MOUSEMOVE QS_MOUSEBUTTON QS_POSTMESSAGE QS_SENDMESSAGE QS_HOTKEY
-
   /* Extra message information */
   LPARAM ExtraInfo;
 
@@ -113,13 +89,6 @@ typedef struct _USER_MESSAGE_QUEUE
   /* Cursor object */
   PCURICON_OBJECT CursorObject;
 
-  /* Messages that are currently dispatched by other threads */
-  LIST_ENTRY DispatchingMessagesHead;
-  /* Messages that are currently dispatched by this message queue, required for cleanup */
-  LIST_ENTRY LocalDispatchingMessagesHead;
-
-  /* Desktop that the message queue is attached to */
-  struct _DESKTOP *Desktop;
 } USER_MESSAGE_QUEUE, *PUSER_MESSAGE_QUEUE;
 
 #define QF_UPDATEKEYSTATE         0x00000001
@@ -149,17 +118,17 @@ enum internal_event_message
     WM_ASYNC_SETACTIVEWINDOW
 };
 
-BOOL FASTCALL MsqIsHung(PUSER_MESSAGE_QUEUE MessageQueue);
+BOOL FASTCALL MsqIsHung(PTHREADINFO pti);
 VOID CALLBACK HungAppSysTimerProc(HWND,UINT,UINT_PTR,DWORD);
-NTSTATUS FASTCALL co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
+NTSTATUS FASTCALL co_MsqSendMessage(PTHREADINFO ptirec,
            HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam,
            UINT uTimeout, BOOL Block, INT HookMessage, ULONG_PTR *uResult);
 PUSER_MESSAGE FASTCALL MsqCreateMessage(LPMSG Msg);
 VOID FASTCALL MsqDestroyMessage(PUSER_MESSAGE Message);
-VOID FASTCALL MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg, BOOLEAN HardwareMessage, DWORD MessageBits);
-VOID FASTCALL MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode);
+VOID FASTCALL MsqPostMessage(PTHREADINFO, MSG*, BOOLEAN, DWORD, DWORD);
+VOID FASTCALL MsqPostQuitMessage(PTHREADINFO pti, ULONG ExitCode);
 BOOLEAN APIENTRY
-MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
+MsqPeekMessage(IN PTHREADINFO pti,
 	              IN BOOLEAN Remove,
 	              IN PWND Window,
 	              IN UINT MsgFilterLow,
@@ -167,7 +136,7 @@ MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 	              IN UINT QSflags,
 	              OUT PMSG Message);
 BOOL APIENTRY
-co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
+co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
 	                      IN BOOL Remove,
 	                      IN PWND Window,
 	                      IN UINT MsgFilterLow,
@@ -175,22 +144,23 @@ co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 	                      IN UINT QSflags,
 	                      OUT MSG* pMsg);
 BOOL APIENTRY
-co_MsqPeekMouseMove(IN PUSER_MESSAGE_QUEUE MessageQueue,
+co_MsqPeekMouseMove(IN PTHREADINFO pti,
                     IN BOOL Remove,
                     IN PWND Window,
                     IN UINT MsgFilterLow,
                     IN UINT MsgFilterHigh,
                     OUT MSG* pMsg);
-BOOLEAN FASTCALL MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQueue);
-PUSER_MESSAGE_QUEUE FASTCALL MsqCreateMessageQueue(struct _ETHREAD *Thread);
-VOID FASTCALL MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue);
+BOOLEAN FASTCALL MsqInitializeMessageQueue(PTHREADINFO, PUSER_MESSAGE_QUEUE);
+PUSER_MESSAGE_QUEUE FASTCALL MsqCreateMessageQueue(PTHREADINFO);
+VOID FASTCALL MsqCleanupThreadMsgs(PTHREADINFO);
+VOID FASTCALL MsqDestroyMessageQueue(PTHREADINFO);
 INIT_FUNCTION NTSTATUS NTAPI MsqInitializeImpl(VOID);
-BOOLEAN FASTCALL co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue);
+BOOLEAN FASTCALL co_MsqDispatchOneSentMessage(PTHREADINFO pti);
 NTSTATUS FASTCALL
-co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, PWND WndFilter,
+co_MsqWaitForNewMessages(PTHREADINFO pti, PWND WndFilter,
                       UINT MsgFilterMin, UINT MsgFilterMax);
-VOID FASTCALL MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
-VOID FASTCALL MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
+VOID FASTCALL MsqIncPaintCountQueue(PTHREADINFO);
+VOID FASTCALL MsqDecPaintCountQueue(PTHREADINFO);
 LRESULT FASTCALL co_IntSendMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 LRESULT FASTCALL co_IntPostOrSendMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 LRESULT FASTCALL
@@ -232,13 +202,13 @@ VOID FASTCALL MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARA
 VOID FASTCALL co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook);
 BOOL FASTCALL MsqIsClkLck(LPMSG Msg, BOOL Remove);
 BOOL FASTCALL MsqIsDblClk(LPMSG Msg, BOOL Remove);
-HWND FASTCALL MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, HWND hWnd);
+HWND FASTCALL MsqSetStateWindow(PTHREADINFO pti, ULONG Type, HWND hWnd);
 BOOL APIENTRY IntInitMessagePumpHook(VOID);
 BOOL APIENTRY IntUninitMessagePumpHook(VOID);
 
 LPARAM FASTCALL MsqSetMessageExtraInfo(LPARAM lParam);
 LPARAM FASTCALL MsqGetMessageExtraInfo(VOID);
-VOID APIENTRY MsqRemoveWindowMessagesFromQueue(PVOID pWindow); /* F*(&$ headers, will be gone in the rewrite! */
+VOID APIENTRY MsqRemoveWindowMessagesFromQueue(PWND pWindow);
 
 #define IntReferenceMessageQueue(MsgQueue) \
   InterlockedIncrement(&(MsgQueue)->References)
@@ -247,9 +217,7 @@ VOID APIENTRY MsqRemoveWindowMessagesFromQueue(PVOID pWindow); /* F*(&$ headers,
   do { \
     if(InterlockedDecrement(&(MsgQueue)->References) == 0) \
     { \
-      TRACE("Free message queue 0x%x\n", (MsgQueue)); \
-      if ((MsgQueue)->NewMessages != NULL) \
-        ObDereferenceObject((MsgQueue)->NewMessages); \
+      ERR("Free message queue 0x%p\n", (MsgQueue)); \
       ExFreePoolWithTag((MsgQueue), USERTAG_Q); \
     } \
   } while(0)
@@ -286,8 +254,8 @@ MsqCalculateMessageTime(IN PLARGE_INTEGER TickCount)
 VOID FASTCALL IdlePing(VOID);
 VOID FASTCALL IdlePong(VOID);
 BOOL FASTCALL co_MsqReplyMessage(LRESULT);
-VOID FASTCALL MsqWakeQueue(PUSER_MESSAGE_QUEUE,DWORD,BOOL);
-VOID FASTCALL ClearMsgBitsMask(PUSER_MESSAGE_QUEUE,UINT);
+VOID FASTCALL MsqWakeQueue(PTHREADINFO,DWORD,BOOL);
+VOID FASTCALL ClearMsgBitsMask(PTHREADINFO,UINT);
 
 int UserShowCursor(BOOL bShow);
 PCURICON_OBJECT
@@ -298,4 +266,13 @@ UserSetCursor(PCURICON_OBJECT NewCursor,
 DWORD APIENTRY IntGetQueueStatus(DWORD);
 
 UINT lParamMemorySize(UINT Msg, WPARAM wParam, LPARAM lParam);
+
+BOOL FASTCALL
+co_IntGetPeekMessage( PMSG pMsg,
+                      HWND hWnd,
+                      UINT MsgFilterMin,
+                      UINT MsgFilterMax,
+                      UINT RemoveMsg,
+                      BOOL bGMSG );
+
 /* EOF */

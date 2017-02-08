@@ -68,6 +68,7 @@ typedef struct _HUB_CHILDDEVICE_EXTENSION
     PUSB_CONFIGURATION_DESCRIPTOR FullConfigDesc;
     UNICODE_STRING SymbolicLinkName;
     USB_BUS_INTERFACE_USBDI_V2 DeviceInterface;
+    USB_DEVICE_INFORMATION_0 DeviceInformation;
 } HUB_CHILDDEVICE_EXTENSION, *PHUB_CHILDDEVICE_EXTENSION;
 
 typedef struct _HUB_DEVICE_EXTENSION
@@ -103,8 +104,9 @@ typedef struct _HUB_DEVICE_EXTENSION
     PVOID RootHubHandle;
     USB_BUS_INTERFACE_USBDI_V2 DeviceInterface;
 
-
     UNICODE_STRING SymbolicLinkName;
+    ULONG InstanceCount;
+
 } HUB_DEVICE_EXTENSION, *PHUB_DEVICE_EXTENSION;
 
 // createclose.c

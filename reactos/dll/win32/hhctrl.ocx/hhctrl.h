@@ -20,26 +20,31 @@
 #ifndef HHCTRL_H
 #define HHCTRL_H
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "htmlhelp.h"
-#include "ole2.h"
-#include "exdisp.h"
-#include "mshtmhst.h"
-#include "commctrl.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <winnls.h>
+#include <htmlhelp.h>
+#include <ole2.h>
+#include <exdisp.h>
+#include <mshtmhst.h>
+#include <commctrl.h>
 
 #ifdef INIT_GUID
-#include "initguid.h"
+#include <initguid.h>
 #endif
 
-#include "wine/itss.h"
-#include "wine/unicode.h"
+#include <wine/itss.h>
+#include <wine/unicode.h>
+#include <wine/list.h>
 
 #define WB_GOBACK     0
 #define WB_GOFORWARD  1
@@ -47,6 +52,7 @@
 #define WB_SEARCH     3
 #define WB_REFRESH    4
 #define WB_STOP       5
+#define WB_PRINT      6
 
 typedef struct {
     LPWSTR chm_file;
@@ -101,15 +107,20 @@ typedef struct CHMInfo
     char **strings;
     DWORD strings_size;
 
+    WCHAR *compiledFile;
+    WCHAR *defWindow;
     WCHAR *defTopic;
     WCHAR *defTitle;
     WCHAR *defToc;
+
+    UINT codePage;
 } CHMInfo;
 
 #define TAB_CONTENTS   0
 #define TAB_INDEX      1
 #define TAB_SEARCH     2
 #define TAB_FAVORITES  3
+#define TAB_NUMTABS    TAB_FAVORITES
 
 typedef struct {
     HWND hwnd;
@@ -130,62 +141,98 @@ typedef struct {
 } SearchTab;
 
 typedef struct {
+    HIMAGELIST hImageList;
+} ContentsTab;
+
+struct wintype_stringsW {
+    WCHAR *pszType;
+    WCHAR *pszCaption;
+    WCHAR *pszToc;
+    WCHAR *pszIndex;
+    WCHAR *pszFile;
+    WCHAR *pszHome;
+    WCHAR *pszJump1;
+    WCHAR *pszJump2;
+    WCHAR *pszUrlJump1;
+    WCHAR *pszUrlJump2;
+    WCHAR *pszCustomTabs;
+};
+
+struct wintype_stringsA {
+    char *pszType;
+    char *pszCaption;
+    char *pszToc;
+    char *pszIndex;
+    char *pszFile;
+    char *pszHome;
+    char *pszJump1;
+    char *pszJump2;
+    char *pszUrlJump1;
+    char *pszUrlJump2;
+    char *pszCustomTabs;
+};
+
+typedef struct {
     IOleClientSite *client_site;
     IWebBrowser2 *web_browser;
     IOleObject *wb_object;
 
     HH_WINTYPEW WinType;
 
-    LPWSTR pszType;
-    LPWSTR pszCaption;
-    LPWSTR pszToc;
-    LPWSTR pszIndex;
-    LPWSTR pszFile;
-    LPWSTR pszHome;
-    LPWSTR pszJump1;
-    LPWSTR pszJump2;
-    LPWSTR pszUrlJump1;
-    LPWSTR pszUrlJump2;
-    LPWSTR pszCustomTabs;
+    struct wintype_stringsA stringsA;
+    struct wintype_stringsW stringsW;
 
+    struct list entry;
     CHMInfo *pCHMInfo;
     ContentItem *content;
     IndexItem *index;
     IndexPopup popup;
     SearchTab search;
+    ContentsTab contents;
     HWND hwndTabCtrl;
     HWND hwndSizeBar;
     HFONT hFont;
 
     HHTab tabs[TAB_FAVORITES+1];
+    int viewer_initialized;
     DWORD current_tab;
 } HHInfo;
 
-BOOL InitWebBrowser(HHInfo*,HWND);
-void ReleaseWebBrowser(HHInfo*);
-void ResizeWebBrowser(HHInfo*,DWORD,DWORD);
-void DoPageAction(HHInfo*,DWORD);
+BOOL InitWebBrowser(HHInfo*,HWND) DECLSPEC_HIDDEN;
+void ReleaseWebBrowser(HHInfo*) DECLSPEC_HIDDEN;
+void ResizeWebBrowser(HHInfo*,DWORD,DWORD) DECLSPEC_HIDDEN;
+void DoPageAction(HHInfo*,DWORD) DECLSPEC_HIDDEN;
 
-void InitContent(HHInfo*);
-void ReleaseContent(HHInfo*);
+void InitContent(HHInfo*) DECLSPEC_HIDDEN;
+void ReleaseContent(HHInfo*) DECLSPEC_HIDDEN;
+void ActivateContentTopic(HWND,LPCWSTR,ContentItem *) DECLSPEC_HIDDEN;
 
-void InitIndex(HHInfo*);
-void ReleaseIndex(HHInfo*);
+void InitIndex(HHInfo*) DECLSPEC_HIDDEN;
+void ReleaseIndex(HHInfo*) DECLSPEC_HIDDEN;
 
-CHMInfo *OpenCHM(LPCWSTR szFile);
-BOOL LoadWinTypeFromCHM(HHInfo *info);
-CHMInfo *CloseCHM(CHMInfo *pCHMInfo);
-void SetChmPath(ChmPath*,LPCWSTR,LPCWSTR);
-IStream *GetChmStream(CHMInfo*,LPCWSTR,ChmPath*);
-LPWSTR FindContextAlias(CHMInfo*,DWORD);
+CHMInfo *OpenCHM(LPCWSTR szFile) DECLSPEC_HIDDEN;
+BOOL LoadWinTypeFromCHM(HHInfo *info) DECLSPEC_HIDDEN;
+CHMInfo *CloseCHM(CHMInfo *pCHMInfo) DECLSPEC_HIDDEN;
+void SetChmPath(ChmPath*,LPCWSTR,LPCWSTR) DECLSPEC_HIDDEN;
+IStream *GetChmStream(CHMInfo*,LPCWSTR,ChmPath*) DECLSPEC_HIDDEN;
+LPWSTR FindContextAlias(CHMInfo*,DWORD) DECLSPEC_HIDDEN;
+WCHAR *GetDocumentTitle(CHMInfo*,LPCWSTR) DECLSPEC_HIDDEN;
 
-HHInfo *CreateHelpViewer(LPCWSTR);
-void ReleaseHelpViewer(HHInfo*);
-BOOL NavigateToUrl(HHInfo*,LPCWSTR);
-BOOL NavigateToChm(HHInfo*,LPCWSTR,LPCWSTR);
+HHInfo *CreateHelpViewer(HHInfo*,LPCWSTR,HWND) DECLSPEC_HIDDEN;
+void ReleaseHelpViewer(HHInfo*) DECLSPEC_HIDDEN;
+BOOL NavigateToUrl(HHInfo*,LPCWSTR) DECLSPEC_HIDDEN;
+BOOL NavigateToChm(HHInfo*,LPCWSTR,LPCWSTR) DECLSPEC_HIDDEN;
+void MergeChmProperties(HH_WINTYPEW*,HHInfo*,BOOL) DECLSPEC_HIDDEN;
+void UpdateHelpWindow(HHInfo *info) DECLSPEC_HIDDEN;
 
-void InitSearch(HHInfo *info, const char *needle);
-void ReleaseSearch(HHInfo *info);
+void InitSearch(HHInfo *info, const char *needle) DECLSPEC_HIDDEN;
+void ReleaseSearch(HHInfo *info) DECLSPEC_HIDDEN;
+
+LPCWSTR skip_schema(LPCWSTR url) DECLSPEC_HIDDEN;
+void wintype_stringsA_free(struct wintype_stringsA *stringsA) DECLSPEC_HIDDEN;
+void wintype_stringsW_free(struct wintype_stringsW *stringsW) DECLSPEC_HIDDEN;
+WCHAR *decode_html(const char *html_fragment, int html_fragment_len, UINT code_page) DECLSPEC_HIDDEN;
+HHInfo *find_window(const WCHAR *window) DECLSPEC_HIDDEN;
 
 /* memory allocation functions */
 
@@ -257,9 +304,22 @@ static inline LPWSTR strdupAtoW(LPCSTR str)
     return strdupnAtoW(str, -1);
 }
 
+static inline LPSTR strdupWtoA(LPCWSTR str)
+{
+    LPSTR ret;
+    DWORD len;
+
+    if(!str)
+        return NULL;
+
+    len = WideCharToMultiByte(CP_ACP, 0, str, -1, NULL, 0, NULL, NULL);
+    ret = heap_alloc(len);
+    WideCharToMultiByte(CP_ACP, 0, str, -1, ret, len, NULL, NULL);
+    return ret;
+}
 
 
-extern HINSTANCE hhctrl_hinstance;
-extern BOOL hh_process;
+extern HINSTANCE hhctrl_hinstance DECLSPEC_HIDDEN;
+extern BOOL hh_process DECLSPEC_HIDDEN;
 
 #endif

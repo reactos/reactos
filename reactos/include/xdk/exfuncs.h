@@ -528,6 +528,7 @@ _When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE))
 _When_((PoolType & (NonPagedPoolMustSucceed | POOL_RAISE_IF_ALLOCATION_FAILURE)) != 0,
   _Post_notnull_)
 _Post_writable_byte_size_(NumberOfBytes)
+_Function_class_(ALLOCATE_FUNCTION)
 NTKERNELAPI
 PVOID
 NTAPI
@@ -598,6 +599,7 @@ ExDeleteResourceLite(
   _Inout_ PERESOURCE Resource);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
+_Function_class_(FREE_FUNCTION)
 NTKERNELAPI
 VOID
 NTAPI

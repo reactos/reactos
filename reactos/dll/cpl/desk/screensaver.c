@@ -473,7 +473,7 @@ SetScreenSaver(HWND hwndDlg, PDATA pData)
     {
         INT Time;
         BOOL bRet;
-        TCHAR szTime[256], Sec;
+        TCHAR Sec;
         UINT Ret;
 
         /* Set the screensaver */
@@ -485,35 +485,17 @@ SetScreenSaver(HWND hwndDlg, PDATA pData)
                           REG_SZ,
                           (PBYTE)pData->ScreenSaverItems[pData->Selection].szFilename,
                           _tcslen(pData->ScreenSaverItems[pData->Selection].szFilename) * sizeof(TCHAR));
+
+            SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, TRUE, 0, SPIF_UPDATEINIFILE);
         }
         else
         {
             /* Windows deletes the value if no screensaver is set */
             RegDeleteValue(regKey, _T("SCRNSAVE.EXE"));
             DeleteMode = TRUE;
+
+            SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, FALSE, 0, SPIF_UPDATEINIFILE);
         }
-
-        /* set the screensaver time delay */
-        Time = GetDlgItemInt(hwndDlg,
-                             IDC_SCREENS_TIMEDELAY,
-                             &bRet,
-                             FALSE);
-        if (Time == 0)
-            Time = 60;
-        else
-            Time *= 60;
-
-        _itot(Time, szTime, 10);
-        RegSetValueEx(regKey,
-                      _T("ScreenSaveTimeOut"),
-                      0,
-                      REG_SZ,
-                      (PBYTE)szTime,
-                      _tcslen(szTime) * sizeof(TCHAR));
-
-        if (DeleteMode) Time = 0;
-
-        SystemParametersInfoW(SPI_SETSCREENSAVETIMEOUT, Time, 0, SPIF_SENDCHANGE);
 
         /* Set the secure value */
         Ret = SendDlgItemMessage(hwndDlg,
@@ -528,6 +510,18 @@ SetScreenSaver(HWND hwndDlg, PDATA pData)
                       REG_SZ,
                       (PBYTE)&Sec,
                       sizeof(TCHAR));
+
+        /* Set the screensaver time delay */
+        Time = GetDlgItemInt(hwndDlg,
+                             IDC_SCREENS_TIMEDELAY,
+                             &bRet,
+                             FALSE);
+        if (Time == 0)
+            Time = 60;
+        else
+            Time *= 60;
+
+        SystemParametersInfoW(SPI_SETSCREENSAVETIMEOUT, Time, 0, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
 
         RegCloseKey(regKey);
     }
@@ -735,7 +729,6 @@ ScreenSaverPageProc(HWND hwndDlg,
                 {
                     if (command == BN_CLICKED)
                     {
-                        MessageBox(NULL, TEXT("Feature not yet implemented"), TEXT("Sorry"), MB_OK);
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
@@ -758,16 +751,14 @@ ScreenSaverPageProc(HWND hwndDlg,
 
                 case PSN_SETACTIVE:
                 {
-                    /* Activate screen saver support */
-                    SystemParametersInfoW(SPI_SETSCREENSAVEACTIVE, TRUE, 0, SPIF_SENDCHANGE);
+                    /* Enable screensaver preview support */
                     SetScreenSaverPreviewBox(hwndDlg, pData);
                     break;
                 }
 
                 case PSN_KILLACTIVE:
                 {
-                    /* Disable screensaver support */
-                    SystemParametersInfoW(SPI_SETSCREENSAVEACTIVE, FALSE, 0, SPIF_SENDCHANGE);
+                    /* Kill running preview screensaver */
                     if (pData->PrevWindowPi.hProcess)
                     {
                         TerminateProcess(pData->PrevWindowPi.hProcess, 0);

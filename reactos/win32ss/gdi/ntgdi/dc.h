@@ -66,7 +66,7 @@ typedef struct _DCLEVEL
   POINTL            ptlBrushOrigin;
   PBRUSH            pbrFill;
   PBRUSH            pbrLine;
-  PVOID             plfnt; /* LFONTOBJ* (TEXTOBJ*) */
+  _Notnull_ struct _LFONT   * plfnt; /* LFONT* (TEXTOBJ*) */
   HGDIOBJ           hPath; /* HPATH */
   FLONG             flPath;
   LINEATTRS         laPath; /* 0x20 bytes */
@@ -110,7 +110,7 @@ typedef struct _DC
   PVOID       hsem;   /* PERESOURCE aka HSEMAPHORE */
   FLONG       flGraphicsCaps;
   FLONG       flGraphicsCaps2;
-  PDC_ATTR    pdcattr;
+  _Notnull_ PDC_ATTR    pdcattr;
   DCLEVEL     dclevel;
   DC_ATTR     dcattr;
   HDC         hdcNext;
@@ -155,12 +155,34 @@ VOID FASTCALL DC_vUpdateLineBrush(PDC pdc);
 VOID FASTCALL DC_vUpdateTextBrush(PDC pdc);
 VOID FASTCALL DC_vUpdateBackgroundBrush(PDC pdc);
 
+HFONT
+NTAPI
+DC_hSelectFont(
+    _In_ PDC pdc,
+    _In_ HFONT hlfntNew);
+
 HPALETTE
 NTAPI
 GdiSelectPalette(
-    HDC hDC,
-    HPALETTE hpal,
-    BOOL ForceBackground);
+    _In_ HDC hDC,
+    _In_ HPALETTE hpal,
+    _In_ BOOL ForceBackground);
+
+/* dcutil.c */
+
+COLORREF
+FASTCALL
+IntGdiSetBkColor(
+    _In_ HDC hDC,
+    _In_ COLORREF Color);
+
+INT FASTCALL IntGdiSetBkMode(HDC  hDC, INT  backgroundMode);
+COLORREF FASTCALL  IntGdiSetTextColor(HDC hDC, COLORREF color);
+UINT FASTCALL IntGdiSetTextAlign(HDC  hDC, UINT  Mode);
+VOID FASTCALL DCU_SetDcUndeletable(HDC);
+BOOL FASTCALL IntSetDefaultRegion(PDC);
+ULONG TranslateCOLORREF(PDC pdc, COLORREF crColor);
+int FASTCALL GreSetStretchBltMode(HDC hdc, int iStretchMode);
 
 
 
@@ -179,20 +201,15 @@ VOID FASTCALL DC_vPrepareDCsForBlit(PDC pdc1, RECT rc1, PDC pdc2, RECT rc2);
 
 VOID NTAPI DC_vRestoreDC(IN PDC pdc, INT iSaveLevel);
 
-VOID FASTCALL DCU_SetDcUndeletable(HDC);
 VOID NTAPI DC_vFreeDcAttr(PDC pdc);
 VOID NTAPI DC_vInitDc(PDC pdc, DCTYPE dctype, PPDEVOBJ ppdev);
 
-COLORREF FASTCALL IntGdiSetBkColor (HDC hDC, COLORREF Color);
-INT FASTCALL IntGdiSetBkMode(HDC  hDC, INT  backgroundMode);
-COLORREF FASTCALL  IntGdiSetTextColor(HDC hDC, COLORREF color);
-UINT FASTCALL IntGdiSetTextAlign(HDC  hDC, UINT  Mode);
 VOID FASTCALL IntGdiReferencePdev(PPDEVOBJ pPDev);
 VOID FASTCALL IntGdiUnreferencePdev(PPDEVOBJ pPDev, DWORD CleanUpType);
 HDC FASTCALL IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC);
 BOOL FASTCALL IntGdiCleanDC(HDC hDC);
 VOID FASTCALL IntvGetDeviceCaps(PPDEVOBJ, PDEVCAPS);
-BOOL FASTCALL IntSetDefaultRegion(PDC);
+
 BOOL NTAPI GreSetDCOwner(HDC hdc, ULONG ulOwner);
 
 VOID
@@ -203,14 +220,26 @@ FORCEINLINE
 PDC
 DC_LockDc(HDC hdc)
 {
-    //if (GDI_HANDLE_GET_TYPE(hdc) != GDILoObjType_LO_DC_TYPE) return NULL; ???
-    return GDIOBJ_LockObject(hdc, GDIObjType_DC_TYPE);
+    PDC pdc;
+
+    pdc = GDIOBJ_LockObject(hdc, GDIObjType_DC_TYPE);
+    if (pdc)
+    {
+        ASSERT(GDI_HANDLE_GET_TYPE(pdc->BaseObject.hHmgr) == GDILoObjType_LO_DC_TYPE);
+        ASSERT(pdc->dclevel.plfnt != NULL);
+        ASSERT(GDI_HANDLE_GET_TYPE(((POBJ)pdc->dclevel.plfnt)->hHmgr) == GDILoObjType_LO_FONT_TYPE);
+    }
+
+    return pdc;
 }
 
 FORCEINLINE
 VOID
 DC_UnlockDc(PDC pdc)
 {
+    ASSERT(pdc->dclevel.plfnt != NULL);
+    ASSERT(GDI_HANDLE_GET_TYPE(((POBJ)pdc->dclevel.plfnt)->hHmgr) == GDILoObjType_LO_FONT_TYPE);
+
     GDIOBJ_vUnlockObject(&pdc->BaseObject);
 }
 
@@ -265,7 +294,7 @@ DC_vSelectPalette(PDC pdc, PPALETTE ppal)
     pdc->dclevel.ppal = ppal;
 }
 
-extern PBRUSH pbrDefaultBrush ;
-extern PSURFACE psurfDefaultBitmap;
+extern _Notnull_ PBRUSH pbrDefaultBrush;
+extern _Notnull_ PSURFACE psurfDefaultBitmap;
 
 #endif /* not __WIN32K_DC_H */

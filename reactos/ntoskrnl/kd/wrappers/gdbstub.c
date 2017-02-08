@@ -44,7 +44,8 @@ static FAST_MUTEX GspLock;
 extern LIST_ENTRY PsActiveProcessHead;
 
 /* FIXME hardcoded for COM2, 115200 baud */
-KD_PORT_INFORMATION GdbPortInfo = { 2, 115200, 0 };
+ULONG  GdbPortNumber = DEFAULT_DEBUG_PORT;
+CPPORT GdbPortInfo   = {0, DEFAULT_DEBUG_BAUD_RATE, 0};
 
 static CHAR GspInBuffer[1000];
 static CHAR GspOutBuffer[1000];
@@ -126,9 +127,7 @@ GdbGetChar(VOID)
 {
     UCHAR Value;
 
-    while (!KdPortGetByteEx(&GdbPortInfo, &Value))
-        ;
-
+    while (!KdPortGetByteEx(&GdbPortInfo, &Value)) ;
     return Value;
 }
 
@@ -145,8 +144,7 @@ GspGetPacket()
     while (TRUE)
     {
         /* wait around for the start character, ignore all other characters */
-        while ((ch = GdbGetChar()) != '$')
-            ;
+        while ((ch = GdbGetChar()) != '$') ;
 
 retry:
         Checksum = 0;
@@ -784,7 +782,6 @@ GspQuery(PCHAR Request)
     }
     else if (strncmp(Request, "Rcmd,", 5) == 0)
     {
-        ;
     }
 }
 
@@ -943,12 +940,14 @@ GspFindSwBreakpoint(ULONG_PTR Address, PULONG PIndex)
     ULONG Index;
 
     for (Index = 0; Index < GspSwBreakpointCount; Index++)
+    {
         if (GspSwBreakpoints[Index].Address == Address)
         {
             if (PIndex)
                 *PIndex = Index;
             return TRUE;
         }
+    }
 
     return FALSE;
 }
@@ -1569,7 +1568,7 @@ KdpGdbStubInit(PKD_DISPATCH_TABLE WrapperTable, ULONG BootPhase)
         WrapperTable->KdpExceptionRoutine = KdpGdbEnterDebuggerException;
 
         /* Initialize the Port */
-        KdPortInitializeEx(&GdbPortInfo, 0, 0);
+        KdPortInitializeEx(&GdbPortInfo, GdbPortNumber);
     }
     else if (BootPhase == 1)
     {

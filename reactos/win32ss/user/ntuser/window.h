@@ -34,7 +34,7 @@ extern ATOM AtomFlashWndState;
 #define IntGetWndProcessId(WndObj) \
   PsGetProcessId(WndObj->head.pti->ppi->peProcess)
 
-  
+PWND FASTCALL ValidateHwndNoErr(HWND);
 BOOL FASTCALL UserUpdateUiState(PWND Wnd, WPARAM wParam);
 BOOL FASTCALL IntIsWindow(HWND hWnd);
 HWND* FASTCALL IntWinListChildren(PWND Window);
@@ -47,10 +47,19 @@ VOID FASTCALL IntGetWindowBorderMeasures(PWND WindowObject, UINT *cx, UINT *cy);
 BOOL FASTCALL IntShowOwnedPopups( PWND owner, BOOL fShow );
 LRESULT FASTCALL IntDefWindowProc( PWND Window, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Ansi);
 VOID FASTCALL IntNotifyWinEvent(DWORD, PWND, LONG, LONG, DWORD);
-PWND FASTCALL co_UserCreateWindowEx(CREATESTRUCTW*, PUNICODE_STRING, PLARGE_STRING, PVOID);
+PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
+                                        PLARGE_STRING WindowName,
+                                        PCLS Class,
+                                        PWND ParentWindow,
+                                        PWND OwnerWindow,
+                                        PVOID acbiBuffer,
+                                        PDESKTOP pdeskCreated);
 BOOL FASTCALL IntEnableWindow(HWND,BOOL);
+BOOL FASTCALL IntIsWindowVisible(PWND);
 DWORD FASTCALL GetNCHitEx(PWND,POINT);
 ULONG FASTCALL IntSetStyle(PWND,ULONG,ULONG);
 PWND FASTCALL VerifyWnd(PWND);
+PWND FASTCALL IntGetNonChildAncestor(PWND);
+LONG FASTCALL co_UserSetWindowLong(HWND,DWORD,LONG,BOOL);
 
 /* EOF */

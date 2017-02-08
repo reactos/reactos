@@ -19,7 +19,7 @@
  */
 
 #include "editstr.h"
-#include "wine/unicode.h"
+#include <wine/unicode.h>
 
 struct _RTF_Info;
 
@@ -187,7 +187,7 @@ void ME_DestroyContext(ME_Context *c) DECLSPEC_HIDDEN;
 
 /* wrap.c */
 BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) DECLSPEC_HIDDEN;
-void ME_InvalidateMarkedParagraphs(ME_TextEditor *editor, ME_DisplayItem *start_para, ME_DisplayItem *end_para) DECLSPEC_HIDDEN;
+void ME_InvalidateParagraphRange(ME_TextEditor *editor, ME_DisplayItem *start_para, ME_DisplayItem *last_para) DECLSPEC_HIDDEN;
 void ME_SendRequestResize(ME_TextEditor *editor, BOOL force) DECLSPEC_HIDDEN;
 
 /* para.c */
@@ -201,8 +201,6 @@ void ME_DumpParaStyle(ME_Paragraph *s) DECLSPEC_HIDDEN;
 void ME_DumpParaStyleToBuf(const PARAFORMAT2 *pFmt, char buf[2048]) DECLSPEC_HIDDEN;
 BOOL ME_SetSelectionParaFormat(ME_TextEditor *editor, const PARAFORMAT2 *pFmt) DECLSPEC_HIDDEN;
 void ME_GetSelectionParaFormat(ME_TextEditor *editor, PARAFORMAT2 *pFmt) DECLSPEC_HIDDEN;
-/* marks from first up to (but not including) last */
-void ME_MarkForPainting(ME_TextEditor *editor, ME_DisplayItem *first, const ME_DisplayItem *last) DECLSPEC_HIDDEN;
 void ME_MarkAllForWrapping(ME_TextEditor *editor) DECLSPEC_HIDDEN;
 void ME_SetDefaultParaFormat(PARAFORMAT2 *pFmt) DECLSPEC_HIDDEN;
 
@@ -261,6 +259,7 @@ ME_DisplayItem *ME_InsertTableCellFromCursor(ME_TextEditor *editor) DECLSPEC_HID
 ME_DisplayItem *ME_InsertTableRowEndFromCursor(ME_TextEditor *editor) DECLSPEC_HIDDEN;
 ME_DisplayItem *ME_GetTableRowEnd(ME_DisplayItem *para) DECLSPEC_HIDDEN;
 ME_DisplayItem *ME_GetTableRowStart(ME_DisplayItem *para) DECLSPEC_HIDDEN;
+ME_DisplayItem *ME_GetOuterParagraph(ME_DisplayItem *para) DECLSPEC_HIDDEN;
 void ME_CheckTablesForCorruption(ME_TextEditor *editor) DECLSPEC_HIDDEN;
 void ME_ProtectPartialTableDeletion(ME_TextEditor *editor, ME_Cursor *c, int *nChars) DECLSPEC_HIDDEN;
 ME_DisplayItem* ME_AppendTableRow(ME_TextEditor *editor, ME_DisplayItem *table_row) DECLSPEC_HIDDEN;

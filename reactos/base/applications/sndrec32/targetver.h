@@ -5,10 +5,7 @@
  * PROGRAMMERS:     Marco Pagliaricci (irc: rendar)
  */
 
-
-
 #pragma once
-
 
 #ifndef WINVER                         
 #define WINVER 0x0600           

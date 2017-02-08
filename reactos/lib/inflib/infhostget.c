@@ -16,8 +16,8 @@
 
 int
 InfHostFindFirstLine(HINF InfHandle,
-                     const CHAR *Section,
-                     const CHAR *Key,
+                     const WCHAR *Section,
+                     const WCHAR *Key,
                      PINFCONTEXT *Context)
 {
   INFSTATUS Status;
@@ -56,7 +56,7 @@ InfHostFindNextLine(PINFCONTEXT ContextIn,
 
 int
 InfHostFindFirstMatchLine(PINFCONTEXT ContextIn,
-                          const CHAR *Key,
+                          const WCHAR *Key,
                           PINFCONTEXT ContextOut)
 {
   INFSTATUS Status;
@@ -76,7 +76,7 @@ InfHostFindFirstMatchLine(PINFCONTEXT ContextIn,
 
 int
 InfHostFindNextMatchLine(PINFCONTEXT ContextIn,
-                         const CHAR *Key,
+                         const WCHAR *Key,
                          PINFCONTEXT ContextOut)
 {
   INFSTATUS Status;
@@ -96,7 +96,7 @@ InfHostFindNextMatchLine(PINFCONTEXT ContextIn,
 
 LONG
 InfHostGetLineCount(HINF InfHandle,
-                    PCTSTR Section)
+                    PCWSTR Section)
 {
   return InfpGetLineCount(InfHandle, Section);
 }
@@ -138,11 +138,11 @@ InfHostGetBinaryField(PINFCONTEXT Context,
 int
 InfHostGetIntField(PINFCONTEXT Context,
                    ULONG FieldIndex,
-                   ULONG *IntegerValue)
+                   INT *IntegerValue)
 {
   INFSTATUS Status;
 
-  Status = InfpGetIntField(Context, FieldIndex, (PLONG)IntegerValue);
+  Status = InfpGetIntField(Context, FieldIndex, IntegerValue);
   if (INF_SUCCESS(Status))
     {
       return 0;
@@ -158,7 +158,7 @@ InfHostGetIntField(PINFCONTEXT Context,
 int
 InfHostGetMultiSzField(PINFCONTEXT Context,
                        ULONG FieldIndex,
-                       CHAR * ReturnBuffer,
+                       WCHAR *ReturnBuffer,
                        ULONG ReturnBufferSize,
                        ULONG *RequiredSize)
 {
@@ -181,7 +181,7 @@ InfHostGetMultiSzField(PINFCONTEXT Context,
 int
 InfHostGetStringField(PINFCONTEXT Context,
                       ULONG FieldIndex,
-                      CHAR *ReturnBuffer,
+                      WCHAR *ReturnBuffer,
                       ULONG ReturnBufferSize,
                       ULONG *RequiredSize)
 {
@@ -203,8 +203,8 @@ InfHostGetStringField(PINFCONTEXT Context,
 
 int
 InfHostGetData(PINFCONTEXT Context,
-               CHAR **Key,
-               CHAR **Data)
+               WCHAR **Key,
+               WCHAR **Data)
 {
   INFSTATUS Status;
 
@@ -224,7 +224,7 @@ InfHostGetData(PINFCONTEXT Context,
 int
 InfHostGetDataField(PINFCONTEXT Context,
                     ULONG FieldIndex,
-                    CHAR **Data)
+                    WCHAR **Data)
 {
   INFSTATUS Status;
 

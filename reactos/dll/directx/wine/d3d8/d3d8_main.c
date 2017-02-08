@@ -19,10 +19,10 @@
  *
  */
 
-#include "config.h"
-#include "initguid.h"
+#include <config.h>
+#include <initguid.h>
 #include "d3d8_private.h"
-#include "wine/debug.h"
+//#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
 
@@ -35,27 +35,24 @@ void WINAPI DebugSetMute(void) {
     /* nothing to do */
 }
 
-IDirect3D8* WINAPI DECLSPEC_HOTPATCH Direct3DCreate8(UINT SDKVersion) {
-    IDirect3D8Impl* object;
-    TRACE("SDKVersion = %x\n", SDKVersion);
+IDirect3D8 * WINAPI DECLSPEC_HOTPATCH Direct3DCreate8(UINT sdk_version)
+{
+    struct d3d8 *object;
 
-    wined3d_mutex_lock();
+    TRACE("sdk_version %#x.\n", sdk_version);
 
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirect3D8Impl));
+    if (!(object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object))))
+        return NULL;
 
-    object->IDirect3D8_iface.lpVtbl = &Direct3D8_Vtbl;
-    object->ref = 1;
-    object->WineD3D = wined3d_create(8, WINED3D_LEGACY_DEPTH_BIAS, &object->IDirect3D8_iface);
-
-    TRACE("Created Direct3D object @ %p, WineObj @ %p\n", object, object->WineD3D);
-
-    wined3d_mutex_unlock();
-
-    if (!object->WineD3D)
+    if (!d3d8_init(object))
     {
-        HeapFree( GetProcessHeap(), 0, object );
-        object = NULL;
+        WARN("Failed to initialize d3d8.\n");
+        HeapFree(GetProcessHeap(), 0, object);
+        return NULL;
     }
+
+    TRACE("Created d3d8 object %p.\n", object);
+
     return &object->IDirect3D8_iface;
 }
 

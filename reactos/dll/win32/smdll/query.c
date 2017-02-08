@@ -1,12 +1,11 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/smdll/query.c
  * PURPOSE:         Call SM API SM_API_QUERY_INFORMATION (not in NT)
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 #define NDEBUG
 #include <debug.h>

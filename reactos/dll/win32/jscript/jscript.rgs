@@ -1,0 +1,123 @@
+HKCR
+{
+    NoRemove CLSID
+    {
+        '{F414C260-6AC0-11CF-B6D1-00AA00BBBB58}'
+        {
+            'Implemented Categories'
+            {
+                '{f0b7a1a1-9847-11cf-8f20-00805f2cd064}'
+                '{f0b7a1a2-9847-11cf-8f20-00805f2cd064}'
+            }
+            OLEScript
+        }
+        '{F414C261-6AC0-11CF-B6D1-00AA00BBBB58}'
+        {
+            'Implemented Categories'
+            {
+                '{0aee2a92-bcbb-11d0-8c72-00c04fc2b085}'
+            }
+            OLEScript
+        }
+        '{F414C262-6AC0-11CF-B6D1-00AA00BBBB58}'
+        {
+            'Implemented Categories'
+            {
+                '{f0b7a1a1-9847-11cf-8f20-00805f2cd064}'
+                '{f0b7a1a2-9847-11cf-8f20-00805f2cd064}'
+                '{f0b7a1a3-9847-11cf-8f20-00805f2cd064}'
+            }
+            OLEScript
+        }
+    }
+
+    NoRemove 'Component Categories'
+    {
+        ForceRemove '{f0b7a1a1-9847-11cf-8f20-00805f2cd064}'
+        {
+            val '409' = s 'Active Scripting Engine'
+        }
+        ForceRemove '{f0b7a1a2-9847-11cf-8f20-00805f2cd064}'
+        {
+            val '409' = s 'Active Scripting Engine with Parsing'
+        }
+        ForceRemove '{f0b7a1a3-9847-11cf-8f20-00805f2cd064}'
+        {
+            val '409' = s 'Active Scripting Engine with Encoding'
+        }
+        ForceRemove '{0aee2a92-bcbb-11d0-8c72-00c04fc2b085}'
+        {
+            val '409' = s 'Active Scripting Engine with Authoring'
+        }
+    }
+
+    'ECMAScript' = s 'JScript Language'
+    {
+        CLSID = s '{F414C260-6AC0-11CF-B6D1-00AA00BBBB58}'
+        OLEScript
+    }
+    'JavaScript' = s 'JScript Language'
+    {
+        CLSID = s '{F414C260-6AC0-11CF-B6D1-00AA00BBBB58}'
+        OLEScript
+    }
+    'JavaScript1.1' = s 'JScript Language'
+    {
+        CLSID = s '{F414C260-6AC0-11CF-B6D1-00AA00BBBB58}'
+        OLEScript
+    }
+    'JavaScript1.2' = s 'JScript Language'
+    {
+        CLSID = s '{F414C260-6AC0-11CF-B6D1-00AA00BBBB58}'
+        OLEScript
+    }
+    'JavaScript1.3' = s 'JScript Language'
+    {
+        CLSID = s '{F414C260-6AC0-11CF-B6D1-00AA00BBBB58}'
+        OLEScript
+    }
+    'LiveScript' = s 'JScript Language'
+    {
+        CLSID = s '{F414C260-6AC0-11CF-B6D1-00AA00BBBB58}'
+        OLEScript
+    }
+    'JScript'
+    {
+        OLEScript
+    }
+
+    'JScript Author'
+    {
+        OLEScript
+    }
+    'JavaScript Author' = s 'JScript Language Authoring'
+    {
+        CLSID = s '{F414C261-6AC0-11CF-B6D1-00AA00BBBB58}'
+        OLEScript
+    }
+    'JavaScript1.1 Author' = s 'JScript Language Authoring'
+    {
+        CLSID = s '{F414C261-6AC0-11CF-B6D1-00AA00BBBB58}'
+        OLEScript
+    }
+    'JavaScript1.2 Author' = s 'JScript Language Authoring'
+    {
+        CLSID = s '{F414C261-6AC0-11CF-B6D1-00AA00BBBB58}'
+        OLEScript
+    }
+    'LiveScript Author' = s 'JScript Language Authoring'
+    {
+        CLSID = s '{F414C261-6AC0-11CF-B6D1-00AA00BBBB58}'
+        OLEScript
+    }
+
+    'JScript.Encode'
+    {
+        OLEScript
+    }
+
+    ForceRemove JSFile = s 'JScript Script File'
+    {
+        ScriptEngine = s 'JScript'
+    }
+}

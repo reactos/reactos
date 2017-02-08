@@ -57,7 +57,7 @@ IntVideoPortSetupTimer(
 
       if (!NT_SUCCESS(Status))
       {
-         WARN_(VIDEOPRT, "IoInitializeTimer failed with status 0x%08x\n", Status);
+         ERR_(VIDEOPRT, "IoInitializeTimer failed with status 0x%08x\n", Status);
          return FALSE;
       }
    }

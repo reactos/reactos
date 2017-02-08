@@ -152,8 +152,7 @@ PciIsDatacenter(VOID)
     else
     {
         /* This scenario shouldn't happen yet, since SetupDD isn't used */
-        UNIMPLEMENTED;
-        while (TRUE);
+        UNIMPLEMENTED_FATAL("ReactOS doesn't use SetupDD for its installation program. Therefore this scenario must not happen!\n");
     }
 
     /* Return if this is Datacenter or not */
@@ -503,7 +502,7 @@ PciGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
         if (!Buffer)
         {
             /* No memory, fail the request */
-            DPRINT1("PCI - Failed to allocate DeviceProperty buffer (%d bytes).\n", BufferLength);
+            DPRINT1("PCI - Failed to allocate DeviceProperty buffer (%u bytes).\n", BufferLength);
             Status = STATUS_INSUFFICIENT_RESOURCES;
             break;
         }
@@ -752,13 +751,15 @@ PciIsDeviceOnDebugPath(IN PPCI_PDO_EXTENSION DeviceExtension)
 {
     PAGED_CODE();
 
+    UNREFERENCED_PARAMETER(DeviceExtension);
+
     /* Check for too many, or no, debug ports */
     ASSERT(PciDebugPortsCount <= MAX_DEBUGGING_DEVICES_SUPPORTED);
     if (!PciDebugPortsCount) return FALSE;
 
     /* eVb has not been able to test such devices yet */
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
+    return FALSE;
 }
 
 NTSTATUS
@@ -1316,6 +1317,8 @@ PciQueryBusInformation(IN PPCI_PDO_EXTENSION PdoExtension,
 {
     PPNP_BUS_INFORMATION BusInfo;
 
+    UNREFERENCED_PARAMETER(Buffer);
+
     /* Allocate a structure for the bus information */
     BusInfo = ExAllocatePoolWithTag(PagedPool,
                                     sizeof(PNP_BUS_INFORMATION),
@@ -1341,7 +1344,7 @@ PciDetermineSlotNumber(IN PPCI_PDO_EXTENSION PdoExtension,
 
     /* Check if a $PIR from the BIOS is used (legacy IRQ routing) */
     ParentExtension = PdoExtension->ParentFdoExtension;
-    DPRINT1("Slot lookup for %d.%d.%d\n",
+    DPRINT1("Slot lookup for %d.%u.%u\n",
             ParentExtension ? ParentExtension->BaseBus : -1,
             PdoExtension->Slot.u.bits.DeviceNumber,
             PdoExtension->Slot.u.bits.FunctionNumber);
@@ -1349,12 +1352,12 @@ PciDetermineSlotNumber(IN PPCI_PDO_EXTENSION PdoExtension,
     {
         /* Read every slot information entry */
         SlotInfo = &PciIrqRoutingTable->Slot[0];
-        DPRINT1("PIR$ %p is %lx bytes, slot 0 is at: %lx\n",
+        DPRINT1("PIR$ %p is %lx bytes, slot 0 is at: %p\n",
                 PciIrqRoutingTable, PciIrqRoutingTable->TableSize, SlotInfo);
         while (SlotInfo < (PSLOT_INFO)((ULONG_PTR)PciIrqRoutingTable +
                                        PciIrqRoutingTable->TableSize))
         {
-            DPRINT1("Slot Info: %d.%d->#%d\n",
+            DPRINT1("Slot Info: %u.%u->#%u\n",
                     SlotInfo->BusNumber,
                     SlotInfo->DeviceNumber,
                     SlotInfo->SlotNumber);

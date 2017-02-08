@@ -18,6 +18,7 @@
 #include <libxml/globals.h>
 #include <libxml/xmlerror.h>
 #include <libxml/tree.h>
+#include <libxml/dict.h>
 #include <libxml/xpathInternals.h>
 #include <libxml/parserInternals.h>
 #include "xslt.h"
@@ -39,7 +40,7 @@
  *			Module interfaces				*
  *									*
  ************************************************************************/
- 
+
 /**
  * xsltEvalXPathPredicate:
  * @ctxt:  the XSLT transformation context
@@ -198,7 +199,8 @@ xsltEvalTemplateString(xsltTransformContextPtr ctxt,
     xmlNodePtr oldInsert, insert = NULL;
     xmlChar *ret;
 
-    if ((ctxt == NULL) || (contextNode == NULL) || (inst == NULL))
+    if ((ctxt == NULL) || (contextNode == NULL) || (inst == NULL) ||
+        (inst->type != XML_ELEMENT_NODE))
 	return(NULL);
 
     if (inst->children == NULL)
@@ -279,7 +281,17 @@ xsltAttrTemplateValueProcessNode(xsltTransformContextPtr ctxt,
 	    ret = xmlStrncat(ret, str, cur - str);
 	    str = cur;
 	    cur++;
-	    while ((*cur != 0) && (*cur != '}')) cur++;
+	    while ((*cur != 0) && (*cur != '}')) {
+		/* Need to check for literal (bug539741) */
+		if ((*cur == '\'') || (*cur == '"')) {
+		    char delim = *(cur++);
+		    while ((*cur != 0) && (*cur != delim))
+			cur++;
+		    if (*cur != 0)
+			cur++;	/* skip the ending delimiter */
+		} else
+		    cur++;
+            }
 	    if (*cur == 0) {
 	        xsltTransformError(ctxt, NULL, inst,
 			"xsltAttrTemplateValueProcessNode: unmatched '{'\n");
@@ -380,7 +392,8 @@ xsltEvalAttrValueTemplate(xsltTransformContextPtr ctxt, xmlNodePtr inst,
     xmlChar *ret;
     xmlChar *expr;
 
-    if ((ctxt == NULL) || (inst == NULL) || (name == NULL))
+    if ((ctxt == NULL) || (inst == NULL) || (name == NULL) ||
+        (inst->type != XML_ELEMENT_NODE))
 	return(NULL);
 
     expr = xsltGetNsProp(inst, name, ns);
@@ -424,7 +437,8 @@ xsltEvalStaticAttrValueTemplate(xsltStylesheetPtr style, xmlNodePtr inst,
     const xmlChar *ret;
     xmlChar *expr;
 
-    if ((style == NULL) || (inst == NULL) || (name == NULL))
+    if ((style == NULL) || (inst == NULL) || (name == NULL) ||
+        (inst->type != XML_ELEMENT_NODE))
 	return(NULL);
 
     expr = xsltGetNsProp(inst, name, ns);
@@ -454,7 +468,7 @@ xsltEvalStaticAttrValueTemplate(xsltStylesheetPtr style, xmlNodePtr inst,
  * Evaluates Attribute Value Templates and copies the attribute over to
  * the result element.
  * This does *not* process attribute sets (xsl:use-attribute-set).
- * 
+ *
  *
  * Returns the generated attribute node.
  */
@@ -465,16 +479,17 @@ xsltAttrTemplateProcess(xsltTransformContextPtr ctxt, xmlNodePtr target,
     const xmlChar *value;
     xmlAttrPtr ret;
 
-    if ((ctxt == NULL) || (attr == NULL) || (target == NULL))
+    if ((ctxt == NULL) || (attr == NULL) || (target == NULL) ||
+        (target->type != XML_ELEMENT_NODE))
 	return(NULL);
-    
+
     if (attr->type != XML_ATTRIBUTE_NODE)
 	return(NULL);
 
     /*
     * Skip all XSLT attributes.
     */
-#ifdef XSLT_REFACTORED    
+#ifdef XSLT_REFACTORED
     if (attr->psvi == xsltXSLTAttrMarker)
 	return(NULL);
 #else
@@ -511,7 +526,7 @@ xsltAttrTemplateProcess(xsltTransformContextPtr ctxt, xmlNodePtr target,
 	}
         ret = ret->next;
     }
-    if (ret != NULL) {	
+    if (ret != NULL) {
         /* free the existing value */
 	xmlFreeNodeList(ret->children);
 	ret->children = ret->last = NULL;
@@ -530,7 +545,7 @@ xsltAttrTemplateProcess(xsltTransformContextPtr ctxt, xmlNodePtr target,
 		xsltGetNamespace(ctxt, attr->parent, attr->ns, target),
 		    attr->name, NULL);
 	else
-	    ret = xmlNewNsProp(target, NULL, attr->name, NULL);	
+	    ret = xmlNewNsProp(target, NULL, attr->name, NULL);
     }
     /*
     * Set the value.
@@ -572,7 +587,8 @@ xsltAttrTemplateProcess(xsltTransformContextPtr ctxt, xmlNodePtr target,
 		}
 	    } else if ((ctxt->internalized) && (target != NULL) &&
 	               (target->doc != NULL) &&
-		       (target->doc->dict == ctxt->dict)) {
+		       (target->doc->dict == ctxt->dict) &&
+		       xmlDictOwns(ctxt->dict, value)) {
 		text->content = (xmlChar *) value;
 	    } else {
 		text->content = xmlStrdup(value);
@@ -581,11 +597,11 @@ xsltAttrTemplateProcess(xsltTransformContextPtr ctxt, xmlNodePtr target,
     } else {
 	if (attr->ns) {
 	    xsltTransformError(ctxt, NULL, attr->parent,
-	    	"Internal error: Failed to create attribute '{%s}%s'.\n",
+		"Internal error: Failed to create attribute '{%s}%s'.\n",
 		attr->ns->href, attr->name);
 	} else {
 	    xsltTransformError(ctxt, NULL, attr->parent,
-	    	"Internal error: Failed to create attribute '%s'.\n",
+		"Internal error: Failed to create attribute '%s'.\n",
 		attr->name);
 	}
     }
@@ -613,7 +629,7 @@ xsltAttrTemplateProcess(xsltTransformContextPtr ctxt, xmlNodePtr target,
  *         attributes will be disattached.)
  */
 xmlAttrPtr
-xsltAttrListTemplateProcess(xsltTransformContextPtr ctxt, 
+xsltAttrListTemplateProcess(xsltTransformContextPtr ctxt,
 	                    xmlNodePtr target, xmlAttrPtr attrs)
 {
     xmlAttrPtr attr, copy, last;
@@ -622,11 +638,12 @@ xsltAttrListTemplateProcess(xsltTransformContextPtr ctxt,
     const xmlChar *value;
     xmlChar *valueAVT;
 
-    if ((ctxt == NULL) || (target == NULL) || (attrs == NULL))
+    if ((ctxt == NULL) || (target == NULL) || (attrs == NULL) ||
+        (target->type != XML_ELEMENT_NODE))
 	return(NULL);
 
     oldInsert = ctxt->insert;
-    ctxt->insert = target;        
+    ctxt->insert = target;
 
     /*
     * Instantiate LRE-attributes.
@@ -757,7 +774,8 @@ xsltAttrListTemplateProcess(xsltTransformContextPtr ctxt,
 		}
 	    } else if ((ctxt->internalized) &&
 		(target->doc != NULL) &&
-		(target->doc->dict == ctxt->dict))
+		(target->doc->dict == ctxt->dict) &&
+		xmlDictOwns(ctxt->dict, value))
 	    {
 		text->content = (xmlChar *) value;
 	    } else {
@@ -818,7 +836,7 @@ xmlNodePtr *
 xsltTemplateProcess(xsltTransformContextPtr ctxt ATTRIBUTE_UNUSED, xmlNodePtr node) {
     if (node == NULL)
 	return(NULL);
-    
+
     return(0);
 }
 

@@ -582,13 +582,12 @@ PMIB_IPNETTABLE getArpTable(void)
 					(PVOID *)&AdapterArpTable,
 					&returnSize );
 
-	    if( status == STATUS_SUCCESS ) {
-		for( TmpIdx = 0; TmpIdx < returnSize; TmpIdx++, CurrIdx++ )
-		    IpArpTable->table[CurrIdx] = AdapterArpTable[TmpIdx];
-	    }
-
-	    if( AdapterArpTable ) tdiFreeThingSet( AdapterArpTable );
-	}
+            if( status == STATUS_SUCCESS ) {
+                for( TmpIdx = 0; TmpIdx < returnSize; TmpIdx++, CurrIdx++ )
+                    IpArpTable->table[CurrIdx] = AdapterArpTable[TmpIdx];
+                tdiFreeThingSet( AdapterArpTable );
+            }
+        }
     }
 
     closeTcpFile( tcpFile );

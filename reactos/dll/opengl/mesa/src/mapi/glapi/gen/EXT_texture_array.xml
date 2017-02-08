@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!DOCTYPE OpenGLAPI SYSTEM "gl_API.dtd">
+
+<OpenGLAPI>
+
+<category name="GL_EXT_texture_array" number="329">
+    <enum name="TEXTURE_1D_ARRAY_EXT"                      value="0x8C18"/>
+    <enum name="PROXY_TEXTURE_1D_ARRAY_EXT"                value="0x8C19"/>
+    <enum name="TEXTURE_2D_ARRAY_EXT"                      value="0x8C1A"/>
+    <enum name="PROXY_TEXTURE_2D_ARRAY_EXT"                value="0x8C1B"/>
+
+    <enum name="TEXTURE_BINDING_1D_ARRAY_EXT"   count="1"  value="0x8C1C">
+        <size name="Get" mode="get"/>
+    </enum>
+
+    <enum name="TEXTURE_BINDING_2D_ARRAY_EXT"   count="1"  value="0x8C1D">
+        <size name="Get" mode="get"/>
+    </enum>
+
+    <enum name="MAX_ARRAY_TEXTURE_LAYERS_EXT"   count="1"  value="0x88FF">
+        <size name="Get" mode="get"/>
+    </enum>
+
+    <enum name="COMPARE_REF_DEPTH_TO_TEXTURE_EXT" count="1" value="0x884E">
+        <size name="Get" mode="get"/>
+    </enum>
+
+    <enum name="FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER_EXT"   count="1" value="0x8CD4">
+        <size name="GetFramebufferAttachmentParameterivEXT" mode="get"/>
+    </enum>
+
+    <function name="FramebufferTextureLayerEXT" offset="assign">
+        <param name="target" type="GLenum"/>
+        <param name="attachment" type="GLenum"/>
+        <param name="texture" type="GLuint"/>
+        <param name="level" type="GLint"/>
+        <param name="layer" type="GLint"/>
+	<glx rop="237"/>
+    </function>
+</category>
+
+</OpenGLAPI>

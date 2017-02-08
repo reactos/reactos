@@ -16,8 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS International Control Panel
  * FILE:            dll/cpl/intl/date.c
  * PURPOSE:         Date property page
@@ -80,7 +79,7 @@ FindDateSep(const TCHAR *szSourceStr)
     return pszFoundSep;
 }
 
-/* Replace given template in source string with string to replace and return recieved string */
+/* Replace given template in source string with string to replace and return received string */
 
 
 /* Setted up short date separator to registry */

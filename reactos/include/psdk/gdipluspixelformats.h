@@ -46,7 +46,40 @@ typedef INT PixelFormat;
 #define    PixelFormat48bppRGB          (12 | (48 << 8) | PixelFormatExtended)
 #define    PixelFormat64bppARGB         (13 | (64 << 8) | PixelFormatAlpha  | PixelFormatCanonical | PixelFormatExtended)
 #define    PixelFormat64bppPARGB        (14 | (64 << 8) | PixelFormatAlpha  | PixelFormatPAlpha | PixelFormatExtended)
-#define    PixelFormatMax               15
+#define    PixelFormat32bppCMYK         (15 | (32 << 8))
+#define    PixelFormatMax               16
+
+static inline BOOL IsIndexedPixelFormat(PixelFormat format)
+{
+    return (format & PixelFormatIndexed) != 0;
+}
+
+static inline BOOL IsAlphaPixelFormat(PixelFormat format)
+{
+    return (format & PixelFormatAlpha) != 0;
+}
+
+static inline BOOL IsCanonicalPixelFormat(PixelFormat format)
+{
+    return (format & PixelFormatCanonical) != 0;
+}
+
+static inline BOOL IsExtendedPixelFormat(PixelFormat format)
+{
+    return (format & PixelFormatExtended) != 0;
+}
+
+static inline UINT GetPixelFormatSize(PixelFormat format)
+{
+    return (format >> 8) & 0xff;
+}
+
+enum PaletteFlags
+{
+    PaletteFlagsHasAlpha        = 1,
+    PaletteFlagsGrayScale       = 2,
+    PaletteFlagsHalftone        = 4
+};
 
 #ifdef __cplusplus
 

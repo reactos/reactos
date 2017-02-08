@@ -1,7 +1,7 @@
 #define COBJMACROS
-#include <windows.h>
-#include <tchar.h>
-#include <stdio.h>
-#include <shlobj.h>
-#include <ole2.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+
 #include <debug.h>

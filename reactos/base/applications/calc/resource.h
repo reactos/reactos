@@ -1,3 +1,5 @@
+#pragma once
+
 #define IDS_STRING_LICENSE              1
 #define IDS_MATH_ERROR                  2
 #define IDS_QUICKHELP                   3
@@ -376,4 +378,3 @@
 #define IDM_VIEW_BYTE                   40018
 #define IDM_VIEW_DWORD                  40019
 #define IDM_VIEW_CONVERSION             40020
-

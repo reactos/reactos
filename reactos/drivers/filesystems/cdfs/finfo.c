@@ -1,31 +1,30 @@
 /*
-*  ReactOS kernel
-*  Copyright (C) 2002, 2004 ReactOS Team
-*
-*  This program is free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  This program is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  You should have received a copy of the GNU General Public License along
-*  with this program; if not, write to the Free Software Foundation, Inc.,
-*  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-*/
-/* $Id$
-*
-* COPYRIGHT:        See COPYING in the top level directory
-* PROJECT:          ReactOS kernel
-* FILE:             services/fs/cdfs/finfo.c
-* PURPOSE:          CDROM (ISO 9660) filesystem driver
-* PROGRAMMER:       Art Yerkes
-*                   Eric Kohl
-* UPDATE HISTORY:
-*/
+ *  ReactOS kernel
+ *  Copyright (C) 2002, 2004 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+/*
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PROJECT:          ReactOS kernel
+ * FILE:             services/fs/cdfs/finfo.c
+ * PURPOSE:          CDROM (ISO 9660) filesystem driver
+ * PROGRAMMER:       Art Yerkes
+ *                   Eric Kohl
+ * UPDATE HISTORY:
+ */
 
 /* INCLUDES *****************************************************************/
 
@@ -46,6 +45,8 @@ CdfsGetStandardInformation(PFCB Fcb,
                            PULONG BufferLength)
 {
     DPRINT("CdfsGetStandardInformation() called\n");
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     if (*BufferLength < sizeof(FILE_STANDARD_INFORMATION))
         return STATUS_BUFFER_OVERFLOW;
@@ -113,6 +114,9 @@ CdfsGetBasicInformation(PFILE_OBJECT FileObject,
 {
     DPRINT("CdfsGetBasicInformation() called\n");
 
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     if (*BufferLength < sizeof(FILE_BASIC_INFORMATION))
         return STATUS_BUFFER_OVERFLOW;
 
@@ -151,6 +155,9 @@ CdfsGetNameInformation(PFILE_OBJECT FileObject,
 
     ASSERT(NameInfo != NULL);
     ASSERT(Fcb != NULL);
+
+    UNREFERENCED_PARAMETER(FileObject);
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     /* If buffer can't hold at least the file name length, bail out */
     if (*BufferLength < (ULONG)FIELD_OFFSET(FILE_NAME_INFORMATION, FileName[0]))
@@ -404,7 +411,7 @@ CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
         break;
 
     default:
-        DPRINT("Unimplemented information class %u\n", FileInformationClass);
+        DPRINT("Unimplemented information class %x\n", FileInformationClass);
         Status = STATUS_INVALID_PARAMETER;
         break;
     }
@@ -431,8 +438,8 @@ CdfsSetPositionInformation(PFILE_OBJECT FileObject,
 {
     DPRINT ("CdfsSetPositionInformation()\n");
 
-    DPRINT ("PositionInfo %x\n", PositionInfo);
-    DPRINT ("Setting position %I64u\n", PositionInfo->CurrentByteOffset.QuadPart);
+    DPRINT ("PositionInfo %p\n", PositionInfo);
+    DPRINT ("Setting position %I64d\n", PositionInfo->CurrentByteOffset.QuadPart);
 
     FileObject->CurrentByteOffset.QuadPart =
         PositionInfo->CurrentByteOffset.QuadPart;
@@ -454,6 +461,8 @@ CdfsSetInformation(PDEVICE_OBJECT DeviceObject,
     PVOID SystemBuffer;
 
     NTSTATUS Status = STATUS_SUCCESS;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     DPRINT("CdfsSetInformation() called\n");
 

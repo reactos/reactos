@@ -33,7 +33,7 @@ RtlGetCallersAddress(OUT PVOID *CallersAddress,
     /* Only if user want it */
     if (*CallersAddress != NULL)
     {
-        /* only when first frames exist */ 
+        /* only when first frames exist */
         if (FrameCount >= 1)
         {
             *CallersAddress = BackTrace[0];
@@ -47,7 +47,7 @@ RtlGetCallersAddress(OUT PVOID *CallersAddress,
     /* Only if user want it */
     if (*CallersCaller != NULL)
     {
-        /* only when second frames exist */ 
+        /* only when second frames exist */
         if (FrameCount >= 2)
         {
             *CallersCaller = BackTrace[1];
@@ -74,15 +74,11 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     ULONG_PTR StackLow, StackHigh;
     ULONG_PTR RegistrationFrameEnd;
 
-    /* Perform vectored exception handling if we are in user mode */
-    if (RtlpGetMode() != KernelMode)
+    /* Perform vectored exception handling (a dummy in kernel mode) */
+    if (RtlCallVectoredExceptionHandlers(ExceptionRecord, Context))
     {
-        /* Call any registered vectored handlers */
-        if (RtlCallVectoredExceptionHandlers(ExceptionRecord, Context))
-        {
-            /* Exception handled, continue execution */
-            return TRUE;
-        }
+        /* Exception handled, continue execution */
+        return TRUE;
     }
 
     /* Get the current stack limits and registration frame */
@@ -92,6 +88,9 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     /* Now loop every frame */
     while (RegistrationFrame != EXCEPTION_CHAIN_END)
     {
+        /* Registration chain entries are never NULL */
+        ASSERT(RegistrationFrame != NULL);
+
         /* Find out where it ends */
         RegistrationFrameEnd = (ULONG_PTR)RegistrationFrame +
                                 sizeof(EXCEPTION_REGISTRATION_RECORD);
@@ -127,8 +126,7 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                                                      RegistrationFrame,
                                                      Context,
                                                      &DispatcherContext,
-                                                     RegistrationFrame->
-                                                     Handler);
+                                                     RegistrationFrame->Handler);
 
         /* Check if this is a nested frame */
         if (RegistrationFrame == NestedFrame)
@@ -274,6 +272,9 @@ RtlUnwind(IN PVOID TargetFrame OPTIONAL,
     /* Now loop every frame */
     while (RegistrationFrame != EXCEPTION_CHAIN_END)
     {
+        /* Registration chain entries are never NULL */
+        ASSERT(RegistrationFrame != NULL);
+
         /* If this is the target */
         if (RegistrationFrame == TargetFrame) ZwContinue(Context, FALSE);
 
@@ -326,8 +327,7 @@ RtlUnwind(IN PVOID TargetFrame OPTIONAL,
                                                       RegistrationFrame,
                                                       Context,
                                                       &DispatcherContext,
-                                                      RegistrationFrame->
-                                                      Handler);
+                                                      RegistrationFrame->Handler);
             switch(Disposition)
             {
                 /* Continue searching */

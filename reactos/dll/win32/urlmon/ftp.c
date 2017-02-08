@@ -19,9 +19,9 @@
 #include "urlmon_main.h"
 
 #define NO_SHLWAPI_REG
-#include "shlwapi.h"
+#include <shlwapi.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
@@ -144,7 +144,7 @@ static HRESULT WINAPI FtpProtocol_QueryInterface(IInternetProtocolEx *iface, REF
     }
 
     if(*ppv) {
-        IInternetProtocol_AddRef(iface);
+        IInternetProtocolEx_AddRef(iface);
         return S_OK;
     }
 

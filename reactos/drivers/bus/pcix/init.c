@@ -677,20 +677,21 @@ NTSTATUS
 NTAPI
 PciGetDebugPorts(IN HANDLE DebugKey)
 {
+    UNREFERENCED_PARAMETER(DebugKey);
     /* This function is not yet implemented */
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_SUCCESS;
 }
+
+DRIVER_UNLOAD PciDriverUnload;
 
 VOID
 NTAPI
 PciDriverUnload(IN PDRIVER_OBJECT DriverObject)
 {
+    UNREFERENCED_PARAMETER(DriverObject);
     /* This function is not yet implemented */
-    DPRINT1("PCI: Unload\n");
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK("PCI: Unload\n");
 }
 
 NTSTATUS

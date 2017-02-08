@@ -1,7 +1,7 @@
 /*
 * COPYRIGHT:  See COPYING in the top level directory
 * PROJECT:    ReactOS kernel
-* FILE:       drivers/fs/np/finfo.c
+* FILE:       drivers/filesystems/npfs/finfo.c
 * PURPOSE:    Named pipe filesystem
 * PROGRAMMER: Eric Kohl
 */
@@ -24,6 +24,9 @@ NpfsSetPipeInformation(PDEVICE_OBJECT DeviceObject,
 {
     PNPFS_FCB Fcb;
     PFILE_PIPE_INFORMATION Request;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     DPRINT("NpfsSetPipeInformation()\n");
 
     if (*BufferLength < sizeof(FILE_PIPE_INFORMATION))
@@ -48,7 +51,7 @@ NpfsSetPipeInformation(PDEVICE_OBJECT DeviceObject,
     {
         Fcb->ClientReadMode = Request->ReadMode;
     }
-    else 
+    else
     {
         Fcb->ServerReadMode = Request->ReadMode;
     }
@@ -68,6 +71,9 @@ NpfsSetPipeRemoteInformation(PDEVICE_OBJECT DeviceObject,
 {
     PNPFS_FCB Fcb;
     PFILE_PIPE_REMOTE_INFORMATION Request;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     DPRINT("NpfsSetPipeRemoteInformation()\n");
 
     if (*BufferLength < sizeof(FILE_PIPE_REMOTE_INFORMATION))
@@ -97,6 +103,9 @@ NpfsQueryPipeInformation(PDEVICE_OBJECT DeviceObject,
 {
     PNPFS_FCB Fcb;
     ULONG ConnectionSideReadMode;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     DPRINT("NpfsQueryPipeInformation()\n");
 
     if (*BufferLength < sizeof(FILE_PIPE_INFORMATION))
@@ -132,6 +141,9 @@ NpfsQueryPipeRemoteInformation(PDEVICE_OBJECT DeviceObject,
                                PULONG BufferLength)
 {
     PNPFS_FCB Fcb;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     DPRINT("NpfsQueryPipeRemoteInformation()\n");
 
     if (*BufferLength < sizeof(FILE_PIPE_REMOTE_INFORMATION))
@@ -164,6 +176,8 @@ NpfsQueryLocalPipeInformation(PDEVICE_OBJECT DeviceObject,
                               PULONG BufferLength)
 {
     PNPFS_FCB Fcb;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     DPRINT("NpfsQueryLocalPipeInformation()\n");
 

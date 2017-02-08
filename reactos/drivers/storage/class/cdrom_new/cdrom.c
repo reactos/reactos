@@ -72,8 +72,6 @@ Revision History:
   (irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_CDROM_RAW_READ)))
 
 
-
-
 NTSTATUS
 NTAPI
 DriverEntry(
@@ -175,9 +173,9 @@ Return Value:
     return ClassInitialize( DriverObject, RegistryPath, &InitializationData);
 
 } // end DriverEntry()
-
 
 VOID
+NTAPI
 CdRomUnload(
     IN PDRIVER_OBJECT DriverObject
     )
@@ -189,9 +187,9 @@ CdRomUnload(
     WPP_CLEANUP(DriverObject);
     return;
 } // end CdRomUnload()
-
 
 NTSTATUS
+NTAPI
 CdRomAddDevice(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT PhysicalDeviceObject
@@ -259,9 +257,9 @@ Return Value:
 
     return status;
 }
-
 
 NTSTATUS
+NTAPI
 CdRomCreateDeviceObject(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT PhysicalDeviceObject
@@ -290,7 +288,7 @@ Return Value:
 --*/
 {
     UCHAR ntNameBuffer[64];
-    STRING ntNameString;
+    //STRING ntNameString;
     NTSTATUS status;
 
     PDEVICE_OBJECT lowerDevice = NULL;
@@ -300,12 +298,12 @@ Return Value:
     PCDROM_DRIVER_EXTENSION driverExtension = NULL;
     ULONG deviceNumber;
 
-    CCHAR                   dosNameBuffer[64];
-    CCHAR                   deviceNameBuffer[64];
-    STRING                  deviceNameString;
-    STRING                  dosString;
-    UNICODE_STRING          dosUnicodeString;
-    UNICODE_STRING          unicodeString;
+    //CCHAR                   dosNameBuffer[64];
+    //CCHAR                   deviceNameBuffer[64];
+    //STRING                  deviceNameString;
+    //STRING                  dosString;
+    //UNICODE_STRING          dosUnicodeString;
+    //UNICODE_STRING          unicodeString;
 
     PAGED_CODE();
 
@@ -518,9 +516,9 @@ CreateCdRomDeviceObjectExit:
     return status;
 
 } // end CreateCdRomDeviceObject()
-
 
 NTSTATUS
+NTAPI
 CdRomInitDevice(
     IN PDEVICE_OBJECT Fdo
     )
@@ -557,7 +555,7 @@ Return Value:
     ULONG timeOut;
     PCDROM_DATA cddata = NULL;
 
-    BOOLEAN changerDevice;
+    //BOOLEAN changerDevice;
     BOOLEAN isMmcDevice = FALSE;
 
     ULONG bps;
@@ -1173,9 +1171,9 @@ CdRomInitDeviceExit:
     return status;
 
 }
-
 
 NTSTATUS
+NTAPI
 CdRomStartDevice(
     IN PDEVICE_OBJECT Fdo
     )
@@ -1321,9 +1319,9 @@ Return Value:
 
     return STATUS_SUCCESS;
 }
-
 
 NTSTATUS
+NTAPI
 CdRomStopDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN UCHAR Type
@@ -1331,9 +1329,9 @@ CdRomStopDevice(
 {
     return STATUS_SUCCESS;
 }
-
 
 VOID
+NTAPI
 CdRomStartIo(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP Irp
@@ -1351,7 +1349,7 @@ CdRomStartIo(
 
     ULONG               transferPages;
     ULONG               transferByteCount = currentIrpStack->Parameters.Read.Length;
-    LARGE_INTEGER       startingOffset = currentIrpStack->Parameters.Read.ByteOffset;
+    //LARGE_INTEGER       startingOffset = currentIrpStack->Parameters.Read.ByteOffset;
     PCDROM_DATA         cdData;
     PSCSI_REQUEST_BLOCK srb = NULL;
     PCDB                cdb;
@@ -1942,7 +1940,7 @@ CdRomStartIo(
                 if (cdData->RawAccess) {
 
                     ULONG  startingSector;
-                    UCHAR  min, sec, frame;
+                    //UCHAR  min, sec, frame;
 
                     //
                     // Free the recently allocated irp, as we don't need it.
@@ -2962,7 +2960,7 @@ CdRomStartIo(
 
         case IOCTL_CDROM_GET_CONTROL: {
 
-            PAUDIO_OUTPUT audioOutput;
+            //PAUDIO_OUTPUT audioOutput;
             PCDROM_AUDIO_CONTROL audioControl = Irp->AssociatedIrp.SystemBuffer;
 
             //
@@ -3295,9 +3293,9 @@ CdRomStartIo(
     IoCallDriver(commonExtension->LowerDeviceObject, Irp);
     return;
 }
-
 
 NTSTATUS
+NTAPI
 CdRomReadWriteVerification(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -3333,7 +3331,7 @@ Return Value:
 
     SCSI_REQUEST_BLOCK  srb;
     PCDB                cdb = (PCDB)srb.Cdb;
-    NTSTATUS            status;
+    //NTSTATUS            status;
 
     PAGED_CODE();
 
@@ -3381,9 +3379,9 @@ Return Value:
     return STATUS_SUCCESS;
 
 } // end CdRomReadWriteVerification()
-
 
 NTSTATUS
+NTAPI
 CdRomSwitchModeCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -3552,7 +3550,7 @@ CdRomSwitchModeCompletion(
 
             ULONG maximumTransferLength;
             ULONG transferPages;
-            UCHAR min, sec, frame;
+            //UCHAR min, sec, frame;
 
             //
             // Calculate starting offset.
@@ -3828,9 +3826,9 @@ CdRomSwitchModeCompletion(
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
-
 
 VOID
+NTAPI
 ScanForSpecialHandler(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     ULONG_PTR HackFlags
@@ -3851,6 +3849,7 @@ ScanForSpecialHandler(
 }
 
 VOID
+NTAPI
 ScanForSpecial(
     PDEVICE_OBJECT DeviceObject
     )
@@ -4187,9 +4186,9 @@ Return Value:
     
     return;
 }
-
 
 VOID
+NTAPI
 HitachiProcessErrorGD2000(
     PDEVICE_OBJECT Fdo,
     PSCSI_REQUEST_BLOCK OriginalSrb,
@@ -4234,12 +4233,12 @@ Return Value:
     if (((senseBuffer->SenseKey & 0xf) == SCSI_SENSE_HARDWARE_ERROR) &&
         (senseBuffer->AdditionalSenseCode == 0x44)) {
 
-        PFUNCTIONAL_DEVICE_EXTENSION fdoExtension;
-        PIRP                irp;
-        PIO_STACK_LOCATION  irpStack;
-        PCOMPLETION_CONTEXT context;
-        PSCSI_REQUEST_BLOCK newSrb;
-        PCDB                cdb;
+        //PFUNCTIONAL_DEVICE_EXTENSION fdoExtension;
+        //PIRP                irp;
+        //PIO_STACK_LOCATION  irpStack;
+        //PCOMPLETION_CONTEXT context;
+        //PSCSI_REQUEST_BLOCK newSrb;
+        //PCDB                cdb;
 
         TraceLog((CdromDebugWarning,
                     "HitachiProcessErrorGD2000 (%p) => Internal Target "
@@ -4266,9 +4265,9 @@ Return Value:
 
     return;
 }
-
 
 VOID
+NTAPI
 HitachiProcessError(
     PDEVICE_OBJECT DeviceObject,
     PSCSI_REQUEST_BLOCK Srb,
@@ -4479,9 +4478,9 @@ Return Value:
 
     }
 }
-
 
 NTSTATUS
+NTAPI
 ToshibaProcessErrorCompletion(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -4531,9 +4530,9 @@ Return Value:
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
-
 
 VOID
+NTAPI
 ToshibaProcessError(
     PDEVICE_OBJECT DeviceObject,
     PSCSI_REQUEST_BLOCK Srb,
@@ -4713,9 +4712,9 @@ Return Value:
         IoCallDriver(fdoExtension->CommonExtension.LowerDeviceObject, irp);
     }
 }
-
 
 BOOLEAN
+NTAPI
 CdRomIsPlayActive(
     IN PDEVICE_OBJECT DeviceObject
     )
@@ -4795,9 +4794,9 @@ Return Value:
     return(PLAY_ACTIVE(fdoExtension));
 
 }
-
 
 VOID
+NTAPI
 CdRomTickHandler(
     IN PDEVICE_OBJECT DeviceObject
     )
@@ -4827,12 +4826,12 @@ Return Value:
 
     KIRQL             oldIrql;
 
-    PIRP              irp;
-    PIRP              heldIrpList;
-    PIRP              nextIrp;
-    PLIST_ENTRY       listEntry;
+    //PIRP              irp;
+    //PIRP              heldIrpList;
+    //PIRP              nextIrp;
+    //PLIST_ENTRY       listEntry;
     PCDROM_DATA       cddata;
-    PIO_STACK_LOCATION irpStack;
+    //PIO_STACK_LOCATION irpStack;
     UCHAR             uniqueAddress;
 
     isRemoved = ClassAcquireRemoveLock(DeviceObject, (PIRP) &uniqueAddress);
@@ -4915,9 +4914,9 @@ Return Value:
 
     ClassReleaseRemoveLock(DeviceObject, (PIRP) &uniqueAddress);
 }
-
 
 NTSTATUS
+NTAPI
 CdRomUpdateGeometryCompletion(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -4955,10 +4954,10 @@ Return Value:
     NTSTATUS            status;
     BOOLEAN             retry;
     ULONG               retryCount;
-    ULONG               lastSector;
+    //ULONG               lastSector;
     PIRP                originalIrp;
-    PCDROM_DATA         cddata;
-    UCHAR               uniqueAddress;
+    //PCDROM_DATA         cddata;
+    //UCHAR               uniqueAddress;
 
     //
     // Get items saved in the private IRP stack location.
@@ -4975,7 +4974,7 @@ Return Value:
 
     fdoExtension = DeviceObject->DeviceExtension;
     commonExtension = DeviceObject->DeviceExtension;
-    cddata = commonExtension->DriverData;
+    //cddata = commonExtension->DriverData;
     readCapacityBuffer = srb->DataBuffer;
 
     if ((NT_SUCCESS(Irp->IoStatus.Status)) && (SRB_STATUS(srb->SrbStatus) == SRB_STATUS_SUCCESS)) {
@@ -5155,9 +5154,9 @@ Return Value:
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
-
 
 NTSTATUS
+NTAPI
 CdRomUpdateCapacity(
     IN PFUNCTIONAL_DEVICE_EXTENSION DeviceExtension,
     IN PIRP IrpToComplete,
@@ -5194,7 +5193,7 @@ Return Value:
     PREAD_CAPACITY_DATA capacityBuffer;
     PIO_STACK_LOCATION  irpStack;
     PUCHAR              senseBuffer;
-    NTSTATUS            status;
+    //NTSTATUS            status;
 
     irp = IoAllocateIrp((CCHAR)(commonExtension->DeviceObject->StackSize+1),
                         FALSE);
@@ -5353,9 +5352,9 @@ Return Value:
                                              IrpToComplete);
     return STATUS_INSUFFICIENT_RESOURCES;
 }
-
 
 NTSTATUS
+NTAPI
 CdRomRemoveDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN UCHAR Type
@@ -5494,9 +5493,9 @@ Return Value:
 
     return STATUS_SUCCESS;
 }
-
 
 DEVICE_TYPE
+NTAPI
 CdRomGetDeviceType(
     IN PDEVICE_OBJECT DeviceObject
     )
@@ -5621,9 +5620,9 @@ Return Value:
 
     return deviceType;
 }
-
 
 NTSTATUS
+NTAPI
 CdRomCreateWellKnownName(
     IN PDEVICE_OBJECT DeviceObject
     )
@@ -5733,9 +5732,9 @@ Return Value:
 
     return STATUS_SUCCESS;
 }
-
 
 VOID
+NTAPI
 CdRomDeleteWellKnownName(
     IN PDEVICE_OBJECT DeviceObject
     )
@@ -5754,9 +5753,9 @@ CdRomDeleteWellKnownName(
     }
     return;
 }
-
 
 NTSTATUS
+NTAPI
 CdRomGetDeviceParameter (
     IN     PDEVICE_OBJECT      Fdo,
     IN     PWSTR               ParameterName,
@@ -5830,9 +5829,9 @@ Return Value:
     return status;
 
 } // CdRomGetDeviceParameter
-
 
 NTSTATUS
+NTAPI
 CdRomSetDeviceParameter (
     IN PDEVICE_OBJECT Fdo,
     IN PWSTR          ParameterName,
@@ -5891,9 +5890,9 @@ Return Value:
     return status;
 
 } // CdromSetDeviceParameter
-
 
 VOID
+NTAPI
 CdRomPickDvdRegion(
     IN PDEVICE_OBJECT Fdo
     )
@@ -6372,9 +6371,9 @@ getout:
 
     return;
 }
-
 
 NTSTATUS
+NTAPI
 CdRomRetryRequest(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN PIRP Irp,
@@ -6404,9 +6403,9 @@ CdRomRetryRequest(
 
     return STATUS_PENDING;
 }
-
 
 NTSTATUS
+NTAPI
 CdRomRerunRequest(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN OPTIONAL PIRP Irp,
@@ -6425,7 +6424,6 @@ CdRomRerunRequest(
         return STATUS_MORE_PROCESSING_REQUIRED;
     }
 }
-
 
 /*++
 
@@ -6625,6 +6623,7 @@ Routine Description:
 
 --*/
 VOID
+NTAPI
 CdRomErrorHandler(
     PDEVICE_OBJECT DeviceObject,
     PSCSI_REQUEST_BLOCK Srb,
@@ -6704,7 +6703,6 @@ CdRomErrorHandler(
     }
     return;
 }
-
 
 /*++
 
@@ -6726,6 +6724,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 CdRomShutdownFlush(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -7007,8 +7006,8 @@ SafeExit:
 
 } // end CdromShutdownFlush()
 
-
 VOID
+NTAPI
 CdromFakePartitionInfo(
     IN PCOMMON_DEVICE_EXTENSION CommonExtension,
     IN PIRP Irp
@@ -7144,5 +7143,3 @@ CdromFakePartitionInfo(
     return;
 
 }
-
-

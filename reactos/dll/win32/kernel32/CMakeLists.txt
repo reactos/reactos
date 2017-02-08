@@ -1,47 +1,48 @@
 
 add_definitions(-D_KERNEL32_)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
-
-set_rc_compiler()
-
 spec2def(kernel32.dll kernel32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-	client/appcache.c
-	client/atom.c
-	client/compname.c
+    client/appcache.c
+    client/atom.c
+    client/compname.c
     client/debugger.c
     client/dosdev.c
-	client/dllmain.c
-	client/environ.c
+    client/dllmain.c
+    client/environ.c
     client/except.c
     client/fiber.c
-	client/handle.c
+    client/handle.c
     client/heapmem.c
     client/job.c
-	client/loader.c
-	client/path.c
-	client/perfcnt.c
-	client/power.c
+    client/loader.c
+    client/path.c
+    client/perfcnt.c
+    client/power.c
     client/proc.c
-	client/resntfy.c
+    client/resntfy.c
     client/session.c
     client/synch.c
-	client/sysinfo.c
-	client/time.c
-	client/timerqueue.c
-	client/toolhelp.c
-	client/utils.c
+    client/sysinfo.c
+    client/time.c
+    client/timerqueue.c
+    client/toolhelp.c
+    client/utils.c
     client/thread.c
-	client/vdm.c
-	client/version.c
+    client/vdm.c
+    client/version.c
     client/virtmem.c
     client/vista.c
+    client/console/alias.c
+    client/console/console.c
+    client/console/history.c
+    client/console/init.c
+    client/console/readwrite.c
+    client/console/vista.c
     client/file/backup.c
     client/file/cnotify.c
     client/file/copy.c
-    client/file/console.c
     client/file/create.c
     client/file/delete.c
     client/file/deviceio.c
@@ -79,24 +80,21 @@ list(APPEND SOURCE
     kernel32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/kernel32.def)
 
-if(ARCH MATCHES i386)
-list(APPEND SOURCE
-    client/i386/fiber.S
-    client/i386/thread.S)
-elseif(ARCH MATCHES amd64)
-list(APPEND SOURCE
-    client/amd64/fiber.S
-    client/amd64/thread.S)
-endif(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
+    list(APPEND ASM_SOURCE
+        client/i386/fiber.S
+        client/i386/thread.S)
+elseif(ARCH STREQUAL "amd64")
+    list(APPEND ASM_SOURCE
+        client/amd64/fiber.S
+        client/amd64/thread.S)
+endif()
 
-add_library(kernel32 SHARED ${SOURCE})
-
+add_asm_files(kernel32_asm ${ASM_SOURCE})
+add_library(kernel32 SHARED ${SOURCE} ${kernel32_asm})
 set_module_type(kernel32 win32dll ENTRYPOINT DllMain 12)
-
 target_link_libraries(kernel32 wine chkstk ${PSEH_LIB})
-
 add_importlibs(kernel32 ntdll)
 add_pch(kernel32 k32.h)
 add_dependencies(kernel32 psdk errcodes asm)
 add_cd_file(TARGET kernel32 DESTINATION reactos/system32 FOR all)
-

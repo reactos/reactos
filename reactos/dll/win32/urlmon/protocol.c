@@ -19,7 +19,7 @@
 
 #include "urlmon_main.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
@@ -70,6 +70,55 @@ static void all_data_read(Protocol *protocol)
     report_result(protocol, S_OK);
 }
 
+static HRESULT start_downloading(Protocol *protocol)
+{
+    HRESULT hres;
+
+    hres = protocol->vtbl->start_downloading(protocol);
+    if(FAILED(hres)) {
+        protocol_close_connection(protocol);
+        report_result(protocol, hres);
+        return S_OK;
+    }
+
+    if(protocol->bindf & BINDF_NEEDFILE) {
+        WCHAR cache_file[MAX_PATH];
+        DWORD buflen = sizeof(cache_file);
+
+        if(InternetQueryOptionW(protocol->request, INTERNET_OPTION_DATAFILE_NAME, cache_file, &buflen)) {
+            report_progress(protocol, BINDSTATUS_CACHEFILENAMEAVAILABLE, cache_file);
+        }else {
+            FIXME("Could not get cache file\n");
+        }
+    }
+
+    protocol->flags |= FLAG_FIRST_CONTINUE_COMPLETE;
+    return S_OK;
+}
+
+HRESULT protocol_syncbinding(Protocol *protocol)
+{
+    BOOL res;
+    HRESULT hres;
+
+    protocol->flags |= FLAG_SYNC_READ;
+
+    hres = start_downloading(protocol);
+    if(FAILED(hres))
+        return hres;
+
+    res = InternetQueryDataAvailable(protocol->request, &protocol->query_available, 0, 0);
+    if(res)
+        protocol->available_bytes = protocol->query_available;
+    else
+        WARN("InternetQueryDataAvailable failed: %u\n", GetLastError());
+
+    protocol->flags |= FLAG_FIRST_DATA_REPORTED|FLAG_LAST_DATA_REPORTED;
+    IInternetProtocolSink_ReportData(protocol->protocol_sink, BSCF_LASTDATANOTIFICATION|BSCF_DATAFULLYAVAILABLE,
+            protocol->available_bytes, protocol->content_length);
+    return S_OK;
+}
+
 static void request_complete(Protocol *protocol, INTERNET_ASYNC_RESULT *ar)
 {
     PROTOCOLDATA data;
@@ -89,13 +138,13 @@ static void request_complete(Protocol *protocol, INTERNET_ASYNC_RESULT *ar)
         }
 
         if(protocol->flags & FLAG_FIRST_CONTINUE_COMPLETE)
-            data.pData = (LPVOID)BINDSTATUS_ENDDOWNLOADCOMPONENTS;
+            data.pData = UlongToPtr(BINDSTATUS_ENDDOWNLOADCOMPONENTS);
         else
-            data.pData = (LPVOID)BINDSTATUS_DOWNLOADINGDATA;
+            data.pData = UlongToPtr(BINDSTATUS_DOWNLOADINGDATA);
 
     }else {
         protocol->flags |= FLAG_ERROR;
-        data.pData = (LPVOID)ar->dwError;
+        data.pData = UlongToPtr(ar->dwError);
     }
 
     if (protocol->bindf & BINDF_FROMURLMON)
@@ -115,10 +164,19 @@ static void WINAPI internet_status_callback(HINTERNET internet, DWORD_PTR contex
         report_progress(protocol, BINDSTATUS_FINDINGRESOURCE, (LPWSTR)status_info);
         break;
 
-    case INTERNET_STATUS_CONNECTING_TO_SERVER:
-        TRACE("%p INTERNET_STATUS_CONNECTING_TO_SERVER\n", protocol);
-        report_progress(protocol, BINDSTATUS_CONNECTING, (LPWSTR)status_info);
+    case INTERNET_STATUS_CONNECTING_TO_SERVER: {
+        WCHAR *info;
+
+        TRACE("%p INTERNET_STATUS_CONNECTING_TO_SERVER %s\n", protocol, (const char*)status_info);
+
+        info = heap_strdupAtoW(status_info);
+        if(!info)
+            return;
+
+        report_progress(protocol, BINDSTATUS_CONNECTING, info);
+        heap_free(info);
         break;
+    }
 
     case INTERNET_STATUS_SENDING_REQUEST:
         TRACE("%p INTERNET_STATUS_SENDING_REQUEST\n", protocol);
@@ -286,12 +344,10 @@ HRESULT protocol_start(Protocol *protocol, IInternetProtocol *prot, IUri *uri,
 
 HRESULT protocol_continue(Protocol *protocol, PROTOCOLDATA *data)
 {
+    BOOL is_start;
     HRESULT hres;
 
-    if (!data) {
-        WARN("Expected pProtocolData to be non-NULL\n");
-        return S_OK;
-    }
+    is_start = !data || data->pData == UlongToPtr(BINDSTATUS_DOWNLOADINGDATA);
 
     if(!protocol->request) {
         WARN("Expected request to be non-NULL\n");
@@ -305,52 +361,56 @@ HRESULT protocol_continue(Protocol *protocol, PROTOCOLDATA *data)
 
     if(protocol->flags & FLAG_ERROR) {
         protocol->flags &= ~FLAG_ERROR;
-        protocol->vtbl->on_error(protocol, (DWORD)data->pData);
+        protocol->vtbl->on_error(protocol, PtrToUlong(data->pData));
         return S_OK;
     }
 
     if(protocol->post_stream)
         return write_post_stream(protocol);
 
-    if(data->pData == (LPVOID)BINDSTATUS_DOWNLOADINGDATA) {
-        hres = protocol->vtbl->start_downloading(protocol);
-        if(FAILED(hres)) {
-            protocol_close_connection(protocol);
-            report_result(protocol, hres);
+    if(is_start) {
+        hres = start_downloading(protocol);
+        if(FAILED(hres))
             return S_OK;
-        }
-
-        if(protocol->bindf & BINDF_NEEDFILE) {
-            WCHAR cache_file[MAX_PATH];
-            DWORD buflen = sizeof(cache_file);
-
-            if(InternetQueryOptionW(protocol->request, INTERNET_OPTION_DATAFILE_NAME,
-                    cache_file, &buflen)) {
-                report_progress(protocol, BINDSTATUS_CACHEFILENAMEAVAILABLE, cache_file);
-            }else {
-                FIXME("Could not get cache file\n");
-            }
-        }
-
-        protocol->flags |= FLAG_FIRST_CONTINUE_COMPLETE;
     }
 
-    if(data->pData >= (LPVOID)BINDSTATUS_DOWNLOADINGDATA && !protocol->available_bytes) {
-        BOOL res;
+    if(!data || data->pData >= UlongToPtr(BINDSTATUS_DOWNLOADINGDATA)) {
+        if(!protocol->available_bytes) {
+            if(protocol->query_available) {
+                protocol->available_bytes = protocol->query_available;
+            }else {
+                BOOL res;
 
-        /* InternetQueryDataAvailable may immediately fork and perform its asynchronous
-         * read, so clear the flag _before_ calling so it does not incorrectly get cleared
-         * after the status callback is called */
-        protocol->flags &= ~FLAG_REQUEST_COMPLETE;
-        res = InternetQueryDataAvailable(protocol->request, &protocol->available_bytes, 0, 0);
-        if(res) {
+                /* InternetQueryDataAvailable may immediately fork and perform its asynchronous
+                 * read, so clear the flag _before_ calling so it does not incorrectly get cleared
+                 * after the status callback is called */
+                protocol->flags &= ~FLAG_REQUEST_COMPLETE;
+                res = InternetQueryDataAvailable(protocol->request, &protocol->query_available, 0, 0);
+                if(res) {
+                    TRACE("available %u bytes\n", protocol->query_available);
+                    if(!protocol->query_available) {
+                        if(is_start) {
+                            TRACE("empty file\n");
+                            all_data_read(protocol);
+                        }else {
+                            WARN("unexpected end of file?\n");
+                            report_result(protocol, INET_E_DOWNLOAD_FAILURE);
+                        }
+                        return S_OK;
+                    }
+                    protocol->available_bytes = protocol->query_available;
+                }else if(GetLastError() != ERROR_IO_PENDING) {
+                    protocol->flags |= FLAG_REQUEST_COMPLETE;
+                    WARN("InternetQueryDataAvailable failed: %d\n", GetLastError());
+                    report_result(protocol, INET_E_DATA_NOT_AVAILABLE);
+                    return S_OK;
+                }
+            }
+
             protocol->flags |= FLAG_REQUEST_COMPLETE;
-            report_data(protocol);
-        }else if(GetLastError() != ERROR_IO_PENDING) {
-            protocol->flags |= FLAG_REQUEST_COMPLETE;
-            WARN("InternetQueryDataAvailable failed: %d\n", GetLastError());
-            report_result(protocol, INET_E_DATA_NOT_AVAILABLE);
         }
+
+        report_data(protocol);
     }
 
     return S_OK;
@@ -367,7 +427,7 @@ HRESULT protocol_read(Protocol *protocol, void *buf, ULONG size, ULONG *read_ret
         return S_FALSE;
     }
 
-    if(!(protocol->flags & FLAG_REQUEST_COMPLETE) || !protocol->available_bytes) {
+    if(!(protocol->flags & FLAG_SYNC_READ) && (!(protocol->flags & FLAG_REQUEST_COMPLETE) || !protocol->available_bytes)) {
         *read_ret = 0;
         return E_PENDING;
     }
@@ -393,12 +453,14 @@ HRESULT protocol_read(Protocol *protocol, void *buf, ULONG size, ULONG *read_ret
         protocol->current_position += len;
         protocol->available_bytes -= len;
 
+        TRACE("current_position %d, available_bytes %d\n", protocol->current_position, protocol->available_bytes);
+
         if(!protocol->available_bytes) {
             /* InternetQueryDataAvailable may immediately fork and perform its asynchronous
              * read, so clear the flag _before_ calling so it does not incorrectly get cleared
              * after the status callback is called */
             protocol->flags &= ~FLAG_REQUEST_COMPLETE;
-            res = InternetQueryDataAvailable(protocol->request, &protocol->available_bytes, 0, 0);
+            res = InternetQueryDataAvailable(protocol->request, &protocol->query_available, 0, 0);
             if(!res) {
                 if (GetLastError() == ERROR_IO_PENDING) {
                     hres = E_PENDING;
@@ -410,10 +472,12 @@ HRESULT protocol_read(Protocol *protocol, void *buf, ULONG size, ULONG *read_ret
                 break;
             }
 
-            if(!protocol->available_bytes) {
+            if(!protocol->query_available) {
                 all_data_read(protocol);
                 break;
             }
+
+            protocol->available_bytes = protocol->query_available;
         }
     }
 

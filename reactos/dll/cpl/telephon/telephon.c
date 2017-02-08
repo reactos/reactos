@@ -8,7 +8,10 @@
  *    10-19-2007  Created
  */
 
-#include <windows.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 #include <cpl.h>
 
 #include "resource.h"

@@ -20,21 +20,27 @@
 #ifndef __WINE_URLMON_MAIN_H
 #define __WINE_URLMON_MAIN_H
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "ole2.h"
-#include "urlmon.h"
-#include "wininet.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+//#include "winuser.h"
+#include <ole2.h>
+#include <urlmon.h>
+#include <wininet.h>
+#include <shellapi.h>
 
-#include "wine/unicode.h"
-#include "wine/list.h"
+#include <wine/unicode.h>
+#include <wine/list.h>
 
 extern HINSTANCE hProxyDll DECLSPEC_HIDDEN;
 extern HRESULT SecManagerImpl_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
@@ -47,6 +53,7 @@ extern HRESULT FtpProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPE
 extern HRESULT GopherProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
 extern HRESULT MkProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
 extern HRESULT MimeFilter_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
+extern HRESULT Uri_Construct(IUnknown *pUnkOuter, LPVOID *ppobj) DECLSPEC_HIDDEN;
 
 extern BOOL WINAPI URLMON_DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) DECLSPEC_HIDDEN;
 extern HRESULT WINAPI URLMON_DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv) DECLSPEC_HIDDEN;
@@ -54,6 +61,7 @@ extern HRESULT WINAPI URLMON_DllRegisterServer(void) DECLSPEC_HIDDEN;
 extern HRESULT WINAPI URLMON_DllUnregisterServer(void) DECLSPEC_HIDDEN;
 
 extern GUID const CLSID_PSFactoryBuffer DECLSPEC_HIDDEN;
+extern GUID const CLSID_CUri DECLSPEC_HIDDEN;
 
 /**********************************************************************
  * Dll lifetime tracking declaration for urlmon.dll
@@ -62,11 +70,13 @@ extern LONG URLMON_refCount DECLSPEC_HIDDEN;
 static inline void URLMON_LockModule(void) { InterlockedIncrement( &URLMON_refCount ); }
 static inline void URLMON_UnlockModule(void) { InterlockedDecrement( &URLMON_refCount ); }
 
+extern HINSTANCE urlmon_instance;
+
 IInternetProtocolInfo *get_protocol_info(LPCWSTR) DECLSPEC_HIDDEN;
 HRESULT get_protocol_handler(IUri*,CLSID*,BOOL*,IClassFactory**) DECLSPEC_HIDDEN;
 IInternetProtocol *get_mime_filter(LPCWSTR) DECLSPEC_HIDDEN;
 BOOL is_registered_protocol(LPCWSTR) DECLSPEC_HIDDEN;
-void register_urlmon_namespace(IClassFactory*,REFIID,LPCWSTR,BOOL) DECLSPEC_HIDDEN;
+HRESULT register_namespace(IClassFactory*,REFIID,LPCWSTR,BOOL) DECLSPEC_HIDDEN;
 HINTERNET get_internet_session(IInternetBindInfo*) DECLSPEC_HIDDEN;
 LPWSTR get_useragent(void) DECLSPEC_HIDDEN;
 void free_session(void) DECLSPEC_HIDDEN;
@@ -76,6 +86,10 @@ HRESULT bind_to_object(IMoniker*,IUri*,IBindCtx*,REFIID,void**ppv) DECLSPEC_HIDD
 
 HRESULT create_default_callback(IBindStatusCallback**) DECLSPEC_HIDDEN;
 HRESULT wrap_callback(IBindStatusCallback*,IBindStatusCallback**) DECLSPEC_HIDDEN;
+IBindStatusCallback *bsc_from_bctx(IBindCtx*) DECLSPEC_HIDDEN;
+
+typedef HRESULT (*stop_cache_binding_proc_t)(void*,const WCHAR*,HRESULT,const WCHAR*);
+HRESULT download_to_cache(IUri*,stop_cache_binding_proc_t,void*,IBindStatusCallback*) DECLSPEC_HIDDEN;
 
 typedef struct ProtocolVtbl ProtocolVtbl;
 
@@ -96,6 +110,7 @@ typedef struct {
     ULONG current_position;
     ULONG content_length;
     ULONG available_bytes;
+    ULONG query_available;
 
     IStream *post_stream;
 
@@ -140,6 +155,7 @@ struct ProtocolVtbl {
 #define FLAG_LAST_DATA_REPORTED       0x0010
 #define FLAG_RESULT_REPORTED          0x0020
 #define FLAG_ERROR                    0x0040
+#define FLAG_SYNC_READ                0x0080
 
 HRESULT protocol_start(Protocol*,IInternetProtocol*,IUri*,IInternetProtocolSink*,IInternetBindInfo*) DECLSPEC_HIDDEN;
 HRESULT protocol_continue(Protocol*,PROTOCOLDATA*) DECLSPEC_HIDDEN;
@@ -147,21 +163,10 @@ HRESULT protocol_read(Protocol*,void*,ULONG,ULONG*) DECLSPEC_HIDDEN;
 HRESULT protocol_lock_request(Protocol*) DECLSPEC_HIDDEN;
 HRESULT protocol_unlock_request(Protocol*) DECLSPEC_HIDDEN;
 HRESULT protocol_abort(Protocol*,HRESULT) DECLSPEC_HIDDEN;
+HRESULT protocol_syncbinding(Protocol*) DECLSPEC_HIDDEN;
 void protocol_close_connection(Protocol*) DECLSPEC_HIDDEN;
 
 void find_domain_name(const WCHAR*,DWORD,INT*) DECLSPEC_HIDDEN;
-
-typedef struct {
-    IInternetProtocol     IInternetProtocol_iface;
-    IInternetProtocolSink IInternetProtocolSink_iface;
-
-    LONG ref;
-
-    IInternetProtocolSink *protocol_sink;
-    IInternetProtocol *protocol;
-} ProtocolProxy;
-
-HRESULT create_protocol_proxy(IInternetProtocol*,IInternetProtocolSink*,ProtocolProxy**) DECLSPEC_HIDDEN;
 
 typedef struct _task_header_t task_header_t;
 
@@ -184,8 +189,10 @@ typedef struct {
 
     struct {
         IInternetProtocol IInternetProtocol_iface;
+        IInternetProtocolSink IInternetProtocolSink_iface;
     } default_protocol_handler;
     IInternetProtocol *protocol_handler;
+    IInternetProtocolSink *protocol_sink_handler;
 
     LONG priority;
 
@@ -209,7 +216,7 @@ typedef struct {
     DWORD buf_size;
     LPWSTR mime;
     IUri *uri;
-    ProtocolProxy *filter_proxy;
+    BSTR display_uri;
 }  BindProtocol;
 
 HRESULT create_binding_protocol(BOOL,BindProtocol**) DECLSPEC_HIDDEN;
@@ -226,6 +233,8 @@ tls_data_t *get_tls_data(void) DECLSPEC_HIDDEN;
 
 HWND get_notif_hwnd(void) DECLSPEC_HIDDEN;
 void release_notif_hwnd(HWND) DECLSPEC_HIDDEN;
+
+const char *debugstr_bindstatus(ULONG) DECLSPEC_HIDDEN;
 
 static inline void *heap_alloc(size_t len)
 {
@@ -261,7 +270,8 @@ static inline LPWSTR heap_strdupW(LPCWSTR str)
 
         size = (strlenW(str)+1)*sizeof(WCHAR);
         ret = heap_alloc(size);
-        memcpy(ret, str, size);
+        if(ret)
+            memcpy(ret, str, size);
     }
 
     return ret;
@@ -289,7 +299,22 @@ static inline LPWSTR heap_strdupAtoW(const char *str)
     if(str) {
         DWORD len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
         ret = heap_alloc(len*sizeof(WCHAR));
-        MultiByteToWideChar(CP_ACP, 0, str, -1, ret, len);
+        if(ret)
+            MultiByteToWideChar(CP_ACP, 0, str, -1, ret, len);
+    }
+
+    return ret;
+}
+
+static inline char *heap_strdupWtoA(const WCHAR *str)
+{
+    char *ret = NULL;
+
+    if(str) {
+        size_t size = WideCharToMultiByte(CP_ACP, 0, str, -1, NULL, 0, NULL, NULL);
+        ret = heap_alloc(size);
+        if(ret)
+            WideCharToMultiByte(CP_ACP, 0, str, -1, ret, size, NULL, NULL);
     }
 
     return ret;

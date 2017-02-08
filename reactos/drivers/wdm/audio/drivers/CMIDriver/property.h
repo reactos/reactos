@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2006-2007 dogbert <dogber1@gmail.com>
+Copyright (c) 2006-2008 dogbert <dogber1@gmail.com>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -25,16 +25,15 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#pragma once
+#ifndef _PROPERTY_H_
+#define _PROPERTY_H_
 
 //GUID for the private property
 // {2B81CDBB-EE6C-4ECC-8AA5-9A188B023DFF}
-
 #define STATIC_KSPROPSETID_CMI \
-    0x2B81CDBB, 0xEE6C, 0x4ECC, 0x8A, 0xA5, 0x9A, 0x18, 0x8B, 0x02, 0x3D, 0xFF
+    0x2B81CDBB, 0xEE6C, 0x4ECC, {0x8A, 0xA5, 0x9A, 0x18, 0x8B, 0x02, 0x3D, 0xFF}
 DEFINE_GUIDSTRUCT("2B81CDBB-EE6C-4ECC-8AA5-9A188B023DFF", KSPROPSETID_CMI);
 #define KSPROPSETID_CMI DEFINE_GUIDNAMED(KSPROPSETID_CMI)
-
 
 //methods
 #define KSPROPERTY_CMI_GET  1
@@ -67,7 +66,7 @@ typedef struct
 	UInt16  IOBase;
 	UInt16  MPUBase;
 	UInt32  maxChannels;
-	UInt32  enablePCMDAC;
+	UInt32  enableSPDIMonitor;
 	UInt32  exchangeFrontBack;
 	UInt32  enableBass2Line;
 	UInt32  enableCenter2Line;
@@ -83,3 +82,5 @@ typedef struct
 	UInt32  formatMask;
 	UInt32  enableSPDI;
 } CMIDATA;
+
+#endif //_PROPERTY_H_

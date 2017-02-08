@@ -1,0 +1,30 @@
+LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+	POPUP "&קובץ"
+	BEGIN
+		MENUITEM "&פתח...", IDM_OPEN_FILE
+		MENUITEM "&סגור", IDM_CLOSE_FILE
+		MENUITEM SEPARATOR
+		MENUITEM "&יציאה", IDM_EXIT
+	END
+	POPUP "&עזרה"
+	BEGIN
+		MENUITEM "&אודות", IDM_ABOUT
+	END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_ALL_TYPES_FILTER "כל הקבצים הנתמכים (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+	IDS_TOOLTIP_PLAY "נגן"
+	IDS_TOOLTIP_STOP "עצור"
+	IDS_TOOLTIP_EJECT "הוצא"
+	IDS_TOOLTIP_BACKWARD "דלג אחורנית"
+	IDS_TOOLTIP_SEEKBACK "חפש אחורנית"
+	IDS_TOOLTIP_SEEKFORW "חפש קדימה"
+	IDS_TOOLTIP_FORWARD "דלג קדימה"
+	IDS_APPTITLE "נגן המולטימדיה של ReactOS"
+	IDS_PLAY "נגן"
+END

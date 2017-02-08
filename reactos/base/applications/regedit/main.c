@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <regedit.h>
+#include "regedit.h"
 
 BOOL ProcessCmdLine(LPWSTR lpCmdLine);
 
@@ -33,12 +33,12 @@ HWND hStatusBar;
 HMENU hMenuFrame;
 HMENU hPopupMenus = 0;
 UINT nClipboardFormat;
-LPCTSTR strClipboardFormat = _T("TODO: SET CORRECT FORMAT");
+LPCWSTR strClipboardFormat = L"TODO: SET CORRECT FORMAT";
 
 #define MAX_LOADSTRING  100
-TCHAR szTitle[MAX_LOADSTRING];
-TCHAR szFrameClass[MAX_LOADSTRING];
-TCHAR szChildClass[MAX_LOADSTRING];
+WCHAR szTitle[MAX_LOADSTRING];
+WCHAR szFrameClass[MAX_LOADSTRING];
+WCHAR szChildClass[MAX_LOADSTRING];
 
 
 /*******************************************************************************
@@ -59,43 +59,44 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     BOOL AclUiAvailable;
     HMENU hEditMenu;
 
-    WNDCLASSEX wcFrame;
-    WNDCLASSEX wcChild;
+    WNDCLASSEXW wcFrame;
+    WNDCLASSEXW wcChild;
     ATOM hFrameWndClass;
 
-    ZeroMemory(&wcFrame, sizeof(WNDCLASSEX));
-    wcFrame.cbSize = sizeof(WNDCLASSEX);
+    ZeroMemory(&wcFrame, sizeof(WNDCLASSEXW));
+    wcFrame.cbSize = sizeof(WNDCLASSEXW);
     wcFrame.lpfnWndProc = FrameWndProc;
     wcFrame.hInstance = hInstance;
-    wcFrame.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_REGEDIT));
-    wcFrame.hIconSm = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_REGEDIT),
-                                       IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
-                                       GetSystemMetrics(SM_CYSMICON), LR_SHARED);
-    wcFrame.hCursor = LoadCursor(0, IDC_ARROW);
+    wcFrame.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_REGEDIT));
+    wcFrame.hIconSm = (HICON)LoadImageW(hInstance, MAKEINTRESOURCEW(IDI_REGEDIT),
+                                        IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
+                                        GetSystemMetrics(SM_CYSMICON), LR_SHARED);
+    wcFrame.hCursor = LoadCursorW(NULL, IDC_ARROW);
     wcFrame.lpszClassName = szFrameClass;
 
-    hFrameWndClass = RegisterClassEx(&wcFrame); /* register frame window class */
+    hFrameWndClass = RegisterClassExW(&wcFrame); /* register frame window class */
 
-    ZeroMemory(&wcChild, sizeof(WNDCLASSEX));
-    wcChild.cbSize = sizeof(WNDCLASSEX);
+    ZeroMemory(&wcChild, sizeof(WNDCLASSEXW));
+    wcChild.cbSize = sizeof(WNDCLASSEXW);
     wcChild.lpfnWndProc = ChildWndProc;
     wcChild.cbWndExtra = sizeof(HANDLE);
     wcChild.hInstance = hInstance;
-    wcChild.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_REGEDIT));
-    wcChild.hCursor = LoadCursor(0, IDC_ARROW);
+    wcChild.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_REGEDIT));
+    wcChild.hCursor = LoadCursorW(NULL, IDC_ARROW);
     wcChild.lpszClassName = szChildClass;
-    wcChild.hIconSm = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_REGEDIT),
-                                       IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
-                                       GetSystemMetrics(SM_CYSMICON), LR_SHARED);
+    wcChild.hIconSm = (HICON)LoadImageW(hInstance, MAKEINTRESOURCEW(IDI_REGEDIT),
+                                        IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
+                                        GetSystemMetrics(SM_CYSMICON), LR_SHARED);
 
-    RegisterClassEx(&wcChild); /* register child windows class */
+    RegisterClassExW(&wcChild); /* register child windows class */
 
     RegisterHexEditorClass(hInstance);
 
-    hMenuFrame = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_REGEDIT_MENU));
-    hPopupMenus = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_POPUP_MENUS));
+    hMenuFrame = LoadMenuW(hInstance, MAKEINTRESOURCEW(IDR_REGEDIT_MENU));
+    hPopupMenus = LoadMenuW(hInstance, MAKEINTRESOURCEW(IDR_POPUP_MENUS));
 
     /* Initialize the Windows Common Controls DLL */
+    // TODO: Replace this call by InitCommonControlsEx(_something_)
     InitCommonControls();
 
     hEditMenu = GetSubMenu(hMenuFrame, 1);
@@ -115,15 +116,15 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     if(hEditMenu != NULL)
         SetMenuDefaultItem(hEditMenu, ID_EDIT_MODIFY, MF_BYCOMMAND);
 
-    nClipboardFormat = RegisterClipboardFormat(strClipboardFormat);
+    nClipboardFormat = RegisterClipboardFormatW(strClipboardFormat);
     /* if (nClipboardFormat == 0) {
         DWORD dwError = GetLastError();
     } */
 
-    hFrameWnd = CreateWindowEx(WS_EX_WINDOWEDGE, (LPCTSTR)(UlongToPtr(hFrameWndClass)), szTitle,
-                               WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
-                               CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                               NULL, hMenuFrame, hInstance, NULL/*lpParam*/);
+    hFrameWnd = CreateWindowExW(WS_EX_WINDOWEDGE, (LPCWSTR)(UlongToPtr(hFrameWndClass)), szTitle,
+                                WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+                                CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+                                NULL, hMenuFrame, hInstance, NULL/*lpParam*/);
 
     if (!hFrameWnd)
     {
@@ -131,13 +132,13 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     }
 
     /* Create the status bar */
-    hStatusBar = CreateStatusWindow(WS_VISIBLE|WS_CHILD|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|SBT_NOBORDERS,
-                                    _T(""), hFrameWnd, STATUS_WINDOW);
+    hStatusBar = CreateStatusWindowW(WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | SBT_NOBORDERS,
+                                     L"", hFrameWnd, STATUS_WINDOW);
     if (hStatusBar)
     {
         /* Create the status bar panes */
         SetupStatusBar(hFrameWnd, FALSE);
-        CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), ID_VIEW_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
+        CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), ID_VIEW_STATUSBAR, MF_BYCOMMAND | MF_CHECKED);
     }
 
     LoadSettings();
@@ -147,8 +148,10 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 /******************************************************************************/
 
-/* we need to destroy the main menu before destroying the main window
-   to avoid a memory leak */
+/*
+ * We need to destroy the main menu before destroying the main window
+ * to avoid a memory leak.
+ */
 
 void DestroyMainMenu()
 {
@@ -165,22 +168,22 @@ void ExitInstance(HINSTANCE hInstance)
     UnloadAclUiDll();
 }
 
-BOOL TranslateChildTabMessage(MSG *msg)
+BOOL TranslateChildTabMessage(PMSG msg)
 {
     if (msg->message != WM_KEYDOWN) return FALSE;
 
     /* Allow Ctrl+A on address bar */
     if ((msg->hwnd == g_pChildWnd->hAddressBarWnd) &&
         (msg->message == WM_KEYDOWN) &&
-        (msg->wParam == 'A') && (GetKeyState(VK_CONTROL) < 0))
+        (msg->wParam == L'A') && (GetKeyState(VK_CONTROL) < 0))
     {
-        SendMessage(msg->hwnd, EM_SETSEL, 0, -1);
+        SendMessageW(msg->hwnd, EM_SETSEL, 0, -1);
         return TRUE;
     }
 
     if (msg->wParam != VK_TAB) return FALSE;
     if (GetParent(msg->hwnd) != g_pChildWnd->hWnd) return FALSE;
-    PostMessage(g_pChildWnd->hWnd, WM_COMMAND, ID_SWITCH_PANELS, 0);
+    PostMessageW(g_pChildWnd->hWnd, WM_COMMAND, ID_SWITCH_PANELS, 0);
     return TRUE;
 }
 
@@ -200,9 +203,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     }
 
     /* Initialize global strings */
-    LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadString(hInstance, IDC_REGEDIT_FRAME, szFrameClass, MAX_LOADSTRING);
-    LoadString(hInstance, IDC_REGEDIT, szChildClass, MAX_LOADSTRING);
+    LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+    LoadStringW(hInstance, IDC_REGEDIT_FRAME, szFrameClass, MAX_LOADSTRING);
+    LoadStringW(hInstance, IDC_REGEDIT, szChildClass, MAX_LOADSTRING);
 
     /* Store instance handle in our global variable */
     hInst = hInstance;
@@ -210,21 +213,23 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     /* Perform application initialization */
     if (!InitInstance(hInstance, nCmdShow))
     {
-        return FALSE;
+        return 0;
     }
-    hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(ID_ACCEL));
+    hAccel = LoadAcceleratorsW(hInstance, MAKEINTRESOURCEW(ID_ACCEL));
 
     /* Main message loop */
-    while (GetMessage(&msg, (HWND)NULL, 0, 0))
+    while (GetMessageW(&msg, NULL, 0, 0))
     {
-        if (!TranslateAccelerator(hFrameWnd, hAccel, &msg)
-                && !TranslateChildTabMessage(&msg))
+        if (!TranslateAcceleratorW(hFrameWnd, hAccel, &msg) &&
+            !TranslateChildTabMessage(&msg))
         {
             TranslateMessage(&msg);
-            DispatchMessage(&msg);
+            DispatchMessageW(&msg);
         }
     }
 
     ExitInstance(hInstance);
-    return (int) msg.wParam;
+    return (int)msg.wParam;
 }
+
+/* EOF */

@@ -16,12 +16,12 @@
  */
 char *getenv(const char *name)
 {
-   char **environ;
+   char **env;
    size_t length = strlen(name);
 
-   for (environ = *__p__environ(); *environ; environ++)
+   for (env = *__p__environ(); *env; env++)
    {
-      char *str = *environ;
+      char *str = *env;
       char *pos = strchr(str,'=');
       if (pos && ((unsigned int)(pos - str) == length) && !_strnicmp(str, name, length))
          return pos + 1;
@@ -34,12 +34,12 @@ char *getenv(const char *name)
  */
 wchar_t *_wgetenv(const wchar_t *name)
 {
-   wchar_t **environ;
+   wchar_t **env;
    size_t length = wcslen(name);
 
-   for (environ = *__p__wenviron(); *environ; environ++)
+   for (env = *__p__wenviron(); *env; env++)
    {
-      wchar_t *str = *environ;
+      wchar_t *str = *env;
       wchar_t *pos = wcschr(str, L'=');
       if (pos && ((unsigned int)(pos - str) == length) && !_wcsnicmp(str, name, length))
          return pos + 1;

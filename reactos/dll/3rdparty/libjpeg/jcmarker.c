@@ -2,7 +2,7 @@
  * jcmarker.c
  *
  * Copyright (C) 1991-1998, Thomas G. Lane.
- * Modified 2003-2010 by Guido Vollbeding.
+ * Modified 2003-2012 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -19,24 +19,24 @@ typedef enum {			/* JPEG marker codes */
   M_SOF1  = 0xc1,
   M_SOF2  = 0xc2,
   M_SOF3  = 0xc3,
-  
+
   M_SOF5  = 0xc5,
   M_SOF6  = 0xc6,
   M_SOF7  = 0xc7,
-  
+
   M_JPG   = 0xc8,
   M_SOF9  = 0xc9,
   M_SOF10 = 0xca,
   M_SOF11 = 0xcb,
-  
+
   M_SOF13 = 0xcd,
   M_SOF14 = 0xce,
   M_SOF15 = 0xcf,
-  
+
   M_DHT   = 0xc4,
-  
+
   M_DAC   = 0xcc,
-  
+
   M_RST0  = 0xd0,
   M_RST1  = 0xd1,
   M_RST2  = 0xd2,
@@ -45,7 +45,7 @@ typedef enum {			/* JPEG marker codes */
   M_RST5  = 0xd5,
   M_RST6  = 0xd6,
   M_RST7  = 0xd7,
-  
+
   M_SOI   = 0xd8,
   M_EOI   = 0xd9,
   M_SOS   = 0xda,
@@ -54,7 +54,7 @@ typedef enum {			/* JPEG marker codes */
   M_DRI   = 0xdd,
   M_DHP   = 0xde,
   M_EXP   = 0xdf,
-  
+
   M_APP0  = 0xe0,
   M_APP1  = 0xe1,
   M_APP2  = 0xe2,
@@ -71,13 +71,14 @@ typedef enum {			/* JPEG marker codes */
   M_APP13 = 0xed,
   M_APP14 = 0xee,
   M_APP15 = 0xef,
-  
+
   M_JPG0  = 0xf0,
+  M_JPG8  = 0xf8,
   M_JPG13 = 0xfd,
   M_COM   = 0xfe,
-  
+
   M_TEM   = 0x01,
-  
+
   M_ERROR = 0x100
 } JPEG_MARKER;
 
@@ -278,6 +279,37 @@ emit_dri (j_compress_ptr cinfo)
   emit_2bytes(cinfo, 4);	/* fixed length */
 
   emit_2bytes(cinfo, (int) cinfo->restart_interval);
+}
+
+
+LOCAL(void)
+emit_lse_ict (j_compress_ptr cinfo)
+/* Emit an LSE inverse color transform specification marker */
+{
+  /* Support only 1 transform */
+  if (cinfo->color_transform != JCT_SUBTRACT_GREEN ||
+      cinfo->num_components < 3)
+    ERREXIT(cinfo, JERR_CONVERSION_NOTIMPL);
+
+  emit_marker(cinfo, M_JPG8);
+  
+  emit_2bytes(cinfo, 24);	/* fixed length */
+
+  emit_byte(cinfo, 0x0D);	/* ID inverse transform specification */
+  emit_2bytes(cinfo, MAXJSAMPLE);	/* MAXTRANS */
+  emit_byte(cinfo, 3);		/* Nt=3 */
+  emit_byte(cinfo, cinfo->comp_info[1].component_id);
+  emit_byte(cinfo, cinfo->comp_info[0].component_id);
+  emit_byte(cinfo, cinfo->comp_info[2].component_id);
+  emit_byte(cinfo, 0x80);	/* F1: CENTER1=1, NORM1=0 */
+  emit_2bytes(cinfo, 0);	/* A(1,1)=0 */
+  emit_2bytes(cinfo, 0);	/* A(1,2)=0 */
+  emit_byte(cinfo, 0);		/* F2: CENTER2=0, NORM2=0 */
+  emit_2bytes(cinfo, 1);	/* A(2,1)=1 */
+  emit_2bytes(cinfo, 0);	/* A(2,2)=0 */
+  emit_byte(cinfo, 0);		/* F3: CENTER3=0, NORM3=0 */
+  emit_2bytes(cinfo, 1);	/* A(3,1)=1 */
+  emit_2bytes(cinfo, 0);	/* A(3,2)=0 */
 }
 
 
@@ -502,7 +534,8 @@ write_file_header (j_compress_ptr cinfo)
 
 /*
  * Write frame header.
- * This consists of DQT and SOFn markers, and a conditional pseudo SOS marker.
+ * This consists of DQT and SOFn markers,
+ * a conditional LSE marker and a conditional pseudo SOS marker.
  * Note that we do not emit the SOF until we have emitted the DQT(s).
  * This avoids compatibility problems with incorrect implementations that
  * try to error-check the quant table numbers as soon as they see the SOF.
@@ -559,6 +592,10 @@ write_frame_header (j_compress_ptr cinfo)
     else
       emit_sof(cinfo, M_SOF1);	/* SOF code for non-baseline Huffman file */
   }
+
+  /* Check to emit LSE inverse color transform specification marker */
+  if (cinfo->color_transform)
+    emit_lse_ict(cinfo);
 
   /* Check to emit pseudo SOS marker */
   if (cinfo->progressive_mode && cinfo->block_size != DCTSIZE)
@@ -668,7 +705,7 @@ jinit_marker_writer (j_compress_ptr cinfo)
   marker = (my_marker_ptr)
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
 				SIZEOF(my_marker_writer));
-  cinfo->marker = (struct jpeg_marker_writer *) marker;
+  cinfo->marker = &marker->pub;
   /* Initialize method pointers */
   marker->pub.write_file_header = write_file_header;
   marker->pub.write_frame_header = write_frame_header;

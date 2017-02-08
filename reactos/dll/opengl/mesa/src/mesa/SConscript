@@ -1,0 +1,513 @@
+#######################################################################
+# SConscript for Mesa
+
+
+Import('*')
+import filecmp
+import os
+import subprocess
+
+env = env.Clone()
+
+env.Append(CPPPATH = [
+    '#/src/mapi',
+    '#/src/glsl',
+    '#/src/mesa',
+])
+
+env.Append(CPPDEFINES = [
+    'FEATURE_GL=1',
+])
+
+if env['platform'] == 'windows':
+    env.Append(CPPDEFINES = [
+        '_GDI32_', # prevent gl* being declared __declspec(dllimport) in MS headers
+        'BUILD_GL32', # declare gl* as __declspec(dllexport) in Mesa headers
+    ])
+    if not env['gles']:
+        # prevent _glapi_* from being declared __declspec(dllimport)
+        env.Append(CPPDEFINES = ['_GLAPI_NO_EXPORTS'])
+else:
+    env.Append(CPPDEFINES = [
+        'IN_DRI_DRIVER', # enable the remap table (for DRI drivers)
+    ])
+
+#
+# Source files
+#
+
+main_sources = [
+    'main/api_arrayelt.c',
+    'main/api_exec.c',
+    'main/api_loopback.c',
+    'main/api_validate.c',
+    'main/accum.c',
+    'main/arbprogram.c',
+    'main/atifragshader.c',
+    'main/attrib.c',
+    'main/arrayobj.c',
+    'main/blend.c',
+    'main/bufferobj.c',
+    'main/buffers.c',
+    'main/clear.c',
+    'main/clip.c',
+    'main/colortab.c',
+    'main/condrender.c',
+    'main/context.c',
+    'main/convolve.c',
+    'main/cpuinfo.c',
+    'main/debug.c',
+    'main/depth.c',
+    'main/dlist.c',
+    'main/dlopen.c',
+    'main/drawpix.c',
+    'main/drawtex.c',
+    'main/enable.c',
+    'main/enums.c',
+    'main/eval.c',
+    'main/execmem.c',
+    'main/extensions.c',
+    'main/fbobject.c',
+    'main/feedback.c',
+    'main/ff_fragment_shader.cpp',
+    'main/ffvertex_prog.c',
+    'main/fog.c',
+    'main/formats.c',
+    'main/format_pack.c',
+    'main/format_unpack.c',
+    'main/framebuffer.c',
+    'main/get.c',
+    'main/getstring.c',
+    'main/hash.c',
+    'main/hint.c',
+    'main/histogram.c',
+    'main/image.c',
+    'main/imports.c',
+    'main/light.c',
+    'main/lines.c',
+    'main/matrix.c',
+    'main/mipmap.c',
+    'main/mm.c',
+    'main/multisample.c',
+    'main/nvprogram.c',
+    'main/pack.c',
+    'main/pbo.c',
+    'main/pixel.c',
+    'main/pixelstore.c',
+    'main/pixeltransfer.c',
+    'main/points.c',
+    'main/polygon.c',
+    'main/querymatrix.c',
+    'main/queryobj.c',
+    'main/rastpos.c',
+    'main/readpix.c',
+    'main/remap.c',
+    'main/renderbuffer.c',
+    'main/samplerobj.c',
+    'main/scissor.c',
+    'main/shaderapi.c',
+    'main/shaderobj.c',
+    'main/shader_query.cpp',
+    'main/shared.c',
+    'main/state.c',
+    'main/stencil.c',
+    'main/syncobj.c',
+    'main/texcompress.c',
+    'main/texcompress_rgtc.c',
+    'main/texcompress_s3tc.c',
+    'main/texcompress_fxt1.c',
+    'main/texcompress_etc.c',
+    'main/texenv.c',
+    'main/texformat.c',
+    'main/texgen.c',
+    'main/texgetimage.c',
+    'main/teximage.c',
+    'main/texobj.c',
+    'main/texpal.c',
+    'main/texparam.c',
+    'main/texstate.c',
+    'main/texstorage.c',
+    'main/texstore.c',
+    'main/texturebarrier.c',
+    'main/transformfeedback.c',
+    'main/uniform_query.cpp',
+    'main/uniforms.c',
+    'main/varray.c',
+    'main/version.c',
+    'main/viewport.c',
+    'main/vtxfmt.c',
+]
+
+math_sources = [
+    'math/m_debug_clip.c',
+    'math/m_debug_norm.c',
+    'math/m_debug_xform.c',
+    'math/m_eval.c',
+    'math/m_matrix.c',
+    'math/m_translate.c',
+    'math/m_vector.c',
+    'math/m_xform.c',
+]
+
+swrast_sources = [
+    'swrast/s_aaline.c',
+    'swrast/s_aatriangle.c',
+    'swrast/s_alpha.c',
+    'swrast/s_atifragshader.c',
+    'swrast/s_bitmap.c',
+    'swrast/s_blend.c',
+    'swrast/s_blit.c',
+    'swrast/s_clear.c',
+    'swrast/s_copypix.c',
+    'swrast/s_context.c',
+    'swrast/s_depth.c',
+    'swrast/s_drawpix.c',
+    'swrast/s_feedback.c',
+    'swrast/s_fog.c',
+    'swrast/s_fragprog.c',
+    'swrast/s_lines.c',
+    'swrast/s_logic.c',
+    'swrast/s_masking.c',
+    'swrast/s_points.c',
+    'swrast/s_renderbuffer.c',
+    'swrast/s_span.c',
+    'swrast/s_stencil.c',
+    'swrast/s_texcombine.c',
+    'swrast/s_texfetch.c',
+    'swrast/s_texfilter.c',
+    'swrast/s_texrender.c',
+    'swrast/s_texture.c',
+    'swrast/s_triangle.c',
+    'swrast/s_zoom.c',
+]
+
+swrast_setup_sources = [
+    'swrast_setup/ss_context.c',
+    'swrast_setup/ss_triangle.c',
+]
+
+tnl_sources = [
+    'tnl/t_context.c',
+    'tnl/t_pipeline.c',
+    'tnl/t_draw.c',
+    'tnl/t_rasterpos.c',
+    'tnl/t_vb_program.c',
+    'tnl/t_vb_render.c',
+    'tnl/t_vb_texgen.c',
+    'tnl/t_vb_texmat.c',
+    'tnl/t_vb_vertex.c',
+    'tnl/t_vb_fog.c',
+    'tnl/t_vb_light.c',
+    'tnl/t_vb_normals.c',
+    'tnl/t_vb_points.c',
+    'tnl/t_vp_build.c',
+    'tnl/t_vertex.c',
+    'tnl/t_vertex_sse.c',
+    'tnl/t_vertex_generic.c',
+]
+
+vbo_sources = [
+    'vbo/vbo_context.c',
+    'vbo/vbo_exec.c',
+    'vbo/vbo_exec_api.c',
+    'vbo/vbo_exec_array.c',
+    'vbo/vbo_exec_draw.c',
+    'vbo/vbo_exec_eval.c',
+    'vbo/vbo_noop.c',
+    'vbo/vbo_rebase.c',
+    'vbo/vbo_split.c',
+    'vbo/vbo_split_copy.c',
+    'vbo/vbo_split_inplace.c',
+    'vbo/vbo_save.c',
+    'vbo/vbo_save_api.c',
+    'vbo/vbo_save_draw.c',
+    'vbo/vbo_save_loopback.c',
+]
+
+statetracker_sources = [
+    'state_tracker/st_atom.c',
+    'state_tracker/st_atom_blend.c',
+    'state_tracker/st_atom_clip.c',
+    'state_tracker/st_atom_constbuf.c',
+    'state_tracker/st_atom_depth.c',
+    'state_tracker/st_atom_framebuffer.c',
+    'state_tracker/st_atom_msaa.c',
+    'state_tracker/st_atom_pixeltransfer.c',
+    'state_tracker/st_atom_sampler.c',
+    'state_tracker/st_atom_scissor.c',
+    'state_tracker/st_atom_shader.c',
+    'state_tracker/st_atom_rasterizer.c',
+    'state_tracker/st_atom_stipple.c',
+    'state_tracker/st_atom_texture.c',
+    'state_tracker/st_atom_viewport.c',
+    'state_tracker/st_cb_bitmap.c',
+    'state_tracker/st_cb_blit.c',
+    'state_tracker/st_cb_bufferobjects.c',
+    'state_tracker/st_cb_clear.c',
+    'state_tracker/st_cb_condrender.c',
+    'state_tracker/st_cb_flush.c',
+    'state_tracker/st_cb_drawpixels.c',
+    'state_tracker/st_cb_drawtex.c',
+    'state_tracker/st_cb_eglimage.c',
+    'state_tracker/st_cb_fbo.c',
+    'state_tracker/st_cb_feedback.c',
+    'state_tracker/st_cb_program.c',
+    'state_tracker/st_cb_queryobj.c',
+    'state_tracker/st_cb_rasterpos.c',
+    'state_tracker/st_cb_readpixels.c',
+    'state_tracker/st_cb_syncobj.c',
+    'state_tracker/st_cb_strings.c',
+    'state_tracker/st_cb_texture.c',
+    'state_tracker/st_cb_texturebarrier.c',
+    'state_tracker/st_cb_viewport.c',
+    'state_tracker/st_cb_xformfb.c',
+    'state_tracker/st_context.c',
+    'state_tracker/st_debug.c',
+    'state_tracker/st_draw.c',
+    'state_tracker/st_draw_feedback.c',
+    'state_tracker/st_extensions.c',
+    'state_tracker/st_format.c',
+    'state_tracker/st_glsl_to_tgsi.cpp',
+    'state_tracker/st_gen_mipmap.c',
+    'state_tracker/st_manager.c',
+    'state_tracker/st_mesa_to_tgsi.c',
+    'state_tracker/st_program.c',
+    'state_tracker/st_texture.c',
+]
+
+env.Append(YACCFLAGS = '-d')
+program_lex = env.CFile('program/lex.yy.c', 'program/program_lexer.l')
+program_parse = env.CFile('program/program_parse.tab.c',
+                          'program/program_parse.y')
+
+# Make program/program_parse.tab.h reacheable from the include path
+env.Append(CPPPATH = [Dir('.').abspath])
+
+program_sources = [
+    'program/arbprogparse.c',
+    'program/hash_table.c',
+    'program/ir_to_mesa.cpp',
+    'program/nvfragparse.c',
+    'program/nvvertparse.c',
+    'program/program.c',
+    'program/program_parse_extra.c',
+    'program/prog_cache.c',
+    'program/prog_execute.c',
+    'program/prog_instruction.c',
+    'program/prog_noise.c',
+    'program/prog_optimize.c',
+    'program/prog_opt_constant_fold.c',
+    'program/prog_parameter.c',
+    'program/prog_parameter_layout.c',
+    'program/prog_print.c',
+    'program/prog_statevars.c',
+    'program/programopt.c',
+    'program/sampler.cpp',
+    'program/symbol_table.c',
+    'program/string_to_uint_map.cpp',
+    program_lex,
+    program_parse[0],
+]
+
+common_driver_sources =	[
+    'drivers/common/driverfuncs.c',
+    'drivers/common/meta.c',
+]
+
+mesa_sources = (
+    main_sources +
+    math_sources +
+    program_sources +
+    vbo_sources +
+    tnl_sources +
+    swrast_sources +
+    swrast_setup_sources +
+    common_driver_sources +
+    statetracker_sources
+)
+
+if env['gles']:
+    from sys import executable as python_cmd
+
+    env.Append(CPPDEFINES = ['FEATURE_ES1=1', 'FEATURE_ES2=1'])
+
+    # generate GLES sources
+    gles_sources = []
+    gles_sources += env.CodeGenerate(
+        target = 'main/api_exec_es1.c',
+        script = 'main/es_generator.py',
+        source = 'main/APIspec.xml',
+        command = python_cmd + ' $SCRIPT -S $SOURCE -V GLES1.1 > $TARGET'
+    )
+    gles_sources += env.CodeGenerate(
+        target = 'main/api_exec_es2.c',
+        script = 'main/es_generator.py',
+        source = 'main/APIspec.xml',
+        command = python_cmd + ' $SCRIPT -S $SOURCE -V GLES2.0 > $TARGET'
+    )
+
+    # generate GLES headers
+    GLAPI = '#src/mapi/glapi/'
+    gles_headers = []
+    gles_headers += env.CodeGenerate(
+        target = 'main/api_exec_es1_dispatch.h',
+        script = GLAPI + 'gen/gl_table.py',
+        source = GLAPI + 'gen/gl_and_es_API.xml',
+        command = python_cmd + ' $SCRIPT -c es1 -m remap_table -f $SOURCE > $TARGET',
+    )
+    gles_headers += env.CodeGenerate(
+        target = 'main/api_exec_es1_remap_helper.h',
+        script = GLAPI + 'gen/remap_helper.py',
+        source = GLAPI + 'gen/gl_and_es_API.xml',
+        command = python_cmd + ' $SCRIPT -c es1 -f $SOURCE > $TARGET',
+    )
+    gles_headers += env.CodeGenerate(
+        target = 'main/api_exec_es2_dispatch.h',
+        script = GLAPI + 'gen/gl_table.py',
+        source = GLAPI + 'gen/gl_and_es_API.xml',
+        command = python_cmd + ' $SCRIPT -c es2 -m remap_table -f $SOURCE > $TARGET',
+    )
+    gles_headers += env.CodeGenerate(
+        target = 'main/api_exec_es2_remap_helper.h',
+        script = GLAPI + 'gen/remap_helper.py',
+        source = GLAPI + 'gen/gl_and_es_API.xml',
+        command = python_cmd + ' $SCRIPT -c es2 -f $SOURCE > $TARGET',
+    )
+
+    env.Depends(gles_sources, gles_headers)
+
+    # gles_sources #include gles_headers with full path
+    env.Append(CPPPATH = [gles_headers[0].dir.up().up()])
+
+    mesa_sources += gles_sources
+
+#
+# Assembly sources
+#
+if env['gcc'] and env['platform'] != 'windows':
+    if env['machine'] == 'x86':
+        env.Append(CPPDEFINES = [
+            'USE_X86_ASM',
+            'USE_MMX_ASM',
+            'USE_3DNOW_ASM',
+            'USE_SSE_ASM',
+        ])
+        mesa_sources += [
+            'x86/common_x86.c',
+            'x86/x86_xform.c',
+            'x86/3dnow.c',
+            'x86/sse.c',
+            'x86/common_x86_asm.S',
+            'x86/x86_xform2.S',
+            'x86/x86_xform3.S',
+            'x86/x86_xform4.S',
+            'x86/x86_cliptest.S',
+            'x86/mmx_blend.S',
+            'x86/3dnow_xform1.S',
+            'x86/3dnow_xform2.S',
+            'x86/3dnow_xform3.S',
+            'x86/3dnow_xform4.S',
+            'x86/3dnow_normal.S',
+            'x86/sse_xform1.S',
+            'x86/sse_xform2.S',
+            'x86/sse_xform3.S',
+            'x86/sse_xform4.S',
+            'x86/sse_normal.S',
+            'x86/read_rgba_span_x86.S',
+        ]
+    elif env['machine'] == 'x86_64':
+        env.Append(CPPDEFINES = [
+            'USE_X86_64_ASM',
+        ])
+        mesa_sources += [
+            'x86-64/x86-64.c',
+            'x86-64/xform4.S',
+        ]
+    elif env['machine'] == 'ppc':
+        env.Append(CPPDEFINES = [
+            'USE_PPC_ASM',
+            'USE_VMX_ASM',
+        ])
+        mesa_sources += [
+            'ppc/common_ppc.c',
+        ]
+    elif env['machine'] == 'sparc':
+        mesa_sources += [
+            'sparc/sparc.c',
+            'sparc/clip.S',
+            'sparc/norm.S',
+            'sparc/xform.S',
+        ]
+    else:
+        pass
+
+    # Generate matypes.h
+    if env['machine'] in ('x86', 'x86_64'):
+        # See http://www.scons.org/wiki/UsingCodeGenerators
+        gen_matypes = env.Program(
+            target = 'gen_matypes',
+            source = 'x86/gen_matypes.c',
+        )
+        matypes = env.Command(
+            'matypes.h',
+            gen_matypes,
+            gen_matypes[0].abspath + ' > $TARGET',
+        )
+        # Add the dir containing the generated header (somewhere inside  the
+        # build dir) to the include path
+        env.Append(CPPPATH = [matypes[0].dir])
+
+
+
+
+def write_git_sha1_h_file(filename):
+    """Mesa looks for a git_sha1.h file at compile time in order to display
+    the current git hash id in the GL_VERSION string.  This function tries
+    to retrieve the git hashid and write the header file.  An empty file
+    will be created if anything goes wrong."""
+
+    args = [ 'git', 'log', '-n', '1', '--oneline' ]
+    try:
+        (commit, foo) = subprocess.Popen(args, stdout=subprocess.PIPE).communicate()
+    except:
+        # git log command didn't work
+        if not os.path.exists(filename):
+            # create an empty file if none already exists
+            f = open(filename, "w")
+            f.close()
+        return
+
+    commit = '#define MESA_GIT_SHA1 "git-%s"\n' % commit[0:7]
+    tempfile = "git_sha1.h.tmp"
+    f = open(tempfile, "w")
+    f.write(commit)
+    f.close()
+    if not os.path.exists(filename) or not filecmp.cmp(tempfile, filename):
+        # The filename does not exist or it's different from the new file,
+        # so replace old file with new.
+        if os.path.exists(filename):
+            os.remove(filename)
+        os.rename(tempfile, filename)
+    return
+
+
+# Create the git_sha1.h header file
+write_git_sha1_h_file("main/git_sha1.h")
+# and update CPPPATH so the git_sha1.h header can be found
+env.Append(CPPPATH = ["#" + env['build_dir'] + "/mesa/main"])
+
+
+#
+# Libraries
+#
+
+mesa = env.ConvenienceLibrary(
+    target = 'mesa',
+    source = mesa_sources,
+)
+
+env.Alias('mesa', mesa)
+
+Export('mesa')
+
+SConscript('drivers/SConscript')

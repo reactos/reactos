@@ -25,7 +25,7 @@
  * UPDATE HISTORY:
  *      10/07/2005  Created
  */
-#include <precomp.h>
+#include "precomp.h"
 
 
 /*

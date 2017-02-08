@@ -1,0 +1,242 @@
+-*- mode:text; coding:utf-8; -*-
+                        GNU FreeFont Authors
+                        ====================
+
+The FreeFont collection is being maintained by
+	Steve White <stevan.white AT googlemail.com>
+The folowing list cites the other contributors that contributed to
+particular ISO 10646 blocks.
+
+* URW++ Design & Development GmbH <http://www.urwpp.de/>
+
+	Basic Latin				(U+0041-U+007A)
+	Latin-1 Supplement                      (U+00C0-U+00FF) (most)
+	Latin Extended-A                        (U+0100-U+017F)
+	Spacing Modifier Letters		(U+02B0-U+02FF)
+	Mathematical Operators			(U+2200-U+22FF) (parts)
+	Block Elements				(U+2580-U+259F)
+	Dingbats				(U+2700-U+27BF)
+
+* Yannis Haralambous <yannis.haralambous AT enst-bretagne.fr> and John
+  Plaice <plaice AT omega.cse.unsw.edu.au>
+
+	Latin Extended-B                        (U+0180-U+024F)
+	IPA Extensions				(U+0250-U+02AF)
+	Greek					(U+0370-U+03FF)
+	Armenian				(U+0530-U+058F)
+	Hebrew					(U+0590-U+05FF)
+	Arabic					(U+0600-U+06FF)
+	Currency Symbols			(U+20A0-U+20CF)
+	Arabic Presentation Forms-A		(U+FB50-U+FDFF)
+	Arabic Presentation Forms-B		(U+FE70-U+FEFF)
+
+* Yannis Haralambous and Wellcome Institute
+
+	Sinhala					(U+0D80-U+0DFF)
+
+* Young U. Ryu <ryoung AT utdallas.edu>
+
+	Arrows					(U+2190-U+21FF)
+	Mathematical Symbols			(U+2200-U+22FF)
+	Mathematical Alphanumeric Symbols       (U+1D400-U+1D7FF)
+
+* Valek Filippov <frob AT df.ru>
+
+	Cyrillic				(U+0400-U+04FF)
+
+* Wadalab Kanji Comittee
+
+	Hiragana				(U+3040-U+309F)
+	Katakana				(U+30A0-U+30FF)
+
+* Angelo Haritsis <ah AT computer.org>
+
+	Greek					(U+0370-U+03FF)
+
+* Yannis Haralambous and Virach Sornlertlamvanich
+
+	Thai					(U+0E00-U+0E7F)
+
+* Shaheed R. Haque <srhaque AT iee.org>
+
+	Bengali					(U+0980-U+09FF)
+
+* Sam Stepanyan <sam AT arminco.com>
+
+	Armenian				(U+0530-U+058F)
+
+* Mohamed Ishan <ishan AT mitf.f2s.com>
+
+	Thaana					(U+0780-U+07BF)
+
+* Sushant Kumar Dash <sushant AT writeme.com>
+
+	Oriya					(U+0B00-U+0B7F)
+
+* Harsh Kumar <harshkumar AT vsnl.com>
+
+	Devanagari				(U+0900-U+097F)
+	Bengali					(U+0980-U+09FF)
+	Gurmukhi				(U+0A00-U+0A7F)
+	Gujarati				(U+0A80-U+0AFF)
+
+* Prasad A. Chodavarapu <chprasad AT hotmail.com>
+
+	Telugu					(U+0C00-U+0C7F)
+
+* Frans Velthuis <velthuis AT rc.rug.nl> and Anshuman Pandey
+  <apandey AT u.washington.edu> 
+
+	Devanagari				(U+0900-U+097F)
+
+* Hardip Singh Pannu <HSPannu AT aol.com>
+
+	Gurmukhi				(U+0A00-U+0A7F)
+
+* Jeroen Hellingman <jehe AT kabelfoon.nl>
+
+	Oriya					(U+0B00-U+0B7F)
+	Malayalam				(U+0D00-U+0D7F)
+
+* Thomas Ridgeway <email needed>
+
+	Tamil					(U+0B80-U+0BFF)
+
+* Berhanu Beyene <1beyene AT informatik.uni-hamburg.de>,
+  Prof. Dr. Manfred Kudlek <kudlek AT informatik.uni-hamburg.de>, Olaf
+  Kummer <kummer AT informatik.uni-hamburg.de>, and Jochen Metzinger <?>
+
+	Ethiopic				(U+1200-U+137F)
+
+* Maxim Iorsh <iorsh AT users.sourceforge.net>
+
+	Hebrew					(U+0590-U+05FF)
+
+* Vyacheslav Dikonov <sdiconov AT mail.ru>
+
+	Syriac					(U+0700-U+074A)
+	Braille					(U+2800-U+28FF)
+
+* Panayotis Katsaloulis <panayotis AT panayotis.com>
+
+	Greek Extended				(U+1F00-U+1FFF)
+
+* M.S. Sridhar <mssridhar AT vsnl.com>
+
+	Devanagari				(U+0900-U+097F)
+	Bengali					(U+0980-U+09FF)
+	Gurmukhi				(U+0A00-U+0A7F)
+	Gujarati				(U+0A80-U+0AFF)
+	Oriya					(U+0B00-U+0B7F)
+	Tamil					(U+0B80-U+0BFF)
+	Telugu					(U+0C00-U+0C7F)
+	Kannada					(U+0C80-U+0CFF)	
+	Malayalam				(U+0D00-U+0D7F)
+
+* DMS Electronics, The Sri Lanka Tipitaka Project, and Noah Levitt
+  <nlevitt AT columbia.edu>
+
+	Sinhala					(U+0D80-U+0DFF)
+        
+* Dan Shurovich Chirkov <dansh AT chirkov.com>
+
+	Cyrillic				(U+0400-U+04FF)
+
+* Abbas Izad <abbasizad AT hotmail.com>
+
+	Arabic					(U+0600-U+06FF)
+	Arabic Presentation Forms-A		(U+FB50-U+FDFF)
+	Arabic Presentation Forms-B		(U+FE70-U+FEFF)
+
+* Denis Jacquerye <moyogo AT gmail.com>
+
+	Latin Extended-B                        (U+0180-U+024F)
+	IPA Extensions				(U+0250-U+02AF)
+
+* K.H. Hussain <hussain AT kfri.org> and R. Chitrajan
+
+	Malayalam				(U+0D00-U+0D7F)
+
+* Solaiman Karim <solaiman AT ekushey.org> and Omi Azad <omi AT ekushey.org>
+
+	Bengali					(U+0980-U+09FF)
+
+* Sonali Sonania <sonalisonania AT gmail.com> and Monika Shah
+  <monikapatira AT gmail.com>
+
+	Devanagari				(U+0900-U+097F)
+	Gujarati				(U+0A80-U+0AFF)
+
+* Pravin Satpute <pravin.d.s AT gmail.com>, Bageshri Salvi
+  <sbagrshri AT yahoo.co.in>, Rahul Bhalerao <b.rahul.pm AT gmail.com> and
+  Sandeep Shedmake <sandeep.shedmake AT gmail.com>
+
+	Devanagari				(U+0900-U+097F)
+	Gujarati				(U+0A80-U+0AFF)
+	Oriya					(U+0B00-U+0B7F)
+	Malayalam				(U+0D00-U+0D7F)
+	Tamil					(U+0B80-U+0BFF)
+
+* Kulbir Singh Thind
+
+	Gurmukhi				(U+0A00-U+0A7F)
+
+* Gia Shervashidze <giasher AT telenet.ge>
+
+        Georgian				(U+10A0-U+10FF)
+
+* Daniel Johnson
+
+	Armenian (serif)                        (U+0530-U+058F)
+	Cherokee                                (U+13A0-U+13FF)
+	Unified Canadian Aboriginal Syllabics   (U+1400-U+167F)
+	UCAS Extended                           (U+18B0-U+18F5)
+	Tifinagh                                (U+2D30-U+2D7F)
+	Vai                                     (U+A500-U+A62B)
+	Latin Extended-D (Mayanist letters)     (U+A720-U+A7FF)
+	Kayah Li                                (U+A900-U+A92F)
+	Osmanya                                 (U+10480-U+104a7)
+
+* George Douros
+
+	Gothic                                  (U+10330-U+1034F)
+	Phoenecian                              (U+10900-U+1091F)
+	Byzantine Musical Symbols               (U+1D000-U+1D0FF)
+	Western Musical Symbols                 (U+1D100-U+1D1DF)
+	Mathematical Alphanumeric Symbols       (U+1D400-U+1D7FF)
+	Mah Jong Tiles                          (U+1F000-U+1F02B)
+	Dominoes                                (U+1F030-U+1F093)
+
+* Steve White <stevan_white AT gmail.com>
+	Glagolitic                              (U+2C00-U+2C5F)
+	Coptic                                  (U+2C80-U+2CFF)
+	Arabic					(U+0600-U+06FF) (Mono)
+	Old Italic                              (U+10300-U+1032F)
+
+* Pavel Skrylev is responsible for
+	Cyrillic Extended-A                     (U+2DEO-U+2DFF)
+  as well as many of the additions to
+	Cyrillic Extended-B                     (U+A640-U+A65F)
+
+* Mark Williamson
+  Made the MPH 2 Damase font, from which 
+	Hanunóo                                 (U+1720-U+173F)
+	Buginese                                (U+1A00-U+1A1F)
+	Tai Le                                  (U+1950-U+197F)
+	Ugaritic                                (U+10380-U+1039F)
+	Old Persian                             (U+103A0-U+103DF)
+
+* Masoud Pourmoosa
+	Arabic					(U+0600-U+06FF)
+
+* Emmanuel Vallois
+	Python scripts, support
+
+* Primož Peterlin <primoz.peterlin AT biofiz.mf.uni-lj.si>
+  maintained FreeFont for several years, and is thanked for all his work.
+
+Please see the CREDITS file for details on who contributed particular
+subsets of the glyphs in font files.
+
+--------------------------------------------------------------------------
+$Id: AUTHORS,v 1.23 2010-09-11 13:24:11 Stevan_White Exp $

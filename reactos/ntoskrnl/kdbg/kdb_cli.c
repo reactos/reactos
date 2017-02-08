@@ -90,12 +90,15 @@ static BOOLEAN KdbpCmdSet(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdHelp(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdDmesg(ULONG Argc, PCHAR Argv[]);
 
+BOOLEAN ExpKdbgExtPool(ULONG Argc, PCHAR Argv[]);
+
 #ifdef __ROS_DWARF__
 static BOOLEAN KdbpCmdPrintStruct(ULONG Argc, PCHAR Argv[]);
 #endif
 
 /* GLOBALS *******************************************************************/
 
+static PKDBG_CLI_ROUTINE KdbCliCallbacks[10];
 static BOOLEAN KdbUseIntelSyntax = FALSE; /* Set to TRUE for intel syntax */
 static BOOLEAN KdbBreakOnModuleLoad = FALSE; /* Set to TRUE to break into KDB when a module is loaded */
 
@@ -177,7 +180,8 @@ static const struct
     { "set", "set [var] [value]", "Sets var to value or displays value of var.", KdbpCmdSet },
     { "dmesg", "dmesg", "Display debug messages on screen, with navigation on pages.", KdbpCmdDmesg },
     { "kmsg", "kmsg", "Kernel dmesg. Alias for dmesg.", KdbpCmdDmesg },
-    { "help", "help", "Display help screen.", KdbpCmdHelp }
+    { "help", "help", "Display help screen.", KdbpCmdHelp },
+    { "!pool", "!pool [Address [Flags]]", "Display information about pool allocations.", ExpKdbgExtPool }
 };
 
 /* FUNCTIONS *****************************************************************/
@@ -400,6 +404,24 @@ KdbpEvaluateExpression(
     }
 
     return Ok;
+}
+
+BOOLEAN
+NTAPI
+KdbpGetHexNumber(
+    IN PCHAR pszNum,
+    OUT ULONG_PTR *pulValue)
+{
+    char *endptr;
+
+    /* Skip optional '0x' prefix */
+    if ((pszNum[0] == '0') && ((pszNum[1] == 'x') || (pszNum[1] == 'X')))
+        pszNum += 2;
+
+    /* Make a number from the string (hex) */
+    *pulValue = strtoul(pszNum, &endptr, 16);
+
+    return (*endptr == '\0');
 }
 
 /*!\brief Evaluates an expression and displays the result.
@@ -864,7 +886,7 @@ KdbpCmdRegs(
     else if (Argv[0][0] == 'c') /* cregs */
     {
         ULONG Cr0, Cr2, Cr3, Cr4;
-        KDESCRIPTOR Gdtr, Idtr;
+        KDESCRIPTOR Gdtr = {0, 0, 0}, Idtr = {0, 0, 0};
         USHORT Ldtr;
         static const PCHAR Cr0Bits[32] = { " PE", " MP", " EM", " TS", " ET", " NE", NULL, NULL,
                                            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -3266,6 +3288,82 @@ KdbpReadCommand(
     }
 }
 
+
+BOOLEAN
+NTAPI
+KdbRegisterCliCallback(
+    PVOID Callback,
+    BOOLEAN Deregister)
+{
+    ULONG i;
+
+    /* Loop all entries */
+    for (i = 0; i < _countof(KdbCliCallbacks); i++)
+    {
+        /* Check if deregistering was requested */
+        if (Deregister)
+        {
+            /* Check if this entry is the one that was registered */
+            if (KdbCliCallbacks[i] == Callback)
+            {
+                /* Delete it and report success */
+                KdbCliCallbacks[i] = NULL;
+                return TRUE;
+            }
+        }
+        else
+        {
+            /* Check if this entry is free */
+            if (KdbCliCallbacks[i] == NULL)
+            {
+                /* Set it and and report success */
+                KdbCliCallbacks[i] = Callback;
+                return TRUE;
+            }
+        }
+    }
+
+    /* Unsuccessful */
+    return FALSE;
+}
+
+/*! \brief Invokes registered CLI callbacks until one of them handled the
+ *         Command.
+ *
+ * \param Command - Command line to parse and execute if possible.
+ * \param Argc - Number of arguments in Argv
+ * \param Argv - Array of strings, each of them containing one argument.
+ *
+ * \return TRUE, if the command was handled, FALSE if it was not handled.
+ */
+static
+BOOLEAN
+KdbpInvokeCliCallbacks(
+    IN PCHAR Command,
+    IN ULONG Argc,
+    IN PCH Argv[])
+{
+    ULONG i;
+
+    /* Loop all entries */
+    for (i = 0; i < _countof(KdbCliCallbacks); i++)
+    {
+        /* Check if this entry is registered */
+        if (KdbCliCallbacks[i])
+        {
+            /* Invoke the callback and check if it handled the command */
+            if (KdbCliCallbacks[i](Command, Argc, Argv))
+            {
+                return TRUE;
+            }
+        }
+    }
+
+    /* None of the callbacks handled the command */
+    return FALSE;
+}
+
+
 /*!\brief Parses command line and executes command if found
  *
  * \param Command    Command line to parse and execute if possible.
@@ -3280,6 +3378,7 @@ KdbpDoCommand(
     ULONG i;
     PCHAR p;
     ULONG Argc;
+    // FIXME: for what do we need a 1024 characters command line and 256 tokens?
     static PCH Argv[256];
     static CHAR OrigCommand[1024];
 
@@ -3318,6 +3417,12 @@ KdbpDoCommand(
         {
             return KdbDebuggerCommands[i].Fn(Argc, Argv);
         }
+    }
+
+    /* Now invoke the registered callbacks */
+    if (KdbpInvokeCliCallbacks(Command, Argc, Argv))
+    {
+        return TRUE;
     }
 
     KdbpPrint("Command '%s' is unknown.\n", OrigCommand);

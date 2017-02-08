@@ -23,6 +23,16 @@ BEGIN
     PUSHBUTTON "&Параметри клавіатури...", IDC_KEY_SET_BTN, 14, 198, 110, 14
 END
 
+IDD_PROPPAGEADVANCEDSETTINGS DIALOGEX 0, 0, 254, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Advanced Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "System Configuration", -1, 7, 7, 240, 70
+    AUTOCHECKBOX "&Turn off advanced text services", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 130, 12
+    LTEXT "Select this check box to turn off advanced text services in all programs.\nThis is not recommended for East Asian users because this closes the language bar.", -1, 14, 40, 230, 35
+END
+
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Додаткові параметри клавіатури"

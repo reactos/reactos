@@ -6,8 +6,15 @@
  * PROGRAMMERS: Saveliy Tretiakov (saveliyt@mail.ru)
  */
 
-#include <windows.h>
-#include <shlwapi.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <winnls.h>
+
 #include "resource.h"
 
 #define UNIMPLEMENTED \

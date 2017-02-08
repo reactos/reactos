@@ -10,7 +10,7 @@
  *                       Jan 14, 2007: Rewritten and tidied up
  */
 
-#include <mmdrv.h>
+#include "mmdrv.h"
 
 
 #define MAX_WAVE_BUFFER_SIZE    65536

@@ -19,7 +19,7 @@
  */
 
 #include "uxthemep.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
 
@@ -51,9 +51,8 @@ static ATOM atSubIdList;
 ATOM atWndContrext;
 
 static BOOL bThemeActive = FALSE;
-static WCHAR szCurrentTheme[MAX_PATH];
-static WCHAR szCurrentColor[64];
-static WCHAR szCurrentSize[64];
+
+static PTHEME_FILE ActiveThemeFile;
 
 /***********************************************************************/
 
@@ -128,6 +127,19 @@ static DWORD query_reg_path (HKEY hKey, LPCWSTR lpszValue,
   return dwRet;
 }
 
+static HRESULT UXTHEME_SetActiveTheme(PTHEME_FILE tf)
+{
+    if(ActiveThemeFile)
+        MSSTYLES_CloseThemeFile(ActiveThemeFile);
+    ActiveThemeFile = tf;
+    if (ActiveThemeFile)
+    {
+        MSSTYLES_ReferenceTheme(ActiveThemeFile);
+        MSSTYLES_ParseThemeIni(ActiveThemeFile);
+    }
+    return S_OK;
+}
+
 /***********************************************************************
  *      UXTHEME_LoadTheme
  *
@@ -140,6 +152,9 @@ void UXTHEME_LoadTheme(BOOL bLoad)
     HRESULT hr;
     WCHAR tmp[10];
     PTHEME_FILE pt;
+    WCHAR szCurrentTheme[MAX_PATH];
+    WCHAR szCurrentColor[64];
+    WCHAR szCurrentSize[64];
 
     if(bLoad == TRUE) 
     {
@@ -180,23 +195,17 @@ void UXTHEME_LoadTheme(BOOL bLoad)
                                     &pt);
         if(FAILED(hr)) {
             bThemeActive = FALSE;
-            szCurrentTheme[0] = '\0';
-            szCurrentColor[0] = '\0';
-            szCurrentSize[0] = '\0';
         }
         else {
-            /* Make sure the global color & size match the theme */
-            lstrcpynW(szCurrentColor, pt->pszSelectedColor, sizeof(szCurrentColor)/sizeof(szCurrentColor[0]));
-            lstrcpynW(szCurrentSize, pt->pszSelectedSize, sizeof(szCurrentSize)/sizeof(szCurrentSize[0]));
-
-            MSSTYLES_SetActiveTheme(pt, FALSE);
             TRACE("Theme active: %s %s %s\n", debugstr_w(szCurrentTheme),
                 debugstr_w(szCurrentColor), debugstr_w(szCurrentSize));
+
+            UXTHEME_SetActiveTheme(pt);
             MSSTYLES_CloseThemeFile(pt);
         }
     }
     if(!bThemeActive) {
-        MSSTYLES_SetActiveTheme(NULL, FALSE);
+        UXTHEME_SetActiveTheme(NULL);
         TRACE("Theming not active\n");
     }
 }
@@ -453,32 +462,26 @@ static void UXTHEME_SaveSystemMetrics(void)
 }
 
 /***********************************************************************
- *      UXTHEME_SetActiveTheme
+ *      UXTHEME_ApplyTheme
  *
  * Change the current active theme
  */
-static HRESULT UXTHEME_SetActiveTheme(PTHEME_FILE tf)
+static HRESULT UXTHEME_ApplyTheme(PTHEME_FILE tf)
 {
     HKEY hKey;
     WCHAR tmp[2];
     HRESULT hr;
 
     if(tf && !bThemeActive) UXTHEME_BackupSystemMetrics();
-    hr = MSSTYLES_SetActiveTheme(tf, TRUE);
+    hr = UXTHEME_SetActiveTheme(tf);
     if(FAILED(hr))
         return hr;
     if(tf) {
         bThemeActive = TRUE;
-        lstrcpynW(szCurrentTheme, tf->szThemeFile, sizeof(szCurrentTheme)/sizeof(szCurrentTheme[0]));
-        lstrcpynW(szCurrentColor, tf->pszSelectedColor, sizeof(szCurrentColor)/sizeof(szCurrentColor[0]));
-        lstrcpynW(szCurrentSize, tf->pszSelectedSize, sizeof(szCurrentSize)/sizeof(szCurrentSize[0]));
     }
     else {
         UXTHEME_RestoreSystemMetrics();
         bThemeActive = FALSE;
-        szCurrentTheme[0] = '\0';
-        szCurrentColor[0] = '\0';
-        szCurrentSize[0] = '\0';
     }
 
     TRACE("Writing theme config to registry\n");
@@ -487,12 +490,12 @@ static HRESULT UXTHEME_SetActiveTheme(PTHEME_FILE tf)
         tmp[1] = '\0';
         RegSetValueExW(hKey, szThemeActive, 0, REG_SZ, (const BYTE*)tmp, sizeof(WCHAR)*2);
         if(bThemeActive) {
-            RegSetValueExW(hKey, szColorName, 0, REG_SZ, (const BYTE*)szCurrentColor, 
-		(lstrlenW(szCurrentColor)+1)*sizeof(WCHAR));
-            RegSetValueExW(hKey, szSizeName, 0, REG_SZ, (const BYTE*)szCurrentSize, 
-		(lstrlenW(szCurrentSize)+1)*sizeof(WCHAR));
-            RegSetValueExW(hKey, szDllName, 0, REG_SZ, (const BYTE*)szCurrentTheme, 
-		(lstrlenW(szCurrentTheme)+1)*sizeof(WCHAR));
+            RegSetValueExW(hKey, szColorName, 0, REG_SZ, (const BYTE*)tf->pszSelectedColor, 
+		(lstrlenW(tf->pszSelectedColor)+1)*sizeof(WCHAR));
+            RegSetValueExW(hKey, szSizeName, 0, REG_SZ, (const BYTE*)tf->pszSelectedSize, 
+		(lstrlenW(tf->pszSelectedSize)+1)*sizeof(WCHAR));
+            RegSetValueExW(hKey, szDllName, 0, REG_SZ, (const BYTE*)tf->szThemeFile, 
+		(lstrlenW(tf->szThemeFile)+1)*sizeof(WCHAR));
         }
         else {
             RegDeleteValueW(hKey, szColorName);
@@ -619,10 +622,8 @@ static LPWSTR UXTHEME_GetWindowProperty(HWND hwnd, ATOM aProp, LPWSTR pszBuffer,
     return NULL;
 }
 
-/***********************************************************************
- *      OpenThemeDataEx                                     (UXTHEME.61)
- */
-HTHEME WINAPI OpenThemeDataEx(HWND hwnd, LPCWSTR pszClassList, DWORD flags)
+static HTHEME WINAPI
+OpenThemeDataInternal(PTHEME_FILE ThemeFile, HWND hwnd, LPCWSTR pszClassList, DWORD flags)
 {
     WCHAR szAppBuff[256];
     WCHAR szClassBuff[256];
@@ -649,7 +650,7 @@ HTHEME WINAPI OpenThemeDataEx(HWND hwnd, LPCWSTR pszClassList, DWORD flags)
             pszUseClassList = pszClassList;
 
         if (pszUseClassList)
-            hTheme = MSSTYLES_OpenThemeClass(pszAppName, pszUseClassList);
+            hTheme = MSSTYLES_OpenThemeClass(ThemeFile, pszAppName, pszUseClassList);
     }
     if(IsWindow(hwnd))
         SetPropW(hwnd, (LPCWSTR)MAKEINTATOM(atWindowTheme), hTheme);
@@ -658,11 +659,31 @@ HTHEME WINAPI OpenThemeDataEx(HWND hwnd, LPCWSTR pszClassList, DWORD flags)
 }
 
 /***********************************************************************
+ *      OpenThemeDataEx                                     (UXTHEME.61)
+ */
+HTHEME WINAPI OpenThemeDataEx(HWND hwnd, LPCWSTR pszClassList, DWORD flags)
+{
+    return OpenThemeDataInternal(ActiveThemeFile, hwnd, pszClassList, flags);
+}
+
+/***********************************************************************
+ *      OpenThemeDataEx                                     (UXTHEME.16)
+ */
+HTHEME WINAPI OpenThemeDataFromFile(HTHEMEFILE hThemeFile, HWND hwnd, LPCWSTR pszClassList, DWORD flags)
+{
+    PTHEME_FILE ThemeFile = (PTHEME_FILE)hThemeFile;
+
+    MSSTYLES_ParseThemeIni(ThemeFile);
+
+    return OpenThemeDataInternal(ThemeFile, hwnd, pszClassList, flags);
+}
+
+/***********************************************************************
  *      OpenThemeData                                       (UXTHEME.@)
  */
 HTHEME WINAPI OpenThemeData(HWND hwnd, LPCWSTR classlist)
 {
-    return OpenThemeDataEx(hwnd, classlist, 0);
+    return OpenThemeDataInternal(ActiveThemeFile, hwnd, classlist, 0);
 }
 
 /***********************************************************************
@@ -715,11 +736,35 @@ HRESULT WINAPI GetCurrentThemeName(LPWSTR pszThemeFileName, int dwMaxNameChars,
                                    LPWSTR pszColorBuff, int cchMaxColorChars,
                                    LPWSTR pszSizeBuff, int cchMaxSizeChars)
 {
-    if(!bThemeActive)
-        return E_PROP_ID_UNSUPPORTED;
-    if(pszThemeFileName) lstrcpynW(pszThemeFileName, szCurrentTheme, dwMaxNameChars);
-    if(pszColorBuff) lstrcpynW(pszColorBuff, szCurrentColor, cchMaxColorChars);
-    if(pszSizeBuff) lstrcpynW(pszSizeBuff, szCurrentSize, cchMaxSizeChars);
+    int cchar;
+
+    if(ActiveThemeFile == NULL)
+         return E_PROP_ID_UNSUPPORTED;
+
+    if(pszThemeFileName) 
+    {
+        cchar = lstrlenW(ActiveThemeFile->szThemeFile) + 1;
+        if(cchar > dwMaxNameChars)
+           return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        lstrcpynW(pszThemeFileName, ActiveThemeFile->szThemeFile, cchar);
+    }
+
+    if(pszColorBuff) 
+    {
+        cchar = lstrlenW(ActiveThemeFile->pszSelectedColor) + 1;
+        if(cchar > cchMaxColorChars)
+            return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        lstrcpynW(pszColorBuff, ActiveThemeFile->pszSelectedColor, cchar);
+    }
+
+   if(pszSizeBuff) 
+    {
+        cchar = lstrlenW(ActiveThemeFile->pszSelectedSize) + 1;
+        if(cchar > cchMaxSizeChars)
+            return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        lstrcpynW(pszSizeBuff, ActiveThemeFile->pszSelectedSize, cchar);
+    }
+
     return S_OK;
 }
 
@@ -931,7 +976,7 @@ HRESULT WINAPI ApplyTheme(HTHEMEFILE hThemeFile, char *unknown, HWND hWnd)
 {
     HRESULT hr;
     TRACE("(%p,%s,%p)\n", hThemeFile, unknown, hWnd);
-    hr = UXTHEME_SetActiveTheme(hThemeFile);
+    hr = UXTHEME_ApplyTheme(hThemeFile);
     UXTHEME_broadcast_msg (NULL, WM_THEMECHANGED);
     return hr;
 }
@@ -1214,3 +1259,16 @@ HRESULT WINAPI CheckThemeSignature(LPCWSTR pszThemeFileName)
     MSSTYLES_CloseThemeFile(pt);
     return S_OK;
 }
+
+HRESULT WINAPI DrawNCPreview(HDC hDC, 
+                             DWORD DNCP_Flag,
+                             LPRECT prcPreview, 
+                             LPCWSTR pszThemeFileName, 
+                             LPCWSTR pszColorName,
+                             LPCWSTR pszSizeName,
+                             PNONCLIENTMETRICSW pncMetrics,
+                             COLORREF* lpaRgbValues)
+{
+    return E_NOTIMPL;
+}
+

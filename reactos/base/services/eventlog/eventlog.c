@@ -101,7 +101,7 @@ ServiceControlHandler(DWORD dwControl,
             return ERROR_SUCCESS;
 
         default :
-            DPRINT1("  Control %lu received\n");
+            DPRINT1("  Control %lu received\n", dwControl);
             return ERROR_CALL_NOT_IMPLEMENTED;
     }
 }
@@ -293,7 +293,7 @@ PLOGFILE LoadLogFile(HKEY hKey, WCHAR * LogName)
                              &ValueLen);
     if (Result != ERROR_SUCCESS)
     {
-        DPRINT1("RegQueryValueEx failed: %d\n", GetLastError());
+        DPRINT1("RegQueryValueEx failed: %lu\n", GetLastError());
         HeapFree(MyHeap, 0, Buf);
         return NULL;
     }
@@ -491,17 +491,17 @@ VOID SystemTimeToEventTime(SYSTEMTIME * pSystemTime, DWORD * pEventTime)
 
 VOID PRINT_HEADER(PEVENTLOGHEADER header)
 {
-    DPRINT("HeaderSize = %d\n", header->HeaderSize);
+    DPRINT("HeaderSize = %lu\n", header->HeaderSize);
     DPRINT("Signature = 0x%x\n", header->Signature);
-    DPRINT("MajorVersion = %d\n", header->MajorVersion);
-    DPRINT("MinorVersion = %d\n", header->MinorVersion);
-    DPRINT("StartOffset = %d\n", header->StartOffset);
+    DPRINT("MajorVersion = %lu\n", header->MajorVersion);
+    DPRINT("MinorVersion = %lu\n", header->MinorVersion);
+    DPRINT("StartOffset = %lu\n", header->StartOffset);
     DPRINT("EndOffset = 0x%x\n", header->EndOffset);
-    DPRINT("CurrentRecordNumber = %d\n", header->CurrentRecordNumber);
-    DPRINT("OldestRecordNumber = %d\n", header->OldestRecordNumber);
+    DPRINT("CurrentRecordNumber = %lu\n", header->CurrentRecordNumber);
+    DPRINT("OldestRecordNumber = %lu\n", header->OldestRecordNumber);
     DPRINT("MaxSize = 0x%x\n", header->MaxSize);
     DPRINT("Retention = 0x%x\n", header->Retention);
-    DPRINT("EndHeaderSize = %d\n", header->EndHeaderSize);
+    DPRINT("EndHeaderSize = %lu\n", header->EndHeaderSize);
     DPRINT("Flags: ");
     if (header->Flags & ELF_LOGFILE_HEADER_DIRTY)  DPRINT("ELF_LOGFILE_HEADER_DIRTY");
     if (header->Flags & ELF_LOGFILE_HEADER_WRAP)  DPRINT("| ELF_LOGFILE_HEADER_WRAP ");
@@ -516,21 +516,21 @@ VOID PRINT_RECORD(PEVENTLOGRECORD pRec)
     WCHAR *str;
     SYSTEMTIME time;
 
-    DPRINT("Length = %d\n", pRec->Length);
+    DPRINT("Length = %lu\n", pRec->Length);
     DPRINT("Reserved = 0x%x\n", pRec->Reserved);
-    DPRINT("RecordNumber = %d\n", pRec->RecordNumber);
+    DPRINT("RecordNumber = %lu\n", pRec->RecordNumber);
 
     EventTimeToSystemTime(pRec->TimeGenerated, &time);
-    DPRINT("TimeGenerated = %d.%d.%d %d:%d:%d\n",
+    DPRINT("TimeGenerated = %hu.%hu.%hu %hu:%hu:%hu\n",
            time.wDay, time.wMonth, time.wYear,
            time.wHour, time.wMinute, time.wSecond);
 
     EventTimeToSystemTime(pRec->TimeWritten, &time);
-    DPRINT("TimeWritten = %d.%d.%d %d:%d:%d\n",
+    DPRINT("TimeWritten = %hu.%hu.%hu %hu:%hu:%hu\n",
            time.wDay, time.wMonth, time.wYear,
            time.wHour, time.wMinute, time.wSecond);
 
-    DPRINT("EventID = %d\n", pRec->EventID);
+    DPRINT("EventID = %lu\n", pRec->EventID);
 
     switch (pRec->EventType)
     {
@@ -550,18 +550,18 @@ VOID PRINT_RECORD(PEVENTLOGRECORD pRec)
             DPRINT("EventType = EVENTLOG_AUDIT_FAILURE\n");
             break;
         default:
-            DPRINT("EventType = %d\n", pRec->EventType);
+            DPRINT("EventType = %hu\n", pRec->EventType);
     }
 
-    DPRINT("NumStrings = %d\n", pRec->NumStrings);
-    DPRINT("EventCategory = %d\n", pRec->EventCategory);
+    DPRINT("NumStrings = %hu\n", pRec->NumStrings);
+    DPRINT("EventCategory = %hu\n", pRec->EventCategory);
     DPRINT("ReservedFlags = 0x%x\n", pRec->ReservedFlags);
-    DPRINT("ClosingRecordNumber = %d\n", pRec->ClosingRecordNumber);
-    DPRINT("StringOffset = %d\n", pRec->StringOffset);
-    DPRINT("UserSidLength = %d\n", pRec->UserSidLength);
-    DPRINT("UserSidOffset = %d\n", pRec->UserSidOffset);
-    DPRINT("DataLength = %d\n", pRec->DataLength);
-    DPRINT("DataOffset = %d\n", pRec->DataOffset);
+    DPRINT("ClosingRecordNumber = %lu\n", pRec->ClosingRecordNumber);
+    DPRINT("StringOffset = %lu\n", pRec->StringOffset);
+    DPRINT("UserSidLength = %lu\n", pRec->UserSidLength);
+    DPRINT("UserSidOffset = %lu\n", pRec->UserSidOffset);
+    DPRINT("DataLength = %lu\n", pRec->DataLength);
+    DPRINT("DataOffset = %lu\n", pRec->DataOffset);
 
     DPRINT("SourceName: %S\n", (WCHAR *) (((PBYTE) pRec) + sizeof(EVENTLOGRECORD)));
 
@@ -576,10 +576,10 @@ VOID PRINT_RECORD(PEVENTLOGRECORD pRec)
         str = (WCHAR *) (((PBYTE) pRec) + pRec->StringOffset);
         for (i = 0; i < pRec->NumStrings; i++)
         {
-            DPRINT("[%d] %S\n", i, str);
+            DPRINT("[%u] %S\n", i, str);
             str = str + lstrlenW(str) + 1;
         }
     }
 
-    DPRINT("Length2 = %d\n", *(PDWORD) (((PBYTE) pRec) + pRec->Length - 4));
+    DPRINT("Length2 = %lu\n", *(PDWORD) (((PBYTE) pRec) + pRec->Length - 4));
 }

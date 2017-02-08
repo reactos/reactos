@@ -124,7 +124,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Completing the first stage of ReactOS Setup", IDC_FINISHTITLE, "Button", BS_GROUPBOX, 10,0,297,172
     LTEXT "You have successfully completed the first stage of ReactOS Setup.", IDC_STATIC, 20, 50, 277, 10
- 
+
     LTEXT "When you click Finish, your computer will restart.", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
     LTEXT "If there is a CD in a drive, remove it. Then, to restart your computer, click Finish.", IDC_STATIC, 10, 180, 297, 20

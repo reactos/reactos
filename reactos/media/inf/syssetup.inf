@@ -25,6 +25,7 @@ unknown.inf
 usbport.inf
 audio.inf
 ks.inf
+c_image.inf
 
 [RegistrationPhase2]
 RegisterDlls = OleControlDlls
@@ -64,7 +65,11 @@ AddReg=Classes
 11,,msimtf.dll,1
 11,,msisip.dll,1
 11,,mstask.dll,1
+11,,msxml.dll,1
+11,,msxml2.dll,1
 11,,msxml3.dll,1
+11,,msxml4.dll,1
+11,,msxml6.dll,1
 11,,netcfgx.dll,1
 11,,netshell.dll,1
 11,,objsel.dll,1
@@ -72,6 +77,7 @@ AddReg=Classes
 11,,oleacc.dll,1
 11,,oleaut32.dll,1
 11,,olepro32.dll,1
+11,,propsys.dll,1
 11,,pstorec.dll,1
 11,,qedit.dll,1
 11,,qmgr.dll,1
@@ -90,6 +96,7 @@ AddReg=Classes
 11,,wininet.dll,2
 11,,wintrust.dll,1
 11,,wuapi.dll,1
+11,,ieframe.dll,1
 
 [Strings]
 MciExtStr="Software\Microsoft\Windows NT\CurrentVersion\MCI Extensions"

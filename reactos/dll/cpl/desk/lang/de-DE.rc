@@ -39,22 +39,24 @@ BEGIN
     CONTROL         "&Passwort nach Reaktivierung", IDC_SCREENS_USEPASSCHK, "button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
     GROUPBOX        "&Enerigesparfunktionen des Monitors", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
-    LTEXT           "Um die Energieeinstellungen des Monitors zu editieren, wählen Sie Energieeinstellungen.",
+    LTEXT           "Um die Energieeinstellungen des Monitors zu editieren, wÃ¤hlen Sie Energieeinstellungen.",
                     IDC_STATIC, 14, 166, 146, 20
     PUSHBUTTON      "Energieoptionen", IDC_SCREENS_POWER_BUTTON, 165, 171, 61, 13
 END
 
-IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 204
+IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Darstellung"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-	LTEXT           "Visual Style", IDC_STATIC, 7, 130, 64, 7
+    LTEXT           "Visual Style", IDC_STATIC, 7, 130, 64, 7
     COMBOBOX        IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Farbschema", IDC_STATIC, 7, 160, 64, 7
     COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 170, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Size", IDC_STATIC, 7, 190, 64, 7
+    COMBOBOX        IDC_APPEARANCE_SIZE, 7, 200, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "&Effekte...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
     PUSHBUTTON      "Erweitert", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
 END
@@ -71,7 +73,7 @@ BEGIN
     LTEXT "Element", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT "&Größe", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 21, 9
+    LTEXT "&GrÃ¶ÃŸe", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 21, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
 
@@ -103,15 +105,15 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Effekte"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "&Verwende folgenden Übergangseffekt für Menüs und Tooltips",IDC_EFFAPPEARANCE_ANIMATION,"button",
+    CONTROL         "&Verwende folgenden Ãœbergangseffekt fÃ¼r MenÃ¼s und Tooltips",IDC_EFFAPPEARANCE_ANIMATION,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 285, 19
     COMBOBOX        IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "V&erwende folgende Kantenglättungsmethode für Bildschirmschriften",IDC_EFFAPPEARANCE_SMOOTHING,"button",
+    CONTROL         "V&erwende folgende KantenglÃ¤ttungsmethode fÃ¼r Bildschirmschriften",IDC_EFFAPPEARANCE_SMOOTHING,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 285, 19
     COMBOBOX        IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    CONTROL         "Ve&rwende große Icons",IDC_EFFAPPEARANCE_LARGEICONS,"button",
+    CONTROL         "Ve&rwende groÃŸe Icons",IDC_EFFAPPEARANCE_LARGEICONS,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 285, 19
-    CONTROL         "Zeige Menüsch&atten",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
+    CONTROL         "Zeige MenÃ¼sch&atten",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 285, 19
     CONTROL         "Zeige &Fensterinhalt beim Verschieben",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 285, 19
@@ -130,13 +132,13 @@ BEGIN
     CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,23,240,82,WS_EX_CLIENTEDGE
     LTEXT           "&Anzeige",1820,3,107,30,8
     LTEXT           "<kein>",IDC_SETTINGS_DEVICE,9,116,224,8
-    GROUPBOX        "Bi&ldschirmauflösung",1818,3,127,115,43
+    GROUPBOX        "Bi&ldschirmauflÃ¶sung",1818,3,127,115,43
     CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
                     TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
     LTEXT           "Niedrig",1815,9,137,15,8,NOT WS_GROUP
     LTEXT           "Hoch",1816,93,137,21,8,NOT WS_GROUP
     LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,157,100,10,NOT WS_GROUP | SS_CENTER
-    GROUPBOX        "&Farbqualität",1817,125,127,115,43
+    GROUPBOX        "&FarbqualitÃ¤t",1817,125,127,115,43
     COMBOBOX        IDC_SETTINGS_BPP,131,137,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "",IDC_SETTINGS_SPECTRUM,"Static",SS_OWNERDRAW | SS_SUNKEN,131,155,103,9
@@ -149,13 +151,13 @@ CAPTION "Allgemein"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Anzeige", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Schriftgröße", -1, 14, 20, 222, 8
+    LTEXT "SchriftgrÃ¶ÃŸe", -1, 14, 20, 222, 8
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_COSTOM, 14, 46, 223, 12
-    GROUPBOX "Kompatibilität", -1, 7, 67, 237, 97
-    LTEXT "Einige Programme könnten fehlerhaft arbeiten, wenn nach Änderung der Farbeinstellungen nicht neugestartet wird.\r\n\nNach Änderung der Farbeinstellungen", -1, 12, 78, 228, 34
+    GROUPBOX "KompatibilitÃ¤t", -1, 7, 67, 237, 97
+    LTEXT "Einige Programme kÃ¶nnten fehlerhaft arbeiten, wenn nach Ã„nderung der Farbeinstellungen nicht neugestartet wird.\r\n\nNach Ã„nderung der Farbeinstellungen", -1, 12, 78, 228, 34
     AUTORADIOBUTTON "&Computer vor dem Anwenden der Farbeinstellungen neustarten.", IDC_RESTART_RB, 14, 116, 224, 10
-    AUTORADIOBUTTON "Farbeinstellungen ohne Neustart übernehmen.", IDC_WITHOUTREBOOT_RB, 14, 131, 224, 10
+    AUTORADIOBUTTON "Farbeinstellungen ohne Neustart Ã¼bernehmen.", IDC_WITHOUTREBOOT_RB, 14, 131, 224, 10
     AUTORADIOBUTTON "Vor dem Anwenden der neuen Farbeinstellungen nachfragen.", IDC_ASKME_RB, 14, 146, 224, 10
 END
 
@@ -163,15 +165,15 @@ IDR_PREVIEW_MENU MENU
 BEGIN
     MENUITEM "Normal",           ID_MENU_NORMAL
     MENUITEM "Deaktiviert",      ID_MENU_DISABLED
-    MENUITEM "Ausgewählt",       ID_MENU_SELECTED
+    MENUITEM "AusgewÃ¤hlt",       ID_MENU_SELECTED
 END
 
 IDM_MONITOR_MENU MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Angefügt",   ID_MENU_ATTACHED
-        MENUITEM "&Primär",    ID_MENU_PRIMARY
+        MENUITEM "&AngefÃ¼gt",   ID_MENU_ATTACHED
+        MENUITEM "&PrimÃ¤r",    ID_MENU_PRIMARY
         MENUITEM SEPARATOR
         MENUITEM "&Identifizieren",   ID_MENU_IDENTIFY
         MENUITEM "&Eigenschaften", ID_MENU_PROPERTIES
@@ -231,6 +233,7 @@ BEGIN
     IDS_MESSBOX  "Dialogfeld"
     IDS_MESSTEXT "Dialogfeldtext"
     IDS_BUTTEXT  "OK"
+    IDS_CLASSIC_THEME   "Classic Theme"
 END
 
 STRINGTABLE DISCARDABLE
@@ -240,19 +243,19 @@ BEGIN
     IDS_ELEMENT_3 "Rahmen der inaktiven Fenster"
     IDS_ELEMENT_4 "Titelleiste des aktiven Fensters"
     IDS_ELEMENT_5 "Rahmen des aktiven Fensters"
-    IDS_ELEMENT_6 "Menü"
+    IDS_ELEMENT_6 "MenÃ¼"
     IDS_ELEMENT_7 "Markierte Elemente"
     IDS_ELEMENT_8 "Fenster"
     IDS_ELEMENT_9 "Bildlaufleiste"
     IDS_ELEMENT_10 "3D-Objekte"
     IDS_ELEMENT_11 "Palettentitel"
     IDS_ELEMENT_12 "Symboltitel"
-    IDS_ELEMENT_13 "Titelleistenschaltfläche"
-    IDS_ELEMENT_14 "Deaktiviertes Menüelement"
+    IDS_ELEMENT_13 "TitelleistenschaltflÃ¤che"
+    IDS_ELEMENT_14 "Deaktiviertes MenÃ¼element"
     IDS_ELEMENT_15 "Dialogfeld"
-    IDS_ELEMENT_16 "Bildlaufleisten-Schaltflächen"
+    IDS_ELEMENT_16 "Bildlaufleisten-SchaltflÃ¤chen"
     IDS_ELEMENT_17 "Hintergrund der Anwendung"
-    IDS_ELEMENT_18 "Kleine Titelleistenschaltfläche"
+    IDS_ELEMENT_18 "Kleine TitelleistenschaltflÃ¤che"
     IDS_ELEMENT_19 "Symbolabstand (Horizontal)"
     IDS_ELEMENT_20 "Symbolabstand (Vertikal)"
     IDS_ELEMENT_21 "Quickinfo"
@@ -262,6 +265,6 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DISPLAY_SETTINGS "Anzeigeeinstellungen"
-    IDS_APPLY_FAILED "Beim Anwenden Ihrer Änderungen ist ein Fehler aufgetreten..."
-    IDS_APPLY_NEEDS_RESTART "Sie müssen Ihren Computer neu starten, damit die Änderungen wirksam werden."
+    IDS_APPLY_FAILED "Beim Anwenden Ihrer Ã„nderungen ist ein Fehler aufgetreten..."
+    IDS_APPLY_NEEDS_RESTART "Sie mÃ¼ssen Ihren Computer neu starten, damit die Ã„nderungen wirksam werden."
 END

@@ -24,17 +24,25 @@ cpp_quote("#endif")
 
 [
     object,
-    oleautomation,
-    uuid(44EC053B-400F-11D0-9DCD-00A0C90391D3)
+    uuid(e21f8a85-b05d-4243-8183-c7cb405588f7),
+    pointer_default(unique)
 ]
-interface IRegistrar : IUnknown
+interface IRegistrarBase : IUnknown
 {
     HRESULT AddReplacement(
         [in] LPCOLESTR Key,
         [in] LPCOLESTR item);
 
     HRESULT ClearReplacements();
+}
 
+[
+    object,
+    uuid(44EC053B-400F-11D0-9DCD-00A0C90391D3),
+    pointer_default(unique)
+]
+interface IRegistrar : IRegistrarBase
+{
     HRESULT ResourceRegisterSz(
         [in] LPCOLESTR resFileName,
         [in] LPCOLESTR szID,

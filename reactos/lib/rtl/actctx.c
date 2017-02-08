@@ -192,7 +192,7 @@ static const WCHAR helpdirW[] = {'h','e','l','p','d','i','r',0};
 static const WCHAR iidW[] = {'i','i','d',0};
 static const WCHAR languageW[] = {'l','a','n','g','u','a','g','e',0};
 static const WCHAR manifestVersionW[] = {'m','a','n','i','f','e','s','t','V','e','r','s','i','o','n',0};
-static const WCHAR nameW[] = {'n','a','m','e',0};
+static const WCHAR g_nameW[] = {'n','a','m','e',0};
 static const WCHAR newVersionW[] = {'n','e','w','V','e','r','s','i','o','n',0};
 static const WCHAR oldVersionW[] = {'o','l','d','V','e','r','s','i','o','n',0};
 static const WCHAR optionalW[] = {'o','p','t','i','o','n','a','l',0};
@@ -203,7 +203,7 @@ static const WCHAR typeW[] = {'t','y','p','e',0};
 static const WCHAR versionW[] = {'v','e','r','s','i','o','n',0};
 static const WCHAR xmlnsW[] = {'x','m','l','n','s',0};
 
-static const WCHAR xmlW[] = {'?','x','m','l',0};
+static const WCHAR g_xmlW[] = {'?','x','m','l',0};
 static const WCHAR manifestv1W[] = {'u','r','n',':','s','c','h','e','m','a','s','-','m','i','c','r','o','s','o','f','t','-','c','o','m',':','a','s','m','.','v','1',0};
 static const WCHAR manifestv3W[] = {'u','r','n',':','s','c','h','e','m','a','s','-','m','i','c','r','o','s','o','f','t','-','c','o','m',':','a','s','m','.','v','3',0};
 
@@ -387,7 +387,7 @@ static void free_entity_array(struct entity_array *array)
             RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.clrsurrogate.clsid);
             break;
         default:
-            DPRINT1("Unknown entity kind %d\n", entity->kind);
+            DPRINT1("Unknown entity kind %u\n", entity->kind);
         }
     }
     RtlFreeHeap( RtlGetProcessHeap(), 0, array->base );
@@ -528,21 +528,17 @@ static WCHAR *build_assembly_id( const struct assembly_identity *ai )
         {',','p','r','o','c','e','s','s','o','r','A','r','c','h','i','t','e','c','t','u','r','e','=',0};
     static const WCHAR public_keyW[] =
         {',','p','u','b','l','i','c','K','e','y','T','o','k','e','n','=',0};
-    static const WCHAR typeW[] =
-        {',','t','y','p','e','=',0};
-    static const WCHAR versionW[] =
-        {',','v','e','r','s','i','o','n','=',0};
 
     WCHAR version[64], *ret;
     SIZE_T size = 0;
 
     sprintfW( version, version_formatW,
               ai->version.major, ai->version.minor, ai->version.build, ai->version.revision );
-    if (ai->name) size += strlenW(ai->name) * sizeof(WCHAR);
+    if (ai->name) size += strlenW(ai->name);
     if (ai->arch) size += strlenW(archW) + strlenW(ai->arch) + 2;
     if (ai->public_key) size += strlenW(public_keyW) + strlenW(ai->public_key) + 2;
-    if (ai->type) size += strlenW(typeW) + strlenW(ai->type) + 2;
-    size += strlenW(versionW) + strlenW(version) + 2;
+    if (ai->type) size += 1 + strlenW(typeW) + 1 + strlenW(ai->type) + 2;
+    size += 1+ strlenW(versionW) + 1 + strlenW(version) + 2;
 
     if (!(ret = RtlAllocateHeap( RtlGetProcessHeap(), 0, (size + 1) * sizeof(WCHAR) )))
         return NULL;
@@ -791,8 +787,8 @@ static BOOL parse_expect_no_attr(xmlbuf_t* xmlbuf, BOOL* end)
     while (next_xml_attr(xmlbuf, &attr_name, &attr_value, &error, end))
     {
         attr_nameU = xmlstr2unicode(&attr_name);
-        attr_valueU = xmlstr2unicode(&attr_name);
-        DPRINT1( "unexpected attr %S=%S\n", &attr_nameU,
+        attr_valueU = xmlstr2unicode(&attr_value);
+        DPRINT1( "unexpected attr %wZ=%wZ\n", &attr_nameU,
              &attr_valueU);
     }
     return !error;
@@ -847,7 +843,7 @@ static BOOL parse_assembly_identity_elem(xmlbuf_t* xmlbuf, ACTIVATION_CONTEXT* a
 
     while (next_xml_attr(xmlbuf, &attr_name, &attr_value, &error, &end))
     {
-        if (xmlstr_cmp(&attr_name, nameW))
+        if (xmlstr_cmp(&attr_name, g_nameW))
         {
             if (!(ai->name = xmlstrdupW(&attr_value))) return FALSE;
         }
@@ -944,7 +940,7 @@ static BOOL parse_cominterface_proxy_stub_elem(xmlbuf_t* xmlbuf, struct dll_redi
         {
             if (!(entity->u.proxy.iid = xmlstrdupW(&attr_value))) return FALSE;
         }
-        if (xmlstr_cmp(&attr_name, nameW))
+        if (xmlstr_cmp(&attr_name, g_nameW))
         {
             if (!(entity->u.proxy.name = xmlstrdupW(&attr_value))) return FALSE;
         }
@@ -1107,7 +1103,7 @@ static BOOL parse_com_interface_external_proxy_stub_elem(xmlbuf_t* xmlbuf,
         {
             if (!(entity->u.proxy.iid = xmlstrdupW(&attr_value))) return FALSE;
         }
-        if (xmlstr_cmp(&attr_name, nameW))
+        if (xmlstr_cmp(&attr_name, g_nameW))
         {
             if (!(entity->u.proxy.name = xmlstrdupW(&attr_value))) return FALSE;
         }
@@ -1133,7 +1129,7 @@ static BOOL parse_clr_class_elem(xmlbuf_t* xmlbuf, struct assembly* assembly)
 
     while (next_xml_attr(xmlbuf, &attr_name, &attr_value, &error, &end))
     {
-        if (xmlstr_cmp(&attr_name, nameW))
+        if (xmlstr_cmp(&attr_name, g_nameW))
         {
             if (!(entity->u.clrclass.name = xmlstrdupW(&attr_value))) return FALSE;
         }
@@ -1165,7 +1161,7 @@ static BOOL parse_clr_surrogate_elem(xmlbuf_t* xmlbuf, struct assembly* assembly
 
     while (next_xml_attr(xmlbuf, &attr_name, &attr_value, &error, &end))
     {
-        if (xmlstr_cmp(&attr_name, nameW))
+        if (xmlstr_cmp(&attr_name, g_nameW))
         {
             if (!(entity->u.clrsurrogate.name = xmlstrdupW(&attr_value))) return FALSE;
         }
@@ -1299,7 +1295,7 @@ static BOOL parse_file_elem(xmlbuf_t* xmlbuf, struct assembly* assembly)
         attr_nameU = xmlstr2unicode(&attr_name);
         attr_valueU = xmlstr2unicode(&attr_value);
 
-        if (xmlstr_cmp(&attr_name, nameW))
+        if (xmlstr_cmp(&attr_name, g_nameW))
         {
             if (!(dll->name = xmlstrdupW(&attr_value))) return FALSE;
             DPRINT("name=%wZ\n", &attr_valueU);
@@ -1499,7 +1495,7 @@ static NTSTATUS parse_manifest_buffer( struct actctx_loader* acl, struct assembl
 
     if (!next_xml_elem(xmlbuf, &elem)) return STATUS_SXS_CANT_GEN_ACTCTX;
 
-    if (xmlstr_cmp(&elem, xmlW) &&
+    if (xmlstr_cmp(&elem, g_xmlW) &&
         (!parse_xml_header(xmlbuf) || !next_xml_elem(xmlbuf, &elem)))
         return STATUS_SXS_CANT_GEN_ACTCTX;
 
@@ -2279,7 +2275,8 @@ NTSTATUS WINAPI RtlCreateActivationContext( HANDLE *handle,  void *ptr )
         if (pActCtx->dwFlags & ACTCTX_FLAG_HMODULE_VALID) module = pActCtx->hModule;
         else module = NtCurrentTeb()->ProcessEnvironmentBlock->ImageBaseAddress;
 
-        if ((status = get_module_filename( module, &dir, 0 ))) goto error;
+        status = get_module_filename(module, &dir, 0);
+        if (!NT_SUCCESS(status)) goto error;
         if ((p = strrchrW( dir.Buffer, '\\' ))) p[1] = 0;
         actctx->appdir.info = dir.Buffer;
     }
@@ -2293,7 +2290,7 @@ NTSTATUS WINAPI RtlCreateActivationContext( HANDLE *handle,  void *ptr )
             goto error;
         }
         status = open_nt_file( &file, &nameW );
-        if (status)
+        if (!NT_SUCCESS(status))
         {
             RtlFreeUnicodeString( &nameW );
             goto error;
@@ -2338,10 +2335,11 @@ NTSTATUS WINAPI RtlCreateActivationContext( HANDLE *handle,  void *ptr )
     if (file) NtClose( file );
     RtlFreeUnicodeString( &nameW );
 
-    if (status == STATUS_SUCCESS) status = parse_depend_manifests(&acl);
+    if (NT_SUCCESS(status)) status = parse_depend_manifests(&acl);
     free_depend_manifests( &acl );
 
-    if (status == STATUS_SUCCESS) *handle = actctx;
+    if (NT_SUCCESS(status))
+        *handle = actctx;
     else actctx_release( actctx );
     return status;
 
@@ -2431,7 +2429,7 @@ RtlDeactivateActivationContext( ULONG flags, ULONG_PTR cookie )
 
 VOID
 NTAPI
-RtlFreeActivationContextStack(PACTIVATION_CONTEXT_STACK Stack)
+RtlFreeActivationContextStack(IN PACTIVATION_CONTEXT_STACK Stack)
 {
     PRTL_ACTIVATION_CONTEXT_STACK_FRAME ActiveFrame, PrevFrame;
 
@@ -2461,7 +2459,7 @@ RtlFreeActivationContextStack(PACTIVATION_CONTEXT_STACK Stack)
 }
 
 VOID
-NTAPI RtlFreeThreadActivationContextStack(void)
+NTAPI RtlFreeThreadActivationContextStack(VOID)
 {
     RtlFreeActivationContextStack(NtCurrentTeb()->ActivationContextStackPointer);
     NtCurrentTeb()->ActivationContextStackPointer = NULL;
@@ -2502,7 +2500,7 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
     ACTIVATION_CONTEXT *actctx;
     NTSTATUS status;
 
-    DPRINT("%08x %p %p %u %p %ld %p\n", flags, handle,
+    DPRINT("%08x %p %p %u %p %Iu %p\n", flags, handle,
           subinst, class, buffer, bufsize, retlen);
 
     if (retlen) *retlen = 0;
@@ -2777,15 +2775,15 @@ RtlFindActivationContextSectionString( ULONG flags, const GUID *guid, ULONG sect
 
 NTSTATUS
 NTAPI
-RtlAllocateActivationContextStack(IN PVOID *Context)
+RtlAllocateActivationContextStack(IN PACTIVATION_CONTEXT_STACK *Stack)
 {
     PACTIVATION_CONTEXT_STACK ContextStack;
 
     /* Check if it's already allocated */
-    if (*Context) return STATUS_SUCCESS;
+    if (*Stack) return STATUS_SUCCESS;
 
     /* Allocate space for the context stack */
-    ContextStack = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof (ACTIVATION_CONTEXT_STACK) );
+    ContextStack = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ACTIVATION_CONTEXT_STACK));
     if (!ContextStack)
     {
         return STATUS_NO_MEMORY;
@@ -2798,7 +2796,7 @@ RtlAllocateActivationContextStack(IN PVOID *Context)
     ContextStack->NextCookieSequenceNumber = 1;
     ContextStack->StackId = 1; //TODO: Timer-based
 
-    *Context = ContextStack;
+    *Stack = ContextStack;
 
     return STATUS_SUCCESS;
 }

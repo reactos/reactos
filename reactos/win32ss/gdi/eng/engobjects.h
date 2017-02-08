@@ -75,6 +75,11 @@ typedef struct _CLIPGDI {
   ENUMRECTS EnumRects;
 } CLIPGDI, *PCLIPGDI;
 
+// HACK, until we use the original structure
+#define XCLIPOBJ CLIPGDI
+
+extern XCLIPOBJ gxcoTrivial;
+
 /*ei What is this for? */
 typedef struct _DRVFUNCTIONSGDI {
   HDEV  hdev;

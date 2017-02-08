@@ -1,0 +1,6 @@
+Import('*')
+
+SConscript('osmesa/SConscript')
+
+if env['platform'] == 'windows':
+    SConscript('windows/gdi/SConscript')

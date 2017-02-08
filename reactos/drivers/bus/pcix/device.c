@@ -250,6 +250,7 @@ VOID
 NTAPI
 Device_RestoreCurrent(IN PPCI_CONFIGURATOR_CONTEXT Context)
 {
+    UNREFERENCED_PARAMETER(Context);
     /* Nothing to do for devices */
     return;
 }
@@ -260,9 +261,11 @@ Device_GetAdditionalResourceDescriptors(IN PPCI_CONFIGURATOR_CONTEXT Context,
                                         IN PPCI_COMMON_HEADER PciData,
                                         IN PIO_RESOURCE_DESCRIPTOR IoDescriptor)
 {
+    UNREFERENCED_PARAMETER(Context);
+    UNREFERENCED_PARAMETER(PciData);
+    UNREFERENCED_PARAMETER(IoDescriptor);
     /* Not yet implemented */
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 VOID
@@ -270,9 +273,10 @@ NTAPI
 Device_ResetDevice(IN PPCI_PDO_EXTENSION PdoExtension,
                    IN PPCI_COMMON_HEADER PciData)
 {
+    UNREFERENCED_PARAMETER(PdoExtension);
+    UNREFERENCED_PARAMETER(PciData);
     /* Not yet implemented */
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 VOID
@@ -280,9 +284,10 @@ NTAPI
 Device_ChangeResourceSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                               IN PPCI_COMMON_HEADER PciData)
 {
+    UNREFERENCED_PARAMETER(PdoExtension);
+    UNREFERENCED_PARAMETER(PciData);
     /* Not yet implemented */
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 /* EOF */

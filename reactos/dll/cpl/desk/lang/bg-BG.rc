@@ -4,7 +4,7 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDD_BACKGROUND DIALOGEX DISCARDABLE 0, 0, 246, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Работна площ"
+CAPTION "Р Р°Р±РѕС‚РЅР° РїР»РѕС‰"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW,
@@ -12,258 +12,261 @@ BEGIN
     CONTROL         "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT |
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP, 8, 114, 174, 78
-    LTEXT           "Изберете изображение за украса на работната си площ",
+    LTEXT           "РР·Р±РµСЂРµС‚Рµ РёР·РѕР±СЂР°Р¶РµРЅРёРµ Р·Р° СѓРєСЂР°СЃР° РЅР° СЂР°Р±РѕС‚РЅР°С‚Р° СЃРё РїР»РѕС‰",
                     IDC_STATIC, 8, 103, 230, 9
-    PUSHBUTTON      "&Обзор...", IDC_BROWSE_BUTTON, 188, 114, 50, 15
-    PUSHBUTTON      "&Цвят...", IDC_COLOR_BUTTON, 188, 177, 50, 15
-    LTEXT           "Разположение", IDC_STATIC, 188, 138, 55, 9
+    PUSHBUTTON      "&РћР±Р·РѕСЂ...", IDC_BROWSE_BUTTON, 188, 114, 50, 15
+    PUSHBUTTON      "&Р¦РІСЏС‚...", IDC_COLOR_BUTTON, 188, 177, 50, 15
+    LTEXT           "Р Р°Р·РїРѕР»РѕР¶РµРЅРёРµ", IDC_STATIC, 188, 138, 55, 9
     COMBOBOX        IDC_PLACEMENT_COMBO, 188, 149, 50, 54,
                     CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Екранен предпазител"
+CAPTION "Р•РєСЂР°РЅРµРЅ РїСЂРµРґРїР°Р·РёС‚РµР»"
 FONT 8, "MS Shell Dlg", 0, 0
 BEGIN
     CONTROL         "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW,
                     70, 10, 105, 70, WS_EX_STATICEDGE
-    GROUPBOX        "&Екранен предпазител",IDC_SCREENS_DUMMY, 8, 92, 230, 52
+    GROUPBOX        "&Р•РєСЂР°РЅРµРЅ РїСЂРµРґРїР°Р·РёС‚РµР»",IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX        IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "На&стройки",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
-    PUSHBUTTON      "Пре&глед",IDC_SCREENS_TESTSC, 175, 103, 50, 13
-    LTEXT           "&Изчакване",IDC_WAITTEXT, 14, 125, 20, 9
+    PUSHBUTTON      "РќР°&СЃС‚СЂРѕР№РєРё",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
+    PUSHBUTTON      "РџСЂРµ&РіР»РµРґ",IDC_SCREENS_TESTSC, 175, 103, 50, 13
+    LTEXT           "&РР·С‡Р°РєРІР°РЅРµ",IDC_WAITTEXT, 14, 125, 20, 9
     EDITTEXT        IDC_SCREENS_TIMEDELAY, 34, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
                     WS_BORDER | WS_GROUP, 54, 123, 12, 13
-    LTEXT           "минути", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL         "Искане на парола при изход",IDC_SCREENS_USEPASSCHK,"button",
+    LTEXT           "РјРёРЅСѓС‚Рё", IDC_MINTEXT, 70, 125, 26, 9
+    CONTROL         "РСЃРєР°РЅРµ РЅР° РїР°СЂРѕР»Р° РїСЂРё РёР·С…РѕРґ",IDC_SCREENS_USEPASSCHK,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
-    GROUPBOX        "&Енергоспестяващи възможности на монитора", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
-    LTEXT           "За настройка захранването на монитора, натиснете „Захранване...“.",
+    GROUPBOX        "&Р•РЅРµСЂРіРѕСЃРїРµСЃС‚СЏРІР°С‰Рё РІСЉР·РјРѕР¶РЅРѕСЃС‚Рё РЅР° РјРѕРЅРёС‚РѕСЂР°", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
+    LTEXT           "Р—Р° РЅР°СЃС‚СЂРѕР№РєР° Р·Р°С…СЂР°РЅРІР°РЅРµС‚Рѕ РЅР° РјРѕРЅРёС‚РѕСЂР°, РЅР°С‚РёСЃРЅРµС‚Рµ вЂћР—Р°С…СЂР°РЅРІР°РЅРµ...вЂњ.",
                     IDC_STATIC, 14, 166, 158 ,20
-    PUSHBUTTON      "Захранване...", IDC_SCREENS_POWER_BUTTON, 165, 171, 61, 13
+    PUSHBUTTON      "Р—Р°С…СЂР°РЅРІР°РЅРµ...", IDC_SCREENS_POWER_BUTTON, 165, 171, 61, 13
 END
 
-IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 204
+IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Облик"
+CAPTION "РћР±Р»РёРє"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
     LTEXT           "Visual Style", IDC_STATIC, 7, 130, 64, 7
     COMBOBOX        IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-	LTEXT           "Разцветка", IDC_STATIC, 7, 160, 64, 7
+    LTEXT           "Р Р°Р·С†РІРµС‚РєР°", IDC_STATIC, 7, 160, 64, 7
     COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 170, 134, 90 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "&Ефекти", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
-    PUSHBUTTON      "Още", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
+    LTEXT           "Size", IDC_STATIC, 7, 190, 64, 7
+    COMBOBOX        IDC_APPEARANCE_SIZE, 7, 200, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Р•С„РµРєС‚Рё", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
+    PUSHBUTTON      "РћС‰Рµ", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
 END
 
 IDD_ADVAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 250, 239
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Разширен облик"
+CAPTION "Р Р°Р·С€РёСЂРµРЅ РѕР±Р»РёРє"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
 
-    LTEXT "Част", 8, 5, 160, 50, 9
+    LTEXT "Р§Р°СЃС‚", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT "&Размер", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 35, 9
+    LTEXT "&Р Р°Р·РјРµСЂ", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 35, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
 
-    LTEXT   "Цвят &1", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
+    LTEXT   "Р¦РІСЏС‚ &1", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
     CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
-    LTEXT   "Цвят &2", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
+    LTEXT   "Р¦РІСЏС‚ &2", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
     CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR2_B, 216, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
-    LTEXT "Шрифт", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 8
+    LTEXT "РЁСЂРёС„С‚", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 8
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT   "Размер на шрифта", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 8
+    LTEXT   "Р Р°Р·РјРµСЂ РЅР° С€СЂРёС„С‚Р°", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 8
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
 
-    LTEXT   "Цвят", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 20, 9
+    LTEXT   "Р¦РІСЏС‚", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 20, 9
     CHECKBOX   "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
-    AUTOCHECKBOX   "Ч", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
-    AUTOCHECKBOX   "К ", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE
+    AUTOCHECKBOX   "Р§", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
+    AUTOCHECKBOX   "Рљ ", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE
 
-    PUSHBUTTON "Отказ", IDCANCEL, 191, 220, 50, 14
-    DEFPUSHBUTTON "Добре", IDOK, 137, 220, 50, 14
+    PUSHBUTTON "РћС‚РєР°Р·", IDCANCEL, 191, 220, 50, 14
+    DEFPUSHBUTTON "Р”РѕР±СЂРµ", IDOK, 137, 220, 50, 14
 END
 
 IDD_EFFAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 285, 185
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Ефекти"
+CAPTION "Р•С„РµРєС‚Рё"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "Из&ползване на следните преходни ефекти за изборниците и подсказките",IDC_EFFAPPEARANCE_ANIMATION,"button",
+    CONTROL         "РР·&РїРѕР»Р·РІР°РЅРµ РЅР° СЃР»РµРґРЅРёС‚Рµ РїСЂРµС…РѕРґРЅРё РµС„РµРєС‚Рё Р·Р° РёР·Р±РѕСЂРЅРёС†РёС‚Рµ Рё РїРѕРґСЃРєР°Р·РєРёС‚Рµ",IDC_EFFAPPEARANCE_ANIMATION,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 285, 19
     COMBOBOX        IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "&Използване на следния похват за изглаждане ръбовете на екранните шрифтове",IDC_EFFAPPEARANCE_SMOOTHING,"button",
+    CONTROL         "&РР·РїРѕР»Р·РІР°РЅРµ РЅР° СЃР»РµРґРЅРёСЏ РїРѕС…РІР°С‚ Р·Р° РёР·РіР»Р°Р¶РґР°РЅРµ СЂСЉР±РѕРІРµС‚Рµ РЅР° РµРєСЂР°РЅРЅРёС‚Рµ С€СЂРёС„С‚РѕРІРµ",IDC_EFFAPPEARANCE_SMOOTHING,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 285, 19
     COMBOBOX        IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    CONTROL         "Използван&е на големи значета",IDC_EFFAPPEARANCE_LARGEICONS,"button",
+    CONTROL         "РР·РїРѕР»Р·РІР°РЅ&Рµ РЅР° РіРѕР»РµРјРё Р·РЅР°С‡РµС‚Р°",IDC_EFFAPPEARANCE_LARGEICONS,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 285, 19
-    CONTROL         "Изобразяване на &сенки под изборницте",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
+    CONTROL         "РР·РѕР±СЂР°Р·СЏРІР°РЅРµ РЅР° &СЃРµРЅРєРё РїРѕРґ РёР·Р±РѕСЂРЅРёС†С‚Рµ",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 285, 19
-    CONTROL         "Показване на съдържанието на &прозорците по време на влачене",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
+    CONTROL         "РџРѕРєР°Р·РІР°РЅРµ РЅР° СЃСЉРґСЉСЂР¶Р°РЅРёРµС‚Рѕ РЅР° &РїСЂРѕР·РѕСЂС†РёС‚Рµ РїРѕ РІСЂРµРјРµ РЅР° РІР»Р°С‡РµРЅРµ",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 285, 19
-    CONTROL         "С&криване на подчертаването за клавиатурното насочване, до натискане на Alt",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
+    CONTROL         "РЎ&РєСЂРёРІР°РЅРµ РЅР° РїРѕРґС‡РµСЂС‚Р°РІР°РЅРµС‚Рѕ Р·Р° РєР»Р°РІРёР°С‚СѓСЂРЅРѕС‚Рѕ РЅР°СЃРѕС‡РІР°РЅРµ, РґРѕ РЅР°С‚РёСЃРєР°РЅРµ РЅР° Alt",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 285, 19
-    PUSHBUTTON "Отказ", IDCANCEL, 226, 165, 50, 14
-    DEFPUSHBUTTON "Добре", IDOK, 172, 165, 50, 14
+    PUSHBUTTON "РћС‚РєР°Р·", IDCANCEL, 226, 165, 50, 14
+    DEFPUSHBUTTON "Р”РѕР±СЂРµ", IDOK, 172, 165, 50, 14
 END
 
 IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Настройки"
+CAPTION "РќР°СЃС‚СЂРѕР№РєРё"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Завлачете значетата на мониторите така, че да отговарят на действителното разположение на мониторите ви.",-1,3,3,240,16
+    LTEXT           "Р—Р°РІР»Р°С‡РµС‚Рµ Р·РЅР°С‡РµС‚Р°С‚Р° РЅР° РјРѕРЅРёС‚РѕСЂРёС‚Рµ С‚Р°РєР°, С‡Рµ РґР° РѕС‚РіРѕРІР°СЂСЏС‚ РЅР° РґРµР№СЃС‚РІРёС‚РµР»РЅРѕС‚Рѕ СЂР°Р·РїРѕР»РѕР¶РµРЅРёРµ РЅР° РјРѕРЅРёС‚РѕСЂРёС‚Рµ РІРё.",-1,3,3,240,16
     CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,23,240,82,WS_EX_CLIENTEDGE
-    LTEXT           "&Екран",1820,3,107,30,8
-    LTEXT           "<няма>",IDC_SETTINGS_DEVICE,9,116,224,8
-    GROUPBOX        "&Разделителна способност",1818,3,127,115,43
+    LTEXT           "&Р•РєСЂР°РЅ",1820,3,107,30,8
+    LTEXT           "<РЅСЏРјР°>",IDC_SETTINGS_DEVICE,9,116,224,8
+    GROUPBOX        "&Р Р°Р·РґРµР»РёС‚РµР»РЅР° СЃРїРѕСЃРѕР±РЅРѕСЃС‚",1818,3,127,115,43
     CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
                     TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
-    LTEXT           "Малка",1815,9,137,22,8,NOT WS_GROUP
-    LTEXT           "Голяма",1816,93,137,21,8,NOT WS_GROUP
+    LTEXT           "РњР°Р»РєР°",1815,9,137,22,8,NOT WS_GROUP
+    LTEXT           "Р“РѕР»СЏРјР°",1816,93,137,21,8,NOT WS_GROUP
     LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,157,100,10,NOT WS_GROUP | SS_CENTER
-    GROUPBOX        "&Цветове",1817,125,127,115,43
+    GROUPBOX        "&Р¦РІРµС‚РѕРІРµ",1817,125,127,115,43
     COMBOBOX        IDC_SETTINGS_BPP,131,137,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "",IDC_SETTINGS_SPECTRUM,"Static",SS_OWNERDRAW | SS_SUNKEN,131,155,103,9
-    PUSHBUTTON      "Раз&ширени...",IDC_SETTINGS_ADVANCED,170,174,70,14
+    PUSHBUTTON      "Р Р°Р·&С€РёСЂРµРЅРё...",IDC_SETTINGS_ADVANCED,170,174,70,14
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX DISCARDABLE 0, 0, 253, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Общи"
+CAPTION "РћР±С‰Рё"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Екран", -1, 7, 6, 237, 56, WS_GROUP
-    LTEXT "Размер на шрифта", -1, 14, 20, 222, 8
+    GROUPBOX "Р•РєСЂР°РЅ", -1, 7, 6, 237, 56, WS_GROUP
+    LTEXT "Р Р°Р·РјРµСЂ РЅР° С€СЂРёС„С‚Р°", -1, 14, 20, 222, 8
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_COSTOM, 14, 46, 223, 12
-    GROUPBOX "Съвместимост", -1, 7, 67, 237, 97
-    LTEXT "Някои приложения няма да работят правилно, ако не презапуснете компютъра, след като промените цветовите настройки.\r\nСлед като променя цветовите настройки", -1, 12, 78, 228, 34
-    AUTORADIOBUTTON "&Презапуск преди прилагане на новите цветови настройки.", IDC_RESTART_RB, 14, 116, 224, 10
-    AUTORADIOBUTTON "Прилагане на новите настройки без презапуск.", IDC_WITHOUTREBOOT_RB, 14, 131, 224, 10
-    AUTORADIOBUTTON "Питане преди прилагане на новите настройки", IDC_ASKME_RB, 14, 146, 224, 10
+    GROUPBOX "РЎСЉРІРјРµСЃС‚РёРјРѕСЃС‚", -1, 7, 67, 237, 97
+    LTEXT "РќСЏРєРѕРё РїСЂРёР»РѕР¶РµРЅРёСЏ РЅСЏРјР° РґР° СЂР°Р±РѕС‚СЏС‚ РїСЂР°РІРёР»РЅРѕ, Р°РєРѕ РЅРµ РїСЂРµР·Р°РїСѓСЃРЅРµС‚Рµ РєРѕРјРїСЋС‚СЉСЂР°, СЃР»РµРґ РєР°С‚Рѕ РїСЂРѕРјРµРЅРёС‚Рµ С†РІРµС‚РѕРІРёС‚Рµ РЅР°СЃС‚СЂРѕР№РєРё.\r\nРЎР»РµРґ РєР°С‚Рѕ РїСЂРѕРјРµРЅСЏ С†РІРµС‚РѕРІРёС‚Рµ РЅР°СЃС‚СЂРѕР№РєРё", -1, 12, 78, 228, 34
+    AUTORADIOBUTTON "&РџСЂРµР·Р°РїСѓСЃРє РїСЂРµРґРё РїСЂРёР»Р°РіР°РЅРµ РЅР° РЅРѕРІРёС‚Рµ С†РІРµС‚РѕРІРё РЅР°СЃС‚СЂРѕР№РєРё.", IDC_RESTART_RB, 14, 116, 224, 10
+    AUTORADIOBUTTON "РџСЂРёР»Р°РіР°РЅРµ РЅР° РЅРѕРІРёС‚Рµ РЅР°СЃС‚СЂРѕР№РєРё Р±РµР· РїСЂРµР·Р°РїСѓСЃРє.", IDC_WITHOUTREBOOT_RB, 14, 131, 224, 10
+    AUTORADIOBUTTON "РџРёС‚Р°РЅРµ РїСЂРµРґРё РїСЂРёР»Р°РіР°РЅРµ РЅР° РЅРѕРІРёС‚Рµ РЅР°СЃС‚СЂРѕР№РєРё", IDC_ASKME_RB, 14, 146, 224, 10
 END
 
 IDR_PREVIEW_MENU MENU
 BEGIN
-    MENUITEM "Обикновено",           ID_MENU_NORMAL
-    MENUITEM "Изключено",         ID_MENU_DISABLED
-    MENUITEM "Избрано",         ID_MENU_SELECTED
+    MENUITEM "РћР±РёРєРЅРѕРІРµРЅРѕ",           ID_MENU_NORMAL
+    MENUITEM "РР·РєР»СЋС‡РµРЅРѕ",         ID_MENU_DISABLED
+    MENUITEM "РР·Р±СЂР°РЅРѕ",         ID_MENU_SELECTED
 END
 
 IDM_MONITOR_MENU MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "При&крепен",   ID_MENU_ATTACHED
-        MENUITEM "&Първичен",    ID_MENU_PRIMARY
+        MENUITEM "РџСЂРё&РєСЂРµРїРµРЅ",   ID_MENU_ATTACHED
+        MENUITEM "&РџСЉСЂРІРёС‡РµРЅ",    ID_MENU_PRIMARY
         MENUITEM SEPARATOR
-        MENUITEM "&Разпознаване",   ID_MENU_IDENTIFY
-        MENUITEM "&Свойства", ID_MENU_PROPERTIES
+        MENUITEM "&Р Р°Р·РїРѕР·РЅР°РІР°РЅРµ",   ID_MENU_IDENTIFY
+        MENUITEM "&РЎРІРѕР№СЃС‚РІР°", ID_MENU_PROPERTIES
     END
 END
 
 STRINGTABLE  DISCARDABLE
 BEGIN
-    IDS_SLIDEEFFECT "Ефект на плъзгане"
-    IDS_FADEEFFECT  "Ефект на изтляване"
+    IDS_SLIDEEFFECT "Р•С„РµРєС‚ РЅР° РїР»СЉР·РіР°РЅРµ"
+    IDS_FADEEFFECT  "Р•С„РµРєС‚ РЅР° РёР·С‚Р»СЏРІР°РЅРµ"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_STANDARDEFFECT  "Обичаен"
-    IDS_CLEARTYPEEFFECT "Изчистен"
+    IDS_STANDARDEFFECT  "РћР±РёС‡Р°РµРЅ"
+    IDS_CLEARTYPEEFFECT "РР·С‡РёСЃС‚РµРЅ"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_MULTIPLEMONITORS "(Много монитори)"
-    IDS_UNKNOWNMONITOR "(Неизвестен монитор)"
-    IDS_ADVANCEDTITLEFMT "%s и %s"
+    IDS_MULTIPLEMONITORS "(РњРЅРѕРіРѕ РјРѕРЅРёС‚РѕСЂРё)"
+    IDS_UNKNOWNMONITOR "(РќРµРёР·РІРµСЃС‚РµРЅ РјРѕРЅРёС‚РѕСЂ)"
+    IDS_ADVANCEDTITLEFMT "%s Рё %s"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Екран"
-    IDS_CPLDESCRIPTION "Настройки на работната площ и екранния предпазител."
-    IDS_NONE "(Няма)"
-    IDS_CENTER "В средата"
-    IDS_STRETCH "Разтегнато"
-    IDS_TILE "Настелено"
+    IDS_CPLNAME "Р•РєСЂР°РЅ"
+    IDS_CPLDESCRIPTION "РќР°СЃС‚СЂРѕР№РєРё РЅР° СЂР°Р±РѕС‚РЅР°С‚Р° РїР»РѕС‰ Рё РµРєСЂР°РЅРЅРёСЏ РїСЂРµРґРїР°Р·РёС‚РµР»."
+    IDS_NONE "(РќСЏРјР°)"
+    IDS_CENTER "Р’ СЃСЂРµРґР°С‚Р°"
+    IDS_STRETCH "Р Р°Р·С‚РµРіРЅР°С‚Рѕ"
+    IDS_TILE "РќР°СЃС‚РµР»РµРЅРѕ"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_COLOR_4BIT "16 цвята"
-    IDS_COLOR_8BIT "256 цвята"
-    IDS_COLOR_16BIT "Многоцветно (16 бита)"
-    IDS_COLOR_24BIT "Пълноцветно (24 бита)"
-    IDS_COLOR_32BIT "Пълноцветно (32 бита)"
-    IDS_PIXEL "%lux%lu точки"
+    IDS_COLOR_4BIT "16 С†РІСЏС‚Р°"
+    IDS_COLOR_8BIT "256 С†РІСЏС‚Р°"
+    IDS_COLOR_16BIT "РњРЅРѕРіРѕС†РІРµС‚РЅРѕ (16 Р±РёС‚Р°)"
+    IDS_COLOR_24BIT "РџСЉР»РЅРѕС†РІРµС‚РЅРѕ (24 Р±РёС‚Р°)"
+    IDS_COLOR_32BIT "РџСЉР»РЅРѕС†РІРµС‚РЅРѕ (32 Р±РёС‚Р°)"
+    IDS_PIXEL "%lux%lu С‚РѕС‡РєРё"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_BACKGROUND_COMDLG_FILTER "Изображения (*.bmp;*.dib)\0*.bmp;*.dib\0"
+    IDS_BACKGROUND_COMDLG_FILTER "РР·РѕР±СЂР°Р¶РµРЅРёСЏ (*.bmp;*.dib)\0*.bmp;*.dib\0"
     IDS_SUPPORTED_EXT "*.bmp;*.dib"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_INACTWIN "Нетекущ прозорец"
-    IDS_ACTWIN   "Текущ прозорец"
-    IDS_WINTEXT  "Текст на прозорците"
-    IDS_MESSBOX  "Кутия за съобщения"
-    IDS_MESSTEXT "Текст на съобщенията"
-    IDS_BUTTEXT  "Добре"
+    IDS_INACTWIN "РќРµС‚РµРєСѓС‰ РїСЂРѕР·РѕСЂРµС†"
+    IDS_ACTWIN   "РўРµРєСѓС‰ РїСЂРѕР·РѕСЂРµС†"
+    IDS_WINTEXT  "РўРµРєСЃС‚ РЅР° РїСЂРѕР·РѕСЂС†РёС‚Рµ"
+    IDS_MESSBOX  "РљСѓС‚РёСЏ Р·Р° СЃСЉРѕР±С‰РµРЅРёСЏ"
+    IDS_MESSTEXT "РўРµРєСЃС‚ РЅР° СЃСЉРѕР±С‰РµРЅРёСЏС‚Р°"
+    IDS_BUTTEXT  "Р”РѕР±СЂРµ"
+    IDS_CLASSIC_THEME   "Classic Theme"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ELEMENT_1 "Работна площ"
-    IDS_ELEMENT_2 "Надписвания на нетекущите прозорци"
-    IDS_ELEMENT_3 "Рамка на нетекущите прозорци"
-    IDS_ELEMENT_4 "Надписвания на текущите прозорци"
-    IDS_ELEMENT_5 "Рамка на текущите прозорци"
-    IDS_ELEMENT_6 "Меню"
-    IDS_ELEMENT_7 "Подсказки"
-    IDS_ELEMENT_8 "Прозорци"
-    IDS_ELEMENT_9 "Плъзгачи"
-    IDS_ELEMENT_10 "Тримерни предмети"
-    IDS_ELEMENT_11 "Цвят на заглавията"
-    IDS_ELEMENT_12 "Символно заглавие"
-    IDS_ELEMENT_13 "Надписна лента"
-    IDS_ELEMENT_14 "Нетекущи части от менюто"
-    IDS_ELEMENT_15 "Въпросителен прозорец"
-    IDS_ELEMENT_16 "Управляващи плъзгачи"
-    IDS_ELEMENT_17 "Подкраска на приложенията"
-    IDS_ELEMENT_18 "Подзаглавия"
-    IDS_ELEMENT_19 "Водоравна разредка"
-    IDS_ELEMENT_20 "Отвесна разредка"
-    IDS_ELEMENT_21 "Бързи сведения"
-    IDS_ELEMENT_22 "Символ"
+    IDS_ELEMENT_1 "Р Р°Р±РѕС‚РЅР° РїР»РѕС‰"
+    IDS_ELEMENT_2 "РќР°РґРїРёСЃРІР°РЅРёСЏ РЅР° РЅРµС‚РµРєСѓС‰РёС‚Рµ РїСЂРѕР·РѕСЂС†Рё"
+    IDS_ELEMENT_3 "Р Р°РјРєР° РЅР° РЅРµС‚РµРєСѓС‰РёС‚Рµ РїСЂРѕР·РѕСЂС†Рё"
+    IDS_ELEMENT_4 "РќР°РґРїРёСЃРІР°РЅРёСЏ РЅР° С‚РµРєСѓС‰РёС‚Рµ РїСЂРѕР·РѕСЂС†Рё"
+    IDS_ELEMENT_5 "Р Р°РјРєР° РЅР° С‚РµРєСѓС‰РёС‚Рµ РїСЂРѕР·РѕСЂС†Рё"
+    IDS_ELEMENT_6 "РњРµРЅСЋ"
+    IDS_ELEMENT_7 "РџРѕРґСЃРєР°Р·РєРё"
+    IDS_ELEMENT_8 "РџСЂРѕР·РѕСЂС†Рё"
+    IDS_ELEMENT_9 "РџР»СЉР·РіР°С‡Рё"
+    IDS_ELEMENT_10 "РўСЂРёРјРµСЂРЅРё РїСЂРµРґРјРµС‚Рё"
+    IDS_ELEMENT_11 "Р¦РІСЏС‚ РЅР° Р·Р°РіР»Р°РІРёСЏС‚Р°"
+    IDS_ELEMENT_12 "РЎРёРјРІРѕР»РЅРѕ Р·Р°РіР»Р°РІРёРµ"
+    IDS_ELEMENT_13 "РќР°РґРїРёСЃРЅР° Р»РµРЅС‚Р°"
+    IDS_ELEMENT_14 "РќРµС‚РµРєСѓС‰Рё С‡Р°СЃС‚Рё РѕС‚ РјРµРЅСЋС‚Рѕ"
+    IDS_ELEMENT_15 "Р’СЉРїСЂРѕСЃРёС‚РµР»РµРЅ РїСЂРѕР·РѕСЂРµС†"
+    IDS_ELEMENT_16 "РЈРїСЂР°РІР»СЏРІР°С‰Рё РїР»СЉР·РіР°С‡Рё"
+    IDS_ELEMENT_17 "РџРѕРґРєСЂР°СЃРєР° РЅР° РїСЂРёР»РѕР¶РµРЅРёСЏС‚Р°"
+    IDS_ELEMENT_18 "РџРѕРґР·Р°РіР»Р°РІРёСЏ"
+    IDS_ELEMENT_19 "Р’РѕРґРѕСЂР°РІРЅР° СЂР°Р·СЂРµРґРєР°"
+    IDS_ELEMENT_20 "РћС‚РІРµСЃРЅР° СЂР°Р·СЂРµРґРєР°"
+    IDS_ELEMENT_21 "Р‘СЉСЂР·Рё СЃРІРµРґРµРЅРёСЏ"
+    IDS_ELEMENT_22 "РЎРёРјРІРѕР»"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DISPLAY_SETTINGS "Настройки на екрана"
-    IDS_APPLY_FAILED "Неуспешно прилагане на новите настройки..."
-    IDS_APPLY_NEEDS_RESTART "За прилагане на настройките, трябва да презапуснете компютъра"
+    IDS_DISPLAY_SETTINGS "РќР°СЃС‚СЂРѕР№РєРё РЅР° РµРєСЂР°РЅР°"
+    IDS_APPLY_FAILED "РќРµСѓСЃРїРµС€РЅРѕ РїСЂРёР»Р°РіР°РЅРµ РЅР° РЅРѕРІРёС‚Рµ РЅР°СЃС‚СЂРѕР№РєРё..."
+    IDS_APPLY_NEEDS_RESTART "Р—Р° РїСЂРёР»Р°РіР°РЅРµ РЅР° РЅР°СЃС‚СЂРѕР№РєРёС‚Рµ, С‚СЂСЏР±РІР° РґР° РїСЂРµР·Р°РїСѓСЃРЅРµС‚Рµ РєРѕРјРїСЋС‚СЉСЂР°"
 END

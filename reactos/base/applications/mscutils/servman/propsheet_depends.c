@@ -9,7 +9,6 @@
 
 #include "precomp.h"
 
-
 HTREEITEM
 AddItemToTreeView(HWND hTreeView,
                   HTREEITEM hParent,
@@ -175,7 +174,6 @@ InitDependPage(PSERVICEPROPSHEET pDlgInfo)
     /* Set the second tree view */
     TV2_Initialize(pDlgInfo, pDlgInfo->pService->lpServiceName);
 }
-
 
 /*
  * Dependancies Property dialog callback.

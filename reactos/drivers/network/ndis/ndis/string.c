@@ -12,7 +12,6 @@
 
 #include "ndissys.h"
 
-
 /*
  * @implemented
  */
@@ -41,7 +40,6 @@ NdisAnsiStringToUnicodeString(
 }
 
 
-
 /*
  * @implemented
  */
@@ -71,7 +69,6 @@ NdisEqualString(
       CaseInsensitive);
 }
 
-
 /*
  * @implemented
  */
@@ -96,7 +93,6 @@ NdisInitAnsiString(
   RtlInitString((PANSI_STRING)DestinationString, (PCSZ)SourceString);
 }
 
-
 /*
  * @implemented
  */
@@ -125,7 +121,6 @@ NdisInitializeString(
   RtlAnsiStringToUnicodeString((PUNICODE_STRING)DestinationString, &AnsiString, TRUE);
 }
 
-
 /*
  * @implemented
  */
@@ -150,7 +145,6 @@ NdisInitUnicodeString(
   RtlInitUnicodeString((PUNICODE_STRING)DestinationString, SourceString);
 }
 
-
 /*
  * @implemented
  */
@@ -179,7 +173,6 @@ NdisUnicodeStringToAnsiString(
       FALSE);
 }
 
-
 /*
  * @implemented
  */

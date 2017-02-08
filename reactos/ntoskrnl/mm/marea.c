@@ -401,7 +401,7 @@ MmInsertMemoryArea(
        Vad->u.VadFlags.Spare = 1;
        Vad->u.VadFlags.PrivateMemory = 1;
        Vad->u.VadFlags.Protection = MiMakeProtectionMask(marea->Protect);
-       
+
        /* Insert the VAD */
        MiInsertVad(Vad, Process);
        marea->Vad = Vad;
@@ -676,6 +676,100 @@ NTAPI
 MiRemoveNode(IN PMMADDRESS_NODE Node,
 IN PMM_AVL_TABLE Table);
 
+#if DBG
+
+static
+VOID
+MiRosCheckMemoryAreasRecursive(
+   PMEMORY_AREA Node)
+{
+    /* Check if the allocation is ok */
+    ExpCheckPoolAllocation(Node, NonPagedPool, 'ERAM');
+
+    /* Check some fields */
+    ASSERT(Node->Magic == 'erAM');
+    ASSERT(PAGE_ALIGN(Node->StartingAddress) == Node->StartingAddress);
+    ASSERT(Node->EndingAddress != NULL);
+    ASSERT(PAGE_ALIGN(Node->EndingAddress) == Node->EndingAddress);
+    ASSERT((ULONG_PTR)Node->StartingAddress < (ULONG_PTR)Node->EndingAddress);
+    ASSERT((Node->Type == 0) ||
+           (Node->Type == MEMORY_AREA_CACHE) ||
+          // (Node->Type == MEMORY_AREA_CACHE_SEGMENT) ||
+           (Node->Type == MEMORY_AREA_SECTION_VIEW) ||
+           (Node->Type == MEMORY_AREA_OWNED_BY_ARM3) ||
+           (Node->Type == (MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC)));
+
+    /* Recursively check children */
+    if (Node->LeftChild != NULL)
+        MiRosCheckMemoryAreasRecursive(Node->LeftChild);
+    if (Node->RightChild != NULL)
+        MiRosCheckMemoryAreasRecursive(Node->RightChild);
+}
+
+VOID
+NTAPI
+MiRosCheckMemoryAreas(
+   PMMSUPPORT AddressSpace)
+{
+    PMEMORY_AREA RootNode;
+    PEPROCESS AddressSpaceOwner;
+    BOOLEAN NeedReleaseLock;
+
+    NeedReleaseLock = FALSE;
+
+    /* Get the address space owner */
+    AddressSpaceOwner = CONTAINING_RECORD(AddressSpace, EPROCESS, Vm);
+
+    /* Check if we already own the address space lock */
+    if (AddressSpaceOwner->AddressCreationLock.Owner != KeGetCurrentThread())
+    {
+        /* We must own it! */
+        MmLockAddressSpace(AddressSpace);
+        NeedReleaseLock = TRUE;
+    }
+
+    /* Check all memory areas */
+    RootNode = (PMEMORY_AREA)AddressSpace->WorkingSetExpansionLinks.Flink;
+    MiRosCheckMemoryAreasRecursive(RootNode);
+
+    /* Release the lock, if we acquired it */
+    if (NeedReleaseLock)
+    {
+        MmUnlockAddressSpace(AddressSpace);
+    }
+}
+
+extern KGUARDED_MUTEX PspActiveProcessMutex;
+
+VOID
+NTAPI
+MiCheckAllProcessMemoryAreas(VOID)
+{
+    PEPROCESS Process;
+    PLIST_ENTRY Entry;
+
+    /* Acquire the Active Process Lock */
+    KeAcquireGuardedMutex(&PspActiveProcessMutex);
+
+    /* Loop the process list */
+    Entry = PsActiveProcessHead.Flink;
+    while (Entry != &PsActiveProcessHead)
+    {
+        /* Get the process */
+        Process = CONTAINING_RECORD(Entry, EPROCESS, ActiveProcessLinks);
+
+        /* Check memory areas */
+        MiRosCheckMemoryAreas(&Process->Vm);
+
+        Entry = Entry->Flink;
+    }
+
+    /* Release the lock */
+    KeReleaseGuardedMutex(&PspActiveProcessMutex);
+}
+
+#endif
+
 /**
  * @name MmFreeMemoryArea
  *
@@ -712,6 +806,12 @@ MmFreeMemoryArea(
    ULONG_PTR Address;
    PVOID EndAddress;
 
+   /* Make sure we own the address space lock! */
+   ASSERT(CONTAINING_RECORD(AddressSpace, EPROCESS, Vm)->AddressCreationLock.Owner == KeGetCurrentThread());
+
+    /* Check magic */
+    ASSERT(MemoryArea->Magic == 'erAM');
+
    if (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3)
    {
        PEPROCESS CurrentProcess = PsGetCurrentProcess();
@@ -731,7 +831,7 @@ MmFreeMemoryArea(
             BOOLEAN Dirty = FALSE;
             SWAPENTRY SwapEntry = 0;
             PFN_NUMBER Page = 0;
-             
+
              if (MmIsPageSwapEntry(Process, (PVOID)Address))
              {
                 MmDeletePageFileMapping(Process, (PVOID)Address, &SwapEntry);
@@ -787,9 +887,6 @@ MmFreeMemoryArea(
            MemoryArea->Vad = NULL;
        }
     }
-
-    /* There must be no page ops in progress */
-    ASSERT(MemoryArea->PageOpCount == 0);
 
    /* Remove the tree item. */
    {
@@ -979,7 +1076,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
    MemoryArea->Protect = Protect;
    MemoryArea->Flags = AllocationFlags;
    //MemoryArea->LockCount = 0;
-   MemoryArea->PageOpCount = 0;
+   MemoryArea->Magic = 'erAM';
    MemoryArea->DeleteInProgress = FALSE;
 
    MmInsertMemoryArea(AddressSpace, MemoryArea);
@@ -1072,17 +1169,17 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
             KeBugCheck(MEMORY_MANAGEMENT);
       }
    }
-   
+
 #if (_MI_PAGING_LEVELS == 2)
     {
         KIRQL OldIrql;
         PMMPDE pointerPde;
         /* Attach to Process */
         KeAttachProcess(&Process->Pcb);
-        
+
         /* Acquire PFN lock */
         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-        
+
         for(Address = MI_LOWEST_VAD_ADDRESS;
             Address < MM_HIGHEST_VAD_ADDRESS;
             Address =(PVOID)((ULONG_PTR)Address + (PAGE_SIZE * PTE_COUNT)))
@@ -1098,7 +1195,7 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
         }
         /* Release lock */
         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-        
+
         /* Detach */
         KeDetachProcess();
     }

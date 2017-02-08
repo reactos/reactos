@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+1 WINE_REGISTRY dinput8.rgs
+
 #define WINE_FILEDESCRIPTION_STR "Wine DirectInput 8"
 #define WINE_FILENAME_STR "dinput8.dll"
 #define WINE_FILEVERSION 5,1,2600,881
@@ -23,4 +25,4 @@
 #define WINE_PRODUCTVERSION 5,1,2600,881
 #define WINE_PRODUCTVERSION_STR "5.1"
 
-#include "wine/wine_common_ver.rc"
+#include <wine/wine_common_ver.rc>

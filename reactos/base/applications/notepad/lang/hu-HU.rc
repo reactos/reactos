@@ -178,7 +178,7 @@ STRING_ERROR,                                   "HIBA"
 STRING_WARNING,                                 "FIGYELMEZTETÉS"
 STRING_INFO,                                    "Információ"
 
-STRING_UNTITLED,                                "(névtelen)"
+STRING_UNTITLED,                                "Névtelen"
 
 STRING_ALL_FILES,                               "Minden fájl (*.*)"
 STRING_TEXT_FILES_TXT,                  "Szövegfájlok (*.txt)"

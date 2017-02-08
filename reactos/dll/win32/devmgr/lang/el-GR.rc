@@ -1,4 +1,4 @@
-// Greek language resource file (Apostolos Alexiadis, 2009-01-25)
+﻿// Greek language resource file (Apostolos Alexiadis, 2009-01-25)
 
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
@@ -34,26 +34,26 @@ STRINGTABLE
 BEGIN
     IDS_DEV_NO_PROBLEM "Αυτή η συσκευή λειτουργεί κανονικά."
     IDS_DEV_NOT_CONFIGURED "Αυτή η συσκευή δεν έχει διαμορφωθεί σωστά."
-    IDS_DEV_DEVLOADER_FAILED "Το ReactOS δε μπόρεσε να φορτώσει τον οδηγό για αυτή τη συσκευή γιατί ο υπολογιστής αναφέρει 2 $1 bus τύπους."
-    IDS_DEV_DEVLOADER_FAILED2 "The $1 device loader(s) for this device could not load the device driver."
+    IDS_DEV_DEVLOADER_FAILED "Το ReactOS δε μπόρεσε να φορτώσει τον οδηγό για αυτή τη συσκευή γιατί ο υπολογιστής αναφέρει 2 %1 bus τύπους."
+    IDS_DEV_DEVLOADER_FAILED2 "The %1 device loader(s) for this device could not load the device driver."
     IDS_DEV_OUT_OF_MEMORY "Ο οδηγός για αυτή τη συσκευή μπορεί να είναι λανθασμένος, ή το σύστημά σας μπορεί να έχει λίγη μνήμη ή άλλους πόρους."
     IDS_DEV_ENTRY_IS_WRONG_TYPE "Αυτή η συσκευή δε λειτουργεί κανονικά επειδή ένας από τους οδηγούς τους πιθανόν να είναι λανθασμένος, ή το μητρώο σας ενδέχεται να έχει λάθη."
     IDS_DEV_LACKED_ARBITRATOR "The driver for this device requested a resource that ReactOS does not know how to handle."
     IDS_DEV_BOOT_CONFIG_CONFLICT "Another device is using the resources this device needs."
     IDS_DEV_FAILED_FILTER "Οι οδηγοί για αυτή τη συσκευή πρέπει να επανεγκατασταθούν."
-    IDS_DEV_DEVLOADER_NOT_FOUND "Αυτή η συσκευή δε λειτουργεί κανονικά επειδή το ReactOS δε μπορεί να φορτώσει το αρχείο $1 που φορτώνει τους οδηγούς για τη συσκευή."
-    IDS_DEV_DEVLOADER_NOT_FOUND2 "Αυτή η συσκευή δε λειτουργεί κανονικά επειδή το αρχείο $1 που φορτώνει τους οδηγούς για αυτή τη συσκευή είναι λανθασμένο."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Αυτή η συσκευή δε λειτουργεί κανονικά επειδή το ReactOS δε μπορεί να φορτώσει το αρχείο %1 που φορτώνει τους οδηγούς για τη συσκευή."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Αυτή η συσκευή δε λειτουργεί κανονικά επειδή το αρχείο %1 που φορτώνει τους οδηγούς για αυτή τη συσκευή είναι λανθασμένο."
     IDS_DEV_DEVLOADER_NOT_FOUND3 "Device failure: Try changing the driver for this device. If that doesn't work, see your hardware documentation."
     IDS_DEV_INVALID_DATA "This device is not working properly because the BIOS in your computer is reporting the resources for the device incorrectly."
     IDS_DEV_INVALID_DATA2 "This device is not working properly because the BIOS in the device is reporting the resources for the device incorrectly. "
     IDS_DEV_FAILED_START "This device is either not present, not working properly, or does not have all the drivers installed."
     IDS_DEV_LIAR "ReactOS stopped responding while attempting to start this device, and therefore will never attempt to start this device again."
-    IDS_DEV_NORMAL_CONFLICT "This device cannot find any free $1 resources to use."
+    IDS_DEV_NORMAL_CONFLICT "This device cannot find any free %1 resources to use."
     IDS_DEV_NOT_VERIFIED "Αυτή η συσκευή μπορεί να μην είναι παρούσα, να μη λειτουργεί σωστά, ή να μην έχει όλους τους οδηγούς της εγκατεστημένους."
     IDS_DEV_NEED_RESTART "Αυτή η συσκευή δε μπορεί να λειτουργήσει κανονικά μέχρι να επανεκκινήσετε τον υπολογιστή σας."
     IDS_DEV_REENUMERATION "This device is causing a resource conflict."
     IDS_DEV_PARTIAL_LOG_CONF "ReactOS could not identify all the resources this device uses."
-    IDS_DEV_UNKNOWN_RESOURCE "The driver information file $1 is telling this child device to use a resource that the parent device does not have or recognize."
+    IDS_DEV_UNKNOWN_RESOURCE "The driver information file %1 is telling this child device to use a resource that the parent device does not have or recognize."
     IDS_DEV_REINSTALL "Οι οδηγοί για αυτή τη συσκευή πρέπει να επανεγκατασταθούν."
     IDS_DEV_REGISTRY "Το μητρώο σας ενδέχεται να έχει λάθη."
     IDS_DEV_WILL_BE_REMOVED "Το ReactOS αφαιρεί αυτή τη συσκευή."
@@ -69,7 +69,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "The drivers for this device are not installed."
     IDS_DEV_HARDWARE_DISABLED "This device is disabled because the BIOS for the device did not give it any resources."
     IDS_DEV_CANT_SHARE_IRQ "This device is using an Interrupt Request (IRQ) resource that is in use by another device and cannot be shared.\nYou must change the conflicting setting or remove the real-mode driver causing the conflict."
-    IDS_DEV_FAILED_ADD "This device is not working properly because $1 is not working properly."
+    IDS_DEV_FAILED_ADD "This device is not working properly because %1 is not working properly."
     IDS_DEV_DISABLED_SERVICE "ReactOS cannot install the drivers for this device because it cannot access the drive or network location that has the setup files on it."
     IDS_DEV_TRANSLATION_FAILED "This device isn't responding to its driver."
     IDS_DEV_NO_SOFTCONFIG "ReactOS cannot determine the settings for this device. Consult the documentation that came with this device and use the Resource tab to set the configuration."

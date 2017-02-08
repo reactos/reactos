@@ -652,21 +652,21 @@ static BOOL CRYPT_WriteSerializedStoreToStream(HCERTSTORE store,
     ret = output(handle, fileHeader, sizeof(fileHeader));
     if (ret)
     {
-        memcpy(&interface, pCertInterface, sizeof(interface));
+        interface = *pCertInterface;
         interface.serialize = (SerializeElementFunc)CRYPT_SerializeCertNoHash;
         ret = CRYPT_SerializeContextsToStream(output, handle, &interface,
          store);
     }
     if (ret)
     {
-        memcpy(&interface, pCRLInterface, sizeof(interface));
+        interface = *pCRLInterface;
         interface.serialize = (SerializeElementFunc)CRYPT_SerializeCRLNoHash;
         ret = CRYPT_SerializeContextsToStream(output, handle, &interface,
          store);
     }
     if (ret)
     {
-        memcpy(&interface, pCTLInterface, sizeof(interface));
+        interface = *pCTLInterface;
         interface.serialize = (SerializeElementFunc)CRYPT_SerializeCTLNoHash;
         ret = CRYPT_SerializeContextsToStream(output, handle, &interface,
          store);

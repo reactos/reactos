@@ -145,11 +145,10 @@ MiReadFilePage(PMMSUPPORT AddressSpace,
     PMDL Mdl = (PMDL)MdlBase;
     KIRQL OldIrql;
 
-    DPRINTC("Pulling page %08x%08x from %wZ to %x\n",
-            FileOffset->u.HighPart,
-            FileOffset->u.LowPart,
+    DPRINTC("Pulling page %I64x from %wZ to %Ix\n",
+            FileOffset->QuadPart,
             &FileObject->FileName,
-            Page);
+            *Page);
 
     Status = MmRequestPageMemoryConsumer(RequiredResources->Consumer,
                                          TRUE,

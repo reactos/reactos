@@ -55,10 +55,11 @@ RunVMWInstall(HWND hWnd)
     PROCESS_INFORMATION ProcInfo;
     MSG msg;
     DWORD ret;
-    STARTUPINFOW si = {0};
+    STARTUPINFOW si;
     WCHAR InstallName[] = L"vmwinst.exe";
 
-    si.cb = sizeof(STARTUPINFO);
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
 
     if(CreateProcessW(NULL, InstallName, NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS,
                       NULL, NULL, &si, &ProcInfo))
@@ -347,6 +348,7 @@ AckPageDlgProc(HWND hwndDlg,
             if (HIWORD(wParam) == BN_CLICKED && IDC_VIEWGPL == LOWORD(wParam))
             {
                 DialogBox(hDllInstance, MAKEINTRESOURCE(IDD_GPL), NULL, GplDlgProc);
+                SetForegroundWindow(GetParent(hwndDlg));
             }
             break;
 
@@ -786,33 +788,45 @@ SetKeyboardLayoutName(HWND hwnd)
 
 
 static BOOL
-RunControlPanelApplet(HWND hwnd, WCHAR *lpCommandLine)
+RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
 {
-    STARTUPINFOW StartupInfo;
-    PROCESS_INFORMATION ProcessInformation;
-
-    ZeroMemory(&StartupInfo, sizeof(STARTUPINFOW));
-    StartupInfo.cb = sizeof(STARTUPINFOW);
-
-    if (!CreateProcessW(NULL,
-                        lpCommandLine,
-                        NULL,
-                        NULL,
-                        FALSE,
-                        0,
-                        NULL,
-                        NULL,
-                        &StartupInfo,
-                        &ProcessInformation))
+    if (pwszCPLParameters)
     {
-        MessageBoxW(hwnd, L"Error: failed to launch rundll32", NULL, MB_ICONERROR);
+        STARTUPINFOW StartupInfo;
+        PROCESS_INFORMATION ProcessInformation;
+        WCHAR CmdLine[MAX_PATH] = L"rundll32.exe shell32.dll,Control_RunDLL ";
+
+        ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+        StartupInfo.cb = sizeof(StartupInfo);
+
+        ASSERT(_countof(CmdLine) > wcslen(CmdLine) + wcslen(pwszCPLParameters));
+        wcscat(CmdLine, pwszCPLParameters);
+
+        if (!CreateProcessW(NULL,
+                            CmdLine,
+                            NULL,
+                            NULL,
+                            FALSE,
+                            0,
+                            NULL,
+                            NULL,
+                            &StartupInfo,
+                            &ProcessInformation))
+        {
+            MessageBoxW(hwnd, L"Error: Failed to launch the Control Panel Applet.", NULL, MB_ICONERROR);
+            return FALSE;
+        }
+
+        WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
+        CloseHandle(ProcessInformation.hThread);
+        CloseHandle(ProcessInformation.hProcess);
+        return TRUE;
+    }
+    else
+    {
+        MessageBoxW(hwnd, L"Error: Failed to launch the Control Panel Applet.", NULL, MB_ICONERROR);
         return FALSE;
     }
-
-    WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
-    CloseHandle(ProcessInformation.hThread);
-    CloseHandle(ProcessInformation.hProcess);
-    return TRUE;
 }
 
 static VOID
@@ -866,12 +880,12 @@ LocalePageDlgProc(HWND hwndDlg,
                 switch (LOWORD(wParam))
                 {
                     case IDC_CUSTOMLOCALE:
-                        RunControlPanelApplet(hwndDlg, L"rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,5");
+                        RunControlPanelApplet(hwndDlg, L"intl.cpl,,5");
                         /* FIXME: Update input locale name */
                         break;
 
                     case IDC_CUSTOMLAYOUT:
-                        RunControlPanelApplet(hwndDlg, L"rundll32.exe shell32.dll,Control_RunDLL input.dll,@1");
+                        RunControlPanelApplet(hwndDlg, L"input.dll,@1");
                         break;
                 }
             }
@@ -888,13 +902,18 @@ LocalePageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (SetupData->UnattendSetup)
                     {
-                        WCHAR wszPath[MAX_PATH], wszBuf[1024];
+                        WCHAR wszPath[MAX_PATH];
                         if (GetRosInstallCD(wszPath, _countof(wszPath)))
-                            swprintf(wszBuf, L"rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,/f:\"%sreactos\\unattend.inf\"", wszPath);
+                        {
+                            WCHAR wszParams[1024];
+                            swprintf(wszParams, L"intl.cpl,,/f:\"%sreactos\\unattend.inf\"", wszPath);
+                            RunControlPanelApplet(hwndDlg, wszParams);
+                        }
                         else
-                            wcscpy(wszBuf, L"rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,/f:\"unattend.inf\"");
+                        {
+                            RunControlPanelApplet(hwndDlg, L"intl.cpl,,/f:\"unattend.inf\"");
+                        }
 
-                        RunControlPanelApplet(hwndDlg, wszBuf);
                         SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_DATETIMEPAGE);
                         return TRUE;
                     }
@@ -1355,57 +1374,13 @@ SetAutoDaylightInfo(HWND hwnd)
 static BOOL
 SetSystemLocalTime(HWND hwnd, PSETUPDATA SetupData)
 {
-    HANDLE hToken;
-    DWORD PrevSize;
-    TOKEN_PRIVILEGES priv, previouspriv;
     BOOL Ret = FALSE;
 
     /*
-     * enable the SeSystemtimePrivilege privilege
+     * Call SetLocalTime twice to ensure correct results
      */
-
-    if(OpenProcessToken(GetCurrentProcess(),
-                        TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
-                        &hToken))
-    {
-        priv.PrivilegeCount = 1;
-        priv.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-
-        if(LookupPrivilegeValue(NULL,
-                                SE_SYSTEMTIME_NAME,
-                                &priv.Privileges[0].Luid))
-        {
-            if(AdjustTokenPrivileges(hToken,
-                                     FALSE,
-                                     &priv,
-                                     sizeof(previouspriv),
-                                     &previouspriv,
-                                     &PrevSize) &&
-                    GetLastError() == ERROR_SUCCESS)
-            {
-                /*
-                 * We successfully enabled it, we're permitted to change the system time
-                 * Call SetLocalTime twice to ensure correct results
-                 */
-                Ret = SetLocalTime(&SetupData->SystemTime) &&
-                      SetLocalTime(&SetupData->SystemTime);
-
-                /*
-                 * for the sake of security, restore the previous status again
-                 */
-                if(previouspriv.PrivilegeCount > 0)
-                {
-                    AdjustTokenPrivileges(hToken,
-                                          FALSE,
-                                          &previouspriv,
-                                          0,
-                                          NULL,
-                                          0);
-                }
-            }
-        }
-        CloseHandle(hToken);
-    }
+    Ret = SetLocalTime(&SetupData->SystemTime) &&
+          SetLocalTime(&SetupData->SystemTime);
 
     return Ret;
 }

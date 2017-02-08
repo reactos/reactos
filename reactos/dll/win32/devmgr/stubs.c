@@ -15,7 +15,7 @@
  * UPDATE HISTORY:
  *      04-04-2004  Created
  */
-#include <precomp.h>
+#include <windef.h>
 
 #define NDEBUG
 #include <debug.h>

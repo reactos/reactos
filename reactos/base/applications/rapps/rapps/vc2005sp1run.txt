@@ -23,6 +23,10 @@ Description = Librerias Visual Studio 2005 SP1.
 Licence = Inconnue
 Description = Bibliothèque Visual Studio 2005 SP1.
 
+[Section.0413]
+Licence = Ongekend
+Description = Visual Studio 2005 Runtime SP1. Bevat: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
+
 [Section.0415]
 Licence = Nieznana
 Description = Biblioteki uruchomieniowe Visual Studio 2005 SP1.
@@ -30,8 +34,12 @@ Description = Biblioteki uruchomieniowe Visual Studio 2005 SP1.
 [Section.0418]
 Licence = Necunoscută
 Description = Visual Studio 2005 Runtime SP1. Conține: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
-Size = 2.6Mo
+Size = 2,6 Mo
 
 [Section.0422]
 Licence = Невідома
 Description = Бібліотеки Visual Studio 2005 SP1.
+
+[Section.0813]
+Licence = Ongekend
+Description = Visual Studio 2005 Runtime SP1. Bevat: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.

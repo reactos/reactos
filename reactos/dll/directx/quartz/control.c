@@ -22,8 +22,8 @@
 #include "quartz_private.h"
 #include "control_private.h"
 
-#include "uuids.h"
-#include "wine/debug.h"
+//#include "uuids.h"
+#include <wine/debug.h>
 
 #include <assert.h>
 

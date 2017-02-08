@@ -124,6 +124,14 @@ CUSBHardwareDevice::QueryInterface(
     return STATUS_UNSUCCESSFUL;
 }
 
+LPCSTR
+STDMETHODCALLTYPE
+CUSBHardwareDevice::GetUSBType()
+{
+    return "USBOHCI";
+}
+
+
 NTSTATUS
 STDMETHODCALLTYPE
 CUSBHardwareDevice::Initialize(
@@ -545,7 +553,7 @@ retry:
             // delay is 100 ms
             //
             Timeout.QuadPart = WaitInMs;
-            DPRINT1("Waiting %d milliseconds for controller to transition state\n", Timeout.LowPart);
+            DPRINT1("Waiting %lu milliseconds for controller to transition state\n", Timeout.LowPart);
             
             //
             // convert to 100 ns units (absolute)
@@ -1125,7 +1133,7 @@ CUSBHardwareDevice::ClearPortStatus(
             // delay is 100 ms
             //
             Timeout.QuadPart = 100;
-            DPRINT1("Waiting %d milliseconds for port to stabilize after connection\n", Timeout.LowPart);
+            DPRINT1("Waiting %lu milliseconds for port to stabilize after connection\n", Timeout.LowPart);
 
             //
             // convert to 100 ns units (absolute)
@@ -1196,7 +1204,7 @@ CUSBHardwareDevice::SetPortFeature(
         // delay is multiplied by 2 ms
         //
         Timeout.QuadPart *= 2;
-        DPRINT1("Waiting %d milliseconds for port power up\n", Timeout.LowPart);
+        DPRINT1("Waiting %lu milliseconds for port power up\n", Timeout.LowPart);
 
         //
         // convert to 100 ns units (absolute)
@@ -1464,7 +1472,7 @@ OhciDefferedRoutine(
                     //
                     // device connected
                     //
-                    DPRINT1("New device arrival at Port %d LowSpeed %x\n", Index, (PortStatus & OHCI_RH_PORTSTATUS_LSDA));
+                    DPRINT1("New device arrival at Port %lu LowSpeed %x\n", Index, (PortStatus & OHCI_RH_PORTSTATUS_LSDA));
 
                     //
                     // enable port
@@ -1501,7 +1509,7 @@ OhciDefferedRoutine(
                 //
                 // This is a port reset complete interrupt
                 //
-                DPRINT1("Port %d completed reset\n", Index);
+                DPRINT1("Port %lu completed reset\n", Index);
 
                 //
                 // Queue a work item

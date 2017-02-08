@@ -18,14 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell32start);
 
-CStartMenu::CStartMenu()
+CStartMenu::CStartMenu() :
+    m_pBandSite(NULL),
+    m_pUnkSite(NULL)
 {
-    m_pBandSite = NULL;
-    m_pUnkSite = NULL;
 }
 
 CStartMenu::~CStartMenu()
@@ -109,7 +109,7 @@ HRESULT STDMETHODCALLTYPE CStartMenu::Initialize()
 {
     HRESULT hr;
     CComObject<CMenuBandSite> *pBandSiteObj;
-    
+
     TRACE("(%p)\n", this);
 
     //pBandSiteObj = new CComObject<CMenuBandSite>();
@@ -136,10 +136,10 @@ HRESULT STDMETHODCALLTYPE CStartMenu::TranslateMenuMessage(MSG *pmsg, LRESULT *p
     return E_NOTIMPL;
 }
 
-CMenuBandSite::CMenuBandSite()
+CMenuBandSite::CMenuBandSite() :
+    m_pObjects(NULL),
+    m_cObjects(0)
 {
-    m_pObjects = NULL;
-    m_cObjects = 0;
 }
 
 CMenuBandSite::~CMenuBandSite()
@@ -184,7 +184,7 @@ HRESULT STDMETHODCALLTYPE CMenuBandSite::EnumBands(UINT uBand, DWORD *pdwBandID)
 
     ObjectCount = 0;
 
-    for(Index = 0; Index < m_cObjects; Index++)
+    for (Index = 0; Index < m_cObjects; Index++)
     {
         if (m_pObjects[Index] != NULL)
         {

@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2002-2005 Alexandr A. Telyatnikov (Alter)
+Copyright (c) 2002-2012 Alexandr A. Telyatnikov (Alter)
 
 Module Name:
     tools.h
@@ -94,195 +94,6 @@ typedef struct _FOUR_BYTE {
 }
 #define DEC_TO_BCD(x) (((x / 10) << 4) + (x % 10))
 
-/*
-
-#if defined _X86_ && !defined(__GNUC__)
-
-#define MOV_DD_SWP(a,b)           \
-{                                 \
-    PFOUR_BYTE _from_, _to_;      \
-    _from_ = ((PFOUR_BYTE)&(b));  \
-    _to_ =   ((PFOUR_BYTE)&(a));  \
-    __asm mov ebx,_from_          \
-    __asm mov eax,[ebx]           \
-    __asm bswap eax               \
-    __asm mov ebx,_to_            \
-    __asm mov [ebx],eax           \
-}
-
-#define MOV_DW_SWP(a,b)           \
-{                                 \
-    PFOUR_BYTE _from_, _to_;      \
-    _from_ = ((PFOUR_BYTE)&(b));  \
-    _to_ =   ((PFOUR_BYTE)&(a));  \
-    __asm mov ebx,_from_          \
-    __asm mov ax,[ebx]            \
-    __asm rol ax,8                \
-    __asm mov ebx,_to_            \
-    __asm mov [ebx],ax            \
-}
-
-#define REVERSE_DD(a) {           \
-    PFOUR_BYTE _from_;            \
-    _from_ = ((PFOUR_BYTE)&(a));  \
-    __asm mov ebx,_from_          \
-    __asm mov eax,[ebx]           \
-    __asm bswap eax               \
-    __asm mov [ebx],eax           \
-}
-
-#define REVERSE_DW(a) {           \
-    PFOUR_BYTE _from_;            \
-    _from_ = ((PFOUR_BYTE)&(a));  \
-    __asm mov eax,_from_          \
-    __asm rol word ptr [eax],8    \
-}
-
-#define MOV_DW2DD_SWP(a,b)        \
-{                                 \
-    PFOUR_BYTE _from_, _to_;      \
-    _from_ = ((PFOUR_BYTE)&(b));  \
-    _to_ =   ((PFOUR_BYTE)&(a));  \
-    __asm mov ebx,_from_          \
-    __asm mov ax,[ebx]            \
-    __asm rol ax,8                \
-    __asm mov ebx,_to_            \
-    __asm mov [ebx+2],ax          \
-    __asm mov [ebx],0             \
-}
-
-#define MOV_SWP_DW2DD(a,b)        \
-{                                 \
-    PFOUR_BYTE _from_, _to_;      \
-    _from_ = ((PFOUR_BYTE)&(b));  \
-    _to_ =   ((PFOUR_BYTE)&(a));  \
-    __asm mov ebx,_from_          \
-    __asm xor eax,eax             \
-    __asm mov ax,[ebx]            \
-    __asm rol ax,8                \
-    __asm mov ebx,_to_            \
-    __asm mov [ebx],eax           \
-}
-
-#define MOV_MSF(a,b)              \
-{                                 \
-    PFOUR_BYTE _from_, _to_;      \
-    _from_ = ((PFOUR_BYTE)&(b));  \
-    _to_ =   ((PFOUR_BYTE)&(a));  \
-    __asm mov ebx,_from_          \
-    __asm mov eax,[ebx]           \
-    __asm mov ebx,_to_            \
-    __asm mov [ebx],ax            \
-    __asm shr eax,16              \
-    __asm mov [ebx+2],al          \
-}
-
-#define MOV_MSF_SWP(a,b)          \
-{                                 \
-    PFOUR_BYTE _from_, _to_;      \
-    _from_ = ((PFOUR_BYTE)&(b));  \
-    _to_ =   ((PFOUR_BYTE)&(a));  \
-    __asm mov ebx,_from_          \
-    __asm mov eax,[ebx]           \
-    __asm mov ebx,_to_            \
-    __asm mov [ebx+2],al          \
-    __asm bswap eax               \
-    __asm shr eax,8               \
-    __asm mov [ebx],ax            \
-}
-
-#define XCHG_DD(a,b)              \
-{                                 \
-    PULONG _from_, _to_;          \
-    _from_ = ((PULONG)&(b));      \
-    _to_ =   ((PULONG)&(a));      \
-    __asm mov ebx,_from_          \
-    __asm mov ecx,_to_            \
-    __asm mov eax,[ebx]           \
-    __asm xchg eax,[ecx]          \
-    __asm mov [ebx],eax           \
-}
-
-#else   // NO X86 optimization , use generic C/C++
-
-#define MOV_DD_SWP(a,b)           \
-{                                 \
-    PFOUR_BYTE _from_, _to_;      \
-    _from_ = ((PFOUR_BYTE)&(b));  \
-    _to_ =   ((PFOUR_BYTE)&(a));  \
-    _to_->Byte0 = _from_->Byte3;  \
-    _to_->Byte1 = _from_->Byte2;  \
-    _to_->Byte2 = _from_->Byte1;  \
-    _to_->Byte3 = _from_->Byte0;  \
-}
-
-#define MOV_DW_SWP(a,b)           \
-{                                 \
-    PFOUR_BYTE _from_, _to_;      \
-    _from_ = ((PFOUR_BYTE)&(b));  \
-    _to_ =   ((PFOUR_BYTE)&(a));  \
-    _to_->Byte0 = _from_->Byte1;  \
-    _to_->Byte1 = _from_->Byte0;  \
-}
-
-#define REVERSE_DD(a) {           \
-    ULONG _i_;                    \
-    MOV_DD_SWP(_i_,(a));          \
-    *((PULONG)&(a)) = _i_;        \
-}
-
-#define REVERSE_DW(a) {           \
-    USHORT _i_;                   \
-    MOV_DW_SWP(_i_,(a));          \
-    *((PUSHORT)&(a)) = _i_;       \
-}
-
-#define MOV_DW2DD_SWP(a,b)        \
-{                                 \
-    PFOUR_BYTE _from_, _to_;      \
-    _from_ = ((PFOUR_BYTE)&(b));  \
-    _to_ =   ((PFOUR_BYTE)&(a));  \
-    *((PUSHORT)_to_) = 0;         \
-    _to_->Byte2 = _from_->Byte1;  \
-    _to_->Byte3 = _from_->Byte0;  \
-}
-
-#define MOV_MSF(a,b)              \
-{                                 \
-    PFOUR_BYTE _from_, _to_;      \
-    _from_ = ((PFOUR_BYTE)&(b));  \
-    _to_ =   ((PFOUR_BYTE)&(a));  \
-    _to_->Byte0 = _from_->Byte0;  \
-    _to_->Byte1 = _from_->Byte1;  \
-    _to_->Byte2 = _from_->Byte2;  \
-}
-
-#define MOV_MSF_SWP(a,b)          \
-{                                 \
-    PFOUR_BYTE _from_, _to_;      \
-    _from_ = ((PFOUR_BYTE)&(b));  \
-    _to_ =   ((PFOUR_BYTE)&(a));  \
-    _to_->Byte0 = _from_->Byte2;  \
-    _to_->Byte1 = _from_->Byte1;  \
-    _to_->Byte2 = _from_->Byte0;  \
-}
-
-#define XCHG_DD(a,b)              \
-{                                 \
-    ULONG  _temp_;                \
-    PULONG _from_, _to_;          \
-    _from_ = ((PULONG)&(b));      \
-    _to_ =   ((PULONG)&(a));      \
-    _temp_ = *_from_;             \
-    *_from_ = *_to_;              \
-    *_to_ = _temp_;               \
-}
-
-#endif // _X86_
-
-#define MOV_3B_SWP(a,b)     MOV_MSF_SWP(a,b)
-
-*/
 
 #ifdef DBG
 
@@ -298,7 +109,7 @@ if((a)!=NULL) {                             \
     KdPrint(("\n"));                        \
 }
 
-#define BrutePoint() {}
+#define BrutePoint() { ASSERT(0); }
 
 #define DbgAllocatePool(x,y) ExAllocatePool(x,y)
 #define DbgFreePool(x) ExFreePool(x)

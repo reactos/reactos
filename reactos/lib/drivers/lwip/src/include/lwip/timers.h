@@ -41,7 +41,9 @@
 #if LWIP_TIMERS
 
 #include "lwip/err.h"
+#if !NO_SYS
 #include "lwip/sys.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {

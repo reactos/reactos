@@ -15,7 +15,7 @@ BEGIN
     CONTROL "", IDC_MONTHCALENDAR, "MonthCalWnd",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP,
             11, 37, 108, 80, WS_EX_CLIENTEDGE
-    GROUPBOX "&Time", -1, 132, 2, 113, 125
+    GROUPBOX "&Ora", -1, 132, 2, 113, 125
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
             DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
             144, 105, 90, 12
@@ -50,7 +50,7 @@ BEGIN
     PUSHBUTTON      "Aggiorna ora", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT           "", IDC_SUCSYNC, 12, 54, 214, 23
     LTEXT           "", IDC_NEXTSYNC, 12, 96, 137, 12
-    LTEXT           "La sincronizzazione può avvenire solo quando il computer è connesso a Internet.", -1, 12, 114, 225, 25
+    LTEXT           "La sincronizzazione puÃ² avvenire solo quando il computer Ã¨ connesso a Internet.", -1, 12, 114, 225, 25
 END
 
 
@@ -61,7 +61,7 @@ BEGIN
     IDS_TIMEZONETEXT "Fuso orario corrente: %s"
     IDS_TIMEZONEINVALID "Non valido"
     IDS_TIMEZONEUNKNOWN "Sconosciuto"
-    IDS_INETTIMESUCSYNC "L'ora è stata sincronizzata correttamente con %s %s alle %s"
+    IDS_INETTIMESUCSYNC "L'ora Ã¨ stata sincronizzata correttamente con %s %s alle %s"
     IDS_INETTIMENEXTSYNC "Prossima sincronizzazione: %s alle %s"
     IDS_INETTIMESYNCING "Sincronizzazione ora con %s"
     IDS_INETTIMEERROR "E' stato rilevato un errore mentre ReactOS si stava sincronizzando con %s"

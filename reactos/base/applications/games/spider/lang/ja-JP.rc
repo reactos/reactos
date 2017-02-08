@@ -49,7 +49,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SPI_NAME    "スパイダ"
-    IDS_SPI_ABOUT   "Gregor Schneider によるスパイダ ソ リティア\n\nCardLib バージョン 1.0"
+    IDS_SPI_ABOUT   "Gregor Schneider によるスパイダ ソリティア\n\nCardLib バージョン 1.0"
     IDS_SPI_QUIT    "現在のゲームを終了しますか?"
     IDS_SPI_WIN     "おめでとう、あなたの勝ちです!"
     IDS_SPI_DEAL    "もう一度カードを配りますか?"

@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
  * FILE:            dll/cpl/desk/background.c
@@ -124,60 +123,62 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
     pData->listViewItemCount++;
 
     /* Add current wallpaper if any */
-    RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), 0, KEY_ALL_ACCESS, &regKey);
-
-    result = RegQueryValueEx(regKey, TEXT("Wallpaper"), 0, &varType, (LPBYTE)wallpaperFilename, &bufferSize);
-    if ((result == ERROR_SUCCESS) && (_tcslen(wallpaperFilename) > 0))
+    result = RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), 0, KEY_ALL_ACCESS, &regKey);
+    if (result == ERROR_SUCCESS)
     {
-        /* Allow environment variables in file name */
-        if (ExpandEnvironmentStrings(wallpaperFilename, buffer, MAX_PATH))
+        result = RegQueryValueEx(regKey, TEXT("Wallpaper"), 0, &varType, (LPBYTE)wallpaperFilename, &bufferSize);
+        if ((result == ERROR_SUCCESS) && (_tcslen(wallpaperFilename) > 0))
         {
-            _tcscpy(wallpaperFilename, buffer);
-        }
-
-        himl = (HIMAGELIST)SHGetFileInfo(wallpaperFilename,
-                                         0,
-                                         &sfi,
-                                         sizeof(sfi),
-                                         SHGFI_SYSICONINDEX | SHGFI_SMALLICON |
-                                         SHGFI_DISPLAYNAME);
-
-        if (himl != NULL)
-        {
-            if (i++ == 0)
+            /* Allow environment variables in file name */
+            if (ExpandEnvironmentStrings(wallpaperFilename, buffer, MAX_PATH))
             {
-                (void)ListView_SetImageList(hwndBackgroundList, himl, LVSIL_SMALL);
+                _tcscpy(wallpaperFilename, buffer);
             }
 
-            backgroundItem = &pData->backgroundItems[pData->listViewItemCount];
+            himl = (HIMAGELIST)SHGetFileInfo(wallpaperFilename,
+                                             0,
+                                             &sfi,
+                                             sizeof(sfi),
+                                             SHGFI_SYSICONINDEX | SHGFI_SMALLICON |
+                                             SHGFI_DISPLAYNAME);
 
-            backgroundItem->bWallpaper = TRUE;
+            if (himl != NULL)
+            {
+                if (i++ == 0)
+                {
+                    (void)ListView_SetImageList(hwndBackgroundList, himl, LVSIL_SMALL);
+                }
 
-            _tcscpy(backgroundItem->szDisplayName, sfi.szDisplayName);
-            p = _tcsrchr(backgroundItem->szDisplayName, _T('.'));
-            if (p)
-                *p = (TCHAR)0;
-            _tcscpy(backgroundItem->szFilename, wallpaperFilename);
+                backgroundItem = &pData->backgroundItems[pData->listViewItemCount];
 
-            ZeroMemory(&listItem, sizeof(LV_ITEM));
-            listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
-            listItem.state      = 0;
-            listItem.pszText    = backgroundItem->szDisplayName;
-            listItem.iImage     = sfi.iIcon;
-            listItem.iItem      = pData->listViewItemCount;
-            listItem.lParam     = pData->listViewItemCount;
+                backgroundItem->bWallpaper = TRUE;
 
-            (void)ListView_InsertItem(hwndBackgroundList, &listItem);
-            ListView_SetItemState(hwndBackgroundList,
-                                  pData->listViewItemCount,
-                                  LVIS_SELECTED,
-                                  LVIS_SELECTED);
+                _tcscpy(backgroundItem->szDisplayName, sfi.szDisplayName);
+                p = _tcsrchr(backgroundItem->szDisplayName, _T('.'));
+                if (p)
+                    *p = (TCHAR)0;
+                _tcscpy(backgroundItem->szFilename, wallpaperFilename);
 
-            pData->listViewItemCount++;
+                ZeroMemory(&listItem, sizeof(LV_ITEM));
+                listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
+                listItem.state      = 0;
+                listItem.pszText    = backgroundItem->szDisplayName;
+                listItem.iImage     = sfi.iIcon;
+                listItem.iItem      = pData->listViewItemCount;
+                listItem.lParam     = pData->listViewItemCount;
+
+                (void)ListView_InsertItem(hwndBackgroundList, &listItem);
+                ListView_SetItemState(hwndBackgroundList,
+                                      pData->listViewItemCount,
+                                      LVIS_SELECTED,
+                                      LVIS_SELECTED);
+
+                pData->listViewItemCount++;
+            }
         }
-    }
 
-    RegCloseKey(regKey);
+        RegCloseKey(regKey);
+    }
 
     /* Add all the images in the C:\ReactOS directory. */
 

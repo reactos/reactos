@@ -3162,6 +3162,7 @@ static BOOL match_domain_component(LPCWSTR allowed_component, DWORD allowed_len,
     BOOL matches = TRUE;
 
     *see_wildcard = FALSE;
+
     if (server_len < allowed_len)
     {
         WARN_(chain)("domain component %s too short for %s\n",
@@ -3220,6 +3221,13 @@ static BOOL match_common_name(LPCWSTR server_name, const CERT_RDN_ATTR *nameAttr
     BOOL matches = TRUE, allow_wildcards = TRUE;
 
     TRACE_(chain)("CN = %s\n", debugstr_wn(allowed_component, allowed_len));
+
+    /* Remove trailing NULLs from the allowed name; while they shouldn't appear
+     * in a certificate in the first place, they sometimes do, and they should
+     * be ignored.
+     */
+    while (allowed_len && allowed_component[allowed_len - 1] == 0)
+      allowed_len--;
 
     /* From RFC 2818 (HTTP over TLS), section 3.1:
      * "Names may contain the wildcard character * which is considered to match

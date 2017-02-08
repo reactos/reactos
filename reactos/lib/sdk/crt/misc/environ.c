@@ -1,4 +1,4 @@
-/* 
+/*
  * environ.c
  *
  * ReactOS MSVCRT.DLL Compatibility Library
@@ -64,11 +64,11 @@ int BlockEnvToEnvironA(void)
          {
             if ((*envptr = malloc(len)) == NULL)
             {
-               for (envptr--; envptr >= _environ; envptr--);
+               for (envptr--; envptr >= _environ; envptr--)
                   free(*envptr);
                FreeEnvironmentStringsA(environment_strings);
                free(_environ);
-	       __initenv = _environ = NULL;
+               __initenv = _environ = NULL;
                return -1;
             }
             memcpy(*envptr++, ptr, len);
@@ -116,11 +116,11 @@ int BlockEnvToEnvironW(void)
          {
             if ((*envptr = malloc(len * sizeof(wchar_t))) == NULL)
             {
-               for (envptr--; envptr >= _wenviron; envptr--);
+               for (envptr--; envptr >= _wenviron; envptr--)
                   free(*envptr);
                FreeEnvironmentStringsW(environment_strings);
                free(_wenviron);
-	       __winitenv = _wenviron = NULL;
+               __winitenv = _wenviron = NULL;
                return -1;
             }
             memcpy(*envptr++, ptr, len * sizeof(wchar_t));
@@ -168,7 +168,7 @@ char **DuplicateEnvironment(char **original_environment, int wide)
          *newenvptr = _strdup(*envptr++);
       if (*newenvptr == NULL)
       {
-         for (newenvptr--; newenvptr >= newenv; newenvptr--);
+         for (newenvptr--; newenvptr >= newenv; newenvptr--)
             free(*newenvptr);
          free(newenv);
          return original_environment;
@@ -426,7 +426,15 @@ errno_t _get_osplatform(unsigned int *pValue)
  */
 int *__p___mb_cur_max(void)
 {
-    return &__mb_cur_max;
+    return &get_locinfo()->mb_cur_max;
+}
+
+/*********************************************************************
+ *         ___mb_cur_max_func(MSVCRT.@)
+ */
+int CDECL ___mb_cur_max_func(void)
+{
+  return get_locinfo()->mb_cur_max;
 }
 
 /*

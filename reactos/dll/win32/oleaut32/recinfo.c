@@ -16,20 +16,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
 #include <stdarg.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include "windef.h"
-#include "winbase.h"
-#include "objbase.h"
-#include "oaidl.h"
-#include "oleauto.h"
+#include <windef.h>
+#include <winbase.h>
+#include <objbase.h>
+//#include "oaidl.h"
+#include <oleauto.h>
 
-#include "wine/unicode.h"
-#include "wine/debug.h"
+#include <wine/unicode.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -41,7 +44,7 @@ typedef struct {
 } fieldstr;
 
 typedef struct {
-    const IRecordInfoVtbl *lpVtbl;
+    IRecordInfo IRecordInfo_iface;
     LONG ref;
 
     GUID guid;
@@ -52,6 +55,11 @@ typedef struct {
     fieldstr *fields;
     ITypeInfo *pTypeInfo;
 } IRecordInfoImpl;
+
+static inline IRecordInfoImpl *impl_from_IRecordInfo(IRecordInfo *iface)
+{
+    return CONTAINING_RECORD(iface, IRecordInfoImpl, IRecordInfo_iface);
+}
 
 static HRESULT copy_to_variant(void *src, VARIANT *pvar, enum VARENUM vt)
 {
@@ -155,7 +163,7 @@ static HRESULT WINAPI IRecordInfoImpl_QueryInterface(IRecordInfo *iface, REFIID 
 
 static ULONG WINAPI IRecordInfoImpl_AddRef(IRecordInfo *iface)
 {
-    IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
+    IRecordInfoImpl *This = impl_from_IRecordInfo(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
     TRACE("(%p) -> %d\n", This, ref);
     return ref;
@@ -163,7 +171,7 @@ static ULONG WINAPI IRecordInfoImpl_AddRef(IRecordInfo *iface)
 
 static ULONG WINAPI IRecordInfoImpl_Release(IRecordInfo *iface)
 {
-    IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
+    IRecordInfoImpl *This = impl_from_IRecordInfo(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) -> %d\n", This, ref);
@@ -182,7 +190,7 @@ static ULONG WINAPI IRecordInfoImpl_Release(IRecordInfo *iface)
 
 static HRESULT WINAPI IRecordInfoImpl_RecordInit(IRecordInfo *iface, PVOID pvNew)
 {
-    IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
+    IRecordInfoImpl *This = impl_from_IRecordInfo(iface);
     TRACE("(%p)->(%p)\n", This, pvNew);
 
     if(!pvNew)
@@ -194,7 +202,7 @@ static HRESULT WINAPI IRecordInfoImpl_RecordInit(IRecordInfo *iface, PVOID pvNew
 
 static HRESULT WINAPI IRecordInfoImpl_RecordClear(IRecordInfo *iface, PVOID pvExisting)
 {
-    IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
+    IRecordInfoImpl *This = impl_from_IRecordInfo(iface);
     int i;
     PVOID var;
 
@@ -251,7 +259,7 @@ static HRESULT WINAPI IRecordInfoImpl_RecordClear(IRecordInfo *iface, PVOID pvEx
 static HRESULT WINAPI IRecordInfoImpl_RecordCopy(IRecordInfo *iface, PVOID pvExisting,
                                                 PVOID pvNew)
 {
-    IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
+    IRecordInfoImpl *This = impl_from_IRecordInfo(iface);
 
     TRACE("(%p)->(%p %p)\n", This, pvExisting, pvNew);
     
@@ -264,7 +272,7 @@ static HRESULT WINAPI IRecordInfoImpl_RecordCopy(IRecordInfo *iface, PVOID pvExi
 
 static HRESULT WINAPI IRecordInfoImpl_GetGuid(IRecordInfo *iface, GUID *pguid)
 {
-    IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
+    IRecordInfoImpl *This = impl_from_IRecordInfo(iface);
 
     TRACE("(%p)->(%p)\n", This, pguid);
 
@@ -277,7 +285,7 @@ static HRESULT WINAPI IRecordInfoImpl_GetGuid(IRecordInfo *iface, GUID *pguid)
 
 static HRESULT WINAPI IRecordInfoImpl_GetName(IRecordInfo *iface, BSTR *pbstrName)
 {
-    IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
+    IRecordInfoImpl *This = impl_from_IRecordInfo(iface);
 
     TRACE("(%p)->(%p)\n", This, pbstrName);
 
@@ -290,8 +298,8 @@ static HRESULT WINAPI IRecordInfoImpl_GetName(IRecordInfo *iface, BSTR *pbstrNam
 
 static HRESULT WINAPI IRecordInfoImpl_GetSize(IRecordInfo *iface, ULONG *pcbSize)
 {
-    IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
-    
+    IRecordInfoImpl *This = impl_from_IRecordInfo(iface);
+
     TRACE("(%p)->(%p)\n", This, pcbSize);
 
     if(!pcbSize)
@@ -303,7 +311,7 @@ static HRESULT WINAPI IRecordInfoImpl_GetSize(IRecordInfo *iface, ULONG *pcbSize
 
 static HRESULT WINAPI IRecordInfoImpl_GetTypeInfo(IRecordInfo *iface, ITypeInfo **ppTypeInfo)
 {
-    IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
+    IRecordInfoImpl *This = impl_from_IRecordInfo(iface);
 
     TRACE("(%p)->(%p)\n", This, ppTypeInfo);
 
@@ -319,7 +327,7 @@ static HRESULT WINAPI IRecordInfoImpl_GetTypeInfo(IRecordInfo *iface, ITypeInfo 
 static HRESULT WINAPI IRecordInfoImpl_GetField(IRecordInfo *iface, PVOID pvData,
                                                 LPCOLESTR szFieldName, VARIANT *pvarField)
 {
-    IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
+    IRecordInfoImpl *This = impl_from_IRecordInfo(iface);
     int i;
 
     TRACE("(%p)->(%p %s %p)\n", This, pvData, debugstr_w(szFieldName), pvarField);
@@ -341,7 +349,7 @@ static HRESULT WINAPI IRecordInfoImpl_GetField(IRecordInfo *iface, PVOID pvData,
 static HRESULT WINAPI IRecordInfoImpl_GetFieldNoCopy(IRecordInfo *iface, PVOID pvData,
                             LPCOLESTR szFieldName, VARIANT *pvarField, PVOID *ppvDataCArray)
 {
-    IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
+    IRecordInfoImpl *This = impl_from_IRecordInfo(iface);
     int i;
 
     TRACE("(%p)->(%p %s %p %p)\n", This, pvData, debugstr_w(szFieldName), pvarField, ppvDataCArray);
@@ -365,7 +373,7 @@ static HRESULT WINAPI IRecordInfoImpl_GetFieldNoCopy(IRecordInfo *iface, PVOID p
 static HRESULT WINAPI IRecordInfoImpl_PutField(IRecordInfo *iface, ULONG wFlags, PVOID pvData,
                                             LPCOLESTR szFieldName, VARIANT *pvarField)
 {
-    IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
+    IRecordInfoImpl *This = impl_from_IRecordInfo(iface);
     int i;
 
     TRACE("(%p)->(%08x %p %s %p)\n", This, wFlags, pvData, debugstr_w(szFieldName),
@@ -393,7 +401,7 @@ static HRESULT WINAPI IRecordInfoImpl_PutField(IRecordInfo *iface, ULONG wFlags,
 static HRESULT WINAPI IRecordInfoImpl_PutFieldNoCopy(IRecordInfo *iface, ULONG wFlags,
                 PVOID pvData, LPCOLESTR szFieldName, VARIANT *pvarField)
 {
-    IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
+    IRecordInfoImpl *This = impl_from_IRecordInfo(iface);
     int i;
 
     FIXME("(%p)->(%08x %p %s %p) stub\n", This, wFlags, pvData, debugstr_w(szFieldName), pvarField);
@@ -414,7 +422,7 @@ static HRESULT WINAPI IRecordInfoImpl_PutFieldNoCopy(IRecordInfo *iface, ULONG w
 static HRESULT WINAPI IRecordInfoImpl_GetFieldNames(IRecordInfo *iface, ULONG *pcNames,
                                                 BSTR *rgBstrNames)
 {
-    IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
+    IRecordInfoImpl *This = impl_from_IRecordInfo(iface);
     ULONG n = This->n_vars, i;
 
     TRACE("(%p)->(%p %p)\n", This, pcNames, rgBstrNames);
@@ -434,18 +442,25 @@ static HRESULT WINAPI IRecordInfoImpl_GetFieldNames(IRecordInfo *iface, ULONG *p
     return S_OK;
 }
 
-static BOOL WINAPI IRecordInfoImpl_IsMatchingType(IRecordInfo *iface, IRecordInfo *pRecordInfo)
+static BOOL WINAPI IRecordInfoImpl_IsMatchingType(IRecordInfo *iface, IRecordInfo *info2)
 {
-    IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
+    IRecordInfoImpl *This = impl_from_IRecordInfo(iface);
+    GUID guid2;
 
-    FIXME("(%p)->(%p) stub\n", This, pRecordInfo);
+    TRACE( "(%p)->(%p)\n", This, info2 );
+
+    IRecordInfo_GetGuid( info2, &guid2 );
+    if (IsEqualGUID( &This->guid, &guid2 )) return TRUE;
+
+    FIXME( "records have different guids (%s %s) but could still match\n",
+           debugstr_guid( &This->guid ), debugstr_guid( &guid2 ) );
 
     return FALSE;
 }
 
 static PVOID WINAPI IRecordInfoImpl_RecordCreate(IRecordInfo *iface)
 {
-    IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
+    IRecordInfoImpl *This = impl_from_IRecordInfo(iface);
 
     TRACE("(%p)\n", This);
 
@@ -455,7 +470,7 @@ static PVOID WINAPI IRecordInfoImpl_RecordCreate(IRecordInfo *iface)
 static HRESULT WINAPI IRecordInfoImpl_RecordCreateCopy(IRecordInfo *iface, PVOID pvSource,
                                                     PVOID *ppvDest)
 {
-    IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
+    IRecordInfoImpl *This = impl_from_IRecordInfo(iface);
 
     TRACE("(%p)->(%p %p)\n", This, pvSource, ppvDest);
 
@@ -468,7 +483,7 @@ static HRESULT WINAPI IRecordInfoImpl_RecordCreateCopy(IRecordInfo *iface, PVOID
 
 static HRESULT WINAPI IRecordInfoImpl_RecordDestroy(IRecordInfo *iface, PVOID pvRecord)
 {
-    IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
+    IRecordInfoImpl *This = impl_from_IRecordInfo(iface);
     HRESULT hres;
 
     TRACE("(%p)->(%p)\n", This, pvRecord);
@@ -585,7 +600,7 @@ HRESULT WINAPI GetRecordInfoFromTypeInfo(ITypeInfo* pTI, IRecordInfo** ppRecInfo
     }
 
     ret = HeapAlloc(GetProcessHeap(), 0, sizeof(*ret));
-    ret->lpVtbl = &IRecordInfoImplVtbl;
+    ret->IRecordInfo_iface.lpVtbl = &IRecordInfoImplVtbl;
     ret->ref = 1;
     ret->pTypeInfo = pTypeInfo;
     ret->n_vars = typeattr->cVars;
@@ -604,7 +619,7 @@ HRESULT WINAPI GetRecordInfoFromTypeInfo(ITypeInfo* pTI, IRecordInfo** ppRecInfo
         ret->name = NULL;
     }
 
-    ret->fields = HeapAlloc(GetProcessHeap(), 0, ret->n_vars*sizeof(VARDESC));
+    ret->fields = HeapAlloc(GetProcessHeap(), 0, ret->n_vars*sizeof(fieldstr));
     for(i = 0; i<ret->n_vars; i++) {
         VARDESC *vardesc;
         hres = ITypeInfo_GetVarDesc(pTypeInfo, i, &vardesc);
@@ -621,8 +636,8 @@ HRESULT WINAPI GetRecordInfoFromTypeInfo(ITypeInfo* pTI, IRecordInfo** ppRecInfo
             WARN("GetDocumentation failed: %08x\n", hres);
         ITypeInfo_ReleaseVarDesc(pTypeInfo, vardesc);
     }
-        
-    *ppRecInfo = (IRecordInfo*)ret;
+
+    *ppRecInfo = &ret->IRecordInfo_iface;
 
     return S_OK;
 }

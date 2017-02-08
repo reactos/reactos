@@ -170,8 +170,18 @@ typedef struct _LDR_RESOURCE_INFO
 {
     ULONG_PTR Type;
     ULONG_PTR Name;
-    ULONG Language;
+    ULONG_PTR Language;
 } LDR_RESOURCE_INFO, *PLDR_RESOURCE_INFO;
+
+typedef struct _LDR_ENUM_RESOURCE_INFO
+{
+    ULONG_PTR Type;
+    ULONG_PTR Name;
+    ULONG_PTR Language;
+    PVOID Data;
+    SIZE_T Size;
+    ULONG_PTR Reserved;
+} LDR_ENUM_RESOURCE_INFO, *PLDR_ENUM_RESOURCE_INFO;
 
 //
 // DLL Notifications
@@ -187,8 +197,8 @@ typedef struct _LDR_DLL_LOADED_NOTIFICATION_DATA
 
 typedef VOID
 (NTAPI *PLDR_DLL_LOADED_NOTIFICATION_CALLBACK)(
-    IN BOOLEAN Type,
-    IN struct _LDR_DLL_LOADED_NOTIFICATION_DATA *Data
+    _In_ BOOLEAN Type,
+    _In_ struct _LDR_DLL_LOADED_NOTIFICATION_DATA *Data
 );
 
 typedef struct _LDR_DLL_LOADED_NOTIFICATION_ENTRY
@@ -218,7 +228,7 @@ typedef struct _ALT_RESOURCE_MODULE
 //
 // Callback function for LdrEnumerateLoadedModules
 //
-typedef VOID (NTAPI LDR_ENUM_CALLBACK)(IN PLDR_DATA_TABLE_ENTRY ModuleInformation, IN PVOID Parameter, OUT BOOLEAN *Stop);
+typedef VOID (NTAPI LDR_ENUM_CALLBACK)(IN PLDR_DATA_TABLE_ENTRY ModuleInformation, _In_ PVOID Parameter, _Out_ BOOLEAN *Stop);
 typedef LDR_ENUM_CALLBACK *PLDR_ENUM_CALLBACK;
 
 //
@@ -226,9 +236,9 @@ typedef LDR_ENUM_CALLBACK *PLDR_ENUM_CALLBACK;
 //
 typedef BOOLEAN
 (NTAPI *PDLL_INIT_ROUTINE)(
-    IN PVOID DllHandle,
-    IN ULONG Reason,
-    IN PCONTEXT Context OPTIONAL
+    _In_ PVOID DllHandle,
+    _In_ ULONG Reason,
+    _In_opt_ PCONTEXT Context
 );
 
 #endif

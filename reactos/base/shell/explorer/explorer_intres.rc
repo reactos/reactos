@@ -7,7 +7,8 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include <windows.h>
+#include <windef.h>
+#include <winuser.h>
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -127,6 +128,7 @@ BEGIN
     "#include ""explorer-sv.rc""\r\n"
     "\r\n"
     "#pragma code_page(65001)"
+    "#include ""explorer-he.rc""\r\n"
     "#include ""explorer-pl.rc""\r\n"
     "#include ""explorer-ro.rc""\r\n"
     "#include ""explorer-ru.rc""\r\n"
@@ -266,6 +268,9 @@ CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST DISCARDABLE PURE "explorer.exe.ma
 
 // UTF-8
 #pragma code_page(65001)
+#ifdef LANGUAGE_HE_IL
+    #include "explorer-he.rc"
+#endif
 #ifdef LANGUAGE_PL_PL
     #include "explorer-pl.rc"
 #endif

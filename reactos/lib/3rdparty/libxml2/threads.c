@@ -27,7 +27,7 @@
 #ifdef HAVE_PTHREAD_H
 #include <pthread.h>
 #elif defined HAVE_WIN32_THREADS
-#include <windows.h>
+//#include <windows.h>
 #ifndef HAVE_COMPILER_TLS
 #include <process.h>
 #endif
@@ -439,7 +439,7 @@ __xmlGlobalInitMutexLock(void)
     /* Make sure the global init lock is initialized and then lock it. */
 #ifdef HAVE_PTHREAD_H
     /* The mutex is statically initialized, so we just lock it. */
-    if (pthread_mutex_lock)
+    if (pthread_mutex_lock != NULL)
         pthread_mutex_lock(&global_init_lock);
 #elif defined HAVE_WIN32_THREADS
     LPCRITICAL_SECTION cs;
@@ -509,7 +509,7 @@ void
 __xmlGlobalInitMutexUnlock(void)
 {
 #ifdef HAVE_PTHREAD_H
-    if (pthread_mutex_unlock)
+    if (pthread_mutex_unlock != NULL)
         pthread_mutex_unlock(&global_init_lock);
 #elif defined HAVE_WIN32_THREADS
     if (global_init_lock != NULL) {
@@ -915,6 +915,7 @@ xmlCleanupThreads(void)
 #ifdef HAVE_PTHREAD_H
     if ((libxml_is_threaded)  && (pthread_key_delete != NULL))
         pthread_key_delete(globalkey);
+    once_control = PTHREAD_ONCE_INIT;
 #elif defined(HAVE_WIN32_THREADS) && !defined(HAVE_COMPILER_TLS) && (!defined(LIBXML_STATIC) || defined(LIBXML_STATIC_FOR_DLL))
     if (globalkey != TLS_OUT_OF_INDEXES) {
         xmlGlobalStateCleanupHelperParams *p;

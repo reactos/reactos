@@ -160,14 +160,77 @@ NTAPI
 FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
                         IN PANSI_STRING Name)
 {
-    SHORT StarFound = -1;
-    PUSHORT BackTracking = NULL;
-    USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars;
+    SHORT StarFound = -1, DosStarFound = -1;
+    PUSHORT BackTracking = NULL, DosBackTracking = NULL;
+    USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars, LastDot;
     PAGED_CODE();
 
     ASSERT(Name->Length);
     ASSERT(Expression->Length);
     ASSERT(!FsRtlDoesDbcsContainWildCards(Name));
+
+    /* Check if we were given strings at all */
+    if (!Name->Length || !Expression->Length)
+    {
+        /* Return TRUE if both strings are empty, otherwise FALSE */
+        if (Name->Length == 0 && Expression->Length == 0)
+            return TRUE;
+        else
+            return FALSE;
+    }
+
+    /* Check for a shortcut: just one wildcard */
+    if (Expression->Length == sizeof(CHAR))
+    {
+        if (Expression->Buffer[0] == '*')
+            return TRUE;
+    }
+
+    //ASSERT(FsRtlDoesDbcsContainWildCards(Expression));
+
+    /* Another shortcut, wildcard followed by some string */
+    if (Expression->Buffer[0] == '*')
+    {
+        /* Copy Expression to our local variable */
+        ANSI_STRING IntExpression = *Expression;
+
+        /* Skip the first char */
+        IntExpression.Buffer++;
+        IntExpression.Length -= sizeof(CHAR);
+
+        /* Continue only if the rest of the expression does NOT contain
+           any more wildcards */
+        if (!FsRtlDoesDbcsContainWildCards(&IntExpression))
+        {
+            /* Check for a degenerate case */
+            if (Name->Length < (Expression->Length - sizeof(CHAR)))
+                return FALSE;
+
+            /* Calculate position */
+            NamePosition = (Name->Length - IntExpression.Length) / sizeof(CHAR);
+
+            /* Check whether we are breaking a two chars char (DBCS) */
+            if (NlsMbOemCodePageTag)
+            {
+                MatchingChars = 0;
+
+                while (MatchingChars < NamePosition)
+                {
+                    /* Check if current char is DBCS lead char, if so, jump by two chars */
+                    MatchingChars += FsRtlIsLeadDbcsCharacter(Name->Buffer[MatchingChars]) ? 2 : 1;
+                }
+
+                /* If so, deny */
+                if (MatchingChars > NamePosition)
+                    return FALSE;
+            }
+
+            /* Compare */
+            return RtlEqualMemory(IntExpression.Buffer,
+                                  (Name->Buffer + NamePosition),
+                                  IntExpression.Length);
+        }
+    }
 
     while (NamePosition < Name->Length && ExpressionPosition < Expression->Length)
     {
@@ -178,8 +241,7 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
             ExpressionPosition++;
         }
         /* Check cases that eat one char */
-        else if ((Expression->Buffer[ExpressionPosition] == '?') || (Expression->Buffer[ExpressionPosition] == ANSI_DOS_QM) ||
-                 (Expression->Buffer[ExpressionPosition] == ANSI_DOS_DOT && Name->Buffer[NamePosition] == '.'))
+        else if (Expression->Buffer[ExpressionPosition] == '?')
         {
             NamePosition++;
             ExpressionPosition++;
@@ -207,7 +269,9 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
                 NamePosition = Name->Length;
                 break;
             }
-            else if (Expression->Buffer[ExpressionPosition] != '?')
+            /* Allow null matching */
+            else if (Expression->Buffer[ExpressionPosition] != '?' &&
+                     Expression->Buffer[ExpressionPosition] != Name->Buffer[NamePosition])
             {
                 NamePosition++;
             }
@@ -215,14 +279,72 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
         /* Check DOS_STAR */
         else if (Expression->Buffer[ExpressionPosition] == ANSI_DOS_STAR)
         {
-            MatchingChars = NamePosition;
+            /* Skip contigous stars */
+            while (ExpressionPosition + 1 < Expression->Length && Expression->Buffer[ExpressionPosition + 1] == ANSI_DOS_STAR)
+            {
+                ExpressionPosition++;
+            }
+
+            /* Look for last dot */
+            MatchingChars = 0;
+            LastDot = (USHORT)-1;
             while (MatchingChars < Name->Length)
             {
                 if (Name->Buffer[MatchingChars] == '.')
                 {
-                    NamePosition = MatchingChars;
+                    LastDot = MatchingChars;
+                    if (LastDot > NamePosition)
+                        break;
                 }
+
                 MatchingChars++;
+            }
+
+            /* If we don't have dots or we didn't find last yet
+             * start eating everything
+             */
+            if (MatchingChars != Name->Length || LastDot == (USHORT)-1)
+            {
+                if (!DosBackTracking) DosBackTracking = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
+                                                                              Expression->Length * sizeof(USHORT), 'nrSF');
+                DosBackTracking[++DosStarFound] = ExpressionPosition++;
+
+                /* Not the same char, start exploring */
+                if (Expression->Buffer[ExpressionPosition] != Name->Buffer[NamePosition])
+                    NamePosition++;
+            }
+            else
+            {
+                /* Else, if we are at last dot, eat it - otherwise, null match */
+                if (Name->Buffer[NamePosition] == '.')
+                    NamePosition++;
+
+                 ExpressionPosition++;
+            }
+        }
+        /* Check DOS_DOT */
+        else if (Expression->Buffer[ExpressionPosition] == ANSI_DOS_DOT)
+        {
+            /* We only match dots */
+            if (Name->Buffer[NamePosition] == '.')
+            {
+                NamePosition++;
+            }
+            /* Try to explore later on for null matching */
+            else if (ExpressionPosition + 1 < Expression->Length &&
+                     Name->Buffer[NamePosition] == Expression->Buffer[ExpressionPosition + 1])
+            {
+                NamePosition++;
+            }
+            ExpressionPosition++;
+        }
+        /* Check DOS_QM */
+        else if (Expression->Buffer[ExpressionPosition] == ANSI_DOS_QM)
+        {
+            /* We match everything except dots */
+            if (Name->Buffer[NamePosition] != '.')
+            {
+                NamePosition++;
             }
             ExpressionPosition++;
         }
@@ -230,6 +352,10 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
         else if (StarFound >= 0)
         {
             ExpressionPosition = BackTracking[StarFound--];
+        }
+        else if (DosStarFound >= 0)
+        {
+            ExpressionPosition = DosBackTracking[DosStarFound--];
         }
         /* Otherwise, fail */
         else
@@ -245,15 +371,28 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
             ExpressionPosition = BackTracking[StarFound--];
         }
     }
-    if (ExpressionPosition + 1 == Expression->Length && NamePosition == Name->Length &&
-        Expression->Buffer[ExpressionPosition] == ANSI_DOS_DOT)
+    /* If we have nullable matching wc at the end of the string, eat them */
+    if (ExpressionPosition != Expression->Length && NamePosition == Name->Length)
     {
-        ExpressionPosition++;
+        while (ExpressionPosition < Expression->Length)
+        {
+            if (Expression->Buffer[ExpressionPosition] != ANSI_DOS_DOT &&
+                Expression->Buffer[ExpressionPosition] != '*' &&
+                Expression->Buffer[ExpressionPosition] != ANSI_DOS_STAR)
+            {
+                break;
+            }
+            ExpressionPosition++;
+        }
     }
 
     if (BackTracking)
     {
         ExFreePoolWithTag(BackTracking, 'nrSF');
+    }
+    if (DosBackTracking)
+    {
+        ExFreePoolWithTag(DosBackTracking, 'nrSF');
     }
 
     return (ExpressionPosition == Expression->Length && NamePosition == Name->Length);

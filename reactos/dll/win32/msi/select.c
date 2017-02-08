@@ -18,20 +18,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "wine/debug.h"
-#include "msi.h"
-#include "msiquery.h"
-#include "objbase.h"
-#include "objidl.h"
+//#include <stdarg.h>
+
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winerror.h"
+#include <wine/debug.h>
+//#include "msi.h"
+//#include "msiquery.h"
+//#include "objbase.h"
+//#include "objidl.h"
 #include "msipriv.h"
-#include "winnls.h"
+//#include "winnls.h"
 
-#include "query.h"
+//#include "query.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 
@@ -276,8 +280,9 @@ static UINT msi_select_update(struct tagMSIVIEW *view, MSIRECORD *rec, UINT row)
         }
         else if (type & MSITYPE_STRING)
         {
-            str = MSI_RecordGetString(rec, i + 1);
-            r = MSI_RecordSetStringW(mod, col, str);
+            int len;
+            str = msi_record_get_string( rec, i + 1, &len );
+            r = msi_record_set_string( mod, col, str, len );
         }
         else
         {
@@ -430,7 +435,7 @@ UINT SELECT_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
 
     count = select_count_columns( columns );
 
-    sv = msi_alloc_zero( sizeof *sv + count*sizeof (UINT) );
+    sv = msi_alloc_zero( FIELD_OFFSET( MSISELECTVIEW, cols[count] ));
     if( !sv )
         return ERROR_FUNCTION_FAILED;
     

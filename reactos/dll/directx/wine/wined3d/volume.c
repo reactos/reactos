@@ -19,7 +19,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#include <config.h>
+#include <wine/port.h>
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_surface);
@@ -87,12 +88,10 @@ void volume_load(const struct wined3d_volume *volume, struct wined3d_context *co
 
     volume_bind_and_dirtify(volume, context);
 
-    ENTER_GL();
     GL_EXTCALL(glTexImage3DEXT(GL_TEXTURE_3D, level, format->glInternal,
             volume->resource.width, volume->resource.height, volume->resource.depth,
             0, format->glFormat, format->glType, volume->resource.allocatedMemory));
     checkGLcall("glTexImage3D");
-    LEAVE_GL();
 
     /* When adding code releasing volume->resource.allocatedMemory to save
      * data keep in mind that GL_UNPACK_CLIENT_STORAGE_APPLE is enabled by
@@ -185,23 +184,23 @@ struct wined3d_resource * CDECL wined3d_volume_get_resource(struct wined3d_volum
 }
 
 HRESULT CDECL wined3d_volume_map(struct wined3d_volume *volume,
-        struct wined3d_mapped_box *mapped_box, const struct wined3d_box *box, DWORD flags)
+        struct wined3d_map_desc *map_desc, const struct wined3d_box *box, DWORD flags)
 {
-    TRACE("volume %p, mapped_box %p, box %p, flags %#x.\n",
-            volume, mapped_box, box, flags);
+    TRACE("volume %p, map_desc %p, box %p, flags %#x.\n",
+            volume, map_desc, box, flags);
 
     if (!volume->resource.allocatedMemory)
         volume->resource.allocatedMemory = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, volume->resource.size);
 
     TRACE("allocatedMemory %p.\n", volume->resource.allocatedMemory);
 
-    mapped_box->row_pitch = volume->resource.format->byte_count * volume->resource.width; /* Bytes / row */
-    mapped_box->slice_pitch = volume->resource.format->byte_count
+    map_desc->row_pitch = volume->resource.format->byte_count * volume->resource.width; /* Bytes / row */
+    map_desc->slice_pitch = volume->resource.format->byte_count
             * volume->resource.width * volume->resource.height; /* Bytes / slice */
     if (!box)
     {
         TRACE("No box supplied - all is ok\n");
-        mapped_box->data = volume->resource.allocatedMemory;
+        map_desc->data = volume->resource.allocatedMemory;
         volume->lockedBox.left   = 0;
         volume->lockedBox.top    = 0;
         volume->lockedBox.front  = 0;
@@ -213,9 +212,9 @@ HRESULT CDECL wined3d_volume_map(struct wined3d_volume *volume,
     {
         TRACE("Lock Box (%p) = l %u, t %u, r %u, b %u, fr %u, ba %u\n",
                 box, box->left, box->top, box->right, box->bottom, box->front, box->back);
-        mapped_box->data = volume->resource.allocatedMemory
-                + (mapped_box->slice_pitch * box->front)     /* FIXME: is front < back or vica versa? */
-                + (mapped_box->row_pitch * box->top)
+        map_desc->data = volume->resource.allocatedMemory
+                + (map_desc->slice_pitch * box->front)     /* FIXME: is front < back or vica versa? */
+                + (map_desc->row_pitch * box->top)
                 + (box->left * volume->resource.format->byte_count);
         volume->lockedBox.left   = box->left;
         volume->lockedBox.top    = box->top;
@@ -225,7 +224,7 @@ HRESULT CDECL wined3d_volume_map(struct wined3d_volume *volume,
         volume->lockedBox.back   = box->back;
     }
 
-    if (!(flags & (WINED3DLOCK_NO_DIRTY_UPDATE | WINED3DLOCK_READONLY)))
+    if (!(flags & (WINED3D_MAP_NO_DIRTY_UPDATE | WINED3D_MAP_READONLY)))
     {
         volume_add_dirty_box(volume, &volume->lockedBox);
         wined3d_texture_set_dirty(volume->container, TRUE);
@@ -234,7 +233,7 @@ HRESULT CDECL wined3d_volume_map(struct wined3d_volume *volume,
     volume->locked = TRUE;
 
     TRACE("Returning memory %p, row pitch %d, slice pitch %d.\n",
-            mapped_box->data, mapped_box->row_pitch, mapped_box->slice_pitch);
+            map_desc->data, map_desc->row_pitch, map_desc->slice_pitch);
 
     return WINED3D_OK;
 }
@@ -313,7 +312,6 @@ HRESULT CDECL wined3d_volume_create(struct wined3d_device *device, UINT width, U
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
     if (!object)
     {
-        ERR("Out of memory\n");
         *volume = NULL;
         return WINED3DERR_OUTOFVIDEOMEMORY;
     }

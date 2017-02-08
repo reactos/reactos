@@ -266,6 +266,37 @@ typedef struct _USER_INFO_3 {
 	LPWSTR usri3_home_dir_drive;
 	DWORD usri3_password_expired;
 }USER_INFO_3,*PUSER_INFO_3,*LPUSER_INFO_3;
+typedef struct _USER_INFO_4 {
+    LPWSTR usri4_name;
+    LPWSTR usri4_password;
+    DWORD  usri4_password_age;
+    DWORD  usri4_priv;
+    LPWSTR usri4_home_dir;
+    LPWSTR usri4_comment;
+    DWORD  usri4_flags;
+    LPWSTR usri4_script_path;
+    DWORD  usri4_auth_flags;
+    LPWSTR usri4_full_name;
+    LPWSTR usri4_usr_comment;
+    LPWSTR usri4_parms;
+    LPWSTR usri4_workstations;
+    DWORD  usri4_last_logon;
+    DWORD  usri4_last_logoff;
+    DWORD  usri4_acct_expires;
+    DWORD  usri4_max_storage;
+    DWORD  usri4_units_per_week;
+    PBYTE  usri4_logon_hours;
+    DWORD  usri4_bad_pw_count;
+    DWORD  usri4_num_logons;
+    LPWSTR usri4_logon_server;
+    DWORD  usri4_country_code;
+    DWORD  usri4_code_page;
+    PSID   usri4_user_sid;
+    DWORD  usri4_primary_group_id;
+    LPWSTR usri4_profile;
+    LPWSTR usri4_home_dir_drive;
+    DWORD  usri4_password_expired;
+} USER_INFO_4, *PUSER_INFO_4, *LPUSER_INFO_4;
 typedef struct _USER_INFO_10 {
 	LPWSTR usri10_name;
 	LPWSTR usri10_comment;
@@ -329,7 +360,14 @@ typedef struct _USER_INFO_22 {
 	LPWSTR usri22_logon_server;
 	DWORD usri22_country_code;
 	DWORD usri22_code_page;
-	}USER_INFO_22,*PUSER_INFO_22,*LPUSER_INFO_22;
+}USER_INFO_22,*PUSER_INFO_22,*LPUSER_INFO_22;
+typedef struct _USER_INFO_23 {
+    LPWSTR usri23_name;
+    LPWSTR usri23_full_name;
+    LPWSTR usri23_comment;
+    DWORD  usri23_flags;
+    PSID   usri23_user_sid;
+} USER_INFO_23, *PUSER_INFO_23, *LPUSER_INFO_23;
 typedef struct _USER_INFO_1003 {
 	LPWSTR usri1003_password;
 } USER_INFO_1003,*PUSER_INFO_1003,*LPUSER_INFO_1003;

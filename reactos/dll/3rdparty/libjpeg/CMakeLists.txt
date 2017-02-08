@@ -58,7 +58,7 @@ add_library(libjpeg SHARED
     jmemmgr.c
     jmemnobs.c)
 
-set_entrypoint(libjpeg 0)
+set_module_type(libjpeg win32dll)
 add_importlibs(libjpeg msvcrt kernel32)
 add_dependencies(libjpeg psdk)
 add_cd_file(TARGET libjpeg DESTINATION reactos/system32 FOR all)

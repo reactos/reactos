@@ -19,20 +19,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+//#include <stdarg.h>
 #include <assert.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
-#include "msi.h"
-#include "msiquery.h"
-#include "objbase.h"
-#include "objidl.h"
-#include "msipriv.h"
-#include "winnls.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winerror.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
+//#include "msi.h"
+//#include "msiquery.h"
+//#include "objbase.h"
+//#include "objidl.h"
+//#include "msipriv.h"
+//#include "winnls.h"
 
 #include "query.h"
 
@@ -494,7 +498,7 @@ static UINT STRING_evaluate( MSIWHEREVIEW *wv, const UINT rows[],
     case EXPR_COL_NUMBER_STRING:
         r = expr_fetch_value(&expr->u.column, rows, &val);
         if (r == ERROR_SUCCESS)
-            *str =  msi_string_lookup_id(wv->db->strings, val);
+            *str =  msi_string_lookup(wv->db->strings, val, NULL);
         else
             *str = NULL;
         break;
@@ -770,7 +774,7 @@ static UINT WHERE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     JOINTABLE *table = wv->tables;
     UINT *rows;
     JOINTABLE **ordered_tables;
-    int i = 0;
+    UINT i = 0;
 
     TRACE("%p %p\n", wv, record);
 
@@ -883,7 +887,7 @@ static UINT join_find_row( MSIWHEREVIEW *wv, MSIRECORD *rec, UINT *row )
     UINT r, i, id, data;
 
     str = MSI_RecordGetString( rec, 1 );
-    r = msi_string2idW( wv->db->strings, str, &id );
+    r = msi_string2id( wv->db->strings, str, -1, &id );
     if (r != ERROR_SUCCESS)
         return r;
 
@@ -1052,7 +1056,7 @@ static UINT WHERE_sort(struct tagMSIVIEW *view, column_info *columns)
     column_info *column = columns;
     MSIORDERINFO *orderinfo;
     UINT r, count = 0;
-    int i;
+    UINT i;
 
     TRACE("%p %p\n", view, columns);
 
@@ -1068,7 +1072,7 @@ static UINT WHERE_sort(struct tagMSIVIEW *view, column_info *columns)
     if (count == 0)
         return ERROR_SUCCESS;
 
-    orderinfo = msi_alloc(sizeof(MSIORDERINFO) + (count - 1) * sizeof(union ext_column));
+    orderinfo = msi_alloc(FIELD_OFFSET(MSIORDERINFO, columns[count]));
     if (!orderinfo)
         return ERROR_OUTOFMEMORY;
 
@@ -1253,6 +1257,8 @@ UINT WHERE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR tables,
         if (r != ERROR_SUCCESS)
         {
             ERR("can't get table dimensions\n");
+            table->view->ops->delete(table->view);
+            msi_free(table);
             goto end;
         }
 

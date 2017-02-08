@@ -212,6 +212,12 @@ typedef struct _NDIS_WAN_SET_COMP_INFO {
   IN NDIS_WAN_COMPRESS_INFO RecvCapabilities;
 } NDIS_WAN_SET_COMP_INFO, *PNDIS_WAN_SET_COMP_INFO;
 
+/*
+ * NOTE: As some people may notice, this structure contains three misspelled
+ * fields (the "Tunnel*Recieve*" fields). Their names come from the Windows
+ * Driver Development Kit and thus, blame Microsoft if they do not know how
+ * to write proper English or if they do not re-read what they are writing !!
+ */
 typedef struct _NDIS_WAN_GET_STATS_INFO {
   IN NDIS_HANDLE NdisLinkHandle;
   OUT ULONG BytesSent;
@@ -302,6 +308,12 @@ typedef struct _NDIS_WAN_CO_SET_COMP_INFO {
   IN NDIS_WAN_COMPRESS_INFO RecvCapabilities;
 } NDIS_WAN_CO_SET_COMP_INFO, *PNDIS_WAN_CO_SET_COMP_INFO;
 
+/*
+ * NOTE: As some people may notice, this structure contains three misspelled
+ * fields (the "Tunnel*Recieve*" fields). Their names come from the Windows
+ * Driver Development Kit and thus, blame Microsoft if they do not know how
+ * to write proper English or if they do not re-read what they are writing !!
+ */
 typedef struct _NDIS_WAN_CO_GET_STATS_INFO {
   OUT ULONG BytesSent;
   OUT ULONG BytesRcvd;

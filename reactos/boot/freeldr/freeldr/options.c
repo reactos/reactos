@@ -20,13 +20,13 @@
 #include <freeldr.h>
 #include <debug.h>
 
-PCSTR	OptionsMenuList[] =
+PCSTR OptionsMenuList[] =
 {
 	"Safe Mode",
 	"Safe Mode with Networking",
 	"Safe Mode with Command Prompt",
 
-	"SEPARATOR",
+	NULL,
 
 	"Enable Boot Logging",
 	"Enable VGA Mode",
@@ -35,8 +35,9 @@ PCSTR	OptionsMenuList[] =
 	"Debugging Mode",
 	"FreeLdr debugging",
 
-	"SEPARATOR",
+	NULL,
 
+	"Start ReactOS normally",
 #ifdef HAS_OPTION_MENU_CUSTOM_BOOT
 	"Custom Boot",
 #endif
@@ -45,7 +46,7 @@ PCSTR	OptionsMenuList[] =
 #endif
 };
 
-PCSTR FrldrDbgMsg = "Enable freeldr debug channels\n"
+PCSTR FrldrDbgMsg = "Enable FreeLdr debug channels\n"
                     "Acceptable syntax: [level1]#channel1[,[level2]#channel2]\n"
                     "level can be one of: trace,warn,fixme,err\n"
                     "  if the level is ommited all levels\n"
@@ -58,50 +59,43 @@ PCSTR FrldrDbgMsg = "Enable freeldr debug channels\n"
                     "  trace+windows,trace+reactos\n"
                     "  +hwdetect,err-disk\n"
                     "  +peloader\n"
-                    "NOTE: all letters must be lowercase, no spaces allowed\n";
+                    "NOTE: all letters must be lowercase, no spaces allowed.";
 
-enum OptionMenuItems
+//
+// The boot options are mutually exclusive.
+//
+enum BootOption
 {
-	SAFE_MODE = 0,
-	SAFE_MODE_WITH_NETWORKING = 1,
-	SAFE_MODE_WITH_COMMAND_PROMPT = 2,
+	NO_OPTION = 0,
 
-	SEPARATOR1 = 3,
+	SAFE_MODE,
+	SAFE_MODE_WITH_NETWORKING,
+	SAFE_MODE_WITH_COMMAND_PROMPT,
 
-	ENABLE_BOOT_LOGGING = 4,
-	ENABLE_VGA_MODE = 5,
-	LAST_KNOWN_GOOD_CONFIGURATION = 6,
-	DIRECTORY_SERVICES_RESTORE_MODE = 7,
-	DEBUGGING_MODE = 8,
-	FREELDR_DEBUGGING = 9,
-
-	SEPARATOR2 = 10,
-
-#ifdef HAS_OPTION_MENU_CUSTOM_BOOT
-	CUSTOM_BOOT = 11,
-#endif
-#ifdef HAS_OPTION_MENU_REBOOT
-	REBOOT = 12,
-#endif
+	LAST_KNOWN_GOOD_CONFIGURATION,
+	DIRECTORY_SERVICES_RESTORE_MODE,
 };
 
-ULONG		OptionsMenuItemCount = sizeof(OptionsMenuList) / sizeof(OptionsMenuList[0]);
+ULONG OptionsMenuItemCount = sizeof(OptionsMenuList) / sizeof(OptionsMenuList[0]);
 
-BOOLEAN SafeMode = FALSE;
-BOOLEAN SafeModeWithNetworking = FALSE;
-BOOLEAN SafeModeWithCommandPrompt = FALSE;
-BOOLEAN BootLogging = FALSE;
-BOOLEAN VgaMode = FALSE;
-BOOLEAN LastKnownGoodConfiguration = FALSE;
-BOOLEAN DirectoryServicesRepairMode = FALSE;
-BOOLEAN DebuggingMode = FALSE;
+static enum BootOption BootOptionChoice = NO_OPTION;
+static BOOLEAN BootLogging = FALSE;
+static BOOLEAN VgaMode = FALSE;
+static BOOLEAN DebuggingMode = FALSE;
 
 VOID DoOptionsMenu(VOID)
 {
-	ULONG		SelectedMenuItem;
-	CHAR DebugChannelString[100];
+	ULONG SelectedMenuItem;
+	CHAR  DebugChannelString[100];
 
-	if (!UiDisplayMenu(OptionsMenuList, OptionsMenuItemCount, 0, -1, &SelectedMenuItem, TRUE, NULL))
+	if (!UiDisplayMenu("Select an option:", "",
+	                   TRUE,
+	                   OptionsMenuList,
+	                   OptionsMenuItemCount,
+	                   0, -1,
+	                   &SelectedMenuItem,
+	                   TRUE,
+	                   NULL))
 	{
 		// The user pressed ESC
 		return;
@@ -112,77 +106,170 @@ VOID DoOptionsMenu(VOID)
 
 	switch (SelectedMenuItem)
 	{
-	case SAFE_MODE:
-		SafeMode = TRUE;
-		BootLogging = TRUE;
-		break;
-	case SAFE_MODE_WITH_NETWORKING:
-		SafeModeWithNetworking = TRUE;
-		BootLogging = TRUE;
-		break;
-	case SAFE_MODE_WITH_COMMAND_PROMPT:
-		SafeModeWithCommandPrompt = TRUE;
-		BootLogging = TRUE;
-		break;
-	//case SEPARATOR1:
-	//	break;
-	case ENABLE_BOOT_LOGGING:
-		BootLogging = TRUE;
-		break;
-	case ENABLE_VGA_MODE:
-		VgaMode = TRUE;
-		break;
-	case LAST_KNOWN_GOOD_CONFIGURATION:
-		LastKnownGoodConfiguration = TRUE;
-		break;
-	case DIRECTORY_SERVICES_RESTORE_MODE:
-		DirectoryServicesRepairMode = TRUE;
-		break;
-	case DEBUGGING_MODE:
-		DebuggingMode = TRUE;
-		break;
-	case FREELDR_DEBUGGING:
-		DebugChannelString[0]=0;
-		if(UiEditBox(FrldrDbgMsg, DebugChannelString, 100))
-			DbgParseDebugChannels(DebugChannelString);
-		break;
-	//case SEPARATOR2:
-	//	break;
+		case 0: // Safe Mode
+			BootOptionChoice = SAFE_MODE;
+			BootLogging = TRUE;
+			break;
+		case 1: // Safe Mode with Networking
+			BootOptionChoice = SAFE_MODE_WITH_NETWORKING;
+			BootLogging = TRUE;
+			break;
+		case 2: // Safe Mode with Command Prompt
+			BootOptionChoice = SAFE_MODE_WITH_COMMAND_PROMPT;
+			BootLogging = TRUE;
+			break;
+		// case 3: // Separator
+		//     break;
+		case 4: // Enable Boot Logging
+			BootLogging = TRUE;
+			break;
+		case 5: // Enable VGA Mode
+			VgaMode = TRUE;
+			break;
+		case 6: // Last Known Good Configuration
+			BootOptionChoice = LAST_KNOWN_GOOD_CONFIGURATION;
+			break;
+		case 7: // Directory Services Restore Mode
+			BootOptionChoice = DIRECTORY_SERVICES_RESTORE_MODE;
+			break;
+		case 8: // Debugging Mode
+			DebuggingMode = TRUE;
+			break;
+		case 9: // FreeLdr debugging
+			DebugChannelString[0] = 0;
+			if (UiEditBox(FrldrDbgMsg,
+			              DebugChannelString,
+			              sizeof(DebugChannelString) / sizeof(DebugChannelString[0])))
+			{
+				DbgParseDebugChannels(DebugChannelString);
+			}
+			break;
+		// case 10: // Separator
+		//     break;
+		case 11: // Start ReactOS normally
+			// Reset all the parameters to their default values.
+			BootOptionChoice = NO_OPTION;
+			BootLogging = FALSE;
+			VgaMode = FALSE;
+			DebuggingMode = FALSE;
+			break;
 #ifdef HAS_OPTION_MENU_CUSTOM_BOOT
-	case CUSTOM_BOOT:
-		OptionMenuCustomBoot();
-		break;
+		case 12: // Custom Boot
+			OptionMenuCustomBoot();
+			break;
 #endif
 #ifdef HAS_OPTION_MENU_REBOOT
-	case REBOOT:
-		OptionMenuReboot();
-		break;
+		case 13: // Reboot
+			OptionMenuReboot();
+			break;
 #endif
 	}
 }
 
+VOID DisplayBootTimeOptions(VOID)
+{
+	CHAR BootOptions[260] = "";
+
+	switch (BootOptionChoice)
+	{
+		case SAFE_MODE:
+			strcat(BootOptions, OptionsMenuList[0]);
+			break;
+
+		case SAFE_MODE_WITH_NETWORKING:
+			strcat(BootOptions, OptionsMenuList[1]);
+			break;
+
+		case SAFE_MODE_WITH_COMMAND_PROMPT:
+			strcat(BootOptions, OptionsMenuList[2]);
+			break;
+
+		case LAST_KNOWN_GOOD_CONFIGURATION:
+			strcat(BootOptions, OptionsMenuList[6]);
+			break;
+
+		case DIRECTORY_SERVICES_RESTORE_MODE:
+			strcat(BootOptions, OptionsMenuList[7]);
+			break;
+
+		default:
+			break;
+	}
+
+	if (BootLogging)
+	{
+		if ( (BootOptionChoice != SAFE_MODE) &&
+		     (BootOptionChoice != SAFE_MODE_WITH_NETWORKING) &&
+		     (BootOptionChoice != SAFE_MODE_WITH_COMMAND_PROMPT) )
+		{
+			if (BootOptionChoice != NO_OPTION)
+			{
+				strcat(BootOptions, ", ");
+			}
+			strcat(BootOptions, OptionsMenuList[4]);
+		}
+	}
+
+	if (VgaMode)
+	{
+		if ((BootOptionChoice != NO_OPTION) ||
+		     BootLogging)
+		{
+			strcat(BootOptions, ", ");
+		}
+		strcat(BootOptions, OptionsMenuList[5]);
+	}
+
+	if (DebuggingMode)
+	{
+		if ((BootOptionChoice != NO_OPTION) ||
+		     BootLogging || VgaMode)
+		{
+			strcat(BootOptions, ", ");
+		}
+		strcat(BootOptions, OptionsMenuList[8]);
+	}
+
+	/* Display the chosen boot options */
+	UiDrawText(0,
+	           UiScreenHeight - 2,
+	           BootOptions,
+	           ATTR(COLOR_LIGHTBLUE, UiMenuBgColor));
+}
+
 VOID AppendBootTimeOptions(PCHAR BootOptions)
 {
-	if (SafeMode)
-		strcat(BootOptions, " /SAFEBOOT:MINIMAL /SOS"); //FIXME: NOGUIBOOT should also be specified
+	switch (BootOptionChoice)
+	{
+		case SAFE_MODE:
+			strcat(BootOptions, " /SAFEBOOT:MINIMAL /SOS"); //FIXME: NOGUIBOOT should also be specified
+			break;
 
-	if (SafeModeWithNetworking)
-		strcat(BootOptions, " /SAFEBOOT:NETWORK /SOS"); //FIXME: NOGUIBOOT should also be specified
+		case SAFE_MODE_WITH_NETWORKING:
+			strcat(BootOptions, " /SAFEBOOT:NETWORK /SOS"); //FIXME: NOGUIBOOT should also be specified
+			break;
 
-	if (SafeModeWithCommandPrompt)
-		strcat(BootOptions, " /SAFEBOOT:MINIMAL(ALTERNATESHELL) /SOS"); //FIXME: NOGUIBOOT should also be specified
+		case SAFE_MODE_WITH_COMMAND_PROMPT:
+			strcat(BootOptions, " /SAFEBOOT:MINIMAL(ALTERNATESHELL) /SOS"); //FIXME: NOGUIBOOT should also be specified
+			break;
+
+		case LAST_KNOWN_GOOD_CONFIGURATION:
+			DbgPrint("Last known good configuration is not supported yet!\n");
+			break;
+
+		case DIRECTORY_SERVICES_RESTORE_MODE:
+			strcat(BootOptions, " /SAFEBOOT:DSREPAIR /SOS");
+			break;
+
+		default:
+			break;
+	}
 
 	if (BootLogging)
 		strcat(BootOptions, " /BOOTLOG");
 
 	if (VgaMode)
 		strcat(BootOptions, " /BASEVIDEO");
-
-	if (LastKnownGoodConfiguration)
-		DbgPrint("Last known good configuration is not supported yet!\n");
-
-	if (DirectoryServicesRepairMode)
-		strcat(BootOptions, " /SAFEBOOT:DSREPAIR /SOS");
 
 	if (DebuggingMode)
 		strcat(BootOptions, " /DEBUG");

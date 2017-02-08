@@ -10,14 +10,20 @@
 
 /* Definitions */
 #define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 #define NTOS_MODE_USER
 
 #include <stdio.h>
 
 /* SDK/DDK/NDK Headers. */
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+#include <objbase.h>
 #include <ndk/rtlfuncs.h>
 #include <wingdi.h>
+#define _ENGINE_EXPORT_
 #include <winddi.h>
 #include <d3dnthal.h>
 #include <prntfont.h>

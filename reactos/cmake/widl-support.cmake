@@ -1,8 +1,8 @@
 
 #idl files support
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     set(IDL_FLAGS -m32 --win32)
-elseif(ARCH MATCHES amd64)
+elseif(ARCH STREQUAL "amd64")
     set(IDL_FLAGS -m64 --win64)
 else()
     set(IDL_FLAGS "")
@@ -60,10 +60,10 @@ function(add_rpc_files __type)
     get_includes(INCLUDES)
     get_defines(DEFINES)
     # Is it a client or server module?
-    if(__type STREQUAL server)
+    if(__type STREQUAL "server")
         set(__server_client -Oif -s -o)
         set(__suffix _s)
-    elseif(__type STREQUAL client)
+    elseif(__type STREQUAL "client")
         set(__server_client -Oif -c -o)
         set(__suffix _c)
     else()
@@ -82,7 +82,37 @@ function(add_rpc_files __type)
     endforeach()
 endfunction()
 
-function(generate_idl_iids IDL_FILE)
+function(generate_idl_iids)
+    foreach(IDL_FILE ${ARGN})
+        get_filename_component(FILE ${IDL_FILE} NAME)
+        if(FILE STREQUAL "${IDL_FILE}")
+            set(IDL_FILE_FULL "${CMAKE_CURRENT_SOURCE_DIR}/${IDL_FILE}")
+        else()
+            set(IDL_FILE_FULL ${IDL_FILE})
+        endif()
+        get_includes(INCLUDES)
+        get_defines(DEFINES)
+        get_filename_component(NAME ${IDL_FILE} NAME_WE)
+        add_custom_command(
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c
+            COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -u -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c ${IDL_FILE_FULL}
+            DEPENDS ${IDL_FILE_FULL} native-widl)
+        set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c PROPERTIES GENERATED TRUE)
+    endforeach()
+endfunction()
+
+function(add_iid_library TARGET)
+    foreach(IDL_FILE ${ARGN})
+        get_filename_component(NAME ${IDL_FILE} NAME_WE)
+        generate_idl_iids(${IDL_FILE})
+        list(APPEND IID_SOURCES ${NAME}_i.c)
+    endforeach()
+    add_library(${TARGET} ${IID_SOURCES})
+    add_dependencies(${TARGET} psdk)
+    set_target_properties(${TARGET} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+endfunction()
+
+function(add_idl_reg_script IDL_FILE)
     get_filename_component(FILE ${IDL_FILE} NAME)
     if(FILE STREQUAL "${IDL_FILE}")
         set(IDL_FILE_FULL "${CMAKE_CURRENT_SOURCE_DIR}/${IDL_FILE}")
@@ -93,19 +123,9 @@ function(generate_idl_iids IDL_FILE)
     get_defines(DEFINES)
     get_filename_component(NAME ${IDL_FILE} NAME_WE)
     add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c
-        COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -u -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c ${IDL_FILE_FULL}
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_r.res
+        COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -r -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_r.res ${IDL_FILE_FULL}
         DEPENDS ${IDL_FILE_FULL} native-widl)
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c PROPERTIES GENERATED TRUE)
-endfunction()
-
-function(add_iid_library TARGET)
-    foreach(IDL_FILE ${ARGN})
-        get_filename_component(NAME ${IDL_FILE} NAME_WE)
-        generate_idl_iids(${IDL_FILE})
-        list(APPEND IID_SOURCES ${NAME}_i.c)
-    endforeach()
-    add_library(${TARGET} ${IID_SOURCES})
-	add_dependencies(${TARGET} psdk)
-    set_target_properties(${TARGET} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${NAME}_r.res PROPERTIES 
+        GENERATED TRUE EXTERNAL_OBJECT TRUE)
 endfunction()

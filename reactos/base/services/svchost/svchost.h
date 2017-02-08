@@ -14,8 +14,12 @@
 #define _CRT_SECURE_NO_DEPRECATE 1
 #endif
 
-#include <stdio.h>
-#include <winsock2.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winsvc.h>
 #include <tchar.h>
 
 /* DEFINES *******************************************************************/

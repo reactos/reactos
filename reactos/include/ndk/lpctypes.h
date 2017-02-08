@@ -44,7 +44,9 @@ extern POBJECT_TYPE NTSYSAPI LpcPortObjectType;
 // Port Object Access Masks
 //
 #define PORT_CONNECT                    0x1
-#define PORT_ALL_ACCESS                 0x1
+#define PORT_ALL_ACCESS                 (STANDARD_RIGHTS_REQUIRED | \
+                                         SYNCHRONIZE | \
+                                         PORT_CONNECT)
 
 //
 // Port Object Flags

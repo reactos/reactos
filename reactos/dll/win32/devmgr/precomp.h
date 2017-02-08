@@ -1,13 +1,15 @@
 #ifndef __DEVMGR_H
 #define __DEVMGR_H
 
+#define WIN32_NO_STATUS
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <wchar.h>
 #include <regstr.h>
 #include <setupapi.h>
 #include <cfgmgr32.h>
-#include <commctrl.h>
-#include <stdio.h>
 #include <dll/devmgr/devmgr.h>
+
 #include "resource.h"
 
 extern HINSTANCE hDllInstance;

@@ -1,6 +1,6 @@
-/* $Id$ */
+#include <windef.h>
+#include <winuser.h>
 
-#include <windows.h>
 #include "resource.h"
 
 #define REACTOS_VERSION_DLL

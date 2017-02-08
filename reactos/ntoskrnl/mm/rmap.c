@@ -27,6 +27,16 @@ FAST_MUTEX RmapListLock;
 
 /* FUNCTIONS ****************************************************************/
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+static
+VOID
+NTAPI
+RmapListFree(
+    _In_ __drv_freesMem(Mem) PVOID P)
+{
+    ExFreePoolWithTag(P, TAG_RMAP);
+}
+
 VOID
 INIT_FUNCTION
 NTAPI
@@ -35,7 +45,7 @@ MmInitializeRmapList(VOID)
    ExInitializeFastMutex(&RmapListLock);
    ExInitializeNPagedLookasideList (&RmapLookasideList,
                                     NULL,
-                                    NULL,
+                                    RmapListFree,
                                     0,
                                     sizeof(MM_RMAP_ENTRY),
                                     TAG_RMAP,

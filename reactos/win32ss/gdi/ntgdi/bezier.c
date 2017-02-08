@@ -98,7 +98,7 @@ static BOOL FASTCALL BezierCheck( int level, POINT *Points)
         return TRUE;
   }
   else
-  {   
+  {
       /* Steep line */
       /* Check that control points are between begin and end */
       if(Points[1].y < Points[0].y)

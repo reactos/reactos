@@ -13,33 +13,33 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_DPLAYX_MESSAGES__
 #define __WINE_DPLAYX_MESSAGES__
 
-#include <stdarg.h>
+//#include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "dplay.h"
-#include "rpc.h" /* For GUID */
+//#include "windef.h"
+//#include "winbase.h"
+//#include "dplay.h"
+//#include "rpc.h" /* For GUID */
 
 #include "dplay_global.h"
 
 DWORD CreateLobbyMessageReceptionThread( HANDLE hNotifyEvent, HANDLE hStart,
-                                         HANDLE hDeath, HANDLE hConnRead );
+                                         HANDLE hDeath, HANDLE hConnRead ) DECLSPEC_HIDDEN;
 
 HRESULT DP_MSG_SendRequestPlayerId( IDirectPlay2AImpl* This, DWORD dwFlags,
-                                    LPDPID lpdipidAllocatedId );
-HRESULT DP_MSG_ForwardPlayerCreation( IDirectPlay2AImpl* This, DPID dpidServer );
+                                    LPDPID lpdipidAllocatedId ) DECLSPEC_HIDDEN;
+HRESULT DP_MSG_ForwardPlayerCreation( IDirectPlay2AImpl* This, DPID dpidServer ) DECLSPEC_HIDDEN;
 
 void DP_MSG_ReplyReceived( IDirectPlay2AImpl* This, WORD wCommandId,
-                           LPCVOID lpMsgBody, DWORD dwMsgBodySize );
+                           LPCVOID lpMsgBody, DWORD dwMsgBodySize ) DECLSPEC_HIDDEN;
 void DP_MSG_ErrorReceived( IDirectPlay2AImpl* This, WORD wCommandId,
-                           LPCVOID lpMsgBody, DWORD dwMsgBodySize );
-void DP_MSG_ToSelf( IDirectPlay2AImpl* This, DPID dpidSelf );
+                           LPCVOID lpMsgBody, DWORD dwMsgBodySize ) DECLSPEC_HIDDEN;
+void DP_MSG_ToSelf( IDirectPlay2AImpl* This, DPID dpidSelf ) DECLSPEC_HIDDEN;
 
 /* Timings -> 1000 ticks/sec */
 #define DPMSG_WAIT_5_SECS   5000
@@ -48,7 +48,7 @@ void DP_MSG_ToSelf( IDirectPlay2AImpl* This, DPID dpidSelf );
 #define DPMSG_DEFAULT_WAIT_TIME DPMSG_WAIT_30_SECS
 
 /* Message types etc. */
-#include "pshpack1.h"
+#include <pshpack1.h>
 
 /* Non provided messages for DPLAY - guess work which may be wrong :( */
 #define DPMSGCMD_ENUMSESSIONSREPLY    1
@@ -218,6 +218,6 @@ typedef struct tagDPMSG_FORWARDADDPLAYERNACK
 } DPMSG_FORWARDADDPLAYERNACK, *LPDPMSG_FORWARDADDPLAYERNACK;
 typedef const DPMSG_FORWARDADDPLAYERNACK* LPCDPMSG_FORWARDADDPLAYERNACK;
 
-#include "poppack.h"
+#include <poppack.h>
 
 #endif

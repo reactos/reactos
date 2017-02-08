@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2006-2007 dogbert <dogber1@gmail.com>
+Copyright (c) 2006-2008 dogbert <dogber1@gmail.com>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,8 @@ class CMiniportWaveCMI:
 #else
                                 public IMiniportWaveCyclic,
 #endif
-                                public IMiniportWaveCMI
+                                public IMiniportWaveCMI,
+                                public CUnknown
 {
 private:
     PCMIADAPTER             CMIAdapter;                 // Adapter common object.
@@ -55,7 +56,7 @@ private:
     CMI8738Info             *cm;
 	UInt32                  requestedChannelCount;
 	UInt32                  requestedChannelMask;
-    LONG m_Ref;
+
 
     CMiniportWaveStreamCMI  *stream[3];
     bool                    isStreamRunning[3];
@@ -71,24 +72,8 @@ private:
     NTSTATUS loadChannelConfigFromRegistry();
 	NTSTATUS storeChannelConfigToRegistry();
 public:
-    STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
-    CMiniportWaveCMI(IUnknown * OuterUnknown){}
+    DECLARE_STD_UNKNOWN();
+    DEFINE_STD_CONSTRUCTOR(CMiniportWaveCMI);
     ~CMiniportWaveCMI();
 #ifdef WAVERT
     IMP_IMiniportWaveRT;
@@ -111,7 +96,8 @@ class CMiniportWaveStreamCMI:
 #else
                                       public IMiniportWaveCyclicStream,
 #endif
-                                      public IDrmAudioStream
+                                      public IDrmAudioStream,
+                                      public CUnknown
 {
 private:
     CMiniportWaveCMI  *Miniport;
@@ -133,7 +119,6 @@ private:
     UInt32            dmaSize;        // size of the DMA buffer in frames, NOT in bytes
     UInt32            currentChannelCount, currentSampleRate, currentResolution;
     bool              enableAC3Passthru, enableSPDIF;
-    LONG              m_Ref;
 
     NTSTATUS prepareStream();
     NTSTATUS setDACChannels();
@@ -141,24 +126,8 @@ private:
     NTSTATUS setupAC3Passthru();
 
 public:
-    STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
-    STDMETHODIMP_(ULONG) AddRef()
-    {
-        InterlockedIncrement(&m_Ref);
-        return m_Ref;
-    }
-    STDMETHODIMP_(ULONG) Release()
-    {
-        InterlockedDecrement(&m_Ref);
-
-        if (!m_Ref)
-        {
-            delete this;
-            return 0;
-        }
-        return m_Ref;
-    }
-    CMiniportWaveStreamCMI(IUnknown * OuterUnknown){}
+    DECLARE_STD_UNKNOWN();
+    DEFINE_STD_CONSTRUCTOR(CMiniportWaveStreamCMI);
     ~CMiniportWaveStreamCMI();
 #ifdef WAVERT
 	IMP_IMiniportWaveRTStream;

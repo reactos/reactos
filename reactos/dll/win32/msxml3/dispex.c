@@ -16,32 +16,64 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
 #define COBJMACROS
 
-#include "config.h"
+#include <config.h>
 
-#include <stdarg.h>
-#include <assert.h>
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "ole2.h"
-#include "msxml2.h"
-#include "wininet.h"
-#include "urlmon.h"
-#include "winreg.h"
-#include "shlwapi.h"
+//#include <stdarg.h>
+#ifdef HAVE_LIBXML2
+# include <libxml/parser.h>
+//# include <libxml/xmlerror.h>
+#endif
 
-#include "wine/debug.h"
-#include "wine/list.h"
-#include "wine/unicode.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+//#include "winnls.h"
+#include <ole2.h>
+#include <msxml6.h>
+//#include "wininet.h"
+//#include "urlmon.h"
+//#include "winreg.h"
+//#include "shlwapi.h"
+
+#include <wine/debug.h>
+#include <wine/list.h>
+//#include "wine/unicode.h"
 
 #include "msxml_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
-#define DISPATCHEX(x)  ((IDispatchEx*)  &(x)->lpIDispatchExVtbl)
+static CRITICAL_SECTION cs_dispex_static_data;
+static CRITICAL_SECTION_DEBUG cs_dispex_static_data_dbg =
+{
+    0, 0, &cs_dispex_static_data,
+    { &cs_dispex_static_data_dbg.ProcessLocksList, &cs_dispex_static_data_dbg.ProcessLocksList },
+      0, 0, { (DWORD_PTR)(__FILE__ ": dispex_static_data") }
+};
+static CRITICAL_SECTION cs_dispex_static_data = { &cs_dispex_static_data_dbg, -1, 0, 0, 0, 0 };
+
+
+enum lib_version_t
+{
+    LibXml = 0,
+    LibXml2,
+    LibXml_Last
+};
+
+typedef struct {
+    REFIID iid;
+    enum lib_version_t lib;
+} tid_id_t;
+
+typedef struct {
+    REFIID iid;
+    unsigned short major;
+} lib_id_t;
 
 typedef struct {
     DISPID id;
@@ -72,73 +104,102 @@ struct dispex_dynamic_data_t {
 #define DISPID_DYNPROP_MAX  0x5fffffff
 
 static struct list dispex_data_list = LIST_INIT(dispex_data_list);
-static ITypeLib *typelib;
+static ITypeLib *typelib[LibXml_Last];
 static ITypeInfo *typeinfos[LAST_tid];
 
-static REFIID tid_ids[] = {
-    &IID_IXMLDOMAttribute,
-    &IID_IXMLDOMCDATASection,
-    &IID_IXMLDOMComment,
-    &IID_IXMLDOMDocument,
-    &IID_IXMLDOMDocument2,
-    &IID_IXMLDOMDocumentFragment,
-    &IID_IXMLDOMElement,
-    &IID_IXMLDOMEntityReference,
-    &IID_IXMLDOMImplementation,
-    &IID_IXMLDOMNamedNodeMap,
-    &IID_IXMLDOMNode,
-    &IID_IXMLDOMNodeList,
-    &IID_IXMLDOMParseError,
-    &IID_IXMLDOMProcessingInstruction,
-    &IID_IXMLDOMSchemaCollection,
-    &IID_IXMLDOMSelection,
-    &IID_IXMLDOMText,
-    &IID_IXMLElement,
-    &IID_IXMLDOMDocument,
-    &IID_IXMLHTTPRequest,
-    &IID_IVBSAXAttributes,
-    &IID_IVBSAXContentHandler,
-    &IID_IVBSAXDeclHandler,
-    &IID_IVBSAXDTDHandler,
-    &IID_IVBSAXEntityResolver,
-    &IID_IVBSAXErrorHandler,
-    &IID_IVBSAXLexicalHandler,
-    &IID_IVBSAXLocator,
-    &IID_IVBSAXXMLFilter,
-    &IID_IVBSAXXMLReader,
-    &IID_IMXAttributes,
-    &IID_IMXReaderControl,
-    &IID_IMXWriter,
+/* indexed with lib_version_t values */
+static lib_id_t lib_ids[] = {
+    { &LIBID_MSXML,  2 },
+    { &LIBID_MSXML2, 3 }
 };
+
+static tid_id_t tid_ids[] = {
+    { &IID_NULL, LibXml_Last },
+    { &IID_IXMLDOMAttribute, LibXml2 },
+    { &IID_IXMLDOMCDATASection, LibXml2 },
+    { &IID_IXMLDOMComment, LibXml2 },
+    { &IID_IXMLDOMDocument, LibXml2 },
+    { &IID_IXMLDOMDocument2, LibXml2 },
+    { &IID_IXMLDOMDocument3, LibXml2 },
+    { &IID_IXMLDOMDocumentFragment, LibXml2 },
+    { &IID_IXMLDOMDocumentType, LibXml2 },
+    { &IID_IXMLDOMElement, LibXml2 },
+    { &IID_IXMLDOMEntityReference, LibXml2 },
+    { &IID_IXMLDOMImplementation, LibXml2 },
+    { &IID_IXMLDOMNamedNodeMap, LibXml2 },
+    { &IID_IXMLDOMNode, LibXml2 },
+    { &IID_IXMLDOMNodeList, LibXml2 },
+    { &IID_IXMLDOMParseError2, LibXml2 },
+    { &IID_IXMLDOMProcessingInstruction, LibXml2 },
+    { &IID_IXMLDOMSchemaCollection, LibXml2 },
+    { &IID_IXMLDOMSchemaCollection2, LibXml2 },
+    { &IID_IXMLDOMSelection, LibXml2 },
+    { &IID_IXMLDOMText, LibXml2 },
+    { &IID_IXMLElement, LibXml },
+    { &IID_IXMLDocument, LibXml },
+    { &IID_IXMLHTTPRequest, LibXml2 },
+    { &IID_IXSLProcessor, LibXml2 },
+    { &IID_IXSLTemplate, LibXml2 },
+    { &IID_IVBSAXAttributes, LibXml2 },
+    { &IID_IVBSAXContentHandler, LibXml2 },
+    { &IID_IVBSAXDeclHandler, LibXml2 },
+    { &IID_IVBSAXDTDHandler, LibXml2 },
+    { &IID_IVBSAXEntityResolver, LibXml2 },
+    { &IID_IVBSAXErrorHandler, LibXml2 },
+    { &IID_IVBSAXLexicalHandler, LibXml2 },
+    { &IID_IVBSAXLocator, LibXml2 },
+    { &IID_IVBSAXXMLFilter, LibXml2 },
+    { &IID_IVBSAXXMLReader, LibXml2 },
+    { &IID_IMXAttributes, LibXml2 },
+    { &IID_IMXReaderControl, LibXml2 },
+    { &IID_IMXWriter, LibXml2 },
+    { &IID_IVBMXNamespaceManager, LibXml2 },
+    { &IID_IServerXMLHTTPRequest, LibXml2 }
+};
+
+const IID *get_riid_from_tid(tid_t tid)
+{
+    return tid_ids[tid].iid;
+}
+
+static inline unsigned get_libid_from_tid(tid_t tid)
+{
+    return tid_ids[tid].lib;
+}
 
 HRESULT get_typeinfo(enum tid_t tid, ITypeInfo **typeinfo)
 {
+    unsigned lib = get_libid_from_tid(tid);
     HRESULT hres;
 
-    if(!typelib) {
+    if(!typelib[lib]) {
         ITypeLib *tl;
 
-        hres = LoadRegTypeLib(&LIBID_MSXML2, 3, 0, LOCALE_SYSTEM_DEFAULT, &tl);
+        hres = LoadRegTypeLib(lib_ids[lib].iid, lib_ids[lib].major, 0, LOCALE_SYSTEM_DEFAULT, &tl);
         if(FAILED(hres)) {
             ERR("LoadRegTypeLib failed: %08x\n", hres);
             return hres;
         }
 
-        if(InterlockedCompareExchangePointer((void**)&typelib, tl, NULL))
+        if(InterlockedCompareExchangePointer((void**)&typelib[lib], tl, NULL))
             ITypeLib_Release(tl);
     }
 
     if(!typeinfos[tid]) {
-        ITypeInfo *typeinfo;
+        ITypeInfo *ti;
 
-        hres = ITypeLib_GetTypeInfoOfGuid(typelib, tid_ids[tid], &typeinfo);
+        hres = ITypeLib_GetTypeInfoOfGuid(typelib[lib], get_riid_from_tid(tid), &ti);
         if(FAILED(hres)) {
-            ERR("GetTypeInfoOfGuid failed: %08x\n", hres);
-            return hres;
+            /* try harder with typelib from msxml.dll */
+            hres = ITypeLib_GetTypeInfoOfGuid(typelib[LibXml], get_riid_from_tid(tid), &ti);
+            if(FAILED(hres)) {
+                ERR("GetTypeInfoOfGuid failed: %08x\n", hres);
+                return hres;
+            }
         }
 
-        if(InterlockedCompareExchangePointer((void**)(typeinfos+tid), typeinfo, NULL))
-            ITypeInfo_Release(typeinfo);
+        if(InterlockedCompareExchangePointer((void**)(typeinfos+tid), ti, NULL))
+            ITypeInfo_Release(ti);
     }
 
     *typeinfo = typeinfos[tid];
@@ -164,14 +225,15 @@ void release_typelib(void)
         heap_free(iter);
     }
 
-    if(!typelib)
-        return;
-
     for(i=0; i < sizeof(typeinfos)/sizeof(*typeinfos); i++)
         if(typeinfos[i])
             ITypeInfo_Release(typeinfos[i]);
 
-    ITypeLib_Release(typelib);
+    for(i=0; i < sizeof(typelib)/sizeof(*typelib); i++)
+        if(typelib[i])
+            ITypeLib_Release(typelib[i]);
+
+    DeleteCriticalSection(&cs_dispex_static_data);
 }
 
 static void add_func_info(dispex_data_t *data, DWORD *size, tid_t tid, DISPID id, ITypeInfo *dti)
@@ -267,16 +329,6 @@ static dispex_data_t *preprocess_dispex_data(DispatchEx *This)
     return data;
 }
 
-static CRITICAL_SECTION cs_dispex_static_data;
-static CRITICAL_SECTION_DEBUG cs_dispex_static_data_dbg =
-{
-    0, 0, &cs_dispex_static_data,
-    { &cs_dispex_static_data_dbg.ProcessLocksList, &cs_dispex_static_data_dbg.ProcessLocksList },
-      0, 0, { (DWORD_PTR)(__FILE__ ": dispex_static_data") }
-};
-static CRITICAL_SECTION cs_dispex_static_data = { &cs_dispex_static_data_dbg, -1, 0, 0, 0, 0 };
-
-
 static dispex_data_t *get_dispex_data(DispatchEx *This)
 {
     if(This->data->data)
@@ -292,11 +344,6 @@ static dispex_data_t *get_dispex_data(DispatchEx *This)
     return This->data->data;
 }
 
-static inline BOOL is_custom_dispid(DISPID id)
-{
-    return MSXML_DISPID_CUSTOM_MIN <= id && id <= MSXML_DISPID_CUSTOM_MAX;
-}
-
 static inline BOOL is_dynamic_dispid(DISPID id)
 {
     return DISPID_DYNPROP_0 <= id && id <= DISPID_DYNPROP_MAX;
@@ -304,7 +351,7 @@ static inline BOOL is_dynamic_dispid(DISPID id)
 
 static inline DispatchEx *impl_from_IDispatchEx(IDispatchEx *iface)
 {
-    return (DispatchEx*)((char*)iface - FIELD_OFFSET(DispatchEx, lpIDispatchExVtbl));
+    return CONTAINING_RECORD(iface, DispatchEx, IDispatchEx_iface);
 }
 
 static HRESULT WINAPI DispatchEx_QueryInterface(IDispatchEx *iface, REFIID riid, void **ppv)
@@ -360,7 +407,7 @@ static HRESULT WINAPI DispatchEx_GetIDsOfNames(IDispatchEx *iface, REFIID riid,
           lcid, rgDispId);
 
     for(i=0; i < cNames; i++) {
-        hres = IDispatchEx_GetDispID(DISPATCHEX(This), rgszNames[i], 0, rgDispId+i);
+        hres = IDispatchEx_GetDispID(&This->IDispatchEx_iface, rgszNames[i], 0, rgDispId+i);
         if(FAILED(hres))
             return hres;
     }
@@ -377,7 +424,7 @@ static HRESULT WINAPI DispatchEx_Invoke(IDispatchEx *iface, DISPID dispIdMember,
     TRACE("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
           lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 
-    return IDispatchEx_InvokeEx(DISPATCHEX(This), dispIdMember, lcid, wFlags,
+    return IDispatchEx_InvokeEx(&This->IDispatchEx_iface, dispIdMember, lcid, wFlags,
                                 pDispParams, pVarResult, pExcepInfo, NULL);
 }
 
@@ -489,8 +536,10 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
 
     TRACE("(%p)->(%x %x %x %p %p %p %p)\n", This, id, lcid, wFlags, pdp, pvarRes, pei, pspCaller);
 
-    if(is_custom_dispid(id) && This->data->vtbl && This->data->vtbl->invoke)
-        return This->data->vtbl->invoke(This->outer, id, lcid, wFlags, pdp, pvarRes, pei);
+    if(This->data->vtbl && This->data->vtbl->invoke) {
+        hres = This->data->vtbl->invoke(This->outer, id, lcid, wFlags, pdp, pvarRes, pei);
+        if (hres != DISP_E_UNKNOWNNAME) return hres;
+    }
 
     if(wFlags == DISPATCH_CONSTRUCT) {
         FIXME("DISPATCH_CONSTRUCT not implemented\n");
@@ -508,6 +557,7 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
 
         switch(wFlags) {
         case INVOKE_PROPERTYGET:
+            V_VT(pvarRes) = VT_EMPTY;
             return VariantCopy(pvarRes, var);
         case INVOKE_PROPERTYPUT:
             VariantClear(var);
@@ -548,9 +598,10 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
         return hres;
     }
 
-    hres = IUnknown_QueryInterface(This->outer, tid_ids[data->funcs[n].tid], (void**)&unk);
+    hres = IUnknown_QueryInterface(This->outer, get_riid_from_tid(data->funcs[n].tid), (void**)&unk);
     if(FAILED(hres)) {
         ERR("Could not get iface: %08x\n", hres);
+        ITypeInfo_Release(ti);
         return E_FAIL;
     }
 
@@ -625,13 +676,18 @@ BOOL dispex_query_interface(DispatchEx *This, REFIID riid, void **ppv)
 {
     static const IID IID_UndocumentedScriptIface =
         {0x719c3050,0xf9d3,0x11cf,{0xa4,0x93,0x00,0x40,0x05,0x23,0xa8,0xa0}};
+    static const IID IID_IDispatchJS =
+        {0x719c3050,0xf9d3,0x11cf,{0xa4,0x93,0x00,0x40,0x05,0x23,0xa8,0xa6}};
 
     if(IsEqualGUID(&IID_IDispatch, riid)) {
         TRACE("(%p)->(IID_IDispatch %p)\n", This, ppv);
-        *ppv = DISPATCHEX(This);
+        *ppv = &This->IDispatchEx_iface;
     }else if(IsEqualGUID(&IID_IDispatchEx, riid)) {
         TRACE("(%p)->(IID_IDispatchEx %p)\n", This, ppv);
-        *ppv = DISPATCHEX(This);
+        *ppv = &This->IDispatchEx_iface;
+    }else if(IsEqualGUID(&IID_IDispatchJS, riid)) {
+        TRACE("(%p)->(IID_IDispatchJS %p) returning NULL\n", This, ppv);
+        *ppv = NULL;
     }else if(IsEqualGUID(&IID_UndocumentedScriptIface, riid)) {
         TRACE("(%p)->(IID_UndocumentedScriptIface %p) returning NULL\n", This, ppv);
         *ppv = NULL;
@@ -647,9 +703,26 @@ BOOL dispex_query_interface(DispatchEx *This, REFIID riid, void **ppv)
     return TRUE;
 }
 
+void release_dispex(DispatchEx *This)
+{
+    dynamic_prop_t *prop;
+
+    if(!This->dynamic_data)
+        return;
+
+    for(prop = This->dynamic_data->props; prop < This->dynamic_data->props + This->dynamic_data->prop_cnt; prop++) {
+        VariantClear(&prop->var);
+        heap_free(prop->name);
+    }
+
+    heap_free(This->dynamic_data->props);
+    heap_free(This->dynamic_data);
+}
+
 void init_dispex(DispatchEx *dispex, IUnknown *outer, dispex_static_data_t *data)
 {
-    dispex->lpIDispatchExVtbl = &DispatchExVtbl;
+    dispex->IDispatchEx_iface.lpVtbl = &DispatchExVtbl;
     dispex->outer = outer;
     dispex->data = data;
+    dispex->dynamic_data = NULL;
 }

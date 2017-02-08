@@ -1,10 +1,9 @@
-/* $Id: file.c 54310 2011-11-06 04:13:21Z ion $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/file.c
  * PURPOSE:         Directory functions
- * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+ * PROGRAMMERS:     Ariadne (ariadne@xs4all.nl)
  *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)
  * UPDATE HISTORY:
  *                  Created 01/11/98
@@ -92,7 +91,8 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
     UINT ID, Num = 0;
     CHAR IDString[5];
     WCHAR * TempFileName;
-    CSR_API_MESSAGE ApiMessage;
+    BASE_API_MESSAGE ApiMessage;
+    PBASE_GET_TEMP_FILE GetTempFile = &ApiMessage.Data.GetTempFile;
     DWORD FileAttributes, LastError;
     UNICODE_STRING PathNameString, PrefixString;
     static const WCHAR Ext[] = { L'.', 't', 'm', 'p', UNICODE_NULL };
@@ -158,14 +158,17 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
         /* If user didn't gave any ID, ask Csrss to give one */
         if (!uUnique)
         {
-            CsrClientCallServer(&ApiMessage, NULL, MAKE_CSR_API(GET_TEMP_FILE, CSR_NATIVE), sizeof(CSR_API_MESSAGE));
-            if (ApiMessage.Data.GetTempFile.UniqueID == 0)
+            CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                NULL,
+                                CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetTempFile),
+                                sizeof(BASE_GET_TEMP_FILE));
+            if (GetTempFile->UniqueID == 0)
             {
                 Num++;
                 continue;
             }
  
-            ID = ApiMessage.Data.GetTempFile.UniqueID;
+            ID = GetTempFile->UniqueID;
         }
         else
         {

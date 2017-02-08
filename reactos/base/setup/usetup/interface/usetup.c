@@ -26,7 +26,7 @@
  *                  Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#include "usetup.h"
+#include <usetup.h>
 
 #define NDEBUG
 #include <debug.h>

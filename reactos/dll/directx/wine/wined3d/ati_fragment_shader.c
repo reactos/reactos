@@ -18,17 +18,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#include <config.h>
+#include <wine/port.h>
 
-#include <math.h>
-#include <stdio.h>
+//#include <math.h>
+//#include <stdio.h>
 
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_shader);
 WINE_DECLARE_DEBUG_CHANNEL(d3d);
 
-/* GL locking for state handlers is done by the caller. */
+/* Context activation for state handlers is done by the caller. */
 
 /* Some private defines, Constant associations, etc.
  * Env bump matrix and per stage constant should be independent,
@@ -156,6 +157,7 @@ static const char *debug_rep(GLuint rep) {
         case GL_RED:                    return "GL_RED";
         case GL_GREEN:                  return "GL_GREEN";
         case GL_BLUE:                   return "GL_BLUE";
+        case GL_ALPHA:                  return "GL_ALPHA";
         default:                        return "unknown argrep";
     }
 }
@@ -467,11 +469,11 @@ static GLuint gen_ati_shader(const struct texture_stage_op op[MAX_TEXTURES], con
          */
         wrap_op3(gl_info, GL_MAD_ATI, GL_REG_0_ATI + stage + 1, GL_ALPHA, GL_NONE,
                  GL_REG_0_ATI + stage, GL_RED, argmodextra_y,
-                 ATI_FFP_CONST_BUMPMAT(stage), GL_BLUE, GL_NONE,
+                 ATI_FFP_CONST_BUMPMAT(stage), GL_BLUE, GL_2X_BIT_ATI | GL_BIAS_BIT_ATI,
                  GL_REG_0_ATI + stage + 1, GL_GREEN, GL_NONE);
         wrap_op3(gl_info, GL_MAD_ATI, GL_REG_0_ATI + stage + 1, GL_GREEN_BIT_ATI, GL_NONE,
                  GL_REG_0_ATI + stage, GL_GREEN, argmodextra_y,
-                 ATI_FFP_CONST_BUMPMAT(stage), GL_ALPHA, GL_NONE,
+                 ATI_FFP_CONST_BUMPMAT(stage), GL_ALPHA, GL_2X_BIT_ATI | GL_BIAS_BIT_ATI,
                  GL_REG_0_ATI + stage + 1, GL_ALPHA, GL_NONE);
     }
 
@@ -856,10 +858,10 @@ static void set_tex_op_atifs(struct wined3d_context *context, const struct wined
         {
             if (settings.op[i].cop == WINED3D_TOP_DISABLE)
                 break;
-            new_desc->num_textures_used = i;
+            new_desc->num_textures_used = i + 1;
         }
 
-        memcpy(&new_desc->parent.settings, &settings, sizeof(settings));
+        new_desc->parent.settings = settings;
         new_desc->shader = gen_ati_shader(settings.op, gl_info);
         add_ffp_frag_shader(&priv->fragment_shaders, &new_desc->parent);
         TRACE("Allocated fixed function replacement shader descriptor %p\n", new_desc);
@@ -925,9 +927,6 @@ static void textransform(struct wined3d_context *context, const struct wined3d_s
 
 static void atifs_apply_pixelshader(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    const struct wined3d_device *device = context->swapchain->device;
-    BOOL use_vshader = use_vs(state);
-
     context->last_was_pshader = use_ps(state);
     /* The ATIFS code does not support pixel shaders currently, but we have to
      * provide a state handler to call shader_select to select a vertex shader
@@ -942,13 +941,8 @@ static void atifs_apply_pixelshader(struct wined3d_context *context, const struc
      * startup, and blitting disables all shaders and dirtifies all shader
      * states. If atifs can deal with this it keeps the rest of the code
      * simpler. */
-    if (!isStateDirty(context, context->state_table[STATE_VSHADER].representative))
-    {
-        device->shader_backend->shader_select(context, FALSE, use_vshader);
-
-        if (!isStateDirty(context, STATE_VERTEXSHADERCONSTANT) && use_vshader)
-            context_apply_state(context, state, STATE_VERTEXSHADERCONSTANT);
-    }
+    context->select_shader = 1;
+    context->load_constants = 1;
 }
 
 static void atifs_srgbwriteenable(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
@@ -1091,20 +1085,24 @@ static const struct StateEntryTemplate atifs_fragmentstate_template[] = {
     {0 /* Terminate */,                                   { 0,                                                  0                       }, WINED3D_GL_EXT_NONE             },
 };
 
-/* Context activation and GL locking are done by the caller. */
-static void atifs_enable(BOOL enable)
+/* Context activation is done by the caller. */
+static void atifs_enable(const struct wined3d_gl_info *gl_info, BOOL enable)
 {
-    if(enable) {
-        glEnable(GL_FRAGMENT_SHADER_ATI);
+    if (enable)
+    {
+        gl_info->gl_ops.gl.p_glEnable(GL_FRAGMENT_SHADER_ATI);
         checkGLcall("glEnable(GL_FRAGMENT_SHADER_ATI)");
-    } else {
-        glDisable(GL_FRAGMENT_SHADER_ATI);
+    }
+    else
+    {
+        gl_info->gl_ops.gl.p_glDisable(GL_FRAGMENT_SHADER_ATI);
         checkGLcall("glDisable(GL_FRAGMENT_SHADER_ATI)");
     }
 }
 
 static void atifs_get_caps(const struct wined3d_gl_info *gl_info, struct fragment_caps *caps)
 {
+    caps->wined3d_caps = WINED3D_FRAGMENT_CAP_PROJ_CONTROL;
     caps->PrimitiveMiscCaps = WINED3DPMISCCAPS_TSSARGTEMP;
     caps->TextureOpCaps =  WINED3DTEXOPCAPS_DISABLE                     |
                            WINED3DTEXOPCAPS_SELECTARG1                  |
@@ -1150,24 +1148,21 @@ static void atifs_get_caps(const struct wined3d_gl_info *gl_info, struct fragmen
     caps->MaxSimultaneousTextures = 6;
 }
 
-static HRESULT atifs_alloc(struct wined3d_device *device)
+static void *atifs_alloc(const struct wined3d_shader_backend_ops *shader_backend, void *shader_priv)
 {
     struct atifs_private_data *priv;
 
-    device->fragment_priv = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct atifs_private_data));
-    if (!device->fragment_priv)
-    {
-        ERR("Out of memory\n");
-        return E_OUTOFMEMORY;
-    }
-    priv = device->fragment_priv;
+    if (!(priv = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*priv))))
+        return NULL;
+
     if (wine_rb_init(&priv->fragment_shaders, &wined3d_ffp_frag_program_rb_functions) == -1)
     {
         ERR("Failed to initialize rbtree.\n");
-        HeapFree(GetProcessHeap(), 0, device->fragment_priv);
-        return E_OUTOFMEMORY;
+        HeapFree(GetProcessHeap(), 0, priv);
+        return NULL;
     }
-    return WINED3D_OK;
+
+    return priv;
 }
 
 /* Context activation is done by the caller. */
@@ -1177,11 +1172,9 @@ static void atifs_free_ffpshader(struct wine_rb_entry *entry, void *context)
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
     struct atifs_ffp_desc *entry_ati = WINE_RB_ENTRY_VALUE(entry, struct atifs_ffp_desc, parent.entry);
 
-    ENTER_GL();
     GL_EXTCALL(glDeleteFragmentShaderATI(entry_ati->shader));
     checkGLcall("glDeleteFragmentShaderATI(entry->shader)");
     HeapFree(GetProcessHeap(), 0, entry_ati);
-    LEAVE_GL();
 }
 
 /* Context activation is done by the caller. */
@@ -1223,5 +1216,4 @@ const struct fragment_pipeline atifs_fragment_pipeline = {
     atifs_free,
     atifs_color_fixup_supported,
     atifs_fragmentstate_template,
-    TRUE /* We can disable projected textures */
 };

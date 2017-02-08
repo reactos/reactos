@@ -2,6 +2,7 @@
  * HTML Help resources
  *
  * Copyright 2005 James Hawkins
+ * Copyright 2011 Owen Rudge for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,16 +19,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winnls.h"
-#include "htmlhelp.h"
-#include "resource.h"
-
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-
-#include "version.rc"
+#define WIN32_NO_STATUS
+#include <windef.h>
+//#include "winbase.h"
+//#include "wingdi.h"
+//#include "winnls.h"
+//#include "htmlhelp.h"
+//#include "resource.h"
 
 #ifdef LANGUAGE_CS_CZ
     #include "Cs.rc"
@@ -76,6 +74,9 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #ifdef LANGUAGE_FR_FR
     #include "Fr.rc"
 #endif
+#ifdef LANGUAGE_HE_IL
+    #include "He.rc"
+#endif
 #ifdef LANGUAGE_IT_IT
     #include "It.rc"
 #endif
@@ -104,3 +105,23 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
     #include "Zh.rc"
 #endif
 
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+/* @makedep: hhtoolbar.bmp */
+IDB_HHTOOLBAR BITMAP hhtoolbar.bmp
+
+/* @makedep: hhtreeview.bmp */
+IDB_HHTREEVIEW BITMAP hhtreeview.bmp
+
+1 TYPELIB hhctrl_tlb.tlb
+
+1 WINE_REGISTRY hhctrl_tlb.rgs
+
+#define WINE_FILEDESCRIPTION_STR "Wine htmlhelp OCX"
+#define WINE_FILENAME_STR "hhctrl.ocx"
+#define WINE_FILEVERSION 5,2,3790,2744
+#define WINE_FILEVERSION_STR "5.2.3790.2744"
+#define WINE_PRODUCTVERSION 5,2,3790,2744
+#define WINE_PRODUCTVERSION_STR "5.2.3790.2744"
+
+#include <wine/wine_common_ver.rc>

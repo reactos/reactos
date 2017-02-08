@@ -238,122 +238,81 @@ wchar_t* CDECL wcspbrk( const wchar_t* str, const wchar_t* accept )
 /*********************************************************************
  *		wctomb (MSVCRT.@)
  */
-INT CDECL wctomb(char *mbchar, wchar_t wchar)
+/*********************************************************************
+ *         wctomb (MSVCRT.@)
+ */
+INT CDECL wctomb( char *dst, wchar_t ch )
 {
-    BOOL bUsedDefaultChar;
-    char chMultiByte[MB_LEN_MAX];
-    int nBytes;
+    BOOL error;
+    INT size;
 
-    /* At least one parameter needs to be given, the length of a null character cannot be queried (verified by tests under WinXP SP2) */
-    if(!mbchar && !wchar)
-        return 0;
-
-    /* Use WideCharToMultiByte for doing the conversion using the codepage currently set with setlocale() */
-    nBytes = WideCharToMultiByte(MSVCRT___lc_codepage, 0, &wchar, 1, chMultiByte, MB_LEN_MAX, NULL, &bUsedDefaultChar);
-
-    /* Only copy the character if an 'mbchar' pointer was given.
-
-       The "C" locale is emulated with codepage 1252 here. This codepage has a default character "?", but the "C" locale doesn't have one.
-       Therefore don't copy the character in this case. */
-    if(mbchar && !(MSVCRT_current_lc_all[0] == 'C' && !MSVCRT_current_lc_all[1] && bUsedDefaultChar))
-        memcpy(mbchar, chMultiByte, nBytes);
-
-    /* If the default character was used, set errno to EILSEQ and return -1. */
-    if(bUsedDefaultChar)
-    {
-        _set_errno(EILSEQ);
-        return -1;
+    size = WideCharToMultiByte(get_locinfo()->lc_codepage, 0, &ch, 1, dst, dst ? 6 : 0, NULL, &error);
+    if(!size || error) {
+        *_errno() = EINVAL;
+        return EOF;
     }
-
-    /* Otherwise return the number of bytes this character occupies. */
-    return nBytes;
+    return size;
 }
 
+/*********************************************************************
+ * wcsrtombs_l (INTERNAL)
+ */
+static size_t CDECL wcsrtombs_l(char *mbstr, const wchar_t **wcstr, size_t count, _locale_t locale)
+{
+    MSVCRT_pthreadlocinfo locinfo;
+    size_t tmp = 0;
+    BOOL used_default;
+
+    if(!locale)
+        locinfo = get_locinfo();
+    else
+        locinfo = ((MSVCRT__locale_t)locale)->locinfo;
+
+    if(!mbstr) {
+        tmp = WideCharToMultiByte(locinfo->lc_codepage, WC_NO_BEST_FIT_CHARS,
+                *wcstr, -1, NULL, 0, NULL, &used_default)-1;
+        if(used_default)
+            return -1;
+        return tmp;
+    }
+
+    while(**wcstr) {
+        char buf[3];
+        size_t i, size;
+
+        size = WideCharToMultiByte(locinfo->lc_codepage, WC_NO_BEST_FIT_CHARS,
+                *wcstr, 1, buf, 3, NULL, &used_default);
+        if(used_default)
+            return -1;
+        if(tmp+size > count)
+            return tmp;
+
+        for(i=0; i<size; i++)
+            mbstr[tmp++] = buf[i];
+        (*wcstr)++;
+    }
+
+    if(tmp < count) {
+        mbstr[tmp] = '\0';
+        *wcstr = NULL;
+    }
+    return tmp;
+}
+
+/*********************************************************************
+ *		_wcstombs_l (MSVCRT.@)
+ */
+size_t CDECL _wcstombs_l(char *mbstr, const wchar_t *wcstr, size_t count, _locale_t locale)
+{
+    return wcsrtombs_l(mbstr, &wcstr, count, locale);
+}
+
+/*********************************************************************
+ *		wcstombs (MSVCRT.@)
+ */
 size_t CDECL wcstombs(char *mbstr, const wchar_t *wcstr, size_t count)
 {
-    BOOL bUsedDefaultChar;
-    char* p = mbstr;
-    int nResult;
-
-    /* Does the caller query for output buffer size? */
-    if(!mbstr)
-    {
-        int nLength;
-
-        /* If we currently use the "C" locale, the length of the input string is returned (verified by tests under WinXP SP2) */
-        if(MSVCRT_current_lc_all[0] == 'C' && !MSVCRT_current_lc_all[1])
-            return wcslen(wcstr);
-
-        /* Otherwise check the length each character needs and build a final return value out of this */
-        count = wcslen(wcstr);
-        nLength = 0;
-
-        while((int)(--count) >= 0 && *wcstr)
-        {
-            /* Get the length of this character */
-            nResult = wctomb(NULL, *wcstr++);
-
-            /* If this character is not convertible in the current locale, the end result will be -1 */
-            if(nResult == -1)
-                return -1;
-
-            nLength += nResult;
-        }
-
-        /* Return the final length */
-        return nLength;
-    }
-
-    /* Convert the string then */
-    bUsedDefaultChar = FALSE;
-
-    for(;;)
-    {
-        char chMultiByte[MB_LEN_MAX];
-        UINT uLength;
-
-        /* Are we at the terminating null character? */
-        if(!*wcstr)
-        {
-            /* Set the null character, but don't increment the pointer as the returned length never includes the terminating null character */
-            *p = 0;
-            break;
-        }
-
-        /* Convert this character into the temporary chMultiByte variable */
-        ZeroMemory(chMultiByte, MB_LEN_MAX);
-        nResult = wctomb(chMultiByte, *wcstr++);
-
-        /* Check if this was an invalid character */
-        if(nResult == -1)
-            bUsedDefaultChar = TRUE;
-
-        /* If we got no character, stop the conversion process here */
-        if(!chMultiByte[0])
-            break;
-
-        /* Determine whether this is a double-byte or a single-byte character */
-        if(chMultiByte[1])
-            uLength = 2;
-        else
-            uLength = 1;
-
-        /* Decrease 'count' by the character length and check if the buffer can still hold the full character */
-        count -= uLength;
-
-        if((int)count < 0)
-            break;
-
-        /* It can, so copy it and move the pointer forward */
-        memcpy(p, chMultiByte, uLength);
-        p += uLength;
-    }
-
-    if(bUsedDefaultChar)
-        return -1;
-
-    /* Return the length in bytes of the copied characters (without the terminating null character) */
-    return p - mbstr;
+    return wcsrtombs_l(mbstr, &wcstr, count, NULL);
 }
 #endif
 

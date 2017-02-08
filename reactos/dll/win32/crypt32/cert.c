@@ -17,17 +17,21 @@
  *
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <assert.h>
 #include <stdarg.h>
 
 #define NONAMELESSUNION
-#include "windef.h"
-#include "winbase.h"
-#include "wincrypt.h"
-#include "winnls.h"
-#include "rpc.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wincrypt.h>
+//#include "winnls.h"
+#include <rpc.h>
+#include <wine/debug.h>
+#include <wine/unicode.h>
 #include "crypt32_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
@@ -842,7 +846,7 @@ static BOOL container_matches_cert(PCCERT_CONTEXT pCert, LPCSTR container,
      * keyProvInfo->pwszContainerName to be NULL or a heap-allocated container
      * name.
      */
-    memcpy(&copy, keyProvInfo, sizeof(copy));
+    copy = *keyProvInfo;
     copy.pwszContainerName = containerW;
     matches = key_prov_info_matches_cert(pCert, &copy);
     if (matches)
@@ -2216,9 +2220,7 @@ BOOL WINAPI CryptSignAndEncodeCertificate(HCRYPTPROV_OR_NCRYPT_KEY_HANDLE hCrypt
 
                             info.ToBeSigned.cbData = encodedSize;
                             info.ToBeSigned.pbData = encoded;
-                            memcpy(&info.SignatureAlgorithm,
-                             pSignatureAlgorithm,
-                             sizeof(info.SignatureAlgorithm));
+                            info.SignatureAlgorithm = *pSignatureAlgorithm;
                             info.Signature.cbData = hashSize;
                             info.Signature.pbData = hash;
                             info.Signature.cUnusedBits = 0;
@@ -2239,8 +2241,10 @@ BOOL WINAPI CryptVerifyCertificateSignature(HCRYPTPROV_LEGACY hCryptProv,
  DWORD dwCertEncodingType, const BYTE *pbEncoded, DWORD cbEncoded,
  PCERT_PUBLIC_KEY_INFO pPublicKey)
 {
+    CRYPT_DATA_BLOB blob = { cbEncoded, (BYTE *)pbEncoded };
+
     return CryptVerifyCertificateSignatureEx(hCryptProv, dwCertEncodingType,
-     CRYPT_VERIFY_CERT_SIGN_SUBJECT_BLOB, (void *)pbEncoded,
+     CRYPT_VERIFY_CERT_SIGN_SUBJECT_BLOB, &blob,
      CRYPT_VERIFY_CERT_SIGN_ISSUER_PUBKEY, pPublicKey, 0, NULL);
 }
 
@@ -2984,8 +2988,7 @@ static PCCERT_CONTEXT CRYPT_CreateSignedCert(const CRYPT_DER_BLOB *blob,
 
             signedInfo.ToBeSigned.cbData = blob->cbData;
             signedInfo.ToBeSigned.pbData = blob->pbData;
-            memcpy(&signedInfo.SignatureAlgorithm, sigAlgo,
-             sizeof(signedInfo.SignatureAlgorithm));
+            signedInfo.SignatureAlgorithm = *sigAlgo;
             signedInfo.Signature.cbData = sigSize;
             signedInfo.Signature.pbData = sig;
             signedInfo.Signature.cUnusedBits = 0;
@@ -3036,8 +3039,7 @@ static void CRYPT_MakeCertInfo(PCERT_INFO info, const CRYPT_DATA_BLOB *pSerialNu
     info->SerialNumber.cbData = pSerialNumber->cbData;
     info->SerialNumber.pbData = pSerialNumber->pbData;
     if (pSignatureAlgorithm)
-        memcpy(&info->SignatureAlgorithm, pSignatureAlgorithm,
-         sizeof(info->SignatureAlgorithm));
+        info->SignatureAlgorithm = *pSignatureAlgorithm;
     else
     {
         info->SignatureAlgorithm.pszObjId = oid;
@@ -3064,8 +3066,7 @@ static void CRYPT_MakeCertInfo(PCERT_INFO info, const CRYPT_DATA_BLOB *pSerialNu
     }
     info->Subject.cbData = pSubjectIssuerBlob->cbData;
     info->Subject.pbData = pSubjectIssuerBlob->pbData;
-    memcpy(&info->SubjectPublicKeyInfo, pubKey,
-     sizeof(info->SubjectPublicKeyInfo));
+    info->SubjectPublicKeyInfo = *pubKey;
     if (pExtensions)
     {
         info->cExtension = pExtensions->cExtension;
@@ -3137,7 +3138,7 @@ PCCERT_CONTEXT WINAPI CertCreateSelfSignCertificate(HCRYPTPROV_OR_NCRYPT_KEY_HAN
     PCCERT_CONTEXT context = NULL;
     BOOL ret, releaseContext = FALSE;
     PCERT_PUBLIC_KEY_INFO pubKey = NULL;
-    DWORD pubKeySize = 0,dwKeySpec = AT_SIGNATURE;
+    DWORD pubKeySize = 0, dwKeySpec;
 
     TRACE("(%08lx, %p, %08x, %p, %p, %p, %p, %p)\n", hProv,
      pSubjectIssuerBlob, dwFlags, pKeyProvInfo, pSignatureAlgorithm, pStartTime,
@@ -3149,6 +3150,7 @@ PCCERT_CONTEXT WINAPI CertCreateSelfSignCertificate(HCRYPTPROV_OR_NCRYPT_KEY_HAN
         return NULL;
     }
 
+    dwKeySpec = pKeyProvInfo ? pKeyProvInfo->dwKeySpec : AT_SIGNATURE;
     if (!hProv)
     {
         if (!pKeyProvInfo)
@@ -3179,7 +3181,6 @@ PCCERT_CONTEXT WINAPI CertCreateSelfSignCertificate(HCRYPTPROV_OR_NCRYPT_KEY_HAN
                 if (!ret)
                     return NULL;
 	    }
-            dwKeySpec = pKeyProvInfo->dwKeySpec;
             /* check if the key is here */
             ret = CryptGetUserKey(hProv,dwKeySpec,&hKey);
             if(!ret)
@@ -3199,14 +3200,11 @@ PCCERT_CONTEXT WINAPI CertCreateSelfSignCertificate(HCRYPTPROV_OR_NCRYPT_KEY_HAN
             releaseContext = TRUE;
         }
     }
-    else if (pKeyProvInfo)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return NULL;
-    }
 
-    CryptExportPublicKeyInfo(hProv, dwKeySpec, X509_ASN_ENCODING, NULL,
+    ret = CryptExportPublicKeyInfo(hProv, dwKeySpec, X509_ASN_ENCODING, NULL,
      &pubKeySize);
+    if (!ret)
+        goto end;
     pubKey = CryptMemAlloc(pubKeySize);
     if (pubKey)
     {
@@ -3240,6 +3238,7 @@ PCCERT_CONTEXT WINAPI CertCreateSelfSignCertificate(HCRYPTPROV_OR_NCRYPT_KEY_HAN
         }
         CryptMemFree(pubKey);
     }
+end:
     if (releaseContext)
         CryptReleaseContext(hProv, 0);
     return context;

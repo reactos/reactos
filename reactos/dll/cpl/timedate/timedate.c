@@ -8,7 +8,7 @@
  *
  */
 
-#include <timedate.h>
+#include "timedate.h"
 
 #define NUM_APPLETS 1
 

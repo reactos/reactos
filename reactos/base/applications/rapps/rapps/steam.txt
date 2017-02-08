@@ -20,14 +20,20 @@ Description = La plataforma de juego STEAM usada por muchos juegos actuales.
 [Section.040c]
 Description = La plateforme de jeu STEAM utilisée par beaucoup de jeux de nos jours.
 
+[Section.0413]
+Description = Het STEAM platform, veel gebruikt voor spelletjes.
+
 [Section.0415]
 Description = STEAM - platforma, którą używa obecnie wiele gier.
 
 [Section.0418]
 Licence = Gratuită
 Description = Platforma de joc STEAM, utilizată de multe jocuri în zilele de astăzi.
-Size = 1.53Mo
+Size = 1,53 Mo
 URLSite = http://store.steampowered.com/?l=romanian
 
 [Section.0422]
 Description = Ігрова платформа, що використовується багатьма іграми.
+
+[Section.0813]
+Description = Het STEAM platform, veel gebruikt voor spelletjes.

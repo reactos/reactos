@@ -1,4 +1,4 @@
-#include "precomp.h"
+#include <precomp.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -572,7 +572,7 @@ SetTextAlign(HDC hdc,
              UINT fMode)
 {
     PDC_ATTR Dc_Attr;
-    INT OldMode = 0;
+    INT OldMode;
 #if 0
     if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
     {
@@ -593,17 +593,16 @@ SetTextAlign(HDC hdc,
                       }
               }
 #endif
-              if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return OldMode;
+              if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return GDI_ERROR;
 
     OldMode = Dc_Attr->lTextAlign;
     Dc_Attr->lTextAlign = fMode; // Raw
     if (Dc_Attr->dwLayout & LAYOUT_RTL)
     {
-        if(!(fMode & TA_CENTER))  fMode |= TA_RIGHT;
+        if ((fMode & TA_CENTER) != TA_CENTER) fMode ^= TA_RIGHT;
     }
-    Dc_Attr->flTextAlign = fMode & (TA_BASELINE|TA_UPDATECP|TA_CENTER);
+    Dc_Attr->flTextAlign = fMode & TA_MASK;
     return OldMode;
-
 }
 
 

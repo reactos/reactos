@@ -21,17 +21,16 @@
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
 #define NTOS_MODE_USER
 #include <ndk/pofuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/setypes.h>
 #include <powrprof.h>
-#include <wchar.h>
-#include <stdio.h>
-
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(powrprof);
 

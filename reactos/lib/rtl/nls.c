@@ -210,11 +210,9 @@ RtlInitNlsTables(IN PUSHORT AnsiTableBase,
          CaseTableBase == NULL)
       return;
 
-   RtlInitCodePageTable (AnsiTableBase,
-                         &NlsTable->AnsiTableInfo);
+   RtlInitCodePageTable(AnsiTableBase, &NlsTable->AnsiTableInfo);
 
-   RtlInitCodePageTable (OemTableBase,
-                         &NlsTable->OemTableInfo);
+   RtlInitCodePageTable(OemTableBase, &NlsTable->OemTableInfo);
 
    NlsTable->UpperCaseTable = (PUSHORT)CaseTableBase + 2;
    NlsTable->LowerCaseTable = (PUSHORT)CaseTableBase + *((PUSHORT)CaseTableBase + 1) + 2;

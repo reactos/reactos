@@ -1,5 +1,5 @@
 /*
- * Top level resource file for oleaut32
+ * Resources for oleaut32
  *
  * Copyright 2003 Jon Griffiths
  *
@@ -18,11 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "resource.h"
-
-#include "version.rc"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "resource.h"
 
 #ifdef LANGUAGE_BG_BG
     #include "oleaut32_Bg.rc"
@@ -83,6 +81,9 @@
 #ifdef LANGUAGE_DE_DE
     #include "oleaut32_De.rc"
 #endif
+#ifdef LANGUAGE_HE_IL
+    #include "oleaut32_He.rc"
+#endif
 #ifdef LANGUAGE_LT_LT
     #include "oleaut32_Lt.rc"
 #endif
@@ -108,3 +109,17 @@
  *  Turkish (at least) are localised in XP Home.
  *  I expect Chinese etc are localised in Asian Editions also.
  */
+
+/* @makedep: oleaut32.rgs */
+1 WINE_REGISTRY oleaut32.rgs
+
+2 WINE_REGISTRY oleaut32_oaidl.rgs
+3 WINE_REGISTRY oleaut32_ocidl.rgs
+
+#define WINE_FILEDESCRIPTION_STR "Wine OLE dll"
+#define WINE_FILENAME_STR "oleaut32.dll"
+#define WINE_FILEVERSION 6, 0, 6001, 18000 /* version from Vista SP1 */
+#define WINE_FILEVERSION_STR "6.0.6001.18000"
+#define WINE_EXTRAVALUES VALUE "OLESelfRegister",""
+
+#include <wine/wine_common_ver.rc>

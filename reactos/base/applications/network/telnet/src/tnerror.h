@@ -1,7 +1,14 @@
 #pragma once
 
 #ifndef __WINDOWS_H
-#include <windows.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <wincon.h>
+#define _INC_WINDOWS
+#include <winsock.h>
 #endif
 
 #include "tnmsg.h"

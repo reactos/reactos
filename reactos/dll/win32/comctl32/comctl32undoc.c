@@ -26,32 +26,36 @@
  *     COMCTL32.DLL (internally).
  *
  */
-#include "config.h"
-#include "wine/port.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include <stdarg.h>
-#include <string.h>
-#include <ctype.h>
-#include <limits.h>
+#include <config.h>
+//#include "wine/port.h"
+
+//#include <stdarg.h>
+//#include <string.h>
+//#include <ctype.h>
+//#include <limits.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "winreg.h"
-#include "commctrl.h"
-#include "objbase.h"
-#include "winerror.h"
+#include <windef.h>
+//#include "winbase.h"
+//#include "wingdi.h"
+//#include "winuser.h"
+//#include "winnls.h"
+#include <winreg.h>
+//#include "commctrl.h"
+//#include "objbase.h"
+//#include "winerror.h"
 
-#include "wine/unicode.h"
+#include <wine/unicode.h>
 #include "comctl32.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
 
@@ -143,8 +147,8 @@ DWORD WINAPI GetSize (LPVOID lpMem)
  * MRU-Functions  {COMCTL32}
  *
  * NOTES
- * The MRU-Api is a set of functions to manipulate lists of M.R.U. (Most Recently
- * Used) items. It is an undocumented Api that is used (at least) by the shell
+ * The MRU-API is a set of functions to manipulate lists of M.R.U. (Most Recently
+ * Used) items. It is an undocumented API that is used (at least) by the shell
  * and explorer to implement their recent documents feature.
  *
  * Since these functions are undocumented, they are unsupported by MS and

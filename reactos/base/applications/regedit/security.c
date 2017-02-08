@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <regedit.h>
+#include "regedit.h"
 
 #define INITGUID
 #include <guiddef.h>
@@ -336,18 +336,18 @@ static const struct ifaceISecurityObjectTypeInfoVbtl vtblISecurityObjectTypeInfo
  ******************************************************************************/
 
 static SI_ACCESS RegAccess[] = {
-    {&GUID_NULL, KEY_ALL_ACCESS,         (LPWSTR)MAKEINTRESOURCE(IDS_ACCESS_FULLCONTROL),      SI_ACCESS_GENERAL | SI_ACCESS_SPECIFIC},
-    {&GUID_NULL, KEY_READ,               (LPWSTR)MAKEINTRESOURCE(IDS_ACCESS_READ),             SI_ACCESS_GENERAL},
-    {&GUID_NULL, KEY_QUERY_VALUE,        (LPWSTR)MAKEINTRESOURCE(IDS_ACCESS_QUERYVALUE),       SI_ACCESS_SPECIFIC},
-    {&GUID_NULL, KEY_SET_VALUE,          (LPWSTR)MAKEINTRESOURCE(IDS_ACCESS_SETVALUE),         SI_ACCESS_SPECIFIC},
-    {&GUID_NULL, KEY_CREATE_SUB_KEY,     (LPWSTR)MAKEINTRESOURCE(IDS_ACCESS_CREATESUBKEY),     SI_ACCESS_SPECIFIC},
-    {&GUID_NULL, KEY_ENUMERATE_SUB_KEYS, (LPWSTR)MAKEINTRESOURCE(IDS_ACCESS_ENUMERATESUBKEYS), SI_ACCESS_SPECIFIC},
-    {&GUID_NULL, KEY_NOTIFY,             (LPWSTR)MAKEINTRESOURCE(IDS_ACCESS_NOTIFY),           SI_ACCESS_SPECIFIC},
-    {&GUID_NULL, KEY_CREATE_LINK,        (LPWSTR)MAKEINTRESOURCE(IDS_ACCESS_CREATELINK),       SI_ACCESS_SPECIFIC},
-    {&GUID_NULL, DELETE,                 (LPWSTR)MAKEINTRESOURCE(IDS_ACCESS_DELETE),           SI_ACCESS_SPECIFIC},
-    {&GUID_NULL, WRITE_DAC,              (LPWSTR)MAKEINTRESOURCE(IDS_ACCESS_WRITEDAC),         SI_ACCESS_SPECIFIC},
-    {&GUID_NULL, WRITE_OWNER,            (LPWSTR)MAKEINTRESOURCE(IDS_ACCESS_WRITEOWNER),       SI_ACCESS_SPECIFIC},
-    {&GUID_NULL, READ_CONTROL,           (LPWSTR)MAKEINTRESOURCE(IDS_ACCESS_READCONTROL),      SI_ACCESS_SPECIFIC},
+    {&GUID_NULL, KEY_ALL_ACCESS,         MAKEINTRESOURCEW(IDS_ACCESS_FULLCONTROL),      SI_ACCESS_GENERAL | SI_ACCESS_SPECIFIC},
+    {&GUID_NULL, KEY_READ,               MAKEINTRESOURCEW(IDS_ACCESS_READ),             SI_ACCESS_GENERAL},
+    {&GUID_NULL, KEY_QUERY_VALUE,        MAKEINTRESOURCEW(IDS_ACCESS_QUERYVALUE),       SI_ACCESS_SPECIFIC},
+    {&GUID_NULL, KEY_SET_VALUE,          MAKEINTRESOURCEW(IDS_ACCESS_SETVALUE),         SI_ACCESS_SPECIFIC},
+    {&GUID_NULL, KEY_CREATE_SUB_KEY,     MAKEINTRESOURCEW(IDS_ACCESS_CREATESUBKEY),     SI_ACCESS_SPECIFIC},
+    {&GUID_NULL, KEY_ENUMERATE_SUB_KEYS, MAKEINTRESOURCEW(IDS_ACCESS_ENUMERATESUBKEYS), SI_ACCESS_SPECIFIC},
+    {&GUID_NULL, KEY_NOTIFY,             MAKEINTRESOURCEW(IDS_ACCESS_NOTIFY),           SI_ACCESS_SPECIFIC},
+    {&GUID_NULL, KEY_CREATE_LINK,        MAKEINTRESOURCEW(IDS_ACCESS_CREATELINK),       SI_ACCESS_SPECIFIC},
+    {&GUID_NULL, DELETE,                 MAKEINTRESOURCEW(IDS_ACCESS_DELETE),           SI_ACCESS_SPECIFIC},
+    {&GUID_NULL, WRITE_DAC,              MAKEINTRESOURCEW(IDS_ACCESS_WRITEDAC),         SI_ACCESS_SPECIFIC},
+    {&GUID_NULL, WRITE_OWNER,            MAKEINTRESOURCEW(IDS_ACCESS_WRITEOWNER),       SI_ACCESS_SPECIFIC},
+    {&GUID_NULL, READ_CONTROL,           MAKEINTRESOURCEW(IDS_ACCESS_READCONTROL),      SI_ACCESS_SPECIFIC},
 };
 
 static const DWORD RegDefaultAccess = 1; /* KEY_READ */
@@ -360,9 +360,9 @@ static GENERIC_MAPPING RegAccessMasks = {
 };
 
 static SI_INHERIT_TYPE RegInheritTypes[] = {
-    {&GUID_NULL, 0,                                        (LPWSTR)MAKEINTRESOURCE(IDS_INHERIT_THISKEYONLY)},
-    {&GUID_NULL, CONTAINER_INHERIT_ACE,                    (LPWSTR)MAKEINTRESOURCE(IDS_INHERIT_THISKEYANDSUBKEYS)},
-    {&GUID_NULL, INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE, (LPWSTR)MAKEINTRESOURCE(IDS_INHERIT_SUBKEYSONLY)},
+    {&GUID_NULL, 0,                                        (LPWSTR)MAKEINTRESOURCEW(IDS_INHERIT_THISKEYONLY)},
+    {&GUID_NULL, CONTAINER_INHERIT_ACE,                    (LPWSTR)MAKEINTRESOURCEW(IDS_INHERIT_THISKEYANDSUBKEYS)},
+    {&GUID_NULL, INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE, (LPWSTR)MAKEINTRESOURCEW(IDS_INHERIT_SUBKEYSONLY)},
 };
 
 static HRESULT STDMETHODCALLTYPE
@@ -414,14 +414,14 @@ ISecurityInformation_fnGetSecurity(struct ISecurityInformation *this,
     PCRegKeySecurity obj = impl_from_ISecurityInformation(this);
     LONG ErrorCode;
 
-    ErrorCode = GetNamedSecurityInfo(obj->szRegKey,
-                                     SE_REGISTRY_KEY,
-                                     RequestedInformation,
-                                     NULL,
-                                     NULL,
-                                     NULL,
-                                     NULL,
-                                     ppSecurityDescriptor);
+    ErrorCode = GetNamedSecurityInfoW(obj->szRegKey,
+                                      SE_REGISTRY_KEY,
+                                      RequestedInformation,
+                                      NULL,
+                                      NULL,
+                                      NULL,
+                                      NULL,
+                                      ppSecurityDescriptor);
 
     return HRESULT_FROM_WIN32(ErrorCode);
 }
@@ -677,7 +677,7 @@ ISecurityObjectTypeInfo_fnGetInheritSource(struct ISecurityObjectTypeInfo *this,
     PINHERITED_FROM pif, pif2;
     SIZE_T pifSize;
     DWORD ErrorCode, i;
-    LPTSTR lpBuf;
+    LPWSTR lpBuf;
 
     pifSize = pACL->AceCount * sizeof(INHERITED_FROM);
     pif = (PINHERITED_FROM)HeapAlloc(GetProcessHeap(),
@@ -688,16 +688,16 @@ ISecurityObjectTypeInfo_fnGetInheritSource(struct ISecurityObjectTypeInfo *this,
         return E_OUTOFMEMORY;
     }
 
-    ErrorCode = GetInheritanceSource(obj->szRegKey,
-                                     SE_REGISTRY_KEY,
-                                     si,
-                                     (obj->ObjectInfo.dwFlags & SI_CONTAINER) != 0,
-                                     NULL,
-                                     0,
-                                     pACL,
-                                     NULL,
-                                     &RegAccessMasks,
-                                     pif);
+    ErrorCode = GetInheritanceSourceW(obj->szRegKey,
+                                      SE_REGISTRY_KEY,
+                                      si,
+                                      (obj->ObjectInfo.dwFlags & SI_CONTAINER) != 0,
+                                      NULL,
+                                      0,
+                                      pACL,
+                                      NULL,
+                                      &RegAccessMasks,
+                                      pif);
 
     if (ErrorCode == ERROR_SUCCESS)
     {
@@ -708,7 +708,7 @@ ISecurityObjectTypeInfo_fnGetInheritSource(struct ISecurityObjectTypeInfo *this,
         {
             if (pif[i].AncestorName != NULL)
             {
-                pifSize += (_tcslen(pif[i].AncestorName) + 1) * sizeof(TCHAR);
+                pifSize += (wcslen(pif[i].AncestorName) + 1) * sizeof(WCHAR);
             }
         }
 
@@ -722,7 +722,7 @@ ISecurityObjectTypeInfo_fnGetInheritSource(struct ISecurityObjectTypeInfo *this,
         }
 
         /* copy the array and strings to the buffer */
-        lpBuf = (LPTSTR)((ULONG_PTR)pif2 + (pACL->AceCount * sizeof(INHERITED_FROM)));
+        lpBuf = (LPWSTR)((ULONG_PTR)pif2 + (pACL->AceCount * sizeof(INHERITED_FROM)));
         for (i = 0;
              i < pACL->AceCount;
              i++)
@@ -731,9 +731,9 @@ ISecurityObjectTypeInfo_fnGetInheritSource(struct ISecurityObjectTypeInfo *this,
             if (pif[i].AncestorName != NULL)
             {
                 pif2[i].AncestorName = lpBuf;
-                _tcscpy(lpBuf,
+                wcscpy(lpBuf,
                         pif[i].AncestorName);
-                lpBuf += _tcslen(pif[i].AncestorName) + 1;
+                lpBuf += wcslen(pif[i].AncestorName) + 1;
             }
             else
                 pif2[i].AncestorName = NULL;
@@ -759,7 +759,7 @@ Cleanup:
  ******************************************************************************/
 
 static PCRegKeySecurity
-CRegKeySecurity_fnConstructor(LPTSTR lpRegKey,
+CRegKeySecurity_fnConstructor(LPWSTR lpRegKey,
                               HKEY hRootKey,
                               SI_OBJECT_INFO *ObjectInfo,
                               BOOL *Btn)
@@ -769,7 +769,7 @@ CRegKeySecurity_fnConstructor(LPTSTR lpRegKey,
     obj = (PCRegKeySecurity)HeapAlloc(GetProcessHeap(),
                                       HEAP_ZERO_MEMORY,
                                       FIELD_OFFSET(CRegKeySecurity,
-                                                   szRegKey[_tcslen(lpRegKey) + 1]));
+                                                   szRegKey[wcslen(lpRegKey) + 1]));
     if (obj != NULL)
     {
         obj->ref = 1;
@@ -782,7 +782,7 @@ CRegKeySecurity_fnConstructor(LPTSTR lpRegKey,
         obj->ObjectInfo = *ObjectInfo;
         obj->Btn = Btn;
         obj->hRootKey = hRootKey;
-        _tcscpy(obj->szRegKey,
+        wcscpy(obj->szRegKey,
                 lpRegKey);
     }
     else
@@ -798,7 +798,7 @@ CRegKeySecurity_fnConstructor(LPTSTR lpRegKey,
 typedef struct _CHANGE_CONTEXT
 {
   HKEY hKey;
-  LPTSTR KeyString;
+  LPWSTR KeyString;
 } CHANGE_CONTEXT, *PCHANGE_CONTEXT;
 
 typedef BOOL (WINAPI *PEDITSECURITY)(HWND hwndOwner,
@@ -810,7 +810,7 @@ static HMODULE hAclUiDll;
 BOOL
 InitializeAclUiDll(VOID)
 {
-    if (!(hAclUiDll = LoadLibrary(_T("aclui.dll"))))
+    if (!(hAclUiDll = LoadLibraryW(L"aclui.dll")))
     {
         return FALSE;
     }
@@ -838,13 +838,12 @@ UnloadAclUiDll(VOID)
 BOOL
 RegKeyEditPermissions(HWND hWndOwner,
                       HKEY hKey,
-                      LPCTSTR lpMachine,
-                      LPCTSTR lpKeyName)
+                      LPCWSTR lpMachine,
+                      LPCWSTR lpKeyName)
 {
     BOOL Result = FALSE;
-    LPWSTR Machine = NULL, KeyName = NULL;
-    LPCTSTR lphKey = NULL;
-    LPTSTR lpKeyPath = NULL;
+    LPCWSTR lphKey = NULL;
+    LPWSTR lpKeyPath = NULL;
     PCRegKeySecurity RegKeySecurity;
     SI_OBJECT_INFO ObjectInfo;
     size_t lnMachine = 0, lnKeyName = 0;
@@ -854,130 +853,72 @@ RegKeyEditPermissions(HWND hWndOwner,
         return FALSE;
     }
 
-#ifndef UNICODE
-    /* aclui.dll only accepts unicode strings, convert them */
     if (lpMachine != NULL)
-    {
-        lnMachine = lstrlen(lpMachine);
-        if (!(Machine = HeapAlloc(GetProcessHeap(),
-                                  0,
-                                  (lnMachine + 1) * sizeof(WCHAR))))
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto Cleanup;
-        }
-
-        if (lnMachine > 0)
-        {
-            MultiByteToWideChar(CP_ACP,
-                                0,
-                                lpMachine,
-                                -1,
-                                Machine,
-                                lnMachine + 1);
-        }
-        else
-            *Machine = L'\0';
-    }
-    else
-        Machine = NULL;
-
-    if (lpKeyName != NULL)
-    {
-        lnKeyName = lstrlen(lpKeyName);
-        if (!(KeyName = HeapAlloc(GetProcessHeap(),
-                                  0,
-                                  (lnKeyName + 1) * sizeof(WCHAR))))
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto Cleanup;
-        }
-
-        if (lnKeyName > 0)
-        {
-            MultiByteToWideChar(CP_ACP,
-                                0,
-                                lpKeyName,
-                                -1,
-                                KeyName,
-                                lnKeyName + 1);
-        }
-        else
-            *KeyName = L'\0';
-    }
-    else
-        KeyName = NULL;
-#else
-    Machine = (LPWSTR)lpMachine;
-    KeyName = (LPWSTR)lpKeyName;
-
-    if (Machine != NULL)
         lnMachine = wcslen(lpMachine);
-    if (KeyName != NULL)
-        lnKeyName = wcslen(KeyName);
-#endif
+    if (lpKeyName != NULL)
+        lnKeyName = wcslen(lpKeyName);
 
     /* build registry path */
     if (lpMachine != NULL &&
-        (lpMachine[0] == _T('\0') ||
-         (lpMachine[0] == _T('.') && lpMachine[1] == _T('.'))))
+        (lpMachine[0] == L'\0' ||
+         (lpMachine[0] == L'.' && lpMachine[1] == L'.')))
     {
         lnMachine = 0;
     }
 
     if (hKey == HKEY_CLASSES_ROOT)
-        lphKey = TEXT("CLASSES_ROOT");
+        lphKey = L"CLASSES_ROOT";
     else if (hKey == HKEY_CURRENT_USER)
-        lphKey = TEXT("CURRENT_USER");
+        lphKey = L"CURRENT_USER";
     else if (hKey == HKEY_LOCAL_MACHINE)
-        lphKey = TEXT("MACHINE");
+        lphKey = L"MACHINE";
     else if (hKey == HKEY_USERS)
-        lphKey = TEXT("USERS");
+        lphKey = L"USERS";
     else if (hKey == HKEY_CURRENT_CONFIG)
-        lphKey = TEXT("CONFIG");
+        lphKey = L"CONFIG";
     else
     goto Cleanup;
 
     lpKeyPath = HeapAlloc(GetProcessHeap(),
                           0,
-                          (2 + lnMachine + 1 + _tcslen(lphKey) + 1 + lnKeyName) * sizeof(TCHAR));
+                          (2 + lnMachine + 1 + wcslen(lphKey) + 1 + lnKeyName) * sizeof(WCHAR));
     if (lpKeyPath == NULL)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         goto Cleanup;
     }
-    lpKeyPath[0] = _T('\0');
+    lpKeyPath[0] = L'\0';
 
     if (lnMachine != 0)
     {
-        _tcscat(lpKeyPath,
-                _T("\\\\"));
-        _tcscat(lpKeyPath,
-                lpMachine);
-        _tcscat(lpKeyPath,
-                _T("\\"));
+        wcscat(lpKeyPath,
+               L"\\\\");
+        wcscat(lpKeyPath,
+               lpMachine);
+        wcscat(lpKeyPath,
+               L"\\");
     }
 
-    _tcscat(lpKeyPath,
-            lphKey);
-    if (lpKeyName != NULL && lpKeyName[0] != _T('\0'))
+    wcscat(lpKeyPath,
+           lphKey);
+    if (lpKeyName != NULL && lpKeyName[0] != L'\0')
     {
-        if (lpKeyName[0] != _T('\\'))
+        if (lpKeyName[0] != L'\\')
         {
-            _tcscat(lpKeyPath,
-                    _T("\\"));
+            wcscat(lpKeyPath,
+                    L"\\");
         }
 
-        _tcscat(lpKeyPath,
-                lpKeyName);
+        wcscat(lpKeyPath,
+               lpKeyName);
     }
 
     ObjectInfo.dwFlags = SI_EDIT_ALL  | SI_ADVANCED | SI_CONTAINER | SI_EDIT_EFFECTIVE | SI_EDIT_PERMS |
                              SI_OWNER_RECURSE | SI_RESET_DACL_TREE | SI_RESET_SACL_TREE;
     ObjectInfo.hInstance = hInst;
-    ObjectInfo.pszServerName = Machine;
-    ObjectInfo.pszObjectName = KeyName; /* FIXME */
-    ObjectInfo.pszPageTitle = KeyName; /* FIXME */
+    ObjectInfo.pszServerName = (LPWSTR)lpMachine;
+    ObjectInfo.pszObjectName = (LPWSTR)lpKeyName; /* FIXME */
+    ObjectInfo.pszPageTitle = (LPWSTR)lpKeyName; /* FIXME */
 
     if (!(RegKeySecurity = CRegKeySecurity_fnConstructor(lpKeyPath,
                                                          hKey,
@@ -996,22 +937,6 @@ RegKeyEditPermissions(HWND hWndOwner,
     CRegKeySecurity_fnRelease(RegKeySecurity);
 
 Cleanup:
-#ifndef UNICODE
-    if (Machine != NULL)
-    {
-        HeapFree(GetProcessHeap(),
-                 0,
-                 Machine);
-    }
-
-    if (KeyName != NULL)
-    {
-        HeapFree(GetProcessHeap(),
-                 0,
-                 KeyName);
-    }
-#endif
-
     if (lpKeyPath != NULL)
     {
         HeapFree(GetProcessHeap(),

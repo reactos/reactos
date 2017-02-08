@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 typedef struct _PROPSHEET_INFO
 {
@@ -38,7 +38,7 @@ UpdateTaskbarBitmap(PPROPSHEET_INFO pPropInfo)
     HWND hwndBitmap;
     BOOL bLock, bHide, bGroup, bShowQL;
     LPTSTR lpImageName = NULL;
-    BOOL bRet = FALSE; 
+    BOOL bRet = FALSE;
 
     hwndLock = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_LOCK);
     hwndHide = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_HIDE);
@@ -140,7 +140,7 @@ TaskbarPageProc(HWND hwndDlg,
             break;
 
         case WM_COMMAND:
-            switch(LOWORD(wParam))
+            switch (LOWORD(wParam))
             {
                 case IDC_TASKBARPROP_LOCK:
                 case IDC_TASKBARPROP_HIDE:
@@ -161,7 +161,7 @@ TaskbarPageProc(HWND hwndDlg,
         {
             LPNMHDR pnmh = (LPNMHDR)lParam;
 
-            switch(pnmh->code)
+            switch (pnmh->code)
             {
                 case PSN_SETACTIVE:
                     break;
@@ -188,8 +188,59 @@ HandleDefaultMessage:
     return FALSE;
 }
 
+static INT_PTR CALLBACK
+AdvancedSettingsPageProc(HWND hwndDlg,
+                         UINT uMsg,
+                         WPARAM wParam,
+                         LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            CheckDlgButton(hwndDlg, IDC_TASKBARPROP_SECONDS, AdvancedSettings.bShowSeconds ? BST_CHECKED : BST_UNCHECKED);
+            break;
 
-INT_PTR CALLBACK
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDC_TASKBARPROP_SECONDS:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
+            }
+            break;
+
+        case WM_NOTIFY:
+        {
+            LPNMHDR pnmh = (LPNMHDR)lParam;
+
+            switch (pnmh->code)
+            {
+                case PSN_SETACTIVE:
+                    break;
+
+                case PSN_APPLY:
+                    AdvancedSettings.bShowSeconds = IsDlgButtonChecked(hwndDlg, IDC_TASKBARPROP_SECONDS);
+                    SaveSettingDword(szAdvancedSettingsKey, TEXT("ShowSeconds"), AdvancedSettings.bShowSeconds);
+                    break;
+            }
+
+            break;
+        }
+
+        case WM_DESTROY:
+            break;
+
+        default:
+            return FALSE;
+    }
+
+    return FALSE;
+}
+
+static INT_PTR CALLBACK
 StartMenuPageProc(HWND hwndDlg,
                   UINT uMsg,
                   WPARAM wParam,
@@ -207,7 +258,7 @@ StartMenuPageProc(HWND hwndDlg,
         {
             LPNMHDR pnmh = (LPNMHDR)lParam;
 
-            switch(pnmh->code)
+            switch (pnmh->code)
             {
                 case PSN_SETACTIVE:
                     break;
@@ -224,7 +275,7 @@ StartMenuPageProc(HWND hwndDlg,
 }
 
 
-INT_PTR CALLBACK
+static INT_PTR CALLBACK
 NotificationPageProc(HWND hwndDlg,
                      UINT uMsg,
                      WPARAM wParam,
@@ -242,7 +293,7 @@ NotificationPageProc(HWND hwndDlg,
         {
             LPNMHDR pnmh = (LPNMHDR)lParam;
 
-            switch(pnmh->code)
+            switch (pnmh->code)
             {
                 case PSN_SETACTIVE:
                     break;
@@ -259,7 +310,7 @@ NotificationPageProc(HWND hwndDlg,
 }
 
 
-INT_PTR CALLBACK
+static INT_PTR CALLBACK
 ToolbarsPageProc(HWND hwndDlg,
                  UINT uMsg,
                  WPARAM wParam,
@@ -277,7 +328,7 @@ ToolbarsPageProc(HWND hwndDlg,
         {
             LPNMHDR pnmh = (LPNMHDR)lParam;
 
-            switch(pnmh->code)
+            switch (pnmh->code)
             {
                 case PSN_SETACTIVE:
                     break;
@@ -310,38 +361,26 @@ InitPropSheetPage(PROPSHEETPAGE *psp,
 }
 
 
-HWND
-DisplayTrayProperties(ITrayWindow *Tray)
+VOID
+DisplayTrayProperties(IN HWND hwndOwner)
 {
-    PPROPSHEET_INFO pPropInfo;
+    PROPSHEET_INFO propInfo;
     PROPSHEETHEADER psh;
-    PROPSHEETPAGE psp[4];
+    PROPSHEETPAGE psp[5];
     TCHAR szCaption[256];
-
-    pPropInfo = (PPROPSHEET_INFO)HeapAlloc(hProcessHeap,
-                                           HEAP_ZERO_MEMORY,
-                                           sizeof(PROPSHEET_INFO));
-    if (!pPropInfo)
-    {
-        return NULL;
-    }
 
     if (!LoadString(hExplorerInstance,
                     IDS_TASKBAR_STARTMENU_PROP_CAPTION,
                     szCaption,
                     sizeof(szCaption) / sizeof(szCaption[0])))
     {
-        HeapFree(hProcessHeap,
-                 0,
-                 pPropInfo);
-
-        return NULL;
+        return;
     }
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE;
-    psh.hwndParent = NULL;
+    psh.hwndParent = hwndOwner;
     psh.hInstance = hExplorerInstance;
     psh.hIcon = NULL;
     psh.pszCaption = szCaption;
@@ -349,17 +388,11 @@ DisplayTrayProperties(ITrayWindow *Tray)
     psh.nStartPage = 0;
     psh.ppsp = psp;
 
-    InitPropSheetPage(&psp[0], IDD_TASKBARPROP_TASKBAR, (DLGPROC)TaskbarPageProc, (LPARAM)pPropInfo);
-    InitPropSheetPage(&psp[1], IDD_TASKBARPROP_STARTMENU, (DLGPROC)StartMenuPageProc, (LPARAM)pPropInfo);
-    InitPropSheetPage(&psp[2], IDD_TASKBARPROP_NOTIFICATION, (DLGPROC)NotificationPageProc, (LPARAM)pPropInfo);
-    InitPropSheetPage(&psp[3], IDD_TASKBARPROP_TOOLBARS, (DLGPROC)ToolbarsPageProc, (LPARAM)pPropInfo);
+    InitPropSheetPage(&psp[0], IDD_TASKBARPROP_TASKBAR, TaskbarPageProc, (LPARAM)&propInfo);
+    InitPropSheetPage(&psp[1], IDD_TASKBARPROP_STARTMENU, StartMenuPageProc, (LPARAM)&propInfo);
+    InitPropSheetPage(&psp[2], IDD_TASKBARPROP_NOTIFICATION, NotificationPageProc, (LPARAM)&propInfo);
+    InitPropSheetPage(&psp[3], IDD_TASKBARPROP_TOOLBARS, ToolbarsPageProc, (LPARAM)&propInfo);
+    InitPropSheetPage(&psp[4], IDD_TASKBARPROP_ADVANCED, AdvancedSettingsPageProc, (LPARAM)&propInfo);
 
     PropertySheet(&psh);
-
-    HeapFree(hProcessHeap,
-             0,
-             pPropInfo);
-
-    // FIXME: return the HWND
-    return NULL;
 }

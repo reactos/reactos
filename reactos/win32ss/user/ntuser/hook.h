@@ -50,9 +50,9 @@ PHOOK FASTCALL IntGetNextHook(PHOOK Hook);
 LRESULT FASTCALL UserCallNextHookEx( PHOOK pHook, int Code, WPARAM wParam, LPARAM lParam, BOOL Ansi);
 BOOL FASTCALL IntUnhookWindowsHook(int,HOOKPROC);
 
-BOOL FASTCALL UserLoadApiHook();
+BOOL FASTCALL UserLoadApiHook(VOID);
 BOOL IntLoadHookModule(int iHookID, HHOOK hHook, BOOL Unload);
-BOOL FASTCALL UserUnregisterUserApiHook();
+BOOL FASTCALL UserUnregisterUserApiHook(VOID);
 
 extern PPROCESSINFO ppiUahServer;
 

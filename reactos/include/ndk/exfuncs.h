@@ -45,13 +45,13 @@ typedef struct _EVENT_TRACE_HEADER *PEVENT_TRACE_HEADER;
 VOID
 FASTCALL
 ExEnterCriticalRegionAndAcquireFastMutexUnsafe(
-    PFAST_MUTEX FastMutex
+    _Inout_ PFAST_MUTEX FastMutex
 );
 
 VOID
 FASTCALL
 ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(
-    PFAST_MUTEX FastMutex
+    _Inout_ PFAST_MUTEX FastMutex
 );
 
 //
@@ -60,44 +60,44 @@ ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(
 VOID
 FASTCALL
 ExfAcquirePushLockExclusive(
-    PEX_PUSH_LOCK PushLock
+    _Inout_ PEX_PUSH_LOCK PushLock
 );
 
 VOID
 FASTCALL
 ExfAcquirePushLockShared(
-    PEX_PUSH_LOCK PushLock
+    _Inout_ PEX_PUSH_LOCK PushLock
 );
 
 VOID
 FASTCALL
 ExfReleasePushLock(
-    PEX_PUSH_LOCK PushLock
+    _Inout_ PEX_PUSH_LOCK PushLock
 );
 
 VOID
 FASTCALL
 ExfReleasePushLockExclusive(
-    PEX_PUSH_LOCK PushLock
+    _Inout_ PEX_PUSH_LOCK PushLock
 );
 
 VOID
 FASTCALL
 ExfReleasePushLockShared(
-    PEX_PUSH_LOCK PushLock
+    _Inout_ PEX_PUSH_LOCK PushLock
 );
 
 VOID
 FASTCALL
 ExfTryToWakePushLock(
-    PEX_PUSH_LOCK PushLock
+    _Inout_ PEX_PUSH_LOCK PushLock
 );
 
 VOID
 FASTCALL
 ExfUnblockPushLock(
-    PEX_PUSH_LOCK PushLock,
-    PVOID CurrentWaitBlock
+    _Inout_ PEX_PUSH_LOCK PushLock,
+    _Inout_ PVOID CurrentWaitBlock
 );
 
 //
@@ -107,10 +107,10 @@ NTKERNELAPI
 BOOLEAN
 NTAPI
 ExEnumHandleTable(
-    IN PHANDLE_TABLE HandleTable,
-    IN PEX_ENUM_HANDLE_CALLBACK EnumHandleProcedure,
-    IN OUT PVOID Context,
-    OUT PHANDLE Handle OPTIONAL
+    _In_ PHANDLE_TABLE HandleTable,
+    _In_ PEX_ENUM_HANDLE_CALLBACK EnumHandleProcedure,
+    _Inout_ PVOID Context,
+    _Out_opt_ PHANDLE Handle
 );
 
 //
@@ -119,12 +119,12 @@ ExEnumHandleTable(
 NTSTATUS
 NTAPI
 ExRaiseHardError(
-    IN NTSTATUS ErrorStatus,
-    IN ULONG NumberOfParameters,
-    IN ULONG UnicodeStringParameterMask,
-    IN PULONG_PTR Parameters,
-    IN ULONG ValidResponseOptions,
-    OUT PULONG Response
+    _In_ NTSTATUS ErrorStatus,
+    _In_ ULONG NumberOfParameters,
+    _In_ ULONG UnicodeStringParameterMask,
+    _In_ PULONG_PTR Parameters,
+    _In_ ULONG ValidResponseOptions,
+    _Out_ PULONG Response
 );
 
 #endif
@@ -136,187 +136,190 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAddAtom(
-    IN PWSTR AtomName,
-    IN ULONG AtomNameLength,
-    IN OUT PRTL_ATOM Atom
+    _In_ PWSTR AtomName,
+    _In_ ULONG AtomNameLength,
+    _Inout_ PRTL_ATOM Atom
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCancelTimer(
-    IN HANDLE TimerHandle,
-    OUT PBOOLEAN CurrentState OPTIONAL
+    _In_ HANDLE TimerHandle,
+    _Out_opt_ PBOOLEAN CurrentState
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtClearEvent(
-    IN HANDLE EventHandle
+    _In_ HANDLE EventHandle
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateEvent(
-    OUT PHANDLE EventHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN EVENT_TYPE EventType,
-    IN BOOLEAN InitialState
+    _Out_ PHANDLE EventHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ EVENT_TYPE EventType,
+    _In_ BOOLEAN InitialState
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateEventPair(
-    OUT PHANDLE EventPairHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE EventPairHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateKeyedEvent(
-    OUT PHANDLE KeyedEventHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN ULONG Flags
+    _Out_ PHANDLE OutHandle,
+    _In_ ACCESS_MASK AccessMask,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ ULONG Flags
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateMutant(
-    OUT PHANDLE MutantHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN BOOLEAN InitialOwner
+    _Out_ PHANDLE MutantHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ BOOLEAN InitialOwner
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateSemaphore(
-    OUT PHANDLE SemaphoreHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-    IN LONG InitialCount,
-    IN LONG MaximumCount
+    _Out_ PHANDLE SemaphoreHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ LONG InitialCount,
+    _In_ LONG MaximumCount
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateTimer(
-    OUT PHANDLE TimerHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-    IN TIMER_TYPE TimerType
+    _Out_ PHANDLE TimerHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ TIMER_TYPE TimerType
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtDeleteAtom(
-    IN RTL_ATOM Atom
+    _In_ RTL_ATOM Atom
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtDisplayString(
-    IN PUNICODE_STRING DisplayString
+    _In_ PUNICODE_STRING DisplayString
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtEnumerateSystemEnvironmentValuesEx(
-    IN ULONG InformationClass,
-    IN PVOID Buffer,
-    IN ULONG BufferLength
+    _In_ ULONG InformationClass,
+    _In_ PVOID Buffer,
+    _In_ ULONG BufferLength
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtFindAtom(
-    IN  PWSTR AtomName,
-    IN  ULONG AtomNameLength,
-    OUT PRTL_ATOM Atom OPTIONAL
+    _In_  PWSTR AtomName,
+    _In_  ULONG AtomNameLength,
+    _Out_opt_ PRTL_ATOM Atom
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenEvent(
-    OUT PHANDLE EventHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE EventHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenKeyedEvent(
-    OUT PHANDLE EventHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE OutHandle,
+    _In_ ACCESS_MASK AccessMask,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenEventPair(
-    OUT PHANDLE EventPairHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE EventPairHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenMutant(
-    OUT PHANDLE MutantHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE MutantHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenSemaphore(
-    OUT PHANDLE SemaphoreHandle,
-    IN ACCESS_MASK DesiredAcces,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE SemaphoreHandle,
+    _In_ ACCESS_MASK DesiredAcces,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenTimer(
-    OUT PHANDLE TimerHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE TimerHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtPulseEvent(
-    IN HANDLE EventHandle,
-    IN PLONG PulseCount OPTIONAL
+    _In_ HANDLE EventHandle,
+    _In_opt_ PLONG PulseCount
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryDefaultLocale(
-    IN BOOLEAN UserProfile,
-    OUT PLCID DefaultLocaleId
+    _In_ BOOLEAN UserProfile,
+    _Out_ PLCID DefaultLocaleId
 );
 
 NTSYSCALLAPI
@@ -330,22 +333,22 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryEvent(
-    IN HANDLE EventHandle,
-    IN EVENT_INFORMATION_CLASS EventInformationClass,
-    OUT PVOID EventInformation,
-    IN ULONG EventInformationLength,
-    OUT PULONG ReturnLength
+    _In_ HANDLE EventHandle,
+    _In_ EVENT_INFORMATION_CLASS EventInformationClass,
+    _Out_ PVOID EventInformation,
+    _In_ ULONG EventInformationLength,
+    _Out_ PULONG ReturnLength
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryInformationAtom(
-    IN  RTL_ATOM Atom,
-    IN  ATOM_INFORMATION_CLASS AtomInformationClass,
-    OUT PVOID AtomInformation,
-    IN  ULONG AtomInformationLength,
-    OUT PULONG ReturnLength OPTIONAL
+    _In_  RTL_ATOM Atom,
+    _In_  ATOM_INFORMATION_CLASS AtomInformationClass,
+    _Out_ PVOID AtomInformation,
+    _In_  ULONG AtomInformationLength,
+    _Out_opt_ PULONG ReturnLength
 );
 
 NTSYSCALLAPI
@@ -359,30 +362,30 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryMutant(
-    IN HANDLE MutantHandle,
-    IN MUTANT_INFORMATION_CLASS MutantInformationClass,
-    OUT PVOID MutantInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    _In_ HANDLE MutantHandle,
+    _In_ MUTANT_INFORMATION_CLASS MutantInformationClass,
+    _Out_ PVOID MutantInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQuerySemaphore(
-    IN HANDLE SemaphoreHandle,
-    IN SEMAPHORE_INFORMATION_CLASS SemaphoreInformationClass,
-    OUT PVOID SemaphoreInformation,
-    IN ULONG Length,
-    OUT PULONG ReturnLength
+    _In_ HANDLE SemaphoreHandle,
+    _In_ SEMAPHORE_INFORMATION_CLASS SemaphoreInformationClass,
+    _Out_ PVOID SemaphoreInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ReturnLength
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQuerySystemEnvironmentValue(
-    IN PUNICODE_STRING Name,
-    OUT PWSTR Value,
+    _In_ PUNICODE_STRING Name,
+    _Out_ PWSTR Value,
     ULONG Length,
     PULONG ReturnLength
 );
@@ -391,87 +394,88 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQuerySystemEnvironmentValueEx(
-    IN PUNICODE_STRING VariableName,
-    IN LPGUID VendorGuid,
-    IN PVOID Value,
-    IN OUT PULONG ReturnLength,
-    IN OUT PULONG Attributes
+    _In_ PUNICODE_STRING VariableName,
+    _In_ LPGUID VendorGuid,
+    _In_ PVOID Value,
+    _Inout_ PULONG ReturnLength,
+    _Inout_ PULONG Attributes
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQuerySystemInformation(
-    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
-    OUT PVOID SystemInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    _In_ SYSTEM_INFORMATION_CLASS SystemInformationClass,
+    _Out_ PVOID SystemInformation,
+    _In_ ULONG Length,
+    _Out_opt_ PULONG ResultLength
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryTimer(
-    IN HANDLE TimerHandle,
-    IN TIMER_INFORMATION_CLASS TimerInformationClass,
-    OUT PVOID TimerInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    _In_ HANDLE TimerHandle,
+    _In_ TIMER_INFORMATION_CLASS TimerInformationClass,
+    _Out_ PVOID TimerInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRaiseHardError(
-    IN NTSTATUS ErrorStatus,
-    IN ULONG NumberOfParameters,
-    IN ULONG UnicodeStringParameterMask,
-    IN PULONG_PTR Parameters,
-    IN ULONG ValidResponseOptions,
-    OUT PULONG Response
+    _In_ NTSTATUS ErrorStatus,
+    _In_ ULONG NumberOfParameters,
+    _In_ ULONG UnicodeStringParameterMask,
+    _In_ PULONG_PTR Parameters,
+    _In_ ULONG ValidResponseOptions,
+    _Out_ PULONG Response
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReleaseMutant(
-    IN HANDLE MutantHandle,
-    IN PLONG ReleaseCount OPTIONAL
+    _In_ HANDLE MutantHandle,
+    _In_opt_ PLONG ReleaseCount
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReleaseKeyedEvent(
-    IN HANDLE EventHandle,
-    IN PVOID Key,
-    IN BOOLEAN Alertable,
-    IN PLARGE_INTEGER Timeout OPTIONAL
+    _In_opt_ HANDLE EventHandle,
+    _In_ PVOID Key,
+    _In_ BOOLEAN Alertable,
+    _In_opt_ PLARGE_INTEGER Timeout
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReleaseSemaphore(
-    IN HANDLE SemaphoreHandle,
-    IN LONG ReleaseCount,
-    OUT PLONG PreviousCount
+    _In_ HANDLE SemaphoreHandle,
+    _In_ LONG ReleaseCount,
+    _Out_opt_ PLONG PreviousCount
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtResetEvent(
-    IN HANDLE EventHandle,
-    OUT PLONG NumberOfWaitingThreads OPTIONAL
+    _In_ HANDLE EventHandle,
+    _Out_opt_ PLONG NumberOfWaitingThreads
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetDefaultLocale(
-    IN BOOLEAN UserProfile,
-    IN LCID DefaultLocaleId
+    _In_ BOOLEAN UserProfile,
+    _In_ LCID DefaultLocaleId
 );
 
 NTSYSCALLAPI
@@ -485,145 +489,146 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetDefaultHardErrorPort(
-    IN HANDLE PortHandle
+    _In_ HANDLE PortHandle
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetEvent(
-    IN HANDLE EventHandle,
-    OUT PLONG PreviousState  OPTIONAL
+    _In_ HANDLE EventHandle,
+    _Out_opt_ PLONG PreviousState
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetEventBoostPriority(
-    IN HANDLE EventHandle
+    _In_ HANDLE EventHandle
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetHighEventPair(
-    IN HANDLE EventPairHandle
+    _In_ HANDLE EventPairHandle
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetHighWaitLowEventPair(
-    IN HANDLE EventPairHandle
+    _In_ HANDLE EventPairHandle
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetLowEventPair(
-    HANDLE EventPair
+    _In_ HANDLE EventPair
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetLowWaitHighEventPair(
-    HANDLE EventPair
+    _In_ HANDLE EventPair
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetSystemEnvironmentValue(
-    IN PUNICODE_STRING VariableName,
-    IN PUNICODE_STRING Value
+    _In_ PUNICODE_STRING VariableName,
+    _In_ PUNICODE_STRING Value
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetSystemEnvironmentValueEx(
-    IN PUNICODE_STRING VariableName,
-    IN LPGUID VendorGuid
+    _In_ PUNICODE_STRING VariableName,
+    _In_ LPGUID VendorGuid
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetSystemInformation(
-    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
-    IN PVOID SystemInformation,
-    IN ULONG SystemInformationLength
+    _In_ SYSTEM_INFORMATION_CLASS SystemInformationClass,
+    _In_ PVOID SystemInformation,
+    _In_ ULONG SystemInformationLength
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetTimer(
-    IN HANDLE TimerHandle,
-    IN PLARGE_INTEGER DueTime,
-    IN PTIMER_APC_ROUTINE TimerApcRoutine,
-    IN PVOID TimerContext,
-    IN BOOLEAN WakeTimer,
-    IN LONG Period OPTIONAL,
-    OUT PBOOLEAN PreviousState OPTIONAL
+    _In_ HANDLE TimerHandle,
+    _In_ PLARGE_INTEGER DueTime,
+    _In_ PTIMER_APC_ROUTINE TimerApcRoutine,
+    _In_ PVOID TimerContext,
+    _In_ BOOLEAN WakeTimer,
+    _In_opt_ LONG Period,
+    _Out_opt_ PBOOLEAN PreviousState
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetUuidSeed(
-    IN PUCHAR UuidSeed
+    _In_ PUCHAR UuidSeed
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtShutdownSystem(
-    IN SHUTDOWN_ACTION Action
+    _In_ SHUTDOWN_ACTION Action
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtWaitForKeyedEvent(
-    IN HANDLE EventHandle,
-    IN PVOID Key,
-    IN BOOLEAN Alertable,
-    IN PLARGE_INTEGER Timeout OPTIONAL
+    _In_opt_ HANDLE EventHandle,
+    _In_ PVOID Key,
+    _In_ BOOLEAN Alertable,
+    _In_opt_ PLARGE_INTEGER Timeout
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtWaitHighEventPair(
-    IN HANDLE EventPairHandle
+    _In_ HANDLE EventPairHandle
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtWaitLowEventPair(
-    IN HANDLE EventPairHandle
+    _In_ HANDLE EventPairHandle
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtTraceEvent(
-    IN ULONG TraceHandle,
-    IN ULONG Flags,
-    IN ULONG TraceHeaderLength,
-    IN PEVENT_TRACE_HEADER TraceHeader
+    _In_ ULONG TraceHandle,
+    _In_ ULONG Flags,
+    _In_ ULONG TraceHeaderLength,
+    _In_ PEVENT_TRACE_HEADER TraceHeader
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAddAtom(
-    IN PWSTR AtomName,
-    IN ULONG AtomNameLength,
-    IN OUT PRTL_ATOM Atom
+    _In_ PWSTR AtomName,
+    _In_ ULONG AtomNameLength,
+    _Inout_ PRTL_ATOM Atom
 );
 
 #ifdef NTOS_MODE_USER
@@ -631,8 +636,8 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCancelTimer(
-    IN HANDLE TimerHandle,
-    OUT PBOOLEAN CurrentState OPTIONAL
+    _In_ HANDLE TimerHandle,
+    _Out_opt_ PBOOLEAN CurrentState
 );
 #endif
 
@@ -640,48 +645,49 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwClearEvent(
-    IN HANDLE EventHandle
+    _In_ HANDLE EventHandle
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateEvent(
-    OUT PHANDLE EventHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN EVENT_TYPE EventType,
-    IN BOOLEAN InitialState
+    _Out_ PHANDLE EventHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ EVENT_TYPE EventType,
+    _In_ BOOLEAN InitialState
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateEventPair(
-    OUT PHANDLE EventPairHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE EventPairHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateMutant(
-    OUT PHANDLE MutantHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN BOOLEAN InitialOwner
+    _Out_ PHANDLE MutantHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ BOOLEAN InitialOwner
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateSemaphore(
-    OUT PHANDLE SemaphoreHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-    IN LONG InitialCount,
-    IN LONG MaximumCount
+    _Out_ PHANDLE SemaphoreHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ LONG InitialCount,
+    _In_ LONG MaximumCount
 );
 
 #ifdef NTOS_MODE_USER
@@ -689,10 +695,10 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateTimer(
-    OUT PHANDLE TimerHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-    IN TIMER_TYPE TimerType
+    _Out_ PHANDLE TimerHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ TIMER_TYPE TimerType
 );
 #endif
 
@@ -700,59 +706,59 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDeleteAtom(
-    IN RTL_ATOM Atom
+    _In_ RTL_ATOM Atom
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDisplayString(
-    IN PUNICODE_STRING DisplayString
+    _In_ PUNICODE_STRING DisplayString
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwFindAtom(
-    IN  PWSTR AtomName,
-    IN  ULONG AtomNameLength,
-    OUT PRTL_ATOM Atom OPTIONAL
+    _In_  PWSTR AtomName,
+    _In_  ULONG AtomNameLength,
+    _Out_opt_ PRTL_ATOM Atom
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwOpenEvent(
-    OUT PHANDLE EventHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE EventHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenEventPair(
-    OUT PHANDLE EventPairHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE EventPairHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenMutant(
-    OUT PHANDLE MutantHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE MutantHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenSemaphore(
-    OUT PHANDLE SemaphoreHandle,
-    IN ACCESS_MASK DesiredAcces,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE SemaphoreHandle,
+    _In_ ACCESS_MASK DesiredAcces,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 #ifdef NTOS_MODE_USER
@@ -760,9 +766,9 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenTimer(
-    OUT PHANDLE TimerHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE TimerHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 #endif
 
@@ -770,16 +776,16 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwPulseEvent(
-    IN HANDLE EventHandle,
-    IN PLONG PulseCount OPTIONAL
+    _In_ HANDLE EventHandle,
+    _In_opt_ PLONG PulseCount
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryDefaultLocale(
-    IN BOOLEAN UserProfile,
-    OUT PLCID DefaultLocaleId
+    _In_ BOOLEAN UserProfile,
+    _Out_ PLCID DefaultLocaleId
 );
 
 NTSYSAPI
@@ -793,22 +799,22 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryEvent(
-    IN HANDLE EventHandle,
-    IN EVENT_INFORMATION_CLASS EventInformationClass,
-    OUT PVOID EventInformation,
-    IN ULONG EventInformationLength,
-    OUT PULONG ReturnLength
+    _In_ HANDLE EventHandle,
+    _In_ EVENT_INFORMATION_CLASS EventInformationClass,
+    _Out_ PVOID EventInformation,
+    _In_ ULONG EventInformationLength,
+    _Out_ PULONG ReturnLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationAtom(
-    IN  RTL_ATOM Atom,
-    IN  ATOM_INFORMATION_CLASS AtomInformationClass,
-    OUT PVOID AtomInformation,
-    IN  ULONG AtomInformationLength,
-    OUT PULONG ReturnLength OPTIONAL
+    _In_  RTL_ATOM Atom,
+    _In_  ATOM_INFORMATION_CLASS AtomInformationClass,
+    _Out_ PVOID AtomInformation,
+    _In_  ULONG AtomInformationLength,
+    _Out_opt_ PULONG ReturnLength
 );
 
 NTSYSAPI
@@ -822,98 +828,98 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryMutant(
-    IN HANDLE MutantHandle,
-    IN MUTANT_INFORMATION_CLASS MutantInformationClass,
-    OUT PVOID MutantInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    _In_ HANDLE MutantHandle,
+    _In_ MUTANT_INFORMATION_CLASS MutantInformationClass,
+    _Out_ PVOID MutantInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySemaphore(
-    IN HANDLE SemaphoreHandle,
-    IN SEMAPHORE_INFORMATION_CLASS SemaphoreInformationClass,
-    OUT PVOID SemaphoreInformation,
-    IN ULONG Length,
-    OUT PULONG ReturnLength
+    _In_ HANDLE SemaphoreHandle,
+    _In_ SEMAPHORE_INFORMATION_CLASS SemaphoreInformationClass,
+    _Out_ PVOID SemaphoreInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ReturnLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySystemEnvironmentValue(
-    IN PUNICODE_STRING Name,
-    OUT PWSTR Value,
-    ULONG Length,
-    PULONG ReturnLength
+    _In_ PUNICODE_STRING Name,
+    _Out_ PWSTR Value,
+    _In_ ULONG Length,
+    _Out_ PULONG ReturnLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySystemInformation(
-    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
-    OUT PVOID SystemInformation,
-    IN SIZE_T Length,
-    OUT PSIZE_T ResultLength
+    _In_ SYSTEM_INFORMATION_CLASS SystemInformationClass,
+    _Out_ PVOID SystemInformation,
+    _In_ SIZE_T Length,
+    _Out_opt_ PSIZE_T ResultLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryTimer(
-    IN HANDLE TimerHandle,
-    IN TIMER_INFORMATION_CLASS TimerInformationClass,
-    OUT PVOID TimerInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    _In_ HANDLE TimerHandle,
+    _In_ TIMER_INFORMATION_CLASS TimerInformationClass,
+    _Out_ PVOID TimerInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRaiseHardError(
-    IN NTSTATUS ErrorStatus,
-    IN ULONG NumberOfParameters,
-    IN ULONG UnicodeStringParameterMask,
-    IN PULONG_PTR Parameters,
-    IN ULONG ValidResponseOptions,
-    OUT PULONG Response
+    _In_ NTSTATUS ErrorStatus,
+    _In_ ULONG NumberOfParameters,
+    _In_ ULONG UnicodeStringParameterMask,
+    _In_ PULONG_PTR Parameters,
+    _In_ ULONG ValidResponseOptions,
+    _Out_ PULONG Response
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReleaseMutant(
-    IN HANDLE MutantHandle,
-    IN PLONG ReleaseCount OPTIONAL
+    _In_ HANDLE MutantHandle,
+    _In_opt_ PLONG ReleaseCount
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReleaseSemaphore(
-    IN HANDLE SemaphoreHandle,
-    IN LONG ReleaseCount,
-    OUT PLONG PreviousCount
+    _In_ HANDLE SemaphoreHandle,
+    _In_ LONG ReleaseCount,
+    _Out_opt_ PLONG PreviousCount
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwResetEvent(
-    IN HANDLE EventHandle,
-    OUT PLONG NumberOfWaitingThreads OPTIONAL
+    _In_ HANDLE EventHandle,
+    _Out_opt_ PLONG NumberOfWaitingThreads
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetDefaultLocale(
-    IN BOOLEAN UserProfile,
-    IN LCID DefaultLocaleId
+    _In_ BOOLEAN UserProfile,
+    _In_ LCID DefaultLocaleId
 );
 
 NTSYSAPI
@@ -927,60 +933,60 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetDefaultHardErrorPort(
-    IN HANDLE PortHandle
+    _In_ HANDLE PortHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetEvent(
-    IN HANDLE EventHandle,
-    OUT PLONG PreviousState  OPTIONAL
+    _In_ HANDLE EventHandle,
+    _Out_opt_ PLONG PreviousState
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetHighEventPair(
-    IN HANDLE EventPairHandle
+    _In_ HANDLE EventPairHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetHighWaitLowEventPair(
-    IN HANDLE EventPairHandle
+    _In_ HANDLE EventPairHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetLowEventPair(
-    HANDLE EventPair
+    _In_ HANDLE EventPair
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetLowWaitHighEventPair(
-    HANDLE EventPair
+    _In_ HANDLE EventPair
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetSystemEnvironmentValue(
-    IN PUNICODE_STRING VariableName,
-    IN PUNICODE_STRING Value
+    _In_ PUNICODE_STRING VariableName,
+    _In_ PUNICODE_STRING Value
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetSystemInformation(
-    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
-    IN PVOID SystemInformation,
-    IN SIZE_T SystemInformationLength
+    _In_ SYSTEM_INFORMATION_CLASS SystemInformationClass,
+    _In_ PVOID SystemInformation,
+    _In_ SIZE_T SystemInformationLength
 );
 
 #ifdef NTOS_MODE_USER
@@ -988,13 +994,13 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetTimer(
-    IN HANDLE TimerHandle,
-    IN PLARGE_INTEGER DueTime,
-    IN PTIMER_APC_ROUTINE TimerApcRoutine,
-    IN PVOID TimerContext,
-    IN BOOLEAN WakeTimer,
-    IN LONG Period OPTIONAL,
-    OUT PBOOLEAN PreviousState OPTIONAL
+    _In_ HANDLE TimerHandle,
+    _In_ PLARGE_INTEGER DueTime,
+    _In_ PTIMER_APC_ROUTINE TimerApcRoutine,
+    _In_ PVOID TimerContext,
+    _In_ BOOLEAN WakeTimer,
+    _In_opt_ LONG Period,
+    _Out_opt_ PBOOLEAN PreviousState
 );
 #endif
 
@@ -1002,38 +1008,38 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetUuidSeed(
-    IN PUCHAR UuidSeed
+    _In_ PUCHAR UuidSeed
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwShutdownSystem(
-    IN SHUTDOWN_ACTION Action
+    _In_ SHUTDOWN_ACTION Action
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWaitHighEventPair(
-    IN HANDLE EventPairHandle
+    _In_ HANDLE EventPairHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWaitLowEventPair(
-    IN HANDLE EventPairHandle
+    _In_ HANDLE EventPairHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwTraceEvent(
-    IN ULONG TraceHandle,
-    IN ULONG Flags,
-    IN ULONG TraceHeaderLength,
-    IN PEVENT_TRACE_HEADER TraceHeader
+    _In_ ULONG TraceHandle,
+    _In_ ULONG Flags,
+    _In_ ULONG TraceHeaderLength,
+    _In_ PEVENT_TRACE_HEADER TraceHeader
 );
 
 #ifdef __cplusplus

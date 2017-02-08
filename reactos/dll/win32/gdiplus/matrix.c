@@ -16,18 +16,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <math.h>
+//#include <stdarg.h>
+//#include <math.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "wingdi.h"
 
-#include "objbase.h"
+//#include "objbase.h"
 
-#include "gdiplus.h"
+//#include "gdiplus.h"
 #include "gdiplus_private.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 
@@ -393,8 +393,8 @@ GpStatus WINGDIPAPI GdipTransformMatrixPointsI(GpMatrix *matrix, GpPoint *pts, I
 
     if(ret == Ok)
         for(i = 0; i < count; i++){
-            pts[i].X = roundr(ptsF[i].X);
-            pts[i].Y = roundr(ptsF[i].Y);
+            pts[i].X = gdip_round(ptsF[i].X);
+            pts[i].Y = gdip_round(ptsF[i].Y);
         }
     GdipFree(ptsF);
 
@@ -474,8 +474,8 @@ GpStatus WINGDIPAPI GdipVectorTransformMatrixPointsI(GpMatrix *matrix, GpPoint *
     /* store back */
     if(ret == Ok)
         for(i = 0; i < count; i++){
-            pts[i].X = roundr(ptsF[i].X);
-            pts[i].Y = roundr(ptsF[i].Y);
+            pts[i].X = gdip_round(ptsF[i].X);
+            pts[i].Y = gdip_round(ptsF[i].Y);
         }
     GdipFree(ptsF);
 

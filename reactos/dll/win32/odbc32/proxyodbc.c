@@ -25,28 +25,30 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
+#define WIN32_NO_STATUS
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <config.h>
+#include <wine/port.h>
+
+//#include <stdarg.h>
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <string.h>
 #include <assert.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
+#include <windef.h>
+//#include "winbase.h"
+#include <winreg.h>
 
-#include "sql.h"
-#include "sqltypes.h"
-#include "sqlext.h"
+//#include "sql.h"
+//#include "sqltypes.h"
+#include <sqlext.h>
 
 #undef TRACE_ON
 
-#include "wine/debug.h"
-#include "wine/library.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+#include <wine/library.h>
+#include <wine/unicode.h>
 
 #include "proxyodbc.h"
 

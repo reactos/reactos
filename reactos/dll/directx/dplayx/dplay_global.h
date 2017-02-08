@@ -13,25 +13,26 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_DPLAY_GLOBAL_INCLUDED
 #define __WINE_DPLAY_GLOBAL_INCLUDED
 
-#include <stdarg.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
 
-#include "windef.h"
-#include "winbase.h"
+//#include <stdarg.h>
+
+//#include "windef.h"
+//#include "winbase.h"
 #include "dplaysp.h"
 #include "lobbysp.h"
 #include "dplayx_queue.h"
 
 extern HRESULT DPL_EnumAddress( LPDPENUMADDRESSCALLBACK lpEnumAddressCallback,
                                 LPCVOID lpAddress, DWORD dwAddressSize,
-                                LPVOID lpContext );
-
-extern DWORD DP_CalcSessionDescSize( LPCDPSESSIONDESC2 lpSessDesc, BOOL bAnsi );
+                                LPVOID lpContext ) DECLSPEC_HIDDEN;
 
 /*****************************************************************************
  * Predeclare the interface implementation structures
@@ -69,7 +70,7 @@ typedef struct tagDP_MSG_REPLY_STRUCT
 
 typedef struct tagDP_MSG_REPLY_STRUCT_LIST
 {
-  DPQ_ENTRY(tagDP_MSG_REPLY_STRUCT_LIST) replysExpected;
+  DPQ_ENTRY(tagDP_MSG_REPLY_STRUCT_LIST) repliesExpected;
   DP_MSG_REPLY_STRUCT replyExpected;
 } DP_MSG_REPLY_STRUCT_LIST, *LPDP_MSG_REPLY_STRUCT_LIST;
 
@@ -164,6 +165,7 @@ typedef struct tagDirectPlay2Data
   /* For async EnumSessions requests */
   HANDLE hEnumSessionThread;
   HANDLE hKillEnumSessionThreadEvent;
+  DWORD  dwEnumSessionLock;
 
   LPVOID lpNameServerData; /* DPlay interface doesn't know contents */
 
@@ -194,7 +196,7 @@ typedef struct tagDirectPlay2Data
   enum SPSTATE connectionInitialized;
 
   /* Expected messages queue */
-  DPQ_HEAD( tagDP_MSG_REPLY_STRUCT_LIST ) replysExpected;
+  DPQ_HEAD( tagDP_MSG_REPLY_STRUCT_LIST ) repliesExpected;
 } DirectPlay2Data;
 
 typedef struct tagDirectPlay3Data
@@ -234,13 +236,13 @@ struct IDirectPlay4Impl
 HRESULT DP_HandleMessage( IDirectPlay2Impl* This, LPCVOID lpMessageBody,
                           DWORD  dwMessageBodySize, LPCVOID lpMessageHeader,
                           WORD wCommandId, WORD wVersion,
-                          LPVOID* lplpReply, LPDWORD lpdwMsgSize );
+                          LPVOID* lplpReply, LPDWORD lpdwMsgSize ) DECLSPEC_HIDDEN;
 
 /* DP SP external interfaces into DirectPlay */
-extern HRESULT DP_GetSPPlayerData( IDirectPlay2Impl* lpDP, DPID idPlayer, LPVOID* lplpData );
-extern HRESULT DP_SetSPPlayerData( IDirectPlay2Impl* lpDP, DPID idPlayer, LPVOID lpData );
+extern HRESULT DP_GetSPPlayerData( IDirectPlay2Impl* lpDP, DPID idPlayer, LPVOID* lplpData ) DECLSPEC_HIDDEN;
+extern HRESULT DP_SetSPPlayerData( IDirectPlay2Impl* lpDP, DPID idPlayer, LPVOID lpData ) DECLSPEC_HIDDEN;
 
 /* DP external interfaces to call into DPSP interface */
-extern LPVOID DPSP_CreateSPPlayerData(void);
+extern LPVOID DPSP_CreateSPPlayerData(void) DECLSPEC_HIDDEN;
 
 #endif /* __WINE_DPLAY_GLOBAL_INCLUDED */

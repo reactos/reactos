@@ -1,8 +1,8 @@
 
 /* pngset.c - storage of image information into info struct
  *
- * Last changed in libpng 1.5.7 [December 15, 2011]
- * Copyright (c) 1998-2011 Glenn Randers-Pehrson
+ * Last changed in libpng 1.5.14 [January 24, 2013]
+ * Copyright (c) 1998-2013 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -149,7 +149,7 @@ png_set_gAMA_fixed(png_structp png_ptr, png_infop info_ptr, png_fixed_point
     * possible for 1/gamma to overflow the limit of 21474 and this means the
     * gamma value must be at least 5/100000 and hence at most 20000.0.  For
     * safety the limits here are a little narrower.  The values are 0.00016 to
-    * 6250.0, which are truly ridiculous gammma values (and will produce
+    * 6250.0, which are truly ridiculous gamma values (and will produce
     * displays that are all black or all white.)
     */
    if (file_gamma < 16 || file_gamma > 625000000)
@@ -690,26 +690,41 @@ png_set_text_2(png_structp png_ptr, png_infop info_ptr,
    /* Make sure we have enough space in the "text" array in info_struct
     * to hold all of the incoming text_ptr objects.
     */
+
+   if (num_text < 0 ||
+       num_text > INT_MAX - info_ptr->num_text - 8 ||
+       (unsigned int)/*SAFE*/(num_text +/*SAFE*/
+       info_ptr->num_text + 8) >=
+       PNG_SIZE_MAX/png_sizeof(png_text))
+   {
+      png_warning(png_ptr, "too many text chunks");
+      return(0);
+   }
+
    if (info_ptr->num_text + num_text > info_ptr->max_text)
    {
+      int old_max_text = info_ptr->max_text;
+      int old_num_text = info_ptr->num_text;
+
       if (info_ptr->text != NULL)
       {
          png_textp old_text;
-         int old_max;
 
-         old_max = info_ptr->max_text;
          info_ptr->max_text = info_ptr->num_text + num_text + 8;
          old_text = info_ptr->text;
+
          info_ptr->text = (png_textp)png_malloc_warn(png_ptr,
             (png_size_t)(info_ptr->max_text * png_sizeof(png_text)));
 
          if (info_ptr->text == NULL)
          {
-            png_free(png_ptr, old_text);
+            /* Restore to previous condition */
+            info_ptr->max_text = old_max_text;
+            info_ptr->text = old_text;
             return(1);
          }
 
-         png_memcpy(info_ptr->text, old_text, (png_size_t)(old_max *
+         png_memcpy(info_ptr->text, old_text, (png_size_t)(old_max_text *
              png_sizeof(png_text)));
          png_free(png_ptr, old_text);
       }
@@ -721,7 +736,12 @@ png_set_text_2(png_structp png_ptr, png_infop info_ptr,
          info_ptr->text = (png_textp)png_malloc_warn(png_ptr,
              (png_size_t)(info_ptr->max_text * png_sizeof(png_text)));
          if (info_ptr->text == NULL)
+         {
+            /* Restore to previous condition */
+            info_ptr->num_text = old_num_text;
+            info_ptr->max_text = old_max_text;
             return(1);
+         }
          info_ptr->free_me |= PNG_FREE_TEXT;
       }
 
@@ -888,6 +908,12 @@ png_set_tRNS(png_structp png_ptr, png_infop info_ptr,
    if (png_ptr == NULL || info_ptr == NULL)
       return;
 
+   if (num_trans < 0 || num_trans > PNG_MAX_PALETTE_LENGTH)
+      {
+        png_warning(png_ptr, "Ignoring invalid num_trans value");
+        return;
+      }
+
    if (trans_alpha != NULL)
    {
        /* It may not actually be necessary to set png_ptr->trans_alpha here;
@@ -954,9 +980,18 @@ png_set_sPLT(png_structp png_ptr,
    if (png_ptr == NULL || info_ptr == NULL)
       return;
 
-   np = (png_sPLT_tp)png_malloc_warn(png_ptr,
-       (info_ptr->splt_palettes_num + nentries) *
-       (png_size_t)png_sizeof(png_sPLT_t));
+   if (nentries < 0 ||
+       nentries > INT_MAX-info_ptr->splt_palettes_num ||
+       (unsigned int)/*SAFE*/(nentries +/*SAFE*/
+       info_ptr->splt_palettes_num) >=
+       PNG_SIZE_MAX/png_sizeof(png_sPLT_t))
+      np=NULL;
+
+   else
+
+      np = (png_sPLT_tp)png_malloc_warn(png_ptr,
+          (info_ptr->splt_palettes_num + nentries) *
+          (png_size_t)png_sizeof(png_sPLT_t));
 
    if (np == NULL)
    {
@@ -1024,9 +1059,17 @@ png_set_unknown_chunks(png_structp png_ptr,
    if (png_ptr == NULL || info_ptr == NULL || num_unknowns == 0)
       return;
 
-   np = (png_unknown_chunkp)png_malloc_warn(png_ptr,
-       (png_size_t)(info_ptr->unknown_chunks_num + num_unknowns) *
-       png_sizeof(png_unknown_chunk));
+   if (num_unknowns < 0 ||
+       num_unknowns > INT_MAX-info_ptr->unknown_chunks_num ||
+       (unsigned int)/*SAFE*/(num_unknowns +/*SAFE*/
+       info_ptr->unknown_chunks_num) >=
+       PNG_SIZE_MAX/png_sizeof(png_unknown_chunk))
+      np=NULL;
+
+   else
+      np = (png_unknown_chunkp)png_malloc_warn(png_ptr,
+          (png_size_t)(info_ptr->unknown_chunks_num + num_unknowns) *
+          png_sizeof(png_unknown_chunk));
 
    if (np == NULL)
    {
@@ -1281,4 +1324,22 @@ png_set_benign_errors(png_structp png_ptr, int allowed)
       png_ptr->flags &= ~PNG_FLAG_BENIGN_ERRORS_WARN;
 }
 #endif /* PNG_BENIGN_ERRORS_SUPPORTED */
+
+#ifdef PNG_CHECK_FOR_INVALID_INDEX_SUPPORTED
+/* Whether to report invalid palette index; added at libng-1.5.10
+ *   allowed  - one of 0: disable; 1: enable
+ */
+void PNGAPI
+png_set_check_for_invalid_index(png_structp png_ptr, int allowed)
+{
+   png_debug(1, "in png_set_check_for_invalid_index");
+
+   if (allowed)
+      png_ptr->num_palette_max = 0;
+
+   else
+      png_ptr->num_palette_max = -1;
+}
+#endif
+
 #endif /* PNG_READ_SUPPORTED || PNG_WRITE_SUPPORTED */

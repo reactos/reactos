@@ -1,4 +1,4 @@
-/* $Id$
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/context.c
@@ -16,6 +16,8 @@ AfdGetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
     UINT ContextSize = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
@@ -40,6 +42,8 @@ AfdGetContextSize( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
 
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
     if (IrpSp->Parameters.DeviceIoControl.OutputBufferLength < sizeof(ULONG))
@@ -60,7 +64,9 @@ AfdSetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                PIO_STACK_LOCATION IrpSp ) {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PVOID Context = LockRequest(Irp, IrpSp);
+    PVOID Context = LockRequest(Irp, IrpSp, FALSE, NULL);
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 

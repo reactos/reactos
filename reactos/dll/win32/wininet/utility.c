@@ -22,24 +22,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <config.h>
+//#include "wine/port.h"
+
+#include <stdarg.h>
+//#include <stdlib.h>
+//#include <string.h>
+//#include <time.h>
+
+#include <windef.h>
+#include <winbase.h>
+#include <wininet.h>
+//#include "winnls.h"
 
 #if defined(__MINGW32__) || defined (_MSC_VER)
 #include <ws2tcpip.h>
 #endif
 
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "wininet.h"
-#include "winnls.h"
-
-#include "wine/debug.h"
+#include <wine/debug.h>
 #include "internet.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wininet);

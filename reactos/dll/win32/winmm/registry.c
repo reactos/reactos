@@ -16,9 +16,10 @@
     TODO: Handle system.ini
 */
 
-#include <windows.h>
+#include <windef.h>
+#include <winreg.h>
 #include "winemm.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(winmm);
 

@@ -20,28 +20,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-#include <limits.h>
+//#include <assert.h>
+//#include <stdlib.h>
+//#include <stdarg.h>
+//#include <stdio.h>
+//#include <string.h>
+//#include <limits.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winerror.h"
-#include "objbase.h"
-#include "ole2.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winuser.h"
+//#include "winerror.h"
+//#include "objbase.h"
+//#include "ole2.h"
 
 #include "storage32.h"
 
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(storage);
 
@@ -141,7 +141,7 @@ HRESULT FileLockBytesImpl_Construct(HANDLE hFile, DWORD openFlags, LPCWSTR pwcsN
 static HRESULT WINAPI FileLockBytesImpl_QueryInterface(ILockBytes *iface, REFIID riid,
     void **ppvObject)
 {
-    if (IsEqualIID(riid, &IID_ILockBytes) || IsEqualIID(riid, &IID_ILockBytes))
+    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_ILockBytes))
         *ppvObject = iface;
     else
     {

@@ -22,24 +22,7 @@
 #ifndef __WINE_SHELL_MAIN_H
 #define __WINE_SHELL_MAIN_H
 
-#include <stdarg.h>
-#include <shlobj.h>
-
-/*
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "commctrl.h"
-#include "objbase.h"
-#include "docobj.h"
-#include "undocshell.h"
-#include "shlobj.h"
-#include "shellapi.h"
-#include "wine/windef16.h"
-*/
-#include "wine/unicode.h"
+#include <wine/unicode.h>
 
 
 /*******************************************

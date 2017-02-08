@@ -56,7 +56,7 @@ CreateTimer(VOID)
   HANDLE Handle;
   PTIMER Ret = NULL;
 
-  Ret = UserCreateObject(gHandleTable, NULL, &Handle, otTimer, sizeof(TIMER));
+  Ret = UserCreateObject(gHandleTable, NULL, NULL, &Handle, TYPE_TIMER, sizeof(TIMER));
   if (Ret)
   {
      Ret->head.h = Handle;
@@ -86,7 +86,7 @@ RemoveTimer(PTIMER pTmr)
         IntUnlockWindowlessTimerBitmap();
      }
      UserDereferenceObject(pTmr);
-     Ret = UserDeleteObject( UserHMGetHandle(pTmr), otTimer);
+     Ret = UserDeleteObject( UserHMGetHandle(pTmr), TYPE_TIMER);
   }
   if (!Ret) ERR("Warning: Unable to delete timer\n");
 
@@ -359,7 +359,7 @@ FASTCALL
 StartTheTimers(VOID)
 {
   // Need to start gdi syncro timers then start timer with Hang App proc
-  // that calles Idle process so the screen savers will know to run......    
+  // that calles Idle process so the screen savers will know to run......
   IntSetTimer(NULL, 0, 1000, HungAppSysTimerProc, TMRF_RIT);
 // Test Timers
 //  IntSetTimer(NULL, 0, 1000, SystemTimerProc, TMRF_RIT);
@@ -386,14 +386,12 @@ FASTCALL
 PostTimerMessages(PWND Window)
 {
   PLIST_ENTRY pLE;
-  PUSER_MESSAGE_QUEUE ThreadQueue;
   MSG Msg;
   PTHREADINFO pti;
   BOOL Hit = FALSE;
   PTIMER pTmr;
 
   pti = PsGetCurrentThreadWin32Thread();
-  ThreadQueue = pti->MessageQueue;
 
   TimerEnterExclusive();
   pLE = TimersListHead.Flink;
@@ -409,7 +407,7 @@ PostTimerMessages(PWND Window)
            Msg.wParam  = (WPARAM) pTmr->nID;
            Msg.lParam  = (LPARAM) pTmr->pfn;
 
-           MsqPostMessage(ThreadQueue, &Msg, FALSE, QS_TIMER);
+           MsqPostMessage(pti, &Msg, FALSE, QS_TIMER, 0);
            pTmr->flags &= ~TMRF_READY;
            pti->cTimersReady++;
            Hit = TRUE;
@@ -484,8 +482,8 @@ ProcessTimers(VOID)
                 // Set thread message queue for this timer.
                 if (pTmr->pti->MessageQueue)
                 {  // Wakeup thread
-                   ASSERT(pTmr->pti->MessageQueue->NewMessages != NULL);
-                   KeSetEvent(pTmr->pti->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+                   ASSERT(pTmr->pti->pEventQueueServer != NULL);
+                   KeSetEvent(pTmr->pti->pEventQueueServer, IO_NO_INCREMENT, FALSE);
                 }
              }
           }
@@ -584,9 +582,14 @@ NTAPI
 InitTimerImpl(VOID)
 {
    ULONG BitmapBytes;
-   
+
    /* Allocate FAST_MUTEX from non paged pool */
    Mutex = ExAllocatePoolWithTag(NonPagedPool, sizeof(FAST_MUTEX), TAG_INTERNAL_SYNC);
+   if (!Mutex)
+   {
+       return STATUS_INSUFFICIENT_RESOURCES;
+   }
+
    ExInitializeFastMutex(Mutex);
 
    BitmapBytes = ROUND_UP(NUM_WINDOW_LESS_TIMERS, sizeof(ULONG) * 8) / 8;
@@ -619,12 +622,12 @@ NtUserSetTimer
    TIMERPROC lpTimerFunc
 )
 {
-   PWND Window;
+   PWND Window = NULL;
    DECLARE_RETURN(UINT_PTR);
 
    TRACE("Enter NtUserSetTimer\n");
    UserEnterExclusive();
-   Window = UserGetWindowObject(hWnd);
+   if (hWnd) Window = UserGetWindowObject(hWnd);
    UserLeave();
 
    RETURN(IntSetTimer(Window, nIDEvent, uElapse, lpTimerFunc, TMRF_TIFROMWND));
@@ -644,12 +647,12 @@ NtUserKillTimer
    UINT_PTR uIDEvent
 )
 {
-   PWND Window;
+   PWND Window = NULL;
    DECLARE_RETURN(BOOL);
 
    TRACE("Enter NtUserKillTimer\n");
    UserEnterExclusive();
-   Window = UserGetWindowObject(hWnd);
+   if (hWnd) Window = UserGetWindowObject(hWnd);
    UserLeave();
 
    RETURN(IntKillTimer(Window, uIDEvent, FALSE));

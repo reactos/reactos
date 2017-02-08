@@ -285,6 +285,11 @@ PoVolumeDevice(
     IN PDEVICE_OBJECT DeviceObject
 );
 
+VOID
+NTAPI
+PoRemoveVolumeDevice(
+    IN PDEVICE_OBJECT DeviceObject);
+
 //
 // Power State routines
 //

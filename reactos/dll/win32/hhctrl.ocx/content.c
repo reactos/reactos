@@ -1,5 +1,6 @@
 /*
  * Copyright 2007 Jacek Caban for CodeWeavers
+ * Copyright 2011 Owen Rudge for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,8 +22,9 @@
 
 #include "hhctrl.h"
 #include "stream.h"
+#include "resource.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
 
@@ -49,11 +51,11 @@ static void free_content_item(ContentItem *item)
     }
 }
 
-static void parse_obj_node_param(ContentItem *item, ContentItem *hhc_root, const char *text)
+static void parse_obj_node_param(ContentItem *item, ContentItem *hhc_root, const char *text, UINT code_page)
 {
     const char *ptr;
     LPWSTR *param, merge;
-    int len, wlen;
+    int len;
 
     ptr = get_attr(text, "name", &len);
     if(!ptr) {
@@ -78,10 +80,21 @@ static void parse_obj_node_param(ContentItem *item, ContentItem *hhc_root, const
         return;
     }
 
-    wlen = MultiByteToWideChar(CP_ACP, 0, ptr, len, NULL, 0);
-    *param = heap_alloc((wlen+1)*sizeof(WCHAR));
-    MultiByteToWideChar(CP_ACP, 0, ptr, len, *param, wlen);
-    (*param)[wlen] = 0;
+    /*
+     * "merge" parameter data (referencing another CHM file) can be incorporated into the "local" parameter
+     * by specifying the filename in the format:
+     *  MS-ITS:file.chm::/local_path.htm
+     */
+    if(param == &item->local && strstr(ptr, "::"))
+    {
+        const char *local = strstr(ptr, "::")+2;
+        int local_len = len-(local-ptr);
+
+        item->local = decode_html(local, local_len, code_page);
+        param = &merge;
+    }
+
+    *param = decode_html(ptr, len, code_page);
 
     if(param == &merge) {
         SetChmPath(&item->merge, hhc_root->merge.chm_file, merge);
@@ -139,7 +152,7 @@ static ContentItem *parse_sitemap_object(HHInfo *info, stream_t *stream, Content
         if(!strcasecmp(node_name.buf, "/object"))
             break;
         if(!strcasecmp(node_name.buf, "param"))
-            parse_obj_node_param(item, hhc_root, node.buf);
+            parse_obj_node_param(item, hhc_root, node.buf, info->pCHMInfo->codePage);
 
         strbuf_zero(&node);
     }
@@ -255,10 +268,12 @@ static void insert_content_item(HWND hwnd, ContentItem *parent, ContentItem *ite
     TVINSERTSTRUCTW tvis;
 
     memset(&tvis, 0, sizeof(tvis));
-    tvis.u.item.mask = TVIF_TEXT|TVIF_PARAM;
+    tvis.u.item.mask = TVIF_TEXT|TVIF_PARAM|TVIF_IMAGE|TVIF_SELECTEDIMAGE;
     tvis.u.item.cchTextMax = strlenW(item->name)+1;
     tvis.u.item.pszText = item->name;
     tvis.u.item.lParam = (LPARAM)item;
+    tvis.u.item.iImage = item->child ? HHTV_FOLDER : HHTV_DOCUMENT;
+    tvis.u.item.iSelectedImage = item->child ? HHTV_FOLDER : HHTV_DOCUMENT;
     tvis.hParent = parent ? parent->id : 0;
     tvis.hInsertAfter = TVI_LAST;
 
@@ -311,4 +326,19 @@ void InitContent(HHInfo *info)
 void ReleaseContent(HHInfo *info)
 {
     free_content_item(info->content);
+}
+
+void ActivateContentTopic(HWND hWnd, LPCWSTR filename, ContentItem *item)
+{
+    if (lstrcmpiW(item->local, filename) == 0)
+    {
+        SendMessageW(hWnd, TVM_SELECTITEM, TVGN_CARET, (LPARAM) item->id);
+        return;
+    }
+
+    if (item->next)
+        ActivateContentTopic(hWnd, filename, item->next);
+
+    if (item->child)
+        ActivateContentTopic(hWnd, filename, item->child);
 }

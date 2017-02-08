@@ -1,8 +1,12 @@
-
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <wingdi.h>
+#include <winreg.h>
 #include <tchar.h>
-#include <stdio.h>
-#include <string.h>
+//#include <stdio.h>
+//#include <string.h>
 #include <math.h>
 #include <float.h>
 #include <malloc.h>

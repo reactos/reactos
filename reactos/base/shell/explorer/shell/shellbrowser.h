@@ -141,6 +141,8 @@ struct ShellBrowser : public IShellBrowserImpl
 
 	void	invalidate_cache();
 
+	bool TranslateAccelerator(LPMSG lpmsg);
+
 protected:
 	HWND			_hwnd;
 	HWND			_hwndFrame;

@@ -24,51 +24,55 @@ extern "C" {
 /**
  * XInclude default processing.
  */
-XSLTPUBFUN void XSLTCALL		
+XSLTPUBFUN void XSLTCALL
 		xsltSetXIncludeDefault	(int xinclude);
-XSLTPUBFUN int XSLTCALL		
+XSLTPUBFUN int XSLTCALL
 		xsltGetXIncludeDefault	(void);
 
 /**
  * Export context to users.
  */
-XSLTPUBFUN xsltTransformContextPtr XSLTCALL 
+XSLTPUBFUN xsltTransformContextPtr XSLTCALL
 		xsltNewTransformContext	(xsltStylesheetPtr style,
 					 xmlDocPtr doc);
 
-XSLTPUBFUN void XSLTCALL			
+XSLTPUBFUN void XSLTCALL
 		xsltFreeTransformContext(xsltTransformContextPtr ctxt);
 
-XSLTPUBFUN xmlDocPtr XSLTCALL		
+XSLTPUBFUN xmlDocPtr XSLTCALL
 		xsltApplyStylesheetUser	(xsltStylesheetPtr style,
 					 xmlDocPtr doc,
 					 const char **params,
 					 const char *output,
 					 FILE * profile,
 					 xsltTransformContextPtr userCtxt);
+XSLTPUBFUN void XSLTCALL
+                xsltProcessOneNode      (xsltTransformContextPtr ctxt,
+                                         xmlNodePtr node,
+                                         xsltStackElemPtr params);
 /**
  * Private Interfaces.
  */
-XSLTPUBFUN void XSLTCALL		
+XSLTPUBFUN void XSLTCALL
 		xsltApplyStripSpaces	(xsltTransformContextPtr ctxt,
 					 xmlNodePtr node);
-XSLTPUBFUN xmlDocPtr XSLTCALL	
+XSLTPUBFUN xmlDocPtr XSLTCALL
 		xsltApplyStylesheet	(xsltStylesheetPtr style,
 					 xmlDocPtr doc,
 					 const char **params);
-XSLTPUBFUN xmlDocPtr XSLTCALL	
+XSLTPUBFUN xmlDocPtr XSLTCALL
 		xsltProfileStylesheet	(xsltStylesheetPtr style,
 					 xmlDocPtr doc,
 					 const char **params,
 					 FILE * output);
-XSLTPUBFUN int XSLTCALL		
+XSLTPUBFUN int XSLTCALL
 		xsltRunStylesheet	(xsltStylesheetPtr style,
 					 xmlDocPtr doc,
 					 const char **params,
 					 const char *output,
 					 xmlSAXHandlerPtr SAX,
 					 xmlOutputBufferPtr IObuf);
-XSLTPUBFUN int XSLTCALL		
+XSLTPUBFUN int XSLTCALL
 		xsltRunStylesheetUser	(xsltStylesheetPtr style,
 					 xmlDocPtr doc,
 					 const char **params,
@@ -77,101 +81,101 @@ XSLTPUBFUN int XSLTCALL
 					 xmlOutputBufferPtr IObuf,
 					 FILE * profile,
 					 xsltTransformContextPtr userCtxt);
-XSLTPUBFUN void XSLTCALL		
+XSLTPUBFUN void XSLTCALL
 		xsltApplyOneTemplate	(xsltTransformContextPtr ctxt,
 					 xmlNodePtr node,
 					 xmlNodePtr list,
 					 xsltTemplatePtr templ,
 					 xsltStackElemPtr params);
-XSLTPUBFUN void XSLTCALL 		
+XSLTPUBFUN void XSLTCALL
 		xsltDocumentElem	(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
 					 xsltStylePreCompPtr comp);
-XSLTPUBFUN void XSLTCALL 		
+XSLTPUBFUN void XSLTCALL
 		xsltSort		(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
 					 xsltStylePreCompPtr comp);
-XSLTPUBFUN void XSLTCALL 		
+XSLTPUBFUN void XSLTCALL
 		xsltCopy		(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
 					 xsltStylePreCompPtr comp);
-XSLTPUBFUN void XSLTCALL 		
+XSLTPUBFUN void XSLTCALL
 		xsltText		(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
 					 xsltStylePreCompPtr comp);
-XSLTPUBFUN void XSLTCALL 		
+XSLTPUBFUN void XSLTCALL
 		xsltElement		(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
 					 xsltStylePreCompPtr comp);
-XSLTPUBFUN void XSLTCALL 		
+XSLTPUBFUN void XSLTCALL
 		xsltComment		(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
 					 xsltStylePreCompPtr comp);
-XSLTPUBFUN void XSLTCALL 		
+XSLTPUBFUN void XSLTCALL
 		xsltAttribute		(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
 					 xsltStylePreCompPtr comp);
-XSLTPUBFUN void XSLTCALL 		
+XSLTPUBFUN void XSLTCALL
 		xsltProcessingInstruction(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
 					 xsltStylePreCompPtr comp);
-XSLTPUBFUN void XSLTCALL 		
+XSLTPUBFUN void XSLTCALL
 		xsltCopyOf		(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
 					 xsltStylePreCompPtr comp);
-XSLTPUBFUN void XSLTCALL 		
+XSLTPUBFUN void XSLTCALL
 		xsltValueOf		(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
 					 xsltStylePreCompPtr comp);
-XSLTPUBFUN void XSLTCALL 		
+XSLTPUBFUN void XSLTCALL
 		xsltNumber		(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
 					 xsltStylePreCompPtr comp);
-XSLTPUBFUN void XSLTCALL 		
+XSLTPUBFUN void XSLTCALL
 		xsltApplyImports	(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
 					 xsltStylePreCompPtr comp);
-XSLTPUBFUN void XSLTCALL 		
+XSLTPUBFUN void XSLTCALL
 		xsltCallTemplate	(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
 					 xsltStylePreCompPtr comp);
-XSLTPUBFUN void XSLTCALL 		
+XSLTPUBFUN void XSLTCALL
 		xsltApplyTemplates	(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
 					 xsltStylePreCompPtr comp);
-XSLTPUBFUN void XSLTCALL 		
+XSLTPUBFUN void XSLTCALL
 		xsltChoose		(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
 					 xsltStylePreCompPtr comp);
-XSLTPUBFUN void XSLTCALL 		
+XSLTPUBFUN void XSLTCALL
 		xsltIf			(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
 					 xsltStylePreCompPtr comp);
-XSLTPUBFUN void XSLTCALL 		
+XSLTPUBFUN void XSLTCALL
 		xsltForEach		(xsltTransformContextPtr ctxt,
 	                                 xmlNodePtr node,
 					 xmlNodePtr inst,
 					 xsltStylePreCompPtr comp);
-XSLTPUBFUN void XSLTCALL		
+XSLTPUBFUN void XSLTCALL
 		xsltRegisterAllElement	(xsltTransformContextPtr ctxt);
 
-XSLTPUBFUN xmlNodePtr XSLTCALL	
+XSLTPUBFUN xmlNodePtr XSLTCALL
 		xsltCopyTextString	(xsltTransformContextPtr ctxt,
 					 xmlNodePtr target,
 					 const xmlChar *string,
@@ -189,7 +193,7 @@ XSLTPUBFUN int XSLTCALL
 /*
  * Hook for the debugger if activated.
  */
-XSLTPUBFUN void XSLTCALL		
+XSLTPUBFUN void XSLTCALL
 		xslHandleDebugger	(xmlNodePtr cur,
 					 xmlNodePtr node,
 					 xsltTemplatePtr templ,

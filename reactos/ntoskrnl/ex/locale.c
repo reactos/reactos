@@ -209,7 +209,7 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
     HANDLE KeyHandle;
     ULONG ValueLength;
     WCHAR ValueBuffer[20];
-    HANDLE UserKey = NULL;
+    HANDLE UserKey;
     NTSTATUS Status;
     PAGED_CODE();
 
@@ -231,6 +231,7 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
                              L"\\Registry\\Machine\\System\\CurrentControlSet"
                              L"\\Control\\Nls\\Language");
         RtlInitUnicodeString(&ValueName, L"Default");
+        UserKey = NULL;
     }
 
     /* Initailize the object attributes */
@@ -286,7 +287,10 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
     }
 
     /* Close the user key */
-    ZwClose(UserKey);
+    if (UserKey)
+    {
+        ObCloseHandle(UserKey, KernelMode);
+    }
 
     /* Check for success */
     if (NT_SUCCESS(Status))
@@ -349,8 +353,12 @@ NTSTATUS
 NTAPI
 NtQueryDefaultUILanguage(OUT LANGID* LanguageId)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
+    LANGID SafeLanguageId;
     PAGED_CODE();
+
+    /* Call the executive helper routine */
+    Status = ExpGetCurrentUserUILanguage(L"MultiUILanguageId", &SafeLanguageId);
 
     /* Enter SEH for probing */
     _SEH2_TRY
@@ -362,11 +370,14 @@ NtQueryDefaultUILanguage(OUT LANGID* LanguageId)
             ProbeForWriteLangid(LanguageId);
         }
 
-        /* Call the executive helper routine */
-        Status = ExpGetCurrentUserUILanguage(L"MultiUILanguageId", LanguageId);
         if (NT_SUCCESS(Status))
         {
             /* Success, return the language */
+            *LanguageId = SafeLanguageId;
+        }
+        else
+        {
+            /* Failed, use fallback value */
             *LanguageId = PsInstallUILanguageId;
         }
     }

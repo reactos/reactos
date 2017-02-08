@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -83,26 +83,38 @@ static int SIC_LoadOverlayIcon(int icon_idx);
  * NOTES
  *  Creates a new icon as a copy of the passed-in icon, overlayed with a
  *  shortcut image.
+ * FIXME: This should go to the ImageList implementation!
  */
 static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
-{    ICONINFO SourceIconInfo, ShortcutIconInfo, TargetIconInfo;
-    HICON ShortcutIcon, TargetIcon;
-    BITMAP SourceBitmapInfo, ShortcutBitmapInfo;
-    HDC SourceDC = NULL,
-      ShortcutDC = NULL,
-      TargetDC = NULL,
-      ScreenDC = NULL;
-    HBITMAP OldSourceBitmap = NULL,
-      OldShortcutBitmap = NULL,
+{    
+    ICONINFO ShortcutIconInfo, TargetIconInfo;
+    HICON ShortcutIcon = NULL, TargetIcon;
+    BITMAP TargetBitmapInfo, ShortcutBitmapInfo;
+    HDC ShortcutDC = NULL,
+      TargetDC = NULL;
+    HBITMAP OldShortcutBitmap = NULL,
       OldTargetBitmap = NULL;
 
     static int s_imgListIdx = -1;
+    ZeroMemory(&ShortcutIconInfo, sizeof(ShortcutIconInfo));
+    ZeroMemory(&TargetIconInfo, sizeof(TargetIconInfo));
 
-    /* Get information about the source icon and shortcut overlay */
-    if (! GetIconInfo(SourceIcon, &SourceIconInfo)
-        || 0 == GetObjectW(SourceIconInfo.hbmColor, sizeof(BITMAP), &SourceBitmapInfo))
+    /* Get information about the source icon and shortcut overlay.
+     * We will write over the source bitmaps to get the final ones */
+    if (! GetIconInfo(SourceIcon, &TargetIconInfo))
+        return NULL;
+    
+    /* Is it possible with the ImageList implementation? */
+    if(!TargetIconInfo.hbmColor)
     {
-      return NULL;
+        /* Maybe we'll support this at some point */
+        FIXME("1bpp icon wants its overlay!\n");
+        goto fail;
+    }
+        
+    if(!GetObjectW(TargetIconInfo.hbmColor, sizeof(BITMAP), &TargetBitmapInfo))
+    {
+        goto fail;
     }
 
     /* search for the shortcut icon only once */
@@ -121,23 +133,25 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
     } else
         ShortcutIcon = NULL;
 
-    if (NULL == ShortcutIcon
-        || ! GetIconInfo(ShortcutIcon, &ShortcutIconInfo)
-        || 0 == GetObjectW(ShortcutIconInfo.hbmColor, sizeof(BITMAP), &ShortcutBitmapInfo))
+    if (!ShortcutIcon || !GetIconInfo(ShortcutIcon, &ShortcutIconInfo))
     {
-      return NULL;
+        goto fail;
+    }
+    
+    /* Is it possible with the ImageLists ? */
+    if(!ShortcutIconInfo.hbmColor)
+    {
+        /* Maybe we'll support this at some point */
+        FIXME("Should draw 1bpp overlay!\n");
+        goto fail;
+    }
+    
+    if(!GetObjectW(ShortcutIconInfo.hbmColor, sizeof(BITMAP), &ShortcutBitmapInfo))
+    {
+        goto fail;
     }
 
-    TargetIconInfo = SourceIconInfo;
-    TargetIconInfo.hbmMask = NULL;
-    TargetIconInfo.hbmColor = NULL;
-
-    /* Setup the source, shortcut and target masks */
-    SourceDC = CreateCompatibleDC(NULL);
-    if (NULL == SourceDC) goto fail;
-    OldSourceBitmap = (HBITMAP)SelectObject(SourceDC, SourceIconInfo.hbmMask);
-    if (NULL == OldSourceBitmap) goto fail;
-
+    /* Setup the masks */
     ShortcutDC = CreateCompatibleDC(NULL);
     if (NULL == ShortcutDC) goto fail;
     OldShortcutBitmap = (HBITMAP)SelectObject(ShortcutDC, ShortcutIconInfo.hbmMask);
@@ -145,44 +159,120 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
 
     TargetDC = CreateCompatibleDC(NULL);
     if (NULL == TargetDC) goto fail;
-    TargetIconInfo.hbmMask = CreateCompatibleBitmap(TargetDC, SourceBitmapInfo.bmWidth,
-                                                    SourceBitmapInfo.bmHeight);
-    if (NULL == TargetIconInfo.hbmMask) goto fail;
-    ScreenDC = GetDC(NULL);
-    if (NULL == ScreenDC) goto fail;
-    TargetIconInfo.hbmColor = CreateCompatibleBitmap(ScreenDC, SourceBitmapInfo.bmWidth,
-                                                     SourceBitmapInfo.bmHeight);
-    ReleaseDC(NULL, ScreenDC);
-    if (NULL == TargetIconInfo.hbmColor) goto fail;
     OldTargetBitmap = (HBITMAP)SelectObject(TargetDC, TargetIconInfo.hbmMask);
     if (NULL == OldTargetBitmap) goto fail;
 
-    /* Create the target mask by ANDing the source and shortcut masks */
-    if (! BitBlt(TargetDC, 0, 0, SourceBitmapInfo.bmWidth, SourceBitmapInfo.bmHeight,
-                 SourceDC, 0, 0, SRCCOPY) ||
-        ! BitBlt(TargetDC, 0, SourceBitmapInfo.bmHeight - ShortcutBitmapInfo.bmHeight,
-                 ShortcutBitmapInfo.bmWidth, ShortcutBitmapInfo.bmHeight,
-                 ShortcutDC, 0, 0, SRCAND))
+    /* Create the complete mask by ANDing the source and shortcut masks.
+     * NOTE: in an ImageList, all icons have the same dimensions */
+    if (!BitBlt(TargetDC, 0, 0, ShortcutBitmapInfo.bmWidth, ShortcutBitmapInfo.bmHeight,
+                ShortcutDC, 0, 0, SRCAND))
     {
       goto fail;
     }
 
-    /* Setup the source and target xor bitmap */
-    if (NULL == SelectObject(SourceDC, SourceIconInfo.hbmColor) ||
+    /*
+     * We must remove or add the alpha component to the shortcut overlay:
+     * If we don't, SRCCOPY will copy it to our resulting icon, resulting in a
+     * partially transparent icons where it shouldn't be, and to an invisible icon
+     * if the underlying icon don't have any alpha channel information. (16bpp only icon for instance).
+     * But if the underlying icon has alpha channel information, then we must mark the overlay information
+     * as opaque.
+     * NOTE: This code sucks(tm) and should belong to the ImageList implementation.
+     * NOTE2: there are better ways to do this.
+     */
+    if(ShortcutBitmapInfo.bmBitsPixel == 32)
+    {
+        BOOL add_alpha;
+        BYTE buffer[sizeof(BITMAPINFO) + 256 * sizeof(RGBQUAD)];
+        BITMAPINFO* lpbmi = (BITMAPINFO*)buffer;
+        PVOID bits;
+        PULONG pixel;
+        INT i, j;
+        
+        /* Find if the source bitmap has an alpha channel */
+        if(TargetBitmapInfo.bmBitsPixel != 32) add_alpha = FALSE;
+        else
+        {
+            ZeroMemory(buffer, sizeof(buffer));
+            lpbmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+            lpbmi->bmiHeader.biWidth = TargetBitmapInfo.bmWidth;
+            lpbmi->bmiHeader.biHeight = TargetBitmapInfo.bmHeight;
+            lpbmi->bmiHeader.biPlanes = 1;
+            lpbmi->bmiHeader.biBitCount = 32;
+            
+            bits = HeapAlloc(GetProcessHeap(), 0, TargetBitmapInfo.bmHeight * TargetBitmapInfo.bmWidthBytes);
+            
+            if(!bits) goto fail;
+            
+            if(!GetDIBits(TargetDC, TargetIconInfo.hbmColor, 0, TargetBitmapInfo.bmHeight, bits, lpbmi, DIB_RGB_COLORS))
+            {
+                ERR("GetBIBits failed!\n");
+                HeapFree(GetProcessHeap(), 0, bits);
+                goto fail;
+            }
+            
+            i = j = 0;
+            pixel = (PULONG)bits;
+            
+            for(i=0; i<TargetBitmapInfo.bmHeight; i++)
+            {
+                for(j=0; j<TargetBitmapInfo.bmWidth; j++)
+                {
+                    add_alpha = (*pixel++ & 0xFF000000) != 0;
+                    if(add_alpha) break;
+                }
+                if(add_alpha) break;
+            }
+            HeapFree(GetProcessHeap(), 0, bits);
+        }
+        
+        /* Allocate the bits */
+        bits = HeapAlloc(GetProcessHeap(), 0, ShortcutBitmapInfo.bmHeight*ShortcutBitmapInfo.bmWidthBytes);
+        if(!bits) goto fail;
+        
+        ZeroMemory(buffer, sizeof(buffer));
+        lpbmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+        lpbmi->bmiHeader.biWidth = ShortcutBitmapInfo.bmWidth;
+        lpbmi->bmiHeader.biHeight = ShortcutBitmapInfo.bmHeight;
+        lpbmi->bmiHeader.biPlanes = 1;
+        lpbmi->bmiHeader.biBitCount = 32;
+        
+        if(!GetDIBits(TargetDC, ShortcutIconInfo.hbmColor, 0, ShortcutBitmapInfo.bmHeight, bits, lpbmi, DIB_RGB_COLORS))
+        {
+            ERR("GetBIBits failed!\n");
+            HeapFree(GetProcessHeap(), 0, bits);
+            goto fail;
+        }
+        
+        pixel = (PULONG)bits;
+        /* Remove alpha channel component or make it totally opaque */
+        for(i=0; i<ShortcutBitmapInfo.bmHeight; i++)
+        {
+            for(j=0; j<ShortcutBitmapInfo.bmWidth; j++)
+            {
+                if(add_alpha) *pixel++ |= 0xFF000000;
+                else *pixel++ &= 0x00FFFFFF;
+            }
+        }
+        
+        /* GetDIBits return BI_BITFIELDS with masks set to 0, and SetDIBits fails when masks are 0. The irony... */
+        lpbmi->bmiHeader.biCompression = BI_RGB;
+        
+        /* Set the bits again */
+        if(!SetDIBits(TargetDC, ShortcutIconInfo.hbmColor, 0, ShortcutBitmapInfo.bmHeight, bits, lpbmi, DIB_RGB_COLORS))
+        {
+            ERR("SetBIBits failed!, %lu\n", GetLastError());
+            HeapFree(GetProcessHeap(), 0, bits);
+            goto fail;
+        }
+        HeapFree(GetProcessHeap(), 0, bits);
+    }
+
+    /* Now do the copy. We overwrite the original icon data */
+    if (NULL == SelectObject(ShortcutDC, ShortcutIconInfo.hbmColor) ||
         NULL == SelectObject(TargetDC, TargetIconInfo.hbmColor))
-    {
-      goto fail;
-    }
-
-    /* Copy the source color bitmap to the target */
-    if (! BitBlt(TargetDC, 0, 0, SourceBitmapInfo.bmWidth, SourceBitmapInfo.bmHeight,
-                 SourceDC, 0, 0, SRCCOPY)) goto fail;
-
-    /* Copy the source xor bitmap to the target and clear out part of it by using
-       the shortcut mask */
-    if (NULL == SelectObject(ShortcutDC, ShortcutIconInfo.hbmColor)) goto fail;
-    if (!MaskBlt(TargetDC, 0, SourceBitmapInfo.bmHeight - ShortcutBitmapInfo.bmHeight,
-                 ShortcutBitmapInfo.bmWidth, ShortcutBitmapInfo.bmHeight,
+        goto fail;
+    if (!MaskBlt(TargetDC, 0, 0, ShortcutBitmapInfo.bmWidth, ShortcutBitmapInfo.bmHeight,
                  ShortcutDC, 0, 0, ShortcutIconInfo.hbmMask, 0, 0,
                  MAKEROP4(0xAA0000, SRCCOPY)))
     {
@@ -192,11 +282,9 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
     /* Clean up, we're not goto'ing to 'fail' after this so we can be lazy and not set
        handles to NULL */
     SelectObject(TargetDC, OldTargetBitmap);
-    DeleteObject(TargetDC);
+    DeleteDC(TargetDC);
     SelectObject(ShortcutDC, OldShortcutBitmap);
-    DeleteObject(ShortcutDC);
-    SelectObject(SourceDC, OldSourceBitmap);
-    DeleteObject(SourceDC);
+    DeleteDC(ShortcutDC);
 
     /* Create the icon using the bitmaps prepared earlier */
     TargetIcon = CreateIconIndirect(&TargetIconInfo);
@@ -204,19 +292,24 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
     /* CreateIconIndirect copies the bitmaps, so we can release our bitmaps now */
     DeleteObject(TargetIconInfo.hbmColor);
     DeleteObject(TargetIconInfo.hbmMask);
+    /* Delete what GetIconInfo gave us */
+    DeleteObject(ShortcutIconInfo.hbmColor);
+    DeleteObject(ShortcutIconInfo.hbmMask);
+    DestroyIcon(ShortcutIcon);
 
     return TargetIcon;
 
 fail:
     /* Clean up scratch resources we created */
     if (NULL != OldTargetBitmap) SelectObject(TargetDC, OldTargetBitmap);
+    if (NULL != TargetDC) DeleteDC(TargetDC);
+    if (NULL != OldShortcutBitmap) SelectObject(ShortcutDC, OldShortcutBitmap);
+    if (NULL != ShortcutDC) DeleteDC(ShortcutDC);
     if (NULL != TargetIconInfo.hbmColor) DeleteObject(TargetIconInfo.hbmColor);
     if (NULL != TargetIconInfo.hbmMask) DeleteObject(TargetIconInfo.hbmMask);
-    if (NULL != TargetDC) DeleteObject(TargetDC);
-    if (NULL != OldShortcutBitmap) SelectObject(ShortcutDC, OldShortcutBitmap);
-    if (NULL != ShortcutDC) DeleteObject(ShortcutDC);
-    if (NULL != OldSourceBitmap) SelectObject(SourceDC, OldSourceBitmap);
-    if (NULL != SourceDC) DeleteObject(SourceDC);
+    if (NULL != ShortcutIconInfo.hbmColor) DeleteObject(ShortcutIconInfo.hbmColor);
+    if (NULL != ShortcutIconInfo.hbmMask) DeleteObject(ShortcutIconInfo.hbmColor);
+    if (NULL != ShortcutIcon) DestroyIcon(ShortcutIcon);
 
     return NULL;
 }
@@ -228,8 +321,9 @@ fail:
  *  appends an icon pair to the end of the cache
  */
 static INT SIC_IconAppend (LPCWSTR sSourceFile, INT dwSourceIndex, HICON hSmallIcon, HICON hBigIcon, DWORD dwFlags)
-{    LPSIC_ENTRY lpsice;
-    INT ret, index, index1;
+{
+    LPSIC_ENTRY lpsice;
+    INT ret, index, index1, indexDPA;
     WCHAR path[MAX_PATH];
     TRACE("%s %i %p %p\n", debugstr_w(sSourceFile), dwSourceIndex, hSmallIcon ,hBigIcon);
 
@@ -244,26 +338,42 @@ static INT SIC_IconAppend (LPCWSTR sSourceFile, INT dwSourceIndex, HICON hSmallI
 
     EnterCriticalSection(&SHELL32_SicCS);
 
-    index = DPA_InsertPtr(sic_hdpa, 0x7fff, lpsice);
-    if ( INVALID_INDEX == index )
+    indexDPA = DPA_InsertPtr(sic_hdpa, 0x7fff, lpsice);
+    if ( -1 == indexDPA )
     {
-      HeapFree(GetProcessHeap(), 0, lpsice->sSourceFile);
-      SHFree(lpsice);
-      ret = INVALID_INDEX;
+        ret = INVALID_INDEX;
+        goto leave;
     }
-    else
-    {
-      index = ImageList_AddIcon (ShellSmallIconList, hSmallIcon);
-      index1= ImageList_AddIcon (ShellBigIconList, hBigIcon);
 
-      if (index!=index1)
-      {
+    index = ImageList_AddIcon (ShellSmallIconList, hSmallIcon);
+    index1= ImageList_AddIcon (ShellBigIconList, hBigIcon);
+
+    /* Something went wrong when allocating a new image in the list. Abort. */
+    if((index == -1) || (index1 == -1))
+    {
+        WARN("Something went wrong when adding the icon to the list: small - 0x%x, big - 0x%x.\n",
+            index, index1);
+        if(index != -1) ImageList_Remove(ShellSmallIconList, index);
+        if(index1 != -1) ImageList_Remove(ShellBigIconList, index1);
+        ret = INVALID_INDEX;
+        goto leave;
+    }
+
+    if (index!=index1)
+    {
         FIXME("iconlists out of sync 0x%x 0x%x\n", index, index1);
-      }
-      lpsice->dwListIndex = index;
-      ret = lpsice->dwListIndex;
+        /* What to do ???? */
     }
+    lpsice->dwListIndex = index;
+    ret = lpsice->dwListIndex;
 
+leave:
+    if(ret == INVALID_INDEX)
+    {
+        if(indexDPA != -1) DPA_DeletePtr(sic_hdpa, indexDPA);
+        HeapFree(GetProcessHeap(), 0, lpsice->sSourceFile);
+        SHFree(lpsice);
+    }
     LeaveCriticalSection(&SHELL32_SicCS);
     return ret;
 }
@@ -274,23 +384,23 @@ static INT SIC_IconAppend (LPCWSTR sSourceFile, INT dwSourceIndex, HICON hSmallI
  *  gets small/big icon by number from a file
  */
 static INT SIC_LoadIcon (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags)
-{    HICON    hiconLarge=0;
-    HICON    hiconSmall=0;
-    HICON     hiconLargeShortcut;
-    HICON    hiconSmallShortcut;
-
-#if defined(__CYGWIN__) || defined (__MINGW32__) || defined(_MSC_VER)
+{
+    HICON hiconLarge=0;
+    HICON hiconSmall=0;
+    UINT ret;
     static UINT (WINAPI*PrivateExtractIconExW)(LPCWSTR,int,HICON*,HICON*,UINT) = NULL;
 
-    if (!PrivateExtractIconExW) {
+    if (!PrivateExtractIconExW)
+    {
         HMODULE hUser32 = GetModuleHandleA("user32");
         PrivateExtractIconExW = (UINT(WINAPI*)(LPCWSTR,int,HICON*,HICON*,UINT)) GetProcAddress(hUser32, "PrivateExtractIconExW");
     }
 
-        if (PrivateExtractIconExW)
+    if (PrivateExtractIconExW)
+    {
         PrivateExtractIconExW(sSourceFile, dwSourceIndex, &hiconLarge, &hiconSmall, 1);
+    }
     else
-#endif
     {
         PrivateExtractIconsW(sSourceFile, dwSourceIndex, 32, 32, &hiconLarge, NULL, 1, 0);
         PrivateExtractIconsW(sSourceFile, dwSourceIndex, 16, 16, &hiconSmall, NULL, 1, 0);
@@ -298,29 +408,36 @@ static INT SIC_LoadIcon (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags)
 
     if ( !hiconLarge ||  !hiconSmall)
     {
-      WARN("failure loading icon %i from %s (%p %p)\n", dwSourceIndex, debugstr_w(sSourceFile), hiconLarge, hiconSmall);
-      return -1;
+        WARN("failure loading icon %i from %s (%p %p)\n", dwSourceIndex, debugstr_w(sSourceFile), hiconLarge, hiconSmall);
+        if(hiconLarge) DestroyIcon(hiconLarge);
+        if(hiconSmall) DestroyIcon(hiconSmall);
+        return INVALID_INDEX;
     }
 
     if (0 != (dwFlags & GIL_FORSHORTCUT))
     {
-      hiconLargeShortcut = SIC_OverlayShortcutImage(hiconLarge, TRUE);
-      hiconSmallShortcut = SIC_OverlayShortcutImage(hiconSmall, FALSE);
-      if (NULL != hiconLargeShortcut && NULL != hiconSmallShortcut)
-      {
-        hiconLarge = hiconLargeShortcut;
-        hiconSmall = hiconSmallShortcut;
-      }
-      else
-      {
-        WARN("Failed to create shortcut overlayed icons\n");
-        if (NULL != hiconLargeShortcut) DestroyIcon(hiconLargeShortcut);
-        if (NULL != hiconSmallShortcut) DestroyIcon(hiconSmallShortcut);
-        dwFlags &= ~ GIL_FORSHORTCUT;
-      }
+        HICON hiconLargeShortcut = SIC_OverlayShortcutImage(hiconLarge, TRUE);
+        HICON hiconSmallShortcut = SIC_OverlayShortcutImage(hiconSmall, FALSE);
+        if (NULL != hiconLargeShortcut && NULL != hiconSmallShortcut)
+        {
+            DestroyIcon(hiconLarge);
+            DestroyIcon(hiconSmall);
+            hiconLarge = hiconLargeShortcut;
+            hiconSmall = hiconSmallShortcut;
+        }
+        else
+        {
+            WARN("Failed to create shortcut overlayed icons\n");
+            if (NULL != hiconLargeShortcut) DestroyIcon(hiconLargeShortcut);
+            if (NULL != hiconSmallShortcut) DestroyIcon(hiconSmallShortcut);
+            dwFlags &= ~ GIL_FORSHORTCUT;
+        }
     }
 
-    return SIC_IconAppend (sSourceFile, dwSourceIndex, hiconSmall, hiconLarge, dwFlags);
+    ret = SIC_IconAppend (sSourceFile, dwSourceIndex, hiconSmall, hiconLarge, dwFlags);
+    DestroyIcon(hiconLarge);
+    DestroyIcon(hiconSmall);
+    return ret;
 }
 /*****************************************************************************
  * SIC_GetIconIndex            [internal]
@@ -367,6 +484,7 @@ INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags )
     LeaveCriticalSection(&SHELL32_SicCS);
     return ret;
 }
+
 /*****************************************************************************
  * SIC_Initialize            [internal]
  */
@@ -378,6 +496,7 @@ BOOL SIC_Initialize(void)
     HDC hDC;
     INT bpp;
     DWORD ilMask;
+    BOOL result = FALSE;
 
     TRACE("Entered SIC_Initialize\n");
 
@@ -397,11 +516,11 @@ BOOL SIC_Initialize(void)
     if (!hDC)
     {
         ERR("Failed to create information context (error %d)\n", GetLastError());
-        return FALSE;
+        goto end;
     }
 
     bpp = GetDeviceCaps(hDC, BITSPIXEL);
-    ReleaseDC(NULL, hDC);
+    DeleteDC(hDC);
 
     if (bpp <= 4)
         ilMask = ILC_COLOR4;
@@ -428,61 +547,83 @@ BOOL SIC_Initialize(void)
                                           ilMask,
                                           100,
                                           100);
+    if (!ShellSmallIconList)
+    {
+        ERR("Failed to create the small icon list.\n");
+        goto end;
+    }
 
     ShellBigIconList = ImageList_Create(cx_large,
                                         cy_large,
                                         ilMask,
                                         100,
                                         100);
-    if (ShellSmallIconList)
+    if (!ShellBigIconList)
     {
-        /* Load the document icon, which is used as the default if an icon isn't found. */
-        hSm = (HICON)LoadImageW(shell32_hInstance,
-                                MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
-                                IMAGE_ICON,
-                                cx_small,
-                                cy_small,
-                                LR_SHARED | LR_DEFAULTCOLOR);
-        if (!hSm)
-        {
-            ERR("Failed to load IDI_SHELL_DOCUMENT icon1!\n");
-            return FALSE;
-        }
+        ERR("Failed to create the big icon list.\n");
+        goto end;
     }
-    else
+    
+    /* Load the document icon, which is used as the default if an icon isn't found. */
+    hSm = (HICON)LoadImageW(shell32_hInstance,
+                            MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
+                            IMAGE_ICON,
+                            cx_small,
+                            cy_small,
+                            LR_SHARED | LR_DEFAULTCOLOR);
+    if (!hSm)
     {
-        ERR("Failed to load ShellSmallIconList\n");
-        return FALSE;
+        ERR("Failed to load small IDI_SHELL_DOCUMENT icon!\n");
+        goto end;
     }
 
-    if (ShellBigIconList)
+    hLg = (HICON)LoadImageW(shell32_hInstance,
+                            MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
+                            IMAGE_ICON,
+                            cx_large,
+                            cy_large,
+                            LR_SHARED | LR_DEFAULTCOLOR);
+    if (!hLg)
     {
-        hLg = (HICON)LoadImageW(shell32_hInstance,
-                                MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
-                                IMAGE_ICON,
-                                cx_large,
-                                cy_large,
-                                LR_SHARED | LR_DEFAULTCOLOR);
-        if (!hLg)
-        {
-            ERR("Failed to load IDI_SHELL_DOCUMENT icon2!\n");
-            DestroyIcon(hSm);
-            return FALSE;
-        }
-    }
-    else
-    {
-        ERR("Failed to load ShellBigIconList\n");
-        return FALSE;
+        ERR("Failed to load large IDI_SHELL_DOCUMENT icon!\n");
+        goto end;
     }
 
-    SIC_IconAppend(swShell32Name, IDI_SHELL_DOCUMENT-1, hSm, hLg, 0);
-    SIC_IconAppend(swShell32Name, -IDI_SHELL_DOCUMENT, hSm, hLg, 0);
+    if(SIC_IconAppend(swShell32Name, IDI_SHELL_DOCUMENT-1, hSm, hLg, 0) == INVALID_INDEX)
+    {
+        ERR("Failed to add IDI_SHELL_DOCUMENT icon to cache.\n");
+        goto end;
+    }
+    if(SIC_IconAppend(swShell32Name, -IDI_SHELL_DOCUMENT, hSm, hLg, 0) == INVALID_INDEX)
+    {
+        ERR("Failed to add IDI_SHELL_DOCUMENT icon to cache.\n");
+        goto end;
+    }
+    
+    /* Everything went fine */
+    result = TRUE;
+    
+end:
+    /* The image list keeps a copy of the icons, we must destroy them */
+    if(hSm) DestroyIcon(hSm);
+    if(hLg) DestroyIcon(hLg);
+    
+    /* Clean everything if something went wrong */
+    if(!result)
+    {
+        if(sic_hdpa) DPA_Destroy(sic_hdpa);
+        if(ShellSmallIconList) ImageList_Destroy(ShellSmallIconList);
+        if(ShellBigIconList) ImageList_Destroy(ShellSmallIconList);
+        sic_hdpa = NULL;
+        ShellSmallIconList = NULL;
+        ShellBigIconList = NULL;
+    }
 
     TRACE("hIconSmall=%p hIconBig=%p\n",ShellSmallIconList, ShellBigIconList);
 
-    return TRUE;
+    return result;
 }
+
 /*************************************************************************
  * SIC_Destroy
  *

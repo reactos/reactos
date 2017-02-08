@@ -8,67 +8,77 @@
 
 /* INCLUDES *******************************************************************/
 
+#pragma once
+
 #include <ntdef.h>
 
+//
+// Return error codes.
+//
 #define CP_GET_SUCCESS  0
 #define CP_GET_NODATA   1
 #define CP_GET_ERROR    2
 
-#define CPPORT_FLAG_MODEM_CONTROL	0x02
+//
+// COM port flags.
+//
+#define CPPORT_FLAG_MODEM_CONTROL   0x02
+
 typedef struct _CPPORT
 {
-	PUCHAR Address;
-	ULONG Baud;
-	USHORT Flags;
+    PUCHAR Address;
+    ULONG  BaudRate;
+    USHORT Flags;
 } CPPORT, *PCPPORT;
-	
-VOID
-NTAPI
-CpInitialize(
-	IN PCPPORT Port,
-	IN PUCHAR Address,
-	IN ULONG Rate
-	);
 
 VOID
 NTAPI
 CpEnableFifo(
-	IN PUCHAR Address,
-	IN BOOLEAN Enable
-	);
-
-BOOLEAN
-NTAPI
-CpDoesPortExist(
-	IN PUCHAR Address
-	);
-	
-UCHAR
-NTAPI
-CpReadLsr(
-	IN PCPPORT Port,
-	IN UCHAR ExpectedValue
-	);
+    IN PUCHAR  Address,
+    IN BOOLEAN Enable
+);
 
 VOID
 NTAPI
 CpSetBaud(
-	IN PCPPORT Port,
-	IN ULONG Rate
-	);
+    IN PCPPORT Port,
+    IN ULONG   BaudRate
+);
+
+NTSTATUS
+NTAPI
+CpInitialize(
+    IN PCPPORT Port,
+    IN PUCHAR  Address,
+    IN ULONG   BaudRate
+);
+
+BOOLEAN
+NTAPI
+CpDoesPortExist(
+    IN PUCHAR Address
+);
+
+UCHAR
+NTAPI
+CpReadLsr(
+    IN PCPPORT Port,
+    IN UCHAR   ExpectedValue
+);
 
 USHORT
 NTAPI
 CpGetByte(
-	IN PCPPORT Port,
-	IN PUCHAR Byte,
-	IN BOOLEAN Wait,
-	IN BOOLEAN Poll
-	);
-	
+    IN  PCPPORT Port,
+    OUT PUCHAR  Byte,
+    IN  BOOLEAN Wait
+);
+
 VOID
 NTAPI
 CpPutByte(
-	IN PCPPORT Port,
-	IN UCHAR Byte
-	);
+    IN PCPPORT Port,
+    IN UCHAR   Byte
+);
+
+/* EOF */

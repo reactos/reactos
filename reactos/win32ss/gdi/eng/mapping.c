@@ -11,10 +11,6 @@
 #define NDEBUG
 #include <debug.h>
 
-// HACK!!!
-#define MmMapViewInSessionSpace MmMapViewInSystemSpace
-#define MmUnmapViewInSessionSpace MmUnmapViewInSystemSpace
-
 HANDLE ghSystem32Directory;
 HANDLE ghRootDirectory;
 
@@ -29,6 +25,13 @@ EngMapSectionView(
     LARGE_INTEGER liSectionOffset;
     PVOID pvBaseAddress;
     NTSTATUS Status;
+
+    /* Check if the size is ok (for 64 bit) */
+    if (cjSize > ULONG_MAX)
+    {
+        DPRINT1("chSize out of range: 0x%Id\n", cjSize);
+        return NULL;
+    }
 
     /* Align the offset at allocation granularity and compensate for the size */
     liSectionOffset.QuadPart = cjOffset & ~(MM_ALLOCATION_GRANULARITY - 1);
@@ -52,7 +55,7 @@ EngMapSectionView(
     }
 
     /* Secure the section memory */
-    *phSecure = EngSecureMem(pvBaseAddress, cjSize);
+    *phSecure = EngSecureMem(pvBaseAddress, (ULONG)cjSize);
     if (!*phSecure)
     {
         ZwUnmapViewOfSection(NtCurrentProcess(), pvBaseAddress);
@@ -80,10 +83,7 @@ EngUnmapSectionView(
 
     /* Unmap the section view */
     Status = MmUnmapViewOfSection(PsGetCurrentProcess(), pvBits);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Could not unmap section view!\n");
-    }
+    ASSERT(NT_SUCCESS(Status));
 }
 
 
@@ -127,6 +127,48 @@ EngCreateSection(
 
     return pSection;
 }
+
+PVOID
+NTAPI
+EngCreateSectionHack(
+    IN ULONG fl,
+    IN SIZE_T cjSize,
+    IN ULONG ulTag)
+{
+    NTSTATUS Status;
+    PENGSECTION pSection;
+    PVOID pvSectionObject;
+    LARGE_INTEGER liSize;
+
+    /* Allocate a section object */
+    pSection = EngAllocMem(0, sizeof(ENGSECTION), 'stsU');
+    if (!pSection) return NULL;
+
+    liSize.QuadPart = cjSize;
+    Status = MmCreateSection(&pvSectionObject,
+                             SECTION_ALL_ACCESS,
+                             NULL,
+                             &liSize,
+                             PAGE_READWRITE,
+                             SEC_COMMIT | 1,
+                             NULL,
+                             NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create a section Status=0x%x\n", Status);
+        EngFreeMem(pSection);
+        return NULL;
+    }
+
+    /* Set the fields of the section */
+    pSection->ulTag = ulTag;
+    pSection->pvSectionObject = pvSectionObject;
+    pSection->pvMappedBase = NULL;
+    pSection->cjViewSize = cjSize;
+
+    return pSection;
+}
+
 
 
 BOOL
@@ -188,7 +230,7 @@ EngMapSection(
         }
         else
         {
-            DPRINT1("Failed to unmap a section @ &p Status=0x%x\n",
+            DPRINT1("Failed to unmap a section @ %p Status=0x%x\n",
                     pSection->pvMappedBase, Status);
         }
     }
@@ -250,7 +292,7 @@ EngAllocSectionMem(
     if (cjSize == 0) return NULL;
 
     /* Allocate a section object */
-    pSection = EngCreateSection(fl, cjSize, ulTag);
+    pSection = EngCreateSectionHack(fl, cjSize, ulTag);
     if (!pSection)
     {
         *ppvSection = NULL;
@@ -355,7 +397,7 @@ EngLoadModuleEx(
     Status = MmCreateSection(&pFileView->pSection,
                              SECTION_ALL_ACCESS,
                              NULL,
-                             cjSizeOfModule ? &liSize : NULL,
+                             &liSize,
                              fl & FVF_READONLY ? PAGE_EXECUTE_READ : PAGE_EXECUTE_READWRITE,
                              SEC_COMMIT,
                              hFile,
@@ -381,7 +423,8 @@ EngLoadModuleEx(
 
 HANDLE
 APIENTRY
-EngLoadModule(LPWSTR pwsz)
+EngLoadModule(
+    _In_ LPWSTR pwsz)
 {
     /* Forward to EngLoadModuleEx */
     return (HANDLE)EngLoadModuleEx(pwsz, 0, FVF_READONLY | FVF_SYSTEMROOT);
@@ -390,8 +433,8 @@ EngLoadModule(LPWSTR pwsz)
 HANDLE
 APIENTRY
 EngLoadModuleForWrite(
-	IN LPWSTR pwsz,
-	IN ULONG  cjSizeOfModule)
+    _In_ LPWSTR pwsz,
+    _In_ ULONG  cjSizeOfModule)
 {
     /* Forward to EngLoadModuleEx */
     return (HANDLE)EngLoadModuleEx(pwsz, cjSizeOfModule, FVF_SYSTEMROOT);
@@ -400,18 +443,18 @@ EngLoadModuleForWrite(
 PVOID
 APIENTRY
 EngMapModule(
-	IN  HANDLE h,
-	OUT PULONG pulSize)
+    _In_  HANDLE h,
+    _Out_ PULONG pulSize)
 {
     PFILEVIEW pFileView = (PFILEVIEW)h;
     NTSTATUS Status;
 
     pFileView->cjView = 0;
 
-    /* Map the section in session space */
-    Status = MmMapViewInSessionSpace(pFileView->pSection,
-                                     &pFileView->pvKView,
-                                     &pFileView->cjView);
+    /* FIXME: Use system space because ARM3 doesn't support executable sections yet */
+    Status = MmMapViewInSystemSpace(pFileView->pSection,
+                                    &pFileView->pvKView,
+                                    &pFileView->cjView);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to map a section Status=0x%x\n", Status);
@@ -419,19 +462,20 @@ EngMapModule(
         return NULL;
     }
 
-    *pulSize = pFileView->cjView;
+    *pulSize = (ULONG)pFileView->cjView;
     return pFileView->pvKView;
 }
 
 VOID
 APIENTRY
-EngFreeModule(IN HANDLE h)
+EngFreeModule(
+    _In_ HANDLE h)
 {
     PFILEVIEW pFileView = (PFILEVIEW)h;
     NTSTATUS Status;
 
-    /* Unmap the section */
-    Status = MmUnmapViewInSessionSpace(pFileView->pvKView);
+    /* FIXME: Use system space because ARM3 doesn't support executable sections yet */
+    Status = MmUnmapViewInSystemSpace(pFileView->pvKView);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("MmUnmapViewInSessionSpace failed: 0x%lx\n", Status);
@@ -445,12 +489,14 @@ EngFreeModule(IN HANDLE h)
     EngFreeMem(pFileView);
 }
 
+_Success_(return != 0)
+_When_(cjSize != 0, _At_(return, _Out_writes_bytes_(cjSize)))
 PVOID
 APIENTRY
 EngMapFile(
-    IN LPWSTR pwsz,
-    IN ULONG cjSize,
-    OUT ULONG_PTR *piFile)
+    _In_ LPWSTR pwsz,
+    _In_ ULONG cjSize,
+    _Out_ ULONG_PTR *piFile)
 {
     HANDLE hModule;
     PVOID pvBase;
@@ -479,7 +525,7 @@ EngMapFile(
 BOOL
 APIENTRY
 EngUnmapFile(
-    IN ULONG_PTR iFile)
+    _In_ ULONG_PTR iFile)
 {
     HANDLE hModule = (HANDLE)iFile;
 
@@ -492,9 +538,9 @@ EngUnmapFile(
 BOOL
 APIENTRY
 EngMapFontFileFD(
-	IN  ULONG_PTR iFile,
-	OUT PULONG    *ppjBuf,
-	OUT ULONG     *pcjBuf)
+	_In_ ULONG_PTR iFile,
+	_Outptr_result_bytebuffer_(*pcjBuf) PULONG *ppjBuf,
+	_Out_ ULONG *pcjBuf)
 {
     // www.osr.com/ddk/graphics/gdifncs_0co7.htm
     UNIMPLEMENTED;
@@ -504,7 +550,7 @@ EngMapFontFileFD(
 VOID
 APIENTRY
 EngUnmapFontFileFD(
-    IN ULONG_PTR iFile)
+    _In_ ULONG_PTR iFile)
 {
     // http://www.osr.com/ddk/graphics/gdifncs_6wbr.htm
     UNIMPLEMENTED;
@@ -513,9 +559,9 @@ EngUnmapFontFileFD(
 BOOL
 APIENTRY
 EngMapFontFile(
-	ULONG_PTR iFile,
-	PULONG    *ppjBuf,
-	ULONG     *pcjBuf)
+    _In_ ULONG_PTR iFile,
+    _Outptr_result_bytebuffer_(*pcjBuf) PULONG *ppjBuf,
+    _Out_ ULONG *pcjBuf)
 {
     // www.osr.com/ddk/graphics/gdifncs_3up3.htm
     return EngMapFontFileFD(iFile, ppjBuf, pcjBuf);
@@ -524,7 +570,7 @@ EngMapFontFile(
 VOID
 APIENTRY
 EngUnmapFontFile(
-    IN ULONG_PTR iFile)
+    _In_ ULONG_PTR iFile)
 {
     // www.osr.com/ddk/graphics/gdifncs_09wn.htm
     EngUnmapFontFileFD(iFile);

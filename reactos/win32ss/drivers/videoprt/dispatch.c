@@ -205,7 +205,9 @@ IntVideoPortDispatchDeviceControl(
    DriverExtension = DeviceExtension->DriverExtension;
 
    /* Translate the IRP to a VRP */
-   vrp = ExAllocatePool(NonPagedPool, sizeof(VIDEO_REQUEST_PACKET));
+   vrp = ExAllocatePoolWithTag(NonPagedPool,
+                               sizeof(VIDEO_REQUEST_PACKET),
+                               TAG_REQUEST_PACKET);
    if (NULL == vrp)
    {
       return STATUS_NO_MEMORY;
@@ -228,7 +230,7 @@ IntVideoPortDispatchDeviceControl(
       vrp);
 
    /* Free the VRP */
-   ExFreePool(vrp);
+   ExFreePoolWithTag(vrp, TAG_REQUEST_PACKET);
 
    INFO_(VIDEOPRT, "- Returned status: %x\n", Irp->IoStatus.Status);
 
@@ -561,7 +563,7 @@ IntVideoPortDispatchPnp(
     IN PIRP Irp)
 {
     PVIDEO_PORT_COMMON_EXTENSION CommonExtension = DeviceObject->DeviceExtension;
-    
+
     if (CommonExtension->Fdo)
         return IntVideoPortDispatchFdoPnp(DeviceObject, Irp);
     else

@@ -1,5 +1,4 @@
-/* $Id$
- * 
+/* 
  * LZ Decompression functions
  *
  * Copyright 1996 Marcus Meissner

@@ -2,11 +2,11 @@
 /* pngpriv.h - private declarations for use inside libpng
  *
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2011 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2012 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
- * Last changed in libpng 1.5.7 [December 15, 2011]
+ * Last changed in libpng 1.5.10 [March 29, 2012]
  *
  * This code is released under the libpng license.
  * For conditions of distribution and use, see the disclaimer
@@ -131,6 +131,46 @@
 /* pngconf.h does not set PNG_DLL_EXPORT unless it is required, so: */
 #ifndef PNG_DLL_EXPORT
 #  define PNG_DLL_EXPORT
+#endif
+
+/* SECURITY and SAFETY:
+ *
+ * By default libpng is built without any internal limits on image size,
+ * individual heap (png_malloc) allocations or the total amount of memory used.
+ * If PNG_SAFE_LIMITS_SUPPORTED is defined, however, the limits below are used
+ * (unless individually overridden).  These limits are believed to be fairly
+ * safe, but builders of secure systems should verify the values against the
+ * real system capabilities.
+ */
+
+#ifdef PNG_SAFE_LIMITS_SUPPORTED
+   /* 'safe' limits */
+#  ifndef PNG_USER_WIDTH_MAX
+#     define PNG_USER_WIDTH_MAX 1000000
+#  endif
+#  ifndef PNG_USER_HEIGHT_MAX
+#     define PNG_USER_HEIGHT_MAX 1000000
+#  endif
+#  ifndef PNG_USER_CHUNK_CACHE_MAX
+#     define PNG_USER_CHUNK_CACHE_MAX 128
+#  endif
+#  ifndef PNG_USER_CHUNK_MALLOC_MAX
+#     define PNG_USER_CHUNK_MALLOC_MAX 8000000
+#  endif
+#else
+   /* values for no limits */
+#  ifndef PNG_USER_WIDTH_MAX
+#     define PNG_USER_WIDTH_MAX 0x7fffffff
+#  endif
+#  ifndef PNG_USER_HEIGHT_MAX
+#     define PNG_USER_HEIGHT_MAX 0x7fffffff
+#  endif
+#  ifndef PNG_USER_CHUNK_CACHE_MAX
+#     define PNG_USER_CHUNK_CACHE_MAX 0
+#  endif
+#  ifndef PNG_USER_CHUNK_MALLOC_MAX
+#     define PNG_USER_CHUNK_MALLOC_MAX 0
+#  endif
 #endif
 
 /* This is used for 16 bit gamma tables - only the top level pointers are const,
@@ -310,6 +350,8 @@ typedef PNG_CONST png_uint_16p FAR * png_const_uint_16pp;
 
 #if defined(WIN32) || defined(_Windows) || defined(_WINDOWS) || \
     defined(_WIN32) || defined(__WIN32__)
+#  define WIN32_NO_STATUS
+#  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>  /* defines _WINDOWS_ macro */
 #endif
 
@@ -376,7 +418,7 @@ typedef PNG_CONST png_uint_16p FAR * png_const_uint_16pp;
 #if PNG_ALIGN_TYPE == PNG_ALIGN_SIZE
    /* This is used because in some compiler implementations non-aligned
     * structure members are supported, so the offsetof approach below fails.
-    * Set PNG_ALIGN_TO_SIZE=0 for compiler combinations where unaligned access
+    * Set PNG_ALIGN_SIZE=0 for compiler combinations where unaligned access
     * is good for performance.  Do not do this unless you have tested the result
     * and understand it.
     */
@@ -426,6 +468,7 @@ typedef PNG_CONST png_uint_16p FAR * png_const_uint_16pp;
 #define PNG_BACKGROUND_IS_GRAY     0x800
 #define PNG_HAVE_PNG_SIGNATURE    0x1000
 #define PNG_HAVE_CHUNK_AFTER_IDAT 0x2000 /* Have another chunk after IDAT */
+#define PNG_HAVE_iCCP             0x4000
 
 /* Flags for the transformations the PNG library does on the image data */
 #define PNG_BGR                 0x0001
@@ -782,10 +825,8 @@ PNG_EXTERN void png_write_IEND PNGARG((png_structp png_ptr));
 #  ifdef PNG_FLOATING_POINT_SUPPORTED
 PNG_EXTERN void png_write_gAMA PNGARG((png_structp png_ptr, double file_gamma));
 #  endif
-#  ifdef PNG_FIXED_POINT_SUPPORTED
 PNG_EXTERN void png_write_gAMA_fixed PNGARG((png_structp png_ptr,
     png_fixed_point file_gamma));
-#  endif
 #endif
 
 #ifdef PNG_WRITE_sBIT_SUPPORTED
@@ -952,8 +993,8 @@ PNG_EXTERN void png_do_write_interlace PNGARG((png_row_infop row_info,
 /* Unfilter a row: check the filter value before calling this, there is no point
  * calling it for PNG_FILTER_VALUE_NONE.
  */
-PNG_EXTERN void png_read_filter_row PNGARG((png_structp pp, png_row_infop row_info,
-    png_bytep row, png_const_bytep prev_row, int filter));
+PNG_EXTERN void png_read_filter_row PNGARG((png_structp pp, png_row_infop
+    row_info, png_bytep row, png_const_bytep prev_row, int filter));
 
 PNG_EXTERN void png_read_filter_row_up_neon PNGARG((png_row_infop row_info,
     png_bytep row, png_const_bytep prev_row));
@@ -1218,10 +1259,8 @@ PNG_EXTERN void png_handle_zTXt PNGARG((png_structp png_ptr, png_infop info_ptr,
     png_uint_32 length));
 #endif
 
-#ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED
 PNG_EXTERN void png_handle_unknown PNGARG((png_structp png_ptr,
     png_infop info_ptr, png_uint_32 length));
-#endif
 
 PNG_EXTERN void png_check_chunk_name PNGARG((png_structp png_ptr,
     png_uint_32 chunk_name));
@@ -1355,6 +1394,13 @@ PNG_EXTERN void png_check_IHDR PNGARG((png_structp png_ptr,
     int color_type, int interlace_type, int compression_type,
     int filter_type));
 
+/* Added at libpng version 1.5.10 */
+#if defined(PNG_READ_CHECK_FOR_INVALID_INDEX_SUPPORTED) || \
+    defined(PNG_WRITE_CHECK_FOR_INVALID_INDEX_SUPPORTED)
+PNG_EXTERN void png_do_check_palette_indexes PNGARG((png_structp png_ptr,
+    png_row_infop row_info));
+#endif
+
 /* Free all memory used by the read (old method - NOT DLL EXPORTED) */
 PNG_EXTERN void png_read_destroy PNGARG((png_structp png_ptr,
     png_infop info_ptr, png_infop end_info_ptr));
@@ -1445,14 +1491,16 @@ PNG_EXTERN void png_formatted_warning(png_structp png_ptr,
 /* ASCII to FP interfaces, currently only implemented if sCAL
  * support is required.
  */
-#if defined(PNG_READ_sCAL_SUPPORTED)
+#ifdef PNG_sCAL_SUPPORTED
 /* MAX_DIGITS is actually the maximum number of characters in an sCAL
  * width or height, derived from the precision (number of significant
  * digits - a build time settable option) and assumpitions about the
  * maximum ridiculous exponent.
  */
 #define PNG_sCAL_MAX_DIGITS (PNG_sCAL_PRECISION+1/*.*/+1/*E*/+10/*exponent*/)
+#endif
 
+#ifdef PNG_sCAL_SUPPORTED
 #ifdef PNG_FLOATING_POINT_SUPPORTED
 PNG_EXTERN void png_ascii_from_fp PNGARG((png_structp png_ptr, png_charp ascii,
     png_size_t size, double fp, unsigned int precision));
@@ -1536,15 +1584,15 @@ PNG_EXTERN void png_ascii_from_fixed PNGARG((png_structp png_ptr,
 #define PNG_FP_IS_ZERO(state) (((state) & PNG_FP_Z_MASK) == PNG_FP_SAW_DIGIT)
 #define PNG_FP_IS_POSITIVE(state) (((state) & PNG_FP_NZ_MASK) == PNG_FP_Z_MASK)
 #define PNG_FP_IS_NEGATIVE(state) (((state) & PNG_FP_NZ_MASK) == PNG_FP_NZ_MASK)
- 
-/* The actual parser.  This can be called repeatedly, it updates
+
+/* The actual parser.  This can be called repeatedly. It updates
  * the index into the string and the state variable (which must
- * be initialzed to 0).  It returns a result code, as above.  There
+ * be initialized to 0).  It returns a result code, as above.  There
  * is no point calling the parser any more if it fails to advance to
  * the end of the string - it is stuck on an invalid character (or
  * terminated by '\0').
  *
- * Note that the pointer will consume an E or even an E+ then leave
+ * Note that the pointer will consume an E or even an E+ and then leave
  * a 'maybe' state even though a preceding integer.fraction is valid.
  * The PNG_FP_WAS_VALID flag indicates that a preceding substring was
  * a valid number.  It's possible to recover from this by calling
@@ -1583,7 +1631,7 @@ PNG_EXTERN png_fixed_point png_muldiv_warn PNGARG((png_structp png_ptr,
     png_fixed_point a, png_int_32 multiplied_by, png_int_32 divided_by));
 #endif
 
-#ifdef PNG_READ_GAMMA_SUPPORTED
+#if (defined PNG_READ_GAMMA_SUPPORTED) || (defined PNG_cHRM_SUPPORTED)
 /* Calculate a reciprocal - used for gamma values.  This returns
  * 0 if the argument is 0 in order to maintain an undefined value,
  * there are no warnings.
@@ -1618,7 +1666,72 @@ PNG_EXTERN void png_build_gamma_table PNGARG((png_structp png_ptr,
     int bit_depth));
 #endif
 
-/* Maintainer: Put new private prototypes here ^ and in libpngpf.3 */
+/* Missing declarations if FIXED_POINT is *not* supported - fixed properly
+ * in libpng 1.6
+ */
+#ifndef PNG_FIXED_POINT_SUPPORTED
+#ifdef PNG_cHRM_SUPPORTED
+PNG_EXTERN png_uint_32 png_get_cHRM_XYZ_fixed PNGARG(
+    (png_structp png_ptr, png_const_infop info_ptr,
+    png_fixed_point *int_red_X, png_fixed_point *int_red_Y,
+    png_fixed_point *int_red_Z, png_fixed_point *int_green_X,
+    png_fixed_point *int_green_Y, png_fixed_point *int_green_Z,
+    png_fixed_point *int_blue_X, png_fixed_point *int_blue_Y,
+    png_fixed_point *int_blue_Z));
+PNG_EXTERN void png_set_cHRM_XYZ_fixed PNGARG((png_structp png_ptr,
+    png_infop info_ptr, png_fixed_point int_red_X, png_fixed_point int_red_Y,
+    png_fixed_point int_red_Z, png_fixed_point int_green_X,
+    png_fixed_point int_green_Y, png_fixed_point int_green_Z,
+    png_fixed_point int_blue_X, png_fixed_point int_blue_Y,
+    png_fixed_point int_blue_Z));
+PNG_EXTERN void png_set_cHRM_fixed PNGARG((png_structp png_ptr,
+    png_infop info_ptr, png_fixed_point int_white_x,
+    png_fixed_point int_white_y, png_fixed_point int_red_x,
+    png_fixed_point int_red_y, png_fixed_point int_green_x,
+    png_fixed_point int_green_y, png_fixed_point int_blue_x,
+    png_fixed_point int_blue_y));
+#endif
+
+#ifdef PNG_gAMA_SUPPORTED
+PNG_EXTERN png_uint_32 png_get_gAMA_fixed PNGARG(
+    (png_const_structp png_ptr, png_const_infop info_ptr,
+    png_fixed_point *int_file_gamma));
+PNG_EXTERN void png_set_gAMA_fixed PNGARG((png_structp png_ptr,
+    png_infop info_ptr, png_fixed_point int_file_gamma));
+#endif
+
+#ifdef PNG_READ_BACKGROUND_SUPPORTED
+PNG_EXTERN void png_set_background_fixed PNGARG((png_structp png_ptr,
+    png_const_color_16p background_color, int background_gamma_code,
+    int need_expand, png_fixed_point background_gamma));
+#endif
+
+#ifdef PNG_READ_ALPHA_MODE_SUPPORTED
+PNG_EXTERN void png_set_alpha_mode_fixed PNGARG((png_structp png_ptr,
+    int mode, png_fixed_point output_gamma));
+#endif
+
+#ifdef PNG_READ_GAMMA_SUPPORTED
+PNG_EXTERN void png_set_gamma_fixed PNGARG((png_structp png_ptr,
+    png_fixed_point screen_gamma, png_fixed_point override_file_gamma));
+#endif
+
+#ifdef PNG_READ_RGB_TO_GRAY_SUPPORTED
+PNG_EXTERN void png_set_rgb_to_gray_fixed PNGARG((png_structp png_ptr,
+    int error_action, png_fixed_point red, png_fixed_point green));
+#endif
+#endif /* FIX MISSING !FIXED_POINT DECLARATIONS */
+
+#ifdef PNG_FILTER_OPTIMIZATIONS
+PNG_EXTERN void PNG_FILTER_OPTIMIZATIONS(png_structp png_ptr, unsigned int bpp);
+   /* This is the initialization function for hardware specific optimizations,
+    * one implementation (for ARM NEON machines) is contained in
+    * arm/filter_neon.c.  It need not be defined - the generic code will be used
+    * if not.
+    */
+#endif
+
+/* Maintainer: Put new private prototypes here ^ */
 
 #include "pngdebug.h"
 

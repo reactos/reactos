@@ -30,7 +30,7 @@
  *          Addison-Wesley, 1983. ISBN 0-201-06672-6.
  */
 
-/* @(#) $Id: trees.c 47933 2010-07-03 22:34:05Z dreimer $ */
+/* @(#) $Id$ */
 
 /* #define GEN_TREES_H */
 

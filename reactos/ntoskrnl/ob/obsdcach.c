@@ -427,7 +427,7 @@ ObLogSecurityDescriptor(IN PSECURITY_DESCRIPTOR InputSecurityDescriptor,
             *OutputSecurityDescriptor = &SdHeader->SecurityDescriptor;
             
             /* Free anything that we may have had to create */
-            if (NewHeader) ExFreePool(NewHeader);
+            if (NewHeader) ExFreePoolWithTag(NewHeader, TAG_OB_SD_CACHE);
             return STATUS_SUCCESS;
         }
         

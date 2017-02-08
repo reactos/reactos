@@ -18,23 +18,41 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 
 #include <stdarg.h>
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "winuser.h"
-#include "msidefs.h"
+#include <windef.h>
+//#include "winbase.h"
+//#include "winerror.h"
+//#include "winuser.h"
+//#include "msidefs.h"
 #include "msipriv.h"
-#include "activscp.h"
-#include "oleauto.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <activscp.h>
+#include <oleauto.h>
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
-#include "msiserver.h"
+//#include "msiserver.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
+
+#ifdef _WIN64
+
+#define IActiveScriptParse_Release IActiveScriptParse64_Release
+#define IActiveScriptParse_InitNew IActiveScriptParse64_InitNew
+#define IActiveScriptParse_ParseScriptText IActiveScriptParse64_ParseScriptText
+
+#else
+
+#define IActiveScriptParse_Release IActiveScriptParse32_Release
+#define IActiveScriptParse_InitNew IActiveScriptParse32_InitNew
+#define IActiveScriptParse_ParseScriptText IActiveScriptParse32_ParseScriptText
+
+#endif
 
 static const WCHAR szJScript[] = { 'J','S','c','r','i','p','t',0};
 static const WCHAR szVBScript[] = { 'V','B','S','c','r','i','p','t',0};
@@ -43,192 +61,54 @@ static const WCHAR szSession[] = {'S','e','s','s','i','o','n',0};
 /*
  * MsiActiveScriptSite - Our IActiveScriptSite implementation.
  */
-
 typedef struct {
-    IActiveScriptSite lpVtbl;
-    IDispatch *pInstaller;
-    IDispatch *pSession;
+    IActiveScriptSite IActiveScriptSite_iface;
+    IDispatch *installer;
+    IDispatch *session;
     LONG ref;
 } MsiActiveScriptSite;
 
-static const struct IActiveScriptSiteVtbl ASS_Vtbl;
-
-static HRESULT create_ActiveScriptSite(IUnknown *pUnkOuter, LPVOID *ppObj)
+static inline MsiActiveScriptSite *impl_from_IActiveScriptSite( IActiveScriptSite *iface )
 {
-    MsiActiveScriptSite* object;
-
-    TRACE("(%p,%p)\n", pUnkOuter, ppObj);
-
-    if( pUnkOuter )
-        return CLASS_E_NOAGGREGATION;
-
-    object = msi_alloc_zero( sizeof(MsiActiveScriptSite) );
-
-    object->lpVtbl.lpVtbl = &ASS_Vtbl;
-    object->ref = 1;
-    object->pInstaller = NULL;
-    object->pSession = NULL;
-
-    *ppObj = object;
-
-    return S_OK;
-}
-
-/*
- * Call a script.
- */
-DWORD call_script(MSIHANDLE hPackage, INT type, LPCWSTR script, LPCWSTR function, LPCWSTR action)
-{
-    HRESULT hr;
-    IActiveScript *pActiveScript = NULL;
-    IActiveScriptParse *pActiveScriptParse = NULL;
-    MsiActiveScriptSite *pActiveScriptSite = NULL;
-    IDispatch *pDispatch = NULL;
-    DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
-    DISPID dispid;
-    CLSID clsid;
-    VARIANT var;
-    DWORD ret = ERROR_INSTALL_FAILURE;
-
-    CoInitialize(NULL);
-
-    /* Create MsiActiveScriptSite object */
-    hr = create_ActiveScriptSite(NULL, (void **)&pActiveScriptSite);
-    if (hr != S_OK) goto done;
-
-    /* Create an installer object */
-    hr = create_msiserver(NULL, (LPVOID *)&pActiveScriptSite->pInstaller);
-    if (hr != S_OK) goto done;
-
-    /* Create a session object */
-    hr = create_session(hPackage, pActiveScriptSite->pInstaller, &pActiveScriptSite->pSession);
-    if (hr != S_OK) goto done;
-
-    /* Create the scripting engine */
-    if ((type & 7) == msidbCustomActionTypeJScript)
-        hr = CLSIDFromProgID(szJScript, &clsid);
-    else if ((type & 7) == msidbCustomActionTypeVBScript)
-        hr = CLSIDFromProgID(szVBScript, &clsid);
-    else {
-        ERR("Unknown script type %d\n", type);
-        goto done;
-    }
-    if (FAILED(hr)) {
-        ERR("Could not find CLSID for Windows Script\n");
-        goto done;
-    }
-    hr = CoCreateInstance(&clsid, NULL, CLSCTX_INPROC_SERVER, &IID_IActiveScript, (void **)&pActiveScript);
-    if (FAILED(hr)) {
-        ERR("Could not instantiate class for Windows Script\n");
-        goto done;
-    }
-
-    /* Get the IActiveScriptParse engine interface */
-    hr = IActiveScript_QueryInterface(pActiveScript, &IID_IActiveScriptParse, (void **)&pActiveScriptParse);
-    if (FAILED(hr)) goto done;
-
-    /* Give our host to the engine */
-    hr = IActiveScript_SetScriptSite(pActiveScript, (IActiveScriptSite *)pActiveScriptSite);
-    if (FAILED(hr)) goto done;
-
-    /* Initialize the script engine */
-    hr = IActiveScriptParse64_InitNew(pActiveScriptParse);
-    if (FAILED(hr)) goto done;
-
-    /* Add the session object */
-    hr = IActiveScript_AddNamedItem(pActiveScript, szSession, SCRIPTITEM_GLOBALMEMBERS);
-    if (FAILED(hr)) goto done;
-
-    /* Pass the script to the engine */
-    hr = IActiveScriptParse64_ParseScriptText(pActiveScriptParse, script, NULL, NULL, NULL, 0, 0, 0L, NULL, NULL);
-    if (FAILED(hr)) goto done;
-
-    /* Start processing the script */
-    hr = IActiveScript_SetScriptState(pActiveScript, SCRIPTSTATE_CONNECTED);
-    if (FAILED(hr)) goto done;
-
-    /* Call a function if necessary through the IDispatch interface */
-    if (function != NULL && strlenW(function) > 0) {
-        TRACE("Calling function %s\n", debugstr_w(function));
-
-        hr = IActiveScript_GetScriptDispatch(pActiveScript, NULL, &pDispatch);
-        if (FAILED(hr)) goto done;
-
-        hr = IDispatch_GetIDsOfNames(pDispatch, &IID_NULL, (WCHAR **)&function, 1,LOCALE_USER_DEFAULT, &dispid);
-        if (FAILED(hr)) goto done;
-
-        hr = IDispatch_Invoke(pDispatch, dispid, &IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &dispparamsNoArgs, &var, NULL, NULL);
-        if (FAILED(hr)) goto done;
-
-        /* Check return value, if it's not IDOK we failed */
-        hr = VariantChangeType(&var, &var, 0, VT_I4);
-        if (FAILED(hr)) goto done;
-
-        if (V_I4(&var) == IDOK)
-            ret = ERROR_SUCCESS;
-        else ret = ERROR_INSTALL_FAILURE;
-
-        VariantClear(&var);
-    } else {
-        /* If no function to be called, MSI behavior is to succeed */
-        ret = ERROR_SUCCESS;
-    }
-
-done:
-
-    /* Free everything that needs to be freed */
-    if (pDispatch) IDispatch_Release(pDispatch);
-    if (pActiveScript) IActiveScriptSite_Release(pActiveScript);
-    if (pActiveScriptSite &&
-        pActiveScriptSite->pSession) IUnknown_Release((IUnknown *)pActiveScriptSite->pSession);
-    if (pActiveScriptSite &&
-        pActiveScriptSite->pInstaller) IUnknown_Release((IUnknown *)pActiveScriptSite->pInstaller);
-    if (pActiveScriptSite) IUnknown_Release((IUnknown *)pActiveScriptSite);
-
-    CoUninitialize();    /* must call even if CoInitialize failed */
-
-    return ret;
+    return CONTAINING_RECORD(iface, MsiActiveScriptSite, IActiveScriptSite_iface);
 }
 
 /*
  * MsiActiveScriptSite
  */
-
-/*** IUnknown methods ***/
-static HRESULT WINAPI MsiActiveScriptSite_QueryInterface(IActiveScriptSite* iface, REFIID riid, void** ppvObject)
+static HRESULT WINAPI MsiActiveScriptSite_QueryInterface(IActiveScriptSite* iface, REFIID riid, void** obj)
 {
-    MsiActiveScriptSite *This = (MsiActiveScriptSite *)iface;
+    MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
 
-    TRACE("(%p/%p)->(%s,%p)\n", iface, This, debugstr_guid(riid), ppvObject);
+    TRACE("(%p)->(%s, %p)\n", This, debugstr_guid(riid), obj);
 
     if (IsEqualGUID(riid, &IID_IUnknown) ||
         IsEqualGUID(riid, &IID_IActiveScriptSite))
     {
-        IClassFactory_AddRef(iface);
-        *ppvObject = This;
+        IActiveScriptSite_AddRef(iface);
+        *obj = iface;
         return S_OK;
     }
 
-    TRACE("(%p)->(%s,%p),not found\n",This,debugstr_guid(riid),ppvObject);
+    *obj = NULL;
 
     return E_NOINTERFACE;
 }
 
 static ULONG WINAPI MsiActiveScriptSite_AddRef(IActiveScriptSite* iface)
 {
-    MsiActiveScriptSite *This = (MsiActiveScriptSite *)iface;
-
-    TRACE("(%p/%p)\n", iface, This);
-
-    return InterlockedIncrement(&This->ref);
+    MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
+    ULONG ref = InterlockedIncrement(&This->ref);
+    TRACE("(%p)->(%d)\n", This, ref);
+    return ref;
 }
 
 static ULONG WINAPI MsiActiveScriptSite_Release(IActiveScriptSite* iface)
 {
-    MsiActiveScriptSite *This = (MsiActiveScriptSite *)iface;
+    MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p/%p)\n", iface, This);
+    TRACE("(%p)->(%d)\n", This, ref);
 
     if (!ref)
         msi_free(This);
@@ -236,18 +116,18 @@ static ULONG WINAPI MsiActiveScriptSite_Release(IActiveScriptSite* iface)
     return ref;
 }
 
-/*** IActiveScriptSite methods **/
 static HRESULT WINAPI MsiActiveScriptSite_GetLCID(IActiveScriptSite* iface, LCID* plcid)
 {
-    MsiActiveScriptSite *This = (MsiActiveScriptSite *)iface;
-    TRACE("(%p/%p)->(%p)\n", This, iface, plcid);
+    MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
+    TRACE("(%p)->(%p)\n", This, plcid);
     return E_NOTIMPL;  /* Script will use system-defined locale */
 }
 
 static HRESULT WINAPI MsiActiveScriptSite_GetItemInfo(IActiveScriptSite* iface, LPCOLESTR pstrName, DWORD dwReturnMask, IUnknown** ppiunkItem, ITypeInfo** ppti)
 {
-    MsiActiveScriptSite *This = (MsiActiveScriptSite *)iface;
-    TRACE("(%p/%p)->(%p,%d,%p,%p)\n", This, iface, pstrName, dwReturnMask, ppiunkItem, ppti);
+    MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
+
+    TRACE("(%p)->(%p, %d, %p, %p)\n", This, pstrName, dwReturnMask, ppiunkItem, ppti);
 
     /* Determine the kind of pointer that is requested, and make sure placeholder is valid */
     if (dwReturnMask & SCRIPTINFO_ITYPEINFO) {
@@ -261,10 +141,14 @@ static HRESULT WINAPI MsiActiveScriptSite_GetItemInfo(IActiveScriptSite* iface, 
 
     /* Are we looking for the session object? */
     if (!strcmpW(szSession, pstrName)) {
-        if (dwReturnMask & SCRIPTINFO_ITYPEINFO)
-            return load_type_info(This->pSession, ppti, &DIID_Session, 0);
+        if (dwReturnMask & SCRIPTINFO_ITYPEINFO) {
+            HRESULT hr = get_typeinfo(Session_tid, ppti);
+            if (SUCCEEDED(hr))
+                ITypeInfo_AddRef(*ppti);
+            return hr;
+        }
         else if (dwReturnMask & SCRIPTINFO_IUNKNOWN) {
-            IDispatch_QueryInterface(This->pSession, &IID_IUnknown, (void **)ppiunkItem);
+            IDispatch_QueryInterface(This->session, &IID_IUnknown, (void **)ppiunkItem);
             return S_OK;
         }
     }
@@ -274,15 +158,15 @@ static HRESULT WINAPI MsiActiveScriptSite_GetItemInfo(IActiveScriptSite* iface, 
 
 static HRESULT WINAPI MsiActiveScriptSite_GetDocVersionString(IActiveScriptSite* iface, BSTR* pbstrVersion)
 {
-    MsiActiveScriptSite *This = (MsiActiveScriptSite *)iface;
-    TRACE("(%p/%p)->(%p)\n", This, iface, pbstrVersion);
+    MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
+    TRACE("(%p)->(%p)\n", This, pbstrVersion);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI MsiActiveScriptSite_OnScriptTerminate(IActiveScriptSite* iface, const VARIANT* pvarResult, const EXCEPINFO* pexcepinfo)
 {
-    MsiActiveScriptSite *This = (MsiActiveScriptSite *)iface;
-    TRACE("(%p/%p)->(%p,%p)\n", This, iface, pvarResult, pexcepinfo);
+    MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
+    TRACE("(%p)->(%p, %p)\n", This, pvarResult, pexcepinfo);
     return S_OK;
 }
 
@@ -323,11 +207,11 @@ static HRESULT WINAPI MsiActiveScriptSite_OnStateChange(IActiveScriptSite* iface
 
 static HRESULT WINAPI MsiActiveScriptSite_OnScriptError(IActiveScriptSite* iface, IActiveScriptError* pscripterror)
 {
-    MsiActiveScriptSite *This = (MsiActiveScriptSite *)iface;
+    MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
     EXCEPINFO exception;
     HRESULT hr;
 
-    TRACE("(%p/%p)->(%p)\n", This, iface, pscripterror);
+    TRACE("(%p)->(%p)\n", This, pscripterror);
 
     memset(&exception, 0, sizeof(EXCEPINFO));
     hr = IActiveScriptError_GetExceptionInfo(pscripterror, &exception);
@@ -344,19 +228,19 @@ static HRESULT WINAPI MsiActiveScriptSite_OnScriptError(IActiveScriptSite* iface
 
 static HRESULT WINAPI MsiActiveScriptSite_OnEnterScript(IActiveScriptSite* iface)
 {
-    MsiActiveScriptSite *This = (MsiActiveScriptSite *)iface;
-    TRACE("(%p/%p)\n", This, iface);
+    MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
+    TRACE("(%p)\n", This);
     return S_OK;
 }
 
 static HRESULT WINAPI MsiActiveScriptSite_OnLeaveScript(IActiveScriptSite* iface)
 {
-    MsiActiveScriptSite *This = (MsiActiveScriptSite *)iface;
-    TRACE("(%p/%p)\n", This, iface);
+    MsiActiveScriptSite *This = impl_from_IActiveScriptSite(iface);
+    TRACE("(%p)\n", This);
     return S_OK;
 }
 
-static const struct IActiveScriptSiteVtbl ASS_Vtbl =
+static const struct IActiveScriptSiteVtbl activescriptsitevtbl =
 {
     MsiActiveScriptSite_QueryInterface,
     MsiActiveScriptSite_AddRef,
@@ -370,3 +254,135 @@ static const struct IActiveScriptSiteVtbl ASS_Vtbl =
     MsiActiveScriptSite_OnEnterScript,
     MsiActiveScriptSite_OnLeaveScript
 };
+
+static HRESULT create_activescriptsite(MsiActiveScriptSite **obj)
+{
+    MsiActiveScriptSite* object;
+
+    TRACE("(%p)\n", obj);
+
+    *obj = NULL;
+
+    object = msi_alloc( sizeof(MsiActiveScriptSite) );
+    if (!object)
+        return E_OUTOFMEMORY;
+
+    object->IActiveScriptSite_iface.lpVtbl = &activescriptsitevtbl;
+    object->ref = 1;
+    object->installer = NULL;
+    object->session = NULL;
+
+    *obj = object;
+
+    return S_OK;
+}
+
+/*
+ * Call a script.
+ */
+DWORD call_script(MSIHANDLE hPackage, INT type, LPCWSTR script, LPCWSTR function, LPCWSTR action)
+{
+    HRESULT hr;
+    IActiveScript *pActiveScript = NULL;
+    IActiveScriptParse *pActiveScriptParse = NULL;
+    MsiActiveScriptSite *scriptsite;
+    IDispatch *pDispatch = NULL;
+    DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
+    DISPID dispid;
+    CLSID clsid;
+    VARIANT var;
+    DWORD ret = ERROR_INSTALL_FAILURE;
+
+    CoInitialize(NULL);
+
+    /* Create MsiActiveScriptSite object */
+    hr = create_activescriptsite(&scriptsite);
+    if (hr != S_OK) goto done;
+
+    /* Create an installer object */
+    hr = create_msiserver(NULL, (void**)&scriptsite->installer);
+    if (hr != S_OK) goto done;
+
+    /* Create a session object */
+    hr = create_session(hPackage, scriptsite->installer, &scriptsite->session);
+    if (hr != S_OK) goto done;
+
+    /* Create the scripting engine */
+    type &= msidbCustomActionTypeJScript|msidbCustomActionTypeVBScript;
+    if (type == msidbCustomActionTypeJScript)
+        hr = CLSIDFromProgID(szJScript, &clsid);
+    else if (type == msidbCustomActionTypeVBScript)
+        hr = CLSIDFromProgID(szVBScript, &clsid);
+    else {
+        ERR("Unknown script type %d\n", type);
+        goto done;
+    }
+    if (FAILED(hr)) {
+        ERR("Could not find CLSID for Windows Script\n");
+        goto done;
+    }
+    hr = CoCreateInstance(&clsid, NULL, CLSCTX_INPROC_SERVER, &IID_IActiveScript, (void **)&pActiveScript);
+    if (FAILED(hr)) {
+        ERR("Could not instantiate class for Windows Script\n");
+        goto done;
+    }
+
+    hr = IActiveScript_QueryInterface(pActiveScript, &IID_IActiveScriptParse, (void **)&pActiveScriptParse);
+    if (FAILED(hr)) goto done;
+
+    hr = IActiveScript_SetScriptSite(pActiveScript, &scriptsite->IActiveScriptSite_iface);
+    if (FAILED(hr)) goto done;
+
+    hr = IActiveScriptParse_InitNew(pActiveScriptParse);
+    if (FAILED(hr)) goto done;
+
+    hr = IActiveScript_AddNamedItem(pActiveScript, szSession, SCRIPTITEM_GLOBALMEMBERS|SCRIPTITEM_ISVISIBLE);
+    if (FAILED(hr)) goto done;
+
+    hr = IActiveScriptParse_ParseScriptText(pActiveScriptParse, script, NULL, NULL, NULL, 0, 0, 0L, NULL, NULL);
+    if (FAILED(hr)) goto done;
+
+    hr = IActiveScript_SetScriptState(pActiveScript, SCRIPTSTATE_CONNECTED);
+    if (FAILED(hr)) goto done;
+
+    /* Call a function if necessary through the IDispatch interface */
+    if (function != NULL && strlenW(function) > 0) {
+        TRACE("Calling function %s\n", debugstr_w(function));
+
+        hr = IActiveScript_GetScriptDispatch(pActiveScript, NULL, &pDispatch);
+        if (FAILED(hr)) goto done;
+
+        hr = IDispatch_GetIDsOfNames(pDispatch, &IID_NULL, (WCHAR **)&function, 1,LOCALE_USER_DEFAULT, &dispid);
+        if (FAILED(hr)) goto done;
+
+        hr = IDispatch_Invoke(pDispatch, dispid, &IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &dispparamsNoArgs, &var, NULL, NULL);
+        if (FAILED(hr)) goto done;
+
+        /* Check return value, if it's not IDOK we failed */
+        hr = VariantChangeType(&var, &var, 0, VT_I4);
+        if (FAILED(hr)) goto done;
+
+        if (V_I4(&var) == IDOK)
+            ret = ERROR_SUCCESS;
+        else ret = ERROR_INSTALL_FAILURE;
+
+        VariantClear(&var);
+    } else {
+        /* If no function to be called, MSI behavior is to succeed */
+        ret = ERROR_SUCCESS;
+    }
+
+done:
+
+    if (pDispatch) IDispatch_Release(pDispatch);
+    if (pActiveScript) IActiveScript_Release(pActiveScript);
+    if (pActiveScriptParse) IActiveScriptParse_Release(pActiveScriptParse);
+    if (scriptsite)
+    {
+        if (scriptsite->session) IDispatch_Release(scriptsite->session);
+        if (scriptsite->installer) IDispatch_Release(scriptsite->installer);
+        IActiveScriptSite_Release(&scriptsite->IActiveScriptSite_iface);
+    }
+    CoUninitialize();    /* must call even if CoInitialize failed */
+    return ret;
+}

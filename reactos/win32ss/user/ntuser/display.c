@@ -173,7 +173,7 @@ InitVideo()
         if (NT_SUCCESS(Status))
         {
             /* Check if VGA mode is requested. */
-            if (wcsstr(awcBuffer, L"/BASEVIDEO") != 0)
+            if (wcsstr(awcBuffer, L"BASEVIDEO") != 0)
             {
                 ERR("VGA mode requested.\n");
                 gbBaseVideo = TRUE;
@@ -187,7 +187,7 @@ InitVideo()
     Status = RegOpenKey(KEY_VIDEO, &hkey);
     if (!NT_SUCCESS(Status))
     {
-        ERR("Could not open device registry key!\n");
+        ERR("Could not open HARDWARE\\DEVICEMAP\\VIDEO registry key:0x%lx\n", Status);
         return Status;
     }
 

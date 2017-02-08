@@ -16,7 +16,9 @@ NTAPI
 PcmciaFdoPlugPlay(PPCMCIA_FDO_EXTENSION FdoExt,
                   PIRP Irp)
 {
-  UNIMPLEMENTED
+  UNREFERENCED_PARAMETER(FdoExt);
+
+  UNIMPLEMENTED;
 
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
 

@@ -41,8 +41,10 @@ extern "C" {
 #define DECLSPEC_IMPORT __attribute__((dllimport))
 #endif
 
-#ifndef WIN32KAPI
-#define WIN32KAPI DECLSPEC_ADDRSAFE
+#if defined(_ENGINE_EXPORT_)
+#define ENGAPI
+#else
+#define ENGAPI DECLSPEC_IMPORT
 #endif
 
 #define DDI_DRIVER_VERSION_NT4            0x00020000
@@ -1157,33 +1159,33 @@ typedef VOID (APIENTRY CALLBACK *WNDOBJCHANGEPROC)(
     _In_ FLONG fl);
 
 
-WIN32KAPI
+ENGAPI
 HANDLE
 APIENTRY
 BRUSHOBJ_hGetColorTransform(
     _In_ BRUSHOBJ *pbo);
 
 _Ret_opt_bytecount_(cj)
-WIN32KAPI
+ENGAPI
 PVOID
 APIENTRY
 BRUSHOBJ_pvAllocRbrush(
     _In_ BRUSHOBJ *pbo,
     _In_ ULONG cj);
 
-WIN32KAPI
+ENGAPI
 PVOID
 APIENTRY
 BRUSHOBJ_pvGetRbrush(
     _In_ BRUSHOBJ *pbo);
 
-WIN32KAPI
+ENGAPI
 ULONG
 APIENTRY
 BRUSHOBJ_ulGetBrushColor(
     _In_ BRUSHOBJ *pbo);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 CLIPOBJ_bEnum(
@@ -1203,7 +1205,7 @@ CLIPOBJ_bEnum(
 #define CD_LEFTUP                         0x00000003
 #define CD_ANY                            0x00000004
 
-WIN32KAPI
+ENGAPI
 ULONG
 APIENTRY
 CLIPOBJ_cEnumStart(
@@ -1213,21 +1215,21 @@ CLIPOBJ_cEnumStart(
     _In_ ULONG iDirection,
     _In_ ULONG cLimit);
 
-WIN32KAPI
+ENGAPI
 PATHOBJ*
 APIENTRY
 CLIPOBJ_ppoGetPath(
     _In_ CLIPOBJ *pco);
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-WIN32KAPI
+ENGAPI
 HANDLE
 APIENTRY
 CLIPOBJ_GetRgn(
     _In_ CLIPOBJ* pco);
 #endif
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngAcquireSemaphore(
@@ -1247,7 +1249,7 @@ EngAcquireSemaphore(
 _Must_inspect_result_
 _When_(fl & FL_ZERO_MEMORY, _Ret_opt_bytecount_(cjMemSize))
 _When_(!(fl & FL_ZERO_MEMORY), _Ret_opt_bytecap_(cjMemSize))
-WIN32KAPI
+ENGAPI
 PVOID
 APIENTRY
 EngAllocMem(
@@ -1256,8 +1258,8 @@ EngAllocMem(
     _In_ ULONG ulTag);
 
 _Must_inspect_result_
-_Ret_opt_bytecount_(cj)
-WIN32KAPI
+_Ret_opt_bytecount_(cjMemSize)
+ENGAPI
 PVOID
 APIENTRY
 EngAllocPrivateUserMem(
@@ -1267,7 +1269,7 @@ EngAllocPrivateUserMem(
 
 _Must_inspect_result_
 _Ret_opt_bytecount_(cjMemSize)
-WIN32KAPI
+ENGAPI
 PVOID
 APIENTRY
 EngAllocUserMem(
@@ -1276,7 +1278,7 @@ EngAllocUserMem(
 
 #endif /* USERMODE_DRIVER */
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngAlphaBlend(
@@ -1312,7 +1314,7 @@ EngAlphaBlend(
 #define HOOK_FLAGS                        0x0003b5ff
 #endif
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngAssociateSurface(
@@ -1320,7 +1322,7 @@ EngAssociateSurface(
     _In_ HDEV hdev,
     _In_ FLONG flHooks);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngBitBlt(
@@ -1330,25 +1332,25 @@ EngBitBlt(
     _In_opt_ CLIPOBJ *pco,
     _In_opt_ XLATEOBJ *pxlo,
     _In_ RECTL *prclTrg,
-    _When_(psoSrc, _In_) POINTL *pptlSrc,
-    _When_(psoMask, _In_) POINTL *pptlMask,
+    _In_opt_ POINTL *pptlSrc,
+    _In_opt_ POINTL *pptlMask,
     _In_opt_ BRUSHOBJ *pbo,
-    _When_(pbo, _In_) POINTL *pptlBrush,
+    _In_opt_ POINTL *pptlBrush,
     _In_ ROP4 rop4);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngCheckAbort(
     _In_ SURFOBJ *pso);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngClearEvent(
     _In_ PEVENT pEvent);
 
-WIN32KAPI
+ENGAPI
 FD_GLYPHSET*
 APIENTRY
 EngComputeGlyphSet(
@@ -1360,14 +1362,14 @@ EngComputeGlyphSet(
 #define ECS_TEARDOWN                      0x00000001
 #define ECS_REDRAW                        0x00000002
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngControlSprites(
     _Inout_ WNDOBJ *pwo,
     _In_ FLONG fl);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngCopyBits(
@@ -1378,7 +1380,7 @@ EngCopyBits(
     _In_ RECTL *prclDest,
     _In_ POINTL *pptlSrc);
 
-WIN32KAPI
+ENGAPI
 HBITMAP
 APIENTRY
 EngCreateBitmap(
@@ -1388,13 +1390,13 @@ EngCreateBitmap(
     _In_ FLONG fl,
     _In_opt_ PVOID pvBits);
 
-WIN32KAPI
+ENGAPI
 CLIPOBJ*
 APIENTRY
 EngCreateClip(VOID);
 
 _Must_inspect_result_
-WIN32KAPI
+ENGAPI
 HBITMAP
 APIENTRY
 EngCreateDeviceBitmap(
@@ -1403,7 +1405,7 @@ EngCreateDeviceBitmap(
     _In_ ULONG iFormatCompat);
 
 _Must_inspect_result_
-WIN32KAPI
+ENGAPI
 HSURF
 APIENTRY
 EngCreateDeviceSurface(
@@ -1412,7 +1414,7 @@ EngCreateDeviceSurface(
     _In_ ULONG iFormatCompat);
 
 _Must_inspect_result_
-WIN32KAPI
+ENGAPI
 HDRVOBJ
 APIENTRY
 EngCreateDriverObj(
@@ -1420,11 +1422,13 @@ EngCreateDriverObj(
     _In_opt_ FREEOBJPROC pFreeObjProc,
     _In_ HDEV hdev);
 
-WIN32KAPI
+_Must_inspect_result_
+_Success_(return != FALSE)
+ENGAPI
 BOOL
 APIENTRY
 EngCreateEvent(
-    _Deref_out_opt_ PEVENT *ppEvent);
+    _Outptr_ PEVENT *ppEvent);
 
 /* EngCreatePalette.iMode constants */
 #define PAL_INDEXED                       0x00000001
@@ -1434,7 +1438,7 @@ EngCreateEvent(
 #define PAL_CMYK                          0x00000010
 
 _Must_inspect_result_
-WIN32KAPI
+ENGAPI
 HPALETTE
 APIENTRY
 EngCreatePalette(
@@ -1445,12 +1449,12 @@ EngCreatePalette(
     _In_ FLONG flGreen,
     _In_ FLONG flBlue);
 
-WIN32KAPI
+ENGAPI
 PATHOBJ*
 APIENTRY
 EngCreatePath(VOID);
 
-WIN32KAPI
+ENGAPI
 HSEMAPHORE
 APIENTRY
 EngCreateSemaphore(VOID);
@@ -1470,7 +1474,7 @@ EngCreateSemaphore(VOID);
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 _Must_inspect_result_
-WIN32KAPI
+ENGAPI
 WNDOBJ*
 APIENTRY
 EngCreateWnd(
@@ -1481,12 +1485,12 @@ EngCreateWnd(
     _In_ INT iPixelFormat);
 
 _Analysis_noreturn_
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngDebugBreak(VOID);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngDebugPrint(
@@ -1494,13 +1498,13 @@ EngDebugPrint(
     _In_z_ PCHAR DebugMessage,
     _In_ va_list ap);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngDeleteClip(
     _In_ _Post_ptr_invalid_ CLIPOBJ *pco);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngDeleteDriverObj(
@@ -1508,55 +1512,56 @@ EngDeleteDriverObj(
     _In_ BOOL bCallBack,
     _In_ BOOL bLocked);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngDeleteEvent(
     _In_ _Post_ptr_invalid_ PEVENT pEvent);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngDeleteFile(
     _In_ LPWSTR pwszFileName);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngDeletePalette(
     _In_ _Post_ptr_invalid_ HPALETTE hpal);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngDeletePath(
     _In_ _Post_ptr_invalid_ PATHOBJ *ppo);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngDeleteSafeSemaphore(
     _Inout_ ENGSAFESEMAPHORE *pssem);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngDeleteSemaphore(
     _In_ _Post_ptr_invalid_ HSEMAPHORE hsem);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngDeleteSurface(
     _In_ _Post_ptr_invalid_ HSURF hsurf);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngDeleteWnd(
     _In_ _Post_ptr_invalid_ WNDOBJ *pwo);
 
-WIN32KAPI
+_Success_(return==0)
+ENGAPI
 DWORD
 APIENTRY
 EngDeviceIoControl(
@@ -1571,7 +1576,7 @@ EngDeviceIoControl(
 #define DM_DEFAULT                        0x00000001
 #define DM_MONOCHROME                     0x00000002
 
-WIN32KAPI
+ENGAPI
 ULONG
 APIENTRY
 EngDitherColor(
@@ -1582,7 +1587,7 @@ EngDitherColor(
     _When_(iMode == DM_MONOCHROME, _Out_writes_bytes_(8))
         ULONG *pul);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngEnumForms(
@@ -1593,7 +1598,7 @@ EngEnumForms(
     _Out_ LPDWORD pcbNeeded,
     _Out_ LPDWORD pcReturned);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngEraseSurface(
@@ -1601,7 +1606,7 @@ EngEraseSurface(
     _In_ RECTL *prcl,
     _In_ ULONG iColor);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngFillPath(
@@ -1613,14 +1618,14 @@ EngFillPath(
     _In_ MIX mix,
     _In_ FLONG flOptions);
 
-WIN32KAPI
+ENGAPI
 PVOID
 APIENTRY
 EngFindImageProcAddress(
     _In_ HANDLE hModule,
     _In_ LPSTR lpProcName);
 
-WIN32KAPI
+ENGAPI
 PVOID
 APIENTRY
 EngFindResource(
@@ -1631,7 +1636,7 @@ EngFindResource(
 
 _Must_inspect_result_
 _Ret_opt_bytecap_(cjSize)
-WIN32KAPI
+ENGAPI
 PVOID
 APIENTRY
 EngFntCacheAlloc(
@@ -1642,14 +1647,14 @@ EngFntCacheAlloc(
 #define ENG_FNT_CACHE_READ_FAULT          0x00000001
 #define ENG_FNT_CACHE_WRITE_FAULT         0x00000002
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngFntCacheFault(
     _In_ ULONG ulFastCheckSum,
     _In_ ULONG iFaultMode);
 
-WIN32KAPI
+ENGAPI
 PVOID
 APIENTRY
 EngFntCacheLookUp(
@@ -1664,20 +1669,20 @@ EngFntCacheLookUp(
 
 #else /* !USERMODE_DRIVER */
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngFreeMem(
     _In_ _Post_ptr_invalid_ PVOID pv);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngFreePrivateUserMem(
     _In_ PDD_SURFACE_LOCAL psl,
     _In_ _Post_ptr_invalid_ PVOID  pv);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngFreeUserMem(
@@ -1685,52 +1690,52 @@ EngFreeUserMem(
 
 #endif /* !USERMODE_DRIVER */
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngFreeModule(
     _In_ HANDLE h);
 
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngGetCurrentCodePage(
     _Out_ PUSHORT OemCodePage,
     _Out_ PUSHORT AnsiCodePage);
 
-WIN32KAPI
+ENGAPI
 HANDLE
 APIENTRY
 EngGetCurrentProcessId(VOID);
 
-WIN32KAPI
+ENGAPI
 HANDLE
 APIENTRY
 EngGetCurrentThreadId(VOID);
 
 _Must_inspect_result_ _Ret_z_
-WIN32KAPI
+ENGAPI
 LPWSTR
 APIENTRY
 EngGetDriverName(
     _In_ HDEV hdev);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngGetFileChangeTime(
     _In_ HANDLE h,
     _Out_ LARGE_INTEGER *pChangeTime);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngGetFilePath(
     _In_ HANDLE h,
     _Out_ WCHAR (*pDest)[MAX_PATH+1]);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngGetForm(
@@ -1744,13 +1749,13 @@ EngGetForm(
 #ifdef USERMODE_DRIVER
 #define EngGetLastError GetLastError
 #else
-WIN32KAPI
+ENGAPI
 ULONG
 APIENTRY
 EngGetLastError(VOID);
 #endif
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngGetPrinter(
@@ -1760,7 +1765,7 @@ EngGetPrinter(
     _In_ DWORD  cbBuf,
     _Out_ LPDWORD pcbNeeded);
 
-WIN32KAPI
+ENGAPI
 DWORD
 APIENTRY
 EngGetPrinterData(
@@ -1771,13 +1776,13 @@ EngGetPrinterData(
     _In_ DWORD cjSize,
     _Out_ LPDWORD pcjNeeded);
 
-WIN32KAPI
+ENGAPI
 LPWSTR
 APIENTRY
 EngGetPrinterDataFileName(
     _In_ HDEV hdev);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngGetPrinterDriver(
@@ -1788,12 +1793,12 @@ EngGetPrinterDriver(
     _In_ DWORD cjBufSize,
     _Out_ DWORD *pcjNeeded);
 
-WIN32KAPI
+ENGAPI
 HANDLE
 APIENTRY
 EngGetProcessHandle(VOID);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngGetType1FontList(
@@ -1804,7 +1809,7 @@ EngGetType1FontList(
     _Out_ PULONG pulRemoteFonts,
     _Out_ LARGE_INTEGER *pLastModified);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngGradientFill(
@@ -1823,32 +1828,32 @@ EngGradientFill(
 #define EHN_RESTORED                      0x00000000
 #define EHN_ERROR                         0x00000001
 
-WIN32KAPI
+ENGAPI
 ULONG
 APIENTRY
 EngHangNotification(
     _In_ HDEV hDev,
     _Reserved_ PVOID Reserved);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngInitializeSafeSemaphore(
     _Out_ ENGSAFESEMAPHORE *pssem);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngIsSemaphoreOwned(
     _In_ HSEMAPHORE hsem);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngIsSemaphoreOwnedByCurrentThread(
     _In_ HSEMAPHORE hsem);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngLineTo(
@@ -1862,49 +1867,49 @@ EngLineTo(
     _In_opt_ RECTL *prclBounds,
     _In_ MIX mix);
 
-WIN32KAPI
+ENGAPI
 HANDLE
 APIENTRY
 EngLoadImage(
     _In_ LPWSTR pwszDriver);
 
-WIN32KAPI
+ENGAPI
 HANDLE
 APIENTRY
 EngLoadModule(
     _In_ LPWSTR pwsz);
 
-WIN32KAPI
+ENGAPI
 HANDLE
 APIENTRY
 EngLoadModuleForWrite(
     _In_ LPWSTR pwsz,
     _In_ ULONG cjSizeOfModule);
 
-WIN32KAPI
+ENGAPI
 PDD_SURFACE_LOCAL
 APIENTRY
 EngLockDirectDrawSurface(
     _In_ HANDLE hSurface);
 
-WIN32KAPI
+ENGAPI
 DRIVEROBJ*
 APIENTRY
 EngLockDriverObj(
     _In_ HDRVOBJ hdo);
 
-WIN32KAPI
+ENGAPI
 SURFOBJ*
 APIENTRY
 EngLockSurface(
     _In_ HSURF hsurf);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngLpkInstalled(VOID);
 
-WIN32KAPI
+ENGAPI
 PEVENT
 APIENTRY
 EngMapEvent(
@@ -1916,7 +1921,7 @@ EngMapEvent(
 
 _Success_(return != 0)
 _When_(cjSize != 0, _At_(return, _Out_writes_bytes_(cjSize)))
-WIN32KAPI
+ENGAPI
 PVOID
 APIENTRY
 EngMapFile(
@@ -1924,7 +1929,7 @@ EngMapFile(
     _In_ ULONG cjSize,
     _Out_ ULONG_PTR *piFile);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngMapFontFile(
@@ -1932,7 +1937,7 @@ EngMapFontFile(
     _Outptr_result_bytebuffer_(*pcjBuf) PULONG *ppjBuf,
     _Out_ ULONG *pcjBuf);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngMapFontFileFD(
@@ -1940,14 +1945,14 @@ EngMapFontFileFD(
     _Outptr_result_bytebuffer_(*pcjBuf) PULONG *ppjBuf,
     _Out_ ULONG *pcjBuf);
 
-WIN32KAPI
+ENGAPI
 PVOID
 APIENTRY
 EngMapModule(
     _In_ HANDLE h,
     _Out_ PULONG pSize);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngMarkBandingSurface(
@@ -1957,7 +1962,7 @@ EngMarkBandingSurface(
 #define MS_NOTSYSTEMMEMORY                0x00000001
 #define MS_SHAREDACCESS                   0x00000002
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngModifySurface(
@@ -1970,7 +1975,7 @@ EngModifySurface(
     _In_ LONG lDelta,
     _Reserved_ PVOID pvReserved);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngMovePointer(
@@ -1982,7 +1987,7 @@ EngMovePointer(
 #ifdef USERMODE_DRIVER
 #define EngMulDiv MulDiv
 #else /* !USERMODE_DRIVER */
-WIN32KAPI
+ENGAPI
 INT
 APIENTRY
 EngMulDiv(
@@ -1991,7 +1996,7 @@ EngMulDiv(
     _In_ INT c);
 #endif /* !USERMODE_DRIVER */
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngMultiByteToUnicodeN(
@@ -2001,7 +2006,7 @@ EngMultiByteToUnicodeN(
     _In_reads_bytes_(BytesInMultiByteString) PCHAR MultiByteString,
     _In_ ULONG BytesInMultiByteString);
 
-WIN32KAPI
+ENGAPI
 INT
 APIENTRY
 EngMultiByteToWideChar(
@@ -2011,7 +2016,7 @@ EngMultiByteToWideChar(
     _In_reads_bytes_opt_(cjMultiByteString) LPSTR MultiByteString,
     _In_ INT cjMultiByteString);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngPaint(
@@ -2021,7 +2026,7 @@ EngPaint(
     _In_ POINTL *pptlBrushOrg,
     _In_ MIX mix);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngPlgBlt(
@@ -2037,7 +2042,7 @@ EngPlgBlt(
     _When_(psoMsk, _In_) POINTL *pptl,
     _In_ ULONG iMode);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngProbeForRead(
@@ -2049,7 +2054,7 @@ EngProbeForRead(
 #endif
     _In_ ULONG Alignment);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngProbeForReadAndWrite(
@@ -2066,7 +2071,7 @@ typedef enum _ENG_DEVICE_ATTRIBUTE {
   QDA_ACCELERATION_LEVEL
 } ENG_DEVICE_ATTRIBUTE;
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngQueryDeviceAttribute(
@@ -2077,19 +2082,19 @@ EngQueryDeviceAttribute(
     _Out_writes_bytes_(cjOutSize) PVOID pvOut,
     _In_ ULONG cjOutSize);
 
-WIN32KAPI
+ENGAPI
 LARGE_INTEGER
 APIENTRY
 EngQueryFileTimeStamp(
     _In_ LPWSTR pwsz);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngQueryLocalTime(
     _Out_ PENG_TIME_FIELDS ptf);
 
-WIN32KAPI
+ENGAPI
 ULONG
 APIENTRY
 EngQueryPalette(
@@ -2098,13 +2103,13 @@ EngQueryPalette(
     _In_ ULONG cColors,
     _Out_writes_opt_(cColors) ULONG *pulColors);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngQueryPerformanceCounter(
     _Out_ LONGLONG *pPerformanceCount);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngQueryPerformanceFrequency(
@@ -2121,46 +2126,61 @@ typedef enum _ENG_SYSTEM_ATTRIBUTE {
 #define QSA_SSE                           0x00002000
 #define QSA_3DNOW                         0x00004000
 
-WIN32KAPI
+_Check_return_
+_Success_(return)
+ENGAPI
 BOOL
 APIENTRY
 EngQuerySystemAttribute(
     _In_ ENG_SYSTEM_ATTRIBUTE CapNum,
     _Out_ PDWORD pCapability);
 
-WIN32KAPI
+ENGAPI
 LONG
 APIENTRY
 EngReadStateEvent(
     _In_ PEVENT pEvent);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngReleaseSemaphore(
     _In_ HSEMAPHORE hsem);
 
-WIN32KAPI
+_Check_return_
+_Success_(return)
+_Kernel_float_restored_
+_At_(*pBuffer, _Kernel_requires_resource_held_(EngFloatState)
+               _Kernel_releases_resource_(EngFloatState))
+ENGAPI
 BOOL
 APIENTRY
 EngRestoreFloatingPointState(
-    _In_ VOID *pBuffer);
+    _In_reads_(_Inexpressible_(statesize))
+    PVOID pBuffer);
 
-WIN32KAPI
+_Check_return_
+_Success_(((pBuffer != NULL && cjBufferSize != 0) && return == 1) ||
+          ((pBuffer == NULL || cjBufferSize == 0) && return > 0))
+_When_(pBuffer != NULL && cjBufferSize != 0 && return == 1, _Kernel_float_saved_
+    _At_(*pBuffer, _Post_valid_ _Kernel_acquires_resource_(EngFloatState)))
+_On_failure_(_Post_satisfies_(return == 0))
+ENGAPI
 ULONG
 APIENTRY
 EngSaveFloatingPointState(
-    _Out_ VOID *pBuffer,
-    _In_ ULONG cjBufferSize);
+    _At_(*pBuffer, _Kernel_requires_resource_not_held_(EngFloatState))
+    _Out_writes_bytes_opt_(cjBufferSize) PVOID pBuffer,
+    _Inout_ ULONG cjBufferSize);
 
-WIN32KAPI
+ENGAPI
 HANDLE
 APIENTRY
 EngSecureMem(
     _In_reads_bytes_(cjLength) PVOID Address,
     _In_ ULONG cjLength);
 
-WIN32KAPI
+ENGAPI
 LONG
 APIENTRY
 EngSetEvent(
@@ -2169,14 +2189,14 @@ EngSetEvent(
 #ifdef USERMODE_DRIVER
 #define EngSetLastError SetLastError
 #else
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngSetLastError(
     _In_ ULONG iError);
 #endif
 
-WIN32KAPI
+ENGAPI
 ULONG
 APIENTRY
 EngSetPointerShape(
@@ -2191,7 +2211,7 @@ EngSetPointerShape(
     _In_ RECTL *prcl,
     _In_ FLONG fl);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngSetPointerTag(
@@ -2201,7 +2221,7 @@ EngSetPointerTag(
     _Reserved_ XLATEOBJ *pxlo,
     _In_ FLONG fl);
 
-WIN32KAPI
+ENGAPI
 DWORD
 APIENTRY
 EngSetPrinterData(
@@ -2213,7 +2233,7 @@ EngSetPrinterData(
 
 typedef int (CDECL *SORTCOMP)(const void *pv1, const void *pv2);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngSort(
@@ -2222,7 +2242,7 @@ EngSort(
     _In_ ULONG cjElem,
     _In_ SORTCOMP pfnComp);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngStretchBlt(
@@ -2238,7 +2258,7 @@ EngStretchBlt(
     _When_(psoMask, _In_) POINTL *pptlMask,
     _In_ ULONG iMode);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngStretchBltROP(
@@ -2253,10 +2273,10 @@ EngStretchBltROP(
     _In_ RECTL *prclSrc,
     _When_(psoMask, _In_) POINTL *pptlMask,
     _In_ ULONG iMode,
-    _In_ BRUSHOBJ *pbo,
+    _In_opt_ BRUSHOBJ *pbo,
     _In_ DWORD rop4);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngStrokeAndFillPath(
@@ -2271,7 +2291,7 @@ EngStrokeAndFillPath(
     _In_ MIX mixFill,
     _In_ FLONG flOptions);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngStrokePath(
@@ -2284,7 +2304,7 @@ EngStrokePath(
     _In_ LINEATTRS *plineattrs,
     _In_ MIX mix);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngTextOut(
@@ -2299,7 +2319,7 @@ EngTextOut(
     _In_ POINTL *pptlOrg,
     _In_ MIX mix);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngTransparentBlt(
@@ -2312,7 +2332,7 @@ EngTransparentBlt(
     _In_ ULONG iTransColor,
     _In_ ULONG ulReserved);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngUnicodeToMultiByteN(
@@ -2322,68 +2342,68 @@ EngUnicodeToMultiByteN(
     _In_reads_bytes_(cjUnicodeString) PWSTR pwszUnicodeString,
     _In_ ULONG cjUnicodeString);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngUnloadImage(
     _In_ HANDLE hModule);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngUnlockDirectDrawSurface(
     _In_ PDD_SURFACE_LOCAL pSurface);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngUnlockDriverObj(
     _In_ _Post_ptr_invalid_ HDRVOBJ hdo);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngUnlockSurface(
     _In_ _Post_ptr_invalid_ SURFOBJ *pso);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngUnmapEvent(
     _In_ PEVENT pEvent);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngUnmapFile(
     _In_ ULONG_PTR iFile);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngUnmapFontFile(
     _In_ ULONG_PTR iFile);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngUnmapFontFileFD(
     _In_ ULONG_PTR iFile);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 EngUnsecureMem(
     _In_ HANDLE hSecure);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngWaitForSingleObject(
     _In_ PEVENT pEvent,
     _In_opt_ PLARGE_INTEGER pTimeOut);
 
-WIN32KAPI
+ENGAPI
 INT
 APIENTRY
 EngWideCharToMultiByte(
@@ -2393,7 +2413,7 @@ EngWideCharToMultiByte(
     _Out_z_bytecap_(cjMultiByteString) LPSTR pszMultiByteString,
     _In_ INT cjMultiByteString);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 EngWritePrinter(
@@ -2403,158 +2423,158 @@ EngWritePrinter(
     _Out_ LPDWORD pcWritten);
 
 #if defined(_X86_) && !defined(USERMODE_DRIVER)
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 FLOATOBJ_Add(
     _Inout_ PFLOATOBJ pf,
     _In_ PFLOATOBJ pf1);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 FLOATOBJ_AddFloat(
     _Inout_ PFLOATOBJ pf,
     _In_ FLOATL f);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 FLOATOBJ_AddLong(
     _Inout_ PFLOATOBJ pf,
     _In_ LONG l);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 FLOATOBJ_Div(
     _Inout_ PFLOATOBJ pf,
     _In_ PFLOATOBJ pf1);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 FLOATOBJ_DivFloat(
     _Inout_ PFLOATOBJ pf,
     _In_ FLOATL f);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 FLOATOBJ_DivLong(
     _Inout_ PFLOATOBJ pf,
     _In_ LONG l);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 FLOATOBJ_Equal(
     _In_ PFLOATOBJ pf,
     _In_ PFLOATOBJ pf1);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 FLOATOBJ_EqualLong(
     _In_ PFLOATOBJ pf,
     _In_ LONG l);
 
-WIN32KAPI
+ENGAPI
 LONG
 APIENTRY
 FLOATOBJ_GetFloat(
     _In_ PFLOATOBJ pf);
 
-WIN32KAPI
+ENGAPI
 LONG
 APIENTRY
 FLOATOBJ_GetLong(
     _In_ PFLOATOBJ pf);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 FLOATOBJ_GreaterThan(
     _In_ PFLOATOBJ pf,
     _In_ PFLOATOBJ pf1);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 FLOATOBJ_GreaterThanLong(
     _In_ PFLOATOBJ pf,
     _In_ LONG l);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 FLOATOBJ_LessThan(
     _In_ PFLOATOBJ pf,
     _In_ PFLOATOBJ pf1);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 FLOATOBJ_LessThanLong(
     _In_ PFLOATOBJ pf,
     _In_ LONG l);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 FLOATOBJ_Mul(
     _Inout_ PFLOATOBJ pf,
     _In_ PFLOATOBJ pf1);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 FLOATOBJ_MulFloat(
     _Inout_ PFLOATOBJ pf,
     _In_ FLOATL f);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 FLOATOBJ_MulLong(
     _Inout_ PFLOATOBJ pf,
     _In_ LONG l);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 FLOATOBJ_Neg(
     _Inout_ PFLOATOBJ pf);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 FLOATOBJ_SetFloat(
     _Out_ PFLOATOBJ pf,
     _In_ FLOATL f);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 FLOATOBJ_SetLong(
     _Out_ PFLOATOBJ pf,
     _In_ LONG l);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 FLOATOBJ_Sub(
     _Inout_ PFLOATOBJ pf,
     _In_ PFLOATOBJ pf1);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 FLOATOBJ_SubFloat(
     _Inout_ PFLOATOBJ pf,
     _In_ FLOATL f);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 FLOATOBJ_SubLong(
@@ -2589,14 +2609,14 @@ FLOATOBJ_SubLong(
 
 #endif
 
-WIN32KAPI
+ENGAPI
 ULONG
 APIENTRY
 FONTOBJ_cGetAllGlyphHandles(
     _In_ FONTOBJ *pfo,
-    _Out_opt_bytecap_(return) HGLYPH *phg);
+    _Out_opt_ HGLYPH *phg);
 
-WIN32KAPI
+ENGAPI
 ULONG
 APIENTRY
 FONTOBJ_cGetGlyphs(
@@ -2606,20 +2626,20 @@ FONTOBJ_cGetGlyphs(
     _In_count_(cGlyph) HGLYPH *phg,
     _Out_ PVOID *ppvGlyph);
 
-WIN32KAPI
+ENGAPI
 FD_GLYPHSET*
 APIENTRY
 FONTOBJ_pfdg(
     _In_ FONTOBJ *pfo);
 
-WIN32KAPI
+ENGAPI
 IFIMETRICS*
 APIENTRY
 FONTOBJ_pifi(
     _In_ FONTOBJ *pfo);
 
 _Ret_opt_bytecount_(*pcjTable)
-WIN32KAPI
+ENGAPI
 PBYTE
 APIENTRY
 FONTOBJ_pjOpenTypeTablePointer(
@@ -2627,7 +2647,7 @@ FONTOBJ_pjOpenTypeTablePointer(
     _In_ ULONG ulTag,
     _Out_ ULONG *pcjTable);
 
-WIN32KAPI
+ENGAPI
 PFD_GLYPHATTR
 APIENTRY
 FONTOBJ_pQueryGlyphAttrs(
@@ -2635,27 +2655,27 @@ FONTOBJ_pQueryGlyphAttrs(
     _In_ ULONG iMode);
 
 _Ret_opt_bytecount_(*pcjFile)
-WIN32KAPI
+ENGAPI
 PVOID
 APIENTRY
 FONTOBJ_pvTrueTypeFontFile(
     _In_ FONTOBJ *pfo,
     _Out_ ULONG *pcjFile);
 
-WIN32KAPI
+ENGAPI
 LPWSTR
 APIENTRY
 FONTOBJ_pwszFontFilePaths(
     _In_ FONTOBJ *pfo,
     _Out_ ULONG *pcwc);
 
-WIN32KAPI
+ENGAPI
 XFORMOBJ*
 APIENTRY
 FONTOBJ_pxoGetXform(
     _In_ FONTOBJ *pfo);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 FONTOBJ_vGetInfo(
@@ -2670,7 +2690,7 @@ FONTOBJ_pGetGammaTables(
     _In_ FONTOBJ *pfo);
 #endif
 
-WIN32KAPI
+ENGAPI
 LONG
 APIENTRY
 HT_ComputeRGBGammaTable(
@@ -2681,7 +2701,7 @@ HT_ComputeRGBGammaTable(
     _In_ USHORT BlueGamma,
     _Out_writes_bytes_(GammaTableEntries * 3) LPBYTE pGammaTable);
 
-WIN32KAPI
+ENGAPI
 LONG
 APIENTRY
 HT_Get8BPPFormatPalette(
@@ -2690,7 +2710,7 @@ HT_Get8BPPFormatPalette(
     _In_ USHORT GreenGamma,
     _In_ USHORT BlueGamma);
 
-WIN32KAPI
+ENGAPI
 LONG
 APIENTRY
 HT_Get8BPPMaskPalette(
@@ -2701,14 +2721,14 @@ HT_Get8BPPMaskPalette(
     _In_ USHORT GreenGamma,
     _In_ USHORT BlueGamma);
 
-WIN32KAPI
+ENGAPI
 LONG
 APIENTRY
 HTUI_DeviceColorAdjustment(
     _In_ LPSTR pDeviceName,
     _Out_ PDEVHTADJDATA pDevHTAdjData);
 
-WIN32KAPI
+ENGAPI
 ULONG
 APIENTRY
 PALOBJ_cGetColors(
@@ -2717,20 +2737,20 @@ PALOBJ_cGetColors(
     _In_ ULONG cColors,
     _Out_writes_(cColors) ULONG *pulColors);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 PATHOBJ_bCloseFigure(
     _In_ PATHOBJ *ppo);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 PATHOBJ_bEnum(
     _In_ PATHOBJ *ppo,
     _Out_ PATHDATA *ppd);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 PATHOBJ_bEnumClipLines(
@@ -2738,14 +2758,14 @@ PATHOBJ_bEnumClipLines(
     _In_ ULONG cj,
     _Out_bytecap_(cj) CLIPLINE *pcl);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 PATHOBJ_bMoveTo(
     _In_ PATHOBJ *ppo,
     _In_ POINTFIX ptfx);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 PATHOBJ_bPolyBezierTo(
@@ -2753,7 +2773,7 @@ PATHOBJ_bPolyBezierTo(
     _In_count_(cptfx) POINTFIX *pptfx,
     _In_ ULONG cptfx);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 PATHOBJ_bPolyLineTo(
@@ -2761,13 +2781,13 @@ PATHOBJ_bPolyLineTo(
     _In_count_(cptfx) POINTFIX *pptfx,
     _In_ ULONG cptfx);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 PATHOBJ_vEnumStart(
     _Inout_ PATHOBJ *ppo);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 PATHOBJ_vEnumStartClipLines(
@@ -2776,14 +2796,14 @@ PATHOBJ_vEnumStartClipLines(
     _In_ SURFOBJ *pso,
     _In_ LINEATTRS *pla);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 PATHOBJ_vGetBounds(
     _In_ PATHOBJ *ppo,
     _Out_ PRECTFX prectfx);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 STROBJ_bEnum(
@@ -2791,7 +2811,7 @@ STROBJ_bEnum(
     _Out_ ULONG *pc,
     _Out_ PGLYPHPOS *ppgpos); // FIXME_ size?
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 STROBJ_bEnumPositionsOnly(
@@ -2799,7 +2819,7 @@ STROBJ_bEnumPositionsOnly(
     _Out_ ULONG *pc,
     _Out_ PGLYPHPOS *ppgpos); // FIXME_ size?
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 STROBJ_bGetAdvanceWidths(
@@ -2808,31 +2828,31 @@ STROBJ_bGetAdvanceWidths(
     _In_ ULONG c,
     _Out_cap_(c) POINTQF *pptqD);
 
-WIN32KAPI
+ENGAPI
 DWORD
 APIENTRY
 STROBJ_dwGetCodePage(
     _In_ STROBJ *pstro);
 
-WIN32KAPI
+ENGAPI
 FIX
 APIENTRY
 STROBJ_fxBreakExtra(
     _In_ STROBJ *pstro);
 
-WIN32KAPI
+ENGAPI
 FIX
 APIENTRY
 STROBJ_fxCharacterExtra(
     _In_ STROBJ *pstro);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 STROBJ_vEnumStart(
-    _In_ STROBJ *pstro);
+    _Inout_ STROBJ *pstro);
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 WNDOBJ_bEnum(
@@ -2840,7 +2860,7 @@ WNDOBJ_bEnum(
     _In_ ULONG cj,
     _Out_bytecap_(cj) ULONG *pul);
 
-WIN32KAPI
+ENGAPI
 ULONG
 APIENTRY
 WNDOBJ_cEnumStart(
@@ -2849,7 +2869,7 @@ WNDOBJ_cEnumStart(
     _In_ ULONG iDirection,
     _In_ ULONG cLimit);
 
-WIN32KAPI
+ENGAPI
 VOID
 APIENTRY
 WNDOBJ_vSetConsumer(
@@ -2862,7 +2882,7 @@ WNDOBJ_vSetConsumer(
 #define XF_LTOFX                          2L
 #define XF_INV_FXTOL                      3L
 
-WIN32KAPI
+ENGAPI
 BOOL
 APIENTRY
 XFORMOBJ_bApplyXform(
@@ -2873,7 +2893,7 @@ XFORMOBJ_bApplyXform(
     _Out_writes_bytes_(cPoints * sizeof(POINTL)) PVOID pvOut);
 
 #if !defined(USERMODE_DRIVER)
-WIN32KAPI
+ENGAPI
 ULONG
 APIENTRY
 XFORMOBJ_iGetFloatObjXform(
@@ -2883,7 +2903,7 @@ XFORMOBJ_iGetFloatObjXform(
 #define XFORMOBJ_iGetFloatObjXform XFORMOBJ_iGetXform
 #endif
 
-WIN32KAPI
+ENGAPI
 ULONG
 APIENTRY
 XFORMOBJ_iGetXform(
@@ -2897,7 +2917,7 @@ XFORMOBJ_iGetXform(
 #define XO_SRCBITFIELDS                   4
 #define XO_DESTBITFIELDS                  5
 
-WIN32KAPI
+ENGAPI
 ULONG
 APIENTRY
 XLATEOBJ_cGetPalette(
@@ -2906,20 +2926,20 @@ XLATEOBJ_cGetPalette(
     _In_ ULONG cPal,
     _Out_cap_(cPal) ULONG *pPal);
 
-WIN32KAPI
+ENGAPI
 HANDLE
 APIENTRY
 XLATEOBJ_hGetColorTransform(
     _In_ XLATEOBJ *pxlo);
 
-WIN32KAPI
+ENGAPI
 ULONG
 APIENTRY
 XLATEOBJ_iXlate(
     _In_ XLATEOBJ *pxlo,
     _In_ ULONG iColor);
 
-WIN32KAPI
+ENGAPI
 ULONG*
 APIENTRY
 XLATEOBJ_piVector(
@@ -2955,10 +2975,10 @@ typedef BOOL
     _In_ CLIPOBJ *pco,
     _In_opt_ XLATEOBJ *pxlo,
     _In_ RECTL *prclTrg,
-    _When_(psoSrc, _In_) POINTL *pptlSrc,
-    _When_(psoMask, _In_) POINTL *pptlMask,
+    _In_opt_ POINTL *pptlSrc,
+    _In_opt_ POINTL *pptlMask,
     _In_opt_ BRUSHOBJ *pbo,
-    _When_(pbo, _In_) POINTL *pptlBrush,
+    _In_opt_ POINTL *pptlBrush,
     _In_ ROP4 rop4);
 typedef FN_DrvBitBlt *PFN_DrvBitBlt;
 extern FN_DrvBitBlt DrvBitBlt;
@@ -3007,7 +3027,7 @@ typedef LONG
     _In_ DHPDEV dhpdev,
     _In_ LONG iPixelFormat,
     _In_ ULONG cjpfd,
-    _Out_ PIXELFORMATDESCRIPTOR *ppfd);
+    _Out_opt_ PIXELFORMATDESCRIPTOR *ppfd);
 typedef FN_DrvDescribePixelFormat *PFN_DrvDescribePixelFormat;
 extern FN_DrvDescribePixelFormat DrvDescribePixelFormat;
 

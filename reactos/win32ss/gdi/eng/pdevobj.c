@@ -163,6 +163,15 @@ PDEVOBJ_bEnablePDEV(
     if (ppdev->gdiinfo.ulLogPixelsY == 0)
         ppdev->gdiinfo.ulLogPixelsY = 96;
 
+    /* Set raster caps */
+    ppdev->gdiinfo.flRaster = RC_OP_DX_OUTPUT | RC_GDI20_OUTPUT | RC_BIGFONT;
+    if ((ppdev->gdiinfo.ulTechnology != DT_PLOTTER) && (ppdev->gdiinfo.ulTechnology != DT_CHARSTREAM))
+        ppdev->gdiinfo.flRaster |= RC_STRETCHDIB | RC_STRETCHBLT | RC_DIBTODEV | RC_DI_BITMAP | RC_BITMAP64 | RC_BITBLT;
+    if (ppdev->gdiinfo.ulTechnology == DT_RASDISPLAY)
+        ppdev->gdiinfo.flRaster |= RC_FLOODFILL;
+    if (ppdev->devinfo.flGraphicsCaps & GCAPS_PALMANAGED)
+        ppdev->gdiinfo.flRaster |= RC_PALETTE;
+
     /* Setup Palette */
     ppdev->ppalSurf = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
 
@@ -291,14 +300,14 @@ EngpCreatePDEV(
     {
         /* ... use the device's default one */
         pdm = pGraphicsDevice->pDevModeList[pGraphicsDevice->iDefaultMode].pdm;
-        DPRINT("Using iDefaultMode = %ld\n", pGraphicsDevice->iDefaultMode);
+        DPRINT("Using iDefaultMode = %lu\n", pGraphicsDevice->iDefaultMode);
     }
 
     /* Try to get a diplay driver */
     ppdev->pldev = EngLoadImageEx(pdm->dmDeviceName, LDEV_DEVICE_DISPLAY);
     if (!ppdev->pldev)
     {
-        DPRINT1("Could not load display driver '%ls', '%s'\n",
+        DPRINT1("Could not load display driver '%ls', '%ls'\n",
                 pGraphicsDevice->pDiplayDrivers,
                 pdm->dmDeviceName);
         ExFreePoolWithTag(ppdev, GDITAG_PDEV);
@@ -342,51 +351,67 @@ EngpCreatePDEV(
 }
 
 VOID
+FORCEINLINE
+SwitchPointer(
+    _Inout_ PVOID pvPointer1,
+    _Inout_ PVOID pvPointer2)
+{
+    PVOID *ppvPointer1 = pvPointer1;
+    PVOID *ppvPointer2 = pvPointer2;
+    PVOID pvTemp;
+
+    pvTemp = *ppvPointer1;
+    *ppvPointer1 = *ppvPointer2;
+    *ppvPointer2 = pvTemp;
+}
+
+VOID
 NTAPI
 PDEVOBJ_vSwitchPdev(
     PPDEVOBJ ppdev,
     PPDEVOBJ ppdev2)
 {
-    PDEVOBJ pdevTmp;
-    DWORD tmpStateFlags;
-
-    /* Exchange data */
-    pdevTmp = *ppdev;
+    union
+    {
+        DRIVER_FUNCTIONS pfn;
+        GDIINFO gdiinfo;
+        DEVINFO devinfo;
+        DWORD StateFlags;
+    } temp;
 
     /* Exchange driver functions */
+    temp.pfn = ppdev->pfn;
     ppdev->pfn = ppdev2->pfn;
-    ppdev2->pfn = pdevTmp.pfn;
+    ppdev2->pfn = temp.pfn;
 
     /* Exchange LDEVs */
-    ppdev->pldev = ppdev2->pldev;
-    ppdev2->pldev = pdevTmp.pldev;
+    SwitchPointer(&ppdev->pldev, &ppdev2->pldev);
 
     /* Exchange DHPDEV */
-    ppdev->dhpdev = ppdev2->dhpdev;
-    ppdev2->dhpdev = pdevTmp.dhpdev;
+    SwitchPointer(&ppdev->dhpdev, &ppdev2->dhpdev);
 
     /* Exchange surfaces and associate them with their new PDEV */
-    ppdev->pSurface = ppdev2->pSurface;
-    ppdev2->pSurface = pdevTmp.pSurface;
+    SwitchPointer(&ppdev->pSurface, &ppdev2->pSurface);
     ppdev->pSurface->SurfObj.hdev = (HDEV)ppdev;
     ppdev2->pSurface->SurfObj.hdev = (HDEV)ppdev2;
 
     /* Exchange devinfo */
+    temp.devinfo = ppdev->devinfo;
     ppdev->devinfo = ppdev2->devinfo;
-    ppdev2->devinfo = pdevTmp.devinfo;
+    ppdev2->devinfo = temp.devinfo;
 
     /* Exchange gdiinfo */
+    temp.gdiinfo = ppdev->gdiinfo;
     ppdev->gdiinfo = ppdev2->gdiinfo;
-    ppdev2->gdiinfo = pdevTmp.gdiinfo;
+    ppdev2->gdiinfo = temp.gdiinfo;
 
     /* Exchange DEVMODE */
-    ppdev->pdmwDev = ppdev2->pdmwDev;
-    ppdev2->pdmwDev = pdevTmp.pdmwDev;
+    SwitchPointer(&ppdev->pdmwDev, &ppdev2->pdmwDev);
 
     /* Exchange state flags */
-    tmpStateFlags = ppdev->pGraphicsDevice->StateFlags;
+    temp.StateFlags = ppdev->pGraphicsDevice->StateFlags;
     ppdev->pGraphicsDevice->StateFlags = ppdev2->pGraphicsDevice->StateFlags;
-    ppdev2->pGraphicsDevice->StateFlags = tmpStateFlags;
+    ppdev2->pGraphicsDevice->StateFlags = temp.StateFlags;
 
     /* Notify each driver instance of its new HDEV association */
     ppdev->pfn.CompletePDEV(ppdev->dhpdev, (HDEV)ppdev);
@@ -407,6 +432,7 @@ PDEVOBJ_bSwitchMode(
 
     /* Lock the PDEV */
     EngAcquireSemaphore(ppdev->hsemDevLock);
+
     /* And everything else */
     EngAcquireSemaphore(ghsemPDEV);
 
@@ -472,7 +498,7 @@ leave:
 PPDEVOBJ
 NTAPI
 EngpGetPDEV(
-    PUNICODE_STRING pustrDeviceName)
+    _In_opt_ PUNICODE_STRING pustrDeviceName)
 {
     UNICODE_STRING ustrCurrent;
     PPDEVOBJ ppdev;
@@ -481,37 +507,39 @@ EngpGetPDEV(
     /* Acquire PDEV lock */
     EngAcquireSemaphore(ghsemPDEV);
 
-    /* If no device name is given, ... */
-    if (!pustrDeviceName && gppdevPrimary)
+    /* Did the caller pass a device name? */
+    if (pustrDeviceName)
     {
-        /* ... use the primary PDEV */
-        ppdev = gppdevPrimary;
-
-        /* Reference the pdev */
-        InterlockedIncrement(&ppdev->cPdevRefs);
-        goto leave;
-    }
-
-    /* Loop all present PDEVs */
-    for (ppdev = gppdevList; ppdev; ppdev = ppdev->ppdevNext)
-    {
-        /* Get a pointer to the GRAPHICS_DEVICE */
-        pGraphicsDevice = ppdev->pGraphicsDevice;
-
-        /* Compare the name */
-        RtlInitUnicodeString(&ustrCurrent, pGraphicsDevice->szWinDeviceName);
-        if (RtlEqualUnicodeString(pustrDeviceName, &ustrCurrent, FALSE))
+        /* Loop all present PDEVs */
+        for (ppdev = gppdevList; ppdev; ppdev = ppdev->ppdevNext)
         {
-            /* Found! Reference the PDEV */
-            InterlockedIncrement(&ppdev->cPdevRefs);
-            break;
+            /* Get a pointer to the GRAPHICS_DEVICE */
+            pGraphicsDevice = ppdev->pGraphicsDevice;
+
+            /* Compare the name */
+            RtlInitUnicodeString(&ustrCurrent, pGraphicsDevice->szWinDeviceName);
+            if (RtlEqualUnicodeString(pustrDeviceName, &ustrCurrent, FALSE))
+            {
+                /* Found! */
+                break;
+            }
         }
+    }
+    else
+    {
+        /* Otherwise use the primary PDEV */
+        ppdev = gppdevPrimary;
     }
 
     /* Did we find one? */
-    if (!ppdev)
+    if (ppdev)
     {
-        /* No, create a new PDEV */
+        /* Yes, reference the PDEV */
+        InterlockedIncrement(&ppdev->cPdevRefs);
+    }
+    else
+    {
+        /* No, create a new PDEV for the given device */
         ppdev = EngpCreatePDEV(pustrDeviceName, NULL);
         if (ppdev)
         {
@@ -528,7 +556,6 @@ EngpGetPDEV(
         }
     }
 
-leave:
     /* Release PDEV lock */
     EngReleaseSemaphore(ghsemPDEV);
 
@@ -612,23 +639,19 @@ PDEVOBJ_vGetDeviceCaps(
 
 /** Exported functions ********************************************************/
 
+_Must_inspect_result_ _Ret_z_
 LPWSTR
 APIENTRY
-EngGetDriverName(IN HDEV hdev)
+EngGetDriverName(_In_ HDEV hdev)
 {
     PPDEVOBJ ppdev = (PPDEVOBJ)hdev;
-    PLDEVOBJ pldev;
 
-    if (!hdev)
-        return NULL;
+    ASSERT(ppdev);
+    ASSERT(ppdev->pldev);
+    ASSERT(ppdev->pldev->pGdiDriverInfo);
+    ASSERT(ppdev->pldev->pGdiDriverInfo->DriverName.Buffer);
 
-    pldev = ppdev->pldev;
-    ASSERT(pldev);
-
-    if (!pldev->pGdiDriverInfo)
-        return NULL;
-
-    return pldev->pGdiDriverInfo->DriverName.Buffer;
+    return ppdev->pldev->pGdiDriverInfo->DriverName.Buffer;
 }
 
 
@@ -780,7 +803,7 @@ NtGdiGetDeviceCaps(
     return 0;
 }
 
-
+_Success_(return!=FALSE)
 BOOL
 APIENTRY
 NtGdiGetDeviceCapsAll(

@@ -22,8 +22,8 @@
 #ifdef HAVE_SANE
 # include <sane/sane.h>
 #endif
-#include "twain.h"
-#include "windef.h"
+#include <twain.h>
+//#include "windef.h"
 
 /* internel information about an active data source */
 typedef struct tagActiveDS

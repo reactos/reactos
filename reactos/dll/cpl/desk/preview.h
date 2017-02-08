@@ -21,21 +21,14 @@
 #define IDX_APPSPACE         16
 #define IDX_QUICKINFO        20
 
-
-
-#define PVM_GETCYCAPTION     (WM_USER+1)
-#define PVM_SETCYCAPTION     (WM_USER+2)
-
-#define PVM_GETCYMENU        (WM_USER+3)
-#define PVM_SETCYMENU        (WM_USER+4)
-
-#define PVM_GETCXSCROLLBAR   (WM_USER+5)
-#define PVM_SETCXSCROLLBAR   (WM_USER+6)
-
-#define PVM_GETCYSIZEFRAME   (WM_USER+7)
-#define PVM_SETCYSIZEFRAME   (WM_USER+8)
-
-#define PVM_UPDATETHEME      (WM_USER+13)
+#define PVM_SETSIZE          (WM_USER+1) 
+#define PVM_GETSIZE          (WM_USER+2)
+#define PVM_SETFONT          (WM_USER+3)
+#define PVM_GETFONT          (WM_USER+4)
+#define PVM_SETCOLOR         (WM_USER+5)
+#define PVM_GETCOLOR         (WM_USER+6)
+#define PVM_SET_HDC_PREVIEW  (WM_USER+7)
+#define PVM_UPDATETHEME      (WM_USER+8)
 
 BOOL RegisterPreviewControl(IN HINSTANCE hInstance);
 VOID UnregisterPreviewControl(IN HINSTANCE hInstance);

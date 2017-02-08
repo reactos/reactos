@@ -28,7 +28,7 @@ So it changes the name of hello.txt in the current directory.
 3)Syntax errors:
 
 -Way #1 with different Subdirectories path: ren c:\ie\hello.txt c:\hi\hi.txt, this is not possible.Since ren doesnt move files,just rename them.
--Way #2 semi path in destiny: ren hello.txt c:\ie\hi.txt. This feature isnt available.
+-Way #2 semi path in destiny: ren hello.txt c:\ie\hi.txt. This feature isn't available.
 
 
 **************************************************

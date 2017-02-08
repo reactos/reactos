@@ -29,28 +29,33 @@ set(CMAKE_COLOR_MAKEFILE OFF)
 if(NOT ARCH)
     set(ARCH i386)
 endif()
+# Now the ARCH variable will be in lowercase.
+# It is needed because STREQUAL comparison
+# is case-sensitive.
+# See http://cmake.3232098.n2.nabble.com/Case-insensitive-string-compare-td7580269.html
+# for more information.
 string(TOLOWER ${ARCH} ARCH)
 
 # Compile options
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     include(cmake/config.cmake)
-elseif(ARCH MATCHES amd64)
+elseif(ARCH STREQUAL "amd64")
     include(cmake/config-amd64.cmake)
-elseif(ARCH MATCHES arm)
+elseif(ARCH STREQUAL "arm")
     include(cmake/config-arm.cmake)
 endif()
 
 # Compiler flags handling
 include(cmake/compilerflags.cmake)
 
-add_definitions(-D__REACTOS__ -D__ROS_CMAKE__)
+add_definitions(-D__REACTOS__)
 
 if(NOT CMAKE_CROSSCOMPILING)
 
     add_definitions(-DTARGET_${ARCH})
 
     if(MSVC)
-        if(ARCH MATCHES i386)
+        if(ARCH STREQUAL "i386")
             add_definitions(/D_X86_ /DWIN32 /D_WINDOWS)
         endif()
         add_definitions(/Dinline=__inline)
@@ -64,9 +69,9 @@ if(NOT CMAKE_CROSSCOMPILING)
     add_subdirectory(lib)
 
     if(NOT MSVC)
-        export(TARGETS widl gendib cabman cdmake mkhive obj2bin spec2def geninc rsym mkshelllink FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+        export(TARGETS bin2c widl gendib cabman cdmake mkhive obj2bin spec2def geninc rsym mkshelllink FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
     else()
-        export(TARGETS gendib cabman cdmake mkhive obj2bin spec2def geninc mkshelllink FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+        export(TARGETS bin2c widl gendib cabman cdmake mkhive obj2bin spec2def geninc mkshelllink FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
     endif()
 
 else()
@@ -81,13 +86,14 @@ else()
     #useful stuff!
     include(CMakeParseArguments)
 
-    # this is needed as well
-    link_directories(${REACTOS_SOURCE_DIR}/importlibs)
-
     if(ENABLE_CCACHE)
         set(CMAKE_C_USE_RESPONSE_FILE_FOR_INCLUDES OFF)
         set(CMAKE_CXX_USE_RESPONSE_FILE_FOR_INCLUDES OFF)
     endif()
+
+    # Default to Debug for the build type
+    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING 
+"Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel." FORCE)
 
     # Do some cleanup
     file(REMOVE
@@ -120,6 +126,10 @@ else()
         add_definitions(-D_WINKD_=1)
     endif()
 
+    if(USE_PSEH3)
+        add_definitions(-D_USE_PSEH3=1)
+    endif()
+
     # Version Options
     add_definitions(-DWINVER=0x502
                     -D_WIN32_IE=0x600
@@ -128,21 +138,21 @@ else()
                     -D_SETUPAPI_VER=0x502)
 
     # Arch Options
-    if(ARCH MATCHES i386)
+    if(ARCH STREQUAL "i386")
         add_definitions(-D_M_IX86 -D_X86_ -D__i386__)
-    elseif(ARCH MATCHES amd64)
+    elseif(ARCH STREQUAL "amd64")
         add_definitions(-D_M_AMD64 -D_AMD64_ -D__x86_64__ -D_WIN64)
-    elseif(ARCH MATCHES arm)
+    elseif(ARCH STREQUAL "arm")
         # _M_ARM is already defined by toolchain
         add_definitions(-D_ARM_ -D__arm__)
     endif()
 
     # Other
-    if(ARCH MATCHES i386)
+    if(ARCH STREQUAL "i386")
         add_definitions(-DUSE_COMPILER_EXCEPTIONS -D_USE_32BIT_TIME_T)
-    elseif(ARCH MATCHES amd64)
+    elseif(ARCH STREQUAL "amd64")
         add_definitions(-DUSE_COMPILER_EXCEPTIONS -DNO_UNDERSCORE_PREFIX)
-    elseif(ARCH MATCHES arm)
+    elseif(ARCH STREQUAL "arm")
         add_definitions(-DUSE_COMPILER_EXCEPTIONS)
     endif()
 
@@ -169,11 +179,8 @@ else()
     include(cmake/CMakeMacros.cmake)
 
     # IDL macros for widl/midl
-    if (MSVC)
-        include(cmake/midl-support.cmake)
-    else()
-        include(cmake/widl-support.cmake)
-    endif()
+    # We're using widl now for both MSVC and GCC builds
+    include(cmake/widl-support.cmake)
 
     if(MSVC AND USE_WDK_HEADERS)
         include_directories(
@@ -206,7 +213,7 @@ else()
     endif()
 
 
-    if(ARCH MATCHES arm)
+    if(ARCH STREQUAL "arm")
         include_directories(${REACTOS_SOURCE_DIR}/include/reactos/arm)
     endif()
 

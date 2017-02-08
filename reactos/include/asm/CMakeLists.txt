@@ -10,9 +10,9 @@ else()
     set(OPT_MS "")
 endif()
 
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     set(_filename ks386)
-elseif(ARCH MATCHES amd64)
+elseif(ARCH STREQUAL "amd64")
     set(_filename ksamd64)
 endif()
 

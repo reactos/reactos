@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/mm/ARM3/sectopm.c
+ * FILE:            ntoskrnl/mm/ARM3/section.c
  * PURPOSE:         ARM Memory Manager Section Support
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
@@ -81,6 +81,29 @@ CHAR MmUserProtectionToMask2[16] =
     (CHAR)MM_INVALID_PROTECTION
 };
 
+ULONG MmCompatibleProtectionMask[8] =
+{
+    PAGE_NOACCESS,
+
+    PAGE_NOACCESS | PAGE_READONLY | PAGE_WRITECOPY,
+
+    PAGE_NOACCESS | PAGE_EXECUTE,
+
+    PAGE_NOACCESS | PAGE_READONLY | PAGE_WRITECOPY | PAGE_EXECUTE |
+    PAGE_EXECUTE_READ,
+
+    PAGE_NOACCESS | PAGE_READONLY | PAGE_WRITECOPY | PAGE_READWRITE,
+
+    PAGE_NOACCESS | PAGE_READONLY | PAGE_WRITECOPY,
+
+    PAGE_NOACCESS | PAGE_READONLY | PAGE_WRITECOPY | PAGE_READWRITE |
+    PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE |
+    PAGE_EXECUTE_WRITECOPY,
+
+    PAGE_NOACCESS | PAGE_READONLY | PAGE_WRITECOPY | PAGE_EXECUTE |
+    PAGE_EXECUTE_READ | PAGE_EXECUTE_WRITECOPY
+};
+
 MMSESSION MmSession;
 KGUARDED_MUTEX MmSectionCommitMutex;
 MM_AVL_TABLE MmSectionBasedRoot;
@@ -88,6 +111,29 @@ KGUARDED_MUTEX MmSectionBasedMutex;
 PVOID MmHighSectionBase;
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+BOOLEAN
+NTAPI
+MiIsProtectionCompatible(IN ULONG SectionPageProtection,
+                         IN ULONG NewSectionPageProtection)
+{
+    ULONG ProtectionMask, CompatibleMask;
+
+    /* Calculate the protection mask and make sure it's valid */
+    ProtectionMask = MiMakeProtectionMask(SectionPageProtection);
+    if (ProtectionMask == MM_INVALID_PROTECTION)
+    {
+        DPRINT1("Invalid protection mask\n");
+        return FALSE;
+    }
+
+    /* Calculate the compatible mask */
+    CompatibleMask = MmCompatibleProtectionMask[ProtectionMask & 0x7] |
+                     PAGE_GUARD | PAGE_NOCACHE | PAGE_WRITECOMBINE;
+
+    /* See if the mapping protection is compatible with the create protection */
+    return ((CompatibleMask | NewSectionPageProtection) == CompatibleMask);
+}
 
 ACCESS_MASK
 NTAPI
@@ -667,11 +713,29 @@ MiCheckControlArea(IN PCONTROL_AREA ControlArea,
 
 VOID
 NTAPI
+MiDereferenceControlArea(IN PCONTROL_AREA ControlArea)
+{
+    KIRQL OldIrql;
+
+    /* Lock the PFN database */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+    /* Drop reference counts */
+    ControlArea->NumberOfMappedViews--;
+    ControlArea->NumberOfUserReferences--;
+
+    /* Check if it's time to delete the CA. This releases the lock */
+    MiCheckControlArea(ControlArea, OldIrql);
+}
+
+VOID
+NTAPI
 MiRemoveMappedView(IN PEPROCESS CurrentProcess,
                    IN PMMVAD Vad)
 {
     KIRQL OldIrql;
     PCONTROL_AREA ControlArea;
+    PETHREAD CurrentThread = PsGetCurrentThread();
 
     /* Get the control area */
     ControlArea = Vad->ControlArea;
@@ -688,7 +752,7 @@ MiRemoveMappedView(IN PEPROCESS CurrentProcess,
                              Vad);
 
     /* Release the working set */
-    MiUnlockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
+    MiUnlockProcessWorkingSetUnsafe(CurrentProcess, CurrentThread);
 
     /* Lock the PFN database */
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
@@ -714,6 +778,8 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
     PVOID DbgBase = NULL;
     SIZE_T RegionSize;
     NTSTATUS Status;
+    PETHREAD CurrentThread = PsGetCurrentThread();
+    PEPROCESS CurrentProcess = PsGetCurrentProcess();
     PAGED_CODE();
 
     /* Check for Mm Region */
@@ -725,7 +791,7 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
     }
 
     /* Check if we should attach to the process */
-    if (PsGetCurrentProcess() != Process)
+    if (CurrentProcess != Process)
     {
         /* The process is different, do an attach */
         KeStackAttachProcess(&Process->Pcb, &ApcState);
@@ -771,7 +837,18 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
     /* For SEC_NO_CHANGE sections, we need some extra checks */
     if (Vad->u.VadFlags.NoChange == 1)
     {
-        DPRINT1("Unmapping SEC_NO_CHANGE. Should validate if allowed!\n");
+        /* Are we allowed to mess with this VAD? */
+        Status = MiCheckSecuredVad(Vad,
+                                   (PVOID)(Vad->StartingVpn >> PAGE_SHIFT),
+                                   RegionSize,
+                                   MM_DELETE_CHECK);
+        if (!NT_SUCCESS(Status))
+        {
+            /* We failed */
+            DPRINT1("Trying to unmap protected VAD!\n");
+            if (!Flags) MmUnlockAddressSpace(&Process->Vm);
+            goto Quickie;
+        }
     }
 
     /* Not currently supported */
@@ -780,13 +857,13 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
     /* FIXME: Remove VAD charges */
 
     /* Lock the working set */
-    MiLockWorkingSet(PsGetCurrentThread(), &Process->Vm);
+    MiLockProcessWorkingSetUnsafe(Process, CurrentThread);
 
     /* Remove the VAD */
     ASSERT(Process->VadRoot.NumberGenericTableElements >= 1);
     MiRemoveNode((PMMADDRESS_NODE)Vad, &Process->VadRoot);
 
-    /* Remove the PTEs for this view */
+    /* Remove the PTEs for this view, which also releases the working set lock */
     MiRemoveMappedView(Process, Vad);
 
     /* FIXME: Remove commitment */
@@ -805,7 +882,6 @@ Quickie:
     if (Attached) KeUnstackDetachProcess(&ApcState);
     return Status;
 }
-
 
 NTSTATUS
 NTAPI
@@ -827,12 +903,13 @@ MiSessionCommitPageTables(IN PVOID StartVa,
     /* Get the start and end PDE, then loop each one */
     StartPde = MiAddressToPde(StartVa);
     EndPde = MiAddressToPde((PVOID)((ULONG_PTR)EndVa - 1));
-    Index = (ULONG_PTR)StartVa >> 22;
+    Index = ((ULONG_PTR)StartVa - (ULONG_PTR)MmSessionBase) >> 22;
     while (StartPde <= EndPde)
     {
+#ifndef _M_AMD64
         /* If we don't already have a page table for it, increment count */
         if (MmSessionSpace->PageTables[Index].u.Long == 0) PageCount++;
-
+#endif
         /* Move to the next one */
         StartPde++;
         Index++;
@@ -843,11 +920,12 @@ MiSessionCommitPageTables(IN PVOID StartVa,
 
     /* Reset the start PDE and index */
     StartPde = MiAddressToPde(StartVa);
-    Index = (ULONG_PTR)StartVa >> 22;
+    Index = ((ULONG_PTR)StartVa - (ULONG_PTR)MmSessionBase) >> 22;
 
     /* Loop each PDE while holding the working set lock */
 //  MiLockWorkingSet(PsGetCurrentThread(),
 //                   &MmSessionSpace->GlobalVirtualAddress->Vm);
+#ifndef _M_AMD64
     while (StartPde <= EndPde)
     {
         /* Check if we already have a page table */
@@ -890,15 +968,16 @@ MiSessionCommitPageTables(IN PVOID StartVa,
         StartPde++;
         Index++;
     }
+#endif
 
     /* Make sure we didn't do more pages than expected */
     ASSERT(ActualPages <= PageCount);
 
     /* Release the working set lock */
-//  MiUnlockWorkingSet(PsGetCurrentThread(), 
+//  MiUnlockWorkingSet(PsGetCurrentThread(),
 //                     &MmSessionSpace->GlobalVirtualAddress->Vm);
 
-    
+
     /* If we did at least one page... */
     if (ActualPages)
     {
@@ -945,8 +1024,10 @@ MiMapViewInSystemSpace(IN PVOID Section,
     /* Check if the caller wanted a larger section than the view */
     if (*ViewSize > SectionSize)
     {
-        /* We should probably fail. FIXME TODO */
-        ASSERT(FALSE);
+        /* Fail */
+        DPRINT1("View is too large\n");
+        MiDereferenceControlArea(ControlArea);
+        return STATUS_INVALID_VIEW_SIZE;
     }
 
     /* Get the number of 64K buckets required for this mapping */
@@ -956,13 +1037,21 @@ MiMapViewInSystemSpace(IN PVOID Section,
     /* Check if the view is more than 4GB large */
     if (Buckets >= MI_SYSTEM_VIEW_BUCKET_SIZE)
     {
-        /* We should probably fail */
-        ASSERT(FALSE);
+        /* Fail */
+        DPRINT1("View is too large\n");
+        MiDereferenceControlArea(ControlArea);
+        return STATUS_INVALID_VIEW_SIZE;
     }
 
     /* Insert this view into system space and get a base address for it */
     Base = MiInsertInSystemSpace(Session, Buckets, ControlArea);
-    ASSERT(Base);
+    if (!Base)
+    {
+        /* Fail */
+        DPRINT1("Out of system space\n");
+        MiDereferenceControlArea(ControlArea);
+        return STATUS_NO_MEMORY;
+    }
 
     /* What's the underlying session? */
     if (Session == &MmSession)
@@ -975,7 +1064,7 @@ MiMapViewInSystemSpace(IN PVOID Section,
     {
         /* Create the PDEs needed for this mapping */
         Status = MiSessionCommitPageTables(Base,
-                                           (PVOID)((ULONG_PTR)Base + 
+                                           (PVOID)((ULONG_PTR)Base +
                                            Buckets * MI_SYSTEM_VIEW_BUCKET_SIZE));
         NT_ASSERT(NT_SUCCESS(Status));
     }
@@ -1149,7 +1238,8 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
                                       &Process->VadRoot))
         {
             DPRINT1("Conflict with SEC_BASED or manually based section!\n");
-            return STATUS_CONFLICTING_ADDRESSES; // FIXME: CA Leak
+            MiDereferenceControlArea(ControlArea);
+            return STATUS_CONFLICTING_ADDRESSES;
         }
     }
 
@@ -1157,7 +1247,11 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     /* FIXME: we are allocating a LONG VAD for ReactOS compatibility only */
     ASSERT((AllocationType & MEM_RESERVE) == 0); /* ARM3 does not support this */
     Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD_LONG), 'ldaV');
-    if (!Vad) return STATUS_INSUFFICIENT_RESOURCES; /* FIXME: CA Leak */
+    if (!Vad)
+    {
+        MiDereferenceControlArea(ControlArea);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
     RtlZeroMemory(Vad, sizeof(MMVAD_LONG));
     Vad->u4.Banked = (PVOID)0xDEADBABE;
 
@@ -1188,13 +1282,13 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     Status = STATUS_SUCCESS;
 
     /* Pretend as if we own the working set */
-    MiLockProcessWorkingSet(Process, Thread);
+    MiLockProcessWorkingSetUnsafe(Process, Thread);
 
     /* Insert the VAD */
     MiInsertVad((PMMVAD)Vad, Process);
 
     /* Release the working set */
-    MiUnlockProcessWorkingSet(Process, Thread);
+    MiUnlockProcessWorkingSetUnsafe(Process, Thread);
 
     /* Windows stores this for accounting purposes, do so as well */
     if (!Segment->u2.FirstMappedVa) Segment->u2.FirstMappedVa = (PVOID)StartAddress;
@@ -1242,6 +1336,38 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     *BaseAddress = (PVOID)StartAddress;
     DPRINT("Start and region: 0x%p, 0x%p\n", *BaseAddress, *ViewSize);
     return STATUS_SUCCESS;
+}
+
+VOID
+NTAPI
+MiSubsectionConsistent(IN PSUBSECTION Subsection)
+{
+    /* ReactOS only supports systems with 4K pages and 4K sectors */
+    ASSERT(Subsection->u.SubsectionFlags.SectorEndOffset == 0);
+
+    /* Therefore, then number of PTEs should be equal to the number of sectors */
+    if (Subsection->NumberOfFullSectors != Subsection->PtesInSubsection)
+    {
+        /* Break and warn if this is inconsistent */
+        DPRINT1("Mm: Subsection inconsistent (%x vs %x)\n",
+                Subsection->NumberOfFullSectors, Subsection->PtesInSubsection);
+        DbgBreakPoint();
+    }
+}
+
+NTSTATUS
+NTAPI
+MiCreateDataFileMap(IN PFILE_OBJECT File,
+                    OUT PSEGMENT *Segment,
+                    IN PSIZE_T MaximumSize,
+                    IN ULONG SectionPageProtection,
+                    IN ULONG AllocationAttributes,
+                    IN ULONG IgnoreFileSizing)
+{
+    /* Not yet implemented */
+    ASSERT(FALSE);
+    *Segment = NULL;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -1602,6 +1728,7 @@ MiFlushTbAndCapture(IN PMMVAD FoundVad,
 {
     MMPTE TempPte, PreviousPte;
     KIRQL OldIrql;
+    BOOLEAN RebuildPte = FALSE;
 
     //
     // User for sanity checking later on
@@ -1618,11 +1745,45 @@ MiFlushTbAndCapture(IN PMMVAD FoundVad,
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
     //
-    // We don't support I/O mappings in this path yet, and only cached memory
+    // We don't support I/O mappings in this path yet
     //
     ASSERT(Pfn1 != NULL);
-    ASSERT(Pfn1->u3.e1.CacheAttribute == MiCached);
-    ASSERT((ProtectionMask & (MM_NOCACHE | MM_NOACCESS)) == 0);
+    ASSERT(Pfn1->u3.e1.CacheAttribute != MiWriteCombined);
+
+    //
+    // Make sure new protection mask doesn't get in conflict and fix it if it does
+    //
+    if (Pfn1->u3.e1.CacheAttribute == MiCached)
+    {
+        //
+        // This is a cached PFN
+        //
+        if (ProtectionMask & (MM_NOCACHE | MM_NOACCESS))
+        {
+            RebuildPte = TRUE;
+            ProtectionMask &= ~(MM_NOCACHE | MM_NOACCESS);
+        }
+    }
+    else if (Pfn1->u3.e1.CacheAttribute == MiNonCached)
+    {
+        //
+        // This is a non-cached PFN
+        //
+        if ((ProtectionMask & (MM_NOCACHE | MM_NOACCESS)) != MM_NOCACHE)
+        {
+            RebuildPte = TRUE;
+            ProtectionMask &= ~MM_NOACCESS;
+            ProtectionMask |= MM_NOCACHE;
+        }
+    }
+
+    if (RebuildPte)
+    {
+        MI_MAKE_HARDWARE_PTE_USER(&TempPte,
+                                  PointerPte,
+                                  ProtectionMask,
+                                  PreviousPte.u.Hard.PageFrameNumber);
+    }
 
     //
     // Write the new PTE, making sure we are only changing the bits
@@ -1674,8 +1835,7 @@ MiSetProtectionOnSection(IN PEPROCESS Process,
     PMMPDE PointerPde;
     PMMPFN Pfn1;
     ULONG ProtectionMask, QuotaCharge = 0;
-    PUSHORT UsedPageTableEntries;
-    //PETHREAD Thread = PsGetCurrentThread();
+    PETHREAD Thread = PsGetCurrentThread();
     PAGED_CODE();
 
     //
@@ -1707,7 +1867,7 @@ MiSetProtectionOnSection(IN PEPROCESS Process,
     //
     // Get the PTE and PDE for the address, as well as the final PTE
     //
-    //MiLockProcessWorkingSet(Thread, Process);
+    MiLockProcessWorkingSetUnsafe(Process, Thread);
     PointerPde = MiAddressToPde(StartingAddress);
     PointerPte = MiAddressToPte(StartingAddress);
     LastPte = MiAddressToPte(EndingAddress);
@@ -1767,9 +1927,7 @@ MiSetProtectionOnSection(IN PEPROCESS Process,
             // This used to be a zero PTE and it no longer is, so we must add a
             // reference to the pagetable.
             //
-            UsedPageTableEntries = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(MiPteToAddress(PointerPte))];
-            (*UsedPageTableEntries)++;
-            ASSERT((*UsedPageTableEntries) <= PTE_COUNT);
+            MiIncrementPageTableReferences(MiPteToAddress(PointerPte));
 
             //
             // Create the demand-zero prototype PTE
@@ -1821,7 +1979,7 @@ MiSetProtectionOnSection(IN PEPROCESS Process,
     //
     // Unlock the working set and update quota charges if needed, then return
     //
-    //MiUnlockProcessWorkingSet(Thread, Process);
+    MiUnlockProcessWorkingSetUnsafe(Process, Thread);
     if ((QuotaCharge > 0) && (!DontCharge))
     {
         FoundVad->u.VadFlags.CommitCharge -= QuotaCharge;
@@ -2014,15 +2172,15 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
     SECTION Section;
     PSECTION NewSection;
     PSUBSECTION Subsection;
-    PSEGMENT NewSegment;
+    PSEGMENT NewSegment, Segment;
     NTSTATUS Status;
     PCONTROL_AREA ControlArea;
-    ULONG ProtectionMask;
-
-    /* ARM3 does not yet support this */
-    ASSERT(FileHandle == NULL);
-    ASSERT(FileObject == NULL);
-    ASSERT((AllocationAttributes & SEC_LARGE_PAGES) == 0);
+    ULONG ProtectionMask, ControlAreaSize, Size, NonPagedCharge, PagedCharge;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    BOOLEAN FileLock = FALSE, KernelCall = FALSE;
+    KIRQL OldIrql;
+    PFILE_OBJECT File;
+    PVOID PreviousSectionPointer;
 
     /* Make the same sanity checks that the Nt interface should've validated */
     ASSERT((AllocationAttributes & ~(SEC_COMMIT | SEC_RESERVE | SEC_BASED |
@@ -2045,53 +2203,228 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
     ProtectionMask = MiMakeProtectionMask(SectionPageProtection);
     if (ProtectionMask == MM_INVALID_PROTECTION) return STATUS_INVALID_PAGE_PROTECTION;
 
-    /* A handle must be supplied with SEC_IMAGE, and this is the no-handle path */
-    if (AllocationAttributes & SEC_IMAGE) return STATUS_INVALID_FILE_FOR_SECTION;
+    /* Check if this is going to be a data or image backed file section */
+    if ((FileHandle) || (FileObject))
+    {
+        /* These cannot be mapped with large pages */
+        if (AllocationAttributes & SEC_LARGE_PAGES) return STATUS_INVALID_PARAMETER_6;
 
-    /* So this must be a pagefile-backed section, create the mappings needed */
-    Status = MiCreatePagingFileMap(&NewSegment,
-                                   (PSIZE_T)InputMaximumSize,
-                                   ProtectionMask,
-                                   AllocationAttributes);
-    ASSERT(NT_SUCCESS(Status));
-    ASSERT(NewSegment != NULL);
+        /* For now, only support the mechanism through a file handle */
+        ASSERT(FileObject == NULL);
+
+        /* Reference the file handle to get the object */
+        Status = ObReferenceObjectByHandle(FileHandle,
+                                           MmMakeFileAccess[ProtectionMask],
+                                           IoFileObjectType,
+                                           PreviousMode,
+                                           (PVOID*)&File,
+                                           NULL);
+        if (!NT_SUCCESS(Status)) return Status;
+
+        /* Make sure Cc has been doing its job */
+        if (!File->SectionObjectPointer)
+        {
+            /* This is not a valid file system-based file, fail */
+            ObDereferenceObject(File);
+            return STATUS_INVALID_FILE_FOR_SECTION;
+        }
+
+        /* Image-file backed sections are not yet supported */
+        ASSERT((AllocationAttributes & SEC_IMAGE) == 0);
+
+        /* Compute the size of the control area, and allocate it */
+        ControlAreaSize = sizeof(CONTROL_AREA) + sizeof(MSUBSECTION);
+        ControlArea = ExAllocatePoolWithTag(NonPagedPool, ControlAreaSize, 'aCmM');
+        if (!ControlArea)
+        {
+            ObDereferenceObject(File);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* Zero it out */
+        RtlZeroMemory(ControlArea, ControlAreaSize);
+
+        /* Did we get a handle, or an object? */
+        if (FileHandle)
+        {
+            /* We got a file handle so we have to lock down the file */
+#if 0
+            Status = FsRtlAcquireToCreateMappedSection(File, SectionPageProtection);
+            if (!NT_SUCCESS(Status))
+            {
+                ExFreePool(ControlArea);
+                ObDereferenceObject(File);
+                return Status;
+            }
+#else
+            /* ReactOS doesn't support this API yet, so do nothing */
+            Status = STATUS_SUCCESS;
+#endif
+            /* Update the top-level IRP so that drivers know what's happening */
+            IoSetTopLevelIrp((PIRP)FSRTL_FSP_TOP_LEVEL_IRP);
+            FileLock = TRUE;
+        }
+
+        /* Lock the PFN database while we play with the section pointers */
+        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+        /* Image-file backed sections are not yet supported */
+        ASSERT((AllocationAttributes & SEC_IMAGE) == 0);
+
+        /* There should not already be a control area for this file */
+        ASSERT(File->SectionObjectPointer->DataSectionObject == NULL);
+        NewSegment = NULL;
+
+        /* Write down that this CA is being created, and set it */
+        ControlArea->u.Flags.BeingCreated = TRUE;
+        PreviousSectionPointer = File->SectionObjectPointer;
+        File->SectionObjectPointer->DataSectionObject = ControlArea;
+
+        /* We can release the PFN lock now */
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+
+        /* We don't support previously-mapped file */
+        ASSERT(NewSegment == NULL);
+
+        /* Image-file backed sections are not yet supported */
+        ASSERT((AllocationAttributes & SEC_IMAGE) == 0);
+
+        /* So we always create a data file map */
+        Status = MiCreateDataFileMap(File,
+                                     &Segment,
+                                     (PSIZE_T)InputMaximumSize,
+                                     SectionPageProtection,
+                                     AllocationAttributes,
+                                     KernelCall);
+        ASSERT(PreviousSectionPointer == File->SectionObjectPointer);
+        ASSERT(NT_SUCCESS(Status));
+
+        /* Check if a maximum size was specified */
+        if (!InputMaximumSize->QuadPart)
+        {
+            /* Nope, use the segment size */
+            Section.SizeOfSection.QuadPart = (LONGLONG)Segment->SizeOfSegment;
+        }
+        else
+        {
+            /* Yep, use the entered size */
+            Section.SizeOfSection.QuadPart = InputMaximumSize->QuadPart;
+        }
+    }
+    else
+    {
+        /* A handle must be supplied with SEC_IMAGE, as this is the no-handle path */
+        if (AllocationAttributes & SEC_IMAGE) return STATUS_INVALID_FILE_FOR_SECTION;
+
+        /* Not yet supported */
+        ASSERT((AllocationAttributes & SEC_LARGE_PAGES) == 0);
+
+        /* So this must be a pagefile-backed section, create the mappings needed */
+        Status = MiCreatePagingFileMap(&NewSegment,
+                                       (PSIZE_T)InputMaximumSize,
+                                       ProtectionMask,
+                                       AllocationAttributes);
+        if (!NT_SUCCESS(Status)) return Status;
+
+        /* Set the size here, and read the control area */
+        Section.SizeOfSection.QuadPart = NewSegment->SizeOfSegment;
+        ControlArea = NewSegment->ControlArea;
+    }
+
+    /* Did we already have a segment? */
+    if (!NewSegment)
+    {
+        /* This must be the file path and we created a segment */
+        NewSegment = Segment;
+        ASSERT(File != NULL);
+
+        /* Acquire the PFN lock while we set control area flags */
+        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+        /* We don't support this race condition yet, so assume no waiters */
+        ASSERT(ControlArea->WaitingForDeletion == NULL);
+        ControlArea->WaitingForDeletion = NULL;
+
+        /* Image-file backed sections are not yet supported, nor ROM images */
+        ASSERT((AllocationAttributes & SEC_IMAGE) == 0);
+        ASSERT(Segment->ControlArea->u.Flags.Rom == 0);
+
+        /* Take off the being created flag, and then release the lock */
+        ControlArea->u.Flags.BeingCreated = FALSE;
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    }
+
+    /* Check if we locked the file earlier */
+    if (FileLock)
+    {
+        /* Reset the top-level IRP and release the lock */
+        IoSetTopLevelIrp(NULL);
+        //FsRtlReleaseFile(File);
+        FileLock = FALSE;
+    }
 
     /* Set the initial section object data */
     Section.InitialPageProtection = SectionPageProtection;
-    Section.SizeOfSection.QuadPart = NewSegment->SizeOfSegment;
-    Section.Segment = NewSegment;
 
-    /* THe mapping created a control area and segment, save the flags */
-    ControlArea = NewSegment->ControlArea;
+    /* The mapping created a control area and segment, save the flags */
+    Section.Segment = NewSegment;
     Section.u.LongFlags = ControlArea->u.LongFlags;
 
-    /* ARM3 cannot support these right now, make sure they're not being set */
-    ASSERT(ControlArea->u.Flags.Image == 0);
-    ASSERT(ControlArea->FilePointer == NULL);
+    /* Check if this is a user-mode read-write non-image file mapping */
+    if (!(FileObject) &&
+        (SectionPageProtection & (PAGE_READWRITE | PAGE_EXECUTE_READWRITE)) &&
+        (ControlArea->u.Flags.Image == 0) &&
+        (ControlArea->FilePointer != NULL))
+    {
+        /* Add a reference and set the flag */
+        Section.u.Flags.UserWritable = 1;
+        InterlockedIncrement((PLONG)&ControlArea->WritableUserReferences);
+    }
+
+    /* Check for image mappings or page file mappings */
+    if ((ControlArea->u.Flags.Image == 1) || !(ControlArea->FilePointer))
+    {
+        /* Charge the segment size, and allocate a subsection */
+        PagedCharge = sizeof(SECTION) + NewSegment->TotalNumberOfPtes * sizeof(MMPTE);
+        Size = sizeof(SUBSECTION);
+    }
+    else
+    {
+        /* Charge nothing, and allocate a mapped subsection */
+        PagedCharge = 0;
+        Size = sizeof(MSUBSECTION);
+    }
+
+    /* Check if this is a normal CA */
     ASSERT(ControlArea->u.Flags.GlobalOnlyPerSession == 0);
     ASSERT(ControlArea->u.Flags.Rom == 0);
-    ASSERT(ControlArea->u.Flags.WasPurged == 0);
 
-    /* A pagefile-backed mapping only has one subsection, and this is all ARM3 supports */
+    /* Charge only a CA, and the subsection is right after */
+    NonPagedCharge = sizeof(CONTROL_AREA);
     Subsection = (PSUBSECTION)(ControlArea + 1);
+
+    /* We only support single-subsection mappings */
+    NonPagedCharge += Size;
     ASSERT(Subsection->NextSubsection == NULL);
 
     /* Create the actual section object, with enough space for the prototype PTEs */
-    Status = ObCreateObject(ExGetPreviousMode(),
+    Status = ObCreateObject(PreviousMode,
                             MmSectionObjectType,
                             ObjectAttributes,
-                            ExGetPreviousMode(),
+                            PreviousMode,
                             NULL,
                             sizeof(SECTION),
-                            sizeof(SECTION) +
-                            NewSegment->TotalNumberOfPtes * sizeof(MMPTE),
-                            sizeof(CONTROL_AREA) + sizeof(SUBSECTION),
+                            PagedCharge,
+                            NonPagedCharge,
                             (PVOID*)&NewSection);
     ASSERT(NT_SUCCESS(Status));
 
     /* Now copy the local section object from the stack into this new object */
     RtlCopyMemory(NewSection, &Section, sizeof(SECTION));
     NewSection->Address.StartingVpn = 0;
+
+    /* For now, only user calls are supported */
+    ASSERT(KernelCall == FALSE);
     NewSection->u.Flags.UserReference = TRUE;
 
     /* Migrate the attribute into a flag */
@@ -2137,6 +2470,13 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
         KeReleaseGuardedMutex(&MmSectionBasedMutex);
     }
 
+    /* Write down if this was a kernel call */
+    ControlArea->u.Flags.WasPurged |= KernelCall;
+    ASSERT(ControlArea->u.Flags.WasPurged == FALSE);
+
+    /* Make sure the segment and the section are the same size, or the section is smaller */
+    ASSERT((ULONG64)NewSection->SizeOfSection.QuadPart <= NewSection->Segment->SizeOfSegment);
+
     /* Return the object and the creation status */
     *SectionObject = (PVOID)NewSection;
     return Status;
@@ -2166,9 +2506,6 @@ MmMapViewOfArm3Section(IN PVOID SectionObject,
     NTSTATUS Status;
     PAGED_CODE();
 
-    /* Force PAGE_READWRITE for everything, for now */
-    Protect = PAGE_READWRITE;
-
     /* Get the segment and control area */
     Section = (PSECTION)SectionObject;
     ControlArea = Section->Segment->ControlArea;
@@ -2180,14 +2517,12 @@ MmMapViewOfArm3Section(IN PVOID SectionObject,
     ASSERT((AllocationType & MEM_RESERVE) == 0);
     ASSERT(ControlArea->u.Flags.PhysicalMemory == 0);
 
-#if 0
-    /* FIXME: Check if the mapping protection is compatible with the create */
+    /* Check if the mapping protection is compatible with the create */
     if (!MiIsProtectionCompatible(Section->InitialPageProtection, Protect))
     {
         DPRINT1("Mapping protection is incompatible\n");
         return STATUS_SECTION_PROTECTION;
     }
-#endif
 
     /* Check if the offset and size would cause an overflow */
     if (((ULONG64)SectionOffset->QuadPart + *ViewSize) <
@@ -2330,7 +2665,6 @@ MmMapViewInSessionSpace(IN PVOID Section,
 
     /* Use the system space API, but with the session view instead */
     ASSERT(MmIsAddressValid(MmSessionSpace) == TRUE);
-    ASSERT(FALSE);
     return MiMapViewInSystemSpace(Section,
                                   &MmSessionSpace->Session,
                                   MappedBase,
@@ -2704,6 +3038,13 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
     {
         DPRINT1("Invalid page protection\n");
         return STATUS_INVALID_PAGE_PROTECTION;
+    }
+
+    /* Check for non-allocation-granularity-aligned BaseAddress */
+    if (BaseAddress && (*BaseAddress != ALIGN_DOWN_POINTER_BY(*BaseAddress, MM_VIRTMEM_GRANULARITY)))
+    {
+       DPRINT("BaseAddress is not at 64-kilobyte address boundary.");
+       return STATUS_MAPPED_ALIGNMENT;
     }
 
     /* Now convert the protection mask into desired section access mask */

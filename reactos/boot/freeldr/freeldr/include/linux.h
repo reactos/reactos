@@ -18,6 +18,7 @@
  */
 
 #include <fs.h>
+#include <oslist.h>
 
 #ifndef __LINUX_H
 #define __LINUX_H
@@ -129,7 +130,9 @@ typedef struct
 VOID	BootNewLinuxKernel(VOID);				// Implemented in linux.S
 VOID	BootOldLinuxKernel(ULONG KernelSize);		// Implemented in linux.S
 
-VOID	LoadAndBootLinux(PCSTR OperatingSystemName, PCSTR Description);
+VOID
+LoadAndBootLinux(IN OperatingSystemItem* OperatingSystem,
+                 IN USHORT OperatingSystemVersion);
 
 BOOLEAN	LinuxParseIniSection(PCSTR OperatingSystemName);
 BOOLEAN	LinuxReadBootSector(PFILE LinuxKernelFile);

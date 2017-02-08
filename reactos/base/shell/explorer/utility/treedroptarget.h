@@ -61,7 +61,8 @@ public:
         /* [out][in] */ DWORD __RPC_FAR *pdwEffect)
 	{
 		TVHITTESTINFO hit;
-		hit.pt = (POINT&)pt;
+		hit.pt.x = pt.x;
+		hit.pt.y = pt.y;
 		ScreenToClient(m_hTargetWnd, &hit.pt);
 		hit.flags = TVHT_ONITEM;
 		HTREEITEM hItem = TreeView_HitTest(m_hTargetWnd,&hit);

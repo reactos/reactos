@@ -3,8 +3,6 @@
  * PROJECT:     ReactOS VFAT filesystem library
  * FILE:        vfatxlib.h
  */
-#define WIN32_NO_STATUS
-#include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/iofuncs.h>
 #include <ndk/kefuncs.h>

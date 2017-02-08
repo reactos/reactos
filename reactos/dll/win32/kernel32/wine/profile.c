@@ -820,10 +820,10 @@ static BOOL PROFILE_Open( LPCWSTR filename, BOOL write_access )
                     CurProfile->LastWriteTime = LastWriteTime;
                 }
                 CloseHandle(hFile);
+                return TRUE;
             }
             else TRACE("(%s): already opened, not yet created (mru=%d)\n",
                        debugstr_w(buffer), i);
-            return TRUE;
         }
     }
 
@@ -1239,12 +1239,11 @@ UINT WINAPI GetPrivateProfileIntW( LPCWSTR section, LPCWSTR entry,
 {
     WCHAR buffer[30];
     UNICODE_STRING bufferW;
-    INT len;
     ULONG result;
 
-    if (!(len = GetPrivateProfileStringW( section, entry, emptystringW,
-                                          buffer, sizeof(buffer)/sizeof(WCHAR),
-                                          filename )))
+    if (GetPrivateProfileStringW( section, entry, emptystringW,
+                                   buffer, sizeof(buffer)/sizeof(WCHAR),
+                                   filename ) == 0)
         return def_val;
 
     /* FIXME: if entry can be found but it's empty, then Win16 is

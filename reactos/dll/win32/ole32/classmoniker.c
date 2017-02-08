@@ -19,21 +19,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
+//#include <assert.h>
 #include <stdarg.h>
-#include <string.h>
+//#include <string.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include "winerror.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "wine/debug.h"
-#include "ole2.h"
-#include "wine/unicode.h"
+//#include "winerror.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+#include <wine/debug.h>
+#include <ole2.h>
+#include <wine/unicode.h>
 #include "moniker.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
@@ -816,14 +819,13 @@ HRESULT ClassMoniker_CreateFromDisplayName(LPBC pbc, LPCOLESTR szDisplayName, LP
     return hr;
 }
 
-static HRESULT WINAPI ClassMonikerCF_QueryInterface(LPCLASSFACTORY iface,
-                                                  REFIID riid, LPVOID *ppv)
+static HRESULT WINAPI ClassMonikerCF_QueryInterface(IClassFactory *iface, REFIID riid, void **ppv)
 {
     *ppv = NULL;
     if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IClassFactory))
     {
         *ppv = iface;
-        IUnknown_AddRef(iface);
+        IClassFactory_AddRef(iface);
         return S_OK;
     }
     return E_NOINTERFACE;

@@ -2,6 +2,7 @@
 #include <tchar.h>
 
 #define stat64_to_stat(buf64, buf)   \
+    do { \
     buf->st_dev   = (buf64)->st_dev;   \
     buf->st_ino   = (buf64)->st_ino;   \
     buf->st_mode  = (buf64)->st_mode;  \
@@ -13,6 +14,7 @@
     buf->st_atime = (time_t)(buf64)->st_atime; \
     buf->st_mtime = (time_t)(buf64)->st_mtime; \
     buf->st_ctime = (time_t)(buf64)->st_ctime; \
+    } while (0)
 
 int CDECL _tstat(const _TCHAR* path, struct _stat * buf)
 {

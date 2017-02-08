@@ -18,7 +18,7 @@
 BOOL
 APIENTRY
 EngRestoreFloatingPointState(
-    IN VOID *Buffer)
+    PVOID Buffer)
 {
     NTSTATUS Status;
 
@@ -34,8 +34,8 @@ EngRestoreFloatingPointState(
 ULONG
 APIENTRY
 EngSaveFloatingPointState(
-    OUT VOID *Buffer,
-    IN ULONG BufferSize)
+    PVOID Buffer,
+    ULONG BufferSize)
 {
     KFLOATING_SAVE TempBuffer;
     NTSTATUS Status;

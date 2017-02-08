@@ -5,7 +5,7 @@
  * PURPOSE:         Functions for coordinate transformation
  * PROGRAMMER:
  */
-#include "precomp.h"
+#include <precomp.h>
 
 /* Currently we use a MATRIX inside the DC_ATTR containing the
    coordinate transformations, while we deal with XFORM structures

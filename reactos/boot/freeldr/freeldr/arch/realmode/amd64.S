@@ -50,7 +50,7 @@ Startup:
 
     /* Wait for a keypress */
     int HEX(16)
-    jmp SoftReboot
+    jmp Reboot
 
 Msg_Unsupported:
     .ascii "This CPU is not supported.", CR, LF
@@ -330,11 +330,11 @@ LongModeEntryPoint:
     .long 0, 0
 
     int HEX(16)
-    jmp SoftReboot
+    jmp Reboot
 
 CallbackTable:
     .word Int386
-    .word SoftReboot
+    .word Reboot
     .word ChainLoadBiosBootSectorCode
     .word PxeCallApi
     .word PnpBiosGetDeviceNodeCount

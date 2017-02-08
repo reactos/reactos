@@ -1275,7 +1275,7 @@ getservbyname(IN  CONST CHAR FAR* name,
         WS_DbgPrint(MAX_TRACE,("Aliase %d: %s\n", i, Aliases[i]));
     }
 
-    memcpy(p->Getservbyname,
+    memcpy(p->Getservbyname->Aliases,
            Aliases,
            sizeof(Aliases));
 
@@ -1457,7 +1457,7 @@ getservbyport(IN  INT port,
         WS_DbgPrint(MAX_TRACE,("Aliases %d: %s\n", i, Aliases[i]));
     }
 
-    memcpy(p->Getservbyport,Aliases,sizeof(Aliases));
+    memcpy(p->Getservbyport->Aliases,Aliases,sizeof(Aliases));
 
     /* Create the struct proper */
     p->Getservbyport->ServerEntry.s_name = ServiceName;
@@ -1598,14 +1598,24 @@ getaddrinfo(const char FAR * nodename,
     DNS_STATUS dns_status;
     PDNS_RECORD dp, currdns;
     struct sockaddr_in *sin;
+    INT error;
 
     if (res == NULL)
-        return WSAEINVAL;
+    {
+        error = WSAEINVAL;
+        goto End;
+    }
     if (nodename == NULL && servname == NULL)
-        return WSAHOST_NOT_FOUND;
+    {
+        error = WSAHOST_NOT_FOUND;
+        goto End;
+    }
 
     if (!WSAINITIALIZED)
-        return WSANOTINITIALISED;
+    {
+        error = WSANOTINITIALISED;
+        goto End;
+    }
 
     if (servname)
     {
@@ -1619,14 +1629,20 @@ getaddrinfo(const char FAR * nodename,
             {
                 pent = getprotobynumber(hints->ai_protocol);
                 if (pent == NULL)
-                  return WSAEINVAL;
+                {
+                  error = WSAEINVAL;
+                  goto End;
+                }
                 proto = pent->p_name;
             }
             else
                 proto = NULL;
             se = getservbyname(servname, proto);
             if (se == NULL)
-                return WSATYPE_NOT_FOUND;
+            {
+                error = WSATYPE_NOT_FOUND;
+                goto End;
+            }
             port = se->s_port;
         }
         else
@@ -1639,7 +1655,10 @@ getaddrinfo(const char FAR * nodename,
     {
         /* Is it an IPv6 address? */
         if (strstr(nodename, ":"))
-            return WSAHOST_NOT_FOUND;
+        {
+            error = WSAHOST_NOT_FOUND;
+            goto End;
+        }
 
         /* Is it an IPv4 address? */
         addr = inet_addr(nodename);
@@ -1729,16 +1748,24 @@ getaddrinfo(const char FAR * nodename,
     }
 
     if (ret == NULL)
-        return WSAHOST_NOT_FOUND;
+    {
+        error = WSAHOST_NOT_FOUND;
+        goto End;
+    }
 
     if (hints && hints->ai_family != PF_UNSPEC && hints->ai_family != PF_INET)
     {
         freeaddrinfo(ret);
-        return WSAEAFNOSUPPORT;
+        error = WSAEAFNOSUPPORT;
+        goto End;
     }
 
     *res = ret;
-    return 0;
+    error = 0;
+
+End:
+    WSASetLastError(error);
+    return error;
 }
 
 /* EOF */

@@ -24,7 +24,7 @@
  *                  Hervé Poussineau
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 #define NDEBUG
 #include <debug.h>

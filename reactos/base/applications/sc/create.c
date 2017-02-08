@@ -10,7 +10,6 @@
 
 #include "sc.h"
 
-
 typedef struct
 {
     LPCTSTR lpOption;

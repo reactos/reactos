@@ -113,6 +113,7 @@ NTSTATUS TiCreateFileObject(
     PVOID ClientContext;
     NTSTATUS Status;
     ULONG Protocol;
+    BOOLEAN Shared;
 
     TI_DbgPrint(DEBUG_IRP, ("Called. DeviceObject is at (0x%X), IRP is at (0x%X).\n", DeviceObject, Irp));
 
@@ -196,7 +197,9 @@ NTSTATUS TiCreateFileObject(
             return STATUS_INVALID_PARAMETER;
         }
 
-        Status = FileOpenAddress(&Request, Address, Protocol, NULL);
+        Shared = (IrpSp->Parameters.Create.ShareAccess != 0);
+
+        Status = FileOpenAddress(&Request, Address, Protocol, Shared, NULL);
         if (NT_SUCCESS(Status))
         {
             IrpSp->FileObject->FsContext2 = (PVOID)TDI_TRANSPORT_ADDRESS_FILE;

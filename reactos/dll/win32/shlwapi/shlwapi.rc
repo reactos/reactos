@@ -1,5 +1,5 @@
 /*
- * Top level resource file for shlwapi
+ * Resources for shlwapi
  *
  * Copyright 2004 Jon Griffiths
  *
@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "resource.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winuser.h"
+//#include "resource.h"
 
 #include "version.rc"
 
@@ -69,6 +69,9 @@
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "shlwapi_Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "shlwapi_He.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
     #include "shlwapi_Hu.rc"

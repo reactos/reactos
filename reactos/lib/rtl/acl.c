@@ -8,171 +8,181 @@
 /* INCLUDES *****************************************************************/
 
 #include <rtl.h>
-
+#include <../../ntoskrnl/include/internal/se.h>
 #define NDEBUG
 #include <debug.h>
 
-/* FUNCTIONS ***************************************************************/
+/* PRIVATE FUNCTIONS **********************************************************/
 
 BOOLEAN
 NTAPI
-RtlFirstFreeAce(
-    PACL Acl,
-    PACE* Ace)
+RtlFirstFreeAce(IN PACL Acl,
+                OUT PACE* FirstFreeAce)
 {
     PACE Current;
     ULONG_PTR AclEnd;
     ULONG i;
     PAGED_CODE_RTL();
 
+    /* Assume failure */
+    *FirstFreeAce = NULL;
+
+    /* Get the start and end pointers */
     Current = (PACE)(Acl + 1);
-    *Ace = NULL;
-
-    if (Acl->AceCount == 0)
-    {
-        *Ace = Current;
-        return TRUE;
-    }
-
-    i = 0;
     AclEnd = (ULONG_PTR)Acl + Acl->AclSize;
-    do
+
+    /* Loop all the ACEs */
+    for (i = 0; i < Acl->AceCount; i++)
     {
-        if ((ULONG_PTR)Current >= AclEnd)
-        {
-            return FALSE;
-        }
-        if (Current->Header.AceType == ACCESS_ALLOWED_COMPOUND_ACE_TYPE &&
-            Acl->AclRevision < ACL_REVISION3)
-        {
-            return FALSE;
-        }
+        /* If any is beyond the DACL, bail out, otherwise keep going */
+        if ((ULONG_PTR)Current >= AclEnd) return FALSE;
         Current = (PACE)((ULONG_PTR)Current + Current->Header.AceSize);
     }
-    while (++i < Acl->AceCount);
 
-    if ((ULONG_PTR)Current < AclEnd)
-    {
-        *Ace = Current;
-    }
-
+    /* If the last spot is empty and still valid, return it */
+    if ((ULONG_PTR)Current < AclEnd) *FirstFreeAce = Current;
     return TRUE;
 }
 
-
-/*
- * @implemented
- */
-NTSTATUS
+VOID
 NTAPI
-RtlGetAce(
-    PACL Acl,
-    ULONG AceIndex,
-    PVOID *Ace)
+RtlpAddData(IN PVOID AceList,
+            IN ULONG AceListLength,
+            IN PVOID Ace,
+            IN ULONG Offset)
 {
-    ULONG i;
-    PAGED_CODE_RTL();
-
-    if (Acl->AclRevision < MIN_ACL_REVISION ||
-        Acl->AclRevision > MAX_ACL_REVISION ||
-        AceIndex >= Acl->AceCount)
+    /* Shift the buffer down */
+    if (Offset > 0)
     {
-        return STATUS_INVALID_PARAMETER;
+        RtlCopyMemory((PVOID)((ULONG_PTR)Ace + AceListLength),
+                      Ace,
+                      Offset);
     }
 
-    *Ace = (PVOID)((PACE)(Acl + 1));
-
-    for (i = 0; i < AceIndex; i++)
-    {
-        if ((ULONG_PTR)*Ace >= (ULONG_PTR)Acl + Acl->AclSize)
-        {
-            return STATUS_INVALID_PARAMETER;
-        }
-        *Ace = (PVOID)((PACE)((ULONG_PTR)(*Ace) + ((PACE)(*Ace))->Header.AceSize));
-    }
-
-    if ((ULONG_PTR)*Ace >= (ULONG_PTR)Acl + Acl->AclSize)
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    return STATUS_SUCCESS;
+    /* Copy the new data in */
+    if (AceListLength) RtlCopyMemory(Ace, AceList, AceListLength);
 }
 
-
-static
-NTSTATUS
-RtlpAddKnownAce(
-    PACL Acl,
-    ULONG Revision,
-    ULONG Flags,
-    ACCESS_MASK AccessMask,
-    GUID *ObjectTypeGuid  OPTIONAL,
-    GUID *InheritedObjectTypeGuid  OPTIONAL,
-    PSID Sid,
-    UCHAR Type)
+VOID
+NTAPI
+RtlpDeleteData(IN PVOID Ace,
+               IN ULONG AceSize,
+               IN ULONG Offset)
 {
-    PACE Ace;
-    PSID SidStart;
+    /* Move the data up */
+    if (AceSize < Offset)
+    {
+        RtlMoveMemory(Ace,
+                      (PVOID)((ULONG_PTR)Ace + AceSize),
+                      Offset - AceSize);
+    }
+
+    /* Zero the rest */
+    if ((Offset - AceSize) < Offset)
+    {
+        RtlZeroMemory((PVOID)((ULONG_PTR)Ace + Offset - AceSize), AceSize);
+    }
+}
+
+NTSTATUS
+NTAPI
+RtlpAddKnownAce(IN PACL Acl,
+                IN ULONG Revision,
+                IN ULONG Flags,
+                IN ACCESS_MASK AccessMask,
+                IN PSID Sid,
+                IN UCHAR Type)
+{
+    PKNOWN_ACE Ace;
     ULONG AceSize, InvalidFlags;
-    ULONG AceObjectFlags = 0;
     PAGED_CODE_RTL();
 
-#if DBG
-    /* check if RtlpAddKnownAce was called incorrectly */
-    if (ObjectTypeGuid != NULL || InheritedObjectTypeGuid != NULL)
+    /* Check the validity of the SID */
+    if (!RtlValidSid(Sid)) return STATUS_INVALID_SID;
+
+    /* Check the validity of the revision */
+    if ((Acl->AclRevision > ACL_REVISION4) || (Revision > ACL_REVISION4))
     {
-        ASSERT(Type == ACCESS_ALLOWED_CALLBACK_OBJECT_ACE_TYPE ||
-               Type == ACCESS_ALLOWED_OBJECT_ACE_TYPE ||
-               Type == ACCESS_DENIED_CALLBACK_OBJECT_ACE_TYPE ||
-               Type == ACCESS_DENIED_OBJECT_ACE_TYPE ||
-               Type == SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE ||
-               Type == SYSTEM_AUDIT_OBJECT_ACE_TYPE);
+        return STATUS_REVISION_MISMATCH;
+    }
+
+    /* Pick the smallest of the revisions */
+    if (Revision < Acl->AclRevision) Revision = Acl->AclRevision;
+
+    /* Validate the flags */
+    if (Type == SYSTEM_AUDIT_ACE_TYPE)
+    {
+        InvalidFlags = Flags & ~(VALID_INHERIT_FLAGS |
+                                 SUCCESSFUL_ACCESS_ACE_FLAG |
+                                 FAILED_ACCESS_ACE_FLAG);
     }
     else
     {
-        ASSERT(Type != ACCESS_ALLOWED_CALLBACK_OBJECT_ACE_TYPE &&
-               Type != ACCESS_ALLOWED_OBJECT_ACE_TYPE &&
-               Type != ACCESS_DENIED_CALLBACK_OBJECT_ACE_TYPE &&
-               Type != ACCESS_DENIED_OBJECT_ACE_TYPE &&
-               Type != SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE &&
-               Type != SYSTEM_AUDIT_OBJECT_ACE_TYPE);
+        InvalidFlags = Flags & ~VALID_INHERIT_FLAGS;
     }
-#endif
 
-    if (!RtlValidSid(Sid))
+    /* If flags are invalid, bail out */
+    if (InvalidFlags != 0) return STATUS_INVALID_PARAMETER;
+
+    /* If ACL is invalid, bail out */
+    if (!RtlValidAcl(Acl)) return STATUS_INVALID_ACL;
+
+    /* If there's no free ACE, bail out */
+    if (!RtlFirstFreeAce(Acl, (PACE*)&Ace)) return STATUS_INVALID_ACL;
+
+    /* Calculate the size of the ACE and bail out if it's too small */
+    AceSize = RtlLengthSid(Sid) + sizeof(ACE);
+    if (!(Ace) || ((ULONG_PTR)Ace + AceSize > (ULONG_PTR)Acl + Acl->AclSize))
     {
-        return STATUS_INVALID_SID;
+        return STATUS_ALLOTTED_SPACE_EXCEEDED;
     }
 
-    if (Type == SYSTEM_MANDATORY_LABEL_ACE_TYPE)
+    /* Initialize the header and common fields */
+    Ace->Header.AceFlags = (BYTE)Flags;
+    Ace->Header.AceType = Type;
+    Ace->Header.AceSize = (WORD)AceSize;
+    Ace->Mask = AccessMask;
+
+    /* Copy the SID */
+    RtlCopySid(RtlLengthSid(Sid), &Ace->SidStart, Sid);
+
+    /* Fill out the ACL header and return */
+    Acl->AceCount++;
+    Acl->AclRevision = (BYTE)Revision;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+RtlpAddKnownObjectAce(IN PACL Acl,
+                      IN ULONG Revision,
+                      IN ULONG Flags,
+                      IN ACCESS_MASK AccessMask,
+                      IN GUID *ObjectTypeGuid OPTIONAL,
+                      IN GUID *InheritedObjectTypeGuid OPTIONAL,
+                      IN PSID Sid,
+                      IN UCHAR Type)
+{
+    PKNOWN_OBJECT_ACE Ace;
+    ULONG_PTR SidStart;
+    ULONG AceSize, InvalidFlags, AceObjectFlags = 0;
+    PAGED_CODE_RTL();
+
+    /* Check the validity of the SID */
+    if (!RtlValidSid(Sid)) return STATUS_INVALID_SID;
+
+    /* Check the validity of the revision */
+    if ((Acl->AclRevision > ACL_REVISION4) || (Revision > ACL_REVISION4))
     {
-        static const SID_IDENTIFIER_AUTHORITY MandatoryLabelAuthority = {SECURITY_MANDATORY_LABEL_AUTHORITY};
-
-        /* The SID's identifier authority must be SECURITY_MANDATORY_LABEL_AUTHORITY! */
-        if (RtlCompareMemory(&((PISID)Sid)->IdentifierAuthority,
-                             &MandatoryLabelAuthority,
-                             sizeof(MandatoryLabelAuthority)) != sizeof(MandatoryLabelAuthority))
-        {
-            return STATUS_INVALID_PARAMETER;
-        }
+        return STATUS_REVISION_MISMATCH;
     }
 
-    if (Acl->AclRevision > MAX_ACL_REVISION ||
-        Revision > MAX_ACL_REVISION)
-    {
-        return STATUS_UNKNOWN_REVISION;
-    }
-
-    if (Revision < Acl->AclRevision)
-    {
-        Revision = Acl->AclRevision;
-    }
+    /* Pick the smallest of the revisions */
+    if (Revision < Acl->AclRevision) Revision = Acl->AclRevision;
 
     /* Validate the flags */
-    if (Type == SYSTEM_AUDIT_ACE_TYPE ||
-        Type == SYSTEM_AUDIT_OBJECT_ACE_TYPE ||
-        Type == SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE)
+    if ((Type == SYSTEM_AUDIT_OBJECT_ACE_TYPE) ||
+        (Type == SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE))
     {
         InvalidFlags = Flags & ~(VALID_INHERIT_FLAGS |
                                SUCCESSFUL_ACCESS_ACE_FLAG | FAILED_ACCESS_ACE_FLAG);
@@ -182,711 +192,774 @@ RtlpAddKnownAce(
         InvalidFlags = Flags & ~VALID_INHERIT_FLAGS;
     }
 
-    if (InvalidFlags != 0)
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
+    /* If flags are invalid, bail out */
+    if (InvalidFlags != 0) return STATUS_INVALID_PARAMETER;
 
-    if (!RtlFirstFreeAce(Acl, &Ace))
-    {
-        return STATUS_INVALID_ACL;
-    }
-    if (Ace == NULL)
-    {
-        return STATUS_ALLOTTED_SPACE_EXCEEDED;
-    }
+    /* If ACL is invalid, bail out */
+    if (!RtlValidAcl(Acl)) return STATUS_INVALID_ACL;
+
+    /* If there's no free ACE, bail out */
+    if (!RtlFirstFreeAce(Acl, (PACE*)&Ace)) return STATUS_INVALID_ACL;
 
     /* Calculate the size of the ACE */
-    AceSize = RtlLengthSid(Sid) + sizeof(ACE);
-    if (ObjectTypeGuid != NULL)
+    AceSize = RtlLengthSid(Sid) + sizeof(ACE) + sizeof(ULONG);
+
+    /* Add-in the size of the GUIDs if any and update flags as needed */
+    if (ObjectTypeGuid)
     {
         AceObjectFlags |= ACE_OBJECT_TYPE_PRESENT;
         AceSize += sizeof(GUID);
     }
-    if (InheritedObjectTypeGuid != NULL)
+    if (InheritedObjectTypeGuid)
     {
         AceObjectFlags |= ACE_INHERITED_OBJECT_TYPE_PRESENT;
         AceSize += sizeof(GUID);
     }
 
-    if (AceObjectFlags != 0)
-    {
-        /* Don't forget the ACE object flags
-          (corresponds to the Flags field in the *_OBJECT_ACE structures) */
-        AceSize += sizeof(ULONG);
-    }
-
-    if ((ULONG_PTR)Ace + AceSize >
-        (ULONG_PTR)Acl + Acl->AclSize)
+    /* Bail out if there's not enough space in the ACL */
+    if (!(Ace) || ((ULONG_PTR)Ace + AceSize > (ULONG_PTR)Acl + Acl->AclSize))
     {
         return STATUS_ALLOTTED_SPACE_EXCEEDED;
     }
 
-    /* initialize the header and common fields */
+    /* Initialize the header and common fields */
     Ace->Header.AceFlags = (BYTE)Flags;
     Ace->Header.AceType = Type;
     Ace->Header.AceSize = (WORD)AceSize;
-    Ace->AccessMask = AccessMask;
+    Ace->Mask = AccessMask;
+    Ace->Flags = AceObjectFlags;
 
-    if (AceObjectFlags != 0)
+    /* Copy the GUIDs */
+    SidStart = (ULONG_PTR)&Ace->SidStart;
+    if (ObjectTypeGuid )
     {
-        /* Write the ACE flags to the ACE
-           (corresponds to the Flags field in the *_OBJECT_ACE structures) */
-        *(PULONG)(Ace + 1) = AceObjectFlags;
-        SidStart = (PSID)((ULONG_PTR)(Ace + 1) + sizeof(ULONG));
+        RtlCopyMemory((PVOID)SidStart, ObjectTypeGuid, sizeof(GUID));
+        SidStart += sizeof(GUID);
     }
-    else
-        SidStart = (PSID)(Ace + 1);
-
-    /* copy the GUIDs */
-    if (ObjectTypeGuid != NULL)
+    if (InheritedObjectTypeGuid)
     {
-        RtlCopyMemory(SidStart, ObjectTypeGuid, sizeof(GUID));
-        SidStart = (PSID)((ULONG_PTR)SidStart + sizeof(GUID));
-    }
-    if (InheritedObjectTypeGuid != NULL)
-    {
-        RtlCopyMemory(SidStart, InheritedObjectTypeGuid, sizeof(GUID));
-        SidStart = (PSID)((ULONG_PTR)SidStart + sizeof(GUID));
+        RtlCopyMemory((PVOID)SidStart, InheritedObjectTypeGuid, sizeof(GUID));
+        SidStart += sizeof(GUID);
     }
 
-    /* copy the SID */
-    RtlCopySid(RtlLengthSid(Sid), SidStart, Sid);
+    /* Copy the SID */
+    RtlCopySid(RtlLengthSid(Sid), (PSID)SidStart, Sid);
+
+    /* Fill out the ACL header and return */
     Acl->AceCount++;
     Acl->AclRevision = (BYTE)Revision;
-
     return STATUS_SUCCESS;
 }
 
+/* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
  * @implemented
  */
 NTSTATUS
 NTAPI
-RtlAddAccessAllowedAce(
-    IN OUT PACL Acl,
-    IN ULONG Revision,
-    IN ACCESS_MASK AccessMask,
-    IN PSID Sid)
+RtlAddAccessAllowedAce(IN OUT PACL Acl,
+                       IN ULONG Revision,
+                       IN ACCESS_MASK AccessMask,
+                       IN PSID Sid)
 {
     PAGED_CODE_RTL();
 
+    /* Call the worker function */
     return RtlpAddKnownAce(Acl,
                            Revision,
                            0,
                            AccessMask,
-                           NULL,
-                           NULL,
                            Sid,
                            ACCESS_ALLOWED_ACE_TYPE);
 }
 
-
 /*
  * @implemented
  */
 NTSTATUS
 NTAPI
-RtlAddAccessAllowedAceEx(
-    IN OUT PACL Acl,
-    IN ULONG Revision,
-    IN ULONG Flags,
-    IN ACCESS_MASK AccessMask,
-    IN PSID Sid)
+RtlAddAccessAllowedAceEx(IN OUT PACL Acl,
+                         IN ULONG Revision,
+                         IN ULONG Flags,
+                         IN ACCESS_MASK AccessMask,
+                         IN PSID Sid)
 {
     PAGED_CODE_RTL();
 
+    /* Call the worker function */
     return RtlpAddKnownAce(Acl,
                            Revision,
                            Flags,
                            AccessMask,
-                           NULL,
-                           NULL,
                            Sid,
                            ACCESS_ALLOWED_ACE_TYPE);
 }
 
-
 /*
  * @implemented
  */
 NTSTATUS
 NTAPI
-RtlAddAccessAllowedObjectAce(
-    IN OUT PACL Acl,
-    IN ULONG Revision,
-    IN ULONG Flags,
-    IN ACCESS_MASK AccessMask,
-    IN GUID *ObjectTypeGuid  OPTIONAL,
-    IN GUID *InheritedObjectTypeGuid  OPTIONAL,
-    IN PSID Sid)
+RtlAddAccessAllowedObjectAce(IN OUT PACL Acl,
+                             IN ULONG Revision,
+                             IN ULONG Flags,
+                             IN ACCESS_MASK AccessMask,
+                             IN GUID *ObjectTypeGuid  OPTIONAL,
+                             IN GUID *InheritedObjectTypeGuid  OPTIONAL,
+                             IN PSID Sid)
 {
-    UCHAR Type;
     PAGED_CODE_RTL();
 
-    /* make sure we call RtlpAddKnownAce correctly */
-    if (ObjectTypeGuid != NULL || InheritedObjectTypeGuid != NULL)
-        Type = ACCESS_ALLOWED_OBJECT_ACE_TYPE;
-    else
-        Type = ACCESS_ALLOWED_ACE_TYPE;
+    /* Is there no object data? */
+    if (!(ObjectTypeGuid) && !(InheritedObjectTypeGuid))
+    {
+        /* Use the usual routine */
+        return RtlpAddKnownAce(Acl,
+                               Revision,
+                               Flags,
+                               AccessMask,
+                               Sid,
+                               ACCESS_ALLOWED_ACE_TYPE);
+    }
 
-    return RtlpAddKnownAce(Acl,
-                           Revision,
-                           Flags,
-                           AccessMask,
-                           ObjectTypeGuid,
-                           InheritedObjectTypeGuid,
-                           Sid,
-                           Type);
+    /* Use the object routine */
+    return RtlpAddKnownObjectAce(Acl,
+                                 Revision,
+                                 Flags,
+                                 AccessMask,
+                                 ObjectTypeGuid,
+                                 InheritedObjectTypeGuid,
+                                 Sid,
+                                 ACCESS_ALLOWED_OBJECT_ACE_TYPE);
 }
 
-
 /*
  * @implemented
  */
 NTSTATUS
 NTAPI
-RtlAddAccessDeniedAce(
-    PACL Acl,
-    ULONG Revision,
-    ACCESS_MASK AccessMask,
-    PSID Sid)
+RtlAddAccessDeniedAce(IN PACL Acl,
+                      IN ULONG Revision,
+                      IN ACCESS_MASK AccessMask,
+                      IN PSID Sid)
 {
     PAGED_CODE_RTL();
 
+    /* Call the worker function */
     return RtlpAddKnownAce(Acl,
                            Revision,
                            0,
                            AccessMask,
-                           NULL,
-                           NULL,
                            Sid,
                            ACCESS_DENIED_ACE_TYPE);
 }
 
-
 /*
  * @implemented
  */
 NTSTATUS
 NTAPI
-RtlAddAccessDeniedAceEx(
-    IN OUT PACL Acl,
-    IN ULONG Revision,
-    IN ULONG Flags,
-    IN ACCESS_MASK AccessMask,
-    IN PSID Sid)
+RtlAddAccessDeniedAceEx(IN OUT PACL Acl,
+                        IN ULONG Revision,
+                        IN ULONG Flags,
+                        IN ACCESS_MASK AccessMask,
+                        IN PSID Sid)
 {
     PAGED_CODE_RTL();
 
+    /* Call the worker function */
     return RtlpAddKnownAce(Acl,
                            Revision,
                            Flags,
                            AccessMask,
-                           NULL,
-                           NULL,
                            Sid,
                            ACCESS_DENIED_ACE_TYPE);
 }
 
-
 /*
  * @implemented
  */
 NTSTATUS
 NTAPI
-RtlAddAccessDeniedObjectAce(
-    IN OUT PACL Acl,
-    IN ULONG Revision,
-    IN ULONG Flags,
-    IN ACCESS_MASK AccessMask,
-    IN GUID *ObjectTypeGuid  OPTIONAL,
-    IN GUID *InheritedObjectTypeGuid  OPTIONAL,
-    IN PSID Sid)
+RtlAddAccessDeniedObjectAce(IN OUT PACL Acl,
+                            IN ULONG Revision,
+                            IN ULONG Flags,
+                            IN ACCESS_MASK AccessMask,
+                            IN GUID *ObjectTypeGuid OPTIONAL,
+                            IN GUID *InheritedObjectTypeGuid OPTIONAL,
+                            IN PSID Sid)
 {
-    UCHAR Type;
     PAGED_CODE_RTL();
 
-    /* make sure we call RtlpAddKnownAce correctly */
-    if (ObjectTypeGuid != NULL || InheritedObjectTypeGuid != NULL)
-        Type = ACCESS_DENIED_OBJECT_ACE_TYPE;
-    else
-        Type = ACCESS_DENIED_ACE_TYPE;
-
-    return RtlpAddKnownAce(Acl,
-                           Revision,
-                           Flags,
-                           AccessMask,
-                           ObjectTypeGuid,
-                           InheritedObjectTypeGuid,
-                           Sid,
-                           Type);
-}
-
-
-static
-VOID
-RtlpAddData(
-    PVOID AceList,
-    ULONG AceListLength,
-    PVOID Ace,
-    ULONG Offset)
-{
-    if (Offset > 0)
+    /* Is there no object data? */
+    if (!(ObjectTypeGuid) && !(InheritedObjectTypeGuid))
     {
-        RtlCopyMemory((PVOID)((ULONG_PTR)Ace + AceListLength),
-                      Ace,
-                      Offset);
+        /* Use the usual routine */
+        return RtlpAddKnownAce(Acl,
+                               Revision,
+                               Flags,
+                               AccessMask,
+                               Sid,
+                               ACCESS_DENIED_ACE_TYPE);
     }
 
-    if (AceListLength != 0)
-    {
-        RtlCopyMemory(Ace, AceList, AceListLength);
-    }
+    /* There's object data, use the object routine */
+    return RtlpAddKnownObjectAce(Acl,
+                                 Revision,
+                                 Flags,
+                                 AccessMask,
+                                 ObjectTypeGuid,
+                                 InheritedObjectTypeGuid,
+                                 Sid,
+                                 ACCESS_DENIED_OBJECT_ACE_TYPE);
 }
-
 
 /*
  * @implemented
  */
 NTSTATUS
 NTAPI
-RtlAddAce(
-    PACL Acl,
-    ULONG AclRevision,
-    ULONG StartingIndex,
-    PVOID AceList,
-    ULONG AceListLength)
-{
-    PACE Ace;
-    PACE Current;
-    WORD NewAceCount;
-    ULONG Index;
-    PAGED_CODE_RTL();
-
-    /* Make sure, the ACL is valid */
-    if (Acl->AclRevision < MIN_ACL_REVISION ||
-        Acl->AclRevision > MAX_ACL_REVISION ||
-        !RtlFirstFreeAce(Acl, &Ace))
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    /* Check if the ACL revision is smaller than the given one */
-    if (Acl->AclRevision <= AclRevision)
-    {
-        /* Update the revision to the given one */
-        AclRevision = Acl->AclRevision;
-    }
-
-    if (((ULONG_PTR)AceList + AceListLength) <= (ULONG_PTR)AceList)
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    for (Current = AceList, NewAceCount = 0;
-         (ULONG_PTR)Current < ((ULONG_PTR)AceList + AceListLength);
-         Current = (PACE)((ULONG_PTR)Current + Current->Header.AceSize),
-         ++NewAceCount)
-    {
-        if (((PACE)AceList)->Header.AceType == ACCESS_ALLOWED_COMPOUND_ACE_TYPE &&
-            AclRevision < ACL_REVISION3)
-        {
-            return STATUS_INVALID_PARAMETER;
-        }
-    }
-
-    if (Ace == NULL ||
-        ((ULONG_PTR)Ace + AceListLength) > ((ULONG_PTR)Acl + Acl->AclSize))
-    {
-        return STATUS_BUFFER_TOO_SMALL;
-    }
-
-    Current = (PACE)(Acl + 1);
-    for (Index = 0; Index < StartingIndex && Index < Acl->AceCount; Index++)
-    {
-        Current = (PACE)((ULONG_PTR)Current + Current->Header.AceSize);
-    }
-
-    RtlpAddData(AceList,
-                AceListLength,
-                Current,
-                (ULONG)((ULONG_PTR)Ace - (ULONG_PTR)Current));
-
-    Acl->AceCount = Acl->AceCount + NewAceCount;
-    Acl->AclRevision = (BYTE)AclRevision;
-
-    return STATUS_SUCCESS;
-}
-
-
-/*
- * @implemented
- */
-NTSTATUS
-NTAPI
-RtlAddAuditAccessAce(
-    PACL Acl,
-    ULONG Revision,
-    ACCESS_MASK AccessMask,
-    PSID Sid,
-    BOOLEAN Success,
-    BOOLEAN Failure)
+RtlAddAuditAccessAce(IN PACL Acl,
+                     IN ULONG Revision,
+                     IN ACCESS_MASK AccessMask,
+                     IN PSID Sid,
+                     IN BOOLEAN Success,
+                     IN BOOLEAN Failure)
 {
     ULONG Flags = 0;
     PAGED_CODE_RTL();
 
+    /* Add flags */
     if (Success) Flags |= SUCCESSFUL_ACCESS_ACE_FLAG;
     if (Failure) Flags |= FAILED_ACCESS_ACE_FLAG;
 
+    /* Call the worker routine */
     return RtlpAddKnownAce(Acl,
                            Revision,
                            Flags,
                            AccessMask,
-                           NULL,
-                           NULL,
                            Sid,
                            SYSTEM_AUDIT_ACE_TYPE);
 }
 
-
 /*
  * @implemented
  */
 NTSTATUS
 NTAPI
-RtlAddAuditAccessAceEx(
-    PACL Acl,
-    ULONG Revision,
-    ULONG Flags,
-    ACCESS_MASK AccessMask,
-    PSID Sid,
-    BOOLEAN Success,
-    BOOLEAN Failure)
+RtlAddAuditAccessAceEx(IN PACL Acl,
+                       IN ULONG Revision,
+                       IN ULONG Flags,
+                       IN ACCESS_MASK AccessMask,
+                       IN PSID Sid,
+                       IN BOOLEAN Success,
+                       IN BOOLEAN Failure)
 {
-    if (Success) Flags |= SUCCESSFUL_ACCESS_ACE_FLAG;
-    if (Failure) Flags |= FAILED_ACCESS_ACE_FLAG;
-
-    return RtlpAddKnownAce(Acl,
-                           Revision,
-                           Flags,
-                           AccessMask,
-                           NULL,
-                           NULL,
-                           Sid,
-                           SYSTEM_AUDIT_ACE_TYPE);
-}
-
-
-/*
- * @implemented
- */
-NTSTATUS
-NTAPI
-RtlAddAuditAccessObjectAce(
-    PACL Acl,
-    ULONG Revision,
-    ULONG Flags,
-    ACCESS_MASK AccessMask,
-    IN GUID *ObjectTypeGuid  OPTIONAL,
-    IN GUID *InheritedObjectTypeGuid  OPTIONAL,
-    PSID Sid,
-    BOOLEAN Success,
-    BOOLEAN Failure)
-{
-    UCHAR Type;
-
-    if (Success)
-    {
-        Flags |= SUCCESSFUL_ACCESS_ACE_FLAG;
-    }
-
-    if (Failure)
-    {
-        Flags |= FAILED_ACCESS_ACE_FLAG;
-    }
-
-    /* make sure we call RtlpAddKnownAce correctly */
-    if (ObjectTypeGuid != NULL || InheritedObjectTypeGuid != NULL)
-        Type = SYSTEM_AUDIT_OBJECT_ACE_TYPE;
-    else
-        Type = SYSTEM_AUDIT_ACE_TYPE;
-
-    return RtlpAddKnownAce(Acl,
-                           Revision,
-                           Flags,
-                           AccessMask,
-                           ObjectTypeGuid,
-                           InheritedObjectTypeGuid,
-                           Sid,
-                           Type);
-}
-
-
-/*
- * @implemented
- */
-NTSTATUS
-NTAPI
-RtlAddMandatoryAce(
-    IN OUT PACL Acl,
-    IN ULONG Revision,
-    IN ULONG Flags,
-    IN ULONG MandatoryFlags,
-    IN UCHAR AceType,
-    IN PSID LabelSid)
-{
-    if (MandatoryFlags & ~SYSTEM_MANDATORY_LABEL_VALID_MASK)
-        return STATUS_INVALID_PARAMETER;
-
-    if (AceType != SYSTEM_MANDATORY_LABEL_ACE_TYPE)
-        return STATUS_INVALID_PARAMETER;
-
-    return RtlpAddKnownAce(Acl,
-                           Revision,
-                           Flags,
-                           (ACCESS_MASK)MandatoryFlags,
-                           NULL,
-                           NULL,
-                           LabelSid,
-                           AceType);
-}
-
-
-static
-VOID
-RtlpDeleteData(
-    PVOID Ace,
-    ULONG AceSize,
-    ULONG Offset)
-{
-    if (AceSize < Offset)
-    {
-        RtlMoveMemory(Ace,
-                     (PVOID)((ULONG_PTR)Ace + AceSize),
-                     Offset - AceSize);
-    }
-
-    if (Offset - AceSize < Offset)
-    {
-        RtlZeroMemory((PVOID)((ULONG_PTR)Ace + Offset - AceSize), AceSize);
-    }
-}
-
-
-/*
- * @implemented
- */
-NTSTATUS
-NTAPI
-RtlDeleteAce(
-    PACL Acl,
-    ULONG AceIndex)
-{
-    PACE Ace;
-    PACE Current;
     PAGED_CODE_RTL();
 
-    if (Acl->AclRevision < MIN_ACL_REVISION ||
-        Acl->AclRevision > MAX_ACL_REVISION ||
-        Acl->AceCount <= AceIndex ||
-        !RtlFirstFreeAce(Acl, &Ace))
+    /* Add flags */
+    if (Success) Flags |= SUCCESSFUL_ACCESS_ACE_FLAG;
+    if (Failure) Flags |= FAILED_ACCESS_ACE_FLAG;
+
+    /* Call the worker routine */
+    return RtlpAddKnownAce(Acl,
+                           Revision,
+                           Flags,
+                           AccessMask,
+                           Sid,
+                           SYSTEM_AUDIT_ACE_TYPE);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlAddAuditAccessObjectAce(IN PACL Acl,
+                           IN ULONG Revision,
+                           IN ULONG Flags,
+                           IN ACCESS_MASK AccessMask,
+                           IN GUID *ObjectTypeGuid  OPTIONAL,
+                           IN GUID *InheritedObjectTypeGuid  OPTIONAL,
+                           IN PSID Sid,
+                           IN BOOLEAN Success,
+                           IN BOOLEAN Failure)
+{
+    /* Add flags */
+    if (Success) Flags |= SUCCESSFUL_ACCESS_ACE_FLAG;
+    if (Failure) Flags |= FAILED_ACCESS_ACE_FLAG;
+
+    /* Is there no object data? */
+    if (!(ObjectTypeGuid) && !(InheritedObjectTypeGuid))
+    {
+        /* Call the normal routine */
+        return RtlpAddKnownAce(Acl,
+                               Revision,
+                               Flags,
+                               AccessMask,
+                               Sid,
+                               SYSTEM_AUDIT_ACE_TYPE);
+    }
+
+    /* There's object data, use the object routine */
+    return RtlpAddKnownObjectAce(Acl,
+                                 Revision,
+                                 Flags,
+                                 AccessMask,
+                                 ObjectTypeGuid,
+                                 InheritedObjectTypeGuid,
+                                 Sid,
+                                 SYSTEM_AUDIT_OBJECT_ACE_TYPE);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlGetAce(IN PACL Acl,
+          IN ULONG AceIndex,
+          OUT PVOID *Ace)
+{
+    ULONG i;
+    PAGED_CODE_RTL();
+
+    /* Bail out if the revision or the index are invalid */
+    if ((Acl->AclRevision < MIN_ACL_REVISION) ||
+        (Acl->AclRevision > MAX_ACL_REVISION) ||
+        (AceIndex >= Acl->AceCount))
     {
         return STATUS_INVALID_PARAMETER;
     }
 
-    Current = (PACE)(Acl + 1);
-
-    while(AceIndex--)
+    /* Loop through the ACEs */
+    *Ace = (PVOID)((PACE)(Acl + 1));
+    for (i = 0; i < AceIndex; i++)
     {
-        Current = (PACE)((ULONG_PTR)Current + Current->Header.AceSize);
+        /* Bail out if an invalid ACE is ever found */
+        if ((ULONG_PTR)*Ace >= (ULONG_PTR)Acl + Acl->AclSize)
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        /* Keep going */
+        *Ace = (PVOID)((PACE)((ULONG_PTR)(*Ace) + ((PACE)(*Ace))->Header.AceSize));
     }
 
-    RtlpDeleteData(Current,
-                   Current->Header.AceSize,
-                   (ULONG)((ULONG_PTR)Ace - (ULONG_PTR)Current));
-    Acl->AceCount--;
+    /* Check if the last ACE is still valid */
+    if ((ULONG_PTR)*Ace >= (ULONG_PTR)Acl + Acl->AclSize)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
 
+    /* All good, return */
     return STATUS_SUCCESS;
 }
 
-
 /*
  * @implemented
  */
 NTSTATUS
 NTAPI
-RtlCreateAcl(
-    PACL Acl,
-    ULONG AclSize,
-    ULONG AclRevision)
+RtlAddAce(IN PACL Acl,
+          IN ULONG AclRevision,
+          IN ULONG StartingIndex,
+          IN PVOID AceList,
+          IN ULONG AceListLength)
 {
+    PACE Ace, FreeAce;
+    USHORT NewAceCount;
+    ULONG Index;
     PAGED_CODE_RTL();
 
-    if (AclSize < sizeof(ACL))
+    /* Bail out if the ACL is invalid */
+    if (!RtlValidAcl(Acl)) return STATUS_INVALID_PARAMETER;
+
+    /* Bail out if there's no space */
+    if (!RtlFirstFreeAce(Acl, &FreeAce)) return STATUS_INVALID_PARAMETER;
+
+    /* Always use the smaller revision */
+    if (Acl->AclRevision <= AclRevision) AclRevision = Acl->AclRevision;
+
+    /* Loop over all the ACEs, keeping track of new ACEs as we go along */
+    for (Ace = AceList, NewAceCount = 0;
+         Ace < (PACE)((ULONG_PTR)AceList + AceListLength);
+         NewAceCount++)
+    {
+        /* Make sure that the revision of this ACE is valid in this list */
+        if (Ace->Header.AceType <= ACCESS_MAX_MS_V3_ACE_TYPE)
+        {
+            if (AclRevision < ACL_REVISION3) return STATUS_INVALID_PARAMETER;
+        }
+        else if (Ace->Header.AceType <= ACCESS_MAX_MS_V4_ACE_TYPE)
+        {
+            if (AclRevision < ACL_REVISION4) return STATUS_INVALID_PARAMETER;
+        }
+
+        /* Move to the next ACE */
+        Ace = (PACE)((ULONG_PTR)Ace + Ace->Header.AceSize);
+    }
+
+    /* Bail out if there's no more space for us */
+    if ((ULONG_PTR)Ace > ((ULONG_PTR)AceList + AceListLength))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Bail out if there's no free ACE spot, or if we would overflow it */
+    if (!(FreeAce) ||
+        ((ULONG_PTR)FreeAce + AceListLength > (ULONG_PTR)Acl + Acl->AclSize))
     {
         return STATUS_BUFFER_TOO_SMALL;
     }
 
-    if (AclRevision < MIN_ACL_REVISION ||
-        AclRevision > MAX_ACL_REVISION ||
-        AclSize > 0xffff)
+    /* Go down the list until we find our index */
+    Ace = (PACE)(Acl + 1);
+    for (Index = 0; (Index < StartingIndex) && (Index < Acl->AceCount); Index++)
     {
-        return STATUS_INVALID_PARAMETER;
+        Ace = (PACE)((ULONG_PTR)Ace + Ace->Header.AceSize);
     }
 
-    AclSize = ROUND_UP(AclSize, 4);
-    Acl->AclSize = (WORD)AclSize;
-    Acl->AclRevision = (BYTE)AclRevision;
-    Acl->AceCount = 0;
-    Acl->Sbz1 = 0;
-    Acl->Sbz2 = 0;
+    /* Found where we want to do, add us to the list */
+    RtlpAddData(AceList,
+                AceListLength,
+                Ace,
+                (ULONG_PTR)FreeAce - (ULONG_PTR)Ace);
 
+    /* Fill out the header and return */
+    Acl->AceCount = Acl->AceCount + NewAceCount;
+    Acl->AclRevision = (UCHAR)AclRevision;
     return STATUS_SUCCESS;
 }
-
 
 /*
  * @implemented
  */
 NTSTATUS
 NTAPI
-RtlQueryInformationAcl(
-    PACL Acl,
-    PVOID Information,
-    ULONG InformationLength,
-    ACL_INFORMATION_CLASS InformationClass)
+RtlDeleteAce(IN PACL Acl,
+             IN ULONG AceIndex)
 {
-    PACE Ace;
+    PACE FreeAce, Ace;
     PAGED_CODE_RTL();
 
-    if (Acl->AclRevision < MIN_ACL_REVISION ||
-       Acl->AclRevision > MAX_ACL_REVISION)
+    /* Bail out if the ACL is invalid */
+    if (!RtlValidAcl(Acl)) return STATUS_INVALID_PARAMETER;
+
+    /* Bail out if there's no space or if we're full */
+    if ((Acl->AceCount <= AceIndex) || !(RtlFirstFreeAce(Acl, &FreeAce)))
     {
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Enumerate until the indexed ACE is reached */
+    Ace = (PACE)(Acl + 1);
+    while (AceIndex--) Ace = (PACE)((ULONG_PTR)Ace + Ace->Header.AceSize);
+
+    /* Delete this ACE */
+    RtlpDeleteData(Ace,
+                   Ace->Header.AceSize,
+                   (ULONG)((ULONG_PTR)FreeAce - (ULONG_PTR)Ace));
+
+    /* Decrease an ACE and return success */
+    Acl->AceCount--;
+    return STATUS_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlCreateAcl(IN PACL Acl,
+             IN ULONG AclSize,
+             IN ULONG AclRevision)
+{
+    PAGED_CODE_RTL();
+
+    /* Bail out if too small */
+    if (AclSize < sizeof(ACL)) return STATUS_BUFFER_TOO_SMALL;
+
+    /* Bail out if too large or invalid revision */
+    if ((AclRevision < MIN_ACL_REVISION) ||
+        (AclRevision > MAX_ACL_REVISION) ||
+        (AclSize > MAXUSHORT))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Setup the header */
+    Acl->AclSize = (USHORT)ROUND_UP(AclSize, 4);
+    Acl->AclRevision = (UCHAR)AclRevision;
+    Acl->AceCount = 0;
+    Acl->Sbz1 = 0;
+    Acl->Sbz2 = 0;
+    return STATUS_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlQueryInformationAcl(IN PACL Acl,
+                       IN PVOID Information,
+                       IN ULONG InformationLength,
+                       IN ACL_INFORMATION_CLASS InformationClass)
+{
+    PACE Ace;
+    PACL_REVISION_INFORMATION RevisionInfo;
+    PACL_SIZE_INFORMATION SizeInfo;
+    PAGED_CODE_RTL();
+
+    /* Validate the ACL revision */
+    if ((Acl->AclRevision < MIN_ACL_REVISION) ||
+        (Acl->AclRevision > MAX_ACL_REVISION))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Check what the caller is querying */
     switch (InformationClass)
     {
+        /* Revision data */
         case AclRevisionInformation:
-        {
-            PACL_REVISION_INFORMATION Info = (PACL_REVISION_INFORMATION)Information;
 
+            /* Bail out if the buffer is too small */
             if (InformationLength < sizeof(ACL_REVISION_INFORMATION))
             {
                return STATUS_BUFFER_TOO_SMALL;
             }
-            Info->AclRevision = Acl->AclRevision;
-        }
-        break;
 
+            /* Return the current revision */
+            RevisionInfo = (PACL_REVISION_INFORMATION)Information;
+            RevisionInfo->AclRevision = Acl->AclRevision;
+            break;
+
+        /* Size data */
         case AclSizeInformation:
-        {
-            PACL_SIZE_INFORMATION Info = (PACL_SIZE_INFORMATION)Information;
 
+            /* Bail out if the buffer is too small */
             if (InformationLength < sizeof(ACL_SIZE_INFORMATION))
             {
                return STATUS_BUFFER_TOO_SMALL;
             }
 
-            if (!RtlFirstFreeAce(Acl, &Ace))
-            {
-               return STATUS_INVALID_PARAMETER;
-            }
+            /* Bail out if there's no space in the ACL */
+            if (!RtlFirstFreeAce(Acl, &Ace)) return STATUS_INVALID_PARAMETER;
 
-            Info->AceCount = Acl->AceCount;
-            if (Ace != NULL)
+            /* Read the number of ACEs and check if there was a free ACE */
+            SizeInfo = (PACL_SIZE_INFORMATION)Information;
+            SizeInfo->AceCount = Acl->AceCount;
+            if (Ace)
             {
-               Info->AclBytesInUse = (DWORD)((ULONG_PTR)Ace - (ULONG_PTR)Acl);
-               Info->AclBytesFree  = Acl->AclSize - Info->AclBytesInUse;
+                /* Return how much space there is in the ACL */
+                SizeInfo->AclBytesInUse = (ULONG_PTR)Ace - (ULONG_PTR)Acl;
+                SizeInfo->AclBytesFree = Acl->AclSize - SizeInfo->AclBytesInUse;
             }
             else
             {
-               Info->AclBytesInUse = Acl->AclSize;
-               Info->AclBytesFree  = 0;
+                /* No free ACE, means the whole ACL is full */
+                SizeInfo->AclBytesInUse = Acl->AclSize;
+                SizeInfo->AclBytesFree = 0;
             }
-        }
-        break;
+            break;
 
         default:
+            /* Anything else is illegal */
             return STATUS_INVALID_INFO_CLASS;
     }
 
+    /* All done */
     return STATUS_SUCCESS;
 }
-
 
 /*
  * @implemented
  */
-NTSTATUS NTAPI
-RtlSetInformationAcl(PACL Acl,
-                     PVOID Information,
-                     ULONG InformationLength,
-                     ACL_INFORMATION_CLASS InformationClass)
+NTSTATUS
+NTAPI
+RtlSetInformationAcl(IN PACL Acl,
+                     IN PVOID Information,
+                     IN ULONG InformationLength,
+                     IN ACL_INFORMATION_CLASS InformationClass)
 {
+    PACL_REVISION_INFORMATION Info ;
     PAGED_CODE_RTL();
 
-    if (Acl->AclRevision < MIN_ACL_REVISION ||
-       Acl->AclRevision > MAX_ACL_REVISION)
+    /* Validate the ACL revision */
+    if ((Acl->AclRevision < MIN_ACL_REVISION) ||
+        (Acl->AclRevision > MAX_ACL_REVISION))
     {
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* What is the caller trying to set? */
     switch (InformationClass)
     {
+        /* This is the only info class */
         case AclRevisionInformation:
-        {
-            PACL_REVISION_INFORMATION Info = (PACL_REVISION_INFORMATION)Information;
 
+            /* Make sure the buffer is large enough */
             if (InformationLength < sizeof(ACL_REVISION_INFORMATION))
             {
                 return STATUS_BUFFER_TOO_SMALL;
             }
 
+            /* Make sure the new revision is within the acceptable bounds*/
+            Info = (PACL_REVISION_INFORMATION)Information;
             if (Acl->AclRevision >= Info->AclRevision)
             {
                 return STATUS_INVALID_PARAMETER;
             }
 
+            /* Set the new revision */
             Acl->AclRevision = (BYTE)Info->AclRevision;
-        }
-        break;
+            break;
 
         default:
+            /* Anything else is invalid */
             return STATUS_INVALID_INFO_CLASS;
-   }
+    }
 
+    /* All good */
     return STATUS_SUCCESS;
 }
-
 
 /*
  * @implemented
  */
 BOOLEAN
 NTAPI
-RtlValidAcl(PACL Acl)
+RtlValidAcl(IN PACL Acl)
 {
-    PACE Ace;
-    USHORT Size;
+    PACE_HEADER Ace;
+    PISID Sid;
+    ULONG i;
     PAGED_CODE_RTL();
 
-    Size = ROUND_UP(Acl->AclSize, 4);
-
-    if (Acl->AclRevision < MIN_ACL_REVISION ||
-        Acl->AclRevision > MAX_ACL_REVISION)
+    _SEH2_TRY
     {
+        /* First, validate the revision */
+        if ((Acl->AclRevision < MIN_ACL_REVISION) ||
+            (Acl->AclRevision > MAX_ACL_REVISION))
+        {
+            DPRINT1("Invalid ACL revision\n");
+            return FALSE;
+        }
+
+        /* Next, validate that the ACL is USHORT-aligned */
+        if (ROUND_DOWN(Acl->AclSize, sizeof(USHORT)) != Acl->AclSize)
+        {
+            DPRINT1("Invalid ACL size\n");
+            return FALSE;
+        }
+
+        /* And that it's big enough */
+        if (Acl->AclSize < sizeof(ACL))
+        {
+            DPRINT1("Invalid ACL size\n");
+            return FALSE;
+        }
+
+        /* Loop each ACE */
+        Ace = (PACE_HEADER)((ULONG_PTR)Acl + sizeof(ACL));
+        for (i = 0; i < Acl->AceCount; i++)
+        {
+            /* Validate we have space for this ACE header */
+            if (((ULONG_PTR)Ace + sizeof(ACE_HEADER)) >= ((ULONG_PTR)Acl + Acl->AclSize))
+            {
+                DPRINT1("Invalid ACE size\n");
+                return FALSE;
+            }
+
+            /* Validate the length of this ACE */
+            if (ROUND_DOWN(Ace->AceSize, sizeof(USHORT)) != Ace->AceSize)
+            {
+                DPRINT1("Invalid ACE size: %lx\n", Ace->AceSize);
+                return FALSE;
+            }
+
+            /* Validate we have space for the entire ACE */
+            if (((ULONG_PTR)Ace + Ace->AceSize) > ((ULONG_PTR)Acl + Acl->AclSize))
+            {
+                DPRINT1("Invalid ACE size %lx %lx\n", Ace->AceSize, Acl->AclSize);
+                return FALSE;
+            }
+
+            /* Check what kind of ACE this is */
+            if ((Ace->AceType >= ACCESS_MIN_MS_ACE_TYPE) ||
+                (Ace->AceType <= ACCESS_MAX_MS_V2_ACE_TYPE))
+            {
+                /* Validate the length of this ACE */
+                if (ROUND_DOWN(Ace->AceSize, sizeof(ULONG)) != Ace->AceSize)
+                {
+                    DPRINT1("Invalid ACE size\n");
+                    return FALSE;
+                }
+
+                /* The ACE size should at least have enough for the header */
+                if (Ace->AceSize < sizeof(ACE_HEADER))
+                {
+                    DPRINT1("Invalid ACE size: %lx %lx\n", Ace->AceSize, sizeof(ACE_HEADER));
+                    return FALSE;
+                }
+
+                /* Check if the SID revision is valid */
+                Sid = (PISID)&((PKNOWN_ACE)Ace)->SidStart;
+                if (Sid->Revision != SID_REVISION)
+                {
+                    DPRINT1("Invalid SID\n");
+                    return FALSE;
+                }
+
+                /* Check if the SID is out of bounds */
+                if (Sid->SubAuthorityCount > SID_MAX_SUB_AUTHORITIES)
+                {
+                    DPRINT1("Invalid SID\n");
+                    return FALSE;
+                }
+
+                /* The ACE size should at least have enough for the header and SID */
+                if (Ace->AceSize < (sizeof(ACE_HEADER) + RtlLengthSid(Sid)))
+                {
+                    DPRINT1("Invalid ACE size\n");
+                    return FALSE;
+                }
+            }
+            else if (Ace->AceType == ACCESS_ALLOWED_COMPOUND_ACE_TYPE)
+            {
+                DPRINT1("Unsupported ACE in ReactOS, assuming valid\n");
+            }
+            else if ((Ace->AceType >= ACCESS_MIN_MS_OBJECT_ACE_TYPE) ||
+                     (Ace->AceType <= ACCESS_MAX_MS_OBJECT_ACE_TYPE))
+            {
+                DPRINT1("Unsupported ACE in ReactOS, assuming valid\n");
+            }
+            else
+            {
+                /* Unknown ACE, see if it's as big as a header at least */
+                if (Ace->AceSize < sizeof(ACE_HEADER))
+                {
+                    DPRINT1("Unknown ACE\n");
+                    return FALSE;
+                }
+            }
+
+            /* Move to the next ace */
+            Ace = (PACE_HEADER)((ULONG_PTR)Ace + Ace->AceSize);
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Something was invalid, fail */
         return FALSE;
     }
+    _SEH2_END;
 
-    if (Size != Acl->AclSize)
-    {
-        return FALSE;
-    }
-
-    return RtlFirstFreeAce(Acl, &Ace);
+    /* The ACL looks ok */
+    return TRUE;
 }
 
 /* EOF */

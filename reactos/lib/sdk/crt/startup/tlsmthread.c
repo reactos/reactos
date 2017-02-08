@@ -5,11 +5,12 @@
  *
  * Written by Kai Tietz  <kai.tietz@onevision.com>
  */
-#ifndef WIN32_LEAN_AND_MEAN
+/*#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
-#include <windows.h>
+#include <windows.h>*/
 #include <stdlib.h>
+#include <windef.h>
 
 int __mingwthr_key_dtor (DWORD key, void (*dtor)(void *));
 int __mingwthr_remove_key_dtor (DWORD key);

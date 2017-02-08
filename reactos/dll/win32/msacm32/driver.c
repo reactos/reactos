@@ -21,24 +21,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#define WIN32_NO_STATUS
 
-#include <stdarg.h>
-#include <stdio.h>
+#include <config.h>
+//#include "wine/port.h"
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "mmsystem.h"
-#include "mmreg.h"
-#include "msacm.h"
-#include "msacmdrv.h"
+//#include <stdarg.h>
+//#include <stdio.h>
+
+#include <windef.h>
+//#include "winbase.h"
+#include <wingdi.h>
+//#include "winuser.h"
+//#include "winnls.h"
+//#include "mmsystem.h"
+//#include "mmreg.h"
+//#include "msacm.h"
+#include <msacmdrv.h>
 #include "wineacm.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msacm);
 

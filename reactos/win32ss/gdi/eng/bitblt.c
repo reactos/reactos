@@ -12,6 +12,12 @@
 #define NDEBUG
 #include <debug.h>
 
+XCLIPOBJ gxcoTrivial =
+{
+    {0, {LONG_MIN, LONG_MIN, LONG_MAX, LONG_MAX}, DC_TRIVIAL, FC_RECT, TC_RECTANGLES, 0},
+    0, 0, 0
+};
+
 typedef BOOLEAN (APIENTRY *PBLTRECTFUNC)(SURFOBJ* OutputObj,
                                         SURFOBJ* InputObj,
                                         SURFOBJ* Mask,
@@ -290,18 +296,20 @@ NtGdiEngBitBlt(
 /*
  * @implemented
  */
-BOOL APIENTRY
-EngBitBlt(SURFOBJ *DestObj,
-          SURFOBJ *SourceObj,
-          SURFOBJ *Mask,
-          CLIPOBJ *ClipRegion,
-          XLATEOBJ *ColorTranslation,
-          RECTL *DestRect,
-          POINTL *SourcePoint,
-          POINTL *MaskOrigin,
-          BRUSHOBJ *pbo,
-          POINTL *BrushOrigin,
-          ROP4 Rop4)
+BOOL
+APIENTRY
+EngBitBlt(
+    _Inout_ SURFOBJ *psoTrg,
+    _In_opt_ SURFOBJ *psoSrc,
+    _In_opt_ SURFOBJ *psoMask,
+    _In_opt_ CLIPOBJ *pco,
+    _In_opt_ XLATEOBJ *pxlo,
+    _In_ RECTL *prclTrg,
+    _In_opt_ POINTL *pptlSrc,
+    _In_opt_ POINTL *pptlMask,
+    _In_opt_ BRUSHOBJ *pbo,
+    _In_opt_ POINTL *pptlBrush,
+    _In_ ROP4 rop4)
 {
     BYTE               clippingType;
     RECTL              CombinedRect;
@@ -315,36 +323,36 @@ EngBitBlt(SURFOBJ *DestObj,
     PBLTRECTFUNC       BltRectFunc;
     BOOLEAN            Ret = TRUE;
     RECTL              ClipRect;
-    unsigned           i;
+    ULONG              i;
     POINTL             Pt;
     ULONG              Direction;
     BOOL               UsesSource, UsesMask;
     POINTL             AdjustedBrushOrigin;
 
-    UsesSource = ROP4_USES_SOURCE(Rop4);
-    UsesMask = ROP4_USES_MASK(Rop4);
+    UsesSource = ROP4_USES_SOURCE(rop4);
+    UsesMask = ROP4_USES_MASK(rop4);
 
-    if (Rop4 == ROP4_NOOP)
+    if (rop4 == ROP4_NOOP)
     {
         /* Copy destination onto itself: nop */
         return TRUE;
     }
 
-    //DPRINT1("Rop4 : 0x%08x\n", Rop4);
+    //DPRINT1("rop4 : 0x%08x\n", rop4);
 
-    OutputRect = *DestRect;
+    OutputRect = *prclTrg;
     RECTL_vMakeWellOrdered(&OutputRect);
 
     if (UsesSource)
     {
-        if (NULL == SourcePoint)
+        if (!psoSrc || !pptlSrc)
         {
             return FALSE;
         }
 
         /* Make sure we don't try to copy anything outside the valid source
            region */
-        InputPoint = *SourcePoint;
+        InputPoint = *pptlSrc;
         if (InputPoint.x < 0)
         {
             OutputRect.left -= InputPoint.x;
@@ -355,17 +363,17 @@ EngBitBlt(SURFOBJ *DestObj,
             OutputRect.top -= InputPoint.y;
             InputPoint.y = 0;
         }
-        if (SourceObj->sizlBitmap.cx < InputPoint.x +
+        if (psoSrc->sizlBitmap.cx < InputPoint.x +
                 OutputRect.right - OutputRect.left)
         {
             OutputRect.right = OutputRect.left +
-                               SourceObj->sizlBitmap.cx - InputPoint.x;
+                               psoSrc->sizlBitmap.cx - InputPoint.x;
         }
-        if (SourceObj->sizlBitmap.cy < InputPoint.y +
+        if (psoSrc->sizlBitmap.cy < InputPoint.y +
                 OutputRect.bottom - OutputRect.top)
         {
             OutputRect.bottom = OutputRect.top +
-                                SourceObj->sizlBitmap.cy - InputPoint.y;
+                                psoSrc->sizlBitmap.cy - InputPoint.y;
         }
 
         InputRect.left = InputPoint.x;
@@ -373,40 +381,40 @@ EngBitBlt(SURFOBJ *DestObj,
         InputRect.top = InputPoint.y;
         InputRect.bottom = InputPoint.y + (OutputRect.bottom - OutputRect.top);
 
-        InputObj = SourceObj;
+        InputObj = psoSrc;
     }
     else
     {
         InputPoint.x = InputPoint.y = 0;
         InputRect.left = 0;
-        InputRect.right = DestRect->right - DestRect->left;
+        InputRect.right = prclTrg->right - prclTrg->left;
         InputRect.top = 0;
-        InputRect.bottom = DestRect->bottom - DestRect->top;
+        InputRect.bottom = prclTrg->bottom - prclTrg->top;
     }
 
-    if (NULL != ClipRegion)
+    if (NULL != pco)
     {
-        if (OutputRect.left < ClipRegion->rclBounds.left)
+        if (OutputRect.left < pco->rclBounds.left)
         {
-            InputRect.left += ClipRegion->rclBounds.left - OutputRect.left;
-            InputPoint.x += ClipRegion->rclBounds.left - OutputRect.left;
-            OutputRect.left = ClipRegion->rclBounds.left;
+            InputRect.left += pco->rclBounds.left - OutputRect.left;
+            InputPoint.x += pco->rclBounds.left - OutputRect.left;
+            OutputRect.left = pco->rclBounds.left;
         }
-        if (ClipRegion->rclBounds.right < OutputRect.right)
+        if (pco->rclBounds.right < OutputRect.right)
         {
-            InputRect.right -=  OutputRect.right - ClipRegion->rclBounds.right;
-            OutputRect.right = ClipRegion->rclBounds.right;
+            InputRect.right -=  OutputRect.right - pco->rclBounds.right;
+            OutputRect.right = pco->rclBounds.right;
         }
-        if (OutputRect.top < ClipRegion->rclBounds.top)
+        if (OutputRect.top < pco->rclBounds.top)
         {
-            InputRect.top += ClipRegion->rclBounds.top - OutputRect.top;
-            InputPoint.y += ClipRegion->rclBounds.top - OutputRect.top;
-            OutputRect.top = ClipRegion->rclBounds.top;
+            InputRect.top += pco->rclBounds.top - OutputRect.top;
+            InputPoint.y += pco->rclBounds.top - OutputRect.top;
+            OutputRect.top = pco->rclBounds.top;
         }
-        if (ClipRegion->rclBounds.bottom < OutputRect.bottom)
+        if (pco->rclBounds.bottom < OutputRect.bottom)
         {
-            InputRect.bottom -=  OutputRect.bottom - ClipRegion->rclBounds.bottom;
-            OutputRect.bottom = ClipRegion->rclBounds.bottom;
+            InputRect.bottom -=  OutputRect.bottom - pco->rclBounds.bottom;
+            OutputRect.bottom = pco->rclBounds.bottom;
         }
     }
 
@@ -418,12 +426,12 @@ EngBitBlt(SURFOBJ *DestObj,
         return TRUE;
     }
 
-    OutputObj = DestObj;
+    OutputObj = psoTrg;
 
-    if (BrushOrigin)
+    if (pptlBrush)
     {
-        AdjustedBrushOrigin.x = BrushOrigin->x;
-        AdjustedBrushOrigin.y = BrushOrigin->y;
+        AdjustedBrushOrigin.x = pptlBrush->x;
+        AdjustedBrushOrigin.y = pptlBrush->y;
     }
     else
     {
@@ -432,20 +440,20 @@ EngBitBlt(SURFOBJ *DestObj,
     }
 
     /* Determine clipping type */
-    if (ClipRegion == (CLIPOBJ *) NULL)
+    if (pco == (CLIPOBJ *) NULL)
     {
         clippingType = DC_TRIVIAL;
     }
     else
     {
-        clippingType = ClipRegion->iDComplexity;
+        clippingType = pco->iDComplexity;
     }
 
     if (UsesMask)
     {
         BltRectFunc = BltMask;
     }
-    else if ((Rop4 & 0xFF) == R3_OPINDEX_PATCOPY)
+    else if ((rop4 & 0xFF) == R3_OPINDEX_PATCOPY)
     {
         if (pbo && pbo->iSolidColor == 0xFFFFFFFF)
             BltRectFunc = CallDibBitBlt;
@@ -461,16 +469,23 @@ EngBitBlt(SURFOBJ *DestObj,
     switch (clippingType)
     {
         case DC_TRIVIAL:
-            Ret = (*BltRectFunc)(OutputObj, InputObj, Mask, ColorTranslation,
-                                 &OutputRect, &InputPoint, MaskOrigin, pbo,
-                                 &AdjustedBrushOrigin, Rop4);
+            Ret = (*BltRectFunc)(OutputObj,
+                                 InputObj,
+                                 psoMask,
+                                 pxlo,
+                                 &OutputRect,
+                                 &InputPoint,
+                                 pptlMask,
+                                 pbo,
+                                 &AdjustedBrushOrigin,
+                                 rop4);
             break;
         case DC_RECT:
             /* Clip the blt to the clip rectangle */
-            ClipRect.left = ClipRegion->rclBounds.left;
-            ClipRect.right = ClipRegion->rclBounds.right;
-            ClipRect.top = ClipRegion->rclBounds.top;
-            ClipRect.bottom = ClipRegion->rclBounds.bottom;
+            ClipRect.left = pco->rclBounds.left;
+            ClipRect.right = pco->rclBounds.right;
+            ClipRect.top = pco->rclBounds.top;
+            ClipRect.bottom = pco->rclBounds.bottom;
             if (RECTL_bIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
             {
 #ifdef _USE_DIBLIB_
@@ -482,9 +497,16 @@ EngBitBlt(SURFOBJ *DestObj,
 #endif
                 Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
                 Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
-                Ret = (*BltRectFunc)(OutputObj, InputObj, Mask, ColorTranslation,
-                                     &CombinedRect, &Pt, MaskOrigin, pbo,
-                                     &AdjustedBrushOrigin, Rop4);
+                Ret = (*BltRectFunc)(OutputObj,
+                                     InputObj,
+                                     psoMask,
+                                     pxlo,
+                                     &CombinedRect,
+                                     &Pt,
+                                     pptlMask,
+                                     pbo,
+                                     &AdjustedBrushOrigin,
+                                     rop4);
             }
             break;
         case DC_COMPLEX:
@@ -506,10 +528,10 @@ EngBitBlt(SURFOBJ *DestObj,
             {
                 Direction = CD_ANY;
             }
-            CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, Direction, 0);
+            CLIPOBJ_cEnumStart(pco, FALSE, CT_RECTANGLES, Direction, 0);
             do
             {
-                EnumMore = CLIPOBJ_bEnum(ClipRegion,(ULONG) sizeof(RectEnum),
+                EnumMore = CLIPOBJ_bEnum(pco, sizeof(RectEnum),
                                          (PVOID) &RectEnum);
 
                 for (i = 0; i < RectEnum.c; i++)
@@ -529,10 +551,16 @@ EngBitBlt(SURFOBJ *DestObj,
 #endif
                         Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
                         Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
-                        Ret = (*BltRectFunc)(OutputObj, InputObj, Mask,
-                                             ColorTranslation, &CombinedRect, &Pt,
-                                             MaskOrigin, pbo, &AdjustedBrushOrigin,
-                                             Rop4) && Ret;
+                        Ret = (*BltRectFunc)(OutputObj,
+                                             InputObj,
+                                             psoMask,
+                                             pxlo,
+                                             &CombinedRect,
+                                             &Pt,
+                                             pptlMask,
+                                             pbo,
+                                             &AdjustedBrushOrigin,
+                                             rop4) && Ret;
                     }
                 }
             }
@@ -590,6 +618,8 @@ IntEngBitBlt(
         if (pco->iDComplexity == DC_RECT)
             pco = NULL;
     }
+    else
+        pco = &gxcoTrivial.ClipObj;
 
     if (ROP4_USES_SOURCE(Rop4))
     {
@@ -601,6 +631,7 @@ IntEngBitBlt(
         rclSrc.top = pptlSrc->y + rclClipped.top - prclTrg->top;
         rclSrc.right = rclSrc.left + rclClipped.right - rclClipped.left;
         rclSrc.bottom = rclSrc.top + rclClipped.bottom - rclClipped.top;
+        pptlSrc = (PPOINTL)&rclSrc;
     }
     else
     {
@@ -647,7 +678,7 @@ IntEngBitBlt(
                         pco,
                         pxlo,
                         &rclClipped,
-                        (POINTL*)&rclSrc,
+                        pptlSrc,
                         pptlMask,
                         pbo,
                         pptlBrush ? &ptlBrush : NULL,
@@ -956,7 +987,7 @@ IntEngMaskBlt(SURFOBJ *psoDest,
 {
     BOOLEAN ret;
     RECTL OutputRect;
-    POINTL InputPoint;
+    POINTL InputPoint = {0,0};
     //SURFACE *psurfDest;
 
     ASSERT(psoMask);

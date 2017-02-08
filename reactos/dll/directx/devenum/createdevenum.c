@@ -27,11 +27,11 @@
 #define NONAMELESSUNION
 
 #include "devenum_private.h"
-#include "vfw.h"
+#include <vfw.h>
 
-#include "wine/debug.h"
-#include "wine/unicode.h"
-#include "mmddk.h"
+#include <wine/debug.h>
+//#include "wine/unicode.h"
+//#include "mmddk.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(devenum);
 

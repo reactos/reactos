@@ -342,7 +342,7 @@ BEGIN
     ID_EDIT_RENAME          "Renomme la sélection"
     ID_EDIT_COPYKEYNAME     "Copie le nom de la clé sélectionnée vers le presse-papier"
     ID_EDIT_FIND            "Recherche du texte dans une clé, une valeur ou des données"
-    ID_EDIT_FINDNEXT        "Recherche l'occurence suivante du texte de la dernière recherche"
+    ID_EDIT_FINDNEXT        "Recherche l'occurrence suivante du texte de la dernière recherche"
 END
 
 STRINGTABLE DISCARDABLE
@@ -430,8 +430,10 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_IMPORT_PROMPT             "Voulez-vous ajouter des informations dans le Registre ?"
-  IDS_IMPORTED_OK               "Les informations ont bien été ajoutées dans le Registre."
+  IDS_IMPORT_PROMPT              "L'ajout d'informations peut involontairement modifier ou supprimer des valeurs et endommager le fonctionnement de composants.\nSi vous n'êtes pas sûr de la source de ces informations dans '%s', ne les ajoutez pas au Registre.\n\nÊtes-vous sûr de vouloir continuer ?"
+  IDS_IMPORT_OK                  "Les clés et valeurs contenues dans '%s' ont été correctement ajoutées au Registre."
+  IDS_IMPORT_ERROR               "Impossible d'importer '%s' à la suite d'une erreur lors de la lecture de ce fichier. Il s'agit d'une erreur disque, ou le fichier est endommagé."
+  IDS_EXPORT_ERROR               "Impossible d'exporter dans le fichier '%s' à la suite d'une erreur lors de sa création ou d'une tentative d'écriture, pouvant être due à une erreur de disque ou de système de fichiers."
 END
 
 STRINGTABLE DISCARDABLE

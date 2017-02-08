@@ -45,7 +45,7 @@
 *        Preload some nice strings.
 */
 
-#include <precomp.h>
+#include "precomp.h"
 
 #ifdef INCLUDE_CMD_DEL
 
@@ -107,7 +107,7 @@ RemoveFile (LPTSTR lpFileName, DWORD dwFlags, WIN32_FIND_DATA* f)
 		{
 			/*setting file to normal, not saving old attrs first
 			  because the file is going to be deleted anyways
-			  so the only thing that matters is that it isnt
+			  so the only thing that matters is that it isn't
 			  read only.*/
                         SetFileAttributes(lpFileName,FILE_ATTRIBUTE_NORMAL);
                 }
@@ -513,7 +513,7 @@ INT CommandDelete (LPTSTR param)
 	for (i = 0; i < args && !(dwFiles & 0x80000000); i++)
 	{
 
-                /*this checks to see if it isnt a flag, if it isnt, we assume it is a file name*/
+        /*this checks to see if it is a flag; if it isn't, we assume it is a file name*/
 		if((*arg[i] == _T('/')) || (*arg[i] == _T('-')))
 			continue;
 
@@ -549,6 +549,5 @@ INT CommandDelete (LPTSTR param)
 
 	return 0;
 }
-
 
 #endif

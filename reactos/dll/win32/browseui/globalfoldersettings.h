@@ -21,25 +21,25 @@
 #pragma once
 
 class CGlobalFolderSettings :
-	public CComCoClass<CGlobalFolderSettings, &CLSID_ACLMulti>,
-	public CComObjectRootEx<CComMultiThreadModelNoCS>,
-	public IGlobalFolderSettings
+    public CComCoClass<CGlobalFolderSettings, &CLSID_ACLMulti>,
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IGlobalFolderSettings
 {
 private:
 public:
-	CGlobalFolderSettings();
-	~CGlobalFolderSettings();
+    CGlobalFolderSettings();
+    ~CGlobalFolderSettings();
 
-	// *** IGlobalFolderSettings methods ***
-	virtual HRESULT STDMETHODCALLTYPE Get(DEFFOLDERSETTINGS *paramC, int param10);
-	virtual HRESULT STDMETHODCALLTYPE Set(const DEFFOLDERSETTINGS *paramC, int param10, unsigned int param14);
+    // *** IGlobalFolderSettings methods ***
+    virtual HRESULT STDMETHODCALLTYPE Get(DEFFOLDERSETTINGS *paramC, int param10);
+    virtual HRESULT STDMETHODCALLTYPE Set(const DEFFOLDERSETTINGS *paramC, int param10, unsigned int param14);
 
-DECLARE_REGISTRY_RESOURCEID(IDR_GLOBALFOLDERSETTINGS)
-DECLARE_NOT_AGGREGATABLE(CGlobalFolderSettings)
+    DECLARE_REGISTRY_RESOURCEID(IDR_GLOBALFOLDERSETTINGS)
+    DECLARE_NOT_AGGREGATABLE(CGlobalFolderSettings)
 
-DECLARE_PROTECT_FINAL_CONSTRUCT()
+    DECLARE_PROTECT_FINAL_CONSTRUCT()
 
-BEGIN_COM_MAP(CGlobalFolderSettings)
-	COM_INTERFACE_ENTRY_IID(IID_IGlobalFolderSettings, IGlobalFolderSettings)
-END_COM_MAP()
+    BEGIN_COM_MAP(CGlobalFolderSettings)
+        COM_INTERFACE_ENTRY_IID(IID_IGlobalFolderSettings, IGlobalFolderSettings)
+    END_COM_MAP()
 };

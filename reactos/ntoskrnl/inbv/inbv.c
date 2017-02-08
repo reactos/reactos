@@ -24,6 +24,108 @@ ROT_BAR_TYPE RotBarSelection;
 ULONG PltRotBarStatus;
 BT_PROGRESS_INDICATOR InbvProgressIndicator = {0, 25, 0};
 
+/* FADING FUNCTION ***********************************************************/
+
+/** From include/psdk/wingdi.h **/
+typedef struct tagRGBQUAD
+{
+    UCHAR    rgbBlue;
+    UCHAR    rgbGreen;
+    UCHAR    rgbRed;
+    UCHAR    rgbReserved;
+} RGBQUAD,*LPRGBQUAD;
+/*******************************/
+
+static RGBQUAD _MainPalette[16];
+
+#define PALETTE_FADE_STEPS  15
+#define PALETTE_FADE_TIME   20 * 10000 /* 20ms */
+
+/** From bootvid/precomp.h **/
+//
+// Bitmap Header
+//
+typedef struct tagBITMAPINFOHEADER
+{
+    ULONG biSize;
+    LONG biWidth;
+    LONG biHeight;
+    USHORT biPlanes;
+    USHORT biBitCount;
+    ULONG biCompression;
+    ULONG biSizeImage;
+    LONG biXPelsPerMeter;
+    LONG biYPelsPerMeter;
+    ULONG biClrUsed;
+    ULONG biClrImportant;
+} BITMAPINFOHEADER, *PBITMAPINFOHEADER;
+/****************************/
+
+//
+// Needed prototypes
+//
+VOID NTAPI InbvAcquireLock(VOID);
+VOID NTAPI InbvReleaseLock(VOID);
+
+static VOID
+NTAPI
+BootImageFadeIn(VOID)
+{
+    UCHAR PaletteBitmapBuffer[sizeof(BITMAPINFOHEADER) + sizeof(_MainPalette)];
+    PBITMAPINFOHEADER PaletteBitmap = (PBITMAPINFOHEADER)PaletteBitmapBuffer;
+    LPRGBQUAD Palette = (LPRGBQUAD)(PaletteBitmapBuffer + sizeof(BITMAPINFOHEADER));
+
+    ULONG Iteration, Index, ClrUsed;
+    LARGE_INTEGER Interval;
+
+    Interval.QuadPart = -PALETTE_FADE_TIME;
+
+    /* Check if we're installed and we own it */
+    if ((InbvBootDriverInstalled) &&
+        (InbvDisplayState == INBV_DISPLAY_STATE_OWNED))
+    {
+        /* Acquire the lock */
+        InbvAcquireLock();
+
+        /*
+         * Build a bitmap containing the fade in palette. The palette entries
+         * are then processed in a loop and set using VidBitBlt function.
+         */
+        ClrUsed = sizeof(_MainPalette) / sizeof(_MainPalette[0]);
+        RtlZeroMemory(PaletteBitmap, sizeof(BITMAPINFOHEADER));
+        PaletteBitmap->biSize = sizeof(BITMAPINFOHEADER);
+        PaletteBitmap->biBitCount = 4;
+        PaletteBitmap->biClrUsed = ClrUsed;
+
+        /*
+         * Main animation loop.
+         */
+        for (Iteration = 0; Iteration <= PALETTE_FADE_STEPS; ++Iteration)
+        {
+            for (Index = 0; Index < ClrUsed; Index++)
+            {
+                Palette[Index].rgbRed = (UCHAR)
+                    (_MainPalette[Index].rgbRed * Iteration / PALETTE_FADE_STEPS);
+                Palette[Index].rgbGreen = (UCHAR)
+                    (_MainPalette[Index].rgbGreen * Iteration / PALETTE_FADE_STEPS);
+                Palette[Index].rgbBlue = (UCHAR)
+                    (_MainPalette[Index].rgbBlue * Iteration / PALETTE_FADE_STEPS);
+            }
+
+            VidBitBlt(PaletteBitmapBuffer, 0, 0);
+
+            /* Wait for a bit. */
+            KeDelayExecutionThread(KernelMode, FALSE, &Interval);
+        }
+
+        /* Release the lock */
+        InbvReleaseLock();
+
+        /* Wait for a bit. */
+        KeDelayExecutionThread(KernelMode, FALSE, &Interval);
+    }
+}
+
 /* FUNCTIONS *****************************************************************/
 
 PVOID
@@ -119,7 +221,7 @@ InbvDriverInitialize(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     {
         /* Now reset the display, but only if there's a custom boot logo */
         VidResetDisplay(CustomLogo);
-        
+
         /* Find bitmap resources in the kernel */
         ResourceCount = min(IDB_CLUSTER_SERVER, Count);
         for (i = 1; i <= Count; i++)
@@ -267,12 +369,11 @@ InbvDisplayString(IN PCHAR String)
         if (InbvBootDriverInstalled) VidDisplayString((PUCHAR) String);
 
         /* Print the string on the EMS port */
-		HeadlessDispatch(
-			HeadlessCmdPutString,
-			String,
-			strlen(String) + sizeof(ANSI_NULL),
-			NULL,
-			NULL);
+        HeadlessDispatch(HeadlessCmdPutString,
+                         String,
+                         strlen(String) + sizeof(ANSI_NULL),
+                         NULL,
+                         NULL);
 
         /* Release the lock */
         InbvReleaseLock();
@@ -578,10 +679,16 @@ NTAPI
 INIT_FUNCTION
 DisplayBootBitmap(IN BOOLEAN TextMode)
 {
+    PBITMAPINFOHEADER BitmapInfoHeader;
+    LPRGBQUAD Palette;
+
     PVOID Header, Band, Text, Screen;
     ROT_BAR_TYPE TempRotBarSelection = RB_UNSPECIFIED;
+
+#ifdef CORE_6781_resolved
     UCHAR Buffer[64];
-    
+#endif
+
     /* Check if the system thread has already been created */
     if (SysThreadCreated)
     {
@@ -602,7 +709,7 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
             InbvSetTextColor(15);
             InbvSolidColorFill(0, 0, 639, 479, 7);
             InbvSolidColorFill(0, 421, 639, 479, 1);
-            
+
             /* Get resources */
             Header = InbvGetResourceAddress(IDB_LOGO_HEADER);
             Band = InbvGetResourceAddress(IDB_LOGO_BAND);
@@ -661,23 +768,36 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
                 /* Normal edition */
                 Text = InbvGetResourceAddress(IDB_SERVER_LOGO);
             }
-            
+
             /* Server product, display appropriate status bar color */
             InbvGetResourceAddress(IDB_BAR_SERVER);
         }
-        
+
         /* Make sure we had a logo */
         if (Screen)
         {
             /* Choose progress bar */
             TempRotBarSelection = RB_SQUARE_CELLS;
 
+            /*
+             * Save the main image palette and replace it with black palette, so
+             * we can do fade in effect later.
+             */
+            BitmapInfoHeader = (PBITMAPINFOHEADER)Screen;
+            Palette = (LPRGBQUAD)((PUCHAR)Screen + BitmapInfoHeader->biSize);
+            RtlCopyMemory(_MainPalette, Palette, sizeof(_MainPalette));
+            RtlZeroMemory(Palette, sizeof(_MainPalette));
+
             /* Blit the background */
             InbvBitBlt(Screen, 0, 0);
 
             /* Set progress bar coordinates and display it */
             InbvSetProgressBarCoordinates(257, 352);
-            
+
+            /* Display the boot logo and fade it in */
+            BootImageFadeIn();
+
+#ifdef CORE_6781_resolved
             /* Check for non-workstation products */
             if (SharedUserData->NtProductType != NtProductWinNt)
             {
@@ -685,20 +805,23 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
                 InbvScreenToBufferBlt(Buffer, 413, 237, 7, 7, 8);
                 InbvSolidColorFill(418, 230, 454, 256, 0);
                 InbvBufferToScreenBlt(Buffer, 413, 237, 7, 7, 8);
-                
+
                 /* In setup mode, you haven't selected a SKU yet */
                 if (ExpInTextModeSetup) Text = NULL;
             }
-          }
-          
-          /* Draw the SKU text if it exits */
-          if (Text) InbvBitBlt(Text, 180, 121);
-          
-          /* Draw the progress bar bit */
-//          if (Bar) InbvBitBlt(Bar, 0, 0);
+#endif
+        }
 
-          /* Set filter which will draw text display if needed */
-          InbvInstallDisplayStringFilter(DisplayFilter);
+#ifdef CORE_6781_resolved
+        /* Draw the SKU text if it exits */
+        if (Text) InbvBitBlt(Text, 180, 121);
+#endif
+
+        /* Draw the progress bar bit */
+//      if (Bar) InbvBitBlt(Bar, 0, 0);
+
+        /* Set filter which will draw text display if needed */
+        InbvInstallDisplayStringFilter(DisplayFilter);
     }
 
     /* Do we have a system thread? */
@@ -728,7 +851,7 @@ DisplayFilter(PCHAR *String)
     {
         /* Remove the filter */
         InbvInstallDisplayStringFilter(NULL);
-        
+
         DotHack = FALSE;
 
         /* Draw text screen */

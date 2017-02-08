@@ -1,5 +1,5 @@
 /*
- * Copyright 2001 Ove Kaaven
+ * Copyright 2009 Austin English
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,12 +16,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WINE_OLESELFREGISTER
-#define WINE_FILEDESCRIPTION_STR "Wine WineD3D OpenGL (Licen LGPL)"
+#include "config.h" /* Needed to get PACKAGE_VERSION */
+
+#define WINE_FILEDESCRIPTION_STR "Wine D3D"
 #define WINE_FILENAME_STR "wined3d.dll"
-#define WINE_FILEVERSION 5,3,1,904
-#define WINE_FILEVERSION_STR "5.3.1.904"
-#define WINE_PRODUCTVERSION 5,3,1,904
-#define WINE_PRODUCTVERSION_STR "5.3.1.904"
+#define WINE_FILEVERSION_STR PACKAGE_VERSION
+#define WINE_PRODUCTVERSION_STR PACKAGE_VERSION
+#define WINE_PRODUCTNAME_STR "Wine D3D"
 
 #include "wine/wine_common_ver.rc"

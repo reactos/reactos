@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
  * FILE:            dll/cpl/desk/desk.c
@@ -10,7 +9,7 @@
 
 #include "desk.h"
 
-#define NUM_APPLETS	(1)
+#define NUM_APPLETS    (1)
 
 static LONG APIENTRY DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 

@@ -12,10 +12,14 @@
 
 #include <sect_attribs.h>
 
-#ifndef WIN32_LEAN_AND_MEAN
+/*#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
-#include <windows.h>
+#include <windows.h>*/
+
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 
 #include <stdio.h>
 #include <memory.h>

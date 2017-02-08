@@ -1,5 +1,8 @@
+#include <windef.h>
+#include <winuser.h>
+#include <commctrl.h>
+
 #include "resource.h"
-#include <windows.h>
 
 IDI_TASKMANAGER         ICON    DISCARDABLE "res/taskmgr.ico"
 IDI_WINDOW              ICON    DISCARDABLE "res/window.ico"

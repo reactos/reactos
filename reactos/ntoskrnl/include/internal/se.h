@@ -1,5 +1,111 @@
 #pragma once
 
+typedef struct _KNOWN_ACE
+{
+    ACE_HEADER Header;
+    ACCESS_MASK Mask;
+    ULONG SidStart;
+} KNOWN_ACE, *PKNOWN_ACE;
+
+typedef struct _KNOWN_OBJECT_ACE
+{
+    ACE_HEADER Header;
+    ACCESS_MASK Mask;
+    ULONG Flags;
+    ULONG SidStart;
+} KNOWN_OBJECT_ACE, *PKNOWN_OBJECT_ACE;
+
+typedef struct _KNOWN_COMPOUND_ACE
+{
+    ACE_HEADER Header;
+    ACCESS_MASK Mask;
+    USHORT CompoundAceType;
+    USHORT Reserved;
+    ULONG SidStart;
+} KNOWN_COMPOUND_ACE, *PKNOWN_COMPOUND_ACE;
+
+PSID
+FORCEINLINE
+SepGetGroupFromDescriptor(PVOID _Descriptor)
+{
+    PISECURITY_DESCRIPTOR Descriptor = (PISECURITY_DESCRIPTOR)_Descriptor;
+    PISECURITY_DESCRIPTOR_RELATIVE SdRel;
+
+    if (Descriptor->Control & SE_SELF_RELATIVE)
+    {
+        SdRel = (PISECURITY_DESCRIPTOR_RELATIVE)Descriptor;
+        if (!SdRel->Group) return NULL;
+        return (PSID)((ULONG_PTR)Descriptor + SdRel->Group);
+    }
+    else
+    {
+        return Descriptor->Group;
+    }
+}
+
+PSID
+FORCEINLINE
+SepGetOwnerFromDescriptor(PVOID _Descriptor)
+{
+    PISECURITY_DESCRIPTOR Descriptor = (PISECURITY_DESCRIPTOR)_Descriptor;
+    PISECURITY_DESCRIPTOR_RELATIVE SdRel;
+
+    if (Descriptor->Control & SE_SELF_RELATIVE)
+    {
+        SdRel = (PISECURITY_DESCRIPTOR_RELATIVE)Descriptor;
+        if (!SdRel->Owner) return NULL;
+        return (PSID)((ULONG_PTR)Descriptor + SdRel->Owner);
+    }
+    else
+    {
+        return Descriptor->Owner;
+    }
+}
+
+PACL
+FORCEINLINE
+SepGetDaclFromDescriptor(PVOID _Descriptor)
+{
+    PISECURITY_DESCRIPTOR Descriptor = (PISECURITY_DESCRIPTOR)_Descriptor;
+    PISECURITY_DESCRIPTOR_RELATIVE SdRel;
+
+    if (!(Descriptor->Control & SE_DACL_PRESENT)) return NULL;
+
+    if (Descriptor->Control & SE_SELF_RELATIVE)
+    {
+        SdRel = (PISECURITY_DESCRIPTOR_RELATIVE)Descriptor;
+        if (!SdRel->Dacl) return NULL;
+        return (PACL)((ULONG_PTR)Descriptor + SdRel->Dacl);
+    }
+    else
+    {
+        return Descriptor->Dacl;
+    }
+}
+
+PACL
+FORCEINLINE
+SepGetSaclFromDescriptor(PVOID _Descriptor)
+{
+    PISECURITY_DESCRIPTOR Descriptor = (PISECURITY_DESCRIPTOR)_Descriptor;
+    PISECURITY_DESCRIPTOR_RELATIVE SdRel;
+
+    if (!(Descriptor->Control & SE_SACL_PRESENT)) return NULL;
+
+    if (Descriptor->Control & SE_SELF_RELATIVE)
+    {
+        SdRel = (PISECURITY_DESCRIPTOR_RELATIVE)Descriptor;
+        if (!SdRel->Sacl) return NULL;
+        return (PACL)((ULONG_PTR)Descriptor + SdRel->Sacl);
+    }
+    else
+    {
+        return Descriptor->Sacl;
+    }
+}
+
+#ifndef RTL_H
+
 /* SID Authorities */
 extern SID_IDENTIFIER_AUTHORITY SeNullSidAuthority;
 extern SID_IDENTIFIER_AUTHORITY SeWorldSidAuthority;
@@ -79,6 +185,52 @@ extern PSECURITY_DESCRIPTOR SePublicOpenSd;
 extern PSECURITY_DESCRIPTOR SePublicOpenUnrestrictedSd;
 extern PSECURITY_DESCRIPTOR SeSystemDefaultSd;
 extern PSECURITY_DESCRIPTOR SeUnrestrictedSd;
+
+
+#define SepAcquireTokenLockExclusive(Token)                                    \
+{                                                                              \
+    KeEnterCriticalRegion();                                                   \
+    ExAcquireResourceExclusive(((PTOKEN)Token)->TokenLock, TRUE);              \
+}
+#define SepAcquireTokenLockShared(Token)                                       \
+{                                                                              \
+    KeEnterCriticalRegion();                                                   \
+    ExAcquireResourceShared(((PTOKEN)Token)->TokenLock, TRUE);                 \
+}
+
+#define SepReleaseTokenLock(Token)                                             \
+{                                                                              \
+    ExReleaseResource(((PTOKEN)Token)->TokenLock);                             \
+    KeLeaveCriticalRegion();                                                   \
+}
+
+//
+// Token Functions
+//
+BOOLEAN
+NTAPI
+SepTokenIsOwner(
+    IN PACCESS_TOKEN _Token,
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN BOOLEAN TokenLocked
+);
+
+BOOLEAN
+NTAPI
+SepSidInToken(
+    IN PACCESS_TOKEN _Token,
+    IN PSID Sid
+);
+
+BOOLEAN
+NTAPI
+SepSidInTokenEx(
+    IN PACCESS_TOKEN _Token,
+    IN PSID PrincipalSelfSid,
+    IN PSID _Sid,
+    IN BOOLEAN Deny,
+    IN BOOLEAN Restricted
+);
 
 /* Functions */
 BOOLEAN
@@ -330,24 +482,6 @@ SeCopyClientToken(
     OUT PACCESS_TOKEN* NewToken
 );
 
-#define SepAcquireTokenLockExclusive(Token)                                    \
-  do {                                                                         \
-    KeEnterCriticalRegion();                                                   \
-    ExAcquireResourceExclusive(((PTOKEN)Token)->TokenLock, TRUE);              \
-  while(0)
-
-#define SepAcquireTokenLockShared(Token)                                       \
-  do {                                                                         \
-    KeEnterCriticalRegion();                                                   \
-    ExAcquireResourceShared(((PTOKEN)Token)->TokenLock, TRUE);                 \
-  while(0)
-
-#define SepReleaseTokenLock(Token)                                             \
-  do {                                                                         \
-    ExReleaseResource(((PTOKEN)Token)->TokenLock);                             \
-    KeLeaveCriticalRegion();                                                   \
-  while(0)
-
 VOID NTAPI
 SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
                           OUT PACCESS_MASK DesiredAccess);
@@ -355,5 +489,14 @@ SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
 VOID NTAPI
 SeSetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
                         OUT PACCESS_MASK DesiredAccess);
+
+BOOLEAN
+NTAPI
+SeFastTraverseCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                    IN PACCESS_STATE AccessState,
+                    IN ACCESS_MASK DesiredAccess,
+                    IN KPROCESSOR_MODE AccessMode);
+
+#endif
 
 /* EOF */

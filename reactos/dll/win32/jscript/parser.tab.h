@@ -79,8 +79,10 @@
      tShiftOper = 295,
      tRelOper = 296,
      tNumericLiteral = 297,
-     tStringLiteral = 298,
-     LOWER_THAN_ELSE = 299
+     tBooleanLiteral = 298,
+     tStringLiteral = 299,
+     tEOF = 300,
+     LOWER_THAN_ELSE = 301
    };
 #endif
 
@@ -91,7 +93,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 150 "parser.y"
+#line 145 "parser.y"
 
     int                     ival;
     const WCHAR             *srcptr;
@@ -115,7 +117,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 119 "parser.tab.h"
+#line 121 "parser.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

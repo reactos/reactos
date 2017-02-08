@@ -1,5 +1,3 @@
-/* $Id$
- */
 
 #ifndef __TCHAR_INC_S__
 #define __TCHAR_INC_S__

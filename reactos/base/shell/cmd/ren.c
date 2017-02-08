@@ -29,7 +29,7 @@
  *
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 #ifdef INCLUDE_CMD_RENAME
 
@@ -223,7 +223,7 @@ INT cmd_rename (LPTSTR param)
 
 	}
 
-  if (!_tcschr(srcPattern, _T('\\'))) //If srcPattern isnt a Path but a  name:
+  if (!_tcschr(srcPattern, _T('\\'))) //If srcPattern isn't a Path but a name:
   {
 	srcFILE=srcPattern;
 	if(_tcschr(dstPattern, _T('\\')))

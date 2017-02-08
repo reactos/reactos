@@ -16,7 +16,7 @@ SETTINGS_INFO SettingsInfo;
 
 
 VOID
-FillDafaultSettings(PSETTINGS_INFO pSettingsInfo)
+FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
 {
     pSettingsInfo->bSaveWndPos = TRUE;
     pSettingsInfo->bUpdateAtStart = FALSE;
@@ -782,7 +782,7 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
 
     if (!LoadSettings())
     {
-        FillDafaultSettings(&SettingsInfo);
+        FillDefaultSettings(&SettingsInfo);
     }
 
     InitLogs();

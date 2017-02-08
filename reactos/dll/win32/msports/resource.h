@@ -1,3 +1,4 @@
+#pragma once
 
 #define IDD_SERIALSETTINGS                200
 #define IDC_SERIAL_BITSPERSECOND          201

@@ -66,7 +66,7 @@ static PUCHAR NtfsDecodeRun(PUCHAR DataRun, LONGLONG *DataRunOffset, ULONGLONG *
     DataRun++;
     for (i = 0; i < DataRunLengthSize; i++)
     {
-        *DataRunLength += *DataRun << (i << 3);
+        *DataRunLength += ((ULONG64)*DataRun) << (i * 8);
         DataRun++;
     }
 
@@ -79,11 +79,11 @@ static PUCHAR NtfsDecodeRun(PUCHAR DataRun, LONGLONG *DataRunOffset, ULONGLONG *
     {
         for (i = 0; i < DataRunOffsetSize - 1; i++)
         {
-            *DataRunOffset += *DataRun << (i << 3);
+            *DataRunOffset += ((ULONG64)*DataRun) << (i * 8);
             DataRun++;
         }
         /* The last byte contains sign so we must process it different way. */
-        *DataRunOffset = ((CHAR)(*(DataRun++)) << (i << 3)) + *DataRunOffset;
+        *DataRunOffset = ((LONG64)(CHAR)(*(DataRun++)) << (i * 8)) + *DataRunOffset;
     }
 
     TRACE("DataRunOffsetSize: %x\n", DataRunOffsetSize);
@@ -387,7 +387,7 @@ static PNTFS_ATTR_CONTEXT NtfsFindAttributeHelper(PNTFS_VOLUME_INFO Volume, PNTF
                 ListBuffer = MmHeapAlloc((ULONG)ListSize);
             else
                 ListBuffer = NULL;
-            
+
             if(!ListBuffer)
             {
                 TRACE("Failed to allocate memory: %x\n", (ULONG)ListSize);
@@ -616,7 +616,7 @@ static BOOLEAN NtfsFindMftRecord(PNTFS_VOLUME_INFO Volume, ULONGLONG MFTIndex, P
                 BitmapData = MmHeapAlloc((ULONG)BitmapDataSize);
             else
                 BitmapData = NULL;
-            
+
             if (BitmapData == NULL)
             {
                 MmHeapFree(IndexRecord);

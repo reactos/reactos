@@ -26,17 +26,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#if defined(__MINGW32__) || defined (_MSC_VER)
-#include <ws2tcpip.h>
-#endif
+#include <config.h>
+//#include "wine/port.h"
 
-#include <string.h>
-#include <stdarg.h>
+//#include <string.h>
+//#include <stdarg.h>
 #include <stdio.h>
-#include <sys/types.h>
+//#include <sys/types.h>
 #ifdef HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
 #endif
@@ -49,31 +49,35 @@
 #ifdef HAVE_SYS_TIME_H
 # include <sys/time.h>
 #endif
-#include <stdlib.h>
-#include <ctype.h>
+//#include <stdlib.h>
+//#include <ctype.h>
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
-#include <assert.h>
+//#include <assert.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "winuser.h"
-#include "wininet.h"
-#include "winineti.h"
-#include "winnls.h"
-#include "wine/debug.h"
-#include "winerror.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winuser.h>
+#include <wininet.h>
+//#include "winineti.h"
+//#include "winnls.h"
+#include <wine/debug.h>
+//#include "winerror.h"
 #define NO_SHLWAPI_STREAM
-#include "shlwapi.h"
+#include <shlwapi.h>
 
-#include "wine/exception.h"
+#if defined(__MINGW32__) || defined (_MSC_VER)
+#include <ws2tcpip.h>
+#endif
+
+//#include "wine/exception.h"
 
 #include "internet.h"
 #include "resource.h"
 
-#include "wine/unicode.h"
+//#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 

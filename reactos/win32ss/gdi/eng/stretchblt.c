@@ -169,6 +169,7 @@ EngStretchBltROP(
         InputRect.right = OutputRect.right - OutputRect.left;
         InputRect.top = 0;
         InputRect.bottom = OutputRect.bottom - OutputRect.top;
+        psoInput = NULL;
     }
 
     if (NULL != ClipRegion)
@@ -364,6 +365,7 @@ IntEngStretchBlt(SURFOBJ *psoDest,
                  SURFOBJ *MaskSurf,
                  CLIPOBJ *ClipRegion,
                  XLATEOBJ *ColorTranslation,
+                 COLORADJUSTMENT *pca,
                  RECTL *DestRect,
                  RECTL *SourceRect,
                  POINTL *pMaskOrigin,
@@ -372,7 +374,6 @@ IntEngStretchBlt(SURFOBJ *psoDest,
                  DWORD Rop4)
 {
     BOOLEAN ret;
-    COLORADJUSTMENT ca;
     POINTL MaskOrigin = {0, 0};
     SURFACE *psurfDest;
     //SURFACE *psurfSource = NULL;
@@ -383,9 +384,15 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     LONG InputClWidth, InputClHeight, InputWidth, InputHeight;
 
     ASSERT(psoDest);
-    psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
-    ASSERT(psurfDest);
+    //ASSERT(psoSource); // FIXME!
     ASSERT(DestRect);
+    //ASSERT(SourceRect); // FIXME!
+    //ASSERT(!RECTL_bIsEmptyRect(SourceRect)); // FIXME!
+
+    /* If no clip object is given, use trivial one */
+    if (!ClipRegion) ClipRegion = &gxcoTrivial.ClipObj;
+
+    psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
 
     /* Sanity check */
     ASSERT(IS_VALID_ROP4(Rop4));
@@ -420,23 +427,20 @@ IntEngStretchBlt(SURFOBJ *psoDest,
         InputClippedRect.bottom = DestRect->top;
     }
 
-    if (UsesSource)
+    if (NULL == SourceRect || NULL == psoSource)
     {
-        if (NULL == SourceRect || NULL == psoSource)
-        {
-            return FALSE;
-        }
-        InputRect = *SourceRect;
+        return FALSE;
+    }
+    InputRect = *SourceRect;
 
-        if (InputRect.right < InputRect.left ||
-                InputRect.bottom < InputRect.top)
-        {
-            /* Everything clipped away, nothing to do */
-            return TRUE;
-        }
+    if (InputRect.right < InputRect.left ||
+            InputRect.bottom < InputRect.top)
+    {
+        /* Everything clipped away, nothing to do */
+        return TRUE;
     }
 
-    if (ClipRegion)
+    if (ClipRegion->iDComplexity != DC_TRIVIAL)
     {
         if (!RECTL_bIntersectRect(&OutputRect, &InputClippedRect,
                                &ClipRegion->rclBounds))
@@ -473,18 +477,17 @@ IntEngStretchBlt(SURFOBJ *psoDest,
         //psurfSource = CONTAINING_RECORD(psoSource, SURFACE, SurfObj);
     }
 
-    /* Prepare color adjustment */
-
     /* Call the driver's DrvStretchBlt if available */
     if (psurfDest->flags & HOOK_STRETCHBLTROP)
     {
         /* Drv->StretchBltROP (look at http://www.osronline.com/ddkx/graphics/ddifncs_0z3b.htm ) */
         ret = GDIDEVFUNCS(psoDest).StretchBltROP(psoDest,
-                                                 (UsesSource) ? psoSource : NULL,
+                                                 psoSource,
                                                  MaskSurf,
                                                  ClipRegion,
                                                  ColorTranslation,
-                                                 &ca, BrushOrigin,
+                                                 pca,
+                                                 BrushOrigin,
                                                  &OutputRect,
                                                  &InputRect,
                                                  &MaskOrigin,
@@ -496,11 +499,11 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     if (! ret)
     {
         ret = EngStretchBltROP(psoDest,
-                               (UsesSource) ? psoSource : NULL,
+                               psoSource,
                                MaskSurf,
                                ClipRegion,
                                ColorTranslation,
-                               &ca,
+                               pca,
                                BrushOrigin,
                                &OutputRect,
                                &InputRect,
@@ -536,8 +539,12 @@ NtGdiEngStretchBlt(
 
     _SEH2_TRY
     {
-        ProbeForRead(pca, sizeof(COLORADJUSTMENT), 1);
-        RtlCopyMemory(&ca,pca, sizeof(COLORADJUSTMENT));
+        if (pca)
+        {
+            ProbeForRead(pca, sizeof(COLORADJUSTMENT), 1);
+            RtlCopyMemory(&ca,pca, sizeof(COLORADJUSTMENT));
+            pca = &ca;
+        }
 
         ProbeForRead(BrushOrigin, sizeof(POINTL), 1);
         RtlCopyMemory(&lBrushOrigin, BrushOrigin, sizeof(POINTL));
@@ -558,7 +565,7 @@ NtGdiEngStretchBlt(
     }
     _SEH2_END;
 
-    return EngStretchBlt(psoDest, psoSource, Mask, ClipRegion, ColorTranslation, &ca, &lBrushOrigin, &rclDest, &rclSrc, &lMaskOrigin, Mode);
+    return EngStretchBlt(psoDest, psoSource, Mask, ClipRegion, ColorTranslation, pca, &lBrushOrigin, &rclDest, &rclSrc, &lMaskOrigin, Mode);
 }
 
 /* EOF */

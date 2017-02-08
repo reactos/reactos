@@ -56,6 +56,7 @@
 #include "lwip/dns.h"
 #include "lwip/timers.h"
 #include "netif/etharp.h"
+#include "lwip/api.h"
 
 /* Compile-time sanity checks for configuration errors.
  * These can be done independently of LWIP_DEBUG, without penalty.
@@ -65,9 +66,6 @@
 #endif
 #if (!IP_SOF_BROADCAST && IP_SOF_BROADCAST_RECV)
   #error "If you want to use broadcast filter per pcb on recv operations, you have to define IP_SOF_BROADCAST=1 in your lwipopts.h"
-#endif
-#if (!LWIP_ARP && ARP_QUEUEING)
-  #error "If you want to use ARP Queueing, you have to define LWIP_ARP=1 in your lwipopts.h"
 #endif
 #if (!LWIP_UDP && LWIP_UDPLITE)
   #error "If you want to use UDP Lite, you have to define LWIP_UDP=1 in your lwipopts.h"
@@ -87,6 +85,7 @@
 #if (!LWIP_UDP && LWIP_DNS)
   #error "If you want to use DNS, you have to define LWIP_UDP=1 in your lwipopts.h"
 #endif
+#if !MEMP_MEM_MALLOC /* MEMP_NUM_* checks are disabled when not using the pool allocator */
 #if (LWIP_ARP && ARP_QUEUEING && (MEMP_NUM_ARP_QUEUE<=0))
   #error "If you want to use ARP Queueing, you have to define MEMP_NUM_ARP_QUEUE>=1 in your lwipopts.h"
 #endif
@@ -99,6 +98,20 @@
 #if (LWIP_TCP && (MEMP_NUM_TCP_PCB<=0))
   #error "If you want to use TCP, you have to define MEMP_NUM_TCP_PCB>=1 in your lwipopts.h"
 #endif
+#if (LWIP_IGMP && (MEMP_NUM_IGMP_GROUP<=1))
+  #error "If you want to use IGMP, you have to define MEMP_NUM_IGMP_GROUP>1 in your lwipopts.h"
+#endif
+#if ((LWIP_NETCONN || LWIP_SOCKET) && (MEMP_NUM_TCPIP_MSG_API<=0))
+  #error "If you want to use Sequential API, you have to define MEMP_NUM_TCPIP_MSG_API>=1 in your lwipopts.h"
+#endif
+/* There must be sufficient timeouts, taking into account requirements of the subsystems. */
+#if LWIP_TIMERS && (MEMP_NUM_SYS_TIMEOUT < (LWIP_TCP + IP_REASSEMBLY + LWIP_ARP + (2*LWIP_DHCP) + LWIP_AUTOIP + LWIP_IGMP + LWIP_DNS + PPP_SUPPORT))
+  #error "MEMP_NUM_SYS_TIMEOUT is too low to accomodate all required timeouts"
+#endif
+#if (IP_REASSEMBLY && (MEMP_NUM_REASSDATA > IP_REASS_MAX_PBUFS))
+  #error "MEMP_NUM_REASSDATA > IP_REASS_MAX_PBUFS doesn't make sense since each struct ip_reassdata must hold 2 pbufs at least!"
+#endif
+#endif /* !MEMP_MEM_MALLOC */
 #if (LWIP_TCP && (TCP_WND > 0xffff))
   #error "If you want to use TCP, TCP_WND must fit in an u16_t, so, you have to reduce it in your lwipopts.h"
 #endif
@@ -114,17 +127,11 @@
 #if (LWIP_TCP && TCP_LISTEN_BACKLOG && (TCP_DEFAULT_LISTEN_BACKLOG < 0) || (TCP_DEFAULT_LISTEN_BACKLOG > 0xff))
   #error "If you want to use TCP backlog, TCP_DEFAULT_LISTEN_BACKLOG must fit into an u8_t"
 #endif
-#if (LWIP_IGMP && (MEMP_NUM_IGMP_GROUP<=1))
-  #error "If you want to use IGMP, you have to define MEMP_NUM_IGMP_GROUP>1 in your lwipopts.h"
-#endif
 #if (LWIP_NETIF_API && (NO_SYS==1))
   #error "If you want to use NETIF API, you have to define NO_SYS=0 in your lwipopts.h"
 #endif
 #if ((LWIP_SOCKET || LWIP_NETCONN) && (NO_SYS==1))
   #error "If you want to use Sequential API, you have to define NO_SYS=0 in your lwipopts.h"
-#endif
-#if ((LWIP_NETCONN || LWIP_SOCKET) && (MEMP_NUM_TCPIP_MSG_API<=0))
-  #error "If you want to use Sequential API, you have to define MEMP_NUM_TCPIP_MSG_API>=1 in your lwipopts.h"
 #endif
 #if (!LWIP_NETCONN && LWIP_SOCKET)
   #error "If you want to use Socket API, you have to define LWIP_NETCONN=1 in your lwipopts.h"
@@ -147,13 +154,6 @@
 #if (LWIP_TCP && ((LWIP_EVENT_API && LWIP_CALLBACK_API) || (!LWIP_EVENT_API && !LWIP_CALLBACK_API)))
   #error "One and exactly one of LWIP_EVENT_API and LWIP_CALLBACK_API has to be enabled in your lwipopts.h"
 #endif
-/* There must be sufficient timeouts, taking into account requirements of the subsystems. */
-#if LWIP_TIMERS && (MEMP_NUM_SYS_TIMEOUT < (LWIP_TCP + IP_REASSEMBLY + LWIP_ARP + (2*LWIP_DHCP) + LWIP_AUTOIP + LWIP_IGMP + LWIP_DNS + PPP_SUPPORT))
-  #error "MEMP_NUM_SYS_TIMEOUT is too low to accomodate all required timeouts"
-#endif
-#if (IP_REASSEMBLY && (MEMP_NUM_REASSDATA > IP_REASS_MAX_PBUFS))
-  #error "MEMP_NUM_REASSDATA > IP_REASS_MAX_PBUFS doesn't make sense since each struct ip_reassdata must hold 2 pbufs at least!"
-#endif
 #if (MEM_LIBC_MALLOC && MEM_USE_POOLS)
   #error "MEM_LIBC_MALLOC and MEM_USE_POOLS may not both be simultaneously enabled in your lwipopts.h"
 #endif
@@ -162,9 +162,6 @@
 #endif
 #if (PBUF_POOL_BUFSIZE <= MEM_ALIGNMENT)
   #error "PBUF_POOL_BUFSIZE must be greater than MEM_ALIGNMENT or the offset may take the full first pbuf"
-#endif
-#if (TCP_QUEUE_OOSEQ && !LWIP_TCP)
-  #error "TCP_QUEUE_OOSEQ requires LWIP_TCP"
 #endif
 #if (DNS_LOCAL_HOSTLIST && !DNS_LOCAL_HOSTLIST_IS_DYNAMIC && !(defined(DNS_LOCAL_HOSTLIST_INIT)))
   #error "you have to define define DNS_LOCAL_HOSTLIST_INIT {{'host1', 0x123}, {'host2', 0x234}} to initialize DNS_LOCAL_HOSTLIST"
@@ -187,6 +184,32 @@
 #if IP_FRAG && IP_FRAG_USES_STATIC_BUF && LWIP_NETIF_TX_SINGLE_PBUF
   #error "LWIP_NETIF_TX_SINGLE_PBUF does not work with IP_FRAG_USES_STATIC_BUF==1 as that creates pbuf queues"
 #endif
+#if LWIP_NETCONN && LWIP_TCP
+#if NETCONN_COPY != TCP_WRITE_FLAG_COPY
+  #error "NETCONN_COPY != TCP_WRITE_FLAG_COPY"
+#endif
+#if NETCONN_MORE != TCP_WRITE_FLAG_MORE
+  #error "NETCONN_MORE != TCP_WRITE_FLAG_MORE"
+#endif
+#endif /* LWIP_NETCONN && LWIP_TCP */ 
+#if LWIP_SOCKET
+/* Check that the SO_* socket options and SOF_* lwIP-internal flags match */
+#if SO_ACCEPTCONN != SOF_ACCEPTCONN
+  #error "SO_ACCEPTCONN != SOF_ACCEPTCONN"
+#endif
+#if SO_REUSEADDR != SOF_REUSEADDR
+  #error "WARNING: SO_REUSEADDR != SOF_REUSEADDR"
+#endif
+#if SO_KEEPALIVE != SOF_KEEPALIVE
+  #error "WARNING: SO_KEEPALIVE != SOF_KEEPALIVE"
+#endif
+#if SO_BROADCAST != SOF_BROADCAST
+  #error "WARNING: SO_BROADCAST != SOF_BROADCAST"
+#endif
+#if SO_LINGER != SOF_LINGER
+  #error "WARNING: SO_LINGER != SOF_LINGER"
+#endif
+#endif /* LWIP_SOCKET */
 
 
 /* Compile-time checks for deprecated options.
@@ -210,48 +233,54 @@
   #error "ETHARP_ALWAYS_INSERT option is deprecated. Remove it from your lwipopts.h."
 #endif
 
-#ifdef LWIP_DEBUG
-static void
-lwip_sanity_check(void)
-{
-  /* Warnings */
+#ifndef LWIP_DISABLE_TCP_SANITY_CHECKS
+#define LWIP_DISABLE_TCP_SANITY_CHECKS  0
+#endif
+#ifndef LWIP_DISABLE_MEMP_SANITY_CHECKS
+#define LWIP_DISABLE_MEMP_SANITY_CHECKS 0
+#endif
+
+/* MEMP sanity checks */
+#if !LWIP_DISABLE_MEMP_SANITY_CHECKS
 #if LWIP_NETCONN
-  if (MEMP_NUM_NETCONN > (MEMP_NUM_TCP_PCB+MEMP_NUM_TCP_PCB_LISTEN+MEMP_NUM_UDP_PCB+MEMP_NUM_RAW_PCB))
-    LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: MEMP_NUM_NETCONN should be less than the sum of MEMP_NUM_{TCP,RAW,UDP}_PCB+MEMP_NUM_TCP_PCB_LISTEN\n"));
+#if MEMP_MEM_MALLOC
+#if !MEMP_NUM_NETCONN && LWIP_SOCKET
+#error "lwip_sanity_check: WARNING: MEMP_NUM_NETCONN cannot be 0 when using sockets!"
+#endif
+#else /* MEMP_MEM_MALLOC */
+#if MEMP_NUM_NETCONN > (MEMP_NUM_TCP_PCB+MEMP_NUM_TCP_PCB_LISTEN+MEMP_NUM_UDP_PCB+MEMP_NUM_RAW_PCB)
+#error "lwip_sanity_check: WARNING: MEMP_NUM_NETCONN should be less than the sum of MEMP_NUM_{TCP,RAW,UDP}_PCB+MEMP_NUM_TCP_PCB_LISTEN. If you know what you are doing, define LWIP_DISABLE_MEMP_SANITY_CHECKS to 1 to disable this error."
+#endif
+#endif /* MEMP_MEM_MALLOC */
 #endif /* LWIP_NETCONN */
+#endif /* !LWIP_DISABLE_MEMP_SANITY_CHECKS */
+
+/* TCP sanity checks */
+#if !LWIP_DISABLE_TCP_SANITY_CHECKS
 #if LWIP_TCP
-  if (MEMP_NUM_TCP_SEG < TCP_SND_QUEUELEN)
-    LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: MEMP_NUM_TCP_SEG should be at least as big as TCP_SND_QUEUELEN\n"));
-  if (TCP_SND_BUF < 2 * TCP_MSS)
-    LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: TCP_SND_BUF must be at least as much as (2 * TCP_MSS) for things to work smoothly\n"));
-  if (TCP_SND_QUEUELEN < (2 * (TCP_SND_BUF/TCP_MSS)))
-    LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: TCP_SND_QUEUELEN must be at least as much as (2 * TCP_SND_BUF/TCP_MSS) for things to work\n"));
-  if (TCP_SNDLOWAT >= TCP_SND_BUF)
-    LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: TCP_SNDLOWAT must be less than TCP_SND_BUF.\n"));
-  if (TCP_SNDQUEUELOWAT >= TCP_SND_QUEUELEN)
-    LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: TCP_SNDQUEUELOWAT must be less than TCP_SND_QUEUELEN.\n"));
-  if (TCP_WND > (PBUF_POOL_SIZE*PBUF_POOL_BUFSIZE))
-    LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: TCP_WND is larger than space provided by PBUF_POOL_SIZE*PBUF_POOL_BUFSIZE\n"));
-  if (TCP_WND < TCP_MSS)
-    LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: TCP_WND is smaller than MSS\n"));
+#if !MEMP_MEM_MALLOC && (MEMP_NUM_TCP_SEG < TCP_SND_QUEUELEN)
+  #error "lwip_sanity_check: WARNING: MEMP_NUM_TCP_SEG should be at least as big as TCP_SND_QUEUELEN. If you know what you are doing, define LWIP_DISABLE_TCP_SANITY_CHECKS to 1 to disable this error."
+#endif
+#if TCP_SND_BUF < (2 * TCP_MSS)
+  #error "lwip_sanity_check: WARNING: TCP_SND_BUF must be at least as much as (2 * TCP_MSS) for things to work smoothly. If you know what you are doing, define LWIP_DISABLE_TCP_SANITY_CHECKS to 1 to disable this error."
+#endif
+#if TCP_SND_QUEUELEN < (2 * (TCP_SND_BUF / TCP_MSS))
+  #error "lwip_sanity_check: WARNING: TCP_SND_QUEUELEN must be at least as much as (2 * TCP_SND_BUF/TCP_MSS) for things to work. If you know what you are doing, define LWIP_DISABLE_TCP_SANITY_CHECKS to 1 to disable this error."
+#endif
+#if TCP_SNDLOWAT >= TCP_SND_BUF
+  #error "lwip_sanity_check: WARNING: TCP_SNDLOWAT must be less than TCP_SND_BUF. If you know what you are doing, define LWIP_DISABLE_TCP_SANITY_CHECKS to 1 to disable this error."
+#endif
+#if TCP_SNDQUEUELOWAT >= TCP_SND_QUEUELEN
+  #error "lwip_sanity_check: WARNING: TCP_SNDQUEUELOWAT must be less than TCP_SND_QUEUELEN. If you know what you are doing, define LWIP_DISABLE_TCP_SANITY_CHECKS to 1 to disable this error."
+#endif
+#if !MEMP_MEM_MALLOC && (TCP_WND > (PBUF_POOL_SIZE * (PBUF_POOL_BUFSIZE - (PBUF_LINK_HLEN + PBUF_IP_HLEN + PBUF_TRANSPORT_HLEN))))
+  #error "lwip_sanity_check: WARNING: TCP_WND is larger than space provided by PBUF_POOL_SIZE * (PBUF_POOL_BUFSIZE - protocol headers). If you know what you are doing, define LWIP_DISABLE_TCP_SANITY_CHECKS to 1 to disable this error."
+#endif
+#if TCP_WND < TCP_MSS
+  #error "lwip_sanity_check: WARNING: TCP_WND is smaller than MSS. If you know what you are doing, define LWIP_DISABLE_TCP_SANITY_CHECKS to 1 to disable this error."
+#endif
 #endif /* LWIP_TCP */
-#if LWIP_SOCKET
-  /* Check that the SO_* socket options and SOF_* lwIP-internal flags match */
-  if (SO_ACCEPTCONN != SOF_ACCEPTCONN)
-    LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: SO_ACCEPTCONN != SOF_ACCEPTCONN\n"));
-  if (SO_REUSEADDR != SOF_REUSEADDR)
-    LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: SO_REUSEADDR != SOF_REUSEADDR\n"));
-  if (SO_KEEPALIVE != SOF_KEEPALIVE)
-    LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: SO_KEEPALIVE != SOF_KEEPALIVE\n"));
-  if (SO_BROADCAST != SOF_BROADCAST)
-    LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: SO_BROADCAST != SOF_BROADCAST\n"));
-  if (SO_LINGER != SOF_LINGER)
-    LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: SO_LINGER != SOF_LINGER\n"));
-#endif /* LWIP_SOCKET */
-}
-#else  /* LWIP_DEBUG */
-#define lwip_sanity_check()
-#endif /* LWIP_DEBUG */
+#endif /* !LWIP_DISABLE_TCP_SANITY_CHECKS */
 
 /**
  * Perform Sanity check of user-configurable values, and initialize all modules.
@@ -259,9 +288,6 @@ lwip_sanity_check(void)
 void
 lwip_init(void)
 {
-  /* Sanity check user-configurable values */
-  lwip_sanity_check();
-
   /* Modules initialization */
   stats_init();
 #if !NO_SYS

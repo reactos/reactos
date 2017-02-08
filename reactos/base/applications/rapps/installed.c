@@ -8,7 +8,6 @@
 
 #include "rapps.h"
 
-
 BOOL
 GetApplicationString(HKEY hKey, LPWSTR lpKeyName, LPWSTR lpString)
 {

@@ -1,11 +1,11 @@
 /*
-* PROJECT:         ReactOS Kernel
-* LICENSE:         BSD - See COPYING.ARM in the top level directory
-* FILE:            ntoskrnl/mm/ARM3/sysldr.c
-* PURPOSE:         Contains the Kernel Loader (SYSLDR) for loading PE files.
-* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
-*                  ReactOS Portable Systems Group
-*/
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
+ * FILE:            ntoskrnl/mm/ARM3/sysldr.c
+ * PURPOSE:         Contains the Kernel Loader (SYSLDR) for loading PE files.
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  ReactOS Portable Systems Group
+ */
 
 /* INCLUDES *******************************************************************/
 
@@ -105,8 +105,8 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     if (SessionLoad)
     {
         /* Fail */
-        DPRINT1("Session loading not yet supported!\n");
-        while (TRUE);
+        UNIMPLEMENTED_DBGBREAK("Session loading not yet supported!\n");
+        return STATUS_NOT_IMPLEMENTED;
     }
 
     /* Not session load, shouldn't have an entry */
@@ -1216,8 +1216,7 @@ CheckDllState:
                 {
                     /* We failed, unload the image */
                     MmUnloadSystemImage(DllEntry);
-                    DPRINT1("MmCallDllInitialize failed with status 0x%x\n", Status);
-                    while (TRUE);
+                    ERROR_DBGBREAK("MmCallDllInitialize failed with status 0x%x\n", Status);
                     Loaded = FALSE;
                 }
             }
@@ -1385,7 +1384,7 @@ MiFreeInitializationCode(IN PVOID InitStart,
 
     /*  Compute the number of pages we expect to free */
     PagesFreed = (PFN_NUMBER)(MiAddressToPte(InitEnd) - PointerPte + 1);
-    
+
     /* Try to actually free them */
     PagesFreed = MiDeleteSystemPageableVm(PointerPte,
                                           PagesFreed,
@@ -1406,7 +1405,7 @@ MiFindInitializationCode(OUT PVOID *StartVa,
     PIMAGE_NT_HEADERS NtHeader;
     PIMAGE_SECTION_HEADER Section, LastSection;
     BOOLEAN InitFound;
-    
+
     /* So we don't free our own code yet */
     InitCode = (ULONG_PTR)&MiFindInitializationCode;
 
@@ -1423,7 +1422,7 @@ MiFindInitializationCode(OUT PVOID *StartVa,
         /* Get the loader entry and its DLL base */
         LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
         DllBase = (ULONG_PTR)LdrEntry->DllBase;
-        
+
         /* Get the NT header */
         NtHeader = RtlImageNtHeader((PVOID)DllBase);
         if (!NtHeader)
@@ -1454,13 +1453,13 @@ MiFindInitializationCode(OUT PVOID *StartVa,
             {
                 /* Pick the biggest size -- either raw or virtual */
                 Size = max(Section->SizeOfRawData, Section->Misc.VirtualSize);
-                
+
                 /* Read the section alignment */
                 Alignment = NtHeader->OptionalHeader.SectionAlignment;
 
                 /* Align the start and end addresses appropriately */
                 InitStart = DllBase + Section->VirtualAddress;
-                InitEnd = ((Alignment + InitStart + Size - 2) & 0xFFFFF000) - 1;                        
+                InitEnd = ((Alignment + InitStart + Size - 2) & 0xFFFFF000) - 1;
                 InitStart = (InitStart + (PAGE_SIZE - 1)) & 0xFFFFF000;
 
                 /* Have we reached the last section? */
@@ -1532,12 +1531,12 @@ MiFindInitializationCode(OUT PVOID *StartVa,
                     }
                 }
             }
-            
+
             /* Move to the next section */
             SectionCount--;
             Section++;
         }
-        
+
         /* Move to the next module */
         NextEntry = NextEntry->Flink;
     }
@@ -1546,7 +1545,7 @@ MiFindInitializationCode(OUT PVOID *StartVa,
     KeLeaveCriticalRegion();
 }
 
-/* 
+/*
  * Note: This function assumes that all discardable sections are at the end of
  * the PE file. It searches backwards until it finds the non-discardable section
  */
@@ -1719,8 +1718,8 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         if (!PointerPte)
         {
             /* Shouldn't happen */
-            DPRINT1("[Mm0]: Couldn't allocate driver section!\n");
-            while (TRUE);
+            ERROR_FATAL("[Mm0]: Couldn't allocate driver section!\n");
+            return;
         }
 
         /* This is the new virtual address for the module */
@@ -1772,8 +1771,8 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             if (!NT_SUCCESS(Status))
             {
                 /* This shouldn't happen */
-                DPRINT1("Relocations failed!\n");
-                while (TRUE);
+                ERROR_FATAL("Relocations failed!\n");
+                return;
             }
         }
 
@@ -1970,9 +1969,8 @@ MiBuildImportsForBootDrivers(VOID)
                 if (*ImageThunk)
                 {
                     /* Should not be happening */
-                    DPRINT1("Broken IAT entry for %p at %p (%lx)\n",
-                            LdrEntry, ImageThunk, *ImageThunk);
-                    ASSERT(FALSE);
+                    ERROR_FATAL("Broken IAT entry for %p at %p (%lx)\n",
+                                LdrEntry, ImageThunk, *ImageThunk);
                 }
 
                 /* Reset if we hit this */
@@ -2179,9 +2177,13 @@ MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         NewEntry->FullDllName.Buffer =
             ExAllocatePoolWithTag(PagedPool,
                                   LdrEntry->FullDllName.MaximumLength +
-                                  sizeof(UNICODE_NULL),
+                                      sizeof(UNICODE_NULL),
                                   TAG_LDR_WSTR);
-        if (!NewEntry->FullDllName.Buffer) return FALSE;
+        if (!NewEntry->FullDllName.Buffer)
+        {
+            ExFreePoolWithTag(NewEntry, TAG_MODULE_OBJECT);
+            return FALSE;
+        }
 
         /* Set the base name */
         NewEntry->BaseDllName.Buffer = (PVOID)(NewEntry + 1);
@@ -2356,8 +2358,7 @@ MiWriteProtectSystemImage(IN PVOID ImageBase)
     else
     {
         /* Not supported */
-        DPRINT1("Session drivers not supported\n");
-        ASSERT(FALSE);
+        UNIMPLEMENTED_DBGBREAK("Session drivers not supported\n");
     }
 
     /* These are the only protection masks we care about */
@@ -2917,8 +2918,8 @@ LoaderScan:
         else
         {
             /* We don't support session loading yet */
-            DPRINT1("Unsupported Session-Load!\n");
-            while (TRUE);
+            UNIMPLEMENTED_DBGBREAK("Unsupported Session-Load!\n");
+            Status = STATUS_NOT_IMPLEMENTED;
         }
 
         /* Do cleanup */
@@ -2956,7 +2957,8 @@ LoaderScan:
                             0);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("ZwOpenFile failed with status 0x%x\n", Status);
+            DPRINT1("ZwOpenFile failed for '%wZ' with status 0x%x\n",
+                    FileName, Status);
             goto Quickie;
         }
 
@@ -3017,8 +3019,8 @@ LoaderScan:
         if (Flags)
         {
             /* We don't support session loading yet */
-            DPRINT1("Unsupported Session-Load!\n");
-            while (TRUE);
+            UNIMPLEMENTED_DBGBREAK("Unsupported Session-Load!\n");
+            goto Quickie;
         }
 
         /* Check the loader list again, we should end up in the path below */
@@ -3436,3 +3438,4 @@ MmGetSystemRoutineAddress(IN PUNICODE_STRING SystemRoutineName)
     return ProcAddress;
 }
 
+/* EOF */

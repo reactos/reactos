@@ -32,7 +32,7 @@ WinSta0
 
 -The one-and-only interactive WinSta. 
 -No other winsta can be visible/active.
--Only WinSta0 can recieve input. 
+-Only WinSta0 can receive input. 
 -All other WinSta's are invisible/non-interactive WinStas.
 
 What good is a invisible WinSta? Its used for running services in thus services cant

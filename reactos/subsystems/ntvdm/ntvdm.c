@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            subsys/ntvdm/ntvdm->c
@@ -10,9 +9,15 @@
  */
 
 /* INCLUDES *****************************************************************/
+
+#include <stdarg.h>
 #define WIN32_NO_STATUS
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wincon.h>
+#include <winuser.h>
 #include <stdio.h>
+
 #include "resource.h"
 
 #define NDEBUG

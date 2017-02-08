@@ -30,30 +30,30 @@ CRegTreeOptions::~CRegTreeOptions()
 
 HRESULT STDMETHODCALLTYPE CRegTreeOptions::InitTree(HWND paramC, HKEY param10, char const *param14, char const *param18)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CRegTreeOptions::WalkTree(WALK_TREE_CMD paramC)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CRegTreeOptions::ToggleItem(HTREEITEM paramC)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CRegTreeOptions::ShowHelp(HTREEITEM paramC, unsigned long param10)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CRegTreeOptions::SetSite(IUnknown *pUnkSite)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CRegTreeOptions::GetSite(REFIID riid, void **ppvSite)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }

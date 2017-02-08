@@ -18,7 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windef.h>
+#pragma once
+
+//#include <windef.h>
 
 /* Translation IDs. */
 #define STRING_USAGE            101

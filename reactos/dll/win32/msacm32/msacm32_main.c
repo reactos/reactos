@@ -21,16 +21,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+#define WIN32_NO_STATUS
 
-#include "windef.h"
-#include "winbase.h"
-#include "wine/debug.h"
-#include "mmsystem.h"
+//#include <stdarg.h>
+
+//#include "windef.h"
+//#include "winbase.h"
+#include <wine/debug.h>
+//#include "mmsystem.h"
 #define NOBITMAP
-#include "mmreg.h"
-#include "msacm.h"
-#include "msacmdrv.h"
+//#include "mmreg.h"
+//#include "msacm.h"
+#include <msacmdrv.h>
 #include "wineacm.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msacm);

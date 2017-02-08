@@ -26,15 +26,22 @@
 #include <stdarg.h>
 
 #define COBJMACROS
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include "windef.h"
-#include "winbase.h"
-#include "wtypes.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "dshow.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "wtypes.h"
+//#include "wingdi.h"
+//#include "winuser.h"
+
+#include <objbase.h>
+#include <oleauto.h>
+
+#include <dshow.h>
 #define __WINE_DDRAW_H /* ROS HACK */
-#include "qedit.h"
+#include <qedit.h>
 
 HRESULT MediaDet_create(IUnknown *pUnkOuter, LPVOID *ppObj);
 HRESULT SampleGrabber_create(IUnknown *pUnkOuter, LPVOID *ppObj);

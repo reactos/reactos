@@ -75,12 +75,12 @@ PspGetOrSetContextKernelRoutine(IN PKAPC Apc,
     /* Check if it's a set or get */
     if (Apc->SystemArgument1)
     {
-        /* Get the Context */
+        /* Set the Context */
         PspSetContext(TrapFrame, NULL, Context, Mode);
     }
     else
     {
-        /* Set the Context */
+        /* Get the Context */
         PspGetContext(TrapFrame, NULL, Context);
     }
 

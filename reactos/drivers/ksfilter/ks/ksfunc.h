@@ -106,8 +106,7 @@ KspPinPropertyHandler(
 NTSTATUS
 FindMatchingCreateItem(
     PLIST_ENTRY ListHead,
-    ULONG BufferSize,
-    LPWSTR Buffer,
+    PUNICODE_STRING String,
     OUT PCREATE_ITEM_ENTRY *OutCreateItem);
 
 NTSTATUS

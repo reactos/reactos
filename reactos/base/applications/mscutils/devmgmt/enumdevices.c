@@ -300,6 +300,16 @@ EnumDevices(INT index,
         }
     }
 
+    if (DeviceID != NULL &&
+        _tcscmp(*DeviceID, _T("HTREE\\ROOT\\0")) == 0)
+    {
+        HeapFree(GetProcessHeap(),
+                 0,
+                 *DeviceID);
+        *DeviceID = NULL;
+        return -1;
+    }
+
     /* get the device's friendly name */
     if (!SetupDiGetDeviceRegistryProperty(hDevInfo,
                                           &DeviceInfoData,
@@ -462,7 +472,7 @@ AddDeviceToTree(HWND hTreeView,
     TCHAR ClassGuidString[MAX_GUID_STRING_LEN];
     GUID ClassGuid;
     ULONG ulLength;
-    LPTSTR DeviceID;
+    LPTSTR DeviceID = NULL;
     INT ClassImage = 24;
     CONFIGRET cr;
 

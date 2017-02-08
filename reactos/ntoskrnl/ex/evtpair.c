@@ -23,21 +23,22 @@ POBJECT_TYPE ExEventPairObjectType = NULL;
 
 GENERIC_MAPPING ExEventPairMapping =
 {
-    STANDARD_RIGHTS_READ,
-    STANDARD_RIGHTS_WRITE,
+    STANDARD_RIGHTS_READ | SYNCHRONIZE,
+    STANDARD_RIGHTS_WRITE | SYNCHRONIZE,
     STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
     EVENT_PAIR_ALL_ACCESS
 };
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
+BOOLEAN
 INIT_FUNCTION
 NTAPI
 ExpInitializeEventPairImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
+    NTSTATUS Status;
     DPRINT("Creating Event Pair Object Type\n");
 
     /* Create the Event Pair Object Type */
@@ -49,7 +50,10 @@ ExpInitializeEventPairImplementation(VOID)
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.ValidAccessMask = EVENT_PAIR_ALL_ACCESS;
     ObjectTypeInitializer.UseDefaultObject = TRUE;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExEventPairObjectType);
+    ObjectTypeInitializer.InvalidAttributes = OBJ_OPENLINK;
+    Status = ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExEventPairObjectType);
+    if (!NT_SUCCESS(Status)) return FALSE;
+    return TRUE;
 }
 
 NTSTATUS
@@ -97,7 +101,7 @@ NtCreateEventPair(OUT PHANDLE EventPairHandle,
     /* Check for Success */
     if (NT_SUCCESS(Status))
     {
-        /* Initalize the Event */
+        /* Initialize the Event */
         DPRINT("Initializing EventPair\n");
         KeInitializeEventPair(EventPair);
 

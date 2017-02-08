@@ -1,5 +1,7 @@
-#include <windows.h>
-#include "resource.h"
+#include <windef.h>
+#include <winuser.h>
+
+//#include "resource.h"
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"Remote Access Common Dialog API\0"
@@ -41,6 +43,9 @@
 #endif
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/he-IL.rc"
 #endif
 #ifdef LANGUAGE_NB_NO
     #include "lang/no-NO.rc"

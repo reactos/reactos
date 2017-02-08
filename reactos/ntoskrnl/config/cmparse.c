@@ -136,7 +136,7 @@ CmpGetSymbolicLink(IN PHHIVE Hive,
     if (Length > 0xFFFF) goto Exit;
 
     /* Check if we need a new buffer */
-	if (Length > ObjectName->MaximumLength)
+    if (Length > ObjectName->MaximumLength)
     {
         /* We do -- allocate one */
         NewBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_CM);
@@ -334,7 +334,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
     KeyNode->MaxClassLen = 0;
     KeyNode->NameLength = CmpCopyName(Hive, KeyNode->Name, Name);
     if (KeyNode->NameLength < Name->Length) KeyNode->Flags |= KEY_COMP_NAME;
-    
+
     /* Create the KCB */
     Kcb = CmpCreateKeyControlBlock(Hive,
                                    *KeyCell,
@@ -349,7 +349,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto Quickie;
     }
-    
+
     /* Sanity check */
     ASSERT(Kcb->RefCount == 1);
 
@@ -357,7 +357,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
     KeyBody->NotifyBlock = NULL;
     KeyBody->ProcessID = PsGetCurrentProcessId();
     KeyBody->KeyControlBlock = Kcb;
-    
+
     /* Link it with the KCB */
     EnlistKeyBodyWithKCB(KeyBody, 0);
 
@@ -745,7 +745,7 @@ CmpCreateLinkNode(IN PHHIVE Hive,
         DPRINT1("Invalid link node attempt\n");
         return STATUS_ACCESS_DENIED;
     }
-    
+
     /* Check if the parent is being deleted */
     if (ParentKcb->Delete)
     {
@@ -754,7 +754,7 @@ CmpCreateLinkNode(IN PHHIVE Hive,
         Status = STATUS_OBJECT_NAME_NOT_FOUND;
         goto Exit;
     }
-    
+
     /* Allocate a link node */
     LinkCell = HvAllocateCell(Hive,
                               FIELD_OFFSET(CM_KEY_NODE, Name) +
@@ -767,14 +767,14 @@ CmpCreateLinkNode(IN PHHIVE Hive,
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto Exit;
     }
-    
+
     /* Get the key cell */
     KeyCell = Context->ChildHive.KeyCell;
     if (KeyCell != HCELL_NIL)
     {
         /* Hive exists! */
         ChildCell = KeyCell;
-        
+
         /* Get the node data */
         KeyNode = (PCM_KEY_NODE)HvGetCell(Context->ChildHive.KeyHive, ChildCell);
         if (!KeyNode)
@@ -784,12 +784,12 @@ CmpCreateLinkNode(IN PHHIVE Hive,
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto Exit;
         }
-        
+
         /* Fill out the data */
         KeyNode->Parent = LinkCell;
         KeyNode->Flags |= KEY_HIVE_ENTRY | KEY_NO_DELETE;
         HvReleaseCell(Context->ChildHive.KeyHive, ChildCell);
-        
+
         /* Now open the key cell */
         KeyNode = (PCM_KEY_NODE)HvGetCell(Context->ChildHive.KeyHive, KeyCell);
         if (!KeyNode)
@@ -799,7 +799,7 @@ CmpCreateLinkNode(IN PHHIVE Hive,
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto Exit;
         }
-        
+
         /* Open the parent */
         Status = CmpDoOpen(Context->ChildHive.KeyHive,
                            KeyCell,
@@ -834,13 +834,13 @@ CmpCreateLinkNode(IN PHHIVE Hive,
             Context->ChildHive.KeyHive->BaseBlock->RootCell = ChildCell;
         }
     }
-    
+
     /* Check if open or create suceeded */
     if (NT_SUCCESS(Status))
     {
         /* Mark the cell dirty */
         HvMarkCellDirty(Context->ChildHive.KeyHive, ChildCell, FALSE);
-        
+
         /* Get the key node */
         KeyNode = HvGetCell(Context->ChildHive.KeyHive, ChildCell);
         if (!KeyNode)
@@ -850,14 +850,14 @@ CmpCreateLinkNode(IN PHHIVE Hive,
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto Exit;
         }
-        
+
         /* Release it */
         HvReleaseCell(Context->ChildHive.KeyHive, ChildCell);
-        
+
         /* Set the parent and flags */
         KeyNode->Parent = LinkCell;
         KeyNode->Flags |= KEY_HIVE_ENTRY | KEY_NO_DELETE;
-        
+
         /* Get the link node */
         KeyNode = HvGetCell(Hive, LinkCell);
         if (!KeyNode)
@@ -867,7 +867,7 @@ CmpCreateLinkNode(IN PHHIVE Hive,
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto Exit;
         }
-        
+
         /* Set it up */
         KeyNode->Signature = CM_LINK_NODE_SIGNATURE;
         KeyNode->Flags = KEY_HIVE_EXIT | KEY_NO_DELETE;
@@ -876,7 +876,7 @@ CmpCreateLinkNode(IN PHHIVE Hive,
         if (KeyNode->NameLength < Name.Length) KeyNode->Flags |= KEY_COMP_NAME;
         KeQuerySystemTime(&TimeStamp);
         KeyNode->LastWriteTime = TimeStamp;
-        
+
         /* Clear out the rest */
         KeyNode->SubKeyCounts[Stable] = 0;
         KeyNode->SubKeyCounts[Volatile] = 0;
@@ -885,12 +885,12 @@ CmpCreateLinkNode(IN PHHIVE Hive,
         KeyNode->ValueList.Count = 0;
         KeyNode->ValueList.List = HCELL_NIL;
         KeyNode->ClassLength = 0;
-        
+
         /* Reference the root node */
         KeyNode->ChildHiveReference.KeyHive = Context->ChildHive.KeyHive;
         KeyNode->ChildHiveReference.KeyCell = ChildCell;
         HvReleaseCell(Hive, LinkCell);
-        
+
         /* Get the parent node */
         KeyNode = HvGetCell(Hive, Cell);
         if (!KeyNode)
@@ -900,14 +900,14 @@ CmpCreateLinkNode(IN PHHIVE Hive,
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto Exit;  
         }
-        
+
         /* Now add the subkey */
         if (!CmpAddSubKey(Hive, Cell, LinkCell))
         {
             /* Failure! We don't handle this yet! */
             ASSERT(FALSE);
         }
-        
+
         /* Get the key body */
         KeyBody = (PCM_KEY_BODY)*Object;
 
@@ -915,12 +915,12 @@ CmpCreateLinkNode(IN PHHIVE Hive,
         ASSERT(KeyBody->KeyControlBlock->ParentKcb->KeyCell == Cell);
         ASSERT(KeyBody->KeyControlBlock->ParentKcb->KeyHive == Hive);
         ASSERT(KeyBody->KeyControlBlock->ParentKcb->KcbMaxNameLen == KeyNode->MaxNameLen);
-        
+
         /* Update the timestamp */
         KeQuerySystemTime(&TimeStamp);
         KeyNode->LastWriteTime = TimeStamp;
         KeyBody->KeyControlBlock->ParentKcb->KcbLastWriteTime = TimeStamp;
-        
+
         /* Check if we need to update name maximum */
         if (KeyNode->MaxNameLen < Name.Length)
         {
@@ -928,14 +928,14 @@ CmpCreateLinkNode(IN PHHIVE Hive,
             KeyNode->MaxNameLen = Name.Length;
             KeyBody->KeyControlBlock->ParentKcb->KcbMaxNameLen = Name.Length;
         }
-        
+
         /* Check if we need toupdate class length maximum */
         if (KeyNode->MaxClassLen < Context->Class.Length)
         {
             /* Update it */
             KeyNode->MaxClassLen = Context->Class.Length;
         }
-        
+
         /* Release the cell */
         HvReleaseCell(Hive, Cell);
     }
@@ -944,7 +944,7 @@ CmpCreateLinkNode(IN PHHIVE Hive,
         /* Release the link cell */
         HvReleaseCell(Hive, LinkCell);
     }
-    
+
 Exit:
     /* Release the flusher locks and return status */
     return Status;
@@ -965,11 +965,11 @@ CmpHandleExitNode(IN OUT PHHIVE *Hive,
         ASSERT(*ReleaseHive != NULL);
         HvReleaseCell((*ReleaseHive), *ReleaseCell);
     }
-    
+
     /* Get the link references */
     *Hive = (*KeyNode)->ChildHiveReference.KeyHive;
     *Cell = (*KeyNode)->ChildHiveReference.KeyCell;
-    
+
     /* Get the new node */
     *KeyNode = (PCM_KEY_NODE)HvGetCell((*Hive), *Cell);
     if (*KeyNode)
@@ -1004,10 +1004,10 @@ CmpBuildHashStackAndLookupCache(IN PCM_KEY_BODY ParseObject,
 
     /* Calculate hash values */
     *TotalRemainingSubkeys = 0xBAADF00D;
-    
+
     /* Lock the registry */
     CmpLockRegistry();
-    
+
     /* Return hive and cell data */
     *Hive = (*Kcb)->KeyHive;
     *Cell = (*Kcb)->KeyCell;
@@ -1060,7 +1060,7 @@ CmpParseKey(IN PVOID ParseObject,
 
     /* Fail if this isn't a key object */
     if (ObjectType != CmpKeyObjectType) return STATUS_OBJECT_TYPE_MISMATCH;
-    
+
     /* Copy the remaining name */
     Current = *RemainingName;
     
@@ -1070,9 +1070,12 @@ CmpParseKey(IN PVOID ParseObject,
         /* It isn't, so no context */
         ParseContext = NULL;
     }
-    
+
     /* Grab the KCB */
     Kcb = ((PCM_KEY_BODY)ParseObject)->KeyControlBlock;
+
+    /* Sanity check */
+    ASSERT(Kcb != NULL);
 
     /* Fail if the key was marked as deleted */
     if (Kcb->Delete)
@@ -1089,10 +1092,13 @@ CmpParseKey(IN PVOID ParseObject,
                                              &TotalSubkeys,
                                              NULL,
                                              &LockedKcbs);
-    
+
     /* This is now the parent */
     ParentKcb = Kcb;
-    
+
+    /* Sanity check */
+    ASSERT(ParentKcb != NULL);
+
     /* Check if everything was found cached */
     if (!TotalRemainingSubkeys) ASSERTMSG("Caching not implemented", FALSE);
 
@@ -1127,7 +1133,7 @@ CmpParseKey(IN PVOID ParseObject,
             goto Quickie;
         }
         Current.MaximumLength += NextName.MaximumLength;
-        
+
         /* Parse the symlink */
         if (CmpGetSymbolicLink(Hive,
                                CompleteName,
@@ -1146,7 +1152,7 @@ CmpParseKey(IN PVOID ParseObject,
         /* We're done */
         goto Quickie;
     }
-    
+
     /* Get the key node */
     Node = (PCM_KEY_NODE)HvGetCell(Hive, Cell);
     if (!Node)
@@ -1174,7 +1180,7 @@ CmpParseKey(IN PVOID ParseObject,
                     Cell = NextCell;
                     Node = (PCM_KEY_NODE)HvGetCell(Hive, Cell);
                     if (!Node) ASSERT(FALSE);
-                    
+
                     /* Check if this was the last key */
                     if (Last)
                     {
@@ -1189,7 +1195,7 @@ CmpParseKey(IN PVOID ParseObject,
                                               &CellToRelease);
                             if (!Node) ASSERT(FALSE);
                         }
-                        
+
                         /* Do the open */
                         Status = CmpDoOpen(Hive,
                                            Cell,
@@ -1214,11 +1220,11 @@ CmpParseKey(IN PVOID ParseObject,
                                 Status = STATUS_OBJECT_NAME_NOT_FOUND;
                             }
                         }
-                        
+
                         /* We are done */
                         break;
                     }
-                    
+
                     /* Is this an exit node */
                     if (Node->Flags & KEY_HIVE_EXIT)
                     {
@@ -1239,7 +1245,7 @@ CmpParseKey(IN PVOID ParseObject,
                                                    0,
                                                    &NextName);
                     if (!Kcb) ASSERT(FALSE);
-                    
+
                     /* Dereference the parent and set the new one */
                     CmpDereferenceKeyControlBlock(ParentKcb);
                     ParentKcb = Kcb;
@@ -1275,7 +1281,7 @@ CmpParseKey(IN PVOID ParseObject,
                                                  ParentKcb,
                                                  Object);
                         }
-                        
+
                         /* Check for reparse (in this case, someone beat us) */
                         if (Status == STATUS_REPARSE) break;
 
@@ -1295,7 +1301,7 @@ CmpParseKey(IN PVOID ParseObject,
             {
                 /* Save the next name */
                 Current.Buffer = NextName.Buffer;
-                
+
                 /* Validate the current name string length */
                 if (Current.Length + NextName.Length > MAXUSHORT)
                 {
@@ -1304,7 +1310,7 @@ CmpParseKey(IN PVOID ParseObject,
                     break;
                 }
                 Current.Length += NextName.Length;
-                
+
                 /* Validate the current name string maximum length */
                 if (Current.MaximumLength + NextName.MaximumLength > MAXUSHORT)
                 {
@@ -1313,7 +1319,7 @@ CmpParseKey(IN PVOID ParseObject,
                     break;
                 }
                 Current.MaximumLength += NextName.MaximumLength;
-                
+
                 /* Parse the symlink */
                 if (CmpGetSymbolicLink(Hive,
                                        CompleteName,
@@ -1363,7 +1369,7 @@ CmpParseKey(IN PVOID ParseObject,
             {
                 /* Nothing to do */
             }
-            
+
             /* We're done */
             break;
         }
@@ -1378,7 +1384,7 @@ CmpParseKey(IN PVOID ParseObject,
     /* Dereference the parent if it exists */
 Quickie:
     if (ParentKcb) CmpDereferenceKeyControlBlock(ParentKcb);
-    
+
     /* Unlock the registry */
     CmpUnlockRegistry();
     return Status;

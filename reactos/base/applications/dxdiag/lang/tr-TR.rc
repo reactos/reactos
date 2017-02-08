@@ -1,5 +1,5 @@
 /*
- * Çeviri:   Arda Tanrıkulu <ardatanrikulu@gmail.com>
+ * Çeviri:   Arda Tanrıkulu (ardatanrikulu@gmail.com), Erdem Ersoy (erdemersoy@live.com)
  */
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -12,7 +12,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Tab1",IDC_TAB_CONTROL,"SysTabControl32",WS_TABSTOP,2,2,474,250
     PUSHBUTTON "&Yardım", IDC_BUTTON_HELP, 2, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    DEFPUSHBUTTON "S&onraki Sayfa", IDC_BUTTON_NEXT, 257, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    DEFPUSHBUTTON "&Sonraki Bölüm", IDC_BUTTON_NEXT, 257, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "&Tüm Bilgileri Kaydet...", IDC_BUTTON_SAVE_INFO, 311, 261, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "&Çıkış", IDC_BUTTON_EXIT, 425, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
@@ -21,19 +21,19 @@ IDD_SYSTEM_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bu araç, sisteminizde yüklü ReactX bileşenleri ve sürücüleri hakkında detaylı bilgi raporlar.  İşlevselliği sınamanızı, sorunları tanımanızı en iyi şekilde çalışmak için sistem yapılandırmanızı değiştirmenizi sağlar.", -1, 10, 10, 443, 17
-    LTEXT "Hangi alanın soruna neden olduğunu biliyorsanız, yukarıda uygun sekmeyi tıklatın.  Aksi halde, sırayla her sayfaya gitmek için aşağıdaki ""Sonraki Sayfa"" düğmesini kullanabilirsiniz.", -1, 10, 30, 443, 25
-    GROUPBOX "Sistem Bilgisi", -1, 10, 55, 443, 130, SS_RIGHT
-    LTEXT "Geçerli Tarih/Saat:", -1, 70, 70, 80, 10, SS_RIGHT
-    LTEXT "Bilgisayar Adı:", -1, 70, 80, 80, 10, SS_RIGHT
-    LTEXT "İşletim Sistemi:", -1, 70, 90, 80, 10, SS_RIGHT
+    LTEXT "Bu araç, dizgenizde yüklü ReactX bileşenleri ve sürücüleri hakkında ayrıntılı bilgi yazanaklar.", -1, 10, 10, 443, 17
+    LTEXT "Soruna hangi bölümün neden olduğunu biliyorsanız, yukarıdaki uygun sekmeyi tıklatınız. Bilmiyorsanız sırayla her bölüme gitmek için aşağıdaki ""Sonraki Bölüm"" düğmesini kullanabilirsiniz.", -1, 10, 30, 443, 25
+    GROUPBOX "Bilgisayar Bilgisi", -1, 10, 55, 443, 130, SS_RIGHT
+    LTEXT "Geçerli Zaman:", -1, 70, 70, 80, 10, SS_RIGHT
+    LTEXT "Ad:", -1, 70, 80, 80, 10, SS_RIGHT
+    LTEXT "İşletim Dizgesi:", -1, 70, 90, 80, 10, SS_RIGHT
     LTEXT "Dil:", -1, 70, 100, 80, 10, SS_RIGHT
-    LTEXT "Sistem Üreticisi:", -1, 70, 110, 80, 10, SS_RIGHT
-    LTEXT "Sistem Modeli:", -1, 70, 120, 80, 10, SS_RIGHT
+    LTEXT "Üretici:", -1, 70, 110, 80, 10, SS_RIGHT
+    LTEXT "Biçim:", -1, 70, 120, 80, 10, SS_RIGHT
     LTEXT "BIOS:", -1, 70, 130, 80, 10, SS_RIGHT
     LTEXT "İşlemci:", -1, 70, 140, 80, 10, SS_RIGHT
     LTEXT "Bellek:", -1, 70, 150, 80, 10, SS_RIGHT
-    LTEXT "Sayfa Dosyası:", -1, 70, 160, 80, 10, SS_RIGHT
+    LTEXT "Disk Belleği:", -1, 70, 160, 80, 10, SS_RIGHT
     LTEXT "ReactX Sürümü:", -1, 70, 170, 80, 10, SS_RIGHT
     LTEXT "", IDC_STATIC_TIME, 155, 70, 195, 10, SS_LEFT
     LTEXT "", IDC_STATIC_COMPUTER, 155, 80, 195, 10, SS_LEFT
@@ -55,11 +55,11 @@ BEGIN
     GROUPBOX "Aygıt", -1, 10, 10, 250, 100
     RTEXT "Ad:", -1, 20, 25, 70, 10
     RTEXT "Üretici:", -1, 20, 35, 70, 10
-    RTEXT "Yonga türü:", -1, 20, 45, 70, 10
-    RTEXT "DAC türü:", -1, 20, 55, 70, 10
-    RTEXT "Yaklaşık Top. Bellek:", -1, 20, 65, 70, 10
-    RTEXT "Geçerli Görüntü Modu:", -1, 20, 75, 70, 10
-    RTEXT "Monitör:", -1, 20, 85, 70, 10
+    RTEXT "Yonga Türü:", -1, 20, 45, 70, 10
+    RTEXT "DAC Türü:", -1, 20, 55, 70, 10
+    RTEXT "Yaklaşık Toplam Bellek:", -1, 20, 65, 70, 10
+    RTEXT "Geçerli Görüntü Seçeneği:", -1, 20, 75, 70, 10
+    RTEXT "Göstergeç:", -1, 20, 85, 70, 10
     LTEXT "", IDC_STATIC_ADAPTER_ID, 95, 25, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_VENDOR, 95, 35, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_CHIP, 95, 45, 150, 10
@@ -71,8 +71,8 @@ BEGIN
     GROUPBOX "Sürücüler", -1, 270, 10, 190, 100
     RTEXT "Ana Sürücü:", -1, 275, 25, 55, 10
     RTEXT "Sürüm:", -1, 275, 35, 55, 10
-    RTEXT "Tarih:", -1, 275, 45, 55, 10
-    RTEXT "WHQL Logolu:", -1, 275, 55, 55, 10
+    RTEXT "Zaman:", -1, 275, 45, 55, 10
+    RTEXT "WHQL İmleği:", -1, 275, 55, 55, 10
     RTEXT "Mini VDD:", -1, 275, 65, 55, 10
     RTEXT " vvdddVDD:", -1, 275, 75, 55, 10
     RTEXT "DDI Sürümü:", -1, 275, 85, 55, 10
@@ -85,17 +85,17 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_DDI, 335, 85, 100, 10
 
     GROUPBOX "ReactX Özellikleri", -1, 10, 115, 450, 60
-    RTEXT "DirectDraw Hızlandırması:", -1, 15, 130, 110, 12
-    RTEXT "Direct3D Hızlandırması:", -1, 15, 145, 110, 12
+    RTEXT "ReactDraw Hızlandırması:", -1, 15, 130, 110, 12
+    RTEXT "React3D Hızlandırması:", -1, 15, 145, 110, 12
     RTEXT "AGP Doku Hızlandırması:", -1, 15, 160, 110, 12
     LTEXT "", IDC_STATIC_DDSTATE, 130, 130, 40, 10
     LTEXT "", IDC_STATIC_D3DSTATE, 130, 145, 40, 10
     LTEXT "", IDC_STATIC_AGPSTATE, 130, 160, 40, 10
-    PUSHBUTTON "Enable", IDC_BUTTON_DDRAW, 170, 124, 60, 14, WS_DISABLED
-    PUSHBUTTON "Enable", IDC_BUTTON_D3D, 170, 140, 60, 14, WS_DISABLED
-    PUSHBUTTON "Enable", IDC_BUTTON_AGP, 170, 156, 60, 14, WS_DISABLED
-    PUSHBUTTON "DirectDra&w Sınaması Yap", IDC_BUTTON_TESTDD, 250, 124, 80, 14
-    PUSHBUTTON "Dire&ct3D Sınaması Yap", IDC_BUTTON_TEST3D, 250, 140, 80, 14
+    PUSHBUTTON "Etkinleştir", IDC_BUTTON_DDRAW, 170, 124, 60, 14, WS_DISABLED
+    PUSHBUTTON "Etkinleştir", IDC_BUTTON_D3D, 170, 140, 60, 14, WS_DISABLED
+    PUSHBUTTON "Etkinleştir", IDC_BUTTON_AGP, 170, 156, 60, 14, WS_DISABLED
+    PUSHBUTTON "&ReactDraw'ı Sına", IDC_BUTTON_TESTDD, 250, 124, 80, 14
+    PUSHBUTTON "R&eact3D'yi Sına", IDC_BUTTON_TEST3D, 250, 140, 80, 14
 
     GROUPBOX "Notlar", -1, 10, 180, 450, 40
     EDITTEXT  IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
@@ -108,11 +108,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Aygıt", -1, 10, 10, 250, 100
     RTEXT "Ad:", -1, 20, 25, 70, 10
-    RTEXT "Aygıt tanıtıcı:", -1, 20, 35, 70, 10
+    RTEXT "Aygıt Kimliği:", -1, 20, 35, 70, 10
     RTEXT "Üretici Kimliği:", -1, 20, 45, 70, 10
     RTEXT "Ürün Kimliği:", -1, 20, 55, 70, 10
     RTEXT "Tür:", -1, 20, 65, 70, 10
-    RTEXT "Varsayılan aygıt:", -1, 20, 75, 70, 10
+    RTEXT "Varsayılan Aygıt:", -1, 20, 75, 70, 10
     LTEXT "", IDC_STATIC_DSOUND_NAME, 95, 25, 150, 10
     LTEXT "", IDC_STATIC_DSOUND_DEVICEID, 95, 35, 150, 10
     LTEXT "", IDC_STATIC_DSOUND_VENDORID, 95, 45, 150, 10
@@ -122,9 +122,9 @@ BEGIN
     GROUPBOX "Sürücü", -1, 270, 10, 190, 100
     RTEXT "Ad:", -1, 275, 25, 55, 10
     RTEXT "Sürüm:", -1, 275, 35, 55, 10
-    RTEXT "Tarih:", -1, 275, 45, 55, 10
-    RTEXT "WHQL Logolu:", -1, 275, 55, 55, 10
-    RTEXT "Diğer Dosyalar:", -1, 275, 65, 55, 10
+    RTEXT "Zaman:", -1, 275, 45, 55, 10
+    RTEXT "WHQL İmleği:", -1, 275, 55, 55, 10
+    RTEXT "Diğer Kütükler:", -1, 275, 65, 55, 10
     RTEXT "Sağlayıcı:", -1, 275, 75, 55, 10
     LTEXT "", IDC_STATIC_DSOUND_DRIVER, 335, 25, 100, 10
     LTEXT "", IDC_STATIC_DSOUND_VERSION, 335, 35, 100, 10
@@ -134,8 +134,8 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_PROVIDER, 335, 75, 100, 10
     GROUPBOX "ReactX Özellikleri", -1, 10, 115, 450, 60
     CONTROL "", IDC_SLIDER_DSOUND, "msctls_trackbar32", TBS_BOTTOM | TBS_AUTOTICKS | WS_TABSTOP, 120, 135, 80, 17
-    RTEXT "Donanım Ses\nHızlandırma Düzeyi:", -1, 20, 135, 90, 20
-    PUSHBUTTON "DirectSo&und'u Sına", IDC_BUTTON_TESTDSOUND, 270, 134, 80, 14
+    RTEXT "Donanım İvmesi:", -1, 20, 135, 90, 20
+    PUSHBUTTON "&ReactSound'u Sına", IDC_BUTTON_TESTDSOUND, 270, 134, 80, 14
     GROUPBOX "Notlar", -1, 10, 180, 450, 40
     EDITTEXT  IDC_TEXT_DSOUNDINFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
 END
@@ -151,7 +151,7 @@ IDD_INPUT_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "DirectInput Aygıtları", -1, 10, 10, 452, 80
+    GROUPBOX "ReactInput Aygıtları", -1, 10, 10, 452, 80
     CONTROL "", IDC_LIST_DEVICE, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
     GROUPBOX "Girişle İlgili Aygıtlar", -1, 10, 100, 452, 60
     CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 20, 112, 432, 40, 0x00000200
@@ -163,7 +163,7 @@ IDD_NETWORK_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Kayıtlı DirectPlay Hizmet Sağlayıcıları", -1, 10, 10, 452, 80
+    GROUPBOX "Kayıtlı ReactPlay Hizmet Sağlayıcıları", -1, 10, 10, 452, 80
     CONTROL "", IDC_LIST_PROVIDER, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
 END
 
@@ -176,54 +176,54 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_MAIN_DIALOG "ReactX Tanı Aracı"
-	IDS_SYSTEM_DIALOG "Sistem"
+	IDS_SYSTEM_DIALOG "Dizge"
 	IDS_DISPLAY_DIALOG "Görüntü"
 	IDS_SOUND_DIALOG "Ses"
-	IDS_MUSIC_DIALOG "Müzik"
+	IDS_MUSIC_DIALOG "Mûsiki"
 	IDS_INPUT_DIALOG "Giriş"
 	IDS_NETWORK_DIALOG "Ağ"
 	IDS_HELP_DIALOG "Yardım"
-	IDS_FORMAT_MB "%I64uMB RAM"
-	IDS_FORMAT_SWAP "%I64u MB kullanılan, %I64u MB kullanılabilir"
+	IDS_FORMAT_MB "%I64u MB RAM"
+	IDS_FORMAT_SWAP "%I64u MB kullanıldı, %I64u MB kullanılabilir"
 	IDS_FORMAT_UNIPROC "%s (%u CPU)"
-	IDS_FORMAT_MPPROC  "%s (%u CPUlar)"
+	IDS_FORMAT_MPPROC  "%s (%u CPU)"
 	IDS_VERSION_UNKNOWN "Bilinmeyen Sürüm"
 	IDS_DEVICE_STATUS_ATTACHED "Bağlı"
 	IDS_DEVICE_STATUS_MISSING "Bağlı değil"
 	IDS_DEVICE_STATUS_UNKNOWN "Bilinmiyor"
-	IDS_DEVICE_NAME "Aygıt adı"
+	IDS_DEVICE_NAME "Aygıt Adı"
 	IDS_DEVICE_STATUS "Durum"
 	IDS_DEVICE_CONTROLLER "Denetleyici Kimliği"
 	IDS_DEVICE_MANUFACTURER "Üretici Kimliği"
-	IDS_DEVICE_PRODUCT "Ürüm Kimliği"
-	IDS_DEVICE_FORCEFEEDBACK "Force Feedback Sürücü"
-	IDS_NOT_APPLICABLE "Kullanılamaz"
+	IDS_DEVICE_PRODUCT "Ürün Kimliği"
+	IDS_DEVICE_FORCEFEEDBACK "Güç Geribildirimli Sürücüsü"
+	IDS_NOT_APPLICABLE "Uygulanamaz"
 	IDS_OPTION_YES "Evet"
 	IDS_DIRECTPLAY_COL_NAME1 "Ad"
-	IDS_DIRECTPLAY_COL_NAME2 "Kayıt"
-	IDS_DIRECTPLAY_COL_NAME3 "Dosya"
+	IDS_DIRECTPLAY_COL_NAME2 "Değer"
+	IDS_DIRECTPLAY_COL_NAME3 "Kütük"
 	IDS_DIRECTPLAY_COL_NAME4 "Sürüm"
-	IDS_DIRECTPLAY8_MODEMSP "DirectPlay8-Modem Servis Sağlayıcısı"
-	IDS_DIRECTPLAY8_SERIALSP "DirectPlay8 Seri Servis Sağlayıcısı"
-	IDS_DIRECTPLAY8_IPXSP "DirectPlay8 IPX Servis Sağlayıcısı"
-	IDS_DIRECTPLAY8_TCPSP "DirectPlay8-TCP/IP Servis Sağlayıcısı"
-	IDS_DIRECTPLAY_TCPCONN "DirectPlay için Internet TCP/IP Bağlantısı"
-	IDS_DIRECTPLAY_IPXCONN "DirectPlay için IPX Bağlantısı"
-	IDS_DIRECTPLAY_MODEMCONN "DirectPlay için Modem Bağlantısı"
-	IDS_DIRECTPLAY_SERIALCONN "DirectPlay için Seri Bağlantı"
+	IDS_DIRECTPLAY8_MODEMSP "ReactPlay8 Çevirge Hizmeti Sağlayıcısı"
+	IDS_DIRECTPLAY8_SERIALSP "ReactPlay8 Dizi Hizmeti Sağlayıcısı"
+	IDS_DIRECTPLAY8_IPXSP "ReactPlay8 IPX Hizmeti Sağlayıcısı"
+	IDS_DIRECTPLAY8_TCPSP "ReactPlay8 TCP/IP Hizmeti Sağlayıcısı"
+	IDS_DIRECTPLAY_TCPCONN "ReactPlay için Genelağ TCP/IP Bağlantısı"
+	IDS_DIRECTPLAY_IPXCONN "ReactPlay için IPX Bağlantısı"
+	IDS_DIRECTPLAY_MODEMCONN "ReactPlay için Çeivrge Bağlantısı"
+	IDS_DIRECTPLAY_SERIALCONN "ReactPlay için Dizi Bağlantısı"
 	IDS_REG_SUCCESS "Tamam"
 	IDS_REG_FAIL "Hata"
-	IDS_DDTEST_ERROR "Test başarısız oldu!"
-	IDS_DDTEST_DESCRIPTION "DirectDraw arayüz sınaması başlatılacak. Devam?"
-	IDS_DDPRIMARY_DESCRIPTION "Bu sınama DirectDraw'u birincil yüzeye yazmak için kullanacak. Siyah ve beyaz dikdörtgenler çizilecek. Devam?"
-	IDS_DDPRIMARY_RESULT "Siyah ve beyaz dikdörtgenler gördünüz mü?"
-	IDS_DDOFFSCREEN_DESCRIPTION "Bu sınama DirectDraw'u ekranüstü arabelleği kullanacak. Hareket eden beyaz dikdörtgen göreceksiniz. Devam?"
-	IDS_DDOFFSCREEN_RESULT "Hareket eden beyaz dikdörtgen gördünüz mü?"
-	IDS_DDFULLSCREEN_DESCRIPTION "Bu sınama DirectDraw ile tam ekran yazım yapacak. Hareket eden beyaz dikdörtgen göreceksiniz. Devam?"
-	IDS_DDFULLSCREEN_RESULT "Tam ekran modunda hareket eden beyaz dikdörtgen gördünüz mü?"
+	IDS_DDTEST_ERROR "Sınama başarısız oldu."
+	IDS_DDTEST_DESCRIPTION "ReactDraw arayüz sınaması başlatılacak. Sürdürülsün mü?"
+	IDS_DDPRIMARY_DESCRIPTION "Bu sınama, ReactDraw'ı birincil yüzeye çizmek için kullanacak. Ekrana ak ve kara dikdörtgenler çizilecek. Sürdürülsün mü?"
+	IDS_DDPRIMARY_RESULT "Ekranda ak ve kara dikdörtgenler gördünüz mü?"
+	IDS_DDOFFSCREEN_DESCRIPTION "Bu sınama, ReactDraw'ı ekran dışı arabelleğe çizmek için kullanacak. Ekranda devinen bir ak dikdörtgen göreceksiniz. Sürdürülsün mü?"
+	IDS_DDOFFSCREEN_RESULT "Ekranda devinen bir ak dikdörtgen gördünüz mü?"
+	IDS_DDFULLSCREEN_DESCRIPTION "Bu sınama, ReactDraw'ı tam ekranda çizmek için kullanacak. Tam ekranda devinen bir ak dikdörtgen göreceksiniz. Sürdürülsün mü?"
+	IDS_DDFULLSCREEN_RESULT "Tam ekranda devinen bir ak dikdörtgen gördünüz mü?"
 	IDS_FORMAT_ADAPTER_MEM "%u MB"
-	IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
+	IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u ikillik) (%uHz)"
 	IDS_OPTION_NO "Hayır"
-	IDS_D3DTEST_DESCRIPTION "Direct3D arayüz sınaması başlatılacak. Devam?"
-	IDS_D3DTEST_D3Dx "Bu sınama donanım hızlandırmalı Direct3D %u arayüzünü kullanacak."
+	IDS_D3DTEST_DESCRIPTION "React3D arayüz sınaması başlatılacak. Sürdürülsün mü?"
+	IDS_D3DTEST_D3Dx "Bu sınama, donanım hızlandırmalı React3D %u arayüzünü kullanacak."
 END

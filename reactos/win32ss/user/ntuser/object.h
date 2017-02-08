@@ -6,38 +6,18 @@ typedef struct _USER_REFERENCE_ENTRY
    PVOID obj;
 } USER_REFERENCE_ENTRY, *PUSER_REFERENCE_ENTRY;
 
-#define USER_ASSERT(exp,file,line) \
-    if (!(exp)) {RtlAssert(#exp,(PVOID)file,line,"");}
-
-static __inline VOID
-UserAssertLastRef(PVOID obj, const char *file, int line)
-{
-    PTHREADINFO W32Thread;
-    PSINGLE_LIST_ENTRY ReferenceEntry;
-    PUSER_REFERENCE_ENTRY UserReferenceEntry;
-
-    USER_ASSERT(obj != NULL, file, line);
-    W32Thread = PsGetCurrentThreadWin32Thread();
-    USER_ASSERT(W32Thread != NULL, file, line);
-    ReferenceEntry = W32Thread->ReferencesList.Next;
-    USER_ASSERT(ReferenceEntry != NULL, file, line);
-    UserReferenceEntry = CONTAINING_RECORD(ReferenceEntry, USER_REFERENCE_ENTRY, Entry);
-    USER_ASSERT(UserReferenceEntry != NULL, file, line);
-    USER_ASSERT(obj == UserReferenceEntry->obj, file, line);
-}
-#define ASSERT_LAST_REF(_obj_) UserAssertLastRef(_obj,__FILE__,__LINE__)
-
-#undef USER_ASSERT
-
 extern PUSER_HANDLE_TABLE gHandleTable;
 VOID FASTCALL UserReferenceObject(PVOID obj);
-PVOID FASTCALL UserReferenceObjectByHandle(HANDLE handle, USER_OBJECT_TYPE type);
+PVOID FASTCALL UserReferenceObjectByHandle(HANDLE handle, HANDLE_TYPE type);
 BOOL FASTCALL UserDereferenceObject(PVOID obj);
-PVOID FASTCALL UserCreateObject(PUSER_HANDLE_TABLE ht, struct _DESKTOP* pDesktop, HANDLE* h,USER_OBJECT_TYPE type , ULONG size);
-BOOL FASTCALL UserDeleteObject(HANDLE h, USER_OBJECT_TYPE type );
-PVOID UserGetObject(PUSER_HANDLE_TABLE ht, HANDLE handle, USER_OBJECT_TYPE type );
+PVOID FASTCALL UserCreateObject(PUSER_HANDLE_TABLE ht, struct _DESKTOP* pDesktop, PTHREADINFO pti, HANDLE* h,HANDLE_TYPE type , ULONG size);
+BOOL FASTCALL UserDeleteObject(HANDLE h, HANDLE_TYPE type );
+PVOID UserGetObject(PUSER_HANDLE_TABLE ht, HANDLE handle, HANDLE_TYPE type );
+PVOID UserGetObjectNoErr(PUSER_HANDLE_TABLE, HANDLE, HANDLE_TYPE);
 BOOL FASTCALL UserCreateHandleTable(VOID);
 BOOL FASTCALL UserObjectInDestroy(HANDLE);
+void DbgUserDumpHandleTable();
+VOID FASTCALL UserSetObjectOwner(PVOID obj, HANDLE_TYPE type, PVOID owner);
 
 static __inline VOID
 UserRefObjectCo(PVOID obj, PUSER_REFERENCE_ENTRY UserReferenceEntry)

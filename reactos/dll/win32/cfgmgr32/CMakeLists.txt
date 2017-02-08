@@ -8,7 +8,7 @@ list(APPEND SOURCE
 
 add_library(cfgmgr32 SHARED ${SOURCE})
 
-set_module_type(cfgmgr32 win32dll ENTRYPOINT 0 )
-add_importlibs(cfgmgr32 setupapi kernel32 ntdll)
+set_module_type(cfgmgr32 win32dll)
+add_importlibs(cfgmgr32 msvcrt setupapi kernel32 ntdll)
 add_dependencies(cfgmgr32 psdk)
 add_cd_file(TARGET cfgmgr32 DESTINATION reactos/system32 FOR all)

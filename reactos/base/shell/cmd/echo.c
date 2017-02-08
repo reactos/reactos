@@ -26,7 +26,7 @@
  *        Remove all hardcode string to En.rc
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 BOOL
 OnOffCommand(LPTSTR param, LPBOOL flag, INT message)
@@ -83,7 +83,7 @@ INT CommandEcho (LPTSTR param)
 	{
 		/* skip the first character */
 		ConOutPuts(param + 1);
-		ConOutPuts(_T("\n"));
+		ConOutPuts(_T("\r\n"));
 	}
 	return 0;
 }

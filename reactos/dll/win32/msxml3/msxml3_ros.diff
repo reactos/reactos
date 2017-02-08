@@ -20,3 +20,22 @@ Index: msxml3.spec
  
  @ stdcall -private DllCanUnloadNow()
  @ stdcall -private DllGetClassObject(ptr ptr ptr)
+
+
+Index: nodelist.c
+===================================================================
+--- nodelist.c  (revision 57316)
++++ nodelist.c  (working copy)
+@@ -89,7 +89,11 @@
+
+     if (!ppvObject)
+     {
+-        return E_POINTER;
++        /* NOTE: Interface documentation for IUnknown explicitly states
++         * this case should return E_POINTER. Empirical data proves
++         * MS violates this contract and instead return E_INVALIDARG.
++         */
++        return E_INVALIDARG;
+     }
+
+     if ( IsEqualGUID( riid, &IID_IUnknown ) ||

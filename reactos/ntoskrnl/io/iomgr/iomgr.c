@@ -273,6 +273,7 @@ IopCreateObjectTypes(VOID)
     ObjectTypeInitializer.DeleteProcedure = IopDeleteDevice;
     ObjectTypeInitializer.ParseProcedure = IopParseDevice;
     ObjectTypeInitializer.SecurityProcedure = IopSecurityFile;
+    ObjectTypeInitializer.CaseInsensitive = TRUE;
     if (!NT_SUCCESS(ObCreateObjectType(&Name,
                                        &ObjectTypeInitializer,
                                        NULL,

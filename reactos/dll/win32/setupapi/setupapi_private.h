@@ -20,20 +20,25 @@
 #ifndef __SETUPAPI_PRIVATE_H
 #define __SETUPAPI_PRIVATE_H
 
-#include <assert.h>
-#include <errno.h>
 #include <fcntl.h>
-#include <limits.h>
 #include <share.h>
 #include <wchar.h>
 
 #define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 #define COBJMACROS
-#include <windows.h>
-#include <aclapi.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winsvc.h>
+#include <winver.h>
+#include <wingdi.h>
+#include <wincon.h>
+#include <objbase.h>
+#include <lzexpand.h>
 #include <cfgmgr32.h>
 #include <fdi.h>
-#include <reason.h>
 #include <regstr.h>
 #include <sddl.h>
 #include <setupapi.h>
@@ -45,11 +50,12 @@
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
 
-#include <pseh/pseh2.h>
+//#include <pseh/pseh2.h>
 
 #include <pnp_c.h>
+
 #include "rpc_private.h"
-#include "resource.h"
+//#include "resource.h"
 
 #ifdef __REACTOS__
 #undef __WINESRC__

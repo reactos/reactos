@@ -13,7 +13,10 @@
  * keyboard layout!
  */
 
-#include <windows.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winuser.h>
 #include <ndk/kbd.h>
 
 #ifdef _M_IA64

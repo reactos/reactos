@@ -17,10 +17,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "cryptres.h"
+#include <windef.h>
+//#include "winbase.h"
+//#include "winuser.h"
+//#include "cryptres.h"
 
 #ifdef LANGUAGE_DA_DK
     #include "cryptdlg_Da.rc"
@@ -44,6 +44,9 @@
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "cryptdlg_Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "cryptdlg_He.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
     #include "cryptdlg_Hu.rc"

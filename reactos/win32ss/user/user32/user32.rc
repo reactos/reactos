@@ -1,4 +1,5 @@
-#include <windows.h>
+#include <windef.h>
+#include <winuser.h>
 #include "include/resource.h"
 
 #define REACTOS_VERSION_DLL
@@ -136,6 +137,9 @@ OBM_OLD_CLOSE BITMAP "resources/obm_old_close.bmp"
 #ifdef LANGUAGE_FR_FR
     #include "lang/fr-FR.rc"
 #endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/he-IL.rc"
+#endif
 #ifdef LANGUAGE_HU_HU
     #include "lang/hu-HU.rc"
 #endif
@@ -175,9 +179,12 @@ OBM_OLD_CLOSE BITMAP "resources/obm_old_close.bmp"
 #ifdef LANGUAGE_SV_SE
     #include "lang/sv-SE.rc"
 #endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"
 #endif
-#ifdef LANGUAGE_TR_TR
-    #include "lang/tr-TR.rc"
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
 #endif

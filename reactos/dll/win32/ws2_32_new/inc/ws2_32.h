@@ -5,8 +5,9 @@
  * PURPOSE:     WinSock 2.2 Main Header
  */
 
-/* Definitions for NDK Usage */
 #define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 //#define _WIN32_WINNT 0x502
 #define NTOS_MODE_USER
 #define _CRT_SECURE_NO_DEPRECATE
@@ -14,14 +15,19 @@
 
 /* C Header */
 #include <stdio.h>
+#include <stdlib.h>
 
 /* PSDK and NDK Headers */
-#include <winsock2.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winnls.h>
+#include <winuser.h>
 #include <ws2tcpip.h>
 #include <ws2spi.h>
-#include <ndk/umtypes.h>
+//#include <ndk/umtypes.h>
 #include <ndk/rtlfuncs.h>
-#include <svcguid.h>
+//#include <svcguid.h>
 
 /* Winsock Helper Header */
 #include <ws2help.h>

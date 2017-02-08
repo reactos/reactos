@@ -29,14 +29,14 @@
 
 #include <stdarg.h>
 
-#include "wine/list.h"
+#include <wine/list.h>
 
 #include "windef.h"
 #include "winbase.h"
 #include "wtypes.h"
-#include "dcom.h"
+#include <dcom.h>
 #include "winreg.h"
-#include "winternl.h"
+#include <winternl.h>
 
 struct apartment;
 typedef struct apartment APARTMENT;
@@ -185,7 +185,8 @@ ULONG stub_manager_int_release(struct stub_manager *This) DECLSPEC_HIDDEN;
 struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object) DECLSPEC_HIDDEN;
 ULONG stub_manager_ext_addref(struct stub_manager *m, ULONG refs, BOOL tableweak) DECLSPEC_HIDDEN;
 ULONG stub_manager_ext_release(struct stub_manager *m, ULONG refs, BOOL tableweak, BOOL last_unlock_releases) DECLSPEC_HIDDEN;
-struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *sb, IUnknown *iptr, REFIID iid, MSHLFLAGS flags) DECLSPEC_HIDDEN;
+struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *sb, IUnknown *iptr, REFIID iid,
+     DWORD dest_context, void *dest_context_data, MSHLFLAGS flags) DECLSPEC_HIDDEN;
 struct ifstub *stub_manager_find_ifstub(struct stub_manager *m, REFIID iid, MSHLFLAGS flags) DECLSPEC_HIDDEN;
 struct stub_manager *get_stub_manager(APARTMENT *apt, OID oid) DECLSPEC_HIDDEN;
 struct stub_manager *get_stub_manager_from_object(APARTMENT *apt, void *object) DECLSPEC_HIDDEN;
@@ -195,7 +196,7 @@ void stub_manager_release_marshal_data(struct stub_manager *m, ULONG refs, const
 HRESULT ipid_get_dispatch_params(const IPID *ipid, APARTMENT **stub_apt, IRpcStubBuffer **stub, IRpcChannelBuffer **chan, IID *iid, IUnknown **iface) DECLSPEC_HIDDEN;
 HRESULT start_apartment_remote_unknown(void) DECLSPEC_HIDDEN;
 
-HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnknown *obj, MSHLFLAGS mshlflags) DECLSPEC_HIDDEN;
+HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnknown *obj, DWORD dest_context, void *dest_context_data, MSHLFLAGS mshlflags) DECLSPEC_HIDDEN;
 
 /* RPC Backend */
 
@@ -206,7 +207,7 @@ HRESULT RPC_CreateClientChannel(const OXID *oxid, const IPID *ipid,
                                 const OXID_INFO *oxid_info,
                                 DWORD dest_context, void *dest_context_data,
                                 IRpcChannelBuffer **chan) DECLSPEC_HIDDEN;
-HRESULT RPC_CreateServerChannel(IRpcChannelBuffer **chan) DECLSPEC_HIDDEN;
+HRESULT RPC_CreateServerChannel(DWORD dest_context, void *dest_context_data, IRpcChannelBuffer **chan) DECLSPEC_HIDDEN;
 void    RPC_ExecuteCall(struct dispatch_params *params) DECLSPEC_HIDDEN;
 HRESULT RPC_RegisterInterface(REFIID riid) DECLSPEC_HIDDEN;
 void    RPC_UnregisterInterface(REFIID riid) DECLSPEC_HIDDEN;
@@ -307,5 +308,8 @@ extern UINT link_source_clipboard_format DECLSPEC_HIDDEN;
 extern UINT object_descriptor_clipboard_format DECLSPEC_HIDDEN;
 extern UINT link_source_descriptor_clipboard_format DECLSPEC_HIDDEN;
 extern UINT ole_private_data_clipboard_format DECLSPEC_HIDDEN;
+
+extern LSTATUS create_classes_key(HKEY, const WCHAR *, REGSAM, HKEY *) DECLSPEC_HIDDEN;
+extern LSTATUS open_classes_key(HKEY, const WCHAR *, REGSAM, HKEY *) DECLSPEC_HIDDEN;
 
 #endif /* __WINE_OLE_COMPOBJ_H */

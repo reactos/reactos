@@ -4,11 +4,15 @@
 //    Freeware
 //    Copyright J Brown 2001
 //
-#include <windows.h>
-#include <stdlib.h>
+//#include <windows.h>
+
+#define WIN32_NO_STATUS
+#include <windef.h>
+
+//#include <stdlib.h>
 #include "cardlib.h"
-#include "cardregion.h"
-#include "cardcolor.h"
+//#include "cardregion.h"
+//#include "cardcolor.h"
 
 HPALETTE UseNicePalette(HDC hdc, HPALETTE hPalette);
 void PaintRect(HDC hdc, RECT *rect, COLORREF colour);

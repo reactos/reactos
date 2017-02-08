@@ -634,14 +634,17 @@ static BOOL CRYPT_LoadSIP(const GUID *pgSubject)
     if (!sip.pfPut || temp != lib)
         goto error;
     FreeLibrary(temp);
+    temp = NULL;
     sip.pfCreate = CRYPT_LoadSIPFunc(pgSubject, szCreate, &temp);
     if (!sip.pfCreate || temp != lib)
         goto error;
     FreeLibrary(temp);
+    temp = NULL;
     sip.pfVerify = CRYPT_LoadSIPFunc(pgSubject, szVerify, &temp);
     if (!sip.pfVerify || temp != lib)
         goto error;
     FreeLibrary(temp);
+    temp = NULL;
     sip.pfRemove = CRYPT_LoadSIPFunc(pgSubject, szRemoveSigned, &temp);
     if (!sip.pfRemove || temp != lib)
         goto error;

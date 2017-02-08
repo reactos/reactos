@@ -176,7 +176,7 @@ STRING_ERROR,                                   "ПОМИЛКА"
 STRING_WARNING,                                 "УВАГА"
 STRING_INFO,                                    "Інформація"
 
-STRING_UNTITLED,                                "(без заголовка)"
+STRING_UNTITLED,                                "Без заголовка"
 
 STRING_ALL_FILES,                               "Усі файли (*.*)"
 STRING_TEXT_FILES_TXT,                  "Текстові файли (*.txt)"

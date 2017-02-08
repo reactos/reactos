@@ -1,3 +1,5 @@
+#pragma once
+
 #define IDS_EVENPARITY 2001
 #define IDS_MARKPARITY 2002
 #define IDS_NOPARITY 2003

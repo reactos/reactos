@@ -62,8 +62,10 @@ struct sockaddr {
   char sa_data[14];
 };
 
-#ifndef socklen_t
-#  define socklen_t u32_t
+/* If your port already typedef's socklen_t, define SOCKLEN_T_DEFINED
+   to prevent this code from redefining it. */
+#if !defined(socklen_t) && !defined(SOCKLEN_T_DEFINED)
+typedef u32_t socklen_t;
 #endif
 
 /* Socket protocol types (TCP/UDP/RAW) */
@@ -363,6 +365,7 @@ int lwip_fcntl(int s, int cmd, int val);
 #define read(a,b,c)           lwip_read(a,b,c)
 #define write(a,b,c)          lwip_write(a,b,c)
 #define close(s)              lwip_close(s)
+#define fcntl(a,b,c)          lwip_fcntl(a,b,c)
 #endif /* LWIP_POSIX_SOCKETS_IO_NAMES */
 
 #endif /* LWIP_COMPAT_SOCKETS */

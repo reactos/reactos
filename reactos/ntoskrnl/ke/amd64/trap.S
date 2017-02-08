@@ -224,7 +224,7 @@ FUNC KiBreakpointTrap
 
 KiBreakpointTrapKMode:
     /* Dispatch the exception */
-    DispatchException STATUS_BREAKPOINT, 3, 0, 0, 0
+    DispatchException STATUS_BREAKPOINT, 3, BREAKPOINT_BREAK, 0, 0
 
     /* Return */
     ExitTrap TF_SAVE_ALL
@@ -534,7 +534,7 @@ ENDFUNC
 PUBLIC KiRaiseAssertion
 FUNC KiRaiseAssertion
     /* We have an error code */
-    EnterTrap (TF_HAS_ERROR_CODE OR TF_SAVE_ALL)
+    EnterTrap (TF_SAVE_ALL)
 
     /* Decrement RIP to point to the INT2C instruction (2 bytes, not 1 like INT3) */
     sub qword ptr [rbp + KTRAP_FRAME_Rip], 2

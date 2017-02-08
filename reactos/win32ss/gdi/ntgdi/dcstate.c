@@ -45,7 +45,9 @@ DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL To)
     DC_vSelectLineBrush(pdcDst, pdcSrc->dclevel.pbrLine);
     DC_vSelectPalette(pdcDst, pdcSrc->dclevel.ppal);
 
-    // FIXME: Handle refs
+    /* Dereference the old font, reference the new one */
+    if (pdcDst->dclevel.plfnt) LFONT_ShareUnlockFont(pdcDst->dclevel.plfnt); /// @todo should aways be != NULL
+    GDIOBJ_vReferenceObjectByPointer(&pdcSrc->dclevel.plfnt->BaseObject);
     pdcDst->dclevel.plfnt           = pdcSrc->dclevel.plfnt;
 
     /* Get/SetDCState() don't change hVisRgn field ("Undoc. Windows" p.559). */

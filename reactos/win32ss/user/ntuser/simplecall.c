@@ -15,9 +15,8 @@ PPROCESSINFO LogonProcess = NULL;
 BOOL FASTCALL
 co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
 {
-   PEPROCESS Process;
    NTSTATUS Status;
-   CSR_API_MESSAGE Request;
+   PEPROCESS Process;
 
    Status = PsLookupProcessByProcessId(ProcessId,
                                        &Process);
@@ -51,17 +50,6 @@ co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
    }
 
    ObDereferenceObject(Process);
-
-   Request.Type = MAKE_CSR_API(REGISTER_LOGON_PROCESS, CSR_GUI);
-   Request.Data.RegisterLogonProcessRequest.ProcessId = ProcessId;
-   Request.Data.RegisterLogonProcessRequest.Register = Register;
-
-   Status = co_CsrNotify(&Request);
-   if (! NT_SUCCESS(Status))
-   {
-      ERR("Failed to register logon process with CSRSS\n");
-      return FALSE;
-   }
 
    return TRUE;
 }
@@ -123,11 +111,15 @@ NtUserCallNoParam(DWORD Routine)
       case NOPARAM_ROUTINE_ZAPACTIVEANDFOUS:
       {
          PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-         ERR("Zapping the Active and Focus window out of the Queue!\n");
+         TRACE("Zapping the Active and Focus window out of the Queue!\n");
          pti->MessageQueue->spwndFocus = NULL;
          pti->MessageQueue->spwndActive = NULL;
          RETURN(0);
       }
+
+      /* this is a Reactos only case and is needed for gui-on-demand */
+      case NOPARAM_ROUTINE_ISCONSOLEMODE:
+          RETURN( ScreenDeviceContext == NULL );
 
       default:
          ERR("Calling invalid routine number 0x%x in NtUserCallNoParam\n", Routine);
@@ -137,7 +129,7 @@ NtUserCallNoParam(DWORD Routine)
    RETURN(Result);
 
 CLEANUP:
-   TRACE("Leave NtUserCallNoParam, ret=%i\n",_ret_);
+   TRACE("Leave NtUserCallNoParam, ret=%p\n",(PVOID)_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -164,7 +156,7 @@ NtUserCallOneParam(
           {
                 PTHREADINFO pti;
                 pti = PsGetCurrentThreadWin32Thread();
-                MsqPostQuitMessage(pti->MessageQueue, Param);
+                MsqPostQuitMessage(pti, Param);
                 RETURN(TRUE);
           }
 
@@ -183,15 +175,16 @@ NtUserCallOneParam(
              if (count == 0) count = 8;
 
              psmwp = (PSMWP) UserCreateObject( gHandleTable,
-                                               NULL,
+                                               NULL, 
+                                               NULL, 
                                               (PHANDLE)&hDwp,
-                                               otSMWP,
+                                               TYPE_SETWINDOWPOS,
                                                sizeof(SMWP));
              if (!psmwp) RETURN(0);
              psmwp->acvr = ExAllocatePoolWithTag(PagedPool, count * sizeof(CVR), USERTAG_SWP);
              if (!psmwp->acvr)
              {
-                UserDeleteObject(hDwp, otSMWP);
+                UserDeleteObject(hDwp, TYPE_SETWINDOWPOS);
                 RETURN(0);
              }
              RtlZeroMemory(psmwp->acvr, count * sizeof(CVR));
@@ -247,7 +240,7 @@ NtUserCallOneParam(
             PCURICON_OBJECT CurIcon;
 			DWORD_PTR Result ;
 
-            if (!(CurIcon = IntCreateCurIconHandle()))
+            if (!(CurIcon = IntCreateCurIconHandle((DWORD)Param)))
             {
                EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
                RETURN(0);
@@ -256,25 +249,6 @@ NtUserCallOneParam(
             Result = (DWORD_PTR)CurIcon->Self;
 			UserDereferenceObject(CurIcon);
 			RETURN(Result);
-         }
-
-      case ONEPARAM_ROUTINE_GETCURSORPOSITION:
-         {
-             BOOL ret = TRUE;
-
-            _SEH2_TRY
-            {
-               ProbeForWrite((POINT*)Param,sizeof(POINT),1);
-               RtlCopyMemory((POINT*)Param,&gpsi->ptCursor,sizeof(POINT));
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                SetLastNtError(_SEH2_GetExceptionCode());
-                ret = FALSE;
-            }
-            _SEH2_END;
-
-            RETURN (ret);
          }
 
       case ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING:
@@ -333,9 +307,10 @@ NtUserCallOneParam(
           BOOL Ret = TRUE;
           PPOINTL pptl;
           PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-          if (pti->hdesk != InputDesktopHandle) RETURN(FALSE);
+          if (pti->rpdesk != IntGetActiveDesktop()) RETURN(FALSE);
           _SEH2_TRY
           {
+              ProbeForWrite((POINT*)Param,sizeof(POINT),1);
              pptl = (PPOINTL)Param;
              *pptl = gpsi->ptCursor;
           }
@@ -363,7 +338,7 @@ NtUserCallOneParam(
           BOOL Ret = TRUE;
           PPROCESSINFO ppi;
           PDWORD pdwLayout;
-          if ( PsGetCurrentProcess() == CsrProcess)
+          if ( PsGetCurrentProcess() == gpepCSRSS)
           {
              EngSetLastError(ERROR_INVALID_ACCESS);
              RETURN(FALSE);
@@ -400,7 +375,7 @@ NtUserCallOneParam(
    RETURN( 0);
 
 CLEANUP:
-   TRACE("Leave NtUserCallOneParam, ret=%i\n",_ret_);
+   TRACE("Leave NtUserCallOneParam, ret=%p\n", (PVOID)_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -444,10 +419,9 @@ NtUserCallTwoParam(
 
       case TWOPARAM_ROUTINE_SETGUITHRDHANDLE:
          {
-            PUSER_MESSAGE_QUEUE MsgQueue = ((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->MessageQueue;
-
-            ASSERT(MsgQueue);
-            RETURN( (DWORD_PTR)MsqSetStateWindow(MsgQueue, (ULONG)Param1, (HWND)Param2));
+            PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
+            ASSERT(pti->MessageQueue);
+            RETURN( (DWORD_PTR)MsqSetStateWindow(pti, (ULONG)Param1, (HWND)Param2));
          }
 
       case TWOPARAM_ROUTINE_ENABLEWINDOW:
@@ -490,6 +464,13 @@ NtUserCallTwoParam(
 
       case TWOPARAM_ROUTINE_UNHOOKWINDOWSHOOK:
          RETURN( IntUnhookWindowsHook((int)Param1, (HOOKPROC)Param2));
+      case TWOPARAM_ROUTINE_EXITREACTOS:
+          if(hwndSAS == NULL)
+          {
+              ASSERT(hwndSAS);
+              RETURN(STATUS_NOT_FOUND);
+          }
+         RETURN( co_IntSendMessage (hwndSAS, PM_WINLOGON_EXITWINDOWS, (WPARAM) Param1, (LPARAM)Param2));
    }
    ERR("Calling invalid routine number 0x%x in NtUserCallTwoParam(), Param1=0x%x Parm2=0x%x\n",
            Routine, Param1, Param2);
@@ -497,7 +478,7 @@ NtUserCallTwoParam(
    RETURN( 0);
 
 CLEANUP:
-   TRACE("Leave NtUserCallTwoParam, ret=%i\n",_ret_);
+   TRACE("Leave NtUserCallTwoParam, ret=%p\n", (PVOID)_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -572,15 +553,21 @@ NtUserCallHwndLock(
                                 SWP_FRAMECHANGED );
          if (!Window->spwndOwner && !IntGetParent(Window))
          {
-            co_IntShellHookNotify(HSHELL_REDRAW, (LPARAM) hWnd);
+            co_IntShellHookNotify(HSHELL_REDRAW, (WPARAM) hWnd, FALSE); // FIXME Flashing?
          }
          Ret = TRUE;
          break;
 
       case HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOW:
-         TRACE("co_IntSetForegroundWindow 1 %p\n",hWnd);
+         TRACE("co_IntSetForegroundWindow 1 0x%p\n",hWnd);
          Ret = co_IntSetForegroundWindow(Window);
-         TRACE("co_IntSetForegroundWindow 2 \n");
+         TRACE("co_IntSetForegroundWindow 2 0x%p\n",hWnd);
+         break;
+
+      case HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOWMOUSE:
+         TRACE("co_IntSetForegroundWindow 1 0x%p\n",hWnd);
+         Ret = co_IntSetForegroundWindowMouse(Window);
+         TRACE("co_IntSetForegroundWindow 2 0x%p\n",hWnd);
          break;
 
       case HWNDLOCK_ROUTINE_UPDATEWINDOW:
@@ -593,7 +580,7 @@ NtUserCallHwndLock(
    RETURN( Ret);
 
 CLEANUP:
-   TRACE("Leave NtUserCallHwndLock, ret=%i\n",_ret_);
+   TRACE("Leave NtUserCallHwndLock, ret=%u\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -816,7 +803,7 @@ NtUserCallHwndParamLock(
    RETURN( Ret);
 
 CLEANUP:
-   TRACE("Leave NtUserCallHwndParamLock, ret=%i\n",_ret_);
+   TRACE("Leave NtUserCallHwndParamLock, ret=%lu\n",_ret_);
    UserLeave();
    END_CLEANUP;
 

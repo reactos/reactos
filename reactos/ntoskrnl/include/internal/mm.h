@@ -257,7 +257,7 @@ typedef struct _MEMORY_AREA
     ULONG Protect;
     ULONG Flags;
     BOOLEAN DeleteInProgress;
-    ULONG PageOpCount;
+    ULONG Magic;
     PVOID Vad;
     union
     {
@@ -496,6 +496,12 @@ MmIsSessionAddress(
     IN PVOID Address
 );
 
+ULONG
+NTAPI
+MmGetSessionId(
+    IN PEPROCESS Process
+);
+
 /* marea.c *******************************************************************/
 
 NTSTATUS
@@ -579,6 +585,15 @@ MmMapMemoryArea(PVOID BaseAddress,
                 SIZE_T Length,
                 ULONG Consumer,
                 ULONG Protection);
+
+VOID
+NTAPI
+MiRosCheckMemoryAreas(
+   PMMSUPPORT AddressSpace);
+
+VOID
+NTAPI
+MiCheckAllProcessMemoryAreas(VOID);
 
 /* npool.c *******************************************************************/
 
@@ -1712,17 +1727,13 @@ VOID
 MmLockAddressSpace(PMMSUPPORT AddressSpace)
 {
     KeAcquireGuardedMutex(&CONTAINING_RECORD(AddressSpace, EPROCESS, Vm)->AddressCreationLock);
-    //ASSERT(Thread->OwnsProcessAddressSpaceExclusive == 0);
-    //Thread->OwnsProcessAddressSpaceExclusive = TRUE;
 }
 
 FORCEINLINE
 VOID
 MmUnlockAddressSpace(PMMSUPPORT AddressSpace)
 {
-    //ASSERT(Thread->OwnsProcessAddressSpaceExclusive == 1);
     KeReleaseGuardedMutex(&CONTAINING_RECORD(AddressSpace, EPROCESS, Vm)->AddressCreationLock);
-    //Thread->OwnsProcessAddressSpaceExclusive = 0;
 }
 
 FORCEINLINE
@@ -1746,3 +1757,13 @@ MmGetKernelAddressSpace(VOID)
 {
     return MmKernelAddressSpace;
 }
+
+
+/* expool.c ******************************************************************/
+
+VOID
+NTAPI
+ExpCheckPoolAllocation(
+    PVOID P,
+    POOL_TYPE PoolType,
+    ULONG Tag);

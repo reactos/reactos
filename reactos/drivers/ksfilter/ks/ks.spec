@@ -9,7 +9,7 @@
 @ stdcall -i386 ?NonDelegatedQueryInterface@CBaseUnknown@@UAGJABU_GUID@@PAPAX@Z(ptr ptr ptr) INonDelegatedUnknown_fnQueryInterface
 @ stdcall ?NonDelegatedRelease@CBaseUnknown@@UAGKXZ(ptr) IIndirectedUnknown_fnRelease
 
-@ stdcall DllInitialize(ptr)
+@ stdcall -private DllInitialize(ptr)
 @ stdcall KoCreateInstance(ptr ptr long ptr ptr)
 @ stdcall KoDeviceInitialize(ptr)
 @ stdcall KoDriverInitialize(ptr ptr ptr)

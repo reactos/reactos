@@ -1,5 +1,4 @@
-/* $Id: font.c 21840 2006-05-07 18:56:52Z ion $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Xbox HAL
  * FILE:            hal/halx86/xbox/font.h

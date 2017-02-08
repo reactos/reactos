@@ -395,48 +395,6 @@ RealizeFontInit(HFONT hFont)
   return pTextObj;
 }
 
-HFONT
-FASTCALL
-GreSelectFont( HDC hDC, HFONT hFont)
-{
-    PDC pdc;
-    PDC_ATTR pdcattr;
-    PTEXTOBJ pOrgFnt, pNewFnt = NULL;
-    HFONT hOrgFont = NULL;
-
-    if (!hDC || !hFont) return NULL;
-
-    pdc = DC_LockDc(hDC);
-    if (!pdc)
-    {
-        return NULL;
-    }
-
-    if (NT_SUCCESS(TextIntRealizeFont((HFONT)hFont,NULL)))
-    {
-       /* LFONTOBJ use share and locking. */
-       pNewFnt = TEXTOBJ_LockText(hFont);
-       pdcattr = pdc->pdcattr;
-       pOrgFnt = pdc->dclevel.plfnt;
-       if (pOrgFnt)
-       {
-          hOrgFont = pOrgFnt->BaseObject.hHmgr;
-       }
-       else
-       {
-          hOrgFont = pdcattr->hlfntNew;
-       }
-       pdc->dclevel.plfnt = pNewFnt;
-       pdc->hlfntCur = hFont;
-       pdcattr->hlfntNew = hFont;
-       pdcattr->ulDirty_ |= DIRTY_CHARSET;
-       pdcattr->ulDirty_ &= ~SLOW_WIDTHS;
-    }
-
-    if (pNewFnt) TEXTOBJ_UnlockText(pNewFnt);
-    DC_UnlockDc(pdc);
-    return hOrgFont;
-}
 
 /** Functions ******************************************************************/
 
@@ -1056,7 +1014,7 @@ NtGdiHfontCreate(
 {
   ENUMLOGFONTEXDVW SafeLogfont;
   HFONT hNewFont;
-  PTEXTOBJ TextObj;
+  PLFONT plfont;
   NTSTATUS Status = STATUS_SUCCESS;
 
   /* Silence GCC warnings */
@@ -1084,25 +1042,26 @@ NtGdiHfontCreate(
       return NULL;
   }
 
-  TextObj = TEXTOBJ_AllocTextWithHandle();
-  if (!TextObj)
+  plfont = LFONT_AllocFontWithHandle();
+  if (!plfont)
   {
       return NULL;
   }
-  hNewFont = TextObj->BaseObject.hHmgr;
+  hNewFont = plfont->BaseObject.hHmgr;
 
-  TextObj->lft = lft;
-  TextObj->fl  = fl;
-  RtlCopyMemory (&TextObj->logfont, &SafeLogfont, sizeof(ENUMLOGFONTEXDVW));
+  plfont->lft = lft;
+  plfont->fl  = fl;
+  RtlCopyMemory (&plfont->logfont, &SafeLogfont, sizeof(ENUMLOGFONTEXDVW));
+  ExInitializePushLock(&plfont->lock);
 
   if (SafeLogfont.elfEnumLogfontEx.elfLogFont.lfEscapement !=
       SafeLogfont.elfEnumLogfontEx.elfLogFont.lfOrientation)
   {
     /* This should really depend on whether GM_ADVANCED is set */
-    TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation =
-    TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
+    plfont->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation =
+    plfont->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
   }
-  TEXTOBJ_UnlockText(TextObj);
+  LFONT_UnlockFont(plfont);
 
   if (pvCliData && hNewFont)
   {
@@ -1117,18 +1076,6 @@ NtGdiHfontCreate(
   }
 
   return hNewFont;
-}
-
-/*
- * @implemented
- */
-HFONT
-APIENTRY
-NtGdiSelectFont(
-    IN HDC hDC,
-    IN HFONT hFont)
-{
-    return GreSelectFont(hDC, hFont);
 }
 
 

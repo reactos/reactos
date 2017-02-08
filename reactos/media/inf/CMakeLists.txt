@@ -4,6 +4,7 @@ list(APPEND INF_FILES
     battery.inf
     bda.inf
     bth.inf
+    c_image.inf
     cdrom.inf
     cpu.inf
     defltws.inf

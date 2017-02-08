@@ -156,7 +156,7 @@ RtlFindUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
     RTL_GENERIC_COMPARE_RESULTS Result;
 
     DPRINT("RtlFindUnicodePrefix(): Table %p, FullName %wZ, "
-        "CaseInsensitive %b\n", PrefixTable, FullName, CaseInsensitiveIndex);
+        "CaseInsensitive %lu\n", PrefixTable, FullName, CaseInsensitiveIndex);
 
     /* Find out how many names there are */
     NameCount = ComputeUnicodeNameLength(FullName);
@@ -467,7 +467,7 @@ RtlNextUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
     PRTL_SPLAY_LINKS SplayLinks;
     PUNICODE_PREFIX_TABLE_ENTRY Entry, CaseMatchEntry = NULL;
 
-    DPRINT("RtlNextUnicodePrefix(): Table %p Restart %b\n",
+    DPRINT("RtlNextUnicodePrefix(): Table %p Restart %u\n",
         PrefixTable, Restart);
 
     /* We might need this entry 2/3rd of the time, so cache it now */

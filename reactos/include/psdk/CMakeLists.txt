@@ -12,6 +12,7 @@ list(APPEND SOURCE
 #   asynot.idl
 #   asysta.idl
     atliface.idl
+    audioclient.idl
     bdaiface.idl
 #   binres.idl
     bits.idl
@@ -35,11 +36,13 @@ list(APPEND SOURCE
     dimm.idl
     dispex.idl
     docobj.idl
+    docobjectservice.idl
     downloadmgr.idl
 #   dyngraph.idl
     exdisp.idl
     fusion.idl
     hlink.idl
+    htiface.idl
     htiframe.idl
     httprequest.idl
     iads.idl
@@ -51,6 +54,7 @@ list(APPEND SOURCE
     mimeinfo.idl
     mimeole.idl
     mlang.idl
+    mmdeviceapi.idl
     mscoree.idl
     msctf.idl
     msdadc.idl
@@ -105,6 +109,7 @@ list(APPEND SOURCE
     wia_lh.idl
     wia_xp.idl
     wincodec.idl
+    wincodecsdk.idl
     winsxs.idl
     wtypes.idl
     wuapi.idl

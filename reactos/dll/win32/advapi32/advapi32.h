@@ -16,9 +16,10 @@
 
 /* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
+#define WIN32_LEAN_AND_MEAN
 #define _WMI_SOURCE_
 #include <windows.h>
-#include <accctrl.h>
+#include <winefs.h>
 #include <aclapi.h>
 #include <wmistr.h>
 #include <evntrace.h>
@@ -39,11 +40,9 @@
 #include <ntsecapi.h>
 
 #include <services/services.h>
-#include "svcctl_c.h"
-#include "lsa_c.h"
-#include "eventlogrpc_c.h"
-
-#include <rpc.h>
+#include <svcctl_c.h>
+#include <lsa_c.h>
+#include <eventlogrpc_c.h>
 
 #include "crypt/crypt.h"
 #include <wine/debug.h>
@@ -56,10 +55,6 @@
 #ifndef HAS_FN_PROGRESSA
 #define FN_PROGRESSA FN_PROGRESS
 #endif
-
-/* sid.c */
-
-BOOL ADVAPI_GetComputerSid(PSID sid);
 
 /* rpc.c */
 

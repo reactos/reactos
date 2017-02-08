@@ -24,7 +24,7 @@
 @ stdcall AddAuditAccessAce(ptr long long ptr long long)
 @ stdcall AddAuditAccessAceEx(ptr long long long ptr long long)
 @ stdcall AddAuditAccessObjectAce(ptr long long long ptr ptr ptr long long)
-@ stdcall AddMandatoryAce(ptr long long long ptr)
+;@ stdcall AddMandatoryAce(ptr long long long ptr)
 @ stdcall AddUsersToEncryptedFile(wstr ptr)
 @ stdcall AdjustTokenGroups(long long ptr long ptr ptr)
 @ stdcall AdjustTokenPrivileges(long long ptr long ptr ptr)
@@ -113,10 +113,10 @@
 @ stdcall CredGetSessionTypes(long ptr)
 @ stub CredGetTargetInfoA
 @ stub CredGetTargetInfoW
-@ stub CredIsMarshaledCredentialA
-@ stub CredIsMarshaledCredentialW
-@ stub CredMarshalCredentialA
-@ stub CredMarshalCredentialW
+@ stdcall CredIsMarshaledCredentialA(str)
+@ stdcall CredIsMarshaledCredentialW(wstr)
+@ stdcall CredMarshalCredentialA(long ptr str)
+@ stdcall CredMarshalCredentialW(long ptr wstr)
 @ stub CredProfileLoaded
 @ stdcall CredReadA(str long long ptr)
 @ stdcall CredReadDomainCredentialsA(ptr long ptr ptr)
@@ -346,67 +346,65 @@
 @ stub LookupSecurityDescriptorPartsW
 @ stdcall LsaAddAccountRights(ptr ptr ptr long)
 @ stdcall LsaAddPrivilegesToAccount(ptr ptr)
-@ stub LsaClearAuditLog
+@ stdcall LsaClearAuditLog(ptr)
 @ stdcall LsaClose(ptr)
 @ stdcall LsaCreateAccount(ptr ptr long ptr)
-@ stub LsaCreateSecret
+@ stdcall LsaCreateSecret(ptr ptr long ptr)
 @ stdcall LsaCreateTrustedDomain(ptr ptr long ptr)
 @ stdcall LsaCreateTrustedDomainEx(ptr ptr ptr long ptr)
 @ stdcall LsaDelete(ptr)
 @ stdcall LsaDeleteTrustedDomain(ptr ptr)
 @ stdcall LsaEnumerateAccountRights(ptr ptr ptr ptr)
-@ stub LsaEnumerateAccounts
+@ stdcall LsaEnumerateAccounts(ptr ptr ptr long ptr)
 @ stdcall LsaEnumerateAccountsWithUserRight(ptr ptr ptr ptr)
-@ stub LsaEnumeratePrivileges
+@ stdcall LsaEnumeratePrivileges(ptr ptr ptr long ptr)
 @ stdcall LsaEnumeratePrivilegesOfAccount(ptr ptr)
 @ stdcall LsaEnumerateTrustedDomains(ptr ptr ptr long ptr)
 @ stdcall LsaEnumerateTrustedDomainsEx(ptr ptr ptr long ptr)
 @ stdcall LsaFreeMemory(ptr)
-@ stub LsaGetQuotasForAccount
-@ stub LsaGetRemoteUserName
-@ stub LsaGetSystemAccessAccount
+@ stdcall LsaGetQuotasForAccount(ptr ptr)
+@ stdcall LsaGetRemoteUserName(ptr ptr ptr)
+@ stdcall LsaGetSystemAccessAccount(ptr ptr)
 @ stdcall LsaGetUserName(ptr ptr)
 @ stub LsaICLookupNames
 @ stub LsaICLookupNamesWithCreds
 @ stub LsaICLookupSids
 @ stub LsaICLookupSidsWithCreds
-@ stdcall LsaLookupNames(long long ptr ptr ptr)
+@ stdcall LsaLookupNames(ptr long ptr ptr ptr)
 @ stdcall LsaLookupNames2(ptr long long ptr ptr ptr)
-@ stub LsaLookupPrivilegeDisplayName
+@ stdcall LsaLookupPrivilegeDisplayName(ptr ptr ptr ptr)
 @ stdcall LsaLookupPrivilegeName(ptr ptr ptr)
 @ stdcall LsaLookupPrivilegeValue(ptr ptr ptr)
 @ stdcall LsaLookupSids(ptr long ptr ptr ptr)
 @ stdcall LsaNtStatusToWinError(long)
 @ stdcall LsaOpenAccount(ptr ptr long ptr)
 @ stdcall LsaOpenPolicy(ptr ptr long ptr)
-@ stub LsaOpenPolicySce
-@ stub LsaOpenSecret
-@ stub LsaOpenTrustedDomain
+@ stdcall LsaOpenPolicySce(ptr ptr long ptr)
+@ stdcall LsaOpenSecret(ptr ptr long ptr)
+@ stdcall LsaOpenTrustedDomain(ptr ptr long ptr)
 @ stdcall LsaOpenTrustedDomainByName(ptr ptr long ptr)
 @ stdcall LsaQueryDomainInformationPolicy(ptr long ptr)
 @ stdcall LsaQueryForestTrustInformation(ptr ptr ptr)
-@ stdcall LsaQueryInfoTrustedDomain(long long long)
+@ stdcall LsaQueryInfoTrustedDomain(ptr long ptr)
 @ stdcall LsaQueryInformationPolicy(ptr long ptr)
-@ stub LsaQuerySecret
-@ stub LsaQuerySecurityObject
+@ stdcall LsaQuerySecret(ptr ptr ptr ptr ptr)
+@ stdcall LsaQuerySecurityObject(ptr long ptr)
 @ stdcall LsaQueryTrustedDomainInfo(ptr ptr long ptr)
 @ stdcall LsaQueryTrustedDomainInfoByName(ptr ptr long ptr)
-@ stdcall LsaRegisterPolicyChangeNotification(long long)
 @ stdcall LsaRemoveAccountRights(ptr ptr long ptr long)
-@ stub LsaRemovePrivilegesFromAccount
+@ stdcall LsaRemovePrivilegesFromAccount(ptr long ptr)
 @ stdcall LsaRetrievePrivateData(ptr ptr ptr)
 @ stdcall LsaSetDomainInformationPolicy(ptr long ptr)
 @ stdcall LsaSetForestTrustInformation(ptr ptr ptr long ptr)
-@ stdcall LsaSetInformationPolicy(long long ptr)
-@ stub LsaSetInformationTrustedDomain
-@ stub LsaSetQuotasForAccount
+@ stdcall LsaSetInformationPolicy(ptr long ptr)
+@ stdcall LsaSetInformationTrustedDomain(ptr long ptr)
+@ stdcall LsaSetQuotasForAccount(ptr ptr)
 @ stdcall LsaSetSecret(ptr ptr ptr)
-@ stub LsaSetSecurityObject
-@ stub LsaSetSystemAccessAccount
+@ stdcall LsaSetSecurityObject(ptr long ptr)
+@ stdcall LsaSetSystemAccessAccount(ptr long)
 @ stdcall LsaSetTrustedDomainInfoByName(ptr ptr long ptr)
 @ stdcall LsaSetTrustedDomainInformation(ptr ptr long ptr)
 @ stdcall LsaStorePrivateData(ptr ptr ptr)
-@ stdcall LsaUnregisterPolicyChangeNotification(long long)
 @ stdcall MD4Final(ptr)
 @ stdcall MD4Init(ptr)
 @ stdcall MD4Update(ptr ptr long)
@@ -479,8 +477,8 @@
 @ stdcall RegCreateKeyExW(long wstr long ptr long long ptr ptr ptr)
 @ stdcall RegCreateKeyW(long wstr ptr)
 @ stdcall RegDeleteKeyA(long str)
-;@ stdcall RegDeleteKeyExA(long str long long)
-;@ stdcall RegDeleteKeyExW(long wstr long long)
+@ stdcall RegDeleteKeyExA(long str long long)
+@ stdcall RegDeleteKeyExW(long wstr long long)
 @ stdcall RegDeleteKeyW(long wstr)
 @ stdcall RegDeleteKeyValueA(ptr str str)
 @ stdcall RegDeleteKeyValueW(ptr wstr wstr)
@@ -555,13 +553,13 @@
 @ stdcall ReportEventA(long long long long ptr long long str ptr)
 @ stdcall ReportEventW(long long long long ptr long long wstr ptr)
 @ stdcall RevertToSelf()
-@ stub SaferCloseLevel
-@ stub SaferComputeTokenFromLevel
+@ stdcall SaferCloseLevel(ptr)
+@ stdcall SaferComputeTokenFromLevel(ptr ptr ptr long ptr)
 @ stdcall SaferCreateLevel(long long long ptr ptr)
 @ stub SaferGetLevelInformation
 @ stdcall SaferGetPolicyInformation(long long long ptr ptr ptr)
-@ stub SaferIdentifyLevel
-@ stub SaferRecordEventLogEntry
+@ stdcall SaferIdentifyLevel(long ptr ptr ptr)
+@ stdcall SaferRecordEventLogEntry(ptr wstr ptr)
 @ stub SaferSetLevelInformation
 @ stub SaferSetPolicyInformation
 @ stub SaferiChangeRegistryScope

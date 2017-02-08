@@ -9,11 +9,12 @@
 /* INCLUDES ******************************************************************/
 
 #define WIN32_NO_STATUS
+#define WIN32_LEAN_AND_MEAN
 #define NTOS_MODE_USER
 
 /* PSDK/NDK Headers */
 #include <windows.h>
-#include <winerror.h>
+//#include <winerror.h>
 #include <windns.h>
 #include <ndk/rtlfuncs.h>
 

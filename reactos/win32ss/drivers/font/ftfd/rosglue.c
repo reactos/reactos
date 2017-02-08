@@ -1,5 +1,4 @@
-/* $Id: rosglue.c 39928 2009-03-10 02:49:45Z tkreuzer $
- *
+/*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           FreeType implementation for ReactOS
  * PURPOSE:           Glue functions between FreeType

@@ -56,6 +56,8 @@
 #include "lwip/autoip.h"
 #include "lwip/igmp.h"
 #include "lwip/dns.h"
+#include "lwip/sys.h"
+#include "lwip/pbuf.h"
 
 
 /** The one and only timeout list */
@@ -355,22 +357,25 @@ sys_untimeout(sys_timeout_handler handler, void *arg)
 void
 sys_check_timeouts(void)
 {
-  struct sys_timeo *tmptimeout;
-  u32_t diff;
-  sys_timeout_handler handler;
-  void *arg;
-  int had_one;
-  u32_t now;
-
-  now = sys_now();
   if (next_timeout) {
+    struct sys_timeo *tmptimeout;
+    u32_t diff;
+    sys_timeout_handler handler;
+    void *arg;
+    u8_t had_one;
+    u32_t now;
+
+    now = sys_now();
     /* this cares for wraparounds */
-    diff = LWIP_U32_DIFF(now, timeouts_last_time);
+    diff = now - timeouts_last_time;
     do
     {
+#if PBUF_POOL_FREE_OOSEQ
+      PBUF_CHECK_FREE_OOSEQ();
+#endif /* PBUF_POOL_FREE_OOSEQ */
       had_one = 0;
       tmptimeout = next_timeout;
-      if (tmptimeout->time <= diff) {
+      if (tmptimeout && (tmptimeout->time <= diff)) {
         /* timeout has expired */
         had_one = 1;
         timeouts_last_time = now;

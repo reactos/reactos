@@ -229,7 +229,7 @@ HalHandleNMI(IN PVOID NmiInfo)
     //
     // Don't recurse
     //
-    if (HalpNMIInProgress++) while (TRUE);
+    if (HalpNMIInProgress++) ERROR_DBGBREAK();
 
     //
     // Read the system control register B

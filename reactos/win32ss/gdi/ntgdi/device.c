@@ -26,26 +26,17 @@ IntGdiUnreferencePdev(PPDEVOBJ ppdev, DWORD CleanUpType)
 }
 
 BOOL FASTCALL
-IntCreatePrimarySurface()
+IntCreatePrimarySurface(VOID)
 {
     SIZEL SurfSize;
     SURFOBJ *pso;
-
-    /* Attach monitor */
-    UserAttachMonitor((HDEV)gppdevPrimary);
-
-    DPRINT("IntCreatePrimarySurface, gppdevPrimary=%p, gppdevPrimary->pSurface = %p\n",
-        gppdevPrimary, gppdevPrimary->pSurface);
 
     /* Create surface */
     pso = &PDEVOBJ_pSurface(gppdevPrimary)->SurfObj;
     SurfSize = pso->sizlBitmap;
 
-    /* Put the pointer in the center of the screen */
-    gpsi->ptCursor.x = pso->sizlBitmap.cx / 2;
-    gpsi->ptCursor.y = pso->sizlBitmap.cy / 2;
-
-    co_IntShowDesktop(IntGetActiveDesktop(), SurfSize.cx, SurfSize.cy);
+    DPRINT("IntCreatePrimarySurface, gppdevPrimary=%p, gppdevPrimary->pSurface = %p\n",
+        gppdevPrimary, gppdevPrimary->pSurface);
 
     // Init Primary Displays Device Capabilities.
     PDEVOBJ_vGetDeviceCaps(gppdevPrimary, &GdiHandleTable->DevCaps);
@@ -54,7 +45,7 @@ IntCreatePrimarySurface()
 }
 
 VOID FASTCALL
-IntDestroyPrimarySurface()
+IntDestroyPrimarySurface(VOID)
 {
     UNIMPLEMENTED;
 }

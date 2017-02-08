@@ -36,6 +36,7 @@
 /* Win32 headers */
 /* FIXME: Defines in winbase.h that we need... */
 typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
+#define MAKEINTATOM(i) (LPWSTR)((ULONG_PTR)((WORD)(i)))
 #define WINBASEAPI
 #define STARTF_USESIZE 2
 #define STARTF_USEPOSITION 4
@@ -57,6 +58,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <winerror.h>
 #include <wingdi.h>
 #define NT_BUILD_ENVIRONMENT
+#define _ENGINE_EXPORT_
 #include <winddi.h>
 #include <winuser.h>
 #include <windowsx.h>
@@ -70,8 +72,9 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 /* SEH support with PSEH */
 #include <pseh/pseh2.h>
 
-/* CSRSS header */
-#include <csrss/csrss.h>
+/* CSRSS Header */
+#include <csr/csr.h>
+#include <win/winmsg.h>
 
 /* Public Win32K headers */
 #include <include/callback.h>
@@ -84,6 +87,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 
 /* Undocumented user definitions */
 #include <undocuser.h>
+#include <winlogon.h>
 
 /* Freetype headers */
 #include <ft2build.h>

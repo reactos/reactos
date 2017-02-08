@@ -34,20 +34,22 @@
  *	  whole stuff did not work anyway to other changes).
  */
 
-#include <windows.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include "wine/config.h"
-#include "wine/port.h"
+#include <wine/config.h>
+//#include "wine/port.h"
 
 #include <stdarg.h>
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winsock2.h"
-#include "ws2spi.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "wingdi.h"
+#include <winuser.h>
+#include <winsock2.h>
+//#include "ws2spi.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(winsock);
 

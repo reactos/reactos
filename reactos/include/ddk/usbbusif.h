@@ -12,8 +12,9 @@
 typedef PVOID PUSB_DEVICE_HANDLE;
 #endif
 
+typedef
 _Must_inspect_result_
-typedef NTSTATUS
+NTSTATUS
 (USB_BUSIFFN *PUSB_BUSIFFN_SUBMIT_ISO_OUT_URB) (
   _In_ PVOID,
   _In_ PURB);
@@ -26,8 +27,9 @@ typedef VOID
   _Out_opt_ PUSBD_VERSION_INFORMATION,
   _Out_opt_ PULONG);
 
+typedef
 _Must_inspect_result_
-typedef NTSTATUS
+NTSTATUS
 (USB_BUSIFFN *PUSB_BUSIFFN_QUERY_BUS_TIME) (
   _In_ PVOID,
   _Out_opt_ PULONG);
@@ -52,8 +54,9 @@ typedef struct _USB_BUS_INFORMATION_LEVEL_1 {
   WCHAR ControllerNameUnicodeString[1];
 } USB_BUS_INFORMATION_LEVEL_1, *PUSB_BUS_INFORMATION_LEVEL_1;
 
+typedef
 _Must_inspect_result_
-typedef NTSTATUS
+NTSTATUS
 (USB_BUSIFFN *PUSB_BUSIFFN_QUERY_BUS_INFORMATION) (
   _In_ PVOID,
   _In_ ULONG,
@@ -61,8 +64,9 @@ typedef NTSTATUS
   _Out_ PULONG,
   _Out_opt_ PULONG);
 
+typedef
 _Must_inspect_result_
-typedef BOOLEAN
+BOOLEAN
 (USB_BUSIFFN *PUSB_BUSIFFN_IS_DEVICE_HIGH_SPEED) (
   _In_opt_ PVOID);
 
@@ -117,14 +121,16 @@ typedef struct _USB_BUS_INTERFACE_USBDI_V2 {
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
+typedef
 _Must_inspect_result_
-typedef NTSTATUS
+NTSTATUS
 (USB_BUSIFFN *PUSB_BUSIFFN_QUERY_BUS_TIME_EX) (
   _In_opt_ PVOID,
   _Out_opt_ PULONG);
 
+typedef
 _Must_inspect_result_
-typedef NTSTATUS
+NTSTATUS
 (USB_BUSIFFN *PUSB_BUSIFFN_QUERY_CONTROLLER_TYPE) (
   _In_opt_ PVOID,
   _Out_opt_ PULONG,
@@ -167,8 +173,9 @@ typedef struct _USBC_FUNCTION_DESCRIPTOR{
   PVOID Reserved;
 } USBC_FUNCTION_DESCRIPTOR, *PUSBC_FUNCTION_DESCRIPTOR;
 
+typedef
 _Must_inspect_result_
-typedef NTSTATUS
+NTSTATUS
 (USB_BUSIFFN *USBC_START_DEVICE_CALLBACK)(
   _In_ PUSB_DEVICE_DESCRIPTOR DeviceDescriptor,
   _In_ PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
@@ -178,8 +185,9 @@ typedef NTSTATUS
   _In_ PDEVICE_OBJECT FdoDeviceObject,
   _In_ PDEVICE_OBJECT PdoDeviceObject);
 
+typedef
 _Must_inspect_result_
-typedef BOOLEAN
+BOOLEAN
 (USB_BUSIFFN *USBC_PDO_ENABLE_CALLBACK)(
   _In_ PVOID Context,
   _In_ USHORT FirstInterfaceNumber,

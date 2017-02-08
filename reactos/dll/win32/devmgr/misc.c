@@ -16,8 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-/* $Id: devmgr.c 12852 2005-01-06 13:58:04Z mf $
- *
+/*
  * PROJECT:         ReactOS devmgr.dll
  * FILE:            lib/devmgr/misc.c
  * PURPOSE:         ReactOS Device Manager
@@ -25,7 +24,7 @@
  * UPDATE HISTORY:
  *      2005/11/24  Created
  */
-#include <precomp.h>
+#include "precomp.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -130,6 +129,7 @@ AllocAndLoadStringsCat(OUT LPWSTR *lpTarget,
                 if (!(Ret = LoadStringW(hInst, uID[i], s, ln)))
                 {
                     LocalFree((HLOCAL)(*lpTarget));
+                    return 0;
                 }
 
                 s += Ret;

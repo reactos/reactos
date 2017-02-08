@@ -2,8 +2,7 @@
 set_cpp()
 
 add_definitions(
-    -D__WINESRC__
-    -DROS_Headers)
+    -D__WINESRC__)
 
 if (MSVC)
     add_compile_flags("/EHa-")
@@ -12,13 +11,9 @@ endif()
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/wine
-    ${REACTOS_SOURCE_DIR}/lib/atl)
+include_directories(${REACTOS_SOURCE_DIR}/lib/atl)
 
-set_rc_compiler()
-
-spec2def(browseui.dll browseui.spec)
+spec2def(browseui.dll browseui.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     aclmulti.cpp

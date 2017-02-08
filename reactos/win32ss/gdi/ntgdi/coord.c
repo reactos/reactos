@@ -430,6 +430,7 @@ NtGdiTransformPoints(
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Do not set last error */
+        ret = 0;
     }
     _SEH2_END;
 
@@ -1232,7 +1233,6 @@ NtGdiGetDCPoint(
     POINTL SafePoint;
     SIZE Size;
     PSIZEL pszlViewportExt;
-    NTSTATUS Status = STATUS_SUCCESS;
 
     if (!Point)
     {
@@ -1293,15 +1293,9 @@ NtGdiGetDCPoint(
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
-        }
-        _SEH2_END;
-
-        if (!NT_SUCCESS(Status))
-        {
-            SetLastNtError(Status);
             Ret = FALSE;
         }
+        _SEH2_END;
     }
 
     DC_UnlockDc(pdc);

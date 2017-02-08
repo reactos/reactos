@@ -184,8 +184,39 @@ USBHUB_DispatchPower(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    DPRINT1("Power Function %x\n", IoStack->MinorFunction);
+
+    if (IoStack->MinorFunction == IRP_MN_SET_POWER)
+    {
+        PoStartNextPowerIrp(Irp);
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+
+    }
+    else if (IoStack->MinorFunction == IRP_MN_QUERY_POWER)
+    {
+        PoStartNextPowerIrp(Irp);
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+
+    }
+    else if (IoStack->MinorFunction == IRP_MN_WAIT_WAKE)
+    {
+        PoStartNextPowerIrp(Irp);
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
+
+    PoStartNextPowerIrp(Irp);
+    Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_NOT_SUPPORTED;
+    return STATUS_SUCCESS;
 }
 
 VOID

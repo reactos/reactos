@@ -277,7 +277,7 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(PIP_ADDRESS Destination)
 				  A2S(&NCE->Address), Length));
 
 	if(Length >= MaskLength && (Length > BestLength || !BestNCE) &&
-           (!(State & NUD_STALE) || !BestNCE)) {
+           ((!(State & NUD_STALE) && !(State & NUD_INCOMPLETE)) || !BestNCE)) {
 	    /* This seems to be a better router */
 	    BestNCE    = NCE;
 	    BestLength = Length;

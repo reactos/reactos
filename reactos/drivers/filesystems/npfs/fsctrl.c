@@ -1,7 +1,7 @@
 /*
 * COPYRIGHT:  See COPYING in the top level directory
 * PROJECT:    ReactOS kernel
-* FILE:       drivers/fs/np/fsctrl.c
+* FILE:       drivers/filesystems/npfs/fsctrl.c
 * PURPOSE:    Named pipe filesystem
 * PROGRAMMER: David Welch <welch@cwcom.net>
 *             Eric Kohl
@@ -25,6 +25,8 @@ NpfsListeningCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
                            IN PIRP Irp)
 {
     PNPFS_WAITER_ENTRY Waiter;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     Waiter = (PNPFS_WAITER_ENTRY)&Irp->Tail.Overlay.DriverContext;
 
@@ -359,7 +361,7 @@ NpfsWaitPipe(PIRP Irp,
     /* Fail if not pipe was found */
     if (Fcb == NULL)
     {
-        DPRINT("No pipe found!\n", Fcb);
+        DPRINT("No pipe found!\n");
         return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
@@ -481,7 +483,7 @@ NpfsWaitPipe2(PIRP Irp,
     /* Fail if not pipe was found */
     if (Fcb == NULL)
     {
-        DPRINT("No pipe found!\n", Fcb);
+        DPRINT("No pipe found!\n");
         return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
@@ -581,14 +583,14 @@ NpfsPeekPipe(PIRP Irp,
     DPRINT("OutputBufferLength: %lu\n", OutputBufferLength);
 
     /* Validate parameters */
-    if (OutputBufferLength < sizeof(FILE_PIPE_PEEK_BUFFER))
+    if (OutputBufferLength < (ULONG)FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]))
     {
         DPRINT1("Buffer too small\n");
         return STATUS_INVALID_PARAMETER;
     }
 
     Ccb = IoStack->FileObject->FsContext2;
-    Reply = (PFILE_PIPE_PEEK_BUFFER)Irp->AssociatedIrp.SystemBuffer;
+    Reply = Irp->AssociatedIrp.SystemBuffer;
     //Fcb = Ccb->Fcb;
 
 
@@ -599,52 +601,55 @@ NpfsPeekPipe(PIRP Irp,
 
     ExAcquireFastMutex(&Ccb->DataListLock);
     BufferPtr = Ccb->ReadPtr;
-    DPRINT("BufferPtr = %x\n", BufferPtr);
+    DPRINT("BufferPtr = %p\n", BufferPtr);
     if (Ccb->Fcb->PipeType == FILE_PIPE_BYTE_STREAM_TYPE)
     {
         DPRINT("Byte Stream Mode\n");
         Reply->MessageLength = Ccb->ReadDataAvailable;
-        DPRINT("Reply->MessageLength  %lu\n",Reply->MessageLength );
+        DPRINT("Reply->MessageLength  %lu\n", Reply->MessageLength);
         MessageCount = 1;
 
-        if (Reply->Data[0] && (OutputBufferLength >= Ccb->ReadDataAvailable + FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0])))
+        if (OutputBufferLength >= (ULONG)FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[Ccb->ReadDataAvailable]))
         {
+            RtlCopyMemory(Reply->Data, BufferPtr, Ccb->ReadDataAvailable);
             ReturnLength = Ccb->ReadDataAvailable;
-            memcpy(&Reply->Data[0], (PVOID)BufferPtr, Ccb->ReadDataAvailable);
         }
     }
     else
     {
         DPRINT("Message Mode\n");
-        ReadDataAvailable=Ccb->ReadDataAvailable;
+        ReadDataAvailable = Ccb->ReadDataAvailable;
 
         if (ReadDataAvailable > 0)
         {
-            memcpy(&Reply->MessageLength, BufferPtr, sizeof(ULONG));
+            RtlCopyMemory(&Reply->MessageLength,
+                          BufferPtr,
+                          sizeof(Reply->MessageLength));
 
             while ((ReadDataAvailable > 0) && (BufferPtr < Ccb->WritePtr))
             {
-                memcpy(&MessageLength, BufferPtr, sizeof(MessageLength));
+                RtlCopyMemory(&MessageLength, BufferPtr, sizeof(MessageLength));
 
                 ASSERT(MessageLength > 0);
 
-                DPRINT("MessageLength = %lu\n",MessageLength);
+                DPRINT("MessageLength = %lu\n", MessageLength);
                 ReadDataAvailable -= MessageLength;
                 MessageCount++;
 
                 /* If its the first message, copy the Message if the size of buffer is large enough */
-                if (MessageCount==1)
+                if (MessageCount == 1)
                 {
-                    if ((Reply->Data[0])
-                        && (OutputBufferLength >= (MessageLength + FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]))))
+                    if (OutputBufferLength >= (ULONG)FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[MessageLength]))
                     {
-                        memcpy(&Reply->Data[0], (PVOID)((ULONG_PTR)BufferPtr + sizeof(MessageLength)), MessageLength);
+                        RtlCopyMemory(Reply->Data,
+                                      (PVOID)((ULONG_PTR)BufferPtr + sizeof(MessageLength)),
+                                      MessageLength);
                         ReturnLength = MessageLength;
                     }
                 }
 
-                BufferPtr =(PVOID)((ULONG_PTR)BufferPtr + MessageLength + sizeof(MessageLength));
-                DPRINT("BufferPtr = %x\n", BufferPtr);
+                BufferPtr = (PVOID)((ULONG_PTR)BufferPtr + sizeof(MessageLength) + MessageLength);
+                DPRINT("BufferPtr = %p\n", BufferPtr);
                 DPRINT("ReadDataAvailable: %lu\n", ReadDataAvailable);
             }
 
@@ -659,7 +664,7 @@ NpfsPeekPipe(PIRP Irp,
 
     Reply->NumberOfMessages = MessageCount;
 
-    Irp->IoStatus.Information = ReturnLength + FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]);
+    Irp->IoStatus.Information = FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[ReturnLength]);
     Irp->IoStatus.Status = STATUS_SUCCESS;
 
     Status = STATUS_SUCCESS;
@@ -792,6 +797,7 @@ NpfsFlushBuffers(PDEVICE_OBJECT DeviceObject,
                  PIRP Irp)
 {
     /* FIXME: Implement */
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;

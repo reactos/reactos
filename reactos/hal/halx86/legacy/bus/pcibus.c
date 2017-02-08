@@ -536,8 +536,7 @@ HalpPCIPin2ISALine(IN PBUS_HANDLER BusHandler,
                    IN PCI_SLOT_NUMBER SlotNumber,
                    IN PPCI_COMMON_CONFIG PciData)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 VOID
@@ -548,8 +547,7 @@ HalpPCIISALine2Pin(IN PBUS_HANDLER BusHandler,
                    IN PPCI_COMMON_CONFIG PciNewData,
                    IN PPCI_COMMON_CONFIG PciOldData)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 NTSTATUS
@@ -641,9 +639,8 @@ HalpRegisterPciDebuggingDeviceInfo(VOID)
     if (!Found) return;
 
     /* FIXME: TODO */
-    DPRINT1("You have implemented the KD routines for searching PCI debugger"
-            "devices, but you have forgotten to implement this routine\n");
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK("You have implemented the KD routines for searching PCI debugger"
+                           "devices, but you have forgotten to implement this routine\n");
 }
 
 static ULONG NTAPI
@@ -677,8 +674,7 @@ HalpAdjustPCIResourceList(IN PBUS_HANDLER BusHandler,
     if (HalpPciLockSettings)
     {
         /* /PCILOCK is not yet supported */
-        UNIMPLEMENTED;
-        while (TRUE);
+        UNIMPLEMENTED_DBGBREAK("/PCILOCK boot switch is not yet supported.");
     }
 #endif
     /* Now create the correct resource list based on the supported bus ranges */

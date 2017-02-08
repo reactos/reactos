@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Hid User Library
  * FILE:            lib/hid/stubs.c
@@ -9,7 +8,7 @@
  * UPDATE HISTORY:
  *      07/12/2004  Created
  */
-#include <precomp.h>
+#include "precomp.h"
 
 /*
  * @unimplemented

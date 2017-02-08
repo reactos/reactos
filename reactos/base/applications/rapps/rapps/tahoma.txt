@@ -4,7 +4,7 @@
 Name = Microsoft Tahoma Font
 Version = 1.0
 Licence = Unknown
-Description = Tahoma Font pack needed by some apps (Steam). Contains: Tahoma.tff, Tahomabd.ttf.
+Description = Tahoma Font pack needed by some apps (Steam). Contains: Tahoma.ttf, Tahomabd.ttf.
 Size = 305.12kB
 Category = 14
 URLSite = http://support.microsoft.com/
@@ -24,16 +24,24 @@ Licence = Inconnue
 Description = Package pour la police Tahoma, nécessaire pour certaines applications (Steam).
 
 [Section.0410]
-Description = Il font pack Tahoma è richiesto da alcune applicazioni (Steam). Contiene: Tahoma.tff, Tahomabd.ttf.
+Description = Il font pack Tahoma è richiesto da alcune applicazioni (Steam). Contiene: Tahoma.ttf, Tahomabd.ttf.
+
+[Section.0413]
+Licence = Ongekend
+Description = Tahoma lettertypes gebruikt door een aantal programma's (Steam). Bevat: Tahoma.ttf, Tahomabt.ttf.
 
 [Section.0415]
 Description = Pakiet Czcionki Tahoma wymagany przez niektóre programy (np. Steam).
 
 [Section.0418]
 Licence = Necunoscută
-Description = Pachetul Tahoma Font, necesar unor aplicații (Steam). Conține: Tahoma.tff, Tahomabd.ttf.
-Size = 305.12ko
+Description = Pachetul Tahoma Font, necesar unor aplicații (Steam). Conține: Tahoma.ttf, Tahomabd.ttf.
+Size = 305,12 ko
 
 [Section.0422]
 Licence = Невідома
 Description = Пакет шрифтів Tahoma, що необхідні деяким програмам (Steam).
+
+[Section.0813]
+Licence = Ongekend
+Description = Tahoma lettertypes gebruikt door een aantal programma's (Steam). Bevat: Tahoma.ttf, Tahomabt.ttf.

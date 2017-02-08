@@ -25,20 +25,20 @@
  */
 
 #include <stdarg.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "winreg.h"
-#include "usp10.h"
+#include <windef.h>
+//#include "winbase.h"
+#include <wingdi.h>
+#include <winuser.h>
+//#include "winnls.h"
+#include <winreg.h>
+#include <usp10.h>
 
 #include "usp10_internal.h"
 
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(uniscribe);
 
@@ -513,7 +513,7 @@ const scriptData scriptInformation[] = {
      {0x53, 0, 1, 1, 1, DEFAULT_CHARSET, 0, 0, 0, 0, 1, 0, 0, 0, 0},
      MS_MAKE_TAG('k','h','m','r'),
      {'D','a','u','n','P','e','n','h'}},
-    {{Script_Khmer, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+    {{Script_Khmer_Numeric, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {0x53, 1, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('k','h','m','r'),
      {'D','a','u','n','P','e','n','h'}},
@@ -729,9 +729,61 @@ static inline BOOL heap_free(LPVOID mem)
     return HeapFree(GetProcessHeap(), 0, mem);
 }
 
-static inline WCHAR get_cache_default_char(SCRIPT_CACHE *psc)
+/* TODO Fix font properties on Arabic locale */
+static inline BOOL set_cache_font_properties(const HDC hdc, ScriptCache *sc)
 {
-    return ((ScriptCache *)*psc)->tm.tmDefaultChar;
+    if (!sc->sfnt)
+    {
+        sc->sfp.wgBlank = sc->tm.tmBreakChar;
+        sc->sfp.wgDefault = sc->tm.tmDefaultChar;
+        sc->sfp.wgInvalid = sc->sfp.wgBlank;
+        sc->sfp.wgKashida = 0xFFFF;
+        sc->sfp.iKashidaWidth = 0;
+    }
+    else
+    {
+        static const WCHAR chars[4] = {0x0020, 0x200B, 0xF71B, 0x0640};
+        /* U+0020: numeric space
+           U+200B: zero width space
+           U+F71B: unknow char found by black box testing
+           U+0640: kashida */
+        WORD gi[4];
+
+        if (GetGlyphIndicesW(hdc, chars, 4, gi, GGI_MARK_NONEXISTING_GLYPHS) != GDI_ERROR)
+        {
+            if(gi[0] != 0xFFFF) /* 0xFFFF: index of default non exist char */
+                sc->sfp.wgBlank = gi[0];
+            else
+                sc->sfp.wgBlank = 0;
+
+            sc->sfp.wgDefault = 0;
+
+            if (gi[2] != 0xFFFF)
+                sc->sfp.wgInvalid = gi[2];
+            else if (gi[1] != 0xFFFF)
+                sc->sfp.wgInvalid = gi[1];
+            else if (gi[0] != 0xFFFF)
+                sc->sfp.wgInvalid = gi[0];
+            else
+                sc->sfp.wgInvalid = 0;
+
+            sc->sfp.wgKashida = gi[3];
+
+            sc->sfp.iKashidaWidth = 0; /* TODO */
+        }
+        else
+            return FALSE;
+    }
+    return TRUE;
+}
+
+static inline void get_cache_font_properties(SCRIPT_FONTPROPERTIES *sfp, ScriptCache *sc)
+{
+    sfp->wgBlank = sc->sfp.wgBlank;
+    sfp->wgDefault = sc->sfp.wgDefault;
+    sfp->wgInvalid = sc->sfp.wgInvalid;
+    sfp->wgKashida = sc->sfp.wgKashida;
+    sfp->iKashidaWidth = sc->sfp.iKashidaWidth;
 }
 
 static inline LONG get_cache_height(SCRIPT_CACHE *psc)
@@ -746,18 +798,24 @@ static inline BYTE get_cache_pitch_family(SCRIPT_CACHE *psc)
 
 static inline WORD get_cache_glyph(SCRIPT_CACHE *psc, DWORD c)
 {
-    WORD *block = ((ScriptCache *)*psc)->glyphs[c >> GLYPH_BLOCK_SHIFT];
+    CacheGlyphPage *page = ((ScriptCache *)*psc)->page[c / 0x10000];
+    WORD *block;
 
+    if (!page) return 0;
+    block = page->glyphs[(c % 0x10000) >> GLYPH_BLOCK_SHIFT];
     if (!block) return 0;
-    return block[c & GLYPH_BLOCK_MASK];
+    return block[(c % 0x10000) & GLYPH_BLOCK_MASK];
 }
 
 static inline WORD set_cache_glyph(SCRIPT_CACHE *psc, WCHAR c, WORD glyph)
 {
-    WORD **block = &((ScriptCache *)*psc)->glyphs[c >> GLYPH_BLOCK_SHIFT];
+    CacheGlyphPage **page = &((ScriptCache *)*psc)->page[c / 0x10000];
+    WORD **block;
+    if (!*page && !(*page = heap_alloc_zero(sizeof(CacheGlyphPage)))) return 0;
 
+    block = &(*page)->glyphs[(c % 0x10000) >> GLYPH_BLOCK_SHIFT];
     if (!*block && !(*block = heap_alloc_zero(sizeof(WORD) * GLYPH_BLOCK_SIZE))) return 0;
-    return ((*block)[c & GLYPH_BLOCK_MASK] = glyph);
+    return ((*block)[(c % 0x10000) & GLYPH_BLOCK_MASK] = glyph);
 }
 
 static inline BOOL get_cache_glyph_widths(SCRIPT_CACHE *psc, WORD glyph, ABC *abc)
@@ -782,6 +840,7 @@ static inline BOOL set_cache_glyph_widths(SCRIPT_CACHE *psc, WORD glyph, ABC *ab
 static HRESULT init_script_cache(const HDC hdc, SCRIPT_CACHE *psc)
 {
     ScriptCache *sc;
+    int size;
 
     if (!psc) return E_INVALIDARG;
     if (*psc) return S_OK;
@@ -793,12 +852,24 @@ static HRESULT init_script_cache(const HDC hdc, SCRIPT_CACHE *psc)
         heap_free(sc);
         return E_INVALIDARG;
     }
+    size = GetOutlineTextMetricsW(hdc, 0, NULL);
+    if (size)
+    {
+        sc->otm = heap_alloc(size);
+        sc->otm->otmSize = size;
+        GetOutlineTextMetricsW(hdc, size, sc->otm);
+    }
     if (!GetObjectW(GetCurrentObject(hdc, OBJ_FONT), sizeof(LOGFONTW), &sc->lf))
     {
         heap_free(sc);
         return E_INVALIDARG;
     }
     sc->sfnt = (GetFontData(hdc, MS_MAKE_TAG('h','e','a','d'), 0, NULL, 0)!=GDI_ERROR);
+    if (!set_cache_font_properties(hdc, sc))
+    {
+        heap_free(sc);
+        return E_INVALIDARG;
+    }
     *psc = sc;
     TRACE("<- %p\n", sc);
     return S_OK;
@@ -928,23 +999,6 @@ int USP10_FindGlyphInLogClust(const WORD* pwLogClust, int cChars, WORD target)
 }
 
 /***********************************************************************
- *      DllMain
- *
- */
-BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
-{
-    switch(fdwReason)
-    {
-    case DLL_PROCESS_ATTACH:
-        DisableThreadLibraryCalls(hInstDLL);
-        break;
-    case DLL_PROCESS_DETACH:
-        break;
-    }
-    return TRUE;
-}
-
-/***********************************************************************
  *      ScriptFreeCache (USP10.@)
  *
  * Free a script cache.
@@ -963,27 +1017,40 @@ HRESULT WINAPI ScriptFreeCache(SCRIPT_CACHE *psc)
     if (psc && *psc)
     {
         unsigned int i;
+        INT n;
         for (i = 0; i < GLYPH_MAX / GLYPH_BLOCK_SIZE; i++)
         {
-            heap_free(((ScriptCache *)*psc)->glyphs[i]);
             heap_free(((ScriptCache *)*psc)->widths[i]);
+        }
+        for (i = 0; i < 0x10; i++)
+        {
+            unsigned int j;
+            if (((ScriptCache *)*psc)->page[i])
+                for (j = 0; j < GLYPH_MAX / GLYPH_BLOCK_SIZE; j++)
+                    heap_free(((ScriptCache *)*psc)->page[i]->glyphs[j]);
+            heap_free(((ScriptCache *)*psc)->page[i]);
         }
         heap_free(((ScriptCache *)*psc)->GSUB_Table);
         heap_free(((ScriptCache *)*psc)->GDEF_Table);
         heap_free(((ScriptCache *)*psc)->CMAP_Table);
-        for (i = 0; i < ((ScriptCache *)*psc)->script_count; i++)
+        heap_free(((ScriptCache *)*psc)->GPOS_Table);
+        for (n = 0; n < ((ScriptCache *)*psc)->script_count; n++)
         {
             int j;
-            for (j = 0; j < ((ScriptCache *)*psc)->scripts[i].language_count; j++)
+            for (j = 0; j < ((ScriptCache *)*psc)->scripts[n].language_count; j++)
             {
                 int k;
-                for (k = 0; k < ((ScriptCache *)*psc)->scripts[i].languages[j].feature_count; k++)
-                    heap_free(((ScriptCache *)*psc)->scripts[i].languages[j].features[k].lookups);
-                heap_free(((ScriptCache *)*psc)->scripts[i].languages[j].features);
+                for (k = 0; k < ((ScriptCache *)*psc)->scripts[n].languages[j].feature_count; k++)
+                    heap_free(((ScriptCache *)*psc)->scripts[n].languages[j].features[k].lookups);
+                heap_free(((ScriptCache *)*psc)->scripts[n].languages[j].features);
             }
-            heap_free(((ScriptCache *)*psc)->scripts[i].languages);
+            for (j = 0; j < ((ScriptCache *)*psc)->scripts[n].default_language.feature_count; j++)
+                heap_free(((ScriptCache *)*psc)->scripts[n].default_language.features[j].lookups);
+            heap_free(((ScriptCache *)*psc)->scripts[n].default_language.features);
+            heap_free(((ScriptCache *)*psc)->scripts[n].languages);
         }
         heap_free(((ScriptCache *)*psc)->scripts);
+        heap_free(((ScriptCache *)*psc)->otm);
         heap_free(*psc);
         *psc = NULL;
     }
@@ -1040,12 +1107,7 @@ HRESULT WINAPI ScriptGetFontProperties(HDC hdc, SCRIPT_CACHE *psc, SCRIPT_FONTPR
     if (sfp->cBytes != sizeof(SCRIPT_FONTPROPERTIES))
         return E_INVALIDARG;
 
-    /* return something sensible? */
-    sfp->wgBlank = 0;
-    sfp->wgDefault = get_cache_default_char(psc);
-    sfp->wgInvalid = 0;
-    sfp->wgKashida = 0xffff;
-    sfp->iKashidaWidth = 0;
+    get_cache_font_properties(sfp, *psc);
 
     return S_OK;
 }
@@ -1195,28 +1257,11 @@ static inline WORD base_indic(WORD script)
     };
 }
 
-/***********************************************************************
- *      ScriptItemizeOpenType (USP10.@)
- *
- * Split a Unicode string into shapeable parts.
- *
- * PARAMS
- *  pwcInChars  [I] String to split.
- *  cInChars    [I] Number of characters in pwcInChars.
- *  cMaxItems   [I] Maximum number of items to return.
- *  psControl   [I] Pointer to a SCRIPT_CONTROL structure.
- *  psState     [I] Pointer to a SCRIPT_STATE structure.
- *  pItems      [O] Buffer to receive SCRIPT_ITEM structures.
- *  pScriptTags [O] Buffer to receive OPENTYPE_TAGs.
- *  pcItems     [O] Number of script items returned.
- *
- * RETURNS
- *  Success: S_OK
- *  Failure: Non-zero HRESULT value.
- */
-HRESULT WINAPI ScriptItemizeOpenType(const WCHAR *pwcInChars, int cInChars, int cMaxItems,
-                             const SCRIPT_CONTROL *psControl, const SCRIPT_STATE *psState,
-                             SCRIPT_ITEM *pItems, OPENTYPE_TAG *pScriptTags, int *pcItems)
+
+static HRESULT _ItemizeInternal(const WCHAR *pwcInChars, int cInChars,
+                int cMaxItems, const SCRIPT_CONTROL *psControl,
+                const SCRIPT_STATE *psState, SCRIPT_ITEM *pItems,
+                OPENTYPE_TAG *pScriptTags, int *pcItems)
 {
 
 #define Numeric_space 0x0020
@@ -1271,8 +1316,36 @@ HRESULT WINAPI ScriptItemizeOpenType(const WCHAR *pwcInChars, int cInChars, int 
             forceLevels = TRUE;
 
         /* Diacritical marks merge with other scripts */
-        if (scripts[i] == Script_Diacritical && i > 0)
-                scripts[i] = scripts[i-1];
+        if (scripts[i] == Script_Diacritical)
+        {
+            if (i > 0)
+            {
+                if (pScriptTags)
+                    scripts[i] = scripts[i-1];
+                else
+                {
+                    int j;
+                    BOOL asian = FALSE;
+                    WORD first_script = scripts[i-1];
+                    for (j = i-1; j >= 0 &&  scripts[j] == first_script && pwcInChars[j] != Numeric_space; j--)
+                    {
+                        WORD original = scripts[j];
+                        if (original == Script_Ideograph || original == Script_Kana || original == Script_Yi || original == Script_CJK_Han || original == Script_Bopomofo)
+                        {
+                            asian = TRUE;
+                            break;
+                        }
+                        if (original != Script_MathAlpha && scriptInformation[scripts[j]].props.fComplex)
+                            break;
+                        scripts[j] = scripts[i];
+                        if (original == Script_Punctuation2)
+                            break;
+                    }
+                    if (scriptInformation[scripts[j]].props.fComplex || asian)
+                        scripts[i] = scripts[j];
+                }
+            }
+        }
     }
 
     for (i = 0; i < cInChars; i++)
@@ -1421,7 +1494,8 @@ HRESULT WINAPI ScriptItemizeOpenType(const WCHAR *pwcInChars, int cInChars, int 
 
     pItems[index].iCharPos = 0;
     pItems[index].a = scriptInformation[scripts[cnt]].a;
-    pScriptTags[index] = scriptInformation[scripts[cnt]].scriptTag;
+    if (pScriptTags)
+        pScriptTags[index] = scriptInformation[scripts[cnt]].scriptTag;
 
     if (strength && strength[cnt] == BIDI_STRONG)
         str = strength[cnt];
@@ -1515,7 +1589,8 @@ HRESULT WINAPI ScriptItemizeOpenType(const WCHAR *pwcInChars, int cInChars, int 
             memset(&pItems[index].a, 0, sizeof(SCRIPT_ANALYSIS));
 
             pItems[index].a = scriptInformation[New_Script].a;
-            pScriptTags[index] = scriptInformation[New_Script].scriptTag;
+            if (pScriptTags)
+                pScriptTags[index] = scriptInformation[New_Script].scriptTag;
             if (levels)
             {
                 if (levels[cnt] == 0)
@@ -1558,6 +1633,32 @@ HRESULT WINAPI ScriptItemizeOpenType(const WCHAR *pwcInChars, int cInChars, int 
 }
 
 /***********************************************************************
+ *      ScriptItemizeOpenType (USP10.@)
+ *
+ * Split a Unicode string into shapeable parts.
+ *
+ * PARAMS
+ *  pwcInChars  [I] String to split.
+ *  cInChars    [I] Number of characters in pwcInChars.
+ *  cMaxItems   [I] Maximum number of items to return.
+ *  psControl   [I] Pointer to a SCRIPT_CONTROL structure.
+ *  psState     [I] Pointer to a SCRIPT_STATE structure.
+ *  pItems      [O] Buffer to receive SCRIPT_ITEM structures.
+ *  pScriptTags [O] Buffer to receive OPENTYPE_TAGs.
+ *  pcItems     [O] Number of script items returned.
+ *
+ * RETURNS
+ *  Success: S_OK
+ *  Failure: Non-zero HRESULT value.
+ */
+HRESULT WINAPI ScriptItemizeOpenType(const WCHAR *pwcInChars, int cInChars, int cMaxItems,
+                             const SCRIPT_CONTROL *psControl, const SCRIPT_STATE *psState,
+                             SCRIPT_ITEM *pItems, OPENTYPE_TAG *pScriptTags, int *pcItems)
+{
+    return _ItemizeInternal(pwcInChars, cInChars, cMaxItems, psControl, psState, pItems, pScriptTags, pcItems);
+}
+
+/***********************************************************************
  *      ScriptItemize (USP10.@)
  *
  * Split a Unicode string into shapeable parts.
@@ -1579,15 +1680,7 @@ HRESULT WINAPI ScriptItemize(const WCHAR *pwcInChars, int cInChars, int cMaxItem
                              const SCRIPT_CONTROL *psControl, const SCRIPT_STATE *psState,
                              SCRIPT_ITEM *pItems, int *pcItems)
 {
-    OPENTYPE_TAG *discarded_tags;
-    HRESULT res;
-
-    discarded_tags = heap_alloc(cMaxItems * sizeof(OPENTYPE_TAG));
-    if (!discarded_tags)
-        return E_OUTOFMEMORY;
-    res = ScriptItemizeOpenType(pwcInChars, cInChars, cMaxItems, psControl, psState, pItems, discarded_tags, pcItems);
-    heap_free(discarded_tags);
-    return res;
+    return _ItemizeInternal(pwcInChars, cInChars, cMaxItems, psControl, psState, pItems, NULL, pcItems);
 }
 
 static inline int getGivenTabWidth(ScriptCache *psc, SCRIPT_TABDEF *pTabdef, int charPos, int current_x)
@@ -1772,7 +1865,7 @@ HRESULT WINAPI ScriptStringAnalyse(HDC hdc, const void *pString, int cString,
     hr = ScriptItemize(pString, cString, num_items, &sControl, &sState, analysis->pItem,
                        &analysis->numItems);
 
-    if FAILED(hr)
+    if (FAILED(hr))
     {
         if (hr == E_OUTOFMEMORY)
             hr = E_INVALIDARG;
@@ -1860,7 +1953,7 @@ HRESULT WINAPI ScriptStringAnalyse(HDC hdc, const void *pString, int cString,
             if ((dwFlags & SSA_LINK) && !analysis->glyphs[i].fallbackFont && analysis->pItem[i].a.eScript == Script_Hangul)
                 analysis->pItem[i].a.fNoGlyphIndex = TRUE;
 
-            if ((dwFlags & SSA_LINK) && !analysis->glyphs[i].fallbackFont && !scriptInformation[analysis->pItem[i].a.eScript].props.fComplex)
+            if ((dwFlags & SSA_LINK) && !analysis->glyphs[i].fallbackFont && !scriptInformation[analysis->pItem[i].a.eScript].props.fComplex && !analysis->pItem[i].a.fRTL)
                 analysis->pItem[i].a.fNoGlyphIndex = TRUE;
 
             hr = ScriptShape(hdc, sc, &pStr[analysis->pItem[i].iCharPos],
@@ -2084,7 +2177,7 @@ static HRESULT SS_ItemOut( SCRIPT_STRING_ANALYSIS ssa,
  *  ssa       [I] buffer to hold the analysed string components
  *  iX        [I] X axis displacement for output
  *  iY        [I] Y axis displacement for output
- *  uOptions  [I] flags controling output processing
+ *  uOptions  [I] flags controlling output processing
  *  prc       [I] rectangle coordinates
  *  iMinSel   [I] starting pos for substringing output string
  *  iMaxSel   [I] ending pos for substringing output string
@@ -2442,8 +2535,9 @@ HRESULT WINAPI ScriptCPtoX(int iCP,
 
             if (check >= cChars && !iMaxPos)
             {
-                for (check = clust; check < cChars; check++)
-                    special_size += get_glyph_cluster_advance(piAdvance, psva, pwLogClust, cGlyphs, cChars, check, 1);
+                int glyph;
+                for (glyph = clust; glyph < cGlyphs; glyph++)
+                    special_size += get_glyph_cluster_advance(piAdvance, psva, pwLogClust, cGlyphs, cChars, glyph, 1);
                 iSpecial = item;
                 special_size /= (cChars - item);
                 iPosX += special_size;
@@ -2574,8 +2668,9 @@ HRESULT WINAPI ScriptXtoCP(int iX,
 
             if (check >= cChars && direction > 0)
             {
-                for (check = clust; check < cChars; check++)
-                    special_size += get_glyph_cluster_advance(piAdvance, psva, pwLogClust, cGlyphs, cChars, check, direction);
+                int glyph;
+                for (glyph = clust; glyph < cGlyphs; glyph++)
+                    special_size += get_glyph_cluster_advance(piAdvance, psva, pwLogClust, cGlyphs, cChars, glyph, direction);
                 iSpecial = item;
                 special_size /= (cChars - item);
                 iPosX += special_size;
@@ -2749,7 +2844,8 @@ HRESULT WINAPI ScriptShapeOpenType( HDC hdc, SCRIPT_CACHE *psc,
                                     SCRIPT_GLYPHPROP *pOutGlyphProps, int *pcGlyphs)
 {
     HRESULT hr;
-    unsigned int i,g;
+    int i;
+    unsigned int g;
     BOOL rtl;
     int cluster;
 
@@ -3030,6 +3126,8 @@ HRESULT WINAPI ScriptPlaceOpenType( HDC hdc, SCRIPT_CACHE *psc, SCRIPT_ANALYSIS 
         if (piAdvance) piAdvance[i] = abc.abcA + abc.abcB + abc.abcC;
     }
 
+    SHAPE_ApplyOpenTypePositions(hdc, (ScriptCache *)*psc, psa, pwGlyphs, cGlyphs, piAdvance, pGoffset);
+
     if (pABC) TRACE("Total for run: abcA=%d, abcB=%d, abcC=%d\n", pABC->abcA, pABC->abcB, pABC->abcC);
     return S_OK;
 }
@@ -3160,6 +3258,9 @@ HRESULT WINAPI ScriptTextOut(const HDC hdc, SCRIPT_CACHE *psc, int x, int y, UIN
                              const int *piJustify, const GOFFSET *pGoffset)
 {
     HRESULT hr = S_OK;
+    INT i, dir = 1;
+    INT *lpDx;
+    WORD *reordered_glyphs = (WORD *)pwGlyphs;
 
     TRACE("(%p, %p, %d, %d, %04x, %p, %p, %p, %d, %p, %d, %p, %p, %p)\n",
          hdc, psc, x, y, fuOptions, lprc, psa, pwcReserved, iReserved, pwGlyphs, cGlyphs,
@@ -3173,25 +3274,52 @@ HRESULT WINAPI ScriptTextOut(const HDC hdc, SCRIPT_CACHE *psc, int x, int y, UIN
     if  (!psa->fNoGlyphIndex)                                     /* Have Glyphs?                      */
         fuOptions |= ETO_GLYPH_INDEX;                             /* Say don't do translation to glyph */
 
+    lpDx = heap_alloc(cGlyphs * sizeof(INT) * 2);
+    if (!lpDx) return E_OUTOFMEMORY;
+    fuOptions |= ETO_PDY;
+
     if (psa->fRTL && psa->fLogicalOrder)
     {
-        int i;
-        WORD *rtlGlyphs;
-
-        rtlGlyphs = heap_alloc(cGlyphs * sizeof(WORD));
-        if (!rtlGlyphs)
+        reordered_glyphs = heap_alloc( cGlyphs * sizeof(WORD) );
+        if (!reordered_glyphs)
+        {
+            heap_free( lpDx );
             return E_OUTOFMEMORY;
+        }
 
         for (i = 0; i < cGlyphs; i++)
-            rtlGlyphs[i] = pwGlyphs[cGlyphs-1-i];
-
-        if (!ExtTextOutW(hdc, x, y, fuOptions, lprc, rtlGlyphs, cGlyphs, NULL))
-            hr = S_FALSE;
-        heap_free(rtlGlyphs);
+            reordered_glyphs[i] = pwGlyphs[cGlyphs - 1 - i];
+        dir = -1;
     }
-    else
-        if (!ExtTextOutW(hdc, x, y, fuOptions, lprc, pwGlyphs, cGlyphs, NULL))
-            hr = S_FALSE;
+
+    for (i = 0; i < cGlyphs; i++)
+    {
+        int orig_index = (dir > 0) ? i : cGlyphs - 1 - i;
+        lpDx[i * 2] = piAdvance[orig_index];
+        lpDx[i * 2 + 1] = 0;
+
+        if (pGoffset)
+        {
+            if (i == 0)
+            {
+                x += pGoffset[orig_index].du * dir;
+                y += pGoffset[orig_index].dv;
+            }
+            else
+            {
+                lpDx[(i - 1) * 2]     += pGoffset[orig_index].du * dir;
+                lpDx[(i - 1) * 2 + 1] += pGoffset[orig_index].dv;
+            }
+            lpDx[i * 2]     -= pGoffset[orig_index].du * dir;
+            lpDx[i * 2 + 1] -= pGoffset[orig_index].dv;
+        }
+    }
+
+    if (!ExtTextOutW(hdc, x, y, fuOptions, lprc, reordered_glyphs, cGlyphs, lpDx))
+        hr = S_FALSE;
+
+    if (reordered_glyphs != pwGlyphs) heap_free( reordered_glyphs );
+    heap_free(lpDx);
 
     return hr;
 }

@@ -26,110 +26,14 @@ Author:
 #include <dbgktypes.h>
 
 //
-// Don't force inclusion of csrss header, leave this opaque.
-//
-struct _CSR_API_MESSAGE;
-struct _CSR_CAPTURE_BUFFER;
-
-//
-// CSR Functions
-//
-PVOID
-NTAPI
-CsrAllocateCaptureBuffer(
-    ULONG ArgumentCount,
-    ULONG BufferSize
-);
-
-ULONG
-NTAPI
-CsrAllocateMessagePointer(
-    struct _CSR_CAPTURE_BUFFER *CaptureBuffer,
-    ULONG MessageLength,
-    PVOID *CaptureData
-);
-
-VOID
-NTAPI
-CsrCaptureMessageBuffer(
-    struct _CSR_CAPTURE_BUFFER *CaptureBuffer,
-    PVOID MessageString,
-    ULONG StringLength,
-    PVOID *CapturedData
-);
-
-NTSTATUS
-NTAPI
-CsrClientConnectToServer(
-    PWSTR ObjectDirectory,
-    ULONG ServerId,
-    PVOID ConnectionInfo,
-    PULONG ConnectionInfoSize,
-    PBOOLEAN ServerToServerCall
-);
-
-NTSTATUS
-NTAPI
-CsrClientCallServer(
-    struct _CSR_API_MESSAGE *Request,
-    struct _CSR_CAPTURE_BUFFER *CaptureBuffer OPTIONAL,
-    ULONG ApiNumber,
-    ULONG RequestLength
-);
-
-NTSTATUS
-NTAPI
-CsrIdentifyAlertableThread(
-    VOID
-);
-
-VOID
-NTAPI
-CsrFreeCaptureBuffer(
-    struct _CSR_CAPTURE_BUFFER *CaptureBuffer
-);
-
-HANDLE
-NTAPI
-CsrGetProcessId(
-    VOID
-);
-
-NTSTATUS
-NTAPI
-CsrNewThread(VOID);
-
-NTSTATUS
-NTAPI
-CsrSetPriorityClass(
-    HANDLE Process,
-    PULONG PriorityClass
-);
-
-VOID
-NTAPI
-CsrProbeForRead(
-    IN PVOID Address,
-    IN ULONG Length,
-    IN ULONG Alignment
-);
-
-VOID
-NTAPI
-CsrProbeForWrite(
-    IN PVOID Address,
-    IN ULONG Length,
-    IN ULONG Alignment
-);
-
-//
 // Debug Functions
 //
+__analysis_noreturn
 NTSYSAPI
 VOID
 NTAPI
 DbgBreakPointWithStatus(
-    IN ULONG Status
+    _In_ ULONG Status
 );
 
 NTSTATUS
@@ -141,35 +45,35 @@ DbgUiConnectToDbg(
 NTSTATUS
 NTAPI
 DbgUiContinue(
-    IN PCLIENT_ID ClientId,
-    IN NTSTATUS ContinueStatus
+    _In_ PCLIENT_ID ClientId,
+    _In_ NTSTATUS ContinueStatus
 );
 
 NTSTATUS
 NTAPI
 DbgUiDebugActiveProcess(
-    IN HANDLE Process
+    _In_ HANDLE Process
 );
 
 NTSTATUS
 NTAPI
 DbgUiStopDebugging(
-    IN HANDLE Process
+    _In_ HANDLE Process
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 DbgUiWaitStateChange(
-    IN PDBGUI_WAIT_STATE_CHANGE DbgUiWaitStateCange,
-    IN PLARGE_INTEGER TimeOut
+    _In_ PDBGUI_WAIT_STATE_CHANGE DbgUiWaitStateCange,
+    _In_ PLARGE_INTEGER TimeOut
 );
 
 NTSTATUS
 NTAPI
 DbgUiConvertStateChangeStructure(
-    IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
-    IN PVOID DebugEvent
+    _In_ PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
+    _In_ PVOID DebugEvent
 );
 
 VOID
@@ -181,7 +85,7 @@ DbgUiRemoteBreakin(
 NTSTATUS
 NTAPI
 DbgUiIssueRemoteBreakin(
-    IN HANDLE Process
+    _In_ HANDLE Process
 );
 
 HANDLE
@@ -197,47 +101,48 @@ DbgUiGetThreadDebugObject(
 NTSTATUS
 NTAPI
 LdrAddRefDll(
-    IN ULONG Flags,
-    IN PVOID BaseAddress
+    _In_ ULONG Flags,
+    _In_ PVOID BaseAddress
 );
 
 NTSTATUS
 NTAPI
 LdrDisableThreadCalloutsForDll(
-    IN PVOID BaseAddress
+    _In_ PVOID BaseAddress
 );
 
 NTSTATUS
 NTAPI
 LdrGetDllHandle(
-    IN PWSTR DllPath OPTIONAL,
-    IN PULONG DllCharacteristics,
-    IN PUNICODE_STRING DllName,
-    OUT PVOID *DllHandle
+    _In_opt_ PWSTR DllPath,
+    _In_ PULONG DllCharacteristics,
+    _In_ PUNICODE_STRING DllName,
+    _Out_ PVOID *DllHandle
 );
 
 NTSTATUS
 NTAPI
-LdrGetDllHandleEx(IN ULONG Flags,
-                  IN PWSTR DllPath OPTIONAL,
-                  IN PULONG DllCharacteristics OPTIONAL,
-                  IN PUNICODE_STRING DllName,
-                  OUT PVOID *DllHandle OPTIONAL);
+LdrGetDllHandleEx(
+    _In_ ULONG Flags,
+    _In_opt_ PWSTR DllPath,
+    _In_opt_ PULONG DllCharacteristics,
+    _In_ PUNICODE_STRING DllName,
+    _Out_opt_ PVOID *DllHandle);
 
 NTSTATUS
 NTAPI
 LdrFindEntryForAddress(
-    IN PVOID Address,
-    OUT PLDR_DATA_TABLE_ENTRY *Module
+    _In_ PVOID Address,
+    _Out_ PLDR_DATA_TABLE_ENTRY *Module
 );
 
 NTSTATUS
 NTAPI
 LdrGetProcedureAddress(
-    IN PVOID BaseAddress,
-    IN PANSI_STRING Name,
-    IN ULONG Ordinal,
-    OUT PVOID *ProcedureAddress
+    _In_ PVOID BaseAddress,
+    _In_ PANSI_STRING Name,
+    _In_ ULONG Ordinal,
+    _Out_ PVOID *ProcedureAddress
 );
 
 VOID
@@ -252,38 +157,38 @@ LdrInitializeThunk(
 NTSTATUS
 NTAPI
 LdrLoadDll(
-    IN PWSTR SearchPath OPTIONAL,
-    IN PULONG LoadFlags OPTIONAL,
-    IN PUNICODE_STRING Name,
-    OUT PVOID *BaseAddress OPTIONAL
+    _In_opt_ PWSTR SearchPath,
+    _In_opt_ PULONG LoadFlags,
+    _In_ PUNICODE_STRING Name,
+    _Out_opt_ PVOID *BaseAddress
 );
 
 PIMAGE_BASE_RELOCATION
 NTAPI
 LdrProcessRelocationBlock(
-    IN ULONG_PTR Address,
-    IN ULONG Count,
-    IN PUSHORT TypeOffset,
-    IN LONG_PTR Delta
+    _In_ ULONG_PTR Address,
+    _In_ ULONG Count,
+    _In_ PUSHORT TypeOffset,
+    _In_ LONG_PTR Delta
 );
 
 NTSTATUS
 NTAPI
 LdrQueryImageFileExecutionOptions(
-    IN PUNICODE_STRING SubKey,
-    IN PCWSTR ValueName,
-    IN ULONG ValueSize,
-    OUT PVOID Buffer,
-    IN ULONG BufferSize,
-    OUT PULONG RetunedLength OPTIONAL
+    _In_ PUNICODE_STRING SubKey,
+    _In_ PCWSTR ValueName,
+    _In_ ULONG ValueSize,
+    _Out_ PVOID Buffer,
+    _In_ ULONG BufferSize,
+    _Out_opt_ PULONG RetunedLength
 );
 
 NTSTATUS
 NTAPI
 LdrQueryProcessModuleInformation(
-    IN PRTL_PROCESS_MODULES ModuleInformation OPTIONAL,
-    IN ULONG Size OPTIONAL,
-    OUT PULONG ReturnedSize
+    _In_opt_ PRTL_PROCESS_MODULES ModuleInformation,
+    _In_opt_ ULONG Size,
+    _Out_ PULONG ReturnedSize
 );
 
 NTSTATUS
@@ -301,36 +206,36 @@ LdrShutdownThread(
 NTSTATUS
 NTAPI
 LdrUnloadDll(
-    IN PVOID BaseAddress
+    _In_ PVOID BaseAddress
 );
 
 typedef VOID (NTAPI *PLDR_CALLBACK)(PVOID CallbackContext, PCHAR Name);
 NTSTATUS
 NTAPI
 LdrVerifyImageMatchesChecksum(
-    IN HANDLE FileHandle,
-    IN PLDR_CALLBACK Callback,
-    IN PVOID CallbackContext,
-    OUT PUSHORT ImageCharacterstics
+    _In_ HANDLE FileHandle,
+    _In_ PLDR_CALLBACK Callback,
+    _In_ PVOID CallbackContext,
+    _Out_ PUSHORT ImageCharacterstics
 );
 
 NTSTATUS
 NTAPI
 LdrOpenImageFileOptionsKey(
-    IN PUNICODE_STRING SubKey,
-    IN BOOLEAN Wow64,
-    OUT PHANDLE NewKeyHandle
+    _In_ PUNICODE_STRING SubKey,
+    _In_ BOOLEAN Wow64,
+    _Out_ PHANDLE NewKeyHandle
 );
 
 NTSTATUS
 NTAPI
 LdrQueryImageFileKeyOption(
-    IN HANDLE KeyHandle,
-    IN PCWSTR ValueName,
-    IN ULONG Type,
-    OUT PVOID Buffer,
-    IN ULONG BufferSize,
-    OUT PULONG ReturnedLength OPTIONAL
+    _In_ HANDLE KeyHandle,
+    _In_ PCWSTR ValueName,
+    _In_ ULONG Type,
+    _Out_ PVOID Buffer,
+    _In_ ULONG BufferSize,
+    _Out_opt_ PULONG ReturnedLength
 );
 
 #endif

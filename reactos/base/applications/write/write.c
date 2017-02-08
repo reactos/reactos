@@ -18,11 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_LEAN_AND_MEAN
-
 #include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
 
-#include <windows.h>
 #include "resources.h"
 
 static const WCHAR SZ_BACKSLASH[] = {'\\',0};
@@ -35,16 +35,20 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPWSTR szCmdP
     PROCESS_INFORMATION info;
 
     if (!GetSystemDirectoryW(path, MAX_PATH - 1 - lstrlenW(SZ_WORDPAD)))
-	goto failed;
+        goto failed;
+
     if (path[lstrlenW(path) - 1] != '\\')
-	lstrcatW(path, SZ_BACKSLASH);
+        lstrcatW(path, SZ_BACKSLASH);
+
     lstrcatW(path, SZ_WORDPAD);
 
-    stinf.cb = sizeof(STARTUPINFOW);
+    ZeroMemory(&stinf, sizeof(stinf));
+    stinf.cb = sizeof(stinf);
     GetStartupInfoW(&stinf);
 
     if (!CreateProcessW(path, GetCommandLineW(), NULL, NULL, FALSE, 0, NULL, NULL, &stinf, &info))
-	goto failed;
+        goto failed;
+
     CloseHandle(info.hProcess);
     CloseHandle(info.hThread);
     return 0;

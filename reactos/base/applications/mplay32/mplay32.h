@@ -1,4 +1,11 @@
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <wingdi.h>
+#include <commdlg.h>
+#include <shellapi.h>
+#include <mmsystem.h>
 #include <commctrl.h>
 #include <tchar.h>
 

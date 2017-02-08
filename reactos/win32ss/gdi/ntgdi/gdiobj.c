@@ -51,16 +51,13 @@
            (objt) == GDIObjType_BRUSH_TYPE)
 #define ASSERT_EXCLUSIVE_OBJECT_TYPE(objt) \
     ASSERT((objt) == GDIObjType_DC_TYPE || \
-           (objt) == GDIObjType_RGN_TYPE || \
-           (objt) == GDIObjType_LFONT_TYPE)
+           (objt) == GDIObjType_RGN_TYPE)
 #else
 #define DBG_INCREASE_LOCK_COUNT(ppi, hobj)
 #define DBG_DECREASE_LOCK_COUNT(x, y)
 #define ASSERT_SHARED_OBJECT_TYPE(objt)
 #define ASSERT_EXCLUSIVE_OBJECT_TYPE(objt)
 #endif
-
-#define MmMapViewInSessionSpace MmMapViewInSystemSpace
 
 #if defined(_M_IX86) || defined(_M_AMD64)
 #define InterlockedOr16 _InterlockedOr16
@@ -81,8 +78,8 @@ enum
 
 /* Per session handle table globals */
 static PVOID gpvGdiHdlTblSection = NULL;
-static PENTRY gpentHmgr;
-static PULONG gpaulRefCount;
+PENTRY gpentHmgr;
+PULONG gpaulRefCount;
 ULONG gulFirstFree;
 ULONG gulFirstUnused;
 static PPAGED_LOOKASIDE_LIST gpaLookasideList;
@@ -166,7 +163,7 @@ InitGdiHandleTable(void)
                              NULL,
                              &liSize,
                              PAGE_READWRITE,
-                             SEC_COMMIT,
+                             SEC_COMMIT | 0x1,
                              NULL,
                              NULL);
     if (!NT_SUCCESS(status))
@@ -361,7 +358,7 @@ ENTRY_ReferenceEntryByHandle(HGDIOBJ hobj, FLONG fl)
         if (pentry->FullUnique != (USHORT)((ULONG_PTR)hobj >> 16))
         {
             DPRINT("GDIOBJ: Wrong unique value. Handle: 0x%4x, entry: 0x%4x\n",
-                   (USHORT)((ULONG_PTR)hobj >> 16, pentry->FullUnique));
+                   (USHORT)((ULONG_PTR)hobj >> 16), pentry->FullUnique);
             return NULL;
         }
 
@@ -1069,11 +1066,10 @@ INT
 APIENTRY
 NtGdiExtGetObjectW(
     IN HANDLE hobj,
-    IN INT cbCount,
+    IN INT cjBufferSize,
     OUT LPVOID lpBuffer)
 {
-    INT iRetCount = 0;
-    INT cbCopyCount;
+    UINT iResult, cjMaxSize;
     union
     {
         BITMAP bitmap;
@@ -1086,33 +1082,33 @@ NtGdiExtGetObjectW(
     } object;
 
     /* Normalize to the largest supported object size */
-    cbCount = min((UINT)cbCount, sizeof(object));
+    cjMaxSize = min((UINT)cjBufferSize, sizeof(object));
 
     /* Now do the actual call */
-    iRetCount = GreGetObject(hobj, cbCount, lpBuffer ? &object : NULL);
-    cbCopyCount = min((UINT)cbCount, (UINT)iRetCount);
+    iResult = GreGetObject(hobj, cjMaxSize, lpBuffer ? &object : NULL);
 
-    /* Make sure we have a buffer and a copy size */
-    if ((cbCopyCount) && (lpBuffer))
+    /* Check if we have a buffer and data */
+    if ((lpBuffer != NULL) && (iResult != 0))
     {
         /* Enter SEH for buffer transfer */
         _SEH2_TRY
         {
             /* Probe the buffer and copy it */
-            ProbeForWrite(lpBuffer, cbCopyCount, sizeof(WORD));
-            RtlCopyMemory(lpBuffer, &object, cbCopyCount);
+            cjMaxSize = min(cjMaxSize, iResult);
+            ProbeForWrite(lpBuffer, cjMaxSize, sizeof(WORD));
+            RtlCopyMemory(lpBuffer, &object, cjMaxSize);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Clear the return value.
              * Do *NOT* set last error here! */
-            iRetCount = 0;
+            iResult = 0;
         }
         _SEH2_END;
     }
 
     /* Return the count */
-    return iRetCount;
+    return iResult;
 }
 
 W32KAPI
@@ -1240,6 +1236,11 @@ GDIOBJ_AllocObjWithHandle(ULONG ObjectType, ULONG cjSize)
     }
 
     pobj = GDIOBJ_AllocateObject(objt, cjSize, fl);
+    if (!pobj)
+    {
+        return NULL;
+    }
+
     if (!GDIOBJ_hInsertObject(pobj, GDI_OBJ_HMGR_POWNED))
     {
         GDIOBJ_vFreeObject(pobj);
@@ -1286,7 +1287,7 @@ GDI_CleanupForProcess(struct _EPROCESS *Process)
     DWORD dwProcessId;
     PPROCESSINFO ppi;
 
-    DPRINT("CleanupForProcess prochandle %x Pid %d\n",
+    DPRINT("CleanupForProcess prochandle %p Pid %p\n",
            Process, Process->UniqueProcessId);
 
     ASSERT(Process == PsGetCurrentProcess());
@@ -1317,7 +1318,7 @@ GDI_CleanupForProcess(struct _EPROCESS *Process)
 #endif
 
     ppi = PsGetCurrentProcessWin32Process();
-    DPRINT("Completed cleanup for process %d\n", Process->UniqueProcessId);
+    DPRINT("Completed cleanup for process %p\n", Process->UniqueProcessId);
     if (ppi->GDIHandleCount != 0)
     {
         DPRINT1("Leaking %d handles!\n", ppi->GDIHandleCount);
@@ -1342,5 +1343,6 @@ GDI_CleanupForProcess(struct _EPROCESS *Process)
 
     return TRUE;
 }
+
 
 /* EOF */

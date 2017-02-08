@@ -38,13 +38,13 @@ CmpDoFlushNextHive(IN BOOLEAN ForceFlush,
     NTSTATUS Status;
     PLIST_ENTRY NextEntry;
     PCMHIVE CmHive;
-    BOOLEAN Result;    
+    BOOLEAN Result;
     ULONG HiveCount = CmpLazyFlushHiveCount;
 
     /* Set Defaults */
     *Error = FALSE;
     *DirtyCount = 0;
-    
+
     /* Don't do anything if we're not supposed to */
     if (CmpNoWrite) return TRUE;
 
@@ -66,7 +66,7 @@ CmpDoFlushNextHive(IN BOOLEAN ForceFlush,
         {
             /* Great sucess! */
             Result = TRUE;
-            
+
             /* Ignore clean or volatile hves */
             if (!(CmHive->Hive.DirtyCount) ||
                 (CmHive->Hive.HiveFlags & HIVE_VOLATILE))
@@ -100,7 +100,7 @@ CmpDoFlushNextHive(IN BOOLEAN ForceFlush,
         /* Try the next one */
         NextEntry = NextEntry->Flink;
     }
-    
+
     /* Check if we've flushed everything */
     if (NextEntry == &CmpHiveListHead)
     {
@@ -112,12 +112,13 @@ CmpDoFlushNextHive(IN BOOLEAN ForceFlush,
         /* We need to be called again */
         Result = TRUE;
     }
-    
+
     /* Unlock the list and return the result */
     ExReleasePushLock(&CmpHiveListHeadLock);
     return Result;
 }
 
+_Function_class_(KDEFERRED_ROUTINE)
 VOID
 NTAPI
 CmpEnableLazyFlushDpcRoutine(IN PKDPC Dpc,
@@ -129,6 +130,7 @@ CmpEnableLazyFlushDpcRoutine(IN PKDPC Dpc,
     CmpHoldLazyFlush = FALSE;
 }
 
+_Function_class_(KDEFERRED_ROUTINE)
 VOID
 NTAPI
 CmpLazyFlushDpcRoutine(IN PKDPC Dpc,
@@ -150,7 +152,7 @@ CmpLazyFlush(VOID)
 {
     LARGE_INTEGER DueTime;
     PAGED_CODE();
-    
+
     /* Check if we should set the lazy flush timer */
     if ((!CmpNoWrite) && (!CmpHoldLazyFlush))
     {
@@ -161,6 +163,7 @@ CmpLazyFlush(VOID)
     }
 }
 
+_Function_class_(WORKER_THREAD_ROUTINE)
 VOID
 NTAPI
 CmpLazyFlushWorker(IN PVOID Parameter)
@@ -171,7 +174,7 @@ CmpLazyFlushWorker(IN PVOID Parameter)
 
     /* Don't do anything if lazy flushing isn't enabled yet */
     if (CmpHoldLazyFlush) return;
-    
+
     /* Check if we are forcing a flush */
     ForceFlush = CmpForceForceFlush;
     if (ForceFlush)
@@ -185,7 +188,7 @@ CmpLazyFlushWorker(IN PVOID Parameter)
         CmpLockRegistry();
         InterlockedIncrement(&CmpFlushStarveWriters);
     }
-    
+
     /* Flush the next hive */
     MoreWork = CmpDoFlushNextHive(ForceFlush, &Result, &DirtyCount);
     if (!MoreWork)
@@ -200,7 +203,7 @@ CmpLazyFlushWorker(IN PVOID Parameter)
     /* Not pending anymore, release the registry lock */
     CmpLazyFlushPending = FALSE;
     CmpUnlockRegistry();
-    
+
     /* Check if we need to flush another hive */
     if ((MoreWork) || (DirtyCount)) CmpLazyFlush();
 }
@@ -209,15 +212,15 @@ VOID
 NTAPI
 CmpCmdInit(IN BOOLEAN SetupBoot)
 {
-    LARGE_INTEGER DueTime;  
+    LARGE_INTEGER DueTime;
     PAGED_CODE();
-    
+
     /* Setup the lazy DPC */
     KeInitializeDpc(&CmpLazyFlushDpc, CmpLazyFlushDpcRoutine, NULL);
-    
+
     /* Setup the lazy timer */
     KeInitializeTimer(&CmpLazyFlushTimer);
-    
+
     /* Setup the lazy worker */
     ExInitializeWorkItem(&CmpLazyWorkItem, CmpLazyFlushWorker, NULL);
 
@@ -226,7 +229,7 @@ CmpCmdInit(IN BOOLEAN SetupBoot)
                     CmpEnableLazyFlushDpcRoutine,
                     NULL);
     KeInitializeTimer(&CmpEnableLazyFlushTimer);
-    
+
     /* Enable lazy flushing after 10 minutes */
     DueTime.QuadPart = Int32x32To64(600, -10 * 1000 * 1000);
     KeSetTimer(&CmpEnableLazyFlushTimer, DueTime, &CmpEnableLazyFlushDpc);
@@ -234,10 +237,10 @@ CmpCmdInit(IN BOOLEAN SetupBoot)
     /* Setup flush variables */
     CmpNoWrite = CmpMiniNTBoot;
     CmpWasSetupBoot = SetupBoot;
-    
+
     /* Testing: Force Lazy Flushing */
     CmpHoldLazyFlush = FALSE;
-    
+
     /* Setup the hive list */
     CmpInitializeHiveList(SetupBoot);
 }

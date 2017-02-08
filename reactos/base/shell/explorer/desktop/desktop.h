@@ -48,9 +48,9 @@ protected:
 
 
  /// Implementation of the Explorer desktop window
-struct DesktopWindow : public Window, public IShellBrowserImpl
+struct DesktopWindow : public PreTranslateWindow, public IShellBrowserImpl
 {
-	typedef Window super;
+	typedef PreTranslateWindow super;
 
 	DesktopWindow(HWND hwnd);
 	~DesktopWindow();
@@ -141,7 +141,8 @@ public:
         /* [out][in] */ DWORD __RPC_FAR *pdwEffect)
 	{
 		TVHITTESTINFO hit;
-		hit.pt = (POINT&)pt;
+		hit.pt.x = pt.x;
+		hit.pt.y = pt.y;
 		ScreenToClient(m_hTargetWnd, &hit.pt);
 		hit.flags = TVHT_ONITEM;
 

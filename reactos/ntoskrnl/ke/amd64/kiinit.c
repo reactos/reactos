@@ -14,7 +14,8 @@
 #include <debug.h>
 
 #define REQUIRED_FEATURE_BITS (KF_RDTSC|KF_CR4|KF_CMPXCHG8B|KF_XMMI|KF_XMMI64| \
-                               KF_NX_BIT)
+                               KF_LARGE_PAGE|KF_FAST_SYSCALL|KF_GLOBAL_PAGE| \
+                               KF_CMOV|KF_PAT|KF_MMX|KF_FXSR|KF_NX_BIT)
 
 /* GLOBALS *******************************************************************/
 
@@ -162,6 +163,7 @@ VOID
 NTAPI
 KiInitializeCpu(PKIPCR Pcr)
 {
+    ULONG64 Pat;
     ULONG FeatureBits;
 
     /* Initialize gs */
@@ -215,14 +217,19 @@ KiInitializeCpu(PKIPCR Pcr)
     __writemsr(MSR_LSTAR, (ULONG64)KiSystemCallEntry64);
     __writemsr(MSR_CSTAR, (ULONG64)KiSystemCallEntry32);
 
-   __writemsr(MSR_STAR, ((ULONG64)KGDT64_R0_CODE << 32) |
-                        ((ULONG64)(KGDT64_R3_CMCODE|RPL_MASK) << 48));
+    __writemsr(MSR_STAR, ((ULONG64)KGDT64_R0_CODE << 32) |
+                         ((ULONG64)(KGDT64_R3_CMCODE|RPL_MASK) << 48));
 
     /* Set the flags to be cleared when doing a syscall */
     __writemsr(MSR_SYSCALL_MASK, EFLAGS_IF_MASK | EFLAGS_TF | EFLAGS_DF);
 
-    /* Enable syscall instruction */
-    __writemsr(MSR_EFER, __readmsr(MSR_EFER) | MSR_SCE);
+    /* Enable syscall instruction and no-execute support */
+    __writemsr(MSR_EFER, __readmsr(MSR_EFER) | MSR_SCE | MSR_NXE);
+
+    /* Initialize the PAT */
+    Pat = (PAT_WB << 0)  | (PAT_WC << 8) | (PAT_UCM << 16) | (PAT_UC << 24) |
+          (PAT_WB << 32) | (PAT_WC << 40) | (PAT_UCM << 48) | (PAT_UC << 56);
+    __writemsr(MSR_PAT, Pat);
 }
 
 VOID

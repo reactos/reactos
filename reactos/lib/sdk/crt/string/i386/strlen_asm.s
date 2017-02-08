@@ -1,5 +1,3 @@
-/* $Id$
- */
 
 #include "tcslen.inc"
 

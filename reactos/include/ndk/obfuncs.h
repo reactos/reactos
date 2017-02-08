@@ -26,6 +26,10 @@ Author:
 #include <pstypes.h>
 #include <obtypes.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef NTOS_MODE_USER
 
 //
@@ -35,129 +39,129 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 ObAssignSecurity(
-    IN PACCESS_STATE AccessState,
-    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-    IN PVOID Object,
-    IN POBJECT_TYPE Type
+    _In_ PACCESS_STATE AccessState,
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ PVOID Object,
+    _In_ POBJECT_TYPE Type
 );
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ObCloseHandle(
-    IN HANDLE Handle,
-    IN KPROCESSOR_MODE AccessMode
+    _In_ HANDLE Handle,
+    _In_ KPROCESSOR_MODE AccessMode
 );
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ObCreateObject(
-    IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
-    IN POBJECT_TYPE ObjectType,
-    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-    IN KPROCESSOR_MODE AccessMode,
-    IN OUT PVOID ParseContext OPTIONAL,
-    IN ULONG ObjectSize,
-    IN ULONG PagedPoolCharge OPTIONAL,
-    IN ULONG NonPagedPoolCharge OPTIONAL,
-    OUT PVOID *Object
+    _In_opt_ KPROCESSOR_MODE ObjectAttributesAccessMode,
+    _In_ POBJECT_TYPE ObjectType,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _Inout_opt_ PVOID ParseContext,
+    _In_ ULONG ObjectSize,
+    _In_opt_ ULONG PagedPoolCharge,
+    _In_opt_ ULONG NonPagedPoolCharge,
+    _Out_ PVOID *Object
 );
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ObCreateObjectType(
-    IN PUNICODE_STRING TypeName,
-    IN POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
-    IN PVOID Reserved,
-    OUT POBJECT_TYPE *ObjectType
+    _In_ PUNICODE_STRING TypeName,
+    _In_ POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
+    _In_ PVOID Reserved,
+    _Out_ POBJECT_TYPE *ObjectType
 );
 
 NTKERNELAPI
 VOID
 NTAPI
 ObDereferenceSecurityDescriptor(
-  PSECURITY_DESCRIPTOR SecurityDescriptor,
-  ULONG Count
+    _Inout_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ ULONG Count
 );
 
 NTKERNELAPI
 ULONG
 NTAPI
 ObGetObjectPointerCount(
-    IN PVOID Object
+    _In_ PVOID Object
 );
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ObLogSecurityDescriptor(
-    IN PSECURITY_DESCRIPTOR InputSecurityDescriptor,
-    OUT PSECURITY_DESCRIPTOR *OutputSecurityDescriptor,
-    IN ULONG RefBias
+    _In_ PSECURITY_DESCRIPTOR InputSecurityDescriptor,
+    _Out_ PSECURITY_DESCRIPTOR *OutputSecurityDescriptor,
+    _In_ ULONG RefBias
 );
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ObOpenObjectByName(
-    IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN POBJECT_TYPE ObjectType,
-    IN KPROCESSOR_MODE AccessMode,
-    IN PACCESS_STATE PassedAccessState,
-    IN ACCESS_MASK DesiredAccess,
-    IN OUT PVOID ParseContext,
-    OUT PHANDLE Handle
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ POBJECT_TYPE ObjectType,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _In_opt_ PACCESS_STATE PassedAccessState,
+    _In_ ACCESS_MASK DesiredAccess,
+    _Inout_ PVOID ParseContext,
+    _Out_ PHANDLE Handle
 );
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ObReferenceObjectByName(
-    IN PUNICODE_STRING ObjectName,
-    IN ULONG Attributes,
-    IN PACCESS_STATE PassedAccessState OPTIONAL,
-    IN ACCESS_MASK DesiredAccess OPTIONAL,
-    IN POBJECT_TYPE ObjectType,
-    IN KPROCESSOR_MODE AccessMode,
-    IN OUT PVOID ParseContext OPTIONAL,
-    OUT PVOID *Object
+    _In_ PUNICODE_STRING ObjectName,
+    _In_ ULONG Attributes,
+    _In_opt_ PACCESS_STATE PassedAccessState,
+    _In_opt_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_TYPE ObjectType,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _Inout_opt_ PVOID ParseContext,
+    _Out_ PVOID *Object
 );
 
 NTKERNELAPI
 VOID
 NTAPI
 ObReferenceSecurityDescriptor(
-    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-    IN ULONG Count
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ ULONG Count
 );
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ObSetSecurityObjectByPointer(
-  IN PVOID Object,
-  IN SECURITY_INFORMATION SecurityInformation,
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor
+    _In_ PVOID Object,
+    _In_ SECURITY_INFORMATION SecurityInformation,
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor
 );
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 ObFindHandleForObject(
-    IN PEPROCESS Process,
-    IN PVOID Object,
-    IN POBJECT_TYPE ObjectType,
-    IN POBJECT_HANDLE_INFORMATION HandleInformation,
-    OUT PHANDLE Handle
+    _In_ PEPROCESS Process,
+    _In_ PVOID Object,
+    _In_ POBJECT_TYPE ObjectType,
+    _In_ POBJECT_HANDLE_INFORMATION HandleInformation,
+    _Out_ PHANDLE Handle
 );
 
 NTKERNELAPI
 VOID
 NTAPI
 ObDereferenceObjectDeferDelete(
-    IN PVOID Object
+    _In_ PVOID Object
 );
 
 #endif
@@ -169,392 +173,415 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtClose(
-    IN HANDLE Handle
+    _In_ HANDLE Handle
 );
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCloseObjectAuditAlarm(
-    IN PUNICODE_STRING SubsystemName,
-    IN PVOID HandleId,
-    IN BOOLEAN GenerateOnClose
+    _In_ PUNICODE_STRING SubsystemName,
+    _In_opt_ PVOID HandleId,
+    _In_ BOOLEAN GenerateOnClose
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateDirectoryObject(
-    OUT PHANDLE DirectoryHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE DirectoryHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateSymbolicLinkObject(
-    OUT PHANDLE SymbolicLinkHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN PUNICODE_STRING Name
+    _Out_ PHANDLE SymbolicLinkHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ PUNICODE_STRING Name
 );
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtDeleteObjectAuditAlarm(
-    IN PUNICODE_STRING SubsystemName,
-    IN PVOID HandleId,
-    IN BOOLEAN GenerateOnClose
+    _In_ PUNICODE_STRING SubsystemName,
+    _In_opt_ PVOID HandleId,
+    _In_ BOOLEAN GenerateOnClose
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtDuplicateObject(
-    IN HANDLE SourceProcessHandle,
-    IN HANDLE SourceHandle,
-    IN HANDLE TargetProcessHandle,
-    OUT PHANDLE TargetHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN ULONG HandleAttributes,
-    IN ULONG Options
+    _In_ HANDLE SourceProcessHandle,
+    _In_ HANDLE SourceHandle,
+    _In_ HANDLE TargetProcessHandle,
+    _Out_ PHANDLE TargetHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ ULONG HandleAttributes,
+    _In_ ULONG Options
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtMakePermanentObject(
-    IN HANDLE Object
+    _In_ HANDLE Object
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtMakeTemporaryObject(
-    IN HANDLE Handle
+    _In_ HANDLE Handle
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenDirectoryObject(
-    OUT PHANDLE FileHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE FileHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenJobObject(
-    PHANDLE JobHandle,
-    ACCESS_MASK DesiredAccess,
-    POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE JobHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenSymbolicLinkObject(
-    OUT PHANDLE SymbolicLinkHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE SymbolicLinkHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryDirectoryObject(
-    IN HANDLE DirectoryHandle,
-    OUT PVOID Buffer,
-    IN ULONG BufferLength,
-    IN BOOLEAN ReturnSingleEntry,
-    IN BOOLEAN RestartScan,
-    IN OUT PULONG Context,
-    OUT PULONG ReturnLength OPTIONAL
+    _In_ HANDLE DirectoryHandle,
+    _Out_ PVOID Buffer,
+    _In_ ULONG BufferLength,
+    _In_ BOOLEAN ReturnSingleEntry,
+    _In_ BOOLEAN RestartScan,
+    _Inout_ PULONG Context,
+    _Out_opt_ PULONG ReturnLength
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryObject(
-    IN HANDLE ObjectHandle,
-    IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
-    OUT PVOID ObjectInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength OPTIONAL
+    _In_opt_ HANDLE Handle,
+    _In_ OBJECT_INFORMATION_CLASS ObjectInformationClass,
+    _Out_writes_bytes_opt_(ObjectInformationLength) PVOID ObjectInformation,
+    _In_ ULONG ObjectInformationLength,
+    _Out_opt_ PULONG ReturnLength
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQuerySecurityObject(
-    IN HANDLE Handle,
-    IN SECURITY_INFORMATION SecurityInformation,
-    OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    _In_ HANDLE Handle,
+    _In_ SECURITY_INFORMATION SecurityInformation,
+    _Out_writes_bytes_opt_(Length) PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ ULONG Length,
+    _Out_ PULONG LengthNeeded
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQuerySymbolicLinkObject(
-    IN HANDLE SymLinkObjHandle,
-    OUT PUNICODE_STRING LinkTarget,
-    OUT PULONG DataWritten OPTIONAL
+    _In_ HANDLE SymLinkObjHandle,
+    _Out_ PUNICODE_STRING LinkTarget,
+    _Out_opt_ PULONG DataWritten
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetInformationObject(
-    IN HANDLE ObjectHandle,
-    IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
-    IN PVOID ObjectInformation,
-    IN ULONG Length
+    _In_ HANDLE ObjectHandle,
+    _In_ OBJECT_INFORMATION_CLASS ObjectInformationClass,
+    _In_ PVOID ObjectInformation,
+    _In_ ULONG Length
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetSecurityObject(
-    IN HANDLE Handle,
-    IN SECURITY_INFORMATION SecurityInformation,
-    IN PSECURITY_DESCRIPTOR SecurityDescriptor
+    _In_ HANDLE Handle,
+    _In_ SECURITY_INFORMATION SecurityInformation,
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSignalAndWaitForSingleObject(
-    IN HANDLE SignalObject,
-    IN HANDLE WaitObject,
-    IN BOOLEAN Alertable,
-    IN PLARGE_INTEGER Time
+    _In_ HANDLE SignalObject,
+    _In_ HANDLE WaitObject,
+    _In_ BOOLEAN Alertable,
+    _In_ PLARGE_INTEGER Time
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtWaitForMultipleObjects(
-    IN ULONG Count,
-    IN HANDLE Object[],
-    IN WAIT_TYPE WaitType,
-    IN BOOLEAN Alertable,
-    IN PLARGE_INTEGER Time
+    _In_ ULONG Count,
+    _In_ HANDLE Object[],
+    _In_ WAIT_TYPE WaitType,
+    _In_ BOOLEAN Alertable,
+    _In_ PLARGE_INTEGER Time
 );
 
 NTSTATUS
 NTAPI
 NtWaitForMultipleObjects32(
-    IN ULONG ObjectCount,
-    IN PLONG Handles,
-    IN WAIT_TYPE WaitType,
-    IN BOOLEAN Alertable,
-    IN PLARGE_INTEGER TimeOut OPTIONAL
+    _In_ ULONG ObjectCount,
+    _In_ PLONG Handles,
+    _In_ WAIT_TYPE WaitType,
+    _In_ BOOLEAN Alertable,
+    _In_opt_ PLARGE_INTEGER TimeOut
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtWaitForSingleObject(
-    IN HANDLE Object,
-    IN BOOLEAN Alertable,
-    IN PLARGE_INTEGER Time
+    _In_ HANDLE Object,
+    _In_ BOOLEAN Alertable,
+    _In_opt_ PLARGE_INTEGER Time
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwClose(
-    IN HANDLE Handle
+    _In_ HANDLE Handle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCloseObjectAuditAlarm(
-    IN PUNICODE_STRING SubsystemName,
-    IN PVOID HandleId,
-    IN BOOLEAN GenerateOnClose
+    _In_ PUNICODE_STRING SubsystemName,
+    _In_ PVOID HandleId,
+    _In_ BOOLEAN GenerateOnClose
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateDirectoryObject(
-    OUT PHANDLE DirectoryHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE DirectoryHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateSymbolicLinkObject(
-    OUT PHANDLE SymbolicLinkHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN PUNICODE_STRING Name
+    _Out_ PHANDLE SymbolicLinkHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ PUNICODE_STRING Name
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDeleteObjectAuditAlarm(
-    IN PUNICODE_STRING SubsystemName,
-    IN PVOID HandleId,
-    IN BOOLEAN GenerateOnClose
+    _In_ PUNICODE_STRING SubsystemName,
+    _In_ PVOID HandleId,
+    _In_ BOOLEAN GenerateOnClose
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDuplicateObject(
-    IN HANDLE SourceProcessHandle,
-    IN HANDLE SourceHandle,
-    IN HANDLE TargetProcessHandle,
-    OUT PHANDLE TargetHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN ULONG HandleAttributes,
-    IN ULONG Options
+    _In_ HANDLE SourceProcessHandle,
+    _In_ HANDLE SourceHandle,
+    _In_opt_ HANDLE TargetProcessHandle,
+    _Out_opt_ PHANDLE TargetHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ ULONG HandleAttributes,
+    _In_ ULONG Options
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwMakePermanentObject(
-    IN HANDLE Object
+    _In_ HANDLE Object
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwMakeTemporaryObject(
-    IN HANDLE Handle
+    _In_ HANDLE Handle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenDirectoryObject(
-    OUT PHANDLE FileHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE FileHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenJobObject(
-    PHANDLE JobHandle,
-    ACCESS_MASK DesiredAccess,
-    POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE JobHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenSymbolicLinkObject(
-    OUT PHANDLE SymbolicLinkHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE SymbolicLinkHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryDirectoryObject(
-    IN HANDLE DirectoryHandle,
-    OUT PVOID Buffer,
-    IN ULONG BufferLength,
-    IN BOOLEAN ReturnSingleEntry,
-    IN BOOLEAN RestartScan,
-    IN OUT PULONG Context,
-    OUT PULONG ReturnLength OPTIONAL
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQueryObject(
-    IN HANDLE ObjectHandle,
-    IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
-    OUT PVOID ObjectInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength OPTIONAL
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQuerySecurityObject(
-    IN HANDLE Handle,
-    IN SECURITY_INFORMATION SecurityInformation,
-    OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
-    IN ULONG Length,
-    OUT PULONG ResultLength
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQuerySymbolicLinkObject(
-    IN HANDLE SymLinkObjHandle,
-    OUT PUNICODE_STRING LinkTarget,
-    OUT PULONG DataWritten OPTIONAL
+    _In_ HANDLE DirectoryHandle,
+    _Out_ PVOID Buffer,
+    _In_ ULONG BufferLength,
+    _In_ BOOLEAN ReturnSingleEntry,
+    _In_ BOOLEAN RestartScan,
+    _Inout_ PULONG Context,
+    _Out_opt_ PULONG ReturnLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetInformationObject(
-    IN HANDLE ObjectHandle,
-    IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
-    IN PVOID ObjectInformation,
-    IN ULONG Length
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwSetSecurityObject(
-    IN HANDLE Handle,
-    IN SECURITY_INFORMATION SecurityInformation,
-    IN PSECURITY_DESCRIPTOR SecurityDescriptor
+    _In_ HANDLE ObjectHandle,
+    _In_ OBJECT_INFORMATION_CLASS ObjectInformationClass,
+    _In_ PVOID ObjectInformation,
+    _In_ ULONG Length
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSignalAndWaitForSingleObject(
-    IN HANDLE SignalObject,
-    IN HANDLE WaitObject,
-    IN BOOLEAN Alertable,
-    IN PLARGE_INTEGER Time
+    _In_ HANDLE SignalObject,
+    _In_ HANDLE WaitObject,
+    _In_ BOOLEAN Alertable,
+    _In_opt_ PLARGE_INTEGER Time
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWaitForMultipleObjects(
-    IN ULONG Count,
-    IN HANDLE Object[],
-    IN WAIT_TYPE WaitType,
-    IN BOOLEAN Alertable,
-    IN PLARGE_INTEGER Time
+    _In_ ULONG Count,
+    _In_ HANDLE Object[],
+    _In_ WAIT_TYPE WaitType,
+    _In_ BOOLEAN Alertable,
+    _In_ PLARGE_INTEGER Time
 );
 
+#ifdef NTOS_MODE_USER
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQueryObject(
+    _In_opt_ HANDLE Handle,
+    _In_ OBJECT_INFORMATION_CLASS ObjectInformationClass,
+    _Out_writes_bytes_opt_(ObjectInformationLength) PVOID ObjectInformation,
+    _In_ ULONG ObjectInformationLength,
+    _Out_opt_ PULONG ReturnLength
+);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQuerySecurityObject(
+    _In_ HANDLE Handle,
+    _In_ SECURITY_INFORMATION SecurityInformation,
+    _Out_writes_bytes_to_(Length,*LengthNeeded) PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ ULONG Length,
+    _Out_ PULONG LengthNeeded
+);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQuerySymbolicLinkObject(
+    _In_ HANDLE LinkHandle,
+    _Inout_ PUNICODE_STRING LinkTarget,
+    _Out_opt_ PULONG ReturnedLength
+);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetSecurityObject(
+    _In_ HANDLE Handle,
+    _In_ SECURITY_INFORMATION SecurityInformation,
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor
+);
+
+_When_(Timeout == NULL, _IRQL_requires_max_(APC_LEVEL))
+_When_(Timeout->QuadPart != 0, _IRQL_requires_max_(APC_LEVEL))
+_When_(Timeout->QuadPart == 0, _IRQL_requires_max_(DISPATCH_LEVEL))
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWaitForSingleObject(
-    IN HANDLE Object,
-    IN BOOLEAN Alertable,
-    IN PLARGE_INTEGER Time
+    _In_ HANDLE Handle,
+    _In_ BOOLEAN Alertable,
+    _In_opt_ PLARGE_INTEGER Timeout
 );
+
+#endif /* NTOS_MODE_USER */
+
+#ifdef __cplusplus
+}; // extern "C"
+#endif
 
 #endif

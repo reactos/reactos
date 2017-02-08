@@ -262,7 +262,6 @@ NdisUpdateSharedMemory(
     /* No-op. */
 }
 
-
 /*
  * @unimplemented
  */
@@ -277,7 +276,6 @@ NdisImmediateReadSharedMemory(
     UNIMPLEMENTED
 }
 
-
 /*
  * @unimplemented
  */

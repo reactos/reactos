@@ -25,7 +25,7 @@
  *        simple check to fix > and | bug with 'rem'
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 #ifdef FEATURE_REDIRECTION
 
@@ -57,23 +57,21 @@ PerformRedirection(REDIRECTION *RedirList)
 	LPTSTR Filename;
 	HANDLE hNew;
 	UINT DupNumber;
+
 	static SECURITY_ATTRIBUTES SecAttr = { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
 
 	/* Some parameters used for read, write, and append, respectively */
-	static const DWORD dwAccess[] = {
-		GENERIC_READ, 
-		GENERIC_WRITE,
-		GENERIC_WRITE
-	};
-	static const DWORD dwShareMode[] = {
-		FILE_SHARE_READ | FILE_SHARE_WRITE,
-		FILE_SHARE_READ,
-		FILE_SHARE_READ
-	};
-	static const DWORD dwCreationDisposition[] = {
-		OPEN_EXISTING,
-		CREATE_ALWAYS,
-		OPEN_ALWAYS
+	static
+	struct REDIR_PARAMS
+	{
+		DWORD dwDesiredAccess;
+		DWORD dwShareMode;
+		DWORD dwCreationDisposition;
+	} RedirParams[] =
+	{
+		{GENERIC_READ , FILE_SHARE_READ | FILE_SHARE_WRITE, OPEN_EXISTING}, // REDIR_READ
+		{GENERIC_WRITE, FILE_SHARE_READ                   , CREATE_ALWAYS}, // REDIR_WRITE
+		{GENERIC_WRITE, FILE_SHARE_READ                   , OPEN_ALWAYS  }  // REDIR_APPEND
 	};
 
 	for (Redir = RedirList; Redir; Redir = Redir->Next)
@@ -101,17 +99,18 @@ PerformRedirection(REDIRECTION *RedirList)
 		else
 		{
 			hNew = CreateFile(Filename,
-			                  dwAccess[Redir->Type],
-			                  dwShareMode[Redir->Type],
+			                  RedirParams[Redir->Mode].dwDesiredAccess,
+			                  RedirParams[Redir->Mode].dwShareMode,
 			                  &SecAttr,
-			                  dwCreationDisposition[Redir->Type],
+			                  RedirParams[Redir->Mode].dwCreationDisposition,
 			                  0,
 			                  NULL);
 		}
 
 		if (hNew == INVALID_HANDLE_VALUE)
 		{
-			ConErrResPrintf(Redir->Type == REDIR_READ ? STRING_CMD_ERROR1 : STRING_CMD_ERROR3,
+			/* TODO: Print a more detailed message */
+			ConErrResPrintf(Redir->Mode == REDIR_READ ? STRING_CMD_ERROR1 : STRING_CMD_ERROR3,
 			                Filename);
 			cmd_free(Filename);
 redir_error:
@@ -120,7 +119,7 @@ redir_error:
 			return FALSE;
 		}
 
-		if (Redir->Type == REDIR_APPEND)
+		if (Redir->Mode == REDIR_APPEND)
 			SetFilePointer(hNew, 0, NULL, FILE_END);
 		Redir->OldHandle = GetHandle(Redir->Number);
 		SetHandle(Redir->Number, hNew);

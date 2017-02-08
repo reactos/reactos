@@ -49,7 +49,7 @@
 
 /** helper struct for gethostbyname_r to access the char* buffer */
 struct gethostbyname_r_helper {
-  ip_addr_t *addrs;
+  ip_addr_t *addr_list[2];
   ip_addr_t addr;
   char *aliases;
 };
@@ -180,7 +180,7 @@ lwip_gethostbyname_r(const char *name, struct hostent *ret, char *buf,
   }
   /* first thing to do: set *result to nothing */
   *result = NULL;
-  if ((name == NULL) || (ret == NULL) || (buf == 0)) {
+  if ((name == NULL) || (ret == NULL) || (buf == NULL)) {
     /* not all arguments given */
     *h_errnop = EINVAL;
     return -1;
@@ -197,10 +197,10 @@ lwip_gethostbyname_r(const char *name, struct hostent *ret, char *buf,
   hostname = ((char*)h) + sizeof(struct gethostbyname_r_helper);
 
   /* query host IP address */
-  err = netconn_gethostbyname(name, &(h->addr));
+  err = netconn_gethostbyname(name, &h->addr);
   if (err != ERR_OK) {
     LWIP_DEBUGF(DNS_DEBUG, ("lwip_gethostbyname(%s) failed, err=%d\n", name, err));
-    *h_errnop = ENSRNOTFOUND;
+    *h_errnop = HOST_NOT_FOUND;
     return -1;
   }
 
@@ -209,13 +209,14 @@ lwip_gethostbyname_r(const char *name, struct hostent *ret, char *buf,
   hostname[namelen] = 0;
 
   /* fill hostent */
-  h->addrs = &(h->addr);
+  h->addr_list[0] = &h->addr;
+  h->addr_list[1] = NULL;
   h->aliases = NULL;
-  ret->h_name = (char*)hostname;
-  ret->h_aliases = &(h->aliases);
+  ret->h_name = hostname;
+  ret->h_aliases = &h->aliases;
   ret->h_addrtype = AF_INET;
   ret->h_length = sizeof(ip_addr_t);
-  ret->h_addr_list = (char**)&(h->addrs);
+  ret->h_addr_list = (char**)&h->addr_list;
 
   /* set result != NULL */
   *result = ret;

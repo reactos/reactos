@@ -21,7 +21,7 @@
 #ifndef __WINE_RPC_MESSAGE_H
 #define __WINE_RPC_MESSAGE_H
 
-#include "rpc_defs.h"
+//#include "rpc_defs.h"
 
 typedef unsigned int NCA_STATUS;
 

@@ -249,7 +249,8 @@ bool CARDLIBPROC StackDropProc(CardRegion &stackobj, CardStack &dragcards)
             int i, max = NUM_ONECOLOR_CARDS - dragcards.NumCards() - 1;
 
             /* Dragged cards have been checked to be in order, check stack cards */
-            if (stackLookingGood(mystack, max))
+            if (mystack[0].Suit() == dragcard.Suit() &&
+                stackLookingGood(mystack, max)) 
             {
                 CardStack s = stackobj.GetCardStack();
                 CardStack f;
@@ -279,8 +280,8 @@ void CreateSpider()
 {
     int i, pos;
 
-    /* Compute the value for yRowStackCardOffset based on the height of the card, so the card number isn't hidden on larger cards */
-    yRowStackCardOffset = (int)(__cardheight / 6.7);
+    /* Compute the value for yRowStackCardOffset based on the height of the card, so the card number and suite isn't hidden on larger cards except Ace */
+    yRowStackCardOffset = (int)(__cardheight / 6.4);
 
     pDeck = SpiderWnd.CreateRegion(0, true, 0, 0, -15, 0);
     pDeck->SetFaceDirection(CS_FACE_DOWN, 0);

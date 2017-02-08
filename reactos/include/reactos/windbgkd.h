@@ -451,7 +451,7 @@ typedef struct _DBGKD_WAIT_STATE_CHANGE32
     ULONG Thread;
     ULONG ProgramCounter;
     union
-	{
+    {
         DBGKM_EXCEPTION32 Exception;
         DBGKD_LOAD_SYMBOLS32 LoadSymbols;
     } u;
@@ -481,13 +481,13 @@ typedef struct _DBGKD_ANY_WAIT_STATE_CHANGE
     ULONG64 Thread;
     ULONG64 ProgramCounter;
     union
-	{
+    {
         DBGKM_EXCEPTION64 Exception;
         DBGKD_LOAD_SYMBOLS64 LoadSymbols;
         DBGKD_COMMAND_STRING CommandString;
     } u;
     union
-	{
+    {
         DBGKD_CONTROL_REPORT ControlReport;
         DBGKD_ANY_CONTROL_REPORT AnyControlReport;
     };
@@ -814,7 +814,7 @@ typedef struct _DBGKD_FILE_IO
     ULONG ApiNumber;
     ULONG Status;
     union
-	{
+    {
         ULONG64 ReserveSpace[7];
         DBGKD_CREATE_FILE CreateFile;
         DBGKD_READ_FILE ReadFile;
@@ -843,7 +843,7 @@ typedef struct _DBGKD_CONTROL_REQUEST
 {
     ULONG ApiNumber;
     union
-	{
+    {
         DBGKD_REQUEST_BREAKPOINT RequestBreakpoint;
         DBGKD_RELEASE_BREAKPOINT ReleaseBreakpoint;
     } u;

@@ -80,9 +80,15 @@ typedef PVOID PKSWORKER;
     #endif
 #endif
 
-#if defined(__cplusplus) && _MSC_VER >= 1100
-    #define DEFINE_GUIDSTRUCT(guid, name) struct __declspec(uuid(guid)) name
-    #define DEFINE_GUIDNAMED(name) __uuidof(struct name)
+#if defined(__cplusplus)
+    #if _MSC_VER >= 1100
+        #define DEFINE_GUIDSTRUCT(guid, name) struct __declspec(uuid(guid)) name
+        #define DEFINE_GUIDNAMED(name) __uuidof(struct name)
+    #else
+        #define DEFINE_GUIDSTRUCT(guid, name)          \
+            extern const DECLSPEC_SELECTANY GUID __uuid__##name={STATIC_##name};
+        #define DEFINE_GUIDNAMED(name) __uuid__##name
+    #endif
 #else
     #define DEFINE_GUIDSTRUCT(guid, name) DEFINE_GUIDEX(name)
     #define DEFINE_GUIDNAMED(name) name
@@ -93,7 +99,6 @@ typedef PVOID PKSWORKER;
     0x00000000L, 0x0000, 0x0000, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 DEFINE_GUIDSTRUCT("00000000-0000-0000-0000-000000000000", GUID_NULL);
 #define GUID_NULL DEFINE_GUIDNAMED(GUID_NULL)
-
 
 #define STATIC_KSNAME_Filter\
     0x9b365890L, 0x165f, 0x11d0, {0xa1, 0x95, 0x00, 0x20, 0xaf, 0xd1, 0x56, 0xe4}

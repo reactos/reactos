@@ -70,7 +70,7 @@ BaseCheckVDM(IN ULONG BinaryType,
              IN PCWCH CommandLine,
              IN PCWCH CurrentDirectory,
              IN PANSI_STRING AnsiEnvironment,
-             IN PCSR_API_MESSAGE Msg,
+             IN PCSR_API_MESSAGE ApiMessage,
              IN OUT PULONG iTask,
              IN DWORD CreationFlags,
              IN LPSTARTUPINFOW StartupInfo)
@@ -87,9 +87,10 @@ BaseUpdateVDMEntry(IN ULONG UpdateIndex,
                    IN ULONG IndexInfo,
                    IN ULONG BinaryType)
 {
+#if 0 // Unimplemented in BASESRV
     NTSTATUS Status;
-    CSR_API_MESSAGE Msg;
-    ULONG CsrRequest = MAKE_CSR_API(UPDATE_VDM_ENTRY, CSR_CONSOLE);
+    BASE_API_MESSAGE ApiMessage;
+    PBASE_UPDATE_VDM_ENTRY UpdateVdmEntry = &ApiMessage.Data.UpdateVdmEntry;
 
     /* Check what update is being sent */
     switch (UpdateIndex)
@@ -98,16 +99,16 @@ BaseUpdateVDMEntry(IN ULONG UpdateIndex,
         case VdmEntryUndo:
 
             /* Tell the server how far we had gotten along */
-            Msg.Data.UpdateVdmEntry.iTask = (ULONG)*WaitHandle;
-            Msg.Data.UpdateVdmEntry.VDMCreationState = IndexInfo;
+            UpdateVdmEntry->iTask = (ULONG)*WaitHandle;
+            UpdateVdmEntry->VDMCreationState = IndexInfo;
             break;
 
         /* VDM is ready with a new process handle */
         case VdmEntryUpdateProcess:
 
             /* Send it the process handle */
-            Msg.Data.UpdateVdmEntry.VDMProcessHandle = *WaitHandle;
-            Msg.Data.UpdateVdmEntry.iTask = IndexInfo;
+            UpdateVdmEntry->VDMProcessHandle = *WaitHandle;
+            UpdateVdmEntry->iTask = IndexInfo;
             break;
     }
 
@@ -115,29 +116,32 @@ BaseUpdateVDMEntry(IN ULONG UpdateIndex,
     if (BinaryType == BINARY_TYPE_WOW)
     {
         /* Magic value for 16-bit apps */
-        Msg.Data.UpdateVdmEntry.ConsoleHandle = (HANDLE)-1;
+        UpdateVdmEntry->ConsoleHandle = (HANDLE)-1;
     }
-    else if (Msg.Data.UpdateVdmEntry.iTask)
+    else if (UpdateVdmEntry->iTask)
     {
         /* No handle for true VDM */
-        Msg.Data.UpdateVdmEntry.ConsoleHandle = 0;
+        UpdateVdmEntry->ConsoleHandle = 0;
     }
     else
     {
         /* Otherwise, send the regular consoel handle */
-        Msg.Data.UpdateVdmEntry.ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+        UpdateVdmEntry->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
     }
 
     /* Finally write the index and binary type */
-    Msg.Data.UpdateVdmEntry.EntryIndex = UpdateIndex;
-    Msg.Data.UpdateVdmEntry.BinaryType = BinaryType;
+    UpdateVdmEntry->EntryIndex = UpdateIndex;
+    UpdateVdmEntry->BinaryType = BinaryType;
 
     /* Send the message to CSRSS */
-    Status = CsrClientCallServer(&Msg, NULL, CsrRequest, sizeof(Msg));
-    if (!(NT_SUCCESS(Status)) || !(NT_SUCCESS(Msg.Status)))
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                 NULL,
+                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepUpdateVDMEntry),
+                                 sizeof(BASE_UPDATE_VDM_ENTRY));
+    if (!NT_SUCCESS(Status))
     {
         /* Handle failure */
-        BaseSetLastNTError(Msg.Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -145,9 +149,9 @@ BaseUpdateVDMEntry(IN ULONG UpdateIndex,
     if (UpdateIndex == VdmEntryUpdateProcess)
     {
         /* Return it to the caller */
-        *WaitHandle = Msg.Data.UpdateVdmEntry.WaitObjectForParent;
+        *WaitHandle = UpdateVdmEntry->WaitObjectForParent;
     }
-
+#endif
     /* We made it */
     return TRUE;
 }
@@ -157,10 +161,11 @@ WINAPI
 BaseCheckForVDM(IN HANDLE ProcessHandle,
                 OUT LPDWORD ExitCode)
 {
+#if 0 // Unimplemented in BASESRV
     NTSTATUS Status;
     EVENT_BASIC_INFORMATION EventBasicInfo;
-    CSR_API_MESSAGE Msg;
-    ULONG CsrRequest = MAKE_CSR_API(GET_VDM_EXIT_CODE, CSR_CONSOLE);
+    BASE_API_MESSAGE ApiMessage;
+    PBASE_GET_VDM_EXIT_CODE GetVdmExitCode = &ApiMessage.Data.GetVdmExitCode;
 
     /* It's VDM if the process is actually a wait handle (an event) */
     Status = NtQueryEvent(ProcessHandle,
@@ -171,15 +176,19 @@ BaseCheckForVDM(IN HANDLE ProcessHandle,
     if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Setup the input parameters */
-    Msg.Data.GetVdmExitCode.ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
-    Msg.Data.GetVdmExitCode.hParent = ProcessHandle;
+    GetVdmExitCode->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+    GetVdmExitCode->hParent = ProcessHandle;
 
     /* Call CSRSS */
-    Status = CsrClientCallServer(&Msg, NULL, CsrRequest, sizeof(Msg));
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                 NULL,
+                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetVDMExitCode /* BasepCheckVDM */),
+                                 sizeof(BASE_GET_VDM_EXIT_CODE));
     if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Get the exit code from the reply */
-    *ExitCode = Msg.Data.GetVdmExitCode.ExitCode;
+    *ExitCode = GetVdmExitCode->ExitCode;
+#endif
     return TRUE;
 }
 
@@ -224,7 +233,7 @@ BaseGetVdmConfigInfo(IN LPCWSTR Reserved,
     }
     else
     {
-        /* Non-DOS, build the stirng for it without the task ID */
+        /* Non-DOS, build the string for it without the task ID */
         _snwprintf(CommandLine,
                    sizeof(CommandLine),
                    L"\"%s\\ntvdm.exe\"  %s%c",

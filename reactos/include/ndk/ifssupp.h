@@ -30,9 +30,9 @@ typedef enum _TOKEN_TYPE
 
 typedef NTSTATUS
 (NTAPI * PRTL_HEAP_COMMIT_ROUTINE)(
-    IN PVOID Base,
-    IN OUT PVOID *CommitAddress,
-    IN OUT PSIZE_T CommitSize
+    _In_ PVOID Base,
+    _Inout_ PVOID *CommitAddress,
+    _Inout_ PSIZE_T CommitSize
 );
 
 typedef struct _RTL_HEAP_PARAMETERS

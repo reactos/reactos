@@ -241,7 +241,7 @@ KeBoostPriorityThread(IN PKTHREAD Thread,
     {
         /* Lock the thread */
         KiAcquireThreadLock(Thread);
-        
+
         /* Check again, and make sure there's not already a boost */
         if ((Thread->Priority < LOW_REALTIME_PRIORITY) &&
             !(Thread->PriorityDecrement))
@@ -266,7 +266,7 @@ KeBoostPriorityThread(IN PKTHREAD Thread,
         /* Release thread lock */
         KiReleaseThreadLock(Thread);
     }
-    
+
     /* Release the dispatcher lokc */
     KiReleaseDispatcherLock(OldIrql);
 }
@@ -457,6 +457,7 @@ KeRundownThread(VOID)
     {
         /* Get the Mutant */
         Mutant = CONTAINING_RECORD(NextEntry, KMUTANT, MutantListEntry);
+        ASSERT_MUTANT(Mutant);
 
         /* Make sure it's not terminating with APCs off */
         if (Mutant->ApcDisable)
@@ -485,7 +486,7 @@ KeRundownThread(VOID)
         }
 
         /* Move on */
-        NextEntry = NextEntry->Flink;
+        NextEntry = Thread->MutantListHead.Flink;
     }
 
     /* Release the Lock */
@@ -771,7 +772,7 @@ KeInitThread(IN OUT PKTHREAD Thread,
     PKTIMER Timer;
     NTSTATUS Status;
 
-    /* Initalize the Dispatcher Header */
+    /* Initialize the Dispatcher Header */
     Thread->Header.Type = ThreadObject;
     Thread->Header.ThreadControlFlags = 0;
     Thread->Header.DebugActive = FALSE;
@@ -861,7 +862,7 @@ KeInitThread(IN OUT PKTHREAD Thread,
     Status = STATUS_SUCCESS;
     _SEH2_TRY
     {
-        /* Initalize the Thread Context */
+        /* Initialize the Thread Context */
         KiInitializeContextThread(Thread,
                                   SystemRoutine,
                                   StartRoutine,
@@ -883,7 +884,7 @@ KeInitThread(IN OUT PKTHREAD Thread,
     }
     _SEH2_END;
 
-    /* Set the Thread to initalized */
+    /* Set the Thread to initialized */
     Thread->State = Initialized;
     return Status;
 }

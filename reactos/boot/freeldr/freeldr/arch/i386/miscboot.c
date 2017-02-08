@@ -19,21 +19,24 @@
 
 #include <freeldr.h>
 
-VOID LoadAndBootBootSector(PCSTR OperatingSystemName)
+VOID
+LoadAndBootBootSector(IN OperatingSystemItem* OperatingSystem,
+                      IN USHORT OperatingSystemVersion)
 {
-	PFILE	FilePointer;
-	CHAR	SettingName[80];
-	ULONG	SectionId;
+	ULONG_PTR	SectionId;
+	PCSTR	SectionName = OperatingSystem->SystemPartition;
 	CHAR	FileName[260];
+	PFILE	FilePointer;
 	ULONG	BytesRead;
+	CHAR	SettingName[80];
 
 	// Find all the message box settings and run them
-	UiShowMessageBoxesInSection(OperatingSystemName);
+	UiShowMessageBoxesInSection(SectionName);
 
 	// Try to open the operating system section in the .ini file
-	if (!IniOpenSection(OperatingSystemName, &SectionId))
+	if (!IniOpenSection(SectionName, &SectionId))
 	{
-		sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", OperatingSystemName);
+		sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", SectionName);
 		UiMessageBox(SettingName);
 		return;
 	}
@@ -79,22 +82,25 @@ VOID LoadAndBootBootSector(PCSTR OperatingSystemName)
 	ChainLoadBiosBootSectorCode();
 }
 
-VOID LoadAndBootPartition(PCSTR OperatingSystemName)
+VOID
+LoadAndBootPartition(IN OperatingSystemItem* OperatingSystem,
+                     IN USHORT OperatingSystemVersion)
 {
+	ULONG_PTR		SectionId;
+	PCSTR			SectionName = OperatingSystem->SystemPartition;
 	CHAR			SettingName[80];
 	CHAR			SettingValue[80];
-	ULONG			SectionId;
 	PARTITION_TABLE_ENTRY	PartitionTableEntry;
 	UCHAR			DriveNumber;
 	ULONG			PartitionNumber;
 
 	// Find all the message box settings and run them
-	UiShowMessageBoxesInSection(OperatingSystemName);
+	UiShowMessageBoxesInSection(SectionName);
 
 	// Try to open the operating system section in the .ini file
-	if (!IniOpenSection(OperatingSystemName, &SectionId))
+	if (!IniOpenSection(SectionName, &SectionId))
 	{
-		sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", OperatingSystemName);
+		sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", SectionName);
 		UiMessageBox(SettingName);
 		return;
 	}
@@ -151,20 +157,23 @@ VOID LoadAndBootPartition(PCSTR OperatingSystemName)
 	ChainLoadBiosBootSectorCode();
 }
 
-VOID LoadAndBootDrive(PCSTR OperatingSystemName)
+VOID
+LoadAndBootDrive(IN OperatingSystemItem* OperatingSystem,
+                 IN USHORT OperatingSystemVersion)
 {
+	ULONG_PTR	SectionId;
+	PCSTR	SectionName = OperatingSystem->SystemPartition;
 	CHAR	SettingName[80];
 	CHAR	SettingValue[80];
-	ULONG	SectionId;
 	UCHAR	DriveNumber;
 
 	// Find all the message box settings and run them
-	UiShowMessageBoxesInSection(OperatingSystemName);
+	UiShowMessageBoxesInSection(SectionName);
 
 	// Try to open the operating system section in the .ini file
-	if (!IniOpenSection(OperatingSystemName, &SectionId))
+	if (!IniOpenSection(SectionName, &SectionId))
 	{
-		sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", OperatingSystemName);
+		sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", SectionName);
 		UiMessageBox(SettingName);
 		return;
 	}

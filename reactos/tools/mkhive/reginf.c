@@ -430,7 +430,7 @@ registry_callback (HINF hInf, PWCHAR Section, BOOL Delete)
 		else
 		{
 			/* get flags */
-			if (InfHostGetIntField (Context, 4, &Flags) != 0)
+			if (InfHostGetIntField (Context, 4, (INT *)&Flags) != 0)
 				Flags = 0;
 		}
 

@@ -18,13 +18,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "oledlg.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include "resource.h"
+#include <windef.h>
+//#include "winbase.h"
+//#include "winuser.h"
+//#include "winnls.h"
+//#include "oledlg.h"
+
+//#include "resource.h"
 
 /*
  * Everything specific to any language goes
@@ -67,6 +71,9 @@
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "oledlg_Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "oledlg_He.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
     #include "oledlg_Hu.rc"

@@ -1,4 +1,3 @@
-/* $Id: sndblst.rc 39744 2009-02-25 09:10:46Z silverblade $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"SoundBlaster Driver\0"

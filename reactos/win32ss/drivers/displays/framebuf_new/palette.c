@@ -36,7 +36,7 @@ const PALETTEENTRY BASEPALETTE[20] =
     { 0xFF,0xFF,0xFF,0 },       // 19
 };
 
-BOOL bInitDefaultPalette(PPDEV ppdev, DEVINFO *pDevInfo);
+BOOL NTAPI bInitDefaultPalette(PPDEV ppdev, DEVINFO *pDevInfo);
 
 /******************************Public*Routine******************************\
 * bInitPaletteInfo
@@ -47,7 +47,7 @@ BOOL bInitDefaultPalette(PPDEV ppdev, DEVINFO *pDevInfo);
 *
 \**************************************************************************/
 
-BOOL bInitPaletteInfo(PPDEV ppdev, DEVINFO *pDevInfo)
+BOOL NTAPI bInitPaletteInfo(PPDEV ppdev, DEVINFO *pDevInfo)
 {
     if (!bInitDefaultPalette(ppdev, pDevInfo))
         return(FALSE);
@@ -62,7 +62,7 @@ BOOL bInitPaletteInfo(PPDEV ppdev, DEVINFO *pDevInfo)
 *
 \**************************************************************************/
 
-VOID vDisablePalette(PPDEV ppdev)
+VOID NTAPI vDisablePalette(PPDEV ppdev)
 {
 // Delete the default palette if we created one.
 
@@ -83,7 +83,7 @@ VOID vDisablePalette(PPDEV ppdev)
 *
 \**************************************************************************/
 
-BOOL bInitDefaultPalette(PPDEV ppdev, DEVINFO *pDevInfo)
+BOOL NTAPI bInitDefaultPalette(PPDEV ppdev, DEVINFO *pDevInfo)
 {
     if (ppdev->ulBitCount == 8)
     {
@@ -190,7 +190,7 @@ BOOL bInitDefaultPalette(PPDEV ppdev, DEVINFO *pDevInfo)
 *
 \**************************************************************************/
 
-BOOL bInit256ColorPalette(PPDEV ppdev)
+BOOL NTAPI bInit256ColorPalette(PPDEV ppdev)
 {
     BYTE        ajClutSpace[MAX_CLUT_SIZE];
     PVIDEO_CLUT pScreenClut;
@@ -255,7 +255,7 @@ BOOL bInit256ColorPalette(PPDEV ppdev)
 *
 \**************************************************************************/
 
-BOOL DrvSetPalette(
+BOOL NTAPI DrvSetPalette(
 DHPDEV  dhpdev,
 PALOBJ* ppalo,
 FLONG   fl,

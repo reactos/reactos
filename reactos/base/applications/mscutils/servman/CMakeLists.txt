@@ -1,6 +1,4 @@
 
-set_rc_compiler()
-
 list(APPEND SOURCE
     about.c
     control.c
@@ -24,11 +22,7 @@ list(APPEND SOURCE
     servman.rc)
 
 add_executable(servman ${SOURCE})
-
 set_module_type(servman win32gui UNICODE)
-
 add_importlibs(servman user32 gdi32 advapi32 version comctl32 shell32 comdlg32 msvcrt kernel32)
-
 add_pch(servman precomp.h)
-
 add_cd_file(TARGET servman DESTINATION reactos/system32 FOR all)

@@ -3,7 +3,7 @@
 
 #include "globals.h"
 #include "cardstack.h"
-#include "cardlib.h"
+//#include "cardlib.h"
 
 class CardWindow;
 

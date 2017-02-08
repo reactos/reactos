@@ -22,19 +22,19 @@
  *   o Check the installation functions.
  */
 
-#include <stdlib.h>
-#include <stdarg.h>
+//#include <stdlib.h>
+//#include <stdarg.h>
 #include <stdio.h>
-#include <string.h>
+//#include <string.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winver.h"
-#include "winnls.h"
-#include "wine/unicode.h"
-#include "winerror.h"
-#include "lzexpand.h"
-#include "wine/debug.h"
+#include <windef.h>
+//#include "winbase.h"
+#include <winver.h>
+//#include "winnls.h"
+#include <wine/unicode.h>
+//#include "winerror.h"
+#include <lzexpand.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ver);
 

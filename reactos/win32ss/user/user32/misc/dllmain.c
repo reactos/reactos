@@ -13,6 +13,7 @@ PUSER_HANDLE_TABLE gHandleTable = NULL;
 PUSER_HANDLE_ENTRY gHandleEntries = NULL;
 PSERVERINFO gpsi = NULL;
 ULONG_PTR g_ulSharedDelta;
+BOOLEAN gfLogonProcess  = FALSE;
 BOOLEAN gfServerProcess = FALSE;
 
 WCHAR szAppInit[KEY_LENGTH];

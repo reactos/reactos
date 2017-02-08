@@ -51,11 +51,13 @@ NTSTATUS
 InfOpenBufferedFile(PHINF InfHandle,
                     PVOID Buffer,
                     ULONG BufferSize,
+                    LANGID LanguageId,
                     PULONG ErrorLine)
 {
   INFSTATUS Status;
   PINFCACHE Cache;
   PCHAR FileBuffer;
+  ULONG FileBufferSize;
 
   CheckHeap();
 
@@ -63,7 +65,8 @@ InfOpenBufferedFile(PHINF InfHandle,
   *ErrorLine = (ULONG)-1;
 
   /* Allocate file buffer */
-  FileBuffer = MALLOC(BufferSize + 1);
+  FileBufferSize = BufferSize + 2;
+  FileBuffer = MALLOC(FileBufferSize);
   if (FileBuffer == NULL)
     {
       DPRINT1("MALLOC() failed\n");
@@ -74,6 +77,7 @@ InfOpenBufferedFile(PHINF InfHandle,
 
   /* Append string terminator */
   FileBuffer[BufferSize] = 0;
+  FileBuffer[BufferSize + 1] = 0;
 
   /* Allocate infcache header */
   Cache = (PINFCACHE)MALLOC(sizeof(INFCACHE));
@@ -88,11 +92,56 @@ InfOpenBufferedFile(PHINF InfHandle,
   ZEROMEMORY(Cache,
              sizeof(INFCACHE));
 
-  /* Parse the inf buffer */
-  Status = InfpParseBuffer (Cache,
-			    FileBuffer,
-			    FileBuffer + BufferSize,
-			    ErrorLine);
+    Cache->LanguageId = LanguageId;
+
+    /* Parse the inf buffer */
+    if (!RtlIsTextUnicode(FileBuffer, FileBufferSize, NULL))
+    {
+//        static const BYTE utf8_bom[3] = { 0xef, 0xbb, 0xbf };
+        WCHAR *new_buff;
+//        UINT codepage = CP_ACP;
+        UINT offset = 0;
+
+//        if (BufferSize > sizeof(utf8_bom) && !memcmp(FileBuffer, utf8_bom, sizeof(utf8_bom) ))
+//        {
+//            codepage = CP_UTF8;
+//            offset = sizeof(utf8_bom);
+//        }
+
+        new_buff = MALLOC(FileBufferSize * sizeof(WCHAR));
+        if (new_buff != NULL)
+        {
+            ULONG len;
+            Status = RtlMultiByteToUnicodeN(new_buff,
+                                            FileBufferSize * sizeof(WCHAR),
+                                            &len,
+                                            (char *)FileBuffer + offset,
+                                            FileBufferSize - offset);
+
+            Status = InfpParseBuffer(Cache,
+                                     new_buff,
+                                     new_buff + len / sizeof(WCHAR),
+                                     ErrorLine);
+            FREE(new_buff);
+        }
+        else
+            Status = INF_STATUS_INSUFFICIENT_RESOURCES;
+    }
+    else
+    {
+        WCHAR *new_buff = (WCHAR *)FileBuffer;
+        /* UCS-16 files should start with the Unicode BOM; we should skip it */
+        if (*new_buff == 0xfeff)
+        {
+            new_buff++;
+            FileBufferSize -= sizeof(WCHAR);
+        }
+        Status = InfpParseBuffer(Cache,
+                                 new_buff,
+                                 (WCHAR*)((char*)new_buff + FileBufferSize),
+                                 ErrorLine);
+    }
+
   if (!INF_SUCCESS(Status))
     {
       FREE(Cache);
@@ -111,6 +160,7 @@ InfOpenBufferedFile(PHINF InfHandle,
 NTSTATUS
 InfOpenFile(PHINF InfHandle,
 	    PUNICODE_STRING FileName,
+	    LANGID LanguageId,
 	    PULONG ErrorLine)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
@@ -120,6 +170,7 @@ InfOpenFile(PHINF InfHandle,
   NTSTATUS Status;
   PCHAR FileBuffer;
   ULONG FileLength;
+  ULONG FileBufferLength;
   LARGE_INTEGER FileOffset;
   PINFCACHE Cache;
 
@@ -167,7 +218,8 @@ InfOpenFile(PHINF InfHandle,
   DPRINT("File size: %lu\n", FileLength);
 
   /* Allocate file buffer */
-  FileBuffer = MALLOC(FileLength + 1);
+  FileBufferLength = FileLength + 2;
+  FileBuffer = MALLOC(FileBufferLength);
   if (FileBuffer == NULL)
     {
       DPRINT1("MALLOC() failed\n");
@@ -189,6 +241,7 @@ InfOpenFile(PHINF InfHandle,
 
   /* Append string terminator */
   FileBuffer[FileLength] = 0;
+  FileBuffer[FileLength + 1] = 0;
 
   NtClose(FileHandle);
 
@@ -212,11 +265,56 @@ InfOpenFile(PHINF InfHandle,
   ZEROMEMORY(Cache,
              sizeof(INFCACHE));
 
-  /* Parse the inf buffer */
-  Status = InfpParseBuffer (Cache,
-			    FileBuffer,
-			    FileBuffer + FileLength,
-			    ErrorLine);
+    Cache->LanguageId = LanguageId;
+
+    /* Parse the inf buffer */
+    if (!RtlIsTextUnicode(FileBuffer, FileBufferLength, NULL))
+    {
+//        static const BYTE utf8_bom[3] = { 0xef, 0xbb, 0xbf };
+        WCHAR *new_buff;
+//        UINT codepage = CP_ACP;
+        UINT offset = 0;
+
+//        if (FileLength > sizeof(utf8_bom) && !memcmp(FileBuffer, utf8_bom, sizeof(utf8_bom) ))
+//        {
+//            codepage = CP_UTF8;
+//            offset = sizeof(utf8_bom);
+//        }
+
+        new_buff = MALLOC(FileBufferLength * sizeof(WCHAR));
+        if (new_buff != NULL)
+        {
+            ULONG len;
+            Status = RtlMultiByteToUnicodeN(new_buff,
+                                            FileBufferLength * sizeof(WCHAR),
+                                            &len,
+                                            (char *)FileBuffer + offset,
+                                            FileBufferLength - offset);
+
+            Status = InfpParseBuffer(Cache,
+                                     new_buff,
+                                     new_buff + len / sizeof(WCHAR),
+                                     ErrorLine);
+            FREE(new_buff);
+        }
+        else
+            Status = INF_STATUS_INSUFFICIENT_RESOURCES;
+    }
+    else
+    {
+        WCHAR *new_buff = (WCHAR *)FileBuffer;
+        /* UCS-16 files should start with the Unicode BOM; we should skip it */
+        if (*new_buff == 0xfeff)
+        {
+            new_buff++;
+            FileBufferLength -= sizeof(WCHAR);
+        }
+        Status = InfpParseBuffer(Cache,
+                                 new_buff,
+                                 (WCHAR*)((char*)new_buff + FileBufferLength),
+                                 ErrorLine);
+    }
+
   if (!INF_SUCCESS(Status))
     {
       FREE(Cache);

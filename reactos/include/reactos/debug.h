@@ -3,14 +3,13 @@
  * PROJECT:         ReactOS kernel
  * FILE:            include/internal/debug.h
  * PURPOSE:         Useful debugging macros
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                28/05/98: Created
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 /*
- * NOTE: Define NDEBUG before including this header to disable debugging
- * macros
+ * NOTE: Define NDEBUG before including this header
+ * to disable debugging macros.
  */
 
 #ifndef __INTERNAL_DEBUG
@@ -19,7 +18,7 @@
 /* Define DbgPrint/DbgPrintEx/RtlAssert unless the NDK is used */
 #if !defined(_RTLFUNCS_H) && !defined(_NTDDK_)
 
-/* Make sure we have basic types (some people include us *before* SDK... */
+/* Make sure we have basic types (some people include us *before* SDK)... */
 #if !defined(_NTDEF_) && !defined(_NTDEF_H) && !defined(_WINDEF_) && !defined(_WINDEF_H)
 #error Please include SDK first.
 #endif
@@ -56,7 +55,7 @@ RtlAssert(
 
 #ifndef assert
 #ifndef NASSERT
-#define assert(x) if (!(x)) {RtlAssert((PVOID)#x,(PVOID)__FILE__,__LINE__, ""); }
+#define assert(x) if (!(x)) { RtlAssert((PVOID)#x, (PVOID)__FILE__, __LINE__, ""); }
 #else
 #define assert(x)
 #endif
@@ -64,7 +63,7 @@ RtlAssert(
 
 #ifndef ASSERT
 #ifndef NASSERT
-#define ASSERT(x) if (!(x)) {RtlAssert((PVOID)#x,(PVOID)__FILE__,__LINE__, ""); }
+#define ASSERT(x) if (!(x)) { RtlAssert((PVOID)#x, (PVOID)__FILE__, __LINE__, ""); }
 #else
 #define ASSERT(x)
 #endif
@@ -72,11 +71,14 @@ RtlAssert(
 
 #ifndef ASSERTMSG
 #ifndef NASSERT
-#define ASSERTMSG(x,m) if (!(x)) {RtlAssert((PVOID)#x,__FILE__,__LINE__, m); }
+#define ASSERTMSG(x,m) if (!(x)) { RtlAssert((PVOID)#x, __FILE__, __LINE__, m); }
 #else
 #define ASSERTMSG(x)
 #endif
 #endif
+
+/* For internal purposes only */
+#define __NOTICE(level, fmt, ...)   DbgPrint(#level ":  %s at %s:%d " fmt, __FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__)
 
 /* Print stuff only on Debug Builds*/
 #define DPFLTR_DEFAULT_ID -1
@@ -102,7 +104,7 @@ RtlAssert(
 
     #endif
 
-    #define UNIMPLEMENTED         DbgPrint("WARNING:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__);
+    #define UNIMPLEMENTED         __NOTICE(WARNING, "is UNIMPLEMENTED!\n");
 
     #define ERR_(ch, fmt, ...)    DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_ERROR_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
     #define WARN_(ch, fmt, ...)   DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_WARNING_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
@@ -113,6 +115,7 @@ RtlAssert(
     #define WARN__(ch, fmt, ...)   DbgPrintEx(ch, DPFLTR_WARNING_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
     #define TRACE__(ch, fmt, ...)  DbgPrintEx(ch, DPFLTR_TRACE_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
     #define INFO__(ch, fmt, ...)   DbgPrintEx(ch, DPFLTR_INFO_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
+
 #else /* not DBG */
 
     /* On non-debug builds, we never show these */
@@ -130,7 +133,90 @@ RtlAssert(
     #define WARN__(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define TRACE__(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define INFO__(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+
 #endif /* not DBG */
+
+/******************************************************************************/
+/*
+ * Declare a target-dependent process termination procedure.
+ */
+#ifndef _NTDDK_             /* User-Mode */
+    #ifndef NTOS_MODE_USER  /* Should be Win32 */
+        #ifndef _WIN32
+            #error "Unsupported target."
+        #else
+            #define TerminateCurrentProcess(Status) TerminateProcess(GetCurrentProcess(), (Status))
+        #endif
+    #else   /* Native */
+        #ifndef _PSFUNCS_H
+            NTSYSCALLAPI
+            NTSTATUS
+            NTAPI
+            NtTerminateProcess(
+                IN HANDLE ProcessHandle,
+                IN NTSTATUS ExitStatus
+            );
+        #endif
+        #ifndef NtCurrentProcess
+            #define NtCurrentProcess() ((HANDLE)(LONG_PTR)-1)
+        #endif
+        #define TerminateCurrentProcess(Status) NtTerminateProcess(NtCurrentProcess(), (Status))
+    #endif
+#else   /* Kernel-Mode */
+    #include <bugcodes.h>
+    #define TerminateCurrentProcess(Status) KeBugCheckEx(CRITICAL_SERVICE_FAILED, (Status), 0, 0, 0)
+#endif
+
+
+/* For internal purposes only */
+#define __ERROR_DBGBREAK(...)   \
+do {                            \
+    DbgPrint("" __VA_ARGS__);   \
+    DbgBreakPoint();            \
+} while (0)
+
+/* For internal purposes only */
+#define __ERROR_FATAL(Status, ...)      \
+do {                                    \
+    DbgPrint("" __VA_ARGS__);           \
+    DbgBreakPoint();                    \
+    TerminateCurrentProcess(Status);    \
+} while (0)
+
+/*
+ * These macros are designed to display an optional printf-like
+ * user-defined message and to break into the debugger.
+ * After that they allow to continue the program execution.
+ */
+#define ERROR_DBGBREAK(...)         \
+do {                                \
+    __NOTICE(ERROR, "\n");          \
+    __ERROR_DBGBREAK(__VA_ARGS__);  \
+} while (0)
+
+#define UNIMPLEMENTED_DBGBREAK(...)         \
+do {                                        \
+    __NOTICE(ERROR, "is UNIMPLEMENTED!\n"); \
+    __ERROR_DBGBREAK(__VA_ARGS__);          \
+} while (0)
+
+/*
+ * These macros are designed to display an optional printf-like
+ * user-defined message and to break into the debugger.
+ * After that they halt the execution of the current thread.
+ */
+#define ERROR_FATAL(...)                                    \
+do {                                                        \
+    __NOTICE(UNRECOVERABLE ERROR, "\n");                    \
+    __ERROR_FATAL(STATUS_ASSERTION_FAILURE, __VA_ARGS__);   \
+} while (0)
+
+#define UNIMPLEMENTED_FATAL(...)                            \
+do {                                                        \
+    __NOTICE(UNRECOVERABLE ERROR, "is UNIMPLEMENTED!\n");   \
+    __ERROR_FATAL(STATUS_NOT_IMPLEMENTED, __VA_ARGS__);     \
+} while (0)
+/******************************************************************************/
 
 #define ASSERT_IRQL_LESS_OR_EQUAL(x) ASSERT(KeGetCurrentIrql()<=(x))
 #define ASSERT_IRQL_EQUAL(x) ASSERT(KeGetCurrentIrql()==(x))

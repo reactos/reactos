@@ -3,10 +3,9 @@
 
 #define NtCurrentTeb NtXCurrentTeb
 
-#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
+//#include <sys/types.h>
 #ifdef HAVE_NETINET_IN_H
 # include <netinet/in.h>
 #endif
@@ -21,32 +20,32 @@
 #endif
 
 #define WIN32_NO_STATUS
-#include <winsock2.h>
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winnls.h>
 #include <ws2tcpip.h>
-#include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/iofuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
-#include <nspapi.h>
-#include <iptypes.h>
-#include "iphlpapi.h"
+#include <iphlpapi.h>
 #include "resinfo.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 #include "dhcp.h"
-#include "dhcpcsdk.h"
-#include "dhcpcapi.h"
-#include <assert.h>
+#include <dhcpcsdk.h>
+#include <dhcpcapi.h>
 
-//#include "ntddndis.h"
-#include "tdiinfo.h"
-#include "tcpioctl.h"
+#include <tdiinfo.h>
+#include <tcpioctl.h>
 
-#include "tdilib.h"
+#include <tdilib.h>
 
 #include "ifenum.h"
-
 #include "ipstats.h"
 #include "route.h"
 

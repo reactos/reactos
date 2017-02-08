@@ -26,12 +26,18 @@ Description = Nécessaire pour faire tourner certains jeux open source. Vous aur
 [Section.0410]
 Description = Necessario per il corretto funzionamento di alcuni giochi OpenSource. Necessita di 7-zip o utility simili per essere estratto.
 
+[Section.0413]
+Description = Gebruikt door veel open-bron-spelletjes. Gebruik 7-zip om het uit te pakken.
+
 [Section.0415]
 Description = Biblioteka wymagana przez niektóre gry (zwłaszcza te o otwartym źródle). Do jej rozpakowania potrzebny jest 7-Zip lub podobny program.
 
 [Section.0418]
 Description = Necesar pentru execuția unor jocuri (open-source). Dezarhivați cu 7-Zip sau cu un utilitar asemănător.
-Size = 548.02ko
+Size = 548,02 ko
 
 [Section.0422]
 Description = Необхідний для роботи декотрих відкритих ігор. Вам потрібен 7-Zip або подібна утиліта щоб розпакувати його.
+
+[Section.0813]
+Description = Gebruikt door veel open-bron-spelletjes. Gebruik 7-zip om het uit te pakken.

@@ -82,10 +82,10 @@ extern ULONG NTSYSAPI NtBuildNumber;
 //
 // Callback Object Access Mask
 //
-#define CALLBACK_ALL_ACCESS                 (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0x0001)
-#define CALLBACK_EXECUTE                    (STANDARD_RIGHTS_EXECUTE|SYNCHRONIZE|0x0001)
-#define CALLBACK_WRITE                      (STANDARD_RIGHTS_WRITE|SYNCHRONIZE|0x0001)
-#define CALLBACK_READ                       (STANDARD_RIGHTS_READ|SYNCHRONIZE|0x0001)
+#define CALLBACK_MODIFY_STATE               0x0001
+#define CALLBACK_ALL_ACCESS                 (STANDARD_RIGHTS_REQUIRED | \
+                                             SYNCHRONIZE | \
+                                             CALLBACK_MODIFY_STATE)
 
 //
 // Event Object Access Masks
@@ -362,7 +362,7 @@ struct _SYSTEM_FIRMWARE_TABLE_INFORMATION;
 typedef
 NTSTATUS
 (__cdecl *PFNFTH)(
-    IN struct _SYSTEM_FIRMWARE_TABLE_INFORMATION *FirmwareTableInformation
+    _In_ struct _SYSTEM_FIRMWARE_TABLE_INFORMATION *FirmwareTableInformation
 );
 
 #else
@@ -373,9 +373,9 @@ NTSTATUS
 struct _HANDLE_TABLE_ENTRY;
 typedef BOOLEAN
 (NTAPI *PEX_ENUM_HANDLE_CALLBACK)(
-    IN struct _HANDLE_TABLE_ENTRY *HandleTableEntry,
-    IN HANDLE Handle,
-    IN PVOID Context
+    _In_ struct _HANDLE_TABLE_ENTRY *HandleTableEntry,
+    _In_ HANDLE Handle,
+    _In_ PVOID Context
 );
 
 //

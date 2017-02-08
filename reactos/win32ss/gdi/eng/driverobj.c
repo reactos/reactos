@@ -36,12 +36,13 @@ DRIVEROBJ_Cleanup(PVOID pObject)
 
 /** Public interface **********************************************************/
 
+_Must_inspect_result_
 HDRVOBJ
 APIENTRY
 EngCreateDriverObj(
-	IN PVOID       pvObj,
-	IN FREEOBJPROC pFreeObjProc,
-	IN HDEV        hdev)
+    _In_ PVOID       pvObj,
+    _In_opt_ FREEOBJPROC pFreeObjProc,
+    _In_ HDEV        hdev)
 {
     PEDRIVEROBJ pedo;
     HDRVOBJ hdo;
@@ -72,9 +73,9 @@ EngCreateDriverObj(
 BOOL
 APIENTRY
 EngDeleteDriverObj(
-	IN HDRVOBJ hdo,
-	IN BOOL    bCallBack,
-	IN BOOL    bLocked)
+    _In_ _Post_ptr_invalid_ HDRVOBJ hdo,
+    _In_ BOOL    bCallBack,
+    _In_ BOOL    bLocked)
 {
     PEDRIVEROBJ pedo;
 
@@ -111,7 +112,7 @@ EngDeleteDriverObj(
 PDRIVEROBJ
 APIENTRY
 EngLockDriverObj(
-    IN HDRVOBJ hdo)
+    _In_ HDRVOBJ hdo)
 {
     PEDRIVEROBJ pedo;
 
@@ -126,7 +127,7 @@ EngLockDriverObj(
 BOOL
 APIENTRY
 EngUnlockDriverObj(
-    IN HDRVOBJ hdo)
+    _In_ _Post_ptr_invalid_ HDRVOBJ hdo)
 {
     PEDRIVEROBJ pedo;
     ULONG cLocks;

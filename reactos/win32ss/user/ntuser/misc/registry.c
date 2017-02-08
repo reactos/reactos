@@ -292,7 +292,7 @@ RegWriteUserSetting(
     Status = RtlAppendUnicodeToString(&usKeyName, pwszKeyName);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("RtlAppendUnicodeToString failed with Status=%lx, buf:%d,%d\n",
+        DPRINT1("RtlAppendUnicodeToString failed with Status=0x%lx, buf:%u,%u\n",
                 Status, usKeyName.Length, usKeyName.MaximumLength);
         return FALSE;
     }

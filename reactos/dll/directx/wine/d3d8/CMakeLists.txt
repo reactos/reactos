@@ -1,18 +1,14 @@
 
-
 add_definitions(
     -D__WINESRC__
     -DUSE_WIN32_OPENGL)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-set_rc_compiler()
-
 spec2def(d3d8.dll d3d8.spec)
 
 list(APPEND SOURCE
     buffer.c
-    cubetexture.c
     d3d8_main.c
     device.c
     directx.c
@@ -22,14 +18,11 @@ list(APPEND SOURCE
     texture.c
     vertexdeclaration.c
     volume.c
-    volumetexture.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/d3d8.def)
 
 add_library(d3d8 SHARED ${SOURCE})
-
 set_module_type(d3d8 win32dll UNICODE)
-
 target_link_libraries(d3d8 uuid wine)
 
 add_importlibs(d3d8

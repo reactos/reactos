@@ -23,4 +23,4 @@ Description = Microsoft .NET Framework Wersja 2.0 Service Pack 2.
 [Section.0418]
 Licence = Nespecificată
 Description = Platforma Microsoft .NET versiunea 2.0 - Service Pack 2
-Size = 23.84Mo
+Size = 23,84 Mo

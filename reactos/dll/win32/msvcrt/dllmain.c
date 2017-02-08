@@ -15,7 +15,7 @@
  *
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
@@ -77,17 +77,11 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
 
         /* Initialization of the WINE code */
         msvcrt_init_mt_locks();
-        //if(!msvcrt_init_locale()) {
-        //    msvcrt_free_mt_locks();
-        //    msvcrt_free_tls_mem();
-        //    return FALSE;
-        //}
         //msvcrt_init_math();
         msvcrt_init_io();
         //msvcrt_init_console();
         //msvcrt_init_args();
         //msvcrt_init_signals();
-        _setmbcp(_MB_CP_LOCALE);
         TRACE("Attach done\n");
         break;
 
@@ -110,7 +104,8 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
         msvcrt_free_tls_mem();
         if (!msvcrt_free_tls())
           return FALSE;
-        //MSVCRT__free_locale(MSVCRT_locale);
+        if(global_locale)
+          MSVCRT__free_locale(global_locale);
 
     if (__winitenv && __winitenv != _wenviron)
             FreeEnvironment((char**)__winitenv);

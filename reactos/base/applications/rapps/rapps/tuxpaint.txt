@@ -23,12 +23,18 @@ Description = Editor gráfico de imágenes pensado para niños de código abiert
 [Section.040c]
 Description = Un éditeur graphic bitmap open source orienté pour les jeunes enfants.
 
+[Section.0413]
+Description = Een open-bron grafische ontwerker voor kinderen.
+
 [Section.0415]
 Description = Otwarty program graficzny przeznaczony głównie dla dzieci.
 
 [Section.0418]
 Description = Un editor grafic bitmap, adresat copiilor.
-Size = 10.42Mo
+Size = 10,42 Mo
 
 [Section.0422]
 Description = Відкритий графічний редактор для малих дітей.
+
+[Section.0813]
+Description = Een open-bron grafische ontwerker voor kinderen.

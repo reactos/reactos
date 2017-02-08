@@ -18,12 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <regedit.h>
+#include "regedit.h"
 
 
 #define CX_ICON    16
 #define CY_ICON    16
-#define NUM_ICONS    2
+#define NUM_ICONS   2
 
 int Image_String = 0;
 int Image_Bin = 0;
@@ -32,26 +32,31 @@ INT iListViewSelect = -1;
 typedef struct tagLINE_INFO
 {
     DWORD dwValType;
-    LPTSTR name;
+    LPWSTR name;
     void* val;
     size_t val_len;
 } LINE_INFO, *PLINE_INFO;
+
+typedef struct tagSORT_INFO
+{
+    INT  iSortingColumn;
+    BOOL bSortAscending;
+} SORT_INFO, *PSORT_INFO;
 
 /*******************************************************************************
  * Global and Local Variables:
  */
 
-static DWORD g_columnToSort = ~0UL;
-static BOOL  g_invertSort = FALSE;
+static INT g_iSortedColumn = 0;
 
 #define MAX_LIST_COLUMNS (IDS_LIST_COLUMN_LAST - IDS_LIST_COLUMN_FIRST + 1)
 static const int default_column_widths[MAX_LIST_COLUMNS] = { 200, 175, 400 };
 static const int column_alignment[MAX_LIST_COLUMNS] = { LVCFMT_LEFT, LVCFMT_LEFT, LVCFMT_LEFT };
 
-LPCTSTR GetValueName(HWND hwndLV, int iStartAt)
+LPCWSTR GetValueName(HWND hwndLV, int iStartAt)
 {
     int item;
-    LVITEM LVItem;
+    LVITEMW LVItem;
     PLINE_INFO lineinfo;
 
     /*
@@ -77,10 +82,10 @@ LPCTSTR GetValueName(HWND hwndLV, int iStartAt)
     return lineinfo->name;
 }
 
-VOID SetValueName(HWND hwndLV, LPCTSTR pszValueName)
+VOID SetValueName(HWND hwndLV, LPCWSTR pszValueName)
 {
     INT i, c;
-    LV_FINDINFO fi;
+    LVFINDINFOW fi;
 
     c = ListView_GetItemCount(hwndLV);
     for(i = 0; i < c; i++)
@@ -103,14 +108,14 @@ VOID SetValueName(HWND hwndLV, LPCTSTR pszValueName)
 BOOL IsDefaultValue(HWND hwndLV, int i)
 {
     PLINE_INFO lineinfo;
-    LVITEM Item;
+    LVITEMW Item;
 
     Item.mask = LVIF_PARAM;
     Item.iItem = i;
     if(ListView_GetItem(hwndLV, &Item))
     {
         lineinfo = (PLINE_INFO)Item.lParam;
-        return lineinfo && (!lineinfo->name || !_tcscmp(lineinfo->name, _T("")));
+        return lineinfo && (!lineinfo->name || !wcscmp(lineinfo->name, L""));
     }
     return FALSE;
 }
@@ -118,20 +123,21 @@ BOOL IsDefaultValue(HWND hwndLV, int i)
 /*******************************************************************************
  * Local module support methods
  */
-static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValBuf, DWORD dwCount, int Position, BOOL ValExists)
+static void AddEntryToList(HWND hwndLV, LPWSTR Name, DWORD dwValType, void* ValBuf, DWORD dwCount, int Position, BOOL ValExists)
 {
     PLINE_INFO linfo;
-    LVITEM item;
+    LVITEMW item;
     int index;
 
     linfo = (PLINE_INFO)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LINE_INFO) + dwCount);
     linfo->dwValType = dwValType;
     linfo->val_len = dwCount;
-    if(dwCount > 0)
+    if (dwCount > 0)
     {
         memcpy(&linfo[1], ValBuf, dwCount);
+        linfo->val = &linfo[1];
     }
-    linfo->name = _tcsdup(Name);
+    linfo->name = _wcsdup(Name);
 
     item.mask = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE;
     item.iItem = (Position == -1 ? 0: Position);
@@ -139,21 +145,21 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
     item.state = 0;
     item.stateMask = 0;
     item.pszText = Name;
-    item.cchTextMax = (int) _tcslen(item.pszText);
+    item.cchTextMax = (int)wcslen(item.pszText);
     if (item.cchTextMax == 0)
         item.pszText = LPSTR_TEXTCALLBACK;
     item.iImage = 0;
     item.lParam = (LPARAM)linfo;
     switch(dwValType)
     {
-    case REG_SZ:
-    case REG_EXPAND_SZ:
-    case REG_MULTI_SZ:
-        item.iImage = Image_String;
-        break;
-    default:
-        item.iImage = Image_Bin;
-        break;
+        case REG_SZ:
+        case REG_EXPAND_SZ:
+        case REG_MULTI_SZ:
+            item.iImage = Image_String;
+            break;
+        default:
+            item.iImage = Image_Bin;
+            break;
     }
 
     /*    item.lParam = (LPARAM)ValBuf; */
@@ -174,49 +180,49 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
             }
             else if(!ValExists)
             {
-                TCHAR buffer[255];
+                WCHAR buffer[255];
                 /* load (value not set) string */
-                LoadString(hInst, IDS_VALUE_NOT_SET, buffer, COUNT_OF(buffer));
+                LoadStringW(hInst, IDS_VALUE_NOT_SET, buffer, COUNT_OF(buffer));
                 ListView_SetItemText(hwndLV, index, 2, buffer);
             }
             break;
         case REG_MULTI_SZ:
         {
-            LPTSTR src, str;
+            LPWSTR src, str;
             if(dwCount >= 2)
             {
-                src = (LPTSTR)ValBuf;
-                str = HeapAlloc(GetProcessHeap(), 0, dwCount + sizeof(TCHAR));
+                src = (LPWSTR)ValBuf;
+                str = HeapAlloc(GetProcessHeap(), 0, dwCount + sizeof(WCHAR));
                 if(str != NULL)
                 {
-                    *str = _T('\0');
+                    *str = L'\0';
                     /* concatenate all srings */
-                    while(*src != _T('\0'))
+                    while(*src != L'\0')
                     {
-                        _tcscat(str, src);
-                        _tcscat(str, _T(" "));
-                        src += _tcslen(src) + 1;
+                        wcscat(str, src);
+                        wcscat(str, L" ");
+                        src += wcslen(src) + 1;
                     }
                     ListView_SetItemText(hwndLV, index, 2, str);
                     HeapFree(GetProcessHeap(), 0, str);
                 }
                 else
-                    ListView_SetItemText(hwndLV, index, 2, _T(""));
+                    ListView_SetItemText(hwndLV, index, 2, L"");
             }
             else
-                ListView_SetItemText(hwndLV, index, 2, _T(""));
+                ListView_SetItemText(hwndLV, index, 2, L"");
         }
         break;
         case REG_DWORD:
         {
-            TCHAR buf[200];
+            WCHAR buf[200];
             if(dwCount == sizeof(DWORD))
             {
-                wsprintf(buf, _T("0x%08x (%u)"), *(DWORD*)ValBuf, *(DWORD*)ValBuf);
+                wsprintf(buf, L"0x%08x (%u)", *(DWORD*)ValBuf, *(DWORD*)ValBuf);
             }
             else
             {
-                LoadString(hInst, IDS_INVALID_DWORD, buf, COUNT_OF(buf));
+                LoadStringW(hInst, IDS_INVALID_DWORD, buf, COUNT_OF(buf));
             }
             ListView_SetItemText(hwndLV, index, 2, buf);
         }
@@ -226,13 +232,13 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
         {
             unsigned int i;
             LPBYTE pData = (LPBYTE)ValBuf;
-            LPTSTR strBinary;
+            LPWSTR strBinary;
             if(dwCount > 0)
             {
-                strBinary = HeapAlloc(GetProcessHeap(), 0, (dwCount * sizeof(TCHAR) * 3) + sizeof(TCHAR));
+                strBinary = HeapAlloc(GetProcessHeap(), 0, (dwCount * sizeof(WCHAR) * 3) + sizeof(WCHAR));
                 for (i = 0; i < dwCount; i++)
                 {
-                    wsprintf( strBinary + i*3, _T("%02X "), pData[i] );
+                    wsprintf( strBinary + i*3, L"%02X ", pData[i] );
                 }
                 strBinary[dwCount * 3] = 0;
                 ListView_SetItemText(hwndLV, index, 2, strBinary);
@@ -240,8 +246,8 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
             }
             else
             {
-                TCHAR szText[128];
-                LoadString(hInst, IDS_BINARY_EMPTY, szText, COUNT_OF(szText));
+                WCHAR szText[128];
+                LoadStringW(hInst, IDS_BINARY_EMPTY, szText, COUNT_OF(szText));
                 ListView_SetItemText(hwndLV, index, 2, szText);
             }
         }
@@ -252,9 +258,9 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
 
 static BOOL CreateListColumns(HWND hWndListView)
 {
-    TCHAR szText[50];
+    WCHAR szText[50];
     int index;
-    LV_COLUMN lvC;
+    LVCOLUMN lvC;
 
     /* Create columns. */
     lvC.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
@@ -266,7 +272,7 @@ static BOOL CreateListColumns(HWND hWndListView)
         lvC.iSubItem = index;
         lvC.cx = default_column_widths[index];
         lvC.fmt = column_alignment[index];
-        LoadString(hInst, IDS_LIST_COLUMN_FIRST + index, szText, COUNT_OF(szText));
+        LoadStringW(hInst, IDS_LIST_COLUMN_FIRST + index, szText, COUNT_OF(szText));
         if (ListView_InsertColumn(hWndListView, index, &lvC) == -1) return FALSE;
     }
     return TRUE;
@@ -280,14 +286,15 @@ static BOOL InitListViewImageLists(HWND hwndLV)
     /* Create the image list.  */
     if ((himl = ImageList_Create(CX_ICON, CY_ICON,
                                  ILC_MASK, 0, NUM_ICONS)) == NULL)
+    {
         return FALSE;
+    }
 
-    hico = LoadIcon(hInst, MAKEINTRESOURCE(IDI_BIN));
+    hico = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_BIN));
     Image_Bin = ImageList_AddIcon(himl, hico);
 
-    hico = LoadIcon(hInst, MAKEINTRESOURCE(IDI_STRING));
+    hico = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_STRING));
     Image_String = ImageList_AddIcon(himl, hico);
-
 
     /* Fail if not all of the images were added.  */
     if (ImageList_GetImageCount(himl) < NUM_ICONS)
@@ -305,7 +312,7 @@ static BOOL InitListViewImageLists(HWND hwndLV)
 
 static void OnGetDispInfo(NMLVDISPINFO* plvdi)
 {
-    static TCHAR buffer[200];
+    static WCHAR buffer[200];
 
     plvdi->item.pszText = NULL;
     plvdi->item.cchTextMax = 0;
@@ -313,87 +320,231 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
     switch (plvdi->item.iSubItem)
     {
     case 0:
-        LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, COUNT_OF(buffer));
+        LoadStringW(hInst, IDS_DEFAULT_VALUE_NAME, buffer, COUNT_OF(buffer));
         plvdi->item.pszText = buffer;
         break;
     case 1:
         switch (((LINE_INFO*)plvdi->item.lParam)->dwValType)
         {
-        case REG_NONE:
-            plvdi->item.pszText = _T("REG_NONE");
-            break;
-        case REG_SZ:
-            plvdi->item.pszText = _T("REG_SZ");
-            break;
-        case REG_EXPAND_SZ:
-            plvdi->item.pszText = _T("REG_EXPAND_SZ");
-            break;
-        case REG_BINARY:
-            plvdi->item.pszText = _T("REG_BINARY");
-            break;
-        case REG_DWORD: /* REG_DWORD_LITTLE_ENDIAN */
-            plvdi->item.pszText = _T("REG_DWORD");
-            break;
-        case REG_DWORD_BIG_ENDIAN:
-            plvdi->item.pszText = _T("REG_DWORD_BIG_ENDIAN");
-            break;
-        case REG_LINK:
-            plvdi->item.pszText = _T("REG_LINK");
-            break;
-        case REG_MULTI_SZ:
-            plvdi->item.pszText = _T("REG_MULTI_SZ");
-            break;
-        case REG_RESOURCE_LIST:
-            plvdi->item.pszText = _T("REG_RESOURCE_LIST");
-            break;
-        case REG_FULL_RESOURCE_DESCRIPTOR:
-            plvdi->item.pszText = _T("REG_FULL_RESOURCE_DESCRIPTOR");
-            break;
-        case REG_RESOURCE_REQUIREMENTS_LIST:
-            plvdi->item.pszText = _T("REG_RESOURCE_REQUIREMENTS_LIST");
-            break;
-        case REG_QWORD: /* REG_QWORD_LITTLE_ENDIAN */
-            plvdi->item.pszText = _T("REG_QWORD");
-            break;
-        default:
-        {
-            TCHAR buf2[200];
-            LoadString(hInst, IDS_UNKNOWN_TYPE, buf2, COUNT_OF(buf2));
-            wsprintf(buffer, buf2, ((LINE_INFO*)plvdi->item.lParam)->dwValType);
-            plvdi->item.pszText = buffer;
-            break;
-        }
+            case REG_NONE:
+                plvdi->item.pszText = L"REG_NONE";
+                break;
+            case REG_SZ:
+                plvdi->item.pszText = L"REG_SZ";
+                break;
+            case REG_EXPAND_SZ:
+                plvdi->item.pszText = L"REG_EXPAND_SZ";
+                break;
+            case REG_BINARY:
+                plvdi->item.pszText = L"REG_BINARY";
+                break;
+            case REG_DWORD: /* REG_DWORD_LITTLE_ENDIAN */
+                plvdi->item.pszText = L"REG_DWORD";
+                break;
+            case REG_DWORD_BIG_ENDIAN:
+                plvdi->item.pszText = L"REG_DWORD_BIG_ENDIAN";
+                break;
+            case REG_LINK:
+                plvdi->item.pszText = L"REG_LINK";
+                break;
+            case REG_MULTI_SZ:
+                plvdi->item.pszText = L"REG_MULTI_SZ";
+                break;
+            case REG_RESOURCE_LIST:
+                plvdi->item.pszText = L"REG_RESOURCE_LIST";
+                break;
+            case REG_FULL_RESOURCE_DESCRIPTOR:
+                plvdi->item.pszText = L"REG_FULL_RESOURCE_DESCRIPTOR";
+                break;
+            case REG_RESOURCE_REQUIREMENTS_LIST:
+                plvdi->item.pszText = L"REG_RESOURCE_REQUIREMENTS_LIST";
+                break;
+            case REG_QWORD: /* REG_QWORD_LITTLE_ENDIAN */
+                plvdi->item.pszText = L"REG_QWORD";
+                break;
+            default:
+            {
+                WCHAR buf2[200];
+                LoadStringW(hInst, IDS_UNKNOWN_TYPE, buf2, COUNT_OF(buf2));
+                wsprintf(buffer, buf2, ((LINE_INFO*)plvdi->item.lParam)->dwValType);
+                plvdi->item.pszText = buffer;
+                break;
+            }
         }
         break;
     case 3:
-        plvdi->item.pszText = _T("");
+        plvdi->item.pszText = L"";
         break;
     }
 }
 
 static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-    LINE_INFO*l, *r;
-    UNREFERENCED_PARAMETER(lParamSort);
+    PSORT_INFO pSortInfo = (PSORT_INFO)lParamSort;
+    LINE_INFO *l, *r;
+    DWORD dw1, dw2;
+    DWORDLONG qw1, qw2;
 
     l = (LINE_INFO*)lParam1;
     r = (LINE_INFO*)lParam2;
 
-    if (g_columnToSort == ~0UL)
-        g_columnToSort = 0;
-
-    if (g_columnToSort == 1 && l->dwValType != r->dwValType)
-        return g_invertSort ? (int)r->dwValType - (int)l->dwValType : (int)l->dwValType - (int)r->dwValType;
-    if (g_columnToSort == 2)
+    if (pSortInfo->iSortingColumn == 1 && l->dwValType != r->dwValType)
     {
-        /* FIXME: Sort on value */
+        /* Sort by type */
+        if (pSortInfo->bSortAscending)
+            return ((int)l->dwValType - (int)r->dwValType);
+        else
+            return ((int)r->dwValType - (int)l->dwValType);
     }
-    return g_invertSort ? _tcsicmp(r->name, l->name) : _tcsicmp(l->name, r->name);
+    if (pSortInfo->iSortingColumn == 2)
+    {
+        /* Sort by value */
+        if (l->dwValType != r->dwValType)
+        {
+            if (pSortInfo->bSortAscending)
+                return ((int)l->dwValType - (int)r->dwValType);
+            else
+                return ((int)r->dwValType - (int)l->dwValType);
+        }
+
+        if (l->val == NULL && r->val == NULL)
+            return 0;
+
+        if (pSortInfo->bSortAscending)
+        {
+            if (l->val == NULL)
+                return -1;
+            if (r->val == NULL)
+                return 1;
+        }
+        else
+        {
+            if (l->val == NULL)
+                return 1;
+            if (r->val == NULL)
+                return -1;
+        }
+
+        switch(l->dwValType)
+        {
+            case REG_DWORD:
+            {
+                dw1 = *(DWORD*)l->val;
+                dw2 = *(DWORD*)r->val;
+                if (pSortInfo->bSortAscending)
+                    // return (dw1 > dw2 ? 1 : -1);
+                    return ((int)dw1 - (int)dw2);
+                else
+                    // return (dw1 > dw2 ? -1 : 1);
+                    return ((int)dw2 - (int)dw1);
+            }
+
+            case REG_QWORD:
+            {
+                qw1 = *(DWORDLONG*)l->val;
+                qw2 = *(DWORDLONG*)r->val;
+                if (pSortInfo->bSortAscending)
+                    // return (qw1 > qw2 ? 1 : -1);
+                    return ((int)qw1 - (int)qw2);
+                else
+                    // return (qw1 > qw2 ? -1 : 1);
+                    return ((int)qw2 - (int)qw1);
+            }
+
+            default:
+            {
+                INT nCompare = 0;
+
+                if (pSortInfo->bSortAscending)
+                {
+                    nCompare = memcmp(l->val, r->val, min(l->val_len, r->val_len));
+                    if (nCompare == 0)
+                        nCompare = l->val_len - r->val_len;
+                }
+                else
+                {
+                    nCompare = memcmp(r->val, l->val, min(r->val_len, l->val_len));
+                    if (nCompare == 0)
+                        nCompare = r->val_len - l->val_len;
+                }
+
+                return nCompare;
+            }
+        }
+    }
+
+    /* Sort by name */
+    return (pSortInfo->bSortAscending ? StrCmpLogicalW(l->name, r->name) : StrCmpLogicalW(r->name, l->name));
+}
+
+static BOOL ListView_Sort(HWND hListView, int iSortingColumn, int iSortedColumn)
+{
+    if ( (GetWindowLongPtr(hListView, GWL_STYLE) & ~LVS_NOSORTHEADER) &&
+         (iSortingColumn >= 0) )
+    {
+        BOOL bSortAscending;
+        SORT_INFO SortInfo;
+
+        HWND hHeader = ListView_GetHeader(hListView);
+        HDITEM hColumn = {0};
+
+        /* If we are sorting according to another column, uninitialize the old one */
+        if ( (iSortedColumn >= 0) && (iSortingColumn != iSortedColumn) )
+        {
+            hColumn.mask = HDI_FORMAT;
+            Header_GetItem(hHeader, iSortedColumn, &hColumn);
+            hColumn.fmt &= ~(HDF_SORTUP | HDF_SORTDOWN);
+            Header_SetItem(hHeader, iSortedColumn, &hColumn);
+        }
+
+        /* Get the sorting state of the new column */
+        hColumn.mask = HDI_FORMAT;
+        Header_GetItem(hHeader, iSortingColumn, &hColumn);
+
+        /*
+         * Check whether we are sorting the list because the user clicked
+         * on a column, or because we are refreshing the list:
+         *
+         * iSortedColumn >= 0 - User clicked on a column; holds the
+         *                      old sorting column index.
+         * iSortedColumn  < 0 - List being refreshed.
+         */
+        if (iSortedColumn >= 0)
+        {
+            /* Invert the sorting direction */
+            bSortAscending = ((hColumn.fmt & HDF_SORTUP) == 0);
+        }
+        else
+        {
+            /*
+             * If the sorting state of the column is uninitialized,
+             * initialize it by default to ascending sorting.
+             */
+            if ((hColumn.fmt & (HDF_SORTUP | HDF_SORTDOWN)) == 0)
+                hColumn.fmt |= HDF_SORTUP;
+
+            /* Keep the same sorting direction */
+            bSortAscending = ((hColumn.fmt & HDF_SORTUP) != 0);
+        }
+
+        /* Set the new column sorting state */
+        hColumn.fmt &= ~(bSortAscending ? HDF_SORTDOWN : HDF_SORTUP  );
+        hColumn.fmt |=  (bSortAscending ? HDF_SORTUP   : HDF_SORTDOWN);
+        Header_SetItem(hHeader, iSortingColumn, &hColumn);
+
+        /* Sort the list */
+        SortInfo.iSortingColumn = iSortingColumn;
+        SortInfo.bSortAscending = bSortAscending;
+        return ListView_SortItems(hListView, CompareFunc, (LPARAM)&SortInfo);
+    }
+    else
+        return TRUE;
 }
 
 BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
 {
     NMLVDISPINFO* Info;
+    int iSortingColumn;
     UNREFERENCED_PARAMETER(wParam);
     *Result = TRUE;
     switch (((LPNMHDR)lParam)->code)
@@ -402,20 +553,14 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
         OnGetDispInfo((NMLVDISPINFO*)lParam);
         return TRUE;
     case LVN_COLUMNCLICK:
-        if (g_columnToSort == (DWORD)((LPNMLISTVIEW)lParam)->iSubItem)
-            g_invertSort = !g_invertSort;
-        else
-        {
-            g_columnToSort = ((LPNMLISTVIEW)lParam)->iSubItem;
-            g_invertSort = FALSE;
-        }
-
-        (void)ListView_SortItems(hWnd, CompareFunc, (WPARAM)hWnd);
+        iSortingColumn = ((LPNMLISTVIEW)lParam)->iSubItem;
+        (void)ListView_Sort(hWnd, iSortingColumn, g_iSortedColumn);
+        g_iSortedColumn = iSortingColumn;
         return TRUE;
     case NM_DBLCLK:
     case NM_RETURN:
     {
-        SendMessage(hFrameWnd, WM_COMMAND, MAKEWPARAM(ID_EDIT_MODIFY, 0), 0);
+        SendMessageW(hFrameWnd, WM_COMMAND, MAKEWPARAM(ID_EDIT_MODIFY, 0), 0);
     }
     return TRUE;
     case NM_SETFOCUS:
@@ -426,7 +571,7 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
         if(Info)
         {
             PLINE_INFO lineinfo = (PLINE_INFO)Info->item.lParam;
-            if(!lineinfo->name || !_tcscmp(lineinfo->name, _T("")))
+            if(!lineinfo->name || !wcscmp(lineinfo->name, L""))
             {
                 *Result = TRUE;
             }
@@ -443,32 +588,32 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
         if(Info && Info->item.pszText)
         {
             PLINE_INFO lineinfo = (PLINE_INFO)Info->item.lParam;
-            if(!lineinfo->name || !_tcscmp(lineinfo->name, _T("")))
+            if(!lineinfo->name || !wcscmp(lineinfo->name, L""))
             {
                 *Result = FALSE;
             }
             else
             {
-                if(_tcslen(Info->item.pszText) == 0)
+                if(wcslen(Info->item.pszText) == 0)
                 {
-                    TCHAR msg[128], caption[128];
+                    WCHAR msg[128], caption[128];
 
-                    LoadString(hInst, IDS_ERR_RENVAL_TOEMPTY, msg, COUNT_OF(msg));
-                    LoadString(hInst, IDS_ERR_RENVAL_CAPTION, caption, COUNT_OF(caption));
-                    MessageBox(0, msg, caption, 0);
+                    LoadStringW(hInst, IDS_ERR_RENVAL_TOEMPTY, msg, COUNT_OF(msg));
+                    LoadStringW(hInst, IDS_ERR_RENVAL_CAPTION, caption, COUNT_OF(caption));
+                    MessageBoxW(0, msg, caption, 0);
                     *Result = TRUE;
                 }
                 else
                 {
                     HKEY hKeyRoot;
-                    LPCTSTR keyPath;
+                    LPCWSTR keyPath;
                     LONG lResult;
 
                     keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
                     lResult = RenameValue(hKeyRoot, keyPath, Info->item.pszText, lineinfo->name);
-                    lineinfo->name = realloc(lineinfo->name, (_tcslen(Info->item.pszText)+1)*sizeof(TCHAR));
+                    lineinfo->name = realloc(lineinfo->name, (wcslen(Info->item.pszText)+1)*sizeof(WCHAR));
                     if (lineinfo->name != NULL)
-                        _tcscpy(lineinfo->name, Info->item.pszText);
+                        wcscpy(lineinfo->name, Info->item.pszText);
 
                     *Result = TRUE;
                     return (lResult == ERROR_SUCCESS);
@@ -483,21 +628,20 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
     return FALSE;
 }
 
-
 HWND CreateListView(HWND hwndParent, HMENU id)
 {
     RECT rcClient;
     HWND hwndLV;
 
-    /* Get the dimensions of the parent window's client area, and create the list view control.  */
+    /* Get the dimensions of the parent window's client area, and create the list view control. */
     GetClientRect(hwndParent, &rcClient);
-    hwndLV = CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTVIEW, _T("List View"),
-                            WS_VISIBLE | WS_CHILD | WS_TABSTOP | LVS_REPORT | LVS_EDITLABELS,
-                            0, 0, rcClient.right, rcClient.bottom,
-                            hwndParent, id, hInst, NULL);
+    hwndLV = CreateWindowExW(WS_EX_CLIENTEDGE, WC_LISTVIEW, L"List View",
+                             WS_VISIBLE | WS_CHILD | WS_TABSTOP | LVS_REPORT | LVS_EDITLABELS | LVS_SHOWSELALWAYS,
+                             0, 0, rcClient.right, rcClient.bottom,
+                             hwndParent, id, hInst, NULL);
     if (!hwndLV) return NULL;
 
-    /* Initialize the image list, and add items to the control.  */
+    /* Initialize the image list, and add items to the control. */
     if (!CreateListColumns(hwndLV)) goto fail;
     if (!InitListViewImageLists(hwndLV)) goto fail;
 
@@ -510,7 +654,7 @@ fail:
 void DestroyListView(HWND hwndLV)
 {
     INT count, i;
-    LVITEM item;
+    LVITEMW item;
 
     count = ListView_GetItemCount(hwndLV);
     for (i = 0; i < count; i++)
@@ -524,7 +668,7 @@ void DestroyListView(HWND hwndLV)
 
 }
 
-BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
+BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath)
 {
     DWORD max_sub_key_len;
     DWORD max_val_name_len;
@@ -539,46 +683,43 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
 
     (void)ListView_EditLabel(hwndLV, -1);
 
-    SendMessage(hwndLV, WM_SETREDRAW, FALSE, 0);
+    SendMessageW(hwndLV, WM_SETREDRAW, FALSE, 0);
     DestroyListView(hwndLV);
 
-    g_columnToSort = ~0UL;
     (void)ListView_DeleteAllItems(hwndLV);
 
     if(!hKey) return FALSE;
 
-    errCode = RegOpenKeyEx(hKey, keyPath, 0, KEY_READ, &hNewKey);
+    errCode = RegOpenKeyExW(hKey, keyPath, 0, KEY_READ, &hNewKey);
     if (errCode != ERROR_SUCCESS) return FALSE;
 
     /* get size information and resize the buffers if necessary */
-    errCode = RegQueryInfoKey(hNewKey, NULL, NULL, NULL, NULL, &max_sub_key_len, NULL,
-                              &val_count, &max_val_name_len, &max_val_size, NULL, NULL);
+    errCode = RegQueryInfoKeyW(hNewKey, NULL, NULL, NULL, NULL, &max_sub_key_len, NULL,
+                               &val_count, &max_val_name_len, &max_val_size, NULL, NULL);
 
     if (errCode == ERROR_SUCCESS)
     {
-        TCHAR* ValName = HeapAlloc(GetProcessHeap(), 0, ++max_val_name_len * sizeof(TCHAR));
+        WCHAR* ValName = HeapAlloc(GetProcessHeap(), 0, ++max_val_name_len * sizeof(WCHAR));
         DWORD dwValNameLen = max_val_name_len;
-        BYTE* ValBuf = HeapAlloc(GetProcessHeap(), 0, max_val_size + sizeof(TCHAR));
+        BYTE* ValBuf = HeapAlloc(GetProcessHeap(), 0, max_val_size + sizeof(WCHAR));
         DWORD dwValSize = max_val_size;
         DWORD dwIndex = 0L;
         DWORD dwValType;
-        /*                if (RegQueryValueEx(hNewKey, NULL, NULL, &dwValType, ValBuf, &dwValSize) == ERROR_SUCCESS) { */
-        /*                    AddEntryToList(hwndLV, _T("(Default)"), dwValType, ValBuf, dwValSize); */
+        /*                if (RegQueryValueExW(hNewKey, NULL, NULL, &dwValType, ValBuf, &dwValSize) == ERROR_SUCCESS) { */
+        /*                    AddEntryToList(hwndLV, L"(Default)", dwValType, ValBuf, dwValSize); */
         /*                } */
         /*                dwValSize = max_val_size; */
-        while (RegEnumValue(hNewKey, dwIndex, ValName, &dwValNameLen, NULL, &dwValType, ValBuf, &dwValSize) == ERROR_SUCCESS)
+        while (RegEnumValueW(hNewKey, dwIndex, ValName, &dwValNameLen, NULL, &dwValType, ValBuf, &dwValSize) == ERROR_SUCCESS)
         {
             /* Add a terminating 0 character. Usually this is only necessary for strings. */
-            ValBuf[dwValSize] = 0;
-#ifdef UNICODE
-            ValBuf[dwValSize + 1] = 0;
-#endif
+            ValBuf[dwValSize] = ValBuf[dwValSize + 1] = 0;
+
             AddEntryToList(hwndLV, ValName, dwValType, ValBuf, dwValSize, -1, TRUE);
             dwValNameLen = max_val_name_len;
             dwValSize = max_val_size;
             dwValType = 0L;
             ++dwIndex;
-            if(!_tcscmp(ValName, _T("")))
+            if(!wcscmp(ValName, L""))
             {
                 AddedDefault = TRUE;
             }
@@ -586,11 +727,12 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
         HeapFree(GetProcessHeap(), 0, ValBuf);
         HeapFree(GetProcessHeap(), 0, ValName);
     }
+    RegCloseKey(hNewKey);
+
     if(!AddedDefault)
     {
-        AddEntryToList(hwndLV, _T(""), REG_SZ, NULL, 0, 0, FALSE);
+        AddEntryToList(hwndLV, L"", REG_SZ, NULL, 0, 0, FALSE);
     }
-    ListView_SortItems(hwndLV, CompareFunc, (WPARAM)hwndLV);
     c = ListView_GetItemCount(hwndLV);
     for(i = 0; i < c; i++)
     {
@@ -599,8 +741,8 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
     ListView_SetItemState(hwndLV, iListViewSelect,
                           LVIS_FOCUSED | LVIS_SELECTED,
                           LVIS_FOCUSED | LVIS_SELECTED);
-    RegCloseKey(hNewKey);
-    SendMessage(hwndLV, WM_SETREDRAW, TRUE, 0);
+    (void)ListView_Sort(hwndLV, g_iSortedColumn, -1);
+    SendMessageW(hwndLV, WM_SETREDRAW, TRUE, 0);
 
     return TRUE;
 }

@@ -15,6 +15,7 @@ typedef struct tcp_pcb* PTCP_PCB;
 typedef struct _QUEUE_ENTRY
 {
     struct pbuf *p;
+    ULONG Offset;
     LIST_ENTRY ListEntry;
 } QUEUE_ENTRY, *PQUEUE_ENTRY;
 
@@ -71,6 +72,7 @@ struct lwip_callback_msg
         } Listen;
         struct {
             err_t Error;
+            u32_t Information;
         } Send;
         struct {
             err_t Error;
@@ -97,7 +99,7 @@ extern void TCPRecvEventHandler(void *arg);
 PTCP_PCB    LibTCPSocket(void *arg);
 err_t       LibTCPBind(PCONNECTION_ENDPOINT Connection, struct ip_addr *const ipaddr, const u16_t port);
 PTCP_PCB    LibTCPListen(PCONNECTION_ENDPOINT Connection, const u8_t backlog);
-err_t       LibTCPSend(PCONNECTION_ENDPOINT Connection, void *const dataptr, const u16_t len, const int safe);
+err_t       LibTCPSend(PCONNECTION_ENDPOINT Connection, void *const dataptr, const u16_t len, u32_t *sent, const int safe);
 err_t       LibTCPConnect(PCONNECTION_ENDPOINT Connection, struct ip_addr *const ipaddr, const u16_t port);
 err_t       LibTCPShutdown(PCONNECTION_ENDPOINT Connection, const int shut_rx, const int shut_tx);
 err_t       LibTCPClose(PCONNECTION_ENDPOINT Connection, const int safe, const int callback);

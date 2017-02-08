@@ -1,5 +1,4 @@
-/* $Id: videoport.c 22739 2006-07-01 12:08:35Z greatlrd $
- *
+/*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
  * FILE:                 ddraw/videoport/videoport_stubs.c

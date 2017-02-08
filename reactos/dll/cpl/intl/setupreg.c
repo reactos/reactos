@@ -125,7 +125,7 @@ InsSpacesFmt(const TCHAR *szSourceStr, const TCHAR *szFmtStr)
     return pszDestStr;
 }
 
-/* Replace given template in source string with string to replace and return recieved string */
+/* Replace given template in source string with string to replace and return received string */
 TCHAR*
 ReplaceSubStr(const TCHAR *szSourceStr,
               const TCHAR *szStrToReplace,

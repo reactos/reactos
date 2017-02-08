@@ -11,22 +11,18 @@
 #include <commctrl.h>
 #include <shellapi.h>
 #include <shlwapi.h>
-#include <stdlib.h>
-#include <tchar.h>
-#include <process.h>
 #include <stdio.h>
-#include <limits.h>
-#include <accctrl.h>
-#include <unknwn.h>
 #include <aclapi.h>
 #include <commdlg.h>
 #include <cderr.h>
-#include <ole2.h>
-#include <objbase.h>
 #include <objsel.h>
 #include <assert.h>
+
 #include "main.h"
 #include "regproc.h"
 #include "hexedit.h"
 #include "security.h"
+
 #endif
+
+/* EOF */

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2006-2007 dogbert <dogber1@gmail.com>
+Copyright (c) 2006-2008 dogbert <dogber1@gmail.com>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -32,25 +32,23 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ntstrsafe.h"
 
 #ifdef _MSC_VER
-#pragma code_seg("PAGE") /* warning - ignored by GCC compiler */
+#pragma code_seg("PAGE")
 #endif
 
-const GUID KSPROPSETID_CMI = {0x2B81CDBB, 0xEE6C, 0x4ECC, {0x8A, 0xA5, 0x9A, 0x18, 0x8B, 0x02, 0x3D, 0xFF}};
-
-HRESULT NTAPI CreateMiniportTopologyCMI(PUNKNOWN* Unknown, REFCLSID, PUNKNOWN UnknownOuter, POOL_TYPE PoolType)
+NTSTATUS NTAPI CreateMiniportTopologyCMI(PUNKNOWN* Unknown, REFCLSID, PUNKNOWN UnknownOuter, POOL_TYPE PoolType)
 {
-	//PAGED_CODE();
-	//ASSERT(Unknown);
+	PAGED_CODE();
+	ASSERT(Unknown);
 	STD_CREATE_BODY_(CCMITopology,Unknown,UnknownOuter,PoolType,PMINIPORTTOPOLOGY);
 }
 
-STDMETHODIMP CCMITopology::QueryInterface(REFIID Interface, PVOID* Object)
+STDMETHODIMP CCMITopology::NonDelegatingQueryInterface(REFIID Interface, PVOID* Object)
 {
-	//PAGED_CODE();
-	//ASSERT(Object);
+	PAGED_CODE();
+	ASSERT(Object);
 	DBGPRINT(("CCMITopology::NonDelegatingQueryInterface"));
 
-	if (IsEqualGUIDAligned(Interface, IID_IUnknown)) {
+	if (IsEqualGUIDAligned(Interface,IID_IUnknown)) {
 		*Object = PVOID(PUNKNOWN(PMINIPORTTOPOLOGY(this)));
 	} else if (IsEqualGUIDAligned(Interface,IID_IMiniport)) {
 		*Object = PVOID(PMINIPORT(this));
@@ -72,7 +70,7 @@ STDMETHODIMP CCMITopology::QueryInterface(REFIID Interface, PVOID* Object)
 
 CCMITopology::~CCMITopology()
 {
-	//PAGED_CODE();
+	PAGED_CODE();
 
 	DBGPRINT(("CCMITopology::~CCMITopology"));
 
@@ -86,9 +84,9 @@ CCMITopology::~CCMITopology()
 
 STDMETHODIMP CCMITopology::Init(PUNKNOWN UnknownAdapter, PRESOURCELIST ResourceList, PPORTTOPOLOGY Port)
 {
-	//PAGED_CODE();
-	//ASSERT(UnknownAdapter);
-	//ASSERT(Port);
+	PAGED_CODE();
+	ASSERT(UnknownAdapter);
+	ASSERT(Port);
 	DBGPRINT(("CCMITopology::Init"));
 
 	NTSTATUS ntStatus = UnknownAdapter->QueryInterface(IID_ICMIAdapter, (PVOID *)&CMIAdapter);
@@ -115,8 +113,8 @@ STDMETHODIMP CCMITopology::Init(PUNKNOWN UnknownAdapter, PRESOURCELIST ResourceL
 
 STDMETHODIMP CCMITopology::GetDescription(PPCFILTER_DESCRIPTOR*  OutFilterDescriptor)
 {
-    //PAGED_CODE();
-    //ASSERT(OutFilterDescriptor);
+    PAGED_CODE();
+    ASSERT(OutFilterDescriptor);
     DBGPRINT(("CCMITopology::GetDescription"));
 
     *OutFilterDescriptor = &MiniportFilterDescriptor;
@@ -126,7 +124,7 @@ STDMETHODIMP CCMITopology::GetDescription(PPCFILTER_DESCRIPTOR*  OutFilterDescri
 
 STDMETHODIMP CCMITopology::loadMixerSettingsFromRegistry()
 {
-	//PAGED_CODE();
+	PAGED_CODE();
 	DBGPRINT(("CCMITopology::loadMixerSettingsFromRegistry"));
 
 	PREGISTRYKEY       DriverKey;
@@ -175,7 +173,7 @@ STDMETHODIMP CCMITopology::loadMixerSettingsFromRegistry()
 	PropertyRequest.ValueSize    = sizeof(DWORD);
 	PropertyRequest.PropertyItem = &PropertyItem;
 
-	for ( UINT i=0; i < SIZEOF_ARRAY(TopologyNodes); i++ ) {
+	for (unsigned int i=0;i < SIZEOF_ARRAY(TopologyNodes); i++) {
 		PropertyRequest.Node = i;
 
 		Channel = CHAN_LEFT;
@@ -217,6 +215,11 @@ STDMETHODIMP CCMITopology::loadMixerSettingsFromRegistry()
 				*(PBOOL(PropertyRequest.Value)) = false;
 				PropertyHandler_OnOff(&PropertyRequest);
 			}
+			if (i == KSNODE_TOPO_IEC_MONITOR) {
+				PropertyItem.Id = KSPROPERTY_AUDIO_LOUDNESS;
+				*(PBOOL(PropertyRequest.Value)) = true;
+				PropertyHandler_OnOff(&PropertyRequest);
+			}
 		}
 
 		Channel = CHAN_RIGHT;
@@ -242,6 +245,11 @@ STDMETHODIMP CCMITopology::loadMixerSettingsFromRegistry()
 				}
 			}
 		} else {
+			if (i == KSNODE_TOPO_IEC_OUT) {
+				PropertyItem.Id = KSPROPERTY_AUDIO_LOUDNESS;
+				*(PBOOL(PropertyRequest.Value)) = true;
+				PropertyHandler_OnOff(&PropertyRequest);
+			}
 			if (i == KSNODE_TOPO_WAVEOUT_MUTE_IN) {
 				PropertyItem.Id = KSPROPERTY_AUDIO_MUTE;
 				*(PBOOL(PropertyRequest.Value)) = true;
@@ -258,7 +266,10 @@ STDMETHODIMP CCMITopology::loadMixerSettingsFromRegistry()
 			cm->formatMask = (*(PLONG)PartialInfo->Data);
 		}
 	} else {
-		cm->formatMask = 0xFFFFFFFF;
+		cm->formatMask = FMT_441_PCM | FMT_441_MULTI_PCM | FMT_441_DOLBY | FMT_480_PCM | FMT_480_MULTI_PCM | FMT_480_DOLBY;
+		if (cm->chipVersion >= 68) {
+			cm->formatMask |= FMT_882_PCM | FMT_882_MULTI_PCM | FMT_882_DOLBY | FMT_960_PCM | FMT_960_MULTI_PCM | FMT_960_DOLBY;
+		}
 	}
 
 	ExFreePoolWithTag (KeyInfo,'dbrt');
@@ -273,7 +284,7 @@ STDMETHODIMP CCMITopology::loadMixerSettingsFromRegistry()
 
 STDMETHODIMP CCMITopology::storeMixerSettingsToRegistry()
 {
-	//PAGED_CODE();
+	PAGED_CODE();
 	DBGPRINT(("CCMITopology::storeMixerSettingsToRegistry"));
 
 	PREGISTRYKEY       DriverKey;
@@ -312,7 +323,7 @@ STDMETHODIMP CCMITopology::storeMixerSettingsToRegistry()
 	PropertyRequest.ValueSize    = sizeof(DWORD);
 	PropertyRequest.PropertyItem = &PropertyItem;
 
-	for ( UINT i=0; i < SIZEOF_ARRAY(TopologyNodes); i++ ) {
+	for (unsigned int i=0;i < SIZEOF_ARRAY(TopologyNodes); i++) {
 		PropertyRequest.Node = i;
 		if (IsEqualGUIDAligned(*(TopologyNodes[i].Type), KSNODETYPE_VOLUME)) {
 			PropertyRequest.Node = i;
@@ -433,7 +444,7 @@ STDMETHODIMP CCMITopology::storeMixerSettingsToRegistry()
 
 STDMETHODIMP CCMITopology::loadMixerSettingsFromMemory()
 {
-	//PAGED_CODE();
+	PAGED_CODE();
 	DBGPRINT(("CCMITopology::loadMixerSettingsFromMemory"));
 
 	CMIAdapter->resetMixer();
@@ -453,7 +464,7 @@ STDMETHODIMP CCMITopology::loadMixerSettingsFromMemory()
 
 STDMETHODIMP CCMITopology::storeMixerSettingsToMemory()
 {
-	//PAGED_CODE();
+	PAGED_CODE();
 	DBGPRINT(("CCMITopology::storeMixerSettingsToMemory"));
 
 	mixer1Register   = CMIAdapter->readUInt8(REG_MIXER1);
@@ -468,14 +479,13 @@ STDMETHODIMP CCMITopology::storeMixerSettingsToMemory()
 
 NTSTATUS NTAPI PropertyHandler_OnOff(PPCPROPERTY_REQUEST PropertyRequest)
 {
-	//PAGED_CODE();
-	//ASSERT(PropertyRequest);
+	PAGED_CODE();
+	ASSERT(PropertyRequest);
 	DBGPRINT(("[PropertyHandler_OnOff]"));
 
 	CCMITopology *that = (CCMITopology *) ((PMINIPORTTOPOLOGY) PropertyRequest->MajorTarget);
 
 	NTSTATUS  ntStatus = STATUS_INVALID_PARAMETER;
-	//UInt8     data, mask, reg;
 	UInt8     mask, reg;
 	LONG      channel;
 
@@ -603,8 +613,8 @@ NTSTATUS NTAPI PropertyHandler_OnOff(PPCPROPERTY_REQUEST PropertyRequest)
 
 					case KSNODE_TOPO_CD_MUTE_IN:
 						switch (channel) {
-							case CHAN_LEFT:  mask = EN_LINEIN_L; reg = EN_CD_L; break;
-							case CHAN_RIGHT: mask = EN_LINEIN_R; reg = EN_CD_R; break;
+							case CHAN_LEFT:  mask = EN_CD_L; reg = SBREG_IN_CTRL_L; break;
+							case CHAN_RIGHT: mask = EN_CD_R; reg = SBREG_IN_CTRL_R; break;
 							default: return ntStatus;
 						}
 						if (PropertyRequest->Verb & KSPROPERTY_TYPE_GET) {
@@ -647,13 +657,13 @@ NTSTATUS NTAPI PropertyHandler_OnOff(PPCPROPERTY_REQUEST PropertyRequest)
 							default: return ntStatus;
 						}
 						if (PropertyRequest->Verb & KSPROPERTY_TYPE_GET) {
-							*Muted = (that->micVolumeRegister & mask) ;
+							*Muted = !(that->micVolumeRegister & mask) ;
 						}
 						if (PropertyRequest->Verb & KSPROPERTY_TYPE_SET) {
 							if (*Muted) {
-								that->micVolumeRegister |= mask;
-							} else {
 								that->micVolumeRegister &= ~mask;
+							} else {
+								that->micVolumeRegister |= mask;
 							}
 							that->CMIAdapter->writeUInt8(REG_MIXER2, that->micVolumeRegister);
 						}
@@ -709,7 +719,6 @@ NTSTATUS NTAPI PropertyHandler_OnOff(PPCPROPERTY_REQUEST PropertyRequest)
 								*LoudnessOn = (that->CMIAdapter->readMixer(SBREG_EXTENSION) & EN_MICBOOST);
 							}
 							if (PropertyRequest->Verb & KSPROPERTY_TYPE_SET) {
-//								DBGPRINT(("setting mic boost: previous state %d, new state %d", (that->CMIAdapter->readMixer(SBREG_EXTENSION) & EN_MICBOOST), (*LoudnessOn)));
 								if (*LoudnessOn) {
 									that->CMIAdapter->setMixerBit(SBREG_EXTENSION, EN_MICBOOST);
 								} else {
@@ -791,11 +800,14 @@ NTSTATUS NTAPI PropertyHandler_OnOff(PPCPROPERTY_REQUEST PropertyRequest)
 						if (PropertyRequest->Verb & KSPROPERTY_TYPE_GET) {
 							*LoudnessOn = (that->CMIAdapter->readUInt8(REG_MIXER1) & EN_SPDI2DAC);
 						}
-						if (PropertyRequest->Verb & KSPROPERTY_TYPE_SET) {
+						if ((PropertyRequest->Verb & KSPROPERTY_TYPE_SET) && !(that->settingsLoaded)) {
 							if (*LoudnessOn) {
 								that->CMIAdapter->setUInt8Bit(REG_MIXER1, EN_SPDI2DAC);
 							} else {
 								that->CMIAdapter->clearUInt8Bit(REG_MIXER1, EN_SPDI2DAC);
+							}
+							if (that->cm) {
+								that->cm->enableSPDIFInMonitor = *LoudnessOn;
 							}
 						}
 						ntStatus = STATUS_SUCCESS;
@@ -809,7 +821,7 @@ NTSTATUS NTAPI PropertyHandler_OnOff(PPCPROPERTY_REQUEST PropertyRequest)
 								*LoudnessOn = (that->CMIAdapter->readUInt32(REG_MISCCTRL) & SEL_SPDIFI2);
 							}
 						}
-						if (PropertyRequest->Verb & KSPROPERTY_TYPE_SET) {
+						if ((PropertyRequest->Verb & KSPROPERTY_TYPE_SET) && !(that->settingsLoaded)) {
 							if (*LoudnessOn) {
 								if (that->cm->chipVersion <= 37) {
 									that->CMIAdapter->setUInt32Bit(REG_CHFORMAT, SEL_SPDIFI1);
@@ -1018,8 +1030,8 @@ NTSTATUS NTAPI PropertyHandler_OnOff(PPCPROPERTY_REQUEST PropertyRequest)
 
 static NTSTATUS BasicSupportHandler(PPCPROPERTY_REQUEST PropertyRequest)
 {
-	//PAGED_CODE();
-	//ASSERT(PropertyRequest);
+	PAGED_CODE();
+	ASSERT(PropertyRequest);
 	DBGPRINT(("[BasicSupportHandler]"));
 
 	NTSTATUS ntStatus = STATUS_INVALID_DEVICE_REQUEST;
@@ -1045,7 +1057,7 @@ static NTSTATUS BasicSupportHandler(PPCPROPERTY_REQUEST PropertyRequest)
 
 			PKSPROPERTY_STEPPING_LONG Range = PKSPROPERTY_STEPPING_LONG(Members + 1);
 
-			for ( UINT i=0; i < SIZEOF_ARRAY(VolTable); i++ ) {
+			for (unsigned int i=0;i<SIZEOF_ARRAY(VolTable);i++) {
 				if (VolTable[i].node == PropertyRequest->Node) {
 					Range->Bounds.SignedMaximum = (VolTable[i].max << 16);
 					Range->Bounds.SignedMinimum = (VolTable[i].min << 16);
@@ -1088,8 +1100,8 @@ static NTSTATUS BasicSupportHandler(PPCPROPERTY_REQUEST PropertyRequest)
 
 NTSTATUS NTAPI PropertyHandler_Level(PPCPROPERTY_REQUEST PropertyRequest)
 {
-	//PAGED_CODE();
-	//ASSERT(PropertyRequest);
+	PAGED_CODE();
+	ASSERT(PropertyRequest);
 	DBGPRINT(("[PropertyHandler_Level]"));
 
 	CCMITopology *that = (CCMITopology *) ((PMINIPORTTOPOLOGY) PropertyRequest->MajorTarget);
@@ -1113,7 +1125,7 @@ NTSTATUS NTAPI PropertyHandler_Level(PPCPROPERTY_REQUEST PropertyRequest)
 
 			PLONG Level = (PLONG)PropertyRequest->Value;
 
-			for ( UINT i=0; i <SIZEOF_ARRAY(VolTable); i++ )
+			for (unsigned int i=0;i<SIZEOF_ARRAY(VolTable);i++)
 			{
 				if (VolTable[i].node == PropertyRequest->Node) {
 					if (PropertyRequest->Verb & KSPROPERTY_TYPE_GET) {
@@ -1223,15 +1235,16 @@ NTSTATUS NTAPI PropertyHandler_Level(PPCPROPERTY_REQUEST PropertyRequest)
 
 	return ntStatus;
 }
-NTSTATUS NTAPI PropertyHandler_CpuResources(PPCPROPERTY_REQUEST PropertyRequest)
+
+NTSTATUS NTAPI PropertyHandler_CpuResources(PPCPROPERTY_REQUEST   PropertyRequest)
 {
-	//PAGED_CODE();
-	//ASSERT(PropertyRequest);
+	PAGED_CODE();
+	ASSERT(PropertyRequest);
 	DBGPRINT(("[PropertyHandler_CpuResources]"));
 
 	NTSTATUS ntStatus = STATUS_INVALID_DEVICE_REQUEST;
 
-	if (PropertyRequest->Node == MAXULONG) {
+	if (PropertyRequest->Node == (ULONG)-1) {
 		return ntStatus;
 	}
 	if (PropertyRequest->Node >= KSNODE_TOPO_INVALID) {
@@ -1277,8 +1290,8 @@ NTSTATUS NTAPI PropertyHandler_CpuResources(PPCPROPERTY_REQUEST PropertyRequest)
 
 NTSTATUS NTAPI PropertyHandler_ComponentId(PPCPROPERTY_REQUEST PropertyRequest)
 {
-	//PAGED_CODE();
-	//ASSERT(PropertyRequest);
+	PAGED_CODE();
+	ASSERT(PropertyRequest);
 	DBGPRINT(("[PropertyHandler_ComponentId]"));
 
 	NTSTATUS ntStatus = STATUS_INVALID_DEVICE_REQUEST;
@@ -1323,8 +1336,8 @@ NTSTATUS NTAPI PropertyHandler_ComponentId(PPCPROPERTY_REQUEST PropertyRequest)
 
 NTSTATUS NTAPI PropertyHandler_Private(PPCPROPERTY_REQUEST PropertyRequest)
 {
-	//PAGED_CODE();
-	//ASSERT(PropertyRequest);
+	PAGED_CODE();
+	ASSERT(PropertyRequest);
 	DBGPRINT(("[PropertyHandler_Private]"));
 
 	NTSTATUS     ntStatus = STATUS_INVALID_DEVICE_REQUEST;
@@ -1351,14 +1364,14 @@ NTSTATUS NTAPI PropertyHandler_Private(PPCPROPERTY_REQUEST PropertyRequest)
 #endif
 		cmiData->hardwareRevision    = that->cm->chipVersion;
 		cmiData->maxChannels         = that->cm->maxChannels;
-		cmiData->IOBase              = (USHORT)(ULONG_PTR)that->cm->IOBase;
-		cmiData->MPUBase             = (USHORT)(ULONG_PTR)that->cm->MPUBase;
+		cmiData->IOBase              = (USHORT)((ULONG_PTR)that->cm->IOBase);
+		cmiData->MPUBase             = (USHORT)((ULONG_PTR)that->cm->MPUBase);
 		cmiData->enableSPDO          = that->cm->enableSPDIFOut;
+		cmiData->enableSPDIMonitor   = that->cm->enableSPDIFInMonitor;
 		cmiData->enableSPDI          = that->cm->enableSPDIFIn;
 		cmiData->formatMask          = that->cm->formatMask;
 		cmiData->exchangeFrontBack   = (that->CMIAdapter->readUInt8(REG_MIXER1) & REAR2FRONT);
 		cmiData->enableSPDO5V        = (that->CMIAdapter->readUInt32(REG_MISCCTRL) & EN_SPDO5V);
-		cmiData->enablePCMDAC        = (that->CMIAdapter->readUInt8(REG_MIXER1) & EN_SPDI2DAC);
 		cmiData->enableBass2Line     = (that->CMIAdapter->readUInt32(REG_LEGACY) & BASS2LINE);
 		cmiData->enableCenter2Line   = (that->CMIAdapter->readUInt32(REG_LEGACY) & CENTER2LINE);
 		cmiData->enableRear2Line     = (that->CMIAdapter->readUInt8(REG_MIXER1) & REAR2LINE);
@@ -1392,6 +1405,7 @@ NTSTATUS NTAPI PropertyHandler_Private(PPCPROPERTY_REQUEST PropertyRequest)
 		that->cm->enableSPDIFIn         = cmiData->enableSPDI;
 		that->cm->enableSPDIFOut        = cmiData->enableSPDO;
 		that->cm->formatMask            = cmiData->formatMask;
+		that->cm->enableSPDIFInMonitor  = cmiData->enableSPDIMonitor;
 
 		if (cmiData->enableSPDI) {
 			that->CMIAdapter->setUInt8Bit(REG_MIXER1, EN_WAVEIN_L | EN_WAVEIN_R);
@@ -1409,7 +1423,7 @@ NTSTATUS NTAPI PropertyHandler_Private(PPCPROPERTY_REQUEST PropertyRequest)
 		} else {
 			that->CMIAdapter->clearUInt32Bit(REG_MISCCTRL, EN_SPDO5V);
 		}
-		if (cmiData->enablePCMDAC) {
+		if (cmiData->enableSPDIMonitor) {
 			that->CMIAdapter->setUInt8Bit(REG_MIXER1, EN_SPDI2DAC);
 		} else {
 			that->CMIAdapter->clearUInt8Bit(REG_MIXER1, EN_SPDI2DAC);

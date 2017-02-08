@@ -9,6 +9,8 @@
 
 typedef struct _WINSTATION_OBJECT
 {
+    DWORD dwSessionId;
+
     KSPIN_LOCK Lock;
     UNICODE_STRING Name;
     LIST_ENTRY DesktopListHead;
@@ -69,7 +71,7 @@ INIT_FUNCTION
 NTSTATUS
 NTAPI
 InitWindowStationImpl(VOID);
-NTSTATUS NTAPI UserCreateWinstaDirectoy();
+NTSTATUS NTAPI UserCreateWinstaDirectory();
 
 VOID APIENTRY IntWinStaObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
 NTSTATUS APIENTRY IntWinStaObjectParse(PWIN32_PARSEMETHOD_PARAMETERS Parameters);

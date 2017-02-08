@@ -9,6 +9,8 @@
 #define NDEBUG
 #include <debug.h>
 
+static IO_COMPLETION_ROUTINE ForwardIrpCompletion;
+
 static
 NTSTATUS
 NTAPI
@@ -17,6 +19,9 @@ ForwardIrpCompletion(
 	IN PIRP Irp,
 	IN PVOID Context)
 {
+
+  UNREFERENCED_PARAMETER(DeviceObject);
+
   if (Irp->PendingReturned)
     KeSetEvent((PKEVENT)Context, IO_NO_INCREMENT, FALSE);
 
@@ -48,6 +53,7 @@ IsaForwardIrpSynchronous(
   return Status;
 }
 
+static DRIVER_DISPATCH IsaCreateClose;
 
 static
 NTSTATUS
@@ -65,6 +71,8 @@ IsaCreateClose(
 
   return STATUS_SUCCESS;
 }
+
+static DRIVER_DISPATCH IsaIoctl;
 
 static
 NTSTATUS
@@ -91,6 +99,8 @@ IsaIoctl(
 
   return Status;
 }
+
+static DRIVER_DISPATCH IsaReadWrite;
 
 static
 NTSTATUS
@@ -152,6 +162,8 @@ IsaAddDevice(
 
   return STATUS_SUCCESS;
 }
+
+static DRIVER_DISPATCH IsaPnp;
 
 static
 NTSTATUS

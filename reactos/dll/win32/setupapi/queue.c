@@ -20,6 +20,8 @@
 
 #include "setupapi_private.h"
 
+#include <aclapi.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
 /* Unicode constants */

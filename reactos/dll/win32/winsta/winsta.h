@@ -12,13 +12,13 @@
 
 /* Default header set */
 #include <stdarg.h>
-#include <time.h>
+//#include <time.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winternl.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winternl.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(winsta);
 

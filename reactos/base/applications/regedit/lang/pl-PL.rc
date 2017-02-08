@@ -375,8 +375,8 @@ BEGIN
     IDS_ERR_DELETEVALUE     "Nie można usunąć wszystkich podanych wartości!"
     IDS_ERR_RENVAL_CAPTION  "Błąd przy zmianie wartości"
     IDS_ERR_RENVAL_TOEMPTY  "Nie można zmienić nazwy %s. Określona nazwa klucza jest pusta. Wpisz inną nazwę i spróbuj ponownie."
-    IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
-    IDS_QUERY_IMPORT_HIVE_MSG     "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Potwierdź odtworzenie klucza"
+    IDS_QUERY_IMPORT_HIVE_MSG     "Klucz zostanie odtworzony powyżej klucza wskazanego obecnie.\nWszystkie wartości i podklucze zawarte w danym kluczu zostaną usunięte.\nCzy chcesz kontynuować operację?"
     IDS_NEW_KEY             "Nowy klucz #%d"
     IDS_NEW_VALUE           "Nowa wartość #%d"
 END
@@ -441,8 +441,10 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_IMPORT_PROMPT             "Czy dodać dane do rejestru?"
-  IDS_IMPORTED_OK               "Dane dopisane do rejestru"
+  IDS_IMPORT_PROMPT              "Dodawanie danych do rejestru może zmienić lub skasować pewne wartości, przez co pewne składniki systemu mogą przestać poprawnie funkcjonować.\nJeśli nie ufasz źródłu danch w '%s', nie dodawaj ich do rejestru.\n\nCzy na pewno chcesz kontynuować?"
+  IDS_IMPORT_OK                  "Klucze i wartości w '%s' zostały z powodzeniem dodane do rejestru."
+  IDS_IMPORT_ERROR               "Nie można zaimportować '%s': Błąd podczas otwierania pliku. Może to oznaczać problem z dyskiem, systemem plików lub podany plik nie instnieje."
+  IDS_EXPORT_ERROR               "Nie można wyeksportować '%s': Błąd podczas tworzenia bądź zapisywania pliku. Może to oznaczać problem z dyskiem lub systemem plików."
 END
 
 STRINGTABLE DISCARDABLE

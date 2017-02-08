@@ -372,7 +372,10 @@ netconn_recv_data(struct netconn *conn, void **new_buf)
 #endif /* LWIP_SO_RCVTIMEO*/
 
 #if LWIP_TCP
-  if (conn->type == NETCONN_TCP) {
+#if (LWIP_UDP || LWIP_RAW)
+  if (conn->type == NETCONN_TCP)
+#endif /* (LWIP_UDP || LWIP_RAW) */
+  {
     if (!netconn_get_noautorecved(conn) || (buf == NULL)) {
       /* Let the stack know that we have taken the data. */
       /* TODO: Speedup: Don't block and wait for the answer here
@@ -461,7 +464,10 @@ netconn_recv(struct netconn *conn, struct netbuf **new_buf)
   LWIP_ERROR("netconn_accept: invalid recvmbox", sys_mbox_valid(&conn->recvmbox), return ERR_CONN;);
 
 #if LWIP_TCP
-  if (conn->type == NETCONN_TCP) {
+#if (LWIP_UDP || LWIP_RAW)
+  if (conn->type == NETCONN_TCP)
+#endif /* (LWIP_UDP || LWIP_RAW) */
+  {
     struct pbuf *p = NULL;
     /* This is not a listening netconn, since recvmbox is set */
 
@@ -485,8 +491,11 @@ netconn_recv(struct netconn *conn, struct netbuf **new_buf)
     *new_buf = buf;
     /* don't set conn->last_err: it's only ERR_OK, anyway */
     return ERR_OK;
-  } else
+  }
 #endif /* LWIP_TCP */
+#if LWIP_TCP && (LWIP_UDP || LWIP_RAW)
+  else
+#endif /* LWIP_TCP && (LWIP_UDP || LWIP_RAW) */
   {
 #if (LWIP_UDP || LWIP_RAW)
     return netconn_recv_data(conn, (void **)new_buf);
@@ -582,31 +591,62 @@ netconn_send(struct netconn *conn, struct netbuf *buf)
  * - NETCONN_COPY: data will be copied into memory belonging to the stack
  * - NETCONN_MORE: for TCP connection, PSH flag will be set on last segment sent
  * - NETCONN_DONTBLOCK: only write the data if all dat can be written at once
+ * @param bytes_written pointer to a location that receives the number of written bytes
  * @return ERR_OK if data was sent, any other err_t on error
  */
 err_t
-netconn_write(struct netconn *conn, const void *dataptr, size_t size, u8_t apiflags)
+netconn_write_partly(struct netconn *conn, const void *dataptr, size_t size,
+                     u8_t apiflags, size_t *bytes_written)
 {
   struct api_msg msg;
   err_t err;
+  u8_t dontblock;
 
   LWIP_ERROR("netconn_write: invalid conn",  (conn != NULL), return ERR_ARG;);
   LWIP_ERROR("netconn_write: invalid conn->type",  (conn->type == NETCONN_TCP), return ERR_VAL;);
   if (size == 0) {
     return ERR_OK;
   }
+  dontblock = netconn_is_nonblocking(conn) || (apiflags & NETCONN_DONTBLOCK);
+  if (dontblock && !bytes_written) {
+    /* This implies netconn_write() cannot be used for non-blocking send, since
+       it has no way to return the number of bytes written. */
+    return ERR_VAL;
+  }
 
-  /* @todo: for non-blocking write, check if 'size' would ever fit into
-            snd_queue or snd_buf */
+  /* non-blocking write sends as much  */
   msg.function = do_write;
   msg.msg.conn = conn;
   msg.msg.msg.w.dataptr = dataptr;
   msg.msg.msg.w.apiflags = apiflags;
   msg.msg.msg.w.len = size;
+#if LWIP_SO_SNDTIMEO
+  if (conn->send_timeout != 0) {
+    /* get the time we started, which is later compared to
+        sys_now() + conn->send_timeout */
+    msg.msg.msg.w.time_started = sys_now();
+  } else {
+    msg.msg.msg.w.time_started = 0;
+  }
+#endif /* LWIP_SO_SNDTIMEO */
+
   /* For locking the core: this _can_ be delayed on low memory/low send buffer,
      but if it is, this is done inside api_msg.c:do_write(), so we can use the
      non-blocking version here. */
   err = TCPIP_APIMSG(&msg);
+  if ((err == ERR_OK) && (bytes_written != NULL)) {
+    if (dontblock
+#if LWIP_SO_SNDTIMEO
+        || (conn->send_timeout != 0)
+#endif /* LWIP_SO_SNDTIMEO */
+       ) {
+      /* nonblocking write: maybe the data has been sent partly */
+      *bytes_written = msg.msg.msg.w.len;
+    } else {
+      /* blocking call succeeded: all data has been sent if it */
+      *bytes_written = size;
+    }
+  }
 
   NETCONN_SET_SAFE_ERR(conn, err);
   return err;

@@ -22,6 +22,7 @@ VOID NoUiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillCha
 VOID NoUiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);
 VOID NoUiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOLEAN Fill, BOOLEAN Shadow, UCHAR Attr);
 VOID NoUiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr);
+VOID NoUiDrawText2(ULONG X, ULONG Y, ULONG MaxNumChars, PCSTR Text, UCHAR Attr);
 VOID NoUiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr);
 VOID NoUiDrawStatusText(PCSTR StatusText);
 VOID NoUiUpdateDateTime(VOID);
@@ -35,14 +36,11 @@ UCHAR NoUiTextToFillStyle(PCSTR FillStyleText);
 VOID NoUiFadeInBackdrop(VOID);
 VOID NoUiFadeOut(VOID);
 
-BOOLEAN NoUiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
-VOID NoUiDrawMenu(PUI_MENU_INFO MenuInfo);
-
 ///////////////////////////////////////////////////////////////////////////////////////
 //
 // Menu Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-BOOLEAN NoUiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
+BOOLEAN NoUiDisplayMenu(PCSTR MenuHeader, PCSTR MenuFooter, BOOLEAN ShowBootOptions, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
 VOID NoUiDrawMenu(PUI_MENU_INFO MenuInfo);

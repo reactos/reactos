@@ -2,8 +2,6 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-set_rc_compiler()
-
 spec2def(itss.dll itss.spec)
 
 list(APPEND SOURCE
@@ -23,9 +21,8 @@ add_library(itss SHARED
 
 set_module_type(itss win32dll)
 target_link_libraries(itss uuid wine)
-if(MSVC)
-    target_link_libraries(itss itss_guid)
-else()
+
+if(NOT MSVC)
     # FIXME: http://www.cmake.org/Bug/view.php?id=12998
     #allow_warnings(itss)
     set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")

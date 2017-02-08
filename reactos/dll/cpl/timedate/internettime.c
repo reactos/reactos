@@ -7,7 +7,7 @@
  *
  */
 
-#include <timedate.h>
+#include "timedate.h"
 
 static VOID
 CreateNTPServerList(HWND hwnd)

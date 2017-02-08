@@ -1,0 +1,18 @@
+LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE    "מציג התמונות והפקסים של ReactOS"
+    IDS_SETASDESKBG "קבע כרקע שולחן עבודה"
+    IDS_PREVIEW     "תצוגה מקדימה"
+
+    /* Tooltips */
+    IDS_TOOLTIP_NEXT_PIC   "התמונה הבאה"
+    IDS_TOOLTIP_PREV_PIC   "התמונה הקודמת"
+    IDS_TOOLTIP_ZOOM_IN    "הגדלה (+)"
+    IDS_TOOLTIP_ZOOM_OUT   "הרחקה (-)"
+    IDS_TOOLTIP_ROT_CLOCKW "סובב עם כיוון השעון (Ctrl+K)"
+    IDS_TOOLTIP_ROT_COUNCW "סובב כנגד כיוון השעון (Ctrl+L)"
+    IDS_TOOLTIP_PRINT      "הדפס (Ctrl+P)"
+    IDS_TOOLTIP_SAVEAS     "שמירה בשם... (Ctrl+S)"
+END

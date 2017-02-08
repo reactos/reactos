@@ -45,7 +45,7 @@ static char copyright[] =
 "$Id: tree.c,v 1.10 1997/05/09 08:14:57 mellon Exp $ Copyright (c) 1995, 1996, 1997 The Internet Software Consortium.  All rights reserved.\n";
 #endif /* not lint */
 
-#include "rosdhcp.h"
+#include <rosdhcp.h>
 
 static TIME tree_evaluate_recurse PROTO ((int *, unsigned char **, int *,
 					  struct tree *));

@@ -6,6 +6,10 @@
 # define RTL_NUMBER_OF(x) (sizeof(x) / sizeof((x)[0]))
 #endif
 
+/* formerly located in kdbg/kdb_symbols.c */
+#define TAG_KDBS 'SBDK'
+#define TAG_KDBG 'GBDK'
+
 /* TYPES *********************************************************************/
 
 /* from kdb.c */
@@ -113,6 +117,12 @@ VOID
 KdbpPrint(
    IN PCHAR Format,
    IN ...  OPTIONAL);
+
+BOOLEAN
+NTAPI
+KdbpGetHexNumber(
+    IN PCHAR pszNum,
+    OUT ULONG_PTR *pulValue);
 
 /* from kdb_expr.c */
 

@@ -1,6 +1,5 @@
 
 set_cpp()
-set_rc_compiler()
 
 include_directories(${REACTOS_SOURCE_DIR}/lib/3rdparty/cardlib)
 

@@ -1,6 +1,4 @@
 
-set_rc_compiler()
-
 list(APPEND SOURCE
     toolspage.c
     srvpage.c
@@ -12,7 +10,6 @@ list(APPEND SOURCE
     msconfig.rc)
 
 add_executable(msconfig ${SOURCE})
-
 set_module_type(msconfig win32gui UNICODE)
 add_importlibs(msconfig user32 advapi32 version comctl32 shell32 shlwapi msvcrt kernel32)
 add_pch(msconfig precomp.h)

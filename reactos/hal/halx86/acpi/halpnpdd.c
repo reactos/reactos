@@ -813,8 +813,7 @@ NTAPI
 HalpDispatchWmi(IN PDEVICE_OBJECT DeviceObject,
                 IN PIRP Irp)
 {
-    DPRINT1("HAL: PnP Driver WMI!\n");
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK("HAL: PnP Driver WMI!\n");
     return STATUS_SUCCESS;
 }
 

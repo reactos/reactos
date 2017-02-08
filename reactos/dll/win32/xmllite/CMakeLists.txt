@@ -12,12 +12,14 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/xmllite_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/xmllite.def)
 
+if(NOT MSVC)
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
+    #allow_warnings(xmllite)
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
+endif()
+
 add_library(xmllite SHARED ${SOURCE})
-
 set_module_type(xmllite win32dll)
-
 target_link_libraries(xmllite wine uuid)
-
 add_importlibs(xmllite msvcrt kernel32 ntdll)
-
 add_cd_file(TARGET xmllite DESTINATION reactos/system32 FOR all)

@@ -1,10 +1,9 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/dosdev.c
  * PURPOSE:         Dos device functions
- * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+ * PROGRAMMER:      Ariadne (ariadne@xs4all.nl)
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
@@ -90,8 +89,9 @@ DefineDosDeviceW(
 {
     ULONG ArgumentCount;
     ULONG BufferSize;
+    BASE_API_MESSAGE ApiMessage;
+    PBASE_DEFINE_DOS_DEVICE DefineDosDeviceRequest = &ApiMessage.Data.DefineDosDeviceRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
-    CSR_API_MESSAGE Request;
     NTSTATUS Status;
     UNICODE_STRING NtTargetPathU;
     UNICODE_STRING DeviceNameU;
@@ -157,16 +157,16 @@ DefineDosDeviceW(
     }
     else
     {
-        Request.Data.DefineDosDeviceRequest.dwFlags = dwFlags;
+        DefineDosDeviceRequest->dwFlags = dwFlags;
 
         CsrCaptureMessageBuffer(CaptureBuffer,
                                 (PVOID)DeviceUpcaseNameU.Buffer,
                                 DeviceUpcaseNameU.Length,
-                                (PVOID*)&Request.Data.DefineDosDeviceRequest.DeviceName.Buffer);
+                                (PVOID*)&DefineDosDeviceRequest->DeviceName.Buffer);
 
-        Request.Data.DefineDosDeviceRequest.DeviceName.Length =
+        DefineDosDeviceRequest->DeviceName.Length =
             DeviceUpcaseNameU.Length;
-        Request.Data.DefineDosDeviceRequest.DeviceName.MaximumLength =
+        DefineDosDeviceRequest->DeviceName.MaximumLength =
             DeviceUpcaseNameU.Length;
 
         if (NtTargetPathU.Buffer)
@@ -174,24 +174,22 @@ DefineDosDeviceW(
             CsrCaptureMessageBuffer(CaptureBuffer,
                                     (PVOID)NtTargetPathU.Buffer,
                                     NtTargetPathU.Length,
-                                    (PVOID*)&Request.Data.DefineDosDeviceRequest.TargetName.Buffer);
+                                    (PVOID*)&DefineDosDeviceRequest->TargetName.Buffer);
         }
-        Request.Data.DefineDosDeviceRequest.TargetName.Length =
+        DefineDosDeviceRequest->TargetName.Length =
             NtTargetPathU.Length;
-        Request.Data.DefineDosDeviceRequest.TargetName.MaximumLength =
+        DefineDosDeviceRequest->TargetName.MaximumLength =
             NtTargetPathU.Length;
 
-        Status = CsrClientCallServer(&Request,
+        Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                      CaptureBuffer,
-                                     MAKE_CSR_API(DEFINE_DOS_DEVICE, CSR_CONSOLE),
-                                     sizeof(CSR_API_MESSAGE));
+                                     CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepDefineDosDevice),
+                                     sizeof(BASE_DEFINE_DOS_DEVICE));
         CsrFreeCaptureBuffer(CaptureBuffer);
 
-        if (! NT_SUCCESS(Status) ||
-            ! NT_SUCCESS(Status = Request.Status))
+        if (!NT_SUCCESS(Status))
         {
-            WARN("CsrClientCallServer() failed (Status %lx)\n",
-                Status);
+            WARN("CsrClientCallServer() failed (Status %lx)\n", Status);
             BaseSetLastNTError(Status);
             Result = FALSE;
         }

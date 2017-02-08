@@ -20,7 +20,11 @@
 #define NOMINMAX
 
 #define _WIN32_FUSION 0x0100
-#include <windows.h>
+//#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
 
 #ifndef NULL
 #ifdef __cplusplus

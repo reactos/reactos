@@ -24,7 +24,7 @@
 #ifndef __WINE_HANDLE_H
 #define __WINE_HANDLE_H
 
-#include "wincrypt.h"
+#include <wincrypt.h>
 
 #ifdef __cplusplus
 extern "C" {

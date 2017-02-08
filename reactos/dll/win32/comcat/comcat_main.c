@@ -18,16 +18,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+#define WIN32_NO_STATUS
+
+//#include <stdarg.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "winerror.h"
-#include "ole2.h"
+#include <windef.h>
+//#include "winbase.h"
+//#include "winuser.h"
+//#include "winreg.h"
+//#include "winerror.h"
+//#include "ole2.h"
 
 /***********************************************************************
  *		DllCanUnloadNow (COMCAT.@)

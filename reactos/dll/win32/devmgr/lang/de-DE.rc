@@ -1,4 +1,4 @@
-// German language resource file (David Hinz (fRy2oo5), 2005-12-04) ( and Friedrich Stange (dj_smith_reactos@online.de), 2006-1-20 )
+﻿// German language resource file (David Hinz (fRy2oo5), 2005-12-04) ( and Friedrich Stange (dj_smith_reactos@online.de), 2006-1-20 )
 // This is incomplete, IDS_DEV_UNKNOWN_RESOURCE still needs to be translated
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
@@ -35,26 +35,26 @@ STRINGTABLE
 BEGIN
     IDS_DEV_NO_PROBLEM "Dieses Gerät funktioniert einwandfrei."
     IDS_DEV_NOT_CONFIGURED "Dieses Gerät ist nicht richtig konfiguriert."
-    IDS_DEV_DEVLOADER_FAILED "ReactOS  konnte den Treiber für dieses Gerät nicht laden, weil der Computer zwei $1 Bustypen meldet."
-    IDS_DEV_DEVLOADER_FAILED2 "Der/die $1 Gerätelader für dieses Gerät konnte den Gerätetreiber nicht laden."
+    IDS_DEV_DEVLOADER_FAILED "ReactOS  konnte den Treiber für dieses Gerät nicht laden, weil der Computer zwei %1 Bustypen meldet."
+    IDS_DEV_DEVLOADER_FAILED2 "Der/die %1 Gerätelader für dieses Gerät konnte den Gerätetreiber nicht laden."
     IDS_DEV_OUT_OF_MEMORY "Der Treiber für dieses Gerät könnte beschädigt sein, oder Ihr System verfügt über zu wenig Speicher oder andere Ressourcen."
     IDS_DEV_ENTRY_IS_WRONG_TYPE "Dieses Gerät arbeitet nicht korrekt, weil einer seiner Treiber oder die Registry beschädigt ist."
     IDS_DEV_LACKED_ARBITRATOR "Der Treiber dieses Gerätes hat eine Ressource angefragt, die ReactOS nicht behandeln kann."
     IDS_DEV_BOOT_CONFIG_CONFLICT "Ein anderes Gerät benutzt bereits die Ressourcen, die dieses Gerät benötigt."
     IDS_DEV_FAILED_FILTER "Die Treiber für dieses Gerät müssen neu installiert werden."
-    IDS_DEV_DEVLOADER_NOT_FOUND "Dieses Gerät arbeitet nicht korrekt, weil ReactOS die Datei $1 nicht laden kann, die die Treiber für dieses Gerät lädt."
-    IDS_DEV_DEVLOADER_NOT_FOUND2 "Dieses Gerät arbeitet nicht korrekt, weil die Datei $1, die die Treiber für dieses Gerät lädt, defekt ist."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Dieses Gerät arbeitet nicht korrekt, weil ReactOS die Datei %1 nicht laden kann, die die Treiber für dieses Gerät lädt."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Dieses Gerät arbeitet nicht korrekt, weil die Datei %1, die die Treiber für dieses Gerät lädt, defekt ist."
     IDS_DEV_DEVLOADER_NOT_FOUND3 "Gerätefehler: Versuchen Sie, den Treiber für dieses Gerät auszutauschen. Wenn das nicht hilft, sehen Sie in die Gerätedokumentation."
     IDS_DEV_INVALID_DATA "Dieses Gerät arbeitet nicht korrekt, weil das BIOS ihres Computers die Ressourcen für dieses Gerät falsch angibt."
     IDS_DEV_INVALID_DATA2 "Dieses Gerät arbeitet nicht korrekt, weil das BIOS dieses Gerätes die Ressourcen für dieses Gerät falsch angibt. "
     IDS_DEV_FAILED_START "Dieses Gerät ist entweder nicht vorhanden, funktioniert nicht korrekt, oder es sind nicht alle Treiber installiert."
     IDS_DEV_LIAR "ReactOS hörte während des Versuchs dieses Gerät zu starten auf zu reagieren und wird deshalb nicht wieder versuchen, dieses Gerät zu starten.."
-    IDS_DEV_NORMAL_CONFLICT "Dieses Gerät kann keine freien $1 Ressourcen zur Benutzung finden."
+    IDS_DEV_NORMAL_CONFLICT "Dieses Gerät kann keine freien %1 Ressourcen zur Benutzung finden."
     IDS_DEV_NOT_VERIFIED "Dieses Gerät ist entweder nicht vorhanden, funktioniert nicht korrekt, oder es sind nicht alle Treiber installiert."
     IDS_DEV_NEED_RESTART "Dieses Gerät wird erst korrekt funktionieren, wenn Sie den Computer neugestartet haben."
     IDS_DEV_REENUMERATION "Dieses Gerät verursacht einen Ressourcenkonflikt."
     IDS_DEV_PARTIAL_LOG_CONF "ReactOS konnte nicht alle Ressourcen identifizieren, die dieses Gerät benutzt."
-    IDS_DEV_UNKNOWN_RESOURCE "The driver information file $1 is telling this child device to use a resource that the parent device does not have or recognize."
+    IDS_DEV_UNKNOWN_RESOURCE "The driver information file %1 is telling this child device to use a resource that the parent device does not have or recognize."
     IDS_DEV_REINSTALL "Die Treiber für dieses Gerät müssen neuinstalliert werden."
     IDS_DEV_REGISTRY "Die Registrierungsdatenbank könnte beschädigt sein."
     IDS_DEV_WILL_BE_REMOVED "ReactOS wird dieses Gerät entfernen."
@@ -70,7 +70,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Die Treiber für dieses Gerät sind nicht installiert."
     IDS_DEV_HARDWARE_DISABLED "Dieses Gerät ist deaktiviert, weil das BIOS für dieses Gerät keine Ressourcen zugeteilt hat."
     IDS_DEV_CANT_SHARE_IRQ "Dieses Gerät benutzt einen Interrupt (IRQ), der bereits von einem anderen Gerät benutzt wird und nicht geteilt werden kann. Sie müssen die kollidierenden Einstellungen ändern, oder den real-mode Treiber entfernen, der den Konflikt verursacht."
-    IDS_DEV_FAILED_ADD "Dieses Gerät arbeitet nicht korrekt, weil $1 nicht korrekt funktioniert."
+    IDS_DEV_FAILED_ADD "Dieses Gerät arbeitet nicht korrekt, weil %1 nicht korrekt funktioniert."
     IDS_DEV_DISABLED_SERVICE "ReactOS kann die Treiber für dieses Gerät nicht installieren, weil auf das (Netz-)Laufwerk, auf dem die Installationsdateien abgelegt sind, nicht zugegriffen werden kann."
     IDS_DEV_TRANSLATION_FAILED "Dieses Gerät reagiert nicht auf seinen Treiber."
     IDS_DEV_NO_SOFTCONFIG "ReactOS kann die Einstellungen für dieses Gerät nicht feststellen. Lesen Sie die Dokumentation, die mit diesem Gerät kam und benutzen Sie den Reiter ""Ressourcen"" umd die Konfiguration vorzunehmen."

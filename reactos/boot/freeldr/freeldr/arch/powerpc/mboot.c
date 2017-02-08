@@ -672,7 +672,7 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
  * FrLdrMapKernel
  * INTERNAL
  *
- *     Maps the Kernel into memory, does PE Section Mapping, initalizes the
+ *     Maps the Kernel into memory, does PE Section Mapping, initializes the
  *     uninitialized data sections, and relocates the image.
  *
  * Params:

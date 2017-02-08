@@ -24,14 +24,18 @@
  * PROGRAMMERS: Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *              Klemens Friedl (frik85@hotmail.com)
  */
-#include <windows.h>
-#include <commctrl.h>
+
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include <newdev.h>
-#include <stdio.h>
-#include <string.h>
 #include <pseh/pseh2.h>
-#include "vmwinst.h"
 #include <debug.h>
+
+#include "vmwinst.h"
 
 extern VOID CALLBACK InstallHinfSectionW(HWND hwnd, HINSTANCE ModuleHandle,
                                          PCWSTR CmdLineBuffer, INT nCmdShow);

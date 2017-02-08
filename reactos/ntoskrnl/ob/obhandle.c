@@ -2490,6 +2490,15 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
         PassedAccessState->SecurityDescriptor =
             TempBuffer->ObjectCreateInfo.SecurityDescriptor;
     }
+    
+    /* Validate the access mask */
+    Status = ObpValidateAccessMask(PassedAccessState);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Cleanup after lookup */
+        ObpReleaseLookupContext(&TempBuffer->LookupContext);
+        goto Cleanup;
+    }
 
     /* Now do the lookup */
     Status = ObpLookupObjectName(TempBuffer->ObjectCreateInfo.RootDirectory,

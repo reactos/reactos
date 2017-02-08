@@ -27,6 +27,10 @@ PciTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
                        OUT PULONG AddressSpace,
                        OUT PPHYSICAL_ADDRESS TranslatedAddress)
 {
+    UNREFERENCED_PARAMETER(InterfaceType);
+    UNREFERENCED_PARAMETER(BusNumber);
+    UNREFERENCED_PARAMETER(AddressSpace);
+
     /* FIXME: Broken translation */
     UNIMPLEMENTED;
     TranslatedAddress->QuadPart = BusAddress.QuadPart;

@@ -18,26 +18,29 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
+#include <config.h>
+//#include "wine/port.h"
 
 #include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
+//#include <stdio.h>
+//#include <string.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "winreg.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winerror.h"
+#include <winreg.h>
 
-#include "objbase.h"
+#include <objbase.h>
 
-#include "rpcproxy.h"
+#include <rpcproxy.h>
 
-#include "wine/unicode.h"
-#include "wine/debug.h"
+#include <wine/unicode.h>
+#include <wine/debug.h>
 
 #include "cpsf.h"
 

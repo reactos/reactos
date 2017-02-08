@@ -1,12 +1,9 @@
 
-add_definitions(-D__WINESRC__)
-
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
+add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
-set_rc_compiler()
 spec2def(inseng.dll inseng.spec)
 
 list(APPEND SOURCE
@@ -16,9 +13,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/inseng.def)
 
 add_library(inseng SHARED ${SOURCE})
-
 set_module_type(inseng win32dll)
-
 target_link_libraries(inseng uuid wine)
 
 add_importlibs(inseng

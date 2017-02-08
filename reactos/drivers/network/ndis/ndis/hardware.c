@@ -14,7 +14,6 @@
 
 #include "ndissys.h"
 
-
 /*
  * @implemented
  */
@@ -33,7 +32,6 @@ NdisImmediateReadPciSlotInformation(
                                WrapperContext->SlotNumber, Buffer, Offset, Length);
 }
 
-
 /*
  * @implemented
  */
@@ -52,7 +50,6 @@ NdisImmediateWritePciSlotInformation(
                                WrapperContext->SlotNumber, Buffer, Offset, Length);
 }
 
-
 /*
  * @implemented
  */
@@ -96,7 +93,8 @@ NdisPciAssignResources(
 	return NdisMPciAssignResources(Adapter,
                                    SlotNumber,
                                    AssignedResources);
-}
+}
+
 /*
  * @implemented
  */
@@ -193,7 +191,6 @@ NdisReadPciSlotInformation(
                                Buffer, Offset, Length);
 }
 
-
 /*
  * @implemented
  */

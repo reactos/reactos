@@ -27,19 +27,20 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <windows.h>
+//#include <string.h>
+//#include <ctype.h>
 
-#include <io.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+
+//#include <io.h>
 #include <dos.h>
 
 #include "resource.h"
 
-
 /* Symbol definition */
 #define MAX_STR 1024
-
 
 /* This function prints out all lines containing a substring.  There are some
  * conditions that may be passed to the function.
@@ -251,5 +252,3 @@ main (int argc, char **argv)
   */
   exit ( (ret ? 0 : 1) );
 }
-
-

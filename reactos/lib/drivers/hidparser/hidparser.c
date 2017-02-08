@@ -34,6 +34,8 @@ TranslateHidParserStatus(
             return HIDP_STATUS_I8042_TRANS_UNKNOWN;
         case HIDPARSER_STATUS_COLLECTION_NOT_FOUND:
             return HIDP_STATUS_NOT_IMPLEMENTED; //FIXME
+        case HIDPARSER_STATUS_BAD_LOG_PHY_VALUES:
+            return HIDP_STATUS_BAD_LOG_PHY_VALUES;
     }
     DPRINT1("TranslateHidParserStatus Status %ld not implemented\n", Status);
     return HIDP_STATUS_NOT_IMPLEMENTED;
@@ -203,7 +205,7 @@ HidParser_FreeCollectionDescription(
     //
     // free report description
     //
-    ExFreePool(DeviceDescription->ReportIDs);
+    Parser->Free(DeviceDescription->ReportIDs);
 }
 
 HIDAPI
@@ -952,9 +954,54 @@ HidParser_GetUsageValue(
     IN PCHAR  Report,
     IN ULONG  ReportLength)
 {
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    HIDPARSER_STATUS ParserStatus;
+
+    //
+    // FIXME: implement searching in specific collection
+    //
+    ASSERT(LinkCollection == HIDP_LINK_COLLECTION_UNSPECIFIED);
+
+    if (ReportType == HidP_Input)
+    {
+        //
+        // input report
+        //
+        ParserStatus = HidParser_GetUsageValueWithReport(Parser, CollectionContext, HID_REPORT_TYPE_INPUT, UsagePage, Usage, UsageValue, Report, ReportLength);
+    }
+    else if (ReportType == HidP_Output)
+    {
+        //
+        // input report
+        //
+        ParserStatus = HidParser_GetUsageValueWithReport(Parser, CollectionContext, HID_REPORT_TYPE_OUTPUT, UsagePage, Usage, UsageValue, Report, ReportLength);
+    }
+    else if (ReportType == HidP_Feature)
+    {
+        //
+        // input report
+        //
+        ParserStatus = HidParser_GetUsageValueWithReport(Parser, CollectionContext, HID_REPORT_TYPE_FEATURE,  UsagePage, Usage, UsageValue, Report, ReportLength);
+    }
+    else
+    {
+        //
+        // invalid report type
+        //
+        return HIDP_STATUS_INVALID_REPORT_TYPE;
+    }
+
+    if (ParserStatus == HIDPARSER_STATUS_SUCCESS)
+    {
+        //
+        // success
+        //
+        return HIDP_STATUS_SUCCESS;
+    }
+
+    //
+    // translate error
+    //
+    return TranslateHidParserStatus(ParserStatus);
 }
 
 NTSTATUS

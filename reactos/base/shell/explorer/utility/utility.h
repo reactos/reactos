@@ -28,8 +28,15 @@
  // standard windows headers
 #define WIN32_LEAN_AND_MEAN
 #define WIN32_EXTRA_LEAN
-#include <windows.h>
-#include <undocuser.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+
+//#include <undocuser.h>
 
  // Unicode support
 #if defined(UNICODE) && !defined(_UNICODE)
@@ -41,13 +48,13 @@
 #include <commctrl.h>
 
 #include <objbase.h>
-#include <oleauto.h>	// for VARIANT
+//#include <oleauto.h>	// for VARIANT
 
-#include <malloc.h>		// for alloca()
+//#include <malloc.h>		// for alloca()
 #include <assert.h>
-#include <stdlib.h>		// for _MAX_DIR, ...
+//#include <stdlib.h>		// for _MAX_DIR, ...
 #include <stdio.h>		// for sprintf()
-#include <time.h>
+//#include <time.h>
 
 #ifdef __cplusplus
 

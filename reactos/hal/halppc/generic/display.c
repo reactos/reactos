@@ -16,8 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* $Id: display.c 23907 2006-09-04 05:52:23Z arty $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/hal/x86/display.c
@@ -222,7 +221,7 @@ HalPutCharacter (CHAR Character)
 VOID FASTCALL
 HalInitializeDisplay (PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 /*
- * FUNCTION: Initalize the display
+ * FUNCTION: Initialize the display
  * ARGUMENTS:
  *         InitParameters = Parameters setup by the boot loader
  */

@@ -22,8 +22,7 @@ NTAPI
 KdpGetStateChange(IN PDBGKD_MANIPULATE_STATE64 State,
                   IN PCONTEXT Context)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 VOID
@@ -31,8 +30,7 @@ NTAPI
 KdpSetContextState(IN PDBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange,
                    IN PCONTEXT Context)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 NTSTATUS
@@ -40,8 +38,7 @@ NTAPI
 KdpSysReadMsr(IN ULONG Msr,
               OUT PLARGE_INTEGER MsrValue)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -50,8 +47,7 @@ NTAPI
 KdpSysWriteMsr(IN ULONG Msr,
                IN PLARGE_INTEGER MsrValue)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -65,8 +61,7 @@ KdpSysReadBusData(IN ULONG BusDataType,
                   IN ULONG Length,
                   OUT PULONG ActualLength)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -80,8 +75,7 @@ KdpSysWriteBusData(IN ULONG BusDataType,
                    IN ULONG Length,
                    OUT PULONG ActualLength)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -93,8 +87,7 @@ KdpSysReadControlSpace(IN ULONG Processor,
                        IN ULONG Length,
                        OUT PULONG ActualLength)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -106,8 +99,7 @@ KdpSysWriteControlSpace(IN ULONG Processor,
                         IN ULONG Length,
                         OUT PULONG ActualLength)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -121,8 +113,7 @@ KdpSysReadIoSpace(IN ULONG InterfaceType,
                   IN ULONG DataSize,
                   OUT PULONG ActualDataSize)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -136,8 +127,7 @@ KdpSysWriteIoSpace(IN ULONG InterfaceType,
                    IN ULONG DataSize,
                    OUT PULONG ActualDataSize)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -145,8 +135,7 @@ NTSTATUS
 NTAPI
 KdpSysCheckLowMemory(IN ULONG Flags)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -154,7 +143,6 @@ NTSTATUS
 NTAPI
 KdpAllowDisable(VOID)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_ACCESS_DENIED;
 }

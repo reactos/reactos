@@ -15,18 +15,18 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <string.h>
-#include "winerror.h"
-#include "wine/debug.h"
+//#include <string.h>
+//#include "winerror.h"
+#include <wine/debug.h>
 
-#include "dpinit.h"
-#include "dplaysp.h"
-#include "dplay_global.h"
+//#include "dpinit.h"
+//#include "dplaysp.h"
+//#include "dplay_global.h"
 #include "name_server.h"
-#include "dplayx_messages.h"
+//#include "dplayx_messages.h"
 
 #include "dplayx_global.h" /* FIXME: For global hack */
 
@@ -86,7 +86,6 @@ typedef struct tagDP_SPPLAYERDATA
 } DP_SPPLAYERDATA, *LPDP_SPPLAYERDATA;
 
 /* Create the SP interface */
-extern
 HRESULT DPSP_CreateInterface( REFIID riid, LPVOID* ppvObj, IDirectPlay2Impl* dp )
 {
   TRACE( " for %s\n", debugstr_guid( riid ) );
@@ -101,7 +100,7 @@ HRESULT DPSP_CreateInterface( REFIID riid, LPVOID* ppvObj, IDirectPlay2Impl* dp 
 
   if( IsEqualGUID( &IID_IDirectPlaySP, riid ) )
   {
-    IDirectPlaySPImpl *This = (IDirectPlaySPImpl *)*ppvObj;
+    IDirectPlaySPImpl *This = *ppvObj;
     This->lpVtbl = &directPlaySPVT;
   }
   else
@@ -134,7 +133,7 @@ HRESULT DPSP_CreateInterface( REFIID riid, LPVOID* ppvObj, IDirectPlay2Impl* dp 
 
 static BOOL DPSP_CreateIUnknown( LPVOID lpSP )
 {
-  IDirectPlaySPImpl *This = (IDirectPlaySPImpl *)lpSP;
+  IDirectPlaySPImpl *This = lpSP;
 
   This->unk = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof( *(This->unk) ) );
 
@@ -144,14 +143,16 @@ static BOOL DPSP_CreateIUnknown( LPVOID lpSP )
   }
 
   InitializeCriticalSection( &This->unk->DPSP_lock );
+  This->unk->DPSP_lock.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": IDirectPlaySPImpl*->DirectPlaySPIUnknownData*->DPSP_lock");
 
   return TRUE;
 }
 
 static BOOL DPSP_DestroyIUnknown( LPVOID lpSP )
 {
-  IDirectPlaySPImpl *This = (IDirectPlaySPImpl *)lpSP;
+  IDirectPlaySPImpl *This = lpSP;
 
+  This->unk->DPSP_lock.DebugInfo->Spare[0] = 0;
   DeleteCriticalSection( &This->unk->DPSP_lock );
   HeapFree( GetProcessHeap(), 0, This->unk );
 
@@ -161,7 +162,7 @@ static BOOL DPSP_DestroyIUnknown( LPVOID lpSP )
 
 static BOOL DPSP_CreateDirectPlaySP( LPVOID lpSP, IDirectPlay2Impl* dp )
 {
-  IDirectPlaySPImpl *This = (IDirectPlaySPImpl *)lpSP;
+  IDirectPlaySPImpl *This = lpSP;
 
   This->sp = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof( *(This->sp) ) );
 
@@ -192,7 +193,7 @@ static BOOL DPSP_CreateDirectPlaySP( LPVOID lpSP, IDirectPlay2Impl* dp )
 
 static BOOL DPSP_DestroyDirectPlaySP( LPVOID lpSP )
 {
-  IDirectPlaySPImpl *This = (IDirectPlaySPImpl *)lpSP;
+  IDirectPlaySPImpl *This = lpSP;
 
   /* Normally we should be keeping a reference, but since only the dplay
    * interface that created us can destroy us, we do not keep a reference
@@ -234,7 +235,7 @@ static HRESULT WINAPI DPSP_QueryInterface
 
   if( IsEqualGUID( &IID_IDirectPlaySP, riid ) )
   {
-    IDirectPlaySPImpl *This = (IDirectPlaySPImpl *)*ppvObj;
+    IDirectPlaySPImpl *This = *ppvObj;
     This->lpVtbl = &directPlaySPVT;
   }
   else
@@ -260,7 +261,7 @@ static ULONG WINAPI DPSP_AddRef
   ulObjRefCount       = InterlockedIncrement( &This->unk->ulObjRef );
   ulInterfaceRefCount = InterlockedIncrement( &This->ulInterfaceRef );
 
-  TRACE( "ref count incremented to %lu:%lu for %p\n",
+  TRACE( "ref count incremented to %u:%u for %p\n",
          ulInterfaceRefCount, ulObjRefCount, This );
 
   return ulObjRefCount;
@@ -275,7 +276,7 @@ static ULONG WINAPI DPSP_Release
   ulObjRefCount       = InterlockedDecrement( &This->unk->ulObjRef );
   ulInterfaceRefCount = InterlockedDecrement( &This->ulInterfaceRef );
 
-  TRACE( "ref count decremented to %lu:%lu for %p\n",
+  TRACE( "ref count decremented to %u:%u for %p\n",
          ulInterfaceRefCount, ulObjRefCount, This );
 
   /* Deallocate if this is the last reference to the object */
@@ -306,7 +307,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_AddMRUEntry
 
   /* Should be able to call the comctl32 undocumented MRU routines.
      I suspect that the interface works appropriately */
-  FIXME( "(%p)->(%p,%p%p,0x%08lx,0x%08lx): stub\n",
+  FIXME( "(%p)->(%p,%p%p,0x%08x,0x%08x): stub\n",
          This, lpSection, lpKey, lpData, dwDataSize, dwMaxEntries );
 
   return DP_OK;
@@ -324,7 +325,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_CreateAddress
 {
   IDirectPlaySPImpl *This = (IDirectPlaySPImpl *)iface;
 
-  FIXME( "(%p)->(%s,%s,%p,0x%08lx,%p,%p): stub\n",
+  FIXME( "(%p)->(%s,%s,%p,0x%08x,%p,%p): stub\n",
          This, debugstr_guid(guidSP), debugstr_guid(guidDataType),
          lpData, dwDataSize, lpAddress, lpdwAddressSize );
 
@@ -341,7 +342,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_EnumAddress
 {
   IDirectPlaySPImpl *This = (IDirectPlaySPImpl *)iface;
 
-  TRACE( "(%p)->(%p,%p,0x%08lx,%p)\n",
+  TRACE( "(%p)->(%p,%p,0x%08x,%p)\n",
          This, lpEnumAddressCallback, lpAddress, dwAddressSize, lpContext );
 
   DPL_EnumAddress( lpEnumAddressCallback, lpAddress, dwAddressSize, lpContext );
@@ -375,7 +376,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_GetPlayerFlags
 {
   IDirectPlaySPImpl *This = (IDirectPlaySPImpl *)iface;
 
-  FIXME( "(%p)->(0x%08lx,%p): stub\n",
+  FIXME( "(%p)->(0x%08x,%p): stub\n",
          This, idPlayer, lpdwPlayerFlags );
 
   return DP_OK;
@@ -393,7 +394,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_GetSPPlayerData
   LPDP_SPPLAYERDATA lpPlayerData;
   IDirectPlaySPImpl *This = (IDirectPlaySPImpl *)iface;
 
-  TRACE( "(%p)->(0x%08lx,%p,%p,0x%08lx)\n",
+  TRACE( "(%p)->(0x%08x,%p,%p,0x%08x)\n",
          This, idPlayer, lplpData, lpdwDataSize, dwFlags );
 
   hr = DP_GetSPPlayerData( This->sp->dplay, idPlayer, (LPVOID*)&lpPlayerData );
@@ -433,7 +434,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_HandleMessage
   LPVOID lpMessageHeader
 )
 {
-  LPDPMSG_SENDENVELOPE lpMsg = (LPDPMSG_SENDENVELOPE)lpMessageBody;
+  LPDPMSG_SENDENVELOPE lpMsg = lpMessageBody;
   HRESULT hr = DPERR_GENERIC;
   WORD wCommandId;
   WORD wVersion;
@@ -441,24 +442,24 @@ static HRESULT WINAPI IDirectPlaySPImpl_HandleMessage
 
   IDirectPlaySPImpl *This = (IDirectPlaySPImpl *)iface;
 
-  FIXME( "(%p)->(%p,0x%08lx,%p): mostly stub\n",
+  FIXME( "(%p)->(%p,0x%08x,%p): mostly stub\n",
          This, lpMessageBody, dwMessageBodySize, lpMessageHeader );
 
   wCommandId = lpMsg->wCommandId;
   wVersion   = lpMsg->wVersion;
 
-  TRACE( "Incoming message has envelope of 0x%08lx, %u, %u\n",
+  TRACE( "Incoming message has envelope of 0x%08x, %u, %u\n",
          lpMsg->dwMagic, wCommandId, wVersion );
 
   if( lpMsg->dwMagic != DPMSGMAGIC_DPLAYMSG )
   {
-    ERR( "Unknown magic 0x%08lx!\n", lpMsg->dwMagic );
+    ERR( "Unknown magic 0x%08x!\n", lpMsg->dwMagic );
     return DPERR_GENERIC;
   }
 
 #if 0
   {
-    const LPDWORD lpcHeader = (LPDWORD)lpMessageHeader;
+    const LPDWORD lpcHeader = lpMessageHeader;
 
     TRACE( "lpMessageHeader = [0x%08lx] [0x%08lx] [0x%08lx] [0x%08lx] [0x%08lx]\n",
            lpcHeader[0], lpcHeader[1], lpcHeader[2], lpcHeader[3], lpcHeader[4] );
@@ -499,7 +500,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_HandleMessage
 #if 0
   HRESULT hr = DP_OK;
   HANDLE  hReceiveEvent = 0;
-  /* FIXME: Aquire some sort of interface lock */
+  /* FIXME: Acquire some sort of interface lock */
   /* FIXME: Need some sort of context for this callback. Need to determine
    *        how this is actually done with the SP
    */
@@ -508,7 +509,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_HandleMessage
   {
     case DPSYS_CREATEPLAYERORGROUP:
     {
-      LPDPMSG_CREATEPLAYERORGROUP msg = (LPDPMSG_CREATEPLAYERORGROUP)lpMsg;
+      LPDPMSG_CREATEPLAYERORGROUP msg = lpMsg;
 
       if( msg->dwPlayerType == DPPLAYERTYPE_PLAYER )
       {
@@ -543,7 +544,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_HandleMessage
 
     case DPSYS_DESTROYPLAYERORGROUP:
     {
-      LPDPMSG_DESTROYPLAYERORGROUP msg = (LPDPMSG_DESTROYPLAYERORGROUP)lpMsg;
+      LPDPMSG_DESTROYPLAYERORGROUP msg = lpMsg;
 
       if( msg->dwPlayerType == DPPLAYERTYPE_PLAYER )
       {
@@ -564,7 +565,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_HandleMessage
 
     case DPSYS_ADDPLAYERTOGROUP:
     {
-      LPDPMSG_ADDPLAYERTOGROUP msg = (LPDPMSG_ADDPLAYERTOGROUP)lpMsg;
+      LPDPMSG_ADDPLAYERTOGROUP msg = lpMsg;
 
       hr = DP_IF_AddPlayerToGroup( This, msg->dpIdGroup, msg->dpIdPlayer, ... );
       break;
@@ -572,7 +573,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_HandleMessage
 
     case DPSYS_DELETEPLAYERFROMGROUP:
     {
-      LPDPMSG_DELETEPLAYERFROMGROUP msg = (LPDPMSG_DELETEPLAYERFROMGROUP)lpMsg;
+      LPDPMSG_DELETEPLAYERFROMGROUP msg = lpMsg;
 
       hr = DP_IF_DeletePlayerFromGroup( This, msg->dpIdGroup, msg->dpIdPlayer,
                                         ... );
@@ -582,7 +583,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_HandleMessage
 
     case DPSYS_SESSIONLOST:
     {
-      LPDPMSG_SESSIONLOST msg = (LPDPMSG_SESSIONLOST)lpMsg;
+      LPDPMSG_SESSIONLOST msg = lpMsg;
 
       FIXME( "DPSYS_SESSIONLOST not handled\n" );
 
@@ -591,7 +592,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_HandleMessage
 
     case DPSYS_HOST:
     {
-      LPDPMSG_HOST msg = (LPDPMSG_HOST)lpMsg;
+      LPDPMSG_HOST msg = lpMsg;
 
       FIXME( "DPSYS_HOST not handled\n" );
 
@@ -600,7 +601,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_HandleMessage
 
     case DPSYS_SETPLAYERORGROUPDATA:
     {
-      LPDPMSG_SETPLAYERORGROUPDATA msg = (LPDPMSG_SETPLAYERORGROUPDATA)lpMsg;
+      LPDPMSG_SETPLAYERORGROUPDATA msg = lpMsg;
 
       if( msg->dwPlayerType == DPPLAYERTYPE_PLAYER )
       {
@@ -622,7 +623,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_HandleMessage
 
     case DPSYS_SETPLAYERORGROUPNAME:
     {
-      LPDPMSG_SETPLAYERORGROUPNAME msg = (LPDPMSG_SETPLAYERORGROUPNAME)lpMsg;
+      LPDPMSG_SETPLAYERORGROUPNAME msg = lpMsg;
 
       if( msg->dwPlayerType == DPPLAYERTYPE_PLAYER )
       {
@@ -643,7 +644,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_HandleMessage
 
     case DPSYS_SETSESSIONDESC;
     {
-      LPDPMSG_SETSESSIONDESC msg = (LPDPMSG_SETSESSIONDESC)lpMsg;
+      LPDPMSG_SETSESSIONDESC msg = lpMsg;
 
       hr = DP_IF_SetSessionDesc( This, &msg->dpDesc );
 
@@ -652,7 +653,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_HandleMessage
 
     case DPSYS_ADDGROUPTOGROUP:
     {
-      LPDPMSG_ADDGROUPTOGROUP msg = (LPDPMSG_ADDGROUPTOGROUP)lpMsg;
+      LPDPMSG_ADDGROUPTOGROUP msg = lpMsg;
 
       hr = DP_IF_AddGroupToGroup( This, msg->dpIdParentGroup, msg->dpIdGroup,
                                   ... );
@@ -662,7 +663,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_HandleMessage
 
     case DPSYS_DELETEGROUPFROMGROUP:
     {
-      LPDPMSG_DELETEGROUPFROMGROUP msg = (LPDPMSG_DELETEGROUPFROMGROUP)lpMsg;
+      LPDPMSG_DELETEGROUPFROMGROUP msg = lpMsg;
 
       hr = DP_IF_DeleteGroupFromGroup( This, msg->dpIdParentGroup,
                                        msg->dpIdGroup, ... );
@@ -672,7 +673,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_HandleMessage
 
     case DPSYS_SECUREMESSAGE:
     {
-      LPDPMSG_SECUREMESSAGE msg = (LPDPMSG_SECUREMESSAGE)lpMsg;
+      LPDPMSG_SECUREMESSAGE msg = lpMsg;
 
       FIXME( "DPSYS_SECUREMESSAGE not implemented\n" );
 
@@ -681,7 +682,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_HandleMessage
 
     case DPSYS_STARTSESSION:
     {
-      LPDPMSG_STARTSESSION msg = (LPDPMSG_STARTSESSION)lpMsg;
+      LPDPMSG_STARTSESSION msg = lpMsg;
 
       FIXME( "DPSYS_STARTSESSION not implemented\n" );
 
@@ -690,7 +691,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_HandleMessage
 
     case DPSYS_CHAT:
     {
-      LPDPMSG_CHAT msg = (LPDPMSG_CHAT)lpMsg;
+      LPDPMSG_CHAT msg = lpMsg;
 
       FIXME( "DPSYS_CHAT not implemeneted\n" );
 
@@ -699,7 +700,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_HandleMessage
 
     case DPSYS_SETGROUPOWNER:
     {
-      LPDPMSG_SETGROUPOWNER msg = (LPDPMSG_SETGROUPOWNER)lpMsg;
+      LPDPMSG_SETGROUPOWNER msg = lpMsg;
 
       FIXME( "DPSYS_SETGROUPOWNER not implemented\n" );
 
@@ -708,7 +709,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_HandleMessage
 
     case DPSYS_SENDCOMPLETE:
     {
-      LPDPMSG_SENDCOMPLETE msg = (LPDPMSG_SENDCOMPLETE)lpMsg;
+      LPDPMSG_SENDCOMPLETE msg = lpMsg;
 
       FIXME( "DPSYS_SENDCOMPLETE not implemented\n" );
 
@@ -755,7 +756,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_SetSPPlayerData
   IDirectPlaySPImpl *This = (IDirectPlaySPImpl *)iface;
 
 /*  TRACE( "Called on process 0x%08lx\n", GetCurrentProcessId() ); */
-  TRACE( "(%p)->(0x%08lx,%p,0x%08lx,0x%08lx)\n",
+  TRACE( "(%p)->(0x%08x,%p,0x%08x,0x%08x)\n",
          This, idPlayer, lpData, dwDataSize, dwFlags );
 
   hr = DP_GetSPPlayerData( This->sp->dplay, idPlayer, (LPVOID*)&lpPlayerEntry );
@@ -794,7 +795,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_CreateCompoundAddress
 {
   IDirectPlaySPImpl *This = (IDirectPlaySPImpl *)iface;
 
-  FIXME( "(%p)->(%p,0x%08lx,%p,%p): stub\n",
+  FIXME( "(%p)->(%p,0x%08x,%p,%p): stub\n",
          This, lpElements, dwElementCount, lpAddress, lpdwAddressSize );
 
   return DP_OK;
@@ -811,7 +812,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_GetSPData
   IDirectPlaySPImpl *This = (IDirectPlaySPImpl *)iface;
 
 /*  TRACE( "Called on process 0x%08lx\n", GetCurrentProcessId() ); */
-  TRACE( "(%p)->(%p,%p,0x%08lx)\n",
+  TRACE( "(%p)->(%p,%p,0x%08x)\n",
          This, lplpData, lpdwDataSize, dwFlags );
 
 #if 0
@@ -827,7 +828,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_GetSPData
    */
   if( dwFlags != DPSET_REMOTE )
   {
-    TRACE( "Undocumented dwFlags 0x%08lx used\n", dwFlags );
+    TRACE( "Undocumented dwFlags 0x%08x used\n", dwFlags );
   }
 #endif
 
@@ -870,7 +871,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_SetSPData
   IDirectPlaySPImpl *This = (IDirectPlaySPImpl *)iface;
 
 /*  TRACE( "Called on process 0x%08lx\n", GetCurrentProcessId() ); */
-  TRACE( "(%p)->(%p,0x%08lx,0x%08lx)\n",
+  TRACE( "(%p)->(%p,0x%08x,0x%08x)\n",
          This, lpData, dwDataSize, dwFlags );
 
 #if 0
@@ -886,7 +887,7 @@ static HRESULT WINAPI IDirectPlaySPImpl_SetSPData
    */
   if( dwFlags != DPSET_REMOTE )
   {
-    TRACE( "Undocumented dwFlags 0x%08lx used\n", dwFlags );
+    TRACE( "Undocumented dwFlags 0x%08x used\n", dwFlags );
   }
 #endif
 
@@ -918,7 +919,7 @@ static VOID WINAPI IDirectPlaySPImpl_SendComplete
 {
   IDirectPlaySPImpl *This = (IDirectPlaySPImpl *)iface;
 
-  FIXME( "(%p)->(%p,0x%08lx): stub\n",
+  FIXME( "(%p)->(%p,0x%08x): stub\n",
          This, unknownA, unknownB );
 }
 
@@ -947,7 +948,7 @@ static const IDirectPlaySPVtbl directPlaySPVT =
 /* DP external interfaces to call into DPSP interface */
 
 /* Allocate the structure */
-extern LPVOID DPSP_CreateSPPlayerData(void)
+LPVOID DPSP_CreateSPPlayerData(void)
 {
   TRACE( "Creating SPPlayer data struct\n" );
   return HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY,

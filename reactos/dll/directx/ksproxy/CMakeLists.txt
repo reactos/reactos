@@ -27,7 +27,7 @@ add_library(ksproxy SHARED
     ${SOURCE}
     ksproxy.rc)
 
-set_module_type(ksproxy win32dll ENTRYPOINT 0)
+set_module_type(ksproxy win32dll)
 set_target_properties(ksproxy PROPERTIES SUFFIX ".ax")
 
 if(MSVC)

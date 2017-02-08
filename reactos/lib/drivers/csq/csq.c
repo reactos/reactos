@@ -23,7 +23,6 @@
  * all happen at DISPATCH_LEVEL all of the time, so thread switching on a single
  * processor can create races too.
  */
-/* $Id$ */
 
 #include <ntdef.h>
 #undef DECLSPEC_IMPORT
@@ -31,13 +30,13 @@
 #include <ntifs.h>
 
 
-static VOID NTAPI IopCsqCancelRoutine(PDEVICE_OBJECT DeviceObject,
-                               PIRP Irp)
-/*
- * FUNCTION: Cancel routine that is installed on any IRP that this library manages
- * ARGUMENTS:
- *     [Called back by the system]
- * NOTES:
+/*!
+ * @brief Cancel routine that is installed on any IRP that this library manages
+ *
+ * @param DeviceObject
+ * @param Irp
+ *
+ * @note
  *     - We assume that Irp->Tail.Overlay.DriverContext[3] has either a IO_CSQ
  *       or an IO_CSQ_IRP_CONTEXT in it, but we have to figure out which it is
  *     - By the time this routine executes, the I/O Manager has already cleared
@@ -47,136 +46,152 @@ static VOID NTAPI IopCsqCancelRoutine(PDEVICE_OBJECT DeviceObject,
  *       system
  *     - May be called at high IRQL
  */
+_Function_class_(DRIVER_CANCEL)
+static
+VOID
+NTAPI
+IopCsqCancelRoutine(
+    _Inout_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ _IRQL_uses_cancel_ PIRP Irp)
 {
-	PIO_CSQ Csq;
-	KIRQL Irql;
+    PIO_CSQ Csq;
+    KIRQL Irql;
 
-	/* First things first: */
-	IoReleaseCancelSpinLock(Irp->CancelIrql);
+    /* First things first: */
+    IoReleaseCancelSpinLock(Irp->CancelIrql);
 
-	/* We could either get a context or just a csq */
-	Csq = (PIO_CSQ)Irp->Tail.Overlay.DriverContext[3];
+    /* We could either get a context or just a csq */
+    Csq = (PIO_CSQ)Irp->Tail.Overlay.DriverContext[3];
 
-	if(Csq->Type == IO_TYPE_CSQ_IRP_CONTEXT)
-		{
-			PIO_CSQ_IRP_CONTEXT Context = (PIO_CSQ_IRP_CONTEXT)Csq;
-			Csq = Context->Csq;
+    if(Csq->Type == IO_TYPE_CSQ_IRP_CONTEXT)
+    {
+        PIO_CSQ_IRP_CONTEXT Context = (PIO_CSQ_IRP_CONTEXT)Csq;
+        Csq = Context->Csq;
 
-			/* clean up context while we're here */
-			Context->Irp = NULL;
-		}
+        /* clean up context while we're here */
+        Context->Irp = NULL;
+    }
 
-	/* Now that we have our CSQ, complete the IRP */
-	Csq->CsqAcquireLock(Csq, &Irql);
-		{
-			Csq->CsqRemoveIrp(Csq, Irp);
-			Csq->CsqCompleteCanceledIrp(Csq, Irp);
-		}
-	Csq->CsqReleaseLock(Csq, Irql);
+    /* Now that we have our CSQ, complete the IRP */
+    Csq->CsqAcquireLock(Csq, &Irql);
+    Csq->CsqRemoveIrp(Csq, Irp);
+    Csq->CsqReleaseLock(Csq, Irql);
+
+    Csq->CsqCompleteCanceledIrp(Csq, Irp);
 }
 
 
-NTSTATUS NTAPI IoCsqInitialize(PIO_CSQ Csq,
-                               PIO_CSQ_INSERT_IRP CsqInsertIrp,
-                               PIO_CSQ_REMOVE_IRP CsqRemoveIrp,
-                               PIO_CSQ_PEEK_NEXT_IRP CsqPeekNextIrp,
-                               PIO_CSQ_ACQUIRE_LOCK CsqAcquireLock,
-                               PIO_CSQ_RELEASE_LOCK CsqReleaseLock,
-                               PIO_CSQ_COMPLETE_CANCELED_IRP CsqCompleteCanceledIrp)
-/*
- * FUNCTION: Set up a CSQ struct to initialize the queue
- * ARGUMENTS:
- *     Csq: Caller-allocated non-paged space for our IO_CSQ to be initialized
- *     CsqInsertIrp: Insert routine
- *     CsqRemoveIrp: Remove routine
- *     CsqPeekNextIrp: Routine to paeek at the next IRP in queue
- *     CsqAcquireLock: Acquire the queue's lock
- *     CsqReleaseLock: Release the queue's lock
- *     CsqCompleteCanceledIrp: Routine to complete IRPs when they are canceled
- * RETURNS:
+/*!
+ * @brief Set up a CSQ struct to initialize the queue
+ *
+ * @param Csq - Caller-allocated non-paged space for our IO_CSQ to be initialized
+ * @param CsqInsertIrp - Insert routine
+ * @param CsqRemoveIrp - Remove routine
+ * @param CsqPeekNextIrp - Routine to paeek at the next IRP in queue
+ * @param CsqAcquireLock - Acquire the queue's lock
+ * @param CsqReleaseLock - Release the queue's lock
+ * @param CsqCompleteCanceledIrp - Routine to complete IRPs when they are canceled
+ *
+ * @return
  *     - STATUS_SUCCESS in all cases
- * NOTES:
+ *
+ * @note
  *     - Csq must be non-paged, as the queue is manipulated with a held spinlock
  */
+NTSTATUS
+NTAPI
+IoCsqInitialize(
+    _Out_ PIO_CSQ Csq,
+    _In_ PIO_CSQ_INSERT_IRP CsqInsertIrp,
+    _In_ PIO_CSQ_REMOVE_IRP CsqRemoveIrp,
+    _In_ PIO_CSQ_PEEK_NEXT_IRP CsqPeekNextIrp,
+    _In_ PIO_CSQ_ACQUIRE_LOCK CsqAcquireLock,
+    _In_ PIO_CSQ_RELEASE_LOCK CsqReleaseLock,
+    _In_ PIO_CSQ_COMPLETE_CANCELED_IRP CsqCompleteCanceledIrp)
 {
-	Csq->Type = IO_TYPE_CSQ;
-	Csq->CsqInsertIrp = CsqInsertIrp;
-	Csq->CsqRemoveIrp = CsqRemoveIrp;
-	Csq->CsqPeekNextIrp = CsqPeekNextIrp;
-	Csq->CsqAcquireLock = CsqAcquireLock;
-	Csq->CsqReleaseLock = CsqReleaseLock;
-	Csq->CsqCompleteCanceledIrp = CsqCompleteCanceledIrp;
-	Csq->ReservePointer = NULL;
+    Csq->Type = IO_TYPE_CSQ;
+    Csq->CsqInsertIrp = CsqInsertIrp;
+    Csq->CsqRemoveIrp = CsqRemoveIrp;
+    Csq->CsqPeekNextIrp = CsqPeekNextIrp;
+    Csq->CsqAcquireLock = CsqAcquireLock;
+    Csq->CsqReleaseLock = CsqReleaseLock;
+    Csq->CsqCompleteCanceledIrp = CsqCompleteCanceledIrp;
+    Csq->ReservePointer = NULL;
 
-	return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 
-NTSTATUS NTAPI IoCsqInitializeEx(PIO_CSQ Csq,
-                                 PIO_CSQ_INSERT_IRP_EX CsqInsertIrpEx,
-                                 PIO_CSQ_REMOVE_IRP CsqRemoveIrp,
-                                 PIO_CSQ_PEEK_NEXT_IRP CsqPeekNextIrp,
-                                 PIO_CSQ_ACQUIRE_LOCK CsqAcquireLock,
-                                 PIO_CSQ_RELEASE_LOCK CsqReleaseLock,
-                                 PIO_CSQ_COMPLETE_CANCELED_IRP CsqCompleteCanceledIrp)
-/*
- * FUNCTION: Set up a CSQ struct to initialize the queue (extended version)
- * ARGUMENTS:
- *     Csq: Caller-allocated non-paged space for our IO_CSQ to be initialized
- *     CsqInsertIrpEx: Extended insert routine
- *     CsqRemoveIrp: Remove routine
- *     CsqPeekNextIrp: Routine to paeek at the next IRP in queue
- *     CsqAcquireLock: Acquire the queue's lock
- *     CsqReleaseLock: Release the queue's lock
- *     CsqCompleteCanceledIrp: Routine to complete IRPs when they are canceled
- * RETURNS:
+/*!
+ * @brief Set up a CSQ struct to initialize the queue (extended version)
+ *
+ * @param Csq - Caller-allocated non-paged space for our IO_CSQ to be initialized
+ * @param CsqInsertIrpEx - Extended insert routine
+ * @param CsqRemoveIrp - Remove routine
+ * @param CsqPeekNextIrp - Routine to paeek at the next IRP in queue
+ * @param CsqAcquireLock - Acquire the queue's lock
+ * @param CsqReleaseLock - Release the queue's lock
+ * @param CsqCompleteCanceledIrp - Routine to complete IRPs when they are canceled
+ *
+ * @return
  *     - STATUS_SUCCESS in all cases
- * NOTES:
+ * @note
  *     - Csq must be non-paged, as the queue is manipulated with a held spinlock
  */
+NTSTATUS
+NTAPI
+IoCsqInitializeEx(
+    _Out_ PIO_CSQ Csq,
+    _In_ PIO_CSQ_INSERT_IRP_EX CsqInsertIrpEx,
+    _In_ PIO_CSQ_REMOVE_IRP CsqRemoveIrp,
+    _In_ PIO_CSQ_PEEK_NEXT_IRP CsqPeekNextIrp,
+    _In_ PIO_CSQ_ACQUIRE_LOCK CsqAcquireLock,
+    _In_ PIO_CSQ_RELEASE_LOCK CsqReleaseLock,
+    _In_ PIO_CSQ_COMPLETE_CANCELED_IRP CsqCompleteCanceledIrp)
 {
-	Csq->Type = IO_TYPE_CSQ_EX;
-	Csq->CsqInsertIrp = (PIO_CSQ_INSERT_IRP)CsqInsertIrpEx;
-	Csq->CsqRemoveIrp = CsqRemoveIrp;
-	Csq->CsqPeekNextIrp = CsqPeekNextIrp;
-	Csq->CsqAcquireLock = CsqAcquireLock;
-	Csq->CsqReleaseLock = CsqReleaseLock;
-	Csq->CsqCompleteCanceledIrp = CsqCompleteCanceledIrp;
-	Csq->ReservePointer = NULL;
+    Csq->Type = IO_TYPE_CSQ_EX;
+    Csq->CsqInsertIrp = (PIO_CSQ_INSERT_IRP)CsqInsertIrpEx;
+    Csq->CsqRemoveIrp = CsqRemoveIrp;
+    Csq->CsqPeekNextIrp = CsqPeekNextIrp;
+    Csq->CsqAcquireLock = CsqAcquireLock;
+    Csq->CsqReleaseLock = CsqReleaseLock;
+    Csq->CsqCompleteCanceledIrp = CsqCompleteCanceledIrp;
+    Csq->ReservePointer = NULL;
 
-	return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 
-VOID NTAPI IoCsqInsertIrp(PIO_CSQ Csq,
-                          PIRP Irp,
-                          PIO_CSQ_IRP_CONTEXT Context)
-/*
- * FUNCTION: Insert an IRP into the CSQ
- * ARGUMENTS:
- *     Csq: Pointer to the initialized CSQ
- *     Irp: Pointer to the IRP to queue
- *     Context: Context record to track the IRP while queued
- * NOTES:
+/*!
+ * @brief Insert an IRP into the CSQ
+ *
+ * @param Csq - Pointer to the initialized CSQ
+ * @param Irp - Pointer to the IRP to queue
+ * @param Context - Context record to track the IRP while queued
+ *
+ * @return
  *     - Just passes through to IoCsqInsertIrpEx, with no InsertContext
  */
+VOID
+NTAPI
+IoCsqInsertIrp(
+    _Inout_ PIO_CSQ Csq,
+    _Inout_ PIRP Irp,
+    _Out_opt_ PIO_CSQ_IRP_CONTEXT Context)
 {
-	IoCsqInsertIrpEx(Csq, Irp, Context, 0);
+    IoCsqInsertIrpEx(Csq, Irp, Context, 0);
 }
 
 
-NTSTATUS NTAPI IoCsqInsertIrpEx(PIO_CSQ Csq,
-                                PIRP Irp,
-                                PIO_CSQ_IRP_CONTEXT Context,
-                                PVOID InsertContext)
-/*
- * FUNCTION: Insert an IRP into the CSQ, with additional tracking context
- * ARGUMENTS:
- *     Csq: Pointer to the initialized CSQ
- *     Irp: Pointer to the IRP to queue
- *     Context: Context record to track the IRP while queued
- *     InsertContext: additional data that is passed through to CsqInsertIrpEx
- * NOTES:
+/*!
+ * @brief Insert an IRP into the CSQ, with additional tracking context
+ *
+ * @param Csq - Pointer to the initialized CSQ
+ * @param Irp - Pointer to the IRP to queue
+ * @param Context - Context record to track the IRP while queued
+ * @param InsertContext - additional data that is passed through to CsqInsertIrpEx
+ *
+ * @note
  *     - Passes the additional context through to the driver-supplied callback,
  *       which can be used with more sophistocated queues
  *     - Marks the IRP pending in all cases
@@ -185,205 +200,222 @@ NTSTATUS NTAPI IoCsqInsertIrpEx(PIO_CSQ Csq,
  *       I'm sure I have gotten the details wrong on a fine point or two, but
  *       basically this works with the MS-supplied samples.
  */
+NTSTATUS
+NTAPI
+IoCsqInsertIrpEx(
+    _Inout_ PIO_CSQ Csq,
+    _Inout_ PIRP Irp,
+    _Out_opt_ PIO_CSQ_IRP_CONTEXT Context,
+    _In_opt_ PVOID InsertContext)
 {
-	NTSTATUS Retval = STATUS_SUCCESS;
-	KIRQL Irql;
+    NTSTATUS Retval = STATUS_SUCCESS;
+    KIRQL Irql;
 
-	Csq->CsqAcquireLock(Csq, &Irql);
+    Csq->CsqAcquireLock(Csq, &Irql);
 
-	do
-		{
-			/* mark all irps pending -- says so in the cancel sample */
-			IoMarkIrpPending(Irp);
+    do
+    {
+        /* mark all irps pending -- says so in the cancel sample */
+        IoMarkIrpPending(Irp);
 
-			/* set up the context if we have one */
-			if(Context)
-				{
-					Context->Type = IO_TYPE_CSQ_IRP_CONTEXT;
-					Context->Irp = Irp;
-					Context->Csq = Csq;
-					Irp->Tail.Overlay.DriverContext[3] = Context;
-				}
-			else
-				Irp->Tail.Overlay.DriverContext[3] = Csq;
+        /* set up the context if we have one */
+        if(Context)
+        {
+            Context->Type = IO_TYPE_CSQ_IRP_CONTEXT;
+            Context->Irp = Irp;
+            Context->Csq = Csq;
+            Irp->Tail.Overlay.DriverContext[3] = Context;
+        }
+        else
+            Irp->Tail.Overlay.DriverContext[3] = Csq;
 
-			/*
-			 * NOTE!  This is very sensitive to order.  If you set the cancel routine
-			 * *before* you queue the IRP, our cancel routine will get called back for
-			 * an IRP that isn't in its queue.
-			 *
-			 * There are three possibilities:
-			 * 1) We get an IRP, we queue it, and it is valid the whole way
-			 * 2) We get an IRP, and the IO manager cancels it before we're done here
-			 * 3) We get an IRP, queue it, and the IO manager cancels it.
-			 *
-			 * #2 is is a booger.
-			 *
-			 * When the IO manger receives a request to cancel an IRP, it sets the cancel
-			 * bit in the IRP's control byte to TRUE.  Then, it looks to see if a cancel
-			 * routine is set.  If it isn't, the IO manager just returns to the caller.
-			 * If there *is* a routine, it gets called.
-			 *
-			 * If we test for cancel first and then set the cancel routine, there is a spot
-			 * between test and set that the IO manager can cancel us without our knowledge,
-			 * so we miss a cancel request.  That is bad.
-			 *
-			 * If we set a routine first and then test for cancel, we race with our completion
-			 * routine:  We set the routine, the IO Manager sets cancel, we test cancel and find
-			 * it is TRUE.  Meanwhile the IO manager has called our cancel routine already, so
-			 * we can't complete the IRP because it'll rip it out from under the cancel routine.
-			 *
-			 * The IO manager does us a favor though: it nulls out the cancel routine in the IRP
-			 * before calling it.  Therefore, if we test to see if the cancel routine is NULL
-			 * (after we have just set it), that means our own cancel routine is already working
-			 * on the IRP, and we can just return quietly.  Otherwise, we have to de-queue the
-			 * IRP and cancel it ourselves.
-			 *
-			 * We have to go through all of this mess because this API guarantees that we will
-			 * never return having left a canceled IRP in the queue.
-			 */
+        /*
+         * NOTE!  This is very sensitive to order.  If you set the cancel routine
+         * *before* you queue the IRP, our cancel routine will get called back for
+         * an IRP that isn't in its queue.
+         *
+         * There are three possibilities:
+         * 1) We get an IRP, we queue it, and it is valid the whole way
+         * 2) We get an IRP, and the IO manager cancels it before we're done here
+         * 3) We get an IRP, queue it, and the IO manager cancels it.
+         *
+         * #2 is is a booger.
+         *
+         * When the IO manger receives a request to cancel an IRP, it sets the cancel
+         * bit in the IRP's control byte to TRUE.  Then, it looks to see if a cancel
+         * routine is set.  If it isn't, the IO manager just returns to the caller.
+         * If there *is* a routine, it gets called.
+         *
+         * If we test for cancel first and then set the cancel routine, there is a spot
+         * between test and set that the IO manager can cancel us without our knowledge,
+         * so we miss a cancel request.  That is bad.
+         *
+         * If we set a routine first and then test for cancel, we race with our completion
+         * routine:  We set the routine, the IO Manager sets cancel, we test cancel and find
+         * it is TRUE.  Meanwhile the IO manager has called our cancel routine already, so
+         * we can't complete the IRP because it'll rip it out from under the cancel routine.
+         *
+         * The IO manager does us a favor though: it nulls out the cancel routine in the IRP
+         * before calling it.  Therefore, if we test to see if the cancel routine is NULL
+         * (after we have just set it), that means our own cancel routine is already working
+         * on the IRP, and we can just return quietly.  Otherwise, we have to de-queue the
+         * IRP and cancel it ourselves.
+         *
+         * We have to go through all of this mess because this API guarantees that we will
+         * never return having left a canceled IRP in the queue.
+         */
 
-			/* Step 1: Queue the IRP */
-			if(Csq->Type == IO_TYPE_CSQ)
-				Csq->CsqInsertIrp(Csq, Irp);
-			else
-				{
-					PIO_CSQ_INSERT_IRP_EX pCsqInsertIrpEx = (PIO_CSQ_INSERT_IRP_EX)Csq->CsqInsertIrp;
-					Retval = pCsqInsertIrpEx(Csq, Irp, InsertContext);
-					if(Retval != STATUS_SUCCESS)
-						break;
-				}
+        /* Step 1: Queue the IRP */
+        if(Csq->Type == IO_TYPE_CSQ)
+            Csq->CsqInsertIrp(Csq, Irp);
+        else
+        {
+            PIO_CSQ_INSERT_IRP_EX pCsqInsertIrpEx = (PIO_CSQ_INSERT_IRP_EX)Csq->CsqInsertIrp;
+            Retval = pCsqInsertIrpEx(Csq, Irp, InsertContext);
+            if(Retval != STATUS_SUCCESS)
+                break;
+        }
 
-			/* Step 2: Set our cancel routine */
-			(void)IoSetCancelRoutine(Irp, IopCsqCancelRoutine);
+        /* Step 2: Set our cancel routine */
+        (void)IoSetCancelRoutine(Irp, IopCsqCancelRoutine);
 
-			/* Step 3: Deal with an IRP that is already canceled */
-			if(!Irp->Cancel)
-				break;
+        /* Step 3: Deal with an IRP that is already canceled */
+        if(!Irp->Cancel)
+            break;
 
-			/*
-			 * Since we're canceled, see if our cancel routine is already running
-			 * If this is NULL, the IO Manager has already called our cancel routine
-			 */
-			if(!IoSetCancelRoutine(Irp, NULL))
-				break;
+        /*
+         * Since we're canceled, see if our cancel routine is already running
+         * If this is NULL, the IO Manager has already called our cancel routine
+         */
+        if(!IoSetCancelRoutine(Irp, NULL))
+            break;
 
-			/* OK, looks like we have to de-queue and complete this ourselves */
-			Csq->CsqRemoveIrp(Csq, Irp);
-			Csq->CsqCompleteCanceledIrp(Csq, Irp);
+        /* OK, looks like we have to de-queue and complete this ourselves */
+        Csq->CsqRemoveIrp(Csq, Irp);
+        Csq->CsqCompleteCanceledIrp(Csq, Irp);
 
-			if(Context)
-				Context->Irp = NULL;
-		}
-	while(0);
+        if(Context)
+            Context->Irp = NULL;
+    }
+    while(0);
 
-	Csq->CsqReleaseLock(Csq, Irql);
+    Csq->CsqReleaseLock(Csq, Irql);
 
-	return Retval;
+    return Retval;
 }
 
 
-PIRP NTAPI IoCsqRemoveIrp(PIO_CSQ Csq,
-                          PIO_CSQ_IRP_CONTEXT Context)
-/*
- * FUNCTION: Remove anb IRP from the queue
- * ARGUMENTS:
- *     Csq: Queue to remove the IRP from
- *     Context: Context record containing the IRP to be dequeued
- * RETURNS:
+/*!
+ * @brief Remove anb IRP from the queue
+ *
+ * @param Csq - Queue to remove the IRP from
+ * @param Context - Context record containing the IRP to be dequeued
+ *
+ * @return
  *     - Pointer to an IRP if we found it
- * NOTES:
+ *
+ * @note
  *     - Don't forget that we can be canceled any time up to the point
  *       where we unset our cancel routine
  */
+PIRP
+NTAPI
+IoCsqRemoveIrp(
+    _Inout_ PIO_CSQ Csq,
+    _Inout_ PIO_CSQ_IRP_CONTEXT Context)
 {
-	KIRQL Irql;
-	PIRP Irp = NULL;
+    KIRQL Irql;
+    PIRP Irp = NULL;
 
-	Csq->CsqAcquireLock(Csq, &Irql);
+    Csq->CsqAcquireLock(Csq, &Irql);
 
-	do
-		{
-			/* It's possible that this IRP could have been canceled */
-			Irp = Context->Irp;
+    do
+    {
+        /* It's possible that this IRP could have been canceled */
+        Irp = Context->Irp;
 
-			if(!Irp)
-				break;
+        if(!Irp)
+            break;
 
-			/* Unset the cancel routine and see if it has already been canceled */
-			if(!IoSetCancelRoutine(Irp, NULL))
-				{
-					/*
-					 * already gone, return NULL  --> NOTE  that we cannot touch this IRP *or* the context,
-					 * since the context is being simultaneously twiddled by the cancel routine
-					 */
-					Irp = NULL;
-					break;
-				}
+        /* Unset the cancel routine and see if it has already been canceled */
+        if(!IoSetCancelRoutine(Irp, NULL))
+        {
+            /*
+             * already gone, return NULL  --> NOTE  that we cannot touch this IRP *or* the context,
+             * since the context is being simultaneously twiddled by the cancel routine
+             */
+            Irp = NULL;
+            break;
+        }
 
-			/* This IRP is valid and is ours.  Dequeue it, fix it up, and return */
-			Csq->CsqRemoveIrp(Csq, Irp);
+        /* This IRP is valid and is ours.  Dequeue it, fix it up, and return */
+        Csq->CsqRemoveIrp(Csq, Irp);
 
-			Context = (PIO_CSQ_IRP_CONTEXT)InterlockedExchangePointer(&Irp->Tail.Overlay.DriverContext[3], NULL);
+        Context = (PIO_CSQ_IRP_CONTEXT)InterlockedExchangePointer(&Irp->Tail.Overlay.DriverContext[3], NULL);
 
-			if(Context && Context->Type == IO_TYPE_CSQ_IRP_CONTEXT)
-				Context->Irp = NULL;
-		}
-	while(0);
+        if(Context && Context->Type == IO_TYPE_CSQ_IRP_CONTEXT)
+            Context->Irp = NULL;
+    }
+    while(0);
 
-	Csq->CsqReleaseLock(Csq, Irql);
+    Csq->CsqReleaseLock(Csq, Irql);
 
-	return Irp;
+    return Irp;
 }
 
-PIRP NTAPI IoCsqRemoveNextIrp(PIO_CSQ Csq,
-                              PVOID PeekContext)
-/*
- * FUNCTION: IoCsqRemoveNextIrp - Removes the next IRP from the queue
- * ARGUMENTS:
- *     Csq: Queue to remove the IRP from
- *     PeekContext: Identifier of the IRP to be removed
- * RETURNS:
+/*!
+ * @brief IoCsqRemoveNextIrp - Removes the next IRP from the queue
+ *
+ * @param Csq - Queue to remove the IRP from
+ * @param PeekContext - Identifier of the IRP to be removed
+ *
+ * @return
  *     Pointer to the IRP that was removed, or NULL if one
  *     could not be found
- * NOTES:
+ *
+ * @note
  *     - This function is sensitive to yet another race condition.
  *       The basic idea is that we have to return the first IRP that
  *       we get that matches the PeekContext >that is not already canceled<.
  *       Therefore, we have to do a trick similar to the one done in Insert
  *       above.
  */
+PIRP
+NTAPI
+IoCsqRemoveNextIrp(
+    _Inout_ PIO_CSQ Csq,
+    _In_opt_ PVOID PeekContext)
 {
-	KIRQL Irql;
-	PIRP Irp = NULL;
-	PIO_CSQ_IRP_CONTEXT Context;
+    KIRQL Irql;
+    PIRP Irp = NULL;
+    PIO_CSQ_IRP_CONTEXT Context;
 
-	Csq->CsqAcquireLock(Csq, &Irql);
+    Csq->CsqAcquireLock(Csq, &Irql);
 
-	while((Irp = Csq->CsqPeekNextIrp(Csq, Irp, PeekContext)))
-		{
-			/*
-			 * If the cancel routine is gone, we're already canceled,
-			 * and are spinning on the queue lock in our own cancel
-			 * routine.  Move on to the next candidate.  It'll get
-			 * removed by the cance routine.
-			 */
-			if(!IoSetCancelRoutine(Irp, NULL))
-				continue;
+    while((Irp = Csq->CsqPeekNextIrp(Csq, Irp, PeekContext)))
+    {
+        /*
+         * If the cancel routine is gone, we're already canceled,
+         * and are spinning on the queue lock in our own cancel
+         * routine.  Move on to the next candidate.  It'll get
+         * removed by the cance routine.
+         */
+        if(!IoSetCancelRoutine(Irp, NULL))
+            continue;
 
-			Csq->CsqRemoveIrp(Csq, Irp);
+        Csq->CsqRemoveIrp(Csq, Irp);
 
-			/* Unset the context stuff and return */
-			Context = (PIO_CSQ_IRP_CONTEXT)InterlockedExchangePointer(&Irp->Tail.Overlay.DriverContext[3], NULL);
+        /* Unset the context stuff and return */
+        Context = (PIO_CSQ_IRP_CONTEXT)InterlockedExchangePointer(&Irp->Tail.Overlay.DriverContext[3], NULL);
 
-			if(Context && Context->Type == IO_TYPE_CSQ_IRP_CONTEXT)
-				Context->Irp = NULL;
+        if(Context && Context->Type == IO_TYPE_CSQ_IRP_CONTEXT)
+            Context->Irp = NULL;
 
-			break;
-		}
+        break;
+    }
 
-	Csq->CsqReleaseLock(Csq, Irql);
+    Csq->CsqReleaseLock(Csq, Irql);
 
-	return Irp;
+    return Irp;
 }
 

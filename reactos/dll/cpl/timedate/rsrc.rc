@@ -1,6 +1,3 @@
-#include <windows.h>
-#include "resource.h"
-
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
 #endif
@@ -34,9 +31,6 @@
 #ifdef LANGUAGE_ID_ID
     #include "lang/id-ID.rc"
 #endif
-#ifdef LANGUAGE_IT_IT
-    #include "lang/it-IT.rc"
-#endif
 #ifdef LANGUAGE_JA_JP
     #include "lang/ja-JP.rc"
 #endif
@@ -55,9 +49,19 @@
 #ifdef LANGUAGE_TH_TH
     #include "lang/th-TH.rc"
 #endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
+#endif
 
 // UTF-8
 #pragma code_page(65001)
+
+#ifdef LANGUAGE_HE_IL
+    #include "lang/he-IL.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/it-IT.rc"
+#endif
 #ifdef LANGUAGE_PL_PL
     #include "lang/pl-PL.rc"
 #endif

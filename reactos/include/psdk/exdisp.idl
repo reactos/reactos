@@ -26,6 +26,12 @@ import "docobj.idl";
 #include <olectl.h>
 #include <exdispid.h>
 
+#ifndef __WIDL__
+#define threading(model)
+#define progid(str)
+#define vi_progid(str)
+#endif
+
 cpp_quote("#ifdef WINE_NO_UNICODE_MACROS")
 cpp_quote("#undef FindText")
 cpp_quote("#endif")
@@ -473,6 +479,10 @@ dispinterface DWebBrowserEvents2
 }
 
 [
+    helpstring("Microsoft Web Browser Version 1"),
+    threading(apartment),
+    progid("Shell.Explorer.1"),
+    vi_progid("Shell.Explorer"),
     uuid(eab22ac3-30c1-11cf-a7eb-0000c05bae0b),
     control
 ]
@@ -485,6 +495,10 @@ coclass WebBrowser_V1
 }
 
 [
+    helpstring("Microsoft Web Browser"),
+    threading(apartment),
+    progid("Shell.Explorer.2"),
+    vi_progid("Shell.Explorer"),
     uuid(8856f961-340a-11d0-a96b-00c04fd705a2),
     control
 ]
@@ -497,6 +511,9 @@ coclass WebBrowser
 }
 
 [
+    helpstring("Internet Explorer(Ver 1.0)"),
+    progid("InternetExplorer.Application.1"),
+    vi_progid("InternetExplorer.Application"),
     uuid(0002df01-0000-0000-c000-000000000046)
 ]
 coclass InternetExplorer
@@ -599,6 +616,7 @@ interface IShellWindows : IDispatch
 }
 
 [
+    threading(apartment),
     uuid(9ba05972-f6a8-11cf-a442-00a0c90a8f39)
 ]
 coclass ShellWindows
@@ -720,6 +738,10 @@ interface IShellUIHelper2 : IShellUIHelper {
 }
 
 [
+    helpstring("Microsoft Shell UI Helper"),
+    threading(apartment),
+    progid("Shell.UIHelper.1"),
+    vi_progid("Shell.UIHelper"),
     uuid(64ab4bb7-111e-11d1-8f79-00c04fc2fbe1)
 ]
 coclass ShellUIHelper {
@@ -810,17 +832,25 @@ interface IShellNameSpace : IShellFavoritesNameSpace {
 }
 
 [
-    uuid(55136805-b2de-11d1-b9f2-00a0c98bc547)
+    helpstring("Shell Name Space"),
+    threading(apartment),
+    progid("ShellNameSpace.ShellNameSpace.1"),
+    vi_progid("ShellNameSpace.ShellNameSpace"),
+    uuid(2f2f1f96-2bc1-4b1c-be28-ea3774f4676a)
 ]
-coclass ShellNameSpace {
+coclass ShellShellNameSpace {
     [default] interface IShellNameSpace;
     [default, source] dispinterface DShellNameSpaceEvents;
 }
 
 [
-    uuid(2f2f1f96-2bc1-4b1c-be28-ea3774f4676a)
+    helpstring("Shell Name Space"),
+    threading(apartment),
+    progid("ShellNameSpace.ShellNameSpace.1"),
+    vi_progid("ShellNameSpace.ShellNameSpace"),
+    uuid(55136805-b2de-11d1-b9f2-00a0c98bc547)
 ]
-coclass ShellShellNameSpace {
+coclass ShellNameSpace {
     [default] interface IShellNameSpace;
     [default, source] dispinterface DShellNameSpaceEvents;
 }
@@ -989,19 +1019,26 @@ dispinterface _SearchAssistantEvents {
 }
 
 [
-    uuid(b45ff030-4447-11d2-85de-00C04fa35c89),
+    helpstring("SearchAssistantOC"),
+    threading(apartment),
+    progid("SearchAssistantOC.SearchAssistantOC.1"),
+    vi_progid("SearchAssistantOC.SearchAssistantOC"),
+    uuid(2e71fd0f-aab1-42c0-9146-6d2c4edcf07d),
     hidden
 ]
-coclass SearchAssistantOC {
+coclass ShellSearchAssistantOC {
     [default] interface ISearchAssistantOC3;
     [default, source] dispinterface _SearchAssistantEvents;
 }
 
 [
-    uuid(2e71fd0f-aab1-42c0-9146-6d2c4edcf07d),
+    threading(apartment),
+    progid("SearchAssistantOC.SearchAssistantOC.1"),
+    vi_progid("SearchAssistantOC.SearchAssistantOC"),
+    uuid(b45ff030-4447-11d2-85de-00C04fa35c89),
     hidden
 ]
-coclass ShellSearchAssistantOC {
+coclass SearchAssistantOC {
     [default] interface ISearchAssistantOC3;
     [default, source] dispinterface _SearchAssistantEvents;
 }

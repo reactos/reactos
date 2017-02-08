@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS International Control Panel
  * FILE:            dll/cpl/intl/sort.c
  * PURPOSE:         Sorting property page

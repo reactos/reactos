@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -122,7 +122,7 @@ static HDDEDATA CALLBACK DdeCallback(
  * can use them.
  *
  * PARAMS
- *  bInit [I] TRUE to initialize the services, FALSE to uninitalize.
+ *  bInit [I] TRUE to initialize the services, FALSE to uninitialize.
  *
  * RETURNS
  *  Nothing.

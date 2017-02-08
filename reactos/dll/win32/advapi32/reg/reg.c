@@ -14,6 +14,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <advapi32.h>
+#include <pseh/pseh2.h>
 WINE_DEFAULT_DEBUG_CHANNEL(reg);
 
 /* DEFINES ******************************************************************/
@@ -931,7 +932,7 @@ CreateNestedKey(PHKEY KeyHandle,
     LocalObjectAttributes.ObjectName = &LocalKeyName;
     FullNameLength = LocalKeyName.Length / sizeof(WCHAR);
 
-  LocalKeyHandle = NULL;
+    LocalKeyHandle = NULL;
 
     /* Remove the last part of the key name and try to create the key again. */
     while (Status == STATUS_OBJECT_NAME_NOT_FOUND)
@@ -1317,7 +1318,7 @@ Cleanup:
 /************************************************************************
  *  RegDeleteKeyExA
  *
- * @unimplemented
+ * @implemented
  */
 LONG
 WINAPI
@@ -1326,15 +1327,68 @@ RegDeleteKeyExA(HKEY hKey,
                 REGSAM samDesired,
                 DWORD Reserved)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING SubKeyName;
+    HANDLE ParentKey;
+    HANDLE TargetKey;
+    NTSTATUS Status;
+
+    /* Make sure we got a subkey */
+    if (!lpSubKey)
+    {
+        /* Fail */
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    Status = MapDefaultKey(&ParentKey,
+                           hKey);
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+
+    if (samDesired & KEY_WOW64_32KEY)
+        ERR("Wow64 not yet supported!\n");
+
+    if (samDesired & KEY_WOW64_64KEY)
+        ERR("Wow64 not yet supported!\n");
+
+    RtlCreateUnicodeStringFromAsciiz(&SubKeyName,
+                                     (LPSTR)lpSubKey);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &SubKeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               ParentKey,
+                               NULL);
+
+    Status = NtOpenKey(&TargetKey,
+                       DELETE,
+                       &ObjectAttributes);
+    RtlFreeUnicodeString(&SubKeyName);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Cleanup;
+    }
+
+    Status = NtDeleteKey(TargetKey);
+    NtClose (TargetKey);
+
+Cleanup:
+    ClosePredefKey(ParentKey);
+
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+
+    return ERROR_SUCCESS;
 }
 
 
 /************************************************************************
  *  RegDeleteKeyExW
  *
- * @unimplemented
+ * @implemented
  */
 LONG
 WINAPI
@@ -1343,8 +1397,60 @@ RegDeleteKeyExW(HKEY hKey,
                 REGSAM samDesired,
                 DWORD Reserved)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING SubKeyName;
+    HANDLE ParentKey;
+    HANDLE TargetKey;
+    NTSTATUS Status;
+
+    /* Make sure we got a subkey */
+    if (!lpSubKey)
+    {
+        /* Fail */
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    Status = MapDefaultKey(&ParentKey,
+                           hKey);
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+
+    if (samDesired & KEY_WOW64_32KEY)
+        ERR("Wow64 not yet supported!\n");
+
+    if (samDesired & KEY_WOW64_64KEY)
+        ERR("Wow64 not yet supported!\n");
+
+
+    RtlInitUnicodeString(&SubKeyName,
+                         (LPWSTR)lpSubKey);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &SubKeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               ParentKey,
+                               NULL);
+    Status = NtOpenKey(&TargetKey,
+                       DELETE,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Cleanup;
+    }
+
+    Status = NtDeleteKey(TargetKey);
+    NtClose(TargetKey);
+
+Cleanup:
+    ClosePredefKey(ParentKey);
+
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+
+    return ERROR_SUCCESS;
 }
 
 
@@ -4847,9 +4953,28 @@ RegSetValueExW(HKEY hKey,
                DWORD cbData)
 {
     UNICODE_STRING ValueName;
-    PUNICODE_STRING pValueName;
     HANDLE KeyHandle;
     NTSTATUS Status;
+
+    if (is_string(dwType) && (cbData != 0))
+    {
+        PWSTR pwsData = (PWSTR)lpData;
+
+        _SEH2_TRY
+        {
+            if((pwsData[cbData / sizeof(WCHAR) - 1] != L'\0') &&
+                (pwsData[cbData / sizeof(WCHAR)] == L'\0'))
+            {
+                /* Increment length if last character is not zero and next is zero */
+                cbData += sizeof(WCHAR);
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return ERROR_NOACCESS);
+        }
+        _SEH2_END;
+    }
 
     Status = MapDefaultKey(&KeyHandle,
                            hKey);
@@ -4859,22 +4984,9 @@ RegSetValueExW(HKEY hKey,
     }
 
     RtlInitUnicodeString(&ValueName, lpValueName);
-    pValueName = &ValueName;
-
-    if (is_string(dwType) && (cbData != 0))
-    {
-        PWSTR pwsData = (PWSTR)lpData;
-
-        if((pwsData[cbData / sizeof(WCHAR) - 1] != L'\0') &&
-            (pwsData[cbData / sizeof(WCHAR)] == L'\0'))
-        {
-            /* Increment length if last character is not zero and next is zero */
-            cbData += sizeof(WCHAR);
-        }
-    }
 
     Status = NtSetValueKey(KeyHandle,
-                           pValueName,
+                           &ValueName,
                            0,
                            dwType,
                            (PVOID)lpData,

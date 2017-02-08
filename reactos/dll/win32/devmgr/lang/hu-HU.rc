@@ -1,4 +1,4 @@
-//Hungarian language resource file (Robert Horvath, talley at cubeclub dot hu)
+﻿//Hungarian language resource file (Robert Horvath, talley at cubeclub dot hu)
 
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
@@ -33,21 +33,21 @@ STRINGTABLE
 BEGIN
     IDS_DEV_NO_PROBLEM "Ez az eszköz megfelelõen mûködik."
     IDS_DEV_NOT_CONFIGURED "Ez az eszköz rosszul van beállítva."
-    IDS_DEV_DEVLOADER_FAILED "A ReactOS nem tudja betölteni a meghajtóprogramot ehhez az eszközhöz, mert a számítógép két $1 busz típust lát."
-    IDS_DEV_DEVLOADER_FAILED2 "A(z) $1 eszközvezérlõ betöltõ nem tudják betölteni ennek az eszköznek a meghajtóprogramját."
+    IDS_DEV_DEVLOADER_FAILED "A ReactOS nem tudja betölteni a meghajtóprogramot ehhez az eszközhöz, mert a számítógép két %1 busz típust lát."
+    IDS_DEV_DEVLOADER_FAILED2 "A(z) %1 eszközvezérlõ betöltõ nem tudják betölteni ennek az eszköznek a meghajtóprogramját."
     IDS_DEV_OUT_OF_MEMORY "Az eszköz meghajtóprogram hibás lehet, vagy nincs elég memória a betöltéséhez."
     IDS_DEV_ENTRY_IS_WRONG_TYPE "Ez az eszköz nem tud mûködni, mert a meghajtóprogramjai vagy a rendszerleíró bejegyzései hibásak."
     IDS_DEV_LACKED_ARBITRATOR "Az eszköz meghajtóprogramja egy olyan erõforrást igényel amit nem tud a ReactOS kezelni."
     IDS_DEV_BOOT_CONFIG_CONFLICT "Egy másik eszköz használja azokat az erõforrásokat amelyeket ez az eszköz igényel."
     IDS_DEV_FAILED_FILTER "Az eszköz meghajtóprogramjait újra kell telepíteni."
-    IDS_DEV_DEVLOADER_NOT_FOUND "Ez az eszköz nem mûködik, mert a ReactOS nem tudja betölteni a meghajtóprogramjait, mivel a(z) $1 elérhetetlen."
-    IDS_DEV_DEVLOADER_NOT_FOUND2 "Ez az eszköz nem mûködik, mert a ReactOS nem tudja betölteni a meghajtóprogramjait, mivel a(z) $1 sérült."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Ez az eszköz nem mûködik, mert a ReactOS nem tudja betölteni a meghajtóprogramjait, mivel a(z) %1 elérhetetlen."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Ez az eszköz nem mûködik, mert a ReactOS nem tudja betölteni a meghajtóprogramjait, mivel a(z) %1 sérült."
     IDS_DEV_DEVLOADER_NOT_FOUND3 "Eszköz hiba: próbáld meg kicserélni a meghajtóprogramokat, és ha ez sem segít akkor nézd meg a felhasználói könyvét."
     IDS_DEV_INVALID_DATA "Ez az eszköz lehet, hogy nem fog megfelelõen mûködni, mert a számítógép BIOS-a rossz erõforrásokat osztott ki."
     IDS_DEV_INVALID_DATA2 "Ez az eszköz lehet, hogy nem fog megfelelõen mûködni, mert az eszköz BIOS-a rossz erõforrásokat igényelt."
     IDS_DEV_FAILED_START "Ez az eszköz már nincs jelen, elromlott vagy nincs minden meghajtóprogram feltelepítve hozzá."
     IDS_DEV_LIAR "A ReactOS megállt miközben megpróbálta elindítani ezt az eszközt, ezért nem fogja mégegyszer megpróbálni."
-    IDS_DEV_NORMAL_CONFLICT "Az eszköz nem tud szabad $1 erõforrást találni."
+    IDS_DEV_NORMAL_CONFLICT "Az eszköz nem tud szabad %1 erõforrást találni."
     IDS_DEV_NOT_VERIFIED "Az eszköz illesztõprogramja nem találja az eszközt."
     IDS_DEV_NEED_RESTART "Ez az eszköz nem tud megfelelõen mûködni, amíg nem indítod újra a gépet."
     IDS_DEV_REENUMERATION "Az eszköz erõforrás ütközést okozott elõ."
@@ -68,7 +68,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Az eszközhoz nincsenek illesztõprogramok telepítve."
     IDS_DEV_HARDWARE_DISABLED "Az eszköz levan tiltva, mivel a BIOS-a nem adott neki erõforrást."
     IDS_DEV_CANT_SHARE_IRQ "Ez az eszköz egy olyan megszakítást (IRQ) igényelt, amit egy másik eszköz használ és nem oszthatja meg. Meg kell változtatnod az erõforrás kiosztást, vagy eltávolítanod a real-mode (16 bites) illesztõprogramot."
-    IDS_DEV_FAILED_ADD "Ez az eszköz nem tud megfelelõen mûködni, mivel a(z) $1 sem mûködik megfelelõen."
+    IDS_DEV_FAILED_ADD "Ez az eszköz nem tud megfelelõen mûködni, mivel a(z) %1 sem mûködik megfelelõen."
     IDS_DEV_DISABLED_SERVICE "A ReactOS nem tudja feltelepíteni az eszköz illesztõprogramjait, mivel a programokat tartalmazó hely nem elérhetõ."
     IDS_DEV_TRANSLATION_FAILED "Ez az eszköz nem válaszol a illesztõprogramjának."
     IDS_DEV_NO_SOFTCONFIG "A ReactOS nem tudja kitalálni a beállításokat ehhez az eszközhöz. Használd a felhasználói utasítást, ami ehhez az eszközhöz jár, és állítsd be az erõforrásait."

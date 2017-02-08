@@ -20,12 +20,18 @@ Description = Esta utilidad le permite acceder a sus carpetas e impresoras compa
 [Section.040c]
 Description = Cet outil vous permet d'accéder à vos répertoire/imprimantes partagés Windows avec ReactOS.
 
+[Section.0413]
+Description = Maakt het mogelijk om Windows gedeelde printers te gebruiken met ReactOS.
+
 [Section.0415]
 Description = Narzędzie pozwalające na dostęp z poziomu ReactOSa do współdzielonych folderów/drukarek Windows.
 
 [Section.0418]
 Description = Acest instrument permite accesarea în ReactOS a dosarelor/imprimantelor partajate din Windows.
-Size = 2.13Mo
+Size = 2,13 Mo
 
 [Section.0422]
 Description = Цей інструмент дозволяє отримати доступ до спільних тек/принтерів Windows з ReactOSа.
+
+[Section.0813]
+Description = Maakt het mogelijk om Windows gedeelde printers te gebruiken met ReactOS.

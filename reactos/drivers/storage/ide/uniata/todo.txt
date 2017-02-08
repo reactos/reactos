@@ -251,4 +251,7 @@
 156.use http://www.winimage.com/readfi15.zip for performance checks
 157.use IOCTL_SCSI_MINIPORT_IDENTIFY in atactl.exe to determine         ...
     PIO/DMA when no uniata.sys is installed                            (+++)
-158.
+158.implement .INF generator
+159.fix bug with invalid INF section under XP+                         (43e2)
+160.add INF handler for SCSI\NET\VEN_UNIATA&PROD_MANAGEMENT_PORT
+161.

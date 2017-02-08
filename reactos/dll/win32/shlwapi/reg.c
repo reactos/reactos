@@ -19,16 +19,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
-#include <string.h>
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "wine/debug.h"
+//#include <string.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <winreg.h>
+#include <wine/debug.h>
 #define NO_SHLWAPI_STREAM
-#include "shlwapi.h"
-#include "wine/unicode.h"
+#include <shlwapi.h>
+#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -235,12 +239,49 @@ LONG WINAPI SHRegCreateUSKeyA(LPCSTR pszPath, REGSAM samDesired, HUSKEY hRelativ
  *
  * See SHRegCreateUSKeyA.
  */
-LONG WINAPI SHRegCreateUSKeyW(LPCWSTR pszPath, REGSAM samDesired, HUSKEY hRelativeUSKey,
-                              PHUSKEY phNewUSKey, DWORD dwFlags)
+LONG WINAPI SHRegCreateUSKeyW(LPCWSTR path, REGSAM samDesired, HUSKEY relative_key,
+                              PHUSKEY new_uskey, DWORD flags)
 {
-    FIXME("(%s, 0x%08x, %p, %p, 0x%08x) stub\n", debugstr_w(pszPath), samDesired,
-          hRelativeUSKey, phNewUSKey, dwFlags);
-    return ERROR_SUCCESS;
+    LONG ret = ERROR_CALL_NOT_IMPLEMENTED;
+    SHUSKEY *ret_key;
+
+    TRACE("(%s, 0x%08x, %p, %p, 0x%08x)\n", debugstr_w(path), samDesired,
+          relative_key, new_uskey, flags);
+
+    if (!new_uskey) return ERROR_INVALID_PARAMETER;
+
+    *new_uskey = NULL;
+
+    if (flags & ~SHREGSET_FORCE_HKCU)
+    {
+        FIXME("unsupported flags 0x%08x\n", flags);
+        return ERROR_SUCCESS;
+    }
+
+    ret_key = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*ret_key));
+    lstrcpynW(ret_key->lpszPath, path, sizeof(ret_key->lpszPath)/sizeof(WCHAR));
+
+    if (relative_key)
+    {
+        ret_key->HKCUstart = SHRegDuplicateHKey(REG_GetHKEYFromHUSKEY(relative_key, REG_HKCU));
+        ret_key->HKLMstart = SHRegDuplicateHKey(REG_GetHKEYFromHUSKEY(relative_key, REG_HKLM));
+    }
+    else
+    {
+        ret_key->HKCUstart = HKEY_CURRENT_USER;
+        ret_key->HKLMstart = HKEY_LOCAL_MACHINE;
+    }
+
+    if (flags & SHREGSET_FORCE_HKCU)
+    {
+        ret = RegCreateKeyExW(ret_key->HKCUstart, path, 0, NULL, 0, samDesired, NULL, &ret_key->HKCUkey, NULL);
+        if (ret == ERROR_SUCCESS)
+            *new_uskey = ret_key;
+        else
+            HeapFree(GetProcessHeap(), 0, ret_key);
+    }
+
+    return ret;
 }
 
 /*************************************************************************
@@ -1853,17 +1894,14 @@ DWORD WINAPI SHGetValueGoodBootW(HKEY hkey, LPCWSTR pSubKey, LPCWSTR pValue,
  */
 BOOL WINAPI RegisterMIMETypeForExtensionA(LPCSTR lpszSubKey, LPCSTR lpszValue)
 {
-  DWORD dwRet;
-
   if (!lpszValue)
   {
     WARN("Invalid lpszValue would crash under Win32!\n");
     return FALSE;
   }
 
-  dwRet = SHSetValueA(HKEY_CLASSES_ROOT, lpszSubKey, lpszContentTypeA,
+  return !SHSetValueA(HKEY_CLASSES_ROOT, lpszSubKey, lpszContentTypeA,
                       REG_SZ, lpszValue, strlen(lpszValue));
-  return dwRet ? FALSE : TRUE;
 }
 
 /*************************************************************************
@@ -1873,17 +1911,14 @@ BOOL WINAPI RegisterMIMETypeForExtensionA(LPCSTR lpszSubKey, LPCSTR lpszValue)
  */
 BOOL WINAPI RegisterMIMETypeForExtensionW(LPCWSTR lpszSubKey, LPCWSTR lpszValue)
 {
-  DWORD dwRet;
-
   if (!lpszValue)
   {
     WARN("Invalid lpszValue would crash under Win32!\n");
     return FALSE;
   }
 
-  dwRet = SHSetValueW(HKEY_CLASSES_ROOT, lpszSubKey, lpszContentTypeW,
+  return !SHSetValueW(HKEY_CLASSES_ROOT, lpszSubKey, lpszContentTypeW,
                       REG_SZ, lpszValue, strlenW(lpszValue));
-  return dwRet ? FALSE : TRUE;
 }
 
 /*************************************************************************
@@ -1900,8 +1935,7 @@ BOOL WINAPI RegisterMIMETypeForExtensionW(LPCWSTR lpszSubKey, LPCWSTR lpszValue)
  */
 BOOL WINAPI UnregisterMIMETypeForExtensionA(LPCSTR lpszSubKey)
 {
-  HRESULT ret = SHDeleteValueA(HKEY_CLASSES_ROOT, lpszSubKey, lpszContentTypeA);
-  return ret ? FALSE : TRUE;
+  return !SHDeleteValueA(HKEY_CLASSES_ROOT, lpszSubKey, lpszContentTypeA);
 }
 
 /*************************************************************************
@@ -1911,8 +1945,7 @@ BOOL WINAPI UnregisterMIMETypeForExtensionA(LPCSTR lpszSubKey)
  */
 BOOL WINAPI UnregisterMIMETypeForExtensionW(LPCWSTR lpszSubKey)
 {
-  HRESULT ret = SHDeleteValueW(HKEY_CLASSES_ROOT, lpszSubKey, lpszContentTypeW);
-  return ret ? FALSE : TRUE;
+  return !SHDeleteValueW(HKEY_CLASSES_ROOT, lpszSubKey, lpszContentTypeW);
 }
 
 /*************************************************************************
@@ -2199,7 +2232,7 @@ DWORD WINAPI SHCopyKeyA(HKEY hKeySrc, LPCSTR lpszSrcSubKey, HKEY hKeyDst, DWORD 
   TRACE("(hkey=%p,%s,%p08x,%d)\n", hKeySrc, debugstr_a(lpszSrcSubKey), hKeyDst, dwReserved);
 
   if (lpszSrcSubKey)
-    MultiByteToWideChar(0, 0, lpszSrcSubKey, -1, szSubKeyW, MAX_PATH);
+    MultiByteToWideChar(CP_ACP, 0, lpszSrcSubKey, -1, szSubKeyW, MAX_PATH);
 
   return SHCopyKeyW(hKeySrc, lpszSrcSubKey ? szSubKeyW : NULL, hKeyDst, dwReserved);
 }

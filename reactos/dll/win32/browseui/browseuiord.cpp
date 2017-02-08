@@ -27,7 +27,7 @@ extern DWORD WINAPI BrowserThreadProc(LPVOID lpThreadParameter);
  */
 extern "C" void WINAPI InitOCHostClass(long param8)
 {
-	// forwards to shdocvw
+    // forwards to shdocvw
 }
 
 /*************************************************************************
@@ -35,7 +35,7 @@ extern "C" void WINAPI InitOCHostClass(long param8)
  */
 extern "C" long WINAPI SHOpenFolderWindow(IEThreadParamBlock *param8)
 {
-	return 0;
+    return 0;
 }
 
 /*************************************************************************
@@ -52,7 +52,7 @@ extern "C" void WINAPI SHCreateSavedWindows()
  */
 extern "C" long WINAPI SHCreateFromDesktop(long param8)
 {
-	return -1;
+    return -1;
 }
 
 /*************************************************************************
@@ -60,7 +60,7 @@ extern "C" long WINAPI SHCreateFromDesktop(long param8)
  */
 extern "C" long WINAPI SHExplorerParseCmdLine(LPCTSTR commandLine)
 {
-	return -1;
+    return -1;
 }
 
 /*************************************************************************
@@ -75,7 +75,7 @@ extern "C" void WINAPI UEMRegisterNotify(long param8, long paramC)
  */
 extern "C" HRESULT WINAPI SHCreateBandForPidl(LPCITEMIDLIST param8, IUnknown *paramC, BOOL param10)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 /*************************************************************************
@@ -83,7 +83,7 @@ extern "C" HRESULT WINAPI SHCreateBandForPidl(LPCITEMIDLIST param8, IUnknown *pa
  */
 extern "C" HRESULT WINAPI SHPidlFromDataObject(IDataObject *param8, long *paramC, long param10, FILEDESCRIPTORW *param14)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 /*************************************************************************
@@ -91,28 +91,29 @@ extern "C" HRESULT WINAPI SHPidlFromDataObject(IDataObject *param8, long *paramC
  */
 extern "C" long WINAPI IDataObject_GetDeskBandState(long param8)
 {
-	return -1;
+    return -1;
 }
 
 /*************************************************************************
  * SHCreateIETHREADPARAM		[BROWSEUI.123]
  */
-extern "C" IEThreadParamBlock *WINAPI SHCreateIETHREADPARAM(long param8, long paramC, IUnknown *param10, IUnknown *param14)
+extern "C" IEThreadParamBlock *WINAPI SHCreateIETHREADPARAM(
+    long param8, long paramC, IUnknown *param10, IUnknown *param14)
 {
-	IEThreadParamBlock						*result;
+    IEThreadParamBlock                      *result;
 
-	result = (IEThreadParamBlock *)LocalAlloc(LMEM_ZEROINIT, 256);
-	if (result == NULL)
-		return NULL;
-	result->offset0 = param8;
-	result->offset8 = paramC;
-	result->offsetC = param10;
-	if (param10 != NULL)
-		param10->AddRef();
-	result->offset14 = param14;
-	if (param14 != NULL)
-		param14->AddRef();
-	return result;
+    result = (IEThreadParamBlock *)LocalAlloc(LMEM_ZEROINIT, 256);
+    if (result == NULL)
+        return NULL;
+    result->offset0 = param8;
+    result->offset8 = paramC;
+    result->offsetC = param10;
+    if (param10 != NULL)
+        param10->AddRef();
+    result->offset14 = param14;
+    if (param14 != NULL)
+        param14->AddRef();
+    return result;
 }
 
 /*************************************************************************
@@ -120,25 +121,25 @@ extern "C" IEThreadParamBlock *WINAPI SHCreateIETHREADPARAM(long param8, long pa
  */
 extern "C" IEThreadParamBlock *WINAPI SHCloneIETHREADPARAM(IEThreadParamBlock *param)
 {
-	IEThreadParamBlock						*result;
+    IEThreadParamBlock                      *result;
 
-	result = (IEThreadParamBlock *)LocalAlloc(LMEM_FIXED, 256);
-	if (result == NULL)
-		return NULL;
-	memcpy(result, param, 0x40 * 4);
-	if (result->directoryPIDL != NULL)
-		result->directoryPIDL = ILClone(result->directoryPIDL);
-	if (result->offset7C != NULL)
-		result->offset7C = ILClone(result->offset7C);
-	if (result->offset80 != NULL)
-		result->offset80 = ILClone(result->offset80);
-	if (result->offset70 != NULL)
-		result->offset70->AddRef();
+    result = (IEThreadParamBlock *)LocalAlloc(LMEM_FIXED, 256);
+    if (result == NULL)
+        return NULL;
+    memcpy(result, param, 0x40 * 4);
+    if (result->directoryPIDL != NULL)
+        result->directoryPIDL = ILClone(result->directoryPIDL);
+    if (result->offset7C != NULL)
+        result->offset7C = ILClone(result->offset7C);
+    if (result->offset80 != NULL)
+        result->offset80 = ILClone(result->offset80);
+    if (result->offset70 != NULL)
+        result->offset70->AddRef();
 #if 0
-	if (result->offsetC != NULL)
-		result->offsetC->Method2C();
+    if (result->offsetC != NULL)
+        result->offsetC->Method2C();
 #endif
-	return result;
+    return result;
 }
 
 /*************************************************************************
@@ -146,7 +147,7 @@ extern "C" IEThreadParamBlock *WINAPI SHCloneIETHREADPARAM(IEThreadParamBlock *p
  */
 extern "C" long WINAPI SHParseIECommandLine(long param8, long paramC)
 {
-	return -1;
+    return -1;
 }
 
 /*************************************************************************
@@ -154,25 +155,25 @@ extern "C" long WINAPI SHParseIECommandLine(long param8, long paramC)
  */
 extern "C" void WINAPI SHDestroyIETHREADPARAM(IEThreadParamBlock *param)
 {
-	if (param == NULL)
-		return;
-	if (param->directoryPIDL != NULL)
-		ILFree(param->directoryPIDL);
-	if (param->offset7C != NULL)
-		ILFree(param->offset7C);
-	if ((param->offset4 & 0x80000) == 0 && param->offset80 != NULL)
-		ILFree(param->offset80);
-	if (param->offset14 != NULL)
-		param->offset14->Release();
-	if (param->offset70 != NULL)
-		param->offset70->Release();
-	if (param->offset78 != NULL)
-		param->offset78->Release();
-	if (param->offsetC != NULL)
-		param->offsetC->Release();
-	if (param->offsetF8 != NULL)
-		param->offsetF8->Release();
-	LocalFree(param);
+    if (param == NULL)
+        return;
+    if (param->directoryPIDL != NULL)
+        ILFree(param->directoryPIDL);
+    if (param->offset7C != NULL)
+        ILFree(param->offset7C);
+    if ((param->offset4 & 0x80000) == 0 && param->offset80 != NULL)
+        ILFree(param->offset80);
+    if (param->offset14 != NULL)
+        param->offset14->Release();
+    if (param->offset70 != NULL)
+        param->offset70->Release();
+    if (param->offset78 != NULL)
+        param->offset78->Release();
+    if (param->offsetC != NULL)
+        param->offsetC->Release();
+    if (param->offsetF8 != NULL)
+        param->offsetF8->Release();
+    LocalFree(param);
 }
 
 /*************************************************************************
@@ -180,7 +181,7 @@ extern "C" void WINAPI SHDestroyIETHREADPARAM(IEThreadParamBlock *param)
  */
 extern "C" HRESULT WINAPI SHOnCWMCommandLine(long param8)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 /*************************************************************************
@@ -188,7 +189,7 @@ extern "C" HRESULT WINAPI SHOnCWMCommandLine(long param8)
  */
 extern "C" LPITEMIDLIST WINAPI Channel_GetFolderPidl()
 {
-	return NULL;
+    return NULL;
 }
 
 /*************************************************************************
@@ -196,7 +197,7 @@ extern "C" LPITEMIDLIST WINAPI Channel_GetFolderPidl()
  */
 extern "C" IUnknown *WINAPI ChannelBand_Create(LPITEMIDLIST pidl)
 {
-	return NULL;
+    return NULL;
 }
 
 /*************************************************************************
@@ -204,7 +205,7 @@ extern "C" IUnknown *WINAPI ChannelBand_Create(LPITEMIDLIST pidl)
  */
 extern "C" HRESULT WINAPI Channels_SetBandInfoSFB(IUnknown *param8)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 /*************************************************************************
@@ -212,7 +213,7 @@ extern "C" HRESULT WINAPI Channels_SetBandInfoSFB(IUnknown *param8)
  */
 extern "C" HRESULT WINAPI IUnknown_SetBandInfoSFB(IUnknown *param8, long paramC)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 /*************************************************************************
@@ -220,7 +221,7 @@ extern "C" HRESULT WINAPI IUnknown_SetBandInfoSFB(IUnknown *param8, long paramC)
  */
 extern "C" HRESULT WINAPI Channel_QuickLaunch()
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 /*************************************************************************
@@ -228,7 +229,7 @@ extern "C" HRESULT WINAPI Channel_QuickLaunch()
  */
 extern "C" HRESULT WINAPI SHGetNavigateTarget(long param8, long paramC, long param10, long param14)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 /*************************************************************************
@@ -236,7 +237,7 @@ extern "C" HRESULT WINAPI SHGetNavigateTarget(long param8, long paramC, long par
  */
 extern "C" HRESULT WINAPI GetInfoTip(IUnknown *param8, long paramC, LPTSTR *param10, long cchMax)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 /*************************************************************************
@@ -244,15 +245,16 @@ extern "C" HRESULT WINAPI GetInfoTip(IUnknown *param8, long paramC, LPTSTR *para
  */
 extern "C" HRESULT WINAPI SHEnumClassesOfCategories(long param8, long paramC, long param10, long param14, long param18)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 /*************************************************************************
  * SHWriteClassesOfCategories	[BROWSEUI.137]
  */
-extern "C" HRESULT WINAPI SHWriteClassesOfCategories(long param8, long paramC, long param10, long param14, long param18, long param1C, long param20)
+extern "C" HRESULT WINAPI SHWriteClassesOfCategories(long param8, long paramC, long param10,
+    long param14, long param18, long param1C, long param20)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 /*************************************************************************
@@ -260,7 +262,7 @@ extern "C" HRESULT WINAPI SHWriteClassesOfCategories(long param8, long paramC, l
  */
 extern "C" BOOL WINAPI SHIsExplorerBrowser()
 {
-	return TRUE;
+    return TRUE;
 }
 
 // 75FA56C1h
@@ -272,26 +274,26 @@ extern "C" BOOL WINAPI SHIsExplorerBrowser()
  */
 extern "C" HRESULT WINAPI SHOpenNewFrame(LPITEMIDLIST pidl, IUnknown *paramC, long param10, long param14)
 {
-	IEThreadParamBlock						*parameters;
-	HANDLE									threadHandle;
-	DWORD									threadID;
+    IEThreadParamBlock                      *parameters;
+    HANDLE                                  threadHandle;
+    DWORD                                   threadID;
 
-	parameters = SHCreateIETHREADPARAM(0, 1, paramC, NULL);
-	if (parameters == NULL)
-	{
-		ILFree(pidl);
-		return E_OUTOFMEMORY;
-	}
-	if (paramC != NULL)
-		parameters->offset10 = param10;
-	parameters->directoryPIDL = pidl;
-	parameters->offset4 = param14;
-	threadHandle = CreateThread(NULL, 0x10000, BrowserThreadProc, parameters, 0, &threadID);
-	if (threadHandle != NULL)
-	{
-		CloseHandle(threadHandle);
-		return S_OK;
-	}
-	SHDestroyIETHREADPARAM(parameters);
-	return E_FAIL;
+    parameters = SHCreateIETHREADPARAM(0, 1, paramC, NULL);
+    if (parameters == NULL)
+    {
+        ILFree(pidl);
+        return E_OUTOFMEMORY;
+    }
+    if (paramC != NULL)
+        parameters->offset10 = param10;
+    parameters->directoryPIDL = pidl;
+    parameters->offset4 = param14;
+    threadHandle = CreateThread(NULL, 0x10000, BrowserThreadProc, parameters, 0, &threadID);
+    if (threadHandle != NULL)
+    {
+        CloseHandle(threadHandle);
+        return S_OK;
+    }
+    SHDestroyIETHREADPARAM(parameters);
+    return E_FAIL;
 }

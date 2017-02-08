@@ -15,9 +15,12 @@
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+_Must_inspect_result_
+_Success_(return != FALSE)
 BOOL
 APIENTRY
-EngCreateEvent(OUT PEVENT* Event)
+EngCreateEvent(
+    _Outptr_ PEVENT *ppEvent)
 {
     BOOLEAN Result = TRUE;
     PENG_EVENT EngEvent;
@@ -38,7 +41,7 @@ EngCreateEvent(OUT PEVENT* Event)
                           FALSE);
 
         /* Pass pointer to our structure to the caller */
-        *Event = EngEvent;
+        *ppEvent = EngEvent;
         DPRINT("EngCreateEvent() created %p\n", EngEvent);
     }
     else
@@ -54,7 +57,8 @@ EngCreateEvent(OUT PEVENT* Event)
 
 BOOL
 APIENTRY
-EngDeleteEvent(IN PEVENT Event)
+EngDeleteEvent(
+    _In_ _Post_ptr_invalid_ PEVENT Event)
 {
     DPRINT("EngDeleteEvent(%p)\n", Event);
 
@@ -67,7 +71,7 @@ EngDeleteEvent(IN PEVENT Event)
     }
 
     /* Free the allocated memory */
-    ExFreePool(Event);
+    ExFreePoolWithTag(Event, GDITAG_ENG_EVENT);
 
     /* Return success */
     return TRUE;
@@ -75,7 +79,8 @@ EngDeleteEvent(IN PEVENT Event)
 
 VOID
 APIENTRY
-EngClearEvent(IN PEVENT Event)
+EngClearEvent(
+    _In_ PEVENT Event)
 {
     /* Clear the event */
     KeClearEvent(Event->pKEvent);
@@ -83,7 +88,8 @@ EngClearEvent(IN PEVENT Event)
 
 LONG
 APIENTRY
-EngSetEvent(IN PEVENT Event)
+EngSetEvent(
+    _In_ PEVENT Event)
 {
     /* Set the event */
     return KeSetEvent(Event->pKEvent,
@@ -93,7 +99,8 @@ EngSetEvent(IN PEVENT Event)
 
 LONG
 APIENTRY
-EngReadStateEvent(IN PEVENT Event)
+EngReadStateEvent(
+    _In_ PEVENT Event)
 {
     /* Read the event state */
     return KeReadStateEvent(Event->pKEvent);
@@ -101,11 +108,12 @@ EngReadStateEvent(IN PEVENT Event)
 
 PEVENT
 APIENTRY
-EngMapEvent(IN HDEV hDev,
-            IN HANDLE hUserObject,
-            IN PVOID Reserved1,
-            IN PVOID Reserved2,
-            IN PVOID Reserved3)
+EngMapEvent(
+    _In_ HDEV hDev,
+    _In_ HANDLE hUserObject,
+    _Reserved_ PVOID Reserved1,
+    _Reserved_ PVOID Reserved2,
+    _Reserved_ PVOID Reserved3)
 {
     PENG_EVENT EngEvent;
     NTSTATUS Status;
@@ -136,7 +144,7 @@ EngMapEvent(IN HDEV hDev,
     else
     {
         /* Free the allocation */
-        ExFreePool(EngEvent);
+        ExFreePoolWithTag(EngEvent, GDITAG_ENG_EVENT);
         EngEvent = NULL;
     }
 
@@ -147,7 +155,8 @@ EngMapEvent(IN HDEV hDev,
 
 BOOL
 APIENTRY
-EngUnmapEvent(IN PEVENT Event)
+EngUnmapEvent(
+    _In_ PEVENT Event)
 {
     /* Must be a usermapped event */
     if (!(Event->fFlags & ENG_EVENT_USERMAPPED)) return FALSE;
@@ -156,14 +165,15 @@ EngUnmapEvent(IN PEVENT Event)
     ObDereferenceObject(Event->pKEvent);
 
     /* Free the Eng object */
-    ExFreePool(Event);
+    ExFreePoolWithTag(Event, GDITAG_ENG_EVENT);
     return TRUE;
 }
 
 BOOL
 APIENTRY
-EngWaitForSingleObject(IN PEVENT Event,
-                       IN PLARGE_INTEGER TimeOut)
+EngWaitForSingleObject(
+    _In_ PEVENT Event,
+    _In_opt_ PLARGE_INTEGER TimeOut)
 {
     NTSTATUS Status;
     DPRINT("EngWaitForSingleObject(%p %I64d)\n", Event, TimeOut->QuadPart);

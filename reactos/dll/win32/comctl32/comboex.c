@@ -30,17 +30,17 @@
  * 
  */
 
-#include <stdarg.h>
-#include <string.h>
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "commctrl.h"
+//#include <stdarg.h>
+//#include <string.h>
+//#include "windef.h"
+//#include "winbase.h"
+//#include "wingdi.h"
+//#include "winuser.h"
+//#include "winnls.h"
+//#include "commctrl.h"
 #include "comctl32.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(comboex);
 
@@ -720,7 +720,7 @@ COMBOEX_SetExtendedStyle (COMBOEX_INFO *infoPtr, DWORD mask, DWORD style)
     /* see if we need to change the word break proc on the edit */
     if ((infoPtr->dwExtStyle ^ dwTemp) & CBES_EX_PATHWORDBREAKPROC)
         SetPathWordBreakProc(infoPtr->hwndEdit, 
-            (infoPtr->dwExtStyle & CBES_EX_PATHWORDBREAKPROC) ? TRUE : FALSE);
+            (infoPtr->dwExtStyle & CBES_EX_PATHWORDBREAKPROC) != 0);
 
     /* test if the control's appearance has changed */
     mask = CBES_EX_NOEDITIMAGE | CBES_EX_NOEDITIMAGEINDENT;
@@ -1381,8 +1381,6 @@ static LRESULT COMBOEX_DrawItem (const COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT con
 	item = infoPtr->edit;
 
 	if (infoPtr->hwndEdit) {
-	    INT len;
-
 	    /* free previous text of edit item */
 	    COMBOEX_FreeText(item);
 	    item->mask &= ~CBEIF_TEXT;
@@ -2076,7 +2074,6 @@ COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 		 * For EN_CHANGE this issues the same calls and messages
 		 *  as the native seems to do.
 		 */
-		WCHAR edit_text[260];
 		LPCWSTR lastwrk;
                 cmp_func_t cmptext = get_cmp_func(infoPtr);
 
@@ -2311,7 +2308,8 @@ COMBOEX_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return COMBOEX_WindowPosChanging (infoPtr, (WINDOWPOS *)lParam);
 
         case WM_SETFOCUS:
-            SetFocus(infoPtr->hwndCombo);
+            if (infoPtr->hwndEdit) SetFocus( infoPtr->hwndEdit );
+            else SetFocus( infoPtr->hwndCombo );
             return 0;
 
         case WM_SYSCOLORCHANGE:

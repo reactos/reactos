@@ -1,4 +1,4 @@
-#include <vdmdbg.h>
+#include "vdmdbg.h"
 
 #define NDEBUG
 #include <debug.h>

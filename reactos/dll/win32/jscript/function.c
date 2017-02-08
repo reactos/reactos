@@ -16,26 +16,32 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <assert.h>
+
 #include "jscript.h"
 #include "engine.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 typedef struct {
-    DispatchEx dispex;
+    jsdisp_t dispex;
     builtin_invoke_t value_proc;
     const WCHAR *name;
     DWORD flags;
-    source_elements_t *source;
-    parameter_t *parameters;
     scope_chain_t *scope_chain;
-    parser_ctx_t *parser;
-    const WCHAR *src_str;
-    DWORD src_len;
+    bytecode_t *code;
+    function_code_t *func_code;
     DWORD length;
+    jsdisp_t *arguments;
 } FunctionInstance;
+
+typedef struct {
+    jsdisp_t jsdisp;
+    FunctionInstance *function;
+    jsdisp_t *var_obj;
+} ArgumentsInstance;
 
 static inline FunctionInstance *function_from_vdisp(vdisp_t *vdisp)
 {
@@ -53,135 +59,135 @@ static const WCHAR lengthW[] = {'l','e','n','g','t','h',0};
 static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
 static const WCHAR applyW[] = {'a','p','p','l','y',0};
 static const WCHAR callW[] = {'c','a','l','l',0};
+static const WCHAR argumentsW[] = {'a','r','g','u','m','e','n','t','s',0};
 
-static IDispatch *get_this(DISPPARAMS *dp)
+static HRESULT init_parameters(jsdisp_t *var_disp, FunctionInstance *function, unsigned argc, jsval_t *argv)
 {
-    DWORD i;
-
-    for(i=0; i < dp->cNamedArgs; i++) {
-        if(dp->rgdispidNamedArgs[i] == DISPID_THIS) {
-            if(V_VT(dp->rgvarg+i) == VT_DISPATCH)
-                return V_DISPATCH(dp->rgvarg+i);
-
-            WARN("This is not VT_DISPATCH\n");
-            return NULL;
-        }
-    }
-
-    TRACE("no this passed\n");
-    return NULL;
-}
-
-static HRESULT init_parameters(DispatchEx *var_disp, FunctionInstance *function, DISPPARAMS *dp,
-        jsexcept_t *ei, IServiceProvider *caller)
-{
-    parameter_t *param;
-    VARIANT var_empty;
-    DWORD cargs, i=0;
+    DWORD i=0;
     HRESULT hres;
 
-    V_VT(&var_empty) = VT_EMPTY;
-    cargs = arg_cnt(dp);
-
-    for(param = function->parameters; param; param = param->next) {
-        hres = jsdisp_propput_name(var_disp, param->identifier,
-                i < cargs ? get_arg(dp,i) : &var_empty, ei, caller);
+    for(i=0; i < function->func_code->param_cnt; i++) {
+        hres = jsdisp_propput_name(var_disp, function->func_code->params[i],
+                i < argc ? argv[i] : jsval_undefined());
         if(FAILED(hres))
             return hres;
-
-        i++;
     }
 
     return S_OK;
 }
 
-static HRESULT Arguments_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
+static HRESULT Arguments_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
     FIXME("\n");
     return E_NOTIMPL;
+}
+
+static void Arguments_destructor(jsdisp_t *jsdisp)
+{
+    ArgumentsInstance *arguments = (ArgumentsInstance*)jsdisp;
+
+    jsdisp_release(&arguments->function->dispex);
+    jsdisp_release(arguments->var_obj);
+    heap_free(arguments);
+}
+
+static unsigned Arguments_idx_length(jsdisp_t *jsdisp)
+{
+    ArgumentsInstance *arguments = (ArgumentsInstance*)jsdisp;
+    return arguments->function->length;
+}
+
+static HRESULT Arguments_idx_get(jsdisp_t *jsdisp, unsigned idx, jsval_t *res)
+{
+    ArgumentsInstance *arguments = (ArgumentsInstance*)jsdisp;
+
+    TRACE("%p[%u]\n", arguments, idx);
+
+    /* FIXME: Accessing by name won't work for duplicated argument names */
+    return jsdisp_propget_name(arguments->var_obj, arguments->function->func_code->params[idx], res);
+}
+
+static HRESULT Arguments_idx_put(jsdisp_t *jsdisp, unsigned idx, jsval_t val)
+{
+    ArgumentsInstance *arguments = (ArgumentsInstance*)jsdisp;
+
+    TRACE("%p[%u] = %s\n", arguments, idx, debugstr_jsval(val));
+
+    /* FIXME: Accessing by name won't work for duplicated argument names */
+    return jsdisp_propput_name(arguments->var_obj, arguments->function->func_code->params[idx], val);
 }
 
 static const builtin_info_t Arguments_info = {
     JSCLASS_ARGUMENTS,
     {NULL, Arguments_value, 0},
     0, NULL,
+    Arguments_destructor,
     NULL,
-    NULL
+    Arguments_idx_length,
+    Arguments_idx_get,
+    Arguments_idx_put
 };
 
-static HRESULT create_arguments(script_ctx_t *ctx, IDispatch *calee, DISPPARAMS *dp,
-        jsexcept_t *ei, IServiceProvider *caller, DispatchEx **ret)
+static HRESULT create_arguments(script_ctx_t *ctx, FunctionInstance *calee, jsdisp_t *var_obj,
+        unsigned argc, jsval_t *argv, jsdisp_t **ret)
 {
-    DispatchEx *args;
-    VARIANT var;
-    DWORD i;
+    ArgumentsInstance *args;
+    unsigned i;
     HRESULT hres;
 
     static const WCHAR caleeW[] = {'c','a','l','l','e','e',0};
 
-    args = heap_alloc_zero(sizeof(DispatchEx));
+    args = heap_alloc_zero(sizeof(*args));
     if(!args)
         return E_OUTOFMEMORY;
 
-    hres = init_dispex_from_constr(args, ctx, &Arguments_info, ctx->object_constr);
+    hres = init_dispex_from_constr(&args->jsdisp, ctx, &Arguments_info, ctx->object_constr);
     if(FAILED(hres)) {
         heap_free(args);
         return hres;
     }
 
-    for(i=0; i < arg_cnt(dp); i++) {
-        hres = jsdisp_propput_idx(args, i, get_arg(dp,i), ei, caller);
+    jsdisp_addref(&calee->dispex);
+    args->function = calee;
+    args->var_obj = jsdisp_addref(var_obj);
+
+    /* Store unnamed arguments directly in arguments object */
+    for(i = calee->length; i < argc; i++) {
+        WCHAR buf[12];
+
+        static const WCHAR formatW[] = {'%','d',0};
+
+        sprintfW(buf, formatW, i);
+        hres = jsdisp_propput_dontenum(&args->jsdisp, buf, argv[i]);
         if(FAILED(hres))
             break;
     }
 
     if(SUCCEEDED(hres)) {
-        V_VT(&var) = VT_I4;
-        V_I4(&var) = arg_cnt(dp);
-        hres = jsdisp_propput_name(args, lengthW, &var, ei, caller);
-
-        if(SUCCEEDED(hres)) {
-            V_VT(&var) = VT_DISPATCH;
-            V_DISPATCH(&var) = calee;
-            hres = jsdisp_propput_name(args, caleeW, &var, ei, caller);
-        }
+        hres = jsdisp_propput_dontenum(&args->jsdisp, lengthW, jsval_number(argc));
+        if(SUCCEEDED(hres))
+            hres = jsdisp_propput_dontenum(&args->jsdisp, caleeW, jsval_disp(to_disp(&calee->dispex)));
     }
-
     if(FAILED(hres)) {
-        jsdisp_release(args);
+        jsdisp_release(&args->jsdisp);
         return hres;
     }
 
-    *ret = args;
+    *ret = &args->jsdisp;
     return S_OK;
 }
 
-static HRESULT create_var_disp(script_ctx_t *ctx, FunctionInstance *function, DISPPARAMS *dp, jsexcept_t *ei,
-                               IServiceProvider *caller, DispatchEx **ret)
+static HRESULT create_var_disp(script_ctx_t *ctx, FunctionInstance *function, unsigned argc, jsval_t *argv, jsdisp_t **ret)
 {
-    DispatchEx *var_disp, *arg_disp;
+    jsdisp_t *var_disp;
     HRESULT hres;
-
-    static const WCHAR argumentsW[] = {'a','r','g','u','m','e','n','t','s',0};
 
     hres = create_dispex(ctx, NULL, NULL, &var_disp);
     if(FAILED(hres))
         return hres;
 
-    hres = create_arguments(ctx, (IDispatch*)_IDispatchEx_(&function->dispex),
-            dp, ei, caller, &arg_disp);
-    if(SUCCEEDED(hres)) {
-        VARIANT var;
-
-        V_VT(&var) = VT_DISPATCH;
-        V_DISPATCH(&var) = (IDispatch*)_IDispatchEx_(arg_disp);
-        hres = jsdisp_propput_name(var_disp, argumentsW, &var, ei, caller);
-        jsdisp_release(arg_disp);
-    }
-
-    if(SUCCEEDED(hres))
-        hres = init_parameters(var_disp, function, dp, ei, caller);
+    hres = init_parameters(var_disp, function, argc, argv);
     if(FAILED(hres)) {
         jsdisp_release(var_disp);
         return hres;
@@ -191,68 +197,91 @@ static HRESULT create_var_disp(script_ctx_t *ctx, FunctionInstance *function, DI
     return S_OK;
 }
 
-static HRESULT invoke_source(script_ctx_t *ctx, FunctionInstance *function, IDispatch *this_obj, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
+static HRESULT invoke_source(script_ctx_t *ctx, FunctionInstance *function, IDispatch *this_obj, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
-    DispatchEx *var_disp;
+    jsdisp_t *var_disp, *arg_disp;
     exec_ctx_t *exec_ctx;
     scope_chain_t *scope;
     HRESULT hres;
 
-    if(!function->source) {
+    if(!function->func_code) {
         FIXME("no source\n");
         return E_FAIL;
     }
 
-    hres = create_var_disp(ctx, function, dp, ei, caller, &var_disp);
+    hres = create_var_disp(ctx, function, argc, argv, &var_disp);
     if(FAILED(hres))
         return hres;
 
-    hres = scope_push(function->scope_chain, var_disp, &scope);
-    if(SUCCEEDED(hres)) {
-        hres = create_exec_ctx(ctx, this_obj, var_disp, scope, &exec_ctx);
-        scope_release(scope);
+    hres = create_arguments(ctx, function, var_disp, argc, argv, &arg_disp);
+    if(FAILED(hres)) {
+        jsdisp_release(var_disp);
+        return hres;
     }
-    jsdisp_release(var_disp);
-    if(FAILED(hres))
+
+    hres = jsdisp_propput(var_disp, argumentsW, PROPF_DONTDELETE, jsval_obj(arg_disp));
+    if(FAILED(hres)) {
+        jsdisp_release(arg_disp);
+        jsdisp_release(var_disp);
         return hres;
+    }
 
-    hres = exec_source(exec_ctx, function->parser, function->source, EXECT_FUNCTION, ei, retv);
-    exec_release(exec_ctx);
+    hres = scope_push(function->scope_chain, var_disp, to_disp(var_disp), &scope);
+    if(SUCCEEDED(hres)) {
+        hres = create_exec_ctx(ctx, this_obj, var_disp, scope, FALSE, &exec_ctx);
+        scope_release(scope);
 
+        if(SUCCEEDED(hres)) {
+            jsdisp_t *prev_args;
+
+            prev_args = function->arguments;
+            function->arguments = arg_disp;
+            hres = exec_source(exec_ctx, function->code, function->func_code, FALSE, r);
+            function->arguments = prev_args;
+
+            exec_release(exec_ctx);
+        }
+    }
+
+    /* Reset arguments value to cut the reference cycle. Note that since all activation contexts have
+     * their own arguments property, it's impossible to use prototype's one during name lookup */
+    jsdisp_propput_name(var_disp, argumentsW, jsval_undefined());
+
+    jsdisp_release(arg_disp);
+    jsdisp_release(var_disp);
     return hres;
 }
 
-static HRESULT invoke_constructor(script_ctx_t *ctx, FunctionInstance *function, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
+static HRESULT invoke_constructor(script_ctx_t *ctx, FunctionInstance *function, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
-    DispatchEx *this_obj;
-    VARIANT var;
+    jsdisp_t *this_obj;
+    jsval_t var;
     HRESULT hres;
 
     hres = create_object(ctx, &function->dispex, &this_obj);
     if(FAILED(hres))
         return hres;
 
-    hres = invoke_source(ctx, function, (IDispatch*)_IDispatchEx_(this_obj), dp, &var, ei, caller);
+    hres = invoke_source(ctx, function, to_disp(this_obj), argc, argv, &var);
     if(FAILED(hres)) {
         jsdisp_release(this_obj);
         return hres;
     }
 
-    V_VT(retv) = VT_DISPATCH;
-    if(V_VT(&var) == VT_DISPATCH) {
+    if(is_object_instance(var)) {
         jsdisp_release(this_obj);
-        V_DISPATCH(retv) = V_DISPATCH(&var);
+        *r = var;
     }else {
-        VariantClear(&var);
-        V_DISPATCH(retv) = (IDispatch*)_IDispatchEx_(this_obj);
+        jsval_release(var);
+        *r = jsval_obj(this_obj);
     }
     return S_OK;
 }
 
-static HRESULT invoke_value_proc(script_ctx_t *ctx, FunctionInstance *function, IDispatch *this_disp, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
+static HRESULT invoke_value_proc(script_ctx_t *ctx, FunctionInstance *function, IDispatch *this_disp, WORD flags,
+        unsigned argc, jsval_t *argv, jsval_t *r)
 {
     vdisp_t vthis;
     HRESULT hres;
@@ -264,24 +293,24 @@ static HRESULT invoke_value_proc(script_ctx_t *ctx, FunctionInstance *function, 
     else
         set_jsdisp(&vthis, ctx->global);
 
-    hres = function->value_proc(ctx, &vthis, flags, dp, retv, ei, caller);
+    hres = function->value_proc(ctx, &vthis, flags, argc, argv, r);
 
     vdisp_release(&vthis);
     return hres;
 }
 
-static HRESULT call_function(script_ctx_t *ctx, FunctionInstance *function, IDispatch *this_obj, DISPPARAMS *args,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
+static HRESULT call_function(script_ctx_t *ctx, FunctionInstance *function, IDispatch *this_obj,
+        unsigned argc, jsval_t *argv, jsval_t *r)
 {
     if(function->value_proc)
-        return invoke_value_proc(ctx, function, this_obj, DISPATCH_METHOD, args, retv, ei, caller);
+        return invoke_value_proc(ctx, function, this_obj, DISPATCH_METHOD, argc, argv, r);
 
-    return invoke_source(ctx, function, this_obj, args, retv, ei, caller);
+    return invoke_source(ctx, function, this_obj, argc, argv, r);
 }
 
-static HRESULT function_to_string(FunctionInstance *function, BSTR *ret)
+static HRESULT function_to_string(FunctionInstance *function, jsstr_t **ret)
 {
-    BSTR str;
+    jsstr_t *str;
 
     static const WCHAR native_prefixW[] = {'\n','f','u','n','c','t','i','o','n',' '};
     static const WCHAR native_suffixW[] =
@@ -291,15 +320,15 @@ static HRESULT function_to_string(FunctionInstance *function, BSTR *ret)
         DWORD name_len;
 
         name_len = strlenW(function->name);
-        str = SysAllocStringLen(NULL, sizeof(native_prefixW) + name_len*sizeof(WCHAR) + sizeof(native_suffixW));
+        str = jsstr_alloc_buf((sizeof(native_prefixW)+sizeof(native_suffixW))/sizeof(WCHAR) + name_len);
         if(!str)
             return E_OUTOFMEMORY;
 
-        memcpy(str, native_prefixW, sizeof(native_prefixW));
-        memcpy(str + sizeof(native_prefixW)/sizeof(WCHAR), function->name, name_len*sizeof(WCHAR));
-        memcpy(str + sizeof(native_prefixW)/sizeof(WCHAR) + name_len, native_suffixW, sizeof(native_suffixW));
+        memcpy(str->str, native_prefixW, sizeof(native_prefixW));
+        memcpy(str->str + sizeof(native_prefixW)/sizeof(WCHAR), function->name, name_len*sizeof(WCHAR));
+        memcpy(str->str + sizeof(native_prefixW)/sizeof(WCHAR) + name_len, native_suffixW, sizeof(native_suffixW));
     }else {
-        str = SysAllocStringLen(function->src_str, function->src_len);
+        str = jsstr_alloc_len(function->func_code->source, function->func_code->source_len);
         if(!str)
             return E_OUTOFMEMORY;
     }
@@ -308,8 +337,27 @@ static HRESULT function_to_string(FunctionInstance *function, BSTR *ret)
     return S_OK;
 }
 
-static HRESULT Function_length(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+HRESULT Function_invoke(jsdisp_t *func_this, IDispatch *jsthis, WORD flags, unsigned argc, jsval_t *argv, jsval_t *r)
+{
+    FunctionInstance *function;
+
+    TRACE("func %p this %p\n", func_this, jsthis);
+
+    assert(is_class(func_this, JSCLASS_FUNCTION));
+    function = (FunctionInstance*)func_this;
+
+    if(function->value_proc)
+        return invoke_value_proc(function->dispex.ctx, function, jsthis, flags, argc, argv, r);
+
+    if(flags == DISPATCH_CONSTRUCT)
+        return invoke_constructor(function->dispex.ctx, function, argc, argv, r);
+
+    assert(flags == DISPATCH_METHOD);
+    return invoke_source(function->dispex.ctx, function, jsthis, argc, argv, r);
+}
+
+static HRESULT Function_length(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
     FunctionInstance *This = function_from_vdisp(jsthis);
 
@@ -317,8 +365,7 @@ static HRESULT Function_length(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, D
 
     switch(flags) {
     case DISPATCH_PROPERTYGET:
-        V_VT(retv) = VT_I4;
-        V_I4(retv) = This->length;
+        *r = jsval_number(This->length);
         break;
     default:
         FIXME("unimplemented flags %x\n", flags);
@@ -328,98 +375,91 @@ static HRESULT Function_length(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, D
     return S_OK;
 }
 
-static HRESULT Function_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT Function_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
     FunctionInstance *function;
-    BSTR str;
+    jsstr_t *str;
     HRESULT hres;
 
     TRACE("\n");
 
     if(!(function = function_this(jsthis)))
-        return throw_type_error(ctx, ei, IDS_NOT_FUNC, NULL);
+        return throw_type_error(ctx, JS_E_FUNCTION_EXPECTED, NULL);
 
     hres = function_to_string(function, &str);
     if(FAILED(hres))
         return hres;
 
-    if(retv) {
-        V_VT(retv) = VT_BSTR;
-        V_BSTR(retv) = str;
-    }else {
-        SysFreeString(str);
-    }
+    if(r)
+        *r = jsval_string(str);
+    else
+        jsstr_release(str);
     return S_OK;
 }
 
-static HRESULT array_to_args(script_ctx_t *ctx, DispatchEx *arg_array, jsexcept_t *ei, IServiceProvider *caller,
-        DISPPARAMS *args)
+static HRESULT array_to_args(script_ctx_t *ctx, jsdisp_t *arg_array, unsigned *argc, jsval_t **ret)
 {
-    VARIANT var, *argv;
+    jsval_t *argv, val;
     DWORD length, i;
     HRESULT hres;
 
-    hres = jsdisp_propget_name(arg_array, lengthW, &var, ei, NULL/*FIXME*/);
+    hres = jsdisp_propget_name(arg_array, lengthW, &val);
     if(FAILED(hres))
         return hres;
 
-    hres = to_uint32(ctx, &var, ei, &length);
-    VariantClear(&var);
+    hres = to_uint32(ctx, val, &length);
+    jsval_release(val);
     if(FAILED(hres))
         return hres;
 
-    argv = heap_alloc(length * sizeof(VARIANT));
+    argv = heap_alloc(length * sizeof(*argv));
     if(!argv)
         return E_OUTOFMEMORY;
 
     for(i=0; i<length; i++) {
-        hres = jsdisp_get_idx(arg_array, i, argv+i, ei, caller);
-        if(hres == DISP_E_UNKNOWNNAME)
-            V_VT(argv+i) = VT_EMPTY;
-        else if(FAILED(hres)) {
+        hres = jsdisp_get_idx(arg_array, i, argv+i);
+        if(hres == DISP_E_UNKNOWNNAME) {
+            argv[i] = jsval_undefined();
+        }else if(FAILED(hres)) {
             while(i--)
-                VariantClear(argv+i);
+                jsval_release(argv[i]);
             heap_free(argv);
             return hres;
         }
     }
 
-    args->cArgs = length;
-    args->rgvarg = argv;
+    *argc = length;
+    *ret = argv;
     return S_OK;
 }
 
-static HRESULT Function_apply(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
+static HRESULT Function_apply(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv, jsval_t *r)
 {
     FunctionInstance *function;
-    DISPPARAMS args = {NULL,NULL,0,0};
-    DWORD argc, i;
+    jsval_t *args = NULL;
+    unsigned i, cnt = 0;
     IDispatch *this_obj = NULL;
     HRESULT hres = S_OK;
 
     TRACE("\n");
 
     if(!(function = function_this(jsthis)))
-        return throw_type_error(ctx, ei, IDS_NOT_FUNC, NULL);
+        return throw_type_error(ctx, JS_E_FUNCTION_EXPECTED, NULL);
 
-    argc = arg_cnt(dp);
     if(argc) {
-        VARIANT *v = get_arg(dp,0);
-
-        if(V_VT(v) != VT_EMPTY && V_VT(v) != VT_NULL) {
-            hres = to_object(ctx, v, &this_obj);
+        if(!is_undefined(argv[0]) && !is_null(argv[0])) {
+            hres = to_object(ctx, argv[0], &this_obj);
             if(FAILED(hres))
                 return hres;
         }
     }
 
     if(argc >= 2) {
-        DispatchEx *arg_array = NULL;
+        jsdisp_t *arg_array = NULL;
 
-        if(V_VT(get_arg(dp,1)) == VT_DISPATCH) {
-            arg_array = iface_to_jsdisp((IUnknown*)V_DISPATCH(get_arg(dp,1)));
+        if(is_object_instance(argv[1])) {
+            arg_array = iface_to_jsdisp((IUnknown*)get_object(argv[1]));
             if(arg_array &&
                (!is_class(arg_array, JSCLASS_ARRAY) && !is_class(arg_array, JSCLASS_ARGUMENTS) )) {
                 jsdisp_release(arg_array);
@@ -428,7 +468,7 @@ static HRESULT Function_apply(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DI
         }
 
         if(arg_array) {
-            hres = array_to_args(ctx, arg_array, ei, caller, &args);
+            hres = array_to_args(ctx, arg_array, &cnt, &args);
             jsdisp_release(arg_array);
         }else {
             FIXME("throw TypeError\n");
@@ -436,55 +476,49 @@ static HRESULT Function_apply(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DI
         }
     }
 
-    hres = call_function(ctx, function, this_obj, &args, retv, ei, caller);
+    if(SUCCEEDED(hres))
+        hres = call_function(ctx, function, this_obj, cnt, args, r);
 
     if(this_obj)
         IDispatch_Release(this_obj);
-    for(i=0; i<args.cArgs; i++)
-        VariantClear(args.rgvarg+i);
-    heap_free(args.rgvarg);
+    for(i=0; i < cnt; i++)
+        jsval_release(args[i]);
+    heap_free(args);
     return hres;
 }
 
-static HRESULT Function_call(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
+static HRESULT Function_call(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
     FunctionInstance *function;
-    DISPPARAMS args = {NULL,NULL,0,0};
     IDispatch *this_obj = NULL;
-    DWORD argc;
+    unsigned cnt = 0;
     HRESULT hres;
 
     TRACE("\n");
 
     if(!(function = function_this(jsthis)))
-        return throw_type_error(ctx, ei, IDS_NOT_FUNC, NULL);
+        return throw_type_error(ctx, JS_E_FUNCTION_EXPECTED, NULL);
 
-    argc = arg_cnt(dp);
     if(argc) {
-        VARIANT *v = get_arg(dp,0);
-
-        if(V_VT(v) != VT_EMPTY && V_VT(v) != VT_NULL) {
-            hres = to_object(ctx, v, &this_obj);
+        if(!is_undefined(argv[0]) && !is_null(argv[0])) {
+            hres = to_object(ctx, argv[0], &this_obj);
             if(FAILED(hres))
                 return hres;
         }
 
-        args.cArgs = argc-1;
+        cnt = argc-1;
     }
 
-    if(args.cArgs)
-        args.rgvarg = dp->rgvarg + dp->cArgs - args.cArgs-1;
-
-    hres = call_function(ctx, function, this_obj, &args, retv, ei, caller);
+    hres = call_function(ctx, function, this_obj, cnt, argv+1, r);
 
     if(this_obj)
         IDispatch_Release(this_obj);
     return hres;
 }
 
-HRESULT Function_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
+HRESULT Function_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
     FunctionInstance *function;
 
@@ -499,29 +533,24 @@ HRESULT Function_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAM
 
     switch(flags) {
     case DISPATCH_METHOD:
-        if(function->value_proc)
-            return invoke_value_proc(ctx, function, get_this(dp), flags, dp, retv, ei, caller);
-
-        return invoke_source(ctx, function, get_this(dp), dp, retv, ei, caller);
+        assert(function->value_proc != NULL);
+        return invoke_value_proc(ctx, function, NULL, flags, argc, argv, r);
 
     case DISPATCH_PROPERTYGET: {
         HRESULT hres;
-        BSTR str;
+        jsstr_t *str;
 
         hres = function_to_string(function, &str);
         if(FAILED(hres))
             return hres;
 
-        V_VT(retv) = VT_BSTR;
-        V_BSTR(retv) = str;
+        *r = jsval_string(str);
         break;
     }
 
     case DISPATCH_CONSTRUCT:
-        if(function->value_proc)
-            return invoke_value_proc(ctx, function, get_this(dp), flags, dp, retv, ei, caller);
-
-        return invoke_constructor(ctx, function, dp, retv, ei, caller);
+        assert(function->value_proc != NULL);
+        return invoke_value_proc(ctx, function, NULL, flags, argc, argv, r);
 
     default:
         FIXME("not implemented flags %x\n", flags);
@@ -531,12 +560,35 @@ HRESULT Function_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAM
     return S_OK;
 }
 
-static void Function_destructor(DispatchEx *dispex)
+static HRESULT Function_arguments(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
+        unsigned argc, jsval_t *argv, jsval_t *r)
+{
+    FunctionInstance *function = (FunctionInstance*)jsthis->u.jsdisp;
+    HRESULT hres = S_OK;
+
+    TRACE("\n");
+
+    switch(flags) {
+    case DISPATCH_PROPERTYGET: {
+        *r = function->arguments ? jsval_obj(jsdisp_addref(function->arguments)) : jsval_null();
+        break;
+    }
+    case DISPATCH_PROPERTYPUT:
+        break;
+    default:
+        FIXME("unimplemented flags %x\n", flags);
+        hres = E_NOTIMPL;
+    }
+
+    return hres;
+}
+
+static void Function_destructor(jsdisp_t *dispex)
 {
     FunctionInstance *This = (FunctionInstance*)dispex;
 
-    if(This->parser)
-        parser_release(This->parser);
+    if(This->code)
+        release_bytecode(This->code);
     if(This->scope_chain)
         scope_release(This->scope_chain);
     heap_free(This);
@@ -544,6 +596,7 @@ static void Function_destructor(DispatchEx *dispex)
 
 static const builtin_prop_t Function_props[] = {
     {applyW,                 Function_apply,                 PROPF_METHOD|2},
+    {argumentsW,             Function_arguments,             0},
     {callW,                  Function_call,                  PROPF_METHOD|1},
     {lengthW,                Function_length,                0},
     {toStringW,              Function_toString,              PROPF_METHOD}
@@ -558,8 +611,22 @@ static const builtin_info_t Function_info = {
     NULL
 };
 
+static const builtin_prop_t FunctionInst_props[] = {
+    {argumentsW,             Function_arguments,             0},
+    {lengthW,                Function_length,                0}
+};
+
+static const builtin_info_t FunctionInst_info = {
+    JSCLASS_FUNCTION,
+    {NULL, Function_value, 0},
+    sizeof(FunctionInst_props)/sizeof(*FunctionInst_props),
+    FunctionInst_props,
+    Function_destructor,
+    NULL
+};
+
 static HRESULT create_function(script_ctx_t *ctx, const builtin_info_t *builtin_info, DWORD flags,
-        BOOL funcprot, DispatchEx *prototype, FunctionInstance **ret)
+        BOOL funcprot, jsdisp_t *prototype, FunctionInstance **ret)
 {
     FunctionInstance *function;
     HRESULT hres;
@@ -569,13 +636,15 @@ static HRESULT create_function(script_ctx_t *ctx, const builtin_info_t *builtin_
         return E_OUTOFMEMORY;
 
     if(funcprot)
-        hres = init_dispex(&function->dispex, ctx, &Function_info, prototype);
+        hres = init_dispex(&function->dispex, ctx, builtin_info, prototype);
     else if(builtin_info)
         hres = init_dispex_from_constr(&function->dispex, ctx, builtin_info, ctx->function_constr);
     else
-        hres = init_dispex_from_constr(&function->dispex, ctx, &Function_info, ctx->function_constr);
-    if(FAILED(hres))
+        hres = init_dispex_from_constr(&function->dispex, ctx, &FunctionInst_info, ctx->function_constr);
+    if(FAILED(hres)) {
+        heap_free(function);
         return hres;
+    }
 
     function->flags = flags;
     function->length = flags & PROPF_ARGMASK;
@@ -584,20 +653,13 @@ static HRESULT create_function(script_ctx_t *ctx, const builtin_info_t *builtin_
     return S_OK;
 }
 
-static HRESULT set_prototype(script_ctx_t *ctx, DispatchEx *dispex, DispatchEx *prototype)
+static inline HRESULT set_prototype(script_ctx_t *ctx, jsdisp_t *dispex, jsdisp_t *prototype)
 {
-    jsexcept_t jsexcept;
-    VARIANT var;
-
-    V_VT(&var) = VT_DISPATCH;
-    V_DISPATCH(&var) = (IDispatch*)_IDispatchEx_(prototype);
-    memset(&jsexcept, 0, sizeof(jsexcept));
-
-    return jsdisp_propput_name(dispex, prototypeW, &var, &jsexcept, NULL/*FIXME*/);
+    return jsdisp_propput_dontenum(dispex, prototypeW, jsval_obj(prototype));
 }
 
 HRESULT create_builtin_function(script_ctx_t *ctx, builtin_invoke_t value_proc, const WCHAR *name,
-        const builtin_info_t *builtin_info, DWORD flags, DispatchEx *prototype, DispatchEx **ret)
+        const builtin_info_t *builtin_info, DWORD flags, jsdisp_t *prototype, jsdisp_t **ret)
 {
     FunctionInstance *function;
     HRESULT hres;
@@ -606,14 +668,8 @@ HRESULT create_builtin_function(script_ctx_t *ctx, builtin_invoke_t value_proc, 
     if(FAILED(hres))
         return hres;
 
-    if(builtin_info) {
-        VARIANT var;
-
-        V_VT(&var) = VT_I4;
-        V_I4(&var) = function->length;
-        hres = jsdisp_propput_const(&function->dispex, lengthW, &var);
-    }
-
+    if(builtin_info)
+        hres = jsdisp_propput_const(&function->dispex, lengthW, jsval_number(function->length));
     if(SUCCEEDED(hres))
         hres = set_prototype(ctx, &function->dispex, prototype);
     if(FAILED(hres)) {
@@ -628,22 +684,49 @@ HRESULT create_builtin_function(script_ctx_t *ctx, builtin_invoke_t value_proc, 
     return S_OK;
 }
 
-HRESULT create_source_function(parser_ctx_t *ctx, parameter_t *parameters, source_elements_t *source,
-        scope_chain_t *scope_chain, const WCHAR *src_str, DWORD src_len, DispatchEx **ret)
+static HRESULT set_constructor_prop(script_ctx_t *ctx, jsdisp_t *constr, jsdisp_t *prot)
 {
-    FunctionInstance *function;
-    DispatchEx *prototype;
-    parameter_t *iter;
-    DWORD length = 0;
+    static const WCHAR constructorW[] = {'c','o','n','s','t','r','u','c','t','o','r',0};
+
+    return jsdisp_propput_dontenum(prot, constructorW, jsval_obj(constr));
+}
+
+HRESULT create_builtin_constructor(script_ctx_t *ctx, builtin_invoke_t value_proc, const WCHAR *name,
+        const builtin_info_t *builtin_info, DWORD flags, jsdisp_t *prototype, jsdisp_t **ret)
+{
+    jsdisp_t *constr;
     HRESULT hres;
 
-    hres = create_object(ctx->script, NULL, &prototype);
+    hres = create_builtin_function(ctx, value_proc, name, builtin_info, flags, prototype, &constr);
     if(FAILED(hres))
         return hres;
 
-    hres = create_function(ctx->script, NULL, PROPF_CONSTR, FALSE, NULL, &function);
+    hres = set_constructor_prop(ctx, constr, prototype);
+    if(FAILED(hres)) {
+        jsdisp_release(constr);
+        return hres;
+    }
+
+    *ret = constr;
+    return S_OK;
+}
+
+HRESULT create_source_function(script_ctx_t *ctx, bytecode_t *code, function_code_t *func_code,
+        scope_chain_t *scope_chain, jsdisp_t **ret)
+{
+    FunctionInstance *function;
+    jsdisp_t *prototype;
+    HRESULT hres;
+
+    hres = create_object(ctx, NULL, &prototype);
+    if(FAILED(hres))
+        return hres;
+
+    hres = create_function(ctx, NULL, PROPF_CONSTR, FALSE, NULL, &function);
     if(SUCCEEDED(hres)) {
-        hres = set_prototype(ctx->script, &function->dispex, prototype);
+        hres = set_prototype(ctx, &function->dispex, prototype);
+        if(SUCCEEDED(hres))
+            hres = set_constructor_prop(ctx, &function->dispex, prototype);
         if(FAILED(hres))
             jsdisp_release(&function->dispex);
     }
@@ -651,56 +734,46 @@ HRESULT create_source_function(parser_ctx_t *ctx, parameter_t *parameters, sourc
     if(FAILED(hres))
         return hres;
 
-    function->source = source;
-    function->parameters = parameters;
-
     if(scope_chain) {
         scope_addref(scope_chain);
         function->scope_chain = scope_chain;
     }
 
-    parser_addref(ctx);
-    function->parser = ctx;
-
-    for(iter = parameters; iter; iter = iter->next)
-        length++;
-    function->length = length;
-
-    function->src_str = src_str;
-    function->src_len = src_len;
+    bytecode_addref(code);
+    function->code = code;
+    function->func_code = func_code;
+    function->length = function->func_code->param_cnt;
 
     *ret = &function->dispex;
     return S_OK;
 }
 
-static HRESULT construct_function(script_ctx_t *ctx, DISPPARAMS *dp, jsexcept_t *ei, IDispatch **ret)
+static HRESULT construct_function(script_ctx_t *ctx, unsigned argc, jsval_t *argv, IDispatch **ret)
 {
-    function_expression_t *expr;
     WCHAR *str = NULL, *ptr;
-    DWORD argc, len = 0, l;
-    parser_ctx_t *parser;
-    DispatchEx *function;
-    BSTR *params = NULL;
-    int i=0, j=0;
+    unsigned len = 0, i = 0;
+    bytecode_t *code;
+    jsdisp_t *function;
+    jsstr_t **params = NULL;
+    int j = 0;
     HRESULT hres = S_OK;
 
     static const WCHAR function_anonymousW[] = {'f','u','n','c','t','i','o','n',' ','a','n','o','n','y','m','o','u','s','('};
     static const WCHAR function_beginW[] = {')',' ','{','\n'};
     static const WCHAR function_endW[] = {'\n','}',0};
 
-    argc = arg_cnt(dp);
     if(argc) {
-        params = heap_alloc(argc*sizeof(BSTR));
+        params = heap_alloc(argc*sizeof(*params));
         if(!params)
             return E_OUTOFMEMORY;
 
         if(argc > 2)
             len = (argc-2)*2; /* separating commas */
         for(i=0; i < argc; i++) {
-            hres = to_string(ctx, get_arg(dp,i), ei, params+i);
+            hres = to_string(ctx, argv[i], params+i);
             if(FAILED(hres))
                 break;
-            len += SysStringLen(params[i]);
+            len += jsstr_length(params[i]);
         }
     }
 
@@ -712,9 +785,7 @@ static HRESULT construct_function(script_ctx_t *ctx, DISPPARAMS *dp, jsexcept_t 
             ptr = str + sizeof(function_anonymousW)/sizeof(WCHAR);
             if(argc > 1) {
                 while(1) {
-                    l = SysStringLen(params[j]);
-                    memcpy(ptr, params[j], l*sizeof(WCHAR));
-                    ptr += l;
+                    ptr += jsstr_flush(params[j], ptr);
                     if(++j == argc-1)
                         break;
                     *ptr++ = ',';
@@ -723,11 +794,8 @@ static HRESULT construct_function(script_ctx_t *ctx, DISPPARAMS *dp, jsexcept_t 
             }
             memcpy(ptr, function_beginW, sizeof(function_beginW));
             ptr += sizeof(function_beginW)/sizeof(WCHAR);
-            if(argc) {
-                l = SysStringLen(params[argc-1]);
-                memcpy(ptr, params[argc-1], l*sizeof(WCHAR));
-                ptr += l;
-            }
+            if(argc)
+                ptr += jsstr_flush(params[argc-1], ptr);
             memcpy(ptr, function_endW, sizeof(function_endW));
 
             TRACE("%s\n", debugstr_w(str));
@@ -736,36 +804,34 @@ static HRESULT construct_function(script_ctx_t *ctx, DISPPARAMS *dp, jsexcept_t 
         }
     }
 
-    while(--i >= 0)
-        SysFreeString(params[i]);
+    while(i)
+        jsstr_release(params[--i]);
     heap_free(params);
     if(FAILED(hres))
         return hres;
 
-    hres = script_parse(ctx, str, NULL, &parser);
+    hres = compile_script(ctx, str, NULL, NULL, FALSE, FALSE, &code);
     heap_free(str);
     if(FAILED(hres))
         return hres;
 
-    if(!parser->source || !parser->source->functions || parser->source->functions->next || parser->source->variables) {
+    if(code->global_code.func_cnt != 1 || code->global_code.var_cnt) {
         ERR("Invalid parser result!\n");
-        parser_release(parser);
+        release_bytecode(code);
         return E_UNEXPECTED;
     }
-    expr = parser->source->functions->expr;
 
-    hres = create_source_function(parser, expr->parameter_list, expr->source_elements, NULL, expr->src_str,
-            expr->src_len, &function);
-    parser_release(parser);
+    hres = create_source_function(ctx, code, code->global_code.funcs, NULL, &function);
+    release_bytecode(code);
     if(FAILED(hres))
         return hres;
 
-    *ret = (IDispatch*)_IDispatchEx_(function);
+    *ret = to_disp(function);
     return S_OK;
 }
 
-static HRESULT FunctionConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT FunctionConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
     HRESULT hres;
 
@@ -775,12 +841,11 @@ static HRESULT FunctionConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD fla
     case DISPATCH_CONSTRUCT: {
         IDispatch *ret;
 
-        hres = construct_function(ctx, dp, ei, &ret);
+        hres = construct_function(ctx, argc, argv, &ret);
         if(FAILED(hres))
             return hres;
 
-        V_VT(retv) = VT_DISPATCH;
-        V_DISPATCH(retv) = ret;
+        *r = jsval_disp(ret);
         break;
     }
     default:
@@ -791,32 +856,34 @@ static HRESULT FunctionConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD fla
     return S_OK;
 }
 
-static HRESULT FunctionProt_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT FunctionProt_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
     FIXME("\n");
     return E_NOTIMPL;
 }
 
-HRESULT init_function_constr(script_ctx_t *ctx, DispatchEx *object_prototype)
+HRESULT init_function_constr(script_ctx_t *ctx, jsdisp_t *object_prototype)
 {
     FunctionInstance *prot, *constr;
     HRESULT hres;
 
     static const WCHAR FunctionW[] = {'F','u','n','c','t','i','o','n',0};
 
-    hres = create_function(ctx, NULL, PROPF_CONSTR, TRUE, object_prototype, &prot);
+    hres = create_function(ctx, &Function_info, PROPF_CONSTR, TRUE, object_prototype, &prot);
     if(FAILED(hres))
         return hres;
 
     prot->value_proc = FunctionProt_value;
     prot->name = prototypeW;
 
-    hres = create_function(ctx, NULL, PROPF_CONSTR|1, TRUE, &prot->dispex, &constr);
+    hres = create_function(ctx, &FunctionInst_info, PROPF_CONSTR|1, TRUE, &prot->dispex, &constr);
     if(SUCCEEDED(hres)) {
         constr->value_proc = FunctionConstr_value;
         constr->name = FunctionW;
         hres = set_prototype(ctx, &constr->dispex, &prot->dispex);
+        if(SUCCEEDED(hres))
+            hres = set_constructor_prop(ctx, &constr->dispex, &prot->dispex);
         if(FAILED(hres))
             jsdisp_release(&constr->dispex);
     }

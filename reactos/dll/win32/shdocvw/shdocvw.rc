@@ -16,70 +16,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WINE_OLESELFREGISTER
+#include <windef.h>
+
+1 WINE_REGISTRY shdocvw_v1.rgs
+
+1 TYPELIB shdocvw_v1.tlb
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
 #define WINE_FILEDESCRIPTION_STR "Wine core dll"
 #define WINE_FILENAME_STR "shdocvw.dll"
 #define WINE_FILEVERSION 6,0,2900,2180
 #define WINE_FILEVERSION_STR "6.0.2900.2180"
 #define WINE_PRODUCTVERSION 6,0,2900,2180
 #define WINE_PRODUCTVERSION_STR "6.0.2900.2180"
+#define WINE_EXTRAVALUES VALUE "OLESelfRegister",""
 
-#include "wine/wine_common_ver.rc"
-
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-
-/* @makedep: shdocvw_v1.tlb */
-1 TYPELIB shdocvw_v1.tlb
-
-/* @makedep: shdocvw.inf */
-REGINST REGINST shdocvw.inf
-
-/* @makedep: ietoolbar.bmp */
-IDB_IETOOLBAR BITMAP ietoolbar.bmp
-
-#ifdef LANGUAGE_DE_DE
-    #include "De.rc"
-#endif
-#ifdef LANGUAGE_EN_US
-    #include "En.rc"
-#endif
-#ifdef LANGUAGE_ES_ES
-    #include "Es.rc"
-#endif
-#ifdef LANGUAGE_FR_FR
-    #include "Fr.rc"
-#endif
-#ifdef LANGUAGE_HE_IL
-    #include "He.rc"
-#endif
-#ifdef LANGUAGE_IT_IT
-    #include "It.rc"
-#endif
-#ifdef LANGUAGE_KO_KR
-    #include "Ko.rc"
-#endif
-#ifdef LANGUAGE_LT_LT
-    #include "Lt.rc"
-#endif
-#ifdef LANGUAGE_NL_NL
-    #include "Nl.rc"
-#endif
-//#include "Pl.rc"
-#ifdef LANGUAGE_PT_PT
-    #include "Pt.rc"
-#endif
-#ifdef LANGUAGE_RO_RO
-    #include "Ro.rc"
-#endif
-#ifdef LANGUAGE_SL_SI
-    #include "Si.rc"
-#endif
-#ifdef LANGUAGE_SR_SP
-    #include "Sr.rc"
-#endif
-#ifdef LANGUAGE_SV_SE
-    #include "Sv.rc"
-#endif
-#ifdef LANGUAGE_UK_UA
-    #include "Uk.rc"
-#endif
+#include <wine/wine_common_ver.rc>

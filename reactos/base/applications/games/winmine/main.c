@@ -18,13 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_LEAN_AND_MEAN
-
-#include <string.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <wingdi.h>
 #include <time.h>
-#include <windows.h>
 #include <stdlib.h>
 #include <shellapi.h>
+
 #include "main.h"
 #include "resource.h"
 
@@ -105,7 +108,7 @@ static void LoadBoard( BOARD *p_board )
         p_board->IsMarkQ = TRUE;
 
     for( i = 0; i < 3; i++ ) {
-        wsprintf( key_name, "Name%d", i+1 );
+        wsprintf( key_name, "Name%u", i+1 );
         size = sizeof( data );
         if( RegQueryValueEx( hkey, key_name, NULL, &type,
                 (LPBYTE) data, &size ) == ERROR_SUCCESS )
@@ -115,7 +118,7 @@ static void LoadBoard( BOARD *p_board )
     }
 
     for( i = 0; i < 3; i++ ) {
-        wsprintf( key_name, "Time%d", i+1 );
+        wsprintf( key_name, "Time%u", i+1 );
         size = sizeof( p_board->best_time[i] );
         if( !RegQueryValueEx( hkey, key_name, NULL, &type,
                 (LPBYTE) &p_board->best_time[i], &size ) == ERROR_SUCCESS )

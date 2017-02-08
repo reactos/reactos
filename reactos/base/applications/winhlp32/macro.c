@@ -19,16 +19,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_LEAN_AND_MEAN
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <commdlg.h>
+#include <shellapi.h>
+#include <wine/debug.h>
 
-#include <stdio.h>
-
-#include "windows.h"
-#include "commdlg.h"
-#include "shellapi.h"
 #include "winhelp.h"
-
-#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(winhelp);
 
@@ -61,7 +61,7 @@ static WINHELP_BUTTON**        MACRO_LookupButton(WINHELP_WINDOW* win, LPCSTR na
     WINHELP_BUTTON**    b;
 
     for (b = &win->first_button; *b; b = &(*b)->next)
-        if (!lstrcmpi(name, (*b)->lpszID)) break;
+        if (!lstrcmpiA(name, (*b)->lpszID)) break;
     return b;
 }
 
@@ -79,7 +79,7 @@ void CALLBACK MACRO_CreateButton(LPCSTR id, LPCSTR name, LPCSTR macro)
 
     WINE_TRACE("(\"%s\", \"%s\", %s)\n", id, name, macro);
 
-    size = sizeof(WINHELP_BUTTON) + lstrlen(id) + lstrlen(name) + lstrlen(macro) + 3;
+    size = sizeof(WINHELP_BUTTON) + strlen(id) + strlen(name) + strlen(macro) + 3;
 
     button = HeapAlloc(GetProcessHeap(), 0, size);
     if (!button) return;
@@ -89,15 +89,15 @@ void CALLBACK MACRO_CreateButton(LPCSTR id, LPCSTR name, LPCSTR macro)
 
     ptr = (char*)button + sizeof(WINHELP_BUTTON);
 
-    lstrcpy(ptr, id);
+    strcpy(ptr, id);
     button->lpszID = ptr;
-    ptr += lstrlen(id) + 1;
+    ptr += strlen(id) + 1;
 
-    lstrcpy(ptr, name);
+    strcpy(ptr, name);
     button->lpszName = ptr;
-    ptr += lstrlen(name) + 1;
+    ptr += strlen(name) + 1;
 
-    lstrcpy(ptr, macro);
+    strcpy(ptr, macro);
     button->lpszMacro = ptr;
 
     button->wParam = WH_FIRST_BUTTON;
@@ -236,8 +236,8 @@ static void CALLBACK MACRO_ChangeButtonBinding(LPCSTR id, LPCSTR macro)
     b = MACRO_LookupButton(win, id);
     if (!*b) {WINE_FIXME("Couldn't find button '%s'\n", id); return;}
 
-    size = sizeof(WINHELP_BUTTON) + lstrlen(id) +
-        lstrlen((*b)->lpszName) + lstrlen(macro) + 3;
+    size = sizeof(WINHELP_BUTTON) + strlen(id) +
+        strlen((*b)->lpszName) + strlen(macro) + 3;
 
     button = HeapAlloc(GetProcessHeap(), 0, size);
     if (!button) return;
@@ -248,15 +248,15 @@ static void CALLBACK MACRO_ChangeButtonBinding(LPCSTR id, LPCSTR macro)
 
     ptr = (char*)button + sizeof(WINHELP_BUTTON);
 
-    lstrcpy(ptr, id);
+    strcpy(ptr, id);
     button->lpszID = ptr;
-    ptr += lstrlen(id) + 1;
+    ptr += strlen(id) + 1;
 
-    lstrcpy(ptr, (*b)->lpszName);
+    strcpy(ptr, (*b)->lpszName);
     button->lpszName = ptr;
-    ptr += lstrlen((*b)->lpszName) + 1;
+    ptr += strlen((*b)->lpszName) + 1;
 
-    lstrcpy(ptr, macro);
+    strcpy(ptr, macro);
     button->lpszMacro = ptr;
 
     *b = button;
@@ -291,7 +291,7 @@ static void CALLBACK MACRO_CloseSecondarys(void)
     for (win = Globals.win_list; win; win = next)
     {
         next = win->next;
-        if (lstrcmpi(win->info->name, "main"))
+        if (lstrcmpiA(win->info->name, "main"))
             WINHELP_ReleaseWindow(win);
     }
 }
@@ -308,7 +308,7 @@ static void CALLBACK MACRO_CloseWindow(LPCSTR lpszWindow)
     for (win = Globals.win_list; win; win = next)
     {
         next = win->next;
-        if (!lstrcmpi(win->info->name, lpszWindow))
+        if (!lstrcmpiA(win->info->name, lpszWindow))
             WINHELP_ReleaseWindow(win);
     }
 }
@@ -415,7 +415,7 @@ static void CALLBACK MACRO_ExtInsertMenu(LPCSTR str1, LPCSTR str2, LPCSTR str3, 
 static BOOL CALLBACK MACRO_FileExist(LPCSTR str)
 {
     WINE_TRACE("(\"%s\")\n", str);
-    return GetFileAttributes(str) != INVALID_FILE_ATTRIBUTES;
+    return GetFileAttributesA(str) != INVALID_FILE_ATTRIBUTES;
 }
 
 void CALLBACK MACRO_FileOpen(void)
@@ -457,7 +457,7 @@ static void CALLBACK MACRO_FocusWindow(LPCSTR lpszWindow)
     if (!lpszWindow || !lpszWindow[0]) lpszWindow = "main";
 
     for (win = Globals.win_list; win; win = win->next)
-        if (!lstrcmpi(win->info->name, lpszWindow))
+        if (!lstrcmpiA(win->info->name, lpszWindow))
             SetFocus(win->hMainWnd);
 }
 
@@ -488,7 +488,29 @@ void CALLBACK MACRO_HelpOn(void)
 
 void CALLBACK MACRO_HelpOnTop(void)
 {
-    WINE_FIXME("()\n");
+    static BOOL on_top = FALSE;
+    WINHELP_WINDOW *win;
+    HWND main_wnd = NULL;
+    HMENU menu;
+
+    for (win = Globals.win_list; win; win = win->next)
+        if (!lstrcmpiA(win->info->name, "main"))
+            main_wnd = win->hMainWnd;
+    if (!main_wnd)
+    {
+        WINE_ERR("could not find the main window!\n");
+        return;
+    }
+    menu = GetMenu(main_wnd);
+
+    on_top = !on_top;
+    if (on_top) {
+        CheckMenuItem(menu, MNID_HELP_HELPTOP, MF_BYCOMMAND|MF_CHECKED);
+        SetWindowPos(main_wnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
+    } else {
+        CheckMenuItem(menu, MNID_HELP_HELPTOP, MF_BYCOMMAND|MF_UNCHECKED);
+        SetWindowPos(main_wnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
+    }
 }
 
 void CALLBACK MACRO_History(void)
@@ -497,7 +519,7 @@ void CALLBACK MACRO_History(void)
 
     if (Globals.active_win && !Globals.active_win->hHistoryWnd)
     {
-        HWND hWnd = CreateWindow(HISTORY_WIN_CLASS_NAME, "History", WS_OVERLAPPEDWINDOW,
+        HWND hWnd = CreateWindowA(HISTORY_WIN_CLASS_NAME, "History", WS_OVERLAPPEDWINDOW,
                                  0, 0, 0, 0, 0, 0, Globals.hInstance, Globals.active_win);
         ShowWindow(hWnd, SW_NORMAL);
     }
@@ -553,11 +575,11 @@ void CALLBACK MACRO_JumpContext(LPCSTR lpszPath, LPCSTR lpszWindow, LONG context
     HLPFILE*    hlpfile;
 
     WINE_TRACE("(\"%s\", \"%s\", %d)\n", lpszPath, lpszWindow, context);
-    hlpfile = WINHELP_LookupHelpFile(lpszPath);
-    /* Some madness: what user calls 'context', hlpfile calls 'map' */
-    WINHELP_OpenHelpWindow(HLPFILE_PageByMap, hlpfile, context,
-                           WINHELP_GetWindowInfo(hlpfile, lpszWindow),
-                           SW_NORMAL);
+    if ((hlpfile = WINHELP_LookupHelpFile(lpszPath)))
+        /* Some madness: what user calls 'context', hlpfile calls 'map' */
+        WINHELP_OpenHelpWindow(HLPFILE_PageByMap, hlpfile, context,
+                               WINHELP_GetWindowInfo(hlpfile, lpszWindow),
+                               SW_NORMAL);
 }
 
 void CALLBACK MACRO_JumpHash(LPCSTR lpszPath, LPCSTR lpszWindow, LONG lHash)
@@ -569,9 +591,10 @@ void CALLBACK MACRO_JumpHash(LPCSTR lpszPath, LPCSTR lpszWindow, LONG lHash)
         hlpfile = MACRO_CurrentWindow()->page->file;
     else
         hlpfile = WINHELP_LookupHelpFile(lpszPath);
-    WINHELP_OpenHelpWindow(HLPFILE_PageByHash, hlpfile, lHash,
-                           WINHELP_GetWindowInfo(hlpfile, lpszWindow),
-                           SW_NORMAL);
+    if (hlpfile)
+        WINHELP_OpenHelpWindow(HLPFILE_PageByHash, hlpfile, lHash,
+                               WINHELP_GetWindowInfo(hlpfile, lpszWindow),
+                               SW_NORMAL);
 }
 
 static void CALLBACK MACRO_JumpHelpOn(void)
@@ -691,7 +714,7 @@ static void CALLBACK MACRO_Prev(void)
 
 void CALLBACK MACRO_Print(void)
 {
-    PRINTDLG printer;
+    PRINTDLGW printer;
 
     WINE_TRACE("()\n");
 
@@ -715,7 +738,7 @@ void CALLBACK MACRO_Print(void)
     printer.hPrintTemplate      = 0;
     printer.hSetupTemplate      = 0;
 
-    if (PrintDlgA(&printer)) {
+    if (PrintDlgW(&printer)) {
         WINE_FIXME("Print()\n");
     }
 }
@@ -742,7 +765,7 @@ static void CALLBACK MACRO_RegisterRoutine(LPCSTR dll_name, LPCSTR proc, LPCSTR 
     }
     if (!dll)
     {
-        HANDLE hLib = LoadLibrary(dll_name);
+        HANDLE hLib = LoadLibraryA(dll_name);
 
         /* FIXME: the library will not be unloaded until exit of program 
          * We don't send the DW_TERM message
@@ -1006,6 +1029,32 @@ int MACRO_Lookup(const char* name, struct lexret* lr)
         return ret;
     if (MACRO_Loaded && (ret = MACRO_DoLookUp(MACRO_Loaded, name, lr, MACRO_NumLoaded)) != EMPTY)
         return ret;
+    if (!strcmp(name, "hwndApp"))
+    {
+        WINHELP_WINDOW* win;
+        lr->integer = 0;
+        for (win = Globals.win_list; win; win = win->next)
+        {
+            if (!strcmp(win->info->name, "main"))
+            {
+                lr->integer = (LONG_PTR)win->hMainWnd;
+                break;
+            }
+        }
+        return INTEGER;
+    }
+    if (!strcmp(name, "hwndContext"))
+    {
+        lr->integer = Globals.active_win ?
+            (LONG_PTR)Globals.active_win->hMainWnd : 0;
+        return INTEGER;
+    }
+    if (!strcmp(name, "qchPath") || !strcmp(name, "qError") || !strcmp(name, "lTopicNo") ||
+        !strcmp(name, "hfs") || !strcmp(name, "coForeground") || !strcmp(name, "coBackground"))
+    {
+        WINE_FIXME("keyword %s not substituted in macro parsing\n", name);
+        return EMPTY;
+    }
 
     lr->string = name;
     return IDENTIFIER;

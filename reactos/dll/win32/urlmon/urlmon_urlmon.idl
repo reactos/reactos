@@ -18,20 +18,12 @@
 
 #include "urlmon.idl"
 
-#ifndef __WIDL__
-#define threading(model)
-#define progid(str)
-#define vi_progid(str)
-#endif
-
-#ifndef __midl
 [
     helpstring("URL Moniker"),
     threading(apartment),
     uuid(79eac9e0-baf9-11ce-8c82-00aa004ba90b)
 ]
 coclass StdURLMoniker { interface IMoniker; }
-#endif
 
 [
     helpstring("http: Asynchronous Pluggable Protocol Handler"),
@@ -68,14 +60,12 @@ coclass HttpsProtocol { interface IInternetProtocolEx; interface IInternetPriori
 ]
 coclass MkProtocol { interface IInternetProtocolEx; interface IInternetPriority; }
 
-#ifndef __midl
 [
     helpstring("file:, local: Asynchronous Pluggable Protocol Handler"),
     threading(apartment),
     uuid(79eac9e7-baf9-11ce-8c82-00aa004ba90b)
 ]
 coclass FileProtocol { interface IInternetProtocolEx; interface IInternetPriority; }
-#endif
 
 [
     helpstring("CDL: Asynchronous Pluggable Protocol Handler"),
@@ -111,3 +101,10 @@ coclass PSFactoryBuffer { interface IPSFactoryBuffer; }
     uuid(8f6b0360-b80d-11d0-a9b3-006097942311)
 ]
 coclass DeCompMimeFilter { interface IInternetProtocol; interface IInternetProtocolSink; }
+
+[
+    helpstring("CUri"),
+    threading(apartment),
+    uuid(df2fce13-25ec-45bb-9d4c-cecd47c2430c)
+]
+coclass CUri { interface IUri; }

@@ -47,13 +47,14 @@
  *  3 Sep 90 - Version 1.1 by Gershon Elber (Support for Gif89, Unique names).
  *****************************************************************************/
 
-#include <stdlib.h>
-#include <string.h>
-#include "ungif.h"
+//#include <stdlib.h>
+//#include <string.h>
 
 #include <stdarg.h>
-#include "windef.h"
-#include "winbase.h"
+#include <windef.h>
+#include <winbase.h>
+
+#include "ungif.h"
 
 static void *ungif_alloc( size_t sz )
 {
@@ -158,6 +159,7 @@ MakeMapObject(int ColorCount,
 
     Object->Colors = ungif_calloc(ColorCount, sizeof(GifColorType));
     if (Object->Colors == NULL) {
+        ungif_free(Object);
         return NULL;
     }
 
@@ -190,7 +192,7 @@ FreeMapObject(ColorMapObject * Object) {
 }
 
 static int
-AddExtensionBlock(SavedImage * New,
+AddExtensionBlock(Extensions *New,
                   int Len,
                   const unsigned char ExtData[]) {
 
@@ -208,32 +210,63 @@ AddExtensionBlock(SavedImage * New,
 
     ep = &New->ExtensionBlocks[New->ExtensionBlockCount++];
 
-    ep->ByteCount=Len;
-    ep->Bytes = ungif_alloc(ep->ByteCount);
+    ep->ByteCount=Len + 3;
+    ep->Bytes = ungif_alloc(ep->ByteCount + 3);
     if (ep->Bytes == NULL)
         return (GIF_ERROR);
 
+    /* Extension Header */
+    ep->Bytes[0] = 0x21;
+    ep->Bytes[1] = New->Function;
+    ep->Bytes[2] = Len;
+
     if (ExtData) {
-        memcpy(ep->Bytes, ExtData, Len);
+        memcpy(ep->Bytes + 3, ExtData, Len);
         ep->Function = New->Function;
     }
 
     return (GIF_OK);
 }
 
-static void
-FreeExtension(SavedImage * Image)
+static int
+AppendExtensionBlock(Extensions *New,
+                     int Len,
+                     const unsigned char ExtData[])
 {
     ExtensionBlock *ep;
 
-    if ((Image == NULL) || (Image->ExtensionBlocks == NULL)) {
+    if (New->ExtensionBlocks == NULL)
+        return (GIF_ERROR);
+
+    ep = &New->ExtensionBlocks[New->ExtensionBlockCount - 1];
+
+    ep->Bytes = ungif_realloc(ep->Bytes, ep->ByteCount + Len + 1);
+    if (ep->Bytes == NULL)
+        return (GIF_ERROR);
+
+    ep->Bytes[ep->ByteCount] = Len;
+
+    if (ExtData)
+        memcpy(ep->Bytes + ep->ByteCount + 1, ExtData, Len);
+
+    ep->ByteCount += Len + 1;
+
+    return (GIF_OK);
+}
+
+static void
+FreeExtension(Extensions *Extensions)
+{
+    ExtensionBlock *ep;
+
+    if ((Extensions == NULL) || (Extensions->ExtensionBlocks == NULL)) {
         return;
     }
-    for (ep = Image->ExtensionBlocks;
-         ep < (Image->ExtensionBlocks + Image->ExtensionBlockCount); ep++)
+    for (ep = Extensions->ExtensionBlocks;
+         ep < (Extensions->ExtensionBlocks + Extensions->ExtensionBlockCount); ep++)
         ungif_free(ep->Bytes);
-    ungif_free(Image->ExtensionBlocks);
-    Image->ExtensionBlocks = NULL;
+    ungif_free(Extensions->ExtensionBlocks);
+    Extensions->ExtensionBlocks = NULL;
 }
 
 /******************************************************************************
@@ -257,8 +290,8 @@ FreeSavedImages(GifFileType * GifFile) {
 
         ungif_free(sp->RasterBits);
 
-        if (sp->ExtensionBlocks)
-            FreeExtension(sp);
+        if (sp->Extensions.ExtensionBlocks)
+            FreeExtension(&sp->Extensions);
     }
     ungif_free(GifFile->SavedImages);
     GifFile->SavedImages=NULL;
@@ -271,7 +304,7 @@ FreeSavedImages(GifFileType * GifFile) {
 static int
 DGifGetScreenDesc(GifFileType * GifFile) {
 
-    int i, BitsPerPixel;
+    int i, BitsPerPixel, SortFlag;
     GifByteType Buf[3];
 
     /* Put the screen descriptor into the file: */
@@ -283,8 +316,10 @@ DGifGetScreenDesc(GifFileType * GifFile) {
         return GIF_ERROR;
     }
     GifFile->SColorResolution = (((Buf[0] & 0x70) + 1) >> 4) + 1;
+    SortFlag = (Buf[0] & 0x08) != 0;
     BitsPerPixel = (Buf[0] & 0x07) + 1;
     GifFile->SBackGroundColor = Buf[1];
+    GifFile->SAspectRatio = Buf[2];
     if (Buf[0] & 0x80) {    /* Do we have global color map? */
 
         GifFile->SColorMap = MakeMapObject(1 << BitsPerPixel, NULL);
@@ -293,6 +328,7 @@ DGifGetScreenDesc(GifFileType * GifFile) {
         }
 
         /* Get the global color map: */
+        GifFile->SColorMap->SortFlag = SortFlag;
         for (i = 0; i < GifFile->SColorMap->ColorCount; i++) {
             if (READ(GifFile, Buf, 3) != 3) {
                 FreeMapObject(GifFile->SColorMap);
@@ -351,7 +387,7 @@ DGifGetRecordType(GifFileType * GifFile,
 static int
 DGifGetImageDesc(GifFileType * GifFile) {
 
-    int i, BitsPerPixel;
+    int i, BitsPerPixel, SortFlag;
     GifByteType Buf[3];
     GifFilePrivateType *Private = GifFile->Private;
     SavedImage *sp;
@@ -365,6 +401,7 @@ DGifGetImageDesc(GifFileType * GifFile) {
         return GIF_ERROR;
     }
     BitsPerPixel = (Buf[0] & 0x07) + 1;
+    SortFlag = (Buf[0] & 0x20) != 0;
     GifFile->Image.Interlace = (Buf[0] & 0x40);
     if (Buf[0] & 0x80) {    /* Does this image have local color map? */
 
@@ -379,6 +416,7 @@ DGifGetImageDesc(GifFileType * GifFile) {
         }
 
         /* Get the image local color map: */
+        GifFile->Image.ColorMap->SortFlag = SortFlag;
         for (i = 0; i < GifFile->Image.ColorMap->ColorCount; i++) {
             if (READ(GifFile, Buf, 3) != 3) {
                 FreeMapObject(GifFile->Image.ColorMap);
@@ -415,10 +453,11 @@ DGifGetImageDesc(GifFileType * GifFile) {
         if (sp->ImageDesc.ColorMap == NULL) {
             return GIF_ERROR;
         }
+        sp->ImageDesc.ColorMap->SortFlag = GifFile->Image.ColorMap->SortFlag;
     }
     sp->RasterBits = NULL;
-    sp->ExtensionBlockCount = 0;
-    sp->ExtensionBlocks = NULL;
+    sp->Extensions.ExtensionBlockCount = 0;
+    sp->Extensions.ExtensionBlocks = NULL;
 
     GifFile->ImageCount++;
 
@@ -838,7 +877,7 @@ DGifSlurp(GifFileType * GifFile) {
     GifRecordType RecordType;
     SavedImage *sp;
     GifByteType *ExtData;
-    SavedImage temp_save;
+    Extensions temp_save;
 
     temp_save.ExtensionBlocks = NULL;
     temp_save.ExtensionBlockCount = 0;
@@ -863,8 +902,8 @@ DGifSlurp(GifFileType * GifFile) {
                   GIF_ERROR)
                   return (GIF_ERROR);
               if (temp_save.ExtensionBlocks) {
-                  sp->ExtensionBlocks = temp_save.ExtensionBlocks;
-                  sp->ExtensionBlockCount = temp_save.ExtensionBlockCount;
+                  sp->Extensions.ExtensionBlocks = temp_save.ExtensionBlocks;
+                  sp->Extensions.ExtensionBlockCount = temp_save.ExtensionBlockCount;
 
                   temp_save.ExtensionBlocks = NULL;
                   temp_save.ExtensionBlockCount = 0;
@@ -872,26 +911,52 @@ DGifSlurp(GifFileType * GifFile) {
                   /* FIXME: The following is wrong.  It is left in only for
                    * backwards compatibility.  Someday it should go away. Use
                    * the sp->ExtensionBlocks->Function variable instead. */
-                  sp->Function = sp->ExtensionBlocks[0].Function;
+                  sp->Extensions.Function = sp->Extensions.ExtensionBlocks[0].Function;
               }
               break;
 
           case EXTENSION_RECORD_TYPE:
-              if (DGifGetExtension(GifFile, &temp_save.Function, &ExtData) ==
-                  GIF_ERROR)
-                  return (GIF_ERROR);
-              while (ExtData != NULL) {
+          {
+              int Function;
+              Extensions *Extensions;
 
-                  /* Create an extension block with our data */
-                  if (AddExtensionBlock(&temp_save, ExtData[0], &ExtData[1])
-                      == GIF_ERROR)
-                      return (GIF_ERROR);
+              if (DGifGetExtension(GifFile, &Function, &ExtData) == GIF_ERROR)
+                  return (GIF_ERROR);
+
+              if (GifFile->ImageCount || Function == GRAPHICS_EXT_FUNC_CODE)
+                  Extensions = &temp_save;
+              else
+                  Extensions = &GifFile->Extensions;
+
+              Extensions->Function = Function;
+
+              /* Create an extension block with our data */
+              if (AddExtensionBlock(Extensions, ExtData[0], &ExtData[1]) == GIF_ERROR)
+                  return (GIF_ERROR);
+
+              while (ExtData != NULL) {
+                  int Len;
+                  GifByteType *Data;
 
                   if (DGifGetExtensionNext(GifFile, &ExtData) == GIF_ERROR)
                       return (GIF_ERROR);
-                  temp_save.Function = 0;
+
+                  if (ExtData)
+                  {
+                      Len = ExtData[0];
+                      Data = &ExtData[1];
+                  }
+                  else
+                  {
+                      Len = 0;
+                      Data = NULL;
+                  }
+
+                  if (AppendExtensionBlock(Extensions, Len, Data) == GIF_ERROR)
+                      return (GIF_ERROR);
               }
               break;
+          }
 
           case TERMINATE_RECORD_TYPE:
               break;
@@ -995,6 +1060,8 @@ DGifCloseFile(GifFileType * GifFile) {
         FreeSavedImages(GifFile);
         GifFile->SavedImages = NULL;
     }
+
+    FreeExtension(&GifFile->Extensions);
 
     ungif_free(GifFile);
 

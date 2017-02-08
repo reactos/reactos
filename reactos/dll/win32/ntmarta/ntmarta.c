@@ -16,8 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-/* $Id: ntmarta.c 31176 2007-12-12 07:04:12Z weiden $
- *
+/*
  * PROJECT:         ReactOS MARTA provider
  * FILE:            lib/ntmarta/ntmarta.c
  * PURPOSE:         ReactOS MARTA provider
@@ -26,7 +25,7 @@
  * UPDATE HISTORY:
  *      07/26/2005  Created
  */
-#include <ntmarta.h>
+#include "ntmarta.h"
 
 #define NDEBUG
 #include <debug.h>

@@ -41,7 +41,7 @@
  */
 
 #define DHCP_OPTION_DATA
-#include "rosdhcp.h"
+#include <rosdhcp.h>
 
 int bad_options = 0;
 int bad_options_max = 5;

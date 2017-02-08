@@ -183,6 +183,7 @@ void __getmainargs(int* argc, char*** argv, char*** env, int expand_wildcards, i
 {
    int i, afterlastspace, ignorespace, doexpand;
    size_t len;
+   char* aNewCmdln;
 
    /* missing threading init */
 
@@ -203,10 +204,12 @@ void __getmainargs(int* argc, char*** argv, char*** env, int expand_wildcards, i
 
    len = strlen(_acmdln);
 
+   /* Allocate a temporary buffer to be used instead of the original _acmdln parameter. */
+   aNewCmdln = strndup(_acmdln, len);
 
-   while (_acmdln[i])
+   while (aNewCmdln[i])
    {
-      if (_acmdln[i] == '"')
+      if (aNewCmdln[i] == '"')
       {
          if(ignorespace)
          {
@@ -217,16 +220,16 @@ void __getmainargs(int* argc, char*** argv, char*** env, int expand_wildcards, i
             ignorespace = 1;
             doexpand = 0;
          }
-         memmove(_acmdln + i, _acmdln + i + 1, len - i);
+         memmove(aNewCmdln + i, aNewCmdln + i + 1, len - i);
          len--;
          continue;
       }
 
-      if (_acmdln[i] == ' ' && !ignorespace)
+      if (aNewCmdln[i] == ' ' && !ignorespace)
       {
-         aexpand(strndup(_acmdln + afterlastspace, i - afterlastspace), doexpand);
+         aexpand(strndup(aNewCmdln + afterlastspace, i - afterlastspace), doexpand);
          i++;
-         while (_acmdln[i]==' ')
+         while (aNewCmdln[i] == ' ')
             i++;
          afterlastspace=i;
          doexpand = expand_wildcards;
@@ -237,10 +240,13 @@ void __getmainargs(int* argc, char*** argv, char*** env, int expand_wildcards, i
       }
    }
 
-   if (_acmdln[afterlastspace] != 0)
+   if (aNewCmdln[afterlastspace] != 0)
    {
-      aexpand(strndup(_acmdln+afterlastspace, i - afterlastspace), doexpand);
+      aexpand(strndup(aNewCmdln + afterlastspace, i - afterlastspace), doexpand);
    }
+
+   /* Free the temporary buffer. */
+   free(aNewCmdln);
 
    HeapValidate(GetProcessHeap(), 0, NULL);
 
@@ -265,6 +271,7 @@ void __wgetmainargs(int* argc, wchar_t*** wargv, wchar_t*** wenv,
 {
    int i, afterlastspace, ignorespace, doexpand;
    size_t len;
+   wchar_t* wNewCmdln;
 
    /* missing threading init */
 
@@ -285,9 +292,12 @@ void __wgetmainargs(int* argc, wchar_t*** wargv, wchar_t*** wenv,
 
    len = wcslen(_wcmdln);
 
-   while (_wcmdln[i])
+   /* Allocate a temporary buffer to be used instead of the original _wcmdln parameter. */
+   wNewCmdln = wcsndup(_wcmdln, len);
+
+   while (wNewCmdln[i])
    {
-      if (_wcmdln[i] == L'"')
+      if (wNewCmdln[i] == L'"')
       {
          if(ignorespace)
          {
@@ -298,16 +308,16 @@ void __wgetmainargs(int* argc, wchar_t*** wargv, wchar_t*** wenv,
             ignorespace = 1;
             doexpand = 0;
          }
-         memmove(_wcmdln + i, _wcmdln + i + 1, (len - i) * sizeof(wchar_t));
+         memmove(wNewCmdln + i, wNewCmdln + i + 1, (len - i) * sizeof(wchar_t));
          len--;
          continue;
       }
 
-      if (_wcmdln[i] == L' ' && !ignorespace)
+      if (wNewCmdln[i] == L' ' && !ignorespace)
       {
-         wexpand(wcsndup(_wcmdln + afterlastspace, i - afterlastspace), doexpand);
+         wexpand(wcsndup(wNewCmdln + afterlastspace, i - afterlastspace), doexpand);
          i++;
-         while (_wcmdln[i]==L' ')
+         while (wNewCmdln[i] == L' ')
             i++;
          afterlastspace=i;
          doexpand = expand_wildcards;
@@ -318,10 +328,13 @@ void __wgetmainargs(int* argc, wchar_t*** wargv, wchar_t*** wenv,
       }
    }
 
-   if (_wcmdln[afterlastspace] != 0)
+   if (wNewCmdln[afterlastspace] != 0)
    {
-      wexpand(wcsndup(_wcmdln+afterlastspace, i - afterlastspace), doexpand);
+      wexpand(wcsndup(wNewCmdln + afterlastspace, i - afterlastspace), doexpand);
    }
+
+   /* Free the temporary buffer. */
+   free(wNewCmdln);
 
    HeapValidate(GetProcessHeap(), 0, NULL);
 

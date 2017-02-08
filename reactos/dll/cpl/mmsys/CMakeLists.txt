@@ -1,6 +1,4 @@
 
-set_rc_compiler()
-
 spec2def(mmsys.cpl mmsys.spec)
 
 add_library(mmsys SHARED

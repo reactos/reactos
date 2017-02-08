@@ -23,7 +23,7 @@
 #ifndef KJK_PSEH2_H_
 #define KJK_PSEH2_H_
 
-#if defined(USE_NATIVE_SEH) || defined(_MSC_VER)
+#if defined(_USE_NATIVE_SEH) || defined(_MSC_VER)
 
 #include <excpt.h>
 #define _SEH2_TRY __try
@@ -35,8 +35,9 @@
 #define _SEH2_AbnormalTermination() (AbnormalTermination())
 #define _SEH2_YIELD(STMT_) STMT_
 #define _SEH2_LEAVE __leave
+#define _SEH2_VOLATILE
 
-#elif defined(USE_DUMMY_PSEH) || defined (__arm__) || defined(__clang__) || defined(_M_AMD64)
+#elif defined(_USE_DUMMY_PSEH) || defined (__arm__) || defined(__clang__) || defined(_M_AMD64)
 
 #define _SEH2_TRY  {
 #define _SEH2_FINALLY }  {
@@ -47,6 +48,23 @@
 #define _SEH2_AbnormalTermination()
 #define _SEH2_YIELD(STMT_) STMT_
 #define _SEH2_LEAVE
+#define _SEH2_VOLATILE volatile
+
+#elif defined(_USE_PSEH3)
+
+#include "pseh3.h"
+
+/* Compatibility macros */
+#define _SEH2_TRY _SEH3_TRY
+#define _SEH2_EXCEPT _SEH3_EXCEPT
+#define _SEH2_FINALLY _SEH3_FINALLY
+#define _SEH2_END _SEH3_END
+#define _SEH2_GetExceptionInformation() ((struct _EXCEPTION_POINTERS*)_exception_info())
+#define _SEH2_GetExceptionCode _exception_code
+#define _SEH2_AbnormalTermination _abnormal_termination
+#define _SEH2_LEAVE _SEH3_LEAVE
+#define _SEH2_YIELD(x) x
+#define _SEH2_VOLATILE volatile
 
 #elif defined(__GNUC__)
 
@@ -108,6 +126,14 @@ extern void __cdecl _SEH2Return(void);
 
 #ifdef __cplusplus
 }
+#endif
+
+/* Prevent gcc from inlining functions that use SEH. */
+#if ((__GNUC__ >= 4) && (__GNUC_MINOR__ >= 7))
+static inline __attribute__((always_inline)) __attribute__((returns_twice)) void _SEH_DontInline() {}
+#define __PREVENT_GCC_FROM_INLINING_SEH_FUNCTIONS() _SEH_DontInline();
+#else
+#define __PREVENT_GCC_FROM_INLINING_SEH_FUNCTIONS()
 #endif
 
 /* A no-op side effect that scares GCC */
@@ -246,6 +272,7 @@ extern void __cdecl _SEH2Return(void);
 	auto __SEH_DECLARE_FINALLY(_SEHFinally);
 
 #define _SEH2_TRY \
+	__PREVENT_GCC_FROM_INLINING_SEH_FUNCTIONS() \
 	__SEH_BEGIN_SCOPE \
 	{ \
 		__SEH_SCOPE_LOCALS; \
@@ -386,6 +413,7 @@ extern void __cdecl _SEH2Return(void);
 
 __SEH_END_SCOPE_CHAIN;
 
+#define _SEH2_VOLATILE volatile
 
 #else
 #error no PSEH support

@@ -13,17 +13,17 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_LOBBY_SP_H
 #define __WINE_LOBBY_SP_H
 
-#include <stdarg.h>
+//#include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winuser.h"
 #include "dplobby.h"
 
 /* GUID for IDPLobbySP {5A4E5A20-2CED-11d0-A889-00A0C905433C} */
@@ -70,14 +70,14 @@ typedef struct SPDATA_ADDREMOTEPLAYERTOGROUP
   LPDPNAME    lpName;
 } SPDATA_ADDREMOTEPLAYERTOGROUP, *LPSPDATA_ADDREMOTEPLAYERTOGROUP;
 
-typedef struct SPDATA_BUILDPARENTALHEIRARCHY
+typedef struct SPDATA_BUILDPARENTALHIERARCHY
 {
   DWORD       dwSize;
   LPDPLOBBYSP lpISP;
   DWORD       dwGroupID;
   DWORD       dwMessage;
   DWORD       dwParentID;
-} SPDATA_BUILDPARENTALHEIRARCHY, *LPSPDATA_BUILDPARENTALHEIRARCHY;
+} SPDATA_BUILDPARENTALHIERARCHY, *LPSPDATA_BUILDPARENTALHIERARCHY;
 
 typedef struct SPDATA_CLOSE
 {
@@ -388,7 +388,7 @@ typedef struct SPDATA_STARTSESSIONCOMMAND
 /* Prototypes for callbacks returned by DPLSPInit */
 typedef HRESULT (WINAPI *LPSP_ADDGROUPTOGROUP)(LPSPDATA_ADDGROUPTOGROUP);
 typedef HRESULT	(WINAPI *LPSP_ADDPLAYERTOGROUP)(LPSPDATA_ADDPLAYERTOGROUP);
-typedef HRESULT	(WINAPI *LPSP_BUILDPARENTALHEIRARCHY)(LPSPDATA_BUILDPARENTALHEIRARCHY);
+typedef HRESULT	(WINAPI *LPSP_BUILDPARENTALHIERARCHY)(LPSPDATA_BUILDPARENTALHIERARCHY);
 typedef HRESULT	(WINAPI *LPSP_CLOSE)(LPSPDATA_CLOSE);
 typedef HRESULT	(WINAPI *LPSP_CREATEGROUP)(LPSPDATA_CREATEGROUP);
 typedef HRESULT (WINAPI *LPSP_CREATEGROUPINGROUP)(LPSPDATA_CREATEGROUPINGROUP);
@@ -422,7 +422,7 @@ typedef struct SP_CALLBACKS
   DWORD                            dwFlags;
   LPSP_ADDGROUPTOGROUP             AddGroupToGroup;
   LPSP_ADDPLAYERTOGROUP            AddPlayerToGroup;
-  LPSP_BUILDPARENTALHEIRARCHY      BuildParentalHeirarchy;
+  LPSP_BUILDPARENTALHIERARCHY      BuildParentalHierarchy;
   LPSP_CLOSE                       Close;
   LPSP_CREATEGROUP                 CreateGroup;
   LPSP_CREATEGROUPINGROUP          CreateGroupInGroup;
@@ -458,7 +458,7 @@ typedef struct SPDATA_INIT
 } SPDATA_INIT, *LPSPDATA_INIT;
 
 typedef HRESULT (WINAPI *LPSP_INIT)(LPSPDATA_INIT);
-HRESULT WINAPI DPLSPInit(LPSPDATA_INIT);
+HRESULT WINAPI DPLSPInit(LPSPDATA_INIT) DECLSPEC_HIDDEN;
 
 /* Define the COM interface */
 #define INTERFACE IDPLobbySP
@@ -515,6 +515,6 @@ DECLARE_INTERFACE_(IDPLobbySP,IUnknown)
 /* This variable is exported from the DLL at ordinal 6 to be accessed by the
  * SP directly. This is the same variable that the DP SP will use.
  */
-extern DWORD gdwDPlaySPRefCount;
+extern DWORD gdwDPlaySPRefCount DECLSPEC_HIDDEN;
 
 #endif

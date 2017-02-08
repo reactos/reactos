@@ -3,7 +3,7 @@
  *
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 #define C_OP_LOWEST C_MULTI
 #define C_OP_HIGHEST C_PIPE
@@ -214,7 +214,7 @@ static BOOL ParseRedirection(REDIRECTION **List)
 {
 	TCHAR *Tok = CurrentToken;
 	BYTE Number;
-	BYTE RedirType;
+	REDIR_MODE RedirMode;
 	REDIRECTION *Redir;
 
 	if (*Tok >= _T('0') && *Tok <= _T('9'))
@@ -224,16 +224,16 @@ static BOOL ParseRedirection(REDIRECTION **List)
 
 	if (*Tok++ == _T('<'))
 	{
-		RedirType = REDIR_READ;
+		RedirMode = REDIR_READ;
 		if (*Tok == _T('<'))
 			goto fail;
 	}
 	else
 	{
-		RedirType = REDIR_WRITE;
+		RedirMode = REDIR_WRITE;
 		if (*Tok == _T('>'))
 		{
-			RedirType = REDIR_APPEND;
+			RedirMode = REDIR_APPEND;
 			Tok++;
 		}
 	}
@@ -262,7 +262,7 @@ static BOOL ParseRedirection(REDIRECTION **List)
 	Redir->Next = NULL;
 	Redir->OldHandle = INVALID_HANDLE_VALUE;
 	Redir->Number = Number;
-	Redir->Type = RedirType;
+	Redir->Mode = RedirMode;
 	_tcscpy(Redir->Filename, Tok);
 	*List = Redir;
 	return TRUE;
@@ -815,7 +815,7 @@ EchoCommand(PARSED_COMMAND *Cmd)
 	{
 		if (SubstituteForVars(Redir->Filename, Buf))
 			ConOutPrintf(_T(" %c%s%s"), _T('0') + Redir->Number,
-				RedirString[Redir->Type], Buf);
+				RedirString[Redir->Mode], Buf);
 	}
 }
 
@@ -916,7 +916,7 @@ Unparse(PARSED_COMMAND *Cmd, TCHAR *Out, TCHAR *OutEnd)
 	{
 		if (!SubstituteForVars(Redir->Filename, Buf)) return NULL;
 		PRINTF(_T(" %c%s%s"), _T('0') + Redir->Number,
-			RedirString[Redir->Type], Buf)
+			RedirString[Redir->Mode], Buf)
 	}
 	return Out;
 }

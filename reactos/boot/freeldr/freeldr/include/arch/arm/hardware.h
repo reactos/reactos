@@ -24,8 +24,6 @@ FldrCreateSystemKey(
     OUT PCONFIGURATION_COMPONENT_DATA *SystemKey
 );
 
-#define HW_MAX_ARC_HEAP_SIZE 256
-
 extern PARM_BOARD_CONFIGURATION_BLOCK ArmBoardBlock;
 extern ULONG FirstLevelDcacheSize;
 extern ULONG FirstLevelDcacheFillSize;
@@ -38,4 +36,3 @@ extern ULONG SecondLevelIcacheFillSize;
 
 extern ULONG gDiskReadBuffer, gFileSysBuffer;
 #define DISKREADBUFFER gDiskReadBuffer
-#define FILESYSBUFFER  gFileSysBuffer

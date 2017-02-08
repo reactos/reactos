@@ -31,7 +31,7 @@
  *        Copy command is now completed.
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 #ifdef INCLUDE_CMD_COPY
 
@@ -377,11 +377,15 @@ INT cmd_copy(LPTSTR param)
 
     if (size > 512)
     {
+        TCHAR *old_evar = evar;
         evar = cmd_realloc(evar,size * sizeof(TCHAR) );
         if (evar!=NULL)
             size = GetEnvironmentVariable (_T("COPYCMD"), evar, size);
         else
+        {
             size=0;
+            evar = old_evar;
+        }
     }
 
     /* check see if we did get any env variable */
@@ -781,7 +785,7 @@ INT cmd_copy(LPTSTR param)
             _tcscpy(tmpDestPath, szDestPath);
             _tcscat(tmpDestPath, _T("\\"));
 
-            /* Can't put a file into a folder that isnt there */
+            /* Can't put a file into a folder that isn't there */
             if (_tcscmp(tmpDestPath, _T("\\\\.\\")) &&
                 !IsExistingDirectory(tmpDestPath))
             {

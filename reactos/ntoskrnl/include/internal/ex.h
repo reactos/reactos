@@ -140,7 +140,7 @@ ExGetPoolTagInfo(
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 
-VOID
+BOOLEAN
 NTAPI
 ExpWin32kInit(VOID);
 
@@ -202,31 +202,31 @@ ExpInitializeExecutive(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
-VOID
+BOOLEAN
 NTAPI
 ExpInitializeEventImplementation(VOID);
 
-VOID
+BOOLEAN
 NTAPI
 ExpInitializeKeyedEventImplementation(VOID);
 
-VOID
+BOOLEAN
 NTAPI
 ExpInitializeEventPairImplementation(VOID);
 
-VOID
+BOOLEAN
 NTAPI
 ExpInitializeSemaphoreImplementation(VOID);
 
-VOID
+BOOLEAN
 NTAPI
 ExpInitializeMutantImplementation(VOID);
 
-VOID
+BOOLEAN
 NTAPI
 ExpInitializeTimerImplementation(VOID);
 
-VOID
+BOOLEAN
 NTAPI
 ExpInitializeProfileImplementation(VOID);
 

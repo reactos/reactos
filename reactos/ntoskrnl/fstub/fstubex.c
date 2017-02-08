@@ -269,7 +269,7 @@ FstubConvertExtendedToLayout(IN PDRIVE_LAYOUT_INFORMATION_EX LayoutEx)
     DriveLayout = ExAllocatePoolWithTag(NonPagedPool,
                                         FIELD_OFFSET(DRIVE_LAYOUT_INFORMATION, PartitionEntry) +
                                         LayoutEx->PartitionCount * sizeof(PARTITION_INFORMATION),
-                                        'BtsF');
+                                        TAG_FSTUB);
     if (!DriveLayout)
     {
         return NULL;
@@ -985,7 +985,7 @@ FstubReadPartitionTableEFI(IN PDISK_INFORMATION Disk,
         if ((Disk->SectorCount - 1ULL) != EfiHeader.AlternateLBA)
         {
             /* We'll update it. First, count number of sectors needed to store partitions */
-            SectorsForPartitions = (EfiHeader.NumberOfEntries * PARTITION_ENTRY_SIZE) / Disk->SectorSize;
+            SectorsForPartitions = ((ULONGLONG)EfiHeader.NumberOfEntries * PARTITION_ENTRY_SIZE) / Disk->SectorSize;
             /* Then set first usable LBA: Legacy MBR + GPT header + Partitions entries */
             EfiHeader.FirstUsableLBA = SectorsForPartitions + 2;
             /* Then set last usable LBA: Last sector - GPT header - Partitions entries */
@@ -1605,7 +1605,7 @@ FstubWritePartitionTableMBR(IN PDISK_INFORMATION Disk,
                                    DriveLayout);
 
     /* Free allocated structure and return */
-    ExFreePool(DriveLayout);
+    ExFreePoolWithTag(DriveLayout, TAG_FSTUB);
     return Status;
 }
 

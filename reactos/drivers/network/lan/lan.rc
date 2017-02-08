@@ -1,4 +1,3 @@
-/* $Id$ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"TCP/IP protocol driver\0"

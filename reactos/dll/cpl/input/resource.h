@@ -17,10 +17,11 @@
 
 /* IDD */
 #define IDD_PROPPAGESETTINGS                            500
-#define IDD_INPUT_LANG_PROP                             501
-#define IDD_CHANGE_KEY_SEQ                              502
-#define IDD_ADD                                         503
-#define IDD_KEYSETTINGS                                 504
+#define IDD_PROPPAGEADVANCEDSETTINGS                    501
+#define IDD_INPUT_LANG_PROP                             502
+#define IDD_CHANGE_KEY_SEQ                              503
+#define IDD_ADD                                         504
+#define IDD_KEYSETTINGS                                 505
 
 /* IDC */
 #define IDC_KEYLAYOUT_LIST                              1000
@@ -62,6 +63,7 @@
 #define IDS_CTRL_SHIFT                                  14
 #define IDS_LEFT_ALT_SHIFT                              15
 #define IDS_SWITCH_BET_INLANG                           16
+#define IDC_TURNOFFTEXTSVCS_CB                          17
 
 /* Layouts */
 #define IDS_US_LAYOUT                                   5000

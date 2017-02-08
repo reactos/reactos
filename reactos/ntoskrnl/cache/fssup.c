@@ -392,14 +392,13 @@ CcPurgeCacheSection(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
     CcpFlushCache(Map, NULL, 0, NULL, TRUE);
     return TRUE;
 }
-
+
 VOID
 NTAPI
 CcSetDirtyPageThreshold(IN PFILE_OBJECT FileObject,
                         IN ULONG DirtyPageThreshold)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 /*

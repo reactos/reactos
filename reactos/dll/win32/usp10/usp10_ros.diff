@@ -2,7 +2,7 @@ Index: usp10.c
 ===================================================================
 --- usp10.c     (revision 54504)
 +++ usp10.c     (working copy)
-@@ -3621,3 +3621,9 @@
+@@ -3746,3 +3746,9 @@
  
      return SHAPE_GetFontFeatureTags(hdc, (ScriptCache *)*psc, psa, tagScript, tagLangSys, cMaxTags, pFeatureTags, pcTags);
  }

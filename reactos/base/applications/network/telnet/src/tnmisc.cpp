@@ -8,9 +8,9 @@ BOOL CreateHiddenConsoleProcess(LPCTSTR szChildName, PROCESS_INFORMATION* ppi,
     BOOL fCreated;
     STARTUPINFO si;
     SECURITY_ATTRIBUTES sa;
-    HANDLE hInRead;
-    HANDLE hOutWrite;
-    HANDLE hErrWrite;
+    HANDLE hInRead = INVALID_HANDLE_VALUE;
+    HANDLE hOutWrite = INVALID_HANDLE_VALUE;
+    HANDLE hErrWrite = INVALID_HANDLE_VALUE;
 
     // Create pipes
     // initialize security attributes for handle inheritance (for WinNT)
@@ -19,16 +19,22 @@ BOOL CreateHiddenConsoleProcess(LPCTSTR szChildName, PROCESS_INFORMATION* ppi,
     sa.lpSecurityDescriptor  = NULL;
 
     // create STDIN pipe
-    if( !CreatePipe( &hInRead, phInWrite, &sa, 0 ))
+    if( !CreatePipe( &hInRead, phInWrite, &sa, 0 )) {
+        hInRead = INVALID_HANDLE_VALUE;
         goto error;
+    }
 
     // create STDOUT pipe
-    if( !CreatePipe( phOutRead, &hOutWrite, &sa, 0 ))
+    if( !CreatePipe( phOutRead, &hOutWrite, &sa, 0 )) {
+        hOutWrite = INVALID_HANDLE_VALUE;
         goto error;
+    }
 
     // create STDERR pipe
-    if( !CreatePipe( phErrRead, &hErrWrite, &sa, 0 ))
+    if( !CreatePipe( phErrRead, &hErrWrite, &sa, 0 )) {
+        hErrWrite = INVALID_HANDLE_VALUE;
         goto error;
+    }
 
     // process startup information
     memset( &si, 0, sizeof( si ));
@@ -63,9 +69,9 @@ BOOL CreateHiddenConsoleProcess(LPCTSTR szChildName, PROCESS_INFORMATION* ppi,
     return TRUE;
 
 error:
-    CloseHandle( hInRead );
-    CloseHandle( hOutWrite );
-    CloseHandle( hErrWrite );
+    if (hInRead != INVALID_HANDLE_VALUE) CloseHandle( hInRead );
+    if (hOutWrite != INVALID_HANDLE_VALUE) CloseHandle( hOutWrite );
+    if (hErrWrite != INVALID_HANDLE_VALUE) CloseHandle( hErrWrite );
     CloseHandle( ppi->hProcess );
     CloseHandle( ppi->hThread );
 

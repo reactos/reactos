@@ -12,7 +12,6 @@
 #define RTL_H
 
 /* We're a core NT DLL, we don't import syscalls */
-#define WIN32_NO_STATUS
 #define _INC_SWPRINTF_INL_
 #undef __MSVCRT__
 
@@ -21,7 +20,13 @@
 #include <stdio.h>
 
 /* PSDK/NDK Headers */
-#include <windows.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <objbase.h>
 #include <ndk/cmfuncs.h>
 #include <ndk/exfuncs.h>
 #include <ndk/iofuncs.h>

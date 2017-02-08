@@ -1,5 +1,4 @@
-/* $Id: main.c 21434 2006-04-01 19:12:56Z greatlrd $
- *
+/*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
  * FILE:                 lib/ddraw/ddraw.c

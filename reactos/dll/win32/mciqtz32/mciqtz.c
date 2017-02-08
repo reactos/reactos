@@ -18,15 +18,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define WIN32_LEAN_AND_MEAN
+
 #include <stdarg.h>
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "mmddk.h"
-#include "wine/debug.h"
+#include <windef.h>
+//#include "winbase.h"
+//#include "winuser.h"
+#include <mmddk.h>
+#include <wine/debug.h>
 #include "mciqtz_private.h"
-#include "digitalv.h"
-#include "wownt32.h"
+#include <digitalv.h>
+#include <wownt32.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(mciqtz);
 

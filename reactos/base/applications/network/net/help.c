@@ -1,4 +1,3 @@
-
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS net command
@@ -10,154 +9,154 @@
 
 #include "net.h"
 
-INT cmdHelp(INT argc, CHAR **argv)
+INT cmdHelp(INT argc, WCHAR **argv)
 {
-    if (argc>3)
+    if (argc != 3)
     {
       return 0;
     }
 
-    if (strcmp(argv[0],"ACCOUNTS")==0)
+    if (_wcsicmp(argv[2],L"ACCOUNTS")==0)
     {
         puts("ACCOUNTS");
         puts("help text");
         return 0;
     }
 
-    if (strcmp(argv[0],"COMPUTER")==0)
+    if (_wcsicmp(argv[2],L"COMPUTER")==0)
     {
         puts("COMPUTER");
         puts("help text");
         return 0;
     }
 
-    if (strcmp(argv[0],"CONFIG")==0)
+    if (_wcsicmp(argv[2],L"CONFIG")==0)
     {
         puts("CONFIG");
         puts("help text");
         return 0;
     }
 
-    if (strcmp(argv[0],"CONTINUE")==0)
+    if (_wcsicmp(argv[2],L"CONTINUE")==0)
     {
         puts("CONTINUE");
         puts("help text");
         return 0;
     }
 
-    if (strcmp(argv[0],"FILE")==0)
+    if (_wcsicmp(argv[2],L"FILE")==0)
     {
         puts("FILE");
         puts("help text");
         return 0;
     }
 
-    if (strcmp(argv[0],"GROUP")==0)
+    if (_wcsicmp(argv[2],L"GROUP")==0)
     {
         puts("GROUP");
         puts("help text");
         return 0;
     }
 
-    if (strcmp(argv[0],"HELP")==0)
+    if (_wcsicmp(argv[2],L"HELP")==0)
     {
         puts("HELP");
         puts("help text");
         return 0;
     }
 
-    if (strcmp(argv[0],"HELPMSG")==0)
+    if (_wcsicmp(argv[2],L"HELPMSG")==0)
     {
         puts("HELPMSG");
         puts("help text");
         return 0;
     }
 
-    if (strcmp(argv[0],"LOCALGROUP")==0)
+    if (_wcsicmp(argv[2],L"LOCALGROUP")==0)
     {
         puts("LOCALGROUP");
         puts("help text");
         return 0;
     }
 
-    if (strcmp(argv[0],"NAME")==0)
+    if (_wcsicmp(argv[2],L"NAME")==0)
     {
         puts("NAME");
         puts("help text");
         return 0;
     }
 
-    if (strcmp(argv[0],"PRINT")==0)
+    if (_wcsicmp(argv[2],L"PRINT")==0)
     {
         puts("PRINT");
         puts("help text");
         return 0;
     }
 
-    if (strcmp(argv[0],"SEND")==0)
+    if (_wcsicmp(argv[2],L"SEND")==0)
     {
         puts("SEND");
         puts("help text");
         return 0;
     }
 
-    if (strcmp(argv[0],"SESSION")==0)
+    if (_wcsicmp(argv[2],L"SESSION")==0)
     {
         puts("SESSION");
         puts("help text");
         return 0;
     }
 
-    if (strcmp(argv[0],"SHARE")==0)
+    if (_wcsicmp(argv[2],L"SHARE")==0)
     {
         puts("SHARE");
         puts("help text");
         return 0;
     }
 
-    if (strcmp(argv[0],"START")==0)
+    if (_wcsicmp(argv[2],L"START")==0)
     {
         puts("START");
         puts("help text");
         return 0;
     }
 
-    if (strcmp(argv[0],"STATISTICS")==0)
+    if (_wcsicmp(argv[2],L"STATISTICS")==0)
     {
         puts("STATISTICS");
         puts("help text");
         return 0;
     }
 
-    if (strcmp(argv[0],"STOP")==0)
+    if (_wcsicmp(argv[2],L"STOP")==0)
     {
         puts("STOP");
         puts("help text");
         return 0;
     }
 
-    if (strcmp(argv[0],"TIME")==0)
+    if (_wcsicmp(argv[2],L"TIME")==0)
     {
         puts("TIME");
         puts("help text");
         return 0;
     }
 
-    if (strcmp(argv[0],"USE")==0)
+    if (_wcsicmp(argv[2],L"USE")==0)
     {
         puts("USE");
         puts("help text");
         return 0;
     }
 
-    if (strcmp(argv[0],"USER")==0)
+    if (_wcsicmp(argv[2],L"USER")==0)
     {
         puts("USER");
         puts("help text");
         return 0;
     }
 
-    if (strcmp(argv[0],"VIEW")==0)
+    if (_wcsicmp(argv[2],L"VIEW")==0)
     {
         puts("VIEW");
         puts("help text");
@@ -168,7 +167,7 @@ INT cmdHelp(INT argc, CHAR **argv)
     return 0;
 }
 
-void help()
+VOID help(VOID)
 {
     puts("NET ACCOUNTS");
     puts("NET COMPUTER");

@@ -28,3 +28,6 @@
 
 /* @makedep: iexplore.ico */
 1 ICON iexplore.ico
+
+/* @makedep: iexplore.inf */
+REGINST REGINST iexplore.inf

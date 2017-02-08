@@ -460,7 +460,7 @@ _returnFromException ()
 #ifdef WIN32 //MF
 
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+//#include <windows.h>
 
 void handle_exception(int exceptionVector);
 
@@ -1157,7 +1157,7 @@ void disable_debugging()
 		}
 }
 
-
+#define _INC_WINDOWS
 #include <winsock.h>
 #ifdef _MSC_VER
 #pragma comment(lib, "wsock32")

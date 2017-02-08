@@ -1917,7 +1917,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_APP_INIT_FAILURE
 Language=German
-ERROR_APP_INIT_FAILURE - Das Programm konnte nicht richtig initalisiert werden (0x%lx). Klicken Sie auf OK, um das Programm zu beenden.
+ERROR_APP_INIT_FAILURE - Das Programm konnte nicht richtig initialisiert werden (0x%lx). Klicken Sie auf OK, um das Programm zu beenden.
 .
 
 MessageId=576

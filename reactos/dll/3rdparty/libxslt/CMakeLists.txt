@@ -1,5 +1,6 @@
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}
+                    ${REACTOS_SOURCE_DIR}/include/reactos/libs/libxslt)
 
 add_definitions(
     -DHAVE_CONFIG_H
@@ -33,7 +34,7 @@ add_library(libxslt SHARED
     xsltlocale.c
     xsltutils.c)
 
-set_module_type(libxslt win32dll ENTRYPOINT 0)
+set_module_type(libxslt win32dll)
 target_link_libraries(libxslt libxml2)
 add_importlibs(libxslt msvcrt ws2_32 kernel32)
 

@@ -398,7 +398,7 @@ PdoQueryResourceRequirements(
   }
   else
   {
-    DPRINT1("Unsupported header type %u\n", PCI_CONFIGURATION_TYPE(&PciConfig));
+    DPRINT1("Unsupported header type %d\n", PCI_CONFIGURATION_TYPE(&PciConfig));
   }
 
   if (ResCount == 0)
@@ -708,7 +708,7 @@ PdoQueryResources(
   }
   else
   {
-    DPRINT1("Unsupported header type %u\n", PCI_CONFIGURATION_TYPE(&PciConfig));
+    DPRINT1("Unsupported header type %d\n", PCI_CONFIGURATION_TYPE(&PciConfig));
   }
 
   if (ResCount == 0)
@@ -896,8 +896,11 @@ InterfaceDereference(
   InterlockedDecrement(&DeviceExtension->References);
 }
 
+static TRANSLATE_BUS_ADDRESS InterfaceBusTranslateBusAddress;
 
-static BOOLEAN NTAPI
+static
+BOOLEAN
+NTAPI
 InterfaceBusTranslateBusAddress(
   IN PVOID Context,
   IN PHYSICAL_ADDRESS BusAddress,
@@ -917,8 +920,11 @@ InterfaceBusTranslateBusAddress(
     BusAddress, AddressSpace, TranslatedAddress);
 }
 
+static GET_DMA_ADAPTER InterfaceBusGetDmaAdapter;
 
-static PDMA_ADAPTER NTAPI
+static
+PDMA_ADAPTER
+NTAPI
 InterfaceBusGetDmaAdapter(
   IN PVOID Context,
   IN PDEVICE_DESCRIPTION DeviceDescription,
@@ -929,8 +935,11 @@ InterfaceBusGetDmaAdapter(
   return (PDMA_ADAPTER)HalGetAdapter(DeviceDescription, NumberOfMapRegisters);
 }
 
+static GET_SET_DEVICE_DATA InterfaceBusSetBusData;
 
-static ULONG NTAPI
+static
+ULONG
+NTAPI
 InterfaceBusSetBusData(
   IN PVOID Context,
   IN ULONG DataType,
@@ -962,8 +971,11 @@ InterfaceBusSetBusData(
   return Size;
 }
 
+static GET_SET_DEVICE_DATA InterfaceBusGetBusData;
 
-static ULONG NTAPI
+static
+ULONG
+NTAPI
 InterfaceBusGetBusData(
   IN PVOID Context,
   IN ULONG DataType,
@@ -1229,6 +1241,8 @@ PdoStartDevice(
     UCHAR Irq;
     USHORT Command;
 
+    UNREFERENCED_PARAMETER(Irp);
+
     if (!RawResList)
         return STATUS_SUCCESS;
 
@@ -1244,7 +1258,7 @@ PdoStartDevice(
 
             if (RawPartialDesc->Type == CmResourceTypeInterrupt)
             {
-                DPRINT1("Assigning IRQ %d to PCI device 0x%x on bus 0x%x\n",
+                DPRINT1("Assigning IRQ %u to PCI device 0x%x on bus 0x%x\n",
                         RawPartialDesc->u.Interrupt.Vector,
                         DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
                         DeviceExtension->PciDevice->BusNumber);
@@ -1401,6 +1415,7 @@ PdoSetPower(
 {
   NTSTATUS Status;
 
+  UNREFERENCED_PARAMETER(DeviceObject);
   UNREFERENCED_PARAMETER(Irp);
   DPRINT("Called\n");
 

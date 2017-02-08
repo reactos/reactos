@@ -5,7 +5,7 @@
  * PROGRAMMER:      Samuel Serapi?n
  * 
  */
-#include <winsta.h>
+#include "winsta.h"
 
 VOID
 WINSTAAPI WinStationFreeMemory(PVOID A)

@@ -1,5 +1,6 @@
 
 set(USE_DIBLIB FALSE)
+set(USE_NEW_CURSORICON FALSE)
 
 # Give WIN32 subsystem its own project.
 PROJECT(WIN32SS)
@@ -10,10 +11,15 @@ if(USE_DIBLIB)
     add_subdirectory(gdi/diblib)
 endif()
 
+if(USE_NEW_CURSORICON)
+    add_definitions(-DNEW_CURSORICON)
+endif()
+
 add_subdirectory(gdi/gdi32)
 add_subdirectory(reactx)
+add_subdirectory(user/consrv)
 add_subdirectory(user/user32)
-add_subdirectory(user/win32csr)
+add_subdirectory(user/winsrv)
 
 spec2def(win32k.sys win32k.spec ADD_IMPORTLIB)
 
@@ -65,6 +71,7 @@ list(APPEND SOURCE
     gdi/eng/lineto.c
     gdi/eng/ldevobj.c
     gdi/eng/mapping.c
+    gdi/eng/math.c
     gdi/eng/mem.c
     gdi/eng/engmisc.c
     gdi/eng/mouse.c
@@ -82,11 +89,9 @@ list(APPEND SOURCE
     gdi/eng/xlateobj.c
     user/ntuser/main.c
     user/ntuser/misc/file.c
-    user/ntuser/misc/math.c
     user/ntuser/misc/rtlstr.c
     user/ntuser/misc/copy.c
     user/ntuser/misc/registry.c
-    user/ntuser/misc/usrheap.c
     reactx/ntddraw/ddraw.c
     reactx/ntddraw/dd.c
     reactx/ntddraw/ddsurf.c
@@ -101,8 +106,6 @@ list(APPEND SOURCE
     user/ntuser/caret.c
     user/ntuser/class.c
     user/ntuser/clipboard.c
-    user/ntuser/csr.c
-    user/ntuser/cursoricon.c
     user/ntuser/defwnd.c
     user/ntuser/desktop.c
     user/ntuser/display.c
@@ -131,6 +134,7 @@ list(APPEND SOURCE
     user/ntuser/sysparams.c
     user/ntuser/timer.c
     user/ntuser/useratom.c
+    user/ntuser/usrheap.c
     user/ntuser/vis.c
     user/ntuser/windc.c
     user/ntuser/window.c
@@ -175,7 +179,8 @@ list(APPEND SOURCE
     gdi/ntgdi/xformobj.c
     gdi/eng/stubs.c
     gdi/eng/umpdstubs.c
-    win32k.rc)
+    win32k.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/win32k.def)
 
 if(USE_DIBLIB)
     add_definitions(-D_USE_DIBLIB_)
@@ -189,26 +194,31 @@ else()
         ${GENDIB_FILES})
 endif()
 
-if(ARCH MATCHES i386)
-list(APPEND SOURCE
+if(USE_NEW_CURSORICON)
+    list(APPEND SOURCE user/ntuser/cursoricon_new.c)
+else()
+    list(APPEND SOURCE user/ntuser/cursoricon.c)
+endif()
+
+if(ARCH STREQUAL "i386")
+list(APPEND ASM_SOURCE
     gdi/dib/i386/dib24bpp_hline.s
     gdi/dib/i386/dib32bpp_hline.s
     gdi/dib/i386/dib32bpp_colorfill.s
-    gdi/eng/i386/floatobj.S
-    user/ntuser/misc/i386/cos_asm.s
-    user/ntuser/misc/i386/sin_asm.s
-    user/ntuser/misc/i386/atan2_asm.s
-    user/ntuser/misc/i386/floor_asm.s
-    user/ntuser/misc/i386/ceil_asm.s)
+    gdi/eng/i386/floatobj.S)
 else()
 list(APPEND SOURCE
     gdi/dib/dib24bppc.c
     gdi/dib/dib32bppc.c)
 endif()
 
-add_library(win32k SHARED
-    ${CMAKE_CURRENT_BINARY_DIR}/win32k.def
-    ${SOURCE})
+if(KDBG)
+    list(APPEND SOURCE
+        gdi/ntgdi/gdikdbgext.c)
+endif()
+
+add_asm_files(win32k_asm ${ASM_SOURCE})
+add_library(win32k SHARED ${SOURCE} ${win32k_asm})
 
 set_module_type(win32k kernelmodedriver)
 
@@ -225,5 +235,7 @@ add_importlibs(win32k ntoskrnl hal ftfd)
 add_pch(win32k pch.h)
 add_cd_file(TARGET win32k DESTINATION reactos/system32 FOR all)
 
-add_library(win32ksys sys-stubs.S)
 set_source_files_properties(sys-stubs.S PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/w32ksvc.h)
+add_asm_files(win32ksys_asm sys-stubs.S)
+add_library(win32ksys ${win32ksys_asm})
+set_target_properties(win32ksys PROPERTIES LINKER_LANGUAGE "C")

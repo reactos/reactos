@@ -2,7 +2,7 @@
  * jdhuff.c
  *
  * Copyright (C) 1991-1997, Thomas G. Lane.
- * Modified 2006-2009 by Guido Vollbeding.
+ * Modified 2006-2012 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -797,7 +797,7 @@ decode_mcu_AC_first (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 
     /* There is always only one block per MCU */
 
-    if (EOBRUN > 0)		/* if it's a band of zeroes... */
+    if (EOBRUN)			/* if it's a band of zeroes... */
       EOBRUN--;			/* ...process it now (we do nothing) */
     else {
       BITREAD_LOAD_STATE(cinfo,entropy->bitstate);
@@ -816,18 +816,17 @@ decode_mcu_AC_first (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 	  /* Scale and output coefficient in natural (dezigzagged) order */
 	  (*block)[natural_order[k]] = (JCOEF) (s << Al);
 	} else {
-	  if (r == 15) {	/* ZRL */
-	    k += 15;		/* skip 15 zeroes in band */
-	  } else {		/* EOBr, run length is 2^r + appended bits */
-	    EOBRUN = 1 << r;
+	  if (r != 15) {	/* EOBr, run length is 2^r + appended bits */
 	    if (r) {		/* EOBr, r > 0 */
+	      EOBRUN = 1 << r;
 	      CHECK_BIT_BUFFER(br_state, r, return FALSE);
 	      r = GET_BITS(r);
 	      EOBRUN += r;
+	      EOBRUN--;		/* this band is processed at this moment */
 	    }
-	    EOBRUN--;		/* this band is processed at this moment */
 	    break;		/* force end-of-band */
 	  }
+	  k += 15;		/* ZRL: skip 15 zeroes in band */
 	}
       }
 
@@ -951,7 +950,7 @@ decode_mcu_AC_refine (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
     k = cinfo->Ss;
 
     if (EOBRUN == 0) {
-      for (; k <= Se; k++) {
+      do {
 	HUFF_DECODE(s, br_state, tbl, goto undoit, label3);
 	r = s >> 4;
 	s &= 15;
@@ -981,7 +980,7 @@ decode_mcu_AC_refine (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 	 */
 	do {
 	  thiscoef = *block + natural_order[k];
-	  if (*thiscoef != 0) {
+	  if (*thiscoef) {
 	    CHECK_BIT_BUFFER(br_state, 1, goto undoit);
 	    if (GET_BITS(1)) {
 	      if ((*thiscoef & p1) == 0) { /* do nothing if already set it */
@@ -1004,18 +1003,19 @@ decode_mcu_AC_refine (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 	  /* Remember its position in case we have to suspend */
 	  newnz_pos[num_newnz++] = pos;
 	}
-      }
+	k++;
+      } while (k <= Se);
     }
 
-    if (EOBRUN > 0) {
+    if (EOBRUN) {
       /* Scan any remaining coefficient positions after the end-of-band
        * (the last newly nonzero coefficient, if any).  Append a correction
        * bit to each already-nonzero coefficient.  A correction bit is 1
        * if the absolute value of the coefficient must be increased.
        */
-      for (; k <= Se; k++) {
+      do {
 	thiscoef = *block + natural_order[k];
-	if (*thiscoef != 0) {
+	if (*thiscoef) {
 	  CHECK_BIT_BUFFER(br_state, 1, goto undoit);
 	  if (GET_BITS(1)) {
 	    if ((*thiscoef & p1) == 0) { /* do nothing if already changed it */
@@ -1026,7 +1026,8 @@ decode_mcu_AC_refine (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 	    }
 	  }
 	}
-      }
+	k++;
+      } while (k <= Se);
       /* Count one block completed in EOB run */
       EOBRUN--;
     }
@@ -1043,7 +1044,7 @@ decode_mcu_AC_refine (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 
 undoit:
   /* Re-zero any output coefficients that we made newly nonzero */
-  while (num_newnz > 0)
+  while (num_newnz)
     (*block)[newnz_pos[--num_newnz]] = 0;
 
   return FALSE;
@@ -1514,7 +1515,7 @@ jinit_huff_decoder (j_decompress_ptr cinfo)
   entropy = (huff_entropy_ptr)
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
 				SIZEOF(huff_entropy_decoder));
-  cinfo->entropy = (struct jpeg_entropy_decoder *) entropy;
+  cinfo->entropy = &entropy->pub;
   entropy->pub.start_pass = start_pass_huff_decoder;
 
   if (cinfo->progressive_mode) {

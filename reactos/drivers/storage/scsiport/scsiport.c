@@ -623,8 +623,8 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
 {
     PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
     SCSI_PHYSICAL_ADDRESS PhysicalAddress;
-    ULONG BufferLength = 0;
-    ULONG Offset;
+    SIZE_T BufferLength = 0;
+    ULONG_PTR Offset;
     PSCSI_SG_ADDRESS SGList;
     PSCSI_REQUEST_BLOCK_INFO SrbInfo;
 
@@ -673,7 +673,7 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
         PhysicalAddress.QuadPart = (LONGLONG)(SP_UNINITIALIZED_VALUE);
     }
 
-    *Length = BufferLength;
+    *Length = (ULONG)BufferLength;
     return PhysicalAddress;
 }
 
@@ -1034,6 +1034,7 @@ ScsiPortInitialize(IN PVOID Argument1,
     KIRQL OldIrql;
     PCM_RESOURCE_LIST ResourceList;
     BOOLEAN Conflict;
+    SIZE_T BusConfigSize;
 
 
     DPRINT ("ScsiPortInitialize() called!\n");
@@ -1635,10 +1636,11 @@ CreatePortConfig:
       IoStartTimer(PortDeviceObject);
 
       /* Initialize bus scanning information */
+      BusConfigSize = FIELD_OFFSET(BUSES_CONFIGURATION_INFORMATION,
+                                   BusScanInfo[DeviceExtension->PortConfig->NumberOfBuses]);
       DeviceExtension->BusesConfig = ExAllocatePoolWithTag(PagedPool,
-          sizeof(PVOID) * DeviceExtension->PortConfig->NumberOfBuses
-          + sizeof(ULONG), TAG_SCSIPORT);
-
+                                                           BusConfigSize,
+                                                           TAG_SCSIPORT);
       if (!DeviceExtension->BusesConfig)
       {
           DPRINT1("Out of resources!\n");
@@ -1647,9 +1649,7 @@ CreatePortConfig:
       }
 
       /* Zero it */
-      RtlZeroMemory(DeviceExtension->BusesConfig,
-          sizeof(PVOID) * DeviceExtension->PortConfig->NumberOfBuses
-          + sizeof(ULONG));
+      RtlZeroMemory(DeviceExtension->BusesConfig, BusConfigSize);
 
       /* Store number of buses there */
       DeviceExtension->BusesConfig->NumberOfBuses = (UCHAR)DeviceExtension->BusNum;
@@ -2622,6 +2622,7 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
 
     case SRB_FUNCTION_EXECUTE_SCSI:
     case SRB_FUNCTION_IO_CONTROL:
+        DPRINT("  SRB_FUNCTION_EXECUTE_SCSI or SRB_FUNCTION_IO_CONTROL\n");
         /* Mark IRP as pending in all cases */
         IoMarkIrpPending(Irp);
 
@@ -2870,7 +2871,11 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
           break;
 
       default:
-          DPRINT1("  unknown ioctl code: 0x%lX\n", Stack->Parameters.DeviceIoControl.IoControlCode);
+          if ('M' == (Stack->Parameters.DeviceIoControl.IoControlCode >> 16)) {
+            DPRINT1("  got ioctl intended for the mount manager: 0x%lX\n", Stack->Parameters.DeviceIoControl.IoControlCode);
+          } else {
+            DPRINT1("  unknown ioctl code: 0x%lX\n", Stack->Parameters.DeviceIoControl.IoControlCode);
+          }
           Status = STATUS_NOT_IMPLEMENTED;
           break;
     }
@@ -4009,7 +4014,7 @@ SpiGetInquiryData(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
         BusData = &AdapterBusInfo->BusData[Bus];
 
         /* Calculate and save an offset of the inquiry data */
-        BusData->InquiryDataOffset = (PUCHAR)InquiryData - Buffer;
+        BusData->InquiryDataOffset = (ULONG)((PUCHAR)InquiryData - Buffer);
 
         /* Get a pointer to the LUN information structure */
         LunInfo = DeviceExtension->BusesConfig->BusScanInfo[Bus]->LunInfo;
@@ -4035,7 +4040,7 @@ SpiGetInquiryData(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
             InquiryData->InquiryDataLength = INQUIRYDATABUFFERSIZE;
             InquiryData->DeviceClaimed = LunInfo->DeviceClaimed;
             InquiryData->NextInquiryDataOffset =
-                (PUCHAR)InquiryData + InquiryDataSize - Buffer;
+                (ULONG)((PUCHAR)InquiryData + InquiryDataSize - Buffer);
 
             /* Copy data in it */
             RtlCopyMemory(InquiryData->InquiryData,
@@ -4585,7 +4590,11 @@ ScsiPortIsr(IN PKINTERRUPT Interrupt,
         return FALSE;
 
     /* Call miniport's HwInterrupt routine */
-    DeviceExtension->HwInterrupt(&DeviceExtension->MiniPortDeviceExtension);
+    if (DeviceExtension->HwInterrupt(&DeviceExtension->MiniPortDeviceExtension) == FALSE)
+    {
+        /* This interrupt doesn't belong to us */
+        return FALSE;
+    }
 
     /* If flag of notification is set - queue a DPC */
     if (DeviceExtension->InterruptData.Flags & SCSI_PORT_NOTIFICATION_NEEDED)
@@ -5356,7 +5365,7 @@ SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 			 0,
 			 REG_SZ,
 			 DriverName,
-			 (wcslen(DriverName) + 1) * sizeof(WCHAR));
+			 (ULONG)((wcslen(DriverName) + 1) * sizeof(WCHAR)));
   if (!NT_SUCCESS(Status))
     {
       DPRINT("ZwSetValueKey('Driver') failed (Status %lx)\n", Status);
@@ -5549,7 +5558,7 @@ SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 					 0,
 					 REG_SZ,
 					 NameBuffer,
-					 (wcslen(NameBuffer) + 1) * sizeof(WCHAR));
+					 (ULONG)((wcslen(NameBuffer) + 1) * sizeof(WCHAR)));
 		  if (!NT_SUCCESS(Status))
 		    {
 		      DPRINT("ZwSetValueKey('Identifier') failed (Status %lx)\n", Status);
@@ -5598,7 +5607,7 @@ SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 					 0,
 					 REG_SZ,
 					 TypeName,
-					 (wcslen(TypeName) + 1) * sizeof(WCHAR));
+					 (ULONG)((wcslen(TypeName) + 1) * sizeof(WCHAR)));
 		  if (!NT_SUCCESS(Status))
 		    {
 		      DPRINT("ZwSetValueKey('Type') failed (Status %lx)\n", Status);

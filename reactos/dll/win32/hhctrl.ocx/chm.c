@@ -20,16 +20,13 @@
  */
 
 #include "hhctrl.h"
+#include "stream.h"
 
-#include "winreg.h"
-#include "shlwapi.h"
-#include "wine/debug.h"
+#include <winreg.h>
+#include <shlwapi.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
-
-#define BLOCK_BITS 12
-#define BLOCK_SIZE (1 << BLOCK_BITS)
-#define BLOCK_MASK (BLOCK_SIZE-1)
 
 /* Reads a string from the #STRINGS section in the CHM file */
 static LPCSTR GetChmString(CHMInfo *chm, DWORD offset)
@@ -133,11 +130,21 @@ static BOOL ReadChmSystem(CHMInfo *chm)
             heap_free(chm->defTitle);
             chm->defTitle = strdupnAtoW(buf, entry.len);
             break;
+        case 0x4:
+            /* TODO: Currently only the Locale ID is loaded from this field */
+            TRACE("Locale is: %d\n", *(LCID*)&buf[0]);
+            if(!GetLocaleInfoW(*(LCID*)&buf[0], LOCALE_IDEFAULTANSICODEPAGE|LOCALE_RETURN_NUMBER,
+                               (WCHAR *)&chm->codePage, sizeof(chm->codePage)/sizeof(WCHAR)))
+                chm->codePage = CP_ACP;
+            break;
         case 0x5:
-            TRACE("Default window is %s\n", debugstr_an(buf, entry.len));
+            TRACE("Window name is %s\n", debugstr_an(buf, entry.len));
+            chm->defWindow = strdupnAtoW(buf, entry.len);
             break;
         case 0x6:
             TRACE("Compiled file is %s\n", debugstr_an(buf, entry.len));
+            heap_free(chm->compiledFile);
+            chm->compiledFile = strdupnAtoW(buf, entry.len);
             break;
         case 0x9:
             TRACE("Version is %s\n", debugstr_an(buf, entry.len));
@@ -209,6 +216,107 @@ LPWSTR FindContextAlias(CHMInfo *chm, DWORD index)
     return strdupAtoW(ret);
 }
 
+/*
+ * Tests if the file <chmfile>.<ext> exists, used for loading Indices, Table of Contents, etc.
+ * when these files are not available from the HH_WINTYPE structure.
+ */
+static WCHAR *FindHTMLHelpSetting(HHInfo *info, const WCHAR *extW)
+{
+    static const WCHAR periodW[] = {'.',0};
+    IStorage *pStorage = info->pCHMInfo->pStorage;
+    IStream *pStream;
+    WCHAR *filename;
+    HRESULT hr;
+
+    filename = heap_alloc( (strlenW(info->pCHMInfo->compiledFile)
+                            + strlenW(periodW) + strlenW(extW) + 1) * sizeof(WCHAR) );
+    strcpyW(filename, info->pCHMInfo->compiledFile);
+    strcatW(filename, periodW);
+    strcatW(filename, extW);
+    hr = IStorage_OpenStream(pStorage, filename, NULL, STGM_READ, 0, &pStream);
+    if (FAILED(hr))
+    {
+        heap_free(filename);
+        return strdupAtoW("");
+    }
+    IStream_Release(pStream);
+    return filename;
+}
+
+static inline WCHAR *MergeChmString(LPCWSTR src, WCHAR **dst)
+{
+    if(*dst == NULL)
+        *dst = strdupW(src);
+    return *dst;
+}
+
+void MergeChmProperties(HH_WINTYPEW *src, HHInfo *info, BOOL override)
+{
+    DWORD unhandled_params = src->fsValidMembers & ~(HHWIN_PARAM_PROPERTIES|HHWIN_PARAM_STYLES
+                             |HHWIN_PARAM_EXSTYLES|HHWIN_PARAM_RECT|HHWIN_PARAM_NAV_WIDTH
+                             |HHWIN_PARAM_SHOWSTATE|HHWIN_PARAM_INFOTYPES|HHWIN_PARAM_TB_FLAGS
+                             |HHWIN_PARAM_EXPANSION|HHWIN_PARAM_TABPOS|HHWIN_PARAM_TABORDER
+                             |HHWIN_PARAM_HISTORY_COUNT|HHWIN_PARAM_CUR_TAB);
+    HH_WINTYPEW *dst = &info->WinType;
+    DWORD merge = override ? src->fsValidMembers : src->fsValidMembers & ~dst->fsValidMembers;
+
+    if (unhandled_params)
+        FIXME("Unsupported fsValidMembers fields: 0x%x\n", unhandled_params);
+
+    dst->fsValidMembers |= merge;
+    if (dst->cbStruct == 0)
+    {
+        /* If the structure has not been filled in yet then use all of the values */
+        dst->cbStruct = sizeof(HH_WINTYPEW);
+        merge = ~0;
+    }
+    if (merge & HHWIN_PARAM_PROPERTIES) dst->fsWinProperties = src->fsWinProperties;
+    if (merge & HHWIN_PARAM_STYLES) dst->dwStyles = src->dwStyles;
+    if (merge & HHWIN_PARAM_EXSTYLES) dst->dwExStyles = src->dwExStyles;
+    if (merge & HHWIN_PARAM_RECT) dst->rcWindowPos = src->rcWindowPos;
+    if (merge & HHWIN_PARAM_NAV_WIDTH) dst->iNavWidth = src->iNavWidth;
+    if (merge & HHWIN_PARAM_SHOWSTATE) dst->nShowState = src->nShowState;
+    if (merge & HHWIN_PARAM_INFOTYPES) dst->paInfoTypes = src->paInfoTypes;
+    if (merge & HHWIN_PARAM_TB_FLAGS) dst->fsToolBarFlags = src->fsToolBarFlags;
+    if (merge & HHWIN_PARAM_EXPANSION) dst->fNotExpanded = src->fNotExpanded;
+    if (merge & HHWIN_PARAM_TABPOS) dst->tabpos = src->tabpos;
+    if (merge & HHWIN_PARAM_TABORDER) memcpy(dst->tabOrder, src->tabOrder, sizeof(src->tabOrder));
+    if (merge & HHWIN_PARAM_HISTORY_COUNT) dst->cHistory = src->cHistory;
+    if (merge & HHWIN_PARAM_CUR_TAB) dst->curNavType = src->curNavType;
+
+    /*
+     * Note: We assume that hwndHelp, hwndCaller, hwndToolBar, hwndNavigation, and hwndHTML cannot be
+     * modified by the user.  rcHTML and rcMinSize are not currently supported, so don't bother to copy them.
+     */
+
+    dst->pszType       = MergeChmString(src->pszType, &info->stringsW.pszType);
+    dst->pszFile       = MergeChmString(src->pszFile, &info->stringsW.pszFile);
+    dst->pszToc        = MergeChmString(src->pszToc, &info->stringsW.pszToc);
+    dst->pszIndex      = MergeChmString(src->pszIndex, &info->stringsW.pszIndex);
+    dst->pszCaption    = MergeChmString(src->pszCaption, &info->stringsW.pszCaption);
+    dst->pszHome       = MergeChmString(src->pszHome, &info->stringsW.pszHome);
+    dst->pszJump1      = MergeChmString(src->pszJump1, &info->stringsW.pszJump1);
+    dst->pszJump2      = MergeChmString(src->pszJump2, &info->stringsW.pszJump2);
+    dst->pszUrlJump1   = MergeChmString(src->pszUrlJump1, &info->stringsW.pszUrlJump1);
+    dst->pszUrlJump2   = MergeChmString(src->pszUrlJump2, &info->stringsW.pszUrlJump2);
+
+    /* FIXME: pszCustomTabs is a list of multiple zero-terminated strings so ReadString won't
+     * work in this case
+     */
+#if 0
+    dst->pszCustomTabs = MergeChmString(src->pszCustomTabs, &info->pszCustomTabs);
+#endif
+}
+
+static inline WCHAR *ConvertChmString(HHInfo *info, const WCHAR **str)
+{
+    WCHAR *ret = NULL;
+
+    if(*str)
+        *str = ret = strdupAtoW(GetChmString(info->pCHMInfo, (DWORD_PTR)*str));
+    return ret;
+}
+
 /* Loads the HH_WINTYPE data from the CHM file
  *
  * FIXME: There may be more than one window type in the file, so
@@ -217,72 +325,94 @@ LPWSTR FindContextAlias(CHMInfo *chm, DWORD index)
 BOOL LoadWinTypeFromCHM(HHInfo *info)
 {
     LARGE_INTEGER liOffset;
+    WCHAR *pszType = NULL, *pszFile = NULL, *pszToc = NULL, *pszIndex = NULL, *pszCaption = NULL;
+    WCHAR *pszHome = NULL, *pszJump1 = NULL, *pszJump2 = NULL, *pszUrlJump1 = NULL, *pszUrlJump2 = NULL;
     IStorage *pStorage = info->pCHMInfo->pStorage;
-    IStream *pStream;
+    IStream *pStream = NULL;
+    HH_WINTYPEW wintype;
     HRESULT hr;
     DWORD cbRead;
+    BOOL ret = FALSE;
 
+    static const WCHAR null[] = {0};
+    static const WCHAR toc_extW[] = {'h','h','c',0};
+    static const WCHAR index_extW[] = {'h','h','k',0};
     static const WCHAR windowsW[] = {'#','W','I','N','D','O','W','S',0};
 
     hr = IStorage_OpenStream(pStorage, windowsW, NULL, STGM_READ, 0, &pStream);
-    if (FAILED(hr))
+    if (SUCCEEDED(hr))
+    {
+        /* jump past the #WINDOWS header */
+        liOffset.QuadPart = sizeof(DWORD) * 2;
+
+        hr = IStream_Seek(pStream, liOffset, STREAM_SEEK_SET, NULL);
+        if (FAILED(hr)) goto done;
+
+        /* read the HH_WINTYPE struct data */
+        hr = IStream_Read(pStream, &wintype, sizeof(wintype), &cbRead);
+        if (FAILED(hr)) goto done;
+
+        /* convert the #STRINGS offsets to actual strings */
+        pszType     = ConvertChmString(info, &wintype.pszType);
+        pszFile     = ConvertChmString(info, &wintype.pszFile);
+        pszToc      = ConvertChmString(info, &wintype.pszToc);
+        pszIndex    = ConvertChmString(info, &wintype.pszIndex);
+        pszCaption  = ConvertChmString(info, &wintype.pszCaption);
+        pszHome     = ConvertChmString(info, &wintype.pszHome);
+        pszJump1    = ConvertChmString(info, &wintype.pszJump1);
+        pszJump2    = ConvertChmString(info, &wintype.pszJump2);
+        pszUrlJump1 = ConvertChmString(info, &wintype.pszUrlJump1);
+        pszUrlJump2 = ConvertChmString(info, &wintype.pszUrlJump2);
+    }
+    else
     {
         /* no defined window types so use (hopefully) sane defaults */
         static const WCHAR defaultwinW[] = {'d','e','f','a','u','l','t','w','i','n','\0'};
-        static const WCHAR null[] = {0};
-        memset((void*)&(info->WinType), 0, sizeof(info->WinType));
-        info->WinType.cbStruct=sizeof(info->WinType);
-        info->WinType.fUniCodeStrings=TRUE;
-        info->WinType.pszType=strdupW(defaultwinW);
-        info->WinType.pszToc = strdupW(info->pCHMInfo->defToc ? info->pCHMInfo->defToc : null);
-        info->WinType.pszIndex = strdupW(null);
-        info->WinType.fsValidMembers=0;
-        info->WinType.fsWinProperties=HHWIN_PROP_TRI_PANE;
-        info->WinType.pszCaption=strdupW(info->pCHMInfo->defTitle ? info->pCHMInfo->defTitle : null);
-        info->WinType.dwStyles=WS_POPUP;
-        info->WinType.dwExStyles=0;
-        info->WinType.nShowState=SW_SHOW;
-        info->WinType.pszFile=strdupW(info->pCHMInfo->defTopic ? info->pCHMInfo->defTopic : null);
-        info->WinType.curNavType=HHWIN_NAVTYPE_TOC;
-        return TRUE;
+        memset(&wintype, 0, sizeof(wintype));
+        wintype.cbStruct = sizeof(wintype);
+        wintype.fUniCodeStrings = TRUE;
+        wintype.pszType    = pszType     = strdupW(info->pCHMInfo->defWindow ? info->pCHMInfo->defWindow : defaultwinW);
+        wintype.pszToc     = pszToc      = strdupW(info->pCHMInfo->defToc ? info->pCHMInfo->defToc : null);
+        wintype.pszIndex   = pszIndex    = strdupW(null);
+        wintype.fsValidMembers = 0;
+        wintype.fsWinProperties = HHWIN_PROP_TRI_PANE;
+        wintype.dwStyles = WS_POPUP;
+        wintype.dwExStyles = 0;
+        wintype.nShowState = SW_SHOW;
+        wintype.curNavType = HHWIN_NAVTYPE_TOC;
     }
 
-    /* jump past the #WINDOWS header */
-    liOffset.QuadPart = sizeof(DWORD) * 2;
+    /* merge the new data with any pre-existing HH_WINTYPE structure */
+    MergeChmProperties(&wintype, info, FALSE);
+    if (!info->WinType.pszCaption)
+        info->WinType.pszCaption = info->stringsW.pszCaption = strdupW(info->pCHMInfo->defTitle ? info->pCHMInfo->defTitle : null);
+    if (!info->WinType.pszFile)
+        info->WinType.pszFile    = info->stringsW.pszFile    = strdupW(info->pCHMInfo->defTopic ? info->pCHMInfo->defTopic : null);
+    if (!info->WinType.pszToc)
+        info->WinType.pszToc     = info->stringsW.pszToc     = FindHTMLHelpSetting(info, toc_extW);
+    if (!info->WinType.pszIndex)
+        info->WinType.pszIndex   = info->stringsW.pszIndex   = FindHTMLHelpSetting(info, index_extW);
 
-    hr = IStream_Seek(pStream, liOffset, STREAM_SEEK_SET, NULL);
-    if (FAILED(hr)) goto done;
-
-    /* read the HH_WINTYPE struct data */
-    hr = IStream_Read(pStream, &info->WinType, sizeof(info->WinType), &cbRead);
-    if (FAILED(hr)) goto done;
-
-    /* convert the #STRINGS offsets to actual strings */
-    info->WinType.pszType     = info->pszType     = strdupAtoW(GetChmString(info->pCHMInfo, (DWORD_PTR)info->WinType.pszType));
-    info->WinType.pszCaption  = info->pszCaption  = strdupAtoW(GetChmString(info->pCHMInfo, (DWORD_PTR)info->WinType.pszCaption));
-    info->WinType.pszToc      = info->pszToc      = strdupAtoW(GetChmString(info->pCHMInfo, (DWORD_PTR)info->WinType.pszToc));
-    info->WinType.pszIndex    = info->pszIndex    = strdupAtoW(GetChmString(info->pCHMInfo, (DWORD_PTR)info->WinType.pszIndex));
-    info->WinType.pszFile     = info->pszFile     = strdupAtoW(GetChmString(info->pCHMInfo, (DWORD_PTR)info->WinType.pszFile));
-    info->WinType.pszHome     = info->pszHome     = strdupAtoW(GetChmString(info->pCHMInfo, (DWORD_PTR)info->WinType.pszHome));
-    info->WinType.pszJump1    = info->pszJump1    = strdupAtoW(GetChmString(info->pCHMInfo, (DWORD_PTR)info->WinType.pszJump1));
-    info->WinType.pszJump2    = info->pszJump2    = strdupAtoW(GetChmString(info->pCHMInfo, (DWORD_PTR)info->WinType.pszJump2));
-    info->WinType.pszUrlJump1 = info->pszUrlJump1 = strdupAtoW(GetChmString(info->pCHMInfo, (DWORD_PTR)info->WinType.pszUrlJump1));
-    info->WinType.pszUrlJump2 = info->pszUrlJump2 = strdupAtoW(GetChmString(info->pCHMInfo, (DWORD_PTR)info->WinType.pszUrlJump2));
-
-    /* FIXME: pszCustomTabs is a list of multiple zero-terminated strings so ReadString won't
-     * work in this case
-     */
-#if 0
-    info->WinType.pszCustomTabs = info->pszCustomTabs = CHM_ReadString(pChmInfo, (DWORD_PTR)info->WinType.pszCustomTabs);
-#endif
+    heap_free(pszType);
+    heap_free(pszFile);
+    heap_free(pszToc);
+    heap_free(pszIndex);
+    heap_free(pszCaption);
+    heap_free(pszHome);
+    heap_free(pszJump1);
+    heap_free(pszJump2);
+    heap_free(pszUrlJump1);
+    heap_free(pszUrlJump2);
+    ret = TRUE;
 
 done:
-    IStream_Release(pStream);
+    if (pStream)
+        IStream_Release(pStream);
 
-    return SUCCEEDED(hr);
+    return ret;
 }
 
-static LPCWSTR skip_schema(LPCWSTR url)
+LPCWSTR skip_schema(LPCWSTR url)
 {
     static const WCHAR its_schema[] = {'i','t','s',':'};
     static const WCHAR msits_schema[] = {'m','s','-','i','t','s',':'};
@@ -364,6 +494,62 @@ IStream *GetChmStream(CHMInfo *info, LPCWSTR parent_chm, ChmPath *chm_file)
     return stream;
 }
 
+/*
+ * Retrieve a CHM document and parse the data from the <title> element to get the document's title.
+ */
+WCHAR *GetDocumentTitle(CHMInfo *info, LPCWSTR document)
+{
+    strbuf_t node, node_name, content;
+    WCHAR *document_title = NULL;
+    IStream *str = NULL;
+    IStorage *storage;
+    stream_t stream;
+    HRESULT hres;
+
+    TRACE("%s\n", debugstr_w(document));
+
+    storage = info->pStorage;
+    if(!storage) {
+        WARN("Could not open storage to obtain the title for a document.\n");
+        return NULL;
+    }
+    IStorage_AddRef(storage);
+
+    hres = IStorage_OpenStream(storage, document, NULL, STGM_READ, 0, &str);
+    IStorage_Release(storage);
+    if(FAILED(hres))
+        WARN("Could not open stream: %08x\n", hres);
+
+    stream_init(&stream, str);
+    strbuf_init(&node);
+    strbuf_init(&content);
+    strbuf_init(&node_name);
+
+    while(next_node(&stream, &node)) {
+        get_node_name(&node, &node_name);
+
+        TRACE("%s\n", node.buf);
+
+        if(!strcasecmp(node_name.buf, "title")) {
+            if(next_content(&stream, &content) && content.len > 1)
+            {
+                document_title = strdupnAtoW(&content.buf[1], content.len-1);
+                FIXME("magic: %s\n", debugstr_w(document_title));
+                break;
+            }
+        }
+
+        strbuf_zero(&node);
+    }
+
+    strbuf_free(&node);
+    strbuf_free(&content);
+    strbuf_free(&node_name);
+    IStream_Release(str);
+
+    return document_title;
+}
+
 /* Opens the CHM file for reading */
 CHMInfo *OpenCHM(LPCWSTR szFile)
 {
@@ -374,6 +560,7 @@ CHMInfo *OpenCHM(LPCWSTR szFile)
 
     if (!(ret = heap_alloc_zero(sizeof(CHMInfo))))
         return NULL;
+    ret->codePage = CP_ACP;
 
     if (!(ret->szFile = strdupW(szFile))) {
         heap_free(ret);
@@ -427,10 +614,12 @@ CHMInfo *CloseCHM(CHMInfo *chm)
     }
 
     heap_free(chm->strings);
+    heap_free(chm->defWindow);
     heap_free(chm->defTitle);
     heap_free(chm->defTopic);
     heap_free(chm->defToc);
     heap_free(chm->szFile);
+    heap_free(chm->compiledFile);
     heap_free(chm);
 
     return NULL;

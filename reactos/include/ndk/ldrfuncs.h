@@ -34,41 +34,52 @@ Author:
 NTSTATUS
 NTAPI
 LdrAccessResource(
-    IN PVOID BaseAddress,
-    IN PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry,
-    OUT PVOID *Resource OPTIONAL,
-    OUT PULONG Size OPTIONAL
+    _In_ PVOID BaseAddress,
+    _In_ PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry,
+    _Out_opt_ PVOID *Resource,
+    _Out_opt_ PULONG Size
 );
 
 NTSTATUS
 NTAPI
 LdrFindResource_U(
-    IN PVOID BaseAddress,
-    IN PLDR_RESOURCE_INFO ResourceInfo,
-    IN ULONG Level,
-    OUT PIMAGE_RESOURCE_DATA_ENTRY *ResourceDataEntry
+    _In_ PVOID BaseAddress,
+    _In_ PLDR_RESOURCE_INFO ResourceInfo,
+    _In_ ULONG Level,
+    _Out_ PIMAGE_RESOURCE_DATA_ENTRY *ResourceDataEntry
 );
 
 NTSTATUS
 NTAPI
+LdrEnumResources(
+    _In_ PVOID BaseAddress,
+    _In_ PLDR_RESOURCE_INFO ResourceInfo,
+    _In_ ULONG Level,
+    _Inout_ ULONG *ResourceCount,
+    _Out_writes_to_(*ResourceCount,*ResourceCount) LDR_ENUM_RESOURCE_INFO *Resources
+);
+
+
+NTSTATUS
+NTAPI
 LdrFindResourceDirectory_U(
-    IN PVOID BaseAddress,
-    IN PLDR_RESOURCE_INFO ResourceInfo,
-    IN ULONG Level,
-    OUT PIMAGE_RESOURCE_DIRECTORY *ResourceDirectory
+    _In_ PVOID BaseAddress,
+    _In_ PLDR_RESOURCE_INFO ResourceInfo,
+    _In_ ULONG Level,
+    _Out_ PIMAGE_RESOURCE_DIRECTORY *ResourceDirectory
 );
 
 NTSTATUS
 NTAPI
 LdrLoadAlternateResourceModule(
-    IN PVOID Module,
-    IN PWSTR Buffer
+    _In_ PVOID Module,
+    _In_ PWSTR Buffer
 );
 
 BOOLEAN
 NTAPI
 LdrUnloadAlternateResourceModule(
-    IN PVOID BaseAddress
+    _In_ PVOID BaseAddress
 );
 
 //
@@ -77,60 +88,60 @@ LdrUnloadAlternateResourceModule(
 NTSTATUS
 NTAPI
 LdrGetProcedureAddress(
-    IN PVOID BaseAddress,
-    IN PANSI_STRING Name,
-    IN ULONG Ordinal,
-    OUT PVOID *ProcedureAddress
+    _In_ PVOID BaseAddress,
+    _In_ PANSI_STRING Name,
+    _In_ ULONG Ordinal,
+    _Out_ PVOID *ProcedureAddress
 );
 
 ULONG
 NTAPI
 LdrRelocateImage(
-    IN PVOID NewBase,
-    IN PUCHAR LoaderName,
-    IN ULONG Success,
-    IN ULONG Conflict,
-    IN ULONG Invalid
+    _In_ PVOID NewBase,
+    _In_ PUCHAR LoaderName,
+    _In_ ULONG Success,
+    _In_ ULONG Conflict,
+    _In_ ULONG Invalid
 );
 
 NTSTATUS
 NTAPI
 LdrLockLoaderLock(
-    IN ULONG Flags,
-    OUT PULONG Disposition OPTIONAL,
-    OUT PULONG Cookie OPTIONAL
+    _In_ ULONG Flags,
+    _Out_opt_ PULONG Disposition,
+    _Out_opt_ PULONG Cookie
 );
 
 NTSTATUS
 NTAPI
 LdrUnlockLoaderLock(
-    IN ULONG Flags,
-    IN ULONG Cookie OPTIONAL
+    _In_ ULONG Flags,
+    _In_opt_ ULONG Cookie
 );
 
 BOOLEAN
 NTAPI
 LdrVerifyMappedImageMatchesChecksum(
-    IN PVOID BaseAddress,
-    IN SIZE_T NumberOfBytes,
-    IN ULONG FileLength
+    _In_ PVOID BaseAddress,
+    _In_ SIZE_T NumberOfBytes,
+    _In_ ULONG FileLength
 );
 
 PIMAGE_BASE_RELOCATION
 NTAPI
 LdrProcessRelocationBlockLongLong(
-    IN ULONG_PTR Address,
-    IN ULONG Count,
-    IN PUSHORT TypeOffset,
-    IN LONGLONG Delta
+    _In_ ULONG_PTR Address,
+    _In_ ULONG Count,
+    _In_ PUSHORT TypeOffset,
+    _In_ LONGLONG Delta
 );
 
 NTSTATUS
 NTAPI
 LdrEnumerateLoadedModules(
-    IN BOOLEAN ReservedFlag,
-    IN PLDR_ENUM_CALLBACK EnumProc,
-    IN PVOID Context
+    _In_ BOOLEAN ReservedFlag,
+    _In_ PLDR_ENUM_CALLBACK EnumProc,
+    _In_ PVOID Context
 );
 
 #endif

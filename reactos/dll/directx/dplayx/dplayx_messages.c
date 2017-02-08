@@ -14,25 +14,25 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTES
  *  o Messaging interface required for both DirectPlay and DirectPlayLobby.
  */
 
-#include <stdarg.h>
-#include <string.h>
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winerror.h"
+//#include <stdarg.h>
+//#include <string.h>
+//#include "windef.h"
+//#include "winbase.h"
+//#include "wingdi.h"
+//#include "winuser.h"
+//#include "winerror.h"
 
-#include "dplayx_messages.h"
-#include "dplay_global.h"
+//#include "dplayx_messages.h"
+//#include "dplay_global.h"
 #include "dplayx_global.h"
 #include "name_server.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(dplay);
 
@@ -110,7 +110,7 @@ error:
 
 static DWORD CALLBACK DPL_MSG_ThreadMain( LPVOID lpContext )
 {
-  LPMSGTHREADINFO lpThreadInfo = (LPMSGTHREADINFO)lpContext;
+  LPMSGTHREADINFO lpThreadInfo = lpContext;
   DWORD dwWaitResult;
 
   TRACE( "Msg thread created. Waiting on app startup\n" );
@@ -119,7 +119,7 @@ static DWORD CALLBACK DPL_MSG_ThreadMain( LPVOID lpContext )
   dwWaitResult = WaitForSingleObject( lpThreadInfo->hStart, 10000 /* 10 sec */ );
   if( dwWaitResult == WAIT_TIMEOUT )
   {
-    FIXME( "Should signal app/wait creation failure (0x%08lx)\n", dwWaitResult );
+    FIXME( "Should signal app/wait creation failure (0x%08x)\n", dwWaitResult );
     goto end_of_thread;
   }
 
@@ -131,14 +131,14 @@ static DWORD CALLBACK DPL_MSG_ThreadMain( LPVOID lpContext )
   dwWaitResult = WaitForSingleObject( lpThreadInfo->hSettingRead, INFINITE );
   if( dwWaitResult == WAIT_TIMEOUT )
   {
-    ERR( "App Read connection setting timeout fail (0x%08lx)\n", dwWaitResult );
+    ERR( "App Read connection setting timeout fail (0x%08x)\n", dwWaitResult );
   }
 
   /* Close this handle as it's not needed anymore */
   CloseHandle( lpThreadInfo->hSettingRead );
   lpThreadInfo->hSettingRead = 0;
 
-  TRACE( "App created && intialized starting main message reception loop\n" );
+  TRACE( "App created && initialized starting main message reception loop\n" );
 
   for ( ;; )
   {
@@ -153,7 +153,7 @@ end_of_thread:
   return 0;
 }
 
-/* DP messageing stuff */
+/* DP messaging stuff */
 static HANDLE DP_MSG_BuildAndLinkReplyStruct( IDirectPlay2Impl* This,
                                               LPDP_MSG_REPLY_STRUCT_LIST lpReplyStructList,
                                               WORD wReplyCommandId );
@@ -172,7 +172,7 @@ HANDLE DP_MSG_BuildAndLinkReplyStruct( IDirectPlay2Impl* This,
 
   /* Insert into the message queue while locked */
   EnterCriticalSection( &This->unk->DP_lock );
-    DPQ_INSERT( This->dp2->replysExpected, lpReplyStructList, replysExpected );
+    DPQ_INSERT( This->dp2->repliesExpected, lpReplyStructList, repliesExpected );
   LeaveCriticalSection( &This->unk->DP_lock );
 
   return lpReplyStructList->replyExpected.hReceipt;
@@ -225,7 +225,7 @@ HRESULT DP_MSG_SendRequestPlayerId( IDirectPlay2AImpl* This, DWORD dwFlags,
     data.bSystemMessage = TRUE; /* Allow reply to be sent */
     data.lpISP          = This->dp2->spData.lpISP;
 
-    TRACE( "Asking for player id w/ dwFlags 0x%08lx\n",
+    TRACE( "Asking for player id w/ dwFlags 0x%08x\n",
            lpMsgBody->dwFlags );
 
     DP_MSG_ExpectReply( This, &data, DPMSG_DEFAULT_WAIT_TIME, DPMSGCMD_NEWPLAYERIDREPLY,
@@ -233,20 +233,20 @@ HRESULT DP_MSG_SendRequestPlayerId( IDirectPlay2AImpl* This, DWORD dwFlags,
   }
 
   /* Need to examine the data and extract the new player id */
-  if( !FAILED(hr) )
+  if( SUCCEEDED(hr) )
   {
     LPCDPMSG_NEWPLAYERIDREPLY lpcReply;
 
-    lpcReply = (LPCDPMSG_NEWPLAYERIDREPLY)lpMsg;
+    lpcReply = lpMsg;
 
     *lpdpidAllocatedId = lpcReply->dpidNewPlayerId;
 
-    TRACE( "Received reply for id = 0x%08lx\n", lpcReply->dpidNewPlayerId );
+    TRACE( "Received reply for id = 0x%08x\n", lpcReply->dpidNewPlayerId );
 
     /* FIXME: I think that the rest of the message has something to do
      *        with remote data for the player that perhaps I need to setup.
      *        However, with the information that is passed, all that it could
-     *        be used for is a standardized intialization value, which I'm
+     *        be used for is a standardized initialization value, which I'm
      *        guessing we can do without. Unless the message content is the same
      *        for several different messages?
      */
@@ -282,7 +282,7 @@ HRESULT DP_MSG_ForwardPlayerCreation( IDirectPlay2AImpl* This, DPID dpidServer )
     DWORD  dwDataSize;
 
     /* SP Player remote data needs to be propagated at some point - is this the point? */
-    IDirectPlaySP_GetSPPlayerData( This->dp2->spData.lpISP, 0, (LPVOID*)&lpPData, &dwDataSize, DPSET_REMOTE );
+    IDirectPlaySP_GetSPPlayerData( This->dp2->spData.lpISP, 0, &lpPData, &dwDataSize, DPSET_REMOTE );
 
     ERR( "Player Data size is 0x%08lx\n"
          "[%02x%02x %02x%02x %02x%02x %02x%02x %02x%02x %02x%02x %02x%02x %02x%02x]\n"
@@ -323,18 +323,14 @@ HRESULT DP_MSG_ForwardPlayerCreation( IDirectPlay2AImpl* This, DPID dpidServer )
 
   lpMsgBody->unknown4[3] =  NS_GetNsMagic( This->dp2->lpNameServerData ) -
                             0x02000000;
-  TRACE( "Setting first magic to 0x%08lx\n", lpMsgBody->unknown4[3] );
+  TRACE( "Setting first magic to 0x%08x\n", lpMsgBody->unknown4[3] );
 
   lpMsgBody->unknown4[4] =  0x0;
   lpMsgBody->unknown4[5] =  0x0;
   lpMsgBody->unknown4[6] =  0x0;
 
-#if 0
-  lpMsgBody->unknown4[7] =  NS_GetOtherMagic( This->dp2->lpNameServerData )
-#else
   lpMsgBody->unknown4[7] =  NS_GetNsMagic( This->dp2->lpNameServerData );
-#endif
-  TRACE( "Setting second magic to 0x%08lx\n", lpMsgBody->unknown4[7] );
+  TRACE( "Setting second magic to 0x%08x\n", lpMsgBody->unknown4[7] );
 
   lpMsgBody->unknown4[8] =  0x0;
   lpMsgBody->unknown4[9] =  0x0;
@@ -356,7 +352,7 @@ HRESULT DP_MSG_ForwardPlayerCreation( IDirectPlay2AImpl* This, DPID dpidServer )
     data.bSystemMessage = TRUE; /* Allow reply to be sent */
     data.lpISP          = This->dp2->spData.lpISP;
 
-    TRACE( "Sending forward player request with 0x%08lx\n", dpidServer );
+    TRACE( "Sending forward player request with 0x%08x\n", dpidServer );
 
     lpMsg = DP_MSG_ExpectReply( This, &data,
                                 DPMSG_WAIT_60_SECS,
@@ -393,7 +389,7 @@ LPVOID DP_MSG_ExpectReply( IDirectPlay2AImpl* This, LPDPSP_SENDDATA lpData,
   hMsgReceipt = DP_MSG_BuildAndLinkReplyStruct( This, &replyStructList,
                                                 wReplyCommandId );
 
-  TRACE( "Sending msg and expecting cmd %u in reply within %lu ticks\n",
+  TRACE( "Sending msg and expecting cmd %u in reply within %u ticks\n",
          wReplyCommandId, dwWaitTime );
   hr = (*This->dp2->spData.lpCB->Send)( lpData );
 
@@ -409,7 +405,7 @@ LPVOID DP_MSG_ExpectReply( IDirectPlay2AImpl* This, LPDPSP_SENDDATA lpData,
   dwWaitReturn = WaitForSingleObject( hMsgReceipt, dwWaitTime );
   if( dwWaitReturn != WAIT_OBJECT_0 )
   {
-    ERR( "Wait failed 0x%08lx\n", dwWaitReturn );
+    ERR( "Wait failed 0x%08x\n", dwWaitReturn );
     return NULL;
   }
 
@@ -437,7 +433,7 @@ void DP_MSG_ReplyReceived( IDirectPlay2AImpl* This, WORD wCommandId,
    * avoid problems.
    */
   EnterCriticalSection( &This->unk->DP_lock );
-    DPQ_REMOVE_ENTRY( This->dp2->replysExpected, replysExpected, replyExpected.wExpectedReply,\
+    DPQ_REMOVE_ENTRY( This->dp2->repliesExpected, repliesExpected, replyExpected.wExpectedReply,
                      ==, wCommandId, lpReplyList );
   LeaveCriticalSection( &This->unk->DP_lock );
 
@@ -502,7 +498,7 @@ void DP_MSG_ErrorReceived( IDirectPlay2AImpl* This, WORD wCommandId,
 {
   LPCDPMSG_FORWARDADDPLAYERNACK lpcErrorMsg;
 
-  lpcErrorMsg = (LPCDPMSG_FORWARDADDPLAYERNACK)lpMsgBody;
+  lpcErrorMsg = lpMsgBody;
 
   ERR( "Received error message %u. Error is %s\n",
        wCommandId, DPLAYX_HresultToString( lpcErrorMsg->errorCode) );

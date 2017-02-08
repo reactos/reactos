@@ -73,14 +73,18 @@ PciVerifierRetrieveFailureData(IN ULONG FailureCode)
     return VerifierData;
 }
 
+DRIVER_NOTIFICATION_CALLBACK_ROUTINE PciVerifierProfileChangeCallback;
+
 NTSTATUS
 NTAPI
 PciVerifierProfileChangeCallback(IN PVOID NotificationStructure,
                                  IN PVOID Context)
 {
+    UNREFERENCED_PARAMETER(NotificationStructure);
+    UNREFERENCED_PARAMETER(Context);
+
     /* This function is not yet implemented */
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_SUCCESS;
 }
 

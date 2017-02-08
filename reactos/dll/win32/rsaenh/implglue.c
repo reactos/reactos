@@ -21,17 +21,20 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include "config.h"
+#define WIN32_NO_STATUS
+#define WIN32_LEAN_AND_MEAN
 
-#include "wine/port.h"
-#include "wine/library.h"
+#include <config.h>
 
-#include "windef.h"
-#include "wincrypt.h"
+//#include "wine/port.h"
+#include <wine/library.h>
+
+//#include "windef.h"
+#include <wincrypt.h>
 
 #include "implglue.h"
 
-#include <stdio.h>
+//#include <stdio.h>
 
 /* Function prototypes copied from dlls/advapi32/crypt_md4.c */
 VOID WINAPI MD4Init( MD4_CTX *ctx );

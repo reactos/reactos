@@ -1,7 +1,7 @@
-#include <string.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#include <windef.h>
 #include <winsock2.h>
-#include <windows.h>
-#include <io.h>
 
 const char *
 WSAAPI

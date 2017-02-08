@@ -11,7 +11,7 @@ list(APPEND SOURCE
 
 add_library(odbccp32 SHARED ${SOURCE})
 
-set_module_type(odbccp32 win32dll ENTRYPOINT 0 )
+set_module_type(odbccp32 win32dll)
 target_link_libraries(odbccp32 uuid wine)
 
 add_importlibs(odbccp32

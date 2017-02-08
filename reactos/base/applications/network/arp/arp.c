@@ -28,13 +28,14 @@
  *
  */
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <tchar.h>
-#include <string.h>
-#include <ctype.h>
+#define _INC_WINDOWS
 #include <winsock2.h>
 #include <iphlpapi.h>
 
@@ -47,7 +48,6 @@
 const char SEPERATOR = '-';
 int _CRT_glob = 0; // stop * from listing dir files in arp -d *
 
-
 /*
  * function declerations
  */
@@ -57,7 +57,6 @@ INT DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr);
 INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr);
 INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr);
 VOID Usage(VOID);
-
 
 /*
  * convert error code into meaningful message
@@ -93,8 +92,6 @@ DWORD DoFormatMessage(VOID)
     }
     return 0;
 }
-
-
 
 /*
  *
@@ -135,7 +132,6 @@ INT PrintEntries(PMIB_IPNETROW pIpAddRow)
     }
     return EXIT_SUCCESS;
 }
-
 
 /*
  *
@@ -252,7 +248,6 @@ cleanup:
         HeapFree(GetProcessHeap(), 0, pIpAddrTable);
     return EXIT_FAILURE;
 }
-
 
 /*
  *
@@ -394,7 +389,6 @@ cleanup:
     return EXIT_FAILURE;
 }
 
-
 /*
  *
  * Takes an internet address and an optional interface address as
@@ -510,8 +504,6 @@ cleanup:
     return EXIT_FAILURE;
 }
 
-
-
 /*
  *
  * print program usage to screen
@@ -549,8 +541,6 @@ VOID Usage(VOID)
                 "  > arp -s 157.55.85.212   00-aa-00-62-c6-09  .... Adds a static entry.\n"
                 "  > arp -a                                    .... Displays the arp table.\n\n"));
 }
-
-
 
 /*
  *

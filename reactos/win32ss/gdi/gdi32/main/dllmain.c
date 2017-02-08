@@ -1,13 +1,8 @@
 /*
  * dllmain.c
- *
- * $Revision: 1.11 $
- * $Author$
- * $Date$
- *
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 extern HGDIOBJ stock_objects[];
 BOOL SetStockObjects = FALSE;

@@ -23,7 +23,7 @@ typedef struct _INFCACHEFIELD
   struct _INFCACHEFIELD *Next;
   struct _INFCACHEFIELD *Prev;
 
-  TCHAR Data[1];
+  WCHAR Data[1];
 } INFCACHEFIELD, *PINFCACHEFIELD;
 
 typedef struct _INFCACHELINE
@@ -33,7 +33,7 @@ typedef struct _INFCACHELINE
 
   LONG FieldCount;
 
-  PTSTR Key;
+  PWCHAR Key;
 
   PINFCACHEFIELD FirstField;
   PINFCACHEFIELD LastField;
@@ -50,11 +50,12 @@ typedef struct _INFCACHESECTION
 
   LONG LineCount;
 
-  TCHAR Name[1];
+  WCHAR Name[1];
 } INFCACHESECTION, *PINFCACHESECTION;
 
 typedef struct _INFCACHE
 {
+  LANGID LanguageId;
   PINFCACHESECTION FirstSection;
   PINFCACHESECTION LastSection;
 
@@ -73,40 +74,40 @@ typedef int INFSTATUS;
 /* FUNCTIONS ****************************************************************/
 
 extern INFSTATUS InfpParseBuffer(PINFCACHE file,
-                                 const CHAR *buffer,
-                                 const CHAR *end,
+                                 const WCHAR *buffer,
+                                 const WCHAR *end,
                                  PULONG error_line);
 extern PINFCACHESECTION InfpFreeSection(PINFCACHESECTION Section);
 extern PINFCACHESECTION InfpAddSection(PINFCACHE Cache,
-                                       PCTSTR Name);
+                                       PCWSTR Name);
 extern PINFCACHELINE InfpAddLine(PINFCACHESECTION Section);
 extern PVOID InfpAddKeyToLine(PINFCACHELINE Line,
-                              PCTSTR Key);
+                              PCWSTR Key);
 extern PVOID InfpAddFieldToLine(PINFCACHELINE Line,
-                                PCTSTR Data);
+                                PCWSTR Data);
 extern PINFCACHELINE InfpFindKeyLine(PINFCACHESECTION Section,
-                                     PCTSTR Key);
+                                     PCWSTR Key);
 extern PINFCACHESECTION InfpFindSection(PINFCACHE Cache,
-                                        PCTSTR Section);
+                                        PCWSTR Section);
 
 extern INFSTATUS InfpBuildFileBuffer(PINFCACHE InfHandle,
-                                     PCHAR *Buffer,
+                                     PWCHAR *Buffer,
                                      PULONG BufferSize);
 
 extern INFSTATUS InfpFindFirstLine(PINFCACHE InfHandle,
-                                   PCTSTR Section,
-                                   PCTSTR Key,
+                                   PCWSTR Section,
+                                   PCWSTR Key,
                                    PINFCONTEXT *Context);
 extern INFSTATUS InfpFindNextLine(PINFCONTEXT ContextIn,
                                   PINFCONTEXT ContextOut);
 extern INFSTATUS InfpFindFirstMatchLine(PINFCONTEXT ContextIn,
-                                        PCTSTR Key,
+                                        PCWSTR Key,
                                         PINFCONTEXT ContextOut);
 extern INFSTATUS InfpFindNextMatchLine(PINFCONTEXT ContextIn,
-                                       PCTSTR Key,
+                                       PCWSTR Key,
                                        PINFCONTEXT ContextOut);
 extern LONG InfpGetLineCount(HINF InfHandle,
-                             PCTSTR Section);
+                             PCWSTR Section);
 extern LONG InfpGetFieldCount(PINFCONTEXT Context);
 extern INFSTATUS InfpGetBinaryField(PINFCONTEXT Context,
                                     ULONG FieldIndex,
@@ -115,29 +116,29 @@ extern INFSTATUS InfpGetBinaryField(PINFCONTEXT Context,
                                     PULONG RequiredSize);
 extern INFSTATUS InfpGetIntField(PINFCONTEXT Context,
                                  ULONG FieldIndex,
-                                 INT* IntegerValue);
+                                 INT *IntegerValue);
 extern INFSTATUS InfpGetMultiSzField(PINFCONTEXT Context,
                                      ULONG FieldIndex,
-                                     PTSTR ReturnBuffer,
+                                     PWSTR ReturnBuffer,
                                      ULONG ReturnBufferSize,
                                      PULONG RequiredSize);
 extern INFSTATUS InfpGetStringField(PINFCONTEXT Context,
                                     ULONG FieldIndex,
-                                    PTSTR ReturnBuffer,
+                                    PWSTR ReturnBuffer,
                                     ULONG ReturnBufferSize,
                                     PULONG RequiredSize);
 extern INFSTATUS InfpGetData(PINFCONTEXT Context,
-                             PTCHAR *Key,
-                             PTCHAR *Data);
+                             PWCHAR *Key,
+                             PWCHAR *Data);
 extern INFSTATUS InfpGetDataField(PINFCONTEXT Context,
                                   ULONG FieldIndex,
-                                  PTCHAR *Data);
+                                  PWCHAR *Data);
 
 extern INFSTATUS InfpFindOrAddSection(PINFCACHE Cache,
-                                      PCTSTR Section,
+                                      PCWSTR Section,
                                       PINFCONTEXT *Context);
-extern INFSTATUS InfpAddLineWithKey(PINFCONTEXT Context, PCTSTR Key);
-extern INFSTATUS InfpAddField(PINFCONTEXT Context, PCTSTR Data);
+extern INFSTATUS InfpAddLineWithKey(PINFCONTEXT Context, PCWSTR Key);
+extern INFSTATUS InfpAddField(PINFCONTEXT Context, PCWSTR Data);
 
 extern VOID InfpFreeContext(PINFCONTEXT Context);
 

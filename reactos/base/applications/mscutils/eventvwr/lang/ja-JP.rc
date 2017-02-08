@@ -18,7 +18,7 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "終了(&X)",                  IDM_EXIT
 	END
-	POPUP "表 示(&V)"
+	POPUP "表示(&V)"
 	BEGIN
 		MENUITEM "更新(&R)",                  IDM_REFRESH
 	END
@@ -78,7 +78,7 @@ BEGIN
 	LTEXT           "Static",IDC_EVENTCOMPUTERSTATIC,56,54,72,8
 	LTEXT           "イベントID:",IDC_STATIC,133,15,36,8
 	LTEXT           "Static",IDC_EVENTIDSTATIC,175,15,87,8
-	LTEXT           "ソ ース:",IDC_STATIC,133,28,36,8
+	LTEXT           "ソース:",IDC_STATIC,133,28,36,8
 	LTEXT           "Static",IDC_EVENTSOURCESTATIC,175,28,87,8
 	LTEXT           "種類:",IDC_STATIC,133,42,36,8
 	LTEXT           "Static",IDC_EVENTTYPESTATIC,175,42,87,8
@@ -93,7 +93,7 @@ END
 STRINGTABLE
 BEGIN
 	IDS_APP_TITLE                  "イベント ビューア"
-	IDS_EVENTSTRINGIDNOTFOUND      "イベント ID (%lu) (ソ ース %s 内) に関する説明が見つかりませんでした。 リモート コンピュータからメッセージを表 示するために必要なレジストリ情報またはメッセージ DLL ファイルがローカル コンピュータにない可能 性があります。"
+	IDS_EVENTSTRINGIDNOTFOUND      "イベント ID (%lu) (ソース %s 内) に関する説明が見つかりませんでした。 リモート コンピュータからメッセージを表示するために必要なレジストリ情報またはメッセージ DLL ファイルがローカル コンピュータにない可能性があります。"
 	IDS_EVENTLOG_ERROR_TYPE        "エラー"
 	IDS_EVENTLOG_WARNING_TYPE      "警告"
 	IDS_EVENTLOG_INFORMATION_TYPE  "情報"

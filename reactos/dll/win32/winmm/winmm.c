@@ -40,20 +40,20 @@
  */
 
 #include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
+//#include <stdarg.h>
+//#include <string.h>
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-#include "windef.h"
-#include "winbase.h"
-#include "mmsystem.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "winternl.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "mmsystem.h"
+#include <winuser.h>
+#include <winnls.h>
+//#include "winternl.h"
 #include "winemm.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(winmm);
 

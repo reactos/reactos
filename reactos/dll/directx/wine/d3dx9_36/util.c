@@ -17,7 +17,7 @@
  *
  */
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 #include "d3dx9_36_private.h"
 
 

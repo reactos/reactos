@@ -18,22 +18,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <stdio.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winver.h"
-#include "wincrypt.h"
-#include "dbghelp.h"
-#include "ole2.h"
-#include "fusion.h"
-#include "corhdr.h"
+#include <stdarg.h>
+//#include <stdio.h>
+
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+#include <winver.h>
+#include <wincrypt.h>
+#include <dbghelp.h>
+#include <ole2.h>
+#include <fusion.h>
+#include <corhdr.h>
 
 #include "fusionpriv.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 #define TableFromToken(tk) (TypeFromToken(tk) >> 24)
 #define TokenFromTable(idx) (idx << 24)
@@ -482,8 +486,9 @@ static inline ULONG get_table_size(const ASSEMBLY *assembly, DWORD index)
 
 static HRESULT parse_clr_tables(ASSEMBLY *assembly, ULONG offset)
 {
-    DWORD i, previ, offidx;
+    DWORD i, count;
     ULONG currofs;
+    ULONGLONG mask;
 
     currofs = offset;
     assembly->tableshdr = assembly_data_offset(assembly, currofs);
@@ -502,44 +507,22 @@ static HRESULT parse_clr_tables(ASSEMBLY *assembly, ULONG offset)
     if (!assembly->numrows)
         return E_FAIL;
 
-    assembly->numtables = 0;
-    for (i = 0; i < MAX_CLR_TABLES; i++)
-    {
-        if ((i < 32 && (assembly->tableshdr->MaskValid.u.LowPart >> i) & 1) ||
-            (i >= 32 && (assembly->tableshdr->MaskValid.u.HighPart >> i) & 1))
-        {
-            assembly->numtables++;
-        }
-    }
-
-    currofs += assembly->numtables * sizeof(DWORD);
     memset(assembly->tables, -1, MAX_CLR_TABLES * sizeof(CLRTABLE));
 
-    if (assembly->tableshdr->MaskValid.u.LowPart & 1)
-        assembly->tables[0].offset = currofs;
-
-    offidx = 0;
-    for (i = 0; i < MAX_CLR_TABLES; i++)
+    for (i = count = 0, mask = 1; i < MAX_CLR_TABLES; i++, mask <<= 1)
     {
-        if ((i < 32 && (assembly->tableshdr->MaskValid.u.LowPart >> i) & 1) ||
-            (i >= 32 && (assembly->tableshdr->MaskValid.u.HighPart >> i) & 1))
-        {
-            assembly->tables[i].rows = assembly->numrows[offidx];
-            offidx++;
-        }
+        if (assembly->tableshdr->MaskValid.QuadPart & mask)
+            assembly->tables[i].rows = assembly->numrows[count++];
     }
+    assembly->numtables = count;
+    currofs += assembly->numtables * sizeof(DWORD);
 
-    previ = 0;
-    offidx = 1;
-    for (i = 1; i < MAX_CLR_TABLES; i++)
+    for (i = 0, mask = 1; i < MAX_CLR_TABLES; i++, mask <<= 1)
     {
-        if ((i < 32 && (assembly->tableshdr->MaskValid.u.LowPart >> i) & 1) ||
-            (i >= 32 && (assembly->tableshdr->MaskValid.u.HighPart >> i) & 1))
+        if (assembly->tableshdr->MaskValid.QuadPart & mask)
         {
-            currofs += get_table_size(assembly, previ) * assembly->numrows[offidx - 1];
             assembly->tables[i].offset = currofs;
-            offidx++;
-            previ = i;
+            currofs += get_table_size(assembly, i) * assembly->tables[i].rows;
         }
     }
 
@@ -567,7 +550,7 @@ static HRESULT parse_metadata_header(ASSEMBLY *assembly, DWORD *hdrsz)
     size = FIELD_OFFSET(METADATAHDR, Version);
     memcpy(assembly->metadatahdr, metadatahdr, size);
 
-    /* we don't care about the version string */
+    assembly->metadatahdr->Version = (LPSTR)&metadatahdr->Version;
 
     ofs = FIELD_OFFSET(METADATAHDR, Flags);
     ptr += FIELD_OFFSET(METADATAHDR, Version) + metadatahdr->VersionLength + 1;
@@ -761,9 +744,9 @@ HRESULT assembly_get_name(ASSEMBLY *assembly, LPWSTR *name)
 
     ptr += FIELD_OFFSET(ASSEMBLYTABLE, PublicKey) + assembly->blobsz;
     if (assembly->stringsz == sizeof(DWORD))
-        stridx = *((DWORD *)ptr);
+        stridx = *(DWORD *)ptr;
     else
-        stridx = *((WORD *)ptr);
+        stridx = *(WORD *)ptr;
 
     *name = assembly_dup_str(assembly, stridx);
     if (!*name)
@@ -811,10 +794,10 @@ HRESULT assembly_get_version(ASSEMBLY *assembly, LPWSTR *version)
     return S_OK;
 }
 
-BYTE assembly_get_architecture(ASSEMBLY *assembly)
+PEKIND assembly_get_architecture(ASSEMBLY *assembly)
 {
     if ((assembly->corhdr->MajorRuntimeVersion == 2) && (assembly->corhdr->MinorRuntimeVersion == 0))
-        return 0; /* .NET 1.x assembly */
+        return peNone; /* .NET 1.x assembly */
 
     if (assembly->nthdr->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR64_MAGIC)
         return peAMD64; /* AMD64/IA64 assembly */
@@ -825,23 +808,22 @@ BYTE assembly_get_architecture(ASSEMBLY *assembly)
     return peI386; /* x86 assembly */
 }
 
-static BYTE *assembly_get_blob(ASSEMBLY *assembly, WORD index, ULONG *size)
+static BYTE *assembly_get_blob(ASSEMBLY *assembly, DWORD index, ULONG *size)
 {
     return GetData(&assembly->blobs[index], size);
 }
 
 HRESULT assembly_get_pubkey_token(ASSEMBLY *assembly, LPWSTR *token)
 {
-    ASSEMBLYTABLE *asmtbl;
     ULONG i, size;
     LONG offset;
-    BYTE *hashdata;
+    BYTE *hashdata, *pubkey, *ptr;
     HCRYPTPROV crypt;
     HCRYPTHASH hash;
-    BYTE *pubkey;
     BYTE tokbytes[BYTES_PER_TOKEN];
     HRESULT hr = E_FAIL;
     LPWSTR tok;
+    DWORD idx;
 
     *token = NULL;
 
@@ -849,11 +831,17 @@ HRESULT assembly_get_pubkey_token(ASSEMBLY *assembly, LPWSTR *token)
     if (offset == -1)
         return E_FAIL;
 
-    asmtbl = assembly_data_offset(assembly, offset);
-    if (!asmtbl)
+    ptr = assembly_data_offset(assembly, offset);
+    if (!ptr)
         return E_FAIL;
 
-    pubkey = assembly_get_blob(assembly, asmtbl->PublicKey, &size);
+    ptr += FIELD_OFFSET(ASSEMBLYTABLE, PublicKey);
+    if (assembly->blobsz == sizeof(DWORD))
+        idx = *(DWORD *)ptr;
+    else
+        idx = *(WORD *)ptr;
+
+    pubkey = assembly_get_blob(assembly, idx, &size);
 
     if (!CryptAcquireContextA(&crypt, NULL, NULL, PROV_RSA_FULL,
                               CRYPT_VERIFYCONTEXT))
@@ -900,4 +888,59 @@ done:
     CryptReleaseContext(crypt, 0);
 
     return hr;
+}
+
+HRESULT assembly_get_runtime_version(ASSEMBLY *assembly, LPSTR *version)
+{
+    *version = assembly->metadatahdr->Version;
+    return S_OK;
+}
+
+HRESULT assembly_get_external_files(ASSEMBLY *assembly, LPWSTR **files, DWORD *count)
+{
+    LONG offset;
+    INT i, num_rows;
+    WCHAR **ret;
+    BYTE *ptr;
+    DWORD idx;
+
+    *count = 0;
+
+    offset = assembly->tables[TableFromToken(mdtFile)].offset;
+    if (offset == -1)
+        return S_OK;
+
+    ptr = assembly_data_offset(assembly, offset);
+    if (!ptr)
+        return S_OK;
+
+    num_rows = assembly->tables[TableFromToken(mdtFile)].rows;
+    if (num_rows <= 0)
+        return S_OK;
+
+    ret = HeapAlloc(GetProcessHeap(), 0, num_rows * sizeof(WCHAR *));
+    if (!ret)
+        return E_OUTOFMEMORY;
+
+    for (i = 0; i < num_rows; i++)
+    {
+        ptr += sizeof(DWORD); /* skip Flags field */
+        if (assembly->stringsz == sizeof(DWORD))
+            idx = *(DWORD *)ptr;
+        else
+            idx = *(WORD *)ptr;
+
+        ret[i] = assembly_dup_str(assembly, idx);
+        if (!ret[i])
+        {
+            for (; i >= 0; i--) HeapFree(GetProcessHeap(), 0, ret[i]);
+            HeapFree(GetProcessHeap(), 0, ret);
+            return E_OUTOFMEMORY;
+        }
+        ptr += assembly->stringsz; /* skip Name field */
+        ptr += assembly->blobsz; /* skip Hash field */
+    }
+    *count = num_rows;
+    *files = ret;
+    return S_OK;
 }

@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/process/job.c
@@ -292,7 +291,7 @@ SetInformationJobObject(IN HANDLE hJob,
         if (LocalInfo.BasicLimitInformation.LimitFlags &
             JOB_OBJECT_LIMIT_WORKINGSET)
         {
-            Status = RtlAcquirePrivilege(&Privilege, TRUE, FALSE, &State);
+            Status = RtlAcquirePrivilege(&Privilege, 1, 0, &State);
         }
     }
 

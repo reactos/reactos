@@ -29,22 +29,22 @@
 /* INCLUDES *****************************************************************/
 //#define HAVE_SLIST_ENTRY_IMPLEMENTED
 #define WIN32_NO_STATUS
-#include <windows.h>
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winsvc.h>
 #include <stdio.h>
-#include <cmtypes.h>
 #include <cmfuncs.h>
 #include <rtlfuncs.h>
 #include <setypes.h>
 #include <umpnpmgr/sysguid.h>
-#include <wdmguid.h>
 #include <cfgmgr32.h>
 #include <regstr.h>
 #include <userenv.h>
-
-#include <rpc.h>
-#include <rpcdce.h>
-
-#include "pnp_s.h"
+#include <pnp_s.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -3025,7 +3025,7 @@ IsConsoleBoot(VOID)
     if (rc != ERROR_SUCCESS)
         goto cleanup;
 
-    /* Check for CMDCONS in SystemStartOptions */
+    /* Check for CONSOLE switch in SystemStartOptions */
     CurrentOption = SystemStartOptions;
     while (CurrentOption)
     {

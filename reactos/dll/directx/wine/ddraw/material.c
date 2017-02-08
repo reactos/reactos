@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <config.h>
+//#include "wine/port.h"
 
 #include "ddraw_private.h"
 
@@ -31,19 +31,19 @@ static void dump_material(const D3DMATERIAL *mat)
     TRACE("  dwSize : %d\n", mat->dwSize);
 }
 
-static inline IDirect3DMaterialImpl *impl_from_IDirect3DMaterial(IDirect3DMaterial *iface)
+static inline struct d3d_material *impl_from_IDirect3DMaterial(IDirect3DMaterial *iface)
 {
-    return CONTAINING_RECORD(iface, IDirect3DMaterialImpl, IDirect3DMaterial_iface);
+    return CONTAINING_RECORD(iface, struct d3d_material, IDirect3DMaterial_iface);
 }
 
-static inline IDirect3DMaterialImpl *impl_from_IDirect3DMaterial2(IDirect3DMaterial2 *iface)
+static inline struct d3d_material *impl_from_IDirect3DMaterial2(IDirect3DMaterial2 *iface)
 {
-    return CONTAINING_RECORD(iface, IDirect3DMaterialImpl, IDirect3DMaterial2_iface);
+    return CONTAINING_RECORD(iface, struct d3d_material, IDirect3DMaterial2_iface);
 }
 
-static inline IDirect3DMaterialImpl *impl_from_IDirect3DMaterial3(IDirect3DMaterial3 *iface)
+static inline struct d3d_material *impl_from_IDirect3DMaterial3(IDirect3DMaterial3 *iface)
 {
-    return CONTAINING_RECORD(iface, IDirect3DMaterialImpl, IDirect3DMaterial3_iface);
+    return CONTAINING_RECORD(iface, struct d3d_material, IDirect3DMaterial3_iface);
 }
 
 /*****************************************************************************
@@ -65,40 +65,45 @@ static inline IDirect3DMaterialImpl *impl_from_IDirect3DMaterial3(IDirect3DMater
  *  E_NOINTERFACE if the requested interface wasn't found
  *
  *****************************************************************************/
-static HRESULT WINAPI IDirect3DMaterialImpl_QueryInterface(IDirect3DMaterial3 *iface, REFIID riid,
-        void **obp)
+static HRESULT WINAPI d3d_material3_QueryInterface(IDirect3DMaterial3 *iface, REFIID riid, void **obp)
 {
-    IDirect3DMaterialImpl *This = impl_from_IDirect3DMaterial3(iface);
+    struct d3d_material *material = impl_from_IDirect3DMaterial3(iface);
 
     TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), obp);
 
     *obp = NULL;
 
-    if ( IsEqualGUID( &IID_IUnknown,  riid ) ) {
-        IUnknown_AddRef(iface);
+    if (IsEqualGUID(&IID_IUnknown, riid))
+    {
+        IDirect3DMaterial3_AddRef(iface);
         *obp = iface;
         TRACE("  Creating IUnknown interface at %p.\n", *obp);
         return S_OK;
     }
-    if ( IsEqualGUID( &IID_IDirect3DMaterial, riid ) ) {
-        IDirect3DMaterial_AddRef(&This->IDirect3DMaterial_iface);
-        *obp = &This->IDirect3DMaterial_iface;
+    if (IsEqualGUID(&IID_IDirect3DMaterial, riid))
+    {
+        IDirect3DMaterial_AddRef(&material->IDirect3DMaterial_iface);
+        *obp = &material->IDirect3DMaterial_iface;
         TRACE("  Creating IDirect3DMaterial interface %p\n", *obp);
         return S_OK;
     }
-    if ( IsEqualGUID( &IID_IDirect3DMaterial2, riid ) ) {
-        IDirect3DMaterial_AddRef(&This->IDirect3DMaterial2_iface);
-        *obp = &This->IDirect3DMaterial2_iface;
+    if (IsEqualGUID(&IID_IDirect3DMaterial2, riid))
+    {
+        IDirect3DMaterial2_AddRef(&material->IDirect3DMaterial2_iface);
+        *obp = &material->IDirect3DMaterial2_iface;
         TRACE("  Creating IDirect3DMaterial2 interface %p\n", *obp);
         return S_OK;
     }
-    if ( IsEqualGUID( &IID_IDirect3DMaterial3, riid ) ) {
-        IDirect3DMaterial3_AddRef(&This->IDirect3DMaterial3_iface);
-        *obp = This;
+    if (IsEqualGUID(&IID_IDirect3DMaterial3, riid))
+    {
+        IDirect3DMaterial3_AddRef(&material->IDirect3DMaterial3_iface);
+        *obp = &material->IDirect3DMaterial3_iface;
         TRACE("  Creating IDirect3DMaterial3 interface %p\n", *obp);
         return S_OK;
     }
-    FIXME("(%p): interface for IID %s NOT found!\n", This, debugstr_guid(riid));
+
+    WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(riid));
+
     return E_NOINTERFACE;
 }
 
@@ -111,12 +116,12 @@ static HRESULT WINAPI IDirect3DMaterialImpl_QueryInterface(IDirect3DMaterial3 *i
  *  The new refcount
  *
  *****************************************************************************/
-static ULONG WINAPI IDirect3DMaterialImpl_AddRef(IDirect3DMaterial3 *iface)
+static ULONG WINAPI d3d_material3_AddRef(IDirect3DMaterial3 *iface)
 {
-    IDirect3DMaterialImpl *This = impl_from_IDirect3DMaterial3(iface);
-    ULONG ref = InterlockedIncrement(&This->ref);
+    struct d3d_material *material = impl_from_IDirect3DMaterial3(iface);
+    ULONG ref = InterlockedIncrement(&material->ref);
 
-    TRACE("%p increasing refcount to %u.\n", This, ref);
+    TRACE("%p increasing refcount to %u.\n", material, ref);
 
     return ref;
 }
@@ -131,25 +136,25 @@ static ULONG WINAPI IDirect3DMaterialImpl_AddRef(IDirect3DMaterial3 *iface)
  *  The new refcount
  *
  *****************************************************************************/
-static ULONG WINAPI IDirect3DMaterialImpl_Release(IDirect3DMaterial3 *iface)
+static ULONG WINAPI d3d_material3_Release(IDirect3DMaterial3 *iface)
 {
-    IDirect3DMaterialImpl *This = impl_from_IDirect3DMaterial3(iface);
-    ULONG ref = InterlockedDecrement(&This->ref);
+    struct d3d_material *material = impl_from_IDirect3DMaterial3(iface);
+    ULONG ref = InterlockedDecrement(&material->ref);
 
-    TRACE("%p decreasing refcount to %u.\n", This, ref);
+    TRACE("%p decreasing refcount to %u.\n", material, ref);
 
     if (!ref)
     {
-        if(This->Handle)
+        if (material->Handle)
         {
             wined3d_mutex_lock();
-            ddraw_free_handle(&This->ddraw->d3ddevice->handle_table, This->Handle - 1, DDRAW_HANDLE_MATERIAL);
+            ddraw_free_handle(&material->ddraw->d3ddevice->handle_table, material->Handle - 1, DDRAW_HANDLE_MATERIAL);
             wined3d_mutex_unlock();
         }
 
-        HeapFree(GetProcessHeap(), 0, This);
-        return 0;
+        HeapFree(GetProcessHeap(), 0, material);
     }
+
     return ref;
 }
 
@@ -169,11 +174,9 @@ static ULONG WINAPI IDirect3DMaterialImpl_Release(IDirect3DMaterial3 *iface)
  *  D3D_OK
  *
  *****************************************************************************/
-static HRESULT WINAPI
-IDirect3DMaterialImpl_Initialize(IDirect3DMaterial *iface,
-                                  IDirect3D *Direct3D)
+static HRESULT WINAPI d3d_material1_Initialize(IDirect3DMaterial *iface, IDirect3D *d3d)
 {
-    TRACE("iface %p, d3d %p.\n", iface, Direct3D);
+    TRACE("iface %p, d3d %p.\n", iface, d3d);
 
     return D3D_OK;
 }
@@ -188,8 +191,7 @@ IDirect3DMaterialImpl_Initialize(IDirect3DMaterial *iface,
  *  DDERR_UNSUPPORTED
  *
  *****************************************************************************/
-static HRESULT WINAPI
-IDirect3DMaterialImpl_Reserve(IDirect3DMaterial *iface)
+static HRESULT WINAPI d3d_material1_Reserve(IDirect3DMaterial *iface)
 {
     TRACE("iface %p.\n", iface);
 
@@ -205,8 +207,7 @@ IDirect3DMaterialImpl_Reserve(IDirect3DMaterial *iface)
  *  DDERR_UNSUPPORTED
  *
  *****************************************************************************/
-static HRESULT WINAPI
-IDirect3DMaterialImpl_Unreserve(IDirect3DMaterial *iface)
+static HRESULT WINAPI d3d_material1_Unreserve(IDirect3DMaterial *iface)
 {
     TRACE("iface %p.\n", iface);
 
@@ -226,19 +227,18 @@ IDirect3DMaterialImpl_Unreserve(IDirect3DMaterial *iface)
  *  DDERR_INVALIDPARAMS if Mat is NULL
  *
  *****************************************************************************/
-static HRESULT WINAPI IDirect3DMaterialImpl_SetMaterial(IDirect3DMaterial3 *iface,
-        D3DMATERIAL *lpMat)
+static HRESULT WINAPI d3d_material3_SetMaterial(IDirect3DMaterial3 *iface, D3DMATERIAL *mat)
 {
-    IDirect3DMaterialImpl *This = impl_from_IDirect3DMaterial3(iface);
+    struct d3d_material *material = impl_from_IDirect3DMaterial3(iface);
 
-    TRACE("iface %p, material %p.\n", iface, lpMat);
+    TRACE("iface %p, mat %p.\n", iface, mat);
     if (TRACE_ON(ddraw))
-        dump_material(lpMat);
+        dump_material(mat);
 
     /* Stores the material */
     wined3d_mutex_lock();
-    memset(&This->mat, 0, sizeof(This->mat));
-    memcpy(&This->mat, lpMat, lpMat->dwSize);
+    memset(&material->mat, 0, sizeof(material->mat));
+    memcpy(&material->mat, mat, mat->dwSize);
     wined3d_mutex_unlock();
 
     return DD_OK;
@@ -257,23 +257,22 @@ static HRESULT WINAPI IDirect3DMaterialImpl_SetMaterial(IDirect3DMaterial3 *ifac
  *  DDERR_INVALIDPARAMS if Mat is NULL
  *
  *****************************************************************************/
-static HRESULT WINAPI IDirect3DMaterialImpl_GetMaterial(IDirect3DMaterial3 *iface,
-        D3DMATERIAL *lpMat)
+static HRESULT WINAPI d3d_material3_GetMaterial(IDirect3DMaterial3 *iface, D3DMATERIAL *mat)
 {
-    IDirect3DMaterialImpl *This = impl_from_IDirect3DMaterial3(iface);
+    struct d3d_material *material = impl_from_IDirect3DMaterial3(iface);
     DWORD dwSize;
 
-    TRACE("iface %p, material %p.\n", iface, lpMat);
+    TRACE("iface %p, mat %p.\n", iface, mat);
     if (TRACE_ON(ddraw))
     {
         TRACE("  Returning material : ");
-        dump_material(&This->mat);
+        dump_material(&material->mat);
     }
 
     /* Copies the material structure */
     wined3d_mutex_lock();
-    dwSize = lpMat->dwSize;
-    memcpy(lpMat, &This->mat, dwSize);
+    dwSize = mat->dwSize;
+    memcpy(mat, &material->mat, dwSize);
     wined3d_mutex_unlock();
 
     return DD_OK;
@@ -294,19 +293,19 @@ static HRESULT WINAPI IDirect3DMaterialImpl_GetMaterial(IDirect3DMaterial3 *ifac
  *  DDERR_INVALIDPARAMS if Handle is NULL
  *
  *****************************************************************************/
-static HRESULT WINAPI IDirect3DMaterialImpl_GetHandle(IDirect3DMaterial3 *iface,
+static HRESULT WINAPI d3d_material3_GetHandle(IDirect3DMaterial3 *iface,
         IDirect3DDevice3 *device, D3DMATERIALHANDLE *handle)
 {
-    IDirect3DMaterialImpl *This = impl_from_IDirect3DMaterial3(iface);
-    IDirect3DDeviceImpl *device_impl = unsafe_impl_from_IDirect3DDevice3(device);
+    struct d3d_material *material = impl_from_IDirect3DMaterial3(iface);
+    struct d3d_device *device_impl = unsafe_impl_from_IDirect3DDevice3(device);
 
     TRACE("iface %p, device %p, handle %p.\n", iface, device, handle);
 
     wined3d_mutex_lock();
-    This->active_device = device_impl;
-    if(!This->Handle)
+    material->active_device = device_impl;
+    if (!material->Handle)
     {
-        DWORD h = ddraw_allocate_handle(&device_impl->handle_table, This, DDRAW_HANDLE_MATERIAL);
+        DWORD h = ddraw_allocate_handle(&device_impl->handle_table, material, DDRAW_HANDLE_MATERIAL);
         if (h == DDRAW_INVALID_HANDLE)
         {
             ERR("Failed to allocate a material handle.\n");
@@ -314,133 +313,127 @@ static HRESULT WINAPI IDirect3DMaterialImpl_GetHandle(IDirect3DMaterial3 *iface,
             return DDERR_INVALIDPARAMS;   /* Unchecked */
         }
 
-        This->Handle = h + 1;
+        material->Handle = h + 1;
     }
-    *handle = This->Handle;
+    *handle = material->Handle;
     TRACE(" returning handle %08x.\n", *handle);
     wined3d_mutex_unlock();
 
     return D3D_OK;
 }
 
-static HRESULT WINAPI IDirect3DMaterialImpl_2_GetHandle(IDirect3DMaterial2 *iface,
+static HRESULT WINAPI d3d_material2_GetHandle(IDirect3DMaterial2 *iface,
         IDirect3DDevice2 *device, D3DMATERIALHANDLE *handle)
 {
-    IDirect3DMaterialImpl *This = impl_from_IDirect3DMaterial2(iface);
-    IDirect3DDeviceImpl *device_impl = unsafe_impl_from_IDirect3DDevice2(device);
+    struct d3d_material *material = impl_from_IDirect3DMaterial2(iface);
+    struct d3d_device *device_impl = unsafe_impl_from_IDirect3DDevice2(device);
 
     TRACE("iface %p, device %p, handle %p.\n", iface, device, handle);
 
-    return IDirect3DMaterial3_GetHandle(&This->IDirect3DMaterial3_iface, device_impl ?
-            &device_impl->IDirect3DDevice3_iface : NULL, handle);
+    return d3d_material3_GetHandle(&material->IDirect3DMaterial3_iface,
+            device_impl ? &device_impl->IDirect3DDevice3_iface : NULL, handle);
 }
 
-static HRESULT WINAPI IDirect3DMaterialImpl_1_GetHandle(IDirect3DMaterial *iface,
+static HRESULT WINAPI d3d_material1_GetHandle(IDirect3DMaterial *iface,
         IDirect3DDevice *device, D3DMATERIALHANDLE *handle)
 {
-    IDirect3DMaterialImpl *This = impl_from_IDirect3DMaterial(iface);
-    IDirect3DDeviceImpl *device_impl = unsafe_impl_from_IDirect3DDevice(device);
+    struct d3d_material *material = impl_from_IDirect3DMaterial(iface);
+    struct d3d_device *device_impl = unsafe_impl_from_IDirect3DDevice(device);
 
     TRACE("iface %p, device %p, handle %p.\n", iface, device, handle);
 
-    return IDirect3DMaterial3_GetHandle(&This->IDirect3DMaterial3_iface, device_impl ?
-            &device_impl->IDirect3DDevice3_iface : NULL, handle);
+    return d3d_material3_GetHandle(&material->IDirect3DMaterial3_iface,
+            device_impl ? &device_impl->IDirect3DDevice3_iface : NULL, handle);
 }
 
-static HRESULT WINAPI IDirect3DMaterialImpl_2_QueryInterface(IDirect3DMaterial2 *iface, REFIID riid,
-        void **obp)
+static HRESULT WINAPI d3d_material2_QueryInterface(IDirect3DMaterial2 *iface, REFIID riid, void **object)
 {
-    IDirect3DMaterialImpl *This = impl_from_IDirect3DMaterial2(iface);
+    struct d3d_material *material = impl_from_IDirect3DMaterial2(iface);
 
-    TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), obp);
+    TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), object);
 
-    return IDirect3DMaterial3_QueryInterface(&This->IDirect3DMaterial3_iface, riid, obp);
+    return d3d_material3_QueryInterface(&material->IDirect3DMaterial3_iface, riid, object);
 }
 
-static HRESULT WINAPI IDirect3DMaterialImpl_1_QueryInterface(IDirect3DMaterial *iface, REFIID riid,
-        void **obp)
+static HRESULT WINAPI d3d_material1_QueryInterface(IDirect3DMaterial *iface, REFIID riid, void **object)
 {
-    IDirect3DMaterialImpl *This = impl_from_IDirect3DMaterial(iface);
+    struct d3d_material *material = impl_from_IDirect3DMaterial(iface);
 
-    TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), obp);
+    TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), object);
 
-    return IDirect3DMaterial3_QueryInterface(&This->IDirect3DMaterial3_iface, riid, obp);
+    return d3d_material3_QueryInterface(&material->IDirect3DMaterial3_iface, riid, object);
 }
 
-static ULONG WINAPI IDirect3DMaterialImpl_2_AddRef(IDirect3DMaterial2 *iface)
+static ULONG WINAPI d3d_material2_AddRef(IDirect3DMaterial2 *iface)
 {
-    IDirect3DMaterialImpl *This = impl_from_IDirect3DMaterial2(iface);
+    struct d3d_material *material = impl_from_IDirect3DMaterial2(iface);
 
     TRACE("iface %p.\n", iface);
 
-    return IDirect3DMaterial3_AddRef(&This->IDirect3DMaterial3_iface);
+    return d3d_material3_AddRef(&material->IDirect3DMaterial3_iface);
 }
 
-static ULONG WINAPI IDirect3DMaterialImpl_1_AddRef(IDirect3DMaterial *iface)
+static ULONG WINAPI d3d_material1_AddRef(IDirect3DMaterial *iface)
 {
-    IDirect3DMaterialImpl *This = impl_from_IDirect3DMaterial(iface);
+    struct d3d_material *material = impl_from_IDirect3DMaterial(iface);
 
     TRACE("iface %p.\n", iface);
 
-    return IDirect3DMaterial3_AddRef(&This->IDirect3DMaterial3_iface);
+    return d3d_material3_AddRef(&material->IDirect3DMaterial3_iface);
 }
 
-static ULONG WINAPI IDirect3DMaterialImpl_2_Release(IDirect3DMaterial2 *iface)
+static ULONG WINAPI d3d_material2_Release(IDirect3DMaterial2 *iface)
 {
-    IDirect3DMaterialImpl *This = impl_from_IDirect3DMaterial2(iface);
+    struct d3d_material *material = impl_from_IDirect3DMaterial2(iface);
 
     TRACE("iface %p.\n", iface);
 
-    return IDirect3DMaterial3_Release(&This->IDirect3DMaterial3_iface);
+    return d3d_material3_Release(&material->IDirect3DMaterial3_iface);
 }
 
-static ULONG WINAPI IDirect3DMaterialImpl_1_Release(IDirect3DMaterial *iface)
+static ULONG WINAPI d3d_material1_Release(IDirect3DMaterial *iface)
 {
-    IDirect3DMaterialImpl *This = impl_from_IDirect3DMaterial(iface);
+    struct d3d_material *material = impl_from_IDirect3DMaterial(iface);
 
     TRACE("iface %p.\n", iface);
 
-    return IDirect3DMaterial3_Release(&This->IDirect3DMaterial3_iface);
+    return d3d_material3_Release(&material->IDirect3DMaterial3_iface);
 }
 
-static HRESULT WINAPI IDirect3DMaterialImpl_2_SetMaterial(IDirect3DMaterial2 *iface,
-        LPD3DMATERIAL lpMat)
+static HRESULT WINAPI d3d_material2_SetMaterial(IDirect3DMaterial2 *iface, D3DMATERIAL *mat)
 {
-    IDirect3DMaterialImpl *This = impl_from_IDirect3DMaterial2(iface);
+    struct d3d_material *material = impl_from_IDirect3DMaterial2(iface);
 
-    TRACE("iface %p, material %p.\n", iface, lpMat);
+    TRACE("iface %p, material %p.\n", iface, mat);
 
-    return IDirect3DMaterial3_SetMaterial(&This->IDirect3DMaterial3_iface, lpMat);
+    return d3d_material3_SetMaterial(&material->IDirect3DMaterial3_iface, mat);
 }
 
-static HRESULT WINAPI IDirect3DMaterialImpl_1_SetMaterial(IDirect3DMaterial *iface,
-        LPD3DMATERIAL lpMat)
+static HRESULT WINAPI d3d_material1_SetMaterial(IDirect3DMaterial *iface, D3DMATERIAL *mat)
 {
-    IDirect3DMaterialImpl *This = impl_from_IDirect3DMaterial(iface);
+    struct d3d_material *material = impl_from_IDirect3DMaterial(iface);
 
-    TRACE("iface %p, material %p.\n", iface, lpMat);
+    TRACE("iface %p, material %p.\n", iface, mat);
 
-    return IDirect3DMaterial3_SetMaterial(&This->IDirect3DMaterial3_iface, lpMat);
+    return d3d_material3_SetMaterial(&material->IDirect3DMaterial3_iface, mat);
 }
 
-static HRESULT WINAPI IDirect3DMaterialImpl_2_GetMaterial(IDirect3DMaterial2 *iface,
-        LPD3DMATERIAL lpMat)
+static HRESULT WINAPI d3d_material2_GetMaterial(IDirect3DMaterial2 *iface, D3DMATERIAL *mat)
 {
-    IDirect3DMaterialImpl *This = impl_from_IDirect3DMaterial2(iface);
+    struct d3d_material *material = impl_from_IDirect3DMaterial2(iface);
 
-    TRACE("iface %p, material %p.\n", iface, lpMat);
+    TRACE("iface %p, material %p.\n", iface, mat);
 
-    return IDirect3DMaterial3_GetMaterial(&This->IDirect3DMaterial3_iface, lpMat);
+    return d3d_material3_GetMaterial(&material->IDirect3DMaterial3_iface, mat);
 }
 
-static HRESULT WINAPI IDirect3DMaterialImpl_1_GetMaterial(IDirect3DMaterial *iface,
-        LPD3DMATERIAL lpMat)
+static HRESULT WINAPI d3d_material1_GetMaterial(IDirect3DMaterial *iface, D3DMATERIAL *mat)
 {
-    IDirect3DMaterialImpl *This = impl_from_IDirect3DMaterial(iface);
+    struct d3d_material *material = impl_from_IDirect3DMaterial(iface);
 
-    TRACE("iface %p, material %p.\n", iface, lpMat);
+    TRACE("iface %p, material %p.\n", iface, mat);
 
-    return IDirect3DMaterial3_GetMaterial(&This->IDirect3DMaterial3_iface, lpMat);
+    return d3d_material3_GetMaterial(&material->IDirect3DMaterial3_iface, mat);
 }
 
 
@@ -453,62 +446,63 @@ static HRESULT WINAPI IDirect3DMaterialImpl_1_GetMaterial(IDirect3DMaterial *ifa
  *  This: Pointer to the material implementation to activate
  *
  *****************************************************************************/
-void material_activate(IDirect3DMaterialImpl* This)
+void material_activate(struct d3d_material *material)
 {
     D3DMATERIAL7 d3d7mat;
 
-    TRACE("Activating material %p\n", This);
-    d3d7mat.u.diffuse = This->mat.u.diffuse;
-    d3d7mat.u1.ambient = This->mat.u1.ambient;
-    d3d7mat.u2.specular = This->mat.u2.specular;
-    d3d7mat.u3.emissive = This->mat.u3.emissive;
-    d3d7mat.u4.power = This->mat.u4.power;
+    TRACE("Activating material %p.\n", material);
 
-    IDirect3DDevice7_SetMaterial(&This->active_device->IDirect3DDevice7_iface, &d3d7mat);
+    d3d7mat.u.diffuse = material->mat.u.diffuse;
+    d3d7mat.u1.ambient = material->mat.u1.ambient;
+    d3d7mat.u2.specular = material->mat.u2.specular;
+    d3d7mat.u3.emissive = material->mat.u3.emissive;
+    d3d7mat.u4.power = material->mat.u4.power;
+
+    IDirect3DDevice7_SetMaterial(&material->active_device->IDirect3DDevice7_iface, &d3d7mat);
 }
 
 static const struct IDirect3DMaterial3Vtbl d3d_material3_vtbl =
 {
     /*** IUnknown Methods ***/
-    IDirect3DMaterialImpl_QueryInterface,
-    IDirect3DMaterialImpl_AddRef,
-    IDirect3DMaterialImpl_Release,
+    d3d_material3_QueryInterface,
+    d3d_material3_AddRef,
+    d3d_material3_Release,
     /*** IDirect3DMaterial3 Methods ***/
-    IDirect3DMaterialImpl_SetMaterial,
-    IDirect3DMaterialImpl_GetMaterial,
-    IDirect3DMaterialImpl_GetHandle,
+    d3d_material3_SetMaterial,
+    d3d_material3_GetMaterial,
+    d3d_material3_GetHandle,
 };
 
 static const struct IDirect3DMaterial2Vtbl d3d_material2_vtbl =
 {
     /*** IUnknown Methods ***/
-    IDirect3DMaterialImpl_2_QueryInterface,
-    IDirect3DMaterialImpl_2_AddRef,
-    IDirect3DMaterialImpl_2_Release,
+    d3d_material2_QueryInterface,
+    d3d_material2_AddRef,
+    d3d_material2_Release,
     /*** IDirect3DMaterial2 Methods ***/
-    IDirect3DMaterialImpl_2_SetMaterial,
-    IDirect3DMaterialImpl_2_GetMaterial,
-    IDirect3DMaterialImpl_2_GetHandle,
+    d3d_material2_SetMaterial,
+    d3d_material2_GetMaterial,
+    d3d_material2_GetHandle,
 };
 
 static const struct IDirect3DMaterialVtbl d3d_material1_vtbl =
 {
     /*** IUnknown Methods ***/
-    IDirect3DMaterialImpl_1_QueryInterface,
-    IDirect3DMaterialImpl_1_AddRef,
-    IDirect3DMaterialImpl_1_Release,
+    d3d_material1_QueryInterface,
+    d3d_material1_AddRef,
+    d3d_material1_Release,
     /*** IDirect3DMaterial1 Methods ***/
-    IDirect3DMaterialImpl_Initialize,
-    IDirect3DMaterialImpl_1_SetMaterial,
-    IDirect3DMaterialImpl_1_GetMaterial,
-    IDirect3DMaterialImpl_1_GetHandle,
-    IDirect3DMaterialImpl_Reserve,
-    IDirect3DMaterialImpl_Unreserve
+    d3d_material1_Initialize,
+    d3d_material1_SetMaterial,
+    d3d_material1_GetMaterial,
+    d3d_material1_GetHandle,
+    d3d_material1_Reserve,
+    d3d_material1_Unreserve,
 };
 
-IDirect3DMaterialImpl *d3d_material_create(IDirectDrawImpl *ddraw)
+struct d3d_material *d3d_material_create(struct ddraw *ddraw)
 {
-    IDirect3DMaterialImpl *material;
+    struct d3d_material *material;
 
     material = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*material));
     if (!material)

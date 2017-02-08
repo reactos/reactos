@@ -34,18 +34,18 @@
  *
  */
 
-#include <stdarg.h>
-#include <string.h>
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "commctrl.h"
+//#include <stdarg.h>
+//#include <string.h>
+//#include "windef.h"
+//#include "winbase.h"
+//#include "wingdi.h"
+//#include "winuser.h"
+//#include "winnls.h"
+//#include "commctrl.h"
 #include "comctl32.h"
-#include "uxtheme.h"
-#include "vssym32.h"
-#include "wine/debug.h"
+#include <uxtheme.h>
+#include <vssym32.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(progress);
 
@@ -745,7 +745,7 @@ void PROGRESS_Register (void)
 
     ZeroMemory (&wndClass, sizeof(wndClass));
     wndClass.style         = CS_GLOBALCLASS | CS_VREDRAW | CS_HREDRAW;
-    wndClass.lpfnWndProc   = (WNDPROC)ProgressWindowProc;
+    wndClass.lpfnWndProc   = ProgressWindowProc;
     wndClass.cbClsExtra    = 0;
     wndClass.cbWndExtra    = sizeof (PROGRESS_INFO *);
     wndClass.hCursor       = LoadCursorW (0, (LPWSTR)IDC_ARROW);

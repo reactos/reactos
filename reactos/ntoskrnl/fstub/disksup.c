@@ -446,38 +446,46 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
     DPRINT("RDiskCount %d\n", RDiskCount);
 
-    Buffer1 = (PWSTR)ExAllocatePoolWithTag(PagedPool,
-        64 * sizeof(WCHAR), TAG_FILE_SYSTEM);
-    Buffer2 = (PWSTR)ExAllocatePoolWithTag(PagedPool,
-        32 * sizeof(WCHAR), TAG_FILE_SYSTEM);
+    Buffer1 = ExAllocatePoolWithTag(PagedPool,
+        64 * sizeof(WCHAR),
+        TAG_FILE_SYSTEM);
+    if (!Buffer1) return;
 
-    PartialInformation = (PKEY_VALUE_PARTIAL_INFORMATION)ExAllocatePoolWithTag(PagedPool,
-        sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(REG_DISK_MOUNT_INFO), TAG_FILE_SYSTEM);
+    Buffer2 = ExAllocatePoolWithTag(PagedPool,
+        32 * sizeof(WCHAR),
+        TAG_FILE_SYSTEM);
+    if (!Buffer2)
+    {
+        ExFreePoolWithTag(Buffer1, TAG_FILE_SYSTEM);
+        return;
+    }
 
-    if (!Buffer1 || !Buffer2 || !PartialInformation) return;
+    PartialInformation = ExAllocatePoolWithTag(PagedPool,
+        sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(REG_DISK_MOUNT_INFO),
+        TAG_FILE_SYSTEM);
+    if (!PartialInformation)
+    {
+        ExFreePoolWithTag(Buffer2, TAG_FILE_SYSTEM);
+        ExFreePoolWithTag(Buffer1, TAG_FILE_SYSTEM);
+        return;
+    }
 
     DiskMountInfo = (PREG_DISK_MOUNT_INFO) PartialInformation->Data;
 
-    /* Open or Create the 'MountedDevices' key */
+    /* Create or open the 'MountedDevices' key */
     RtlInitUnicodeString(&UnicodeString1, L"\\Registry\\Machine\\SYSTEM\\MountedDevices");
     InitializeObjectAttributes(&ObjectAttributes,
         &UnicodeString1,
-        OBJ_CASE_INSENSITIVE,
+        OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
         NULL,
         NULL);
-    Status = ZwOpenKey(&hKey,
+    Status = ZwCreateKey(&hKey,
         KEY_ALL_ACCESS,
-        &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
-    {
-        Status = ZwCreateKey(&hKey,
-            KEY_ALL_ACCESS,
-            &ObjectAttributes,
-            0,
-            NULL,
-            REG_OPTION_NON_VOLATILE,
-            NULL);
-    }
+        &ObjectAttributes,
+        0,
+        NULL,
+        REG_OPTION_NON_VOLATILE,
+        NULL);
     if (!NT_SUCCESS(Status))
     {
         hKey = NULL;
@@ -535,7 +543,8 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         ExFreePoolWithTag(PartialInformation, TAG_FILE_SYSTEM);
         ExFreePoolWithTag(Buffer2, TAG_FILE_SYSTEM);
         ExFreePoolWithTag(Buffer1, TAG_FILE_SYSTEM);
-        if (hKey) ZwClose(hKey);
+        if (hKey) ObCloseHandle(hKey, KernelMode);
+        return;
     }
 
     RtlZeroMemory(LayoutArray,
@@ -951,10 +960,7 @@ end_assign_disks:
     ExFreePoolWithTag(PartialInformation, TAG_FILE_SYSTEM);
     ExFreePoolWithTag(Buffer2, TAG_FILE_SYSTEM);
     ExFreePoolWithTag(Buffer1, TAG_FILE_SYSTEM);
-    if (hKey)
-    {
-        ZwClose(hKey);
-    }
+    if (hKey) ObCloseHandle(hKey, KernelMode);
 }
 
 #endif

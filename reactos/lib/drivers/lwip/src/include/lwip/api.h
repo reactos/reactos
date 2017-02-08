@@ -159,6 +159,11 @@ struct netconn {
 #if LWIP_SOCKET
   int socket;
 #endif /* LWIP_SOCKET */
+#if LWIP_SO_SNDTIMEO
+  /** timeout to wait for sending data (which means enqueueing data for sending
+      in internal buffers) */
+  s32_t send_timeout;
+#endif /* LWIP_SO_RCVTIMEO */
 #if LWIP_SO_RCVTIMEO
   /** timeout to wait for new data to be received
       (or connections to arrive for listening netconns) */
@@ -230,8 +235,10 @@ void    netconn_recved(struct netconn *conn, u32_t length);
 err_t   netconn_sendto(struct netconn *conn, struct netbuf *buf,
                        ip_addr_t *addr, u16_t port);
 err_t   netconn_send(struct netconn *conn, struct netbuf *buf);
-err_t   netconn_write(struct netconn *conn, const void *dataptr, size_t size,
-                      u8_t apiflags);
+err_t   netconn_write_partly(struct netconn *conn, const void *dataptr, size_t size,
+                             u8_t apiflags, size_t *bytes_written);
+#define netconn_write(conn, dataptr, size, apiflags) \
+          netconn_write_partly(conn, dataptr, size, apiflags, NULL)
 err_t   netconn_close(struct netconn *conn);
 err_t   netconn_shutdown(struct netconn *conn, u8_t shut_rx, u8_t shut_tx);
 
@@ -262,6 +269,12 @@ err_t   netconn_gethostbyname(const char *name, ip_addr_t *addr);
 /** TCP: Get the no-auto-recved status of netconn calls (see NETCONN_FLAG_NO_AUTO_RECVED) */
 #define netconn_get_noautorecved(conn)        (((conn)->flags & NETCONN_FLAG_NO_AUTO_RECVED) != 0)
 
+#if LWIP_SO_SNDTIMEO
+/** Set the send timeout in milliseconds */
+#define netconn_set_sendtimeout(conn, timeout)      ((conn)->send_timeout = (timeout))
+/** Get the send timeout in milliseconds */
+#define netconn_get_sendtimeout(conn)               ((conn)->send_timeout)
+#endif /* LWIP_SO_SNDTIMEO */
 #if LWIP_SO_RCVTIMEO
 /** Set the receive timeout in milliseconds */
 #define netconn_set_recvtimeout(conn, timeout)      ((conn)->recv_timeout = (timeout))

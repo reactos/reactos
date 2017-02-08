@@ -6,7 +6,7 @@
 #define MAXDROPZONES	8
 
 #include "dropzone.h"
-#include "cardlib.h"
+//#include "cardlib.h"
 
 class CardRegion;
 class CardButton;

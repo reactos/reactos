@@ -1,8 +1,8 @@
 #pragma once
 
 #include "tparams.h"
-#include "tnclip.h"
-#include "ttelhndl.h"
+//#include "tnclip.h"
+//#include "ttelhndl.h"
 
 enum {
 	SC_UP,

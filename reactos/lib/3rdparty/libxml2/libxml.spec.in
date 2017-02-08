@@ -6,7 +6,7 @@ License: MIT
 Group: Development/Libraries
 Source: ftp://xmlsoft.org/libxml2/libxml2-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
-BuildRequires: python python-devel zlib-devel pkgconfig
+BuildRequires: python python-devel zlib-devel pkgconfig xz-devel
 URL: http://xmlsoft.org/
 
 %description
@@ -25,6 +25,7 @@ Summary: Libraries, includes, etc. to develop XML and HTML applications
 Group: Development/Libraries
 Requires: libxml2 = %{version}-%{release}
 Requires: zlib-devel
+Requires: xz-devel
 Requires: pkgconfig
 
 %description devel

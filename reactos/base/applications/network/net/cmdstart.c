@@ -1,4 +1,3 @@
-
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS net command
@@ -10,99 +9,169 @@
 
 #include "net.h"
 
-INT cmdStart(INT argc, CHAR **argv )
+/* Enumerate all running services */
+static
+INT
+EnumerateRunningServices(VOID)
 {
-   char *string;
-   long size = 100*sizeof(char);
+    SC_HANDLE hManager = NULL;
+    SC_HANDLE hService = NULL;
+    DWORD dwBufferSize = 0;
+    DWORD dwServiceCount;
+    DWORD dwResumeHandle = 0;
+    LPENUM_SERVICE_STATUS lpServiceBuffer = NULL;
+    INT i;
+    INT nError = 0;
+    DWORD dwError = ERROR_SUCCESS;
 
-   if (argc>4)
-   {
-	  help();
-	  return 0;
-   }
+    hManager = OpenSCManagerW(NULL,
+                              SERVICES_ACTIVE_DATABASE,
+                              SC_MANAGER_ENUMERATE_SERVICE);
+    if (hManager == NULL)
+    {
+        dwError = GetLastError();
+        nError = 1;
+        goto done;
+    }
 
-   if (argc==2)
-   {
-      string = (char *) malloc(size);
-      if (string != NULL)
-      {
-         sprintf(string,"rpcclient -c \"service enum\"");
-         system(string);
-         free(string);
-      }
-      return 0;
-   }
+    EnumServicesStatusW(hManager,
+                        SERVICE_WIN32,
+                        SERVICE_ACTIVE,
+                        NULL,
+                        0,
+                        &dwBufferSize,
+                        &dwServiceCount,
+                        &dwResumeHandle);
 
-   if (argc==3)
-   {
-	  start_service(argv[1]);
-      return 0;
-   }
+    if (dwBufferSize != 0)
+    {
+        lpServiceBuffer = HeapAlloc(GetProcessHeap(), 0, dwBufferSize);
+        if (lpServiceBuffer != NULL)
+        {
+            if (EnumServicesStatusW(hManager,
+                                    SERVICE_WIN32,
+                                    SERVICE_ACTIVE,
+                                    lpServiceBuffer,
+                                    dwBufferSize,
+                                    &dwBufferSize,
+                                    &dwServiceCount,
+                                    &dwResumeHandle))
+            {
+                printf("The following services hav been started:\n\n");
 
-   return 0;
+                for (i = 0; i < dwServiceCount; i++)
+                {
+                    printf("  %S\n", lpServiceBuffer[i].lpDisplayName);
+                }
+            }
+
+            HeapFree(GetProcessHeap(), 0, lpServiceBuffer);
+        }
+    }
+
+done:
+    if (hService != NULL)
+        CloseServiceHandle(hService);
+
+    if (hManager != NULL)
+        CloseServiceHandle(hManager);
+
+     if (dwError != ERROR_SUCCESS)
+    {
+        /* FIXME: Print proper error message */
+        printf("Error: %lu\n", dwError);
+    }
+
+    return nError;
 }
 
-
-INT start_service(CHAR *service)
+/* Start the service argv[2] */
+static
+INT
+StartOneService(INT argc, WCHAR **argv)
 {
+    SC_HANDLE hManager = NULL;
+    SC_HANDLE hService = NULL;
+    LPCWSTR *lpArgVectors = NULL;
+    DWORD dwError = ERROR_SUCCESS;
+    INT nError = 0;
+    INT i;
 
-  CHAR *srvlst;
-  LONG pos=0;
-  LONG old_pos=0;
-  LONG row_size=0;
-  LONG size=0;
+    hManager = OpenSCManagerW(NULL,
+                              SERVICES_ACTIVE_DATABASE,
+                              SC_MANAGER_ENUMERATE_SERVICE);
+    if (hManager == NULL)
+    {
+        dwError = GetLastError();
+        nError = 1;
+        goto done;
+    }
 
-  CHAR *row; /* we assume display name can max be 20 row and each row is 80 char */
+    hService = OpenServiceW(hManager,
+                            argv[2],
+                            SERVICE_START);
+    if (hService == NULL)
+    {
+        dwError = GetLastError();
+        nError = 1;
+        goto done;
+    }
 
+    lpArgVectors = HeapAlloc(GetProcessHeap(),
+                             0,
+                             (argc - 2) * sizeof(LPCWSTR));
+    if (lpArgVectors == NULL)
+    {
+        dwError = GetLastError();
+        nError = 1;
+        goto done;
+    }
 
-  /* Get the size for  srvlst */
-  myCreateProcessStartGetSzie("rpcclient -c \"service enum\"", &size);
-  if (size==0)
-  {
-    return 0;
-  }
+    for (i = 2; i < argc; i++)
+    {
+        lpArgVectors[i - 2] = argv[i];
+    }
 
-  srvlst = (CHAR *) malloc(size);
-  if (srvlst == NULL)
-  {
-	  return 0;
-  }
-  /* Get the server list */
-  myCreateProcessStart("rpcclient -c \"service enum\"", srvlst, size);
+    if (!StartServiceW(hService,
+                       (DWORD)argc - 2,
+                       lpArgVectors))
+    {
+        dwError = GetLastError();
+        nError = 1;
+    }
 
+done:
+    if (lpArgVectors != NULL)
+        HeapFree(GetProcessHeap(), 0, lpArgVectors);
 
-  /* scan after display name */
-  while (pos<size)
-  {
-		old_pos = pos;
+    if (hService != NULL)
+        CloseServiceHandle(hService);
 
-		if (1 == row_scanner_service(srvlst, &pos, size, service, NULL))
-		{
-		  row_size = (pos - old_pos)+32; /* 32 buffer for command */
-		  pos = old_pos;
-		  row = (CHAR *) malloc(row_size*sizeof(CHAR));
-		  if (row == NULL)
-	      {
-		    free(srvlst);
-		    return 0;
-		  }
-		  memset(row,0,row_size*sizeof(CHAR));
-		  if (1 == row_scanner_service(srvlst, &pos, size, service, &row[28]))
-		  {
-		     /*
-			    display name found
-		        now we can start the service
-			  */
+    if (hManager != NULL)
+        CloseServiceHandle(hManager);
 
-			  memcpy(row,"rpcclient -c \"service start %s\"\"",28*sizeof(CHAR));
-			  row_size = strlen(row);
-			  row[row_size] = '\"';
-              system(row);
-		  }
-		  free(row);
-		}
-  }
+    if (dwError != ERROR_SUCCESS)
+    {
+        /* FIXME: Print proper error message */
+        printf("Error: %lu\n", dwError);
+    }
 
-  free(srvlst);
-  return 0;
+    return nError;
+}
+
+INT
+cmdStart(INT argc, WCHAR **argv)
+{
+    INT nError = 0;
+
+    if (argc == 2)
+    {
+        nError = EnumerateRunningServices();
+    }
+    else
+    {
+        nError = StartOneService(argc, argv);
+    }
+
+    return nError;
 }

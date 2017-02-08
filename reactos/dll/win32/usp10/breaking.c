@@ -18,20 +18,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  */
-#include "config.h"
+#include <config.h>
 #include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
+//#include <stdio.h>
+//#include <stdlib.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "wingdi.h"
-#include "winnls.h"
-#include "usp10.h"
-#include "winternl.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+#include <wingdi.h>
+//#include "winnls.h"
+#include <usp10.h>
+//#include "winternl.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 #include "usp10_internal.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(uniscribe);
@@ -132,7 +132,7 @@ void BREAK_line(const WCHAR *chars, int count, const SCRIPT_ANALYSIS *sa, SCRIPT
             case b_NL:
             case b_BK:
                 if (i < count-1) else_break(&break_before[i+1],b_r);
-                    else_break(&break_before[i],b_x);
+                else_break(&break_before[i],b_x);
                 break;
             /* LB7 */
             case b_SP:

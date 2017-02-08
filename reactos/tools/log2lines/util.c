@@ -95,7 +95,7 @@ static FILE *
 rfopen(char *path, char *mode)
 {
     FILE *f = NULL;
-    char tmppath[MAX_PATH]; // Don't modify const strings
+    char tmppath[PATH_MAX]; // Don't modify const strings
 
     strcpy(tmppath, path);
     f = fopen(tmppath, mode);

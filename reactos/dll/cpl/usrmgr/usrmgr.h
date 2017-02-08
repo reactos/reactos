@@ -1,13 +1,14 @@
-#include <windows.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
 #include <commctrl.h>
-#include <commdlg.h>
 #include <cpl.h>
 #include <tchar.h>
-#include <setupapi.h>
 #include <lmaccess.h>
 #include <lmapibuf.h>
 #include <lmerr.h>
-#include <stdio.h>
 
 #include "resource.h"
 

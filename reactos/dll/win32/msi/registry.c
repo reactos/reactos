@@ -19,24 +19,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+//#include <stdarg.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "winnls.h"
-#include "shlwapi.h"
-#include "wine/debug.h"
-#include "msi.h"
+#include <windef.h>
+//#include "winbase.h"
+#include <winreg.h>
+//#include "winnls.h"
+//#include "shlwapi.h"
+#include <wine/debug.h>
+//#include "msi.h"
 #include "msipriv.h"
-#include "wincrypt.h"
-#include "wine/unicode.h"
-#include "winver.h"
-#include "winuser.h"
-#include "sddl.h"
+//#include "wincrypt.h"
+#include <wine/unicode.h>
+//#include "winver.h"
+//#include "winuser.h"
+#include <sddl.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -562,12 +566,12 @@ UINT MSIREG_OpenUserPatchesKey(LPCWSTR szPatch, HKEY *key, BOOL create)
     return RegOpenKeyW(HKEY_CURRENT_USER, keypath, key);
 }
 
-UINT MSIREG_OpenFeaturesKey(LPCWSTR szProduct, MSIINSTALLCONTEXT context, HKEY *key, BOOL create)
+UINT MSIREG_OpenFeaturesKey(LPCWSTR szProduct, LPCWSTR szUserSid, MSIINSTALLCONTEXT context,
+                            HKEY *key, BOOL create)
 {
-    LPWSTR usersid;
     HKEY root = HKEY_LOCAL_MACHINE;
     REGSAM access = KEY_WOW64_64KEY | KEY_ALL_ACCESS;
-    WCHAR squished_pc[GUID_SIZE], keypath[MAX_PATH];
+    WCHAR squished_pc[GUID_SIZE], keypath[MAX_PATH], *usersid = NULL;
 
     if (!squash_guid(szProduct, squished_pc)) return ERROR_FUNCTION_FAILED;
     TRACE("%s squished %s\n", debugstr_w(szProduct), debugstr_w(squished_pc));
@@ -585,12 +589,16 @@ UINT MSIREG_OpenFeaturesKey(LPCWSTR szProduct, MSIINSTALLCONTEXT context, HKEY *
     }
     else
     {
-        if (!(usersid = get_user_sid()))
+        if (!szUserSid)
         {
-            ERR("Failed to retrieve user SID\n");
-            return ERROR_FUNCTION_FAILED;
+            if (!(usersid = get_user_sid()))
+            {
+                ERR("Failed to retrieve user SID\n");
+                return ERROR_FUNCTION_FAILED;
+            }
+            szUserSid = usersid;
         }
-        sprintfW(keypath, szInstaller_LocalManagedFeat_fmt, usersid, squished_pc);
+        sprintfW(keypath, szInstaller_LocalManagedFeat_fmt, szUserSid, squished_pc);
         LocalFree(usersid);
     }
     if (create) return RegCreateKeyExW(root, keypath, 0, NULL, 0, access, NULL, key, NULL);
@@ -624,11 +632,11 @@ static UINT MSIREG_OpenInstallerFeaturesKey(LPCWSTR szProduct, HKEY *key, BOOL c
     return RegOpenKeyExW(HKEY_LOCAL_MACHINE, keypath, 0, access, key);
 }
 
-UINT MSIREG_OpenUserDataFeaturesKey(LPCWSTR szProduct, MSIINSTALLCONTEXT context, HKEY *key, BOOL create)
+UINT MSIREG_OpenUserDataFeaturesKey(LPCWSTR szProduct, LPCWSTR szUserSid, MSIINSTALLCONTEXT context,
+                                    HKEY *key, BOOL create)
 {
-    LPWSTR usersid;
     REGSAM access = KEY_WOW64_64KEY | KEY_ALL_ACCESS;
-    WCHAR squished_pc[GUID_SIZE], keypath[0x200];
+    WCHAR squished_pc[GUID_SIZE], keypath[0x200], *usersid = NULL;
 
     if (!squash_guid(szProduct, squished_pc)) return ERROR_FUNCTION_FAILED;
     TRACE("%s squished %s\n", debugstr_w(szProduct), debugstr_w(squished_pc));
@@ -639,12 +647,16 @@ UINT MSIREG_OpenUserDataFeaturesKey(LPCWSTR szProduct, MSIINSTALLCONTEXT context
     }
     else
     {
-        if (!(usersid = get_user_sid()))
+        if (!szUserSid)
         {
-            ERR("Failed to retrieve user SID\n");
-            return ERROR_FUNCTION_FAILED;
+            if (!(usersid = get_user_sid()))
+            {
+                ERR("Failed to retrieve user SID\n");
+                return ERROR_FUNCTION_FAILED;
+            }
+            szUserSid = usersid;
         }
-        sprintfW(keypath, szUserDataFeatures_fmt, usersid, squished_pc);
+        sprintfW(keypath, szUserDataFeatures_fmt, szUserSid, squished_pc);
         LocalFree(usersid);
     }
     if (create) return RegCreateKeyExW(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, access, NULL, key, NULL);
@@ -1557,7 +1569,7 @@ static UINT MSI_EnumComponentQualifiers( LPCWSTR szComponent, DWORD iIndex,
         }
 
         r = ERROR_OUTOFMEMORY;
-        if ((name_sz+1) >= name_max)
+        if (name_sz + 1 >= name_max)
         {
             name_max *= 2;
             msi_free( name );
@@ -1586,8 +1598,8 @@ static UINT MSI_EnumComponentQualifiers( LPCWSTR szComponent, DWORD iIndex,
 
     TRACE("Providing %s and %s\n", debugstr_w(name), debugstr_w(val+ofs));
 
-    r = msi_strcpy_to_awstring( name, lpQualBuf, pcchQual );
-    r2 = msi_strcpy_to_awstring( val+ofs, lpAppBuf, pcchAppBuf );
+    r = msi_strcpy_to_awstring( name, -1, lpQualBuf, pcchQual );
+    r2 = msi_strcpy_to_awstring( val+ofs, -1, lpAppBuf, pcchAppBuf );
 
     if (r2 != ERROR_SUCCESS)
         r = r2;
@@ -1596,7 +1608,6 @@ end:
     msi_free(val);
     msi_free(name);
     RegCloseKey(key);
-
     return r;
 }
 

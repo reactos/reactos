@@ -474,8 +474,11 @@ USBD_ParseDescriptors(
            return CommonDescriptor;
        }
 
-       /* sanity check */
-       ASSERT(CommonDescriptor->bLength);
+       if (CommonDescriptor->bLength == 0)
+       {
+           /* invalid usb descriptor */
+           return NULL;
+       }
 
        /* move to next descriptor */
        CommonDescriptor = (PUSB_COMMON_DESCRIPTOR)((ULONG_PTR)CommonDescriptor + CommonDescriptor->bLength);

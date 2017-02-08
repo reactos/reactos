@@ -1,0 +1,33 @@
+/*
+ * FILE:             win32ss/user/consrv/lang/ro-RO.rc
+ *                   ReactOS Project (http://www.reactos.org)
+ * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
+ * CHANGE LOG:       2011-10-16  initial translation
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_EDIT            "Editare"
+    IDS_MARK            "Marchează"
+    IDS_COPY            "Copiază\tEnter"
+    IDS_PASTE           "Lipește"
+    IDS_SELECTALL       "Selectează tot"
+    IDS_SCROLL          "Derulează"
+    IDS_FIND            "Găsire…"
+    IDS_DEFAULTS        "Implicite"
+    IDS_PROPERTIES      "Proprietăți"
+
+/*
+    IDS_SCROLLHERE      "Derulează aici"
+    IDS_SCROLLTOP       "Derulează la început"
+    IDS_SCROLLBOTTOM    "Derulează la sfârșit"
+    IDS_SCROLLPAGE_UP   "Pagina anterioară"
+    IDS_SCROLLPAGE_DOWN "Pagina următoare"
+    IDS_SCROLLUP        "Derulează în sus"
+    IDS_SCROLLDOWN      "Derulează în jos"
+*/
+
+    IDS_TERMINAL_TITLE   "ReactOS Console"
+END

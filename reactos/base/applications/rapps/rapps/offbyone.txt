@@ -23,13 +23,19 @@ Description = Es un pequeño y rápido navegador web con completo soporte HTML 3
 [Section.040c]
 Description = Le navigateur Off By One est un navigateur internet très petit et rapide avec un support complet de HTML 3.2.
 
+[Section.0413]
+Description = Off By One Browser is een uiterst kleine en snelle web browser met volledige HTTP 3.2 ondersteuning.
+
 [Section.0415]
 Description = Bardzo mała i szybka przeglądarka internetowa z pełną obsługą HTML 3.2.
 
 [Section.0418]
 Licence = Gratuită
 Description = Un navigator web foarte mic și rapid compatibil cu HTML 3.2.
-Size = 0.98Mo
+Size = 0,98 Mo
 
 [Section.0422]
 Description = Дуже малий та швидкий веб-браузер з повною підтримкою HTML 3.2.
+
+[Section.0813]
+Description = Off By One Browser is een uiterst kleine en snelle web browser met volledige HTTP 3.2 ondersteuning.

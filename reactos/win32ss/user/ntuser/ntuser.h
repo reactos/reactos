@@ -12,8 +12,11 @@
 extern BOOL gbInitialized;
 extern PSERVERINFO gpsi;
 extern PTHREADINFO gptiCurrent;
+extern PPROCESSINFO gppiList;
 extern PPROCESSINFO ppiScrnSaver;
 extern PPROCESSINFO gppiInputProvider;
+extern PEPROCESS gpepCSRSS;
+extern ATOM gaGuiConsoleWndClass;
 
 INIT_FUNCTION NTSTATUS NTAPI InitUserImpl(VOID);
 VOID FASTCALL CleanupUserImpl(VOID);

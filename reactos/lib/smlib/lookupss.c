@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/smlib/lookupss.c
@@ -15,12 +14,12 @@
  *
  * DESCRIPTION
  * 	Read from the registry key
- * 	\Registry\SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems
+ * 	\Registry\SYSTEM\CurrentControlSet\Control\Session Manager\SubSystems
  * 	the value which name is Name.
  *
  * ARGUMENTS
  * 	Name: name of the program to run, that is a value's name in
- * 	      the SM registry key Subsystems;
+ * 	      the SM registry key SubSystems;
  * 	Data: what the registry gave back for Name;
  * 	DataLength: how much Data the registry returns;
  * 	DataType: what is Data?

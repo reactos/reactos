@@ -52,6 +52,15 @@ stop:
 	nop
 
 
+PUBLIC Reboot
+Reboot:
+    /* Set the function ID */
+    mov bx, FNID_Reboot
+
+    /* Switch to real mode (We don't return) */
+    jmp SwitchToReal
+
+
 /* Internal function for realmode calls
  * bx must be set to the ID of the realmode function to call. */
 PUBLIC CallRealMode

@@ -34,10 +34,11 @@
 /* FIXME */
 GUID MountedDevicesGuid = {0x53F5630D, 0xB6BF, 0x11D0, {0x94, 0xF2, 0x00, 0xA0, 0xC9, 0x1E, 0xFB, 0x8B}};
 
+PDEVICE_OBJECT gdeviceObject;
 KEVENT UnloadEvent;
 LONG Unloading;
 
-PWSTR Cunc = L"\\??\\C:";
+static const WCHAR Cunc[] = L"\\??\\C:";
 
 /*
  * TODO:

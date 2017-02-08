@@ -146,8 +146,8 @@ BOOL WINAPI RegisterClientPFN(VOID)
   pfnClientW.pfnTitleWndProc          = IconTitleWndProc;
   pfnClientA.pfnMenuWndProc           = PopupMenuWndProcA;
   pfnClientW.pfnMenuWndProc           = PopupMenuWndProcW;
-  pfnClientA.pfnDesktopWndProc        = DesktopWndProc;
-  pfnClientW.pfnDesktopWndProc        = DesktopWndProc;
+  pfnClientA.pfnDesktopWndProc        = DesktopWndProcA;
+  pfnClientW.pfnDesktopWndProc        = DesktopWndProcW;
   pfnClientA.pfnDefWindowProc         = DefWindowProcA;
   pfnClientW.pfnDefWindowProc         = DefWindowProcW;
   pfnClientA.pfnMessageWindowProc     = MsgWindowProc;

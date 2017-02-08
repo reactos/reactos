@@ -27,21 +27,19 @@
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "objbase.h"
-#include "oleauto.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+//#include "objbase.h"
+//#include "oleauto.h"
 
 #include "shdocvw.h"
 
-#include "wine/unicode.h"
-#include "wine/debug.h"
+//#include "wine/unicode.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
-#define ADJUST_THIS(c,m,p) ((c*)(((long)p)-(long)&(((c*)0)->lp##m##Vtbl)))
-#define STATIC_CAST(i,p) ((i*)&p->lp##i##Vtbl)
 #define CHARS_IN_GUID 39
 
 /******************************************************************************
@@ -50,22 +48,20 @@ WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
  * Gives access to a registry key's values via the IPropertyBag interface.
  */
 typedef struct _RegistryPropertyBag {
-    const IPropertyBagVtbl *lpIPropertyBagVtbl;
+    IPropertyBag           IPropertyBag_iface;
     LONG                   m_cRef;
     HKEY                   m_hInitPropertyBagKey;
 } RegistryPropertyBag;
 
-static void RegistryPropertyBag_Destroy(RegistryPropertyBag *This) {
-    TRACE("This=%p)\n", This);
-
-    RegCloseKey(This->m_hInitPropertyBagKey);
-    heap_free(This);
+static inline RegistryPropertyBag *impl_from_IPropertyBag(IPropertyBag *iface)
+{
+    return CONTAINING_RECORD(iface, RegistryPropertyBag, IPropertyBag_iface);
 }
 
 static HRESULT WINAPI RegistryPropertyBag_IPropertyBag_QueryInterface(IPropertyBag *iface,
     REFIID riid, void **ppv)
 {
-    RegistryPropertyBag *This = ADJUST_THIS(RegistryPropertyBag, IPropertyBag, iface);
+    RegistryPropertyBag *This = impl_from_IPropertyBag(iface);
 
     TRACE("(iface=%p, riid=%s, ppv=%p)\n", iface, debugstr_guid(riid), ppv);
 
@@ -73,7 +69,7 @@ static HRESULT WINAPI RegistryPropertyBag_IPropertyBag_QueryInterface(IPropertyB
         return E_INVALIDARG;
 
     if (IsEqualIID(&IID_IUnknown, riid) || IsEqualIID(&IID_IPropertyBag, riid)) {
-        *ppv = STATIC_CAST(IPropertyBag, This);
+        *ppv = &This->IPropertyBag_iface;
     } else {
         *ppv = NULL;
         return E_NOINTERFACE;
@@ -83,8 +79,9 @@ static HRESULT WINAPI RegistryPropertyBag_IPropertyBag_QueryInterface(IPropertyB
     return S_OK;
 }
 
-static ULONG WINAPI RegistryPropertyBag_IPropertyBag_AddRef(IPropertyBag *iface) {
-    RegistryPropertyBag *This = ADJUST_THIS(RegistryPropertyBag, IPropertyBag, iface);
+static ULONG WINAPI RegistryPropertyBag_IPropertyBag_AddRef(IPropertyBag *iface)
+{
+    RegistryPropertyBag *This = impl_from_IPropertyBag(iface);
     ULONG cRef;
 
     TRACE("(iface=%p)\n", iface);
@@ -97,16 +94,19 @@ static ULONG WINAPI RegistryPropertyBag_IPropertyBag_AddRef(IPropertyBag *iface)
     return cRef;
 }
 
-static ULONG WINAPI RegistryPropertyBag_IPropertyBag_Release(IPropertyBag *iface) {
-    RegistryPropertyBag *This = ADJUST_THIS(RegistryPropertyBag, IPropertyBag, iface);
+static ULONG WINAPI RegistryPropertyBag_IPropertyBag_Release(IPropertyBag *iface)
+{
+    RegistryPropertyBag *This = impl_from_IPropertyBag(iface);
     ULONG cRef;
 
     TRACE("(iface=%p)\n", iface);
 
     cRef = InterlockedDecrement(&This->m_cRef);
 
-    if (cRef == 0) { 
-        RegistryPropertyBag_Destroy(This);
+    if (cRef == 0) {
+        TRACE("Destroying This=%p)\n", This);
+        RegCloseKey(This->m_hInitPropertyBagKey);
+        heap_free(This);
         SHDOCVW_UnlockModule();
     }
 
@@ -116,7 +116,7 @@ static ULONG WINAPI RegistryPropertyBag_IPropertyBag_Release(IPropertyBag *iface
 static HRESULT WINAPI RegistryPropertyBag_IPropertyBag_Read(IPropertyBag *iface,
     LPCOLESTR pwszPropName, VARIANT *pVar, IErrorLog *pErrorLog)
 {
-    RegistryPropertyBag *This = ADJUST_THIS(RegistryPropertyBag, IPropertyBag, iface);
+    RegistryPropertyBag *This = impl_from_IPropertyBag(iface);
     WCHAR *pwszValue;
     DWORD dwType, cbData;
     LONG res;
@@ -178,15 +178,15 @@ static HRESULT RegistryPropertyBag_Constructor(HKEY hInitPropertyBagKey, REFIID 
     
     pRegistryPropertyBag = heap_alloc(sizeof(RegistryPropertyBag));
     if (pRegistryPropertyBag) {
-        pRegistryPropertyBag->lpIPropertyBagVtbl = &RegistryPropertyBag_IPropertyBagVtbl;
+        pRegistryPropertyBag->IPropertyBag_iface.lpVtbl = &RegistryPropertyBag_IPropertyBagVtbl;
         pRegistryPropertyBag->m_cRef = 0;
         pRegistryPropertyBag->m_hInitPropertyBagKey = hInitPropertyBagKey;
 
         /* The clasping AddRef/Release is for the case that QueryInterface fails, which will result
          * in a reference count of 0 in the Release call, which will result in object destruction.*/
-        IPropertyBag_AddRef(STATIC_CAST(IPropertyBag, pRegistryPropertyBag));
-        hr = IPropertyBag_QueryInterface(STATIC_CAST(IPropertyBag, pRegistryPropertyBag), riid, ppvObject);
-        IPropertyBag_Release(STATIC_CAST(IPropertyBag, pRegistryPropertyBag));
+        IPropertyBag_AddRef(&pRegistryPropertyBag->IPropertyBag_iface);
+        hr = IPropertyBag_QueryInterface(&pRegistryPropertyBag->IPropertyBag_iface, riid, ppvObject);
+        IPropertyBag_Release(&pRegistryPropertyBag->IPropertyBag_iface);
     }
 
     return hr;
@@ -198,21 +198,21 @@ static HRESULT RegistryPropertyBag_Constructor(HKEY hInitPropertyBagKey, REFIID 
  * values of a PropertyBag.
  */
 typedef struct _InstanceObjectFactory {
-    const IClassFactoryVtbl *lpIClassFactoryVtbl;
+    IClassFactory           IClassFactory_iface;
     LONG                    m_cRef;
     CLSID                   m_clsidInstance; /* CLSID of the objects to create. */
     IPropertyBag            *m_pPropertyBag; /* PropertyBag to initialize those objects. */
 } InstanceObjectFactory;
 
-static void InstanceObjectFactory_Destroy(InstanceObjectFactory *This) {
-    IPropertyBag_Release(This->m_pPropertyBag);
-    heap_free(This);
+static inline InstanceObjectFactory *impl_from_IClassFactory(IClassFactory *iface)
+{
+    return CONTAINING_RECORD(iface, InstanceObjectFactory, IClassFactory_iface);
 }
 
-static HRESULT WINAPI InstanceObjectFactory_IClassFactory_QueryInterface(IClassFactory *iface, 
-    REFIID riid, LPVOID* ppv)
+static HRESULT WINAPI InstanceObjectFactory_IClassFactory_QueryInterface(IClassFactory *iface,
+    REFIID riid, void **ppv)
 {
-    InstanceObjectFactory *This = ADJUST_THIS(InstanceObjectFactory, IClassFactory, iface);
+    InstanceObjectFactory *This = impl_from_IClassFactory(iface);
 
     TRACE("iface=%p, riid=%s, ppv=%p)\n", iface, debugstr_guid(riid), ppv);
 
@@ -220,7 +220,7 @@ static HRESULT WINAPI InstanceObjectFactory_IClassFactory_QueryInterface(IClassF
         return E_INVALIDARG;
 
     if (IsEqualIID(&IID_IUnknown, riid) || IsEqualIID(&IID_IClassFactory, riid)) {
-        *ppv = STATIC_CAST(IClassFactory, This);
+        *ppv = &This->IClassFactory_iface;
     } else {
         *ppv = NULL;
         return E_NOINTERFACE;
@@ -232,7 +232,7 @@ static HRESULT WINAPI InstanceObjectFactory_IClassFactory_QueryInterface(IClassF
     
 static ULONG WINAPI InstanceObjectFactory_IClassFactory_AddRef(IClassFactory *iface)
 {
-    InstanceObjectFactory *This = ADJUST_THIS(InstanceObjectFactory, IClassFactory, iface);
+    InstanceObjectFactory *This = impl_from_IClassFactory(iface);
     ULONG cRef;
 
     TRACE("(iface=%p)\n", iface);
@@ -247,16 +247,17 @@ static ULONG WINAPI InstanceObjectFactory_IClassFactory_AddRef(IClassFactory *if
 
 static ULONG WINAPI InstanceObjectFactory_IClassFactory_Release(IClassFactory *iface)
 {
-    InstanceObjectFactory *This = ADJUST_THIS(InstanceObjectFactory, IClassFactory, iface);
+    InstanceObjectFactory *This = impl_from_IClassFactory(iface);
     ULONG cRef;
 
     TRACE("(iface=%p)\n", iface);
 
     cRef = InterlockedDecrement(&This->m_cRef);
 
-    if (cRef == 0) { 
+    if (cRef == 0) {
         IClassFactory_LockServer(iface, FALSE);
-        InstanceObjectFactory_Destroy(This);
+        IPropertyBag_Release(This->m_pPropertyBag);
+        heap_free(This);
     }
 
     return cRef;
@@ -265,12 +266,12 @@ static ULONG WINAPI InstanceObjectFactory_IClassFactory_Release(IClassFactory *i
 static HRESULT WINAPI InstanceObjectFactory_IClassFactory_CreateInstance(IClassFactory *iface,
     IUnknown *pUnkOuter, REFIID riid, LPVOID *ppvObj)
 {
-    InstanceObjectFactory *This = ADJUST_THIS(InstanceObjectFactory, IClassFactory, iface);
+    InstanceObjectFactory *This = impl_from_IClassFactory(iface);
     IPersistPropertyBag *pPersistPropertyBag;
     HRESULT hr;
-        
+
     TRACE("(pUnkOuter=%p, riid=%s, ppvObj=%p)\n", pUnkOuter, debugstr_guid(riid), ppvObj);
-    
+
     hr = CoCreateInstance(&This->m_clsidInstance, NULL, CLSCTX_INPROC_SERVER,
                           &IID_IPersistPropertyBag, (LPVOID*)&pPersistPropertyBag);
     if (FAILED(hr)) {
@@ -281,7 +282,7 @@ static HRESULT WINAPI InstanceObjectFactory_IClassFactory_CreateInstance(IClassF
 
     hr = IPersistPropertyBag_Load(pPersistPropertyBag, This->m_pPropertyBag, NULL);
     if (FAILED(hr)) {
-        TRACE("Failed to initialize object from ProperyBag: hr = %08x\n", hr);
+        TRACE("Failed to initialize object from PropertyBag: hr = %08x\n", hr);
         IPersistPropertyBag_Release(pPersistPropertyBag);
         return hr;
     }
@@ -324,16 +325,16 @@ static HRESULT InstanceObjectFactory_Constructor(REFCLSID rclsid, IPropertyBag *
 
     pInstanceObjectFactory = heap_alloc(sizeof(InstanceObjectFactory));
     if (pInstanceObjectFactory) {
-        pInstanceObjectFactory->lpIClassFactoryVtbl = &InstanceObjectFactory_IClassFactoryVtbl;
+        pInstanceObjectFactory->IClassFactory_iface.lpVtbl = &InstanceObjectFactory_IClassFactoryVtbl;
         pInstanceObjectFactory->m_cRef = 0;
         pInstanceObjectFactory->m_clsidInstance = *rclsid;
         pInstanceObjectFactory->m_pPropertyBag = pPropertyBag;
         IPropertyBag_AddRef(pPropertyBag);
 
-        IClassFactory_AddRef(STATIC_CAST(IClassFactory, pInstanceObjectFactory));
-        hr = IClassFactory_QueryInterface(STATIC_CAST(IClassFactory, pInstanceObjectFactory),
+        IClassFactory_AddRef(&pInstanceObjectFactory->IClassFactory_iface);
+        hr = IClassFactory_QueryInterface(&pInstanceObjectFactory->IClassFactory_iface,
                                           riid, ppvObject);
-        IClassFactory_Release(STATIC_CAST(IClassFactory, pInstanceObjectFactory));
+        IClassFactory_Release(&pInstanceObjectFactory->IClassFactory_iface);
     }
 
     return hr;
@@ -375,16 +376,15 @@ HRESULT SHDOCVW_GetShellInstanceObjectClassObject(REFCLSID rclsid, REFIID riid,
           ppvClassObj);
 
     /* Figure if there is an 'Instance' subkey for the given CLSID and acquire a handle. */
-    if (!StringFromGUID2(rclsid, wszInstanceKey + 6, CHARS_IN_GUID) ||
-        !(wszInstanceKey[5+CHARS_IN_GUID]='\\') || /* Repair the null-termination. */
-        ERROR_SUCCESS != RegOpenKeyExW(HKEY_CLASSES_ROOT, wszInstanceKey, 0, KEY_READ, &hInstanceKey))
-    {
+    if (!StringFromGUID2(rclsid, wszInstanceKey + 6, CHARS_IN_GUID))
+        return CLASS_E_CLASSNOTAVAILABLE;
+    wszInstanceKey[5+CHARS_IN_GUID] = '\\'; /* Repair the null-termination. */
+    if (ERROR_SUCCESS != RegOpenKeyExW(HKEY_CLASSES_ROOT, wszInstanceKey, 0, KEY_READ, &hInstanceKey))
         /* If there is no 'Instance' subkey, then it's not a Shell Instance Object. */
         return CLASS_E_CLASSNOTAVAILABLE;
-    }
 
-    if (RegQueryValueExW(hInstanceKey, wszCLSID, NULL, &dwType, (LPBYTE)wszCLSIDInstance, &cbBytes)
-        != ERROR_SUCCESS || FAILED(CLSIDFromString(wszCLSIDInstance, &clsidInstance)))
+    if (ERROR_SUCCESS != RegQueryValueExW(hInstanceKey, wszCLSID, NULL, &dwType, (LPBYTE)wszCLSIDInstance, &cbBytes) ||
+        FAILED(CLSIDFromString(wszCLSIDInstance, &clsidInstance)))
     {
         /* 'Instance' should have a 'CLSID' value with a well-formed clsid-string. */
         FIXME("Failed to infer instance CLSID! %s\n", debugstr_w(wszCLSIDInstance));
@@ -402,9 +402,9 @@ HRESULT SHDOCVW_GetShellInstanceObjectClassObject(REFCLSID rclsid, REFIID riid,
         return CLASS_E_CLASSNOTAVAILABLE;
     }
 
-    /* If the construction succeeds, the new RegistryPropertyBag is responsible for closing 
-     * hInitProperyBagKey. */
-    hr = RegistryPropertyBag_Constructor(hInitPropertyBagKey, &IID_IPropertyBag, 
+    /* If the construction succeeds, the new RegistryPropertyBag is responsible for closing
+     * hInitPropertyBagKey. */
+    hr = RegistryPropertyBag_Constructor(hInitPropertyBagKey, &IID_IPropertyBag,
                                          (LPVOID*)&pInitPropertyBag);
     if (FAILED(hr)) {
         RegCloseKey(hInitPropertyBagKey);

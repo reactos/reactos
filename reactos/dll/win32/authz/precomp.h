@@ -2,7 +2,15 @@
 #define __AUTHZ_PRECOMP_H
 
 #define _AUTHZ_
-#include <windows.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+
 #include <authz.h>
 #include <debug.h>
 

@@ -21,11 +21,11 @@
 #ifndef _WINE_TYPELIB_H
 #define _WINE_TYPELIB_H
 
-#include <stdarg.h>
+//#include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "oleauto.h"
+//#include "windef.h"
+//#include "winbase.h"
+#include <oleauto.h>
 
 #define HELPDLLFLAG (0x0100)
 #define DO_NOT_SEEK (-1)
@@ -52,8 +52,11 @@
  * it is at the beginning of a type lib file
  *
  */
+
+#define MSFT_SIGNATURE 0x5446534D /* "MSFT" */
+
 typedef struct tagMSFT_Header {
-/*0x00*/INT magic1;       /* 0x5446534D "MSFT" */
+/*0x00*/INT   magic1;       /* 0x5446534D "MSFT" */
         INT   magic2;       /* 0x00010002 version nr? */
         INT   posguid;      /* position of libid in guid table  */
                             /* (should be,  else -1) */
@@ -174,7 +177,7 @@ typedef struct tagMSFT_ImpInfo {
 
 /* function description data */
 typedef struct {
-/*  INT   recsize;       record size including some xtra stuff */
+    INT   Info;         /* record size including some extra stuff */
     INT   DataType;     /* data type of the member, eg return of function */
     INT   Flags;        /* something to do with attribute flags (LOWORD) */
 #ifdef WORDS_BIGENDIAN
@@ -199,19 +202,17 @@ typedef struct {
     INT16 nrargs;       /* number of arguments (including optional ????) */
     INT16 nroargs;      /* nr of optional arguments */
 #endif
+
     /* optional attribute fields, the number of them is variable */
-    INT   OptAttr[1];
-/*
-0*  INT   helpcontext;
-1*  INT   oHelpString;
-2*  INT   oEntry;       // either offset in string table or numeric as it is //
-3*  INT   res9;         // unknown (-1) //
-4*  INT   resA;         // unknown (-1) //
-5*  INT   HelpStringContext;
-    // these are controlled by a bit set in the FKCCIC field  //
-6*  INT   oCustData;        // custom data for function //
-7*  INT   oArgCustData[1];  // custom data per argument //
-*/
+    INT   HelpContext;
+    INT   oHelpString;
+    INT   oEntry;       /* either offset in string table or numeric as it is */
+    INT   res9;         /* unknown (-1) */
+    INT   resA;         /* unknown (-1) */
+    INT   HelpStringContext;
+    /* these are controlled by a bit set in the FKCCIC field  */
+    INT   oCustData;        /* custom data for function */
+    INT   oArgCustData[1];  /* custom data per argument */
 } MSFT_FuncRecord;
 
 /* after this may follow an array with default value pointers if the
@@ -228,7 +229,7 @@ typedef struct {
 
 /* Variable description data */
 typedef struct {
-/*  INT   recsize;      // record size including some xtra stuff */
+    INT   Info;         /* record size including some extra stuff */
     INT   DataType;     /* data type of the variable */
     INT   Flags;        /* VarFlags (LOWORD) */
 #ifdef WORDS_BIGENDIAN
@@ -243,11 +244,10 @@ typedef struct {
     /* optional attribute fields, the number of them is variable */
     /* controlled by record length */
     INT   HelpContext;
-    INT   oHelpString;
+    INT   HelpString;
     INT   res9;         /* unknown (-1) */
     INT   oCustData;        /* custom data for variable */
     INT   HelpStringContext;
-
 } MSFT_VarRecord;
 
 /* Structure of the reference data  */
@@ -596,11 +596,17 @@ WORD typeofarray
 
 #include "poppack.h"
 
-HRESULT ITypeInfoImpl_GetInternalFuncDesc( ITypeInfo *iface, UINT index, const FUNCDESC **ppFuncDesc );
+/* heap allocation helpers */
+extern void* heap_alloc_zero(unsigned size) DECLSPEC_HIDDEN __WINE_ALLOC_SIZE(1);
+extern void* heap_alloc(unsigned size) DECLSPEC_HIDDEN __WINE_ALLOC_SIZE(1);
+extern void* heap_realloc(void *ptr, unsigned size) DECLSPEC_HIDDEN;
+extern void  heap_free(void *ptr) DECLSPEC_HIDDEN;
 
-extern DWORD _invoke(FARPROC func,CALLCONV callconv, int nrargs, DWORD *args);
+HRESULT ITypeInfoImpl_GetInternalFuncDesc( ITypeInfo *iface, UINT index, const FUNCDESC **ppFuncDesc ) DECLSPEC_HIDDEN;
 
-HRESULT TMARSHAL_DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv);
+extern DWORD _invoke(FARPROC func,CALLCONV callconv, int nrargs, DWORD *args) DECLSPEC_HIDDEN;
+
+HRESULT TMARSHAL_DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv) DECLSPEC_HIDDEN;
 
 /* The OLE Automation ProxyStub Interface Class (aka Typelib Marshaler) */
 DEFINE_OLEGUID( CLSID_PSDispatch,    0x00020420, 0x0000, 0x0000 );

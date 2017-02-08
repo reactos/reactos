@@ -1,5 +1,5 @@
 
-#include <precomp.h>
+#include "precomp.h"
 
 /* update NUM_SETTINGS in precomp.h */
 LPWSTR lpSettings[NUM_SETTINGS] =

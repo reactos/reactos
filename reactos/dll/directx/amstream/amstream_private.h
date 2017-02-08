@@ -21,15 +21,18 @@
 #ifndef __AMSTREAM_PRIVATE_INCLUDED__
 #define __AMSTREAM_PRIVATE_INCLUDED__
 
-#include <stdarg.h>
+#define WIN32_NO_STATUS
+#define WIN32_LEAN_AND_MEAN
 
-#include "windef.h"
-#include "winbase.h"
-#include "wtypes.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "dshow.h"
-#include "mmstream.h"
+//#include <stdarg.h>
+
+//#include "windef.h"
+//#include "winbase.h"
+//#include "wtypes.h"
+//#include "wingdi.h"
+//#include "winuser.h"
+#include <dshow.h>
+#include <mmstream.h>
 
 HRESULT AM_create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
 HRESULT MediaStreamFilter_create(IUnknown *pUnkOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;

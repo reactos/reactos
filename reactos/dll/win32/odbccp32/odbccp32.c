@@ -20,19 +20,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+
 #include <assert.h>
 #include <stdarg.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "winnls.h"
-#include "wine/debug.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winnls.h>
+#include <wine/debug.h>
 
-#include "odbcinst.h"
+#include <odbcinst.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(odbc);
 

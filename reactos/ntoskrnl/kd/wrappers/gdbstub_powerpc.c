@@ -88,12 +88,8 @@
 #include <debug.h>
 
 /************************************************************************/
-/* BUFMAX defines the maximum number of characters in inbound/outbound buffers*/
-/* at least NUMREGBYTES*2 are needed for register packets */
-#define BUFMAX 1000
 
 static BOOLEAN GspInitialized;
-
 static BOOLEAN GspRemoteDebug;
 
 static CONST CHAR HexChars[]="0123456789abcdef";
@@ -105,25 +101,34 @@ static PETHREAD GspEnumThread;
 static FAST_MUTEX GspLock;
 
 extern LIST_ENTRY PsActiveProcessHead;
-KD_PORT_INFORMATION GdbPortInfo = { 2, 115200, 0 }; /* FIXME hardcoded for COM2, 115200 baud */
+
+/* FIXME hardcoded for COM2, 115200 baud */
+ULONG  GdbPortNumber = DEFAULT_DEBUG_PORT;
+CPPORT GdbPortInfo   = {0, DEFAULT_DEBUG_BAUD_RATE, 0};
+
+/* BUFMAX defines the maximum number of characters in inbound/outbound buffers*/
+/* at least NUMREGBYTES*2 are needed for register packets */
+#define BUFMAX 1000
+static CHAR GspInBuffer[BUFMAX];
+static CHAR GspOutBuffer[BUFMAX];
 
 /* Number of Registers.  */
 #define NUMREGS 16
 
 enum REGISTER_NAMES
 {
-  EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI,
-  PC /* also known as eip */,
-  PS /* also known as eflags */,
-  CS, SS, DS, ES, FS, GS
+    EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI,
+    PC /* also known as eip */,
+    PS /* also known as eflags */,
+    CS, SS, DS, ES, FS, GS
 };
 
 typedef struct _CPU_REGISTER
 {
-  ULONG Size;
-  ULONG OffsetInTF;
-  ULONG OffsetInContext;
-  BOOLEAN SetInContext;
+    ULONG Size;
+    ULONG OffsetInTF;
+    ULONG OffsetInContext;
+    BOOLEAN SetInContext;
 } CPU_REGISTER, *PCPU_REGISTER;
 
 static CPU_REGISTER GspRegisters[NUMREGS] =
@@ -132,54 +137,45 @@ static CPU_REGISTER GspRegisters[NUMREGS] =
 
 static PCHAR GspThreadStates[DeferredReady+1] =
 {
-  "Initialized",
-  "Ready",
-  "Running",
-  "Standby",
-  "Terminated",
-  "Waiting",
-  "Transition",
-  "DeferredReady"
+    "Initialized",
+    "Ready",
+    "Running",
+    "Standby",
+    "Terminated",
+    "Waiting",
+    "Transition",
+    "DeferredReady"
 };
 
 
 LONG
 HexValue(CHAR ch)
 {
-  if ((ch >= '0') && (ch <= '9'))
-    {
-      return (ch - '0');
-    }
-  if ((ch >= 'a') && (ch <= 'f'))
-    {
-      return (ch - 'a' + 10);
-    }
-  if ((ch >= 'A') && (ch <= 'F'))
-    {
-      return (ch - 'A' + 10);
-    }
+    if ((ch >= '0') && (ch <= '9'))
+        return (ch - '0');
 
-  return -1;
+    if ((ch >= 'a') && (ch <= 'f'))
+        return (ch - 'a' + 10);
+
+    if ((ch >= 'A') && (ch <= 'F'))
+        return (ch - 'A' + 10);
+
+    return -1;
 }
-
-static CHAR GspInBuffer[BUFMAX];
-static CHAR GspOutBuffer[BUFMAX];
 
 VOID
 GdbPutChar(UCHAR Value)
 {
-  KdPortPutByteEx(&GdbPortInfo, Value);
+    KdPortPutByteEx(&GdbPortInfo, Value);
 }
 
 UCHAR
 GdbGetChar(VOID)
 {
-  UCHAR Value;
+    UCHAR Value;
 
-  while (!KdPortGetByteEx(&GdbPortInfo, &Value))
-    ;
-
-  return Value;
+    while (!KdPortGetByteEx(&GdbPortInfo, &Value)) ;
+    return Value;
 }
 
 /* scan for the sequence $<data>#<Checksum>     */
@@ -187,57 +183,53 @@ GdbGetChar(VOID)
 PCHAR
 GspGetPacket()
 {
-  PCHAR Buffer = &GspInBuffer[0];
-  CHAR Checksum;
-  CHAR XmitChecksum;
-  ULONG Count;
-  CHAR ch;
+    PCHAR Buffer = &GspInBuffer[0];
+    CHAR Checksum;
+    CHAR XmitChecksum;
+    ULONG Count;
+    CHAR ch;
 
-  while (TRUE)
+    while (TRUE)
     {
-      /* wait around for the start character, ignore all other characters */
-      while ((ch = GdbGetChar ()) != '$')
-        ;
+        /* wait around for the start character, ignore all other characters */
+        while ((ch = GdbGetChar ()) != '$') ;
 
-    retry:
-      Checksum = 0;
-      XmitChecksum = -1;
-      Count = 0;
+retry:
+        Checksum = 0;
+        XmitChecksum = -1;
+        Count = 0;
 
-      /* now, read until a # or end of Buffer is found */
-      while (Count < BUFMAX)
+        /* now, read until a # or end of Buffer is found */
+        while (Count < BUFMAX)
         {
-          ch = GdbGetChar();
-          if (ch == '$')
-            {
-              goto retry;
-            }
-          if (ch == '#')
-            {
-              break;
-            }
-          Checksum = Checksum + ch;
-          Buffer[Count] = ch;
-          Count = Count + 1;
+            ch = GdbGetChar();
+            if (ch == '$')
+                goto retry;
+
+            if (ch == '#')
+                break;
+
+            Checksum = Checksum + ch;
+            Buffer[Count] = ch;
+            Count = Count + 1;
         }
-      Buffer[Count] = 0;
+        Buffer[Count] = 0;
 
-      if (ch == '#')
+        if (ch == '#')
         {
-          ch = GdbGetChar();
-          XmitChecksum = (CHAR)(HexValue(ch) << 4);
-          ch = GdbGetChar();
-          XmitChecksum += (CHAR)(HexValue(ch));
+            ch = GdbGetChar();
+            XmitChecksum = (CHAR)(HexValue(ch) << 4);
+            ch = GdbGetChar();
+            XmitChecksum += (CHAR)(HexValue(ch));
 
-          if (Checksum != XmitChecksum)
+            if (Checksum != XmitChecksum)
             {
-              GdbPutChar('-'); /* failed checksum */
+                GdbPutChar('-'); /* failed checksum */
             }
-          else
+            else
             {
-              GdbPutChar('+'); /* successful transfer */
-
-              return &Buffer[0];
+                GdbPutChar('+'); /* successful transfer */
+                return &Buffer[0];
             }
         }
     }
@@ -248,54 +240,54 @@ GspGetPacket()
 VOID
 GspPutPacket(PCHAR Buffer)
 {
-  CHAR Checksum;
-  LONG Count;
-  CHAR ch;
+    CHAR Checksum;
+    LONG Count;
+    CHAR ch;
 
-  /*  $<packet info>#<Checksum>. */
-  do
+    /*  $<packet info>#<Checksum>. */
+    do
     {
-      GdbPutChar('$');
-      Checksum = 0;
-      Count = 0;
+        GdbPutChar('$');
+        Checksum = 0;
+        Count = 0;
 
-      while ((ch = Buffer[Count]))
+        while ((ch = Buffer[Count]))
         {
-          GdbPutChar(ch);
-          Checksum += ch;
-          Count += 1;
+            GdbPutChar(ch);
+            Checksum += ch;
+            Count += 1;
         }
 
-      GdbPutChar('#');
-      GdbPutChar(HexChars[(Checksum >> 4) & 0xf]);
-      GdbPutChar(HexChars[Checksum & 0xf]);
+        GdbPutChar('#');
+        GdbPutChar(HexChars[(Checksum >> 4) & 0xf]);
+        GdbPutChar(HexChars[Checksum & 0xf]);
     }
-  while (GdbGetChar() != '+');
+    while (GdbGetChar() != '+');
 }
 
 
 VOID
 GspPutPacketNoWait(PCHAR Buffer)
 {
-  CHAR Checksum;
-  LONG Count;
-  CHAR ch;
+    CHAR Checksum;
+    LONG Count;
+    CHAR ch;
 
-  /*  $<packet info>#<Checksum>. */
-  GdbPutChar('$');
-  Checksum = 0;
-  Count = 0;
+    /*  $<packet info>#<Checksum>. */
+    GdbPutChar('$');
+    Checksum = 0;
+    Count = 0;
 
-  while ((ch = Buffer[Count]))
+    while ((ch = Buffer[Count]))
     {
-      GdbPutChar(ch);
-      Checksum += ch;
-      Count += 1;
+        GdbPutChar(ch);
+        Checksum += ch;
+        Count += 1;
     }
 
-  GdbPutChar('#');
-  GdbPutChar(HexChars[(Checksum >> 4) & 0xf]);
-  GdbPutChar(HexChars[Checksum & 0xf]);
+    GdbPutChar('#');
+    GdbPutChar(HexChars[(Checksum >> 4) & 0xf]);
+    GdbPutChar(HexChars[Checksum & 0xf]);
 }
 
 /* Indicate to caller of GspMem2Hex or GspHex2Mem that there has been an
@@ -306,19 +298,33 @@ static volatile void *GspAccessLocation = NULL;
 static CHAR
 GspReadMemSafe(PCHAR Address)
 {
-  CHAR ch;
+    CHAR ch;
 
-  if (NULL == Address)
+    if (NULL == Address)
     {
-      GspMemoryError = TRUE;
-      return '\0';
+        GspMemoryError = TRUE;
+        return '\0';
     }
 
-  GspAccessLocation = Address;
-  ch = *Address;
-  GspAccessLocation = NULL;
+    GspAccessLocation = Address;
+    ch = *Address;
+    GspAccessLocation = NULL;
 
-  return ch;
+    return ch;
+}
+
+static CHAR
+GspWriteMemSafeGetContent(PVOID Context, ULONG Offset)
+{
+    ASSERT(0 == Offset);
+    return *((PCHAR) Context);
+}
+
+static void
+GspWriteMemSafe(PCHAR Address,
+                CHAR Ch)
+{
+    GspWriteMem(Address, 1, TRUE, GspWriteMemSafeGetContent, &Ch);
 }
 
 /* Convert the memory pointed to by Address into hex, placing result in Buffer */
@@ -327,131 +333,110 @@ GspReadMemSafe(PCHAR Address)
    a fault; if FALSE treat a fault like any other fault in the stub.  */
 static PCHAR
 GspMem2Hex(PCHAR Address,
-  PCHAR Buffer,
-  LONG Count,
-  BOOLEAN MayFault)
+           PCHAR Buffer,
+           LONG Count,
+           BOOLEAN MayFault)
 {
-  ULONG i;
-  CHAR ch;
+    ULONG i;
+    CHAR ch;
 
-  for (i = 0; i < (ULONG) Count; i++)
+    for (i = 0; i < (ULONG) Count; i++)
     {
-      if (MayFault)
+        if (MayFault)
         {
-          ch = GspReadMemSafe(Address);
-          if (GspMemoryError)
-            {
-              return Buffer;
-            }
+            ch = GspReadMemSafe(Address);
+            if (GspMemoryError)
+                return Buffer;
         }
-      else
+        else
         {
-          ch = *Address;
+            ch = *Address;
         }
-      *Buffer++ = HexChars[(ch >> 4) & 0xf];
-      *Buffer++ = HexChars[ch & 0xf];
-      Address++;
+        *Buffer++ = HexChars[(ch >> 4) & 0xf];
+        *Buffer++ = HexChars[ch & 0xf];
+        Address++;
     }
 
-  *Buffer = 0;
-  return Buffer;
+    *Buffer = 0;
+    return Buffer;
 }
 
 static ULONG
 GspWriteMem(PCHAR Address,
-  ULONG Count,
-  BOOLEAN MayFault,
-  CHAR (*GetContent)(PVOID Context, ULONG Offset),
-  PVOID Context)
+            ULONG Count,
+            BOOLEAN MayFault,
+            CHAR (*GetContent)(PVOID Context, ULONG Offset),
+            PVOID Context)
 {
-  PCHAR Current;
-  PCHAR Page;
-  ULONG CountInPage;
-  ULONG i;
-  CHAR ch;
-  ULONG OldProt = 0;
+    PCHAR Current;
+    PCHAR Page;
+    ULONG CountInPage;
+    ULONG i;
+    CHAR ch;
+    ULONG OldProt = 0;
 
-  Current = Address;
-  while (Current < Address + Count)
+    Current = Address;
+    while (Current < Address + Count)
     {
-      Page = (PCHAR)PAGE_ROUND_DOWN(Current);
-      if (Address + Count <= Page + PAGE_SIZE)
+        Page = (PCHAR)PAGE_ROUND_DOWN(Current);
+        if (Address + Count <= Page + PAGE_SIZE)
         {
-          /* Fits in this page */
-          CountInPage = Count;
+            /* Fits in this page */
+            CountInPage = Count;
         }
-      else
+        else
         {
-          /* Flows into next page, handle only current page in this iteration */
-          CountInPage = PAGE_SIZE - (Address - Page);
+            /* Flows into next page, handle only current page in this iteration */
+            CountInPage = PAGE_SIZE - (Address - Page);
         }
-      if (MayFault)
+        if (MayFault)
         {
-          OldProt = MmGetPageProtect(NULL, Address);
-          MmSetPageProtect(NULL, Address, PAGE_EXECUTE_READWRITE);
+            OldProt = MmGetPageProtect(NULL, Address);
+            MmSetPageProtect(NULL, Address, PAGE_EXECUTE_READWRITE);
         }
 
-      for (i = 0; i < CountInPage && ! GspMemoryError; i++)
+        for (i = 0; i < CountInPage && ! GspMemoryError; i++)
         {
-          ch = (*GetContent)(Context, Current - Address);
+            ch = (*GetContent)(Context, Current - Address);
 
-          if (MayFault)
-            {
-              GspAccessLocation = Current;
-            }
-          *Current = ch;
-          if (MayFault)
-            {
-              GspAccessLocation = NULL;
-            }
-          Current++;
+            if (MayFault)
+                GspAccessLocation = Current;
+
+            *Current = ch;
+
+            if (MayFault)
+                GspAccessLocation = NULL;
+
+            Current++;
         }
-      if (MayFault)
+        if (MayFault)
         {
-          MmSetPageProtect(NULL, Page, OldProt);
-          if (GspMemoryError)
-            {
-              return Current - Address;
-            }
+            MmSetPageProtect(NULL, Page, OldProt);
+            if (GspMemoryError)
+                return Current - Address;
         }
     }
 
-  return Current - Address;
+    return Current - Address;
 }
 
 static CHAR
 GspHex2MemGetContent(PVOID Context, ULONG Offset)
 {
-  return (CHAR)((HexValue(*((PCHAR) Context + 2 * Offset)) << 4) +
-                HexValue(*((PCHAR) Context + 2 * Offset + 1)));
+    return (CHAR)((HexValue(*((PCHAR) Context + 2 * Offset)) << 4) +
+                   HexValue(*((PCHAR) Context + 2 * Offset + 1)));
 }
 
 /* Convert the hex array pointed to by Buffer into binary to be placed at Address */
 /* Return a pointer to the character AFTER the last byte read from Buffer */
 static PCHAR
 GspHex2Mem(PCHAR Buffer,
-  PCHAR Address,
-  ULONG Count,
-  BOOLEAN MayFault)
+           PCHAR Address,
+           ULONG Count,
+           BOOLEAN MayFault)
 {
-  Count = GspWriteMem(Address, Count, MayFault, GspHex2MemGetContent, Buffer);
-
-  return Buffer + 2 * Count;
-}
-
-static CHAR
-GspWriteMemSafeGetContent(PVOID Context, ULONG Offset)
-{
-  ASSERT(0 == Offset);
-
-  return *((PCHAR) Context);
-}
-
-static void
-GspWriteMemSafe(PCHAR Address,
-  CHAR Ch)
-{
-  GspWriteMem(Address, 1, TRUE, GspWriteMemSafeGetContent, &Ch);
+    Count = GspWriteMem(Address, Count, MayFault, GspHex2MemGetContent, Buffer);
+    return Buffer + 2 * Count;
 }
 
 
@@ -460,33 +445,38 @@ GspWriteMemSafe(PCHAR Address,
 ULONG
 GspComputeSignal(NTSTATUS ExceptionCode)
 {
-  ULONG SigVal;
+    ULONG SigVal;
 
-  switch (ExceptionCode)
+    switch (ExceptionCode)
     {
-    case STATUS_INTEGER_DIVIDE_BY_ZERO:
-      SigVal = 8; /* divide by zero */
-      break;
-    case STATUS_SINGLE_STEP:
-    case STATUS_BREAKPOINT:
-      SigVal = 5; /* breakpoint */
-      break;
-    case STATUS_INTEGER_OVERFLOW:
-    case STATUS_ARRAY_BOUNDS_EXCEEDED:
-      SigVal = 16; /* bound instruction */
-      break;
-    case STATUS_ILLEGAL_INSTRUCTION:
-      SigVal = 4; /* Invalid opcode */
-      break;
-    case STATUS_STACK_OVERFLOW:
-    case STATUS_DATATYPE_MISALIGNMENT:
-    case STATUS_ACCESS_VIOLATION:
-      SigVal = 11; /* access violation */
-      break;
-    default:
-      SigVal = 7; /* "software generated" */
+        case STATUS_INTEGER_DIVIDE_BY_ZERO:
+            SigVal = 8; /* divide by zero */
+            break;
+
+        case STATUS_SINGLE_STEP:
+        case STATUS_BREAKPOINT:
+            SigVal = 5; /* breakpoint */
+            break;
+
+        case STATUS_INTEGER_OVERFLOW:
+        case STATUS_ARRAY_BOUNDS_EXCEEDED:
+            SigVal = 16; /* bound instruction */
+            break;
+
+        case STATUS_ILLEGAL_INSTRUCTION:
+            SigVal = 4; /* Invalid opcode */
+            break;
+
+        case STATUS_STACK_OVERFLOW:
+        case STATUS_DATATYPE_MISALIGNMENT:
+        case STATUS_ACCESS_VIOLATION:
+            SigVal = 11; /* access violation */
+            break;
+
+        default:
+            SigVal = 7; /* "software generated" */
     }
-  return SigVal;
+    return SigVal;
 }
 
 
@@ -1624,43 +1614,39 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
 BOOLEAN
 NTAPI
 GspBreakIn(PKINTERRUPT Interrupt,
-  PVOID ServiceContext)
+           PVOID ServiceContext)
 {
-  PKTRAP_FRAME TrapFrame;
-  BOOLEAN DoBreakIn;
-  CONTEXT Context;
-  KIRQL OldIrql;
-  UCHAR Value;
+    PKTRAP_FRAME TrapFrame;
+    BOOLEAN DoBreakIn;
+    CONTEXT Context;
+    KIRQL OldIrql;
+    UCHAR Value;
 
-  DPRINT("Break In\n");
+    DPRINT("Break In\n");
 
-  DoBreakIn = FALSE;
-  while (KdPortGetByteEx(&GdbPortInfo, &Value))
+    DoBreakIn = FALSE;
+    while (KdPortGetByteEx(&GdbPortInfo, &Value))
     {
-      if (Value == 0x03)
-        {
-          DoBreakIn = TRUE;
-        }
+        if (Value == 0x03)
+            DoBreakIn = TRUE;
     }
 
-  if (!DoBreakIn)
-    {
-      return TRUE;
-    }
+    if (!DoBreakIn)
+        return TRUE;
 
-  KeRaiseIrql(HIGH_LEVEL, &OldIrql);
+    KeRaiseIrql(HIGH_LEVEL, &OldIrql);
 
-  TrapFrame = PsGetCurrentThread()->Tcb.TrapFrame;
+    TrapFrame = PsGetCurrentThread()->Tcb.TrapFrame;
 
-  KeTrapFrameToContext(TrapFrame, NULL, &Context);
+    KeTrapFrameToContext(TrapFrame, NULL, &Context);
 
-  KdpGdbEnterDebuggerException(NULL, &Context, TrapFrame);
+    KdpGdbEnterDebuggerException(NULL, &Context, TrapFrame);
 
-  KeContextToTrapFrame(&Context, NULL, TrapFrame, Context.ContextFlags, KernelMode);
+    KeContextToTrapFrame(&Context, NULL, TrapFrame, Context.ContextFlags, KernelMode);
 
-  KeLowerIrql(OldIrql);
+    KeLowerIrql(OldIrql);
 
-  return TRUE;
+    return TRUE;
 }
 
 VOID
@@ -1675,39 +1661,36 @@ NTAPI
 KdpGdbStubInit(PKD_DISPATCH_TABLE WrapperTable,
                ULONG BootPhase)
 {
-  if (!KdDebuggerEnabled || !KdpDebugMode.Gdb)
+    if (!KdDebuggerEnabled || !KdpDebugMode.Gdb)
+        return;
+
+    if (BootPhase == 0)
     {
-      return;
+        ExInitializeFastMutex(&GspLock);
+
+        /* Write out the functions that we support for now */
+        WrapperTable->KdpInitRoutine = KdpGdbStubInit;
+        WrapperTable->KdpPrintRoutine = KdpGdbDebugPrint;
+        WrapperTable->KdpExceptionRoutine = KdpGdbEnterDebuggerException;
+
+        /* Initialize the Port */
+        KdPortInitializeEx(&GdbPortInfo, GdbPortNumber);
+        // KdpPort = GdbPortInfo.ComPort;
     }
-
-  if (BootPhase == 0)
+    else if (BootPhase == 1)
     {
-      ExInitializeFastMutex(&GspLock);
+        GspInitialized = TRUE;
 
-      /* Write out the functions that we support for now */
-      WrapperTable->KdpInitRoutine = KdpGdbStubInit;
-      WrapperTable->KdpPrintRoutine = KdpGdbDebugPrint;
-      WrapperTable->KdpExceptionRoutine = KdpGdbEnterDebuggerException;
+        GspRunThread = NULL;
+        GspDbgThread = NULL;
+        GspEnumThread = NULL;
 
-      /* Initialize the Port */
-      KdPortInitializeEx(&GdbPortInfo, 0, 0);
-
-      KdpPort = GdbPortInfo.ComPort;
+        HalDisplayString("Waiting for GDB to attach\n");
+        DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
     }
-  else if (BootPhase == 1)
+    else if (BootPhase == 2)
     {
-      GspInitialized = TRUE;
-
-      GspRunThread = NULL;
-      GspDbgThread = NULL;
-      GspEnumThread = NULL;
-
-      HalDisplayString("Waiting for GDB to attach\n");
-      DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
-    }
-  else if (BootPhase == 2)
-    {
-      HalDisplayString("\n   GDB debugging enabled\n\n");
+        HalDisplayString("\n   GDB debugging enabled\n\n");
     }
 }
 

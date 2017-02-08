@@ -1245,7 +1245,7 @@ User32DefWindowProc(HWND hWnd,
             }
             return (0);
         }
-
+/*
         case WM_SYNCPAINT:
         {
             HRGN hRgn;
@@ -1272,64 +1272,34 @@ User32DefWindowProc(HWND hWnd,
             }
             return (0);
         }
-
+*/
         case WM_CLOSE:
-        {
             DestroyWindow(hWnd);
             return (0);
-        }
 
         case WM_MOUSEACTIVATE:
-        {
             if (GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CHILD)
             {
-                LONG Ret;
-                if (bUnicode)
-                {
-                    Ret = SendMessageW(GetParent(hWnd), WM_MOUSEACTIVATE,
-                                       wParam, lParam);
-                }
-                else
-                {
-                    Ret = SendMessageA(GetParent(hWnd), WM_MOUSEACTIVATE,
-                                       wParam, lParam);
-                }
-                if (Ret)
-                {
-                    return (Ret);
-                }
+                LONG Ret = SendMessageW(GetParent(hWnd), WM_MOUSEACTIVATE, wParam, lParam);
+                if (Ret) return (Ret);
             }
-            return ((LOWORD(lParam) >= HTCLIENT) ? MA_ACTIVATE : MA_NOACTIVATE);
-        }
+            return ( (HIWORD(lParam) == WM_LBUTTONDOWN && LOWORD(lParam) == HTCAPTION) ? MA_NOACTIVATE : MA_ACTIVATE );
 
         case WM_ACTIVATE:
-        {
-            /* Check if the window is minimized. */
+            /* The default action in Windows is to set the keyboard focus to
+             * the window, if it's being activated and not minimized */
             if (LOWORD(wParam) != WA_INACTIVE &&
                 !(GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_MINIMIZE))
             {
+                //ERR("WM_ACTIVATE %p\n",hWnd);
                 SetFocus(hWnd);
             }
             break;
-        }
 
         case WM_MOUSEWHEEL:
-        {
             if (GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CHILD)
-            {
-                if (bUnicode)
-                {
-                    return (SendMessageW(GetParent(hWnd), WM_MOUSEWHEEL,
-                                         wParam, lParam));
-                }
-                else
-                {
-                    return (SendMessageA(GetParent(hWnd), WM_MOUSEWHEEL,
-                                         wParam, lParam));
-                }
-            }
+                return SendMessageW( GetParent(hWnd), WM_MOUSEWHEEL, wParam, lParam);
             break;
-        }
 
         case WM_ERASEBKGND:
         case WM_ICONERASEBKGND:
@@ -1816,6 +1786,8 @@ User32DefWindowProc(HWND hWnd,
 /* Move to win32k !*/
         case WM_SHOWWINDOW:
             if (!lParam) break; // Call when it is necessary.
+        case WM_SYNCPAINT:
+        case WM_SETREDRAW:
         case WM_CLIENTSHUTDOWN:
         case WM_GETHOTKEY:
         case WM_SETHOTKEY:

@@ -19,24 +19,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
+//#include <assert.h>
 #include <stdarg.h>
-#include <string.h>
+//#include <string.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "winnls.h"
-#include "wine/unicode.h"
-#include "wine/debug.h"
-#include "objbase.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winerror.h"
+//#include "winnls.h"
+#include <wine/unicode.h>
+#include <wine/debug.h>
+#include <objbase.h>
 #include "moniker.h"
 
-#include "compobj_private.h"
+//#include "compobj_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -657,6 +660,15 @@ FileMonikerImpl_Reduce(IMoniker* iface, IBindCtx* pbc, DWORD dwReduceHowFar,
     return MK_S_REDUCED_TO_SELF;
 }
 
+static void free_stringtable(LPOLESTR *stringTable)
+{
+    int i;
+
+    for (i=0; stringTable[i]!=NULL; i++)
+        CoTaskMemFree(stringTable[i]);
+    CoTaskMemFree(stringTable);
+}
+
 /******************************************************************************
  *        FileMoniker_ComposeWith
  */
@@ -711,31 +723,28 @@ FileMonikerImpl_ComposeWith(IMoniker* iface, IMoniker* pmkRight,
         /* the length of the composed path string  is raised by the sum of the two paths lengths  */
         newStr=HeapAlloc(GetProcessHeap(),0,sizeof(WCHAR)*(lstrlenW(str1)+lstrlenW(str2)+1));
 
-	  if (newStr==NULL)
-		return E_OUTOFMEMORY;
+        if (newStr)
+        {
+            /* new path is the concatenation of the rest of str1 and str2 */
+            for(*newStr=0,j=0;j<=lastIdx1;j++)
+                strcatW(newStr,strDec1[j]);
 
-        /* new path is the concatenation of the rest of str1 and str2 */
-        for(*newStr=0,j=0;j<=lastIdx1;j++)
-            strcatW(newStr,strDec1[j]);
+            if ((strDec2[i]==NULL && lastIdx1>-1 && lastIdx2>-1) || lstrcmpW(strDec2[i],bkSlash)!=0)
+                strcatW(newStr,bkSlash);
 
-        if ((strDec2[i]==NULL && lastIdx1>-1 && lastIdx2>-1) || lstrcmpW(strDec2[i],bkSlash)!=0)
-            strcatW(newStr,bkSlash);
+            for(j=i;j<=lastIdx2;j++)
+                strcatW(newStr,strDec2[j]);
 
-        for(j=i;j<=lastIdx2;j++)
-            strcatW(newStr,strDec2[j]);
+            /* create a new moniker with the new string */
+            res=CreateFileMoniker(newStr,ppmkComposite);
 
-        /* create a new moniker with the new string */
-        res=CreateFileMoniker(newStr,ppmkComposite);
+            /* free all strings space memory used by this function */
+            HeapFree(GetProcessHeap(),0,newStr);
+        }
+        else res = E_OUTOFMEMORY;
 
-        /* free all strings space memory used by this function */
-        HeapFree(GetProcessHeap(),0,newStr);
-
-        for(i=0; strDec1[i]!=NULL;i++)
-            CoTaskMemFree(strDec1[i]);
-        for(i=0; strDec2[i]!=NULL;i++)
-            CoTaskMemFree(strDec2[i]);
-        CoTaskMemFree(strDec1);
-        CoTaskMemFree(strDec2);
+        free_stringtable(strDec1);
+        free_stringtable(strDec2);
 
         CoTaskMemFree(str1);
         CoTaskMemFree(str2);
@@ -967,10 +976,17 @@ FileMonikerImpl_CommonPrefixWith(IMoniker* iface,IMoniker* pmkOther,IMoniker** p
             return nb1;
         nb2=FileMonikerImpl_DecomposePath(pathOther,&stringTable2);
         if (FAILED(nb2))
+        {
+            free_stringtable(stringTable1);
             return nb2;
+        }
 
         if (nb1==0 || nb2==0)
+        {
+            free_stringtable(stringTable1);
+            free_stringtable(stringTable2);
             return MK_E_NOPREFIX;
+        }
 
         commonPath=HeapAlloc(GetProcessHeap(),0,sizeof(WCHAR)*(min(lstrlenW(pathThis),lstrlenW(pathOther))+1));
         if (!commonPath)
@@ -1003,17 +1019,9 @@ FileMonikerImpl_CommonPrefixWith(IMoniker* iface,IMoniker* pmkOther,IMoniker** p
         {
             for(i=0;i<sameIdx;i++)
                 strcatW(commonPath,stringTable1[i]);
-    
-            for(i=0;i<nb1;i++)
-                CoTaskMemFree(stringTable1[i]);
-    
-            CoTaskMemFree(stringTable1);
-    
-            for(i=0;i<nb2;i++)
-                CoTaskMemFree(stringTable2[i]);
-    
-            CoTaskMemFree(stringTable2);
-    
+
+            free_stringtable(stringTable1);
+            free_stringtable(stringTable2);
             ret = CreateFileMoniker(commonPath,ppmkPrefix);
         }
         HeapFree(GetProcessHeap(),0,commonPath);
@@ -1138,10 +1146,15 @@ FileMonikerImpl_RelativePathTo(IMoniker* iface,IMoniker* pmOther, IMoniker** ppm
 	return res;
 
     len1=FileMonikerImpl_DecomposePath(str1,&tabStr1);
+    if (FAILED(len1))
+        return E_OUTOFMEMORY;
     len2=FileMonikerImpl_DecomposePath(str2,&tabStr2);
 
-    if (FAILED(len1) || FAILED(len2))
-	return E_OUTOFMEMORY;
+    if (FAILED(len2))
+    {
+        free_stringtable(tabStr1);
+        return E_OUTOFMEMORY;
+    }
 
     /* count the number of similar items from the begin of the two paths */
     for(sameIdx=0; ( (tabStr1[sameIdx]!=NULL) &&
@@ -1166,12 +1179,8 @@ FileMonikerImpl_RelativePathTo(IMoniker* iface,IMoniker* pmOther, IMoniker** ppm
 
     res=CreateFileMoniker(relPath,ppmkRelPath);
 
-    for(j=0; tabStr1[j]!=NULL;j++)
-        CoTaskMemFree(tabStr1[j]);
-    for(j=0; tabStr2[j]!=NULL;j++)
-        CoTaskMemFree(tabStr2[j]);
-    CoTaskMemFree(tabStr1);
-    CoTaskMemFree(tabStr2);
+    free_stringtable(tabStr1);
+    free_stringtable(tabStr2);
     CoTaskMemFree(str1);
     CoTaskMemFree(str2);
     HeapFree(GetProcessHeap(),0,relPath);
@@ -1409,9 +1418,7 @@ static HRESULT FileMonikerImpl_Construct(FileMonikerImpl* This, LPCOLESTR lpszPa
             strcatW(This->filePathName,bkSlash);
     }
 
-    for(i=0; tabStr[i]!=NULL;i++)
-        CoTaskMemFree(tabStr[i]);
-    CoTaskMemFree(tabStr);
+    free_stringtable(tabStr);
 
     return S_OK;
 }
@@ -1555,7 +1562,7 @@ static HRESULT WINAPI FileMonikerCF_QueryInterface(LPCLASSFACTORY iface,
     if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IClassFactory))
     {
         *ppv = iface;
-        IUnknown_AddRef(iface);
+        IClassFactory_AddRef(iface);
         return S_OK;
     }
     return E_NOINTERFACE;

@@ -16,33 +16,40 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <config.h>
 
 #include <stdarg.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "objbase.h"
-#include "ocidl.h"
-#include "initguid.h"
-#include "wincodec.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winreg.h"
+#include <objbase.h>
+//#include "ocidl.h"
+#include <initguid.h>
+//#include "wincodec.h"
+#include <wincodecsdk.h>
 
 #include "wincodecs_private.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
+
+extern HRESULT WINAPI WIC_DllGetClassObject(REFCLSID, REFIID, LPVOID *) DECLSPEC_HIDDEN;
 
 typedef struct {
     REFCLSID classid;
     HRESULT (*constructor)(IUnknown*,REFIID,void**);
 } classinfo;
 
-static classinfo wic_classes[] = {
-    {&CLSID_WICImagingFactory, ImagingFactory_CreateInstance},
+static const classinfo wic_classes[] = {
+    {&CLSID_WICImagingFactory, ComponentFactory_CreateInstance},
     {&CLSID_WICBmpDecoder, BmpDecoder_CreateInstance},
     {&CLSID_WICPngDecoder, PngDecoder_CreateInstance},
     {&CLSID_WICPngEncoder, PngEncoder_CreateInstance},
@@ -50,27 +57,45 @@ static classinfo wic_classes[] = {
     {&CLSID_WICGifDecoder, GifDecoder_CreateInstance},
     {&CLSID_WICIcoDecoder, IcoDecoder_CreateInstance},
     {&CLSID_WICJpegDecoder, JpegDecoder_CreateInstance},
+    {&CLSID_WICJpegEncoder, JpegEncoder_CreateInstance},
     {&CLSID_WICTiffDecoder, TiffDecoder_CreateInstance},
+    {&CLSID_WICTiffEncoder, TiffEncoder_CreateInstance},
+    {&CLSID_WICIcnsEncoder, IcnsEncoder_CreateInstance},
     {&CLSID_WICDefaultFormatConverter, FormatConverter_CreateInstance},
+    {&CLSID_WineTgaDecoder, TgaDecoder_CreateInstance},
+    {&CLSID_WICUnknownMetadataReader, UnknownMetadataReader_CreateInstance},
+    {&CLSID_WICIfdMetadataReader, IfdMetadataReader_CreateInstance},
+    {&CLSID_WICPngTextMetadataReader, PngTextReader_CreateInstance},
+    {&CLSID_WICLSDMetadataReader, LSDReader_CreateInstance},
+    {&CLSID_WICIMDMetadataReader, IMDReader_CreateInstance},
+    {&CLSID_WICGCEMetadataReader, GCEReader_CreateInstance},
+    {&CLSID_WICAPEMetadataReader, APEReader_CreateInstance},
+    {&CLSID_WICGifCommentMetadataReader, GifCommentReader_CreateInstance},
     {0}};
 
 typedef struct {
-    const IClassFactoryVtbl *lpIClassFactoryVtbl;
+    IClassFactory           IClassFactory_iface;
     LONG                    ref;
-    classinfo               *info;
+    const classinfo         *info;
 } ClassFactoryImpl;
+
+static inline ClassFactoryImpl *impl_from_IClassFactory(IClassFactory *iface)
+{
+    return CONTAINING_RECORD(iface, ClassFactoryImpl, IClassFactory_iface);
+}
 
 static HRESULT WINAPI ClassFactoryImpl_QueryInterface(IClassFactory *iface,
     REFIID iid, void **ppv)
 {
-    ClassFactoryImpl *This = (ClassFactoryImpl*)iface;
+    ClassFactoryImpl *This = impl_from_IClassFactory(iface);
     TRACE("(%p,%s,%p)\n", iface, debugstr_guid(iid), ppv);
 
     if (!ppv) return E_INVALIDARG;
 
-    if (IsEqualIID(&IID_IUnknown, iid) || IsEqualIID(&IID_IClassFactory, iid))
+    if (IsEqualIID(&IID_IUnknown, iid) ||
+        IsEqualIID(&IID_IClassFactory, iid))
     {
-        *ppv = This;
+        *ppv = &This->IClassFactory_iface;
     }
     else
     {
@@ -84,7 +109,7 @@ static HRESULT WINAPI ClassFactoryImpl_QueryInterface(IClassFactory *iface,
 
 static ULONG WINAPI ClassFactoryImpl_AddRef(IClassFactory *iface)
 {
-    ClassFactoryImpl *This = (ClassFactoryImpl*)iface;
+    ClassFactoryImpl *This = impl_from_IClassFactory(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
     TRACE("(%p) refcount=%u\n", iface, ref);
@@ -94,7 +119,7 @@ static ULONG WINAPI ClassFactoryImpl_AddRef(IClassFactory *iface)
 
 static ULONG WINAPI ClassFactoryImpl_Release(IClassFactory *iface)
 {
-    ClassFactoryImpl *This = (ClassFactoryImpl*)iface;
+    ClassFactoryImpl *This = impl_from_IClassFactory(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) refcount=%u\n", iface, ref);
@@ -108,7 +133,7 @@ static ULONG WINAPI ClassFactoryImpl_Release(IClassFactory *iface)
 static HRESULT WINAPI ClassFactoryImpl_CreateInstance(IClassFactory *iface,
     IUnknown *pUnkOuter, REFIID riid, void **ppv)
 {
-    ClassFactoryImpl *This = (ClassFactoryImpl*)iface;
+    ClassFactoryImpl *This = impl_from_IClassFactory(iface);
 
     return This->info->constructor(pUnkOuter, riid, ppv);
 }
@@ -127,7 +152,7 @@ static const IClassFactoryVtbl ClassFactoryImpl_Vtbl = {
     ClassFactoryImpl_LockServer
 };
 
-static HRESULT ClassFactoryImpl_Constructor(classinfo *info, REFIID riid, LPVOID *ppv)
+static HRESULT ClassFactoryImpl_Constructor(const classinfo *info, REFIID riid, LPVOID *ppv)
 {
     ClassFactoryImpl *This;
     HRESULT ret;
@@ -137,12 +162,12 @@ static HRESULT ClassFactoryImpl_Constructor(classinfo *info, REFIID riid, LPVOID
     This = HeapAlloc(GetProcessHeap(), 0, sizeof(ClassFactoryImpl));
     if (!This) return E_OUTOFMEMORY;
 
-    This->lpIClassFactoryVtbl = &ClassFactoryImpl_Vtbl;
+    This->IClassFactory_iface.lpVtbl = &ClassFactoryImpl_Vtbl;
     This->ref = 1;
     This->info = info;
 
-    ret = IClassFactory_QueryInterface((IClassFactory*)This, riid, ppv);
-    IClassFactory_Release((IClassFactory*)This);
+    ret = IClassFactory_QueryInterface(&This->IClassFactory_iface, riid, ppv);
+    IClassFactory_Release(&This->IClassFactory_iface);
 
     return ret;
 }
@@ -150,7 +175,7 @@ static HRESULT ClassFactoryImpl_Constructor(classinfo *info, REFIID riid, LPVOID
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 {
     HRESULT ret;
-    classinfo *info=NULL;
+    const classinfo *info=NULL;
     int i;
 
     TRACE("(%s,%s,%p)\n", debugstr_guid(rclsid), debugstr_guid(iid), ppv);
@@ -172,7 +197,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
     if (info)
         ret = ClassFactoryImpl_Constructor(info, iid, ppv);
     else
-        ret = CLASS_E_CLASSNOTAVAILABLE;
+        ret = WIC_DllGetClassObject(rclsid, iid, ppv);
 
     TRACE("<-- %08X\n", ret);
     return ret;

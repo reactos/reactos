@@ -18,17 +18,21 @@
 // in the checked build of SMSS, which is probably a close approximation. We add
 // "p" to use the similar nomenclature seen/leaked out in the Base CSRSS APIs.
 //
+// The enumeration finishes with an enumeratee holding the maximum API number.
+// Its name is based on BasepMaxApiNumber, UserpMaxApiNumber...
+//
 //
 typedef enum _SMSRV_API_NUMBER
 {
-    SmCreateForeignSessionApi,
-    SmSessionCompleteApi,
-    SmTerminateForeignSessionApi,
-    SmExecPgmApi,
-    SmLoadDeferedSubsystemApi,
-    SmStartCsrApi,
-    SmStopCsrApi,
-    SmMaxApiNumber // Based on BasepMaxApiNumber, UserpMaxApiNumber...
+    SmpCreateForeignSessionApi,
+    SmpSessionCompleteApi,
+    SmpTerminateForeignSessionApi,
+    SmpExecPgmApi,
+    SmpLoadDeferedSubsystemApi,
+    SmpStartCsrApi,
+    SmpStopCsrApi,
+
+    SmpMaxApiNumber
 } SMSRV_API_NUMBER;
 
 //
@@ -108,7 +112,7 @@ C_ASSERT(sizeof(SM_API_MSG) == 0x130);
 #endif
 
 //
-// There are the APIs that the SMSS Serve can send to a client (such as CSRSS)
+// There are the APIs that the SMSS Server can send to a client (such as CSRSS).
 //
 // These are called "SB" APIs.
 //
@@ -117,6 +121,9 @@ C_ASSERT(sizeof(SM_API_MSG) == 0x130);
 // We add "p" to use the similar nomenclature seen/leaked out in the Base CSRSS
 // APIs.
 //
+// The enumeration finishes with an enumeratee holding the maximum API number.
+// Its name is based on BasepMaxApiNumber, UserpMaxApiNumber...
+//
 //
 typedef enum _SB_API_NUMBER
 {
@@ -124,7 +131,8 @@ typedef enum _SB_API_NUMBER
     SbpTerminateSession,
     SbpForeignSessionComplete,
     SbpCreateProcess,
-    SbpMaxApiNumber // Based on BasepMaxApiNumber, UserpMaxApiNumber...
+
+    SbpMaxApiNumber
 } SB_API_NUMBER;
 
 //

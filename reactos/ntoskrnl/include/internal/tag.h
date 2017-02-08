@@ -95,10 +95,6 @@
 #define TAG_VPB    ' BPV'
 #define TAG_SYSB   'BSYS'
 
-/* formerly located in kdbg/kdb_symbols.c */
-#define TAG_KDBS 'SBDK'
-#define TAG_KDBG 'GBDK'
-
 /* formerly located in ldr/loader.c */
 #define TAG_DRIVER_MEM  'MVRD' /* drvm */
 #define TAG_MODULE_OBJECT 'omlk' /* klmo - kernel ldr module object */

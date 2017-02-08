@@ -26,7 +26,14 @@ typedef enum _EXCEPTION_DISPOSITION
   struct _EXCEPTION_RECORD;
   struct _CONTEXT;
 
-  EXCEPTION_DISPOSITION __cdecl _except_handler(struct _EXCEPTION_RECORD *_ExceptionRecord,void *_EstablisherFrame,struct _CONTEXT *_ContextRecord,void *_DispatcherContext);
+  EXCEPTION_DISPOSITION
+  __cdecl
+  _except_handler(
+    _In_ struct _EXCEPTION_RECORD *_ExceptionRecord,
+    _In_ void *_EstablisherFrame,
+    _Inout_ struct _CONTEXT *_ContextRecord,
+    _Inout_ void *_DispatcherContext);
+
 #elif defined(__ia64__)
 
   typedef struct _EXCEPTION_POINTERS *Exception_info_ptr;
@@ -34,14 +41,33 @@ typedef enum _EXCEPTION_DISPOSITION
   struct _CONTEXT;
   struct _DISPATCHER_CONTEXT;
 
-  __MINGW_EXTENSION _CRTIMP EXCEPTION_DISPOSITION __cdecl __C_specific_handler (struct _EXCEPTION_RECORD *_ExceptionRecord,unsigned __int64 _MemoryStackFp,unsigned __int64 _BackingStoreFp,struct _CONTEXT *_ContextRecord,struct _DISPATCHER_CONTEXT *_DispatcherContext,unsigned __int64 _GlobalPointer);
+  __MINGW_EXTENSION
+  _CRTIMP
+  EXCEPTION_DISPOSITION
+  __cdecl
+  __C_specific_handler(
+    _In_ struct _EXCEPTION_RECORD *_ExceptionRecord,
+    _In_ unsigned __int64 _MemoryStackFp,
+    _In_ unsigned __int64 _BackingStoreFp,
+    _Inout_ struct _CONTEXT *_ContextRecord,
+    _Inout_ struct _DISPATCHER_CONTEXT *_DispatcherContext,
+    _In_ unsigned __int64 _GlobalPointer);
+
 #elif defined(__x86_64)
 
   struct _EXCEPTION_RECORD;
   struct _CONTEXT;
   struct _DISPATCHER_CONTEXT;
 
-  _CRTIMP EXCEPTION_DISPOSITION __cdecl __C_specific_handler (struct _EXCEPTION_RECORD *_ExceptionRecord,void *_EstablisherFrame,struct _CONTEXT *_ContextRecord,struct _DISPATCHER_CONTEXT *_DispatcherContext);
+  _CRTIMP
+  EXCEPTION_DISPOSITION
+  __cdecl
+  __C_specific_handler(
+    _In_ struct _EXCEPTION_RECORD *_ExceptionRecord,
+    _In_ void *_EstablisherFrame,
+    _Inout_ struct _CONTEXT *_ContextRecord,
+    _Inout_ struct _DISPATCHER_CONTEXT *_DispatcherContext);
+
 #endif
 
 #ifdef _MSC_VER

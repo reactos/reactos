@@ -32,14 +32,22 @@
 /* The size of a `long', as computed by sizeof. */
 #define SIZEOF_LONG 4
 
+/* Signed 64-bit type formatter */
+#define TIFF_INT64_FORMAT "%I64d"
+
 /* Signed 64-bit type */
 #define TIFF_INT64_T signed __int64
+
+/* Unsigned 64-bit type formatter */
+#define TIFF_UINT64_FORMAT "%I64u"
 
 /* Unsigned 64-bit type */
 #define TIFF_UINT64_T unsigned __int64
 
 /* Set the native cpu bit order */
 #define HOST_FILLORDER FILLORDER_LSB2MSB
+
+#define snprintf _snprintf
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */

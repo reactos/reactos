@@ -1,0 +1,250 @@
+/*
+ * Copyright (C) 2009 Maarten Lankhorst
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "unknwn.idl";
+import "propsys.idl";
+
+cpp_quote("#ifndef E_NOTFOUND")
+cpp_quote("#define E_NOTFOUND HRESULT_FROM_WIN32(ERROR_NOT_FOUND)")
+cpp_quote("#endif")
+cpp_quote("#ifndef E_UNSUPPORTED_TYPE")
+cpp_quote("#define E_UNSUPPORTED_TYPE HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE)")
+cpp_quote("#endif")
+
+
+cpp_quote("#define DEVICE_STATE_ACTIVE 0x1")
+cpp_quote("#define DEVICE_STATE_DISABLED 0x2")
+cpp_quote("#define DEVICE_STATE_NOTPRESENT 0x4")
+cpp_quote("#define DEVICE_STATE_UNPLUGGED 0x8")
+cpp_quote("#define DEVICE_STATEMASK_ALL 0xf")
+
+/* Generic PKEY_AudioEndPoint ID for grepping: {1da5d803-d492-4edd-8c23-e0c0ffee7f0e} */
+cpp_quote("DEFINE_PROPERTYKEY(PKEY_AudioEndpoint_FormFactor,0x1da5d803,0xd492,0x4edd,0x8c,0x23,0xe0,0xc0,0xff,0xee,0x7f,0x0e,0);")
+cpp_quote("DEFINE_PROPERTYKEY(PKEY_AudioEndpoint_ControlPanelPageProvider,0x1da5d803,0xd492,0x4edd,0x8c,0x23,0xe0,0xc0,0xff,0xee,0x7f,0x0e,1);")
+cpp_quote("DEFINE_PROPERTYKEY(PKEY_AudioEndpoint_Association,0x1da5d803,0xd492,0x4edd,0x8c,0x23,0xe0,0xc0,0xff,0xee,0x7f,0x0e,2);")
+cpp_quote("DEFINE_PROPERTYKEY(PKEY_AudioEndpoint_PhysicalSpeakers,0x1da5d803,0xd492,0x4edd,0x8c,0x23,0xe0,0xc0,0xff,0xee,0x7f,0x0e,3);")
+cpp_quote("DEFINE_PROPERTYKEY(PKEY_AudioEndpoint_GUID,0x1da5d803,0xd492,0x4edd,0x8c,0x23,0xe0,0xc0,0xff,0xee,0x7f,0x0e,4);")
+cpp_quote("DEFINE_PROPERTYKEY(PKEY_AudioEndpoint_Disable_SysFx,0x1da5d803,0xd492,0x4edd,0x8c,0x23,0xe0,0xc0,0xff,0xee,0x7f,0x0e,5);")
+
+cpp_quote("#define ENDPOINT_SYSFX_ENABLED 0")
+cpp_quote("#define ENDPOINT_SYSFX_DISABLED 1")
+
+cpp_quote("DEFINE_PROPERTYKEY(PKEY_AudioEndpoint_FullRangeSpeakers,0x1da5d803,0xd492,0x4edd,0x8c,0x23,0xe0,0xc0,0xff,0xee,0x7f,0x0e,6);")
+cpp_quote("DEFINE_PROPERTYKEY(PKEY_AudioEndpoint_Supports_EventDriven_Mode,0x1da5d803,0xd492,0x4edd,0x8c,0x23,0xe0,0xc0,0xff,0xee,0x7f,0x0e,7);")
+cpp_quote("DEFINE_PROPERTYKEY(PKEY_AudioEndpoint_JackSubType,0x1da5d803,0xd492,0x4edd,0x8c,0x23,0xe0,0xc0,0xff,0xee,0x7f,0x0e,8);")
+
+cpp_quote("DEFINE_PROPERTYKEY(PKEY_AudioEngine_DeviceFormat,0xf19f064d,0x082c,0x4e27,0xbc,0x73,0x68,0x82,0xa1,0xbb,0x8e,0x4c,0);")
+cpp_quote("DEFINE_PROPERTYKEY(PKEY_AudioEngine_OEMFormat,0xe4870e26,0x3cc5,0x4cd2,0xba,0x46,0xca,0x0a,0x9a,0x70,0xed,0x04,3);")
+
+typedef struct tagDIRECTX_AUDIO_ACTIVATION_PARAMS
+{
+    DWORD cbDirectXAudioActivationParams;
+    GUID guidAudioSession;
+    DWORD dwAudioStreamFlags;
+} DIRECTX_AUDIO_ACTIVATION_PARAMS, *PDIRECTX_AUDIO_ACTIVATION_PARAMS;
+
+typedef enum _EDataFlow
+{
+    eRender,
+    eCapture,
+    eAll,
+    EDataFlow_enum_count
+} EDataFlow;
+
+typedef enum _ERole
+{
+    eConsole,
+    eMultimedia,
+    eCommunications,
+    ERole_enum_count
+} ERole;
+
+typedef enum _EndpointFormFactor
+{
+    RemoteNetworkDevice,
+    Speakers,
+    LineLevel,
+    Headphones,
+    Microphone,
+    Headset,
+    Handset,
+    UnknownDigitalPassthrough,
+    SPDIF,
+    DigitalAudioDisplayDevice,
+    UnknownFormFactor,
+    EndpointFormFactor_enum_count
+} EndpointFormFactor;
+
+cpp_quote("#define HDMI DigitalAudioDisplayDevice")
+
+[
+    object,
+    local,
+    uuid(7991eec9-7e89-4d85-8390-6c703cec60c0),
+    nonextensible,
+    pointer_default(unique)
+]
+interface IMMNotificationClient : IUnknown
+{
+    [id(1)] HRESULT OnDeviceStateChanged(
+        [in] LPCWSTR pwstrDeviceId,
+        [in] DWORD dwNewState
+    );
+    [id(2)] HRESULT OnDeviceAdded(
+        [in] LPCWSTR pwstrDeviceId
+    );
+    [id(3)] HRESULT OnDeviceRemoved(
+        [in] LPCWSTR pwstrDeviceId
+    );
+    [id(4)] HRESULT OnDefaultDeviceChanged(
+        [in] EDataFlow flow,
+        [in] ERole role,
+        [in] LPCWSTR pwstrDeviceId
+    );
+    [id(5)] HRESULT OnPropertyValueChanged(
+        [in] LPCWSTR pwstrDeviceId,
+        [in] const PROPERTYKEY key
+    );
+}
+
+[
+    object,
+    local,
+    uuid(d666063f-1587-4e43-81f1-b948e807363f),
+    nonextensible,
+    pointer_default(unique)
+]
+interface IMMDevice : IUnknown
+{
+    [id(1)] HRESULT Activate(
+        [in] REFIID iid,
+        [in] DWORD dwClsCtx,
+        [in,unique] PROPVARIANT *pActivationParams,
+        [out,iid_is(iid)] void **ppv
+    );
+    [id(2)] HRESULT OpenPropertyStore(
+        [in] DWORD stgmAccess,
+        [out] IPropertyStore **ppProperties
+    );
+    [id(3)] HRESULT GetId(
+        [out] LPWSTR *ppstrId
+    );
+    [id(4)] HRESULT GetState(
+        [out] DWORD *pdwState
+    );
+}
+
+[
+    object,
+    local,
+    uuid(0bd7a1be-7a1a-44db-8397-cc5392387b5e),
+    nonextensible,
+    pointer_default(unique)
+]
+interface IMMDeviceCollection : IUnknown
+{
+    [id(1)] HRESULT GetCount(
+        [out] UINT *pcDevices
+    );
+    [id(2)] HRESULT Item(
+        [in] UINT nDevice,
+        [out] IMMDevice **ppdevice
+    );
+}
+
+[
+    object,
+    local,
+    uuid(1be09788-6894-4089-8586-9a2a6c265ac5),
+    nonextensible,
+    pointer_default(unique)
+]
+interface IMMEndpoint : IUnknown
+{
+    [id(1)] HRESULT GetDataFlow(
+        [out] EDataFlow *pDataFlow
+    );
+}
+
+[
+    object,
+    local,
+    uuid(a95664d2-9614-4f35-a746-de8db63617e6),
+    nonextensible,
+    pointer_default(unique)
+]
+interface IMMDeviceEnumerator : IUnknown
+{
+    [id(1)] HRESULT EnumAudioEndpoints(
+        [in] EDataFlow dataFlow,
+        [in] DWORD dwStateMask,
+        [out] IMMDeviceCollection **ppDevices
+    );
+    [id(2)] HRESULT GetDefaultAudioEndpoint(
+        [in] EDataFlow dataFlow,
+        [in] ERole role,
+        [out] IMMDevice **ppEndpoint
+    );
+    [id(3)] HRESULT GetDevice(
+        [in] LPCWSTR pwstrId,
+        [out] IMMDevice **ppDevice
+    );
+    [id(4)] HRESULT RegisterEndpointNotificationCallback(
+        [in] IMMNotificationClient *pClient
+    );
+    [id(5)] HRESULT UnregisterEndpointNotificationCallback(
+        [in] IMMNotificationClient *pClient
+    );
+}
+
+[
+    object,
+    local,
+    uuid(3b0d0ea4-d0a9-4b0e-935b-09516746fac0),
+    nonextensible,
+    pointer_default(unique)
+]
+interface IMMDeviceActivator : IUnknown
+{
+    [id(1)] HRESULT Activate(
+        [in] REFIID iid,
+        [in] IMMDevice *pDevice,
+        [in] PROPVARIANT *pActivationParams,
+        [out,iid_is(iid)] void **ppv
+    );
+}
+
+typedef struct _AudioExtensionParams
+{
+    LPARAM AddPageParam;
+    IMMDevice *pEndPoint;
+    IMMDevice *pPnpInterface;
+    IMMDevice *pPnpDevnode;
+} AudioExtensionParams;
+
+[
+    uuid(2fdaafa3-7523-4f66-9957-9d5e7fe698f6),
+    version(1.0)
+]
+library MMDeviceAPILib
+{
+    [ uuid(bcde0395-e52f-467c-8e3d-c4579291692e) ] coclass MMDeviceEnumerator
+    {
+        [default] interface IMMDeviceEnumerator;
+    }
+}

@@ -17,6 +17,7 @@ PTHREADINFO ptiKeyboard;
 PTHREADINFO ptiMouse;
 PKTIMER MasterTimer = NULL;
 PATTACHINFO gpai = NULL;
+INT paiCount = 0;
 HANDLE ghKeyboardDevice;
 
 static DWORD LastInputTick = 0;
@@ -303,6 +304,7 @@ CreateSystemThreads(UINT Type)
     switch (Type)
     {
         case 0: RawInputThreadMain(); break;
+        case 1: DesktopThreadMain(); break;
         default: ERR("Wrong type: %x\n", Type);
     }
 
@@ -394,76 +396,155 @@ NtUserBlockInput(
     return ret;
 }
 
-BOOL FASTCALL
+PTHREADINFO FASTCALL
+IsThreadAttach(PTHREADINFO ptiTo)
+{
+    PATTACHINFO pai;
+
+    if (!gpai) return NULL;
+
+    pai = gpai;
+    do
+    {
+        if (pai->pti2 == ptiTo) break;
+        pai = pai->paiNext;
+    } while (pai);
+
+    if (!pai) return NULL;
+
+    // Return ptiFrom.
+    return pai->pti1;
+}
+
+NTSTATUS FASTCALL
 UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
 {
     MSG msg;
     PATTACHINFO pai;
 
     /* Can not be the same thread. */
-    if (ptiFrom == ptiTo) return FALSE;
+    if (ptiFrom == ptiTo) return STATUS_INVALID_PARAMETER;
 
     /* Do not attach to system threads or between different desktops. */
     if (ptiFrom->TIF_flags & TIF_DONTATTACHQUEUE ||
-            ptiTo->TIF_flags & TIF_DONTATTACHQUEUE ||
-            ptiFrom->rpdesk != ptiTo->rpdesk)
-        return FALSE;
+        ptiTo->TIF_flags & TIF_DONTATTACHQUEUE ||
+        ptiFrom->rpdesk != ptiTo->rpdesk)
+        return STATUS_ACCESS_DENIED;
+
+    /* MSDN Note:
+       Keyboard and mouse events received by both threads are processed by the thread specified by the idAttachTo.
+     */
 
     /* If Attach set, allocate and link. */
     if (fAttach)
     {
         pai = ExAllocatePoolWithTag(PagedPool, sizeof(ATTACHINFO), USERTAG_ATTACHINFO);
-        if (!pai) return FALSE;
+        if (!pai) return STATUS_NO_MEMORY;
 
         pai->paiNext = gpai;
         pai->pti1 = ptiFrom;
         pai->pti2 = ptiTo;
         gpai = pai;
-        TRACE("Attach Allocated! ptiFrom 0x%p  ptiTo 0x%p\n",ptiFrom,ptiTo);
+        paiCount++;
+        ERR("Attach Allocated! ptiFrom 0x%p  ptiTo 0x%p paiCount %d\n",ptiFrom,ptiTo,paiCount);
+
+        if (ptiTo->MessageQueue == ptiFrom->MessageQueue)
+        {
+           ERR("Attach Threads are already associated!\n");
+        }
 
         ptiTo->MessageQueue->iCursorLevel -= ptiFrom->iCursorLevel;
-        ptiFrom->pqAttach = ptiFrom->MessageQueue;
+
+        /* Keep the original queue in pqAttach (ie do not trash it in a second attachment) */
+        if (ptiFrom->pqAttach == NULL)
+           ptiFrom->pqAttach = ptiFrom->MessageQueue;
         ptiFrom->MessageQueue = ptiTo->MessageQueue;
+
+        ptiFrom->MessageQueue->cThreads++;
+        ERR("ptiTo S Share count %d\n", ptiFrom->MessageQueue->cThreads);
+
         // FIXME: conditions?
         if (ptiFrom->pqAttach == gpqForeground)
         {
+           ERR("ptiFrom is Foreground\n");
         ptiFrom->MessageQueue->spwndActive = ptiFrom->pqAttach->spwndActive;
         ptiFrom->MessageQueue->spwndFocus = ptiFrom->pqAttach->spwndFocus;
         ptiFrom->MessageQueue->CursorObject = ptiFrom->pqAttach->CursorObject;
-        ptiFrom->MessageQueue->CaptureWindow = ptiFrom->pqAttach->CaptureWindow;
         ptiFrom->MessageQueue->spwndCapture = ptiFrom->pqAttach->spwndCapture;
         ptiFrom->MessageQueue->QF_flags ^= ((ptiFrom->MessageQueue->QF_flags ^ ptiFrom->pqAttach->QF_flags) & QF_CAPTURELOCKED);
         ptiFrom->MessageQueue->CaretInfo = ptiFrom->pqAttach->CaretInfo;
         }
+        else
+        {
+           ERR("ptiFrom NOT Foreground\n");
+        }
+        if (ptiTo->MessageQueue == gpqForeground)
+        {
+           ERR("ptiTo is Foreground\n");
+        }
+        else
+        {
+           ERR("ptiTo NOT Foreground\n");
+        }
     }
     else /* If clear, unlink and free it. */
     {
-        PATTACHINFO paiprev = NULL;
+        BOOL Hit = FALSE;
+        PATTACHINFO *ppai;
 
-        if (!gpai) return FALSE;
-
-        pai = gpai;
+        if (!gpai) return STATUS_INVALID_PARAMETER;
 
         /* Search list and free if found or return false. */
-        do
+        ppai = &gpai;
+        while (*ppai != NULL)
         {
-            if (pai->pti2 == ptiTo && pai->pti1 == ptiFrom) break;
-            paiprev = pai;
+           if ( (*ppai)->pti2 == ptiTo && (*ppai)->pti1 == ptiFrom )
+           {
+              pai = *ppai;
+              /* Remove it from the list */
+              *ppai = (*ppai)->paiNext;
+              ExFreePoolWithTag(pai, USERTAG_ATTACHINFO);
+              paiCount--;
+              Hit = TRUE;
+              break;
+           }
+           ppai = &((*ppai)->paiNext);
+        }
+
+        if (!Hit) return STATUS_INVALID_PARAMETER;
+
+        ASSERT(ptiFrom->pqAttach);
+ 
+        ERR("Attach Free! ptiFrom 0x%p  ptiTo 0x%p paiCount %d\n",ptiFrom,ptiTo,paiCount);
+
+        /* Search list and check if the thread is attached one more time */
+        pai = gpai;
+        while(pai)
+        {
+            /* If the thread is attached again , we are done */
+            if (pai->pti1 == ptiFrom) 
+            {
+                ptiFrom->MessageQueue->cThreads--;
+                ERR("ptiTo L Share count %d\n", ptiFrom->MessageQueue->cThreads);
+                /* Use the message queue of the last attachment */
+                ptiFrom->MessageQueue = pai->pti2->MessageQueue;
+                ptiFrom->MessageQueue->CursorObject = NULL;
+                ptiFrom->MessageQueue->spwndActive = NULL;
+                ptiFrom->MessageQueue->spwndFocus = NULL;
+                ptiFrom->MessageQueue->spwndCapture = NULL;
+                return STATUS_SUCCESS;
+            }
             pai = pai->paiNext;
-        } while (pai);
+        }
 
-        if (!pai) return FALSE;
-
-        if (paiprev) paiprev->paiNext = pai->paiNext;
-
-        ExFreePoolWithTag(pai, USERTAG_ATTACHINFO);
-        TRACE("Attach Free! ptiFrom 0x%p  ptiTo 0x%p\n",ptiFrom,ptiTo);
-
+        ptiFrom->MessageQueue->cThreads--;
+        ERR("ptiTo E Share count %d\n", ptiFrom->MessageQueue->cThreads);
         ptiFrom->MessageQueue = ptiFrom->pqAttach;
         // FIXME: conditions?
         ptiFrom->MessageQueue->CursorObject = NULL;
         ptiFrom->MessageQueue->spwndActive = NULL;
         ptiFrom->MessageQueue->spwndFocus = NULL;
+        ptiFrom->MessageQueue->spwndCapture = NULL;
         ptiFrom->pqAttach = NULL;
         ptiTo->MessageQueue->iCursorLevel -= ptiFrom->iCursorLevel;
     }
@@ -480,7 +561,7 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
     msg.pt = gpsi->ptCursor;
     co_MsqInsertMouseMessage(&msg, 0, 0, TRUE);
 
-    return TRUE;
+    return STATUS_SUCCESS;
 }
 
 /*

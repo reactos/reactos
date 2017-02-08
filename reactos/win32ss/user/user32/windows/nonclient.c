@@ -216,7 +216,7 @@ UserDrawCaptionButton(HWND hWnd, LPRECT Rect, DWORD Style, DWORD ExStyle, HDC hD
       {
           HMENU hSysMenu = GetSystemMenu(hWnd, FALSE);
           UINT MenuState = GetMenuState(hSysMenu, SC_CLOSE, MF_BYCOMMAND); /* in case of error MenuState==0xFFFFFFFF */
-          
+
          /* FIXME: A tool window has a smaller Close button */
 
          if (ExStyle & WS_EX_TOOLWINDOW)
@@ -336,10 +336,10 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
    /* Firstly the "thick" frame */
    if ((Style & WS_THICKFRAME) && !(Style & WS_MINIMIZE))
    {
-      DWORD Width =
+      LONG Width =
          (GetSystemMetrics(SM_CXFRAME) - GetSystemMetrics(SM_CXDLGFRAME)) *
          GetSystemMetrics(SM_CXBORDER);
-      DWORD Height =
+      LONG Height =
          (GetSystemMetrics(SM_CYFRAME) - GetSystemMetrics(SM_CYDLGFRAME)) *
          GetSystemMetrics(SM_CYBORDER);
 
@@ -661,7 +661,7 @@ DefWndNCActivate(HWND hWnd, WPARAM wParam, LPARAM lParam)
   /* Lotus Notes draws menu descriptions in the caption of its main
    * window. When it wants to restore original "system" view, it just
    * sends WM_NCACTIVATE message to itself. Any optimizations here in
-   * attempt to minimize redrawings lead to a not restored caption.   
+   * attempt to minimize redrawings lead to a not restored caption.
    */
    if (wParam)
       NtUserxSetWindowState(Wnd, WNDSACTIVEFRAME);
@@ -987,7 +987,8 @@ DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
         case HTCAPTION:
         {
 	        HWND hTopWnd = GetAncestor(hWnd, GA_ROOT);
-	        if (SetActiveWindow(hTopWnd) || GetActiveWindow() == hTopWnd)
+	        if ( NtUserCallHwndLock(hTopWnd, HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOWMOUSE) ||
+                    GetActiveWindow() == hTopWnd)
 	        {
 	            SendMessageW(hWnd, WM_SYSCOMMAND, SC_MOVE + HTCAPTION, lParam);
 	        }
@@ -995,7 +996,8 @@ DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
         }
         case HTSYSMENU:
         {
-	  if (GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_SYSMENU)
+          LONG style = GetWindowLongPtrW( hWnd, GWL_STYLE );
+          if (style & WS_SYSMENU)
             {
 	      SendMessageW(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU,
 			   lParam);
@@ -1036,6 +1038,8 @@ DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
             SendMessageW(hWnd, WM_SYSCOMMAND, SC_SIZE + wParam - (HTLEFT - WMSZ_LEFT), lParam);
             break;
         }
+        case HTBORDER:
+            break;
     }
     return(0);
 }

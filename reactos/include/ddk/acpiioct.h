@@ -57,7 +57,7 @@ typedef struct _ACPI_EVAL_INPUT_BUFFER_SIMPLE_STRING {
     ULONG MethodNameAsUlong;
   } DUMMYUNIONNAME;
   ULONG StringLength;
-  UCHAR String[ANYSIZE_ARRAY];
+  _Field_size_bytes_(StringLength) _Null_terminated_ UCHAR String[ANYSIZE_ARRAY];
 } ACPI_EVAL_INPUT_BUFFER_SIMPLE_STRING, *PACPI_EVAL_INPUT_BUFFER_SIMPLE_STRING;
 
 typedef struct _ACPI_METHOD_ARGUMENT {
@@ -65,7 +65,7 @@ typedef struct _ACPI_METHOD_ARGUMENT {
   USHORT DataLength;
   _ANONYMOUS_UNION union {
     ULONG Argument;
-    UCHAR Data[ANYSIZE_ARRAY];
+    _Field_size_bytes_(DataLength) UCHAR Data[ANYSIZE_ARRAY];
   } DUMMYUNIONNAME;
 } ACPI_METHOD_ARGUMENT;
 typedef ACPI_METHOD_ARGUMENT UNALIGNED *PACPI_METHOD_ARGUMENT;
@@ -85,7 +85,7 @@ typedef struct _ACPI_EVAL_OUTPUT_BUFFER {
   ULONG Signature;
   ULONG Length;
   ULONG Count;
-  ACPI_METHOD_ARGUMENT Argument[ANYSIZE_ARRAY];
+  _Field_size_bytes_(Length) ACPI_METHOD_ARGUMENT Argument[ANYSIZE_ARRAY];
 } ACPI_EVAL_OUTPUT_BUFFER;
 typedef ACPI_EVAL_OUTPUT_BUFFER UNALIGNED *PACPI_EVAL_OUTPUT_BUFFER;
 
@@ -96,12 +96,12 @@ typedef struct _ACPI_MANIPULATE_GLOBAL_LOCK_BUFFER {
 
 typedef struct _ACPI_EVAL_INPUT_BUFFER_EX {
   ULONG Signature;
-  CHAR MethodName[256];
+  _Null_terminated_ CHAR MethodName[256];
 } ACPI_EVAL_INPUT_BUFFER_EX, *PACPI_EVAL_INPUT_BUFFER_EX;
 
 typedef struct _ACPI_EVAL_INPUT_BUFFER_SIMPLE_INTEGER_EX {
   ULONG Signature;
-  CHAR MethodName[256];
+  _Null_terminated_ CHAR MethodName[256];
   ULONG64 IntegerArgument;
 } ACPI_EVAL_INPUT_BUFFER_SIMPLE_INTEGER_EX, *PACPI_EVAL_INPUT_BUFFER_SIMPLE_INTEGER_EX;
 
@@ -109,7 +109,7 @@ typedef struct _ACPI_EVAL_INPUT_BUFFER_SIMPLE_STRING_EX {
   ULONG Signature;
   CHAR MethodName[256];
   ULONG StringLength;
-  UCHAR String[ANYSIZE_ARRAY];
+  _Field_size_(StringLength) _Null_terminated_ UCHAR String[ANYSIZE_ARRAY];
 } ACPI_EVAL_INPUT_BUFFER_SIMPLE_STRING_EX, *PACPI_EVAL_INPUT_BUFFER_SIMPLE_STRING_EX;
 
 typedef struct _ACPI_EVAL_INPUT_BUFFER_COMPLEX_EX {
@@ -117,20 +117,20 @@ typedef struct _ACPI_EVAL_INPUT_BUFFER_COMPLEX_EX {
   CHAR MethodName[256];
   ULONG Size;
   ULONG ArgumentCount;
-  ACPI_METHOD_ARGUMENT Argument[ANYSIZE_ARRAY];
+  _Field_size_(ArgumentCount) ACPI_METHOD_ARGUMENT Argument[ANYSIZE_ARRAY];
 } ACPI_EVAL_INPUT_BUFFER_COMPLEX_EX, *PACPI_EVAL_INPUT_BUFFER_COMPLEX_EX;
 
 typedef struct _ACPI_ENUM_CHILDREN_INPUT_BUFFER {
   ULONG Signature;
   ULONG Flags;
   ULONG NameLength;
-  CHAR Name[ANYSIZE_ARRAY];
+  _Field_size_bytes_(NameLength) _Null_terminated_ CHAR Name[ANYSIZE_ARRAY];
 } ACPI_ENUM_CHILDREN_INPUT_BUFFER, *PACPI_ENUM_CHILDREN_INPUT_BUFFER;
 
 typedef struct _ACPI_ENUM_CHILD {
   ULONG Flags;
   ULONG NameLength;
-  CHAR Name[ANYSIZE_ARRAY];
+  _Field_size_bytes_(NameLength) _Null_terminated_ CHAR Name[ANYSIZE_ARRAY];
 } ACPI_ENUM_CHILD;
 typedef ACPI_ENUM_CHILD UNALIGNED *PACPI_ENUM_CHILD;
 

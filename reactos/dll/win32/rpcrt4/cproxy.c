@@ -21,24 +21,27 @@
  * TODO: Handle non-i386 architectures
  */
 
-#include "config.h"
-#include "wine/port.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
+#include <config.h>
+//#include "wine/port.h"
 
 #include <stdarg.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winerror.h"
 
-#include "objbase.h"
-#include "rpcproxy.h"
+#include <objbase.h>
+#include <rpcproxy.h>
 
 #include "cpsf.h"
-#include "ndr_misc.h"
-#include "ndr_stubless.h"
-#include "wine/debug.h"
+//#include "ndr_misc.h"
+//#include "ndr_stubless.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 

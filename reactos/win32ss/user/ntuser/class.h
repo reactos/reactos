@@ -39,7 +39,7 @@ IntDereferenceClass(IN OUT PCLS Class,
                     IN PPROCESSINFO pi);
 
 PCLS
-IntGetAndReferenceClass(PUNICODE_STRING ClassName, HINSTANCE hInstance);
+IntGetAndReferenceClass(PUNICODE_STRING ClassName, HINSTANCE hInstance, BOOL bDesktopThread);
 
 BOOL FASTCALL UserRegisterSystemClasses(VOID);
 
@@ -48,13 +48,22 @@ UserAddCallProcToClass(IN OUT PCLS Class,
                        IN PCALLPROCDATA CallProc);
 
 BOOL
-IntGetAtomFromStringOrAtom(IN PUNICODE_STRING ClassName,
-                           OUT RTL_ATOM *Atom);
+NTAPI
+IntGetAtomFromStringOrAtom(
+    _In_ PUNICODE_STRING ClassName,
+    _Out_ RTL_ATOM *Atom);
 
 BOOL
 IntCheckProcessDesktopClasses(IN PDESKTOP Desktop,
                               IN BOOL FreeOnFailure);
 
 ULONG_PTR FASTCALL UserGetCPD(PVOID,GETCPD,ULONG_PTR);
+
+_Must_inspect_result_
+NTSTATUS
+NTAPI
+ProbeAndCaptureUnicodeStringOrAtom(
+    _Out_ _When_(return>=0, _At_(pustrOut->Buffer, _Post_ _Notnull_)) PUNICODE_STRING pustrOut,
+    __in_data_source(USER_MODE) _In_ PUNICODE_STRING pustrUnsafe);
 
 /* EOF */

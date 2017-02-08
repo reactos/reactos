@@ -286,12 +286,13 @@ RtlpCheckDeviceName(IN PUNICODE_STRING FileName,
 
 ULONG
 NTAPI
-RtlGetFullPathName_Ustr(IN PUNICODE_STRING FileName,
-                        IN ULONG Size,
-                        IN PWSTR Buffer,
-                        OUT PCWSTR *ShortName,
-                        OUT PBOOLEAN InvalidName,
-                        OUT RTL_PATH_TYPE *PathType)
+RtlGetFullPathName_Ustr(
+    _In_ PUNICODE_STRING FileName,
+    _In_ ULONG Size,
+    _Out_z_bytecap_(Size) PWSTR Buffer,
+    _Out_opt_ PCWSTR *ShortName,
+    _Out_opt_ PBOOLEAN InvalidName,
+    _Out_ RTL_PATH_TYPE *PathType)
 {
     PWCHAR FileNameBuffer;
     ULONG FileNameLength, FileNameChars, DosLength, DosLengthOffset, FullLength;
@@ -300,7 +301,7 @@ RtlGetFullPathName_Ustr(IN PUNICODE_STRING FileName,
 
     /* For now, assume the name is valid */
     DPRINT("Filename: %wZ\n", FileName);
-    DPRINT("Size and buffer: %lx %S\n", Size, Buffer);
+    DPRINT("Size and buffer: %lx %p\n", Size, Buffer);
     if (InvalidName) *InvalidName = FALSE;
 
     /* Handle initial path type and failure case */
@@ -374,7 +375,7 @@ RtlGetFullPathName_Ustr(IN PUNICODE_STRING FileName,
     DPRINT("Path type: %lx\n", *PathType);
 
     /* This is disgusting... but avoids re-writing everything */
-    DPRINT("Calling old API with %s and %lx and %S\n", FileNameBuffer, Size, Buffer);
+    DPRINT("Calling old API with '%S' and %lu and %S\n", FileNameBuffer, Size, Buffer);
     return RtlGetFullPathName_U(FileNameBuffer, Size, Buffer, (PWSTR*)ShortName);
 }
 
@@ -911,8 +912,9 @@ RtlIsDosDeviceName_U(IN PCWSTR Path)
  */
 ULONG
 NTAPI
-RtlGetCurrentDirectory_U(IN ULONG MaximumLength,
-                         IN PWSTR Buffer)
+RtlGetCurrentDirectory_U(
+    _In_ ULONG MaximumLength,
+    _Out_bytecap_(MaximumLength) PWSTR Buffer)
 {
     ULONG Length, Bytes;
     PCURDIR CurDir;
@@ -982,6 +984,8 @@ RtlGetCurrentDirectory_U(IN ULONG MaximumLength,
     DPRINT("CurrentDirectory %S\n", Buffer);
     return Length * sizeof(WCHAR);
 }
+
+
 
 /*
  * @implemented
@@ -1453,7 +1457,7 @@ static ULONG get_full_path_helper(
     if (reqsize) memcpy(buffer, ins_str, reqsize);
     reqsize += deplen;
 
-    if (ins_str != tmp && ins_str != cd->Buffer)
+    if (ins_str && ins_str != tmp && ins_str != cd->Buffer)
         RtlFreeHeap(RtlGetProcessHeap(), 0, ins_str);
 
     collapse_path( buffer, (ULONG)mark );
@@ -1824,7 +1828,7 @@ RtlGetFullPathName_UstrEx(IN PUNICODE_STRING FileName,
                                      &ShortName,
                                      NameInvalid,
                                      PathType);
-    DPRINT("Length: %d StaticBuffer: %S\n", Length, StaticBuffer);
+    DPRINT("Length: %u StaticBuffer: %S\n", Length, StaticBuffer);
     if (!Length)
     {
         /* Fail if it failed */
@@ -2310,6 +2314,7 @@ RtlDosSearchPath_Ustr(IN ULONG Flags,
                              "the search path, but RtlGetfullPathNameUStrEx() "
                              "returned %08lx\n",
                              __FUNCTION__,
+                             &StaticCandidateString,
                              Status);
                 }
                 DPRINT("STatus: %lx BUFFER: %S\n", Status, CallerBuffer->Buffer);

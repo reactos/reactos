@@ -9,7 +9,7 @@
  *
  */
 
-#include <timedate.h>
+#include "timedate.h"
 
 static WNDPROC pOldWndProc = NULL;
 
@@ -123,15 +123,12 @@ SetTimeZoneName(HWND hwnd)
     switch (TimeZoneId)
     {
         case TIME_ZONE_ID_STANDARD:
+        case TIME_ZONE_ID_UNKNOWN:
             wcscpy(TimeZoneName, TimeZoneInfo.StandardName);
             break;
 
         case TIME_ZONE_ID_DAYLIGHT:
             wcscpy(TimeZoneName, TimeZoneInfo.DaylightName);
-            break;
-
-        case TIME_ZONE_ID_UNKNOWN:
-            LoadStringW(hApplet, IDS_TIMEZONEUNKNOWN, TimeZoneName, 128);
             break;
 
         case TIME_ZONE_ID_INVALID:

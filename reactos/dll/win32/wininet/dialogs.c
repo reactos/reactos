@@ -18,29 +18,33 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <config.h>
+//#include "wine/port.h"
+
+#include <stdarg.h>
+
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+//#include "winreg.h"
+#include <wininet.h>
+#include <winnetwk.h>
+#include <wine/debug.h>
+//#include "winerror.h"
+#define NO_SHLWAPI_STREAM
+//#include "shlwapi.h"
 
 #if defined(__MINGW32__) || defined (_MSC_VER)
 #include <ws2tcpip.h>
 #endif
 
-#include <stdarg.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "wininet.h"
-#include "winnetwk.h"
-#include "wine/debug.h"
-#include "winerror.h"
-#define NO_SHLWAPI_STREAM
-#include "shlwapi.h"
-
 #include "internet.h"
 
-#include "wine/unicode.h"
+//#include "wine/unicode.h"
 
 #include "resource.h"
 

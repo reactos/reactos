@@ -1,15 +1,19 @@
 #ifndef __SNDVOL32_H
 #define __SNDVOL32_H
 
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include <mmsystem.h>
 #include <commctrl.h>
 #include <shellapi.h>
-#include <stdio.h>
 #include <tchar.h>
-#include <string.h>
-#include "resources.h"
 #include <assert.h>
+
+#include "resources.h"
 
 typedef struct _MIXER_WINDOW
 {

@@ -14,13 +14,9 @@
 #include "stdafx.h"
 #include "sndrec32.h"
 
-
-
-
-
-HINSTANCE hInst;								
-TCHAR szTitle[MAX_LOADSTRING];					
-TCHAR szWindowClass[MAX_LOADSTRING];		
+HINSTANCE hInst;
+TCHAR szTitle[MAX_LOADSTRING];
+TCHAR szWindowClass[MAX_LOADSTRING];
 
 
 ATOM				MyRegisterClass( HINSTANCE hInstance );

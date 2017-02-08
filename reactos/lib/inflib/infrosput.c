@@ -22,9 +22,9 @@ InfWriteFile(HINF InfHandle,
   HANDLE FileHandle;
   NTSTATUS Status;
   INFSTATUS InfStatus;
-  PCHAR Buffer;
+  PWCHAR Buffer;
   ULONG BufferSize;
-  PCHAR HeaderBuffer;
+  PWCHAR HeaderBuffer;
   ULONG HeaderBufferSize;
   UINT Index;
 
@@ -60,17 +60,17 @@ InfWriteFile(HINF InfHandle,
   if (NULL != HeaderComment && 0 != HeaderComment->Length)
     {
       /* This is just a comment header, don't abort on errors here */
-      HeaderBufferSize = HeaderComment->Length / sizeof(WCHAR) + 7;
+      HeaderBufferSize = HeaderComment->Length + 7 * sizeof(WCHAR);
       HeaderBuffer = MALLOC(HeaderBufferSize);
       if (NULL != HeaderBuffer)
         {
-          strcpy(HeaderBuffer, "; ");
+          strcpyW(HeaderBuffer, L"; ");
           for (Index = 0; Index < HeaderComment->Length / sizeof(WCHAR); Index++)
             {
-              HeaderBuffer[2 + Index] = (CHAR) HeaderComment->Buffer[Index];
+              HeaderBuffer[2 + Index] = HeaderComment->Buffer[Index];
             }
-          strcpy(HeaderBuffer + (2 + HeaderComment->Length / sizeof(WCHAR)),
-                 "\r\n\r\n");
+          strcpyW(HeaderBuffer + (2 + HeaderComment->Length / sizeof(WCHAR)),
+                  L"\r\n\r\n");
           NtWriteFile(FileHandle,
                       NULL,
                       NULL,

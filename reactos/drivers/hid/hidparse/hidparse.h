@@ -9,3 +9,5 @@
 #include <debug.h>
 #include "hidparser.h"
 #include <stdio.h>
+
+#define HIDPARSE_TAG 'PdiH'

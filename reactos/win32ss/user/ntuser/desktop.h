@@ -39,6 +39,10 @@ typedef struct _DESKTOP
 #define DF_DESKWNDDESTROYED 0x00010000
 #define DF_DYING            0x00020000
 
+// Index offset for Desktop data. Should these be global?
+#define DT_GWL_PROCESSID 0
+#define DT_GWL_THREADID  4
+
 #define DESKTOP_READ       STANDARD_RIGHTS_READ      | \
                            DESKTOP_ENUMERATE         | \
                            DESKTOP_READOBJECTS
@@ -66,9 +70,9 @@ typedef struct _DESKTOP
                             DESKTOP_WRITEOBJECTS
 
 extern PDESKTOP InputDesktop;
-extern HDESK InputDesktopHandle;
 extern PCLS DesktopWindowClass;
 extern HDC ScreenDeviceContext;
+extern PTHREADINFO gptiDesktopThread;
 
 typedef struct _SHELL_HOOK_WINDOW
 {
@@ -100,6 +104,12 @@ IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
 NTSTATUS NTAPI 
 IntDesktopOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters);
 
+NTSTATUS NTAPI 
+IntDesktopObjectOpen(PWIN32_OPENMETHOD_PARAMETERS Parameters);
+
+NTSTATUS NTAPI 
+IntDesktopObjectClose(PWIN32_CLOSEMETHOD_PARAMETERS Parameters);
+
 HDC FASTCALL
 IntGetScreenDC(VOID);
 
@@ -122,7 +132,7 @@ PDESKTOP FASTCALL
 IntGetActiveDesktop(VOID);
 
 NTSTATUS FASTCALL
-co_IntShowDesktop(PDESKTOP Desktop, ULONG Width, ULONG Height);
+co_IntShowDesktop(PDESKTOP Desktop, ULONG Width, ULONG Height, BOOL Redraw);
 
 NTSTATUS FASTCALL
 IntHideDesktop(PDESKTOP Desktop);
@@ -146,7 +156,7 @@ IntParseDesktopPath(PEPROCESS Process,
 VOID APIENTRY UserRedrawDesktop(VOID);
 BOOL IntRegisterShellHookWindow(HWND hWnd);
 BOOL IntDeRegisterShellHookWindow(HWND hWnd);
-VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam);
+VOID co_IntShellHookNotify(WPARAM Message, WPARAM wParam, LPARAM lParam);
 HDC FASTCALL UserGetDesktopDC(ULONG,BOOL,BOOL);
 
 #define IntIsActiveDesktop(Desktop) \
@@ -277,6 +287,8 @@ DesktopHeapAddressToUser(PVOID lpMem)
 
 PWND FASTCALL IntGetThreadDesktopWindow(PTHREADINFO);
 PWND FASTCALL co_GetDesktopWindow(PWND);
-
-LRESULT FASTCALL DesktopWindowProc(PWND, UINT, WPARAM, LPARAM);
+BOOL FASTCALL IntPaintDesktop(HDC);
+BOOL FASTCALL DesktopWindowProc(PWND, UINT, WPARAM, LPARAM, LRESULT *);
+BOOL FASTCALL UserMessageWindowProc(PWND pwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lResult);
+VOID NTAPI DesktopThreadMain();
 /* EOF */

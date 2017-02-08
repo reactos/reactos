@@ -7,7 +7,9 @@
  * PROGRAMMERS:     Ge van Geldorp (gvg@reactos.com)
  */
 
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 #include <reactos/rossym.h>
 #include "rossympriv.h"
 

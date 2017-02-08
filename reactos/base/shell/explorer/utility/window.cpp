@@ -591,6 +591,14 @@ void Window::unregister_pretranslate(HWND hwnd)
 
 BOOL Window::pretranslate_msg(LPMSG pmsg)
 {
+    if ((pmsg->message != WM_KEYDOWN) &&
+        (pmsg->message != WM_SYSKEYDOWN) &&
+        (pmsg->message != WM_SYSCHAR) &&
+        (pmsg->message != WM_CHAR))
+    {
+        return FALSE;
+    }
+
 	for(WindowSet::const_iterator it=Window::s_pretranslate_windows.begin(); it!=s_pretranslate_windows.end(); ++it)
 		if (SendMessage(*it, PM_TRANSLATE_MSG, 0, (LPARAM)pmsg))
 			return TRUE;

@@ -23,12 +23,12 @@
 
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "winerror.h"
-#include "winuser.h"
-#include "wine/debug.h"
+#include <windef.h>
+//#include "winbase.h"
+#include <winreg.h>
+//#include "winerror.h"
+#include <winuser.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
 

@@ -3,5 +3,3 @@
 #define REACTOS_STR_ORIGINAL_FILENAME   "netstat.exe\0"
 #define REACTOS_STR_ORIGINAL_COPYRIGHT  "Ged Murphy (gedmurphy@gmail.com)\0"
 #include <reactos/version.rc>
-
-

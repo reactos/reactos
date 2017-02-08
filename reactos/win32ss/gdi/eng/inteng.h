@@ -2,7 +2,7 @@
 
 typedef ULONG HCLIP;
 
-#define ENUM_RECT_LIMIT 50
+#define ENUM_RECT_LIMIT 32
 
 typedef struct _RECT_ENUM
 {
@@ -86,6 +86,7 @@ IntEngStretchBlt(SURFOBJ *DestObj,
                  SURFOBJ *Mask,
                  CLIPOBJ *ClipRegion,
                  XLATEOBJ *ColorTranslation,
+                 COLORADJUSTMENT *pca,
                  RECTL *DestRect,
                  RECTL *SourceRect,
                  POINTL *pMaskOrigin,
@@ -152,14 +153,16 @@ IntEngSetPointerShape(
    IN RECTL *prcl,
    IN FLONG fl);
 
-BOOL APIENTRY
-IntEngAlphaBlend(IN SURFOBJ *Dest,
-                 IN SURFOBJ *Source,
-                 IN CLIPOBJ *ClipRegion,
-                 IN XLATEOBJ *ColorTranslation,
-                 IN PRECTL DestRect,
-                 IN PRECTL SourceRect,
-                 IN BLENDOBJ *BlendObj);
+BOOL
+APIENTRY
+IntEngAlphaBlend(
+    _Inout_ SURFOBJ *psoDest,
+    _In_ SURFOBJ *psoSource,
+    _In_opt_ CLIPOBJ *pco,
+    _In_opt_ XLATEOBJ *pxlo,
+    _In_ RECTL *prclDest,
+    _In_ RECTL *prclSrc,
+    _In_ BLENDOBJ *pBlendObj);
 
 BOOL APIENTRY
 IntEngCopyBits(SURFOBJ *psoDest,

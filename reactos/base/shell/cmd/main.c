@@ -1,4 +1,4 @@
-#include <precomp.h>
+#include "precomp.h"
 
 int _tmain (int argc, const TCHAR *argv[])
 {

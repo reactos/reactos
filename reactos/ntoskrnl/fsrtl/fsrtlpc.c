@@ -16,6 +16,7 @@
 
 PERESOURCE FsRtlPagingIoResources;
 ULONG FsRtlPagingIoResourceSelector;
+NTSTATUS NTAPI INIT_FUNCTION FsRtlInitializeWorkerThread(VOID);
 
 static UCHAR LegalAnsiCharacterArray[] =
 {
@@ -183,7 +184,7 @@ FsRtlInitSystem(VOID)
         ExInitializeResource(&FsRtlPagingIoResources[i]);
     }
 
-    return TRUE;
+    return NT_SUCCESS(FsRtlInitializeWorkerThread());
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

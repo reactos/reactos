@@ -1,0 +1,140 @@
+<!ELEMENT OpenGLAPI (category?, xi:include?, OpenGLAPI?)+>
+<!ELEMENT category (type*, enum*, function*)*>
+<!ELEMENT type EMPTY>
+<!ELEMENT enum (size*)>
+<!ELEMENT size EMPTY>
+<!ELEMENT function (param*, return?, glx?)*>
+<!ELEMENT param EMPTY>
+<!ELEMENT return EMPTY>
+<!ELEMENT glx EMPTY>
+
+<!ELEMENT xi:include (xi:fallback)?>
+<!ATTLIST xi:include
+          xmlns:xi  CDATA #FIXED "http://www.w3.org/2001/XInclude"
+          href       CDATA #REQUIRED
+          parse      (xml|text) "xml"
+          encoding   CDATA #IMPLIED>
+<!ELEMENT xi:fallback ANY>
+<!ATTLIST xi:fallback
+          xmlns:xi   CDATA #FIXED "http://www.w3.org/2001/XInclude">
+
+
+<!ATTLIST category name                NMTOKEN #REQUIRED
+                   number              NMTOKEN #IMPLIED
+		   window_system       NMTOKEN #IMPLIED>
+<!ATTLIST type     name                NMTOKEN #REQUIRED
+                   size                NMTOKEN #REQUIRED
+		   float               (true | false) "false"
+		   unsigned            (true | false) "false"
+                   glx_name            NMTOKEN #IMPLIED>
+<!ATTLIST enum     name                NMTOKEN #REQUIRED
+                   count               CDATA   #IMPLIED
+                   value               NMTOKEN #REQUIRED>
+<!ATTLIST function name                NMTOKEN #REQUIRED
+                   alias               NMTOKEN #IMPLIED
+                   offset              CDATA   #IMPLIED
+                   static_dispatch     (true | false) "true"
+                   vectorequiv         NMTOKEN #IMPLIED>
+<!ATTLIST size     name                NMTOKEN #REQUIRED
+                   count               NMTOKEN #IMPLIED
+                   mode                (get | set) "set">
+<!ATTLIST param    name                NMTOKEN #REQUIRED
+                   type                CDATA   #REQUIRED
+		   client_only	       (true | false) "false"
+                   count               NMTOKEN #IMPLIED
+                   counter             (true | false) "false"
+                   count_scale         NMTOKEN "1"
+                   output              (true | false) "false"
+                   padding             (true | false) "false"
+                   img_width           NMTOKEN #IMPLIED
+                   img_height          NMTOKEN #IMPLIED
+                   img_depth           NMTOKEN #IMPLIED
+                   img_extent          NMTOKEN #IMPLIED
+                   img_xoff            NMTOKEN #IMPLIED
+                   img_yoff            NMTOKEN #IMPLIED
+                   img_zoff            NMTOKEN #IMPLIED
+                   img_woff            NMTOKEN #IMPLIED
+                   img_format          NMTOKEN #IMPLIED
+                   img_type            NMTOKEN #IMPLIED
+                   img_target          NMTOKEN #IMPLIED
+                   img_send_null       (true | false) "false"
+                   img_null_flag       (true | false) "false"
+                   img_pad_dimensions  (true | false) "false"
+                   variable_param      NMTOKENS #IMPLIED>
+<!ATTLIST return   type                CDATA   "void">
+<!ATTLIST glx      rop                 NMTOKEN #IMPLIED
+                   sop                 NMTOKEN #IMPLIED
+                   vendorpriv          NMTOKEN #IMPLIED
+                   large               (true | false) "false"
+                   doubles_in_order    (true | false) "false"
+                   always_array        (true | false) "false"
+                   handcode            (true | false | client | server) "false"
+                   img_reset           NMTOKEN #IMPLIED
+                   dimensions_in_reply (true | false) "false"
+                   ignore              (true | false) "false">
+
+<!--
+The various attributes for param and glx have the meanings listed below.
+When adding new functions, please annote them correctly.  In most cases this
+will just mean adding a '<glx ignore="true"/>' tag.
+
+param:
+     name - name of the parameter
+     type - fully qualified type (e.g., with "const", etc.)
+     client_only - boolean flag set on parameters which are interpreted only
+         by the client and are not present in the protocol encoding (e.g.,
+	 the stride parameters to Map1f, etc.)
+     count - for counted arrays (e.g., the 'lists' parameter to glCallLists),
+         the parameter or literal that represents the count.  For functions
+         like glVertex3fv it will be a litteral, for others it will be one of
+         the parameters.
+     counter - this parameter is a counter that will be referenced by the
+         'count' attribute in another parameter.
+     count_scale - literal value scale factor for the 'count' attribute.
+         See ProgramParameters4dvNV for an example.
+     output - this parameter is used to store the output of the function.
+     variable_param - name of parameter used to determine the number of
+         elements referenced by this parameter.  This should be the name of a
+         single enum parameter.  Most of the gl*Parameter[if]v functions use
+         this.  Additionally, the enums that can be passed should be properly
+         annotated.
+     img_width / img_height / img_depth / img_extent - name of parameters
+         (or hardcoded integer) used for the dimensions of pixel data.
+     img_xoff / img_yoff / img_zoff / img_woff - name of parameters used
+         for x, y, z, and w offsets of pixel data.
+     img_format - name of parameter used as the pixel data format.
+     img_type - name of parameter used as the pixel data type.
+     img_target - name of parameter used as a texture target.  Non-texture
+        pixel data should hardcode 0.
+     img_send_null - boolean flag to determine if blank pixel data should
+        be sent when a NULL pointer is passed.  This is only used by
+        TexImage1D and TexImage2D.
+     img_null_flag - boolean flag to determine if an extra flag is used to
+        determine if a NULL pixel pointer was passed.  This is used by
+        TexSubImage1D, TexSubImage2D, TexImage3D and others.
+     img_pad_dimensions - boolean flag to determine if dimension data and
+        offset data should be padded to the next even number of dimensions.
+        For example, this will insert an empty "height" field after the
+        "width" field in the protocol for TexImage1D.
+
+glx:
+     rop - Opcode value for "render" commands
+     sop - Opcode value for "single" commands
+     vendorpriv - Opcode value for vendor private (or vendor private with
+         reply) commands
+     large - set to "true" of the render command can use RenderLarge protocol.
+     doubles_in_order - older commands always put GLdouble data at the
+         start of the render packet.  Newer commands (e.g., 
+         ProgramEnvParameter4dvARB) put the in the order that they appear
+         in the parameter list.
+     always_array - some single commands take reply data as an array or as
+         return value data (e.g., glGetLightfv).  Other single commands take
+         reply data only as an array (e.g., glGetClipPlane).
+     handcode - some functions are just too complicated to generate 
+         (e.g., glSeperableFilter2D) or operate only on client-side data
+         (e.g., glVertexPointer) and must be handcoded.
+     ignore - some functions have an entry in the dispatch table, but aren't
+         suitable for protocol implementation (e.g., glLockArraysEXT).  This
+         also applies to functions that don't have any GLX protocol specified
+         (e.g., glGetFogFuncSGIS).
+-->

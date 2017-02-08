@@ -18,24 +18,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 #define NONAMELESSUNION
 
 #include <stdarg.h>
-#include <stdio.h>
+//#include <stdio.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "objbase.h"
-#include "ole2.h"
-#include "mimeole.h"
-#include "mlang.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+//#include "winnls.h"
+//#include "objbase.h"
+#include <ole2.h>
+#include <mimeole.h>
+#include <mlang.h>
 
-#include "wine/list.h"
-#include "wine/unicode.h"
-#include "wine/debug.h"
+#include <wine/list.h>
+#include <wine/unicode.h>
+#include <wine/debug.h>
 
 #include "inetcomm_private.h"
 

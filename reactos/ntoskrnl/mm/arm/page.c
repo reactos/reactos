@@ -124,8 +124,7 @@ NTAPI
 MiFlushTlb(IN PMMPTE PointerPte,
            IN PVOID Address)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 BOOLEAN
@@ -134,8 +133,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
                             IN PEPROCESS Process,
                             IN PULONG DirectoryTableBase)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return FALSE;
 }
 
@@ -164,8 +162,7 @@ MmDisableVirtualMapping(IN PEPROCESS Process,
                         OUT PBOOLEAN WasDirty,
                         OUT PPFN_NUMBER Page)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 VOID
@@ -173,8 +170,7 @@ NTAPI
 MmEnableVirtualMapping(IN PEPROCESS Process,
                        IN PVOID Address)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 NTSTATUS
@@ -185,8 +181,7 @@ MmCreateVirtualMappingUnsafe(IN PEPROCESS Process,
                              IN PPFN_NUMBER Pages,
                              IN ULONG PageCount)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_SUCCESS;
 }
 
@@ -198,8 +193,7 @@ MmCreateVirtualMapping(IN PEPROCESS Process,
                        IN PPFN_NUMBER Pages,
                        IN ULONG PageCount)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_SUCCESS;
 }
 
@@ -207,8 +201,7 @@ VOID
 NTAPI
 MmRawDeleteVirtualMapping(IN PVOID Address)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 VOID
@@ -219,8 +212,7 @@ MmDeleteVirtualMapping(IN PEPROCESS Process,
                        OUT PBOOLEAN WasDirty,
                        OUT PPFN_NUMBER Page)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 VOID
@@ -229,8 +221,7 @@ MmDeletePageFileMapping(IN PEPROCESS Process,
                         IN PVOID Address,
                         IN SWAPENTRY *SwapEntry)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 NTSTATUS
@@ -239,9 +230,8 @@ MmCreatePageFileMapping(IN PEPROCESS Process,
                         IN PVOID Address,
                         IN SWAPENTRY SwapEntry)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return 0;
+    UNIMPLEMENTED_DBGBREAK();
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 PFN_NUMBER
@@ -249,8 +239,7 @@ NTAPI
 MmGetPfnForProcess(IN PEPROCESS Process,
                    IN PVOID Address)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return 0;
 }
 
@@ -259,9 +248,8 @@ NTAPI
 MmIsDirtyPage(IN PEPROCESS Process,
               IN PVOID Address)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return 0;
+    UNIMPLEMENTED_DBGBREAK();
+    return FALSE;
 }
 
 VOID
@@ -269,8 +257,7 @@ NTAPI
 MmSetCleanPage(IN PEPROCESS Process,
                IN PVOID Address)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 VOID
@@ -278,8 +265,7 @@ NTAPI
 MmSetDirtyPage(IN PEPROCESS Process,
                IN PVOID Address)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 BOOLEAN
@@ -287,8 +273,7 @@ NTAPI
 MmIsPagePresent(IN PEPROCESS Process,
                 IN PVOID Address)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return FALSE;
 }
 
@@ -297,8 +282,7 @@ NTAPI
 MmIsPageSwapEntry(IN PEPROCESS Process,
                   IN PVOID Address)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return FALSE;
 }
 
@@ -328,7 +312,6 @@ MmInitGlobalKernelPageDirectory(VOID)
     ULONG i;
     PULONG CurrentPageDirectory = (PULONG)PDE_BASE;
 
-
     /* Loop the 2GB of address space which belong to the kernel */
     for (i = MiGetPdeOffset(MmSystemRangeStart); i < 2048; i++)
     {
@@ -356,8 +339,7 @@ MmGetPhysicalAddress(IN PVOID Address)
     PHYSICAL_ADDRESS PhysicalAddress;
     PhysicalAddress.QuadPart = 0;
 
-    UNIMPLEMENTED;
-    while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 
     return PhysicalAddress;
 }

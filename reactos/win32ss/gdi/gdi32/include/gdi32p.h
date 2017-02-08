@@ -334,7 +334,7 @@ GdiAllocBatchCommand(
 
     /* Check if the buffer is full */
     if ((pTeb->GdiBatchCount >= GDI_BatchLimit) ||
-            ((pTeb->GdiTebBatch.Offset + cjSize) > GDIBATCHBUFSIZE))
+        ((pTeb->GdiTebBatch.Offset + cjSize) > GDIBATCHBUFSIZE))
     {
         /* Call win32k, the kernel will call NtGdiFlushUserBatch to flush
            the current batch */

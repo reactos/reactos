@@ -3,7 +3,7 @@
 
 #define MAXBUTTONTEXT 64
 
-#include "cardlib.h"
+//#include "cardlib.h"
 
 class CardButton
 {

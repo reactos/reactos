@@ -45,22 +45,26 @@
  * - All the methods related to notification and advise sinks are
  *   in place but no notifications are sent to the sinks yet.
  */
-#include <assert.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
+//#include <assert.h>
 #include <stdarg.h>
-#include <string.h>
+//#include <string.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winerror.h"
-#include "ole2.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+//#include "winerror.h"
+#include <ole2.h>
 
 #include "compobj_private.h"
+#include "storage32.h"
 
-#include "wine/unicode.h"
-#include "wine/debug.h"
+#include <wine/unicode.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -230,7 +234,7 @@ static HRESULT WINAPI DefaultHandler_NDIUnknown_QueryInterface(
   }
   else if (This->inproc_server && This->pOleDelegate)
   {
-    return IUnknown_QueryInterface(This->pOleDelegate, riid, ppvObject);
+    return IOleObject_QueryInterface(This->pOleDelegate, riid, ppvObject);
   }
 
   /* Check that we obtained an interface. */
@@ -1321,7 +1325,7 @@ static HRESULT WINAPI DefaultHandler_Run(
 
   release_delegates(This);
 
-  hr = CoCreateInstance(&This->clsid, NULL, CLSCTX_LOCAL_SERVER,
+  hr = CoCreateInstance(&This->clsid, NULL, CLSCTX_LOCAL_SERVER | CLSCTX_REMOTE_SERVER,
                         &IID_IOleObject, (void **)&This->pOleDelegate);
   if (FAILED(hr))
     return hr;
@@ -1583,10 +1587,8 @@ static HRESULT WINAPI DefaultHandler_IPersistStorage_IsDirty(
 }
 
 /***********************************************************************
- *   init_ole_stream
  *
- * Creates the '\1Ole' stream.
- * The format of this stream is as follows:
+ * The format of '\1Ole' stream is as follows:
  *
  * DWORD Version == 0x02000001
  * DWORD Flags - low bit set indicates the object is a link otherwise it's embedded.
@@ -1610,29 +1612,6 @@ typedef struct
     DWORD moniker_size;
 } ole_stream_header_t;
 static const DWORD ole_stream_version = 0x02000001;
-
-static void init_ole_stream(IStorage *storage)
-{
-    HRESULT hr;
-    IStream *stream;
-
-    hr = IStorage_CreateStream(storage, OleStream, STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, 0, &stream);
-    if(SUCCEEDED(hr))
-    {
-        DWORD written;
-        ole_stream_header_t header;
-
-        header.version         = ole_stream_version;
-        header.flags           = 0;
-        header.link_update_opt = 0;
-        header.res             = 0;
-        header.moniker_size    = 0;
-
-        IStream_Write(stream, &header, sizeof(header), &written);
-        IStream_Release(stream);
-    }
-    return;
-}
 
 static HRESULT load_ole_stream(DefaultHandler *This, IStorage *storage)
 {
@@ -1663,10 +1642,8 @@ static HRESULT load_ole_stream(DefaultHandler *This, IStorage *storage)
         IStream_Release(stream);
     }
     else
-    {
-        init_ole_stream(storage);
-        hr = S_OK;
-    }
+        hr = STORAGE_CreateOleStream(storage, 0);
+
     return hr;
 }
 
@@ -1682,7 +1659,8 @@ static HRESULT WINAPI DefaultHandler_IPersistStorage_InitNew(
     HRESULT hr;
 
     TRACE("(%p)->(%p)\n", iface, pStg);
-    init_ole_stream(pStg);
+    hr = STORAGE_CreateOleStream(pStg, 0);
+    if (hr != S_OK) return hr;
 
     hr = IPersistStorage_InitNew(This->dataCache_PersistStg, pStg);
 
@@ -1924,7 +1902,7 @@ static DefaultHandler* DefaultHandler_Construct(
   This->IAdviseSink_iface.lpVtbl = &DefaultHandler_IAdviseSink_VTable;
   This->IPersistStorage_iface.lpVtbl = &DefaultHandler_IPersistStorage_VTable;
 
-  This->inproc_server = (flags & EMBDHLP_INPROC_SERVER) ? TRUE : FALSE;
+  This->inproc_server = (flags & EMBDHLP_INPROC_SERVER) != 0;
 
   /*
    * Start with one reference count. The caller of this function

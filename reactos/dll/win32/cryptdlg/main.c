@@ -16,25 +16,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+
 #define NONAMELESSUNION
 
-#include "config.h"
+#include <config.h>
 
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "winreg.h"
-#include "wincrypt.h"
-#include "wintrust.h"
-#include "winuser.h"
-#include "objbase.h"
-#include "cryptdlg.h"
-#include "cryptuiapi.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winnls.h"
+#include <winreg.h>
+#include <wincrypt.h>
+//#include "wintrust.h"
+#include <winuser.h>
+//#include "objbase.h"
+#include <cryptdlg.h>
+#include <cryptuiapi.h>
 #include "cryptres.h"
-#include "wine/unicode.h"
-#include "wine/debug.h"
+#include <wine/unicode.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(cryptdlg);
 
@@ -276,7 +278,7 @@ static HCERTCHAINENGINE CRYPTDLG_MakeEngine(CERT_VERIFY_CERTIFICATE_TRUST *cert)
     {
         trust = CertOpenStore(CERT_STORE_PROV_COLLECTION, 0, 0,
          CERT_STORE_CREATE_NEW_FLAG, NULL);
-        if (root)
+        if (trust)
         {
             for (i = 0; i < cert->cTrustStores; i++)
                 CertAddStoreToCollection(trust, cert->rghstoreTrust[i], 0, 0);

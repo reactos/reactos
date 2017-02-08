@@ -3,19 +3,24 @@
 
 #include <ntstatus.h>
 #define WIN32_NO_STATUS
-#include <windows.h>
-#include <commctrl.h>
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <winnls.h>
+#include <wincon.h>
 #include <powrprof.h>
 #include <tchar.h>
-#include <stdio.h>
 #include <cpl.h>
 #include <shellapi.h>
 #include <shlwapi.h>
-#include <shlguid.h>
 #include <shlobj.h>
-#include <cplext.h>
 #include <regstr.h>
 #include <setupapi.h>
+
 #include "resource.h"
 
 #define NUM_APPLETS (1)

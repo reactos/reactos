@@ -1,6 +1,7 @@
-/* $Id: powercfg.rc 21982 2006-05-22 21:33:22Z janderwald $ */
+#include <windef.h>
+#include <winuser.h>
+#include <commctrl.h>
 
-#include <windows.h>
 #include "resource.h"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL

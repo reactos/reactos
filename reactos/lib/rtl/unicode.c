@@ -584,14 +584,17 @@ RtlInitUnicodeString(
     IN PCWSTR SourceString)
 {
     SIZE_T Size;
-    CONST SIZE_T MaxSize = (MAXUSHORT & ~1) - sizeof(WCHAR); // an even number
+    CONST SIZE_T MaxSize = (MAXUSHORT & ~1) - sizeof(UNICODE_NULL); // an even number
 
     if (SourceString)
     {
         Size = wcslen(SourceString) * sizeof(WCHAR);
-        if (Size > MaxSize) Size = MaxSize;
+        __analysis_assume(Size <= MaxSize);
+
+        if (Size > MaxSize)
+            Size = MaxSize;
         DestinationString->Length = (USHORT)Size;
-        DestinationString->MaximumLength = (USHORT)Size + sizeof(WCHAR);
+        DestinationString->MaximumLength = (USHORT)Size + sizeof(UNICODE_NULL);
     }
     else
     {
@@ -1735,7 +1738,6 @@ RtlLargeIntegerToChar(
     IN OUT PCHAR  String)
 {
     ULONGLONG Val = Value->QuadPart;
-    NTSTATUS Status = STATUS_SUCCESS;
     CHAR Buffer[65];
     CHAR Digit;
     SIZE_T Len;
@@ -1769,36 +1771,12 @@ RtlLargeIntegerToChar(
     if (Len > Length)
         return STATUS_BUFFER_OVERFLOW;
 
-#if 1 /* It needs to be removed, when will probably use SEH in rtl */
+    /* If possible, add the 0 termination */
+    if (Len < Length)
+        Len += 1;
 
-    if (String == NULL)
-    {
-        return STATUS_ACCESS_VIOLATION;
-    }
-
-#endif
-
-#if 0
-    _SEH2_TRY
-    {
-#endif
-
-        if (Len == Length)
-            RtlCopyMemory(String, Pos, Len);
-        else
-            RtlCopyMemory(String, Pos, Len + 1);
-
-#if 0
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Get the error code */
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-#endif
-
-    return Status;
+    /* Copy the string to the target using SEH */
+    return RtlpSafeCopyMemory(String, Pos, Len);
 }
 
 /*
@@ -1957,7 +1935,7 @@ RtlUpcaseUnicodeStringToCountedOemString(
 /*
  * @implemented
  * NOTES
- *  Oem string is allways nullterminated
+ *  OEM string is always nullterminated
  *  It performs a partial copy if oem is too small.
  */
 NTSTATUS

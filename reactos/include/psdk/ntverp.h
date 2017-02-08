@@ -9,7 +9,7 @@
  *                  The VER_PRODUCTBUILD lines must contain the product
  *                  comments and end with the build#<CR><LF>.
  *                  The VER_PRODUCTBETA_STR lines must contain the product
- *                  comments and end with "somestring"<CR><LF.
+ *                  comments and end with "somestring"<CR><LF>.
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 

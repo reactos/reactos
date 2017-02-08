@@ -118,16 +118,16 @@ xsltDocumentFunctionLoadDocument(xmlXPathParserContextPtr ctxt, xmlChar* URI)
 	    "document() : internal error tctxt == NULL\n");
 	valuePush(ctxt, xmlXPathNewNodeSet(NULL));
 	return;
-    } 
-	
+    }
+
     uri = xmlParseURI((const char *) URI);
     if (uri == NULL) {
 	xsltTransformError(tctxt, NULL, NULL,
 	    "document() : failed to parse URI\n");
 	valuePush(ctxt, xmlXPathNewNodeSet(NULL));
 	return;
-    } 
-    
+    }
+
     /*
      * check for and remove fragment identifier
      */
@@ -141,12 +141,12 @@ xsltDocumentFunctionLoadDocument(xmlXPathParserContextPtr ctxt, xmlChar* URI)
     } else
 	idoc = xsltLoadDocument(tctxt, URI);
     xmlFreeURI(uri);
-    
+
     if (idoc == NULL) {
 	if ((URI == NULL) ||
 	    (URI[0] == '#') ||
 	    ((tctxt->style->doc != NULL) &&
-	    (xmlStrEqual(tctxt->style->doc->URL, URI)))) 
+	    (xmlStrEqual(tctxt->style->doc->URL, URI))))
 	{
 	    /*
 	    * This selects the stylesheet's doc itself.
@@ -167,7 +167,7 @@ xsltDocumentFunctionLoadDocument(xmlXPathParserContextPtr ctxt, xmlChar* URI)
 	valuePush(ctxt, xmlXPathNewNodeSet((xmlNodePtr) doc));
 	return;
     }
-	
+
     /* use XPointer of HTML location for fragment ID */
 #ifdef LIBXML_XPTR_ENABLED
     xptrctxt = xmlXPtrNewContext(doc, NULL, NULL);
@@ -180,11 +180,11 @@ xsltDocumentFunctionLoadDocument(xmlXPathParserContextPtr ctxt, xmlChar* URI)
     resObj = xmlXPtrEval(fragment, xptrctxt);
     xmlXPathFreeContext(xptrctxt);
 #endif
-    xmlFree(fragment);	
+    xmlFree(fragment);
 
     if (resObj == NULL)
 	goto out_fragment;
-	
+
     switch (resObj->type) {
 	case XPATH_NODESET:
 	    break;
@@ -198,11 +198,11 @@ xsltDocumentFunctionLoadDocument(xmlXPathParserContextPtr ctxt, xmlChar* URI)
 	case XPATH_RANGE:
 	case XPATH_LOCATIONSET:
 	    xsltTransformError(tctxt, NULL, NULL,
-		"document() : XPointer does not select a node set: #%s\n", 
+		"document() : XPointer does not select a node set: #%s\n",
 		fragment);
 	goto out_object;
     }
-    
+
     valuePush(ctxt, resObj);
     return;
 
@@ -260,7 +260,7 @@ xsltDocumentFunction(xmlXPathParserContextPtr ctxt, int nargs)
         obj = valuePop(ctxt);
         ret = xmlXPathNewNodeSet(NULL);
 
-        if (obj->nodesetval) {
+        if ((obj != NULL) && obj->nodesetval) {
             for (i = 0; i < obj->nodesetval->nodeNr; i++) {
                 valuePush(ctxt,
                           xmlXPathNewNodeSet(obj->nodesetval->nodeTab[i]));
@@ -280,7 +280,8 @@ xsltDocumentFunction(xmlXPathParserContextPtr ctxt, int nargs)
             }
         }
 
-        xmlXPathFreeObject(obj);
+        if (obj != NULL)
+            xmlXPathFreeObject(obj);
         if (obj2 != NULL)
             xmlXPathFreeObject(obj2);
         valuePush(ctxt, ret);
@@ -302,6 +303,8 @@ xsltDocumentFunction(xmlXPathParserContextPtr ctxt, int nargs)
     if (obj->stringval == NULL) {
         valuePush(ctxt, xmlXPathNewNodeSet(NULL));
     } else {
+        xsltTransformContextPtr tctxt;
+        tctxt = xsltXPathGetTransformContext(ctxt);
         if ((obj2 != NULL) && (obj2->nodesetval != NULL) &&
             (obj2->nodesetval->nodeNr > 0) &&
             IS_XSLT_REAL_NODE(obj2->nodesetval->nodeTab[0])) {
@@ -314,9 +317,6 @@ xsltDocumentFunction(xmlXPathParserContextPtr ctxt, int nargs)
             }
             base = xmlNodeGetBase(target->doc, target);
         } else {
-            xsltTransformContextPtr tctxt;
-
-            tctxt = xsltXPathGetTransformContext(ctxt);
             if ((tctxt != NULL) && (tctxt->inst != NULL)) {
                 base = xmlNodeGetBase(tctxt->inst->doc, tctxt->inst);
             } else if ((tctxt != NULL) && (tctxt->style != NULL) &&
@@ -329,7 +329,14 @@ xsltDocumentFunction(xmlXPathParserContextPtr ctxt, int nargs)
         if (base != NULL)
             xmlFree(base);
         if (URI == NULL) {
-            valuePush(ctxt, xmlXPathNewNodeSet(NULL));
+            if ((tctxt != NULL) && (tctxt->style != NULL) &&
+                (tctxt->style->doc != NULL) &&
+                (xmlStrEqual(URI, tctxt->style->doc->URL))) {
+                /* This selects the stylesheet's doc itself. */
+                valuePush(ctxt, xmlXPathNewNodeSet((xmlNodePtr) tctxt->style->doc));
+            } else {
+                valuePush(ctxt, xmlXPathNewNodeSet(NULL));
+            }
         } else {
 	    xsltDocumentFunctionLoadDocument( ctxt, URI );
 	    xmlFree(URI);
@@ -349,15 +356,15 @@ xsltDocumentFunction(xmlXPathParserContextPtr ctxt, int nargs)
  *   node-set key(string, object)
  */
 void
-xsltKeyFunction(xmlXPathParserContextPtr ctxt, int nargs){    
-    xmlXPathObjectPtr obj1, obj2;    
-    
+xsltKeyFunction(xmlXPathParserContextPtr ctxt, int nargs){
+    xmlXPathObjectPtr obj1, obj2;
+
     if (nargs != 2) {
 	xsltTransformError(xsltXPathGetTransformContext(ctxt), NULL, NULL,
 		"key() : expects two arguments\n");
 	ctxt->error = XPATH_INVALID_ARITY;
 	return;
-    }    
+    }
 
     /*
     * Get the key's value.
@@ -376,7 +383,7 @@ xsltKeyFunction(xmlXPathParserContextPtr ctxt, int nargs){
     /*
     * Get the key's name.
     */
-    obj1 = valuePop(ctxt);    
+    obj1 = valuePop(ctxt);
 
     if ((obj2->type == XPATH_NODESET) || (obj2->type == XPATH_XSLT_TREE)) {
 	int i;
@@ -402,7 +409,7 @@ xsltKeyFunction(xmlXPathParserContextPtr ctxt, int nargs){
 	xmlNodeSetPtr nodelist = NULL;
 	xmlChar *key = NULL, *value;
 	const xmlChar *keyURI;
-	xsltTransformContextPtr tctxt;   
+	xsltTransformContextPtr tctxt;
 	xmlChar *qname, *prefix;
 	xmlXPathContextPtr xpctxt = ctxt->context;
 	xmlNodePtr tmpNode = NULL;
@@ -418,7 +425,7 @@ xsltKeyFunction(xmlXPathParserContextPtr ctxt, int nargs){
 		"The context node is not set on the XPath context.\n");
 	    tctxt->state = XSLT_STATE_STOPPED;
 	    goto error;
-	}	
+	}
 	/*
 	 * Get the associated namespace URI if qualified name
 	 */
@@ -458,7 +465,7 @@ xsltKeyFunction(xmlXPathParserContextPtr ctxt, int nargs){
 	}
 	obj2 = valuePop(ctxt);
 	value = obj2->stringval;
-	
+
 	/*
 	* We need to ensure that ctxt->document is available for
 	* xsltGetKey().
@@ -468,7 +475,7 @@ xsltKeyFunction(xmlXPathParserContextPtr ctxt, int nargs){
 	* or the doc might be a Result Tree Fragment.
 	* FUTURE INFO: In XSLT 2.0 the key() function takes an additional
 	* argument indicating the doc to use.
-	*/	
+	*/
 	if (xpctxt->node->type == XML_NAMESPACE_DECL) {
 	    /*
 	    * REVISIT: This is a libxml hack! Check xpath.c for details.
@@ -492,7 +499,7 @@ xsltKeyFunction(xmlXPathParserContextPtr ctxt, int nargs){
 
 	if ((tctxt->document == NULL) ||
 	    (tctxt->document->doc != tmpNode->doc))
-	{	   
+	{
 	    if (tmpNode->doc->name && (tmpNode->doc->name[0] == ' ')) {
 		/*
 		* This is a Result Tree Fragment.
@@ -502,7 +509,7 @@ xsltKeyFunction(xmlXPathParserContextPtr ctxt, int nargs){
 		    if (tmpNode->doc->_private == NULL)
 			goto error;
 		}
-		tctxt->document = (xsltDocumentPtr) tmpNode->doc->_private;		
+		tctxt->document = (xsltDocumentPtr) tmpNode->doc->_private;
 	    } else {
 		/*
 		* May be the initial source doc or a doc acquired via the
@@ -523,18 +530,18 @@ xsltKeyFunction(xmlXPathParserContextPtr ctxt, int nargs){
 	*/
 	nodelist = xsltGetKey(tctxt, key, keyURI, value);
 
-error:	
+error:
 	tctxt->document = oldDocInfo;
 	valuePush(ctxt, xmlXPathWrapNodeSet(
 	    xmlXPathNodeSetMerge(NULL, nodelist)));
 	if (key != NULL)
 	    xmlFree(key);
-    }    
+    }
 
     if (obj1 != NULL)
 	xmlXPathFreeObject(obj1);
     if (obj2 != NULL)
-	xmlXPathFreeObject(obj2);    
+	xmlXPathFreeObject(obj2);
 }
 
 /**
@@ -606,7 +613,7 @@ xsltFormatNumberFunction(xmlXPathParserContextPtr ctxt, int nargs)
     if (sheet == NULL)
 	return;
     formatValues = sheet->decimalFormat;
-    
+
     switch (nargs) {
     case 3:
 	CAST_TO_STRING;
@@ -614,7 +621,7 @@ xsltFormatNumberFunction(xmlXPathParserContextPtr ctxt, int nargs)
 	formatValues = xsltDecimalFormatGetByName(sheet, decimalObj->stringval);
 	if (formatValues == NULL) {
 	    xsltTransformError(tctxt, NULL, NULL,
-		    "format-number() : undeclared decimal format '%s'\n", 
+		    "format-number() : undeclared decimal format '%s'\n",
 		    decimalObj->stringval);
 	}
 	/* Intentional fall-through */
@@ -653,14 +660,16 @@ xsltFormatNumberFunction(xmlXPathParserContextPtr ctxt, int nargs)
  */
 void
 xsltGenerateIdFunction(xmlXPathParserContextPtr ctxt, int nargs){
+    static char base_address;
     xmlNodePtr cur = NULL;
-    unsigned long val;
-    xmlChar str[20];
+    xmlXPathObjectPtr obj = NULL;
+    long val;
+    xmlChar str[30];
+    xmlDocPtr doc;
 
     if (nargs == 0) {
 	cur = ctxt->context->node;
     } else if (nargs == 1) {
-	xmlXPathObjectPtr obj;
 	xmlNodeSetPtr nodelist;
 	int i, ret;
 
@@ -683,7 +692,6 @@ xsltGenerateIdFunction(xmlXPathParserContextPtr ctxt, int nargs){
 	    if (ret == -1)
 	        cur = nodelist->nodeTab[i];
 	}
-	xmlXPathFreeObject(obj);
     } else {
 	xsltTransformError(xsltXPathGetTransformContext(ctxt), NULL, NULL,
 		"generate-id() : invalid number of args %d\n", nargs);
@@ -694,9 +702,27 @@ xsltGenerateIdFunction(xmlXPathParserContextPtr ctxt, int nargs){
      * Okay this is ugly but should work, use the NodePtr address
      * to forge the ID
      */
-    val = (unsigned long)((char *)cur - (char *)0);
-    val /= sizeof(xmlNode);
-    sprintf((char *)str, "id%ld", val);
+    if (cur->type != XML_NAMESPACE_DECL)
+        doc = cur->doc;
+    else {
+        xmlNsPtr ns = (xmlNsPtr) cur;
+
+        if (ns->context != NULL)
+            doc = ns->context;
+        else
+            doc = ctxt->context->doc;
+
+    }
+
+    if (obj)
+        xmlXPathFreeObject(obj);
+
+    val = (long)((char *)cur - (char *)&base_address);
+    if (val >= 0) {
+      sprintf((char *)str, "idp%ld", val);
+    } else {
+      sprintf((char *)str, "idm%ld", -val);
+    }
     valuePush(ctxt, xmlXPathNewString(str));
 }
 
@@ -783,7 +809,9 @@ xsltSystemPropertyFunction(xmlXPathParserContextPtr ctxt, int nargs){
 	    } else {
 		valuePush(ctxt, xmlXPathNewString((const xmlChar *)""));
 	    }
-	}
+	} else {
+	    valuePush(ctxt, xmlXPathNewString((const xmlChar *)""));
+        }
 	if (name != NULL)
 	    xmlFree(name);
 	if (prefix != NULL)
@@ -941,9 +969,9 @@ xsltCurrentFunction(xmlXPathParserContextPtr ctxt, int nargs){
 }
 
 /************************************************************************
- * 									*
- * 		Registration of XSLT and libxslt functions		*
- * 									*
+ *									*
+ *		Registration of XSLT and libxslt functions		*
+ *									*
  ************************************************************************/
 
 /**

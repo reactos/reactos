@@ -1,5 +1,4 @@
-/* $Id: stubs.c 28533 2007-08-24 22:44:36Z greatlrd $
- *
+/*
  * reactos/lib/gdi32/misc/eng.c
  *
  * GDI32.DLL eng part
@@ -7,7 +6,7 @@
  *
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 /*
  * @implemented

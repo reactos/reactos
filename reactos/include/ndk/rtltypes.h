@@ -54,16 +54,9 @@ Author:
 #define RTL_DRIVE_LETTER_VALID (USHORT)0x0001
 
 //
-// Exception Flags
+// End of Exception List
 //
 #define EXCEPTION_CHAIN_END                                 ((PEXCEPTION_REGISTRATION_RECORD)-1)
-#define EXCEPTION_UNWINDING                                 0x02
-#define EXCEPTION_EXIT_UNWIND                               0x04
-#define EXCEPTION_STACK_INVALID                             0x08
-#define EXCEPTION_UNWIND                                    (EXCEPTION_UNWINDING + EXCEPTION_EXIT_UNWIND)
-#define EXCEPTION_NESTED_CALL                               0x10
-#define EXCEPTION_TARGET_UNWIND                             0x20
-#define EXCEPTION_COLLIDED_UNWIND                           0x20
 
 //
 // Range and Range List Flags
@@ -455,7 +448,7 @@ typedef LONG
 //
 typedef VOID
 (NTAPI *WORKERCALLBACKFUNC)(
-    IN PVOID Context
+    _In_ PVOID Context
 );
 
 #else /* !NTOS_MODE_USER */
@@ -491,7 +484,7 @@ extern const PRTL_REALLOCATE_STRING_ROUTINE RtlReallocateStringRoutine;
 //
 typedef ULONG
 (NTAPI *RTLP_UNHANDLED_EXCEPTION_FILTER)(
-    IN struct _EXCEPTION_POINTERS *ExceptionInfo
+    _In_ struct _EXCEPTION_POINTERS *ExceptionInfo
 );
 typedef RTLP_UNHANDLED_EXCEPTION_FILTER *PRTLP_UNHANDLED_EXCEPTION_FILTER;
 
@@ -500,8 +493,8 @@ typedef RTLP_UNHANDLED_EXCEPTION_FILTER *PRTLP_UNHANDLED_EXCEPTION_FILTER;
 //
 typedef NTSTATUS
 (NTAPI *PHEAP_ENUMERATION_ROUTINE)(
-    IN PVOID HeapHandle,
-    IN PVOID UserParam
+    _In_ PVOID HeapHandle,
+    _In_ PVOID UserParam
 );
 
 //
@@ -522,14 +515,14 @@ typedef VOID
 //
 typedef NTSTATUS
 (NTAPI *PRTL_START_POOL_THREAD)(
-    IN PTHREAD_START_ROUTINE Function,
-    IN PVOID Parameter,
-    OUT PHANDLE ThreadHandle
+    _In_ PTHREAD_START_ROUTINE Function,
+    _In_ PVOID Parameter,
+    _Out_ PHANDLE ThreadHandle
 );
 
 typedef NTSTATUS
 (NTAPI *PRTL_EXIT_POOL_THREAD)(
-    IN NTSTATUS ExitStatus
+    _In_ NTSTATUS ExitStatus
 );
 
 //
@@ -620,12 +613,12 @@ typedef RTL_AVL_FREE_ROUTINE *PRTL_AVL_FREE_ROUTINE;
 #ifdef NTOS_MODE_USER
 typedef NTSTATUS
 (NTAPI *PRTL_QUERY_REGISTRY_ROUTINE)(
-    IN PWSTR ValueName,
-    IN ULONG ValueType,
-    IN PVOID ValueData,
-    IN ULONG ValueLength,
-    IN PVOID Context,
-    IN PVOID EntryContext
+    _In_ PWSTR ValueName,
+    _In_ ULONG ValueType,
+    _In_ PVOID ValueData,
+    _In_ ULONG ValueLength,
+    _In_ PVOID Context,
+    _In_ PVOID EntryContext
 );
 #endif
 
@@ -635,8 +628,8 @@ typedef NTSTATUS
 #ifdef NTOS_MODE_USER
 typedef NTSTATUS
 (NTAPI *PRTL_SECURE_MEMORY_CACHE_CALLBACK)(
-    IN PVOID Address,
-    IN SIZE_T Length
+    _In_ PVOID Address,
+    _In_ SIZE_T Length
 );
 #endif
 
@@ -655,9 +648,9 @@ typedef BOOLEAN
 //
 typedef NTSTATUS
 (NTAPI * PRTL_HEAP_COMMIT_ROUTINE)(
-    IN PVOID Base,
-    IN OUT PVOID *CommitAddress,
-    IN OUT PSIZE_T CommitSize
+    _In_ PVOID Base,
+    _Inout_ PVOID *CommitAddress,
+    _Inout_ PSIZE_T CommitSize
 );
 
 //

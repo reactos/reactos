@@ -9,8 +9,6 @@
 
 #include "precomp.h"
 
-
-
 static VOID
 SetButtonStates(PSERVICEPROPSHEET dlgInfo,
                 HWND hwndDlg)
@@ -54,7 +52,6 @@ SetButtonStates(PSERVICEPROPSHEET dlgInfo,
     /* set the main toolbar */
     SetMenuAndButtonStates(dlgInfo->Info);
 }
-
 
 static VOID
 SetServiceStatusText(PSERVICEPROPSHEET dlgInfo,
@@ -137,7 +134,6 @@ SetStartupType(LPTSTR lpServiceName,
     }
 }
 
-
 /*
  * Populates the General Properties dialog with
  * the relevant service information
@@ -206,7 +202,6 @@ InitGeneralPage(PSERVICEPROPSHEET dlgInfo,
     }
 }
 
-
 VOID
 SaveDlgInfo(PSERVICEPROPSHEET dlgInfo,
             HWND hwndDlg)
@@ -250,7 +245,6 @@ SaveDlgInfo(PSERVICEPROPSHEET dlgInfo,
     }
 }
 
-
 static
 VOID
 OnStart(HWND hwndDlg,
@@ -270,7 +264,6 @@ OnStart(HWND hwndDlg,
         SetServiceStatusText(dlgInfo, hwndDlg);
     }
 }
-
 
 /*
  * General Property dialog callback.

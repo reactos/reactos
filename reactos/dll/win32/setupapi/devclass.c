@@ -646,108 +646,105 @@ SetupDiLoadClassIcon(
     OUT HICON *LargeIcon OPTIONAL,
     OUT PINT MiniIconIndex OPTIONAL)
 {
+    LPWSTR Buffer = NULL;
+    LPCWSTR DllName;
+    INT iconIndex = -18;
+    HKEY hKey = INVALID_HANDLE_VALUE;
+
     BOOL ret = FALSE;
 
-    if (!ClassGuid)
-        SetLastError(ERROR_INVALID_PARAMETER);
-    else
+    if (ClassGuid)
     {
-        LPWSTR Buffer = NULL;
-        LPCWSTR DllName;
-        INT iconIndex = 0;
-        HKEY hKey = INVALID_HANDLE_VALUE;
-
         hKey = SetupDiOpenClassRegKey(ClassGuid, KEY_QUERY_VALUE);
-        if (hKey == INVALID_HANDLE_VALUE)
-            goto cleanup;
+        if (hKey != INVALID_HANDLE_VALUE)
+            SETUP_GetIconIndex(hKey, &iconIndex);
+    }
 
-        if (!SETUP_GetIconIndex(hKey, &iconIndex))
-            goto cleanup;
-
-        if (iconIndex > 0)
+    if (iconIndex > 0)
+    {
+        /* Look up icon in dll specified by Installer32 or EnumPropPages32 key */
+        PWCHAR Comma;
+        LONG rc;
+        DWORD dwRegType, dwLength;
+        rc = RegQueryValueExW(hKey, REGSTR_VAL_INSTALLER_32, NULL, &dwRegType, NULL, &dwLength);
+        if (rc == ERROR_SUCCESS && dwRegType == REG_SZ)
         {
-            /* Look up icon in dll specified by Installer32 or EnumPropPages32 key */
-            PWCHAR Comma;
-            LONG rc;
-            DWORD dwRegType, dwLength;
-            rc = RegQueryValueExW(hKey, REGSTR_VAL_INSTALLER_32, NULL, &dwRegType, NULL, &dwLength);
-            if (rc == ERROR_SUCCESS && dwRegType == REG_SZ)
+            Buffer = MyMalloc(dwLength + sizeof(WCHAR));
+            if (Buffer == NULL)
             {
-                Buffer = MyMalloc(dwLength + sizeof(WCHAR));
-                if (Buffer == NULL)
-                {
-                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                    goto cleanup;
-                }
-                rc = RegQueryValueExW(hKey, REGSTR_VAL_INSTALLER_32, NULL, NULL, (LPBYTE)Buffer, &dwLength);
-                if (rc != ERROR_SUCCESS)
-                {
-                    SetLastError(rc);
-                    goto cleanup;
-                }
-                /* make sure the returned buffer is NULL-terminated */
-                Buffer[dwLength / sizeof(WCHAR)] = 0;
-            }
-            else if
-                (ERROR_SUCCESS == (rc = RegQueryValueExW(hKey, REGSTR_VAL_ENUMPROPPAGES_32, NULL, &dwRegType, NULL, &dwLength))
-                && dwRegType == REG_SZ)
-            {
-                Buffer = MyMalloc(dwLength + sizeof(WCHAR));
-                if (Buffer == NULL)
-                {
-                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                    goto cleanup;
-                }
-                rc = RegQueryValueExW(hKey, REGSTR_VAL_ENUMPROPPAGES_32, NULL, NULL, (LPBYTE)Buffer, &dwLength);
-                if (rc != ERROR_SUCCESS)
-                {
-                    SetLastError(rc);
-                    goto cleanup;
-                }
-                /* make sure the returned buffer is NULL-terminated */
-                Buffer[dwLength / sizeof(WCHAR)] = 0;
-            }
-            else
-            {
-                /* Unable to find where to load the icon */
-                SetLastError(ERROR_FILE_NOT_FOUND);
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
                 goto cleanup;
             }
-            Comma = strchrW(Buffer, ',');
-            if (!Comma)
+            rc = RegQueryValueExW(hKey, REGSTR_VAL_INSTALLER_32, NULL, NULL, (LPBYTE)Buffer, &dwLength);
+            if (rc != ERROR_SUCCESS)
             {
-                SetLastError(ERROR_GEN_FAILURE);
+                SetLastError(rc);
                 goto cleanup;
             }
-            *Comma = '\0';
-            DllName = Buffer;
+            /* make sure the returned buffer is NULL-terminated */
+            Buffer[dwLength / sizeof(WCHAR)] = 0;
+        }
+        else if
+            (ERROR_SUCCESS == (rc = RegQueryValueExW(hKey, REGSTR_VAL_ENUMPROPPAGES_32, NULL, &dwRegType, NULL, &dwLength))
+            && dwRegType == REG_SZ)
+        {
+            Buffer = MyMalloc(dwLength + sizeof(WCHAR));
+            if (Buffer == NULL)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                goto cleanup;
+            }
+            rc = RegQueryValueExW(hKey, REGSTR_VAL_ENUMPROPPAGES_32, NULL, NULL, (LPBYTE)Buffer, &dwLength);
+            if (rc != ERROR_SUCCESS)
+            {
+                SetLastError(rc);
+                goto cleanup;
+            }
+            /* make sure the returned buffer is NULL-terminated */
+            Buffer[dwLength / sizeof(WCHAR)] = 0;
         }
         else
         {
-            /* Look up icon in setupapi.dll */
-            DllName = SetupapiDll;
-            iconIndex = -iconIndex;
+            /* Unable to find where to load the icon */
+            SetLastError(ERROR_FILE_NOT_FOUND);
+            goto cleanup;
         }
-
-        TRACE("Icon index %d, dll name %s\n", iconIndex, debugstr_w(DllName));
-        if (LargeIcon)
+        Comma = strchrW(Buffer, ',');
+        if (!Comma)
         {
-            *LargeIcon = LoadImage(hInstance, MAKEINTRESOURCE(iconIndex), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
-            if (!*LargeIcon)
-            {
-                SetLastError(ERROR_INVALID_INDEX);
-                goto cleanup;
-            }
+            SetLastError(ERROR_GEN_FAILURE);
+            goto cleanup;
         }
-        if (MiniIconIndex)
-            *MiniIconIndex = iconIndex;
-        ret = TRUE;
+        *Comma = '\0';
+        DllName = Buffer;
+    }
+    else
+    {
+        /* Look up icon in setupapi.dll */
+        DllName = SetupapiDll;
+        iconIndex = -iconIndex;
+    }
+
+    TRACE("Icon index %d, dll name %s\n", iconIndex, debugstr_w(DllName));
+    if (LargeIcon)
+    {
+        *LargeIcon = LoadImage(hInstance, MAKEINTRESOURCE(iconIndex), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+        if (!*LargeIcon)
+        {
+            SetLastError(ERROR_INVALID_INDEX);
+            goto cleanup;
+        }
+    }
+    if (MiniIconIndex)
+        *MiniIconIndex = iconIndex;
+    ret = TRUE;
 
 cleanup:
-        if (hKey != INVALID_HANDLE_VALUE)
-            RegCloseKey(hKey);
+    if (hKey != INVALID_HANDLE_VALUE)
+        RegCloseKey(hKey);
+
+    if (Buffer != NULL)
         MyFree(Buffer);
-    }
 
     TRACE("Returning %d\n", ret);
     return ret;

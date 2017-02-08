@@ -21,6 +21,7 @@ list(APPEND MSVCRTEX_SOURCE
     startup/charmax.c
     startup/merr.c
     startup/atonexit.c
+    startup/dllmain.c
     startup/txtmode.c
     startup/pesect.c
     startup/tlsmcrt.c
@@ -38,8 +39,7 @@ list(APPEND MSVCRTEX_SOURCE
     misc/fltused.c
     misc/isblank.c
     misc/iswblank.c
-    misc/ofmt_stub.c
-)
+    misc/ofmt_stub.c)
 
 if(NOT MSVC)
     list(APPEND MSVCRTEX_SOURCE
@@ -47,20 +47,21 @@ if(NOT MSVC)
         startup/pseudo-reloc-list.c)
 endif()
 
-if(ARCH MATCHES i386)
-    list(APPEND MSVCRTEX_SOURCE
+if(ARCH STREQUAL "i386")
+    list(APPEND MSVCRTEX_ASM_SOURCE
         except/i386/chkstk_asm.s
         except/i386/chkstk_ms.s
+        math/i386/ftol2_asm.s
+        math/i386/alldiv_asm.s)
+    list(APPEND MSVCRTEX_SOURCE
         math/i386/ci.c
         math/i386/cicos.c
         math/i386/cilog.c
         math/i386/cipow.c
         math/i386/cisin.c
-        math/i386/cisqrt.c
-        math/i386/ftol2_asm.s
-        math/i386/alldiv_asm.s)
-elseif(ARCH MATCHES amd64)
-    list(APPEND MSVCRTEX_SOURCE
+        math/i386/cisqrt.c)
+elseif(ARCH STREQUAL "amd64")
+    list(APPEND MSVCRTEX_ASM_SOURCE
         except/amd64/chkstk_asm.s
         except/amd64/chkstk_ms.s)
 endif()
@@ -71,7 +72,10 @@ else()
     list(APPEND MSVCRTEX_SOURCE startup/gccmain.c)
 endif()
 
-add_library(msvcrtex ${MSVCRTEX_SOURCE})
+set_source_files_properties(${MSVCRTEX_ASM_SOURCE} PROPERTIES COMPILE_DEFINITIONS "_DLL;_MSVCRTEX_")
+add_asm_files(msvcrtex_asm ${MSVCRTEX_ASM_SOURCE})
+
+add_library(msvcrtex ${MSVCRTEX_SOURCE} ${msvcrtex_asm})
 add_target_compile_definitions(msvcrtex _DLL _MSVCRTEX_)
 set_source_files_properties(startup/crtdll.c PROPERTIES COMPILE_DEFINITIONS CRTDLL)
 set_source_files_properties(startup/crtexe.c

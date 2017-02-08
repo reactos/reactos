@@ -18,14 +18,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_LEAN_AND_MEAN
+#include <stdarg.h>
+#include <windef.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <wine/debug.h>
 
-#include <stdio.h>
-
-#include "windows.h"
 #include "winhelp.h"
-
-#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(winhelp);
 
@@ -46,7 +45,7 @@ static HANDLE CALLBACK WHD_Open(LPSTR name, BYTE flags)
     case 2: mode = GENERIC_READ; break;
     default: WINE_FIXME("Undocumented flags %x\n", flags);
     }
-    return CreateFile(name, mode, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+    return CreateFileA(name, mode, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
                       OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 }
 

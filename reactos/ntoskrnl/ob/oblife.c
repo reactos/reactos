@@ -1027,11 +1027,11 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     POBJECT_TYPE LocalObjectType;
     ULONG HeaderSize;
     NTSTATUS Status;
-    CHAR Tag[4];
     OBP_LOOKUP_CONTEXT Context;
     PWCHAR p;
     ULONG i;
     UNICODE_STRING ObjectName;
+    ANSI_STRING AnsiName;
     POBJECT_HEADER_CREATOR_INFO CreatorInfo;
 
     /* Verify parameters */
@@ -1136,12 +1136,22 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     }
     else
     {
-        /* Set Tag */
-        Tag[0] = (CHAR)TypeName->Buffer[0];
-        Tag[1] = (CHAR)TypeName->Buffer[1];
-        Tag[2] = (CHAR)TypeName->Buffer[2];
-        Tag[3] = (CHAR)TypeName->Buffer[3];
-        LocalObjectType->Key = *(PULONG)Tag;
+        /* Convert the tag to ASCII */
+        Status = RtlUnicodeStringToAnsiString(&AnsiName, TypeName, TRUE);
+        if (NT_SUCCESS(Status))
+        {
+            /* For every missing character, use a space */
+            for (i = 3; i >= AnsiName.Length; i--) AnsiName.Buffer[i] = ' ';
+
+            /* Set the key and free the converted name */
+            LocalObjectType->Key = *(PULONG)AnsiName.Buffer;
+            ExFreePool(AnsiName.Buffer);
+        }
+        else
+        {
+            /* Just copy the characters */
+            LocalObjectType->Key = *(PULONG)TypeName->Buffer;
+        }
     }
 
     /* Set up the type information */
@@ -1419,7 +1429,7 @@ NtQueryObject(IN HANDLE ObjectHandle,
     POBJECT_HEADER ObjectHeader = NULL;
     POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleFlags;
     POBJECT_BASIC_INFORMATION BasicInfo;
-    ULONG InfoLength;
+    ULONG InfoLength = 0;
     PVOID Object = NULL;
     NTSTATUS Status;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();

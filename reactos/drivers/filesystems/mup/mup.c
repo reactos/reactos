@@ -16,8 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/mup/mup.c
@@ -38,7 +37,7 @@
 /* FUNCTIONS ****************************************************************/
 
 /*
- * FUNCTION: Called by the system to initalize the driver
+ * FUNCTION: Called by the system to initialize the driver
  * ARGUMENTS:
  *           DriverObject = object describing this driver
  *           RegistryPath = path to our configuration entries

@@ -4,7 +4,7 @@
  * FILE:            ntoskrnl/se/access.c
  * PURPOSE:         Access state functions
  *
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net) - 
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net) -
  *                               Based on patch by Javier M. Mellid
  */
 
@@ -18,7 +18,241 @@
 
 ERESOURCE SepSubjectContextLock;
 
-/* FUNCTIONS ******************************************************************/
+/* PRIVATE FUNCTIONS **********************************************************/
+
+BOOLEAN
+NTAPI
+SepSidInTokenEx(IN PACCESS_TOKEN _Token,
+                IN PSID PrincipalSelfSid,
+                IN PSID _Sid,
+                IN BOOLEAN Deny,
+                IN BOOLEAN Restricted)
+{
+    ULONG i;
+    PTOKEN Token = (PTOKEN)_Token;
+    PISID TokenSid, Sid = (PISID)_Sid;
+    PSID_AND_ATTRIBUTES SidAndAttributes;
+    ULONG SidCount, SidLength;
+    USHORT SidMetadata;
+    PAGED_CODE();
+
+    /* Not yet supported */
+    ASSERT(PrincipalSelfSid == NULL);
+    ASSERT(Restricted == FALSE);
+
+    /* Check if a principal SID was given, and this is our current SID already */
+    if ((PrincipalSelfSid) && (RtlEqualSid(SePrincipalSelfSid, Sid)))
+    {
+        /* Just use the principal SID in this case */
+        Sid = PrincipalSelfSid;
+    }
+
+    /* Check if this is a restricted token or not */
+    if (Restricted)
+    {
+        /* Use the restricted SIDs and count */
+        SidAndAttributes = Token->RestrictedSids;
+        SidCount = Token->RestrictedSidCount;
+    }
+    else
+    {
+        /* Use the normal SIDs and count */
+        SidAndAttributes = Token->UserAndGroups;
+        SidCount = Token->UserAndGroupCount;
+    }
+
+    /* Do checks here by hand instead of the usual 4 function calls */
+    SidLength = FIELD_OFFSET(SID,
+                             SubAuthority[Sid->SubAuthorityCount]);
+    SidMetadata = *(PUSHORT)&Sid->Revision;
+
+    /* Loop every SID */
+    for (i = 0; i < SidCount; i++)
+    {
+        TokenSid = (PISID)SidAndAttributes->Sid;
+#if SE_SID_DEBUG
+        UNICODE_STRING sidString;
+        RtlConvertSidToUnicodeString(&sidString, TokenSid, TRUE);
+        DPRINT1("SID in Token: %wZ\n", &sidString);
+        RtlFreeUnicodeString(&sidString);
+#endif
+        /* Check if the SID metadata matches */
+        if (*(PUSHORT)&TokenSid->Revision == SidMetadata)
+        {
+            /* Check if the SID data matches */
+            if (RtlEqualMemory(Sid, TokenSid, SidLength))
+            {
+                /* Check if the group is enabled, or used for deny only */
+                if ((!(i) && !(SidAndAttributes->Attributes & SE_GROUP_USE_FOR_DENY_ONLY)) ||
+                    (SidAndAttributes->Attributes & SE_GROUP_ENABLED) ||
+                    ((Deny) && (SidAndAttributes->Attributes & SE_GROUP_USE_FOR_DENY_ONLY)))
+                {
+                    /* SID is present */
+                    return TRUE;
+                }
+                else
+                {
+                    /* SID is not present */
+                    return FALSE;
+                }
+            }
+        }
+
+        /* Move to the next SID */
+        SidAndAttributes++;
+    }
+
+    /* SID is not present */
+    return FALSE;
+}
+
+BOOLEAN
+NTAPI
+SepSidInToken(IN PACCESS_TOKEN _Token,
+              IN PSID Sid)
+{
+    /* Call extended API */
+    return SepSidInTokenEx(_Token, NULL, Sid, FALSE, FALSE);
+}
+
+BOOLEAN
+NTAPI
+SepTokenIsOwner(IN PACCESS_TOKEN _Token,
+                IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                IN BOOLEAN TokenLocked)
+{
+    PSID Sid;
+    BOOLEAN Result;
+    PTOKEN Token = _Token;
+
+    /* Get the owner SID */
+    Sid = SepGetOwnerFromDescriptor(SecurityDescriptor);
+    ASSERT(Sid != NULL);
+
+    /* Lock the token if needed */
+    if (!TokenLocked) SepAcquireTokenLockShared(Token);
+
+    /* Check if the owner SID is found, handling restricted case as well */
+    Result = SepSidInToken(Token, Sid);
+    if ((Result) && (Token->TokenFlags & TOKEN_IS_RESTRICTED))
+    {
+        Result = SepSidInTokenEx(Token, NULL, Sid, FALSE, TRUE);
+    }
+
+    /* Release the lock if we had acquired it */
+    if (!TokenLocked) SepReleaseTokenLock(Token);
+
+    /* Return the result */
+    return Result;
+}
+
+VOID
+NTAPI
+SeGetTokenControlInformation(IN PACCESS_TOKEN _Token,
+                             OUT PTOKEN_CONTROL TokenControl)
+{
+    PTOKEN Token = _Token;
+    PAGED_CODE();
+
+    /* Capture the main fields */
+    TokenControl->AuthenticationId = Token->AuthenticationId;
+    TokenControl->TokenId = Token->TokenId;
+    TokenControl->TokenSource = Token->TokenSource;
+
+    /* Lock the token */
+    SepAcquireTokenLockShared(Token);
+
+    /* Capture the modified it */
+    TokenControl->ModifiedId = Token->ModifiedId;
+
+    /* Unlock it */
+    SepReleaseTokenLock(Token);
+}
+
+NTSTATUS
+NTAPI
+SepCreateClientSecurity(IN PACCESS_TOKEN Token,
+                        IN PSECURITY_QUALITY_OF_SERVICE ClientSecurityQos,
+                        IN BOOLEAN ServerIsRemote,
+                        IN TOKEN_TYPE TokenType,
+                        IN BOOLEAN ThreadEffectiveOnly,
+                        IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
+                        OUT PSECURITY_CLIENT_CONTEXT ClientContext)
+{
+    NTSTATUS Status;
+    PACCESS_TOKEN NewToken;
+    PAGED_CODE();
+
+    /* Check for bogus impersonation level */
+    if (!VALID_IMPERSONATION_LEVEL(ClientSecurityQos->ImpersonationLevel))
+    {
+        /* Fail the call */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Check what kind of token this is */
+    if (TokenType != TokenImpersonation)
+    {
+        /* On a primary token, if we do direct access, copy the flag from the QOS */
+        ClientContext->DirectAccessEffectiveOnly = ClientSecurityQos->EffectiveOnly;
+    }
+    else
+    {
+        /* This is an impersonation token, is the level ok? */
+        if (ClientSecurityQos->ImpersonationLevel > ImpersonationLevel)
+        {
+            /* Nope, fail */
+            return STATUS_BAD_IMPERSONATION_LEVEL;
+        }
+
+        /* Is the level too low, or are we doing something other than delegation remotely */
+        if ((ImpersonationLevel == SecurityAnonymous) ||
+            (ImpersonationLevel == SecurityIdentification) ||
+            ((ServerIsRemote) && (ImpersonationLevel != SecurityDelegation)))
+        {
+            /* Fail the call */
+            return STATUS_BAD_IMPERSONATION_LEVEL;
+        }
+
+        /* Pick either the thread setting or the QOS setting */
+        ClientContext->DirectAccessEffectiveOnly = ((ThreadEffectiveOnly) ||
+                                                    (ClientSecurityQos->EffectiveOnly)) ? TRUE : FALSE;
+    }
+
+    /* Is this static tracking */
+    if (ClientSecurityQos->ContextTrackingMode == SECURITY_STATIC_TRACKING)
+    {
+        /* Do not use direct access and make a copy */
+        ClientContext->DirectlyAccessClientToken = FALSE;
+        Status = SeCopyClientToken(Token, ImpersonationLevel, 0, &NewToken);
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+    else
+    {
+        /* Use direct access and check if this is local */
+        ClientContext->DirectlyAccessClientToken = TRUE;
+        if (ServerIsRemote)
+        {
+            /* We are doing delegation, so make a copy of the control data */
+            SeGetTokenControlInformation(Token,
+                                         &ClientContext->ClientTokenControl);
+        }
+
+        /* Keep the same token */
+        NewToken = Token;
+    }
+
+    /* Fill out the context and return success */
+    ClientContext->SecurityQos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
+    ClientContext->SecurityQos.ImpersonationLevel = ClientSecurityQos->ImpersonationLevel;
+    ClientContext->SecurityQos.ContextTrackingMode = ClientSecurityQos->ContextTrackingMode;
+    ClientContext->SecurityQos.EffectiveOnly = ClientSecurityQos->EffectiveOnly;
+    ClientContext->ServerIsRemote = ServerIsRemote;
+    ClientContext->ClientToken = NewToken;
+    return STATUS_SUCCESS;
+}
+
+/* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
  * @implemented
@@ -75,10 +309,19 @@ VOID
 NTAPI
 SeLockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
+    PTOKEN PrimaryToken, ClientToken;
     PAGED_CODE();
 
-    KeEnterCriticalRegion();
-    ExAcquireResourceExclusiveLite(&SepSubjectContextLock, TRUE);
+    /* Read both tokens */
+    PrimaryToken = SubjectContext->PrimaryToken;
+    ClientToken = SubjectContext->ClientToken;
+
+    /* Always lock the primary */
+    SepAcquireTokenLockShared(PrimaryToken);
+
+    /* Lock the impersonation one if it's there */
+    if (!ClientToken) return;
+    SepAcquireTokenLockShared(ClientToken);
 }
 
 /*
@@ -88,10 +331,19 @@ VOID
 NTAPI
 SeUnlockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
+    PTOKEN PrimaryToken, ClientToken;
     PAGED_CODE();
 
-    ExReleaseResourceLite(&SepSubjectContextLock);
-    KeLeaveCriticalRegion();
+    /* Read both tokens */
+    PrimaryToken = SubjectContext->PrimaryToken;
+    ClientToken = SubjectContext->ClientToken;
+
+    /* Always unlock the primary one */
+    SepReleaseTokenLock(PrimaryToken);
+
+    /* Unlock the impersonation one if it's there */
+    if (!ClientToken) return;
+    SepReleaseTokenLock(ClientToken);
 }
 
 /*
@@ -103,15 +355,13 @@ SeReleaseSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
     PAGED_CODE();
 
-    if (SubjectContext->PrimaryToken != NULL)
-    {
-        ObFastDereferenceObject(&PsGetCurrentProcess()->Token, SubjectContext->PrimaryToken);
-    }
+    /* Drop reference on the primary */
+    ObFastDereferenceObject(&PsGetCurrentProcess()->Token, SubjectContext->PrimaryToken);
+    SubjectContext->PrimaryToken = NULL;
 
-    if (SubjectContext->ClientToken != NULL)
-    {
-        ObDereferenceObject(SubjectContext->ClientToken);
-    }
+    /* Drop reference on the impersonation, if there was one */
+    PsDereferenceImpersonationToken(SubjectContext->ClientToken);
+    SubjectContext->ClientToken = NULL;
 }
 
 /*
@@ -128,7 +378,6 @@ SeCreateAccessStateEx(IN PETHREAD Thread,
 {
     ACCESS_MASK AccessMask = Access;
     PTOKEN Token;
-
     PAGED_CODE();
 
     /* Map the Generic Acess to Specific Access if we have a Mapping */
@@ -139,6 +388,12 @@ SeCreateAccessStateEx(IN PETHREAD Thread,
 
     /* Initialize the Access State */
     RtlZeroMemory(AccessState, sizeof(ACCESS_STATE));
+    ASSERT(AccessState->SecurityDescriptor == NULL);
+    ASSERT(AccessState->PrivilegesAllocated == FALSE);
+
+    /* Initialize and save aux data */
+    RtlZeroMemory(AuxData, sizeof(AUX_ACCESS_DATA));
+    AccessState->AuxData = AuxData;
 
     /* Capture the Subject Context */
     SeCaptureSubjectContextEx(Thread,
@@ -146,15 +401,12 @@ SeCreateAccessStateEx(IN PETHREAD Thread,
                               &AccessState->SubjectSecurityContext);
 
     /* Set Access State Data */
-    AccessState->AuxData = AuxData;
-    AccessState->RemainingDesiredAccess  = AccessMask;
+    AccessState->RemainingDesiredAccess = AccessMask;
     AccessState->OriginalDesiredAccess = AccessMask;
     ExpAllocateLocallyUniqueId(&AccessState->OperationID);
 
     /* Get the Token to use */
-    Token = AccessState->SubjectSecurityContext.ClientToken ?
-            (PTOKEN)&AccessState->SubjectSecurityContext.ClientToken :
-            (PTOKEN)&AccessState->SubjectSecurityContext.PrimaryToken;
+    Token = SeQuerySubjectContextToken(&AccessState->SubjectSecurityContext);
 
     /* Check for Travers Privilege */
     if (Token->TokenFlags & TOKEN_HAS_TRAVERSE_PRIVILEGE)
@@ -202,7 +454,6 @@ NTAPI
 SeDeleteAccessState(IN PACCESS_STATE AccessState)
 {
     PAUX_ACCESS_DATA AuxData;
-
     PAGED_CODE();
 
     /* Get the Auxiliary Data */
@@ -255,69 +506,36 @@ SeCreateClientSecurity(IN PETHREAD Thread,
     SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
     PACCESS_TOKEN Token;
     NTSTATUS Status;
-    PACCESS_TOKEN NewToken;
-
     PAGED_CODE();
 
+    /* Reference the correct token */
     Token = PsReferenceEffectiveToken(Thread,
                                       &TokenType,
                                       &ThreadEffectiveOnly,
                                       &ImpersonationLevel);
-    if (TokenType != TokenImpersonation)
-    {
-        ClientContext->DirectAccessEffectiveOnly = Qos->EffectiveOnly;
-    }
-    else
-    {
-        if (Qos->ImpersonationLevel > ImpersonationLevel)
-        {
-            if (Token) ObDereferenceObject(Token);
-            return STATUS_BAD_IMPERSONATION_LEVEL;
-        }
 
-        if ((ImpersonationLevel == SecurityAnonymous) ||
-            (ImpersonationLevel == SecurityIdentification) ||
-            ((RemoteClient) && (ImpersonationLevel != SecurityDelegation)))
-        {
-            if (Token) ObDereferenceObject(Token);
-            return STATUS_BAD_IMPERSONATION_LEVEL;
-        }
+    /* Create client security from it */
+    Status = SepCreateClientSecurity(Token,
+                                     Qos,
+                                     RemoteClient,
+                                     TokenType,
+                                     ThreadEffectiveOnly,
+                                     ImpersonationLevel,
+                                     ClientContext);
 
-        ClientContext->DirectAccessEffectiveOnly = ((ThreadEffectiveOnly) ||
-                                                    (Qos->EffectiveOnly)) ? TRUE : FALSE;
+    /* Check if we failed or static tracking was used */
+    if (!(NT_SUCCESS(Status)) || (Qos->ContextTrackingMode == SECURITY_STATIC_TRACKING))
+    {
+        /* Dereference our copy since it's not being used */
+        ObDereferenceObject(Token);
     }
 
-    if (Qos->ContextTrackingMode == SECURITY_STATIC_TRACKING)
-    {
-        ClientContext->DirectlyAccessClientToken = FALSE;
-        Status = SeCopyClientToken(Token, ImpersonationLevel, 0, &NewToken);
-        if (!NT_SUCCESS(Status)) return Status;
-    }
-    else
-    {
-        ClientContext->DirectlyAccessClientToken = TRUE;
-        if (RemoteClient != FALSE)
-        {
-#if 0
-            SeGetTokenControlInformation(Token,
-                                         &ClientContext->ClientTokenControl);
-#endif
-        }
-
-        NewToken = Token;
-    }
-
-    ClientContext->SecurityQos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
-    ClientContext->SecurityQos.ImpersonationLevel = Qos->ImpersonationLevel;
-    ClientContext->SecurityQos.ContextTrackingMode = Qos->ContextTrackingMode;
-    ClientContext->SecurityQos.EffectiveOnly = Qos->EffectiveOnly;
-    ClientContext->ServerIsRemote = RemoteClient;
-    ClientContext->ClientToken = NewToken;
-    return STATUS_SUCCESS;
+    /* Return status */
+    return Status;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -326,8 +544,34 @@ SeCreateClientSecurityFromSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectCon
                                          IN BOOLEAN ServerIsRemote,
                                          OUT PSECURITY_CLIENT_CONTEXT ClientContext)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PACCESS_TOKEN Token;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Get the right token and reference it */
+    Token = SeQuerySubjectContextToken(SubjectContext);
+    ObReferenceObject(Token);
+
+    /* Create the context */
+    Status = SepCreateClientSecurity(Token,
+                                     ClientSecurityQos,
+                                     ServerIsRemote,
+                                     SubjectContext->ClientToken ?
+                                     TokenImpersonation : TokenPrimary,
+                                     FALSE,
+                                     SubjectContext->ImpersonationLevel,
+                                     ClientContext);
+
+    /* Check if we failed or static tracking was used */
+    if (!(NT_SUCCESS(Status)) ||
+        (ClientSecurityQos->ContextTrackingMode == SECURITY_STATIC_TRACKING))
+    {
+        /* Dereference our copy since it's not being used */
+        ObDereferenceObject(Token);
+    }
+
+    /* Return status */
+    return Status;
 }
 
 /*
@@ -339,23 +583,24 @@ SeImpersonateClientEx(IN PSECURITY_CLIENT_CONTEXT ClientContext,
                       IN PETHREAD ServerThread OPTIONAL)
 {
     BOOLEAN EffectiveOnly;
-
     PAGED_CODE();
 
-    if (ClientContext->DirectlyAccessClientToken == FALSE)
+    /* Check if direct access is requested */
+    if (!ClientContext->DirectlyAccessClientToken)
     {
+        /* No, so get the flag from QOS */
         EffectiveOnly = ClientContext->SecurityQos.EffectiveOnly;
     }
     else
     {
+        /* Yes, so see if direct access should be effective only */
         EffectiveOnly = ClientContext->DirectAccessEffectiveOnly;
     }
 
-    if (ServerThread == NULL)
-    {
-        ServerThread = PsGetCurrentThread();
-    }
+    /* Use the current thread if one was not passed */
+    if (!ServerThread) ServerThread = PsGetCurrentThread();
 
+    /* Call the lower layer routine */
     return PsImpersonateClient(ServerThread,
                                ClientContext->ClientToken,
                                TRUE,
@@ -373,8 +618,8 @@ SeImpersonateClient(IN PSECURITY_CLIENT_CONTEXT ClientContext,
 {
     PAGED_CODE();
 
-    SeImpersonateClientEx(ClientContext,
-                          ServerThread);
+    /* Call the new API */
+    SeImpersonateClientEx(ClientContext, ServerThread);
 }
 
 /* EOF */

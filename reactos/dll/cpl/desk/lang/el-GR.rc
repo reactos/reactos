@@ -2,7 +2,7 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 IDD_BACKGROUND DIALOGEX DISCARDABLE 0, 0, 246, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Φόντο"
+CAPTION "Ξ¦ΟΞ½Ο„ΞΏ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW,
@@ -10,90 +10,92 @@ BEGIN
     CONTROL         "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT |
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP, 7, 114, 174, 78
-    LTEXT           "Επιλέξτε Φόντο",
+    LTEXT           "Ξ•Ο€ΞΉΞ»Ξ­ΞΎΟ„Ξµ Ξ¦ΟΞ½Ο„ΞΏ",
                     IDC_STATIC, 8, 103, 180, 9
-    PUSHBUTTON      "&Αναζήτηση...", IDC_BROWSE_BUTTON, 188, 114, 50, 15
-    PUSHBUTTON      "&Χρώμα...", IDC_COLOR_BUTTON, 188, 177, 50, 15
-    LTEXT           "Θέση", IDC_STATIC, 188, 138, 36, 9
+    PUSHBUTTON      "&Ξ‘Ξ½Ξ±Ξ¶Ξ®Ο„Ξ·ΟƒΞ·...", IDC_BROWSE_BUTTON, 188, 114, 50, 15
+    PUSHBUTTON      "&Ξ§ΟΟΞΌΞ±...", IDC_COLOR_BUTTON, 188, 177, 50, 15
+    LTEXT           "ΞΞ­ΟƒΞ·", IDC_STATIC, 188, 138, 36, 9
     COMBOBOX        IDC_PLACEMENT_COMBO, 188, 149, 50, 54,
                     CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Προφύλαξη οθόνης"
+CAPTION "Ξ ΟΞΏΟ†ΟΞ»Ξ±ΞΎΞ· ΞΏΞΈΟΞ½Ξ·Ο‚"
 FONT 8, "MS Shell Dlg", 0, 0
 BEGIN
     CONTROL         "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW,
                     70, 10, 105, 70, WS_EX_STATICEDGE
-    GROUPBOX        "Προφύλαξη οθόνης", IDC_SCREENS_DUMMY, 8, 92, 230, 52
+    GROUPBOX        "Ξ ΟΞΏΟ†ΟΞ»Ξ±ΞΎΞ· ΞΏΞΈΟΞ½Ξ·Ο‚", IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX        IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Ρυθμίσεις", IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
-    PUSHBUTTON      "Προεπισκόπηση", IDC_SCREENS_TESTSC, 175, 103, 50, 13
-    LTEXT           "Αναμονή", IDC_WAITTEXT, 14, 125, 20, 9
+    PUSHBUTTON      "Ξ΅Ο…ΞΈΞΌΞ―ΟƒΞµΞΉΟ‚", IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
+    PUSHBUTTON      "Ξ ΟΞΏΞµΟ€ΞΉΟƒΞΊΟΟ€Ξ·ΟƒΞ·", IDC_SCREENS_TESTSC, 175, 103, 50, 13
+    LTEXT           "Ξ‘Ξ½Ξ±ΞΌΞΏΞ½Ξ®", IDC_WAITTEXT, 14, 125, 20, 9
     EDITTEXT        IDC_SCREENS_TIMEDELAY, 34, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL         "", IDC_SCREENS_TIME ,UPDOWN_CLASS, UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
                     WS_BORDER | WS_GROUP, 54, 123, 12, 13
-    LTEXT           "λεπτά", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL         "Κατά τη συνέχιση, προστασία με κωδικό πρόσβασης.", IDC_SCREENS_USEPASSCHK, "button",
+    LTEXT           "Ξ»ΞµΟ€Ο„Ξ¬", IDC_MINTEXT, 70, 125, 26, 9
+    CONTROL         "ΞΞ±Ο„Ξ¬ Ο„Ξ· ΟƒΟ…Ξ½Ξ­Ο‡ΞΉΟƒΞ·, Ο€ΟΞΏΟƒΟ„Ξ±ΟƒΞ―Ξ± ΞΌΞµ ΞΊΟ‰Ξ΄ΞΉΞΊΟ Ο€ΟΟΟƒΞ²Ξ±ΟƒΞ·Ο‚.", IDC_SCREENS_USEPASSCHK, "button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
-    GROUPBOX        "Ενέργεια οθόνης", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
-    LTEXT           "Για ρύθμιση των χαρακτηριστικών εξοικονόμησης ενέργειας, κάντε κλικ στο κουμπί 'Ενέργεια'.",
+    GROUPBOX        "Ξ•Ξ½Ξ­ΟΞ³ΞµΞΉΞ± ΞΏΞΈΟΞ½Ξ·Ο‚", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
+    LTEXT           "Ξ“ΞΉΞ± ΟΟΞΈΞΌΞΉΟƒΞ· Ο„Ο‰Ξ½ Ο‡Ξ±ΟΞ±ΞΊΟ„Ξ·ΟΞΉΟƒΟ„ΞΉΞΊΟΞ½ ΞµΞΎΞΏΞΉΞΊΞΏΞ½ΟΞΌΞ·ΟƒΞ·Ο‚ ΞµΞ½Ξ­ΟΞ³ΞµΞΉΞ±Ο‚, ΞΊΞ¬Ξ½Ο„Ξµ ΞΊΞ»ΞΉΞΊ ΟƒΟ„ΞΏ ΞΊΞΏΟ…ΞΌΟ€Ξ― 'Ξ•Ξ½Ξ­ΟΞ³ΞµΞΉΞ±'.",
                     IDC_STATIC, 14, 166, 146, 20
-    PUSHBUTTON      "Ενέργεια...", IDC_SCREENS_POWER_BUTTON, 165, 171, 61, 13
+    PUSHBUTTON      "Ξ•Ξ½Ξ­ΟΞ³ΞµΞΉΞ±...", IDC_SCREENS_POWER_BUTTON, 165, 171, 61, 13
 END
 
-IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 204
+IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Εμφάνιση"
+CAPTION "Ξ•ΞΌΟ†Ξ¬Ξ½ΞΉΟƒΞ·"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
     LTEXT           "Visual Style", IDC_STATIC, 7, 130, 64, 7
     COMBOBOX        IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Συνδυασμός χρωμάτων", IDC_STATIC, 7, 160, 64, 7
+    LTEXT           "Ξ£Ο…Ξ½Ξ΄Ο…Ξ±ΟƒΞΌΟΟ‚ Ο‡ΟΟ‰ΞΌΞ¬Ο„Ο‰Ξ½", IDC_STATIC, 7, 160, 64, 7
     COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 170, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "ΞΞ­Ξ³ΞµΞΈΞΏΟ‚", IDC_STATIC, 7, 190, 64, 7
+    COMBOBOX        IDC_APPEARANCE_SIZE, 7, 200, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "&Effects...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
-    PUSHBUTTON      "Για προχωρημένους", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
+    PUSHBUTTON      "Ξ“ΞΉΞ± Ο€ΟΞΏΟ‡Ο‰ΟΞ·ΞΌΞ­Ξ½ΞΏΟ…Ο‚", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
 END
 
 IDD_ADVAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 250, 239
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Πρόσθετες ρυθμίσεις εμφάνισης"
+CAPTION "Ξ ΟΟΟƒΞΈΞµΟ„ΞµΟ‚ ΟΟ…ΞΈΞΌΞ―ΟƒΞµΞΉΟ‚ ΞµΞΌΟ†Ξ¬Ξ½ΞΉΟƒΞ·Ο‚"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
 
-    LTEXT "Αντικείμενο", 8, 5, 160, 50, 9
+    LTEXT "Ξ‘Ξ½Ο„ΞΉΞΊΞµΞ―ΞΌΞµΞ½ΞΏ", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT "Μέγεθος", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 21, 9
+    LTEXT "ΞΞ­Ξ³ΞµΞΈΞΏΟ‚", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 21, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
 
-    LTEXT   "Χρώμα 1", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
+    LTEXT   "Ξ§ΟΟΞΌΞ± 1", IDC_ADVAPPEARANCE_COLOR1_T, 184, 160, 40, 9
     CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR1_B, 184, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
-    LTEXT   "Χρώμα 2", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
+    LTEXT   "Ξ§ΟΟΞΌΞ± 2", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
     CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR2_B, 216, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
-    LTEXT "Γραμματοσειρά", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 8
+    LTEXT "Ξ“ΟΞ±ΞΌΞΌΞ±Ο„ΞΏΟƒΞµΞΉΟΞ¬", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 8
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT   "Μέγεθος", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 8
+    LTEXT   "ΞΞ­Ξ³ΞµΞΈΞΏΟ‚", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 8
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
 
-    LTEXT   "Χρώμα", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 20, 9
+    LTEXT   "Ξ§ΟΟΞΌΞ±", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 20, 9
     CHECKBOX   "", IDC_ADVAPPEARANCE_FONTCOLOR_B, 184, 200, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
     AUTOCHECKBOX   "B", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
     AUTOCHECKBOX   "I ", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE
 
-    PUSHBUTTON "Άκυρο", IDCANCEL, 191, 220, 50, 14
+    PUSHBUTTON "Ξ†ΞΊΟ…ΟΞΏ", IDCANCEL, 191, 220, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 137, 220, 50, 14
 END
 
@@ -123,24 +125,24 @@ END
 
 IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Ρυθμίσεις"
+CAPTION "Ξ΅Ο…ΞΈΞΌΞ―ΟƒΞµΞΉΟ‚"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Σύρετε τα εικονίδια της οθόνης, ώστε να ταιριάξουν με τη φυσική διάταξη των οθονών σας.",-1,3,3,240,20
+    LTEXT           "Ξ£ΟΟΞµΟ„Ξµ Ο„Ξ± ΞµΞΉΞΊΞΏΞ½Ξ―Ξ΄ΞΉΞ± Ο„Ξ·Ο‚ ΞΏΞΈΟΞ½Ξ·Ο‚, ΟΟƒΟ„Ξµ Ξ½Ξ± Ο„Ξ±ΞΉΟΞΉΞ¬ΞΎΞΏΟ…Ξ½ ΞΌΞµ Ο„Ξ· Ο†Ο…ΟƒΞΉΞΊΞ® Ξ΄ΞΉΞ¬Ο„Ξ±ΞΎΞ· Ο„Ο‰Ξ½ ΞΏΞΈΞΏΞ½ΟΞ½ ΟƒΞ±Ο‚.",-1,3,3,240,20
     CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,23,240,82,WS_EX_CLIENTEDGE
-    LTEXT           "&Εμφάνιση",1820,3,107,30,8
-    LTEXT           "<κανένα>",IDC_SETTINGS_DEVICE,9,116,224,8
-    GROUPBOX        "&Ανάλυση οθόνης",1818,3,127,115,43
+    LTEXT           "&Ξ•ΞΌΟ†Ξ¬Ξ½ΞΉΟƒΞ·",1820,3,107,30,8
+    LTEXT           "<ΞΊΞ±Ξ½Ξ­Ξ½Ξ±>",IDC_SETTINGS_DEVICE,9,116,224,8
+    GROUPBOX        "&Ξ‘Ξ½Ξ¬Ξ»Ο…ΟƒΞ· ΞΏΞΈΟΞ½Ξ·Ο‚",1818,3,127,115,43
     CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
                     TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
-    LTEXT           "Μικρότερη",1815,9,137,15,8,NOT WS_GROUP
-    LTEXT           "Μεγαλύτερη",1816,93,137,21,8,NOT WS_GROUP
+    LTEXT           "ΞΞΉΞΊΟΟΟ„ΞµΟΞ·",1815,9,137,15,8,NOT WS_GROUP
+    LTEXT           "ΞΞµΞ³Ξ±Ξ»ΟΟ„ΞµΟΞ·",1816,93,137,21,8,NOT WS_GROUP
     LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,157,100,10,NOT WS_GROUP | SS_CENTER
-    GROUPBOX        "&Ποιότητα χρώματος",1817,125,127,115,43
+    GROUPBOX        "&Ξ ΞΏΞΉΟΟ„Ξ·Ο„Ξ± Ο‡ΟΟΞΌΞ±Ο„ΞΏΟ‚",1817,125,127,115,43
     COMBOBOX        IDC_SETTINGS_BPP,131,137,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "",IDC_SETTINGS_SPECTRUM,"Static",SS_OWNERDRAW | SS_SUNKEN,131,155,103,9
-    PUSHBUTTON      "Για &προχωρημένους...",IDC_SETTINGS_ADVANCED,170,174,70,14
+    PUSHBUTTON      "Ξ“ΞΉΞ± &Ο€ΟΞΏΟ‡Ο‰ΟΞ·ΞΌΞ­Ξ½ΞΏΟ…Ο‚...",IDC_SETTINGS_ADVANCED,170,174,70,14
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX DISCARDABLE 0, 0, 253, 204
@@ -161,20 +163,20 @@ END
 
 IDR_PREVIEW_MENU MENU
 BEGIN
-    MENUITEM "Κανονικό",           ID_MENU_NORMAL
-    MENUITEM "Αενεργό",         ID_MENU_DISABLED
-    MENUITEM "Επιλεγμένο",         ID_MENU_SELECTED
+    MENUITEM "ΞΞ±Ξ½ΞΏΞ½ΞΉΞΊΟ",           ID_MENU_NORMAL
+    MENUITEM "Ξ‘ΞµΞ½ΞµΟΞ³Ο",         ID_MENU_DISABLED
+    MENUITEM "Ξ•Ο€ΞΉΞ»ΞµΞ³ΞΌΞ­Ξ½ΞΏ",         ID_MENU_SELECTED
 END
 
 IDM_MONITOR_MENU MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Προσκωλημένη",   ID_MENU_ATTACHED
-        MENUITEM "&Κύρια",    ID_MENU_PRIMARY
+        MENUITEM "&Ξ ΟΞΏΟƒΞΊΟ‰Ξ»Ξ·ΞΌΞ­Ξ½Ξ·",   ID_MENU_ATTACHED
+        MENUITEM "&ΞΟΟΞΉΞ±",    ID_MENU_PRIMARY
         MENUITEM SEPARATOR
-        MENUITEM "&Αναγνώρηση",   ID_MENU_IDENTIFY
-        MENUITEM "Ιδιότητες", ID_MENU_PROPERTIES
+        MENUITEM "&Ξ‘Ξ½Ξ±Ξ³Ξ½ΟΟΞ·ΟƒΞ·",   ID_MENU_IDENTIFY
+        MENUITEM "Ξ™Ξ΄ΞΉΟΟ„Ξ·Ο„ΞµΟ‚", ID_MENU_PROPERTIES
     END
 END
 
@@ -192,71 +194,72 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MULTIPLEMONITORS "(Πολλαπλές οθόνες)"
-    IDS_UNKNOWNMONITOR "(Άγνωστη οθόνη)"
-    IDS_ADVANCEDTITLEFMT "%s και %s"
+    IDS_MULTIPLEMONITORS "(Ξ ΞΏΞ»Ξ»Ξ±Ο€Ξ»Ξ­Ο‚ ΞΏΞΈΟΞ½ΞµΟ‚)"
+    IDS_UNKNOWNMONITOR "(Ξ†Ξ³Ξ½Ο‰ΟƒΟ„Ξ· ΞΏΞΈΟΞ½Ξ·)"
+    IDS_ADVANCEDTITLEFMT "%s ΞΊΞ±ΞΉ %s"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Οθόνη"
-    IDS_CPLDESCRIPTION "Παραμετροποιεί την επιφάνεια εργασίας και την προφύλαξη οθόνης."
-    IDS_NONE "(Κενό)"
-    IDS_CENTER "Κέντρο"
-    IDS_STRETCH "Παραμόρφωση"
-    IDS_TILE "Σε παράθεση"
+    IDS_CPLNAME "ΞΞΈΟΞ½Ξ·"
+    IDS_CPLDESCRIPTION "Ξ Ξ±ΟΞ±ΞΌΞµΟ„ΟΞΏΟ€ΞΏΞΉΞµΞ― Ο„Ξ·Ξ½ ΞµΟ€ΞΉΟ†Ξ¬Ξ½ΞµΞΉΞ± ΞµΟΞ³Ξ±ΟƒΞ―Ξ±Ο‚ ΞΊΞ±ΞΉ Ο„Ξ·Ξ½ Ο€ΟΞΏΟ†ΟΞ»Ξ±ΞΎΞ· ΞΏΞΈΟΞ½Ξ·Ο‚."
+    IDS_NONE "(ΞΞµΞ½Ο)"
+    IDS_CENTER "ΞΞ­Ξ½Ο„ΟΞΏ"
+    IDS_STRETCH "Ξ Ξ±ΟΞ±ΞΌΟΟΟ†Ο‰ΟƒΞ·"
+    IDS_TILE "Ξ£Ξµ Ο€Ξ±ΟΞ¬ΞΈΞµΟƒΞ·"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_COLOR_4BIT "16 χρώματα"
-    IDS_COLOR_8BIT "256 χρώματα"
-    IDS_COLOR_16BIT "Μέτρια (16 Bit)"
-    IDS_COLOR_24BIT "Υψηλή (24 Bit)"
-    IDS_COLOR_32BIT "Πολύ υψηλή (32 Bit)"
-    IDS_PIXEL "%lu επί %lu Pixel"
+    IDS_COLOR_4BIT "16 Ο‡ΟΟΞΌΞ±Ο„Ξ±"
+    IDS_COLOR_8BIT "256 Ο‡ΟΟΞΌΞ±Ο„Ξ±"
+    IDS_COLOR_16BIT "ΞΞ­Ο„ΟΞΉΞ± (16 Bit)"
+    IDS_COLOR_24BIT "Ξ¥ΟΞ·Ξ»Ξ® (24 Bit)"
+    IDS_COLOR_32BIT "Ξ ΞΏΞ»Ο Ο…ΟΞ·Ξ»Ξ® (32 Bit)"
+    IDS_PIXEL "%lu ΞµΟ€Ξ― %lu Pixel"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_BACKGROUND_COMDLG_FILTER "Εικόνες (*.bmp;*.dib)\0*.bmp;*.dib\0"
+    IDS_BACKGROUND_COMDLG_FILTER "Ξ•ΞΉΞΊΟΞ½ΞµΟ‚ (*.bmp;*.dib)\0*.bmp;*.dib\0"
     IDS_SUPPORTED_EXT "*.bmp;*.dib"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_INACTWIN "Ανενεργό παράθυρο"
-    IDS_ACTWIN   "Ενεργό παράθυρο"
-    IDS_WINTEXT  "Κείμενο σε παράθυρο"
-    IDS_MESSBOX  "Παράθυρο μηνύματος"
-    IDS_MESSTEXT "Κείμενο μυνήματος"
+    IDS_INACTWIN "Ξ‘Ξ½ΞµΞ½ΞµΟΞ³Ο Ο€Ξ±ΟΞ¬ΞΈΟ…ΟΞΏ"
+    IDS_ACTWIN   "Ξ•Ξ½ΞµΟΞ³Ο Ο€Ξ±ΟΞ¬ΞΈΟ…ΟΞΏ"
+    IDS_WINTEXT  "ΞΞµΞ―ΞΌΞµΞ½ΞΏ ΟƒΞµ Ο€Ξ±ΟΞ¬ΞΈΟ…ΟΞΏ"
+    IDS_MESSBOX  "Ξ Ξ±ΟΞ¬ΞΈΟ…ΟΞΏ ΞΌΞ·Ξ½ΟΞΌΞ±Ο„ΞΏΟ‚"
+    IDS_MESSTEXT "ΞΞµΞ―ΞΌΞµΞ½ΞΏ ΞΌΟ…Ξ½Ξ®ΞΌΞ±Ο„ΞΏΟ‚"
     IDS_BUTTEXT  "OK"
+    IDS_CLASSIC_THEME   "ΞΞ»Ξ±ΟƒΞΉΞΊΟ ΞΈΞ­ΞΌΞ±"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ELEMENT_1 "Επιφάνεια εργασίας"
-    IDS_ELEMENT_2 "Ανενεργή γραμμή τίτλου"
-    IDS_ELEMENT_3 "Πλαίσιο ανενεργού παραθύρου"
-    IDS_ELEMENT_4 "Ενεργή γραμμή τίτλου"
-    IDS_ELEMENT_5 "Πλαίσιο ενεργού παραθύρου"
-    IDS_ELEMENT_6 "Μενού"
-    IDS_ELEMENT_7 "Επιλεγμένα στοιχεία"
-    IDS_ELEMENT_8 "Παράθυρο"
-    IDS_ELEMENT_9 "Γραμμή κύλισης"
-    IDS_ELEMENT_10 "Αντικείμενα 3-Δ"
-    IDS_ELEMENT_11 "Τίτλος παλέτας"
-    IDS_ELEMENT_12 "Τίτλος εικονιδίου"
-    IDS_ELEMENT_13 "Γραμμή τίτλου"
-    IDS_ELEMENT_14 "Αενεργά στοιχεία μενού"
-    IDS_ELEMENT_15 "Παράθυρο μηνύματος"
-    IDS_ELEMENT_16 "Γραμμή κύλισης"
-    IDS_ELEMENT_17 "Φόντο εφαρμογών"
-    IDS_ELEMENT_18 "Μικρή γραμμή τίτλου"
-    IDS_ELEMENT_19 "Διάκενο εικονιδίων (οριζόντιο)"
-    IDS_ELEMENT_20 "Διάκενο εικονιδίων (κατακόρυφο)"
-    IDS_ELEMENT_21 "Γρήγορη επεξήγηση"
-    IDS_ELEMENT_22 "Εικονίδιο"
+    IDS_ELEMENT_1 "Ξ•Ο€ΞΉΟ†Ξ¬Ξ½ΞµΞΉΞ± ΞµΟΞ³Ξ±ΟƒΞ―Ξ±Ο‚"
+    IDS_ELEMENT_2 "Ξ‘Ξ½ΞµΞ½ΞµΟΞ³Ξ® Ξ³ΟΞ±ΞΌΞΌΞ® Ο„Ξ―Ο„Ξ»ΞΏΟ…"
+    IDS_ELEMENT_3 "Ξ Ξ»Ξ±Ξ―ΟƒΞΉΞΏ Ξ±Ξ½ΞµΞ½ΞµΟΞ³ΞΏΟ Ο€Ξ±ΟΞ±ΞΈΟΟΞΏΟ…"
+    IDS_ELEMENT_4 "Ξ•Ξ½ΞµΟΞ³Ξ® Ξ³ΟΞ±ΞΌΞΌΞ® Ο„Ξ―Ο„Ξ»ΞΏΟ…"
+    IDS_ELEMENT_5 "Ξ Ξ»Ξ±Ξ―ΟƒΞΉΞΏ ΞµΞ½ΞµΟΞ³ΞΏΟ Ο€Ξ±ΟΞ±ΞΈΟΟΞΏΟ…"
+    IDS_ELEMENT_6 "ΞΞµΞ½ΞΏΟ"
+    IDS_ELEMENT_7 "Ξ•Ο€ΞΉΞ»ΞµΞ³ΞΌΞ­Ξ½Ξ± ΟƒΟ„ΞΏΞΉΟ‡ΞµΞ―Ξ±"
+    IDS_ELEMENT_8 "Ξ Ξ±ΟΞ¬ΞΈΟ…ΟΞΏ"
+    IDS_ELEMENT_9 "Ξ“ΟΞ±ΞΌΞΌΞ® ΞΊΟΞ»ΞΉΟƒΞ·Ο‚"
+    IDS_ELEMENT_10 "Ξ‘Ξ½Ο„ΞΉΞΊΞµΞ―ΞΌΞµΞ½Ξ± 3-Ξ”"
+    IDS_ELEMENT_11 "Ξ¤Ξ―Ο„Ξ»ΞΏΟ‚ Ο€Ξ±Ξ»Ξ­Ο„Ξ±Ο‚"
+    IDS_ELEMENT_12 "Ξ¤Ξ―Ο„Ξ»ΞΏΟ‚ ΞµΞΉΞΊΞΏΞ½ΞΉΞ΄Ξ―ΞΏΟ…"
+    IDS_ELEMENT_13 "Ξ“ΟΞ±ΞΌΞΌΞ® Ο„Ξ―Ο„Ξ»ΞΏΟ…"
+    IDS_ELEMENT_14 "Ξ‘ΞµΞ½ΞµΟΞ³Ξ¬ ΟƒΟ„ΞΏΞΉΟ‡ΞµΞ―Ξ± ΞΌΞµΞ½ΞΏΟ"
+    IDS_ELEMENT_15 "Ξ Ξ±ΟΞ¬ΞΈΟ…ΟΞΏ ΞΌΞ·Ξ½ΟΞΌΞ±Ο„ΞΏΟ‚"
+    IDS_ELEMENT_16 "Ξ“ΟΞ±ΞΌΞΌΞ® ΞΊΟΞ»ΞΉΟƒΞ·Ο‚"
+    IDS_ELEMENT_17 "Ξ¦ΟΞ½Ο„ΞΏ ΞµΟ†Ξ±ΟΞΌΞΏΞ³ΟΞ½"
+    IDS_ELEMENT_18 "ΞΞΉΞΊΟΞ® Ξ³ΟΞ±ΞΌΞΌΞ® Ο„Ξ―Ο„Ξ»ΞΏΟ…"
+    IDS_ELEMENT_19 "Ξ”ΞΉΞ¬ΞΊΞµΞ½ΞΏ ΞµΞΉΞΊΞΏΞ½ΞΉΞ΄Ξ―Ο‰Ξ½ (ΞΏΟΞΉΞ¶ΟΞ½Ο„ΞΉΞΏ)"
+    IDS_ELEMENT_20 "Ξ”ΞΉΞ¬ΞΊΞµΞ½ΞΏ ΞµΞΉΞΊΞΏΞ½ΞΉΞ΄Ξ―Ο‰Ξ½ (ΞΊΞ±Ο„Ξ±ΞΊΟΟΟ…Ο†ΞΏ)"
+    IDS_ELEMENT_21 "Ξ“ΟΞ®Ξ³ΞΏΟΞ· ΞµΟ€ΞµΞΎΞ®Ξ³Ξ·ΟƒΞ·"
+    IDS_ELEMENT_22 "Ξ•ΞΉΞΊΞΏΞ½Ξ―Ξ΄ΞΉΞΏ"
 END
 
 STRINGTABLE DISCARDABLE

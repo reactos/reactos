@@ -1,4 +1,4 @@
-/* TRANSLATOR :  Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+﻿/* TRANSLATOR :  Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  30-05-2008
  * LAST CHANGE:  31-05-2010
  */
@@ -37,26 +37,26 @@ STRINGTABLE
 BEGIN
     IDS_DEV_NO_PROBLEM "Toto zariadenie pracuje správne."
     IDS_DEV_NOT_CONFIGURED "Toto zariadenie nie je správne nastavené."
-    IDS_DEV_DEVLOADER_FAILED "ReactOS  could not load the driver for this device because the computer is reporting two $1 bus types."
-    IDS_DEV_DEVLOADER_FAILED2 "The $1 device loader(s) for this device could not load the device driver."
+    IDS_DEV_DEVLOADER_FAILED "ReactOS  could not load the driver for this device because the computer is reporting two %1 bus types."
+    IDS_DEV_DEVLOADER_FAILED2 "The %1 device loader(s) for this device could not load the device driver."
     IDS_DEV_OUT_OF_MEMORY "The driver for this device may be bad, or your system may be running low on memory or other resources."
     IDS_DEV_ENTRY_IS_WRONG_TYPE "This device is not working properly because one of its drivers may be bad, or your registry may be bad."
     IDS_DEV_LACKED_ARBITRATOR "The driver for this device requested a resource that ReactOS does not know how to handle."
     IDS_DEV_BOOT_CONFIG_CONFLICT "Iné zariadenie používa prostriedky, ktoré potrebuje toto zariadenie."
     IDS_DEV_FAILED_FILTER "The drivers for this device need to be reinstalled."
-    IDS_DEV_DEVLOADER_NOT_FOUND "This device is not working properly because ReactOS cannot load the file $1 that loads the drivers for the device."
-    IDS_DEV_DEVLOADER_NOT_FOUND2 "This device is not working properly because the file $1 that loads the drivers for this device is bad."
+    IDS_DEV_DEVLOADER_NOT_FOUND "This device is not working properly because ReactOS cannot load the file %1 that loads the drivers for the device."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "This device is not working properly because the file %1 that loads the drivers for this device is bad."
     IDS_DEV_DEVLOADER_NOT_FOUND3 "Device failure: Try changing the driver for this device. If that doesn't work, see your hardware documentation."
     IDS_DEV_INVALID_DATA "This device is not working properly because the BIOS in your computer is reporting the resources for the device incorrectly."
     IDS_DEV_INVALID_DATA2 "This device is not working properly because the BIOS in the device is reporting the resources for the device incorrectly. "
     IDS_DEV_FAILED_START "This device is either not present, not working properly, or does not have all the drivers installed."
     IDS_DEV_LIAR "ReactOS stopped responding while attempting to start this device, and therefore will never attempt to start this device again."
-    IDS_DEV_NORMAL_CONFLICT "This device cannot find any free $1 resources to use."
+    IDS_DEV_NORMAL_CONFLICT "This device cannot find any free %1 resources to use."
     IDS_DEV_NOT_VERIFIED "This device is either not present, not working properly, or does not have all the drivers installed."
     IDS_DEV_NEED_RESTART "Toto zariadenie nemože správne pracovať, kým nereštartujete počítač."
     IDS_DEV_REENUMERATION "This device is causing a resource conflict."
     IDS_DEV_PARTIAL_LOG_CONF "ReactOS could not identify all the resources this device uses."
-    IDS_DEV_UNKNOWN_RESOURCE "The driver information file $1 is telling this child device to use a resource that the parent device does not have or recognize."
+    IDS_DEV_UNKNOWN_RESOURCE "The driver information file %1 is telling this child device to use a resource that the parent device does not have or recognize."
     IDS_DEV_REINSTALL "Je potrebné preinštalovať ovládače pre toto zariadenie."
     IDS_DEV_REGISTRY "Your registry may be bad."
     IDS_DEV_WILL_BE_REMOVED "ReactOS is removing this device."
@@ -72,7 +72,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "The drivers for this device are not installed."
     IDS_DEV_HARDWARE_DISABLED "This device is disabled because the BIOS for the device did not give it any resources."
     IDS_DEV_CANT_SHARE_IRQ "This device is using an Interrupt Request (IRQ) resource that is in use by another device and cannot be shared.\nYou must change the conflicting setting or remove the real-mode driver causing the conflict."
-    IDS_DEV_FAILED_ADD "This device is not working properly because $1 is not working properly."
+    IDS_DEV_FAILED_ADD "This device is not working properly because %1 is not working properly."
     IDS_DEV_DISABLED_SERVICE "ReactOS cannot install the drivers for this device because it cannot access the drive or network location that has the setup files on it."
     IDS_DEV_TRANSLATION_FAILED "This device isn't responding to its driver."
     IDS_DEV_NO_SOFTCONFIG "ReactOS cannot determine the settings for this device. Consult the documentation that came with this device and use the Resource tab to set the configuration."

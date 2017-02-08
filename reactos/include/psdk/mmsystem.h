@@ -31,7 +31,9 @@ extern "C" {
 #define TIME_SMPTE             8
 #define TIME_MIDI              16
 #define TIME_TICKS             32
+#ifndef MAKEFOURCC
 #define MAKEFOURCC(c0,c1,c2,c3) ((DWORD)(BYTE)(c0)|((DWORD)(BYTE)(c1)<<8)|((DWORD)(BYTE)(c2)<<16)|((DWORD)(BYTE)(c3)<<24))
+#endif
 #ifndef mmioFOURCC
 #define mmioFOURCC(c0,c1,c2,c3) MAKEFOURCC(c0,c1,c2,c3)
 #endif

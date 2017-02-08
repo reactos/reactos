@@ -8,6 +8,34 @@ typedef struct tagCURICON_PROCESS
   PPROCESSINFO Process;
 } CURICON_PROCESS, *PCURICON_PROCESS;
 
+#ifdef NEW_CURSORICON
+typedef struct _CURICON_OBJECT
+{
+   PROCMARKHEAD head;
+   struct _tagCURSOR* pcurNext;
+   UNICODE_STRING strName;
+   USHORT atomModName;
+   USHORT rt;
+   ULONG CURSORF_flags;
+   SHORT xHotspot;
+   SHORT yHotspot;
+   HBITMAP hbmMask;
+   HBITMAP hbmColor;
+   HBITMAP hbmAlpha;
+   RECT rcBounds;
+   HBITMAP hbmUserAlpha;
+   ULONG bpp;
+   ULONG cx;
+   ULONG cy;
+/* ReactOS specific, to be deleted */
+  LIST_ENTRY ListEntry;
+  HANDLE Self;
+  LIST_ENTRY ProcessList;
+  UNICODE_STRING ustrModule;
+} CURICON_OBJECT, *PCURICON_OBJECT;
+
+#else
+
 typedef struct _CURICON_OBJECT
 {
   PROCMARKHEAD head;
@@ -21,6 +49,7 @@ typedef struct _CURICON_OBJECT
   BYTE Shadow;
   ICONINFO IconInfo;
 } CURICON_OBJECT, *PCURICON_OBJECT;
+#endif
 
 typedef struct _CURSORACCELERATION_INFO
 {
@@ -62,7 +91,7 @@ typedef struct _SYSTEM_CURSORINFO
 } SYSTEM_CURSORINFO, *PSYSTEM_CURSORINFO;
 
 BOOL InitCursorImpl(VOID);
-PCURICON_OBJECT IntCreateCurIconHandle(VOID);
+PCURICON_OBJECT IntCreateCurIconHandle(DWORD dwNumber);
 VOID FASTCALL IntCleanupCurIcons(struct _EPROCESS *Process, PPROCESSINFO Win32Process);
 
 BOOL UserDrawIconEx(HDC hDc, INT xLeft, INT yTop, PCURICON_OBJECT pIcon, INT cxWidth,

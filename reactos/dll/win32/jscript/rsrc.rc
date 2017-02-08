@@ -16,11 +16,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* @makedep: jscript.inf */
-REGINST REGINST jscript.inf
+/* @makedep: jscript.rgs */
+2 WINE_REGISTRY jscript.rgs
+
+3 WINE_REGISTRY jscript_classes.rgs
 
 /* @makedep: jsglobal.tlb */
 1 TYPELIB jsglobal.tlb
+
+#define WINE_FILEDESCRIPTION_STR "Wine JScript"
+#define WINE_FILENAME_STR "jscript.dll"
+#define WINE_FILEVERSION 5,7,7601,16982
+#define WINE_FILEVERSION_STR "5.8.7601.16982"
+#define WINE_PRODUCTVERSION 5,8,7601,16982
+#define WINE_PRODUCTVERSION_STR "5.8.7601.16982"
+
+#include "wine/wine_common_ver.rc"
 
 #ifdef LANGUAGE_EN_US
     #include "jscript_En.rc"
@@ -41,6 +52,9 @@ REGINST REGINST jscript.inf
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "jscript_Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "jscript_He.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
     #include "jscript_Hu.rc"

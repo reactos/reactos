@@ -1,6 +1,4 @@
 
-set_rc_compiler()
-
 list(APPEND SOURCE
     dialog.c
     misc.c
@@ -9,7 +7,6 @@ list(APPEND SOURCE
     sndvol32.rc)
 
 add_executable(sndvol32 ${SOURCE})
-
 set_module_type(sndvol32 win32gui UNICODE)
 add_importlibs(sndvol32 user32 advapi32 gdi32 comctl32 shell32 winmm msvcrt kernel32 ntdll)
 add_pch(sndvol32 sndvol32.h)

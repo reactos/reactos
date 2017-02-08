@@ -1,6 +1,3 @@
-#include "resource.h"
-#include <windows.h>
-
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
 #endif
@@ -37,6 +34,9 @@
 
 // UTF-8
 #pragma code_page(65001)
+#ifdef LANGUAGE_HE_IL
+    #include "lang/he-IL.rc"
+#endif
 #ifdef LANGUAGE_PL_PL
     #include "lang/pl-PL.rc"
 #endif

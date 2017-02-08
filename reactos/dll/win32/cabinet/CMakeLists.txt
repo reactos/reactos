@@ -19,7 +19,7 @@ list(APPEND SOURCE
 
 add_library(cabinet SHARED ${SOURCE})
 
-set_module_type(cabinet win32dll ENTRYPOINT 0)
+set_module_type(cabinet win32dll)
 target_link_libraries(cabinet wine zlib)
 add_importlibs(cabinet msvcrt kernel32 ntdll)
 

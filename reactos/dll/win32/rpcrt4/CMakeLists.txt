@@ -27,22 +27,24 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/rpcrt4_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/rpcrt4.def)
 
-if(MSVC)
-    list(APPEND SOURCE msvc.S)
-endif()
-
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(
+    -D__WINESRC__
     -D_RPCRT4_
     -DCOM_NO_WINDOWS_H
     -DMSWMSG)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+if(MSVC)
+    add_asm_files(rpcrt4_asm msvc.S)
+endif()
+
 add_library(rpcrt4 SHARED
     ${SOURCE}
+    ${rpcrt4_asm}
     rpcrt4.rc)
 
 set_module_type(rpcrt4 win32dll)

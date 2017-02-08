@@ -19,15 +19,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 #define COBJMACROS
 
-#include "winbase.h"
-#include "wingdi.h"
+//#include "winbase.h"
+//#include "wingdi.h"
 
 #include "amstream_private.h"
-#include "amstream.h"
+#include <amstream.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(amstream);
 

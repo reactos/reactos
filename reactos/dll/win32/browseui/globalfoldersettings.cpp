@@ -30,10 +30,11 @@ CGlobalFolderSettings::~CGlobalFolderSettings()
 
 HRESULT STDMETHODCALLTYPE CGlobalFolderSettings::Get(DEFFOLDERSETTINGS *paramC, int param10)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CGlobalFolderSettings::Set(const DEFFOLDERSETTINGS *paramC, int param10, unsigned int param14)
+HRESULT STDMETHODCALLTYPE CGlobalFolderSettings::Set(
+    const DEFFOLDERSETTINGS *paramC, int param10, unsigned int param14)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }

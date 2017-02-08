@@ -18,7 +18,7 @@
 
 #include "urlmon_main.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
@@ -26,30 +26,30 @@ HRESULT CALLBACK IWinInetHttpInfo_QueryInfo_Proxy(IWinInetHttpInfo* This,
     DWORD dwOption, LPVOID pBuffer, DWORD *pcbBuf, DWORD *pdwFlags,
     DWORD *pdwReserved)
 {
-    FIXME("stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p %x %p %p %p %p)\n", This, dwOption, pBuffer, pcbBuf, pdwFlags, pdwReserved);
+    return IWinInetHttpInfo_RemoteQueryInfo_Proxy(This, dwOption, pBuffer, pcbBuf, pdwFlags, pdwReserved);
 }
 
 HRESULT __RPC_STUB IWinInetHttpInfo_QueryInfo_Stub(IWinInetHttpInfo* This,
     DWORD dwOption, BYTE *pBuffer, DWORD *pcbBuf, DWORD *pdwFlags,
     DWORD *pdwReserved)
 {
-    FIXME("stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p %x %p %p %p %p)\n", This, dwOption, pBuffer, pcbBuf, pdwFlags, pdwReserved);
+    return IWinInetHttpInfo_QueryInfo(This, dwOption, pBuffer, pcbBuf, pdwFlags, pdwReserved);
 }
 
 HRESULT CALLBACK IWinInetInfo_QueryOption_Proxy(IWinInetInfo* This,
         DWORD dwOption, LPVOID pBuffer, DWORD *pcbBuf)
 {
-    FIXME("stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p %x %p %p)\n", This, dwOption, pBuffer, pcbBuf);
+    return IWinInetInfo_RemoteQueryOption_Proxy(This, dwOption, pBuffer, pcbBuf);
 }
 
 HRESULT __RPC_STUB IWinInetInfo_QueryOption_Stub(IWinInetInfo* This,
         DWORD dwOption, BYTE *pBuffer, DWORD *pcbBuf)
 {
-    FIXME("stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p %x %p %p)\n", This, dwOption, pBuffer, pcbBuf);
+    return IWinInetInfo_QueryOption(This, dwOption, pBuffer, pcbBuf);
 }
 
 HRESULT CALLBACK IBindHost_MonikerBindToStorage_Proxy(IBindHost* This,
@@ -145,18 +145,4 @@ HRESULT __RPC_STUB IBinding_GetBindResult_Stub(IBinding* This,
 {
     FIXME("stub\n");
     return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE IWindowForBindingUI_GetWindow_Proxy(
-        IWindowForBindingUI* This, REFGUID rguidReason, HWND *phwnd)
-{
-    FIXME("stub\n");
-    return E_NOTIMPL;
-}
-
-void __RPC_STUB IWindowForBindingUI_GetWindow_Stub(IRpcStubBuffer* This,
-        IRpcChannelBuffer* pRpcChannelBuffer, PRPC_MESSAGE pRpcMessage,
-        DWORD* pdwStubPhase)
-{
-    FIXME("stub\n");
 }

@@ -48,7 +48,7 @@ BEGIN
 END
 
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_TAB_GENERAL         "General"
     IDS_TAB_DISPLAY         "Display"

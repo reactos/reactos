@@ -1020,6 +1020,9 @@ CUSBRequest::BuildBulkInterruptTransferDescriptor(
     {
         // get buffer base
         m_Base = MmGetMdlVirtualAddress(m_TransferBufferMDL);
+
+        // sanity check
+        ASSERT(m_Base != NULL);
     }
 
     // get new buffer offset

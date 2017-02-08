@@ -20,17 +20,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 %}
-%option noinput nounput interactive 8bit
+%option noinput nounput never-interactive 8bit
 %x quote
 %{
 #include "config.h"
 #include <assert.h>
 #include <stdarg.h>
 
-#ifndef HAVE_UNISTD_H
 #define YY_NO_UNISTD_H
-#endif
-
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"

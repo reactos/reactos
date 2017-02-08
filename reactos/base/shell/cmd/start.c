@@ -11,7 +11,7 @@
  *        Remove all hardcode string to En.rc
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 #ifdef INCLUDE_CMD_START
 
@@ -193,9 +193,11 @@ INT cmd_start (LPTSTR Rest)
 	{
 		if (size > MAX_PATH)
 		{
+			LPTSTR Oldcomspec = comspec;
 			comspec = cmd_realloc(comspec,size * sizeof(TCHAR) );
 			if (comspec==NULL)
 			{
+				cmd_free(Oldcomspec);
 				return 1;
 			}
 			size = GetEnvironmentVariable (_T("COMSPEC"), comspec, size);

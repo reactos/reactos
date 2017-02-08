@@ -1,5 +1,3 @@
-#define WIN32_NO_STATUS
-#include <windows.h>
 #include <ndk/umtypes.h>
 #include <ndk/rtlfuncs.h>
 #include <string.h>

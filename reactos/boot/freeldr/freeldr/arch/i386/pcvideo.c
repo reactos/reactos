@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  *  FreeLoader
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -18,6 +17,7 @@
  */
 
 #include <freeldr.h>
+#include <suppress.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -909,7 +909,7 @@ PcVideoSetDisplayMode(char *DisplayModeName, BOOLEAN Init)
         }
       else
         {
-          VideoMode = atoi(DisplayModeName);
+          VideoMode = (USHORT)strtoul(DisplayModeName, NULL, 0);
         }
     }
 
@@ -1048,6 +1048,7 @@ PcVideoClearScreen(UCHAR Attr)
        BufPtr < (USHORT *) (VIDEOTEXT_MEM_ADDRESS + VIDEOTEXT_MEM_SIZE);
        BufPtr++)
     {
+      _PRAGMA_WARNING_SUPPRESS(__WARNING_DEREF_NULL_PTR)
       *BufPtr = AttrChar;
     }
 }

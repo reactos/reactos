@@ -23,6 +23,10 @@ Description = Librerias Visual Basic 5.
 Licence = Inconnue
 Description = Bibliothèque Visual Basic 5.
 
+[Section.0413]
+Licence = Ongekend
+Description = Visual Basic 5 Runtime. Bevat: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
+
 [Section.0415]
 Licence = Nieznana
 Description = Biblioteki uruchomieniowe Visual Basic 5.
@@ -30,8 +34,12 @@ Description = Biblioteki uruchomieniowe Visual Basic 5.
 [Section.0418]
 Licence = Necunoscută
 Description = Visual Basic 5 Runtime. Conține: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
-Size = 969.59ko
+Size = 969,59 ko
 
 [Section.0422]
 Licence = Невідома
 Description = Бібліотеки Visual Basic 5.
+
+[Section.0813]
+Licence = Ongekend
+Description = Visual Basic 5 Runtime. Bevat: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.

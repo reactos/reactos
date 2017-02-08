@@ -8,7 +8,6 @@
 
 #include "rapps.h"
 
-
 static
 INT_PTR CALLBACK
 AboutDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)

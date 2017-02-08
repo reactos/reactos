@@ -523,11 +523,9 @@ APIENTRY
 NtGdiGetTextMetricsW(
     IN HDC hDC,
     OUT TMW_INTERNAL * pUnsafeTmwi,
-    IN ULONG cj
-)
+    IN ULONG cj)
 {
     TMW_INTERNAL Tmwi;
-    NTSTATUS Status = STATUS_SUCCESS;
 
     if ( cj <= sizeof(TMW_INTERNAL) )
     {
@@ -540,15 +538,11 @@ NtGdiGetTextMetricsW(
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                Status = _SEH2_GetExceptionCode();
+                SetLastNtError(_SEH2_GetExceptionCode());
+                _SEH2_YIELD(return FALSE);
             }
             _SEH2_END
 
-            if (!NT_SUCCESS(Status))
-            {
-                SetLastNtError(Status);
-                return FALSE;
-            }
             return TRUE;
         }
     }

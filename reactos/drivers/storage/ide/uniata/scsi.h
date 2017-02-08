@@ -98,6 +98,19 @@ typedef union _CDB {
         UCHAR Control;
     } ERASE, *PERASE;
 
+    struct _ERASE10 {
+        UCHAR OperationCode;
+        UCHAR Reserved : 1;
+        UCHAR Immediate : 1;
+        UCHAR ERA : 1;
+        UCHAR Reserved1 : 2;
+        UCHAR Lun : 3;
+        UCHAR LBA[4];
+        UCHAR Reserved2;
+        UCHAR TransferBlocks[2];
+        UCHAR Control;
+    } ERASE10, *PERASE10;
+
 #define FormatUnit_Code_Mask    0x07
 #define FormatUnit_Cmp          0x08
 #define FormatUnit_Fmt          0x10
@@ -131,6 +144,14 @@ typedef union _CDB {
         UCHAR TransferBlocks[2];
         UCHAR Control;
     } CDB10, *PCDB10;
+
+    // Service Action 16-byte CDB
+    struct _SERVICE_ACTION16 {
+        UCHAR OperationCode; // 0x9E
+        UCHAR ServiceAction : 5;
+        UCHAR Reserved1 : 3;
+        UCHAR Data[14];
+    } SERVICE_ACTION16, *PSERVICE_ACTION16;
 
     // CD Rom Audio CDBs
 
@@ -371,12 +392,21 @@ typedef union _CDB {
         UCHAR Immediate: 1;
         UCHAR Reserved1 : 4;
         UCHAR Lun : 3;
-        UCHAR Reserved2[2];
+        UCHAR Reserved2;
+        UCHAR FormatLayerNumber : 2;
+        UCHAR Reserved2_2 : 6;
         UCHAR Start : 1;
         UCHAR LoadEject : 1;
-        UCHAR Reserved3 : 6;
+        UCHAR FL : 1;
+        UCHAR Reserved3 : 1;
+        UCHAR PowerConditions : 4;
         UCHAR Control;
     } START_STOP, *PSTART_STOP;
+
+#define StartStop_Power_NoChg    0x00
+#define StartStop_Power_Idle     0x02
+#define StartStop_Power_Standby  0x03
+#define StartStop_Power_Sleep    0x05
 
     struct _MEDIA_REMOVAL {
         UCHAR OperationCode;
@@ -664,6 +694,14 @@ typedef union _CDB {
         UCHAR Control;
     } SET_READ_AHEAD, *PSET_READ_AHEAD;
 
+    struct _REPORT_LUNS {
+        UCHAR OperationCode;    // 0xA0 - SCSIOP_REPORT_LUNS
+        UCHAR Reserved1[5];
+        UCHAR AllocationLength[4];
+        UCHAR Reserved2[1];
+        UCHAR Control;
+    } REPORT_LUNS, *PREPORT_LUNS;
+
 #define SendOpc_DoOpc   0x01
 
     struct _SEND_OPC_INFO {
@@ -709,6 +747,26 @@ typedef union _CDB {
         UCHAR NumOfBlocks [4];
         UCHAR Reserved1[2];
     } CDB12READWRITE, *PCDB12READWRITE;
+
+    struct _CDB16READWRITE {
+        UCHAR OperationCode;
+        union {
+            UCHAR Flags;
+            struct {
+                UCHAR RELADR    : 1;
+                UCHAR Reserved0 : 2;
+                UCHAR FUA       : 1;
+                UCHAR DPO       : 1;
+                UCHAR Reserved1 : 3;
+            } Fields;
+        } Byte1;
+        UCHAR LBA [8];
+        UCHAR NumOfBlocks [4];
+        UCHAR GroupNumber:5;
+        UCHAR Reserved14_5_6:2;
+        UCHAR Restricted:1; // MMC-4
+        UCHAR Reserved1[1];
+    } CDB16READWRITE, *PCDB16READWRITE;
 
     // Plextor Read CD-DA
     struct _PLXTR_READ_CDDA {
@@ -853,6 +911,14 @@ typedef union _CDB {
 #define SCSIOP_CLOSE_TRACK_SESSION  0x5B
 #define SCSIOP_READ_BUFFER_CAPACITY 0x5C
 #define SCSIOP_SEND_CUE_SHEET       0x5D
+#define SCSIOP_READ16               0x88
+#define SCSIOP_WRITE16              0x8A
+#define SCSIOP_VERIFY16             0x8F
+#define SCSIOP_SERVICE_ACTION16     0x9E
+
+  #define SCSIOP_SA_READ_CAPACITY16     0x10
+
+#define SCSIOP_REPORT_LUNS          0xA0
 #define SCSIOP_BLANK                0xA1
 #define SCSIOP_SEND_KEY             0xA3
 #define SCSIOP_REPORT_KEY           0xA4
@@ -861,6 +927,7 @@ typedef union _CDB {
 #define SCSIOP_SET_READ_AHEAD       0xA7
 #define SCSIOP_READ12               0xA8
 #define SCSIOP_WRITE12              0xAA
+#define SCSIOP_VERIFY12             0xAF
 #define SCSIOP_SEEK12               0xAB
 #define SCSIOP_GET_PERFORMANCE      0xAC
 #define SCSIOP_READ_DVD_STRUCTURE   0xAD
@@ -1033,9 +1100,14 @@ typedef struct _INQUIRYDATA {
     UCHAR Wide16Bit : 1;
     UCHAR Wide32Bit : 1;
     UCHAR RelativeAddressing : 1;
-    UCHAR VendorId[8];
-    UCHAR ProductId[16];
-    UCHAR ProductRevisionLevel[4];
+    union {
+    UCHAR DeviceIdentificationString[28];
+        struct {
+            UCHAR VendorId[8];
+            UCHAR ProductId[16];
+            UCHAR ProductRevisionLevel[4];
+        };
+    };
     UCHAR VendorSpecific[20];
     UCHAR Reserved3[40];
 } INQUIRYDATA, *PINQUIRYDATA;
@@ -1344,6 +1416,9 @@ typedef struct _SENSE_DATA {
 #define IOCTL_SCSI_MINIPORT_ENABLE_DISABLE_AUTOSAVE ((FILE_DEVICE_SCSI << 16) + 0x0507)
 #define IOCTL_SCSI_MINIPORT_SAVE_ATTRIBUTE_VALUES   ((FILE_DEVICE_SCSI << 16) + 0x0508)
 #define IOCTL_SCSI_MINIPORT_EXECUTE_OFFLINE_DIAGS   ((FILE_DEVICE_SCSI << 16) + 0x0509)
+#define IOCTL_SCSI_MINIPORT_ENABLE_DISABLE_AUTO_OFFLINE ((FILE_DEVICE_SCSI << 16) + 0x050a)
+#define IOCTL_SCSI_MINIPORT_READ_SMART_LOG              ((FILE_DEVICE_SCSI << 16) + 0x050b)
+#define IOCTL_SCSI_MINIPORT_WRITE_SMART_LOG             ((FILE_DEVICE_SCSI << 16) + 0x050c)
 
 // Read Capacity Data - returned in Big Endian format
 
@@ -1351,6 +1426,15 @@ typedef struct _READ_CAPACITY_DATA {
     ULONG LogicalBlockAddress;
     ULONG BytesPerBlock;
 } READ_CAPACITY_DATA, *PREAD_CAPACITY_DATA;
+
+typedef struct _READ_CAPACITY16_DATA {
+    ULONGLONG LogicalBlockAddress;
+    ULONG BytesPerBlock;
+    UCHAR Prot_EN:1;
+    UCHAR RTO_EN:1;
+    UCHAR Reserved:6;
+    UCHAR Reserved1[20];
+} READ_CAPACITY16_DATA, *PREAD_CAPACITY16_DATA;
 
 // CD ROM Read Table Of Contents (TOC) structures
 // Format 0 - Get table of contents
@@ -2843,6 +2927,12 @@ typedef struct _DVD_RPC_KEY {
     UCHAR RpcScheme;
     UCHAR Reserved2[1];
 } DVD_RPC_KEY, * PDVD_RPC_KEY;
+
+typedef struct _REPORT_LUNS_INFO_HDR {
+    UCHAR ListLength[4];
+    UCHAR Reserved[4];
+} REPORT_LUNS_INFO_HDR, *PREPORT_LUNS_INFO_HDR;
+
 
 #pragma pack(pop)
 

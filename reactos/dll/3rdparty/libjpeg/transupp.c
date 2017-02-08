@@ -1,7 +1,7 @@
 /*
  * transupp.c
  *
- * Copyright (C) 1997-2009, Thomas G. Lane, Guido Vollbeding.
+ * Copyright (C) 1997-2012, Thomas G. Lane, Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -771,7 +771,7 @@ jt_read_integer (const char ** strptr, JDIMENSION * result)
  * The routine returns TRUE if the spec string is valid, FALSE if not.
  *
  * The crop spec string should have the format
- *	<width>x<height>{+-}<xoffset>{+-}<yoffset>
+ *	<width>[f]x<height>[f]{+-}<xoffset>{+-}<yoffset>
  * where width, height, xoffset, and yoffset are unsigned integers.
  * Each of the elements can be omitted to indicate a default value.
  * (A weakness of this style is that it is not possible to omit xoffset
@@ -793,14 +793,22 @@ jtransform_parse_crop_spec (jpeg_transform_info *info, const char *spec)
     /* fetch width */
     if (! jt_read_integer(&spec, &info->crop_width))
       return FALSE;
-    info->crop_width_set = JCROP_POS;
+    if (*spec == 'f' || *spec == 'F') {
+      spec++;
+      info->crop_width_set = JCROP_FORCE;
+    } else
+      info->crop_width_set = JCROP_POS;
   }
-  if (*spec == 'x' || *spec == 'X') {	
+  if (*spec == 'x' || *spec == 'X') {
     /* fetch height */
     spec++;
     if (! jt_read_integer(&spec, &info->crop_height))
       return FALSE;
-    info->crop_height_set = JCROP_POS;
+    if (*spec == 'f' || *spec == 'F') {
+      spec++;
+      info->crop_height_set = JCROP_FORCE;
+    } else
+      info->crop_height_set = JCROP_POS;
   }
   if (*spec == '+' || *spec == '-') {
     /* fetch xoffset */
@@ -980,10 +988,16 @@ jtransform_request_workspace (j_decompress_ptr srcinfo,
     else
       yoffset = info->crop_yoffset;
     /* Now adjust so that upper left corner falls at an iMCU boundary */
-    info->output_width =
-      info->crop_width + (xoffset % info->iMCU_sample_width);
-    info->output_height =
-      info->crop_height + (yoffset % info->iMCU_sample_height);
+    if (info->crop_width_set == JCROP_FORCE)
+      info->output_width = info->crop_width;
+    else
+      info->output_width =
+        info->crop_width + (xoffset % info->iMCU_sample_width);
+    if (info->crop_height_set == JCROP_FORCE)
+      info->output_height = info->crop_height;
+    else
+      info->output_height =
+        info->crop_height + (yoffset % info->iMCU_sample_height);
     /* Save x/y offsets measured in iMCUs */
     info->x_crop_offset = xoffset / info->iMCU_sample_width;
     info->y_crop_offset = yoffset / info->iMCU_sample_height;
@@ -1062,7 +1076,7 @@ jtransform_request_workspace (j_decompress_ptr srcinfo,
   if (need_workspace) {
     coef_arrays = (jvirt_barray_ptr *)
       (*srcinfo->mem->alloc_small) ((j_common_ptr) srcinfo, JPOOL_IMAGE,
-		SIZEOF(jvirt_barray_ptr) * info->num_components);
+	SIZEOF(jvirt_barray_ptr) * info->num_components);
     width_in_iMCUs = (JDIMENSION)
       jdiv_round_up((long) info->output_width,
 		    (long) info->iMCU_sample_width);

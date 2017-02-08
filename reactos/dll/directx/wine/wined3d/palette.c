@@ -18,11 +18,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include "config.h"
-#include "winerror.h"
-#include "wine/debug.h"
+#include <config.h>
+#include <wine/port.h>
+//#include "winerror.h"
+//#include "wine/debug.h"
 
-#include <string.h>
+//#include <string.h>
 
 #include "wined3d_private.h"
 
@@ -198,10 +199,7 @@ HRESULT CDECL wined3d_palette_create(struct wined3d_device *device, DWORD flags,
 
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
     if (!object)
-    {
-        ERR("Failed to allocate palette memory.\n");
         return E_OUTOFMEMORY;
-    }
 
     hr = wined3d_palette_init(object, device, flags, entries, parent);
     if (FAILED(hr))

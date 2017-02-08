@@ -26,17 +26,21 @@
  * RemoveExistingProducts (TODO)
  */
 
-#include <stdarg.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "winreg.h"
-#include "wine/debug.h"
-#include "msidefs.h"
+//#include <stdarg.h>
+
+#include <windef.h>
+//#include "winbase.h"
+//#include "winerror.h"
+#include <winreg.h>
+#include <wine/debug.h>
+//#include "msidefs.h"
 #include "msipriv.h"
-#include "winuser.h"
-#include "wine/unicode.h"
+//#include "winuser.h"
+#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -88,7 +92,7 @@ static void append_productcode(MSIPACKAGE* package, LPCWSTR action_property,
         newprop[0] = 0;
     strcatW(newprop,productid);
 
-    r = msi_set_property( package->db, action_property, newprop );
+    r = msi_set_property( package->db, action_property, newprop, -1 );
     if (r == ERROR_SUCCESS && !strcmpW( action_property, szSourceDir ))
         msi_reset_folders( package, TRUE );
 

@@ -15,7 +15,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 /*
- * $Id:
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS GDI32
  * PURPOSE:
@@ -25,7 +24,7 @@
  * NOTES:
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include <debug.h>
 
 // global variables in a dll are process-global

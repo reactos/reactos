@@ -16,8 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS Compatibility Layer Shell Extension
  * FILE:            lib/shellext/cplsample/cplsample.c
  * PURPOSE:         ReactOS Compatibility Layer Shell Extension
@@ -25,7 +24,7 @@
  * UPDATE HISTORY:
  *      09/25/2004  Created
  */
-#include <precomp.h>
+#include "precomp.h"
 
 HINSTANCE hInstance = NULL;
 static LONG dllrefs = 0;

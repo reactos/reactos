@@ -1,4 +1,3 @@
-
  @ stub LsaIAuditNotifyPackageLoad
  @ stub LsaIAuditSamEvent
  @ stub LsaIEnumerateSecrets
@@ -6,7 +5,7 @@
  @ stub LsaIFree_LSAI_SECRET_ENUM_BUFFER
  @ stub LsaIFree_LSAPR_ACCOUNT_ENUM_BUFFER
  @ stub LsaIFree_LSAPR_CR_CIPHER_VALUE
- @ stub LsaIFree_LSAPR_POLICY_INFORMATION
+ @ stdcall LsaIFree_LSAPR_POLICY_INFORMATION(long ptr)
  @ stub LsaIFree_LSAPR_PRIVILEGE_ENUM_BUFFER
  @ stub LsaIFree_LSAPR_PRIVILEGE_SET
  @ stub LsaIFree_LSAPR_REFERENCED_DOMAIN_LIST
@@ -22,7 +21,7 @@
  @ stub LsaIGetSerialNumberPolicy2
  @ stub LsaIHealthCheck
  @ stub LsaIInitializeWellKnownSids
- @ stub LsaIOpenPolicyTrusted
+ @ stdcall LsaIOpenPolicyTrusted(ptr)
  @ stub LsaIQueryInformationPolicyTrusted
  @ stub LsaISetPrivateData
  @ stub LsaISetSerialNumberPolicy

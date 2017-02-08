@@ -45,36 +45,38 @@ $if (_WDMDDK_)
 
 /* ULONG
  * BYTE_OFFSET(
- *   IN PVOID Va)
+ *     _In_ PVOID Va)
  */
 #define BYTE_OFFSET(Va) \
   ((ULONG) ((ULONG_PTR) (Va) & (PAGE_SIZE - 1)))
 
 /* ULONG
  * BYTES_TO_PAGES(
- *   IN ULONG Size)
+ *     _In_ ULONG Size)
+ *
+ * Note: This needs to be like this to avoid overflows!
  */
 #define BYTES_TO_PAGES(Size) \
-  (((Size) + PAGE_SIZE - 1) >> PAGE_SHIFT)
+  (((Size) >> PAGE_SHIFT) + (((Size) & (PAGE_SIZE - 1)) != 0))
 
 /* PVOID
  * PAGE_ALIGN(
- *   IN PVOID Va)
+ *     _In_ PVOID Va)
  */
 #define PAGE_ALIGN(Va) \
   ((PVOID) ((ULONG_PTR)(Va) & ~(PAGE_SIZE - 1)))
 
 /* ULONG_PTR
  * ROUND_TO_PAGES(
- *   IN ULONG_PTR Size)
+ *     _In_ ULONG_PTR Size)
  */
 #define ROUND_TO_PAGES(Size) \
   (((ULONG_PTR) (Size) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1))
 
 /* ULONG
  * ADDRESS_AND_SIZE_TO_SPAN_PAGES(
- *   IN PVOID Va,
- *   IN ULONG Size)
+ *     _In_ PVOID Va,
+ *     _In_ ULONG Size)
  */
 #define ADDRESS_AND_SIZE_TO_SPAN_PAGES(_Va, _Size) \
   ((ULONG) ((((ULONG_PTR) (_Va) & (PAGE_SIZE - 1)) \
@@ -86,7 +88,7 @@ $if (_WDMDDK_)
 /*
  * ULONG
  * MmGetMdlByteCount(
- *   IN PMDL  Mdl)
+ *     _In_ PMDL  Mdl)
  */
 #define MmGetMdlByteCount(_Mdl) \
   ((_Mdl)->ByteCount)
@@ -104,7 +106,7 @@ $if (_WDMDDK_)
 /*
  * PPFN_NUMBER
  * MmGetMdlPfnArray(
- *   IN PMDL  Mdl)
+ *     _In_ PMDL  Mdl)
  */
 #define MmGetMdlPfnArray(_Mdl) \
   ((PPFN_NUMBER) ((_Mdl) + 1))
@@ -112,7 +114,7 @@ $if (_WDMDDK_)
 /*
  * PVOID
  * MmGetMdlVirtualAddress(
- *   IN PMDL  Mdl)
+ *     _In_ PMDL  Mdl)
  */
 #define MmGetMdlVirtualAddress(_Mdl) \
   ((PVOID) ((PCHAR) ((_Mdl)->StartVa) + (_Mdl)->ByteOffset))
@@ -121,7 +123,7 @@ $if (_WDMDDK_)
 #define MmLockPagableCodeSection(Address) MmLockPagableDataSection(Address)
 
 /* PVOID MmGetSystemAddressForMdl(
- *     IN PMDL Mdl);
+ *     _In_ PMDL Mdl);
  */
 #define MmGetSystemAddressForMdl(Mdl) \
   (((Mdl)->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA | \
@@ -131,8 +133,8 @@ $if (_WDMDDK_)
 
 /* PVOID
  * MmGetSystemAddressForMdlSafe(
- *     IN PMDL Mdl,
- *     IN MM_PAGE_PRIORITY Priority)
+ *     _In_ PMDL Mdl,
+ *     _In_ MM_PAGE_PRIORITY Priority)
  */
 #define MmGetSystemAddressForMdlSafe(_Mdl, _Priority) \
   (((_Mdl)->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA \
@@ -144,9 +146,9 @@ $if (_WDMDDK_)
 /*
  * VOID
  * MmInitializeMdl(
- *   IN PMDL  MemoryDescriptorList,
- *   IN PVOID  BaseVa,
- *   IN SIZE_T  Length)
+ *     _In_ PMDL MemoryDescriptorList,
+ *     _In_ PVOID BaseVa,
+ *     _In_ SIZE_T Length)
  */
 #define MmInitializeMdl(_MemoryDescriptorList, \
                         _BaseVa, \
@@ -164,7 +166,7 @@ $if (_WDMDDK_)
 /*
  * VOID
  * MmPrepareMdlForReuse(
- *   IN PMDL  Mdl)
+ *     _In_ PMDL Mdl)
  */
 #define MmPrepareMdlForReuse(_Mdl) \
 { \
@@ -298,8 +300,8 @@ MmMapIoSpace(
   _In_ MEMORY_CACHING_TYPE CacheType);
 
 _Must_inspect_result_
-_When_(AccessMode==0, _IRQL_requires_max_(DISPATCH_LEVEL))
-_When_(AccessMode==1, _Maybe_raises_SEH_exception_ _IRQL_requires_max_(APC_LEVEL))
+_When_(AccessMode==KernelMode, _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_(AccessMode==UserMode, _Maybe_raises_SEH_exception_ _IRQL_requires_max_(APC_LEVEL))
 NTKERNELAPI
 PVOID
 NTAPI
@@ -574,59 +576,6 @@ NTAPI
 MmAddPhysicalMemory(
   _In_ PPHYSICAL_ADDRESS StartAddress,
   _Inout_ PLARGE_INTEGER NumberOfBytes);
-
-_Must_inspect_result_
-_IRQL_requires_max_(DISPATCH_LEVEL)
-_When_(return != NULL, _Post_writable_byte_size_(NumberOfBytes))
-NTKERNELAPI
-PVOID
-NTAPI
-MmAllocateContiguousMemory(
-  _In_ SIZE_T NumberOfBytes,
-  _In_ PHYSICAL_ADDRESS HighestAcceptableAddress);
-
-_Must_inspect_result_
-_IRQL_requires_max_(DISPATCH_LEVEL)
-_When_(return != NULL, _Post_writable_byte_size_(NumberOfBytes))
-NTKERNELAPI
-PVOID
-NTAPI
-MmAllocateContiguousMemorySpecifyCache(
-  _In_ SIZE_T NumberOfBytes,
-  _In_ PHYSICAL_ADDRESS LowestAcceptableAddress,
-  _In_ PHYSICAL_ADDRESS HighestAcceptableAddress,
-  _In_opt_ PHYSICAL_ADDRESS BoundaryAddressMultiple,
-  _In_ MEMORY_CACHING_TYPE CacheType);
-
-_Must_inspect_result_
-_IRQL_requires_max_(DISPATCH_LEVEL)
-_When_(return != NULL, _Post_writable_byte_size_(NumberOfBytes))
-NTKERNELAPI
-PVOID
-NTAPI
-MmAllocateContiguousMemorySpecifyCacheNode(
-  _In_ SIZE_T NumberOfBytes,
-  _In_ PHYSICAL_ADDRESS LowestAcceptableAddress,
-  _In_ PHYSICAL_ADDRESS HighestAcceptableAddress,
-  _In_opt_ PHYSICAL_ADDRESS BoundaryAddressMultiple,
-  _In_ MEMORY_CACHING_TYPE CacheType,
-  _In_ NODE_REQUIREMENT PreferredNode);
-
-_IRQL_requires_max_(DISPATCH_LEVEL)
-NTKERNELAPI
-VOID
-NTAPI
-MmFreeContiguousMemory(
-  _In_ PVOID BaseAddress);
-
-_IRQL_requires_max_(DISPATCH_LEVEL)
-NTKERNELAPI
-VOID
-NTAPI
-MmFreeContiguousMemorySpecifyCache(
-  _In_reads_bytes_(NumberOfBytes) PVOID BaseAddress,
-  _In_ SIZE_T NumberOfBytes,
-  _In_ MEMORY_CACHING_TYPE CacheType);
 $endif (_NTDDK_)
 $if (_NTIFS_)
 
@@ -835,6 +784,32 @@ ULONG
 NTAPI
 MmDoesFileHaveUserWritableReferences(
   _In_ PSECTION_OBJECT_POINTERS SectionPointer);
+
+_Must_inspect_result_
+_At_(*BaseAddress, __drv_allocatesMem(Mem))
+__kernel_entry
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtAllocateVirtualMemory(
+    _In_ HANDLE ProcessHandle,
+    _Inout_ _Outptr_result_buffer_(*RegionSize) PVOID *BaseAddress,
+    _In_ ULONG_PTR ZeroBits,
+    _Inout_ PSIZE_T RegionSize,
+    _In_ ULONG AllocationType,
+    _In_ ULONG Protect);
+
+__kernel_entry
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtFreeVirtualMemory(
+    _In_ HANDLE ProcessHandle,
+    _Inout_ __drv_freesMem(Mem) PVOID *BaseAddress,
+    _Inout_ PSIZE_T RegionSize,
+    _In_ ULONG FreeType);
+
 $endif (_NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 

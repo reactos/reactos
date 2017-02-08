@@ -646,11 +646,23 @@ int main( int argc, char **argv )
            #expression, (void*)(result), _value); \
     } while (0)
 
+#define ok_size_t(expression, result) \
+    do { \
+        size_t _value = (expression); \
+        ok(_value == (result), "Wrong value for '%s', expected: " #result " (%Ix), got: %Ix\n", \
+           #expression, (size_t)(result), _value); \
+    } while (0)
+
+#define ok_char(expression, result) ok_hex(expression, result)
+
 #define ok_err(error) \
     ok(GetLastError() == (error), "Wrong last error. Expected " #error ", got %d\n", (int)GetLastError())
 
 #define ok_str(x, y) \
     ok(strcmp(x, y) == 0, "Wrong string. Expected '%s', got '%s'\n", y, x)
+
+#define ok_wstr(x, y) \
+    ok(wcscmp(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
 
 #define ok_long(expression, result) ok_hex(expression, result)
 #define ok_int(expression, result) ok_dec(expression, result)

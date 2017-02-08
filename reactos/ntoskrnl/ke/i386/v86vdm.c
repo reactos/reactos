@@ -45,32 +45,38 @@ KiVdmUnhandledOpcode(INTO);
 KiVdmUnhandledOpcode(INV);
 
 /* OPCODE HANDLERS ************************************************************/
-    
+
 BOOLEAN
 FASTCALL
 KiVdmOpcodePUSHF(IN PKTRAP_FRAME TrapFrame,
                  IN ULONG Flags)
 {
     ULONG Esp, V86EFlags, TrapEFlags;
-    
-    /* Check for VME support */
-    ASSERT(KeI386VirtualIntExtensions == FALSE);
 
     /* Get current V8086 flags and mask out interrupt flag */
     V86EFlags = *KiNtVdmState;
     V86EFlags &= ~EFLAGS_INTERRUPT_MASK;
 
-    /* Get trap frame EFLags and leave only align, nested task and interrupt */
+    /* Get trap frame EFLags */
     TrapEFlags = TrapFrame->EFlags;
-    V86EFlags &= (EFLAGS_ALIGN_CHECK | EFLAGS_NESTED_TASK | EFLAGS_INTERRUPT_MASK);
+    /* Check for VME support */
+    if(KeI386VirtualIntExtensions)
+    {
+        /* Copy the virtual interrupt flag to the interrupt flag */
+        TrapEFlags &= ~EFLAGS_INTERRUPT_MASK;
+        if(TrapEFlags & EFLAGS_VIF)
+            TrapEFlags |= EFLAGS_INTERRUPT_MASK;
+    }
+    /* Leave only align, nested task and interrupt */
+    TrapEFlags &= (EFLAGS_ALIGN_CHECK | EFLAGS_NESTED_TASK | EFLAGS_INTERRUPT_MASK);
 
     /* Add in those flags if they exist, and add in the IOPL flag */
     V86EFlags |= TrapEFlags;
     V86EFlags |= EFLAGS_IOPL;
-    
+
     /* Build flat ESP */
     Esp = (TrapFrame->HardwareSegSs << 4) + (USHORT)TrapFrame->HardwareEsp;
-    
+
     /* Check for OPER32 */
     if (KiVdmGetPrefixFlags(Flags) & PFX_FLAG_OPER32)
     {
@@ -84,11 +90,11 @@ KiVdmOpcodePUSHF(IN PKTRAP_FRAME TrapFrame,
         Esp -= 2;
         *(PUSHORT)Esp = (USHORT)V86EFlags;
     }
-    
+
     /* Set new ESP and EIP */
     TrapFrame->HardwareEsp = Esp - (TrapFrame->HardwareSegSs << 4);
     TrapFrame->Eip += KiVdmGetInstructionSize(Flags);
-    
+
     /* We're done */
     return TRUE;
 }
@@ -99,10 +105,10 @@ KiVdmOpcodePOPF(IN PKTRAP_FRAME TrapFrame,
                 IN ULONG Flags)
 {
     ULONG Esp, V86EFlags, EFlags, TrapEFlags;
-    
+
     /* Build flat ESP */
     Esp = (TrapFrame->HardwareSegSs << 4) + (USHORT)TrapFrame->HardwareEsp;
-    
+
     /* Check for OPER32 */
     if (KiVdmGetPrefixFlags(Flags) & PFX_FLAG_OPER32)
     {
@@ -116,43 +122,53 @@ KiVdmOpcodePOPF(IN PKTRAP_FRAME TrapFrame,
         EFlags = *(PUSHORT)Esp;
         Esp += 2;
     }
-    
+
     /* Set new ESP */
     TrapFrame->HardwareEsp = Esp - (TrapFrame->HardwareSegSs << 4);
-    
+
     /* Mask out IOPL from the flags */
     EFlags &= ~EFLAGS_IOPL;
-    
+
     /* Save the V86 flags, but mask out the nested task flag */
     V86EFlags = EFlags & ~EFLAGS_NESTED_TASK;
-    
+
     /* Now leave only alignment, nested task and interrupt flag */
     EFlags &= (EFLAGS_ALIGN_CHECK | EFLAGS_NESTED_TASK | EFLAGS_INTERRUPT_MASK);
-    
+
     /* Get trap EFlags */
     TrapEFlags = TrapFrame->EFlags;
-                
-    /* Check for VME support */
-    ASSERT(KeI386VirtualIntExtensions == FALSE);
 
-    /* Add V86 and Interrupt flag */
-    V86EFlags |= EFLAGS_V86_MASK | EFLAGS_INTERRUPT_MASK;
+    /* Check for VME support */
+    if(KeI386VirtualIntExtensions)
+    {
+        /* Copy the IF flag into the VIF one */
+        V86EFlags &= ~EFLAGS_VIF;
+        if(V86EFlags & EFLAGS_INTERRUPT_MASK)
+        {
+            V86EFlags |= EFLAGS_VIF;
+            /* Don't set the interrupt flag */
+            V86EFlags &= ~EFLAGS_INTERRUPT_MASK;
+        }
+    }
+
+    /* Add V86 flag */
+    V86EFlags |= EFLAGS_V86_MASK;
 
     /* Update EFlags in trap frame */
-    TrapFrame->EFlags = V86EFlags;
+    TrapFrame->EFlags |= V86EFlags;
 
     /* Check if ESP0 needs to be fixed up */
     if (TrapEFlags & EFLAGS_V86_MASK) Ki386AdjustEsp0(TrapFrame);
-    
+
     /* Update the V8086 EFlags state */
     KiVdmClearVdmEFlags(EFLAGS_ALIGN_CHECK | EFLAGS_NESTED_TASK | EFLAGS_INTERRUPT_MASK);
     KiVdmSetVdmEFlags(EFlags);
-   
+
     /* FIXME: Check for VDM interrupts */
-    
+
     /* Update EIP */
     TrapFrame->Eip += KiVdmGetInstructionSize(Flags);
-    
+
     /* We're done */
     return TRUE;
 }
@@ -163,63 +179,63 @@ KiVdmOpcodeINTnn(IN PKTRAP_FRAME TrapFrame,
                  IN ULONG Flags)
 {
     ULONG Esp, V86EFlags, TrapEFlags, Eip, Interrupt;
-    
+
     /* Read trap frame EFlags */
     TrapEFlags = TrapFrame->EFlags;
-    
+
     /* Remove interrupt flag from V8086 EFlags */
     V86EFlags = *KiNtVdmState;
     KiVdmClearVdmEFlags(EFLAGS_INTERRUPT_MASK);
-    
+
     /* Keep only alignment and interrupt flag from the V8086 state */
     V86EFlags &= (EFLAGS_ALIGN_CHECK | EFLAGS_INTERRUPT_MASK);
-    
+
     /* Check for VME support */
     ASSERT(KeI386VirtualIntExtensions == FALSE);
-    
+
     /* Mask in the relevant V86 EFlags into the trap flags */
     V86EFlags |= (TrapEFlags & ~EFLAGS_INTERRUPT_MASK);
-    
+
     /* And mask out the VIF, nested task and TF flag from the trap flags */
     TrapFrame->EFlags = TrapEFlags &~ (EFLAGS_VIF | EFLAGS_NESTED_TASK | EFLAGS_TF);
-    
+
     /* Add the IOPL flag to the local trap flags */
     V86EFlags |= EFLAGS_IOPL;
-    
+
     /* Build flat ESP */
     Esp = (TrapFrame->HardwareSegSs << 4) + TrapFrame->HardwareEsp;
-    
+
     /* Push EFlags */
     Esp -= 2;
     *(PUSHORT)(Esp) = (USHORT)V86EFlags;
-    
+
     /* Push CS */
     Esp -= 2;
     *(PUSHORT)(Esp) = (USHORT)TrapFrame->SegCs;
-    
+
     /* Push IP */
     Esp -= 2;
     *(PUSHORT)(Esp) = (USHORT)TrapFrame->Eip + KiVdmGetInstructionSize(Flags) + 1;
-    
+
     /* Update ESP */
     TrapFrame->HardwareEsp = (USHORT)Esp;
-    
+
     /* Get flat EIP */
     Eip = (TrapFrame->SegCs << 4) + TrapFrame->Eip;
-    
+
     /* Now get the *next* EIP address (current is original + the count - 1) */
     Eip += KiVdmGetInstructionSize(Flags);
-    
+
     /* Now read the interrupt number */
     Interrupt = *(PUCHAR)Eip;
-        
+
     /* Read the EIP from its IVT entry */
     Interrupt = *(PULONG)(Interrupt * 4);
     TrapFrame->Eip = (USHORT)Interrupt;
-    
+
     /* Now get the CS segment */
     Interrupt = (USHORT)(Interrupt >> 16);
-    
+
     /* Check if the trap was not V8086 trap */
     if (!(TrapFrame->EFlags & EFLAGS_V86_MASK))
     {
@@ -241,7 +257,7 @@ KiVdmOpcodeINTnn(IN PKTRAP_FRAME TrapFrame,
         /* Set IVT CS */
         TrapFrame->SegCs = Interrupt;
     }
-    
+
     /* We're done */
     return TRUE;
 }
@@ -255,17 +271,17 @@ KiVdmOpcodeIRET(IN PKTRAP_FRAME TrapFrame,
 
     /* Build flat ESP */
     Esp = (TrapFrame->HardwareSegSs << 4) + TrapFrame->HardwareEsp;
-    
+
     /* Check for OPER32 */
     if (KiVdmGetPrefixFlags(Flags) & PFX_FLAG_OPER32)
     {
         /* Build segmented EIP */
         TrapFrame->Eip = *(PULONG)Esp;
         TrapFrame->SegCs = *(PUSHORT)(Esp + 4);
-        
+
         /* Set new ESP */
         TrapFrame->HardwareEsp += 12;
-        
+
         /* Get EFLAGS */
         EFlags = *(PULONG)(Esp + 8);
     }
@@ -281,28 +297,28 @@ KiVdmOpcodeIRET(IN PKTRAP_FRAME TrapFrame,
         /* Get EFLAGS */
         EFlags = *(PUSHORT)(Esp + 4);
     }
-    
+
     /* Mask out EFlags */
     EFlags &= ~(EFLAGS_IOPL + EFLAGS_VIF + EFLAGS_NESTED_TASK + EFLAGS_VIP);
     V86EFlags = EFlags;
-    
+
     /* Check for VME support */
     ASSERT(KeI386VirtualIntExtensions == FALSE);
-    
+
     /* Add V86 and Interrupt flag */
     EFlags |= EFLAGS_V86_MASK | EFLAGS_INTERRUPT_MASK;
-    
+
     /* Update EFlags in trap frame */
     TrapEFlags = TrapFrame->EFlags;
     TrapFrame->EFlags = (TrapFrame->EFlags & EFLAGS_VIP) | EFlags;
-    
+
     /* Check if ESP0 needs to be fixed up */
     if (!(TrapEFlags & EFLAGS_V86_MASK)) Ki386AdjustEsp0(TrapFrame);
-    
+
     /* Update the V8086 EFlags state */
     KiVdmClearVdmEFlags(EFLAGS_INTERRUPT_MASK);
     KiVdmSetVdmEFlags(V86EFlags);
-    
+
     /* Build flat EIP and check if this is the BOP instruction */
     Eip = (TrapFrame->SegCs << 4) + TrapFrame->Eip;
     if (*(PUSHORT)Eip == 0xC4C4)
@@ -315,7 +331,7 @@ KiVdmOpcodeIRET(IN PKTRAP_FRAME TrapFrame,
         /* FIXME: Check for VDM interrupts */
        DPRINT("FIXME: Check for VDM interrupts\n");
     }
-    
+
     /* We're done */
     return TRUE;
 }
@@ -324,16 +340,16 @@ BOOLEAN
 FASTCALL
 KiVdmOpcodeCLI(IN PKTRAP_FRAME TrapFrame,
                IN ULONG Flags)
-{       
+{
     /* Check for VME support */
     ASSERT(KeI386VirtualIntExtensions == FALSE);
 
     /* Disable interrupts */
     KiVdmClearVdmEFlags(EFLAGS_INTERRUPT_MASK);
-    
+
     /* Skip instruction */
     TrapFrame->Eip += KiVdmGetInstructionSize(Flags);
-    
+
     /* Done */
     return TRUE;
 }
@@ -348,10 +364,10 @@ KiVdmOpcodeSTI(IN PKTRAP_FRAME TrapFrame,
 
     /* Enable interrupts */
     KiVdmSetVdmEFlags(EFLAGS_INTERRUPT_MASK);
-    
+
     /* Skip instruction */
     TrapFrame->Eip += KiVdmGetInstructionSize(Flags);
-    
+
     /* Done */
     return TRUE;
 }
@@ -364,11 +380,11 @@ KiVdmHandleOpcode(IN PKTRAP_FRAME TrapFrame,
                   IN ULONG Flags)
 {
     ULONG Eip;
-    
+
     /* Get flat EIP of the *current* instruction (not the original EIP) */
     Eip = (TrapFrame->SegCs << 4) + TrapFrame->Eip;
     Eip += KiVdmGetInstructionSize(Flags) - 1;
-    
+
     /* Read the opcode entry */
     switch (*(PUCHAR)Eip)
     {
@@ -401,11 +417,11 @@ KiVdmHandleOpcode(IN PKTRAP_FRAME TrapFrame,
         case 0x9D:              return KiCallVdmHandler(POPF);
         case 0xCD:              return KiCallVdmHandler(INTnn);
         case 0xCE:              return KiCallVdmHandler(INTO);
-        case 0xCF:              return KiCallVdmHandler(IRET);   
-        case 0xE4:              return KiCallVdmHandler(INBimm);   
+        case 0xCF:              return KiCallVdmHandler(IRET);
+        case 0xE4:              return KiCallVdmHandler(INBimm);
         case 0xE5:              return KiCallVdmHandler(INWimm);
         case 0xE6:              return KiCallVdmHandler(OUTBimm);
-        case 0xE7:              return KiCallVdmHandler(OUTWimm);        
+        case 0xE7:              return KiCallVdmHandler(OUTWimm);
         case 0xEC:              return KiCallVdmHandler(INB);
         case 0xED:              return KiCallVdmHandler(INW);
         case 0xEE:              return KiCallVdmHandler(OUTB);
@@ -414,7 +430,7 @@ KiVdmHandleOpcode(IN PKTRAP_FRAME TrapFrame,
         case 0xFA:              return KiCallVdmHandler(CLI);
         case 0xFB:              return KiCallVdmHandler(STI);
         default:                return KiCallVdmHandler(INV);
-    }    
+    }
 }
 
 /* PREFIX HANDLER *************************************************************/
@@ -426,7 +442,7 @@ KiVdmOpcodePrefix(IN PKTRAP_FRAME TrapFrame,
 {
     /* Increase instruction size */
     Flags++;
-    
+
     /* Handle the next opcode */
     return KiVdmHandleOpcode(TrapFrame, Flags);
 }
@@ -450,37 +466,30 @@ FASTCALL
 KiExitV86Mode(IN PKTRAP_FRAME TrapFrame)
 {
     PKV8086_STACK_FRAME StackFrame;
-    PKGDTENTRY GdtEntry;
     PKTHREAD Thread;
     PKTRAP_FRAME PmTrapFrame;
     PKV86_FRAME V86Frame;
     PFX_SAVE_AREA NpxFrame;
-    
+
     /* Get the stack frame back */
     StackFrame = CONTAINING_RECORD(TrapFrame->Esi, KV8086_STACK_FRAME, V86Frame);
     PmTrapFrame = &StackFrame->TrapFrame;
     V86Frame = &StackFrame->V86Frame;
     NpxFrame = &StackFrame->NpxArea;
-    
+
     /* Copy the FPU frame back */
     Thread = KeGetCurrentThread();
     RtlCopyMemory(KiGetThreadNpxArea(Thread), NpxFrame, sizeof(FX_SAVE_AREA));
 
     /* Set initial stack back */
     Thread->InitialStack = (PVOID)((ULONG_PTR)V86Frame->ThreadStack + sizeof(FX_SAVE_AREA));
-    
+
     /* Set ESP0 back in the KTSS */
     KeGetPcr()->TSS->Esp0 = (ULONG_PTR)&PmTrapFrame->V86Es;
 
     /* Restore TEB addresses */
     Thread->Teb = V86Frame->ThreadTeb;
-    KeGetPcr()->NtTib.Self = V86Frame->PcrTeb;
-    
-    /* Setup real TEB descriptor */
-    GdtEntry = &((PKIPCR)KeGetPcr())->GDT[KGDT_R3_TEB / sizeof(KGDTENTRY)];
-    GdtEntry->BaseLow = (USHORT)((ULONG_PTR)Thread->Teb & 0xFFFF);
-    GdtEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)Thread->Teb >> 16);
-    GdtEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)Thread->Teb >> 24);
+    KiSetTebBase(KeGetPcr(), V86Frame->ThreadTeb);
 
     /* Enable interrupts and return a pointer to the trap frame */
     _enable();
@@ -492,7 +501,6 @@ FASTCALL
 KiEnterV86Mode(IN PKV8086_STACK_FRAME StackFrame)
 {
     PKTHREAD Thread;
-    PKGDTENTRY GdtEntry;
     PKTRAP_FRAME TrapFrame = &StackFrame->TrapFrame;
     PKV86_FRAME V86Frame = &StackFrame->V86Frame;
     PFX_SAVE_AREA NpxFrame = &StackFrame->NpxArea;
@@ -501,26 +509,26 @@ KiEnterV86Mode(IN PKV8086_STACK_FRAME StackFrame)
     TrapFrame->SegCs = KGDT_R0_CODE | RPL_MASK;
     TrapFrame->SegEs = TrapFrame->SegDs = TrapFrame->SegFs = TrapFrame->SegGs = 0;
     TrapFrame->ErrCode = 0;
-    
+
     /* Get the current thread's initial stack */
     Thread = KeGetCurrentThread();
     V86Frame->ThreadStack = KiGetThreadNpxArea(Thread);
-    
+
     /* Save TEB addresses */
     V86Frame->ThreadTeb = Thread->Teb;
     V86Frame->PcrTeb = KeGetPcr()->NtTib.Self;
-    
+
     /* Save return EIP */
     TrapFrame->Eip = (ULONG_PTR)Ki386BiosCallReturnAddress;
-    
+
     /* Save our stack (after the frames) */
     TrapFrame->Esi = (ULONG_PTR)V86Frame;
     TrapFrame->Edi = (ULONG_PTR)_AddressOfReturnAddress() + 4;
-    
+
     /* Sanitize EFlags and enable interrupts */
     TrapFrame->EFlags = __readeflags() & 0x60DD7;
     TrapFrame->EFlags |= EFLAGS_INTERRUPT_MASK;
-    
+
     /* Fill out the rest of the frame */
     TrapFrame->HardwareSegSs = KGDT_R3_DATA | RPL_MASK;
     TrapFrame->HardwareEsp = 0x11FFE;
@@ -529,38 +537,32 @@ KiEnterV86Mode(IN PKV8086_STACK_FRAME StackFrame)
 
     /* Set some debug fields if trap debugging is enabled */
     KiFillTrapFrameDebug(TrapFrame);
-    
+
     /* Disable interrupts */
     _disable();
-    
+
     /* Copy the thread's NPX frame */
     RtlCopyMemory(NpxFrame, V86Frame->ThreadStack, sizeof(FX_SAVE_AREA));
-    
+
     /* Clear exception list */
     KeGetPcr()->NtTib.ExceptionList = EXCEPTION_CHAIN_END;
-    
+
     /* Set new ESP0 */
     KeGetPcr()->TSS->Esp0 = (ULONG_PTR)&TrapFrame->V86Es;
-                             
+
     /* Set new initial stack */
     Thread->InitialStack = V86Frame;
-        
+
     /* Set VDM TEB */
     Thread->Teb = (PTEB)TRAMPOLINE_TEB;
-    KeGetPcr()->NtTib.Self = (PVOID)TRAMPOLINE_TEB;
-    
-    /* Setup VDM TEB descriptor */
-    GdtEntry = &((PKIPCR)KeGetPcr())->GDT[KGDT_R3_TEB / sizeof(KGDTENTRY)];
-    GdtEntry->BaseLow = (USHORT)((ULONG_PTR)TRAMPOLINE_TEB & 0xFFFF);
-    GdtEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)TRAMPOLINE_TEB >> 16);
-    GdtEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)TRAMPOLINE_TEB >> 24);
-    
+    KiSetTebBase(KeGetPcr(), (PVOID)TRAMPOLINE_TEB);
+
     /* Enable interrupts */
     _enable();
- 
+
     /* Start VDM execution */
     NtVdmControl(VdmStartExecution, NULL);
-    
+
     /* Exit to V86 mode */
     KiEoiHelper(TrapFrame);
 }
@@ -585,14 +587,14 @@ Ke386SetIOPL(VOID)
     /* Convert to a context */
     Context.ContextFlags = CONTEXT_CONTROL;
     KeTrapFrameToContext(TrapFrame, NULL, &Context);
-    
+
     /* Set the IOPL flag */
     Context.EFlags |= EFLAGS_IOPL;
-    
+
     /* Convert back to a trap frame */
     KeContextToTrapFrame(&Context, NULL, TrapFrame, CONTEXT_CONTROL, UserMode);
 }
- 
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*

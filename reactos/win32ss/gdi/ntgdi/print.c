@@ -3,9 +3,9 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            subsystems/win32/win32k/objects/print.c
  * PURPOSE:         Print functions
- * PROGRAMMER:      
+ * PROGRAMMER:
  */
- 
+
 #include <win32k.h>
 
 #define NDEBUG
@@ -88,14 +88,14 @@ IntGdiExtEscape(
    SURFACE *psurf = dc->dclevel.pSurface;
    INT Result;
 
-   if (!dc->ppdev->DriverFunctions.Escape)
+   if (!dc->ppdev->DriverFunctions.Escape || !psurf)
    {
       Result = 0;
    }
    else
    {
       Result = dc->ppdev->DriverFunctions.Escape(
-         psurf ? &psurf->SurfObj : NULL,
+         &psurf->SurfObj,
          Escape,
          InSize,
          (PVOID)InData,

@@ -14,7 +14,6 @@ add_rpc_files(client
     ${REACTOS_SOURCE_DIR}/include/reactos/idl/eventlogrpc.idl
     ${REACTOS_SOURCE_DIR}/include/reactos/idl/lsa.idl
     ${REACTOS_SOURCE_DIR}/include/reactos/idl/svcctl.idl)
-    
 
 list(APPEND SOURCE
     crypt/crypt.c
@@ -38,6 +37,7 @@ list(APPEND SOURCE
     sec/cred.c
     sec/lsa.c
     sec/misc.c
+    sec/safer.c
     sec/sec.c
     sec/sid.c
     sec/trustee.c

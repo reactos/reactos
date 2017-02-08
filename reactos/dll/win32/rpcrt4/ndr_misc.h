@@ -21,12 +21,15 @@
 #ifndef __WINE_NDR_MISC_H
 #define __WINE_NDR_MISC_H
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "rpc.h"
-#include "rpcndr.h"
+#include <windef.h>
+#include <winbase.h>
+#include <rpc.h>
+#include <rpcndr.h>
 
 struct IPSFactoryBuffer;
 

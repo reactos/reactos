@@ -39,12 +39,12 @@ OBJECT_ENTRY(CLSID_BrandBand, CBrandBand)
 OBJECT_ENTRY(CLSID_InternetToolbar, CInternetToolbar)
 END_OBJECT_MAP()
 
-CBrowseUIModule								gModule;
-CAtlWinModule								gWinModule;
+CBrowseUIModule                             gModule;
+CAtlWinModule                               gWinModule;
 
 void *operator new (size_t, void *buf)
 {
-	return buf;
+    return buf;
 }
 
 /*************************************************************************
@@ -53,23 +53,23 @@ void *operator new (size_t, void *buf)
 STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
 {
     TRACE("%p 0x%x %p\n", hInstance, dwReason, fImpLoad);
-	
-	/* HACK - the global constructors don't run, so I placement new them here */
-	new (&gModule) CBrowseUIModule;
-	new (&gWinModule) CAtlWinModule;
-	new (&_AtlBaseModule) CAtlBaseModule;
-	new (&_AtlComModule) CAtlComModule;
 
-	if (dwReason == DLL_PROCESS_ATTACH)
-	{
-		gModule.Init(ObjectMap, hInstance, NULL);
-		DisableThreadLibraryCalls (hInstance);
-	}
-	else if (dwReason == DLL_PROCESS_DETACH)
-	{
-		gModule.Term();
-	}
-	return TRUE;
+    /* HACK - the global constructors don't run, so I placement new them here */
+    new (&gModule) CBrowseUIModule;
+    new (&gWinModule) CAtlWinModule;
+    new (&_AtlBaseModule) CAtlBaseModule;
+    new (&_AtlComModule) CAtlComModule;
+
+    if (dwReason == DLL_PROCESS_ATTACH)
+    {
+        gModule.Init(ObjectMap, hInstance, NULL);
+        DisableThreadLibraryCalls (hInstance);
+    }
+    else if (dwReason == DLL_PROCESS_DETACH)
+    {
+        gModule.Term();
+    }
+    return TRUE;
 }
 
 /***********************************************************************
@@ -77,7 +77,7 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
  */
 STDAPI DllCanUnloadNow()
 {
-	return gModule.DllCanUnloadNow();
+    return gModule.DllCanUnloadNow();
 }
 
 /***********************************************************************
@@ -85,7 +85,7 @@ STDAPI DllCanUnloadNow()
  */
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
-	return gModule.DllGetClassObject(rclsid, riid, ppv);
+    return gModule.DllGetClassObject(rclsid, riid, ppv);
 }
 
 /***********************************************************************
@@ -93,7 +93,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
  */
 STDAPI DllRegisterServer()
 {
-	return gModule.DllRegisterServer(FALSE);
+    return gModule.DllRegisterServer(FALSE);
 }
 
 /***********************************************************************
@@ -101,7 +101,7 @@ STDAPI DllRegisterServer()
  */
 STDAPI DllUnregisterServer()
 {
-	return gModule.DllUnregisterServer(FALSE);
+    return gModule.DllUnregisterServer(FALSE);
 }
 
 /***********************************************************************

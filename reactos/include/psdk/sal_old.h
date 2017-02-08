@@ -53,7 +53,6 @@
 #define __inner_fallthrough_dec __inline __nothrow void __FallThrough() {}
 #define __inner_override __declspec("__override")
 #define __inner_success(expr) __declspec("SAL_success("SPECSTRINGIZE(expr)")")
-#define __inner_typefix(ctype) __declspec("SAL_typefix("SPECSTRINGIZE(ctype)")")
 #define __maybenull __declspec("SAL_maybenull")
 #define __maybereadonly __declspec("SAL_maybereadonly")
 #define __maybevalid __declspec("SAL_maybevalid")

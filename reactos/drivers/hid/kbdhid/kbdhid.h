@@ -26,7 +26,7 @@ typedef struct
     PIRP Irp;
 
     //
-    // event 
+    // event
     //
     KEVENT ReadCompletionEvent;
 
@@ -39,6 +39,11 @@ typedef struct
     // class callback
     //
     PVOID ClassService;
+
+    //
+    // buffer for the four usage lists below
+    //
+    PVOID UsageListBuffer;
 
     //
     // usage list length
@@ -120,17 +125,15 @@ typedef struct
     //
     KEYBOARD_TYPEMATIC_PARAMETERS KeyboardTypematic;
 
-
-
-}KBDHID_DEVICE_EXTENSION, *PKBDHID_DEVICE_EXTENSION;
+} KBDHID_DEVICE_EXTENSION, *PKBDHID_DEVICE_EXTENSION;
 
 /* defaults from kbfiltr.h */
-#define KEYBOARD_TYPEMATIC_RATE_MINIMUM 2 
-#define KEYBOARD_TYPEMATIC_RATE_MAXIMUM 30 
-#define KEYBOARD_TYPEMATIC_RATE_DEFAULT 30 
-#define KEYBOARD_TYPEMATIC_DELAY_MINIMUM 250 
-#define KEYBOARD_TYPEMATIC_DELAY_MAXIMUM 1000 
-#define KEYBOARD_TYPEMATIC_DELAY_DEFAULT 250 
+#define KEYBOARD_TYPEMATIC_RATE_MINIMUM 2
+#define KEYBOARD_TYPEMATIC_RATE_MAXIMUM 30
+#define KEYBOARD_TYPEMATIC_RATE_DEFAULT 30
+#define KEYBOARD_TYPEMATIC_DELAY_MINIMUM 250
+#define KEYBOARD_TYPEMATIC_DELAY_MAXIMUM 1000
+#define KEYBOARD_TYPEMATIC_DELAY_DEFAULT 250
 
 /* FIXME: write kbd.h */
 #define MICROSOFT_KBD_FUNC              12
@@ -138,9 +141,8 @@ typedef struct
 #define MICROSOFT_KBD_101_TYPE           0
 
 
-
-
 NTSTATUS
 KbdHid_InitiateRead(
     IN PKBDHID_DEVICE_EXTENSION DeviceExtension);
 
+#define KBDHID_TAG 'diHK'

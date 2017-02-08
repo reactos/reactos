@@ -229,7 +229,7 @@
 233 stub MsiDeleteUserDataA
 234 stub MsiDeleteUserDataW
 235 stub Migrate10CachedPackagesA
-236 stub Migrate10CachedPackagesW
+236 stdcall Migrate10CachedPackagesW(ptr ptr ptr long)
 237 stub MsiRemovePatchesA
 238 stub MsiRemovePatchesW
 239 stdcall MsiApplyMultiplePatchesA(str str str)
@@ -244,8 +244,8 @@
 248 stdcall MsiGetProductInfoExW(wstr wstr long wstr ptr ptr)
 249 stdcall MsiQueryComponentStateA(str str long str ptr)
 250 stdcall MsiQueryComponentStateW(wstr wstr long wstr ptr)
-251 stub MsiQueryFeatureStateExA
-252 stub MsiQueryFeatureStateExW
+251 stdcall MsiQueryFeatureStateExA(str str long str ptr)
+252 stdcall MsiQueryFeatureStateExW(wstr wstr long wstr ptr)
 253 stdcall MsiDeterminePatchSequenceA(str str long long ptr)
 254 stdcall MsiDeterminePatchSequenceW(wstr wstr long long ptr)
 255 stdcall MsiSourceListAddSourceExA(str str long long str long)

@@ -599,6 +599,27 @@ bool ShellBrowser::jump_to_pidl(LPCITEMIDLIST pidl)
 	return false;
 }
 
+bool ShellBrowser::TranslateAccelerator(LPMSG lpmsg)
+{
+    HWND hwnd;
+
+    /* TranslateAccelerator is called for all explorer windows that are open 
+       so we have to decide if this is the correct recipient */
+    hwnd = lpmsg->hwnd;
+
+    while(hwnd)
+    {
+        if(hwnd == _hwnd)
+            break;
+
+        hwnd = GetParent(hwnd);
+    }
+
+    if (hwnd)
+        return _pShellView->TranslateAccelerator(lpmsg) == S_OK;
+
+    return false;
+}
 
 bool ShellBrowser::select_folder(Entry* entry, bool expand)
 {
@@ -706,6 +727,9 @@ LRESULT MDIShellBrowserChild::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		SendMessage(_left_hwnd, WM_SYSCOLORCHANGE, 0, 0);
 		SendMessage(_right_hwnd, WM_SYSCOLORCHANGE, 0, 0);
 		break;
+
+	  case PM_TRANSLATE_MSG:
+		return _shellBrowser->TranslateAccelerator((MSG*)lparam);
 
 	  default:
 		return super::WndProc(nmsg, wparam, lparam);

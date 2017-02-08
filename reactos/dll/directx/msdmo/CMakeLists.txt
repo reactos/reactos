@@ -12,11 +12,12 @@ add_library(msdmo SHARED
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msdmo.def)
 
-set_module_type(msdmo win32dll ENTRYPOINT 0 UNICODE)
+set_module_type(msdmo win32dll UNICODE)
 
 target_link_libraries(msdmo uuid wine mediaobj_guid)
 
 add_importlibs(msdmo
+    msvcrt
     user32
     advapi32
     ole32

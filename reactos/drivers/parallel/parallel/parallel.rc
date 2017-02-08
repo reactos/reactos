@@ -1,4 +1,3 @@
-/* $Id$ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"Parallel Port Device Driver\0"

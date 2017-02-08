@@ -18,20 +18,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include <assert.h>
-#include <stdarg.h>
-#include <string.h>
+#include <config.h>
+//#include <assert.h>
+//#include <stdarg.h>
+//#include <string.h>
 
 #define COBJMACROS
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include "wine/debug.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "dinput.h"
+#include <wine/debug.h>
+//#include "windef.h"
+#include <winbase.h>
+//#include "winerror.h"
+#include <objbase.h>
+#include <rpcproxy.h>
+#include <dinput.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(dinput);
+
+static HINSTANCE instance;
 static LONG dll_count;
 
 /*
@@ -50,37 +57,65 @@ static void UnlockModule(void)
 /******************************************************************************
  *	DirectInput8Create (DINPUT8.@)
  */
-HRESULT WINAPI DirectInput8Create(HINSTANCE hinst, DWORD dwVersion, REFIID riid, LPVOID *ppDI, LPUNKNOWN punkOuter) {
-    HRESULT hr;
+HRESULT WINAPI DECLSPEC_HOTPATCH DirectInput8Create(HINSTANCE hinst, DWORD dwVersion, REFIID riid, LPVOID *ppDI, LPUNKNOWN punkOuter) {
+    IDirectInputA *pDI;
+    HRESULT hr, hrCo;
 
     TRACE("hInst (%p), dwVersion: %d, riid (%s), punkOuter (%p))\n", hinst, dwVersion, debugstr_guid(riid), punkOuter);
 
-    /* The specified version needs to be dinput8 (0x800) or higher */
-    if(dwVersion < 0x800)
-        return DIERR_OLDDIRECTINPUTVERSION;
+    if (!ppDI)
+        return E_POINTER;
 
-    if( !(IsEqualGUID(&IID_IDirectInput8A, riid) || IsEqualGUID(&IID_IDirectInput8W, riid) || IsEqualGUID(&IID_IUnknown, riid)) )
-        return DIERR_INVALIDPARAM;
-
-    CoInitialize(NULL);
-    
-    hr = CoCreateInstance( &CLSID_DirectInput8, punkOuter, CLSCTX_INPROC_SERVER, riid, ppDI);
-    if(FAILED(hr)) {
-        ERR("CoCreateInstance failed with hr = %d; Try running wineprefixcreate to fix it.\n", hr);
-        return DIERR_INVALIDPARAM;
+    if (!IsEqualGUID(&IID_IDirectInput8A, riid) &&
+        !IsEqualGUID(&IID_IDirectInput8W, riid) &&
+        !IsEqualGUID(&IID_IUnknown, riid))
+    {
+        *ppDI = NULL;
+        return DIERR_NOINTERFACE;
     }
 
-    CoUninitialize();
+    hrCo = CoInitialize(NULL);
+
+    hr = CoCreateInstance(&CLSID_DirectInput, NULL, CLSCTX_INPROC_SERVER, &IID_IDirectInputA, (void **)&pDI);
+
+    /* Ensure balance of calls. */
+    if (SUCCEEDED(hrCo))
+        CoUninitialize();
+
+    if (FAILED(hr)) {
+        ERR("CoCreateInstance failed with hr = 0x%08x\n", hr);
+        return hr;
+    }
+
+    hr = IDirectInput_QueryInterface(pDI, riid, ppDI);
+    IDirectInput_Release(pDI);
+
+    if (FAILED(hr))
+        return hr;
 
     /* When aggregation is used (punkOuter!=NULL) the application needs to manually call Initialize. */
     if(punkOuter == NULL && IsEqualGUID(&IID_IDirectInput8A, riid)) {
-        LPDIRECTINPUTA DI = *ppDI;
-        IDirectInput8_Initialize(DI, hinst, dwVersion);
+        IDirectInput8A *DI = *ppDI;
+
+        hr = IDirectInput8_Initialize(DI, hinst, dwVersion);
+        if (FAILED(hr))
+        {
+            IDirectInput8_Release(DI);
+            *ppDI = NULL;
+            return hr;
+        }
     }
 
     if(punkOuter == NULL && IsEqualGUID(&IID_IDirectInput8W, riid)) {
-        LPDIRECTINPUTW DI = *ppDI;
-        IDirectInput8_Initialize(DI, hinst, dwVersion);
+        IDirectInput8W *DI = *ppDI;
+
+        hr = IDirectInput8_Initialize(DI, hinst, dwVersion);
+        if (FAILED(hr))
+        {
+            IDirectInput8_Release(DI);
+            *ppDI = NULL;
+            return hr;
+        }
     }
 
     return S_OK;
@@ -92,11 +127,16 @@ HRESULT WINAPI DirectInput8Create(HINSTANCE hinst, DWORD dwVersion, REFIID riid,
 typedef struct
 {
     /* IUnknown fields */
-    const IClassFactoryVtbl    *lpVtbl;
+    IClassFactory IClassFactory_iface;
 } IClassFactoryImpl;
 
+static inline IClassFactoryImpl *impl_from_IClassFactory(IClassFactory *iface)
+{
+    return CONTAINING_RECORD(iface, IClassFactoryImpl, IClassFactory_iface);
+}
+
 static HRESULT WINAPI DI8CF_QueryInterface(LPCLASSFACTORY iface,REFIID riid,LPVOID *ppobj) {
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+    IClassFactoryImpl *This = impl_from_IClassFactory(iface);
     FIXME("%p %s %p\n",This,debugstr_guid(riid),ppobj);
     return E_NOINTERFACE;
 }
@@ -112,11 +152,21 @@ static ULONG WINAPI DI8CF_Release(LPCLASSFACTORY iface) {
 }
 
 static HRESULT WINAPI DI8CF_CreateInstance(LPCLASSFACTORY iface,LPUNKNOWN pOuter,REFIID riid,LPVOID *ppobj) {
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+    IClassFactoryImpl *This = impl_from_IClassFactory(iface);
 
     TRACE("(%p)->(%p,%s,%p)\n",This,pOuter,debugstr_guid(riid),ppobj);
     if( IsEqualGUID( &IID_IDirectInput8A, riid ) || IsEqualGUID( &IID_IDirectInput8W, riid ) || IsEqualGUID( &IID_IUnknown, riid )) {
-        return DirectInputCreateEx(0, DIRECTINPUT_VERSION, riid, ppobj, pOuter);
+        IDirectInputA *ppDI;
+        HRESULT hr;
+
+        hr = CoCreateInstance(&CLSID_DirectInput, NULL, CLSCTX_INPROC_SERVER, &IID_IDirectInputA, (void **)&ppDI);
+        if (FAILED(hr))
+            return hr;
+
+        hr = IDirectInput_QueryInterface(ppDI, riid, ppobj);
+        IDirectInput_Release(ppDI);
+
+        return hr;
     }
 
     ERR("(%p,%p,%s,%p) Interface not found!\n",This,pOuter,debugstr_guid(riid),ppobj);    
@@ -141,7 +191,7 @@ static const IClassFactoryVtbl DI8CF_Vtbl = {
     DI8CF_CreateInstance,
     DI8CF_LockServer
 };
-static IClassFactoryImpl DINPUT8_CF = { &DI8CF_Vtbl };
+static IClassFactoryImpl DINPUT8_CF = { { &DI8CF_Vtbl } };
 
 
 /***********************************************************************
@@ -166,4 +216,35 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 
     FIXME("(%s,%s,%p): no interface found.\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
     return CLASS_E_CLASSNOTAVAILABLE;
+}
+
+/***********************************************************************
+ *		DllMain
+ */
+BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD reason, LPVOID lpv)
+{
+    switch (reason)
+    {
+    case DLL_PROCESS_ATTACH:
+        instance = hInstDLL;
+        DisableThreadLibraryCalls( hInstDLL );
+        break;
+    }
+    return TRUE;
+}
+
+/***********************************************************************
+ *		DllRegisterServer (DINPUT8.@)
+ */
+HRESULT WINAPI DllRegisterServer(void)
+{
+    return __wine_register_resources( instance );
+}
+
+/***********************************************************************
+ *		DllUnregisterServer (DINPUT8.@)
+ */
+HRESULT WINAPI DllUnregisterServer(void)
+{
+    return __wine_unregister_resources( instance );
 }

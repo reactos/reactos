@@ -21,7 +21,7 @@
 #ifndef _WINE_DLL_CDLG_H
 #define _WINE_DLL_CDLG_H
 
-#include "dlgs.h"
+#include <dlgs.h>
 
 /* Common dialogs implementation globals */
 #define COMDLG32_Atom	((ATOM)0xa000)	/* MS uses this one to identify props */
@@ -165,6 +165,7 @@ typedef struct {
 #include "wingdi.h"
 #include "winuser.h"
 #include "winnls.h"
+#include "wincon.h"
 #include "commctrl.h"
 #include "shlobj.h"
 #include "shellapi.h"

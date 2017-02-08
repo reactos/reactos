@@ -194,7 +194,7 @@ _ui64tow_s( unsigned __int64 value, wchar_t *str,
 	    *--pos = 'a' + digit - 10;
     } while (value != 0);
 
-    if(buffer-pos+65 > size) {
+    if((size_t)(buffer-pos+65) > size) {
         MSVCRT_INVALID_PMT("str[size] is too small");
 #ifndef _LIBCNT_
         *_errno() = EINVAL;

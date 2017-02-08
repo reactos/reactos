@@ -17,7 +17,7 @@
  */
 
 #include "urlmon_main.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
@@ -31,6 +31,10 @@ typedef struct {
     IBinding *binding;
     LPWSTR file_name;
     LPWSTR cache_file;
+    DWORD bindf;
+
+    stop_cache_binding_proc_t onstop_proc;
+    void *ctx;
 } DownloadBSC;
 
 static inline DownloadBSC *impl_from_IBindStatusCallback(IBindStatusCallback *iface)
@@ -62,7 +66,7 @@ static HRESULT WINAPI DownloadBSC_QueryInterface(IBindStatusCallback *iface,
     }
 
     if(*ppv) {
-        IBindStatusCallback_AddRef((IUnknown*)*ppv);
+        IUnknown_AddRef((IUnknown*)*ppv);
         return S_OK;
     }
 
@@ -189,6 +193,7 @@ static HRESULT WINAPI DownloadBSC_OnStopBinding(IBindStatusCallback *iface,
         HRESULT hresult, LPCWSTR szError)
 {
     DownloadBSC *This = impl_from_IBindStatusCallback(iface);
+    HRESULT hres = S_OK;
 
     TRACE("(%p)->(%08x %s)\n", This, hresult, debugstr_w(szError));
 
@@ -204,7 +209,9 @@ static HRESULT WINAPI DownloadBSC_OnStopBinding(IBindStatusCallback *iface,
         }
     }
 
-    if(This->callback)
+    if(This->onstop_proc)
+        hres = This->onstop_proc(This->ctx, This->cache_file, hresult, szError);
+    else if(This->callback)
         IBindStatusCallback_OnStopBinding(This->callback, hresult, szError);
 
     if(This->binding) {
@@ -212,7 +219,7 @@ static HRESULT WINAPI DownloadBSC_OnStopBinding(IBindStatusCallback *iface,
         This->binding = NULL;
     }
 
-    return S_OK;
+    return hres;
 }
 
 static HRESULT WINAPI DownloadBSC_GetBindInfo(IBindStatusCallback *iface,
@@ -235,7 +242,7 @@ static HRESULT WINAPI DownloadBSC_GetBindInfo(IBindStatusCallback *iface,
             ReleaseBindInfo(&bindinfo);
     }
 
-    *grfBINDF = BINDF_PULLDATA | BINDF_NEEDFILE | (bindf & BINDF_ENFORCERESTRICTED);
+    *grfBINDF = BINDF_PULLDATA | BINDF_NEEDFILE | (bindf & BINDF_ENFORCERESTRICTED) | This->bindf;
     return S_OK;
 }
 
@@ -323,37 +330,82 @@ static const IServiceProviderVtbl ServiceProviderVtbl = {
     DwlServiceProvider_QueryService
 };
 
-static HRESULT DownloadBSC_Create(IBindStatusCallback *callback, LPCWSTR file_name, IBindStatusCallback **ret_callback)
+static HRESULT DownloadBSC_Create(IBindStatusCallback *callback, LPCWSTR file_name, DownloadBSC **ret_callback)
 {
-    DownloadBSC *ret = heap_alloc(sizeof(*ret));
+    DownloadBSC *ret;
+
+    ret = heap_alloc_zero(sizeof(*ret));
+    if(!ret)
+        return E_OUTOFMEMORY;
 
     ret->IBindStatusCallback_iface.lpVtbl = &BindStatusCallbackVtbl;
     ret->IServiceProvider_iface.lpVtbl = &ServiceProviderVtbl;
     ret->ref = 1;
-    ret->file_name = heap_strdupW(file_name);
-    ret->cache_file = NULL;
-    ret->binding = NULL;
+
+    if(file_name) {
+        ret->file_name = heap_strdupW(file_name);
+        if(!ret->file_name) {
+            heap_free(ret);
+            return E_OUTOFMEMORY;
+        }
+    }
 
     if(callback)
         IBindStatusCallback_AddRef(callback);
     ret->callback = callback;
 
-    *ret_callback = &ret->IBindStatusCallback_iface;
+    *ret_callback = ret;
     return S_OK;
 }
 
 HRESULT create_default_callback(IBindStatusCallback **ret)
 {
-    IBindStatusCallback *callback;
+    DownloadBSC *callback;
     HRESULT hres;
 
     hres = DownloadBSC_Create(NULL, NULL, &callback);
     if(FAILED(hres))
         return hres;
 
-    hres = wrap_callback(callback, ret);
-    IBindStatusCallback_Release(callback);
+    hres = wrap_callback(&callback->IBindStatusCallback_iface, ret);
+    IBindStatusCallback_Release(&callback->IBindStatusCallback_iface);
     return hres;
+}
+
+HRESULT download_to_cache(IUri *uri, stop_cache_binding_proc_t proc, void *ctx, IBindStatusCallback *callback)
+{
+    DownloadBSC *dwl_bsc;
+    IBindCtx *bindctx;
+    IMoniker *mon;
+    IUnknown *unk;
+    HRESULT hres;
+
+    hres = DownloadBSC_Create(callback, NULL, &dwl_bsc);
+    if(FAILED(hres))
+        return hres;
+
+    dwl_bsc->onstop_proc = proc;
+    dwl_bsc->ctx = ctx;
+    dwl_bsc->bindf = BINDF_ASYNCHRONOUS;
+
+    hres = CreateAsyncBindCtx(0, &dwl_bsc->IBindStatusCallback_iface, NULL, &bindctx);
+    IBindStatusCallback_Release(&dwl_bsc->IBindStatusCallback_iface);
+    if(FAILED(hres))
+        return hres;
+
+    hres = CreateURLMonikerEx2(NULL, uri, &mon, 0);
+    if(FAILED(hres)) {
+        IBindCtx_Release(bindctx);
+        return hres;
+    }
+
+    hres = IMoniker_BindToStorage(mon, bindctx, NULL, &IID_IUnknown, (void**)&unk);
+    IMoniker_Release(mon);
+    IBindCtx_Release(bindctx);
+    if(SUCCEEDED(hres) && unk)
+        IUnknown_Release(unk);
+    return hres;
+
 }
 
 /***********************************************************************
@@ -375,7 +427,7 @@ HRESULT create_default_callback(IBindStatusCallback **ret)
 HRESULT WINAPI URLDownloadToFileW(LPUNKNOWN pCaller, LPCWSTR szURL, LPCWSTR szFileName,
         DWORD dwReserved, LPBINDSTATUSCALLBACK lpfnCB)
 {
-    IBindStatusCallback *callback;
+    DownloadBSC *callback;
     IUnknown *unk;
     IMoniker *mon;
     IBindCtx *bindctx;
@@ -390,8 +442,8 @@ HRESULT WINAPI URLDownloadToFileW(LPUNKNOWN pCaller, LPCWSTR szURL, LPCWSTR szFi
     if(FAILED(hres))
         return hres;
 
-    hres = CreateAsyncBindCtx(0, callback, NULL, &bindctx);
-    IBindStatusCallback_Release(callback);
+    hres = CreateAsyncBindCtx(0, &callback->IBindStatusCallback_iface, NULL, &bindctx);
+    IBindStatusCallback_Release(&callback->IBindStatusCallback_iface);
     if(FAILED(hres))
         return hres;
 

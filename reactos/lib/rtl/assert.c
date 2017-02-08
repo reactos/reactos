@@ -100,7 +100,7 @@ RtlAssert(IN PVOID FailedAssertion,
 #else
    if (NULL != Message)
    {
-      DbgPrint("Assertion \'%s\' failed at %s line %d: %s\n",
+      DbgPrint("Assertion \'%s\' failed at %s line %u: %s\n",
                (PCHAR)FailedAssertion,
                (PCHAR)FileName,
                LineNumber,
@@ -108,7 +108,7 @@ RtlAssert(IN PVOID FailedAssertion,
    }
    else
    {
-      DbgPrint("Assertion \'%s\' failed at %s line %d\n",
+      DbgPrint("Assertion \'%s\' failed at %s line %u\n",
                (PCHAR)FailedAssertion,
                (PCHAR)FileName,
                LineNumber);

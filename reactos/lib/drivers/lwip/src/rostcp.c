@@ -1,4 +1,5 @@
 #include "lwip/sys.h"
+#include "lwip/netif.h"
 #include "lwip/tcpip.h"
 
 #include "rosip.h"
@@ -31,6 +32,9 @@ extern KEVENT TerminationEvent;
 extern NPAGED_LOOKASIDE_LIST MessageLookasideList;
 extern NPAGED_LOOKASIDE_LIST QueueEntryLookasideList;
 
+/* Required for ERR_T to NTSTATUS translation in receive error handling */
+NTSTATUS TCPTranslateError(const err_t err);
+
 static
 void
 LibTCPEmptyQueue(PCONNECTION_ENDPOINT Connection)
@@ -60,6 +64,7 @@ void LibTCPEnqueuePacket(PCONNECTION_ENDPOINT Connection, struct pbuf *p)
 
     qp = (PQUEUE_ENTRY)ExAllocateFromNPagedLookasideList(&QueueEntryLookasideList);
     qp->p = p;
+    qp->Offset = 0;
 
     ExInterlockedInsertTailList(&Connection->PacketQueue, &qp->ListEntry, &Connection->Lock);
 }
@@ -82,8 +87,8 @@ NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHA
 {
     PQUEUE_ENTRY qp;
     struct pbuf* p;
-    NTSTATUS Status = STATUS_PENDING;
-    UINT ReadLength, ExistingDataLength;
+    NTSTATUS Status;
+    UINT ReadLength, PayloadLength, Offset, Copied;
     KIRQL OldIrql;
 
     (*Received) = 0;
@@ -95,56 +100,59 @@ NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHA
         while ((qp = LibTCPDequeuePacket(Connection)) != NULL)
         {
             p = qp->p;
-            ExistingDataLength = (*Received);
 
-            Status = STATUS_SUCCESS;
+            /* Calculate the payload length first */
+            PayloadLength = p->tot_len;
+            PayloadLength -= qp->Offset;
+            Offset = qp->Offset;
 
-            ReadLength = MIN(p->tot_len, RecvLen);
-            if (ReadLength != p->tot_len)
+            /* Check if we're reading the whole buffer */
+            ReadLength = MIN(PayloadLength, RecvLen);
+            ASSERT(ReadLength != 0);
+            if (ReadLength != PayloadLength)
             {
-                if (ExistingDataLength)
-                {
-                    /* The packet was too big but we used some data already so give it another shot later */
-                    InsertHeadList(&Connection->PacketQueue, &qp->ListEntry);
-                    break;
-                }
-                else
-                {
-                    /* The packet is just too big to fit fully in our buffer, even when empty so
-                     * return an informative status but still copy all the data we can fit.
-                     */
-                    Status = STATUS_BUFFER_OVERFLOW;
-                }
+                /* Save this one for later */
+                qp->Offset += ReadLength;
+                InsertHeadList(&Connection->PacketQueue, &qp->ListEntry);
+                qp = NULL;
             }
 
             UnlockObject(Connection, OldIrql);
 
-            /* Return to a lower IRQL because the receive buffer may be pageable memory */
-            for (; (*Received) < ReadLength + ExistingDataLength; (*Received) += p->len, p = p->next)
-            {
-                RtlCopyMemory(RecvBuffer + (*Received), p->payload, p->len);
-            }
+            Copied = pbuf_copy_partial(p, RecvBuffer, ReadLength, Offset);
+            ASSERT(Copied == ReadLength);
 
             LockObject(Connection, &OldIrql);
 
+            /* Update trackers */
             RecvLen -= ReadLength;
+            RecvBuffer += ReadLength;
+            (*Received) += ReadLength;
 
-            /* Use this special pbuf free callback function because we're outside tcpip thread */
-            pbuf_free_callback(qp->p);
+            if (qp != NULL)
+            {
+                /* Use this special pbuf free callback function because we're outside tcpip thread */
+                pbuf_free_callback(qp->p);
 
-            ExFreeToNPagedLookasideList(&QueueEntryLookasideList, qp);
+                ExFreeToNPagedLookasideList(&QueueEntryLookasideList, qp);
+            }
+            else
+            {
+                /* If we get here, it means we've filled the buffer */
+                ASSERT(RecvLen == 0);
+            }
+
+            ASSERT((*Received) != 0);
+            Status = STATUS_SUCCESS;
 
             if (!RecvLen)
-                break;
-
-            if (Status != STATUS_SUCCESS)
                 break;
         }
     }
     else
     {
         if (Connection->ReceiveShutdown)
-            Status = STATUS_SUCCESS;
+            Status = Connection->ReceiveShutdownStatus;
         else
             Status = STATUS_PENDING;
     }
@@ -221,7 +229,20 @@ InternalRecvEventHandler(void *arg, PTCP_PCB pcb, struct pbuf *p, const err_t er
          * whole socket here (by calling tcp_close()) as that would violate TCP specs
          */
         Connection->ReceiveShutdown = TRUE;
-        TCPFinEventHandler(arg, ERR_OK);
+        Connection->ReceiveShutdownStatus = STATUS_SUCCESS;
+
+        /* This code path executes for both remotely and locally initiated closures,
+         * and we need to distinguish between them */
+        if (Connection->SocketContext)
+        {
+            /* Remotely initiated close */
+            TCPRecvEventHandler(arg);
+        }
+        else
+        {
+            /* Locally initated close */
+            TCPFinEventHandler(arg, ERR_CLSD);
+        }
     }
 
     return ERR_OK;
@@ -261,10 +282,31 @@ static
 void
 InternalErrorEventHandler(void *arg, const err_t err)
 {
+    PCONNECTION_ENDPOINT Connection = arg;
+    KIRQL OldIrql;
+
     /* Make sure the socket didn't get closed */
     if (!arg) return;
 
-    TCPFinEventHandler(arg, err);
+    /* Check if data is left to be read */
+    LockObject(Connection, &OldIrql);
+    if (IsListEmpty(&Connection->PacketQueue))
+    {
+        UnlockObject(Connection, OldIrql);
+
+        /* Deliver the error now */
+        TCPFinEventHandler(arg, err);
+    }
+    else
+    {
+        UnlockObject(Connection, OldIrql);
+
+        /* Defer the error delivery until all data is gone */
+        Connection->ReceiveShutdown = TRUE;
+        Connection->ReceiveShutdownStatus = TCPTranslateError(err);
+
+        TCPRecvEventHandler(arg);
+    }
 }
 
 static
@@ -317,6 +359,7 @@ void
 LibTCPBindCallback(void *arg)
 {
     struct lwip_callback_msg *msg = arg;
+    PTCP_PCB pcb = msg->Input.Bind.Connection->SocketContext;
 
     ASSERT(msg);
 
@@ -326,7 +369,10 @@ LibTCPBindCallback(void *arg)
         goto done;
     }
 
-    msg->Output.Bind.Error = tcp_bind((PTCP_PCB)msg->Input.Bind.Connection->SocketContext,
+    /* We're guaranteed that the local address is valid to bind at this point */
+    pcb->so_options |= SOF_REUSEADDR;
+
+    msg->Output.Bind.Error = tcp_bind(pcb,
                                       msg->Input.Bind.IpAddress,
                                       ntohs(msg->Input.Bind.Port));
 
@@ -421,6 +467,9 @@ void
 LibTCPSendCallback(void *arg)
 {
     struct lwip_callback_msg *msg = arg;
+    PTCP_PCB pcb = msg->Input.Send.Connection->SocketContext;
+    ULONG SendLength;
+    UCHAR SendFlags;
 
     ASSERT(msg);
 
@@ -436,19 +485,37 @@ LibTCPSendCallback(void *arg)
         goto done;
     }
 
-    msg->Output.Send.Error = tcp_write((PTCP_PCB)msg->Input.Send.Connection->SocketContext,
-                                       msg->Input.Send.Data,
-                                       msg->Input.Send.DataLength,
-                                       TCP_WRITE_FLAG_COPY);
-    if (msg->Output.Send.Error == ERR_MEM)
+    SendFlags = TCP_WRITE_FLAG_COPY;
+    SendLength = msg->Input.Send.DataLength;
+    if (tcp_sndbuf(pcb) == 0)
     {
         /* No buffer space so return pending */
         msg->Output.Send.Error = ERR_INPROGRESS;
+        goto done;
     }
-    else if (msg->Output.Send.Error == ERR_OK)
+    else if (tcp_sndbuf(pcb) < SendLength)
+    {
+        /* We've got some room so let's send what we can */
+        SendLength = tcp_sndbuf(pcb);
+
+        /* Don't set the push flag */
+        SendFlags |= TCP_WRITE_FLAG_MORE;
+    }
+
+    msg->Output.Send.Error = tcp_write(pcb,
+                                       msg->Input.Send.Data,
+                                       SendLength,
+                                       SendFlags);
+    if (msg->Output.Send.Error == ERR_OK)
     {
         /* Queued successfully so try to send it */
         tcp_output((PTCP_PCB)msg->Input.Send.Connection->SocketContext);
+        msg->Output.Send.Information = SendLength;
+    }
+    else if (msg->Output.Send.Error == ERR_MEM)
+    {
+        /* The queue is too long */
+        msg->Output.Send.Error = ERR_INPROGRESS;
     }
 
 done:
@@ -456,7 +523,7 @@ done:
 }
 
 err_t
-LibTCPSend(PCONNECTION_ENDPOINT Connection, void *const dataptr, const u16_t len, const int safe)
+LibTCPSend(PCONNECTION_ENDPOINT Connection, void *const dataptr, const u16_t len, u32_t *sent, const int safe)
 {
     err_t ret;
     struct lwip_callback_msg *msg;
@@ -478,6 +545,11 @@ LibTCPSend(PCONNECTION_ENDPOINT Connection, void *const dataptr, const u16_t len
             ret = msg->Output.Send.Error;
         else
             ret = ERR_CLSD;
+
+        if (ret == ERR_OK)
+            *sent = msg->Output.Send.Information;
+        else
+            *sent = 0;
 
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
 
@@ -559,21 +631,21 @@ LibTCPShutdownCallback(void *arg)
         goto done;
     }
 
-    if (pcb->state == CLOSE_WAIT)
-    {
-        /* This case actually results in a socket closure later (lwIP bug?) */
-        msg->Input.Shutdown.Connection->SocketContext = NULL;
+    /* These need to be called separately, otherwise we get a tcp_close() */
+    if (msg->Input.Shutdown.shut_rx) {
+        msg->Output.Shutdown.Error = tcp_shutdown(pcb, TRUE, FALSE);
+    }
+    if (msg->Input.Shutdown.shut_tx) {
+        msg->Output.Shutdown.Error = tcp_shutdown(pcb, FALSE, TRUE);
     }
 
-    msg->Output.Shutdown.Error = tcp_shutdown(pcb, msg->Input.Shutdown.shut_rx, msg->Input.Shutdown.shut_tx);
-    if (msg->Output.Shutdown.Error)
-    {
-        msg->Input.Shutdown.Connection->SocketContext = pcb;
-    }
-    else
+    if (!msg->Output.Shutdown.Error)
     {
         if (msg->Input.Shutdown.shut_rx)
+        {
             msg->Input.Shutdown.Connection->ReceiveShutdown = TRUE;
+            msg->Input.Shutdown.Connection->ReceiveShutdownStatus = STATUS_FILE_CLOSED;
+        }
 
         if (msg->Input.Shutdown.shut_tx)
             msg->Input.Shutdown.Connection->SendShutdown = TRUE;
@@ -640,24 +712,13 @@ LibTCPCloseCallback(void *arg)
            msg->Output.Close.Error = tcp_close(pcb);
 
            if (!msg->Output.Close.Error && msg->Input.Close.Callback)
-               TCPFinEventHandler(msg->Input.Close.Connection, ERR_OK);
+               TCPFinEventHandler(msg->Input.Close.Connection, ERR_CLSD);
            break;
 
         default:
-           if (msg->Input.Close.Connection->SendShutdown &&
-               msg->Input.Close.Connection->ReceiveShutdown)
-           {
-               /* Abort the connection */
-               tcp_abort(pcb);
-
-               /* Aborts always succeed */
-               msg->Output.Close.Error = ERR_OK;
-           }
-           else
-           {
-               /* Start the graceful close process (or send RST for pending data) */
-               msg->Output.Close.Error = tcp_close(pcb);
-           }
+           /* Abort the socket */
+           tcp_abort(pcb);
+           msg->Output.Close.Error = ERR_OK;
            break;
     }
 

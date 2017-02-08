@@ -23,13 +23,15 @@
 
 #pragma once
 
-#include "config.h"
+#include <config.h>
 
-#include <windows.h>
+#include <winnls.h>
+#include <winreg.h>
+#include <winuser.h>
+#include <wincon.h>
 #include <tchar.h>
 
 #include "cmdver.h"
-
 #include "cmddbg.h"
 
 #define BREAK_BATCHFILE 1
@@ -409,13 +411,18 @@ INT  cmd_prompt (LPTSTR);
 
 
 /* Prototypes for REDIR.C */
-enum { REDIR_READ, REDIR_WRITE, REDIR_APPEND };
+typedef enum _REDIR_MODE
+{
+	REDIR_READ   = 0,
+	REDIR_WRITE  = 1,
+	REDIR_APPEND = 2
+} REDIR_MODE;
 typedef struct _REDIRECTION
 {
 	struct _REDIRECTION *Next;
 	HANDLE OldHandle;
 	BYTE Number;
-	BYTE Type;
+	REDIR_MODE Mode;
 	TCHAR Filename[];
 } REDIRECTION;
 BOOL PerformRedirection(REDIRECTION *);

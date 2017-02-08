@@ -240,14 +240,14 @@ typedef struct _POLICY_AUDIT_LOG_INFO {
     DWORD AuditLogPercentFull;
     DWORD MaximumLogSize;
     LARGE_INTEGER AuditRetentionPeriod;
-    BYTE AuditLogFullShutdownInProgress;
+    BOOLEAN AuditLogFullShutdownInProgress;
     LARGE_INTEGER TimeToShutdown;
     DWORD NextAuditRecordId;
 } POLICY_AUDIT_LOG_INFO, *PPOLICY_AUDIT_LOG_INFO;
 cpp_quote("#endif")
 
 typedef struct _LSAPR_POLICY_AUDIT_EVENTS_INFO {
-    BYTE AuditingMode;
+    BOOLEAN AuditingMode;
     [size_is(MaximumAuditEventCount)] DWORD *EventAuditingOptions;
     DWORD MaximumAuditEventCount;
 } LSAPR_POLICY_AUDIT_EVENTS_INFO, *PLSAPR_POLICY_AUDIT_EVENTS_INFO;
@@ -775,7 +775,7 @@ interface lsarpc
 
     /* Function 29 */
     NTSTATUS __stdcall LsarSetSecret(
-        [in] LSAPR_HANDLE *SecretHandle,
+        [in] LSAPR_HANDLE SecretHandle,
         [in, unique] PLSAPR_CR_CIPHER_VALUE EncryptedCurrentValue,
         [in, unique] PLSAPR_CR_CIPHER_VALUE EncryptedOldValue);
 
@@ -821,7 +821,7 @@ cpp_quote("#if _WIN32_WINNT >= 0x0351")
         [out] PLSAPR_ACCOUNT_ENUM_BUFFER EnumerationBuffer);
 
     /* Function 36 */
-    NTSTATUS __stdcall LsarEnmuerateAccountRights(
+    NTSTATUS __stdcall LsarEnumerateAccountRights(
         [in] LSAPR_HANDLE PolicyHandle,
         [in] PRPC_SID AccountSid,
         [out] PLSAPR_USER_RIGHT_SET UserRights);
@@ -889,31 +889,27 @@ cpp_quote("#if _WIN32_WINNT >= 0x0500")
     NTSTATUS __stdcall LsarQueryInformationPolicy2(
         [in] LSAPR_HANDLE PolicyHandle,
         [in] POLICY_INFORMATION_CLASS InformationClass,
-        [out] unsigned long *PolicyInformation);
-        /* FIXME: should be [out, switch_is(InformationClass)] PLSAPR_POLICY_INFORMATION *PolicyInformation); */
+        [out, switch_is(InformationClass)] PLSAPR_POLICY_INFORMATION *PolicyInformation);
 
     /* Function 47 */
     NTSTATUS __stdcall LsarSetInformationPolicy2(
         [in] LSAPR_HANDLE PolicyHandle,
         [in] POLICY_INFORMATION_CLASS InformationClass,
-        [in] unsigned long PolicyInformation);
-        /* FIXME: should be [in, switch_is(InformationClass)] PLSAPR_POLICY_INFORMATION PolicyInformation); */
+        [in, switch_is(InformationClass)] PLSAPR_POLICY_INFORMATION PolicyInformation);
 
     /* Function 48 */
     NTSTATUS __stdcall LsarQueryTrustedDomainInfoByName(
         [in] LSAPR_HANDLE PolicyHandle,
         [in] PRPC_UNICODE_STRING TrustedDomainName,
         [in] POLICY_INFORMATION_CLASS InformationClass,
-        [out] unsigned long *PolicyInformation);
-        /* FIXME: should be [out, switch_is(InformationClass)] PLSAPR_POLICY_INFORMATION *PolicyInformation); */
+        [out, switch_is(InformationClass)] PLSAPR_TRUSTED_DOMAIN_INFO *PolicyInformation);
 
     /* Function 49 */
     NTSTATUS __stdcall LsarSetTrustedDomainInfoByName(
         [in] LSAPR_HANDLE PolicyHandle,
         [in] PRPC_UNICODE_STRING TrustedDomainName,
         [in] POLICY_INFORMATION_CLASS InformationClass,
-        [in] unsigned long PolicyInformation);
-        /* FIXME: should be [in, switch_is(InformationClass)] PLSAPR_POLICY_INFORMATION PolicyInformation); */
+        [in, switch_is(InformationClass)] PLSAPR_TRUSTED_DOMAIN_INFO PolicyInformation);
 
     /* Function 50 */
     NTSTATUS __stdcall LsarEnumerateTrustedDomainsEx(
@@ -938,15 +934,13 @@ cpp_quote("#if _WIN32_WINNT >= 0x0500")
     NTSTATUS __stdcall LsarQueryDomainInformationPolicy(
         [in] LSAPR_HANDLE PolicyHandle,
         [in] POLICY_INFORMATION_CLASS InformationClass,
-        [out] unsigned long *PolicyInformation);
-        /* FIXME: should be [out, switch_is(InformationClass)] PLSAPR_POLICY_INFORMATION *PolicyInformation); */
+        [out, switch_is(InformationClass)] PLSAPR_POLICY_DOMAIN_INFORMATION *PolicyInformation);
 
     /* Function 54 */
     NTSTATUS __stdcall LsarSetDomainInformationPolicy(
         [in] LSAPR_HANDLE PolicyHandle,
         [in] POLICY_INFORMATION_CLASS InformationClass,
-        [in] unsigned long PolicyInformation);
-        /* FIXME: should be [in, switch_is(InformationClass)] PLSAPR_POLICY_INFORMATION PolicyInformation); */
+        [in, switch_is(InformationClass)] PLSAPR_POLICY_DOMAIN_INFORMATION PolicyInformation);
 
     /* Function 55 */
     NTSTATUS __stdcall LsarOpenTrustedDomainByName(

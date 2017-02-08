@@ -22,20 +22,20 @@
  */
 
 #include <assert.h>
-#include <math.h>
+//#include <math.h>
 
 #include "quartz_private.h"
 #include "control_private.h"
 #include "pin.h"
 
-#include "uuids.h"
-#include "mmreg.h"
-#include "mmsystem.h"
+//#include "uuids.h"
+#include <mmreg.h>
+//#include "mmsystem.h"
 
-#include "winternl.h"
+//#include "winternl.h"
 
-#include "wine/unicode.h"
-#include "wine/debug.h"
+//#include "wine/unicode.h"
+#include <wine/debug.h>
 
 #include "parser.h"
 

@@ -17,16 +17,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <config.h>
+#include <wine/port.h>
 
-#include <math.h>
-#include <limits.h>
+//#include <math.h>
+//#include <limits.h>
 
 #include "jscript.h"
-#include "ntsecapi.h"
+#include <ntsecapi.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
@@ -57,520 +57,448 @@ static const WCHAR sinW[] = {'s','i','n',0};
 static const WCHAR sqrtW[] = {'s','q','r','t',0};
 static const WCHAR tanW[] = {'t','a','n',0};
 
-static HRESULT math_constant(DOUBLE val, WORD flags, VARIANT *retv)
-{
-    switch(flags) {
-    case DISPATCH_PROPERTYGET:
-        V_VT(retv) = VT_R8;
-        V_R8(retv) = val;
-        return S_OK;
-    case DISPATCH_PROPERTYPUT:
-        return S_OK;
-    }
-
-    FIXME("unhandled flags %x\n", flags);
-    return E_NOTIMPL;
-}
-
-/* ECMA-262 3rd Edition    15.8.1.1 */
-static HRESULT Math_E(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    TRACE("\n");
-    return math_constant(M_E, flags, retv);
-}
-
-/* ECMA-262 3rd Edition    15.8.1.4 */
-static HRESULT Math_LOG2E(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    TRACE("\n");
-    return math_constant(M_LOG2E, flags, retv);
-}
-
-/* ECMA-262 3rd Edition    15.8.1.4 */
-static HRESULT Math_LOG10E(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    TRACE("\n");
-    return math_constant(M_LOG10E, flags, retv);
-}
-
-static HRESULT Math_LN2(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    TRACE("\n");
-    return math_constant(M_LN2, flags, retv);
-}
-
-static HRESULT Math_LN10(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    TRACE("\n");
-    return math_constant(M_LN10, flags, retv);
-}
-
-/* ECMA-262 3rd Edition    15.8.1.6 */
-static HRESULT Math_PI(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    TRACE("\n");
-    return math_constant(M_PI, flags, retv);
-}
-
-static HRESULT Math_SQRT2(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    TRACE("\n");
-    return math_constant(M_SQRT2, flags, retv);
-}
-
-static HRESULT Math_SQRT1_2(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    TRACE("\n");
-    return math_constant(M_SQRT1_2, flags, retv);
-}
-
 /* ECMA-262 3rd Edition    15.8.2.12 */
-static HRESULT Math_abs(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT Math_abs(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
-    VARIANT v;
-    DOUBLE d;
+    double d;
     HRESULT hres;
 
     TRACE("\n");
 
-    if(!arg_cnt(dp)) {
-        if(retv)
-            num_set_nan(retv);
+    if(!argc) {
+        if(r)
+            *r = jsval_number(NAN);
         return S_OK;
     }
 
-    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, argv[0], &d);
     if(FAILED(hres))
         return hres;
 
-    d = num_val(&v);
-    if(retv)
-        num_set_val(retv, d < 0.0 ? -d : d);
+    if(r)
+        *r = jsval_number(d < 0.0 ? -d : d);
     return S_OK;
 }
 
-static HRESULT Math_acos(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT Math_acos(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
-    VARIANT v;
+    double x;
     HRESULT hres;
 
     TRACE("\n");
 
-    if(!arg_cnt(dp)) {
-        if(retv) num_set_nan(retv);
+    if(!argc) {
+        if(r)
+            *r = jsval_number(NAN);
         return S_OK;
     }
 
-    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, argv[0], &x);
     if(FAILED(hres))
         return hres;
 
-    if(retv) num_set_val(retv, acos(num_val(&v)));
+    if(r)
+        *r = jsval_number(x < -1.0 || x > 1.0 ? NAN : acos(x));
     return S_OK;
 }
 
-static HRESULT Math_asin(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT Math_asin(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
-    VARIANT v;
+    double x;
     HRESULT hres;
 
     TRACE("\n");
 
-    if(!arg_cnt(dp)) {
-        if(retv) num_set_nan(retv);
+    if(!argc) {
+        if(r)
+            *r = jsval_number(NAN);
         return S_OK;
     }
 
-    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, argv[0], &x);
     if(FAILED(hres))
         return hres;
 
-    if(retv) num_set_val(retv, asin(num_val(&v)));
+    if(r)
+        *r = jsval_number(x < -1.0 || x > 1.0 ? NAN : asin(x));
     return S_OK;
 }
 
-static HRESULT Math_atan(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT Math_atan(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
-    VARIANT v;
+    double x;
     HRESULT hres;
 
     TRACE("\n");
 
-    if(!arg_cnt(dp)) {
-        if(retv) num_set_nan(retv);
+    if(!argc) {
+        if(r)
+            *r = jsval_number(NAN);
         return S_OK;
     }
 
-    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, argv[0], &x);
     if(FAILED(hres))
         return hres;
 
-    if(retv) num_set_val(retv, atan(num_val(&v)));
+    if(r)
+        *r = jsval_number(atan(x));
     return S_OK;
 }
 
-static HRESULT Math_atan2(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT Math_atan2(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
-    VARIANT v1, v2;
+    double x, y;
     HRESULT hres;
 
     TRACE("\n");
 
-    if(arg_cnt(dp)<2) {
-        if(retv) num_set_nan(retv);
+    if(argc<2) {
+        if(r)
+            *r = jsval_number(NAN);
         return S_OK;
     }
 
-    hres = to_number(ctx, get_arg(dp, 0), ei, &v1);
+    hres = to_number(ctx, argv[0], &y);
     if(FAILED(hres))
         return hres;
 
-    hres = to_number(ctx, get_arg(dp, 1), ei, &v2);
+    hres = to_number(ctx, argv[1], &x);
     if(FAILED(hres))
         return hres;
 
-    if(retv) num_set_val(retv, atan2(num_val(&v1), num_val(&v2)));
+    if(r)
+        *r = jsval_number(atan2(y, x));
     return S_OK;
 }
 
 /* ECMA-262 3rd Edition    15.8.2.6 */
-static HRESULT Math_ceil(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT Math_ceil(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
-    VARIANT v;
+    double x;
     HRESULT hres;
 
     TRACE("\n");
 
-    if(!arg_cnt(dp)) {
-        if(retv)
-            num_set_nan(retv);
+    if(!argc) {
+        if(r)
+            *r = jsval_number(NAN);
         return S_OK;
     }
 
-    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, argv[0], &x);
     if(FAILED(hres))
         return hres;
 
-    if(retv)
-        num_set_val(retv, ceil(num_val(&v)));
+    if(r)
+        *r = jsval_number(ceil(x));
     return S_OK;
 }
 
-static HRESULT Math_cos(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT Math_cos(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
-    VARIANT v;
+    double x;
     HRESULT hres;
 
     TRACE("\n");
 
-    if(!arg_cnt(dp)) {
-        if(retv) num_set_nan(retv);
+    if(!argc) {
+        if(r)
+            *r = jsval_number(NAN);
         return S_OK;
     }
 
-    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, argv[0], &x);
     if(FAILED(hres))
         return hres;
 
-    if(retv) num_set_val(retv, cos(num_val(&v)));
+    if(r)
+        *r = jsval_number(cos(x));
     return S_OK;
 }
 
-static HRESULT Math_exp(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT Math_exp(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
-    VARIANT v;
+    double x;
     HRESULT hres;
 
     TRACE("\n");
 
-    if(!arg_cnt(dp)) {
-        if(retv) num_set_nan(retv);
+    if(!argc) {
+        if(r)
+            *r = jsval_number(NAN);
         return S_OK;
     }
 
-    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, argv[0], &x);
     if(FAILED(hres))
         return hres;
 
-    if(retv) num_set_val(retv, exp(num_val(&v)));
+    if(r)
+        *r = jsval_number(exp(x));
     return S_OK;
 }
 
-static HRESULT Math_floor(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT Math_floor(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
-    VARIANT v;
+    double x;
     HRESULT hres;
 
     TRACE("\n");
 
-    if(!arg_cnt(dp)) {
-        if(retv)
-            num_set_nan(retv);
+    if(!argc) {
+        if(r)
+            *r = jsval_number(NAN);
         return S_OK;
     }
 
-    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, argv[0], &x);
     if(FAILED(hres))
         return hres;
 
-    if(retv)
-        num_set_val(retv, floor(num_val(&v)));
+    if(r)
+        *r = jsval_number(floor(x));
     return S_OK;
 }
 
-static HRESULT Math_log(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT Math_log(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
-    VARIANT v;
+    double x;
     HRESULT hres;
 
     TRACE("\n");
 
-    if(!arg_cnt(dp)) {
-        if(retv)
-            num_set_nan(retv);
+    if(!argc) {
+        if(r)
+            *r = jsval_number(NAN);
         return S_OK;
     }
 
-    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, argv[0], &x);
     if(FAILED(hres))
         return hres;
 
-    if(retv)
-        num_set_val(retv, log(num_val(&v)));
+    if(r)
+        *r = jsval_number(x < -0.0 ? NAN : log(x));
     return S_OK;
 }
 
 /* ECMA-262 3rd Edition    15.8.2.11 */
-static HRESULT Math_max(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT Math_max(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
     DOUBLE max, d;
-    VARIANT v;
     DWORD i;
     HRESULT hres;
 
     TRACE("\n");
 
-    if(!arg_cnt(dp)) {
-        if(retv)
-            num_set_inf(retv, FALSE);
+    if(!argc) {
+        if(r)
+            *r = jsval_number(-INFINITY);
         return S_OK;
     }
 
-    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, argv[0], &max);
     if(FAILED(hres))
         return hres;
 
-    max = num_val(&v);
-    for(i=1; i < arg_cnt(dp); i++) {
-        hres = to_number(ctx, get_arg(dp, i), ei, &v);
+    for(i=1; i < argc; i++) {
+        hres = to_number(ctx, argv[i], &d);
         if(FAILED(hres))
             return hres;
 
-        d = num_val(&v);
         if(d > max || isnan(d))
             max = d;
     }
 
-    if(retv)
-        num_set_val(retv, max);
+    if(r)
+        *r = jsval_number(max);
     return S_OK;
 }
 
 /* ECMA-262 3rd Edition    15.8.2.12 */
-static HRESULT Math_min(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT Math_min(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
     DOUBLE min, d;
-    VARIANT v;
     DWORD i;
     HRESULT hres;
 
     TRACE("\n");
 
-    if(!arg_cnt(dp)) {
-        if(retv)
-            num_set_inf(retv, TRUE);
+    if(!argc) {
+        if(r)
+            *r = jsval_number(INFINITY);
         return S_OK;
     }
 
-    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, argv[0], &min);
     if(FAILED(hres))
         return hres;
 
-    min = num_val(&v);
-    for(i=1; i < arg_cnt(dp); i++) {
-        hres = to_number(ctx, get_arg(dp, i), ei, &v);
+    for(i=1; i < argc; i++) {
+        hres = to_number(ctx, argv[i], &d);
         if(FAILED(hres))
             return hres;
 
-        d = num_val(&v);
         if(d < min || isnan(d))
             min = d;
     }
 
-    if(retv)
-        num_set_val(retv, min);
+    if(r)
+        *r = jsval_number(min);
     return S_OK;
 }
 
 /* ECMA-262 3rd Edition    15.8.2.13 */
-static HRESULT Math_pow(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT Math_pow(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
-    VARIANT x, y;
+    double x, y;
     HRESULT hres;
 
     TRACE("\n");
 
-    if(arg_cnt(dp) < 2) {
-        if(retv) num_set_nan(retv);
+    if(argc < 2) {
+        if(r)
+            *r = jsval_number(NAN);
         return S_OK;
     }
 
-    hres = to_number(ctx, get_arg(dp, 0), ei, &x);
+    hres = to_number(ctx, argv[0], &x);
     if(FAILED(hres))
         return hres;
 
-    hres = to_number(ctx, get_arg(dp, 1), ei, &y);
+    hres = to_number(ctx, argv[1], &y);
     if(FAILED(hres))
         return hres;
 
-    if(retv)
-        num_set_val(retv, pow(num_val(&x), num_val(&y)));
+    if(r)
+        *r = jsval_number(pow(x, y));
     return S_OK;
 }
 
 /* ECMA-262 3rd Edition    15.8.2.14 */
-static HRESULT Math_random(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT Math_random(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
-    UINT r;
+    UINT x;
 
     TRACE("\n");
 
-    if(!RtlGenRandom(&r, sizeof(r)))
+    if(!RtlGenRandom(&x, sizeof(x)))
         return E_UNEXPECTED;
 
-    if(retv)
-        num_set_val(retv, (DOUBLE)r/(DOUBLE)UINT_MAX);
-
+    if(r)
+        *r = jsval_number((double)x/(double)UINT_MAX);
     return S_OK;
 }
 
 /* ECMA-262 3rd Edition    15.8.2.15 */
-static HRESULT Math_round(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT Math_round(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
-    VARIANT v;
+    double x;
     HRESULT hres;
 
     TRACE("\n");
 
-    if(!arg_cnt(dp)) {
-        num_set_nan(retv);
+    if(!argc) {
+        if(r)
+            *r = jsval_number(NAN);
         return S_OK;
     }
 
-    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, argv[0], &x);
     if(FAILED(hres))
         return hres;
 
-    if(retv)
-        num_set_val(retv, floor(num_val(&v)+0.5));
+    if(r)
+        *r = jsval_number(floor(x+0.5));
     return S_OK;
 }
 
-static HRESULT Math_sin(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT Math_sin(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
-    VARIANT v;
+    double x;
     HRESULT hres;
 
     TRACE("\n");
 
-    if(!arg_cnt(dp)) {
-        if(retv) num_set_nan(retv);
+    if(!argc) {
+        if(r)
+            *r = jsval_number(NAN);
         return S_OK;
     }
 
-    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, argv[0], &x);
     if(FAILED(hres))
         return hres;
 
-    if(retv) num_set_val(retv, sin(num_val(&v)));
+    if(r)
+        *r = jsval_number(sin(x));
     return S_OK;
 }
 
-static HRESULT Math_sqrt(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT Math_sqrt(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
-    VARIANT v;
+    double x;
     HRESULT hres;
 
     TRACE("\n");
 
-    if(!arg_cnt(dp)) {
-        if(retv) num_set_nan(retv);
+    if(!argc) {
+        if(r)
+            *r = jsval_number(NAN);
         return S_OK;
     }
 
-    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, argv[0], &x);
     if(FAILED(hres))
         return hres;
 
-    if(retv) num_set_val(retv, sqrt(num_val(&v)));
+    if(r)
+        *r = jsval_number(sqrt(x));
     return S_OK;
 }
 
-static HRESULT Math_tan(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+static HRESULT Math_tan(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
 {
-    VARIANT v;
+    double x;
     HRESULT hres;
 
     TRACE("\n");
 
-    if(!arg_cnt(dp)) {
-        if(retv) num_set_nan(retv);
+    if(!argc) {
+        if(r)
+            *r = jsval_number(NAN);
         return S_OK;
     }
 
-    hres = to_number(ctx, get_arg(dp, 0), ei, &v);
+    hres = to_number(ctx, argv[0], &x);
     if(FAILED(hres))
         return hres;
 
-    if(retv) num_set_val(retv, tan(num_val(&v)));
+    if(r)
+        *r = jsval_number(tan(x));
     return S_OK;
 }
 
 static const builtin_prop_t Math_props[] = {
-    {EW,        Math_E,        0},
-    {LN10W,     Math_LN10,     0},
-    {LN2W,      Math_LN2,      0},
-    {LOG10EW,   Math_LOG10E,   0},
-    {LOG2EW,    Math_LOG2E,    0},
-    {PIW,       Math_PI,       0},
-    {SQRT1_2W,  Math_SQRT1_2,  0},
-    {SQRT2W,    Math_SQRT2,    0},
     {absW,      Math_abs,      PROPF_METHOD|1},
     {acosW,     Math_acos,     PROPF_METHOD|1},
     {asinW,     Math_asin,     PROPF_METHOD|1},
@@ -600,12 +528,27 @@ static const builtin_info_t Math_info = {
     NULL
 };
 
-HRESULT create_math(script_ctx_t *ctx, DispatchEx **ret)
+HRESULT create_math(script_ctx_t *ctx, jsdisp_t **ret)
 {
-    DispatchEx *math;
+    jsdisp_t *math;
+    unsigned i;
     HRESULT hres;
 
-    math = heap_alloc_zero(sizeof(DispatchEx));
+    struct {
+        const WCHAR *name;
+        DOUBLE val;
+    }constants[] = {
+        {EW,        M_E},        /* ECMA-262 3rd Edition    15.8.1.1 */
+        {LN10W,     M_LN10},     /* ECMA-262 3rd Edition    15.8.1.2 */
+        {LN2W,      M_LN2},      /* ECMA-262 3rd Edition    15.8.1.3 */
+        {LOG2EW,    M_LOG2E},    /* ECMA-262 3rd Edition    15.8.1.4 */
+        {LOG10EW,   M_LOG10E},   /* ECMA-262 3rd Edition    15.8.1.5 */
+        {PIW,       M_PI},       /* ECMA-262 3rd Edition    15.8.1.6 */
+        {SQRT1_2W,  M_SQRT1_2},  /* ECMA-262 3rd Edition    15.8.1.7 */
+        {SQRT2W,    M_SQRT2},    /* ECMA-262 3rd Edition    15.8.1.8 */
+    };
+
+    math = heap_alloc_zero(sizeof(jsdisp_t));
     if(!math)
         return E_OUTOFMEMORY;
 
@@ -613,6 +556,14 @@ HRESULT create_math(script_ctx_t *ctx, DispatchEx **ret)
     if(FAILED(hres)) {
         heap_free(math);
         return hres;
+    }
+
+    for(i=0; i < sizeof(constants)/sizeof(*constants); i++) {
+        hres = jsdisp_propput_const(math, constants[i].name, jsval_number(constants[i].val));
+        if(FAILED(hres)) {
+            jsdisp_release(math);
+            return hres;
+        }
     }
 
     *ret = math;

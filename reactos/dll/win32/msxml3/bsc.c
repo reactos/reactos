@@ -16,31 +16,38 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
 #define COBJMACROS
 #define NONAMELESSUNION
 
-#include "config.h"
+#include <config.h>
 
-#include <stdarg.h>
-#include <assert.h>
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "ole2.h"
-#include "msxml2.h"
-#include "wininet.h"
-#include "urlmon.h"
-#include "winreg.h"
-#include "shlwapi.h"
+//#include <stdarg.h>
+#ifdef HAVE_LIBXML2
+# include <libxml/parser.h>
+//# include <libxml/xmlerror.h>
+#endif
 
-#include "wine/debug.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+#include <ole2.h>
+#include <msxml6.h>
+#include <wininet.h>
+//#include "urlmon.h"
+#include <winreg.h>
+#include <shlwapi.h>
+
+#include <wine/debug.h>
 
 #include "msxml_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 struct bsc_t {
-    const struct IBindStatusCallbackVtbl *lpVtbl;
+    IBindStatusCallback IBindStatusCallback_iface;
 
     LONG ref;
 
@@ -49,11 +56,12 @@ struct bsc_t {
 
     IBinding *binding;
     IStream *memstream;
+    HRESULT hres;
 };
 
 static inline bsc_t *impl_from_IBindStatusCallback( IBindStatusCallback *iface )
 {
-    return (bsc_t *)((char*)iface - FIELD_OFFSET(bsc_t, lpVtbl));
+    return CONTAINING_RECORD(iface, bsc_t, IBindStatusCallback_iface);
 }
 
 static HRESULT WINAPI bsc_QueryInterface(
@@ -70,6 +78,7 @@ static HRESULT WINAPI bsc_QueryInterface(
     }
 
     TRACE("interface %s not implemented\n", debugstr_guid(riid));
+    *ppobj = NULL;
     return E_NOINTERFACE;
 }
 
@@ -168,7 +177,7 @@ static HRESULT WINAPI bsc_OnStopBinding(
             DWORD len = GlobalSize(hglobal);
             char *ptr = GlobalLock(hglobal);
 
-            hr = This->onDataAvailable(This->obj, ptr, len);
+            This->hres = hr = This->onDataAvailable(This->obj, ptr, len);
 
             GlobalUnlock(hglobal);
         }
@@ -236,12 +245,9 @@ static const struct IBindStatusCallbackVtbl bsc_vtbl =
     bsc_OnObjectAvailable
 };
 
-HRESULT bind_url(LPCWSTR url, HRESULT (*onDataAvailable)(void*,char*,DWORD), void *obj, bsc_t **ret)
+HRESULT create_moniker_from_url(LPCWSTR url, IMoniker **mon)
 {
     WCHAR fileUrl[INTERNET_MAX_URL_LENGTH];
-    bsc_t *bsc;
-    IBindCtx *pbc;
-    HRESULT hr;
 
     TRACE("%s\n", debugstr_w(url));
 
@@ -264,39 +270,45 @@ HRESULT bind_url(LPCWSTR url, HRESULT (*onDataAvailable)(void*,char*,DWORD), voi
         url = fileUrl;
     }
 
+    return CreateURLMonikerEx(NULL, url, mon, 0);
+}
+
+HRESULT bind_url(IMoniker *mon, HRESULT (*onDataAvailable)(void*,char*,DWORD),
+        void *obj, bsc_t **ret)
+{
+    bsc_t *bsc;
+    IBindCtx *pbc;
+    HRESULT hr;
+
+    TRACE("%p\n", mon);
+
     hr = CreateBindCtx(0, &pbc);
     if(FAILED(hr))
         return hr;
 
     bsc = heap_alloc(sizeof(bsc_t));
 
-    bsc->lpVtbl = &bsc_vtbl;
+    bsc->IBindStatusCallback_iface.lpVtbl = &bsc_vtbl;
     bsc->ref = 1;
     bsc->obj = obj;
     bsc->onDataAvailable = onDataAvailable;
     bsc->binding = NULL;
     bsc->memstream = NULL;
+    bsc->hres = S_OK;
 
-    hr = RegisterBindStatusCallback(pbc, (IBindStatusCallback*)&bsc->lpVtbl, NULL, 0);
+    hr = RegisterBindStatusCallback(pbc, &bsc->IBindStatusCallback_iface, NULL, 0);
     if(SUCCEEDED(hr))
     {
-        IMoniker *moniker;
-
-        hr = CreateURLMoniker(NULL, url, &moniker);
-        if(SUCCEEDED(hr))
-        {
-            IStream *stream;
-            hr = IMoniker_BindToStorage(moniker, pbc, NULL, &IID_IStream, (LPVOID*)&stream);
-            IMoniker_Release(moniker);
-            if(stream)
-                IStream_Release(stream);
-        }
+        IStream *stream;
+        hr = IMoniker_BindToStorage(mon, pbc, NULL, &IID_IStream, (LPVOID*)&stream);
+        if(stream)
+            IStream_Release(stream);
         IBindCtx_Release(pbc);
     }
 
     if(FAILED(hr))
     {
-        IBindStatusCallback_Release((IBindStatusCallback*)&bsc->lpVtbl);
+        IBindStatusCallback_Release(&bsc->IBindStatusCallback_iface);
         bsc = NULL;
     }
 
@@ -304,11 +316,16 @@ HRESULT bind_url(LPCWSTR url, HRESULT (*onDataAvailable)(void*,char*,DWORD), voi
     return hr;
 }
 
-void detach_bsc(bsc_t *bsc)
+HRESULT detach_bsc(bsc_t *bsc)
 {
+    HRESULT hres;
+
     if(bsc->binding)
         IBinding_Abort(bsc->binding);
 
     bsc->obj = NULL;
-    IBindStatusCallback_Release((IBindStatusCallback*)&bsc->lpVtbl);
+    hres = bsc->hres;
+    IBindStatusCallback_Release(&bsc->IBindStatusCallback_iface);
+
+    return hres;
 }

@@ -18,8 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windows.h>
-#include "shlobj.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <shlobj.h>
+
 #include "resource.h"
 
 #include "version.rc"
@@ -55,6 +58,7 @@ IDR_REGTREEOPTIONS       REGISTRY                "res/regtreeoptions.rgs"
 //#include "lang/en-GB.rc"
 //#include "lang/fi-FI.rc"
 //#include "lang/fr-FR.rc"
+//#include "lang/he-IL.rc"
 //#include "lang/hu-HU.rc"
 //#include "lang/it-IT.rc"
 //#include "lang/ja-JP.rc"
@@ -79,6 +83,9 @@ IDR_REGTREEOPTIONS       REGISTRY                "res/regtreeoptions.rgs"
 #endif
 #ifdef LANGUAGE_ES_ES
     #include "lang/es-ES.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/he-IL.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/it-IT.rc"

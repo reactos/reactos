@@ -1,4 +1,4 @@
-/* $Id$
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/connect.c
@@ -17,6 +17,8 @@ AfdGetConnectOptions(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
     UINT BufferSize = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
 
@@ -44,8 +46,10 @@ AfdSetConnectOptions(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PVOID ConnectOptions = LockRequest(Irp, IrpSp);
+    PVOID ConnectOptions = LockRequest(Irp, IrpSp, FALSE, NULL);
     UINT ConnectOptionsSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
 
@@ -80,8 +84,10 @@ AfdSetConnectOptionsSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PUINT ConnectOptionsSize = LockRequest(Irp, IrpSp);
+    PUINT ConnectOptionsSize = LockRequest(Irp, IrpSp, FALSE, NULL);
     UINT BufferSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
 
@@ -118,6 +124,8 @@ AfdGetConnectData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_FCB FCB = FileObject->FsContext;
     UINT BufferSize = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
 
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
 
     if (FCB->ConnectDataSize == 0)
@@ -144,8 +152,10 @@ AfdSetConnectData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PVOID ConnectData = LockRequest(Irp, IrpSp);
+    PVOID ConnectData = LockRequest(Irp, IrpSp, FALSE, NULL);
     UINT ConnectDataSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
 
@@ -179,8 +189,10 @@ AfdSetConnectDataSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PUINT ConnectDataSize = LockRequest(Irp, IrpSp);
+    PUINT ConnectDataSize = LockRequest(Irp, IrpSp, FALSE, NULL);
     UINT BufferSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
 
@@ -287,6 +299,7 @@ MakeSocketIntoConnection(PAFD_FCB FCB) {
    return Status;
 }
 
+static IO_COMPLETION_ROUTINE StreamSocketConnectComplete;
 static
 NTSTATUS
 NTAPI
@@ -297,7 +310,7 @@ StreamSocketConnectComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PLIST_ENTRY NextIrpEntry;
     PIRP NextIrp;
 
-    AFD_DbgPrint(MID_TRACE,("Called: FCB %x, FO %x\n",
+    AFD_DbgPrint(MID_TRACE,("Called: FCB %p, FO %p\n",
                             Context, FCB->FileObject));
 
     /* I was wrong about this before as we can have pending writes to a not
@@ -338,7 +351,7 @@ StreamSocketConnectComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_CONNECT] ) ) {
         NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_CONNECT]);
         NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
-        AFD_DbgPrint(MID_TRACE,("Completing connect %x\n", NextIrp));
+        AFD_DbgPrint(MID_TRACE,("Completing connect %p\n", NextIrp));
         NextIrp->IoStatus.Status = Status;
         NextIrp->IoStatus.Information = NT_SUCCESS(Status) ? ((ULONG_PTR)FCB->Connection.Handle) : 0;
         if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
@@ -374,7 +387,7 @@ StreamSocketConnectComplete(PDEVICE_OBJECT DeviceObject, PIRP Irp,
             NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]);
             NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP,
                                         Tail.Overlay.ListEntry);
-            AFD_DbgPrint(MID_TRACE,("Launching send request %x\n", NextIrp));
+            AFD_DbgPrint(MID_TRACE,("Launching send request %p\n", NextIrp));
             Status = AfdConnectedSocketWriteData
                 ( DeviceObject,
                   NextIrp,
@@ -403,10 +416,12 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
     PAFD_CONNECT_INFO ConnectReq;
-    AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
+    AFD_DbgPrint(MID_TRACE,("Called on %p\n", FCB));
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
-    if( !(ConnectReq = LockRequest( Irp, IrpSp )) )
+    if( !(ConnectReq = LockRequest( Irp, IrpSp, FALSE, NULL )) )
         return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp,
                                        0 );
 
@@ -445,7 +460,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
             TaBuildNullTransportAddress( ConnectReq->RemoteAddress.Address[0].AddressType );
 
         if( FCB->LocalAddress ) {
-            Status = WarmSocketForBind( FCB );
+            Status = WarmSocketForBind( FCB, AFD_SHARE_WILDCARD );
 
             if( NT_SUCCESS(Status) )
                 FCB->State = SOCKET_STATE_BOUND;
@@ -494,7 +509,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
         FCB->State = SOCKET_STATE_CONNECTING;
 
-        AFD_DbgPrint(MID_TRACE,("Queueing IRP %x\n", Irp));
+        AFD_DbgPrint(MID_TRACE,("Queueing IRP %p\n", Irp));
         Status = QueueUserModeIrp( FCB, Irp, FUNCTION_CONNECT );
         if (Status == STATUS_PENDING)
         {
@@ -517,7 +532,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         break;
 
     default:
-        AFD_DbgPrint(MIN_TRACE,("Inappropriate socket state %d for connect\n",
+        AFD_DbgPrint(MIN_TRACE,("Inappropriate socket state %u for connect\n",
                                 FCB->State));
         break;
     }

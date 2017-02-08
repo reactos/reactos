@@ -77,14 +77,13 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Barra de tareas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "Apariencia de la Barra de tareas ", IDC_STATIC, 6,6,240,121
+    GROUPBOX        "Apariencia de la Barra de tareas ", IDC_STATIC, 6,6,240,104
     CONTROL         "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13,18,224,21
     AUTOCHECKBOX    "&Bloquear la barra de tareas", IDC_TASKBARPROP_LOCK, 13,45,200,10
     AUTOCHECKBOX    "Ocultar automáticam&ente la barra de tareas", IDC_TASKBARPROP_HIDE, 13,58,200,10
     AUTOCHECKBOX    "Mantener la barra de tareas &siempre visible", IDC_TASKBARPROP_ONTOP, 13,71,200,10
     AUTOCHECKBOX    "&Agrupar botones similares  de la barra de tareas", IDC_TASKBARPROP_GROUP, 13,84,200,10
     AUTOCHECKBOX    "Mostrar Inicio rápi&do", IDC_TASKBARPROP_SHOWQL, 13,97,200,10
-    AUTOCHECKBOX    "M&ostrar vista previa de las ventanas (miniaturas)", IDC_TASKBARPROP_WNDPREV, 13,110,200,10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
@@ -129,6 +128,16 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     LTEXT           "Seleccione las barras de herramientas que desea agregar a la barra de tareas.", IDC_STATIC, 7,7,223,12, WS_DISABLED
     CONTROL         "", IDC_TASKBARPROP_DESKBANDLIST, "SysTreeView32",WS_BORDER | WS_TABSTOP | WS_DISABLED, 7,20,236,160, WS_EX_CLIENTEDGE
+END
+
+IDD_TASKBARPROP_ADVANCED DIALOGEX 0, 0, 252, 218
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Advanced"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "Advanced options", IDC_STATIC, 6,6,240,121
+    AUTOCHECKBOX    "Show s&econds", IDC_TASKBARPROP_SECONDS, 13,18,200,10
+    AUTOCHECKBOX    "M&ostrar vista previa de las ventanas (miniaturas)", IDC_TASKBARPROP_WNDPREV, 13,31,200,10
 END
 
 

@@ -562,7 +562,7 @@ RegQueryValueExA(
 	rc = RegQueryValueExW(hKey, lpValueNameW, lpReserved, lpType, lpData, lpcbData);
 	if (lpValueNameW)
 		free(lpValueNameW);
-	return ERROR_UNSUCCESSFUL;
+	return rc;
 }
 
 LONG WINAPI

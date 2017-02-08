@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <config.h>
+//#include "wine/port.h"
 
 #include "ddraw_private.h"
 
@@ -99,29 +99,39 @@ static HRESULT WINAPI ddraw_clipper_SetHWnd(IDirectDrawClipper *iface, DWORD fla
 
 static HRGN get_window_region(HWND window)
 {
-    POINT origin = {0, 0};
-    RECT client_rect;
+    POINT origin;
+    HRGN rgn;
+    HDC dc;
 
-    if (!GetClientRect(window, &client_rect))
+    if (!(dc = GetDC(window)))
     {
-        /* This can happen if the window is destroyed, for example. */
-        WARN("Failed to get client rect.\n");
+        WARN("Failed to get dc.\n");
         return NULL;
     }
 
-    if (!ClientToScreen(window, &origin))
+    if (!(rgn = CreateRectRgn(0, 0, 0, 0)))
     {
-        ERR("Failed to translate origin.\n");
+        ERR("Failed to create region.\n");
+        ReleaseDC(window, dc);
         return NULL;
     }
 
-    if (!OffsetRect(&client_rect, origin.x, origin.y))
+    if (GetRandomRgn(dc, rgn, SYSRGN) != 1)
     {
-        ERR("Failed to translate client rect.\n");
+        ERR("Failed to get window region.\n");
+        DeleteObject(rgn);
+        ReleaseDC(window, dc);
         return NULL;
     }
 
-    return CreateRectRgnIndirect(&client_rect);
+    if (GetVersion() & 0x80000000)
+    {
+        GetDCOrgEx(dc, &origin);
+        OffsetRgn(rgn, origin.x, origin.y);
+    }
+
+    ReleaseDC(window, dc);
+    return rgn;
 }
 
 /*****************************************************************************

@@ -9,7 +9,7 @@
  *              ST   (05/04/2005) Created. Implemented drvCommConfigDialog.
  */
 
-#include <serialui.h>
+#include "serialui.h"
 
 static HINSTANCE hDllInstance;
 

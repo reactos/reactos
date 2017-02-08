@@ -1,7 +1,7 @@
 /*
  * FILE:        dll/cpl/desk/lang/sk-SK.rc
  * PURPOSE:     Slovak Language File for desk
- * TRANSLATOR:  M·rio KaËm·r aka Kario <kario@szm.sk>
+ * TRANSLATOR:  M√°rio Kaƒçm√°r aka Kario <kario@szm.sk>
  * DATE OF TR.: 15-09-2007
  * LAST CHANGE: 18-04-2009
  */
@@ -18,9 +18,9 @@ BEGIN
     CONTROL         "", IDC_BACKGROUND_LIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP, 8, 114, 174, 78
-    LTEXT           "Vyberte obr·zok, ktor˝ chcete pouûiù ako pozadie pracovnej plochy",
+    LTEXT           "Vyberte obr√°zok, ktor√Ω chcete pou≈æi≈• ako pozadie pracovnej plochy",
                     IDC_STATIC, 8, 103, 220, 9
-    PUSHBUTTON      "&Prehæad·vaù...", IDC_BROWSE_BUTTON, 188, 114, 50, 15
+    PUSHBUTTON      "&Prehƒæad√°va≈•...", IDC_BROWSE_BUTTON, 188, 114, 50, 15
     PUSHBUTTON      "&Farba...", IDC_COLOR_BUTTON, 188, 177, 50, 15
     LTEXT           "&Umiestnenie", IDC_STATIC, 188, 138, 50, 9
     COMBOBOX        IDC_PLACEMENT_COMBO, 188, 149, 50, 54,
@@ -29,57 +29,59 @@ END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "äetriË obrazovky"
+CAPTION "≈†etriƒç obrazovky"
 FONT 8, "MS Shell Dlg", 0, 0
 BEGIN
     CONTROL         "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW,
                     70, 10, 105, 70, WS_EX_STATICEDGE
-    GROUPBOX        "äetriË o&brazovky", IDC_SCREENS_DUMMY, 8, 92, 230, 52
+    GROUPBOX        "≈†etriƒç o&brazovky", IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX        IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "&Nastavenie", IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
-    PUSHBUTTON      "&Uk·ûka", IDC_SCREENS_TESTSC, 175, 103, 50, 13
-    LTEXT           "&PoËkaù", IDC_WAITTEXT, 14, 125, 20, 9
+    PUSHBUTTON      "&Uk√°≈æka", IDC_SCREENS_TESTSC, 175, 103, 50, 13
+    LTEXT           "&Poƒçka≈•", IDC_WAITTEXT, 14, 125, 20, 9
     EDITTEXT        IDC_SCREENS_TIMEDELAY, 34, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL         "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
                     WS_BORDER | WS_GROUP, 54, 123, 12, 13
-    LTEXT           "min˙t", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL         "Pri obnovenÌ chr·niù &heslom.", IDC_SCREENS_USEPASSCHK, "button",
+    LTEXT           "min√∫t", IDC_MINTEXT, 70, 125, 26, 9
+    CONTROL         "Pri obnoven√≠ chr√°ni≈• &heslom.", IDC_SCREENS_USEPASSCHK, "button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
-    GROUPBOX        "Nap·jani&e monitora", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
-    LTEXT           "Ak chcete upraviù nastavenie nap·jania monitora a uöetriù energiu, kliknite na tlaËidlo Nap·janie.",
+    GROUPBOX        "Nap√°jani&e monitora", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
+    LTEXT           "Ak chcete upravi≈• nastavenie nap√°jania monitora a u≈°etri≈• energiu, kliknite na tlaƒçidlo Nap√°janie.",
                     IDC_STATIC, 14, 166, 146, 27
-    PUSHBUTTON      "N&ap·janie...", IDC_SCREENS_POWER_BUTTON, 165, 171, 61, 13
+    PUSHBUTTON      "N&ap√°janie...", IDC_SCREENS_POWER_BUTTON, 165, 171, 61, 13
 END
 
-IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 204
+IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Vzhæad"
+CAPTION "Vzhƒæad"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
     LTEXT           "Visual Style", IDC_STATIC, 7, 130, 64, 7
     COMBOBOX        IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "&Farebn· schÈma", IDC_STATIC, 7, 160, 64, 7
+    LTEXT           "&Farebn√° sch√©ma", IDC_STATIC, 7, 160, 64, 7
     COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 170, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Size", IDC_STATIC, 7, 190, 64, 7
+    COMBOBOX        IDC_APPEARANCE_SIZE, 7, 200, 134, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "&Efekty...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
-    PUSHBUTTON      "&Spresniù", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
+    PUSHBUTTON      "&Spresni≈•", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
 END
 
 IDD_ADVAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 250, 239
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Spresnenie vzhæadu"
+CAPTION "Spresnenie vzhƒæadu"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
 
-    LTEXT "P&oloûka", 8, 5, 160, 50, 9
+    LTEXT "P&olo≈æka", 8, 5, 160, 50, 9
     COMBOBOX IDC_ADVAPPEARANCE_ELEMENT, 5, 170, 130, 90, CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_CHILD | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT "&Veækosù", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
+    LTEXT "&Veƒækos≈•", IDC_ADVAPPEARANCE_SIZE_T, 142, 160, 39, 9
     EDITTEXT IDC_ADVAPPEARANCE_SIZE_E, 142, 170, 38, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_ADVAPPEARANCE_SIZE_UD, UPDOWN_CLASS, UDS_AUTOBUDDY | WS_BORDER | WS_GROUP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT | WS_CHILD | WS_VISIBLE, 172, 170, 10, 13
 
@@ -89,10 +91,10 @@ BEGIN
     LTEXT   "Far&ba 2", IDC_ADVAPPEARANCE_COLOR2_T, 216, 160, 40, 9
     CHECKBOX   "-", IDC_ADVAPPEARANCE_COLOR2_B, 216, 170, 28, 13, BS_PUSHLIKE | BS_BITMAP
 
-    LTEXT "&PÌsmo", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 8
+    LTEXT "&P√≠smo", IDC_ADVAPPEARANCE_FONT_T, 5, 190, 50, 8
     COMBOBOX IDC_ADVAPPEARANCE_FONT_C, 5, 200, 130, 90, CBS_DROPDOWN | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT   "V&eækosù", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 8
+    LTEXT   "V&eƒækos≈•", IDC_ADVAPPEARANCE_FONTSIZE_T, 142, 190, 39, 8
     COMBOBOX IDC_ADVAPPEARANCE_FONTSIZE_E, 142, 200, 38, 200, CBS_DROPDOWN | WS_VSCROLL
 
     LTEXT   "Fa&rba", IDC_ADVAPPEARANCE_FONTCOLOR_T, 184, 190, 20, 9
@@ -101,7 +103,7 @@ BEGIN
     AUTOCHECKBOX   "B", IDC_ADVAPPEARANCE_FONTBOLD, 216, 200, 14, 13, BS_PUSHLIKE
     AUTOCHECKBOX   "I ", IDC_ADVAPPEARANCE_FONTITALIC, 230, 200, 14, 13, BS_PUSHLIKE
 
-    PUSHBUTTON "Zruöiù", IDCANCEL, 191, 220, 50, 14
+    PUSHBUTTON "Zru≈°i≈•", IDCANCEL, 191, 220, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 137, 220, 50, 14
 END
 
@@ -111,21 +113,21 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Efekty"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "&PouûÌvaù nasledovn˝ efekt prechodu pre ponuky a n·zvy tlaËidiel",IDC_EFFAPPEARANCE_ANIMATION,"button",
+    CONTROL         "&Pou≈æ√≠va≈• nasledovn√Ω efekt prechodu pre ponuky a n√°zvy tlaƒçidiel",IDC_EFFAPPEARANCE_ANIMATION,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 285, 19
     COMBOBOX        IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Po&uûÌvaù nasledovn˙ metÛdu vyhladenia okrajov zobrazenÈho pÌsma",IDC_EFFAPPEARANCE_SMOOTHING,"button",
+    CONTROL         "Po&u≈æ√≠va≈• nasledovn√∫ met√≥du vyhladenia okrajov zobrazen√©ho p√≠sma",IDC_EFFAPPEARANCE_SMOOTHING,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 285, 19
     COMBOBOX        IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    CONTROL         "PouûÌvaù &veækÈ ikony",IDC_EFFAPPEARANCE_LARGEICONS,"button",
+    CONTROL         "Pou≈æ√≠va≈• &veƒæk√© ikony",IDC_EFFAPPEARANCE_LARGEICONS,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 285, 19
-    CONTROL         "&Zobrazovaù tiene pod ponukami",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
+    CONTROL         "&Zobrazova≈• tiene pod ponukami",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 285, 19
-    CONTROL         "Zobrazovaù &obsah okna poËas pres˙vania",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
+    CONTROL         "Zobrazova≈• &obsah okna poƒças pres√∫vania",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 285, 19
-    CONTROL         "&Skr˝vaù podËiarknutÈ pÌsmen· (kl·vesovÈ skratky) aû do stlaËenia kl·vesu Alt",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
+    CONTROL         "&Skr√Ωva≈• podƒçiarknut√© p√≠smen√° (kl√°vesov√© skratky) a≈æ do stlaƒçenia kl√°vesu Alt",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 285, 19
-    PUSHBUTTON "Zruöiù", IDCANCEL, 226, 165, 50, 14
+    PUSHBUTTON "Zru≈°i≈•", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
 END
 
@@ -134,142 +136,143 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Nastavenie"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "çahanÌm zoraÔte ikony podæa fyzickÈho rozmiestnenia monitorov.",-1,3,3,240,20
+    LTEXT           "≈§ahan√≠m zoraƒète ikony podƒæa fyzick√©ho rozmiestnenia monitorov.",-1,3,3,240,20
     CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,23,240,82,WS_EX_CLIENTEDGE
     LTEXT           "&Monitor",1820,3,107,30,8
     LTEXT           "<Nie je>",IDC_SETTINGS_DEVICE,9,116,224,8
-    GROUPBOX        "&RozlÌöenie obrazovky",1818,3,127,115,43
+    GROUPBOX        "&Rozl√≠≈°enie obrazovky",1818,3,127,115,43
     CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
                     TBS_AUTOTICKS | WS_TABSTOP, 30, 137, 58, 17
-    LTEXT           "niûöie",1815,9,137,20,8,NOT WS_GROUP
-    LTEXT           "vyööie",1816,93,137,21,8,NOT WS_GROUP
+    LTEXT           "ni≈æ≈°ie",1815,9,137,20,8,NOT WS_GROUP
+    LTEXT           "vy≈°≈°ie",1816,93,137,21,8,NOT WS_GROUP
     LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,157,100,10,NOT WS_GROUP | SS_CENTER
     GROUPBOX        "&Farby",1817,125,127,115,43
     COMBOBOX        IDC_SETTINGS_BPP,131,137,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "",IDC_SETTINGS_SPECTRUM,"Static",SS_OWNERDRAW | SS_SUNKEN,131,155,103,9
-    PUSHBUTTON      "&Spresniù...",IDC_SETTINGS_ADVANCED,170,174,70,14
+    PUSHBUTTON      "&Spresni≈•...",IDC_SETTINGS_ADVANCED,170,174,70,14
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX DISCARDABLE 0, 0, 253, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "VöeobecnÈ"
+CAPTION "V≈°eobecn√©"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Zobrazenie", -1, 7, 6, 237, 56, WS_GROUP // Display=viac v˝znamov
-    LTEXT "Veækosù pÌsma", -1, 14, 20, 222, 8
+    GROUPBOX "Zobrazenie", -1, 7, 6, 237, 56, WS_GROUP // Display=viac v√Ωznamov
+    LTEXT "Veƒækos≈• p√≠sma", -1, 14, 20, 222, 8
     COMBOBOX IDC_FONTSIZE_COMBO, 14, 30, 223, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_FONTSIZE_COSTOM, 14, 46, 223, 12
     GROUPBOX "Kompatibilita", -1, 7, 67, 237, 97
-    LTEXT "NiektorÈ programy nemusia pracovaù spr·vne, ak po zmene nastavenÌ farieb nereötartujete poËÌtaË.\r\n\nPo zmene nastavenÌ farieb", -1, 12, 78, 228, 34
-    AUTORADIOBUTTON "&Reötartovaù poËÌtaË pred pouûitÌm nov˝ch nastavenÌ farieb.", IDC_RESTART_RB, 14, 116, 224, 10
-    AUTORADIOBUTTON "Pouûiù &novÈ nastavenia farieb bez reötartovania.", IDC_WITHOUTREBOOT_RB, 14, 131, 224, 10
-    AUTORADIOBUTTON "&Op˝taù sa pred pouûitÌm nov˝ch nastavenÌ farieb.", IDC_ASKME_RB, 14, 146, 224, 10
+    LTEXT "Niektor√© programy nemusia pracova≈• spr√°vne, ak po zmene nastaven√≠ farieb nere≈°tartujete poƒç√≠taƒç.\r\n\nPo zmene nastaven√≠ farieb", -1, 12, 78, 228, 34
+    AUTORADIOBUTTON "&Re≈°tartova≈• poƒç√≠taƒç pred pou≈æit√≠m nov√Ωch nastaven√≠ farieb.", IDC_RESTART_RB, 14, 116, 224, 10
+    AUTORADIOBUTTON "Pou≈æi≈• &nov√© nastavenia farieb bez re≈°tartovania.", IDC_WITHOUTREBOOT_RB, 14, 131, 224, 10
+    AUTORADIOBUTTON "&Op√Ωta≈• sa pred pou≈æit√≠m nov√Ωch nastaven√≠ farieb.", IDC_ASKME_RB, 14, 146, 224, 10
 END
 
 IDR_PREVIEW_MENU MENU
 BEGIN
-    MENUITEM "Norm·lne",           ID_MENU_NORMAL
-    MENUITEM "NedostupnÈ",         ID_MENU_DISABLED
-    MENUITEM "VybranÈ",         ID_MENU_SELECTED
+    MENUITEM "Norm√°lne",           ID_MENU_NORMAL
+    MENUITEM "Nedostupn√©",         ID_MENU_DISABLED
+    MENUITEM "Vybran√©",         ID_MENU_SELECTED
 END
 
 IDM_MONITOR_MENU MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "P&ripojen˝",   ID_MENU_ATTACHED
-        MENUITEM "&Prim·rny",    ID_MENU_PRIMARY
+        MENUITEM "P&ripojen√Ω",   ID_MENU_ATTACHED
+        MENUITEM "&Prim√°rny",    ID_MENU_PRIMARY
         MENUITEM SEPARATOR
-        MENUITEM "&Identifikovaù",   ID_MENU_IDENTIFY
+        MENUITEM "&Identifikova≈•",   ID_MENU_IDENTIFY
         MENUITEM "Vl&astnosti", ID_MENU_PROPERTIES
     END
 END
 
 STRINGTABLE  DISCARDABLE
 BEGIN
-    IDS_SLIDEEFFECT "Pos˙vanie"  // Slide effect
-    IDS_FADEEFFECT  "Vytr·canie" // Fade effect
+    IDS_SLIDEEFFECT "Pos√∫vanie"  // Slide effect
+    IDS_FADEEFFECT  "Vytr√°canie" // Fade effect
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_STANDARDEFFECT  "ätandardn·"
+    IDS_STANDARDEFFECT  "≈†tandardn√°"
     IDS_CLEARTYPEEFFECT "ClearType"
 END
 
 STRINGTABLE
 BEGIN
     IDS_MULTIPLEMONITORS "(Viacero monitorov)"
-    IDS_UNKNOWNMONITOR "(Nezn·my monitor)"
+    IDS_UNKNOWNMONITOR "(Nezn√°my monitor)"
     IDS_ADVANCEDTITLEFMT "%s a %s"
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Obrazovka" // Display
-    IDS_CPLDESCRIPTION "UmoûÚuje prispÙsobiù vzhæad, pozadie a öetriË obrazovky."
+    IDS_CPLDESCRIPTION "Umo≈æ≈àuje prisp√¥sobi≈• vzhƒæad, pozadie a ≈°etriƒç obrazovky."
     IDS_NONE "(Nie je)"
     IDS_CENTER "V strede"
-    IDS_STRETCH "Roztiahnuù"
-    IDS_TILE "Dlaûdice"
+    IDS_STRETCH "Roztiahnu≈•"
+    IDS_TILE "Dla≈ædice"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_COLOR_4BIT "16 farieb"
     IDS_COLOR_8BIT "256 farieb"
-    IDS_COLOR_16BIT "Veæa farieb (16 bitov)"
-    IDS_COLOR_24BIT "PravÈ farby (24 bitov)"
-    IDS_COLOR_32BIT "PravÈ farby (32 bitov)"
+    IDS_COLOR_16BIT "Veƒæa farieb (16 bitov)"
+    IDS_COLOR_24BIT "Prav√© farby (24 bitov)"
+    IDS_COLOR_32BIT "Prav√© farby (32 bitov)"
     IDS_PIXEL "%lux%lu pixelov"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_BACKGROUND_COMDLG_FILTER "Obr·zky (*.bmp;*.dib)\0*.bmp;*.dib\0"
+    IDS_BACKGROUND_COMDLG_FILTER "Obr√°zky (*.bmp;*.dib)\0*.bmp;*.dib\0"
     IDS_SUPPORTED_EXT "*.bmp;*.dib"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_INACTWIN "NeaktÌvne okno"
-    IDS_ACTWIN   "AktÌvne okno"
+    IDS_INACTWIN "Neakt√≠vne okno"
+    IDS_ACTWIN   "Akt√≠vne okno"
     IDS_WINTEXT  "Text okna"
-    IDS_MESSBOX  "Okno spr·vy"
-    IDS_MESSTEXT "Text spr·vy"
+    IDS_MESSBOX  "Okno spr√°vy"
+    IDS_MESSTEXT "Text spr√°vy"
     IDS_BUTTEXT  "OK"
+    IDS_CLASSIC_THEME   "Classic Theme"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ELEMENT_1 "Pracovn· plocha"
-    IDS_ELEMENT_2 "Z·hlavie neaktÌvneho okna"
-    IDS_ELEMENT_3 "Okraj neaktÌvneho okna"
-    IDS_ELEMENT_4 "Z·hlavie aktÌvneho okna"
-    IDS_ELEMENT_5 "Okraj aktÌvneho okna"
+    IDS_ELEMENT_1 "Pracovn√° plocha"
+    IDS_ELEMENT_2 "Z√°hlavie neakt√≠vneho okna"
+    IDS_ELEMENT_3 "Okraj neakt√≠vneho okna"
+    IDS_ELEMENT_4 "Z√°hlavie akt√≠vneho okna"
+    IDS_ELEMENT_5 "Okraj akt√≠vneho okna"
     IDS_ELEMENT_6 "Ponuka"
-    IDS_ELEMENT_7 "VybratÈ poloûky"
+    IDS_ELEMENT_7 "Vybrat√© polo≈æky"
     IDS_ELEMENT_8 "Okno"
-    IDS_ELEMENT_9 "Pos˙vaË"
-    IDS_ELEMENT_10 "PriestorovÈ objekty"
-    IDS_ELEMENT_11 "N·zov palety"
-    IDS_ELEMENT_12 "N·zov tlaËidla"
-    IDS_ELEMENT_13 "Ovl·dacie tlaËidl·" // old=Liöta znaËiek
-    IDS_ELEMENT_14 "NedostupnÈ poloûky ponuky"
-    IDS_ELEMENT_15 "PolÌËko s hl·senÌm"
-    IDS_ELEMENT_16 "Ovl·danie pos˙vaËa"
-    IDS_ELEMENT_17 "Pozadie aplik·cie"
-    IDS_ELEMENT_18 "MalÈ ovl·dacie tlaËidl·"
+    IDS_ELEMENT_9 "Pos√∫vaƒç"
+    IDS_ELEMENT_10 "Priestorov√© objekty"
+    IDS_ELEMENT_11 "N√°zov palety"
+    IDS_ELEMENT_12 "N√°zov tlaƒçidla"
+    IDS_ELEMENT_13 "Ovl√°dacie tlaƒçidl√°" // old=Li≈°ta znaƒçiek
+    IDS_ELEMENT_14 "Nedostupn√© polo≈æky ponuky"
+    IDS_ELEMENT_15 "Pol√≠ƒçko s hl√°sen√≠m"
+    IDS_ELEMENT_16 "Ovl√°danie pos√∫vaƒça"
+    IDS_ELEMENT_17 "Pozadie aplik√°cie"
+    IDS_ELEMENT_18 "Mal√© ovl√°dacie tlaƒçidl√°"
     IDS_ELEMENT_19 "Rozostup ikon (vodorovne)"
     IDS_ELEMENT_20 "Rozostup ikon (zvislo)"
-    IDS_ELEMENT_21 "Popis tlaËidiel"
+    IDS_ELEMENT_21 "Popis tlaƒçidiel"
     IDS_ELEMENT_22 "Ikona"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DISPLAY_SETTINGS "Nastavenia zobrazenia" // obrazovky ?
-    IDS_APPLY_FAILED "Nepodarilo sa aplikovaù novÈ nastavenia..."
-    IDS_APPLY_NEEDS_RESTART "Je potrebnÈ reötartovaù poËÌtaË, aby sa prejavili zmeny."
+    IDS_APPLY_FAILED "Nepodarilo sa aplikova≈• nov√© nastavenia..."
+    IDS_APPLY_NEEDS_RESTART "Je potrebn√© re≈°tartova≈• poƒç√≠taƒç, aby sa prejavili zmeny."
 END

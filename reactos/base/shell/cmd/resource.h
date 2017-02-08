@@ -1,7 +1,6 @@
-
+#pragma once
 
 #define RC_STRING_MAX_SIZE                 3072
-
 
 #define STRING_ERROR_PARAMETERF_ERROR      100
 #define STRING_ERROR_INVALID_SWITCH        101

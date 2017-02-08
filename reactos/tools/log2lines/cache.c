@@ -26,7 +26,7 @@ unpack_iso(char *dir, char *iso)
 {
     char Line[LINESIZE];
     int res = 0;
-    char iso_tmp[MAX_PATH];
+    char iso_tmp[PATH_MAX];
     int iso_copied = 0;
     FILE *fiso;
 
@@ -78,9 +78,9 @@ int
 check_directory(int force)
 {
     char Line[LINESIZE];
-    char freeldr_path[MAX_PATH];
-    char iso_path[MAX_PATH];
-    char compressed_7z_path[MAX_PATH];
+    char freeldr_path[PATH_MAX];
+    char iso_path[PATH_MAX];
+    char compressed_7z_path[PATH_MAX];
     char *check_iso;
     char *check_dir;
 
@@ -141,8 +141,8 @@ check_directory(int force)
             return 1;
         }
     }
-    cache_name = malloc(MAX_PATH);
-    tmp_name = malloc(MAX_PATH);
+    cache_name = malloc(PATH_MAX);
+    tmp_name = malloc(PATH_MAX);
     strcpy(cache_name, opt_dir);
 	if (cleanable(opt_dir))
 		strcat(cache_name, ALT_PATH_STR CACHEFILE);

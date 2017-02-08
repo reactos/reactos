@@ -18,20 +18,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  */
-#include "config.h"
+#include <config.h>
 #include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
+//#include <stdio.h>
+//#include <stdlib.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "wingdi.h"
-#include "winnls.h"
-#include "usp10.h"
-#include "winternl.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+#include <wingdi.h>
+//#include "winnls.h"
+#include <usp10.h>
+//#include "winternl.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 #include "usp10_internal.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(uniscribe);
@@ -208,7 +208,7 @@ static INT Indic_process_next_syllable( LPCWSTR input, INT cChar, INT start, INT
     return parse_consonant_syllable(input, cChar, start, main, next, lex);
 }
 
-static BOOL Consonent_is_post_base_form(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache* psc, LPCWSTR pwChar, IndicSyllable *s, lexical_function lexical, BOOL modern)
+static BOOL Consonant_is_post_base_form(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache* psc, LPCWSTR pwChar, IndicSyllable *s, lexical_function lexical, BOOL modern)
 {
     if (is_consonant(lexical(pwChar[s->base])) && s->base > s->start && lexical(pwChar[s->base-1]) == lex_Halant)
     {
@@ -225,7 +225,7 @@ static BOOL Consonent_is_post_base_form(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCac
     return FALSE;
 }
 
-static BOOL Consonent_is_below_base_form(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache* psc, LPCWSTR pwChar, IndicSyllable *s, lexical_function lexical, BOOL modern)
+static BOOL Consonant_is_below_base_form(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache* psc, LPCWSTR pwChar, IndicSyllable *s, lexical_function lexical, BOOL modern)
 {
     if (is_consonant(lexical(pwChar[s->base])) && s->base > s->start && lexical(pwChar[s->base-1]) == lex_Halant)
     {
@@ -242,7 +242,7 @@ static BOOL Consonent_is_below_base_form(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCa
     return FALSE;
 }
 
-static BOOL Consonent_is_pre_base_form(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache* psc, LPCWSTR pwChar, IndicSyllable *s, lexical_function lexical, BOOL modern)
+static BOOL Consonant_is_pre_base_form(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache* psc, LPCWSTR pwChar, IndicSyllable *s, lexical_function lexical, BOOL modern)
 {
     if (is_consonant(lexical(pwChar[s->base])) && s->base > s->start && lexical(pwChar[s->base-1]) == lex_Halant)
     {
@@ -259,7 +259,7 @@ static BOOL Consonent_is_pre_base_form(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCach
     return FALSE;
 }
 
-static BOOL Consonent_is_ralf(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache* psc, LPCWSTR pwChar, IndicSyllable *s, lexical_function lexical)
+static BOOL Consonant_is_ralf(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache* psc, LPCWSTR pwChar, IndicSyllable *s, lexical_function lexical)
 {
     if ((lexical(pwChar[s->start])==lex_Ra) && s->end > s->start && lexical(pwChar[s->start+1]) == lex_Halant)
         return (SHAPE_does_GSUB_feature_apply_to_chars(hdc, psa, psc, &pwChar[s->start], 1, 2, "rphf") > 0);
@@ -273,7 +273,7 @@ static int FindBaseConsonant(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache* psc, LP
     BOOL pref = FALSE;
 
     /* remove ralf from consideration */
-    if (Consonent_is_ralf(hdc, psa, psc, input, s, lex))
+    if (Consonant_is_ralf(hdc, psa, psc, input, s, lex))
     {
         s->ralf = s->start;
         s->start+=2;
@@ -290,7 +290,7 @@ static int FindBaseConsonant(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache* psc, LP
             }
     }
 
-    while ((blwf = Consonent_is_below_base_form(hdc, psa, psc, input, s, lex, modern)) || Consonent_is_post_base_form(hdc, psa, psc, input, s, lex, modern) || (pref = Consonent_is_pre_base_form(hdc, psa, psc, input, s, lex, modern)))
+    while ((blwf = Consonant_is_below_base_form(hdc, psa, psc, input, s, lex, modern)) || Consonant_is_post_base_form(hdc, psa, psc, input, s, lex, modern) || (pref = Consonant_is_pre_base_form(hdc, psa, psc, input, s, lex, modern)))
     {
         if (blwf && s->blwf == -1)
             s->blwf = s->base - 1;

@@ -27,7 +27,7 @@ WSPEventSelect(
 	BOOLEAN						BlockMode;
 	HANDLE                                  SockEvent;
 
-	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+	Status = NtCreateEvent( &SockEvent, EVENT_ALL_ACCESS,
 				NULL, 1, FALSE );
 
 	if( !NT_SUCCESS(Status) ) return -1;
@@ -146,7 +146,7 @@ WSPEnumNetworkEvents(
 
     AFD_DbgPrint(MID_TRACE,("Called (lpNetworkEvents %x)\n", lpNetworkEvents));
 
-    Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+    Status = NtCreateEvent( &SockEvent, EVENT_ALL_ACCESS,
 			    NULL, 1, FALSE );
 
     if( !NT_SUCCESS(Status) ) {

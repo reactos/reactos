@@ -1,4 +1,6 @@
-#include <windows.h>
+#include <windef.h>
+#include <winuser.h>
+
 #include "resource.h"
 
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Explorer\0"
@@ -20,6 +22,7 @@ IDB_TASKBARPROP_NOLOCK_GROUP_NOQL   BITMAP DISCARDABLE res/nolock_group_noql.bmp
 IDB_TASKBARPROP_NOLOCK_NOGROUP_NOQL BITMAP DISCARDABLE res/nolock_nogroup_noql.bmp
 IDB_TASKBARPROP_NOLOCK_NOGROUP_QL   BITMAP DISCARDABLE res/nolock_nogroup_ql.bmp
 IDB_TASKBARPROP_NOLOCK_GROUP_QL     BITMAP DISCARDABLE res/nolock_group_ql.bmp
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "explorer.exe.manifest"
 
 // UTF-8
 #pragma code_page(65001)
@@ -40,6 +43,9 @@ IDB_TASKBARPROP_NOLOCK_GROUP_QL     BITMAP DISCARDABLE res/nolock_group_ql.bmp
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/fr-FR.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/he-IL.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/it-IT.rc"

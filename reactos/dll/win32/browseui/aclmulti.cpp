@@ -1,8 +1,8 @@
 /*
- *	Multisource AutoComplete list
+ *  Multisource AutoComplete list
  *
- *	Copyright 2007	Mikolaj Zalewski
- *	Copyright 2009	Andrew Hill
+ *  Copyright 2007  Mikolaj Zalewski
+ *  Copyright 2009  Andrew Hill
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -41,7 +41,7 @@ CACLMulti::CACLMulti()
 
 CACLMulti::~CACLMulti()
 {
-    int										i;
+    int                                     i;
 
     TRACE("destroying %p\n", this);
     for (i = 0; i < fObjectCount; i++)
@@ -55,12 +55,13 @@ HRESULT STDMETHODCALLTYPE CACLMulti::Append(IUnknown *punk)
     if (punk == NULL)
         return E_FAIL;
 
-    fObjects = reinterpret_cast<struct ACLMultiSublist *>(CoTaskMemRealloc(fObjects, sizeof(fObjects[0]) * (fObjectCount + 1)));
+    fObjects = static_cast<ACLMultiSublist *>(
+        CoTaskMemRealloc(fObjects, sizeof(fObjects[0]) * (fObjectCount + 1)));
     fObjects[fObjectCount].punk = punk;
     punk->AddRef();
-    if (FAILED(punk->QueryInterface(IID_IEnumString, (void **)&fObjects[fObjectCount].pEnum)))
+    if (FAILED(punk->QueryInterface(IID_IEnumString, reinterpret_cast<void **>(&fObjects[fObjectCount].pEnum))))
         fObjects[fObjectCount].pEnum = NULL;
-    if (FAILED(punk->QueryInterface(IID_IACList, (void **)&fObjects[fObjectCount].pACL)))
+    if (FAILED(punk->QueryInterface(IID_IACList, reinterpret_cast<void **>(&fObjects[fObjectCount].pACL))))
         fObjects[fObjectCount].pACL = NULL;
     fObjectCount++;
     return S_OK;
@@ -68,16 +69,17 @@ HRESULT STDMETHODCALLTYPE CACLMulti::Append(IUnknown *punk)
 
 HRESULT STDMETHODCALLTYPE CACLMulti::Remove(IUnknown *punk)
 {
-    int										i;
+    int                                     i;
 
     TRACE("(%p, %p)\n", this, punk);
     for (i = 0; i < fObjectCount; i++)
         if (fObjects[i].punk == punk)
         {
             release_obj(&fObjects[i]);
-            memmove(&fObjects[i], &fObjects[i + 1], (fObjectCount - i - 1) * sizeof(struct ACLMultiSublist));
+            MoveMemory(&fObjects[i], &fObjects[i + 1], (fObjectCount - i - 1) * sizeof(ACLMultiSublist));
             fObjectCount--;
-            fObjects = reinterpret_cast<struct ACLMultiSublist *>(CoTaskMemRealloc(fObjects, sizeof(fObjects[0]) * fObjectCount));
+            fObjects = static_cast<ACLMultiSublist *>(
+                CoTaskMemRealloc(fObjects, sizeof(fObjects[0]) * fObjectCount));
             return S_OK;
         }
 
@@ -107,7 +109,7 @@ HRESULT STDMETHODCALLTYPE CACLMulti::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pc
 
 HRESULT STDMETHODCALLTYPE CACLMulti::Reset()
 {
-    int										i;
+    int                                     i;
 
     fCurrentObject = 0;
     for (i = 0; i < fObjectCount; i++)
@@ -133,8 +135,8 @@ HRESULT STDMETHODCALLTYPE CACLMulti::Clone(IEnumString **ppOut)
 
 HRESULT STDMETHODCALLTYPE CACLMulti::Expand(LPCWSTR wstr)
 {
-    HRESULT									res = S_OK;
-    int										i;
+    HRESULT                                 res = S_OK;
+    int                                     i;
 
     for (i = 0; i < fObjectCount; i++)
     {

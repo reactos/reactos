@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/create.c
@@ -99,6 +98,7 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
    OBJECT_ATTRIBUTES ObjectAttributes;
    IO_STATUS_BLOCK IoStatusBlock;
    UNICODE_STRING NtPathU;
+   LPCWSTR pszConsoleFileName;
    HANDLE FileHandle;
    NTSTATUS Status;
    ULONG FileAttributes, Flags = 0;
@@ -142,10 +142,10 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
      }
 
    /* check for console input/output */
-   if (0 == _wcsicmp(L"CONOUT$", lpFileName)
-       || 0 == _wcsicmp(L"CONIN$", lpFileName))
+   pszConsoleFileName = IntCheckForConsoleFileName(lpFileName, dwDesiredAccess);
+   if (pszConsoleFileName)
    {
-      return OpenConsoleW(lpFileName,
+      return OpenConsoleW(pszConsoleFileName,
                           dwDesiredAccess,
                           lpSecurityAttributes ? lpSecurityAttributes->bInheritHandle : FALSE,
                           FILE_SHARE_READ | FILE_SHARE_WRITE);
@@ -200,7 +200,7 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
 
    FileAttributes = (dwFlagsAndAttributes & (FILE_ATTRIBUTE_VALID_FLAGS & ~FILE_ATTRIBUTE_DIRECTORY));
 
-   /* handle may allways be waited on and querying attributes are allways allowed */
+   /* handle may always be waited on and querying attributes are always allowed */
    dwDesiredAccess |= SYNCHRONIZE | FILE_READ_ATTRIBUTES;
 
    /* FILE_FLAG_POSIX_SEMANTICS is handled later */

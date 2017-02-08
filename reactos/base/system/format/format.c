@@ -1,13 +1,17 @@
 // Copyright (c) 1998 Mark Russinovich
 // Systems Internals
 // http://www.sysinternals.com
+
+#define WIN32_NO_STATUS
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+#include <winuser.h>
 #include <winternl.h>
 #include <fmifs/fmifs.h>
 #include <tchar.h>
+
 #include "resource.h"
 
 // Globals
@@ -609,4 +613,3 @@ _tmain(int argc, TCHAR *argv[])
 
 	return 0;
 }
-

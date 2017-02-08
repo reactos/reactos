@@ -9,7 +9,10 @@
 #endif
 #define WIN32_NO_STATUS
 #include <stdlib.h>	/* abort () */
-#include <windows.h>
+//#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 #undef  WIN32_NO_STATUS
 #include <ntstatus.h>	/* STATUS macros */
 #ifdef _WIN64

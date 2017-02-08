@@ -72,6 +72,9 @@
 #ifdef LANGUAGE_FR_FR
     #include "ui_Fr.rc"
 #endif
+#ifdef LANGUAGE_HE_IL
+    #include "ui_He.rc"
+#endif
 #ifdef LANGUAGE_HU_HU
     #include "ui_Hu.rc"
 #endif

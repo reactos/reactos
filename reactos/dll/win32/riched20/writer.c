@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <config.h>
+//#include "wine/port.h"
 
 #include "editor.h"
 #include "rtf.h"
@@ -251,11 +251,8 @@ ME_StreamOutRTFFontAndColorTbl(ME_OutStream *pStream, ME_DisplayItem *pFirstRun,
   } while (item);
   item = ME_GetParagraph(pFirstRun);
   do {
-    if (item->member.para.pCell && item->member.para.pCell)
+    if ((pCell = item->member.para.pCell))
     {
-      pCell = item->member.para.pCell;
-      if (pCell)
-      {
         ME_Border* borders[4] = { &pCell->member.cell.border.top,
                                   &pCell->member.cell.border.left,
                                   &pCell->member.cell.border.bottom,
@@ -275,7 +272,6 @@ ME_StreamOutRTFFontAndColorTbl(ME_OutStream *pStream, ME_DisplayItem *pFirstRun,
             }
           }
         }
-      }
     }
     if (item == pLastPara)
       break;

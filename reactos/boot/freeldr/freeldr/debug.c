@@ -24,6 +24,8 @@
 #if DBG && !defined(_M_ARM)
 
 //#define DEBUG_ALL
+//#define DEBUG_WARN
+//#define DEBUG_ERR
 //#define DEBUG_INIFILE
 //#define DEBUG_REACTOS
 //#define DEBUG_CUSTOM
@@ -49,7 +51,12 @@ ULONG		DebugPort = RS232;
 //ULONG		DebugPort = SCREEN;
 //ULONG		DebugPort = BOCHS;
 //ULONG		DebugPort = SCREEN|BOCHS;
+#ifdef _WINKD_
+/* COM1 is the WinDbg port */
+ULONG		ComPort = COM2;
+#else
 ULONG		ComPort = COM1;
+#endif
 //ULONG		BaudRate = 19200;
 ULONG		BaudRate = 115200;
 
@@ -59,6 +66,10 @@ VOID DebugInit(VOID)
 {
 #if defined (DEBUG_ALL)
     memset(DbgChannels, MAX_LEVEL, DBG_CHANNELS_COUNT);
+#elif defined (DEBUG_WARN)
+    memset(DbgChannels, WARN_LEVEL|FIXME_LEVEL|ERR_LEVEL, DBG_CHANNELS_COUNT);
+#elif defined (DEBUG_ERR)
+    memset(DbgChannels, ERR_LEVEL, DBG_CHANNELS_COUNT);
 #else
     memset(DbgChannels, 0, DBG_CHANNELS_COUNT);
 #endif
@@ -275,7 +286,7 @@ DbgAddDebugChannel( CHAR* channel, CHAR* level, CHAR op)
         iLevel = TRACE_LEVEL;
     else
         return FALSE;
-    
+
     if(strcmp(channel, "memory") == 0) iChannel = DPRINT_MEMORY;
     else if(strcmp(channel, "filesystem") == 0) iChannel = DPRINT_FILESYSTEM;
     else if(strcmp(channel, "inifile") == 0) iChannel = DPRINT_INIFILE;
@@ -289,7 +300,7 @@ DbgAddDebugChannel( CHAR* channel, CHAR* level, CHAR op)
     else if(strcmp(channel, "peloader") == 0) iChannel = DPRINT_PELOADER;
     else if(strcmp(channel, "scsiport") == 0) iChannel = DPRINT_SCSIPORT;
     else if(strcmp(channel, "heap") == 0) iChannel = DPRINT_HEAP;
-    else if(strcmp(channel, "all") == 0) 
+    else if(strcmp(channel, "all") == 0)
     {
         int i;
 
@@ -309,7 +320,7 @@ DbgAddDebugChannel( CHAR* channel, CHAR* level, CHAR op)
         DbgChannels[iChannel] |= iLevel;
     else
         DbgChannels[iChannel] &= ~iLevel;
-    
+
     return TRUE;
 }
 
@@ -411,7 +422,7 @@ RtlAssert(IN PVOID FailedAssertion,
 {
    if (Message)
    {
-      DbgPrint("Assertion \'%s\' failed at %s line %d: %s\n",
+      DbgPrint("Assertion \'%s\' failed at %s line %u: %s\n",
                (PCHAR)FailedAssertion,
                (PCHAR)FileName,
                LineNumber,
@@ -419,7 +430,7 @@ RtlAssert(IN PVOID FailedAssertion,
    }
    else
    {
-      DbgPrint("Assertion \'%s\' failed at %s line %d\n",
+      DbgPrint("Assertion \'%s\' failed at %s line %u\n",
                (PCHAR)FailedAssertion,
                (PCHAR)FileName,
                LineNumber);
@@ -427,3 +438,13 @@ RtlAssert(IN PVOID FailedAssertion,
 
    DbgBreakPoint();
 }
+
+char *BugCodeStrings[] =
+{
+    "TEST_BUGCHECK",
+    "MISSING_HARDWARE_REQUIREMENTS",
+    "FREELDR_IMAGE_CORRUPTION",
+};
+
+ULONG_PTR BugCheckInfo[5];
+

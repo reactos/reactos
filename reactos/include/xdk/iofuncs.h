@@ -716,7 +716,7 @@ IoBuildDeviceIoControlRequest(
   _Out_opt_ PVOID OutputBuffer,
   _In_ ULONG OutputBufferLength,
   _In_ BOOLEAN InternalDeviceIoControl,
-  _In_ PKEVENT Event,
+  _In_opt_ PKEVENT Event,
   _Out_ PIO_STATUS_BLOCK IoStatusBlock);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -821,8 +821,8 @@ IoCreateDevice(
   _Outptr_result_nullonfailure_
   _At_(*DeviceObject,
     __drv_allocatesMem(Mem)
-    _When_((((_In_function_class_(DRIVER_INITIALIZE))
-      ||(_In_function_class_(DRIVER_DISPATCH)))),
+    _When_(((_In_function_class_(DRIVER_INITIALIZE))
+      ||(_In_function_class_(DRIVER_DISPATCH))),
       __drv_aliasesMem))
     PDEVICE_OBJECT *DeviceObject);
 

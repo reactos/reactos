@@ -16,8 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS Hid User Library
  * FILE:            lib/hid/hid.c
  * PURPOSE:         ReactOS Hid User Library
@@ -26,7 +25,7 @@
  * UPDATE HISTORY:
  *      07/12/2004  Created
  */
-#include <precomp.h>
+#include "precomp.h"
 
 HINSTANCE hDllInstance;
 

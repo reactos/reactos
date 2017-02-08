@@ -1,8 +1,11 @@
-#include <windows.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winuser.h>
 #include <commctrl.h>
 #include <cpl.h>
-#include <stdio.h>
-#include <initguid.h>
 #include <debug.h>
 
 #include "resource.h"

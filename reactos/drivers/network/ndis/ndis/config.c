@@ -432,7 +432,7 @@ NdisReadConfiguration(
     PMINIPORT_CONFIGURATION_CONTEXT ConfigurationContext = (PMINIPORT_CONFIGURATION_CONTEXT)ConfigurationHandle;
     PVOID Buffer;
 
-    *ParameterValue = NULL;
+    //*ParameterValue = NULL;
     *Status = NDIS_STATUS_FAILURE;
 
     NDIS_DbgPrint(MAX_TRACE,("requested read of %wZ\n", Keyword));
@@ -658,13 +658,15 @@ NdisReadConfiguration(
          str.Length = str.MaximumLength = (USHORT)KeyInformation->DataLength;
          str.Buffer = (PWCHAR)KeyInformation->Data;
 
-         if (Base != 0 && IsValidNumericString(&str, Base) &&
-             ((*Status = RtlUnicodeStringToInteger(&str, Base,
-                             &(*ParameterValue)->ParameterData.IntegerData)) == STATUS_SUCCESS))
+         if (Base != 0 && IsValidNumericString(&str, Base))
          {
+             *Status = RtlUnicodeStringToInteger(&str, Base, &(*ParameterValue)->ParameterData.IntegerData);
+              ASSERT(*Status == STATUS_SUCCESS);
+
              NDIS_DbgPrint(MAX_TRACE, ("NdisParameter(Hex)Integer\n"));
 
-             (*ParameterValue)->ParameterType = ParameterType;
+             /* MSDN documents that this is returned for all integers, regardless of the ParameterType passed in */
+             (*ParameterValue)->ParameterType = NdisParameterInteger;
          }
          else
          {
@@ -697,8 +699,9 @@ NdisReadConfiguration(
         ExFreePool(KeyInformation);
         return;
     }
-    
-    if ((*ParameterValue)->ParameterType != ParameterType)
+
+    if (((*ParameterValue)->ParameterType != ParameterType) &&
+        !((ParameterType == NdisParameterHexInteger) && ((*ParameterValue)->ParameterType == NdisParameterInteger)))
     {
         NDIS_DbgPrint(MIN_TRACE, ("Parameter type mismatch! (Requested: %d | Received: %d)\n",
                                   ParameterType, (*ParameterValue)->ParameterType));
