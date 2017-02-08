@@ -158,7 +158,7 @@ BEGIN
     STRING_WARNING "ATTENTION"
     STRING_INFO "Information"
     STRING_UNTITLED "Sans-titre"
-    STRING_ALL_FILES "Tous fichiers (*.*)"
+    STRING_ALL_FILES "Tous les fichiers (*.*)"
     STRING_TEXT_FILES_TXT "Fichiers texte (*.txt)"
     STRING_TOOLARGE "Le fichier '%s' est trop grand pour le bloc-notes.\n \
 Veuillez utiliser un autre éditeur."
