@@ -23,7 +23,7 @@ HKCR,".clp","",0x00000000,"clpfile"
 HKCR,"clpfile","",0x00000000,"Clipboard Element"
 HKCR,"clpfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\clipbrd.exe,-121"
 HKCR,"clpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\clipbrd.exe,1"
-HKCR,"clpfile\shell\open\command","",0x00000000,"clipbrd.exe %1"
+HKCR,"clpfile\shell\open\command","",0x00000000,"%SystemRoot%\system32\clipbrd.exe %1"
 
 ; Rich Text Files
 HKCR,".rtf","",0x00000000,"rtffile"
@@ -176,7 +176,7 @@ HKCR,".html","PerceivedType",0x00000000,"text"
 HKCR,"htmlfile","",0x00000000,"HTML Document"
 HKCR,"htmlfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\mshtml.dll,-7501"
 HKCR,"htmlfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\ieframe.dll,0"
-HKCR,"htmlfile\shell\open\command","",0x00020000,"""%programfiles%\Internet Explorer\iexplore.exe"" %1"
+HKCR,"htmlfile\shell\open\command","",0x00020000,"""%ProgramFiles%\Internet Explorer\iexplore.exe"" %1"
 
 ; Icons
 HKCR,".ico","",0x00000000,"icofile"
@@ -202,7 +202,7 @@ HKCR,".gif","PerceivedType",0x00000000,"image"
 HKCR,"giffile","",0x00000000,"GIF Image"
 HKCR,"giffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-302"
 HKCR,"giffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,2"
-HKCR,"giffile\shell\open\command","",0x00020000,"""%programfiles%\Internet Explorer\iexplore.exe"" %1"
+HKCR,"giffile\shell\open\command","",0x00020000,"""%ProgramFiles%\Internet Explorer\iexplore.exe"" %1"
 
 ; JPEG Images
 HKCR,".jpg","",0x00000000,"jpegfile"
