@@ -1,5 +1,5 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/include)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/freetype/include)
 spec2def(ftfd.dll ftfd.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

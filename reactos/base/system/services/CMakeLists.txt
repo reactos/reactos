@@ -1,10 +1,10 @@
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/subsys
-    ${REACTOS_SOURCE_DIR}/include/reactos/idl
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl
     ${CMAKE_CURRENT_BINARY_DIR})
 
-add_rpc_files(server ${REACTOS_SOURCE_DIR}/include/reactos/idl/svcctl.idl)
+add_rpc_files(server ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/svcctl.idl)
 
 list(APPEND SOURCE
     config.c

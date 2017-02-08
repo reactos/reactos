@@ -1,6 +1,6 @@
 
 add_definitions(-D__WINESRC__)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(imaadp32.acm imaadp32.acm.spec)
 
 list(APPEND SOURCE

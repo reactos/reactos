@@ -1,9 +1,9 @@
 
 include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
-    ${REACTOS_SOURCE_DIR}/include/reactos/idl)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl)
 
-add_rpc_files(server ${REACTOS_SOURCE_DIR}/include/reactos/idl/sam.idl)
+add_rpc_files(server ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/sam.idl)
 spec2def(samsrv.dll samsrv.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

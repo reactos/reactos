@@ -1,5 +1,5 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 spec2def(sxs.dll sxs.spec ADD_IMPORTLIB)
 

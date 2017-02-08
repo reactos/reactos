@@ -8,8 +8,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "bl.h"
-#include "../drivers/filesystems/fs_rec/fs_rec.h"
+#include <bl.h>
+#include <fs_rec/fs_rec.h>
 
 /* DATA VARIABLES ************************************************************/
 

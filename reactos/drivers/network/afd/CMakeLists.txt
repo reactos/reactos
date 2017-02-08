@@ -1,7 +1,7 @@
 
 include_directories(
     BEFORE include
-    ${REACTOS_SOURCE_DIR}/include/reactos/drivers)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
 
 list(APPEND SOURCE
     afd/bind.c

@@ -4,7 +4,7 @@ add_definitions(-DDEBUG_MODE)
 
 include_directories(
     ${REACTOS_SOURCE_DIR}/ntoskrnl/include
-    ${REACTOS_SOURCE_DIR}/lib/drivers/hidparser)
+    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/hidparser)
 
 
 add_library(hidparse SHARED hidparse.c hidparse.rc ${CMAKE_CURRENT_BINARY_DIR}/hidparse.def)

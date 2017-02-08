@@ -3,7 +3,7 @@ add_definitions(
     -D__WINESRC__
     -D_SHDOCVW_)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(shdocvw.dll shdocvw.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

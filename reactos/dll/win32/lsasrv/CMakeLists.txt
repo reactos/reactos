@@ -1,12 +1,12 @@
 
 include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
-    ${REACTOS_SOURCE_DIR}/include/reactos/idl
-    ${REACTOS_SOURCE_DIR}/include/reactos/subsys/lsass)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys/lsass)
 
 add_rpc_files(server
-    ${REACTOS_SOURCE_DIR}/include/reactos/idl/dssetup.idl
-    ${REACTOS_SOURCE_DIR}/include/reactos/idl/lsa.idl)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/dssetup.idl
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/lsa.idl)
 spec2def(lsasrv.dll lsasrv.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

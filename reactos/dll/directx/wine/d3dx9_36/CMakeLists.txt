@@ -1,6 +1,6 @@
 
 add_definitions(-D__WINESRC__ -Dcopysignf=_copysignf)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(d3dx9_36.dll d3dx9_36.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

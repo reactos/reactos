@@ -1,7 +1,7 @@
 
 include_directories(
     .
-    ${REACTOS_SOURCE_DIR}/include/reactos/libs/fullfat)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/fullfat)
 
 list(APPEND SOURCE
     cleanup.c

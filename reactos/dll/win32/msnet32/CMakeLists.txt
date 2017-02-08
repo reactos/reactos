@@ -1,5 +1,5 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 spec2def(msnet32.dll msnet32.spec)
 add_library(msnet32 SHARED msnet_main.c ${CMAKE_CURRENT_BINARY_DIR}/msnet32.def)

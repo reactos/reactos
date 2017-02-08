@@ -1,7 +1,7 @@
 
 include_directories(
     BEFORE include
-    ${REACTOS_SOURCE_DIR}/lib/drivers/oskittcp/include)
+    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/oskittcp/include)
 
 add_definitions(
     -DNDIS40

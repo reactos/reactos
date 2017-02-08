@@ -1,5 +1,5 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/drivers)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
 
 list(APPEND SOURCE
     blue.c

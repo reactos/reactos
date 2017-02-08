@@ -3,7 +3,7 @@ add_definitions(
     -D__WINESRC__
     -DCOM_NO_WINDOWS_H)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(wuapi.dll wuapi.spec)
 
 list(APPEND SOURCE

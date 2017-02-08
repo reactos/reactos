@@ -2,7 +2,7 @@ PROJECT(SHELL)
 
 set_cpp(WITH_RUNTIME)
 
-include_directories(${REACTOS_SOURCE_DIR}/lib/atl)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 spec2def(browseui.dll browseui.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

@@ -10,8 +10,8 @@ if(MSVC)
 endif()
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/wine
-    ${REACTOS_SOURCE_DIR}/lib/3rdparty/libwin-iconv)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
+    ${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/libwin-iconv)
 
 spec2def(msxml3.dll msxml3.spec ADD_IMPORTLIB NO_PRIVATE_WARNINGS)
 add_typelib(msxml3_v1.idl)

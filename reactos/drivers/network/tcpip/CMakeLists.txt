@@ -1,8 +1,8 @@
 
 include_directories(
     BEFORE include
-    ${REACTOS_SOURCE_DIR}/lib/drivers/lwip/src/include
-    ${REACTOS_SOURCE_DIR}/lib/drivers/lwip/src/include/ipv4)
+    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/lwip/src/include
+    ${REACTOS_SOURCE_DIR}/sdk/lib/drivers/lwip/src/include/ipv4)
 
 add_definitions(
     -DNDIS40

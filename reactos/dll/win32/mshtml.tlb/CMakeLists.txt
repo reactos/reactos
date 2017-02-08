@@ -1,7 +1,7 @@
 
 add_typelib(mshtml_tlb.idl)
 add_definitions(-D__WINESRC__)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 add_library(mshtml.tlb SHARED rsrc.rc)
 
 list(APPEND mshtml_tlb_rc_deps

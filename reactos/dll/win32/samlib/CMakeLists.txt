@@ -1,11 +1,11 @@
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/idl
-    ${REACTOS_SOURCE_DIR}/include/reactos/wine)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 
 add_definitions(-D__WINESRC__)
 spec2def(samlib.dll samlib.spec ADD_IMPORTLIB)
-add_rpc_files(client ${REACTOS_SOURCE_DIR}/include/reactos/idl/sam.idl)
+add_rpc_files(client ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/sam.idl)
 
 list(APPEND SOURCE
     dllmain.c

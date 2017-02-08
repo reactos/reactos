@@ -1,8 +1,8 @@
 
 spec2def(mbedtls.dll mbedtls.spec ADD_IMPORTLIB)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs
-                    ${REACTOS_SOURCE_DIR}/include/reactos/zlib)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs
+                    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/zlib)
 
 list(APPEND src
      _reactos_strsafe_wrapper.c

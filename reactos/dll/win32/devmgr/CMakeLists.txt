@@ -10,8 +10,8 @@ if(NOT MSVC)
 endif()
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/dll
-    ${REACTOS_SOURCE_DIR}/lib/atl 
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/dll
+    ${REACTOS_SOURCE_DIR}/sdk/lib/atl 
     includes)
 
 list(APPEND SOURCE

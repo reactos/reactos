@@ -1,6 +1,6 @@
 
 add_definitions(-D_KERNEL32_)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys)
 spec2def(kernel32.dll kernel32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

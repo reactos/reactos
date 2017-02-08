@@ -14,7 +14,7 @@ add_custom_command(
     DEPENDS native-bin2c command ${_command_com_file})
 #####################################
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/fast486)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/fast486)
 
 spec2def(ntvdm.exe ntvdm.spec ADD_IMPORTLIB)
 

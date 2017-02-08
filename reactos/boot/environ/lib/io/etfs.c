@@ -8,8 +8,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "bl.h"
-#include "../drivers/filesystems/cdfs_new/cd.h"
+#include <bl.h>
+#include <cdfs_new/cd.h>
 typedef struct _RAW_ET_VD
 {
     UCHAR BootIndicator;

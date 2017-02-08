@@ -1,8 +1,8 @@
 
 include_directories(
     include
-    ${REACTOS_SOURCE_DIR}/lib/3rdparty/adns/src
-    ${REACTOS_SOURCE_DIR}/lib/3rdparty/adns/adns_win32)
+    ${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/adns/src
+    ${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/adns/adns_win32)
 
 add_definitions(-DADNS_JGAA_WIN32)
 spec2def(dnsapi.dll dnsapi.spec ADD_IMPORTLIB)

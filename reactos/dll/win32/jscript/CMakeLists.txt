@@ -3,7 +3,7 @@ add_definitions(
     -D__WINESRC__
     -D_USE_MATH_DEFINES)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(jscript.dll jscript.spec)
 
 list(APPEND SOURCE

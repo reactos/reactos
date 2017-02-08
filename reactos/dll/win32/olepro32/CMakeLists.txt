@@ -1,6 +1,6 @@
 
 add_definitions(-D__WINESRC__)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(olepro32.dll olepro32.spec)
 add_typelib(olepro.idl)
 

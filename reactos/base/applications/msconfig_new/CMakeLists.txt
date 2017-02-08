@@ -6,8 +6,8 @@ set_cpp(WITH_RUNTIME WITH_EXCEPTIONS)
 include_directories(
     .
     comctl32ex
-    ${REACTOS_SOURCE_DIR}/include/c++
-    ${REACTOS_SOURCE_DIR}/lib/atl)
+    ${REACTOS_SOURCE_DIR}/sdk/include/c++
+    ${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 
 list(APPEND C_SOURCE
     comctl32ex/comctl32supp.c

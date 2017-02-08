@@ -1,6 +1,6 @@
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/drivers)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
 
 spec2def(msafd.dll msafd.spec)
 

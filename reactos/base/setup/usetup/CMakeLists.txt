@@ -3,9 +3,9 @@ add_definitions(${I18N_DEFS})
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${REACTOS_SOURCE_DIR}/lib/inflib
-    ${REACTOS_SOURCE_DIR}/include/reactos/libs/zlib
-    ${REACTOS_SOURCE_DIR}/include/reactos/drivers)
+    ${REACTOS_SOURCE_DIR}/sdk/lib/inflib
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
 
 list(APPEND SOURCE
     interface/usetup.c

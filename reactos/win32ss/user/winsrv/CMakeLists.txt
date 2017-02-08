@@ -3,7 +3,7 @@
 add_subdirectory(concfg)
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/subsys
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys
     ${REACTOS_SOURCE_DIR}/win32ss/include)
 
 spec2def(winsrv.dll winsrv.spec)

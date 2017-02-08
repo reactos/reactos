@@ -1,5 +1,5 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/include/drivers
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/drivers
                     inc)
 
 list(APPEND SOURCE

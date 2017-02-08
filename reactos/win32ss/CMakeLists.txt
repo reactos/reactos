@@ -26,9 +26,9 @@ include_directories(
     .
     include
     ${REACTOS_SOURCE_DIR}/ntoskrnl/include
-    ${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/include
-    ${REACTOS_SOURCE_DIR}/include/reactos/subsys
-    ${REACTOS_SOURCE_DIR}/include/reactos/drivers)
+    ${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/freetype/include
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
 
 add_definitions(
     -DLANGPACK

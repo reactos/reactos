@@ -1,6 +1,6 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/libxslt
-                    ${REACTOS_SOURCE_DIR}/lib/3rdparty/libwin-iconv)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libxslt
+                    ${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/libwin-iconv)
 
 add_definitions(
     -DHAVE_CONFIG_H

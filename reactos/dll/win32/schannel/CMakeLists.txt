@@ -1,7 +1,7 @@
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/wine
-    ${REACTOS_SOURCE_DIR}/include/reactos/libs/mbedtls)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/mbedtls)
 
 
 add_definitions(-D__WINESRC__ -D_WINE)

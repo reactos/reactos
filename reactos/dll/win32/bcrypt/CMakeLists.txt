@@ -1,8 +1,8 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/wine
-    ${REACTOS_SOURCE_DIR}/include/reactos/libs/mbedtls)
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/mbedtls)
 spec2def(bcrypt.dll bcrypt.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

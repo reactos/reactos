@@ -9,11 +9,11 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(
-    BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine
-    ${REACTOS_SOURCE_DIR}/include/reactos/libs/libjpeg
-    ${REACTOS_SOURCE_DIR}/include/reactos/libs/zlib
-    ${REACTOS_SOURCE_DIR}/include/reactos/libs/libpng
-    ${REACTOS_SOURCE_DIR}/include/reactos/libs/libtiff)
+    BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libjpeg
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libpng
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libtiff)
 
 if(MSVC)
     add_compile_flags("/FItypeof.h")

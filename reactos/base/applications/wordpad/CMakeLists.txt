@@ -2,7 +2,7 @@
 remove_definitions(-D_WIN32_IE=0x600)
 
 add_definitions(-D__ROS_LONG64__)
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 
 list(APPEND SOURCE
     olecallback.c

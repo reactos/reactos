@@ -3,7 +3,7 @@ add_definitions(
     -DCOM_NO_WINDOWS_H
     -D__WINESRC__)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(dplayx.dll dplayx.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

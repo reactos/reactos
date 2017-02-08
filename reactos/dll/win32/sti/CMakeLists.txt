@@ -5,7 +5,7 @@ add_definitions(
     -DPROXY_DELEGATION
     -DWINE_REGISTER_DLL)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(sti.dll sti.spec)
 add_rpcproxy_files(sti_wia.idl)
 
