@@ -20,8 +20,6 @@ IDI_LOCKICON ICON "resources/115.ico"
 /* Bitmaps */
 IDI_ROSLOGO BITMAP "resources/reactos.bmp"
 
-#include <reactos/manifest_dll.rc>
-
 /* UTF-8 */
 #pragma code_page(65001)
 
