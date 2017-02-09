@@ -173,6 +173,9 @@ struct
     { L"a>>>exe",               L"ac.exe",                      FALSE,  FALSE,  FALSE },
     { L"<.exe",                 L"test.exe",                    FALSE,  FALSE,  TRUE },
     { L"<.EXE",                 L"test.exe",                    TRUE,   FALSE,  TRUE },
+    { L"*_MICROSOFT.WINDOWS.COMMON-CONTROLS_6595B64144CCF1DF_6.0.*.*_*_*.MANIFEST",
+                                L"X86_MICROSOFT.VC90.ATL_1FC8B3B9A1E18E3B_9.0.30729.6161_X-WW_92453BB7.CAT",
+                                                                FALSE,  FALSE,  FALSE },
 };
 
 static VOID FsRtlIsNameInExpressionTest()

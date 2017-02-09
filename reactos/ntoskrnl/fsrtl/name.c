@@ -113,7 +113,7 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
         if (NamePosition >= Name->Length / sizeof(WCHAR))
         {
             EndOfName = TRUE;
-            if (OldBackTracking[MatchingChars - 1] == Expression->Length * 2)
+            if (MatchingChars && (OldBackTracking[MatchingChars - 1] == Expression->Length * 2))
                 break;
         }
 
@@ -155,8 +155,8 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                 }
 
                 /* Basic check to test if chars are equal */
-                CompareChar = IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] :
-                                           Name->Buffer[NamePosition];
+                CompareChar = (NamePosition >= Name->Length / sizeof(WCHAR)) ? UNICODE_NULL : (IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] :
+                                           Name->Buffer[NamePosition]);
                 if (Expression->Buffer[ExpressionPosition / sizeof(WCHAR)] == CompareChar && !EndOfName)
                 {
                     BackTracking[BackTrackingPosition++] = (ExpressionPosition + sizeof(WCHAR)) * 2;
@@ -233,7 +233,7 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
     }
 
     /* Store result value */
-    Result = (OldBackTracking[MatchingChars - 1] == (Expression->Length * 2));
+    Result = MatchingChars > 0 && (OldBackTracking[MatchingChars - 1] == (Expression->Length * 2));
 
     /* Frees the memory if necessary */
     if (BackTracking != BackTrackingBuffer && BackTracking != OldBackTrackingBuffer)
