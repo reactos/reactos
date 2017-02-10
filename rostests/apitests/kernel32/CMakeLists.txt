@@ -33,6 +33,7 @@ add_rostests_file(TARGET kernel32_apitest)
 
 list(APPEND MANIFEST_FILES
     classtest.manifest
+    classtest2.manifest
     comctl32dep.manifest
     dep1.manifest
     deptest.manifest)

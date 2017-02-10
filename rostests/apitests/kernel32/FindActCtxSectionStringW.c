@@ -269,8 +269,8 @@ VOID TestLibDependency(HANDLE h)
 
 START_TEST(FindActCtxSectionStringW)
 {
-    HANDLE h;
-    ULONG_PTR cookie;
+    HANDLE h, h2;
+    ULONG_PTR cookie, cookie2;
 
     /*First run the redirection tests without using our own actctx */
     TestClassRedirection(NULL, L"Button", L"Button", L"comctl32.dll", 27);
@@ -284,6 +284,9 @@ START_TEST(FindActCtxSectionStringW)
     {
         _ActivateCtx(h, &cookie, __LINE__);
         TestClassRedirection(h, L"Button", L"2.2.2.2!Button", L"testlib.dll", 5);
+        _ActivateCtx(NULL, &cookie2, __LINE__);
+        TestClassRedirection(NULL, L"Button", L"Button", L"comctl32.dll", 27);
+        _DeactivateCtx(cookie2, __LINE__);
         _DeactivateCtx(cookie, __LINE__);
     }
     else
@@ -291,6 +294,23 @@ START_TEST(FindActCtxSectionStringW)
         skip("Failed to create context for classtest.manifest\n");
     }
     
+    /* Class redirection tests with multiple contexts in the activation stack */
+    h2 = _CreateActCtxFromFile(L"classtest2.manifest", __LINE__);
+    if (h != INVALID_HANDLE_VALUE && h2 != INVALID_HANDLE_VALUE)
+    {
+        _ActivateCtx(h, &cookie, __LINE__);
+        _ActivateCtx(h2, &cookie2, __LINE__);
+        TestClassRedirection(NULL, L"Button", L"Button", L"comctl32.dll", 27);
+        TestClassRedirection(h2, L"MyClass", L"1.1.1.1!MyClass", L"testlib.dll", 5);
+        _DeactivateCtx(cookie2, __LINE__);
+        TestClassRedirection(h, L"Button", L"2.2.2.2!Button", L"testlib.dll", 5);
+        _DeactivateCtx(cookie, __LINE__);
+    }
+    else
+    {
+        skip("Failed to create context for classtest.manifest\n");
+    }
+
     /* Dependency tests */
     h = _CreateActCtxFromFile(L"deptest.manifest", __LINE__);
     if (h != INVALID_HANDLE_VALUE)
