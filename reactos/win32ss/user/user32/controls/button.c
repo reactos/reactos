@@ -496,6 +496,9 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
 
             GetClientRect(hWnd, &client);
             rc = client;
+            /* FIXME: check other BS_* handlers */
+            if (btn_type == BS_GROUPBOX)
+                InflateRect(&rc, -7, 1); /* GB_Paint does this */
             BUTTON_CalcLabelRect(hWnd, hdc, &rc);
             /* Clip by client rect bounds */
             if (rc.right > client.right) rc.right = client.right;
@@ -759,19 +762,26 @@ static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
    switch (style & (BS_ICON|BS_BITMAP))
    {
       case BS_TEXT:
+      {
+          HFONT hFont, hPrevFont = 0;
+
           if (!(text = get_button_text( hwnd ))) goto empty_rect;
           if (!text[0])
           {
               HeapFree( GetProcessHeap(), 0, text );
               goto empty_rect;
           }
+
+          if ((hFont = get_button_font( hwnd ))) hPrevFont = SelectObject( hdc, hFont );
           DrawTextW(hdc, text, -1, &r, dtStyle | DT_CALCRECT);
+          if (hPrevFont) SelectObject( hdc, hPrevFont );
           HeapFree( GetProcessHeap(), 0, text );
 #ifdef __REACTOS__
           if (get_ui_state(hwnd) & UISF_HIDEACCEL)
               dtStyle |= DT_HIDEPREFIX;
 #endif
           break;
+      }
 
       case BS_ICON:
          if (!GetIconInfo((HICON)GetWindowLongPtrW( hwnd, HIMAGE_GWL_OFFSET ), &iconInfo))
