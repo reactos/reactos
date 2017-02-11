@@ -20,6 +20,7 @@
  */
 
 #include "regedit.h"
+#include <strsafe.h>
 
 const WCHAR g_szGeneralRegKey[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit";
 
@@ -129,11 +130,14 @@ extern void SaveSettings(void)
             rootName = get_root_key_name(hRootKey);
 
             /* Load "My Computer" string and complete it */
-            LoadStringW(hInst, IDS_MY_COMPUTER, szBuffer, COUNT_OF(szBuffer));
-            wcscat(szBuffer, L"\\"); wcscat(szBuffer, rootName);
-            wcscat(szBuffer, L"\\"); wcscat(szBuffer, keyPath);
-
-            RegSetValueExW(hKey, L"LastKey", 0, REG_SZ, (LPBYTE)szBuffer, (DWORD)wcslen(szBuffer) * sizeof(WCHAR));
+            if (LoadStringW(hInst, IDS_MY_COMPUTER, szBuffer, COUNT_OF(szBuffer)) &&
+                SUCCEEDED(StringCbCatW(szBuffer, sizeof(szBuffer), L"\\")) &&
+                SUCCEEDED(StringCbCatW(szBuffer, sizeof(szBuffer), rootName)) &&
+                SUCCEEDED(StringCbCatW(szBuffer, sizeof(szBuffer), L"\\")) &&
+                SUCCEEDED(StringCbCatW(szBuffer, sizeof(szBuffer), keyPath)))
+            {
+                RegSetValueExW(hKey, L"LastKey", 0, REG_SZ, (LPBYTE)szBuffer, (DWORD)wcslen(szBuffer) * sizeof(WCHAR));
+            }
         }
 
         /* Get statusbar settings */

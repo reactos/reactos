@@ -1125,11 +1125,13 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
     valueName = GetValueName(g_pChildWnd->hListWnd, -1);
-    if (keyPath)
-    {
-        lRet = RegOpenKeyExW(hKeyRoot, keyPath, 0, regsam, &hKey);
-        if (lRet != ERROR_SUCCESS) hKey = 0;
-    }
+
+    if (!keyPath)
+        return TRUE;
+
+    lRet = RegOpenKeyExW(hKeyRoot, keyPath, 0, regsam, &hKey);
+    if (lRet != ERROR_SUCCESS)
+        hKey = 0;
 
     switch (LOWORD(wParam))
     {

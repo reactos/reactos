@@ -1079,7 +1079,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCWSTR valueName, BOOL EditBin)
     editValueName = valueName;
 
     lRet = RegQueryValueExW(hKey, valueName, 0, &type, 0, &valueDataLen);
-    if (lRet != ERROR_SUCCESS && (!wcscmp(valueName, L"") || valueName == NULL))
+    if (lRet != ERROR_SUCCESS && (valueName == NULL || !valueName[0]))
     {
         lRet = ERROR_SUCCESS; /* Allow editing of (Default) values which don't exist */
         type = REG_SZ;
