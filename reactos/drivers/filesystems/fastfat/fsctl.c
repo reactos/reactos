@@ -622,11 +622,14 @@ VfatVerify(
     FATINFO FatInfo;
     BOOLEAN RecognizedFS;
     PDEVICE_EXTENSION DeviceExt;
+    BOOLEAN AllowRaw;
 
     DPRINT("VfatVerify(IrpContext %p)\n", IrpContext);
 
     DeviceToVerify = IrpContext->Stack->Parameters.VerifyVolume.DeviceObject;
     DeviceExt = DeviceToVerify->DeviceExtension;
+    AllowRaw = BooleanFlagOn(IrpContext->Stack->Flags, SL_ALLOW_RAW_MOUNT);
+
     Status = VfatBlockDeviceIoControl(DeviceExt->StorageDevice,
                                       IOCTL_DISK_CHECK_VERIFY,
                                       NULL,
@@ -637,14 +640,15 @@ VfatVerify(
     if (!NT_SUCCESS(Status) && Status != STATUS_VERIFY_REQUIRED)
     {
         DPRINT("VfatBlockDeviceIoControl() failed (Status %lx)\n", Status);
-        Status = STATUS_WRONG_VOLUME;
+        Status = (AllowRaw ? STATUS_WRONG_VOLUME : Status);
     }
     else
     {
         Status = VfatHasFileSystem(DeviceExt->StorageDevice, &RecognizedFS, &FatInfo, TRUE);
         if (!NT_SUCCESS(Status) || RecognizedFS == FALSE)
         {
-            Status = STATUS_WRONG_VOLUME;
+            if (NT_SUCCESS(Status) || AllowRaw)
+                Status = STATUS_WRONG_VOLUME;
         }
         else if (sizeof(FATINFO) == RtlCompareMemory(&FatInfo, &DeviceExt->FatInfo, sizeof(FATINFO)))
         {
