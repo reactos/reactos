@@ -6,5 +6,8 @@
     <windowClass>VersionTestClass2</windowClass>
     <windowClass>VersionTestClass3</windowClass>
     <windowClass>Button</windowClass>
+    <windowClass>VersionTestClass7</windowClass>
+    <windowClass>VersionTestClass8</windowClass>
+    <windowClass>VersionTestClass9</windowClass>
   </file>
 </assembly>

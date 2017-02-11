@@ -9,6 +9,7 @@
 #define WIN32_NO_STATUS
 #include <ndk/rtlfuncs.h>
 
+#include <wchar.h>
 #include <wingdi.h>
 #include <winuser.h>
 #include "helper.h"
@@ -25,14 +26,35 @@ static ATOM _RegisterClass(LPCWSTR lpwszClassName, HINSTANCE hInstance, UINT sty
 static ATOM _GetClassAtom(LPCWSTR lpwszClassName, HINSTANCE hInstance)
 {
     WNDCLASSEXW wcex = {sizeof(WNDCLASSEXW)};
-    return (ATOM)GetClassInfoEx(hInstance, lpwszClassName, &wcex);
+    return (ATOM)GetClassInfoExW(hInstance, lpwszClassName, &wcex);
 }
 
 static WNDPROC _GetWndproc(LPCWSTR lpwszClassName, HINSTANCE hInstance)
 {
     WNDCLASSEXW wcex = {sizeof(WNDCLASSEXW)};
-    GetClassInfoEx(hInstance, lpwszClassName, &wcex);
-    return wcex.lpfnWndProc;
+    BOOL ret = GetClassInfoExW(hInstance, lpwszClassName, &wcex);
+    return ret ? wcex.lpfnWndProc : NULL;
+}
+
+static ATOM _RegisterClassA(LPCSTR lpzClassName, HINSTANCE hInstance, UINT style, WNDPROC lpfnWndProc)
+{
+    WNDCLASSEXA wcex = {sizeof(WNDCLASSEX), style, lpfnWndProc};
+    wcex.lpszClassName  = lpzClassName;
+    wcex.hInstance      = hInstance;
+    return RegisterClassExA(&wcex);
+}
+
+static ATOM _GetClassAtomA(LPCSTR lpszClassName, HINSTANCE hInstance)
+{
+    WNDCLASSEXA wcex = {sizeof(WNDCLASSEX)};
+    return (ATOM)GetClassInfoExA(hInstance, lpszClassName, &wcex);
+}
+
+static WNDPROC _GetWndprocA(LPCSTR lpszClassName, HINSTANCE hInstance)
+{
+    WNDCLASSEXA wcex = {sizeof(WNDCLASSEX)};
+    BOOL ret = GetClassInfoExA(hInstance, lpszClassName, &wcex);
+    return ret ? wcex.lpfnWndProc : NULL;
 }
 
 HANDLE _CreateActCtxFromFile(LPCWSTR FileName)
@@ -146,9 +168,11 @@ VOID TestVersionedClasses(VOID)
 {
     HMODULE hmod = GetModuleHandle(NULL);
     HANDLE h1, h2;
-    ULONG_PTR cookie1;
-    ATOM a,b,c;
+    ULONG_PTR cookie1, cookie2;
+    ATOM a,b,c,d;
     WNDPROC proc1,proc2,proc3, proc4, proc5;
+    WCHAR buffer[50];
+
 
     h1 = _CreateActCtxFromFile(L"verclasstest1.manifest");
     h2 = _CreateActCtxFromFile(L"verclasstest2.manifest");
@@ -173,9 +197,9 @@ VOID TestVersionedClasses(VOID)
     ok( c != 0, "\n");
     ok( a == c, "\n");
     ok (proc1 == DefWindowProcA, "\n");
-    ok (proc2 == NULL, "\n");
-    ok (proc3 == DefWindowProcW, "\n");
-    ok (proc4 == DefWindowProcW, "\n");
+    ok (proc2 == NULL, "Got 0x%p, expected NULL\n", proc2);
+    ok (proc3 == DefWindowProcW, "Got 0x%p, expected 0x%p\n", proc3, DefWindowProcW);
+    ok (proc4 == DefWindowProcW, "Got 0x%p, expected 0x%p\n", proc4, DefWindowProcW);
     ok (proc5 == DefWindowProcA, "\n");
     
     a = _GetClassAtom(L"Button", hmod);
@@ -184,25 +208,76 @@ VOID TestVersionedClasses(VOID)
     ActivateActCtx(h2, &cookie1);
     c = _RegisterClass(L"Button", hmod, CS_GLOBALCLASS, DefWindowProcA);
     proc2 = _GetWndproc(L"Button", (HMODULE)0xdead);
+    d = _GetClassAtom(L"3.3.3.3!Button", (HMODULE)0xdead);
+    proc3 = _GetWndproc(L"3.3.3.3!Button", (HMODULE)0xdead);
     ok( a != 0, "\n");
     ok( b == 0, "\n");
     ok( c != 0, "\n");
+    ok( d != 0, "\n");
     ok( a == c, "\n");
+    ok( d == a, "\n");
     ok( proc1 != NULL, "\n");
-    ok( proc1 != proc2, "\n");
-    ok( proc2 == DefWindowProcA, "\n");
+    ok( proc1 != DefWindowProcA, "Got 0x%p, expected not 0x%p\n", proc1, DefWindowProcA);
+    ok( proc2 == DefWindowProcA, "Got 0x%p, expected 0x%p\n", proc2, DefWindowProcA);
+    ok( proc3 == DefWindowProcA, "Got 0x%p, expected 0x%p\n", proc3, DefWindowProcA);
     
     a = _RegisterClass(L"VersionTestClass2", hmod, CS_GLOBALCLASS, DefWindowProcW);
     proc1 = _GetWndproc(L"VersionTestClass2", (HMODULE)0xdead);
     b = _RegisterClass(L"VersionTestClass2", hmod, 0, DefWindowProcA);
     proc2 = _GetWndproc(L"VersionTestClass2", hmod);
+    proc3 = _GetWndproc(L"VersionTestClass2", (HMODULE)0xdead);
     ok (a != 0, "\n");
     ok (b != 0, "\n");
     ok (a == b, "\n");
+    ok (proc1 == DefWindowProcW, "Got 0x%p, expected 0x%p\n", proc1, DefWindowProcW);
+    ok (proc2 == DefWindowProcA, "Got 0x%p, expected 0x%p\n", proc2, DefWindowProcA);
+    ok (proc3 == DefWindowProcW, "Got 0x%p, expected 0x%p\n", proc2, DefWindowProcA);
+
+    a = _RegisterClass(L"VersionTestClass3", hmod, 0, DefWindowProcW);
+    swprintf(buffer, L"#%d", a);
+    proc1 = _GetWndproc((LPCWSTR)(DWORD_PTR)a, hmod);
+    proc2 = _GetWndproc(buffer, hmod);
+    ok (a != 0, "\n");
     ok (proc1 == DefWindowProcW, "\n");
-    ok (proc2 == DefWindowProcA, "\n");
-    
-    
+    ok (proc2 == 0, "Got 0x%p for %S, expected 0\n", proc2, buffer);
+    DeactivateActCtx(0, cookie1);
+
+    a = _RegisterClass(L"VersionTestClass3", hmod, 0, DefWindowProcW);
+    swprintf(buffer, L"#%d", a);
+    proc1 = _GetWndproc((LPCWSTR)(DWORD_PTR)a, hmod);
+    proc2 = _GetWndproc(buffer, hmod);
+    ok (a != 0, "\n");
+    ok (proc1 == DefWindowProcW, "\n");
+    ok (proc2 == 0, "Got 0x%p for %S, expected 0\n", proc2, buffer);
+
+    ActivateActCtx(h2, &cookie1);
+    a = _RegisterClassA("VersionTestClass7", hmod, 0, DefWindowProcW);
+    b = _GetClassAtomA("VersionTestClass7", hmod);
+    proc1 = _GetWndprocA("VersionTestClass7", hmod);
+    proc2 = _GetWndprocA((LPCSTR)(DWORD_PTR)a, hmod);
+    ok(a != 0, "\n");
+    ok(b != 0, "\n");
+    ok(a == b, "\n");
+    ok (proc1 == DefWindowProcW, "\n");
+    ok (proc2 == DefWindowProcW, "\n");
+
+    DeactivateActCtx(0, cookie1);
+
+    proc1 = _GetWndproc(L"Button", 0);
+    ActivateActCtx(h2, &cookie1);
+    ActivateActCtx(h1, &cookie2);
+    proc2 = _GetWndproc(L"Button", 0);
+    DeactivateActCtx(0, cookie2);
+    ActivateActCtx(0, &cookie2);
+    proc3 = _GetWndproc(L"Button", 0);
+    DeactivateActCtx(0, cookie2);
+    DeactivateActCtx(0, cookie1);
+    ok (proc1 != 0, "\n");
+    ok (proc2 != 0, "\n");
+    ok (proc4 != 0, "\n");
+    ok (proc1 == proc2, "\n");
+    ok (proc1 == proc3, "\n");
+
 }
 
 START_TEST(RegisterClassEx)
