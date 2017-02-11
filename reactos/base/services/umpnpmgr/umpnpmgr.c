@@ -993,7 +993,9 @@ PNP_GetDeviceRegProp(
     }
 
 done:
-    *pulTransferLen = (ret == CR_SUCCESS) ? *pulLength : 0;
+
+    if(pulTransferLen)
+        *pulTransferLen = (ret == CR_SUCCESS) ? *pulLength : 0;
 
     if (hKey != NULL)
         RegCloseKey(hKey);
