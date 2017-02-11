@@ -49,8 +49,15 @@ TCPSendDataCallback(struct netif *netif, struct pbuf *p, struct ip_addr *dest)
     GetDataPtr(Packet.NdisPacket, 0, (PCHAR*)&Packet.Header, &Packet.TotalSize);
     Packet.MappedHeader = TRUE;
 
-    ASSERT(p->tot_len == p->len);
-    ASSERT(Packet.TotalSize == p->len);
+    if (p->tot_len != p->len ||
+        Packet.TotalSize != p->len)
+    {
+        TI_DbgPrint(MIN_TRACE,
+                    ("TCPSendDataCallback tot_len = %u, len = %u, TotalSize = %u\n",
+                     p->tot_len, p->len, Packet.TotalSize));
+        ASSERT(p->tot_len == p->len);
+        ASSERT(Packet.TotalSize == p->len);
+    }
 
     RtlCopyMemory(Packet.Header, p->payload, p->len);
 
