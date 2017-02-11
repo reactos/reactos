@@ -618,7 +618,7 @@ VfatVerify(
     PVFAT_IRP_CONTEXT IrpContext)
 {
     PDEVICE_OBJECT DeviceToVerify;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     FATINFO FatInfo;
     BOOLEAN RecognizedFS;
     PDEVICE_EXTENSION DeviceExt;
