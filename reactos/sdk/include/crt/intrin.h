@@ -125,6 +125,7 @@ unsigned __int64 __readmsr(unsigned long);
 unsigned __int64 __readpmc(unsigned long);
 unsigned long __segmentlimit(unsigned long);
 void __sidt(void *);
+void _sgdt(void *);
 void __stosb(unsigned char *, unsigned char, size_t);
 void __stosd(unsigned long *, unsigned long, size_t);
 void __stosw(unsigned short *, unsigned short, size_t);
