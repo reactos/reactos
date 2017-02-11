@@ -2027,7 +2027,7 @@ DWORD WINAPI IpReleaseAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 {
   DWORD Status, Version = 0;
 
-  if (!AdapterInfo || !AdapterInfo->Name)
+  if (!AdapterInfo)
       return ERROR_INVALID_PARAMETER;
 
   /* Maybe we should do this in DllMain */
@@ -2061,7 +2061,7 @@ DWORD WINAPI IpRenewAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 {
   DWORD Status, Version = 0;
 
-  if (!AdapterInfo || !AdapterInfo->Name)
+  if (!AdapterInfo)
       return ERROR_INVALID_PARAMETER;
 
   /* Maybe we should do this in DllMain */
