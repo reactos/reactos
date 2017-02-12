@@ -623,12 +623,20 @@ VfatVerify(
     BOOLEAN RecognizedFS;
     PDEVICE_EXTENSION DeviceExt;
     BOOLEAN AllowRaw;
+    PVPB Vpb;
 
     DPRINT("VfatVerify(IrpContext %p)\n", IrpContext);
 
     DeviceToVerify = IrpContext->Stack->Parameters.VerifyVolume.DeviceObject;
     DeviceExt = DeviceToVerify->DeviceExtension;
+    Vpb = IrpContext->Stack->Parameters.VerifyVolume.Vpb;
     AllowRaw = BooleanFlagOn(IrpContext->Stack->Flags, SL_ALLOW_RAW_MOUNT);
+
+    if (!BooleanFlagOn(Vpb->RealDevice->Flags, DO_VERIFY_VOLUME))
+    {
+        DPRINT("Already verified\n");
+        return STATUS_SUCCESS;
+    }
 
     Status = VfatBlockDeviceIoControl(DeviceExt->StorageDevice,
                                       IOCTL_DISK_CHECK_VERIFY,
@@ -671,7 +679,7 @@ VfatVerify(
         }
     }
 
-    IrpContext->Stack->Parameters.VerifyVolume.Vpb->RealDevice->Flags &= ~DO_VERIFY_VOLUME;
+    Vpb->RealDevice->Flags &= ~DO_VERIFY_VOLUME;
 
     return Status;
 }
