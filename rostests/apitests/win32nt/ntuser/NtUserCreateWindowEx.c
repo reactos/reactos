@@ -61,6 +61,7 @@ START_TEST(NtUserCreateWindowEx)
 
     /* LARGE_STRING for NtUserCreateWindowEx */
     LARGE_STRING l_dummy = {14, 32, 0, L"DummyMe"};
+    LARGE_STRING l_empty = {0, 0, 0, L""};
     LARGE_STRING l_wndName = {32, 32, 0, L""};
     LARGE_STRING l_cls = {cls.Length, 32, 0, cls.Buffer};
     LARGE_STRING l_ver_cls = {ver_cls.Length, 32, 0, ver_cls.Buffer};
@@ -182,6 +183,8 @@ START_TEST(NtUserCreateWindowEx)
         /* Check what return GetClassLong */
         TEST(GetClassLong(hwnd, GCW_ATOM) == atom);
 
+        TEST(NtUserFindWindowEx(NULL, NULL, &cls, (UNICODE_STRING*)&l_empty, 0) == hwnd);
+
         /* Finally destroy it */
         DestroyWindow(hwnd);
     }
@@ -245,4 +248,8 @@ START_TEST(NtUserCreateWindowEx)
     TEST(NtUserUnregisterClass(&another_cls, hinst, &outClsMnu) != 0);
     TEST(NtUserUnregisterClass(&menu, hinst, &outClsMnu) == 0);
 
+    /* Make sure that the classes got destroyed */
+    TEST(NtUserGetWOWClass(hinst, &cls) == 0);
+    TEST(NtUserGetWOWClass(hinst, &ver_cls) == 0);
+    TEST(NtUserGetWOWClass(hinst, &another_cls) == 0);
 }
