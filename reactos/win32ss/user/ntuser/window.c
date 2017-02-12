@@ -3021,7 +3021,7 @@ NtUserFindWindowEx(HWND hwndParent,
        }
        else
        {
-          ERR("FindWindowEx: Not Desktop Parent!\n");
+          TRACE("FindWindowEx: Not Desktop Parent!\n");
           Ret = IntFindWindow(Parent, ChildAfter, ClassAtom, &WindowName);
        }
 
