@@ -1428,7 +1428,7 @@ VfatQueryInformation(
     PVFAT_IRP_CONTEXT IrpContext)
 {
     FILE_INFORMATION_CLASS FileInformationClass;
-    PVFATFCB FCB = NULL;
+    PVFATFCB FCB;
 
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID SystemBuffer;
@@ -1554,7 +1554,7 @@ VfatSetInformation(
     PVFAT_IRP_CONTEXT IrpContext)
 {
     FILE_INFORMATION_CLASS FileInformationClass;
-    PVFATFCB FCB = NULL;
+    PVFATFCB FCB;
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID SystemBuffer;
 
