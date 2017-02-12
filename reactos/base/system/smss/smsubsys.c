@@ -500,7 +500,7 @@ Quickie2:
     {
         RemoveEntryList(&NewSubsystem->Entry);
         NtSetEvent(NewSubsystem->Event, 0);
-        if (NewSubsystem) SmpDereferenceSubsystem(NewSubsystem);
+        SmpDereferenceSubsystem(NewSubsystem);
     }
 
     /* Finally, we're all done! */
