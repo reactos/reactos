@@ -213,7 +213,7 @@ START_TEST(NtUserCreateWindowEx)
     TEST(res.hIconSm == wclex.hIconSm);
 
     /* Get versioned class info */
-    TEST(NtUserGetClassInfo(hinst, &ver_cls, &res, &pwstr, 0) != 0);
+    TEST(NtUserGetClassInfo(hinst, &ver_cls, &res, &pwstr, 0) == atom2);
     TEST(GetLastError() == 0);
     TEST(res.cbSize == wclex2.cbSize);
     TEST(res.style == wclex2.style);
