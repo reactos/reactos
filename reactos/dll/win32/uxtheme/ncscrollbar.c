@@ -113,7 +113,7 @@ static enum SCROLL_HITTEST SCROLL_HitTest( HWND hwnd, SCROLLBARINFO* psbi, BOOL 
         pt.y -= psbi->rcScrollBar.top;
         if (pt.y < psbi->xyThumbTop) 
             return SCROLL_TOP_RECT;
-        if (pt.y >= psbi->xyThumbTop + psbi->dxyLineButton) 
+        if (pt.y >= psbi->xyThumbBottom) 
             return SCROLL_BOTTOM_RECT;
     }
     else  /* horizontal */
@@ -127,7 +127,7 @@ static enum SCROLL_HITTEST SCROLL_HitTest( HWND hwnd, SCROLLBARINFO* psbi, BOOL 
         pt.x -= psbi->rcScrollBar.left;
         if (pt.x < psbi->xyThumbTop) 
             return SCROLL_TOP_RECT;
-        if (pt.x >= psbi->xyThumbTop + psbi->dxyLineButton) 
+        if (pt.x >= psbi->xyThumbBottom) 
             return SCROLL_BOTTOM_RECT;
     }
     return SCROLL_THUMB;
@@ -215,12 +215,12 @@ static void SCROLL_DrawInterior( PDRAW_CONTEXT pcontext, SCROLLBARINFO* psbi,
     if (vertical)
     { 
         rcPart = r;
-        rcPart.bottom = rcPart.top + thumbPos - psbi->dxyLineButton;
+        rcPart.bottom = thumbPos;
         SCROLL_ThemeDrawPart(pcontext, SBP_UPPERTRACKVERT, BUTTON_NORMAL, psbi, SCROLL_TOP_RECT, htDown, htHot, &rcPart);
         r.top = rcPart.bottom;
 
         rcPart = r;
-        rcPart.top += psbi->dxyLineButton;
+        rcPart.top += psbi->xyThumbBottom - psbi->xyThumbTop;
         SCROLL_ThemeDrawPart(pcontext, SBP_LOWERTRACKVERT, BUTTON_NORMAL, psbi, SCROLL_BOTTOM_RECT, htDown, htHot, &rcPart); 
         r.bottom = rcPart.top;
 
@@ -230,12 +230,12 @@ static void SCROLL_DrawInterior( PDRAW_CONTEXT pcontext, SCROLLBARINFO* psbi,
     else  /* horizontal */
     {
         rcPart = r;
-        rcPart.right = rcPart.left + thumbPos - psbi->dxyLineButton;
+        rcPart.right = thumbPos;
         SCROLL_ThemeDrawPart(pcontext, SBP_UPPERTRACKHORZ, BUTTON_NORMAL, psbi, SCROLL_TOP_RECT, htDown, htHot, &rcPart);
         r.left = rcPart.right;
 
         rcPart = r;
-        rcPart.left += psbi->dxyLineButton;
+        rcPart.left += psbi->xyThumbBottom - psbi->xyThumbTop;
         SCROLL_ThemeDrawPart(pcontext, SBP_LOWERTRACKHORZ, BUTTON_NORMAL, psbi, SCROLL_BOTTOM_RECT, htDown, htHot, &rcPart);
         r.right = rcPart.left;
 
@@ -252,12 +252,12 @@ static void SCROLL_DrawMovingThumb( PDRAW_CONTEXT pcontext, SCROLLBARINFO* psbi,
   if( vertical )
       max_size = psbi->rcScrollBar.bottom - psbi->rcScrollBar.top;
   else
-    max_size = psbi->rcScrollBar.right - psbi->rcScrollBar.left;
+      max_size = psbi->rcScrollBar.right - psbi->rcScrollBar.left;
 
-  max_size -= (psbi->dxyLineButton -SCROLL_ARROW_THUMB_OVERLAP) + psbi->dxyLineButton;
+  max_size -= psbi->xyThumbBottom - psbi->xyThumbTop + psbi->dxyLineButton;
 
-  if( pos < (psbi->dxyLineButton-SCROLL_ARROW_THUMB_OVERLAP) )
-    pos = (psbi->dxyLineButton-SCROLL_ARROW_THUMB_OVERLAP);
+  if( pos < (psbi->dxyLineButton) )
+    pos = (psbi->dxyLineButton);
   else if( pos > max_size )
     pos = max_size;
 
@@ -274,6 +274,12 @@ ThemeDrawScrollBar(PDRAW_CONTEXT pcontext, INT nBar, POINT* pt)
     SCROLLBARINFO sbi;
     BOOL vertical;
     enum SCROLL_HITTEST htHot = SCROLL_NOWHERE;
+
+    if (SCROLL_TrackingWin)
+        return;
+
+    if (((nBar == SB_VERT) && !(pcontext->wi.dwStyle & WS_VSCROLL)) ||
+        ((nBar == SB_HORZ) && !(pcontext->wi.dwStyle & WS_HSCROLL))) return;
 
     /* Retrieve scrollbar info */
     sbi.cbSize = sizeof(sbi);
@@ -296,9 +302,6 @@ ThemeDrawScrollBar(PDRAW_CONTEXT pcontext, INT nBar, POINT* pt)
         ScreenToWindow(pcontext->hWnd, pt);
         htHot = SCROLL_HitTest(pcontext->hWnd, &sbi, vertical, *pt, FALSE);
     }
-    
-    if (((nBar == SB_VERT) && !(pcontext->wi.dwStyle & WS_VSCROLL)) ||
-        ((nBar == SB_HORZ) && !(pcontext->wi.dwStyle & WS_HSCROLL))) return;
 
     /* do not draw if the scrollbar rectangle is empty */
     if(IsRectEmpty(&sbi.rcScrollBar)) return;
