@@ -466,7 +466,7 @@ typedef struct _PLUGPLAY_CONTROL_DEPTH_DATA
 typedef struct _PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA
 {
     UNICODE_STRING DeviceInstance;
-    ULONG Relations; // 0:EjectRelations, 1:RemovalRelations, 3:BusRelations
+    ULONG Relations; // 0:EjectRelations, 1:RemovalRelations, 2:PowerRelations, 3:BusRelations
     ULONG BufferSize;
     PWCHAR Buffer;
 } PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA, *PPLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA;

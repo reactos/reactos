@@ -489,7 +489,7 @@ PNP_GetDeviceList(
     DWORD ulFlags)
 {
     PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA PlugPlayData;
-    CONFIGRET ret = CR_CALL_NOT_IMPLEMENTED;
+    CONFIGRET ret = CR_SUCCESS;
     NTSTATUS Status;
 
     DPRINT("PNP_GetDeviceList() called\n");
@@ -501,9 +501,7 @@ PNP_GetDeviceList(
         return CR_INVALID_POINTER;
 
 //    if (Buffer == NULL)
-//        return 
-
-    *pulLength = 0;
+//        return CR_INVALID_POINTER;
 
     if (ulFlags &
         (CM_GETIDLIST_FILTER_BUSRELATIONS |
@@ -519,8 +517,7 @@ PNP_GetDeviceList(
         }
         else if (ulFlags & CM_GETIDLIST_FILTER_POWERRELATIONS)
         {
-            /* FIXME */
-            PlugPlayData.Relations = 0;
+            PlugPlayData.Relations = 2;
         }
         else if (ulFlags & CM_GETIDLIST_FILTER_REMOVALRELATIONS)
         {
@@ -531,7 +528,7 @@ PNP_GetDeviceList(
             PlugPlayData.Relations = 0;
         }
 
-        PlugPlayData.BufferSize = *pulLength;
+        PlugPlayData.BufferSize = *pulLength * sizeof(WCHAR);
         PlugPlayData.Buffer = Buffer;
 
         Status = NtPlugPlayControl(PlugPlayControlQueryDeviceRelations,
@@ -539,7 +536,7 @@ PNP_GetDeviceList(
                                    sizeof(PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA));
         if (NT_SUCCESS(Status))
         {
-            *pulLength = PlugPlayData.BufferSize;
+            *pulLength = PlugPlayData.BufferSize / sizeof(WCHAR);
         }
         else
         {
@@ -548,15 +545,15 @@ PNP_GetDeviceList(
     }
     else if (ulFlags & CM_GETIDLIST_FILTER_SERVICE)
     {
-
+        ret = CR_CALL_NOT_IMPLEMENTED;
     }
     else if (ulFlags & CM_GETIDLIST_FILTER_ENUMERATOR)
     {
-
+        ret = CR_CALL_NOT_IMPLEMENTED;
     }
     else /* CM_GETIDLIST_FILTER_NONE */
     {
-
+        ret = CR_CALL_NOT_IMPLEMENTED;
     }
 
     return ret;
@@ -573,7 +570,7 @@ PNP_GetDeviceListSize(
     DWORD ulFlags)
 {
     PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA PlugPlayData;
-    CONFIGRET ret = CR_CALL_NOT_IMPLEMENTED;
+    CONFIGRET ret = CR_SUCCESS;
     NTSTATUS Status;
 
     DPRINT("PNP_GetDeviceListSize() called\n");
@@ -600,8 +597,7 @@ PNP_GetDeviceListSize(
         }
         else if (ulFlags & CM_GETIDLIST_FILTER_POWERRELATIONS)
         {
-            /* FIXME */
-            PlugPlayData.Relations = 0;
+            PlugPlayData.Relations = 2;
         }
         else if (ulFlags & CM_GETIDLIST_FILTER_REMOVALRELATIONS)
         {
@@ -620,7 +616,7 @@ PNP_GetDeviceListSize(
                                    sizeof(PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA));
         if (NT_SUCCESS(Status))
         {
-            *pulLength = PlugPlayData.BufferSize;
+            *pulLength = PlugPlayData.BufferSize / sizeof(WCHAR);
         }
         else
         {
@@ -629,15 +625,15 @@ PNP_GetDeviceListSize(
     }
     else if (ulFlags & CM_GETIDLIST_FILTER_SERVICE)
     {
-
+        ret = CR_CALL_NOT_IMPLEMENTED;
     }
     else if (ulFlags & CM_GETIDLIST_FILTER_ENUMERATOR)
     {
-
+        ret = CR_CALL_NOT_IMPLEMENTED;
     }
     else /* CM_GETIDLIST_FILTER_NONE */
     {
-
+        ret = CR_CALL_NOT_IMPLEMENTED;
     }
 
     return ret;
@@ -994,7 +990,7 @@ PNP_GetDeviceRegProp(
 
 done:
 
-    if(pulTransferLen)
+    if (pulTransferLen)
         *pulTransferLen = (ret == CR_SUCCESS) ? *pulLength : 0;
 
     if (hKey != NULL)
