@@ -118,6 +118,16 @@ BOOL UXINI_FindSection(PUXINI_FILE uf, LPCWSTR lpName);
 LPCWSTR UXINI_GetNextValue(PUXINI_FILE uf, DWORD *dwNameLen, LPCWSTR *lpValue, DWORD *dwValueLen);
 BOOL UXINI_FindValue(PUXINI_FILE uf, LPCWSTR lpName, LPCWSTR *lpValue, DWORD *dwValueLen);
 
+  /* Scroll-bar hit testing */
+enum SCROLL_HITTEST
+{
+    SCROLL_NOWHERE,      /* Outside the scroll bar */
+    SCROLL_TOP_ARROW,    /* Top or left arrow */
+    SCROLL_TOP_RECT,     /* Rectangle between the top arrow and the thumb */
+    SCROLL_THUMB,        /* Thumb rectangle */
+    SCROLL_BOTTOM_RECT,  /* Rectangle between the thumb and the bottom arrow */
+    SCROLL_BOTTOM_ARROW  /* Bottom or right arrow */
+};
 
 /* The window context stores data for the window needed through the life of the window */
 typedef struct _WND_CONTEXT
@@ -127,6 +137,14 @@ typedef struct _WND_CONTEXT
     BOOL HasThemeRgn;
     BOOL UpdatingRgn;
     BOOL DirtyThemeRegion;
+
+    BOOL SCROLL_trackVertical;
+    enum SCROLL_HITTEST SCROLL_trackHitTest;
+    BOOL SCROLL_MovingThumb;  /* Is the moving thumb being displayed? */
+    HWND SCROLL_TrackingWin;
+    INT  SCROLL_TrackingBar;
+    INT  SCROLL_TrackingPos;
+    INT  SCROLL_TrackingVal;
 } WND_CONTEXT, *PWND_CONTEXT;
 
 /* The draw context stores data that are needed by the drawing operations in the non client area of the window */
@@ -167,17 +185,6 @@ typedef enum {
     BUTTON_DISABLED ,
     BUTTON_INACTIVE
 } THEME_BUTTON_STATES;
-
-  /* Scroll-bar hit testing */
-enum SCROLL_HITTEST
-{
-    SCROLL_NOWHERE,      /* Outside the scroll bar */
-    SCROLL_TOP_ARROW,    /* Top or left arrow */
-    SCROLL_TOP_RECT,     /* Rectangle between the top arrow and the thumb */
-    SCROLL_THUMB,        /* Thumb rectangle */
-    SCROLL_BOTTOM_RECT,  /* Rectangle between the thumb and the bottom arrow */
-    SCROLL_BOTTOM_ARROW  /* Bottom or right arrow */
-};
 
 #define HT_ISBUTTON(ht) ((ht) == HTMINBUTTON || (ht) == HTMAXBUTTON || (ht) == HTCLOSE || (ht) == HTHELP)
 

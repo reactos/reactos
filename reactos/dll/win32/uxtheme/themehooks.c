@@ -269,6 +269,44 @@ int WINAPI ThemeSetWindowRgn(HWND hWnd, HRGN hRgn, BOOL bRedraw)
     return user32ApiHook.SetWindowRgn(hWnd, hRgn, bRedraw);
 }
 
+BOOL ThemeGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
+{
+    PWND_CONTEXT pwndContext;
+    DWORD style;
+    BOOL ret;
+
+    /* Avoid creating a window context if it is not needed */
+    if(!IsAppThemed())
+        goto dodefault;
+
+    style = GetWindowLongW(hwnd, GWL_STYLE);
+    if((style & (WS_HSCROLL|WS_VSCROLL))==0)
+        goto dodefault;
+
+    pwndContext = ThemeGetWndContext(hwnd);
+    if (pwndContext == NULL)
+        goto dodefault;
+
+    /* 
+     * Uxtheme needs to handle the tracking of the scrollbar itself 
+     * This means than if an application needs to get the track position
+     * with GetScrollInfo, it will get wrong data. So uxtheme needs to
+     * hook it and set the correct tracking position itself
+     */
+    ret = user32ApiHook.GetScrollInfo(hwnd, fnBar, lpsi);
+    if ( lpsi && 
+        (lpsi->fMask & SIF_TRACKPOS) &&
+         pwndContext->SCROLL_TrackingWin == hwnd && 
+         pwndContext->SCROLL_TrackingBar == fnBar)
+    {
+        lpsi->nTrackPos = pwndContext->SCROLL_TrackingVal;
+    }
+    return ret;
+
+dodefault:
+    return user32ApiHook.GetScrollInfo(hwnd, fnBar, lpsi);
+}
+
 /**********************************************************************
  *      Exports
  */
@@ -303,6 +341,7 @@ ThemeInitApiHook(UAPIHK State, PUSERAPIHOOK puah)
     puah->DlgProcArray.Size = UAHOWP_MAX_SIZE;
 
     puah->SetWindowRgn = ThemeSetWindowRgn;
+    puah->GetScrollInfo = (FARPROC)ThemeGetScrollInfo;
 
     UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_NCPAINT);
     UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_NCACTIVATE);

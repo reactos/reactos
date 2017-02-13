@@ -13,15 +13,6 @@
 
 #include <assert.h>
 
-static BOOL SCROLL_trackVertical;
-static enum SCROLL_HITTEST SCROLL_trackHitTest;
-/* Is the moving thumb being displayed? */
-static BOOL SCROLL_MovingThumb = FALSE;
-static HWND SCROLL_TrackingWin = 0;
-static INT  SCROLL_TrackingBar = 0;
-static INT  SCROLL_TrackingPos = 0;
-static INT  SCROLL_TrackingVal = 0;
-
 static void ScreenToWindow( HWND hWnd, POINT* pt)
 {
     RECT rcWnd;
@@ -244,9 +235,9 @@ static void SCROLL_DrawInterior( PDRAW_CONTEXT pcontext, SCROLLBARINFO* psbi,
     }
 }
 
-static void SCROLL_DrawMovingThumb( PDRAW_CONTEXT pcontext, SCROLLBARINFO* psbi,  BOOL vertical)
+static void SCROLL_DrawMovingThumb(PWND_CONTEXT pwndContext, PDRAW_CONTEXT pcontext, SCROLLBARINFO* psbi,  BOOL vertical)
 {
-  INT pos = SCROLL_TrackingPos;
+  INT pos = pwndContext->SCROLL_TrackingPos;
   INT max_size;
 
   if( vertical )
@@ -263,7 +254,7 @@ static void SCROLL_DrawMovingThumb( PDRAW_CONTEXT pcontext, SCROLLBARINFO* psbi,
 
   SCROLL_DrawInterior(pcontext, psbi, pos, vertical, SCROLL_THUMB, 0);  
 
-  SCROLL_MovingThumb = !SCROLL_MovingThumb;
+  pwndContext->SCROLL_MovingThumb = !pwndContext->SCROLL_MovingThumb;
 }
 
 
@@ -274,12 +265,16 @@ ThemeDrawScrollBar(PDRAW_CONTEXT pcontext, INT nBar, POINT* pt)
     SCROLLBARINFO sbi;
     BOOL vertical;
     enum SCROLL_HITTEST htHot = SCROLL_NOWHERE;
-
-    if (SCROLL_TrackingWin)
-        return;
+    PWND_CONTEXT pwndContext;
 
     if (((nBar == SB_VERT) && !(pcontext->wi.dwStyle & WS_VSCROLL)) ||
         ((nBar == SB_HORZ) && !(pcontext->wi.dwStyle & WS_HSCROLL))) return;
+
+    if (!(pwndContext = ThemeGetWndContext(pcontext->hWnd)))
+        return;
+
+    if (pwndContext->SCROLL_TrackingWin)
+        return;
 
     /* Retrieve scrollbar info */
     sbi.cbSize = sizeof(sbi);
@@ -372,7 +367,7 @@ static UINT SCROLL_GetThumbVal( SCROLLINFO *psi, RECT *rect,
 }
 
 static void 
-SCROLL_HandleScrollEvent( HWND hwnd, INT nBar, UINT msg, POINT pt)
+SCROLL_HandleScrollEvent(PWND_CONTEXT pwndContext, HWND hwnd, INT nBar, UINT msg, POINT pt)
 {
       /* Previous mouse position for timer events */
     static POINT prevPt;
@@ -402,7 +397,7 @@ SCROLL_HandleScrollEvent( HWND hwnd, INT nBar, UINT msg, POINT pt)
         return;
     }
 
-    if ((SCROLL_trackHitTest == SCROLL_NOWHERE) && (msg != WM_LBUTTONDOWN))
+    if ((pwndContext->SCROLL_trackHitTest == SCROLL_NOWHERE) && (msg != WM_LBUTTONDOWN))
 		  return;
     
     ThemeInitDrawContext(&context, hwnd, 0);
@@ -417,8 +412,8 @@ SCROLL_HandleScrollEvent( HWND hwnd, INT nBar, UINT msg, POINT pt)
     {
       case WM_LBUTTONDOWN:  /* Initialise mouse tracking */
           HideCaret(hwnd);  /* hide caret while holding down LBUTTON */
-          SCROLL_trackVertical = vertical;
-          SCROLL_trackHitTest  = hittest = SCROLL_HitTest( hwnd, &sbi, vertical, pt, FALSE );
+          pwndContext->SCROLL_trackVertical = vertical;
+          pwndContext->SCROLL_trackHitTest  = hittest = SCROLL_HitTest( hwnd, &sbi, vertical, pt, FALSE );
           lastClickPos  = vertical ? (pt.y - sbi.rcScrollBar.top) : (pt.x - sbi.rcScrollBar.left);
           lastMousePos  = lastClickPos;
           trackThumbPos = sbi.xyThumbTop;
@@ -451,15 +446,15 @@ SCROLL_HandleScrollEvent( HWND hwnd, INT nBar, UINT msg, POINT pt)
     //TRACE("Event: hwnd=%p bar=%d msg=%s pt=%d,%d hit=%d\n",
     //      hwnd, nBar, SPY_GetMsgName(msg,hwnd), pt.x, pt.y, hittest );
 
-    switch(SCROLL_trackHitTest)
+    switch(pwndContext->SCROLL_trackHitTest)
     {
     case SCROLL_NOWHERE:  /* No tracking in progress */
         break;
 
     case SCROLL_TOP_ARROW:
-        if (hittest == SCROLL_trackHitTest)
+        if (hittest == pwndContext->SCROLL_trackHitTest)
         {
-            SCROLL_DrawArrows( &context, &sbi, vertical, SCROLL_trackHitTest, 0 );
+            SCROLL_DrawArrows( &context, &sbi, vertical, pwndContext->SCROLL_trackHitTest, 0 );
             if ((msg == WM_LBUTTONDOWN) || (msg == WM_SYSTIMER))
             {
                 SendMessageW( hwndOwner, vertical ? WM_VSCROLL : WM_HSCROLL,
@@ -478,8 +473,8 @@ SCROLL_HandleScrollEvent( HWND hwnd, INT nBar, UINT msg, POINT pt)
         break;
 
     case SCROLL_TOP_RECT:
-        SCROLL_DrawInterior( &context, &sbi, sbi.xyThumbTop, vertical, SCROLL_trackHitTest, 0);
-        if (hittest == SCROLL_trackHitTest)
+        SCROLL_DrawInterior( &context, &sbi, sbi.xyThumbTop, vertical, pwndContext->SCROLL_trackHitTest, 0);
+        if (hittest == pwndContext->SCROLL_trackHitTest)
         {
             if ((msg == WM_LBUTTONDOWN) || (msg == WM_SYSTIMER))
             {
@@ -495,20 +490,20 @@ SCROLL_HandleScrollEvent( HWND hwnd, INT nBar, UINT msg, POINT pt)
     case SCROLL_THUMB:
         if (msg == WM_LBUTTONDOWN)
         {
-            SCROLL_TrackingWin = hwnd;
-            SCROLL_TrackingBar = nBar;
-            SCROLL_TrackingPos = trackThumbPos + lastMousePos - lastClickPos;
-            SCROLL_TrackingVal = SCROLL_GetThumbVal( &si, &sbi.rcScrollBar, 
-                                                     vertical, SCROLL_TrackingPos );
-	        if (!SCROLL_MovingThumb)
-		        SCROLL_DrawMovingThumb(&context, &sbi, vertical);
+            pwndContext->SCROLL_TrackingWin = hwnd;
+            pwndContext->SCROLL_TrackingBar = nBar;
+            pwndContext->SCROLL_TrackingPos = trackThumbPos + lastMousePos - lastClickPos;
+            pwndContext->SCROLL_TrackingVal = SCROLL_GetThumbVal( &si, &sbi.rcScrollBar, 
+                                                     vertical, pwndContext->SCROLL_TrackingPos );
+	        if (!pwndContext->SCROLL_MovingThumb)
+		        SCROLL_DrawMovingThumb(pwndContext, &context, &sbi, vertical);
         }
         else if (msg == WM_LBUTTONUP)
         {
-	        if (SCROLL_MovingThumb)
-		        SCROLL_DrawMovingThumb(&context, &sbi, vertical);
+	        if (pwndContext->SCROLL_MovingThumb)
+		        SCROLL_DrawMovingThumb(pwndContext, &context, &sbi, vertical);
 
-            SCROLL_DrawInterior(  &context, &sbi, sbi.xyThumbTop, vertical, 0, SCROLL_trackHitTest );
+            SCROLL_DrawInterior(  &context, &sbi, sbi.xyThumbTop, vertical, 0, pwndContext->SCROLL_trackHitTest );
         }
         else  /* WM_MOUSEMOVE */
         {
@@ -521,28 +516,28 @@ SCROLL_HandleScrollEvent( HWND hwnd, INT nBar, UINT msg, POINT pt)
                 pt = SCROLL_ClipPos( &sbi.rcScrollBar, pt );
                 pos = vertical ? (pt.y - sbi.rcScrollBar.top) : (pt.x - sbi.rcScrollBar.left);
             }
-            if ( (pos != lastMousePos) || (!SCROLL_MovingThumb) )
+            if ( (pos != lastMousePos) || (!pwndContext->SCROLL_MovingThumb) )
             {
-                if (SCROLL_MovingThumb)
-                    SCROLL_DrawMovingThumb( &context, &sbi, vertical);
+                if (pwndContext->SCROLL_MovingThumb)
+                    SCROLL_DrawMovingThumb(pwndContext, &context, &sbi, vertical);
                 lastMousePos = pos;
-                SCROLL_TrackingPos = trackThumbPos + pos - lastClickPos;
-                SCROLL_TrackingVal = SCROLL_GetThumbVal( &si, &sbi.rcScrollBar,
+                pwndContext->SCROLL_TrackingPos = trackThumbPos + pos - lastClickPos;
+                pwndContext->SCROLL_TrackingVal = SCROLL_GetThumbVal( &si, &sbi.rcScrollBar,
                                                          vertical,
-                                                         SCROLL_TrackingPos );
+                                                         pwndContext->SCROLL_TrackingPos );
                 SendMessageW( hwndOwner, vertical ? WM_VSCROLL : WM_HSCROLL,
-                                MAKEWPARAM( SB_THUMBTRACK, SCROLL_TrackingVal),
+                                MAKEWPARAM( SB_THUMBTRACK, pwndContext->SCROLL_TrackingVal),
                                 (LPARAM)hwndCtl );
-                if (!SCROLL_MovingThumb)
-                    SCROLL_DrawMovingThumb( &context, &sbi, vertical);
+                if (!pwndContext->SCROLL_MovingThumb)
+                    SCROLL_DrawMovingThumb(pwndContext, &context, &sbi, vertical);
             }
         }
         break;
 
     case SCROLL_BOTTOM_RECT:
-        if (hittest == SCROLL_trackHitTest)
+        if (hittest == pwndContext->SCROLL_trackHitTest)
         {
-            SCROLL_DrawInterior(  &context, &sbi, sbi.xyThumbTop, vertical, SCROLL_trackHitTest, 0 );
+            SCROLL_DrawInterior(  &context, &sbi, sbi.xyThumbTop, vertical, pwndContext->SCROLL_trackHitTest, 0 );
             if ((msg == WM_LBUTTONDOWN) || (msg == WM_SYSTIMER))
             {
                 SendMessageW( hwndOwner, vertical ? WM_VSCROLL : WM_HSCROLL,
@@ -559,9 +554,9 @@ SCROLL_HandleScrollEvent( HWND hwnd, INT nBar, UINT msg, POINT pt)
         break;
 
     case SCROLL_BOTTOM_ARROW:
-        if (hittest == SCROLL_trackHitTest)
+        if (hittest == pwndContext->SCROLL_trackHitTest)
         {
-            SCROLL_DrawArrows(  &context, &sbi, vertical, SCROLL_trackHitTest, 0 );
+            SCROLL_DrawArrows(  &context, &sbi, vertical, pwndContext->SCROLL_trackHitTest, 0 );
             if ((msg == WM_LBUTTONDOWN) || (msg == WM_SYSTIMER))
             {
                 SendMessageW( hwndOwner, vertical ? WM_VSCROLL : WM_HSCROLL,
@@ -593,8 +588,8 @@ SCROLL_HandleScrollEvent( HWND hwnd, INT nBar, UINT msg, POINT pt)
 
     if (msg == WM_LBUTTONUP)
     {
-        hittest = SCROLL_trackHitTest;
-        SCROLL_trackHitTest = SCROLL_NOWHERE;  /* Terminate tracking */
+        hittest = pwndContext->SCROLL_trackHitTest;
+        pwndContext->SCROLL_trackHitTest = SCROLL_NOWHERE;  /* Terminate tracking */
 
         if (hittest == SCROLL_THUMB)
         {
@@ -608,7 +603,7 @@ SCROLL_HandleScrollEvent( HWND hwnd, INT nBar, UINT msg, POINT pt)
                           SB_ENDSCROLL, (LPARAM)hwndCtl );
 
         /* Terminate tracking */
-        SCROLL_TrackingWin = 0;
+        pwndContext->SCROLL_TrackingWin = 0;
     }
 
     ThemeCleanupDrawContext(&context);
@@ -618,10 +613,13 @@ static void
 SCROLL_TrackScrollBar( HWND hwnd, INT scrollbar, POINT pt )
 {
     MSG msg;
+    PWND_CONTEXT pwndContext = ThemeGetWndContext(hwnd);
+    if(!pwndContext)
+        return;
 
     ScreenToWindow(hwnd, &pt);
 
-    SCROLL_HandleScrollEvent( hwnd, scrollbar, WM_LBUTTONDOWN, pt );
+    SCROLL_HandleScrollEvent(pwndContext, hwnd, scrollbar, WM_LBUTTONDOWN, pt );
 
     do
     {
@@ -635,7 +633,7 @@ SCROLL_TrackScrollBar( HWND hwnd, INT scrollbar, POINT pt )
             pt.y = GET_Y_LPARAM(msg.lParam);
             ClientToScreen(hwnd, &pt);
             ScreenToWindow(hwnd, &pt);
-            SCROLL_HandleScrollEvent( hwnd, scrollbar, msg.message, pt );
+            SCROLL_HandleScrollEvent(pwndContext, hwnd, scrollbar, msg.message, pt );
         }
         else
         {
