@@ -41,6 +41,8 @@ struct applet_info
 typedef struct CPlApplet {
 #ifndef __REACTOS__
     struct list         entry;
+#else
+    HANDLE hActCtx;
 #endif
     HWND		hWnd;
     LPWSTR		cmd;        /* path to applet */

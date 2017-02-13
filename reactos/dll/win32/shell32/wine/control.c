@@ -53,6 +53,11 @@ void Control_UnloadApplet(CPlApplet* applet)
 
 CPlApplet*	Control_LoadApplet(HWND hWnd, LPCWSTR cmd, CPanel* panel)
 {
+#ifdef __REACTOS__
+    ACTCTXW ActCtx = {sizeof(ACTCTX), ACTCTX_FLAG_RESOURCE_NAME_VALID};
+    ULONG_PTR cookie;
+    BOOL bActivated;
+#endif
     CPlApplet*	applet;
     DWORD len;
     unsigned 	i;
@@ -79,6 +84,13 @@ CPlApplet*	Control_LoadApplet(HWND hWnd, LPCWSTR cmd, CPanel* panel)
     }
 
     applet->hWnd = hWnd;
+
+#ifdef __REACTOS__
+    ActCtx.lpSource = applet->cmd;
+    ActCtx.lpResourceName = (LPCWSTR)123;
+    applet->hActCtx = CreateActCtx(&ActCtx);
+    bActivated = (applet->hActCtx != INVALID_HANDLE_VALUE ? ActivateActCtx(applet->hActCtx, &cookie) : FALSE);
+#endif
 
     if (!(applet->hModule = LoadLibraryW(applet->cmd))) {
         WARN("Cannot load control panel applet %s\n", debugstr_w(applet->cmd));
@@ -170,6 +182,11 @@ CPlApplet*	Control_LoadApplet(HWND hWnd, LPCWSTR cmd, CPanel* panel)
            }
        }
     }
+
+#ifdef __REACTOS__
+    if (bActivated)
+        DeactivateActCtx(0, cookie);
+#endif
 
 #ifndef __REACTOS__
     list_add_head( &panel->applets, &applet->entry );
@@ -805,6 +822,10 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     applet = Control_LoadApplet(hWnd, buffer, panel);
     if (applet)
     {
+#ifdef __REACTOS__
+    ULONG_PTR cookie;
+    BOOL bActivated;
+#endif
         /* we've been given a textual parameter (or none at all) */
         if (sp == -1) {
             while ((++sp) != applet->count) {
@@ -820,10 +841,20 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
             sp = 0;
         }
 
+#ifdef __REACTOS__
+        bActivated = (applet->hActCtx != INVALID_HANDLE_VALUE ? ActivateActCtx(applet->hActCtx, &cookie) : FALSE);
+#endif
+
         if (!applet->proc(applet->hWnd, CPL_STARTWPARMSW, sp, (LPARAM)extraPmts))
             applet->proc(applet->hWnd, CPL_DBLCLK, sp, applet->info[sp].data);
 
         Control_UnloadApplet(applet);
+
+#ifdef __REACTOS__
+    if (bActivated)
+        DeactivateActCtx(0, cookie);
+#endif
+
     }
 
     HeapFree(GetProcessHeap(), 0, buffer);
