@@ -358,10 +358,12 @@ BOOL CExplorerBand::OnTreeItemDeleted(LPNMTREEVIEW pnmtv)
 {
     /* Destroy memory associated to our node */
     NodeInfo* ptr = GetNodeInfo(pnmtv->itemNew.hItem);
-
-    ILFree(ptr->relativePidl);
-    ILFree(ptr->absolutePidl);
-    delete ptr;
+    if (ptr)
+    {    
+        ILFree(ptr->relativePidl);
+        ILFree(ptr->absolutePidl);
+        delete ptr;
+    }
     return TRUE;
 }
 
@@ -1511,7 +1513,10 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::DragOver(DWORD glfKeyState, POINTL pt, 
             hr = pDropTarget->DragEnter(pCurObject, glfKeyState, pt, pdwEffect);
             childTargetNode = info.hItem;
         }
-        hr = pDropTarget->DragOver(glfKeyState, pt, pdwEffect);
+        if (pDropTarget)
+        {
+            hr = pDropTarget->DragOver(glfKeyState, pt, pdwEffect);
+        }
     }
     else
     {
