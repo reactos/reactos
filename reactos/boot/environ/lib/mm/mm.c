@@ -164,7 +164,7 @@ BlMmMapPhysicalAddressEx (
 
     /* Check for invalid requirement flag, if one is present */
     if (((Flags & BlMemoryValidAllocationAttributes) != BlMemoryFixed) &&
-        ((Flags & BlMemoryValidAllocationAttributes) != BlMemoryNonFixed) &&
+        ((Flags & BlMemoryValidAllocationAttributes) != BlMemoryKernelRange) &&
         (Flags & BlMemoryValidAllocationAttributes))
     {
         Status = STATUS_INVALID_PARAMETER;
@@ -181,6 +181,7 @@ BlMmMapPhysicalAddressEx (
 
     /* Select an address to map this at */
     Status = MmSelectMappingAddress(&MappingAddress,
+                                    *VirtualAddress,
                                     Size,
                                     Flags & BlMemoryValidAllocationAttributes,
                                     Flags,
@@ -195,6 +196,7 @@ BlMmMapPhysicalAddressEx (
     MapSize = Size;
     CacheAttributes = ((Flags & BlMemoryValidCacheAttributeMask) != 0x20) ?
                       (Flags & BlMemoryValidCacheAttributeMask) : 0;
+    EfiPrintf(L"Selected address: %p for %lx\r\n", MappingAddress, MappedAddress.LowPart);
     Status = MmMapPhysicalAddress(&MappedAddress,
                                   &MappingAddress,
                                   &MapSize,

@@ -24,6 +24,8 @@ typedef struct _BL_PA_REQUEST
 
 /* DATA VARIABLES ************************************************************/
 
+extern ULONG MmArchLargePageSize;
+
 ULONGLONG PapMaximumPhysicalPage, PapMinimumPhysicalPage;
 
 ULONG PapMinimumAllocationCount;
@@ -419,6 +421,168 @@ Quickie:
 }
 
 NTSTATUS
+MmPapPageAllocatorExtend (
+    _In_ ULONG Attributes,
+    _In_ ULONG Alignment,
+    _In_ ULONGLONG PageCount,
+    _In_ ULONGLONG VirtualPage,
+    _In_opt_ PBL_ADDRESS_RANGE Range,
+    _In_opt_ ULONG Type
+    )
+{
+    BL_PA_REQUEST Request;
+    ULONGLONG PageRange;
+    BL_MEMORY_DESCRIPTOR NewDescriptor;
+    ULONG AllocationFlags, CacheAttributes, AddFlags;
+    NTSTATUS Status;
+    PBL_MEMORY_DESCRIPTOR_LIST MdList;
+    PBL_MEMORY_DESCRIPTOR Descriptor;
+    PVOID VirtualAddress;
+    PHYSICAL_ADDRESS PhysicalAddress;
+
+    /* Is the caller requesting less pages than allowed? */
+    if (!(Attributes & BlMemoryFixed) &&
+        !(Range) &&
+        (PageCount < PapMinimumAllocationCount))
+    {
+        /* Unless this is a fixed request, then adjust the original requirements */
+        PageCount = PapMinimumAllocationCount;
+        Alignment = PapMinimumAllocationCount;
+    }
+
+    /* Extract only the allocation attributes */
+    AllocationFlags = Attributes & BlMemoryValidAllocationAttributeMask;
+
+    /* Check if the caller wants large pages */
+    if ((AllocationFlags & BlMemoryLargePages) && (MmArchLargePageSize != 1))
+    {
+        EfiPrintf(L"Large pages not supported!\r\n");
+        EfiStall(10000000);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Set an emty virtual range */
+    Request.VirtualRange.Minimum = 0;
+    Request.VirtualRange.Maximum = 0;
+
+    /* Check if the caller requested a range */
+    if (Range)
+    {
+        /* Calculate it size in pages, minus a page as this is a 0-based range */
+        PageRange = ((Range->Maximum - Range->Minimum) >> PAGE_SHIFT) - 1;
+
+        /* Set the minimum and maximum, in pages */
+        Request.BaseRange.Minimum = Range->Minimum >> PAGE_SHIFT;
+        Request.BaseRange.Maximum = Request.BaseRange.Minimum + PageRange;
+    }
+    else
+    {
+        /* Initialize a range from the smallest page to the biggest */
+        Request.BaseRange.Minimum = PapMinimumPhysicalPage;
+        Request.BaseRange.Maximum = 0xFFFFFFFF / PAGE_SIZE;
+    }
+
+    /* Get the cache attributes */
+    CacheAttributes = Attributes & BlMemoryValidCacheAttributeMask;
+
+    /* Check if the caller requested a valid allocation type */
+    if ((Type) && !(Type & ~(BL_MM_REQUEST_DEFAULT_TYPE |
+                             BL_MM_REQUEST_TOP_DOWN_TYPE)))
+    {
+        /* Use what the caller wanted */
+        Request.Type = Type;
+    }
+    else
+    {
+        /* Use the default bottom-up type */
+        Request.Type = BL_MM_REQUEST_DEFAULT_TYPE;
+    }
+
+    /* Use the original protection and type, but ignore other attributes */
+    Request.Flags = Attributes & ~(BlMemoryValidAllocationAttributeMask |
+                                   BlMemoryValidCacheAttributeMask);
+    Request.Alignment = Alignment;
+    Request.Pages = PageCount;
+
+    /* Allocate some free pages */
+    Status = MmPaAllocatePages(NULL,
+                               &NewDescriptor,
+                               &MmMdlUnmappedUnallocated,
+                               &Request,
+                               BlConventionalMemory);
+    if (!NT_SUCCESS(Status))
+    {
+        EfiPrintf(L"Failed to get unmapped,unallocated memory!\r\n");
+        EfiStall(10000000);
+        return Status;
+    }
+
+    /* Initialize a descriptor for these pages, adding in the allocation flags */
+    Descriptor = MmMdInitByteGranularDescriptor(AllocationFlags |
+                                                NewDescriptor.Flags,
+                                                BlConventionalMemory,
+                                                NewDescriptor.BasePage,
+                                                NewDescriptor.VirtualPage,
+                                                NewDescriptor.PageCount);
+
+    /* Now map a virtual address for these physical pages */
+    VirtualAddress = (PVOID)((ULONG_PTR)VirtualPage << PAGE_SHIFT);
+    PhysicalAddress.QuadPart = NewDescriptor.BasePage << PAGE_SHIFT;
+    Status = BlMmMapPhysicalAddressEx(&VirtualAddress,
+                                      AllocationFlags | CacheAttributes,
+                                      NewDescriptor.PageCount << PAGE_SHIFT,
+                                      PhysicalAddress);
+    EfiPrintf(L"MAP status: %lx\r\n", Status);
+    if (Status == STATUS_SUCCESS)
+    {
+        /* Add the cache attributes now that the mapping worked */
+        Descriptor->Flags |= CacheAttributes;
+
+        /* Update the virtual page now that we mapped it */
+        Descriptor->VirtualPage = (ULONG_PTR)VirtualAddress >> PAGE_SHIFT;
+
+        /* Add this as a mapped region */
+        Status = MmMdAddDescriptorToList(&MmMdlMappedUnallocated,
+                                         Descriptor,
+                                         BL_MM_ADD_DESCRIPTOR_COALESCE_FLAG);
+
+        /* Make new descriptor that we'll add in firmware allocation tracker */
+        MdList = &MmMdlFwAllocationTracker;
+        Descriptor = MmMdInitByteGranularDescriptor(0,
+                                                    BlConventionalMemory,
+                                                    NewDescriptor.BasePage,
+                                                    0,
+                                                    NewDescriptor.PageCount);
+
+        /* Do not coalesce */
+        AddFlags = 0;
+    }
+    else
+    {
+        /* We failed, free the physical pages */
+        Status = MmFwFreePages(NewDescriptor.BasePage, NewDescriptor.PageCount);
+        if (!NT_SUCCESS(Status))
+        {
+            /* We failed to free the pages, so this is still around */
+            MdList = &MmMdlUnmappedAllocated;
+        }
+        else
+        {
+            /* This is now back to unmapped/unallocated memory */
+            Descriptor->Flags = 0;
+            MdList = &MmMdlUnmappedUnallocated;
+        }
+
+        /* Coalesce the free descriptor */
+        AddFlags = BL_MM_ADD_DESCRIPTOR_COALESCE_FLAG;
+    }
+
+    /* Either add to firmware list, or to unmapped list, then return result */
+    MmMdAddDescriptorToList(MdList, Descriptor, AddFlags);
+    return Status;
+}
+
+NTSTATUS
 MmPapAllocatePagesInRange (
     _Inout_ PVOID* PhysicalAddress,
     _In_ BL_MEMORY_TYPE MemoryType,
@@ -470,8 +634,9 @@ MmPapAllocatePagesInRange (
         }
         else
         {
+            /* Use the entire range that's possible */
             Request.BaseRange.Minimum = PapMinimumPhysicalPage;
-            Request.BaseRange.Maximum = (4 * 1024 * 1024) >> PAGE_SHIFT;
+            Request.BaseRange.Maximum = 0xFFFFFFFF >> PAGE_SHIFT;
         }
 
         /* Check if a fixed allocation was requested */
@@ -486,7 +651,7 @@ MmPapAllocatePagesInRange (
         else
         {
             /* Check if non-fixed was specifically requested */
-            if (Attributes & BlMemoryNonFixed)
+            if (Attributes & BlMemoryKernelRange)
             {
                 /* We don't support virtual memory yet @TODO */
                 EfiPrintf(L"not yet implemented in %S\r\n", __FUNCTION__);
@@ -497,20 +662,15 @@ MmPapAllocatePagesInRange (
 
             /* Set the virtual address range */
             Request.VirtualRange.Minimum = 0;
-            Request.VirtualRange.Maximum = (4 * 1024 * 1024) >> PAGE_SHIFT;
+            Request.VirtualRange.Maximum = 0xFFFFFFFF >> PAGE_SHIFT;
         }
 
         /* Check what type of allocation was requested */
-        if (Type)
+        if ((Type) && !(Type & ~(BL_MM_REQUEST_DEFAULT_TYPE |
+                               BL_MM_REQUEST_TOP_DOWN_TYPE)))
         {
-            /* Save it */
+            /* Save it if it was valid */
             Request.Type = Type;
-
-            /* If it was invalid, set the default */
-            if (Type & ~(BL_MM_REQUEST_DEFAULT_TYPE | BL_MM_REQUEST_TOP_DOWN_TYPE))
-            {
-                Request.Type = BL_MM_REQUEST_DEFAULT_TYPE;
-            }
         }
         else
         {
@@ -531,11 +691,34 @@ MmPapAllocatePagesInRange (
                                    MemoryType);
         if (!NT_SUCCESS(Status))
         {
-            /* We don't support virtual memory yet @TODO */
-            EfiPrintf(L"Need to extend PA allocator\r\n");
-            EfiStall(1000000);
-            Status = STATUS_NOT_IMPLEMENTED;
-            goto Exit;
+            /* Extend the physical allocator */
+            Status = MmPapPageAllocatorExtend(Attributes,
+                                              Alignment,
+                                              Pages,
+                                              ((ULONG_PTR)*PhysicalAddress) >>
+                                              PAGE_SHIFT,
+                                              Range,
+                                              Type);
+            if (!NT_SUCCESS(Status))
+            {
+                /* Fail since we're out of memory */
+                EfiPrintf(L"OUT OF MEMORY: %lx\r\n", Status);
+                Status = STATUS_NO_MEMORY;
+                goto Exit;
+            }
+
+            /* Try the allocation again now */
+            Status = MmPaAllocatePages(&MmMdlMappedAllocated,
+                                       &Descriptor,
+                                       &MmMdlMappedUnallocated,
+                                       &Request,
+                                       MemoryType);
+            if (!NT_SUCCESS(Status))
+            {
+                /* Fail since we're out of memory */
+                EfiPrintf(L"OUT OF MEMORY: %lx\r\n", Status);
+                goto Exit;
+            }
         }
 
         /* Return the allocated address */
@@ -544,7 +727,8 @@ MmPapAllocatePagesInRange (
     else
     {
         /* Check if this is a fixed allocation */
-        BaseAddress.QuadPart = (Attributes & BlMemoryFixed) ? (ULONG_PTR)*PhysicalAddress : 0;
+        BaseAddress.QuadPart = (Attributes & BlMemoryFixed) ?
+                                (ULONG_PTR)*PhysicalAddress : 0;
 
         /* Allocate the pages */
         Status = MmPapAllocatePhysicalPagesInRange(&BaseAddress,
@@ -1316,3 +1500,81 @@ Quickie:
     return Status;
 }
 
+NTSTATUS
+MmSelectMappingAddress (
+    _Out_ PVOID* MappingAddress,
+    _In_ PVOID PreferredAddress, 
+    _In_ ULONGLONG Size,
+    _In_ ULONG AllocationAttributes,
+    _In_ ULONG Flags,
+    _In_ PHYSICAL_ADDRESS PhysicalAddress
+    )
+{
+    BL_PA_REQUEST Request;
+    NTSTATUS Status;
+    BL_MEMORY_DESCRIPTOR NewDescriptor;
+
+    /* Are we in physical mode? */
+    if (MmTranslationType == BlNone)
+    {
+        /* Just return the physical address as the mapping address */
+        PreferredAddress = (PVOID)PhysicalAddress.LowPart;
+    }
+
+    /* If no physical address, or caller wants a fixed address... */
+    if ((PhysicalAddress.QuadPart == -1) || (Flags & BlMemoryFixed))
+    {
+        /* Then just return the preferred address */
+        goto Success;
+    }
+
+    /* Check which range of virtual memory should be used */
+    if (AllocationAttributes & BlMemoryKernelRange)
+    {
+        /* Use kernel range */
+        Request.BaseRange = MmArchKsegAddressRange;
+        Request.Type = BL_MM_REQUEST_DEFAULT_TYPE;
+    }
+    else
+    {
+        /* User user/application range */
+        Request.BaseRange.Minimum = 0;
+        Request.BaseRange.Maximum = MmArchTopOfApplicationAddressSpace;
+        Request.Type = BL_MM_REQUEST_TOP_DOWN_TYPE;
+    }
+
+    /* Build a request */
+    Request.VirtualRange.Minimum = 0;
+    Request.VirtualRange.Maximum = 0;
+    Request.Flags = AllocationAttributes & BlMemoryLargePages;
+    Request.Alignment = 1;
+    Request.Pages = ADDRESS_AND_SIZE_TO_SPAN_PAGES(PhysicalAddress.LowPart, Size);
+
+    /* Allocate the physical pages */
+    Status = MmPaAllocatePages(NULL,
+                               &NewDescriptor,
+                               &MmMdlFreeVirtual,
+                               &Request,
+                               BlConventionalMemory);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Return the address we got back */
+    PreferredAddress = (PVOID)((ULONG_PTR)NewDescriptor.BasePage << PAGE_SHIFT);
+
+    /* Check if the existing physical address was not aligned */
+    if (PhysicalAddress.QuadPart != -1)
+    {
+        /* Add the offset to the returned virtual address */
+        PreferredAddress = (PVOID)((ULONG_PTR)PreferredAddress +
+                                   PhysicalAddress.LowPart -
+                                   BYTE_OFFSET(PhysicalAddress.LowPart));
+    }
+    
+Success:
+    /* Return the mapping address and success */
+    *MappingAddress = PreferredAddress;
+    return STATUS_SUCCESS;
+}

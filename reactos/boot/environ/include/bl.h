@@ -362,11 +362,11 @@ typedef enum _BL_MEMORY_ATTR
     //
     // Memory Allocation Attributes
     //
-    BlMemoryUnknown =           0x00010000,
-    BlMemoryNonFixed =          0x00020000,
+    BlMemoryLargePages =        0x00010000,
+    BlMemoryKernelRange =       0x00020000,
     BlMemoryFixed =             0x00040000,
     BlMemoryBelow1MB =          0x00080000,
-    BlMemoryValidAllocationAttributes       = BlMemoryNonFixed | BlMemoryFixed | BlMemoryBelow1MB | BlMemoryUnknown,
+    BlMemoryValidAllocationAttributes       = BlMemoryKernelRange | BlMemoryFixed | BlMemoryBelow1MB | BlMemoryLargePages,
     BlMemoryValidAllocationAttributeMask    = 0x00FF0000,
 
     //
@@ -2194,6 +2194,7 @@ BlMmGetMemoryMap (
 NTSTATUS
 MmSelectMappingAddress (
     _Out_ PVOID* MappingAddress,
+    _In_ PVOID PreferredAddress,
     _In_ ULONGLONG Size,
     _In_ ULONG AllocationAttributes,
     _In_ ULONG Flags,
@@ -2721,5 +2722,7 @@ extern BL_MEMORY_DESCRIPTOR_LIST MmMdlFreeVirtual;
 extern BL_MEMORY_DESCRIPTOR_LIST MmMdlMappingTrackers;
 extern ULONGLONG BlpTimePerformanceFrequency;
 extern LIST_ENTRY RegisteredFileSystems;
+extern BL_ADDRESS_RANGE MmArchKsegAddressRange;
+extern ULONG_PTR MmArchTopOfApplicationAddressSpace;
 
 #endif

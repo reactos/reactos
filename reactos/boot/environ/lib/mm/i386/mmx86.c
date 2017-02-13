@@ -490,29 +490,6 @@ MmDefpTranslateVirtualAddress (
 }
 
 NTSTATUS
-MmSelectMappingAddress (
-    _Out_ PVOID* MappingAddress,
-    _In_ ULONGLONG Size,
-    _In_ ULONG AllocationAttributes,
-    _In_ ULONG Flags,
-    _In_ PHYSICAL_ADDRESS PhysicalAddress
-    )
-{
-    /* Are we in physical mode? */
-    if (MmTranslationType == BlNone)
-    {
-        /* Just return the physical address as the mapping address */
-        *MappingAddress = (PVOID)PhysicalAddress.LowPart;
-        return STATUS_SUCCESS;
-    }
-
-    /* We don't support virtual memory yet @TODO */
-    EfiPrintf(L"not yet implemented in %S\r\n", __FUNCTION__);
-    EfiStall(1000000);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
 MmMapPhysicalAddress (
     _Inout_ PPHYSICAL_ADDRESS PhysicalAddressPtr,
     _Inout_ PVOID* VirtualAddressPtr,
