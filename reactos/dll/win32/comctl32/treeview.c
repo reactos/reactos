@@ -5429,8 +5429,10 @@ static BOOL TREEVIEW_NCPaint (const TREEVIEW_INFO *infoPtr, HRGN region, LPARAM 
         CombineRgn (cliprgn, cliprgn, region, RGN_AND);
     OffsetRect(&r, -r.left, -r.top);
 
-    dc = GetDCEx(infoPtr->hwnd, region, DCX_WINDOW|DCX_INTERSECTRGN);
-    OffsetRect(&r, -r.left, -r.top);
+    dc = GetWindowDC(infoPtr->hwnd);
+    /* Exclude client part */
+    ExcludeClipRect(dc, r.left + cxEdge, r.top + cyEdge,
+        r.right - cxEdge, r.bottom -cyEdge);
 
     if (IsThemeBackgroundPartiallyTransparent (theme, 0, 0))
         DrawThemeParentBackground(infoPtr->hwnd, dc, &r);
