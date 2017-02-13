@@ -624,6 +624,7 @@ VfatVerify(
     PDEVICE_EXTENSION DeviceExt;
     BOOLEAN AllowRaw;
     PVPB Vpb;
+    ULONG ChangeCount, BufSize = sizeof(ChangeCount);
 
     DPRINT("VfatVerify(IrpContext %p)\n", IrpContext);
 
@@ -642,8 +643,8 @@ VfatVerify(
                                       IOCTL_DISK_CHECK_VERIFY,
                                       NULL,
                                       0,
-                                      NULL,
-                                      0,
+                                      &ChangeCount,
+                                      &BufSize,
                                       TRUE);
     if (!NT_SUCCESS(Status) && Status != STATUS_VERIFY_REQUIRED)
     {
