@@ -707,10 +707,6 @@ ThemeHandleNcMouseMove(HWND hWnd, DWORD ht, POINT* pt)
         TrackMouseEvent(&tme);
     }
 
-    /* Dont do any drawing if the hit test wasn't changed */
-    if (ht == pcontext->lastHitTest)
-        return 0;
-
     ThemeInitDrawContext(&context, hWnd, 0);
     if (context.wi.dwStyle & WS_SYSMENU)
     {
