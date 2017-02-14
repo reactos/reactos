@@ -6,7 +6,7 @@
 IDB_WATERMARK BITMAP "resources/watermark.bmp"
 IDB_HEADER BITMAP "resources/header.bmp"
 
-#include <reactos/manifest_dll.rc>
+#include <reactos/manifest_hosted.rc>
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
