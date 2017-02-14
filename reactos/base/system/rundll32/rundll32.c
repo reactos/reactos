@@ -346,6 +346,11 @@ int WINAPI _tWinMain(
     int i;
     size_t nStrLen;
 
+    ACTCTXW ActCtx = {sizeof(ACTCTX), ACTCTX_FLAG_RESOURCE_NAME_VALID};
+    HANDLE hActCtx;
+    ULONG_PTR cookie;
+    BOOL bActivated;
+
     // Get command-line in argc-argv format
     argv = CommandLineToArgv(GetCommandLine(),&argc);
 
@@ -380,6 +385,11 @@ int WINAPI _tWinMain(
         lptCmdLine = argv[i];
     else
         lptCmdLine = _T("");
+
+    ActCtx.lpSource = lptDllName;
+    ActCtx.lpResourceName = (LPCWSTR)123;
+    hActCtx = CreateActCtx(&ActCtx);
+    bActivated = (hActCtx != INVALID_HANDLE_VALUE ? ActivateActCtx(hActCtx, &cookie) : FALSE);
 
     // Everything is all setup, so load the dll now
     hDll = LoadLibrary(lptDllName);
@@ -429,6 +439,8 @@ int WINAPI _tWinMain(
         if (!RegisterBlankClass(hInstance, hPrevInstance))
         {
             FreeLibrary(hDll);
+            if (bActivated)
+                DeactivateActCtx(0, cookie);
             return 0;
         }
         // Create a window so we can pass a window handle to
@@ -475,6 +487,9 @@ int WINAPI _tWinMain(
         MessageBox(0,lptMsgBuffer,ModuleTitle,MB_ICONERROR);
         free(lptMsgBuffer);
     }
+
+    if (bActivated)
+        DeactivateActCtx(0, cookie);
 
     if (argv) free(argv);
     return 0; /* rundll32 always returns 0! */
