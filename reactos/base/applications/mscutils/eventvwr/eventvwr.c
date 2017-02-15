@@ -1594,7 +1594,7 @@ EnumEventsThread(IN LPVOID lpParameter)
                 goto SkipEvent;
 
             /* Get the computer name and filter it */
-            lpszComputerName = (LPWSTR)((LPBYTE)pEvlrBuffer + sizeof(EVENTLOGRECORD) + (wcslen(lpszSourceName) + 1) * sizeof(WCHAR));
+            lpszComputerName = (LPWSTR)(pEvlrBuffer + sizeof(EVENTLOGRECORD) + (wcslen(lpszSourceName) + 1) * sizeof(WCHAR));
             if (!FilterByString(EventLogFilter->ComputerNames, lpszComputerName))
                 goto SkipEvent;
 
