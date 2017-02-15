@@ -21,6 +21,7 @@ EXTERN _BootApp32Parameters:DWORD
 
 /* FUNCTIONS ****************************************************************/
 .code
+ASSUME nothing
 
 PUBLIC _Archx86TransferTo32BitApplicationAsm
 _Archx86TransferTo32BitApplicationAsm:
@@ -39,10 +40,10 @@ _Archx86TransferTo32BitApplicationAsm:
     mov ebx, esp
 
     /* Save current GDT/IDT, then load new one */
-    sgdt _GdtRegister
-    sidt _IdtRegister
-    lgdt _BootAppGdtRegister
-    lidt _BootAppIdtRegister
+    sgdt _GdtRegister+2
+    sidt _IdtRegister+2
+    lgdt _BootAppGdtRegister+2
+    lidt _BootAppIdtRegister+2
 
     /* Load the new stack */
     xor ebp, ebp
@@ -62,8 +63,8 @@ _Archx86TransferTo32BitApplicationAsm:
     mov esp, ebx
 
     /* Restore old GDT/IDT */
-    lgdt _GdtRegister
-    lidt _IdtRegister
+    lgdt _GdtRegister+2
+    lidt _IdtRegister+2
 
     /* Retore old segments */
     pop ds

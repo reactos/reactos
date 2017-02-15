@@ -497,7 +497,7 @@ MmMapPhysicalAddress (
     _In_ ULONG CacheAttributes
     )
 {
-    ULONGLONG Size, TotalSize;
+    ULONGLONG Size;
     ULONGLONG PhysicalAddress;
     PVOID VirtualAddress;
     PHYSICAL_ADDRESS TranslatedAddress;
@@ -541,13 +541,13 @@ MmMapPhysicalAddress (
         VirtualAddress = (PVOID)PAGE_ROUND_DOWN(VirtualAddress);
 
         /* Round up the size */
-        TotalSize = ROUND_TO_PAGES(PhysicalAddressPtr->QuadPart -
-                                   PhysicalAddress +
-                                   Size);
+        Size = ROUND_TO_PAGES(PhysicalAddressPtr->QuadPart -
+                              PhysicalAddress +
+                              Size);
 
         /* Loop every virtual page */
         CurrentAddress = (ULONG_PTR)VirtualAddress;
-        VirtualAddressEnd = CurrentAddress + TotalSize - 1;
+        VirtualAddressEnd = CurrentAddress + Size - 1;
         while (CurrentAddress < VirtualAddressEnd)
         {
             /* Get the physical page of this virtual page */
@@ -564,6 +564,7 @@ MmMapPhysicalAddress (
                     EfiPrintf(L"Existing mapping exists: %lx vs %lx\r\n",
                               TranslatedAddress.QuadPart,
                               PhysicalAddress + (CurrentAddress - (ULONG_PTR)VirtualAddress));
+                    EfiStall(10000000);
                     return STATUS_INVALID_PARAMETER;
                 }
             }
@@ -636,6 +637,44 @@ Mmx86MapInitStructure (
 
     /* Return back to caller */
     return Status;
+}
+
+VOID
+MmMdDbgDumpList (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST DescriptorList
+    )
+{
+    ULONGLONG EndPage, VirtualEndPage;
+    PBL_MEMORY_DESCRIPTOR MemoryDescriptor;
+    PLIST_ENTRY NextEntry;
+
+    NextEntry = DescriptorList->First->Flink;
+    while (NextEntry != DescriptorList->First)
+    {
+        MemoryDescriptor = CONTAINING_RECORD(NextEntry,
+                                             BL_MEMORY_DESCRIPTOR,
+                                             ListEntry);
+
+        EndPage = MemoryDescriptor->BasePage + MemoryDescriptor->PageCount;
+        if (MemoryDescriptor->VirtualPage != 0)
+        {
+            VirtualEndPage = MemoryDescriptor->VirtualPage + MemoryDescriptor->PageCount;
+        }
+        else
+        {
+            VirtualEndPage = 0;
+        }
+
+        EfiPrintf(L"%p - [%08llx-%08llx @ %08llx-%08llx]:%x\r\n",
+                    MemoryDescriptor,
+                    MemoryDescriptor->BasePage << PAGE_SHIFT,
+                    (EndPage << PAGE_SHIFT) - 1,
+                    MemoryDescriptor->VirtualPage << PAGE_SHIFT,
+                    VirtualEndPage ? (VirtualEndPage << PAGE_SHIFT) - 1 : 0,
+                    (ULONG)MemoryDescriptor->Type);
+
+        NextEntry = NextEntry->Flink;
+    }
 }
 
 NTSTATUS
@@ -1126,7 +1165,7 @@ MmArchInitialize (
             MmArchKsegAddressRange.Maximum = (ULONGLONG)~0;
 
             /* Set the boot application top maximum */
-            MmArchTopOfApplicationAddressSpace = 0x70000000;
+            MmArchTopOfApplicationAddressSpace = 0x70000000 - 1; // Windows bug
 
             /* Initialize virtual address space translation */
             Status = MmDefInitializeTranslation(MemoryData, TranslationType);

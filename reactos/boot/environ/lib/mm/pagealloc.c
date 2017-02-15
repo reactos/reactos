@@ -126,8 +126,8 @@ MmPapAllocateRegionFromMdl (
         FoundDescriptor = CONTAINING_RECORD(NextEntry,
                                             BL_MEMORY_DESCRIPTOR,
                                             ListEntry);
-
-        /* See if it matches  the request */
+        
+        /* See if it matches the request */
         if (MmMdFindSatisfyingRegion(FoundDescriptor,
                                      &LocalDescriptor,
                                      Request->Pages,
@@ -1082,7 +1082,7 @@ MmPapFreePages (
     /* Handle virtual memory scenario */
     if (MmTranslationType != BlNone)
     {
-        EfiPrintf(L"Unimplemented virtual path\r\n");
+        EfiPrintf(L"Unimplemented free virtual path\r\n");
         return STATUS_SUCCESS;
     }
 
@@ -1519,6 +1519,7 @@ MmSelectMappingAddress (
     {
         /* Just return the physical address as the mapping address */
         PreferredAddress = (PVOID)PhysicalAddress.LowPart;
+        goto Success;
     }
 
     /* If no physical address, or caller wants a fixed address... */
@@ -1532,14 +1533,15 @@ MmSelectMappingAddress (
     if (AllocationAttributes & BlMemoryKernelRange)
     {
         /* Use kernel range */
-        Request.BaseRange = MmArchKsegAddressRange;
+        Request.BaseRange.Minimum = MmArchKsegAddressRange.Minimum >> PAGE_SHIFT;
+        Request.BaseRange.Maximum = MmArchKsegAddressRange.Maximum >> PAGE_SHIFT;
         Request.Type = BL_MM_REQUEST_DEFAULT_TYPE;
     }
     else
     {
         /* User user/application range */
-        Request.BaseRange.Minimum = 0;
-        Request.BaseRange.Maximum = MmArchTopOfApplicationAddressSpace;
+        Request.BaseRange.Minimum = 0 >> PAGE_SHIFT;
+        Request.BaseRange.Maximum = MmArchTopOfApplicationAddressSpace >> PAGE_SHIFT;
         Request.Type = BL_MM_REQUEST_TOP_DOWN_TYPE;
     }
 
@@ -1569,8 +1571,7 @@ MmSelectMappingAddress (
     {
         /* Add the offset to the returned virtual address */
         PreferredAddress = (PVOID)((ULONG_PTR)PreferredAddress +
-                                   PhysicalAddress.LowPart -
-                                   BYTE_OFFSET(PhysicalAddress.LowPart));
+                                   BYTE_OFFSET(PhysicalAddress.QuadPart));
     }
     
 Success:

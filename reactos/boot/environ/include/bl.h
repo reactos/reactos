@@ -2015,6 +2015,11 @@ Archx86TransferTo32BitApplicationAsm (
 /* MEMORY DESCRIPTOR ROUTINES ************************************************/
 
 VOID
+MmMdDbgDumpList (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST DescriptorList
+);
+    
+VOID
 MmMdInitializeList (
     _In_ PBL_MEMORY_DESCRIPTOR_LIST DescriptorList,
     _In_ ULONG Type,

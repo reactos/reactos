@@ -646,8 +646,8 @@ EfiStall (
     OldMode = CurrentExecutionContext->Mode;
     if (OldMode != BlRealMode)
     {
-        /* FIXME: Not yet implemented */
-        return STATUS_NOT_IMPLEMENTED;
+        /* Switch to real mode */
+        BlpArchSwitchContext(BlProtectedMode);
     }
 
     /* Make the EFI call */
@@ -1406,6 +1406,7 @@ MmFwGetMemoryMap (
 
     /* Initialize EFI memory map attributes */
     EfiMemoryMapSize = MapKey = DescriptorSize = DescriptorVersion = 0;
+    LibraryBuffer = NULL;
 
     /* Increment the nesting depth */
     MmDescriptorCallTreeCount++;

@@ -149,8 +149,8 @@ MmMdpSwitchToDynamicDescriptors (
     _In_ ULONG Count
     )
 {
-    EfiPrintf(L"dynamic switch NOT SUPPORTED!!!\r\n");
-    while (1);
+    EfiPrintf(L"Dynamic switch NOT SUPPORTED!!!\r\n");
+    EfiStall(10000000);
 }
 
 NTSTATUS
@@ -173,7 +173,8 @@ MmMdFreeDescriptor (
     else
     {
         /* It's a dynamic descriptor, so free it */
-        EfiPrintf(L"Dynamic descriptors not yet supported\r\n");
+        EfiPrintf(L"Freeing dynamic descriptors not yet supported\r\n");
+        EfiStall(10000000);
         Status = STATUS_NOT_IMPLEMENTED;
     }
 
@@ -1043,7 +1044,6 @@ MmMdFindSatisfyingRegion (
     /* Check for start overflow */
     if (BaseMin > BaseMax)
     {
-        EfiPrintf(L"Descriptor overflow\r\n");
         return FALSE;
     }
 
@@ -1145,7 +1145,7 @@ MmMdFreeGlobalDescriptors (
     /* Loop every current global descriptor */
     while (Index < MmGlobalMemoryDescriptorsUsed)
     {
-        /* Does it have any valid pageS? */
+        /* Does it have any valid pages? */
         OldDescriptor = &MmGlobalMemoryDescriptors[Index];
         if (OldDescriptor->PageCount)
         {

@@ -196,7 +196,6 @@ BlMmMapPhysicalAddressEx (
     MapSize = Size;
     CacheAttributes = ((Flags & BlMemoryValidCacheAttributeMask) != 0x20) ?
                       (Flags & BlMemoryValidCacheAttributeMask) : 0;
-    EfiPrintf(L"Selected address: %p for %lx\r\n", MappingAddress, MappedAddress.LowPart);
     Status = MmMapPhysicalAddress(&MappedAddress,
                                   &MappingAddress,
                                   &MapSize,
@@ -215,7 +214,7 @@ BlMmMapPhysicalAddressEx (
     if (MmTranslationType != BlNone)
     {
         /* We don't support virtual memory yet @TODO */
-        EfiPrintf(L"not yet implemented in %S\r\n", __FUNCTION__);
+        EfiPrintf(L"not yet implemented in BlMmMapPhysicalAddressEx\r\n");
         EfiStall(1000000);
         Status = STATUS_NOT_IMPLEMENTED;
         goto Quickie;
