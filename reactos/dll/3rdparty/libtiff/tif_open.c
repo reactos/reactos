@@ -1,4 +1,4 @@
-/* $Id: tif_open.c,v 1.46 2010-12-06 16:54:54 faxguy Exp $ */
+/* $Id: tif_open.c,v 1.47 2016-01-23 21:20:34 erouault Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -169,7 +169,7 @@ TIFFClientOpen(
 	 * The following flags may be used to control intrinsic library
 	 * behaviour that may or may not be desirable (usually for
 	 * compatibility with some application that claims to support
-	 * TIFF but only supports some braindead idea of what the
+	 * TIFF but only supports some brain dead idea of what the
 	 * vendor thinks TIFF is):
 	 *
 	 * 'l' use little-endian byte order for creating a file
@@ -199,8 +199,8 @@ TIFFClientOpen(
 	 * The 'L', 'B', and 'H' flags are intended for applications
 	 * that can optimize operations on data by using a particular
 	 * bit order.  By default the library returns data in MSB2LSB
-	 * bit order for compatibiltiy with older versions of this
-	 * library.  Returning data in the bit order of the native cpu
+	 * bit order for compatibility with older versions of this
+	 * library.  Returning data in the bit order of the native CPU
 	 * makes the most sense but also requires applications to check
 	 * the value of the FillOrder tag; something they probably do
 	 * not do right now.

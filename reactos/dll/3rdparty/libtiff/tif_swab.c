@@ -1,4 +1,4 @@
-/* $Id: tif_swab.c,v 1.13 2010-03-10 18:56:49 bfriesen Exp $ */
+/* $Id: tif_swab.c,v 1.14 2016-09-04 21:32:56 erouault Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -297,8 +297,10 @@ TIFFReverseBits(uint8* cp, tmsize_t n)
 		cp[7] = TIFFBitRevTable[cp[7]];
 		cp += 8;
 	}
-	while (n-- > 0)
-		*cp = TIFFBitRevTable[*cp], cp++;
+	while (n-- > 0) {
+		*cp = TIFFBitRevTable[*cp];
+		cp++;
+	}
 }
 
 /* vim: set ts=8 sts=8 sw=8 noet: */

@@ -3,7 +3,7 @@
 #define UV_NDIVS	16289
 #define UV_VSTART	(float)0.016940
 #define UV_NVS		163
-static struct {
+static const struct {
 	float	ustart;
 	short	nus, ncum;
 }	uv_row[UV_NVS] = {

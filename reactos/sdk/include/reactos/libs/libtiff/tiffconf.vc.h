@@ -55,22 +55,23 @@
 /* Unsigned 64-bit type */
 #define TIFF_UINT64_T unsigned __int64
 
+#if _WIN64
+/*
+  Windows 64-bit build
+*/
+
 /* Signed size type */
-#if defined(_WIN64)
-#define TIFF_SSIZE_T signed __int64
-#else
-#define TIFF_SSIZE_T signed int
-#endif
+#  define TIFF_SSIZE_T TIFF_INT64_T
 
-/* Signed size type formatter */
-#if defined(_WIN64)
-#define TIFF_SSIZE_FORMAT "%I64d"
 #else
-#define TIFF_SSIZE_FORMAT "%ld"
-#endif
+/*
+  Windows 32-bit build
+*/
 
-/* Pointer difference type */
-#define TIFF_PTRDIFF_T long
+/* Signed size type */
+#  define TIFF_SSIZE_T signed int
+
+#endif
 
 /* Compatibility stuff. */
 

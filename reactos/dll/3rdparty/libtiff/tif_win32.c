@@ -1,4 +1,4 @@
-/* $Id: tif_win32.c,v 1.39 2011-12-22 17:07:57 bfriesen Exp $ */
+/* $Id: tif_win32.c,v 1.41 2015-08-23 20:12:44 bfriesen Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -29,6 +29,30 @@
  * Scott Wagner (wagner@itek.com), Itek Graphix, Rochester, NY USA
  */
 
+/*
+  CreateFileA/CreateFileW return type 'HANDLE'.
+
+  thandle_t is declared like
+
+    DECLARE_HANDLE(thandle_t);
+
+  in tiffio.h.
+
+  Windows (from winnt.h) DECLARE_HANDLE logic looks like
+
+  #ifdef STRICT
+    typedef void *HANDLE;
+  #define DECLARE_HANDLE(name) struct name##__ { int unused; }; typedef struct name##__ *name
+  #else
+    typedef PVOID HANDLE;
+  #define DECLARE_HANDLE(name) typedef HANDLE name
+  #endif
+
+  See http://bugzilla.maptools.org/show_bug.cgi?id=1941 for problems in WIN64
+  builds resulting from this.  Unfortunately, the proposed patch was lost.
+
+*/
+  
 #include <precomp.h>
 
 #include <stdlib.h>
@@ -219,7 +243,7 @@ TIFFFdOpen(int ifd, const char* name, const char* mode)
 			break;
 		}
 	}
-	tif = TIFFClientOpen(name, mode, (thandle_t)ifd,
+	tif = TIFFClientOpen(name, mode, (thandle_t)ifd, /* FIXME: WIN64 cast to pointer warning */
 			_tiffReadProc, _tiffWriteProc,
 			_tiffSeekProc, _tiffCloseProc, _tiffSizeProc,
 			fSuppressMap ? _tiffDummyMapProc : _tiffMapProc,
@@ -264,7 +288,7 @@ TIFFOpen(const char* name, const char* mode)
 		return ((TIFF *)0);
 	}
 
-	tif = TIFFFdOpen((int)fd, name, mode);
+	tif = TIFFFdOpen((int)fd, name, mode);   /* FIXME: WIN64 cast from pointer to int warning */
 	if(!tif)
 		CloseHandle(fd);
 	return tif;
@@ -319,7 +343,7 @@ TIFFOpenW(const wchar_t* name, const char* mode)
 				    NULL, NULL);
 	}
 
-	tif = TIFFFdOpen((int)fd,
+	tif = TIFFFdOpen((int)fd,    /* FIXME: WIN64 cast from pointer to int warning */
 			 (mbname != NULL) ? mbname : "<unknown>", mode);
 	if(!tif)
 		CloseHandle(fd);
@@ -334,6 +358,9 @@ TIFFOpenW(const wchar_t* name, const char* mode)
 void*
 _TIFFmalloc(tmsize_t s)
 {
+        if (s == 0)
+                return ((void *) NULL);
+
 	return (malloc((size_t) s));
 }
 

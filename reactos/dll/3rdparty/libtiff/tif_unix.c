@@ -1,4 +1,4 @@
-/* $Id: tif_unix.c,v 1.23 2012-06-01 21:40:59 fwarmerdam Exp $ */
+/* $Id: tif_unix.c,v 1.27 2015-08-19 02:31:04 bfriesen Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -55,53 +55,102 @@
 
 #include "tiffiop.h"
 
+
+#define TIFF_IO_MAX 2147483647U
+
+
+typedef union fd_as_handle_union
+{
+	int fd;
+	thandle_t h;
+} fd_as_handle_union_t;
+
 static tmsize_t
 _tiffReadProc(thandle_t fd, void* buf, tmsize_t size)
 {
-	size_t size_io = (size_t) size;
-	if ((tmsize_t) size_io != size)
+	fd_as_handle_union_t fdh;
+        const size_t bytes_total = (size_t) size;
+        size_t bytes_read;
+        tmsize_t count = -1;
+	if ((tmsize_t) bytes_total != size)
 	{
 		errno=EINVAL;
 		return (tmsize_t) -1;
 	}
-	return ((tmsize_t) read((int) fd, buf, size_io));
+	fdh.h = fd;
+        for (bytes_read=0; bytes_read < bytes_total; bytes_read+=count)
+        {
+                char *buf_offset = (char *) buf+bytes_read;
+                size_t io_size = bytes_total-bytes_read;
+                if (io_size > TIFF_IO_MAX)
+                        io_size = TIFF_IO_MAX;
+                count=read(fdh.fd, buf_offset, (TIFFIOSize_t) io_size);
+                if (count <= 0)
+                        break;
+        }
+        if (count < 0)
+                return (tmsize_t)-1;
+        return (tmsize_t) bytes_read;
 }
 
 static tmsize_t
 _tiffWriteProc(thandle_t fd, void* buf, tmsize_t size)
 {
-	size_t size_io = (size_t) size;
-	if ((tmsize_t) size_io != size)
+	fd_as_handle_union_t fdh;
+	const size_t bytes_total = (size_t) size;
+        size_t bytes_written;
+        tmsize_t count = -1;
+	if ((tmsize_t) bytes_total != size)
 	{
 		errno=EINVAL;
 		return (tmsize_t) -1;
 	}
-	return ((tmsize_t) write((int) fd, buf, size_io));
+	fdh.h = fd;
+        for (bytes_written=0; bytes_written < bytes_total; bytes_written+=count)
+        {
+                const char *buf_offset = (char *) buf+bytes_written;
+                size_t io_size = bytes_total-bytes_written;
+                if (io_size > TIFF_IO_MAX)
+                        io_size = TIFF_IO_MAX;
+                count=write(fdh.fd, buf_offset, (TIFFIOSize_t) io_size);
+                if (count <= 0)
+                        break;
+        }
+        if (count < 0)
+                return (tmsize_t)-1;
+        return (tmsize_t) bytes_written;
+	/* return ((tmsize_t) write(fdh.fd, buf, bytes_total)); */
 }
 
 static uint64
 _tiffSeekProc(thandle_t fd, uint64 off, int whence)
 {
-	off_t off_io = (off_t) off;
+	fd_as_handle_union_t fdh;
+	_TIFF_off_t off_io = (_TIFF_off_t) off;
 	if ((uint64) off_io != off)
 	{
 		errno=EINVAL;
 		return (uint64) -1; /* this is really gross */
 	}
-	return((uint64)lseek((int)fd,off_io,whence));
+	fdh.h = fd;
+	return((uint64)_TIFF_lseek_f(fdh.fd,off_io,whence));
 }
 
 static int
 _tiffCloseProc(thandle_t fd)
 {
-	return(close((int)fd));
+	fd_as_handle_union_t fdh;
+	fdh.h = fd;
+	return(close(fdh.fd));
 }
 
 static uint64
 _tiffSizeProc(thandle_t fd)
 {
-	struct stat sb;
-	if (fstat((int)fd,&sb)<0)
+	_TIFF_stat_s sb;
+	fd_as_handle_union_t fdh;
+	fdh.h = fd;
+	if (_TIFF_fstat_f(fdh.fd,&sb)<0)
 		return(0);
 	else
 		return((uint64)sb.st_size);
@@ -116,8 +165,10 @@ _tiffMapProc(thandle_t fd, void** pbase, toff_t* psize)
 	uint64 size64 = _tiffSizeProc(fd);
 	tmsize_t sizem = (tmsize_t)size64;
 	if ((uint64)sizem==size64) {
+		fd_as_handle_union_t fdh;
+		fdh.h = fd;
 		*pbase = (void*)
-		    mmap(0, (size_t)sizem, PROT_READ, MAP_SHARED, (int) fd, 0);
+		    mmap(0, (size_t)sizem, PROT_READ, MAP_SHARED, fdh.fd, 0);
 		if (*pbase != (void*) -1) {
 			*psize = (tmsize_t)sizem;
 			return (1);
@@ -155,8 +206,10 @@ TIFFFdOpen(int fd, const char* name, const char* mode)
 {
 	TIFF* tif;
 
+	fd_as_handle_union_t fdh;
+	fdh.fd = fd;
 	tif = TIFFClientOpen(name, mode,
-	    (thandle_t) fd,
+	    fdh.h,
 	    _tiffReadProc, _tiffWriteProc,
 	    _tiffSeekProc, _tiffCloseProc, _tiffSizeProc,
 	    _tiffMapProc, _tiffUnmapProc);
@@ -225,7 +278,7 @@ TIFFOpenW(const wchar_t* name, const char* mode)
 
 	fd = _wopen(name, m, 0666);
 	if (fd < 0) {
-		TIFFErrorExt(0, module, "%s: Cannot open", name);
+		TIFFErrorExt(0, module, "%ls: Cannot open", name);
 		return ((TIFF *)0);
 	}
 
@@ -257,6 +310,9 @@ TIFFOpenW(const wchar_t* name, const char* mode)
 void*
 _TIFFmalloc(tmsize_t s)
 {
+        if (s == 0)
+                return ((void *) NULL);
+
 	return (malloc((size_t) s));
 }
 

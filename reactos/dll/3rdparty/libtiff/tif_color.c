@@ -1,4 +1,4 @@
-/* $Id: tif_color.c,v 1.19 2010-12-14 02:22:42 faxguy Exp $ */
+/* $Id: tif_color.c,v 1.22 2016-09-04 21:32:56 erouault Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -126,37 +126,37 @@ TIFFCIELabToRGBInit(TIFFCIELabToRGB* cielab,
 		    const TIFFDisplay *display, float *refWhite)
 {
 	int i;
-	double gamma;
+	double dfGamma;
 
 	cielab->range = CIELABTORGB_TABLE_RANGE;
 
 	_TIFFmemcpy(&cielab->display, display, sizeof(TIFFDisplay));
 
 	/* Red */
-	gamma = 1.0 / cielab->display.d_gammaR ;
+	dfGamma = 1.0 / cielab->display.d_gammaR ;
 	cielab->rstep =
 		(cielab->display.d_YCR - cielab->display.d_Y0R)	/ cielab->range;
 	for(i = 0; i <= cielab->range; i++) {
 		cielab->Yr2r[i] = cielab->display.d_Vrwr
-		    * ((float)pow((double)i / cielab->range, gamma));
+		    * ((float)pow((double)i / cielab->range, dfGamma));
 	}
 
 	/* Green */
-	gamma = 1.0 / cielab->display.d_gammaG ;
+	dfGamma = 1.0 / cielab->display.d_gammaG ;
 	cielab->gstep =
 	    (cielab->display.d_YCR - cielab->display.d_Y0R) / cielab->range;
 	for(i = 0; i <= cielab->range; i++) {
 		cielab->Yg2g[i] = cielab->display.d_Vrwg
-		    * ((float)pow((double)i / cielab->range, gamma));
+		    * ((float)pow((double)i / cielab->range, dfGamma));
 	}
 
 	/* Blue */
-	gamma = 1.0 / cielab->display.d_gammaB ;
+	dfGamma = 1.0 / cielab->display.d_gammaB ;
 	cielab->bstep =
 	    (cielab->display.d_YCR - cielab->display.d_Y0R) / cielab->range;
 	for(i = 0; i <= cielab->range; i++) {
 		cielab->Yb2b[i] = cielab->display.d_Vrwb
-		    * ((float)pow((double)i / cielab->range, gamma));
+		    * ((float)pow((double)i / cielab->range, dfGamma));
 	}
 
 	/* Init reference white point */
@@ -175,7 +175,7 @@ TIFFCIELabToRGBInit(TIFFCIELabToRGB* cielab,
 #define	SHIFT			16
 #define	FIX(x)			((int32)((x) * (1L<<SHIFT) + 0.5))
 #define	ONE_HALF		((int32)(1<<(SHIFT-1)))
-#define	Code2V(c, RB, RW, CR)	((((c)-(int32)(RB))*(float)(CR))/(float)(((RW)-(RB)) ? ((RW)-(RB)) : 1))
+#define	Code2V(c, RB, RW, CR)	((((c)-(int32)(RB))*(float)(CR))/(float)(((RW)-(RB)!=0) ? ((RW)-(RB)) : 1))
 #define	CLAMP(f,min,max)	((f)<(min)?(min):(f)>(max)?(max):(f))
 #define HICLAMP(f,max)		((f)>(max)?(max):(f))
 
@@ -186,7 +186,9 @@ TIFFYCbCrtoRGB(TIFFYCbCrToRGB *ycbcr, uint32 Y, int32 Cb, int32 Cr,
 	int32 i;
 
 	/* XXX: Only 8-bit YCbCr input supported for now */
-	Y = HICLAMP(Y, 255), Cb = CLAMP(Cb, 0, 255), Cr = CLAMP(Cr, 0, 255);
+	Y = HICLAMP(Y, 255);
+	Cb = CLAMP(Cb, 0, 255);
+	Cr = CLAMP(Cr, 0, 255);
 
 	i = ycbcr->Y_tab[Y] + ycbcr->Cr_r_tab[Cr];
 	*r = CLAMP(i, 0, 255);

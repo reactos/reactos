@@ -1,4 +1,4 @@
-/* $Id: tiffiop.h,v 1.84 2012-05-30 01:50:17 fwarmerdam Exp $ */
+/* $Id: tiffiop.h,v 1.89 2016-01-23 21:20:34 erouault Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -57,6 +57,12 @@ extern void *lfind(const void *, const void *, size_t *, size_t,
 		   int (*)(const void *, const void *));
 #endif
 
+#if !defined(HAVE_SNPRINTF) && !defined(HAVE__SNPRINTF)
+#undef snprintf
+#define snprintf _TIFF_snprintf_f
+extern int snprintf(char* str, size_t size, const char* format, ...);
+#endif
+
 #include "tiffio.h"
 
 #include "tif_dir.h"
@@ -80,7 +86,7 @@ typedef struct client_info {
 
 /*
  * Typedefs for ``method pointers'' used internally.
- * these are depriciated and provided only for backwards compatibility
+ * these are deprecated and provided only for backwards compatibility.
  */
 typedef unsigned char tidataval_t;    /* internal image data value type */
 typedef tidataval_t* tidata_t;        /* reference to internal image data */
@@ -99,33 +105,33 @@ struct tiff {
 	int                  tif_fd;           /* open file descriptor */
 	int                  tif_mode;         /* open mode (O_*) */
 	uint32               tif_flags;
-	#define TIFF_FILLORDER   0x00003 /* natural bit fill order for machine */
-	#define TIFF_DIRTYHEADER 0x00004 /* header must be written on close */
-	#define TIFF_DIRTYDIRECT 0x00008 /* current directory must be written */
-	#define TIFF_BUFFERSETUP 0x00010 /* data buffers setup */
-	#define TIFF_CODERSETUP  0x00020 /* encoder/decoder setup done */
-	#define TIFF_BEENWRITING 0x00040 /* written 1+ scanlines to file */
-	#define TIFF_SWAB        0x00080 /* byte swap file information */
-	#define TIFF_NOBITREV    0x00100 /* inhibit bit reversal logic */
-	#define TIFF_MYBUFFER    0x00200 /* my raw data buffer; free on close */
-	#define TIFF_ISTILED     0x00400 /* file is tile, not strip- based */
-	#define TIFF_MAPPED      0x00800 /* file is mapped into memory */
-	#define TIFF_POSTENCODE  0x01000 /* need call to postencode routine */
-	#define TIFF_INSUBIFD    0x02000 /* currently writing a subifd */
-	#define TIFF_UPSAMPLED   0x04000 /* library is doing data up-sampling */
-	#define TIFF_STRIPCHOP   0x08000 /* enable strip chopping support */
-	#define TIFF_HEADERONLY  0x10000 /* read header only, do not process the first directory */
-	#define TIFF_NOREADRAW   0x20000 /* skip reading of raw uncompressed image data */
-	#define TIFF_INCUSTOMIFD 0x40000 /* currently writing a custom IFD */
-	#define TIFF_BIGTIFF     0x80000 /* read/write bigtiff */
-        #define TIFF_BUF4WRITE  0x100000 /* rawcc bytes are for writing */
-        #define TIFF_DIRTYSTRIP 0x200000 /* stripoffsets/stripbytecount dirty*/
-        #define TIFF_PERSAMPLE  0x400000 /* get/set per sample tags as arrays */
-        #define TIFF_BUFFERMMAP 0x800000 /* read buffer (tif_rawdata) points into mmap() memory */
+	#define TIFF_FILLORDER   0x00003U /* natural bit fill order for machine */
+	#define TIFF_DIRTYHEADER 0x00004U /* header must be written on close */
+	#define TIFF_DIRTYDIRECT 0x00008U /* current directory must be written */
+	#define TIFF_BUFFERSETUP 0x00010U /* data buffers setup */
+	#define TIFF_CODERSETUP  0x00020U /* encoder/decoder setup done */
+	#define TIFF_BEENWRITING 0x00040U /* written 1+ scanlines to file */
+	#define TIFF_SWAB        0x00080U /* byte swap file information */
+	#define TIFF_NOBITREV    0x00100U /* inhibit bit reversal logic */
+	#define TIFF_MYBUFFER    0x00200U /* my raw data buffer; free on close */
+	#define TIFF_ISTILED     0x00400U /* file is tile, not strip- based */
+	#define TIFF_MAPPED      0x00800U /* file is mapped into memory */
+	#define TIFF_POSTENCODE  0x01000U /* need call to postencode routine */
+	#define TIFF_INSUBIFD    0x02000U /* currently writing a subifd */
+	#define TIFF_UPSAMPLED   0x04000U /* library is doing data up-sampling */
+	#define TIFF_STRIPCHOP   0x08000U /* enable strip chopping support */
+	#define TIFF_HEADERONLY  0x10000U /* read header only, do not process the first directory */
+	#define TIFF_NOREADRAW   0x20000U /* skip reading of raw uncompressed image data */
+	#define TIFF_INCUSTOMIFD 0x40000U /* currently writing a custom IFD */
+	#define TIFF_BIGTIFF     0x80000U /* read/write bigtiff */
+        #define TIFF_BUF4WRITE  0x100000U /* rawcc bytes are for writing */
+        #define TIFF_DIRTYSTRIP 0x200000U /* stripoffsets/stripbytecount dirty*/
+        #define TIFF_PERSAMPLE  0x400000U /* get/set per sample tags as arrays */
+        #define TIFF_BUFFERMMAP 0x800000U /* read buffer (tif_rawdata) points into mmap() memory */
 	uint64               tif_diroff;       /* file offset of current directory */
 	uint64               tif_nextdiroff;   /* file offset of following directory */
 	uint64*              tif_dirlist;      /* list of offsets to already seen directories to prevent IFD looping */
-	uint16               tif_dirlistsize;  /* number of entires in offset list */
+	uint16               tif_dirlistsize;  /* number of entries in offset list */
 	uint16               tif_dirnumber;    /* number of already seen directories */
 	TIFFDirectory        tif_dir;          /* internal rep of current directory */
 	TIFFDirectory        tif_customdir;    /* custom IFDs are separated from the main ones */
@@ -257,6 +263,53 @@ struct tiff {
 #define TIFFmin(A,B) ((A)<(B)?(A):(B))
 
 #define TIFFArrayCount(a) (sizeof (a) / sizeof ((a)[0]))
+
+/*
+  Support for large files.
+
+  Windows read/write APIs support only 'unsigned int' rather than 'size_t'.
+  Windows off_t is only 32-bit, even in 64-bit builds.
+*/
+#if defined(HAVE_FSEEKO)
+/*
+  Use fseeko() and ftello() if they are available since they use
+  'off_t' rather than 'long'.  It is wrong to use fseeko() and
+  ftello() only on systems with special LFS support since some systems
+  (e.g. FreeBSD) support a 64-bit off_t by default.
+
+  For MinGW, __MSVCRT_VERSION__ must be at least 0x800 to expose these
+  interfaces. The MinGW compiler must support the requested version.  MinGW
+  does not distribute the CRT (it is supplied by Microsoft) so the correct CRT
+  must be available on the target computer in order for the program to run.
+*/
+#if defined(HAVE_FSEEKO)
+#  define fseek(stream,offset,whence)  fseeko(stream,offset,whence)
+#  define ftell(stream,offset,whence)  ftello(stream,offset,whence)
+#endif
+#endif
+#if defined(__WIN32__) && \
+        !(defined(_MSC_VER) && _MSC_VER < 1400) && \
+        !(defined(__MSVCRT_VERSION__) && __MSVCRT_VERSION__ < 0x800)
+typedef unsigned int TIFFIOSize_t;
+#define _TIFF_lseek_f(fildes,offset,whence)  _lseeki64(fildes,/* __int64 */ offset,whence)
+/* #define _TIFF_tell_f(fildes) /\* __int64 *\/ _telli64(fildes) */
+#define _TIFF_fseek_f(stream,offset,whence) _fseeki64(stream,/* __int64 */ offset,whence)
+#define _TIFF_fstat_f(fildes,stat_buff) _fstati64(fildes,/* struct _stati64 */ stat_buff)
+/* #define _TIFF_ftell_f(stream) /\* __int64 *\/ _ftelli64(stream) */
+/* #define _TIFF_stat_f(path,stat_buff) _stati64(path,/\* struct _stati64 *\/ stat_buff) */
+#define _TIFF_stat_s struct _stati64
+#define _TIFF_off_t __int64
+#else
+typedef size_t TIFFIOSize_t;
+#define _TIFF_lseek_f(fildes,offset,whence) lseek(fildes,offset,whence)
+/* #define _TIFF_tell_f(fildes) (_TIFF_lseek_f(fildes,0,SEEK_CUR)) */
+#define _TIFF_fseek_f(stream,offset,whence) fseek(stream,offset,whence)
+#define _TIFF_fstat_f(fildes,stat_buff) fstat(fildes,stat_buff)
+/* #define _TIFF_ftell_f(stream) ftell(stream) */
+/* #define _TIFF_stat_f(path,stat_buff) stat(path,stat_buff) */
+#define _TIFF_stat_s struct stat
+#define _TIFF_off_t off_t
+#endif
 
 #if defined(__cplusplus)
 extern "C" {

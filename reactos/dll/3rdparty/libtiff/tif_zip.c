@@ -1,4 +1,4 @@
-/* $Id: tif_zip.c,v 1.31 2011-01-06 16:00:23 fwarmerdam Exp $ */
+/* $Id: tif_zip.c,v 1.36 2016-11-12 16:48:28 erouault Exp $ */
 
 /*
  * Copyright (c) 1995-1997 Sam Leffler
@@ -37,7 +37,7 @@
  * of the library: this code assumes the 1.0 API and also depends on
  * the ability to write the zlib header multiple times (one per strip)
  * which was not possible with versions prior to 0.95.  Note also that
- * older versions of this codec avoided this bug by supressing the header
+ * older versions of this codec avoided this bug by suppressing the header
  * entirely.  This means that files written with the old library cannot
  * be read; they should be converted to a different compression scheme
  * and then reconverted.
@@ -50,6 +50,8 @@
 #include "tif_predict.h"
 #include "zlib.h"
 
+//#include <stdio.h>
+
 /*
  * Sigh, ZLIB_VERSION is defined as a string so there's no
  * way to do a proper check here.  Instead we guess based
@@ -59,6 +61,8 @@
 #if !defined(Z_NO_COMPRESSION) || !defined(Z_DEFLATED)
 #error "Antiquated ZLIB software; you must use version 1.0 or later"
 #endif
+
+#define SAFE_MSG(sp)   ((sp)->stream.msg == NULL ? "" : (sp)->stream.msg)
 
 /*
  * State block for each open TIFF
@@ -105,7 +109,7 @@ ZIPSetupDecode(TIFF* tif)
 	}
 
 	if (inflateInit(&sp->stream) != Z_OK) {
-		TIFFErrorExt(tif->tif_clientdata, module, "%s", sp->stream.msg);
+		TIFFErrorExt(tif->tif_clientdata, module, "%s", SAFE_MSG(sp));
 		return (0);
 	} else {
 		sp->state |= ZSTATE_INIT_DECODE;
@@ -132,7 +136,7 @@ ZIPPreDecode(TIFF* tif, uint16 s)
 	assert(sizeof(sp->stream.avail_in)==4);  /* if this assert gets raised,
 	    we need to simplify this code to reflect a ZLib that is likely updated
 	    to deal with 8byte memory sizes, though this code will respond
-	    apropriately even before we simplify it */
+	    appropriately even before we simplify it */
 	sp->stream.avail_in = (uInt) tif->tif_rawcc;
 	if ((tmsize_t)sp->stream.avail_in != tif->tif_rawcc)
 	{
@@ -159,7 +163,7 @@ ZIPDecode(TIFF* tif, uint8* op, tmsize_t occ, uint16 s)
 	assert(sizeof(sp->stream.avail_out)==4);  /* if this assert gets raised,
 	    we need to simplify this code to reflect a ZLib that is likely updated
 	    to deal with 8byte memory sizes, though this code will respond
-	    apropriately even before we simplify it */
+	    appropriately even before we simplify it */
 	sp->stream.avail_out = (uInt) occ;
 	if ((tmsize_t)sp->stream.avail_out != occ)
 	{
@@ -173,14 +177,14 @@ ZIPDecode(TIFF* tif, uint8* op, tmsize_t occ, uint16 s)
 		if (state == Z_DATA_ERROR) {
 			TIFFErrorExt(tif->tif_clientdata, module,
 			    "Decoding error at scanline %lu, %s",
-			    (unsigned long) tif->tif_row, sp->stream.msg);
+			     (unsigned long) tif->tif_row, SAFE_MSG(sp));
 			if (inflateSync(&sp->stream) != Z_OK)
 				return (0);
 			continue;
 		}
 		if (state != Z_OK) {
-			TIFFErrorExt(tif->tif_clientdata, module, "ZLib error: %s",
-			    sp->stream.msg);
+			TIFFErrorExt(tif->tif_clientdata, module, 
+				     "ZLib error: %s", SAFE_MSG(sp));
 			return (0);
 		}
 	} while (sp->stream.avail_out > 0);
@@ -210,7 +214,7 @@ ZIPSetupEncode(TIFF* tif)
 	}
 
 	if (deflateInit(&sp->stream, sp->zipquality) != Z_OK) {
-		TIFFErrorExt(tif->tif_clientdata, module, "%s", sp->stream.msg);
+		TIFFErrorExt(tif->tif_clientdata, module, "%s", SAFE_MSG(sp));
 		return (0);
 	} else {
 		sp->state |= ZSTATE_INIT_ENCODE;
@@ -236,8 +240,8 @@ ZIPPreEncode(TIFF* tif, uint16 s)
 	assert(sizeof(sp->stream.avail_out)==4);  /* if this assert gets raised,
 	    we need to simplify this code to reflect a ZLib that is likely updated
 	    to deal with 8byte memory sizes, though this code will respond
-	    apropriately even before we simplify it */
-	sp->stream.avail_out = tif->tif_rawdatasize;
+	    appropriately even before we simplify it */
+	sp->stream.avail_out = (uInt)tif->tif_rawdatasize;
 	if ((tmsize_t)sp->stream.avail_out != tif->tif_rawdatasize)
 	{
 		TIFFErrorExt(tif->tif_clientdata, module, "ZLib cannot deal with buffers this size");
@@ -263,7 +267,7 @@ ZIPEncode(TIFF* tif, uint8* bp, tmsize_t cc, uint16 s)
 	assert(sizeof(sp->stream.avail_in)==4);  /* if this assert gets raised,
 	    we need to simplify this code to reflect a ZLib that is likely updated
 	    to deal with 8byte memory sizes, though this code will respond
-	    apropriately even before we simplify it */
+	    appropriately even before we simplify it */
 	sp->stream.avail_in = (uInt) cc;
 	if ((tmsize_t)sp->stream.avail_in != cc)
 	{
@@ -272,8 +276,9 @@ ZIPEncode(TIFF* tif, uint8* bp, tmsize_t cc, uint16 s)
 	}
 	do {
 		if (deflate(&sp->stream, Z_NO_FLUSH) != Z_OK) {
-			TIFFErrorExt(tif->tif_clientdata, module, "Encoder error: %s",
-			    sp->stream.msg);
+			TIFFErrorExt(tif->tif_clientdata, module, 
+				     "Encoder error: %s",
+				     SAFE_MSG(sp));
 			return (0);
 		}
 		if (sp->stream.avail_out == 0) {
@@ -312,8 +317,8 @@ ZIPPostEncode(TIFF* tif)
 			}
 			break;
 		default:
-			TIFFErrorExt(tif->tif_clientdata, module, "ZLib error: %s",
-			    sp->stream.msg);
+			TIFFErrorExt(tif->tif_clientdata, module, 
+				     "ZLib error: %s", SAFE_MSG(sp));
 			return (0);
 		}
 	} while (state != Z_STREAM_END);
@@ -358,7 +363,7 @@ ZIPVSetField(TIFF* tif, uint32 tag, va_list ap)
 			if (deflateParams(&sp->stream,
 			    sp->zipquality, Z_DEFAULT_STRATEGY) != Z_OK) {
 				TIFFErrorExt(tif->tif_clientdata, module, "ZLib error: %s",
-				    sp->stream.msg);
+					     SAFE_MSG(sp));
 				return (0);
 			}
 		}
@@ -456,7 +461,7 @@ bad:
 		     "No space for ZIP state block");
 	return (0);
 }
-#endif /* ZIP_SUPORT */
+#endif /* ZIP_SUPPORT */
 
 /* vim: set ts=8 sts=8 sw=8 noet: */
 /*

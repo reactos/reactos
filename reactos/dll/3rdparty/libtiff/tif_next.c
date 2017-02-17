@@ -1,4 +1,4 @@
-/* $Id: tif_next.c,v 1.13 2010-03-10 18:56:48 bfriesen Exp $ */
+/* $Id: tif_next.c,v 1.19 2016-09-04 21:32:56 erouault Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -38,7 +38,7 @@
 	case 0:	op[0]  = (unsigned char) ((v) << 6); break;	\
 	case 1:	op[0] |= (v) << 4; break;	\
 	case 2:	op[0] |= (v) << 2; break;	\
-	case 3:	*op++ |= (v);	   break;	\
+	case 3:	*op++ |= (v);	   op_offset++; break;	\
 	}					\
 }
 
@@ -72,8 +72,9 @@ NeXTDecode(TIFF* tif, uint8* buf, tmsize_t occ, uint16 s)
 		TIFFErrorExt(tif->tif_clientdata, module, "Fractional scanlines cannot be read");
 		return (0);
 	}
-	for (row = buf; occ > 0; occ -= scanline, row += scanline) {
-		n = *bp++, cc--;
+	for (row = buf; cc > 0 && occ > 0; occ -= scanline, row += scanline) {
+		n = *bp++;
+		cc--;
 		switch (n) {
 		case LITERALROW:
 			/*
@@ -91,6 +92,8 @@ NeXTDecode(TIFF* tif, uint8* buf, tmsize_t occ, uint16 s)
 			 * The scanline has a literal span that begins at some
 			 * offset.
 			 */
+			if( cc < 4 )
+				goto bad;
 			off = (bp[0] * 256) + bp[1];
 			n = (bp[2] * 256) + bp[3];
 			if (cc < 4+n || off+n > scanline)
@@ -102,7 +105,10 @@ NeXTDecode(TIFF* tif, uint8* buf, tmsize_t occ, uint16 s)
 		}
 		default: {
 			uint32 npixels = 0, grey;
+			tmsize_t op_offset = 0;
 			uint32 imagewidth = tif->tif_dir.td_imagewidth;
+            if( isTiled(tif) )
+                imagewidth = tif->tif_dir.td_tilewidth;
 
 			/*
 			 * The scanline is composed of a sequence of constant
@@ -119,13 +125,19 @@ NeXTDecode(TIFF* tif, uint8* buf, tmsize_t occ, uint16 s)
 				 * bounds, potentially resulting in a security
 				 * issue.
 				 */
-				while (n-- > 0 && npixels < imagewidth)
+				while (n-- > 0 && npixels < imagewidth && op_offset < scanline)
 					SETPIXEL(op, grey);
 				if (npixels >= imagewidth)
 					break;
+                if (op_offset >= scanline ) {
+                    TIFFErrorExt(tif->tif_clientdata, module, "Invalid data for scanline %ld",
+                        (long) tif->tif_row);
+                    return (0);
+                }
 				if (cc == 0)
 					goto bad;
-				n = *bp++, cc--;
+				n = *bp++;
+				cc--;
 			}
 			break;
 		}
@@ -140,10 +152,27 @@ bad:
 	return (0);
 }
 
+static int
+NeXTPreDecode(TIFF* tif, uint16 s)
+{
+	static const char module[] = "NeXTPreDecode";
+	TIFFDirectory *td = &tif->tif_dir;
+	(void)s;
+
+	if( td->td_bitspersample != 2 )
+	{
+		TIFFErrorExt(tif->tif_clientdata, module, "Unsupported BitsPerSample = %d",
+					 td->td_bitspersample);
+		return (0);
+	}
+	return (1);
+}
+	
 int
 TIFFInitNeXT(TIFF* tif, int scheme)
 {
 	(void) scheme;
+	tif->tif_predecode = NeXTPreDecode;  
 	tif->tif_decoderow = NeXTDecode;  
 	tif->tif_decodestrip = NeXTDecode;  
 	tif->tif_decodetile = NeXTDecode;

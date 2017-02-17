@@ -1,4 +1,4 @@
-/* $Id: tif_strip.c,v 1.35 2012-06-06 05:33:55 fwarmerdam Exp $ */
+/* $Id: tif_strip.c,v 1.37 2016-11-09 23:00:49 erouault Exp $ */
 
 /*
  * Copyright (c) 1991-1997 Sam Leffler
@@ -63,6 +63,15 @@ TIFFNumberOfStrips(TIFF* tif)
 {
 	TIFFDirectory *td = &tif->tif_dir;
 	uint32 nstrips;
+
+    /* If the value was already computed and store in td_nstrips, then return it,
+       since ChopUpSingleUncompressedStrip might have altered and resized the
+       since the td_stripbytecount and td_stripoffset arrays to the new value
+       after the initial affectation of td_nstrips = TIFFNumberOfStrips() in
+       tif_dirread.c ~line 3612.
+       See http://bugzilla.maptools.org/show_bug.cgi?id=2587 */
+    if( td->td_nstrips )
+        return td->td_nstrips;
 
 	nstrips = (td->td_rowsperstrip == (uint32) -1 ? 1 :
 	     TIFFhowmany_32(td->td_imagelength, td->td_rowsperstrip));
@@ -318,7 +327,14 @@ TIFFScanlineSize64(TIFF* tif)
 		}
 	}
 	else
+        {
 		scanline_size=TIFFhowmany_64(_TIFFMultiply64(tif,td->td_imagewidth,td->td_bitspersample,module),8);
+        }
+        if (scanline_size == 0)
+        {
+                TIFFErrorExt(tif->tif_clientdata,module,"Computed scanline size is zero");
+                return 0;
+        }
 	return(scanline_size);
 }
 tmsize_t
@@ -329,8 +345,7 @@ TIFFScanlineSize(TIFF* tif)
 	tmsize_t n;
 	m=TIFFScanlineSize64(tif);
 	n=(tmsize_t)m;
-	if ((uint64)n!=m)
-	{
+	if ((uint64)n!=m) {
 		TIFFErrorExt(tif->tif_clientdata,module,"Integer arithmetic overflow");
 		n=0;
 	}
