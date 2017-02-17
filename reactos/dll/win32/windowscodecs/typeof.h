@@ -24,17 +24,17 @@ struct png_color_16_struct;
 
 typedef struct jpeg_error_mgr * (__cdecl typeof(jpeg_std_error))(struct jpeg_error_mgr *);
 typedef void (__cdecl typeof(jpeg_CreateDecompress))(struct jpeg_decompress_struct *, int, __typeof_size);
-typedef int (__cdecl typeof(jpeg_read_header))(struct jpeg_decompress_struct *, int);
-typedef int (__cdecl typeof(jpeg_start_decompress))(struct jpeg_decompress_struct *);
+typedef int (__cdecl typeof(jpeg_read_header))(struct jpeg_decompress_struct *, unsigned char);
+typedef unsigned char (__cdecl typeof(jpeg_start_decompress))(struct jpeg_decompress_struct *);
 typedef unsigned int (__cdecl typeof(jpeg_read_scanlines))(struct jpeg_decompress_struct *, unsigned char **, unsigned int);
-typedef int (__cdecl typeof(jpeg_finish_decompress))(struct jpeg_decompress_struct *);
+typedef unsigned char (__cdecl typeof(jpeg_finish_decompress))(struct jpeg_decompress_struct *);
 typedef void (__cdecl typeof(jpeg_destroy_decompress))(struct jpeg_decompress_struct *);
 typedef unsigned char (__cdecl typeof(jpeg_resync_to_restart))(struct jpeg_decompress_struct *, int);
 typedef void (__cdecl typeof(jpeg_CreateCompress))(struct jpeg_compress_struct *, int, __typeof_size);
 typedef void (__cdecl typeof(jpeg_start_compress))(struct jpeg_compress_struct *, unsigned char);
 typedef void (__cdecl typeof(jpeg_destroy_compress))(struct jpeg_compress_struct *);
-typedef void (__cdecl typeof(jpeg_finish_compress))(struct jpeg_decompress_struct *);
-typedef void (__cdecl typeof(jpeg_set_defaults))(struct jpeg_decompress_struct *);
+typedef void (__cdecl typeof(jpeg_finish_compress))(struct jpeg_compress_struct *);
+typedef void (__cdecl typeof(jpeg_set_defaults))(struct jpeg_compress_struct *);
 typedef unsigned int (__cdecl typeof(jpeg_write_scanlines))(struct jpeg_compress_struct *, char **, unsigned int);
 
 typedef void (*png_error_ptr_1)(struct png_struct_def *, const char *);
@@ -79,7 +79,7 @@ typedef void (__cdecl typeof(png_set_crc_action))(struct png_struct_def *, int, 
 typedef void (__stdcall typeof(png_set_PLTE))(struct png_struct_def *, struct png_info_def *, const struct png_color_struct *, int);
 typedef void (__stdcall typeof(png_set_tRNS))(struct png_struct_def *, struct png_info_def *, const unsigned char *, int, const struct png_color_16_struct *);
 typedef void *thandle_t_1;
-typedef int (*TIFFReadWriteProc_1)(thandle_t_1, void *, long);
+typedef int (*TIFFReadWriteProc_1)(thandle_t_1, void *, __typeof_intptr);
 typedef unsigned int (*TIFFSeekProc_1)(void *, unsigned int, int);
 typedef int (*TIFFCloseProc_1)(thandle_t_1);
 typedef unsigned int (*TIFFSizeProc_1)(thandle_t_1);

@@ -1,5 +1,6 @@
 #include "wincodecs_private.h"
 
+#undef DEFINE_THISCALL_WRAPPER
 #define DEFINE_THISCALL_WRAPPER(func,args) \
     typedef struct {int x[args/4];} _tag_##func; \
     void __stdcall func(_tag_##func p1); \
