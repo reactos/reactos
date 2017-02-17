@@ -30,6 +30,8 @@
 #include <shellapi.h>
 #include <wine/debug.h>
 
+#include <strsafe.h>
+
 #include "cpanel.h"
 #include "wine/unicode.h"
 
@@ -57,6 +59,7 @@ CPlApplet*	Control_LoadApplet(HWND hWnd, LPCWSTR cmd, CPanel* panel)
     ACTCTXW ActCtx = {sizeof(ACTCTX), ACTCTX_FLAG_RESOURCE_NAME_VALID};
     ULONG_PTR cookie;
     BOOL bActivated;
+    WCHAR fileBuffer[MAX_PATH];
 #endif
     CPlApplet*	applet;
     DWORD len;
@@ -86,7 +89,9 @@ CPlApplet*	Control_LoadApplet(HWND hWnd, LPCWSTR cmd, CPanel* panel)
     applet->hWnd = hWnd;
 
 #ifdef __REACTOS__
-    ActCtx.lpSource = applet->cmd;
+    StringCchCopy(fileBuffer, MAX_PATH, applet->cmd);
+    SearchPath(NULL, fileBuffer, NULL, MAX_PATH, fileBuffer, NULL);
+    ActCtx.lpSource = fileBuffer;
     ActCtx.lpResourceName = (LPCWSTR)123;
     applet->hActCtx = CreateActCtx(&ActCtx);
     bActivated = (applet->hActCtx != INVALID_HANDLE_VALUE ? ActivateActCtx(applet->hActCtx, &cookie) : FALSE);
