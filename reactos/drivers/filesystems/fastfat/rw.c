@@ -1017,7 +1017,7 @@ Metadata:
 
             // set dates and times
             KeQuerySystemTime (&SystemTime);
-            if (BooleanFlagOn(Fcb->Flags, FCB_IS_FATX_ENTRY))
+            if (vfatVolumeIsFatX(IrpContext->DeviceExt))
             {
                 FsdSystemTimeToDosDateTime(IrpContext->DeviceExt,
                                            &SystemTime, &Fcb->entry.FatX.UpdateDate,

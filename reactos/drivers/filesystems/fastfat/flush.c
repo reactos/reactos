@@ -35,7 +35,7 @@ VfatFlushFile(
 
     if (BooleanFlagOn(Fcb->Flags, FCB_IS_DIRTY))
     {
-        Status = VfatUpdateEntry(Fcb);
+        Status = VfatUpdateEntry(Fcb, vfatVolumeIsFatX(DeviceExt));
         if (!NT_SUCCESS(Status))
         {
             IoStatus.Status = Status;

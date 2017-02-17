@@ -197,9 +197,9 @@ typedef struct _slot slot;
 
 #define LONGNAME_MAX_LENGTH 	256		// max length for a long filename
 
-#define ENTRY_DELETED(DeviceExt, DirEntry) (BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX) ? FATX_ENTRY_DELETED(&((DirEntry)->FatX)) : FAT_ENTRY_DELETED(&((DirEntry)->Fat)))
-#define ENTRY_VOLUME(DeviceExt, DirEntry) (BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX) ? FATX_ENTRY_VOLUME(&((DirEntry)->FatX)) : FAT_ENTRY_VOLUME(&((DirEntry)->Fat)))
-#define ENTRY_END(DeviceExt, DirEntry) (BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX) ? FATX_ENTRY_END(&((DirEntry)->FatX)) : FAT_ENTRY_END(&((DirEntry)->Fat)))
+#define ENTRY_DELETED(DeviceExt, DirEntry) (vfatVolumeIsFatX(DeviceExt) ? FATX_ENTRY_DELETED(&((DirEntry)->FatX)) : FAT_ENTRY_DELETED(&((DirEntry)->Fat)))
+#define ENTRY_VOLUME(DeviceExt, DirEntry) (vfatVolumeIsFatX(DeviceExt) ? FATX_ENTRY_VOLUME(&((DirEntry)->FatX)) : FAT_ENTRY_VOLUME(&((DirEntry)->Fat)))
+#define ENTRY_END(DeviceExt, DirEntry) (vfatVolumeIsFatX(DeviceExt) ? FATX_ENTRY_END(&((DirEntry)->FatX)) : FAT_ENTRY_END(&((DirEntry)->Fat)))
 
 #define FAT_ENTRY_DELETED(DirEntry)  ((DirEntry)->Filename[0] == 0xe5)
 #define FAT_ENTRY_END(DirEntry)      ((DirEntry)->Filename[0] == 0)
@@ -346,7 +346,6 @@ extern PVFAT_GLOBAL_DATA VfatGlobalData;
 #define FCB_IS_PAGE_FILE        0x0008
 #define FCB_IS_VOLUME           0x0010
 #define FCB_IS_DIRTY            0x0020
-#define FCB_IS_FATX_ENTRY       0x0040
 
 typedef struct _VFATFCB
 {
@@ -530,6 +529,13 @@ vfatFCBIsReadOnly(PVFATFCB FCB)
     return BooleanFlagOn(*FCB->Attributes, FILE_ATTRIBUTE_READONLY);
 }
 
+FORCEINLINE
+BOOLEAN
+vfatVolumeIsFatX(PDEVICE_EXTENSION DeviceExt)
+{
+    return BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX);
+}
+
 /* blockdev.c */
 
 NTSTATUS
@@ -636,7 +642,8 @@ vfatDirEntryGetFirstCluster(
 
 BOOLEAN
 VfatIsDirectoryEmpty(
-    PVFATFCB Fcb);
+    PVFATFCB Fcb,
+    BOOLEAN IsFatX);
 
 NTSTATUS
 FATGetNextDirEntry(
@@ -668,7 +675,8 @@ VfatAddEntry(
 
 NTSTATUS
 VfatUpdateEntry(
-    PVFATFCB pFcb);
+    PVFATFCB pFcb,
+    IN BOOLEAN IsFatX);
 
 NTSTATUS
 VfatDelEntry(

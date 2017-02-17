@@ -59,7 +59,7 @@ FsdGetFsVolumeInformation(
         *BufferLength -= DeviceObject->Vpb->VolumeLabelLength;
     }
 
-    if (BooleanFlagOn(DeviceExt->VolumeFcb->Flags, FCB_IS_FATX_ENTRY))
+    if (vfatVolumeIsFatX(DeviceExt))
     {
         FsdDosDateTimeToSystemTime(DeviceExt,
                                    DeviceExt->VolumeFcb->entry.FatX.CreationDate,
@@ -260,7 +260,7 @@ FsdSetFsLabelInformation(
         return STATUS_NAME_TOO_LONG;
     }
 
-    if (BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX))
+    if (vfatVolumeIsFatX(DeviceExt))
     {
         if (FsLabelInfo->VolumeLabelLength / sizeof(WCHAR) > 42)
             return STATUS_NAME_TOO_LONG;
@@ -289,7 +289,7 @@ FsdSetFsLabelInformation(
     if (!NT_SUCCESS(Status))
         return Status;
 
-    if (BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX))
+    if (vfatVolumeIsFatX(DeviceExt))
     {
         RtlCopyMemory(VolumeLabelDirEntry.FatX.Filename, cString, LabelLen);
         memset(&VolumeLabelDirEntry.FatX.Filename[LabelLen], ' ', 42 - LabelLen);

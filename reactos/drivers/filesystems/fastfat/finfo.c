@@ -165,7 +165,7 @@ VfatSetBasicInformation(
     /* Check volume label bit */
     ASSERT(0 == (*FCB->Attributes & _A_VOLID));
 
-    if (BooleanFlagOn(FCB->Flags, FCB_IS_FATX_ENTRY))
+    if (vfatVolumeIsFatX(DeviceExt))
     {
         if (BasicInfo->CreationTime.QuadPart != 0 && BasicInfo->CreationTime.QuadPart != -1)
         {
@@ -230,7 +230,7 @@ VfatSetBasicInformation(
         DPRINT("Setting attributes 0x%02x\n", *FCB->Attributes);
     }
 
-    VfatUpdateEntry(FCB);
+    VfatUpdateEntry(FCB, vfatVolumeIsFatX(DeviceExt));
 
     return STATUS_SUCCESS;
 }
@@ -254,7 +254,7 @@ VfatGetBasicInformation(
     if (*BufferLength < sizeof(FILE_BASIC_INFORMATION))
         return STATUS_BUFFER_OVERFLOW;
 
-    if (BooleanFlagOn(FCB->Flags, FCB_IS_FATX_ENTRY))
+    if (vfatVolumeIsFatX(DeviceExt))
     {
         FsdDosDateTimeToSystemTime(DeviceExt,
                                    FCB->entry.FatX.CreationDate,
@@ -313,9 +313,7 @@ VfatSetDispositionInformation(
     PDEVICE_OBJECT DeviceObject,
     PFILE_DISPOSITION_INFORMATION DispositionInfo)
 {
-#if DBG
     PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
-#endif
 
     DPRINT("FsdSetDispositionInformation(<%wZ>, Delete %u)\n", &FCB->PathNameU, DispositionInfo->DeleteFile);
 
@@ -359,7 +357,7 @@ VfatSetDispositionInformation(
         return STATUS_CANNOT_DELETE;
     }
 
-    if (vfatFCBIsDirectory(FCB) && !VfatIsDirectoryEmpty(FCB))
+    if (vfatFCBIsDirectory(FCB) && !VfatIsDirectoryEmpty(FCB, vfatVolumeIsFatX(DeviceExt)))
     {
         /* can't delete a non-empty directory */
 
@@ -1043,7 +1041,7 @@ VfatGetNetworkOpenInformation(
     if (*BufferLength < sizeof(FILE_NETWORK_OPEN_INFORMATION))
         return(STATUS_BUFFER_OVERFLOW);
 
-    if (BooleanFlagOn(Fcb->Flags, FCB_IS_FATX_ENTRY))
+    if (vfatVolumeIsFatX(DeviceExt))
     {
         FsdDosDateTimeToSystemTime(DeviceExt,
                                    Fcb->entry.FatX.CreationDate,
@@ -1184,7 +1182,8 @@ UpdateFileSize(
     PFILE_OBJECT FileObject,
     PVFATFCB Fcb,
     ULONG Size,
-    ULONG ClusterSize)
+    ULONG ClusterSize,
+    BOOLEAN IsFatX)
 {
     if (Size > 0)
     {
@@ -1196,7 +1195,7 @@ UpdateFileSize(
     }
     if (!vfatFCBIsDirectory(Fcb))
     {
-        if (BooleanFlagOn(Fcb->Flags, FCB_IS_FATX_ENTRY))
+        if (IsFatX)
             Fcb->entry.FatX.FileSize = Size;
         else
             Fcb->entry.Fat.FileSize = Size;
@@ -1221,7 +1220,7 @@ VfatSetAllocationSizeInformation(
     ULONG ClusterSize = DeviceExt->FatInfo.BytesPerCluster;
     ULONG NewSize = AllocationSize->u.LowPart;
     ULONG NCluster;
-    BOOLEAN AllocSizeChanged = FALSE, IsFatX = BooleanFlagOn(Fcb->Flags, FCB_IS_FATX_ENTRY);
+    BOOLEAN AllocSizeChanged = FALSE, IsFatX = vfatVolumeIsFatX(DeviceExt);
 
     DPRINT("VfatSetAllocationSizeInformation(File <%wZ>, AllocationSize %d %u)\n",
            &Fcb->PathNameU, AllocationSize->HighPart, AllocationSize->LowPart);
@@ -1348,7 +1347,7 @@ VfatSetAllocationSizeInformation(
                 return STATUS_DISK_FULL;
             }
         }
-        UpdateFileSize(FileObject, Fcb, NewSize, ClusterSize);
+        UpdateFileSize(FileObject, Fcb, NewSize, ClusterSize, vfatVolumeIsFatX(DeviceExt));
     }
     else if (NewSize + ClusterSize <= Fcb->RFCB.AllocationSize.u.LowPart)
     {
@@ -1364,7 +1363,7 @@ VfatSetAllocationSizeInformation(
         AllocSizeChanged = TRUE;
         /* FIXME: Use the cached cluster/offset better way. */
         Fcb->LastCluster = Fcb->LastOffset = 0;
-        UpdateFileSize(FileObject, Fcb, NewSize, ClusterSize);
+        UpdateFileSize(FileObject, Fcb, NewSize, ClusterSize, vfatVolumeIsFatX(DeviceExt));
         if (NewSize > 0)
         {
             Status = OffsetToCluster(DeviceExt, FirstCluster,
@@ -1408,14 +1407,14 @@ VfatSetAllocationSizeInformation(
     }
     else
     {
-        UpdateFileSize(FileObject, Fcb, NewSize, ClusterSize);
+        UpdateFileSize(FileObject, Fcb, NewSize, ClusterSize, vfatVolumeIsFatX(DeviceExt));
     }
 
     /* Update the on-disk directory entry */
     Fcb->Flags |= FCB_IS_DIRTY;
     if (AllocSizeChanged)
     {
-        VfatUpdateEntry(Fcb);
+        VfatUpdateEntry(Fcb, vfatVolumeIsFatX(DeviceExt));
     }
     return STATUS_SUCCESS;
 }

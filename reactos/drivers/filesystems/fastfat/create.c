@@ -119,7 +119,7 @@ ReadVolumeLabel(
     *(Vpb->VolumeLabel) = 0;
     Vpb->VolumeLabelLength = 0;
 
-    if (BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX))
+    if (vfatVolumeIsFatX(DeviceExt))
     {
         SizeDirEntry = sizeof(FATX_DIR_ENTRY);
         EntriesPerPage = FATX_ENTRIES_PER_PAGE;
@@ -151,7 +151,7 @@ ReadVolumeLabel(
             if (ENTRY_VOLUME(DeviceExt, Entry))
             {
                 /* copy volume label */
-                if (BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX))
+                if (vfatVolumeIsFatX(DeviceExt))
                 {
                     StringO.Buffer = (PCHAR)Entry->FatX.Filename;
                     StringO.MaximumLength = StringO.Length = Entry->FatX.FilenameLength;
@@ -259,7 +259,7 @@ FindFile(
         if (rcFcb)
         {
             ULONG startIndex = rcFcb->startIndex;
-            if (BooleanFlagOn(rcFcb->Flags, FCB_IS_FATX_ENTRY) && !vfatFCBIsRoot(Parent))
+            if (vfatVolumeIsFatX(DeviceExt) && !vfatFCBIsRoot(Parent))
             {
                 startIndex += 2;
             }
@@ -947,7 +947,7 @@ VfatCreateFile(
             {
                 *pFcb->Attributes = Stack->Parameters.Create.FileAttributes & ~FILE_ATTRIBUTE_NORMAL;
                 *pFcb->Attributes |= FILE_ATTRIBUTE_ARCHIVE;
-                VfatUpdateEntry(pFcb);
+                VfatUpdateEntry(pFcb, vfatVolumeIsFatX(DeviceExt));
             }
 
             ExAcquireResourceExclusiveLite(&(pFcb->MainResource), TRUE);

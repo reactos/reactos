@@ -127,7 +127,7 @@ VfatGetFileDirectoryInformation(
                   DirContext->LongNameU.Buffer,
                   DirContext->LongNameU.Length);
 
-    if (BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX))
+    if (vfatVolumeIsFatX(DeviceExt))
     {
         FsdDosDateTimeToSystemTime(DeviceExt,
                                    DirContext->DirEntry.FatX.CreationDate,
@@ -220,7 +220,7 @@ VfatGetFileFullDirectoryInformation(
                   DirContext->LongNameU.Buffer,
                   DirContext->LongNameU.Length);
 
-    if (BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX))
+    if (vfatVolumeIsFatX(DeviceExt))
     {
         FsdDosDateTimeToSystemTime(DeviceExt,
                                    DirContext->DirEntry.FatX.CreationDate,
@@ -285,7 +285,7 @@ VfatGetFileBothInformation(
 
     pInfo->EaSize = 0;
 
-    if (BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX))
+    if (vfatVolumeIsFatX(DeviceExt))
     {
         pInfo->FileNameLength = DirContext->LongNameU.Length;
 

@@ -21,7 +21,8 @@
  */
 NTSTATUS
 VfatUpdateEntry(
-    IN PVFATFCB pFcb)
+    IN PVFATFCB pFcb,
+    IN BOOLEAN IsFatX)
 {
     PVOID Context;
     PDIR_ENTRY PinEntry;
@@ -31,7 +32,7 @@ VfatUpdateEntry(
 
     ASSERT(pFcb);
 
-    if (BooleanFlagOn(pFcb->Flags, FCB_IS_FATX_ENTRY))
+    if (IsFatX)
     {
         SizeDirEntry = sizeof(FATX_DIR_ENTRY);
         dirIndex = pFcb->startIndex;
@@ -90,7 +91,7 @@ vfatRenameEntry(
 
     DPRINT("vfatRenameEntry(%p, %p, %wZ, %d)\n", DeviceExt, pFcb, FileName, CaseChangeOnly);
 
-    if (BooleanFlagOn(pFcb->Flags, FCB_IS_FATX_ENTRY))
+    if (vfatVolumeIsFatX(DeviceExt))
     {
         VFAT_DIRENTRY_CONTEXT DirContext;
 
@@ -162,7 +163,7 @@ vfatFindDirSpace(
     ULONG SizeDirEntry;
     FileOffset.QuadPart = 0;
 
-    if (BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX))
+    if (vfatVolumeIsFatX(DeviceExt))
         SizeDirEntry = sizeof(FATX_DIR_ENTRY);
     else
         SizeDirEntry = sizeof(FAT_DIR_ENTRY);
@@ -248,7 +249,7 @@ vfatFindDirSpace(
             }
             _SEH2_END;
 
-            if (DeviceExt->Flags & VCB_IS_FATX)
+            if (vfatVolumeIsFatX(DeviceExt))
                 memset(pFatEntry, 0xff, DeviceExt->FatInfo.BytesPerCluster);
             else
                 RtlZeroMemory(pFatEntry, DeviceExt->FatInfo.BytesPerCluster);
@@ -267,7 +268,7 @@ vfatFindDirSpace(
             }
             _SEH2_END;
 
-            if (DeviceExt->Flags & VCB_IS_FATX)
+            if (vfatVolumeIsFatX(DeviceExt))
                 memset(pFatEntry, 0xff, SizeDirEntry);
             else
                 RtlZeroMemory(pFatEntry, SizeDirEntry);
@@ -824,7 +825,7 @@ VfatAddEntry(
     IN UCHAR ReqAttr,
     IN PVFAT_MOVE_CONTEXT MoveContext)
 {
-    if (BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX))
+    if (vfatVolumeIsFatX(DeviceExt))
         return FATXAddEntry(DeviceExt, NameU, Fcb, ParentFcb, RequestedOptions, ReqAttr, MoveContext);
     else
         return FATAddEntry(DeviceExt, NameU, Fcb, ParentFcb, RequestedOptions, ReqAttr, MoveContext);
@@ -927,7 +928,7 @@ FATXDelEntry(
 
     ASSERT(pFcb);
     ASSERT(pFcb->parentFcb);
-    ASSERT(BooleanFlagOn(pFcb->Flags, FCB_IS_FATX_ENTRY));
+    ASSERT(vfatVolumeIsFatX(DeviceExt));
 
     StartIndex = pFcb->startIndex;
 
@@ -983,7 +984,7 @@ VfatDelEntry(
     IN PVFATFCB pFcb,
     OUT PVFAT_MOVE_CONTEXT MoveContext)
 {
-    if (BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX))
+    if (vfatVolumeIsFatX(DeviceExt))
         return FATXDelEntry(DeviceExt, pFcb, MoveContext);
     else
         return FATDelEntry(DeviceExt, pFcb, MoveContext);
