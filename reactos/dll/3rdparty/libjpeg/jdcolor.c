@@ -2,7 +2,7 @@
  * jdcolor.c
  *
  * Copyright (C) 1991-1997, Thomas G. Lane.
- * Modified 2011-2013 by Guido Vollbeding.
+ * Modified 2011-2015 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -24,9 +24,6 @@ typedef struct {
   int * Cb_b_tab;		/* => table for Cb to B conversion */
   INT32 * Cr_g_tab;		/* => table for Cr to G conversion */
   INT32 * Cb_g_tab;		/* => table for Cb to G conversion */
-
-  JSAMPLE * range_limit; /* pointer to normal sample range limit table, */
-		     /* or extended sample range limit table for BG_YCC */
 
   /* Private state for RGB->Y conversion */
   INT32 * rgb_y_tab;		/* => table for RGB to Y conversion */
@@ -134,8 +131,6 @@ build_ycc_rgb_table (j_decompress_ptr cinfo)
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
 				(MAXJSAMPLE+1) * SIZEOF(INT32));
 
-  cconvert->range_limit = cinfo->sample_range_limit;
-
   for (i = 0, x = -CENTERJSAMPLE; i <= MAXJSAMPLE; i++, x++) {
     /* i is the actual input pixel value, in the range 0..MAXJSAMPLE */
     /* The Cb or Cr value we are thinking of is x = i - CENTERJSAMPLE */
@@ -176,10 +171,6 @@ build_bg_ycc_rgb_table (j_decompress_ptr cinfo)
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
 				(MAXJSAMPLE+1) * SIZEOF(INT32));
 
-  cconvert->range_limit = (JSAMPLE *)
-    (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
-				5 * (MAXJSAMPLE+1) * SIZEOF(JSAMPLE));
-
   for (i = 0, x = -CENTERJSAMPLE; i <= MAXJSAMPLE; i++, x++) {
     /* i is the actual input pixel value, in the range 0..MAXJSAMPLE */
     /* The Cb or Cr value we are thinking of is x = i - CENTERJSAMPLE */
@@ -195,20 +186,6 @@ build_bg_ycc_rgb_table (j_decompress_ptr cinfo)
     /* We also add in ONE_HALF so that need not do it in inner loop */
     cconvert->Cb_g_tab[i] = (- FIX(0.688272572)) * x + ONE_HALF;
   }
-
-  /* Cb and Cr portions can extend to double range in wide gamut case,
-   * so we prepare an appropriate extended range limit table.
-   */
-
-  /* First segment of range limit table: limit[x] = 0 for x < 0 */
-  MEMZERO(cconvert->range_limit, 2 * (MAXJSAMPLE+1) * SIZEOF(JSAMPLE));
-  cconvert->range_limit += 2 * (MAXJSAMPLE+1);
-  /* Main part of range limit table: limit[x] = x */
-  for (i = 0; i <= MAXJSAMPLE; i++)
-    cconvert->range_limit[i] = (JSAMPLE) i;
-  /* End of range limit table: limit[x] = MAXJSAMPLE for x > MAXJSAMPLE */
-  for (; i < 3 * (MAXJSAMPLE+1); i++)
-    cconvert->range_limit[i] = MAXJSAMPLE;
 }
 
 
@@ -235,7 +212,7 @@ ycc_rgb_convert (j_decompress_ptr cinfo,
   register JDIMENSION col;
   JDIMENSION num_cols = cinfo->output_width;
   /* copy these pointers into registers if possible */
-  register JSAMPLE * range_limit = cconvert->range_limit;
+  register JSAMPLE * range_limit = cinfo->sample_range_limit;
   register int * Crrtab = cconvert->Cr_r_tab;
   register int * Cbbtab = cconvert->Cb_b_tab;
   register INT32 * Crgtab = cconvert->Cr_g_tab;

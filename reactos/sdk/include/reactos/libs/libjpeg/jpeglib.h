@@ -2,7 +2,7 @@
  * jpeglib.h
  *
  * Copyright (C) 1991-1998, Thomas G. Lane.
- * Modified 2002-2013 by Guido Vollbeding.
+ * Modified 2002-2015 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -39,7 +39,7 @@ extern "C" {
 
 #define JPEG_LIB_VERSION        90	/* Compatibility version 9.0 */
 #define JPEG_LIB_VERSION_MAJOR  9
-#define JPEG_LIB_VERSION_MINOR  1
+#define JPEG_LIB_VERSION_MINOR  2
 
 
 /* Various constants determining the sizes of things.
@@ -979,7 +979,7 @@ EXTERN(void) jpeg_mem_dest JPP((j_compress_ptr cinfo,
 			       unsigned char ** outbuffer,
 			       unsigned long * outsize));
 EXTERN(void) jpeg_mem_src JPP((j_decompress_ptr cinfo,
-			      unsigned char * inbuffer,
+			      const unsigned char * inbuffer,
 			      unsigned long insize));
 
 /* Default parameter setup for compression */

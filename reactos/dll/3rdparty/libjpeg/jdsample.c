@@ -2,7 +2,7 @@
  * jdsample.c
  *
  * Copyright (C) 1991-1996, Thomas G. Lane.
- * Modified 2002-2008 by Guido Vollbeding.
+ * Modified 2002-2015 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -296,13 +296,12 @@ jinit_upsampler (j_decompress_ptr cinfo)
   my_upsample_ptr upsample;
   int ci;
   jpeg_component_info * compptr;
-  boolean need_buffer;
   int h_in_group, v_in_group, h_out_group, v_out_group;
 
   upsample = (my_upsample_ptr)
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
 				SIZEOF(my_upsampler));
-  cinfo->upsample = (struct jpeg_upsampler *) upsample;
+  cinfo->upsample = &upsample->pub;
   upsample->pub.start_pass = start_pass_upsample;
   upsample->pub.upsample = sep_upsample;
   upsample->pub.need_context_rows = FALSE; /* until we find out differently */
@@ -325,17 +324,17 @@ jinit_upsampler (j_decompress_ptr cinfo)
     h_out_group = cinfo->max_h_samp_factor;
     v_out_group = cinfo->max_v_samp_factor;
     upsample->rowgroup_height[ci] = v_in_group; /* save for use later */
-    need_buffer = TRUE;
     if (! compptr->component_needed) {
       /* Don't bother to upsample an uninteresting component. */
       upsample->methods[ci] = noop_upsample;
-      need_buffer = FALSE;
-    } else if (h_in_group == h_out_group && v_in_group == v_out_group) {
+      continue;		/* don't need to allocate buffer */
+    }
+    if (h_in_group == h_out_group && v_in_group == v_out_group) {
       /* Fullsize components can be processed without any work. */
       upsample->methods[ci] = fullsize_upsample;
-      need_buffer = FALSE;
-    } else if (h_in_group * 2 == h_out_group &&
-	       v_in_group == v_out_group) {
+      continue;		/* don't need to allocate buffer */
+    }
+    if (h_in_group * 2 == h_out_group && v_in_group == v_out_group) {
       /* Special case for 2h1v upsampling */
       upsample->methods[ci] = h2v1_upsample;
     } else if (h_in_group * 2 == h_out_group &&
@@ -350,12 +349,10 @@ jinit_upsampler (j_decompress_ptr cinfo)
       upsample->v_expand[ci] = (UINT8) (v_out_group / v_in_group);
     } else
       ERREXIT(cinfo, JERR_FRACT_SAMPLE_NOTIMPL);
-    if (need_buffer) {
-      upsample->color_buf[ci] = (*cinfo->mem->alloc_sarray)
-	((j_common_ptr) cinfo, JPOOL_IMAGE,
-	 (JDIMENSION) jround_up((long) cinfo->output_width,
-				(long) cinfo->max_h_samp_factor),
-	 (JDIMENSION) cinfo->max_v_samp_factor);
-    }
+    upsample->color_buf[ci] = (*cinfo->mem->alloc_sarray)
+      ((j_common_ptr) cinfo, JPOOL_IMAGE,
+       (JDIMENSION) jround_up((long) cinfo->output_width,
+			      (long) cinfo->max_h_samp_factor),
+       (JDIMENSION) cinfo->max_v_samp_factor);
   }
 }
