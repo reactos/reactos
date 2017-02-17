@@ -1861,7 +1861,7 @@ GetShortPathNameW(IN LPCWSTR lpszLongPath,
     if (GetFileAttributesW(lpszLongPath) == INVALID_FILE_ATTRIBUTES)
     {
         /* Windows checks for an application compatibility flag to allow this */
-        if (!(NtCurrentPeb()) || !(NtCurrentPeb()->AppCompatFlags.LowPart & 1))
+        if (!(NtCurrentPeb()) || !(NtCurrentPeb()->AppCompatFlags.LowPart & GetShortPathNameNT4))
         {
             /* It doesn't, so fail */
             ReturnLength = 0;

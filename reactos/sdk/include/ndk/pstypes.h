@@ -735,6 +735,31 @@ typedef struct _Wx86ThreadState
 } Wx86ThreadState, *PWx86ThreadState;
 #endif
 
+//
+// PEB.AppCompatFlags
+// Tag FLAG_MASK_KERNEL
+//
+typedef enum _APPCOMPAT_FLAGS
+{
+    GetShortPathNameNT4 = 0x1,
+    GetDiskFreeSpace2GB = 0x8,
+    FTMFromCurrentAPI = 0x20,
+    DisallowCOMBindingNotifications = 0x40,
+    Ole32ValidatePointers = 0x80,
+    DisableCicero = 0x100,
+    Ole32EnableAsyncDocFile = 0x200,
+    EnableLegacyExceptionHandlinginOLE = 0x400,
+    DisableAdvanceRPCClientHardening = 0x800,
+    DisableMaybeNULLSizeisConsistencycheck = 0x1000,
+    DisableAdvancedRPCrangeCheck = 0x4000,
+    EnableLegacyExceptionHandlingInRPC = 0x8000,
+    EnableLegacyNTFSFlagsForDocfileOpens = 0x10000,
+    DisableNDRIIDConsistencyCheck = 0x20000,
+    UserDisableForwarderPatch = 0x40000,
+    DisableNewWMPAINTDispatchInOLE = 0x100000,
+    DoNotAddToCache = 0x80000000,
+} APPCOMPAT_FLAGS;
+
 
 //
 // Process Environment Block (PEB)
