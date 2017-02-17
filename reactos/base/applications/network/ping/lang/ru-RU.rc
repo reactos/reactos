@@ -34,34 +34,34 @@ BEGIN
     IDS_CTRL_C "Control-C\n"
     IDS_NO_RESOURCES "Невозможно выделить требуемую память.\n"
     IDS_MISSING_ADDRESS "Необходимо указать адрес IP.\n"
-    IDS_MISSING_VALUE "Для опции %1 должно быть указано значение.\n"
-    IDS_BAD_OPTION "Неверная опция %1.\n"
-    IDS_BAD_PARAMETER "Неверный параметр %1.\n"
-    IDS_BAD_VALUE "Недопустимое значение параметра %1, допустимый диапазон с %2!d! по %3!u!.\n"
-    IDS_WRONG_FAMILY "Опция %1 доступна только для %2.\n"
-    IDS_UNKNOWN_HOST "Ping не может найти узел %1. Пожалуйста, проверьте имя и повторите попытку.\n"
-    IDS_PINGING_ADDRESS "\nОбмен пакетами с %1 %0"
-    IDS_PINGING_HOSTNAME "\nОбмен пакетами с %1 [%2] %0"
-    IDS_SOURCE_ADDRESS "from %1!s! %0"/* unused string */
-    IDS_PING_SIZE "по %1!d! байта данных:\n\n"
-    IDS_REPLY_FROM "Ответ от %1: %0"
-    IDS_REPLY_BYTES "число байт=%1!d! %0"
-    IDS_REPLY_TIME_MS "время=%1!d!мс %0"
-    IDS_REPLY_TIME_0MS "время<1мс %0"
-    IDS_REPLY_TTL "TTL=%1!d!\n"
-    IDS_REPLY_STATUS "Ответ от %1.\n"
+    IDS_MISSING_VALUE "Для опции %s должно быть указано значение.\n"
+    IDS_BAD_OPTION "Неверная опция %s.\n"
+    IDS_BAD_PARAMETER "Неверный параметр %s.\n"
+    IDS_BAD_VALUE "Недопустимое значение параметра %s, допустимый диапазон с %u по %u.\n"
+    IDS_WRONG_FAMILY "Опция %s доступна только для %s.\n"
+    IDS_UNKNOWN_HOST "Ping не может найти узел %s. Пожалуйста, проверьте имя и повторите попытку.\n"
+    IDS_PINGING_ADDRESS "\nОбмен пакетами с %s "
+    IDS_PINGING_HOSTNAME "\nОбмен пакетами с %s [%s] "
+    IDS_SOURCE_ADDRESS "from %s %s"/* unused string */
+    IDS_PING_SIZE "по %lu байта данных:\n\n"
+    IDS_REPLY_FROM "Ответ от %s: "
+    IDS_REPLY_BYTES "число байт=%d "
+    IDS_REPLY_TIME_MS "время=%luмс "
+    IDS_REPLY_TIME_0MS "время<1мс "
+    IDS_REPLY_TTL "TTL=%d\n"
+    IDS_REPLY_STATUS "Ответ от %lu.\n"
     IDS_DEST_HOST_UNREACHABLE "Заданный узел недоступен.\n"
     IDS_DEST_NET_UNREACHABLE "Заданная сеть недоступна.\n"
     IDS_REQUEST_TIMED_OUT "Превышен интервал ожидания для запроса.\n"
     IDS_TTL_EXPIRED "Превышен срок жизни (TTL) при передаче пакета.\n"
-    IDS_TRANSMIT_FAILED "PING: сбой передачи. (Ошибка %1!u!)\n"
+    IDS_TRANSMIT_FAILED "PING: сбой передачи. (Ошибка %u)\n"
 
     IDS_STATISTICS "\n\
-Статистика Ping для %1!s!:\n\
-    Пакетов: отправлено = %2!d!, получено = %3!d!, потеряно %4!d! (%5!u!%% потерь),\n"
+Статистика Ping для %s:\n\
+    Пакетов: отправлено = %d, получено = %d, потеряно %d (%d%% потерь),\n"
 
     IDS_APPROXIMATE_RTT "Приблизительное время приема-передачи в мс:\n\
-    Минимальное = %1!u!мс, Максимальное = %2!u!мс, Среднее = %3!u!мс\n"
+    Минимальное = %luмс, Максимальное = %luмс, Среднее = %luмс\n"
 
-    IDS_WINSOCK_FAIL "Не удалось инициализировать WinSock: %1!d!\n"
+    IDS_WINSOCK_FAIL "Не удалось инициализировать WinSock: %i\n"
 END
