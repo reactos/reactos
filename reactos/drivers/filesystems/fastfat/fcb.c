@@ -797,7 +797,8 @@ vfatDirFindFile(
 
     while (TRUE)
     {
-        status = pDeviceExt->GetNextDirEntry(&Context,
+        status = VfatGetNextDirEntry(pDeviceExt,
+            &Context,
             &Page,
             pDirectoryFCB,
             &DirContext,

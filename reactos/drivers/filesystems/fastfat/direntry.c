@@ -39,7 +39,6 @@ vfatDirEntryGetFirstCluster(
     return  cluster;
 }
 
-static
 BOOLEAN
 FATIsDirectoryEmpty(
     PVFATFCB Fcb)
@@ -108,7 +107,6 @@ FATIsDirectoryEmpty(
     return TRUE;
 }
 
-static
 BOOLEAN
 FATXIsDirectoryEmpty(
     PVFATFCB Fcb)
@@ -166,17 +164,6 @@ FATXIsDirectoryEmpty(
     }
 
     return TRUE;
-}
-
-BOOLEAN
-VfatIsDirectoryEmpty(
-    PVFATFCB Fcb,
-    BOOLEAN IsFatX)
-{
-    if (IsFatX)
-        return FATXIsDirectoryEmpty(Fcb);
-    else
-        return FATIsDirectoryEmpty(Fcb);
 }
 
 NTSTATUS

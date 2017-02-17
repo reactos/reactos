@@ -357,7 +357,7 @@ VfatSetDispositionInformation(
         return STATUS_CANNOT_DELETE;
     }
 
-    if (vfatFCBIsDirectory(FCB) && !VfatIsDirectoryEmpty(FCB, vfatVolumeIsFatX(DeviceExt)))
+    if (vfatFCBIsDirectory(FCB) && !VfatIsDirectoryEmpty(DeviceExt, FCB))
     {
         /* can't delete a non-empty directory */
 

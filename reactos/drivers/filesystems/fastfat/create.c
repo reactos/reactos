@@ -296,7 +296,7 @@ FindFile(
 
     while (TRUE)
     {
-        Status = DeviceExt->GetNextDirEntry(&Context, &Page, Parent, DirContext, First);
+        Status = VfatGetNextDirEntry(DeviceExt, &Context, &Page, Parent, DirContext, First);
         First = FALSE;
         if (Status == STATUS_NO_MORE_ENTRIES)
         {

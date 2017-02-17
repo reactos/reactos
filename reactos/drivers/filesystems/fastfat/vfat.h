@@ -260,6 +260,7 @@ typedef struct
 
 struct _VFATFCB;
 struct _VFAT_DIRENTRY_CONTEXT;
+struct _VFAT_MOVE_CONTEXT;
 
 typedef struct _HASHENTRY
 {
@@ -275,7 +276,18 @@ typedef NTSTATUS (*PGET_NEXT_CLUSTER)(PDEVICE_EXTENSION,ULONG,PULONG);
 typedef NTSTATUS (*PFIND_AND_MARK_AVAILABLE_CLUSTER)(PDEVICE_EXTENSION,PULONG);
 typedef NTSTATUS (*PWRITE_CLUSTER)(PDEVICE_EXTENSION,ULONG,ULONG,PULONG);
 
+typedef BOOLEAN (*PIS_DIRECTORY_EMPTY)(struct _VFATFCB*);
+typedef NTSTATUS (*PADD_ENTRY)(PDEVICE_EXTENSION,PUNICODE_STRING,struct _VFATFCB**,struct _VFATFCB*,ULONG,UCHAR,struct _VFAT_MOVE_CONTEXT*);
+typedef NTSTATUS (*PDEL_ENTRY)(PDEVICE_EXTENSION,struct _VFATFCB*,struct _VFAT_MOVE_CONTEXT*);
 typedef NTSTATUS (*PGET_NEXT_DIR_ENTRY)(PVOID*,PVOID*,struct _VFATFCB*,struct _VFAT_DIRENTRY_CONTEXT*,BOOLEAN);
+
+typedef struct _VFAT_DISPATCH
+{
+    PIS_DIRECTORY_EMPTY IsDirectoryEmpty;
+    PADD_ENTRY AddEntry;
+    PDEL_ENTRY DelEntry;
+    PGET_NEXT_DIR_ENTRY GetNextDirEntry;
+} VFAT_DISPATCH, *PVFAT_DISPATCH;
 
 typedef struct DEVICE_EXTENSION
 {
@@ -303,9 +315,6 @@ typedef struct DEVICE_EXTENSION
     PWRITE_CLUSTER WriteCluster;
     ULONG CleanShutBitMask;
 
-    /* Pointers to functions for manipulating directory entries. */
-    PGET_NEXT_DIR_ENTRY GetNextDirEntry;
-
     ULONG BaseDateYear;
 
     LIST_ENTRY VolumeListEntry;
@@ -320,7 +329,52 @@ typedef struct DEVICE_EXTENSION
     /* VPBs for dismount */
     PVPB IoVPB;
     PVPB SpareVPB;
+
+    /* Pointers to functions for manipulating directory entries. */
+    VFAT_DISPATCH Dispatch;
 } DEVICE_EXTENSION, VCB, *PVCB;
+
+FORCEINLINE
+BOOLEAN
+VfatIsDirectoryEmpty(PDEVICE_EXTENSION DeviceExt,
+                     struct _VFATFCB* Fcb)
+{
+    return DeviceExt->Dispatch.IsDirectoryEmpty(Fcb);
+}
+
+FORCEINLINE
+NTSTATUS
+VfatAddEntry(PDEVICE_EXTENSION DeviceExt,
+             PUNICODE_STRING NameU,
+             struct _VFATFCB** Fcb,
+             struct _VFATFCB* ParentFcb,
+             ULONG RequestedOptions,
+             UCHAR ReqAttr,
+             struct _VFAT_MOVE_CONTEXT* MoveContext)
+{
+    return DeviceExt->Dispatch.AddEntry(DeviceExt, NameU, Fcb, ParentFcb, RequestedOptions, ReqAttr, MoveContext);
+}
+
+FORCEINLINE
+NTSTATUS
+VfatDelEntry(PDEVICE_EXTENSION DeviceExt,
+             struct _VFATFCB* Fcb,
+             struct _VFAT_MOVE_CONTEXT* MoveContext)
+{
+    return DeviceExt->Dispatch.DelEntry(DeviceExt, Fcb, MoveContext);
+}
+
+FORCEINLINE
+NTSTATUS
+VfatGetNextDirEntry(PDEVICE_EXTENSION DeviceExt,
+                    PVOID *pContext,
+                    PVOID *pPage,
+                    struct _VFATFCB* pDirFcb,
+                    struct _VFAT_DIRENTRY_CONTEXT* DirContext,
+                    BOOLEAN First)
+{
+    return DeviceExt->Dispatch.GetNextDirEntry(pContext, pPage, pDirFcb, DirContext, First);
+}
 
 #define VFAT_BREAK_ON_CORRUPTION 1
 
@@ -640,49 +694,12 @@ vfatDirEntryGetFirstCluster(
     PDEVICE_EXTENSION pDeviceExt,
     PDIR_ENTRY pDirEntry);
 
-BOOLEAN
-VfatIsDirectoryEmpty(
-    PVFATFCB Fcb,
-    BOOLEAN IsFatX);
-
-NTSTATUS
-FATGetNextDirEntry(
-    PVOID *pContext,
-    PVOID *pPage,
-    IN PVFATFCB pDirFcb,
-    IN PVFAT_DIRENTRY_CONTEXT DirContext,
-    BOOLEAN First);
-
-NTSTATUS
-FATXGetNextDirEntry(
-    PVOID *pContext,
-    PVOID *pPage,
-    IN PVFATFCB pDirFcb,
-    IN PVFAT_DIRENTRY_CONTEXT DirContext,
-    BOOLEAN First);
-
 /* dirwr.c */
-
-NTSTATUS
-VfatAddEntry(
-    PDEVICE_EXTENSION DeviceExt,
-    PUNICODE_STRING PathNameU,
-    PVFATFCB* Fcb,
-    PVFATFCB ParentFcb,
-    ULONG RequestedOptions,
-    UCHAR ReqAttr,
-    PVFAT_MOVE_CONTEXT MoveContext);
 
 NTSTATUS
 VfatUpdateEntry(
     PVFATFCB pFcb,
     IN BOOLEAN IsFatX);
-
-NTSTATUS
-VfatDelEntry(
-    PDEVICE_EXTENSION,
-    PVFATFCB,
-    PVFAT_MOVE_CONTEXT);
 
 BOOLEAN
 vfatFindDirSpace(

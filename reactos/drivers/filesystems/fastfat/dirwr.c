@@ -815,22 +815,6 @@ FATXAddEntry(
     return STATUS_SUCCESS;
 }
 
-NTSTATUS
-VfatAddEntry(
-    IN PDEVICE_EXTENSION DeviceExt,
-    IN PUNICODE_STRING NameU,
-    IN PVFATFCB *Fcb,
-    IN PVFATFCB ParentFcb,
-    IN ULONG RequestedOptions,
-    IN UCHAR ReqAttr,
-    IN PVFAT_MOVE_CONTEXT MoveContext)
-{
-    if (vfatVolumeIsFatX(DeviceExt))
-        return FATXAddEntry(DeviceExt, NameU, Fcb, ParentFcb, RequestedOptions, ReqAttr, MoveContext);
-    else
-        return FATAddEntry(DeviceExt, NameU, Fcb, ParentFcb, RequestedOptions, ReqAttr, MoveContext);
-}
-
 /*
  * deleting an existing FAT entry
  */
@@ -978,18 +962,6 @@ FATXDelEntry(
     return STATUS_SUCCESS;
 }
 
-NTSTATUS
-VfatDelEntry(
-    IN PDEVICE_EXTENSION DeviceExt,
-    IN PVFATFCB pFcb,
-    OUT PVFAT_MOVE_CONTEXT MoveContext)
-{
-    if (vfatVolumeIsFatX(DeviceExt))
-        return FATXDelEntry(DeviceExt, pFcb, MoveContext);
-    else
-        return FATDelEntry(DeviceExt, pFcb, MoveContext);
-}
-
 /*
  * move an existing FAT entry
  */
@@ -1030,5 +1002,24 @@ VfatMoveEntry(
 
     return Status;
 }
+
+extern BOOLEAN FATXIsDirectoryEmpty(PVFATFCB Fcb);
+extern BOOLEAN FATIsDirectoryEmpty(PVFATFCB Fcb);
+extern NTSTATUS FATGetNextDirEntry(PVOID *pContext, PVOID *pPage, PVFATFCB pDirFcb, PVFAT_DIRENTRY_CONTEXT DirContext, BOOLEAN First);
+extern NTSTATUS FATXGetNextDirEntry(PVOID *pContext, PVOID *pPage, PVFATFCB pDirFcb, PVFAT_DIRENTRY_CONTEXT DirContext, BOOLEAN First);
+
+VFAT_DISPATCH FatXDispatch = {
+    .IsDirectoryEmpty = FATXIsDirectoryEmpty,
+    .AddEntry = FATXAddEntry,
+    .DelEntry = FATXDelEntry,
+    .GetNextDirEntry = FATXGetNextDirEntry,
+};
+
+VFAT_DISPATCH FatDispatch = {
+    .IsDirectoryEmpty = FATIsDirectoryEmpty,
+    .AddEntry = FATAddEntry,
+    .DelEntry = FATDelEntry,
+    .GetNextDirEntry = FATGetNextDirEntry,
+};
 
 /* EOF */

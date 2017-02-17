@@ -30,6 +30,9 @@
 #define NDEBUG
 #include <debug.h>
 
+extern VFAT_DISPATCH FatXDispatch;
+extern VFAT_DISPATCH FatDispatch;
+
 /* FUNCTIONS ****************************************************************/
 
 #define  CACHEPAGESIZE(pDeviceExt) ((pDeviceExt)->FatInfo.BytesPerCluster > PAGE_SIZE ? \
@@ -465,13 +468,13 @@ VfatMount(
         DeviceExt->FatInfo.FatType == FATX32)
     {
         DeviceExt->Flags |= VCB_IS_FATX;
-        DeviceExt->GetNextDirEntry = FATXGetNextDirEntry;
         DeviceExt->BaseDateYear = 2000;
+        RtlCopyMemory(&DeviceExt->Dispatch, &FatXDispatch, sizeof(VFAT_DISPATCH));
     }
     else
     {
-        DeviceExt->GetNextDirEntry = FATGetNextDirEntry;
         DeviceExt->BaseDateYear = 1980;
+        RtlCopyMemory(&DeviceExt->Dispatch, &FatDispatch, sizeof(VFAT_DISPATCH));
     }
 
     DeviceExt->StorageDevice = DeviceToMount;
