@@ -907,6 +907,7 @@ VOID COpenWithDialog::Browse()
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
     ofn.nMaxFile = (sizeof(wszPath) / sizeof(WCHAR));
     ofn.lpstrFile = wszPath;
+    ofn.lpstrInitialDir = L"%programfiles%";
 
     /* Init title */
     if (LoadStringW(shell32_hInstance, IDS_OPEN_WITH, wszTitle, sizeof(wszTitle) / sizeof(WCHAR)))
