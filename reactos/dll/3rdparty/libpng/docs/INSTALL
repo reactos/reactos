@@ -1,24 +1,25 @@
 
-Installing libpng
+    Installing libpng
 
 Contents
 
-   I. Simple installation
-  II. Rebuilding the configure scripts
- III. Using scripts/makefile*
-  IV. Using cmake
-   V. Directory structure
-  VI. Building with project files
- VII. Building with makefiles
-VIII. Configuring libpng for 16-bit platforms
-  IX. Configuring for DOS
-   X. Configuring for Medium Model
-  XI. Prepending a prefix to exported symbols
- XII. Configuring for compiler xxx:
-XIII. Removing unwanted object code
- XIV. Changes to the build and configuration of libpng in libpng-1.5.x
-  XV. Setjmp/longjmp issues
- XVI. Other sources of information about libpng
+       I. Simple installation
+      II. Rebuilding the configure scripts
+     III. Using scripts/makefile*
+      IV. Using cmake
+       V. Directory structure
+      VI. Building with project files
+     VII. Building with makefiles
+    VIII. Configuring libpng for 16-bit platforms
+      IX. Configuring for DOS
+       X. Configuring for Medium Model
+      XI. Prepending a prefix to exported symbols
+     XII. Configuring for compiler xxx:
+    XIII. Removing unwanted object code
+     XIV. Changes to the build and configuration of libpng in libpng-1.5.x
+      XV. Setjmp/longjmp issues
+     XVI. Common linking failures
+    XVII. Other sources of information about libpng
 
 I. Simple installation
 
@@ -47,7 +48,9 @@ If configure does not work on your system, or if you have a need to
 change configure.ac or Makefile.am, and you have a reasonably
 up-to-date set of tools, running ./autogen.sh in a git clone before
 running ./configure may fix the problem.  To be really sure that you
-aren't using any of the included pre-built scripts, you can do this:
+aren't using any of the included pre-built scripts, especially if you
+are building from a tar distribution instead of a git distribution,
+do this:
 
     ./configure --enable-maintainer-mode
     make maintainer-clean
@@ -76,7 +79,7 @@ Or you can use one of the "projects" in the "projects" directory.
 Before installing libpng, you must first install zlib, if it
 is not already on your system.  zlib can usually be found
 wherever you got libpng; otherwise go to http://zlib.net.  You can place
-zlib in in the same directory as libpng or in another directory.
+zlib in the same directory as libpng or in another directory.
 
 If your system already has a preinstalled zlib you will still need
 to have access to the zlib.h and zconf.h include files that
@@ -87,22 +90,24 @@ standard library search path, put ZLIBLIB, ZLIBINC, CPPFLAGS, LDFLAGS,
 and LD_LIBRARY_PATH in your environment before running "make test"
 or "make distcheck":
 
-ZLIBLIB=/path/to/lib export ZLIBLIB
-ZLIBINC=/path/to/include export ZLIBINC
-CPPFLAGS="-I$ZLIBINC" export CPPFLAGS
-LDFLAGS="-L$ZLIBLIB" export LDFLAGS
-LD_LIBRARY_PATH="$ZLIBLIB:$LD_LIBRARY_PATH" export LD_LIBRARY_PATH
+    ZLIBLIB=/path/to/lib export ZLIBLIB
+    ZLIBINC=/path/to/include export ZLIBINC
+    CPPFLAGS="-I$ZLIBINC" export CPPFLAGS
+    LDFLAGS="-L$ZLIBLIB" export LDFLAGS
+    LD_LIBRARY_PATH="$ZLIBLIB:$LD_LIBRARY_PATH" export LD_LIBRARY_PATH
 
 If you are using one of the makefile scripts, put ZLIBLIB and ZLIBINC
-in your environment and type "make ZLIBLIB=$ZLIBLIB ZLIBINC=$ZLIBINC test".
+in your environment and type
+
+    make ZLIBLIB=$ZLIBLIB ZLIBINC=$ZLIBINC test
 
 IV. Using cmake
 
 If you want to use "cmake" (see www.cmake.org), type
 
-   cmake . -DCMAKE_INSTALL_PREFIX=/path
-   make
-   make install
+    cmake . -DCMAKE_INSTALL_PREFIX=/path
+    make
+    make install
 
 As when using the simple configure method described above, "/path" points to
 the installation directory where you want to put the libpng "lib", "include",
@@ -116,8 +121,8 @@ or "zlib128") so that you have directories called "zlib" and "libpng".
 
 Your directory structure should look like this:
 
-   ..       (the parent directory)
-      libpng  (this directory)
+    .. (the parent directory)
+      libpng (this directory)
           INSTALL (this file)
           README
           *.h, *.c  => libpng source files
@@ -160,10 +165,15 @@ VII. Building with makefiles
 Copy the file (or files) that you need from the
 scripts directory into this directory, for example
 
-   MSDOS example: copy scripts\makefile.msc makefile
-                  copy scripts\pnglibconf.h.prebuilt pnglibconf.h
-   UNIX example:  cp scripts/makefile.std makefile
-                  cp scripts/pnglibconf.h.prebuilt pnglibconf.h
+MSDOS example:
+
+    copy scripts\makefile.msc makefile
+    copy scripts\pnglibconf.h.prebuilt pnglibconf.h
+
+UNIX example:
+
+    cp scripts/makefile.std makefile
+    cp scripts/pnglibconf.h.prebuilt pnglibconf.h
 
 Read the makefile to see if you need to change any source or
 target directories to match your preferences.
@@ -239,7 +249,7 @@ libpng are compiled.  All the defines end in _SUPPORTED.  If you are
 never going to use a capability, you can change the #define to #undef
 before recompiling libpng and save yourself code and data space, or
 you can turn off individual capabilities with defines that begin with
-PNG_NO_.
+"PNG_NO_".
 
 In libpng-1.5.0 and later, the #define's are in pnglibconf.h instead.
 
@@ -307,7 +317,7 @@ only png_longjmp_ptr, which must match the C longjmp function.)  The new
 approach is documented in pngconf.h
 
 Despite these changes, libpng 1.5.0 only supports the native C function
-calling standard on those platforms tested so far (__cdecl on Microsoft
+calling standard on those platforms tested so far ("__cdecl" on Microsoft
 Windows).  This is because the support requirements for alternative
 calling conventions seem to no longer exist.  Developers who find it
 necessary to set PNG_API_RULE to 1 should advise the mailing list
@@ -371,7 +381,7 @@ your application is going to be using multiple threads, you should
 configure libpng with PNG_NO_SETJMP in your pngusr.dfa file, with
 -DPNG_NO_SETJMP on your compile line, or with
 
-  #undef PNG_SETJMP_SUPPORTED
+    #undef PNG_SETJMP_SUPPORTED
 
 in your pnglibconf.h or pngusr.h.
 
@@ -380,8 +390,25 @@ This requires setjmp/longjmp, so you must either build the library
 with PNG_SETJMP_SUPPORTED defined, or with PNG_SIMPLIFIED_READ_SUPPORTED
 and PNG_SIMPLIFIED_WRITE_SUPPORTED undefined.
 
-XVI. Other sources of information about libpng:
+XVI. Common linking failures
+
+If your application fails to find libpng or zlib entries while linking:
+
+  Be sure "-lz" appears after "-lpng" on your linking command.
+
+  Be sure you have built libpng, zlib, and your application for the
+  same platform (e.g., 32-bit or 64-bit).
+
+  If you are using the vstudio project, observe the WARNING in
+  project/vstudio/README.txt.
+
+XVII. Other sources of information about libpng:
 
 Further information can be found in the README and libpng-manual.txt
 files, in the individual makefiles, in png.h, and the manual pages
 libpng.3 and png.5.
+
+Copyright (c) 1998-2002,2006-2016 Glenn Randers-Pehrson
+This document is released under the libpng license.
+For conditions of distribution and use, see the disclaimer
+and license in png.h.

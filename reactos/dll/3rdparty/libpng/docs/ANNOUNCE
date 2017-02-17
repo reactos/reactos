@@ -1,4 +1,4 @@
-Libpng 1.6.21 - January 15, 2016
+Libpng 1.6.28 - January 5, 2017
 
 This is a public release of libpng, intended for use in production codes.
 
@@ -7,49 +7,28 @@ Files available for download:
 Source files with LF line endings (for Unix/Linux) and with a
 "configure" script
 
-   libpng-1.6.21.tar.xz (LZMA-compressed, recommended)
-   libpng-1.6.21.tar.gz
+   libpng-1.6.28.tar.xz (LZMA-compressed, recommended)
+   libpng-1.6.28.tar.gz
 
 Source files with CRLF line endings (for Windows), without the
 "configure" script
 
-   /scratch/glennrp/Libpng16/lpng1621.7z  (LZMA-compressed, recommended)
-   /scratch/glennrp/Libpng16/lpng1621.zip
+   lpng1628.7z  (LZMA-compressed, recommended)
+   lpng1628.zip
 
 Other information:
 
-   libpng-1.6.21-README.txt
-   libpng-1.6.21-LICENSE.txt
-   libpng-1.6.21-*.asc (armored detached GPG signatures)
+   libpng-1.6.28-README.txt
+   libpng-1.6.28-LICENSE.txt
+   libpng-1.6.28-*.asc (armored detached GPG signatures)
 
-Changes since the last public release (1.6.20):
-
-  Fixed syntax "$(command)" in tests/pngstest that some shells other than
-    bash could not parse (Bug report by Nelson Beebe). Use `command` instead.
-  Moved png_check_keyword() from pngwutil.c to pngset.c
-  Removed LE/BE dependencies in pngvalid, to 'fix' the current problem
-    in the BigEndian tests by not testing it, making the BE code the same 
-    as the LE version.
-  Fixes to pngvalid for various reduced build configurations (eliminate unused
-    statics) and a fix for the case in rgb_to_gray when the digitize option
-    reduces graylo to 0, producing a large error.
-  Widened the 'limit' check on the internally calculated error limits in
-    the 'DIGITIZE' case (the code used prior to 1.7 for rgb_to_gray error
-    checks) and changed the check to only operate in non-release builds
-   (base build type not RC or RELEASE.)
-  Fixed undefined behavior in pngvalid.c, undefined because
-    (png_byte) << shift is undefined if it changes the signed bit
-    (because png_byte is promoted to int). The libpng exported functions
-    png_get_uint_32 and png_get_uint_16 handle this. (Bug reported by
-    David Drysdale as a result of reports from UBSAN in clang 3.8).
-  This changes pngvalid to use BE random numbers; this used to produce
-    errors but these should not be fixed as a result of the previous changes.
-  In projects/vstudio, combined readme.txt and WARNING into README.txt
-  Relocated assert() in contrib/tools/pngfix.c, bug found by American
-    Fuzzy Lop, reported by Brian Carpenter.
-  Marked 'limit' UNUSED in transform_range_check().  This only affects
-    release builds.
-  Worked around a false-positive Coverity issue in pngvalid.c.
+Changes since the last public release (1.6.27):
+  Fixed arm/aarch64 detection in CMakeLists.txt (Gianfranco Costamagna).
+  Added option to Cmake build allowing a custom location of zlib to be
+    specified in a scenario where libpng is being built as a subproject
+    alongside zlib by another project (Sam Serrels).
+  Changed png_ptr->options from a png_byte to png_uint_32, to accomodate
+    up to 16 options.
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit

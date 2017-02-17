@@ -1,6 +1,6 @@
 libpng-manual.txt - A description on how to use and modify libpng
 
- libpng version 1.6.21 - January 15, 2016
+ libpng version 1.6.28 - January 5, 2017
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
  Copyright (c) 1998-2016 Glenn Randers-Pehrson
@@ -11,7 +11,7 @@ libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.6.21 - January 15, 2016
+ libpng versions 0.97, January 1998, through 1.6.28 - January 5, 2017
  Updated and distributed by Glenn Randers-Pehrson
  Copyright (c) 1998-2016 Glenn Randers-Pehrson
 
@@ -467,8 +467,9 @@ the default, use
 
 The values for png_set_crc_action() say how libpng is to handle CRC errors in
 ancillary and critical chunks, and whether to use the data contained
-therein.  Note that it is impossible to "discard" data in a critical
-chunk.
+therein. Starting with libpng-1.6.26, this also governs how an ADLER32 error
+is handled while reading the IDAT chunk. Note that it is impossible to
+"discard" data in a critical chunk.
 
 Choices for (int) crit_action are
    PNG_CRC_DEFAULT      0  error/quit
@@ -484,6 +485,9 @@ Choices for (int) ancil_action are
    PNG_CRC_WARN_USE     3  warn/use data
    PNG_CRC_QUIET_USE    4  quiet/use data
    PNG_CRC_NO_CHANGE    5  use the current value
+
+When the setting for crit_action is PNG_CRC_QUIET_USE, the CRC and ADLER32
+checksums are not only ignored, but they are not evaluated.
 
 Setting up callback code
 
@@ -559,7 +563,7 @@ non-interlaced case the row that was just handled is simply one less than the
 passed in row number, and pass will always be 0.  For the interlaced case the
 same applies unless the row value is 0, in which case the row just handled was
 the last one from one of the preceding passes.  Because interlacing may skip a
-pass you cannot be sure that the preceding pass is just 'pass-1', if you really
+pass you cannot be sure that the preceding pass is just 'pass-1'; if you really
 need to know what the last pass is record (row,pass) from the callback and use
 the last recorded value each time.
 
@@ -2230,7 +2234,8 @@ is exactly the same.  If you are planning on displaying the image
 after each pass, the "rectangle" effect is generally considered the
 better looking one.
 
-If you only want the "sparkle" effect, just call png_read_rows() as
+If you only want the "sparkle" effect, just call png_read_row() or
+png_read_rows() as
 normal, with the third parameter NULL.  Make sure you make pass over
 the image number_of_passes times, and you don't change the data in the
 rows between calls.  You can change the locations of the data, just
@@ -2239,6 +2244,8 @@ pass, and assumes the data from previous passes is still valid.
 
     png_read_rows(png_ptr, row_pointers, NULL,
         number_of_rows);
+    or
+    png_read_row(png_ptr, row_pointers, NULL);
 
 If you only want the first effect (the rectangles), do the same as
 before except pass the row buffer in the third parameter, and leave
@@ -2246,6 +2253,8 @@ the second parameter NULL.
 
     png_read_rows(png_ptr, NULL, row_pointers,
         number_of_rows);
+    or
+    png_read_row(png_ptr, NULL, row_pointers);
 
 If you don't want libpng to handle the interlacing details, just call
 png_read_rows() PNG_INTERLACE_ADAM7_PASSES times to read in all the images.
@@ -2842,7 +2851,7 @@ filter types.
        PNG_FILTER_UP    | PNG_FILTER_VALUE_UP   |
        PNG_FILTER_AVG   | PNG_FILTER_VALUE_AVG  |
        PNG_FILTER_PAETH | PNG_FILTER_VALUE_PAETH|
-       PNG_ALL_FILTERS);
+       PNG_ALL_FILTERS  | PNG_FAST_FILTERS);
 
 If an application wants to start and stop using particular filters during
 compression, it should start out with all of the filters (to ensure that
@@ -4103,6 +4112,13 @@ be written:
 
       Write the image to the named file.
 
+   int png_image_write_to_memory (png_imagep image, void *memory,
+      png_alloc_size_t * PNG_RESTRICT memory_bytes,
+      int convert_to_8_bit, const void *buffer, ptrdiff_t row_stride,
+      const void *colormap));
+
+      Write the image to memory.
+
    int png_image_write_to_stdio(png_imagep image, FILE *file,
       int convert_to_8_bit, const void *buffer,
       png_int_32 row_stride, const void *colormap)
@@ -4380,8 +4396,9 @@ for any images with bit depths less than 8 bits/pixel.
 The 'method' parameter sets the main filtering method, which is
 currently only '0' in the PNG 1.2 specification.  The 'filters'
 parameter sets which filter(s), if any, should be used for each
-scanline.  Possible values are PNG_ALL_FILTERS and PNG_NO_FILTERS
-to turn filtering on and off, respectively.
+scanline.  Possible values are PNG_ALL_FILTERS, PNG_NO_FILTERS,
+or PNG_FAST_FILTERS to turn filtering on and off, or to turn on
+just the fast-decoding subset of filters, respectively.
 
 Individual filter types are PNG_FILTER_NONE, PNG_FILTER_SUB,
 PNG_FILTER_UP, PNG_FILTER_AVG, PNG_FILTER_PAETH, which can be bitwise
@@ -4395,12 +4412,19 @@ means the first row must always be adaptively filtered, because libpng
 currently does not allocate the filter buffers until png_write_row()
 is called for the first time.)
 
-    filters = PNG_FILTER_NONE | PNG_FILTER_SUB
+    filters = PNG_NO_FILTERS;
+    filters = PNG_ALL_FILTERS;
+    filters = PNG_FAST_FILTERS;
+
+    or
+
+    filters = PNG_FILTER_NONE | PNG_FILTER_SUB |
               PNG_FILTER_UP | PNG_FILTER_AVG |
-              PNG_FILTER_PAETH | PNG_ALL_FILTERS;
+              PNG_FILTER_PAETH;
 
     png_set_filter(png_ptr, PNG_FILTER_TYPE_BASE,
        filters);
+
               The second parameter can also be
               PNG_INTRAPIXEL_DIFFERENCING if you are
               writing a PNG to be embedded in a MNG
@@ -4775,7 +4799,8 @@ There are no substantial API changes between the non-deprecated parts of
 the 1.4.5 API and the 1.5.0 API; however, the ability to directly access
 members of the main libpng control structures, png_struct and png_info,
 deprecated in earlier versions of libpng, has been completely removed from
-libpng 1.5.
+libpng 1.5, and new private "pngstruct.h", "pnginfo.h", and "pngdebug.h"
+header files were created.
 
 We no longer include zlib.h in png.h.  The include statement has been moved
 to pngstruct.h, where it is not accessible by applications. Applications that
@@ -5015,6 +5040,7 @@ includes the following:
      png_image_free()
    write functions
      png_image_write_to_file()
+     png_image_write_to_memory()
      png_image_write_to_stdio()
 
 Starting with libpng-1.6.0, you can configure libpng to prefix all exported
@@ -5313,8 +5339,9 @@ with an even number of lower-case hex digits, and to make them unsigned
 We prefer to use underscores rather than camelCase in names, except
 for a few type names that we inherit from zlib.h.
 
-We prefer "if (something != 0)" and "if (something == 0)"
-over "if (something)" and if "(!something)", respectively.
+We prefer "if (something != 0)" and "if (something == 0)" over
+"if (something)" and if "(!something)", respectively, and for pointers
+we prefer "if (some_pointer != NULL)" or "if (some_pointer == NULL)". 
 
 We do not use the TAB character for indentation in the C sources.
 
@@ -5328,7 +5355,7 @@ Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.6.21 are Y2K compliant.  It is my belief that earlier
+upward through 1.6.28 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has two year fields.  One is a 2-byte unsigned integer
