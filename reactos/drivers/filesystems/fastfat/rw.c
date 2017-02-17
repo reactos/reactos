@@ -547,7 +547,7 @@ VfatRead(
     LARGE_INTEGER ByteOffset;
     PVOID Buffer;
     ULONG BytesPerSector;
-    BOOLEAN PagingIo, CanWait;
+    BOOLEAN PagingIo, CanWait, IsVolume;
 
     ASSERT(IrpContext);
 
@@ -586,6 +586,7 @@ VfatRead(
     BytesPerSector = IrpContext->DeviceExt->FatInfo.BytesPerSector;
     PagingIo = BooleanFlagOn(IrpContext->Irp->Flags, IRP_PAGING_IO);
     CanWait = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT);
+    IsVolume = BooleanFlagOn(Fcb->Flags, FCB_IS_VOLUME);
 
     /* fail if file is a directory and no paged read */
     if (*Fcb->Attributes & FILE_ATTRIBUTE_DIRECTORY && !PagingIo)
@@ -596,7 +597,7 @@ VfatRead(
 
     DPRINT("'%wZ', Offset: %u, Length %u\n", &Fcb->PathNameU, ByteOffset.u.LowPart, Length);
 
-    if (ByteOffset.u.HighPart && !(Fcb->Flags & FCB_IS_VOLUME))
+    if (ByteOffset.u.HighPart && !IsVolume)
     {
        Status = STATUS_INVALID_PARAMETER;
        goto ByeBye;
@@ -616,7 +617,7 @@ VfatRead(
        goto ByeBye;
     }
 
-    if (IrpContext->Irp->Flags & (IRP_PAGING_IO | IRP_NOCACHE) || (Fcb->Flags & FCB_IS_VOLUME))
+    if (IrpContext->Irp->Flags & (IRP_PAGING_IO | IRP_NOCACHE) || IsVolume)
     {
         if (ByteOffset.u.LowPart % BytesPerSector != 0 || Length % BytesPerSector != 0)
         {
@@ -627,7 +628,7 @@ VfatRead(
         }
     }
 
-    if (Fcb->Flags & FCB_IS_VOLUME)
+    if (IsVolume)
     {
         Resource = &IrpContext->DeviceExt->DirResource;
     }
@@ -770,7 +771,7 @@ VfatWrite(
     ULONG Length = 0;
     PVOID Buffer;
     ULONG BytesPerSector;
-    BOOLEAN PagingIo, CanWait;
+    BOOLEAN PagingIo, CanWait, IsVolume;
 
     ASSERT(IrpContext);
 
@@ -806,6 +807,7 @@ VfatWrite(
 
     PagingIo = BooleanFlagOn(IrpContext->Irp->Flags, IRP_PAGING_IO);
     CanWait = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT);
+    IsVolume = BooleanFlagOn(Fcb->Flags, FCB_IS_VOLUME);
 
     /* fail if file is a directory and no paged read */
     if (*Fcb->Attributes & FILE_ATTRIBUTE_DIRECTORY && !PagingIo)
@@ -823,7 +825,7 @@ VfatWrite(
     Length = IrpContext->Stack->Parameters.Write.Length;
     BytesPerSector = IrpContext->DeviceExt->FatInfo.BytesPerSector;
 
-    if (ByteOffset.u.HighPart && !(Fcb->Flags & FCB_IS_VOLUME))
+    if (ByteOffset.u.HighPart && !IsVolume)
     {
         Status = STATUS_INVALID_PARAMETER;
         goto ByeBye;
@@ -840,7 +842,7 @@ VfatWrite(
         }
     }
 
-    if (IrpContext->Irp->Flags & (IRP_PAGING_IO|IRP_NOCACHE) || (Fcb->Flags & FCB_IS_VOLUME))
+    if (IrpContext->Irp->Flags & (IRP_PAGING_IO|IRP_NOCACHE) || IsVolume)
     {
         if (ByteOffset.u.LowPart % BytesPerSector != 0 || Length % BytesPerSector != 0)
         {
@@ -874,7 +876,7 @@ VfatWrite(
         }
     }
 
-    if (Fcb->Flags & FCB_IS_VOLUME)
+    if (IsVolume)
     {
         Resource = &IrpContext->DeviceExt->DirResource;
     }
@@ -916,7 +918,7 @@ VfatWrite(
         }
     }
 
-    if (!CanWait && !(Fcb->Flags & FCB_IS_VOLUME))
+    if (!CanWait && !IsVolume)
     {
         if (ByteOffset.u.LowPart + Length > Fcb->RFCB.AllocationSize.u.LowPart)
         {

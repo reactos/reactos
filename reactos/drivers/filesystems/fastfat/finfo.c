@@ -97,7 +97,7 @@ VfatGetStandardInformation(
         StandardInfo->Directory = FALSE;
     }
     StandardInfo->NumberOfLinks = 1;
-    StandardInfo->DeletePending = BooleanFlagOn(FCB->Flags, FCB_DELETE_PENDING) ? TRUE : FALSE;
+    StandardInfo->DeletePending = BooleanFlagOn(FCB->Flags, FCB_DELETE_PENDING);
 
     *BufferLength -= sizeof(FILE_STANDARD_INFORMATION);
     return STATUS_SUCCESS;
@@ -165,7 +165,7 @@ VfatSetBasicInformation(
     /* Check volume label bit */
     ASSERT(0 == (*FCB->Attributes & _A_VOLID));
 
-    if (FCB->Flags & FCB_IS_FATX_ENTRY)
+    if (BooleanFlagOn(FCB->Flags, FCB_IS_FATX_ENTRY))
     {
         if (BasicInfo->CreationTime.QuadPart != 0 && BasicInfo->CreationTime.QuadPart != -1)
         {
@@ -254,7 +254,7 @@ VfatGetBasicInformation(
     if (*BufferLength < sizeof(FILE_BASIC_INFORMATION))
         return STATUS_BUFFER_OVERFLOW;
 
-    if (FCB->Flags & FCB_IS_FATX_ENTRY)
+    if (BooleanFlagOn(FCB->Flags, FCB_IS_FATX_ENTRY))
     {
         FsdDosDateTimeToSystemTime(DeviceExt,
                                    FCB->entry.FatX.CreationDate,
@@ -331,7 +331,7 @@ VfatSetDispositionInformation(
         return STATUS_SUCCESS;
     }
 
-    if (FCB->Flags & FCB_DELETE_PENDING)
+    if (BooleanFlagOn(FCB->Flags, FCB_DELETE_PENDING))
     {
         /* stream already marked for deletion. just update the file object */
         FileObject->DeletePending = TRUE;
@@ -1043,7 +1043,7 @@ VfatGetNetworkOpenInformation(
     if (*BufferLength < sizeof(FILE_NETWORK_OPEN_INFORMATION))
         return(STATUS_BUFFER_OVERFLOW);
 
-    if (Fcb->Flags & FCB_IS_FATX_ENTRY)
+    if (BooleanFlagOn(Fcb->Flags, FCB_IS_FATX_ENTRY))
     {
         FsdDosDateTimeToSystemTime(DeviceExt,
                                    Fcb->entry.FatX.CreationDate,
@@ -1196,7 +1196,7 @@ UpdateFileSize(
     }
     if (!vfatFCBIsDirectory(Fcb))
     {
-        if (Fcb->Flags & FCB_IS_FATX_ENTRY)
+        if (BooleanFlagOn(Fcb->Flags, FCB_IS_FATX_ENTRY))
             Fcb->entry.FatX.FileSize = Size;
         else
             Fcb->entry.Fat.FileSize = Size;
@@ -1221,12 +1221,12 @@ VfatSetAllocationSizeInformation(
     ULONG ClusterSize = DeviceExt->FatInfo.BytesPerCluster;
     ULONG NewSize = AllocationSize->u.LowPart;
     ULONG NCluster;
-    BOOLEAN AllocSizeChanged = FALSE;
+    BOOLEAN AllocSizeChanged = FALSE, IsFatX = BooleanFlagOn(Fcb->Flags, FCB_IS_FATX_ENTRY);
 
     DPRINT("VfatSetAllocationSizeInformation(File <%wZ>, AllocationSize %d %u)\n",
            &Fcb->PathNameU, AllocationSize->HighPart, AllocationSize->LowPart);
 
-    if (Fcb->Flags & FCB_IS_FATX_ENTRY)
+    if (IsFatX)
         OldSize = Fcb->entry.FatX.FileSize;
     else
         OldSize = Fcb->entry.Fat.FileSize;
@@ -1278,7 +1278,7 @@ VfatSetAllocationSizeInformation(
                 return STATUS_DISK_FULL;
             }
 
-            if (Fcb->Flags & FCB_IS_FATX_ENTRY)
+            if (IsFatX)
             {
                 Fcb->entry.FatX.FirstCluster = FirstCluster;
             }
@@ -1378,7 +1378,7 @@ VfatSetAllocationSizeInformation(
         }
         else
         {
-            if (Fcb->Flags & FCB_IS_FATX_ENTRY)
+            if (IsFatX)
             {
                 Fcb->entry.FatX.FirstCluster = 0;
             }
@@ -1454,7 +1454,7 @@ VfatQueryInformation(
     SystemBuffer = IrpContext->Irp->AssociatedIrp.SystemBuffer;
     BufferLength = IrpContext->Stack->Parameters.QueryFile.Length;
 
-    if (!(FCB->Flags & FCB_IS_PAGE_FILE))
+    if (!BooleanFlagOn(FCB->Flags, FCB_IS_PAGE_FILE))
     {
         if (!ExAcquireResourceSharedLite(&FCB->MainResource,
                                          BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
@@ -1532,7 +1532,7 @@ VfatQueryInformation(
             Status = STATUS_INVALID_PARAMETER;
     }
 
-    if (!(FCB->Flags & FCB_IS_PAGE_FILE))
+    if (!BooleanFlagOn(FCB->Flags, FCB_IS_PAGE_FILE))
     {
         ExReleaseResourceLite(&FCB->MainResource);
     }
@@ -1607,7 +1607,7 @@ VfatSetInformation(
         }
     }
 
-    if (!(FCB->Flags & FCB_IS_PAGE_FILE))
+    if (!BooleanFlagOn(FCB->Flags, FCB_IS_PAGE_FILE))
     {
         if (!ExAcquireResourceExclusiveLite(&FCB->MainResource,
                                             BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
@@ -1662,7 +1662,7 @@ VfatSetInformation(
             Status = STATUS_NOT_SUPPORTED;
     }
 
-    if (!(FCB->Flags & FCB_IS_PAGE_FILE))
+    if (!BooleanFlagOn(FCB->Flags, FCB_IS_PAGE_FILE))
     {
         ExReleaseResourceLite(&FCB->MainResource);
     }
