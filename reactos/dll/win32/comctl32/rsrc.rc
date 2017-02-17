@@ -38,6 +38,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* @makedep: comctl32.manifest */
 WINE_MANIFEST RT_MANIFEST comctl32.manifest
+WINE_MANIFESTV5 RT_MANIFEST comctl32v5.manifest
 
 /* @makedep: idt_check.bmp */
 IDT_CHECK BITMAP idt_check.bmp

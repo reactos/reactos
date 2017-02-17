@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-  <assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls" version="6.0.2600.2982" processorArchitecture="" publicKeyToken="6595b64144ccf1df"/>
+  <assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls" version="6.0.2600.2982" publicKeyToken="6595b64144ccf1df"/>
   <file name="comctl32.dll">
     <windowClass>Button</windowClass>
     <windowClass>ButtonListBox</windowClass>
@@ -12,7 +12,6 @@
     <windowClass>NativeFontCtl</windowClass>
     <windowClass>ReBarWindow32</windowClass>
     <windowClass>ScrollBar</windowClass>
-    <windowClass>Static</windowClass>
     <windowClass>SysAnimate32</windowClass>
     <windowClass>SysDateTimePick32</windowClass>
     <windowClass>SysHeader32</windowClass>

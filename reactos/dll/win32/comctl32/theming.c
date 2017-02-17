@@ -30,8 +30,6 @@ extern LRESULT CALLBACK THEMING_ButtonSubclassProc (HWND, UINT, WPARAM, LPARAM,
                                                     ULONG_PTR) DECLSPEC_HIDDEN;
 extern LRESULT CALLBACK THEMING_ComboSubclassProc (HWND, UINT, WPARAM, LPARAM,
                                                    ULONG_PTR) DECLSPEC_HIDDEN;
-extern LRESULT CALLBACK THEMING_DialogSubclassProc (HWND, UINT, WPARAM, LPARAM,
-                                                    ULONG_PTR) DECLSPEC_HIDDEN;
 extern LRESULT CALLBACK THEMING_EditSubclassProc (HWND, UINT, WPARAM, LPARAM,
                                                   ULONG_PTR) DECLSPEC_HIDDEN;
 extern LRESULT CALLBACK THEMING_ListBoxSubclassProc (HWND, UINT, WPARAM, LPARAM,
@@ -48,7 +46,6 @@ static const struct ThemingSubclass
     THEMING_SUBCLASSPROC subclassProc;
 } subclasses[] = {
     /* Note: list must be sorted by class name */
-    {dialogClass,          THEMING_DialogSubclassProc},
     {WC_BUTTONW,           THEMING_ButtonSubclassProc},
     {WC_COMBOBOXW,         THEMING_ComboSubclassProc},
     {comboLboxClass,       THEMING_ListBoxSubclassProc},
@@ -90,7 +87,6 @@ MAKE_SUBCLASS_PROC(2)
 MAKE_SUBCLASS_PROC(3)
 MAKE_SUBCLASS_PROC(4)
 MAKE_SUBCLASS_PROC(5)
-MAKE_SUBCLASS_PROC(6)
 
 static const WNDPROC subclassProcs[NUM_SUBCLASSES] = {
     subclass_proc0,
@@ -98,8 +94,7 @@ static const WNDPROC subclassProcs[NUM_SUBCLASSES] = {
     subclass_proc2,
     subclass_proc3,
     subclass_proc4,
-    subclass_proc5,
-    subclass_proc6
+    subclass_proc5
 };
 
 /***********************************************************************
@@ -108,15 +103,15 @@ static const WNDPROC subclassProcs[NUM_SUBCLASSES] = {
  * Register classes for standard controls that will shadow the system
  * classes.
  */
-void THEMING_Initialize (void)
+void THEMING_Initialize (HANDLE hActCtx5, HANDLE hActCtx6)
 {
     unsigned int i;
     static const WCHAR subclassPropName[] = 
         { 'C','C','3','2','T','h','e','m','i','n','g','S','u','b','C','l',0 };
     static const WCHAR refDataPropName[] = 
         { 'C','C','3','2','T','h','e','m','i','n','g','D','a','t','a',0 };
-
-    if (!IsThemeActive()) return;
+    ULONG_PTR ulCookie;
+    BOOL ret, bActivated;
 
     atSubclassProp = GlobalAddAtomW (subclassPropName);
     atRefDataProp = GlobalAddAtomW (refDataPropName);
@@ -126,7 +121,13 @@ void THEMING_Initialize (void)
         WNDCLASSEXW class;
 
         class.cbSize = sizeof(class);
-        if (!GetClassInfoExW (NULL, subclasses[i].className, &class))
+
+        bActivated = ActivateActCtx(hActCtx5, &ulCookie);
+        ret = GetClassInfoExW (NULL, subclasses[i].className, &class);
+        if (bActivated)
+            DeactivateActCtx(0, ulCookie);
+
+        if (!ret)
         {
             ERR("Could not retrieve information for class %s\n",
                 debugstr_w (subclasses[i].className));
@@ -134,7 +135,9 @@ void THEMING_Initialize (void)
         }
         originalProcs[i] = class.lpfnWndProc;
         class.lpfnWndProc = subclassProcs[i];
-        
+        class.style |= CS_GLOBALCLASS;
+        class.hInstance = COMCTL32_hModule;
+
         if (!class.lpfnWndProc)
         {
             ERR("Missing proc for class %s\n", 
@@ -142,9 +145,11 @@ void THEMING_Initialize (void)
             continue;
         }
 
+        bActivated = ActivateActCtx(hActCtx6, &ulCookie);
+
         if (!RegisterClassExW (&class))
         {
-            ERR("Could not re-register class %s: %x\n",
+            WARN("Could not re-register class %s: %x\n",
                 debugstr_w (subclasses[i].className), GetLastError ());
         }
         else
@@ -152,6 +157,9 @@ void THEMING_Initialize (void)
             TRACE("Re-registered class %s\n", 
                 debugstr_w (subclasses[i].className));
         }
+
+        if (bActivated)
+            DeactivateActCtx(0, ulCookie);
     }
 }
 
