@@ -2743,6 +2743,7 @@ NtUserGetClassInfo(
                                 NULL);
     if (ClassAtom != (RTL_ATOM)0)
     {
+        ClassAtom = Class->atomNVClassName;
         Ret = UserGetClassInfo(Class, &Safewcexw, bAnsi, hInstance);
     }
     else

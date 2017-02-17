@@ -2807,7 +2807,7 @@ IntFindWindow(PWND Parent,
          /* Do not send WM_GETTEXT messages in the kernel mode version!
             The user mode version however calls GetWindowText() which will
             send WM_GETTEXT messages to windows belonging to its processes */
-         if (!ClassAtom || Child->pcls->atomClassName == ClassAtom)
+         if (!ClassAtom || Child->pcls->atomNVClassName == ClassAtom)
          {
              // FIXME: LARGE_STRING truncated
              CurrentWindowName.Buffer = Child->strName.Buffer;
@@ -2999,7 +2999,7 @@ NtUserFindWindowEx(HWND hwndParent,
                                 (TopLevelWindow->strName.Length < 0xFFFF &&
                                  !RtlCompareUnicodeString(&WindowName, &ustr, TRUE));
                 ClassMatches = (ClassAtom == (RTL_ATOM)0) ||
-                               ClassAtom == TopLevelWindow->pcls->atomClassName;
+                               ClassAtom == TopLevelWindow->pcls->atomNVClassName;
 
                 if (WindowMatches && ClassMatches)
                 {

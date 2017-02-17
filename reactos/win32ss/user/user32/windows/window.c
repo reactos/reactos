@@ -16,6 +16,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 void MDI_CalcDefaultChildPos( HWND hwndClient, INT total, LPPOINT lpPos, INT delta, UINT *id );
+extern LPCWSTR FASTCALL ClassNameToVersion(const void *lpszClass, LPCWSTR lpszMenuName, LPCWSTR *plpLibFileName, HANDLE *pContext, BOOL bAnsi);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -165,13 +166,18 @@ User32CreateWindowEx(DWORD dwExStyle,
 {
     LARGE_STRING WindowName;
     LARGE_STRING lstrClassName, *plstrClassName;
+    LARGE_STRING lstrClassVersion, *plstrClassVersion;
     UNICODE_STRING ClassName;
+    UNICODE_STRING ClassVersion;
     WNDCLASSEXA wceA;
     WNDCLASSEXW wceW;
     HMODULE hLibModule = NULL;
     DWORD save_error;
     BOOL Unicode, ClassFound = FALSE;
     HWND Handle = NULL;
+    LPCWSTR lpszClsVersion;
+    HANDLE pCtx;
+    LPCWSTR lpLibFileName;
 
 #if 0
     DbgPrint("[window] User32CreateWindowEx style %d, exstyle %d, parent %d\n", dwStyle, dwExStyle, hWndParent);
@@ -263,11 +269,25 @@ User32CreateWindowEx(DWORD dwExStyle,
 
     if (!Unicode) dwExStyle |= WS_EX_SETANSICREATOR;
 
+    lpszClsVersion = ClassNameToVersion(lpClassName, NULL, &lpLibFileName, &pCtx, !Unicode);
+    if (!lpszClsVersion)
+    {
+        plstrClassVersion = plstrClassName;
+    }
+    else
+    {
+        RtlInitUnicodeString(&ClassVersion, lpszClsVersion);
+        lstrClassVersion.Buffer = ClassVersion.Buffer;
+        lstrClassVersion.Length = ClassVersion.Length;
+        lstrClassVersion.MaximumLength = ClassVersion.MaximumLength;
+        plstrClassVersion = &lstrClassVersion;
+    }
+
     for(;;)
     {
        Handle = NtUserCreateWindowEx(dwExStyle,
                                      plstrClassName,
-                                     plstrClassName,
+                                     plstrClassVersion,
                                      &WindowName,
                                      dwStyle,
                                      x,
@@ -281,12 +301,13 @@ User32CreateWindowEx(DWORD dwExStyle,
                                      dwFlags,
                                      NULL);
        if (Handle) break;
+       if (!lpLibFileName) break;
        if (!ClassFound)
        {
           save_error = GetLastError();
           if ( save_error == ERROR_CANNOT_FIND_WND_CLASS )
           {
-              ClassFound = VersionRegisterClass(ClassName.Buffer, NULL, NULL, &hLibModule);
+              ClassFound = VersionRegisterClass(ClassName.Buffer, lpLibFileName, pCtx, &hLibModule);
               if (ClassFound) continue;
           }
        }

@@ -13,177 +13,38 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
+#define USE_VERSIONED_CLASSES
+
 /* From rtl/actctx.c and must match! */
-struct entity
+struct strsection_header
 {
-    DWORD  kind;  // Activation context type
-    WCHAR *name;  // Class name
-    WCHAR *clsid; // Not supported yet but needed for menu name.
+    DWORD magic;
+    ULONG size;
+    DWORD unk1[3];
+    ULONG count;
+    ULONG index_offset;
+    DWORD unk2[2];
+    ULONG global_offset;
+    ULONG global_len;
 };
 
-struct dll_redirect
+struct wndclass_redirect_data
 {
-    WCHAR *name; // Dll name
-    WCHAR *hash;
-    DWORD  Data; // Junk
+    ULONG size;
+    DWORD res;
+    ULONG name_len;
+    ULONG name_offset;  /* versioned name offset */
+    ULONG module_len;
+    ULONG module_offset;/* container name offset */
 };
 
-LPCWSTR
-FASTCALL
-ClassNameToVersion(
-  LPCTSTR lpszClass,
-  LPCWSTR lpszMenuName,
-  LPCWSTR *plpLibFileName,
-  HANDLE *pContext,
-  BOOL bAnsi)
-{
-    NTSTATUS Status;
-    UNICODE_STRING SectionName;
-    WCHAR SeactionNameBuf[MAX_PATH] = {0};
-    ACTCTX_SECTION_KEYED_DATA KeyedData = { sizeof(KeyedData) };
-
-    if (IS_ATOM(lpszClass))
-    {
-        SectionName.Buffer = (LPWSTR)&SeactionNameBuf;
-        SectionName.MaximumLength = sizeof(SeactionNameBuf);
-        if(!NtUserGetAtomName(LOWORD((DWORD_PTR)lpszClass), &SectionName))
-        {
-            return NULL;
-        }
-    }
-    else
-    {
-        if (bAnsi)
-        {
-            RtlCreateUnicodeStringFromAsciiz(&SectionName, (LPSTR)lpszClass);
-        }
-        else
-        {
-            RtlInitUnicodeString(&SectionName, lpszClass);
-        }
-    }
-    Status = RtlFindActivationContextSectionString( FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX,
-                                                    NULL,
-                                                    ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION,
-                                                   &SectionName,
-                                                   &KeyedData );
-
-    if (NT_SUCCESS(Status) && KeyedData.ulDataFormatVersion == 1)
-    {
-        struct dll_redirect *dll = KeyedData.lpSectionBase;
-
-        if (plpLibFileName) *plpLibFileName = dll->name;
-
-        if (lpszMenuName)
-        {
-            WCHAR * mnubuf;
-            LPWSTR mnuNameW;
-            LPSTR mnuNameA;
-            int len = 0;
-            struct entity *entity = KeyedData.lpData;
-
-            FIXME("actctx: Needs to support menu name from redirected class!");
-
-            if (entity->clsid)
-            {
-                mnubuf = entity->clsid;
-                if (bAnsi)
-                {
-                    mnuNameA = (LPSTR)lpszMenuName;
-                    RtlUnicodeToMultiByteN( mnuNameA, 255, (PULONG)&len, mnubuf, strlenW(mnubuf) * sizeof(WCHAR) );
-                    mnuNameA[len] = 0;
-                }
-                else
-                {
-                    mnuNameW = (LPWSTR)lpszMenuName;
-                    len = strlenW(mnubuf) * sizeof(WCHAR);
-                    RtlCopyMemory((void *)mnuNameW, mnubuf, len);
-                    mnuNameW[len] = 0;
-                }
-            }
-        }
-        if (pContext) *pContext = KeyedData.hActCtx;
-    }
-
-    if (!IS_ATOM(lpszClass) && bAnsi)
-        RtlFreeUnicodeString(&SectionName);
-    if (KeyedData.hActCtx)
-        RtlReleaseActivationContext(KeyedData.hActCtx);
-
-    return lpszClass;
-}
-
 //
-// Ref: http://yvs-it.blogspot.com/2010/04/initcommoncontrolsex.html
-//
-BOOL
-FASTCALL
-Real_VersionRegisterClass(
-  PCWSTR pszClass,
-  LPCWSTR lpLibFileName,
-  HANDLE Contex,
-  HMODULE * phLibModule)
-{
-    BOOL Ret;
-    HMODULE hLibModule;
-    PREGISTERCLASSNAMEW pRegisterClassNameW;
-    UNICODE_STRING ClassName;
-    WCHAR ClassNameBuf[MAX_PATH] = {0};
-    RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED Frame = { sizeof(Frame), 1 };
-
-    RtlActivateActivationContextUnsafeFast(&Frame, Contex);
-
-    Ret = FALSE;
-    hLibModule = NULL;
-
-    _SEH2_TRY
-    {
-        hLibModule = LoadLibraryW(lpLibFileName);
-        if ( hLibModule )
-        {
-            if ((pRegisterClassNameW = (void*) GetProcAddress(hLibModule, "RegisterClassNameW")))
-            {
-                if (IS_ATOM(pszClass))
-                {
-                    ClassName.Buffer = (LPWSTR)&ClassNameBuf;
-                    ClassName.MaximumLength = sizeof(ClassNameBuf);
-                    if (!NtUserGetAtomName(LOWORD((DWORD_PTR)pszClass), &ClassName))
-                    {
-                        _SEH2_YIELD(goto Error_Exit);
-                    }
-                    pszClass = (PCWSTR)&ClassNameBuf;
-                }
-                Ret = pRegisterClassNameW(pszClass);
-            }
-        }
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-    }
-    _SEH2_END
-
-Error_Exit:
-    if ( Ret || !hLibModule )
-    {
-        if ( phLibModule ) *phLibModule = hLibModule;
-    }
-    else
-    {
-        DWORD save_error = GetLastError();
-        FreeLibrary(hLibModule);
-        SetLastError(save_error);
-    }
-
-    return Ret;
-}
-
-//
-// Use wine hack to process extened context classes.
+// Use wine hack to process extended context classes.
 //
 /***********************************************************************
  *           is_comctl32_class
  */
-static BOOL is_comctl32_class( const WCHAR *name )
+LPCWSTR is_comctl32_class( const WCHAR *name )
 {
     static const WCHAR classesW[][20] =
     {
@@ -213,13 +74,121 @@ static BOOL is_comctl32_class( const WCHAR *name )
     while (min <= max)
     {
         int res, pos = (min + max) / 2;
-        if (!(res = strcmpiW( name, classesW[pos] ))) return TRUE;
+        if (!(res = strcmpiW( name, classesW[pos] ))) return classesW[pos];
         if (res < 0) max = pos - 1;
         else min = pos + 1;
     }
-    return FALSE;
+    return NULL;
 }
 
+LPCWSTR
+FASTCALL
+ClassNameToVersion(
+  const void* lpszClass,
+  LPCWSTR lpszMenuName,
+  LPCWSTR *plpLibFileName,
+  HANDLE *pContext,
+  BOOL bAnsi)
+{
+    LPCWSTR VersionedClass = NULL;
+    NTSTATUS Status;
+    UNICODE_STRING SectionName;
+    WCHAR SectionNameBuf[MAX_PATH] = {0};
+    ACTCTX_SECTION_KEYED_DATA KeyedData = { sizeof(KeyedData) };
+
+    if(!lpszClass)
+    {
+        ERR("Null class given !\n");
+        return NULL;
+    }
+
+    if (IS_ATOM(lpszClass))
+    {
+        RtlInitEmptyUnicodeString(&SectionName, SectionNameBuf, sizeof(SectionNameBuf));
+        if(!NtUserGetAtomName(LOWORD((DWORD_PTR)lpszClass), &SectionName))
+        {
+            ERR("Couldn't get atom name for atom %x !\n", LOWORD((DWORD_PTR)lpszClass));
+            return NULL;
+        }
+        SectionName.Length = wcslen(SectionNameBuf) * sizeof(WCHAR);
+        TRACE("ClassNameToVersion got name %wZ from atom\n", &SectionName);
+    }
+    else
+    {
+        if (bAnsi)
+        {
+            ANSI_STRING AnsiString;
+            RtlInitAnsiString(&AnsiString, lpszClass);
+            RtlInitEmptyUnicodeString(&SectionName, SectionNameBuf, sizeof(SectionNameBuf));
+            RtlAnsiStringToUnicodeString(&SectionName, &AnsiString, FALSE);
+        }
+        else
+        {
+            RtlInitUnicodeString(&SectionName, lpszClass);
+        }
+    }
+    Status = RtlFindActivationContextSectionString( FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX,
+                                                    NULL,
+                                                    ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION,
+                                                   &SectionName,
+                                                   &KeyedData );
+
+#ifdef USE_VERSIONED_CLASSES
+    if (NT_SUCCESS(Status) && KeyedData.ulDataFormatVersion == 1)
+    {
+        struct strsection_header *SectionHeader = KeyedData.lpSectionBase;
+
+        /* Find activation context */
+        if(SectionHeader && SectionHeader->count > 0)
+        {
+            struct wndclass_redirect_data *WindowRedirectionData = KeyedData.lpData;
+            if(WindowRedirectionData && WindowRedirectionData->module_len)
+            {
+                LPCWSTR lpLibFileName;
+
+                VersionedClass = (WCHAR*)((BYTE*)WindowRedirectionData + WindowRedirectionData->name_offset);
+                lpLibFileName = (WCHAR*)((BYTE*)KeyedData.lpSectionBase + WindowRedirectionData->module_offset);
+                TRACE("Returning VersionedClass=%S, plpLibFileName=%S for class %S\n", VersionedClass, lpLibFileName, SectionName.Buffer);
+
+                if (pContext) *pContext = KeyedData.hActCtx;
+                if (plpLibFileName) *plpLibFileName = lpLibFileName;
+
+            }
+        }
+    }
+
+    if (KeyedData.hActCtx)
+        RtlReleaseActivationContext(KeyedData.hActCtx);
+#endif
+
+#ifndef DEFAULT_ACTIVATION_CONTEXTS_SUPPORTED
+    /* This block is a hack! */
+    if (!VersionedClass)
+    {
+        /* 
+         * In windows the default activation context always contains comctl32v5 
+         * In reactos we don't have a default activation context so we 
+         * mimic wine here.
+         */
+        VersionedClass = is_comctl32_class(SectionName.Buffer);
+        if (VersionedClass)
+        {
+            if (pContext) *pContext = 0;
+            if (plpLibFileName) *plpLibFileName = L"comctl32";
+        }
+    }
+#endif
+
+    /* 
+     * The returned strings are pointers in the activation context and 
+     * will get freed when the activation context gets freed 
+     */
+    return VersionedClass;
+}
+
+//
+// Ref: http://yvs-it.blogspot.com/2010/04/initcommoncontrolsex.html
+//
 BOOL
 FASTCALL
 VersionRegisterClass(
@@ -228,64 +197,61 @@ VersionRegisterClass(
   HANDLE Contex,
   HMODULE * phLibModule)
 {
-    // Should be lpLibFileName.....
-    static const WCHAR comctl32W[] = {'c','o','m','c','t','l','3','2','.','d','l','l',0};
-    //
+    BOOL Ret = FALSE;
+    HMODULE hLibModule = NULL;
     PREGISTERCLASSNAMEW pRegisterClassNameW;
     UNICODE_STRING ClassName;
     WCHAR ClassNameBuf[MAX_PATH] = {0};
-    BOOL Ret = FALSE;
-    HMODULE hLibModule = NULL;
+    RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED Frame = { sizeof(Frame), 1 };
 
-    if (!IS_ATOM(pszClass) && is_comctl32_class( pszClass ))
+    RtlActivateActivationContextUnsafeFast(&Frame, Contex);
+
+    _SEH2_TRY
     {
-        _SEH2_TRY
+        hLibModule = LoadLibraryW(lpLibFileName);
+        if ( hLibModule )
         {
-            hLibModule = LoadLibraryW(comctl32W);
-            if ( hLibModule )
+            if ((pRegisterClassNameW = (void*) GetProcAddress(hLibModule, "RegisterClassNameW")))
             {
-                if ((pRegisterClassNameW = (void*) GetProcAddress(hLibModule, "RegisterClassNameW")))
+                if (IS_ATOM(pszClass))
                 {
-                    if (IS_ATOM(pszClass))
+                    ClassName.Buffer = ClassNameBuf;
+                    ClassName.MaximumLength = sizeof(ClassNameBuf);
+                    if (!NtUserGetAtomName(LOWORD((DWORD_PTR)pszClass), &ClassName))
                     {
-                        ClassName.Buffer = (LPWSTR)&ClassNameBuf;
-                        ClassName.MaximumLength = sizeof(ClassNameBuf);
-                        if (!NtUserGetAtomName(LOWORD((DWORD_PTR)pszClass), &ClassName))
-                        {
-                            ERR("Error while verifying ATOM\n");
-                            _SEH2_YIELD(goto Error_Exit);
-                        }
-                        pszClass = (PCWSTR)&ClassNameBuf;
+                        ERR("Error while verifying ATOM\n");
+                        _SEH2_YIELD(goto Error_Exit);
                     }
-                    Ret = pRegisterClassNameW(pszClass);
+                    pszClass = ClassName.Buffer;
                 }
+                Ret = pRegisterClassNameW(pszClass);
+            }
+            else
+            {
+                WARN("No RegisterClassNameW PROC\n");
             }
         }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-        }
-        _SEH2_END
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+    }
+    _SEH2_END
 
 Error_Exit:
-        if ( Ret || !hLibModule )
-        {
-            if ( phLibModule ) *phLibModule = hLibModule;
-        }
-        else
-        {
-            DWORD save_error = GetLastError();
-            FreeLibrary(hLibModule);
-            SetLastError(save_error);
-        }
-        TRACE( "%s retrying after loading comctl32\n", debugstr_w(pszClass) );
-        return Ret;
+    if ( Ret || !hLibModule )
+    {
+        if ( phLibModule ) *phLibModule = hLibModule;
     }
-    TRACE("NO ComCtl32 Class %S!\n",pszClass);
-    return FALSE;
+    else
+    {
+        DWORD save_error = GetLastError();
+        FreeLibrary(hLibModule);
+        SetLastError(save_error);
+    }
+
+    RtlDeactivateActivationContextUnsafeFast(&Frame);
+    return Ret;
 }
-//
-//
-//
 
 /*
  * @implemented
@@ -301,7 +267,10 @@ GetClassInfoExA(
     LPCSTR pszMenuName;
     HMODULE hLibModule = NULL;
     DWORD save_error;
-    BOOL Ret, ClassFound = FALSE;
+    BOOL Ret, ClassFound = FALSE, ConvertedString = FALSE;
+    LPCWSTR lpszClsVersion;
+    HANDLE pCtx = NULL;
+    LPCWSTR lpLibFileName = NULL;
 
     TRACE("%p class/atom: %s/%04x %p\n", hInstance,
         IS_ATOM(lpszClass) ? NULL : lpszClass,
@@ -325,14 +294,19 @@ GetClassInfoExA(
         return FALSE;
     }
 
-    if (IS_ATOM(lpszClass))
+    lpszClsVersion = ClassNameToVersion(lpszClass, NULL, &lpLibFileName, &pCtx, TRUE);
+    if (lpszClsVersion)
+    {
+        RtlInitUnicodeString(&ClassName, lpszClsVersion);
+    }
+    else if (IS_ATOM(lpszClass))
     {
         ClassName.Buffer = (PWSTR)((ULONG_PTR)lpszClass);
     }
     else
     {
-        if (!RtlCreateUnicodeStringFromAsciiz(&ClassName,
-                                              lpszClass))
+        ConvertedString = TRUE;
+        if (!RtlCreateUnicodeStringFromAsciiz(&ClassName, lpszClass))
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return FALSE;
@@ -353,13 +327,14 @@ GetClassInfoExA(
                                  (LPWSTR *)&pszMenuName,
                                  TRUE);
         if (Ret) break;
+        if (!lpLibFileName) break;
         if (!ClassFound)
         {
             save_error = GetLastError();
             if ( save_error == ERROR_CANNOT_FIND_WND_CLASS ||
                  save_error == ERROR_CLASS_DOES_NOT_EXIST )
             {
-                ClassFound = VersionRegisterClass(ClassName.Buffer, NULL, NULL, &hLibModule);
+                ClassFound = VersionRegisterClass(ClassName.Buffer, lpLibFileName, pCtx, &hLibModule);
                 if (ClassFound) continue;
             }
         }
@@ -379,7 +354,7 @@ GetClassInfoExA(
 //       lpwcx->lpszMenuName  = pszMenuName;
     }
 
-    if (!IS_ATOM(lpszClass))
+    if (ConvertedString)
     {
         RtlFreeUnicodeString(&ClassName);
     }
@@ -403,6 +378,9 @@ GetClassInfoExW(
     HMODULE hLibModule = NULL;
     DWORD save_error;
     BOOL Ret, ClassFound = FALSE;
+    LPCWSTR lpszClsVersion;
+    HANDLE pCtx = NULL;
+    LPCWSTR lpLibFileName = NULL;
 
     TRACE("%p class/atom: %S/%04x %p\n", hInstance,
         IS_ATOM(lpszClass) ? NULL : lpszClass,
@@ -429,14 +407,18 @@ GetClassInfoExW(
         return FALSE;
     }
 
-    if (IS_ATOM(lpszClass))
+    lpszClsVersion = ClassNameToVersion(lpszClass, NULL, &lpLibFileName, &pCtx, FALSE);
+    if (lpszClsVersion)
+    {
+        RtlInitUnicodeString(&ClassName, lpszClsVersion);
+    }
+    else if (IS_ATOM(lpszClass))
     {
         ClassName.Buffer = (PWSTR)((ULONG_PTR)lpszClass);
     }
     else
     {
-        RtlInitUnicodeString(&ClassName,
-                             lpszClass);
+        RtlInitUnicodeString(&ClassName, lpszClass);
     }
 
     if (!RegisterDefaultClasses)
@@ -453,13 +435,14 @@ GetClassInfoExW(
                                  &pszMenuName,
                                   FALSE);
         if (Ret) break;
+        if (!lpLibFileName) break;
         if (!ClassFound)
         {
             save_error = GetLastError();
             if ( save_error == ERROR_CANNOT_FIND_WND_CLASS ||
                  save_error == ERROR_CLASS_DOES_NOT_EXIST )
             {
-                ClassFound = VersionRegisterClass(ClassName.Buffer, NULL, NULL, &hLibModule);
+                ClassFound = VersionRegisterClass(ClassName.Buffer, lpLibFileName, pCtx, &hLibModule);
                 if (ClassFound) continue;
             }
         }
@@ -1419,12 +1402,11 @@ RegisterClassExWOWW(WNDCLASSEXW *lpwcx,
     ATOM Atom;
     WNDCLASSEXW WndClass;
     UNICODE_STRING ClassName;
+    UNICODE_STRING ClassVersion;
     UNICODE_STRING MenuName = {0};
     CLSMENUNAME clsMenuName;
     ANSI_STRING AnsiMenuName;
-    HMODULE hLibModule = NULL;
-    DWORD save_error;
-    BOOL ClassFound = FALSE;
+    LPCWSTR lpszClsVersion;
 
     if (lpwcx == NULL || lpwcx->cbSize != sizeof(WNDCLASSEXW) ||
         lpwcx->cbClsExtra < 0 || lpwcx->cbWndExtra < 0 ||
@@ -1495,40 +1477,27 @@ RegisterClassExWOWW(WNDCLASSEXW *lpwcx,
         RtlInitUnicodeString(&ClassName, WndClass.lpszClassName);
     }
 
+    ClassVersion = ClassName;
+    if (fnID == 0)
+    {
+        lpszClsVersion = ClassNameToVersion(lpwcx->lpszClassName, NULL, NULL, NULL, FALSE);
+        if (lpszClsVersion)
+        {
+            RtlInitUnicodeString(&ClassVersion, lpszClsVersion);
+        }
+    }
+
     clsMenuName.pszClientAnsiMenuName = AnsiMenuName.Buffer;
     clsMenuName.pwszClientUnicodeMenuName = MenuName.Buffer;
     clsMenuName.pusMenuName = &MenuName;
 
-    for(;;)
-    {
-        Atom = NtUserRegisterClassExWOW( &WndClass,
-                                         &ClassName,
-                                         &ClassName, //PUNICODE_STRING ClsNVersion,
-                                         &clsMenuName,
-                                         fnID,
-                                         dwFlags,
-                                         pdwWowData);
-
-        if (Atom) break;
-        if (!ClassFound)
-        {
-            save_error = GetLastError();
-            if ( save_error == ERROR_CANNOT_FIND_WND_CLASS ||
-                 save_error == ERROR_CLASS_DOES_NOT_EXIST )
-            {
-                ClassFound = VersionRegisterClass(ClassName.Buffer, NULL, NULL, &hLibModule);
-                if (ClassFound) continue;
-            }
-        }
-        if (hLibModule)
-        {
-            save_error = GetLastError();
-            FreeLibrary(hLibModule);
-            SetLastError(save_error);
-            hLibModule = 0;
-        }
-        break;
-    }
+    Atom = NtUserRegisterClassExWOW( &WndClass,
+                                     &ClassName,
+                                     &ClassVersion,
+                                     &clsMenuName,
+                                     fnID,
+                                     dwFlags,
+                                     pdwWowData);
 
     TRACE("atom=%04x wndproc=%p hinst=%p bg=%p style=%08x clsExt=%d winExt=%d class=%p\n",
            Atom, lpwcx->lpfnWndProc, lpwcx->hInstance, lpwcx->hbrBackground,
@@ -1886,16 +1855,23 @@ UnregisterClassA(
 {
     UNICODE_STRING ClassName = {0};
     BOOL Ret;
+    LPCWSTR lpszClsVersion;
+    BOOL ConvertedString = FALSE;
 
     TRACE("class/atom: %s/%04x %p\n",
         IS_ATOM(lpClassName) ? NULL : lpClassName,
         IS_ATOM(lpClassName) ? lpClassName : 0,
         hInstance);
 
-    if (!IS_ATOM(lpClassName))
+    lpszClsVersion = ClassNameToVersion(lpClassName, NULL, NULL, NULL, TRUE);
+    if (lpszClsVersion)
     {
-        if (!RtlCreateUnicodeStringFromAsciiz(&ClassName,
-                                              lpClassName))
+        RtlInitUnicodeString(&ClassName, lpszClsVersion);
+    }
+    else if (!IS_ATOM(lpClassName))
+    {
+        ConvertedString = TRUE;
+        if (!RtlCreateUnicodeStringFromAsciiz(&ClassName, lpClassName))
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return 0;
@@ -1904,11 +1880,9 @@ UnregisterClassA(
     else
         ClassName.Buffer = (PWSTR)((ULONG_PTR)lpClassName);
 
-    Ret = NtUserUnregisterClass(&ClassName,
-                                 hInstance,
-                                 0);
+    Ret = NtUserUnregisterClass(&ClassName, hInstance, 0);
 
-    if (!IS_ATOM(lpClassName))
+    if (ConvertedString)
         RtlFreeUnicodeString(&ClassName);
 
     return Ret;
@@ -1925,23 +1899,28 @@ UnregisterClassW(
   HINSTANCE hInstance)
 {
     UNICODE_STRING ClassName = {0};
+    LPCWSTR lpszClsVersion;
 
     TRACE("class/atom: %S/%04x %p\n",
         IS_ATOM(lpClassName) ? NULL : lpClassName,
         IS_ATOM(lpClassName) ? lpClassName : 0,
         hInstance);
 
-    if (!IS_ATOM(lpClassName))
+    lpszClsVersion = ClassNameToVersion(lpClassName, NULL, NULL, NULL, FALSE);
+    if (lpszClsVersion)
     {
-        RtlInitUnicodeString(&ClassName,
-                             lpClassName);
+        RtlInitUnicodeString(&ClassName, lpszClsVersion);
+    }
+    else if (!IS_ATOM(lpClassName))
+    {
+        RtlInitUnicodeString(&ClassName, lpClassName);
     }
     else
+    {    
         ClassName.Buffer = (PWSTR)((ULONG_PTR)lpClassName);
+    }
 
-    return NtUserUnregisterClass(&ClassName,
-                                 hInstance,
-                                 0);
+    return NtUserUnregisterClass(&ClassName, hInstance, 0);
 }
 
 /* EOF */
