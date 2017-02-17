@@ -97,7 +97,7 @@ VfatGetStandardInformation(
         StandardInfo->Directory = FALSE;
     }
     StandardInfo->NumberOfLinks = 1;
-    StandardInfo->DeletePending = FCB->Flags & FCB_DELETE_PENDING ? TRUE : FALSE;
+    StandardInfo->DeletePending = BooleanFlagOn(FCB->Flags, FCB_DELETE_PENDING) ? TRUE : FALSE;
 
     *BufferLength -= sizeof(FILE_STANDARD_INFORMATION);
     return STATUS_SUCCESS;

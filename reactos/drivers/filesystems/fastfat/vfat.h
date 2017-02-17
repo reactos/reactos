@@ -197,9 +197,9 @@ typedef struct _slot slot;
 
 #define LONGNAME_MAX_LENGTH 	256		// max length for a long filename
 
-#define ENTRY_DELETED(DeviceExt, DirEntry) ((DeviceExt)->Flags & VCB_IS_FATX ? FATX_ENTRY_DELETED(&((DirEntry)->FatX)) : FAT_ENTRY_DELETED(&((DirEntry)->Fat)))
-#define ENTRY_VOLUME(DeviceExt, DirEntry)  ((DeviceExt)->Flags & VCB_IS_FATX ? FATX_ENTRY_VOLUME(&((DirEntry)->FatX)) : FAT_ENTRY_VOLUME(&((DirEntry)->Fat)))
-#define ENTRY_END(DeviceExt, DirEntry)     ((DeviceExt)->Flags & VCB_IS_FATX ? FATX_ENTRY_END(&((DirEntry)->FatX)) : FAT_ENTRY_END(&((DirEntry)->Fat)))
+#define ENTRY_DELETED(DeviceExt, DirEntry) (BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX) ? FATX_ENTRY_DELETED(&((DirEntry)->FatX)) : FAT_ENTRY_DELETED(&((DirEntry)->Fat)))
+#define ENTRY_VOLUME(DeviceExt, DirEntry) (BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX) ? FATX_ENTRY_VOLUME(&((DirEntry)->FatX)) : FAT_ENTRY_VOLUME(&((DirEntry)->Fat)))
+#define ENTRY_END(DeviceExt, DirEntry) (BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX) ? FATX_ENTRY_END(&((DirEntry)->FatX)) : FAT_ENTRY_END(&((DirEntry)->Fat)))
 
 #define FAT_ENTRY_DELETED(DirEntry)  ((DirEntry)->Filename[0] == 0xe5)
 #define FAT_ENTRY_END(DirEntry)      ((DirEntry)->Filename[0] == 0)

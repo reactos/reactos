@@ -547,6 +547,7 @@ VfatRead(
     LARGE_INTEGER ByteOffset;
     PVOID Buffer;
     ULONG BytesPerSector;
+    BOOLEAN PagingIo, CanWait;
 
     ASSERT(IrpContext);
 
@@ -583,9 +584,11 @@ VfatRead(
     ByteOffset = IrpContext->Stack->Parameters.Read.ByteOffset;
     Length = IrpContext->Stack->Parameters.Read.Length;
     BytesPerSector = IrpContext->DeviceExt->FatInfo.BytesPerSector;
+    PagingIo = BooleanFlagOn(IrpContext->Irp->Flags, IRP_PAGING_IO);
+    CanWait = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT);
 
     /* fail if file is a directory and no paged read */
-    if (*Fcb->Attributes & FILE_ATTRIBUTE_DIRECTORY && !(IrpContext->Irp->Flags & IRP_PAGING_IO))
+    if (*Fcb->Attributes & FILE_ATTRIBUTE_DIRECTORY && !PagingIo)
     {
         Status = STATUS_INVALID_PARAMETER;
         goto ByeBye;
@@ -628,7 +631,7 @@ VfatRead(
     {
         Resource = &IrpContext->DeviceExt->DirResource;
     }
-    else if (IrpContext->Irp->Flags & IRP_PAGING_IO)
+    else if (PagingIo)
     {
         Resource = &Fcb->PagingIoResource;
     }
@@ -637,15 +640,14 @@ VfatRead(
         Resource = &Fcb->MainResource;
     }
 
-    if (!ExAcquireResourceSharedLite(Resource,
-                                     IrpContext->Flags & IRPCONTEXT_CANWAIT ? TRUE : FALSE))
+    if (!ExAcquireResourceSharedLite(Resource, CanWait))
     {
         Resource = NULL;
         Status = STATUS_PENDING;
         goto ByeBye;
     }
 
-    if (!(IrpContext->Irp->Flags & IRP_PAGING_IO) &&
+    if (!PagingIo &&
         FsRtlAreThereCurrentFileLocks(&Fcb->FileLock))
     {
         if (!FsRtlCheckLockForReadAccess(&Fcb->FileLock, IrpContext->Irp))
@@ -655,7 +657,7 @@ VfatRead(
         }
     }
 
-    Buffer = VfatGetUserBuffer(IrpContext->Irp, BooleanFlagOn(IrpContext->Irp->Flags, IRP_PAGING_IO));
+    Buffer = VfatGetUserBuffer(IrpContext->Irp, PagingIo);
 
     if (!(IrpContext->Irp->Flags & (IRP_NOCACHE|IRP_PAGING_IO)) &&
         !(Fcb->Flags & (FCB_IS_PAGE_FILE|FCB_IS_VOLUME)))
@@ -682,11 +684,11 @@ VfatRead(
             if (!CcCopyRead(IrpContext->FileObject,
                             &ByteOffset,
                             Length,
-                            (IrpContext->Flags & IRPCONTEXT_CANWAIT) != 0,
+                            CanWait,
                             Buffer,
                             &IrpContext->Irp->IoStatus))
             {
-                ASSERT((IrpContext->Flags & IRPCONTEXT_CANWAIT) == 0);
+                ASSERT(!CanWait);
                 Status = STATUS_PENDING;
                 goto ByeBye;
             }
@@ -742,7 +744,7 @@ ByeBye:
     {
         IrpContext->Irp->IoStatus.Status = Status;
         if (IrpContext->FileObject->Flags & FO_SYNCHRONOUS_IO &&
-            !(IrpContext->Irp->Flags & IRP_PAGING_IO) &&
+            !PagingIo &&
             (NT_SUCCESS(Status) || Status == STATUS_END_OF_FILE))
         {
             IrpContext->FileObject->CurrentByteOffset.QuadPart =
@@ -768,6 +770,7 @@ VfatWrite(
     ULONG Length = 0;
     PVOID Buffer;
     ULONG BytesPerSector;
+    BOOLEAN PagingIo, CanWait;
 
     ASSERT(IrpContext);
 
@@ -801,8 +804,11 @@ VfatWrite(
 
     DPRINT("<%wZ>\n", &Fcb->PathNameU);
 
+    PagingIo = BooleanFlagOn(IrpContext->Irp->Flags, IRP_PAGING_IO);
+    CanWait = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT);
+
     /* fail if file is a directory and no paged read */
-    if (*Fcb->Attributes & FILE_ATTRIBUTE_DIRECTORY && !(IrpContext->Irp->Flags & IRP_PAGING_IO))
+    if (*Fcb->Attributes & FILE_ATTRIBUTE_DIRECTORY && !PagingIo)
     {
         Status = STATUS_INVALID_PARAMETER;
         goto ByeBye;
@@ -854,7 +860,7 @@ VfatWrite(
         goto Metadata;
     }
 
-    if (IrpContext->Irp->Flags & IRP_PAGING_IO)
+    if (PagingIo)
     {
         if (ByteOffset.u.LowPart + Length > Fcb->RFCB.AllocationSize.u.LowPart)
         {
@@ -872,7 +878,7 @@ VfatWrite(
     {
         Resource = &IrpContext->DeviceExt->DirResource;
     }
-    else if (IrpContext->Irp->Flags & IRP_PAGING_IO)
+    else if (PagingIo)
     {
         Resource = &Fcb->PagingIoResource;
     }
@@ -881,10 +887,9 @@ VfatWrite(
         Resource = &Fcb->MainResource;
     }
 
-    if ((Fcb->Flags & FCB_IS_PAGE_FILE) || (IrpContext->Irp->Flags & IRP_PAGING_IO))
+    if ((Fcb->Flags & FCB_IS_PAGE_FILE) || PagingIo)
     {
-        if (!ExAcquireResourceSharedLite(Resource,
-                                         BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+        if (!ExAcquireResourceSharedLite(Resource, CanWait))
         {
             Resource = NULL;
             Status = STATUS_PENDING;
@@ -893,8 +898,7 @@ VfatWrite(
     }
     else
     {
-        if (!ExAcquireResourceExclusiveLite(Resource,
-                                            BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+        if (!ExAcquireResourceExclusiveLite(Resource, CanWait))
         {
             Resource = NULL;
             Status = STATUS_PENDING;
@@ -902,7 +906,7 @@ VfatWrite(
         }
     }
 
-    if (!(IrpContext->Irp->Flags & IRP_PAGING_IO) &&
+    if (!PagingIo &&
         FsRtlAreThereCurrentFileLocks(&Fcb->FileLock))
     {
         if (!FsRtlCheckLockForWriteAccess(&Fcb->FileLock, IrpContext->Irp))
@@ -912,7 +916,7 @@ VfatWrite(
         }
     }
 
-    if (!(IrpContext->Flags & IRPCONTEXT_CANWAIT) && !(Fcb->Flags & FCB_IS_VOLUME))
+    if (!CanWait && !(Fcb->Flags & FCB_IS_VOLUME))
     {
         if (ByteOffset.u.LowPart + Length > Fcb->RFCB.AllocationSize.u.LowPart)
         {
@@ -921,10 +925,10 @@ VfatWrite(
         }
     }
 
-    Buffer = VfatGetUserBuffer(IrpContext->Irp, BooleanFlagOn(IrpContext->Irp->Flags, IRP_PAGING_IO));
+    Buffer = VfatGetUserBuffer(IrpContext->Irp, PagingIo);
 
     if (!(Fcb->Flags & (FCB_IS_FAT|FCB_IS_VOLUME)) &&
-        !(IrpContext->Irp->Flags & IRP_PAGING_IO) &&
+        !PagingIo &&
         ByteOffset.u.LowPart + Length > Fcb->RFCB.FileSize.u.LowPart)
     {
         LARGE_INTEGER AllocationSize;
@@ -961,7 +965,7 @@ VfatWrite(
             if (CcCopyWrite(IrpContext->FileObject,
                             &ByteOffset,
                             Length,
-                            TRUE /*(IrpContext->Flags & IRPCONTEXT_CANWAIT) != 0*/,
+                            TRUE /*CanWait*/,
                             Buffer))
             {
                 IrpContext->Irp->IoStatus.Information = Length;
@@ -969,7 +973,7 @@ VfatWrite(
             }
             else
             {
-                ASSERT(FALSE /*(IrpContext->Flags & IRPCONTEXT_CANWAIT) == 0*/);
+                ASSERT(FALSE /*!CanWait*/);
                 Status = STATUS_UNSUCCESSFUL;
             }
         }
@@ -1002,7 +1006,7 @@ VfatWrite(
     }
 
 Metadata:
-    if (!(IrpContext->Irp->Flags & IRP_PAGING_IO) &&
+    if (!PagingIo &&
         !(Fcb->Flags & (FCB_IS_FAT|FCB_IS_VOLUME)))
     {
         if(!(*Fcb->Attributes & FILE_ATTRIBUTE_DIRECTORY))
@@ -1064,7 +1068,7 @@ ByeBye:
     {
         IrpContext->Irp->IoStatus.Status = Status;
         if (IrpContext->FileObject->Flags & FO_SYNCHRONOUS_IO &&
-            !(IrpContext->Irp->Flags & IRP_PAGING_IO) && NT_SUCCESS(Status))
+            !PagingIo && NT_SUCCESS(Status))
         {
             IrpContext->FileObject->CurrentByteOffset.QuadPart =
                 ByteOffset.QuadPart + IrpContext->Irp->IoStatus.Information;
