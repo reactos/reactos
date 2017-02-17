@@ -12,12 +12,19 @@ EXPORTS TIFFOpen
 	TIFFGetTagListEntry
 	TIFFGetTagListCount
 	TIFFReadDirectory
+	TIFFScanlineSize64
 	TIFFScanlineSize
+	TIFFStripSize64
 	TIFFStripSize
+	TIFFVStripSize64
 	TIFFVStripSize
+	TIFFRawStripSize64
 	TIFFRawStripSize
+	TIFFTileRowSize64
 	TIFFTileRowSize
+	TIFFTileSize64
 	TIFFTileSize
+	TIFFVTileSize64
 	TIFFVTileSize
 	TIFFFileno
 	TIFFSetFileno
@@ -86,17 +93,20 @@ EXPORTS TIFFOpen
 	TIFFWriteEncodedTile
 	TIFFWriteRawTile
 	TIFFSetWriteOffset
+	TIFFSwabFloat
 	TIFFSwabDouble
 	TIFFSwabShort
 	TIFFSwabLong
 	TIFFSwabArrayOfShort
 	TIFFSwabArrayOfLong
+	TIFFSwabArrayOfFloat
 	TIFFSwabArrayOfDouble
 	TIFFSwabArrayOfTriples
 	TIFFReverseBits
 	TIFFGetBitRevTable
 	TIFFDefaultStripSize
 	TIFFDefaultTileSize
+	TIFFRasterScanlineSize64
 	TIFFRasterScanlineSize
 	_TIFFmalloc
 	_TIFFrealloc
@@ -104,13 +114,17 @@ EXPORTS TIFFOpen
 	_TIFFmemset
 	_TIFFmemcpy
 	_TIFFmemcmp
+	_TIFFCheckMalloc
 	TIFFCreateDirectory
 	TIFFSetTagExtender
-	TIFFMergeFieldInfo
-	TIFFFindFieldInfo
-	TIFFFindFieldInfoByName
 	TIFFFieldWithName
 	TIFFFieldWithTag
+	TIFFFieldTag
+	TIFFFieldName
+	TIFFFieldDataType
+	TIFFFieldPassCount
+	TIFFFieldReadCount
+	TIFFFieldWriteCount
 	TIFFCurrentDirOffset
 	TIFFWriteCheck
 	TIFFRGBAImageOK
@@ -137,4 +151,8 @@ EXPORTS TIFFOpen
  	TIFFAccessTagMethods
  	TIFFGetClientInfo
  	TIFFSetClientInfo
- 	TIFFReassignTagToIgnore
+	TIFFSwabLong8
+	TIFFSwabArrayOfLong8
+	TIFFFindField
+	TIFFUnsetField
+	TIFFMergeFieldInfo
