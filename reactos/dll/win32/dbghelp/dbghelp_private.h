@@ -714,6 +714,12 @@ extern BOOL         dwarf2_parse(struct module* module, unsigned long load_offse
 extern BOOL         dwarf2_virtual_unwind(struct cpu_stack_walk* csw, DWORD_PTR ip,
                                           CONTEXT* context, ULONG_PTR* cfa) DECLSPEC_HIDDEN;
 
+/* rsym.c */
+extern BOOL         rsym_parse(struct module* module, unsigned long load_offset,
+                                const void* rsym, int rsymlen) DECLSPEC_HIDDEN;
+
+
+
 /* stack.c */
 #ifndef DBGHELP_STATIC_LIB
 extern BOOL         sw_read_mem(struct cpu_stack_walk* csw, DWORD64 addr, void* ptr, DWORD sz) DECLSPEC_HIDDEN;

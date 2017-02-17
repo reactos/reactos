@@ -63,6 +63,7 @@ else()
         path.c
         pe_module.c
         rosstubs.c
+        rsym.c
         source.c
         stabs.c
         stack.c
