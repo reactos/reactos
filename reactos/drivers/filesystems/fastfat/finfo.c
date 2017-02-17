@@ -338,7 +338,7 @@ VfatSetDispositionInformation(
         return STATUS_SUCCESS;
     }
 
-    if (*FCB->Attributes & FILE_ATTRIBUTE_READONLY)
+    if (vfatFCBIsReadOnly(FCB))
     {
         return STATUS_CANNOT_DELETE;
     }
@@ -398,7 +398,7 @@ vfatPrepareTargetForRename(
         if (ReplaceIfExists)
         {
             /* If that's a directory or a read-only file, we're not allowed */
-            if (vfatFCBIsDirectory(TargetFcb) || ((*TargetFcb->Attributes & FILE_ATTRIBUTE_READONLY) == FILE_ATTRIBUTE_READONLY))
+            if (vfatFCBIsDirectory(TargetFcb) || vfatFCBIsReadOnly(TargetFcb))
             {
                 DPRINT("And this is a readonly file!\n");
                 vfatReleaseFCB(DeviceExt, *ParentFCB);
@@ -791,7 +791,7 @@ VfatSetRenameInformation(
                                         FCB->PathNameU.Length - FCB->LongNameU.Length,
                                         NULL,
                                         NULL,
-                                        ((*FCB->Attributes & FILE_ATTRIBUTE_DIRECTORY) ?
+                                        (vfatFCBIsDirectory(FCB) ?
                                         FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
                                         FILE_ACTION_RENAMED_OLD_NAME,
                                         NULL);
@@ -804,7 +804,7 @@ VfatSetRenameInformation(
                                             FCB->PathNameU.Length - FCB->LongNameU.Length,
                                             NULL,
                                             NULL,
-                                            ((*FCB->Attributes & FILE_ATTRIBUTE_DIRECTORY) ?
+                                            (vfatFCBIsDirectory(FCB) ?
                                             FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
                                             FILE_ACTION_RENAMED_NEW_NAME,
                                             NULL);
@@ -834,7 +834,7 @@ VfatSetRenameInformation(
                                         FCB->PathNameU.Length - FCB->LongNameU.Length,
                                         NULL,
                                         NULL,
-                                        ((*FCB->Attributes & FILE_ATTRIBUTE_DIRECTORY) ?
+                                        (vfatFCBIsDirectory(FCB) ?
                                         FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
                                         (DeletedTarget ? FILE_ACTION_REMOVED : FILE_ACTION_RENAMED_OLD_NAME),
                                         NULL);
@@ -862,7 +862,7 @@ VfatSetRenameInformation(
                                                 FCB->PathNameU.Length - FCB->LongNameU.Length,
                                                 NULL,
                                                 NULL,
-                                                ((*FCB->Attributes & FILE_ATTRIBUTE_DIRECTORY) ?
+                                                (vfatFCBIsDirectory(FCB) ?
                                                 FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
                                                 FILE_ACTION_RENAMED_NEW_NAME,
                                                 NULL);
@@ -905,7 +905,7 @@ VfatSetRenameInformation(
                                     FCB->PathNameU.Length - FCB->LongNameU.Length,
                                     NULL,
                                     NULL,
-                                    ((*FCB->Attributes & FILE_ATTRIBUTE_DIRECTORY) ?
+                                    (vfatFCBIsDirectory(FCB) ?
                                     FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
                                     FILE_ACTION_REMOVED,
                                     NULL);
@@ -933,7 +933,7 @@ VfatSetRenameInformation(
                                             FCB->PathNameU.Length - FCB->LongNameU.Length,
                                             NULL,
                                             NULL,
-                                            ((*FCB->Attributes & FILE_ATTRIBUTE_DIRECTORY) ?
+                                            (vfatFCBIsDirectory(FCB) ?
                                             FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
                                             FILE_ACTION_ADDED,
                                             NULL);

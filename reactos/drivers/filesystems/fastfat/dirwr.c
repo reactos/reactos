@@ -31,7 +31,7 @@ VfatUpdateEntry(
 
     ASSERT(pFcb);
 
-    if (pFcb->Flags & FCB_IS_FATX_ENTRY)
+    if (BooleanFlagOn(pFcb->Flags, FCB_IS_FATX_ENTRY))
     {
         SizeDirEntry = sizeof(FATX_DIR_ENTRY);
         dirIndex = pFcb->startIndex;
@@ -44,7 +44,7 @@ VfatUpdateEntry(
 
     DPRINT("updEntry dirIndex %u, PathName \'%wZ\'\n", dirIndex, &pFcb->PathNameU);
 
-    if (vfatFCBIsRoot(pFcb) || (pFcb->Flags & (FCB_IS_FAT|FCB_IS_VOLUME)))
+    if (vfatFCBIsRoot(pFcb) || BooleanFlagOn(pFcb->Flags, FCB_IS_FAT | FCB_IS_VOLUME))
     {
         return STATUS_SUCCESS;
     }
@@ -90,7 +90,7 @@ vfatRenameEntry(
 
     DPRINT("vfatRenameEntry(%p, %p, %wZ, %d)\n", DeviceExt, pFcb, FileName, CaseChangeOnly);
 
-    if (pFcb->Flags & FCB_IS_FATX_ENTRY)
+    if (BooleanFlagOn(pFcb->Flags, FCB_IS_FATX_ENTRY))
     {
         VFAT_DIRENTRY_CONTEXT DirContext;
 
@@ -162,7 +162,7 @@ vfatFindDirSpace(
     ULONG SizeDirEntry;
     FileOffset.QuadPart = 0;
 
-    if (DeviceExt->Flags & VCB_IS_FATX)
+    if (BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX))
         SizeDirEntry = sizeof(FATX_DIR_ENTRY);
     else
         SizeDirEntry = sizeof(FAT_DIR_ENTRY);
@@ -304,6 +304,7 @@ FATAddEntry(
     BOOLEAN BaseAllLower, BaseAllUpper;
     BOOLEAN ExtensionAllLower, ExtensionAllUpper;
     BOOLEAN InExtension;
+    BOOLEAN IsDirectory;
     WCHAR c;
     ULONG CurrentCluster;
     LARGE_INTEGER SystemTime, FileOffset;
@@ -323,6 +324,7 @@ FATAddEntry(
     DPRINT("addEntry: Name='%wZ', Dir='%wZ'\n", NameU, &ParentFcb->PathNameU);
 
     DirContext.LongNameU = *NameU;
+    IsDirectory = BooleanFlagOn(RequestedOptions, FILE_DIRECTORY_FILE);
 
     /* nb of entry needed for long name+normal entry */
     nbSlots = (DirContext.LongNameU.Length / sizeof(WCHAR) + 12) / 13 + 1;
@@ -480,7 +482,7 @@ FATAddEntry(
 
     /* set attributes */
     DirContext.DirEntry.Fat.Attrib = ReqAttr;
-    if (RequestedOptions & FILE_DIRECTORY_FILE)
+    if (IsDirectory)
     {
         DirContext.DirEntry.Fat.Attrib |= FILE_ATTRIBUTE_DIRECTORY;
     }
@@ -534,7 +536,7 @@ FATAddEntry(
         return STATUS_DISK_FULL;
     }
     DirContext.DirIndex = DirContext.StartIndex + nbSlots - 1;
-    if (RequestedOptions & FILE_DIRECTORY_FILE)
+    if (IsDirectory)
     {
         /* If we aren't moving, use next */
         if (MoveContext == NULL)
@@ -653,7 +655,7 @@ FATAddEntry(
     DPRINT("new : entry=%11.11s\n", (*Fcb)->entry.Fat.Filename);
     DPRINT("new : entry=%11.11s\n", DirContext.DirEntry.Fat.Filename);
 
-    if (RequestedOptions & FILE_DIRECTORY_FILE)
+    if (IsDirectory)
     {
         FileOffset.QuadPart = 0;
         _SEH2_TRY
@@ -759,7 +761,7 @@ FATXAddEntry(
 
     /* set attributes */
     DirContext.DirEntry.FatX.Attrib = ReqAttr;
-    if (RequestedOptions & FILE_DIRECTORY_FILE)
+    if (BooleanFlagOn(RequestedOptions, FILE_DIRECTORY_FILE))
     {
         DirContext.DirEntry.FatX.Attrib |= FILE_ATTRIBUTE_DIRECTORY;
     }
@@ -822,7 +824,7 @@ VfatAddEntry(
     IN UCHAR ReqAttr,
     IN PVFAT_MOVE_CONTEXT MoveContext)
 {
-    if (DeviceExt->Flags & VCB_IS_FATX)
+    if (BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX))
         return FATXAddEntry(DeviceExt, NameU, Fcb, ParentFcb, RequestedOptions, ReqAttr, MoveContext);
     else
         return FATAddEntry(DeviceExt, NameU, Fcb, ParentFcb, RequestedOptions, ReqAttr, MoveContext);
@@ -925,7 +927,7 @@ FATXDelEntry(
 
     ASSERT(pFcb);
     ASSERT(pFcb->parentFcb);
-    ASSERT(pFcb->Flags & FCB_IS_FATX_ENTRY);
+    ASSERT(BooleanFlagOn(pFcb->Flags, FCB_IS_FATX_ENTRY));
 
     StartIndex = pFcb->startIndex;
 
@@ -981,7 +983,7 @@ VfatDelEntry(
     IN PVFATFCB pFcb,
     OUT PVFAT_MOVE_CONTEXT MoveContext)
 {
-    if (DeviceExt->Flags & VCB_IS_FATX)
+    if (BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX))
         return FATXDelEntry(DeviceExt, pFcb, MoveContext);
     else
         return FATDelEntry(DeviceExt, pFcb, MoveContext);

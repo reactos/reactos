@@ -136,7 +136,7 @@ vfatNewFCB(
     }
     RtlZeroMemory(rcFCB, sizeof(VFATFCB));
     vfatInitFcb(rcFCB, pFileNameU);
-    if (pVCB->Flags & VCB_IS_FATX)
+    if (BooleanFlagOn(pVCB->Flags, VCB_IS_FATX))
     {
         rcFCB->Flags |= FCB_IS_FATX_ENTRY;
         rcFCB->Attributes = &rcFCB->entry.FatX.Attrib;
@@ -281,13 +281,6 @@ vfatDestroyFCB(
 }
 
 BOOLEAN
-vfatFCBIsDirectory(
-    PVFATFCB FCB)
-{
-    return ((*FCB->Attributes & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY);
-}
-
-BOOLEAN
 vfatFCBIsRoot(
     PVFATFCB FCB)
 {
@@ -408,7 +401,7 @@ vfatInitFCBFromDirEntry(
             }
         }
     }
-    else if (Fcb->Flags & FCB_IS_FATX_ENTRY)
+    else if (BooleanFlagOn(Fcb->Flags, FCB_IS_FATX_ENTRY))
     {
         Size = Fcb->entry.FatX.FileSize;
     }
@@ -418,7 +411,7 @@ vfatInitFCBFromDirEntry(
     }
     Fcb->dirIndex = DirContext->DirIndex;
     Fcb->startIndex = DirContext->StartIndex;
-    if ((Fcb->Flags & FCB_IS_FATX_ENTRY) && !vfatFCBIsRoot(Fcb))
+    if (BooleanFlagOn(Fcb->Flags, FCB_IS_FATX_ENTRY) && !vfatFCBIsRoot(Fcb))
     {
         ASSERT(DirContext->DirIndex >= 2 && DirContext->StartIndex >= 2);
         Fcb->dirIndex = DirContext->DirIndex-2;
@@ -460,7 +453,7 @@ vfatSetFCBNewDirName(
     Fcb->DirNameU.Buffer = Fcb->PathNameU.Buffer;
     vfatSplitPathName(&Fcb->PathNameU, &Fcb->DirNameU, &Fcb->LongNameU);
     Fcb->Hash.Hash = vfatNameHash(0, &Fcb->PathNameU);
-    if (pVCB->Flags & VCB_IS_FATX)
+    if (BooleanFlagOn(pVCB->Flags, VCB_IS_FATX))
     {
         Fcb->ShortHash.Hash = Fcb->Hash.Hash;
     }
@@ -644,7 +637,7 @@ vfatMakeRootFCB(
     UNICODE_STRING NameU = RTL_CONSTANT_STRING(L"\\");
 
     FCB = vfatNewFCB(pVCB, &NameU);
-    if (FCB->Flags & FCB_IS_FATX_ENTRY)
+    if (BooleanFlagOn(FCB->Flags, FCB_IS_FATX_ENTRY))
     {
         memset(FCB->entry.FatX.Filename, ' ', 42);
         FCB->entry.FatX.FileSize = pVCB->FatInfo.rootDirectorySectors * pVCB->FatInfo.BytesPerSector;

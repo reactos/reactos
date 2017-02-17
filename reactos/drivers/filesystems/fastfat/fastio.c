@@ -131,7 +131,7 @@ VfatFastIoQueryBasicInfo(
 
     FsRtlEnterFileSystem();
 
-    if (!(FCB->Flags & FCB_IS_PAGE_FILE))
+    if (!BooleanFlagOn(FCB->Flags, FCB_IS_PAGE_FILE))
     {
         if (!ExAcquireResourceSharedLite(&FCB->MainResource, Wait))
         {
@@ -146,7 +146,7 @@ VfatFastIoQueryBasicInfo(
                                      Buffer,
                                      &BufferLength);
 
-    if (!(FCB->Flags & FCB_IS_PAGE_FILE))
+    if (!BooleanFlagOn(FCB->Flags, FCB_IS_PAGE_FILE))
     {
         ExReleaseResourceLite(&FCB->MainResource);
     }
@@ -192,7 +192,7 @@ VfatFastIoQueryStandardInfo(
 
     FsRtlEnterFileSystem();
 
-    if (!(FCB->Flags & FCB_IS_PAGE_FILE))
+    if (!BooleanFlagOn(FCB->Flags, FCB_IS_PAGE_FILE))
     {
         if (!ExAcquireResourceSharedLite(&FCB->MainResource, Wait))
         {
@@ -205,7 +205,7 @@ VfatFastIoQueryStandardInfo(
                                         Buffer,
                                         &BufferLength);
 
-    if (!(FCB->Flags & FCB_IS_PAGE_FILE))
+    if (!BooleanFlagOn(FCB->Flags, FCB_IS_PAGE_FILE))
     {
         ExReleaseResourceLite(&FCB->MainResource);
     }
@@ -691,7 +691,7 @@ VfatAcquireForCcFlush(
     UNREFERENCED_PARAMETER(DeviceObject);
 
     /* Make sure it is not a volume lock */
-    ASSERT(!(Fcb->Flags & FCB_IS_VOLUME));
+    ASSERT(!BooleanFlagOn(Fcb->Flags, FCB_IS_VOLUME));
 
     /* Acquire the resource */
     ExAcquireResourceExclusiveLite(&(Fcb->MainResource), TRUE);
@@ -715,7 +715,7 @@ VfatReleaseForCcFlush(
     UNREFERENCED_PARAMETER(DeviceObject);
 
     /* Make sure it is not a volume lock */
-    ASSERT(!(Fcb->Flags & FCB_IS_VOLUME));
+    ASSERT(!BooleanFlagOn(Fcb->Flags, FCB_IS_VOLUME));
 
     /* Release the resource */
     ExReleaseResourceLite(&(Fcb->MainResource));

@@ -56,7 +56,7 @@ VfatReadWritePartialCompletion(
     }
 
     if (0 == InterlockedDecrement((PLONG)&IrpContext->RefCount) &&
-        IrpContext->Flags & IRPCONTEXT_PENDINGRETURNED)
+        BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_PENDINGRETURNED))
     {
         KeSetEvent(&IrpContext->Event, IO_NO_INCREMENT, FALSE);
     }

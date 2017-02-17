@@ -127,7 +127,7 @@ VfatGetFileDirectoryInformation(
                   DirContext->LongNameU.Buffer,
                   DirContext->LongNameU.Length);
 
-    if (DeviceExt->Flags & VCB_IS_FATX)
+    if (BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX))
     {
         FsdDosDateTimeToSystemTime(DeviceExt,
                                    DirContext->DirEntry.FatX.CreationDate,
@@ -144,7 +144,7 @@ VfatGetFileDirectoryInformation(
 
         pInfo->ChangeTime = pInfo->LastWriteTime;
 
-        if (DirContext->DirEntry.FatX.Attrib & FILE_ATTRIBUTE_DIRECTORY)
+        if (BooleanFlagOn(DirContext->DirEntry.FatX.Attrib, FILE_ATTRIBUTE_DIRECTORY))
         {
             pInfo->EndOfFile.QuadPart = 0;
             pInfo->AllocationSize.QuadPart = 0;
@@ -178,7 +178,7 @@ VfatGetFileDirectoryInformation(
 
         pInfo->ChangeTime = pInfo->LastWriteTime;
 
-        if (DirContext->DirEntry.Fat.Attrib & FILE_ATTRIBUTE_DIRECTORY)
+        if (BooleanFlagOn(DirContext->DirEntry.Fat.Attrib, FILE_ATTRIBUTE_DIRECTORY))
         {
             pInfo->EndOfFile.QuadPart = 0;
             pInfo->AllocationSize.QuadPart = 0;
@@ -220,7 +220,7 @@ VfatGetFileFullDirectoryInformation(
                   DirContext->LongNameU.Buffer,
                   DirContext->LongNameU.Length);
 
-    if (DeviceExt->Flags & VCB_IS_FATX)
+    if (BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX))
     {
         FsdDosDateTimeToSystemTime(DeviceExt,
                                    DirContext->DirEntry.FatX.CreationDate,
@@ -285,7 +285,7 @@ VfatGetFileBothInformation(
 
     pInfo->EaSize = 0;
 
-    if (DeviceExt->Flags & VCB_IS_FATX)
+    if (BooleanFlagOn(DeviceExt->Flags, VCB_IS_FATX))
     {
         pInfo->FileNameLength = DirContext->LongNameU.Length;
 
@@ -314,7 +314,7 @@ VfatGetFileBothInformation(
 
         pInfo->ChangeTime = pInfo->LastWriteTime;
 
-        if (DirContext->DirEntry.FatX.Attrib & FILE_ATTRIBUTE_DIRECTORY)
+        if (BooleanFlagOn(DirContext->DirEntry.FatX.Attrib, FILE_ATTRIBUTE_DIRECTORY))
         {
             pInfo->EndOfFile.QuadPart = 0;
             pInfo->AllocationSize.QuadPart = 0;
@@ -364,7 +364,7 @@ VfatGetFileBothInformation(
 
         pInfo->ChangeTime = pInfo->LastWriteTime;
 
-        if (DirContext->DirEntry.Fat.Attrib & FILE_ATTRIBUTE_DIRECTORY)
+        if (BooleanFlagOn(DirContext->DirEntry.Fat.Attrib, FILE_ATTRIBUTE_DIRECTORY))
         {
             pInfo->EndOfFile.QuadPart = 0;
             pInfo->AllocationSize.QuadPart = 0;
@@ -497,11 +497,11 @@ DoQuery(
         pCcb->SearchPattern.Length = sizeof(WCHAR);
     }
 
-    if (IrpContext->Stack->Flags & SL_INDEX_SPECIFIED)
+    if (BooleanFlagOn(IrpContext->Stack->Flags, SL_INDEX_SPECIFIED))
     {
         DirContext.DirIndex = pCcb->Entry = Stack->Parameters.QueryDirectory.FileIndex;
     }
-    else if (FirstQuery || (IrpContext->Stack->Flags & SL_RESTART_SCAN))
+    else if (FirstQuery || BooleanFlagOn(IrpContext->Stack->Flags, SL_RESTART_SCAN))
     {
         DirContext.DirIndex = pCcb->Entry = 0;
     }
@@ -579,7 +579,7 @@ DoQuery(
         pCcb->Entry = ++DirContext.DirIndex;
         BufferLength -= Buffer0->NextEntryOffset;
 
-        if (IrpContext->Stack->Flags & SL_RETURN_SINGLE_ENTRY)
+        if (BooleanFlagOn(IrpContext->Stack->Flags, SL_RETURN_SINGLE_ENTRY))
             break;
 
         Buffer += Buffer0->NextEntryOffset;
@@ -653,7 +653,7 @@ VfatDirectoryControl(
             break;
     }
 
-    if (Status == STATUS_PENDING && IrpContext->Flags & IRPCONTEXT_COMPLETE)
+    if (Status == STATUS_PENDING && BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_COMPLETE))
     {
         return VfatMarkIrpContextForQueue(IrpContext);
     }

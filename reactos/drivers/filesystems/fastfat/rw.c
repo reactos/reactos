@@ -155,7 +155,7 @@ VfatReadFileData(
     ASSERT(Length % BytesPerSector == 0);
 
     /* Is this a read of the FAT? */
-    if (Fcb->Flags & FCB_IS_FAT)
+    if (BooleanFlagOn(Fcb->Flags, FCB_IS_FAT))
     {
         ReadOffset.QuadPart += DeviceExt->FatInfo.FATStart * BytesPerSector;
         Status = VfatReadDiskPartial(IrpContext, &ReadOffset, Length, 0, TRUE);
@@ -172,7 +172,7 @@ VfatReadFileData(
     }
 
     /* Is this a read of the Volume ? */
-    if (Fcb->Flags & FCB_IS_VOLUME)
+    if (BooleanFlagOn(Fcb->Flags, FCB_IS_VOLUME))
     {
         Status = VfatReadDiskPartial(IrpContext, &ReadOffset, Length, 0, TRUE);
         if (NT_SUCCESS(Status))
@@ -367,7 +367,7 @@ VfatWriteFileData(
     ASSERT(Length % BytesPerSector == 0);
 
     /* Is this a write of the volume? */
-    if (Fcb->Flags & FCB_IS_VOLUME)
+    if (BooleanFlagOn(Fcb->Flags, FCB_IS_VOLUME))
     {
         Status = VfatWriteDiskPartial(IrpContext, &WriteOffset, Length, 0, TRUE);
         if (!NT_SUCCESS(Status))
@@ -378,7 +378,7 @@ VfatWriteFileData(
     }
 
     /* Is this a write to the FAT? */
-    if (Fcb->Flags & FCB_IS_FAT)
+    if (BooleanFlagOn(Fcb->Flags, FCB_IS_FAT))
     {
         WriteOffset.u.LowPart += DeviceExt->FatInfo.FATStart * BytesPerSector;
         IrpContext->RefCount = 1;
@@ -547,7 +547,7 @@ VfatRead(
     LARGE_INTEGER ByteOffset;
     PVOID Buffer;
     ULONG BytesPerSector;
-    BOOLEAN PagingIo, CanWait, IsVolume;
+    BOOLEAN PagingIo, CanWait, IsVolume, NoCache;
 
     ASSERT(IrpContext);
 
@@ -568,7 +568,7 @@ VfatRead(
     Fcb = IrpContext->FileObject->FsContext;
     ASSERT(Fcb);
 
-    if (Fcb->Flags & FCB_IS_PAGE_FILE)
+    if (BooleanFlagOn(Fcb->Flags, FCB_IS_PAGE_FILE))
     {
         PFATINFO FatInfo = &IrpContext->DeviceExt->FatInfo;
         IrpContext->Stack->Parameters.Read.ByteOffset.QuadPart += FatInfo->dataStart * FatInfo->BytesPerSector;
@@ -587,9 +587,10 @@ VfatRead(
     PagingIo = BooleanFlagOn(IrpContext->Irp->Flags, IRP_PAGING_IO);
     CanWait = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT);
     IsVolume = BooleanFlagOn(Fcb->Flags, FCB_IS_VOLUME);
+    NoCache = BooleanFlagOn(IrpContext->Irp->Flags, IRP_NOCACHE);
 
     /* fail if file is a directory and no paged read */
-    if (*Fcb->Attributes & FILE_ATTRIBUTE_DIRECTORY && !PagingIo)
+    if (vfatFCBIsDirectory(Fcb) && !PagingIo)
     {
         Status = STATUS_INVALID_PARAMETER;
         goto ByeBye;
@@ -617,7 +618,7 @@ VfatRead(
        goto ByeBye;
     }
 
-    if (IrpContext->Irp->Flags & (IRP_PAGING_IO | IRP_NOCACHE) || IsVolume)
+    if (NoCache || PagingIo || IsVolume)
     {
         if (ByteOffset.u.LowPart % BytesPerSector != 0 || Length % BytesPerSector != 0)
         {
@@ -660,8 +661,7 @@ VfatRead(
 
     Buffer = VfatGetUserBuffer(IrpContext->Irp, PagingIo);
 
-    if (!(IrpContext->Irp->Flags & (IRP_NOCACHE|IRP_PAGING_IO)) &&
-        !(Fcb->Flags & (FCB_IS_PAGE_FILE|FCB_IS_VOLUME)))
+    if (!PagingIo && !NoCache && !IsVolume)
     {
         // cached read
         Status = STATUS_SUCCESS;
@@ -744,7 +744,7 @@ ByeBye:
     else
     {
         IrpContext->Irp->IoStatus.Status = Status;
-        if (IrpContext->FileObject->Flags & FO_SYNCHRONOUS_IO &&
+        if (BooleanFlagOn(IrpContext->FileObject->Flags, FO_SYNCHRONOUS_IO) &&
             !PagingIo &&
             (NT_SUCCESS(Status) || Status == STATUS_END_OF_FILE))
         {
@@ -771,7 +771,7 @@ VfatWrite(
     ULONG Length = 0;
     PVOID Buffer;
     ULONG BytesPerSector;
-    BOOLEAN PagingIo, CanWait, IsVolume;
+    BOOLEAN PagingIo, CanWait, IsVolume, IsFAT, NoCache;
 
     ASSERT(IrpContext);
 
@@ -792,7 +792,7 @@ VfatWrite(
     Fcb = IrpContext->FileObject->FsContext;
     ASSERT(Fcb);
 
-    if (Fcb->Flags & FCB_IS_PAGE_FILE)
+    if (BooleanFlagOn(Fcb->Flags, FCB_IS_PAGE_FILE))
     {
         PFATINFO FatInfo = &IrpContext->DeviceExt->FatInfo;
         IrpContext->Stack->Parameters.Write.ByteOffset.QuadPart += FatInfo->dataStart * FatInfo->BytesPerSector;
@@ -808,9 +808,11 @@ VfatWrite(
     PagingIo = BooleanFlagOn(IrpContext->Irp->Flags, IRP_PAGING_IO);
     CanWait = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT);
     IsVolume = BooleanFlagOn(Fcb->Flags, FCB_IS_VOLUME);
+    IsFAT = BooleanFlagOn(Fcb->Flags, FCB_IS_FAT);
+    NoCache = BooleanFlagOn(IrpContext->Irp->Flags, IRP_NOCACHE);
 
     /* fail if file is a directory and no paged read */
-    if (*Fcb->Attributes & FILE_ATTRIBUTE_DIRECTORY && !PagingIo)
+    if (vfatFCBIsDirectory(Fcb) && !PagingIo)
     {
         Status = STATUS_INVALID_PARAMETER;
         goto ByeBye;
@@ -831,7 +833,7 @@ VfatWrite(
         goto ByeBye;
     }
 
-    if (Fcb->Flags & (FCB_IS_FAT | FCB_IS_VOLUME) ||
+    if (IsFAT || IsVolume ||
         vfatDirEntryGetFirstCluster(IrpContext->DeviceExt, &Fcb->entry) == 1)
     {
         if (ByteOffset.QuadPart + Length > Fcb->RFCB.FileSize.QuadPart)
@@ -842,7 +844,7 @@ VfatWrite(
         }
     }
 
-    if (IrpContext->Irp->Flags & (IRP_PAGING_IO|IRP_NOCACHE) || IsVolume)
+    if (PagingIo || NoCache || IsVolume)
     {
         if (ByteOffset.u.LowPart % BytesPerSector != 0 || Length % BytesPerSector != 0)
         {
@@ -889,7 +891,7 @@ VfatWrite(
         Resource = &Fcb->MainResource;
     }
 
-    if ((Fcb->Flags & FCB_IS_PAGE_FILE) || PagingIo)
+    if (PagingIo)
     {
         if (!ExAcquireResourceSharedLite(Resource, CanWait))
         {
@@ -929,8 +931,7 @@ VfatWrite(
 
     Buffer = VfatGetUserBuffer(IrpContext->Irp, PagingIo);
 
-    if (!(Fcb->Flags & (FCB_IS_FAT|FCB_IS_VOLUME)) &&
-        !PagingIo &&
+    if (!IsFAT && !IsVolume && !PagingIo &&
         ByteOffset.u.LowPart + Length > Fcb->RFCB.FileSize.u.LowPart)
     {
         LARGE_INTEGER AllocationSize;
@@ -943,8 +944,7 @@ VfatWrite(
         }
     }
 
-    if (!(IrpContext->Irp->Flags & (IRP_NOCACHE|IRP_PAGING_IO)) &&
-        !(Fcb->Flags & (FCB_IS_PAGE_FILE|FCB_IS_VOLUME)))
+    if (!NoCache && !PagingIo && !IsVolume)
     {
         // cached write
 
@@ -1008,17 +1008,16 @@ VfatWrite(
     }
 
 Metadata:
-    if (!PagingIo &&
-        !(Fcb->Flags & (FCB_IS_FAT|FCB_IS_VOLUME)))
+    if (!PagingIo && !IsFAT && !IsVolume)
     {
-        if(!(*Fcb->Attributes & FILE_ATTRIBUTE_DIRECTORY))
+        if(!vfatFCBIsDirectory(Fcb))
         {
             LARGE_INTEGER SystemTime;
             ULONG Filter;
 
             // set dates and times
             KeQuerySystemTime (&SystemTime);
-            if (Fcb->Flags & FCB_IS_FATX_ENTRY)
+            if (BooleanFlagOn(Fcb->Flags, FCB_IS_FATX_ENTRY))
             {
                 FsdSystemTimeToDosDateTime(IrpContext->DeviceExt,
                                            &SystemTime, &Fcb->entry.FatX.UpdateDate,
@@ -1069,7 +1068,7 @@ ByeBye:
     else
     {
         IrpContext->Irp->IoStatus.Status = Status;
-        if (IrpContext->FileObject->Flags & FO_SYNCHRONOUS_IO &&
+        if (BooleanFlagOn(IrpContext->FileObject->Flags, FO_SYNCHRONOUS_IO) &&
             !PagingIo && NT_SUCCESS(Status))
         {
             IrpContext->FileObject->CurrentByteOffset.QuadPart =

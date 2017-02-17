@@ -516,6 +516,20 @@ VfatMarkIrpContextForQueue(PVFAT_IRP_CONTEXT IrpContext)
     return STATUS_PENDING;
 }
 
+FORCEINLINE
+BOOLEAN
+vfatFCBIsDirectory(PVFATFCB FCB)
+{
+    return BooleanFlagOn(*FCB->Attributes, FILE_ATTRIBUTE_DIRECTORY);
+}
+
+FORCEINLINE
+BOOLEAN
+vfatFCBIsReadOnly(PVFATFCB FCB)
+{
+    return BooleanFlagOn(*FCB->Attributes, FILE_ATTRIBUTE_READONLY);
+}
+
 /* blockdev.c */
 
 NTSTATUS

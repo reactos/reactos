@@ -39,7 +39,7 @@ VfatCloseFile(
         return STATUS_SUCCESS;
     }
 
-    if (pFcb->Flags & FCB_IS_VOLUME)
+    if (BooleanFlagOn(pFcb->Flags, FCB_IS_VOLUME))
     {
         DPRINT("Volume\n");
         FileObject->FsContext2 = NULL;

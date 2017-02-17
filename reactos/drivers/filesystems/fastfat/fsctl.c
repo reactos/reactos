@@ -816,8 +816,8 @@ VfatIsVolumeDirty(
     Flags = (PULONG)IrpContext->Irp->AssociatedIrp.SystemBuffer;
     *Flags = 0;
 
-    if ((IrpContext->DeviceExt->VolumeFcb->Flags & VCB_IS_DIRTY) &&
-        !(IrpContext->DeviceExt->VolumeFcb->Flags & VCB_CLEAR_DIRTY))
+    if (BooleanFlagOn(IrpContext->DeviceExt->VolumeFcb->Flags, VCB_IS_DIRTY) &&
+        !BooleanFlagOn(IrpContext->DeviceExt->VolumeFcb->Flags, VCB_CLEAR_DIRTY))
     {
         *Flags |= VOLUME_IS_DIRTY;
     }
@@ -837,7 +837,7 @@ VfatMarkVolumeDirty(
     DPRINT("VfatMarkVolumeDirty(IrpContext %p)\n", IrpContext);
     DeviceExt = IrpContext->DeviceExt;
 
-    if (!(DeviceExt->VolumeFcb->Flags & VCB_IS_DIRTY))
+    if (!BooleanFlagOn(DeviceExt->VolumeFcb->Flags, VCB_IS_DIRTY))
     {
         Status = GetNextCluster(DeviceExt, 1, &eocMark);
         if (NT_SUCCESS(Status))
@@ -870,14 +870,14 @@ VfatLockOrUnlockVolume(
     Fcb = FileObject->FsContext;
 
     /* Only allow locking with the volume open */
-    if (!(Fcb->Flags & FCB_IS_VOLUME))
+    if (!BooleanFlagOn(Fcb->Flags, FCB_IS_VOLUME))
     {
         return STATUS_ACCESS_DENIED;
     }
 
     /* Bail out if it's already in the demanded state */
-    if (((DeviceExt->Flags & VCB_VOLUME_LOCKED) && Lock) ||
-        (!(DeviceExt->Flags & VCB_VOLUME_LOCKED) && !Lock))
+    if ((BooleanFlagOn(DeviceExt->Flags, VCB_VOLUME_LOCKED) && Lock) ||
+        (!BooleanFlagOn(DeviceExt->Flags, VCB_VOLUME_LOCKED) && !Lock))
     {
         return STATUS_ACCESS_DENIED;
     }
@@ -921,13 +921,13 @@ VfatDismountVolume(
     /* We HAVE to be locked. Windows also allows dismount with no lock
      * but we're here mainly for 1st stage, so KISS
      */
-    if (!(DeviceExt->Flags & VCB_VOLUME_LOCKED))
+    if (!BooleanFlagOn(DeviceExt->Flags, VCB_VOLUME_LOCKED))
     {
         return STATUS_ACCESS_DENIED;
     }
 
     /* Race condition? */
-    if (DeviceExt->Flags & VCB_DISMOUNT_PENDING)
+    if (BooleanFlagOn(DeviceExt->Flags, VCB_DISMOUNT_PENDING))
     {
         return STATUS_VOLUME_DISMOUNTED;
     }
@@ -937,7 +937,7 @@ VfatDismountVolume(
 
     ExAcquireResourceExclusiveLite(&DeviceExt->FatResource, TRUE);
 
-    if (DeviceExt->VolumeFcb->Flags & VCB_CLEAR_DIRTY)
+    if (BooleanFlagOn(DeviceExt->VolumeFcb->Flags, VCB_CLEAR_DIRTY))
     {
         /* Set clean shutdown bit */
         Status = GetNextCluster(DeviceExt, 1, &eocMark);
