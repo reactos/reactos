@@ -395,7 +395,10 @@ KsCreateDefaultClock(
     /* let's allocate the clock struct */
     Clock = AllocateItem(NonPagedPool, sizeof(KSICLOCK));
     if (!Clock)
+    {
+        FreeItem(ClockCreate);
         return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* now allocate the object header */
     Status = KsAllocateObjectHeader((PVOID*)&Clock->ObjectHeader, 0, NULL, Irp, &DispatchTable);
@@ -404,6 +407,7 @@ KsCreateDefaultClock(
     if (!NT_SUCCESS(Status))
     {
         /* failed */
+        FreeItem(ClockCreate);
         FreeItem(Clock);
         return Status;
     }
