@@ -33,7 +33,9 @@ START_TEST(NtCreateSection)
     Status = NtCreateSection(&SectionHandle, SECTION_ALL_ACCESS, 0, &MaxFileSize,
                              PAGE_READWRITE, SEC_COMMIT, Handle);
     ok_eq_hex(Status, STATUS_INVALID_FILE_FOR_SECTION);
-    NtClose(Handle);
+    if (NT_SUCCESS(Status)) NtClose(SectionHandle);
+    Status = NtClose(Handle);
+    ok_eq_hex(Status, STATUS_SUCCESS);
 
     /* Test 1 */
     InitializeObjectAttributes(&ObjectAttributes, &InitOnCreate, OBJ_CASE_INSENSITIVE, NULL, NULL);
@@ -57,9 +59,12 @@ START_TEST(NtCreateSection)
     memset(Buffer, 0xBA, 512);
     KmtEndSeh(STATUS_SUCCESS);
 
-    NtUnmapViewOfSection(NtCurrentProcess(), Buffer);
-    NtClose(SectionHandle);
-    NtClose(Handle);
+    Status = NtUnmapViewOfSection(NtCurrentProcess(), Buffer);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    Status = NtClose(SectionHandle);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    Status = NtClose(Handle);
+    ok_eq_hex(Status, STATUS_SUCCESS);
 
     /* Test 2 */
     InitializeObjectAttributes(&ObjectAttributes, &InitOnCreate, OBJ_CASE_INSENSITIVE, NULL, NULL);
@@ -83,9 +88,12 @@ START_TEST(NtCreateSection)
     memset(Buffer, 0xBA, 4096);
     KmtEndSeh(STATUS_SUCCESS);
 
-    NtUnmapViewOfSection(NtCurrentProcess(), Buffer);
-    NtClose(SectionHandle);
-    NtClose(Handle);
+    Status = NtUnmapViewOfSection(NtCurrentProcess(), Buffer);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    Status = NtClose(SectionHandle);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    Status = NtClose(Handle);
+    ok_eq_hex(Status, STATUS_SUCCESS);
 
     /* Test 3 */
     InitializeObjectAttributes(&ObjectAttributes, &InitOnRW, OBJ_CASE_INSENSITIVE, NULL, NULL);
@@ -109,9 +117,12 @@ START_TEST(NtCreateSection)
     memset(Buffer, 0xBA, 512);
     KmtEndSeh(STATUS_SUCCESS);
 
-    NtUnmapViewOfSection(NtCurrentProcess(), Buffer);
-    NtClose(SectionHandle);
-    NtClose(Handle);
+    Status = NtUnmapViewOfSection(NtCurrentProcess(), Buffer);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    Status = NtClose(SectionHandle);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    Status = NtClose(Handle);
+    ok_eq_hex(Status, STATUS_SUCCESS);
 
     /* Test 4 */
     InitializeObjectAttributes(&ObjectAttributes, &InitOnRW, OBJ_CASE_INSENSITIVE, NULL, NULL);
@@ -135,9 +146,12 @@ START_TEST(NtCreateSection)
     memset(Buffer, 0xBA, 4096);
     KmtEndSeh(STATUS_SUCCESS);
 
-    NtUnmapViewOfSection(NtCurrentProcess(), Buffer);
-    NtClose(SectionHandle);
-    NtClose(Handle);
+    Status = NtUnmapViewOfSection(NtCurrentProcess(), Buffer);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    Status = NtClose(SectionHandle);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    Status = NtClose(Handle);
+    ok_eq_hex(Status, STATUS_SUCCESS);
 
     /* Test 10 */
     InitializeObjectAttributes(&ObjectAttributes, &InvalidInit, OBJ_CASE_INSENSITIVE, NULL, NULL);
@@ -149,7 +163,9 @@ START_TEST(NtCreateSection)
     Status = NtCreateSection(&SectionHandle, SECTION_ALL_ACCESS, 0, &MaxFileSize,
                              PAGE_READWRITE, SEC_COMMIT, Handle);
     ok_eq_hex(Status, STATUS_INVALID_FILE_FOR_SECTION);
-    NtClose(Handle);
+    if (NT_SUCCESS(Status)) NtClose(SectionHandle);
+    Status = NtClose(Handle);
+    ok_eq_hex(Status, STATUS_SUCCESS);
 
     /* Test 11 */
     InitializeObjectAttributes(&ObjectAttributes, &InitOnCreate, OBJ_CASE_INSENSITIVE, NULL, NULL);
@@ -173,9 +189,12 @@ START_TEST(NtCreateSection)
     memset(Buffer, 0xBA, 512);
     KmtEndSeh(STATUS_SUCCESS);
 
-    NtUnmapViewOfSection(NtCurrentProcess(), Buffer);
-    NtClose(SectionHandle);
-    NtClose(Handle);
+    Status = NtUnmapViewOfSection(NtCurrentProcess(), Buffer);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    Status = NtClose(SectionHandle);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    Status = NtClose(Handle);
+    ok_eq_hex(Status, STATUS_SUCCESS);
 
     /* Test 12 */
     InitializeObjectAttributes(&ObjectAttributes, &InitOnCreate, OBJ_CASE_INSENSITIVE, NULL, NULL);
@@ -199,9 +218,12 @@ START_TEST(NtCreateSection)
     memset(Buffer, 0xBA, 4096);
     KmtEndSeh(STATUS_SUCCESS);
 
-    NtUnmapViewOfSection(NtCurrentProcess(), Buffer);
-    NtClose(SectionHandle);
-    NtClose(Handle);
+    Status = NtUnmapViewOfSection(NtCurrentProcess(), Buffer);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    Status = NtClose(SectionHandle);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    Status = NtClose(Handle);
+    ok_eq_hex(Status, STATUS_SUCCESS);
 
     /* Test 13 */
     InitializeObjectAttributes(&ObjectAttributes, &InitOnRW, OBJ_CASE_INSENSITIVE, NULL, NULL);
@@ -225,9 +247,12 @@ START_TEST(NtCreateSection)
     memset(Buffer, 0xBA, 512);
     KmtEndSeh(STATUS_SUCCESS);
 
-    NtUnmapViewOfSection(NtCurrentProcess(), Buffer);
-    NtClose(SectionHandle);
-    NtClose(Handle);
+    Status = NtUnmapViewOfSection(NtCurrentProcess(), Buffer);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    Status = NtClose(SectionHandle);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    Status = NtClose(Handle);
+    ok_eq_hex(Status, STATUS_SUCCESS);
 
     /* Test 14 */
     InitializeObjectAttributes(&ObjectAttributes, &InitOnRW, OBJ_CASE_INSENSITIVE, NULL, NULL);
@@ -251,9 +276,12 @@ START_TEST(NtCreateSection)
     memset(Buffer, 0xBA, 4096);
     KmtEndSeh(STATUS_SUCCESS);
 
-    NtUnmapViewOfSection(NtCurrentProcess(), Buffer);
-    NtClose(SectionHandle);
-    NtClose(Handle);
+    Status = NtUnmapViewOfSection(NtCurrentProcess(), Buffer);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    Status = NtClose(SectionHandle);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    Status = NtClose(Handle);
+    ok_eq_hex(Status, STATUS_SUCCESS);
 
     KmtCloseDriver();
     KmtUnloadDriver();
