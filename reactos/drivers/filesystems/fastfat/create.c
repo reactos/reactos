@@ -115,6 +115,7 @@ FindFile(
     UNICODE_STRING PathNameU;
     UNICODE_STRING FileToFindUpcase;
     BOOLEAN WildCard;
+    BOOLEAN IsFatX = vfatVolumeIsFatX(DeviceExt);
 
     DPRINT("FindFile(Parent %p, FileToFind '%wZ', DirIndex: %u)\n",
            Parent, FileToFindU, DirContext->DirIndex);
@@ -151,7 +152,7 @@ FindFile(
         if (rcFcb)
         {
             ULONG startIndex = rcFcb->startIndex;
-            if (vfatVolumeIsFatX(DeviceExt) && !vfatFCBIsRoot(Parent))
+            if (IsFatX && !vfatFCBIsRoot(Parent))
             {
                 startIndex += 2;
             }
@@ -194,7 +195,7 @@ FindFile(
         {
             break;
         }
-        if (ENTRY_VOLUME(DeviceExt, &DirContext->DirEntry))
+        if (ENTRY_VOLUME(IsFatX, &DirContext->DirEntry))
         {
             DirContext->DirIndex++;
             continue;

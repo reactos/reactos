@@ -431,7 +431,7 @@ ReadVolumeLabel(
     {
         while (TRUE)
         {
-            if (ENTRY_VOLUME2(IsFatX, Entry))
+            if (ENTRY_VOLUME(IsFatX, Entry))
             {
                 /* copy volume label */
                 if (IsFatX)
@@ -446,7 +446,7 @@ ReadVolumeLabel(
                 }
                 break;
             }
-            if (ENTRY_END2(IsFatX, Entry))
+            if (ENTRY_END(IsFatX, Entry))
             {
                 break;
             }

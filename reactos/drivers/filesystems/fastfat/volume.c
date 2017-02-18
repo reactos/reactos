@@ -250,17 +250,19 @@ FsdSetFsLabelInformation(
     CHAR cString[43];
     ULONG SizeDirEntry;
     ULONG EntriesPerPage;
+    BOOLEAN IsFatX;
 
     DPRINT("FsdSetFsLabelInformation()\n");
 
     DeviceExt = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    IsFatX = vfatVolumeIsFatX(DeviceExt);
 
     if (sizeof(DeviceObject->Vpb->VolumeLabel) < FsLabelInfo->VolumeLabelLength)
     {
         return STATUS_NAME_TOO_LONG;
     }
 
-    if (vfatVolumeIsFatX(DeviceExt))
+    if (IsFatX)
     {
         if (FsLabelInfo->VolumeLabelLength / sizeof(WCHAR) > 42)
             return STATUS_NAME_TOO_LONG;
@@ -289,7 +291,7 @@ FsdSetFsLabelInformation(
     if (!NT_SUCCESS(Status))
         return Status;
 
-    if (vfatVolumeIsFatX(DeviceExt))
+    if (IsFatX)
     {
         RtlCopyMemory(VolumeLabelDirEntry.FatX.Filename, cString, LabelLen);
         memset(&VolumeLabelDirEntry.FatX.Filename[LabelLen], ' ', 42 - LabelLen);
@@ -328,7 +330,7 @@ FsdSetFsLabelInformation(
     {
         while (TRUE)
         {
-            if (ENTRY_VOLUME(DeviceExt, Entry))
+            if (ENTRY_VOLUME(IsFatX, Entry))
             {
                 /* Update entry */
                 LabelFound = TRUE;
@@ -338,7 +340,7 @@ FsdSetFsLabelInformation(
                 break;
             }
 
-            if (ENTRY_END(DeviceExt, Entry))
+            if (ENTRY_END(IsFatX, Entry))
             {
                 break;
             }

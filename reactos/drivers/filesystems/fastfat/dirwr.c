@@ -161,9 +161,10 @@ vfatFindDirSpace(
     PVOID Context = NULL;
     NTSTATUS Status;
     ULONG SizeDirEntry;
+    BOOLEAN IsFatX = vfatVolumeIsFatX(DeviceExt);
     FileOffset.QuadPart = 0;
 
-    if (vfatVolumeIsFatX(DeviceExt))
+    if (IsFatX)
         SizeDirEntry = sizeof(FATX_DIR_ENTRY);
     else
         SizeDirEntry = sizeof(FAT_DIR_ENTRY);
@@ -190,11 +191,11 @@ vfatFindDirSpace(
 
             FileOffset.u.LowPart += DeviceExt->FatInfo.BytesPerCluster;
         }
-        if (ENTRY_END(DeviceExt, pFatEntry))
+        if (ENTRY_END(IsFatX, pFatEntry))
         {
             break;
         }
-        if (ENTRY_DELETED(DeviceExt, pFatEntry))
+        if (ENTRY_DELETED(IsFatX, pFatEntry))
         {
             nbFree++;
         }
@@ -249,7 +250,7 @@ vfatFindDirSpace(
             }
             _SEH2_END;
 
-            if (vfatVolumeIsFatX(DeviceExt))
+            if (IsFatX)
                 memset(pFatEntry, 0xff, DeviceExt->FatInfo.BytesPerCluster);
             else
                 RtlZeroMemory(pFatEntry, DeviceExt->FatInfo.BytesPerCluster);
@@ -268,7 +269,7 @@ vfatFindDirSpace(
             }
             _SEH2_END;
 
-            if (vfatVolumeIsFatX(DeviceExt))
+            if (IsFatX)
                 memset(pFatEntry, 0xff, SizeDirEntry);
             else
                 RtlZeroMemory(pFatEntry, SizeDirEntry);

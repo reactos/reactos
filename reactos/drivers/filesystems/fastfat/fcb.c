@@ -778,6 +778,7 @@ vfatDirFindFile(
     WCHAR ShortNameBuffer[13];
     BOOLEAN FoundLong = FALSE;
     BOOLEAN FoundShort = FALSE;
+    BOOLEAN IsFatX = vfatVolumeIsFatX(pDeviceExt);
 
     ASSERT(pDeviceExt);
     ASSERT(pDirectoryFCB);
@@ -816,7 +817,7 @@ vfatDirFindFile(
         DPRINT("  Index:%u  longName:%wZ\n",
                DirContext.DirIndex, &DirContext.LongNameU);
 
-        if (!ENTRY_VOLUME(pDeviceExt, &DirContext.DirEntry))
+        if (!ENTRY_VOLUME(IsFatX, &DirContext.DirEntry))
         {
             if (DirContext.LongNameU.Length == 0 ||
                 DirContext.ShortNameU.Length == 0)
