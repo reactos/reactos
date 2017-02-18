@@ -340,31 +340,38 @@ VfatHasFileSystem(
 
 /*
  * FUNCTION: Read the volume label
+ * WARNING: Read this comment carefully before using it (and using it wrong)
+ * Device parameter is expected to be the lower DO is start isn't 0
+ *                  otherwise, it is expected to be the VCB is start is 0
+ * Start parameter is expected to be, in bytes, the beginning of the root start.
+ *                 Set it to 0 if you wish to use the associated FCB with caching.
+ *                 In that specific case, Device parameter is expected to be the VCB!
+ * VolumeLabel parameter is expected to be a preallocated UNICODE_STRING (ie, with buffer)
+ *                       Its buffer has to be able to contain MAXIMUM_VOLUME_LABEL_LENGTH bytes 
  */
 static
 NTSTATUS
 ReadVolumeLabel(
-    PDEVICE_EXTENSION DeviceExt,
-    PVPB Vpb)
+    PVOID Device,
+    ULONG Start,
+    BOOLEAN IsFatX,
+    PUNICODE_STRING VolumeLabel)
 {
+    PDEVICE_EXTENSION DeviceExt;
+    PDEVICE_OBJECT DeviceObject;
     PVOID Context = NULL;
     ULONG DirIndex = 0;
     PDIR_ENTRY Entry;
     PVFATFCB pFcb;
     LARGE_INTEGER FileOffset;
-    UNICODE_STRING NameU;
     ULONG SizeDirEntry;
     ULONG EntriesPerPage;
     OEM_STRING StringO;
+    BOOLEAN NoCache = (Start != 0);
+    PVOID Buffer;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    NameU.Buffer = Vpb->VolumeLabel;
-    NameU.Length = 0;
-    NameU.MaximumLength = sizeof(Vpb->VolumeLabel);
-    *(Vpb->VolumeLabel) = 0;
-    Vpb->VolumeLabelLength = 0;
-
-    if (vfatVolumeIsFatX(DeviceExt))
+    if (IsFatX)
     {
         SizeDirEntry = sizeof(FATX_DIR_ENTRY);
         EntriesPerPage = FATX_ENTRIES_PER_PAGE;
@@ -375,41 +382,71 @@ ReadVolumeLabel(
         EntriesPerPage = FAT_ENTRIES_PER_PAGE;
     }
 
-    ExAcquireResourceExclusiveLite(&DeviceExt->DirResource, TRUE);
-    pFcb = vfatOpenRootFCB(DeviceExt);
-    ExReleaseResourceLite(&DeviceExt->DirResource);
+    FileOffset.QuadPart = Start;
+    if (!NoCache)
+    {
+        DeviceExt = Device;
 
-    FileOffset.QuadPart = 0;
-    _SEH2_TRY
-    {
-        CcMapData(pFcb->FileObject, &FileOffset, SizeDirEntry, MAP_WAIT, &Context, (PVOID*)&Entry);
+        /* FIXME: Check we really have a VCB
+        ASSERT();
+        */
+
+        ExAcquireResourceExclusiveLite(&DeviceExt->DirResource, TRUE);
+        pFcb = vfatOpenRootFCB(DeviceExt);
+        ExReleaseResourceLite(&DeviceExt->DirResource);
+
+        _SEH2_TRY
+        {
+            CcMapData(pFcb->FileObject, &FileOffset, SizeDirEntry, MAP_WAIT, &Context, (PVOID*)&Entry);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    else
     {
-        Status = _SEH2_GetExceptionCode();
+        DeviceObject = Device;
+
+        ASSERT(DeviceObject->Type == 3);
+
+        Buffer = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE, TAG_VFAT);
+        if (Buffer != NULL)
+        {
+            Status = VfatReadDisk(DeviceObject, &FileOffset, PAGE_SIZE, (PUCHAR)Buffer, TRUE);
+            if (!NT_SUCCESS(Status))
+            {
+                ExFreePoolWithTag(Entry, TAG_VFAT);
+            }
+            Entry = Buffer;
+        }
+        else
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+        }
     }
-    _SEH2_END;
+
     if (NT_SUCCESS(Status))
     {
         while (TRUE)
         {
-            if (ENTRY_VOLUME(DeviceExt, Entry))
+            if (ENTRY_VOLUME2(IsFatX, Entry))
             {
                 /* copy volume label */
-                if (vfatVolumeIsFatX(DeviceExt))
+                if (IsFatX)
                 {
                     StringO.Buffer = (PCHAR)Entry->FatX.Filename;
                     StringO.MaximumLength = StringO.Length = Entry->FatX.FilenameLength;
-                    RtlOemStringToUnicodeString(&NameU, &StringO, FALSE);
+                    RtlOemStringToUnicodeString(VolumeLabel, &StringO, FALSE);
                 }
                 else
                 {
-                    vfat8Dot3ToString(&Entry->Fat, &NameU);
+                    vfat8Dot3ToString(&Entry->Fat, VolumeLabel);
                 }
-                Vpb->VolumeLabelLength = NameU.Length;
                 break;
             }
-            if (ENTRY_END(DeviceExt, Entry))
+            if (ENTRY_END2(IsFatX, Entry))
             {
                 break;
             }
@@ -417,21 +454,35 @@ ReadVolumeLabel(
             Entry = (PDIR_ENTRY)((ULONG_PTR)Entry + SizeDirEntry);
             if ((DirIndex % EntriesPerPage) == 0)
             {
-                CcUnpinData(Context);
                 FileOffset.u.LowPart += PAGE_SIZE;
-                _SEH2_TRY
+
+                if (!NoCache)
                 {
-                    CcMapData(pFcb->FileObject, &FileOffset, SizeDirEntry, MAP_WAIT, &Context, (PVOID*)&Entry);
+                    CcUnpinData(Context);
+
+                    _SEH2_TRY
+                    {
+                        CcMapData(pFcb->FileObject, &FileOffset, SizeDirEntry, MAP_WAIT, &Context, (PVOID*)&Entry);
+                    }
+                    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                    {
+                        Status = _SEH2_GetExceptionCode();
+                    }
+                    _SEH2_END;
+                    if (!NT_SUCCESS(Status))
+                    {
+                        Context = NULL;
+                        break;
+                    }
                 }
-                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                else
                 {
-                    Status = _SEH2_GetExceptionCode();
-                }
-                _SEH2_END;
-                if (!NT_SUCCESS(Status))
-                {
-                    Context = NULL;
-                    break;
+                    Status = VfatReadDisk(DeviceObject, &FileOffset, PAGE_SIZE, (PUCHAR)Buffer, TRUE);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        break;
+                    }
+                    Entry = Buffer;
                 }
             }
         }
@@ -439,10 +490,18 @@ ReadVolumeLabel(
         {
             CcUnpinData(Context);
         }
+        else if (NoCache)
+        {
+            ExFreePoolWithTag(Buffer, TAG_VFAT);
+        }
     }
-    ExAcquireResourceExclusiveLite(&DeviceExt->DirResource, TRUE);
-    vfatReleaseFCB(DeviceExt, pFcb);
-    ExReleaseResourceLite(&DeviceExt->DirResource);
+
+    if (!NoCache)
+    {
+        ExAcquireResourceExclusiveLite(&DeviceExt->DirResource, TRUE);
+        vfatReleaseFCB(DeviceExt, pFcb);
+        ExReleaseResourceLite(&DeviceExt->DirResource);
+    }
 
     return STATUS_SUCCESS;
 }
@@ -467,6 +526,7 @@ VfatMount(
     PVPB Vpb;
     UNICODE_STRING NameU = RTL_CONSTANT_STRING(L"\\$$Fat$$");
     UNICODE_STRING VolumeNameU = RTL_CONSTANT_STRING(L"\\$$Volume$$");
+    UNICODE_STRING VolumeLabelU;
     ULONG HashTableSize;
     ULONG eocMark;
     FATINFO FatInfo;
@@ -676,7 +736,11 @@ VfatMount(
     DeviceObject->Vpb->SerialNumber = DeviceExt->FatInfo.VolumeID;
 
     /* read volume label */
-    ReadVolumeLabel(DeviceExt,  DeviceObject->Vpb);
+    VolumeLabelU.Buffer = DeviceObject->Vpb->VolumeLabel;
+    VolumeLabelU.Length = 0;
+    VolumeLabelU.MaximumLength = sizeof(DeviceObject->Vpb->VolumeLabel);
+    ReadVolumeLabel(DeviceExt, 0, vfatVolumeIsFatX(DeviceExt), &VolumeLabelU);
+    Vpb->VolumeLabelLength = VolumeLabelU.Length;
 
     /* read clean shutdown bit status */
     Status = GetNextCluster(DeviceExt, 1, &eocMark);
@@ -769,21 +833,41 @@ VfatVerify(
         if (!NT_SUCCESS(Status) || RecognizedFS == FALSE)
         {
             if (NT_SUCCESS(Status) || AllowRaw)
+            {
                 Status = STATUS_WRONG_VOLUME;
+            }
         }
         else if (sizeof(FATINFO) == RtlCompareMemory(&FatInfo, &DeviceExt->FatInfo, sizeof(FATINFO)))
         {
-            DPRINT1("Same volume\n");
-            /*
-             * FIXME:
-             *   Preformatted floppy disks have very often a serial number of 0000:0000.
-             *   We should calculate a crc sum over the sectors from the root directory as secondary volume number.
-             *   Each write to the root directory must update this crc sum.
-             */
-            /* HACK */
-            if (!FatInfo.FixedMedia && FatInfo.FatType >= FATX16)
+            WCHAR BufferU[MAXIMUM_VOLUME_LABEL_LENGTH / sizeof(WCHAR)];
+            UNICODE_STRING VolumeLabelU;
+            UNICODE_STRING VpbLabelU;
+
+            VolumeLabelU.Buffer = BufferU;
+            VolumeLabelU.Length = 0;
+            VolumeLabelU.MaximumLength = sizeof(BufferU);
+            Status = ReadVolumeLabel(DeviceExt->StorageDevice, FatInfo.rootStart * FatInfo.BytesPerSector, (FatInfo.FatType >= FATX16), &VolumeLabelU);
+            if (!NT_SUCCESS(Status))
             {
-                Status = STATUS_WRONG_VOLUME;
+                if (AllowRaw)
+                {
+                    Status = STATUS_WRONG_VOLUME;
+                }
+            }
+            else
+            {
+                VpbLabelU.Buffer = Vpb->VolumeLabel;
+                VpbLabelU.Length = Vpb->VolumeLabelLength;
+                VpbLabelU.MaximumLength = sizeof(Vpb->VolumeLabel);
+
+                if (RtlCompareUnicodeString(&VpbLabelU, &VolumeLabelU, FALSE) != 0)
+                {
+                    Status = STATUS_WRONG_VOLUME;
+                }
+                else
+                {
+                    DPRINT1("Same volume\n");
+                }
             }
         }
         else

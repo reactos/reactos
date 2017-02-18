@@ -201,6 +201,10 @@ typedef struct _slot slot;
 #define ENTRY_VOLUME(DeviceExt, DirEntry) (vfatVolumeIsFatX(DeviceExt) ? FATX_ENTRY_VOLUME(&((DirEntry)->FatX)) : FAT_ENTRY_VOLUME(&((DirEntry)->Fat)))
 #define ENTRY_END(DeviceExt, DirEntry) (vfatVolumeIsFatX(DeviceExt) ? FATX_ENTRY_END(&((DirEntry)->FatX)) : FAT_ENTRY_END(&((DirEntry)->Fat)))
 
+#define ENTRY_DELETED2(IsFatX, DirEntry) (IsFatX ? FATX_ENTRY_DELETED(&((DirEntry)->FatX)) : FAT_ENTRY_DELETED(&((DirEntry)->Fat)))
+#define ENTRY_VOLUME2(IsFatX, DirEntry) (IsFatX ? FATX_ENTRY_VOLUME(&((DirEntry)->FatX)) : FAT_ENTRY_VOLUME(&((DirEntry)->Fat)))
+#define ENTRY_END2(IsFatX, DirEntry) (IsFatX ? FATX_ENTRY_END(&((DirEntry)->FatX)) : FAT_ENTRY_END(&((DirEntry)->Fat)))
+
 #define FAT_ENTRY_DELETED(DirEntry)  ((DirEntry)->Filename[0] == 0xe5)
 #define FAT_ENTRY_END(DirEntry)      ((DirEntry)->Filename[0] == 0)
 #define FAT_ENTRY_LONG(DirEntry)     (((DirEntry)->Attrib & 0x3f) == 0x0f)
