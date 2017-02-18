@@ -5064,10 +5064,20 @@ KsFilterCreatePinFactory(
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
+PKSDEVICE
+NTAPI
+KsGetDevice(
+  _In_ PVOID Object);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+static
 __inline
 PKSDEVICE
 KsFilterFactoryGetDevice(
-  _In_ PKSFILTERFACTORY FilterFactory);
+  _In_ PKSFILTERFACTORY FilterFactory)
+{
+    return KsGetDevice((PVOID)FilterFactory);
+}
 
 /* etc. */
 #endif /* avstream */
