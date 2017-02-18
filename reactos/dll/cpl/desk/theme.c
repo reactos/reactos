@@ -879,7 +879,7 @@ ActivateTheme(IN PTHEME_SELECTION pSelectedTheme)
         if (!SUCCEEDED(hret)) return FALSE;
     }
 
-    hret = ApplyTheme(hThemeFile, "", 0);
+    hret = ApplyTheme(hThemeFile, 0, 0);
 
     if (pSelectedTheme->ThemeActive)
     {
