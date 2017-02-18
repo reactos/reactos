@@ -44,6 +44,7 @@ list(APPEND SOURCE
     GetCurrentObject.c
     GetDIBColorTable.c
     GetDIBits.c
+    GetFontResourceInfoW.c
     GetGlyphIndices.c
     GetObject.c
     GetRandomRgn.c
