@@ -338,6 +338,115 @@ VfatHasFileSystem(
     return Status;
 }
 
+/*
+ * FUNCTION: Read the volume label
+ */
+static
+NTSTATUS
+ReadVolumeLabel(
+    PDEVICE_EXTENSION DeviceExt,
+    PVPB Vpb)
+{
+    PVOID Context = NULL;
+    ULONG DirIndex = 0;
+    PDIR_ENTRY Entry;
+    PVFATFCB pFcb;
+    LARGE_INTEGER FileOffset;
+    UNICODE_STRING NameU;
+    ULONG SizeDirEntry;
+    ULONG EntriesPerPage;
+    OEM_STRING StringO;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    NameU.Buffer = Vpb->VolumeLabel;
+    NameU.Length = 0;
+    NameU.MaximumLength = sizeof(Vpb->VolumeLabel);
+    *(Vpb->VolumeLabel) = 0;
+    Vpb->VolumeLabelLength = 0;
+
+    if (vfatVolumeIsFatX(DeviceExt))
+    {
+        SizeDirEntry = sizeof(FATX_DIR_ENTRY);
+        EntriesPerPage = FATX_ENTRIES_PER_PAGE;
+    }
+    else
+    {
+        SizeDirEntry = sizeof(FAT_DIR_ENTRY);
+        EntriesPerPage = FAT_ENTRIES_PER_PAGE;
+    }
+
+    ExAcquireResourceExclusiveLite(&DeviceExt->DirResource, TRUE);
+    pFcb = vfatOpenRootFCB(DeviceExt);
+    ExReleaseResourceLite(&DeviceExt->DirResource);
+
+    FileOffset.QuadPart = 0;
+    _SEH2_TRY
+    {
+        CcMapData(pFcb->FileObject, &FileOffset, SizeDirEntry, MAP_WAIT, &Context, (PVOID*)&Entry);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+    if (NT_SUCCESS(Status))
+    {
+        while (TRUE)
+        {
+            if (ENTRY_VOLUME(DeviceExt, Entry))
+            {
+                /* copy volume label */
+                if (vfatVolumeIsFatX(DeviceExt))
+                {
+                    StringO.Buffer = (PCHAR)Entry->FatX.Filename;
+                    StringO.MaximumLength = StringO.Length = Entry->FatX.FilenameLength;
+                    RtlOemStringToUnicodeString(&NameU, &StringO, FALSE);
+                }
+                else
+                {
+                    vfat8Dot3ToString(&Entry->Fat, &NameU);
+                }
+                Vpb->VolumeLabelLength = NameU.Length;
+                break;
+            }
+            if (ENTRY_END(DeviceExt, Entry))
+            {
+                break;
+            }
+            DirIndex++;
+            Entry = (PDIR_ENTRY)((ULONG_PTR)Entry + SizeDirEntry);
+            if ((DirIndex % EntriesPerPage) == 0)
+            {
+                CcUnpinData(Context);
+                FileOffset.u.LowPart += PAGE_SIZE;
+                _SEH2_TRY
+                {
+                    CcMapData(pFcb->FileObject, &FileOffset, SizeDirEntry, MAP_WAIT, &Context, (PVOID*)&Entry);
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Status = _SEH2_GetExceptionCode();
+                }
+                _SEH2_END;
+                if (!NT_SUCCESS(Status))
+                {
+                    Context = NULL;
+                    break;
+                }
+            }
+        }
+        if (Context)
+        {
+            CcUnpinData(Context);
+        }
+    }
+    ExAcquireResourceExclusiveLite(&DeviceExt->DirResource, TRUE);
+    vfatReleaseFCB(DeviceExt, pFcb);
+    ExReleaseResourceLite(&DeviceExt->DirResource);
+
+    return STATUS_SUCCESS;
+}
+
 
 /*
  * FUNCTION: Mount the filesystem

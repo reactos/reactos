@@ -662,11 +662,6 @@ vfat8Dot3ToString(
     PFAT_DIR_ENTRY pEntry,
     PUNICODE_STRING NameU);
 
-NTSTATUS
-ReadVolumeLabel(
-    PDEVICE_EXTENSION DeviceExt,
-    PVPB Vpb);
-
 /* dir.c */
 
 NTSTATUS
