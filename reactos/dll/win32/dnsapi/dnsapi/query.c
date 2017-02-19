@@ -738,7 +738,7 @@ DnsQuery_W(LPCWSTR Name,
             TempLen += StringLength;
             HostWithDomainName = (PCHAR)RtlAllocateHeap(RtlGetProcessHeap(), 0, TempLen);
             StringCchCopyA(HostWithDomainName, TempLen, network_info->HostName);
-            if (network_info->DomainName)
+            if (network_info->DomainName[0])
             {
                 StringCchCatA(HostWithDomainName, TempLen, ".");
                 StringCchCatA(HostWithDomainName, TempLen, network_info->DomainName);
@@ -783,7 +783,7 @@ DnsQuery_W(LPCWSTR Name,
             if ((addr.s_addr != INADDR_ANY) && (addr.s_addr != INADDR_NONE))
                 adns_addserver(astate, addr);
         }
-        if (network_info->DomainName)
+        if (network_info->DomainName[0])
         {
             adns_ccf_search(astate, "LOCALDOMAIN", -1, network_info->DomainName);
         }
