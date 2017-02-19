@@ -90,7 +90,8 @@ CPlApplet*	Control_LoadApplet(HWND hWnd, LPCWSTR cmd, CPanel* panel)
 
 #ifdef __REACTOS__
     StringCchCopy(fileBuffer, MAX_PATH, applet->cmd);
-    SearchPath(NULL, fileBuffer, NULL, MAX_PATH, fileBuffer, NULL);
+    if (PathIsFileSpecW(fileBuffer))
+        SearchPath(NULL, fileBuffer, NULL, MAX_PATH, fileBuffer, NULL);
     ActCtx.lpSource = fileBuffer;
     ActCtx.lpResourceName = (LPCWSTR)123;
     applet->hActCtx = CreateActCtx(&ActCtx);
