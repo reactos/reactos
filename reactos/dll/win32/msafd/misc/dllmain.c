@@ -79,16 +79,25 @@ WSPSocket(int AddressFamily,
     {
         /* Duplpicating socket from different process */
         if ((HANDLE)lpProtocolInfo->dwServiceFlags3 == INVALID_HANDLE_VALUE)
-            return WSAEINVAL;
+        {
+            Status = WSAEINVAL;
+            goto error;
+        }
         if ((HANDLE)lpProtocolInfo->dwServiceFlags4 == INVALID_HANDLE_VALUE)
-            return WSAEINVAL;
+        {
+            Status = WSAEINVAL;
+            goto error;
+        }
         SharedData = MapViewOfFile((HANDLE)lpProtocolInfo->dwServiceFlags3,
                                    FILE_MAP_ALL_ACCESS,
                                    0,
                                    0,
                                    sizeof(SOCK_SHARED_INFO));
         if (!SharedData)
-            return WSAEINVAL;
+        {
+            Status = WSAEINVAL;
+            goto error;
+        }
         InterlockedIncrement(&SharedData->RefCount);
         AddressFamily = SharedData->AddressFamily;
         SocketType = SharedData->SocketType;
@@ -96,7 +105,10 @@ WSPSocket(int AddressFamily,
     }
 
     if (AddressFamily == AF_UNSPEC && SocketType == 0 && Protocol == 0)
-        return WSAEINVAL;
+    {
+        Status = WSAEINVAL;
+        goto error;
+    }
 
     /* Set the defaults */
     if (AddressFamily == AF_UNSPEC)
@@ -167,7 +179,7 @@ WSPSocket(int AddressFamily,
     Socket = HeapAlloc(GlobalHeap, 0, sizeof(*Socket));
     if (!Socket)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        Status = WSAENOBUFS;
         goto error;
     }
     RtlZeroMemory(Socket, sizeof(*Socket));
@@ -184,7 +196,7 @@ WSPSocket(int AddressFamily,
         Socket->SharedData = HeapAlloc(GlobalHeap, 0, sizeof(*Socket->SharedData));
         if (!Socket->SharedData)
         {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
+            Status = WSAENOBUFS;
             goto error;
         }
         RtlZeroMemory(Socket->SharedData, sizeof(*Socket->SharedData));
@@ -236,7 +248,7 @@ WSPSocket(int AddressFamily,
     EABuffer = HeapAlloc(GlobalHeap, 0, SizeOfEA);
     if (!EABuffer)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        Status = WSAENOBUFS;
         goto error;
     }
 
@@ -263,6 +275,7 @@ WSPSocket(int AddressFamily,
         if ((SocketType != SOCK_DGRAM) && (SocketType != SOCK_RAW))
         {
             /* Only RAW or UDP can be Connectionless */
+            Status = WSAEINVAL;
             goto error;
         }
         AfdPacket->EndpointFlags |= AFD_ENDPOINT_CONNECTIONLESS;
@@ -275,6 +288,7 @@ WSPSocket(int AddressFamily,
             if ((Socket->SharedData->ServiceFlags1 & XP1_PSEUDO_STREAM) == 0)
             {
                 /* The Provider doesn't actually support Message Oriented Streams */
+                Status = WSAEINVAL;
                 goto error;
             }
         }
@@ -291,6 +305,7 @@ WSPSocket(int AddressFamily,
         if ((Socket->SharedData->ServiceFlags1 & XP1_SUPPORT_MULTIPOINT) == 0)
         {
             /* The Provider doesn't actually support Multipoint */
+            Status = WSAEINVAL;
             goto error;
         }
         AfdPacket->EndpointFlags |= AFD_ENDPOINT_MULTIPOINT;
@@ -301,6 +316,7 @@ WSPSocket(int AddressFamily,
                 || ((dwFlags & WSA_FLAG_MULTIPOINT_C_LEAF) != 0))
             {
                 /* The Provider doesn't support Control Planes, or you already gave a leaf */
+                Status = WSAEINVAL;
                 goto error;
             }
             AfdPacket->EndpointFlags |= AFD_ENDPOINT_C_ROOT;
@@ -312,6 +328,7 @@ WSPSocket(int AddressFamily,
                 || ((dwFlags & WSA_FLAG_MULTIPOINT_D_LEAF) != 0))
             {
                 /* The Provider doesn't support Data Planes, or you already gave a leaf */
+                Status = WSAEINVAL;
                 goto error;
             }
             AfdPacket->EndpointFlags |= AFD_ENDPOINT_D_ROOT;
@@ -346,6 +363,7 @@ WSPSocket(int AddressFamily,
     if (!NT_SUCCESS(Status))
     {
         ERR("Failed to open socket. Status 0x%08x\n", Status);
+        Status = TranslateNtStatusError(Status);
         goto error;
     }
 

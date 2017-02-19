@@ -567,13 +567,6 @@ DoLookup:
         }
 
         /* Check if we got a valid socket */
-        if (Status == WSAEINVAL)
-        {
-            Status = INVALID_SOCKET;
-            ErrorCode = WSAEINVAL;
-        }
-
-        /* Check if we got a valid socket */
         if (Status != INVALID_SOCKET)
         {
             /* Add an API reference and return */
