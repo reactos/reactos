@@ -346,7 +346,7 @@ CheckForCurrentHostname(CONST CHAR * Name, PFIXED_INFO network_info)
     PIP_ADAPTER_ADDRESSES Addresses = NULL, pip;
     BOOL Found = FALSE;
 
-    if (network_info->DomainName)
+    if (network_info->DomainName[0])
     {
         size_t StringLength;
         size_t TempSize = 2;
