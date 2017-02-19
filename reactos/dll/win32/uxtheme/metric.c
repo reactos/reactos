@@ -61,15 +61,11 @@ COLORREF WINAPI GetThemeSysColor(HTHEME hTheme, int iColorID)
     HRESULT hr;
     PTHEME_PROPERTY tp;
 
-    // TODO: Check if this is correct
-    if ( iColorID >= 0 && iColorID < 32)
-        iColorID += TMT_SCROLLBAR;
-
     TRACE("(%p, %d)\n", hTheme, iColorID);
     SetLastError(0);
     if(hTheme) {
         PTHEME_CLASS ptc = (PTHEME_CLASS) hTheme;
-        if((tp = MSSTYLES_FindMetric(ptc->tf, TMT_COLOR, iColorID))) {
+        if((tp = MSSTYLES_FindMetric(ptc->tf, TMT_COLOR, iColorID + TMT_FIRSTCOLOR))) {
             COLORREF color;
             hr = MSSTYLES_GetPropertyColor(tp, &color);
             if(SUCCEEDED(hr))
