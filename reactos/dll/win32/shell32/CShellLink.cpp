@@ -1074,13 +1074,17 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetPath(LPSTR pszFile, INT cchMaxPath, WIN
         /* Copy the file data if a file path was returned */
         if (*pszFile)
         {
+            DWORD len;
+
             /* Copy the fixed part */
             CopyMemory(pfd, &wfd, FIELD_OFFSET(WIN32_FIND_DATAA, cFileName));
 
             /* Convert the file names to ANSI */
-            WideCharToMultiByte(CP_ACP, 0, wfd.cFileName, sizeof(wfd.cFileName),
+            len = lstrlenW(wfd.cFileName);
+            WideCharToMultiByte(CP_ACP, 0, wfd.cFileName, len + 1,
                                 pfd->cFileName, sizeof(pfd->cFileName), NULL, NULL);
-            WideCharToMultiByte(CP_ACP, 0, wfd.cAlternateFileName, sizeof(wfd.cAlternateFileName),
+            len = lstrlenW(wfd.cAlternateFileName);
+            WideCharToMultiByte(CP_ACP, 0, wfd.cAlternateFileName, len + 1,
                                 pfd->cAlternateFileName, sizeof(pfd->cAlternateFileName), NULL, NULL);
         }
     }
