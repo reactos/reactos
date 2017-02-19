@@ -22,6 +22,7 @@ extern struct acpi_device *sleep_button;
 extern struct acpi_device *power_button;
 
 UNICODE_STRING ProcessorHardwareIds = {0, 0, NULL};
+LPWSTR ProcessorIdString = NULL;
 LPWSTR ProcessorNameString = NULL;
 
 
@@ -649,6 +650,15 @@ GetProcessorInformation(VOID)
     ProcessorHardwareIds.Length = (SHORT)HardwareIdsLength;
     ProcessorHardwareIds.MaximumLength = ProcessorHardwareIds.Length;
     ProcessorHardwareIds.Buffer = HardwareIdsBuffer;
+
+    Length = (5 + VendorIdentifierLength + 3 + Level1Length + 1) * sizeof(WCHAR);
+    ProcessorIdString = ExAllocatePoolWithTag(PagedPool, Length, 'IpcA');
+    if (ProcessorIdString != NULL)
+    {
+        Length = swprintf(ProcessorIdString, L"ACPI\\%s_-_%.*s", ProcessorVendorIdentifier, Level1Length, ProcessorIdentifier);
+        ProcessorIdString[Length++] = UNICODE_NULL;
+        DPRINT("ProcessorIdString: %S\n", ProcessorIdString);
+    }
 
 done:
     if (ProcessorHandle != NULL)

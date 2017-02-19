@@ -5,6 +5,7 @@
  */
 
 extern UNICODE_STRING ProcessorHardwareIds;
+extern LPWSTR ProcessorIdString;
 extern LPWSTR ProcessorNameString;
 
 typedef enum _DEVICE_PNP_STATE {

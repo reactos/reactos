@@ -454,9 +454,17 @@ Bus_PDO_QueryDeviceId(
         {
             acpi_bus_get_device(DeviceData->AcpiHandle, &Device);
 
-            length = swprintf(temp,
-                              L"ACPI\\%hs",
-                              Device->pnp.hardware_id);
+            if (strcmp(Device->pnp.hardware_id, "Processor") == 0)
+            {
+                length = wcslen(ProcessorIdString);
+                wcscpy(temp, ProcessorIdString);
+            }
+            else
+            {
+                length = swprintf(temp,
+                                  L"ACPI\\%hs",
+                                  Device->pnp.hardware_id);
+            }
         }
         else
         {
