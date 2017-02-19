@@ -236,7 +236,7 @@ WSHIoctl_GetInterfaceList(
     INT res = -1;
 
     /* Init Interface-ID-List */
-    IntfIDList = HeapAlloc(hHeap,0,sizeof(IntfIDList));
+    IntfIDList = HeapAlloc(hHeap, 0, sizeof(*IntfIDList));
     list_init(&IntfIDList->entry);
 
     /* open tcp-driver */
