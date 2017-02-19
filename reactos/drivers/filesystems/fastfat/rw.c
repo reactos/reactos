@@ -555,6 +555,10 @@ VfatRead(
 
     ASSERT(IrpContext->DeviceObject);
 
+    PagingIo = BooleanFlagOn(IrpContext->Irp->Flags, IRP_PAGING_IO);
+    CanWait = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT);
+    NoCache = BooleanFlagOn(IrpContext->Irp->Flags, IRP_NOCACHE);
+
     // This request is not allowed on the main device object
     if (IrpContext->DeviceObject == VfatGlobalData->DeviceObject)
     {
@@ -567,6 +571,8 @@ VfatRead(
     ASSERT(IrpContext->FileObject);
     Fcb = IrpContext->FileObject->FsContext;
     ASSERT(Fcb);
+
+    IsVolume = BooleanFlagOn(Fcb->Flags, FCB_IS_VOLUME);
 
     if (BooleanFlagOn(Fcb->Flags, FCB_IS_PAGE_FILE))
     {
@@ -584,10 +590,6 @@ VfatRead(
     ByteOffset = IrpContext->Stack->Parameters.Read.ByteOffset;
     Length = IrpContext->Stack->Parameters.Read.Length;
     BytesPerSector = IrpContext->DeviceExt->FatInfo.BytesPerSector;
-    PagingIo = BooleanFlagOn(IrpContext->Irp->Flags, IRP_PAGING_IO);
-    CanWait = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT);
-    IsVolume = BooleanFlagOn(Fcb->Flags, FCB_IS_VOLUME);
-    NoCache = BooleanFlagOn(IrpContext->Irp->Flags, IRP_NOCACHE);
 
     /* fail if file is a directory and no paged read */
     if (vfatFCBIsDirectory(Fcb) && !PagingIo)
@@ -779,6 +781,10 @@ VfatWrite(
 
     ASSERT(IrpContext->DeviceObject);
 
+    PagingIo = BooleanFlagOn(IrpContext->Irp->Flags, IRP_PAGING_IO);
+    CanWait = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT);
+    NoCache = BooleanFlagOn(IrpContext->Irp->Flags, IRP_NOCACHE);
+
     // This request is not allowed on the main device object
     if (IrpContext->DeviceObject == VfatGlobalData->DeviceObject)
     {
@@ -792,6 +798,9 @@ VfatWrite(
     Fcb = IrpContext->FileObject->FsContext;
     ASSERT(Fcb);
 
+    IsVolume = BooleanFlagOn(Fcb->Flags, FCB_IS_VOLUME);
+    IsFAT = BooleanFlagOn(Fcb->Flags, FCB_IS_FAT);
+
     if (BooleanFlagOn(Fcb->Flags, FCB_IS_PAGE_FILE))
     {
         PFATINFO FatInfo = &IrpContext->DeviceExt->FatInfo;
@@ -804,12 +813,6 @@ VfatWrite(
     }
 
     DPRINT("<%wZ>\n", &Fcb->PathNameU);
-
-    PagingIo = BooleanFlagOn(IrpContext->Irp->Flags, IRP_PAGING_IO);
-    CanWait = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT);
-    IsVolume = BooleanFlagOn(Fcb->Flags, FCB_IS_VOLUME);
-    IsFAT = BooleanFlagOn(Fcb->Flags, FCB_IS_FAT);
-    NoCache = BooleanFlagOn(IrpContext->Irp->Flags, IRP_NOCACHE);
 
     /* fail if file is a directory and no paged read */
     if (vfatFCBIsDirectory(Fcb) && !PagingIo)
