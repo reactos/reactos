@@ -1072,7 +1072,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetPath(LPSTR pszFile, INT cchMaxPath, WIN
         ZeroMemory(pfd, sizeof(*pfd));
 
         /* Copy the file data if a file path was returned */
-        if (*pszFileW)
+        if (*pszFile)
         {
             /* Copy the fixed part */
             CopyMemory(pfd, &wfd, FIELD_OFFSET(WIN32_FIND_DATAA, cFileName));
