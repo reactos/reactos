@@ -851,6 +851,7 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
     POINT ClientPoint;
     WINDOWINFO wi;
 
+    wi.cbSize = sizeof(wi);
     GetWindowInfo(hWnd, &wi);
 
     if (!PtInRect(&wi.rcWindow, Point))
@@ -1185,6 +1186,7 @@ HRESULT WINAPI DrawNCPreview(HDC hDC,
     if (!context.theme)
         return E_FAIL;
     context.Active = TRUE;
+    context.wi.cbSize = sizeof(context.wi);
     if (!GetWindowInfo(hwndDummy, &context.wi))
         return E_FAIL;
     context.wi.dwStyle |= WS_VISIBLE;
