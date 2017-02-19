@@ -128,10 +128,16 @@ CDeviceView::OnRightClick(
     _In_ LPNMHDR NmHdr
     )
 {
-    HTREEITEM hItem = TreeView_GetNextItem(NmHdr->hwndFrom, 0, TVGN_DROPHILITE);
-    if (hItem)
+    TVHITTESTINFO hitInfo;
+    HTREEITEM hItem;
+
+    GetCursorPos(&hitInfo.pt);
+    ScreenToClient(m_hTreeView, &hitInfo.pt);
+
+    hItem = TreeView_HitTest(m_hTreeView, &hitInfo);
+    if (hItem != NULL && (hitInfo.flags & (TVHT_ONITEM | TVHT_ONITEMICON)))
     {
-        TreeView_SelectItem(NmHdr->hwndFrom, hItem);
+        TreeView_SelectItem(m_hTreeView, hItem);
     }
 
     return 0;
