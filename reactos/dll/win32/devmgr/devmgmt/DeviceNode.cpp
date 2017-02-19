@@ -68,7 +68,7 @@ CDeviceNode::SetupNode()
                                 m_DeviceId,
                                 ulLength + 1,
                                 0);
-        if (cr != CR_SUCCESS)
+        if (cr != CR_SUCCESS || wcscmp(m_DeviceId, L"HTREE\\ROOT\\0") == 0)
         {
             delete[] m_DeviceId;
             m_DeviceId = NULL;
