@@ -347,7 +347,7 @@ DriverDetailsDlgProc(IN HWND hwndDlg,
 
                     if (ListView_GetItemCount(hDriversListView) == 0)
                     {
-                        if(LoadStringW(hDllInstance, IDS_NODRIVERS, szBuffer, _countof(szBuffer)))
+                        if (LoadStringW(hDllInstance, IDS_NODRIVERS, szBuffer, _countof(szBuffer)))
                             MessageBoxW(hwndDlg, szBuffer, dap->szDevName, MB_OK);
                         EndDialog(hwndDlg, IDCANCEL);
                     }

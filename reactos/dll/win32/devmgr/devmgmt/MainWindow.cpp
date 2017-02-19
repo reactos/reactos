@@ -93,7 +93,6 @@ CDeviceManager::~CDeviceManager(void)
 {
 }
 
-
 bool
 CDeviceManager::Create(_In_ HWND /*hWndParent*/,
                        _In_ HINSTANCE hInst,
@@ -130,7 +129,6 @@ CDeviceManager::Create(_In_ HWND /*hWndParent*/,
 
     return (Ret == 0);
 }
-
 
 
 /* PRIVATE METHODS **********************************************/
@@ -256,11 +254,25 @@ CDeviceManager::RefreshView(_In_ ViewType Type,
     // Get the menu item id
     switch (Type)
     {
-        case DevicesByType: CheckId = IDC_DEVBYTYPE; break;
-        case DevicesByConnection: CheckId = IDC_DEVBYCONN; break;
-        case ResourcesByType: CheckId = IDC_RESBYTYPE; break;
-        case ResourcesByConnection: CheckId = IDC_RESBYCONN; break;
-        default: ATLASSERT(FALSE); break;
+        case DevicesByType:
+            CheckId = IDC_DEVBYTYPE;
+            break;
+
+        case DevicesByConnection:
+            CheckId = IDC_DEVBYCONN;
+            break;
+
+        case ResourcesByType:
+            CheckId = IDC_RESBYTYPE;
+            break;
+
+        case ResourcesByConnection:
+            CheckId = IDC_RESBYCONN;
+            break;
+
+        default:
+            ATLASSERT(FALSE);
+            break;
     }
 
     // Set the new check item
@@ -291,7 +303,8 @@ CDeviceManager::CreateToolBar(void)
                                  (HMENU)IDC_TOOLBAR,
                                  g_hThisInstance,
                                  NULL);
-    if (m_hToolBar == NULL) return FALSE;
+    if (m_hToolBar == NULL)
+        return FALSE;
 
     // Don't show clipped buttons
     SendMessageW(m_hToolBar,
@@ -394,8 +407,6 @@ void CDeviceManager::UpdateToolbar()
     }
     SendMessageW(m_hToolBar, TB_SETSTATE, IDC_DISABLE_DRV, MAKELPARAM(State, 0));
 }
-
-
 
 bool
 CDeviceManager::StatusBarLoadString(_In_ HWND hStatusBar,
@@ -793,6 +804,7 @@ CDeviceManager::MainWndProc(_In_ HWND hwnd,
             }
             break;
         }
+
         case WM_TIMER:
         {
             if (wParam == REFRESH_TIMER)
@@ -829,9 +841,11 @@ CDeviceManager::MainWndProc(_In_ HWND hwnd,
         }
 
         case WM_ACTIVATE:
+        {
             if (LOWORD(hwnd))
                 This->OnActivate();
             break;
+        }
 
         case WM_DESTROY:
         {
