@@ -1430,7 +1430,7 @@ EnumEventsThread(IN LPVOID lpParameter)
 
     ULONG LogIndex;
     HANDLE hEventLog;
-    PEVENTLOGRECORD pEvlr;
+    PEVENTLOGRECORD pEvlr = NULL;
     PBYTE pEvlrEnd;
     PBYTE pEvlrBuffer;
     DWORD dwWanted, dwRead, dwNeeded, dwStatus = ERROR_SUCCESS;
