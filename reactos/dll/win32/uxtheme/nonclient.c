@@ -58,6 +58,7 @@ UserHasWindowEdge(DWORD Style, DWORD ExStyle)
         return FALSE;
     if (Style & WS_THICKFRAME)
         return TRUE;
+    Style &= WS_CAPTION;
     if (Style == WS_DLGFRAME || Style == WS_CAPTION)
         return TRUE;
    return FALSE;
@@ -442,9 +443,9 @@ DrawClassicFrame(PDRAW_CONTEXT context, RECT* prcCurrent)
                prcCurrent->right - prcCurrent->left, Height, PATCOPY);
         PatBlt(context->hDC, prcCurrent->left, prcCurrent->top, 
                Width, prcCurrent->bottom - prcCurrent->top, PATCOPY);
-        PatBlt(context->hDC, prcCurrent->left, prcCurrent->bottom, 
+        PatBlt(context->hDC, prcCurrent->left, prcCurrent->bottom - 1, 
                prcCurrent->right - prcCurrent->left, -Height, PATCOPY);
-        PatBlt(context->hDC, prcCurrent->right, prcCurrent->top, 
+        PatBlt(context->hDC, prcCurrent->right - 1, prcCurrent->top, 
                -Width, prcCurrent->bottom - prcCurrent->top, PATCOPY);
 
         InflateRect(prcCurrent, -Width, -Height);
@@ -467,9 +468,9 @@ DrawClassicFrame(PDRAW_CONTEXT context, RECT* prcCurrent)
                prcCurrent->right - prcCurrent->left, Height, PATCOPY);
         PatBlt(context->hDC, prcCurrent->left, prcCurrent->top, 
                Width, prcCurrent->bottom - prcCurrent->top, PATCOPY);
-        PatBlt(context->hDC, prcCurrent->left, prcCurrent->bottom, 
+        PatBlt(context->hDC, prcCurrent->left, prcCurrent->bottom - 1, 
                prcCurrent->right - prcCurrent->left, -Height, PATCOPY);
-        PatBlt(context->hDC, prcCurrent->right, prcCurrent->top, 
+        PatBlt(context->hDC, prcCurrent->right - 1, prcCurrent->top, 
               -Width, prcCurrent->bottom - prcCurrent->top, PATCOPY);
 
         InflateRect(prcCurrent, -Width, -Height);
