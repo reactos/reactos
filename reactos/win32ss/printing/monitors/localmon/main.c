@@ -223,6 +223,7 @@ InitializePrintMonitor2(PMONITORINIT pMonitorInit, PHANDLE phMonitor)
         if (!cchPortName || _IsNEPort(pPort->pwszPortName))
         {
             DllFreeSplMem(pPort);
+            pPort = NULL;
             continue;
         }
 

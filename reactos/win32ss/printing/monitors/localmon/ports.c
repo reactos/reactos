@@ -541,8 +541,8 @@ LocalmonClosePort(HANDLE hPort)
     {
         EnterCriticalSection(&pPort->pLocalmon->Section);
         RemoveEntryList(&pPort->Entry);
-        DllFreeSplMem(pPort);
         LeaveCriticalSection(&pPort->pLocalmon->Section);
+        DllFreeSplMem(pPort);
     }
 
     SetLastError(ERROR_SUCCESS);
