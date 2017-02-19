@@ -1758,6 +1758,7 @@ TOOLBAR_LayoutToolbar(TOOLBAR_INFO *infoPtr)
 	if (btnPtr->fsState & TBSTATE_HIDDEN)
 	{
 	    SetRectEmpty (&btnPtr->rect);
+	    TOOLBAR_TooltipSetRect(infoPtr, btnPtr);
 	    continue;
 	}
 
