@@ -816,7 +816,7 @@ getaddrinfo(const char FAR *nodename,
     /* Convert the node name */
     if (nodename)
     {
-        UnicodeNodeName = UnicodeDupFromAnsi((LPSTR)nodename);
+        UnicodeNodeName = UnicodeDupFromAnsi(nodename);
         if (!UnicodeNodeName)
         {
             /* Prepare to fail */
@@ -828,7 +828,7 @@ getaddrinfo(const char FAR *nodename,
     /* Convert the servname too, if we have one */
     if (servname)
     {
-        UnicodeServName = UnicodeDupFromAnsi((LPSTR)servname);
+        UnicodeServName = UnicodeDupFromAnsi(servname);
         if (!UnicodeServName)
         {
             /* Prepare to fail */

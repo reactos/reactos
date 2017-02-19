@@ -14,8 +14,8 @@
 
 PWSPROCESS CurrentWsProcess;
 
-#define WsProcLock()      EnterCriticalSection((LPCRITICAL_SECTION)&Process->ThreadLock);
-#define WsProcUnlock()    LeaveCriticalSection((LPCRITICAL_SECTION)&Process->ThreadLock);
+#define WsProcLock()      EnterCriticalSection(&Process->ThreadLock);
+#define WsProcUnlock()    LeaveCriticalSection(&Process->ThreadLock);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -27,7 +27,7 @@ WsProcInitialize(IN PWSPROCESS Process)
     HKEY RootKey = NULL;
 
     /* Initialize the thread list lock */
-    InitializeCriticalSection((LPCRITICAL_SECTION)&Process->ThreadLock);
+    InitializeCriticalSection(&Process->ThreadLock);
     Process->LockReady = TRUE;
 
     /* Open the Winsock Key */
@@ -295,7 +295,7 @@ WsProcDelete(IN PWSPROCESS Process)
     }
 
     /* Delete the thread lock */
-    DeleteCriticalSection((LPCRITICAL_SECTION)&Process->ThreadLock);
+    DeleteCriticalSection(&Process->ThreadLock);
 }
 
 VOID

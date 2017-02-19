@@ -700,8 +700,9 @@ WsAsyncGetHost(IN HANDLE TaskHandle,
 
 DWORD
 WINAPI
-WsAsyncThread(IN PWSASYNCCONTEXT Context)
+WsAsyncThread(IN PVOID ThreadContext)
 {
+    PWSASYNCCONTEXT Context = ThreadContext;
     PWSASYNCBLOCK AsyncBlock;
     PLIST_ENTRY Entry;
     HANDLE AsyncEvent = Context->AsyncEvent;
@@ -859,7 +860,7 @@ WsAsyncCheckAndInitThread(VOID)
         /* Create the thread */
         ThreadHandle = CreateThread(NULL,
                                     0,
-                                    (LPTHREAD_START_ROUTINE)WsAsyncThread,
+                                    WsAsyncThread,
                                     Context,
                                     0,
                                     &Tid);

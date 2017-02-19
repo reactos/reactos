@@ -120,7 +120,7 @@ WsNpInitialize(IN PNS_PROVIDER Provider,
     }
 
     /* Call it */
-    (*NSPStartupProc)(ProviderId, (LPNSP_ROUTINE)&Provider->Service.cbSize);
+    (*NSPStartupProc)(ProviderId, &Provider->Service);
 
     /* Save the provider ID */
     Provider->ProviderId = *ProviderId;

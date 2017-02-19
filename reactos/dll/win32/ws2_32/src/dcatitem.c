@@ -100,7 +100,7 @@ WsTcEntryInitializeFromRegistry(IN PTCATALOG_ENTRY CatalogEntry,
                               &RegSize);
 
 
-    memcpy(CatalogEntry->DllPath, (LPCSTR)Buf, sizeof(CatalogEntry->DllPath));
+    memcpy(CatalogEntry->DllPath, Buf, sizeof(CatalogEntry->DllPath));
     index = sizeof(CatalogEntry->DllPath);
     if(index < RegSize)
     {

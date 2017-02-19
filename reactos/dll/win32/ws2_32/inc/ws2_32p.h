@@ -98,7 +98,7 @@ typedef struct _TCATALOG
     DWORD UniqueId;
     DWORD NextId;
     HKEY CatalogKey;
-    RTL_CRITICAL_SECTION Lock;
+    CRITICAL_SECTION Lock;
     BOOLEAN Initialized;
 } TCATALOG, *PTCATALOG;
 
@@ -139,7 +139,7 @@ typedef struct _NSCATALOG
     DWORD ItemCount;
     DWORD UniqueId;
     HKEY CatalogKey;
-    RTL_CRITICAL_SECTION Lock;
+    CRITICAL_SECTION Lock;
 } NSCATALOG, *PNSCATALOG;
 
 typedef struct _NSQUERY
@@ -149,7 +149,7 @@ typedef struct _NSQUERY
     BOOLEAN ShuttingDown;
     LIST_ENTRY ProviderList;
     PNSQUERY_PROVIDER ActiveProvider;
-    RTL_CRITICAL_SECTION Lock;
+    CRITICAL_SECTION Lock;
     PNSQUERY_PROVIDER CurrentProvider;
     LPWSAQUERYSETW QuerySet;
     DWORD ControlFlags;
@@ -169,7 +169,7 @@ typedef struct _WSPROCESS
     HANDLE NamespaceCatalogEvent;
     DWORD Version;
     BOOLEAN LockReady;
-    RTL_CRITICAL_SECTION ThreadLock;
+    CRITICAL_SECTION ThreadLock;
 } WSPROCESS, *PWSPROCESS;
 
 typedef struct _WSTHREAD
@@ -270,11 +270,11 @@ extern PWS_SOCK_POST_ROUTINE WsSockPostRoutine;
 
 LPSTR
 WSAAPI
-AnsiDupFromUnicode(IN LPWSTR UnicodeString);
+AnsiDupFromUnicode(IN LPCWSTR UnicodeString);
 
 LPWSTR
 WSAAPI
-UnicodeDupFromAnsi(IN LPSTR AnsiString);
+UnicodeDupFromAnsi(IN LPCSTR AnsiString);
 
 VOID
 WSAAPI

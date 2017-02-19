@@ -46,8 +46,8 @@ WsTpInitialize(IN PTPROVIDER Provider,
     DPRINT("WsTpInitialize: %p, %p, %p\n", Provider, DllName, ProtocolInfo);
     
     /* Clear the tables */
-    RtlZeroMemory(&Provider->UpcallTable, sizeof(WSPUPCALLTABLE));
-    RtlZeroMemory(&Provider->Service.lpWSPAccept, sizeof(WSPPROC_TABLE));
+    RtlZeroMemory(&Provider->UpcallTable, sizeof(Provider->UpcallTable));
+    RtlZeroMemory(&Provider->Service, sizeof(Provider->Service));
 
     /* Set up the Upcall Table */
     Provider->UpcallTable.lpWPUCloseEvent = WPUCloseEvent;
@@ -88,7 +88,7 @@ WsTpInitialize(IN PTPROVIDER Provider,
                       &WspData,
                       ProtocolInfo,
                       Provider->UpcallTable,
-                      (LPWSPPROC_TABLE)&Provider->Service.lpWSPAccept);
+                      &Provider->Service);
 
     /* Return */
     return ErrorCode;

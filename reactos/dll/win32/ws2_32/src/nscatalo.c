@@ -15,8 +15,8 @@
 
 /* DATA **********************************************************************/
 
-#define WsNcLock()          EnterCriticalSection((LPCRITICAL_SECTION)&Catalog->Lock);
-#define WsNcUnlock()        LeaveCriticalSection((LPCRITICAL_SECTION)&Catalog->Lock);
+#define WsNcLock()          EnterCriticalSection(&Catalog->Lock);
+#define WsNcUnlock()        LeaveCriticalSection(&Catalog->Lock);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -48,7 +48,7 @@ WsNcOpen(IN PNSCATALOG Catalog,
     CHAR* CatalogKeyName;
 
     /* Initialize the catalog lock and namespace list */
-    InitializeCriticalSection((LPCRITICAL_SECTION)&Catalog->Lock);
+    InitializeCriticalSection(&Catalog->Lock);
     InitializeListHead(&Catalog->CatalogList);
 
     /* Read the catalog name */
@@ -638,7 +638,7 @@ WsNcDelete(IN PNSCATALOG Catalog)
 
     /* Release and delete the lock */
     WsNcUnlock();
-    DeleteCriticalSection((LPCRITICAL_SECTION)&Catalog->Lock);
+    DeleteCriticalSection(&Catalog->Lock);
 
     /* Delete the object */
     HeapFree(WsSockHeap, 0, Catalog);

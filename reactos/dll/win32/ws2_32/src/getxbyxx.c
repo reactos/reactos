@@ -413,7 +413,7 @@ gethostname(OUT char FAR * name,
     if(Name)
     {
         /* Copy it */
-        strncpy((LPSTR)name, Name, namelen-1);
+        strncpy(name, Name, namelen-1);
     }
 
     /* Check if we received a newly allocated buffer; free it. */

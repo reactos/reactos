@@ -12,8 +12,8 @@
 
 /* DATA **********************************************************************/
 
-#define WsNqLock()      EnterCriticalSection((LPCRITICAL_SECTION)&NsQuery->Lock);
-#define WsNqUnlock()    LeaveCriticalSection((LPCRITICAL_SECTION)&NsQuery->Lock);
+#define WsNqLock()      EnterCriticalSection(&NsQuery->Lock);
+#define WsNqUnlock()    LeaveCriticalSection(&NsQuery->Lock);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -40,7 +40,7 @@ WSAAPI
 WsNqInitialize(IN PNSQUERY Query)
 {
     /* Initialize the lock */
-    InitializeCriticalSection((LPCRITICAL_SECTION)&Query->Lock);
+    InitializeCriticalSection(&Query->Lock);
 
     /* Set initial reference count and signature */
     Query->RefCount = 1;
@@ -92,7 +92,7 @@ WsNqDelete(IN PNSQUERY NsQuery)
 
     /* Remove the signature and delete the lock */
     NsQuery->Signature = ~0xBEADFACE;
-    DeleteCriticalSection((LPCRITICAL_SECTION)&NsQuery->Lock);
+    DeleteCriticalSection(&NsQuery->Lock);
 
     /* Free us */
     HeapFree(WsSockHeap, 0, NsQuery);

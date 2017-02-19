@@ -15,8 +15,8 @@
 
 /* DATA **********************************************************************/
 
-#define WsTcLock()          EnterCriticalSection((LPCRITICAL_SECTION)&Catalog->Lock);
-#define WsTcUnlock()        LeaveCriticalSection((LPCRITICAL_SECTION)&Catalog->Lock);
+#define WsTcLock()          EnterCriticalSection(&Catalog->Lock);
+#define WsTcUnlock()        LeaveCriticalSection(&Catalog->Lock);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -49,7 +49,7 @@ WsTcOpen(IN PTCATALOG Catalog,
     CHAR* CatalogKeyName;
 
     /* Initialize the catalog lock and namespace list */
-    InitializeCriticalSection((LPCRITICAL_SECTION)&Catalog->Lock);
+    InitializeCriticalSection(&Catalog->Lock);
     InitializeListHead(&Catalog->ProtocolList);
 
     /* Read the catalog name */
@@ -759,7 +759,7 @@ WsTcFindIfsProviderForSocket(IN PTCATALOG Catalog,
     PTPROVIDER Provider;
     IN SOCKET NewHandle;
     INT Error;
-    DWORD OptionLength;
+    INT OptionLength;
     PLIST_ENTRY Entry;
     WSAPROTOCOL_INFOW ProtocolInfo;
     DWORD UniqueId;
@@ -811,7 +811,7 @@ CatalogChanged:
                                                       SOL_SOCKET,
                                                       SO_PROTOCOL_INFOW,
                                                       (PCHAR)&ProtocolInfo,
-                                                      (LPINT)&OptionLength,
+                                                      &OptionLength,
                                                       &Error);
 
         /* Dereference the entry and check the result */
@@ -895,7 +895,7 @@ WsTcDelete(IN PTCATALOG Catalog)
 
     /* Release and delete the lock */
     WsTcUnlock();
-    DeleteCriticalSection((LPCRITICAL_SECTION)&Catalog->Lock);
+    DeleteCriticalSection(&Catalog->Lock);
 
     /* Delete the object */
     HeapFree(WsSockHeap, 0, Catalog);

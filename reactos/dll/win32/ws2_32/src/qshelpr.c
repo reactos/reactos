@@ -17,7 +17,7 @@
 
 LPSTR
 WSAAPI
-AnsiDupFromUnicode(IN LPWSTR UnicodeString)
+AnsiDupFromUnicode(IN LPCWSTR UnicodeString)
 {
     INT Length = 0;
     BOOL GoOn = TRUE;
@@ -65,7 +65,7 @@ AnsiDupFromUnicode(IN LPWSTR UnicodeString)
 
 LPWSTR
 WSAAPI
-UnicodeDupFromAnsi(IN LPSTR AnsiString)
+UnicodeDupFromAnsi(IN LPCSTR AnsiString)
 {
     INT Length = 0;
     BOOL GoOn = TRUE;
