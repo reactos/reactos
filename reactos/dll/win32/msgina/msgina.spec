@@ -1,6 +1,6 @@
 1 stub -noname ShellGetUserList   ; (long long long)
 2 stub -noname ShellStatusHostEnd ; (long)
-3 stub -noname ShellIsFriendlyUIActive ; ()
+3 stdcall -stub -noname ShellIsFriendlyUIActive()
 4 stub -noname ShellIsSuspendAllowed   ; ()
 5 stub -noname ShellIsRemoteConnectionsEnabled ; ()
 6 stub -noname ShellEnableFriendlyUI    ; (long)
