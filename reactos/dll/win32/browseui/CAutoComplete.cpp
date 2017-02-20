@@ -184,6 +184,7 @@ HRESULT WINAPI CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL, LPCOLESTR p
         
                 if (res == ERROR_SUCCESS)
                 {
+                    len = sizeof(result);
                     res = RegQueryValueW(hKey, value, result, &len);
                     if (res == ERROR_SUCCESS)
                     {
