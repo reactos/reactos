@@ -602,6 +602,7 @@ LRESULT co_UserFreeWindow(PWND Window,
       MsqDecPaintCountQueue(Window->head.pti);
       if (Window->hrgnUpdate > HRGN_WINDOW && GreIsHandleValid(Window->hrgnUpdate))
       {
+         IntGdiSetRegionOwner(Window->hrgnUpdate, GDI_OBJ_HMGR_POWNED);
          GreDeleteObject(Window->hrgnUpdate);
       }
       Window->hrgnUpdate = NULL;
