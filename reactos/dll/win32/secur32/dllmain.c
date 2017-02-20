@@ -18,6 +18,11 @@ HANDLE Secur32Heap;
 
 /* FUNCTIONS *****************************************************************/
 
+#ifdef __REACTOS__
+// See sspi.c
+extern void SECUR32_freeProviders(void);
+#endif
+
 BOOL
 WINAPI
 DllMain(HINSTANCE hInstance,
@@ -36,6 +41,9 @@ DllMain(HINSTANCE hInstance,
             break;
 
         case DLL_PROCESS_DETACH:
+#ifdef __REACTOS__
+            SECUR32_freeProviders();
+#endif
             LsapCloseLsaPort();
             if (!RtlDestroyHeap(Secur32Heap))
             {

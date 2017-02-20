@@ -42,6 +42,7 @@ typedef struct _SecureProviderTable
 } SecureProviderTable;
 
 static void SECUR32_initializeProviders(void);
+/* static */ void SECUR32_freeProviders(void);
 
 static CRITICAL_SECTION cs;
 static CRITICAL_SECTION_DEBUG cs_debug =
@@ -359,7 +360,7 @@ static void _copyPackageInfo(PSecPkgInfoW info, const SecPkgInfoA *inInfoA,
     }
 }
 
-static
+// static
 SecureProvider *SECUR32_addProvider(const SecurityFunctionTableA *fnTableA,
  const SecurityFunctionTableW *fnTableW, PCWSTR moduleName)
 {
@@ -406,7 +407,7 @@ SecureProvider *SECUR32_addProvider(const SecurityFunctionTableA *fnTableA,
     return ret;
 }
 
-static
+// static
 void SECUR32_addPackages(SecureProvider *provider, ULONG toAdd,
  const SecPkgInfoA *infoA, const SecPkgInfoW *infoW)
 {
@@ -519,7 +520,6 @@ static const WCHAR securityProvidersW[] = {
  'S','e','c','u','r','i','t','y','P','r','o','v','i','d','e','r','s',0
  };
 
- /* FIXME: we're missing SECUR32_freeProviders, so all of this gets leaked */
 static void SECUR32_initializeProviders(void)
 {
     HKEY key;
@@ -559,6 +559,19 @@ static void SECUR32_initializeProviders(void)
         }
         RegCloseKey(key);
     }
+
+    /* Now load the built-in providers (in Wine, this is done before the registry loading) */
+#ifdef __REACTOS__
+/// FIXME: Interim Wine code until we get Samuel's rewrite!
+    /* First load built-in providers */
+    SECUR32_initNTLMSP();
+    SECUR32_initKerberosSP();
+    /* Load the Negotiate provider last so apps stumble over the working NTLM
+     * provider first. Attempting to fix bug #16905 while keeping the
+     * application reported on wine-users on 2006-09-12 working. */
+    SECUR32_initNegotiateSP();
+#endif
+
 }
 
 SecurePackage *SECUR32_findPackageW(PCWSTR packageName)
@@ -630,6 +643,50 @@ SecurePackage *SECUR32_findPackageA(PCSTR packageName)
     else
         ret = NULL;
     return ret;
+}
+
+/* static */ void SECUR32_freeProviders(void)
+{
+    TRACE("\n");
+    EnterCriticalSection(&cs);
+
+#ifndef __REACTOS__
+    SECUR32_deinitSchannelSP();
+#endif
+
+    if (packageTable)
+    {
+        SecurePackage *package, *package_next;
+        LIST_FOR_EACH_ENTRY_SAFE(package, package_next, &packageTable->table,
+                                 SecurePackage, entry)
+        {
+            HeapFree(GetProcessHeap(), 0, package->infoW.Name);
+            HeapFree(GetProcessHeap(), 0, package->infoW.Comment);
+            HeapFree(GetProcessHeap(), 0, package);
+        }
+
+        HeapFree(GetProcessHeap(), 0, packageTable);
+        packageTable = NULL;
+    }
+
+    if (providerTable)
+    {
+        SecureProvider *provider, *provider_next;
+        LIST_FOR_EACH_ENTRY_SAFE(provider, provider_next, &providerTable->table,
+                                 SecureProvider, entry)
+        {
+            HeapFree(GetProcessHeap(), 0, provider->moduleName);
+            if (provider->lib)
+                FreeLibrary(provider->lib);
+            HeapFree(GetProcessHeap(), 0, provider);
+        }
+
+        HeapFree(GetProcessHeap(), 0, providerTable);
+        providerTable = NULL;
+    }
+
+    LeaveCriticalSection(&cs);
+    DeleteCriticalSection(&cs);
 }
 
 /***********************************************************************
