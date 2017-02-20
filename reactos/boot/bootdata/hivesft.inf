@@ -92,13 +92,6 @@ HKLM,"SOFTWARE\Microsoft\Rpc\SecurityService","9",2,"secur32.dll"
 
 HKLM,"SOFTWARE\Microsoft\Secure",,0x00000012
 
-; WBem
-HKLM,"SOFTWARE\Microsoft\wbem\ess",,0x00000012
-HKLM,"SOFTWARE\Microsoft\wbem\Transports",,0x00000012
-HKLM,"SOFTWARE\Microsoft\wbem\Scripting",,0x00000012
-HKLM,"SOFTWARE\Microsoft\wbem","Installation Directory",0x00020000,"%SystemRoot%\system32\wbem"
-HKLM,"SOFTWARE\Microsoft\wbem","MOF Self-Install Directory",0x00020000,"%SystemRoot%\system32\wbem\mof"
-
 ; HTML Help
 HKLM,"SOFTWARE\Microsoft\Active Setup\Installed Components\{de5aed00-a4bf-11d1-9948-00c04f98bbc9}",,2,"HTML Help"
 HKLM,"SOFTWARE\Microsoft\Active Setup\Installed Components\{de5aed00-a4bf-11d1-9948-00c04f98bbc9}","ComponentID",2,"HTMLHelp"

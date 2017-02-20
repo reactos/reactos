@@ -8,3 +8,4 @@ add_library(wmisvc SHARED
 set_module_type(wmisvc win32dll UNICODE)
 add_importlibs(wmisvc advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET wmisvc DESTINATION reactos/system32/wbem FOR all)
+add_registry_inf(wmisvc_reg.inf)

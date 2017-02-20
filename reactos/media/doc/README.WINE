@@ -21,6 +21,11 @@ reactos/sdk/tools/wpp                   # Synced to WineStaging-1.9.11
 
 The following libraries are shared with Wine.
 
+reactos/base/wmi/wbemdisp               # Synced to WineStaging-1.9.16
+reactos/base/wmi/wbemprox               # Synced to WineStaging-1.9.23
+reactos/base/wmi/wmi                    # Synced to WineStaging-1.9.11
+reactos/base/wmi/wmiutils               # Synced to WineStaging-1.9.11
+
 reactos/dll/directx/wine/amstream       # Synced to WineStaging-1.9.23
 reactos/dll/directx/wine/d3d8           # Synced to WineStaging-1.9.4
 reactos/dll/directx/wine/d3d9           # Synced to WineStaging-1.9.4
@@ -194,8 +199,6 @@ reactos/dll/win32/uxtheme             # Forked
 reactos/dll/win32/vbscript            # Synced to WineStaging-1.9.23
 reactos/dll/win32/version             # Synced to WineStaging-1.9.11
 reactos/dll/win32/vssapi              # Synced to WineStaging-1.9.11
-reactos/dll/win32/wbemdisp            # Synced to WineStaging-1.9.16
-reactos/dll/win32/wbemprox            # Synced to WineStaging-1.9.23
 reactos/dll/win32/windowscodecs       # Synced to WineStaging-1.9.23
 reactos/dll/win32/windowscodecsext    # Synced to WineStaging-1.9.11
 reactos/dll/win32/winemp3.acm         # Synced to WineStaging-1.9.23
@@ -208,8 +211,6 @@ reactos/dll/win32/winmm/wavemap       # Forked at Wine-20050628
 reactos/dll/win32/winscard            # Synced to WineStaging-1.9.11
 reactos/dll/win32/wintrust            # Synced to WineStaging-1.9.23
 reactos/dll/win32/wldap32             # Synced to WineStaging-1.9.11
-reactos/dll/win32/wmi                 # Synced to WineStaging-1.9.11
-reactos/dll/win32/wmiutils            # Synced to WineStaging-1.9.11
 reactos/dll/win32/wmvcore             # Synced to WineStaging-1.9.11
 reactos/dll/win32/wshom.ocx           # Synced to WineStaging-1.9.11
 reactos/dll/win32/wtsapi32            # Synced to WineStaging-1.9.11
@@ -230,7 +231,6 @@ reactos/base/applications/cmdutils/cscript  # Synced to WineStaging-1.9.11
 reactos/base/applications/cmdutils/reg      # Synced to WineStaging-1.9.16
 reactos/base/applications/cmdutils/schtasks # Synced to WineStaging-1.9.14
 reactos/base/applications/cmdutils/taskkill # Synced to WineStaging-1.9.11
-reactos/base/applications/cmdutils/wmic     # Synced to WineStaging-1.9.11
 reactos/base/applications/cmdutils/wscript  # Synced to WineStaging-1.9.16
 reactos/base/applications/cmdutils/xcopy    # Synced to WineStaging-1.9.11
 reactos/base/applications/games/winmine     # Synced to WineStaging-1.9.16 with our own resources.
@@ -244,6 +244,10 @@ reactos/base/applications/write             # Synced to WineStaging-1.9.16
 reactos/base/services/rpcss                 # Synced to WineStaging-1.9.16
 reactos/base/system/expand                  # Synced to WineStaging-1.9.11
 reactos/base/system/msiexec                 # Synced to WineStaging-1.9.11
+
+reactos/base/wmi/mofcomp                    # Synced to Wine-2.2
+reactos/base/wmi/wmic                       # Synced to WineStaging-1.9.11
+
 reactos/modules/rosapps/winfile             # Autosync
 
 In addition the following libs, dlls and source files are mostly based on code ported

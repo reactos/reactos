@@ -1,0 +1,7 @@
+; WBem
+[AddReg]
+HKLM,"SOFTWARE\Microsoft\wbem\ess",,0x00000012
+HKLM,"SOFTWARE\Microsoft\wbem\Transports",,0x00000012
+HKLM,"SOFTWARE\Microsoft\wbem\Scripting",,0x00000012
+HKLM,"SOFTWARE\Microsoft\wbem","Installation Directory",0x00020000,"%SystemRoot%\system32\wbem"
+HKLM,"SOFTWARE\Microsoft\wbem","MOF Self-Install Directory",0x00020000,"%SystemRoot%\system32\wbem\mof"
