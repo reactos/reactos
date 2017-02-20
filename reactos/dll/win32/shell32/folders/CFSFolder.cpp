@@ -1056,38 +1056,41 @@ HRESULT WINAPI CFSFolder::_LoadDynamicDropTargetHandlerForKey(HKEY hRootKey, LPC
 {
     TRACE("CFSFolder::_LoadDynamicDropTargetHandlerForKey entered\n");
 
-    WCHAR wszName[MAX_PATH], *pwszClsid;
+    WCHAR wszName[MAX_PATH];
     DWORD dwSize = sizeof(wszName);
     HRESULT hr;
+    LRESULT res;
 
-    if (RegGetValueW(hRootKey, L"shellex\\DropHandler", NULL, RRF_RT_REG_SZ, NULL, wszName, &dwSize) == ERROR_SUCCESS)
+    res = RegGetValueW(hRootKey, L"shellex\\DropHandler", NULL, RRF_RT_REG_SZ, NULL, wszName, &dwSize);
+    if (res != ERROR_SUCCESS)
+        return S_FALSE;
+
+    CLSID clsid;
+    hr = CLSIDFromString(wszName, &clsid);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    if (m_bGroupPolicyActive)
     {
-        CLSID clsid;
-        hr = CLSIDFromString(wszName, &clsid);
-        if (hr == S_OK)
-            pwszClsid = wszName;
-
-        if (m_bGroupPolicyActive)
+        res = RegGetValueW(HKEY_LOCAL_MACHINE,
+                           L"Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved",
+                           wszName,
+                           RRF_RT_REG_SZ,
+                           NULL,
+                           NULL,
+                           NULL);
+        if (res != ERROR_SUCCESS)
         {
-            if (RegGetValueW(HKEY_LOCAL_MACHINE,
-                             L"Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved",
-                             pwszClsid,
-                             RRF_RT_REG_SZ,
-                             NULL,
-                             NULL,
-                             NULL) == ERROR_SUCCESS)
-            {
-                hr = _LoadDynamicDropTargetHandler(&clsid, pwcsname, ppvOut);
-            }
-        }
-        else
-        {
-            hr = _LoadDynamicDropTargetHandler(&clsid, pwcsname, ppvOut);
+            ERR("DropHandler extension %S not approved\n", wszName);
+            return E_FAIL;
         }
     }
-    else
-        return E_FAIL;
-    return hr;
+
+    hr = _LoadDynamicDropTargetHandler(&clsid, pwcsname, ppvOut);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return S_OK;
 }
 
 HRESULT WINAPI CFSFolder::_LoadDynamicDropTargetHandler(const CLSID *pclsid, LPCWSTR pwcsname, LPVOID *ppvOut)
