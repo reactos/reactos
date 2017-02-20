@@ -5197,6 +5197,46 @@ HRESULT WINAPI SHPropertyBag_ReadLONG(IPropertyBag *ppb, LPCWSTR pszPropName, LP
     return hr;
 }
 
+#ifdef __REACTOS__
+/**************************************************************************
+ *  SHPropertyBag_WriteLONG (SHLWAPI.497)
+ *
+ * This function asks a property bag to write a named property as a LONG.
+ *
+ * PARAMS
+ *  ppb: a IPropertyBag interface
+ *  pszPropName:  Unicode string that names the property
+ *  lValue: address to receive the property value as a 32-bit signed integer
+ *
+ * RETURNS
+ *  HRESULT codes
+ */
+HRESULT WINAPI SHPropertyBag_WriteLONG(IPropertyBag *ppb, LPCWSTR pszPropName, LONG lValue)
+{
+	UNIMPLEMENTED;
+	return E_NOTIMPL;
+}
+
+/**************************************************************************
+ *  SHPropertyBag_WriteStr (SHLWAPI.495)
+ *
+ * This function asks a property bag to write a string as the value of a named property.
+ *
+ * PARAMS
+ *  ppb: a IPropertyBag interface
+ *  pszPropName:  Unicode string that names the property
+ *  pValue: address to write the property value
+ *
+ * RETURNS
+ *  HRESULT codes
+ */
+HRESULT WINAPI SHPropertyBag_WriteStr(IPropertyBag *ppb, LPCWSTR pszPropName, LPCWSTR pszValue)
+{
+	UNIMPLEMENTED;
+	return E_NOTIMPL;
+}
+#endif
+
 /* return flags for SHGetObjectCompatFlags, names derived from registry value names */
 #define OBJCOMPAT_OTNEEDSSFCACHE           0x00000001
 #define OBJCOMPAT_NO_WEBVIEW               0x00000002

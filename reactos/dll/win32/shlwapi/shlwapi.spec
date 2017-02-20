@@ -492,9 +492,9 @@
 492 stub -noname PrettifyFileDescriptionW
 493 stub -noname SHPropertyBag_ReadType
 494 stub -noname SHPropertyBag_ReadStr
-495 stub -noname SHPropertyBag_WriteStr
+495 stdcall -noname SHPropertyBag_WriteStr(ptr wstr wstr)
 496 stdcall -noname SHPropertyBag_ReadLONG(ptr wstr ptr)
-497 stub -noname SHPropertyBag_WriteLONG
+497 stdcall -noname SHPropertyBag_WriteLONG(ptr wstr long)
 498 stub -noname SHPropertyBag_ReadBOOLOld
 499 stub -noname SHPropertyBag_WriteBOOL
 500 stdcall AssocGetPerceivedType(wstr ptr ptr ptr)
