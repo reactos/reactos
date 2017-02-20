@@ -204,6 +204,18 @@ BOOL WINAPI DrawCaptionTempW(HWND,HDC,const RECT*,HFONT,HICON,LPCWSTR,UINT);
 
 typedef LRESULT(CALLBACK *WNDPROC_OWP)(HWND,UINT,WPARAM,LPARAM,ULONG_PTR,PDWORD);
 typedef int (WINAPI *SETWINDOWRGN)(HWND hWnd, HRGN hRgn, BOOL bRedraw);
+typedef BOOL (WINAPI *GETSCROLLINFO)(HWND,INT,LPSCROLLINFO);
+typedef INT (WINAPI *SETSCROLLINFO)(HWND,int,LPCSCROLLINFO,BOOL);
+typedef BOOL (WINAPI *ENABLESCROLLBAR)(HWND,UINT,UINT);
+typedef BOOL (WINAPI *ADJUSTWINDOWRECTEX)(LPRECT,DWORD,BOOL,DWORD);
+typedef int (WINAPI *GETSYSTEMMETRICS)(int);
+typedef BOOL (WINAPI *SYSTEMPARAMETERSINFOA)(UINT,UINT,PVOID,UINT);
+typedef BOOL (WINAPI *SYSTEMPARAMETERSINFOW)(UINT,UINT,PVOID,UINT);
+typedef BOOL (__fastcall *FORCERESETUSERAPIHOOK)(HINSTANCE);
+typedef BOOL (WINAPI *DRAWFRAMECONTROL)(HDC,LPRECT,UINT,UINT);
+typedef BOOL (WINAPI *DRAWCAPTION)(HWND,HDC,LPCRECT,UINT);
+typedef BOOL (WINAPI *MDIREDRAWFRAME)(HWND,DWORD);
+typedef DWORD (WINAPI *GETREALWINDOWOWNER)(HWND);
 
 typedef struct _UAHOWP
 {
@@ -221,10 +233,10 @@ typedef struct tagUSERAPIHOOK
     WNDPROC     DefWindowProcA;
     WNDPROC     DefWindowProcW;
     UAHOWP      DefWndProcArray;
-    FARPROC     GetScrollInfo;
-    FARPROC     SetScrollInfo;
-    FARPROC     EnableScrollBar;
-    FARPROC     AdjustWindowRectEx;
+    GETSCROLLINFO GetScrollInfo;
+    SETSCROLLINFO SetScrollInfo;
+    ENABLESCROLLBAR EnableScrollBar;
+    ADJUSTWINDOWRECTEX AdjustWindowRectEx;
     SETWINDOWRGN SetWindowRgn;
     WNDPROC_OWP PreWndProc;
     WNDPROC_OWP PostWndProc;
@@ -232,14 +244,14 @@ typedef struct tagUSERAPIHOOK
     WNDPROC_OWP PreDefDlgProc;
     WNDPROC_OWP PostDefDlgProc;
     UAHOWP      DlgProcArray;
-    FARPROC     GetSystemMetrics;
-    FARPROC     SystemParametersInfoA;
-    FARPROC     SystemParametersInfoW;
-    FARPROC     ForceResetUserApiHook;
-    FARPROC     DrawFrameControl;
-    FARPROC     DrawCaption;
-    FARPROC     MDIRedrawFrame;
-    FARPROC     GetRealWindowOwner;
+    GETSYSTEMMETRICS GetSystemMetrics;
+    SYSTEMPARAMETERSINFOA SystemParametersInfoA;
+    SYSTEMPARAMETERSINFOW SystemParametersInfoW;
+    FORCERESETUSERAPIHOOK ForceResetUserApiHook;
+    DRAWFRAMECONTROL DrawFrameControl;
+    DRAWCAPTION DrawCaption;
+    MDIREDRAWFRAME MDIRedrawFrame;
+    GETREALWINDOWOWNER GetRealWindowOwner;
 } USERAPIHOOK, *PUSERAPIHOOK;
 
 typedef enum _UAPIHK

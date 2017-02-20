@@ -269,7 +269,7 @@ int WINAPI ThemeSetWindowRgn(HWND hWnd, HRGN hRgn, BOOL bRedraw)
     return user32ApiHook.SetWindowRgn(hWnd, hRgn, bRedraw);
 }
 
-BOOL ThemeGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
+BOOL WINAPI ThemeGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
 {
     PWND_CONTEXT pwndContext;
     DWORD style;
@@ -341,7 +341,7 @@ ThemeInitApiHook(UAPIHK State, PUSERAPIHOOK puah)
     puah->DlgProcArray.Size = UAHOWP_MAX_SIZE;
 
     puah->SetWindowRgn = ThemeSetWindowRgn;
-    puah->GetScrollInfo = (FARPROC)ThemeGetScrollInfo;
+    puah->GetScrollInfo = ThemeGetScrollInfo;
 
     UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_NCPAINT);
     UAH_HOOK_MESSAGE(puah->DefWndProcArray, WM_NCACTIVATE);
