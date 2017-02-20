@@ -145,12 +145,13 @@ GetProtoGetNextEnt(IN HANDLE DbHandle,
         /* Read 512 bytes */
         if (!ReadFile(DbHandle,
                       Buffer->LineBuffer,
-                      512,
+                      sizeof(Buffer->LineBuffer) - 1,
                       &Read,
                       NULL)) return NULL;
 
         /* Find out where the line ends */
         p1 = Buffer->LineBuffer;
+        Buffer->LineBuffer[Read] = ANSI_NULL;
         p = strchr(Buffer->LineBuffer, '\n');
 
         /* Bail out if the file is parsed */
@@ -243,7 +244,7 @@ getprotobynumber(IN INT number)
     PWSTHREAD Thread;
     INT ErrorCode;
     PPROTOENT Protoent;
-    PVOID GetProtoBuffer; 
+    PVOID GetProtoBuffer;
     HANDLE DbHandle;
     DPRINT("getprotobynumber: %lx\n", number);
 
@@ -307,7 +308,7 @@ getprotobyname(IN CONST CHAR FAR *name)
     PWSTHREAD Thread;
     INT ErrorCode;
     PPROTOENT Protoent;
-    PVOID GetProtoBuffer; 
+    PVOID GetProtoBuffer;
     HANDLE DbHandle;
     DPRINT("getprotobyname: %s\n", name);
 
