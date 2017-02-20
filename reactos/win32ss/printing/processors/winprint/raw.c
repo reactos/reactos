@@ -31,7 +31,7 @@ PrintRawJob(PWINPRINT_HANDLE pHandle, PWSTR pwszPrinterAndJob)
     DWORD cbWritten;
     DWORD dwErrorCode;
     HANDLE hPrintJob;
-    HANDLE hPrintMonitor;
+    HANDLE hPrintMonitor = NULL;
     PBYTE pBuffer = NULL;
 
     // Open the spooled job to read from it.
