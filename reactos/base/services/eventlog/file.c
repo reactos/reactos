@@ -332,7 +332,7 @@ LogfCreate(PLOGFILE* LogFile,
                                NULL,
                                NULL);
 
-    DPRINT1("Going to create or open %wZ\n", FileName);
+    DPRINT("Going to create or open %wZ\n", FileName);
     Status = NtCreateFile(&pLogFile->FileHandle,
                           Backup ? (GENERIC_READ | SYNCHRONIZE)
                                  : (GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE),
@@ -352,7 +352,7 @@ LogfCreate(PLOGFILE* LogFile,
     }
 
     CreateNew = (IoStatusBlock.Information == FILE_CREATED);
-    DPRINT1("%wZ %s successfully\n", FileName, CreateNew ? "created" : "opened");
+    DPRINT("%wZ %s successfully\n", FileName, CreateNew ? "created" : "opened");
 
     /*
      * Retrieve the log file size and check whether the file is not too large;
@@ -504,7 +504,7 @@ LogfBackupFile(PLOGFILE LogFile,
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
 
-    DPRINT1("LogfBackupFile(%p, %wZ)\n", LogFile, BackupFileName);
+    DPRINT("LogfBackupFile(%p, %wZ)\n", LogFile, BackupFileName);
 
     /* Lock the log file shared */
     RtlAcquireResourceShared(&LogFile->Lock, TRUE);
