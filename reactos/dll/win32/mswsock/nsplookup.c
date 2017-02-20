@@ -14,6 +14,9 @@
 
 #include "mswhelper.h"
 
+#define NDEBUG
+#include <debug.h>
+
 #define NSP_CALLID_DNS 0x0001
 #define NSP_CALLID_HOSTNAME 0x0002
 #define NSP_CALLID_HOSTBYNAME 0x0003
@@ -891,18 +894,14 @@ NSP_LookupServiceNextW(_In_ PWSHANDLEINTERN data,
         if (result != ERROR_SUCCESS)
             goto End;
     }
-    else if (CallID == NSP_CALLID_SERVICEBYNAME)
+    else
     {
+        ASSERT(CallID == NSP_CALLID_SERVICEBYNAME);
         result = NSP_GetServiceByNameHeapAllocW(data->hostnameW,
                                                 &data->providerId,
                                                 &hostinfo);
         if (result != ERROR_SUCCESS)
             goto End;
-    }
-    else
-    {
-        result = WSANO_RECOVERY; // Internal error!
-        goto End;
     }
 
     if (((LUP_RETURN_BLOB & data->dwControlFlags) != 0) ||
