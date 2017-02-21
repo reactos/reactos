@@ -135,6 +135,7 @@ static const pfPaint btnPaintFunc[MAX_BTN_TYPE] =
     OB_Paint     /* BS_OWNERDRAW */
 };
 
+/* The original code from user32 was kept in order to make it easier to bring changes from user32 */
 #ifdef _USER32_
 /*********************************************************************
  * button class descriptor
