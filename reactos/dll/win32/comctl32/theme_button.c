@@ -294,16 +294,16 @@ static const pfThemedPaint btnThemedPaintFunc[BUTTON_TYPE + 1] =
     NULL, /* Not defined */
 };
 
-static BOOL BUTTON_Paint(HTHEME theme, HWND hwnd, HDC hParamDC)
+BOOL BUTTON_PaintWithTheme(HTHEME theme, HWND hwnd, HDC hParamDC)
 {
-    PAINTSTRUCT ps;
-    HDC hDC;
     DWORD dwStyle = GetWindowLongW(hwnd, GWL_STYLE);
     DWORD dwStyleEx = GetWindowLongW(hwnd, GWL_EXSTYLE);
     UINT dtFlags = get_drawtext_flags(dwStyle, dwStyleEx);
     int state = (int)SendMessageW(hwnd, BM_GETSTATE, 0, 0);
     ButtonState drawState;
     pfThemedPaint paint = btnThemedPaintFunc[ dwStyle & BUTTON_TYPE ];
+    if (!paint)
+        return FALSE;
 
     if(IsWindowEnabled(hwnd))
     {
@@ -314,105 +314,6 @@ static BOOL BUTTON_Paint(HTHEME theme, HWND hwnd, HDC hParamDC)
     }
     else drawState = STATE_DISABLED;
 
-    hDC = hParamDC ? hParamDC : BeginPaint(hwnd, &ps);
-    if (paint) paint(theme, hwnd, hDC, drawState, dtFlags, state & BST_FOCUS);
-    if (!hParamDC) EndPaint(hwnd, &ps);
+    paint(theme, hwnd, hParamDC, drawState, dtFlags, state & BST_FOCUS);
     return TRUE;
-}
-
-/**********************************************************************
- * The button control subclass window proc.
- */
-LRESULT CALLBACK THEMING_ButtonSubclassProc(HWND hwnd, UINT msg,
-                                            WPARAM wParam, LPARAM lParam,
-                                            ULONG_PTR dwRefData)
-{
-    const WCHAR* themeClass = WC_BUTTONW;
-    HTHEME theme;
-    LRESULT result;
-
-    switch (msg)
-    {
-    case WM_CREATE:
-        result = THEMING_CallOriginalClass(hwnd, msg, wParam, lParam);
-        OpenThemeData(hwnd, themeClass);
-        return result;
-
-    case WM_DESTROY:
-        theme = GetWindowTheme(hwnd);
-        CloseThemeData (theme);
-        return THEMING_CallOriginalClass(hwnd, msg, wParam, lParam);
-
-    case WM_THEMECHANGED:
-        theme = GetWindowTheme(hwnd);
-        CloseThemeData (theme);
-        OpenThemeData(hwnd, themeClass);
-        break;
-
-    case WM_SYSCOLORCHANGE:
-        theme = GetWindowTheme(hwnd);
-	if (!theme) return THEMING_CallOriginalClass(hwnd, msg, wParam, lParam);
-        /* Do nothing. When themed, a WM_THEMECHANGED will be received, too,
-	 * which will do the repaint. */
-        break;
-
-    case WM_PAINT:
-        theme = GetWindowTheme(hwnd);
-        if (theme && BUTTON_Paint(theme, hwnd, (HDC)wParam))
-            return 0;
-        else
-            return THEMING_CallOriginalClass(hwnd, msg, wParam, lParam);
-
-    case WM_ENABLE:
-        theme = GetWindowTheme(hwnd);
-        if (theme) {
-            RedrawWindow(hwnd, NULL, NULL, RDW_FRAME | RDW_INVALIDATE | RDW_UPDATENOW);
-            return 0;
-        } else
-            return THEMING_CallOriginalClass(hwnd, msg, wParam, lParam);
-
-    case WM_MOUSEMOVE:
-    {
-        TRACKMOUSEEVENT mouse_event;
-        mouse_event.cbSize = sizeof(TRACKMOUSEEVENT);
-        mouse_event.dwFlags = TME_QUERY;
-        if(!TrackMouseEvent(&mouse_event) || !(mouse_event.dwFlags&(TME_HOVER|TME_LEAVE)))
-        {
-            mouse_event.dwFlags = TME_HOVER|TME_LEAVE;
-            mouse_event.hwndTrack = hwnd;
-            mouse_event.dwHoverTime = 1;
-            TrackMouseEvent(&mouse_event);
-        }
-        break;
-    }
-
-    case WM_MOUSEHOVER:
-    {
-        int state = (int)SendMessageW(hwnd, BM_GETSTATE, 0, 0);
-        SetWindowLongW(hwnd, 0, state|BST_HOT);
-        InvalidateRect(hwnd, NULL, FALSE);
-        break;
-    }
-
-    case WM_MOUSELEAVE:
-    {
-        int state = (int)SendMessageW(hwnd, BM_GETSTATE, 0, 0);
-        SetWindowLongW(hwnd, 0, state&(~BST_HOT));
-        InvalidateRect(hwnd, NULL, FALSE);
-        break;
-    }
-
-    case BM_SETCHECK:
-    case BM_SETSTATE:
-        theme = GetWindowTheme(hwnd);
-        if (theme) {
-            InvalidateRect(hwnd, NULL, FALSE);
-        }
-        return THEMING_CallOriginalClass(hwnd, msg, wParam, lParam);
-
-    default:
-	/* Call old proc */
-	return THEMING_CallOriginalClass(hwnd, msg, wParam, lParam);
-    }
-    return 0;
 }

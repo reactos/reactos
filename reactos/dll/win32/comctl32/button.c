@@ -205,7 +205,7 @@ HRGN set_control_clipping( HDC hdc, const RECT *rect )
     return hrgn;
 }
 
-BOOL BUTTON_Paint(HTHEME theme, HWND hwnd, HDC hParamDC, UINT action);
+BOOL BUTTON_PaintWithTheme(HTHEME theme, HWND hwnd, HDC hParamDC);
 
 #endif
 
@@ -227,12 +227,31 @@ static inline UINT get_button_type( LONG window_style )
 /* paint a button of any type */
 static inline void paint_button( HWND hwnd, LONG style, UINT action )
 {
+#ifndef _USER32_
+    HTHEME theme = GetWindowTheme(hwnd);
+    RECT rc;
+    HDC hdc = GetDC( hwnd );
+    /* GetDC appears to give a dc with a clip rect that includes the whoe parent, not sure if it is correct or not. */
+    GetClientRect(hwnd, &rc);
+    IntersectClipRect (hdc, rc.left, rc. top, rc.right, rc.bottom);
+    if (theme && BUTTON_PaintWithTheme(theme, hwnd, hdc))
+    {
+        ReleaseDC( hwnd, hdc );
+        return;
+    }
+    if (btnPaintFunc[style] && IsWindowVisible(hwnd))
+    {
+        btnPaintFunc[style]( hwnd, hdc, action );
+    }
+    ReleaseDC( hwnd, hdc );
+#elif
     if (btnPaintFunc[style] && IsWindowVisible(hwnd))
     {
         HDC hdc = GetDC( hwnd );
         btnPaintFunc[style]( hwnd, hdc, action );
         ReleaseDC( hwnd, hdc );
     }
+#endif
 }
 
 /* retrieve the button text; returned buffer must be freed by caller */
@@ -343,6 +362,9 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
 #ifdef __REACTOS__
         button_update_uistate( hWnd, unicode );
 #endif
+#ifndef _USER32_
+        OpenThemeData(hWnd, WC_BUTTONW);
+#endif
         return 0;
 
 #if defined(__REACTOS__) && defined(_USER32_)
@@ -351,7 +373,31 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
     case WM_DESTROY:
         break;
 #endif
+#ifndef _USER32_
+    case WM_DESTROY:
+        CloseThemeData (GetWindowTheme(hWnd));
+        break;
+    case WM_THEMECHANGED:
+        CloseThemeData (GetWindowTheme(hWnd));
+        OpenThemeData(hWnd, WC_BUTTONW);
+        break;
 
+    case WM_MOUSEHOVER:
+    {
+        int state = (int)SendMessageW(hWnd, BM_GETSTATE, 0, 0);
+        SetWindowLongW(hWnd, 0, state|BST_HOT);
+        InvalidateRect(hWnd, NULL, FALSE);
+        break;
+    }
+
+    case WM_MOUSELEAVE:
+    {
+        int state = (int)SendMessageW(hWnd, BM_GETSTATE, 0, 0);
+        SetWindowLongW(hWnd, 0, state&(~BST_HOT));
+        InvalidateRect(hWnd, NULL, FALSE);
+        break;
+    }
+#endif
     case WM_ERASEBKGND:
         if (btn_type == BS_OWNERDRAW)
         {
@@ -378,6 +424,14 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
     {
         PAINTSTRUCT ps;
         HDC hdc = wParam ? (HDC)wParam : BeginPaint( hWnd, &ps );
+#ifndef _USER32_
+        HTHEME theme = GetWindowTheme(hWnd);
+        if (theme && BUTTON_PaintWithTheme(theme, hWnd, hdc))
+        {
+            if ( !wParam ) EndPaint( hWnd, &ps );
+            return 0;
+        }
+#endif
         if (btnPaintFunc[btn_type])
         {
             int nOldMode = SetBkMode( hdc, OPAQUE );
@@ -480,6 +534,21 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         break;
 
     case WM_MOUSEMOVE:
+#ifndef _USER32_
+    {
+        TRACKMOUSEEVENT mouse_event;
+        mouse_event.cbSize = sizeof(TRACKMOUSEEVENT);
+        mouse_event.dwFlags = TME_QUERY;
+        if(!TrackMouseEvent(&mouse_event) || !(mouse_event.dwFlags&(TME_HOVER|TME_LEAVE)))
+        {
+            mouse_event.dwFlags = TME_HOVER|TME_LEAVE;
+            mouse_event.hwndTrack = hWnd;
+            mouse_event.dwHoverTime = 1;
+            TrackMouseEvent(&mouse_event);
+        }
+    }
+#endif
+
         if ((wParam & MK_LBUTTON) && GetCapture() == hWnd)
         {
             GetClientRect( hWnd, &rect );
