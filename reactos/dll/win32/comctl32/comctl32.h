@@ -159,7 +159,8 @@ extern void TREEVIEW_Register(void) DECLSPEC_HIDDEN;
 extern void TREEVIEW_Unregister(void) DECLSPEC_HIDDEN;
 extern void UPDOWN_Register(void) DECLSPEC_HIDDEN;
 extern void UPDOWN_Unregister(void) DECLSPEC_HIDDEN;
-
+extern void BUTTON_Register();
+extern void BUTTON_Unregister();
 
 int MONTHCAL_MonthLength(int month, int year) DECLSPEC_HIDDEN;
 int MONTHCAL_CalculateDayOfWeek(SYSTEMTIME *date, BOOL inplace) DECLSPEC_HIDDEN;

@@ -274,6 +274,7 @@ static void InitializeClasses()
     {
         activated = ActivateActCtx(hActCtx6, &ulCookie);
         RegisterControls();      /* Register the classes pretending to be v6 */
+        BUTTON_Register();
         if (activated) DeactivateActCtx(0, ulCookie);
 
         /* Initialize the themed controls only when the v6 manifest is present */
@@ -298,6 +299,7 @@ static void UninitializeClasses()
         activated = ActivateActCtx(hActCtx6, &ulCookie);
         THEMING_Uninitialize();
         UnregisterControls();
+        BUTTON_Unregister();
         if (activated) DeactivateActCtx(0, ulCookie);
     }
 }

@@ -12,6 +12,7 @@ spec2def(comctl32.dll comctl32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     animate.c
+    button.c
     comboex.c
     comctl32undoc.c
     commctrl.c
