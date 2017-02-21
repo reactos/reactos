@@ -244,7 +244,7 @@ static inline void paint_button( HWND hwnd, LONG style, UINT action )
         btnPaintFunc[style]( hwnd, hdc, action );
     }
     ReleaseDC( hwnd, hdc );
-#elif
+#else
     if (btnPaintFunc[style] && IsWindowVisible(hwnd))
     {
         HDC hdc = GetDC( hwnd );
