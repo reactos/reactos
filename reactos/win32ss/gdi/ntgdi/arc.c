@@ -143,15 +143,18 @@ IntArc( DC *dc,
               arctype);
     }
 
-    ret = IntDrawArc( dc,
-              RectBounds.left,
-              RectBounds.top,
-              abs(RectBounds.right-RectBounds.left), // Width
-              abs(RectBounds.bottom-RectBounds.top), // Height
-              AngleStart,
-              AngleEnd,
-              arctype,
-              pbrPen);
+    if(ret)
+    {
+        ret = IntDrawArc( dc,
+                  RectBounds.left,
+                  RectBounds.top,
+                  abs(RectBounds.right-RectBounds.left), // Width
+                  abs(RectBounds.bottom-RectBounds.top), // Height
+                  AngleStart,
+                  AngleEnd,
+                  arctype,
+                  pbrPen);
+    }
 
     psurf = dc->dclevel.pSurface;
     if (NULL == psurf)

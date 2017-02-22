@@ -480,7 +480,6 @@ ENTRY_ReferenceEntryByHandle(HGDIOBJ hobj, FLONG fl)
 
     /* Get the handle index and check if its too big */
     ulIndex = GDI_HANDLE_GET_INDEX(hobj);
-    if (ulIndex >= GDI_HANDLE_COUNT) return NULL;
 
     /* Get pointer to the entry */
     pentry = &gpentHmgr[ulIndex];

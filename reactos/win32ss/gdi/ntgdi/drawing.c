@@ -162,8 +162,6 @@ app_draw_ellipse(DC *g, Rect r, PBRUSH pbrush)
     Rect r1, r2;
     int result = 1;
 
-//	START_DEBUG();
-
     if ((r.width <= 2) || (r.height <= 2))
         return app_fill_rect(g, r, pbrush, TRUE);
 
@@ -636,8 +634,6 @@ app_fill_ellipse(DC *g, Rect r, PBRUSH pbrush)
     Rect r1, r2;
     int result = 1;
 
-//	START_DEBUG();
-
     if ((r.width <= 2) || (r.height <= 2))
         return app_fill_rect(g, r, pbrush, FALSE);
 
@@ -809,8 +805,6 @@ app_fill_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrush, BOOL 
 
     /* Line descriptions */
     POINT p0, p1, p2;
-
-//	START_DEBUG();
 
     /* If angles differ by 360 degrees or more, close the shape */
     if ((start_angle + 360 <= end_angle) ||
@@ -1009,8 +1003,6 @@ int app_draw_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrushPen
 
     /* Line descriptions */
     POINT p0, p1, p2;
-
-//	START_DEBUG();
 
     /* If angles differ by 360 degrees or more, close the shape */
     if ((start_angle + 360 <= end_angle) ||

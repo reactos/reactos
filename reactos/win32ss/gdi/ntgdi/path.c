@@ -1813,6 +1813,8 @@ PATH_WidenPath(DC *dc)
             DPRINT1("Expected PT_MOVETO %s, got path flag %c\n",
                     i == 0 ? "as first point" : "after PT_CLOSEFIGURE",
                     flat_path->pFlags[i]);
+            if (pStrokes)
+                ExFreePoolWithTag(pStrokes, TAG_PATH);
             PATH_UnlockPath(flat_path);
             PATH_Delete(flat_path->BaseObject.hHmgr);
             return FALSE;
@@ -1867,6 +1869,8 @@ PATH_WidenPath(DC *dc)
                 break;
             default:
                 DPRINT1("Got path flag %c\n", flat_path->pFlags[i]);
+                if (pStrokes)
+                    ExFreePoolWithTag(pStrokes, TAG_PATH);
                 PATH_UnlockPath(flat_path);
                 PATH_Delete(flat_path->BaseObject.hHmgr);
                 return FALSE;
