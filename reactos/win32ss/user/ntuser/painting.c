@@ -2473,6 +2473,81 @@ NtUserDrawCaption(HWND hWnd,
    return NtUserDrawCaptionTemp(hWnd, hDC, lpRc, 0, 0, NULL, uFlags);
 }
 
+INT FASTCALL
+co_UserExcludeUpdateRgn(HDC hDC, PWND Window)
+{
+    POINT pt;
+    RECT rc;
+
+    if (Window->hrgnUpdate)
+    {
+        if (Window->hrgnUpdate == HRGN_WINDOW)
+        {
+            return NtGdiIntersectClipRect(hDC, 0, 0, 0, 0);
+        }
+        else
+        {
+            INT ret = ERROR;
+            HRGN hrgn = NtGdiCreateRectRgn(0,0,0,0);
+
+            if ( hrgn && GreGetDCPoint( hDC, GdiGetDCOrg, &pt) )
+            {
+                if ( NtGdiGetRandomRgn( hDC, hrgn, CLIPRGN) == NULLREGION )
+                {
+                    NtGdiOffsetRgn(hrgn, pt.x, pt.y);
+                }
+                else
+                {
+                    HRGN hrgnScreen;
+                    PMONITOR pm = UserGetPrimaryMonitor();
+                    hrgnScreen = NtGdiCreateRectRgn(0,0,0,0);
+                    NtGdiCombineRgn(hrgnScreen, hrgnScreen, pm->hrgnMonitor, RGN_OR);
+
+                    NtGdiCombineRgn(hrgn, hrgnScreen, NULL, RGN_COPY);
+
+                    GreDeleteObject(hrgnScreen);
+                }
+
+                NtGdiCombineRgn(hrgn, hrgn, Window->hrgnUpdate, RGN_DIFF);
+
+                NtGdiOffsetRgn(hrgn, -pt.x, -pt.y);
+
+                ret = NtGdiExtSelectClipRgn(hDC, hrgn, RGN_COPY);
+
+                GreDeleteObject(hrgn);
+            }
+            return ret;
+        }
+    }
+    else
+    {
+        return GdiGetClipBox( hDC, &rc);
+    }
+}
+
+INT
+APIENTRY
+NtUserExcludeUpdateRgn(
+    HDC hDC,
+    HWND hWnd)
+{
+    INT ret = ERROR;
+    PWND pWnd;
+
+    TRACE("Enter NtUserExcludeUpdateRgn\n");
+    UserEnterExclusive();
+
+    pWnd = UserGetWindowObject(hWnd);
+
+    if (hDC && pWnd)
+        ret = co_UserExcludeUpdateRgn(hDC, pWnd);
+
+    TRACE("Leave NtUserExcludeUpdateRgn, ret=%i\n", ret);
+
+    UserLeave();
+    return ret;
+}
+
 BOOL
 APIENTRY
 NtUserInvalidateRect(

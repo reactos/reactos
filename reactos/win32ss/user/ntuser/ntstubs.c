@@ -104,17 +104,6 @@ NtUserEvent(
    return 0;
 }
 
-DWORD
-APIENTRY
-NtUserExcludeUpdateRgn(
-  HDC hDC,
-  HWND hWnd)
-{
-   STUB
-
-   return 0;
-}
-
 BOOL
 APIENTRY
 NtUserGetAltTabInfo(

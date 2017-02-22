@@ -2063,7 +2063,7 @@ NTAPI
 NtUserEvent(
     DWORD Unknown0);
 
-DWORD
+INT
 NTAPI
 NtUserExcludeUpdateRgn(
     HDC hDC,
@@ -2470,7 +2470,7 @@ NtUserGetUpdateRect(
     LPRECT lpRect,
     BOOL fErase);
 
-int
+INT
 NTAPI
 NtUserGetUpdateRgn(
     HWND hWnd,
