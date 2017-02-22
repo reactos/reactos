@@ -205,7 +205,7 @@ HRGN set_control_clipping( HDC hdc, const RECT *rect )
     return hrgn;
 }
 
-BOOL BUTTON_PaintWithTheme(HTHEME theme, HWND hwnd, HDC hParamDC);
+BOOL BUTTON_PaintWithTheme(HTHEME theme, HWND hwnd, HDC hParamDC, LPARAM prfFlag);
 
 #endif
 
@@ -234,7 +234,7 @@ static inline void paint_button( HWND hwnd, LONG style, UINT action )
     /* GetDC appears to give a dc with a clip rect that includes the whoe parent, not sure if it is correct or not. */
     GetClientRect(hwnd, &rc);
     IntersectClipRect (hdc, rc.left, rc. top, rc.right, rc.bottom);
-    if (theme && BUTTON_PaintWithTheme(theme, hwnd, hdc))
+    if (theme && BUTTON_PaintWithTheme(theme, hwnd, hdc, 0))
     {
         ReleaseDC( hwnd, hdc );
         return;
@@ -426,7 +426,7 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         HDC hdc = wParam ? (HDC)wParam : BeginPaint( hWnd, &ps );
 #ifndef _USER32_
         HTHEME theme = GetWindowTheme(hWnd);
-        if (theme && BUTTON_PaintWithTheme(theme, hWnd, hdc))
+        if (theme && BUTTON_PaintWithTheme(theme, hWnd, hdc, uMsg == WM_PRINTCLIENT ? lParam : 0))
         {
             if ( !wParam ) EndPaint( hWnd, &ps );
             return 0;
