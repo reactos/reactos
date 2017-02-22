@@ -953,23 +953,6 @@ NtUserCtxDisplayIOCtl(
 }
 
 /*
- * FillWindow: Called from User; Dialog, Edit and ListBox procs during a WM_ERASEBKGND.
- */
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtUserFillWindow(HWND hWndPaint,
-                 HWND hWndPaint1,
-                 HDC  hDC,
-                 HBRUSH hBrush)
-{
-   STUB
-
-   return 0;
-}
-
-/*
  * @unimplemented
  */
 BOOL APIENTRY

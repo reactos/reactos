@@ -1555,6 +1555,50 @@ IntEndPaint(PWND Wnd, PPAINTSTRUCT Ps)
    return TRUE;
 }
 
+BOOL FASTCALL
+IntFillWindow(PWND pWndParent,
+              PWND pWnd,
+              HDC  hDC,
+              HBRUSH hBrush)
+{
+   RECT Rect, Rect1;
+   INT type;
+
+   if (!pWndParent)
+      pWndParent = pWnd;
+
+   type = GdiGetClipBox(hDC, &Rect);
+
+   IntGetClientRect(pWnd, &Rect1);
+
+   if ( type != NULLREGION && // Clip box is not empty,
+       (!(pWnd->pcls->style & CS_PARENTDC) || // not parent dc or
+         RECTL_bIntersectRect( &Rect, &Rect, &Rect1) ) ) // intersecting.
+   {
+      POINT ppt;
+      INT x = 0, y = 0;
+
+      if ( pWndParent != UserGetDesktopWindow())
+      {
+          x = pWndParent->rcClient.left - pWnd->rcClient.left;
+          y = pWndParent->rcClient.top  - pWnd->rcClient.top;
+      }
+
+      GreSetBrushOrg(hDC, x, y, &ppt);
+
+      if ( hBrush < (HBRUSH)CTLCOLOR_MAX )
+          hBrush = GetControlColor( pWndParent, pWnd, hDC, HandleToUlong(hBrush) + WM_CTLCOLORMSGBOX);
+
+      FillRect(hDC, &Rect, hBrush);
+
+      GreSetBrushOrg(hDC, ppt.x, ppt.y, NULL);
+
+      return TRUE;
+   }
+   else
+      return FALSE;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -1653,6 +1697,50 @@ CLEANUP:
    TRACE("Leave NtUserEndPaint, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
+}
+
+/*
+ * FillWindow: Called from User; Dialog, Edit and ListBox procs during a WM_ERASEBKGND.
+ */
+/*
+ * @implemented
+ */
+BOOL APIENTRY
+NtUserFillWindow(HWND hWndParent,
+                 HWND hWnd,
+                 HDC  hDC,
+                 HBRUSH hBrush)
+{
+   BOOL ret = FALSE;
+   PWND pWnd, pWndParent = NULL;
+   USER_REFERENCE_ENTRY Ref;
+
+   TRACE("Enter NtUserFillWindow\n");
+   UserEnterExclusive();
+
+   if (!hDC)
+   {
+      goto Exit;
+   }
+
+   if (!(pWnd = UserGetWindowObject(hWnd)))
+   {
+      goto Exit;
+   }
+
+   if (hWndParent && !(pWndParent = UserGetWindowObject(hWndParent)))
+   {
+      goto Exit;
+   }
+
+   UserRefObjectCo(pWnd, &Ref);
+   ret = IntFillWindow( pWndParent, pWnd, hDC, hBrush );
+   UserDerefObjectCo(pWnd);
+
+Exit:
+   TRACE("Leave NtUserFillWindow, ret=%i\n",ret);
+   UserLeave();
+   return ret;
 }
 
 /*
