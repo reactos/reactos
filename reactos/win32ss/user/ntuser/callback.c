@@ -279,6 +279,7 @@ co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 
    if (!NT_SUCCESS(Status))
    {
+      ERR("KeUserModeCallback failed with %lx\n", Status);
       return;
    }
    return;

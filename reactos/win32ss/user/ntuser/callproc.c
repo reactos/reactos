@@ -47,10 +47,10 @@ CreateCallProc(IN PDESKTOP Desktop,
         NewCallProc->pfnClientPrevious = WndProc;
         NewCallProc->wType |= Unicode ? UserGetCPDA2U : UserGetCPDU2A ;
         NewCallProc->spcpdNext = NULL;
-    }
 
-    /* Release the extra reference (UserCreateObject added 2 references) */
-    if (NewCallProc != NULL) UserDereferenceObject(NewCallProc);
+        /* Release the extra reference (UserCreateObject added 2 references) */
+        UserDereferenceObject(NewCallProc);
+    }
 
     return NewCallProc;
 }

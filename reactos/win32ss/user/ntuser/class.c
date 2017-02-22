@@ -1228,7 +1228,8 @@ NoMem:
     }
 
     TRACE("Created class 0x%p with name %wZ and proc 0x%p for atom 0x%x and version atom 0x%x and hInstance 0x%p, global %u\n",
-            Class, ClassName, Class->lpfnWndProc, Atom, verAtom, Class->hModule, Class->Global);
+          Class, ClassName, Class ? Class->lpfnWndProc : NULL, Atom, verAtom,
+          Class ? Class->hModule : NULL , Class ? Class->Global : 0);
 
     return Class;
 }
@@ -2332,6 +2333,7 @@ UserRegisterSystemClasses(VOID)
             if (SYSTEMCUR(ARROW) == NULL)
             {
                 ERR("SYSTEMCUR(ARROW) == NULL, should not happen!!\n");
+                ASSERT(FALSE);
             }
             else
             {

@@ -1494,7 +1494,9 @@ Exit:
     }
 
     /* Dereference the cursor and return the result */
-    UserDereferenceObject(pcur);
+    if (pcur)
+        UserDereferenceObject(pcur);
+
     return bResult;
 }
 
