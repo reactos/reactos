@@ -626,7 +626,7 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
     case WM_SETFOCUS:
         TRACE("WM_SETFOCUS %p\n",hWnd);
         set_button_state( hWnd, get_button_state(hWnd) | BST_FOCUS );
-        paint_button( hWnd, btn_type, ODA_FOCUS );
+        InvalidateRect(hWnd, NULL, FALSE);
         if (style & BS_NOTIFY)
             BUTTON_NOTIFY_PARENT(hWnd, BN_SETFOCUS);
         break;
@@ -721,7 +721,7 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         if ((state & 3) != wParam)
         {
             set_button_state( hWnd, (state & ~3) | wParam );
-            paint_button( hWnd, btn_type, ODA_SELECT );
+            InvalidateRect(hWnd, NULL, FALSE);
         }
         if ((btn_type == BS_AUTORADIOBUTTON) && (wParam == BST_CHECKED) && (style & WS_CHILD))
             BUTTON_CheckAutoRadioButton( hWnd );
@@ -737,7 +737,7 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         else
             set_button_state( hWnd, state & ~BST_PUSHED );
 
-        paint_button( hWnd, btn_type, ODA_SELECT );
+        InvalidateRect(hWnd, NULL, FALSE);
         break;
 
 #ifdef __REACTOS__
