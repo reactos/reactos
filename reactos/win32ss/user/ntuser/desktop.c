@@ -1806,7 +1806,7 @@ NtUserOpenDesktop(
     {
         ERR("Failed to open desktop\n");
         SetLastNtError(Status);
-        return 0;
+        return NULL;
     }
 
     TRACE("Opened desktop %S with handle 0x%p\n", ObjectAttributes->ObjectName->Buffer, Desktop);

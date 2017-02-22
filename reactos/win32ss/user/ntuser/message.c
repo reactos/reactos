@@ -616,9 +616,7 @@ static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPAR
 //    USER_REFERENCE_ENTRY Ref;
 //    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
-    if (!pWnd ||
-         pWnd == UserGetDesktopWindow() || // pWnd->fnid == FNID_DESKTOP
-         pWnd == UserGetMessageWindow() )  // pWnd->fnid == FNID_MESSAGEWND
+    if (!pWnd || UserIsDesktopWindow(pWnd) || UserIsMessageWindow(pWnd))
        return 0;
 
     TRACE("Internal Event Msg 0x%x hWnd 0x%p\n", msg, pWnd->head.h);

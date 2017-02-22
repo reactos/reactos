@@ -1161,9 +1161,8 @@ NtUserEnableScrollBar(
    TRACE("Enter NtUserEnableScrollBar\n");
    UserEnterExclusive();
 
-   if (!(Window = UserGetWindowObject(hWnd)) || // FIXME:
-         Window == UserGetDesktopWindow() ||    // pWnd->fnid == FNID_DESKTOP
-         Window == UserGetMessageWindow() )     // pWnd->fnid == FNID_MESSAGEWND
+   if (!(Window = UserGetWindowObject(hWnd)) ||
+        UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
    {
       RETURN(FALSE);
    }
@@ -1247,9 +1246,8 @@ NtUserSetScrollInfo(
    TRACE("Enter NtUserSetScrollInfo\n");
    UserEnterExclusive();
 
-   if(!(Window = UserGetWindowObject(hWnd)) || // FIXME:
-        Window == UserGetDesktopWindow() ||    // pWnd->fnid == FNID_DESKTOP
-        Window == UserGetMessageWindow() )     // pWnd->fnid == FNID_MESSAGEWND
+   if(!(Window = UserGetWindowObject(hWnd)) ||
+        UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
    {
       RETURN( 0);
    }

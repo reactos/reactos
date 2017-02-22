@@ -392,7 +392,7 @@ IntScrollWindowEx(
          {
             UserRefObjectCo(Child, &WndRef);
 
-            if (Window->spwndParent == UserGetDesktopWindow()) // Window->spwndParent->fnid == FNID_DESKTOP )
+            if (UserIsDesktopWindow(Window->spwndParent))
                lParam = MAKELONG(Child->rcClient.left, Child->rcClient.top);
             else
                lParam = MAKELONG(rcChild.left + dx, rcChild.top + dy);

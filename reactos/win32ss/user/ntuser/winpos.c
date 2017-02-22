@@ -99,7 +99,7 @@ IntGetClientRect(PWND Wnd, RECTL *Rect)
       Rect->bottom = UserGetSystemMetrics(SM_CYMINIMIZED);
       return;
    }
-   if ( Wnd != UserGetDesktopWindow()) // Wnd->fnid != FNID_DESKTOP )
+   if (!UserIsDesktopWindow(Wnd))
    {
       *Rect = Wnd->rcClient;
       RECTL_vOffsetRect(Rect, -Wnd->rcClient.left, -Wnd->rcClient.top);
@@ -122,7 +122,7 @@ IntGetWindowRect(PWND Wnd, RECTL *Rect)
    ASSERT( Wnd );
    ASSERT( Rect );
    if (!Wnd) return FALSE;
-   if ( Wnd != UserGetDesktopWindow()) // Wnd->fnid != FNID_DESKTOP )
+   if (!UserIsDesktopWindow(Wnd))
    {
        *Rect = Wnd->rcWindow;
    }
@@ -151,7 +151,7 @@ IntMapWindowPoints(PWND FromWnd, PWND ToWnd, LPPOINT lpPoints, UINT cPoints)
     Delta.x = Delta.y = 0;
     mirror_from = mirror_to = FALSE;
 
-    if (FromWnd && FromWnd != UserGetDesktopWindow()) // FromWnd->fnid != FNID_DESKTOP)
+    if (FromWnd && !UserIsDesktopWindow(FromWnd))
     {
        if (FromWnd->ExStyle & WS_EX_LAYOUTRTL)
        {
@@ -164,7 +164,7 @@ IntMapWindowPoints(PWND FromWnd, PWND ToWnd, LPPOINT lpPoints, UINT cPoints)
        Delta.y = FromWnd->rcClient.top;
     }
 
-    if (ToWnd && ToWnd != UserGetDesktopWindow()) // ToWnd->fnid != FNID_DESKTOP)
+    if (ToWnd && !UserIsDesktopWindow(ToWnd))
     {
        if (ToWnd->ExStyle & WS_EX_LAYOUTRTL)
        {
@@ -255,7 +255,7 @@ PWND FASTCALL IntGetLastTopMostWindow(VOID)
 }
 
 VOID
-SelectWindowRgn( PWND Window, HRGN hRgnClip)
+SelectWindowRgn(PWND Window, HRGN hRgnClip)
 {
     if (Window->hrgnClip)
     {
@@ -267,7 +267,7 @@ SelectWindowRgn( PWND Window, HRGN hRgnClip)
 
     if (hRgnClip > HRGN_WINDOW)
     {
-        /*if (Window != UserGetDesktopWindow()) // Window->fnid != FNID_DESKTOP)
+        /*if (!UserIsDesktopWindow(Window))
         {
             NtGdiOffsetRgn(hRgnClip, Window->rcWindow.left, Window->rcWindow.top);
         }*/
@@ -480,7 +480,7 @@ WinPosInitInternalPos(PWND Wnd, RECTL *RestoreRect)
    POINT Size;
    RECTL Rect = *RestoreRect;
 
-   if (Wnd->spwndParent && Wnd->spwndParent != UserGetDesktopWindow())
+   if (Wnd->spwndParent && !UserIsDesktopWindow(Wnd->spwndParent))
    {
       RECTL_vOffsetRect(&Rect,
                         -Wnd->spwndParent->rcClient.left,
@@ -782,7 +782,7 @@ WinPosFindIconPos(PWND Window, POINT *Pos)
    int x, y, xspacing, yspacing;
 
    pwndParent = Window->spwndParent;
-   if (pwndParent == UserGetDesktopWindow())
+   if (UserIsDesktopWindow(pwndParent))
    {
       ERR("FIXME: Parent is Desktop, Min off screen!\n");
       /* FIXME: ReactOS doesn't support iconic minimize to desktop */
@@ -1972,7 +1972,7 @@ co_WinPosSetWindowPos(
                            0,
                            RDW_VALIDATE | RDW_NOFRAME | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ALLCHILDREN);
 
-      if (Window->spwndParent == UserGetDesktopWindow())
+      if (UserIsDesktopWindow(Window->spwndParent))
          co_IntShellHookNotify(HSHELL_WINDOWDESTROYED, (WPARAM)Window->head.h, 0);
 
       Window->style &= ~WS_VISIBLE; //IntSetStyle( Window, 0, WS_VISIBLE );
@@ -1981,7 +1981,7 @@ co_WinPosSetWindowPos(
    }
    else if (WinPos.flags & SWP_SHOWWINDOW)
    {
-       if (Window->spwndParent == UserGetDesktopWindow() &&
+       if (UserIsDesktopWindow(Window->spwndParent) &&
            Window->spwndOwner == NULL &&
            (!(Window->ExStyle & WS_EX_TOOLWINDOW) ||
             (Window->ExStyle & WS_EX_APPWINDOW)))
@@ -2330,7 +2330,7 @@ co_WinPosSendSizeMove(PWND Wnd)
 
     co_IntSendMessageNoWait(UserHMGetHandle(Wnd), WM_SIZE, wParam, lParam);
 
-    if (Wnd->spwndParent == UserGetDesktopWindow()) // Wnd->spwndParent->fnid == FNID_DESKTOP )
+    if (UserIsDesktopWindow(Wnd->spwndParent))
        lParam = MAKELONG(Wnd->rcClient.left, Wnd->rcClient.top);
     else
        lParam = MAKELONG(Wnd->rcClient.left-Wnd->spwndParent->rcClient.left, Wnd->rcClient.top-Wnd->spwndParent->rcClient.top);
@@ -2582,7 +2582,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
    {
       if ( Wnd == pti->MessageQueue->spwndActive && pti->MessageQueue == IntGetFocusMessageQueue()  )
       {
-          if ( Wnd->spwndParent == UserGetDesktopWindow())
+          if (UserIsDesktopWindow(Wnd->spwndParent))
           {
               if (!ActivateOtherWindowMin(Wnd))
               {
@@ -2599,7 +2599,8 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
       if (Wnd == pti->MessageQueue->spwndFocus)
       {
          Parent = Wnd->spwndParent;
-         if (Wnd->spwndParent == UserGetDesktopWindow()) Parent = 0;
+         if (UserIsDesktopWindow(Wnd->spwndParent))
+             Parent = 0;
          co_UserSetFocus(Parent);
       }
       // Hide, just return.
@@ -2753,7 +2754,7 @@ IntRealChildWindowFromPoint(PWND Parent, LONG x, LONG y)
    Pt.x = x;
    Pt.y = y;
 
-   if (Parent != UserGetDesktopWindow())
+   if (!UserIsDesktopWindow(Parent))
    {
       Pt.x += Parent->rcClient.left;
       Pt.y += Parent->rcClient.top;
@@ -2795,7 +2796,7 @@ IntChildWindowFromPointEx(PWND Parent, LONG x, LONG y, UINT uiFlags)
    Pt.x = x;
    Pt.y = y;
 
-   if (Parent != UserGetDesktopWindow())
+   if (!UserIsDesktopWindow(Parent))
    {
       if (Parent->ExStyle & WS_EX_LAYOUTRTL)
          Pt.x = Parent->rcClient.right - Pt.x;
@@ -3059,9 +3060,7 @@ NtUserDeferWindowPos(HDWP WinPosInfo,
    }
 
    pWnd = UserGetWindowObject(Wnd);
-   if ( !pWnd ||                           // FIXME:
-         pWnd == UserGetDesktopWindow() || // pWnd->fnid == FNID_DESKTOP
-         pWnd == UserGetMessageWindow() )  // pWnd->fnid == FNID_MESSAGEWND
+   if (!pWnd || UserIsDesktopWindow(pWnd) || UserIsMessageWindow(pWnd))
    {
       goto Exit;
    }
@@ -3072,9 +3071,7 @@ NtUserDeferWindowPos(HDWP WinPosInfo,
         WndInsertAfter != HWND_NOTOPMOST )
    {
       pWndIA = UserGetWindowObject(WndInsertAfter);
-      if ( !pWndIA ||
-            pWndIA == UserGetDesktopWindow() ||
-            pWndIA == UserGetMessageWindow() )
+      if (!pWndIA || UserIsDesktopWindow(pWndIA) || UserIsMessageWindow(pWndIA))
       {
          goto Exit;
       }
@@ -3221,9 +3218,7 @@ NtUserMinMaximize(
   UserEnterExclusive();
 
   pWnd = UserGetWindowObject(hWnd);
-  if ( !pWnd ||                           // FIXME:
-        pWnd == UserGetDesktopWindow() || // pWnd->fnid == FNID_DESKTOP
-        pWnd == UserGetMessageWindow() )  // pWnd->fnid == FNID_MESSAGEWND
+  if (!pWnd || UserIsDesktopWindow(pWnd) || UserIsMessageWindow(pWnd))
   {
      goto Exit;
   }
@@ -3302,9 +3297,8 @@ NtUserSetWindowPos(
    TRACE("Enter NtUserSetWindowPos\n");
    UserEnterExclusive();
 
-   if (!(Window = UserGetWindowObject(hWnd)) || // FIXME:
-         Window == UserGetDesktopWindow() ||    // pWnd->fnid == FNID_DESKTOP
-         Window == UserGetMessageWindow() )     // pWnd->fnid == FNID_MESSAGEWND
+   if (!(Window = UserGetWindowObject(hWnd)) ||
+        UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
    {
       ERR("NtUserSetWindowPos bad window handle!\n");
       RETURN(FALSE);
@@ -3316,8 +3310,7 @@ NtUserSetWindowPos(
         hWndInsertAfter != HWND_NOTOPMOST )
    {
       if (!(pWndIA = UserGetWindowObject(hWndInsertAfter)) ||
-            pWndIA == UserGetDesktopWindow() ||
-            pWndIA == UserGetMessageWindow() )
+            UserIsDesktopWindow(pWndIA) || UserIsMessageWindow(pWndIA))
       {
          ERR("NtUserSetWindowPos bad insert window handle!\n");
          RETURN(FALSE);
@@ -3370,9 +3363,8 @@ NtUserSetWindowRgn(
    TRACE("Enter NtUserSetWindowRgn\n");
    UserEnterExclusive();
 
-   if (!(Window = UserGetWindowObject(hWnd)) || // FIXME:
-         Window == UserGetDesktopWindow() ||    // pWnd->fnid == FNID_DESKTOP
-         Window == UserGetMessageWindow() )     // pWnd->fnid == FNID_MESSAGEWND
+   if (!(Window = UserGetWindowObject(hWnd)) ||
+        UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
    {
       RETURN( 0);
    }
@@ -3432,8 +3424,7 @@ NtUserSetInternalWindowPos(
    UserEnterExclusive();
 
    if (!(Wnd = UserGetWindowObject(hwnd)) || // FIXME:
-         Wnd == UserGetDesktopWindow() ||    // pWnd->fnid == FNID_DESKTOP
-         Wnd == UserGetMessageWindow() )     // pWnd->fnid == FNID_MESSAGEWND
+        UserIsDesktopWindow(Wnd) || UserIsMessageWindow(Wnd))
    {
       RETURN( FALSE);
    }
@@ -3501,9 +3492,8 @@ NtUserSetWindowPlacement(HWND hWnd,
    TRACE("Enter NtUserSetWindowPlacement\n");
    UserEnterExclusive();
 
-   if (!(Wnd = UserGetWindowObject(hWnd)) || // FIXME:
-        Wnd == UserGetDesktopWindow() ||     // pWnd->fnid == FNID_DESKTOP
-        Wnd == UserGetMessageWindow() )      // pWnd->fnid == FNID_MESSAGEWND
+   if (!(Wnd = UserGetWindowObject(hWnd)) ||
+        UserIsDesktopWindow(Wnd) || UserIsMessageWindow(Wnd))
    {
       RETURN( FALSE);
    }
@@ -3552,9 +3542,8 @@ NtUserShowWindowAsync(HWND hWnd, LONG nCmdShow)
    TRACE("Enter NtUserShowWindowAsync\n");
    UserEnterExclusive();
 
-   if (!(Window = UserGetWindowObject(hWnd)) || // FIXME:
-         Window == UserGetDesktopWindow() ||    // pWnd->fnid == FNID_DESKTOP
-         Window == UserGetMessageWindow() )     // pWnd->fnid == FNID_MESSAGEWND
+   if (!(Window = UserGetWindowObject(hWnd)) ||
+        UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
    {
       RETURN(FALSE);
    }
@@ -3592,9 +3581,8 @@ NtUserShowWindow(HWND hWnd, LONG nCmdShow)
    TRACE("Enter NtUserShowWindow hWnd %p SW_ %d\n",hWnd, nCmdShow);
    UserEnterExclusive();
 
-   if (!(Window = UserGetWindowObject(hWnd)) || // FIXME:
-         Window == UserGetDesktopWindow() ||    // pWnd->fnid == FNID_DESKTOP
-         Window == UserGetMessageWindow() )     // pWnd->fnid == FNID_MESSAGEWND
+   if (!(Window = UserGetWindowObject(hWnd)) ||
+        UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
    {
       RETURN(FALSE);
    }

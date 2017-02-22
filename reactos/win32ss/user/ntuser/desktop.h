@@ -181,10 +181,35 @@ VOID co_IntShellHookNotify(WPARAM Message, WPARAM wParam, LPARAM lParam);
 HDC FASTCALL UserGetDesktopDC(ULONG,BOOL,BOOL);
 
 #define IntIsActiveDesktop(Desktop) \
-  ((Desktop)->rpwinstaParent->ActiveDesktop == (Desktop))
+    ((Desktop)->rpwinstaParent->ActiveDesktop == (Desktop))
 
 HWND FASTCALL IntGetMessageWindow(VOID);
 PWND FASTCALL UserGetMessageWindow(VOID);
+
+#if 0
+static __inline BOOL
+UserIsDesktopWindow(IN PWND pWnd)
+{
+    // return (pWnd == UserGetDesktopWindow());
+    return (pWnd && (pWnd->fnid == FNID_DESKTOP));
+}
+
+static __inline BOOL
+UserIsMessageWindow(IN PWND pWnd)
+{
+    // return (pWnd == UserGetMessageWindow());
+    return (pWnd && (pWnd->fnid == FNID_MESSAGEWND));
+}
+#else
+
+#define UserIsDesktopWindow(pWnd)   \
+    ((pWnd) && ((pWnd)->fnid == FNID_DESKTOP))
+
+#define UserIsMessageWindow(pWnd)   \
+    ((pWnd) && ((pWnd)->fnid == FNID_MESSAGEWND))
+
+#endif
+
 
 static __inline PVOID
 DesktopHeapAlloc(IN PDESKTOP Desktop,

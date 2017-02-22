@@ -1501,7 +1501,7 @@ NC_HandleNCLButtonDown(PWND pWnd, WPARAM wParam, LPARAM lParam)
                 if ((TopWnd->style & (WS_POPUP|WS_CHILD)) != WS_CHILD)
                     break;
                 parent = UserGetAncestor( TopWnd, GA_PARENT );
-                if (!parent || parent == UserGetDesktopWindow()) break;
+                if (!parent || UserIsDesktopWindow(parent)) break;
                 TopWnd = parent;
             }
 
@@ -1885,7 +1885,7 @@ GetNCHitEx(PWND pWnd, POINT pt)
 
    if (!pWnd) return HTNOWHERE;
 
-   if (pWnd == UserGetDesktopWindow()) // pWnd->fnid == FNID_DESKTOP)
+   if (UserIsDesktopWindow(pWnd))
    {
       rcClient.left = rcClient.top = rcWindow.left = rcWindow.top = 0;
       rcWindow.right  = UserGetSystemMetrics(SM_CXSCREEN);

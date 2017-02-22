@@ -175,7 +175,7 @@ IntSendSyncPaint(PWND Wnd, ULONG Flags)
    }
 
    // Send to all the children if this is the desktop window.
-   if ( Wnd == UserGetDesktopWindow() )
+   if (UserIsDesktopWindow(Wnd))
    {
       if ( Flags & RDW_ALLCHILDREN ||
           ( !(Flags & RDW_NOCHILDREN) && Wnd->style & WS_CLIPCHILDREN))
@@ -567,9 +567,9 @@ co_IntUpdateWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
    * Update child windows.
    */
 
-   if (!(Flags & RDW_NOCHILDREN) && 
-         Flags & RDW_ALLCHILDREN &&
-         Wnd != UserGetDesktopWindow() )
+   if (!(Flags & RDW_NOCHILDREN)  && 
+        (Flags & RDW_ALLCHILDREN) &&
+        !UserIsDesktopWindow(Wnd))
    {
       PWND Child;
 
@@ -1239,7 +1239,7 @@ IntGetPaintMessage(
    PaintWnd->state &= ~WNDS_UPDATEDIRTY;
 
    Window = PaintWnd;
-   while( Window && Window != UserGetDesktopWindow())
+   while (Window && !UserIsDesktopWindow(Window))
    {
       // Role back and check for clip children, do not set if any.
       if (Window->spwndParent && !(Window->spwndParent->style & WS_CLIPCHILDREN))
@@ -1578,7 +1578,7 @@ IntFillWindow(PWND pWndParent,
       POINT ppt;
       INT x = 0, y = 0;
 
-      if ( pWndParent != UserGetDesktopWindow())
+      if (!UserIsDesktopWindow(pWndParent))
       {
           x = pWndParent->rcClient.left - pWnd->rcClient.left;
           y = pWndParent->rcClient.top  - pWnd->rcClient.top;
@@ -1825,7 +1825,7 @@ co_UserGetUpdateRgn(PWND Window, HRGN hRgn, BOOL bErase)
 
       RegionType = SIMPLEREGION;
 
-      if (Window != UserGetDesktopWindow()) // Window->fnid == FNID_DESKTOP
+      if (!UserIsDesktopWindow(Window))
       {
          RECTL_vOffsetRect(&Rect,
                           -Window->rcClient.left,
@@ -1846,7 +1846,7 @@ co_UserGetUpdateRgn(PWND Window, HRGN hRgn, BOOL bErase)
          return RegionType;
       }
 
-      if (Window != UserGetDesktopWindow()) // Window->fnid == FNID_DESKTOP
+      if (!UserIsDesktopWindow(Window))
       {
          NtGdiOffsetRgn(hRgn,
                        -Window->rcClient.left,
@@ -1896,7 +1896,7 @@ co_UserGetUpdateRect(PWND Window, PRECT pRect, BOOL bErase)
 
       if (IntIntersectWithParents(Window, pRect))
       {
-         if (Window != UserGetDesktopWindow()) // Window->fnid == FNID_DESKTOP
+         if (!UserIsDesktopWindow(Window))
          {
             RECTL_vOffsetRect(pRect,
                               -Window->rcClient.left,
@@ -2593,9 +2593,8 @@ NtUserPrintWindow(
 
     if (hwnd)
     {
-       if (!(Window = UserGetWindowObject(hwnd)) || // FIXME:
-             Window == UserGetDesktopWindow() ||    // pWnd->fnid == FNID_DESKTOP
-             Window == UserGetMessageWindow() )     // pWnd->fnid == FNID_MESSAGEWND
+       if (!(Window = UserGetWindowObject(hwnd)) ||
+            UserIsDesktopWindow(Window) || UserIsMessageWindow(Window))
        {
           goto Exit;
        }
