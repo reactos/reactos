@@ -1950,6 +1950,8 @@ GetNCHitEx(PWND pWnd, POINT pt)
             RECTL_vInflateRect(&rcWindow, -UserGetSystemMetrics(SM_CXDLGFRAME), -UserGetSystemMetrics(SM_CYDLGFRAME));
         else if (HAS_THINFRAME( Style, ExStyle ))
             RECTL_vInflateRect(&rcWindow, -UserGetSystemMetrics(SM_CXBORDER), -UserGetSystemMetrics(SM_CYBORDER));
+        else if (HAS_CLIENTFRAME( Style, ExStyle ))
+            RECTL_vInflateRect(&rcWindow, -UserGetSystemMetrics(SM_CXEDGE), -UserGetSystemMetrics(SM_CYEDGE));
         if (!RECTL_bPointInRect( &rcWindow, pt.x, pt.y  )) return HTBORDER;
     }
 
