@@ -2053,7 +2053,7 @@ REGION_bXformRgn(
 
     /* Check for zero rectangles and return TRUE for translation only matrices */
     if (prgn->rdh.nCount < 1)
-        return pmx->flAccel & XFORM_UNITY;
+        return (pmx->flAccel & XFORM_UNITY) != 0;
 
     /* Check if this is a scaling only matrix (off-diagonal elements are 0 */
     if (pmx->flAccel & XFORM_SCALE)

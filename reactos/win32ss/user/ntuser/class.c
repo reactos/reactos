@@ -2333,7 +2333,6 @@ UserRegisterSystemClasses(VOID)
             if (SYSTEMCUR(ARROW) == NULL)
             {
                 ERR("SYSTEMCUR(ARROW) == NULL, should not happen!!\n");
-                //ASSERT(FALSE);
             }
             else
             {
