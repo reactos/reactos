@@ -1096,7 +1096,7 @@ METADC_GetAndSetDCDWord(
 
         case GdiGetSetArcDirection:
             if (GDI_HANDLE_GET_TYPE(physdev->hdc) == GDILoObjType_LO_METADC16_TYPE)
-                pdwResult = 0;
+                *pdwResult = 0;
             else
                 *pdwResult = physdev->funcs->pSetArcDirection(physdev, dwIn);
             break;

@@ -132,7 +132,11 @@ static LPWSTR FONT_mbtowc(HDC hdc, LPCSTR str, INT count, INT *plenW, UINT *pCP)
     strW = HeapAlloc(GetProcessHeap(), 0, lenW*sizeof(WCHAR));
     if (!strW)
         return NULL;
-    MultiByteToWideChar(cp, 0, str, count, strW, lenW);
+    if(!MultiByteToWideChar(cp, 0, str, count, strW, lenW))
+    {
+        HeapFree(GetProcessHeap(), 0, strW);
+        return NULL;
+    }
     DPRINT("mapped %s -> %S\n", str, strW);
     if(plenW) *plenW = lenW;
     if(pCP) *pCP = cp;
@@ -1009,6 +1013,8 @@ GetGlyphOutlineA(
             mbchs[0] = (uChar & 0xff);
         }
         p = FONT_mbtowc(hdc, mbchs, len, NULL, NULL);
+        if(!p)
+            return GDI_ERROR;
         c = p[0];
     }
     else

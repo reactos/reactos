@@ -578,16 +578,13 @@ SetDIBits(
     if (!lpvBits || (GDI_HANDLE_GET_TYPE(hBitmap) != GDI_OBJECT_TYPE_BITMAP))
         return 0;
 
-    if (lpbmi)
+    if (lpbmi->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER))
     {
-        if (lpbmi->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER))
+        if (lpbmi->bmiHeader.biCompression == BI_JPEG
+            || lpbmi->bmiHeader.biCompression == BI_PNG)
         {
-            if (lpbmi->bmiHeader.biCompression == BI_JPEG
-                || lpbmi->bmiHeader.biCompression == BI_PNG)
-            {
-                SetLastError(ERROR_INVALID_PARAMETER);
-                return 0;
-            }
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return 0;
         }
     }
 
