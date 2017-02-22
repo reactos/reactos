@@ -222,6 +222,31 @@ IntSetDCBrushColor(HDC hdc, COLORREF crColor)
    return OldColor;
 }
 
+BOOL FASTCALL
+GreSetBrushOrg(
+    HDC hdc,
+    INT x,
+    INT y,
+    LPPOINT pptOut)
+{
+    PDC pdc = DC_LockDc(hdc);
+    if (pdc == NULL)
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    if (pptOut != NULL)
+    {
+        *pptOut = pdc->pdcattr->ptlBrushOrigin;
+    }
+
+    DC_vSetBrushOrigin(pdc, x, y);
+
+    DC_UnlockDc(pdc);
+    return TRUE;
+}
+
 COLORREF FASTCALL
 IntSetDCPenColor(HDC hdc, COLORREF crColor)
 {
