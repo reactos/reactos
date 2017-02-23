@@ -1041,7 +1041,7 @@ USBSTOR_AllocateIrp(
     Request->DataBuffer = ExAllocatePoolWithTag(NonPagedPool,
                                                 DataTransferLength,
                                                 USB_STOR_TAG);
-    if (!Request)
+    if (!Request->DataBuffer)
     {
         //
         // no memory
@@ -1061,6 +1061,7 @@ USBSTOR_AllocateIrp(
         // no memory
         //
         IoFreeIrp(Irp);
+        ExFreePoolWithTag(Request->DataBuffer, USB_STOR_TAG);
         ExFreePoolWithTag(Request, USB_STOR_TAG);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
@@ -1173,6 +1174,7 @@ USBSTOR_SendIrp(
     //
     // free resources
     //
+    ExFreePoolWithTag(Request->DataBuffer, USB_STOR_TAG);
     ExFreePoolWithTag(Request, USB_STOR_TAG);
     IoFreeIrp(Irp);
     return Status;
