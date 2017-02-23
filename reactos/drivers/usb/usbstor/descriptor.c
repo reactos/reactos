@@ -414,7 +414,7 @@ USBSTOR_SelectConfigurationAndInterface(
         //
         DPRINT1("USBSTOR_SelectConfiguration failed to set interface %x\n", Status);
         FreeItem(InterfaceList);
-        ExFreePool(Urb);
+        ExFreePoolWithTag(Urb, 0);
         return Status;
     }
 
@@ -428,7 +428,7 @@ USBSTOR_SelectConfigurationAndInterface(
         // failed to allocate interface information structure
         //
         FreeItem(InterfaceList);
-        ExFreePool(Urb);
+        ExFreePoolWithTag(Urb, 0);
         return Status;
     }
 
@@ -473,7 +473,7 @@ USBSTOR_SelectConfigurationAndInterface(
     // free interface list & urb
     //
     FreeItem(InterfaceList);
-    ExFreePool(Urb);
+    ExFreePoolWithTag(Urb, 0);
 
     //
     // done
