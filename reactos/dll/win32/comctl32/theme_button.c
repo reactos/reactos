@@ -38,6 +38,7 @@ typedef void (*pfThemedPaint)(HTHEME theme, HWND hwnd, HDC hdc, ButtonState draw
 
 #define STATE_GWL_OFFSET  0
 #define HFONT_GWL_OFFSET  (sizeof(LONG))
+#define HIMAGE_GWL_OFFSET (HFONT_GWL_OFFSET+sizeof(HFONT))
 
 static inline LONG get_button_state( HWND hwnd )
 {
@@ -320,14 +321,24 @@ static const pfThemedPaint btnThemedPaintFunc[BUTTON_TYPE + 1] =
 
 BOOL BUTTON_PaintWithTheme(HTHEME theme, HWND hwnd, HDC hParamDC, LPARAM prfFlag)
 {
-    DWORD dwStyle = GetWindowLongW(hwnd, GWL_STYLE);
-    DWORD dwStyleEx = GetWindowLongW(hwnd, GWL_EXSTYLE);
-    UINT dtFlags = get_drawtext_flags(dwStyle, dwStyleEx);
-    int state = get_button_state(hwnd);
+    DWORD dwStyle;
+    DWORD dwStyleEx;
+    UINT dtFlags;
+    int state;
     ButtonState drawState;
-    pfThemedPaint paint = btnThemedPaintFunc[ dwStyle & BUTTON_TYPE ];
+    pfThemedPaint paint;
+
+    dwStyle = GetWindowLongW(hwnd, GWL_STYLE);
+    paint = btnThemedPaintFunc[ dwStyle & BUTTON_TYPE ];
     if (!paint)
         return FALSE;
+
+    if (GetWindowLongPtrW( hwnd, HIMAGE_GWL_OFFSET) != 0)
+        return FALSE;
+
+    dwStyleEx = GetWindowLongW(hwnd, GWL_EXSTYLE);
+    dtFlags = get_drawtext_flags(dwStyle, dwStyleEx);
+    state = get_button_state(hwnd);
 
     if(IsWindowEnabled(hwnd))
     {
