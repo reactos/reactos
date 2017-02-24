@@ -124,7 +124,17 @@ START_TEST(GetGlyphIndices)
     ok_lasterrornotchanged();
     ok_int(GetGlyphIndicesW(hdc, NULL, 1, Indices, 0), GDI_ERROR);
     ok_lasterrornotchanged();
+    ok_int(GetGlyphIndicesW(hdc, Single, 0, NULL, 0), GDI_ERROR);
+    ok_lasterrornotchanged();
+    ok_int(GetGlyphIndicesW(hdc, Single, 0, Indices, 0), GDI_ERROR);
+    ok_lasterrornotchanged();
     ok_int(GetGlyphIndicesW(hdc, Single, 1, NULL, 0), GDI_ERROR);
+    ok_lasterrornotchanged();
+
+    /* Test an exceptional case that does not seem to return an error */
+    // FIXME: What does the returned value exactly means?
+    ok(GetGlyphIndicesW(hdc, NULL, 0, NULL, 0) != 0,
+       "GetGlyphIndicesW(hdc, NULL, 0, NULL, 0) return expected not zero, but got zero!\n");
     ok_lasterrornotchanged();
 
     /* Test a single valid char */
