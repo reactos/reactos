@@ -4393,6 +4393,9 @@ NtGdiGetCharWidthW(
 /*
 * @implemented
 */
+// TODO: Move this code into NtGdiGetGlyphIndicesWInternal and wrap
+// NtGdiGetGlyphIndicesW around NtGdiGetGlyphIndicesWInternal instead.
+// NOTE: See also GreGetGlyphIndicesW.
 __kernel_entry
 W32KAPI
 DWORD
@@ -4408,7 +4411,7 @@ NtGdiGetGlyphIndicesW(
     PDC_ATTR pdcattr;
     PTEXTOBJ TextObj;
     PFONTGDI FontGDI;
-    HFONT hFont = 0;
+    HFONT hFont = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     OUTLINETEXTMETRICW *potm;
     INT i;
@@ -4419,12 +4422,31 @@ NtGdiGetGlyphIndicesW(
     LPCWSTR UnSafepwc = pwc;
     LPWORD UnSafepgi = pgi;
 
-    if ((!UnSafepwc) && (!UnSafepgi)) return cwc;
+    /* Check for integer overflow */
+    if (cwc & 0x80000000) // (INT_MAX + 1) == INT_MIN 
+        return GDI_ERROR;
 
-    if ((UnSafepwc == NULL) || (UnSafepgi == NULL))
+    if (!UnSafepwc && !UnSafepgi)
+        return cwc;
+
+    if (!UnSafepwc || !UnSafepgi)
     {
         DPRINT1("UnSafepwc == %p, UnSafepgi = %p\n", UnSafepwc, UnSafepgi);
-        return -1;
+        return GDI_ERROR;
+    }
+
+    // TODO: Special undocumented case!
+    if (!pwc && !pgi && (cwc == 0))
+    {
+        DPRINT1("ERR: NtGdiGetGlyphIndicesW with (!pwc && !pgi && (cwc == 0)) is UNIMPLEMENTED!\n");
+        return 0;
+    }
+
+    // FIXME: This is a hack!! (triggered by e.g. Word 2010). See CORE-12825
+    if (cwc == 0)
+    {
+        DPRINT1("ERR: NtGdiGetGlyphIndicesW with (cwc == 0) is UNIMPLEMENTED!\n");
+        return GDI_ERROR;
     }
 
     dc = DC_LockDc(hdc);
