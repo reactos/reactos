@@ -10,7 +10,8 @@ static
 INT_PTR
 NULL_Unused()
 {
-    __debugbreak();
+    DPRINT1("NULL_Unused\n");
+    // __debugbreak();
     return 0;
 }
 
