@@ -1,0 +1,16 @@
+[Section]
+Name = Wine Gecko Engine
+Version = 2.40
+License = GPL
+Description = Gecko Engine normally installed on 1st stage setup, but only if internet connection was available at that time. Needed for applications using mshtml.dll.
+Size = 26.7 MiB
+Category = 14
+URLSite = 
+URLDownload = https://svn.reactos.org/amine/wine_gecko-2.40-x86.msi
+SHA1 = 8a3adedf3707973d1ed4ac3b2e791486abf814bd
+CDPath = none
+
+[Section.0407]
+Description = Die Gecko Engine, welche normalerweise während des 1st stage Setups installiert wird, aber nur wenn zu diesem Zeitpunkt Internet verfügbar war. Wird für Anwendungen benötigt, die mshtml.dll einsetzen.
+Size = 26,7 MiB
+
