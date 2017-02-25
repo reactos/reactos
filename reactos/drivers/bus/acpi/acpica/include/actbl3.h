@@ -563,9 +563,10 @@ typedef struct acpi_table_pcct
 
 enum AcpiPcctType
 {
-    ACPI_PCCT_TYPE_GENERIC_SUBSPACE     = 0,
-    ACPI_PCCT_TYPE_HW_REDUCED_SUBSPACE  = 1,
-    ACPI_PCCT_TYPE_RESERVED             = 2     /* 2 and greater are reserved */
+    ACPI_PCCT_TYPE_GENERIC_SUBSPACE             = 0,
+    ACPI_PCCT_TYPE_HW_REDUCED_SUBSPACE          = 1,
+    ACPI_PCCT_TYPE_HW_REDUCED_SUBSPACE_TYPE2    = 2,    /* ACPI 6.1 */
+    ACPI_PCCT_TYPE_RESERVED                     = 3     /* 3 and greater are reserved */
 };
 
 /*
@@ -608,6 +609,30 @@ typedef struct acpi_pcct_hw_reduced
     UINT16                  MinTurnaroundTime;
 
 } ACPI_PCCT_HW_REDUCED;
+
+
+/* 2: HW-reduced Communications Subspace Type 2 (ACPI 6.1) */
+
+typedef struct acpi_pcct_hw_reduced_type2
+{
+    ACPI_SUBTABLE_HEADER    Header;
+    UINT32                  DoorbellInterrupt;
+    UINT8                   Flags;
+    UINT8                   Reserved;
+    UINT64                  BaseAddress;
+    UINT64                  Length;
+    ACPI_GENERIC_ADDRESS    DoorbellRegister;
+    UINT64                  PreserveMask;
+    UINT64                  WriteMask;
+    UINT32                  Latency;
+    UINT32                  MaxAccessRate;
+    UINT16                  MinTurnaroundTime;
+    ACPI_GENERIC_ADDRESS    DoorbellAckRegister;
+    UINT64                  AckPreserveMask;
+    UINT64                  AckWriteMask;
+
+} ACPI_PCCT_HW_REDUCED_TYPE2;
+
 
 /* Values for doorbell flags above */
 

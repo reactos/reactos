@@ -603,12 +603,14 @@ AcpiDsCreateOperand (
                 }
                 else if (ParentOp->Common.AmlOpcode == AML_EXTERNAL_OP)
                 {
-                    /* TBD: May only be temporary */
-
-                    ObjDesc = AcpiUtCreateStringObject ((ACPI_SIZE) NameLength);
-
-                    strncpy (ObjDesc->String.Pointer, NameString, NameLength);
-                    Status = AE_OK;
+                    /*
+                     * This opcode should never appear here. It is used only
+                     * by AML disassemblers and is surrounded by an If(0)
+                     * by the ASL compiler.
+                     *
+                     * Therefore, if we see it here, it is a serious error.
+                     */
+                    Status = AE_AML_BAD_OPCODE;
                 }
                 else
                 {

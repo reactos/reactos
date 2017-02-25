@@ -131,7 +131,8 @@ enum AcpiReturnPackageTypes
     ACPI_PTYPE2_REV_FIXED   = 9,
     ACPI_PTYPE2_FIX_VAR     = 10,
     ACPI_PTYPE2_VAR_VAR     = 11,
-    ACPI_PTYPE2_UUID_PAIR   = 12
+    ACPI_PTYPE2_UUID_PAIR   = 12,
+    ACPI_PTYPE_CUSTOM       = 13
 };
 
 
@@ -344,7 +345,7 @@ const ACPI_PREDEFINED_INFO          AcpiGbl_PredefinedMethods[] =
 
     {{"_BIX",   METHOD_0ARGS,
                 METHOD_RETURNS (ACPI_RTYPE_PACKAGE)}}, /* Fixed-length (16 Int),(4 Str) */
-                    PACKAGE_INFO (ACPI_PTYPE1_FIXED, ACPI_RTYPE_INTEGER, 16, ACPI_RTYPE_STRING, 4,0),
+                    PACKAGE_INFO (ACPI_PTYPE_CUSTOM, ACPI_RTYPE_INTEGER, 16, ACPI_RTYPE_STRING, 4,0),
 
     {{"_BLT",   METHOD_3ARGS (ACPI_TYPE_INTEGER, ACPI_TYPE_INTEGER, ACPI_TYPE_INTEGER),
                 METHOD_NO_RETURN_VALUE}},

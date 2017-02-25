@@ -305,13 +305,12 @@ AcpiEvaluateObject (
     }
 
 
-#if 0
+#ifdef _FUTURE_FEATURE
 
     /*
      * Begin incoming argument count analysis. Check for too few args
      * and too many args.
      */
-
     switch (AcpiNsGetType (Info->Node))
     {
     case ACPI_TYPE_METHOD:
@@ -399,68 +398,73 @@ AcpiEvaluateObject (
      * If we are expecting a return value, and all went well above,
      * copy the return value to an external object.
      */
-    if (ReturnBuffer)
+    if (!ReturnBuffer)
     {
-        if (!Info->ReturnObject)
+        goto CleanupReturnObject;
+    }
+
+    if (!Info->ReturnObject)
+    {
+        ReturnBuffer->Length = 0;
+        goto Cleanup;
+    }
+
+    if (ACPI_GET_DESCRIPTOR_TYPE (Info->ReturnObject) ==
+        ACPI_DESC_TYPE_NAMED)
+    {
+        /*
+         * If we received a NS Node as a return object, this means that
+         * the object we are evaluating has nothing interesting to
+         * return (such as a mutex, etc.)  We return an error because
+         * these types are essentially unsupported by this interface.
+         * We don't check up front because this makes it easier to add
+         * support for various types at a later date if necessary.
+         */
+        Status = AE_TYPE;
+        Info->ReturnObject = NULL;   /* No need to delete a NS Node */
+        ReturnBuffer->Length = 0;
+    }
+
+    if (ACPI_FAILURE (Status))
+    {
+        goto CleanupReturnObject;
+    }
+
+    /* Dereference Index and RefOf references */
+
+    AcpiNsResolveReferences (Info);
+
+    /* Get the size of the returned object */
+
+    Status = AcpiUtGetObjectSize (Info->ReturnObject,
+        &BufferSpaceNeeded);
+    if (ACPI_SUCCESS (Status))
+    {
+        /* Validate/Allocate/Clear caller buffer */
+
+        Status = AcpiUtInitializeBuffer (ReturnBuffer,
+            BufferSpaceNeeded);
+        if (ACPI_FAILURE (Status))
         {
-            ReturnBuffer->Length = 0;
+            /*
+             * Caller's buffer is too small or a new one can't
+             * be allocated
+             */
+            ACPI_DEBUG_PRINT ((ACPI_DB_INFO,
+                "Needed buffer size %X, %s\n",
+                (UINT32) BufferSpaceNeeded,
+                AcpiFormatException (Status)));
         }
         else
         {
-            if (ACPI_GET_DESCRIPTOR_TYPE (Info->ReturnObject) ==
-                ACPI_DESC_TYPE_NAMED)
-            {
-                /*
-                 * If we received a NS Node as a return object, this means that
-                 * the object we are evaluating has nothing interesting to
-                 * return (such as a mutex, etc.)  We return an error because
-                 * these types are essentially unsupported by this interface.
-                 * We don't check up front because this makes it easier to add
-                 * support for various types at a later date if necessary.
-                 */
-                Status = AE_TYPE;
-                Info->ReturnObject = NULL;   /* No need to delete a NS Node */
-                ReturnBuffer->Length = 0;
-            }
+            /* We have enough space for the object, build it */
 
-            if (ACPI_SUCCESS (Status))
-            {
-                /* Dereference Index and RefOf references */
-
-                AcpiNsResolveReferences (Info);
-
-                /* Get the size of the returned object */
-
-                Status = AcpiUtGetObjectSize (Info->ReturnObject,
-                    &BufferSpaceNeeded);
-                if (ACPI_SUCCESS (Status))
-                {
-                    /* Validate/Allocate/Clear caller buffer */
-
-                    Status = AcpiUtInitializeBuffer (ReturnBuffer,
-                        BufferSpaceNeeded);
-                    if (ACPI_FAILURE (Status))
-                    {
-                        /*
-                         * Caller's buffer is too small or a new one can't
-                         * be allocated
-                         */
-                        ACPI_DEBUG_PRINT ((ACPI_DB_INFO,
-                            "Needed buffer size %X, %s\n",
-                            (UINT32) BufferSpaceNeeded,
-                            AcpiFormatException (Status)));
-                    }
-                    else
-                    {
-                        /* We have enough space for the object, build it */
-
-                        Status = AcpiUtCopyIobjectToEobject (
-                            Info->ReturnObject, ReturnBuffer);
-                    }
-                }
-            }
+            Status = AcpiUtCopyIobjectToEobject (
+                Info->ReturnObject, ReturnBuffer);
         }
     }
+
+CleanupReturnObject:
 
     if (Info->ReturnObject)
     {

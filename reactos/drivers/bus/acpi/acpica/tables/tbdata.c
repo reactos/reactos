@@ -441,7 +441,7 @@ AcpiTbVerifyTempTable (
             ACPI_EXCEPTION ((AE_INFO, AE_NO_MEMORY,
                 "%4.4s 0x%8.8X%8.8X"
                 " Attempted table install failed",
-                AcpiUtValidAcpiName (TableDesc->Signature.Ascii) ?
+                AcpiUtValidNameseg (TableDesc->Signature.Ascii) ?
                     TableDesc->Signature.Ascii : "????",
                 ACPI_FORMAT_UINT64 (TableDesc->Address)));
 

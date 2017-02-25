@@ -107,6 +107,7 @@
  * DESCRIPTION: Compare two Buffers, with a maximum length
  *
  ******************************************************************************/
+
 int
 memcmp (
     void                    *VBuffer1,

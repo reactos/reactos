@@ -485,6 +485,7 @@ typedef struct acpi_resource_gpio
     UINT8                           Type; \
     UINT8                           ProducerConsumer;    /* For values, see Producer/Consumer above */\
     UINT8                           SlaveMode; \
+    UINT8                           ConnectionSharing; \
     UINT8                           TypeRevisionId; \
     UINT16                          TypeDataLength; \
     UINT16                          VendorLength; \

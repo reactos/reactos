@@ -460,6 +460,9 @@ AcpiDsBeginMethodExecution (
             {
                 ObjDesc->Method.Mutex->Mutex.OriginalSyncLevel =
                     ObjDesc->Method.Mutex->Mutex.SyncLevel;
+
+                ObjDesc->Method.Mutex->Mutex.ThreadId =
+                    AcpiOsGetThreadId ();
             }
         }
 

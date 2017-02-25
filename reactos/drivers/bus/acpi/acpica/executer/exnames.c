@@ -204,7 +204,7 @@ AcpiExNameSegment (
     ACPI_DEBUG_PRINT ((ACPI_DB_LOAD, "Bytes from stream:\n"));
 
     for (Index = 0;
-        (Index < ACPI_NAME_SIZE) && (AcpiUtValidAcpiChar (*AmlAddress, 0));
+        (Index < ACPI_NAME_SIZE) && (AcpiUtValidNameChar (*AmlAddress, 0));
         Index++)
     {
         CharBuf[Index] = *AmlAddress++;

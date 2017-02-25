@@ -326,7 +326,7 @@ AcpiTbInstallStandardTable (
             ACPI_BIOS_ERROR ((AE_INFO,
                 "Table has invalid signature [%4.4s] (0x%8.8X), "
                 "must be SSDT or OEMx",
-                AcpiUtValidAcpiName (NewTableDesc.Signature.Ascii) ?
+                AcpiUtValidNameseg (NewTableDesc.Signature.Ascii) ?
                     NewTableDesc.Signature.Ascii : "????",
                 NewTableDesc.Signature.Integer));
 

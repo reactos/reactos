@@ -132,9 +132,10 @@ list(APPEND ACPICA_SOURCE
     acpica/tables/tbxfroot.c
     acpica/utilities/utaddress.c
     acpica/utilities/utalloc.c
+    acpica/utilities/utascii.c
     acpica/utilities/utbuffer.c
     acpica/utilities/utcache.c
-    acpica/utilities/utclib.c
+    # acpica/utilities/utclib.c
     acpica/utilities/utcopy.c
     # acpica/utilities/utdebug.c
     acpica/utilities/utdecode.c

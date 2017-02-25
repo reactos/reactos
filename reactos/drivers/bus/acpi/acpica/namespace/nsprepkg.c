@@ -70,6 +70,12 @@ AcpiNsCheckPackageElements (
     UINT32                      Count2,
     UINT32                      StartIndex);
 
+static ACPI_STATUS
+AcpiNsCustomPackage (
+    ACPI_EVALUATE_INFO          *Info,
+    ACPI_OPERAND_OBJECT         **Elements,
+    UINT32                      Count);
+
 
 /*******************************************************************************
  *
@@ -148,6 +154,11 @@ AcpiNsCheckPackage (
      */
     switch (Package->RetInfo.Type)
     {
+    case ACPI_PTYPE_CUSTOM:
+
+        Status = AcpiNsCustomPackage (Info, Elements, Count);
+        break;
+
     case ACPI_PTYPE1_FIXED:
         /*
          * The package count is fixed and there are no subpackages
@@ -621,6 +632,92 @@ PackageTooSmall:
         i, SubPackage->Package.Count, ExpectedCount));
 
     return (AE_AML_OPERAND_VALUE);
+}
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiNsCustomPackage
+ *
+ * PARAMETERS:  Info                - Method execution information block
+ *              Elements            - Pointer to the package elements array
+ *              Count               - Element count for the package
+ *
+ * RETURN:      Status
+ *
+ * DESCRIPTION: Check a returned package object for the correct count and
+ *              correct type of all sub-objects.
+ *
+ * NOTE: Currently used for the _BIX method only. When needed for two or more
+ * methods, probably a detect/dispatch mechanism will be required.
+ *
+ ******************************************************************************/
+
+static ACPI_STATUS
+AcpiNsCustomPackage (
+    ACPI_EVALUATE_INFO          *Info,
+    ACPI_OPERAND_OBJECT         **Elements,
+    UINT32                      Count)
+{
+    UINT32                      ExpectedCount;
+    UINT32                      Version;
+    ACPI_STATUS                 Status = AE_OK;
+
+
+    ACPI_FUNCTION_NAME (NsCustomPackage);
+
+
+    /* Get version number, must be Integer */
+
+    if ((*Elements)->Common.Type != ACPI_TYPE_INTEGER)
+    {
+        ACPI_WARN_PREDEFINED ((AE_INFO, Info->FullPathname, Info->NodeFlags,
+            "Return Package has invalid object type for version number"));
+        return_ACPI_STATUS (AE_AML_OPERAND_TYPE);
+    }
+
+    Version = (UINT32) (*Elements)->Integer.Value;
+    ExpectedCount = 21;         /* Version 1 */
+
+    if (Version == 0)
+    {
+        ExpectedCount = 20;     /* Version 0 */
+    }
+
+    if (Count < ExpectedCount)
+    {
+        ACPI_WARN_PREDEFINED ((AE_INFO, Info->FullPathname, Info->NodeFlags,
+            "Return Package is too small - found %u elements, expected %u",
+            Count, ExpectedCount));
+        return_ACPI_STATUS (AE_AML_OPERAND_VALUE);
+    }
+    else if (Count > ExpectedCount)
+    {
+        ACPI_DEBUG_PRINT ((ACPI_DB_REPAIR,
+            "%s: Return Package is larger than needed - "
+            "found %u, expected %u\n",
+            Info->FullPathname, Count, ExpectedCount));
+    }
+
+    /* Validate all elements of the returned package */
+
+    Status = AcpiNsCheckPackageElements (Info, Elements,
+        ACPI_RTYPE_INTEGER, 16,
+        ACPI_RTYPE_STRING, 4, 0);
+    if (ACPI_FAILURE (Status))
+    {
+        return_ACPI_STATUS (Status);
+    }
+
+    /* Version 1 has a single trailing integer */
+
+    if (Version > 0)
+    {
+        Status = AcpiNsCheckPackageElements (Info, Elements + 20,
+            ACPI_RTYPE_INTEGER, 1, 0, 0, 20);
+    }
+
+    return_ACPI_STATUS (Status);
 }
 
 

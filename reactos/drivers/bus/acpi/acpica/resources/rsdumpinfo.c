@@ -265,19 +265,20 @@ ACPI_RSDUMP_INFO        AcpiRsDumpFixedDma[4] =
     {ACPI_RSD_UINT8,    ACPI_RSD_OFFSET (CommonSerialBus.Type),             "Type",                     AcpiGbl_SbtDecode}, \
     {ACPI_RSD_1BITFLAG, ACPI_RSD_OFFSET (CommonSerialBus.ProducerConsumer), "ProducerConsumer",         AcpiGbl_ConsumeDecode}, \
     {ACPI_RSD_1BITFLAG, ACPI_RSD_OFFSET (CommonSerialBus.SlaveMode),        "SlaveMode",                AcpiGbl_SmDecode}, \
+    {ACPI_RSD_1BITFLAG, ACPI_RSD_OFFSET (CommonSerialBus.ConnectionSharing),"ConnectionSharing",        AcpiGbl_ShrDecode}, \
     {ACPI_RSD_UINT8,    ACPI_RSD_OFFSET (CommonSerialBus.TypeRevisionId),   "TypeRevisionId",           NULL}, \
     {ACPI_RSD_UINT16,   ACPI_RSD_OFFSET (CommonSerialBus.TypeDataLength),   "TypeDataLength",           NULL}, \
     {ACPI_RSD_SOURCE,   ACPI_RSD_OFFSET (CommonSerialBus.ResourceSource),   "ResourceSource",           NULL}, \
     {ACPI_RSD_UINT16,   ACPI_RSD_OFFSET (CommonSerialBus.VendorLength),     "VendorLength",             NULL}, \
     {ACPI_RSD_SHORTLISTX,ACPI_RSD_OFFSET (CommonSerialBus.VendorData),      "VendorData",               NULL},
 
-ACPI_RSDUMP_INFO        AcpiRsDumpCommonSerialBus[10] =
+ACPI_RSDUMP_INFO        AcpiRsDumpCommonSerialBus[11] =
 {
     {ACPI_RSD_TITLE,    ACPI_RSD_TABLE_SIZE (AcpiRsDumpCommonSerialBus),    "Common Serial Bus",        NULL},
     ACPI_RS_DUMP_COMMON_SERIAL_BUS
 };
 
-ACPI_RSDUMP_INFO        AcpiRsDumpI2cSerialBus[13] =
+ACPI_RSDUMP_INFO        AcpiRsDumpI2cSerialBus[14] =
 {
     {ACPI_RSD_TITLE,    ACPI_RSD_TABLE_SIZE (AcpiRsDumpI2cSerialBus),       "I2C Serial Bus",           NULL},
     ACPI_RS_DUMP_COMMON_SERIAL_BUS
@@ -286,7 +287,7 @@ ACPI_RSDUMP_INFO        AcpiRsDumpI2cSerialBus[13] =
     {ACPI_RSD_UINT16,   ACPI_RSD_OFFSET (I2cSerialBus.SlaveAddress),        "SlaveAddress",             NULL},
 };
 
-ACPI_RSDUMP_INFO        AcpiRsDumpSpiSerialBus[17] =
+ACPI_RSDUMP_INFO        AcpiRsDumpSpiSerialBus[18] =
 {
     {ACPI_RSD_TITLE,    ACPI_RSD_TABLE_SIZE (AcpiRsDumpSpiSerialBus),       "Spi Serial Bus",           NULL},
     ACPI_RS_DUMP_COMMON_SERIAL_BUS
@@ -299,7 +300,7 @@ ACPI_RSDUMP_INFO        AcpiRsDumpSpiSerialBus[17] =
     {ACPI_RSD_UINT32,   ACPI_RSD_OFFSET (SpiSerialBus.ConnectionSpeed),     "ConnectionSpeed",          NULL},
 };
 
-ACPI_RSDUMP_INFO        AcpiRsDumpUartSerialBus[19] =
+ACPI_RSDUMP_INFO        AcpiRsDumpUartSerialBus[20] =
 {
     {ACPI_RSD_TITLE,    ACPI_RSD_TABLE_SIZE (AcpiRsDumpUartSerialBus),       "Uart Serial Bus",         NULL},
     ACPI_RS_DUMP_COMMON_SERIAL_BUS

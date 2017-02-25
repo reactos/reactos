@@ -632,6 +632,48 @@ AcpiUtPtrExit (
 
 /*******************************************************************************
  *
+ * FUNCTION:    AcpiUtStrExit
+ *
+ * PARAMETERS:  LineNumber          - Caller's line number
+ *              FunctionName        - Caller's procedure name
+ *              ModuleName          - Caller's module name
+ *              ComponentId         - Caller's component ID
+ *              String              - String to display
+ *
+ * RETURN:      None
+ *
+ * DESCRIPTION: Function exit trace. Prints only if TRACE_FUNCTIONS bit is
+ *              set in DebugLevel. Prints exit value also.
+ *
+ ******************************************************************************/
+
+void
+AcpiUtStrExit (
+    UINT32                  LineNumber,
+    const char              *FunctionName,
+    const char              *ModuleName,
+    UINT32                  ComponentId,
+    const char              *String)
+{
+
+    /* Check if enabled up-front for performance */
+
+    if (ACPI_IS_DEBUG_ENABLED (ACPI_LV_FUNCTIONS, ComponentId))
+    {
+        AcpiDebugPrint (ACPI_LV_FUNCTIONS,
+            LineNumber, FunctionName, ModuleName, ComponentId,
+            "%s %s\n", AcpiGbl_FunctionExitPrefix, String);
+    }
+
+    if (AcpiGbl_NestingLevel)
+    {
+        AcpiGbl_NestingLevel--;
+    }
+}
+
+
+/*******************************************************************************
+ *
  * FUNCTION:    AcpiTracePoint
  *
  * PARAMETERS:  Type                - Trace event type

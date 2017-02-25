@@ -83,7 +83,7 @@ AcpiTbFindTable (
 
     /* Validate the input table signature */
 
-    if (!AcpiIsValidSignature (Signature))
+    if (!AcpiUtValidNameseg (Signature))
     {
         return_ACPI_STATUS (AE_BAD_SIGNATURE);
     }

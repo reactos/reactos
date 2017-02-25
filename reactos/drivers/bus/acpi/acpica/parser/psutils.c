@@ -148,7 +148,7 @@ AcpiPsAllocOp (
     }
     else if (OpInfo->Flags & AML_NAMED)
     {
-        Flags = ACPI_PARSEOP_NAMED;
+        Flags = ACPI_PARSEOP_NAMED_OBJECT;
     }
     else if (Opcode == AML_INT_BYTELIST_OP)
     {

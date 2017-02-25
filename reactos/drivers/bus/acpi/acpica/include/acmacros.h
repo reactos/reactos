@@ -264,10 +264,6 @@
 
 #define ACPI_IS_MISALIGNED(value)           (((ACPI_SIZE) value) & (sizeof(ACPI_SIZE)-1))
 
-/* Generic (power-of-two) rounding */
-
-#define ACPI_IS_POWER_OF_TWO(a)             (((a) & ((a) - 1)) == 0)
-
 /*
  * Bitmask creation
  * Bit positions start at zero.
@@ -291,10 +287,10 @@
 /* Generic bitfield macros and masks */
 
 #define ACPI_GET_BITS(SourcePtr, Position, Mask) \
-    ((*SourcePtr >> Position) & Mask)
+    ((*(SourcePtr) >> (Position)) & (Mask))
 
 #define ACPI_SET_BITS(TargetPtr, Position, Mask, Value) \
-    (*TargetPtr |= ((Value & Mask) << Position))
+    (*(TargetPtr) |= (((Value) & (Mask)) << (Position)))
 
 #define ACPI_1BIT_MASK      0x00000001
 #define ACPI_2BIT_MASK      0x00000003

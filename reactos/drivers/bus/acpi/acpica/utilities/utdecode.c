@@ -284,7 +284,7 @@ AcpiUtGetObjectTypeName (
         return_PTR ("Invalid object");
     }
 
-    return_PTR (AcpiUtGetTypeName (ObjDesc->Common.Type));
+    return_STR (AcpiUtGetTypeName (ObjDesc->Common.Type));
 }
 
 

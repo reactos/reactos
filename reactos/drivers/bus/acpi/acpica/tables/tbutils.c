@@ -411,36 +411,3 @@ NextTable:
     AcpiOsUnmapMemory (Table, Length);
     return_ACPI_STATUS (AE_OK);
 }
-
-
-/*******************************************************************************
- *
- * FUNCTION:    AcpiIsValidSignature
- *
- * PARAMETERS:  Signature           - Sig string to be validated
- *
- * RETURN:      TRUE if signature is has 4 valid ACPI characters
- *
- * DESCRIPTION: Validate an ACPI table signature.
- *
- ******************************************************************************/
-
-BOOLEAN
-AcpiIsValidSignature (
-    char                    *Signature)
-{
-    UINT32                  i;
-
-
-    /* Validate each character in the signature */
-
-    for (i = 0; i < ACPI_NAME_SIZE; i++)
-    {
-        if (!AcpiUtValidAcpiChar (Signature[i], i))
-        {
-            return (FALSE);
-        }
-    }
-
-    return (TRUE);
-}
