@@ -242,7 +242,7 @@ AcpiTbInstallFixedTable (
     char                    *Signature,
     UINT32                  *TableIndex);
 
-ACPI_STATUS
+ACPI_STATUS ACPI_INIT_FUNCTION
 AcpiTbParseRootTable (
     ACPI_PHYSICAL_ADDRESS   RsdpAddress);
 

@@ -64,6 +64,10 @@
 #define stat            _stat
 #define fstat           _fstat
 #define mkdir           _mkdir
+#define snprintf        _snprintf
+#if _MSC_VER <= 1200 /* Versions below VC++ 6 */
+#define vsnprintf       _vsnprintf
+#endif
 #define O_RDONLY        _O_RDONLY
 #define O_BINARY        _O_BINARY
 #define O_CREAT         _O_CREAT
@@ -102,6 +106,10 @@
 #define ACPI_INTERNAL_XFACE
 #define ACPI_INTERNAL_VAR_XFACE     __cdecl
 
+
+/* Do not maintain the architecture specific stuffs for the EFI ports */
+
+#if !defined(_EDK2_EFI) && !defined(_GNU_EFI)
 #ifndef _LINT
 /*
  * Math helper functions
@@ -135,6 +143,7 @@
     n_hi >>= 1;    \
     n_lo >>= 1;    \
 }
+#endif
 #endif
 
 #ifdef __REACTOS__
@@ -254,5 +263,16 @@ _CrtSetBreakAlloc (937);
 #define COMPILER_VA_MACRO               1
 #else
 #endif
+
+/* Begin standard headers */
+
+/*
+ * warn C4001: nonstandard extension 'single line comment' was used
+ *
+ * We need to enable this for ACPICA internal files, but disable it for
+ * buggy MS runtime headers.
+ */
+#pragma warning(push)
+#pragma warning(disable:4001)
 
 #endif /* __ACMSVC_H__ */

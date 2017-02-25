@@ -226,7 +226,7 @@ AcpiUtInitGlobals (
     AcpiGbl_NextOwnerIdOffset           = 0;
     AcpiGbl_DebuggerConfiguration       = DEBUGGER_THREADING;
     AcpiGbl_OsiMutex                    = NULL;
-    AcpiGbl_MaxLoopIterations           = 0xFFFF;
+    AcpiGbl_MaxLoopIterations           = ACPI_MAX_LOOP_COUNT;
 
     /* Hardware oriented */
 

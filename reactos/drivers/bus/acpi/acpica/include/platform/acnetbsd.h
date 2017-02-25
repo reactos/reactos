@@ -44,10 +44,6 @@
 #ifndef __ACNETBSD_H__
 #define __ACNETBSD_H__
 
-/* NetBSD uses GCC */
-
-#include "acgcc.h"
-
 #define ACPI_UINTPTR_T          uintptr_t
 #define ACPI_USE_LOCAL_CACHE
 #define ACPI_CAST_PTHREAD_T(x)  ((ACPI_THREAD_ID) ACPI_TO_INTEGER (x))

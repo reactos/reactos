@@ -44,10 +44,12 @@
 #ifndef __ACEFI_H__
 #define __ACEFI_H__
 
-#include <stdarg.h>
-#if defined(_GNU_EFI)
-#include <stdint.h>
-#include <unistd.h>
+/* EDK2 EFI environemnt */
+
+#if defined(_EDK2_EFI)
+
+#define _GNU_EFI
+
 #endif
 
 #if defined(__x86_64__)
@@ -57,22 +59,12 @@
 #endif
 
 #ifdef _MSC_EXTENSIONS
-#define EFIAPI __cdecl
+#define ACPI_EFI_API __cdecl
 #elif USE_MS_ABI
-#define EFIAPI __attribute__((ms_abi))
+#define ACPI_EFI_API __attribute__((ms_abi))
 #else
-#define EFIAPI
+#define ACPI_EFI_API
 #endif
-
-typedef uint8_t     UINT8;
-typedef uint16_t    UINT16;
-typedef int16_t     INT16;
-typedef uint32_t    UINT32;
-typedef int32_t     INT32;
-typedef uint64_t    UINT64;
-typedef int64_t     INT64;
-typedef uint8_t     BOOLEAN;
-typedef uint16_t    CHAR16;
 
 #define VOID        void
 
@@ -94,23 +86,23 @@ typedef uint16_t    CHAR16;
 
 #endif
 
-typedef uint64_t    UINTN;
-typedef int64_t     INTN;
+#define UINTN       uint64_t
+#define INTN        int64_t
 
-#define EFIERR(a)           (0x8000000000000000 | a)
+#define ACPI_EFI_ERR(a)             (0x8000000000000000 | a)
 
 #else
 
 #define ACPI_MACHINE_WIDTH          32
-#define ACPI_USE_NATIVE_DIVIDE
 
-typedef uint32_t UINTN;
-typedef int32_t INTN;
+#define UINTN       uint32_t
+#define INTN        int32_t
 
-#define EFIERR(a)           (0x80000000 | a)
+#define ACPI_EFI_ERR(a)             (0x80000000 | a)
 
 #endif
 
+#define CHAR16      uint16_t
 
 #ifdef USE_EFI_FUNCTION_WRAPPER
 #define __VA_NARG__(...)                        \
@@ -230,15 +222,6 @@ UINT64 efi_call10(void *func, UINT64 arg1, UINT64 arg2, UINT64 arg3,
 
 #if defined(_GNU_EFI)
 
-/* Using GCC for GNU EFI */
-
-#include "acgcc.h"
-
-#undef ACPI_USE_SYSTEM_CLIBRARY
-#undef ACPI_USE_STANDARD_HEADERS
-#undef ACPI_USE_NATIVE_DIVIDE
-#define ACPI_USE_SYSTEM_INTTYPES
-
 /*
  * Math helpers
  */
@@ -255,21 +238,20 @@ UINT64 efi_call10(void *func, UINT64 arg1, UINT64 arg2, UINT64 arg3,
         (n_hi) >>= 1;                   \
     } while (0)
 
-
 #endif
 
-struct _SIMPLE_TEXT_OUTPUT_INTERFACE;
-struct _SIMPLE_INPUT_INTERFACE;
-struct _EFI_FILE_IO_INTERFACE;
-struct _EFI_FILE_HANDLE;
-struct _EFI_BOOT_SERVICES;
-struct _EFI_SYSTEM_TABLE;
+struct _ACPI_SIMPLE_TEXT_OUTPUT_INTERFACE;
+struct _ACPI_SIMPLE_INPUT_INTERFACE;
+struct _ACPI_EFI_FILE_IO_INTERFACE;
+struct _ACPI_EFI_FILE_HANDLE;
+struct _ACPI_EFI_BOOT_SERVICES;
+struct _ACPI_EFI_SYSTEM_TABLE;
 
-extern struct _EFI_SYSTEM_TABLE         *ST;
-extern struct _EFI_BOOT_SERVICES        *BS;
+extern struct _ACPI_EFI_SYSTEM_TABLE        *ST;
+extern struct _ACPI_EFI_BOOT_SERVICES       *BS;
 
-#define ACPI_FILE           struct _SIMPLE_TEXT_OUTPUT_INTERFACE *
-#define ACPI_FILE_OUT       ST->ConOut
-#define ACPI_FILE_ERR       ST->ConOut
+#define FILE                struct _ACPI_SIMPLE_TEXT_OUTPUT_INTERFACE
+#define stdout              ST->ConOut
+#define stderr              ST->ConOut
 
 #endif /* __ACEFI_H__ */

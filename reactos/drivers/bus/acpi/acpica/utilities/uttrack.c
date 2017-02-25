@@ -107,13 +107,11 @@ AcpiUtCreateList (
     ACPI_MEMORY_LIST        *Cache;
 
 
-    Cache = AcpiOsAllocate (sizeof (ACPI_MEMORY_LIST));
+    Cache = AcpiOsAllocateZeroed (sizeof (ACPI_MEMORY_LIST));
     if (!Cache)
     {
         return (AE_NO_MEMORY);
     }
-
-    memset (Cache, 0, sizeof (ACPI_MEMORY_LIST));
 
     Cache->ListName = ListName;
     Cache->ObjectSize = ObjectSize;

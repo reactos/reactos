@@ -1068,48 +1068,6 @@ AcpiAhMatchUuid (
 
 
 /*
- * utprint - printf/vprintf output functions
- */
-const char *
-AcpiUtScanNumber (
-    const char              *String,
-    UINT64                  *NumberPtr);
-
-const char *
-AcpiUtPrintNumber (
-    char                    *String,
-    UINT64                  Number);
-
-int
-AcpiUtVsnprintf (
-    char                    *String,
-    ACPI_SIZE               Size,
-    const char              *Format,
-    va_list                 Args);
-
-int
-AcpiUtSnprintf (
-    char                    *String,
-    ACPI_SIZE               Size,
-    const char              *Format,
-    ...);
-
-#ifdef ACPI_APPLICATION
-int
-AcpiUtFileVprintf (
-    ACPI_FILE               File,
-    const char              *Format,
-    va_list                 Args);
-
-int
-AcpiUtFilePrintf (
-    ACPI_FILE               File,
-    const char              *Format,
-    ...);
-#endif
-
-
-/*
  * utuuid -- UUID support functions
  */
 #if (defined ACPI_ASL_COMPILER || defined ACPI_EXEC_APP || defined ACPI_HELP_APP)

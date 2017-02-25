@@ -44,14 +44,10 @@
 #ifndef __ACWIN64_H__
 #define __ACWIN64_H__
 
-/*! [Begin] no source code translation (Keep the include) */
-
-#include "acintel.h"
-/*! [End] no source code translation !*/
+#define ACPI_USE_STANDARD_HEADERS
+#define ACPI_USE_SYSTEM_CLIBRARY
 
 #define ACPI_MACHINE_WIDTH          64
-
-#define ACPI_USE_STANDARD_HEADERS
 
 /*
  * Handle platform- and compiler-specific assembly language differences.

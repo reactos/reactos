@@ -44,7 +44,6 @@
 #ifndef __ACDRAGONFLY_H_
 #define __ACDRAGONFLY_H_
 
-#include <platform/acgcc.h>     /* DragonFly uses GCC */
 #include <sys/types.h>
 
 #ifdef __LP64__

@@ -44,6 +44,12 @@
 #ifndef __ACINTEL_H__
 #define __ACINTEL_H__
 
+/*
+ * Use compiler specific <stdarg.h> is a good practice for even when
+ * -nostdinc is specified (i.e., ACPI_USE_STANDARD_HEADERS undefined.
+ */
+#include <stdarg.h>
+
 /* Configuration specific to Intel 64-bit C compiler */
 
 #define COMPILER_DEPENDENT_INT64    __int64

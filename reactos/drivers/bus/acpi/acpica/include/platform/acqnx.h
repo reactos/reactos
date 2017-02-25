@@ -44,9 +44,8 @@
 #ifndef __ACQNX_H__
 #define __ACQNX_H__
 
-/* QNX uses GCC */
-
-#include "acgcc.h"
+#define ACPI_USE_STANDARD_HEADERS
+#define ACPI_USE_SYSTEM_CLIBRARY
 
 #define ACPI_UINTPTR_T          uintptr_t
 #define ACPI_USE_LOCAL_CACHE
@@ -62,13 +61,10 @@
 #include <stdint.h>
 #include <sys/neutrino.h>
 
-#define ACPI_USE_STANDARD_HEADERS
-
 #define __cli() InterruptDisable();
 #define __sti() InterruptEnable();
 #define __cdecl
 
-#define ACPI_USE_SYSTEM_CLIBRARY
 #define ACPI_USE_NATIVE_DIVIDE
 
 #endif /* __ACQNX_H__ */

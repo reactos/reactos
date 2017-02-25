@@ -71,7 +71,7 @@
 /*
  * Overrides for in-kernel ACPICA
  */
-ACPI_STATUS __init AcpiOsInitialize (
+ACPI_STATUS ACPI_INIT_FUNCTION AcpiOsInitialize (
     void);
 
 ACPI_STATUS AcpiOsTerminate (
