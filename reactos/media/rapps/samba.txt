@@ -1,0 +1,16 @@
+[Section]
+Name = Samba
+Version = 1.3
+License = GPLv3
+Description = Provides authentication providers for secur32.dll (e.g. NTLM ...) needed for running applications.
+Size = 10.8 MiB
+Category = 5
+URLSite = http://samba.org/
+URLDownload = http://svn.reactos.org/packages/samba-for-ReactOSv1.3.exe
+SHA1 = 85e670da4700dbfe93e8460a43f6aeafee6fd1fd
+CDPath = none
+
+[Section.0407]
+Description = Liefert Authentifizierungsanbieter für secur32.dll (wie NTLM ...) die für einige Anwendungen benötigt werden.
+Size = 10,8 MiB
+
