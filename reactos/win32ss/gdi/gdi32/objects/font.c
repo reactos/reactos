@@ -1882,6 +1882,7 @@ RemoveFontResourceExW(LPCWSTR lpFileName,
     /* FIXME the flags */
     /* FIXME the pdv */
     /* FIXME NtGdiRemoveFontResource handle flags and pdv */
+    DPRINT("RemoveFontResourceExW\n");
     return 0;
 }
 

@@ -3,7 +3,9 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            win32ss/gdi/ntgdi/font.c
  * PURPOSE:         Font
- * PROGRAMMER:
+ * PROGRAMMERS:     James Tabor <james.tabor@reactos.org>
+ *                  Timo Kreuzer <timo.kreuzer@reactos.org>
+ *                  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 /** Includes ******************************************************************/
@@ -441,6 +443,8 @@ NtGdiAddFontResourceW(
     DBG_UNREFERENCED_PARAMETER(dwPidTid);
     DBG_UNREFERENCED_PARAMETER(pdv);
 
+    DPRINT("NtGdiAddFontResourceW\n");
+
     /* cwc = Length + trailing zero. */
     if (cwc <= 1 || cwc > UNICODE_STRING_MAX_CHARS)
         return 0;
@@ -823,6 +827,7 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
      return 0;
   }
   FontGDI = ObjToGDI(TextObj->Font, FONT);
+  TextIntUpdateSize(dc, TextObj, FontGDI, TRUE);
   TEXTOBJ_UnlockText(TextObj);
   Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
   if (!otm) return Size;
@@ -865,31 +870,25 @@ W32KAPI
 BOOL
 APIENTRY
 NtGdiGetFontResourceInfoInternalW(
-    IN LPWSTR   pwszFiles,
-    IN ULONG    cwc,
-    IN ULONG    cFiles,
-    IN UINT     cjIn,
-    OUT LPDWORD pdwBytes,
-    OUT LPVOID  pvBuf,
-    IN DWORD    dwType)
+    IN LPWSTR       pwszFiles,
+    IN ULONG        cwc,
+    IN ULONG        cFiles,
+    IN UINT         cjIn,
+    IN OUT LPDWORD  pdwBytes,
+    OUT LPVOID      pvBuf,
+    IN DWORD        dwType)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    DWORD dwBytes;
+    DWORD dwBytes, dwBytesRequested;
     UNICODE_STRING SafeFileNames;
     BOOL bRet = FALSE;
     ULONG cbStringSize;
-
-    union
-    {
-        LOGFONTW logfontw;
-        WCHAR FullName[LF_FULLFACESIZE];
-    } Buffer;
+    LPVOID Buffer;
 
     /* FIXME: Handle cFiles > 0 */
 
-    /* Check for valid dwType values
-       dwType == 4 seems to be handled by gdi32 only */
-    if (dwType == 4 || dwType > 5)
+    /* Check for valid dwType values */
+    if (dwType > 5)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -906,15 +905,28 @@ NtGdiGetFontResourceInfoInternalW(
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
+    RtlZeroMemory(SafeFileNames.Buffer, SafeFileNames.MaximumLength);
 
     /* Check buffers and copy pwszFiles to safe unicode string */
     _SEH2_TRY
     {
         ProbeForRead(pwszFiles, cbStringSize, 1);
         ProbeForWrite(pdwBytes, sizeof(DWORD), 1);
-        ProbeForWrite(pvBuf, cjIn, 1);
+        if (pvBuf)
+            ProbeForWrite(pvBuf, cjIn, 1);
+
+        dwBytes = *pdwBytes;
+        dwBytesRequested = dwBytes;
 
         RtlCopyMemory(SafeFileNames.Buffer, pwszFiles, cbStringSize);
+        if (dwBytes > 0)
+        {
+            Buffer = ExAllocatePoolWithTag(PagedPool, dwBytes, TAG_FINF);
+        }
+        else
+        {
+            Buffer = ExAllocatePoolWithTag(PagedPool, sizeof(DWORD), TAG_FINF);
+        }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -931,16 +943,19 @@ NtGdiGetFontResourceInfoInternalW(
     }
 
     /* Do the actual call */
-    bRet = IntGdiGetFontResourceInfo(&SafeFileNames, &Buffer, &dwBytes, dwType);
+    bRet = IntGdiGetFontResourceInfo(&SafeFileNames,
+                                     (pvBuf ? Buffer : NULL),
+                                     &dwBytes, dwType);
 
-    /* Check if succeeded and the buffer is big enough */
-    if (bRet && cjIn >= dwBytes)
+    /* Check if succeeded */
+    if (bRet)
     {
         /* Copy the data back to caller */
         _SEH2_TRY
         {
             /* Buffers are already probed */
-            RtlCopyMemory(pvBuf, &Buffer, dwBytes);
+            if (pvBuf && dwBytesRequested > 0)
+                RtlCopyMemory(pvBuf, Buffer, min(dwBytesRequested, dwBytes));
             *pdwBytes = dwBytes;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -956,6 +971,7 @@ NtGdiGetFontResourceInfoInternalW(
         }
     }
 
+    ExFreePoolWithTag(Buffer, TAG_FINF);
     /* Free the string for the safe filenames */
     ExFreePoolWithTag(SafeFileNames.Buffer, TAG_USTR);
 

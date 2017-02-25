@@ -107,22 +107,31 @@ typedef struct _FLOATGDI {
   ULONG Dummy;
 } FLOATGDI;
 
+typedef struct _SHARED_FACE {
+  FT_Face     Face;
+  LONG        RefCount;
+} SHARED_FACE, *PSHARED_FACE;
+
 typedef struct _FONTGDI {
-  FONTOBJ     FontObj;
-  ULONG       iUnique;
-  FLONG       flType;
-  union{
-  DHPDEV      dhpdev;
-  FT_Face     face;
-  };
+  FONTOBJ       FontObj;
+  ULONG         iUnique;
+  FLONG         flType;
 
-  LONG        lMaxNegA;
-  LONG        lMaxNegC;
-  LONG        lMinWidthD;
+  DHPDEV        dhpdev;
+  PSHARED_FACE  SharedFace;
 
-  LPWSTR      Filename;
-  BYTE        Underline;
-  BYTE        StrikeOut;
+  LONG          lMaxNegA;
+  LONG          lMaxNegC;
+  LONG          lMinWidthD;
+
+  LPWSTR        Filename;
+  BYTE          RequestUnderline;
+  BYTE          RequestStrikeOut;
+  BYTE          RequestItalic;
+  LONG          RequestWeight;
+  BYTE          OriginalItalic;
+  LONG          OriginalWeight;
+  BYTE          CharSet;
 } FONTGDI, *PFONTGDI;
 
 typedef struct _PATHGDI {
