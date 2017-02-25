@@ -380,6 +380,7 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
     case WM_THEMECHANGED:
         CloseThemeData (GetWindowTheme(hWnd));
         OpenThemeData(hWnd, WC_BUTTONW);
+        InvalidateRect(hWnd, NULL, FALSE);
         break;
 
     case WM_MOUSEHOVER:
