@@ -79,6 +79,10 @@ void Test_Imagelist()
     ok (imlData.himl == (HIMAGELIST)0xdead, "Expected 0 himl\n");
     ok (imlData.uAlign == 0, "Expected 0 uAlign\n");
     ok_rect(imlData.margin, 0, 0, 0, 1);
+
+    imlData.himl = 0;
+    ret = SendMessageW(hwnd1, BCM_SETIMAGELIST, 0, (LPARAM)&imlData);
+    ok (ret == FALSE, "Expected BCM_SETIMAGELIST to fail\n"); /* This works in win10 */
 }
 
 START_TEST(button)
