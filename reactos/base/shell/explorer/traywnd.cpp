@@ -325,12 +325,16 @@ Cleanup:
 
             if (SendMessageW(BCM_SETIMAGELIST, 0, (LPARAM) &bil))
             {
-                /* We're using the image list, remove the BS_BITMAP style and
-                don't center it horizontally */
-                SetWindowStyle(m_hWnd, BS_BITMAP | BS_RIGHT, 0);
+                SIZE Size = { 0, 0 };
+                if (SendMessageW(BCM_GETIDEALSIZE, 0, (LPARAM) &Size))
+                {
+                    /* We're using the image list, remove the BS_BITMAP style and
+                    don't center it horizontally */
+                    SetWindowStyle(m_hWnd, BS_BITMAP | BS_RIGHT, 0);
 
-                UpdateSize();
-                return;
+                    UpdateSize();
+                    return;
+                }
             }
 
             /* Fall back to the deprecated method on older systems that don't
