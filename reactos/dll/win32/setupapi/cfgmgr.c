@@ -95,6 +95,59 @@ RpcStatusToCmStatus(RPC_STATUS Status)
 }
 
 
+static
+ULONG
+GetRegistryPropertyType(
+    ULONG ulProperty)
+{
+    switch (ulProperty)
+    {
+        case CM_DRP_DEVICEDESC:
+        case CM_DRP_SERVICE:
+        case CM_DRP_CLASS:
+        case CM_DRP_CLASSGUID:
+        case CM_DRP_DRIVER:
+        case CM_DRP_MFG:
+        case CM_DRP_FRIENDLYNAME:
+        case CM_DRP_LOCATION_INFORMATION:
+        case CM_DRP_PHYSICAL_DEVICE_OBJECT_NAME:
+        case CM_DRP_ENUMERATOR_NAME:
+        case CM_DRP_SECURITY_SDS:
+        case CM_DRP_UI_NUMBER_DESC_FORMAT:
+            return REG_SZ;
+
+        case CM_DRP_HARDWAREID:
+        case CM_DRP_COMPATIBLEIDS:
+        case CM_DRP_UPPERFILTERS:
+        case CM_DRP_LOWERFILTERS:
+            return REG_MULTI_SZ;
+
+        case CM_DRP_CONFIGFLAGS:
+        case CM_DRP_CAPABILITIES:
+        case CM_DRP_UI_NUMBER:
+        case CM_DRP_LEGACYBUSTYPE:
+        case CM_DRP_BUSNUMBER:
+        case CM_DRP_DEVTYPE:
+        case CM_DRP_EXCLUSIVE:
+        case CM_DRP_CHARACTERISTICS:
+        case CM_DRP_ADDRESS:
+        case CM_DRP_REMOVAL_POLICY:
+        case CM_DRP_REMOVAL_POLICY_HW_DEFAULT:
+        case CM_DRP_REMOVAL_POLICY_OVERRIDE:
+        case CM_DRP_INSTALL_STATE:
+            return REG_DWORD;
+
+        case CM_DRP_BUSTYPEGUID:
+        case CM_DRP_SECURITY:
+        case CM_DRP_DEVICE_POWER_DATA:
+        default:
+            return REG_BINARY;
+    }
+
+    return REG_NONE;
+}
+
+
 /***********************************************************************
  * CMP_Init_Detection [SETUPAPI.@]
  */
@@ -1689,10 +1742,68 @@ CONFIGRET WINAPI CM_Get_Class_Registry_PropertyA(
     LPGUID ClassGuid, ULONG ulProperty, PULONG pulRegDataType,
     PVOID Buffer, PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
 {
-    FIXME("%p %lu %p %p %p %lx %lx\n",
+    PWSTR BufferW = NULL;
+    ULONG ulLength = 0;
+    ULONG ulType;
+    CONFIGRET ret;
+
+    TRACE("%p %lu %p %p %p %lx %lx\n",
           ClassGuid, ulProperty, pulRegDataType, Buffer, pulLength,
           ulFlags, hMachine);
-    return CR_CALL_NOT_IMPLEMENTED;
+
+    if (pulLength == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulProperty < CM_CRP_MIN || ulProperty > CM_CRP_MAX)
+        return CR_INVALID_PROPERTY;
+
+    ulType = GetRegistryPropertyType(ulProperty);
+    if (ulType == REG_SZ || ulType == REG_MULTI_SZ)
+    {
+        /* Get the required buffer size */
+        ret = CM_Get_Class_Registry_PropertyW(ClassGuid, ulProperty, pulRegDataType,
+                                              NULL, &ulLength, ulFlags, hMachine);
+        if (ret != CR_BUFFER_SMALL)
+            return ret;
+
+        /* Allocate the unicode buffer */
+        BufferW = HeapAlloc(GetProcessHeap(), 0, ulLength);
+        if (BufferW == NULL)
+            return CR_OUT_OF_MEMORY;
+
+        /* Get the property */
+        ret = CM_Get_Class_Registry_PropertyW(ClassGuid, ulProperty, pulRegDataType,
+                                              BufferW, &ulLength, ulFlags, hMachine);
+        if (ret != CR_SUCCESS)
+        {
+            HeapFree(GetProcessHeap(), 0, BufferW);
+            return ret;
+        }
+
+        /* Do W->A conversion */
+        *pulLength = WideCharToMultiByte(CP_ACP,
+                                         0,
+                                         BufferW,
+                                         lstrlenW(BufferW) + 1,
+                                         Buffer,
+                                         *pulLength,
+                                         NULL,
+                                         NULL);
+
+        /* Release the unicode buffer */
+        HeapFree(GetProcessHeap(), 0, BufferW);
+
+        if (*pulLength == 0)
+            ret = CR_FAILURE;
+    }
+    else
+    {
+        /* Get the property */
+        ret = CM_Get_Class_Registry_PropertyW(ClassGuid, ulProperty, pulRegDataType,
+                                              Buffer, pulLength, ulFlags, hMachine);
+    }
+
+    return ret;
 }
 
 
@@ -5435,6 +5546,9 @@ CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExA(
     if (Buffer == NULL && ulLength != 0)
         return CR_INVALID_POINTER;
 
+    if (ulProperty < CM_DRP_MIN || ulProperty > CM_DRP_MAX)
+        return CR_INVALID_PROPERTY;
+
     if (Buffer == NULL)
     {
         ret = CM_Set_DevNode_Registry_Property_ExW(dnDevInst,
@@ -5447,87 +5561,7 @@ CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExA(
     else
     {
         /* Get property type */
-        switch (ulProperty)
-        {
-            case CM_DRP_DEVICEDESC:
-                ulType = REG_SZ;
-                break;
-
-            case CM_DRP_HARDWAREID:
-                ulType = REG_MULTI_SZ;
-                break;
-
-            case CM_DRP_COMPATIBLEIDS:
-                ulType = REG_MULTI_SZ;
-                break;
-
-            case CM_DRP_SERVICE:
-                ulType = REG_SZ;
-                break;
-
-            case CM_DRP_CLASS:
-                ulType = REG_SZ;
-                break;
-
-            case CM_DRP_CLASSGUID:
-                ulType = REG_SZ;
-                break;
-
-            case CM_DRP_DRIVER:
-                ulType = REG_SZ;
-                break;
-
-            case CM_DRP_CONFIGFLAGS:
-                ulType = REG_DWORD;
-                break;
-
-            case CM_DRP_MFG:
-                ulType = REG_SZ;
-                break;
-
-            case CM_DRP_FRIENDLYNAME:
-                ulType = REG_SZ;
-                break;
-
-            case CM_DRP_LOCATION_INFORMATION:
-                ulType = REG_SZ;
-                break;
-
-            case CM_DRP_UPPERFILTERS:
-                ulType = REG_MULTI_SZ;
-                break;
-
-            case CM_DRP_LOWERFILTERS:
-                ulType = REG_MULTI_SZ;
-                break;
-
-            case CM_DRP_SECURITY:
-                ulType = REG_BINARY;
-                break;
-
-            case CM_DRP_DEVTYPE:
-                ulType = REG_DWORD;
-                break;
-
-            case CM_DRP_EXCLUSIVE:
-                ulType = REG_DWORD;
-                break;
-
-            case CM_DRP_CHARACTERISTICS:
-                ulType = REG_DWORD;
-                break;
-
-            case CM_DRP_UI_NUMBER_DESC_FORMAT:
-                ulType = REG_SZ;
-                break;
-
-            case CM_DRP_REMOVAL_POLICY_OVERRIDE:
-                ulType = REG_DWORD;
-                break;
-
-            default:
-                return CR_INVALID_PROPERTY;
-        }
+        ulType = GetRegistryPropertyType(ulProperty);
 
         /* Allocate buffer if needed */
         if (ulType == REG_SZ ||
@@ -5623,87 +5657,8 @@ CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExW(
     if (lpDevInst == NULL)
         return CR_INVALID_DEVNODE;
 
-    switch (ulProperty)
-    {
-        case CM_DRP_DEVICEDESC:
-            ulType = REG_SZ;
-            break;
-
-        case CM_DRP_HARDWAREID:
-            ulType = REG_MULTI_SZ;
-            break;
-
-        case CM_DRP_COMPATIBLEIDS:
-            ulType = REG_MULTI_SZ;
-            break;
-
-        case CM_DRP_SERVICE:
-            ulType = REG_SZ;
-            break;
-
-        case CM_DRP_CLASS:
-            ulType = REG_SZ;
-            break;
-
-        case CM_DRP_CLASSGUID:
-            ulType = REG_SZ;
-            break;
-
-        case CM_DRP_DRIVER:
-            ulType = REG_SZ;
-            break;
-
-        case CM_DRP_CONFIGFLAGS:
-            ulType = REG_DWORD;
-            break;
-
-        case CM_DRP_MFG:
-            ulType = REG_SZ;
-            break;
-
-        case CM_DRP_FRIENDLYNAME:
-            ulType = REG_SZ;
-            break;
-
-        case CM_DRP_LOCATION_INFORMATION:
-            ulType = REG_SZ;
-            break;
-
-        case CM_DRP_UPPERFILTERS:
-            ulType = REG_MULTI_SZ;
-            break;
-
-        case CM_DRP_LOWERFILTERS:
-            ulType = REG_MULTI_SZ;
-            break;
-
-        case CM_DRP_SECURITY:
-            ulType = REG_BINARY;
-            break;
-
-        case CM_DRP_DEVTYPE:
-            ulType = REG_DWORD;
-            break;
-
-        case CM_DRP_EXCLUSIVE:
-            ulType = REG_DWORD;
-            break;
-
-        case CM_DRP_CHARACTERISTICS:
-            ulType = REG_DWORD;
-            break;
-
-        case CM_DRP_UI_NUMBER_DESC_FORMAT:
-            ulType = REG_SZ;
-            break;
-
-        case CM_DRP_REMOVAL_POLICY_OVERRIDE:
-            ulType = REG_DWORD;
-            break;
-
-        default:
-            return CR_INVALID_PROPERTY;
-    }
+    /* Get property type */
+    ulType = GetRegistryPropertyType(ulProperty);
 
     RpcTryExcept
     {
