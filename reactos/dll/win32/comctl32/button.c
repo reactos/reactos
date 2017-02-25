@@ -207,6 +207,16 @@ HRGN set_control_clipping( HDC hdc, const RECT *rect )
 
 BOOL BUTTON_PaintWithTheme(HTHEME theme, HWND hwnd, HDC hParamDC, LPARAM prfFlag);
 
+static inline LONG_PTR get_button_image(HWND hwnd)
+{
+    return GetWindowLongPtrW( hwnd, HIMAGE_GWL_OFFSET );
+}
+
+static inline LONG_PTR set_button_image(HWND hwnd, LONG_PTR image)
+{
+    return SetWindowLongPtrW( hwnd, HIMAGE_GWL_OFFSET, image );
+}
+
 #endif
 
 static inline HFONT get_button_font( HWND hwnd )
@@ -697,12 +707,20 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         default:
             return 0;
         }
+#ifdef _USER32_
         oldHbitmap = (HBITMAP)SetWindowLongPtrW( hWnd, HIMAGE_GWL_OFFSET, lParam );
+#else
+        oldHbitmap = (HBITMAP)set_button_image(hWnd, lParam );
+#endif
 	InvalidateRect( hWnd, NULL, FALSE );
 	return (LRESULT)oldHbitmap;
 
     case BM_GETIMAGE:
+#ifdef _USER32_
         return GetWindowLongPtrW( hWnd, HIMAGE_GWL_OFFSET );
+#else
+        return get_button_image(hWnd);
+#endif
 
     case BM_GETCHECK:
         return get_button_state( hWnd ) & 3;
@@ -886,7 +904,11 @@ static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
       }
 
       case BS_ICON:
+#ifdef _USER32_
          if (!GetIconInfo((HICON)GetWindowLongPtrW( hwnd, HIMAGE_GWL_OFFSET ), &iconInfo))
+#else
+         if (!GetIconInfo((HICON)get_button_image(hwnd), &iconInfo))
+#endif
             goto empty_rect;
 
          GetObjectW (iconInfo.hbmColor, sizeof(BITMAP), &bm);
@@ -899,7 +921,11 @@ static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
          break;
 
       case BS_BITMAP:
+#ifdef _USER32_
          if (!GetObjectW( (HANDLE)GetWindowLongPtrW( hwnd, HIMAGE_GWL_OFFSET ), sizeof(BITMAP), &bm))
+#else
+         if (!GetObjectW( (HANDLE)get_button_image(hwnd), sizeof(BITMAP), &bm))
+#endif
             goto empty_rect;
 
          r.right  = r.left + bm.bmWidth;
@@ -1006,12 +1032,20 @@ static void BUTTON_DrawLabel(HWND hwnd, HDC hdc, UINT dtFlags, const RECT *rc)
 
       case BS_ICON:
          flags |= DST_ICON;
+#ifdef _USER32_
          lp = GetWindowLongPtrW( hwnd, HIMAGE_GWL_OFFSET );
+#else
+         lp = get_button_image(hwnd);
+#endif
          break;
 
       case BS_BITMAP:
          flags |= DST_BITMAP;
+#ifdef _USER32_
          lp = GetWindowLongPtrW( hwnd, HIMAGE_GWL_OFFSET );
+#else
+         lp = get_button_image(hwnd);
+#endif
          break;
 
       default:
