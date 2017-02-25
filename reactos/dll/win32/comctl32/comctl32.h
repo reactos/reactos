@@ -81,6 +81,9 @@ typedef struct _BUTTON_DATA {
     HFONT font;
     LONG_PTR image;
     DWORD ui_state;
+
+    RECT rcTextMargin;
+    BUTTON_IMAGELIST imlData;
 } BUTTON_DATA, *PBUTTON_DATA;
 
 static inline PBUTTON_DATA _GetButtonData(HWND hwnd)

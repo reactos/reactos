@@ -395,6 +395,8 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
             }
 
             memset(data, 0, sizeof(BUTTON_DATA));
+            SetRect(&data->rcTextMargin, 1,1,1,1);
+
             _SetButtonData(hWnd, data);
             break;
         }
@@ -447,6 +449,42 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
                 TrackMouseEvent(&mouse_event);
             }
             break;
+        }
+        case BCM_GETTEXTMARGIN:
+        {
+            RECT* prc = (RECT*)lParam;
+            PBUTTON_DATA data = _GetButtonData(hWnd);
+            if (!prc || !data)
+                return FALSE;
+            *prc = data->rcTextMargin;
+            return TRUE;
+        }
+        case BCM_SETTEXTMARGIN:
+        {
+            RECT* prc = (RECT*)lParam;
+            PBUTTON_DATA data = _GetButtonData(hWnd);
+            if (!prc || !data)
+                return FALSE;
+            data->rcTextMargin = *prc;
+            return TRUE;
+        }
+        case BCM_SETIMAGELIST:
+        {
+            BUTTON_IMAGELIST * pimldata = (BUTTON_IMAGELIST *)lParam;
+            PBUTTON_DATA data = _GetButtonData(hWnd);
+            if (!data || !pimldata || !pimldata->himl)
+                return FALSE;
+            data->imlData = *pimldata;
+            return TRUE;
+        }
+        case BCM_GETIMAGELIST:
+        {
+            BUTTON_IMAGELIST * pimldata = (BUTTON_IMAGELIST *)lParam;
+            PBUTTON_DATA data = _GetButtonData(hWnd);
+            if (!data|| !pimldata)
+                return FALSE;
+            *pimldata = data->imlData;
+            return TRUE;
         }
     }
 
