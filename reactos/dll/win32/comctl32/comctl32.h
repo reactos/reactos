@@ -76,6 +76,18 @@ typedef struct
 
 extern COMCTL32_SysColor  comctl32_color DECLSPEC_HIDDEN;
 
+typedef struct _BUTTON_DATA {
+    LONG state;
+    HFONT font;
+    LONG_PTR image;
+    DWORD ui_state;
+} BUTTON_DATA, *PBUTTON_DATA;
+
+static inline PBUTTON_DATA _GetButtonData(HWND hwnd)
+{
+    return (PBUTTON_DATA)GetWindowLongPtrW( hwnd, 0 );
+}
+
 /* Internal function */
 HWND COMCTL32_CreateToolTip (HWND) DECLSPEC_HIDDEN;
 VOID COMCTL32_RefreshSysColors(void) DECLSPEC_HIDDEN;

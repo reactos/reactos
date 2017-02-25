@@ -155,7 +155,6 @@ const struct builtin_class_descr BUTTON_builtin_class =
     IDC_ARROW,           /* cursor */
     0                    /* brush */
 };
-#endif
 
 
 static inline LONG get_button_state( HWND hwnd )
@@ -182,8 +181,40 @@ static __inline LONG get_ui_state( HWND hwnd )
 
 #endif /* __REACTOS__ */
 
-#ifndef _USER32_
+static inline HFONT get_button_font( HWND hwnd )
+{
+    return (HFONT)GetWindowLongPtrW( hwnd, HFONT_GWL_OFFSET );
+}
+
+static inline void set_button_font( HWND hwnd, HFONT font )
+{
+    SetWindowLongPtrW( hwnd, HFONT_GWL_OFFSET, (LONG_PTR)font );
+}
+
+static inline UINT get_button_type( LONG window_style )
+{
+    return (window_style & BS_TYPEMASK);
+}
+
+/* paint a button of any type */
+static inline void paint_button( HWND hwnd, LONG style, UINT action )
+{
+    if (btnPaintFunc[style] && IsWindowVisible(hwnd))
+    {
+        HDC hdc = GetDC( hwnd );
+        btnPaintFunc[style]( hwnd, hdc, action );
+        ReleaseDC( hwnd, hdc );
+    }
+}
+
+#else
+
 #define NtUserAlterWindowStyle SetWindowLongPtrW
+
+static inline void _SetButtonData(HWND hwnd, PBUTTON_DATA data)
+{
+    SetWindowLongPtrW( hwnd, 0, (LONG)data );
+}
 
 HRGN set_control_clipping( HDC hdc, const RECT *rect )
 {
@@ -209,24 +240,45 @@ BOOL BUTTON_PaintWithTheme(HTHEME theme, HWND hwnd, HDC hParamDC, LPARAM prfFlag
 
 static inline LONG_PTR get_button_image(HWND hwnd)
 {
-    return GetWindowLongPtrW( hwnd, HIMAGE_GWL_OFFSET );
+    return _GetButtonData(hwnd)->image;
 }
 
 static inline LONG_PTR set_button_image(HWND hwnd, LONG_PTR image)
 {
-    return SetWindowLongPtrW( hwnd, HIMAGE_GWL_OFFSET, image );
+    PBUTTON_DATA data = _GetButtonData(hwnd);
+    LONG_PTR ret = data->image;
+    data->image = image;
+    return ret;
 }
 
-#endif
+static inline LONG get_button_state( HWND hwnd )
+{
+    return _GetButtonData(hwnd)->state;
+}
+
+static inline void set_button_state( HWND hwnd, LONG state )
+{
+    _GetButtonData(hwnd)->state = state;
+}
+
+static __inline void set_ui_state( HWND hwnd, LONG flags )
+{
+    _GetButtonData(hwnd)->ui_state = flags;
+}
+
+static __inline LONG get_ui_state( HWND hwnd )
+{
+    return _GetButtonData(hwnd)->ui_state;
+}
 
 static inline HFONT get_button_font( HWND hwnd )
 {
-    return (HFONT)GetWindowLongPtrW( hwnd, HFONT_GWL_OFFSET );
+    return (HFONT)_GetButtonData(hwnd)->font;
 }
 
 static inline void set_button_font( HWND hwnd, HFONT font )
 {
-    SetWindowLongPtrW( hwnd, HFONT_GWL_OFFSET, (LONG_PTR)font );
+    _GetButtonData(hwnd)->font = font;
 }
 
 static inline UINT get_button_type( LONG window_style )
@@ -237,7 +289,6 @@ static inline UINT get_button_type( LONG window_style )
 /* paint a button of any type */
 static inline void paint_button( HWND hwnd, LONG style, UINT action )
 {
-#ifndef _USER32_
     HTHEME theme = GetWindowTheme(hwnd);
     RECT rc;
     HDC hdc = GetDC( hwnd );
@@ -254,15 +305,10 @@ static inline void paint_button( HWND hwnd, LONG style, UINT action )
         btnPaintFunc[style]( hwnd, hdc, action );
     }
     ReleaseDC( hwnd, hdc );
-#else
-    if (btnPaintFunc[style] && IsWindowVisible(hwnd))
-    {
-        HDC hdc = GetDC( hwnd );
-        btnPaintFunc[style]( hwnd, hdc, action );
-        ReleaseDC( hwnd, hdc );
-    }
-#endif
 }
+
+#endif
+
 
 /* retrieve the button text; returned buffer must be freed by caller */
 static inline WCHAR *get_button_text( HWND hwnd )
@@ -336,6 +382,83 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
     pt.x = (short)LOWORD(lParam);
     pt.y = (short)HIWORD(lParam);
 
+#ifndef _USER32_
+    switch (uMsg)
+    {
+        case WM_NCCREATE:
+        {
+            PBUTTON_DATA data = HeapAlloc( GetProcessHeap(), 0, sizeof(BUTTON_DATA) );
+            if (!data)
+            {
+                ERR("Failed to alloc internal button data\n");
+                return -1;
+            }
+
+            memset(data, 0, sizeof(BUTTON_DATA));
+            _SetButtonData(hWnd, data);
+            break;
+        }
+        case WM_NCDESTROY:
+        {
+            PBUTTON_DATA data = _GetButtonData(hWnd);
+            if (!data)
+            {
+                ERR("No data");
+                return 0;
+            }
+            HeapFree( GetProcessHeap(), 0, data );
+            _SetButtonData(hWnd, NULL);
+        }
+        case WM_CREATE:
+            OpenThemeData(hWnd, WC_BUTTONW);
+            break;
+        case WM_DESTROY:
+            CloseThemeData (GetWindowTheme(hWnd));
+            break;
+        case WM_THEMECHANGED:
+            CloseThemeData (GetWindowTheme(hWnd));
+            OpenThemeData(hWnd, WC_BUTTONW);
+            InvalidateRect(hWnd, NULL, FALSE);
+            break;
+        case WM_MOUSEHOVER:
+        {
+            int state = (int)SendMessageW(hWnd, BM_GETSTATE, 0, 0);
+            set_button_state(hWnd, state|BST_HOT);
+            InvalidateRect(hWnd, NULL, FALSE);
+            break;
+        }
+        case WM_MOUSELEAVE:
+        {
+            int state = (int)SendMessageW(hWnd, BM_GETSTATE, 0, 0);
+            set_button_state(hWnd, state&(~BST_HOT));
+            InvalidateRect(hWnd, NULL, FALSE);
+            break;
+        }
+        case WM_MOUSEMOVE:
+        {
+            TRACKMOUSEEVENT mouse_event;
+            mouse_event.cbSize = sizeof(TRACKMOUSEEVENT);
+            mouse_event.dwFlags = TME_QUERY;
+            if(!TrackMouseEvent(&mouse_event) || !(mouse_event.dwFlags&(TME_HOVER|TME_LEAVE)))
+            {
+                mouse_event.dwFlags = TME_HOVER|TME_LEAVE;
+                mouse_event.hwndTrack = hWnd;
+                mouse_event.dwHoverTime = 1;
+                TrackMouseEvent(&mouse_event);
+            }
+            break;
+        }
+    }
+
+    if (!_GetButtonData(hWnd))
+    {
+        ERR("no data!\n");
+        return unicode ? DefWindowProcW(hWnd, uMsg, wParam, lParam) :
+                         DefWindowProcA(hWnd, uMsg, wParam, lParam);
+    }
+
+#endif
+
     switch (uMsg)
     {
     case WM_GETDLGCODE:
@@ -372,9 +495,6 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
 #ifdef __REACTOS__
         button_update_uistate( hWnd, unicode );
 #endif
-#ifndef _USER32_
-        OpenThemeData(hWnd, WC_BUTTONW);
-#endif
         return 0;
 
 #if defined(__REACTOS__) && defined(_USER32_)
@@ -382,32 +502,6 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         NtUserSetWindowFNID(hWnd, FNID_DESTROY);
     case WM_DESTROY:
         break;
-#endif
-#ifndef _USER32_
-    case WM_DESTROY:
-        CloseThemeData (GetWindowTheme(hWnd));
-        break;
-    case WM_THEMECHANGED:
-        CloseThemeData (GetWindowTheme(hWnd));
-        OpenThemeData(hWnd, WC_BUTTONW);
-        InvalidateRect(hWnd, NULL, FALSE);
-        break;
-
-    case WM_MOUSEHOVER:
-    {
-        int state = (int)SendMessageW(hWnd, BM_GETSTATE, 0, 0);
-        SetWindowLongW(hWnd, 0, state|BST_HOT);
-        InvalidateRect(hWnd, NULL, FALSE);
-        break;
-    }
-
-    case WM_MOUSELEAVE:
-    {
-        int state = (int)SendMessageW(hWnd, BM_GETSTATE, 0, 0);
-        SetWindowLongW(hWnd, 0, state&(~BST_HOT));
-        InvalidateRect(hWnd, NULL, FALSE);
-        break;
-    }
 #endif
     case WM_ERASEBKGND:
         if (btn_type == BS_OWNERDRAW)
@@ -545,21 +639,6 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         break;
 
     case WM_MOUSEMOVE:
-#ifndef _USER32_
-    {
-        TRACKMOUSEEVENT mouse_event;
-        mouse_event.cbSize = sizeof(TRACKMOUSEEVENT);
-        mouse_event.dwFlags = TME_QUERY;
-        if(!TrackMouseEvent(&mouse_event) || !(mouse_event.dwFlags&(TME_HOVER|TME_LEAVE)))
-        {
-            mouse_event.dwFlags = TME_HOVER|TME_LEAVE;
-            mouse_event.hwndTrack = hWnd;
-            mouse_event.dwHoverTime = 1;
-            TrackMouseEvent(&mouse_event);
-        }
-    }
-#endif
-
         if ((wParam & MK_LBUTTON) && GetCapture() == hWnd)
         {
             GetClientRect( hWnd, &rect );
@@ -637,10 +716,12 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
     case WM_SETFOCUS:
         TRACE("WM_SETFOCUS %p\n",hWnd);
         set_button_state( hWnd, get_button_state(hWnd) | BST_FOCUS );
-        if (btn_type == BS_OWNERDRAW)
-            paint_button( hWnd, btn_type, ODA_FOCUS );
-        else
+#ifndef _USER32_
+        if (btn_type != BS_OWNERDRAW)
             InvalidateRect(hWnd, NULL, FALSE);
+        else
+#endif
+        paint_button( hWnd, btn_type, ODA_FOCUS );
         if (style & BS_NOTIFY)
             BUTTON_NOTIFY_PARENT(hWnd, BN_SETFOCUS);
         break;
@@ -649,6 +730,9 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         TRACE("WM_KILLFOCUS %p\n",hWnd);
         state = get_button_state( hWnd );
         set_button_state( hWnd, state & ~BST_FOCUS );
+#ifdef _USER32_
+	paint_button( hWnd, btn_type, ODA_FOCUS );
+#endif
 
         if ((state & BUTTON_BTNPRESSED) && GetCapture() == hWnd)
             ReleaseCapture();
@@ -742,7 +826,11 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         if ((state & 3) != wParam)
         {
             set_button_state( hWnd, (state & ~3) | wParam );
+#ifdef _USER32
+            paint_button( hWnd, btn_type, ODA_SELECT );
+#else
             InvalidateRect(hWnd, NULL, FALSE);
+#endif
         }
         if ((btn_type == BS_AUTORADIOBUTTON) && (wParam == BST_CHECKED) && (style & WS_CHILD))
             BUTTON_CheckAutoRadioButton( hWnd );
@@ -758,7 +846,11 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         else
             set_button_state( hWnd, state & ~BST_PUSHED );
 
+#ifdef _USER32_
+        paint_button( hWnd, btn_type, ODA_SELECT );
+#else
         InvalidateRect(hWnd, NULL, FALSE);
+#endif
         break;
 
 #ifdef __REACTOS__
@@ -1495,7 +1587,7 @@ void BUTTON_Register()
     wndClass.style         = CS_GLOBALCLASS | CS_DBLCLKS | CS_VREDRAW | CS_HREDRAW | CS_PARENTDC;
     wndClass.lpfnWndProc   = ButtonWndProcW;
     wndClass.cbClsExtra    = 0;
-    wndClass.cbWndExtra    = NB_EXTRA_BYTES;
+    wndClass.cbWndExtra    = sizeof(PBUTTON_DATA);
     wndClass.hCursor       = LoadCursorW(0, (LPCWSTR)IDC_ARROW);
     wndClass.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     wndClass.lpszClassName = WC_BUTTONW;

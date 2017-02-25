@@ -36,18 +36,19 @@ typedef enum
 
 typedef void (*pfThemedPaint)(HTHEME theme, HWND hwnd, HDC hdc, ButtonState drawState, UINT dtFlags, BOOL focused, LPARAM prfFlag);
 
-#define STATE_GWL_OFFSET  0
-#define HFONT_GWL_OFFSET  (sizeof(LONG))
-#define HIMAGE_GWL_OFFSET (HFONT_GWL_OFFSET+sizeof(HFONT))
-
 static inline LONG get_button_state( HWND hwnd )
 {
-    return GetWindowLongPtrW( hwnd, STATE_GWL_OFFSET );
+    return _GetButtonData(hwnd)->state;
 }
 
 static inline HFONT get_button_font( HWND hwnd )
 {
-    return (HFONT)GetWindowLongPtrW( hwnd, HFONT_GWL_OFFSET );
+    return (HFONT)_GetButtonData(hwnd)->font;
+}
+
+static inline LONG_PTR get_button_image(HWND hwnd)
+{
+    return _GetButtonData(hwnd)->image;
 }
 
 static UINT get_drawtext_flags(DWORD style, DWORD ex_style)
@@ -333,7 +334,7 @@ BOOL BUTTON_PaintWithTheme(HTHEME theme, HWND hwnd, HDC hParamDC, LPARAM prfFlag
     if (!paint)
         return FALSE;
 
-    if (GetWindowLongPtrW( hwnd, HIMAGE_GWL_OFFSET) != 0)
+    if (get_button_image(hwnd) != 0)
         return FALSE;
 
     dwStyleEx = GetWindowLongW(hwnd, GWL_EXSTYLE);
