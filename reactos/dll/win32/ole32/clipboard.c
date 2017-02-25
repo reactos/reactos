@@ -807,6 +807,9 @@ static HRESULT get_data_from_global(IDataObject *data, FORMATETC *fmt, HGLOBAL *
 
     mem_fmt = *fmt;
     mem_fmt.tymed = TYMED_HGLOBAL;
+#ifdef __REACTOS__
+    med.pUnkForRelease = NULL;
+#endif
 
     hr = IDataObject_GetData(data, &mem_fmt, &med);
     if(FAILED(hr)) return hr;
