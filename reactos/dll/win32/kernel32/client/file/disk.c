@@ -411,6 +411,7 @@ GetDriveTypeW(IN LPCWSTR lpRootPathName)
 
         TRACE("lpRootPathName: %S\n", lpRootPathName);
 
+        lpRootPath = lpRootPathName;
         if (Length == 2)
         {
             WCHAR DriveLetter = RtlUpcaseUnicodeChar(lpRootPathName[0]);
@@ -427,10 +428,6 @@ GetDriveTypeW(IN LPCWSTR lpRootPathName)
 
                 lpRootPath = CurrentDir;
             }
-        }
-        else
-        {
-            lpRootPath = lpRootPathName;
         }
     }
 
