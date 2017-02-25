@@ -156,7 +156,7 @@
 @ stdcall LdrGetProcedureAddress(ptr ptr long ptr)
 @ stdcall -stub -version=0x600+ LdrGetProcedureAddressEx(ptr ptr long ptr long)
 @ stdcall -stub LdrHotPatchRoutine(ptr)
-@ stdcall -stub LdrInitShimEngineDynamic(ptr)
+@ stdcall LdrInitShimEngineDynamic(ptr)
 @ stdcall LdrInitializeThunk(long long long long)
 @ stdcall LdrLoadAlternateResourceModule(ptr ptr)
 @ stub -version=0x600+ LdrLoadAlternateResourceModuleEx

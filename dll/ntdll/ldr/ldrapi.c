@@ -1672,4 +1672,23 @@ LdrSetAppCompatDllRedirectionCallback(
     return STATUS_NOT_IMPLEMENTED;
 }
 
+BOOLEAN
+NTAPI
+LdrInitShimEngineDynamic(IN PVOID BaseAddress)
+{
+    ULONG_PTR Cookie;
+    NTSTATUS Status = LdrLockLoaderLock(0, NULL, &Cookie);
+    if (NT_SUCCESS(Status))
+    {
+        if (!g_pShimEngineModule)
+        {
+            g_pShimEngineModule = BaseAddress;
+            LdrpGetShimEngineInterface();
+        }
+        LdrUnlockLoaderLock(0, Cookie);
+        return TRUE;
+    }
+    return FALSE;
+}
+
 /* EOF */
