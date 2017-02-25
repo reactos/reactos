@@ -1,13 +1,13 @@
 [Section]
 Name = mIRC 7
-Version = 7.46
+Version = 7.47
 License = Shareware
 Description = The most popular client for the Internet Relay Chat (IRC).
 Size = 2.6 MiB
 Category = 5
 URLSite = http://www.mirc.com/
-URLDownload = http://download.mirc.com/16/mirc746.exe
-SHA1 = d99b89649888944364ad8bd69261d8e13434a479
+URLDownload = http://download.mirc.com/17/mirc747.exe
+SHA1 = b0ec0b88d9e3f26df3731d782bdd8da06c2f9882
 CDPath = none
 
 [Section.0407]

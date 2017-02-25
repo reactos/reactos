@@ -7,7 +7,7 @@ Size = 41.0 KiB
 Category = 5
 URLSite = http://www.uvnc.com/
 URLDownload = http://www.uvnc.eu/download/1211/UltraVNC_1_2_11_X86_Setup.exe
-SHA1 = 8416a4a9b57ecfc09b4cba81b8a275010c8b4d8b
+SHA1 = c91787ed1e87b8d80348c4857b1a98bd0f2d307b
 CDPath = none
 
 [Section.0407]

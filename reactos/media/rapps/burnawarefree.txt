@@ -7,7 +7,7 @@ Size = 3.1 KiB
 Category = 12
 URLSite = http://www.burnaware.com/
 URLDownload = http://www.burnaware.com/downloads/burnaware_free_9.3.exe
-SHA1 = 45e06d622ef9dd345b3b93c19d37d93bd7af4817
+SHA1 = b79dcfb18441abd79dd858535fb33a0a119e4855
 CDPath = none
 
 [Section.0407]
