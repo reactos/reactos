@@ -36,7 +36,7 @@ STRINGTABLE
     11 "Límite de administración excedido"
     12 "Extensión crítica no disponible"
     13 "Confidencialidad requerida"
-    14 ""
+    14 "SASL Bind in Progress"
     15 ""
     16 "No existe dicho atributo"
     17 "Tipo no definido"

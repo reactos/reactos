@@ -211,10 +211,7 @@ static void escape_filter_element( PCHAR src, ULONG srclen, PCHAR dst )
             (src[i] >= 'a' && src[i] <= 'z'))
             *d++ = src[i];
         else
-        {
-            sprintf( d, fmt, (unsigned char)src[i] );
-            d += 3;
-        }
+            d += sprintf( d, fmt, (unsigned char)src[i] );
     }
     *++d = 0;
 }

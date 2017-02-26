@@ -37,7 +37,7 @@ STRINGTABLE
     11 "Przekroczony limit administracyjny na serwerze"
     12 "Bezwzględnie wymagane rozszerzenie nie jest dostępne"
     13 "Wymagana poufność"
-    14 ""
+    14 "SASL Bind in Progress"
     15 ""
     16 "Nie ma takiego atrybutu"
     17 "Niezdefiniowany typ"
