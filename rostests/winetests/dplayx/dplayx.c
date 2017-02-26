@@ -23,7 +23,11 @@
 #define INITGUID
 #include <dplay.h>
 #include <dplobby.h>
+#include <netfw.h>
 
+static HRESULT (WINAPI *pDirectPlayEnumerateA)( LPDPENUMDPCALLBACKA, void* );
+static HRESULT (WINAPI *pDirectPlayEnumerateW)( LPDPENUMDPCALLBACKW, void* );
+static HRESULT (WINAPI *pDirectPlayCreate)( GUID *GUID, LPDIRECTPLAY *lplpDP, IUnknown *pUnk );
 
 #define check(expected, result)                 \
     ok( (expected) == (result),                 \
@@ -735,21 +739,21 @@ static void test_DirectPlayCreate(void)
     /* TODO: Check how it behaves with pUnk!=NULL */
 
     /* pDP==NULL */
-    hr = DirectPlayCreate( NULL, NULL, NULL );
+    hr = pDirectPlayCreate( NULL, NULL, NULL );
     checkHR( DPERR_INVALIDPARAMS, hr );
-    hr = DirectPlayCreate( (LPGUID) &GUID_NULL, NULL, NULL );
+    hr = pDirectPlayCreate( (LPGUID) &GUID_NULL, NULL, NULL );
     checkHR( DPERR_INVALIDPARAMS, hr );
-    hr = DirectPlayCreate( (LPGUID) &DPSPGUID_TCPIP, NULL, NULL );
+    hr = pDirectPlayCreate( (LPGUID) &DPSPGUID_TCPIP, NULL, NULL );
     checkHR( DPERR_INVALIDPARAMS, hr );
 
     /* pUnk==NULL, pDP!=NULL */
-    hr = DirectPlayCreate( NULL, &pDP, NULL );
+    hr = pDirectPlayCreate( NULL, &pDP, NULL );
     checkHR( DPERR_INVALIDPARAMS, hr );
-    hr = DirectPlayCreate( (LPGUID) &GUID_NULL, &pDP, NULL );
+    hr = pDirectPlayCreate( (LPGUID) &GUID_NULL, &pDP, NULL );
     checkHR( DP_OK, hr );
     if ( hr == DP_OK )
         IDirectPlayX_Release( pDP );
-    hr = DirectPlayCreate( (LPGUID) &DPSPGUID_TCPIP, &pDP, NULL );
+    hr = pDirectPlayCreate( (LPGUID) &DPSPGUID_TCPIP, &pDP, NULL );
     checkHR( DP_OK, hr );
     if ( hr == DP_OK )
         IDirectPlayX_Release( pDP );
@@ -801,20 +805,20 @@ static void test_EnumerateProviders(void)
     memset(&arg, 0, sizeof(arg));
     arg.ret_value = TRUE;
 
-    hr = DirectPlayEnumerateA(callback_providersA, NULL);
+    hr = pDirectPlayEnumerateA(callback_providersA, NULL);
     ok(SUCCEEDED(hr), "DirectPlayEnumerateA failed\n");
 
     SetLastError(0xdeadbeef);
-    hr = DirectPlayEnumerateA(NULL, &arg);
+    hr = pDirectPlayEnumerateA(NULL, &arg);
     ok(FAILED(hr), "DirectPlayEnumerateA expected to fail\n");
     ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got 0x%x\n", GetLastError());
 
     SetLastError(0xdeadbeef);
-    hr = DirectPlayEnumerateA(NULL, NULL);
+    hr = pDirectPlayEnumerateA(NULL, NULL);
     ok(FAILED(hr), "DirectPlayEnumerateA expected to fail\n");
     ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got 0x%x\n", GetLastError());
 
-    hr = DirectPlayEnumerateA(callback_providersA, &arg);
+    hr = pDirectPlayEnumerateA(callback_providersA, &arg);
     ok(SUCCEEDED(hr), "DirectPlayEnumerateA failed\n");
     ok(arg.call_count > 0, "Expected at least one valid provider\n");
     trace("Found %d providers\n", arg.call_count);
@@ -827,26 +831,26 @@ static void test_EnumerateProviders(void)
 
     memset(&arg, 0, sizeof(arg));
     arg.ret_value = FALSE;
-    hr = DirectPlayEnumerateA(callback_providersA, &arg);
+    hr = pDirectPlayEnumerateA(callback_providersA, &arg);
     ok(SUCCEEDED(hr), "DirectPlayEnumerateA failed\n");
     ok(arg.call_count == 1, "Expected 1, got %d\n", arg.call_count);
 
-    hr = DirectPlayEnumerateW(callback_providersW, NULL);
+    hr = pDirectPlayEnumerateW(callback_providersW, NULL);
     ok(SUCCEEDED(hr), "DirectPlayEnumerateW failed\n");
 
     SetLastError(0xdeadbeef);
-    hr = DirectPlayEnumerateW(NULL, &arg);
+    hr = pDirectPlayEnumerateW(NULL, &arg);
     ok(FAILED(hr), "DirectPlayEnumerateW expected to fail\n");
     ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got 0x%x\n", GetLastError());
 
     SetLastError(0xdeadbeef);
-    hr = DirectPlayEnumerateW(NULL, NULL);
+    hr = pDirectPlayEnumerateW(NULL, NULL);
     ok(FAILED(hr), "DirectPlayEnumerateW expected to fail\n");
     ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got 0x%x\n", GetLastError());
 
     memset(&arg, 0, sizeof(arg));
     arg.ret_value = TRUE;
-    hr = DirectPlayEnumerateW(callback_providersW, &arg);
+    hr = pDirectPlayEnumerateW(callback_providersW, &arg);
     ok(SUCCEEDED(hr), "DirectPlayEnumerateW failed\n");
     ok(arg.call_count > 0, "Expected at least one valid provider\n");
 
@@ -858,7 +862,7 @@ static void test_EnumerateProviders(void)
 
     memset(&arg, 0, sizeof(arg));
     arg.ret_value = FALSE;
-    hr = DirectPlayEnumerateW(callback_providersW, &arg);
+    hr = pDirectPlayEnumerateW(callback_providersW, &arg);
     ok(SUCCEEDED(hr), "DirectPlayEnumerateW failed\n");
     ok(arg.call_count == 1, "Expected 1, got %d\n", arg.call_count);
 }
@@ -889,7 +893,11 @@ static BOOL CALLBACK EnumAddress_cb2( REFGUID guidDataType,
     }
     else if ( IsEqualGUID( types[1], guidDataType ) )
     {
-        todo_wine checkGuid( sps[ callbackData->dwCounter1 ], lpData );
+        BOOL found = FALSE;
+        int i;
+        for( i=0; i < sizeof(sps) / sizeof(sps[0]) && !found; i++ )
+            found = IsEqualGUID( sps[i], lpData );
+        ok( found, "Unknown Address type found %s\n", wine_dbgstr_guid(lpData) );
     }
 
     callbackData->dwCounter2++;
@@ -953,14 +961,14 @@ static void test_EnumConnections(void)
     hr = IDirectPlayX_EnumConnections( pDP, &appGuid, EnumConnections_cb,
                                        &callbackData, callbackData.dwFlags );
     checkHR( DP_OK, hr );
-    check( 4, callbackData.dwCounter1 );
+    ok( callbackData.dwCounter1 == 4 || callbackData.dwCounter1 == 3, "got=%d\n", callbackData.dwCounter1 );
 
     callbackData.dwCounter1 = 0;
     callbackData.dwFlags = 0;
     hr = IDirectPlayX_EnumConnections( pDP, NULL, EnumConnections_cb,
                                        &callbackData, callbackData.dwFlags );
     checkHR( DP_OK, hr );
-    check( 4, callbackData.dwCounter1 );
+    ok( callbackData.dwCounter1 == 4 || callbackData.dwCounter1 == 3, "got=%d\n", callbackData.dwCounter1 );
 
     callbackData.dwCounter1 = 0;
     callbackData.dwFlags = 0;
@@ -976,7 +984,7 @@ static void test_EnumConnections(void)
     hr = IDirectPlayX_EnumConnections( pDP, &appGuid, EnumConnections_cb,
                                        &callbackData, callbackData.dwFlags );
     checkHR( DP_OK, hr );
-    check( 4, callbackData.dwCounter1 );
+    ok( callbackData.dwCounter1 == 4 || callbackData.dwCounter1 == 3, "got=%d\n", callbackData.dwCounter1 );
 
     callbackData.dwCounter1 = 0;
     callbackData.dwFlags = DPCONNECTION_DIRECTPLAYLOBBY;
@@ -991,7 +999,7 @@ static void test_EnumConnections(void)
     hr = IDirectPlayX_EnumConnections( pDP, &appGuid, EnumConnections_cb,
                                        &callbackData, callbackData.dwFlags );
     checkHR( DP_OK, hr );
-    check( 4, callbackData.dwCounter1 );
+    ok( callbackData.dwCounter1 == 4 || callbackData.dwCounter1 == 3, "got=%d\n", callbackData.dwCounter1 );
 
     callbackData.dwCounter1 = 0;
     callbackData.dwFlags = ~( DPCONNECTION_DIRECTPLAY |
@@ -1090,7 +1098,7 @@ static void test_GetCaps(void)
     {
 
         hr = IDirectPlayX_GetCaps( pDP, &dpcaps, dwFlags );
-        checkHR( DP_OK, hr );
+        todo_wine checkHR( DP_OK, hr );
 
 
         if ( hr == DP_OK )
@@ -6651,28 +6659,254 @@ static void test_COM_dplobby(void)
     ok(refcount == 0, "refcount == %u, expected 0\n", refcount);
 }
 
+enum firewall_op
+{
+    APP_ADD,
+    APP_REMOVE
+};
+
+static BOOL is_process_elevated(void)
+{
+    HANDLE token;
+    if (OpenProcessToken( GetCurrentProcess(), TOKEN_QUERY, &token ))
+    {
+        TOKEN_ELEVATION_TYPE type;
+        DWORD size;
+        BOOL ret;
+
+        ret = GetTokenInformation( token, TokenElevationType, &type, sizeof(type), &size );
+        CloseHandle( token );
+        return (ret && type == TokenElevationTypeFull);
+    }
+    return FALSE;
+}
+
+static BOOL is_firewall_enabled(void)
+{
+    HRESULT hr, init;
+    INetFwMgr *mgr = NULL;
+    INetFwPolicy *policy = NULL;
+    INetFwProfile *profile = NULL;
+    VARIANT_BOOL enabled = VARIANT_FALSE;
+
+    init = CoInitializeEx( 0, COINIT_APARTMENTTHREADED );
+
+    hr = CoCreateInstance( &CLSID_NetFwMgr, NULL, CLSCTX_INPROC_SERVER, &IID_INetFwMgr,
+                           (void **)&mgr );
+    ok( hr == S_OK, "got %08x\n", hr );
+    if (hr != S_OK) goto done;
+
+    hr = INetFwMgr_get_LocalPolicy( mgr, &policy );
+    ok( hr == S_OK, "got %08x\n", hr );
+    if (hr != S_OK) goto done;
+
+    hr = INetFwPolicy_get_CurrentProfile( policy, &profile );
+    if (hr != S_OK) goto done;
+
+    hr = INetFwProfile_get_FirewallEnabled( profile, &enabled );
+    ok( hr == S_OK, "got %08x\n", hr );
+
+done:
+    if (policy) INetFwPolicy_Release( policy );
+    if (profile) INetFwProfile_Release( profile );
+    if (mgr) INetFwMgr_Release( mgr );
+    if (SUCCEEDED( init )) CoUninitialize();
+    return (enabled == VARIANT_TRUE);
+}
+
+static HRESULT set_firewall( enum firewall_op op )
+{
+    static const WCHAR dplaysvrW[] =
+        {'d','p','l','a','y','s','v','r','.','e','x','e',0};
+    static const WCHAR separator[] = {'\\',0};
+    static const WCHAR clientW[] =
+        {'d','p','l','a','y','_','c','l','i','e','n','t',0};
+    static const WCHAR serverW[] =
+        {'d','p','l','a','y','_','s','e','r','v','e','r',0};
+    HRESULT hr, init;
+    INetFwMgr *mgr = NULL;
+    INetFwPolicy *policy = NULL;
+    INetFwProfile *profile = NULL;
+    INetFwAuthorizedApplication *app = NULL;
+    INetFwAuthorizedApplications *apps = NULL;
+    BSTR name, image = SysAllocStringLen( NULL, MAX_PATH );
+    WCHAR path[MAX_PATH];
+
+    if (!GetModuleFileNameW( NULL, image, MAX_PATH ))
+    {
+        SysFreeString( image );
+        return E_FAIL;
+    }
+
+    if(!GetSystemDirectoryW(path, MAX_PATH))
+    {
+        SysFreeString( image );
+        return E_FAIL;
+    }
+    lstrcatW(path, separator);
+    lstrcatW(path, dplaysvrW);
+
+    init = CoInitializeEx( 0, COINIT_APARTMENTTHREADED );
+
+    hr = CoCreateInstance( &CLSID_NetFwMgr, NULL, CLSCTX_INPROC_SERVER, &IID_INetFwMgr,
+                           (void **)&mgr );
+    ok( hr == S_OK, "got %08x\n", hr );
+    if (hr != S_OK) goto done;
+
+    hr = INetFwMgr_get_LocalPolicy( mgr, &policy );
+    ok( hr == S_OK, "got %08x\n", hr );
+    if (hr != S_OK) goto done;
+
+    hr = INetFwPolicy_get_CurrentProfile( policy, &profile );
+    if (hr != S_OK) goto done;
+
+    INetFwProfile_get_AuthorizedApplications( profile, &apps );
+    ok( hr == S_OK, "got %08x\n", hr );
+    if (hr != S_OK) goto done;
+
+    hr = CoCreateInstance( &CLSID_NetFwAuthorizedApplication, NULL, CLSCTX_INPROC_SERVER,
+                           &IID_INetFwAuthorizedApplication, (void **)&app );
+    ok( hr == S_OK, "got %08x\n", hr );
+    if (hr != S_OK) goto done;
+
+    hr = INetFwAuthorizedApplication_put_ProcessImageFileName( app, image );
+    if (hr != S_OK) goto done;
+
+    name = SysAllocString( clientW );
+    hr = INetFwAuthorizedApplication_put_Name( app, name );
+    SysFreeString( name );
+    ok( hr == S_OK, "got %08x\n", hr );
+    if (hr != S_OK) goto done;
+
+    if (op == APP_ADD)
+        hr = INetFwAuthorizedApplications_Add( apps, app );
+    else if (op == APP_REMOVE)
+        hr = INetFwAuthorizedApplications_Remove( apps, image );
+    else
+        hr = E_INVALIDARG;
+    if (hr != S_OK) goto done;
+
+    INetFwAuthorizedApplication_Release( app );
+    hr = CoCreateInstance( &CLSID_NetFwAuthorizedApplication, NULL, CLSCTX_INPROC_SERVER,
+                           &IID_INetFwAuthorizedApplication, (void **)&app );
+    ok( hr == S_OK, "got %08x\n", hr );
+    if (hr != S_OK) goto done;
+
+    SysFreeString( image );
+    image = SysAllocString( path );
+    hr = INetFwAuthorizedApplication_put_ProcessImageFileName( app, image );
+    if (hr != S_OK) goto done;
+
+    name = SysAllocString( serverW );
+    hr = INetFwAuthorizedApplication_put_Name( app, name );
+    SysFreeString( name );
+    ok( hr == S_OK, "got %08x\n", hr );
+    if (hr != S_OK) goto done;
+
+    if (op == APP_ADD)
+        hr = INetFwAuthorizedApplications_Add( apps, app );
+    else if (op == APP_REMOVE)
+        hr = INetFwAuthorizedApplications_Remove( apps, image );
+    else
+        hr = E_INVALIDARG;
+
+done:
+    if (app) INetFwAuthorizedApplication_Release( app );
+    if (apps) INetFwAuthorizedApplications_Release( apps );
+    if (policy) INetFwPolicy_Release( policy );
+    if (profile) INetFwProfile_Release( profile );
+    if (mgr) INetFwMgr_Release( mgr );
+    if (SUCCEEDED( init )) CoUninitialize();
+    SysFreeString( image );
+    return hr;
+}
+
+/* taken from programs/winetest/main.c */
+static BOOL is_stub_dll(const char *filename)
+{
+    DWORD size, ver;
+    BOOL isstub = FALSE;
+    char *p, *data;
+
+    size = GetFileVersionInfoSizeA(filename, &ver);
+    if (!size) return FALSE;
+
+    data = HeapAlloc(GetProcessHeap(), 0, size);
+    if (!data) return FALSE;
+
+    if (GetFileVersionInfoA(filename, ver, size, data))
+    {
+        char buf[256];
+
+        sprintf(buf, "\\StringFileInfo\\%04x%04x\\OriginalFilename", MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), 1200);
+        if (VerQueryValueA(data, buf, (void**)&p, &size))
+            isstub = !lstrcmpiA("wcodstub.dll", p);
+    }
+    HeapFree(GetProcessHeap(), 0, data);
+
+    return isstub;
+}
 
 START_TEST(dplayx)
 {
+    BOOL firewall_enabled;
+    HRESULT hr;
+    char path[MAX_PATH];
+    HMODULE module;
+
+    if(!GetSystemDirectoryA(path, MAX_PATH))
+    {
+        skip("Failed to get systems directory\n");
+        return;
+    }
+    strcat(path, "\\dplayx.dll");
+
+    if (!winetest_interactive && is_stub_dll(path))
+    {
+        win_skip("dpnet is a stub dll, skipping tests\n");
+        return;
+    }
+
+    if ((firewall_enabled = is_firewall_enabled()) && !is_process_elevated())
+    {
+        skip("no privileges, skipping tests to avoid firewall dialog\n");
+        return;
+    }
+
+    if (firewall_enabled)
+    {
+        hr = set_firewall(APP_ADD);
+        if (hr != S_OK)
+        {
+            skip("can't authorize app in firewall %08x\n", hr);
+            return;
+        }
+    }
+
     CoInitialize( NULL );
+
+    module = LoadLibraryA("dplayx.dll");
+
+    pDirectPlayEnumerateA = (void *)GetProcAddress(module, "DirectPlayEnumerateA");
+    pDirectPlayEnumerateW = (void *)GetProcAddress(module, "DirectPlayEnumerateW");
+    pDirectPlayCreate = (void *)GetProcAddress(module, "DirectPlayCreate");
 
     test_COM();
     test_COM_dplobby();
     test_EnumerateProviders();
+    test_DirectPlayCreate();
+    test_EnumConnections();
+    test_InitializeConnection();
+    test_GetCaps();
 
     if (!winetest_interactive)
     {
-        skip("Run in interactive mode to run dplayx tests.\n");
+        skip("Run in interactive mode to run all dplayx tests.\n");
         return;
     }
 
     trace("Running in interactive mode, tests will take a while\n");
 
-    test_DirectPlayCreate();
-    test_EnumConnections();
-    test_InitializeConnection();
-
-    test_GetCaps();
     /* test_Open() takes almost a minute, */
     test_Open();
     /* test_EnumSession takes three minutes */
@@ -6708,5 +6942,6 @@ START_TEST(dplayx)
     test_remote_data_replication();
     test_host_migration();
 
+    FreeLibrary(module);
     CoUninitialize();
 }
