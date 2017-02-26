@@ -224,6 +224,15 @@ HRESULT WINAPI WrapProgress(PVOID unk1, PVOID unk2, PVOID unk3, PVOID unk4, PVOI
 }
 
 /*************************************************************************
+ * HrDispatchNotifications@4 (MAPI32.239)
+ */
+HRESULT WINAPI HrDispatchNotifications(ULONG flags)
+{
+    FIXME("(%08x)\n", flags);
+    return S_OK;
+}
+
+/*************************************************************************
  * HrThisThreadAdviseSink@8 (MAPI32.42)
  *
  * Ensure that an advise sink is only notified in its originating thread.

@@ -1501,7 +1501,7 @@ static HRESULT WINAPI IPropData_fnQueryInterface(LPPROPDATA iface, REFIID riid, 
        IsEqualIID(riid, &IID_IMAPIProp) ||
        IsEqualIID(riid, &IID_IMAPIPropData))
     {
-        *ppvObj = This;
+        *ppvObj = &This->IPropData_iface;
         IPropData_AddRef(iface);
         TRACE("returning %p\n", *ppvObj);
         return S_OK;
