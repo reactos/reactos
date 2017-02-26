@@ -510,8 +510,6 @@ static BOOL ODBC_LoadDriverManager(void)
    const char *s = getenv("LIB_ODBC_DRIVER_MANAGER");
    char error[256];
 
-   TRACE("\n");
-
 #ifdef SONAME_LIBODBC
    if (!s || !s[0]) s = SONAME_LIBODBC;
 #endif
@@ -521,6 +519,7 @@ static BOOL ODBC_LoadDriverManager(void)
 
    if (dmHandle != NULL)
    {
+      TRACE("Opened library %s\n", s);
       nErrorType = ERROR_FREE;
       return TRUE;
    }
@@ -680,7 +679,7 @@ static BOOL ODBC_LoadDMFunctions(void)
 SQLRETURN WINAPI SQLAllocConnect(SQLHENV EnvironmentHandle, SQLHDBC *ConnectionHandle)
 {
         SQLRETURN ret;
-        TRACE("Env=%p\n",EnvironmentHandle);
+        TRACE("(EnvironmentHandle %p)\n",EnvironmentHandle);
 
         if (!pSQLAllocConnect)
         {
@@ -690,7 +689,7 @@ SQLRETURN WINAPI SQLAllocConnect(SQLHENV EnvironmentHandle, SQLHDBC *ConnectionH
         }
 
         ret = pSQLAllocConnect(EnvironmentHandle, ConnectionHandle);
-        TRACE("Returns ret=%d, Handle %p\n",ret, *ConnectionHandle);
+        TRACE("Returns %d, Handle %p\n", ret, *ConnectionHandle);
         return ret;
 }
 
@@ -711,7 +710,7 @@ SQLRETURN WINAPI  SQLAllocEnv(SQLHENV *EnvironmentHandle)
         }
 
         ret = pSQLAllocEnv(EnvironmentHandle);
-        TRACE("Returns ret=%d, Env=%p\n",ret, *EnvironmentHandle);
+        TRACE("Returns %d, EnvironmentHandle %p\n", ret, *EnvironmentHandle);
         return ret;
 }
 
@@ -722,7 +721,7 @@ SQLRETURN WINAPI  SQLAllocEnv(SQLHENV *EnvironmentHandle)
 SQLRETURN WINAPI SQLAllocHandle(SQLSMALLINT HandleType, SQLHANDLE InputHandle, SQLHANDLE *OutputHandle)
 {
         SQLRETURN ret;
-        TRACE("(Type=%d, Handle=%p)\n",HandleType,InputHandle);
+        TRACE("(Type %d, Handle %p)\n", HandleType, InputHandle);
 
         if (!pSQLAllocHandle)
         {
@@ -743,7 +742,7 @@ SQLRETURN WINAPI SQLAllocHandle(SQLSMALLINT HandleType, SQLHANDLE InputHandle, S
         }
 
         ret = pSQLAllocHandle(HandleType, InputHandle, OutputHandle);
-        TRACE("Returns ret=%d, Handle=%p\n",ret, *OutputHandle);
+        TRACE("Returns %d, Handle %p\n", ret, *OutputHandle);
         return ret;
 }
 
@@ -755,7 +754,7 @@ SQLRETURN WINAPI SQLAllocStmt(SQLHDBC ConnectionHandle, SQLHSTMT *StatementHandl
 {
         SQLRETURN ret;
 
-        TRACE("(Connection=%p)\n",ConnectionHandle);
+        TRACE("(Connection %p)\n", ConnectionHandle);
 
         if (!pSQLAllocStmt)
         {
@@ -765,7 +764,7 @@ SQLRETURN WINAPI SQLAllocStmt(SQLHDBC ConnectionHandle, SQLHSTMT *StatementHandl
         }
 
         ret = pSQLAllocStmt(ConnectionHandle, StatementHandle);
-        TRACE ("Returns ret=%d, Handle=%p\n", ret, *StatementHandle);
+        TRACE ("Returns %d, Handle %p\n", ret, *StatementHandle);
         return ret;
 }
 
@@ -856,12 +855,12 @@ SQLRETURN WINAPI SQLCancel(SQLHSTMT StatementHandle)
 SQLRETURN WINAPI  SQLCloseCursor(SQLHSTMT StatementHandle)
 {
         SQLRETURN ret;
-        TRACE("(Handle=%p)\n",StatementHandle);
+        TRACE("(Handle %p)\n", StatementHandle);
 
         if (!pSQLCloseCursor) return SQL_ERROR;
 
         ret = pSQLCloseCursor(StatementHandle);
-        TRACE("returns %d\n",ret);
+        TRACE("Returns %d\n", ret);
         return ret;
 }
 
@@ -915,7 +914,7 @@ SQLRETURN WINAPI SQLConnect(SQLHDBC ConnectionHandle,
         ret = pSQLConnect(ConnectionHandle, ServerName, NameLength1,
                           UserName, NameLength2, Authentication, NameLength3);
 
-        TRACE("returns %d\n",ret);
+        TRACE("Returns %d\n", ret);
         return ret;
 }
 
@@ -943,7 +942,7 @@ SQLRETURN WINAPI SQLDataSources(SQLHENV EnvironmentHandle,
 {
         SQLRETURN ret;
 
-        TRACE("EnvironmentHandle = %p\n", EnvironmentHandle);
+        TRACE("(EnvironmentHandle %p)\n", EnvironmentHandle);
 
         if (!pSQLDataSources) return SQL_ERROR;
 
@@ -952,7 +951,7 @@ SQLRETURN WINAPI SQLDataSources(SQLHENV EnvironmentHandle,
 
         if (TRACE_ON(odbc))
         {
-           TRACE("returns: %d \t", ret);
+           TRACE("Returns %d \t", ret);
            if (NameLength1 && *NameLength1 > 0)
              TRACE("DataSource = %s,", ServerName);
            if (NameLength2 && *NameLength2 > 0)
@@ -979,7 +978,7 @@ SQLRETURN WINAPI SQLDataSourcesA(SQLHENV EnvironmentHandle,
                            BufferLength1, NameLength1, Description, BufferLength2, NameLength2);
     if (TRACE_ON(odbc))
     {
-       TRACE("returns: %d \t", ret);
+       TRACE("Returns %d \t", ret);
        if (NameLength1 && *NameLength1 > 0)
          TRACE("DataSource = %s,", ServerName);
        if (NameLength2 && *NameLength2 > 0)
@@ -1013,12 +1012,12 @@ SQLRETURN WINAPI SQLDescribeCol(SQLHSTMT StatementHandle,
 SQLRETURN WINAPI SQLDisconnect(SQLHDBC ConnectionHandle)
 {
         SQLRETURN ret;
-        TRACE("(Handle=%p)\n", ConnectionHandle);
+        TRACE("(Handle %p)\n", ConnectionHandle);
 
         if (!pSQLDisconnect) return SQL_ERROR;
 
         ret = pSQLDisconnect(ConnectionHandle);
-        TRACE("returns %d\n",ret);
+        TRACE("Returns %d\n", ret);
         return ret;
 }
 
@@ -1044,11 +1043,21 @@ SQLRETURN WINAPI SQLError(SQLHENV EnvironmentHandle,
              SQLCHAR *MessageText, SQLSMALLINT BufferLength,
              SQLSMALLINT *TextLength)
 {
-        TRACE("\n");
+        SQLRETURN ret;
+
+        TRACE("(EnvironmentHandle %p, ConnectionHandle %p, StatementHandle %p, BufferLength %d)\n",
+              EnvironmentHandle, ConnectionHandle, StatementHandle, BufferLength);
 
         if (!pSQLError) return SQL_ERROR;
-        return pSQLError(EnvironmentHandle, ConnectionHandle, StatementHandle,
-                         Sqlstate, NativeError, MessageText, BufferLength, TextLength);
+        ret = pSQLError(EnvironmentHandle, ConnectionHandle, StatementHandle,
+                        Sqlstate, NativeError, MessageText, BufferLength, TextLength);
+        if (ret == SQL_SUCCESS)
+                TRACE("SQLState %s, Error %d, Text %s, Textlen %d\n",
+                       debugstr_an((char *)Sqlstate, 5), *NativeError,
+                       debugstr_an((char *)MessageText, *TextLength), *TextLength);
+        else
+                TRACE("Returns %d\n", ret);
+        return ret;
 }
 
 
@@ -1106,12 +1115,12 @@ SQLRETURN WINAPI SQLFetchScroll(SQLHSTMT StatementHandle, SQLSMALLINT FetchOrien
 SQLRETURN WINAPI SQLFreeConnect(SQLHDBC ConnectionHandle)
 {
         SQLRETURN ret;
-        TRACE("(Handle=%p)\n",ConnectionHandle);
+        TRACE("(Handle %p)\n", ConnectionHandle);
 
         if (!pSQLFreeConnect) return SQL_ERROR;
 
         ret = pSQLFreeConnect(ConnectionHandle);
-        TRACE("Returns %d\n",ret);
+        TRACE("Returns %d\n", ret);
         return ret;
 }
 
@@ -1122,12 +1131,12 @@ SQLRETURN WINAPI SQLFreeConnect(SQLHDBC ConnectionHandle)
 SQLRETURN WINAPI SQLFreeEnv(SQLHENV EnvironmentHandle)
 {
         SQLRETURN ret;
-        TRACE("(Env=%p)\n",EnvironmentHandle);
+        TRACE("(EnvironmentHandle %p)\n",EnvironmentHandle);
 
         if (!pSQLFreeEnv) return SQL_ERROR;
 
         ret = pSQLFreeEnv(EnvironmentHandle);
-        TRACE("Returns %d\n",ret);
+        TRACE("Returns %d\n", ret);
         return ret;
 }
 
@@ -1138,12 +1147,12 @@ SQLRETURN WINAPI SQLFreeEnv(SQLHENV EnvironmentHandle)
 SQLRETURN WINAPI SQLFreeHandle(SQLSMALLINT HandleType, SQLHANDLE Handle)
 {
         SQLRETURN ret;
-        TRACE("(Type=%d, Handle=%p)\n",HandleType,Handle);
+        TRACE("(Type %d, Handle %p)\n", HandleType, Handle);
 
         if (!pSQLFreeHandle) return SQL_ERROR;
 
         ret = pSQLFreeHandle(HandleType, Handle);
-        TRACE ("Returns %d\n",ret);
+        TRACE ("Returns %d\n", ret);
         return ret;
 }
 
@@ -1154,12 +1163,12 @@ SQLRETURN WINAPI SQLFreeHandle(SQLSMALLINT HandleType, SQLHANDLE Handle)
 SQLRETURN WINAPI SQLFreeStmt(SQLHSTMT StatementHandle, SQLUSMALLINT Option)
 {
         SQLRETURN ret;
-        TRACE("(Handle %p, Option=%d)\n",StatementHandle, Option);
+        TRACE("(Handle %p, Option %d)\n", StatementHandle, Option);
 
         if (!pSQLFreeStmt) return SQL_ERROR;
 
         ret = pSQLFreeStmt(StatementHandle, Option);
-        TRACE("Returns %d\n",ret);
+        TRACE("Returns %d\n", ret);
         return ret;
 }
 
@@ -1922,7 +1931,7 @@ SQLRETURN WINAPI SQLDrivers(
 {
         SQLRETURN ret;
 
-        TRACE("direction=%d\n", fDirection);
+        TRACE("(Direction %d)\n", fDirection);
 
         if (!pSQLDrivers) return SQL_ERROR;
         ret = pSQLDrivers(henv, fDirection, szDriverDesc, cbDriverDescMax, pcbDriverDesc,
@@ -1972,11 +1981,16 @@ SQLRETURN WINAPI SQLDriverConnect(
     SQLSMALLINT        *ptr_conn_str_out,
     SQLUSMALLINT       driver_completion )
 {
-        TRACE("\n");
+        SQLRETURN ret;
+
+        TRACE("(ConnectionString %s, Length %d)\n",
+              debugstr_a((char *)conn_str_in), len_conn_str_in);
 
         if (!pSQLDriverConnect) return SQL_ERROR;
-        return pSQLDriverConnect(hdbc, hwnd, conn_str_in, len_conn_str_in, conn_str_out,
+        ret = pSQLDriverConnect(hdbc, hwnd, conn_str_in, len_conn_str_in, conn_str_out,
                                  conn_str_out_max, ptr_conn_str_out, driver_completion);
+        TRACE("Returns %d\n", ret);
+        return ret;
 }
 
 
@@ -2075,7 +2089,7 @@ SQLRETURN WINAPI SQLConnectW(SQLHDBC ConnectionHandle,
         ret = pSQLConnectW(ConnectionHandle, ServerName, NameLength1,
                            UserName, NameLength2, Authentication, NameLength3);
 
-        TRACE("returns %d\n",ret);
+        TRACE("Returns %d\n", ret);
         return ret;
 }
 
@@ -2349,7 +2363,8 @@ SQLRETURN WINAPI SQLDriverConnectW(
     SQLSMALLINT        *ptr_conn_str_out,
     SQLUSMALLINT       driver_completion )
 {
-        TRACE("ConnStrIn (%d bytes) --> %s\n", len_conn_str_in, debugstr_w(conn_str_in));
+        TRACE("(ConnectionString %s, Length %d)\n",
+              debugstr_w(conn_str_in), len_conn_str_in);
 
         if (!pSQLDriverConnectW) return SQL_ERROR;
         return pSQLDriverConnectW(hdbc, hwnd, conn_str_in, len_conn_str_in, conn_str_out,
@@ -2516,7 +2531,7 @@ SQLRETURN WINAPI SQLDataSourcesW(SQLHENV EnvironmentHandle,
 
         if (TRACE_ON(odbc))
         {
-           TRACE("returns: %d \t", ret);
+           TRACE("Returns %d \t", ret);
            if (*NameLength1 > 0)
              TRACE("DataSource = %s,", debugstr_w(ServerName));
            if (*NameLength2 > 0)
@@ -2663,7 +2678,7 @@ SQLRETURN WINAPI SQLDriversW(
 {
         SQLRETURN ret;
 
-        TRACE("direction=%d\n", fDirection);
+        TRACE("(Direction %d)\n", fDirection);
 
         if (!pSQLDriversW) return SQL_ERROR;
         ret = pSQLDriversW(henv, fDirection, szDriverDesc, cbDriverDescMax, pcbDriverDesc,
