@@ -437,7 +437,7 @@ static HRESULT WINAPI xmlwriter_QueryInterface(IXmlWriter *iface, REFIID riid, v
 {
     xmlwriter *This = impl_from_IXmlWriter(iface);
 
-    TRACE("%p %s %p\n", This, debugstr_guid(riid), ppvObject);
+    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppvObject);
 
     if (IsEqualGUID(riid, &IID_IUnknown) ||
         IsEqualGUID(riid, &IID_IXmlWriter))
@@ -453,23 +453,23 @@ static HRESULT WINAPI xmlwriter_QueryInterface(IXmlWriter *iface, REFIID riid, v
 static ULONG WINAPI xmlwriter_AddRef(IXmlWriter *iface)
 {
     xmlwriter *This = impl_from_IXmlWriter(iface);
-    TRACE("%p\n", This);
-    return InterlockedIncrement(&This->ref);
+    ULONG ref = InterlockedIncrement(&This->ref);
+    TRACE("(%p)->(%u)\n", This, ref);
+    return ref;
 }
 
 static ULONG WINAPI xmlwriter_Release(IXmlWriter *iface)
 {
     xmlwriter *This = impl_from_IXmlWriter(iface);
-    LONG ref;
+    ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("%p\n", This);
+    TRACE("(%p)->>(%u)\n", This, ref);
 
-    ref = InterlockedDecrement(&This->ref);
     if (ref == 0) {
         struct element *element, *element2;
         IMalloc *imalloc = This->imalloc;
 
-        IXmlWriter_Flush(iface);
+        writeroutput_flush_stream(This->output);
         if (This->output) IUnknown_Release(&This->output->IXmlWriterOutput_iface);
 
         /* element stack */
