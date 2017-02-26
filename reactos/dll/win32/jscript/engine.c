@@ -384,7 +384,7 @@ static inline void clear_ret(call_frame_t *frame)
     jsval_release(steal_ret(frame));
 }
 
-HRESULT scope_push(scope_chain_t *scope, jsdisp_t *jsobj, IDispatch *obj, scope_chain_t **ret)
+static HRESULT scope_push(scope_chain_t *scope, jsdisp_t *jsobj, IDispatch *obj, scope_chain_t **ret)
 {
     scope_chain_t *new_scope;
 

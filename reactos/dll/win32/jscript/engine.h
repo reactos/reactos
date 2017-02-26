@@ -199,7 +199,6 @@ typedef struct _scope_chain_t {
     struct _scope_chain_t *next;
 } scope_chain_t;
 
-HRESULT scope_push(scope_chain_t*,jsdisp_t*,IDispatch*,scope_chain_t**) DECLSPEC_HIDDEN;
 void scope_release(scope_chain_t*) DECLSPEC_HIDDEN;
 
 static inline scope_chain_t *scope_addref(scope_chain_t *scope)
