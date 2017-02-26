@@ -304,7 +304,9 @@ MMRESULT WINAPI acmStreamPrepareHeader(HACMSTREAM has, PACMSTREAMHEADER pash,
         WARN("invalid use of reserved parameter\n");
         return MMSYSERR_INVALFLAG;
     }
-    if (pash->cbSrcLength < was->drvInst.pwfxSrc->nBlockAlign) {
+    if ((was->drvInst.pwfxSrc->wFormatTag == WAVE_FORMAT_ADPCM ||
+         was->drvInst.pwfxSrc->wFormatTag == WAVE_FORMAT_PCM) &&
+        pash->cbSrcLength < was->drvInst.pwfxSrc->nBlockAlign) {
         WARN("source smaller than block align (%d < %d)\n",
              pash->cbSrcLength, was->drvInst.pwfxSrc->nBlockAlign);
         return pash->cbSrcLength ? ACMERR_NOTPOSSIBLE : MMSYSERR_INVALPARAM;

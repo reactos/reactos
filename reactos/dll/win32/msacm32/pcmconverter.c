@@ -76,12 +76,12 @@ static const struct {
     int		nBits;
     int		rate;
 } PCM_Formats[] = {
-    {1,  8,  8000}, {2,  8,  8000}, {1, 16,  8000}, {2, 16,  8000},
-    {1,  8, 11025}, {2,  8, 11025}, {1, 16, 11025}, {2, 16, 11025},
-    {1,  8, 22050}, {2,  8, 22050}, {1, 16, 22050}, {2, 16, 22050},
-    {1,  8, 44100}, {2,  8, 44100}, {1, 16, 44100}, {2, 16, 44100},
-    {1,  8, 48000}, {2,  8, 48000}, {1, 16, 48000}, {2, 16, 48000},
-    {1,  8, 96000}, {2,  8, 96000}, {1, 16, 96000}, {2, 16, 96000}
+    {1,  8,  8000}, {2,  8,  8000}, {1, 16,  8000}, {2, 16,  8000}, {1, 24,  8000}, {2, 24,  8000},
+    {1,  8, 11025}, {2,  8, 11025}, {1, 16, 11025}, {2, 16, 11025}, {1, 24, 11025}, {2, 24, 11025},
+    {1,  8, 22050}, {2,  8, 22050}, {1, 16, 22050}, {2, 16, 22050}, {1, 24, 22050}, {2, 24, 22050},
+    {1,  8, 44100}, {2,  8, 44100}, {1, 16, 44100}, {2, 16, 44100}, {1, 24, 44100}, {2, 24, 44100},
+    {1,  8, 48000}, {2,  8, 48000}, {1, 16, 48000}, {2, 16, 48000}, {1, 24, 48000}, {2, 24, 48000},
+    {1,  8, 96000}, {2,  8, 96000}, {1, 16, 96000}, {2, 16, 96000}, {1, 24, 96000}, {2, 24, 96000},
 };
 
 /***********************************************************************
@@ -134,6 +134,26 @@ static inline unsigned char C168(short s)
 }
 
 /***********************************************************************
+ *           C248
+ *
+ * Converts a 24 bit sample to a 8 bit one (data loss !!)
+ */
+static inline unsigned char C248(int s)
+{
+    return HIBYTE(HIWORD(s)) ^ (unsigned char)0x80;
+}
+
+/***********************************************************************
+ *           C2416
+ *
+ * Converts a 24 bit sample to a 16 bit one (data loss !!)
+ */
+static inline short C2416(int s)
+{
+    return HIWORD(s);
+}
+
+/***********************************************************************
  *           R16
  *
  * Read a 16 bit sample (correctly handles endianness)
@@ -141,6 +161,18 @@ static inline unsigned char C168(short s)
 static inline short  R16(const unsigned char* src)
 {
     return (short)((unsigned short)src[0] | ((unsigned short)src[1] << 8));
+}
+
+/***********************************************************************
+ *           R24
+ *
+ * Read a 24 bit sample (correctly handles endianness)
+ * Note, to support signed arithmetic, the values are shifted high in the int
+ * and low 8 bytes are unused.
+ */
+static inline int R24(const unsigned char* src)
+{
+    return ((int)src[0] | (int)src[1] << 8 | (int)src[2] << 16) << 8;
 }
 
 /***********************************************************************
@@ -152,6 +184,37 @@ static inline void  W16(unsigned char* dst, short s)
 {
     dst[0] = LOBYTE(s);
     dst[1] = HIBYTE(s);
+}
+
+/***********************************************************************
+ *           W24
+ *
+ * Write a 24 bit sample (correctly handles endianness)
+ */
+static inline void  W24(unsigned char* dst, int s)
+{
+    dst[0] = HIBYTE(LOWORD(s));
+    dst[1] = LOBYTE(HIWORD(s));
+    dst[2] = HIBYTE(HIWORD(s));
+}
+
+/***********************************************************************
+ *           M24
+ *
+ * Convert the (l,r) 24 bit stereo sample into a 24 bit mono
+ * (takes the sum of the two values)
+ */
+static inline int M24(int l, int r)
+{
+    LONGLONG sum = l + r;
+
+    /* clip sum to saturation */
+    if (sum > 0x7fffff00)
+        sum = 0x7fffff00;
+    else if (sum < -0x7fffff00)
+        sum = -0x7fffff00;
+
+    return sum;
 }
 
 /***********************************************************************
@@ -355,14 +418,102 @@ static	void cvtSS168K(const unsigned char* src, int ns, unsigned char* dst)
     }
 }
 
+static	void cvtMS248K(const unsigned char* src, int ns, unsigned char* dst)
+{
+    unsigned char v;
+    TRACE("(%p, %d, %p)\n", src, ns, dst);
+
+    while (ns--) {
+	v = C248(R24(src));	src += 3;
+	*dst++ = v;
+	*dst++ = v;
+    }
+}
+
+static	void cvtSM248K(const unsigned char* src, int ns, unsigned char* dst)
+{
+    TRACE("(%p, %d, %p)\n", src, ns, dst);
+
+    while (ns--) {
+	*dst++ = C248(M24(R24(src), R24(src + 3)));
+	src += 6;
+    }
+}
+
+static	void cvtMM248K(const unsigned char* src, int ns, unsigned char* dst)
+{
+    TRACE("(%p, %d, %p)\n", src, ns, dst);
+
+    while (ns--) {
+	*dst++ = C248(R24(src));	src += 3;
+    }
+}
+
+static	void cvtSS248K(const unsigned char* src, int ns, unsigned char* dst)
+{
+    TRACE("(%p, %d, %p)\n", src, ns, dst);
+
+    while (ns--) {
+	*dst++ = C248(R24(src));	src += 3;
+	*dst++ = C248(R24(src));	src += 3;
+    }
+}
+
+static	void cvtMS2416K(const unsigned char* src, int ns, unsigned char* dst)
+{
+    short v;
+    TRACE("(%p, %d, %p)\n", src, ns, dst);
+
+    while (ns--) {
+	v = C2416(R24(src));	src += 3;
+	W16(dst, v);	dst += 2;
+	W16(dst, v);	dst += 2;
+    }
+}
+
+static	void cvtSM2416K(const unsigned char* src, int ns, unsigned char* dst)
+{
+    TRACE("(%p, %d, %p)\n", src, ns, dst);
+
+    while (ns--) {
+	W16(dst, C2416(M24(R24(src), R24(src + 3))));
+	dst += 2;
+	src += 6;
+    }
+}
+
+static	void cvtMM2416K(const unsigned char* src, int ns, unsigned char* dst)
+{
+    TRACE("(%p, %d, %p)\n", src, ns, dst);
+
+    while (ns--) {
+	W16(dst, C2416(R24(src)));	dst += 2; src += 3;
+    }
+}
+
+static	void cvtSS2416K(const unsigned char* src, int ns, unsigned char* dst)
+{
+    TRACE("(%p, %d, %p)\n", src, ns, dst);
+
+    while (ns--) {
+	W16(dst, C2416(R24(src)));	dst += 2; src += 3;
+	W16(dst, C2416(R24(src)));	dst += 2; src += 3;
+    }
+}
+
 
 typedef void (*PCM_CONVERT_KEEP_RATE)(const unsigned char*, int, unsigned char*);
 
-static const PCM_CONVERT_KEEP_RATE PCM_ConvertKeepRate[16] = {
+static const PCM_CONVERT_KEEP_RATE PCM_ConvertKeepRate[] = {
     cvtSS88K,	cvtSM88K,   cvtMS88K,   cvtMM88K,
     cvtSS816K,	cvtSM816K,  cvtMS816K,  cvtMM816K,
+    NULL, NULL, NULL, NULL, /* TODO: 8->24 */
     cvtSS168K,	cvtSM168K,  cvtMS168K,  cvtMM168K,
     cvtSS1616K, cvtSM1616K, cvtMS1616K, cvtMM1616K,
+    NULL, NULL, NULL, NULL, /* TODO: 16->24 */
+    cvtSS248K, cvtSM248K, cvtMS248K, cvtMM248K,
+    cvtSS2416K, cvtSM2416K, cvtMS2416K, cvtMM2416K,
+    NULL, NULL, NULL, NULL, /* TODO: 24->24 */
 };
 
 /* the conversion routines with rate conversion are labelled cvt<X><Y><N><M>C
@@ -685,13 +836,96 @@ static	void cvtMM1616C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
     }
 }
 
+static	void cvtSS2424C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
+			DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+{
+    DWORD error = dstRate / 2;
+    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
+
+    while ((*ndst)--) {
+        W24(dst, R24(src)); dst += 3;
+        W24(dst, R24(src)); dst += 3;
+        error = error + srcRate;
+        while (error > dstRate) {
+            src += 6;
+            (*nsrc)--;
+            if (*nsrc == 0)
+                return;
+            error = error - dstRate;
+        }
+    }
+}
+
+static	void cvtSM2424C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
+			DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+{
+    DWORD error = dstRate / 2;
+    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
+
+    while ((*ndst)--) {
+        W24(dst, M24(R24(src), R24(src + 3))); dst += 3;
+        error = error + srcRate;
+        while (error > dstRate) {
+            src += 6;
+            (*nsrc)--;
+            if (*nsrc == 0)
+                return;
+            error = error - dstRate;
+        }
+    }
+}
+
+static	void cvtMS2424C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
+			DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+{
+    DWORD error = dstRate / 2;
+    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
+
+    while((*ndst)--) {
+        W24(dst, R24(src)); dst += 3;
+        W24(dst, R24(src)); dst += 3;
+        error = error + srcRate;
+        while (error > dstRate) {
+            src += 3;
+            (*nsrc)--;
+            if (*nsrc == 0)
+                return;
+            error = error - dstRate;
+        }
+    }
+}
+
+static	void cvtMM2424C(DWORD srcRate, const unsigned char* src, LPDWORD nsrc,
+			DWORD dstRate, unsigned char* dst, LPDWORD ndst)
+{
+    DWORD error = dstRate / 2;
+    TRACE("(%d, %p, %p, %d, %p, %p)\n", srcRate, src, nsrc, dstRate, dst, ndst);
+
+    while ((*ndst)--) {
+        W24(dst, R24(src)); dst += 3;
+        error = error + srcRate;
+        while (error > dstRate) {
+            src += 3;
+            (*nsrc)--;
+            if (*nsrc == 0)
+                return;
+            error = error - dstRate;
+        }
+    }
+}
+
 typedef void (*PCM_CONVERT_CHANGE_RATE)(DWORD, const unsigned char*, LPDWORD, DWORD, unsigned char*, LPDWORD);
 
-static const PCM_CONVERT_CHANGE_RATE PCM_ConvertChangeRate[16] = {
+static const PCM_CONVERT_CHANGE_RATE PCM_ConvertChangeRate[] = {
     cvtSS88C,   cvtSM88C,   cvtMS88C,   cvtMM88C,
     cvtSS816C,	cvtSM816C,  cvtMS816C,  cvtMM816C,
+    NULL, NULL, NULL, NULL, /* TODO: 8->24 */
     cvtSS168C,	cvtSM168C,  cvtMS168C,  cvtMM168C,
     cvtSS1616C, cvtSM1616C, cvtMS1616C, cvtMM1616C,
+    NULL, NULL, NULL, NULL, /* TODO: 16->24 */
+    NULL, NULL, NULL, NULL, /* TODO: 24->8 */
+    NULL, NULL, NULL, NULL, /* TODO: 24->16 */
+    cvtSS2424C, cvtSM2424C, cvtMS2424C, cvtMM2424C,
 };
 
 /***********************************************************************
@@ -867,33 +1101,77 @@ static	LRESULT	PCM_FormatSuggest(PACMDRVFORMATSUGGEST adfs)
  */
 static	LRESULT	PCM_StreamOpen(PACMDRVSTREAMINSTANCE adsi)
 {
-    AcmPcmData*	apd;
-    int		idx = 0;
+    AcmPcmData* apd;
+    int idx;
+    DWORD flags;
 
     TRACE("(%p)\n", adsi);
 
     assert(!(adsi->fdwOpen & ACM_STREAMOPENF_ASYNC));
 
+    switch(adsi->pwfxSrc->wBitsPerSample){
+    case 8:
+        idx = 0;
+        break;
+    case 16:
+        idx = 12;
+        break;
+    case 24:
+        if (adsi->pwfxSrc->nBlockAlign != 3 * adsi->pwfxSrc->nChannels) {
+            FIXME("Source: 24-bit samples must be packed\n");
+            return MMSYSERR_NOTSUPPORTED;
+        }
+        idx = 24;
+        break;
+    default:
+        FIXME("Unsupported source bit depth: %u\n", adsi->pwfxSrc->wBitsPerSample);
+        return MMSYSERR_NOTSUPPORTED;
+    }
+
+    switch(adsi->pwfxDst->wBitsPerSample){
+    case 8:
+        break;
+    case 16:
+        idx += 4;
+        break;
+    case 24:
+        if (adsi->pwfxDst->nBlockAlign != 3 * adsi->pwfxDst->nChannels) {
+            FIXME("Destination: 24-bit samples must be packed\n");
+            return MMSYSERR_NOTSUPPORTED;
+        }
+        idx += 8;
+        break;
+    default:
+        FIXME("Unsupported destination bit depth: %u\n", adsi->pwfxDst->wBitsPerSample);
+        return MMSYSERR_NOTSUPPORTED;
+    }
+
+    if (adsi->pwfxSrc->nChannels      == 1)  idx += 2;
+
+    if (adsi->pwfxDst->nChannels      == 1)  idx += 1;
+
     apd = HeapAlloc(GetProcessHeap(), 0, sizeof(AcmPcmData));
-    if (apd == 0) {
-        WARN("no memory\n");
+    if (!apd)
         return MMSYSERR_NOMEM;
+
+    if (adsi->pwfxSrc->nSamplesPerSec == adsi->pwfxDst->nSamplesPerSec) {
+        flags = 0;
+        apd->cvt.cvtKeepRate = PCM_ConvertKeepRate[idx];
+    } else {
+        flags = PCM_RESAMPLE;
+        apd->cvt.cvtChangeRate = PCM_ConvertChangeRate[idx];
+    }
+
+    if(!apd->cvt.cvtChangeRate && !apd->cvt.cvtKeepRate){
+        FIXME("Unimplemented conversion from %u -> %u bps\n",
+            adsi->pwfxSrc->wBitsPerSample,
+            adsi->pwfxDst->wBitsPerSample);
+        HeapFree(GetProcessHeap(), 0, apd);
+        return MMSYSERR_NOTSUPPORTED;
     }
 
     adsi->dwDriver = (DWORD_PTR)apd;
-    adsi->fdwDriver = 0;
-
-    if (adsi->pwfxSrc->wBitsPerSample == 16) idx += 8;
-    if (adsi->pwfxDst->wBitsPerSample == 16) idx += 4;
-    if (adsi->pwfxSrc->nChannels      == 1)  idx += 2;
-    if (adsi->pwfxDst->nChannels      == 1)  idx += 1;
-
-    if (adsi->pwfxSrc->nSamplesPerSec == adsi->pwfxDst->nSamplesPerSec) {
-	apd->cvt.cvtKeepRate = PCM_ConvertKeepRate[idx];
-    } else {
-	adsi->fdwDriver |= PCM_RESAMPLE;
-	apd->cvt.cvtChangeRate = PCM_ConvertChangeRate[idx];
-    }
+    adsi->fdwDriver = flags;
 
     return MMSYSERR_NOERROR;
 }
