@@ -521,7 +521,7 @@ static HRESULT WINAPI AsyncReader_Run(IBaseFilter * iface, REFERENCE_TIME tStart
 {
     AsyncReader *This = impl_from_IBaseFilter(iface);
 
-    TRACE("(%x%08x)\n", (ULONG)(tStart >> 32), (ULONG)tStart);
+    TRACE("(%s)\n", wine_dbgstr_longlong(tStart));
 
     This->filter.state = State_Running;
 

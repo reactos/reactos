@@ -242,9 +242,9 @@ static DWORD VMR9_SendSampleData(struct quartz_vmr *This, VMR9PresentationInfo *
         lock.pBits = (char *)lock.pBits + (height * lock.Pitch);
         while (height--)
         {
+            lock.pBits = (char *)lock.pBits - lock.Pitch;
             memcpy(lock.pBits, data, width * bmiHeader->biBitCount / 8);
             data = data + width * bmiHeader->biBitCount / 8;
-            lock.pBits = (char *)lock.pBits - lock.Pitch;
         }
     }
     else if (lock.Pitch != width * bmiHeader->biBitCount / 8)
@@ -3010,7 +3010,7 @@ static HRESULT WINAPI VMR9_SurfaceAllocator_AdviseNotify(IVMRSurfaceAllocatorEx9
 
     TRACE("(%p/%p)->(...)\n", iface, This);
 
-    /* No AddRef taken here or the base VMR9 filter would never be destroied */
+    /* No AddRef taken here or the base VMR9 filter would never be destroyed */
     This->SurfaceAllocatorNotify = allocnotify;
     return S_OK;
 }
