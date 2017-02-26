@@ -37,6 +37,9 @@ typedef struct {
     IBasicVideo*   vidbasic;
     IBasicAudio*   audio;
     DWORD          time_format;
+    DWORD          mci_flags;
+    REFERENCE_TIME seek_start;
+    REFERENCE_TIME seek_stop;
     UINT           command_table;
     HWND           parent;
     MCIDEVICEID    notify_devid;

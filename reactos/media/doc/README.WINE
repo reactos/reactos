@@ -92,7 +92,7 @@ reactos/dll/win32/lz32                # Synced to WineStaging-1.9.11
 reactos/dll/win32/mapi32              # Synced to WineStaging-2.2
 reactos/dll/win32/mciavi32            # Synced to WineStaging-1.9.16
 reactos/dll/win32/mcicda              # Synced to WineStaging-1.9.16
-reactos/dll/win32/mciqtz32            # Synced to WineStaging-1.9.16
+reactos/dll/win32/mciqtz32            # Synced to WineStaging-2.2
 reactos/dll/win32/mciseq              # Synced to WineStaging-1.9.11
 reactos/dll/win32/mciwave             # Synced to WineStaging-1.9.11
 reactos/dll/win32/mgmtapi             # Synced to WineStaging-1.9.11
