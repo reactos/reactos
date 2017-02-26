@@ -39,9 +39,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(inseng);
 
-static inline void *heap_alloc(size_t len)
+static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
 {
-    return HeapAlloc(GetProcessHeap(), 0, len);
+    return HeapAlloc(GetProcessHeap(), 0, size);
 }
 
 static inline void *heap_zero_alloc(size_t len)

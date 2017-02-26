@@ -81,7 +81,7 @@ reactos/dll/win32/imm32               # Synced to Wine-1.7.27
 reactos/dll/win32/inetcomm            # Synced to WineStaging-1.9.23
 reactos/dll/win32/inetmib1            # Synced to WineStaging-1.9.11
 reactos/dll/win32/initpki             # Synced to WineStaging-1.9.11
-reactos/dll/win32/inseng              # Synced to WineStaging-1.9.23
+reactos/dll/win32/inseng              # Synced to WineStaging-2.2
 reactos/dll/win32/iphlpapi            # Out of sync
 reactos/dll/win32/itircl              # Synced to WineStaging-1.9.11
 reactos/dll/win32/itss                # Synced to WineStaging-1.9.11
