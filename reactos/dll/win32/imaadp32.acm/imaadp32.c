@@ -433,29 +433,27 @@ static	void cvtSS16imaK(PACMDRVSTREAMINSTANCE adsi,
         /* generate header */
     	sampleL = R16(src);  src += 2;
 	W16(dst, sampleL); dst += 2;
-	*dst = (unsigned char)(unsigned)stepIndexL;
-	dst += 2;
+	W16(dst, stepIndexL); dst += 2;
 
     	sampleR = R16(src); src += 2;
 	W16(dst, sampleR); dst += 2;
-	*dst = (unsigned char)(unsigned)stepIndexR;
-	dst += 2;
+	W16(dst, stepIndexR); dst += 2;
 
 	for (nsamp = nsamp_blk; nsamp > 0; nsamp -= 8)
         {
             for (i = 0; i < 4; i++)
             {
-                code1 = generate_nibble(R16(src + (2 * i + 0) * 2 + 0),
+                code1 = generate_nibble(R16(src + (4 * i + 0) * 2),
                                         &stepIndexL, &sampleL);
-                code2 = generate_nibble(R16(src + (2 * i + 1) * 2 + 0),
+                code2 = generate_nibble(R16(src + (4 * i + 2) * 2),
                                         &stepIndexL, &sampleL);
                 *dst++ = (code1 << 4) | code2;
             }
             for (i = 0; i < 4; i++)
             {
-                code1 = generate_nibble(R16(src + (2 * i + 0) * 2 + 1),
+                code1 = generate_nibble(R16(src + (4 * i + 1) * 2),
                                         &stepIndexR, &sampleR);
-                code2 = generate_nibble(R16(src + (2 * i + 1) * 2 + 1),
+                code2 = generate_nibble(R16(src + (4 * i + 3) * 2),
                                         &stepIndexR, &sampleR);
                 *dst++ = (code1 << 4) | code2;
             }
