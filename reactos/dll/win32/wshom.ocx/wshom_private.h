@@ -26,6 +26,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <wshom.h>
+#include <ocidl.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(wshom);
@@ -42,6 +43,14 @@ typedef enum tid_t {
 } tid_t;
 
 HRESULT get_typeinfo(tid_t tid, ITypeInfo **typeinfo) DECLSPEC_HIDDEN;
+
+struct provideclassinfo {
+    IProvideClassInfo IProvideClassInfo_iface;
+    IUnknown *outer;
+    const GUID *guid;
+};
+
+extern void init_classinfo(const GUID *guid, IUnknown *outer, struct provideclassinfo *classinfo) DECLSPEC_HIDDEN;
 
 HRESULT WINAPI WshShellFactory_CreateInstance(IClassFactory*,IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
 

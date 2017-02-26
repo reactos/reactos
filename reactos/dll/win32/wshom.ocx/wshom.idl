@@ -663,4 +663,12 @@ library IWshRuntimeLibrary
     coclass WshNetwork {
         [default] interface IWshNetwork2;
     }
+
+    [
+        uuid(08fed191-be19-11d3-a28b-00104bd35090),
+        threading(apartment)
+    ]
+    coclass WshExec {
+        [default] interface IWshExec;
+    }
 }

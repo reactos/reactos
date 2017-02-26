@@ -132,6 +132,12 @@ HKCR
             Version = s '1.0'
             VersionIndependentProgId = s 'WScript.Network'
         }
+        '{08FED191-BE19-11D3-A28B-00104BD35090}' = s 'WshExec'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            TypeLib = s '{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}'
+            Version = s '1.0'
+        }
     }
     'WScript.Shell.1' = s 'Windows Script Host Shell Object'
     {
