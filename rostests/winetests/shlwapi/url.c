@@ -198,6 +198,15 @@ static const TEST_URL_CANONICALIZE TEST_CANONICALIZE[] = {
     {"res://c:\\tests/res\\foo%20bar/strange\\sth", 0, S_OK, "res://c:\\tests/res\\foo%20bar/strange\\sth", FALSE},
     {"res://c:\\tests/res\\foo%20bar/strange\\sth", URL_FILE_USE_PATHURL, S_OK, "res://c:\\tests/res\\foo%20bar/strange\\sth", FALSE},
     {"res://c:\\tests/res\\foo%20bar/strange\\sth", URL_UNESCAPE, S_OK, "res://c:\\tests/res\\foo bar/strange\\sth", FALSE},
+    {"/A/../B/./C/../../test_remove_dot_segments", 0, S_OK, "/test_remove_dot_segments", FALSE},
+    {"/A/../B/./C/../../test_remove_dot_segments", URL_FILE_USE_PATHURL, S_OK, "/test_remove_dot_segments", FALSE},
+    {"/A/../B/./C/../../test_remove_dot_segments", URL_WININET_COMPATIBILITY, S_OK, "/test_remove_dot_segments", FALSE},
+    {"/A/B\\C/D\\E", 0, S_OK, "/A/B\\C/D\\E", FALSE},
+    {"/A/B\\C/D\\E", URL_FILE_USE_PATHURL, S_OK, "/A/B\\C/D\\E", FALSE},
+    {"/A/B\\C/D\\E", URL_WININET_COMPATIBILITY, S_OK, "/A/B\\C/D\\E", FALSE},
+    {"///A/../B", 0, S_OK, "///B", FALSE},
+    {"///A/../B", URL_FILE_USE_PATHURL, S_OK, "///B", FALSE},
+    {"///A/../B", URL_WININET_COMPATIBILITY, S_OK, "///B", FALSE},
     {"A", 0, S_OK, "A", FALSE},
     {"../A", 0, S_OK, "../A", FALSE},
     {".\\A", 0, S_OK, ".\\A", FALSE},
@@ -944,12 +953,14 @@ static void test_UrlEscapeA(void)
 
 static void test_UrlEscapeW(void)
 {
+    static const WCHAR path_test[] = {'/','t','e','s','t',0};
     static const WCHAR naW[] = {'f','t','p',31,255,250,0x2122,'e','n','d','/',0};
     static const WCHAR naescapedW[] = {'f','t','p','%','1','F','%','F','F','%','F','A',0x2122,'e','n','d','/',0};
     static const WCHAR out[] = {'f','o','o','%','2','0','b','a','r',0};
     WCHAR overwrite[] = {'f','o','o',' ','b','a','r',0,0,0};
     WCHAR ret_urlW[INTERNET_MAX_URL_LENGTH];
-    DWORD size = 0;
+    WCHAR empty_string[] = {0};
+    DWORD size;
     HRESULT ret;
     WCHAR wc;
     int i;
@@ -958,6 +969,42 @@ static void test_UrlEscapeW(void)
         win_skip("UrlEscapeW not found\n");
         return;
     }
+
+    /* Check error paths */
+
+    ret = UrlEscapeW(path_test, NULL, NULL, URL_ESCAPE_SPACES_ONLY);
+    ok(ret == E_INVALIDARG, "got %x, expected %x\n", ret, E_INVALIDARG);
+
+    size = 0;
+    ret = UrlEscapeW(path_test, NULL, &size, URL_ESCAPE_SPACES_ONLY);
+    ok(ret == E_INVALIDARG, "got %x, expected %x\n", ret, E_INVALIDARG);
+    ok(size == 0, "got %d, expected %d\n", size, 0);
+
+    ret = UrlEscapeW(path_test, empty_string, NULL, URL_ESCAPE_SPACES_ONLY);
+    ok(ret == E_INVALIDARG, "got %x, expected %x\n", ret, E_INVALIDARG);
+
+    size = 0;
+    ret = UrlEscapeW(path_test, empty_string, &size, URL_ESCAPE_SPACES_ONLY);
+    ok(ret == E_INVALIDARG, "got %x, expected %x\n", ret, E_INVALIDARG);
+    ok(size == 0, "got %d, expected %d\n", size, 0);
+
+    ret = UrlEscapeW(path_test, NULL, NULL, URL_ESCAPE_SPACES_ONLY);
+    ok(ret == E_INVALIDARG, "got %x, expected %x\n", ret, E_INVALIDARG);
+
+    size = 1;
+    ret = UrlEscapeW(path_test, NULL, &size, URL_ESCAPE_SPACES_ONLY);
+    ok(ret == E_INVALIDARG, "got %x, expected %x\n", ret, E_INVALIDARG);
+    ok(size == 1, "got %d, expected %d\n", size, 1);
+
+    ret = UrlEscapeW(path_test, empty_string, NULL, URL_ESCAPE_SPACES_ONLY);
+    ok(ret == E_INVALIDARG, "got %x, expected %x\n", ret, E_INVALIDARG);
+
+    size = 1;
+    ret = UrlEscapeW(path_test, empty_string, &size, URL_ESCAPE_SPACES_ONLY);
+    ok(ret == E_POINTER, "got %x, expected %x\n", ret, E_POINTER);
+    ok(size == 6, "got %d, expected %d\n", size, 6);
+
+    /* Check actual escaping */
 
     size = sizeof(overwrite)/sizeof(WCHAR);
     ret = pUrlEscapeW(overwrite, overwrite, &size, URL_ESCAPE_SPACES_ONLY);
@@ -1466,6 +1513,7 @@ static const struct parse_url_test_t {
     {"htt?p://www.winehq.org/",URL_E_INVALID_SYNTAX},
     {"ab-://www.winehq.org/",S_OK,3,URL_SCHEME_UNKNOWN},
     {" http://www.winehq.org/",URL_E_INVALID_SYNTAX},
+    {"HTTP://www.winehq.org/",S_OK,4,URL_SCHEME_HTTP},
 };
 
 static void test_ParseURL(void)
