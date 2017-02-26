@@ -1439,7 +1439,7 @@ static void test_XMLHTTP(void)
     IXMLHttpRequest *xhr;
     IObjectWithSite *obj_site, *obj_site2;
     BSTR bstrResponse, str, str1;
-    VARIANT varbody, varbody_ref;
+    VARIANT varbody;
     VARIANT dummy;
     LONG state, status, bound;
     IDispatch *event;
@@ -1625,12 +1625,11 @@ static void test_XMLHTTP(void)
         SysFreeString(bstrResponse);
     }
 
-    /* POST: VT_VARIANT|VT_BYREF body */
+    /* POST: VT_VARIANT body */
+    /* VT_VARIANT|VT_BYREF fails on Windows 10 */
     test_open(xhr, "POST", urlA, S_OK);
 
-    V_VT(&varbody_ref) = VT_VARIANT|VT_BYREF;
-    V_VARIANTREF(&varbody_ref) = &varbody;
-    hr = IXMLHttpRequest_send(xhr, varbody_ref);
+    hr = IXMLHttpRequest_send(xhr, varbody);
     EXPECT_HR(hr, S_OK);
 
     /* GET request */

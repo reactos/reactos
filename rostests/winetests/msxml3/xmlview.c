@@ -188,7 +188,7 @@ static void test_QueryInterface(void)
     ok(hres == S_OK, "QueryInterface(IID_IHTMLDocument) returned %x, expected S_OK\n", hres);
     hres = IHTMLDocument_QueryInterface(htmldoc, &IID_IUnknown, (void**)&unk);
     ok(hres == S_OK, "QueryInterface(IID_IUnknown) returned %x, expected S_OK\n", hres);
-    todo_wine ok(unk == xmlview, "Aggregation is not working as expected\n");
+    ok(unk == xmlview, "Aggregation is not working as expected\n");
     IUnknown_Release(unk);
     IHTMLDocument_Release(htmldoc);
 
