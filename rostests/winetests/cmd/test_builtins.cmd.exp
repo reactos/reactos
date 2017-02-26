@@ -88,6 +88,13 @@ word
 @tab@word
 
 @pwd@>echo @tab@ on @space@@space@
+--- @ with chains and brackets
+
+@todo_wine@@pwd@>(echo the @ character chains until  && )  && echo and can hide brackets  || ()  ||@space@
+@todo_wine@the @ character chains until
+@todo_wine@we leave the current depth
+@todo_wine@and can hide brackets
+@todo_wine@---
 noecho1
 noecho2
 echo3
@@ -241,6 +248,199 @@ WINE_FOO=bar | baz
 WINE_FOO=bar ^| baz
 bar | baz
 0
+------------ Testing chains ------------
+--- chain success
+a1
+a2
+b1
+b2
+c1
+@todo_wine@---
+d1
+d2
+d3
+e1
+e2
+e3
+f1
+f2
+@todo_wine@---
+g1
+g2
+g3
+h1
+h2
+h3
+i1
+i2
+@todo_wine@---
+j1
+@todo_wine@j3
+@todo_wine@---
+k1
+@todo_wine@---
+l1
+@todo_wine@---
+--- chain failure
+a1
+a2
+b1
+@todo_wine@---
+c1
+c2
+d1
+d2
+d3
+e1
+e2
+@todo_wine@---
+f1
+f2
+f3
+g1
+@todo_wine@g3
+@todo_wine@---
+h1
+@todo_wine@---
+i1
+@todo_wine@i3
+@todo_wine@---
+j1
+j2
+j3
+k1
+k2
+@todo_wine@---
+l1
+l2
+l3
+--- chain brackets
+a1
+a2
+a3
+b1
+b2
+b3
+c1
+c2
+@todo_wine@---
+d1
+d2
+d3
+e1
+e2
+e3
+f1
+f2
+@todo_wine@---
+g1
+@todo_wine@---
+h1
+@todo_wine@---
+i1
+@todo_wine@---
+j1
+j2
+j3
+k1
+k2
+@todo_wine@---
+l1
+l2
+l3
+m1
+@todo_wine@---
+n1
+@todo_wine@---
+o1
+@todo_wine@---
+p1
+p2
+p3
+q1
+q2
+@todo_wine@---
+r1
+r2
+r3
+--- chain pipe
+@todo_wine@a@space@
+@todo_wine@a@space@
+---
+b2
+c1
+c3
+d1
+@todo_wine@---
+e1
+e3
+f2
+f3
+g2
+@todo_wine@---
+h2
+h3
+i3
+--- chain pipe input
+a2:[a1,a2]
+b3:[b2:[b1,b2],b3]@or_broken@b3:[b2:,b3]
+c4:[c3:[c2:[c1,c2],c3],c4]@or_broken@c4:[c3:[c2:,c3],c4]@or_broken@c4:[c3:,c4]
+d2:[d1,d2]
+e3:[e2:[e1,e2],e3]@or_broken@e3:[e2:,e3]
+f4:[f3:[f2:[f1,f2],f3],f4]@or_broken@f4:[f3:[f2:,f3],f4]@or_broken@f4:[f3:,f4]
+--- chain else
+a1
+b2
+@todo_wine@---
+@todo_wine@c3
+@todo_wine@---
+@todo_wine@d3
+@todo_wine@---
+@todo_wine@---
+@todo_wine@---
+@todo_wine@---
+@todo_wine@---
+--- chain else (if true)
+a1 else echo a2
+b2 else echo b3
+c1
+c2 else echo c3
+d1
+@todo_wine@---
+e1
+e2 else echo e3
+f3
+g1 else echo g2
+g3
+h1 else echo h2
+@todo_wine@---
+i1 else echo i2
+i3
+@todo_wine@j2@space@
+@todo_wine@---
+k1
+k2
+l1
+@todo_wine@---
+m1
+m2
+n1
+o1
+p1
+q1
+--- chain else (if false)
+@todo_wine@j3
+---
+k3
+l3
+m3
+n3
+o2
+o3
+p2
+@todo_wine@---
+q2
+q3
 ------------ Testing 'set' ------------
 1
 0
@@ -331,7 +531,7 @@ N
 @todo_wine@'@drive@@shortpath@ABCDEFGHIJK.LMNOP'@or_broken@''
 ''@or_broken@'%~ai'
 ''@or_broken@'%~ai'
-'--a------'@or_broken@'--a--------'@or_broken@'%~ai'
+'--a------'@or_broken@'--a--------'@or_broken@'--a--c---'@or_broken@'%~ai'
 '5'@or_broken@'%~zi'
 ''@or_broken@'%~ti'
 ''@or_broken@'%~ti'
@@ -1262,6 +1462,9 @@ Passed: file size check on file3_plus_eof [12]@or_broken@Skipping file size chec
 Passed: file size check on file12_plus_eof [14]@or_broken@Skipping file size check on NT4
 Passed: file size check on file12_no_eof [13]@or_broken@Skipping file size check on NT4
 Passed: file size check on file12_eof2 [14]@or_broken@Skipping file size check on NT4
+Passed: file size check on file1 [24]@or_broken@Skipping file size check on NT4
+Passed: file size check on file2 [16]@or_broken@Skipping file size check on NT4
+Passed: file size check on file3 [13]@or_broken@Skipping file size check on NT4
 Passed: file size check on file1_binary_srccopy [6]@or_broken@Skipping file size check on NT4
 Passed: file size check on file1_ascii_srccopy [5]@or_broken@Skipping file size check on NT4
 Passed: file size check on file123_default_copy [25]@or_broken@Skipping file size check on NT4

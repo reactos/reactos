@@ -31,6 +31,12 @@ echo @tab@word
 echo  @tab@word
 echo@tab@@tab@word
 echo @tab@ on @space@
+@echo --- @ with chains and brackets
+(echo the @ character chains until&&@echo we leave the current depth||(
+echo hidden
+@echo hidden
+))&&echo and can hide brackets||(@echo command hidden)||@(echo brackets hidden)
+@echo ---
 
 @echo off
 echo off@tab@@space@
@@ -245,6 +251,193 @@ echo %WINE_FOO%
 echo %ErrorLevel%
 set WINE_FOO=
 
+echo ------------ Testing chains ------------
+rem The chain operators have the following bottom-up precedence:
+rem 'else' precedes nothing and matches the closest unmatched 'if' in the same bracket depth
+rem '&' precedes 'else'
+rem '||' precedes '&' and 'else'
+rem '&&' precedes '||', '&' and 'else'
+rem '|' precedes '&&', '||', '&' and 'else'
+rem
+rem Example: 'if 1==1 if 2==2 if 3==3 a | b && c || d & e else f else g' is interpreted as
+rem          'if 1==1 (if 2==2 (if 3==3 ((((a | b) && c) || d) & e) else f) else g)'
+goto :cfailend
+:cfail
+echo %1
+call :setError 1
+goto :eof
+:cfailend
+echo --- chain success
+echo a1&echo a2
+echo b1&&echo b2
+echo c1||echo c2
+echo ---
+echo d1&echo d2&echo d3
+echo e1&echo e2&&echo e3
+echo f1&echo f2||echo f3
+echo ---
+echo g1&&echo g2&echo g3
+echo h1&&echo h2&&echo h3
+echo i1&&echo i2||echo i3
+echo ---
+echo j1||echo j2&echo j3
+echo ---
+echo k1||echo k2&&echo k3
+echo ---
+echo l1||echo l2||echo l3
+echo ---
+echo --- chain failure
+call :cfail a1&call :cfail a2
+call :cfail b1&&call :cfail b2
+echo ---
+call :cfail c1||call :cfail c2
+call :cfail d1&call :cfail d2&call :cfail d3
+call :cfail e1&call :cfail e2&&call :cfail e3
+echo ---
+call :cfail f1&call :cfail f2||call :cfail f3
+call :cfail g1&&call :cfail g2&call :cfail g3
+echo ---
+call :cfail h1&&call :cfail h2&&call :cfail h3
+echo ---
+call :cfail i1&&call :cfail i2||call :cfail i3
+echo ---
+call :cfail j1||call :cfail j2&call :cfail j3
+call :cfail k1||call :cfail k2&&call :cfail k3
+echo ---
+call :cfail l1||call :cfail l2||call :cfail l3
+echo --- chain brackets
+rem Brackets are like regular commands, they support redirections
+rem and have the same precedence as regular commands.
+echo a1&(echo a2&echo a3)
+echo b1&(echo b2&&echo b3)
+echo c1&(echo c2||echo c3)
+echo ---
+echo d1&&(echo d2&echo d3)
+echo e1&&(echo e2&&echo e3)
+echo f1&&(echo f2||echo f3)
+echo ---
+echo g1||(echo g2&echo g3)
+echo ---
+echo h1||(echo h2&&echo h3)
+echo ---
+echo i1||(echo i2||echo i3)
+echo ---
+call :cfail j1&(call :cfail j2&call :cfail j3)
+call :cfail k1&(call :cfail k2&&call :cfail k3)
+echo ---
+call :cfail l1&(call :cfail l2||call :cfail l3)
+call :cfail m1&&(call :cfail m2&call :cfail m3)
+echo ---
+call :cfail n1&&(call :cfail n2&&call :cfail n3)
+echo ---
+call :cfail o1&&(call :cfail o2||call :cfail o3)
+echo ---
+call :cfail p1||(call :cfail p2&call :cfail p3)
+call :cfail q1||(call :cfail q2&&call :cfail q3)
+echo ---
+call :cfail r1||(call :cfail r2||call :cfail r3)
+echo --- chain pipe
+rem Piped commands run at the same time, so the print order varies.
+rem Additionally, they don't run in the batch script context, as shown by
+rem 'call :existing_label|echo read the error message'.
+(echo a 1>&2|echo a 1>&2) 2>&1
+echo ---
+echo b1|echo b2
+echo c1&&echo c2|echo c3
+echo d1||echo d2|echo d3
+echo ---
+echo e1&echo e2|echo e3
+echo f1|echo f2&&echo f3
+echo g1|echo g2||echo g3
+echo ---
+echo h1|echo h2&echo h3
+echo i1|echo i2|echo i3
+echo --- chain pipe input
+rem The output data of the left side of a pipe can disappear, probably
+rem because it finished too fast and closed the pipe before it could be read,
+rem which means we can get broken results for the tests of this section.
+echo @echo off> tmp.cmd
+echo set IN=X>> tmp.cmd
+echo set /p IN=%%1:>> tmp.cmd
+echo setlocal EnableDelayedExpansion>> tmp.cmd
+echo echo [!IN!,%%1]>> tmp.cmd
+echo endlocal>> tmp.cmd
+echo set IN=>> tmp.cmd
+echo a1|cmd /ctmp.cmd a2
+echo b1|cmd /ctmp.cmd b2|cmd /ctmp.cmd b3
+echo c1|cmd /ctmp.cmd c2|cmd /ctmp.cmd c3|cmd /ctmp.cmd c4
+echo d1|call tmp.cmd d2
+echo e1|call tmp.cmd e2|call tmp.cmd e3
+echo f1|call tmp.cmd f2|call tmp.cmd f3|call tmp.cmd f4
+rem FIXME these 3 tests cause "unexpected end of output"
+rem test  : echo g1|tmp.cmd g2
+rem result: g2:[g1,g2]
+rem test  : echo h1|tmp.cmd h2|tmp.cmd h3
+rem result: h3:[h2:[h1,h2],h3]@or_broken@h3:[h2:,h3]
+rem test  : echo i1|tmp.cmd i2|tmp.cmd i3|tmp.cmd i4
+rem result: i4:[i3:[i2:[i1,i2],i3],i4]@or_broken@i4:[i3:[i2:,i3],i4]@or_broken@i4:[i3:,i4]
+del tmp.cmd
+echo --- chain else
+rem Command arguments are gready and eat up the 'else' unless terminated by
+rem brackets, which means the 'else' can only be recognized when the
+rem 'if true' command chain ends with brackets.
+if 1==1 if 2==2 if 3==3 (echo a1) else (echo a2) else echo a3
+if 1==1 if 2==2 if 3==0 (echo b1) else (echo b2) else echo b3
+echo ---
+if 1==1 if 2==0 if 3==3 (echo c1) else (echo c2) else echo c3
+echo ---
+if 1==1 if 2==0 if 3==0 (echo d1) else (echo d2) else echo d3
+echo ---
+if 1==0 if 2==2 if 3==3 (echo e1) else (echo e2) else echo e3
+echo ---
+if 1==0 if 2==2 if 3==0 (echo f1) else (echo f2) else echo f3
+echo ---
+if 1==0 if 2==0 if 3==3 (echo g1) else (echo g2) else echo g3
+echo ---
+if 1==0 if 2==0 if 3==0 (echo h1) else (echo h2) else echo h3
+echo ---
+echo --- chain else (if true)
+if 1==1 echo a1 else echo a2
+if 1==1 echo b1|echo b2 else echo b3
+if 1==1 echo c1&&echo c2 else echo c3
+if 1==1 echo d1||echo d2 else echo d3
+echo ---
+if 1==1 echo e1&echo e2 else echo e3
+if 1==1 echo f1 else echo f2|echo f3
+if 1==1 echo g1 else echo g2&&echo g3
+if 1==1 echo h1 else echo h2||echo h3
+echo ---
+if 1==1 echo i1 else echo i2&echo i3
+if 1==1 echo j1|(echo j2) else echo j3
+echo ---
+if 1==1 echo k1&&(echo k2) else echo k3
+if 1==1 echo l1||(echo l2) else echo l3
+echo ---
+if 1==1 echo m1&(echo m2) else echo m3
+if 1==1 (echo n1) else echo n2|echo n3
+if 1==1 (echo o1) else echo o2&&echo o3
+if 1==1 (echo p1) else echo p2||echo p3
+if 1==1 (echo q1) else echo q2&echo q3
+echo --- chain else (if false)
+if 1==0 echo a1 else echo a2
+if 1==0 echo b1|echo b2 else echo b3
+if 1==0 echo c1&&echo c2 else echo c3
+if 1==0 echo d1||echo d2 else echo d3
+if 1==0 echo e1&echo e2 else echo e3
+if 1==0 echo f1 else echo f2|echo f3
+if 1==0 echo g1 else echo g2&&echo g3
+if 1==0 echo h1 else echo h2||echo h3
+if 1==0 echo i1 else echo i2&echo i3
+if 1==0 echo j1|(echo j2) else echo j3
+echo ---
+if 1==0 echo k1&&(echo k2) else echo k3
+if 1==0 echo l1||(echo l2) else echo l3
+if 1==0 echo m1&(echo m2) else echo m3
+if 1==0 (echo n1) else echo n2|echo n3
+if 1==0 (echo o1) else echo o2&&echo o3
+if 1==0 (echo p1) else echo p2||echo p3
+echo ---
+if 1==0 (echo q1) else echo q2&echo q3
 echo ------------ Testing 'set' ------------
 call :setError 0
 rem Remove any WINE_FOO* WINE_BA* environment variables from shell before proceeding
@@ -2390,6 +2583,22 @@ call :CheckFileSize file12_no_eof 13
 rem Concat 2 files, default mode - (one EOF on the end 5+8+1)
 copy ..\file1+..\file2 file12_eof2 >nul 2>&1
 call :CheckFileSize file12_eof2 14
+
+rem Test copying when destination is one of the sources.
+rem Concat file1+file2+file3 into file1, should produce file1+file2+file3 = 24
+copy /y ..\file? .\ >nul 2>&1
+copy /y /b file1+file2+file3 file1 >nul 2>&1
+call :CheckFileSize file1 24
+
+rem Concat file1+file2+file3 into file2, should produce file1+file3 = 16
+copy /y ..\file? .\ >nul 2>&1
+copy /y /b file1+file2+file3 file2 >nul 2>&1
+call :CheckFileSize file2 16
+
+rem Concat file1+file2+file3 into file3, should produce file1+file2 = 13
+copy /y ..\file? .\ >nul 2>&1
+copy /y /b file1+file2+file3 file3 >nul 2>&1
+call :CheckFileSize file3 13
 
 rem --------------------------------------------------------------
 rem Show ascii source copy stops at first EOF, binary does the lot
