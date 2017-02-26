@@ -911,23 +911,45 @@ ULONG SEC_ENTRY SspiPromptForCredentialsW( PCWSTR target, void *info,
     if (!(ret = CredUIPromptForCredentialsW( cred_info, target, NULL, error, username,
                                              len_username, password, len_password, save, flags )))
     {
-        DWORD size = sizeof(*id);
-        WCHAR *ptr;
+        DWORD size = sizeof(*id), len_domain = 0;
+        WCHAR *ptr, *user = username, *domain = NULL;
 
-        len_username = strlenW( username );
+        if ((ptr = strchrW( username, '\\' )))
+        {
+            user = ptr + 1;
+            len_username = strlenW( user );
+            if (!strcmpiW( package, ntlmW ) || !strcmpiW( package, negotiateW ))
+            {
+                domain = username;
+                len_domain = ptr - username;
+            }
+            *ptr = 0;
+        }
+        else len_username = strlenW( username );
         len_password = strlenW( password );
 
         size += (len_username + 1) * sizeof(WCHAR);
+        size += (len_domain + 1) * sizeof(WCHAR);
         size += (len_password + 1) * sizeof(WCHAR);
         if (!(id = HeapAlloc( GetProcessHeap(), 0, size ))) return ERROR_OUTOFMEMORY;
         ptr = (WCHAR *)(id + 1);
 
-        memcpy( ptr, username, (len_username + 1) * sizeof(WCHAR) );
+        memcpy( ptr, user, (len_username + 1) * sizeof(WCHAR) );
         id->User           = ptr;
         id->UserLength     = len_username;
         ptr += len_username + 1;
-        id->Domain         = NULL;
-        id->DomainLength   = 0;
+        if (len_domain)
+        {
+            memcpy( ptr, domain, (len_domain + 1) * sizeof(WCHAR) );
+            id->Domain         = ptr;
+            id->DomainLength   = len_domain;
+            ptr += len_domain + 1;
+        }
+        else
+        {
+            id->Domain         = NULL;
+            id->DomainLength   = 0;
+        }
         memcpy( ptr, password, (len_password + 1) * sizeof(WCHAR) );
         id->Password       = ptr;
         id->PasswordLength = len_password;
