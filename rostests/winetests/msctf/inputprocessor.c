@@ -1550,11 +1550,11 @@ static void test_startSession(void)
     ITfDocumentMgr_Release(dmtest);
 
     hr = TextStoreACP_Constructor((IUnknown**)&ts);
-    if (SUCCEEDED(hr))
-    {
-        hr = ITfDocumentMgr_CreateContext(g_dm, cid, 0, (IUnknown*)ts, &cxt, &editCookie);
-        ok(SUCCEEDED(hr),"CreateContext Failed\n");
-    }
+    ok(SUCCEEDED(hr),"Constructor Failed\n");
+    if (FAILED(hr)) return;
+
+    hr = ITfDocumentMgr_CreateContext(g_dm, cid, 0, (IUnknown*)ts, &cxt, &editCookie);
+    ok(SUCCEEDED(hr),"CreateContext Failed\n");
 
     hr = ITfDocumentMgr_CreateContext(g_dm, cid, 0, NULL, &cxt2, &editCookie);
     ok(SUCCEEDED(hr),"CreateContext Failed\n");
@@ -2175,11 +2175,11 @@ static void test_AssociateFocus(void)
     test_CurrentFocus = dm1;
     test_PrevFocus = FOCUS_IGNORE;
     test_OnSetFocus  = SINK_OPTIONAL;
-    test_ShouldDeactivate = SINK_OPTIONAL;
+    test_ShouldDeactivate = TRUE;
     hr = ITfThreadMgr_AssociateFocus(g_tm,wnd1,dm1,&olddm);
     ok(SUCCEEDED(hr),"AssociateFocus failed\n");
     sink_check_ok(&test_OnSetFocus,"OnSetFocus");
-    test_ShouldDeactivate = SINK_UNEXPECTED;
+    test_ShouldDeactivate = FALSE;
 
     processPendingMessages();
 
@@ -2211,12 +2211,14 @@ static void test_AssociateFocus(void)
     test_CurrentFocus = FOCUS_SAVE;
     test_PrevFocus = FOCUS_SAVE;
     test_OnSetFocus = SINK_SAVE;
+    test_ShouldDeactivate = TRUE; /* win 8/10 */
     ShowWindow(wnd2,SW_SHOWNORMAL);
     SetFocus(wnd2);
     sink_check_saved(&test_OnSetFocus,dm1,dm2,"OnSetFocus");
     test_CurrentFocus = FOCUS_IGNORE; /* occasional wine race */
     test_PrevFocus = FOCUS_IGNORE; /* occasional wine race */
     test_OnSetFocus = SINK_IGNORE; /* occasional wine race */
+    test_ShouldDeactivate = FALSE;
     processPendingMessages();
 
     ShowWindow(wnd3,SW_SHOWNORMAL);
