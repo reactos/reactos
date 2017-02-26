@@ -27,13 +27,30 @@
 #include "wine/test.h"
 
 static HTHEME  (WINAPI * pOpenThemeDataEx)(HWND, LPCWSTR, DWORD);
-
-#define UXTHEME_GET_PROC(func) p ## func = (void*)GetProcAddress(hUxtheme, #func);
+static HPAINTBUFFER (WINAPI *pBeginBufferedPaint)(HDC, const RECT *, BP_BUFFERFORMAT, BP_PAINTPARAMS *, HDC *);
+static HRESULT (WINAPI *pBufferedPaintClear)(HPAINTBUFFER, const RECT *);
+static HRESULT (WINAPI *pEndBufferedPaint)(HPAINTBUFFER, BOOL);
+static HRESULT (WINAPI *pGetBufferedPaintBits)(HPAINTBUFFER, RGBQUAD **, int *);
+static HDC (WINAPI *pGetBufferedPaintDC)(HPAINTBUFFER);
+static HDC (WINAPI *pGetBufferedPaintTargetDC)(HPAINTBUFFER);
+static HRESULT (WINAPI *pGetBufferedPaintTargetRect)(HPAINTBUFFER, RECT *);
 
 static void init_funcs(void)
 {
     HMODULE hUxtheme = GetModuleHandleA("uxtheme.dll");
-    UXTHEME_GET_PROC(OpenThemeDataEx)
+
+#define UXTHEME_GET_PROC(func) p ## func = (void*)GetProcAddress(hUxtheme, #func)
+    UXTHEME_GET_PROC(BeginBufferedPaint);
+    UXTHEME_GET_PROC(BufferedPaintClear);
+    UXTHEME_GET_PROC(EndBufferedPaint);
+    UXTHEME_GET_PROC(GetBufferedPaintBits);
+    UXTHEME_GET_PROC(GetBufferedPaintDC);
+    UXTHEME_GET_PROC(GetBufferedPaintTargetDC);
+    UXTHEME_GET_PROC(GetBufferedPaintTargetRect);
+    UXTHEME_GET_PROC(BufferedPaintClear);
+
+    UXTHEME_GET_PROC(OpenThemeDataEx);
+#undef UXTHEME_GET_PROC
 }
 
 static void test_IsThemed(void)
@@ -180,6 +197,10 @@ static void test_OpenThemeData(void)
         ok( GetLastError() == E_PROP_ID_UNSUPPORTED,
             "Expected GLE() to be E_PROP_ID_UNSUPPORTED, got 0x%08x\n",
             GetLastError());
+
+    /* Close invalid handle */
+    hRes = CloseThemeData((HTHEME)0xdeadbeef);
+    ok( hRes == E_HANDLE, "Expected E_HANDLE, got 0x%08x\n", hRes);
 
     if (!bThemeActive)
     {
@@ -506,6 +527,178 @@ static void test_CloseThemeData(void)
     ok( hRes == E_HANDLE, "Expected E_HANDLE, got 0x%08x\n", hRes);
 }
 
+static void test_buffered_paint(void)
+{
+    BP_PAINTPARAMS params = { 0 };
+    BP_BUFFERFORMAT format;
+    HDC target, src, hdc;
+    HPAINTBUFFER buffer;
+    RECT rect, rect2;
+    RGBQUAD *bits;
+    HRESULT hr;
+    int row;
+
+    if (!pBeginBufferedPaint)
+    {
+        win_skip("Buffered painting API is not supported.\n");
+        return;
+    }
+
+    buffer = pBeginBufferedPaint(NULL, NULL, BPBF_COMPATIBLEBITMAP,
+            NULL, NULL);
+    ok(buffer == NULL, "Unexpected buffer %p\n", buffer);
+
+    target = CreateCompatibleDC(0);
+    buffer = pBeginBufferedPaint(target, NULL, BPBF_COMPATIBLEBITMAP,
+            NULL, NULL);
+    ok(buffer == NULL, "Unexpected buffer %p\n", buffer);
+
+    params.cbSize = sizeof(params);
+    buffer = pBeginBufferedPaint(target, NULL, BPBF_COMPATIBLEBITMAP,
+            &params, NULL);
+    ok(buffer == NULL, "Unexpected buffer %p\n", buffer);
+
+    src = (void *)0xdeadbeef;
+    buffer = pBeginBufferedPaint(target, NULL, BPBF_COMPATIBLEBITMAP,
+            &params, &src);
+    ok(buffer == NULL, "Unexpected buffer %p\n", buffer);
+    ok(src == NULL, "Unexpected buffered dc %p\n", src);
+
+    /* target rect is mandatory */
+    SetRectEmpty(&rect);
+    src = (void *)0xdeadbeef;
+    buffer = pBeginBufferedPaint(target, &rect, BPBF_COMPATIBLEBITMAP,
+            &params, &src);
+    ok(buffer == NULL, "Unexpected buffer %p\n", buffer);
+    ok(src == NULL, "Unexpected buffered dc %p\n", src);
+
+    /* inverted rectangle */
+    SetRect(&rect, 10, 0, 5, 5);
+    src = (void *)0xdeadbeef;
+    buffer = pBeginBufferedPaint(target, &rect, BPBF_COMPATIBLEBITMAP,
+            &params, &src);
+    ok(buffer == NULL, "Unexpected buffer %p\n", buffer);
+    ok(src == NULL, "Unexpected buffered dc %p\n", src);
+
+    SetRect(&rect, 0, 10, 5, 0);
+    src = (void *)0xdeadbeef;
+    buffer = pBeginBufferedPaint(target, &rect, BPBF_COMPATIBLEBITMAP,
+            &params, &src);
+    ok(buffer == NULL, "Unexpected buffer %p\n", buffer);
+    ok(src == NULL, "Unexpected buffered dc %p\n", src);
+
+    /* valid rectangle, no target dc */
+    SetRect(&rect, 0, 0, 5, 5);
+    src = (void *)0xdeadbeef;
+    buffer = pBeginBufferedPaint(NULL, &rect, BPBF_COMPATIBLEBITMAP,
+            &params, &src);
+    ok(buffer == NULL, "Unexpected buffer %p\n", buffer);
+    ok(src == NULL, "Unexpected buffered dc %p\n", src);
+
+    SetRect(&rect, 0, 0, 5, 5);
+    src = NULL;
+    buffer = pBeginBufferedPaint(target, &rect, BPBF_COMPATIBLEBITMAP,
+            &params, &src);
+    ok(buffer != NULL, "Unexpected buffer %p\n", buffer);
+    ok(src != NULL, "Expected buffered dc\n");
+    hr = pEndBufferedPaint(buffer, FALSE);
+    ok(hr == S_OK, "Unexpected return code %#x\n", hr);
+
+    SetRect(&rect, 0, 0, 5, 5);
+    buffer = pBeginBufferedPaint(target, &rect, BPBF_COMPATIBLEBITMAP,
+            &params, &src);
+    ok(buffer != NULL, "Unexpected buffer %p\n", buffer);
+
+    /* clearing */
+    hr = pBufferedPaintClear(NULL, NULL);
+todo_wine
+    ok(hr == E_FAIL, "Unexpected return code %#x\n", hr);
+
+    hr = pBufferedPaintClear(buffer, NULL);
+todo_wine
+    ok(hr == S_OK, "Unexpected return code %#x\n", hr);
+
+    /* access buffer attributes */
+    hdc = pGetBufferedPaintDC(buffer);
+    ok(hdc == src, "Unexpected hdc, %p, buffered dc %p\n", hdc, src);
+
+    hdc = pGetBufferedPaintTargetDC(buffer);
+    ok(hdc == target, "Unexpected target hdc %p, original %p\n", hdc, target);
+
+    hr = pGetBufferedPaintTargetRect(NULL, NULL);
+    ok(hr == E_POINTER, "Unexpected return code %#x\n", hr);
+
+    hr = pGetBufferedPaintTargetRect(buffer, NULL);
+    ok(hr == E_POINTER, "Unexpected return code %#x\n", hr);
+
+    hr = pGetBufferedPaintTargetRect(NULL, &rect2);
+    ok(hr == E_FAIL, "Unexpected return code %#x\n", hr);
+
+    SetRectEmpty(&rect2);
+    hr = pGetBufferedPaintTargetRect(buffer, &rect2);
+    ok(hr == S_OK, "Unexpected return code %#x\n", hr);
+    ok(EqualRect(&rect, &rect2), "Wrong target rect\n");
+
+    hr = pEndBufferedPaint(buffer, FALSE);
+    ok(hr == S_OK, "Unexpected return code %#x\n", hr);
+
+    /* invalid buffer handle */
+    hr = pEndBufferedPaint(NULL, FALSE);
+    ok(hr == E_INVALIDARG, "Unexpected return code %#x\n", hr);
+
+    hdc = pGetBufferedPaintDC(NULL);
+    ok(hdc == NULL, "Unexpected hdc %p\n", hdc);
+
+    hdc = pGetBufferedPaintTargetDC(NULL);
+    ok(hdc == NULL, "Unexpected target hdc %p\n", hdc);
+
+    hr = pGetBufferedPaintTargetRect(NULL, &rect2);
+    ok(hr == E_FAIL, "Unexpected return code %#x\n", hr);
+
+    hr = pGetBufferedPaintTargetRect(NULL, NULL);
+    ok(hr == E_POINTER, "Unexpected return code %#x\n", hr);
+
+    bits = (void *)0xdeadbeef;
+    row = 10;
+    hr = pGetBufferedPaintBits(NULL, &bits, &row);
+    ok(hr == E_FAIL, "Unexpected return code %#x\n", hr);
+    ok(row == 10, "Unexpected row count %d\n", row);
+    ok(bits == (void *)0xdeadbeef, "Unepexpected data pointer %p\n", bits);
+
+    hr = pGetBufferedPaintBits(NULL, NULL, NULL);
+    ok(hr == E_POINTER, "Unexpected return code %#x\n", hr);
+
+    hr = pGetBufferedPaintBits(NULL, &bits, NULL);
+    ok(hr == E_POINTER, "Unexpected return code %#x\n", hr);
+
+    hr = pGetBufferedPaintBits(NULL, NULL, &row);
+    ok(hr == E_POINTER, "Unexpected return code %#x\n", hr);
+
+    /* access buffer bits */
+    for (format = BPBF_COMPATIBLEBITMAP; format <= BPBF_TOPDOWNMONODIB; format++)
+    {
+        buffer = pBeginBufferedPaint(target, &rect, format, &params, &src);
+
+        /* only works for DIB buffers */
+        bits = NULL;
+        row = 0;
+        hr = pGetBufferedPaintBits(buffer, &bits, &row);
+        if (format == BPBF_COMPATIBLEBITMAP)
+            ok(hr == E_FAIL, "Unexpected return code %#x\n", hr);
+        else
+        {
+            ok(hr == S_OK, "Unexpected return code %#x\n", hr);
+            ok(bits != NULL, "Bitmap bits %p\n", bits);
+            ok(row >= (rect.right - rect.left), "format %d: bitmap width %d\n", format, row);
+        }
+
+        hr = pEndBufferedPaint(buffer, FALSE);
+        ok(hr == S_OK, "Unexpected return code %#x\n", hr);
+    }
+
+    DeleteDC(target);
+}
+
 START_TEST(system)
 {
     init_funcs();
@@ -541,4 +734,6 @@ START_TEST(system)
     /* CloseThemeData */
     trace("Starting test_CloseThemeData()\n");
     test_CloseThemeData();
+
+    test_buffered_paint();
 }
