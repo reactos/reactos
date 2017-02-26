@@ -108,7 +108,7 @@ reactos/dll/win32/mscms               # Synced to WineStaging-2.2
 reactos/dll/win32/mscoree             # Synced to Wine-1.5.4
 reactos/dll/win32/msctf               # Synced to WineStaging-2.2
 reactos/dll/win32/msftedit            # Synced to WineStaging-1.9.11
-reactos/dll/win32/msg711.acm          # Synced to WineStaging-1.9.11
+reactos/dll/win32/msg711.acm          # Synced to WineStaging-2.2
 reactos/dll/win32/msgsm32.acm         # Synced to WineStaging-1.9.11
 reactos/dll/win32/mshtml              # Synced to WineStaging-1.7.55
 reactos/dll/win32/mshtml.tlb          # Synced to WineStaging-1.7.55
