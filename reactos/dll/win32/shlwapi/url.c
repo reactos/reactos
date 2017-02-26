@@ -123,7 +123,7 @@ static DWORD get_scheme_code(LPCWSTR scheme, DWORD scheme_len)
 
     for(i=0; i < sizeof(shlwapi_schemes)/sizeof(shlwapi_schemes[0]); i++) {
         if(scheme_len == strlenW(shlwapi_schemes[i].scheme_name)
-           && !memcmp(scheme, shlwapi_schemes[i].scheme_name, scheme_len*sizeof(WCHAR)))
+           && !memicmpW(scheme, shlwapi_schemes[i].scheme_name, scheme_len))
             return shlwapi_schemes[i].scheme_number;
     }
 
@@ -355,6 +355,9 @@ HRESULT WINAPI UrlCanonicalizeW(LPCWSTR pszUrl, LPWSTR pszCanonicalized,
         }
         else
             dwFlags |= URL_ESCAPE_UNSAFE;
+        state = 5;
+        is_file_url = TRUE;
+    } else if(url[0] == '/') {
         state = 5;
         is_file_url = TRUE;
     }
@@ -1074,7 +1077,7 @@ HRESULT WINAPI UrlEscapeW(
     TRACE("(%p(%s) %p %p 0x%08x)\n", pszUrl, debugstr_w(pszUrl),
             pszEscaped, pcchEscaped, dwFlags);
 
-    if(!pszUrl || !pcchEscaped)
+    if(!pszUrl || !pcchEscaped || !pszEscaped || *pcchEscaped == 0)
         return E_INVALIDARG;
 
     if(dwFlags & ~(URL_ESCAPE_SPACES_ONLY |
