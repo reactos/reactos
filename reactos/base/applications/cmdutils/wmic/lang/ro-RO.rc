@@ -7,5 +7,5 @@ STRINGTABLE
     STRING_CMDLINE_NOT_SUPPORTED, "Eroare: Comandă nerecunoscută.\n"
     STRING_ALIAS_NOT_FOUND, "Eroare: Alias necunoscut.\n"
     STRING_INVALID_QUERY, "Eroare: Cerere nevalidă.\n"
-    STRING_INVALID_PATH, "Conținutul din «PATH» este sintactic nevalid.\n"
+    STRING_INVALID_PATH, "Eroare: Conținutul din «PATH» este sintactic nevalid.\n"
 }

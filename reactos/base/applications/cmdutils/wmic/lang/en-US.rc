@@ -5,5 +5,5 @@ STRINGTABLE
     STRING_CMDLINE_NOT_SUPPORTED, "Error: Command line not supported\n"
     STRING_ALIAS_NOT_FOUND, "Error: Alias not found\n"
     STRING_INVALID_QUERY, "Error: Invalid query\n"
-    STRING_INVALID_PATH, "Invalid syntax for PATH\n"
+    STRING_INVALID_PATH, "Error: Invalid syntax for PATH\n"
 }

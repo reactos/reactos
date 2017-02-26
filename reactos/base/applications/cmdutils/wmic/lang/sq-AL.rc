@@ -9,5 +9,5 @@ STRINGTABLE
     STRING_CMDLINE_NOT_SUPPORTED, "Gabim: Linja e komandave jo e mbështetur\n"
     STRING_ALIAS_NOT_FOUND, "Gabim: Pseudonimi nuk u gjend\n"
     STRING_INVALID_QUERY, "Gabim: Kërkim pa vlere\n"
-    STRING_INVALID_PATH, "Invalid syntax for PATH\n"
+    STRING_INVALID_PATH, "Error: Invalid syntax for PATH\n"
 }
