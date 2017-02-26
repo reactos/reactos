@@ -29,73 +29,83 @@ HKR, , Icon,           0, "-28"
 %VIAMfg%=VIA
 
 [Standard]
-%Processor.DeviceDesc% = NO_DRV,ACPI\Processor
+%Processor.DeviceDesc% = Processr_Inst,ACPI\Processor
 
 [Cyrix]
-%CyrixProcessor.DeviceDesc% = NO_DRV,ACPI\CyrixInstead_-_x86
+%CyrixProcessor.DeviceDesc% = Processr_Inst,ACPI\CyrixInstead_-_x86
 
 [Intel]
-%IntelProcessor.DeviceDesc%       = NO_DRV,ACPI\GenuineIntel_-_x86_Family_5_model_1
-%IntelProcessor.DeviceDesc%       = NO_DRV,ACPI\GenuineIntel_-_x86_Family_5_model_2
-%IntelProcessor.DeviceDesc%       = NO_DRV,ACPI\GenuineIntel_-_x86_Family_5_model_3
-%IntelMMXProcessor.DeviceDesc%    = NO_DRV,ACPI\GenuineIntel_-_x86_Family_5_model_4
-%IntelMMXProcessor.DeviceDesc%    = NO_DRV,ACPI\GenuineIntel_-_x86_Family_5_model_7
-%IntelMMXProcessor.DeviceDesc%    = NO_DRV,ACPI\GenuineIntel_-_x86_Family_5_model_8
-%IntelPROProcessor.DeviceDesc%    = NO_DRV,ACPI\GenuineIntel_-_x86_Family_6_Model_1
-%IntelP2Processor.DeviceDesc%     = NO_DRV,ACPI\GenuineIntel_-_x86_Family_6_Model_3
-%IntelP2Processor.DeviceDesc%     = NO_DRV,ACPI\GenuineIntel_-_x86_Family_6_Model_5
-%IntelP2Processor.DeviceDesc%     = NO_DRV,ACPI\GenuineIntel_-_x86_Family_6_Model_6
-%IntelP3Processor.DeviceDesc%     = NO_DRV,ACPI\GenuineIntel_-_x86_Family_6_Model_7
-%IntelP3Processor.DeviceDesc%     = NO_DRV,ACPI\GenuineIntel_-_x86_Family_6_Model_8
-%IntelMProcessor.DeviceDesc%      = NO_DRV,ACPI\GenuineIntel_-_x86_Family_6_Model_9
-%IntelP3Processor.DeviceDesc%     = NO_DRV,ACPI\GenuineIntel_-_x86_Family_6_Model_10
-%IntelP3Processor.DeviceDesc%     = NO_DRV,ACPI\GenuineIntel_-_x86_Family_6_Model_11
-%IntelMProcessor.DeviceDesc%      = NO_DRV,ACPI\GenuineIntel_-_x86_Family_6_Model_13
-%IntelCoreProcessor.DeviceDesc%   = NO_DRV,ACPI\GenuineIntel_-_x86_Family_6_Model_14
-%IntelCoreProcessor.DeviceDesc%   = NO_DRV,ACPI\GenuineIntel_-_x86_Family_6_Model_15
-%IntelCoreProcessor.DeviceDesc%   = NO_DRV,ACPI\GenuineIntel_-_x86_Family_6_Model_22
-%IntelCoreProcessor.DeviceDesc%   = NO_DRV,ACPI\GenuineIntel_-_x86_Family_6_Model_23
-%IntelCoreiXProcessor.DeviceDesc% = NO_DRV,ACPI\GenuineIntel_-_x86_Family_6_Model_26
-%IntelAtomProcessor.DeviceDesc%   = NO_DRV,ACPI\GenuineIntel_-_x86_Family_6_Model_28
-%IntelCoreiXProcessor.DeviceDesc% = NO_DRV,ACPI\GenuineIntel_-_x86_Family_6_Model_30
-%IntelCoreiXProcessor.DeviceDesc% = NO_DRV,ACPI\GenuineIntel_-_x86_Family_6_Model_37
-%IntelP4Processor.DeviceDesc%     = NO_DRV,ACPI\GenuineIntel_-_x86_Family_15
-%IntelProcessor.DeviceDesc%       = NO_DRV,ACPI\GenuineIntel_-_x86
+%IntelProcessor.DeviceDesc%       = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_5_model_1
+%IntelProcessor.DeviceDesc%       = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_5_model_2
+%IntelProcessor.DeviceDesc%       = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_5_model_3
+%IntelMMXProcessor.DeviceDesc%    = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_5_model_4
+%IntelMMXProcessor.DeviceDesc%    = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_5_model_7
+%IntelMMXProcessor.DeviceDesc%    = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_5_model_8
+%IntelPROProcessor.DeviceDesc%    = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_1
+%IntelP2Processor.DeviceDesc%     = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_3
+%IntelP2Processor.DeviceDesc%     = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_5
+%IntelP2Processor.DeviceDesc%     = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_6
+%IntelP3Processor.DeviceDesc%     = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_7
+%IntelP3Processor.DeviceDesc%     = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_8
+%IntelMProcessor.DeviceDesc%      = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_9
+%IntelP3Processor.DeviceDesc%     = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_10
+%IntelP3Processor.DeviceDesc%     = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_11
+%IntelMProcessor.DeviceDesc%      = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_13
+%IntelCoreProcessor.DeviceDesc%   = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_14
+%IntelCoreProcessor.DeviceDesc%   = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_15
+%IntelCoreProcessor.DeviceDesc%   = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_22
+%IntelCoreProcessor.DeviceDesc%   = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_23
+%IntelCoreiXProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_26
+%IntelAtomProcessor.DeviceDesc%   = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_28
+%IntelCoreiXProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_30
+%IntelCoreiXProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_6_Model_37
+%IntelP4Processor.DeviceDesc%     = Processr_Inst,ACPI\GenuineIntel_-_x86_Family_15
+%IntelProcessor.DeviceDesc%       = Processr_Inst,ACPI\GenuineIntel_-_x86
 
 [AMD]
-%AMDK6Processor.DeviceDesc%   = NO_DRV,ACPI\AuthenticAMD_-_x86_Family_5_Model_7
-%AMDK62Processor.DeviceDesc%  = NO_DRV,ACPI\AuthenticAMD_-_x86_Family_5_Model_8
-%AMDK63Processor.DeviceDesc%  = NO_DRV,ACPI\AuthenticAMD_-_x86_Family_5_Model_9
-%AMDK63Processor.DeviceDesc%  = NO_DRV,ACPI\AuthenticAMD_-_x86_Family_5_Model_10
-%AMDK63Processor.DeviceDesc%  = NO_DRV,ACPI\AuthenticAMD_-_x86_Family_5_Model_13
-%AMDK7Processor.DeviceDesc%   = NO_DRV,ACPI\AuthenticAMD_-_x86_Family_6
-%AMDK8Processor.DeviceDesc%   = NO_DRV,ACPI\AuthenticAMD_-_x86_Family_15
-%AMDPHENProcessor.DeviceDesc% = NO_DRV,ACPI\AuthenticAMD_-_x86_Family_16
-%AMDQProcessor.DeviceDesc%    = NO_DRV,ACPI\AuthenticAMD_-_x86_Family_17
-%AMDProcessor.DeviceDesc%     = NO_DRV,ACPI\AuthenticAMD_-_x86
+%AMDK6Processor.DeviceDesc%   = Processr_Inst,ACPI\AuthenticAMD_-_x86_Family_5_Model_7
+%AMDK62Processor.DeviceDesc%  = Processr_Inst,ACPI\AuthenticAMD_-_x86_Family_5_Model_8
+%AMDK63Processor.DeviceDesc%  = Processr_Inst,ACPI\AuthenticAMD_-_x86_Family_5_Model_9
+%AMDK63Processor.DeviceDesc%  = Processr_Inst,ACPI\AuthenticAMD_-_x86_Family_5_Model_10
+%AMDK63Processor.DeviceDesc%  = Processr_Inst,ACPI\AuthenticAMD_-_x86_Family_5_Model_13
+%AMDK7Processor.DeviceDesc%   = Processr_Inst,ACPI\AuthenticAMD_-_x86_Family_6
+%AMDK8Processor.DeviceDesc%   = Processr_Inst,ACPI\AuthenticAMD_-_x86_Family_15
+%AMDPHENProcessor.DeviceDesc% = Processr_Inst,ACPI\AuthenticAMD_-_x86_Family_16
+%AMDQProcessor.DeviceDesc%    = Processr_Inst,ACPI\AuthenticAMD_-_x86_Family_17
+%AMDProcessor.DeviceDesc%     = Processr_Inst,ACPI\AuthenticAMD_-_x86
 
 [Transmeta]
-%TransmetaProcessor.DeviceDesc% = NO_DRV,ACPI\GenuineTMx86_-_x86
+%TransmetaProcessor.DeviceDesc% = Processr_Inst,ACPI\GenuineTMx86_-_x86
 
 [VIA]
-%ViaNEHProcessor.DeviceDesc%  = NO_DRV,ACPI\CentaurHauls_-_x86_Family_6_Model_9
-%ViaESTProcessor.DeviceDesc%  = NO_DRV,ACPI\CentaurHauls_-_x86_Family_6_Model_10
-%ViaC7Processor.DeviceDesc%   = NO_DRV,ACPI\CentaurHauls_-_x86_Family_6_Model_13
-%ViaNANOProcessor.DeviceDesc% = NO_DRV,ACPI\CentaurHauls_-_x86_Family_6_Model_15
-%ViaProcessor.DeviceDesc%     = NO_DRV,ACPI\CentaurHauls_-_x86
+%ViaNEHProcessor.DeviceDesc%  = Processr_Inst,ACPI\CentaurHauls_-_x86_Family_6_Model_9
+%ViaESTProcessor.DeviceDesc%  = Processr_Inst,ACPI\CentaurHauls_-_x86_Family_6_Model_10
+%ViaC7Processor.DeviceDesc%   = Processr_Inst,ACPI\CentaurHauls_-_x86_Family_6_Model_13
+%ViaNANOProcessor.DeviceDesc% = Processr_Inst,ACPI\CentaurHauls_-_x86_Family_6_Model_15
+%ViaProcessor.DeviceDesc%     = Processr_Inst,ACPI\CentaurHauls_-_x86
 
-;---------------------------- NO DRIVER REQ -----------------------------
+;---------------------------- Processr Driver ---------------------------
 
-[NO_DRV]
-AddReg=NO_DRV.AddReg
+[Processr_Inst.NT]
+CopyFiles = Processr_Inst.CopyFiles.NT
+AddReg = Processr_Inst.AddReg.NT
 
-[NO_DRV.Services]
-AddService = , 0x00000002
+[Processr_Inst.CopyFiles.NT]
+processr.sys
 
-[NO_DRV.HW]
-
-[NO_DRV.AddReg]
+[Processr_Inst.AddReg.NT]
 HKR,,EnumPropPages32,,"devcpux.dll,PropSheetExtProc"
+
+[Processr_Inst.NT.Services]
+AddService = Processor, 0x00000002, Processr_Service_Inst
+
+[Processr_Service_Inst]
+DisplayName    = %Processor.ServiceDesc%
+ServiceType    = 1
+StartType      = 1
+ErrorControl   = 1
+ServiceBinary  = %12%\processr.sys
+LoadOrderGroup = Extended Base
 
 ;-------------------------------- STRINGS -------------------------------
 
@@ -110,6 +120,7 @@ AMDMfg = "Advanced Micro Devices"
 TransmetaMfg = "Transmeta"
 VIAMfg = "VIA"
 Processor.DeviceDesc = "Processor"
+Processor.ServiceDesc = "Processor driver"
 CyrixProcessor.DeviceDesc = "Cyrix 6x86 Processor"
 IntelProcessor.DeviceDesc = "Intel Pentium Processor"
 IntelMMXProcessor.DeviceDesc = "Intel Pentium MMX Processor"
@@ -139,6 +150,7 @@ ViaProcessor.DeviceDesc = "VIA Processor"
 
 [Strings.0405]
 Processor.DeviceDesc = "Procesor"
+Processor.ServiceDesc = "Processor driver"
 CyrixProcessor.DeviceDesc = "Procesor Cyrix 6x86"
 IntelProcessor.DeviceDesc = "Procesor Intel Pentium"
 IntelMMXProcessor.DeviceDesc = "Procesor Intel Pentium MMX"
@@ -169,6 +181,7 @@ ViaProcessor.DeviceDesc = "Procesor VIA"
 [Strings.0407]
 ProcessorClassName = "Prozessoren"
 Processor.DeviceDesc = "Prozessor"
+Processor.ServiceDesc = "Prozessortreiber"
 CyrixProcessor.DeviceDesc = "Cyrix 6x86 Prozessor"
 IntelProcessor.DeviceDesc = "Intel Pentium Prozessor"
 IntelMMXProcessor.DeviceDesc = "Intel Pentium MMX Prozessor"
@@ -198,23 +211,27 @@ ViaProcessor.DeviceDesc = "VIA Prozessor"
 
 [Strings.0408]
 Processor.DeviceDesc = "Επεξεργαστής"
+Processor.ServiceDesc = "Processor driver"
 IntelProcessor.DeviceDesc = "Επεξεργαστής Intel"
 Standard = "Πρότυπος επεξεργαστής"
 
 [Strings.0a]
 ReactOS = "Equipo de ReactOS"
 Processor.DeviceDesc = "Procesador"
+Processor.ServiceDesc = "Processor driver"
 IntelProcessor.DeviceDesc = "Procesador Intel"
 AMDProcessor.DeviceDesc = "Procesador AMD"
 Standard = "Procesador estándar"
 
 [Strings.040C]
 Processor.DeviceDesc = "Processeur"
+Processor.ServiceDesc = "Processor driver"
 IntelProcessor.DeviceDesc = "Processeur Intel"
 Standard = "Processeur standard"
 
 [Strings.0411]
 Processor.DeviceDesc = "プロセッサ"
+Processor.ServiceDesc = "Processor driver"
 IntelProcessor.DeviceDesc = "Intel プロセッサ"
 Standard = "スタンダードプロセッサ"
 
@@ -228,6 +245,7 @@ AMDMfg = "Advanced Micro Devices"
 TransmetaMfg = "Transmeta"
 VIAMfg = "VIA"
 Processor.DeviceDesc = "Procesor"
+Processor.ServiceDesc = "Processor driver"
 CyrixProcessor.DeviceDesc = "Procesor Cyrix 6x86"
 IntelProcessor.DeviceDesc = "Procesor Intel Pentium"
 IntelMMXProcessor.DeviceDesc = "Procesor Intel Pentium MMX"
@@ -257,6 +275,7 @@ ViaProcessor.DeviceDesc = "Procesor VIA"
 
 [Strings.0416]
 Processor.DeviceDesc = "Processadores"
+Processor.ServiceDesc = "Processor driver"
 IntelProcessor.DeviceDesc = "Procesador Intel"
 Standard = "Processador padrão"
 
@@ -264,6 +283,7 @@ Standard = "Processador padrão"
 ReactOS = "Fundația ReactOS"
 ProcessorClassName = "Procesoare"
 Processor.DeviceDesc = "Procesor"
+Processor.ServiceDesc = "Processor driver"
 CyrixProcessor.DeviceDesc = "Procesor Cyrix 6x86"
 IntelProcessor.DeviceDesc = "Procesor Intel Pentium"
 IntelMMXProcessor.DeviceDesc = "Procesor Intel Pentium MMX"
@@ -297,6 +317,7 @@ ReactOS = "Фонд ReactOS"
 ProcessorClassName = "Процессоры"
 
 Processor.DeviceDesc = "Процессор"
+Processor.ServiceDesc = "Processor driver"
 CyrixProcessor.DeviceDesc = "Cyrix 6x86 процессор"
 IntelProcessor.DeviceDesc = "Intel Pentium процессор"
 IntelMMXProcessor.DeviceDesc = "Intel Pentium MMX процессор"
@@ -326,6 +347,7 @@ ViaProcessor.DeviceDesc = "VIA процессор"
 
 [Strings.041B]
 Processor.DeviceDesc = "Procesor"
+Processor.ServiceDesc = "Processor driver"
 IntelProcessor.DeviceDesc = "Intel procesor"
 Standard = "Štandardný procesor"
 
@@ -339,6 +361,7 @@ AMDMfg = "Advanced Micro Devices"
 TransmetaMfg = "Transmeta"
 VIAMfg = "VIA"
 Processor.DeviceDesc = "İşlemci"
+Processor.ServiceDesc = "Processor driver"
 CyrixProcessor.DeviceDesc = "Cyrix 6x86 İşlemci"
 IntelProcessor.DeviceDesc = "Intel Pentium İşlemci"
 IntelMMXProcessor.DeviceDesc = "Intel Pentium MMX İşlemci"
@@ -370,6 +393,7 @@ ViaProcessor.DeviceDesc = "VIA İşlemci"
 ReactOS = "Фонд ReactOS"
 ProcessorClassName = "Процесори"
 Processor.DeviceDesc = "Процесор"
+Processor.ServiceDesc = "Processor driver"
 CyrixProcessor.DeviceDesc = "Процесор Cyrix 6x86"
 IntelProcessor.DeviceDesc = "Процесор Intel Pentium"
 IntelMMXProcessor.DeviceDesc = "Процесор Intel Pentium MMX"
@@ -399,5 +423,6 @@ ViaProcessor.DeviceDesc = "Процесор VIA"
 
 [Strings.0427]
 Processor.DeviceDesc = "Procesorius"
+Processor.ServiceDesc = "Processor driver"
 IntelProcessor.DeviceDesc = "Intel procesorius"
 Standard = "Standartinis procesorius"
