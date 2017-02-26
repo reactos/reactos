@@ -1,6 +1,6 @@
 @ stdcall BackupPerfRegistryToFileW(long long)
-@ stdcall InstallPerfDllA(str str ptr)
-@ stdcall InstallPerfDllW(wstr wstr ptr)
+@ stdcall InstallPerfDllA(str str long)
+@ stdcall InstallPerfDllW(wstr wstr long)
 @ stdcall LoadMofFromInstalledServiceA(ptr ptr ptr)
 @ stdcall LoadMofFromInstalledServiceW(ptr ptr ptr)
 @ stdcall LoadPerfCounterTextStringsA(str long)
