@@ -56,7 +56,7 @@ reactos/dll/win32/clusapi             # Synced to WineStaging-1.9.11
 reactos/dll/win32/comcat              # Synced to WineStaging-1.9.11
 reactos/dll/win32/comctl32            # Synced to WineStaging-1.9.23
 reactos/dll/win32/comdlg32            # Synced to WineStaging-1.9.23
-reactos/dll/win32/compstui            # Synced to WineStaging-1.9.11
+reactos/dll/win32/compstui            # Synced to WineStaging-2.2
 reactos/dll/win32/credui              # Synced to WineStaging-1.9.16
 reactos/dll/win32/crypt32             # Synced to WineStaging-1.9.23
 reactos/dll/win32/cryptdlg            # Synced to WineStaging-1.9.11
