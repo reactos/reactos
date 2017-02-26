@@ -510,8 +510,6 @@ VfatCreateFile(
     c = PathNameU.Buffer + PathNameU.Length / sizeof(WCHAR);
     last = c - 1;
 
-    TrailingBackslash = (*last == L'\\');
-
     Dots = TRUE;
     while (c-- > PathNameU.Buffer)
     {
@@ -553,9 +551,11 @@ VfatCreateFile(
         return STATUS_OBJECT_NAME_INVALID;
     }
 
+    TrailingBackslash = FALSE;
     if (PathNameU.Length > sizeof(WCHAR) && PathNameU.Buffer[PathNameU.Length/sizeof(WCHAR)-1] == L'\\')
     {
         PathNameU.Length -= sizeof(WCHAR);
+        TrailingBackslash = TRUE;
     }
 
     if (PathNameU.Length > sizeof(WCHAR) && PathNameU.Buffer[PathNameU.Length/sizeof(WCHAR)-1] == L'\\')
@@ -700,14 +700,16 @@ VfatCreateFile(
             RequestedDisposition == FILE_OVERWRITE_IF ||
             RequestedDisposition == FILE_SUPERSEDE)
         {
-            if (TrailingBackslash & !BooleanFlagOn(RequestedOptions, FILE_DIRECTORY_FILE))
-            {
-                return STATUS_OBJECT_NAME_INVALID;
-            }
-
             Attributes = Stack->Parameters.Create.FileAttributes & ~FILE_ATTRIBUTE_NORMAL;
             if (!BooleanFlagOn(RequestedOptions, FILE_DIRECTORY_FILE))
+            {
+                if (TrailingBackslash)
+                {
+                    vfatReleaseFCB(DeviceExt, ParentFcb);
+                    return STATUS_OBJECT_NAME_INVALID;
+                }
                 Attributes |= FILE_ATTRIBUTE_ARCHIVE;
+            }
             vfatSplitPathName(&PathNameU, NULL, &FileNameU);
             Status = VfatAddEntry(DeviceExt, &FileNameU, &pFcb, ParentFcb, RequestedOptions,
                                   (UCHAR)FlagOn(Attributes, FILE_ATTRIBUTE_VALID_FLAGS), NULL);
@@ -756,15 +758,19 @@ VfatCreateFile(
             vfatReleaseFCB(DeviceExt, ParentFcb);
         }
 
+        pFcb = FileObject->FsContext;
+
         /* Otherwise fail if the caller wanted to create a new file  */
         if (RequestedDisposition == FILE_CREATE)
         {
-            Irp->IoStatus.Information = FILE_EXISTS;
             VfatCloseFile(DeviceExt, FileObject);
+            if (TrailingBackslash && !vfatFCBIsDirectory(pFcb))
+            {
+                return STATUS_OBJECT_NAME_INVALID;
+            }
+            Irp->IoStatus.Information = FILE_EXISTS;
             return STATUS_OBJECT_NAME_COLLISION;
         }
-
-        pFcb = FileObject->FsContext;
 
         if (pFcb->OpenHandleCount != 0)
         {
@@ -795,7 +801,7 @@ VfatCreateFile(
             VfatCloseFile (DeviceExt, FileObject);
             return STATUS_NOT_A_DIRECTORY;
         }
-        if (!vfatFCBIsDirectory(pFcb) && TrailingBackslash)
+        if (TrailingBackslash && !vfatFCBIsDirectory(pFcb))
         {
             VfatCloseFile (DeviceExt, FileObject);
             return STATUS_OBJECT_NAME_INVALID;
