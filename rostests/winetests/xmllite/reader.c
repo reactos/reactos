@@ -432,6 +432,13 @@ static void test_reader_create(void)
     ok(hr == S_FALSE, "got %08x\n", hr);
     ok(nodetype == XmlNodeType_None, "got %d\n", nodetype);
 
+    /* crashes on XP, 2k3, works on newer versions */
+    if (0)
+    {
+        hr = IXmlReader_GetNodeType(reader, NULL);
+        ok(hr == E_INVALIDARG, "got %08x\n", hr);
+    }
+
     resolver = (void*)0xdeadbeef;
     hr = IXmlReader_GetProperty(reader, XmlReaderProperty_XmlResolver, (LONG_PTR*)&resolver);
     ok(hr == S_OK, "got 0x%08x\n", hr);
@@ -1141,11 +1148,114 @@ static void test_read_full(void)
     IXmlReader_Release(reader);
 }
 
-static const char test_dtd[] =
+static const char test_public_dtd[] =
+    "<!DOCTYPE testdtd PUBLIC \"pubid\" \"externalid uri\" >";
+
+static void test_read_public_dtd(void)
+{
+    static const WCHAR sysvalW[] = {'e','x','t','e','r','n','a','l','i','d',' ','u','r','i',0};
+    static const WCHAR pubvalW[] = {'p','u','b','i','d',0};
+    static const WCHAR dtdnameW[] = {'t','e','s','t','d','t','d',0};
+    static const WCHAR sysW[] = {'S','Y','S','T','E','M',0};
+    static const WCHAR pubW[] = {'P','U','B','L','I','C',0};
+    IXmlReader *reader;
+    const WCHAR *str;
+    XmlNodeType type;
+    IStream *stream;
+    UINT len, count;
+    HRESULT hr;
+
+    hr = CreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
+    ok(hr == S_OK, "S_OK, got %08x\n", hr);
+
+    hr = IXmlReader_SetProperty(reader, XmlReaderProperty_DtdProcessing, DtdProcessing_Parse);
+    ok(hr == S_OK, "got 0x%8x\n", hr);
+
+    stream = create_stream_on_data(test_public_dtd, sizeof(test_public_dtd));
+    hr = IXmlReader_SetInput(reader, (IUnknown*)stream);
+    ok(hr == S_OK, "got %08x\n", hr);
+
+    type = XmlNodeType_None;
+    hr = IXmlReader_Read(reader, &type);
+    ok(hr == S_OK, "got 0x%8x\n", hr);
+    ok(type == XmlNodeType_DocumentType, "got type %d\n", type);
+
+    count = 0;
+    hr = IXmlReader_GetAttributeCount(reader, &count);
+    ok(hr == S_OK, "got %08x\n", hr);
+    ok(count == 2, "got %d\n", count);
+
+    hr = IXmlReader_MoveToFirstAttribute(reader);
+    ok(hr == S_OK, "got %08x\n", hr);
+
+    type = XmlNodeType_None;
+    hr = IXmlReader_GetNodeType(reader, &type);
+    ok(hr == S_OK, "got %08x\n", hr);
+    ok(type == XmlNodeType_Attribute, "got %d\n", type);
+
+    len = 0;
+    str = NULL;
+    hr = IXmlReader_GetLocalName(reader, &str, &len);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(len == lstrlenW(pubW), "got %u\n", len);
+    ok(!lstrcmpW(str, pubW), "got %s\n", wine_dbgstr_w(str));
+
+    len = 0;
+    str = NULL;
+    hr = IXmlReader_GetValue(reader, &str, &len);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(len == lstrlenW(pubvalW), "got %u\n", len);
+    ok(!lstrcmpW(str, pubvalW), "got %s\n", wine_dbgstr_w(str));
+
+    hr = IXmlReader_MoveToNextAttribute(reader);
+    ok(hr == S_OK, "got %08x\n", hr);
+
+    type = XmlNodeType_None;
+    hr = IXmlReader_GetNodeType(reader, &type);
+    ok(hr == S_OK, "got %08x\n", hr);
+    ok(type == XmlNodeType_Attribute, "got %d\n", type);
+
+    len = 0;
+    str = NULL;
+    hr = IXmlReader_GetLocalName(reader, &str, &len);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(len == lstrlenW(sysW), "got %u\n", len);
+    ok(!lstrcmpW(str, sysW), "got %s\n", wine_dbgstr_w(str));
+
+    len = 0;
+    str = NULL;
+    hr = IXmlReader_GetValue(reader, &str, &len);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(len == lstrlenW(sysvalW), "got %u\n", len);
+    ok(!lstrcmpW(str, sysvalW), "got %s\n", wine_dbgstr_w(str));
+
+    hr = IXmlReader_MoveToElement(reader);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    len = 0;
+    str = NULL;
+    hr = IXmlReader_GetLocalName(reader, &str, &len);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+todo_wine {
+    ok(len == lstrlenW(dtdnameW), "got %u\n", len);
+    ok(!lstrcmpW(str, dtdnameW), "got %s\n", wine_dbgstr_w(str));
+}
+    len = 0;
+    str = NULL;
+    hr = IXmlReader_GetQualifiedName(reader, &str, &len);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(len == lstrlenW(dtdnameW), "got %u\n", len);
+    ok(!lstrcmpW(str, dtdnameW), "got %s\n", wine_dbgstr_w(str));
+
+    IStream_Release(stream);
+    IXmlReader_Release(reader);
+}
+
+static const char test_system_dtd[] =
     "<!DOCTYPE testdtd SYSTEM \"externalid uri\" >"
     "<!-- comment -->";
 
-static void test_read_dtd(void)
+static void test_read_system_dtd(void)
 {
     static const WCHAR sysvalW[] = {'e','x','t','e','r','n','a','l','i','d',' ','u','r','i',0};
     static const WCHAR dtdnameW[] = {'t','e','s','t','d','t','d',0};
@@ -1163,7 +1273,7 @@ static void test_read_dtd(void)
     hr = IXmlReader_SetProperty(reader, XmlReaderProperty_DtdProcessing, DtdProcessing_Parse);
     ok(hr == S_OK, "got 0x%8x\n", hr);
 
-    stream = create_stream_on_data(test_dtd, sizeof(test_dtd));
+    stream = create_stream_on_data(test_system_dtd, sizeof(test_system_dtd));
     hr = IXmlReader_SetInput(reader, (IUnknown*)stream);
     ok(hr == S_OK, "got %08x\n", hr);
 
@@ -1264,7 +1374,8 @@ static void test_read_element(void)
         if (test->hr_broken)
             ok(hr == test->hr || broken(hr == test->hr_broken), "got %08x for %s\n", hr, test->xml);
         else
-            ok(hr == test->hr, "got %08x for %s\n", hr, test->xml);
+            todo_wine_if(test->hr == NC_E_UNDECLAREDPREFIX)
+                ok(hr == test->hr, "got %08x for %s\n", hr, test->xml);
         if (hr == S_OK)
         {
             const WCHAR *str;
@@ -1735,8 +1846,7 @@ static void test_read_attribute(void)
         hr = IXmlReader_SetInput(reader, (IUnknown*)stream);
         ok(hr == S_OK, "got %08x\n", hr);
 
-        type = XmlNodeType_None;
-        hr = IXmlReader_Read(reader, &type);
+        hr = IXmlReader_Read(reader, NULL);
 
         if (test->hr_broken)
             ok(hr == test->hr || broken(hr == test->hr_broken), "got %08x for %s\n", hr, test->xml);
@@ -1747,6 +1857,10 @@ static void test_read_attribute(void)
             const WCHAR *str;
             WCHAR *str_exp;
             UINT len;
+
+            type = XmlNodeType_None;
+            hr = IXmlReader_GetNodeType(reader, &type);
+            ok(hr == S_OK, "Failed to get node type, %#x\n", hr);
 
             ok(type == XmlNodeType_Element, "got %d for %s\n", type, test->xml);
 
@@ -1807,6 +1921,176 @@ static void test_reader_properties(void)
     IXmlReader_Release(reader);
 }
 
+static void test_prefix(void)
+{
+    static const struct
+    {
+        const char *xml;
+        const char *prefix1;
+        const char *prefix2;
+        const char *prefix3;
+    } prefix_tests[] =
+    {
+        { "<b xmlns=\"defns\" xml:a=\"a ns\"/>", "", "", "xml" },
+    };
+    IXmlReader *reader;
+    unsigned int i;
+    HRESULT hr;
+
+    hr = CreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
+    ok(hr == S_OK, "S_OK, got %08x\n", hr);
+
+    for (i = 0; i < sizeof(prefix_tests)/sizeof(prefix_tests[0]); i++) {
+        const WCHAR *prefix;
+        XmlNodeType type;
+        WCHAR *expected;
+        IStream *stream;
+
+        stream = create_stream_on_data(prefix_tests[i].xml, strlen(prefix_tests[i].xml) + 1);
+        hr = IXmlReader_SetInput(reader, (IUnknown *)stream);
+        ok(hr == S_OK, "got %08x\n", hr);
+
+        hr = IXmlReader_Read(reader, &type);
+        ok(hr == S_OK, "Read() failed, %#x\n", hr);
+        ok(type == XmlNodeType_Element, "Unexpected node type %d.\n", type);
+
+        expected = a2w(prefix_tests[i].prefix1);
+        hr = IXmlReader_GetPrefix(reader, &prefix, NULL);
+        ok(hr == S_OK, "GetPrefix() failed, %#x.\n", hr);
+        ok(!lstrcmpW(prefix, expected), "Unexpected prefix %s, expected %s.\n", wine_dbgstr_w(prefix),
+            wine_dbgstr_w(expected));
+        free_str(expected);
+
+        hr = IXmlReader_MoveToFirstAttribute(reader);
+        ok(hr == S_OK, "MoveToFirstAttribute() failed, %#x.\n", hr);
+
+        hr = IXmlReader_GetNodeType(reader, &type);
+        ok(hr == S_OK, "GetNodeType() failed, %#x.\n", hr);
+        ok(type == XmlNodeType_Attribute, "Unexpected node type %d.\n", type);
+
+        expected = a2w(prefix_tests[i].prefix2);
+        hr = IXmlReader_GetPrefix(reader, &prefix, NULL);
+        ok(hr == S_OK, "GetPrefix() failed, %#x.\n", hr);
+        ok(!lstrcmpW(prefix, expected), "Unexpected prefix %s, expected %s.\n", wine_dbgstr_w(prefix),
+            wine_dbgstr_w(expected));
+        free_str(expected);
+
+        hr = IXmlReader_MoveToNextAttribute(reader);
+        ok(hr == S_OK, "MoveToNextAttribute() failed, %#x.\n", hr);
+
+        hr = IXmlReader_GetNodeType(reader, &type);
+        ok(hr == S_OK, "GetNodeType() failed, %#x.\n", hr);
+        ok(type == XmlNodeType_Attribute, "Unexpected node type %d.\n", type);
+
+        expected = a2w(prefix_tests[i].prefix3);
+        hr = IXmlReader_GetPrefix(reader, &prefix, NULL);
+        ok(hr == S_OK, "GetPrefix() failed, %#x.\n", hr);
+        ok(!lstrcmpW(prefix, expected), "Unexpected prefix %s, expected %s.\n", wine_dbgstr_w(prefix),
+            wine_dbgstr_w(expected));
+        free_str(expected);
+
+        IStream_Release(stream);
+    }
+
+    IXmlReader_Release(reader);
+}
+
+static void test_namespaceuri(void)
+{
+    struct uri_test
+    {
+        const char *xml;
+        const char *uri[5];
+    } uri_tests[] =
+    {
+        { "<a xmlns=\"defns a\"><b xmlns=\"defns b\"><c xmlns=\"defns c\"/></b></a>",
+                { "defns a", "defns b", "defns c", "defns b", "defns a" }},
+        { "<r:a xmlns=\"defns a\" xmlns:r=\"ns r\"/>",
+                { "ns r" }},
+        { "<r:a xmlns=\"defns a\" xmlns:r=\"ns r\"><b/></r:a>",
+                { "ns r", "defns a", "ns r" }},
+        { "<a xmlns=\"defns a\" xmlns:r=\"ns r\"><r:b/></a>",
+                { "defns a", "ns r", "defns a" }},
+        { "<a><b><c/></b></a>",
+                { "", "", "", "", "" }},
+    };
+    IXmlReader *reader;
+    XmlNodeType type;
+    unsigned int i;
+    HRESULT hr;
+
+    hr = CreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
+    ok(hr == S_OK, "S_OK, got %08x\n", hr);
+
+    for (i = 0; i < sizeof(uri_tests)/sizeof(uri_tests[0]); i++) {
+        IStream *stream = create_stream_on_data(uri_tests[i].xml, strlen(uri_tests[i].xml) + 1);
+        unsigned int j = 0;
+
+        hr = IXmlReader_SetInput(reader, (IUnknown *)stream);
+        ok(hr == S_OK, "got %08x\n", hr);
+
+        while (IXmlReader_Read(reader, &type) == S_OK) {
+            const WCHAR *uri, *local;
+            WCHAR *uriW;
+
+            ok(type == XmlNodeType_Element || type == XmlNodeType_EndElement, "Unexpected node type %d.\n", type);
+
+            hr = IXmlReader_GetLocalName(reader, &local, NULL);
+            ok(hr == S_OK, "S_OK, got %08x\n", hr);
+
+            hr = IXmlReader_GetNamespaceUri(reader, &uri, NULL);
+            ok(hr == S_OK, "S_OK, got %08x\n", hr);
+
+            uriW = a2w(uri_tests[i].uri[j]);
+            ok(!lstrcmpW(uriW, uri), "%s: uri %s\n", wine_dbgstr_w(local), wine_dbgstr_w(uri));
+            free_str(uriW);
+
+            j++;
+        }
+
+        IStream_Release(stream);
+    }
+
+    IXmlReader_Release(reader);
+}
+
+static void test_read_charref(void)
+{
+    static const char testA[] = "<a b=\"c\">&#x1f3;&#x103;</a>";
+    static const WCHAR chardataW[] = {0x01f3,0x0103,0};
+    const WCHAR *value;
+    IXmlReader *reader;
+    XmlNodeType type;
+    IStream *stream;
+    HRESULT hr;
+
+    hr = CreateXmlReader(&IID_IXmlReader, (void **)&reader, NULL);
+    ok(hr == S_OK, "S_OK, got %08x\n", hr);
+
+    stream = create_stream_on_data(testA, sizeof(testA));
+    hr = IXmlReader_SetInput(reader, (IUnknown *)stream);
+    ok(hr == S_OK, "got %08x\n", hr);
+
+    hr = IXmlReader_Read(reader, &type);
+    ok(hr == S_OK, "got %08x\n", hr);
+    ok(type == XmlNodeType_Element, "Unexpected node type %d\n", type);
+
+    hr = IXmlReader_Read(reader, &type);
+    ok(hr == S_OK, "got %08x\n", hr);
+    ok(type == XmlNodeType_Text, "Unexpected node type %d\n", type);
+
+    hr = IXmlReader_GetValue(reader, &value, NULL);
+    ok(hr == S_OK, "got %08x\n", hr);
+    ok(!lstrcmpW(value, chardataW), "Text value : %s\n", wine_dbgstr_w(value));
+
+    hr = IXmlReader_Read(reader, &type);
+    ok(hr == S_OK, "got %08x\n", hr);
+    ok(type == XmlNodeType_EndElement, "Unexpected node type %d\n", type);
+
+    IXmlReader_Release(reader);
+    IStream_Release(stream);
+}
+
 START_TEST(reader)
 {
     test_reader_create();
@@ -1816,7 +2100,8 @@ START_TEST(reader)
     test_read_cdata();
     test_read_comment();
     test_read_pi();
-    test_read_dtd();
+    test_read_system_dtd();
+    test_read_public_dtd();
     test_read_element();
     test_isemptyelement();
     test_read_text();
@@ -1825,4 +2110,7 @@ START_TEST(reader)
     test_readvaluechunk();
     test_read_xmldeclaration();
     test_reader_properties();
+    test_prefix();
+    test_namespaceuri();
+    test_read_charref();
 }
