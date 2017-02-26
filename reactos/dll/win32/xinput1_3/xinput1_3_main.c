@@ -50,7 +50,7 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID reserved)
     return TRUE;
 }
 
-void WINAPI XInputEnable(BOOL enable)
+void WINAPI DECLSPEC_HOTPATCH XInputEnable(BOOL enable)
 {
     /* Setting to false will stop messages from XInputSetState being sent
     to the controllers. Setting to true will send the last vibration
@@ -112,7 +112,10 @@ DWORD WINAPI DECLSPEC_HOTPATCH XInputGetStateEx(DWORD index, XINPUT_STATE_EX* st
 
 DWORD WINAPI XInputGetKeystroke(DWORD index, DWORD reserved, PXINPUT_KEYSTROKE keystroke)
 {
-    FIXME("(index %u, reserved %u, keystroke %p) Stub!\n", index, reserved, keystroke);
+    static int warn_once;
+
+    if (!warn_once++)
+        FIXME("(index %u, reserved %u, keystroke %p) Stub!\n", index, reserved, keystroke);
 
     if (index >= XUSER_MAX_COUNT)
         return ERROR_BAD_ARGUMENTS;
