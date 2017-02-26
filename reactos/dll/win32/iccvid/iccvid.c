@@ -85,14 +85,14 @@ typedef struct _ICCVID_Info
     cinepak_info *cvinfo;
 } ICCVID_Info;
 
-static inline LPVOID heap_alloc( size_t size )
+static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
 {
-    return HeapAlloc( GetProcessHeap(), 0, size );
+    return HeapAlloc(GetProcessHeap(), 0, size);
 }
 
-static inline BOOL heap_free( LPVOID ptr )
+static inline BOOL heap_free(void *mem)
 {
-    return HeapFree( GetProcessHeap(), 0, ptr );
+    return HeapFree(GetProcessHeap(), 0, mem);
 }
 
 static inline int get_stride(int width, int depth)
