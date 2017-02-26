@@ -378,8 +378,8 @@ static void test_default_data(void)
     ok(res == 0, "Unable to open file: error=%u\n", res);
 
     pStream0 = (void *)0xdeadbeef;
-    res = AVIFileGetStream(pFile, &pStream0, ~0, 0);
-    ok(res == AVIERR_NODATA, "expected AVIERR_NODATA, got %#x\n", res);
+    res = AVIFileGetStream(pFile, &pStream0, ~0U, 0);
+    ok(res == AVIERR_NODATA, "expected AVIERR_NODATA, got %u\n", res);
     ok(pStream0 == NULL, "AVIFileGetStream should set stream to NULL\n");
 
     res = AVIFileGetStream(pFile, &pStream0, 0, 0);
