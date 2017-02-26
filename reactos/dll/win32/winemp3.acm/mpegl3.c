@@ -261,6 +261,15 @@ static	LRESULT	MPEG3_StreamOpen(PACMDRVSTREAMINSTANCE adsi)
         aad->convert = mp3_horse;
         aad->mh = mpg123_new(NULL,&err);
         mpg123_open_feed(aad->mh);
+
+#if MPG123_API_VERSION >= 31 /* needed for MPG123_IGNORE_FRAMEINFO enum value */
+        /* mpg123 may find a XING header in the mp3 and use that information
+         * to ask for seeks in order to read specific frames in the file.
+         * We cannot allow that since the caller application is feeding us.
+         * This fixes problems for mp3 files encoded with LAME (bug 42361)
+         */
+        mpg123_param(aad->mh, MPG123_ADD_FLAGS, MPG123_IGNORE_INFOFRAME, 0);
+#endif
     }
     /* no encoding yet
     else if (adsi->pwfxSrc->wFormatTag == WAVE_FORMAT_PCM &&

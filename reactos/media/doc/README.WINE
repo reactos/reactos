@@ -198,7 +198,7 @@ reactos/dll/win32/wbemdisp            # Synced to WineStaging-2.2
 reactos/dll/win32/wbemprox            # Synced to WineStaging-2.2
 reactos/dll/win32/windowscodecs       # Synced to WineStaging-1.9.23
 reactos/dll/win32/windowscodecsext    # Synced to WineStaging-1.9.11
-reactos/dll/win32/winemp3.acm         # Synced to WineStaging-1.9.23
+reactos/dll/win32/winemp3.acm         # Synced to WineStaging-2.2
 reactos/dll/win32/wing32              # Synced to WineStaging-1.9.11
 reactos/dll/win32/winhttp             # Synced to WineStaging-1.9.23
 reactos/dll/win32/wininet             # Synced to WineStaging-1.9.23
