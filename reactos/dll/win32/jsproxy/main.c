@@ -89,14 +89,14 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
     return TRUE;
 }
 
-static inline void *heap_alloc( SIZE_T size )
+static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
 {
-    return HeapAlloc( GetProcessHeap(), 0, size );
+    return HeapAlloc(GetProcessHeap(), 0, size);
 }
 
-static inline BOOL heap_free( LPVOID mem )
+static inline BOOL heap_free(void *mem)
 {
-    return HeapFree( GetProcessHeap(), 0, mem );
+    return HeapFree(GetProcessHeap(), 0, mem);
 }
 
 static inline WCHAR *strdupAW( const char *src, int len )
@@ -637,7 +637,7 @@ BOOL WINAPI InternetGetProxyInfo( LPCSTR url, DWORD len_url, LPCSTR hostname, DW
     WCHAR *urlW = NULL, *hostnameW = NULL;
     BOOL ret = FALSE;
 
-    TRACE( "%s, %u, %s, %u, %p, %p\n", url, len_url, hostname, len_hostname, proxy, len_proxy );
+    TRACE( "%s, %u, %s, %u, %p, %p\n", debugstr_a(url), len_url, hostname, len_hostname, proxy, len_proxy );
 
     EnterCriticalSection( &cs_jsproxy );
 
