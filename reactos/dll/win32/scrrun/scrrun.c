@@ -22,6 +22,11 @@
 
 static HINSTANCE scrrun_instance;
 
+static inline struct provideclassinfo *impl_from_IProvideClassInfo(IProvideClassInfo *iface)
+{
+    return CONTAINING_RECORD(iface, struct provideclassinfo, IProvideClassInfo_iface);
+}
+
 typedef HRESULT (*fnCreateInstance)(LPVOID *ppObj);
 
 static HRESULT WINAPI scrruncf_QueryInterface(IClassFactory *iface, REFIID riid, LPVOID *ppv )
@@ -105,6 +110,9 @@ static HRESULT load_typelib(void)
     HRESULT hres;
     ITypeLib *tl;
 
+    if(typelib)
+        return S_OK;
+
     hres = LoadRegTypeLib(&LIBID_Scripting, 1, 0, LOCALE_SYSTEM_DEFAULT, &tl);
     if(FAILED(hres)) {
         ERR("LoadRegTypeLib failed: %08x\n", hres);
@@ -116,13 +124,21 @@ static HRESULT load_typelib(void)
     return hres;
 }
 
+static HRESULT get_typeinfo_of_guid(const GUID *guid, ITypeInfo **tinfo)
+{
+    HRESULT hres;
+
+    if(FAILED(hres = load_typelib()))
+        return hres;
+
+    return ITypeLib_GetTypeInfoOfGuid(typelib, guid, tinfo);
+}
+
 HRESULT get_typeinfo(tid_t tid, ITypeInfo **typeinfo)
 {
     HRESULT hres;
 
-    if (!typelib)
-        hres = load_typelib();
-    if (!typelib)
+    if (FAILED(hres = load_typelib()))
         return hres;
 
     if(!typeinfos[tid]) {
@@ -155,6 +171,56 @@ static void release_typelib(void)
             ITypeInfo_Release(typeinfos[i]);
 
     ITypeLib_Release(typelib);
+}
+
+static HRESULT WINAPI provideclassinfo_QueryInterface(IProvideClassInfo *iface, REFIID riid, void **obj)
+{
+    struct provideclassinfo *This = impl_from_IProvideClassInfo(iface);
+
+    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), obj);
+
+    if (IsEqualIID(riid, &IID_IProvideClassInfo)) {
+        *obj = iface;
+        IProvideClassInfo_AddRef(iface);
+        return S_OK;
+    }
+    else
+        return IUnknown_QueryInterface(This->outer, riid, obj);
+}
+
+static ULONG WINAPI provideclassinfo_AddRef(IProvideClassInfo *iface)
+{
+    struct provideclassinfo *This = impl_from_IProvideClassInfo(iface);
+    return IUnknown_AddRef(This->outer);
+}
+
+static ULONG WINAPI provideclassinfo_Release(IProvideClassInfo *iface)
+{
+    struct provideclassinfo *This = impl_from_IProvideClassInfo(iface);
+    return IUnknown_Release(This->outer);
+}
+
+static HRESULT WINAPI provideclassinfo_GetClassInfo(IProvideClassInfo *iface, ITypeInfo **ti)
+{
+    struct provideclassinfo *This = impl_from_IProvideClassInfo(iface);
+
+    TRACE("(%p)->(%p)\n", This, ti);
+
+    return get_typeinfo_of_guid(This->guid, ti);
+}
+
+static const IProvideClassInfoVtbl provideclassinfovtbl = {
+    provideclassinfo_QueryInterface,
+    provideclassinfo_AddRef,
+    provideclassinfo_Release,
+    provideclassinfo_GetClassInfo
+};
+
+void init_classinfo(const GUID *guid, IUnknown *outer, struct provideclassinfo *classinfo)
+{
+    classinfo->IProvideClassInfo_iface.lpVtbl = &provideclassinfovtbl;
+    classinfo->outer = outer;
+    classinfo->guid = guid;
 }
 
 BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
