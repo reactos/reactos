@@ -2115,6 +2115,7 @@ NtQueryInformationFile(IN HANDLE FileHandle,
         }
         _SEH2_END;
     }
+#if DBG
     else
     {
         /* Validate the information class */
@@ -2132,6 +2133,7 @@ NtQueryInformationFile(IN HANDLE FileHandle,
             return STATUS_INFO_LENGTH_MISMATCH;
         }
     }
+#endif
 
     /* Reference the Handle */
     Status = ObReferenceObjectByHandle(FileHandle,
