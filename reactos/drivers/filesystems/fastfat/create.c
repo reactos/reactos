@@ -398,6 +398,7 @@ VfatCreateFile(
     BOOLEAN PagingFileCreate;
     BOOLEAN Dots;
     BOOLEAN OpenTargetDir;
+    BOOLEAN TrailingBackslash;
     UNICODE_STRING FileNameU;
     UNICODE_STRING PathNameU;
     ULONG Attributes;
@@ -508,6 +509,9 @@ VfatCreateFile(
     PathNameU = FileObject->FileName;
     c = PathNameU.Buffer + PathNameU.Length / sizeof(WCHAR);
     last = c - 1;
+
+    TrailingBackslash = (*last == L'\\');
+
     Dots = TRUE;
     while (c-- > PathNameU.Buffer)
     {
@@ -517,6 +521,12 @@ VfatCreateFile(
             {
                 return STATUS_OBJECT_NAME_INVALID;
             }
+            if (*c == L'\\' && (c - 1) > PathNameU.Buffer &&
+                *(c - 1) == L'\\')
+            {
+                return STATUS_OBJECT_NAME_INVALID;
+            }
+
             last = c - 1;
             Dots = TRUE;
         }
@@ -690,6 +700,11 @@ VfatCreateFile(
             RequestedDisposition == FILE_OVERWRITE_IF ||
             RequestedDisposition == FILE_SUPERSEDE)
         {
+            if (TrailingBackslash & !BooleanFlagOn(RequestedOptions, FILE_DIRECTORY_FILE))
+            {
+                return STATUS_OBJECT_NAME_INVALID;
+            }
+
             Attributes = Stack->Parameters.Create.FileAttributes & ~FILE_ATTRIBUTE_NORMAL;
             if (!BooleanFlagOn(RequestedOptions, FILE_DIRECTORY_FILE))
                 Attributes |= FILE_ATTRIBUTE_ARCHIVE;
@@ -779,6 +794,11 @@ VfatCreateFile(
         {
             VfatCloseFile (DeviceExt, FileObject);
             return STATUS_NOT_A_DIRECTORY;
+        }
+        if (!vfatFCBIsDirectory(pFcb) && TrailingBackslash)
+        {
+            VfatCloseFile (DeviceExt, FileObject);
+            return STATUS_OBJECT_NAME_INVALID;
         }
 #ifndef USE_ROS_CC_AND_FS
         if (!vfatFCBIsDirectory(pFcb))
