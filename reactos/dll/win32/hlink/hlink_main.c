@@ -516,14 +516,14 @@ static HRESULT WINAPI HLinkCF_fnQueryInterface ( LPCLASSFACTORY iface,
 {
     CFImpl *This = impl_from_IClassFactory(iface);
 
-    TRACE("(%p)->(%s)\n",This,debugstr_guid(riid));
+    TRACE("(%p)->(%s, %p)\n", This, debugstr_guid(riid), ppvObj);
 
     *ppvObj = NULL;
 
     if (IsEqualIID(riid, &IID_IUnknown) ||
         IsEqualIID(riid, &IID_IClassFactory))
     {
-        *ppvObj = This;
+        *ppvObj = &This->IClassFactory_iface;
         return S_OK;
     }
 
