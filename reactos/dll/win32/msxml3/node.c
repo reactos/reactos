@@ -810,7 +810,7 @@ static xmlChar* do_get_text(xmlNodePtr node, BOOL trim, DWORD *first, DWORD *las
     case XML_DOCUMENT_FRAG_NODE:
         if (trim && !preserving)
         {
-            xmlChar* ret = str;
+            xmlChar* ret;
             int len;
 
             if (!str)
@@ -1301,6 +1301,7 @@ HRESULT node_transform_node_params(const xmlnode *This, IXMLDOMNode *stylesheet,
 {
 #ifdef SONAME_LIBXSLT
     xsltStylesheetPtr xsltSS;
+    xmlDocPtr sheet_doc;
     HRESULT hr = S_OK;
     xmlnode *sheet;
 
@@ -1312,8 +1313,9 @@ HRESULT node_transform_node_params(const xmlnode *This, IXMLDOMNode *stylesheet,
     sheet = get_node_obj(stylesheet);
     if(!sheet) return E_FAIL;
 
-    xsltSS = pxsltParseStylesheetDoc(sheet->node->doc);
-    if(xsltSS)
+    sheet_doc = xmlCopyDoc(sheet->node->doc, 1);
+    xsltSS = pxsltParseStylesheetDoc(sheet_doc);
+    if (xsltSS)
     {
         const char **xslparams = NULL;
         xmlDocPtr result;
@@ -1358,11 +1360,11 @@ HRESULT node_transform_node_params(const xmlnode *This, IXMLDOMNode *stylesheet,
                 hr = node_transform_write_to_bstr(xsltSS, result, p);
             xmlFreeDoc(result);
         }
-        /* libxslt "helpfully" frees the XML document the stylesheet was
-           generated from, too */
-        xsltSS->doc = NULL;
+
         pxsltFreeStylesheet(xsltSS);
     }
+    else
+        xmlFreeDoc(sheet_doc);
 
     if(!*p) *p = SysAllocStringLen(NULL, 0);
 
