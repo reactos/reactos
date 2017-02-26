@@ -234,10 +234,15 @@ static HRESULT WINAPI LinuxInputEffectImpl_GetEffectStatus(
         LPDIRECTINPUTEFFECT iface,
 	LPDWORD pdwFlags)
 {
-    TRACE("(this=%p,%p)\n", iface, pdwFlags);
+    LinuxInputEffectImpl *This = impl_from_IDirectInputEffect(iface);
+
+    TRACE("(this=%p,%p)\n", This, pdwFlags);
 
     if (!pdwFlags)
         return E_POINTER;
+
+    if (This->effect.id == -1)
+        return DIERR_NOTDOWNLOADED;
 
     /* linux sends the effect status through an event.
      * that event is trapped by our parent joystick driver
@@ -633,9 +638,9 @@ static HRESULT WINAPI LinuxInputEffectImpl_SetParameters(
 
             This->effect.u.periodic.magnitude = (tsp->dwMagnitude / 10) * 32;
             This->effect.u.periodic.offset = (tsp->lOffset / 10) * 32;
-            /* phase ranges from 0 - 35999 in dinput and 0 - 65535 on linux */
+            /* phase ranges from 0 - 35999 in dinput and 0 - 65535 on Linux */
             This->effect.u.periodic.phase = (tsp->dwPhase / 36) * 65;
-            /* dinput uses microseconds, linux uses miliseconds */
+            /* dinput uses microseconds, Linux uses milliseconds */
             if (tsp->dwPeriod <= 1000)
                 This->effect.u.periodic.period = 1;
             else

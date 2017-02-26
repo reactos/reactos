@@ -69,6 +69,8 @@ HRESULT linuxinput_create_effect(int* fd, REFGUID rguid, struct list *parent_lis
 HRESULT linuxinput_get_info_A(int fd, REFGUID rguid, LPDIEFFECTINFOA info);
 HRESULT linuxinput_get_info_W(int fd, REFGUID rguid, LPDIEFFECTINFOW info);
 
+static HRESULT WINAPI JoystickWImpl_SendForceFeedbackCommand(LPDIRECTINPUTDEVICE8W iface, DWORD dwFlags);
+
 typedef struct JoystickImpl JoystickImpl;
 static const IDirectInputDevice8AVtbl JoystickAvt;
 static const IDirectInputDevice8WVtbl JoystickWvt;
@@ -726,18 +728,10 @@ static HRESULT WINAPI JoystickWImpl_Unacquire(LPDIRECTINPUTDEVICE8W iface)
     TRACE("(this=%p)\n",This);
     res = IDirectInputDevice2WImpl_Unacquire(iface);
     if (res==DI_OK && This->joyfd!=-1) {
-      effect_list_item *itr;
       struct input_event event;
 
-      /* For each known effect:
-       * - stop it
-       * - unload it
-       * But, unlike DISFFC_RESET, do not release the effect.
-       */
-      LIST_FOR_EACH_ENTRY(itr, &This->ff_effects, effect_list_item, entry) {
-          IDirectInputEffect_Stop(itr->ref);
-          IDirectInputEffect_Unload(itr->ref);
-      }
+      /* Stop and unload all effects */
+      JoystickWImpl_SendForceFeedbackCommand(iface, DISFFC_RESET);
 
       /* Enable autocenter. */
       event.type = EV_FF;
@@ -883,7 +877,7 @@ static void joy_polldev(LPDIRECTINPUTDEVICE8A iface)
             break;
 #endif
 	default:
-	    FIXME("joystick cannot handle type %d event (code %d)\n",ie.type,ie.code);
+	    TRACE("skipping event\n");
 	    break;
 	}
         if (inst_id >= 0)
@@ -1312,9 +1306,9 @@ static HRESULT WINAPI JoystickWImpl_SendForceFeedbackCommand(LPDIRECTINPUTDEVICE
     {
     case DISFFC_STOPALL:
     {
-	/* Stop all effects */
         effect_list_item *itr;
 
+        /* Stop all effects */
         LIST_FOR_EACH_ENTRY(itr, &This->ff_effects, effect_list_item, entry)
             IDirectInputEffect_Stop(itr->ref);
         break;
@@ -1322,17 +1316,19 @@ static HRESULT WINAPI JoystickWImpl_SendForceFeedbackCommand(LPDIRECTINPUTDEVICE
 
     case DISFFC_RESET:
     {
-        effect_list_item *itr, *ptr;
+        effect_list_item *itr;
 
-	/* Stop, unload, release and free all effects */
-	/* This returns the device to its "bare" state */
-        LIST_FOR_EACH_ENTRY_SAFE(itr, ptr, &This->ff_effects, effect_list_item, entry)
-            IDirectInputEffect_Release(itr->ref);
+        /* Stop and unload all effects. It is not true that effects are released */
+        LIST_FOR_EACH_ENTRY(itr, &This->ff_effects, effect_list_item, entry)
+        {
+            IDirectInputEffect_Stop(itr->ref);
+            IDirectInputEffect_Unload(itr->ref);
+        }
         break;
     }
     case DISFFC_PAUSE:
     case DISFFC_CONTINUE:
-	FIXME("No support for Pause or Continue in linux\n");
+        FIXME("No support for Pause or Continue in linux\n");
         break;
 
     case DISFFC_SETACTUATORSOFF:
@@ -1341,8 +1337,8 @@ static HRESULT WINAPI JoystickWImpl_SendForceFeedbackCommand(LPDIRECTINPUTDEVICE
         break;
 
     default:
-	FIXME("Unknown Force Feedback Command!\n");
-	return DIERR_INVALIDPARAM;
+        WARN("Unknown Force Feedback Command %u!\n", dwFlags);
+        return DIERR_INVALIDPARAM;
     }
     return DI_OK;
 #else
