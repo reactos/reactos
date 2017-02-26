@@ -229,7 +229,6 @@ static void test_LZOpenFileA_nonexisting_compressed(void)
      "LZOpenFileA succeeded on nonexistent file\n");
   ok(GetLastError() == ERROR_FILE_NOT_FOUND,
      "GetLastError() returns %d\n", GetLastError());
-  todo_wine
   ok(test.cBytes == 0xA5, 
      "LZOpenFileA set test.cBytes to %d\n", test.cBytes);
   ok(test.nErrCode == ERROR_FILE_NOT_FOUND, 
@@ -249,7 +248,6 @@ static void test_LZOpenFileA_nonexisting_compressed(void)
      "LZOpenFileA succeeded on nonexistent file\n");
   ok(GetLastError() == ERROR_FILE_NOT_FOUND,
      "GetLastError() returns %d\n", GetLastError());
-  todo_wine
   ok(test.cBytes == 0xA5, 
      "LZOpenFileA set test.cBytes to %d\n", test.cBytes);
   ok(test.nErrCode == ERROR_FILE_NOT_FOUND, 
@@ -269,7 +267,6 @@ static void test_LZOpenFileA_nonexisting_compressed(void)
      "LZOpenFileA succeeded on nonexistent file\n");
   ok(GetLastError() == ERROR_FILE_NOT_FOUND,
      "GetLastError() returns %d\n", GetLastError());
-  todo_wine
   ok(test.cBytes == 0xA5, 
      "LZOpenFileA set test.cBytes to %d\n", test.cBytes);
   ok(test.nErrCode == ERROR_FILE_NOT_FOUND, 
@@ -289,7 +286,6 @@ static void test_LZOpenFileA_nonexisting_compressed(void)
      "LZOpenFileA succeeded on nonexistent file\n");
   ok(GetLastError() == ERROR_FILE_NOT_FOUND,
      "GetLastError() returns %d\n", GetLastError());
-  todo_wine
   ok(test.cBytes == 0xA5, 
      "LZOpenFileA set test.cBytes to %d\n", test.cBytes);
   ok(test.nErrCode == ERROR_FILE_NOT_FOUND, 
@@ -633,7 +629,6 @@ static void test_LZOpenFileW_nonexisting_compressed(void)
      "LZOpenFileW succeeded on nonexistent file\n");
   ok(GetLastError() == ERROR_FILE_NOT_FOUND,
      "GetLastError() returns %d\n", GetLastError());
-  todo_wine
   ok(test.cBytes == 0xA5, 
      "LZOpenFileW set test.cBytes to %d\n", test.cBytes);
   ok(test.nErrCode == ERROR_FILE_NOT_FOUND, 
@@ -653,7 +648,6 @@ static void test_LZOpenFileW_nonexisting_compressed(void)
      "LZOpenFileW succeeded on nonexistent file\n");
   ok(GetLastError() == ERROR_FILE_NOT_FOUND,
      "GetLastError() returns %d\n", GetLastError());
-  todo_wine
   ok(test.cBytes == 0xA5, 
      "LZOpenFileW set test.cBytes to %d\n", test.cBytes);
   ok(test.nErrCode == ERROR_FILE_NOT_FOUND, 
@@ -673,7 +667,6 @@ static void test_LZOpenFileW_nonexisting_compressed(void)
      "LZOpenFileW succeeded on nonexistent file\n");
   ok(GetLastError() == ERROR_FILE_NOT_FOUND,
      "GetLastError() returns %d\n", GetLastError());
-  todo_wine
   ok(test.cBytes == 0xA5, 
      "LZOpenFileW set test.cBytes to %d\n", test.cBytes);
   ok(test.nErrCode == ERROR_FILE_NOT_FOUND, 
@@ -693,7 +686,6 @@ static void test_LZOpenFileW_nonexisting_compressed(void)
      "LZOpenFileW succeeded on nonexistent file\n");
   ok(GetLastError() == ERROR_FILE_NOT_FOUND,
      "GetLastError() returns %d\n", GetLastError());
-  todo_wine
   ok(test.cBytes == 0xA5, 
      "LZOpenFileW set test.cBytes to %d\n", test.cBytes);
   ok(test.nErrCode == ERROR_FILE_NOT_FOUND, 
