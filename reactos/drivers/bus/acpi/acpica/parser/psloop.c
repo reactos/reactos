@@ -104,6 +104,9 @@ AcpiPsGetArguments (
     ACPI_FUNCTION_TRACE_PTR (PsGetArguments, WalkState);
 
 
+    ACPI_DEBUG_PRINT ((ACPI_DB_PARSE,
+        "Get arguments for opcode [%s]\n", Op->Common.AmlOpName));
+
     switch (Op->Common.AmlOpcode)
     {
     case AML_BYTE_OP:       /* AML_BYTEDATA_ARG */

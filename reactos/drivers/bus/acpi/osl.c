@@ -929,6 +929,16 @@ AcpiOsSignal (
 }
 
 ACPI_STATUS
+AcpiOsEnterSleep(
+    UINT8 SleepState,
+    UINT32 RegaValue,
+    UINT32 RegbValue)
+{
+    DPRINT1("Attempt to enter sleep. Aborting.\n");
+    return AE_CTRL_TERMINATE;
+}
+
+ACPI_STATUS
 AcpiOsGetLine(
     char *Buffer,
     UINT32 BufferLength,

@@ -217,11 +217,10 @@ typedef struct acpi_exception_info
 #define AE_CTRL_TRANSFER                EXCEP_CTL (0x0008)
 #define AE_CTRL_BREAK                   EXCEP_CTL (0x0009)
 #define AE_CTRL_CONTINUE                EXCEP_CTL (0x000A)
-#define AE_CTRL_SKIP                    EXCEP_CTL (0x000B)
-#define AE_CTRL_PARSE_CONTINUE          EXCEP_CTL (0x000C)
-#define AE_CTRL_PARSE_PENDING           EXCEP_CTL (0x000D)
+#define AE_CTRL_PARSE_CONTINUE          EXCEP_CTL (0x000B)
+#define AE_CTRL_PARSE_PENDING           EXCEP_CTL (0x000C)
 
-#define AE_CODE_CTRL_MAX                0x000D
+#define AE_CODE_CTRL_MAX                0x000C
 
 
 /* Exception strings for AcpiFormatException */
@@ -344,7 +343,6 @@ static const ACPI_EXCEPTION_INFO    AcpiGbl_ExceptionNames_Ctrl[] =
     EXCEP_TXT ("AE_CTRL_TRANSFER",              "Transfer control to called method"),
     EXCEP_TXT ("AE_CTRL_BREAK",                 "A Break has been executed"),
     EXCEP_TXT ("AE_CTRL_CONTINUE",              "A Continue has been executed"),
-    EXCEP_TXT ("AE_CTRL_SKIP",                  "Not currently used"),
     EXCEP_TXT ("AE_CTRL_PARSE_CONTINUE",        "Used to skip over bad opcodes"),
     EXCEP_TXT ("AE_CTRL_PARSE_PENDING",         "Used to implement AML While loops")
 };

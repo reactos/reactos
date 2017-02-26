@@ -246,12 +246,16 @@ struct _ACPI_EFI_FILE_IO_INTERFACE;
 struct _ACPI_EFI_FILE_HANDLE;
 struct _ACPI_EFI_BOOT_SERVICES;
 struct _ACPI_EFI_SYSTEM_TABLE;
+struct _ACPI_EFI_PCI_IO;
 
 extern struct _ACPI_EFI_SYSTEM_TABLE        *ST;
 extern struct _ACPI_EFI_BOOT_SERVICES       *BS;
 
-#define FILE                struct _ACPI_SIMPLE_TEXT_OUTPUT_INTERFACE
-#define stdout              ST->ConOut
-#define stderr              ST->ConOut
+typedef union acpi_efi_file ACPI_EFI_FILE;
+#define FILE                ACPI_EFI_FILE
+
+extern FILE                 *stdin;
+extern FILE                 *stdout;
+extern FILE                 *stderr;
 
 #endif /* __ACEFI_H__ */

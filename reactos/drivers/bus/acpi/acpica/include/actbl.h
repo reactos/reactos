@@ -256,72 +256,62 @@ typedef struct acpi_table_facs
 
 typedef struct acpi_table_fadt
 {
-    ACPI_TABLE_HEADER       Header;             /* [V1] Common ACPI table header */
-    UINT32                  Facs;               /* [V1] 32-bit physical address of FACS */
-    UINT32                  Dsdt;               /* [V1] 32-bit physical address of DSDT */
-    UINT8                   Model;              /* [V1] System Interrupt Model (ACPI 1.0) - not used in ACPI 2.0+ */
-    UINT8                   PreferredProfile;   /* [V1] Conveys preferred power management profile to OSPM. */
-    UINT16                  SciInterrupt;       /* [V1] System vector of SCI interrupt */
-    UINT32                  SmiCommand;         /* [V1] 32-bit Port address of SMI command port */
-    UINT8                   AcpiEnable;         /* [V1] Value to write to SMI_CMD to enable ACPI */
-    UINT8                   AcpiDisable;        /* [V1] Value to write to SMI_CMD to disable ACPI */
-    UINT8                   S4BiosRequest;      /* [V1] Value to write to SMI_CMD to enter S4BIOS state */
-    UINT8                   PstateControl;      /* [V1] Processor performance state control*/
-    UINT32                  Pm1aEventBlock;     /* [V1] 32-bit port address of Power Mgt 1a Event Reg Blk */
-    UINT32                  Pm1bEventBlock;     /* [V1] 32-bit port address of Power Mgt 1b Event Reg Blk */
-    UINT32                  Pm1aControlBlock;   /* [V1] 32-bit port address of Power Mgt 1a Control Reg Blk */
-    UINT32                  Pm1bControlBlock;   /* [V1] 32-bit port address of Power Mgt 1b Control Reg Blk */
-    UINT32                  Pm2ControlBlock;    /* [V1] 32-bit port address of Power Mgt 2 Control Reg Blk */
-    UINT32                  PmTimerBlock;       /* [V1] 32-bit port address of Power Mgt Timer Ctrl Reg Blk */
-    UINT32                  Gpe0Block;          /* [V1] 32-bit port address of General Purpose Event 0 Reg Blk */
-    UINT32                  Gpe1Block;          /* [V1] 32-bit port address of General Purpose Event 1 Reg Blk */
-    UINT8                   Pm1EventLength;     /* [V1] Byte Length of ports at Pm1xEventBlock */
-    UINT8                   Pm1ControlLength;   /* [V1] Byte Length of ports at Pm1xControlBlock */
-    UINT8                   Pm2ControlLength;   /* [V1] Byte Length of ports at Pm2ControlBlock */
-    UINT8                   PmTimerLength;      /* [V1] Byte Length of ports at PmTimerBlock */
-    UINT8                   Gpe0BlockLength;    /* [V1] Byte Length of ports at Gpe0Block */
-    UINT8                   Gpe1BlockLength;    /* [V1] Byte Length of ports at Gpe1Block */
-    UINT8                   Gpe1Base;           /* [V1] Offset in GPE number space where GPE1 events start */
-    UINT8                   CstControl;         /* [V1] Support for the _CST object and C-States change notification */
-    UINT16                  C2Latency;          /* [V1] Worst case HW latency to enter/exit C2 state */
-    UINT16                  C3Latency;          /* [V1] Worst case HW latency to enter/exit C3 state */
-    UINT16                  FlushSize;          /* [V1] Processor memory cache line width, in bytes */
-    UINT16                  FlushStride;        /* [V1] Number of flush strides that need to be read */
-    UINT8                   DutyOffset;         /* [V1] Processor duty cycle index in processor P_CNT reg */
-    UINT8                   DutyWidth;          /* [V1] Processor duty cycle value bit width in P_CNT register */
-    UINT8                   DayAlarm;           /* [V1] Index to day-of-month alarm in RTC CMOS RAM */
-    UINT8                   MonthAlarm;         /* [V1] Index to month-of-year alarm in RTC CMOS RAM */
-    UINT8                   Century;            /* [V1] Index to century in RTC CMOS RAM */
-    UINT16                  BootFlags;          /* [V3] IA-PC Boot Architecture Flags (see below for individual flags) */
-    UINT8                   Reserved;           /* [V1] Reserved, must be zero */
-    UINT32                  Flags;              /* [V1] Miscellaneous flag bits (see below for individual flags) */
-    /* End of Version 1 FADT fields (ACPI 1.0) */
-
-    ACPI_GENERIC_ADDRESS    ResetRegister;      /* [V3] 64-bit address of the Reset register */
-    UINT8                   ResetValue;         /* [V3] Value to write to the ResetRegister port to reset the system */
-    UINT16                  ArmBootFlags;       /* [V5] ARM-Specific Boot Flags (see below for individual flags) (ACPI 5.1) */
-    UINT8                   MinorRevision;      /* [V5] FADT Minor Revision (ACPI 5.1) */
-    UINT64                  XFacs;              /* [V3] 64-bit physical address of FACS */
-    UINT64                  XDsdt;              /* [V3] 64-bit physical address of DSDT */
-    ACPI_GENERIC_ADDRESS    XPm1aEventBlock;    /* [V3] 64-bit Extended Power Mgt 1a Event Reg Blk address */
-    ACPI_GENERIC_ADDRESS    XPm1bEventBlock;    /* [V3] 64-bit Extended Power Mgt 1b Event Reg Blk address */
-    ACPI_GENERIC_ADDRESS    XPm1aControlBlock;  /* [V3] 64-bit Extended Power Mgt 1a Control Reg Blk address */
-    ACPI_GENERIC_ADDRESS    XPm1bControlBlock;  /* [V3] 64-bit Extended Power Mgt 1b Control Reg Blk address */
-    ACPI_GENERIC_ADDRESS    XPm2ControlBlock;   /* [V3] 64-bit Extended Power Mgt 2 Control Reg Blk address */
-    ACPI_GENERIC_ADDRESS    XPmTimerBlock;      /* [V3] 64-bit Extended Power Mgt Timer Ctrl Reg Blk address */
-    ACPI_GENERIC_ADDRESS    XGpe0Block;         /* [V3] 64-bit Extended General Purpose Event 0 Reg Blk address */
-    ACPI_GENERIC_ADDRESS    XGpe1Block;         /* [V3] 64-bit Extended General Purpose Event 1 Reg Blk address */
-    /* End of Version 3 FADT fields (ACPI 2.0) */
-
-    ACPI_GENERIC_ADDRESS    SleepControl;       /* [V4] 64-bit Sleep Control register (ACPI 5.0) */
-    /* End of Version 4 FADT fields (ACPI 3.0 and ACPI 4.0) (Field was originally reserved in ACPI 3.0) */
-
-    ACPI_GENERIC_ADDRESS    SleepStatus;        /* [V5] 64-bit Sleep Status register (ACPI 5.0) */
-    /* End of Version 5 FADT fields (ACPI 5.0) */
-
-    UINT64                  HypervisorId;       /* [V6] Hypervisor Vendor ID (ACPI 6.0) */
-    /* End of Version 6 FADT fields (ACPI 6.0) */
-
+    ACPI_TABLE_HEADER       Header;             /* Common ACPI table header */
+    UINT32                  Facs;               /* 32-bit physical address of FACS */
+    UINT32                  Dsdt;               /* 32-bit physical address of DSDT */
+    UINT8                   Model;              /* System Interrupt Model (ACPI 1.0) - not used in ACPI 2.0+ */
+    UINT8                   PreferredProfile;   /* Conveys preferred power management profile to OSPM. */
+    UINT16                  SciInterrupt;       /* System vector of SCI interrupt */
+    UINT32                  SmiCommand;         /* 32-bit Port address of SMI command port */
+    UINT8                   AcpiEnable;         /* Value to write to SMI_CMD to enable ACPI */
+    UINT8                   AcpiDisable;        /* Value to write to SMI_CMD to disable ACPI */
+    UINT8                   S4BiosRequest;      /* Value to write to SMI_CMD to enter S4BIOS state */
+    UINT8                   PstateControl;      /* Processor performance state control*/
+    UINT32                  Pm1aEventBlock;     /* 32-bit port address of Power Mgt 1a Event Reg Blk */
+    UINT32                  Pm1bEventBlock;     /* 32-bit port address of Power Mgt 1b Event Reg Blk */
+    UINT32                  Pm1aControlBlock;   /* 32-bit port address of Power Mgt 1a Control Reg Blk */
+    UINT32                  Pm1bControlBlock;   /* 32-bit port address of Power Mgt 1b Control Reg Blk */
+    UINT32                  Pm2ControlBlock;    /* 32-bit port address of Power Mgt 2 Control Reg Blk */
+    UINT32                  PmTimerBlock;       /* 32-bit port address of Power Mgt Timer Ctrl Reg Blk */
+    UINT32                  Gpe0Block;          /* 32-bit port address of General Purpose Event 0 Reg Blk */
+    UINT32                  Gpe1Block;          /* 32-bit port address of General Purpose Event 1 Reg Blk */
+    UINT8                   Pm1EventLength;     /* Byte Length of ports at Pm1xEventBlock */
+    UINT8                   Pm1ControlLength;   /* Byte Length of ports at Pm1xControlBlock */
+    UINT8                   Pm2ControlLength;   /* Byte Length of ports at Pm2ControlBlock */
+    UINT8                   PmTimerLength;      /* Byte Length of ports at PmTimerBlock */
+    UINT8                   Gpe0BlockLength;    /* Byte Length of ports at Gpe0Block */
+    UINT8                   Gpe1BlockLength;    /* Byte Length of ports at Gpe1Block */
+    UINT8                   Gpe1Base;           /* Offset in GPE number space where GPE1 events start */
+    UINT8                   CstControl;         /* Support for the _CST object and C-States change notification */
+    UINT16                  C2Latency;          /* Worst case HW latency to enter/exit C2 state */
+    UINT16                  C3Latency;          /* Worst case HW latency to enter/exit C3 state */
+    UINT16                  FlushSize;          /* Processor memory cache line width, in bytes */
+    UINT16                  FlushStride;        /* Number of flush strides that need to be read */
+    UINT8                   DutyOffset;         /* Processor duty cycle index in processor P_CNT reg */
+    UINT8                   DutyWidth;          /* Processor duty cycle value bit width in P_CNT register */
+    UINT8                   DayAlarm;           /* Index to day-of-month alarm in RTC CMOS RAM */
+    UINT8                   MonthAlarm;         /* Index to month-of-year alarm in RTC CMOS RAM */
+    UINT8                   Century;            /* Index to century in RTC CMOS RAM */
+    UINT16                  BootFlags;          /* IA-PC Boot Architecture Flags (see below for individual flags) */
+    UINT8                   Reserved;           /* Reserved, must be zero */
+    UINT32                  Flags;              /* Miscellaneous flag bits (see below for individual flags) */
+    ACPI_GENERIC_ADDRESS    ResetRegister;      /* 64-bit address of the Reset register */
+    UINT8                   ResetValue;         /* Value to write to the ResetRegister port to reset the system */
+    UINT16                  ArmBootFlags;       /* ARM-Specific Boot Flags (see below for individual flags) (ACPI 5.1) */
+    UINT8                   MinorRevision;      /* FADT Minor Revision (ACPI 5.1) */
+    UINT64                  XFacs;              /* 64-bit physical address of FACS */
+    UINT64                  XDsdt;              /* 64-bit physical address of DSDT */
+    ACPI_GENERIC_ADDRESS    XPm1aEventBlock;    /* 64-bit Extended Power Mgt 1a Event Reg Blk address */
+    ACPI_GENERIC_ADDRESS    XPm1bEventBlock;    /* 64-bit Extended Power Mgt 1b Event Reg Blk address */
+    ACPI_GENERIC_ADDRESS    XPm1aControlBlock;  /* 64-bit Extended Power Mgt 1a Control Reg Blk address */
+    ACPI_GENERIC_ADDRESS    XPm1bControlBlock;  /* 64-bit Extended Power Mgt 1b Control Reg Blk address */
+    ACPI_GENERIC_ADDRESS    XPm2ControlBlock;   /* 64-bit Extended Power Mgt 2 Control Reg Blk address */
+    ACPI_GENERIC_ADDRESS    XPmTimerBlock;      /* 64-bit Extended Power Mgt Timer Ctrl Reg Blk address */
+    ACPI_GENERIC_ADDRESS    XGpe0Block;         /* 64-bit Extended General Purpose Event 0 Reg Blk address */
+    ACPI_GENERIC_ADDRESS    XGpe1Block;         /* 64-bit Extended General Purpose Event 1 Reg Blk address */
+    ACPI_GENERIC_ADDRESS    SleepControl;       /* 64-bit Sleep Control register (ACPI 5.0) */
+    ACPI_GENERIC_ADDRESS    SleepStatus;        /* 64-bit Sleep Status register (ACPI 5.0) */
+    UINT64                  HypervisorId;       /* Hypervisor Vendor ID (ACPI 6.0) */
 
 } ACPI_TABLE_FADT;
 
@@ -337,8 +327,8 @@ typedef struct acpi_table_fadt
 
 /* Masks for FADT ARM Boot Architecture Flags (arm_boot_flags) ACPI 5.1 */
 
-#define ACPI_FADT_PSCI_COMPLIANT    (1)         /* 00: [V5] PSCI 0.2+ is implemented */
-#define ACPI_FADT_PSCI_USE_HVC      (1<<1)      /* 01: [V5] HVC must be used instead of SMC as the PSCI conduit */
+#define ACPI_FADT_PSCI_COMPLIANT    (1)         /* 00: [V5+] PSCI 0.2+ is implemented */
+#define ACPI_FADT_PSCI_USE_HVC      (1<<1)      /* 01: [V5+] HVC must be used instead of SMC as the PSCI conduit */
 
 /* Masks for FADT flags */
 
@@ -415,6 +405,7 @@ typedef struct acpi_table_desc
     ACPI_NAME_UNION                 Signature;
     ACPI_OWNER_ID                   OwnerId;
     UINT8                           Flags;
+    UINT16                          ValidationCount;
 
 } ACPI_TABLE_DESC;
 
@@ -445,34 +436,20 @@ typedef struct acpi_table_desc
  * match the expected length. In other words, the length of the
  * FADT is the bottom line as to what the version really is.
  *
- * NOTE: There is no officialy released V2 of the FADT. This
- * version was used only for prototyping and testing during the
- * 32-bit to 64-bit transition. V3 was the first official 64-bit
- * version of the FADT.
- *
- * Update this list of defines when a new version of the FADT is
- * added to the ACPI specification. Note that the FADT version is
- * only incremented when new fields are appended to the existing
- * version. Therefore, the FADT version is competely independent
- * from the version of the ACPI specification where it is
- * defined.
- *
- * For reference, the various FADT lengths are as follows:
- *     FADT V1 size: 0x074      ACPI 1.0
- *     FADT V3 size: 0x0F4      ACPI 2.0
- *     FADT V4 size: 0x100      ACPI 3.0 and ACPI 4.0
- *     FADT V5 size: 0x10C      ACPI 5.0
- *     FADT V6 size: 0x114      ACPI 6.0
+ * For reference, the values below are as follows:
+ *     FADT V1 size: 0x074
+ *     FADT V2 size: 0x084
+ *     FADT V3 size: 0x0F4
+ *     FADT V4 size: 0x0F4
+ *     FADT V5 size: 0x10C
+ *     FADT V6 size: 0x114
  */
-#define ACPI_FADT_V1_SIZE       (UINT32) (ACPI_FADT_OFFSET (Flags) + 4)         /* ACPI 1.0 */
-#define ACPI_FADT_V3_SIZE       (UINT32) (ACPI_FADT_OFFSET (SleepControl))      /* ACPI 2.0 */
-#define ACPI_FADT_V4_SIZE       (UINT32) (ACPI_FADT_OFFSET (SleepStatus))       /* ACPI 3.0 and ACPI 4.0 */
-#define ACPI_FADT_V5_SIZE       (UINT32) (ACPI_FADT_OFFSET (HypervisorId))      /* ACPI 5.0 */
-#define ACPI_FADT_V6_SIZE       (UINT32) (sizeof (ACPI_TABLE_FADT))             /* ACPI 6.0 */
+#define ACPI_FADT_V1_SIZE       (UINT32) (ACPI_FADT_OFFSET (Flags) + 4)
+#define ACPI_FADT_V2_SIZE       (UINT32) (ACPI_FADT_OFFSET (MinorRevision) + 1)
+#define ACPI_FADT_V3_SIZE       (UINT32) (ACPI_FADT_OFFSET (SleepControl))
+#define ACPI_FADT_V5_SIZE       (UINT32) (ACPI_FADT_OFFSET (HypervisorId))
+#define ACPI_FADT_V6_SIZE       (UINT32) (sizeof (ACPI_TABLE_FADT))
 
-/* Update these when new FADT versions are added */
-
-#define ACPI_FADT_MAX_VERSION   6
 #define ACPI_FADT_CONFORMANCE   "ACPI 6.1 (FADT version 6)"
 
 #endif /* __ACTBL_H__ */

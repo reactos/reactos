@@ -411,3 +411,99 @@ NextTable:
     AcpiOsUnmapMemory (Table, Length);
     return_ACPI_STATUS (AE_OK);
 }
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiTbGetTable
+ *
+ * PARAMETERS:  TableDesc           - Table descriptor
+ *              OutTable            - Where the pointer to the table is returned
+ *
+ * RETURN:      Status and pointer to the requested table
+ *
+ * DESCRIPTION: Increase a reference to a table descriptor and return the
+ *              validated table pointer.
+ *              If the table descriptor is an entry of the root table list,
+ *              this API must be invoked with ACPI_MTX_TABLES acquired.
+ *
+ ******************************************************************************/
+
+ACPI_STATUS
+AcpiTbGetTable (
+    ACPI_TABLE_DESC        *TableDesc,
+    ACPI_TABLE_HEADER      **OutTable)
+{
+    ACPI_STATUS            Status;
+
+
+    ACPI_FUNCTION_TRACE (AcpiTbGetTable);
+
+
+    if (TableDesc->ValidationCount == 0)
+    {
+        /* Table need to be "VALIDATED" */
+
+        Status = AcpiTbValidateTable (TableDesc);
+        if (ACPI_FAILURE (Status))
+        {
+            return_ACPI_STATUS (Status);
+        }
+    }
+
+    TableDesc->ValidationCount++;
+    if (TableDesc->ValidationCount == 0)
+    {
+        ACPI_ERROR ((AE_INFO,
+            "Table %p, Validation count is zero after increment\n",
+            TableDesc));
+        TableDesc->ValidationCount--;
+        return_ACPI_STATUS (AE_LIMIT);
+    }
+
+    *OutTable = TableDesc->Pointer;
+    return_ACPI_STATUS (AE_OK);
+}
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiTbPutTable
+ *
+ * PARAMETERS:  TableDesc           - Table descriptor
+ *
+ * RETURN:      None
+ *
+ * DESCRIPTION: Decrease a reference to a table descriptor and release the
+ *              validated table pointer if no references.
+ *              If the table descriptor is an entry of the root table list,
+ *              this API must be invoked with ACPI_MTX_TABLES acquired.
+ *
+ ******************************************************************************/
+
+void
+AcpiTbPutTable (
+    ACPI_TABLE_DESC        *TableDesc)
+{
+
+    ACPI_FUNCTION_TRACE (AcpiTbPutTable);
+
+
+    if (TableDesc->ValidationCount == 0)
+    {
+        ACPI_WARNING ((AE_INFO,
+            "Table %p, Validation count is zero before decrement\n",
+            TableDesc));
+        return_VOID;
+    }
+    TableDesc->ValidationCount--;
+
+    if (TableDesc->ValidationCount == 0)
+    {
+        /* Table need to be "INVALIDATED" */
+
+        AcpiTbInvalidateTable (TableDesc);
+    }
+
+    return_VOID;
+}

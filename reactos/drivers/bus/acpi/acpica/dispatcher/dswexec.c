@@ -144,7 +144,8 @@ AcpiDsGetPredicateValue (
      * Result of predicate evaluation must be an Integer
      * object. Implicitly convert the argument if necessary.
      */
-    Status = AcpiExConvertToInteger (ObjDesc, &LocalObjDesc, 16);
+    Status = AcpiExConvertToInteger (ObjDesc, &LocalObjDesc,
+        ACPI_STRTOUL_BASE16);
     if (ACPI_FAILURE (Status))
     {
         goto Cleanup;

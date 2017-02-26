@@ -341,6 +341,8 @@ AcpiTbParseFadt (
 {
     UINT32                  Length;
     ACPI_TABLE_HEADER       *Table;
+    ACPI_TABLE_DESC         *FadtDesc;
+    ACPI_STATUS             Status;
 
 
     /*
@@ -350,14 +352,13 @@ AcpiTbParseFadt (
      * Get a local copy of the FADT and convert it to a common format
      * Map entire FADT, assumed to be smaller than one page.
      */
-    Length = AcpiGbl_RootTableList.Tables[AcpiGbl_FadtIndex].Length;
-
-    Table = AcpiOsMapMemory (
-        AcpiGbl_RootTableList.Tables[AcpiGbl_FadtIndex].Address, Length);
-    if (!Table)
+    FadtDesc = &AcpiGbl_RootTableList.Tables[AcpiGbl_FadtIndex];
+    Status = AcpiTbGetTable (FadtDesc, &Table);
+    if (ACPI_FAILURE (Status))
     {
         return;
     }
+    Length = FadtDesc->Length;
 
     /*
      * Validate the FADT checksum before we copy the table. Ignore
@@ -371,12 +372,14 @@ AcpiTbParseFadt (
 
     /* All done with the real FADT, unmap it */
 
-    AcpiOsUnmapMemory (Table, Length);
+    AcpiTbPutTable (FadtDesc);
 
     /* Obtain the DSDT and FACS tables via their addresses within the FADT */
 
-    AcpiTbInstallFixedTable ((ACPI_PHYSICAL_ADDRESS) AcpiGbl_FADT.XDsdt,
-        ACPI_SIG_DSDT, &AcpiGbl_DsdtIndex);
+    AcpiTbInstallStandardTable (
+        (ACPI_PHYSICAL_ADDRESS) AcpiGbl_FADT.XDsdt,
+        ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL, FALSE, TRUE,
+        &AcpiGbl_DsdtIndex);
 
     /* If Hardware Reduced flag is set, there is no FACS */
 
@@ -384,13 +387,17 @@ AcpiTbParseFadt (
     {
         if (AcpiGbl_FADT.Facs)
         {
-            AcpiTbInstallFixedTable ((ACPI_PHYSICAL_ADDRESS) AcpiGbl_FADT.Facs,
-                ACPI_SIG_FACS, &AcpiGbl_FacsIndex);
+            AcpiTbInstallStandardTable (
+                (ACPI_PHYSICAL_ADDRESS) AcpiGbl_FADT.Facs,
+                ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL, FALSE, TRUE,
+                &AcpiGbl_FacsIndex);
         }
         if (AcpiGbl_FADT.XFacs)
         {
-            AcpiTbInstallFixedTable ((ACPI_PHYSICAL_ADDRESS) AcpiGbl_FADT.XFacs,
-                ACPI_SIG_FACS, &AcpiGbl_XFacsIndex);
+            AcpiTbInstallStandardTable (
+                (ACPI_PHYSICAL_ADDRESS) AcpiGbl_FADT.XFacs,
+                ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL, FALSE, TRUE,
+                &AcpiGbl_XFacsIndex);
         }
     }
 }
@@ -516,19 +523,17 @@ AcpiTbConvertFadt (
 
 
     /*
-     * For ACPI 1.0 FADTs (revision 1), ensure that reserved fields which
+     * For ACPI 1.0 FADTs (revision 1 or 2), ensure that reserved fields which
      * should be zero are indeed zero. This will workaround BIOSs that
      * inadvertently place values in these fields.
      *
      * The ACPI 1.0 reserved fields that will be zeroed are the bytes located
      * at offset 45, 55, 95, and the word located at offset 109, 110.
      *
-     * Note: The FADT revision value is unreliable because of BIOS errors.
-     * The table length is instead used as the final word on the version.
-     *
-     * Note: FADT revision 3 is the ACPI 2.0 version of the FADT.
+     * Note: The FADT revision value is unreliable. Only the length can be
+     * trusted.
      */
-    if (AcpiGbl_FADT.Header.Length <= ACPI_FADT_V3_SIZE)
+    if (AcpiGbl_FADT.Header.Length <= ACPI_FADT_V2_SIZE)
     {
         AcpiGbl_FADT.PreferredProfile = 0;
         AcpiGbl_FADT.PstateControl = 0;
@@ -593,65 +598,67 @@ AcpiTbConvertFadt (
          *
          * Address32 zero, Address64 [don't care]   - Use Address64
          *
+         * No override: if AcpiGbl_Use32BitFadtAddresses is FALSE, and:
          * Address32 non-zero, Address64 zero       - Copy/use Address32
          * Address32 non-zero == Address64 non-zero - Use Address64
          * Address32 non-zero != Address64 non-zero - Warning, use Address64
          *
          * Override: if AcpiGbl_Use32BitFadtAddresses is TRUE, and:
+         * Address32 non-zero, Address64 zero       - Copy/use Address32
+         * Address32 non-zero == Address64 non-zero - Copy/use Address32
          * Address32 non-zero != Address64 non-zero - Warning, copy/use Address32
          *
          * Note: SpaceId is always I/O for 32-bit legacy address fields
          */
         if (Address32)
         {
-            if (!Address64->Address)
+            if (Address64->Address)
             {
-                /* 64-bit address is zero, use 32-bit address */
-
-                AcpiTbInitGenericAddress (Address64,
-                    ACPI_ADR_SPACE_SYSTEM_IO,
-                    *ACPI_ADD_PTR (UINT8, &AcpiGbl_FADT,
-                        FadtInfoTable[i].Length),
-                    (UINT64) Address32, Name, Flags);
-            }
-            else if (Address64->Address != (UINT64) Address32)
-            {
-                /* Address mismatch */
-
-                ACPI_BIOS_WARNING ((AE_INFO,
-                    "32/64X address mismatch in FADT/%s: "
-                    "0x%8.8X/0x%8.8X%8.8X, using %u-bit address",
-                    Name, Address32,
-                    ACPI_FORMAT_UINT64 (Address64->Address),
-                    AcpiGbl_Use32BitFadtAddresses ? 32 : 64));
-
-                if (AcpiGbl_Use32BitFadtAddresses)
+                if (Address64->Address != (UINT64) Address32)
                 {
-                    /* 32-bit address override */
+                    /* Address mismatch */
 
-                    AcpiTbInitGenericAddress (Address64,
-                        ACPI_ADR_SPACE_SYSTEM_IO,
-                        *ACPI_ADD_PTR (UINT8, &AcpiGbl_FADT,
-                            FadtInfoTable[i].Length),
-                        (UINT64) Address32, Name, Flags);
+                    ACPI_BIOS_WARNING ((AE_INFO,
+                        "32/64X address mismatch in FADT/%s: "
+                        "0x%8.8X/0x%8.8X%8.8X, using %u-bit address",
+                        Name, Address32,
+                        ACPI_FORMAT_UINT64 (Address64->Address),
+                        AcpiGbl_Use32BitFadtAddresses ? 32 : 64));
+                }
+
+                /*
+                 * For each extended field, check for length mismatch
+                 * between the legacy length field and the corresponding
+                 * 64-bit X length field.
+                 * Note: If the legacy length field is > 0xFF bits, ignore
+                 * this check. (GPE registers can be larger than the
+                 * 64-bit GAS structure can accomodate, 0xFF bits).
+                 */
+                if ((ACPI_MUL_8 (Length) <= ACPI_UINT8_MAX) &&
+                    (Address64->BitWidth != ACPI_MUL_8 (Length)))
+                {
+                    ACPI_BIOS_WARNING ((AE_INFO,
+                        "32/64X length mismatch in FADT/%s: %u/%u",
+                        Name, ACPI_MUL_8 (Length), Address64->BitWidth));
                 }
             }
-        }
 
-        /*
-         * For each extended field, check for length mismatch between the
-         * legacy length field and the corresponding 64-bit X length field.
-         * Note: If the legacy length field is > 0xFF bits, ignore this
-         * check. (GPE registers can be larger than the 64-bit GAS structure
-         * can accomodate, 0xFF bits).
-         */
-        if (Address64->Address &&
-           (ACPI_MUL_8 (Length) <= ACPI_UINT8_MAX) &&
-           (Address64->BitWidth != ACPI_MUL_8 (Length)))
-        {
-            ACPI_BIOS_WARNING ((AE_INFO,
-                "32/64X length mismatch in FADT/%s: %u/%u",
-                Name, ACPI_MUL_8 (Length), Address64->BitWidth));
+            /*
+             * Hardware register access code always uses the 64-bit fields.
+             * So if the 64-bit field is zero or is to be overridden,
+             * initialize it with the 32-bit fields.
+             * Note that when the 32-bit address favor is specified, the
+             * 64-bit fields are always re-initialized so that
+             * AccessSize/BitWidth/BitOffset fields can be correctly
+             * configured to the values to trigger a 32-bit compatible
+             * access mode in the hardware register access code.
+             */
+            if (!Address64->Address || AcpiGbl_Use32BitFadtAddresses)
+            {
+                AcpiTbInitGenericAddress (Address64,
+                    ACPI_ADR_SPACE_SYSTEM_IO, Length,
+                    (UINT64) Address32, Name, Flags);
+            }
         }
 
         if (FadtInfoTable[i].Flags & ACPI_FADT_REQUIRED)

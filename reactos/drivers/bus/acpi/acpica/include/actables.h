@@ -178,6 +178,22 @@ void
 AcpiTbUninstallTable (
     ACPI_TABLE_DESC        *TableDesc);
 
+ACPI_STATUS
+AcpiTbLoadTable (
+    UINT32                  TableIndex,
+    ACPI_NAMESPACE_NODE     *ParentNode);
+
+ACPI_STATUS
+AcpiTbInstallAndLoadTable (
+    ACPI_PHYSICAL_ADDRESS   Address,
+    UINT8                   Flags,
+    BOOLEAN                 Override,
+    UINT32                  *TableIndex);
+
+ACPI_STATUS
+AcpiTbUnloadTable (
+    UINT32                  TableIndex);
+
 void
 AcpiTbTerminate (
     void);
@@ -237,14 +253,17 @@ AcpiTbInstallTableWithOverride (
     UINT32                  *TableIndex);
 
 ACPI_STATUS
-AcpiTbInstallFixedTable (
-    ACPI_PHYSICAL_ADDRESS   Address,
-    char                    *Signature,
-    UINT32                  *TableIndex);
-
-ACPI_STATUS ACPI_INIT_FUNCTION
 AcpiTbParseRootTable (
     ACPI_PHYSICAL_ADDRESS   RsdpAddress);
+
+ACPI_STATUS
+AcpiTbGetTable (
+    ACPI_TABLE_DESC        *TableDesc,
+    ACPI_TABLE_HEADER      **OutTable);
+
+void
+AcpiTbPutTable (
+    ACPI_TABLE_DESC        *TableDesc);
 
 
 /*

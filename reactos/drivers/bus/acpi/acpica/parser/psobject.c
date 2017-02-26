@@ -373,7 +373,13 @@ AcpiPsCreateOp (
                 Op->Common.Flags |= ACPI_PARSEOP_TARGET;
             }
         }
-        else if (ParentScope->Common.AmlOpcode == AML_INCREMENT_OP)
+
+        /*
+         * Special case for both Increment() and Decrement(), where
+         * the lone argument is both a source and a target.
+         */
+        else if ((ParentScope->Common.AmlOpcode == AML_INCREMENT_OP) ||
+                (ParentScope->Common.AmlOpcode == AML_DECREMENT_OP))
         {
             Op->Common.Flags |= ACPI_PARSEOP_TARGET;
         }

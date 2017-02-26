@@ -243,6 +243,7 @@
 #define ARGP_QWORDDATA              0x11
 #define ARGP_SIMPLENAME             0x12 /* NameString | LocalTerm | ArgTerm */
 #define ARGP_NAME_OR_REF            0x13 /* For ObjectType only */
+#define ARGP_MAX                    0x13
 
 /*
  * Resolved argument types for the AML Interpreter
@@ -279,9 +280,24 @@
 #define ARGI_DEVICE_REF             0x0D
 #define ARGI_REFERENCE              0x0E
 #define ARGI_TARGETREF              0x0F    /* Target, subject to implicit conversion */
-#define ARGI_FIXED_TARGET           0x10    /* Target, no implicit conversion */
-#define ARGI_SIMPLE_TARGET          0x11    /* Name, Local, Arg -- no implicit conversion */
-#define ARGI_STORE_TARGET           0x12    /* Target for store is TARGETREF + package objects */
+#define ARGI_SIMPLE_TARGET          0x10    /* Name, Local, Arg -- no implicit conversion */
+#define ARGI_STORE_TARGET           0x11    /* Target for store is TARGETREF + package objects */
+/*
+ * #define ARGI_FIXED_TARGET           0x10     Target, no implicit conversion
+ *
+ * Removed 10/2016. ARGI_FIXED_TARGET was used for these operators:
+ *      FromBCD
+ *      ToBCD
+ *      ToDecimalString
+ *      ToHexString
+ *      ToInteger
+ *      ToBuffer
+ * The purpose of this type was to disable "implicit result conversion",
+ * but this was incorrect per the ACPI spec and other ACPI implementations.
+ * These operators now have the target operand defined as a normal
+ * ARGI_TARGETREF.
+ */
+
 
 /* Multiple/complex types */
 

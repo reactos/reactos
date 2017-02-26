@@ -95,6 +95,20 @@ typedef struct {
     UINT8   Data4[8];
 } ACPI_EFI_GUID;
 
+typedef struct {
+    UINT16 Year;       /* 1998 - 20XX */
+    UINT8  Month;      /* 1 - 12 */
+    UINT8  Day;        /* 1 - 31 */
+    UINT8  Hour;       /* 0 - 23 */
+    UINT8  Minute;     /* 0 - 59 */
+    UINT8  Second;     /* 0 - 59 */
+    UINT8  Pad1;
+    UINT32 Nanosecond; /* 0 - 999,999,999 */
+    INT16  TimeZone;   /* -1440 to 1440 or 2047 */
+    UINT8  Daylight;
+    UINT8  Pad2;
+} ACPI_EFI_TIME;
+
 typedef struct _ACPI_EFI_DEVICE_PATH {
         UINT8                           Type;
         UINT8                           SubType;
@@ -375,6 +389,22 @@ ACPI_EFI_STATUS
     struct _ACPI_EFI_FILE_HANDLE                *File,
     UINT64                                      *Position);
 
+#define ACPI_EFI_FILE_INFO_ID \
+    { 0x9576e92, 0x6d3f, 0x11d2, {0x8e, 0x39, 0x0, 0xa0, 0xc9, 0x69, 0x72, 0x3b} }
+
+typedef struct {
+    UINT64 Size;
+    UINT64 FileSize;
+    UINT64 PhysicalSize;
+    ACPI_EFI_TIME CreateTime;
+    ACPI_EFI_TIME LastAccessTime;
+    ACPI_EFI_TIME ModificationTime;
+    UINT64 Attribute;
+    CHAR16 FileName[1];
+} ACPI_EFI_FILE_INFO;
+
+#define SIZE_OF_ACPI_EFI_FILE_INFO  ACPI_OFFSET(ACPI_EFI_FILE_INFO, FileName)
+
 typedef
 ACPI_EFI_STATUS
 (ACPI_EFI_API *ACPI_EFI_FILE_GET_INFO) (
@@ -455,6 +485,15 @@ typedef
 ACPI_EFI_STATUS
 (ACPI_EFI_API *ACPI_EFI_IMAGE_UNLOAD) (
     ACPI_EFI_HANDLE                 ImageHandle);
+
+
+typedef
+ACPI_EFI_STATUS
+(ACPI_EFI_API *ACPI_EFI_SET_WATCHDOG_TIMER) (
+    UINTN                           Timeout,
+    UINT64                          WatchdogCode,
+    UINTN                           DataSize,
+    CHAR16                          *WatchdogData);
 
 
 #define EFI_IMAGE_INFORMATION_REVISION      0x1000
@@ -744,13 +783,12 @@ typedef struct _ACPI_EFI_BOOT_SERVICES {
     ACPI_EFI_EXIT_BOOT_SERVICES         ExitBootServices;
     ACPI_EFI_GET_NEXT_MONOTONIC_COUNT   GetNextMonotonicCount;
     ACPI_EFI_STALL                      Stall;
-    ACPI_EFI_SET_WATCHDOG_TIMER         SetWatchdogTimer;
 #else
     ACPI_EFI_UNKNOWN_INTERFACE          ExitBootServices;
     ACPI_EFI_UNKNOWN_INTERFACE          GetNextMonotonicCount;
     ACPI_EFI_UNKNOWN_INTERFACE          Stall;
-    ACPI_EFI_UNKNOWN_INTERFACE          SetWatchdogTimer;
 #endif
+    ACPI_EFI_SET_WATCHDOG_TIMER         SetWatchdogTimer;
 
 #if 0
     ACPI_EFI_CONNECT_CONTROLLER         ConnectController;
@@ -831,6 +869,80 @@ typedef struct _ACPI_EFI_SYSTEM_TABLE {
 } ACPI_EFI_SYSTEM_TABLE;
 
 
+/*
+ * EFI PCI I/O Protocol
+ */
+#define ACPI_EFI_PCI_IO_PROTOCOL \
+    { 0x4cf5b200, 0x68b8, 0x4ca5, {0x9e, 0xec, 0xb2, 0x3e, 0x3f, 0x50, 0x2, 0x9a} }
+
+typedef enum {
+    AcpiEfiPciIoWidthUint8 = 0,
+    AcpiEfiPciIoWidthUint16,
+    AcpiEfiPciIoWidthUint32,
+    AcpiEfiPciIoWidthUint64,
+    AcpiEfiPciIoWidthFifoUint8,
+    AcpiEfiPciIoWidthFifoUint16,
+    AcpiEfiPciIoWidthFifoUint32,
+    AcpiEfiPciIoWidthFifoUint64,
+    AcpiEfiPciIoWidthFillUint8,
+    AcpiEfiPciIoWidthFillUint16,
+    AcpiEfiPciIoWidthFillUint32,
+    AcpiEfiPciIoWidthFillUint64,
+    AcpiEfiPciIoWidthMaximum
+} ACPI_EFI_PCI_IO_PROTOCOL_WIDTH;
+
+typedef
+ACPI_EFI_STATUS
+(ACPI_EFI_API *ACPI_EFI_PCI_IO_PROTOCOL_CONFIG)(
+    struct _ACPI_EFI_PCI_IO             *This,
+    ACPI_EFI_PCI_IO_PROTOCOL_WIDTH      Width,
+    UINT32                              Offset,
+    UINTN                               Count,
+    VOID                                *Buffer);
+
+typedef struct {
+    ACPI_EFI_PCI_IO_PROTOCOL_CONFIG     Read;
+    ACPI_EFI_PCI_IO_PROTOCOL_CONFIG     Write;
+} ACPI_EFI_PCI_IO_PROTOCOL_CONFIG_ACCESS;
+
+typedef
+ACPI_EFI_STATUS
+(ACPI_EFI_API *ACPI_EFI_PCI_IO_PROTOCOL_GET_LOCATION)(
+    struct _ACPI_EFI_PCI_IO             *This,
+    UINTN                               *SegmentNumber,
+    UINTN                               *BusNumber,
+    UINTN                               *DeviceNumber,
+    UINTN                               *FunctionNumber);
+
+typedef struct _ACPI_EFI_PCI_IO {
+    ACPI_EFI_UNKNOWN_INTERFACE          PollMem;
+    ACPI_EFI_UNKNOWN_INTERFACE          PollIo;
+    ACPI_EFI_UNKNOWN_INTERFACE          Mem;
+    ACPI_EFI_UNKNOWN_INTERFACE          Io;
+    ACPI_EFI_PCI_IO_PROTOCOL_CONFIG_ACCESS Pci;
+    ACPI_EFI_UNKNOWN_INTERFACE          CopyMem;
+    ACPI_EFI_UNKNOWN_INTERFACE          Map;
+    ACPI_EFI_UNKNOWN_INTERFACE          Unmap;
+    ACPI_EFI_UNKNOWN_INTERFACE          AllocateBuffer;
+    ACPI_EFI_UNKNOWN_INTERFACE          FreeBuffer;
+    ACPI_EFI_UNKNOWN_INTERFACE          Flush;
+    ACPI_EFI_PCI_IO_PROTOCOL_GET_LOCATION GetLocation;
+    ACPI_EFI_UNKNOWN_INTERFACE          Attributes;
+    ACPI_EFI_UNKNOWN_INTERFACE          GetBarAttributes;
+    ACPI_EFI_UNKNOWN_INTERFACE          SetBarAttributes;
+    UINT64                              RomSize;
+    VOID                                *RomImage;
+} ACPI_EFI_PCI_IO;
+
+/* FILE abstraction */
+
+union acpi_efi_file {
+    struct _ACPI_EFI_FILE_HANDLE File;
+    struct _ACPI_SIMPLE_TEXT_OUTPUT_INTERFACE ConOut;
+    struct _ACPI_SIMPLE_INPUT_INTERFACE ConIn;
+};
+
+
 /* GNU EFI definitions */
 
 #if defined(_GNU_EFI)
@@ -864,5 +976,6 @@ extern ACPI_EFI_GUID AcpiGbl_LoadedImageProtocol;
 extern ACPI_EFI_GUID AcpiGbl_TextInProtocol;
 extern ACPI_EFI_GUID AcpiGbl_TextOutProtocol;
 extern ACPI_EFI_GUID AcpiGbl_FileSystemProtocol;
+extern ACPI_EFI_GUID AcpiGbl_GenericFileInfo;
 
 #endif /* __ACEFIEX_H__ */

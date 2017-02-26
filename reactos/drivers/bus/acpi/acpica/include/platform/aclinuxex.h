@@ -144,6 +144,20 @@ AcpiOsReadable (
     return TRUE;
 }
 
+static inline ACPI_STATUS
+AcpiOsInitializeDebugger (
+    void)
+{
+    return AE_OK;
+}
+
+static inline void
+AcpiOsTerminateDebugger (
+    void)
+{
+    return;
+}
+
 
 /*
  * OSL interfaces added by Linux

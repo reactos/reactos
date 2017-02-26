@@ -550,11 +550,12 @@ typedef union acpi_gpe_dispatch_info
  */
 typedef struct acpi_gpe_event_info
 {
-    union acpi_gpe_dispatch_info    Dispatch;       /* Either Method, Handler, or NotifyList */
-    struct acpi_gpe_register_info   *RegisterInfo;  /* Backpointer to register info */
-    UINT8                           Flags;          /* Misc info about this GPE */
-    UINT8                           GpeNumber;      /* This GPE */
-    UINT8                           RuntimeCount;   /* References to a run GPE */
+    union acpi_gpe_dispatch_info    Dispatch;           /* Either Method, Handler, or NotifyList */
+    struct acpi_gpe_register_info   *RegisterInfo;      /* Backpointer to register info */
+    UINT8                           Flags;              /* Misc info about this GPE */
+    UINT8                           GpeNumber;          /* This GPE */
+    UINT8                           RuntimeCount;       /* References to a run GPE */
+    BOOLEAN                         DisableForDispatch; /* Masked during dispatching */
 
 } ACPI_GPE_EVENT_INFO;
 
@@ -567,6 +568,7 @@ typedef struct acpi_gpe_register_info
     UINT16                          BaseGpeNumber;  /* Base GPE number for this register */
     UINT8                           EnableForWake;  /* GPEs to keep enabled when sleeping */
     UINT8                           EnableForRun;   /* GPEs to keep enabled when running */
+    UINT8                           MaskForRun;     /* GPEs to keep masked when running */
     UINT8                           EnableMask;     /* Current mask of enabled GPEs */
 
 } ACPI_GPE_REGISTER_INFO;
@@ -915,13 +917,13 @@ typedef union acpi_parse_value
     ACPI_PARSE_VALUE                Value;          /* Value or args associated with the opcode */\
     UINT8                           ArgListLength;  /* Number of elements in the arg list */\
     ACPI_DISASM_ONLY_MEMBERS (\
-    UINT8                           DisasmFlags;    /* Used during AML disassembly */\
+    UINT16                          DisasmFlags;    /* Used during AML disassembly */\
     UINT8                           DisasmOpcode;   /* Subtype used for disassembly */\
     char                            *OperatorSymbol;/* Used for C-style operator name strings */\
     char                            AmlOpName[16])  /* Op name (debug only) */
 
 
-/* Flags for DisasmFlags field  above */
+/* Internal opcodes for DisasmOpcode field above */
 
 #define ACPI_DASM_BUFFER                0x00        /* Buffer is a simple data buffer */
 #define ACPI_DASM_RESOURCE              0x01        /* Buffer is a Resource Descriptor */
@@ -934,7 +936,10 @@ typedef union acpi_parse_value
 #define ACPI_DASM_LNOT_PREFIX           0x08        /* Start of a LNotEqual (etc.) pair of opcodes */
 #define ACPI_DASM_LNOT_SUFFIX           0x09        /* End  of a LNotEqual (etc.) pair of opcodes */
 #define ACPI_DASM_HID_STRING            0x0A        /* String is a _HID or _CID */
-#define ACPI_DASM_IGNORE                0x0B        /* Not used at this time */
+#define ACPI_DASM_IGNORE_SINGLE         0x0B        /* Ignore the opcode but not it's children */
+#define ACPI_DASM_SWITCH_PREDICATE      0x0C        /* Object is a predicate for a Switch or Case block */
+#define ACPI_DASM_CASE                  0x0D        /* If/Else is a Case in a Switch/Case block */
+#define ACPI_DASM_DEFAULT               0x0E        /* Else is a Default in a Switch/Case block */
 
 /*
  * Generic operation (for example:  If, While, Store)
@@ -1035,14 +1040,15 @@ typedef struct acpi_parse_state
 
 /* Parse object DisasmFlags */
 
-#define ACPI_PARSEOP_IGNORE                 0x01
-#define ACPI_PARSEOP_PARAMETER_LIST         0x02
-#define ACPI_PARSEOP_EMPTY_TERMLIST         0x04
-#define ACPI_PARSEOP_PREDEFINED_CHECKED     0x08
-#define ACPI_PARSEOP_CLOSING_PAREN          0x10
-#define ACPI_PARSEOP_COMPOUND_ASSIGNMENT    0x20
-#define ACPI_PARSEOP_ASSIGNMENT             0x40
-#define ACPI_PARSEOP_ELSEIF                 0x80
+#define ACPI_PARSEOP_IGNORE                 0x0001
+#define ACPI_PARSEOP_PARAMETER_LIST         0x0002
+#define ACPI_PARSEOP_EMPTY_TERMLIST         0x0004
+#define ACPI_PARSEOP_PREDEFINED_CHECKED     0x0008
+#define ACPI_PARSEOP_CLOSING_PAREN          0x0010
+#define ACPI_PARSEOP_COMPOUND_ASSIGNMENT    0x0020
+#define ACPI_PARSEOP_ASSIGNMENT             0x0040
+#define ACPI_PARSEOP_ELSEIF                 0x0080
+#define ACPI_PARSEOP_LEGACY_ASL_ONLY        0x0100
 
 
 /*****************************************************************************

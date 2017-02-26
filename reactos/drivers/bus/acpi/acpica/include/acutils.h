@@ -224,14 +224,16 @@ AcpiUtStricmp (
 ACPI_STATUS
 AcpiUtStrtoul64 (
     char                    *String,
-    UINT32                  Base,
-    UINT32                  MaxIntegerByteWidth,
+    UINT32                  Flags,
     UINT64                  *RetInteger);
 
-/* Values for MaxIntegerByteWidth above */
-
-#define ACPI_MAX32_BYTE_WIDTH       4
-#define ACPI_MAX64_BYTE_WIDTH       8
+/*
+ * Values for Flags above
+ * Note: LIMIT values correspond to AcpiGbl_IntegerByteWidth values (4/8)
+ */
+#define ACPI_STRTOUL_32BIT          0x04    /* 4 bytes */
+#define ACPI_STRTOUL_64BIT          0x08    /* 8 bytes */
+#define ACPI_STRTOUL_BASE16         0x10    /* Default: Base10/16 */
 
 
 /*
@@ -281,10 +283,19 @@ const char *
 AcpiUtGetEventName (
     UINT32                  EventId);
 
+const char *
+AcpiUtGetArgumentTypeName (
+    UINT32                  ArgType);
+
 char
 AcpiUtHexToAsciiChar (
     UINT64                  Integer,
     UINT32                  Position);
+
+ACPI_STATUS
+AcpiUtAsciiToHexByte (
+    char                    *TwoAsciiChars,
+    UINT8                   *ReturnByte);
 
 UINT8
 AcpiUtAsciiCharToHex (

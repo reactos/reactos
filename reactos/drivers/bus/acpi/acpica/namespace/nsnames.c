@@ -110,6 +110,58 @@ AcpiNsGetPathnameLength (
 
 /*******************************************************************************
  *
+ * FUNCTION:    AcpiNsHandleToName
+ *
+ * PARAMETERS:  TargetHandle            - Handle of named object whose name is
+ *                                        to be found
+ *              Buffer                  - Where the name is returned
+ *
+ * RETURN:      Status, Buffer is filled with name if status is AE_OK
+ *
+ * DESCRIPTION: Build and return a full namespace name
+ *
+ ******************************************************************************/
+
+ACPI_STATUS
+AcpiNsHandleToName (
+    ACPI_HANDLE             TargetHandle,
+    ACPI_BUFFER             *Buffer)
+{
+    ACPI_STATUS             Status;
+    ACPI_NAMESPACE_NODE     *Node;
+    const char              *NodeName;
+
+
+    ACPI_FUNCTION_TRACE_PTR (NsHandleToName, TargetHandle);
+
+
+    Node = AcpiNsValidateHandle (TargetHandle);
+    if (!Node)
+    {
+        return_ACPI_STATUS (AE_BAD_PARAMETER);
+    }
+
+    /* Validate/Allocate/Clear caller buffer */
+
+    Status = AcpiUtInitializeBuffer (Buffer, ACPI_PATH_SEGMENT_LENGTH);
+    if (ACPI_FAILURE (Status))
+    {
+        return_ACPI_STATUS (Status);
+    }
+
+    /* Just copy the ACPI name from the Node and zero terminate it */
+
+    NodeName = AcpiUtGetNodeName (Node);
+    ACPI_MOVE_NAME (Buffer->Pointer, NodeName);
+    ((char *) Buffer->Pointer) [ACPI_NAME_SIZE] = 0;
+
+    ACPI_DEBUG_PRINT ((ACPI_DB_EXEC, "%4.4s\n", (char *) Buffer->Pointer));
+    return_ACPI_STATUS (AE_OK);
+}
+
+
+/*******************************************************************************
+ *
  * FUNCTION:    AcpiNsHandleToPathname
  *
  * PARAMETERS:  TargetHandle            - Handle of named object whose name is

@@ -745,16 +745,17 @@ typedef UINT32                          ACPI_EVENT_TYPE;
  * The encoding of ACPI_EVENT_STATUS is illustrated below.
  * Note that a set bit (1) indicates the property is TRUE
  * (e.g. if bit 0 is set then the event is enabled).
- * +-------------+-+-+-+-+-+
- * |   Bits 31:5 |4|3|2|1|0|
- * +-------------+-+-+-+-+-+
- *          |     | | | | |
- *          |     | | | | +- Enabled?
- *          |     | | | +--- Enabled for wake?
- *          |     | | +----- Status bit set?
- *          |     | +------- Enable bit set?
- *          |     +--------- Has a handler?
- *          +--------------- <Reserved>
+ * +-------------+-+-+-+-+-+-+
+ * |   Bits 31:6 |5|4|3|2|1|0|
+ * +-------------+-+-+-+-+-+-+
+ *          |     | | | | | |
+ *          |     | | | | | +- Enabled?
+ *          |     | | | | +--- Enabled for wake?
+ *          |     | | | +----- Status bit set?
+ *          |     | | +------- Enable bit set?
+ *          |     | +--------- Has a handler?
+ *          |     +----------- Masked?
+ *          +----------------- <Reserved>
  */
 typedef UINT32                          ACPI_EVENT_STATUS;
 
@@ -764,6 +765,7 @@ typedef UINT32                          ACPI_EVENT_STATUS;
 #define ACPI_EVENT_FLAG_STATUS_SET      (ACPI_EVENT_STATUS) 0x04
 #define ACPI_EVENT_FLAG_ENABLE_SET      (ACPI_EVENT_STATUS) 0x08
 #define ACPI_EVENT_FLAG_HAS_HANDLER     (ACPI_EVENT_STATUS) 0x10
+#define ACPI_EVENT_FLAG_MASKED          (ACPI_EVENT_STATUS) 0x20
 #define ACPI_EVENT_FLAG_SET             ACPI_EVENT_FLAG_STATUS_SET
 
 /* Actions for AcpiSetGpe, AcpiGpeWakeup, AcpiHwLowSetGpe */
@@ -774,14 +776,15 @@ typedef UINT32                          ACPI_EVENT_STATUS;
 
 /*
  * GPE info flags - Per GPE
- * +-------+-+-+---+
- * |  7:5  |4|3|2:0|
- * +-------+-+-+---+
- *     |    | |  |
- *     |    | |  +-- Type of dispatch:to method, handler, notify, or none
- *     |    | +----- Interrupt type: edge or level triggered
- *     |    +------- Is a Wake GPE
- *     +------------ <Reserved>
+ * +---+-+-+-+---+
+ * |7:6|5|4|3|2:0|
+ * +---+-+-+-+---+
+ *   |  | | |  |
+ *   |  | | |  +-- Type of dispatch:to method, handler, notify, or none
+ *   |  | | +----- Interrupt type: edge or level triggered
+ *   |  | +------- Is a Wake GPE
+ *   |  +--------- Is GPE masked by the software GPE masking machanism
+ *   +------------ <Reserved>
  */
 #define ACPI_GPE_DISPATCH_NONE          (UINT8) 0x00
 #define ACPI_GPE_DISPATCH_METHOD        (UINT8) 0x01
@@ -1079,13 +1082,6 @@ typedef struct acpi_statistics
 } ACPI_STATISTICS;
 
 
-/* Table Event Types */
-
-#define ACPI_TABLE_EVENT_LOAD           0x0
-#define ACPI_TABLE_EVENT_UNLOAD         0x1
-#define ACPI_NUM_TABLE_EVENTS           2
-
-
 /*
  * Types specific to the OS service interfaces
  */
@@ -1158,9 +1154,14 @@ ACPI_STATUS (*ACPI_TABLE_HANDLER) (
     void                            *Table,
     void                            *Context);
 
-#define ACPI_TABLE_LOAD             0x0
-#define ACPI_TABLE_UNLOAD           0x1
-#define ACPI_NUM_TABLE_EVENTS       2
+
+/* Table Event Types */
+
+#define ACPI_TABLE_EVENT_LOAD           0x0
+#define ACPI_TABLE_EVENT_UNLOAD         0x1
+#define ACPI_TABLE_EVENT_INSTALL        0x2
+#define ACPI_TABLE_EVENT_UNINSTALL      0x3
+#define ACPI_NUM_TABLE_EVENTS           4
 
 
 /* Address Spaces (For Operation Regions) */

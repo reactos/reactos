@@ -104,6 +104,16 @@ strchr (
     int                     ch);
 
 char *
+strpbrk (
+    const char              *String,
+    const char              *Delimiters);
+
+char *
+strtok (
+    char                    *String,
+    const char              *Delimiters);
+
+char *
 strcpy (
     char                    *DstString,
     const char              *SrcString);
@@ -160,6 +170,12 @@ memcmp (
 
 void *
 memcpy (
+    void                    *Dest,
+    const void              *Src,
+    ACPI_SIZE               Count);
+
+void *
+memmove (
     void                    *Dest,
     const void              *Src,
     ACPI_SIZE               Count);
@@ -226,6 +242,13 @@ sprintf (
  */
 extern int errno;
 
+#ifndef EOF
+#define EOF                 (-1)
+#endif
+
+#define putchar(c)          fputc(stdout, c)
+#define getchar(c)          fgetc(stdin)
+
 int
 vprintf (
     const char              *Format,
@@ -279,6 +302,21 @@ fseek (
 
 long
 ftell (
+    FILE                    *File);
+
+int
+fgetc (
+    FILE                    *File);
+
+int
+fputc (
+    FILE                    *File,
+    char                    c);
+
+char *
+fgets (
+    char                    *s,
+    ACPI_SIZE               Size,
     FILE                    *File);
 #endif
 

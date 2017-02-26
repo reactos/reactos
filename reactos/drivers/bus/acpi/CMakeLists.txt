@@ -159,6 +159,7 @@ list(APPEND ACPICA_SOURCE
     acpica/utilities/utresrc.c
     acpica/utilities/utstate.c
     acpica/utilities/utstring.c
+    acpica/utilities/utstrtoul64.c
     # acpica/utilities/utuuid.c
     acpica/utilities/uttrack.c
     acpica/utilities/utxface.c

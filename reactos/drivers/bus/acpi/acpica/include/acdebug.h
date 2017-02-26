@@ -233,8 +233,8 @@ AcpiDbDisassembleAml (
     ACPI_PARSE_OBJECT       *Op);
 
 void
-AcpiDbBatchExecute (
-    char                    *CountArg);
+AcpiDbEvaluatePredefinedNames (
+    void);
 
 
 /*
@@ -421,8 +421,7 @@ AcpiDbExecuteThread (
 
 ACPI_STATUS
 AcpiDbUserCommands (
-    char                    Prompt,
-    ACPI_PARSE_OBJECT       *Op);
+    void);
 
 char *
 AcpiDbGetNextToken (

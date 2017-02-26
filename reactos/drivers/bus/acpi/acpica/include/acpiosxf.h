@@ -456,6 +456,14 @@ AcpiOsSignal (
     void                    *Info);
 #endif
 
+#ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsEnterSleep
+ACPI_STATUS
+AcpiOsEnterSleep (
+    UINT8                   SleepState,
+    UINT32                  RegaValue,
+    UINT32                  RegbValue);
+#endif
+
 
 /*
  * Debug print routines
@@ -482,7 +490,7 @@ AcpiOsRedirectOutput (
 
 
 /*
- * Debug input
+ * Debug IO
  */
 #ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsGetLine
 ACPI_STATUS
@@ -490,6 +498,30 @@ AcpiOsGetLine (
     char                    *Buffer,
     UINT32                  BufferLength,
     UINT32                  *BytesRead);
+#endif
+
+#ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsInitializeDebugger
+ACPI_STATUS
+AcpiOsInitializeDebugger (
+    void);
+#endif
+
+#ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsTerminateDebugger
+void
+AcpiOsTerminateDebugger (
+    void);
+#endif
+
+#ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsWaitCommandReady
+ACPI_STATUS
+AcpiOsWaitCommandReady (
+    void);
+#endif
+
+#ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsNotifyCommandComplete
+ACPI_STATUS
+AcpiOsNotifyCommandComplete (
+    void);
 #endif
 
 #ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsTracePoint

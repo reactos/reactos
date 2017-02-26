@@ -159,6 +159,16 @@ AcpiHwLegacySleep (
 
     ACPI_FLUSH_CPU_CACHE ();
 
+    Status = AcpiOsEnterSleep (SleepState, Pm1aControl, Pm1bControl);
+    if (Status == AE_CTRL_TERMINATE)
+    {
+        return_ACPI_STATUS (AE_OK);
+    }
+    if (ACPI_FAILURE (Status))
+    {
+        return_ACPI_STATUS (Status);
+    }
+
     /* Write #2: Write both SLP_TYP + SLP_EN */
 
     Status = AcpiHwWritePm1Control (Pm1aControl, Pm1bControl);

@@ -169,74 +169,6 @@ AcpiTbInstallTableWithOverride (
 
 /*******************************************************************************
  *
- * FUNCTION:    AcpiTbInstallFixedTable
- *
- * PARAMETERS:  Address                 - Physical address of DSDT or FACS
- *              Signature               - Table signature, NULL if no need to
- *                                        match
- *              TableIndex              - Where the table index is returned
- *
- * RETURN:      Status
- *
- * DESCRIPTION: Install a fixed ACPI table (DSDT/FACS) into the global data
- *              structure.
- *
- ******************************************************************************/
-
-ACPI_STATUS
-AcpiTbInstallFixedTable (
-    ACPI_PHYSICAL_ADDRESS   Address,
-    char                    *Signature,
-    UINT32                  *TableIndex)
-{
-    ACPI_TABLE_DESC         NewTableDesc;
-    ACPI_STATUS             Status;
-
-
-    ACPI_FUNCTION_TRACE (TbInstallFixedTable);
-
-
-    if (!Address)
-    {
-        ACPI_ERROR ((AE_INFO, "Null physical address for ACPI table [%s]",
-            Signature));
-        return (AE_NO_MEMORY);
-    }
-
-    /* Fill a table descriptor for validation */
-
-    Status = AcpiTbAcquireTempTable (&NewTableDesc, Address,
-        ACPI_TABLE_ORIGIN_INTERNAL_PHYSICAL);
-    if (ACPI_FAILURE (Status))
-    {
-        ACPI_ERROR ((AE_INFO, "Could not acquire table length at %8.8X%8.8X",
-            ACPI_FORMAT_UINT64 (Address)));
-        return_ACPI_STATUS (Status);
-    }
-
-    /* Validate and verify a table before installation */
-
-    Status = AcpiTbVerifyTempTable (&NewTableDesc, Signature);
-    if (ACPI_FAILURE (Status))
-    {
-        goto ReleaseAndExit;
-    }
-
-    /* Add the table to the global root table list */
-
-    AcpiTbInstallTableWithOverride (&NewTableDesc, TRUE, TableIndex);
-
-ReleaseAndExit:
-
-    /* Release the temporary table descriptor */
-
-    AcpiTbReleaseTempTable (&NewTableDesc);
-    return_ACPI_STATUS (Status);
-}
-
-
-/*******************************************************************************
- *
  * FUNCTION:    AcpiTbInstallStandardTable
  *
  * PARAMETERS:  Address             - Address of the table (might be a virtual
@@ -248,8 +180,7 @@ ReleaseAndExit:
  *
  * RETURN:      Status
  *
- * DESCRIPTION: This function is called to install an ACPI table that is
- *              neither DSDT nor FACS (a "standard" table.)
+ * DESCRIPTION: This function is called to verify and install an ACPI table.
  *              When this function is called by "Load" or "LoadTable" opcodes,
  *              or by AcpiLoadTable() API, the "Reload" parameter is set.
  *              After sucessfully returning from this function, table is
@@ -389,6 +320,14 @@ AcpiTbInstallStandardTable (
     /* Add the table to the global root table list */
 
     AcpiTbInstallTableWithOverride (&NewTableDesc, Override, TableIndex);
+
+    /* Invoke table handler if present */
+
+    if (AcpiGbl_TableHandler)
+    {
+        (void) AcpiGbl_TableHandler (ACPI_TABLE_EVENT_INSTALL,
+            NewTableDesc.Pointer, AcpiGbl_TableHandlerContext);
+    }
 
 ReleaseAndExit:
 

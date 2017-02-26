@@ -555,8 +555,10 @@ AcpiPsParseAml (
         {
             /* Either the method parse or actual execution failed */
 
+            AcpiExExitInterpreter ();
             ACPI_ERROR_METHOD ("Method parse/execution failed",
                 WalkState->MethodNode, NULL, Status);
+            AcpiExEnterInterpreter ();
 
             /* Check for possible multi-thread reentrancy problem */
 
@@ -589,7 +591,8 @@ AcpiPsParseAml (
          * cleanup to do
          */
         if (((WalkState->ParseFlags & ACPI_PARSE_MODE_MASK) ==
-            ACPI_PARSE_EXECUTE) ||
+            ACPI_PARSE_EXECUTE &&
+            !(WalkState->ParseFlags & ACPI_PARSE_MODULE_LEVEL)) ||
             (ACPI_FAILURE (Status)))
         {
             AcpiDsTerminateControlMethod (WalkState->MethodDesc, WalkState);

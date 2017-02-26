@@ -164,7 +164,8 @@ AcpiExDoConcatenate (
     {
     case ACPI_TYPE_INTEGER:
 
-        Status = AcpiExConvertToInteger (LocalOperand1, &TempOperand1, 16);
+        Status = AcpiExConvertToInteger (LocalOperand1, &TempOperand1,
+            ACPI_STRTOUL_BASE16);
         break;
 
     case ACPI_TYPE_BUFFER:

@@ -129,19 +129,6 @@ AcpiUtMutexInitialize (
         return_ACPI_STATUS (Status);
     }
 
-#ifdef ACPI_DEBUGGER
-
-    /* Debugger Support */
-
-    Status = AcpiOsCreateMutex (&AcpiGbl_DbCommandReady);
-    if (ACPI_FAILURE (Status))
-    {
-        return_ACPI_STATUS (Status);
-    }
-
-    Status = AcpiOsCreateMutex (&AcpiGbl_DbCommandComplete);
-#endif
-
     return_ACPI_STATUS (Status);
 }
 
@@ -187,12 +174,6 @@ AcpiUtMutexTerminate (
     /* Delete the reader/writer lock */
 
     AcpiUtDeleteRwLock (&AcpiGbl_NamespaceRwLock);
-
-#ifdef ACPI_DEBUGGER
-    AcpiOsDeleteMutex (AcpiGbl_DbCommandReady);
-    AcpiOsDeleteMutex (AcpiGbl_DbCommandComplete);
-#endif
-
     return_VOID;
 }
 

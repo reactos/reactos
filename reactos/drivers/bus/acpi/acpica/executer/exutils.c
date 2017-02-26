@@ -103,6 +103,11 @@ AcpiExEnterInterpreter (
     {
         ACPI_ERROR ((AE_INFO, "Could not acquire AML Interpreter mutex"));
     }
+    Status = AcpiUtAcquireMutex (ACPI_MTX_NAMESPACE);
+    if (ACPI_FAILURE (Status))
+    {
+        ACPI_ERROR ((AE_INFO, "Could not acquire AML Namespace mutex"));
+    }
 
     return_VOID;
 }
@@ -141,6 +146,11 @@ AcpiExExitInterpreter (
     ACPI_FUNCTION_TRACE (ExExitInterpreter);
 
 
+    Status = AcpiUtReleaseMutex (ACPI_MTX_NAMESPACE);
+    if (ACPI_FAILURE (Status))
+    {
+        ACPI_ERROR ((AE_INFO, "Could not release AML Namespace mutex"));
+    }
     Status = AcpiUtReleaseMutex (ACPI_MTX_INTERPRETER);
     if (ACPI_FAILURE (Status))
     {

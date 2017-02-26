@@ -73,7 +73,7 @@ AcpiTbFindTable (
     char                    *OemTableId,
     UINT32                  *TableIndex)
 {
-    ACPI_STATUS             Status;
+    ACPI_STATUS             Status = AE_OK;
     ACPI_TABLE_HEADER       Header;
     UINT32                  i;
 
@@ -105,6 +105,7 @@ AcpiTbFindTable (
 
     /* Search for the table */
 
+    (void) AcpiUtAcquireMutex (ACPI_MTX_TABLES);
     for (i = 0; i < AcpiGbl_RootTableList.CurrentTableCount; ++i)
     {
         if (memcmp (&(AcpiGbl_RootTableList.Tables[i].Signature),
@@ -124,7 +125,7 @@ AcpiTbFindTable (
             Status = AcpiTbValidateTable (&AcpiGbl_RootTableList.Tables[i]);
             if (ACPI_FAILURE (Status))
             {
-                return_ACPI_STATUS (Status);
+                goto UnlockAndExit;
             }
 
             if (!AcpiGbl_RootTableList.Tables[i].Pointer)
@@ -148,9 +149,12 @@ AcpiTbFindTable (
 
             ACPI_DEBUG_PRINT ((ACPI_DB_TABLES, "Found table [%4.4s]\n",
                 Header.Signature));
-            return_ACPI_STATUS (AE_OK);
+            goto UnlockAndExit;
         }
     }
+    Status = AE_NOT_FOUND;
 
-    return_ACPI_STATUS (AE_NOT_FOUND);
+UnlockAndExit:
+    (void) AcpiUtReleaseMutex (ACPI_MTX_TABLES);
+    return_ACPI_STATUS (Status);
 }

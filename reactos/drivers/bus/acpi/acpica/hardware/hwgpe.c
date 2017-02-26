@@ -108,7 +108,7 @@ AcpiHwLowSetGpe (
     UINT32                  Action)
 {
     ACPI_GPE_REGISTER_INFO  *GpeRegisterInfo;
-    ACPI_STATUS             Status;
+    ACPI_STATUS             Status = AE_OK;
     UINT32                  EnableMask;
     UINT32                  RegisterBit;
 
@@ -164,9 +164,12 @@ AcpiHwLowSetGpe (
         return (AE_BAD_PARAMETER);
     }
 
-    /* Write the updated enable mask */
+    if (!(RegisterBit & GpeRegisterInfo->MaskForRun))
+    {
+        /* Write the updated enable mask */
 
-    Status = AcpiHwWrite (EnableMask, &GpeRegisterInfo->EnableAddress);
+        Status = AcpiHwWrite (EnableMask, &GpeRegisterInfo->EnableAddress);
+    }
     return (Status);
 }
 
@@ -267,6 +270,13 @@ AcpiHwGetGpeStatus (
     if (RegisterBit & GpeRegisterInfo->EnableForRun)
     {
         LocalEventStatus |= ACPI_EVENT_FLAG_ENABLED;
+    }
+
+    /* GPE currently masked? (masked for runtime?) */
+
+    if (RegisterBit & GpeRegisterInfo->MaskForRun)
+    {
+        LocalEventStatus |= ACPI_EVENT_FLAG_MASKED;
     }
 
     /* GPE enabled for wake? */
@@ -440,6 +450,7 @@ AcpiHwEnableRuntimeGpeBlock (
     UINT32                  i;
     ACPI_STATUS             Status;
     ACPI_GPE_REGISTER_INFO  *GpeRegisterInfo;
+    UINT8                   EnableMask;
 
 
     /* NOTE: assumes that all GPEs are currently disabled */
@@ -456,8 +467,9 @@ AcpiHwEnableRuntimeGpeBlock (
 
         /* Enable all "runtime" GPEs in this register */
 
-        Status = AcpiHwGpeEnableWrite (GpeRegisterInfo->EnableForRun,
-            GpeRegisterInfo);
+        EnableMask = GpeRegisterInfo->EnableForRun &
+            ~GpeRegisterInfo->MaskForRun;
+        Status = AcpiHwGpeEnableWrite (EnableMask, GpeRegisterInfo);
         if (ACPI_FAILURE (Status))
         {
             return (Status);

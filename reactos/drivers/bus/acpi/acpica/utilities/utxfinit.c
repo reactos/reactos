@@ -293,7 +293,7 @@ AcpiInitializeObjects (
      * all of the tables have been loaded. It is a legacy option and is
      * not compatible with other ACPI implementations. See AcpiNsLoadTable.
      */
-    if (AcpiGbl_GroupModuleLevelCode)
+    if (!AcpiGbl_ParseTableAsTermList && AcpiGbl_GroupModuleLevelCode)
     {
         AcpiNsExecModuleCodeList ();
 

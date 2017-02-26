@@ -46,7 +46,7 @@
 
 #ifdef __REACTOS__
 /*
- * Header inclusion HACK (see modifications to actypes.h too).
+ * Header inclusion HACK.
  */
 #include <ntddk.h>
 #undef ACPI_BIOS_ERROR  // ACPI_BIOS_ERROR is redefined in acoutput.h

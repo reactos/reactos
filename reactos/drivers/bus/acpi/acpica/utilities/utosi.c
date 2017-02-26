@@ -442,10 +442,21 @@ AcpiUtGetInterface (
  * PARAMETERS:  WalkState           - Current walk state
  *
  * RETURN:      Status
+ *              Integer: TRUE (0) if input string is matched
+ *                       FALSE (-1) if string is not matched
  *
  * DESCRIPTION: Implementation of the _OSI predefined control method. When
  *              an invocation of _OSI is encountered in the system AML,
  *              control is transferred to this function.
+ *
+ * (August 2016)
+ * Note:  _OSI is now defined to return "Ones" to indicate a match, for
+ * compatibility with other ACPI implementations. On a 32-bit DSDT, Ones
+ * is 0xFFFFFFFF. On a 64-bit DSDT, Ones is 0xFFFFFFFFFFFFFFFF
+ * (ACPI_UINT64_MAX).
+ *
+ * This function always returns ACPI_UINT64_MAX for TRUE, and later code
+ * will truncate this to 32 bits if necessary.
  *
  ******************************************************************************/
 
@@ -458,7 +469,7 @@ AcpiUtOsiImplementation (
     ACPI_INTERFACE_INFO     *InterfaceInfo;
     ACPI_INTERFACE_HANDLER  InterfaceHandler;
     ACPI_STATUS             Status;
-    UINT32                  ReturnValue;
+    UINT64                  ReturnValue;
 
 
     ACPI_FUNCTION_TRACE (UtOsiImplementation);
@@ -507,7 +518,7 @@ AcpiUtOsiImplementation (
             AcpiGbl_OsiData = InterfaceInfo->Value;
         }
 
-        ReturnValue = ACPI_UINT32_MAX;
+        ReturnValue = ACPI_UINT64_MAX;
     }
 
     AcpiOsReleaseMutex (AcpiGbl_OsiMutex);
@@ -520,8 +531,11 @@ AcpiUtOsiImplementation (
     InterfaceHandler = AcpiGbl_InterfaceHandler;
     if (InterfaceHandler)
     {
-        ReturnValue = InterfaceHandler (
-            StringDesc->String.Pointer, ReturnValue);
+        if (InterfaceHandler (
+            StringDesc->String.Pointer, (UINT32) ReturnValue))
+        {
+            ReturnValue = ACPI_UINT64_MAX;
+        }
     }
 
     ACPI_DEBUG_PRINT_RAW ((ACPI_DB_INFO,

@@ -245,10 +245,6 @@ ACPI_INIT_GLOBAL (UINT32,               AcpiGbl_NestingLevel, 0);
 
 ACPI_GLOBAL (ACPI_THREAD_STATE *,       AcpiGbl_CurrentWalkList);
 
-/* Maximum number of While() loop iterations before forced abort */
-
-ACPI_GLOBAL (UINT16,                    AcpiGbl_MaxLoopIterations);
-
 /* Control method single step flag */
 
 ACPI_GLOBAL (UINT8,                     AcpiGbl_CmSingleStep);
@@ -322,6 +318,7 @@ ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_CstyleDisassembly, TRUE);
 ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_ForceAmlDisassembly, FALSE);
 ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_DmOpt_Verbose, TRUE);
 ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_DmEmitExternalOpcodes, FALSE);
+ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_DoDisassemblerOptimizations, TRUE);
 
 ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DmOpt_Disasm);
 ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DmOpt_Listing);
@@ -334,7 +331,6 @@ ACPI_GLOBAL (ACPI_EXTERNAL_FILE *,      AcpiGbl_ExternalFileList);
 #ifdef ACPI_DEBUGGER
 
 ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_AbortMethod, FALSE);
-ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_MethodExecuting, FALSE);
 ACPI_INIT_GLOBAL (ACPI_THREAD_ID,       AcpiGbl_DbThreadId, ACPI_INVALID_THREAD_ID);
 
 ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DbOpt_NoIniMethods);
@@ -353,7 +349,6 @@ ACPI_GLOBAL (ACPI_OBJECT_TYPE,          AcpiGbl_DbArgTypes[ACPI_DEBUGGER_MAX_ARG
 
 /* These buffers should all be the same size */
 
-ACPI_GLOBAL (char,                      AcpiGbl_DbLineBuf[ACPI_DB_LINE_BUFFER_SIZE]);
 ACPI_GLOBAL (char,                      AcpiGbl_DbParsedBuf[ACPI_DB_LINE_BUFFER_SIZE]);
 ACPI_GLOBAL (char,                      AcpiGbl_DbScopeBuf[ACPI_DB_LINE_BUFFER_SIZE]);
 ACPI_GLOBAL (char,                      AcpiGbl_DbDebugFilename[ACPI_DB_LINE_BUFFER_SIZE]);
@@ -367,9 +362,6 @@ ACPI_GLOBAL (UINT16,                    AcpiGbl_ObjTypeCountMisc);
 ACPI_GLOBAL (UINT16,                    AcpiGbl_NodeTypeCountMisc);
 ACPI_GLOBAL (UINT32,                    AcpiGbl_NumNodes);
 ACPI_GLOBAL (UINT32,                    AcpiGbl_NumObjects);
-
-ACPI_GLOBAL (ACPI_MUTEX,                AcpiGbl_DbCommandReady);
-ACPI_GLOBAL (ACPI_MUTEX,                AcpiGbl_DbCommandComplete);
 
 #endif /* ACPI_DEBUGGER */
 

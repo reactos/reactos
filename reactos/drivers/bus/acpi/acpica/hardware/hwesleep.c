@@ -113,7 +113,7 @@ AcpiHwExtendedSleep (
     UINT8                   SleepState)
 {
     ACPI_STATUS             Status;
-    UINT8                   SleepTypeValue;
+    UINT8                   SleepControl;
     UINT64                  SleepStatus;
 
 
@@ -139,10 +139,6 @@ AcpiHwExtendedSleep (
 
     AcpiGbl_SystemAwakeAndRunning = FALSE;
 
-    /* Flush caches, as per ACPI specification */
-
-    ACPI_FLUSH_CPU_CACHE ();
-
     /*
      * Set the SLP_TYP and SLP_EN bits.
      *
@@ -152,11 +148,24 @@ AcpiHwExtendedSleep (
     ACPI_DEBUG_PRINT ((ACPI_DB_INIT,
         "Entering sleep state [S%u]\n", SleepState));
 
-    SleepTypeValue = ((AcpiGbl_SleepTypeA << ACPI_X_SLEEP_TYPE_POSITION) &
-        ACPI_X_SLEEP_TYPE_MASK);
+    SleepControl = ((AcpiGbl_SleepTypeA << ACPI_X_SLEEP_TYPE_POSITION) &
+        ACPI_X_SLEEP_TYPE_MASK) | ACPI_X_SLEEP_ENABLE;
 
-    Status = AcpiWrite ((UINT64) (SleepTypeValue | ACPI_X_SLEEP_ENABLE),
-        &AcpiGbl_FADT.SleepControl);
+    /* Flush caches, as per ACPI specification */
+
+    ACPI_FLUSH_CPU_CACHE ();
+
+    Status = AcpiOsEnterSleep (SleepState, SleepControl, 0);
+    if (Status == AE_CTRL_TERMINATE)
+    {
+        return_ACPI_STATUS (AE_OK);
+    }
+    if (ACPI_FAILURE (Status))
+    {
+        return_ACPI_STATUS (Status);
+    }
+
+    Status = AcpiWrite ((UINT64) SleepControl, &AcpiGbl_FADT.SleepControl);
     if (ACPI_FAILURE (Status))
     {
         return_ACPI_STATUS (Status);

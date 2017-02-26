@@ -44,6 +44,7 @@
 #include "acpi.h"
 #include "accommon.h"
 #include "acnamesp.h"
+#include "amlcode.h"
 
 #define _COMPONENT          ACPI_UTILITIES
         ACPI_MODULE_NAME    ("utdecode")
@@ -268,7 +269,7 @@ AcpiUtGetObjectTypeName (
     if (!ObjDesc)
     {
         ACPI_DEBUG_PRINT ((ACPI_DB_EXEC, "Null Object Descriptor\n"));
-        return_PTR ("[NULL Object Descriptor]");
+        return_STR ("[NULL Object Descriptor]");
     }
 
     /* These descriptor types share a common area */
@@ -281,7 +282,7 @@ AcpiUtGetObjectTypeName (
             ACPI_GET_DESCRIPTOR_TYPE (ObjDesc),
             AcpiUtGetDescriptorName (ObjDesc), ObjDesc));
 
-        return_PTR ("Invalid object");
+        return_STR ("Invalid object");
     }
 
     return_STR (AcpiUtGetTypeName (ObjDesc->Common.Type));
@@ -604,6 +605,59 @@ AcpiUtGetNotifyName (
 
     return ("Hardware-Specific");
 }
+
+
+/*******************************************************************************
+ *
+ * FUNCTION:    AcpiUtGetArgumentTypeName
+ *
+ * PARAMETERS:  ArgType             - an ARGP_* parser argument type
+ *
+ * RETURN:      Decoded ARGP_* type
+ *
+ * DESCRIPTION: Decode an ARGP_* parser type, as defined in the amlcode.h file,
+ *              and used in the acopcode.h file. For example, ARGP_TERMARG.
+ *              Used for debug only.
+ *
+ ******************************************************************************/
+
+static const char           *AcpiGbl_ArgumentType[20] =
+{
+    /* 00 */ "Unknown ARGP",
+    /* 01 */ "ByteData",
+    /* 02 */ "ByteList",
+    /* 03 */ "CharList",
+    /* 04 */ "DataObject",
+    /* 05 */ "DataObjectList",
+    /* 06 */ "DWordData",
+    /* 07 */ "FieldList",
+    /* 08 */ "Name",
+    /* 09 */ "NameString",
+    /* 0A */ "ObjectList",
+    /* 0B */ "PackageLength",
+    /* 0C */ "SuperName",
+    /* 0D */ "Target",
+    /* 0E */ "TermArg",
+    /* 0F */ "TermList",
+    /* 10 */ "WordData",
+    /* 11 */ "QWordData",
+    /* 12 */ "SimpleName",
+    /* 13 */ "NameOrRef"
+};
+
+const char *
+AcpiUtGetArgumentTypeName (
+    UINT32                  ArgType)
+{
+
+    if (ArgType > ARGP_MAX)
+    {
+        return ("Unknown ARGP");
+    }
+
+    return (AcpiGbl_ArgumentType[ArgType]);
+}
+
 #endif
 
 
