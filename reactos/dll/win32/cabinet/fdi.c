@@ -2039,11 +2039,24 @@ static int fdi_decomp(const struct fdi_file *fi, int savemode, fdi_decomp_state 
             fullpath[0] = '\0';
             if (pathlen) {
               strcpy(fullpath, userpath);
+#ifndef __REACTOS__
               if (fullpath[pathlen - 1] != '\\')
                 strcat(fullpath, "\\");
+#else
+              if (fullpath[pathlen - 1] == '\\')
+                fullpath[pathlen - 1] = '\0';
+#endif
             }
+#ifndef __REACTOS__
             if (filenamelen)
+#else
+            if (filenamelen) {
+              strcat(fullpath, "\\");
+#endif
               strcat(fullpath, cab->mii.nextname);
+#ifdef __REACTOS__
+            }
+#endif
 
             TRACE("full cab path/file name: %s\n", debugstr_a(fullpath));
 
