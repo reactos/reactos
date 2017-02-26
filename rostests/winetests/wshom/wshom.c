@@ -34,6 +34,31 @@ DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 #define EXPECT_HR(hr,hr_exp) \
     ok(hr == hr_exp, "got 0x%08x, expected 0x%08x\n", hr, hr_exp)
 
+#define test_provideclassinfo(a, b) _test_provideclassinfo((IDispatch*)a, b, __LINE__)
+static void _test_provideclassinfo(IDispatch *disp, const GUID *guid, int line)
+{
+    IProvideClassInfo *classinfo;
+    TYPEATTR *attr;
+    ITypeInfo *ti;
+    HRESULT hr;
+
+    hr = IDispatch_QueryInterface(disp, &IID_IProvideClassInfo, (void **)&classinfo);
+    ok_(__FILE__,line) (hr == S_OK, "Failed to get IProvideClassInfo, %#x.\n", hr);
+
+    hr = IProvideClassInfo_GetClassInfo(classinfo, &ti);
+    ok_(__FILE__,line) (hr == S_OK, "GetClassInfo() failed, %#x.\n", hr);
+
+    hr = ITypeInfo_GetTypeAttr(ti, &attr);
+    ok_(__FILE__,line) (hr == S_OK, "GetTypeAttr() failed, %#x.\n", hr);
+
+    ok_(__FILE__,line) (IsEqualGUID(&attr->guid, guid), "Unexpected typeinfo %s, expected %s\n", wine_dbgstr_guid(&attr->guid),
+        wine_dbgstr_guid(guid));
+
+    IProvideClassInfo_Release(classinfo);
+    ITypeInfo_ReleaseTypeAttr(ti, attr);
+    ITypeInfo_Release(ti);
+}
+
 static void test_wshshell(void)
 {
     static const WCHAR notepadW[] = {'n','o','t','e','p','a','d','.','e','x','e',0};
@@ -69,10 +94,11 @@ static void test_wshshell(void)
 
     hr = IDispatch_QueryInterface(disp, &IID_IWshShell3, (void**)&shell);
     EXPECT_HR(hr, S_OK);
-    IDispatch_Release(disp);
+    test_provideclassinfo(disp, &IID_IWshShell3);
 
     hr = IDispatch_QueryInterface(disp, &IID_IDispatchEx, (void**)&dispex);
     EXPECT_HR(hr, E_NOINTERFACE);
+    IDispatch_Release(disp);
 
     hr = IUnknown_QueryInterface(shell, &IID_IWshShell3, (void**)&sh3);
     EXPECT_HR(hr, S_OK);
@@ -90,6 +116,7 @@ static void test_wshshell(void)
 
     hr = IWshShell3_get_SpecialFolders(sh3, &coll);
     EXPECT_HR(hr, S_OK);
+    test_provideclassinfo(coll, &IID_IWshCollection);
 
     hr = IWshCollection_QueryInterface(coll, &IID_IFolderCollection, (void**)&folders);
     EXPECT_HR(hr, E_NOINTERFACE);
@@ -131,6 +158,7 @@ static void test_wshshell(void)
     SysFreeString(str);
     hr = IDispatch_QueryInterface(shortcut, &IID_IWshShortcut, (void**)&shcut);
     EXPECT_HR(hr, S_OK);
+    test_provideclassinfo(shortcut, &IID_IWshShortcut);
 
     hr = IWshShortcut_get_Arguments(shcut, NULL);
     ok(hr == E_POINTER, "got 0x%08x\n", hr);
@@ -158,6 +186,7 @@ static void test_wshshell(void)
 
     hr = IWshEnvironment_get_Item(env, NULL, NULL);
     ok(hr == E_POINTER, "got 0x%08x\n", hr);
+    test_provideclassinfo(env, &IID_IWshEnvironment);
 
     ret = (BSTR)0x1;
     hr = IWshEnvironment_get_Item(env, NULL, &ret);
