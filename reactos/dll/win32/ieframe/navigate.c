@@ -690,13 +690,16 @@ static HRESULT bind_to_object(DocHost *This, IMoniker *mon, LPCWSTR url, IBindCt
     hres = IMoniker_GetDisplayName(mon, 0, NULL, &display_name);
     if(FAILED(hres)) {
         FIXME("GetDisplayName failed: %08x\n", hres);
+        IMoniker_Release(mon);
         return hres;
     }
 
     hres = set_dochost_url(This, display_name);
     CoTaskMemFree(display_name);
-    if(FAILED(hres))
+    if(FAILED(hres)) {
+        IMoniker_Release(mon);
         return hres;
+    }
 
     IBindCtx_RegisterObjectParam(bindctx, (LPOLESTR)SZ_HTML_CLIENTSITE_OBJECTPARAM,
                                  (IUnknown*)&This->IOleClientSite_iface);
