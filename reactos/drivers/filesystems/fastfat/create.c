@@ -744,10 +744,7 @@ VfatCreateFile(
         }
         else
         {
-            if (ParentFcb)
-            {
-                vfatReleaseFCB(DeviceExt, ParentFcb);
-            }
+            vfatReleaseFCB(DeviceExt, ParentFcb);
             return Status;
         }
     }
