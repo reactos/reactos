@@ -134,17 +134,6 @@ static BOOL find_node_end(stream_t *stream, strbuf_t *buf)
 
 BOOL next_node(stream_t *stream, strbuf_t *buf)
 {
-    strbuf_t tmpbuf;
-
-    /* search through the end of the current node */
-    strbuf_init(&tmpbuf);
-    if(!find_node_end(stream, &tmpbuf))
-    {
-        strbuf_free(&tmpbuf);
-        return FALSE;
-    }
-    strbuf_free(&tmpbuf);
-
     /* find the beginning of the next node */
     if(!stream_chr(stream, NULL, '<'))
         return FALSE;
