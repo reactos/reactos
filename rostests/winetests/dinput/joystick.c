@@ -744,6 +744,46 @@ static BOOL CALLBACK EnumJoysticks(const DIDEVICEINSTANCEA *lpddi, void *pvRef)
             ok(hr==DI_OK, "IDirectInputDevice_GetProperty() failed: %08x\n", hr);
             ok(dip_gain_get.dwData==dip_gain_set.dwData, "Gain not updated: %i\n", dip_gain_get.dwData);
 
+            /* Test SendForceFeedbackCommand
+             * DISFFC_STOPALL - Should stop effects only
+             * DISFFC_RESET - Should stop effects and unload them (NOT release them)
+             * Tests for game Odallus (bug 41623) */
+            hr = IDirectInputDevice2_SendForceFeedbackCommand((IDirectInputDevice2A*)pJoystick, 0);
+            ok(hr==DIERR_INVALIDPARAM, "IDirectInputDevice_SendForceFeedbackCommand() failed: %08x\n", hr);
+            hr = IDirectInputDevice2_SendForceFeedbackCommand((IDirectInputDevice2A*)pJoystick, 0xFF);
+            ok(hr==DIERR_INVALIDPARAM, "IDirectInputDevice_SendForceFeedbackCommand() failed: %08x\n", hr);
+
+            hr = IDirectInputEffect_Download(effect);
+            ok(hr==DI_OK,"IDirectInputEffect_Download() failed: %08x\n", hr);
+
+            /* Send STOPALL and prove that the effect can still be started */
+            hr = IDirectInputDevice2_SendForceFeedbackCommand((IDirectInputDevice2A*)pJoystick, DISFFC_STOPALL);
+            ok(hr==DI_OK, "IDirectInputDevice_SendForceFeedbackCommand() failed: %08x\n", hr);
+            hr = IDirectInputEffect_GetEffectStatus(effect, &effect_status);
+            ok(hr==DI_OK,"IDirectInputEffect_GetEffectStatus() failed: %08x\n", hr);
+            ok(effect_status==0,"IDirectInputEffect_GetEffectStatus() reported effect as started\n");
+            hr = IDirectInputEffect_Start(effect, 1, 0);
+            ok(hr==DI_OK,"IDirectInputEffect_Start() failed: %08x\n", hr);
+            hr = IDirectInputEffect_GetEffectGuid(effect, &guid);
+            ok(hr==DI_OK,"IDirectInputEffect_GetEffectGuid() failed: %08x\n", hr);
+            ok(IsEqualGUID(&effect_data.guid, &guid), "Wrong guid returned\n");
+
+            /* Send RESET and prove that we can still manipulate the effect, thus not released */
+            hr = IDirectInputDevice2_SendForceFeedbackCommand((IDirectInputDevice2A*)pJoystick, DISFFC_RESET);
+            ok(hr==DI_OK, "IDirectInputDevice_SendForceFeedbackCommand() failed: %08x\n", hr);
+            hr = IDirectInputEffect_GetEffectStatus(effect, &effect_status);
+            ok(hr==DIERR_NOTDOWNLOADED,"IDirectInputEffect_GetEffectStatus() failed: %08x\n", hr);
+            hr = IDirectInputEffect_Download(effect);
+            ok(hr==DI_OK,"IDirectInputEffect_Download() failed: %08x\n", hr);
+            hr = IDirectInputEffect_GetEffectStatus(effect, &effect_status);
+            ok(hr==DI_OK,"IDirectInputEffect_GetEffectStatus() failed: %08x\n", hr);
+            ok(effect_status==0,"IDirectInputEffect_GetEffectStatus() reported effect as started\n");
+            hr = IDirectInputEffect_Start(effect, 1, 0);
+            ok(hr==DI_OK,"IDirectInputEffect_Start() failed: %08x\n", hr);
+            hr = IDirectInputEffect_GetEffectGuid(effect, &guid);
+            ok(hr==DI_OK,"IDirectInputEffect_GetEffectGuid() failed: %08x\n", hr);
+            ok(IsEqualGUID(&effect_data.guid, &guid), "Wrong guid returned\n");
+
             ref = IUnknown_Release(effect);
             ok(ref == 0, "IDirectInputDevice_Release() reference count = %d\n", ref);
         }
