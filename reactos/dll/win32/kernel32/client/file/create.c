@@ -104,6 +104,7 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
    ULONG FileAttributes, Flags = 0;
    PVOID EaBuffer = NULL;
    ULONG EaLength = 0;
+   BOOLEAN TrailingBackslash;
 
    if (!lpFileName || !lpFileName[0])
    {
@@ -220,6 +221,13 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
    }
 
    TRACE("NtPathU \'%wZ\'\n", &NtPathU);
+   
+   TrailingBackslash = FALSE;
+   if (NtPathU.Length >= sizeof(WCHAR) &&
+       NtPathU.Buffer[NtPathU.Length / sizeof(WCHAR) - 1])
+   {
+      TrailingBackslash = TRUE;
+   }
 
    if (hTemplateFile != NULL)
    {
@@ -349,6 +357,11 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
           dwCreationDisposition == FILE_CREATE)
       {
          SetLastError( ERROR_FILE_EXISTS );
+      }
+      else if (Status == STATUS_FILE_IS_A_DIRECTORY &&
+               TrailingBackslash)
+      {
+         SetLastError(ERROR_PATH_NOT_FOUND);
       }
       else
       {
