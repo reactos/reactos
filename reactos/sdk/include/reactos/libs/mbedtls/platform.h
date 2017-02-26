@@ -31,6 +31,10 @@
 #include MBEDTLS_CONFIG_FILE
 #endif
 
+#if defined(MBEDTLS_HAVE_TIME)
+#include "mbedtls/platform_time.h"
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -244,39 +248,6 @@ int mbedtls_platform_set_exit( void (*exit_func)( int status ) );
 #else
 #define MBEDTLS_EXIT_FAILURE 1
 #endif
-
-/*
- * The time_t datatype
- */
-#if defined(MBEDTLS_PLATFORM_TIME_TYPE_MACRO)
-typedef MBEDTLS_PLATFORM_TIME_TYPE_MACRO mbedtls_time_t;
-#else
-/* For time_t */
-#include <time.h>
-typedef time_t mbedtls_time_t;
-#endif /* MBEDTLS_PLATFORM_TIME_TYPE_MACRO */
-
-/*
- * The function pointers for time
- */
-#if defined(MBEDTLS_PLATFORM_TIME_ALT)
-extern mbedtls_time_t (*mbedtls_time)( mbedtls_time_t* time );
-
-/**
- * \brief   Set your own time function pointer
- *
- * \param   time_func   the time function implementation
- *
- * \return              0
- */
-int mbedtls_platform_set_time( mbedtls_time_t (*time_func)( mbedtls_time_t* time ) );
-#else
-#if defined(MBEDTLS_PLATFORM_TIME_MACRO)
-#define mbedtls_time    MBEDTLS_PLATFORM_TIME_MACRO
-#else
-#define mbedtls_time   time
-#endif /* MBEDTLS_PLATFORM_TIME_MACRO */
-#endif /* MBEDTLS_PLATFORM_TIME_ALT */
 
 /*
  * The function pointers for reading from and writing a seed file to

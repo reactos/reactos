@@ -19,6 +19,7 @@ list(APPEND src
      certs.c
      cipher.c
      cipher_wrap.c
+     cmac.c
      ctr_drbg.c
      debug.c
      des.c
@@ -39,7 +40,7 @@ list(APPEND src
      md.c
      md_wrap.c
      memory_buffer_alloc.c
-     net.c
+     net_sockets.c
      oid.c
      padlock.c
      pem.c

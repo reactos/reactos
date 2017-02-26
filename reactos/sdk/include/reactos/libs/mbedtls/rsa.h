@@ -101,7 +101,7 @@ typedef struct
     mbedtls_mpi Vf;                     /*!<  cached un-blinding value  */
 
     int padding;                /*!<  MBEDTLS_RSA_PKCS_V15 for 1.5 padding and
-                                      RSA_PKCS_v21 for OAEP/PSS         */
+                                      MBEDTLS_RSA_PKCS_v21 for OAEP/PSS         */
     int hash_id;                /*!<  Hash identifier of mbedtls_md_type_t as
                                       specified in the mbedtls_md.h header file
                                       for the EME-OAEP and EMSA-PSS

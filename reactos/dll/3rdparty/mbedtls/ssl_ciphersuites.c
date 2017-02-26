@@ -35,7 +35,6 @@
 #include "mbedtls/platform.h"
 #else
 #include <stdlib.h>
-#define mbedtls_time_t    time_t
 #endif
 
 #include "mbedtls/ssl_ciphersuites.h"

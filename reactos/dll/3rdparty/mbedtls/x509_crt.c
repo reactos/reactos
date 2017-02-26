@@ -1164,9 +1164,10 @@ int mbedtls_x509_crt_parse_path( mbedtls_x509_crt *chain, const char *path )
     FindClose( hFind );
 #else /* _WIN32 */
     int t_ret;
+    int snp_ret;
     struct stat sb;
     struct dirent *entry;
-    char entry_name[255];
+    char entry_name[MBEDTLS_X509_MAX_FILE_PATH_LEN];
     DIR *dir = opendir( path );
 
     if( dir == NULL )
@@ -1182,11 +1183,16 @@ int mbedtls_x509_crt_parse_path( mbedtls_x509_crt *chain, const char *path )
 
     while( ( entry = readdir( dir ) ) != NULL )
     {
-        mbedtls_snprintf( entry_name, sizeof entry_name, "%s/%s", path, entry->d_name );
+        snp_ret = mbedtls_snprintf( entry_name, sizeof entry_name,
+                                    "%s/%s", path, entry->d_name );
 
-        if( stat( entry_name, &sb ) == -1 )
+        if( snp_ret < 0 || (size_t)snp_ret >= sizeof entry_name )
         {
-            closedir( dir );
+            ret = MBEDTLS_ERR_X509_BUFFER_TOO_SMALL;
+            goto cleanup;
+        }
+        else if( stat( entry_name, &sb ) == -1 )
+        {
             ret = MBEDTLS_ERR_X509_FILE_IO_ERROR;
             goto cleanup;
         }
@@ -1202,9 +1208,10 @@ int mbedtls_x509_crt_parse_path( mbedtls_x509_crt *chain, const char *path )
         else
             ret += t_ret;
     }
-    closedir( dir );
 
 cleanup:
+    closedir( dir );
+
 #if defined(MBEDTLS_THREADING_PTHREAD)
     if( mbedtls_mutex_unlock( &mbedtls_threading_readdir_mutex ) != 0 )
         ret = MBEDTLS_ERR_THREADING_MUTEX_ERROR;

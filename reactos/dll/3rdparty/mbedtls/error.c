@@ -104,7 +104,7 @@
 #endif
 
 #if defined(MBEDTLS_NET_C)
-#include "mbedtls/net.h"
+#include "mbedtls/net_sockets.h"
 #endif
 
 #if defined(MBEDTLS_OID_C)
@@ -437,6 +437,10 @@ void mbedtls_strerror( int ret, char *buf, size_t buflen )
             mbedtls_snprintf( buf, buflen, "SSL - The client initiated a reconnect from the same port" );
         if( use_ret == -(MBEDTLS_ERR_SSL_UNEXPECTED_RECORD) )
             mbedtls_snprintf( buf, buflen, "SSL - Record header looks valid but is not expected" );
+        if( use_ret == -(MBEDTLS_ERR_SSL_NON_FATAL) )
+            mbedtls_snprintf( buf, buflen, "SSL - The alert message received indicates a non-fatal error" );
+        if( use_ret == -(MBEDTLS_ERR_SSL_INVALID_VERIFY_HASH) )
+            mbedtls_snprintf( buf, buflen, "SSL - Couldn't set the hash for verifying CertificateVerify" );
 #endif /* MBEDTLS_SSL_TLS_C */
 
 #if defined(MBEDTLS_X509_USE_C) || defined(MBEDTLS_X509_CREATE_C)

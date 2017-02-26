@@ -38,8 +38,6 @@
 #else
 #define mbedtls_calloc    calloc
 #define mbedtls_free      free
-#define mbedtls_time      time
-#define mbedtls_time_t    time_t
 #endif
 
 #include "mbedtls/ssl_cookie.h"

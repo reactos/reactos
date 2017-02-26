@@ -326,9 +326,6 @@ static const char *features[] = {
 #if defined(MBEDTLS_SHA256_SMALLER)
     "MBEDTLS_SHA256_SMALLER",
 #endif /* MBEDTLS_SHA256_SMALLER */
-#if defined(MBEDTLS_SSL_AEAD_RANDOM_IV)
-    "MBEDTLS_SSL_AEAD_RANDOM_IV",
-#endif /* MBEDTLS_SSL_AEAD_RANDOM_IV */
 #if defined(MBEDTLS_SSL_ALL_ALERT_MESSAGES)
     "MBEDTLS_SSL_ALL_ALERT_MESSAGES",
 #endif /* MBEDTLS_SSL_ALL_ALERT_MESSAGES */
@@ -467,6 +464,9 @@ static const char *features[] = {
 #if defined(MBEDTLS_CIPHER_C)
     "MBEDTLS_CIPHER_C",
 #endif /* MBEDTLS_CIPHER_C */
+#if defined(MBEDTLS_CMAC_C)
+    "MBEDTLS_CMAC_C",
+#endif /* MBEDTLS_CMAC_C */
 #if defined(MBEDTLS_CTR_DRBG_C)
     "MBEDTLS_CTR_DRBG_C",
 #endif /* MBEDTLS_CTR_DRBG_C */

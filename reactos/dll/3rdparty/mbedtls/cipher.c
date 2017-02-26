@@ -47,6 +47,17 @@
 #include "mbedtls/ccm.h"
 #endif
 
+#if defined(MBEDTLS_CMAC_C)
+#include "mbedtls/cmac.h"
+#endif
+
+#if defined(MBEDTLS_PLATFORM_C)
+#include "mbedtls/platform.h"
+#else
+#define mbedtls_calloc calloc
+#define mbedtls_free   free
+#endif
+
 #if defined(MBEDTLS_ARC4_C) || defined(MBEDTLS_CIPHER_NULL_CIPHER)
 #define MBEDTLS_CIPHER_MODE_STREAM
 #endif
@@ -128,6 +139,14 @@ void mbedtls_cipher_free( mbedtls_cipher_context_t *ctx )
 {
     if( ctx == NULL )
         return;
+
+#if defined(MBEDTLS_CMAC_C)
+    if( ctx->cmac_ctx )
+    {
+       mbedtls_zeroize( ctx->cmac_ctx, sizeof( mbedtls_cmac_context_t ) );
+       mbedtls_free( ctx->cmac_ctx );
+    }
+#endif
 
     if( ctx->cipher_ctx )
         ctx->cipher_info->base->ctx_free_func( ctx->cipher_ctx );

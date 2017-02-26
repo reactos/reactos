@@ -54,7 +54,7 @@
 #endif
 
 #if defined(MBEDTLS_HAVE_TIME)
-#include <time.h>
+#include "mbedtls/platform_time.h"
 #endif
 
 /*
@@ -109,6 +109,8 @@
 #define MBEDTLS_ERR_SSL_TIMEOUT                           -0x6800  /**< The operation timed out. */
 #define MBEDTLS_ERR_SSL_CLIENT_RECONNECT                  -0x6780  /**< The client initiated a reconnect from the same port. */
 #define MBEDTLS_ERR_SSL_UNEXPECTED_RECORD                 -0x6700  /**< Record header looks valid but is not expected. */
+#define MBEDTLS_ERR_SSL_NON_FATAL                         -0x6680  /**< The alert message received indicates a non-fatal error. */
+#define MBEDTLS_ERR_SSL_INVALID_VERIFY_HASH               -0x6600  /**< Couldn't set the hash for verifying CertificateVerify */
 
 /*
  * Various constants
@@ -1107,9 +1109,10 @@ void mbedtls_ssl_conf_dbg( mbedtls_ssl_config *conf,
  *                 \c mbedtls_ssl_recv_t and \c mbedtls_ssl_recv_timeout_t for
  *                 the conventions those callbacks must follow.
  *
- * \note           On some platforms, net.c provides \c mbedtls_net_send(),
- *                 \c mbedtls_net_recv() and \c mbedtls_net_recv_timeout()
- *                 that are suitable to be used here.
+ * \note           On some platforms, net_sockets.c provides
+ *                 \c mbedtls_net_send(), \c mbedtls_net_recv() and
+ *                 \c mbedtls_net_recv_timeout() that are suitable to be used
+ *                 here.
  */
 void mbedtls_ssl_set_bio( mbedtls_ssl_context *ssl,
                           void *p_bio,

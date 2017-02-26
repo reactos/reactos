@@ -39,7 +39,7 @@
 #if defined(SONAME_LIBMBEDTLS) && !defined(HAVE_SECURITY_SECURITY_H) && !defined(SONAME_LIBGNUTLS)
 
 #include <mbedtls/ssl.h>
-#include <mbedtls/net.h>
+#include <mbedtls/net_sockets.h>
 
 #include <mbedtls/entropy.h>
 #include <mbedtls/ctr_drbg.h>
