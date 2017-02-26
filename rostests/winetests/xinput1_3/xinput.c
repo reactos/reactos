@@ -32,29 +32,57 @@ static DWORD (WINAPI *pXInputGetKeystroke)(DWORD, DWORD, PXINPUT_KEYSTROKE);
 static DWORD (WINAPI *pXInputGetDSoundAudioDeviceGuids)(DWORD, GUID*, GUID*);
 static DWORD (WINAPI *pXInputGetBatteryInformation)(DWORD, BYTE, XINPUT_BATTERY_INFORMATION*);
 
+static void dump_gamepad(XINPUT_GAMEPAD *data)
+{
+    trace("-- Gamepad Variables --\n");
+    trace("Gamepad.wButtons: %#x\n", data->wButtons);
+    trace("Gamepad.bLeftTrigger: %d\n", data->bLeftTrigger);
+    trace("Gamepad.bRightTrigger: %d\n", data->bRightTrigger);
+    trace("Gamepad.sThumbLX: %d\n", data->sThumbLX);
+    trace("Gamepad.sThumbLY: %d\n", data->sThumbLY);
+    trace("Gamepad.sThumbRX: %d\n", data->sThumbRX);
+    trace("Gamepad.sThumbRY: %d\n\n", data->sThumbRY);
+}
+
 static void test_set_state(void)
 {
     XINPUT_VIBRATION vibrator;
     DWORD controllerNum;
     DWORD result;
 
-    for(controllerNum=0; controllerNum < XUSER_MAX_COUNT; controllerNum++)
+    for(controllerNum = 0; controllerNum < XUSER_MAX_COUNT; controllerNum++)
     {
         ZeroMemory(&vibrator, sizeof(XINPUT_VIBRATION));
+
+        vibrator.wLeftMotorSpeed = 32767;
+        vibrator.wRightMotorSpeed = 32767;
+        result = pXInputSetState(controllerNum, &vibrator);
+        if (result == ERROR_DEVICE_NOT_CONNECTED) continue;
+
+        Sleep(250);
+        vibrator.wLeftMotorSpeed = 0;
+        vibrator.wRightMotorSpeed = 0;
+        result = pXInputSetState(controllerNum, &vibrator);
+        ok(result == ERROR_SUCCESS, "XInputSetState failed with (%d)\n", result);
+
+        /* Disabling XInput here, queueing a vibration and then re-enabling XInput
+         * is used to prove that vibrations are auto enabled when resuming XInput.
+         * If XInputEnable(1) is removed below the vibration will never play. */
+        if (pXInputEnable) pXInputEnable(0);
+
+        Sleep(250);
+        vibrator.wLeftMotorSpeed = 65535;
+        vibrator.wRightMotorSpeed = 65535;
+        result = pXInputSetState(controllerNum, &vibrator);
+        ok(result == ERROR_SUCCESS, "XInputSetState failed with (%d)\n", result);
+
+        if (pXInputEnable) pXInputEnable(1);
+        Sleep(250);
 
         vibrator.wLeftMotorSpeed = 0;
         vibrator.wRightMotorSpeed = 0;
         result = pXInputSetState(controllerNum, &vibrator);
-        ok(result == ERROR_SUCCESS || result == ERROR_DEVICE_NOT_CONNECTED, "XInputSetState failed with (%d)\n", result);
-
-        if (pXInputEnable) pXInputEnable(0);
-
-        vibrator.wLeftMotorSpeed = 65535;
-        vibrator.wRightMotorSpeed = 65535;
-        result = pXInputSetState(controllerNum, &vibrator);
-        ok(result == ERROR_SUCCESS || result == ERROR_DEVICE_NOT_CONNECTED, "XInputSetState failed with (%d)\n", result);
-
-        if (pXInputEnable) pXInputEnable(1);
+        ok(result == ERROR_SUCCESS, "XInputSetState failed with (%d)\n", result);
     }
 
     result = pXInputSetState(XUSER_MAX_COUNT+1, &vibrator);
@@ -68,8 +96,7 @@ static void test_get_state(void)
         XINPUT_STATE state;
         XINPUT_STATE_EX state_ex;
     } xinput;
-    DWORD controllerNum, i;
-    DWORD result;
+    DWORD controllerNum, i, result, good = XUSER_MAX_COUNT;
 
     for (i = 0; i < (pXInputGetStateEx ? 2 : 1); i++)
     {
@@ -92,18 +119,14 @@ static void test_get_state(void)
 
             trace("-- Results for controller %d --\n", controllerNum);
             if (i == 0)
+            {
+                good = controllerNum;
                 trace("XInputGetState: %d\n", result);
+            }
             else
                 trace("XInputGetStateEx: %d\n", result);
             trace("State->dwPacketNumber: %d\n", xinput.state.dwPacketNumber);
-            trace("Gamepad Variables --\n");
-            trace("Gamepad.wButtons: %#x\n", xinput.state.Gamepad.wButtons);
-            trace("Gamepad.bLeftTrigger: 0x%08x\n", xinput.state.Gamepad.bLeftTrigger);
-            trace("Gamepad.bRightTrigger: 0x%08x\n", xinput.state.Gamepad.bRightTrigger);
-            trace("Gamepad.sThumbLX: %d\n", xinput.state.Gamepad.sThumbLX);
-            trace("Gamepad.sThumbLY: %d\n", xinput.state.Gamepad.sThumbLY);
-            trace("Gamepad.sThumbRX: %d\n", xinput.state.Gamepad.sThumbRX);
-            trace("Gamepad.sThumbRY: %d\n", xinput.state.Gamepad.sThumbRY);
+            dump_gamepad(&xinput.state.Gamepad);
         }
     }
 
@@ -120,6 +143,28 @@ static void test_get_state(void)
         result = pXInputGetStateEx(XUSER_MAX_COUNT+1, &xinput.state_ex);
         ok(result == ERROR_BAD_ARGUMENTS, "XInputGetState returned (%d)\n", result);
     }
+
+    if (winetest_interactive && good < XUSER_MAX_COUNT)
+    {
+        DWORD now = GetTickCount(), packet = 0;
+        XINPUT_GAMEPAD *game = &xinput.state.Gamepad;
+
+        trace("You have 20 seconds to test the joystick freely\n");
+        do
+        {
+            Sleep(100);
+            pXInputGetState(good, &xinput.state);
+            if (xinput.state.dwPacketNumber == packet)
+                continue;
+
+            packet = xinput.state.dwPacketNumber;
+            trace("Buttons 0x%04X Triggers %3d/%3d LT %6d/%6d RT %6d/%6d\n",
+                  game->wButtons, game->bLeftTrigger, game->bRightTrigger,
+                  game->sThumbLX, game->sThumbLY, game->sThumbRX, game->sThumbRY);
+        }
+        while(GetTickCount() - now < 20000);
+        trace("Test over...\n");
+    }
 }
 
 static void test_get_keystroke(void)
@@ -128,7 +173,7 @@ static void test_get_keystroke(void)
     DWORD controllerNum;
     DWORD result;
 
-    for(controllerNum=0; controllerNum < XUSER_MAX_COUNT; controllerNum++)
+    for(controllerNum = 0; controllerNum < XUSER_MAX_COUNT; controllerNum++)
     {
         ZeroMemory(&keystroke, sizeof(XINPUT_KEYSTROKE));
 
@@ -153,7 +198,7 @@ static void test_get_capabilities(void)
     DWORD controllerNum;
     DWORD result;
 
-    for(controllerNum=0; controllerNum < XUSER_MAX_COUNT; controllerNum++)
+    for(controllerNum = 0; controllerNum < XUSER_MAX_COUNT; controllerNum++)
     {
         ZeroMemory(&capabilities, sizeof(XINPUT_CAPABILITIES));
 
@@ -163,7 +208,11 @@ static void test_get_capabilities(void)
         if (ERROR_DEVICE_NOT_CONNECTED == result)
         {
             skip("Controller %d is not connected\n", controllerNum);
+            continue;
         }
+
+        /* Important to show that the results changed between 1.3 and 1.4 XInput version */
+        dump_gamepad(&capabilities.Gamepad);
     }
 
     ZeroMemory(&capabilities, sizeof(XINPUT_CAPABILITIES));
@@ -175,18 +224,31 @@ static void test_get_dsoundaudiodevice(void)
 {
     DWORD controllerNum;
     DWORD result;
-    GUID soundRender;
-    GUID soundCapture;
+    GUID soundRender, soundCapture;
+    GUID testGuid = {0xFFFFFFFF, 0xFFFF, 0xFFFF, {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF}};
+    GUID emptyGuid = {0x0, 0x0, 0x0, {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0}};
 
-    for(controllerNum=0; controllerNum < XUSER_MAX_COUNT; controllerNum++)
+    for(controllerNum = 0; controllerNum < XUSER_MAX_COUNT; controllerNum++)
     {
+        soundRender = soundCapture = testGuid;
         result = pXInputGetDSoundAudioDeviceGuids(controllerNum, &soundRender, &soundCapture);
         ok(result == ERROR_SUCCESS || result == ERROR_DEVICE_NOT_CONNECTED, "XInputGetDSoundAudioDeviceGuids failed with (%d)\n", result);
 
         if (ERROR_DEVICE_NOT_CONNECTED == result)
         {
             skip("Controller %d is not connected\n", controllerNum);
+            continue;
         }
+
+        if (!IsEqualGUID(&soundRender, &emptyGuid))
+            ok(!IsEqualGUID(&soundRender, &testGuid), "Broken GUID returned for sound render device\n");
+        else
+            trace("Headset phone not attached\n");
+
+        if (!IsEqualGUID(&soundCapture, &emptyGuid))
+            ok(!IsEqualGUID(&soundCapture, &testGuid), "Broken GUID returned for sound capture device\n");
+        else
+            trace("Headset microphone not attached\n");
     }
 
     result = pXInputGetDSoundAudioDeviceGuids(XUSER_MAX_COUNT+1, &soundRender, &soundCapture);
@@ -199,7 +261,7 @@ static void test_get_batteryinformation(void)
     DWORD result;
     XINPUT_BATTERY_INFORMATION batteryInfo;
 
-    for(controllerNum=0; controllerNum < XUSER_MAX_COUNT; controllerNum++)
+    for(controllerNum = 0; controllerNum < XUSER_MAX_COUNT; controllerNum++)
     {
         ZeroMemory(&batteryInfo, sizeof(XINPUT_BATTERY_INFORMATION));
 
