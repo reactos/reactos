@@ -597,7 +597,7 @@ static HRESULT WINAPI ThreadMgrSource_AdviseSink(ITfSource *iface,
     if (IsEqualIID(riid, &IID_ITfThreadFocusSink))
     {
         WARN("semi-stub for ITfThreadFocusSink: sink won't be used.\n");
-        return advise_sink(&This->ThreadMgrEventSink, &IID_ITfThreadMgrEventSink, COOKIE_MAGIC_TMSINK, punk, pdwCookie);
+        return advise_sink(&This->ThreadFocusSink, &IID_ITfThreadFocusSink, COOKIE_MAGIC_THREADFOCUSSINK, punk, pdwCookie);
     }
 
     FIXME("(%p) Unhandled Sink: %s\n",This,debugstr_guid(riid));
@@ -610,7 +610,7 @@ static HRESULT WINAPI ThreadMgrSource_UnadviseSink(ITfSource *iface, DWORD pdwCo
 
     TRACE("(%p) %x\n",This,pdwCookie);
 
-    if (get_Cookie_magic(pdwCookie)!=COOKIE_MAGIC_TMSINK)
+    if (get_Cookie_magic(pdwCookie) != COOKIE_MAGIC_TMSINK && get_Cookie_magic(pdwCookie) != COOKIE_MAGIC_THREADFOCUSSINK)
         return E_INVALIDARG;
 
     return unadvise_sink(pdwCookie);
@@ -1166,7 +1166,7 @@ static HRESULT WINAPI UIElementMgr_QueryInterface(ITfUIElementMgr *iface, REFIID
 {
     ThreadMgr *This = impl_from_ITfUIElementMgr(iface);
 
-    return ITfThreadMgrEx_QueryInterface(&This->ITfThreadMgrEx_iface, iid, *ppvOut);
+    return ITfThreadMgrEx_QueryInterface(&This->ITfThreadMgrEx_iface, iid, ppvOut);
 }
 
 static ULONG WINAPI UIElementMgr_AddRef(ITfUIElementMgr *iface)
@@ -1315,7 +1315,7 @@ HRESULT ThreadMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
     This->refCount = 1;
     TlsSetValue(tlsIndex,This);
 
-    CompartmentMgr_Constructor((IUnknown*)This, &IID_IUnknown, (IUnknown**)&This->CompartmentMgr);
+    CompartmentMgr_Constructor((IUnknown*)&This->ITfThreadMgrEx_iface, &IID_IUnknown, (IUnknown**)&This->CompartmentMgr);
 
     list_init(&This->CurrentPreservedKeys);
     list_init(&This->CreatedDocumentMgrs);

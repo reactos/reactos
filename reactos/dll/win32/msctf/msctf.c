@@ -162,7 +162,7 @@ static HRESULT ClassFactory_Constructor(LPFNCONSTRUCTOR ctor, LPVOID *ppvOut)
     This->IClassFactory_iface.lpVtbl = &ClassFactoryVtbl;
     This->ref = 1;
     This->ctor = ctor;
-    *ppvOut = This;
+    *ppvOut = &This->IClassFactory_iface;
     TRACE("Created class factory %p\n", This);
     return S_OK;
 }
