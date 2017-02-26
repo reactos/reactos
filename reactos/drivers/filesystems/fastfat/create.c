@@ -450,13 +450,12 @@ VfatCreateFile(
         {
             return STATUS_ACCESS_DENIED;
         }
-#if 0
-        /* In spite of what is shown in WDK, it seems that Windows FAT driver doesn't perform that test */
-        if (RequestedOptions & FILE_DIRECTORY_FILE)
+
+        if (BooleanFlagOn(RequestedOptions, FILE_DIRECTORY_FILE) &&
+            (FileObject->RelatedFileObject == NULL || FileObject->RelatedFileObject->FsContext2 == NULL || FileObject->RelatedFileObject->FsContext == DeviceExt->VolumeFcb))
         {
             return STATUS_NOT_A_DIRECTORY;
         }
-#endif
 
         if (OpenTargetDir)
         {
