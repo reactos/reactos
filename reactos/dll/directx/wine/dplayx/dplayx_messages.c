@@ -287,10 +287,10 @@ HRESULT DP_MSG_ForwardPlayerCreation( IDirectPlayImpl *This, DPID dpidServer )
 
   lpMsgBody->dpidAppServer2 = dpidServer;
   lpMsgBody->unknown3[0] = 0x0;
-  lpMsgBody->unknown3[0] = 0x0;
-  lpMsgBody->unknown3[0] = 0x20;
-  lpMsgBody->unknown3[0] = 0x0;
-  lpMsgBody->unknown3[0] = 0x0;
+  lpMsgBody->unknown3[1] = 0x0;
+  lpMsgBody->unknown3[2] = 0x20;
+  lpMsgBody->unknown3[3] = 0x0;
+  lpMsgBody->unknown3[4] = 0x0;
 
   lpMsgBody->dpidAppServer3 = dpidServer;
   lpMsgBody->unknown4[0] =  0x30;

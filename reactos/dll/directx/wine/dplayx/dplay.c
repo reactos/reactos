@@ -4355,8 +4355,7 @@ static HRESULT WINAPI IDirectPlay4AImpl_EnumConnections( IDirectPlay4A *iface,
     if( RegOpenKeyExA( HKEY_LOCAL_MACHINE, searchSubKey,
                          0, KEY_READ, &hkResult ) != ERROR_SUCCESS )
     {
-      /* Hmmm. Does this mean that there are no service providers? */
-      ERR(": no service providers?\n");
+      TRACE("No Lobby Providers have been registered.\n");
       return DP_OK;
     }
 
