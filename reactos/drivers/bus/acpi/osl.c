@@ -934,8 +934,8 @@ AcpiOsEnterSleep(
     UINT32 RegaValue,
     UINT32 RegbValue)
 {
-    DPRINT1("Attempt to enter sleep. Aborting.\n");
-    return AE_CTRL_TERMINATE;
+    DPRINT1("Entering sleep state S%u.\n", SleepState);
+    return AE_OK;
 }
 
 ACPI_STATUS
