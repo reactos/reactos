@@ -202,6 +202,6 @@ BEGIN
     IDS_CERT_DOES_NOT_MATCH "Verifica del certificato SSL fallita."
     IDS_INTEG_CHECK_TITLE "Verifica integrità pacchetto..."
     IDS_INTEG_CHECK_FAIL "Il pacchetto non ha superato il controllo di integrità, potrebbe essere stato danneggiato o manomesso durante lo scaricamento. L'esecuzione del software non è raccomandata."
-    IDS_INTERRUPTED_DOWNLOAD "The download was interrupted. Check connection to Internet."
-    IDS_UNABLE_TO_WRITE "Unable to write to disk. Disk may be at capacity."
+    IDS_INTERRUPTED_DOWNLOAD "Lo scaricamento è stato interrotto. Verificare la connessione a Internet."
+    IDS_UNABLE_TO_WRITE "Impossibile scrivere su disco: lo spazio libero potrebbe essere esaurito."
 END
