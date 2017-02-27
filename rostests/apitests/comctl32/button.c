@@ -122,6 +122,9 @@ void Test_GetIdealSizeNoThemes()
 
     DestroyWindow(hwnd1);
 
+
+
+
     hwnd1 = CreateWindowW(L"Button", L"", 0, 10, 10, 100, 100, 0, NULL, NULL, NULL);
     ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
     SetWindowTheme(hwnd1, L"", L"");
@@ -165,6 +168,28 @@ void Test_GetIdealSizeNoThemes()
     ok (s.cy > 80, "Expected big cy\n");
 
     DestroyWindow(hwnd1);
+
+
+
+
+    hwnd1 = CreateWindowW(L"Button", L" ", BS_BITMAP , 10, 10, 100, 100, 0, NULL, NULL, NULL);
+    ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
+    SetWindowTheme(hwnd1, L"", L"");
+
+    SendMessageW(hwnd1, BM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hbmp);
+
+    memset(&s, 0, sizeof(s));
+    ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
+    ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
+
+    /* In xp and 2k3 the image is ignored, in vista+ its width is added to the text width */
+    ok_size(s, textent.cx + 2 * wi.cxWindowBorders - 1 + 2, 
+               textent.cy + 2 * wi.cyWindowBorders + 1 + 2); /* the last +2 is the text margin */
+
+    DestroyWindow(hwnd1);
+
+
+
 
     hwnd1 = CreateWindowW(L"Button", L" ", 0, 10, 10, 100, 100, 0, NULL, NULL, NULL);
     ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
@@ -218,6 +243,9 @@ void Test_GetIdealSizeNoThemes()
                textent.cy + 2 * wi.cyWindowBorders + 1);
 
     DestroyWindow(hwnd1);
+
+
+
 
     /* Test again with some real text to see if the formula is correct */
     hwnd1 = CreateWindowW(L"Button", L"Some test text", 0, 10, 10, 100, 100, 0, NULL, NULL, NULL);
