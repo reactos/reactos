@@ -39,7 +39,8 @@ PHOOKAPI WINAPI SHIM_OBJ_NAME(GetHookAPIs)(DWORD fdwReason, PCSTR pszCmdLine, PD
         SHIM_OBJ_NAME(g_szCommandLine) = "";
     }
     SHIM_OBJ_NAME(g_pAPIHooks) = ShimLib_ShimMalloc(sizeof(HOOKAPI) * SHIM_NUM_HOOKS);
-    ZeroMemory(SHIM_OBJ_NAME(g_pAPIHooks), sizeof(HOOKAPI) * SHIM_NUM_HOOKS);
+    if (SHIM_NUM_HOOKS)
+        ZeroMemory(SHIM_OBJ_NAME(g_pAPIHooks), sizeof(HOOKAPI) * SHIM_NUM_HOOKS);
     *pdwHookCount = SHIM_NUM_HOOKS;
 
 #ifdef SHIM_NOTIFY_FN

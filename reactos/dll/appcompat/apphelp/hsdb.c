@@ -65,7 +65,9 @@ HSDB WINAPI SdbInitDatabase(DWORD flags, LPCWSTR path)
             case SDB_DATABASE_MAIN_SHIM: name = shim; break;
             case SDB_DATABASE_MAIN_MSI: name = msi; break;
             case SDB_DATABASE_MAIN_DRIVERS: name = drivers; break;
-            default: return NULL;
+            default:
+                SdbReleaseDatabase(sdb);
+                return NULL;
         }
         SdbGetAppPatchDir(NULL, buffer, 128);
         memcpy(buffer + lstrlenW(buffer), name, SdbpStrlen(name));
