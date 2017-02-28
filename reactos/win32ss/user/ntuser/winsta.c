@@ -671,9 +671,10 @@ NtUserGetObjectInformation(
     DWORD nLength,
     PDWORD nLengthNeeded)
 {
-    PWINSTATION_OBJECT WinStaObject;
-    PDESKTOP DesktopObject = NULL;
     NTSTATUS Status;
+    PWINSTATION_OBJECT WinStaObject = NULL;
+    PDESKTOP DesktopObject = NULL;
+    USEROBJECTFLAGS ObjectFlags;
     PVOID pvData = NULL;
     DWORD nDataSize = 0;
 
@@ -690,7 +691,7 @@ NtUserGetObjectInformation(
     }
     _SEH2_END;
 
-    /* try windowstation */
+    /* Try window station */
     TRACE("Trying to open window station %p\n", hObject);
     Status = ObReferenceObjectByHandle(hObject,
                                        0,
@@ -701,7 +702,7 @@ NtUserGetObjectInformation(
 
     if (Status == STATUS_OBJECT_TYPE_MISMATCH)
     {
-        /* try desktop */
+        /* Try desktop */
         TRACE("Trying to open desktop %p\n", hObject);
         WinStaObject = NULL;
         Status = IntValidateDesktopHandle(hObject,
@@ -718,29 +719,25 @@ NtUserGetObjectInformation(
 
     TRACE("WinSta or Desktop opened!!\n");
 
-    /* get data */
+    /* Get data */
     switch (nIndex)
     {
         case UOI_FLAGS:
-            nDataSize = sizeof(USEROBJECTFLAGS);
-            if (nLength >= nDataSize)
-            {
-                PUSEROBJECTFLAGS ObjectFlags = pvInformation;
+        {
+            /* This is a default implementation that does almost nothing */
+            ObjectFlags.fInherit = FALSE;
+            ObjectFlags.fReserved = FALSE;
+            ObjectFlags.dwFlags = 0;
 
-                ObjectFlags->fInherit = 0;
-                ObjectFlags->fReserved = 0;
-                ObjectFlags->dwFlags = 0;
-
-                Status = STATUS_SUCCESS;
-            }
-            else
-            {
-                Status = STATUS_BUFFER_TOO_SMALL;
-            }
+            pvData = &ObjectFlags;
+            nDataSize = sizeof(ObjectFlags);
+            Status = STATUS_SUCCESS;
             ERR("UOI_FLAGS unimplemented!\n");
             break;
+        }
 
         case UOI_NAME:
+        {
             if (WinStaObject != NULL)
             {
                 pvData = WinStaObject->Name.Buffer;
@@ -754,10 +751,14 @@ NtUserGetObjectInformation(
                 Status = STATUS_SUCCESS;
             }
             else
+            {
                 Status = STATUS_INVALID_PARAMETER;
+            }
             break;
+        }
 
         case UOI_TYPE:
+        {
             if (WinStaObject != NULL)
             {
                 pvData = L"WindowStation";
@@ -771,8 +772,11 @@ NtUserGetObjectInformation(
                 Status = STATUS_SUCCESS;
             }
             else
+            {
                 Status = STATUS_INVALID_PARAMETER;
+            }
             break;
+        }
 
         case UOI_USER_SID:
             Status = STATUS_NOT_IMPLEMENTED;
@@ -785,7 +789,7 @@ NtUserGetObjectInformation(
     }
 
 Exit:
-    if (Status == STATUS_SUCCESS && nLength < nDataSize)
+    if ((Status == STATUS_SUCCESS) && (nLength < nDataSize))
         Status = STATUS_BUFFER_TOO_SMALL;
 
     _SEH2_TRY
@@ -793,7 +797,7 @@ Exit:
         if (nLengthNeeded)
             *nLengthNeeded = nDataSize;
 
-        /* try to copy data to caller */
+        /* Try to copy data to caller */
         if (Status == STATUS_SUCCESS)
         {
             TRACE("Trying to copy data to caller (len = %lu, len needed = %lu)\n", nLength, nDataSize);
@@ -806,11 +810,11 @@ Exit:
     }
     _SEH2_END;
 
-    /* release objects */
-    if (WinStaObject != NULL)
-        ObDereferenceObject(WinStaObject);
+    /* Release objects */
     if (DesktopObject != NULL)
         ObDereferenceObject(DesktopObject);
+    if (WinStaObject != NULL)
+        ObDereferenceObject(WinStaObject);
 
     if (!NT_SUCCESS(Status))
     {
