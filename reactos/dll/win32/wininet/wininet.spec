@@ -80,10 +80,10 @@
 @ stdcall FtpSetCurrentDirectoryW(ptr wstr)
 @ stdcall GetUrlCacheConfigInfoA(ptr ptr long)
 @ stdcall GetUrlCacheConfigInfoW(ptr ptr long)
-@ stdcall GetUrlCacheEntryInfoA(str ptr long)
+@ stdcall GetUrlCacheEntryInfoA(str ptr ptr)
 @ stdcall GetUrlCacheEntryInfoExA(str ptr ptr str ptr ptr long)
 @ stdcall GetUrlCacheEntryInfoExW(wstr ptr ptr wstr ptr ptr long)
-@ stdcall GetUrlCacheEntryInfoW(wstr ptr long)
+@ stdcall GetUrlCacheEntryInfoW(wstr ptr ptr)
 @ stdcall GetUrlCacheGroupAttributeA(int64 long long ptr ptr ptr)
 @ stdcall GetUrlCacheGroupAttributeW(int64 long long ptr ptr ptr)
 @ stub GetUrlCacheHeaderData

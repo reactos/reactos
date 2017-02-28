@@ -250,9 +250,6 @@ server_t *get_server(substr_t name, INTERNET_PORT port, BOOL is_https, BOOL do_c
 {
     server_t *iter, *server = NULL;
 
-    if(port == INTERNET_INVALID_PORT_NUMBER)
-        port = INTERNET_DEFAULT_HTTP_PORT;
-
     EnterCriticalSection(&connection_pool_cs);
 
     LIST_FOR_EACH_ENTRY(iter, &connection_pool, server_t, entry) {
@@ -3388,10 +3385,8 @@ static DWORD HTTP_HttpOpenRequestW(http_session_t *session,
 
     port = session->hostPort;
     if (port == INTERNET_INVALID_PORT_NUMBER)
-    {
         port = (session->hdr.dwFlags & INTERNET_FLAG_SECURE) ?
                 INTERNET_DEFAULT_HTTPS_PORT : INTERNET_DEFAULT_HTTP_PORT;
-    }
 
     request->server = get_server(substrz(session->hostName), port, (dwFlags & INTERNET_FLAG_SECURE) != 0, TRUE);
     if(!request->server) {
@@ -3406,13 +3401,14 @@ static DWORD HTTP_HttpOpenRequestW(http_session_t *session,
 
     if (lpszObjectName && *lpszObjectName) {
         HRESULT rc;
+        WCHAR dummy;
 
-        len = 0;
-        rc = UrlEscapeW(lpszObjectName, NULL, &len, URL_ESCAPE_SPACES_ONLY);
+        len = 1;
+        rc = UrlCanonicalizeW(lpszObjectName, &dummy, &len, URL_ESCAPE_SPACES_ONLY);
         if (rc != E_POINTER)
             len = strlenW(lpszObjectName)+1;
         request->path = heap_alloc(len*sizeof(WCHAR));
-        rc = UrlEscapeW(lpszObjectName, request->path, &len,
+        rc = UrlCanonicalizeW(lpszObjectName, request->path, &len,
                    URL_ESCAPE_SPACES_ONLY);
         if (rc != S_OK)
         {
@@ -4193,12 +4189,13 @@ static DWORD HTTP_HandleRedirect(http_request_t *request, LPCWSTR lpszUrl)
     request->path = NULL;
     if (*path)
     {
-        DWORD needed = 0;
+        DWORD needed = 1;
         HRESULT rc;
+        WCHAR dummy = 0;
 
-        rc = UrlEscapeW(path, NULL, &needed, URL_ESCAPE_SPACES_ONLY);
-        if (rc == E_POINTER)
-            needed = strlenW(path)+1;
+        rc = UrlEscapeW(path, &dummy, &needed, URL_ESCAPE_SPACES_ONLY);
+        if (rc != E_POINTER)
+            ERR("Unable to escape string!(%s) (%d)\n",debugstr_w(path),rc);
         request->path = heap_alloc(needed*sizeof(WCHAR));
         rc = UrlEscapeW(path, request->path, &needed,
                         URL_ESCAPE_SPACES_ONLY);

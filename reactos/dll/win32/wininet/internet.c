@@ -4098,8 +4098,7 @@ static BOOL calc_url_length(LPURL_COMPONENTSW lpUrlComponents,
         {
             char szPort[MAX_WORD_DIGITS+1];
 
-            sprintf(szPort, "%d", lpUrlComponents->nPort);
-            *lpdwUrlLength += strlen(szPort);
+            *lpdwUrlLength += sprintf(szPort, "%d", lpUrlComponents->nPort);
             *lpdwUrlLength += strlen(":");
         }
 
@@ -4342,14 +4341,9 @@ BOOL WINAPI InternetCreateUrlW(LPURL_COMPONENTSW lpUrlComponents, DWORD dwFlags,
 
         if (!url_uses_default_port(nScheme, lpUrlComponents->nPort))
         {
-            WCHAR szPort[MAX_WORD_DIGITS+1];
-
-            sprintfW(szPort, fmtW, lpUrlComponents->nPort);
             *lpszUrl = ':';
             lpszUrl++;
-            dwLen = strlenW(szPort);
-            memcpy(lpszUrl, szPort, dwLen * sizeof(WCHAR));
-            lpszUrl += dwLen;
+            lpszUrl += sprintfW(lpszUrl, fmtW, lpUrlComponents->nPort);
         }
 
         /* add slash between hostname and path if necessary */
