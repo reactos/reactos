@@ -750,7 +750,7 @@ co_UserShowScrollBar(PWND Wnd, int nBar, BOOL fShowH, BOOL fShowV)
          break;
       default:
          EngSetLastError(ERROR_INVALID_PARAMETER);
-         return FALSE;
+         return FALSE; /* Nothing to do! */
    }
 
    old_style = IntSetStyle( Wnd, set_bits, clear_bits );
@@ -761,11 +761,11 @@ co_UserShowScrollBar(PWND Wnd, int nBar, BOOL fShowH, BOOL fShowV)
       //if (Wnd->style & WS_VSCROLL) IntUpdateSBInfo(Wnd, SB_VERT);
       /////
          /* Frame has been changed, let the window redraw itself */
-      co_WinPosSetWindowPos(Wnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
-                            SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOSENDCHANGING);
+      co_WinPosSetWindowPos( Wnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE
+                           | SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED );
       return TRUE;
    }
-   return FALSE;
+   return FALSE; /* no frame changes */
 }
 
 static void
