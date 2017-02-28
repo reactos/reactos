@@ -26,6 +26,7 @@
 #include <winnls.h>
 #include <shellapi.h>
 #include <windowsx.h>
+#include <winreg.h>
 
 #include "fontview.h"
 #include "resource.h"
@@ -420,21 +421,83 @@ MainWnd_OnPaint(HWND hwnd)
 static LRESULT
 MainWnd_OnInstall(HWND hwnd)
 {
-	DWORD fontExists;
+    WCHAR szFullName[64];
 
-	/* First, we have to find out if the font still exists. */
-	fontExists = GetFileAttributes(g_fileName);
-	if (fontExists != 0xFFFFFFFF) /* If the file does not exist */
-	{
-		ErrorMsgBox(0, IDS_ERROR_NOFONT, g_fileName);
-		return -1;
-	}
+    WCHAR szSrcPath[MAX_PATH];
+    WCHAR szDestPath[MAX_PATH];
+    PWSTR pszFileName;
+    LONG res;
+    HKEY hKey;
 
-	//CopyFile(g_fileName, NULL, TRUE);
+    SendDlgItemMessage(hwnd, IDC_DISPLAY, FVM_GETFULLNAME, 64, (LPARAM)szFullName);
+//    MessageBoxW(hwnd, szFullName, L"Debug", MB_OK);
 
-	MessageBox(hwnd, TEXT("This function is unimplemented"), TEXT("Unimplemented"), MB_OK);
+    /* First, we have to find out if the font still exists */
+    if (GetFileAttributes(g_fileName) == INVALID_FILE_ATTRIBUTES)
+    {
+        /* Fail, if the source file does not exist */
+        ErrorMsgBox(0, IDS_ERROR_NOFONT, g_fileName);
+        return -1;
+    }
 
-	return 0;
+    /* Build the full destination file name */
+    GetFullPathNameW(g_fileName, MAX_PATH, szSrcPath, &pszFileName);
+
+    GetWindowsDirectoryW(szDestPath, MAX_PATH);
+    wcscat(szDestPath, L"\\Fonts\\");
+    wcscat(szDestPath, pszFileName);
+
+    /* Debug Message */
+//    MessageBoxW(hwnd, szDestPath, L"szDestPath", MB_OK);
+//    MessageBoxW(hwnd, pszFileName, L"pszFileExt", MB_OK);
+
+    /* Check if the file already exists */
+    if (GetFileAttributesW(szDestPath) != INVALID_FILE_ATTRIBUTES)
+    {
+        MessageBoxW(hwnd, L"This font is already installed!", L"Already Installed", MB_OK);
+        return 0;
+    }
+
+    /* Copy the font file */
+    if (!CopyFileW(g_fileName, szDestPath, TRUE))
+    {
+        MessageBoxW(hwnd,L"Failed to copy the font file!", L"File Error", MB_OK);
+        return -1;
+    }
+
+    /* Open the fonts key */
+    res = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                        L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts",
+                        0,
+                        KEY_ALL_ACCESS,
+                        &hKey);
+    if (res != ERROR_SUCCESS)
+    {
+        MessageBoxW(hwnd, L"Failed top open the fonts key!", L"Debug1", MB_OK);
+        return -1;
+    }
+
+    /* Register the font */
+    res = RegSetValueExW(hKey,
+                         szFullName,
+                         0,
+                         REG_SZ,
+                         (LPBYTE)pszFileName,
+                         (wcslen(pszFileName) + 1) * sizeof(WCHAR));
+    if (res != ERROR_SUCCESS)
+    {
+        MessageBoxW(hwnd, L"Failed to register the new font!", L"Debug2", MB_OK);
+        RegCloseKey(hKey);
+        return -1;
+    }
+
+    /* Close the fonts key */
+    RegCloseKey(hKey);
+
+    /* if all of this goes correctly, message the user about success */
+    MessageBoxW(hwnd, L"Font Installation Completed.", L"Success", MB_OK);
+
+    return 0;
 }
 
 static LRESULT

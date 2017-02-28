@@ -3,6 +3,7 @@
 /* Messages for the display class */
 #define FVM_SETTYPEFACE WM_USER
 #define FVM_SETSTRING (WM_USER + 1)
+#define FVM_GETFULLNAME (WM_USER + 2)
 
 /* Size restrictions */
 #define MAX_STRING 100

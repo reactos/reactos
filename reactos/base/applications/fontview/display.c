@@ -521,6 +521,24 @@ Display_OnPrint(HWND hwnd)
 	return 0;
 }
 
+LRESULT
+Display_GetFullName(HWND hwnd, INT length, PWSTR ptr)
+{
+    DISPLAYDATA *pData;
+    INT len;
+
+    pData = (DISPLAYDATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+
+    len = wcslen(pData->szTypeFaceName) + wcslen(pData->szFormat) + 2;
+
+    if (ptr != NULL && length >= len)
+    {
+        swprintf(ptr, L"%s%s", pData->szTypeFaceName, pData->szFormat);
+    }
+
+    return (LRESULT)len;
+}
+
 LRESULT CALLBACK
 DisplayProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -543,6 +561,9 @@ DisplayProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		case FVM_SETSTRING:
 			return Display_SetString(hwnd, (WCHAR *)lParam);
+
+		case FVM_GETFULLNAME:
+			return Display_GetFullName(hwnd, (INT)wParam, (PWSTR)lParam);
 
 		case WM_DESTROY:
 			return Display_OnDestroy(hwnd);
