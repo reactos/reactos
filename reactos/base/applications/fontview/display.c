@@ -468,7 +468,7 @@ Display_OnPrint(HWND hwnd)
 		pData = (DISPLAYDATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 #endif
 		docinfo.cbSize = sizeof(DOCINFO);
-		docinfo.lpszDocName = "Printing Font";
+		docinfo.lpszDocName = L"Printing Font";
 		docinfo.lpszOutput = NULL;
 		docinfo.lpszDatatype = NULL;
 		docinfo.fwType = 0;

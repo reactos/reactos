@@ -91,9 +91,9 @@ ErrorMsgBox(HWND hParent, DWORD dwMessageId, ...)
 }
 
 int WINAPI
-WinMain (HINSTANCE hThisInstance,
+wWinMain(HINSTANCE hThisInstance,
          HINSTANCE hPrevInstance,
-         LPSTR lpCmdLine,
+         LPWSTR lpCmdLine,
          int nCmdShow)
 {
 	int argc;
@@ -423,7 +423,7 @@ MainWnd_OnInstall(HWND hwnd)
 	DWORD fontExists;
 
 	/* First, we have to find out if the font still exists. */
-	fontExists = GetFileAttributes((LPCSTR)g_fileName);
+	fontExists = GetFileAttributes(g_fileName);
 	if (fontExists != 0xFFFFFFFF) /* If the file does not exist */
 	{
 		ErrorMsgBox(0, IDS_ERROR_NOFONT, g_fileName);
