@@ -2468,6 +2468,10 @@ static DWORD CALLBACK server_thread(LPVOID param)
             send(c, okmsg, sizeof(okmsg)-1, 0);
             send(c, buffer, strlen(buffer), 0);
         }
+        if (strstr(buffer, "GET /test_remove_dot_segments"))
+        {
+            send(c, okmsg, sizeof(okmsg)-1, 0);
+        }
         if (strstr(buffer, "HEAD /test_auth_host1"))
         {
             if (strstr(buffer, "Authorization: Basic dGVzdDE6cGFzcw=="))
@@ -5133,6 +5137,20 @@ static void test_long_url(int port)
     close_request(&req);
 }
 
+static void test_remove_dot_segments(int port)
+{
+    test_request_t req;
+    BOOL ret;
+
+    open_simple_request(&req, "localhost", port, NULL, "/A/../B/./C/../../test_remove_dot_segments");
+
+    ret = HttpSendRequestA(req.request, NULL, 0, NULL, 0);
+    ok(ret, "HttpSendRequest failed: %u\n", GetLastError());
+    test_status_code(req.request, 200);
+
+    close_request(&req);
+}
+
 static void test_http_connection(void)
 {
     struct server_info si;
@@ -5184,6 +5202,7 @@ static void test_http_connection(void)
     test_async_read(si.port);
     test_http_read(si.port);
     test_long_url(si.port);
+    test_remove_dot_segments(si.port);
 
     /* send the basic request again to shutdown the server thread */
     test_basic_request(si.port, "GET", "/quit");

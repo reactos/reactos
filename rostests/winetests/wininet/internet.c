@@ -1202,7 +1202,7 @@ static void test_end_browser_session(void)
     ok(len != 0, "len = 0\n");
 
     ret = InternetSetOptionA(NULL, INTERNET_OPTION_END_BROWSER_SESSION, NULL, 0);
-    ok(ret, "InternetSetOptio(INTERNET_OPTION_END_BROWSER_SESSION) failed: %u\n", GetLastError());
+    ok(ret, "InternetSetOption(INTERNET_OPTION_END_BROWSER_SESSION) failed: %u\n", GetLastError());
 
     len = 1024;
     ret = InternetGetCookieA("http://www.example.com/test_end", NULL, NULL, &len);
