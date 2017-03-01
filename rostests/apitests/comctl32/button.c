@@ -188,7 +188,6 @@ void Test_GetIdealSizeNoThemes()
 
 
 
-
     hwnd1 = CreateWindowW(L"Button", L" ", 0, 10, 10, 100, 100, 0, NULL, NULL, NULL);
     ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
     SetWindowTheme(hwnd1, L"", L"");
@@ -259,7 +258,32 @@ void Test_GetIdealSizeNoThemes()
     ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
     ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
     /* image + its margins is so big that the height is dictated by them */
-    ok_size(s, textent.cx + 5 + 2 + 1 + 100, 101);
+    ok_size(s, textent.cx + 5 + 2 + 1 + 100, (LONG)101);
+
+    DestroyWindow(hwnd1);
+
+
+
+
+
+
+    hwnd1 = CreateWindowW(L"Button", L"Start", BS_VCENTER, 0, 0, 0, 0, 0, NULL, NULL, NULL);
+    ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
+    SetWindowTheme(hwnd1, L"", L"");
+
+    font = (HFONT)SendMessageW(hwnd1, WM_GETFONT, 0, 0);
+    hdc = GetDC(hwnd1);
+    SelectObject(hdc, font);
+    GetTextExtentPoint32W(hdc, L"Start", 5, &textent);
+
+    SetRect(&rc, 0,0,0,0);
+    ret = SendMessageW(hwnd1, BCM_SETTEXTMARGIN, 0, (LPARAM)&rc);
+    ok (ret == TRUE, "Expected BCM_SETTEXTMARGIN to succeed\n");
+
+    memset(&s, 0, sizeof(s));
+    ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
+    ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
+    ok_size(s, textent.cx + 5, textent.cy + 7);
 
     DestroyWindow(hwnd1);
 
@@ -285,6 +309,7 @@ void Test_GetIdealSizeNoThemes()
     /* The hardcoded values are independent of the margin */
     lf.lfHeight = 200;
     lf.lfWidth = 200;
+    lf.lfWeight = FW_BOLD;
     wcscpy(lf.lfFaceName, L"Arial");
     font = CreateFontIndirectW(&lf);
     ok(font != NULL, "\n");
@@ -300,6 +325,10 @@ void Test_GetIdealSizeNoThemes()
                textent.cy + 7 + 2);
 
     DestroyWindow(hwnd1);
+
+
+
+
 }
 
 START_TEST(button)
