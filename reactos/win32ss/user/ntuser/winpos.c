@@ -837,153 +837,6 @@ WinPosFindIconPos(PWND Window, POINT *Pos)
    return;
 }
 
-UINT FASTCALL
-co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
-{
-   POINT Size;
-   WINDOWPLACEMENT wpl;
-   LONG old_style;
-   UINT SwpFlags = 0;
-
-   ASSERT_REFS_CO(Wnd);
-
-   wpl.length = sizeof(wpl);
-   IntGetWindowPlacement( Wnd, &wpl );
-
-   if (co_HOOK_CallHooks( WH_CBT, HCBT_MINMAX, (WPARAM)Wnd->head.h, ShowFlag))
-   {
-      ERR("WinPosMinMaximize WH_CBT Call Hook return!\n");
-      return SWP_NOSIZE | SWP_NOMOVE;
-   }
-      if (Wnd->style & WS_MINIMIZE)
-      {
-         switch (ShowFlag)
-         {
-         case SW_MINIMIZE:
-         case SW_SHOWMINNOACTIVE:
-         case SW_SHOWMINIMIZED:
-         case SW_FORCEMINIMIZE:
-             return SWP_NOSIZE | SWP_NOMOVE;
-         }
-         if (!co_IntSendMessageNoWait(Wnd->head.h, WM_QUERYOPEN, 0, 0))
-         {
-            return(SWP_NOSIZE | SWP_NOMOVE);
-         }
-         SwpFlags |= SWP_NOCOPYBITS;
-      }
-      switch (ShowFlag)
-      {
-         case SW_MINIMIZE:
-         case SW_SHOWMINNOACTIVE:
-         case SW_SHOWMINIMIZED:
-         case SW_FORCEMINIMIZE:
-            {
-               //ERR("MinMaximize Minimize\n");
-               if (Wnd->style & WS_MAXIMIZE)
-               {
-                  Wnd->InternalPos.flags |= WPF_RESTORETOMAXIMIZED;
-               }
-               else
-               {
-                  Wnd->InternalPos.flags &= ~WPF_RESTORETOMAXIMIZED;
-               }
-
-               old_style = IntSetStyle( Wnd, WS_MINIMIZE, WS_MAXIMIZE );
-
-               co_UserRedrawWindow(Wnd, NULL, 0, RDW_VALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT);
-
-               if (!(Wnd->InternalPos.flags & WPF_SETMINPOSITION))
-                  Wnd->InternalPos.flags &= ~WPF_MININIT;
-
-               WinPosFindIconPos(Wnd, &wpl.ptMinPosition);
-
-               /*if (!(old_style & WS_MINIMIZE))
-               {
-                  SwpFlags |= SWP_STATECHANGED;
-                  IntShowOwnedPopups(Wnd, FALSE);
-               }*/
-
-               RECTL_vSetRect(NewPos, wpl.ptMinPosition.x, wpl.ptMinPosition.y,
-                             wpl.ptMinPosition.x + UserGetSystemMetrics(SM_CXMINIMIZED),
-                             wpl.ptMinPosition.y + UserGetSystemMetrics(SM_CYMINIMIZED));
-               SwpFlags |= SWP_NOCOPYBITS;
-               break;
-            }
-
-         case SW_MAXIMIZE:
-            {
-               //ERR("MinMaximize Maximize\n");
-               if ((Wnd->style & WS_MAXIMIZE) && (Wnd->style & WS_VISIBLE))
-               {
-                  SwpFlags = SWP_NOSIZE | SWP_NOMOVE;
-                  break;
-               }
-               co_WinPosGetMinMaxInfo(Wnd, &Size, &wpl.ptMaxPosition, NULL, NULL);
-
-               /*ERR("Maximize: %d,%d %dx%d\n",
-                      wpl.ptMaxPosition.x, wpl.ptMaxPosition.y, Size.x, Size.y);
-                */
-               old_style = IntSetStyle( Wnd, WS_MAXIMIZE, WS_MINIMIZE );
-               /*if (old_style & WS_MINIMIZE)
-               {
-                  IntShowOwnedPopups(Wnd, TRUE);
-               }*/
-
-               if (!(old_style & WS_MAXIMIZE)) SwpFlags |= SWP_STATECHANGED;
-               RECTL_vSetRect(NewPos, wpl.ptMaxPosition.x, wpl.ptMaxPosition.y,
-                              //wpl.ptMaxPosition.x + Size.x, wpl.ptMaxPosition.y + Size.y);
-                              Size.x, Size.y);
-               break;
-            }
-
-         case SW_SHOWNOACTIVATE:
-            Wnd->InternalPos.flags &= ~WPF_RESTORETOMAXIMIZED;
-            /* fall through */
-         case SW_SHOWNORMAL:
-         case SW_RESTORE:
-         case SW_SHOWDEFAULT: /* FIXME: should have its own handler */
-            {
-               //ERR("MinMaximize Restore\n");
-               old_style = IntSetStyle( Wnd, 0, WS_MINIMIZE | WS_MAXIMIZE );
-               if (old_style & WS_MINIMIZE)
-               {
-                  //IntShowOwnedPopups(Wnd, TRUE);
-
-                  if (Wnd->InternalPos.flags & WPF_RESTORETOMAXIMIZED)
-                  {
-                     co_WinPosGetMinMaxInfo(Wnd, &Size, &wpl.ptMaxPosition, NULL, NULL);
-                     IntSetStyle( Wnd, WS_MAXIMIZE, 0 );
-                     SwpFlags |= SWP_STATECHANGED;
-                     RECTL_vSetRect(NewPos, wpl.ptMaxPosition.x, wpl.ptMaxPosition.y,
-                                    wpl.ptMaxPosition.x + Size.x, wpl.ptMaxPosition.y + Size.y);
-                     break;
-                  }
-                  else
-                  {
-                     *NewPos = wpl.rcNormalPosition;
-                     NewPos->right -= NewPos->left;
-                     NewPos->bottom -= NewPos->top;
-                     break;
-                  }
-               }
-               else
-               {
-                  if (!(old_style & WS_MAXIMIZE))
-                  {
-                     break;
-                  }
-                  SwpFlags |= SWP_STATECHANGED;
-                  Wnd->InternalPos.flags &= ~WPF_RESTORETOMAXIMIZED;
-                  *NewPos = wpl.rcNormalPosition;
-                  NewPos->right -= NewPos->left;
-                  NewPos->bottom -= NewPos->top;
-                  break;
-               }
-            }
-      }
-   return SwpFlags;
-}
-
 BOOL
 UserHasWindowEdge(DWORD Style, DWORD ExStyle)
 {
@@ -2051,7 +1904,7 @@ co_WinPosSetWindowPos(
             REGION_Delete(VisBeforeJustClient);
          }
 
-         /* No use in copying bits which are in the update region. */
+         /* Now use in copying bits which are in the update region. */
          if (Window->hrgnUpdate != NULL)
          {
             PREGION RgnUpdate = REGION_LockRgn(Window->hrgnUpdate);
@@ -2338,6 +2191,153 @@ co_WinPosSendSizeMove(PWND Wnd)
     co_IntSendMessageNoWait(UserHMGetHandle(Wnd), WM_MOVE, 0, lParam);
 
     IntEngWindowChanged(Wnd, WOC_RGN_CLIENT);
+}
+
+UINT FASTCALL
+co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
+{
+   POINT Size;
+   WINDOWPLACEMENT wpl;
+   LONG old_style;
+   UINT SwpFlags = 0;
+
+   ASSERT_REFS_CO(Wnd);
+
+   wpl.length = sizeof(wpl);
+   IntGetWindowPlacement( Wnd, &wpl );
+
+   if (co_HOOK_CallHooks( WH_CBT, HCBT_MINMAX, (WPARAM)Wnd->head.h, ShowFlag))
+   {
+      ERR("WinPosMinMaximize WH_CBT Call Hook return!\n");
+      return SWP_NOSIZE | SWP_NOMOVE;
+   }
+      if (Wnd->style & WS_MINIMIZE)
+      {
+         switch (ShowFlag)
+         {
+         case SW_MINIMIZE:
+         case SW_SHOWMINNOACTIVE:
+         case SW_SHOWMINIMIZED:
+         case SW_FORCEMINIMIZE:
+             return SWP_NOSIZE | SWP_NOMOVE;
+         }
+         if (!co_IntSendMessageNoWait(Wnd->head.h, WM_QUERYOPEN, 0, 0))
+         {
+            return(SWP_NOSIZE | SWP_NOMOVE);
+         }
+         SwpFlags |= SWP_NOCOPYBITS;
+      }
+      switch (ShowFlag)
+      {
+         case SW_MINIMIZE:
+         case SW_SHOWMINNOACTIVE:
+         case SW_SHOWMINIMIZED:
+         case SW_FORCEMINIMIZE:
+            {
+               //ERR("MinMaximize Minimize\n");
+               if (Wnd->style & WS_MAXIMIZE)
+               {
+                  Wnd->InternalPos.flags |= WPF_RESTORETOMAXIMIZED;
+               }
+               else
+               {
+                  Wnd->InternalPos.flags &= ~WPF_RESTORETOMAXIMIZED;
+               }
+
+               old_style = IntSetStyle( Wnd, WS_MINIMIZE, WS_MAXIMIZE );
+
+               co_UserRedrawWindow(Wnd, NULL, 0, RDW_VALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT);
+
+               if (!(Wnd->InternalPos.flags & WPF_SETMINPOSITION))
+                  Wnd->InternalPos.flags &= ~WPF_MININIT;
+
+               WinPosFindIconPos(Wnd, &wpl.ptMinPosition);
+
+               /*if (!(old_style & WS_MINIMIZE))
+               {
+                  SwpFlags |= SWP_STATECHANGED;
+                  IntShowOwnedPopups(Wnd, FALSE);
+               }*/
+
+               RECTL_vSetRect(NewPos, wpl.ptMinPosition.x, wpl.ptMinPosition.y,
+                             wpl.ptMinPosition.x + UserGetSystemMetrics(SM_CXMINIMIZED),
+                             wpl.ptMinPosition.y + UserGetSystemMetrics(SM_CYMINIMIZED));
+               SwpFlags |= SWP_NOCOPYBITS;
+               break;
+            }
+
+         case SW_MAXIMIZE:
+            {
+               //ERR("MinMaximize Maximize\n");
+               if ((Wnd->style & WS_MAXIMIZE) && (Wnd->style & WS_VISIBLE))
+               {
+                  SwpFlags = SWP_NOSIZE | SWP_NOMOVE;
+                  break;
+               }
+               co_WinPosGetMinMaxInfo(Wnd, &Size, &wpl.ptMaxPosition, NULL, NULL);
+
+               /*ERR("Maximize: %d,%d %dx%d\n",
+                      wpl.ptMaxPosition.x, wpl.ptMaxPosition.y, Size.x, Size.y);
+                */
+               old_style = IntSetStyle( Wnd, WS_MAXIMIZE, WS_MINIMIZE );
+               /*if (old_style & WS_MINIMIZE)
+               {
+                  IntShowOwnedPopups(Wnd, TRUE);
+               }*/
+
+               if (!(old_style & WS_MAXIMIZE)) SwpFlags |= SWP_STATECHANGED;
+               RECTL_vSetRect(NewPos, wpl.ptMaxPosition.x, wpl.ptMaxPosition.y,
+                              //wpl.ptMaxPosition.x + Size.x, wpl.ptMaxPosition.y + Size.y);
+                              Size.x, Size.y);
+               break;
+            }
+
+         case SW_SHOWNOACTIVATE:
+            Wnd->InternalPos.flags &= ~WPF_RESTORETOMAXIMIZED;
+            /* fall through */
+         case SW_SHOWNORMAL:
+         case SW_RESTORE:
+         case SW_SHOWDEFAULT: /* FIXME: should have its own handler */
+            {
+               //ERR("MinMaximize Restore\n");
+               old_style = IntSetStyle( Wnd, 0, WS_MINIMIZE | WS_MAXIMIZE );
+               if (old_style & WS_MINIMIZE)
+               {
+                  //IntShowOwnedPopups(Wnd, TRUE);
+
+                  if (Wnd->InternalPos.flags & WPF_RESTORETOMAXIMIZED)
+                  {
+                     co_WinPosGetMinMaxInfo(Wnd, &Size, &wpl.ptMaxPosition, NULL, NULL);
+                     IntSetStyle( Wnd, WS_MAXIMIZE, 0 );
+                     SwpFlags |= SWP_STATECHANGED;
+                     RECTL_vSetRect(NewPos, wpl.ptMaxPosition.x, wpl.ptMaxPosition.y,
+                                    wpl.ptMaxPosition.x + Size.x, wpl.ptMaxPosition.y + Size.y);
+                     break;
+                  }
+                  else
+                  {
+                     *NewPos = wpl.rcNormalPosition;
+                     NewPos->right -= NewPos->left;
+                     NewPos->bottom -= NewPos->top;
+                     break;
+                  }
+               }
+               else
+               {
+                  if (!(old_style & WS_MAXIMIZE))
+                  {
+                     break;
+                  }
+                  SwpFlags |= SWP_STATECHANGED;
+                  Wnd->InternalPos.flags &= ~WPF_RESTORETOMAXIMIZED;
+                  *NewPos = wpl.rcNormalPosition;
+                  NewPos->right -= NewPos->left;
+                  NewPos->bottom -= NewPos->top;
+                  break;
+               }
+            }
+      }
+   return SwpFlags;
 }
 
 /*
