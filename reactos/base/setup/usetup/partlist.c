@@ -3045,6 +3045,13 @@ DeleteCurrentPartition(
         return;
     }
 
+    /* Clear the system disk and partition pointers if the system partition will be deleted */
+    if (List->SystemPartition == List->CurrentPartition)
+    {
+        List->SystemDisk = NULL;
+        List->SystemPartition = NULL;
+    }
+
     DiskEntry = List->CurrentDisk;
     PartEntry = List->CurrentPartition;
 
