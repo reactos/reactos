@@ -21,7 +21,8 @@ void Test_TextMargin()
     
     hwnd1 = CreateWindowW(L"Button", L"Test1", 0, 10, 10, 100, 100, 0, NULL, NULL, NULL);
     ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
-    
+    SetWindowTheme(hwnd1, L"", L"");
+
     ret = SendMessageW(hwnd1, BCM_GETTEXTMARGIN, 0, (LPARAM)&rc);
     ok (ret == TRUE, "Expected BCM_GETTEXTMARGIN to succeed\n");
     ok_rect(rc, 1, 1, 1, 1);
@@ -96,11 +97,11 @@ void Test_GetIdealSizeNoThemes()
     SIZE s, textent;
     HFONT font;
     HDC hdc;
-    WINDOWINFO wi;
     HANDLE hbmp;
     HIMAGELIST himl;
     BUTTON_IMAGELIST imlData;
     RECT rc;
+    LOGFONTW lf;
 
     hwnd1 = CreateWindowW(L"Button", L" ", 0, 10, 10, 100, 100, 0, NULL, NULL, NULL);
     ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
@@ -111,14 +112,11 @@ void Test_GetIdealSizeNoThemes()
     SelectObject(hdc, font);
     GetTextExtentPoint32W(hdc, L" ", 1, &textent);
 
-    memset(&wi, 0, sizeof(wi));
-    GetWindowInfo(hwnd1, &wi);
-
     memset(&s, 0, sizeof(s));
     ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
     ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
-    ok_size(s, textent.cx + 2 * wi.cxWindowBorders - 1 + 2, 
-               textent.cy + 2 * wi.cyWindowBorders + 1 + 2); /* the last +2 is the text margin */
+    ok_size(s, textent.cx + 5 + 2, 
+               textent.cy + 7 + 2); /* the last +2 is the text margin */
 
     DestroyWindow(hwnd1);
 
@@ -183,8 +181,8 @@ void Test_GetIdealSizeNoThemes()
     ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
 
     /* In xp and 2k3 the image is ignored, in vista+ its width is added to the text width */
-    ok_size(s, textent.cx + 2 * wi.cxWindowBorders - 1 + 2, 
-               textent.cy + 2 * wi.cyWindowBorders + 1 + 2); /* the last +2 is the text margin */
+    ok_size(s, textent.cx + 5 + 2, 
+               textent.cy + 7 + 2); /* the last +2 is the text margin */
 
     DestroyWindow(hwnd1);
 
@@ -202,8 +200,8 @@ void Test_GetIdealSizeNoThemes()
     memset(&s, 0, sizeof(s));
     ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
     ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
-    ok_size(s, textent.cx + 2 * wi.cxWindowBorders - 1, 
-               textent.cy + 2 * wi.cyWindowBorders + 1);
+    ok_size(s, textent.cx + 5, 
+               textent.cy + 7);
 
     SetRect(&rc, 50,50,50,50);
     ret = SendMessageW(hwnd1, BCM_SETTEXTMARGIN, 0, (LPARAM)&rc);
@@ -212,35 +210,56 @@ void Test_GetIdealSizeNoThemes()
     memset(&s, 0, sizeof(s));
     ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
     ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
-    ok_size(s, textent.cx + 2 * wi.cxWindowBorders - 1 + 100, 
-               textent.cy + 2 * wi.cyWindowBorders + 1 + 100);
+    ok_size(s, textent.cx + 5 + 100, 
+               textent.cy + 7 + 100);
 
-    SetRect(&rc, 0,0,0,0);
+    SetRect(&rc, 1,1,1,1);
     ret = SendMessageW(hwnd1, BCM_SETTEXTMARGIN, 0, (LPARAM)&rc);
     ok (ret == TRUE, "Expected BCM_SETTEXTMARGIN to succeed\n");
 
     ret = SendMessageW(hwnd1, BCM_SETIMAGELIST, 0, (LPARAM)&imlData);
-    ok (ret == TRUE, "Expected BCM_SETIMAGELIST to fail\n"); /* This works in win10 */
+    ok (ret == TRUE, "Expected BCM_SETIMAGELIST to fail\n");
 
     memset(&s, 0, sizeof(s));
     ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
     ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
-    ok_size(s, textent.cx + 2 * wi.cxWindowBorders, /* we get an extra pixel due to the iml */
-               textent.cy + 2 * wi.cyWindowBorders + 1);
+    ok_size(s, textent.cx + 5 + 2 + 1, /* we get an extra pixel due to the iml */
+               textent.cy + 7 + 2);
 
     s.cx = 1;
     s.cy = 1;
     ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
     ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
-    ok_size(s, textent.cx + 2 * wi.cxWindowBorders,
-               textent.cy + 2 * wi.cyWindowBorders + 1);
+    ok_size(s, textent.cx + 5 + 2 + 1,
+               textent.cy + 7 + 2);
 
     s.cx = 100;
     s.cy = 100;
     ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
     ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
-    ok_size(s, textent.cx + 2 * wi.cxWindowBorders,
-               textent.cy + 2 * wi.cyWindowBorders + 1);
+    ok_size(s, textent.cx + 5 + 2 + 1,
+               textent.cy + 7 + 2);
+
+    SetRect(&imlData.margin, 1,1,1,1);
+    ret = SendMessageW(hwnd1, BCM_SETIMAGELIST, 0, (LPARAM)&imlData);
+    ok (ret == TRUE, "Expected BCM_SETIMAGELIST to fail\n");
+
+    memset(&s, 0, sizeof(s));
+    ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
+    ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
+    /* expected width = text width + hardcoded value + text margins + image width + image margins */
+    ok_size(s, textent.cx + 5 + 2 + 1 + 2,
+               textent.cy + 7 + 2);
+
+    SetRect(&imlData.margin, 50,50,50,50);
+    ret = SendMessageW(hwnd1, BCM_SETIMAGELIST, 0, (LPARAM)&imlData);
+    ok (ret == TRUE, "Expected BCM_SETIMAGELIST to fail\n");
+
+    memset(&s, 0, sizeof(s));
+    ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
+    ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
+    /* image + its margins is so big that the height is dictated by them */
+    ok_size(s, textent.cx + 5 + 2 + 1 + 100, 101);
 
     DestroyWindow(hwnd1);
 
@@ -260,8 +279,25 @@ void Test_GetIdealSizeNoThemes()
     memset(&s, 0, sizeof(s));
     ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
     ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
-    ok_size(s, textent.cx + 2 * wi.cxWindowBorders - 1 + 2,  /* the last +2 is the text margin */
-               textent.cy + 2 * wi.cyWindowBorders + 1 + 2);
+    ok_size(s, textent.cx + 5 + 2,  /* the last +2 is the text margin */
+               textent.cy + 7 + 2);
+
+    /* The hardcoded values are independent of the margin */
+    lf.lfHeight = 200;
+    lf.lfWidth = 200;
+    wcscpy(lf.lfFaceName, L"Arial");
+    font = CreateFontIndirectW(&lf);
+    ok(font != NULL, "\n");
+    SendMessageW(hwnd1, WM_SETFONT, (WPARAM)font, FALSE);
+
+    SelectObject(hdc, font);
+    GetTextExtentPoint32W(hdc, L"Some test text", 14, &textent);
+
+    memset(&s, 0, sizeof(s));
+    ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
+    ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
+    ok_size(s, textent.cx + 5 + 2,  /* the last +2 is the text margin */
+               textent.cy + 7 + 2);
 
     DestroyWindow(hwnd1);
 }
