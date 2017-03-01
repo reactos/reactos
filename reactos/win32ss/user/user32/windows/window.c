@@ -176,8 +176,8 @@ User32CreateWindowEx(DWORD dwExStyle,
     BOOL Unicode, ClassFound = FALSE;
     HWND Handle = NULL;
     LPCWSTR lpszClsVersion;
-    HANDLE pCtx;
-    LPCWSTR lpLibFileName;
+    LPCWSTR lpLibFileName = NULL;
+    HANDLE pCtx = NULL;
 
 #if 0
     DbgPrint("[window] User32CreateWindowEx style %d, exstyle %d, parent %d\n", dwStyle, dwExStyle, hWndParent);
