@@ -422,14 +422,14 @@ USBSTOR_SelectConfigurationAndInterface(
     // backup interface information
     //
     DeviceExtension->InterfaceInformation = (PUSBD_INTERFACE_INFORMATION)AllocateItem(NonPagedPool, Urb->UrbSelectConfiguration.Interface.Length);
-    if (!NT_SUCCESS(Status))
+    if (!DeviceExtension->InterfaceInformation)
     {
         //
         // failed to allocate interface information structure
         //
         FreeItem(InterfaceList);
         ExFreePoolWithTag(Urb, 0);
-        return Status;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     //
