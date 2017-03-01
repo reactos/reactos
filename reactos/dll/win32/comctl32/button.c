@@ -237,6 +237,7 @@ HRGN set_control_clipping( HDC hdc, const RECT *rect )
 }
 
 BOOL BUTTON_PaintWithTheme(HTHEME theme, HWND hwnd, HDC hParamDC, LPARAM prfFlag);
+WCHAR *get_button_text( HWND hwnd );
 
 static inline LONG_PTR get_button_image(HWND hwnd)
 {
@@ -307,11 +308,96 @@ static inline void paint_button( HWND hwnd, LONG style, UINT action )
     ReleaseDC( hwnd, hdc );
 }
 
+BOOL BUTTON_GetIdealSize(HTHEME theme, HWND hwnd, SIZE* psize)
+{
+    PBUTTON_DATA pdata;
+    HDC hdc;
+    WCHAR *text;
+    HFONT hFont = 0, hPrevFont = 0;
+    SIZE TextSize, ImageSize, ButtonSize;
+
+    pdata = _GetButtonData(hwnd);
+    text = get_button_text( hwnd );
+    hdc = GetDC(hwnd);
+    if (!pdata || !text || !hdc || !text[0])
+    {
+        psize->cx = 100;
+        psize->cy = 100;
+        goto cleanup;
+    }
+
+    /* FIXME : Should use GetThemeTextExtent but unfortunately uses DrawTextW which is broken */
+    if (theme)
+    {
+        LOGFONTW logfont;
+        HRESULT hr = GetThemeFont(theme, hdc, BP_PUSHBUTTON, PBS_NORMAL, TMT_FONT, &logfont);
+        if(SUCCEEDED(hr))
+        {
+            hFont = CreateFontIndirectW(&logfont);
+            if(hFont)
+                hPrevFont = SelectObject( hdc, hFont );
+        }
+    }
+    else
+    {
+        if (pdata->font)
+            hPrevFont = SelectObject( hdc, pdata->font );
+    }
+
+    GetTextExtentPoint32W(hdc, text, wcslen(text), &TextSize);
+
+    if (hPrevFont)
+        SelectObject( hdc, hPrevFont );
+
+    TextSize.cy += pdata->rcTextMargin.top + pdata->rcTextMargin.bottom;
+    TextSize.cx += pdata->rcTextMargin.left + pdata->rcTextMargin.right;
+
+    if (pdata->imlData.himl && ImageList_GetIconSize(pdata->imlData.himl, &ImageSize.cx, &ImageSize.cy))
+    {
+        ImageSize.cx += pdata->imlData.margin.left + pdata->imlData.margin.right;
+        ImageSize.cy += pdata->imlData.margin.top + pdata->imlData.margin.bottom;
+    }
+    else
+    {
+        ImageSize.cx = ImageSize.cy = 0;
+    }
+
+    if (theme)
+    {
+        RECT rcContents = {0};
+        RECT rcButtonExtent = {0};
+        rcContents.right = ImageSize.cx + TextSize.cx;
+        rcContents.bottom = max(ImageSize.cy, TextSize.cy);
+        GetThemeBackgroundExtent(theme, hdc, BP_PUSHBUTTON, PBS_NORMAL, &rcContents, &rcButtonExtent);
+        ERR("rcContents: %d, %d, %d, %d\n", rcContents.left, rcContents.top, rcContents.right, rcContents.bottom);
+        ERR("rcButtonExtent: %d, %d, %d, %d\n", rcButtonExtent.left, rcButtonExtent.top, rcButtonExtent.right, rcButtonExtent.bottom);
+        ButtonSize.cx = abs(rcButtonExtent.right - rcButtonExtent.left) + 1;
+        ButtonSize.cy = abs(rcButtonExtent.bottom - rcButtonExtent.top) - 1;
+    }
+    else
+    {
+        ButtonSize.cx = ImageSize.cx + TextSize.cx + 5;
+        ButtonSize.cy = max(ImageSize.cy, TextSize.cy  + 7);
+    }
+
+    *psize = ButtonSize;
+
+cleanup:
+    if (hFont)
+        DeleteObject(hFont);
+    if (text) 
+        HeapFree( GetProcessHeap(), 0, text );
+    if (hdc)
+        ReleaseDC(hwnd, hdc);
+
+    return TRUE;
+}
+
 #endif
 
 
 /* retrieve the button text; returned buffer must be freed by caller */
-static inline WCHAR *get_button_text( HWND hwnd )
+inline WCHAR *get_button_text( HWND hwnd )
 {
     INT len = 512;
     WCHAR *buffer = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) );
@@ -485,6 +571,21 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
                 return FALSE;
             *pimldata = data->imlData;
             return TRUE;
+        }
+        case BCM_GETIDEALSIZE:
+        {
+            HTHEME theme = GetWindowTheme(hWnd);
+
+            if (btn_type != BS_PUSHBUTTON && btn_type != BS_DEFPUSHBUTTON)
+            {
+                SIZE* pSize = (SIZE*)lParam;
+                GetClientRect(hWnd, &rect);
+                pSize->cx = rect.right;
+                pSize->cy = rect.bottom;
+                return TRUE;
+            }
+
+            return BUTTON_GetIdealSize(theme, hWnd, (SIZE*)lParam);
         }
     }
 
@@ -1110,11 +1211,34 @@ static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
  */
 static BOOL CALLBACK BUTTON_DrawTextCallback(HDC hdc, LPARAM lp, WPARAM wp, int cx, int cy)
 {
+#ifdef _USER32_
    RECT rc;
 
    SetRect(&rc, 0, 0, cx, cy);
    DrawTextW(hdc, (LPCWSTR)lp, -1, &rc, (UINT)wp);
    return TRUE;
+#else
+    HWND hwnd = (HWND)lp;
+    RECT rc;
+    PBUTTON_DATA pdata = _GetButtonData(hwnd);
+    SIZE ImageSize;
+    WCHAR *text = NULL;
+
+    if (!(text = get_button_text( hwnd ))) return TRUE;
+
+    SetRect(&rc, 0, 0, cx, cy);
+
+    if (pdata->imlData.himl && ImageList_GetIconSize(pdata->imlData.himl, &ImageSize.cx, &ImageSize.cy))
+    {
+        int left = pdata->imlData.margin.left;
+        int top = (cy - ImageSize.cy) / 2;
+        rc.left += pdata->imlData.margin.left + pdata->imlData.margin.right + ImageSize.cy;
+        ImageList_Draw(pdata->imlData.himl, 0, hdc, left, top, 0);
+    }
+
+    DrawTextW(hdc, text, -1, &rc, (UINT)wp);
+    return TRUE;
+#endif
 }
 
 
@@ -1150,8 +1274,13 @@ static void BUTTON_DrawLabel(HWND hwnd, HDC hdc, UINT dtFlags, const RECT *rc)
       case BS_TEXT:
          /* DST_COMPLEX -- is 0 */
          lpOutputProc = BUTTON_DrawTextCallback;
+#ifdef _USER32_
          if (!(text = get_button_text( hwnd ))) return;
          lp = (LPARAM)text;
+#else
+         lp = (LPARAM)hwnd;
+#endif
+
          wp = (WPARAM)dtFlags;
 
 #ifdef __REACTOS__

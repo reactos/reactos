@@ -111,6 +111,8 @@ static void PB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
     HFONT hPrevFont = font ? SelectObject(hDC, font) : NULL;
     int state = states[ drawState ];
     WCHAR *text = get_button_text(hwnd);
+    PBUTTON_DATA pdata = _GetButtonData(hwnd);
+    SIZE ImageSize;
 
     GetClientRect(hwnd, &bgRect);
     GetThemeBackgroundContentRect(theme, hDC, BP_PUSHBUTTON, state, &bgRect, &textRect);
@@ -122,6 +124,15 @@ static void PB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
     }
 
     DrawThemeBackground(theme, hDC, BP_PUSHBUTTON, state, &bgRect, NULL);
+
+    if (pdata->imlData.himl && ImageList_GetIconSize(pdata->imlData.himl, &ImageSize.cx, &ImageSize.cy))
+    {
+        int left = textRect.left + pdata->imlData.margin.left;
+        int top = textRect.top + (textRect.bottom - textRect.top - ImageSize.cy) / 2;
+        textRect.left += pdata->imlData.margin.left + pdata->imlData.margin.right + ImageSize.cy;
+        ImageList_Draw(pdata->imlData.himl, 0, hDC, left, top, 0);
+    }
+
     if (text)
     {
         DrawThemeText(theme, hDC, BP_PUSHBUTTON, state, text, lstrlenW(text), dtFlags, 0, &textRect);
