@@ -946,7 +946,7 @@ PNP_GetDeviceRegProp(
 #endif
 
             case CM_DRP_REMOVAL_POLICY:
-                PlugPlayData.Property = 0x12; // DevicePropertyRemovalPolicy
+                PlugPlayData.Property = 0x13; // DevicePropertyRemovalPolicy
                 break;
 
 #if 0
