@@ -2240,8 +2240,17 @@ NtQueryInformationFile(IN HANDLE FileHandle,
             }
             _SEH2_END;
 
-            /* Unlock FO */
-            IopUnlockFileObject(FileObject);
+            /* Free the event if we had one */
+            if (LocalEvent)
+            {
+                ExFreePoolWithTag(Event, TAG_IO);
+            }
+
+            /* If FO was locked, unlock it */
+            if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+            {
+                IopUnlockFileObject(FileObject);
+            }
 
             /* We're done with FastIO! */
             ObDereferenceObject(FileObject);
