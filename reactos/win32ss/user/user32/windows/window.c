@@ -172,7 +172,7 @@ User32CreateWindowEx(DWORD dwExStyle,
     WNDCLASSEXA wceA;
     WNDCLASSEXW wceW;
     HMODULE hLibModule = NULL;
-    DWORD save_error;
+    DWORD dwLastError;
     BOOL Unicode, ClassFound = FALSE;
     HWND Handle = NULL;
     LPCWSTR lpszClsVersion;
@@ -185,8 +185,8 @@ User32CreateWindowEx(DWORD dwExStyle,
 
     if (!RegisterDefaultClasses)
     {
-       TRACE("RegisterSystemControls\n");
-       RegisterSystemControls();
+        TRACE("RegisterSystemControls\n");
+        RegisterSystemControls();
     }
 
     Unicode = !(dwFlags & NUCWE_ANSI);
@@ -197,14 +197,16 @@ User32CreateWindowEx(DWORD dwExStyle,
     }
     else
     {
-        if(Unicode)
+        if (Unicode)
+        {
             RtlInitUnicodeString(&ClassName, (PCWSTR)lpClassName);
+        }
         else
         {
             if (!RtlCreateUnicodeStringFromAsciiz(&ClassName, (PCSZ)lpClassName))
             {
                 SetLastError(ERROR_OUTOFMEMORY);
-                return (HWND)0;
+                return NULL;
             }
         }
 
@@ -247,20 +249,20 @@ User32CreateWindowEx(DWORD dwExStyle,
         }
     }
 
-    if(!hMenu && (dwStyle & (WS_OVERLAPPEDWINDOW | WS_POPUP)))
+    if (!hMenu && (dwStyle & (WS_OVERLAPPEDWINDOW | WS_POPUP)))
     {
-        if(Unicode)
+        if (Unicode)
         {
-            wceW.cbSize = sizeof(WNDCLASSEXW);
-            if(GetClassInfoExW(hInstance, (LPCWSTR)lpClassName, &wceW) && wceW.lpszMenuName)
+            wceW.cbSize = sizeof(wceW);
+            if (GetClassInfoExW(hInstance, (LPCWSTR)lpClassName, &wceW) && wceW.lpszMenuName)
             {
                 hMenu = LoadMenuW(hInstance, wceW.lpszMenuName);
             }
         }
         else
         {
-            wceA.cbSize = sizeof(WNDCLASSEXA);
-            if(GetClassInfoExA(hInstance, lpClassName, &wceA) && wceA.lpszMenuName)
+            wceA.cbSize = sizeof(wceA);
+            if (GetClassInfoExA(hInstance, lpClassName, &wceA) && wceA.lpszMenuName)
             {
                 hMenu = LoadMenuA(hInstance, wceA.lpszMenuName);
             }
@@ -283,54 +285,53 @@ User32CreateWindowEx(DWORD dwExStyle,
         plstrClassVersion = &lstrClassVersion;
     }
 
-    for(;;)
+    for (;;)
     {
-       Handle = NtUserCreateWindowEx(dwExStyle,
-                                     plstrClassName,
-                                     plstrClassVersion,
-                                     &WindowName,
-                                     dwStyle,
-                                     x,
-                                     y,
-                                     nWidth,
-                                     nHeight,
-                                     hWndParent,
-                                     hMenu,
-                                     hInstance,
-                                     lpParam,
-                                     dwFlags,
-                                     NULL);
-       if (Handle) break;
-       if (!lpLibFileName) break;
-       if (!ClassFound)
-       {
-          save_error = GetLastError();
-          if ( save_error == ERROR_CANNOT_FIND_WND_CLASS )
-          {
-              ClassFound = VersionRegisterClass(ClassName.Buffer, lpLibFileName, pCtx, &hLibModule);
-              if (ClassFound) continue;
-          }
-       }
-       if (hLibModule)
-       {
-          save_error = GetLastError();
-          FreeLibrary(hLibModule);
-          SetLastError(save_error);
-          hLibModule = 0;
-       }
-       break;
+        Handle = NtUserCreateWindowEx(dwExStyle,
+                                      plstrClassName,
+                                      plstrClassVersion,
+                                      &WindowName,
+                                      dwStyle,
+                                      x,
+                                      y,
+                                      nWidth,
+                                      nHeight,
+                                      hWndParent,
+                                      hMenu,
+                                      hInstance,
+                                      lpParam,
+                                      dwFlags,
+                                      NULL);
+        if (Handle) break;
+        if (!lpLibFileName) break;
+        if (!ClassFound)
+        {
+            dwLastError = GetLastError();
+            if (dwLastError == ERROR_CANNOT_FIND_WND_CLASS)
+            {
+                ClassFound = VersionRegisterClass(ClassName.Buffer, lpLibFileName, pCtx, &hLibModule);
+                if (ClassFound) continue;
+            }
+        }
+        if (hLibModule)
+        {
+            dwLastError = GetLastError();
+            FreeLibrary(hLibModule);
+            SetLastError(dwLastError);
+            hLibModule = NULL;
+        }
+        break;
     }
 
 #if 0
     DbgPrint("[window] NtUserCreateWindowEx() == %d\n", Handle);
 #endif
+
 cleanup:
-    if(!Unicode)
+    if (!Unicode)
     {
         if (!IS_ATOM(lpClassName))
-        {
             RtlFreeUnicodeString(&ClassName);
-        }
 
         RtlFreeLargeString(&WindowName);
     }
@@ -573,8 +574,8 @@ CreateWindowExW(DWORD dwExStyle,
     }
 
     hwnd = User32CreateWindowEx(dwExStyle,
-                                (LPCSTR) lpClassName,
-                                (LPCSTR) lpWindowName,
+                                (LPCSTR)lpClassName,
+                                (LPCSTR)lpWindowName,
                                 dwStyle,
                                 x,
                                 y,
