@@ -2062,7 +2062,7 @@ Return Value:
              irpStack->Parameters.DeviceIoControl.OutputBufferLength <
             sizeof(DISK_GEOMETRY_EX))) {
 
-            status = STATUS_INFO_LENGTH_MISMATCH;
+            status = STATUS_BUFFER_TOO_SMALL;
             break;
         }
 
