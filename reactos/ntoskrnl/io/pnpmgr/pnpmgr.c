@@ -1847,6 +1847,128 @@ IopQueryCompatibleIds(PDEVICE_NODE DeviceNode,
    return Status;
 }
 
+NTSTATUS
+IopCreateDeviceInstancePath(
+    _In_ PDEVICE_NODE DeviceNode,
+    _Out_ PUNICODE_STRING InstancePathU)
+{
+    IO_STATUS_BLOCK IoStatusBlock;
+    PWSTR InformationString;
+    WCHAR InstancePath[MAX_PATH];
+    IO_STACK_LOCATION Stack;
+    NTSTATUS Status;
+    UNICODE_STRING ParentIdPrefix = { 0, 0, NULL };
+    DEVICE_CAPABILITIES DeviceCapabilities;
+
+    DPRINT("Sending IRP_MN_QUERY_ID.BusQueryDeviceID to device stack\n");
+
+    Stack.Parameters.QueryId.IdType = BusQueryDeviceID;
+    Status = IopInitiatePnpIrp(DeviceNode->PhysicalDeviceObject,
+                               &IoStatusBlock,
+                               IRP_MN_QUERY_ID,
+                               &Stack);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IopInitiatePnpIrp() failed (Status %x)\n", Status);
+        return Status;
+    }
+
+    /* Copy the device id string */
+    InformationString = (PWSTR)IoStatusBlock.Information;
+    wcscpy(InstancePath, InformationString);
+
+    /*
+     * FIXME: Check for valid characters, if there is invalid characters
+     * then bugcheck.
+     */
+
+    ExFreePoolWithTag(InformationString, 0);
+
+    DPRINT("Sending IRP_MN_QUERY_CAPABILITIES to device stack (after enumeration)\n");
+
+    Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCapabilities);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IopInitiatePnpIrp() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* This bit is only check after enumeration */
+    if (DeviceCapabilities.HardwareDisabled)
+    {
+        /* FIXME: Cleanup device */
+        DeviceNode->Flags |= DNF_DISABLED;
+        return STATUS_PLUGPLAY_NO_DEVICE;
+    }
+    else
+    {
+        DeviceNode->Flags &= ~DNF_DISABLED;
+    }
+
+    if (!DeviceCapabilities.UniqueID)
+    {
+        /* Device has not a unique ID. We need to prepend parent bus unique identifier */
+        DPRINT("Instance ID is not unique\n");
+        Status = IopGetParentIdPrefix(DeviceNode, &ParentIdPrefix);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("IopGetParentIdPrefix() failed (Status 0x%08lx)\n", Status);
+            return Status;
+        }
+    }
+
+    DPRINT("Sending IRP_MN_QUERY_ID.BusQueryInstanceID to device stack\n");
+
+    Stack.Parameters.QueryId.IdType = BusQueryInstanceID;
+    Status = IopInitiatePnpIrp(DeviceNode->PhysicalDeviceObject,
+                               &IoStatusBlock,
+                               IRP_MN_QUERY_ID,
+                               &Stack);
+    if (NT_SUCCESS(Status))
+    {
+        InformationString = (PWSTR)IoStatusBlock.Information;
+
+        /* Append the instance id string */
+        wcscat(InstancePath, L"\\");
+        if (ParentIdPrefix.Length > 0)
+        {
+            /* Add information from parent bus device to InstancePath */
+            wcscat(InstancePath, ParentIdPrefix.Buffer);
+            if (InformationString && *InformationString)
+            {
+                wcscat(InstancePath, L"&");
+            }
+        }
+        if (InformationString)
+        {
+            wcscat(InstancePath, InformationString);
+        }
+
+        /*
+         * FIXME: Check for valid characters, if there is invalid characters
+         * then bugcheck
+         */
+
+        if (InformationString)
+        {
+            ExFreePoolWithTag(InformationString, 0);
+        }
+    }
+    else
+    {
+        DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
+    }
+    RtlFreeUnicodeString(&ParentIdPrefix);
+
+    if (!RtlCreateUnicodeString(InstancePathU, InstancePath))
+    {
+        DPRINT1("RtlCreateUnicodeString failed\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    return STATUS_SUCCESS;
+}
+
 
 /*
  * IopActionInterrogateDeviceStack
@@ -1871,16 +1993,13 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
     IO_STATUS_BLOCK IoStatusBlock;
     PWSTR InformationString;
     PDEVICE_NODE ParentDeviceNode;
-    WCHAR InstancePath[MAX_PATH];
     IO_STACK_LOCATION Stack;
     NTSTATUS Status;
     ULONG RequiredLength;
     LCID LocaleId;
     HANDLE InstanceKey = NULL;
     UNICODE_STRING ValueName;
-    UNICODE_STRING ParentIdPrefix = { 0, 0, NULL };
     UNICODE_STRING InstancePathU;
-    DEVICE_CAPABILITIES DeviceCapabilities;
     PDEVICE_OBJECT OldDeviceObject;
 
     DPRINT("IopActionInterrogateDeviceStack(%p, %p)\n", DeviceNode, Context);
@@ -1928,116 +2047,16 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
      * return STATUS_SUCCESS.
      */
 
-    DPRINT("Sending IRP_MN_QUERY_ID.BusQueryDeviceID to device stack\n");
-
-    Stack.Parameters.QueryId.IdType = BusQueryDeviceID;
-    Status = IopInitiatePnpIrp(DeviceNode->PhysicalDeviceObject,
-                               &IoStatusBlock,
-                               IRP_MN_QUERY_ID,
-                               &Stack);
+    Status = IopCreateDeviceInstancePath(DeviceNode, &InstancePathU);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopInitiatePnpIrp() failed (Status %x)\n", Status);
+        if (Status != STATUS_PLUGPLAY_NO_DEVICE)
+        {
+            DPRINT1("IopCreateDeviceInstancePath() failed with status 0x%lx\n", Status);
+        }
 
         /* We have to return success otherwise we abort the traverse operation */
         return STATUS_SUCCESS;
-    }
-
-    /* Copy the device id string */
-    InformationString = (PWSTR)IoStatusBlock.Information;
-    wcscpy(InstancePath, InformationString);
-
-    /*
-     * FIXME: Check for valid characters, if there is invalid characters
-     * then bugcheck.
-     */
-
-    ExFreePoolWithTag(InformationString, 0);
-
-    DPRINT("Sending IRP_MN_QUERY_CAPABILITIES to device stack (after enumeration)\n");
-
-    Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCapabilities);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("IopInitiatePnpIrp() failed (Status 0x%08lx)\n", Status);
-
-        /* We have to return success otherwise we abort the traverse operation */
-        return STATUS_SUCCESS;
-    }
-
-    /* This bit is only check after enumeration */
-    if (DeviceCapabilities.HardwareDisabled)
-    {
-        /* FIXME: Cleanup device */
-        DeviceNode->Flags |= DNF_DISABLED;
-        return STATUS_SUCCESS;
-    }
-    else
-    {
-        DeviceNode->Flags &= ~DNF_DISABLED;
-    }
-
-    if (!DeviceCapabilities.UniqueID)
-    {
-        /* Device has not a unique ID. We need to prepend parent bus unique identifier */
-        DPRINT("Instance ID is not unique\n");
-        Status = IopGetParentIdPrefix(DeviceNode, &ParentIdPrefix);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("IopGetParentIdPrefix() failed (Status 0x%08lx)\n", Status);
-
-            /* We have to return success otherwise we abort the traverse operation */
-            return STATUS_SUCCESS;
-        }
-    }
-
-    DPRINT("Sending IRP_MN_QUERY_ID.BusQueryInstanceID to device stack\n");
-
-    Stack.Parameters.QueryId.IdType = BusQueryInstanceID;
-    Status = IopInitiatePnpIrp(DeviceNode->PhysicalDeviceObject,
-                               &IoStatusBlock,
-                               IRP_MN_QUERY_ID,
-                               &Stack);
-    if (NT_SUCCESS(Status))
-    {
-        InformationString = (PWSTR)IoStatusBlock.Information;
-
-        /* Append the instance id string */
-        wcscat(InstancePath, L"\\");
-        if (ParentIdPrefix.Length > 0)
-        {
-            /* Add information from parent bus device to InstancePath */
-            wcscat(InstancePath, ParentIdPrefix.Buffer);
-            if (InformationString && *InformationString)
-            {
-                wcscat(InstancePath, L"&");
-            }
-        }
-        if (InformationString)
-        {
-            wcscat(InstancePath, InformationString);
-        }
-
-        /*
-         * FIXME: Check for valid characters, if there is invalid characters
-         * then bugcheck
-         */
-
-        if (InformationString)
-        {
-            ExFreePoolWithTag(InformationString, 0);
-        }
-    }
-    else
-    {
-        DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
-    }
-    RtlFreeUnicodeString(&ParentIdPrefix);
-
-    if (!RtlCreateUnicodeString(&InstancePathU, InstancePath))
-    {
-        DPRINT("No resources\n");
-        /* FIXME: Cleanup and disable device */
     }
 
     /* Verify that this is not a duplicate */
