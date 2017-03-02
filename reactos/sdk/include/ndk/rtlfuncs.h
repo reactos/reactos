@@ -1048,6 +1048,8 @@ RtlWalkHeap(
 
 #endif // NTOS_MODE_USER
 
+#define NtCurrentPeb() (NtCurrentTeb()->ProcessEnvironmentBlock)
+
 NTSYSAPI
 SIZE_T
 NTAPI
@@ -2312,6 +2314,60 @@ RtlValidateUnicodeString(
     _In_ PCUNICODE_STRING String
 );
 
+#define RTL_SKIP_BUFFER_COPY    0x00000001
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlpEnsureBufferSize(
+    _In_ ULONG Flags,
+    _Inout_ PRTL_BUFFER Buffer,
+    _In_ SIZE_T RequiredSize
+);
+
+#ifdef NTOS_MODE_USER
+
+FORCEINLINE
+VOID
+RtlInitBuffer(
+    _Inout_ PRTL_BUFFER Buffer,
+    _In_ PUCHAR Data,
+    _In_ ULONG DataSize
+)
+{
+    Buffer->Buffer = Buffer->StaticBuffer = Data;
+    Buffer->Size = Buffer->StaticSize = DataSize;
+    Buffer->ReservedForAllocatedSize = 0;
+    Buffer->ReservedForIMalloc = NULL;
+}
+
+FORCEINLINE
+NTSTATUS
+RtlEnsureBufferSize(
+    _In_ ULONG Flags,
+    _Inout_ PRTL_BUFFER Buffer,
+    _In_ ULONG RequiredSize
+)
+{
+    if (Buffer && RequiredSize <= Buffer->Size)
+        return STATUS_SUCCESS;
+    return RtlpEnsureBufferSize(Flags, Buffer, RequiredSize);
+}
+
+FORCEINLINE
+VOID
+RtlFreeBuffer(
+    _Inout_ PRTL_BUFFER Buffer
+)
+{
+    if (Buffer->Buffer != Buffer->StaticBuffer && Buffer->Buffer)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer->Buffer);
+    Buffer->Buffer = Buffer->StaticBuffer;
+    Buffer->Size = Buffer->StaticSize;
+}
+
+#endif /* NTOS_MODE_USER */
+
 //
 // Ansi String Functions
 //
@@ -2626,7 +2682,6 @@ RtlGetCurrentProcessorNumber(
     VOID
 );
 
-#define NtCurrentPeb() (NtCurrentTeb()->ProcessEnvironmentBlock)
 
 //
 // Thread Pool Functions

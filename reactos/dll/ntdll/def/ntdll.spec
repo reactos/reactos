@@ -956,7 +956,7 @@
 948 stdcall RtlZeroMemory(ptr long)
 949 stdcall RtlZombifyActivationContext(ptr)
 950 stdcall RtlpApplyLengthFunction(long long ptr ptr)
-951 stdcall RtlpEnsureBufferSize(ptr ptr ptr) ; CHECKME
+951 stdcall RtlpEnsureBufferSize(long ptr long)
 # stdcall RtlpNotOwnerCriticalSection
 953 stdcall RtlpNtCreateKey(ptr long ptr long ptr ptr)
 954 stdcall RtlpNtEnumerateSubKey(ptr ptr long long)

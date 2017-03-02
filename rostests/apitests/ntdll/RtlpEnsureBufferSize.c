@@ -11,29 +11,6 @@
 #include <ndk/rtlfuncs.h>
 #include <tlhelp32.h>
 
-#ifndef RtlInitBuffer
-#define RtlInitBuffer(RtlBuf, StaticData, StaticDataSize) \
-    do { \
-        (RtlBuf)->Buffer = (RtlBuf)->StaticBuffer = (PUCHAR)StaticData; \
-        (RtlBuf)->Size = (RtlBuf)->StaticSize = StaticDataSize; \
-        (RtlBuf)->ReservedForAllocatedSize = 0; \
-        (RtlBuf)->ReservedForIMalloc = NULL; \
-    } while (0)
-#endif
-
-#ifndef RtlFreeBuffer
-#define RtlFreeBuffer(RtlBuf) \
-    do { \
-        if ((RtlBuf)->Buffer != (RtlBuf)->StaticBuffer && (RtlBuf)->Buffer) \
-            RtlFreeHeap(RtlGetProcessHeap(), 0, (RtlBuf)->Buffer); \
-        (RtlBuf)->Buffer = (RtlBuf)->StaticBuffer; \
-        (RtlBuf)->Size = (RtlBuf)->StaticSize; \
-    } while (0)
-#endif
-
-#ifndef RTL_SKIP_BUFFER_COPY
-#define RTL_SKIP_BUFFER_COPY    0x00000001
-#endif
 
 NTSTATUS (NTAPI *pRtlpEnsureBufferSize)(_In_ ULONG Flags, _Inout_ PRTL_BUFFER Buffer, _In_ SIZE_T RequiredSize);
 

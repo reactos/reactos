@@ -2566,14 +2566,68 @@ RtlValidateUnicodeString(IN ULONG Flags,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
-RtlpEnsureBufferSize(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
+RtlpEnsureBufferSize(
+    IN ULONG Flags,
+    IN OUT PRTL_BUFFER Buffer,
+    IN SIZE_T RequiredSize)
 {
-    DPRINT1("RtlpEnsureBufferSize: stub\n");
-    return STATUS_NOT_IMPLEMENTED;
+    PUCHAR NewBuffer;
+
+    /* Parameter checks */
+    if (Flags & ~RTL_SKIP_BUFFER_COPY)
+        return STATUS_INVALID_PARAMETER;
+    if (Buffer == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    /*
+     * We don't need to grow the buffer if its size
+     * is already larger than the required size.
+     */
+    if (Buffer->Size >= RequiredSize)
+        return STATUS_SUCCESS;
+
+    /*
+     * When we are using the static buffer as our buffer, we don't need
+     * to grow it if its size is already larger than the required size.
+     * In this case, just keep it but update the current buffer size to
+     * the one requested.
+     * (But NEVER EVER modify the size of the static buffer!!)
+     * Otherwise, we'll need to create a new buffer and use this one instead.
+     */
+    if ( (Buffer->Buffer == Buffer->StaticBuffer) &&
+         (Buffer->StaticSize >= RequiredSize) )
+    {
+        Buffer->Size = RequiredSize;
+        return STATUS_SUCCESS;
+    }
+
+    /* The buffer we are using is not large enough, try to create a bigger one */
+    NewBuffer = RtlpAllocateStringMemory(RequiredSize, TAG_USTR);
+    if (NewBuffer == NULL)
+        return STATUS_NO_MEMORY;
+
+    /* Copy the original content if needed */
+    if (!(Flags & RTL_SKIP_BUFFER_COPY))
+    {
+        RtlMoveMemory(NewBuffer, Buffer->Buffer, Buffer->Size);
+    }
+
+    /* Free the original buffer only if it's not the static buffer */
+    if (Buffer->Buffer != Buffer->StaticBuffer)
+    {
+        RtlpFreeStringMemory(Buffer->Buffer, TAG_USTR);
+    }
+
+    /* Update the members */
+    Buffer->Buffer = NewBuffer;
+    Buffer->Size   = RequiredSize;
+
+    /* Done */
+    return STATUS_SUCCESS;
 }
 
 static
