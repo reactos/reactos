@@ -942,7 +942,7 @@ static BOOL MSSTYLES_GetNextInteger(LPCWSTR lpStringStart, LPCWSTR lpStringEnd, 
     int total = 0;
     BOOL gotNeg = FALSE;
 
-    while(cur < lpStringEnd && (*cur < '0' || *cur > '9' || *cur == '-')) cur++;
+    while(cur < lpStringEnd && ((*cur < '0' || *cur > '9') && *cur != '-')) cur++;
     if(cur >= lpStringEnd) {
         return FALSE;
     }
