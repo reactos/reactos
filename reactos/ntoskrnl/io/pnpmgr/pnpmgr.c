@@ -1869,6 +1869,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
                                 PVOID Context)
 {
     IO_STATUS_BLOCK IoStatusBlock;
+    PWSTR InformationString;
     PDEVICE_NODE ParentDeviceNode;
     WCHAR InstancePath[MAX_PATH];
     IO_STACK_LOCATION Stack;
@@ -1934,23 +1935,24 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
                                &IoStatusBlock,
                                IRP_MN_QUERY_ID,
                                &Stack);
-    if (NT_SUCCESS(Status))
-    {
-        /* Copy the device id string */
-        wcscpy(InstancePath, (PWSTR)IoStatusBlock.Information);
-
-        /*
-         * FIXME: Check for valid characters, if there is invalid characters
-         * then bugcheck.
-         */
-    }
-    else
+    if (!NT_SUCCESS(Status))
     {
         DPRINT1("IopInitiatePnpIrp() failed (Status %x)\n", Status);
 
         /* We have to return success otherwise we abort the traverse operation */
         return STATUS_SUCCESS;
     }
+
+    /* Copy the device id string */
+    InformationString = (PWSTR)IoStatusBlock.Information;
+    wcscpy(InstancePath, InformationString);
+
+    /*
+     * FIXME: Check for valid characters, if there is invalid characters
+     * then bugcheck.
+     */
+
+    ExFreePoolWithTag(InformationString, 0);
 
     DPRINT("Sending IRP_MN_QUERY_CAPABILITIES to device stack (after enumeration)\n");
 
@@ -1998,26 +2000,33 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
                                &Stack);
     if (NT_SUCCESS(Status))
     {
+        InformationString = (PWSTR)IoStatusBlock.Information;
+
         /* Append the instance id string */
         wcscat(InstancePath, L"\\");
         if (ParentIdPrefix.Length > 0)
         {
             /* Add information from parent bus device to InstancePath */
             wcscat(InstancePath, ParentIdPrefix.Buffer);
-            if (IoStatusBlock.Information && *(PWSTR)IoStatusBlock.Information)
+            if (InformationString && *InformationString)
             {
                 wcscat(InstancePath, L"&");
             }
         }
-        if (IoStatusBlock.Information)
+        if (InformationString)
         {
-            wcscat(InstancePath, (PWSTR)IoStatusBlock.Information);
+            wcscat(InstancePath, InformationString);
         }
 
         /*
          * FIXME: Check for valid characters, if there is invalid characters
          * then bugcheck
          */
+
+        if (InformationString)
+        {
+            ExFreePoolWithTag(InformationString, 0);
+        }
     }
     else
     {
@@ -2076,13 +2085,14 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
                                &IoStatusBlock,
                                IRP_MN_QUERY_DEVICE_TEXT,
                                &Stack);
+    InformationString = NT_SUCCESS(Status) ? (PWSTR)IoStatusBlock.Information
+                                           : NULL;
     /* This key is mandatory, so even if the Irp fails, we still write it */
     RtlInitUnicodeString(&ValueName, L"DeviceDesc");
     if (ZwQueryValueKey(InstanceKey, &ValueName, KeyValueBasicInformation, NULL, 0, &RequiredLength) == STATUS_OBJECT_NAME_NOT_FOUND)
     {
-        if (NT_SUCCESS(Status) &&
-            IoStatusBlock.Information &&
-            (*(PWSTR)IoStatusBlock.Information != 0))
+        if (InformationString &&
+            *InformationString != UNICODE_NULL)
         {
             /* This key is overriden when a driver is installed. Don't write the
              * new description if another one already exists */
@@ -2090,8 +2100,8 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
                                    &ValueName,
                                    0,
                                    REG_SZ,
-                                   (PVOID)IoStatusBlock.Information,
-                                   ((ULONG)wcslen((PWSTR)IoStatusBlock.Information) + 1) * sizeof(WCHAR));
+                                   InformationString,
+                                   ((ULONG)wcslen(InformationString) + 1) * sizeof(WCHAR));
         }
         else
         {
@@ -2112,6 +2122,11 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
         }
     }
 
+    if (InformationString)
+    {
+        ExFreePoolWithTag(InformationString, 0);
+    }
+
     DPRINT("Sending IRP_MN_QUERY_DEVICE_TEXT.DeviceTextLocation to device stack\n");
 
     Stack.Parameters.QueryDeviceText.DeviceTextType = DeviceTextLocationInformation;
@@ -2122,18 +2137,21 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
                                &Stack);
     if (NT_SUCCESS(Status) && IoStatusBlock.Information)
     {
-        DPRINT("LocationInformation: %S\n", (PWSTR)IoStatusBlock.Information);
+        InformationString = (PWSTR)IoStatusBlock.Information;
+        DPRINT("LocationInformation: %S\n", InformationString);
         RtlInitUnicodeString(&ValueName, L"LocationInformation");
         Status = ZwSetValueKey(InstanceKey,
                                &ValueName,
                                0,
                                REG_SZ,
-                               (PVOID)IoStatusBlock.Information,
-                               ((ULONG)wcslen((PWSTR)IoStatusBlock.Information) + 1) * sizeof(WCHAR));
+                               InformationString,
+                               ((ULONG)wcslen(InformationString) + 1) * sizeof(WCHAR));
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("ZwSetValueKey() failed (Status %lx)\n", Status);
         }
+
+        ExFreePoolWithTag(InformationString, 0);
     }
     else
     {
@@ -2153,7 +2171,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
         DeviceNode->ChildBusNumber = BusInformation->BusNumber;
         DeviceNode->ChildInterfaceType = BusInformation->LegacyBusType;
         DeviceNode->ChildBusTypeIndex = IopGetBusTypeGuidIndex(&BusInformation->BusTypeGuid);
-        ExFreePool(BusInformation);
+        ExFreePoolWithTag(BusInformation, 0);
     }
     else
     {
