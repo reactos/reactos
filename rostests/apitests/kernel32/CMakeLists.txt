@@ -3,6 +3,7 @@ add_subdirectory(redirptest)
 
 list(APPEND SOURCE
     DefaultActCtx.c
+    DeviceIoControl.c
     dosdev.c
     FindActCtxSectionStringW.c
     FindFiles.c

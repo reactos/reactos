@@ -4,6 +4,7 @@
 #include <apitest.h>
 
 extern void func_DefaultActCtx(void);
+extern void func_DeviceIoControl(void);
 extern void func_dosdev(void);
 extern void func_FindActCtxSectionStringW(void);
 extern void func_FindFiles(void);
@@ -27,6 +28,7 @@ extern void func_WideCharToMultiByte(void);
 const struct test winetest_testlist[] =
 {
     { "DefaultActCtx",               func_DefaultActCtx },
+    { "DeviceIoControl",             func_DeviceIoControl },
     { "dosdev",                      func_dosdev },
     { "FindActCtxSectionStringW",    func_FindActCtxSectionStringW },
     { "FindFiles",                   func_FindFiles },
