@@ -43,6 +43,7 @@ list(APPEND SOURCE
     RtlInitializeBitMap.c
     RtlIsNameLegalDOS8Dot3.c
     RtlMemoryStream.c
+    RtlpEnsureBufferSize.c
     RtlReAllocateHeap.c
     RtlUpcaseUnicodeStringToCountedOemString.c
     StackOverflow.c

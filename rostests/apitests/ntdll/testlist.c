@@ -47,6 +47,7 @@ extern void func_RtlImageRvaToVa(void);
 extern void func_RtlInitializeBitMap(void);
 extern void func_RtlIsNameLegalDOS8Dot3(void);
 extern void func_RtlMemoryStream(void);
+extern void func_RtlpEnsureBufferSize(void);
 extern void func_RtlReAllocateHeap(void);
 extern void func_RtlUpcaseUnicodeStringToCountedOemString(void);
 extern void func_StackOverflow(void);
@@ -98,6 +99,7 @@ const struct test winetest_testlist[] =
     { "RtlInitializeBitMap",            func_RtlInitializeBitMap },
     { "RtlIsNameLegalDOS8Dot3",         func_RtlIsNameLegalDOS8Dot3 },
     { "RtlMemoryStream",                func_RtlMemoryStream },
+    { "RtlpEnsureBufferSize",           func_RtlpEnsureBufferSize },
     { "RtlReAllocateHeap",              func_RtlReAllocateHeap },
     { "RtlUpcaseUnicodeStringToCountedOemString", func_RtlUpcaseUnicodeStringToCountedOemString },
     { "StackOverflow",                  func_StackOverflow },
