@@ -2828,9 +2828,9 @@ NTSTATUS
 NTAPI
 RtlNtPathNameToDosPathName(
     _In_ ULONG Flags,
-    _Inout_ RTL_UNICODE_STRING_BUFFER* Path,
-    _Out_opt_ ULONG* PathType,
-    _Out_opt_ ULONG* Unknown
+    _Inout_ PRTL_UNICODE_STRING_BUFFER Path,
+    _Out_opt_ PULONG PathType,
+    _Out_opt_ PULONG Unknown
 );
 
 

@@ -10,7 +10,7 @@
 #define WIN32_NO_STATUS
 #include <ndk/rtlfuncs.h>
 
-NTSTATUS (NTAPI *pRtlNtPathNameToDosPathName)(ULONG Flags, RTL_UNICODE_STRING_BUFFER* Path, ULONG* Type, ULONG* Unknown4);
+NTSTATUS (NTAPI *pRtlNtPathNameToDosPathName)(ULONG Flags, PRTL_UNICODE_STRING_BUFFER Path, PULONG Type, PULONG Unknown4);
 
 #define ok_hex_(expression, result) \
     do { \

@@ -1792,9 +1792,9 @@ RtlDosPathNameToRelativeNtPathName_U_WithStatus(IN PCWSTR DosName,
  * @implemented
  */
 NTSTATUS NTAPI RtlNtPathNameToDosPathName(IN ULONG Flags,
-                                          IN OUT RTL_UNICODE_STRING_BUFFER* Path,
-                                          OUT ULONG* PathType,
-                                          ULONG* Unknown)
+                                          IN OUT PRTL_UNICODE_STRING_BUFFER Path,
+                                          OUT PULONG PathType,
+                                          PULONG Unknown)
 {
     PCUNICODE_STRING UsePrefix = NULL, AlternatePrefix = NULL;
 
@@ -1812,7 +1812,7 @@ NTSTATUS NTAPI RtlNtPathNameToDosPathName(IN ULONG Flags,
         if (PathType)
             *PathType = RTL_CONVERTED_UNC_PATH;
     }
-    else if (RtlPrefixUnicodeString(&RtlpDosDevicesPrefix, &Path->String, TRUE))
+    else if (RtlPrefixUnicodeString(&RtlpDosDevicesPrefix, &Path->String, FALSE))
     {
         UsePrefix = &RtlpDosDevicesPrefix;
         if (PathType)
