@@ -2817,6 +2817,23 @@ RtlDosPathNameToNtPathName_U(
     _Out_opt_ PRTL_RELATIVE_NAME_U DirectoryInfo
 );
 
+
+#define RTL_UNCHANGED_UNK_PATH  1
+#define RTL_CONVERTED_UNC_PATH  2
+#define RTL_CONVERTED_NT_PATH   3
+#define RTL_UNCHANGED_DOS_PATH  4
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlNtPathNameToDosPathName(
+    _In_ ULONG Flags,
+    _Inout_ RTL_UNICODE_STRING_BUFFER* Path,
+    _Out_opt_ ULONG* PathType,
+    _Out_opt_ ULONG* Unknown
+);
+
+
 NTSYSAPI
 BOOLEAN
 NTAPI

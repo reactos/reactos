@@ -43,11 +43,6 @@ struct test_entry
 };
 
 
-#define RTL_UNCHANGED_UNK_PATH  1
-#define RTL_CONVERTED_UNC_PATH  2
-#define RTL_CONVERTED_NT_PATH   3
-#define RTL_UNCHANGED_DOS_PATH  4
-
 static struct test_entry test_data[] =
 {
     /* Originally from RtlGetFullPathName_*.c (edited) */

@@ -784,7 +784,7 @@
 779 stdcall RtlNewSecurityObjectEx(ptr ptr ptr ptr long long ptr ptr)
 780 stdcall RtlNewSecurityObjectWithMultipleInheritance(ptr ptr ptr ptr long long long ptr ptr)
 781 stdcall RtlNormalizeProcessParams(ptr)
-782 stdcall RtlNtPathNameToDosPathName(ptr ptr ptr ptr) ; CHECKME
+782 stdcall RtlNtPathNameToDosPathName(long ptr ptr ptr) ; CHECKME (last arg)
 783 stdcall RtlNtStatusToDosError(long)
 784 stdcall RtlNtStatusToDosErrorNoTeb(long)
 785 stdcall RtlNumberGenericTableElements(ptr)

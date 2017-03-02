@@ -45,6 +45,8 @@ const UNICODE_STRING RtlpDosAUXDevice = RTL_CONSTANT_STRING(L"AUX");
 const UNICODE_STRING RtlpDosCONDevice = RTL_CONSTANT_STRING(L"CON");
 const UNICODE_STRING RtlpDosNULDevice = RTL_CONSTANT_STRING(L"NUL");
 
+const UNICODE_STRING RtlpDoubleSlashPrefix   = RTL_CONSTANT_STRING(L"\\\\");
+
 PRTLP_CURDIR_REF RtlpCurDirRef;
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -1787,13 +1789,89 @@ RtlDosPathNameToRelativeNtPathName_U_WithStatus(IN PCWSTR DosName,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
-NTSTATUS NTAPI
-RtlNtPathNameToDosPathName(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3, ULONG Unknown4)
+NTSTATUS NTAPI RtlNtPathNameToDosPathName(IN ULONG Flags,
+                                          IN OUT RTL_UNICODE_STRING_BUFFER* Path,
+                                          OUT ULONG* PathType,
+                                          ULONG* Unknown)
 {
-    DPRINT1("RtlNtPathNameToDosPathName: stub\n");
-    return STATUS_NOT_IMPLEMENTED;
+    PCUNICODE_STRING UsePrefix = NULL, AlternatePrefix = NULL;
+
+    if (PathType)
+        *PathType = 0;
+
+    if (!Path || Flags)
+        return STATUS_INVALID_PARAMETER;
+
+    /* The initial check is done on Path->String */
+    if (RtlPrefixUnicodeString(&RtlpDosDevicesUncPrefix, &Path->String, TRUE))
+    {
+        UsePrefix = &RtlpDosDevicesUncPrefix;
+        AlternatePrefix = &RtlpDoubleSlashPrefix;
+        if (PathType)
+            *PathType = RTL_CONVERTED_UNC_PATH;
+    }
+    else if (RtlPrefixUnicodeString(&RtlpDosDevicesPrefix, &Path->String, TRUE))
+    {
+        UsePrefix = &RtlpDosDevicesPrefix;
+        if (PathType)
+            *PathType = RTL_CONVERTED_NT_PATH;
+    }
+
+    if (UsePrefix)
+    {
+        NTSTATUS Status;
+
+        USHORT Len = Path->String.Length - UsePrefix->Length;
+        if (AlternatePrefix)
+            Len += AlternatePrefix->Length;
+
+        Status = RtlEnsureBufferSize(0, &Path->ByteBuffer, Len);
+        if (!NT_SUCCESS(Status))
+            return Status;
+
+        if (Len + sizeof(UNICODE_NULL) <= Path->ByteBuffer.Size)
+        {
+            /* Then, the contents of Path->ByteBuffer are always used... */
+            if (AlternatePrefix)
+            {
+                memcpy(Path->ByteBuffer.Buffer, AlternatePrefix->Buffer, AlternatePrefix->Length);
+                memmove(Path->ByteBuffer.Buffer + AlternatePrefix->Length, Path->ByteBuffer.Buffer + UsePrefix->Length,
+                    Len - AlternatePrefix->Length);
+            }
+            else
+            {
+                memmove(Path->ByteBuffer.Buffer, Path->ByteBuffer.Buffer + UsePrefix->Length, Len);
+            }
+            Path->String.Buffer = (PWSTR)Path->ByteBuffer.Buffer;
+            Path->String.Length = Len;
+            Path->String.MaximumLength = Path->ByteBuffer.Size;
+            Path->String.Buffer[Len / sizeof(WCHAR)] = UNICODE_NULL;
+        }
+        return STATUS_SUCCESS;
+    }
+
+    if (PathType)
+    {
+        switch (RtlDetermineDosPathNameType_Ustr(&Path->String))
+        {
+        case RtlPathTypeUncAbsolute:
+        case RtlPathTypeDriveAbsolute:
+        case RtlPathTypeLocalDevice:
+        case RtlPathTypeRootLocalDevice:
+            *PathType = RTL_UNCHANGED_DOS_PATH;
+            break;
+        case RtlPathTypeUnknown:
+        case RtlPathTypeDriveRelative:
+        case RtlPathTypeRooted:
+        case RtlPathTypeRelative:
+            *PathType = RTL_UNCHANGED_UNK_PATH;
+            break;
+        }
+    }
+
+    return STATUS_SUCCESS;
 }
 
 /*
