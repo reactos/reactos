@@ -1019,7 +1019,7 @@ HRESULT
 CDefaultContextMenu::DoDynamicShellExtensions(
     LPCMINVOKECOMMANDINFO lpcmi)
 {
-    TRACE("verb %p first %x last %x", lpcmi->lpVerb, m_iIdSHEFirst, m_iIdSHELast);
+    TRACE("verb %p first %x last %x\n", lpcmi->lpVerb, m_iIdSHEFirst, m_iIdSHELast);
 
     UINT idCmd = LOWORD(lpcmi->lpVerb);
     PDynamicShellEntry pEntry = GetDynamicEntry(idCmd);
