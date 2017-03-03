@@ -52,6 +52,24 @@ list(APPEND FONT_FILES
     LiberationSerif-BoldItalic.ttf
     LiberationSerif-Italic.ttf
     LiberationSerif-Regular.ttf
+    LibreFranklin-Black.ttf
+    LibreFranklin-BlackItalic.ttf
+    LibreFranklin-Bold.ttf
+    LibreFranklin-BoldItalic.ttf
+    LibreFranklin-ExtraBold.ttf
+    LibreFranklin-ExtraBoldItalic.ttf
+    LibreFranklin-ExtraLight.ttf
+    LibreFranklin-ExtraLightItalic.ttf
+    LibreFranklin-Italic.ttf
+    LibreFranklin-Light.ttf
+    LibreFranklin-LightItalic.ttf
+    LibreFranklin-Medium.ttf
+    LibreFranklin-MediumItalic.ttf
+    LibreFranklin-Regular.ttf
+    LibreFranklin-SemiBold.ttf
+    LibreFranklin-SemiBoldItalic.ttf
+    LibreFranklin-Thin.ttf
+    LibreFranklin-ThinItalic.ttf
     Marlett.ttf
     OpenSans-Bold.ttf
     OpenSans-BoldItalic.ttf
