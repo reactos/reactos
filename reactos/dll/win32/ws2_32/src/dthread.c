@@ -138,9 +138,11 @@ WsThreadAllocate(VOID)
 
     /* Allocate the object */
     Thread = HeapAlloc(WsSockHeap, HEAP_ZERO_MEMORY, sizeof(*Thread));
-
-    /* Set non-zero data */
-    Thread->BlockingHook = (FARPROC)WsThreadDefaultBlockingHook;
+    if (Thread)
+    {
+        /* Set non-zero data */
+        Thread->BlockingHook = (FARPROC)WsThreadDefaultBlockingHook;
+    }
 
     /* Return it */
     return Thread;

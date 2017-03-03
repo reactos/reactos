@@ -37,6 +37,8 @@ WsProcInitialize(IN PWSPROCESS Process)
     Process->ProtocolCatalogEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     Process->ProtocolCatalog = WsTcAllocate();
 
+    // FIXME: Check for Process->ProtocolCatalog == NULL
+
     /* Initialize it */
     WsTcInitializeFromRegistry(Process->ProtocolCatalog,
                                RootKey,
@@ -45,6 +47,8 @@ WsProcInitialize(IN PWSPROCESS Process)
     /* Create the NS Catalog change event and catalog */
     Process->NamespaceCatalogEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     Process->NamespaceCatalog = WsNcAllocate();
+
+    // FIXME: Check for Process->NamespaceCatalog == NULL
 
     /* Initialize it */
     ErrorCode = WsNcInitializeFromRegistry(Process->NamespaceCatalog,
@@ -64,9 +68,11 @@ WsProcAllocate(VOID)
 
     /* Allocate the structure */
     Process = HeapAlloc(WsSockHeap, HEAP_ZERO_MEMORY, sizeof(*Process));
-
-    /* Set default non-zero values */
-    Process->Version = MAKEWORD(2,2);
+    if (Process)
+    {
+        /* Set default non-zero values */
+        Process->Version = MAKEWORD(2,2);
+    }
 
     /* Return it */
     return Process;
@@ -296,6 +302,9 @@ WsProcDelete(IN PWSPROCESS Process)
 
     /* Delete the thread lock */
     DeleteCriticalSection(&Process->ThreadLock);
+
+    /* Delete us */
+    HeapFree(WsSockHeap, 0, Process);
 }
 
 VOID

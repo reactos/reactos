@@ -25,11 +25,13 @@ WsNqAllocate(VOID)
 
     /* Allocate the object */
     NsQuery = HeapAlloc(WsSockHeap, HEAP_ZERO_MEMORY, sizeof(*NsQuery));
-
-    /* Set non-zero fields */
-    NsQuery->Signature = ~0xBEADFACE;
-    InitializeListHead(&NsQuery->ProviderList);
-    NsQuery->TryAgain = TRUE;
+    if (NsQuery)
+    {
+        /* Set non-zero fields */
+        NsQuery->Signature = ~0xBEADFACE;
+        InitializeListHead(&NsQuery->ProviderList);
+        NsQuery->TryAgain = TRUE;
+    }
 
     /* Return it */
     return NsQuery;

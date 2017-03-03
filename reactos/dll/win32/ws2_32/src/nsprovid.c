@@ -66,12 +66,14 @@ WsNpAllocate(VOID)
 
     /* Allocate the object */
     Provider = HeapAlloc(WsSockHeap, HEAP_ZERO_MEMORY, sizeof(*Provider));
+    if (Provider)
+    {
+        /* Set non-null data */
+        Provider->RefCount = 1;
+        Provider->Service.cbSize = sizeof(NSP_ROUTINE);
+    }
 
-    /* Set non-null data */
-    Provider->RefCount = 1;
-    Provider->Service.cbSize = sizeof(NSP_ROUTINE);
-
-    /* Return us */
+    /* Return it */
     return Provider;
 }
 
@@ -129,6 +131,7 @@ WsNpInitialize(IN PNS_PROVIDER Provider,
 Fail:
     /* Bail out */
     if (Provider->DllHandle) FreeLibrary(Provider->DllHandle);
+    Provider->DllHandle = NULL;
     return ErrorCode;
 }
 
@@ -165,10 +168,11 @@ WsNpDelete(IN PNS_PROVIDER Provider)
 
         /* Unload the library */
         FreeLibrary(Provider->DllHandle);
-
-        /* Clear the handle value */
         Provider->DllHandle = NULL;
     }
+
+    /* Delete us */
+    HeapFree(WsSockHeap, 0, Provider);
 }
 
 VOID

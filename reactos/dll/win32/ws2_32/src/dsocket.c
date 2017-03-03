@@ -50,11 +50,13 @@ WsSockAllocate(VOID)
     PWSSOCKET Socket;
 
     /* Allocate the socket object */
-    Socket = HeapAlloc(WsSockHeap, HEAP_ZERO_MEMORY, sizeof(WSSOCKET));
-
-    /* Setup default non-zero values */
-    Socket->RefCount = 2;
-    Socket->Overlapped = TRUE;
+    Socket = HeapAlloc(WsSockHeap, HEAP_ZERO_MEMORY, sizeof(*Socket));
+    if (Socket)
+    {
+        /* Setup default non-zero values */
+        Socket->RefCount = 2;
+        Socket->Overlapped = TRUE;
+    }
 
     /* Return it */
     return Socket;
@@ -193,6 +195,9 @@ WsSockDelete(IN PWSSOCKET Socket)
         WsTcEntryDereference(Socket->CatalogEntry);
         Socket->CatalogEntry = NULL;
     }
+
+    /* Delete us */
+    HeapFree(WsSockHeap, 0, Socket);
 }
 
 VOID

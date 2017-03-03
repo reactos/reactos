@@ -20,11 +20,13 @@ WsNcEntryAllocate(VOID)
 
     /* Allocate the catalog */
     CatalogEntry = HeapAlloc(WsSockHeap, HEAP_ZERO_MEMORY, sizeof(*CatalogEntry));
-
-    /* Set the default non-null members */
-    CatalogEntry->RefCount = 1;
-    CatalogEntry->Enabled = TRUE;
-    CatalogEntry->AddressFamily = -1;
+    if (CatalogEntry)
+    {
+        /* Set the default non-null members */
+        CatalogEntry->RefCount = 1;
+        CatalogEntry->Enabled = TRUE;
+        CatalogEntry->AddressFamily = -1;
+    }
 
     /* Return it */
     return CatalogEntry;

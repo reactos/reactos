@@ -20,9 +20,11 @@ WsTcEntryAllocate(VOID)
 
     /* Allocate the catalog entry */
     CatalogEntry = HeapAlloc(WsSockHeap, HEAP_ZERO_MEMORY, sizeof(*CatalogEntry));
-
-    /* Set the default non-null members */
-    CatalogEntry->RefCount = 1;
+    if (CatalogEntry)
+    {
+        /* Set the default non-null members */
+        CatalogEntry->RefCount = 1;
+    }
 
     /* Return it */
     return CatalogEntry;

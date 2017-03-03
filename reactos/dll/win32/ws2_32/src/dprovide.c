@@ -21,12 +21,13 @@ WsTpAllocate(VOID)
 {
     PTPROVIDER Provider;
 
-    DPRINT("WsTpAllocate: WsSockHeap %d\n", WsSockHeap);
     /* Allocate the object */
     Provider = HeapAlloc(WsSockHeap, HEAP_ZERO_MEMORY, sizeof(*Provider));
-
-    /* Setup non-zero data */
-    Provider->RefCount = 1;
+    if (Provider)
+    {
+        /* Setup non-zero data */
+        Provider->RefCount = 1;
+    }
 
     /* Return it */
     return Provider;
@@ -130,10 +131,11 @@ WsTpDelete(IN PTPROVIDER Provider)
 
         /* Unload the library */
         FreeLibrary(Provider->DllHandle);
-
-        /* Clear the handle value */
         Provider->DllHandle = NULL;
     }
+
+    /* Delete us */
+    HeapFree(WsSockHeap, 0, Provider);
 }
 
 VOID
