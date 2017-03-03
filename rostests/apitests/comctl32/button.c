@@ -11,7 +11,7 @@
 #include <uxtheme.h>
 
 #define ok_rect(rc, l,r,t,b) ok((rc.left == (l)) && (rc.right == (r)) && (rc.top == (t)) && (rc.bottom == (b)), "Wrong rect. expected %d, %d, %d, %d got %ld, %ld, %ld, %ld\n", l,t,r,b, rc.left, rc.top, rc.right, rc.bottom)
-#define ok_size(s, width, height) ok((s.cx == (width) && s.cy == (height)), "Expected size (%lu,%lu) got (%lu,%lu)\n", width, height, s.cx, s.cy)
+#define ok_size(s, width, height) ok((s.cx == (width) && s.cy == (height)), "Expected size (%lu,%lu) got (%lu,%lu)\n", (LONG)width, (LONG)height, s.cx, s.cy)
 
 void Test_TextMargin()
 {
@@ -52,6 +52,17 @@ void Test_TextMargin()
     ok_rect(rc, 1000, 1000, 1000, 1000);
     
     DestroyWindow(hwnd1);
+
+    hwnd1 = CreateWindowW(L"Button", L"Test1", BS_DEFPUSHBUTTON, 10, 10, 100, 100, 0, NULL, NULL, NULL);
+    ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
+    SetWindowTheme(hwnd1, L"", L"");
+
+    ret = SendMessageW(hwnd1, BCM_GETTEXTMARGIN, 0, (LPARAM)&rc);
+    ok (ret == TRUE, "Expected BCM_GETTEXTMARGIN to succeed\n");
+    ok_rect(rc, 1, 1, 1, 1);
+
+    DestroyWindow(hwnd1);
+
 }
 
 void Test_Imagelist()
@@ -92,7 +103,7 @@ void Test_Imagelist()
 
 void Test_GetIdealSizeNoThemes()
 {
-    HWND hwnd1;
+    HWND hwnd1, hwnd2;
     BOOL ret;
     SIZE s, textent;
     HFONT font;
@@ -102,6 +113,7 @@ void Test_GetIdealSizeNoThemes()
     BUTTON_IMAGELIST imlData;
     RECT rc;
     LOGFONTW lf;
+    DWORD i;
 
     hwnd1 = CreateWindowW(L"Button", L" ", 0, 10, 10, 100, 100, 0, NULL, NULL, NULL);
     ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
@@ -121,6 +133,18 @@ void Test_GetIdealSizeNoThemes()
     DestroyWindow(hwnd1);
 
 
+    hwnd1 = CreateWindowW(L"Button", L" ", BS_USERBUTTON, 10, 10, 100, 100, 0, NULL, NULL, NULL);
+    ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
+    SetWindowTheme(hwnd1, L"", L"");
+
+    memset(&s, 0, sizeof(s));
+    ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
+    ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
+    ok_size(s, textent.cx + 5 + 2, 
+               textent.cy + 7 + 2); /* the last +2 is the text margin */
+
+    DestroyWindow(hwnd1);
+
 
 
     hwnd1 = CreateWindowW(L"Button", L"", 0, 10, 10, 100, 100, 0, NULL, NULL, NULL);
@@ -130,15 +154,13 @@ void Test_GetIdealSizeNoThemes()
     memset(&s, 0, sizeof(s));
     ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
     ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
-    ok (s.cx > 80, "Expected big cx\n");
-    ok (s.cy > 80, "Expected big cy\n");
+    ok_size(s, 123, 100);
 
     s.cx = 1;
     s.cy = 1;
     ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
     ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
-    ok (s.cx > 80, "Expected big cx\n");
-    ok (s.cy > 80, "Expected big cy\n");
+    ok_size(s, 123, 100);
 
     hbmp = LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(5), IMAGE_BITMAP, 0, 0, 0);
     ok (hbmp != 0, "Expected LoadImage to succeed\n");
@@ -148,8 +170,7 @@ void Test_GetIdealSizeNoThemes()
     memset(&s, 0, sizeof(s));
     ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
     ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
-    ok (s.cx > 80, "Expected big cx\n");
-    ok (s.cy > 80, "Expected big cy\n");
+    ok_size(s, 123, 100);
 
     himl = ImageList_LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(5), 1, 1, 0, IMAGE_BITMAP, 0);
     ok (himl != 0, "Expected ImageList_LoadImage to succeed\n");
@@ -162,8 +183,22 @@ void Test_GetIdealSizeNoThemes()
     memset(&s, 0, sizeof(s));
     ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
     ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
-    ok (s.cx > 80, "Expected big cx\n");
-    ok (s.cy > 80, "Expected big cy\n");
+    ok_size(s, 123, 100);
+
+    DestroyWindow(hwnd1);
+
+
+
+
+
+    hwnd1 = CreateWindowW(L"Button", L"", 0, 10, 10, 5, 5, 0, NULL, NULL, NULL);
+    ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
+    SetWindowTheme(hwnd1, L"", L"");
+
+    memset(&s, 0, sizeof(s));
+    ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
+    ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
+    ok_size(s, 123, 34);
 
     DestroyWindow(hwnd1);
 
@@ -326,9 +361,45 @@ void Test_GetIdealSizeNoThemes()
 
     DestroyWindow(hwnd1);
 
+    hwnd1 = CreateWindowW(L"Static", L"", 0, 0, 0, 100, 100, 0, NULL, NULL, NULL);
+    ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
 
+    for (i = BS_CHECKBOX; i <= BS_OWNERDRAW; i++)
+    {
+        if (i == BS_USERBUTTON)
+            continue;
 
+        hwnd2 = CreateWindowW(L"Button", L" ", i, 0, 0, 72, 72, hwnd1, NULL, NULL, NULL);
+        ok (hwnd2 != NULL, "Expected CreateWindowW to succeed\n");
+        memset(&s, 0, sizeof(s));
+        ret = SendMessageW(hwnd2, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
+        ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
+        ok_size(s, 123, 72);
 
+        SetWindowTheme(hwnd2, L"", L"");
+        memset(&s, 0, sizeof(s));
+        ret = SendMessageW(hwnd2, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
+        ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
+        ok_size(s, 123, 72);
+        DestroyWindow(hwnd2);
+
+        hwnd2 = CreateWindowW(L"Button", L" ", i, 0, 0, 12, 12, hwnd1, NULL, NULL, NULL);
+        ok (hwnd2 != NULL, "Expected CreateWindowW to succeed\n");
+        memset(&s, 0, sizeof(s));
+        ret = SendMessageW(hwnd2, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
+        ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
+        ok_size(s, 123, 34);
+        DestroyWindow(hwnd2);
+
+        hwnd2 = CreateWindowW(L"Button", L"", i, 0, 0, 72, 72, hwnd1, NULL, NULL, NULL);
+        ok (hwnd2 != NULL, "Expected CreateWindowW to succeed\n");
+        memset(&s, 0, sizeof(s));
+        ret = SendMessageW(hwnd2, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
+        ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
+        ok_size(s, 123, 72);
+        DestroyWindow(hwnd2);
+    }
+    DestroyWindow(hwnd1);
 }
 
 START_TEST(button)
