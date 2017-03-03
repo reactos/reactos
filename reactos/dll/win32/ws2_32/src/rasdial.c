@@ -110,13 +110,13 @@ WsRasLoadHelperDll(VOID)
         if (WsRasDllHandle)
         {
             /* Get function pointers */
-            lpfnWSAttemptAutodialAddr = 
+            lpfnWSAttemptAutodialAddr =
                 (PVOID)GetProcAddress(WsRasDllHandle,
                                       "WSAttemptAutodialAddr");
-            lpfnWSAttemptAutodialName = 
+            lpfnWSAttemptAutodialName =
                 (PVOID)GetProcAddress(WsRasDllHandle,
                                       "WSAttemptAutodialName");
-            lpfnWSNoteSuccessfulHostentLookup = 
+            lpfnWSNoteSuccessfulHostentLookup =
                 (PVOID)GetProcAddress(WsRasDllHandle,
                                       "WSNoteSuccessfulHostentLookup");
         }

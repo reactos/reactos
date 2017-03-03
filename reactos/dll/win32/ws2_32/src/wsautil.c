@@ -26,7 +26,7 @@ WsOpenRegistryRoot(VOID)
                              0,
                              MAXIMUM_ALLOWED,
                              &WinsockRootKey);
-    
+
     /* Check if it wasn't found */
     if (ErrorCode == ERROR_FILE_NOT_FOUND)
     {

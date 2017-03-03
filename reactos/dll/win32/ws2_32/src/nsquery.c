@@ -22,7 +22,7 @@ WSAAPI
 WsNqAllocate(VOID)
 {
     PNSQUERY NsQuery;
-    
+
     /* Allocate the object */
     NsQuery = HeapAlloc(WsSockHeap, HEAP_ZERO_MEMORY, sizeof(*NsQuery));
 
@@ -30,7 +30,7 @@ WsNqAllocate(VOID)
     NsQuery->Signature = ~0xBEADFACE;
     InitializeListHead(&NsQuery->ProviderList);
     NsQuery->TryAgain = TRUE;
-    
+
     /* Return it */
     return NsQuery;
 }
@@ -73,7 +73,7 @@ WsNqDelete(IN PNSQUERY NsQuery)
 {
     PNSQUERY_PROVIDER Provider;
     PLIST_ENTRY Entry;
-    
+
     /* Make sure that we got initialized */
     if (!NsQuery->ProviderList.Flink) return;
 
@@ -163,7 +163,7 @@ WsNqLookupServiceEnd(IN PNSQUERY NsQuery)
 {
     PNSQUERY_PROVIDER Provider;
     PLIST_ENTRY Entry;
-    
+
     /* Protect us from closure */
     WsNqLock();
     NsQuery->ShuttingDown = TRUE;
@@ -266,7 +266,7 @@ WsNqLookupServiceNext(IN PNSQUERY NsQuery,
 
                 /* Save the current active provider */
                 Provider = NsQuery->ActiveProvider;
-                
+
                 /* Check if one exists */
                 if (Provider)
                 {
@@ -313,7 +313,7 @@ WsNqLookupServiceNext(IN PNSQUERY NsQuery,
                             /* Reset it */
                             WsNqProvLookupServiceEnd(Provider);
                             WsNqProvDelete(Provider);
-                        }                  
+                        }
 
                         /* Start a new query */
                         if (!WsNqLookupServiceBegin(NsQuery,
@@ -322,7 +322,7 @@ WsNqLookupServiceNext(IN PNSQUERY NsQuery,
                                                     NsQuery->Catalog))
                         {
                             /* New query succeeded, set active provider now */
-                            NsQuery->ActiveProvider = 
+                            NsQuery->ActiveProvider =
                                 WsNqNextProvider(NsQuery,
                                                  NsQuery->ActiveProvider);
                         }
@@ -338,7 +338,7 @@ WsNqLookupServiceNext(IN PNSQUERY NsQuery,
                 WsNqUnlock();
 
                 /* Keep looping as long as there is a provider */
-            } while (NextProvider);   
+            } while (NextProvider);
         }
     }
     else
@@ -390,7 +390,7 @@ WsNqLookupServiceBegin(IN PNSQUERY NsQuery,
         NsQuery->ControlFlags = ControlFlags;
         NsQuery->Catalog = Catalog;
     }
-    
+
     /* Check if we have a specific ID */
     if (Restrictions->lpNSProviderId)
     {
@@ -425,7 +425,7 @@ WsNqLookupServiceBegin(IN PNSQUERY NsQuery,
                                   WsNqBeginEnumerationProc,
                                   &EnumContext);
         ErrorCode = EnumContext.ErrorCode;
-        
+
         /* Check for success */
         if (ErrorCode != ERROR_SUCCESS)
         {
@@ -521,7 +521,7 @@ WsNqNextProvider(IN PNSQUERY Query,
 {
     PNSQUERY_PROVIDER NextProvider = NULL;
     PLIST_ENTRY Entry;
-    
+
     /* Get the first entry and get its provider */
     Entry = Provider->QueryLink.Flink;
     if (Entry != &Query->ProviderList)
@@ -541,7 +541,7 @@ WsNqPreviousProvider(IN PNSQUERY Query,
 {
     PNSQUERY_PROVIDER NextProvider = NULL;
     PLIST_ENTRY Entry;
-    
+
     /* Get the first entry and get its provider */
     Entry = Provider->QueryLink.Blink;
     if (Entry != &Query->ProviderList)
@@ -561,7 +561,7 @@ WsNqAddProvider(IN PNSQUERY Query,
 {
     PNSQUERY_PROVIDER QueryProvider;
     DWORD Return = TRUE;
-    
+
     /* Allocate a new Query Provider */
     if ((QueryProvider = WsNqProvAllocate()))
     {

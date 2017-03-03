@@ -204,14 +204,14 @@ ComputeQuerySetSize(IN LPWSAQUERYSETA AnsiSet,
             if (AnsiSet->lpcsaBuffer[i].LocalAddr.lpSockaddr)
             {
                 /* Align the current size and add the sockaddr's length */
-                Size = (Size + 3) & ~3; 
+                Size = (Size + 3) & ~3;
                 Size += AnsiSet->lpcsaBuffer[i].LocalAddr.iSockaddrLength;
             }
             /* Check for remote sockaddr */
             if (AnsiSet->lpcsaBuffer[i].RemoteAddr.lpSockaddr)
             {
                 /* Align the current size and add the sockaddr's length */
-                Size = (Size + 3) & ~3; 
+                Size = (Size + 3) & ~3;
                 Size += AnsiSet->lpcsaBuffer[i].RemoteAddr.iSockaddrLength;
             }
 
@@ -825,11 +825,11 @@ MapAnsiQuerySetToUnicode(IN LPWSAQUERYSETA AnsiSet,
         ErrorCode = WSA_NOT_ENOUGH_MEMORY;
         goto error;
     }
-    
+
     /* Build the relative buffer version */
     ErrorCode = WSABuildQuerySetBufferA(AnsiSet, AnsiSize, AnsiCopy);
     if (ErrorCode != ERROR_SUCCESS) goto error;
-        
+
     /* Re-use the ANSI version since the fields match */
     UnicodeCopy = (LPWSAQUERYSETW)AnsiCopy;
 
@@ -946,11 +946,11 @@ MapUnicodeQuerySetToAnsi(OUT LPWSAQUERYSETW UnicodeSet,
         ErrorCode = WSA_NOT_ENOUGH_MEMORY;
         goto error;
     }
-    
+
     /* Build the relative buffer version */
     ErrorCode = WSABuildQuerySetBufferW(UnicodeSet, UnicodeSize, UnicodeCopy);
     if (ErrorCode != ERROR_SUCCESS) goto error;
-        
+
     /* Re-use the Unicode version since the fields match */
     AnsiCopy = (LPWSAQUERYSETA)UnicodeCopy;
 

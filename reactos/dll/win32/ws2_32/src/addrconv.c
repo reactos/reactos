@@ -272,7 +272,7 @@ WSAHtonl(IN SOCKET s,
     INT ErrorCode;
     PWSSOCKET Socket;
     DPRINT("WSAHtonl: %p, %lx, %p\n", s, hostlong, lpnetlong);
-    
+
     /* Check for WSAStartup */
     if ((ErrorCode = WsQuickProlog()) == ERROR_SUCCESS)
     {
@@ -330,7 +330,7 @@ WSAHtons(IN SOCKET s,
     INT ErrorCode;
     PWSSOCKET Socket;
     DPRINT("WSAHtons: %p, %lx, %p\n", s, hostshort, lpnetshort);
-    
+
     /* Check for WSAStartup */
     if ((ErrorCode = WsQuickProlog()) == ERROR_SUCCESS)
     {
@@ -388,7 +388,7 @@ WSANtohl(IN SOCKET s,
     INT ErrorCode;
     PWSSOCKET Socket;
     DPRINT("WSANtohl: %p, %lx, %p\n", s, netlong, lphostlong);
-    
+
     /* Check for WSAStartup */
     if ((ErrorCode = WsQuickProlog()) == ERROR_SUCCESS)
     {
@@ -446,7 +446,7 @@ WSANtohs(IN SOCKET s,
     INT ErrorCode;
     PWSSOCKET Socket;
     DPRINT("WSANtohs: %p, %lx, %p\n", s, netshort, lphostshort);
-    
+
     /* Check for WSAStartup */
     if ((ErrorCode = WsQuickProlog()) == ERROR_SUCCESS)
     {

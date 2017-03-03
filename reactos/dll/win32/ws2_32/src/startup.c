@@ -42,8 +42,8 @@ WsDestroyStartupSynchronization(VOID)
 /*
  * @implemented
  */
-BOOL 
-WSAAPI 
+BOOL
+WSAAPI
 WSApSetPostRoutine(PVOID Routine)
 {
     /* Set the post routine */
@@ -180,7 +180,7 @@ WSAStartup(IN WORD wVersionRequested,
     lstrcpy(lpWSAData->szDescription, "WinSock 2.0");
     lstrcpy(lpWSAData->szSystemStatus, "Running");
 
-    /* 
+    /*
      * On Winsock 1, the following values are returned.
      * Taken straight from a Winsock Test app on Windows.
      */
@@ -188,13 +188,13 @@ WSAStartup(IN WORD wVersionRequested,
     {
         lpWSAData->iMaxSockets = 32767;
         lpWSAData->iMaxUdpDg = 65467;
-    } 
+    }
     else
     {
         lpWSAData->iMaxSockets = 0;
         lpWSAData->iMaxUdpDg = 0;
     }
- 
+
     /* Requested invalid version (0) */
     if (ErrorCode != ERROR_SUCCESS)
     {

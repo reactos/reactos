@@ -954,7 +954,7 @@ WsAsyncCancelRequest(IN HANDLE TaskHandle)
             WsAsyncFreeBlock(AsyncBlock);
             return NO_ERROR;
         }
-        
+
         /* Move to the next entry */
         Entry = Entry->Flink;
     }

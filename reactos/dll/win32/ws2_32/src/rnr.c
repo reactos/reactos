@@ -74,7 +74,7 @@ WSAAddressToStringA(IN LPSOCKADDR lpsaAddress,
                                        lpsaAddress->sa_family,
                                        &CatalogEntry);
     }
-    
+
     /* Check for success */
     if (ErrorCode == ERROR_SUCCESS)
     {
@@ -167,7 +167,7 @@ WSAAddressToStringW(IN LPSOCKADDR lpsaAddress,
                                        lpsaAddress->sa_family,
                                        &CatalogEntry);
     }
-    
+
     /* Check for success */
     if (ErrorCode == ERROR_SUCCESS)
     {
@@ -249,7 +249,7 @@ WSALookupServiceBeginA(IN LPWSAQUERYSETA lpqsRestrictions,
     DPRINT("WSALookupServiceBeginA: %p\n", lpqsRestrictions);
 
     /* Verify pointer */
-    if (IsBadReadPtr(lpqsRestrictions, sizeof(*lpqsRestrictions)) || 
+    if (IsBadReadPtr(lpqsRestrictions, sizeof(*lpqsRestrictions)) ||
         IsBadReadPtr(lpqsRestrictions->lpServiceClassId, sizeof(*lpqsRestrictions->lpServiceClassId)))
     {
         /* Invalid */
@@ -313,7 +313,7 @@ WSALookupServiceBeginA(IN LPWSAQUERYSETA lpqsRestrictions,
 /*
  * @implemented
  */
-INT 
+INT
 WINAPI
 WSALookupServiceBeginW(IN LPWSAQUERYSETW lpqsRestrictions,
                        IN DWORD dwControlFlags,
@@ -374,7 +374,7 @@ WSALookupServiceBeginW(IN LPWSAQUERYSETW lpqsRestrictions,
         ErrorCode = SOCKET_ERROR;
         SetLastError(WSAENOBUFS);
     }
-    
+
     /* Return */
     return ErrorCode;
 }
@@ -864,7 +864,7 @@ WSAStringToAddressA(IN LPSTR AddressString,
         /* Get it from the address family */
         ErrorCode = WsTcGetEntryFromAf(Catalog, AddressFamily, &CatalogEntry);
     }
-    
+
     /* Check for success */
     if (ErrorCode == ERROR_SUCCESS)
     {
@@ -943,7 +943,7 @@ WSAStringToAddressW(IN LPWSTR AddressString,
         /* Get it from the address family */
         ErrorCode = WsTcGetEntryFromAf(Catalog, AddressFamily, &CatalogEntry);
     }
-    
+
     /* Check for success */
     if (ErrorCode == ERROR_SUCCESS)
     {

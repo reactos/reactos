@@ -33,7 +33,7 @@ DllMain(HANDLE hModule,
     PWSPROCESS WsProcess;
 
     /* Main Entrypoint */
-    switch (dwReason) 
+    switch (dwReason)
     {
         case DLL_PROCESS_ATTACH:
             /* Save DLL Handle */

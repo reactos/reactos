@@ -27,16 +27,16 @@ WSADuplicateSocketA(IN SOCKET s,
     WSAPROTOCOL_INFOW ProtocolInfoW;
     INT ErrorCode;
     DPRINT("WSADuplicateSocketA: %lx, %lx, %p\n", s, dwProcessId, lpProtocolInfo);
-  
+
     /* Call the Unicode Function */
     ErrorCode = WSADuplicateSocketW(s, dwProcessId, &ProtocolInfoW);
 
     /* Check for success */
     if (ErrorCode == ERROR_SUCCESS)
-    {                          
+    {
         /* Convert Protocol Info to Ansi */
-        if (lpProtocolInfo) 
-        {    
+        if (lpProtocolInfo)
+        {
             /* Convert the information to ANSI */
             ErrorCode = MapUnicodeProtocolInfoToAnsi(&ProtocolInfoW,
                                                      lpProtocolInfo);

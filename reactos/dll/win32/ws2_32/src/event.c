@@ -79,10 +79,10 @@ WSAWaitForMultipleEvents(IN DWORD cEvents,
                          IN BOOL fAlertable)
 {
     /* Call Win32 */
-    return WaitForMultipleObjectsEx(cEvents, 
-                                    lphEvents, 
-                                    fWaitAll, 
-                                    dwTimeout, 
+    return WaitForMultipleObjectsEx(cEvents,
+                                    lphEvents,
+                                    fWaitAll,
+                                    dwTimeout,
                                     fAlertable);
 }
 

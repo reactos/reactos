@@ -16,16 +16,16 @@
 /* DATA **********************************************************************/
 
 AFPROTOCOLS afp[2] = {{AF_INET, IPPROTO_UDP}, {AF_INET, IPPROTO_TCP}};
-                     
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
 WSAAPI
-FixList(PCHAR **List, 
+FixList(PCHAR **List,
         ULONG_PTR Base)
 {
     /* Make sure it's valid */
-    if(*List)
+    if (*List)
     {
         PCHAR *Addr;
 
@@ -33,7 +33,7 @@ FixList(PCHAR **List,
         Addr = *List = (PCHAR*)(((ULONG_PTR)*List + Base));
 
         /* Loop the pointers */
-        while(*Addr)
+        while (*Addr)
         {
             /* Rebase them too */
             *Addr = (PCHAR)(((ULONG_PTR)*Addr + Base));
@@ -63,7 +63,7 @@ UnpackHostEnt(PHOSTENT Hostent)
     ULONG_PTR HostentPtr = (ULONG_PTR)Hostent;
 
     /* Convert the Name Offset to a Pointer */
-    if(Hostent->h_name) Hostent->h_name = (PCHAR)(Hostent->h_name + HostentPtr);
+    if (Hostent->h_name) Hostent->h_name = (PCHAR)(Hostent->h_name + HostentPtr);
 
     /* Convert all the List Offsets to Pointers */
     FixList(&Hostent->h_aliases, HostentPtr);
@@ -126,7 +126,7 @@ getxyDataEnt(IN OUT PCHAR *Results,
     WsaQuery->dwNumberOfProtocols = sizeof(afp)/sizeof(afp[0]);
     WsaQuery->lpafpProtocols = afp;
 
-    if(!IsEqualGUID(Type, &HostnameGuid))
+    if (!IsEqualGUID(Type, &HostnameGuid))
         dwControlFlags |= LUP_RETURN_BLOB;
 
     /* Send the Query Request to find a Service */
@@ -134,7 +134,7 @@ getxyDataEnt(IN OUT PCHAR *Results,
                                        dwControlFlags,
                                        &RnRHandle);
 
-    if(ErrorCode == ERROR_SUCCESS) 
+    if (ErrorCode == ERROR_SUCCESS)
     {
         while (TRUE)
         {
@@ -145,22 +145,22 @@ getxyDataEnt(IN OUT PCHAR *Results,
                                               WsaQuery);
 
             /* Return the information requested */
-            if(ErrorCode == ERROR_SUCCESS) 
+            if (ErrorCode == ERROR_SUCCESS)
             {
                 /* Get the Blob and check if we have one */
                 Blob = WsaQuery->lpBlob;
-                if(Blob) 
+                if (Blob)
                 {
                     /* Did they want the name back? */
-                    if(NewName) *NewName = WsaQuery->lpszServiceInstanceName;
-                } 
-                else 
+                    if (NewName) *NewName = WsaQuery->lpszServiceInstanceName;
+                }
+                else
                 {
                     /* Check if this was a Hostname lookup */
                     if (IsEqualGUID(Type, &HostnameGuid))
                     {
                         /* Return the name anyways */
-                        if(NewName) *NewName = WsaQuery->lpszServiceInstanceName;
+                        if (NewName) *NewName = WsaQuery->lpszServiceInstanceName;
                     }
                     else
                     {
@@ -168,8 +168,8 @@ getxyDataEnt(IN OUT PCHAR *Results,
                         ErrorCode = WSANO_DATA;
                     }
                 }
-            } 
-            else 
+            }
+            else
             {
                 /* WSALookupServiceEnd will set its own error, so save ours */
                 ErrorCode = GetLastError();
@@ -197,12 +197,12 @@ getxyDataEnt(IN OUT PCHAR *Results,
                     }
                 }
             }
-        
+
             /* Finish the Query Request */
             WSALookupServiceEnd(RnRHandle);
 
             /* Now set the Last Error */
-            if(ErrorCode != ERROR_SUCCESS) SetLastError(ErrorCode);
+            if (ErrorCode != ERROR_SUCCESS) SetLastError(ErrorCode);
 
             /* Leave the loop */
             break;
@@ -240,13 +240,13 @@ gethostbyname(IN const char FAR * name)
     }
 
     /* Check if no name was given */
-    if(!name || !*name) 
+    if (!name || !*name)
     {
         /* This means we should do a local lookup first */
-        if(gethostname(szLocalName, MAX_HOSTNAME_LEN) != NO_ERROR) return(NULL);
+        if (gethostname(szLocalName, MAX_HOSTNAME_LEN) != NO_ERROR) return(NULL);
         pszName = szLocalName;
-    } 
-    else 
+    }
+    else
     {
         /* Use the name tha twas given to us */
         pszName = (PCHAR)name;
@@ -258,7 +258,7 @@ gethostbyname(IN const char FAR * name)
                         pszName,
                         &HostAddrByNameGuid,
                         0);
-    
+
     /* Check if we didn't get a blob, or if we got an empty name */
     if (!(Blob) && (!(name) || !(*name)))
     {
@@ -271,21 +271,21 @@ gethostbyname(IN const char FAR * name)
     }
 
     /* Check if we got a blob */
-    if(Blob) 
+    if (Blob)
     {
         /* Copy the blob to our buffer and convert it */
         Hostent = WsThreadBlobToHostent(Thread, Blob);
 
         /* Unpack the hostent */
-        if(Hostent) UnpackHostEnt(Hostent);
-    } 
-    else 
+        if (Hostent) UnpackHostEnt(Hostent);
+    }
+    else
     {
         /* We failed, so zero it out */
         Hostent = NULL;
 
         /* Normalize the error message */
-        if(GetLastError() == WSASERVICE_NOT_FOUND) 
+        if (GetLastError() == WSASERVICE_NOT_FOUND)
         {
             SetLastError(WSAHOST_NOT_FOUND);
         }
@@ -360,23 +360,23 @@ gethostbyaddr(IN const char FAR * addr,
                         AddressBuffer,
                         &AddressGuid,
                         0);
-    
+
     /* Check if we got a blob */
-    if(Blob) 
+    if (Blob)
     {
         /* Copy the blob to our buffer and convert it */
         Hostent = WsThreadBlobToHostent(Thread, Blob);
 
         /* Unpack the hostent */
-        if(Hostent) UnpackHostEnt(Hostent);
-    } 
-    else 
+        if (Hostent) UnpackHostEnt(Hostent);
+    }
+    else
     {
         /* We failed, so zero it out */
         Hostent = NULL;
 
         /* Normalize the error message */
-        if(GetLastError() == WSASERVICE_NOT_FOUND) 
+        if (GetLastError() == WSASERVICE_NOT_FOUND)
         {
             SetLastError(WSAHOST_NOT_FOUND);
         }
@@ -410,7 +410,7 @@ gethostname(OUT char FAR * name,
     /* Get the Hostname in a String */
     /* getxyDataEnt does not return blob for HostnameGuid */
     getxyDataEnt(&Results, RNR_BUFFER_SIZE, NULL, &HostnameGuid, &Name);
-    if(Name)
+    if (Name)
     {
         /* Copy it */
         strncpy(name, Name, namelen-1);
@@ -450,7 +450,7 @@ getservbyport(IN int port,
     }
 
     /* No protocol specified */
-    if(!proto) proto = "";
+    if (!proto) proto = "";
 
     /* Allocate memory for the port name */
     PortName = HeapAlloc(WsSockHeap, 0, strlen(proto) + 1 + 1 + 5);
@@ -471,15 +471,15 @@ getservbyport(IN int port,
     HeapFree(WsSockHeap, 0, PortName);
 
     /* Check if we got a blob */
-    if(Blob) 
+    if (Blob)
     {
         /* Copy the blob to our buffer and convert it */
         Servent = WsThreadBlobToServent(Thread, Blob);
 
         /* Unpack the hostent */
-        if(Servent) UnpackServEnt(Servent);
-    } 
-    else 
+        if (Servent) UnpackServEnt(Servent);
+    }
+    else
     {
         /* We failed, so zero it out */
         Servent = 0;
@@ -519,7 +519,7 @@ getservbyname(IN const char FAR * name,
     }
 
     /* No protocol specified */
-    if(!proto) proto = "";
+    if (!proto) proto = "";
 
     /* Allocate buffer for it */
     PortName = HeapAlloc(WsSockHeap, 0, strlen(proto) + 1 + strlen(name) + 1);
@@ -540,15 +540,15 @@ getservbyname(IN const char FAR * name,
     HeapFree(WsSockHeap, 0, PortName);
 
     /* Check if we got a blob */
-    if(Blob) 
+    if (Blob)
     {
         /* Copy the blob to our buffer and convert it */
         Servent = WsThreadBlobToServent(Thread, Blob);
 
         /* Unpack the hostent */
-        if(Servent) UnpackServEnt(Servent);
-    } 
-    else 
+        if (Servent) UnpackServEnt(Servent);
+    }
+    else
     {
         /* We failed, so zero it out */
         Servent = 0;
@@ -568,10 +568,10 @@ HANDLE
 WSAAPI
 WSAAsyncGetHostByAddr(IN HWND hWnd,
                       IN UINT wMsg,
-                      IN CONST CHAR FAR *Address, 
+                      IN CONST CHAR FAR *Address,
                       IN INT Length,
-                      IN INT Type, 
-                      OUT CHAR FAR *Buffer, 
+                      IN INT Type,
+                      OUT CHAR FAR *Buffer,
                       IN INT BufferLength)
 {
     HANDLE TaskHandle;
@@ -633,10 +633,10 @@ WSAAsyncGetHostByAddr(IN HWND hWnd,
  */
 HANDLE
 WSAAPI
-WSAAsyncGetHostByName(IN HWND hWnd, 
-                      IN UINT wMsg,  
-                      IN CONST CHAR FAR *Name, 
-                      OUT CHAR FAR *Buffer, 
+WSAAsyncGetHostByName(IN HWND hWnd,
+                      IN UINT wMsg,
+                      IN CONST CHAR FAR *Name,
+                      OUT CHAR FAR *Buffer,
                       IN INT BufferLength)
 {
     HANDLE TaskHandle;
@@ -771,7 +771,7 @@ WSAAsyncGetProtoByNumber(IN HWND hWnd,
     PWSASYNCBLOCK AsyncBlock;
     INT ErrorCode;
     DPRINT("WSAAsyncGetProtoByNumber: %lx, %lx, %lx\n", hWnd, wMsg, Number);
-    
+
     /* Enter prolog */
     if ((ErrorCode = WsApiProlog(&Process, &Thread)) != ERROR_SUCCESS)
     {
@@ -831,7 +831,7 @@ WSAAsyncGetServByName(IN HWND hWnd,
     INT ErrorCode;
     PVOID NameCopy;
     DPRINT("WSAAsyncGetProtoByNumber: %lx, %lx, %s\n", hWnd, wMsg, Name);
-    
+
     /* Enter prolog */
     if ((ErrorCode = WsApiProlog(&Process, &Thread)) != ERROR_SUCCESS)
     {
@@ -895,7 +895,7 @@ WSAAsyncGetServByPort(IN HWND hWnd,
     PWSASYNCBLOCK AsyncBlock;
     INT ErrorCode;
     DPRINT("WSAAsyncGetProtoByNumber: %lx, %lx, %lx\n", hWnd, wMsg, Port);
-    
+
     /* Enter prolog */
     if ((ErrorCode = WsApiProlog(&Process, &Thread)) != ERROR_SUCCESS)
     {
@@ -948,7 +948,7 @@ WSACancelAsyncRequest(IN HANDLE hAsyncTaskHandle)
     PWSTHREAD Thread;
     INT ErrorCode;
     DPRINT("WSACancelAsyncRequest: %lx\n", hAsyncTaskHandle);
-    
+
     /* Enter prolog */
     if ((ErrorCode = WsApiProlog(&Process, &Thread)) == ERROR_SUCCESS)
     {
@@ -958,7 +958,7 @@ WSACancelAsyncRequest(IN HANDLE hAsyncTaskHandle)
         /* Return */
         if (ErrorCode == ERROR_SUCCESS) return ERROR_SUCCESS;
     }
-    
+
     /* Fail */
     SetLastError(ErrorCode);
     return SOCKET_ERROR;

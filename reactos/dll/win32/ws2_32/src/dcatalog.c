@@ -25,7 +25,7 @@ WSAAPI
 WsTcAllocate(VOID)
 {
     PTCATALOG Catalog;
-    
+
     /* Allocate the object */
     Catalog = HeapAlloc(WsSockHeap, HEAP_ZERO_MEMORY, sizeof(*Catalog));
 
@@ -283,7 +283,7 @@ WsTcRefreshFromRegistry(IN PTCATALOG Catalog,
             ErrorCode = WSASYSCALLFAILURE;
             break;
         }
-        
+
         /* Get the next entry */
         ErrorCode = RegQueryValueEx(Catalog->CatalogKey,
                                     "Next_Catalog_Entry_ID",
@@ -313,7 +313,7 @@ WsTcRefreshFromRegistry(IN PTCATALOG Catalog,
         }
 
         /* Initialize them all */
-        for (i = 1; i <= CatalogEntries; i++) 
+        for (i = 1; i <= CatalogEntries; i++)
         {
             /* Allocate a Catalog Entry Structure */
             CatalogEntry = WsTcEntryAllocate();
@@ -517,13 +517,13 @@ WsTcGetEntryFromTriplet(IN PTCATALOG Catalog,
 
         /* Check if Address Family Matches or if it's wildcard */
         if ((Entry->ProtocolInfo.iAddressFamily == af) || (af == AF_UNSPEC))
-        {    
+        {
             /* Check if Socket Type Matches or if it's wildcard */
             if ((Entry->ProtocolInfo.iSocketType == type) || (type == 0))
             {
                 /* Check if Protocol is In Range or if it's wildcard */
-                if (((Entry->ProtocolInfo.iProtocol <= protocol) && 
-                    ((Entry->ProtocolInfo.iProtocol + 
+                if (((Entry->ProtocolInfo.iProtocol <= protocol) &&
+                    ((Entry->ProtocolInfo.iProtocol +
                       Entry->ProtocolInfo.iProtocolMaxOffset) >= protocol)) ||
                     (protocol == 0))
                 {
@@ -542,18 +542,18 @@ WsTcGetEntryFromTriplet(IN PTCATALOG Catalog,
                     *CatalogEntry = Entry;
                     ErrorCode = ERROR_SUCCESS;
                     break;
-                } 
-                else 
+                }
+                else
                 {
                     ErrorCode = WSAEPROTONOSUPPORT;
                 }
-            } 
-            else 
+            }
+            else
             {
                 ErrorCode = WSAESOCKTNOSUPPORT;
             }
-        } 
-        else 
+        }
+        else
         {
             ErrorCode = WSAEAFNOSUPPORT;
         }
@@ -790,7 +790,7 @@ CatalogChanged:
         {
             /* Load it */
             ErrorCode = WsTcLoadProvider(Catalog, CatalogEntry);
-            
+
             /* Skip it if we failed to load it */
             if (ErrorCode != ERROR_SUCCESS) continue;
 
@@ -830,7 +830,7 @@ CatalogChanged:
         NewHandle = WPUModifyIFSHandle(ProtocolInfo.dwCatalogEntryId,
                                        Handle,
                                        &Error);
-        
+
         /* Check if the socket is invalid */
         if (NewHandle == INVALID_SOCKET) return WSAENOTSOCK;
 

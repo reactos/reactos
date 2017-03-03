@@ -20,8 +20,8 @@
  */
 BOOL
 WSAAPI
-WSAGetQOSByName(IN SOCKET s, 
-                IN OUT LPWSABUF lpQOSName, 
+WSAGetQOSByName(IN SOCKET s,
+                IN OUT LPWSABUF lpQOSName,
                 OUT LPQOS lpQOS)
 {
     PWSSOCKET Socket;

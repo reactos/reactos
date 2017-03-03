@@ -81,18 +81,18 @@ WsTcEntryInitializeFromRegistry(IN PTCATALOG_ENTRY CatalogEntry,
                           &EntryKey);
 
     /* Get Size of Catalog Entry Structure */
-    Return = RegQueryValueEx(EntryKey, 
+    Return = RegQueryValueEx(EntryKey,
                               "PackedCatalogItem",
                               0,
                               NULL,
                               NULL,
                               &RegSize);
-    
-    if(!(Buf = HeapAlloc(WsSockHeap, HEAP_ZERO_MEMORY, RegSize)))
+
+    if (!(Buf = HeapAlloc(WsSockHeap, HEAP_ZERO_MEMORY, RegSize)))
         return ERROR_NOT_ENOUGH_MEMORY;
 
     /* Read the Whole Catalog Entry Structure */
-    Return = RegQueryValueEx(EntryKey, 
+    Return = RegQueryValueEx(EntryKey,
                               "PackedCatalogItem",
                               0,
                               &RegType,
@@ -102,7 +102,7 @@ WsTcEntryInitializeFromRegistry(IN PTCATALOG_ENTRY CatalogEntry,
 
     memcpy(CatalogEntry->DllPath, Buf, sizeof(CatalogEntry->DllPath));
     index = sizeof(CatalogEntry->DllPath);
-    if(index < RegSize)
+    if (index < RegSize)
     {
         memcpy(&CatalogEntry->ProtocolInfo, &Buf[index], sizeof(WSAPROTOCOL_INFOW));
         index += sizeof(WSAPROTOCOL_INFOW);

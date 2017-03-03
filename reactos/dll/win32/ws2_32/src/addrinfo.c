@@ -58,7 +58,7 @@ ConvertAddrinfoFromUnicodeToAnsi(IN PADDRINFOW Addrinfo)
         {
             /* Get the name */
             UnicodeName = &Addrinfo->ai_canonname;
-            
+
             /* Check if it exists */
             if (*UnicodeName)
             {
@@ -68,7 +68,7 @@ ConvertAddrinfoFromUnicodeToAnsi(IN PADDRINFOW Addrinfo)
                 {
                     /* Free the old one */
                     HeapFree(WsSockHeap, 0, *UnicodeName);
-            
+
                     /* Set the new one */
                     *UnicodeName = (LPWSTR)AnsiName;
                 }
@@ -99,9 +99,9 @@ ParseV4Address(IN PCWSTR AddressString,
         return FALSE;
     WideCharToMultiByte(CP_ACP,
                         0,
-                        AddressString, 
-                        -1, 
-                        AnsiAddressString, 
+                        AddressString,
+                        -1,
+                        AnsiAddressString,
                         sizeof(AnsiAddressString),
                         NULL,
                         0);
@@ -234,7 +234,7 @@ CloneAddrInfo(IN WORD Port,
 
     /* Check if we ran out of memory */
     if (Next) return EAI_MEMORY;
-    
+
     /* Return success */
     return 0;
 }
@@ -282,11 +282,11 @@ QueryDNS(IN LPCSTR NodeName,
 
         /* Copy the canonical name */
         strcpy(Alias, Hostent->h_name);
-        
+
         /* Return success */
         return 0;
     }
-    
+
     /* Find out what the error was */
     switch (GetLastError())
     {
@@ -345,7 +345,7 @@ LookupNodeByAddr(IN LPWSTR pNodeBuffer,
         /* Get the reverse name */
         Dns_Ip4AddressToReverseName_W(ReverseBuffer, *Ip4Addr);
     }
-    /* FIXME: Not implemented for now 
+    /* FIXME: Not implemented for now
     else if ( */
 
     /* By this point we have the Reverse Name, so prepare for lookup */
@@ -444,7 +444,7 @@ LookupAddressForName(IN LPCSTR NodeName,
 
     /* Make a copy of the name */
     strcpy(Name, NodeName);
-    
+
     /* Loop */
     while (TRUE)
     {
@@ -477,7 +477,7 @@ LookupAddressForName(IN LPCSTR NodeName,
     {
         /* Allocate memory for a copy */
         (*pptResult)->ai_canonname = HeapAlloc(WsSockHeap, 0, 512);
-        
+
         /* Check if we had enough memory */
         if (!(*pptResult)->ai_canonname)
         {
@@ -487,11 +487,11 @@ LookupAddressForName(IN LPCSTR NodeName,
         else
         {
             /* Convert the alias to UNICODE */
-            MultiByteToWideChar(CP_ACP, 
-                                0, 
-                                Alias, 
-                                -1, 
-                                (*pptResult)->ai_canonname, 
+            MultiByteToWideChar(CP_ACP,
+                                0,
+                                Alias,
+                                -1,
+                                (*pptResult)->ai_canonname,
                                 256);
         }
     }
@@ -551,7 +551,7 @@ GetAddrInfoW(IN PCWSTR pszNodeName,
             SetLastError(EAI_FAIL);
             return EAI_FAIL;
         }
-        
+
         /* Save the flags and validate them */
         iFlags = ptHints->ai_flags;
         if ((iFlags & AI_CANONNAME) && !pszNodeName)
@@ -589,9 +589,9 @@ GetAddrInfoW(IN PCWSTR pszNodeName,
         /* We need to convert it to ANSI */
         WideCharToMultiByte(CP_ACP,
                             0,
-                            pszServiceName, 
-                            -1, 
-                            AnsiServiceName, 
+                            pszServiceName,
+                            -1,
+                            AnsiServiceName,
                             sizeof(AnsiServiceName),
                             NULL,
                             0);
@@ -637,7 +637,7 @@ GetAddrInfoW(IN PCWSTR pszNodeName,
                 /* Return the port from the servent */
                 if (ptService) wPort = wTcpPort = ptService->s_port;
             }
-            
+
             /* If we got 0, then fail */
             if (wPort == 0)
             {
@@ -653,7 +653,7 @@ GetAddrInfoW(IN PCWSTR pszNodeName,
                     iSocketType = SOCK_STREAM;
                 if (!wTcpPort && wUdpPort)
                     iSocketType = SOCK_DGRAM;
-                //bClone = (wTcpPort && wUdpPort); 
+                //bClone = (wTcpPort && wUdpPort);
             }
         }
     }
@@ -668,19 +668,19 @@ GetAddrInfoW(IN PCWSTR pszNodeName,
             dwAddress = htonl((iFlags & AI_PASSIVE) ?
                               INADDR_ANY : INADDR_LOOPBACK);
         }
-        
+
         /* Create the Addr Info */
         *pptResult = NewAddrInfo(iSocketType, iProtocol, wPort, dwAddress);
 
         /* If we didn't get one back, assume out of memory */
         if (!(*pptResult)) iError = EAI_MEMORY;
-        
+
         /* Check if we have success and a nodename */
         if (!iError && pszNodeName)
         {
             /* Set AI_NUMERICHOST since this is a numeric string */
             (*pptResult)->ai_flags |= AI_NUMERICHOST;
-            
+
             /* Check if the canonical name was requested */
             if (iFlags & AI_CANONNAME)
             {
@@ -697,7 +697,7 @@ GetAddrInfoW(IN PCWSTR pszNodeName,
                 (*pptResult)->ai_canonname = HeapAlloc(WsSockHeap,
                                                        0,
                                                        wcslen(CanonicalName));
-                
+
                 if (!(*pptResult)->ai_canonname)
                 {
                     /* No memory for the copy */
@@ -723,9 +723,9 @@ GetAddrInfoW(IN PCWSTR pszNodeName,
         /* We need to convert it to ANSI */
         WideCharToMultiByte(CP_ACP,
                             0,
-                            pszNodeName, 
-                            -1, 
-                            AnsiNodeName, 
+                            pszNodeName,
+                            -1,
+                            AnsiNodeName,
                             sizeof(AnsiNodeName),
                             NULL,
                             0);
@@ -751,7 +751,7 @@ GetAddrInfoW(IN PCWSTR pszNodeName,
     {
         /* Free the address info and return nothing */
         FreeAddrInfoW(*pptResult);
-        *pptResult = NULL;        
+        *pptResult = NULL;
     }
 
     /* Return to caller */
@@ -778,7 +778,7 @@ freeaddrinfo(PADDRINFOA AddrInfo)
             /* Free it */
             HeapFree(WsSockHeap, 0, NextInfo->ai_canonname);
         }
-        
+
         /* Check if there is an address */
         if (NextInfo->ai_addr)
         {
@@ -807,7 +807,7 @@ getaddrinfo(const char FAR *nodename,
 {
     INT ErrorCode;
     LPWSTR UnicodeNodeName = NULL;
-    LPWSTR UnicodeServName = NULL; 
+    LPWSTR UnicodeServName = NULL;
     DPRINT("getaddrinfo: %s, %s, %p, %p\n", nodename, servname, hints, res);
 
     /* Check for WSAStartup */
@@ -836,7 +836,7 @@ getaddrinfo(const char FAR *nodename,
             goto Quickie;
         }
     }
-  
+
     /* Now call the unicode function */
     ErrorCode = GetAddrInfoW(UnicodeNodeName,
                              UnicodeServName,
@@ -915,7 +915,7 @@ GetNameInfoW(IN CONST SOCKADDR *pSockaddr,
         /* Unsupported family */
         SetLastError(EAI_FAMILY);
         return EAI_FAMILY;
-    } 
+    }
 
     /* Check for valid socket address length */
     if ((DWORD)SockaddrLength < AddressLength)
@@ -923,7 +923,7 @@ GetNameInfoW(IN CONST SOCKADDR *pSockaddr,
 
     /* Check if we have a node name */
     if (pNodeBuffer)
-    {    
+    {
         /* Check if only the numeric host is wanted */
         if (!(Flags & NI_NUMERICHOST))
         {
@@ -1030,7 +1030,7 @@ getnameinfo(const struct sockaddr FAR *sa,
         ServiceString = ServiceBuffer;
         ServLength = sizeof(ServiceBuffer) / sizeof(WCHAR);
     }
-  
+
     /* Now call the unicode function */
     ErrorCode = GetNameInfoW(sa,
                              salen,

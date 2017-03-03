@@ -20,9 +20,9 @@
  */
 INT
 WSAAPI
-send(IN SOCKET s, 
-     IN CONST CHAR FAR* buf, 
-     IN INT len, 
+send(IN SOCKET s,
+     IN CONST CHAR FAR* buf,
+     IN INT len,
      IN INT flags)
 {
     PWSSOCKET Socket;
@@ -45,13 +45,13 @@ send(IN SOCKET s,
 
             /* Make the call */
             Status = Socket->Provider->Service.lpWSPSend(s,
-                                                         &Buffers, 
+                                                         &Buffers,
                                                          1,
-                                                         &BytesSent, 
-                                                         (DWORD)flags, 
+                                                         &BytesSent,
+                                                         (DWORD)flags,
                                                          NULL,
-                                                         NULL, 
-                                                         ThreadId, 
+                                                         NULL,
+                                                         ThreadId,
                                                          &ErrorCode);
             /* Deference the Socket Context */
             WsSockDereference(Socket);
@@ -83,7 +83,7 @@ sendto(IN SOCKET s,
        IN CONST CHAR FAR* buf,
        IN INT len,
        IN INT flags,
-       IN CONST struct sockaddr *to, 
+       IN CONST struct sockaddr *to,
        IN INT tolen)
 {
     PWSSOCKET Socket;
@@ -106,15 +106,15 @@ sendto(IN SOCKET s,
 
             /* Make the call */
             Status = Socket->Provider->Service.lpWSPSendTo(s,
-                                                           &Buffers, 
+                                                           &Buffers,
                                                            1,
-                                                           &BytesSent, 
+                                                           &BytesSent,
                                                            (DWORD)flags,
                                                            to,
                                                            tolen,
                                                            NULL,
-                                                           NULL, 
-                                                           ThreadId, 
+                                                           NULL,
+                                                           ThreadId,
                                                            &ErrorCode);
             /* Deference the Socket Context */
             WsSockDereference(Socket);
@@ -164,13 +164,13 @@ WSASend(IN SOCKET s,
         {
             /* Make the call */
             Status = Socket->Provider->Service.lpWSPSend(s,
-                                                         lpBuffers, 
+                                                         lpBuffers,
                                                          dwBufferCount,
-                                                         lpNumberOfBytesSent, 
-                                                         dwFlags, 
+                                                         lpNumberOfBytesSent,
+                                                         dwFlags,
                                                          lpOverlapped,
-                                                         lpCompletionRoutine, 
-                                                         ThreadId, 
+                                                         lpCompletionRoutine,
+                                                         ThreadId,
                                                          &ErrorCode);
             /* Deference the Socket Context */
             WsSockDereference(Socket);
@@ -268,15 +268,15 @@ WSASendTo(IN SOCKET s,
         {
             /* Make the call */
             Status = Socket->Provider->Service.lpWSPSendTo(s,
-                                                           lpBuffers, 
+                                                           lpBuffers,
                                                            dwBufferCount,
-                                                           lpNumberOfBytesSent, 
-                                                           dwFlags, 
+                                                           lpNumberOfBytesSent,
+                                                           dwFlags,
                                                            lpTo,
                                                            iToLen,
                                                            lpOverlapped,
-                                                           lpCompletionRoutine, 
-                                                           ThreadId, 
+                                                           lpCompletionRoutine,
+                                                           ThreadId,
                                                            &ErrorCode);
             /* Deference the Socket Context */
             WsSockDereference(Socket);

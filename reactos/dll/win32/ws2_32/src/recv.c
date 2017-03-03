@@ -45,13 +45,13 @@ recv(IN SOCKET s,
 
             /* Make the call */
             Status = Socket->Provider->Service.lpWSPRecv(s,
-                                                         &Buffers, 
+                                                         &Buffers,
                                                          1,
-                                                         &BytesReceived, 
-                                                         (LPDWORD)&flags, 
+                                                         &BytesReceived,
+                                                         (LPDWORD)&flags,
                                                          NULL,
-                                                         NULL, 
-                                                         ThreadId, 
+                                                         NULL,
+                                                         ThreadId,
                                                          &ErrorCode);
             /* Deference the Socket Context */
             WsSockDereference(Socket);
@@ -111,15 +111,15 @@ recvfrom(IN SOCKET s,
 
             /* Make the call */
             Status = Socket->Provider->Service.lpWSPRecvFrom(s,
-                                                             &Buffers, 
+                                                             &Buffers,
                                                              1,
-                                                             &BytesReceived, 
+                                                             &BytesReceived,
                                                              (LPDWORD)&flags,
                                                              from,
                                                              fromlen,
                                                              NULL,
-                                                             NULL, 
-                                                             ThreadId, 
+                                                             NULL,
+                                                             ThreadId,
                                                              &ErrorCode);
             /* Deference the Socket Context */
             WsSockDereference(Socket);
@@ -174,13 +174,13 @@ WSARecv(IN SOCKET s,
         {
             /* Make the call */
             Status = Socket->Provider->Service.lpWSPRecv(s,
-                                                         lpBuffers, 
+                                                         lpBuffers,
                                                          dwBufferCount,
-                                                         lpNumberOfBytesRecvd, 
-                                                         lpFlags, 
+                                                         lpNumberOfBytesRecvd,
+                                                         lpFlags,
                                                          lpOverlapped,
-                                                         lpCompletionRoutine, 
-                                                         ThreadId, 
+                                                         lpCompletionRoutine,
+                                                         ThreadId,
                                                          &ErrorCode);
             /* Deference the Socket Context */
             WsSockDereference(Socket);
@@ -275,15 +275,15 @@ WSARecvFrom(IN SOCKET s,
         {
             /* Make the call */
             Status = Socket->Provider->Service.lpWSPRecvFrom(s,
-                                                             lpBuffers, 
+                                                             lpBuffers,
                                                              dwBufferCount,
-                                                             lpNumberOfBytesRecvd, 
-                                                             lpFlags, 
+                                                             lpNumberOfBytesRecvd,
+                                                             lpFlags,
                                                              lpFrom,
                                                              lpFromlen,
                                                              lpOverlapped,
                                                              lpCompletionRoutine,
-                                                             ThreadId, 
+                                                             ThreadId,
                                                              &ErrorCode);
             /* Deference the Socket Context */
             WsSockDereference(Socket);

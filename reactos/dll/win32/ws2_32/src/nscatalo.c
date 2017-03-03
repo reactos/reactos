@@ -282,7 +282,7 @@ WsNcRefreshFromRegistry(IN PNSCATALOG Catalog,
         }
 
         /* Initialize them all */
-        for (i = 1; i <= CatalogEntries; i++) 
+        for (i = 1; i <= CatalogEntries; i++)
         {
             /* Allocate a Catalog Entry Structure */
             CatalogEntry = WsNcEntryAllocate();
@@ -396,12 +396,12 @@ WsNcLoadProvider(IN PNSCATALOG Catalog,
                                        CatalogEntry->DllPath,
                                        &CatalogEntry->ProviderId);
 
-                /* Ensure success */
-                if (ErrorCode == ERROR_SUCCESS)
-                {
-                    /* Set the provider */
-                    WsNcEntrySetProvider(CatalogEntry, Provider);
-                }
+            /* Ensure success */
+            if (ErrorCode == ERROR_SUCCESS)
+            {
+                /* Set the provider */
+                WsNcEntrySetProvider(CatalogEntry, Provider);
+            }
 
             /* Dereference it */
             WsNpDereference(Provider);

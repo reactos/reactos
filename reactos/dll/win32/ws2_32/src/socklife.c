@@ -50,7 +50,7 @@ bind(IN SOCKET s,
         {
             /* Make the call */
             Status = Socket->Provider->Service.lpWSPBind(s,
-                                                         name, 
+                                                         name,
                                                          namelen,
                                                          &ErrorCode);
             /* Deference the Socket Context */
@@ -441,8 +441,8 @@ WSASocketA(IN INT af,
     LPWSAPROTOCOL_INFOW p = &ProtocolInfoW;
 
     /* Convert Protocol Info to Wide */
-    if (lpProtocolInfo) 
-    {    
+    if (lpProtocolInfo)
+    {
         /* Copy the Data */
         memcpy(&ProtocolInfoW,
                lpProtocolInfo,
@@ -455,8 +455,8 @@ WSASocketA(IN INT af,
                             -1,
                             ProtocolInfoW.szProtocol,
                             sizeof(ProtocolInfoW.szProtocol) / sizeof(WCHAR));
-    } 
-    else 
+    }
+    else
     {
         /* No Protocol Info Specified */
         p = NULL;
@@ -475,7 +475,7 @@ WSASocketA(IN INT af,
  * @implemented
  */
 SOCKET
-WSAAPI 
+WSAAPI
 WSASocketW(IN INT af,
            IN INT type,
            IN INT protocol,
@@ -506,8 +506,8 @@ WSASocketW(IN INT af,
     Catalog = WsProcGetTCatalog(Process);
 
     /* Find a Provider for the Catalog ID */
-    if (lpProtocolInfo) 
-    {   
+    if (lpProtocolInfo)
+    {
         /* Get the catalog ID */
         CatalogId = lpProtocolInfo->dwCatalogEntryId;
 
@@ -516,8 +516,8 @@ WSASocketW(IN INT af,
                                                    CatalogId,
                                                    &CatalogEntry);
     }
-    else  
-    {   
+    else
+    {
         /* No ID */
         CatalogId = 0;
 
@@ -558,8 +558,8 @@ DoLookup:
         WsTcEntryDereference(CatalogEntry);
 
         /* Did we fail with WSAEINPROGRESS and had no specific provider? */
-        if ((Status == INVALID_SOCKET) && 
-            (ErrorCode == WSAEINPROGRESS) && 
+        if ((Status == INVALID_SOCKET) &&
+            (ErrorCode == WSAEINPROGRESS) &&
             !(lpProtocolInfo))
         {
             /* In that case, restart the lookup from this ID */

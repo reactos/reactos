@@ -17,7 +17,7 @@ WSAAPI
 WsNqProvAllocate(VOID)
 {
     PNSQUERY_PROVIDER Provider;
-    
+
     /* Allocate the object */
     Provider = HeapAlloc(WsSockHeap, HEAP_ZERO_MEMORY, sizeof(*Provider));
 
@@ -63,7 +63,7 @@ WSAAPI
 WsNpAllocate(VOID)
 {
     PNS_PROVIDER Provider;
-    
+
     /* Allocate the object */
     Provider = HeapAlloc(WsSockHeap, HEAP_ZERO_MEMORY, sizeof(*Provider));
 
@@ -84,7 +84,7 @@ WsNpInitialize(IN PNS_PROVIDER Provider,
     INT ErrorCode = ERROR_SUCCESS;
     LPNSPSTARTUP NSPStartupProc;
     CHAR AnsiPath[MAX_PATH], ExpandedDllPath[MAX_PATH];
-    
+
     /* Convert the path to ANSI */
     WideCharToMultiByte(CP_ACP,
                         0,
@@ -138,7 +138,7 @@ WsNpNSPCleanup(IN PNS_PROVIDER Provider)
 {
     INT ErrorCode = ERROR_SUCCESS;
     LPNSPCLEANUP lpNSPCleanup = NULL;
-    
+
     /* Make sure we have a loaded handle */
     if (Provider->DllHandle)
     {

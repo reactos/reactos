@@ -537,7 +537,7 @@ WsNqProvLookupServiceBegin(
     IN PNSQUERY_PROVIDER QueryProvider,
     IN LPWSAQUERYSETW QuerySet,
     IN LPWSASERVICECLASSINFOW ServiceClassInfo,
-    IN DWORD 
+    IN DWORD
 );
 
 VOID

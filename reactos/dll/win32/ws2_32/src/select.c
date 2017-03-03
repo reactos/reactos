@@ -38,10 +38,10 @@ __WSAFDIsSet(SOCKET s,
  */
 INT
 WSAAPI
-select(IN INT s, 
-       IN OUT LPFD_SET readfds, 
-       IN OUT LPFD_SET writefds, 
-       IN OUT LPFD_SET exceptfds, 
+select(IN INT s,
+       IN OUT LPFD_SET readfds,
+       IN OUT LPFD_SET writefds,
+       IN OUT LPFD_SET exceptfds,
        IN CONST struct timeval *timeout)
 {
     PWSSOCKET Socket;
@@ -149,9 +149,9 @@ WSAAsyncSelect(IN SOCKET s,
         {
             /* Make the call */
             Status = Socket->Provider->Service.lpWSPAsyncSelect(s,
-                                                                hWnd, 
+                                                                hWnd,
                                                                 wMsg,
-                                                                lEvent, 
+                                                                lEvent,
                                                                 &ErrorCode);
             /* Deference the Socket Context */
             WsSockDereference(Socket);
