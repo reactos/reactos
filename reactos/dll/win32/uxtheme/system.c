@@ -57,7 +57,7 @@ PTHEME_FILE ActiveThemeFile;
 
 static BOOL CALLBACK UXTHEME_broadcast_msg_enumchild (HWND hWnd, LPARAM msg)
 {
-    PostMessageW(hWnd, msg, 0, 0);
+    SendMessageW(hWnd, msg, 0, 0);
     return TRUE;
 }
 
@@ -70,7 +70,7 @@ BOOL CALLBACK UXTHEME_broadcast_msg (HWND hWnd, LPARAM msg)
     }
     else
     {
-	PostMessageW(hWnd, msg, 0, 0);
+	SendMessageW(hWnd, msg, 0, 0);
 	EnumChildWindows (hWnd, UXTHEME_broadcast_msg_enumchild, msg);
     }
     return TRUE;
