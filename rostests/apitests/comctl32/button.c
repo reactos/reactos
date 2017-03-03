@@ -398,6 +398,14 @@ void Test_GetIdealSizeNoThemes()
         ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
         ok_size(s, 123, 72);
         DestroyWindow(hwnd2);
+        
+        hwnd2 = CreateWindowW(L"Button", L"", i, 0, 0, 150, 72, hwnd1, NULL, NULL, NULL);
+        ok (hwnd2 != NULL, "Expected CreateWindowW to succeed\n");
+        memset(&s, 0, sizeof(s));
+        ret = SendMessageW(hwnd2, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
+        ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
+        ok_size(s, 150, 72);
+        DestroyWindow(hwnd2);
     }
     DestroyWindow(hwnd1);
 }
