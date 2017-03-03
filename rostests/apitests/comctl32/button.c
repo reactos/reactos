@@ -115,7 +115,10 @@ void Test_GetIdealSizeNoThemes()
     LOGFONTW lf;
     DWORD i;
 
-    hwnd1 = CreateWindowW(L"Button", L" ", 0, 10, 10, 100, 100, 0, NULL, NULL, NULL);
+    hwnd2 = CreateWindowW(L"Static", L"", 0, 0, 0, 100, 100, 0, NULL, NULL, NULL);
+    ok (hwnd2 != NULL, "Expected CreateWindowW to succeed\n");
+
+    hwnd1 = CreateWindowW(L"Button", L" ", WS_CHILD, 10, 10, 100, 100, hwnd2, NULL, NULL, NULL);
     ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
     SetWindowTheme(hwnd1, L"", L"");
 
@@ -133,7 +136,7 @@ void Test_GetIdealSizeNoThemes()
     DestroyWindow(hwnd1);
 
 
-    hwnd1 = CreateWindowW(L"Button", L" ", BS_USERBUTTON, 10, 10, 100, 100, 0, NULL, NULL, NULL);
+    hwnd1 = CreateWindowW(L"Button", L" ", BS_USERBUTTON | WS_CHILD, 10, 10, 100, 100, hwnd2, NULL, NULL, NULL);
     ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
     SetWindowTheme(hwnd1, L"", L"");
 
@@ -147,20 +150,15 @@ void Test_GetIdealSizeNoThemes()
 
 
 
-    hwnd1 = CreateWindowW(L"Button", L"", 0, 10, 10, 100, 100, 0, NULL, NULL, NULL);
+    hwnd1 = CreateWindowW(L"Button", L"", WS_CHILD, 10, 10, 100, 100, hwnd2, NULL, NULL, NULL);
     ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
     SetWindowTheme(hwnd1, L"", L"");
-
-    memset(&s, 0, sizeof(s));
-    ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
-    ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
-    ok_size(s, 123, 100);
 
     s.cx = 1;
     s.cy = 1;
     ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
     ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
-    ok_size(s, 123, 100);
+    ok_size(s, 100, 100);
 
     hbmp = LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(5), IMAGE_BITMAP, 0, 0, 0);
     ok (hbmp != 0, "Expected LoadImage to succeed\n");
@@ -170,7 +168,7 @@ void Test_GetIdealSizeNoThemes()
     memset(&s, 0, sizeof(s));
     ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
     ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
-    ok_size(s, 123, 100);
+    ok_size(s, 100, 100);
 
     himl = ImageList_LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(5), 1, 1, 0, IMAGE_BITMAP, 0);
     ok (himl != 0, "Expected ImageList_LoadImage to succeed\n");
@@ -183,7 +181,7 @@ void Test_GetIdealSizeNoThemes()
     memset(&s, 0, sizeof(s));
     ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
     ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
-    ok_size(s, 123, 100);
+    ok_size(s, 100, 100);
 
     DestroyWindow(hwnd1);
 
@@ -191,21 +189,21 @@ void Test_GetIdealSizeNoThemes()
 
 
 
-    hwnd1 = CreateWindowW(L"Button", L"", 0, 10, 10, 5, 5, 0, NULL, NULL, NULL);
+    hwnd1 = CreateWindowW(L"Button", L"",  WS_CHILD, 10, 10, 5, 5, hwnd2, NULL, NULL, NULL);
     ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
     SetWindowTheme(hwnd1, L"", L"");
 
     memset(&s, 0, sizeof(s));
     ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
     ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
-    ok_size(s, 123, 34);
+    ok_size(s, 5, 5);
 
     DestroyWindow(hwnd1);
 
 
 
 
-    hwnd1 = CreateWindowW(L"Button", L" ", BS_BITMAP , 10, 10, 100, 100, 0, NULL, NULL, NULL);
+    hwnd1 = CreateWindowW(L"Button", L" ", BS_BITMAP | WS_CHILD, 10, 10, 100, 100, hwnd2, NULL, NULL, NULL);
     ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
     SetWindowTheme(hwnd1, L"", L"");
 
@@ -223,7 +221,7 @@ void Test_GetIdealSizeNoThemes()
 
 
 
-    hwnd1 = CreateWindowW(L"Button", L" ", 0, 10, 10, 100, 100, 0, NULL, NULL, NULL);
+    hwnd1 = CreateWindowW(L"Button", L" ", WS_CHILD, 10, 10, 100, 100, hwnd2, NULL, NULL, NULL);
     ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
     SetWindowTheme(hwnd1, L"", L"");
 
@@ -302,7 +300,7 @@ void Test_GetIdealSizeNoThemes()
 
 
 
-    hwnd1 = CreateWindowW(L"Button", L"Start", BS_VCENTER, 0, 0, 0, 0, 0, NULL, NULL, NULL);
+    hwnd1 = CreateWindowW(L"Button", L"Start", BS_VCENTER | WS_CHILD, 0, 0, 0, 0, hwnd2, NULL, NULL, NULL);
     ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
     SetWindowTheme(hwnd1, L"", L"");
 
@@ -326,7 +324,7 @@ void Test_GetIdealSizeNoThemes()
 
 
     /* Test again with some real text to see if the formula is correct */
-    hwnd1 = CreateWindowW(L"Button", L"Some test text", 0, 10, 10, 100, 100, 0, NULL, NULL, NULL);
+    hwnd1 = CreateWindowW(L"Button", L"Some test text", WS_CHILD, 10, 10, 100, 100, hwnd2, NULL, NULL, NULL);
     ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
     SetWindowTheme(hwnd1, L"", L"");
 
@@ -361,53 +359,53 @@ void Test_GetIdealSizeNoThemes()
 
     DestroyWindow(hwnd1);
 
-    hwnd1 = CreateWindowW(L"Static", L"", 0, 0, 0, 100, 100, 0, NULL, NULL, NULL);
-    ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
-
-    for (i = BS_CHECKBOX; i <= BS_OWNERDRAW; i++)
+    for (i = BS_PUSHBUTTON; i <= BS_OWNERDRAW; i++)
     {
         if (i == BS_USERBUTTON)
             continue;
 
-        hwnd2 = CreateWindowW(L"Button", L" ", i, 0, 0, 72, 72, hwnd1, NULL, NULL, NULL);
-        ok (hwnd2 != NULL, "Expected CreateWindowW to succeed\n");
-        memset(&s, 0, sizeof(s));
-        ret = SendMessageW(hwnd2, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
-        ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
-        ok_size(s, 123, 72);
+        if (i >= BS_CHECKBOX)
+        {
+            hwnd1 = CreateWindowW(L"Button", L" ", i|WS_CHILD, 0, 0, 72, 72, hwnd2, NULL, NULL, NULL);
+            ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
+            memset(&s, 0, sizeof(s));
+            ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
+            ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
+            ok_size(s, 72, 72);
 
-        SetWindowTheme(hwnd2, L"", L"");
-        memset(&s, 0, sizeof(s));
-        ret = SendMessageW(hwnd2, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
-        ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
-        ok_size(s, 123, 72);
-        DestroyWindow(hwnd2);
+            SetWindowTheme(hwnd1, L"", L"");
+            memset(&s, 0, sizeof(s));
+            ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
+            ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
+            ok_size(s, 72, 72);
+            DestroyWindow(hwnd1);
 
-        hwnd2 = CreateWindowW(L"Button", L" ", i, 0, 0, 12, 12, hwnd1, NULL, NULL, NULL);
-        ok (hwnd2 != NULL, "Expected CreateWindowW to succeed\n");
-        memset(&s, 0, sizeof(s));
-        ret = SendMessageW(hwnd2, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
-        ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
-        ok_size(s, 123, 34);
-        DestroyWindow(hwnd2);
+            hwnd1 = CreateWindowW(L"Button", L" ", i|WS_CHILD, 0, 0, 12, 12, hwnd2, NULL, NULL, NULL);
+            ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
+            memset(&s, 0, sizeof(s));
+            ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
+            ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
+            ok_size(s, 12, 12);
+            DestroyWindow(hwnd1);
+        }
 
-        hwnd2 = CreateWindowW(L"Button", L"", i, 0, 0, 72, 72, hwnd1, NULL, NULL, NULL);
-        ok (hwnd2 != NULL, "Expected CreateWindowW to succeed\n");
+        hwnd1 = CreateWindowW(L"Button", L"", i|WS_CHILD, 0, 0, 72, 72, hwnd2, NULL, NULL, NULL);
+        ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
         memset(&s, 0, sizeof(s));
-        ret = SendMessageW(hwnd2, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
+        ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
         ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
-        ok_size(s, 123, 72);
-        DestroyWindow(hwnd2);
+        ok_size(s, 72, 72);
+        DestroyWindow(hwnd1);
         
-        hwnd2 = CreateWindowW(L"Button", L"", i, 0, 0, 150, 72, hwnd1, NULL, NULL, NULL);
-        ok (hwnd2 != NULL, "Expected CreateWindowW to succeed\n");
+        hwnd1 = CreateWindowW(L"Button", L"", i|WS_CHILD, 0, 0, 150, 72, hwnd2, NULL, NULL, NULL);
+        ok (hwnd1 != NULL, "Expected CreateWindowW to succeed\n");
         memset(&s, 0, sizeof(s));
-        ret = SendMessageW(hwnd2, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
+        ret = SendMessageW(hwnd1, BCM_GETIDEALSIZE, 0, (LPARAM)&s);
         ok (ret == TRUE, "Expected BCM_GETIDEALSIZE to succeed\n");
         ok_size(s, 150, 72);
-        DestroyWindow(hwnd2);
+        DestroyWindow(hwnd1);
     }
-    DestroyWindow(hwnd1);
+    DestroyWindow(hwnd2);
 }
 
 START_TEST(button)
