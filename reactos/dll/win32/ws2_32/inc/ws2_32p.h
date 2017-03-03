@@ -315,9 +315,9 @@ MapAnsiQuerySetToUnicode(IN LPWSAQUERYSETA AnsiSet,
 
 INT
 WSAAPI
-MapUnicodeQuerySetToAnsi(OUT LPWSAQUERYSETW UnicodeSet,
+MapUnicodeQuerySetToAnsi(IN LPWSAQUERYSETW UnicodeSet,
                          IN OUT PSIZE_T SetSize,
-                         IN LPWSAQUERYSETA AnsiSet);
+                         OUT LPWSAQUERYSETA AnsiSet);
 
 INT
 WSAAPI
@@ -435,7 +435,7 @@ WSAAPI
 WsNcEntrySetProvider(IN PNSCATALOG_ENTRY Entry,
                      IN PNS_PROVIDER Provider);
 
-DWORD
+BOOL
 WSAAPI
 WsNqAddProvider(
     IN PNSQUERY NsQuery,
@@ -490,6 +490,13 @@ WsNqNextProvider(
     IN PNSQUERY_PROVIDER Provider
 );
 
+PNSQUERY_PROVIDER
+WSAAPI
+WsNqPreviousProvider(
+    IN PNSQUERY Query,
+    IN PNSQUERY_PROVIDER Provider
+);
+
 VOID
 WSAAPI
 WsNqDereference(IN PNSQUERY Query);
@@ -497,11 +504,6 @@ WsNqDereference(IN PNSQUERY Query);
 BOOL
 WSAAPI
 WsNqValidateAndReference(IN PNSQUERY Query);
-
-PNSQUERY_PROVIDER
-WSAAPI
-WsNqPreviousProvider(IN PNSQUERY Query,
-                     IN PNSQUERY_PROVIDER Provider);
 
 DWORD
 WSAAPI
