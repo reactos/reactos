@@ -721,7 +721,7 @@ WsAsyncThread(IN PVOID ThreadContext)
         WsAsyncLock();
 
         /* Process the queue */
-        while (ListHead->Flink != ListHead)
+        while (!IsListEmpty(ListHead))
         {
             /* Remove this entry and get the async block */
             Entry = RemoveHeadList(ListHead);

@@ -498,13 +498,14 @@ WsNcGetCatalogFromProviderId(IN PNSCATALOG Catalog,
                              IN LPGUID ProviderId,
                              OUT PNSCATALOG_ENTRY *CatalogEntry)
 {
-    PLIST_ENTRY NextEntry = Catalog->CatalogList.Flink;
+    PLIST_ENTRY NextEntry;
     PNSCATALOG_ENTRY Entry;
 
     /* Lock the catalog */
     WsNcLock();
 
     /* Match the Id with all the entries in the List */
+    NextEntry = Catalog->CatalogList.Flink;
     while (NextEntry != &Catalog->CatalogList)
     {
         /* Get the Current Entry */

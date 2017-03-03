@@ -926,9 +926,9 @@ error:
 
 INT
 WSAAPI
-MapUnicodeQuerySetToAnsi(OUT LPWSAQUERYSETW UnicodeSet,
+MapUnicodeQuerySetToAnsi(IN LPWSAQUERYSETW UnicodeSet,
                          IN OUT PSIZE_T SetSize,
-                         IN LPWSAQUERYSETA AnsiSet)
+                         OUT LPWSAQUERYSETA AnsiSet)
 {
     INT ErrorCode = ERROR_SUCCESS;
     SIZE_T UnicodeSize, AnsiSize;

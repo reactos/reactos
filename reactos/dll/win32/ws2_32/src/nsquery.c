@@ -134,9 +134,9 @@ WsNqBeginEnumerationProc(PVOID Context,
         if (!(Provider = Entry->Provider))
         {
             /* None was loaded, load it */
-            if ((WsNcLoadProvider(EnumContext->Catalog, Entry) != ERROR_SUCCESS))
+            if (WsNcLoadProvider(EnumContext->Catalog, Entry) != ERROR_SUCCESS)
             {
-                /* return TRUE to continue enumerating */
+                /* Return TRUE to continue enumerating */
                 return TRUE;
             }
 
@@ -145,7 +145,7 @@ WsNqBeginEnumerationProc(PVOID Context,
         }
 
         /* Add it to the query */
-        if (!(WsNqAddProvider(NsQuery, Provider)))
+        if (!WsNqAddProvider(NsQuery, Provider))
         {
             /* We failed */
             EnumContext->ErrorCode = WSASYSCALLFAILURE;
@@ -194,157 +194,150 @@ WsNqLookupServiceNext(IN PNSQUERY NsQuery,
                       OUT PDWORD BufferLength,
                       OUT LPWSAQUERYSETW Results)
 {
-    PNSQUERY_PROVIDER Provider, NextProvider;
     INT ErrorCode = SOCKET_ERROR, OldErrorCode;
+    PNSQUERY_PROVIDER Provider, NextProvider;
     PLIST_ENTRY Entry;
 
     /* Make sure we're not shutting down */
-    if (!NsQuery->ShuttingDown)
+    if (NsQuery->ShuttingDown)
     {
-        /* Acquire query lock */
-        WsNqLock();
+        /* We are shutting down, fail */
+        SetLastError(WSAECANCELLED);
+        return ErrorCode;
+    }
 
-        /* Check if we already have an active provider */
-        NextProvider = NsQuery->ActiveProvider;
-        if (!NextProvider)
+    /* Acquire query lock */
+    WsNqLock();
+
+    /* Check if we already have an active provider */
+    NextProvider = NsQuery->ActiveProvider;
+    if (!NextProvider)
+    {
+        /* Make sure we have a current provider */
+        if (!NsQuery->CurrentProvider)
         {
-            /* Make sure we have a current provider */
-            if (!NsQuery->CurrentProvider)
-            {
-                /* We don't; fail */
-                WsNqUnlock();
-                SetLastError(WSA_E_NO_MORE);
-                return SOCKET_ERROR;
-            }
-
-            /* Get the first provider on the list and start looping */
-            Entry = NsQuery->ProviderList.Blink;
-            NextProvider = CONTAINING_RECORD(Entry, NSQUERY_PROVIDER, QueryLink);
-            while (NextProvider)
-            {
-                /* Check if this is a new-style provider */
-                if (NextProvider->Provider->Service.NSPIoctl)
-                {
-                    /* Remove it and re-add it on top */
-                    RemoveEntryList(&NextProvider->QueryLink);
-                    InsertHeadList(&NsQuery->ProviderList, &NextProvider->QueryLink);
-
-                    /* Set it as the active provider and exit the loop */
-                    NsQuery->ActiveProvider = NextProvider;
-                    break;
-                }
-
-                /* Get the previous provider */
-                NextProvider = WsNqPreviousProvider(NsQuery, NextProvider);
-            }
+            /* We don't; fail */
+            WsNqUnlock();
+            SetLastError(WSA_E_NO_MORE);
+            return SOCKET_ERROR;
         }
 
-        /* Release the lock */
-        WsNqUnlock();
-
-        /* Check if we have an active provider now */
-        if (NextProvider)
+        /* Get the last provider in the list and start looping */
+        Entry = NsQuery->ProviderList.Blink;
+        NextProvider = CONTAINING_RECORD(Entry, NSQUERY_PROVIDER, QueryLink);
+        while (NextProvider)
         {
-            /* Start loop */
-            do
+            /* Check if this is a new-style provider */
+            if (NextProvider->Provider->Service.NSPIoctl)
             {
-                /* Call its routine */
-                ErrorCode = WsNqProvLookupServiceNext(NextProvider,
-                                                      ControlFlags,
-                                                      BufferLength,
-                                                      Results);
-                /* Check for error or shutdown */
-                if ((ErrorCode == ERROR_SUCCESS) ||
-                    (GetLastError() == WSAEFAULT) || (NsQuery->ShuttingDown))
-                {
-                    /* Get out */
-                    break;
-                }
+                /* Remove it and re-add it on top */
+                RemoveEntryList(&NextProvider->QueryLink);
+                InsertHeadList(&NsQuery->ProviderList, &NextProvider->QueryLink);
 
-                /* Acquire Query Lock */
-                WsNqLock();
+                /* Set it as the active provider and exit the loop */
+                NsQuery->ActiveProvider = NextProvider;
+                break;
+            }
 
-                /* Save the current active provider */
-                Provider = NsQuery->ActiveProvider;
-
-                /* Check if one exists */
-                if (Provider)
-                {
-                    /* Get the next one */
-                    NextProvider = WsNqNextProvider(NsQuery,
-                                                    NsQuery->ActiveProvider);
-
-                    /* Was the old provider our active? */
-                    if (Provider == NsQuery->ActiveProvider)
-                    {
-                        /* Change our active provider to the new one */
-                        NsQuery->ActiveProvider = NextProvider;
-                    }
-                }
-                else
-                {
-                    /* No next provider */
-                    NextProvider = NULL;
-                }
-
-                /* Check if we failed and if we can try again */
-                if (!(NextProvider) &&
-                    (ErrorCode == SOCKET_ERROR) &&
-                    (NsQuery->TryAgain))
-                {
-                    /* Save the error code so RAS doesn't overwrite it */
-                    OldErrorCode = GetLastError();
-
-                    /* Make sure we won't try for a 3rd time */
-                    NsQuery->TryAgain = FALSE;
-
-                    /* Call the helper to auto-dial */
-                    if (WSAttemptAutodialName(NsQuery->QuerySet))
-                    {
-                        /* It succeeded, so we'll delete the current state. */
-                        while (!IsListEmpty(&NsQuery->ProviderList))
-                        {
-                            /* Remove the entry and get its provider */
-                            Entry = RemoveHeadList(&NsQuery->ProviderList);
-                            Provider = CONTAINING_RECORD(Entry,
-                                                         NSQUERY_PROVIDER,
-                                                         QueryLink);
-
-                            /* Reset it */
-                            WsNqProvLookupServiceEnd(Provider);
-                            WsNqProvDelete(Provider);
-                        }
-
-                        /* Start a new query */
-                        if (!WsNqLookupServiceBegin(NsQuery,
-                                                    NsQuery->QuerySet,
-                                                    NsQuery->ControlFlags,
-                                                    NsQuery->Catalog))
-                        {
-                            /* New query succeeded, set active provider now */
-                            NsQuery->ActiveProvider =
-                                WsNqNextProvider(NsQuery,
-                                                 NsQuery->ActiveProvider);
-                        }
-                    }
-                    else
-                    {
-                        /* Reset the error code */
-                        SetLastError(OldErrorCode);
-                    }
-                }
-
-                /* Release lock */
-                WsNqUnlock();
-
-                /* Keep looping as long as there is a provider */
-            } while (NextProvider);
+            /* Get the previous provider */
+            NextProvider = WsNqPreviousProvider(NsQuery, NextProvider);
         }
     }
-    else
+
+    /* Release the lock */
+    WsNqUnlock();
+
+    /* Restart and keep looping as long as there is an active provider */
+    while (NextProvider)
     {
-        /* We are shuting down; fail */
-        SetLastError(WSAECANCELLED);
+        /* Call its routine */
+        ErrorCode = WsNqProvLookupServiceNext(NextProvider,
+                                              ControlFlags,
+                                              BufferLength,
+                                              Results);
+        /* Check for error or shutdown */
+        if ((ErrorCode == ERROR_SUCCESS) ||
+            (GetLastError() == WSAEFAULT) || (NsQuery->ShuttingDown))
+        {
+            /* Get out */
+            break;
+        }
+
+        /* Acquire Query Lock */
+        WsNqLock();
+
+        /* Save the current active provider */
+        Provider = NsQuery->ActiveProvider;
+
+        /* Check if one exists */
+        if (Provider)
+        {
+            /* Get the next one */
+            NextProvider = WsNqNextProvider(NsQuery,
+                                            NsQuery->ActiveProvider);
+
+            /* Was the old provider our active? */
+            if (Provider == NsQuery->ActiveProvider)
+            {
+                /* Change our active provider to the new one */
+                NsQuery->ActiveProvider = NextProvider;
+            }
+        }
+        else
+        {
+            /* No next provider */
+            NextProvider = NULL;
+        }
+
+        /* Check if we failed and if we can try again */
+        if (!(NextProvider) &&
+            (ErrorCode == SOCKET_ERROR) &&
+            (NsQuery->TryAgain))
+        {
+            /* Save the error code so RAS doesn't overwrite it */
+            OldErrorCode = GetLastError();
+
+            /* Make sure we won't try for a 3rd time */
+            NsQuery->TryAgain = FALSE;
+
+            /* Call the helper to auto-dial */
+            if (WSAttemptAutodialName(NsQuery->QuerySet))
+            {
+                /* It succeeded, so we'll delete the current state. */
+                while (!IsListEmpty(&NsQuery->ProviderList))
+                {
+                    /* Remove the entry and get its provider */
+                    Entry = RemoveHeadList(&NsQuery->ProviderList);
+                    Provider = CONTAINING_RECORD(Entry,
+                                                 NSQUERY_PROVIDER,
+                                                 QueryLink);
+
+                    /* Reset it */
+                    WsNqProvLookupServiceEnd(Provider);
+                    WsNqProvDelete(Provider);
+                }
+
+                /* Start a new query */
+                if (WsNqLookupServiceBegin(NsQuery,
+                                           NsQuery->QuerySet,
+                                           NsQuery->ControlFlags,
+                                           NsQuery->Catalog) == ERROR_SUCCESS)
+                {
+                    /* New query succeeded, set active provider now */
+                    NsQuery->ActiveProvider =
+                        WsNqNextProvider(NsQuery,
+                                         NsQuery->ActiveProvider);
+                }
+            }
+            else
+            {
+                /* Reset the error code */
+                SetLastError(OldErrorCode);
+            }
+        }
+
+        /* Release lock */
+        WsNqUnlock();
     }
 
     /* Return */
@@ -359,9 +352,8 @@ WsNqLookupServiceBegin(IN PNSQUERY NsQuery,
                        IN PNSCATALOG Catalog)
 {
     WSASERVICECLASSINFOW ClassInfo;
-    PNSQUERY_PROVIDER Provider;
     LPWSASERVICECLASSINFOW pClassInfo = &ClassInfo;
-    PNSQUERY_PROVIDER NextProvider;
+    PNSQUERY_PROVIDER Provider, NextProvider;
     PLIST_ENTRY Entry;
     INT ErrorCode;
     DWORD ClassInfoSize;
@@ -539,28 +531,28 @@ WSAAPI
 WsNqPreviousProvider(IN PNSQUERY Query,
                      IN PNSQUERY_PROVIDER Provider)
 {
-    PNSQUERY_PROVIDER NextProvider = NULL;
+    PNSQUERY_PROVIDER PrevProvider = NULL;
     PLIST_ENTRY Entry;
 
-    /* Get the first entry and get its provider */
+    /* Get the last entry and get its provider */
     Entry = Provider->QueryLink.Blink;
     if (Entry != &Query->ProviderList)
     {
         /* Get the current provider */
-        NextProvider = CONTAINING_RECORD(Entry, NSQUERY_PROVIDER, QueryLink);
+        PrevProvider = CONTAINING_RECORD(Entry, NSQUERY_PROVIDER, QueryLink);
     }
 
     /* Return it */
-    return NextProvider;
+    return PrevProvider;
 }
 
-DWORD
+BOOL
 WSAAPI
 WsNqAddProvider(IN PNSQUERY Query,
                 IN PNS_PROVIDER Provider)
 {
+    BOOL Success = TRUE;
     PNSQUERY_PROVIDER QueryProvider;
-    DWORD Return = TRUE;
 
     /* Allocate a new Query Provider */
     if ((QueryProvider = WsNqProvAllocate()))
@@ -575,11 +567,10 @@ WsNqAddProvider(IN PNSQUERY Query,
     {
         /* We failed */
         SetLastError(WSASYSCALLFAILURE);
-        Return = FALSE;
+        Success = FALSE;
     }
 
     /* Return */
-    return Return;
+    return Success;
 }
-
 

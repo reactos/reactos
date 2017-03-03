@@ -2,7 +2,7 @@
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 API
  * FILE:        dll/win32/ws2_32_new/src/rnr.c
- * PURPOSE:     Registration n' Resolution Support
+ * PURPOSE:     Registration and Resolution Support
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)
  */
 
@@ -285,11 +285,6 @@ WSALookupServiceBeginA(IN LPWSAQUERYSETA lpqsRestrictions,
                                                    dwControlFlags,
                                                    lphLookup);
             }
-            else
-            {
-                /* Fail, conversion failed */
-                SetLastError(ErrorCode);
-            }
 
             /* Free our buffer */
             HeapFree(WsSockHeap, 0, UnicodeQuerySet);
@@ -297,14 +292,13 @@ WSALookupServiceBeginA(IN LPWSAQUERYSETA lpqsRestrictions,
         else
         {
             /* No memory to allocate */
-            SetLastError(WSAEFAULT);
+            ErrorCode = WSAEFAULT;
         }
     }
-    else
-    {
-        /* We couldn't get the size for some reason */
+
+    /* Set the error in case of failure */
+    if (ErrorCode != ERROR_SUCCESS)
         SetLastError(ErrorCode);
-    }
 
     /* Return to caller */
     return ErrorCode == ERROR_SUCCESS ? ErrorCode : SOCKET_ERROR;

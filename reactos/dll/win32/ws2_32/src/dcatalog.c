@@ -384,7 +384,7 @@ WsTcGetEntryFromAf(IN PTCATALOG Catalog,
                    IN PTCATALOG_ENTRY *CatalogEntry)
 {
     INT ErrorCode = WSAEINVAL;
-    PLIST_ENTRY NextEntry = Catalog->ProtocolList.Flink;
+    PLIST_ENTRY NextEntry;
     PTCATALOG_ENTRY Entry;
 
     /* Assume failure */
@@ -394,6 +394,7 @@ WsTcGetEntryFromAf(IN PTCATALOG Catalog,
     WsTcLock();
 
     /* Match the Id with all the entries in the List */
+    NextEntry = Catalog->ProtocolList.Flink;
     while (NextEntry != &Catalog->ProtocolList)
     {
         /* Get the Current Entry */
@@ -435,13 +436,14 @@ WsTcGetEntryFromCatalogEntryId(IN PTCATALOG Catalog,
                                IN PTCATALOG_ENTRY *CatalogEntry)
 {
     INT ErrorCode = WSAEINVAL;
-    PLIST_ENTRY NextEntry = Catalog->ProtocolList.Flink;
+    PLIST_ENTRY NextEntry;
     PTCATALOG_ENTRY Entry;
 
     /* Lock the catalog */
     WsTcLock();
 
     /* Match the Id with all the entries in the List */
+    NextEntry = Catalog->ProtocolList.Flink;
     while (NextEntry != &Catalog->ProtocolList)
     {
         /* Get the Current Entry */
@@ -483,7 +485,7 @@ WsTcGetEntryFromTriplet(IN PTCATALOG Catalog,
                         IN PTCATALOG_ENTRY *CatalogEntry)
 {
     INT ErrorCode = WSAEINVAL;
-    PLIST_ENTRY NextEntry = Catalog->ProtocolList.Flink;
+    PLIST_ENTRY NextEntry;
     PTCATALOG_ENTRY Entry;
     DPRINT("WsTcGetEntryFromTriplet: %lx, %lx, %lx, %lx\n", af, type, protocol, StartId);
 
@@ -492,6 +494,8 @@ WsTcGetEntryFromTriplet(IN PTCATALOG Catalog,
 
     /* Lock the catalog */
     WsTcLock();
+
+    NextEntry = Catalog->ProtocolList.Flink;
 
     /* Check if we are starting past 0 */
     if (StartId)
@@ -674,14 +678,14 @@ WsTcUpdateProtocolList(IN PTCATALOG Catalog,
     RemoveEntryList(&Catalog->ProtocolList);
     InitializeListHead(&Catalog->ProtocolList);
 
-    /* Loop every item on the list */
+    /* Loop every item in the list */
     while (!IsListEmpty(List))
     {
         /* Get the catalog entry */
         Entry = RemoveHeadList(List);
         CatalogEntry = CONTAINING_RECORD(Entry, TCATALOG_ENTRY, CatalogLink);
 
-        /* Check if this item is already on our list */
+        /* Check if this item is already in our list */
         Entry = TempList.Flink;
         while (Entry != &TempList)
         {
@@ -709,7 +713,7 @@ WsTcUpdateProtocolList(IN PTCATALOG Catalog,
         Catalog->ItemCount++;
     }
 
-    /* If there's anything left on the temporary list */
+    /* If there's anything left in the temporary list */
     while (!IsListEmpty(&TempList))
     {
         /* Get the entry */
