@@ -315,16 +315,13 @@ BOOL BUTTON_GetIdealSize(HTHEME theme, HWND hwnd, SIZE* psize)
     WCHAR *text;
     HFONT hFont = 0, hPrevFont = 0;
     SIZE TextSize, ImageSize, ButtonSize;
+    BOOL ret = FALSE;
 
     pdata = _GetButtonData(hwnd);
     text = get_button_text( hwnd );
     hdc = GetDC(hwnd);
     if (!pdata || !text || !hdc || !text[0])
-    {
-        psize->cx = 100;
-        psize->cy = 100;
         goto cleanup;
-    }
 
     /* FIXME : Should use GetThemeTextExtent but unfortunately uses DrawTextW which is broken */
     if (theme)
@@ -381,6 +378,7 @@ BOOL BUTTON_GetIdealSize(HTHEME theme, HWND hwnd, SIZE* psize)
     }
 
     *psize = ButtonSize;
+    ret = TRUE;
 
 cleanup:
     if (hFont)
@@ -390,7 +388,7 @@ cleanup:
     if (hdc)
         ReleaseDC(hwnd, hdc);
 
-    return TRUE;
+    return ret;
 }
 
 #endif
@@ -575,17 +573,24 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         case BCM_GETIDEALSIZE:
         {
             HTHEME theme = GetWindowTheme(hWnd);
+            BOOL ret = FALSE;
+            SIZE* pSize = (SIZE*)lParam;
 
-            if (btn_type != BS_PUSHBUTTON && btn_type != BS_DEFPUSHBUTTON)
+            if (btn_type == BS_PUSHBUTTON || 
+                btn_type == BS_DEFPUSHBUTTON ||
+                btn_type == BS_USERBUTTON)
             {
-                SIZE* pSize = (SIZE*)lParam;
+                ret = BUTTON_GetIdealSize(theme, hWnd, pSize);
+            }
+
+            if (!ret)
+            {
                 GetClientRect(hWnd, &rect);
                 pSize->cx = rect.right;
                 pSize->cy = rect.bottom;
-                return TRUE;
             }
 
-            return BUTTON_GetIdealSize(theme, hWnd, (SIZE*)lParam);
+            return TRUE;
         }
     }
 
