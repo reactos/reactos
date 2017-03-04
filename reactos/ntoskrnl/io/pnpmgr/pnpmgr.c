@@ -1634,6 +1634,7 @@ NTSTATUS
 IopGetParentIdPrefix(PDEVICE_NODE DeviceNode,
                      PUNICODE_STRING ParentIdPrefix)
 {
+    const UNICODE_STRING EnumKeyPath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
     ULONG KeyNameBufferLength;
     PKEY_VALUE_PARTIAL_INFORMATION ParentIdPrefixInformation = NULL;
     UNICODE_STRING KeyName = {0, 0, NULL};
@@ -1655,22 +1656,28 @@ IopGetParentIdPrefix(PDEVICE_NODE DeviceNode,
 
     /* 1. Try to retrieve ParentIdPrefix from registry */
     KeyNameBufferLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]) + MAX_PATH * sizeof(WCHAR);
-    ParentIdPrefixInformation = ExAllocatePool(PagedPool, KeyNameBufferLength + sizeof(WCHAR));
+    ParentIdPrefixInformation = ExAllocatePoolWithTag(PagedPool,
+                                                      KeyNameBufferLength + sizeof(UNICODE_NULL),
+                                                      TAG_IO);
     if (!ParentIdPrefixInformation)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    KeyName.Buffer = ExAllocatePool(PagedPool, (49 * sizeof(WCHAR)) + DeviceNode->Parent->InstancePath.Length);
+    KeyName.Length = 0;
+    KeyName.MaximumLength = EnumKeyPath.Length +
+                            DeviceNode->Parent->InstancePath.Length +
+                            sizeof(UNICODE_NULL);
+    KeyName.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                           KeyName.MaximumLength,
+                                           TAG_IO);
     if (!KeyName.Buffer)
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto cleanup;
     }
-    KeyName.Length = 0;
-    KeyName.MaximumLength = (49 * sizeof(WCHAR)) + DeviceNode->Parent->InstancePath.Length;
 
-    RtlAppendUnicodeToString(&KeyName, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+    RtlCopyUnicodeString(&KeyName, &EnumKeyPath);
     RtlAppendUnicodeStringToString(&KeyName, &DeviceNode->Parent->InstancePath);
 
     Status = IopOpenRegistryKeyEx(&hKey, NULL, &KeyName, KEY_QUERY_VALUE | KEY_SET_VALUE);
@@ -1693,15 +1700,20 @@ IopGetParentIdPrefix(PDEVICE_NODE DeviceNode,
         }
         else
         {
-            KeyValue.Length = KeyValue.MaximumLength = (USHORT)ParentIdPrefixInformation->DataLength;
+            KeyValue.MaximumLength = (USHORT)ParentIdPrefixInformation->DataLength;
+            KeyValue.Length = KeyValue.MaximumLength - sizeof(UNICODE_NULL);
             KeyValue.Buffer = (PWSTR)ParentIdPrefixInformation->Data;
+            ASSERT(KeyValue.Buffer[KeyValue.Length / sizeof(WCHAR)] == UNICODE_NULL);
         }
         goto cleanup;
     }
     if (Status != STATUS_OBJECT_NAME_NOT_FOUND)
     {
-        KeyValue.Length = KeyValue.MaximumLength = (USHORT)ParentIdPrefixInformation->DataLength;
+        /* FIXME how do we get here and why is ParentIdPrefixInformation valid? */
+        KeyValue.MaximumLength = (USHORT)ParentIdPrefixInformation->DataLength;
+        KeyValue.Length = KeyValue.MaximumLength - sizeof(UNICODE_NULL);
         KeyValue.Buffer = (PWSTR)ParentIdPrefixInformation->Data;
+        ASSERT(KeyValue.Buffer[KeyValue.Length / sizeof(WCHAR)] == UNICODE_NULL);
         goto cleanup;
     }
 
@@ -1710,8 +1722,12 @@ IopGetParentIdPrefix(PDEVICE_NODE DeviceNode,
                             (PUCHAR)DeviceNode->Parent->InstancePath.Buffer,
                             DeviceNode->Parent->InstancePath.Length);
 
-    swprintf((PWSTR)ParentIdPrefixInformation->Data, L"%lx&%lx", DeviceNode->Parent->Level, crc32);
-    RtlInitUnicodeString(&KeyValue, (PWSTR)ParentIdPrefixInformation->Data);
+    RtlStringCbPrintfW((PWSTR)ParentIdPrefixInformation,
+                       KeyNameBufferLength,
+                       L"%lx&%lx",
+                       DeviceNode->Parent->Level,
+                       crc32);
+    RtlInitUnicodeString(&KeyValue, (PWSTR)ParentIdPrefixInformation);
 
     /* 3. Try to write the ParentIdPrefix to registry */
     Status = ZwSetValueKey(hKey,
@@ -1729,7 +1745,7 @@ cleanup:
                                           &KeyValue,
                                           ParentIdPrefix);
     }
-    ExFreePool(ParentIdPrefixInformation);
+    ExFreePoolWithTag(ParentIdPrefixInformation, TAG_IO);
     RtlFreeUnicodeString(&KeyName);
     if (hKey != NULL)
     {
