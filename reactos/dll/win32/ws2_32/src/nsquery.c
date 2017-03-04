@@ -373,7 +373,7 @@ WsNqLookupServiceBegin(IN PNSQUERY NsQuery,
             SetLastError(ErrorCode);
             ErrorCode = SOCKET_ERROR;
             NsQuery->TryAgain = FALSE;
-            goto error;
+            goto Exit;
         }
 
         /* Cache the information for a restart */
@@ -384,17 +384,17 @@ WsNqLookupServiceBegin(IN PNSQUERY NsQuery,
     /* Check if we have a specific ID */
     if (Restrictions->lpNSProviderId)
     {
-        /* Get the provider */
+        /* Get the catalog entry */
         ErrorCode = WsNcGetCatalogFromProviderId(Catalog,
                                                  Restrictions->lpNSProviderId,
                                                  &CatalogEntry);
-        /* Check for success */
+        /* Check for failure */
         if (ErrorCode != ERROR_SUCCESS)
         {
             /* Fail */
             SetLastError(WSAEINVAL);
             ErrorCode = SOCKET_ERROR;
-            goto error;
+            goto Exit;
         }
         else
         {
@@ -422,7 +422,7 @@ WsNqLookupServiceBegin(IN PNSQUERY NsQuery,
             /* Fail */
             SetLastError(WSAEINVAL);
             ErrorCode = SOCKET_ERROR;
-            goto error;
+            goto Exit;
         }
     }
 
@@ -447,7 +447,7 @@ WsNqLookupServiceBegin(IN PNSQUERY NsQuery,
         /* We don't have any providers to handle this! */
         ErrorCode = SOCKET_ERROR;
         SetLastError(WSASERVICE_NOT_FOUND);
-        goto error;
+        goto Exit;
     }
 
     /* Get the first provider and loop */
@@ -476,7 +476,7 @@ WsNqLookupServiceBegin(IN PNSQUERY NsQuery,
         }
     }
 
-error:
+Exit:
     /* Check if we had an error somewhere */
     if (ErrorCode == SOCKET_ERROR)
     {

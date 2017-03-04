@@ -591,10 +591,8 @@ WsTcFindProvider(IN PTCATALOG Catalog,
         Provider = CatalogEntry->Provider;
 
         /* Check for a match */
-        if ((Provider) &&
-            !(memcmp(&CatalogEntry->ProtocolInfo.ProviderId,
-                    ProviderId,
-                    sizeof(GUID))))
+        if (Provider &&
+            IsEqualGUID(&CatalogEntry->ProtocolInfo.ProviderId, ProviderId))
         {
             /* Found a match */
             return Provider;
@@ -879,10 +877,8 @@ WsTcDelete(IN PTCATALOG Catalog)
         /* Get this entry */
         CatalogEntry = CONTAINING_RECORD(Entry, TCATALOG_ENTRY, CatalogLink);
 
-        /* Remove it */
+        /* Remove it and dereference it */
         WsTcRemoveCatalogItem(Catalog, CatalogEntry);
-
-        /* Dereference it */
         WsTcEntryDereference(CatalogEntry);
 
         /* Move to the next entry */

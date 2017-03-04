@@ -459,9 +459,8 @@ WsNcUpdateNamespaceList(IN PNSCATALOG Catalog,
             Entry = Entry->Flink;
 
             /* Check if they match */
-            if (memcmp(&CatalogEntry->ProviderId,
-                       &OldCatalogEntry->ProviderId,
-                       sizeof(GUID)))
+            if (IsEqualGUID(&CatalogEntry->ProviderId,
+                            &OldCatalogEntry->ProviderId))
             {
                 /* We have a match, use the old item instead */
                 WsNcEntryDereference(CatalogEntry);
@@ -513,7 +512,7 @@ WsNcGetCatalogFromProviderId(IN PNSCATALOG Catalog,
         NextEntry = NextEntry->Flink;
 
         /* Check if this is the Catalog Entry ID we want */
-        if (!(memcmp(&Entry->ProviderId, ProviderId, sizeof(GUID))))
+        if (IsEqualGUID(&Entry->ProviderId, ProviderId))
         {
             /* Check if it doesn't already have a provider */
             if (!Entry->Provider)
@@ -619,10 +618,8 @@ WsNcDelete(IN PNSCATALOG Catalog)
         /* Get this entry */
         CatalogEntry = CONTAINING_RECORD(Entry, NSCATALOG_ENTRY, CatalogLink);
 
-        /* Remove it */
+        /* Remove it and dereference it */
         WsNcRemoveCatalogItem(Catalog, CatalogEntry);
-
-        /* Dereference it */
         WsNcEntryDereference(CatalogEntry);
 
         /* Move to the next entry */

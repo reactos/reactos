@@ -823,12 +823,12 @@ MapAnsiQuerySetToUnicode(IN LPWSAQUERYSETA AnsiSet,
     {
         /* Fail, couldn't allocate memory */
         ErrorCode = WSA_NOT_ENOUGH_MEMORY;
-        goto error;
+        goto Exit;
     }
 
     /* Build the relative buffer version */
     ErrorCode = WSABuildQuerySetBufferA(AnsiSet, AnsiSize, AnsiCopy);
-    if (ErrorCode != ERROR_SUCCESS) goto error;
+    if (ErrorCode != ERROR_SUCCESS) goto Exit;
 
     /* Re-use the ANSI version since the fields match */
     UnicodeCopy = (LPWSAQUERYSETW)AnsiCopy;
@@ -842,7 +842,7 @@ MapAnsiQuerySetToUnicode(IN LPWSAQUERYSETA AnsiSet,
         {
             /* Fail */
             ErrorCode = WSA_NOT_ENOUGH_MEMORY;
-            goto error;
+            goto Exit;
         }
 
         /* Set the new string pointer */
@@ -858,7 +858,7 @@ MapAnsiQuerySetToUnicode(IN LPWSAQUERYSETA AnsiSet,
         {
             /* Fail */
             ErrorCode = WSA_NOT_ENOUGH_MEMORY;
-            goto error;
+            goto Exit;
         }
 
         /* Set the new string pointer */
@@ -874,7 +874,7 @@ MapAnsiQuerySetToUnicode(IN LPWSAQUERYSETA AnsiSet,
         {
             /* Fail */
             ErrorCode = WSA_NOT_ENOUGH_MEMORY;
-            goto error;
+            goto Exit;
         }
 
         /* Set the new string pointer */
@@ -890,7 +890,7 @@ MapAnsiQuerySetToUnicode(IN LPWSAQUERYSETA AnsiSet,
         {
             /* Fail */
             ErrorCode = WSA_NOT_ENOUGH_MEMORY;
-            goto error;
+            goto Exit;
         }
 
         /* Set the new string pointer */
@@ -904,13 +904,13 @@ MapAnsiQuerySetToUnicode(IN LPWSAQUERYSETA AnsiSet,
         /* The buffer wasn't large enough; return how much we need */
         *SetSize = UnicodeSize;
         ErrorCode = WSAEFAULT;
-        goto error;
+        goto Exit;
     }
 
     /* Build the relative unicode buffer */
     ErrorCode = WSABuildQuerySetBufferW(UnicodeCopy, *SetSize, UnicodeSet);
 
-error:
+Exit:
     /* Free the Ansi copy if we had one */
     if (AnsiCopy) HeapFree(WsSockHeap, 0, AnsiCopy);
 
@@ -944,12 +944,12 @@ MapUnicodeQuerySetToAnsi(IN LPWSAQUERYSETW UnicodeSet,
     {
         /* Fail, couldn't allocate memory */
         ErrorCode = WSA_NOT_ENOUGH_MEMORY;
-        goto error;
+        goto Exit;
     }
 
     /* Build the relative buffer version */
     ErrorCode = WSABuildQuerySetBufferW(UnicodeSet, UnicodeSize, UnicodeCopy);
-    if (ErrorCode != ERROR_SUCCESS) goto error;
+    if (ErrorCode != ERROR_SUCCESS) goto Exit;
 
     /* Re-use the Unicode version since the fields match */
     AnsiCopy = (LPWSAQUERYSETA)UnicodeCopy;
@@ -963,7 +963,7 @@ MapUnicodeQuerySetToAnsi(IN LPWSAQUERYSETW UnicodeSet,
         {
             /* Fail */
             ErrorCode = WSA_NOT_ENOUGH_MEMORY;
-            goto error;
+            goto Exit;
         }
 
         /* Set the new string pointer */
@@ -979,7 +979,7 @@ MapUnicodeQuerySetToAnsi(IN LPWSAQUERYSETW UnicodeSet,
         {
             /* Fail */
             ErrorCode = WSA_NOT_ENOUGH_MEMORY;
-            goto error;
+            goto Exit;
         }
 
         /* Set the new string pointer */
@@ -995,7 +995,7 @@ MapUnicodeQuerySetToAnsi(IN LPWSAQUERYSETW UnicodeSet,
         {
             /* Fail */
             ErrorCode = WSA_NOT_ENOUGH_MEMORY;
-            goto error;
+            goto Exit;
         }
 
         /* Set the new string pointer */
@@ -1011,7 +1011,7 @@ MapUnicodeQuerySetToAnsi(IN LPWSAQUERYSETW UnicodeSet,
         {
             /* Fail */
             ErrorCode = WSA_NOT_ENOUGH_MEMORY;
-            goto error;
+            goto Exit;
         }
 
         /* Set the new string pointer */
@@ -1025,13 +1025,13 @@ MapUnicodeQuerySetToAnsi(IN LPWSAQUERYSETW UnicodeSet,
         /* The buffer wasn't large enough; return how much we need */
         *SetSize = AnsiSize;
         ErrorCode = WSAEFAULT;
-        goto error;
+        goto Exit;
     }
 
     /* Build the relative unicode buffer */
     ErrorCode = WSABuildQuerySetBufferA(AnsiCopy, *SetSize, AnsiSet);
 
-error:
+Exit:
     /* Free the Ansi copy if we had one */
     if (UnicodeCopy) HeapFree(WsSockHeap, 0, UnicodeCopy);
 
