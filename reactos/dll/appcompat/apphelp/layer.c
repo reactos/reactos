@@ -109,7 +109,7 @@ BOOL SdbpIsPathOnRemovableMedia(PCWSTR Path)
 {
     WCHAR tmp[] = { 'A',':','\\',0 };
     ULONG type;
-    if (!Path)
+    if (!Path || Path[0] == UNICODE_NULL)
     {
         SHIM_ERR("Invalid argument\n");
         return FALSE;
