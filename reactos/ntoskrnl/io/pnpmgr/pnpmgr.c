@@ -1879,9 +1879,8 @@ IopCreateDeviceInstancePath(
     _Out_ PUNICODE_STRING InstancePath)
 {
     IO_STATUS_BLOCK IoStatusBlock;
-    PWSTR DeviceId;
-    PWSTR InstanceId;
-    WCHAR InstancePathBuffer[MAX_PATH];
+    UNICODE_STRING DeviceId;
+    UNICODE_STRING InstanceId;
     IO_STACK_LOCATION Stack;
     NTSTATUS Status;
     UNICODE_STRING ParentIdPrefix = { 0, 0, NULL };
@@ -1900,16 +1899,13 @@ IopCreateDeviceInstancePath(
         return Status;
     }
 
-    /* Copy the device id string */
-    DeviceId = (PWSTR)IoStatusBlock.Information;
-    wcscpy(InstancePathBuffer, DeviceId);
+    /* Save the device id string */
+    RtlInitUnicodeString(&DeviceId, (PWSTR)IoStatusBlock.Information);
 
     /*
      * FIXME: Check for valid characters, if there is invalid characters
      * then bugcheck.
      */
-
-    ExFreePoolWithTag(DeviceId, 0);
 
     DPRINT("Sending IRP_MN_QUERY_CAPABILITIES to device stack (after enumeration)\n");
 
@@ -1917,6 +1913,7 @@ IopCreateDeviceInstancePath(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("IopQueryDeviceCapabilities() failed (Status 0x%08lx)\n", Status);
+        RtlFreeUnicodeString(&DeviceId);
         return Status;
     }
 
@@ -1925,6 +1922,7 @@ IopCreateDeviceInstancePath(
     {
         /* FIXME: Cleanup device */
         DeviceNode->Flags |= DNF_DISABLED;
+        RtlFreeUnicodeString(&DeviceId);
         return STATUS_PLUGPLAY_NO_DEVICE;
     }
     else
@@ -1940,6 +1938,7 @@ IopCreateDeviceInstancePath(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("IopGetParentIdPrefix() failed (Status 0x%08lx)\n", Status);
+            RtlFreeUnicodeString(&DeviceId);
             return Status;
         }
     }
@@ -1953,45 +1952,58 @@ IopCreateDeviceInstancePath(
                                &Stack);
     if (NT_SUCCESS(Status))
     {
-        InstanceId = (PWSTR)IoStatusBlock.Information;
+        RtlInitUnicodeString(&InstanceId,
+                             (PWSTR)IoStatusBlock.Information);
 
-        /* Append the instance id string */
-        wcscat(InstancePathBuffer, L"\\");
-        if (ParentIdPrefix.Length > 0)
+        InstancePath->Length = 0;
+        InstancePath->MaximumLength = DeviceId.Length + sizeof(WCHAR) +
+                                      ParentIdPrefix.Length +
+                                      InstanceId.Length +
+                                      sizeof(UNICODE_NULL);
+        if (ParentIdPrefix.Length && InstanceId.Length)
         {
-            /* Add information from parent bus device to InstancePath */
-            wcscat(InstancePathBuffer, ParentIdPrefix.Buffer);
-            if (InstanceId && *InstanceId)
-            {
-                wcscat(InstancePathBuffer, L"&");
-            }
+            InstancePath->MaximumLength += sizeof(WCHAR);
         }
-        if (InstanceId)
+
+        InstancePath->Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                     InstancePath->MaximumLength,
+                                                     TAG_IO);
+        if (!InstancePath->Buffer)
         {
-            wcscat(InstancePathBuffer, InstanceId);
+            RtlFreeUnicodeString(&InstanceId);
+            RtlFreeUnicodeString(&ParentIdPrefix);
+            RtlFreeUnicodeString(&DeviceId);
+            return STATUS_INSUFFICIENT_RESOURCES;
         }
+
+        /* Start with the device id */
+        RtlCopyUnicodeString(InstancePath, &DeviceId);
+        RtlAppendUnicodeToString(InstancePath, L"\\");
+
+        /* Add information from parent bus device to InstancePath */
+        RtlAppendUnicodeStringToString(InstancePath, &ParentIdPrefix);
+        if (ParentIdPrefix.Length && InstanceId.Length)
+        {
+            RtlAppendUnicodeToString(InstancePath, L"&");
+        }
+
+        /* Finally, add the id returned by the driver stack */
+        RtlAppendUnicodeStringToString(InstancePath, &InstanceId);
 
         /*
          * FIXME: Check for valid characters, if there is invalid characters
          * then bugcheck
          */
 
-        if (InstanceId)
-        {
-            ExFreePoolWithTag(InstanceId, 0);
-        }
+        RtlFreeUnicodeString(&InstanceId);
+        RtlFreeUnicodeString(&DeviceId);
     }
     else
     {
         DPRINT("IopInitiatePnpIrp(BusQueryInstanceID) failed (Status %x)\n", Status);
+        *InstancePath = DeviceId;
     }
     RtlFreeUnicodeString(&ParentIdPrefix);
-
-    if (!RtlCreateUnicodeString(InstancePath, InstancePathBuffer))
-    {
-        DPRINT1("RtlCreateUnicodeString failed\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
 
     return STATUS_SUCCESS;
 }
