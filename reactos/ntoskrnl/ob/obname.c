@@ -34,12 +34,114 @@ UNICODE_STRING ObpDosDevicesShortName =
 NTSTATUS
 NTAPI
 INIT_FUNCTION
+ObpCreateGlobalDosDevicesSD(OUT PSECURITY_DESCRIPTOR SecurityDescriptor)
+{
+    ULONG AclLength;
+    PACL Dacl;
+    NTSTATUS Status;
+
+    /* Initialize the SD */
+    Status = RtlCreateSecurityDescriptor(SecurityDescriptor,
+                                         SECURITY_DESCRIPTOR_REVISION);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Allocate the DACL */
+    AclLength = sizeof(ACL) +
+                sizeof(ACE) + RtlLengthSid(SeWorldSid) +
+                sizeof(ACE) + RtlLengthSid(SeLocalSystemSid) +
+                sizeof(ACE) + RtlLengthSid(SeWorldSid) +
+                sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid) +
+                sizeof(ACE) + RtlLengthSid(SeLocalSystemSid) +
+                sizeof(ACE) + RtlLengthSid(SeCreatorOwnerSid);
+
+    Dacl = ExAllocatePool(PagedPool, AclLength);
+    if (Dacl == NULL)
+    {
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Initialize the DACL */
+    RtlCreateAcl(Dacl, AclLength, ACL_REVISION);
+
+    /* Add the ACEs */
+    RtlAddAccessAllowedAce(Dacl,
+                           ACL_REVISION,
+                           GENERIC_READ | GENERIC_EXECUTE,
+                           SeWorldSid);
+
+    RtlAddAccessAllowedAce(Dacl,
+                           ACL_REVISION,
+                           GENERIC_ALL,
+                           SeLocalSystemSid);
+
+    RtlAddAccessAllowedAceEx(Dacl,
+                             ACL_REVISION,
+                             INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
+                             GENERIC_EXECUTE,
+                             SeWorldSid);
+
+    RtlAddAccessAllowedAceEx(Dacl,
+                             ACL_REVISION,
+                             INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
+                             GENERIC_ALL,
+                             SeAliasAdminsSid);
+
+    RtlAddAccessAllowedAceEx(Dacl,
+                             ACL_REVISION,
+                             INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
+                             GENERIC_ALL,
+                             SeLocalSystemSid);
+
+    RtlAddAccessAllowedAceEx(Dacl,
+                             ACL_REVISION,
+                             INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE | OBJECT_INHERIT_ACE,
+                             GENERIC_ALL,
+                             SeCreatorOwnerSid);
+
+    /* Attach the DACL to the SD */
+    Status = RtlSetDaclSecurityDescriptor(SecurityDescriptor,
+                                          TRUE,
+                                          Dacl,
+                                          FALSE);
+
+    return Status;
+}
+
+VOID
+NTAPI
+INIT_FUNCTION
+ObpFreeGlobalDosDevicesSD(IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor)
+{
+    PACL Dacl = NULL;
+    BOOLEAN DaclPresent, Defaulted;
+    NTSTATUS Status;
+
+    Status = RtlGetDaclSecurityDescriptor(SecurityDescriptor,
+                                          &DaclPresent,
+                                          &Dacl,
+                                          &Defaulted);
+    if (NT_SUCCESS(Status) && Dacl != NULL)
+    {
+        ExFreePool(Dacl);
+    }
+}
+
+NTSTATUS
+NTAPI
+INIT_FUNCTION
 ObpCreateDosDevicesDirectory(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING RootName, TargetName, LinkName;
     HANDLE Handle, SymHandle;
+    SECURITY_DESCRIPTOR DosDevicesSD;
     NTSTATUS Status;
+
+    /* Create a custom security descriptor for the global DosDevices directory */
+    Status = ObpCreateGlobalDosDevicesSD(&DosDevicesSD);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Create the global DosDevices directory \?? */
     RtlInitUnicodeString(&RootName, L"\\GLOBAL??");
@@ -47,10 +149,11 @@ ObpCreateDosDevicesDirectory(VOID)
                                &RootName,
                                OBJ_PERMANENT,
                                NULL,
-                               NULL);
+                               &DosDevicesSD);
     Status = NtCreateDirectoryObject(&Handle,
                                      DIRECTORY_ALL_ACCESS,
                                      &ObjectAttributes);
+    ObpFreeGlobalDosDevicesSD(&DosDevicesSD);
     if (!NT_SUCCESS(Status)) return Status;
 
     /*********************************************\
