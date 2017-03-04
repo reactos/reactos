@@ -138,7 +138,7 @@ CmpHiveRootSecurityDescriptor(VOID)
 }
 
 NTSTATUS
-CmpQuerySecurityDescriptor(IN PCM_KEY_BODY KeyBody,
+CmpQuerySecurityDescriptor(IN PCM_KEY_CONTROL_BLOCK Kcb,
                            IN SECURITY_INFORMATION SecurityInformation,
                            OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
                            IN OUT PULONG BufferLength)
@@ -153,7 +153,9 @@ CmpQuerySecurityDescriptor(IN PCM_KEY_BODY KeyBody,
     ULONG Group = 0;
     ULONG Dacl = 0;
 
-    DBG_UNREFERENCED_PARAMETER(KeyBody);
+    DBG_UNREFERENCED_PARAMETER(Kcb);
+
+    DPRINT("CmpQuerySecurityDescriptor()\n");
 
     if (SecurityInformation == 0)
     {
@@ -236,6 +238,17 @@ CmpQuerySecurityDescriptor(IN PCM_KEY_BODY KeyBody,
 }
 
 NTSTATUS
+CmpSetSecurityDescriptor(IN PCM_KEY_CONTROL_BLOCK Kcb,
+                         IN PSECURITY_INFORMATION SecurityInformation,
+                         IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                         IN POOL_TYPE PoolType,
+                         IN PGENERIC_MAPPING GenericMapping)
+{
+    DPRINT("CmpSetSecurityDescriptor()\n");
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
 NTAPI
 CmpSecurityMethod(IN PVOID ObjectBody,
                   IN SECURITY_OPERATION_CODE OperationCode,
@@ -246,23 +259,57 @@ CmpSecurityMethod(IN PVOID ObjectBody,
                   IN POOL_TYPE PoolType,
                   IN PGENERIC_MAPPING GenericMapping)
 {
+    PCM_KEY_CONTROL_BLOCK Kcb;
+    NTSTATUS Status = STATUS_SUCCESS;
+
     DBG_UNREFERENCED_PARAMETER(OldSecurityDescriptor);
     DBG_UNREFERENCED_PARAMETER(GenericMapping);
+
+    Kcb = ((PCM_KEY_BODY)ObjectBody)->KeyControlBlock;
+
+    /* Acquire hive lock */
+    CmpLockRegistry();
+
+    /* Acquire the KCB lock */
+    if (OperationCode == QuerySecurityDescriptor)
+    {
+        CmpAcquireKcbLockShared(Kcb);
+    }
+    else
+    {
+        CmpAcquireKcbLockExclusive(Kcb);
+    }
+
+    /* Don't touch deleted keys */
+    if (Kcb->Delete)
+    {
+        /* Unlock the KCB */
+        CmpReleaseKcbLock(Kcb);
+
+        /* Unlock the HIVE */
+        CmpUnlockRegistry();
+        return STATUS_KEY_DELETED;
+    }
 
     switch (OperationCode)
     {
         case SetSecurityDescriptor:
             DPRINT("Set security descriptor\n");
             ASSERT((PoolType == PagedPool) || (PoolType == NonPagedPool));
-            /* HACK */
+            Status = CmpSetSecurityDescriptor(Kcb,
+                                              SecurityInformation,
+                                              SecurityDescriptor,
+                                              PoolType,
+                                              GenericMapping);
             break;
 
         case QuerySecurityDescriptor:
             DPRINT("Query security descriptor\n");
-            return CmpQuerySecurityDescriptor(ObjectBody,
-                                              *SecurityInformation,
-                                              SecurityDescriptor,
-                                              BufferLength);
+            Status = CmpQuerySecurityDescriptor(Kcb,
+                                                *SecurityInformation,
+                                                SecurityDescriptor,
+                                                BufferLength);
+            break;
 
         case DeleteSecurityDescriptor:
             DPRINT("Delete security descriptor\n");
@@ -278,6 +325,11 @@ CmpSecurityMethod(IN PVOID ObjectBody,
             KeBugCheckEx(SECURITY_SYSTEM, 0, STATUS_INVALID_PARAMETER, 0, 0);
     }
 
-    /* HACK */
-    return STATUS_SUCCESS;
+    /* Unlock the KCB */
+    CmpReleaseKcbLock(Kcb);
+
+    /* Unlock the hive */
+    CmpUnlockRegistry();
+
+    return Status;
 }
