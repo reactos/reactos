@@ -1701,7 +1701,7 @@ SetScrollRange(HWND hWnd, INT nBar, INT nMinPos, INT nMaxPos, BOOL bRedraw)
   pWnd = ValidateHwnd(hWnd);
   if ( !pWnd ) return FALSE;
 
-  if ((nMaxPos - nMinPos) > MAXLONG)
+  if (((LONGLONG)nMaxPos - nMinPos) > MAXLONG)
   {
      SetLastError(ERROR_INVALID_SCROLLBAR_RANGE);
      return FALSE;
