@@ -1634,98 +1634,108 @@ NTSTATUS
 IopGetParentIdPrefix(PDEVICE_NODE DeviceNode,
                      PUNICODE_STRING ParentIdPrefix)
 {
-   ULONG KeyNameBufferLength;
-   PKEY_VALUE_PARTIAL_INFORMATION ParentIdPrefixInformation = NULL;
-   UNICODE_STRING KeyName = {0, 0, NULL};
-   UNICODE_STRING KeyValue;
-   UNICODE_STRING ValueName;
-   HANDLE hKey = NULL;
-   ULONG crc32;
-   NTSTATUS Status;
+    ULONG KeyNameBufferLength;
+    PKEY_VALUE_PARTIAL_INFORMATION ParentIdPrefixInformation = NULL;
+    UNICODE_STRING KeyName = {0, 0, NULL};
+    UNICODE_STRING KeyValue;
+    UNICODE_STRING ValueName;
+    HANDLE hKey = NULL;
+    ULONG crc32;
+    NTSTATUS Status;
 
-   /* HACK: As long as some devices have a NULL device
-    * instance path, the following test is required :(
-    */
-   if (DeviceNode->Parent->InstancePath.Length == 0)
-   {
-      DPRINT1("Parent of %wZ has NULL Instance path, please report!\n",
-          &DeviceNode->InstancePath);
-      return STATUS_UNSUCCESSFUL;
-   }
+    /* HACK: As long as some devices have a NULL device
+     * instance path, the following test is required :(
+     */
+    if (DeviceNode->Parent->InstancePath.Length == 0)
+    {
+        DPRINT1("Parent of %wZ has NULL Instance path, please report!\n",
+                &DeviceNode->InstancePath);
+        return STATUS_UNSUCCESSFUL;
+    }
 
-   /* 1. Try to retrieve ParentIdPrefix from registry */
-   KeyNameBufferLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]) + MAX_PATH * sizeof(WCHAR);
-   ParentIdPrefixInformation = ExAllocatePool(PagedPool, KeyNameBufferLength + sizeof(WCHAR));
-   if (!ParentIdPrefixInformation)
-   {
-       return STATUS_INSUFFICIENT_RESOURCES;
-   }
+    /* 1. Try to retrieve ParentIdPrefix from registry */
+    KeyNameBufferLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]) + MAX_PATH * sizeof(WCHAR);
+    ParentIdPrefixInformation = ExAllocatePool(PagedPool, KeyNameBufferLength + sizeof(WCHAR));
+    if (!ParentIdPrefixInformation)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
-   KeyName.Buffer = ExAllocatePool(PagedPool, (49 * sizeof(WCHAR)) + DeviceNode->Parent->InstancePath.Length);
-   if (!KeyName.Buffer)
-   {
-       Status = STATUS_INSUFFICIENT_RESOURCES;
-       goto cleanup;
-   }
-   KeyName.Length = 0;
-   KeyName.MaximumLength = (49 * sizeof(WCHAR)) + DeviceNode->Parent->InstancePath.Length;
+    KeyName.Buffer = ExAllocatePool(PagedPool, (49 * sizeof(WCHAR)) + DeviceNode->Parent->InstancePath.Length);
+    if (!KeyName.Buffer)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
+    }
+    KeyName.Length = 0;
+    KeyName.MaximumLength = (49 * sizeof(WCHAR)) + DeviceNode->Parent->InstancePath.Length;
 
-   RtlAppendUnicodeToString(&KeyName, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
-   RtlAppendUnicodeStringToString(&KeyName, &DeviceNode->Parent->InstancePath);
+    RtlAppendUnicodeToString(&KeyName, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+    RtlAppendUnicodeStringToString(&KeyName, &DeviceNode->Parent->InstancePath);
 
-   Status = IopOpenRegistryKeyEx(&hKey, NULL, &KeyName, KEY_QUERY_VALUE | KEY_SET_VALUE);
-   if (!NT_SUCCESS(Status))
-      goto cleanup;
-   RtlInitUnicodeString(&ValueName, L"ParentIdPrefix");
-   Status = ZwQueryValueKey(
-      hKey, &ValueName,
-      KeyValuePartialInformation, ParentIdPrefixInformation,
-      KeyNameBufferLength, &KeyNameBufferLength);
-   if (NT_SUCCESS(Status))
-   {
-      if (ParentIdPrefixInformation->Type != REG_SZ)
-         Status = STATUS_UNSUCCESSFUL;
-      else
-      {
-         KeyValue.Length = KeyValue.MaximumLength = (USHORT)ParentIdPrefixInformation->DataLength;
-         KeyValue.Buffer = (PWSTR)ParentIdPrefixInformation->Data;
-      }
-      goto cleanup;
-   }
-   if (Status != STATUS_OBJECT_NAME_NOT_FOUND)
-   {
-      KeyValue.Length = KeyValue.MaximumLength = (USHORT)ParentIdPrefixInformation->DataLength;
-      KeyValue.Buffer = (PWSTR)ParentIdPrefixInformation->Data;
-      goto cleanup;
-   }
+    Status = IopOpenRegistryKeyEx(&hKey, NULL, &KeyName, KEY_QUERY_VALUE | KEY_SET_VALUE);
+    if (!NT_SUCCESS(Status))
+    {
+        goto cleanup;
+    }
+    RtlInitUnicodeString(&ValueName, L"ParentIdPrefix");
+    Status = ZwQueryValueKey(hKey,
+                             &ValueName,
+                             KeyValuePartialInformation,
+                             ParentIdPrefixInformation,
+                             KeyNameBufferLength,
+                             &KeyNameBufferLength);
+    if (NT_SUCCESS(Status))
+    {
+        if (ParentIdPrefixInformation->Type != REG_SZ)
+        {
+            Status = STATUS_UNSUCCESSFUL;
+        }
+        else
+        {
+            KeyValue.Length = KeyValue.MaximumLength = (USHORT)ParentIdPrefixInformation->DataLength;
+            KeyValue.Buffer = (PWSTR)ParentIdPrefixInformation->Data;
+        }
+        goto cleanup;
+    }
+    if (Status != STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        KeyValue.Length = KeyValue.MaximumLength = (USHORT)ParentIdPrefixInformation->DataLength;
+        KeyValue.Buffer = (PWSTR)ParentIdPrefixInformation->Data;
+        goto cleanup;
+    }
 
-   /* 2. Create the ParentIdPrefix value */
-   crc32 = RtlComputeCrc32(0,
-                           (PUCHAR)DeviceNode->Parent->InstancePath.Buffer,
-                           DeviceNode->Parent->InstancePath.Length);
+    /* 2. Create the ParentIdPrefix value */
+    crc32 = RtlComputeCrc32(0,
+                            (PUCHAR)DeviceNode->Parent->InstancePath.Buffer,
+                            DeviceNode->Parent->InstancePath.Length);
 
-   swprintf((PWSTR)ParentIdPrefixInformation->Data, L"%lx&%lx", DeviceNode->Parent->Level, crc32);
-   RtlInitUnicodeString(&KeyValue, (PWSTR)ParentIdPrefixInformation->Data);
+    swprintf((PWSTR)ParentIdPrefixInformation->Data, L"%lx&%lx", DeviceNode->Parent->Level, crc32);
+    RtlInitUnicodeString(&KeyValue, (PWSTR)ParentIdPrefixInformation->Data);
 
-   /* 3. Try to write the ParentIdPrefix to registry */
-   Status = ZwSetValueKey(hKey,
-                          &ValueName,
-                          0,
-                          REG_SZ,
-                          (PVOID)KeyValue.Buffer,
-                          ((ULONG)wcslen(KeyValue.Buffer) + 1) * sizeof(WCHAR));
+    /* 3. Try to write the ParentIdPrefix to registry */
+    Status = ZwSetValueKey(hKey,
+                           &ValueName,
+                           0,
+                           REG_SZ,
+                           (PVOID)KeyValue.Buffer,
+                           ((ULONG)wcslen(KeyValue.Buffer) + 1) * sizeof(WCHAR));
 
 cleanup:
-   if (NT_SUCCESS(Status))
-   {
-      /* Duplicate the string to return it */
-      Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, &KeyValue, ParentIdPrefix);
-   }
-   ExFreePool(ParentIdPrefixInformation);
-   RtlFreeUnicodeString(&KeyName);
-   if (hKey != NULL)
-      ZwClose(hKey);
-   return Status;
+    if (NT_SUCCESS(Status))
+    {
+       /* Duplicate the string to return it */
+       Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
+                                          &KeyValue,
+                                          ParentIdPrefix);
+    }
+    ExFreePool(ParentIdPrefixInformation);
+    RtlFreeUnicodeString(&KeyName);
+    if (hKey != NULL)
+    {
+        ZwClose(hKey);
+    }
+    return Status;
 }
 
 NTSTATUS
@@ -1850,11 +1860,12 @@ IopQueryCompatibleIds(PDEVICE_NODE DeviceNode,
 NTSTATUS
 IopCreateDeviceInstancePath(
     _In_ PDEVICE_NODE DeviceNode,
-    _Out_ PUNICODE_STRING InstancePathU)
+    _Out_ PUNICODE_STRING InstancePath)
 {
     IO_STATUS_BLOCK IoStatusBlock;
-    PWSTR InformationString;
-    WCHAR InstancePath[MAX_PATH];
+    PWSTR DeviceId;
+    PWSTR InstanceId;
+    WCHAR InstancePathBuffer[MAX_PATH];
     IO_STACK_LOCATION Stack;
     NTSTATUS Status;
     UNICODE_STRING ParentIdPrefix = { 0, 0, NULL };
@@ -1869,27 +1880,27 @@ IopCreateDeviceInstancePath(
                                &Stack);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopInitiatePnpIrp() failed (Status %x)\n", Status);
+        DPRINT1("IopInitiatePnpIrp(BusQueryDeviceID) failed (Status %x)\n", Status);
         return Status;
     }
 
     /* Copy the device id string */
-    InformationString = (PWSTR)IoStatusBlock.Information;
-    wcscpy(InstancePath, InformationString);
+    DeviceId = (PWSTR)IoStatusBlock.Information;
+    wcscpy(InstancePathBuffer, DeviceId);
 
     /*
      * FIXME: Check for valid characters, if there is invalid characters
      * then bugcheck.
      */
 
-    ExFreePoolWithTag(InformationString, 0);
+    ExFreePoolWithTag(DeviceId, 0);
 
     DPRINT("Sending IRP_MN_QUERY_CAPABILITIES to device stack (after enumeration)\n");
 
     Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCapabilities);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopInitiatePnpIrp() failed (Status 0x%08lx)\n", Status);
+        DPRINT1("IopQueryDeviceCapabilities() failed (Status 0x%08lx)\n", Status);
         return Status;
     }
 
@@ -1926,22 +1937,22 @@ IopCreateDeviceInstancePath(
                                &Stack);
     if (NT_SUCCESS(Status))
     {
-        InformationString = (PWSTR)IoStatusBlock.Information;
+        InstanceId = (PWSTR)IoStatusBlock.Information;
 
         /* Append the instance id string */
-        wcscat(InstancePath, L"\\");
+        wcscat(InstancePathBuffer, L"\\");
         if (ParentIdPrefix.Length > 0)
         {
             /* Add information from parent bus device to InstancePath */
-            wcscat(InstancePath, ParentIdPrefix.Buffer);
-            if (InformationString && *InformationString)
+            wcscat(InstancePathBuffer, ParentIdPrefix.Buffer);
+            if (InstanceId && *InstanceId)
             {
-                wcscat(InstancePath, L"&");
+                wcscat(InstancePathBuffer, L"&");
             }
         }
-        if (InformationString)
+        if (InstanceId)
         {
-            wcscat(InstancePath, InformationString);
+            wcscat(InstancePathBuffer, InstanceId);
         }
 
         /*
@@ -1949,18 +1960,18 @@ IopCreateDeviceInstancePath(
          * then bugcheck
          */
 
-        if (InformationString)
+        if (InstanceId)
         {
-            ExFreePoolWithTag(InformationString, 0);
+            ExFreePoolWithTag(InstanceId, 0);
         }
     }
     else
     {
-        DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
+        DPRINT("IopInitiatePnpIrp(BusQueryInstanceID) failed (Status %x)\n", Status);
     }
     RtlFreeUnicodeString(&ParentIdPrefix);
 
-    if (!RtlCreateUnicodeString(InstancePathU, InstancePath))
+    if (!RtlCreateUnicodeString(InstancePath, InstancePathBuffer))
     {
         DPRINT1("RtlCreateUnicodeString failed\n");
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -1991,7 +2002,8 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
                                 PVOID Context)
 {
     IO_STATUS_BLOCK IoStatusBlock;
-    PWSTR InformationString;
+    PWSTR DeviceDescription;
+    PWSTR LocationInformation;
     PDEVICE_NODE ParentDeviceNode;
     IO_STACK_LOCATION Stack;
     NTSTATUS Status;
@@ -2104,14 +2116,14 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
                                &IoStatusBlock,
                                IRP_MN_QUERY_DEVICE_TEXT,
                                &Stack);
-    InformationString = NT_SUCCESS(Status) ? (PWSTR)IoStatusBlock.Information
+    DeviceDescription = NT_SUCCESS(Status) ? (PWSTR)IoStatusBlock.Information
                                            : NULL;
     /* This key is mandatory, so even if the Irp fails, we still write it */
     RtlInitUnicodeString(&ValueName, L"DeviceDesc");
     if (ZwQueryValueKey(InstanceKey, &ValueName, KeyValueBasicInformation, NULL, 0, &RequiredLength) == STATUS_OBJECT_NAME_NOT_FOUND)
     {
-        if (InformationString &&
-            *InformationString != UNICODE_NULL)
+        if (DeviceDescription &&
+            *DeviceDescription != UNICODE_NULL)
         {
             /* This key is overriden when a driver is installed. Don't write the
              * new description if another one already exists */
@@ -2119,8 +2131,8 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
                                    &ValueName,
                                    0,
                                    REG_SZ,
-                                   InformationString,
-                                   ((ULONG)wcslen(InformationString) + 1) * sizeof(WCHAR));
+                                   DeviceDescription,
+                                   ((ULONG)wcslen(DeviceDescription) + 1) * sizeof(WCHAR));
         }
         else
         {
@@ -2141,9 +2153,9 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
         }
     }
 
-    if (InformationString)
+    if (DeviceDescription)
     {
-        ExFreePoolWithTag(InformationString, 0);
+        ExFreePoolWithTag(DeviceDescription, 0);
     }
 
     DPRINT("Sending IRP_MN_QUERY_DEVICE_TEXT.DeviceTextLocation to device stack\n");
@@ -2156,21 +2168,21 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
                                &Stack);
     if (NT_SUCCESS(Status) && IoStatusBlock.Information)
     {
-        InformationString = (PWSTR)IoStatusBlock.Information;
-        DPRINT("LocationInformation: %S\n", InformationString);
+        LocationInformation = (PWSTR)IoStatusBlock.Information;
+        DPRINT("LocationInformation: %S\n", LocationInformation);
         RtlInitUnicodeString(&ValueName, L"LocationInformation");
         Status = ZwSetValueKey(InstanceKey,
                                &ValueName,
                                0,
                                REG_SZ,
-                               InformationString,
-                               ((ULONG)wcslen(InformationString) + 1) * sizeof(WCHAR));
+                               LocationInformation,
+                               ((ULONG)wcslen(LocationInformation) + 1) * sizeof(WCHAR));
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("ZwSetValueKey() failed (Status %lx)\n", Status);
         }
 
-        ExFreePoolWithTag(InformationString, 0);
+        ExFreePoolWithTag(LocationInformation, 0);
     }
     else
     {
