@@ -1058,12 +1058,14 @@ VfatLockOrUnlockVolume(
     PFILE_OBJECT FileObject;
     PDEVICE_EXTENSION DeviceExt;
     PVFATFCB Fcb;
+    PVPB Vpb;
 
     DPRINT("VfatLockOrUnlockVolume(%p, %d)\n", IrpContext, Lock);
 
     DeviceExt = IrpContext->DeviceExt;
     FileObject = IrpContext->FileObject;
     Fcb = FileObject->FsContext;
+    Vpb = DeviceExt->FATFileObject->Vpb;
 
     /* Only allow locking with the volume open */
     if (!BooleanFlagOn(Fcb->Flags, FCB_IS_VOLUME))
@@ -1078,6 +1080,13 @@ VfatLockOrUnlockVolume(
         return STATUS_ACCESS_DENIED;
     }
 
+    /* Bail out if it's already in the demanded state */
+    if ((BooleanFlagOn(Vpb->Flags, VPB_LOCKED) && Lock) ||
+        (!BooleanFlagOn(Vpb->Flags, VPB_LOCKED) && !Lock))
+    {
+        return STATUS_ACCESS_DENIED;
+    }
+
     /* Deny locking if we're not alone */
     if (Lock && DeviceExt->OpenHandleCount != 1)
     {
@@ -1088,10 +1097,12 @@ VfatLockOrUnlockVolume(
     if (Lock)
     {
         DeviceExt->Flags |= VCB_VOLUME_LOCKED;
+        Vpb->Flags |= VPB_LOCKED;
     }
     else
     {
         DeviceExt->Flags &= ~VCB_VOLUME_LOCKED;
+        Vpb->Flags &= ~VPB_LOCKED;
     }
 
     return STATUS_SUCCESS;
