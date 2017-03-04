@@ -210,7 +210,7 @@ AcpiExResolveObjectToValue (
                 /* If method call or CopyObject - do not dereference */
 
                 if ((WalkState->Opcode == AML_INT_METHODCALL_OP) ||
-                    (WalkState->Opcode == AML_COPY_OP))
+                    (WalkState->Opcode == AML_COPY_OBJECT_OP))
                 {
                     break;
                 }

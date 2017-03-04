@@ -803,6 +803,11 @@ AcpiDmEmitExternals (
     void);
 
 void
+AcpiDmEmitExternal (
+    ACPI_PARSE_OBJECT       *NameOp,
+    ACPI_PARSE_OBJECT       *TypeOp);
+
+void
 AcpiDmUnresolvedWarning (
     UINT8                   Type);
 
@@ -1096,5 +1101,14 @@ AdDisplayTables (
 ACPI_STATUS
 AdDisplayStatistics (
     void);
+
+
+/*
+ * dmwalk
+ */
+UINT32
+AcpiDmBlockType (
+    ACPI_PARSE_OBJECT       *Op);
+
 
 #endif  /* __ACDISASM_H__ */

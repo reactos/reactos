@@ -77,7 +77,7 @@ AcpiOsCreateCache (
     ACPI_FUNCTION_ENTRY ();
 
 
-    if (!CacheName || !ReturnCache || (ObjectSize < 16))
+    if (!CacheName || !ReturnCache || !ObjectSize)
     {
         return (AE_BAD_PARAMETER);
     }

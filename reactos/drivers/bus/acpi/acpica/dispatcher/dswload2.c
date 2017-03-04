@@ -543,7 +543,7 @@ AcpiDsLoad2EndOp (
             Status = AcpiExCreateProcessor (WalkState);
             break;
 
-        case AML_POWER_RES_OP:
+        case AML_POWER_RESOURCE_OP:
 
             Status = AcpiExCreatePowerResource (WalkState);
             break;

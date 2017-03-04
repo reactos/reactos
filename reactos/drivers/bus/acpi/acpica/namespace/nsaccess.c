@@ -505,7 +505,7 @@ AcpiNsLookup (
                 "Dual Pathname (2 segments, Flags=%X)\n", Flags));
             break;
 
-        case AML_MULTI_NAME_PREFIX_OP:
+        case AML_MULTI_NAME_PREFIX:
 
             /* More than one NameSeg, search rules do not apply */
 

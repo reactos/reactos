@@ -141,7 +141,7 @@ AcpiExAllocateNameString (
     {
         /* Set up multi prefixes   */
 
-        *TempPtr++ = AML_MULTI_NAME_PREFIX_OP;
+        *TempPtr++ = AML_MULTI_NAME_PREFIX;
         *TempPtr++ = (char) NumNameSegs;
     }
     else if (2 == NumNameSegs)
@@ -385,7 +385,7 @@ AcpiExGetNameString (
             }
             break;
 
-        case AML_MULTI_NAME_PREFIX_OP:
+        case AML_MULTI_NAME_PREFIX:
 
             ACPI_DEBUG_PRINT ((ACPI_DB_LOAD, "MultiNamePrefix at %p\n",
                 AmlAddress));

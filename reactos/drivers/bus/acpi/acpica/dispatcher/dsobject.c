@@ -113,7 +113,7 @@ AcpiDsBuildInternalObject (
                 if ((Status == AE_NOT_FOUND) && (AcpiGbl_EnableInterpreterSlack) &&
 
                     ((Op->Common.Parent->Common.AmlOpcode == AML_PACKAGE_OP) ||
-                     (Op->Common.Parent->Common.AmlOpcode == AML_VAR_PACKAGE_OP)))
+                     (Op->Common.Parent->Common.AmlOpcode == AML_VARIABLE_PACKAGE_OP)))
                 {
                     /*
                      * We didn't find the target and we are populating elements
@@ -142,7 +142,7 @@ AcpiDsBuildInternalObject (
         /* Special object resolution for elements of a package */
 
         if ((Op->Common.Parent->Common.AmlOpcode == AML_PACKAGE_OP) ||
-            (Op->Common.Parent->Common.AmlOpcode == AML_VAR_PACKAGE_OP))
+            (Op->Common.Parent->Common.AmlOpcode == AML_VARIABLE_PACKAGE_OP))
         {
             /*
              * Attempt to resolve the node to a value before we insert it into
@@ -411,7 +411,7 @@ AcpiDsBuildInternalPackageObj (
 
     Parent = Op->Common.Parent;
     while ((Parent->Common.AmlOpcode == AML_PACKAGE_OP) ||
-           (Parent->Common.AmlOpcode == AML_VAR_PACKAGE_OP))
+           (Parent->Common.AmlOpcode == AML_VARIABLE_PACKAGE_OP))
     {
         Parent = Parent->Common.Parent;
     }
@@ -795,9 +795,9 @@ AcpiDsInitObjectFromOp (
         {
         case AML_TYPE_LOCAL_VARIABLE:
 
-            /* Local ID (0-7) is (AML opcode - base AML_LOCAL_OP) */
+            /* Local ID (0-7) is (AML opcode - base AML_FIRST_LOCAL_OP) */
 
-            ObjDesc->Reference.Value = ((UINT32) Opcode) - AML_LOCAL_OP;
+            ObjDesc->Reference.Value = ((UINT32) Opcode) - AML_FIRST_LOCAL_OP;
             ObjDesc->Reference.Class = ACPI_REFCLASS_LOCAL;
 
 #ifndef ACPI_NO_METHOD_EXECUTION
@@ -810,9 +810,9 @@ AcpiDsInitObjectFromOp (
 
         case AML_TYPE_METHOD_ARGUMENT:
 
-            /* Arg ID (0-6) is (AML opcode - base AML_ARG_OP) */
+            /* Arg ID (0-6) is (AML opcode - base AML_FIRST_ARG_OP) */
 
-            ObjDesc->Reference.Value = ((UINT32) Opcode) - AML_ARG_OP;
+            ObjDesc->Reference.Value = ((UINT32) Opcode) - AML_FIRST_ARG_OP;
             ObjDesc->Reference.Class = ACPI_REFCLASS_ARG;
 
 #ifndef ACPI_NO_METHOD_EXECUTION

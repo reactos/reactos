@@ -47,6 +47,7 @@
 #include "amlcode.h"
 #include "acnamesp.h"
 #include "acdispat.h"
+#include "acconvert.h"
 
 #define _COMPONENT          ACPI_PARSER
         ACPI_MODULE_NAME    ("psargs")
@@ -208,7 +209,7 @@ AcpiPsGetNextNamestring (
         End += 1 + (2 * ACPI_NAME_SIZE);
         break;
 
-    case AML_MULTI_NAME_PREFIX_OP:
+    case AML_MULTI_NAME_PREFIX:
 
         /* Multiple name segments, 4 chars each, count in next byte */
 
@@ -369,7 +370,7 @@ AcpiPsGetNextNamepath (
 
         /* 2) NotFound during a CondRefOf(x) is ok by definition */
 
-        else if (WalkState->Op->Common.AmlOpcode == AML_COND_REF_OF_OP)
+        else if (WalkState->Op->Common.AmlOpcode == AML_CONDITIONAL_REF_OF_OP)
         {
             Status = AE_OK;
         }
@@ -381,7 +382,7 @@ AcpiPsGetNextNamepath (
          */
         else if ((Arg->Common.Parent) &&
             ((Arg->Common.Parent->Common.AmlOpcode == AML_PACKAGE_OP) ||
-             (Arg->Common.Parent->Common.AmlOpcode == AML_VAR_PACKAGE_OP)))
+             (Arg->Common.Parent->Common.AmlOpcode == AML_VARIABLE_PACKAGE_OP)))
         {
             Status = AE_OK;
         }
@@ -543,6 +544,7 @@ AcpiPsGetNextField (
     ACPI_FUNCTION_TRACE (PsGetNextField);
 
 
+    ASL_CV_CAPTURE_COMMENTS_ONLY (ParserState);
     Aml = ParserState->Aml;
 
     /* Determine field type */
@@ -589,6 +591,7 @@ AcpiPsGetNextField (
 
     /* Decode the field type */
 
+    ASL_CV_CAPTURE_COMMENTS_ONLY (ParserState);
     switch (Opcode)
     {
     case AML_INT_NAMEDFIELD_OP:
@@ -598,6 +601,23 @@ AcpiPsGetNextField (
         ACPI_MOVE_32_TO_32 (&Name, ParserState->Aml);
         AcpiPsSetName (Field, Name);
         ParserState->Aml += ACPI_NAME_SIZE;
+
+
+        ASL_CV_CAPTURE_COMMENTS_ONLY (ParserState);
+
+#ifdef ACPI_ASL_COMPILER
+        /*
+         * Because the package length isn't represented as a parse tree object,
+         * take comments surrounding this and add to the previously created
+         * parse node.
+         */
+        if (Field->Common.InlineComment)
+        {
+            Field->Common.NameComment = Field->Common.InlineComment;
+        }
+        Field->Common.InlineComment  = AcpiGbl_CurrentInlineComment;
+        AcpiGbl_CurrentInlineComment = NULL;
+#endif
 
         /* Get the length which is encoded as a package length */
 
@@ -655,10 +675,12 @@ AcpiPsGetNextField (
         {
             ParserState->Aml++;
 
+            ASL_CV_CAPTURE_COMMENTS_ONLY (ParserState);
             PkgEnd = ParserState->Aml;
             PkgLength = AcpiPsGetNextPackageLength (ParserState);
             PkgEnd += PkgLength;
 
+            ASL_CV_CAPTURE_COMMENTS_ONLY (ParserState);
             if (ParserState->Aml < PkgEnd)
             {
                 /* Non-empty list */
@@ -675,6 +697,7 @@ AcpiPsGetNextField (
                 Opcode = ACPI_GET8 (ParserState->Aml);
                 ParserState->Aml++;
 
+                ASL_CV_CAPTURE_COMMENTS_ONLY (ParserState);
                 switch (Opcode)
                 {
                 case AML_BYTE_OP:       /* AML_BYTEDATA_ARG */
@@ -703,6 +726,7 @@ AcpiPsGetNextField (
 
                 /* Fill in bytelist data */
 
+                ASL_CV_CAPTURE_COMMENTS_ONLY (ParserState);
                 Arg->Named.Value.Size = BufferLength;
                 Arg->Named.Data = ParserState->Aml;
             }

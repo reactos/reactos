@@ -45,6 +45,7 @@
 #include "accommon.h"
 #include "acparser.h"
 #include "amlcode.h"
+#include "acconvert.h"
 
 #define _COMPONENT          ACPI_PARSER
         ACPI_MODULE_NAME    ("psobject")
@@ -201,6 +202,7 @@ AcpiPsBuildNamedOp (
     while (GET_CURRENT_ARG_TYPE (WalkState->ArgTypes) &&
           (GET_CURRENT_ARG_TYPE (WalkState->ArgTypes) != ARGP_NAME))
     {
+        ASL_CV_CAPTURE_COMMENTS (WalkState);
         Status = AcpiPsGetNextArg (WalkState, &(WalkState->ParserState),
             GET_CURRENT_ARG_TYPE (WalkState->ArgTypes), &Arg);
         if (ACPI_FAILURE (Status))
@@ -211,6 +213,18 @@ AcpiPsBuildNamedOp (
         AcpiPsAppendArg (UnnamedOp, Arg);
         INCREMENT_ARG_LIST (WalkState->ArgTypes);
     }
+
+    /* are there any inline comments associated with the NameSeg?? If so, save this. */
+
+    ASL_CV_CAPTURE_COMMENTS (WalkState);
+
+#ifdef ACPI_ASL_COMPILER
+    if (AcpiGbl_CurrentInlineComment != NULL)
+    {
+        UnnamedOp->Common.NameComment = AcpiGbl_CurrentInlineComment;
+        AcpiGbl_CurrentInlineComment = NULL;
+    }
+#endif
 
     /*
      * Make sure that we found a NAME and didn't run out of arguments
@@ -256,6 +270,28 @@ AcpiPsBuildNamedOp (
     }
 
     AcpiPsAppendArg (*Op, UnnamedOp->Common.Value.Arg);
+
+#ifdef ACPI_ASL_COMPILER
+
+    /* save any comments that might be associated with UnnamedOp. */
+
+    (*Op)->Common.InlineComment     = UnnamedOp->Common.InlineComment;
+    (*Op)->Common.EndNodeComment    = UnnamedOp->Common.EndNodeComment;
+    (*Op)->Common.CloseBraceComment = UnnamedOp->Common.CloseBraceComment;
+    (*Op)->Common.NameComment       = UnnamedOp->Common.NameComment;
+    (*Op)->Common.CommentList       = UnnamedOp->Common.CommentList;
+    (*Op)->Common.EndBlkComment     = UnnamedOp->Common.EndBlkComment;
+    (*Op)->Common.CvFilename        = UnnamedOp->Common.CvFilename;
+    (*Op)->Common.CvParentFilename  = UnnamedOp->Common.CvParentFilename;
+    (*Op)->Named.Aml                = UnnamedOp->Common.Aml;
+
+    UnnamedOp->Common.InlineComment     = NULL;
+    UnnamedOp->Common.EndNodeComment    = NULL;
+    UnnamedOp->Common.CloseBraceComment = NULL;
+    UnnamedOp->Common.NameComment       = NULL;
+    UnnamedOp->Common.CommentList       = NULL;
+    UnnamedOp->Common.EndBlkComment     = NULL;
+#endif
 
     if ((*Op)->Common.AmlOpcode == AML_REGION_OP ||
         (*Op)->Common.AmlOpcode == AML_DATA_REGION_OP)

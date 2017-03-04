@@ -707,4 +707,5 @@ AcpiTracePoint (
 
 ACPI_EXPORT_SYMBOL (AcpiTracePoint)
 
+
 #endif

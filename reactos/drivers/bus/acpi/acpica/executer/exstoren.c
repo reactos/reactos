@@ -113,7 +113,7 @@ AcpiExResolveObject (
 
         /* For CopyObject, no further validation necessary */
 
-        if (WalkState->Opcode == AML_COPY_OP)
+        if (WalkState->Opcode == AML_COPY_OBJECT_OP)
         {
             break;
         }

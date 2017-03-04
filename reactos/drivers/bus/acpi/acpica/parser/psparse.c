@@ -114,7 +114,7 @@ AcpiPsPeekOpcode (
     Aml = ParserState->Aml;
     Opcode = (UINT16) ACPI_GET8 (Aml);
 
-    if (Opcode == AML_EXTENDED_OP_PREFIX)
+    if (Opcode == AML_EXTENDED_PREFIX)
     {
         /* Extended opcode, get the second opcode byte */
 
@@ -218,7 +218,7 @@ AcpiPsCompleteThisOp (
                 (Op->Common.Parent->Common.AmlOpcode == AML_BUFFER_OP)       ||
                 (Op->Common.Parent->Common.AmlOpcode == AML_PACKAGE_OP)      ||
                 (Op->Common.Parent->Common.AmlOpcode == AML_BANK_FIELD_OP)   ||
-                (Op->Common.Parent->Common.AmlOpcode == AML_VAR_PACKAGE_OP))
+                (Op->Common.Parent->Common.AmlOpcode == AML_VARIABLE_PACKAGE_OP))
             {
                 ReplacementOp = AcpiPsAllocOp (
                     AML_INT_RETURN_VALUE_OP, Op->Common.Aml);
@@ -232,7 +232,7 @@ AcpiPsCompleteThisOp (
             {
                 if ((Op->Common.AmlOpcode == AML_BUFFER_OP) ||
                     (Op->Common.AmlOpcode == AML_PACKAGE_OP) ||
-                    (Op->Common.AmlOpcode == AML_VAR_PACKAGE_OP))
+                    (Op->Common.AmlOpcode == AML_VARIABLE_PACKAGE_OP))
                 {
                     ReplacementOp = AcpiPsAllocOp (Op->Common.AmlOpcode,
                         Op->Common.Aml);

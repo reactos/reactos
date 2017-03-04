@@ -728,7 +728,8 @@ AcpiDsStoreObjectToLocal (
  *
  * FUNCTION:    AcpiDsMethodDataGetType
  *
- * PARAMETERS:  Opcode              - Either AML_LOCAL_OP or AML_ARG_OP
+ * PARAMETERS:  Opcode              - Either AML_FIRST LOCAL_OP or
+ *                                    AML_FIRST_ARG_OP
  *              Index               - Which Local or Arg whose type to get
  *              WalkState           - Current walk state object
  *

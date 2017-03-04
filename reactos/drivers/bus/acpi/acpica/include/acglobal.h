@@ -374,6 +374,50 @@ ACPI_GLOBAL (const char,                *AcpiGbl_PldShapeList[]);
 
 #endif
 
+/*
+ * Meant for the -ca option.
+ */
+ACPI_INIT_GLOBAL (char*,   AcpiGbl_CurrentInlineComment,     NULL);
+ACPI_INIT_GLOBAL (char*,   AcpiGbl_CurrentEndNodeComment,    NULL);
+ACPI_INIT_GLOBAL (char*,   AcpiGbl_CurrentOpenBraceComment,  NULL);
+ACPI_INIT_GLOBAL (char*,   AcpiGbl_CurrentCloseBraceComment, NULL);
+
+ACPI_INIT_GLOBAL (char*,   AcpiGbl_RootFilename, NULL);
+ACPI_INIT_GLOBAL (char*,   AcpiGbl_CurrentFilename, NULL);
+ACPI_INIT_GLOBAL (char*,   AcpiGbl_CurrentParentFilename, NULL);
+ACPI_INIT_GLOBAL (char*,   AcpiGbl_CurrentIncludeFilename, NULL);
+
+ACPI_INIT_GLOBAL (ACPI_COMMENT_NODE,   *AcpiGbl_LastListHead, NULL);
+
+ACPI_INIT_GLOBAL (ACPI_COMMENT_NODE,   *AcpiGbl_DefBlkCommentListHead, NULL);
+ACPI_INIT_GLOBAL (ACPI_COMMENT_NODE,   *AcpiGbl_DefBlkCommentListTail, NULL);
+
+ACPI_INIT_GLOBAL (ACPI_COMMENT_NODE,   *AcpiGbl_RegCommentListHead, NULL);
+ACPI_INIT_GLOBAL (ACPI_COMMENT_NODE,   *AcpiGbl_RegCommentListTail, NULL);
+
+ACPI_INIT_GLOBAL (ACPI_COMMENT_NODE,   *AcpiGbl_IncCommentListHead, NULL);
+ACPI_INIT_GLOBAL (ACPI_COMMENT_NODE,   *AcpiGbl_IncCommentListTail, NULL);
+
+ACPI_INIT_GLOBAL (ACPI_COMMENT_NODE,   *AcpiGbl_EndBlkCommentListHead, NULL);
+ACPI_INIT_GLOBAL (ACPI_COMMENT_NODE,   *AcpiGbl_EndBlkCommentListTail, NULL);
+
+ACPI_INIT_GLOBAL (ACPI_COMMENT_ADDR_NODE,   *AcpiGbl_CommentAddrListHead, NULL);
+
+ACPI_INIT_GLOBAL (ACPI_PARSE_OBJECT,   *AcpiGbl_CurrentScope,     NULL);
+
+ACPI_INIT_GLOBAL (ACPI_FILE_NODE,      *AcpiGbl_FileTreeRoot, NULL);
+
+ACPI_GLOBAL (ACPI_CACHE_T *,            AcpiGbl_RegCommentCache);
+ACPI_GLOBAL (ACPI_CACHE_T *,            AcpiGbl_CommentAddrCache);
+ACPI_GLOBAL (ACPI_CACHE_T *,            AcpiGbl_FileCache);
+
+ACPI_INIT_GLOBAL (BOOLEAN, Gbl_CaptureComments, FALSE);
+
+ACPI_INIT_GLOBAL (BOOLEAN, AcpiGbl_DebugAslConversion, FALSE);
+ACPI_INIT_GLOBAL (ACPI_FILE, AcpiGbl_ConvDebugFile, NULL);
+
+ACPI_GLOBAL (char, AcpiGbl_TableSig[4]);
+
 /*****************************************************************************
  *
  * Application globals

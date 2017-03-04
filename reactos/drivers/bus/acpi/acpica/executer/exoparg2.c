@@ -330,7 +330,7 @@ AcpiExOpcode_2A_1T_1R (
             &ReturnDesc->Integer.Value);
         break;
 
-    case AML_CONCAT_OP: /* Concatenate (Data1, Data2, Result) */
+    case AML_CONCATENATE_OP: /* Concatenate (Data1, Data2, Result) */
 
         Status = AcpiExDoConcatenate (
             Operand[0], Operand[1], &ReturnDesc, WalkState);
@@ -376,7 +376,7 @@ AcpiExOpcode_2A_1T_1R (
             Operand[0]->Buffer.Pointer, Length);
         break;
 
-    case AML_CONCAT_RES_OP:
+    case AML_CONCATENATE_TEMPLATE_OP:
 
         /* ConcatenateResTemplate (Buffer, Buffer, Result) (ACPI 2.0) */
 

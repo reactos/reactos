@@ -681,7 +681,7 @@ AcpiDsEvalDataObjectOperands (
         break;
 
     case AML_PACKAGE_OP:
-    case AML_VAR_PACKAGE_OP:
+    case AML_VARIABLE_PACKAGE_OP:
 
         Status = AcpiDsBuildInternalPackageObj (
             WalkState, Op, Length, &ObjDesc);
@@ -701,7 +701,7 @@ AcpiDsEvalDataObjectOperands (
          */
         if ((!Op->Common.Parent) ||
             ((Op->Common.Parent->Common.AmlOpcode != AML_PACKAGE_OP) &&
-             (Op->Common.Parent->Common.AmlOpcode != AML_VAR_PACKAGE_OP) &&
+             (Op->Common.Parent->Common.AmlOpcode != AML_VARIABLE_PACKAGE_OP) &&
              (Op->Common.Parent->Common.AmlOpcode != AML_NAME_OP)))
         {
             WalkState->ResultObj = ObjDesc;

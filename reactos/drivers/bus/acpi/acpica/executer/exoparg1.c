@@ -304,7 +304,7 @@ AcpiExOpcode_1A_1T_1R (
     case AML_FIND_SET_RIGHT_BIT_OP:
     case AML_FROM_BCD_OP:
     case AML_TO_BCD_OP:
-    case AML_COND_REF_OF_OP:
+    case AML_CONDITIONAL_REF_OF_OP:
 
         /* Create a return object of type Integer for these opcodes */
 
@@ -435,7 +435,7 @@ AcpiExOpcode_1A_1T_1R (
             }
             break;
 
-        case AML_COND_REF_OF_OP:        /* CondRefOf (SourceObject, Result)  */
+        case AML_CONDITIONAL_REF_OF_OP:     /* CondRefOf (SourceObject, Result)  */
             /*
              * This op is a little strange because the internal return value is
              * different than the return value stored in the result descriptor
@@ -507,13 +507,13 @@ AcpiExOpcode_1A_1T_1R (
     /*
      * ACPI 2.0 Opcodes
      */
-    case AML_COPY_OP:               /* Copy (Source, Target) */
+    case AML_COPY_OBJECT_OP:        /* CopyObject (Source, Target) */
 
         Status = AcpiUtCopyIobjectToIobject (
             Operand[0], &ReturnDesc, WalkState);
         break;
 
-    case AML_TO_DECSTRING_OP:       /* ToDecimalString (Data, Result) */
+    case AML_TO_DECIMAL_STRING_OP:  /* ToDecimalString (Data, Result) */
 
         Status = AcpiExConvertToString (
             Operand[0], &ReturnDesc, ACPI_EXPLICIT_CONVERT_DECIMAL);
@@ -525,7 +525,7 @@ AcpiExOpcode_1A_1T_1R (
         }
         break;
 
-    case AML_TO_HEXSTRING_OP:       /* ToHexString (Data, Result) */
+    case AML_TO_HEX_STRING_OP:      /* ToHexString (Data, Result) */
 
         Status = AcpiExConvertToString (
             Operand[0], &ReturnDesc, ACPI_EXPLICIT_CONVERT_HEX);
@@ -640,7 +640,7 @@ AcpiExOpcode_1A_0T_1R (
 
     switch (WalkState->Opcode)
     {
-    case AML_LNOT_OP:               /* LNot (Operand) */
+    case AML_LOGICAL_NOT_OP:        /* LNot (Operand) */
 
         ReturnDesc = AcpiUtCreateIntegerObject ((UINT64) 0);
         if (!ReturnDesc)
@@ -691,7 +691,8 @@ AcpiExOpcode_1A_0T_1R (
          * NOTE:  We use LNOT_OP here in order to force resolution of the
          * reference operand to an actual integer.
          */
-        Status = AcpiExResolveOperands (AML_LNOT_OP, &TempDesc, WalkState);
+        Status = AcpiExResolveOperands (AML_LOGICAL_NOT_OP,
+            &TempDesc, WalkState);
         if (ACPI_FAILURE (Status))
         {
             ACPI_EXCEPTION ((AE_INFO, Status,

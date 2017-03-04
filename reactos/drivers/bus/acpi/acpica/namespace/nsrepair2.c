@@ -448,16 +448,12 @@ AcpiNsRepair_CID (
             return (Status);
         }
 
-        /* Take care with reference counts */
-
         if (OriginalElement != *ElementPtr)
         {
-            /* Element was replaced */
+            /* Update reference count of new object */
 
             (*ElementPtr)->Common.ReferenceCount =
                 OriginalRefCount;
-
-            AcpiUtRemoveReference (OriginalElement);
         }
 
         ElementPtr++;

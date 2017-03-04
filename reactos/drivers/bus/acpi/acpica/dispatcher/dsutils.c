@@ -297,8 +297,8 @@ AcpiDsIsResultUsed (
         if ((Op->Common.Parent->Common.AmlOpcode == AML_REGION_OP)       ||
             (Op->Common.Parent->Common.AmlOpcode == AML_DATA_REGION_OP)  ||
             (Op->Common.Parent->Common.AmlOpcode == AML_PACKAGE_OP)      ||
-            (Op->Common.Parent->Common.AmlOpcode == AML_VAR_PACKAGE_OP)  ||
             (Op->Common.Parent->Common.AmlOpcode == AML_BUFFER_OP)       ||
+            (Op->Common.Parent->Common.AmlOpcode == AML_VARIABLE_PACKAGE_OP) ||
             (Op->Common.Parent->Common.AmlOpcode == AML_INT_EVAL_SUBTREE_OP) ||
             (Op->Common.Parent->Common.AmlOpcode == AML_BANK_FIELD_OP))
         {
@@ -589,7 +589,7 @@ AcpiDsCreateOperand (
              */
             if (Status == AE_NOT_FOUND)
             {
-                if (ParentOp->Common.AmlOpcode == AML_COND_REF_OF_OP)
+                if (ParentOp->Common.AmlOpcode == AML_CONDITIONAL_REF_OF_OP)
                 {
                     /*
                      * For the Conditional Reference op, it's OK if
@@ -870,7 +870,7 @@ AcpiDsEvaluateNamePath (
     }
 
     if ((Op->Common.Parent->Common.AmlOpcode == AML_PACKAGE_OP) ||
-        (Op->Common.Parent->Common.AmlOpcode == AML_VAR_PACKAGE_OP) ||
+        (Op->Common.Parent->Common.AmlOpcode == AML_VARIABLE_PACKAGE_OP) ||
         (Op->Common.Parent->Common.AmlOpcode == AML_REF_OF_OP))
     {
         /* TBD: Should we specify this feature as a bit of OpInfo->Flags of these opcodes? */

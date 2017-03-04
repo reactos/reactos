@@ -358,7 +358,7 @@ AcpiDsExecEndControlOp (
 
         break;
 
-    case AML_BREAK_POINT_OP:
+    case AML_BREAKPOINT_OP:
 
         AcpiDbSignalBreakPoint (WalkState);
 

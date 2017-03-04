@@ -294,7 +294,7 @@ AcpiNsBuildInternalName (
         }
         else
         {
-            InternalName[1] = AML_MULTI_NAME_PREFIX_OP;
+            InternalName[1] = AML_MULTI_NAME_PREFIX;
             InternalName[2] = (char) NumSegments;
             Result = &InternalName[3];
         }
@@ -325,7 +325,7 @@ AcpiNsBuildInternalName (
         }
         else
         {
-            InternalName[i] = AML_MULTI_NAME_PREFIX_OP;
+            InternalName[i] = AML_MULTI_NAME_PREFIX;
             InternalName[(ACPI_SIZE) i+1] = (char) NumSegments;
             Result = &InternalName[(ACPI_SIZE) i+2];
         }
@@ -534,7 +534,7 @@ AcpiNsExternalizeName (
     {
         switch (InternalName[PrefixLength])
         {
-        case AML_MULTI_NAME_PREFIX_OP:
+        case AML_MULTI_NAME_PREFIX:
 
             /* <count> 4-byte names */
 
@@ -694,28 +694,23 @@ AcpiNsTerminate (
     void)
 {
     ACPI_STATUS             Status;
+    ACPI_OPERAND_OBJECT     *Prev;
+    ACPI_OPERAND_OBJECT     *Next;
 
 
     ACPI_FUNCTION_TRACE (NsTerminate);
 
 
-#ifdef ACPI_EXEC_APP
+    /* Delete any module-level code blocks */
+
+    Next = AcpiGbl_ModuleCodeList;
+    while (Next)
     {
-        ACPI_OPERAND_OBJECT     *Prev;
-        ACPI_OPERAND_OBJECT     *Next;
-
-        /* Delete any module-level code blocks */
-
-        Next = AcpiGbl_ModuleCodeList;
-        while (Next)
-        {
-            Prev = Next;
-            Next = Next->Method.Mutex;
-            Prev->Method.Mutex = NULL; /* Clear the Mutex (cheated) field */
-            AcpiUtRemoveReference (Prev);
-        }
+        Prev = Next;
+        Next = Next->Method.Mutex;
+        Prev->Method.Mutex = NULL; /* Clear the Mutex (cheated) field */
+        AcpiUtRemoveReference (Prev);
     }
-#endif
 
     /*
      * Free the entire namespace -- all nodes and all objects

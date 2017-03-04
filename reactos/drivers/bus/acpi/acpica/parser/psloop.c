@@ -55,6 +55,7 @@
 #include "acparser.h"
 #include "acdispat.h"
 #include "amlcode.h"
+#include "acconvert.h"
 
 #define _COMPONENT          ACPI_PARSER
         ACPI_MODULE_NAME    ("psloop")
@@ -141,6 +142,22 @@ AcpiPsGetArguments (
             !WalkState->ArgCount)
         {
             WalkState->Aml = WalkState->ParserState.Aml;
+
+            switch (Op->Common.AmlOpcode)
+            {
+            case AML_METHOD_OP:
+            case AML_BUFFER_OP:
+            case AML_PACKAGE_OP:
+            case AML_VARIABLE_PACKAGE_OP:
+            case AML_WHILE_OP:
+
+                break;
+
+            default:
+
+                ASL_CV_CAPTURE_COMMENTS (WalkState);
+                break;
+            }
 
             Status = AcpiPsGetNextArg (WalkState, &(WalkState->ParserState),
                 GET_CURRENT_ARG_TYPE (WalkState->ArgTypes), &Arg);
@@ -249,7 +266,7 @@ AcpiPsGetArguments (
 
         case AML_BUFFER_OP:
         case AML_PACKAGE_OP:
-        case AML_VAR_PACKAGE_OP:
+        case AML_VARIABLE_PACKAGE_OP:
 
             if ((Op->Common.Parent) &&
                 (Op->Common.Parent->Common.AmlOpcode == AML_NAME_OP) &&
@@ -487,6 +504,8 @@ AcpiPsParseLoop (
 
     while ((ParserState->Aml < ParserState->AmlEnd) || (Op))
     {
+        ASL_CV_CAPTURE_COMMENTS (WalkState);
+
         AmlOpStart = ParserState->Aml;
         if (!Op)
         {
@@ -520,12 +539,26 @@ AcpiPsParseLoop (
             AcpiExStartTraceOpcode (Op, WalkState);
         }
 
-
         /*
          * Start ArgCount at zero because we don't know if there are
          * any args yet
          */
-        WalkState->ArgCount  = 0;
+        WalkState->ArgCount = 0;
+
+        switch (Op->Common.AmlOpcode)
+        {
+        case AML_BYTE_OP:
+        case AML_WORD_OP:
+        case AML_DWORD_OP:
+        case AML_QWORD_OP:
+
+            break;
+
+        default:
+
+            ASL_CV_CAPTURE_COMMENTS (WalkState);
+            break;
+        }
 
         /* Are there any arguments that must be processed? */
 
