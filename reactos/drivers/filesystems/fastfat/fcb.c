@@ -273,8 +273,8 @@ vfatDestroyFCB(
     ExFreePool(pFCB->PathNameBuffer);
     ExDeleteResourceLite(&pFCB->PagingIoResource);
     ExDeleteResourceLite(&pFCB->MainResource);
-    ExFreeToNPagedLookasideList(&VfatGlobalData->FcbLookasideList, pFCB);
     ASSERT(IsListEmpty(&pFCB->ParentListHead));
+    ExFreeToNPagedLookasideList(&VfatGlobalData->FcbLookasideList, pFCB);
 }
 
 BOOLEAN
