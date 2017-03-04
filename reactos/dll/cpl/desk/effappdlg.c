@@ -58,16 +58,13 @@ SaveCurrentValues(HWND hwndDlg, GLOBALS *g)
 static VOID
 AddToCombobox(INT Combo, HWND hwndDlg, INT From, INT To)
 {
-    INT iElement, iListIndex, i = 0;
+    INT iElement;
     TCHAR tstrText[80];
 
-    if (Combo == IDC_EFFAPPEARANCE_SMOOTHINGTYPE) i = 1;
-
-    for (iElement = From; iElement<=To; iElement++)
+    for (iElement = From; iElement <= To; iElement++)
     {
         LoadString(hApplet, iElement, (LPTSTR)tstrText, ARRAYSIZE(tstrText));
-        iListIndex = SendDlgItemMessage(hwndDlg, Combo, CB_ADDSTRING, 0, (LPARAM)tstrText);
-        SendDlgItemMessageW(hwndDlg, Combo, CB_SETITEMDATA, (WPARAM)iListIndex, (LPARAM)i++);
+        SendDlgItemMessage(hwndDlg, Combo, CB_ADDSTRING, 0, (LPARAM)tstrText);
     }
 }
 
@@ -159,10 +156,14 @@ EffAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 case IDC_EFFAPPEARANCE_SMOOTHINGTYPE:
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
-                        INT fontTypeIndex = SendDlgItemMessageW(hwndDlg, IDC_EFFAPPEARANCE_SMOOTHINGTYPE, CB_GETCURSEL, 0, 0);
+                        INT Index =
+                            SendDlgItemMessageW(hwndDlg, IDC_EFFAPPEARANCE_SMOOTHINGTYPE,
+                                                CB_GETCURSEL, 0, 0);
 
-                        g->SchemeAdv.Effects.bMenuFade           = SendDlgItemMessageW(hwndDlg, IDC_EFFAPPEARANCE_ANIMATIONTYPE, CB_GETCURSEL,               0, 0);
-                        g->SchemeAdv.Effects.uiFontSmoothingType = SendDlgItemMessageW(hwndDlg, IDC_EFFAPPEARANCE_SMOOTHINGTYPE, CB_GETITEMDATA, fontTypeIndex, 0);
+                        g->SchemeAdv.Effects.bMenuFade =
+                            SendDlgItemMessageW(hwndDlg, IDC_EFFAPPEARANCE_ANIMATIONTYPE,
+                                                CB_GETCURSEL, 0, 0);
+                        g->SchemeAdv.Effects.uiFontSmoothingType = (Index == CB_ERR) ? 0 : (Index + 1);
 
                         UpdateControls(hwndDlg, g);
                     }
