@@ -1087,6 +1087,10 @@ ThemeWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC DefWndPr
     //
     case WM_NCUAHDRAWFRAME:
     case WM_NCACTIVATE:
+
+        if ((GetWindowLongW(hWnd, GWL_STYLE) & WS_CAPTION) != WS_CAPTION)
+            return TRUE;
+
         ThemeHandleNCPaint(hWnd, (HRGN)1);
         return TRUE;
     case WM_NCMOUSEMOVE:
