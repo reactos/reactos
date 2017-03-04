@@ -499,8 +499,8 @@ CopyQuerySetIndirectA(IN PWS_BUFFER Buffer,
                                                     sizeof(PVOID));
 
         /* Copy it into the buffer */
-        RtlCopyMemory(RelativeSet->lpafpProtocols,
-                      AnsiSet->lpafpProtocols,
+        RtlCopyMemory(RelativeSet->lpcsaBuffer,
+                      AnsiSet->lpcsaBuffer,
                       AnsiSet->dwNumberOfCsAddrs * sizeof(CSADDR_INFO));
 
         /* Copy the addresses inside the CSADDR */
@@ -693,8 +693,8 @@ CopyQuerySetIndirectW(IN PWS_BUFFER Buffer,
                                                     sizeof(PVOID));
 
         /* Copy it into the buffer */
-        RtlCopyMemory(RelativeSet->lpafpProtocols,
-                      UnicodeSet->lpafpProtocols,
+        RtlCopyMemory(RelativeSet->lpcsaBuffer,
+                      UnicodeSet->lpcsaBuffer,
                       UnicodeSet->dwNumberOfCsAddrs * sizeof(CSADDR_INFO));
 
         /* Copy the addresses inside the CSADDR */

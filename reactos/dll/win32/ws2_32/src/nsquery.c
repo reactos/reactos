@@ -268,15 +268,12 @@ WsNqLookupServiceNext(IN PNSQUERY NsQuery,
         /* Acquire Query Lock */
         WsNqLock();
 
-        /* Save the current active provider */
-        Provider = NsQuery->ActiveProvider;
-
-        /* Check if one exists */
-        if (Provider)
+        /* Check if we have an active provider */
+        if (NsQuery->ActiveProvider)
         {
-            /* Get the next one */
-            NextProvider = WsNqNextProvider(NsQuery,
-                                            NsQuery->ActiveProvider);
+            /* Save the old provider and get the next one */
+            Provider = NextProvider;
+            NextProvider = WsNqNextProvider(NsQuery, NsQuery->ActiveProvider);
 
             /* Was the old provider our active? */
             if (Provider == NsQuery->ActiveProvider)
@@ -327,8 +324,7 @@ WsNqLookupServiceNext(IN PNSQUERY NsQuery,
                 {
                     /* New query succeeded, set active provider now */
                     NsQuery->ActiveProvider =
-                        WsNqNextProvider(NsQuery,
-                                         NsQuery->ActiveProvider);
+                        WsNqNextProvider(NsQuery, NsQuery->ActiveProvider);
                 }
             }
             else

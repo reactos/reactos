@@ -397,8 +397,9 @@ WSALookupServiceNextW(IN HANDLE hLookup,
         return SOCKET_ERROR;
     }
 
-    /* Verify pointer */
-    if (IsBadWritePtr(lpqsResults, sizeof(*lpqsResults)))
+    /* Verify pointers */
+    if (IsBadReadPtr(lpdwBufferLength, sizeof(*lpdwBufferLength)) ||
+        IsBadWritePtr(lpqsResults, sizeof(*lpqsResults)))
     {
         /* It is invalid; fail */
         SetLastError(WSAEFAULT);
@@ -437,9 +438,20 @@ WSALookupServiceNextA(IN HANDLE hLookup,
                       OUT LPWSAQUERYSETA lpqsResults)
 {
     LPWSAQUERYSETW UnicodeQuerySet;
-    DWORD UnicodeQuerySetSize = *lpdwBufferLength;
+    DWORD UnicodeQuerySetSize;
     INT ErrorCode;
     DPRINT("WSALookupServiceNextA: %lx\n", hLookup);
+
+    /* Verify pointers */
+    if (IsBadReadPtr(lpdwBufferLength, sizeof(*lpdwBufferLength)) ||
+        IsBadWritePtr(lpqsResults, sizeof(*lpqsResults)))
+    {
+        /* It is invalid; fail */
+        SetLastError(WSAEFAULT);
+        return SOCKET_ERROR;
+    }
+
+    UnicodeQuerySetSize = *lpdwBufferLength;
 
     /* Check how much the user is giving */
     if (UnicodeQuerySetSize >= sizeof(WSAQUERYSETW))

@@ -847,6 +847,8 @@ WsAsyncCheckAndInitThread(VOID)
     {
         /* Initialize Thread Context */
         Context = HeapAlloc(WsSockHeap, 0, sizeof(*Context));
+        if (!Context)
+            goto Exit;
 
         /* Initialize the Queue and event */
         WsAsyncQueue = &Context->AsyncQueue;
@@ -855,7 +857,8 @@ WsAsyncCheckAndInitThread(VOID)
         WsAsyncEvent = Context->AsyncEvent;
 
         /* Prevent us from ever being killed while running */
-        WSAStartup(MAKEWORD(2,2), &WsaData);
+        if (WSAStartup(MAKEWORD(2,2), &WsaData) != ERROR_SUCCESS)
+            goto Fail;
 
         /* Create the thread */
         ThreadHandle = CreateThread(NULL,
@@ -864,15 +867,31 @@ WsAsyncCheckAndInitThread(VOID)
                                     Context,
                                     0,
                                     &Tid);
+        if (ThreadHandle == NULL)
+        {
+            /* Cleanup and fail */
+            WSACleanup();
+            goto Fail;
+        }
 
         /* Close the handle and set init */
         CloseHandle(ThreadHandle);
         WsAsyncThreadInitialized = TRUE;
     }
 
+Exit:
     /* Release the lock */
     WsAsyncUnlock();
     return WsAsyncThreadInitialized;
+
+Fail:
+    /* Close the event, free the Context */
+    if (Context->AsyncEvent)
+        CloseHandle(Context->AsyncEvent);
+    HeapFree(WsSockHeap, 0, Context);
+
+    /* Bail out */
+    goto Exit;
 }
 
 VOID
