@@ -141,6 +141,21 @@ void expect_Sdb_imp(PCSTR path, DWORD type, BOOL result, DWORD lenResult, PCSTR 
     }
     WideCharToMultiByte(CP_ACP, 0, buffer, -1, resultBuffer, sizeof(resultBuffer), NULL, NULL);
     winetest_ok(!strcmp(stringResult, resultBuffer), "Expected the result to be '%s', was '%s'\n", stringResult, resultBuffer);
+
+    if (result)
+    {
+        UNICODE_STRING pathNT;
+
+        if (RtlDosPathNameToNtPathName_U(pathW, &pathNT, NULL, NULL))
+        {
+            memset(buffer, 0, sizeof(buffer));
+            dwBufSize = sizeof(buffer);
+            winetest_ok(pSdbGetPermLayerKeys(pathNT.Buffer, buffer, &dwBufSize, type) == FALSE, "Expected pSdbGetPermLayerKeys to fail for NT path\n");
+
+            RtlFreeUnicodeString(&pathNT);
+        }
+    }
+
 }
 
 

@@ -1148,6 +1148,7 @@ static void test_mode_generic(const char* workdir, HSDB hsdb, int cur)
     TAGID tagid;
     TAGREF trApphelp;
     DWORD expect_flags = 0, adwExeFlags_0, exe_count;
+    UNICODE_STRING exenameNT;
 
     memset(&query, 0xab, sizeof(query));
 
@@ -1289,6 +1290,16 @@ static void test_mode_generic(const char* workdir, HSDB hsdb, int cur)
     ret = pSdbTagRefToTagID(hsdb, 0, &pdb, &tagid);
     ok(pdb != NULL && pdb != (PDB)0x12345678, "Expected pdb to be set to a valid pdb, was: %p\n", pdb);
     ok(tagid == 0, "Expected tagid to be set to 0, was: 0x%x\n", tagid);
+
+
+
+    if (RtlDosPathNameToNtPathName_U(exenameW, &exenameNT, NULL, NULL))
+    {
+        ret = pSdbGetMatchingExe(hsdb, exenameNT.Buffer, NULL, NULL, 0, (SDBQUERYRESULT*)&query);
+        ok(ret, "SdbGetMatchingExe should not fail for %d.\n", cur);
+
+        RtlFreeUnicodeString(&exenameNT);
+    }
 
     if (test_exedata[cur].extra_file)
         DeleteFileA(testfile);
