@@ -1950,59 +1950,57 @@ IopCreateDeviceInstancePath(
                                &IoStatusBlock,
                                IRP_MN_QUERY_ID,
                                &Stack);
-    if (NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
-        RtlInitUnicodeString(&InstanceId,
-                             (PWSTR)IoStatusBlock.Information);
+        DPRINT("IopInitiatePnpIrp(BusQueryInstanceID) failed (Status %lx)\n", Status);
+        ASSERT(IoStatusBlock.Information == 0);
+    }
 
-        InstancePath->Length = 0;
-        InstancePath->MaximumLength = DeviceId.Length + sizeof(WCHAR) +
-                                      ParentIdPrefix.Length +
-                                      InstanceId.Length +
-                                      sizeof(UNICODE_NULL);
-        if (ParentIdPrefix.Length && InstanceId.Length)
-        {
-            InstancePath->MaximumLength += sizeof(WCHAR);
-        }
+    RtlInitUnicodeString(&InstanceId,
+                         (PWSTR)IoStatusBlock.Information);
 
-        InstancePath->Buffer = ExAllocatePoolWithTag(PagedPool,
-                                                     InstancePath->MaximumLength,
-                                                     TAG_IO);
-        if (!InstancePath->Buffer)
-        {
-            RtlFreeUnicodeString(&InstanceId);
-            RtlFreeUnicodeString(&ParentIdPrefix);
-            RtlFreeUnicodeString(&DeviceId);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
+    InstancePath->Length = 0;
+    InstancePath->MaximumLength = DeviceId.Length + sizeof(WCHAR) +
+                                  ParentIdPrefix.Length +
+                                  InstanceId.Length +
+                                  sizeof(UNICODE_NULL);
+    if (ParentIdPrefix.Length && InstanceId.Length)
+    {
+        InstancePath->MaximumLength += sizeof(WCHAR);
+    }
 
-        /* Start with the device id */
-        RtlCopyUnicodeString(InstancePath, &DeviceId);
-        RtlAppendUnicodeToString(InstancePath, L"\\");
-
-        /* Add information from parent bus device to InstancePath */
-        RtlAppendUnicodeStringToString(InstancePath, &ParentIdPrefix);
-        if (ParentIdPrefix.Length && InstanceId.Length)
-        {
-            RtlAppendUnicodeToString(InstancePath, L"&");
-        }
-
-        /* Finally, add the id returned by the driver stack */
-        RtlAppendUnicodeStringToString(InstancePath, &InstanceId);
-
-        /*
-         * FIXME: Check for valid characters, if there is invalid characters
-         * then bugcheck
-         */
-
+    InstancePath->Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                 InstancePath->MaximumLength,
+                                                 TAG_IO);
+    if (!InstancePath->Buffer)
+    {
         RtlFreeUnicodeString(&InstanceId);
+        RtlFreeUnicodeString(&ParentIdPrefix);
         RtlFreeUnicodeString(&DeviceId);
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
-    else
+
+    /* Start with the device id */
+    RtlCopyUnicodeString(InstancePath, &DeviceId);
+    RtlAppendUnicodeToString(InstancePath, L"\\");
+
+    /* Add information from parent bus device to InstancePath */
+    RtlAppendUnicodeStringToString(InstancePath, &ParentIdPrefix);
+    if (ParentIdPrefix.Length && InstanceId.Length)
     {
-        DPRINT("IopInitiatePnpIrp(BusQueryInstanceID) failed (Status %x)\n", Status);
-        *InstancePath = DeviceId;
+        RtlAppendUnicodeToString(InstancePath, L"&");
     }
+
+    /* Finally, add the id returned by the driver stack */
+    RtlAppendUnicodeStringToString(InstancePath, &InstanceId);
+
+    /*
+     * FIXME: Check for valid characters, if there is invalid characters
+     * then bugcheck
+     */
+
+    RtlFreeUnicodeString(&InstanceId);
+    RtlFreeUnicodeString(&DeviceId);
     RtlFreeUnicodeString(&ParentIdPrefix);
 
     return STATUS_SUCCESS;
