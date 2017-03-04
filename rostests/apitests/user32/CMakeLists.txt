@@ -32,6 +32,7 @@ list(APPEND SOURCE
     SetParent.c
     SetProp.c
     SetScrollInfo.c
+    SetScrollRange.c
     SystemParametersInfo.c
     TrackMouseEvent.c
     WndProc.c

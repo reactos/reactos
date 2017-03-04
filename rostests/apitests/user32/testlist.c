@@ -34,6 +34,7 @@ extern void func_SetCursorPos(void);
 extern void func_SetParent(void);
 extern void func_SetProp(void);
 extern void func_SetScrollInfo(void);
+extern void func_SetScrollRange(void);
 extern void func_SystemParametersInfo(void);
 extern void func_TrackMouseEvent(void);
 extern void func_WndProc(void);
@@ -72,6 +73,7 @@ const struct test winetest_testlist[] =
     { "SetParent", func_SetParent },
     { "SetProp", func_SetProp },
     { "SetScrollInfo", func_SetScrollInfo },
+    { "SetScrollRange", func_SetScrollRange },
     { "SystemParametersInfo", func_SystemParametersInfo },
     { "TrackMouseEvent", func_TrackMouseEvent },
     { "WndProc", func_WndProc },
