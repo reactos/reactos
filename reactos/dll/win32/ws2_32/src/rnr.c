@@ -34,6 +34,7 @@ WSAAddressToStringA(IN LPSOCKADDR lpsaAddress,
     PTCATALOG_ENTRY CatalogEntry;
     LPWSTR UnicodeString;
     DWORD Length = *lpdwAddressStringLength;
+
     DPRINT("WSAAddressToStringA: %p\n", lpsaAddress);
 
     /* Enter prolog */
@@ -136,6 +137,7 @@ WSAAddressToStringW(IN LPSOCKADDR lpsaAddress,
     DWORD CatalogEntryId;
     PTCATALOG Catalog;
     PTCATALOG_ENTRY CatalogEntry;
+
     DPRINT("WSAAddressToStringW: %p\n", lpsaAddress);
 
     /* Enter prolog */
@@ -203,6 +205,7 @@ WSALookupServiceEnd(IN HANDLE hLookup)
     PWSTHREAD Thread;
     INT ErrorCode;
     PNSQUERY Query = hLookup;
+
     DPRINT("WSALookupServiceEnd: %lx\n", hLookup);
 
     /* Enter prolog */
@@ -246,6 +249,7 @@ WSALookupServiceBeginA(IN LPWSAQUERYSETA lpqsRestrictions,
     INT ErrorCode;
     LPWSAQUERYSETW UnicodeQuerySet = NULL;
     DWORD UnicodeQuerySetSize = 0;
+
     DPRINT("WSALookupServiceBeginA: %p\n", lpqsRestrictions);
 
     /* Verify pointer */
@@ -317,6 +321,7 @@ WSALookupServiceBeginW(IN LPWSAQUERYSETW lpqsRestrictions,
     PWSTHREAD Thread;
     INT ErrorCode;
     PNSQUERY Query;
+
     DPRINT("WSALookupServiceBeginW: %p\n", lpqsRestrictions);
 
     /* Enter prolog */
@@ -387,6 +392,7 @@ WSALookupServiceNextW(IN HANDLE hLookup,
     PWSTHREAD Thread;
     INT ErrorCode;
     PNSQUERY Query = hLookup;
+
     DPRINT("WSALookupServiceNextW: %lx\n", hLookup);
 
     /* Enter prolog */
@@ -440,6 +446,7 @@ WSALookupServiceNextA(IN HANDLE hLookup,
     LPWSAQUERYSETW UnicodeQuerySet;
     DWORD UnicodeQuerySetSize;
     INT ErrorCode;
+
     DPRINT("WSALookupServiceNextA: %lx\n", hLookup);
 
     /* Verify pointers */
@@ -734,6 +741,7 @@ WSAEnumNameSpaceProvidersInternal(IN OUT LPDWORD lpdwBufferLength,
     PWSPROCESS WsProcess;
     PNSCATALOG Catalog;
     NSPROVIDER_ENUM_CONTEXT Context;
+
     DPRINT("WSAEnumNameSpaceProvidersInternal: %lx\n", lpnspBuffer);
 
     if (!lpdwBufferLength)
@@ -829,6 +837,7 @@ WSAStringToAddressA(IN LPSTR AddressString,
     PTCATALOG_ENTRY CatalogEntry;
     LPWSTR UnicodeString;
     DWORD Length = (DWORD)strlen(AddressString) + 1;
+
     DPRINT("WSAStringToAddressA: %s\n", AddressString);
 
     /* Enter prolog */
@@ -920,6 +929,7 @@ WSAStringToAddressW(IN LPWSTR AddressString,
     DWORD CatalogEntryId;
     PTCATALOG Catalog;
     PTCATALOG_ENTRY CatalogEntry;
+
     DPRINT("WSAStringToAddressW: %S\n", AddressString);
 
     /* Enter prolog */

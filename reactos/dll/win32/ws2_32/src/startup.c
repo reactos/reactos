@@ -18,8 +18,8 @@
 PWS_SOCK_POST_ROUTINE WsSockPostRoutine = NULL;
 CRITICAL_SECTION WsStartupLock;
 
-#define WsStartupLock()          EnterCriticalSection(&WsStartupLock);
-#define WsStartupUnlock()        LeaveCriticalSection(&WsStartupLock);
+#define WsStartupLock()     EnterCriticalSection(&WsStartupLock)
+#define WsStartupUnlock()   LeaveCriticalSection(&WsStartupLock)
 
 /* FUNCTIONS *****************************************************************/
 

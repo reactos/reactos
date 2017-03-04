@@ -12,8 +12,8 @@
 
 /* DATA **********************************************************************/
 
-#define WsNqLock()      EnterCriticalSection(&NsQuery->Lock);
-#define WsNqUnlock()    LeaveCriticalSection(&NsQuery->Lock);
+#define WsNqLock()          EnterCriticalSection(&NsQuery->Lock)
+#define WsNqUnlock()        LeaveCriticalSection(&NsQuery->Lock)
 
 /* FUNCTIONS *****************************************************************/
 

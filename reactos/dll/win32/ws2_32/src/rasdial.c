@@ -37,8 +37,8 @@ PWS_ATTEMPT_AUTODIAL_ADDR lpfnWSAttemptAutodialAddr;
 PWS_ATTEMPT_AUTODIAL_NAME lpfnWSAttemptAutodialName;
 PWS_NOTE_SUCCESSFUL_HOSTENT_LOOKUP lpfnWSNoteSuccessfulHostentLookup;
 
-#define WsRasLock()          EnterCriticalSection(&WsRasHelperLock);
-#define WsRasUnlock()        LeaveCriticalSection(&WsRasHelperLock);
+#define WsRasLock()         EnterCriticalSection(&WsRasHelperLock)
+#define WsRasUnlock()       LeaveCriticalSection(&WsRasHelperLock)
 
 /* FUNCTIONS *****************************************************************/
 

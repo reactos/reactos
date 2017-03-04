@@ -15,8 +15,8 @@
 
 /* DATA **********************************************************************/
 
-#define WsNcLock()          EnterCriticalSection(&Catalog->Lock);
-#define WsNcUnlock()        LeaveCriticalSection(&Catalog->Lock);
+#define WsNcLock()          EnterCriticalSection(&Catalog->Lock)
+#define WsNcUnlock()        LeaveCriticalSection(&Catalog->Lock)
 
 /* FUNCTIONS *****************************************************************/
 
@@ -370,7 +370,7 @@ WsNcEnumerateCatalogItems(IN PNSCATALOG Catalog,
         GoOn = Callback(Context, CatalogEntry);
     }
 
-    /* Release lock */
+    /* Release the lock */
     WsNcUnlock();
 }
 
@@ -413,7 +413,7 @@ WsNcLoadProvider(IN PNSCATALOG Catalog,
         }
     }
 
-    /* Release the lock */
+    /* Release the lock and return */
     WsNcUnlock();
     return ErrorCode;
 }

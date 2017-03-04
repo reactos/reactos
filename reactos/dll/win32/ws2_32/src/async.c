@@ -21,8 +21,8 @@ HANDLE WsAsyncCurrentTaskHandle;
 HANDLE WsAsyncCancelledTaskHandle;
 HINSTANCE WsAsyncDllHandle;
 
-#define WsAsyncLock()   EnterCriticalSection(&WsAsyncCritSect);
-#define WsAsyncUnlock() LeaveCriticalSection(&WsAsyncCritSect);
+#define WsAsyncLock()       EnterCriticalSection(&WsAsyncCritSect)
+#define WsAsyncUnlock()     LeaveCriticalSection(&WsAsyncCritSect)
 
 /* FUNCTIONS *****************************************************************/
 

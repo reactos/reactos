@@ -14,8 +14,8 @@
 
 PWSPROCESS CurrentWsProcess;
 
-#define WsProcLock()      EnterCriticalSection(&Process->ThreadLock);
-#define WsProcUnlock()    LeaveCriticalSection(&Process->ThreadLock);
+#define WsProcLock()        EnterCriticalSection(&Process->ThreadLock)
+#define WsProcUnlock()      LeaveCriticalSection(&Process->ThreadLock)
 
 /* FUNCTIONS *****************************************************************/
 

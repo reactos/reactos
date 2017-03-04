@@ -15,8 +15,8 @@
 
 /* DATA **********************************************************************/
 
-#define WsTcLock()          EnterCriticalSection(&Catalog->Lock);
-#define WsTcUnlock()        LeaveCriticalSection(&Catalog->Lock);
+#define WsTcLock()          EnterCriticalSection(&Catalog->Lock)
+#define WsTcUnlock()        LeaveCriticalSection(&Catalog->Lock)
 
 /* FUNCTIONS *****************************************************************/
 
