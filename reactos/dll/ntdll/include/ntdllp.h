@@ -47,6 +47,13 @@ extern BOOLEAN LdrpShutdownInProgress;
 extern UNICODE_STRING LdrpKnownDllPath;
 extern PLDR_DATA_TABLE_ENTRY LdrpGetModuleHandleCache, LdrpLoadedDllHandleCache;
 extern ULONG RtlpDphGlobalFlags;
+extern BOOLEAN g_ShimsEnabled;
+extern PVOID g_pShimEngineModule;
+extern PVOID g_pfnSE_DllLoaded;
+extern PVOID g_pfnSE_DllUnloaded;
+extern PVOID g_pfnSE_InstallBeforeInit;
+extern PVOID g_pfnSE_InstallAfterInit;
+extern PVOID g_pfnSE_ProcessDying;
 
 /* ldrinit.c */
 NTSTATUS NTAPI LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL);
@@ -138,6 +145,18 @@ LdrpFetchAddressOfEntryPoint(PVOID ImageBase);
 
 VOID NTAPI
 LdrpFreeUnicodeString(PUNICODE_STRING String);
+
+VOID NTAPI
+LdrpGetShimEngineInterface();
+
+VOID
+NTAPI
+LdrpLoadShimEngine(IN PWSTR ImageName,
+                   IN PUNICODE_STRING ProcessImage,
+                   IN PVOID pShimData);
+
+VOID NTAPI
+LdrpUnloadShimEngine();
 
 
 /* FIXME: Cleanup this mess */

@@ -1404,7 +1404,12 @@ LdrUnloadDll(IN PVOID BaseAddress)
                         LdrEntry->EntryPoint);
             }
 
-            /* FIXME: Call Shim Engine and notify */
+            /* Call Shim Engine and notify */
+            if (g_ShimsEnabled)
+            {
+                VOID (NTAPI* SE_DllUnloaded)(PVOID) = RtlDecodeSystemPointer(g_pfnSE_DllUnloaded);
+                SE_DllUnloaded(LdrEntry);
+            }
 
             /* Unlink it */
             CurrentEntry = LdrEntry;

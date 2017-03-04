@@ -17,7 +17,14 @@
 /* GLOBALS *******************************************************************/
 
 PLDR_DATA_TABLE_ENTRY LdrpLoadedDllHandleCache, LdrpGetModuleHandleCache;
+
 BOOLEAN g_ShimsEnabled;
+PVOID g_pShimEngineModule;
+PVOID g_pfnSE_DllLoaded;
+PVOID g_pfnSE_DllUnloaded;
+PVOID g_pfnSE_InstallBeforeInit;
+PVOID g_pfnSE_InstallAfterInit;
+PVOID g_pfnSE_ProcessDying;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -2548,12 +2555,11 @@ LdrpLoadDll(IN BOOLEAN Redirected,
         /* If we have to run the entrypoint, make sure the DB is ready */
         if (CallInit && LdrpLdrDatabaseIsSetup)
         {
-            /* FIXME: Notify Shim Engine */
+            /* Notify Shim Engine */
             if (g_ShimsEnabled)
             {
-                /* Call it */
-                //ShimLoadCallback = RtlDecodeSystemPointer(g_pfnSE_DllLoaded);
-                //ShimLoadCallback(LdrEntry);
+                VOID (NTAPI* SE_DllLoaded)(PLDR_DATA_TABLE_ENTRY) = RtlDecodeSystemPointer(g_pfnSE_DllLoaded);
+                SE_DllLoaded(LdrEntry);
             }
 
             /* Run the init routine */
@@ -2652,6 +2658,74 @@ LdrpClearLoadInProgress(VOID)
 
     /* Return final count */
     return ModulesCount;
+}
+
+PVOID LdrpGetShimEngineFunction(PCSZ FunctionName)
+{
+    ANSI_STRING Function;
+    NTSTATUS Status;
+    PVOID Address;
+    RtlInitAnsiString(&Function, FunctionName);
+    Status = LdrGetProcedureAddress(g_pShimEngineModule, &Function, 0, &Address);
+    return NT_SUCCESS(Status) ? Address : NULL;
+}
+
+VOID
+NTAPI
+LdrpGetShimEngineInterface()
+{
+    PVOID SE_DllLoaded = LdrpGetShimEngineFunction("SE_DllLoaded");
+    PVOID SE_DllUnloaded = LdrpGetShimEngineFunction("SE_DllUnloaded");
+    PVOID SE_InstallBeforeInit = LdrpGetShimEngineFunction("SE_InstallBeforeInit");
+    PVOID SE_InstallAfterInit = LdrpGetShimEngineFunction("SE_InstallAfterInit");
+    PVOID SE_ProcessDying = LdrpGetShimEngineFunction("SE_ProcessDying");
+
+    if (SE_DllLoaded && SE_DllUnloaded && SE_InstallBeforeInit && SE_InstallAfterInit && SE_ProcessDying)
+    {
+        g_pfnSE_DllLoaded = RtlEncodeSystemPointer(SE_DllLoaded);
+        g_pfnSE_DllUnloaded = RtlEncodeSystemPointer(SE_DllUnloaded);
+        g_pfnSE_InstallBeforeInit = RtlEncodeSystemPointer(SE_InstallBeforeInit);
+        g_pfnSE_InstallAfterInit = RtlEncodeSystemPointer(SE_InstallAfterInit);
+        g_pfnSE_ProcessDying = RtlEncodeSystemPointer(SE_ProcessDying);
+        g_ShimsEnabled = TRUE;
+    }
+    else
+    {
+        LdrpUnloadShimEngine();
+    }
+}
+
+
+VOID
+NTAPI
+LdrpLoadShimEngine(IN PWSTR ImageName, IN PUNICODE_STRING ProcessImage, IN PVOID pShimData)
+{
+    UNICODE_STRING ShimLibraryName;
+    PVOID ShimLibrary;
+    NTSTATUS Status;
+    RtlInitUnicodeString(&ShimLibraryName, ImageName);
+    Status = LdrpLoadDll(FALSE, NULL, NULL, &ShimLibraryName, &ShimLibrary, TRUE);
+    if (NT_SUCCESS(Status))
+    {
+        g_pShimEngineModule = ShimLibrary;
+        LdrpGetShimEngineInterface();
+        if (g_ShimsEnabled)
+        {
+            VOID(NTAPI *SE_InstallBeforeInit)(PUNICODE_STRING, PVOID);
+            SE_InstallBeforeInit = RtlDecodeSystemPointer(g_pfnSE_InstallBeforeInit);
+            SE_InstallBeforeInit(ProcessImage, pShimData);
+        }
+    }
+}
+
+VOID
+NTAPI
+LdrpUnloadShimEngine()
+{
+    /* Make sure we do not call into the shim engine anymore */
+    g_ShimsEnabled = FALSE;
+    LdrUnloadDll(g_pShimEngineModule);
+    g_pShimEngineModule = NULL;
 }
 
 /* EOF */

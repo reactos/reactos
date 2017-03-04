@@ -901,10 +901,12 @@ LdrShutdownProcess(VOID)
     if (LdrpShutdownInProgress) return STATUS_SUCCESS;
 
     /* Tell the Shim Engine */
-    //if (ShimsEnabled)
-    //{
-        /* FIXME */
-    //}
+    if (g_ShimsEnabled)
+    {
+        VOID(NTAPI *SE_ProcessDying)();
+        SE_ProcessDying = RtlDecodeSystemPointer(g_pfnSE_ProcessDying);
+        SE_ProcessDying();
+    }
 
     /* Tell the world */
     if (ShowSnaps)
@@ -2110,8 +2112,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     {
         /* Load the Shim Engine */
         Peb->AppCompatInfo = NULL;
-        //LdrpLoadShimEngine(OldShimData, ImagePathName, OldShimData);
-        DPRINT1("We do not support shims yet\n");
+        LdrpLoadShimEngine(OldShimData, &ImagePathName, OldShimData);
     }
     else
     {
@@ -2134,7 +2135,13 @@ LdrpInitializeProcess(IN PCONTEXT Context,
         return Status;
     }
 
-    /* FIXME: Unload the Shim Engine if it was loaded */
+    /* Notify Shim Engine */
+    if (g_ShimsEnabled)
+    {
+        VOID(NTAPI *SE_InstallAfterInit)(PUNICODE_STRING, PVOID);
+        SE_InstallAfterInit = RtlDecodeSystemPointer(g_pfnSE_InstallAfterInit);
+        SE_InstallAfterInit(&ImagePathName, OldShimData);
+    }
 
     /* Check if we have a user-defined Post Process Routine */
     if (NT_SUCCESS(Status) && Peb->PostProcessInitRoutine)
