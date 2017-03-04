@@ -540,7 +540,7 @@
 539 stdcall RtlDeactivateActivationContext(long long)
 # RtlDebugPrintTimes
 541 stdcall RtlDecodePointer(ptr)
-542 stdcall RtlDecodeSystemPointer(ptr) RtlEncodeSystemPointer
+542 stdcall RtlDecodeSystemPointer(ptr)
 543 stdcall RtlDecompressBuffer(long ptr long ptr long ptr)
 544 stdcall RtlDecompressFragment(long ptr long ptr long long ptr ptr)
 545 stdcall RtlDefaultNpAcl(ptr)

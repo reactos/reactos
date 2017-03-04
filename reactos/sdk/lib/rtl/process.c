@@ -433,6 +433,16 @@ RtlEncodeSystemPointer(IN PVOID Pointer)
 
 /*
  * @implemented
+ */
+PVOID
+NTAPI
+RtlDecodeSystemPointer(IN PVOID Pointer)
+{
+    return RtlEncodeSystemPointer(Pointer);
+}
+
+/*
+ * @implemented
  *
  * NOTES:
  *   Implementation based on the documentation from:
