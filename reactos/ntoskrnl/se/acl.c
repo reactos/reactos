@@ -38,7 +38,8 @@ SepInitDACLs(VOID)
     /* create PublicDefaultDacl */
     AclLength = sizeof(ACL) +
                 (sizeof(ACE) + RtlLengthSid(SeWorldSid)) +
-                (sizeof(ACE) + RtlLengthSid(SeLocalSystemSid));
+                (sizeof(ACE) + RtlLengthSid(SeLocalSystemSid)) +
+                (sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid));
 
     SePublicDefaultDacl = ExAllocatePoolWithTag(PagedPool,
                                                 AclLength,
@@ -59,6 +60,11 @@ SepInitDACLs(VOID)
                            ACL_REVISION,
                            GENERIC_ALL,
                            SeLocalSystemSid);
+
+    RtlAddAccessAllowedAce(SePublicDefaultDacl,
+                           ACL_REVISION,
+                           GENERIC_ALL,
+                           SeAliasAdminsSid);
 
     /* create PublicDefaultUnrestrictedDacl */
     AclLength = sizeof(ACL) +
