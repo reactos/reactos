@@ -165,9 +165,9 @@ ClassNameToVersion(
     /* This block is a hack! */
     if (!VersionedClass)
     {
-        /* 
-         * In windows the default activation context always contains comctl32v5 
-         * In reactos we don't have a default activation context so we 
+        /*
+         * In windows the default activation context always contains comctl32v5
+         * In reactos we don't have a default activation context so we
          * mimic wine here.
          */
         VersionedClass = is_comctl32_class(SectionName.Buffer);
@@ -179,9 +179,9 @@ ClassNameToVersion(
     }
 #endif
 
-    /* 
-     * The returned strings are pointers in the activation context and 
-     * will get freed when the activation context gets freed 
+    /*
+     * The returned strings are pointers in the activation context and
+     * will get freed when the activation context gets freed
      */
     return VersionedClass;
 }
@@ -209,9 +209,9 @@ VersionRegisterClass(
     _SEH2_TRY
     {
         hLibModule = LoadLibraryW(lpLibFileName);
-        if ( hLibModule )
+        if (hLibModule)
         {
-            if ((pRegisterClassNameW = (void*) GetProcAddress(hLibModule, "RegisterClassNameW")))
+            if ((pRegisterClassNameW = (void*)GetProcAddress(hLibModule, "RegisterClassNameW")))
             {
                 if (IS_ATOM(pszClass))
                 {
@@ -238,15 +238,15 @@ VersionRegisterClass(
     _SEH2_END
 
 Error_Exit:
-    if ( Ret || !hLibModule )
+    if (Ret || !hLibModule)
     {
-        if ( phLibModule ) *phLibModule = hLibModule;
+        if (phLibModule) *phLibModule = hLibModule;
     }
     else
     {
-        DWORD save_error = GetLastError();
+        DWORD dwLastError = GetLastError();
         FreeLibrary(hLibModule);
-        SetLastError(save_error);
+        SetLastError(dwLastError);
     }
 
     RtlDeactivateActivationContextUnsafeFast(&Frame);
@@ -266,7 +266,7 @@ GetClassInfoExA(
     UNICODE_STRING ClassName = {0};
     LPCSTR pszMenuName;
     HMODULE hLibModule = NULL;
-    DWORD save_error;
+    DWORD dwLastError;
     BOOL Ret, ClassFound = FALSE, ConvertedString = FALSE;
     LPCWSTR lpszClsVersion;
     HANDLE pCtx = NULL;
@@ -279,7 +279,7 @@ GetClassInfoExA(
 
     if (!lpwcx)
     {
-        SetLastError( ERROR_NOACCESS );
+        SetLastError(ERROR_NOACCESS);
         return FALSE;
     }
 
@@ -321,7 +321,7 @@ GetClassInfoExA(
 
     for(;;)
     {
-        Ret = NtUserGetClassInfo( hInstance,
+        Ret = NtUserGetClassInfo(hInstance,
                                  &ClassName,
                                  (LPWNDCLASSEXW)lpwcx,
                                  (LPWSTR *)&pszMenuName,
@@ -330,9 +330,9 @@ GetClassInfoExA(
         if (!lpLibFileName) break;
         if (!ClassFound)
         {
-            save_error = GetLastError();
-            if ( save_error == ERROR_CANNOT_FIND_WND_CLASS ||
-                 save_error == ERROR_CLASS_DOES_NOT_EXIST )
+            dwLastError = GetLastError();
+            if ( dwLastError == ERROR_CANNOT_FIND_WND_CLASS ||
+                 dwLastError == ERROR_CLASS_DOES_NOT_EXIST )
             {
                 ClassFound = VersionRegisterClass(ClassName.Buffer, lpLibFileName, pCtx, &hLibModule);
                 if (ClassFound) continue;
@@ -340,9 +340,9 @@ GetClassInfoExA(
         }
         if (hLibModule)
         {
-            save_error = GetLastError();
+            dwLastError = GetLastError();
             FreeLibrary(hLibModule);
-            SetLastError(save_error);
+            SetLastError(dwLastError);
             hLibModule = 0;
         }
         break;
@@ -376,7 +376,7 @@ GetClassInfoExW(
     UNICODE_STRING ClassName = {0};
     LPWSTR pszMenuName;
     HMODULE hLibModule = NULL;
-    DWORD save_error;
+    DWORD dwLastError;
     BOOL Ret, ClassFound = FALSE;
     LPCWSTR lpszClsVersion;
     HANDLE pCtx = NULL;
@@ -438,9 +438,9 @@ GetClassInfoExW(
         if (!lpLibFileName) break;
         if (!ClassFound)
         {
-            save_error = GetLastError();
-            if ( save_error == ERROR_CANNOT_FIND_WND_CLASS ||
-                 save_error == ERROR_CLASS_DOES_NOT_EXIST )
+            dwLastError = GetLastError();
+            if ( dwLastError == ERROR_CANNOT_FIND_WND_CLASS ||
+                 dwLastError == ERROR_CLASS_DOES_NOT_EXIST )
             {
                 ClassFound = VersionRegisterClass(ClassName.Buffer, lpLibFileName, pCtx, &hLibModule);
                 if (ClassFound) continue;
@@ -448,9 +448,9 @@ GetClassInfoExW(
         }
         if (hLibModule)
         {
-            save_error = GetLastError();
+            dwLastError = GetLastError();
             FreeLibrary(hLibModule);
-            SetLastError(save_error);
+            SetLastError(dwLastError);
             hLibModule = 0;
         }
         break;
@@ -1878,7 +1878,9 @@ UnregisterClassA(
         }
     }
     else
+    {
         ClassName.Buffer = (PWSTR)((ULONG_PTR)lpClassName);
+    }
 
     Ret = NtUserUnregisterClass(&ClassName, hInstance, 0);
 
@@ -1916,7 +1918,7 @@ UnregisterClassW(
         RtlInitUnicodeString(&ClassName, lpClassName);
     }
     else
-    {    
+    {
         ClassName.Buffer = (PWSTR)((ULONG_PTR)lpClassName);
     }
 
