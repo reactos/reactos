@@ -183,7 +183,7 @@ ME_Style *ME_ApplyStyle(ME_TextEditor *editor, ME_Style *sSrc, CHARFORMAT2W *mod
   }
 
   COPY_STYLE_ITEM(CFM_UNDERLINETYPE, bUnderlineType);
-  /* If the CFM_UNDERLINE effect is not specified set it appropiately */
+  /* If the CFM_UNDERLINE effect is not specified, set it appropriately */
   if ((mod->dwMask & CFM_UNDERLINETYPE) && !(mod->dwMask & CFM_UNDERLINE))
   {
       fmt.dwMask |= CFM_UNDERLINE;
