@@ -1,7 +1,30 @@
-========================
-ReactOS™ Version 0.4.x
-Updated August 31, 2016
-========================
+================================================================================
+ReactOS™ Version 0.4.4
+für die Chemnitzer Linux-Tage 2017
+================================================================================
+
+Willkommen zu ReactOS!
+
+0. CD-ROM Inhalt
+----------------
+
+* ReactOS Live-System/Installation
+* ReactOS in einer virtuellen QEMU-Maschine
+* ReactOS Build Environment (RosBE)
+* Quellcode
+
+Diese CD-ROM sollte unter Windows ein AutoRun-Programm starten. Alternativ
+können Sie sich den CD-ROM Inhalt über einen Dateibrowser anschauen.
+Die Ordnernamen sollten selbsterklärend sein.
+
+Der gesamte Quellcode des Betriebssystems lässt sich unter Einsatz des
+ReactOS Build Environments sowohl unter Windows als auch unter
+Unix-ähnlichen Betriebssystemen wie Linux kompilieren.
+
+Weitere Informationen über ReactOS finden Sie unter www.reactos.org!
+
+================================================================================
+
 
 1. What is ReactOS?
 -------------------
