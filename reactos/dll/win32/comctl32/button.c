@@ -316,7 +316,7 @@ BOOL BUTTON_GetIdealSize(HTHEME theme, HWND hwnd, SIZE* psize)
     HFONT hFont = 0, hPrevFont = 0;
     SIZE TextSize, ImageSize, ButtonSize;
     BOOL ret = FALSE;
-    LOGFONTW logfont;
+    LOGFONTW logfont = {0};
 
     pdata = _GetButtonData(hwnd);
     text = get_button_text( hwnd );
@@ -372,8 +372,6 @@ BOOL BUTTON_GetIdealSize(HTHEME theme, HWND hwnd, SIZE* psize)
         rcContents.right = ImageSize.cx + TextSize.cx;
         rcContents.bottom = max(ImageSize.cy, TextSize.cy);
         GetThemeBackgroundExtent(theme, hdc, BP_PUSHBUTTON, PBS_NORMAL, &rcContents, &rcButtonExtent);
-        ERR("rcContents: %d, %d, %d, %d\n", rcContents.left, rcContents.top, rcContents.right, rcContents.bottom);
-        ERR("rcButtonExtent: %d, %d, %d, %d\n", rcButtonExtent.left, rcButtonExtent.top, rcButtonExtent.right, rcButtonExtent.bottom);
         ButtonSize.cx = rcButtonExtent.right - rcButtonExtent.left;
         ButtonSize.cy = rcButtonExtent.bottom - rcButtonExtent.top;
     }
