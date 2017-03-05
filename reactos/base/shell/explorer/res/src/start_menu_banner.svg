@@ -16,8 +16,8 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="Logo.svg"
-   inkscape:export-filename="F:\reactos\Logo.png"
+   sodipodi:docname="start_menu_banner.svg"
+   inkscape:export-filename="start_menu_banner.png"
    inkscape:export-xdpi="72"
    inkscape:export-ydpi="72">
   <defs
@@ -79,9 +79,13 @@
     <filter
        style="color-interpolation-filters:sRGB;"
        inkscape:label="Drop Shadow"
-       id="filter4197">
+       id="filter4197"
+       x="-0.02"
+       y="-0.10"
+       width="1.05"
+       height="1.25">
       <feFlood
-         flood-opacity="0.68999999999999995"
+         flood-opacity="0.7"
          flood-color="rgb(0,0,0)"
          result="flood"
          id="feFlood4199" />
@@ -93,11 +97,11 @@
          id="feComposite4201" />
       <feGaussianBlur
          in="composite1"
-         stdDeviation="1"
+         stdDeviation="0.5"
          result="blur"
          id="feGaussianBlur4203" />
       <feOffset
-         dx="-0.1"
+         dx="0.5"
          dy="1"
          result="offset"
          id="feOffset4205" />
@@ -117,17 +121,17 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.4967109"
-     inkscape:cx="-34.214085"
-     inkscape:cy="142.13217"
+     inkscape:cx="-34.417137"
+     inkscape:cy="166.47739"
      inkscape:document-units="px"
      inkscape:current-layer="svg2"
      showgrid="false"
      units="pt"
-     inkscape:window-width="1397"
-     inkscape:window-height="974"
-     inkscape:window-x="437"
-     inkscape:window-y="214"
-     inkscape:window-maximized="0" />
+     inkscape:window-width="1600"
+     inkscape:window-height="838"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1" />
   <metadata
      id="metadata7">
     <rdf:RDF>
@@ -162,20 +166,20 @@
      id="text4707"
      y="34.69656"
      x="-1058.8489"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.14050674px;line-height:100%;font-family:'AvantGarde Bk BT';-inkscape-font-specification:'AvantGarde Bk BT, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter4197)"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.14050674px;line-height:100%;font-family:'AvantGarde Bk BT';-inkscape-font-specification:'AvantGarde Bk BT, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.40488964;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;filter:url(#filter4197)"
      xml:space="preserve"><tspan
        y="34.69656"
        x="-1058.8489"
        id="tspan4709"
        sodipodi:role="line"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20.00007629px;line-height:100%;font-family:'AvantGarde Bk BT';-inkscape-font-specification:'AvantGarde Bk BT, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:19.99142647px;line-height:100%;font-family:'AvantGarde Bk BT';-inkscape-font-specification:'AvantGarde Bk BT, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;stroke:#ffffff;stroke-width:0.40488964;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          id="tspan4213">ReactOS</tspan><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.50006676px;line-height:100%;font-family:'AvantGarde Bk BT';-inkscape-font-specification:'AvantGarde Bk BT, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start"
-         id="tspan4209">  0.5 - SVN</tspan></tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.20780945px;line-height:100%;font-family:'AvantGarde Bk BT';-inkscape-font-specification:'AvantGarde Bk BT, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start;stroke:#ffffff;stroke-width:0.40488964;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="tspan4209">  0.4.4 - CLT 2017</tspan></tspan></text>
   <g
      style="fill:#ffffff;fill-opacity:1"
      id="layer1-2"
-     transform="matrix(-4.4824609e-5,-0.056,0.05634648,-4.4824609e-5,-16.777709,291.46496)">
+     transform="matrix(-4.4824609e-5,-0.056,0.05634648,-4.4824609e-5,-16.57728,291.46496)">
     <g
        style="fill:#ffffff;fill-opacity:1"
        id="g5951"
