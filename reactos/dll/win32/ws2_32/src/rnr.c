@@ -403,9 +403,12 @@ WSALookupServiceNextW(IN HANDLE hLookup,
         return SOCKET_ERROR;
     }
 
-    /* Verify pointers */
+    /*
+     * Verify pointers. Note that the size of the buffer
+     * pointed by lpqsResults is given by *lpdwBufferLength.
+     */
     if (IsBadReadPtr(lpdwBufferLength, sizeof(*lpdwBufferLength)) ||
-        IsBadWritePtr(lpqsResults, sizeof(*lpqsResults)))
+        IsBadWritePtr(lpqsResults, *lpdwBufferLength))
     {
         /* It is invalid; fail */
         SetLastError(WSAEFAULT);
@@ -449,9 +452,12 @@ WSALookupServiceNextA(IN HANDLE hLookup,
 
     DPRINT("WSALookupServiceNextA: %lx\n", hLookup);
 
-    /* Verify pointers */
+    /*
+     * Verify pointers. Note that the size of the buffer
+     * pointed by lpqsResults is given by *lpdwBufferLength.
+     */
     if (IsBadReadPtr(lpdwBufferLength, sizeof(*lpdwBufferLength)) ||
-        IsBadWritePtr(lpqsResults, sizeof(*lpqsResults)))
+        IsBadWritePtr(lpqsResults, *lpdwBufferLength))
     {
         /* It is invalid; fail */
         SetLastError(WSAEFAULT);
@@ -465,13 +471,24 @@ WSALookupServiceNextA(IN HANDLE hLookup,
     {
         /* Allocate the buffer we'll use */
         UnicodeQuerySet = HeapAlloc(WsSockHeap, 0, UnicodeQuerySetSize);
-        if (!UnicodeQuerySet) UnicodeQuerySetSize = 0;
+        if (!UnicodeQuerySet)
+        {
+            /*
+             * We failed, possibly because the specified size was too large?
+             * Retrieve the needed buffer size with the WSALookupServiceNextW
+             * call and retry again a second time.
+             */
+            UnicodeQuerySetSize = 0;
+        }
     }
     else
     {
-        /* His buffer is too small */
-        UnicodeQuerySetSize = 0;
+        /*
+         * The buffer is too small. Retrieve the needed buffer size with
+         * the WSALookupServiceNextW call and return it to the caller.
+         */
         UnicodeQuerySet = NULL;
+        UnicodeQuerySetSize = 0;
     }
 
     /* Call the Unicode Function */
@@ -479,13 +496,39 @@ WSALookupServiceNextA(IN HANDLE hLookup,
                                       dwControlFlags,
                                       &UnicodeQuerySetSize,
                                       UnicodeQuerySet);
+
+    /*
+     * Check whether we actually just retrieved the needed buffer size
+     * because our previous local allocation did fail. If so, allocate
+     * a new buffer and retry again.
+     */
+    if ( (!UnicodeQuerySet) && (*lpdwBufferLength >= sizeof(WSAQUERYSETW)) &&
+         (ErrorCode == SOCKET_ERROR) && (GetLastError() == WSAEFAULT) )
+    {
+        /* Allocate the buffer we'll use */
+        UnicodeQuerySet = HeapAlloc(WsSockHeap, 0, UnicodeQuerySetSize);
+        if (UnicodeQuerySet)
+        {
+            /* Call the Unicode Function */
+            ErrorCode = WSALookupServiceNextW(hLookup,
+                                              dwControlFlags,
+                                              &UnicodeQuerySetSize,
+                                              UnicodeQuerySet);
+        }
+        /*
+         * Otherwise the allocation failed and we
+         * fall back into the error checks below.
+         */
+    }
+
     if (ErrorCode == ERROR_SUCCESS)
     {
-        /* Not convert to ANSI */
+        /* Now convert back to ANSI */
         ErrorCode = MapUnicodeQuerySetToAnsi(UnicodeQuerySet,
                                              lpdwBufferLength,
                                              lpqsResults);
-        if (ErrorCode != ERROR_SUCCESS) SetLastError(ErrorCode);
+        if (ErrorCode != ERROR_SUCCESS)
+            SetLastError(ErrorCode);
     }
     else
     {
@@ -499,10 +542,11 @@ WSALookupServiceNextA(IN HANDLE hLookup,
     }
 
     /* If we had a local buffer, free it */
-    if (UnicodeQuerySet) HeapFree(WsSockHeap, 0, UnicodeQuerySet);
+    if (UnicodeQuerySet)
+        HeapFree(WsSockHeap, 0, UnicodeQuerySet);
 
     /* Return to caller */
-    return ErrorCode == ERROR_SUCCESS ? ErrorCode : SOCKET_ERROR;
+    return (ErrorCode == ERROR_SUCCESS) ? ErrorCode : SOCKET_ERROR;
 }
 
 /*
