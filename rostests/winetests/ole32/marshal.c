@@ -3467,6 +3467,19 @@ static ULONG WINAPI TestChannelHook_Release(IChannelHook *iface)
     return 1;
 }
 
+static BOOL new_hook_struct;
+static int method, server_tid;
+static GUID causality;
+
+struct new_hook_info
+{
+    IID iid;
+    GUID causality;
+    DWORD server_pid;
+    DWORD server_tid;
+    WORD method;
+};
+
 static void WINAPI TestChannelHook_ClientGetSize(
     IChannelHook *iface,
     REFGUID uExtent,
@@ -3474,12 +3487,36 @@ static void WINAPI TestChannelHook_ClientGetSize(
     ULONG  *pDataSize )
 {
     SChannelHookCallInfo *info = (SChannelHookCallInfo *)riid;
-    trace("TestChannelHook_ClientGetBuffer\n");
-    trace("\t%s method %d\n", debugstr_iid(riid), info->iMethod);
-    trace("\tcid: %s\n", debugstr_iid(&info->uCausality));
-    ok(info->cbSize == sizeof(*info), "info->cbSize was %d instead of %d\n", info->cbSize, (int)sizeof(*info));
-    ok(info->dwServerPid == GetCurrentProcessId(), "info->dwServerPid was 0x%x instead of 0x%x\n", info->dwServerPid, GetCurrentProcessId());
-    ok(!info->pObject, "info->pObject should be NULL\n");
+    trace("TestChannelHook_ClientGetSize\n");
+    trace("\t%s\n", debugstr_iid(riid));
+    if (info->cbSize != sizeof(*info))
+        new_hook_struct = TRUE;
+
+    if (!new_hook_struct)
+    {
+        ok(info->cbSize == sizeof(*info), "cbSize was %d instead of %d\n", info->cbSize, (int)sizeof(*info));
+        ok(info->dwServerPid == GetCurrentProcessId(), "dwServerPid was 0x%x instead of 0x%x\n", info->dwServerPid, GetCurrentProcessId());
+        ok(info->iMethod == method, "iMethod was %d should be %d\n", info->iMethod, method);
+        ok(!info->pObject, "pObject should be NULL\n");
+        if (method == 3)
+            causality = info->uCausality;
+        else
+            ok(IsEqualGUID(&info->uCausality, &causality), "causality wasn't correct\n");
+    }
+    else
+    {
+        struct new_hook_info *new_info = (struct new_hook_info *)riid;
+        ok(new_info->server_pid == GetCurrentProcessId(), "server pid was 0x%x instead of 0x%x\n", new_info->server_pid,
+           GetCurrentProcessId());
+        ok(new_info->server_tid == server_tid, "server tid was 0x%x instead of 0x%x\n", new_info->server_tid,
+           server_tid);
+        ok(new_info->method == method, "method was %d instead of %d\n", new_info->method, method);
+        if (method == 3)
+            causality = new_info->causality;
+        else
+            ok(IsEqualGUID(&new_info->causality, &causality), "causality wasn't correct\n");
+    }
+
     ok(IsEqualGUID(uExtent, &EXTENTID_WineTest), "uExtent wasn't correct\n");
 
     *pDataSize = 1;
@@ -3494,9 +3531,26 @@ static void WINAPI TestChannelHook_ClientFillBuffer(
 {
     SChannelHookCallInfo *info = (SChannelHookCallInfo *)riid;
     trace("TestChannelHook_ClientFillBuffer\n");
-    ok(info->cbSize == sizeof(*info), "info->cbSize was %d instead of %d\n", info->cbSize, (int)sizeof(*info));
-    ok(info->dwServerPid == GetCurrentProcessId(), "info->dwServerPid was 0x%x instead of 0x%x\n", info->dwServerPid, GetCurrentProcessId());
-    ok(!info->pObject, "info->pObject should be NULL\n");
+
+    if (!new_hook_struct)
+    {
+        ok(info->cbSize == sizeof(*info), "cbSize was %d instead of %d\n", info->cbSize, (int)sizeof(*info));
+        ok(info->dwServerPid == GetCurrentProcessId(), "dwServerPid was 0x%x instead of 0x%x\n", info->dwServerPid, GetCurrentProcessId());
+        ok(info->iMethod == method, "iMethod was %d should be %d\n", info->iMethod, method);
+        ok(!info->pObject, "pObject should be NULL\n");
+        ok(IsEqualGUID(&info->uCausality, &causality), "causality wasn't correct\n");
+    }
+    else
+    {
+        struct new_hook_info *new_info = (struct new_hook_info *)riid;
+        ok(new_info->server_pid == GetCurrentProcessId(), "server pid was 0x%x instead of 0x%x\n", new_info->server_pid,
+           GetCurrentProcessId());
+        ok(new_info->server_tid == server_tid, "server tid was 0x%x instead of 0x%x\n", new_info->server_tid,
+           server_tid);
+        ok(new_info->method == method, "method was %d instead of %d\n", new_info->method, method);
+        ok(IsEqualGUID(&new_info->causality, &causality), "causality wasn't correct\n");
+    }
+
     ok(IsEqualGUID(uExtent, &EXTENTID_WineTest), "uExtent wasn't correct\n");
 
     *(unsigned char *)pDataBuffer = 0xcc;
@@ -3514,11 +3568,28 @@ static void WINAPI TestChannelHook_ClientNotify(
 {
     SChannelHookCallInfo *info = (SChannelHookCallInfo *)riid;
     trace("TestChannelHook_ClientNotify hrFault = 0x%08x\n", hrFault);
-    ok(info->cbSize == sizeof(*info), "info->cbSize was %d instead of %d\n", info->cbSize, (int)sizeof(*info));
-    ok(info->dwServerPid == GetCurrentProcessId(), "info->dwServerPid was 0x%x instead of 0x%x\n", info->dwServerPid, GetCurrentProcessId());
-    todo_wine {
-    ok(info->pObject != NULL, "info->pObject shouldn't be NULL\n");
+
+    if (!new_hook_struct)
+    {
+        ok(info->cbSize == sizeof(*info), "cbSize was %d instead of %d\n", info->cbSize, (int)sizeof(*info));
+        ok(info->dwServerPid == GetCurrentProcessId(), "dwServerPid was 0x%x instead of 0x%x\n", info->dwServerPid, GetCurrentProcessId());
+        ok(info->iMethod == method, "iMethod was %d should be %d\n", info->iMethod, method);
+        todo_wine {
+            ok(info->pObject != NULL, "pObject shouldn't be NULL\n");
+        }
+        ok(IsEqualGUID(&info->uCausality, &causality), "causality wasn't correct\n");
     }
+    else
+    {
+        struct new_hook_info *new_info = (struct new_hook_info *)riid;
+        ok(new_info->server_pid == GetCurrentProcessId(), "server pid was 0x%x instead of 0x%x\n", new_info->server_pid,
+           GetCurrentProcessId());
+        ok(new_info->server_tid == server_tid, "server tid was 0x%x instead of 0x%x\n", new_info->server_tid,
+           server_tid);
+        ok(new_info->method == method, "method was %d instead of %d\n", new_info->method, method);
+        ok(IsEqualGUID(&new_info->causality, &causality), "causality wasn't correct\n");
+    }
+
     ok(IsEqualGUID(uExtent, &EXTENTID_WineTest), "uExtent wasn't correct\n");
 }
 
@@ -3532,9 +3603,26 @@ static void WINAPI TestChannelHook_ServerNotify(
 {
     SChannelHookCallInfo *info = (SChannelHookCallInfo *)riid;
     trace("TestChannelHook_ServerNotify\n");
-    ok(info->cbSize == sizeof(*info), "info->cbSize was %d instead of %d\n", info->cbSize, (int)sizeof(*info));
-    ok(info->dwServerPid == GetCurrentProcessId(), "info->dwServerPid was 0x%x instead of 0x%x\n", info->dwServerPid, GetCurrentProcessId());
-    ok(info->pObject != NULL, "info->pObject shouldn't be NULL\n");
+
+    if (!new_hook_struct)
+    {
+        ok(info->cbSize == sizeof(*info), "cbSize was %d instead of %d\n", info->cbSize, (int)sizeof(*info));
+        ok(info->dwServerPid == GetCurrentProcessId(), "dwServerPid was 0x%x instead of 0x%x\n", info->dwServerPid, GetCurrentProcessId());
+        ok(info->iMethod == method, "iMethod was %d should be %d\n", info->iMethod, method);
+        ok(info->pObject != NULL, "pObject shouldn't be NULL\n");
+        ok(IsEqualGUID(&info->uCausality, &causality), "causality wasn't correct\n");
+    }
+    else
+    {
+        struct new_hook_info *new_info = (struct new_hook_info *)riid;
+        ok(new_info->server_pid == GetCurrentProcessId(), "server pid was 0x%x instead of 0x%x\n", new_info->server_pid,
+           GetCurrentProcessId());
+        ok(new_info->server_tid == server_tid, "server tid was 0x%x instead of 0x%x\n", new_info->server_tid,
+           server_tid);
+        ok(new_info->method == method, "method was %d instead of %d\n", new_info->method, method);
+        ok(IsEqualGUID(&new_info->causality, &causality), "causality wasn't correct\n");
+    }
+
     ok(cbDataSize == 1, "cbDataSize should have been 1 instead of %d\n", cbDataSize);
     ok(*(unsigned char *)pDataBuffer == 0xcc, "pDataBuffer should have contained 0xcc instead of 0x%x\n", *(unsigned char *)pDataBuffer);
     ok(IsEqualGUID(uExtent, &EXTENTID_WineTest), "uExtent wasn't correct\n");
@@ -3549,10 +3637,26 @@ static void WINAPI TestChannelHook_ServerGetSize(
 {
     SChannelHookCallInfo *info = (SChannelHookCallInfo *)riid;
     trace("TestChannelHook_ServerGetSize\n");
-    trace("\t%s method %d\n", debugstr_iid(riid), info->iMethod);
-    ok(info->cbSize == sizeof(*info), "info->cbSize was %d instead of %d\n", info->cbSize, (int)sizeof(*info));
-    ok(info->dwServerPid == GetCurrentProcessId(), "info->dwServerPid was 0x%x instead of 0x%x\n", info->dwServerPid, GetCurrentProcessId());
-    ok(info->pObject != NULL, "info->pObject shouldn't be NULL\n");
+    trace("\t%s\n", debugstr_iid(riid));
+    if (!new_hook_struct)
+    {
+        ok(info->cbSize == sizeof(*info), "cbSize was %d instead of %d\n", info->cbSize, (int)sizeof(*info));
+        ok(info->dwServerPid == GetCurrentProcessId(), "dwServerPid was 0x%x instead of 0x%x\n", info->dwServerPid, GetCurrentProcessId());
+        ok(info->iMethod == method, "iMethod was %d should be %d\n", info->iMethod, method);
+        ok(info->pObject != NULL, "pObject shouldn't be NULL\n");
+        ok(IsEqualGUID(&info->uCausality, &causality), "causality wasn't correct\n");
+    }
+    else
+    {
+        struct new_hook_info *new_info = (struct new_hook_info *)riid;
+        ok(new_info->server_pid == GetCurrentProcessId(), "server pid was 0x%x instead of 0x%x\n", new_info->server_pid,
+           GetCurrentProcessId());
+        ok(new_info->server_tid == server_tid, "server tid was 0x%x instead of 0x%x\n", new_info->server_tid,
+           server_tid);
+        ok(new_info->method == method, "method was %d instead of %d\n", new_info->method, method);
+        ok(IsEqualGUID(&new_info->causality, &causality), "causality wasn't correct\n");
+    }
+
     ok(IsEqualGUID(uExtent, &EXTENTID_WineTest), "uExtent wasn't correct\n");
     if (hrFault != S_OK)
         trace("\thrFault = 0x%08x\n", hrFault);
@@ -3607,6 +3711,7 @@ static void test_channel_hook(void)
     hr = CreateStreamOnHGlobal(NULL, TRUE, &pStream);
     ok_ole_success(hr, CreateStreamOnHGlobal);
     tid = start_host_object2(pStream, &IID_IClassFactory, (IUnknown*)&Test_ClassFactory, MSHLFLAGS_NORMAL, &MessageFilter, &thread);
+    server_tid = tid;
 
     ok_more_than_one_lock();
 
@@ -3617,8 +3722,11 @@ static void test_channel_hook(void)
 
     ok_more_than_one_lock();
 
+    method = 3;
     hr = IClassFactory_CreateInstance(cf, NULL, &IID_IUnknown, (LPVOID*)&proxy);
     ok_ole_success(hr, IClassFactory_CreateInstance);
+
+    method = 5;
     IUnknown_Release(proxy);
 
     IClassFactory_Release(cf);

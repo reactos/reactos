@@ -176,16 +176,7 @@ static void expect(HRESULT hr, VARTYPE vt, BOOL copy, int line)
     }
     else if(flags == PROP_V0)
         ok(hr == S_OK, "%s (%s): got %08x\n", wine_vtypes[idx], modifier, hr);
-    else if(flags & PROP_TODO)
-    {
-        todo_wine
-        {
-        if(hr != S_OK)
-            win_skip("%s (%s): unsupported\n", wine_vtypes[idx], modifier);
-        else ok(hr == S_OK, "%s (%s): got %08x\n", wine_vtypes[idx], modifier, hr);
-        }
-    }
-    else
+    else todo_wine_if(flags & PROP_TODO)
     {
         if(hr != S_OK)
             win_skip("%s (%s): unsupported\n", wine_vtypes[idx], modifier);
