@@ -394,8 +394,12 @@ Cleanup:
     /* Check if we got here while still having a client thread */
     if (ClientThread)
     {
-        /* FIXME: Complex cleanup code */
-        ASSERT(FALSE);
+        KeAcquireGuardedMutex(&LpcpLock);
+        ClientThread->LpcReplyMessage = Message;
+        LpcpPrepareToWakeClient(ClientThread);
+        KeReleaseGuardedMutex(&LpcpLock);
+        LpcpCompleteWait(&ClientThread->LpcReplySemaphore);
+        ObDereferenceObject(ClientThread);
     }
 
     /* Dereference the client port if we have one, and the process */

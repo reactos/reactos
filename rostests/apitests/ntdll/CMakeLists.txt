@@ -1,6 +1,7 @@
 
 list(APPEND SOURCE
     LdrEnumResources.c
+    NtAcceptConnectPort.c
     NtAllocateVirtualMemory.c
     NtApphelpCacheControl.c
     NtContinue.c
