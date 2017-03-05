@@ -1004,15 +1004,18 @@ static HRESULT PropertyStorage_ReadDictionary(PropertyStorage_impl *This,
         if (This->codePage != CP_UNICODE)
             ptr[cbEntry - 1] = '\0';
         else
-            *((LPWSTR)ptr + cbEntry / sizeof(WCHAR)) = '\0';
+            ((LPWSTR)ptr)[cbEntry - 1] = 0;
         hr = PropertyStorage_StoreNameWithId(This, (char*)ptr, This->codePage, propid);
         if (This->codePage == CP_UNICODE)
         {
+            /* cbEntry is the number of characters */
+            cbEntry *= 2;
+
             /* Unicode entries are padded to DWORD boundaries */
             if (cbEntry % sizeof(DWORD))
                 ptr += sizeof(DWORD) - (cbEntry % sizeof(DWORD));
         }
-        ptr += sizeof(DWORD) + cbEntry;
+        ptr += cbEntry;
     }
     return hr;
 }
@@ -1053,6 +1056,10 @@ static HRESULT PropertyStorage_ReadProperty(PROPVARIANT *prop, const BYTE *data,
         prop->u.bVal = *data;
         TRACE("Read byte 0x%x\n", prop->u.bVal);
         break;
+    case VT_BOOL:
+        StorageUtl_ReadWord(data, 0, (WORD*)&prop->u.boolVal);
+        TRACE("Read bool %d\n", prop->u.boolVal);
+        break;
     case VT_I2:
         StorageUtl_ReadWord(data, 0, (WORD*)&prop->u.iVal);
         TRACE("Read short %d\n", prop->u.iVal);
@@ -1070,6 +1077,18 @@ static HRESULT PropertyStorage_ReadProperty(PROPVARIANT *prop, const BYTE *data,
     case VT_UI4:
         StorageUtl_ReadDWord(data, 0, &prop->u.ulVal);
         TRACE("Read ulong %d\n", prop->u.ulVal);
+        break;
+    case VT_I8:
+        StorageUtl_ReadULargeInteger(data, 0, (ULARGE_INTEGER *)&prop->u.hVal);
+        TRACE("Read long long %s\n", wine_dbgstr_longlong(prop->u.hVal.QuadPart));
+        break;
+    case VT_UI8:
+        StorageUtl_ReadULargeInteger(data, 0, &prop->u.uhVal);
+        TRACE("Read ulong long %s\n", wine_dbgstr_longlong(prop->u.uhVal.QuadPart));
+        break;
+    case VT_R8:
+        memcpy(&prop->u.dblVal, data, sizeof(double));
+        TRACE("Read double %f\n", prop->u.dblVal);
         break;
     case VT_LPSTR:
     {
@@ -2364,7 +2383,9 @@ static HRESULT create_EnumSTATPROPSETSTG(
 
     enumx = enumx_allocate(&IID_IEnumSTATPROPSETSTG,
                            &IEnumSTATPROPSETSTG_Vtbl,
-                           sizeof (STATPROPSETSTG));
+                           sizeof (STATPROPSETSTG),
+                           (IUnknown*)&This->base.IStorage_iface,
+                           NULL);
 
     /* add all the property set elements into a list */
     r = IStorage_EnumElements(stg, 0, NULL, 0, &penum);
@@ -2457,6 +2478,27 @@ static HRESULT WINAPI IEnumSTATPROPSTG_fnClone(
     return enumx_Clone((enumx_impl*)iface, (enumx_impl**)ppenum);
 }
 
+static void prop_enum_copy_cb(IUnknown *parent, void *orig, void *dest)
+{
+    PropertyStorage_impl *storage = impl_from_IPropertyStorage((IPropertyStorage*)parent);
+    STATPROPSTG *src_prop = orig;
+    STATPROPSTG *dest_prop = dest;
+    LPWSTR name;
+
+    dest_prop->propid = src_prop->propid;
+    dest_prop->vt = src_prop->vt;
+    dest_prop->lpwstrName = NULL;
+
+    if (dictionary_find(storage->propid_to_name, UlongToPtr(src_prop->propid), (void**)&name))
+    {
+        DWORD size = (strlenW(name) + 1) * sizeof(WCHAR);
+
+        dest_prop->lpwstrName = CoTaskMemAlloc(size);
+        if (!dest_prop->lpwstrName) return;
+        memcpy(dest_prop->lpwstrName, name, size);
+    }
+}
+
 static BOOL prop_enum_stat(const void *k, const void *v, void *extra, void *arg)
 {
     enumx_impl *enumx = arg;
@@ -2483,7 +2525,9 @@ static HRESULT create_EnumSTATPROPSTG(
 
     enumx = enumx_allocate(&IID_IEnumSTATPROPSTG,
                            &IEnumSTATPROPSTG_Vtbl,
-                           sizeof (STATPROPSTG));
+                           sizeof (STATPROPSTG),
+                           (IUnknown*)&This->IPropertyStorage_iface,
+                           prop_enum_copy_cb);
 
     dictionary_enumerate(This->propid_to_prop, prop_enum_stat, enumx);
 

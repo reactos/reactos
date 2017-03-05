@@ -45,7 +45,7 @@
 @ stdcall CoGetDefaultContext(long ptr ptr)
 @ stdcall CoGetInstanceFromFile(ptr ptr ptr long long wstr long ptr)
 @ stdcall CoGetInstanceFromIStorage(ptr ptr ptr long ptr long ptr)
-# CoGetInterceptor
+@ stdcall -stub CoGetInterceptor(ptr ptr ptr ptr)
 # CoGetInterceptorFromTypeInfo
 @ stdcall CoGetInterfaceAndReleaseStream(ptr ptr ptr)
 @ stdcall CoGetMalloc(long ptr)

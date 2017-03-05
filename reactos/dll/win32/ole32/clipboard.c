@@ -1094,7 +1094,7 @@ static HRESULT get_current_dataobject(IDataObject **data)
 
     h = GetClipboardData(wine_marshal_clipboard_format);
     if(!h) return S_FALSE;
-    if(GlobalSize(h) == 0) return S_FALSE;
+    if(GlobalSize(h) <= 1) return S_FALSE;
     ptr = GlobalLock(h);
     if(!ptr) return S_FALSE;
 
@@ -1182,9 +1182,11 @@ static HRESULT get_priv_data(ole_priv_data **data)
 
         for(cf = 0; (cf = EnumClipboardFormats(cf)) != 0; count++)
         {
-            char buf[100];
-            GetClipboardFormatNameA(cf, buf, sizeof(buf));
-            TRACE("cf %04x %s\n", cf, buf);
+            WCHAR buf[256];
+            if (GetClipboardFormatNameW(cf, buf, sizeof(buf) / sizeof(WCHAR)))
+                TRACE("cf %04x %s\n", cf, debugstr_w(buf));
+            else
+                TRACE("cf %04x\n", cf);
         }
         TRACE("count %d\n", count);
         size += count * sizeof(ret->entries[0]);
@@ -1941,7 +1943,7 @@ static HRESULT expose_marshalled_dataobject(ole_clipbrd *clipbrd, IDataObject *d
         dup_global_mem(h_stm, GMEM_DDESHARE|GMEM_MOVEABLE, &h);
     }
     else /* flushed */
-        h = GlobalAlloc(GMEM_DDESHARE|GMEM_MOVEABLE, 0);
+        h = GlobalAlloc(GMEM_DDESHARE|GMEM_MOVEABLE, 1);
 
     if(!h) return E_OUTOFMEMORY;
 
@@ -2084,8 +2086,7 @@ static HWND create_clipbrd_window(void)
     RegisterClassExW(&class);
 
     return CreateWindowW(clipbrd_wndclass, title, WS_POPUP | WS_CLIPSIBLINGS | WS_OVERLAPPED,
-                         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                         NULL, NULL, hinst, 0);
+                         0, 0, 0, 0, HWND_MESSAGE, NULL, hinst, 0);
 }
 
 /*********************************************************************
