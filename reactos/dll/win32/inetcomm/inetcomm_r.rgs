@@ -65,5 +65,9 @@ HKCR
         {
             InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
         }
+        '{05300401-BCBC-11D0-85E3-00C04FD85AB4}' = s 'MHTML Asynchronous Pluggable Protocol Handler'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+        }
     }
 }

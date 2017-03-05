@@ -38,6 +38,7 @@
 #include <imnxport.h>
 
 #include <wine/list.h>
+#include <wine/unicode.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(inetcomm);
@@ -95,11 +96,22 @@ HRESULT MimeAllocator_create(IUnknown *outer, void **obj) DECLSPEC_HIDDEN;
 HRESULT MimeMessage_create(IUnknown *outer, void **obj) DECLSPEC_HIDDEN;
 HRESULT MimeSecurity_create(IUnknown *outer, void **obj) DECLSPEC_HIDDEN;
 HRESULT VirtualStream_create(IUnknown *outer, void **obj) DECLSPEC_HIDDEN;
+HRESULT MimeHtmlProtocol_create(IUnknown *outer, void **obj) DECLSPEC_HIDDEN;
 
 HRESULT MimeInternational_Construct(IMimeInternational **internat) DECLSPEC_HIDDEN;
 
 HRESULT SMTPTransportCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
 HRESULT IMAPTransportCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
 HRESULT POP3TransportCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
+
+static inline void * __WINE_ALLOC_SIZE(1) heap_alloc(size_t len)
+{
+    return HeapAlloc(GetProcessHeap(), 0, len);
+}
+
+static inline BOOL heap_free(void *mem)
+{
+    return HeapFree(GetProcessHeap(), 0, mem);
+}
 
 #endif /* _INETCOMM_PRIVATE_H_ */

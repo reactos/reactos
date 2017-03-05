@@ -124,3 +124,10 @@ coclass IPropFindRequest { interface IPropFindRequest; }
     uuid(ea678830-235d-11d2-a8b6-0000f8084f96)
 ]
 coclass IPropPatchRequest { interface IPropPatchRequest; }
+
+[
+    helpstring("MHTML Asynchronous Pluggable Protocol Handler"),
+    threading(both),
+    uuid(05300401-bcbc-11d0-85e3-00c04fd85ab4)
+]
+coclass MimeHtmlProtocol { interface IInternetProtocol; }
