@@ -361,6 +361,11 @@ BOOL BUTTON_PaintWithTheme(HTHEME theme, HWND hwnd, HDC hParamDC, LPARAM prfFlag
     }
     else drawState = STATE_DISABLED;
 
+    if (drawState == STATE_NORMAL && (dwStyle & BUTTON_TYPE) == BS_DEFPUSHBUTTON)
+    {
+        drawState = STATE_DEFAULTED;
+    }
+
     paint(theme, hwnd, hParamDC, drawState, dtFlags, state & BST_FOCUS, prfFlag);
     return TRUE;
 }
