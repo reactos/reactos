@@ -1688,6 +1688,7 @@ static void test_createhbitmap(void)
     HDC hdc;
     COLORREF pixel;
     BYTE bits[640];
+    BitmapData lockeddata;
 
     memset(bits, 0x68, 640);
 
@@ -1872,6 +1873,30 @@ static void test_createhbitmap(void)
 
     stat = GdipDisposeImage((GpImage*)bitmap);
     expect(Ok, stat);
+
+    /* create HBITMAP from locked data */
+    memset(bits, 0x68, 640);
+    stat = GdipCreateBitmapFromScan0(10, 20, 32, PixelFormat24bppRGB, bits, &bitmap);
+    expect(Ok, stat);
+
+    memset(&lockeddata, 0, sizeof(lockeddata));
+    stat = GdipBitmapLockBits(bitmap, NULL, ImageLockModeRead | ImageLockModeWrite,
+            PixelFormat32bppRGB, &lockeddata);
+    expect(Ok, stat);
+    ((DWORD*)lockeddata.Scan0)[0] = 0xff242424;
+    stat = GdipCreateHBITMAPFromBitmap(bitmap, &hbitmap, 0);
+    expect(Ok, stat);
+    stat = GdipBitmapUnlockBits(bitmap, &lockeddata);
+    expect(Ok, stat);
+    stat = GdipDisposeImage((GpImage*)bitmap);
+    expect(Ok, stat);
+
+    hdc = CreateCompatibleDC(NULL);
+    oldhbitmap = SelectObject(hdc, hbitmap);
+    pixel = GetPixel(hdc, 0, 0);
+    expect(0x686868, pixel);
+    SelectObject(hdc, oldhbitmap);
+    DeleteDC(hdc);
 }
 
 static void test_getthumbnail(void)
@@ -3107,8 +3132,6 @@ static GpImage *load_image(const BYTE *image_data, UINT image_size)
     ok(refcount == 1, "expected stream refcount 1, got %d\n", refcount);
 
     status = GdipLoadImageFromStream(stream, &image);
-    ok(status == Ok || broken(status == InvalidParameter), /* XP */
-       "GdipLoadImageFromStream error %d\n", status);
     if (status != Ok)
     {
         IStream_Release(stream);
@@ -5168,6 +5191,186 @@ todo_wine
     GdipDisposeImage((GpImage *)bitmap);
 }
 
+#include "pshpack2.h"
+static const struct tiff_1x1_data
+{
+    USHORT byte_order;
+    USHORT version;
+    ULONG  dir_offset;
+    USHORT number_of_entries;
+    struct IFD_entry entry[12];
+    ULONG next_IFD;
+    struct IFD_rational res;
+    short palette_data[3][256];
+    short bps_data[4];
+    BYTE pixel_data[32];
+} tiff_1x1_data =
+{
+#ifdef WORDS_BIGENDIAN
+    'M' | 'M' << 8,
+#else
+    'I' | 'I' << 8,
+#endif
+    42,
+    FIELD_OFFSET(struct tiff_1x1_data, number_of_entries),
+    12,
+    {
+        { 0xff, IFD_SHORT, 1, 0 }, /* SUBFILETYPE */
+        { 0x100, IFD_LONG, 1, 1 }, /* IMAGEWIDTH */
+        { 0x101, IFD_LONG, 1, 1 }, /* IMAGELENGTH */
+        { 0x102, IFD_SHORT, 3, FIELD_OFFSET(struct tiff_1x1_data, bps_data) }, /* BITSPERSAMPLE */
+        { 0x103, IFD_SHORT, 1, 1 }, /* COMPRESSION: XP doesn't accept IFD_LONG here */
+        { 0x106, IFD_SHORT, 1, 2 }, /* PHOTOMETRIC */
+        { 0x111, IFD_LONG, 1, FIELD_OFFSET(struct tiff_1x1_data, pixel_data) }, /* STRIPOFFSETS */
+        { 0x115, IFD_SHORT, 1, 3 }, /* SAMPLESPERPIXEL */
+        { 0x11a, IFD_RATIONAL, 1, FIELD_OFFSET(struct tiff_1x1_data, res) },
+        { 0x11b, IFD_RATIONAL, 1, FIELD_OFFSET(struct tiff_1x1_data, res) },
+        { 0x128, IFD_SHORT, 1, 2 }, /* RESOLUTIONUNIT */
+        { 0x140, IFD_SHORT, 256*3, FIELD_OFFSET(struct tiff_1x1_data, palette_data) } /* COLORMAP */
+    },
+    0,
+    { 96, 1 },
+    { { 0 } },
+    { 8,8,8,0 },
+    { 1,0,2,3,4,5,6,7,8,9,0,1,2,3,4,5 }
+};
+#include "poppack.h"
+
+static void test_tiff_color_formats(void)
+{
+    static const struct
+    {
+        int photometric; /* PhotometricInterpretation */
+        int samples; /* SamplesPerPixel */
+        int bps; /* BitsPerSample */
+        PixelFormat format;
+    } td[] =
+    {
+        /* 2 - RGB */
+        { 2, 3, 1, PixelFormat24bppRGB },
+        { 2, 3, 4, PixelFormat24bppRGB },
+        { 2, 3, 8, PixelFormat24bppRGB },
+        { 2, 3, 16, PixelFormat48bppRGB },
+        { 2, 3, 24, 0 },
+#if 0 /* FIXME */
+        { 2, 3, 32, 0 },
+#endif
+        { 2, 4, 1, PixelFormat32bppARGB },
+        { 2, 4, 4, PixelFormat32bppARGB },
+        { 2, 4, 8, PixelFormat32bppARGB },
+        { 2, 4, 16, PixelFormat48bppRGB },
+        { 2, 4, 24, 0 },
+        { 2, 4, 32, 0 },
+        /* 1 - BlackIsZero (Bilevel) */
+        { 1, 1, 1, PixelFormat1bppIndexed },
+#if 0 /* FIXME: PNG vs TIFF mismatch */
+        { 1, 1, 4, PixelFormat8bppIndexed },
+#endif
+        { 1, 1, 8, PixelFormat8bppIndexed },
+        { 1, 1, 16, PixelFormat32bppARGB },
+        { 1, 1, 24, 0 },
+        { 1, 1, 32, PixelFormat32bppARGB },
+        /* 3 - Palette Color */
+        { 3, 1, 1, PixelFormat1bppIndexed },
+        { 3, 1, 4, PixelFormat4bppIndexed },
+        { 3, 1, 8, PixelFormat8bppIndexed },
+#if 0 /* FIXME: for some reason libtiff replaces photometric 3 by 1 for bps > 8 */
+        { 3, 1, 16, 0 },
+        { 3, 1, 24, 0 },
+        { 3, 1, 32, 0 },
+#endif
+        /* 5 - Separated */
+        { 5, 4, 1, 0 },
+        { 5, 4, 4, 0 },
+        { 5, 4, 8, PixelFormat32bppCMYK },
+        { 5, 4, 16, PixelFormat48bppRGB },
+        { 5, 4, 24, 0 },
+        { 5, 4, 32, 0 },
+    };
+    BYTE buf[sizeof(tiff_1x1_data)];
+    GpStatus status;
+    GpImage *image;
+    UINT count, i;
+    struct IFD_entry *tag, *tag_photo = NULL, *tag_bps = NULL, *tag_samples = NULL, *tag_colormap = NULL;
+    short *bps;
+    ImageType type;
+    PixelFormat format;
+
+    memcpy(buf, &tiff_1x1_data, sizeof(tiff_1x1_data));
+
+    count = *(short *)(buf + tiff_1x1_data.dir_offset);
+    tag = (struct IFD_entry *)(buf + tiff_1x1_data.dir_offset + sizeof(short));
+
+    /* verify the TIFF structure */
+    for (i = 0; i < count; i++)
+    {
+        if (tag[i].id == 0x102) /* BitsPerSample */
+            tag_bps = &tag[i];
+        else if (tag[i].id == 0x106) /* PhotometricInterpretation */
+            tag_photo = &tag[i];
+        else if (tag[i].id == 0x115) /* SamplesPerPixel */
+            tag_samples = &tag[i];
+        else if (tag[i].id == 0x140) /* ColorMap */
+            tag_colormap = &tag[i];
+    }
+
+    ok(tag_bps && tag_photo && tag_samples && tag_colormap, "tag 0x102,0x106,0x115 or 0x140 is missing\n");
+    if (!tag_bps || !tag_photo || !tag_samples || !tag_colormap) return;
+
+    ok(tag_bps->type == IFD_SHORT, "tag 0x102 should have type IFD_SHORT\n");
+    bps = (short *)(buf + tag_bps->value);
+    ok(bps[0] == 8 && bps[1] == 8 && bps[2] == 8 && bps[3] == 0,
+       "expected bps 8,8,8,0 got %d,%d,%d,%d\n", bps[0], bps[1], bps[2], bps[3]);
+
+    for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+    {
+        tag_colormap->count = (1 << td[i].bps) * 3;
+        tag_photo->value = td[i].photometric;
+        tag_bps->count = td[i].samples;
+        tag_samples->value = td[i].samples;
+
+        if (td[i].samples == 1)
+            tag_bps->value = td[i].bps;
+        else if (td[i].samples == 2)
+            tag_bps->value = MAKELONG(td[i].bps, td[i].bps);
+        else if (td[i].samples == 3)
+        {
+            tag_bps->value = (BYTE *)bps - buf;
+            bps[0] = bps[1] = bps[2] = td[i].bps;
+        }
+        else if (td[i].samples == 4)
+        {
+            tag_bps->value = (BYTE *)bps - buf;
+            bps[0] = bps[1] = bps[2] = bps[3] = td[i].bps;
+        }
+        else
+        {
+            ok(0, "%u: unsupported samples count %d\n", i, td[i].samples);
+            continue;
+        }
+
+        image = load_image(buf, sizeof(buf));
+        if (!td[i].format)
+            ok(!image,
+               "%u: (%d,%d,%d) TIFF image loading should have failed\n", i, td[i].photometric, td[i].samples, td[i].bps);
+        else
+            ok(image != NULL || broken(!image) /* XP */, "%u: failed to load TIFF image data (%d,%d,%d)\n",
+               i, td[i].photometric, td[i].samples, td[i].bps);
+        if (!image) continue;
+
+        status = GdipGetImageType(image, &type);
+        ok(status == Ok, "%u: GdipGetImageType error %d\n", i, status);
+        ok(type == ImageTypeBitmap, "%u: wrong image type %d\n", i, type);
+
+        status = GdipGetImagePixelFormat(image, &format);
+        expect(Ok, status);
+        ok(format == td[i].format,
+           "%u: expected %#x, got %#x\n", i, td[i].format, format);
+
+        GdipDisposeImage(image);
+    }
+}
+
 START_TEST(image)
 {
     HMODULE mod = GetModuleHandleA("gdiplus.dll");
@@ -5185,6 +5388,7 @@ START_TEST(image)
     pGdipBitmapGetHistogram = (void*)GetProcAddress(mod, "GdipBitmapGetHistogram");
     pGdipImageSetAbort = (void*)GetProcAddress(mod, "GdipImageSetAbort");
 
+    test_tiff_color_formats();
     test_GdipInitializePalette();
     test_png_color_formats();
     test_supported_encoders();
