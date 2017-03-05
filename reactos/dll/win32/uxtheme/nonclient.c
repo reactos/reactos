@@ -136,7 +136,7 @@ HRESULT WINAPI ThemeDrawCaptionText(HTHEME hTheme, HDC hdc, int iPartId, int iSt
     
     oldTextColor = SetTextColor(hdc, textColor);
     oldBkMode = SetBkMode(hdc, TRANSPARENT);
-    DrawTextW(hdc, pszText, iCharCount, &rt, dwTextFlags);
+    DrawThemeText(hTheme, hdc, iPartId, iStateId, pszText, iCharCount, dwTextFlags, dwTextFlags, pRect);
     SetBkMode(hdc, oldBkMode);
     SetTextColor(hdc, oldTextColor);
 
