@@ -1523,14 +1523,9 @@ static HRESULT WINAPI NoStatStreamImpl_QueryInterface(
   NoStatStreamImpl* const This = impl_from_IStream(iface);
   if (ppvObject==0) return E_INVALIDARG;
   *ppvObject = 0;
-  if (IsEqualIID(&IID_IUnknown, riid))
-  {
-    *ppvObject = This;
-  }
-  else if (IsEqualIID(&IID_IStream, riid))
-  {
-    *ppvObject = This;
-  }
+
+  if (IsEqualIID(&IID_IUnknown, riid) || IsEqualIID(&IID_IStream, riid))
+    *ppvObject = &This->IStream_iface;
 
   if ((*ppvObject)==0)
     return E_NOINTERFACE;

@@ -1086,11 +1086,41 @@ static HRESULT WINAPI ret_false_func(void)
     return S_FALSE;
 }
 
-static const void *vtable[] = { NULL, NULL, NULL, inst_func };
+static const WCHAR testW[] = { 'T','e','s','t',0 };
+
+static void WINAPI variant_func2(VARIANT *ret, VARIANT v1, VARIANT v2)
+{
+    ok(V_VT(&v1) == VT_I4, "unexpected %d\n", V_VT(&v1));
+    ok(V_I4(&v1) == 2, "unexpected %d\n", V_I4(&v1));
+    ok(V_VT(&v2) == VT_BSTR, "unexpected %d\n", V_VT(&v2));
+    ok(lstrcmpW(V_BSTR(&v2), testW) == 0, "unexpected %s\n", wine_dbgstr_w(V_BSTR(&v2)));
+
+    V_VT(ret) = VT_UI4;
+    V_I4(ret) = 4321;
+}
+
+static void WINAPI inst_func2(void *inst, VARIANT *ret, VARIANT v1, VARIANT v2)
+{
+    ok( (*(void ***)inst)[3] == inst_func2, "wrong ptr %p\n", inst );
+
+    ok(V_VT(ret) == VT_I4 || broken(V_VT(ret) == VT_VARIANT) /* win64 */, "unexpected %d\n", V_VT(ret));
+    ok(V_I4(ret) == 1234, "unexpected %d\n", V_I4(ret));
+
+    ok(V_VT(&v1) == VT_I4, "unexpected %d\n", V_VT(&v1));
+    ok(V_I4(&v1) == 2, "unexpected %d\n", V_I4(&v1));
+    ok(V_VT(&v2) == VT_BSTR, "unexpected %d\n", V_VT(&v2));
+    ok(lstrcmpW(V_BSTR(&v2), testW) == 0, "unexpected %s\n", wine_dbgstr_w(V_BSTR(&v2)));
+
+    V_VT(ret) = VT_UI4;
+    V_I4(ret) = 4321;
+}
+
+static void *vtable[] = { NULL, NULL, NULL, inst_func };
+static void *vtable2[] = { NULL, NULL, NULL, inst_func2 };
 
 static void test_DispCallFunc(void)
 {
-    const void **inst = vtable;
+    void **inst;
     HRESULT res;
     VARIANT result, args[5];
     VARIANTARG *pargs[5];
@@ -1098,6 +1128,30 @@ static void test_DispCallFunc(void)
     int i;
 
     for (i = 0; i < 5; i++) pargs[i] = &args[i];
+
+    memset( args, 0x55, sizeof(args) );
+
+    types[0] = VT_VARIANT;
+    V_VT(&args[0]) = VT_I4;
+    V_I4(&args[0]) = 2;
+    types[1] = VT_VARIANT;
+    V_VT(&args[1]) = VT_BSTR;
+    V_BSTR(&args[1]) = SysAllocString(testW);
+    memset( &result, 0xcc, sizeof(result) );
+    res = DispCallFunc(NULL, (ULONG_PTR)variant_func2, CC_STDCALL, VT_VARIANT, 2, types, pargs, &result);
+    ok(res == S_OK, "DispCallFunc error %#x\n", res);
+    ok(V_VT(&result) == VT_UI4, "wrong result type %d\n", V_VT(&result));
+    ok(V_UI4(&result) == 4321, "wrong result %u\n", V_UI4(&result));
+
+    V_VT(&result) = VT_I4;
+    V_UI4(&result) = 1234;
+    inst = vtable2;
+    res = DispCallFunc(&inst, 3 * sizeof(void *), CC_STDCALL, VT_VARIANT, 2, types, pargs, &result);
+    ok(res == S_OK, "DispCallFunc error %#x\n", res);
+    ok(V_VT(&result) == VT_UI4, "wrong result type %d\n", V_VT(&result));
+    ok(V_UI4(&result) == 4321, "wrong result %u\n", V_UI4(&result));
+
+    VariantClear(&args[1]);
 
     memset( args, 0x55, sizeof(args) );
     types[0] = VT_UI4;
@@ -1197,6 +1251,7 @@ static void test_DispCallFunc(void)
     types[0] = VT_I4;
     V_I4(&args[0]) = 3;
     memset( &result, 0xcc, sizeof(result) );
+    inst = vtable;
     res = DispCallFunc( &inst, 3 * sizeof(void*), CC_STDCALL, VT_I4, 1, types, pargs, &result );
     ok( res == S_OK, "DispCallFunc failed %x\n", res );
     ok( V_VT(&result) == VT_I4, "wrong result type %d\n", V_VT(&result) );
@@ -5198,6 +5253,7 @@ static void test_SetFuncAndParamNames(void)
     ok(infos[0] && !infos[1] && !infos[2], "got wrong typeinfo\n");
     ok(memids[0] == 0, "got wrong memid[0]\n");
     ok(memids[1] == 0xdeadbeef && memids[2] == 0xdeadbeef, "got wrong memids\n");
+    ITypeInfo_Release(infos[0]);
 
     found = 3;
     memset(infos, 0, sizeof(infos));
@@ -5210,6 +5266,8 @@ static void test_SetFuncAndParamNames(void)
     ok(infos[0] && infos[1] && infos[0] != infos[1], "got same typeinfo\n");
     ok(memids[0] == 0, "got wrong memid[0]\n");
     ok(memids[1] == 0, "got wrong memid[1]\n");
+    ITypeInfo_Release(infos[0]);
+    ITypeInfo_Release(infos[1]);
 
     ITypeLib_Release(tl);
     ICreateTypeLib2_Release(ctl);
