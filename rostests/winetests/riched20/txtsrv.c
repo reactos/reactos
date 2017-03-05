@@ -99,7 +99,7 @@ static HRESULT WINAPI ITextHostImpl_QueryInterface(ITextHost *iface,
     ITextHostTestImpl *This = impl_from_ITextHost(iface);
 
     if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, pIID_ITextHost)) {
-        *ppvObject = This;
+        *ppvObject = &This->ITextHost_iface;
         ITextHost_AddRef((ITextHost *)*ppvObject);
         return S_OK;
     }
@@ -680,6 +680,16 @@ static void test_TxSetText(void)
                  "String returned of wrong length (expected 4, got %d)\n", SysStringLen(rettext));
     ok(memcmp(rettext,settext,SysStringByteLen(rettext)) == 0,
                  "String returned differs\n");
+
+    /* Null-pointer should behave the same as empty-string */
+
+    hres = ITextServices_TxSetText(txtserv, 0);
+    ok(hres == S_OK, "ITextServices_TxSetText failed (result = %x)\n", hres);
+
+    hres = ITextServices_TxGetText(txtserv, &rettext);
+    ok(hres == S_OK, "ITextServices_TxGetText failed (result = %x)\n", hres);
+    ok(SysStringLen(rettext) == 0,
+                 "String returned of wrong length (expected 0, got %d)\n", SysStringLen(rettext));
 
     SysFreeString(rettext);
     ITextServices_Release(txtserv);
