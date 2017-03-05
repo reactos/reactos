@@ -168,6 +168,17 @@ typedef enum WICTiffCompressionOption {
     WICTIFFCOMPRESSIONOPTION_FORCE_DWORD = CODEC_FORCE_DWORD
 } WICTiffCompressionOption;
 
+typedef enum WICPngFilterOption {
+    WICPngFilterUnspecified = 0,
+    WICPngFilterNone = 1,
+    WICPngFilterSub = 2,
+    WICPngFilterUp = 3,
+    WICPngFilterAverage = 4,
+    WICPngFilterPaeth = 5,
+    WICPngFilterAdaptive = 6,
+    WICPNFFILTEROPTION_FORCE_DWORD = CODEC_FORCE_DWORD
+} WICPngFilterOption;
+
 typedef enum WICSectionAccessLevel {
     WICSectionAccessLevelRead = 0x00000001,
     WICSectionAccessLevelReadWrite = 0x00000003,
@@ -208,7 +219,10 @@ cpp_quote("DEFINE_GUID(GUID_WICPixelFormat48bppRGB, 0x6fddc324,0x4e03,0x4bfe,0xb
 cpp_quote("DEFINE_GUID(GUID_WICPixelFormat64bppRGBA, 0x6fddc324,0x4e03,0x4bfe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x16);")
 cpp_quote("DEFINE_GUID(GUID_WICPixelFormat64bppPRGBA, 0x6fddc324,0x4e03,0x4bfe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x17);")
 
-cpp_quote("DEFINE_GUID(GUID_WICPixelFormat32bppCMYK, 0x6fddc324,0x4e03,0x4fbe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x1c);")
+cpp_quote("DEFINE_GUID(GUID_WICPixelFormat128bppRGBAFloat, 0x6fddc324,0x4e03,0x4bfe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x19);")
+
+cpp_quote("DEFINE_GUID(GUID_WICPixelFormat32bppCMYK, 0x6fddc324,0x4e03,0x4bfe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x1c);")
+cpp_quote("DEFINE_GUID(GUID_WICPixelFormat64bppCMYK, 0x6fddc324,0x4e03,0x4bfe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x1f);")
 
 typedef struct WICRect {
     INT X;
