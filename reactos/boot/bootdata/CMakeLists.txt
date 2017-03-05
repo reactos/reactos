@@ -32,7 +32,7 @@ add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/readme.txt DESTINATION reactos FOR 
 # Welcome.exe optional custom configuration (only for HybridCD)
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/welcome_config/)
     # Copy the main configuration file
-    add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/welcome_config/welcome.ini DESTINATION bootcd/reactos NO_CAB FOR hybridcd)
+    add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/welcome_config/welcome.ini DESTINATION setup/reactos NO_CAB FOR hybridcd)
 
     # Convert the translation files (name format: xx-YY.ini) into UTF-16
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/welcome_config)
@@ -43,7 +43,7 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/welcome_config/)
         add_custom_command(OUTPUT "${_converted_file}"
                            COMMAND native-utf16le "${_source_file}" "${_converted_file}"
                            DEPENDS native-utf16le "${_source_file}")
-        add_cd_file(TARGET converted_welcome_i18n_files FILE ${_converted_file} DESTINATION bootcd/reactos/welcome NO_CAB NAME_ON_CD ${_file} FOR hybridcd)
+        add_cd_file(TARGET converted_welcome_i18n_files FILE ${_converted_file} DESTINATION setup/reactos/welcome NO_CAB NAME_ON_CD ${_file} FOR hybridcd)
         list(APPEND _converted_welcome_i18n_files ${_converted_file})
     endforeach(_file)
     add_custom_target(converted_welcome_i18n_files DEPENDS ${_converted_welcome_i18n_files})
