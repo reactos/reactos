@@ -118,9 +118,9 @@
 118 stdcall NDRSContextMarshall2(ptr ptr ptr ptr ptr long)
 119 stdcall NDRSContextMarshall(ptr ptr ptr)
 120 stdcall NDRSContextMarshallEx(ptr ptr ptr ptr)
-121 stdcall NDRSContextUnmarshall2(ptr ptr ptr ptr long)
-122 stdcall NDRSContextUnmarshall(ptr ptr)
-123 stdcall NDRSContextUnmarshallEx(ptr ptr ptr)
+121 stdcall NDRSContextUnmarshall2(ptr ptr long ptr long)
+122 stdcall NDRSContextUnmarshall(ptr long)
+123 stdcall NDRSContextUnmarshallEx(ptr ptr long)
 124 stub NDRcopy
 125 stdcall NdrAllocate(ptr long)
 126 varargs NdrAsyncClientCall(ptr ptr)

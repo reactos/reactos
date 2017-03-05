@@ -390,7 +390,7 @@ static RPC_STATUS rpcrt4_protseq_ncacn_np_open_endpoint(RpcServerProtseq *protse
   RPC_STATUS r;
   LPSTR pname;
   RpcConnection *Connection;
-  char generated_endpoint[21];
+  char generated_endpoint[26];
 
   if (!endpoint)
   {

@@ -1287,12 +1287,10 @@ RPC_STATUS WINAPI RpcObjectSetType( UUID* ObjUuid, UUID* TypeUuid )
 struct rpc_server_registered_auth_info
 {
     struct list entry;
-    TimeStamp exp;
-    BOOL cred_acquired;
-    CredHandle cred;
-    ULONG max_token;
     USHORT auth_type;
+    WCHAR *package_name;
     WCHAR *principal;
+    ULONG max_token;
 };
 
 static RPC_STATUS find_security_package(ULONG auth_type, SecPkgInfoW **packages_buf, SecPkgInfoW **ret)
@@ -1331,36 +1329,22 @@ RPC_STATUS RPCRT4_ServerGetRegisteredAuthInfo(
 {
     RPC_STATUS status = RPC_S_UNKNOWN_AUTHN_SERVICE;
     struct rpc_server_registered_auth_info *auth_info;
+    SECURITY_STATUS sec_status;
 
     EnterCriticalSection(&server_auth_info_cs);
     LIST_FOR_EACH_ENTRY(auth_info, &server_registered_auth_info, struct rpc_server_registered_auth_info, entry)
     {
         if (auth_info->auth_type == auth_type)
         {
-            if (!auth_info->cred_acquired)
+            sec_status = AcquireCredentialsHandleW((SEC_WCHAR *)auth_info->principal, auth_info->package_name,
+                                                   SECPKG_CRED_INBOUND, NULL, NULL, NULL, NULL,
+                                                   cred, exp);
+            if (sec_status != SEC_E_OK)
             {
-                SecPkgInfoW *packages, *package;
-                SECURITY_STATUS sec_status;
-
-                status = find_security_package(auth_info->auth_type, &packages, &package);
-                if (status != RPC_S_OK)
-                    break;
-
-                sec_status = AcquireCredentialsHandleW((SEC_WCHAR *)auth_info->principal, package->Name,
-                                                       SECPKG_CRED_INBOUND, NULL, NULL, NULL, NULL,
-                                                       &auth_info->cred, &auth_info->exp);
-                FreeContextBuffer(packages);
-                if (sec_status != SEC_E_OK)
-                {
-                    status = RPC_S_SEC_PKG_ERROR;
-                    break;
-                }
-
-                auth_info->cred_acquired = TRUE;
+                status = RPC_S_SEC_PKG_ERROR;
+                break;
             }
 
-            *cred = auth_info->cred;
-            *exp = auth_info->exp;
             *max_token = auth_info->max_token;
             status = RPC_S_OK;
             break;
@@ -1378,8 +1362,7 @@ void RPCRT4_ServerFreeAllRegisteredAuthInfo(void)
     EnterCriticalSection(&server_auth_info_cs);
     LIST_FOR_EACH_ENTRY_SAFE(auth_info, cursor2, &server_registered_auth_info, struct rpc_server_registered_auth_info, entry)
     {
-        if (auth_info->cred_acquired)
-            FreeCredentialsHandle(&auth_info->cred);
+        HeapFree(GetProcessHeap(), 0, auth_info->package_name);
         HeapFree(GetProcessHeap(), 0, auth_info->principal);
         HeapFree(GetProcessHeap(), 0, auth_info);
     }
@@ -1415,6 +1398,7 @@ RPC_STATUS WINAPI RpcServerRegisterAuthInfoW( RPC_WSTR ServerPrincName, ULONG Au
 {
     struct rpc_server_registered_auth_info *auth_info;
     SecPkgInfoW *packages, *package;
+    WCHAR *package_name;
     ULONG max_token;
     RPC_STATUS status;
 
@@ -1424,20 +1408,27 @@ RPC_STATUS WINAPI RpcServerRegisterAuthInfoW( RPC_WSTR ServerPrincName, ULONG Au
     if (status != RPC_S_OK)
         return status;
 
+    package_name = RPCRT4_strdupW(package->Name);
     max_token = package->cbMaxToken;
     FreeContextBuffer(packages);
-
-    auth_info = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*auth_info));
-    if (!auth_info)
+    if (!package_name)
         return RPC_S_OUT_OF_RESOURCES;
 
+    auth_info = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*auth_info));
+    if (!auth_info) {
+        HeapFree(GetProcessHeap(), 0, package_name);
+        return RPC_S_OUT_OF_RESOURCES;
+    }
+
     if (ServerPrincName && !(auth_info->principal = RPCRT4_strdupW(ServerPrincName))) {
+        HeapFree(GetProcessHeap(), 0, package_name);
         HeapFree(GetProcessHeap(), 0, auth_info);
         return RPC_S_OUT_OF_RESOURCES;
     }
 
-    auth_info->max_token = max_token;
     auth_info->auth_type = AuthnSvc;
+    auth_info->package_name = package_name;
+    auth_info->max_token = max_token;
 
     EnterCriticalSection(&server_auth_info_cs);
     list_add_tail(&server_registered_auth_info, &auth_info->entry);

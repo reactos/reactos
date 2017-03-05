@@ -1047,7 +1047,10 @@ RPC_STATUS RPCRT4_ServerConnectionAuth(RpcConnection* conn,
                                         auth_data_in->auth_type, cred, exp,
                                         max_token, NULL, &conn->AuthInfo);
             if (status != RPC_S_OK)
+            {
+                FreeCredentialsHandle(&cred);
                 return status;
+            }
 
             /* FIXME: should auth_data_in->auth_context_id be checked in the !start case? */
             conn->auth_context_id = auth_data_in->auth_context_id;
