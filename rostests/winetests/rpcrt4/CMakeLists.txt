@@ -14,7 +14,6 @@ list(APPEND SOURCE
     ndr_marshall.c
     rpc.c
     rpc_async.c
-    rpc_protseq.c
     server.c
     testlist.c
     ${CMAKE_CURRENT_BINARY_DIR}/server_c.c
@@ -28,7 +27,7 @@ endif()
 add_executable(rpcrt4_winetest ${SOURCE})
 target_link_libraries(rpcrt4_winetest uuid wine ${PSEH_LIB})
 set_module_type(rpcrt4_winetest win32cui)
-add_importlibs(rpcrt4_winetest ole32 rpcrt4 secur32 msvcrt kernel32 ntdll)
+add_importlibs(rpcrt4_winetest oleaut32 ole32 rpcrt4 secur32 advapi32 msvcrt kernel32 ntdll)
 add_rostests_file(TARGET rpcrt4_winetest)
 
 if(NOT MSVC)

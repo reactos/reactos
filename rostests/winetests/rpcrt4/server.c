@@ -18,9 +18,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define COBJMACROS
 #include <windows.h>
+#include <ole2.h>
+#include <oleauto.h>
 #include <secext.h>
 #include <rpcdce.h>
+#include <netfw.h>
 #include "wine/test.h"
 #include "server_s.h"
 #include "server_defines.h"
@@ -1524,6 +1528,15 @@ void __cdecl s_authinfo_test(unsigned int protseq, int secure)
         }
         ok(level == RPC_C_AUTHN_LEVEL_PKT_PRIVACY, "level unchanged\n");
         ok(authnsvc == RPC_C_AUTHN_WINNT, "authnsvc unchanged\n");
+        RpcStringFreeA(&principal);
+
+        status = RpcBindingInqAuthClientA(NULL, &privs, &principal, &level, &authnsvc, NULL);
+        ok(status == RPC_S_OK, "expected RPC_S_OK got %u\n", status);
+        RpcStringFreeA(&principal);
+
+        status = RpcBindingInqAuthClientExA(NULL, &privs, &principal, &level, &authnsvc, NULL, 0);
+        ok(status == RPC_S_OK, "expected RPC_S_OK got %u\n", status);
+        RpcStringFreeA(&principal);
 
         status = RpcImpersonateClient(NULL);
         ok(status == RPC_S_OK, "expected RPC_S_OK got %u\n", status);
@@ -1745,13 +1758,141 @@ server(void)
   }
 }
 
+static BOOL is_process_elevated(void)
+{
+    HANDLE token;
+    if (OpenProcessToken( GetCurrentProcess(), TOKEN_QUERY, &token ))
+    {
+        TOKEN_ELEVATION_TYPE type;
+        DWORD size;
+        BOOL ret;
+
+        ret = GetTokenInformation( token, TokenElevationType, &type, sizeof(type), &size );
+        CloseHandle( token );
+        return (ret && type == TokenElevationTypeFull);
+    }
+    return FALSE;
+}
+
+static BOOL is_firewall_enabled(void)
+{
+    HRESULT hr, init;
+    INetFwMgr *mgr = NULL;
+    INetFwPolicy *policy = NULL;
+    INetFwProfile *profile = NULL;
+    VARIANT_BOOL enabled = VARIANT_FALSE;
+
+    init = CoInitializeEx( 0, COINIT_APARTMENTTHREADED );
+
+    hr = CoCreateInstance( &CLSID_NetFwMgr, NULL, CLSCTX_INPROC_SERVER, &IID_INetFwMgr,
+                           (void **)&mgr );
+    ok( hr == S_OK, "got %08x\n", hr );
+    if (hr != S_OK) goto done;
+
+    hr = INetFwMgr_get_LocalPolicy( mgr, &policy );
+    ok( hr == S_OK, "got %08x\n", hr );
+    if (hr != S_OK) goto done;
+
+    hr = INetFwPolicy_get_CurrentProfile( policy, &profile );
+    if (hr != S_OK) goto done;
+
+    hr = INetFwProfile_get_FirewallEnabled( profile, &enabled );
+    ok( hr == S_OK, "got %08x\n", hr );
+
+done:
+    if (policy) INetFwPolicy_Release( policy );
+    if (profile) INetFwProfile_Release( profile );
+    if (mgr) INetFwMgr_Release( mgr );
+    if (SUCCEEDED( init )) CoUninitialize();
+    return (enabled == VARIANT_TRUE);
+}
+
+enum firewall_op
+{
+    APP_ADD,
+    APP_REMOVE
+};
+
+static HRESULT set_firewall( enum firewall_op op )
+{
+    static const WCHAR testW[] = {'r','p','c','r','t','4','_','t','e','s','t',0};
+    HRESULT hr, init;
+    INetFwMgr *mgr = NULL;
+    INetFwPolicy *policy = NULL;
+    INetFwProfile *profile = NULL;
+    INetFwAuthorizedApplication *app = NULL;
+    INetFwAuthorizedApplications *apps = NULL;
+    BSTR name, image = SysAllocStringLen( NULL, MAX_PATH );
+
+    if (!GetModuleFileNameW( NULL, image, MAX_PATH ))
+    {
+        SysFreeString( image );
+        return E_FAIL;
+    }
+    init = CoInitializeEx( 0, COINIT_APARTMENTTHREADED );
+
+    hr = CoCreateInstance( &CLSID_NetFwMgr, NULL, CLSCTX_INPROC_SERVER, &IID_INetFwMgr,
+                           (void **)&mgr );
+    ok( hr == S_OK, "got %08x\n", hr );
+    if (hr != S_OK) goto done;
+
+    hr = INetFwMgr_get_LocalPolicy( mgr, &policy );
+    ok( hr == S_OK, "got %08x\n", hr );
+    if (hr != S_OK) goto done;
+
+    hr = INetFwPolicy_get_CurrentProfile( policy, &profile );
+    if (hr != S_OK) goto done;
+
+    INetFwProfile_get_AuthorizedApplications( profile, &apps );
+    ok( hr == S_OK, "got %08x\n", hr );
+    if (hr != S_OK) goto done;
+
+    hr = CoCreateInstance( &CLSID_NetFwAuthorizedApplication, NULL, CLSCTX_INPROC_SERVER,
+                           &IID_INetFwAuthorizedApplication, (void **)&app );
+    ok( hr == S_OK, "got %08x\n", hr );
+    if (hr != S_OK) goto done;
+
+    hr = INetFwAuthorizedApplication_put_ProcessImageFileName( app, image );
+    if (hr != S_OK) goto done;
+
+    name = SysAllocString( testW );
+    hr = INetFwAuthorizedApplication_put_Name( app, name );
+    SysFreeString( name );
+    ok( hr == S_OK, "got %08x\n", hr );
+    if (hr != S_OK) goto done;
+
+    if (op == APP_ADD)
+        hr = INetFwAuthorizedApplications_Add( apps, app );
+    else if (op == APP_REMOVE)
+        hr = INetFwAuthorizedApplications_Remove( apps, image );
+    else
+        hr = E_INVALIDARG;
+
+done:
+    if (app) INetFwAuthorizedApplication_Release( app );
+    if (apps) INetFwAuthorizedApplications_Release( apps );
+    if (policy) INetFwPolicy_Release( policy );
+    if (profile) INetFwProfile_Release( profile );
+    if (mgr) INetFwMgr_Release( mgr );
+    if (SUCCEEDED( init )) CoUninitialize();
+    SysFreeString( image );
+    return hr;
+}
+
 START_TEST(server)
 {
   ULONG size = 0;
   int argc;
   char **argv;
+  BOOL firewall_enabled = is_firewall_enabled();
 
   InitFunctionPointers();
+
+  if (firewall_enabled && !is_process_elevated())
+  {
+    trace("no privileges, skipping tests to avoid firewall dialog\n");
+    return;
+  }
 
   ok(!GetUserNameExA(NameSamCompatible, NULL, &size), "GetUserNameExA\n");
   domain_and_user = HeapAlloc(GetProcessHeap(), 0, size);
@@ -1773,7 +1914,20 @@ START_TEST(server)
     RpcEndExcept
   }
   else
+  {
+    if (firewall_enabled)
+    {
+      HRESULT hr = set_firewall(APP_ADD);
+      if (hr != S_OK)
+      {
+        skip("can't authorize app in firewall %08x\n", hr);
+        HeapFree(GetProcessHeap(), 0, domain_and_user);
+        return;
+      }
+    }
     server();
+    if (firewall_enabled) set_firewall(APP_REMOVE);
+  }
 
   HeapFree(GetProcessHeap(), 0, domain_and_user);
 }
