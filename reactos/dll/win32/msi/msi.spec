@@ -7,7 +7,7 @@
 11 stdcall MsiConfigureFeatureA(str str long)
 12 stub MsiConfigureFeatureFromDescriptorA
 13 stub MsiConfigureFeatureFromDescriptorW
-14 stdcall MsiConfigureFeatureW(wstr wstr ptr)
+14 stdcall MsiConfigureFeatureW(wstr wstr long)
 15 stdcall MsiConfigureProductA(str long long)
 16 stdcall MsiConfigureProductW(wstr long long)
 17 stdcall MsiCreateRecord(long)
@@ -60,10 +60,10 @@
 64 stdcall MsiGetMode(long long)
 65 stdcall MsiGetProductCodeA(str str)
 66 stdcall MsiGetProductCodeW(wstr wstr)
-67 stdcall MsiGetProductInfoA(str str ptr long)
+67 stdcall MsiGetProductInfoA(str str ptr ptr)
 68 stub MsiGetProductInfoFromScriptA
 69 stub MsiGetProductInfoFromScriptW
-70 stdcall MsiGetProductInfoW(wstr wstr ptr long)
+70 stdcall MsiGetProductInfoW(wstr wstr ptr ptr)
 71 stdcall MsiGetProductPropertyA(long str ptr ptr)
 72 stdcall MsiGetProductPropertyW(long wstr ptr ptr)
 73 stdcall MsiGetPropertyA(ptr str ptr ptr)
@@ -82,8 +82,8 @@
 86 stub MsiInstallMissingFileW
 87 stdcall MsiInstallProductA(str str)
 88 stdcall MsiInstallProductW(wstr wstr)
-89 stdcall MsiLocateComponentA(str ptr long)
-90 stdcall MsiLocateComponentW(wstr ptr long)
+89 stdcall MsiLocateComponentA(str ptr ptr)
+90 stdcall MsiLocateComponentW(wstr ptr ptr)
 91 stdcall MsiOpenDatabaseA(str str ptr)
 92 stdcall MsiOpenDatabaseW(wstr wstr ptr)
 93 stdcall MsiOpenPackageA(str ptr)

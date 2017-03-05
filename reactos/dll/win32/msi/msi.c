@@ -1084,7 +1084,7 @@ static UINT MSI_GetProductInfo(LPCWSTR szProduct, LPCWSTR szAttribute,
     MSIINSTALLCONTEXT context = MSIINSTALLCONTEXT_USERUNMANAGED;
     UINT r = ERROR_UNKNOWN_PROPERTY;
     HKEY prodkey, userdata, source;
-    WCHAR *val = NULL, squashed_pc[SQUASHED_GUID_SIZE], packagecode[SQUASHED_GUID_SIZE];
+    WCHAR *val = NULL, squashed_pc[SQUASHED_GUID_SIZE], packagecode[GUID_SIZE];
     BOOL badconfig = FALSE;
     LONG res;
     DWORD type = REG_NONE;
@@ -2690,16 +2690,16 @@ UINT WINAPI MsiGetProductPropertyW(MSIHANDLE hProduct, LPCWSTR szProperty,
 
     if (lstrlenW(val) >= *pccbValue)
     {
-        lstrcpynW(szValue, val, *pccbValue);
-        *pccbValue = lstrlenW(val);
+        if (szValue) lstrcpynW(szValue, val, *pccbValue);
         r = ERROR_MORE_DATA;
     }
     else
     {
-        lstrcpyW(szValue, val);
-        *pccbValue = lstrlenW(val);
+        if (szValue) lstrcpyW(szValue, val);
         r = ERROR_SUCCESS;
     }
+
+    *pccbValue = lstrlenW(val);
 
 done:
     if (view)
@@ -3326,7 +3326,7 @@ INSTALLSTATE WINAPI MsiUseFeatureA( LPCSTR szProduct, LPCSTR szFeature )
     return MsiUseFeatureExA(szProduct, szFeature, 0, 0);
 }
 
-WCHAR *reg_get_multisz( HKEY hkey, const WCHAR *name )
+static WCHAR *reg_get_multisz( HKEY hkey, const WCHAR *name )
 {
     WCHAR *ret;
     DWORD len, type;
@@ -3335,7 +3335,7 @@ WCHAR *reg_get_multisz( HKEY hkey, const WCHAR *name )
     return ret;
 }
 
-WCHAR *reg_get_sz( HKEY hkey, const WCHAR *name )
+static WCHAR *reg_get_sz( HKEY hkey, const WCHAR *name )
 {
     WCHAR *ret;
     DWORD len, type;

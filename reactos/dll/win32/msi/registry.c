@@ -637,6 +637,7 @@ UINT MSIREG_OpenUserDataFeaturesKey(LPCWSTR szProduct, LPCWSTR szUserSid, MSIINS
 UINT MSIREG_OpenUserComponentsKey(LPCWSTR szComponent, HKEY *key, BOOL create)
 {
     WCHAR squashed_cc[SQUASHED_GUID_SIZE], keypath[0x200];
+    REGSAM access = KEY_WOW64_64KEY | KEY_ALL_ACCESS;
     UINT ret;
 
     if (!squash_guid( szComponent, squashed_cc)) return ERROR_FUNCTION_FAILED;
@@ -651,7 +652,7 @@ UINT MSIREG_OpenUserComponentsKey(LPCWSTR szComponent, HKEY *key, BOOL create)
 
     strcpyW(keypath, szInstaller_Components);
     strcatW( keypath, squashed_cc );
-    return RegOpenKeyW(HKEY_LOCAL_MACHINE, keypath, key);
+    return RegOpenKeyExW( HKEY_LOCAL_MACHINE, keypath, 0, access, key );
 }
 
 UINT MSIREG_OpenUserDataComponentKey(LPCWSTR szComponent, LPCWSTR szUserSid, HKEY *key, BOOL create)
@@ -926,14 +927,18 @@ UINT MSIREG_OpenUserUpgradeCodesKey(LPCWSTR szUpgradeCode, HKEY* key, BOOL creat
 
 UINT MSIREG_DeleteUpgradeCodesKey( const WCHAR *code )
 {
-    WCHAR squashed_code[SQUASHED_GUID_SIZE], keypath[0x200];
+    WCHAR squashed_code[SQUASHED_GUID_SIZE];
+    REGSAM access = KEY_WOW64_64KEY | KEY_ALL_ACCESS;
+    HKEY hkey;
+    LONG ret;
 
     if (!squash_guid( code, squashed_code )) return ERROR_FUNCTION_FAILED;
     TRACE( "%s squashed %s\n", debugstr_w(code), debugstr_w(squashed_code) );
 
-    strcpyW( keypath, szInstaller_UpgradeCodes );
-    strcatW( keypath, squashed_code );
-    return RegDeleteTreeW( HKEY_LOCAL_MACHINE, keypath );
+    if (RegOpenKeyExW( HKEY_LOCAL_MACHINE, szInstaller_UpgradeCodes, 0, access, &hkey )) return ERROR_SUCCESS;
+    ret = RegDeleteTreeW( hkey, squashed_code );
+    RegCloseKey( hkey );
+    return ret;
 }
 
 UINT MSIREG_DeleteUserUpgradeCodesKey(LPCWSTR szUpgradeCode)
