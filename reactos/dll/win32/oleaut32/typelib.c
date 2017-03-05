@@ -1592,30 +1592,6 @@ static void TLB_abort(void)
     DebugBreak();
 }
 
-void* __WINE_ALLOC_SIZE(1) heap_alloc_zero(unsigned size)
-{
-    void *ret = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
-    if (!ret) ERR("cannot allocate memory\n");
-    return ret;
-}
-
-void* __WINE_ALLOC_SIZE(1) heap_alloc(unsigned size)
-{
-    void *ret = HeapAlloc(GetProcessHeap(), 0, size);
-    if (!ret) ERR("cannot allocate memory\n");
-    return ret;
-}
-
-void* __WINE_ALLOC_SIZE(2) heap_realloc(void *ptr, unsigned size)
-{
-    return HeapReAlloc(GetProcessHeap(), 0, ptr, size);
-}
-
-void heap_free(void *ptr)
-{
-    HeapFree(GetProcessHeap(), 0, ptr);
-}
-
 /* returns the size required for a deep copy of a typedesc into a
  * flat buffer */
 static SIZE_T TLB_SizeTypeDesc( const TYPEDESC *tdesc, BOOL alloc_initial_space )
@@ -5663,7 +5639,7 @@ static HRESULT WINAPI ITypeInfo_fnQueryInterface(
     if(IsEqualIID(riid, &IID_IUnknown) ||
             IsEqualIID(riid,&IID_ITypeInfo)||
             IsEqualIID(riid,&IID_ITypeInfo2))
-        *ppvObject = This;
+        *ppvObject = &This->ITypeInfo2_iface;
     else if(IsEqualIID(riid, &IID_ICreateTypeInfo) ||
              IsEqualIID(riid, &IID_ICreateTypeInfo2))
         *ppvObject = &This->ICreateTypeInfo2_iface;
@@ -6861,8 +6837,17 @@ DispCallFunc(
         break;
     case VT_DECIMAL:
     case VT_VARIANT:
-        args[0] = (DWORD)pvargResult;  /* arg 0 is a pointer to the result */
-        call_method( func, argspos, args, &stack_offset );
+        if (pvInstance)
+        {
+            args[0] = (DWORD)pvInstance;  /* arg 0 is a pointer to the instance */
+            args[1] = (DWORD)pvargResult; /* arg 1 is a pointer to the result */
+            call_method( func, argspos, args, &stack_offset );
+        }
+        else
+        {
+            args[0] = (DWORD)pvargResult;  /* arg 0 is a pointer to the result */
+            call_method( func, argspos, args, &stack_offset );
+        }
         break;
     case VT_I8:
     case VT_UI8:
@@ -6947,8 +6932,17 @@ DispCallFunc(
         break;
     case VT_DECIMAL:
     case VT_VARIANT:
-        args[0] = (DWORD_PTR)pvargResult;  /* arg 0 is a pointer to the result */
-        call_method( func, argspos, args );
+        if (pvInstance)
+        {
+            args[0] = (DWORD_PTR)pvInstance;  /* arg 0 is a pointer to the instance */
+            args[1] = (DWORD_PTR)pvargResult; /* arg 1 is a pointer to the result */
+            call_method( func, argspos, args );
+        }
+        else
+        {
+            args[0] = (DWORD_PTR)pvargResult;  /* arg 0 is a pointer to the result */
+            call_method( func, argspos, args );
+        }
         break;
     case VT_HRESULT:
         WARN("invalid return type %u\n", vtReturn);
@@ -7154,7 +7148,8 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
                         break;
                     }
                 }
-                else if (src_arg)
+                else if (src_arg && !((wParamFlags & PARAMFLAG_FOPT) &&
+                         V_VT(src_arg) == VT_ERROR && V_ERROR(src_arg) == DISP_E_PARAMNOTFOUND))
                 {
                     TRACE("%s\n", debugstr_variant(src_arg));
 

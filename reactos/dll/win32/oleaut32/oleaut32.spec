@@ -373,7 +373,7 @@
 418 stdcall OleLoadPicture(ptr long long ptr ptr)
 419 stdcall OleCreatePictureIndirect(ptr ptr long ptr)
 420 stdcall OleCreateFontIndirect(ptr ptr ptr)
-421 stdcall OleTranslateColor(long long long)
+421 stdcall OleTranslateColor(long long ptr)
 422 stdcall OleLoadPictureFile(int128 ptr)
 423 stdcall OleSavePictureFile(ptr wstr)
 424 stdcall OleLoadPicturePath(wstr ptr long long ptr ptr)
