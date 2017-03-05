@@ -55,10 +55,10 @@ ObpCreateGlobalDosDevicesSD(OUT PSECURITY_DESCRIPTOR SecurityDescriptor)
                 sizeof(ACE) + RtlLengthSid(SeLocalSystemSid) +
                 sizeof(ACE) + RtlLengthSid(SeCreatorOwnerSid);
 
-    Dacl = ExAllocatePool(PagedPool, AclLength);
+    Dacl = ExAllocatePoolWithTag(PagedPool, AclLength, TAG_OB_DIR_SD);
     if (Dacl == NULL)
     {
-        return STATUS_NO_MEMORY;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     /* Initialize the DACL */
