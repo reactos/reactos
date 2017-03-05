@@ -47,6 +47,9 @@ static BOOL (WINAPI *pCryptBinaryToStringA)(const BYTE *pbBinary,
 static BOOL (WINAPI *pCryptStringToBinaryA)(LPCSTR pszString,
  DWORD cchString, DWORD dwFlags, BYTE *pbBinary, DWORD *pcbBinary,
  DWORD *pdwSkip, DWORD *pdwFlags);
+static BOOL (WINAPI *pCryptStringToBinaryW)(LPCWSTR pszString,
+ DWORD cchString, DWORD dwFlags, BYTE *pbBinary, DWORD *pcbBinary,
+ DWORD *pdwSkip, DWORD *pdwFlags);
 
 struct BinTests
 {
@@ -299,6 +302,60 @@ static void decodeAndCompareBase64_A(LPCSTR toDecode, LPCSTR header,
     }
 }
 
+static void decodeBase64WithLenFmtW(LPCSTR strA, int len, DWORD fmt, BOOL retA,
+ const BYTE *bufA, DWORD bufLenA, DWORD fmtUsedA)
+{
+    BYTE buf[8] = {0};
+    DWORD bufLen = sizeof(buf)-1, fmtUsed = 0xdeadbeef;
+    BOOL ret;
+    WCHAR strW[64];
+    int i;
+    for (i = 0; (strW[i] = strA[i]) != 0; ++i);
+    ret = pCryptStringToBinaryW(strW, len, fmt, buf, &bufLen, NULL, &fmtUsed);
+    ok(ret == retA && bufLen == bufLenA && memcmp(bufA, buf, bufLen) == 0
+     && fmtUsed == fmtUsedA, "base64 \"%s\" len %d: W and A differ\n", strA, len);
+}
+
+static void decodeBase64WithLenFmt(LPCSTR str, int len, DWORD fmt, LPCSTR expected, int le, BOOL isBroken)
+{
+    BYTE buf[8] = {0};
+    DWORD bufLen = sizeof(buf)-1, fmtUsed = 0xdeadbeef;
+    BOOL ret;
+    SetLastError(0xdeadbeef);
+    ret = pCryptStringToBinaryA(str, len, fmt, buf, &bufLen, NULL, &fmtUsed);
+    buf[bufLen] = 0;
+    if (expected) {
+        BOOL correct = ret && strcmp(expected, (char*)buf) == 0;
+        ok(correct || (isBroken && broken(!ret)),
+         "base64 \"%s\" len %d: expected \"%s\", got \"%s\" (ret %d, le %d)\n",
+         str, len, expected, (char*)buf, ret, GetLastError());
+        if (correct)
+            ok(fmtUsed == fmt, "base64 \"%s\" len %d: expected fmt %d, used %d\n",
+             str, len, fmt, fmtUsed);
+    } else {
+        ok(!ret && GetLastError() == le,
+         "base64 \"%s\" len %d: expected failure, got \"%s\" (ret %d, le %d)\n",
+         str, len, (char*)buf, ret, GetLastError());
+    }
+    if (pCryptStringToBinaryW)
+        decodeBase64WithLenFmtW(str, len, fmt, ret, buf, bufLen, fmtUsed);
+}
+
+static void decodeBase64WithLenBroken(LPCSTR str, int len, LPCSTR expected, int le)
+{
+    decodeBase64WithLenFmt(str, len, CRYPT_STRING_BASE64, expected, le, TRUE);
+}
+
+static void decodeBase64WithLen(LPCSTR str, int len, LPCSTR expected, int le)
+{
+    decodeBase64WithLenFmt(str, len, CRYPT_STRING_BASE64, expected, le, FALSE);
+}
+
+static void decodeBase64WithFmt(LPCSTR str, DWORD fmt, LPCSTR expected, int le)
+{
+    decodeBase64WithLenFmt(str, 0, fmt, expected, le, FALSE);
+}
+
 struct BadString
 {
     const char *str;
@@ -313,6 +370,7 @@ static void testStringToBinaryA(void)
 {
     BOOL ret;
     DWORD bufLen = 0, i;
+    BYTE buf[8];
 
     ret = pCryptStringToBinaryA(NULL, 0, 0, NULL, NULL, NULL, NULL);
     ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
@@ -339,6 +397,64 @@ static void testStringToBinaryA(void)
         ok(!ret && GetLastError() == ERROR_INVALID_DATA,
            "%d: Expected ERROR_INVALID_DATA, got ret=%d le=%u\n", i, ret, GetLastError());
     }
+    /* Weird base64 strings (invalid padding, extra white-space etc.) */
+    decodeBase64WithLen("V=", 0, 0, ERROR_INVALID_DATA);
+    decodeBase64WithLen("VV=", 0, 0, ERROR_INVALID_DATA);
+    decodeBase64WithLen("V==", 0, 0, ERROR_INVALID_DATA);
+    decodeBase64WithLen("V=", 2, 0, ERROR_INVALID_DATA);
+    decodeBase64WithLen("VV=", 3, 0, ERROR_INVALID_DATA);
+    decodeBase64WithLen("V==", 3, 0, ERROR_INVALID_DATA);
+    decodeBase64WithLenBroken("V", 0, "T", 0);
+    decodeBase64WithLenBroken("VV", 0, "U", 0);
+    decodeBase64WithLenBroken("VVV", 0, "UU", 0);
+    decodeBase64WithLen("V", 1, "T", 0);
+    decodeBase64WithLen("VV", 2, "U", 0);
+    decodeBase64WithLen("VVV", 3, "UU", 0);
+    decodeBase64WithLen("V===", 0, "T", 0);
+    decodeBase64WithLen("V========", 0, "T", 0);
+    decodeBase64WithLen("V===", 4, "T", 0);
+    decodeBase64WithLen("V\nVVV", 0, "UUU", 0);
+    decodeBase64WithLen("VV\nVV", 0, "UUU", 0);
+    decodeBase64WithLen("VVV\nV", 0, "UUU", 0);
+    decodeBase64WithLen("V\nVVV", 5, "UUU", 0);
+    decodeBase64WithLen("VV\nVV", 5, "UUU", 0);
+    decodeBase64WithLen("VVV\nV", 5, "UUU", 0);
+    decodeBase64WithLen("VV    VV", 0, "UUU", 0);
+    decodeBase64WithLen("V===VVVV", 0, "T", 0);
+    decodeBase64WithLen("VV==VVVV", 0, "U", 0);
+    decodeBase64WithLen("VVV=VVVV", 0, "UU", 0);
+    decodeBase64WithLen("VVVV=VVVV", 0, "UUU", 0);
+    decodeBase64WithLen("V===VVVV", 8, "T", 0);
+    decodeBase64WithLen("VV==VVVV", 8, "U", 0);
+    decodeBase64WithLen("VVV=VVVV", 8, "UU", 0);
+    decodeBase64WithLen("VVVV=VVVV", 8, "UUU", 0);
+
+    decodeBase64WithFmt("-----BEGIN-----VVVV-----END-----", CRYPT_STRING_BASE64HEADER, 0, ERROR_INVALID_DATA);
+    decodeBase64WithFmt("-----BEGIN-----VVVV-----END -----", CRYPT_STRING_BASE64HEADER, 0, ERROR_INVALID_DATA);
+    decodeBase64WithFmt("-----BEGIN -----VVVV-----END-----", CRYPT_STRING_BASE64HEADER, 0, ERROR_INVALID_DATA);
+    decodeBase64WithFmt("-----BEGIN -----VVVV-----END -----", CRYPT_STRING_BASE64HEADER, "UUU", 0);
+
+    decodeBase64WithFmt("-----BEGIN -----V-----END -----", CRYPT_STRING_BASE64HEADER, "T", 0);
+    decodeBase64WithFmt("-----BEGIN foo-----V-----END -----", CRYPT_STRING_BASE64HEADER, "T", 0);
+    decodeBase64WithFmt("-----BEGIN foo-----V-----END foo-----", CRYPT_STRING_BASE64HEADER, "T", 0);
+    decodeBase64WithFmt("-----BEGIN -----V-----END foo-----", CRYPT_STRING_BASE64HEADER, "T", 0);
+    decodeBase64WithFmt("-----BEGIN -----V-----END -----", CRYPT_STRING_BASE64X509CRLHEADER, "T", 0);
+    decodeBase64WithFmt("-----BEGIN foo-----V-----END -----", CRYPT_STRING_BASE64X509CRLHEADER, "T", 0);
+    decodeBase64WithFmt("-----BEGIN foo-----V-----END foo-----", CRYPT_STRING_BASE64X509CRLHEADER, "T", 0);
+    decodeBase64WithFmt("-----BEGIN -----V-----END foo-----", CRYPT_STRING_BASE64X509CRLHEADER, "T", 0);
+    decodeBase64WithFmt("-----BEGIN -----V-----END -----", CRYPT_STRING_BASE64REQUESTHEADER, "T", 0);
+    decodeBase64WithFmt("-----BEGIN foo-----V-----END -----", CRYPT_STRING_BASE64REQUESTHEADER, "T", 0);
+    decodeBase64WithFmt("-----BEGIN foo-----V-----END foo-----", CRYPT_STRING_BASE64REQUESTHEADER, "T", 0);
+    decodeBase64WithFmt("-----BEGIN -----V-----END foo-----", CRYPT_STRING_BASE64REQUESTHEADER, "T", 0);
+
+    /* Too small buffer */
+    buf[0] = 0;
+    bufLen = 4;
+    ret = pCryptStringToBinaryA("VVVVVVVV", 8, CRYPT_STRING_BASE64, (BYTE*)buf, &bufLen, NULL, NULL);
+    ok(!ret && bufLen == 4 && buf[0] == 0,
+     "Expected ret 0, bufLen 4, buf[0] '\\0', got ret %d, bufLen %d, buf[0] '%c'\n",
+     ret, bufLen, buf[0]);
+
     /* Good strings */
     for (i = 0; i < sizeof(tests) / sizeof(tests[0]); i++)
     {
@@ -348,7 +464,7 @@ static void testStringToBinaryA(void)
          */
         ret = pCryptStringToBinaryA(tests[i].base64, 1, CRYPT_STRING_BASE64,
          NULL, &bufLen, NULL, NULL);
-        todo_wine ok(ret, "CryptStringToBinaryA failed: %d\n", GetLastError());
+        ok(ret, "CryptStringToBinaryA failed: %d\n", GetLastError());
         /* Check with the precise format */
         decodeAndCompareBase64_A(tests[i].base64, NULL, NULL,
          CRYPT_STRING_BASE64, CRYPT_STRING_BASE64, tests[i].toEncode,
@@ -405,7 +521,7 @@ static void testStringToBinaryA(void)
          */
         ret = pCryptStringToBinaryA(testsNoCR[i].base64, 1, CRYPT_STRING_BASE64,
          NULL, &bufLen, NULL, NULL);
-        todo_wine ok(ret, "CryptStringToBinaryA failed: %d\n", GetLastError());
+        ok(ret, "CryptStringToBinaryA failed: %d\n", GetLastError());
         /* Check with the precise format */
         decodeAndCompareBase64_A(testsNoCR[i].base64, NULL, NULL,
          CRYPT_STRING_BASE64, CRYPT_STRING_BASE64, testsNoCR[i].toEncode,
@@ -442,6 +558,7 @@ START_TEST(base64)
 
     pCryptBinaryToStringA = (void *)GetProcAddress(lib, "CryptBinaryToStringA");
     pCryptStringToBinaryA = (void *)GetProcAddress(lib, "CryptStringToBinaryA");
+    pCryptStringToBinaryW = (void *)GetProcAddress(lib, "CryptStringToBinaryW");
 
     if (pCryptBinaryToStringA)
         testBinaryToStringA();

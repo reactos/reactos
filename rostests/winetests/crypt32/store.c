@@ -410,11 +410,19 @@ static void testRegStoreSavedCerts(void)
             skip("Insufficient privileges for the test %d\n", i);
             continue;
         }
-        ok (store!=NULL, "Failed to open the store at %d, %x", i, GetLastError());
+        ok (store!=NULL, "Failed to open the store at %d, %x\n", i, GetLastError());
         cert1 = CertCreateCertificateContext(X509_ASN_ENCODING, bigCert, sizeof(bigCert));
         ok (cert1 != NULL, "Create cert context failed at %d, %x\n", i, GetLastError());
         ret = CertAddCertificateContextToStore(store, cert1, CERT_STORE_ADD_REPLACE_EXISTING, NULL);
-        ok (ret, "Adding to the store failed at %d, %x\n", i, GetLastError());
+        /* Addittional skip per Win7, it allows opening HKLM store, but disallows adding certs */
+        err = GetLastError();
+        if (!ret)
+        {
+            ok (err == ERROR_ACCESS_DENIED, "Failed to add certificate to store at %d (%08x)\n", i, err);
+            skip("Insufficient privileges for the test %d\n", i);
+            continue;
+        }
+        ok (ret, "Adding to the store failed at %d, %x\n", i, err);
         CertFreeCertificateContext(cert1);
         CertCloseStore(store, 0);
 
@@ -449,7 +457,7 @@ static void testRegStoreSavedCerts(void)
         /* deleting cert from store */
         store = CertOpenStore(CERT_STORE_PROV_SYSTEM_REGISTRY_W,0,0,
             reg_store_saved_certs[i].cert_store, reg_store_saved_certs[i].store_name);
-        ok (store!=NULL, "Failed to open the store at %d, %x", i, GetLastError());
+        ok (store!=NULL, "Failed to open the store at %d, %x\n", i, GetLastError());
 
         cert1 = CertCreateCertificateContext(X509_ASN_ENCODING, bigCert, sizeof(bigCert));
         ok (cert1 != NULL, "Create cert context failed at %d, %x\n", i, GetLastError());
@@ -547,7 +555,7 @@ static void testStoresInCollection(void)
     ok (ret, "Failed to add rw_store_2 to collection %x\n",GetLastError());
 
     cert2 = CertCreateCertificateContext(X509_ASN_ENCODING, signedBigCert, sizeof(signedBigCert));
-    ok (cert2 != NULL, "Failed to create cert context %x \n", GetLastError());
+    ok (cert2 != NULL, "Failed to create cert context %x\n", GetLastError());
     ret = CertAddCertificateContextToStore(collection, cert2, CERT_STORE_ADD_REPLACE_EXISTING, NULL);
     ok (ret, "Failed to add cert3 to the store %x\n",GetLastError());
 
@@ -1516,7 +1524,7 @@ static void testFileStore(void)
 
     if (!GetTempFileNameW(szDot, szPrefix, 0, filename))
        return;
- 
+
     DeleteFileW(filename);
     file = CreateFileW(filename, GENERIC_READ | GENERIC_WRITE, 0, NULL,
      CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -2222,7 +2230,7 @@ static void testCertRegisterSystemStore(void)
         }
 
         ret = CertCloseStore(hstore, 0);
-        ok (ret, "CertCloseStore failed at %08x, last error %x", cur_flag, GetLastError());
+        ok (ret, "CertCloseStore failed at %08x, last error %x\n", cur_flag, GetLastError());
 
         ret = pCertUnregisterSystemStore(WineTestW, cur_flag );
         todo_wine_if (reg_system_store_test_data[i].todo)
@@ -2429,12 +2437,12 @@ static void testAddSerialized(void)
     ok(!ret && GetLastError() == E_INVALIDARG,
      "Expected E_INVALIDARG, got %08x\n", GetLastError());
     /* With a bad context type */
-    ret = CertAddSerializedElementToStore(store, buf, sizeof(buf), 0, 0, 
+    ret = CertAddSerializedElementToStore(store, buf, sizeof(buf), 0, 0,
      CERT_STORE_CRL_CONTEXT_FLAG, NULL, NULL);
     ok(!ret && GetLastError() == E_INVALIDARG,
      "Expected E_INVALIDARG, got %08x\n", GetLastError());
     ret = CertAddSerializedElementToStore(store, buf,
-     sizeof(struct CertPropIDHeader) + sizeof(bigCert), 0, 0, 
+     sizeof(struct CertPropIDHeader) + sizeof(bigCert), 0, 0,
      CERT_STORE_CRL_CONTEXT_FLAG, NULL, NULL);
     ok(!ret && GetLastError() == E_INVALIDARG,
      "Expected E_INVALIDARG, got %08x\n", GetLastError());
@@ -2445,12 +2453,12 @@ static void testAddSerialized(void)
      "Expected E_INVALIDARG, got %08x\n", GetLastError());
     /* Bad unknown field, good type */
     hdr->unknown1 = 2;
-    ret = CertAddSerializedElementToStore(store, buf, sizeof(buf), 0, 0, 
+    ret = CertAddSerializedElementToStore(store, buf, sizeof(buf), 0, 0,
      CERT_STORE_CERTIFICATE_CONTEXT_FLAG, NULL, NULL);
     ok(!ret && GetLastError() == ERROR_FILE_NOT_FOUND,
      "Expected ERROR_FILE_NOT_FOUND got %08x\n", GetLastError());
     ret = CertAddSerializedElementToStore(store, buf,
-     sizeof(struct CertPropIDHeader) + sizeof(bigCert), 0, 0, 
+     sizeof(struct CertPropIDHeader) + sizeof(bigCert), 0, 0,
      CERT_STORE_CERTIFICATE_CONTEXT_FLAG, NULL, NULL);
     ok(!ret && GetLastError() == ERROR_FILE_NOT_FOUND,
      "Expected ERROR_FILE_NOT_FOUND got %08x\n", GetLastError());
@@ -2462,11 +2470,11 @@ static void testAddSerialized(void)
     /* Most everything okay, but bad add disposition */
     hdr->unknown1 = 1;
     /* This crashes
-    ret = CertAddSerializedElementToStore(store, buf, sizeof(buf), 0, 0, 
+    ret = CertAddSerializedElementToStore(store, buf, sizeof(buf), 0, 0,
      CERT_STORE_CERTIFICATE_CONTEXT_FLAG, NULL, NULL);
      * as does this
     ret = CertAddSerializedElementToStore(store, buf,
-     sizeof(struct CertPropIDHeader) + sizeof(bigCert), 0, 0, 
+     sizeof(struct CertPropIDHeader) + sizeof(bigCert), 0, 0,
      CERT_STORE_CERTIFICATE_CONTEXT_FLAG, NULL, NULL);
      */
     /* Everything okay, but buffer's too big */
