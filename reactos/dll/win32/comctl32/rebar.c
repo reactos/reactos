@@ -3386,7 +3386,7 @@ REBAR_NCHitTest (const REBAR_INFO *infoPtr, LPARAM lParam)
 	      ret, i);
 	ret = (LRESULT) i;
     }
-    TRACE("returning %ld, client point (%d,%d)\n", ret, clpt.x, clpt.y);
+    TRACE("returning %ld, client point %s\n", ret, wine_dbgstr_point(&clpt));
     return ret;
 }
 

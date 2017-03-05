@@ -1521,7 +1521,7 @@ TOOLTIPS_RelayEvent (TOOLTIPS_INFO *infoPtr, LPMSG lpMsg)
 						       &pt);
 	    TRACE("tool (%p) %d %d %d\n", infoPtr->hwndSelf, nOldTool,
 		  infoPtr->nTool, infoPtr->nCurrentTool);
-            TRACE("WM_MOUSEMOVE (%p %d %d)\n", infoPtr->hwndSelf, pt.x, pt.y);
+            TRACE("WM_MOUSEMOVE (%p %s)\n", infoPtr->hwndSelf, wine_dbgstr_point(&pt));
 
 	    if (infoPtr->nTool != nOldTool) {
 	        if(infoPtr->nTool == -1) { /* Moved out of all tools */

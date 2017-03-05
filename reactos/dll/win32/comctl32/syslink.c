@@ -33,8 +33,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(syslink);
 
-INT WINAPI StrCmpNIW(LPCWSTR,LPCWSTR,INT);
-
 typedef struct
 {
     int nChars;
@@ -89,11 +87,6 @@ typedef struct
     WCHAR     BreakChar;    /* Break Character for the current font */
     BOOL      IgnoreReturn; /* (infoPtr->Style & LWS_IGNORERETURN) on creation */
 } SYSLINK_INFO;
-
-static const WCHAR SL_LINKOPEN[] =  { '<','a', 0 };
-static const WCHAR SL_HREF[] =      { 'h','r','e','f','=','\"',0 };
-static const WCHAR SL_ID[] =        { 'i','d','=','\"',0 };
-static const WCHAR SL_LINKCLOSE[] = { '<','/','a','>',0 };
 
 /* Control configuration constants */
 
@@ -167,32 +160,16 @@ static VOID SYSLINK_ClearDoc (SYSLINK_INFO *infoPtr)
 }
 
 /***********************************************************************
- * SYSLINK_StrCmpNIW
- * Wrapper for StrCmpNIW to ensure 'len' is not too big.
- */
-static INT SYSLINK_StrCmpNIW (LPCWSTR str, LPCWSTR comp, INT len)
-{
-    INT i;
-
-    for(i = 0; i < len; i++)
-    {
-        if(!str[i])
-        {
-            len = i + 1;
-            break;
-        }
-    }
-
-    return StrCmpNIW(str, comp, len);
-}
-
-/***********************************************************************
  * SYSLINK_ParseText
  * Parses the window text string and creates a document. Returns the
  * number of document items created.
  */
 static UINT SYSLINK_ParseText (SYSLINK_INFO *infoPtr, LPCWSTR Text)
 {
+    static const WCHAR SL_LINKOPEN[] =  { '<','a' };
+    static const WCHAR SL_HREF[] =      { 'h','r','e','f','=','\"' };
+    static const WCHAR SL_ID[] =        { 'i','d','=','\"' };
+    static const WCHAR SL_LINKCLOSE[] = { '<','/','a','>' };
     LPCWSTR current, textstart = NULL, linktext = NULL, firsttag = NULL;
     int taglen = 0, textlen = 0, linklen = 0, docitems = 0;
     PDOC_ITEM Last = NULL;
@@ -206,7 +183,7 @@ static UINT SYSLINK_ParseText (SYSLINK_INFO *infoPtr, LPCWSTR Text)
     {
         if(*current == '<')
         {
-            if(!SYSLINK_StrCmpNIW(current, SL_LINKOPEN, 2) && (CurrentType == slText))
+            if(!strncmpiW(current, SL_LINKOPEN, sizeof(SL_LINKOPEN)/sizeof(SL_LINKOPEN[0])) && (CurrentType == slText))
             {
                 BOOL ValidParam = FALSE, ValidLink = FALSE;
 
@@ -234,14 +211,14 @@ static UINT SYSLINK_ParseText (SYSLINK_INFO *infoPtr, LPCWSTR Text)
                     
 CheckParameter:
                     /* compare the current position with all known parameters */
-                    if(!SYSLINK_StrCmpNIW(tmp, SL_HREF, 6))
+                    if(!strncmpiW(tmp, SL_HREF, sizeof(SL_HREF)/sizeof(SL_HREF[0])))
                     {
                         taglen += 6;
                         ValidParam = TRUE;
                         CurrentParameter = &lpUrl;
                         CurrentParameterLen = &lenUrl;
                     }
-                    else if(!SYSLINK_StrCmpNIW(tmp, SL_ID, 4))
+                    else if(!strncmpiW(tmp, SL_ID, sizeof(SL_ID)/sizeof(SL_ID[0])))
                     {
                         taglen += 4;
                         ValidParam = TRUE;
@@ -315,7 +292,7 @@ CheckParameter:
                     }
                 }
             }
-            else if(!SYSLINK_StrCmpNIW(current, SL_LINKCLOSE, 4) && (CurrentType == slLink) && firsttag)
+            else if(!strncmpiW(current, SL_LINKCLOSE, sizeof(SL_LINKCLOSE)/sizeof(SL_LINKCLOSE[0])) && (CurrentType == slLink) && firsttag)
             {
                 /* there's a <a...> tag opened, first add the previous text, if present */
                 if(textstart != NULL && textlen > 0 && firsttag > textstart)

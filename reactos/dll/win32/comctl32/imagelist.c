@@ -72,6 +72,7 @@ struct _IMAGELIST
     INT     cInitial;
     UINT    uBitsPixel;
     char   *has_alpha;
+    BOOL    color_table_set;
 
     LONG        ref;                       /* reference count */
 };
@@ -298,6 +299,9 @@ done:
     return ret;
 }
 
+UINT WINAPI
+ImageList_SetColorTable(HIMAGELIST himl, UINT uStartIndex, UINT cEntries, const RGBQUAD *prgb);
+
 /*************************************************************************
  * IMAGELIST_InternalExpandBitmaps [Internal]
  *
@@ -420,7 +424,8 @@ ImageList_Add (HIMAGELIST himl,	HBITMAP hbmImage, HBITMAP hbmMask)
 
     nImageCount = bmp.bmWidth / himl->cx;
 
-    TRACE("%p has %d images (%d x %d)\n", hbmImage, nImageCount, bmp.bmWidth, bmp.bmHeight);
+    TRACE("%p has %d images (%d x %d) bpp %d\n", hbmImage, nImageCount, bmp.bmWidth, bmp.bmHeight,
+          bmp.bmBitsPixel);
 
     IMAGELIST_InternalExpandBitmaps(himl, nImageCount);
 
@@ -436,6 +441,14 @@ ImageList_Add (HIMAGELIST himl,	HBITMAP hbmImage, HBITMAP hbmMask)
     {
         hdcTemp = CreateCompatibleDC(0);
         SelectObject(hdcTemp, hbmMask);
+    }
+
+    if (himl->uBitsPixel <= 8 && bmp.bmBitsPixel <= 8 &&
+        !himl->color_table_set && himl->cCurImage == 0)
+    {
+        RGBQUAD colors[256];
+        UINT num = GetDIBColorTable( hdcBitmap, 0, 1 << bmp.bmBitsPixel, colors );
+        if (num) ImageList_SetColorTable( himl, 0, num, colors );
     }
 
     for (i=0; i<nImageCount; i++)
@@ -787,6 +800,7 @@ ImageList_Create (INT cx, INT cy, UINT flags,
     himl->cGrow     = cGrow;
     himl->clrFg     = CLR_DEFAULT;
     himl->clrBk     = CLR_NONE;
+    himl->color_table_set = FALSE;
 
     /* initialize overlay mask indices */
     for (nCount = 0; nCount < MAX_OVERLAYIMAGE; nCount++)
@@ -3219,11 +3233,25 @@ static HBITMAP ImageList_CreateImage(HDC hdc, HIMAGELIST himl, UINT count)
 
 	if (himl->uBitsPixel <= ILC_COLOR8)
 	{
-            /* retrieve the default color map */
-            HBITMAP tmp = CreateBitmap( 1, 1, 1, 1, NULL );
-            GetDIBits( hdc, tmp, 0, 0, NULL, bmi, DIB_RGB_COLORS );
-            DeleteObject( tmp );
-	}
+            if (!himl->color_table_set)
+            {
+                /* retrieve the default color map */
+                HBITMAP tmp = CreateBitmap( 1, 1, 1, 1, NULL );
+                GetDIBits( hdc, tmp, 0, 0, NULL, bmi, DIB_RGB_COLORS );
+                DeleteObject( tmp );
+                if (ilc == ILC_COLOR4)
+                {
+                    RGBQUAD tmp;
+                    tmp = bmi->bmiColors[7];
+                    bmi->bmiColors[7] = bmi->bmiColors[8];
+                    bmi->bmiColors[8] = tmp;
+                }
+            }
+            else
+            {
+                GetDIBColorTable(himl->hdcImage, 0, 1 << himl->uBitsPixel, bmi->bmiColors);
+            }
+        }
 	hbmNewBitmap = CreateDIBSection(hdc, bmi, DIB_RGB_COLORS, NULL, 0, 0);
     }
     else /*if (ilc == ILC_COLORDDB)*/
@@ -3258,6 +3286,8 @@ static HBITMAP ImageList_CreateImage(HDC hdc, HIMAGELIST himl, UINT count)
 UINT WINAPI
 ImageList_SetColorTable(HIMAGELIST himl, UINT uStartIndex, UINT cEntries, const RGBQUAD *prgb)
 {
+    TRACE("(%p, %d, %d, %p)\n", himl, uStartIndex, cEntries, prgb);
+    himl->color_table_set = TRUE;
     return SetDIBColorTable(himl->hdcImage, uStartIndex, cEntries, prgb);
 }
 

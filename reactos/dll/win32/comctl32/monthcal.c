@@ -2157,7 +2157,7 @@ MONTHCAL_LButtonDown(MONTHCAL_INFO *infoPtr, LPARAM lParam)
 
   hit = MONTHCAL_HitTest(infoPtr, &ht);
 
-  TRACE("%x at (%d, %d)\n", hit, ht.pt.x, ht.pt.y);
+  TRACE("%x at %s\n", hit, wine_dbgstr_point(&ht.pt));
 
   switch(hit)
   {
