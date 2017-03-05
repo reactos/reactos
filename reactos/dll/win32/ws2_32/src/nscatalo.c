@@ -497,6 +497,7 @@ WsNcGetCatalogFromProviderId(IN PNSCATALOG Catalog,
                              IN LPGUID ProviderId,
                              OUT PNSCATALOG_ENTRY *CatalogEntry)
 {
+    INT ErrorCode = WSAEINVAL;
     PLIST_ENTRY NextEntry;
     PNSCATALOG_ENTRY Entry;
 
@@ -514,25 +515,24 @@ WsNcGetCatalogFromProviderId(IN PNSCATALOG Catalog,
         /* Check if this is the Catalog Entry ID we want */
         if (IsEqualGUID(&Entry->ProviderId, ProviderId))
         {
-            /* Check if it doesn't already have a provider */
+            /* If it doesn't already have a provider, load the provider */
             if (!Entry->Provider)
-            {
-                /* Match, load the Provider */
-                WsNcLoadProvider(Catalog, Entry);
-            }
+                ErrorCode = WsNcLoadProvider(Catalog, Entry);
 
-            /* Reference the entry and return it */
-            InterlockedIncrement(&Entry->RefCount);
-            *CatalogEntry = Entry;
-            break;
+            /* If we succeeded, reference the entry and return it */
+            if (Entry->Provider /* || ErrorCode == ERROR_SUCCESS */)
+            {
+                InterlockedIncrement(&Entry->RefCount);
+                *CatalogEntry = Entry;
+                ErrorCode = ERROR_SUCCESS;
+                break;
+            }
         }
     }
 
-    /* Release the catalog */
+    /* Release the lock and return */
     WsNcUnlock();
-
-    /* Return */
-    return ERROR_SUCCESS;
+    return ErrorCode;
 }
 
 BOOL

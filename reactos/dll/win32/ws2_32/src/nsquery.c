@@ -355,7 +355,7 @@ WsNqLookupServiceBegin(IN PNSQUERY NsQuery,
     PLIST_ENTRY Entry;
     INT ErrorCode;
     DWORD ClassInfoSize;
-    PNSCATALOG_ENTRY CatalogEntry;
+    PNSCATALOG_ENTRY CatalogEntry = NULL;
     ENUM_CONTEXT EnumContext;
     BOOLEAN TryAgain;
 
@@ -396,10 +396,13 @@ WsNqLookupServiceBegin(IN PNSQUERY NsQuery,
             ErrorCode = SOCKET_ERROR;
             goto Exit;
         }
-        else
+        /* We succeeded, add this provider */
+        else if (!WsNqAddProvider(NsQuery, CatalogEntry->Provider))
         {
-            /* Add this provider */
-            WsNqAddProvider(NsQuery, CatalogEntry->Provider);
+            /* Fail */
+            SetLastError(WSA_NOT_ENOUGH_MEMORY);
+            ErrorCode = SOCKET_ERROR;
+            goto Exit;
         }
     }
     else
