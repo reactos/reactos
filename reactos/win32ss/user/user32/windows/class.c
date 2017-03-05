@@ -215,8 +215,7 @@ VersionRegisterClass(
             {
                 if (IS_ATOM(pszClass))
                 {
-                    ClassName.Buffer = ClassNameBuf;
-                    ClassName.MaximumLength = sizeof(ClassNameBuf);
+                    RtlInitEmptyUnicodeString(&ClassName, ClassNameBuf, sizeof(ClassNameBuf));
                     if (!NtUserGetAtomName(LOWORD((DWORD_PTR)pszClass), &ClassName))
                     {
                         ERR("Error while verifying ATOM\n");
@@ -1027,8 +1026,9 @@ GetClassNameW(
     UNICODE_STRING ClassName;
     int Result;
 
-    ClassName.MaximumLength = nMaxCount * sizeof(WCHAR);
-    ClassName.Buffer = lpClassName;
+    RtlInitEmptyUnicodeString(&ClassName,
+                              lpClassName,
+                              nMaxCount * sizeof(WCHAR));
 
     Result = NtUserGetClassName(hWnd,
                                 FALSE,
@@ -1214,8 +1214,10 @@ RealGetWindowClassW(
   UINT  cchType)
 {
     UNICODE_STRING ClassName;
-    ClassName.MaximumLength = cchType * sizeof(WCHAR);
-    ClassName.Buffer = (PWSTR)pszType;
+
+    RtlInitEmptyUnicodeString(&ClassName,
+                              pszType,
+                              cchType * sizeof(WCHAR));
 
     return NtUserGetClassName(hwnd,TRUE,&ClassName);
 }
