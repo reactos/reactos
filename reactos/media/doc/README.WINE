@@ -68,7 +68,7 @@ reactos/dll/win32/dciman32            # Synced to WineStaging-1.9.11
 reactos/dll/win32/faultrep            # Synced to WineStaging-1.9.11
 reactos/dll/win32/fontsub             # Synced to WineStaging-1.9.13
 reactos/dll/win32/fusion              # Synced to WineStaging-1.9.23
-reactos/dll/win32/gdiplus             # Synced to WineStaging-1.9.23
+reactos/dll/win32/gdiplus             # Synced to WineStaging-2.2
 reactos/dll/win32/hhctrl.ocx          # Synced to WineStaging-2.2
 reactos/dll/win32/hlink               # Synced to WineStaging-2.2
 reactos/dll/win32/hnetcfg             # Synced to WineStaging-1.9.16

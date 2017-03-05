@@ -1584,15 +1584,18 @@ static INT CALLBACK add_font_proc(const LOGFONTW *lfw, const TEXTMETRICW *ntm,
         DWORD type, LPARAM lParam)
 {
     GpFontCollection* fonts = (GpFontCollection*)lParam;
+    GpFontFamily* family;
     int i;
 
     if (type == RASTER_FONTTYPE)
         return 1;
 
-    /* skip duplicates */
-    for (i=0; i<fonts->count; i++)
-        if (strcmpiW(lfw->lfFaceName, fonts->FontFamilies[i]->FamilyName) == 0)
-            return 1;
+    /* skip rotated fonts */
+    if (lfw->lfFaceName[0] == '@')
+        return 1;
+
+    if (fonts->count && strcmpiW(lfw->lfFaceName, fonts->FontFamilies[fonts->count-1]->FamilyName) == 0)
+        return 1;
 
     if (fonts->allocated == fonts->count)
     {
@@ -1608,10 +1611,20 @@ static INT CALLBACK add_font_proc(const LOGFONTW *lfw, const TEXTMETRICW *ntm,
         fonts->allocated = new_alloc_count;
     }
 
-    if (GdipCreateFontFamilyFromName(lfw->lfFaceName, NULL, &fonts->FontFamilies[fonts->count]) == Ok)
-        fonts->count++;
-    else
+    if (GdipCreateFontFamilyFromName(lfw->lfFaceName, NULL, &family) != Ok)
         return 0;
+
+    /* skip duplicates */
+    for (i=0; i<fonts->count; i++)
+    {
+        if (strcmpiW(family->FamilyName, fonts->FontFamilies[i]->FamilyName) == 0)
+        {
+            GdipDeleteFontFamily(family);
+            return 1;
+        }
+    }
+
+    fonts->FontFamilies[fonts->count++] = family;
 
     return 1;
 }

@@ -172,8 +172,8 @@
 172 stdcall GdipDrawImagePointsRectI(ptr ptr ptr long long long long long long ptr ptr ptr)
 173 stdcall GdipDrawImageRect(ptr ptr float float float float)
 174 stdcall GdipDrawImageRectI(ptr ptr long long long long)
-175 stdcall GdipDrawImageRectRect(ptr ptr float float float float float float float float long ptr long ptr)
-176 stdcall GdipDrawImageRectRectI(ptr ptr long long long long long long long long long ptr long ptr)
+175 stdcall GdipDrawImageRectRect(ptr ptr float float float float float float float float long ptr ptr ptr)
+176 stdcall GdipDrawImageRectRectI(ptr ptr long long long long long long long long long ptr ptr ptr)
 177 stdcall GdipDrawLine(ptr ptr float float float float)
 178 stdcall GdipDrawLineI(ptr ptr long long long long)
 179 stdcall GdipDrawLines(ptr ptr ptr long)
@@ -189,7 +189,7 @@
 189 stdcall GdipDrawRectanglesI(ptr ptr ptr long)
 190 stdcall GdipDrawString(ptr wstr long ptr ptr ptr ptr)
 191 stdcall GdipEmfToWmfBits(ptr long ptr long long)
-192 stdcall GdipEndContainer(ptr ptr)
+192 stdcall GdipEndContainer(ptr long)
 193 stdcall GdipEnumerateMetafileDestPoint(ptr ptr ptr ptr ptr ptr)
 194 stdcall GdipEnumerateMetafileDestPointI(ptr ptr ptr ptr ptr ptr)
 195 stub GdipEnumerateMetafileDestPoints
@@ -240,7 +240,7 @@
 240 stdcall GdipGetCustomLineCapBaseInset(ptr ptr)
 241 stub GdipGetCustomLineCapStrokeCaps
 242 stdcall GdipGetCustomLineCapStrokeJoin(ptr ptr)
-243 stub GdipGetCustomLineCapType
+243 stdcall GdipGetCustomLineCapType(ptr ptr)
 244 stdcall GdipGetCustomLineCapWidthScale(ptr ptr)
 245 stdcall GdipGetDC(ptr ptr)
 246 stdcall GdipGetDpiX(ptr ptr)
@@ -563,7 +563,7 @@
 563 stdcall GdipSetPropertyItem(ptr ptr)
 564 stdcall GdipSetRenderingOrigin(ptr long long)
 565 stdcall GdipSetSmoothingMode(ptr long)
-566 stdcall GdipSetSolidFillColor(ptr ptr)
+566 stdcall GdipSetSolidFillColor(ptr long)
 567 stdcall GdipSetStringFormatAlign(ptr long)
 568 stdcall GdipSetStringFormatDigitSubstitution(ptr long long)
 569 stdcall GdipSetStringFormatFlags(ptr long)
@@ -604,8 +604,8 @@
 604 stdcall GdipWidenPath(ptr ptr ptr float)
 605 stdcall GdipWindingModeOutline(ptr ptr float)
 606 stdcall GdiplusNotificationHook(ptr)
-607 stdcall GdiplusNotificationUnhook(ptr)
-608 stdcall GdiplusShutdown(ptr) GdiplusShutdown_wrapper
+607 stdcall GdiplusNotificationUnhook(long)
+608 stdcall GdiplusShutdown(long) GdiplusShutdown_wrapper
 609 stdcall GdiplusStartup(ptr ptr ptr)
 610 stdcall GdipFindFirstImageItem(ptr ptr)
 611 stub GdipFindNextImageItem

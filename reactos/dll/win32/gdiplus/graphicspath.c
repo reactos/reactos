@@ -867,6 +867,7 @@ static GpStatus format_string_callback(HDC dc,
         start = (char *)ph;
         if (!ph || !lengthen_path(path, len / sizeof(POINTFX)))
         {
+            heap_free(ph);
             status = OutOfMemory;
             break;
         }
