@@ -81,6 +81,7 @@ typedef struct
 	UINT sharevistring;
     } HookMsg;
 
+    BOOL ole_initialized;
 } FileOpenDlgInfos;
 
 /***********************************************************************

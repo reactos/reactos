@@ -219,14 +219,10 @@ static BOOL BrowseSelectedFolder(HWND hwnd);
  */
 static BOOL GetFileName95(FileOpenDlgInfos *fodInfos)
 {
-
     LRESULT lRes;
-    LPCVOID origTemplate;
-    DWORD dwSize;
-    LPDLGTEMPLATEW template;
+    void *template;
     HRSRC hRes;
     HANDLE hDlgTmpl = 0;
-    HRESULT hr;
 
     /* test for missing functionality */
     if (fodInfos->ofnInfos->Flags & UNIMPLEMENTED_FLAGS)
@@ -242,36 +238,25 @@ static BOOL GetFileName95(FileOpenDlgInfos *fodInfos)
         COMDLG32_SetCommDlgExtendedError(CDERR_FINDRESFAILURE);
         return FALSE;
     }
-    if (!(dwSize = SizeofResource(COMDLG32_hInstance, hRes)) ||
-        !(hDlgTmpl = LoadResource(COMDLG32_hInstance, hRes)) ||
-        !(origTemplate = LockResource(hDlgTmpl)))
+    if (!(hDlgTmpl = LoadResource(COMDLG32_hInstance, hRes )) ||
+        !(template = LockResource( hDlgTmpl )))
     {
         COMDLG32_SetCommDlgExtendedError(CDERR_LOADRESFAILURE);
         return FALSE;
     }
-    if (!(template = HeapAlloc(GetProcessHeap(), 0, dwSize)))
-    {
-        COMDLG32_SetCommDlgExtendedError(CDERR_MEMALLOCFAILURE);
-        return FALSE;
-    }
-    memcpy(template, origTemplate, dwSize);
 
     /* msdn: explorer style dialogs permit sizing by default.
      * The OFN_ENABLESIZING flag is only needed when a hook or
-     * custom tmeplate is provided */
+     * custom template is provided */
     if( (fodInfos->ofnInfos->Flags & OFN_EXPLORER) &&
             !(fodInfos->ofnInfos->Flags & ( OFN_ENABLEHOOK | OFN_ENABLETEMPLATE | OFN_ENABLETEMPLATEHANDLE)))
         fodInfos->ofnInfos->Flags |= OFN_ENABLESIZING;
 
     if (fodInfos->ofnInfos->Flags & OFN_ENABLESIZING)
     {
-        template->style |= WS_SIZEBOX;
         fodInfos->sizedlg.cx = fodInfos->sizedlg.cy = 0;
         fodInfos->initial_size.x = fodInfos->initial_size.y = 0;
     }
-    else
-        template->style &= ~WS_SIZEBOX;
-
 
     /* old style hook messages */
     if (IsHooked(fodInfos))
@@ -281,9 +266,6 @@ static BOOL GetFileName95(FileOpenDlgInfos *fodInfos)
       fodInfos->HookMsg.helpmsgstring = RegisterWindowMessageW(HELPMSGSTRINGW);
       fodInfos->HookMsg.sharevistring = RegisterWindowMessageW(SHAREVISTRINGW);
     }
-
-    /* Some shell namespace extensions depend on COM being initialized. */
-    hr = OleInitialize(NULL);
 
     if (fodInfos->unicode)
       lRes = DialogBoxIndirectParamW(COMDLG32_hInstance,
@@ -297,10 +279,8 @@ static BOOL GetFileName95(FileOpenDlgInfos *fodInfos)
                                      fodInfos->ofnInfos->hwndOwner,
                                      FileOpenDlgProc95,
                                      (LPARAM) fodInfos);
-    if (SUCCEEDED(hr)) 
+    if (fodInfos->ole_initialized)
         OleUninitialize();
-
-    HeapFree(GetProcessHeap(), 0, template);
 
     /* Unable to create the dialog */
     if( lRes == -1)
@@ -1263,7 +1243,11 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
          int gripx = GetSystemMetrics( SM_CYHSCROLL);
          int gripy = GetSystemMetrics( SM_CYVSCROLL);
 
-	 /* Adds the FileOpenDlgInfos in the property list of the dialog
+         /* Some shell namespace extensions depend on COM being initialized. */
+         if (SUCCEEDED(OleInitialize(NULL)))
+             fodInfos->ole_initialized = TRUE;
+
+         /* Adds the FileOpenDlgInfos in the property list of the dialog
             so it will be easily accessible through a GetPropA(...) */
          SetPropA(hwnd, FileOpenDlgInfosStr, fodInfos);
 
@@ -1271,7 +1255,31 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
          if (fodInfos->ofnInfos->Flags & OFN_ENABLESIZING)
          {
-             GetWindowRect( hwnd, &rc);
+             DWORD style = GetWindowLongW(hwnd, GWL_STYLE);
+             DWORD ex_style = GetWindowLongW(hwnd, GWL_EXSTYLE);
+             RECT client, client_adjusted;
+
+             if (fodInfos->ofnInfos->Flags & OFN_ENABLESIZING)
+             {
+                 style |= WS_SIZEBOX;
+                 ex_style |= WS_EX_WINDOWEDGE;
+             }
+             else
+                 style &= ~WS_SIZEBOX;
+             SetWindowLongW(hwnd, GWL_STYLE, style);
+             SetWindowLongW(hwnd, GWL_EXSTYLE, ex_style);
+
+             GetClientRect( hwnd, &client );
+             GetClientRect( hwnd, &client_adjusted );
+             AdjustWindowRectEx( &client_adjusted, style, FALSE, ex_style );
+
+             GetWindowRect( hwnd, &rc );
+             rc.right += client_adjusted.right - client.right;
+             rc.bottom += client_adjusted.bottom - client.bottom;
+             SetWindowPos(hwnd, 0, 0, 0, rc.right - rc.left, rc.bottom - rc.top, SWP_FRAMECHANGED | SWP_NOACTIVATE |
+                 SWP_NOZORDER | SWP_NOMOVE);
+
+             GetWindowRect( hwnd, &rc );
              fodInfos->DlgInfos.hwndGrip =
                  CreateWindowExA( 0, "SCROLLBAR", NULL,
                      WS_CHILD | WS_GROUP | WS_VISIBLE | WS_CLIPSIBLINGS |
@@ -2911,7 +2919,8 @@ static void FILEDLG95_SHELL_Clean(HWND hwnd)
       IShellView_DestroyViewWindow(fodInfos->Shell.FOIShellView);
       IShellView_Release(fodInfos->Shell.FOIShellView);
     }
-    IShellFolder_Release(fodInfos->Shell.FOIShellFolder);
+    if (fodInfos->Shell.FOIShellFolder)
+      IShellFolder_Release(fodInfos->Shell.FOIShellFolder);
     IShellBrowser_Release(fodInfos->Shell.FOIShellBrowser);
     if (fodInfos->Shell.FOIDataObject)
       IDataObject_Release(fodInfos->Shell.FOIDataObject);
@@ -3987,9 +3996,9 @@ static BOOL BrowseSelectedFolder(HWND hwnd)
           if ( FAILED( IShellBrowser_BrowseObject( fodInfos->Shell.FOIShellBrowser,
                          pidlSelection, SBSP_RELATIVE ) ) )
           {
-               static const WCHAR notexist[] = {'P','a','t','h',' ','d','o','e','s',
-                                   ' ','n','o','t',' ','e','x','i','s','t',0};
-               MessageBoxW( hwnd, notexist, fodInfos->title, MB_OK | MB_ICONEXCLAMATION );
+               WCHAR buf[64];
+               LoadStringW( COMDLG32_hInstance, IDS_PATHNOTEXISTING, buf, sizeof(buf)/sizeof(WCHAR) );
+               MessageBoxW( hwnd, buf, fodInfos->title, MB_OK | MB_ICONEXCLAMATION );
           }
           bBrowseSelFolder = TRUE;
           if(fodInfos->ofnInfos->Flags & OFN_EXPLORER)

@@ -1958,7 +1958,7 @@ static LRESULT CALLBACK dropdown_subclass_proc(HWND hwnd, UINT umessage, WPARAM 
 
     if (umessage == WM_LBUTTONDOWN)
     {
-        FileDialogImpl *This = (FileDialogImpl*)GetPropW(hwnd, prop_this);
+        FileDialogImpl *This = GetPropW(hwnd, prop_this);
 
         SendMessageW(hwnd, BM_SETCHECK, BST_CHECKED, 0);
         show_opendropdown(This);
@@ -2051,7 +2051,7 @@ static LRESULT on_wm_initdialog(HWND hwnd, LPARAM lParam)
         SendMessageW(dropdown_hwnd, WM_SETFONT, (LPARAM)This->hfont_opendropdown, 0);
 
         /* Subclass button so we can handle LBUTTONDOWN */
-        SetPropW(dropdown_hwnd, prop_this, (HANDLE)This);
+        SetPropW(dropdown_hwnd, prop_this, This);
         SetPropW(dropdown_hwnd, prop_oldwndproc,
             (HANDLE)SetWindowLongPtrW(dropdown_hwnd, GWLP_WNDPROC, (LONG_PTR)dropdown_subclass_proc));
     }
