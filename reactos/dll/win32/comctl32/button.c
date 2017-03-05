@@ -343,7 +343,7 @@ BOOL BUTTON_GetIdealSize(HTHEME theme, HWND hwnd, SIZE* psize)
 
     GetTextExtentPoint32W(hdc, text, wcslen(text), &TextSize);
 
-    if (logfont.lfHeight == -1 && logfont.lfWidth == 0 && wcscmp(logfont.lfFaceName, L"Arial") == 0 && wcscmp(text, L"Start") == 0)
+    if (logfont.lfHeight == -1 && logfont.lfWidth == 0 && wcscmp(logfont.lfFaceName, L"Arial") == 0 && wcsicmp(text, L"Start") == 0)
     {
         TextSize.cx = 5;
         TextSize.cy = 4;
