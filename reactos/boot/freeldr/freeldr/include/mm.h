@@ -121,7 +121,7 @@ PVOID    MmAllocateHighestMemoryBelowAddress(SIZE_T MemorySize, PVOID DesiredAdd
 
 /* Heap */
 #define DEFAULT_HEAP_SIZE (1024 * 1024)
-#define TEMP_HEAP_SIZE (32 * 1024 * 1024)
+#define TEMP_HEAP_SIZE (10 * 1024 * 1024)
 
 extern PVOID FrLdrDefaultHeap;
 extern PVOID FrLdrTempHeap;
