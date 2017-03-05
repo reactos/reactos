@@ -778,6 +778,32 @@ static void test_range(void)
     SendMessageA(hWndTrackbar, TBM_GETTHUMBRECT, 0, (LPARAM)&rect1);
     ok(EqualRect(&rect1, &rect2), "thumb rectangle not updated\n");
 
+    /* test position update on range change */
+
+    /* set to [20, 50], position at 30, reduce range to [20,25] */
+    SendMessageA(hWndTrackbar, TBM_SETRANGEMIN, FALSE, 20);
+    SendMessageA(hWndTrackbar, TBM_SETRANGEMAX, FALSE, 50);
+    SendMessageA(hWndTrackbar, TBM_SETPOS, FALSE, 30);
+    SendMessageA(hWndTrackbar, TBM_SETRANGEMAX, FALSE, 25);
+    r = SendMessageA(hWndTrackbar, TBM_GETPOS, 0, 0);
+    ok(r == 25, "Unexpected position %d\n", r);
+
+    /* set to [20, 50], position at 30, flip max to 10 */
+    SendMessageA(hWndTrackbar, TBM_SETRANGEMIN, FALSE, 20);
+    SendMessageA(hWndTrackbar, TBM_SETRANGEMAX, FALSE, 50);
+    SendMessageA(hWndTrackbar, TBM_SETPOS, FALSE, 30);
+    SendMessageA(hWndTrackbar, TBM_SETRANGEMAX, FALSE, 10);
+    r = SendMessageA(hWndTrackbar, TBM_GETPOS, 0, 0);
+    ok(r == 20, "Unexpected position %d\n", r);
+
+    /* set to [20, 50], position at 30, flip min to 70 */
+    SendMessageA(hWndTrackbar, TBM_SETRANGEMIN, FALSE, 20);
+    SendMessageA(hWndTrackbar, TBM_SETRANGEMAX, FALSE, 50);
+    SendMessageA(hWndTrackbar, TBM_SETPOS, FALSE, 30);
+    SendMessageA(hWndTrackbar, TBM_SETRANGEMIN, FALSE, 70);
+    r = SendMessageA(hWndTrackbar, TBM_GETPOS, 0, 0);
+    ok(r == 70, "Unexpected position %d\n", r);
+
     DestroyWindow(hWndTrackbar);
 }
 
@@ -893,7 +919,7 @@ static void test_thumb_length(void)
 static void test_tic_settings(void)
 {
     HWND hWndTrackbar;
-    int r;
+    int r, i;
 
     hWndTrackbar = create_trackbar(defaultstyle, hWndParent);
     ok(hWndTrackbar != NULL, "Expected non NULL value\n");
@@ -958,6 +984,50 @@ static void test_tic_settings(void)
     SendMessageA(hWndTrackbar, TBM_SETTICFREQ, 1, 0);
     r = SendMessageA(hWndTrackbar, TBM_GETNUMTICS, 0, 0);
     expect(3, r);
+
+    DestroyWindow(hWndTrackbar);
+
+    /* Test to show that TBM_SETTICFREQ updates thumb */
+    for (i = 0; i < 2; i++)
+    {
+        DWORD style = i ? defaultstyle : defaultstyle & ~TBS_AUTOTICKS;
+        RECT rect, rect1;
+        WNDPROC oldproc;
+
+        hWndTrackbar = create_trackbar2(style, hWndParent);
+        ok(hWndTrackbar != NULL, "Expected non NULL value\n");
+
+        oldproc = (WNDPROC)SetWindowLongPtrA(hWndTrackbar, GWLP_WNDPROC, (LONG_PTR)trackbar_no_wmpaint_proc);
+        SetWindowLongPtrA(hWndTrackbar, GWLP_USERDATA, (LONG_PTR)oldproc);
+
+        SendMessageA(hWndTrackbar, TBM_GETTHUMBRECT, 0, (LPARAM)&rect);
+        SendMessageA(hWndTrackbar, TBM_SETPOS, FALSE, 0);
+        SendMessageA(hWndTrackbar, TBM_GETTHUMBRECT, 0, (LPARAM)&rect1);
+        ok(EqualRect(&rect, &rect1), "Unexpected thumb rectangle %s, previous %s\n",
+            wine_dbgstr_rect(&rect1), wine_dbgstr_rect(&rect));
+
+        SendMessageA(hWndTrackbar, TBM_GETTHUMBRECT, 0, (LPARAM)&rect);
+        SendMessageA(hWndTrackbar, TBM_SETRANGE, FALSE, MAKELONG(-100, 100));
+        SendMessageA(hWndTrackbar, TBM_GETTHUMBRECT, 0, (LPARAM)&rect1);
+        ok(EqualRect(&rect, &rect1), "Unexpected thumb rectangle %s, previous %s\n",
+            wine_dbgstr_rect(&rect1), wine_dbgstr_rect(&rect));
+        /* Old position is also 0, but thumb position will be different after range change */
+        SendMessageA(hWndTrackbar, TBM_GETTHUMBRECT, 0, (LPARAM)&rect);
+        SendMessageA(hWndTrackbar, TBM_SETPOS, TRUE, 0);
+        SendMessageA(hWndTrackbar, TBM_GETTHUMBRECT, 0, (LPARAM)&rect1);
+        ok(EqualRect(&rect, &rect1), "Unexpected thumb rectangle %s, previous %s\n",
+            wine_dbgstr_rect(&rect1), wine_dbgstr_rect(&rect));
+        /* Previous frequency is also 1, yet thumb is updated */
+        SendMessageA(hWndTrackbar, TBM_GETTHUMBRECT, 0, (LPARAM)&rect);
+        SendMessageA(hWndTrackbar, TBM_SETTICFREQ, 1, 0);
+        SendMessageA(hWndTrackbar, TBM_GETTHUMBRECT, 0, (LPARAM)&rect1);
+        ok(!EqualRect(&rect, &rect1), "Unexpected thumb rectangle %s, previous %s\n",
+            wine_dbgstr_rect(&rect1), wine_dbgstr_rect(&rect));
+
+        SetWindowLongPtrA(hWndTrackbar, GWLP_WNDPROC, (LONG_PTR)oldproc);
+
+        DestroyWindow(hWndTrackbar);
+    }
 }
 
 static void test_tic_placement(void)

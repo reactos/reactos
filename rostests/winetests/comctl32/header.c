@@ -1673,7 +1673,7 @@ static BOOL init(void)
     pInitCommonControlsEx = (void*)GetProcAddress(hComctl32, "InitCommonControlsEx");
     if (!pInitCommonControlsEx)
     {
-        skip("InitCommonControlsEx() is missing. Skipping the tests\n");
+        win_skip("InitCommonControlsEx() is missing. Skipping the tests\n");
         return FALSE;
     }
 

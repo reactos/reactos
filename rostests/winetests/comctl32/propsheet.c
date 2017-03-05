@@ -58,6 +58,21 @@ static int CALLBACK sheet_callback(HWND hwnd, UINT msg, LPARAM lparam)
 {
     switch(msg)
     {
+    case PSCB_PRECREATE:
+      {
+        HMODULE module = GetModuleHandleA("comctl32.dll");
+        DWORD size, buffer_size;
+        HRSRC hrsrc;
+
+        hrsrc = FindResourceA(module, MAKEINTRESOURCEA(1006 /* IDD_PROPSHEET */),
+                (LPSTR)RT_DIALOG);
+        size = SizeofResource(module, hrsrc);
+        ok(size != 0, "Failed to get size of propsheet dialog resource\n");
+        buffer_size = HeapSize(GetProcessHeap(), 0, (void *)lparam);
+        ok(buffer_size == 2 * size, "Unexpected template buffer size %u, resource size %u\n",
+                buffer_size, size);
+        break;
+      }
     case PSCB_INITIALIZED:
       {
         char caption[256];

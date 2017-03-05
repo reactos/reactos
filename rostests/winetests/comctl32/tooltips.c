@@ -301,7 +301,7 @@ static void test_gettext(void)
     TTTOOLINFOA toolinfoA;
     TTTOOLINFOW toolinfoW;
     LRESULT r;
-    CHAR bufA[10] = "";
+    CHAR bufA[16] = "";
     WCHAR bufW[10] = { 0 };
     DWORD length, style;
 

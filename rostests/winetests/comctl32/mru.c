@@ -236,7 +236,7 @@ static void test_MRUListA(void)
 
     if (!pCreateMRUListA || !pFreeMRUList || !pAddMRUStringA || !pEnumMRUListA)
     {
-        skip("MRU entry points not found\n");
+        win_skip("MRU entry points not found\n");
         return;
     }
 

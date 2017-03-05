@@ -558,7 +558,10 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
     }
 
     defwndproc_counter++;
-    ret = DefWindowProcA(hwnd, message, wParam, lParam);
+    if (IsWindowUnicode(hwnd))
+        ret = DefWindowProcW(hwnd, message, wParam, lParam);
+    else
+        ret = DefWindowProcA(hwnd, message, wParam, lParam);
     defwndproc_counter--;
 
     return ret;

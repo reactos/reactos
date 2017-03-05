@@ -532,23 +532,14 @@ static void test_dtm_set_and_get_system_time(void)
 {
     LRESULT r;
     SYSTEMTIME st, getSt, ref;
-    HWND hWnd, hWndDateTime_test_gdt_none;
+    HWND hWnd;
 
-    hWndDateTime_test_gdt_none = create_datetime_control(0);
+    hWnd = create_datetime_control(0);
+    ok(hWnd !=NULL, "Expected non NULL, got %p\n", hWnd);
+    r = SendMessageA(hWnd, DTM_SETSYSTEMTIME, GDT_NONE, (LPARAM)&st);
+    expect(0, r);
 
-    ok(hWndDateTime_test_gdt_none!=NULL, "Expected non NULL, got %p\n", hWndDateTime_test_gdt_none);
-    if(hWndDateTime_test_gdt_none) {
-        r = SendMessageA(hWndDateTime_test_gdt_none, DTM_SETSYSTEMTIME, GDT_NONE, (LPARAM)&st);
-        expect(0, r);
-    }
-    else {
-        skip("hWndDateTime_test_gdt_none is NULL\n");
-        flush_sequences(sequences, NUM_MSG_SEQUENCES);
-
-        return;
-    }
-
-    DestroyWindow(hWndDateTime_test_gdt_none);
+    DestroyWindow(hWnd);
 
     hWnd = create_datetime_control(DTS_SHOWNONE);
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
@@ -802,7 +793,7 @@ START_TEST(datetime)
     pInitCommonControlsEx = (void*)GetProcAddress(hComctl32, "InitCommonControlsEx");
     if (!pInitCommonControlsEx)
     {
-        skip("InitCommonControlsEx() is missing. Skipping the tests\n");
+        win_skip("InitCommonControlsEx() is missing. Skipping the tests\n");
         return;
     }
     iccex.dwSize = sizeof(iccex);

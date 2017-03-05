@@ -86,6 +86,28 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
         add_message(sequences, PAGER_SEQ_INDEX, &msg);
     }
 
+    if (message == WM_NOTIFY)
+    {
+        NMHDR *nmhdr = (NMHDR *)lParam;
+
+        switch (nmhdr->code)
+        {
+            case PGN_CALCSIZE:
+            {
+                NMPGCALCSIZE *nmpgcs = (NMPGCALCSIZE *)lParam;
+                DWORD style = GetWindowLongA(nmpgcs->hdr.hwndFrom, GWL_STYLE);
+
+                if (style & PGS_HORZ)
+                    ok(nmpgcs->dwFlag == PGF_CALCWIDTH, "Unexpected flags %#x.\n", nmpgcs->dwFlag);
+                else
+                    ok(nmpgcs->dwFlag == PGF_CALCHEIGHT, "Unexpected flags %#x.\n", nmpgcs->dwFlag);
+                break;
+            }
+            default:
+                ;
+        }
+    }
+
     defwndproc_counter++;
     ret = DefWindowProcA(hwnd, message, wParam, lParam);
     defwndproc_counter--;
@@ -151,7 +173,7 @@ static HWND create_pager_control( DWORD style )
 static void test_pager(void)
 {
     HWND pager, child;
-    RECT rect;
+    RECT rect, rect2;
 
     pager = create_pager_control( PGS_HORZ );
     if (!pager)
@@ -183,6 +205,29 @@ static void test_pager(void)
     flush_sequences( sequences, NUM_MSG_SEQUENCES );
     SendMessageA( pager, PGM_SETPOS, 0, 9 );
     ok_sequence(sequences, PAGER_SEQ_INDEX, set_pos_seq, "set pos", TRUE);
+
+    DestroyWindow( pager );
+
+    /* Test if resizing works */
+    pager = create_pager_control( CCS_NORESIZE );
+    ok(pager != NULL, "failed to create pager control\n");
+
+    GetWindowRect( pager, &rect );
+    MoveWindow( pager, 0, 0, 200, 100, TRUE );
+    GetWindowRect( pager, &rect2 );
+    ok(rect2.right - rect2.left > rect.right - rect.left, "expected pager window to resize, %s\n",
+        wine_dbgstr_rect( &rect2 ));
+
+    DestroyWindow( pager );
+
+    pager = create_pager_control( CCS_NORESIZE | PGS_HORZ );
+    ok(pager != NULL, "failed to create pager control\n");
+
+    GetWindowRect( pager, &rect );
+    MoveWindow( pager, 0, 0, 100, 200, TRUE );
+    GetWindowRect( pager, &rect2 );
+    ok(rect2.bottom - rect2.top > rect.bottom - rect.top, "expected pager window to resize, %s\n",
+        wine_dbgstr_rect( &rect2 ));
 
     DestroyWindow( pager );
 }

@@ -2056,7 +2056,7 @@ START_TEST(monthcal)
     pInitCommonControlsEx = (void*)GetProcAddress(hComctl32, "InitCommonControlsEx");
     if (!pInitCommonControlsEx)
     {
-        skip("InitCommonControlsEx() is missing. Skipping the tests\n");
+        win_skip("InitCommonControlsEx() is missing. Skipping the tests\n");
         return;
     }
     iccex.dwSize = sizeof(iccex);

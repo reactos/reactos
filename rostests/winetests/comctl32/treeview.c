@@ -42,6 +42,7 @@ static BOOL g_disp_A_to_W;
 static BOOL g_disp_set_stateimage;
 static BOOL g_beginedit_alter_text;
 static HFONT g_customdraw_font;
+static BOOL g_v6;
 
 #define NUM_MSG_SEQUENCES   3
 #define TREEVIEW_SEQ_INDEX  0
@@ -326,6 +327,8 @@ static const struct message empty_seq[] = {
 
 static const struct message parent_cd_seq[] = {
     { WM_NOTIFY, sent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_PREPAINT },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_ITEMPREPAINT },
+    { WM_NOTIFY, sent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_ITEMPOSTPAINT },
     { WM_NOTIFY, sent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_ITEMPREPAINT },
     { WM_NOTIFY, sent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_ITEMPOSTPAINT },
     { WM_NOTIFY, sent|id|custdraw, 0, 0, NM_CUSTOMDRAW, CDDS_POSTPAINT },
@@ -1259,6 +1262,7 @@ static LRESULT CALLBACK parent_wnd_proc(HWND hWnd, UINT message, WPARAM wParam, 
             {
                 NMTVCUSTOMDRAW *nmcd = (NMTVCUSTOMDRAW*)lParam;
                 COLORREF c0ffee = RGB(0xc0,0xff,0xee), cafe = RGB(0xca,0xfe,0x00);
+                COLORREF text = GetTextColor(nmcd->nmcd.hdc), bkgnd = GetBkColor(nmcd->nmcd.hdc);
 
                 msg.flags |= custdraw;
                 msg.stage = nmcd->nmcd.dwDrawStage;
@@ -1269,15 +1273,23 @@ static LRESULT CALLBACK parent_wnd_proc(HWND hWnd, UINT message, WPARAM wParam, 
                 case CDDS_PREPAINT:
                     return CDRF_NOTIFYITEMDRAW|CDRF_NOTIFYITEMERASE|CDRF_NOTIFYPOSTPAINT;
                 case CDDS_ITEMPREPAINT:
-                    nmcd->clrTextBk = c0ffee;
+                    ok(text == nmcd->clrText || (g_v6 && nmcd->clrText == 0xffffffff),
+                       "got %08x vs %08x\n", text, nmcd->clrText);
+                    ok(bkgnd == nmcd->clrTextBk || (g_v6 && nmcd->clrTextBk == 0xffffffff),
+                       "got %08x vs %08x\n", bkgnd, nmcd->clrTextBk);
                     nmcd->clrText = cafe;
+                    nmcd->clrTextBk = c0ffee;
+                    SetTextColor(nmcd->nmcd.hdc, c0ffee);
+                    SetBkColor(nmcd->nmcd.hdc, cafe);
                     if (g_customdraw_font)
                         SelectObject(nmcd->nmcd.hdc, g_customdraw_font);
                     return CDRF_NOTIFYPOSTPAINT|CDRF_NEWFONT;
                 case CDDS_ITEMPOSTPAINT:
                     /* at the point of post paint notification colors are already restored */
-                    ok(GetTextColor(nmcd->nmcd.hdc) != cafe, "got 0%x\n", GetTextColor(nmcd->nmcd.hdc));
-                    ok(GetBkColor(nmcd->nmcd.hdc) != c0ffee, "got 0%x\n", GetBkColor(nmcd->nmcd.hdc));
+                    ok(nmcd->clrText == cafe, "got 0%x\n", nmcd->clrText);
+                    ok(nmcd->clrTextBk == c0ffee, "got 0%x\n", nmcd->clrTextBk);
+                    ok(text != cafe, "got 0%x\n", text);
+                    ok(bkgnd != c0ffee, "got 0%x\n", bkgnd);
                     if (g_customdraw_font)
                         ok(GetCurrentObject(nmcd->nmcd.hdc, OBJ_FONT) != g_customdraw_font, "got %p\n",
                            GetCurrentObject(nmcd->nmcd.hdc, OBJ_FONT));
@@ -2317,20 +2329,12 @@ static void test_WM_GETDLGCODE(void)
 
 static void test_customdraw(void)
 {
-    static const char *rootA = "root";
-    TVINSERTSTRUCTA ins;
-    HTREEITEM hRoot;
     LOGFONTA lf;
     HWND hwnd;
 
     hwnd = create_treeview_control(0);
-
-    ins.hParent = TVI_ROOT;
-    ins.hInsertAfter = TVI_ROOT;
-    U(ins).item.mask = TVIF_TEXT;
-    U(ins).item.pszText = (char*)rootA;
-    hRoot = TreeView_InsertItemA(hwnd, &ins);
-    ok(hRoot != NULL, "got %p\n", hRoot);
+    fill_tree(hwnd);
+    SendMessageA(hwnd, TVM_EXPAND, TVE_EXPAND, (WPARAM)hRoot);
 
     /* create additional font, custom draw handler will select it */
     SystemParametersInfoA(SPI_GETICONTITLELOGFONT, sizeof(lf), &lf, 0);
@@ -2477,6 +2481,7 @@ START_TEST(treeview)
     }
 
     /* comctl32 version 6 tests start here */
+    g_v6 = TRUE;
     test_expandedimage();
     test_htreeitem_layout();
     test_WM_GETDLGCODE();
