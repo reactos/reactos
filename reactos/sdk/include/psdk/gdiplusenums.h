@@ -73,6 +73,12 @@ enum LineCap
     LineCapAnchorMask       = 0xf0
 };
 
+enum CustomLineCapType
+{
+    CustomLineCapTypeDefault         = 0,
+    CustomLineCapTypeAdjustableArrow = 1
+};
+
 enum PathPointType{
     PathPointTypeStart          = 0,    /* start of a figure */
     PathPointTypeLine           = 1,
@@ -720,6 +726,7 @@ typedef enum BrushType BrushType;
 typedef enum DriverStringOptions DriverStringOptions;
 typedef enum FillMode FillMode;
 typedef enum LineCap LineCap;
+typedef enum CustomLineCapType CustomLineCapType;
 typedef enum PathPointType PathPointType;
 typedef enum LineJoin LineJoin;
 typedef enum QualityMode QualityMode;

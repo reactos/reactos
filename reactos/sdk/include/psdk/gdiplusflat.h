@@ -94,6 +94,7 @@ GpStatus WINGDIPAPI GdipSetCustomLineCapStrokeJoin(GpCustomLineCap*,GpLineJoin);
 GpStatus WINGDIPAPI GdipGetCustomLineCapWidthScale(GpCustomLineCap*,REAL*);
 GpStatus WINGDIPAPI GdipSetCustomLineCapWidthScale(GpCustomLineCap*,REAL);
 GpStatus WINGDIPAPI GdipSetCustomLineCapBaseInset(GpCustomLineCap*,REAL);
+GpStatus WINGDIPAPI GdipGetCustomLineCapType(GpCustomLineCap*,CustomLineCapType*);
 
 /* Font */
 GpStatus WINGDIPAPI GdipCloneFont(GpFont*,GpFont**);
@@ -617,6 +618,7 @@ GpStatus WINGDIPAPI GdipCreatePen2(GpBrush*,REAL,GpUnit,GpPen**);
 GpStatus WINGDIPAPI GdipDeletePen(GpPen*);
 GpStatus WINGDIPAPI GdipGetPenBrushFill(GpPen*,GpBrush**);
 GpStatus WINGDIPAPI GdipGetPenColor(GpPen*,ARGB*);
+GpStatus WINGDIPAPI GdipGetPenCompoundCount(GpPen*,INT*);
 GpStatus WINGDIPAPI GdipGetPenCustomStartCap(GpPen*,GpCustomLineCap**);
 GpStatus WINGDIPAPI GdipGetPenCustomEndCap(GpPen*,GpCustomLineCap**);
 GpStatus WINGDIPAPI GdipGetPenDashArray(GpPen*,REAL*,INT);
