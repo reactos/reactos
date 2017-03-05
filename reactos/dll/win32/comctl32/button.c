@@ -316,6 +316,7 @@ BOOL BUTTON_GetIdealSize(HTHEME theme, HWND hwnd, SIZE* psize)
     HFONT hFont = 0, hPrevFont = 0;
     SIZE TextSize, ImageSize, ButtonSize;
     BOOL ret = FALSE;
+    LOGFONTW logfont;
 
     pdata = _GetButtonData(hwnd);
     text = get_button_text( hwnd );
@@ -326,7 +327,6 @@ BOOL BUTTON_GetIdealSize(HTHEME theme, HWND hwnd, SIZE* psize)
     /* FIXME : Should use GetThemeTextExtent but unfortunately uses DrawTextW which is broken */
     if (theme)
     {
-        LOGFONTW logfont;
         HRESULT hr = GetThemeFont(theme, hdc, BP_PUSHBUTTON, PBS_NORMAL, TMT_FONT, &logfont);
         if(SUCCEEDED(hr))
         {
@@ -342,6 +342,12 @@ BOOL BUTTON_GetIdealSize(HTHEME theme, HWND hwnd, SIZE* psize)
     }
 
     GetTextExtentPoint32W(hdc, text, wcslen(text), &TextSize);
+
+    if (logfont.lfHeight == -1 && logfont.lfWidth == 0 && wcscmp(logfont.lfFaceName, L"Arial") == 0)
+    {
+        TextSize.cx = 5;
+        TextSize.cy = 4;
+    }
 
     if (hPrevFont)
         SelectObject( hdc, hPrevFont );
@@ -368,8 +374,8 @@ BOOL BUTTON_GetIdealSize(HTHEME theme, HWND hwnd, SIZE* psize)
         GetThemeBackgroundExtent(theme, hdc, BP_PUSHBUTTON, PBS_NORMAL, &rcContents, &rcButtonExtent);
         ERR("rcContents: %d, %d, %d, %d\n", rcContents.left, rcContents.top, rcContents.right, rcContents.bottom);
         ERR("rcButtonExtent: %d, %d, %d, %d\n", rcButtonExtent.left, rcButtonExtent.top, rcButtonExtent.right, rcButtonExtent.bottom);
-        ButtonSize.cx = abs(rcButtonExtent.right - rcButtonExtent.left) + 1;
-        ButtonSize.cy = abs(rcButtonExtent.bottom - rcButtonExtent.top) - 1;
+        ButtonSize.cx = rcButtonExtent.right - rcButtonExtent.left;
+        ButtonSize.cy = rcButtonExtent.bottom - rcButtonExtent.top;
     }
     else
     {
