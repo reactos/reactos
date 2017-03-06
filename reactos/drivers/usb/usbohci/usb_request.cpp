@@ -771,6 +771,7 @@ CUSBRequest::BuildIsochronousEndpoint(
         //
         // get physical page
         //
+        *(volatile char *)Buffer; // HACK for CORE-9224
         Page = MmGetPhysicalAddress(Buffer).LowPart;
 
         //

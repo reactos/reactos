@@ -17,7 +17,7 @@
 #include "asmxtras.inc"
 #include <isvbop.inc>
 
-// #define NDEBUG
+#define NDEBUG
 
 /* DEFINES ********************************************************************/
 
