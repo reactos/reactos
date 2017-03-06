@@ -335,13 +335,19 @@ BOOL BUTTON_PaintWithTheme(HTHEME theme, HWND hwnd, HDC hParamDC, LPARAM prfFlag
 {
     DWORD dwStyle;
     DWORD dwStyleEx;
+    DWORD type;
     UINT dtFlags;
     int state;
     ButtonState drawState;
     pfThemedPaint paint;
 
     dwStyle = GetWindowLongW(hwnd, GWL_STYLE);
-    paint = btnThemedPaintFunc[ dwStyle & BUTTON_TYPE ];
+    type = dwStyle & BUTTON_TYPE;
+
+    if (type != BS_PUSHBUTTON && type != BS_DEFPUSHBUTTON && (dwStyle & BS_PUSHLIKE))
+        type = BS_PUSHBUTTON;
+
+    paint = btnThemedPaintFunc[type];
     if (!paint)
         return FALSE;
 
@@ -361,7 +367,7 @@ BOOL BUTTON_PaintWithTheme(HTHEME theme, HWND hwnd, HDC hParamDC, LPARAM prfFlag
     }
     else drawState = STATE_DISABLED;
 
-    if (drawState == STATE_NORMAL && (dwStyle & BUTTON_TYPE) == BS_DEFPUSHBUTTON)
+    if (drawState == STATE_NORMAL && type == BS_DEFPUSHBUTTON)
     {
         drawState = STATE_DEFAULTED;
     }
