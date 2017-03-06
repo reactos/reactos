@@ -1171,7 +1171,8 @@ LRESULT NC_HandleNCCalcSize( PWND Wnd, WPARAM wparam, RECTL *Rect, BOOL Suspende
    LRESULT Result = 0;
    SIZE WindowBorders;
    RECT OrigRect;
-   DWORD Style = Wnd->style;
+   LONG Style = Wnd->style;
+   LONG  exStyle = Wnd->ExStyle; 
 
    if (Rect == NULL)
    {
@@ -1239,83 +1240,30 @@ LRESULT NC_HandleNCCalcSize( PWND Wnd, WPARAM wparam, RECTL *Rect, BOOL Suspende
          RECTL_vInflateRect(Rect, -2 * UserGetSystemMetrics(SM_CXBORDER), -2 * UserGetSystemMetrics(SM_CYBORDER));
       }
 
-      if (Wnd->style & (WS_VSCROLL | WS_HSCROLL))
+      if (Style & WS_VSCROLL)
       {
-        SCROLLBARINFO sbi;
-        SETSCROLLBARINFO ssbi;
-
-        sbi.cbSize = sizeof(SCROLLBARINFO);
-        if ((Style & WS_VSCROLL) && co_IntGetScrollBarInfo(Wnd, OBJID_VSCROLL, &sbi))
-        {
-          int i;
-          LONG sx = Rect->right;
-
-          Wnd->state |= WNDS_HASVERTICALSCROOLLBAR;
-
-          sx -= UserGetSystemMetrics(SM_CXVSCROLL);
-
-          for (i = 0; i <= CCHILDREN_SCROLLBAR; i++)
-              ssbi.rgstate[i] = sbi.rgstate[i];
-
-          if (sx <= Rect->left)
-             ssbi.rgstate[0] |= STATE_SYSTEM_OFFSCREEN;
-          else
-             ssbi.rgstate[0] &= ~STATE_SYSTEM_OFFSCREEN;
-
-          co_IntSetScrollBarInfo(Wnd, OBJID_VSCROLL, &ssbi);
-
-          if (ssbi.rgstate[0] & STATE_SYSTEM_OFFSCREEN)
-             Style &= ~WS_VSCROLL;
-        }
-        else
-          Style &= ~WS_VSCROLL;
-
-        if ((Style & WS_HSCROLL) && co_IntGetScrollBarInfo(Wnd, OBJID_HSCROLL, &sbi))
-        {
-          int i;
-          LONG sy = Rect->bottom;
-
-          Wnd->state |= WNDS_HASHORIZONTALSCROLLBAR;
-
-          sy -= UserGetSystemMetrics(SM_CYHSCROLL);
-
-          for (i = 0; i <= CCHILDREN_SCROLLBAR; i++)
-              ssbi.rgstate[i] = sbi.rgstate[i];
-
-          if (sy <= Rect->top)
-             ssbi.rgstate[0] |= STATE_SYSTEM_OFFSCREEN;
-          else
-             ssbi.rgstate[0] &= ~STATE_SYSTEM_OFFSCREEN;
-
-          co_IntSetScrollBarInfo(Wnd, OBJID_HSCROLL, &ssbi);
-
-          if (ssbi.rgstate[0] & STATE_SYSTEM_OFFSCREEN)
-             Style &= ~WS_HSCROLL;
-        }
-        else
-          Style &= ~WS_HSCROLL;
-      }
-
-      if ((Style & WS_VSCROLL) && (Style & WS_HSCROLL))
-      {
-         if ((Wnd->ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
-            Rect->left += UserGetSystemMetrics(SM_CXVSCROLL);
-         else
-            Rect->right -= UserGetSystemMetrics(SM_CXVSCROLL);
-
-         Rect->bottom -= UserGetSystemMetrics(SM_CYHSCROLL);
-      }
-      else
-      {
-         if (Style & WS_VSCROLL)
+         if (Rect->right - Rect->left >= UserGetSystemMetrics(SM_CXVSCROLL))
          {
-            if ((Wnd->ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
-               Rect->left += UserGetSystemMetrics(SM_CXVSCROLL);
-            else
-               Rect->right -= UserGetSystemMetrics(SM_CXVSCROLL);
+             Wnd->state |= WNDS_HASVERTICALSCROOLLBAR;
+
+             /* rectangle is in screen coords when wparam is false */
+             if (!wparam && (exStyle & WS_EX_LAYOUTRTL)) exStyle ^= WS_EX_LEFTSCROLLBAR;
+
+             if((exStyle & WS_EX_LEFTSCROLLBAR) != 0)
+                 Rect->left  += UserGetSystemMetrics(SM_CXVSCROLL);
+             else
+                 Rect->right -= UserGetSystemMetrics(SM_CXVSCROLL);
+          }
+      }
+
+      if (Style & WS_HSCROLL)
+      {
+         if( Rect->bottom - Rect->top > UserGetSystemMetrics(SM_CYHSCROLL))
+         {
+              Wnd->state |= WNDS_HASHORIZONTALSCROLLBAR;
+
+              Rect->bottom -= UserGetSystemMetrics(SM_CYHSCROLL);
          }
-         else if (Style & WS_HSCROLL)
-            Rect->bottom -= UserGetSystemMetrics(SM_CYHSCROLL);
       }
 
       if (Rect->top > Rect->bottom)
