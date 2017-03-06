@@ -1,4 +1,4 @@
-/* @(#)schily.h	1.121 16/11/04 Copyright 1985-2016 J. Schilling */
+/* @(#)schily.h	1.122 16/12/18 Copyright 1985-2016 J. Schilling */
 /*
  *	Definitions for libschily
  *
@@ -543,7 +543,7 @@ extern	int	_openfd64	__PR((const char *, int));
 #ifdef	__never__
 #undef	error
 #define	error		js_error
-#endif
+#endif	/* __never__ */
 #undef	dprintf
 #define	dprintf		js_dprintf
 #undef	fprintf
@@ -558,9 +558,9 @@ extern	int	_openfd64	__PR((const char *, int));
 #ifndef	HAVE_SNPRINTF
 #undef	snprintf
 #define	snprintf	js_snprintf
-#endif
-#endif
-#endif
+#endif	/* HAVE_SNPRINTF */
+#endif	/* SCHILY_PRINT */
+#endif	/* NO_SCHILY_PRINT */
 
 #ifndef	NO_SCHILY_GETLINE	/* Define to disable *getline() redirect */
 #undef	getline

@@ -1,8 +1,8 @@
-/* @(#)mkisofs.c	1.288 16/12/13 joerg */
+/* @(#)mkisofs.c	1.289 17/01/05 joerg */
 #include <schily/mconfig.h>
 #ifndef lint
 static	UConst char sccsid[] =
-	"@(#)mkisofs.c	1.288 16/12/13 joerg";
+	"@(#)mkisofs.c	1.289 17/01/05 joerg";
 #endif
 /*
  * Program mkisofs.c - generate iso9660 filesystem  based upon directory
@@ -11,7 +11,7 @@ static	UConst char sccsid[] =
  * Written by Eric Youngdale (1993).
  *
  * Copyright 1993 Yggdrasil Computing, Incorporated
- * Copyright (c) 1997-2016 J. Schilling
+ * Copyright (c) 1997-2017 J. Schilling
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -132,14 +132,13 @@ BOOL	legacy = FALSE;		/* Implement legacy support for historic CLI */
 int	all_files = 1;		/* New default is to include all files */
 BOOL	Hflag = FALSE;		/* Follow links on cmdline (-H)	*/
 BOOL	follow_links = FALSE;	/* Follow all links (-L)	*/
-#if	defined(IS_CYGWIN) || defined(__MINGW32__) || defined(_MSC_VER)
+#if	defined(__MINGW32__) || defined(_MSC_VER)
 /*
- * Do not cache inodes on Cygwin by default
- * See below in main(), cache for 64bit ino_t
+ * Never cache inodes on DOS or Win-DOS.
  */
 int	cache_inodes = 0;
 #else
-int	cache_inodes = 1; /* Cache inodes if OS has unique inodes */
+int	cache_inodes = -1;	/* Cache inodes if OS has unique inodes */
 #endif
 int	rationalize = 0;	/* Need to call stat_fix()	*/
 int	rationalize_uid = 0;
@@ -2088,14 +2087,6 @@ main(argc, argv)
 	modification_date.l_usec = tv_begun.tv_usec;
 	modification_date.l_gmtoff = -100;
 
-#if	defined(IS_CYGWIN)
-	/*
-	 * If we have 64 bit inode numbers, Cygwin should be able to work
-	 * correctly on NTFS.
-	 */
-	if (sizeof (ino_t) >= 8)
-		cache_inodes = 1;
-#endif
 	cac--;
 	cav++;
 	c = getvargs(&cac, &cav, GA_NO_PROPS, flags);
@@ -2119,7 +2110,7 @@ args_ok:
 	if (pversion) {
 		printf(_("mkisofs %s (%s-%s-%s)\n\n\
 Copyright (C) 1993-1997 %s\n\
-Copyright (C) 1997-2016 %s\n"),
+Copyright (C) 1997-2017 %s\n"),
 			version_string,
 			HOST_CPU, HOST_VENDOR, HOST_OS,
 			_("Eric Youngdale"),
@@ -2212,6 +2203,25 @@ Copyright (C) 1997-2016 %s\n"),
 			(Llong)strlen(biblio));
 		}
 	}
+#ifdef	DUPLICATES_ONCE
+	/*
+	 * If -duplicates-once was specified, do not implicitly enable
+	 * -cache-inodes.
+	 */
+	if (cache_inodes < 0 && duplicates_once)
+		cache_inodes = 0;
+#endif
+#if	defined(IS_CYGWIN)
+	/*
+	 * If we have 64 bit inode numbers, Cygwin should be able to work
+	 * correctly on NTFS, otherwise disable caching unless it has
+	 * been enforced via -cache-inodes.
+	 */
+	if (cache_inodes < 0 && sizeof (ino_t) < 8)
+		cache_inodes = 0;
+#endif
+	if (cache_inodes < 0)
+		cache_inodes = 1;
 #ifdef	DUPLICATES_ONCE
 	if (!cache_inodes && !duplicates_once) {
 #else

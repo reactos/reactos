@@ -1617,6 +1617,9 @@ HRESULT WINAPI DrawThemeIcon(HTHEME hTheme, HDC hdc, int iPartId, int iStateId,
     return E_NOTIMPL;
 }
 
+typedef int (WINAPI * DRAWSHADOWTEXT)(HDC hdc, LPCWSTR pszText, UINT cch, RECT *prc, DWORD dwFlags,
+                          COLORREF crText, COLORREF crShadow, int ixOffset, int iyOffset);
+
 /***********************************************************************
  *      DrawThemeText                                       (UXTHEME.@)
  */
@@ -1630,34 +1633,89 @@ HRESULT WINAPI DrawThemeText(HTHEME hTheme, HDC hdc, int iPartId, int iStateId,
     LOGFONTW logfont;
     COLORREF textColor;
     COLORREF oldTextColor;
+    COLORREF shadowColor;
+    POINT ptShadowOffset;
     int oldBkMode;
     RECT rt;
-    
+    int iShadowType;
+
     TRACE("%d %d: stub\n", iPartId, iStateId);
     if(!hTheme)
         return E_HANDLE;
-    
+
     hr = GetThemeFont(hTheme, hdc, iPartId, iStateId, TMT_FONT, &logfont);
-    if(SUCCEEDED(hr)) {
+    if(SUCCEEDED(hr)) 
+    {
         hFont = CreateFontIndirectW(&logfont);
         if(!hFont)
-            TRACE("Failed to create font\n");
+        {
+            ERR("Failed to create font\n");
+        }
     }
+
     CopyRect(&rt, pRect);
     if(hFont)
         oldFont = SelectObject(hdc, hFont);
-        
+
+    oldBkMode = SetBkMode(hdc, TRANSPARENT);
+
     if(dwTextFlags2 & DTT_GRAYED)
         textColor = GetSysColor(COLOR_GRAYTEXT);
     else {
         if(FAILED(GetThemeColor(hTheme, iPartId, iStateId, TMT_TEXTCOLOR, &textColor)))
             textColor = GetTextColor(hdc);
     }
+
+    hr = GetThemeEnumValue(hTheme, iPartId, iStateId, TMT_TEXTSHADOWTYPE, &iShadowType);
+    if (SUCCEEDED(hr))
+    {
+        ERR("Got shadow type %d\n", iShadowType);
+
+        hr = GetThemeColor(hTheme, iPartId, iStateId, TMT_TEXTSHADOWCOLOR, &shadowColor);
+        if (FAILED(hr))
+        {
+            ERR("GetThemeColor failed\n");
+        }
+
+        hr = GetThemePosition(hTheme, iPartId, iStateId, TMT_TEXTSHADOWOFFSET, &ptShadowOffset);
+        if (FAILED(hr))
+        {
+            ERR("GetThemePosition failed\n");
+        }
+
+        if (iShadowType == TST_SINGLE)
+        {
+            oldTextColor = SetTextColor(hdc, shadowColor);
+            OffsetRect(&rt, ptShadowOffset.x, ptShadowOffset.y);
+            DrawTextW(hdc, pszText, iCharCount, &rt, dwTextFlags);
+            OffsetRect(&rt, -ptShadowOffset.x, -ptShadowOffset.y);
+            SetTextColor(hdc, oldTextColor);
+        }
+        else if (iShadowType == TST_CONTINUOUS)
+        {
+            HANDLE hcomctl32 = GetModuleHandleW(L"comctl32.dll");
+            DRAWSHADOWTEXT pDrawShadowText;
+            if (!hcomctl32)
+            {
+                hcomctl32 = LoadLibraryW(L"comctl32.dll");
+                if (!hcomctl32)
+                    ERR("Failed to load comctl32\n");
+            }
+
+            pDrawShadowText = (DRAWSHADOWTEXT)GetProcAddress(hcomctl32, "DrawShadowText");
+            if (pDrawShadowText)
+            {
+                pDrawShadowText(hdc, pszText, iCharCount, &rt, dwTextFlags, textColor, shadowColor, ptShadowOffset.x, ptShadowOffset.y);
+                goto cleanup;
+            }
+        }
+    }
+
     oldTextColor = SetTextColor(hdc, textColor);
-    oldBkMode = SetBkMode(hdc, TRANSPARENT);
     DrawTextW(hdc, pszText, iCharCount, &rt, dwTextFlags);
-    SetBkMode(hdc, oldBkMode);
     SetTextColor(hdc, oldTextColor);
+cleanup:
+    SetBkMode(hdc, oldBkMode);
 
     if(hFont) {
         SelectObject(hdc, oldFont);
