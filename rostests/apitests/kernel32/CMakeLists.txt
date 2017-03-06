@@ -14,6 +14,7 @@ list(APPEND SOURCE
     interlck.c
     LoadLibraryExW.c
     lstrcpynW.c
+    lstrlen.c
     MultiByteToWideChar.c
     PrivMoveFileIdentityW.c
     SetConsoleWindowInfo.c

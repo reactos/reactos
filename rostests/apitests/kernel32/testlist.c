@@ -15,6 +15,7 @@ extern void func_GetModuleFileName(void);
 extern void func_interlck(void);
 extern void func_LoadLibraryExW(void);
 extern void func_lstrcpynW(void);
+extern void func_lstrlen(void);
 extern void func_Mailslot(void);
 extern void func_MultiByteToWideChar(void);
 extern void func_PrivMoveFileIdentityW(void);
@@ -39,6 +40,7 @@ const struct test winetest_testlist[] =
     { "interlck",                    func_interlck },
     { "LoadLibraryExW",              func_LoadLibraryExW },
     { "lstrcpynW",                   func_lstrcpynW },
+    { "lstrlen",                     func_lstrlen },
     { "MailslotRead",                func_Mailslot },
     { "MultiByteToWideChar",         func_MultiByteToWideChar },
     { "PrivMoveFileIdentityW",       func_PrivMoveFileIdentityW },
