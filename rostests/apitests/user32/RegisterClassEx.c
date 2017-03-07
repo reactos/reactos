@@ -12,7 +12,6 @@
 #include <wchar.h>
 #include <wingdi.h>
 #include <winuser.h>
-#include "helper.h"
 #include <undocuser.h>
 
 static ATOM _RegisterClass(LPCWSTR lpwszClassName, HINSTANCE hInstance, UINT style, WNDPROC lpfnWndProc)

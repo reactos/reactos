@@ -9,7 +9,7 @@
 
 #include <stdio.h>
 #include <winuser.h>
-#include "helper.h"
+#include <msgtrace.h>
 #include <undocuser.h>
 
 MSG_CACHE default_cache = {
@@ -58,6 +58,10 @@ static char* get_msg_name(UINT msg)
         case WM_SETICON: return "WM_SETICON";
         case WM_KEYDOWN: return "WM_KEYDOWN";
         case WM_KEYUP: return "WM_KEYUP";
+        case WM_NOTIFY: return "WM_NOTIFY";
+        case WM_COMMAND: return "WM_COMMAND";
+        case WM_PRINTCLIENT: return "WM_PRINTCLIENT";
+        case WM_CTLCOLORSTATIC: return "WM_CTLCOLORSTATIC";
         default: return NULL;
     }
 }
@@ -202,17 +206,4 @@ void record_message(MSG_CACHE* cache, int iwnd, UINT message, MSG_TYPE type, int
     }
 
     cache->count++;
-}
-
-ATOM RegisterSimpleClass(WNDPROC lpfnWndProc, LPCWSTR lpszClassName)
-{
-    WNDCLASSEXW wcex;
-
-    memset(&wcex, 0, sizeof(wcex));
-    wcex.cbSize = sizeof(WNDCLASSEX);
-    wcex.lpfnWndProc    = lpfnWndProc;
-    wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszClassName  = lpszClassName;
-    return RegisterClassExW(&wcex);
 }

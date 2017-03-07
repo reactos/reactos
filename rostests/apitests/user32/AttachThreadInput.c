@@ -9,7 +9,8 @@
 
 #include <wingdi.h>
 #include <winuser.h>
-#include "helper.h"
+#include <msgtrace.h>
+#include <user32testhelpers.h>
 
 #define DESKTOP_ALL_ACCESS 0x01ff
 

@@ -6,11 +6,12 @@
  */
 
 #include <apitest.h>
-
 #include <wingdi.h>
 #include <winuser.h>
-#include "helper.h"
 #include <undocuser.h>
+
+#include <msgtrace.h>
+#include <user32testhelpers.h>
 
 HWND hWnd1, hWnd2, hWnd3;
 HHOOK hMouseHookLL, hMouseHook;

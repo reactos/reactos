@@ -1,3 +1,5 @@
+#ifndef APITESTS_MSGTRACE_H
+#define APITESTS_MSGTRACE_H
 
 typedef enum _MSG_TYPE
 {
@@ -30,8 +32,6 @@ void record_message(MSG_CACHE* cache, int iwnd, UINT message, MSG_TYPE type, int
 void compare_cache(MSG_CACHE* cache, const char* file, int line, MSG_ENTRY *msg_chain);
 void trace_cache(MSG_CACHE* cache, const char* file, int line);
 void empty_message_cache(MSG_CACHE* cache);
-
-ATOM RegisterSimpleClass(WNDPROC lpfnWndProc, LPCWSTR lpszClassName);
 
 /* filter messages that are affected by dwm */
 static inline BOOL IsDWmMsg(UINT msg)
@@ -68,3 +68,5 @@ static inline BOOL IseKeyMsg(UINT msg)
         if(notexpected)                                                                                                         \
             ok((status & (notexpected))!=(notexpected), "wrong queue status. got non expected %li\n", (DWORD)(notexpected));    \
     }
+
+#endif

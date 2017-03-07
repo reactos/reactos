@@ -7,7 +7,9 @@
 
 #include <apitest.h>
 #include <winuser.h>
-#include "helper.h"
+
+#include <msgtrace.h>
+#include <user32testhelpers.h>
 
 static DWORD dwThread1;
 static DWORD dwThread2;

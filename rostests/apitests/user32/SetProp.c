@@ -6,9 +6,8 @@
  */
 
 #include <apitest.h>
-
 #include <winuser.h>
-#include "helper.h"
+#include <user32testhelpers.h>
 
 static ATOM Atom1, Atom2, Atom3;
 

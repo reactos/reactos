@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <wingdi.h>
 #include <winuser.h>
-#include "helper.h"
+#include <user32testhelpers.h>
 #include <ndk/umtypes.h>
 #include <ndk/obfuncs.h>
 

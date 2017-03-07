@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <wine/test.h>
 #include <windows.h>
-#include "helper.h"
 
 #define DCX_USESTYLE 0x00010000
 

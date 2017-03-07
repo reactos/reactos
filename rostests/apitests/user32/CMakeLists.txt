@@ -1,7 +1,7 @@
 
 list(APPEND SOURCE
     AttachThreadInput.c
-    helper.c
+    ../include/msgtrace.c
     CreateDialog.c
     CreateIconFromResourceEx.c
     CreateWindowEx.c
