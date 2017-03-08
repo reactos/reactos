@@ -59,11 +59,25 @@ void Test_Messages()
 
     hWnd1 = CreateWindowW(L"testClass", L"Test parent", WS_OVERLAPPEDWINDOW | WS_VISIBLE, 100, 100, 200, 200, 0, NULL, NULL, NULL);
     ok (hWnd1 != NULL, "Expected CreateWindowW to succeed\n");
-    ShowWindow(hWnd1, SW_SHOW);
-    UpdateWindow(hWnd1);
 
     hWnd2 = CreateWindowW(L"testClass", L"test window", WS_CHILD | WS_VISIBLE, 0, 0, 100, 100, hWnd1, NULL, NULL, NULL);
     ok (hWnd2 != NULL, "Expected CreateWindowW to succeed\n");
+
+    FlushMessages();
+    EMPTY_CACHE();
+
+    hdc = GetDC(hWnd1);
+
+    DrawThemeParentBackground(hWnd2, hdc, NULL);
+    FlushMessages();
+    COMPARE_CACHE(draw_parent_chain);
+
+    DrawThemeParentBackground(hWnd1, hdc, NULL);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    ShowWindow(hWnd1, SW_SHOW);
+    UpdateWindow(hWnd1);
     ShowWindow(hWnd2, SW_SHOW);
     UpdateWindow(hWnd2);
 
@@ -77,9 +91,7 @@ void Test_Messages()
     DrawThemeParentBackground(hWnd1, NULL, NULL);
     FlushMessages();
     COMPARE_CACHE(empty_chain);
-    
-    hdc = GetDC(hWnd1);
-    
+
     DrawThemeParentBackground(hWnd2, hdc, NULL);
     FlushMessages();
     COMPARE_CACHE(draw_parent_chain);
@@ -99,7 +111,96 @@ void Test_Messages()
     COMPARE_CACHE(empty_chain);
 }
 
+BOOL bGotException;
+
+static LONG WINAPI VEHandler_1(PEXCEPTION_POINTERS ExceptionInfo)
+{
+    ok(FALSE, "VEHandler_1 called!\n");
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
+static LONG WINAPI VEHandler_2(PEXCEPTION_POINTERS ExceptionInfo)
+{
+    bGotException = TRUE;
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
+void Test_Params()
+{
+    HRESULT hr;
+    HDC hdc;
+    PVOID pVEH;
+
+    bGotException = FALSE;
+
+    pVEH = AddVectoredExceptionHandler(1, VEHandler_1);
+
+    hr = DrawThemeParentBackground(NULL, NULL, NULL);
+    ok (hr == E_HANDLE, "Expected E_HANDLE got 0x%lx error\n", hr);
+
+    hr = DrawThemeParentBackground((HWND)0xdeaddead, NULL, NULL);
+    ok (hr == E_HANDLE, "Expected E_HANDLE got 0x%lx error\n", hr);
+
+    hr = DrawThemeParentBackground(NULL, (HDC)0xdeaddead, NULL);
+    ok (hr == E_HANDLE, "Expected E_HANDLE got 0x%lx error\n", hr);
+
+    hr = DrawThemeParentBackground((HWND)0xdeaddead, (HDC)0xdeaddead, NULL);
+    ok (hr == E_HANDLE, "Expected E_HANDLE got 0x%lx error\n", hr);
+
+    RemoveVectoredExceptionHandler(pVEH);
+
+    RegisterSimpleClass(DefWindowProcW, L"testClass2");
+
+    hWnd1 = CreateWindowW(L"testClass2", L"Test parent", WS_OVERLAPPEDWINDOW | WS_VISIBLE, 100, 100, 200, 200, 0, NULL, NULL, NULL);
+    ok (hWnd1 != NULL, "Expected CreateWindowW to succeed\n");
+    hWnd2 = CreateWindowW(L"testClass2", L"test window", WS_CHILD | WS_VISIBLE, 0, 0, 100, 100, hWnd1, NULL, NULL, NULL);
+    ok (hWnd2 != NULL, "Expected CreateWindowW to succeed\n");
+
+    ShowWindow(hWnd1, SW_SHOW);
+    UpdateWindow(hWnd1);
+    ShowWindow(hWnd2, SW_SHOW);
+    UpdateWindow(hWnd2);
+
+    hr = DrawThemeParentBackground(hWnd1, NULL, NULL);
+    ok (hr == E_HANDLE, "Expected E_HANDLE got 0x%lx error\n", hr);
+
+    hdc = GetDC(hWnd1);
+    ok (hdc != NULL, "Expected GetDC to succeed\n");
+
+    hr = DrawThemeParentBackground(NULL, hdc, NULL);
+    ok (hr == E_HANDLE, "Expected E_HANDLE got 0x%lx error\n", hr);
+
+    hr = DrawThemeParentBackground(hWnd1, hdc, NULL);
+    ok (hr == S_OK, "Expected success got 0x%lx error\n", hr);
+
+    pVEH = AddVectoredExceptionHandler(1, VEHandler_2);
+    hr = DrawThemeParentBackground(hWnd1, hdc, (RECT*)0xdeaddead);
+    ok (hr == E_POINTER, "Expected success got 0x%lx error\n", hr);
+    RemoveVectoredExceptionHandler(pVEH);
+    ok (bGotException == TRUE, "Excepted a handled exception\n");
+
+    hr = DrawThemeParentBackground(hWnd2, NULL, NULL);
+    ok (hr == E_HANDLE, "Expected E_HANDLE got 0x%lx error\n", hr);
+
+    hr = DrawThemeParentBackground(hWnd2, hdc, NULL);
+    ok (hr == S_FALSE, "Expected S_FALSE got 0x%lx error\n", hr);
+
+    ReleaseDC(hWnd1, hdc);
+    hdc = GetDC(hWnd2);
+    ok (hdc != NULL, "Expected GetDC to succeed\n");
+
+    hr = DrawThemeParentBackground(hWnd1, hdc, NULL);
+    ok (hr == S_OK, "Expected success got 0x%lx error\n", hr);
+
+    hr = DrawThemeParentBackground(hWnd2, hdc, NULL);
+    ok (hr == S_FALSE, "Expected S_FALSE got 0x%lx error\n", hr);
+    ReleaseDC(hWnd2, hdc);
+
+
+}
+
 START_TEST(DrawThemeParentBackground)
 {
     Test_Messages();
+    Test_Params();
 }
