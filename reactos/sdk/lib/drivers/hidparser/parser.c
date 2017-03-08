@@ -714,6 +714,30 @@ HidParser_AddMainItem(
 }
 
 HIDPARSER_STATUS
+AllocateParserContext(
+    IN PHID_PARSER Parser,
+    OUT PHID_PARSER_CONTEXT *OutParserContext)
+{
+    PHID_PARSER_CONTEXT ParserContext;
+
+    ParserContext = Parser->Alloc(sizeof(HID_PARSER_CONTEXT));
+    if (!ParserContext)
+    {
+        //
+        // failed
+        //
+        return HIDPARSER_STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    //
+    // store result
+    //
+    *OutParserContext = ParserContext;
+    return HIDPARSER_STATUS_SUCCESS;
+}
+
+
+HIDPARSER_STATUS
 HidParser_ParseReportDescriptor(
     IN PHID_PARSER Parser,
     IN PUCHAR ReportDescriptor,
@@ -736,18 +760,12 @@ HidParser_ParseReportDescriptor(
     PMAIN_ITEM_DATA MainItemData;
     PHID_PARSER_CONTEXT ParserContext;
 
-    CurrentOffset = ReportDescriptor;
-    ReportEnd = ReportDescriptor + ReportLength;
-
-    if (ReportDescriptor >= ReportEnd)
-        return HIDPARSER_STATUS_COLLECTION_NOT_FOUND;
-
     //
     // allocate parser
     //
-    ParserContext = Parser->Alloc(sizeof(HID_PARSER_CONTEXT));;
-    if (!ParserContext)
-        return HIDPARSER_STATUS_INSUFFICIENT_RESOURCES;
+    Status = AllocateParserContext(Parser, &ParserContext);
+    if (Status != HIDPARSER_STATUS_SUCCESS)
+        return Status;
 
 
     //
@@ -760,7 +778,6 @@ HidParser_ParseReportDescriptor(
         //
         // no memory
         //
-        Parser->Free(ParserContext);
         return HIDPARSER_STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -775,7 +792,6 @@ HidParser_ParseReportDescriptor(
         //
         Parser->Free(ParserContext->LocalItemState.UsageStack);
         ParserContext->LocalItemState.UsageStack = NULL;
-        Parser->Free(ParserContext);
         return HIDPARSER_STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -783,6 +799,8 @@ HidParser_ParseReportDescriptor(
     // start parsing
     //
     CurrentCollection = ParserContext->RootCollection;
+    CurrentOffset = ReportDescriptor;
+    ReportEnd = ReportDescriptor + ReportLength;
 
     do
     {
@@ -1212,7 +1230,8 @@ HidParser_ParseReportDescriptor(
         //
         CurrentOffset += CurrentItemSize + sizeof(ITEM_PREFIX);
 
-    }while (CurrentOffset < ReportEnd);
+
+    }while(CurrentOffset < ReportEnd);
 
 
     //

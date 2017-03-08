@@ -568,8 +568,7 @@ CHubController::HandlePnp(
                     break;
                 }
             }
-            // Here we should leave Status as is.
-            Status = Irp->IoStatus.Status;
+            Status = STATUS_SUCCESS;
             break;
         }
         case IRP_MN_QUERY_CAPABILITIES:
@@ -612,14 +611,6 @@ CHubController::HandlePnp(
             // handle device interface requests
             //
             Status = HandleQueryInterface(IoStack);
-
-            //
-            // If a bus driver does not export the requested interface, it
-            // should leave Status as is.
-            //
-            if (Status == STATUS_NOT_SUPPORTED)
-                Status = Irp->IoStatus.Status;
-
             break;
         }
         case IRP_MN_REMOVE_DEVICE:
@@ -3745,7 +3736,6 @@ CHubController::HandleQueryInterface(
             InterfaceHub->SetDeviceHandleData = USBHI_SetDeviceHandleData;
         }
 
-        InterfaceHub->InterfaceReference(InterfaceHub->BusContext);
         //
         // request completed
         //
@@ -3800,7 +3790,6 @@ CHubController::HandleQueryInterface(
             InterfaceDI->EnumLogEntry = USBDI_EnumLogEntry;
         }
 
-        InterfaceDI->InterfaceReference(InterfaceDI->BusContext);
         //
         // request completed
         //

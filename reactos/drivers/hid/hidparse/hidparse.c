@@ -126,29 +126,6 @@ HidP_GetCaps(
 }
 
 NTSTATUS
-TranslateStatusForUpperLayer(
-    IN HIDPARSER_STATUS Status)
-{
-    //
-    // now we are handling only this values, for others just return
-    // status as it is.
-    //
-    switch (Status)
-    {
-    case HIDPARSER_STATUS_INSUFFICIENT_RESOURCES:
-        return STATUS_INSUFFICIENT_RESOURCES;
-    case HIDPARSER_STATUS_INVALID_REPORT_TYPE:
-        return HIDP_STATUS_INVALID_REPORT_TYPE;
-    case HIDPARSER_STATUS_BUFFER_TOO_SMALL:
-        return STATUS_BUFFER_TOO_SMALL;
-    case HIDPARSER_STATUS_COLLECTION_NOT_FOUND:
-        return STATUS_NO_DATA_DETECTED;
-    default:
-        return Status;
-    }
-}
-
-NTSTATUS
 NTAPI
 HidP_GetCollectionDescription(
     IN PHIDP_REPORT_DESCRIPTOR ReportDesc,
@@ -157,7 +134,6 @@ HidP_GetCollectionDescription(
     OUT PHIDP_DEVICE_DESC DeviceDescription)
 {
     HID_PARSER Parser;
-    NTSTATUS Status;
 
     //
     // init parser
@@ -167,8 +143,7 @@ HidP_GetCollectionDescription(
     //
     // get description;
     //
-    Status = HidParser_GetCollectionDescription(&Parser, ReportDesc, DescLength, PoolType, DeviceDescription);
-    return TranslateStatusForUpperLayer(Status);
+    return HidParser_GetCollectionDescription(&Parser, ReportDesc, DescLength, PoolType, DeviceDescription);
 }
 
 HIDAPI

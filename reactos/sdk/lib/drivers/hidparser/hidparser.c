@@ -68,7 +68,7 @@ HidParser_GetCollectionDescription(
         // failed to parse report descriptor
         //
         Parser->Debug("[HIDPARSER] Failed to parse report descriptor with %x\n", ParserStatus);
-        return ParserStatus;
+        return TranslateHidParserStatus(ParserStatus);
     }
 
     //
@@ -126,9 +126,7 @@ HidParser_GetCollectionDescription(
             //
             // no memory
             //
-            Parser->Free(DeviceDescription->CollectionDesc);
-            Parser->Free(DeviceDescription->ReportIDs);
-            return ParserStatus;
+            return TranslateHidParserStatus(ParserStatus);
         }
 
         //
@@ -155,13 +153,6 @@ HidParser_GetCollectionDescription(
         // get collection usage page
         //
         ParserStatus = HidParser_GetCollectionUsagePage((PVOID)DeviceDescription->CollectionDesc[Index].PreparsedData, &DeviceDescription->CollectionDesc[Index].Usage, &DeviceDescription->CollectionDesc[Index].UsagePage);
-        if (ParserStatus != HIDPARSER_STATUS_SUCCESS)
-        {
-            // collection not found
-            Parser->Free(DeviceDescription->CollectionDesc);
-            Parser->Free(DeviceDescription->ReportIDs);
-            return ParserStatus;
-        }
 
         //
         // windows seems to prepend the report id, regardless if it is required
