@@ -56,12 +56,11 @@ ParseArguments(struct CommandLineOptions* pOpts, int argc, WCHAR *argv[])
                     break;
 
                 case L'c': /* Comment on reason for shutdown */
+                    if (index+1 > argc)
+                        return ERROR_INVALID_DATA;
                     if(CheckCommentLength(argv[index+1]))
                     {
-                        if (index+1 <= argc)
-                            pOpts->message = argv[index+1];
-                        else
-                            return ERROR_INVALID_DATA;
+                        pOpts->message = argv[index+1];
                         index++;
                     }
                     else
@@ -72,10 +71,9 @@ ParseArguments(struct CommandLineOptions* pOpts, int argc, WCHAR *argv[])
                     break;
 
                 case L'd': /* Reason code [p|u:]xx:yy */
-                    if (index+1 <= argc)
-                        pOpts->reason = ParseReasonCode(argv[index+1]);
-                    else
+                    if (index+1 >= argc)
                         return ERROR_INVALID_DATA;
+                    pOpts->reason = ParseReasonCode(argv[index+1]);
                     index++;
                     break;
 
@@ -101,7 +99,10 @@ ParseArguments(struct CommandLineOptions* pOpts, int argc, WCHAR *argv[])
                     break;
 
                 case L'm': /* Target remote systems (UNC name/IP address) */
+                    if (index+1 >= argc)
+                        return ERROR_INVALID_DATA;
                     pOpts->remote_system = argv[index+1];
+                    index++;
                     break;
 
                 case L'p': /* Turn off local computer with no warning/time-out */
@@ -118,9 +119,12 @@ ParseArguments(struct CommandLineOptions* pOpts, int argc, WCHAR *argv[])
                     break;
 
                 case L't': /* Shutdown delay */
+                    if (index+1 >= argc)
+                        return ERROR_INVALID_DATA;
                     pOpts->shutdown_delay = _wtoi(argv[index+1]);
                     if (pOpts->shutdown_delay > 0) 
                         pOpts->force = TRUE;
+                    index++;
                     break;
 
                 default:
