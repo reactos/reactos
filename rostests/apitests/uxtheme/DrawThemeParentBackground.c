@@ -173,6 +173,9 @@ void Test_Params()
     hr = DrawThemeParentBackground(hWnd1, hdc, NULL);
     ok (hr == S_OK, "Expected success got 0x%lx error\n", hr);
 
+    hr = DrawThemeParentBackground(hWnd1, (HDC)0xdeaddead, NULL);
+    ok (hr == S_OK, "Expected success got 0x%lx error\n", hr);
+
     pVEH = AddVectoredExceptionHandler(1, VEHandler_2);
     hr = DrawThemeParentBackground(hWnd1, hdc, (RECT*)0xdeaddead);
     ok (hr == E_POINTER, "Expected success got 0x%lx error\n", hr);
