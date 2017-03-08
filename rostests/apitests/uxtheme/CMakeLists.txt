@@ -1,5 +1,6 @@
 
 list(APPEND SOURCE
+    CloseThemeData.c
     DrawThemeParentBackground.c
     ../include/msgtrace.c
     testlist.c)
