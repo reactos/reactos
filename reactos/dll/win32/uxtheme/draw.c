@@ -78,9 +78,17 @@ HRESULT WINAPI DrawThemeParentBackground(HWND hwnd, HDC hdc, RECT *prc)
     int hasClip = -1;
     
     TRACE("(%p,%p,%p)\n", hwnd, hdc, prc);
+
+    if (!IsWindow(hwnd) || !hdc)
+        return E_HANDLE;
+
+    if (prc && IsBadReadPtr (prc, sizeof(RECT)))
+        return E_POINTER;
+
     hParent = GetParent(hwnd);
     if(!hParent)
-        hParent = hwnd;
+        return S_OK;
+
     if(prc) {
         rt = *prc;
         MapWindowPoints(hwnd, hParent, (LPPOINT)&rt, 2);

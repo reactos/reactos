@@ -897,6 +897,8 @@ HRESULT WINAPI CloseThemeData(HTHEME hTheme)
     TRACE("(%p)\n", hTheme);
     if(!hTheme || hTheme == INVALID_HANDLE_VALUE)
         return E_HANDLE;
+    if(IsBadReadPtr (hTheme, sizeof(THEME_CLASS))) /* This check is a hack! */
+        return E_HANDLE;
     return MSSTYLES_CloseThemeClass(hTheme);
 }
 
