@@ -619,15 +619,26 @@ RtlAddVectoredExceptionHandler(
     _In_ PVECTORED_EXCEPTION_HANDLER VectoredHandler
 );
 
-__analysis_noreturn
 NTSYSAPI
-VOID
+ULONG
 NTAPI
-RtlAssert(
-    _In_ PVOID FailedAssertion,
-    _In_ PVOID FileName,
-    _In_ ULONG LineNumber,
-    _In_opt_z_ PCHAR Message
+RtlRemoveVectoredExceptionHandler(
+    _In_ PVOID VectoredHandlerHandle
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlAddVectoredContinueHandler(
+    _In_ ULONG FirstHandler,
+    _In_ PVECTORED_EXCEPTION_HANDLER VectoredHandler
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlRemoveVectoredContinueHandler(
+    _In_ PVOID VectoredHandlerHandle
 );
 
 NTSYSAPI
@@ -642,6 +653,17 @@ LONG
 NTAPI
 RtlUnhandledExceptionFilter(
     _In_ struct _EXCEPTION_POINTERS* ExceptionInfo
+);
+
+__analysis_noreturn
+NTSYSAPI
+VOID
+NTAPI
+RtlAssert(
+    _In_ PVOID FailedAssertion,
+    _In_ PVOID FileName,
+    _In_ ULONG LineNumber,
+    _In_opt_z_ PCHAR Message
 );
 
 NTSYSAPI

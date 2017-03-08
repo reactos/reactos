@@ -27,7 +27,8 @@ lstrcmpA(LPCSTR lpString1, LPCSTR lpString2)
         return 1;
 
     Result = CompareStringA(GetThreadLocale(), 0, lpString1, -1, lpString2, -1);
-    if (Result) Result -= 2;
+    if (Result)
+        Result -= 2;
 
     return Result;
 }
@@ -55,6 +56,7 @@ lstrcmpiA(LPCSTR lpString1, LPCSTR lpString2)
 
     return Result;
 }
+
 
 /*
  * @implemented
@@ -143,6 +145,9 @@ WINAPI
 lstrlenA(LPCSTR lpString)
 {
     INT Ret = 0;
+
+    if (lpString == NULL)
+        return 0;
 
     _SEH2_TRY
     {
@@ -291,6 +296,9 @@ WINAPI
 lstrlenW(LPCWSTR lpString)
 {
     INT Ret = 0;
+
+    if (lpString == NULL)
+        return 0;
 
     _SEH2_TRY
     {
