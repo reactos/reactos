@@ -123,7 +123,7 @@ ObpFreeGlobalDosDevicesSD(IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor)
                                           &Defaulted);
     if (NT_SUCCESS(Status) && Dacl != NULL)
     {
-        ExFreePool(Dacl);
+        ExFreePoolWithTag(Dacl, TAG_OB_DIR_SD);
     }
 }
 
