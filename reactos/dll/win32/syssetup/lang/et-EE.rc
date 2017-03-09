@@ -17,7 +17,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "ReactOSi arendajad sooviksid tunnustada järgmisi avatud lähtekoodiga projekte, mida kasutati ReactOSi loomisel:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "ReactOSi litsentsiks on GPL, seega kui soovid ReactOSi (või selle osasid) kasutada või levitada, peab see toimuma GPL litsentsiga kooskõlas", IDC_STATIC, 15, 110, 220, 22
+    LTEXT "ReactOSi litsentsiks on GPL, seega kui soovid ReactOSi (või selle osasid) kasutada või levitada, peab see toimuma GPL litsentsiga kooskõlas.", IDC_STATIC, 15, 110, 220, 22
     PUSHBUTTON "&Vaata GPL litsentsi...", IDC_VIEWGPL, 230, 110, 71, 19
     LTEXT "Vajuta Järgmine, et jätkata paigaldamist.", IDC_STATIC, 15, 136, 195, 17
 END

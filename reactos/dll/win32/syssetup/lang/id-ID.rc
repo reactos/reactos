@@ -17,7 +17,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "The ReactOS developers would like to acknowledge the following Open Source projects, (parts of) which were used to create ReactOS:", IDC_STATIC, 15, 7, 286, 19
     LISTBOX IDC_PROJECTS, 15, 30, 286, 75, LBS_NOSEL | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT "ReactOS is licensed under the GPL, so if you want to reuse or redistribute (parts of) it you must respect the GPL", IDC_STATIC, 15, 110, 227, 19
+    LTEXT "ReactOS is licensed under the GPL, so if you want to reuse or redistribute (parts of) it you must respect the GPL.", IDC_STATIC, 15, 110, 227, 19
     PUSHBUTTON "&View GPL...", IDC_VIEWGPL, 251, 110, 50, 19
     LTEXT "Click Next to continue with Setup.", IDC_STATIC, 15, 136, 195, 17
 END
