@@ -14,6 +14,8 @@
 #include <winerror.h>
 #include <wingdi.h>
 #include <winddi.h>
+#include <ddkernel.h>
+#include <ddrawi.h>
 
 /* DXG treats this as opaque */
 typedef PVOID PDC;

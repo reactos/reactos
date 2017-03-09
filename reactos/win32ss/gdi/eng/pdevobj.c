@@ -67,6 +67,11 @@ PDEVOBJ_AllocPDEV(VOID)
         return NULL;
     }
 
+    /* Allocate EDD_DIRECTDRAW_GLOBAL for our ReactX driver */
+    ppdev->pEDDgpl = ExAllocatePoolWithTag(PagedPool, sizeof(EDD_DIRECTDRAW_GLOBAL), GDITAG_PDEV);
+    if (ppdev->pEDDgpl)
+        RtlZeroMemory(ppdev->pEDDgpl, sizeof(EDD_DIRECTDRAW_GLOBAL));
+
     ppdev->cPdevRefs = 1;
 
     return ppdev;
@@ -78,6 +83,8 @@ PDEVOBJ_vDeletePDEV(
     PPDEVOBJ ppdev)
 {
     EngDeleteSemaphore(ppdev->hsemDevLock);
+    if (ppdev->pEDDgpl)
+        ExFreePoolWithTag(ppdev->pEDDgpl, GDITAG_PDEV);
     ExFreePoolWithTag(ppdev, GDITAG_PDEV);
 }
 
