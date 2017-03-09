@@ -1176,8 +1176,13 @@ PROPSHEET_WizardSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
       return TRUE;
 
     case WM_CTLCOLORSTATIC:
+#ifdef __REACTOS__
+      SetBkMode((HDC)wParam, TRANSPARENT);
+      return (INT_PTR)GetStockObject(HOLLOW_BRUSH);
+#else
       SetBkColor((HDC)wParam, GetSysColor(COLOR_WINDOW));
       return (INT_PTR)GetSysColorBrush(COLOR_WINDOW);
+#endif
   }
 
   return DefSubclassProc(hwnd, uMsg, wParam, lParam);
@@ -3281,7 +3286,11 @@ static LRESULT PROPSHEET_Paint(HWND hwnd, HDC hdcParam)
 
         hOldFont = SelectObject(hdc, psInfo->hFontBold);
 
+#ifdef __REACTOS__
+        if (psInfo->ppshheader.u5.hbmHeader)
+#else
         if (psInfo->ppshheader.dwFlags & PSH_USEHBMHEADER)
+#endif
         {
             hbmp = SelectObject(hdcSrc, psInfo->ppshheader.u5.hbmHeader);
 
@@ -3356,7 +3365,11 @@ static LRESULT PROPSHEET_Paint(HWND hwnd, HDC hdcParam)
 	if (ppshpage->dwFlags & PSP_USEHEADERSUBTITLE) {
 	    SelectObject(hdc, psInfo->hFont);
 	    SetRect(&r, 40, 25, rzone.right - 69, rzone.bottom);
+#ifdef __REACTOS__
+            if (!IS_INTRESOURCE(ppshpage->pszHeaderSubTitle))
+#else
             if (!IS_INTRESOURCE(ppshpage->pszHeaderTitle))
+#endif
                 DrawTextW(hdc, ppshpage->pszHeaderSubTitle, -1, &r, DT_LEFT | DT_WORDBREAK);
 	    else
 	    {
@@ -3378,7 +3391,12 @@ static LRESULT PROPSHEET_Paint(HWND hwnd, HDC hdcParam)
 
     if ( (ppshpage && (ppshpage->dwFlags & PSP_HIDEHEADER)) &&
 	 (psInfo->ppshheader.dwFlags & (PSH_WIZARD97_OLD | PSH_WIZARD97_NEW)) &&
+#ifdef __REACTOS__
+	 (psInfo->ppshheader.dwFlags & PSH_WATERMARK) &&
+     (psInfo->ppshheader.u4.hbmWatermark) ) 
+#else
 	 (psInfo->ppshheader.dwFlags & PSH_WATERMARK) ) 
+#endif
     {
 	HWND hwndLine = GetDlgItem(hwnd, IDC_SUNKEN_LINE);	    
 
