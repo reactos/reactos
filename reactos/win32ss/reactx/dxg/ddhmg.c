@@ -11,13 +11,14 @@
 #include <dxg_int.h>
 
 /* The DdHmgr manger stuff */
-ULONG gcSizeDdHmgr =  64 * sizeof(DD_ENTRY);
+ULONG gcSizeDdHmgr =  1024;
 PDD_ENTRY gpentDdHmgr = NULL;
 
 ULONG gcMaxDdHmgr = 0;
 PDD_ENTRY gpentDdHmgrLast = NULL;
 
-HANDLE ghFreeDdHmgr = 0;
+/* next free ddhmg handle number available to reuse */
+ULONG ghFreeDdHmgr = 0;
 HSEMAPHORE ghsemHmgr = NULL;
 
 BOOL
@@ -25,7 +26,7 @@ FASTCALL
 VerifyObjectOwner(PDD_ENTRY pEntry)
 {
     DWORD Pid = (DWORD)(DWORD_PTR)PsGetCurrentProcessId() & 0xFFFFFFFC;
-    DWORD check = pEntry->ObjectOwner.ulObj & 0xFFFFFFFE;
+    DWORD check = (DWORD)pEntry->Pid & 0xFFFFFFFE;
     return ( (check == Pid) || (!check));
 }
 
@@ -46,7 +47,7 @@ BOOL
 FASTCALL
 DdHmgCreate(VOID)
 {
-    gpentDdHmgr = EngAllocMem(FL_ZERO_MEMORY, gcSizeDdHmgr, TAG_THDD);
+    gpentDdHmgr = EngAllocMem(FL_ZERO_MEMORY, gcSizeDdHmgr * sizeof(DD_ENTRY), TAG_THDD);
     ghFreeDdHmgr = 0;
     gcMaxDdHmgr = 1;
 
@@ -144,8 +145,8 @@ PVOID
 FASTCALL
 DdHmgLock(HANDLE DdHandle, UCHAR ObjectType, BOOLEAN LockOwned)
 {
+    DWORD Index = DDHMG_HTOI(DdHandle);
 
-    DWORD Index = (DWORD)(DWORD_PTR)DdHandle & 0x1FFFFF;
     PDD_ENTRY pEntry = NULL;
     PVOID Object = NULL;
 
@@ -157,19 +158,17 @@ DdHmgLock(HANDLE DdHandle, UCHAR ObjectType, BOOLEAN LockOwned)
     if ( Index < gcMaxDdHmgr )
     {
         pEntry = (PDD_ENTRY)((PBYTE)gpentDdHmgr + (sizeof(DD_ENTRY) * Index));
+
         if ( VerifyObjectOwner(pEntry) )
         {
-            /* FIXME
-            if ( (pEntry->Objt == ObjectType ) &&
-                 (pEntry->FullUnique == (((DWORD)DdHandle >> 21) & 0x7FF) ) &&
-                 (pEntry->pobj->cExclusiveLock == 0) &&
-                 (pEntry->pobj->Tid == PsGetCurrentThread()))
-               {
-                    InterlockedIncrement(&pEntry->pobj->cExclusiveLock);
-                    pEntry->pobj->Tid = PsGetCurrentThread();
-                    Object = pEntry->pobj;
-               }
-           */
+            if ( ( pEntry->Objt == ObjectType ) &&
+                 ( pEntry->FullUnique == (((ULONG)DdHandle >> 21) & 0x7FF) ) &&
+                 ( !pEntry->pobj->cExclusiveLock ) )
+            {
+                InterlockedIncrement((VOID*)&pEntry->pobj->cExclusiveLock);
+                pEntry->pobj->Tid = KeGetCurrentThread();
+                Object = pEntry->pobj;
+            }
         }
     }
 
@@ -179,4 +178,245 @@ DdHmgLock(HANDLE DdHandle, UCHAR ObjectType, BOOLEAN LockOwned)
     }
 
     return Object;
+}
+
+/*++
+* @name DdAllocateObject
+* @implemented
+*
+* The function DdAllocateObject is used internally in dxg.sys
+* It allocates memory for a DX kernel object
+*
+* @param UINT32 oSize
+* Size of memory to be allocated
+* @param UCHAR oType
+* Object type
+* @param BOOLEAN oZeroMemory
+* Zero memory
+*
+* @remarks.
+* Only used internally in dxg.sys
+*/
+PVOID
+FASTCALL
+DdAllocateObject(ULONG objSize, UCHAR objType, BOOLEAN objZeroMemory)
+{
+    PVOID pObject = NULL;
+
+    if (objZeroMemory)
+        pObject = EngAllocMem(FL_ZERO_MEMORY, objSize, ((ULONG)objType << 24) + TAG_DH_0);
+    else
+        pObject = EngAllocMem(0, objSize, ((ULONG)objType << 24) + TAG_DH_0);
+
+    if (!pObject)
+    {
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+    }
+
+    return pObject;
+}
+
+/*++
+* @name DdFreeObject
+* @implemented
+*
+* The function DdFreeObject is used internally in dxg.sys
+* It frees memory of DX kernel object
+*
+* @param PVOID pObject
+* Object memory to be freed
+*
+* @remarks.
+* Only used internally in dxg.sys
+*/
+VOID
+FASTCALL
+DdFreeObject(PVOID pObject)
+{
+    EngFreeMem(pObject);
+}
+
+
+/*++
+* @name DdGetFreeHandle
+* @implemented
+*
+* The function DdGetFreeHandle is used internally in dxg.sys
+* It allocates new handle for specified object type
+*
+* @param UCHAR oType
+* Object type
+*
+* @return
+* Returns handle or 0 if it fails.
+*
+* @remarks.
+* Only used internally in dxg.sys
+*--*/
+HANDLE
+FASTCALL
+DdGetFreeHandle(UCHAR objType)
+{
+    PVOID mAllocMem = NULL;
+    ULONG mAllocEntries = 0;
+    PDD_ENTRY pEntry = NULL;
+    ULONG retVal;
+    ULONG index;
+
+    // check if memory is allocated
+    if (!gpentDdHmgr)
+        return 0;
+
+    // check if we reached maximum handle index
+    if (gcMaxDdHmgr == DDHMG_HANDLE_LIMIT)
+        return 0;
+
+    // check if we have free handle to reuse
+    if (ghFreeDdHmgr)
+    {
+       index = ghFreeDdHmgr;
+       pEntry = (PDD_ENTRY)((PLONG)gpentDdHmgr + (sizeof(DD_ENTRY) * index));
+
+       // put next free index to our global variable
+       ghFreeDdHmgr = pEntry->NextFree;             
+
+       // build handle 
+       pEntry->FullUnique = objType | 8;
+       retVal = (pEntry->FullUnique << 21) | index;
+       return (HANDLE)retVal;
+    }
+
+    // if all pre-allocated memory is already used then allocate more
+    if (gcSizeDdHmgr == gcMaxDdHmgr)
+    {
+        // allocate buffer for next 1024 handles
+        mAllocEntries = gcSizeDdHmgr + 1024;
+        mAllocMem = EngAllocMem(FL_ZERO_MEMORY, sizeof(DD_ENTRY) * (mAllocEntries), TAG_THDD);
+        if (!mAllocMem)
+            return 0;
+
+        memmove(&mAllocMem, gpentDdHmgr, sizeof(DD_ENTRY) * gcSizeDdHmgr);
+        gcSizeDdHmgr = mAllocEntries;
+        gpentDdHmgrLast = gpentDdHmgr;
+        EngFreeMem(gpentDdHmgr);
+        gpentDdHmgr = mAllocMem;
+    }
+
+    pEntry = (PDD_ENTRY)((PLONG)gpentDdHmgr + (sizeof(DD_ENTRY) * gcMaxDdHmgr));
+
+    // build handle 
+    pEntry->FullUnique = objType | 8;
+    retVal = (pEntry->FullUnique << 21) | gcMaxDdHmgr;
+    gcMaxDdHmgr = gcMaxDdHmgr + 1;
+
+    return (HANDLE)retVal;
+}
+
+/*++
+* @name DdHmgAlloc
+* @implemented
+*
+* The function DdHmgAlloc is used internally in dxg.sys
+* It allocates object
+*
+* @param ULONG objSize
+* Size of memory to be allocated
+* @param CHAR objType
+* Object type
+* @param UINT objFlags
+* Object flags
+*
+* @return
+* Handle if object is not locked by objFlags
+* Object if lock is set in objFlags
+* 0 if it fails.
+*
+* @remarks.
+* Only used internally in dxg.sys
+*--*/
+HANDLE
+FASTCALL
+DdHmgAlloc(ULONG objSize, CHAR objType, UINT objFlags)
+{
+    PVOID pObject = NULL;
+    HANDLE DdHandle = NULL;
+    PDD_ENTRY pEntry = NULL;
+    DWORD Index;
+
+    pObject = DdAllocateObject(objSize, objType, TRUE);
+    if (!pObject)
+        return 0;
+
+    EngAcquireSemaphore(ghsemHmgr);
+
+    /* Get next free handle */
+    DdHandle = DdGetFreeHandle(objType);
+
+    if (DdHandle)
+    {
+        Index = DDHMG_HTOI(DdHandle);
+
+        pEntry = (PDD_ENTRY)((PLONG)gpentDdHmgr + (sizeof(DD_ENTRY) * Index));
+
+        pEntry->pobj = pObject;
+        pEntry->Objt = objType;
+
+        pEntry->Pid = (HANDLE)(((ULONG)PsGetCurrentProcessId() & 0xFFFFFFFC) | ((ULONG)(pEntry->Pid) & 1));
+
+        if (objFlags & 1)
+            pEntry->pobj->Tid = KeGetCurrentThread();
+
+        pEntry->pobj->cExclusiveLock = objFlags & 1;
+        pEntry->pobj->hHmgr = DdHandle;
+        
+        EngReleaseSemaphore(ghsemHmgr);
+
+        /* Return handle if object not locked */
+        if (!(objFlags & 1))
+           return DdHandle;
+
+        return (HANDLE)pEntry;
+    }
+
+    EngReleaseSemaphore(ghsemHmgr);
+    DdFreeObject(pObject);
+    return 0;
+}
+
+/*++
+* @name DdHmgFree
+* @implemented
+*
+* The function DdHmgFree is used internally in dxg.sys
+* It frees DX object and memory allocated to it
+*
+* @param HANDLE DdHandle
+* DX object handle
+*
+* @remarks.
+* Only used internally in dxg.sys
+*--*/
+VOID
+FASTCALL
+DdHmgFree(HANDLE DdHandle)
+{
+    PDD_ENTRY pEntry = NULL;
+
+    DWORD Index = DDHMG_HTOI(DdHandle);
+
+    EngAcquireSemaphore(ghsemHmgr);
+
+    pEntry = (PDD_ENTRY)((PLONG)gpentDdHmgr + (sizeof(DD_ENTRY) * Index));
+
+    // check if we have object that should be freed
+    if (pEntry->pobj)
+        DdFreeObject(pEntry->pobj);
+
+    pEntry->NextFree = ghFreeDdHmgr;
+
+    // reset process ID
+    pEntry->Pid = (HANDLE)((DWORD)pEntry->Pid & 1);
+    ghFreeDdHmgr = Index;
+
+    EngReleaseSemaphore(ghsemHmgr);
 }

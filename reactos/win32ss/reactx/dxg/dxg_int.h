@@ -10,6 +10,10 @@
 #define INTERNAL_CALL NTAPI
 #define NT_BUILD_ENVIRONMENT
 
+#define DDHMG_HANDLE_LIMIT 0x200000
+#define DDHMG_HTOI(DdHandle) ((DWORD)DdHandle & (DDHMG_HANDLE_LIMIT-1))
+
+
 #include <windef.h>
 #include <winerror.h>
 #include <wingdi.h>
@@ -45,22 +49,11 @@ typedef struct _DD_BASEOBJECT
     union
     {
         PDD_BASEOBJECT pobj;
-        HANDLE hFree;
+        ULONG NextFree;
     };
-    union
-    {
-         ULONG ulObj;
-         struct
-         {
-                USHORT Count;
-                USHORT Lock;
-                HANDLE Pid;
-         };
-    } ObjectOwner;
+    HANDLE Pid;
     USHORT FullUnique;
     UCHAR Objt;
-    UCHAR Flags;
-    PVOID pUser;
 } DD_ENTRY, *PDD_ENTRY;
 
 typedef struct _EDD_SURFACE_LOCAL
@@ -80,7 +73,7 @@ extern ULONG gcSizeDdHmgr;
 extern PDD_ENTRY gpentDdHmgr;
 extern ULONG gcMaxDdHmgr;
 extern PDD_ENTRY gpentDdHmgrLast;
-extern HANDLE ghFreeDdHmgr;
+extern ULONG ghFreeDdHmgr;
 extern HSEMAPHORE ghsemHmgr;
 extern LONG gcDummyPageRefCnt;
 extern HSEMAPHORE ghsemDummyPage;
