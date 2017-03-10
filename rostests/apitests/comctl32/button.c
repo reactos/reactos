@@ -491,54 +491,54 @@ MSG_ENTRY erase_sequence[]={
     {1, WM_ERASEBKGND},
     {1, WM_PRINTCLIENT},
     {1, WM_CTLCOLORBTN},
-    {1, WM_NOTIFY, SENT, 0, -12},
-    {1, WM_NOTIFY, SENT, 0, -12},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
     {0,0}};
 
 MSG_ENTRY erase_nonthemed_sequence[]={
     {2, WM_PAINT, POST},
     {1, WM_CTLCOLORBTN},
-    {1, WM_NOTIFY, SENT, 0, -12},
-    {1, WM_NOTIFY, SENT, 0, -12},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
     {0,0}};
 
 MSG_ENTRY printclnt_nonthemed_sequence[]={
     {2, WM_PRINTCLIENT},
     {1, WM_CTLCOLORBTN},
-    {1, WM_NOTIFY, SENT, 0, -12},
-    {1, WM_NOTIFY, SENT, 0, -12},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
     {0,0}};
 
 MSG_ENTRY printclnt_sequence[]={
     {2, WM_PRINTCLIENT},
     {1, WM_CTLCOLORBTN},
-    {1, WM_NOTIFY, SENT, 0, -12},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
     {0,0}};
 
 MSG_ENTRY pseudomove_sequence[]={
     {2, WM_MOUSEMOVE},
-    {1, WM_NOTIFY, SENT, 0, -1249},
+    {1, WM_NOTIFY, SENT, 0, BCN_HOTITEMCHANGE},
     {2, WM_MOUSELEAVE, POST},
-    {1, WM_NOTIFY, SENT, 0, -1249},
+    {1, WM_NOTIFY, SENT, 0, BCN_HOTITEMCHANGE},
     {2, WM_PAINT, POST},
     {2, WM_ERASEBKGND},
     {1, WM_ERASEBKGND},
     {1, WM_PRINTCLIENT},
     {1, WM_CTLCOLORBTN},
-    {1, WM_NOTIFY, SENT, 0, -12},
-    {1, WM_NOTIFY, SENT, 0, -12},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
     {0,0}};
 
 MSG_ENTRY pseudomove_nonthemed_sequence[]={
     {2, WM_MOUSEMOVE},
-    {1, WM_NOTIFY, SENT, 0, -1249},
+    {1, WM_NOTIFY, SENT, 0, BCN_HOTITEMCHANGE},
     {2, WM_MOUSELEAVE, POST},
-    {1, WM_NOTIFY, SENT, 0, -1249},
+    {1, WM_NOTIFY, SENT, 0, BCN_HOTITEMCHANGE},
     {2, WM_PAINT, POST},
     {2, WM_ERASEBKGND},
     {1, WM_CTLCOLORBTN},
-    {1, WM_NOTIFY, SENT, 0, -12},
-    {1, WM_NOTIFY, SENT, 0, -12},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
     {0,0}};
 
 MSG_ENTRY pseudohover_sequence[]={
@@ -554,14 +554,14 @@ MSG_ENTRY mouseenter_sequence[]={
     {2, WM_SETCURSOR},
     {1, WM_SETCURSOR},
     {2, WM_MOUSEMOVE, POST},
-    {1, WM_NOTIFY, SENT, 0, -1249},
+    {1, WM_NOTIFY, SENT, 0, BCN_HOTITEMCHANGE},
     {2, WM_PAINT, POST},
     {2, WM_ERASEBKGND},
     {1, WM_ERASEBKGND},
     {1, WM_PRINTCLIENT},
     {1, WM_CTLCOLORBTN},
-    {1, WM_NOTIFY, SENT, 0, -12},
-    {1, WM_NOTIFY, SENT, 0, -12},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
     {0,0}};
 
 MSG_ENTRY mouseenter_nonthemed_sequence[]={
@@ -569,12 +569,12 @@ MSG_ENTRY mouseenter_nonthemed_sequence[]={
     {2, WM_SETCURSOR},
     {1, WM_SETCURSOR},
     {2, WM_MOUSEMOVE, POST},
-    {1, WM_NOTIFY, SENT, 0, -1249},
+    {1, WM_NOTIFY, SENT, 0, BCN_HOTITEMCHANGE},
     {2, WM_PAINT, POST},
     {2, WM_ERASEBKGND},
     {1, WM_CTLCOLORBTN},
-    {1, WM_NOTIFY, SENT, 0, -12},
-    {1, WM_NOTIFY, SENT, 0, -12},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
     {0,0}};
 
 MSG_ENTRY mousemove_sequence[]={
@@ -586,24 +586,24 @@ MSG_ENTRY mousemove_sequence[]={
 
 MSG_ENTRY mouseleave_sequence[]={
     {2, WM_MOUSELEAVE, POST},
-    {1, WM_NOTIFY, SENT, 0, -1249},
+    {1, WM_NOTIFY, SENT, 0, BCN_HOTITEMCHANGE},
     {2, WM_PAINT, POST},
     {2, WM_ERASEBKGND},
     {1, WM_ERASEBKGND},
     {1, WM_PRINTCLIENT},
     {1, WM_CTLCOLORBTN},
-    {1, WM_NOTIFY, SENT, 0, -12},
-    {1, WM_NOTIFY, SENT, 0, -12},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
     {0,0}};
 
 MSG_ENTRY mouseleave_nonthemed_sequence[]={
     {2, WM_MOUSELEAVE, POST},
-    {1, WM_NOTIFY, SENT, 0, -1249},
+    {1, WM_NOTIFY, SENT, 0, BCN_HOTITEMCHANGE},
     {2, WM_PAINT, POST},
     {2, WM_ERASEBKGND},
     {1, WM_CTLCOLORBTN},
-    {1, WM_NOTIFY, SENT, 0, -12},
-    {1, WM_NOTIFY, SENT, 0, -12},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
     {0,0}};
 
 void Test_MessagesNonThemed()
