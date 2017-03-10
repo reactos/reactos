@@ -932,6 +932,8 @@ UserGetDesktopDC(ULONG DcType, BOOL EmptyDC, BOOL ValidatehWnd)
     PWND DesktopObject = 0;
     HDC DesktopHDC = 0;
 
+    UserEnterExclusive();
+
     if (DcType == DC_TYPE_DIRECT)
     {
         DesktopObject = UserGetDesktopWindow();
@@ -942,6 +944,8 @@ UserGetDesktopDC(ULONG DcType, BOOL EmptyDC, BOOL ValidatehWnd)
         PMONITOR pMonitor = UserGetPrimaryMonitor();
         DesktopHDC = IntGdiCreateDisplayDC(pMonitor->hDev, DcType, EmptyDC);
     }
+
+    UserLeave();
 
     return DesktopHDC;
 }
