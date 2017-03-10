@@ -608,7 +608,10 @@ MSG_ENTRY mouseleave_nonthemed_sequence[]={
 
 void Test_MessagesNonThemed()
 {
+    DWORD state;
+
     MOVE_CURSOR(0,0);
+    EMPTY_CACHE();
 
     RegisterSimpleClass(TestProc, L"testClass");
     hWnd1 = CreateWindowW(L"testClass", L"Test parent", WS_POPUP | WS_VISIBLE, 100, 100, 200, 200, 0, NULL, NULL, NULL);
@@ -659,13 +662,25 @@ void Test_MessagesNonThemed()
     FlushMessages();
     COMPARE_CACHE(pseudoleave_sequence);
 
+    state = SendMessageW(hWnd2, BM_GETSTATE,0,0);
+    ok(state == 0, "Expected state 0, got %lu", state);
+    EMPTY_CACHE();
+
     MOVE_CURSOR(150,150);
     FlushMessages();
     COMPARE_CACHE(mouseenter_nonthemed_sequence);
 
+    state = SendMessageW(hWnd2, BM_GETSTATE,0,0);
+    ok(state == BST_HOT, "Expected state BST_HOT, got %lu", state);
+    EMPTY_CACHE();
+
     MOVE_CURSOR(151,151);
     FlushMessages();
     COMPARE_CACHE(mousemove_sequence);
+
+    state = SendMessageW(hWnd2, BM_GETSTATE,0,0);
+    ok(state == BST_HOT, "Expected state BST_HOT, got %lu", state);
+    EMPTY_CACHE();
 
     MOVE_CURSOR(0,0);
     FlushMessages();
@@ -673,13 +688,20 @@ void Test_MessagesNonThemed()
     FlushMessages();
     COMPARE_CACHE(mouseleave_nonthemed_sequence);
 
+    state = SendMessageW(hWnd2, BM_GETSTATE,0,0);
+    ok(state == 0, "Expected state 0, got %lu", state);
+    EMPTY_CACHE();
+
     DestroyWindow(hWnd1);
     DestroyWindow(hWnd2);
 }
 
 void Test_MessagesThemed()
 {
+    DWORD state;
+
     MOVE_CURSOR(0,0);
+    EMPTY_CACHE();
 
     RegisterSimpleClass(TestProc, L"testClass");
     hWnd1 = CreateWindowW(L"testClass", L"Test parent", WS_POPUP | WS_VISIBLE, 100, 100, 200, 200, 0, NULL, NULL, NULL);
@@ -728,19 +750,35 @@ void Test_MessagesThemed()
     FlushMessages();
     COMPARE_CACHE(pseudoleave_sequence);
 
+    state = SendMessageW(hWnd2, BM_GETSTATE,0,0);
+    ok(state == 0, "Expected state 0, got %lu", state);
+    EMPTY_CACHE();
+
     MOVE_CURSOR(150,150);
     FlushMessages();
     COMPARE_CACHE(mouseenter_sequence);
 
+    state = SendMessageW(hWnd2, BM_GETSTATE,0,0);
+    ok(state == BST_HOT, "Expected state BST_HOT, got %lu", state);
+    EMPTY_CACHE();
+
     MOVE_CURSOR(151,151);
     FlushMessages();
     COMPARE_CACHE(mousemove_sequence);
+
+    state = SendMessageW(hWnd2, BM_GETSTATE,0,0);
+    ok(state == BST_HOT, "Expected state BST_HOT, got %lu", state);
+    EMPTY_CACHE();
 
     MOVE_CURSOR(0,0);
     FlushMessages();
     COMPARE_CACHE(empty_chain);
     FlushMessages();
     COMPARE_CACHE(mouseleave_sequence);
+
+    state = SendMessageW(hWnd2, BM_GETSTATE,0,0);
+    ok(state == 0, "Expected state 0, got %lu", state);
+    EMPTY_CACHE();
 
     DestroyWindow(hWnd1);
     DestroyWindow(hWnd2);
