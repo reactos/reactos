@@ -6,9 +6,13 @@
  */
 
 #include "wine/test.h"
+#include <stdio.h>
 #include <windows.h>
 #include <commctrl.h>
 #include <uxtheme.h>
+#include <undocuser.h>
+#include <msgtrace.h>
+#include <user32testhelpers.h>
 
 #define ok_rect(rc, l,r,t,b) ok((rc.left == (l)) && (rc.right == (r)) && (rc.top == (t)) && (rc.bottom == (b)), "Wrong rect. expected %d, %d, %d, %d got %ld, %ld, %ld, %ld\n", l,t,r,b, rc.left, rc.top, rc.right, rc.bottom)
 #define ok_size(s, width, height) ok((s.cx == (width) && s.cy == (height)), "Expected size (%lu,%lu) got (%lu,%lu)\n", (LONG)width, (LONG)height, s.cx, s.cy)
@@ -408,11 +412,352 @@ void Test_GetIdealSizeNoThemes()
     DestroyWindow(hwnd2);
 }
 
+
+HWND hWnd1, hWnd2;
+
+#define MOVE_CURSOR(x,y) mouse_event(MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE ,                           \
+                                     x*(65535/GetSystemMetrics(SM_CXVIRTUALSCREEN)),                     \
+                                     y*(65535/GetSystemMetrics(SM_CYVIRTUALSCREEN)) , 0,0);
+
+static int get_iwnd(HWND hWnd)
+{
+    if(hWnd == hWnd1) return 1;
+    else if(hWnd == hWnd2) return 2;
+    else return 0;
+}
+
+static LRESULT CALLBACK subclass_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR id, DWORD_PTR ref_data)
+{
+    int iwnd = get_iwnd(hwnd);
+
+    if(message > WM_USER || !iwnd )
+        return DefSubclassProc(hwnd, message, wParam, lParam);
+
+    switch(message)
+    {
+    case WM_IME_SETCONTEXT:
+    case WM_IME_NOTIFY :
+    case WM_GETICON :
+    case WM_GETTEXT:
+    case WM_GETTEXTLENGTH:
+        break;
+    case WM_NOTIFY:
+    {
+        NMHDR* pnmhdr = (NMHDR*)lParam;
+        RECORD_MESSAGE(iwnd, message, SENT, pnmhdr->idFrom,pnmhdr->code);
+        break;
+    }
+    default:
+        RECORD_MESSAGE(iwnd, message, SENT, 0,0);
+    }
+    return DefSubclassProc(hwnd, message, wParam, lParam);
+}
+
+static LRESULT CALLBACK TestProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    int iwnd = get_iwnd(hwnd);
+
+    if (iwnd != 0  && message == WM_NOTIFY)
+    {
+        NMHDR* pnmhdr = (NMHDR*)lParam;
+        RECORD_MESSAGE(iwnd, message, SENT, pnmhdr->idFrom,pnmhdr->code);
+    }
+    else if (iwnd != 0 && message < WM_USER && message != WM_GETICON)
+    {
+        RECORD_MESSAGE(iwnd, message, SENT, 0,0);
+    }
+
+    return DefWindowProc(hwnd, message, wParam, lParam);
+}
+
+static void FlushMessages()
+{
+    MSG msg;
+
+    while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE ))
+    {
+        int iwnd = get_iwnd(msg.hwnd);
+        if(iwnd)
+        {
+            if(msg.message <= WM_USER && iwnd != 0)
+                RECORD_MESSAGE(iwnd, msg.message, POST,0,0);
+        }
+        DispatchMessageW( &msg );
+    }
+}
+
+MSG_ENTRY erase_sequence[]={
+    {2, WM_PAINT, POST},
+    {1, WM_ERASEBKGND},
+    {1, WM_PRINTCLIENT},
+    {1, WM_CTLCOLORBTN},
+    {1, WM_NOTIFY, SENT, 0, -12},
+    {1, WM_NOTIFY, SENT, 0, -12},
+    {0,0}};
+
+MSG_ENTRY erase_nonthemed_sequence[]={
+    {2, WM_PAINT, POST},
+    {1, WM_CTLCOLORBTN},
+    {1, WM_NOTIFY, SENT, 0, -12},
+    {1, WM_NOTIFY, SENT, 0, -12},
+    {0,0}};
+
+MSG_ENTRY printclnt_nonthemed_sequence[]={
+    {2, WM_PRINTCLIENT},
+    {1, WM_CTLCOLORBTN},
+    {1, WM_NOTIFY, SENT, 0, -12},
+    {1, WM_NOTIFY, SENT, 0, -12},
+    {0,0}};
+
+MSG_ENTRY printclnt_sequence[]={
+    {2, WM_PRINTCLIENT},
+    {1, WM_CTLCOLORBTN},
+    {1, WM_NOTIFY, SENT, 0, -12},
+    {0,0}};
+
+MSG_ENTRY pseudomove_sequence[]={
+    {2, WM_MOUSEMOVE},
+    {1, WM_NOTIFY, SENT, 0, -1249},
+    {2, WM_MOUSELEAVE, POST},
+    {1, WM_NOTIFY, SENT, 0, -1249},
+    {2, WM_PAINT, POST},
+    {2, WM_ERASEBKGND},
+    {1, WM_ERASEBKGND},
+    {1, WM_PRINTCLIENT},
+    {1, WM_CTLCOLORBTN},
+    {1, WM_NOTIFY, SENT, 0, -12},
+    {1, WM_NOTIFY, SENT, 0, -12},
+    {0,0}};
+
+MSG_ENTRY pseudomove_nonthemed_sequence[]={
+    {2, WM_MOUSEMOVE},
+    {1, WM_NOTIFY, SENT, 0, -1249},
+    {2, WM_MOUSELEAVE, POST},
+    {1, WM_NOTIFY, SENT, 0, -1249},
+    {2, WM_PAINT, POST},
+    {2, WM_ERASEBKGND},
+    {1, WM_CTLCOLORBTN},
+    {1, WM_NOTIFY, SENT, 0, -12},
+    {1, WM_NOTIFY, SENT, 0, -12},
+    {0,0}};
+
+MSG_ENTRY pseudohover_sequence[]={
+    {2, WM_MOUSEHOVER},
+    {0,0}};
+
+MSG_ENTRY pseudoleave_sequence[]={
+    {2, WM_MOUSELEAVE},
+    {0,0}};
+
+MSG_ENTRY mouseenter_sequence[]={
+    {2, WM_NCHITTEST},
+    {2, WM_SETCURSOR},
+    {1, WM_SETCURSOR},
+    {2, WM_MOUSEMOVE, POST},
+    {1, WM_NOTIFY, SENT, 0, -1249},
+    {2, WM_PAINT, POST},
+    {2, WM_ERASEBKGND},
+    {1, WM_ERASEBKGND},
+    {1, WM_PRINTCLIENT},
+    {1, WM_CTLCOLORBTN},
+    {1, WM_NOTIFY, SENT, 0, -12},
+    {1, WM_NOTIFY, SENT, 0, -12},
+    {0,0}};
+
+MSG_ENTRY mouseenter_nonthemed_sequence[]={
+    {2, WM_NCHITTEST},
+    {2, WM_SETCURSOR},
+    {1, WM_SETCURSOR},
+    {2, WM_MOUSEMOVE, POST},
+    {1, WM_NOTIFY, SENT, 0, -1249},
+    {2, WM_PAINT, POST},
+    {2, WM_ERASEBKGND},
+    {1, WM_CTLCOLORBTN},
+    {1, WM_NOTIFY, SENT, 0, -12},
+    {1, WM_NOTIFY, SENT, 0, -12},
+    {0,0}};
+
+MSG_ENTRY mousemove_sequence[]={
+    {2, WM_NCHITTEST},
+    {2, WM_SETCURSOR},
+    {1, WM_SETCURSOR},
+    {2, WM_MOUSEMOVE, POST},
+    {0,0}};
+
+MSG_ENTRY mouseleave_sequence[]={
+    {2, WM_MOUSELEAVE, POST},
+    {1, WM_NOTIFY, SENT, 0, -1249},
+    {2, WM_PAINT, POST},
+    {2, WM_ERASEBKGND},
+    {1, WM_ERASEBKGND},
+    {1, WM_PRINTCLIENT},
+    {1, WM_CTLCOLORBTN},
+    {1, WM_NOTIFY, SENT, 0, -12},
+    {1, WM_NOTIFY, SENT, 0, -12},
+    {0,0}};
+
+MSG_ENTRY mouseleave_nonthemed_sequence[]={
+    {2, WM_MOUSELEAVE, POST},
+    {1, WM_NOTIFY, SENT, 0, -1249},
+    {2, WM_PAINT, POST},
+    {2, WM_ERASEBKGND},
+    {1, WM_CTLCOLORBTN},
+    {1, WM_NOTIFY, SENT, 0, -12},
+    {1, WM_NOTIFY, SENT, 0, -12},
+    {0,0}};
+
+void Test_MessagesNonThemed()
+{
+    MOVE_CURSOR(0,0);
+
+    RegisterSimpleClass(TestProc, L"testClass");
+    hWnd1 = CreateWindowW(L"testClass", L"Test parent", WS_POPUP | WS_VISIBLE, 100, 100, 200, 200, 0, NULL, NULL, NULL);
+    ok (hWnd1 != NULL, "Expected CreateWindowW to succeed\n");
+    SetWindowTheme(hWnd1, L"", L"");
+    UpdateWindow(hWnd1);
+
+    hWnd2 = CreateWindowW(L"Button", L"test button", /*BS_RADIOBUTTON | */WS_CHILD | WS_VISIBLE, 0, 0, 100, 100, hWnd1, NULL, NULL, NULL);
+    ok (hWnd2 != NULL, "Expected CreateWindowW to succeed\n");
+    SetWindowTheme(hWnd2, L"", L"");
+    SetWindowSubclass(hWnd2, subclass_proc, 0, 0);
+    UpdateWindow(hWnd2);
+
+    FlushMessages();
+    EMPTY_CACHE();
+
+    RedrawWindow(hWnd2, NULL, NULL, RDW_ERASE);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    RedrawWindow(hWnd2, NULL, NULL, RDW_FRAME);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    RedrawWindow(hWnd2, NULL, NULL, RDW_INTERNALPAINT);
+    FlushMessages();
+    COMPARE_CACHE(erase_nonthemed_sequence);
+
+    RedrawWindow(hWnd2, NULL, NULL, RDW_INVALIDATE);
+    FlushMessages();
+    COMPARE_CACHE(erase_nonthemed_sequence);
+
+    SendMessageW(hWnd2, WM_PRINTCLIENT, 0, PRF_ERASEBKGND);
+    FlushMessages();
+    COMPARE_CACHE(printclnt_nonthemed_sequence);
+
+    SendMessageW(hWnd2, WM_MOUSEMOVE, 0, 0);
+    FlushMessages();
+    COMPARE_CACHE(pseudomove_nonthemed_sequence);
+
+    SendMessageW(hWnd2, WM_MOUSEHOVER, 0, 0);
+    FlushMessages();
+    COMPARE_CACHE(pseudohover_sequence);
+
+    SendMessageW(hWnd2, WM_MOUSELEAVE, 0, 0);
+    FlushMessages();
+    COMPARE_CACHE(pseudoleave_sequence);
+
+    MOVE_CURSOR(150,150);
+    FlushMessages();
+    COMPARE_CACHE(mouseenter_nonthemed_sequence);
+
+    MOVE_CURSOR(151,151);
+    FlushMessages();
+    COMPARE_CACHE(mousemove_sequence);
+
+    MOVE_CURSOR(0,0);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+    FlushMessages();
+    COMPARE_CACHE(mouseleave_nonthemed_sequence);
+
+    DestroyWindow(hWnd1);
+    DestroyWindow(hWnd2);
+}
+
+void Test_MessagesThemed()
+{
+    MOVE_CURSOR(0,0);
+
+    RegisterSimpleClass(TestProc, L"testClass");
+    hWnd1 = CreateWindowW(L"testClass", L"Test parent", WS_POPUP | WS_VISIBLE, 100, 100, 200, 200, 0, NULL, NULL, NULL);
+    ok (hWnd1 != NULL, "Expected CreateWindowW to succeed\n");
+    UpdateWindow(hWnd1);
+
+    hWnd2 = CreateWindowW(L"Button", L"test button", /*BS_RADIOBUTTON | */WS_CHILD | WS_VISIBLE, 0, 0, 100, 100, hWnd1, NULL, NULL, NULL);
+    ok (hWnd2 != NULL, "Expected CreateWindowW to succeed\n");
+    SetWindowSubclass(hWnd2, subclass_proc, 0, 0);
+    UpdateWindow(hWnd2);
+
+    FlushMessages();
+    EMPTY_CACHE();
+
+    RedrawWindow(hWnd2, NULL, NULL, RDW_ERASE);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    RedrawWindow(hWnd2, NULL, NULL, RDW_FRAME);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+
+    RedrawWindow(hWnd2, NULL, NULL, RDW_INTERNALPAINT);
+    FlushMessages();
+    COMPARE_CACHE(erase_sequence);
+
+    RedrawWindow(hWnd2, NULL, NULL, RDW_INVALIDATE);
+    FlushMessages();
+    COMPARE_CACHE(erase_sequence);
+
+    SendMessageW(hWnd2, WM_PRINTCLIENT, 0, PRF_ERASEBKGND);
+    FlushMessages();
+    COMPARE_CACHE(printclnt_sequence);
+
+    SendMessageW(hWnd2, WM_MOUSEMOVE, 0, 0);
+    FlushMessages();
+    COMPARE_CACHE(pseudomove_sequence);
+
+    SendMessageW(hWnd2, WM_MOUSEHOVER, 0, 0);
+    FlushMessages();
+    COMPARE_CACHE(pseudohover_sequence);
+
+    SendMessageW(hWnd2, WM_MOUSELEAVE, 0, 0);
+    FlushMessages();
+    COMPARE_CACHE(pseudoleave_sequence);
+
+    MOVE_CURSOR(150,150);
+    FlushMessages();
+    COMPARE_CACHE(mouseenter_sequence);
+
+    MOVE_CURSOR(151,151);
+    FlushMessages();
+    COMPARE_CACHE(mousemove_sequence);
+
+    MOVE_CURSOR(0,0);
+    FlushMessages();
+    COMPARE_CACHE(empty_chain);
+    FlushMessages();
+    COMPARE_CACHE(mouseleave_sequence);
+
+    DestroyWindow(hWnd1);
+    DestroyWindow(hWnd2);
+}
+
 START_TEST(button)
 {
     LoadLibraryW(L"comctl32.dll"); /* same as statically linking to comctl32 and doing InitCommonControls */
     Test_TextMargin();
     Test_Imagelist();
     Test_GetIdealSizeNoThemes();
+
+    Test_MessagesNonThemed();
+    if (IsThemeActive())
+        Test_MessagesThemed();
+    else
+        skip("No active theme, skipping Test_MessagesThemed\n");
+
 }
 
