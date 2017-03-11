@@ -764,6 +764,10 @@ void Test_MessagesThemed()
     FlushMessages();
     COMPARE_CACHE(printclnt_sequence);
 
+    SendMessageW(hWnd2, WM_PRINTCLIENT, 0, PRF_CLIENT);
+    FlushMessages();
+    COMPARE_CACHE(printclnt_sequence);
+
     SendMessageW(hWnd2, WM_MOUSEMOVE, 0, 0);
     FlushMessages();
     COMPARE_CACHE(pseudomove_sequence);
