@@ -508,30 +508,35 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         case WM_THEMECHANGED:
             CloseThemeData (GetWindowTheme(hWnd));
             OpenThemeData(hWnd, WC_BUTTONW);
-            InvalidateRect(hWnd, NULL, FALSE);
+            InvalidateRect(hWnd, NULL, TRUE);
             break;
-        case WM_MOUSEHOVER:
-        {
-            int state = (int)SendMessageW(hWnd, BM_GETSTATE, 0, 0);
-            set_button_state(hWnd, state|BST_HOT);
-            InvalidateRect(hWnd, NULL, FALSE);
-            break;
-        }
         case WM_MOUSELEAVE:
         {
-            int state = (int)SendMessageW(hWnd, BM_GETSTATE, 0, 0);
-            set_button_state(hWnd, state&(~BST_HOT));
-            InvalidateRect(hWnd, NULL, FALSE);
+            state = get_button_state( hWnd );
+            if (state & BST_HOT)
+            {
+                state &= ~BST_HOT;
+                set_button_state(hWnd, state);
+                InvalidateRect(hWnd, NULL, TRUE);
+            }
             break;
         }
         case WM_MOUSEMOVE:
         {
             TRACKMOUSEEVENT mouse_event;
+            state = get_button_state( hWnd );
+            if ((state & BST_HOT) == 0)
+            {
+                state |= BST_HOT;
+                set_button_state(hWnd, state);
+                InvalidateRect(hWnd, NULL, TRUE);
+            }
+
             mouse_event.cbSize = sizeof(TRACKMOUSEEVENT);
             mouse_event.dwFlags = TME_QUERY;
-            if(!TrackMouseEvent(&mouse_event) || !(mouse_event.dwFlags&(TME_HOVER|TME_LEAVE)))
+            if(!TrackMouseEvent(&mouse_event) || !(mouse_event.dwFlags&TME_LEAVE))
             {
-                mouse_event.dwFlags = TME_HOVER|TME_LEAVE;
+                mouse_event.dwFlags = TME_LEAVE;
                 mouse_event.hwndTrack = hWnd;
                 mouse_event.dwHoverTime = 1;
                 TrackMouseEvent(&mouse_event);

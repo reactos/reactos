@@ -117,7 +117,7 @@ static void PB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
     GetClientRect(hwnd, &bgRect);
     GetThemeBackgroundContentRect(theme, hDC, BP_PUSHBUTTON, state, &bgRect, &textRect);
 
-    if (prfFlag == 0 || (prfFlag & PRF_ERASEBKGND))
+    if (prfFlag == 0)
     {
         if (IsThemeBackgroundPartiallyTransparent(theme, BP_PUSHBUTTON, state))
             DrawThemeParentBackground(hwnd, hDC, NULL);
@@ -216,7 +216,7 @@ static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
     bgRect.right = bgRect.left + sz.cx;
     textRect.left = bgRect.right + 6;
 
-    if (prfFlag == 0 || (prfFlag & PRF_ERASEBKGND))
+    if (prfFlag == 0)
     {
         DrawThemeParentBackground(hwnd, hDC, NULL);
     }
@@ -290,7 +290,7 @@ static void GB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
     GetThemeBackgroundContentRect(theme, hDC, BP_GROUPBOX, state, &bgRect, &contentRect);
     ExcludeClipRect(hDC, contentRect.left, contentRect.top, contentRect.right, contentRect.bottom);
 
-    if (prfFlag == 0 || (prfFlag & PRF_ERASEBKGND))
+    if (prfFlag == 0)
     {
         if (IsThemeBackgroundPartiallyTransparent(theme, BP_GROUPBOX, state))
             DrawThemeParentBackground(hwnd, hDC, NULL);
