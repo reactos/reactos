@@ -486,7 +486,7 @@ static void FlushMessages()
     }
 }
 
-MSG_ENTRY erase_sequence[]={
+MSG_ENTRY paint_sequence[]={
     {2, WM_PAINT, POST},
     {1, WM_ERASEBKGND},
     {1, WM_PRINTCLIENT},
@@ -495,8 +495,26 @@ MSG_ENTRY erase_sequence[]={
     {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
     {0,0}};
 
-MSG_ENTRY erase_nonthemed_sequence[]={
+MSG_ENTRY paint_nonthemed_sequence[]={
     {2, WM_PAINT, POST},
+    {1, WM_CTLCOLORBTN},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {0,0}};
+
+MSG_ENTRY redraw_sequence[]={
+    {2, WM_PAINT, POST},
+    {2, WM_ERASEBKGND},
+    {1, WM_ERASEBKGND},
+    {1, WM_PRINTCLIENT},
+    {1, WM_CTLCOLORBTN},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
+    {0,0}};
+
+MSG_ENTRY redraw_nonthemed_sequence[]={
+    {2, WM_PAINT, POST},
+    {2, WM_ERASEBKGND},
     {1, WM_CTLCOLORBTN},
     {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
     {1, WM_NOTIFY, SENT, 0, NM_CUSTOMDRAW},
@@ -640,11 +658,15 @@ void Test_MessagesNonThemed()
 
     RedrawWindow(hWnd2, NULL, NULL, RDW_INTERNALPAINT);
     FlushMessages();
-    COMPARE_CACHE(erase_nonthemed_sequence);
+    COMPARE_CACHE(paint_nonthemed_sequence);
 
     RedrawWindow(hWnd2, NULL, NULL, RDW_INVALIDATE);
     FlushMessages();
-    COMPARE_CACHE(erase_nonthemed_sequence);
+    COMPARE_CACHE(paint_nonthemed_sequence);
+
+    RedrawWindow(hWnd2, NULL, NULL, RDW_ERASE | RDW_INVALIDATE);
+    FlushMessages();
+    COMPARE_CACHE(redraw_nonthemed_sequence);
 
     SendMessageW(hWnd2, WM_PRINTCLIENT, 0, PRF_ERASEBKGND);
     FlushMessages();
@@ -728,11 +750,15 @@ void Test_MessagesThemed()
 
     RedrawWindow(hWnd2, NULL, NULL, RDW_INTERNALPAINT);
     FlushMessages();
-    COMPARE_CACHE(erase_sequence);
+    COMPARE_CACHE(paint_sequence);
 
     RedrawWindow(hWnd2, NULL, NULL, RDW_INVALIDATE);
     FlushMessages();
-    COMPARE_CACHE(erase_sequence);
+    COMPARE_CACHE(paint_sequence);
+
+    RedrawWindow(hWnd2, NULL, NULL, RDW_ERASE | RDW_INVALIDATE);
+    FlushMessages();
+    COMPARE_CACHE(redraw_sequence);
 
     SendMessageW(hWnd2, WM_PRINTCLIENT, 0, PRF_ERASEBKGND);
     FlushMessages();
