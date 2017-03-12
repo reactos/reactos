@@ -455,6 +455,9 @@ LRESULT CExplorerBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
         ERR("Can't get IContextMenu interface\n");
         goto Cleanup;
     }
+
+    IUnknown_SetSite(contextMenu, (IDeskBand *)this);
+
     treeMenu = CreatePopupMenu();
     hr = contextMenu->QueryContextMenu(treeMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST,
         CMF_EXPLORE);
@@ -468,7 +471,10 @@ LRESULT CExplorerBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
         x, y, 0, m_hWnd, NULL);
 
     ExecuteCommand(contextMenu, uCommand);
+
 Cleanup:
+    if (contextMenu)
+        IUnknown_SetSite(contextMenu, NULL);
     if (treeMenu)
         DestroyMenu(treeMenu);
     bNavigating = TRUE;
@@ -1192,8 +1198,8 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::Exec(const GUID *pguidCmdGroup, DWORD n
 // *** IServiceProvider methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    /* FIXME: we probably want to handle more services here */
+    return IUnknown_QueryService(pSite, SID_SShellBrowser, riid, ppvObject);
 }
 
 
