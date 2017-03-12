@@ -37,7 +37,7 @@ CAPTION "Waarschuwingen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Low battery alarm", -1, 10, 15, 235, 95
-    CONTROL "Activate &low battery alarm when power level reaches:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 25, 185, 15
+    AUTOCHECKBOX "Activate &low battery alarm when power level reaches:", IDC_ALARM1, 15, 25, 185, 15, WS_TABSTOP
     LTEXT "Onbekend", IDC_ALARMVALUE1, 200, 28, 40, 10
     LTEXT "0%", -1, 20, 40, 15, 15
     CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 30, 40, 170, 15
@@ -50,7 +50,7 @@ BEGIN
     LTEXT "Run Program:", -1, 95, 90, 50, 10
     LTEXT "Onbekend", IDC_ALARMPROG1, 150, 90, 40, 10
     GROUPBOX "Critical battery alarm", -1, 10, 115, 235, 95
-    CONTROL "Activate &low battery alarm when power level reaches:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 125, 185, 15
+    AUTOCHECKBOX "Activate &low battery alarm when power level reaches:", IDC_ALARM2, 15, 125, 185, 15, WS_TABSTOP
     LTEXT "Onbekend", IDC_ALARMVALUE2, 200, 128, 40, 10
     LTEXT "0%", -1, 20, 140, 15, 15
     CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 30, 140, 170, 15
@@ -72,9 +72,9 @@ BEGIN
     ICON IDI_ACDC, IDI_ACDC, 5, 5, 20, 20
     LTEXT "Selecteer de energiebesparende instellingen die u wilt gebruiken.", -1, 30, 5, 205, 20
     GROUPBOX "Opties", -1, 5, 35, 225, 55
-    CONTROL "&Pictogram altijd in het systeemvak weergeven", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 45, 200, 10
-    CONTROL "&Wachtwoord vragen als de computer uit stand-by wordt gehaald", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 55, 200, 10
-    CONTROL "&Beeldscherm dimmen als de computer op batterijen werkt.", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 65, 200, 10
+    AUTOCHECKBOX "&Pictogram altijd in het systeemvak weergeven", IDC_SYSTRAYBATTERYMETER, 15, 45, 200, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Wachtwoord vragen als de computer uit stand-by wordt gehaald", IDC_PASSWORDLOGON, 15, 55, 200, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Beeldscherm dimmen als de computer op batterijen werkt.", IDC_VIDEODIMDISPLAY, 15, 65, 200, 10, WS_TABSTOP
     GROUPBOX "Energie knoppen", -1, 5, 100, 230, 105
     LTEXT "W&anneer ik het deksel van mijn computer sluit:", IDC_SLIDCLOSE, 10, 110, 210, 10
     COMBOBOX IDC_LIDCLOSE, 10, 120, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
@@ -92,7 +92,7 @@ BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 5, 5, 20, 20
     LTEXT "Als de computer in de slaapstand gaat, wordt de hele inhoud van het geheugen op schijf opgeslagen, waarna de computer wordt afgesloten. Zodra de computer uit de slaapstand komt, wordt de oude situatie hersteld.", -1, 35, 5, 195, 35
     GROUPBOX "Slaapstand", -1, 5, 45, 235, 25
-    CONTROL "&Slaapstand inschakelen", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 55, 210, 10
+    AUTOCHECKBOX "&Slaapstand inschakelen", IDC_HIBERNATEFILE, 10, 55, 210, 10, WS_TABSTOP
     GROUPBOX "Schijfruimte voor slaapstand", -1, 5, 80, 240, 60
     LTEXT "Beschikbare schijfruimte:", -1, 10, 90, 100, 10
     LTEXT "Onbekend", IDC_FREESPACE, 120, 90, 70, 10

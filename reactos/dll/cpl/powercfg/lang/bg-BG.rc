@@ -37,7 +37,7 @@ CAPTION "Тревоги"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Тревога при слаба батерия", -1, 10, 15, 235, 95
-    CONTROL "Тревога за &слаба батерия при ниво под:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 25, 180, 15
+    AUTOCHECKBOX "Тревога за &слаба батерия при ниво под:", IDC_ALARM1, 15, 25, 180, 15, WS_TABSTOP
     LTEXT "неизвестно", IDC_ALARMVALUE1, 200, 25, 40, 10
     LTEXT "0%", -1, 20, 40, 15, 15
     CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 30, 40, 170, 15
@@ -50,7 +50,7 @@ BEGIN
     LTEXT "Изпълняване на приложение:", -1, 95, 90, 50, 10
     LTEXT "Неизвестно", IDC_ALARMPROG1, 180, 90, 55, 10
     GROUPBOX "Тревога за разредена батерия", -1, 10, 115, 235, 95
-    CONTROL "Тревога при разреждане на батерията под:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 125, 180, 15
+    AUTOCHECKBOX "Тревога при разреждане на батерията под:", IDC_ALARM2, 15, 125, 180, 15, WS_TABSTOP
     LTEXT "неизвестно", IDC_ALARMVALUE2, 200, 125, 40, 10
     LTEXT "0%", -1, 20, 140, 15, 15
     CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 30, 140, 170, 15
@@ -72,9 +72,9 @@ BEGIN
     ICON IDI_ACDC, IDI_ACDC, 5, 5, 20, 20
     LTEXT "Изберете енергоспестяващи настройки.", -1, 30, 5, 205, 20
     GROUPBOX "Възможности", -1, 5, 35, 225, 55
-    CONTROL "Винаги има значе в задачната лента", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 45, 200, 10
-    CONTROL "&Искане на парола при излизане от изчакване", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 55, 200, 10
-    CONTROL "&Затъмняване на екрана при работа на батерии", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 65, 200, 10
+    AUTOCHECKBOX "Винаги има значе в задачната лента", IDC_SYSTRAYBATTERYMETER, 15, 45, 200, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Искане на парола при излизане от изчакване", IDC_PASSWORDLOGON, 15, 55, 200, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Затъмняване на екрана при работа на батерии", IDC_VIDEODIMDISPLAY, 15, 65, 200, 10, WS_TABSTOP
     GROUPBOX "Клавиши за захранване", -1, 5, 100, 230, 105
     LTEXT "&При затваряне на капака на преносимия ми компютър:", IDC_SLIDCLOSE, 10, 110, 210, 10
     COMBOBOX IDC_LIDCLOSE, 10, 120, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
@@ -92,7 +92,7 @@ BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 5, 5, 20, 20
     LTEXT "Когато компютърът ви заспи, той съхранява съдържанието на паметта си на твърдия диск, а когато се събуди го връща обратно.", -1, 35, 5, 195, 35
     GROUPBOX "Заспиване", -1, 5, 45, 235, 25
-    CONTROL "Включване на за&спиването", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 55, 210, 10
+    AUTOCHECKBOX "Включване на за&спиването", IDC_HIBERNATEFILE, 10, 55, 210, 10, WS_TABSTOP
     GROUPBOX "Дисково място за заспиване", -1, 5, 80, 240, 60
     LTEXT "Свободно дисково място:", -1, 10, 90, 155, 10
     LTEXT "Неизвестно", IDC_FREESPACE, 180, 90, 70, 10

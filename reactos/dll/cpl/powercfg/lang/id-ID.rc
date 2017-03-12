@@ -39,7 +39,7 @@ CAPTION "Alarm"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Alarm batere renah", -1, 10, 15, 235, 95
-    CONTROL "A&ktifkan alarm batere renah saat tingkat tenaga mencapai:", IDC_ALARM1, "Tombol", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 25, 180, 15
+    AUTOCHECKBOX "A&ktifkan alarm batere renah saat tingkat tenaga mencapai:", IDC_ALARM1, 15, 25, 180, 15, WS_TABSTOP
     LTEXT "tidak dikenal", IDC_ALARMVALUE1, 200, 25, 40, 10
     LTEXT "0%", -1, 20, 40, 15, 15
     CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 30, 40, 170, 15
@@ -52,7 +52,7 @@ BEGIN
     LTEXT "Jalankan Program:", -1, 95, 90, 50, 10
     LTEXT "Tidak dikenal", IDC_ALARMPROG1, 150, 90, 40, 10
     GROUPBOX "Alarm batere kritis", -1, 10, 115, 235, 95
-    CONTROL "Aktifkan ala&rm batere rendah saat tingkat tenaga mencapai:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 125, 180, 15
+    AUTOCHECKBOX "Aktifkan ala&rm batere rendah saat tingkat tenaga mencapai:", IDC_ALARM2, 15, 125, 180, 15, WS_TABSTOP
     LTEXT "tidak dikenal", IDC_ALARMVALUE2, 200, 125, 40, 10
     LTEXT "0%", -1, 20, 140, 15, 15
     CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 30, 140, 170, 15
@@ -74,9 +74,9 @@ BEGIN
     ICON IDI_ACDC, IDI_ACDC, 5, 5, 20, 20
     LTEXT "Pilih setelan hemat-tenaga yang ingin anda pakai.", -1, 30, 5, 205, 20
     GROUPBOX "Opsi", -1, 5, 35, 225, 55
-    CONTROL "Selalu menampilkan ikon pada taskbar", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 45, 200, 10
-    CONTROL "&Prompt kata sandi saat komputer melanjutkan dari standby", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 55, 200, 10
-    CONTROL "&Dim tampilan ketika berjalan dengan baterai.", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 65, 200, 10
+    AUTOCHECKBOX "Selalu menampilkan ikon pada taskbar", IDC_SYSTRAYBATTERYMETER, 15, 45, 200, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Prompt kata sandi saat komputer melanjutkan dari standby", IDC_PASSWORDLOGON, 15, 55, 200, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Dim tampilan ketika berjalan dengan baterai.", IDC_VIDEODIMDISPLAY, 15, 65, 200, 10, WS_TABSTOP
     GROUPBOX "Tombol tenaga", -1, 5, 100, 230, 105
     LTEXT "&Ketika Saya menutup lid komputer portabel saya:", IDC_SLIDCLOSE, 10, 110, 210, 10
     COMBOBOX IDC_LIDCLOSE, 10, 120, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
@@ -94,7 +94,7 @@ BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 5, 5, 20, 20
     LTEXT "Ketika komputer anda hibernasi, ia menyimpan apapun yang ada di memori pada hard disk anda dan kemudian mematikan komputer. Ketika komputer anda keluar dari hibernasi, ia kembali ke keadaan sebelumnya. ", -1, 35, 5, 195, 35
     GROUPBOX "Hibernasi", -1, 5, 45, 235, 25
-    CONTROL "Hidupkan &hibernasi", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 55, 210, 10
+    AUTOCHECKBOX "Hidupkan &hibernasi", IDC_HIBERNATEFILE, 10, 55, 210, 10, WS_TABSTOP
     GROUPBOX "Ruang disk untuk hibernasi", -1, 5, 80, 240, 60
     LTEXT "Ruang bebas disk:", -1, 10, 90, 100, 10
     LTEXT "Tidak dikenal", IDC_FREESPACE, 120, 90, 70, 10

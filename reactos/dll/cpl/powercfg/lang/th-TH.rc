@@ -37,7 +37,7 @@ CAPTION "Alarms"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Low battery alarm", -1, 6, 7, 239, 104
-    CONTROL "Activate &low battery alarm when power level reaches:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
+    AUTOCHECKBOX "Activate &low battery alarm when power level reaches:", IDC_ALARM1, 15, 17, 190, 15, WS_TABSTOP
     LTEXT "unknown", IDC_ALARMVALUE1, 215, 20, 20, 10
     LTEXT "0%", -1, 28, 43, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
@@ -50,7 +50,7 @@ BEGIN
     LTEXT "Run Program:", -1, 95, 95, 55, 10
     LTEXT "Unknown", IDC_ALARMPROG1, 154, 95, 84, 10
     GROUPBOX "Critical battery alarm", -1, 6, 120, 239, 106
-    CONTROL "Activate &critical battery alarm when power level reaches:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
+    AUTOCHECKBOX "Activate &critical battery alarm when power level reaches:", IDC_ALARM2, 15, 131, 180, 15, WS_TABSTOP
     LTEXT "unknown", IDC_ALARMVALUE2, 209, 133, 33, 10
     LTEXT "0%", -1, 28, 154, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 158, 170, 15
@@ -72,9 +72,9 @@ BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
     LTEXT "Select the power-saving settings you want to use.", -1, 37, 6, 207, 20
     GROUPBOX "Options", -1, 6, 30, 240, 65
-    CONTROL "Alway&s show icon on the taskbar", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 43, 220, 10
-    CONTROL "&Prompt for password when computer resumes from standby", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 60, 220, 10
-    CONTROL "&Dim display when running on batteries", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 78, 220, 10
+    AUTOCHECKBOX "Alway&s show icon on the taskbar", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Prompt for password when computer resumes from standby", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Dim display when running on batteries", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
     GROUPBOX "Power buttons", -1, 6, 101, 240, 127
     LTEXT "&When I close the lid of my portable computer:", IDC_SLIDCLOSE, 15, 115, 222, 10
     COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
@@ -92,7 +92,7 @@ BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
     LTEXT "When your computer hibernates, it stores whatever it has in memory on your hard disk and then shuts down. When your computer comes out of hibernation, it returns to its previous state. ", -1, 37, 6, 210, 35
     GROUPBOX "Hibernate", -1, 6, 41, 240, 32
-    CONTROL "Enable &hibernation", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 55, 210, 10
+    AUTOCHECKBOX "Enable &hibernation", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP
     GROUPBOX "Disk space for hibernation", -1, 6, 80, 240, 76
     LTEXT "Free disk space:", -1, 15, 95, 140, 10
     LTEXT "Unknown", IDC_FREESPACE, 160, 95, 80, 10

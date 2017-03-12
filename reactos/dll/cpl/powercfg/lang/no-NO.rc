@@ -39,7 +39,7 @@ CAPTION "Alarmer"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Svakt battery alarm", -1, 6, 7, 239, 104
-    CONTROL "Aktivere &svakt batteri alarm mens strømnivået passerer:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
+    AUTOCHECKBOX "Aktivere &svakt batteri alarm mens strømnivået passerer:", IDC_ALARM1, 15, 17, 190, 15, WS_TABSTOP
     LTEXT "ukjent", IDC_ALARMVALUE1, 215, 20, 20, 10
     LTEXT "0%", -1, 28, 43, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
@@ -52,7 +52,7 @@ BEGIN
     LTEXT "Kjør Program:", -1, 95, 95, 55, 10
     LTEXT "Ukjent", IDC_ALARMPROG1, 154, 95, 84, 10
     GROUPBOX "Kritisk batteri alarm", -1, 6, 120, 239, 106
-    CONTROL "Aktivere svakt batteri alarm mens strømnivået passerer:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
+    AUTOCHECKBOX "Aktivere svakt batteri alarm mens strømnivået passerer:", IDC_ALARM2, 15, 131, 180, 15, WS_TABSTOP
     LTEXT "Ukjent", IDC_ALARMVALUE2, 209, 133, 33, 10
     LTEXT "0%", -1, 28, 154, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 158, 170, 15
@@ -74,9 +74,9 @@ BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
     LTEXT "Velg strøm-sparing innstillinger som du vil bruke.", -1, 37, 6, 207, 20
     GROUPBOX "Valg", -1, 6, 30, 240, 65
-    CONTROL "Allti&d vis ikon på oppgavelinjen", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 43, 220, 10
-    CONTROL "&Spør etter passord ved gjenopptakelse etter dvalemodus", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 60, 220, 10
-    CONTROL "&Dim vis når pcen kjører på batteri strøm", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 78, 220, 10
+    AUTOCHECKBOX "Allti&d vis ikon på oppgavelinjen", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Spør etter passord ved gjenopptakelse etter dvalemodus", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Dim vis når pcen kjører på batteri strøm", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
     GROUPBOX "Strømknapper", -1, 6, 101, 240, 127
     LTEXT "&When I close the lid of my portable computer:", IDC_SLIDCLOSE, 15, 115, 222, 10
     COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
@@ -94,7 +94,7 @@ BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
     LTEXT "Når din datamaskin går i dvalemodus, lagres all data i minnet til din harddisk også blir pcen slått av. Når din datamaskin våkner fra dvalemodus, gjennoppretter den økten til forrige stand. ", -1, 37, 6, 210, 35
     GROUPBOX "Dvalemodus", -1, 6, 41, 240, 32
-    CONTROL "Aktiver &dvalemodus", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 55, 210, 10
+    AUTOCHECKBOX "Aktiver &dvalemodus", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP
     GROUPBOX "Ledig plass for dvalemodus", -1, 6, 80, 240, 76
     LTEXT "Ledig plass:", -1, 15, 95, 140, 10
     LTEXT "Ukjent", IDC_FREESPACE, 160, 95, 80, 10

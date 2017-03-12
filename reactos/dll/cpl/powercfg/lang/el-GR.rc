@@ -39,7 +39,7 @@ CAPTION "Ειδοποιήσεις"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Ειδοποίηση πεσμένης μπαταρίας", -1, 6, 7, 239, 104
-    CONTROL "Ενεργοποίηση ειδοποίησης όταν η ενέργεια φτάσει:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
+    AUTOCHECKBOX "Ενεργοποίηση ειδοποίησης όταν η ενέργεια φτάσει:", IDC_ALARM1, 15, 17, 190, 15, WS_TABSTOP
     LTEXT "unknown", IDC_ALARMVALUE1, 215, 20, 20, 10
     LTEXT "0%", -1, 28, 43, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
@@ -52,7 +52,7 @@ BEGIN
     LTEXT "Εκτέλεση:", -1, 95, 95, 55, 10
     LTEXT "Άγνωστο", IDC_ALARMPROG1, 154, 95, 84, 10
     GROUPBOX "Ειδοποίηση κρίσιμου σημείου μπαταρίας", -1, 6, 120, 239, 106
-    CONTROL "Ενεργοποίηση ειδοποίησης όταν η ενέργεια φτάσει:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
+    AUTOCHECKBOX "Ενεργοποίηση ειδοποίησης όταν η ενέργεια φτάσει:", IDC_ALARM2, 15, 131, 180, 15, WS_TABSTOP
     LTEXT "unknown", IDC_ALARMVALUE2, 215, 134, 20, 10
     LTEXT "0%", -1, 28, 154, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 158, 170, 15
@@ -74,9 +74,9 @@ BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
     LTEXT "Επιλέξτε τις ρυθμίσεις εξοικονόμησης ενέργειας που θέλετε να χρησιμοποιήσετε.", -1, 37, 6, 207, 20
     GROUPBOX "Επιλογές", -1, 6, 30, 240, 65
-    CONTROL "Εμφάνιση του εικονιδίου στη γραμμή εργασιών", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 43, 220, 10
-    CONTROL "&Κωδικός πρόσβασης κατά την επαναφορά από αναμονή", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 60, 220, 10
-    CONTROL "&Εμφάνιση ένδειξης όταν εξαντλείται η μπαταρία", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 78, 220, 10
+    AUTOCHECKBOX "Εμφάνιση του εικονιδίου στη γραμμή εργασιών", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Κωδικός πρόσβασης κατά την επαναφορά από αναμονή", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Εμφάνιση ένδειξης όταν εξαντλείται η μπαταρία", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
     GROUPBOX "Κουμπιά τροφοδοσίας", -1, 6, 101, 240, 127
     LTEXT "&Κατά το κλείσιμο του καλύμματος του φορητού υπολογιστή μου:", IDC_SLIDCLOSE, 15, 115, 222, 10
     COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
@@ -94,7 +94,7 @@ BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
     LTEXT "Όταν ο υπολογιστής αδρανοποιείται, αποθηκεύει ό,τι έχει στη μνήμη στο σκληρό δίσκο και μετά τερματίζεται η λειτουργία του. Όταν επανέρχεται από την αδρανοποίηση, επιστρέφει στο αρχικό του επίπεδο. ", -1, 37, 6, 210, 35
     GROUPBOX "Αδρανοποίηση", -1, 6, 41, 240, 32
-    CONTROL "Ενε&ργοποίηση αδρανοποίησης", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 55, 210, 10
+    AUTOCHECKBOX "Ενε&ργοποίηση αδρανοποίησης", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP
     GROUPBOX "Χώρος του δίσκου για λειτουργία αδρανοποίησης", -1, 6, 80, 240, 76
     LTEXT "Διαθέσιμος χώρος στο δίσκο:", -1, 15, 95, 140, 10
     LTEXT "Unknown", IDC_FREESPACE, 160, 95, 80, 10

@@ -39,7 +39,7 @@ CAPTION "Alarmas"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Alarma de batería baja ", -1, 6, 7, 249, 104
-    CONTROL "Activar la a&larma de batería baja cuando la potencia alcance un nivel:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
+    AUTOCHECKBOX "Activar la a&larma de batería baja cuando la potencia alcance un nivel:", IDC_ALARM1, 15, 17, 190, 15, WS_TABSTOP
     LTEXT "Desconocido", IDC_ALARMVALUE1, 215, 20, 20, 10
     LTEXT "0%", -1, 28, 43, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
@@ -52,7 +52,7 @@ BEGIN
     LTEXT "Ejecutar programa:", -1, 95, 95, 55, 10
     LTEXT "Desconocido", IDC_ALARMPROG1, 154, 95, 84, 10
     GROUPBOX "Alarma de batería crítica ", -1, 6, 120, 249, 106
-    CONTROL "Activar la a&larma de batería baja cuando la potencia alcance un nivel:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
+    AUTOCHECKBOX "Activar la a&larma de batería baja cuando la potencia alcance un nivel:", IDC_ALARM2, 15, 131, 180, 15, WS_TABSTOP
     LTEXT "Desconocido", IDC_ALARMVALUE2, 215, 134, 20, 10
     LTEXT "0%", -1, 28, 154, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 158, 170, 15
@@ -74,9 +74,9 @@ BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
     LTEXT "Seleccione los ajustes de ahorro energético que desee usar.", -1, 37, 6, 207, 20
     GROUPBOX "Opciones", -1, 6, 30, 250, 65
-    CONTROL "Mo&strar siempre el icono en la barra de tareas", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 43, 230, 10
-    CONTROL "S&olicitar una contraseña tras un tiempo de inactividad", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 56, 230, 14
-    CONTROL "&Atenuar monitor cuando esté funcionando con batería", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 78, 230, 10
+    AUTOCHECKBOX "Mo&strar siempre el icono en la barra de tareas", IDC_SYSTRAYBATTERYMETER, 17, 43, 230, 10, WS_TABSTOP
+    AUTOCHECKBOX "S&olicitar una contraseña tras un tiempo de inactividad", IDC_PASSWORDLOGON, 17, 56, 230, 14, WS_TABSTOP
+    AUTOCHECKBOX "&Atenuar monitor cuando esté funcionando con batería", IDC_VIDEODIMDISPLAY, 17, 78, 230, 10, WS_TABSTOP
     GROUPBOX "Botones de encendido", -1, 6, 101, 250, 127
     LTEXT "&Cuando cierre la tapa de mi ordenador portátil:", IDC_SLIDCLOSE, 15, 115, 222, 10
     COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
@@ -94,7 +94,7 @@ BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
     LTEXT "Cuando su equipo hiberna, almacena lo que hay en memoria en el disco duro y luego se apaga. Cuando sale del modo de hibernación vuelve a su estado anterior. ", -1, 37, 6, 210, 35
     GROUPBOX "Hibernar ", -1, 6, 41, 250, 32
-    CONTROL "Habilitar &hibernación", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 55, 210, 10
+    AUTOCHECKBOX "Habilitar &hibernación", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP
     GROUPBOX "Espacio en disco para hibernación ", -1, 6, 80, 250, 76
     LTEXT "Espacio libre en disco:", -1, 15, 95, 140, 10
     LTEXT "Desconocido", IDC_FREESPACE, 160, 95, 80, 10

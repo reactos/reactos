@@ -45,7 +45,7 @@ CAPTION "Signalizácie"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Signalizácia vybitia batérie", -1, 6, 7, 239, 104
-    CONTROL "Zapnúť signalizáciu &vybitia batérie pri hodnote:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
+    AUTOCHECKBOX "Zapnúť signalizáciu &vybitia batérie pri hodnote:", IDC_ALARM1, 15, 17, 190, 15, WS_TABSTOP
     LTEXT "neznáma", IDC_ALARMVALUE1, 215, 20, 20, 10
     LTEXT "0%", -1, 28, 43, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
@@ -58,7 +58,7 @@ BEGIN
     LTEXT "Spustiť program:", -1, 95, 95, 55, 10
     LTEXT "Neznámy", IDC_ALARMPROG1, 154, 95, 84, 10
     GROUPBOX "Signalizácia kritického stavu batérie", -1, 6, 120, 239, 106
-    CONTROL "Zapnúť signalizáciu &kritického stavu batérie pri hodnote:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 188, 15
+    AUTOCHECKBOX "Zapnúť signalizáciu &kritického stavu batérie pri hodnote:", IDC_ALARM2, 15, 131, 188, 15, WS_TABSTOP
     LTEXT "neznáma", IDC_ALARMVALUE2, 209, 133, 33, 10
     LTEXT "0%", -1, 28, 154, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 158, 170, 15
@@ -80,9 +80,9 @@ BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
     LTEXT "Vyberte požadované možnosti šetrenia energie.", -1, 37, 6, 207, 20
     GROUPBOX "Možnosti", -1, 6, 30, 240, 65
-    CONTROL "Vždy &zobraziť ikonu na paneli úloh", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 43, 220, 10
-    CONTROL "Vyžiadať &heslo pri prechode z úsporného režimu", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 60, 220, 10
-    CONTROL "Stmaviť &obrazovku pri napájaní z batérie", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 78, 220, 10
+    AUTOCHECKBOX "Vždy &zobraziť ikonu na paneli úloh", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "Vyžiadať &heslo pri prechode z úsporného režimu", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "Stmaviť &obrazovku pri napájaní z batérie", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
     GROUPBOX "Tlačidlá napájania", -1, 6, 101, 240, 127
     LTEXT "Pri zatváraní &krytu prenosného počítača:", IDC_SLIDCLOSE, 15, 115, 222, 10
     COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
@@ -100,7 +100,7 @@ BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
     LTEXT "Keď počítač prechádza do režimu dlhodobého spánku, uloží obsah pamäte na pevný disk a potom sa vypne. Pri návrate počítača z režimu dlhodobého spánku sa všetko vráti do pôvodného stavu.", -1, 37, 6, 210, 35
     GROUPBOX "Dlhodobý spánok", -1, 6, 41, 240, 32
-    CONTROL "&Povoliť režim dlhodobého spánku", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 55, 210, 10
+    AUTOCHECKBOX "&Povoliť režim dlhodobého spánku", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP
     GROUPBOX "Miesto na disku pre režim dlhodobého spánku", -1, 6, 80, 240, 76
     LTEXT "Voľné miesto na disku:", -1, 15, 95, 140, 10
     LTEXT "Neznáme", IDC_FREESPACE, 160, 95, 80, 10

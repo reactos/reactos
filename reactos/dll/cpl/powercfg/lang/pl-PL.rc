@@ -45,7 +45,7 @@ CAPTION "Ostrzeżenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Słaba bateria", -1, 10, 15, 235, 95
-    CONTROL "Aktywuj ostrzeżenie, kiedy &poziom mocy sięga:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 25, 180, 15
+    AUTOCHECKBOX "Aktywuj ostrzeżenie, kiedy &poziom mocy sięga:", IDC_ALARM1, 15, 25, 180, 15, WS_TABSTOP
     LTEXT "nieznany", IDC_ALARMVALUE1, 200, 25, 40, 10
     LTEXT "0%", -1, 20, 40, 15, 15
     CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 30, 40, 170, 15
@@ -58,7 +58,7 @@ BEGIN
     LTEXT "Uruchom program:", -1, 95, 90, 50, 10
     LTEXT "Nieznany", IDC_ALARMPROG1, 150, 90, 40, 10
     GROUPBOX "Krytycznie słaba bateria", -1, 10, 115, 235, 95
-    CONTROL "Aktywuj ostrzeżenie, kiedy &poziom mocy sięga:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 125, 180, 15
+    AUTOCHECKBOX "Aktywuj ostrzeżenie, kiedy &poziom mocy sięga:", IDC_ALARM2, 15, 125, 180, 15, WS_TABSTOP
     LTEXT "nieznany", IDC_ALARMVALUE2, 200, 125, 40, 10
     LTEXT "0%", -1, 20, 140, 15, 15
     CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 30, 140, 170, 15
@@ -80,9 +80,9 @@ BEGIN
     ICON IDI_ACDC, IDI_ACDC, 5, 5, 20, 20
     LTEXT "Wybierz, których ustawień oszczędzania energii chcesz używać.", -1, 30, 5, 205, 20
     GROUPBOX "Opcje", -1, 5, 35, 225, 55
-    CONTROL "&Zawsze pokazuj ikonę w zasobniku systemowym", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 45, 200, 10
-    CONTROL "Zapytaj o &hasło kiedy komputer powraca ze stanu czuwania", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 55, 200, 10
-    CONTROL "&Przyciemniaj ekran, kiedy zasilanie z akumulatora", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 65, 200, 10
+    AUTOCHECKBOX "&Zawsze pokazuj ikonę w zasobniku systemowym", IDC_SYSTRAYBATTERYMETER, 15, 45, 200, 10, WS_TABSTOP
+    AUTOCHECKBOX "Zapytaj o &hasło kiedy komputer powraca ze stanu czuwania", IDC_PASSWORDLOGON, 15, 55, 200, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Przyciemniaj ekran, kiedy zasilanie z akumulatora", IDC_VIDEODIMDISPLAY, 15, 65, 200, 10, WS_TABSTOP
     GROUPBOX "Przyciski zasilania", -1, 5, 100, 230, 105
     LTEXT "&Kiedy zamykam mój komputer przenośny:", IDC_SLIDCLOSE, 10, 110, 210, 10
     COMBOBOX IDC_LIDCLOSE, 10, 120, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
@@ -100,7 +100,7 @@ BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 5, 5, 20, 20
     LTEXT "Kiedy Twój komputer przechodzi w stan hibernacji cała zawartość pamięci jest zrzucana na dysk twardy i komputer jest wyłączany. Kiedy komputer budzi się z hibernacji, powraca on do poprzedniego stanu. ", -1, 35, 5, 195, 35
     GROUPBOX "Hibernacja", -1, 5, 45, 235, 25
-    CONTROL "Włącz &hibernację", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 55, 210, 10
+    AUTOCHECKBOX "Włącz &hibernację", IDC_HIBERNATEFILE, 10, 55, 210, 10, WS_TABSTOP
     GROUPBOX "Przestrzeń dyskowa dla hibernacji", -1, 5, 80, 240, 60
     LTEXT "Wolna przestrzeń dyskowa:", -1, 10, 90, 100, 10
     LTEXT "Nieznana", IDC_FREESPACE, 120, 90, 70, 10

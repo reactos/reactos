@@ -39,7 +39,7 @@ CAPTION "Uyarılar"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Azalmış Pil Uyarısı", -1, 6, 7, 239, 104
-    CONTROL "&Güç düzeyi şuraya geldiğinde azalmış pil uyarısını etkinleştir:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
+    AUTOCHECKBOX "&Güç düzeyi şuraya geldiğinde azalmış pil uyarısını etkinleştir:", IDC_ALARM1, 15, 17, 190, 15, WS_TABSTOP
     LTEXT "Bilinmiyor", IDC_ALARMVALUE1, 215, 20, 20, 10
     LTEXT "%0", -1, 28, 43, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
@@ -52,7 +52,7 @@ BEGIN
     LTEXT "İzlence Çalıştır:", -1, 95, 95, 55, 10
     LTEXT "Bilinmiyor", IDC_ALARMPROG1, 154, 95, 84, 10
     GROUPBOX "Çok Azalmış Pil Uyarısı", -1, 6, 120, 239, 106
-    CONTROL "G&üç düzeyi şuraya geldiğinde çok azalmış pil uyarısını etkinleştir:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
+    AUTOCHECKBOX "G&üç düzeyi şuraya geldiğinde çok azalmış pil uyarısını etkinleştir:", IDC_ALARM2, 15, 131, 180, 15, WS_TABSTOP
     LTEXT "Bilinmiyor", IDC_ALARMVALUE2, 209, 133, 33, 10
     LTEXT "%0", -1, 28, 154, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 158, 170, 15
@@ -74,9 +74,9 @@ BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
     LTEXT "Kullanmak istediğiniz güç tutumu ayarlarını seçiniz.", -1, 37, 6, 207, 20
     GROUPBOX "Seçenekler", -1, 6, 30, 240, 65
-    CONTROL "&Görev Çubuğunda Sürekli Simge Göster", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 43, 220, 10
-    CONTROL "&Bilgisayar Uykudan Döndüğünde Şifre İste", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 60, 220, 10
-    CONTROL "&Pilde Çalışıyorken Görüntü Parlaklığını Azalt", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 78, 220, 10
+    AUTOCHECKBOX "&Görev Çubuğunda Sürekli Simge Göster", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Bilgisayar Uykudan Döndüğünde Şifre İste", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Pilde Çalışıyorken Görüntü Parlaklığını Azalt", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
     GROUPBOX "Güç Düğmeleri", -1, 6, 101, 240, 127
     LTEXT "&Taşınabilir Bilgisayarımın Kapağını Kapattığımda:", IDC_SLIDCLOSE, 15, 115, 222, 10
     COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
@@ -94,7 +94,7 @@ BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
     LTEXT "Bilgisayar anıkta bekletildiğinde sâbit diskinize bellekte ne varsa saklanır ve sonra bilgisayar kapatılır. Bilgisayarınız anıkta beklemeden çıktığında bir önceki durumuna döner.", -1, 37, 6, 210, 35
     GROUPBOX "Anıkta Bekleme", -1, 6, 41, 240, 32
-    CONTROL "&Anıkta Beklemeyi Etkinleştir", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 55, 210, 10
+    AUTOCHECKBOX "&Anıkta Beklemeyi Etkinleştir", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP
     GROUPBOX "Anıkta Bekleme İçin Disk Alanı", -1, 6, 80, 240, 76
     LTEXT "Boş Disk Alanı:", -1, 15, 95, 140, 10
     LTEXT "Bilinmiyor", IDC_FREESPACE, 160, 95, 80, 10

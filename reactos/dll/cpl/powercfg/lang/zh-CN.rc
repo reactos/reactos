@@ -39,7 +39,7 @@ CAPTION "警报"
 FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "电池不足警报", -1, 6, 7, 239, 104
-    CONTROL "当电量降低到以下水平时，发出电池不足警报(&L):", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
+    AUTOCHECKBOX "当电量降低到以下水平时，发出电池不足警报(&L):", IDC_ALARM1, 15, 17, 190, 15, WS_TABSTOP
     LTEXT "未知", IDC_ALARMVALUE1, 215, 20, 20, 10
     LTEXT "0%", -1, 28, 43, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
@@ -52,7 +52,7 @@ BEGIN
     LTEXT "运行程序:", -1, 95, 95, 55, 10
     LTEXT "未知", IDC_ALARMPROG1, 154, 95, 84, 10
     GROUPBOX "电池严重短缺警报", -1, 6, 120, 239, 106
-    CONTROL "当电力降低到以下水平时，发出电池严重短缺警报(&C):", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
+    AUTOCHECKBOX "当电力降低到以下水平时，发出电池严重短缺警报(&C):", IDC_ALARM2, 15, 131, 180, 15, WS_TABSTOP
     LTEXT "未知", IDC_ALARMVALUE2, 209, 133, 33, 10
     LTEXT "0%", -1, 28, 154, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 158, 170, 15
@@ -74,9 +74,9 @@ BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
     LTEXT "请选择要使用的节能设置。", -1, 37, 6, 207, 20
     GROUPBOX "选项", -1, 6, 30, 240, 65
-    CONTROL "总是在任务栏上显示图标(&S)", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 43, 220, 10
-    CONTROL "在计算机从待机状态恢复时，提示输入密码(&P)", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 60, 220, 10
-    CONTROL "在使用电池时弱显示(&D)。", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 78, 220, 10
+    AUTOCHECKBOX "总是在任务栏上显示图标(&S)", IDC_SYSTRAYBATTERYMETER, 17, 43, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "在计算机从待机状态恢复时，提示输入密码(&P)", IDC_PASSWORDLOGON, 17, 60, 220, 10, WS_TABSTOP
+    AUTOCHECKBOX "在使用电池时弱显示(&D)。", IDC_VIDEODIMDISPLAY, 17, 78, 220, 10, WS_TABSTOP
     GROUPBOX "电源按钮", -1, 6, 101, 240, 127
     LTEXT "在合上便携式计算机时(&W):", IDC_SLIDCLOSE, 15, 115, 222, 10
     COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
@@ -94,7 +94,7 @@ BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
     LTEXT "在计算机休眠时，它将内存中所有信息保存到硬盘上，然后关闭计算机。在退出休眠状态时，计算机会恢复到原来的状态。", -1, 37, 6, 210, 35
     GROUPBOX "休眠", -1, 6, 41, 240, 32
-    CONTROL "启用休眠(&H)", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 55, 210, 10
+    AUTOCHECKBOX "启用休眠(&H)", IDC_HIBERNATEFILE, 17, 55, 210, 10, WS_TABSTOP
     GROUPBOX "用于休眠的磁盘空间", -1, 6, 80, 240, 76
     LTEXT "空闲的磁盘空间:", -1, 15, 95, 140, 10
     LTEXT "未知", IDC_FREESPACE, 160, 95, 80, 10
