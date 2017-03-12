@@ -1010,17 +1010,17 @@ extern NTSTATUS FATGetNextDirEntry(PVOID *pContext, PVOID *pPage, PVFATFCB pDirF
 extern NTSTATUS FATXGetNextDirEntry(PVOID *pContext, PVOID *pPage, PVFATFCB pDirFcb, PVFAT_DIRENTRY_CONTEXT DirContext, BOOLEAN First);
 
 VFAT_DISPATCH FatXDispatch = {
-    .IsDirectoryEmpty = FATXIsDirectoryEmpty,
-    .AddEntry = FATXAddEntry,
-    .DelEntry = FATXDelEntry,
-    .GetNextDirEntry = FATXGetNextDirEntry,
+    FATXIsDirectoryEmpty,   // .IsDirectoryEmpty
+    FATXAddEntry,           // .AddEntry
+    FATXDelEntry,           // .DelEntry
+    FATXGetNextDirEntry,    // .GetNextDirEntry
 };
 
 VFAT_DISPATCH FatDispatch = {
-    .IsDirectoryEmpty = FATIsDirectoryEmpty,
-    .AddEntry = FATAddEntry,
-    .DelEntry = FATDelEntry,
-    .GetNextDirEntry = FATGetNextDirEntry,
+    FATIsDirectoryEmpty,    // .IsDirectoryEmpty
+    FATAddEntry,            // .AddEntry
+    FATDelEntry,            // .DelEntry
+    FATGetNextDirEntry,     // .GetNextDirEntry
 };
 
 /* EOF */
