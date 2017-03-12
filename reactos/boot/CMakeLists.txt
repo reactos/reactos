@@ -20,11 +20,13 @@ add_custom_target(efisys
     DEPENDS native-fatten fat bootmgfw bcd_hive
     VERBATIM)
 
+
 # Create an 'empty' directory (guaranteed to be empty) to be able to add
 # arbitrary empty directories to the ISO image using mkisofs.
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/empty)
 
-# Retrieve the full paths to the generated files of the 'isoboot', 'isobtrt' and 'efisys' targets
+# Retrieve the full paths to the generated files of the 'isombr', 'isoboot', 'isobtrt' and 'efisys' targets
+set(_isombr_file  ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isombr.bin)  # get_target_property(_isombr_file  isombr  LOCATION)
 set(_isoboot_file ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isoboot.bin) # get_target_property(_isoboot_file isoboot LOCATION)
 set(_isobtrt_file ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isobtrt.bin) # get_target_property(_isobtrt_file isobtrt LOCATION)
 set(_efisys_file  ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin) # get_target_property(_efisys_file  efisys  LOCATION)
@@ -68,6 +70,10 @@ add_custom_target(bootcd
         -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst
     DEPENDS native-mkisofs
     VERBATIM)
+add_custom_target(isohybrid_bootcd
+    COMMAND native-isohybrid -b ${_isombr_file} ${REACTOS_BINARY_DIR}/bootcd.iso
+    DEPENDS native-isohybrid isombr bootcd
+    VERBATIM)
 
 ## BootCDRegTest
 # Create the file list
@@ -81,6 +87,10 @@ add_custom_target(bootcdregtest
         -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
         -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.lst
     DEPENDS native-mkisofs
+    VERBATIM)
+add_custom_target(isohybrid_bootcdregtest
+    COMMAND native-isohybrid -b ${_isombr_file} ${REACTOS_BINARY_DIR}/bootcdregtest.iso
+    DEPENDS native-isohybrid isombr bootcdregtest
     VERBATIM)
 
 ## LiveCD
@@ -124,6 +134,10 @@ add_custom_target(livecd
         -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst
     DEPENDS native-mkisofs
     VERBATIM)
+add_custom_target(isohybrid_livecd
+    COMMAND native-isohybrid -b ${_isombr_file} ${REACTOS_BINARY_DIR}/livecd.iso
+    DEPENDS native-isohybrid isombr livecd
+    VERBATIM)
 
 ## HybridCD
 # Create the file list
@@ -165,6 +179,10 @@ add_custom_target(hybridcd
         -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
         -duplicates-once -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst
     DEPENDS native-mkisofs bootcd livecd
+    VERBATIM)
+add_custom_target(isohybrid_hybridcd
+    COMMAND native-isohybrid -b ${_isombr_file} ${REACTOS_BINARY_DIR}/hybridcd.iso
+    DEPENDS native-isohybrid isombr hybridcd
     VERBATIM)
 
 add_cd_file(TARGET efisys FILE ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin DESTINATION loader NO_CAB NOT_IN_HYBRIDCD FOR bootcd regtest livecd hybridcd)
