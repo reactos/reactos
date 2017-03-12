@@ -515,8 +515,17 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
             state = get_button_state( hWnd );
             if (state & BST_HOT)
             {
+                NMBCHOTITEM nmhotitem;
+
                 state &= ~BST_HOT;
                 set_button_state(hWnd, state);
+
+                nmhotitem.hdr.hwndFrom = hWnd;
+                nmhotitem.hdr.idFrom   = GetWindowLongPtrW (hWnd, GWLP_ID);
+                nmhotitem.hdr.code     = BCN_HOTITEMCHANGE;
+                nmhotitem.dwFlags      = HICF_LEAVING;
+                SendMessageW(GetParent(hWnd), WM_NOTIFY, nmhotitem.hdr.idFrom, (LPARAM)&nmhotitem);
+
                 InvalidateRect(hWnd, NULL, TRUE);
             }
             break;
@@ -527,8 +536,17 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
             state = get_button_state( hWnd );
             if ((state & BST_HOT) == 0)
             {
+                NMBCHOTITEM nmhotitem;
+
                 state |= BST_HOT;
                 set_button_state(hWnd, state);
+
+                nmhotitem.hdr.hwndFrom = hWnd;
+                nmhotitem.hdr.idFrom   = GetWindowLongPtrW (hWnd, GWLP_ID);
+                nmhotitem.hdr.code     = BCN_HOTITEMCHANGE;
+                nmhotitem.dwFlags      = HICF_ENTERING;
+                SendMessageW(GetParent(hWnd), WM_NOTIFY, nmhotitem.hdr.idFrom, (LPARAM)&nmhotitem);
+
                 InvalidateRect(hWnd, NULL, TRUE);
             }
 
