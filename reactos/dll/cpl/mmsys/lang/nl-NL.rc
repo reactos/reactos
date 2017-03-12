@@ -12,8 +12,8 @@ BEGIN
     CONTROL "", IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | TBS_ENABLESELRANGE | TBS_BOTTOM | TBS_HORZ | WS_TABSTOP, 65, 45, 140, 14
     LTEXT "Laag", -1, 62, 62, 30, 17
     LTEXT "Hoog", -1, 195, 62, 30, 17
-    CHECKBOX "&Dempen", IDC_MUTE_CHECKBOX, 25, 78, 190, 10
-    CHECKBOX "P&ictogram voor het volume in het systeemvak plaatsen", IDC_ICON_IN_TASKBAR, 25, 92, 190, 10
+    AUTOCHECKBOX "&Dempen", IDC_MUTE_CHECKBOX, 25, 78, 190, 10
+    AUTOCHECKBOX "P&ictogram voor het volume in het systeemvak plaatsen", IDC_ICON_IN_TASKBAR, 25, 92, 190, 10
     PUSHBUTTON "Ge&avanceerd...", IDC_ADVANCED_BTN, 150, 105, 75, 15
     GROUPBOX "Luidsprekerinstellingen", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
     CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
@@ -64,7 +64,7 @@ BEGIN
     COMBOBOX IDC_DEVICE_MIDI_LIST, 50, 168, 180, 46, CBS_DROPDOWNLIST
     PUSHBUTTON "Vol&ume...", IDC_VOLUME3_BTN, 85, 185, 70, 15
     PUSHBUTTON "&Info...", IDC_ADV3_BTN, 160, 185, 70, 15
-    CHECKBOX "&Alleen standaardapparaten gebruiken", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10
+    AUTOCHECKBOX "&Alleen standaardapparaten gebruiken", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10
 END
 
 IDD_VOICE DIALOGEX 0, 0, 246, 228
