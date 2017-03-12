@@ -417,9 +417,12 @@ ReadVolumeLabel(
             Status = VfatReadDisk(DeviceObject, &FileOffset, PAGE_SIZE, (PUCHAR)Buffer, TRUE);
             if (!NT_SUCCESS(Status))
             {
-                ExFreePoolWithTag(Entry, TAG_VFAT);
+                ExFreePoolWithTag(Buffer, TAG_VFAT);
             }
-            Entry = Buffer;
+            else
+            {
+                Entry = Buffer;
+            }
         }
         else
         {
