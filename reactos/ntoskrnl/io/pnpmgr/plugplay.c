@@ -670,9 +670,7 @@ IopGetDeviceRelations(PPLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA RelationsData)
         BufferSize = RelationsData->BufferSize;
         Buffer = RelationsData->Buffer;
 
-        ProbeForWrite(RelationsData->Buffer,
-                      RelationsData->BufferSize,
-                      sizeof(CHAR));
+        ProbeForWrite(Buffer, BufferSize, sizeof(CHAR));
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -723,7 +721,7 @@ IopGetDeviceRelations(PPLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA RelationsData)
                                &IoStatusBlock,
                                IRP_MN_QUERY_DEVICE_RELATIONS,
                                &Stack);
-    if (!NT_SUCCESS(Status) || Status == STATUS_PENDING)
+    if (!NT_SUCCESS(Status))
     {
         DPRINT1("IopInitiatePnpIrp() failed (Status 0x%08lx)\n", Status);
         goto done;
