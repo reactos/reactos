@@ -150,7 +150,6 @@
 /* Object Manager Tags */
 #define OB_NAME_TAG             'mNbO'
 #define OB_DIR_TAG              'iDbO'
-#define TAG_OB_DIR_SD           'sDbO'
 
 
 /* formerly located in ps/cid.c */

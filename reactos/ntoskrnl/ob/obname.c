@@ -34,35 +34,40 @@ UNICODE_STRING ObpDosDevicesShortName =
 NTSTATUS
 NTAPI
 INIT_FUNCTION
-ObpCreateGlobalDosDevicesSD(OUT PSECURITY_DESCRIPTOR SecurityDescriptor)
+ObpCreateGlobalDosDevicesSD(OUT PSECURITY_DESCRIPTOR *SecurityDescriptor)
 {
-    ULONG AclLength;
+    PSECURITY_DESCRIPTOR Sd = NULL;
     PACL Dacl;
+    ULONG AclSize, SdSize;
     NTSTATUS Status;
 
-    /* Initialize the SD */
-    Status = RtlCreateSecurityDescriptor(SecurityDescriptor,
-                                         SECURITY_DESCRIPTOR_REVISION);
-    if (!NT_SUCCESS(Status))
-        return Status;
+    AclSize = sizeof(ACL) +
+              sizeof(ACE) + RtlLengthSid(SeWorldSid) +
+              sizeof(ACE) + RtlLengthSid(SeLocalSystemSid) +
+              sizeof(ACE) + RtlLengthSid(SeWorldSid) +
+              sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid) +
+              sizeof(ACE) + RtlLengthSid(SeLocalSystemSid) +
+              sizeof(ACE) + RtlLengthSid(SeCreatorOwnerSid);
 
-    /* Allocate the DACL */
-    AclLength = sizeof(ACL) +
-                sizeof(ACE) + RtlLengthSid(SeWorldSid) +
-                sizeof(ACE) + RtlLengthSid(SeLocalSystemSid) +
-                sizeof(ACE) + RtlLengthSid(SeWorldSid) +
-                sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid) +
-                sizeof(ACE) + RtlLengthSid(SeLocalSystemSid) +
-                sizeof(ACE) + RtlLengthSid(SeCreatorOwnerSid);
+    SdSize = sizeof(SECURITY_DESCRIPTOR) + AclSize;
 
-    Dacl = ExAllocatePoolWithTag(PagedPool, AclLength, TAG_OB_DIR_SD);
-    if (Dacl == NULL)
+    /* Allocate the SD and ACL */
+    Sd = ExAllocatePoolWithTag(PagedPool, SdSize, TAG_SD);
+    if (Sd == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    /* Initialize the SD */
+    Status = RtlCreateSecurityDescriptor(Sd,
+                                         SECURITY_DESCRIPTOR_REVISION);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Dacl = (PACL)((INT_PTR)Sd + sizeof(SECURITY_DESCRIPTOR));
+
     /* Initialize the DACL */
-    RtlCreateAcl(Dacl, AclLength, ACL_REVISION);
+    RtlCreateAcl(Dacl, AclSize, ACL_REVISION);
 
     /* Add the ACEs */
     RtlAddAccessAllowedAce(Dacl,
@@ -100,31 +105,23 @@ ObpCreateGlobalDosDevicesSD(OUT PSECURITY_DESCRIPTOR SecurityDescriptor)
                              SeCreatorOwnerSid);
 
     /* Attach the DACL to the SD */
-    Status = RtlSetDaclSecurityDescriptor(SecurityDescriptor,
+    Status = RtlSetDaclSecurityDescriptor(Sd,
                                           TRUE,
                                           Dacl,
                                           FALSE);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    *SecurityDescriptor = Sd;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (Sd != NULL)
+            ExFreePoolWithTag(Sd, TAG_SD);
+    }
 
     return Status;
-}
-
-VOID
-NTAPI
-INIT_FUNCTION
-ObpFreeGlobalDosDevicesSD(IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor)
-{
-    PACL Dacl = NULL;
-    BOOLEAN DaclPresent, Defaulted;
-    NTSTATUS Status;
-
-    Status = RtlGetDaclSecurityDescriptor(SecurityDescriptor,
-                                          &DaclPresent,
-                                          &Dacl,
-                                          &Defaulted);
-    if (NT_SUCCESS(Status) && Dacl != NULL)
-    {
-        ExFreePoolWithTag(Dacl, TAG_OB_DIR_SD);
-    }
 }
 
 NTSTATUS
@@ -135,7 +132,7 @@ ObpCreateDosDevicesDirectory(VOID)
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING RootName, TargetName, LinkName;
     HANDLE Handle, SymHandle;
-    SECURITY_DESCRIPTOR DosDevicesSD;
+    PSECURITY_DESCRIPTOR DosDevicesSD = NULL;
     NTSTATUS Status;
 
     /* Create a custom security descriptor for the global DosDevices directory */
@@ -149,11 +146,11 @@ ObpCreateDosDevicesDirectory(VOID)
                                &RootName,
                                OBJ_PERMANENT,
                                NULL,
-                               &DosDevicesSD);
+                               DosDevicesSD);
     Status = NtCreateDirectoryObject(&Handle,
                                      DIRECTORY_ALL_ACCESS,
                                      &ObjectAttributes);
-    ObpFreeGlobalDosDevicesSD(&DosDevicesSD);
+    ExFreePoolWithTag(DosDevicesSD, TAG_SD);
     if (!NT_SUCCESS(Status)) return Status;
 
     /*********************************************\

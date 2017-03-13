@@ -58,32 +58,37 @@ static
 NTSTATUS
 NTAPI
 INIT_FUNCTION
-ObpCreateKernelObjectsSD(OUT PSECURITY_DESCRIPTOR SecurityDescriptor)
+ObpCreateKernelObjectsSD(OUT PSECURITY_DESCRIPTOR *SecurityDescriptor)
 {
-    ULONG AclLength;
+    PSECURITY_DESCRIPTOR Sd = NULL;
     PACL Dacl;
+    ULONG AclSize, SdSize;
     NTSTATUS Status;
 
-    /* Initialize the SD */
-    Status = RtlCreateSecurityDescriptor(SecurityDescriptor,
-                                         SECURITY_DESCRIPTOR_REVISION);
-    if (!NT_SUCCESS(Status))
-        return Status;
+    AclSize = sizeof(ACL) +
+              sizeof(ACE) + RtlLengthSid(SeWorldSid) +
+              sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid) +
+              sizeof(ACE) + RtlLengthSid(SeLocalSystemSid);
 
-    /* Allocate the DACL */
-    AclLength = sizeof(ACL) +
-                sizeof(ACE) + RtlLengthSid(SeWorldSid) +
-                sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid) +
-                sizeof(ACE) + RtlLengthSid(SeLocalSystemSid);
+    SdSize = sizeof(SECURITY_DESCRIPTOR) + AclSize;
 
-    Dacl = ExAllocatePoolWithTag(PagedPool, AclLength, TAG_OB_DIR_SD);
-    if (Dacl == NULL)
+    /* Allocate the SD and ACL */
+    Sd = ExAllocatePoolWithTag(PagedPool, SdSize, TAG_SD);
+    if (Sd == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    /* Initialize the SD */
+    Status = RtlCreateSecurityDescriptor(Sd,
+                                         SECURITY_DESCRIPTOR_REVISION);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Dacl = (PACL)((INT_PTR)Sd + sizeof(SECURITY_DESCRIPTOR));
+
     /* Initialize the DACL */
-    RtlCreateAcl(Dacl, AclLength, ACL_REVISION);
+    RtlCreateAcl(Dacl, AclSize, ACL_REVISION);
 
     /* Add the ACEs */
     RtlAddAccessAllowedAce(Dacl,
@@ -102,32 +107,23 @@ ObpCreateKernelObjectsSD(OUT PSECURITY_DESCRIPTOR SecurityDescriptor)
                            SeLocalSystemSid);
 
     /* Attach the DACL to the SD */
-    Status = RtlSetDaclSecurityDescriptor(SecurityDescriptor,
+    Status = RtlSetDaclSecurityDescriptor(Sd,
                                           TRUE,
                                           Dacl,
                                           FALSE);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    *SecurityDescriptor = Sd;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (Sd != NULL)
+            ExFreePoolWithTag(Sd, TAG_SD);
+    }
 
     return Status;
-}
-
-static
-VOID
-NTAPI
-INIT_FUNCTION
-ObpFreeKernelObjectsSD(IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor)
-{
-    PACL Dacl = NULL;
-    BOOLEAN DaclPresent, Defaulted;
-    NTSTATUS Status;
-
-    Status = RtlGetDaclSecurityDescriptor(SecurityDescriptor,
-                                          &DaclPresent,
-                                          &Dacl,
-                                          &Defaulted);
-    if (NT_SUCCESS(Status) && Dacl != NULL)
-    {
-        ExFreePoolWithTag(Dacl, TAG_OB_DIR_SD);
-    }
 }
 
 BOOLEAN
@@ -212,7 +208,7 @@ ObInitSystem(VOID)
     POBJECT_HEADER Header;
     POBJECT_HEADER_CREATOR_INFO CreatorInfo;
     POBJECT_HEADER_NAME_INFO NameInfo;
-    SECURITY_DESCRIPTOR KernelObjectsSD;
+    PSECURITY_DESCRIPTOR KernelObjectsSD = NULL;
     NTSTATUS Status;
 
     /* Check if this is actually Phase 1 initialization */
@@ -346,13 +342,13 @@ ObPostPhase0:
                                &Name,
                                OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
                                NULL,
-                               &KernelObjectsSD);
+                               KernelObjectsSD);
 
     /* Create the directory */
     Status = NtCreateDirectoryObject(&Handle,
                                      DIRECTORY_ALL_ACCESS,
                                      &ObjectAttributes);
-    ObpFreeKernelObjectsSD(&KernelObjectsSD);
+    ExFreePoolWithTag(KernelObjectsSD, TAG_SD);
     if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Close the extra handle */
