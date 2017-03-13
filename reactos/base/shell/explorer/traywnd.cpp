@@ -847,6 +847,26 @@ GetPrimaryRect:
         return hMon;
     }
 
+    VOID AdjustSizerRect(RECT *rc, DWORD pos)
+    {
+        switch (pos)
+        {
+            case ABE_TOP:
+                rc->bottom -= GetSystemMetrics(SM_CXSIZEFRAME);
+                break;
+            case ABE_BOTTOM:
+                rc->top += GetSystemMetrics(SM_CXSIZEFRAME);
+                break;
+            case ABE_LEFT:
+                rc->right -= GetSystemMetrics(SM_CYSIZEFRAME);
+                break;
+            case ABE_RIGHT:
+                rc->left += GetSystemMetrics(SM_CYSIZEFRAME);
+                break;
+        }
+
+    }
+
     VOID MakeTrayRectWithSize(IN DWORD Position,
                               IN const SIZE *pTraySize,
                               IN OUT RECT *pRect)
@@ -882,10 +902,13 @@ GetPrimaryRect:
 
         *pRect = *pScreen;
 
-        /* Move the border outside of the screen */
-        InflateRect(pRect,
-                    GetSystemMetrics(SM_CXEDGE),
-                    GetSystemMetrics(SM_CYEDGE));
+        if(!IsThemeActive())
+        {
+            /* Move the border outside of the screen */
+            InflateRect(pRect,
+                        GetSystemMetrics(SM_CXEDGE),
+                        GetSystemMetrics(SM_CYEDGE));
+        }
 
         MakeTrayRectWithSize(Position, pTraySize, pRect);
     }
@@ -1374,8 +1397,18 @@ ChangePos:
                entire window size, not just the client size. However, we
                use a thinner border than a standard thick border, so that
                the start button and bands are not stuck to the screen border. */
-            sr.Size.cx = StartBtnSize.cx + (2 * (EdgeSize.cx + DlgFrameSize.cx));
-            sr.Size.cy = StartBtnSize.cy + (2 * (EdgeSize.cy + DlgFrameSize.cy));
+            if(!IsThemeActive())
+            {
+                sr.Size.cx = StartBtnSize.cx + (2 * (EdgeSize.cx + DlgFrameSize.cx));
+                sr.Size.cy = StartBtnSize.cy + (2 * (EdgeSize.cy + DlgFrameSize.cy));
+            }
+            else
+            {
+                sr.Size.cx = StartBtnSize.cx - EdgeSize.cx;
+                sr.Size.cy = StartBtnSize.cy - EdgeSize.cy;
+                if(!Locked)
+                    sr.Size.cy += GetSystemMetrics(SM_CYSIZEFRAME);
+            }
 
             /* Use the primary screen by default */
             rcScreen.left = 0;
@@ -1402,8 +1435,16 @@ ChangePos:
            loaded from the registry are at least. The windows explorer behaves
            the same way, it allows the user to save a zero width vertical tray
            window, but not a zero height horizontal tray window. */
-        WndSize.cx = 2 * (EdgeSize.cx + DlgFrameSize.cx);
-        WndSize.cy = StartBtnSize.cy + (2 * (EdgeSize.cy + DlgFrameSize.cy));
+        if(!IsThemeActive())
+        {
+            WndSize.cx = 2 * (EdgeSize.cx + DlgFrameSize.cx);
+            WndSize.cy = StartBtnSize.cy + (2 * (EdgeSize.cy + DlgFrameSize.cy));
+        }
+        else
+        {
+            WndSize.cx = StartBtnSize.cx;
+            WndSize.cy = StartBtnSize.cy - EdgeSize.cx;
+        }
 
         if (WndSize.cx < sr.Size.cx)
             WndSize.cx = sr.Size.cx;
@@ -1828,7 +1869,7 @@ ChangePos:
         GetWindowRect(&rect);
         OffsetRect(&rect, -rect.left, -rect.top);
 
-        hdc = GetDCEx(hRgn, DCX_WINDOW | DCX_INTERSECTRGN | DCX_PARENTCLIP);
+        hdc = GetWindowDC();
 
         switch (m_Position)
         {
@@ -1889,8 +1930,11 @@ ChangePos:
         if (AlwaysOnTop)
             dwExStyle |= WS_EX_TOPMOST;
 
-        DWORD dwStyle = WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
-            WS_BORDER | WS_THICKFRAME;
+        DWORD dwStyle = WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
+        if(!IsThemeActive())
+        {
+            dwStyle |= WS_THICKFRAME | WS_BORDER;
+        }
 
         ZeroMemory(&rcWnd, sizeof(rcWnd));
         if (m_Position != (DWORD) -1)
@@ -1957,16 +2001,31 @@ ChangePos:
                 }
             }
 
-            if (Locked && m_Theme)
+            if (m_Theme)
             {
-                SetWindowStyle(m_hWnd, WS_THICKFRAME | WS_BORDER, 0);
-            }
-            else
-            {
-                SetWindowStyle(m_hWnd, WS_THICKFRAME | WS_BORDER, WS_THICKFRAME | WS_BORDER);
-            }
-            SetWindowPos(NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
+                /* Update cached tray sizes */
+                for(DWORD Pos = ABE_LEFT; Pos <= ABE_BOTTOM; Pos++)
+                {
+                    RECT rcGripper = {0};
+                    AdjustSizerRect(&rcGripper, Pos);
 
+                    if(Locked)
+                    {
+                        m_TrayRects[Pos].top += rcGripper.top;
+                        m_TrayRects[Pos].left += rcGripper.left;
+                        m_TrayRects[Pos].bottom += rcGripper.bottom;
+                        m_TrayRects[Pos].right += rcGripper.right;
+                    }
+                    else
+                    {
+                        m_TrayRects[Pos].top -= rcGripper.top;
+                        m_TrayRects[Pos].left -= rcGripper.left;
+                        m_TrayRects[Pos].bottom -= rcGripper.bottom;
+                        m_TrayRects[Pos].right -= rcGripper.right;
+                    }
+                }
+            }
+            SetWindowPos(NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOOWNERZORDER);
         }
 
         return bPrevLock;
@@ -2068,7 +2127,7 @@ ChangePos:
         else
             m_Theme = NULL;
 
-        if (Locked && m_Theme)
+        if (m_Theme)
         {
             SetWindowStyle(m_hWnd, WS_THICKFRAME | WS_BORDER, 0);
         }
@@ -2620,6 +2679,38 @@ HandleTrayContextMenu:
         return TRUE;
     }
 
+    LRESULT OnNcCalcSize(INT code, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        RECT *rc = NULL;
+        /* Ignore WM_NCCALCSIZE if we are not themed or locked */
+        if(!IsThemeActive() || Locked)
+        {
+            bHandled = FALSE;
+            return 0;
+        }
+        if(!wParam)
+        {
+            rc = (RECT*)wParam;
+        }
+        else
+        {
+            NCCALCSIZE_PARAMS *prms = (NCCALCSIZE_PARAMS*)lParam;
+            if(prms->lppos->flags & SWP_NOSENDCHANGING)
+            {
+                bHandled = FALSE;
+                return 0;
+            }
+            rc = &prms->rgrc[0];
+        }
+
+        AdjustSizerRect(rc, m_Position);
+
+        if (wParam == FALSE)
+            return 0;
+
+        return 0;
+    }
+
     LRESULT OnRebarAutoSize(INT code, LPNMHDR nmhdr, BOOL& bHandled)
     {
 #if 0
@@ -2723,6 +2814,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(TWM_DOEXITWINDOWS, OnDoExitWindows)
         MESSAGE_HANDLER(WM_CLOSE, OnDoExitWindows)
         MESSAGE_HANDLER(WM_HOTKEY, OnHotkey)
+        MESSAGE_HANDLER(WM_NCCALCSIZE, OnNcCalcSize)
     ALT_MSG_MAP(1)
     END_MSG_MAP()
 
