@@ -2705,9 +2705,6 @@ HandleTrayContextMenu:
 
         AdjustSizerRect(rc, m_Position);
 
-        if (wParam == FALSE)
-            return 0;
-
         return 0;
     }
 
