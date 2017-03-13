@@ -3091,8 +3091,6 @@ public:
 
             TRACE("Adding item %d label %S type %d\n", mii.wID, mii.dwTypeData, mii.fType);
 
-            mii.fType |= MFT_RADIOCHECK;
-
             ::InsertMenuItemW(hPopup, i + 1, TRUE, &mii);
         }
 
