@@ -118,7 +118,7 @@ public:
         SetWindowTheme(m_hWnd, L"Start", NULL);
 
         /* Get the system fonts, we use the caption font, always bold, though. */
-        NONCLIENTMETRICS ncm  {sizeof(ncm)};
+        NONCLIENTMETRICS ncm = {sizeof(ncm)};
         if (SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, FALSE))
         {
             ncm.lfCaptionFont.lfWeight = FW_BOLD;
