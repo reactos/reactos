@@ -105,254 +105,37 @@ public:
         if (m_ImageList == NULL ||
             !SendMessageW(BCM_GETIDEALSIZE, 0, (LPARAM) &Size))
         {
-            Size.cx = 2 * GetSystemMetrics(SM_CXEDGE);
-            Size.cy = 2 * GetSystemMetrics(SM_CYEDGE);
-
-            if (hbmStart == NULL)
-            {
-                hbmStart = (HBITMAP) SendMessageW(BM_GETIMAGE, IMAGE_BITMAP, 0);
-            }
-
-            if (hbmStart != NULL)
-            {
-                BITMAP bmp;
-
-                if (GetObject(hbmStart, sizeof(bmp), &bmp) != 0)
-                {
-                    Size.cx += bmp.bmWidth;
-                    Size.cy += max(bmp.bmHeight, GetSystemMetrics(SM_CYCAPTION));
-                }
-                else
-                {
-                    /* Huh?! Shouldn't happen... */
-                    goto DefSize;
-                }
-            }
-            else
-            {
-DefSize:
-                Size.cx += GetSystemMetrics(SM_CXMINIMIZED);
-                Size.cy += GetSystemMetrics(SM_CYCAPTION);
-            }
+            Size.cx = 2 * GetSystemMetrics(SM_CXEDGE) + GetSystemMetrics(SM_CYCAPTION) * 3;
+            Size.cy = 2 * GetSystemMetrics(SM_CYEDGE) + GetSystemMetrics(SM_CYCAPTION);
         }
 
         /* Save the size of the start button */
         m_Size = Size;
     }
 
-    BOOL CreateImageList()
-    {
-        HICON hIconStart;
-        SIZE IconSize;
-
-        if (m_ImageList != NULL)
-            return TRUE;
-
-        IconSize.cx = GetSystemMetrics(SM_CXSMICON);
-        IconSize.cy = GetSystemMetrics(SM_CYSMICON);
-
-        /* Load the start button icon and create a image list for it */
-        hIconStart = (HICON) LoadImageW(hExplorerInstance,
-                                       MAKEINTRESOURCEW(IDI_START),
-                                       IMAGE_ICON,
-                                       IconSize.cx,
-                                       IconSize.cy,
-                                       LR_SHARED | LR_DEFAULTCOLOR);
-
-        if (hIconStart == NULL)
-            return FALSE;
-
-        m_ImageList = ImageList_Create(IconSize.cx,
-                                        IconSize.cy,
-                                        ILC_COLOR32 | ILC_MASK,
-                                        1, 1);
-        if (m_ImageList == NULL)
-            return FALSE;
-
-        int s = ImageList_ReplaceIcon(m_ImageList, -1, hIconStart);
-        if (s < 0)
-        {
-            /* Failed to add the icon! */
-            ImageList_Destroy(m_ImageList);
-            m_ImageList = NULL;
-
-            return FALSE;
-        }
-
-        return TRUE;
-    }
-
-    HBITMAP CreateBitmap()
-    {
-        WCHAR szStartCaption[32];
-        HFONT hFontOld;
-        HDC hDC = NULL;
-        HDC hDCScreen = NULL;
-        SIZE Size, SmallIcon;
-        HBITMAP hbmpOld, hbmp = NULL;
-        HBITMAP hBitmap = NULL;
-        HICON hIconStart;
-        BOOL Ret;
-        UINT Flags;
-        RECT rcButton;
-
-        /* NOTE: this is the backwards compatibility code that is used if the
-        Common Controls Version 6.0 are not available! */
-
-        if (!LoadStringW(hExplorerInstance,
-                         IDS_START,
-                         szStartCaption,
-                         _countof(szStartCaption)))
-        {
-            return NULL;
-        }
-
-        /* Load the start button icon */
-        SmallIcon.cx = GetSystemMetrics(SM_CXSMICON);
-        SmallIcon.cy = GetSystemMetrics(SM_CYSMICON);
-        hIconStart = (HICON) LoadImageW(hExplorerInstance,
-                                       MAKEINTRESOURCEW(IDI_START),
-                                       IMAGE_ICON,
-                                       SmallIcon.cx,
-                                       SmallIcon.cy,
-                                       LR_SHARED | LR_DEFAULTCOLOR);
-
-        hDCScreen = ::GetDC(NULL);
-        if (hDCScreen == NULL)
-            goto Cleanup;
-
-        hDC = CreateCompatibleDC(hDCScreen);
-        if (hDC == NULL)
-            goto Cleanup;
-
-        hFontOld = (HFONT) SelectObject(hDC, m_Font);
-
-        Ret = GetTextExtentPoint32(hDC,
-                                   szStartCaption,
-                                   wcslen(szStartCaption),
-                                   &Size);
-
-        SelectObject(hDC, hFontOld);
-        if (!Ret)
-            goto Cleanup;
-
-        /* Make sure the height is at least the size of a caption icon. */
-        if (hIconStart != NULL)
-            Size.cx += SmallIcon.cx + 4;
-        Size.cy = max(Size.cy, SmallIcon.cy);
-
-        /* Create the bitmap */
-        hbmp = CreateCompatibleBitmap(hDCScreen,
-                                      Size.cx,
-                                      Size.cy);
-        if (hbmp == NULL)
-            goto Cleanup;
-
-        /* Calculate the button rect */
-        rcButton.left = 0;
-        rcButton.top = 0;
-        rcButton.right = Size.cx;
-        rcButton.bottom = Size.cy;
-
-        /* Draw the button */
-        hbmpOld = (HBITMAP) SelectObject(hDC, hbmp);
-
-        Flags = DC_TEXT | DC_INBUTTON;
-        if (hIconStart != NULL)
-            Flags |= DC_ICON;
-
-        Ret = DrawCaptionTemp(NULL,
-                        hDC,
-                        &rcButton,
-                        m_Font,
-                        hIconStart,
-                        szStartCaption,
-                        Flags);
-
-        SelectObject(hDC, hbmpOld);
-
-        if (!Ret)
-            goto Cleanup;
-
-        /* We successfully created the bitmap! */
-        hBitmap = hbmp;
-        hbmp = NULL;
-
-Cleanup:
-        if (hDCScreen != NULL)
-        {
-            ::ReleaseDC(NULL, hDCScreen);
-        }
-
-        if (hbmp != NULL)
-            DeleteObject(hbmp);
-
-        if (hDC != NULL)
-            DeleteDC(hDC);
-
-        return hBitmap;
-    }
-
     VOID Initialize()
     {
-        NONCLIENTMETRICS ncm;
-
         SetWindowTheme(m_hWnd, L"Start", NULL);
 
-        if (m_Font == NULL)
+        /* Get the system fonts, we use the caption font, always bold, though. */
+        NONCLIENTMETRICS ncm  {sizeof(ncm)};
+        if (SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, FALSE))
         {
-            /* Get the system fonts, we use the caption font, always bold, though. */
-            ncm.cbSize = sizeof(ncm);
-            if (SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, FALSE))
-            {
-                ncm.lfCaptionFont.lfWeight = FW_BOLD;
-                m_Font = CreateFontIndirect(&ncm.lfCaptionFont);
-            }
+            ncm.lfCaptionFont.lfWeight = FW_BOLD;
+            m_Font = CreateFontIndirect(&ncm.lfCaptionFont);
         }
 
         SetFont(m_Font, FALSE);
 
-        if (CreateImageList())
-        {
-            BUTTON_IMAGELIST bil;
+        m_ImageList = ImageList_LoadImageW(hExplorerInstance,
+                                           MAKEINTRESOURCEW(IDB_START),
+                                           0, 0, 0,
+                                           IMAGE_BITMAP,
+                                           LR_LOADTRANSPARENT | LR_CREATEDIBSECTION);
 
-            /* Try to set the start button image. this requires the Common
-            Controls 6.0 to be present (XP and later) */
-            bil.himl = m_ImageList;
-            bil.margin.left = bil.margin.right = 1;
-            bil.margin.top = bil.margin.bottom = 1;
-            bil.uAlign = BUTTON_IMAGELIST_ALIGN_LEFT;
-
-            if (SendMessageW(BCM_SETIMAGELIST, 0, (LPARAM) &bil))
-            {
-                SIZE Size = { 0, 0 };
-                if (SendMessageW(BCM_GETIDEALSIZE, 0, (LPARAM) &Size))
-                {
-                    /* We're using the image list, remove the BS_BITMAP style and
-                    don't center it horizontally */
-                    SetWindowStyle(m_hWnd, BS_BITMAP | BS_RIGHT, 0);
-
-                    UpdateSize();
-                    return;
-                }
-            }
-
-            /* Fall back to the deprecated method on older systems that don't
-            support Common Controls 6.0 */
-            ImageList_Destroy(m_ImageList);
-            m_ImageList = NULL;
-        }
-
-        HBITMAP hbmStart = CreateBitmap();
-        if (hbmStart != NULL)
-        {
-            UpdateSize(hbmStart);
-
-            HBITMAP hbmOld = (HBITMAP) SendMessageW(BM_SETIMAGE, IMAGE_BITMAP, (LPARAM) hbmStart);
-
-            if (hbmOld != NULL)
-                DeleteObject(hbmOld);
-        }
+        BUTTON_IMAGELIST bil = {m_ImageList, {1,1,1,1}, BUTTON_IMAGELIST_ALIGN_LEFT};
+        SendMessageW(BCM_SETIMAGELIST, 0, (LPARAM) &bil);
+        UpdateSize();
     }
 
     HWND Create(HWND hwndParent)
@@ -363,10 +146,10 @@ Cleanup:
                          szStartCaption,
                          _countof(szStartCaption)))
         {
-            szStartCaption[0] = L'\0';
+            wcscpy(szStartCaption, L"Start");
         }
 
-        DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_CENTER | BS_VCENTER | BS_BITMAP;
+        DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_LEFT | BS_VCENTER;
 
         m_hWnd = CreateWindowEx(
             0,
