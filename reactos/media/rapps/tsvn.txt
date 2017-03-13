@@ -1,0 +1,16 @@
+[Section]
+Name = TortoiseSVN
+Version = 1.9.5
+License = GPL
+Description = Graphical SVN client for code synchronization/updating.
+Size = 14.7 MiB
+Category = 7
+URLSite = http://www.tortoisesvn.net/
+URLDownload = https://download.sourceforge.net/project/tortoisesvn/1.9.5/Application/TortoiseSVN-1.9.5.27581-win32-svn-1.9.5.msi
+SHA1 = be765bff3e7145646bd7f569d628b870c3b1751f
+CDPath = none
+
+[Section.0407]
+Description = Grafischer SVN Client für Code Synchronisation/Aktualisierung.
+Size = 14,7 MiB
+

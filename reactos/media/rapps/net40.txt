@@ -1,0 +1,57 @@
+[Section]
+Name = Microsoft .NET Framework Version 4.0
+Version = 4.0
+License = Unknown
+Description = Components needed to run managed Windows applications compiled in an Intermediate language like C#.
+Size = 48.1 MiB
+Category = 14
+URLSite = http://www.microsoft.com/en-US/download/details.aspx?id=17718
+URLDownload = https://download.microsoft.com/download/9/5/A/95A9616B-7A37-4AF6-BC36-D6EA96C8DAAE/dotNetFx40_Full_x86_x64.exe
+SHA1 = 58da3d74db353aad03588cbb5cea8234166d8b99
+CDPath = none
+
+[Section.0407]
+Description = Runtime für C# Windows Anwendungen.
+URLSite = http://www.microsoft.com/de-DE/download/details.aspx?id=17718
+Size = 48,1 MiB
+
+[Section.0a]
+Description = Componentes necesarios para ejecutar programas escritos en lenguajes intermedios como C#.
+URLSite = http://www.microsoft.com/es-ES/download/details.aspx?id=17718
+
+[Section.040c]
+Description = Microsoft .NET Framework version 4.0
+URLSite = http://www.microsoft.com/fr-FR/download/details.aspx?id=17718
+Size = 48,1 Mio
+
+[Section.0410]
+Description = Microsoft .NET Framework Version 4.0
+URLSite = http://www.microsoft.com/it-IT/download/details.aspx?id=17718
+
+[Section.0415]
+Description = Microsoft .NET Framework Wersja 4.0
+URLSite = http://www.microsoft.com/pl-PL/download/details.aspx?id=17718
+
+[Section.0418]
+License = Nespecificată
+Description = Pachet necesar pentru execuția în Windows a aplicațiilor gestionate, scrise într-un limbaj ca C#.
+Size = 48,1 Mio
+
+[Section.0419]
+License = Неизвестно
+Description = Компоненты, необходимые для запуска некоторых Windows приложений.
+URLSite = https://www.microsoft.com/ru-RU/download/details.aspx?id=17718
+Size = 48,1 МиБ
+
+[Section.041f]
+Name = Microsoft .NET Çatısı Sürüm 4.0
+License = Bilinmiyor
+Description = C# gibi orta düzey bir dilde derlenmiş yönetilen Windows uygulamalarını çalıştırmak için gerekli bileşenler.
+URLSite = http://www.microsoft.com/tr-TR/download/details.aspx?id=17718
+Size = 48,1 MiB
+
+[Section.0804]
+License = 未知
+Description = 运行在中间的语言，如 C# 中编译托管的 Windows 应用程序所需的组件。
+URLSite = https://www.microsoft.com/zh-CN/download/details.aspx?id=1639
+
