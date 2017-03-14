@@ -912,10 +912,10 @@ void dump_edd_directdraw_local(PEDD_DIRECTDRAW_LOCAL pEddlcl)
     DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->fl                       : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, fl), pEddlcl->fl);
 
     DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->peDirectDrawLocal_prev   : 0x%p\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, peDirectDrawLocal_prev), pEddlcl->peDirectDrawLocal_prev);
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->Process                  : 0x%p\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, Process), pEddlcl->Process);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_034                  : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, unk_034), pEddlcl->unk_034);
     DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_038                  : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, unk_038), pEddlcl->unk_038);
     DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->UniqueProcess            : 0x%p\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, UniqueProcess), pEddlcl->UniqueProcess);
-    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_040                  : 0x%p\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, unk_040), pEddlcl->unk_040);
+    DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->Process                  : 0x%p\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, Process), pEddlcl->Process);
     DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_044                  : 0x%p\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, unk_044), pEddlcl->unk_044);
     DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_048                  : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, unk_048), pEddlcl->unk_048);
     DPRINT1("0x%08lx PEDD_DIRECTDRAW_LOCAL->unk_04C                  : 0x%08lx\n",FIELD_OFFSET(EDD_DIRECTDRAW_LOCAL, unk_04C), pEddlcl->unk_04C);

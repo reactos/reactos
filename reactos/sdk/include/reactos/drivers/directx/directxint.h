@@ -24,10 +24,10 @@ typedef struct _EDD_DIRECTDRAW_LOCAL
 /* 0x2C */    FLONG fl;
 /* 0x30 */    struct _EDD_DIRECTDRAW_LOCAL *peDirectDrawLocal_prev;  // verified to match Windows XP,
                                                                      // points to the old DDLocal when new handle is created.
-/* 0x34 */    PEPROCESS Process;
+/* 0x34 */    ULONG unk_034;
 /* 0x38 */    ULONG unk_038;
 /* 0x3C */    HANDLE UniqueProcess;
-/* 0x40 */    VOID *unk_040;
+/* 0x40 */    PEPROCESS Process;
 /* 0x44 */    VOID *unk_044;
 /* 0x48 */    ULONG unk_048;
 /* 0x4C */    ULONG unk_04C;

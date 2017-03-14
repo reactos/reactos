@@ -151,15 +151,6 @@ DxDdColorControl(
 
 DWORD
 NTAPI
-DxDdCreateDirectDrawObject(
-    PVOID p1)
-{
-    TRACE();
-    return 0;
-}
-
-DWORD
-NTAPI
 DxDdCreateD3DBuffer(
     PVOID p1,
     PVOID p2,

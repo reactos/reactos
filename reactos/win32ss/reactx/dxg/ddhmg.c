@@ -323,12 +323,12 @@ DdGetFreeHandle(UCHAR objType)
 * Size of memory to be allocated
 * @param CHAR objType
 * Object type
-* @param UINT objFlags
-* Object flags
+* @param UINT objLock
+* Object lock flag
 *
 * @return
-* Handle if object is not locked by objFlags
-* Object if lock is set in objFlags
+* Handle if object is not locked by objLock
+* Object if lock is set in objLock
 * 0 if it fails.
 *
 * @remarks.
@@ -336,7 +336,7 @@ DdGetFreeHandle(UCHAR objType)
 *--*/
 HANDLE
 FASTCALL
-DdHmgAlloc(ULONG objSize, CHAR objType, UINT objFlags)
+DdHmgAlloc(ULONG objSize, CHAR objType, BOOLEAN objLock)
 {
     PVOID pObject = NULL;
     HANDLE DdHandle = NULL;
@@ -363,16 +363,17 @@ DdHmgAlloc(ULONG objSize, CHAR objType, UINT objFlags)
 
         pEntry->Pid = (HANDLE)(((ULONG)PsGetCurrentProcessId() & 0xFFFFFFFC) | ((ULONG)(pEntry->Pid) & 1));
 
-        if (objFlags & 1)
+        if (objLock)
+        {
+            InterlockedIncrement((VOID*)&pEntry->pobj->cExclusiveLock);
             pEntry->pobj->Tid = KeGetCurrentThread();
-
-        pEntry->pobj->cExclusiveLock = objFlags & 1;
+        }
         pEntry->pobj->hHmgr = DdHandle;
         
         EngReleaseSemaphore(ghsemHmgr);
 
         /* Return handle if object not locked */
-        if (!(objFlags & 1))
+        if (!objLock)
            return DdHandle;
 
         return (HANDLE)pEntry;

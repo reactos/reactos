@@ -22,6 +22,7 @@
 #include <initguid.h>
 #include <ddrawi.h>
 #include <ntgdityp.h>
+#include <psfuncs.h>
 
 DEFINE_GUID(GUID_NTCallbacks,             0x6fe9ecde, 0xdf89, 0x11d1, 0x9d, 0xb0, 0x00, 0x60, 0x08, 0x27, 0x71, 0xba);
 DEFINE_GUID(GUID_DDMoreCaps,              0x880baf30, 0xb030, 0x11d0, 0x8e, 0xa7, 0x00, 0x60, 0x97, 0x97, 0xea, 0x5b);
@@ -52,8 +53,9 @@ typedef struct _DD_BASEOBJECT
 #define CapOver_DisableOGL        0x8
 #define CapOver_DisableEscapes    0x10
 
-
+#define ObjType_DDLOCAL_TYPE      1
 #define ObjType_DDSURFACE_TYPE    2
+#define ObjType_DDCONTEXT_TYPE    3
 #define ObjType_DDVIDEOPORT_TYPE  4
 #define ObjType_DDMOTIONCOMP_TYPE 5
 
@@ -171,7 +173,8 @@ typedef struct _DXENG_FUNCTIONS
 NTSTATUS NTAPI DriverEntry(IN PVOID Context1, IN PVOID Context2);
 NTSTATUS NTAPI GsDriverEntry(IN PVOID Context1, IN PVOID Context2);
 NTSTATUS APIENTRY DxDdCleanupDxGraphics(VOID);
-BOOL NTAPI DxDdEnableDirectDraw(PVOID arg1, BOOL arg2);
+BOOL NTAPI DxDdEnableDirectDraw(HANDLE hDev, BOOL arg2);
+DWORD NTAPI DxDdCreateDirectDrawObject(HDC hDC);
 
 /* Global pointers */
 extern ULONG gcSizeDdHmgr;
@@ -198,6 +201,7 @@ BOOL FASTCALL VerifyObjectOwner(PDD_ENTRY pEntry);
 BOOL FASTCALL DdHmgCreate(VOID);
 BOOL FASTCALL DdHmgDestroy(VOID);
 PVOID FASTCALL DdHmgLock(HANDLE DdHandle, UCHAR ObjectType, BOOLEAN LockOwned);
+HANDLE FASTCALL DdHmgAlloc(ULONG objSize, CHAR objType, BOOLEAN objLock);
 
 
 #endif /* _DXG_PCH_ */

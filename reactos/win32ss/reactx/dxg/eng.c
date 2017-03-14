@@ -68,6 +68,40 @@ BOOL intDdGetDriverInfo(PEDD_DIRECTDRAW_GLOBAL peDdGl, GUID guid, PVOID callback
 }
 
 
+PVOID
+FASTCALL
+intDdCreateDirectDrawLocal(HDEV hDev)
+{
+    PEDD_DIRECTDRAW_GLOBAL peDdGl = NULL;
+    PEDD_DIRECTDRAW_LOCAL peDdL = NULL;
+    PDD_ENTRY AllocRet;
+
+    peDdGl = (PEDD_DIRECTDRAW_GLOBAL)gpEngFuncs.DxEngGetHdevData(hDev, DxEGShDevData_eddg);
+
+    AllocRet = DdHmgAlloc(sizeof(EDD_DIRECTDRAW_LOCAL), ObjType_DDLOCAL_TYPE, TRUE);
+    if (!AllocRet) 
+        return NULL;
+
+    peDdL = (PEDD_DIRECTDRAW_LOCAL)AllocRet;
+
+    /* initialize DIRECTDRAW_LOCAL */
+    peDdL->peDirectDrawLocal_prev = peDdGl->peDirectDrawLocalList;
+    peDdL->UniqueProcess = PsGetCurrentThreadProcessId();
+    peDdL->Process = PsGetCurrentProcess();
+
+    // link DirectDrawGlobal and DirectDrawLocal
+    peDdGl->peDirectDrawLocalList = peDdL;
+    peDdL->peDirectDrawGlobal = peDdGl;
+    peDdL->peDirectDrawGlobal2 = peDdGl;
+
+    gpEngFuncs.DxEngReferenceHdev(hDev);
+
+    InterlockedExchangeAdd((LONG*)&peDdL->pobj.cExclusiveLock, 0xFFFFFFFF);
+
+    return peDdL->pobj.hHmgr;
+}
+
+
 PDD_SURFACE_LOCAL
 NTAPI
 DxDdLockDirectDrawSurface(HANDLE hDdSurface)
@@ -265,4 +299,57 @@ DxDdEnableDirectDraw(HANDLE hDev, BOOL arg2/*What for?*/)
     }
 
     return FALSE;
+}
+
+/*++
+* @name DxDdCreateDirectDrawObject
+* @implemented
+*
+* Function creates new DirectDraw object
+*
+* @param HDC hDC
+* Device context handle 
+*
+* @return
+* Newly created DirectDraw object handle. 
+*
+* @remarks.
+* Missing all AGP stuff
+*--*/
+DWORD
+NTAPI
+DxDdCreateDirectDrawObject(
+    HDC hDC)
+{
+    PDC pDC = NULL;
+    HDEV hDev = NULL;
+    DWORD retVal = 0;
+
+    pDC = gpEngFuncs.DxEngLockDC(hDC);
+    if (!pDC)
+        return 0;
+
+    // get driver hDev from DC
+    hDev = (HDEV)gpEngFuncs.DxEngGetDCState(hDC, 3);
+    if (!hDev) {
+        gpEngFuncs.DxEngUnlockDC(pDC);
+        return 0;
+    }
+
+    // is this primary display?
+    if (!gpEngFuncs.DxEngGetHdevData(hDev, DxEGShDevData_display))
+    {
+        gpEngFuncs.DxEngUnlockDC(pDC);
+        return 0;
+    }
+
+    gpEngFuncs.DxEngLockHdev(hDev);
+
+    // create object only for 8BPP and more
+    if (gpEngFuncs.DxEngGetHdevData(hDev, DxEGShDevData_DitherFmt) >= BMF_8BPP)
+        retVal = (DWORD)intDdCreateDirectDrawLocal(hDev);
+
+    gpEngFuncs.DxEngUnlockHdev(hDev);
+    gpEngFuncs.DxEngUnlockDC(pDC);
+    return retVal;
 }
