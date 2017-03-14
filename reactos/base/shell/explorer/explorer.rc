@@ -32,7 +32,6 @@ IDI_INTERNET        ICON "res/ico/253.ico"
 IDI_MAIL            ICON "res/ico/254.ico"
 IDI_MAILSMALL       ICON "res/ico/256.ico"
 IDI_STARTMENU2      ICON "res/ico/257.ico"
-IDI_START           ICON "res/ico/4711.ico"
 
 
 /*******************************************************************************\

@@ -24,7 +24,6 @@
 #define IDI_MAIL            254
 #define IDI_MAILSMALL       256
 #define IDI_STARTMENU2      257
-#define IDI_START           4711
 
 /*******************************************************************************\
 |*                               Bitmap Resources                              *|
