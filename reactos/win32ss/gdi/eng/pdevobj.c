@@ -359,6 +359,10 @@ EngpCreatePDEV(
         ppdev->pfnMovePointer = EngMovePointer;
 
     ppdev->pGraphicsDevice = pGraphicsDevice;
+
+    // DxEngGetHdevData asks for Graphics DeviceObject in hSpooler field
+    ppdev->hSpooler = ppdev->pGraphicsDevice->DeviceObject;
+
     // Should we change the ative mode of pGraphicsDevice ?
     ppdev->pdmwDev = PDEVOBJ_pdmMatchDevMode(ppdev, pdm) ;
 
