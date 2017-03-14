@@ -8,6 +8,9 @@ list(APPEND SOURCE
     historic.c
     dxg_int.h)
 
+include_directories(
+    ${REACTOS_SOURCE_DIR}/win32ss/include)
+
 add_library(dxg SHARED
     ${SOURCE}
     dxg.rc

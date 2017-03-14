@@ -249,7 +249,7 @@ DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Test)
 * The following typs are supported
 * Type                                            Purpose
 * DxEGShDevData_Surface      Retrieve pointer to Surface handle.
-* DxEGShDevData_hSpooler     See if the device is a spooler driver.
+* DxEGShDevData_hSpooler     Device object of graphics driver.
 * DxEGShDevData_DitherFmt    Retrieve the device iDitherFormat
 * DxEGShDevData_FxCaps       Retrieve the device flGraphicsCaps
 * DxEGShDevData_FxCaps2      Retrieve the device flGraphicsCaps2
@@ -297,7 +297,7 @@ DxEngGetHdevData(HDEV hDev,
         break;
       case DxEGShDevData_hSpooler:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_hSpooler\n");
-        retVal = 0; // (DWORD_PTR) PDev->hSpooler; // If the device is a spooler driver.
+        retVal = (DWORD_PTR) PDev->hSpooler;
         break;
       case DxEGShDevData_DitherFmt:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_DitherFmt\n");
@@ -356,9 +356,8 @@ DxEngGetHdevData(HDEV hDev,
         retVal = (DWORD_PTR) PDev->gdiinfo.flRaster & RC_PALETTE;
         break;
       case DxEGShDevData_ldev:
-          DPRINT1("DxEGShDevData_ldev not supported yet\n");
-      // ATM we do not support the Loader Device driver structure.
-//        retVal = (DWORD) PDev->pldev;
+        DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_ldev\n");
+        retVal = (DWORD) PDev->pldev;
         break;
       case DxEGShDevData_GDev:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_GDev\n");
