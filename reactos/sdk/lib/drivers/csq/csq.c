@@ -290,6 +290,9 @@ IoCsqInsertIrpEx(
         if(!IoSetCancelRoutine(Irp, NULL))
             break;
 
+
+        Irp->Tail.Overlay.DriverContext[3] = 0;
+
         /* OK, looks like we have to de-queue and complete this ourselves */
         Csq->CsqRemoveIrp(Csq, Irp);
         Csq->CsqCompleteCanceledIrp(Csq, Irp);
@@ -363,6 +366,8 @@ IoCsqRemoveIrp(
 
             ASSERT(Context->Csq == Csq);
         }
+
+        Irp->Tail.Overlay.DriverContext[3] = 0;
     }
     while(0);
 
@@ -422,6 +427,8 @@ IoCsqRemoveNextIrp(
 
             ASSERT(Context->Csq == Csq);
         }
+
+        Irp->Tail.Overlay.DriverContext[3] = 0;
 
         break;
     }
