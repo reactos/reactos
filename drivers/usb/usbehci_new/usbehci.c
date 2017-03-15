@@ -343,14 +343,12 @@ EHCI_ReopenEndpoint(IN PVOID ehciExtension,
                     IN PVOID endpointParameters,
                     IN PVOID ehciEndpoint)
 {
-    PEHCI_EXTENSION EhciExtension;
     PEHCI_ENDPOINT EhciEndpoint;
     PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
     ULONG TransferType;
     PEHCI_HCD_QH QH;
     ULONG Result;
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
     EhciEndpoint = (PEHCI_ENDPOINT)ehciEndpoint;
     EndpointProperties = (PUSBPORT_ENDPOINT_PROPERTIES)endpointParameters;
 
@@ -476,9 +474,9 @@ EHCI_GetQhForFrame(IN PEHCI_EXTENSION EhciExtension,
         0, 16, 8,  24, 4, 20, 12, 28, 2, 18, 10, 26, 6, 22, 14, 30, 
         1, 17, 9,  25, 5, 21, 13, 29, 3, 19, 11, 27, 7, 23, 15, 31};
 
-    DPRINT_EHCI("EHCI_GetQhForFrame: FrameIdx - %x, Balance[FrameIdx] - %x\n",
-                FrameIdx,
-                Balance[FrameIdx & 0x1F]);
+    //DPRINT_EHCI("EHCI_GetQhForFrame: FrameIdx - %x, Balance[FrameIdx] - %x\n",
+    //            FrameIdx,
+    //            Balance[FrameIdx & 0x1F]);
 
     return EhciExtension->PeriodicHead[Balance[FrameIdx & 0x1F]];
 }
@@ -502,10 +500,10 @@ EHCI_AlignHwStructure(IN PEHCI_EXTENSION EhciExtension,
     PVOID NewPAddress;
     ULONG VAddress;
 
-    DPRINT_EHCI("EHCI_AlignHwStructure: *PhysicalAddress - %p, *VirtualAddress - %p, Alignment - %x\n",
-                 *PhysicalAddress,
-                 *VirtualAddress,
-                 Alignment);
+    //DPRINT_EHCI("EHCI_AlignHwStructure: *PhysicalAddress - %p, *VirtualAddress - %p, Alignment - %x\n",
+    //             *PhysicalAddress,
+    //             *VirtualAddress,
+    //             Alignment);
 
     PAddress = *PhysicalAddress;
     VAddress = *VirtualAddress;
@@ -725,9 +723,9 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
         StaticHeadPA.AsULONG = (ULONG_PTR)StaticQH->PhysicalAddress;
         StaticHeadPA.Type = EHCI_LINK_TYPE_QH;
 
-        DPRINT_EHCI("EHCI_InitializeSchedule: StaticHeadPA[%x] - %p\n",
-                    Frame,
-                    StaticHeadPA);
+        //DPRINT_EHCI("EHCI_InitializeSchedule: StaticHeadPA[%x] - %p\n",
+        //            Frame,
+        //            StaticHeadPA);
 
         HcResourcesVA->PeriodicFrameList[Frame] = (PEHCI_STATIC_QH)StaticHeadPA.AsULONG;
     }
@@ -3252,12 +3250,10 @@ EHCI_SetEndpointStatus(IN PVOID ehciExtension,
                        IN PVOID ehciEndpoint,
                        IN ULONG EndpointStatus)
 {
-    PEHCI_EXTENSION EhciExtension;
     PEHCI_ENDPOINT EhciEndpoint;
     ULONG TransferType;
     PEHCI_HCD_QH QH;
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
     EhciEndpoint = (PEHCI_ENDPOINT)ehciEndpoint;
 
     DPRINT("EHCI_SetEndpointStatus: EhciEndpoint - %p, EndpointStatus - %x\n",
