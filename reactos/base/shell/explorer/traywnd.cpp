@@ -511,6 +511,7 @@ public:
             break;
 
         case ID_SHELL_CMD_CUST_NOTIF:
+            ShowCustomizeNotifyIcons(hExplorerInstance, m_hWnd);
             break;
 
         case ID_SHELL_CMD_ADJUST_DAT:
