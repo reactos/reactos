@@ -43,7 +43,7 @@
 extern const MATRIX gmxWorldToDeviceDefault;
 extern const MATRIX gmxWorldToPageDefault;
 
-// HACK!! Fix XFORMOBJ then use 1:16 / 16:1
+/* HACK!! Fix XFORMOBJ then use 1:16 / 16:1 */
 #define gmxWorldToDeviceDefault gmxWorldToPageDefault
 
 FT_Library  library;
@@ -201,6 +201,167 @@ static const CHARSETINFO FontTci[MAXTCIINDEX] =
     { SYMBOL_CHARSET, CP_SYMBOL, {{0,0,0,0},{FS_SYMBOL,0}} }
 };
 
+/*
+ * FONTSUBST_... --- constants for font substitutes
+ */
+#define FONTSUBST_FROM          0
+#define FONTSUBST_TO            1
+#define FONTSUBST_FROM_AND_TO   2
+
+/*
+ * FONTSUBST_ENTRY --- font substitute entry
+ */
+typedef struct FONTSUBST_ENTRY
+{
+    LIST_ENTRY      ListEntry;
+    UNICODE_STRING  FontNames[FONTSUBST_FROM_AND_TO];
+    BYTE            CharSets[FONTSUBST_FROM_AND_TO];
+} FONTSUBST_ENTRY, *PFONTSUBST_ENTRY;
+
+/* list head */
+static RTL_STATIC_LIST_HEAD(FontSubstListHead);
+
+/*
+ * IntLoadFontSubstList --- loads the list of font substitutes
+ */
+BOOL FASTCALL
+IntLoadFontSubstList(PLIST_ENTRY pHead)
+{
+    NTSTATUS                        Status;
+    HANDLE                          KeyHandle;
+    OBJECT_ATTRIBUTES               ObjectAttributes;
+    KEY_FULL_INFORMATION            KeyFullInfo;
+    ULONG                           i, Length;
+    UNICODE_STRING                  FromW, ToW;
+    BYTE                            InfoBuffer[128];
+    PKEY_VALUE_FULL_INFORMATION     pInfo;
+    BYTE                            CharSets[FONTSUBST_FROM_AND_TO];
+    LPWSTR                          pch;
+    PFONTSUBST_ENTRY                pEntry;
+
+    /* the FontSubstitutes registry key */
+    static UNICODE_STRING FontSubstKey =
+        RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\"
+                            L"Microsoft\\Windows NT\\CurrentVersion\\"
+                            L"FontSubstitutes");
+
+    /* open registry key */
+    InitializeObjectAttributes(&ObjectAttributes, &FontSubstKey,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL, NULL);
+    Status = ZwOpenKey(&KeyHandle, KEY_READ, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ZwOpenKey failed: 0x%08X\n", Status);
+        return FALSE;   /* failure */
+    }
+
+    /* query count of values */
+    Status = ZwQueryKey(KeyHandle, KeyFullInformation,
+                        &KeyFullInfo, sizeof(KeyFullInfo), &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ZwQueryKey failed: 0x%08X\n", Status);
+        ZwClose(KeyHandle);
+        return FALSE;   /* failure */
+    }
+
+    /* for each value */
+    for (i = 0; i < KeyFullInfo.Values; ++i)
+    {
+        /* get value name */
+        Status = ZwEnumerateValueKey(KeyHandle, i, KeyValueFullInformation,
+                                     InfoBuffer, sizeof(InfoBuffer), &Length);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("ZwEnumerateValueKey failed: 0x%08X\n", Status);
+            break;      /* failure */
+        }
+
+        /* create FromW string */
+        pInfo = (PKEY_VALUE_FULL_INFORMATION)InfoBuffer;
+        Length = pInfo->NameLength / sizeof(WCHAR);
+        pInfo->Name[Length] = UNICODE_NULL;   /* truncate */
+        Status = RtlCreateUnicodeString(&FromW, pInfo->Name);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("RtlCreateUnicodeString failed: 0x%08X\n", Status);
+            break;      /* failure */
+        }
+
+        /* query value */
+        Status = ZwQueryValueKey(KeyHandle, &FromW, KeyValueFullInformation, 
+                                 InfoBuffer, sizeof(InfoBuffer), &Length);
+        pInfo = (PKEY_VALUE_FULL_INFORMATION)InfoBuffer;
+        if (!NT_SUCCESS(Status) || !pInfo->DataLength)
+        {
+            DPRINT("ZwQueryValueKey failed: 0x%08X\n", Status);
+            RtlFreeUnicodeString(&FromW);
+            break;      /* failure */
+        }
+
+        /* create ToW string */
+        pch = (LPWSTR)((PUCHAR)pInfo + pInfo->DataOffset);
+        Length = pInfo->DataLength / sizeof(WCHAR);
+        pch[Length] = UNICODE_NULL; /* truncate */
+        Status = RtlCreateUnicodeString(&ToW, pch);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("RtlCreateUnicodeString failed: 0x%08X\n", Status);
+            RtlFreeUnicodeString(&FromW);
+            break;      /* failure */
+        }
+
+        /* does charset exist? (from) */
+        CharSets[FONTSUBST_FROM] = DEFAULT_CHARSET;
+        pch = wcsrchr(FromW.Buffer, L',');
+        if (pch)
+        {
+            /* truncate */
+            *pch = UNICODE_NULL;
+            FromW.Length = (pch - FromW.Buffer) * sizeof(WCHAR);
+            /* parse charset number */
+            CharSets[FONTSUBST_FROM] = (BYTE)_wtoi(pch + 1);
+        }
+
+        /* does charset exist? (to) */
+        CharSets[FONTSUBST_TO] = DEFAULT_CHARSET;
+        pch = wcsrchr(ToW.Buffer, L',');
+        if (pch)
+        {
+            /* truncate */
+            *pch = UNICODE_NULL;
+            ToW.Length = (pch - ToW.Buffer) * sizeof(WCHAR);
+            /* parse charset number */
+            CharSets[FONTSUBST_TO] = (BYTE)_wtoi(pch + 1);
+        }
+
+        /* allocate an entry */
+        pEntry = ExAllocatePoolWithTag(PagedPool, sizeof(FONTSUBST_ENTRY), TAG_FONT);
+        if (pEntry == NULL)
+        {
+            DPRINT("ExAllocatePoolWithTag failed\n");
+            RtlFreeUnicodeString(&FromW);
+            RtlFreeUnicodeString(&ToW);
+            break;      /* failure */
+        }
+
+        /* store to *pEntry */
+        pEntry->FontNames[FONTSUBST_FROM] = FromW;
+        pEntry->FontNames[FONTSUBST_TO] = ToW;
+        pEntry->CharSets[FONTSUBST_FROM] = CharSets[FONTSUBST_FROM];
+        pEntry->CharSets[FONTSUBST_TO] = CharSets[FONTSUBST_TO];
+
+        /* insert pEntry to *pHead */
+        InsertTailList(pHead, &pEntry->ListEntry);
+    }
+
+    /* close now */
+    ZwClose(KeyHandle);
+
+    return NT_SUCCESS(Status);
+}
+
 BOOL FASTCALL
 InitFontSupport(VOID)
 {
@@ -232,6 +393,7 @@ InitFontSupport(VOID)
     }
 
     IntLoadSystemFonts();
+    IntLoadFontSubstList(&FontSubstListHead);
 
     return TRUE;
 }
@@ -265,12 +427,114 @@ FtSetCoordinateTransform(
     FT_Set_Transform(face, &ftmatrix, 0);
 }
 
+static BOOL
+SubstituteFontByList(PLIST_ENTRY        pHead,
+                     PUNICODE_STRING    pOutputName,
+                     PUNICODE_STRING    pInputName,
+                     BYTE               RequestedCharSet,
+                     BYTE               CharSetMap[FONTSUBST_FROM_AND_TO])
+{
+    NTSTATUS            Status;
+    PLIST_ENTRY         pListEntry;
+    PFONTSUBST_ENTRY    pSubstEntry;
+    BYTE                CharSets[FONTSUBST_FROM_AND_TO];
+
+    CharSetMap[FONTSUBST_FROM] = DEFAULT_CHARSET;
+    CharSetMap[FONTSUBST_TO] = RequestedCharSet;
+
+    /* for each list entry */
+    for (pListEntry = pHead->Flink;
+         pListEntry != pHead;
+         pListEntry = pListEntry->Flink)
+    {
+        pSubstEntry =
+            (PFONTSUBST_ENTRY)CONTAINING_RECORD(pListEntry, FONT_ENTRY, ListEntry);
+
+        CharSets[FONTSUBST_FROM] = pSubstEntry->CharSets[FONTSUBST_FROM];
+
+        if (CharSets[FONTSUBST_FROM] != DEFAULT_CHARSET &&
+            CharSets[FONTSUBST_FROM] != RequestedCharSet)
+        {
+            continue;   /* not matched */
+        }
+
+        /* does charset number exist? (to) */
+        if (pSubstEntry->CharSets[FONTSUBST_TO] != DEFAULT_CHARSET)
+        {
+            CharSets[FONTSUBST_TO] = pSubstEntry->CharSets[FONTSUBST_TO];
+        }
+        else
+        {
+            CharSets[FONTSUBST_TO] = RequestedCharSet;
+        }
+
+        /* does font name match? */
+        if (!RtlEqualUnicodeString(&pSubstEntry->FontNames[FONTSUBST_FROM],
+                                   pInputName, TRUE))
+        {
+            continue;   /* not matched */
+        }
+
+        /* update *pOutputName */
+        RtlFreeUnicodeString(pOutputName);
+        Status = RtlCreateUnicodeString(pOutputName,
+                                        pSubstEntry->FontNames[FONTSUBST_TO].Buffer);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("RtlCreateUnicodeString failed: 0x%08X\n", Status);
+            continue;   /* cannot create string */
+        }
+
+        if (CharSetMap[FONTSUBST_FROM] == DEFAULT_CHARSET)
+        {
+            /* update CharSetMap */
+            CharSetMap[FONTSUBST_FROM]  = CharSets[FONTSUBST_FROM];
+            CharSetMap[FONTSUBST_TO]    = CharSets[FONTSUBST_TO];
+        }
+        return TRUE;   /* success */
+    }
+
+    return FALSE;
+}
+
+static BOOL
+SubstituteFontRecurse(PUNICODE_STRING pInOutName, BYTE *pRequestedCharSet)
+{
+    UINT            RecurseCount = 5;
+    UNICODE_STRING  OutputNameW = { 0 };
+    BYTE            CharSetMap[FONTSUBST_FROM_AND_TO];
+    BOOL            Found;
+
+    if (pInOutName->Buffer[0] == UNICODE_NULL)
+        return FALSE;
+
+    while (RecurseCount-- > 0)
+    {
+        RtlInitUnicodeString(&OutputNameW, NULL);
+        Found = SubstituteFontByList(&FontSubstListHead,
+                                     &OutputNameW, pInOutName,
+                                     *pRequestedCharSet, CharSetMap);
+        if (!Found)
+            break;
+
+        /* update *pInOutName and *pRequestedCharSet */
+        RtlFreeUnicodeString(pInOutName);
+        *pInOutName = OutputNameW;
+        if (CharSetMap[FONTSUBST_FROM] == DEFAULT_CHARSET ||
+            CharSetMap[FONTSUBST_FROM] == *pRequestedCharSet)
+        {
+            *pRequestedCharSet = CharSetMap[FONTSUBST_TO];
+        }
+    }
+
+    return TRUE;    /* success */
+}
+
 /*
  * IntLoadSystemFonts
  *
  * Search the system font directory and adds each font found.
  */
-
 VOID FASTCALL
 IntLoadSystemFonts(VOID)
 {
@@ -3296,7 +3560,6 @@ ftGdiGetTextMetricsW(
     return TRUE;
 }
 
-
 DWORD
 FASTCALL
 ftGdiGetFontData(
@@ -3337,73 +3600,13 @@ ftGdiGetFontData(
     return Result;
 }
 
-static __inline BOOLEAN
-SubstituteFontNameByKey(PUNICODE_STRING FaceName,
-                        LPCWSTR Key)
-{
-    RTL_QUERY_REGISTRY_TABLE QueryTable[2] = {{0}};
-    NTSTATUS Status;
-    UNICODE_STRING Value;
-
-    RtlInitUnicodeString(&Value, NULL);
-
-    QueryTable[0].QueryRoutine = NULL;
-    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_NOEXPAND |
-                          RTL_QUERY_REGISTRY_REQUIRED;
-    QueryTable[0].Name = FaceName->Buffer;
-    QueryTable[0].EntryContext = &Value;
-    QueryTable[0].DefaultType = REG_NONE;
-    QueryTable[0].DefaultData = NULL;
-    QueryTable[0].DefaultLength = 0;
-
-    QueryTable[1].QueryRoutine = NULL;
-    QueryTable[1].Name = NULL;
-
-    Status = RtlQueryRegistryValues(RTL_REGISTRY_WINDOWS_NT,
-                                    Key,
-                                    QueryTable,
-                                    NULL,
-                                    NULL);
-    if (NT_SUCCESS(Status))
-    {
-        RtlFreeUnicodeString(FaceName);
-        *FaceName = Value;
-
-        /* truncate */
-        if ((LF_FACESIZE - 1) * sizeof(WCHAR) < FaceName->Length)
-        {
-            FaceName->Length = (LF_FACESIZE - 1) * sizeof(WCHAR);
-            FaceName->Buffer[LF_FACESIZE - 1] = UNICODE_NULL;
-        }
-    }
-
-    return NT_SUCCESS(Status);
-}
-
-static __inline BOOL
-SubstituteFontName(PUNICODE_STRING FaceName)
-{
-    UINT Level;
-    const UINT MaxLevel = 10;
-
-    if (FaceName->Buffer[0] == 0)
-        return FALSE;
-
-    for (Level = 0; Level < MaxLevel; ++Level)
-    {
-        /* NOTE: SubstituteFontNameByKey changes FaceName. Be careful... */
-        if (!SubstituteFontNameByKey(FaceName, L"FontSubstitutes"))
-            break;
-    }
-    return (Level > 0);
-}
-
 // NOTE: See Table 1. of https://msdn.microsoft.com/en-us/library/ms969909.aspx
 static UINT FASTCALL
 GetFontPenalty(LOGFONTW *               LogFont,
                PUNICODE_STRING          RequestedNameW,
                PUNICODE_STRING          ActualNameW,
                PUNICODE_STRING          FullFaceNameW,
+               BYTE                     RequestedCharSet,
                PFONTGDI                 FontGDI,
                OUTLINETEXTMETRICW *     Otm,
                TEXTMETRICW *            TM,
@@ -3443,7 +3646,7 @@ GetFontPenalty(LOGFONTW *               LogFont,
     }
     else    /* Request is non-"System" font */
     {
-        Byte = LogFont->lfCharSet;
+        Byte = RequestedCharSet;
         if (Byte == DEFAULT_CHARSET)
         {
             if (RtlEqualUnicodeString(RequestedNameW, &MarlettW, TRUE))
@@ -3470,12 +3673,12 @@ GetFontPenalty(LOGFONTW *               LogFont,
                 if (UserCharSet != TM->tmCharSet)
                 {
                     /* UNDOCUMENTED */
-                    Penalty += 10;
-                }
-                if (ANSI_CHARSET != TM->tmCharSet)
-                {
-                    /* UNDOCUMENTED */
-                    Penalty += 10;
+                    Penalty += 100;
+                    if (ANSI_CHARSET != TM->tmCharSet)
+                    {
+                        /* UNDOCUMENTED */
+                        Penalty += 100;
+                    }
                 }
             }
         }
@@ -3777,7 +3980,8 @@ GetFontPenalty(LOGFONTW *               LogFont,
 static __inline VOID
 FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty, LOGFONTW *LogFont,
                      PUNICODE_STRING pRequestedNameW,
-                     PUNICODE_STRING pActualNameW, PLIST_ENTRY Head)
+                     PUNICODE_STRING pActualNameW, BYTE RequestedCharSet,
+                     PLIST_ENTRY Head)
 {
     ULONG Penalty;
     NTSTATUS Status;
@@ -3846,8 +4050,8 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty, LOGFONTW *LogFont,
             }
 
             Penalty = GetFontPenalty(LogFont, pRequestedNameW, &ActualNameW,
-                                     &FullFaceNameW, FontGDI, Otm, TM,
-                                     Face->style_name);
+                                     &FullFaceNameW, RequestedCharSet,
+                                     FontGDI, Otm, TM, Face->style_name);
             if (*MatchPenalty == 0xFFFFFFFF || Penalty < *MatchPenalty)
             {
                 DPRINT("%ls Penalty: %lu\n", FullFaceNameW.Buffer, Penalty);
@@ -3915,6 +4119,7 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
     ULONG MatchPenalty;
     LOGFONTW *pLogFont;
     FT_Face Face;
+    BYTE RequestedCharSet;
 
     if (!pTextObj)
     {
@@ -3938,15 +4143,18 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
     RtlInitUnicodeString(&ActualNameW, NULL);
 
     pLogFont = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
-    if (! RtlCreateUnicodeString(&RequestedNameW, pLogFont->lfFaceName))
+    if (!RtlCreateUnicodeString(&RequestedNameW, pLogFont->lfFaceName))
     {
         if (!pTextObj) TEXTOBJ_UnlockText(TextObj);
         return STATUS_NO_MEMORY;
     }
 
-    DPRINT("Font '%ls' is substituted by: ", RequestedNameW.Buffer);
-    SubstituteFontName(&RequestedNameW);
-    DPRINT("'%ls'.\n", RequestedNameW.Buffer);
+    /* substitute */
+    RequestedCharSet = pLogFont->lfCharSet;
+    DPRINT("Font '%ls,%u' is substituted by: ",
+           RequestedNameW.Buffer, RequestedCharSet);
+    SubstituteFontRecurse(&RequestedNameW, &RequestedCharSet);
+    DPRINT("'%ls,%u'.\n", RequestedNameW.Buffer, RequestedCharSet);
 
     MatchPenalty = 0xFFFFFFFF;
     TextObj->Font = NULL;
@@ -3956,14 +4164,14 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
     /* Search private fonts */
     IntLockProcessPrivateFonts(Win32Process);
     FindBestFontFromList(&TextObj->Font, &MatchPenalty, pLogFont,
-                         &RequestedNameW, &ActualNameW,
+                         &RequestedNameW, &ActualNameW, RequestedCharSet,
                          &Win32Process->PrivateFontListHead);
     IntUnLockProcessPrivateFonts(Win32Process);
 
     /* Search system fonts */
     IntLockGlobalFonts;
     FindBestFontFromList(&TextObj->Font, &MatchPenalty, pLogFont,
-                         &RequestedNameW, &ActualNameW,
+                         &RequestedNameW, &ActualNameW, RequestedCharSet,
                          &FontListHead);
     IntUnLockGlobalFonts;
 
