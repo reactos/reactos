@@ -2,12 +2,70 @@
  * PROJECT:         ReactOS api tests
  * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
  * PURPOSE:         Test for CString
- * PROGRAMMER:      Mark Jansen
+ * PROGRAMMERS:     Mark Jansen
+ *                  Katayama Hirofumi MZ
  */
 
 #include <atlstr.h>
-#include <apitest.h>
+#include "resource.h"
 
+#ifdef __REACTOS__
+    #include <apitest.h>
+#else
+    #include <stdlib.h>
+    #include <stdio.h>
+    #include <stdarg.h>
+    #include <windows.h>
+    int g_tests_executed = 0;
+    int g_tests_failed = 0;
+    int g_tests_skipped = 0;
+    const char *g_file = NULL;
+    int g_line = 0;
+    void set_location(const char *file, int line)
+    {
+        g_file = file;
+        g_line = line;
+    }
+    void ok_func(int value, const char *fmt, ...)
+    {
+        va_list va;
+        va_start(va, fmt);
+        if (!value)
+        {
+            printf("%s (%d): ", g_file, g_line);
+            vprintf(fmt, va);
+            g_tests_failed++;
+        }
+        g_tests_executed++;
+        va_end(va);
+    }
+    void skip_func(const char *fmt, ...)
+    {
+        va_list va;
+        va_start(va, fmt);
+        printf("%s (%d): test skipped: ", g_file, g_line);
+        vprintf(fmt, va);
+        g_tests_skipped++;
+        va_end(va);
+    }
+    #undef ok
+    #define ok(value, ...) do { \
+        set_location(__FILE__, __LINE__); \
+        ok_func(value, __VA_ARGS__); \
+    } while (0)
+    #define ok_(x1,x2) set_location(x1,x2); ok_func
+    #define skip(...) do { \
+        set_location(__FILE__, __LINE__); \
+        skip_func(__VA_ARGS__); \
+    } while (0)
+    #define START_TEST(x)   int main(void)
+    char *wine_dbgstr_w(const wchar_t *wstr)
+    {
+        static char buf[512];
+        WideCharToMultiByte(CP_ACP, 0, wstr, -1, buf, _countof(buf), NULL, NULL);
+        return buf;
+    }
+#endif
 
 struct traits_test
 {
@@ -113,7 +171,11 @@ static void test_basetypes()
 
 // Allocation strategy seems to differ a bit between us and MS's atl.
 // if someone cares enough to find out why, feel free to change the macro below.
+#ifdef __REACTOS__
 #define ALLOC_EXPECT(a, b)  b
+#else
+#define ALLOC_EXPECT(a, b)  a
+#endif
 
 
 #undef ok
@@ -123,9 +185,12 @@ static void test_basetypes()
 #define CStringX                CStringW
 #define _X(x)                   L ## x
 #define XCHAR                   WCHAR
+#define YCHAR                   CHAR
 #define dbgstrx(x)              wine_dbgstr_w(x)
 #define ok                      ok_("CStringW:\n" __FILE__, __LINE__)
 #define GetWindowsDirectoryX    GetWindowsDirectoryW
+#define MAKEINTRESOURCEX(x)     MAKEINTRESOURCEW(x)
+#define MAKEINTRESOURCEY(x)     MAKEINTRESOURCEA(x)
 #include "CString.inl"
 
 
@@ -133,17 +198,23 @@ static void test_basetypes()
 #undef TEST_NAMEX
 #undef _X
 #undef XCHAR
+#undef YCHAR
 #undef dbgstrx
 #undef ok
 #undef GetWindowsDirectoryX
+#undef MAKEINTRESOURCEX
+#undef MAKEINTRESOURCEY
 
 #define TEST_NAMEX(name)        void test_##name##A()
 #define CStringX                CStringA
 #define _X(x)                   x
 #define XCHAR                   CHAR
+#define YCHAR                   WCHAR
 #define dbgstrx(x)              (const char*)x
 #define ok                      ok_("CStringA:\n" __FILE__, __LINE__)
 #define GetWindowsDirectoryX    GetWindowsDirectoryA
+#define MAKEINTRESOURCEX(x)     MAKEINTRESOURCEA(x)
+#define MAKEINTRESOURCEY(x)     MAKEINTRESOURCEW(x)
 #include "CString.inl"
 
 
@@ -179,4 +250,12 @@ START_TEST(CString)
 
     test_envW();
     test_envA();
+
+    test_load_strW();
+    test_load_strA();
+
+#ifndef __REACTOS__
+    printf("CString: %i tests executed (0 marked as todo, %i failures), %i skipped.\n", g_tests_executed, g_tests_failed, g_tests_skipped);
+    return 0;
+#endif
 }

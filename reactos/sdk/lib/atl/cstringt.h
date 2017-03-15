@@ -326,48 +326,52 @@ public:
         *this = static_cast<const YCHAR*>(strSrc);
     }
 
-    CStringT(_In_opt_z_ const XCHAR* pszSrc) :
-        CThisSimpleString( StringTraits::GetDefaultManager() )
+protected:
+    /* helper function */
+    template <typename T_CHAR>
+    void LoadFromPtr_(_In_opt_z_ const T_CHAR* pszSrc)
     {
-        // FIXME: Check whether pszSrc is not a resource string ID!
-        *this = pszSrc;
+        if (pszSrc == NULL)
+            return;
+        if (IS_INTRESOURCE(pszSrc))
+            LoadString(LOWORD(pszSrc));
+        else
+            *this = pszSrc;
     }
 
-    CStringT(
-            _In_opt_z_ const XCHAR* pszSrc,
-            _In_ IAtlStringMgr* pStringMgr) :
-        CThisSimpleString( pStringMgr )
+public:
+    CStringT(_In_opt_z_ const XCHAR* pszSrc) :
+        CThisSimpleString(StringTraits::GetDefaultManager())
     {
-        // FIXME: Check whether pszSrc is not a resource string ID!
-        *this = pszSrc;
+        LoadFromPtr_(pszSrc);
+    }
+
+    CStringT(_In_opt_z_ const XCHAR* pszSrc,
+             _In_ IAtlStringMgr* pStringMgr) : CThisSimpleString(pStringMgr)
+    {
+        LoadFromPtr_(pszSrc);
     }
 
     CStringT(_In_opt_z_ const YCHAR* pszSrc) :
-        CThisSimpleString( StringTraits::GetDefaultManager() )
+        CThisSimpleString(StringTraits::GetDefaultManager())
     {
-        // FIXME: Check whether pszSrc is not a resource string ID!
-        *this = pszSrc;
+        LoadFromPtr_(pszSrc);
     }
 
-    CStringT(
-            _In_opt_z_ const YCHAR* pszSrc,
-            _In_ IAtlStringMgr* pStringMgr) :
-        CThisSimpleString( pStringMgr )
+    CStringT(_In_opt_z_ const YCHAR* pszSrc,
+             _In_ IAtlStringMgr* pStringMgr) : CThisSimpleString(pStringMgr)
     {
-        // FIXME: Check whether pszSrc is not a resource string ID!
-        *this = pszSrc;
+        LoadFromPtr_(pszSrc);
     }
 
-    CStringT(
-            _In_reads_z_(nLength) const XCHAR* pch,
-            _In_ int nLength) : 
+    CStringT(_In_reads_z_(nLength) const XCHAR* pch,
+             _In_ int nLength) : 
         CThisSimpleString(pch, nLength, StringTraits::GetDefaultManager())
     {
     }
 
-    CStringT(
-            _In_reads_z_(nLength) const YCHAR* pch,
-            _In_ int nLength) : 
+    CStringT(_In_reads_z_(nLength) const YCHAR* pch,
+             _In_ int nLength) : 
         CThisSimpleString(pch, nLength, StringTraits::GetDefaultManager())
     {
     }

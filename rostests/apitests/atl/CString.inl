@@ -388,3 +388,39 @@ TEST_NAMEX(env)
     ok(test.IsEmpty() == true, "Expected test to be empty\n");
     ok(test.GetLength() == 0, "Expected GetLength() to be 0, was: %i\n", test.GetLength());
 }
+
+TEST_NAMEX(load_str)
+{
+    CStringX str;
+
+    ok(str.LoadString(0) == FALSE, "LoadString should fail.\n");
+
+    ok(str.LoadString(IDS_TEST1) == TRUE, "LoadString failed.\n");
+    ok(str == _X("Test string one."), "The value was '%s'\n", dbgstrx(str));
+
+    ok(str.LoadString(IDS_TEST2) == TRUE, "LoadString failed.\n");
+    ok(str == _X("I am a happy BSTR"), "The value was '%s'\n", dbgstrx(str));
+
+    ok(str.LoadString(0) == FALSE, "LoadString should fail.\n");
+    ok(str == _X("I am a happy BSTR"), "The value was '%s'\n", dbgstrx(str));
+
+    XCHAR *xNULL = NULL;
+    CStringX str0(xNULL);
+    ok(str0.IsEmpty(), "str0 should be empty.\n");
+
+    YCHAR *yNULL = NULL;
+    CStringX str1(yNULL);
+    ok(str1.IsEmpty(), "str1 should be empty.\n");
+
+    CStringX str2(MAKEINTRESOURCEX(IDS_TEST1));
+    ok(str2 == _X("Test string one."), "The value was '%s'\n", dbgstrx(str2));
+
+    CStringX str3(MAKEINTRESOURCEX(IDS_TEST2));
+    ok(str3 == _X("I am a happy BSTR"), "The value was '%s'\n", dbgstrx(str3));
+
+    CStringX str4(MAKEINTRESOURCEY(IDS_TEST1));
+    ok(str4 == _X("Test string one."), "The value was '%s'\n", dbgstrx(str4));
+
+    CStringX str5(MAKEINTRESOURCEY(IDS_TEST2));
+    ok(str5 == _X("I am a happy BSTR"), "The value was '%s'\n", dbgstrx(str5));
+}
