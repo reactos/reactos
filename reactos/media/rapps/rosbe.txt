@@ -1,13 +1,13 @@
 [Section]
 Name = ReactOS Build Environment
-Version = 2.1.3
+Version = 2.1.4
 License = GPL
 Description = Allows you to build the ReactOS Source. For more instructions see ReactOS wiki.
-Size = 32.2 MiB
+Size = 37.8 MiB
 Category = 7
 URLSite = http://reactos.org/wiki/Build_Environment
-URLDownload = http://download.sourceforge.net/reactos/RosBE-2.1.3.exe
-SHA1 = 73cdd8b49af919064abced95872423e4be2afe6f
+URLDownload = http://download.sourceforge.net/reactos/RosBE-2.1.4.exe
+SHA1 = aa32af1d1d5ecffa1ebcdda97d3bafccaa17d803
 CDPath = none
 
 [Section.0405]
@@ -15,14 +15,14 @@ Description = Dovoluje zkompilovat zdrojový kód systému ReactOS. Pro další 
 
 [Section.0407]
 Description = Erlaubt es Ihnen den ReactOS Source Code zu kompilieren. Im ReactOS-Wiki finden Sie dazu nähere Anweisungen.
-Size = 32,2 MiB
+Size = 37,8 MiB
 
 [Section.0a]
 Description = Te permite compilar el código de ReactOS. Para más información consulta la Wiki de ReactOS.
 
 [Section.040c]
 Description = Vous permet de compiler le code source de ReactOS. Pour plus d'instructions, reportez-vous au wiki ReactOS.
-Size = 32,2 Mio
+Size = 37,8 Mio
 
 [Section.0410]
 Description = Permette di compilare i sorgenti di ReactOS. Per maggiori informazioni consultare il Wiki di ReactOS.
@@ -35,16 +35,16 @@ Description = Pozwala zbudować obraz płyty ReactOS ze źródeł. Więcej infor
 
 [Section.0418]
 Description = Permite compilarea surselor ReactOS. Pentru instrucțiuni, consultați wiki ReactOS.
-Size = 32,2 Mio
+Size = 37,8 Mio
 
 [Section.0419]
 Description = Позволит Вам собрать ReactOS из исходных кодов. Подробности смотрите в ReactOS wiki.
-Size = 32,2 МиБ
+Size = 37,8 МиБ
 
 [Section.041f]
 Name = ReactOS Yapma Ortamı
 Description = ReactOS Kaynak Kodları'nı derlemenize olanak sağlar. Daha çok açıklama için ReactOS Wiki'ye bakınız.
-Size = 32,2 MiB
+Size = 37,8 MiB
 
 [Section.0422]
 Description = Дозволяє зібрати ReactOS з вихідних кодів. За детальною інформацією дивіться в ReactOS Вікі.
