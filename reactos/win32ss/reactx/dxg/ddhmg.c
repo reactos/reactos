@@ -174,7 +174,7 @@ DdHmgLock(HANDLE DdHandle, UCHAR ObjectType, BOOLEAN LockOwned)
 
     if ( !LockOwned )
     {
-        EngDeleteSemaphore(ghsemHmgr);
+        EngReleaseSemaphore(ghsemHmgr);
     }
 
     return Object;
