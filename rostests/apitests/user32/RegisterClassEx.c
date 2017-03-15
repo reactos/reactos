@@ -79,7 +79,7 @@ VOID TestGlobalClasses(VOID)
     a = _GetClassAtom(L"TestClass1", hmod);
     b = _RegisterClass(L"TestClass1", hmod, 0, DefWindowProcW);
     c = _GetClassAtom(L"TestClass1", hmod);
-    UnregisterClass(L"TestClass1", hmod);
+    UnregisterClassW(L"TestClass1", hmod);
     d = _GetClassAtom(L"TestClass1", hmod);
     ok( a == 0, "\n");
     ok( b != 0, "\n");
@@ -90,7 +90,7 @@ VOID TestGlobalClasses(VOID)
     a = _GetClassAtom(L"TestClass2", hmod);
     b = _RegisterClass(L"TestClass2", hmod, CS_GLOBALCLASS, DefWindowProcW);
     c = _GetClassAtom(L"TestClass2", hmod);
-    UnregisterClass(L"TestClass2", hmod);
+    UnregisterClassW(L"TestClass2", hmod);
     d = _GetClassAtom(L"TestClass2", hmod);
     ok( a == 0, "\n");
     ok( b != 0, "\n");
@@ -101,7 +101,7 @@ VOID TestGlobalClasses(VOID)
     a = _RegisterClass(L"TestClass3", hmod, 0, DefWindowProcW);
     b = _RegisterClass(L"TestClass3", hmod, 0, DefWindowProcW);
     c = _RegisterClass(L"TestClass3", hmod, CS_GLOBALCLASS, DefWindowProcW);
-    UnregisterClass(L"TestClass3", hmod);
+    UnregisterClassW(L"TestClass3", hmod);
     d = _GetClassAtom(L"TestClass3", hmod);
     ok( a != 0, "\n");
     ok( b == 0, "\n");
@@ -111,9 +111,9 @@ VOID TestGlobalClasses(VOID)
     a = _RegisterClass(L"TestClass4", hmod, CS_GLOBALCLASS, DefWindowProcW);
     b = _RegisterClass(L"TestClass4", hmod, 0, DefWindowProcW);
     c = _RegisterClass(L"TestClass4", hmod, 0, DefWindowProcW);
-    UnregisterClass(L"TestClass4", hmod);
+    UnregisterClassW(L"TestClass4", hmod);
     d = _GetClassAtom(L"TestClass4", hmod);
-    UnregisterClass(L"TestClass4", hmod);
+    UnregisterClassW(L"TestClass4", hmod);
     e = _GetClassAtom(L"TestClass4", hmod);
     ok( a != 0, "\n");
     ok( b != 0, "\n");
@@ -124,9 +124,9 @@ VOID TestGlobalClasses(VOID)
     a = _GetClassAtom(L"ComboBox", hmod);
     b = _RegisterClass(L"ComboBox", hmod, 0, DefWindowProcW);
     c = _RegisterClass(L"ComboBox", hmod, CS_GLOBALCLASS, DefWindowProcW);
-    UnregisterClass(L"ComboBox", hmod);
+    UnregisterClassW(L"ComboBox", hmod);
     d = _GetClassAtom(L"ComboBox", hmod);
-    UnregisterClass(L"TestClass4", hmod);
+    UnregisterClassW(L"TestClass4", hmod);
     e = _GetClassAtom(L"TestClass4", hmod);
     ok( a != 0, "\n");
     ok( b != 0, "\n");
@@ -135,7 +135,7 @@ VOID TestGlobalClasses(VOID)
     ok( e == 0, "\n");
     
     a = _GetClassAtom(L"ScrollBar", hmod);
-    UnregisterClass(L"ScrollBar", hmod);
+    UnregisterClassW(L"ScrollBar", hmod);
     b = _GetClassAtom(L"ScrollBar", hmod);
     c = _RegisterClass(L"ScrollBar", hmod, CS_GLOBALCLASS, DefWindowProcW);
     d = _GetClassAtom(L"ScrollBar", hmod);
@@ -147,14 +147,14 @@ VOID TestGlobalClasses(VOID)
     ok( a == d, "\n"); /* In Windows 10 the last 4 tests fail */
     
     a = _GetClassAtom(L"ListBox", (HMODULE)0xdead);
-    UnregisterClass(L"ListBox", (HMODULE)0xdead);
+    UnregisterClassW(L"ListBox", (HMODULE)0xdead);
     b = _GetClassAtom(L"ListBox", (HMODULE)0xdead);
     ok( a != 0, "\n");
     ok( b == 0, "\n");
     
     a = _RegisterClass(L"TestClass5", (HMODULE)0xdead, CS_GLOBALCLASS, DefWindowProcW);
     b = _GetClassAtom(L"TestClass5", hmod);
-    UnregisterClass(L"TestClass5", hmod);
+    UnregisterClassW(L"TestClass5", hmod);
     c = _GetClassAtom(L"TestClass5", (HMODULE)0xdead);
     d = _GetClassAtom(L"TestClass5", hmod);
     ok( a != 0, "\n");

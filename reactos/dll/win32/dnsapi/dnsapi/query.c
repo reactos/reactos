@@ -303,25 +303,25 @@ OpenNetworkDatabase(LPCWSTR Name)
     {
         /* Use defalt path */
         GetSystemDirectoryW(ExpandedPath, MAX_PATH);
-        StringCchLength(ExpandedPath, MAX_PATH, &StringLength);
+        StringCchLengthW(ExpandedPath, MAX_PATH, &StringLength);
         if (ExpandedPath[StringLength - 1] != L'\\')
         {
             /* It isn't, so add it ourselves */
-            StringCchCat(ExpandedPath, MAX_PATH, L"\\");
+            StringCchCatW(ExpandedPath, MAX_PATH, L"\\");
         }
-        StringCchCat(ExpandedPath, MAX_PATH, L"DRIVERS\\ETC\\");
+        StringCchCatW(ExpandedPath, MAX_PATH, L"DRIVERS\\ETC\\");
     }
 
     /* Make sure that the path is backslash-terminated */
-    StringCchLength(ExpandedPath, MAX_PATH, &StringLength);
+    StringCchLengthW(ExpandedPath, MAX_PATH, &StringLength);
     if (ExpandedPath[StringLength - 1] != L'\\')
     {
         /* It isn't, so add it ourselves */
-        StringCchCat(ExpandedPath, MAX_PATH, L"\\");
+        StringCchCatW(ExpandedPath, MAX_PATH, L"\\");
     }
 
     /* Add the database name */
-    StringCchCat(ExpandedPath, MAX_PATH, Name);
+    StringCchCatW(ExpandedPath, MAX_PATH, Name);
 
     /* Return a handle to the file */
     ret = CreateFileW(ExpandedPath,
