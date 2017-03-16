@@ -296,16 +296,6 @@ DxDdGetDC(
 
 DWORD
 NTAPI
-DxDdGetDriverInfo(
-    PVOID p1,
-    PVOID p2)
-{
-    TRACE();
-    return 0;
-}
-
-DWORD
-NTAPI
 DxDdGetDxHandle(
     PVOID p1,
     PVOID p2,
@@ -394,36 +384,7 @@ DxDdLockD3D(
 
 DWORD
 NTAPI
-DxDdQueryDirectDrawObject(
-    PVOID p1,
-    PVOID p2,
-    PVOID p3,
-    PVOID p4,
-    PVOID p5,
-    PVOID p6,
-    PVOID p7,
-    PVOID p8,
-    PVOID p9,
-    PVOID p10,
-    PVOID p11)
-{
-    TRACE();
-    return 0;
-}
-
-DWORD
-NTAPI
 DxDdQueryMoCompStatus(
-    PVOID p1,
-    PVOID p2)
-{
-    TRACE();
-    return 0;
-}
-
-DWORD
-NTAPI
-DxDdReenableDirectDrawObject(
     PVOID p1,
     PVOID p2)
 {

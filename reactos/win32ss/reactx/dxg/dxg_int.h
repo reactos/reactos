@@ -195,6 +195,13 @@ DWORD NTAPI DxDxgGenericThunk(ULONG_PTR ulIndex, ULONG_PTR ulHandle, SIZE_T *pdw
 DWORD NTAPI DxDdIoctl(ULONG ulIoctl, PVOID pBuffer, ULONG ulBufferSize);
 PDD_SURFACE_LOCAL NTAPI DxDdLockDirectDrawSurface(HANDLE hDdSurface);
 BOOL NTAPI DxDdUnlockDirectDrawSurface(PDD_SURFACE_LOCAL pSurface);
+DWORD NTAPI DxDdGetDriverInfo(HANDLE DdHandle, PDD_GETDRIVERINFODATA drvInfoData);
+BOOL NTAPI DxDdQueryDirectDrawObject(HANDLE DdHandle, DD_HALINFO* pDdHalInfo, DWORD* pCallBackFlags, LPD3DNTHAL_CALLBACKS pd3dNtHalCallbacks, 
+                                     LPD3DNTHAL_GLOBALDRIVERDATA pd3dNtGlobalDriverData, PDD_D3DBUFCALLBACKS pd3dBufCallbacks, LPDDSURFACEDESC pTextureFormats,
+                                     DWORD* p8, VIDEOMEMORY* p9, DWORD* pdwNumFourCC, DWORD* pdwFourCC);
+DWORD NTAPI DxDdReenableDirectDrawObject(HANDLE DdHandle, PVOID p2);
+
+
 
 /* Internal functions */
 BOOL FASTCALL VerifyObjectOwner(PDD_ENTRY pEntry);

@@ -82,7 +82,7 @@ intDdCreateDirectDrawLocal(HDEV hDev)
     if (!AllocRet) 
         return NULL;
 
-    peDdL = (PEDD_DIRECTDRAW_LOCAL)AllocRet;
+    peDdL = (PEDD_DIRECTDRAW_LOCAL)AllocRet->pobj;
 
     /* initialize DIRECTDRAW_LOCAL */
     peDdL->peDirectDrawLocal_prev = peDdGl->peDirectDrawLocalList;
@@ -352,4 +352,268 @@ DxDdCreateDirectDrawObject(
     gpEngFuncs.DxEngUnlockHdev(hDev);
     gpEngFuncs.DxEngUnlockDC(pDC);
     return retVal;
+}
+
+/*++
+* @name DxDdGetDriverInfo
+* @implemented
+*
+* Function queries the driver for DirectDraw and Direct3D functionality
+*
+* @param HANDLE DdHandle
+* Handle to DirectDraw object 
+*
+* @param PDD_GETDRIVERINFODATA drvInfoData
+* Pointer to in/out driver info data structure 
+*--*/
+DWORD
+NTAPI
+DxDdGetDriverInfo(HANDLE DdHandle, PDD_GETDRIVERINFODATA drvInfoData)
+{
+    PEDD_DIRECTDRAW_LOCAL peDdL;
+    PEDD_DIRECTDRAW_GLOBAL peDdGl;
+    PVOID pInfo = NULL;
+    DWORD dwInfoSize = 0;
+    BYTE callbackStruct[1024];
+    DWORD RetVal = FALSE;
+
+    peDdL = (PEDD_DIRECTDRAW_LOCAL)DdHmgLock(DdHandle, ObjType_DDLOCAL_TYPE, FALSE);
+    if (!peDdL)
+        return RetVal;
+    
+    peDdGl = peDdL->peDirectDrawGlobal2;
+
+    // check VideoPort related callbacks
+    if (peDdGl->dwCallbackFlags & EDDDGBL_VIDEOPORTCALLBACKS)
+    {
+        if (InlineIsEqualGUID(&drvInfoData->guidInfo, &GUID_VideoPortCallbacks))
+        {
+            dwInfoSize = sizeof(DD_VIDEOPORTCALLBACKS);
+            pInfo = (VOID*)&peDdGl->ddVideoPortCallback;
+        }
+        if (InlineIsEqualGUID(&drvInfoData->guidInfo, &GUID_VideoPortCaps))
+        {
+            pInfo = (VOID*)peDdGl->unk_000c[0];
+            dwInfoSize = 72 * peDdGl->ddHalInfo.ddCaps.dwMaxVideoPorts;
+        }
+        if (InlineIsEqualGUID(&drvInfoData->guidInfo, &GUID_D3DCallbacks3))
+        {
+            dwInfoSize = sizeof(D3DNTHAL_CALLBACKS3);
+            pInfo = (VOID*)&peDdGl->d3dNtHalCallbacks3;
+        }
+    }
+
+    // check ColorControl related callbacks
+    if (peDdGl->dwCallbackFlags & EDDDGBL_COLORCONTROLCALLBACKS)
+    {
+        if (InlineIsEqualGUID(&drvInfoData->guidInfo, &GUID_ColorControlCallbacks))
+        {
+            dwInfoSize = sizeof(DD_COLORCONTROLCALLBACKS);
+            pInfo = (VOID*)&peDdGl->ddColorControlCallbacks;
+        }
+        if (InlineIsEqualGUID(&drvInfoData->guidInfo, &GUID_NTCallbacks))
+        {
+            dwInfoSize = sizeof(DD_NTCALLBACKS);
+            pInfo = (VOID*)&peDdGl->ddNtCallbacks;
+        }      
+    }
+
+    // check Miscellaneous callbacks
+    if (peDdGl->dwCallbackFlags & EDDDGBL_MISCCALLBACKS)
+    {
+        if (InlineIsEqualGUID(&drvInfoData->guidInfo, &GUID_MiscellaneousCallbacks))
+        {
+            dwInfoSize = sizeof(DD_MISCELLANEOUSCALLBACKS);
+            pInfo = (VOID*)&peDdGl->ddMiscellanousCallbacks;
+        }
+        if (InlineIsEqualGUID(&drvInfoData->guidInfo, &GUID_DDMoreCaps))
+        {
+            dwInfoSize = sizeof(DD_MORECAPS);
+            pInfo = &peDdGl->ddMoreCaps;
+        }
+    }
+
+    if (peDdGl->dwCallbackFlags & EDDDGBL_MISC2CALLBACKS && 
+        InlineIsEqualGUID(&drvInfoData->guidInfo, &GUID_Miscellaneous2Callbacks))
+    {
+        dwInfoSize = sizeof(DD_MISCELLANEOUS2CALLBACKS);
+        pInfo = (VOID*)&peDdGl->ddMiscellanous2Callbacks;
+    }
+
+    if (peDdGl->dwCallbackFlags & EDDDGBL_MOTIONCOMPCALLBACKS && 
+        InlineIsEqualGUID(&drvInfoData->guidInfo, &GUID_MotionCompCallbacks))
+    {
+        dwInfoSize = sizeof(DD_MOTIONCOMPCALLBACKS);
+        pInfo = (VOID*)&peDdGl->ddMotionCompCallbacks;
+    }
+
+    if (InlineIsEqualGUID(&drvInfoData->guidInfo, &GUID_KernelCaps) )
+    {
+        dwInfoSize = sizeof(DD_KERNELCALLBACKS);
+        pInfo = &peDdGl->ddKernelCaps;
+    }
+
+    if (InlineIsEqualGUID(&drvInfoData->guidInfo, &GUID_DDMoreSurfaceCaps))
+    {
+        dwInfoSize = sizeof(DDMORESURFACECAPS);
+        pInfo = &peDdGl->ddMoreSurfaceCaps;
+    }
+
+    if (dwInfoSize && pInfo)
+    {
+        gpEngFuncs.DxEngLockHdev(peDdGl->hDev);
+        intDdGetDriverInfo(peDdGl, drvInfoData->guidInfo, &callbackStruct, dwInfoSize, &dwInfoSize);
+        gpEngFuncs.DxEngUnlockHdev(peDdGl->hDev);
+        memcpy(drvInfoData->lpvData, callbackStruct, dwInfoSize);
+    }
+
+    InterlockedDecrement((VOID*)&peDdL->pobj.cExclusiveLock);
+
+    return TRUE;
+}
+
+
+/*++
+* @name DxDdQueryDirectDrawObject
+* @implemented
+*
+* Function queries the DirectDraw object for its functionality
+*  
+* @return
+* TRUE on success. 
+*--*/
+BOOL
+NTAPI
+DxDdQueryDirectDrawObject(
+    HANDLE DdHandle,
+    DD_HALINFO* pDdHalInfo,
+    DWORD* pCallBackFlags,
+    LPD3DNTHAL_CALLBACKS pd3dNtHalCallbacks,
+    LPD3DNTHAL_GLOBALDRIVERDATA pd3dNtGlobalDriverData,
+    PDD_D3DBUFCALLBACKS pd3dBufCallbacks,
+    LPDDSURFACEDESC pTextureFormats,
+    DWORD* p8,
+    VIDEOMEMORY* p9,
+    DWORD* pdwNumFourCC,
+    DWORD* pdwFourCC)
+{
+    PEDD_DIRECTDRAW_LOCAL peDdL;
+    PEDD_DIRECTDRAW_GLOBAL peDdGl;
+    BOOL RetVal = FALSE;
+
+    if (!DdHandle)
+        return RetVal;
+
+    if (!pDdHalInfo)
+        return RetVal;
+
+    if (!gpEngFuncs.DxEngScreenAccessCheck())
+        return RetVal;
+
+    peDdL = (PEDD_DIRECTDRAW_LOCAL)DdHmgLock(DdHandle, ObjType_DDLOCAL_TYPE, FALSE);
+    if (peDdL)
+    {
+        peDdGl = peDdL->peDirectDrawGlobal2;
+        gpEngFuncs.DxEngLockHdev(peDdGl->hDev);
+
+        memcpy(pDdHalInfo, &peDdGl->ddHalInfo, sizeof(DD_HALINFO));
+
+        if (pCallBackFlags)
+        {
+            *(DWORD*)pCallBackFlags = peDdGl->ddCallbacks.dwFlags;
+            *(DWORD*)((ULONG)pCallBackFlags + 4) = peDdGl->ddSurfaceCallbacks.dwFlags;
+            *(DWORD*)((ULONG)pCallBackFlags + 8) = peDdGl->ddPaletteCallbacks.dwFlags;
+        }
+
+        if ( pd3dNtHalCallbacks )
+            memcpy(pd3dNtHalCallbacks, &peDdGl->d3dNtHalCallbacks, sizeof(peDdGl->d3dNtHalCallbacks));
+
+        if ( pd3dNtGlobalDriverData )
+            memcpy(pd3dNtGlobalDriverData, &peDdGl->d3dNtGlobalDriverData, sizeof(peDdGl->d3dNtGlobalDriverData));
+
+        if ( pd3dBufCallbacks )
+            memcpy(pd3dBufCallbacks, &peDdGl->d3dBufCallbacks, sizeof(peDdGl->d3dBufCallbacks));
+
+        if (pTextureFormats)
+            memcpy(pTextureFormats, &peDdGl->d3dNtGlobalDriverData.lpTextureFormats, peDdGl->d3dNtGlobalDriverData.dwNumTextureFormats * sizeof(DDSURFACEDESC2));
+
+        if (pdwNumFourCC)
+            *pdwNumFourCC = peDdGl->dwNumFourCC;
+
+        if (pdwFourCC)
+            memcpy(pdwFourCC, &peDdGl->pdwFourCC, 4 * peDdGl->dwNumFourCC);
+
+        RetVal = TRUE;
+
+        gpEngFuncs.DxEngUnlockHdev(peDdGl->hDev);
+  
+        InterlockedDecrement((VOID*)&peDdL->pobj.cExclusiveLock);
+    }
+
+    return RetVal;
+}
+
+
+/*++
+* @name DxDdReenableDirectDrawObject
+* @implemented
+*
+* Function re-enables DirectDraw object after mode switch
+*  
+* @param HANDLE DdHandle
+* DirectDraw object handle 
+*
+* @param PVOID p2
+* ??? 
+*
+* @return
+* TRUE on success. 
+*
+* @remarks
+* Missing all AGP stuff and second parameter handling
+*--*/
+DWORD
+NTAPI
+DxDdReenableDirectDrawObject(
+    HANDLE DdHandle,
+    PVOID p2)
+{
+    PEDD_DIRECTDRAW_LOCAL peDdL;
+    PEDD_DIRECTDRAW_GLOBAL peDdGl;
+    HDC hDC;                     
+    DWORD RetVal = FALSE;
+
+    peDdL = (PEDD_DIRECTDRAW_LOCAL)DdHmgLock(DdHandle, ObjType_DDLOCAL_TYPE, FALSE);
+
+    if (!peDdL)
+        return RetVal;
+
+    peDdGl = peDdL->peDirectDrawGlobal2;
+
+    hDC = gpEngFuncs.DxEngGetDesktopDC(0, FALSE, FALSE);
+
+    gpEngFuncs.DxEngLockShareSem();
+    gpEngFuncs.DxEngLockHdev(peDdGl->hDev);
+
+    if (peDdGl->fl & 1 &&
+        gpEngFuncs.DxEngGetDCState(hDC, 2) != 1 &&
+        !(gpEngFuncs.DxEngGetHdevData(peDdGl->hDev, DxEGShDevData_OpenRefs)) &&
+        !(gpEngFuncs.DxEngGetHdevData(peDdGl->hDev, DxEGShDevData_disable)) &&
+        !(gpEngFuncs.DxEngGetHdevData(peDdGl->hDev, DxEGShDevData_dd_nCount)) &&
+        gpEngFuncs.DxEngGetHdevData(peDdGl->hDev, DxEGShDevData_DitherFmt) >= BMF_8BPP)
+    {
+        // reset acceleration and suspend flags
+        peDdGl->fl &= 0xFFFFFFFD;
+        peDdGl->bSuspended = 0;
+
+        RetVal = TRUE;
+        // FIXME AGP Stuff
+    }
+
+    gpEngFuncs.DxEngUnlockHdev(peDdGl->hDev);
+    gpEngFuncs.DxEngUnlockShareSem();
+
+    InterlockedDecrement((VOID*)&peDdL->pobj.cExclusiveLock);
+
+    return RetVal;
 }
