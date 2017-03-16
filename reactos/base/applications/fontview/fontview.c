@@ -37,6 +37,7 @@ INT g_NumFonts = 0;
 LOGFONTW g_LogFonts[64];
 LPCWSTR g_fileName;
 WCHAR g_FontTitle[1024] = L"";
+BOOL g_FontPrint = FALSE;
 
 static const WCHAR g_szFontViewClassName[] = L"FontViewWClass";
 
@@ -156,7 +157,24 @@ wWinMain(HINSTANCE hThisInstance,
 	else
 	{
 		/* Try to add the font resource from command line */
-		fileName = argv[1];
+//		fileName = argv[1];
+		if (argc == 2)
+		{
+			fileName = argv[1];
+		}
+		else
+		{
+			/* Windows fontview supports the /p option, which displays print dialog */
+			fileName = argv[2];
+			if (wcscmp(argv[1], L"/p") == 0)
+			{
+				g_FontPrint = TRUE;
+			}
+			else
+			{
+				fileName = argv[1];
+			}
+		}
 		g_fileName = fileName;
 	}
 
@@ -360,6 +378,9 @@ MainWnd_OnCreate(HWND hwnd)
 	g_FontIndex = 0;
 	SendMessage(hDisplay, FVM_SETTYPEFACE, 0, (LPARAM)&g_LogFonts[g_FontIndex]);
 	ShowWindow(hDisplay, SW_SHOWNORMAL);
+
+	if (g_FontPrint)
+		PostMessage(hwnd, WM_COMMAND, IDC_PRINT, 0);
 
 	return 0;
 }
