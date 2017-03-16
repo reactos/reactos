@@ -200,7 +200,8 @@ BOOL NTAPI DxDdQueryDirectDrawObject(HANDLE DdHandle, DD_HALINFO* pDdHalInfo, DW
                                      LPD3DNTHAL_GLOBALDRIVERDATA pd3dNtGlobalDriverData, PDD_D3DBUFCALLBACKS pd3dBufCallbacks, LPDDSURFACEDESC pTextureFormats,
                                      DWORD* p8, VIDEOMEMORY* p9, DWORD* pdwNumFourCC, DWORD* pdwFourCC);
 DWORD NTAPI DxDdReenableDirectDrawObject(HANDLE DdHandle, PVOID p2);
-
+DWORD NTAPI DxDdCanCreateSurface(HANDLE DdHandle, PDD_CANCREATESURFACEDATA SurfaceData);
+DWORD NTAPI DxDdCanCreateD3DBuffer(HANDLE DdHandle, PDD_CANCREATESURFACEDATA SurfaceData);
 
 
 /* Internal functions */

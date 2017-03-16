@@ -4,6 +4,7 @@
  * PURPOSE:          Native driver for dxg implementation
  * FILE:             win32ss/reactx/dxg/ddhmg.c
  * PROGRAMER:        Magnus olsen (magnus@greatlord.com)
+ *                   Sebastian Gasiorek (sebastian.gasiorek@reactos.org)
  * REVISION HISTORY:
  *       30/12-2007   Magnus Olsen
  */

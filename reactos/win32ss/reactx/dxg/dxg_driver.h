@@ -121,26 +121,6 @@ DxDdBlt(
 
 DWORD
 NTAPI
-DxDdCanCreateSurface(
-    PVOID p1,
-    PVOID p2)
-{
-    TRACE();
-    return 0;
-}
-
-DWORD
-NTAPI
-DxDdCanCreateD3DBuffer(
-    PVOID p1,
-    PVOID p2)
-{
-    TRACE();
-    return 0;
-}
-
-DWORD
-NTAPI
 DxDdColorControl(
     PVOID p1,
     PVOID p2)
