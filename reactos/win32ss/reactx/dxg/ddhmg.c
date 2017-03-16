@@ -157,7 +157,7 @@ DdHmgLock(HANDLE DdHandle, UCHAR ObjectType, BOOLEAN LockOwned)
 
     if ( Index < gcMaxDdHmgr )
     {
-        pEntry = (PDD_ENTRY)((PBYTE)gpentDdHmgr + (sizeof(DD_ENTRY) * Index));
+        pEntry = (PDD_ENTRY)((PLONG)gpentDdHmgr + (sizeof(DD_ENTRY) * Index));
 
         if ( VerifyObjectOwner(pEntry) )
         {
