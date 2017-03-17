@@ -547,7 +547,7 @@ BlpDisplayReinitialize (
     VOID
     )
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     PBL_TEXT_CONSOLE TextConsole;
     PBL_INPUT_CONSOLE InputConsole;
 
