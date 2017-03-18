@@ -67,6 +67,7 @@ extern void LoadSettings(void)
     {
         RegistryBinaryConfig tConfig;
         DWORD iBufferSize = sizeof(tConfig);
+        BOOL bVisible = FALSE;
 
         if (RegQueryValueExW(hKey, L"View", NULL, NULL, (LPBYTE)&tConfig, &iBufferSize) == ERROR_SUCCESS)
         {
@@ -90,11 +91,13 @@ extern void LoadSettings(void)
 
                 /* Apply program window settings */
                 tConfig.tPlacement.length = sizeof(WINDOWPLACEMENT);
-                if (SetWindowPlacement(hFrameWnd, &tConfig.tPlacement) == FALSE)
-                    /* In case we fail, show normal */
-                    ShowWindow(hFrameWnd, SW_SHOWNORMAL);
+                bVisible = SetWindowPlacement(hFrameWnd, &tConfig.tPlacement);
             }
         }
+
+        /* In case we fail to restore the window, or open the key, show normal */
+        if (!bVisible)
+            ShowWindow(hFrameWnd, SW_SHOWNORMAL);
 
         /* Restore key position */
         if (QueryStringValue(HKEY_CURRENT_USER, g_szGeneralRegKey, L"LastKey", szBuffer, COUNT_OF(szBuffer)) == ERROR_SUCCESS)
@@ -102,7 +105,7 @@ extern void LoadSettings(void)
             SelectNode(g_pChildWnd->hTreeWnd, szBuffer);
         }
 
-    RegCloseKey(hKey);
+        RegCloseKey(hKey);
     }
     else
     {
