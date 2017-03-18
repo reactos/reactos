@@ -1,5 +1,6 @@
 add_subdirectory(chklib)
 add_subdirectory(ctm)
+add_subdirectory(fontsub)
 add_subdirectory(gettype)
 add_subdirectory(kill)
 add_subdirectory(logevent)
