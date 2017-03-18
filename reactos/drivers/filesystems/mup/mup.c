@@ -1804,7 +1804,7 @@ QueryPathCompletionRoutine(PDEVICE_OBJECT DeviceObject,
         MasterQueryContext->LatestProvider = QueryContext->UncProvider;
         MasterQueryContext->LatestStatus = Status;
 
-        if (MasterQueryContext->FileObject->FsContext2 != DFS_MAGIC_CCB)
+        if (MasterQueryContext->FileObject->FsContext2 != (PVOID)DFS_DOWNLEVEL_OPEN_CONTEXT)
         {
             /* Allocate a buffer for the prefix */
             AcceptedPrefix = ExAllocatePoolWithTag(PagedPool, QueryResponse->LengthAccepted, TAG_MUP);
@@ -2045,7 +2045,7 @@ CreateRedirectedFile(PIRP Irp,
     }
 
     /* Ok, at that point, that's a regular MUP opening (if no DFS) */
-    if (!MupEnableDfs || FileObject->FsContext2 == DFS_MAGIC_CCB)
+    if (!MupEnableDfs || FileObject->FsContext2 == (PVOID)DFS_DOWNLEVEL_OPEN_CONTEXT)
     {
         /* We won't complete immediately */
         IoMarkIrpPending(Irp);
