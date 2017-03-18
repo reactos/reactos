@@ -499,19 +499,19 @@ const MUI_LANGUAGE LanguageList[] =
     {L"00000403", L"1252", L"850", L"10000", L"Catalan", L"217", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, caESLayouts },
 #endif
 #ifdef LANGUAGE_ZH_TW
-    {L"00000404", L"950", L"950", L"10008", L"Chinese (Taiwan)", L"237", enUSPages, enUSErrorEntries, enUSStrings, CJKFonts, zhTWLayouts },
+    {L"00000404", L"950", L"950", L"10008", L"Chinese (Taiwan)", L"237", enUSPages, enUSErrorEntries, enUSStrings, ChineseTraditionalFonts, zhTWLayouts },
 #endif
 #ifdef LANGUAGE_ZH_CN
-    {L"00000804", L"936", L"936", L"10008", L"Chinese (PRC)", L"45", enUSPages, enUSErrorEntries, enUSStrings, CJKFonts, zhCNLayouts },
+    {L"00000804", L"936", L"936", L"10008", L"Chinese (PRC)", L"45", enUSPages, enUSErrorEntries, enUSStrings, ChineseSimplifiedFonts, zhCNLayouts },
 #endif
 #ifdef LANGUAGE_ZH_HK
-    {L"00000C04", L"950", L"950", L"10008", L"Chinese (Hong Kong S.A.R.)", L"104", enUSPages, enUSErrorEntries, enUSStrings, CJKFonts, zhHKLayouts },
+    {L"00000C04", L"950", L"950", L"10008", L"Chinese (Hong Kong S.A.R.)", L"104", enUSPages, enUSErrorEntries, enUSStrings, ChineseTraditionalFonts, zhHKLayouts },
 #endif
 #ifdef LANGUAGE_ZH_SG
-    {L"00001004", L"936", L"936", L"10008", L"Chinese (Singapore)", L"215", enUSPages, enUSErrorEntries, enUSStrings, CJKFonts, zhSGLayouts },
+    {L"00001004", L"936", L"936", L"10008", L"Chinese (Singapore)", L"215", enUSPages, enUSErrorEntries, enUSStrings, ChineseSimplifiedFonts, zhSGLayouts },
 #endif
 #ifdef LANGUAGE_ZH_MO
-    {L"00001404", L"950", L"950", L"10002", L"Chinese (Macau S.A.R.)", L"151", enUSPages, enUSErrorEntries, enUSStrings, CJKFonts, zhMOLayouts },
+    {L"00001404", L"950", L"950", L"10002", L"Chinese (Macau S.A.R.)", L"151", enUSPages, enUSErrorEntries, enUSStrings, ChineseSimplifiedFonts, zhMOLayouts },
 #endif
 #ifdef LANGUAGE_HR_HR
     {L"0000041A", L"1250", L"852", L"10029", L"Croatian", L"108", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, hrHRLayouts },
@@ -652,7 +652,7 @@ const MUI_LANGUAGE LanguageList[] =
     {L"00000810", L"1252", L"850", L"10000", L"Italian (Switzerland)", L"223", itITPages, itITErrorEntries, itITStrings, LatinFonts, itCHLayouts },
 #endif
 #ifdef LANGUAGE_JA_JP
-    {L"00000411", L"932", L"932", L"10001", L"Japanese", L"122", jaJPPages, jaJPErrorEntries, jaJPStrings, CJKFonts, jaJPLayouts },
+    {L"00000411", L"932", L"932", L"10001", L"Japanese", L"122", jaJPPages, jaJPErrorEntries, jaJPStrings, JapaneseFonts, jaJPLayouts },
 #endif
 #ifdef LANGUAGE_KN_IN
     {L"0000044B", L"1252", L"437", L"10079", L"Kannada (India)", L"113", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts, knINLayouts },
@@ -664,7 +664,7 @@ const MUI_LANGUAGE LanguageList[] =
     {L"00000457", L"0", L"437", L"2", L"Konkani", L"113", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, kokINLayouts},
 #endif
 #ifdef LANGUAGE_KO_KR
-    {L"00000412", L"949", L"949", L"10003", L"Korean", L"134", enUSPages, enUSErrorEntries, enUSStrings, CJKFonts, koKRLayouts },
+    {L"00000412", L"949", L"949", L"10003", L"Korean", L"134", enUSPages, enUSErrorEntries, enUSStrings, KoreanFonts, koKRLayouts },
 #endif
 #ifdef LANGUAGE_KY_KG
     {L"00000440", L"1251", L"866", L"10007", L"Kyrgyz (Kyrgyzstan)", L"130", enUSPages, enUSErrorEntries, enUSStrings, CyrillicFonts, kyKGLayouts },
