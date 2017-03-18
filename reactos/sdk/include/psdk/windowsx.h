@@ -309,6 +309,7 @@
 #define HANDLE_WM_COMMNOTIFY(hwnd,wParam,lParam,fn) ((fn)((hwnd),(int)(wParam),(UINT)LOWORD(lParam)),0)
 #define HANDLE_WM_COMPACTING(hwnd,wParam,lParam,fn) ((fn)((hwnd),(UINT)(wParam)),0)
 #define HANDLE_WM_COMPAREITEM(hwnd,wParam,lParam,fn) (LRESULT)(DWORD)(int)(fn)((hwnd),(const COMPAREITEMSTRUCT*)(lParam))
+#define HANDLE_WM_CONTEXTMENU(hwnd,wParam,lParam,fn) ((fn)((hwnd),(HWND)(wParam),(UINT)GET_X_LPARAM(lParam),(UINT)GET_Y_LPARAM(lParam)))
 #define HANDLE_WM_COPY(hwnd,wParam,lParam,fn) ((fn)(hwnd),0)
 #define HANDLE_WM_CREATE(hwnd,wParam,lParam,fn) ((fn)((hwnd),(LPCREATESTRUCT)(lParam)) ? 0 : (LRESULT)-1L)
 #define HANDLE_WM_CTLCOLORBTN(hwnd,wParam,lParam,fn) (LRESULT)(DWORD)(UINT)(HBRUSH)(fn)((hwnd),(HDC)(wParam),(HWND)(lParam),CTLCOLOR_BTN)
