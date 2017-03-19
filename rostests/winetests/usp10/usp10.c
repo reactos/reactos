@@ -85,7 +85,7 @@ static inline void _test_items_ok(LPCWSTR string, DWORD cchString,
     winetest_ok(hr == S_OK, "ScriptItemize should return S_OK not %08x\n", hr);
     if (nItemsBroken && (broken(nItemsBroken[0] == outnItems) || broken(nItemsBroken[1] == outnItems)))
     {
-        winetest_win_skip("This test broken on this platform\n");
+        winetest_win_skip("This test broken on this platform: nitems %d\n", outnItems);
         return;
     }
     todo_wine_if (nItemsToDo)
@@ -94,38 +94,40 @@ static inline void _test_items_ok(LPCWSTR string, DWORD cchString,
     for (x = 0; x <= outnItems; x++)
     {
         if (items[x].isBroken && broken(outpItems[x].iCharPos == items[x].broken_value[0]))
-            winetest_win_skip("This test broken on this platform\n");
+            winetest_win_skip("This test broken on this platform: item %d CharPos %d\n", x, outpItems[x].iCharPos);
         else todo_wine_if (items[x].todo_flag[0])
             winetest_ok(outpItems[x].iCharPos == items[x].iCharPos, "%i:Wrong CharPos (%i)\n",x,outpItems[x].iCharPos);
 
         if (items[x].isBroken && broken(outpItems[x].a.fRTL== items[x].broken_value[1]))
-            winetest_win_skip("This test broken on this platform\n");
+            winetest_win_skip("This test broken on this platform: item %d fRTL %d\n", x, outpItems[x].a.fRTL);
         else todo_wine_if (items[x].todo_flag[1])
             winetest_ok(outpItems[x].a.fRTL == items[x].fRTL, "%i:Wrong fRTL(%i)\n",x,outpItems[x].a.fRTL);
 
         if (items[x].isBroken && broken(outpItems[x].a.fLayoutRTL == items[x].broken_value[2]))
-            winetest_win_skip("This test broken on this platform\n");
+            winetest_win_skip("This test broken on this platform: item %d fLayoutRTL %d\n", x, outpItems[x].a.fLayoutRTL);
         else todo_wine_if (items[x].todo_flag[2])
             winetest_ok(outpItems[x].a.fLayoutRTL == items[x].fLayoutRTL, "%i:Wrong fLayoutRTL(%i)\n",x,outpItems[x].a.fLayoutRTL);
 
         if (items[x].isBroken && broken(outpItems[x].a.s.uBidiLevel == items[x].broken_value[3]))
-            winetest_win_skip("This test broken on this platform\n");
+            winetest_win_skip("This test broken on this platform: item %d BidiLevel %d\n", x, outpItems[x].a.s.uBidiLevel);
         else todo_wine_if (items[x].todo_flag[3])
             winetest_ok(outpItems[x].a.s.uBidiLevel == items[x].uBidiLevel, "%i:Wrong BidiLevel(%i)\n",x,outpItems[x].a.s.uBidiLevel);
+
+        if (items[x].isBroken && broken(outpItems[x].a.s.fOverrideDirection == items[x].broken_value[4]))
+            winetest_win_skip("This test broken on this platform: item %d fOverrideDirection %d\n", x, outpItems[x].a.s.fOverrideDirection);
+        else todo_wine_if (items[x].todo_flag[4])
+            winetest_ok(outpItems[x].a.s.fOverrideDirection == items[x].fOverrideDirection, "%i:Wrong fOverrideDirection(%i)\n",x,outpItems[x].a.s.fOverrideDirection);
+
         if (x != outnItems)
             winetest_ok(outpItems[x].a.eScript != SCRIPT_UNDEFINED, "%i: Undefined script\n",x);
         if (pScriptItemizeOpenType)
         {
-            if (items[x].isBroken && broken(tags[x] == items[x].broken_value[4]))
-                winetest_win_skip("This test broken on this platform\n");
-            else todo_wine_if (items[x].todo_flag[4])
+            if (items[x].isBroken && broken(tags[x] == items[x].broken_value[5]))
+                winetest_win_skip("This test broken on this platform: item %d Script Tag %x\n", x, tags[x]);
+            else todo_wine_if (items[x].todo_flag[5])
                 winetest_ok(tags[x] == items[x].scriptTag,"%i:Incorrect Script Tag %x != %x\n",x,tags[x],items[x].scriptTag);
         }
 
-        if (items[x].isBroken && broken(outpItems[x].a.s.fOverrideDirection == items[x].broken_value[5]))
-            winetest_win_skip("This test broken on this platform\n");
-        else todo_wine_if (items[x].todo_flag[5])
-            winetest_ok(outpItems[x].a.s.fOverrideDirection == items[x].fOverrideDirection, "%i:Wrong fOverrideDirection(%i)\n",x,outpItems[x].a.s.fOverrideDirection);
     }
 }
 
@@ -264,7 +266,7 @@ static const itemTest t2d5[5] = {{{0,0,0,0,0,0},0,0,0,0,1,latn_tag,FALSE},
 
     /* Hebrew */
     static const WCHAR test6[]  = {0x05e9, 0x05dc, 0x05d5, 0x05dd, '.',0};
-    static const itemTest t61[3] = {{{0,0,0,0,0,0},0,1,1,1,0,hebr_tag,TRUE,{-1,0,0,0,-1}},{{0,0,0,0,0,0},4,0,0,0,0,0,FALSE},{{0,0,0,0,0,0},5,0,0,0,0,-1,FALSE}};
+    static const itemTest t61[3] = {{{0,0,0,0,0,0},0,1,1,1,0,hebr_tag,TRUE,{-1,0,0,0,-1,-1}},{{0,0,0,0,0,0},4,0,0,0,0,0,FALSE},{{0,0,0,0,0,0},5,0,0,0,0,-1,FALSE}};
     static const itemTest t62[3] = {{{0,0,0,0,0,0},0,1,1,1,0,hebr_tag,FALSE},{{0,0,0,0,0,0},4,1,1,1,0,0,FALSE},{{0,0,0,0,0,0},5,0,0,0,0,-1,FALSE}};
     static const itemTest t63[2] = {{{0,0,0,0,0,0},0,1,1,1,0,hebr_tag,FALSE},{{0,0,0,0,0,0},5,0,0,0,0,-1,FALSE}};
 static const itemTest t64[3] = {{{0,0,0,0,0,0},0,0,0,0,1,hebr_tag,FALSE},
@@ -273,7 +275,7 @@ static const itemTest t64[3] = {{{0,0,0,0,0,0},0,0,0,0,1,hebr_tag,FALSE},
 
     static const int b63[2] = {2,2};
     static const WCHAR test7[]  = {'p','a','r','t',' ','o','n','e',' ',0x05d7, 0x05dc, 0x05e7, ' ', 0x05e9, 0x05ea, 0x05d9, 0x05d9, 0x05dd, ' ','p','a','r','t',' ','t','h','r','e','e', 0};
-    static const itemTest t71[4] = {{{0,0,0,0,0,0},0,0,0,0,0,latn_tag,FALSE},{{0,0,0,0,0,0},9,1,1,1,0,hebr_tag,TRUE,{-1,0,0,0,-1}},{{0,0,0,0,0,0},19,0,0,0,0,latn_tag,FALSE},{{0,0,0,0,0,0},29,0,0,0,0,-1,FALSE}};
+    static const itemTest t71[4] = {{{0,0,0,0,0,0},0,0,0,0,0,latn_tag,FALSE},{{0,0,0,0,0,0},9,1,1,1,0,hebr_tag,TRUE,{-1,0,0,0,-1,-1}},{{0,0,0,0,0,0},19,0,0,0,0,latn_tag,FALSE},{{0,0,0,0,0,0},29,0,0,0,0,-1,FALSE}};
     static const itemTest t72[4] = {{{0,0,0,0,0,0},0,0,0,0,0,latn_tag,FALSE},{{0,0,0,0,0,0},9,1,1,1,0,hebr_tag,FALSE},{{0,0,0,0,0,0},18,0,0,0,0,latn_tag,FALSE},{{0,0,0,0,0,0},29,0,0,0,0,-1,FALSE}};
     static const itemTest t73[4] = {{{0,0,0,0,0,0},0,0,0,2,0,latn_tag,FALSE},{{0,0,0,0,0,0},8,1,1,1,0,hebr_tag,FALSE},{{0,0,0,0,0,0},19,0,0,2,0,latn_tag,FALSE},{{0,0,0,0,0,0},29,0,0,0,0,-1,FALSE}};
 static const itemTest t74[4] = {{{0,0,0,0,0,0},0,0,0,0,1,latn_tag,FALSE},
@@ -349,7 +351,7 @@ static const itemTest t74[4] = {{{0,0,0,0,0,0},0,0,0,0,1,latn_tag,FALSE},
     /* Diacritical */
     static const WCHAR test20[] = {0x0309,'a','b','c','d',0};
     static const itemTest t201[3] = {{{0,0,0,0,0,0},0,0,0,0,0x0,0,FALSE},{{0,0,0,0,0,0},1,0,0,0,0,latn_tag,FALSE},{{0,0,0,0,0,0},5,0,0,0,0,-1,FALSE}};
-    static const itemTest t202[3] = {{{0,0,0,0,0,0},0,0,0,2,0,0,TRUE,{-1,1,1,1,-1}},{{0,0,0,0,0,0},1,0,0,2,0,latn_tag,FALSE},{{0,0,0,0,0,0},5,0,0,0,0,-1,FALSE}};
+    static const itemTest t202[3] = {{{0,0,0,0,0,0},0,0,0,2,0,0,TRUE,{-1,1,1,1,-1,-1}},{{0,0,0,0,0,0},1,0,0,2,0,latn_tag,FALSE},{{0,0,0,0,0,0},5,0,0,0,0,-1,FALSE}};
 
     static const WCHAR test21[] = {0x0710, 0x0712, 0x0308, 0x0712, 0x0714,0};
     static const itemTest t211[2] = {{{0,0,0,0,0,0},0,1,1,1,0,syrc_tag,FALSE},{{0,0,0,0,0,0},5,0,0,0,0,-1,FALSE}};
@@ -372,22 +374,22 @@ static const itemTest t74[4] = {{{0,0,0,0,0,0},0,0,0,0,1,latn_tag,FALSE},
     /* Myanmar */
     static const WCHAR test24[] = {0x1019,0x103c,0x1014,0x103a,0x1019,0x102c,0x1021,0x1000,0x1039,0x1001,0x101b,0x102c};
     static const itemTest t241[2] = {{{0,0,0,0,0,0},0,0,0,0,0,mymr_tag,FALSE},{{0,0,0,0,0,0},12,0,0,0,0,-1,FALSE}};
-    static const itemTest t242[2] = {{{0,0,0,0,0,0},0,0,0,2,0,mymr_tag,TRUE,{-1,1,1,1,-1}},{{0,0,0,0,0,0},12,0,0,0,0,-1,FALSE}};
+    static const itemTest t242[2] = {{{0,0,0,0,0,0},0,0,0,2,0,mymr_tag,TRUE,{-1,1,1,1,-1,-1}},{{0,0,0,0,0,0},12,0,0,0,0,-1,FALSE}};
 
     /* Tai Le */
     static const WCHAR test25[] = {0x1956,0x196d,0x1970,0x1956,0x196c,0x1973,0x1951,0x1968,0x1952,0x1970};
-    static const itemTest t251[2] = {{{0,0,0,0,0,0},0,0,0,0,0,tale_tag,TRUE,{-1,-1,-1,-1,latn_tag}},{{0,0,0,0,0,0},10,0,0,0,0,-1,FALSE}};
-    static const itemTest t252[2] = {{{0,0,0,0,0,0},0,0,0,2,0,tale_tag,TRUE,{-1,1,1,1,latn_tag}},{{0,0,0,0,0,0},10,0,0,0,0,-1,FALSE}};
+    static const itemTest t251[2] = {{{0,0,0,0,0,0},0,0,0,0,0,tale_tag,TRUE,{-1,-1,-1,-1,-1,latn_tag}},{{0,0,0,0,0,0},10,0,0,0,0,-1,FALSE}};
+    static const itemTest t252[2] = {{{0,0,0,0,0,0},0,0,0,2,0,tale_tag,TRUE,{-1,1,1,1,-1,latn_tag}},{{0,0,0,0,0,0},10,0,0,0,0,-1,FALSE}};
 
     /* New Tai Lue */
     static const WCHAR test26[] = {0x1992,0x19c4};
-    static const itemTest t261[2] = {{{0,0,0,0,0,0},0,0,0,0,0,talu_tag,TRUE,{-1,-1,-1,-1,latn_tag}},{{0,0,0,0,0,0},2,0,0,0,0,-1,FALSE}};
-    static const itemTest t262[2] = {{{0,0,0,0,0,0},0,0,0,2,0,talu_tag,TRUE,{-1,1,1,1,latn_tag}},{{0,0,0,0,0,0},2,0,0,0,0,-1,FALSE}};
+    static const itemTest t261[2] = {{{0,0,0,0,0,0},0,0,0,0,0,talu_tag,TRUE,{-1,-1,-1,-1,-1,latn_tag}},{{0,0,0,0,0,0},2,0,0,0,0,-1,FALSE}};
+    static const itemTest t262[2] = {{{0,0,0,0,0,0},0,0,0,2,0,talu_tag,TRUE,{-1,1,1,1,-1,latn_tag}},{{0,0,0,0,0,0},2,0,0,0,0,-1,FALSE}};
 
     /* Khmer */
     static const WCHAR test27[] = {0x1781,0x17c1,0x1798,0x179a,0x1797,0x17b6,0x179f,0x17b6};
     static const itemTest t271[2] = {{{0,0,0,0,0,0},0,0,0,0,0,khmr_tag,FALSE},{{0,0,0,0,0,0},8,0,0,0,0,-1,FALSE}};
-    static const itemTest t272[2] = {{{0,0,0,0,0,0},0,0,0,2,0,khmr_tag,TRUE,{-1,1,1,1,-1}},{{0,0,0,0,0,0},8,0,0,0,0,-1,FALSE}};
+    static const itemTest t272[2] = {{{0,0,0,0,0,0},0,0,0,2,0,khmr_tag,TRUE,{-1,1,1,1,-1,-1}},{{0,0,0,0,0,0},8,0,0,0,0,-1,FALSE}};
 
     /* CJK Han */
     static const WCHAR test28[] = {0x8bed,0x7d20,0x6587,0x5b57};
@@ -431,35 +433,35 @@ static const itemTest t74[4] = {{{0,0,0,0,0,0},0,0,0,0,1,latn_tag,FALSE},
     static const WCHAR test35[] = {0x182e,0x1823,0x1829,0x182d,0x1823,0x182f,0x0020,0x182a,0x1822,0x1834,0x1822,0x182d,0x180c};
     static const itemTest t351[2] = {{{0,0,0,0,0,0},0,0,0,0,0,mong_tag,FALSE},{{0,0,0,0,0,0},13,0,0,0,0,-1,FALSE}};
     static const int b351[2] = {2,2};
-    static const itemTest t352[2] = {{{0,0,0,0,0,0},0,0,0,2,0,mong_tag,TRUE,{-1,1,1,1,-1}},{{0,0,0,0,0,0},13,0,0,0,0,-1,FALSE}};
+    static const itemTest t352[2] = {{{0,0,0,0,0,0},0,0,0,2,0,mong_tag,TRUE,{-1,1,1,1,-1,-1}},{{0,0,0,0,0,0},13,0,0,0,0,-1,FALSE}};
     static const int b352[2] = {2,3};
-    static const itemTest t353[2] = {{{0,0,0,0,0,1},0,0,0,0,1,mong_tag,TRUE,{0,0,0,0,0}},{{0,0,0,0,0,0},13,0,0,0,0,-1,FALSE}};
+    static const itemTest t353[2] = {{{0,0,0,0,1,0},0,0,0,0,1,mong_tag,TRUE,{-1,-1,-1,-1,0,0}},{{0,0,0,0,0,0},13,0,0,0,0,-1,FALSE}};
 
     /* Tifinagh */
     static const WCHAR test36[] = {0x2d5c,0x2d49,0x2d3c,0x2d49,0x2d4f,0x2d30,0x2d56};
-    static const itemTest t361[2] = {{{0,0,0,0,0,0},0,0,0,0,0,tfng_tag,TRUE,{-1,-1,-1,-1,latn_tag}},{{0,0,0,0,0,0},7,0,0,0,0,-1,FALSE}};
-    static const itemTest t362[2] = {{{0,0,0,0,0,0},0,0,0,2,0,tfng_tag,TRUE,{-1,1,1,1,latn_tag}},{{0,0,0,0,0,0},7,0,0,0,0,-1,FALSE}};
+    static const itemTest t361[2] = {{{0,0,0,0,0,0},0,0,0,0,0,tfng_tag,TRUE,{-1,-1,-1,-1,-1,latn_tag}},{{0,0,0,0,0,0},7,0,0,0,0,-1,FALSE}};
+    static const itemTest t362[2] = {{{0,0,0,0,0,0},0,0,0,2,0,tfng_tag,TRUE,{-1,1,1,1,-1,latn_tag}},{{0,0,0,0,0,0},7,0,0,0,0,-1,FALSE}};
 
     /* N'Ko */
     static const WCHAR test37[] = {0x07d2,0x07de,0x07cf};
-    static const itemTest t371[2] = {{{0,0,0,0,0,0},0,1,1,1,0,nko_tag,TRUE,{-1,0,0,0,arab_tag,0}},{{0,0,0,0,0,0},3,0,0,0,0,-1,FALSE}};
-    static const itemTest t372[2] = {{{0,0,0,0,0,0},0,1,1,1,0,nko_tag,TRUE,{-1,0,0,2,arab_tag,0}},{{0,0,0,0,0,0},3,0,0,0,0,-1,FALSE}};
-    static const itemTest t373[2] = {{{0,0,0,0,0,0},0,0,0,0,1,nko_tag,TRUE,{-1,0,0,2,arab_tag,0}}, {{0,0,0,0,0,0},3,0,0,0,0,-1,FALSE}};
+    static const itemTest t371[2] = {{{0,0,0,0,0,0},0,1,1,1,0,nko_tag,TRUE,{-1,0,0,0,-1,arab_tag}},{{0,0,0,0,0,0},3,0,0,0,0,-1,FALSE}};
+    static const itemTest t372[2] = {{{0,0,0,0,0,0},0,1,1,1,0,nko_tag,TRUE,{-1,0,0,2,-1,arab_tag}},{{0,0,0,0,0,0},3,0,0,0,0,-1,FALSE}};
+    static const itemTest t373[2] = {{{0,0,0,0,0,0},0,0,0,0,1,nko_tag,TRUE,{-1,-1,-1,2,0,arab_tag}}, {{0,0,0,0,0,0},3,0,0,0,0,-1,FALSE}};
 
     /* Vai */
     static const WCHAR test38[] = {0xa559,0xa524};
-    static const itemTest t381[2] = {{{0,0,0,0,0,0},0,0,0,0,0,vai_tag,TRUE,{-1,-1,-1,-1,latn_tag}},{{0,0,0,0,0,0},2,0,0,0,0,-1,FALSE}};
-    static const itemTest t382[2] = {{{0,0,0,0,0,0},0,0,0,2,0,vai_tag,TRUE,{-1,1,1,1,latn_tag}},{{0,0,0,0,0,0},2,0,0,0,0,-1,FALSE}};
+    static const itemTest t381[2] = {{{0,0,0,0,0,0},0,0,0,0,0,vai_tag,TRUE,{-1,-1,-1,-1,-1,latn_tag}},{{0,0,0,0,0,0},2,0,0,0,0,-1,FALSE}};
+    static const itemTest t382[2] = {{{0,0,0,0,0,0},0,0,0,2,0,vai_tag,TRUE,{-1,1,1,1,-1,latn_tag}},{{0,0,0,0,0,0},2,0,0,0,0,-1,FALSE}};
 
     /* Cherokee */
     static const WCHAR test39[] = {0x13e3,0x13b3,0x13a9,0x0020,0x13a6,0x13ec,0x13c2,0x13af,0x13cd,0x13d7};
     static const itemTest t391[2] = {{{0,0,0,0,0,0},0,0,0,0,0,cher_tag,FALSE},{{0,0,0,0,0,0},10,0,0,0,0,-1,FALSE}};
-    static const itemTest t392[2] = {{{0,0,0,0,0,0},0,0,0,2,0,cher_tag,TRUE,{-1,1,1,1,-1}},{{0,0,0,0,0,0},10,0,0,0,0,-1,FALSE}};
+    static const itemTest t392[2] = {{{0,0,0,0,0,0},0,0,0,2,0,cher_tag,TRUE,{-1,1,1,1,-1,-1}},{{0,0,0,0,0,0},10,0,0,0,0,-1,FALSE}};
 
     /* Canadian Aboriginal Syllabics */
     static const WCHAR test40[] = {0x1403,0x14c4,0x1483,0x144e,0x1450,0x1466};
     static const itemTest t401[2] = {{{0,0,0,0,0,0},0,0,0,0,0,cans_tag,FALSE},{{0,0,0,0,0,0},6,0,0,0,0,-1,FALSE}};
-    static const itemTest t402[2] = {{{0,0,0,0,0,0},0,0,0,2,0,cans_tag,TRUE,{-1,1,1,1,-1}},{{0,0,0,0,0,0},6,0,0,0,0,-1,FALSE}};
+    static const itemTest t402[2] = {{{0,0,0,0,0,0},0,0,0,2,0,cans_tag,TRUE,{-1,1,1,1,-1,-1}},{{0,0,0,0,0,0},6,0,0,0,0,-1,FALSE}};
 
     /* Ogham */
     static const WCHAR test41[] = {0x169b,0x1691,0x168c,0x1690,0x168b,0x169c};
@@ -470,32 +472,32 @@ static const itemTest t74[4] = {{{0,0,0,0,0,0},0,0,0,0,1,latn_tag,FALSE},
     /* Runic */
     static const WCHAR test42[] = {0x16a0,0x16a1,0x16a2,0x16a3,0x16a4,0x16a5};
     static const itemTest t421[2] = {{{0,0,0,0,0,0},0,0,0,0,0,runr_tag,FALSE},{{0,0,0,0,0,0},6,0,0,0,0,-1,FALSE}};
-    static const itemTest t422[4] = {{{0,0,0,0,0,0},0,0,0,2,0,runr_tag,TRUE,{-1,1,1,1,-1}},{{0,0,0,0,0,0},6,0,0,0,0,-1,FALSE}};
+    static const itemTest t422[4] = {{{0,0,0,0,0,0},0,0,0,2,0,runr_tag,TRUE,{-1,1,1,1,-1,-1}},{{0,0,0,0,0,0},6,0,0,0,0,-1,FALSE}};
 
     /* Braille */
     static const WCHAR test43[] = {0x280f,0x2817,0x2811,0x280d,0x280a,0x2811,0x2817};
     static const itemTest t431[2] = {{{0,0,0,0,0,0},0,0,0,0,0,brai_tag,FALSE},{{0,0,0,0,0,0},7,0,0,0,0,-1,FALSE}};
-    static const itemTest t432[4] = {{{0,0,0,0,0,0},0,0,0,2,0,brai_tag,TRUE,{-1,1,1,1,-1}},{{0,0,0,0,0,0},7,0,0,0,0,-1,FALSE}};
+    static const itemTest t432[4] = {{{0,0,0,0,0,0},0,0,0,2,0,brai_tag,TRUE,{-1,1,1,1,-1,-1}},{{0,0,0,0,0,0},7,0,0,0,0,-1,FALSE}};
 
     /* Private and Surrogates Area */
     static const WCHAR test44[] = {0xe000, 0xe001, 0xd800, 0xd801};
     static const itemTest t441[3] = {{{0,0,0,0,0,0},0,0,0,0,0,0,FALSE},{{0,0,0,0,0,0},2,0,0,0,0,0,FALSE},{{0,0,0,0,0,0},4,0,0,0,0,-1,FALSE}};
-    static const itemTest t442[4] = {{{0,0,0,0,0,0},0,0,0,2,0,0,TRUE,{-1,1,1,1,-1}},{{0,0,0,0,0,0},2,0,0,2,0,0,TRUE,{-1,1,1,1,-1}},{{0,0,0,0,0,0},4,0,0,0,0,-1,FALSE}};
+    static const itemTest t442[4] = {{{0,0,0,0,0,0},0,0,0,2,0,0,TRUE,{-1,1,1,1,-1,-1}},{{0,0,0,0,0,0},2,0,0,2,0,0,TRUE,{-1,1,1,1,-1,-1}},{{0,0,0,0,0,0},4,0,0,0,0,-1,FALSE}};
 
     /* Deseret */
     static const WCHAR test45[] = {0xd801,0xdc19,0xd801,0xdc32,0xd801,0xdc4c,0xd801,0xdc3c,0xd801,0xdc32,0xd801,0xdc4b,0xd801,0xdc2f,0xd801,0xdc4c,0xd801,0xdc3b,0xd801,0xdc32,0xd801,0xdc4a,0xd801,0xdc28};
-    static const itemTest t451[2] = {{{0,0,0,0,0,0},0,0,0,0,0,dsrt_tag,TRUE,{-1,-1,-1,-1,0x0}},{{0,0,0,0,0,0},24,0,0,0,0,-1,FALSE}};
-    static const itemTest t452[2] = {{{0,0,0,0,0,0},0,0,0,2,0,dsrt_tag,TRUE,{-1,1,1,1,0x0}},{{0,0,0,0,0,0},24,0,0,0,0,-1,FALSE}};
+    static const itemTest t451[2] = {{{0,0,0,0,0,0},0,0,0,0,0,dsrt_tag,TRUE,{-1,-1,-1,-1,-1,0x0}},{{0,0,0,0,0,0},24,0,0,0,0,-1,FALSE}};
+    static const itemTest t452[2] = {{{0,0,0,0,0,0},0,0,0,2,0,dsrt_tag,TRUE,{-1,1,1,1,-1,0x0}},{{0,0,0,0,0,0},24,0,0,0,0,-1,FALSE}};
 
     /* Osmanya */
     static const WCHAR test46[] = {0xd801,0xdc8b,0xd801,0xdc98,0xd801,0xdc88,0xd801,0xdc91,0xd801,0xdc9b,0xd801,0xdc92,0xd801,0xdc95,0xd801,0xdc80};
-    static const itemTest t461[2] = {{{0,0,0,0,0,0},0,0,0,0,0,osma_tag,TRUE,{-1,-1,-1,-1,0x0}},{{0,0,0,0,0,0},16,0,0,0,0,-1,FALSE}};
-    static const itemTest t462[2] = {{{0,0,0,0,0,0},0,0,0,2,0,osma_tag,TRUE,{-1,1,1,1,0x0}},{{0,0,0,0,0,0},16,0,0,0,0,-1,FALSE}};
+    static const itemTest t461[2] = {{{0,0,0,0,0,0},0,0,0,0,0,osma_tag,TRUE,{-1,-1,-1,-1,-1,0x0}},{{0,0,0,0,0,0},16,0,0,0,0,-1,FALSE}};
+    static const itemTest t462[2] = {{{0,0,0,0,0,0},0,0,0,2,0,osma_tag,TRUE,{-1,1,1,1,-1,0x0}},{{0,0,0,0,0,0},16,0,0,0,0,-1,FALSE}};
 
     /* Mathematical Alphanumeric Symbols */
     static const WCHAR test47[] = {0xd835,0xdc00,0xd835,0xdc35,0xd835,0xdc6a,0xd835,0xdc9f,0xd835,0xdcd4,0xd835,0xdd09,0xd835,0xdd3e,0xd835,0xdd73,0xd835,0xdda8,0xd835,0xdddd,0xd835,0xde12,0xd835,0xde47,0xd835,0xde7c};
-    static const itemTest t471[2] = {{{0,0,0,0,0,0},0,0,0,0,0,math_tag,TRUE,{-1,-1,-1,-1,0x0}},{{0,0,0,0,0,0},26,0,0,0,0,-1,FALSE}};
-    static const itemTest t472[2] = {{{0,0,0,0,0,0},0,0,0,2,0,math_tag,TRUE,{-1,1,1,1,0x0}},{{0,0,0,0,0,0},26,0,0,0,0,-1,FALSE}};
+    static const itemTest t471[2] = {{{0,0,0,0,0,0},0,0,0,0,0,math_tag,TRUE,{-1,-1,-1,-1,-1,0x0}},{{0,0,0,0,0,0},26,0,0,0,0,-1,FALSE}};
+    static const itemTest t472[2] = {{{0,0,0,0,0,0},0,0,0,2,0,math_tag,TRUE,{-1,1,1,1,-1,0x0}},{{0,0,0,0,0,0},26,0,0,0,0,-1,FALSE}};
 
     /* Mathematical and Numeric combinations */
     /* These have a leading hebrew character to force complicated itemization */
@@ -592,7 +594,7 @@ static const itemTest t74[4] = {{{0,0,0,0,0,0},0,0,0,0,1,latn_tag,FALSE},
                                    0x0666, 0x0667, 0x0668, 0x066b, 0x0669, 0x0660};         /* ٦٧٨٫٩٠ */
     static const itemTest t581[] = {{{0,0,0,0,0,0}, 0,0,1,2,0,arab_tag,FALSE},
                                     {{0,0,0,0,0,0},13,0,0,0,0,-1,FALSE}};
-    static const itemTest t582[] = {{{0,0,1,1,0,1}, 0,0,0,0,1,arab_tag,FALSE},
+    static const itemTest t582[] = {{{0,0,1,1,1,0}, 0,0,0,0,1,arab_tag,FALSE},
                                     {{0,0,0,0,0,0},13,0,0,0,0,-1,FALSE}};
 
     SCRIPT_ITEM items[15];
@@ -930,8 +932,9 @@ static const itemTest t74[4] = {{{0,0,0,0,0,0},0,0,0,0,1,latn_tag,FALSE},
 static inline void _test_shape_ok(int valid, HDC hdc, LPCWSTR string,
                          DWORD cchString, SCRIPT_CONTROL *Control,
                          SCRIPT_STATE *State, DWORD item, DWORD nGlyphs,
-                         const shapeTest_char* charItems,
-                         const shapeTest_glyph* glyphItems)
+                         const shapeTest_char *charItems,
+                         const shapeTest_glyph *glyphItems,
+                         const SCRIPT_GLYPHPROP *props2)
 {
     HRESULT hr;
     int x, outnItems=0, outnGlyphs=0;
@@ -1017,19 +1020,27 @@ static inline void _test_shape_ok(int valid, HDC hdc, LPCWSTR string,
                 winetest_trace("%i: Glyph present when it should not be\n",x);
         }
         if (valid > 0)
-            winetest_ok(glyphProp[x].sva.uJustification == glyphItems[x].GlyphProp.sva.uJustification, "%i: uJustification incorrect (%i)\n",x,glyphProp[x].sva.uJustification);
+            winetest_ok(glyphProp[x].sva.uJustification == glyphItems[x].GlyphProp.sva.uJustification ||
+                        (props2 && glyphProp[x].sva.uJustification == props2[x].sva.uJustification),
+                         "%i: uJustification incorrect (%i)\n",x,glyphProp[x].sva.uJustification);
         else if (glyphProp[x].sva.uJustification != glyphItems[x].GlyphProp.sva.uJustification)
             winetest_trace("%i: uJustification incorrect (%i)\n",x,glyphProp[x].sva.uJustification);
         if (valid > 0)
-            winetest_ok(glyphProp[x].sva.fClusterStart == glyphItems[x].GlyphProp.sva.fClusterStart, "%i: fClusterStart incorrect (%i)\n",x,glyphProp[x].sva.fClusterStart);
+            winetest_ok(glyphProp[x].sva.fClusterStart == glyphItems[x].GlyphProp.sva.fClusterStart ||
+                        (props2 && glyphProp[x].sva.fClusterStart == props2[x].sva.fClusterStart),
+                        "%i: fClusterStart incorrect (%i)\n",x,glyphProp[x].sva.fClusterStart);
         else if (glyphProp[x].sva.fClusterStart != glyphItems[x].GlyphProp.sva.fClusterStart)
             winetest_trace("%i: fClusterStart incorrect (%i)\n",x,glyphProp[x].sva.fClusterStart);
         if (valid > 0)
-            winetest_ok(glyphProp[x].sva.fDiacritic == glyphItems[x].GlyphProp.sva.fDiacritic, "%i: fDiacritic incorrect (%i)\n",x,glyphProp[x].sva.fDiacritic);
+            winetest_ok(glyphProp[x].sva.fDiacritic == glyphItems[x].GlyphProp.sva.fDiacritic ||
+                        (props2 && glyphProp[x].sva.fDiacritic == props2[x].sva.fDiacritic),
+                        "%i: fDiacritic incorrect (%i)\n",x,glyphProp[x].sva.fDiacritic);
         else if (glyphProp[x].sva.fDiacritic != glyphItems[x].GlyphProp.sva.fDiacritic)
             winetest_trace("%i: fDiacritic incorrect (%i)\n",x,glyphProp[x].sva.fDiacritic);
         if (valid > 0)
-            winetest_ok(glyphProp[x].sva.fZeroWidth == glyphItems[x].GlyphProp.sva.fZeroWidth, "%i: fZeroWidth incorrect (%i)\n",x,glyphProp[x].sva.fZeroWidth);
+            winetest_ok(glyphProp[x].sva.fZeroWidth == glyphItems[x].GlyphProp.sva.fZeroWidth ||
+                        (props2 && glyphProp[x].sva.fZeroWidth == props2[x].sva.fZeroWidth),
+                        "%i: fZeroWidth incorrect (%i)\n",x,glyphProp[x].sva.fZeroWidth);
         else if (glyphProp[x].sva.fZeroWidth != glyphItems[x].GlyphProp.sva.fZeroWidth)
             winetest_trace("%i: fZeroWidth incorrect (%i)\n",x,glyphProp[x].sva.fZeroWidth);
     }
@@ -1042,9 +1053,14 @@ cleanup:
     ScriptFreeCache(&sc);
 }
 
-#define test_shape_ok(a,b,c,d,e,f,g,h,i) (winetest_set_location(__FILE__,__LINE__), 0) ? 0 : _test_shape_ok(1,a,b,c,d,e,f,g,h,i)
+#define test_shape_ok(a,b,c,d,e,f,g,h,i) \
+    (winetest_set_location(__FILE__,__LINE__), 0) ? 0 : _test_shape_ok(1,a,b,c,d,e,f,g,h,i,NULL)
 
-#define test_shape_ok_valid(v,a,b,c,d,e,f,g,h,i) (winetest_set_location(__FILE__,__LINE__), 0) ? 0 : _test_shape_ok(v,a,b,c,d,e,f,g,h,i)
+#define test_shape_ok_valid(v,a,b,c,d,e,f,g,h,i) \
+    (winetest_set_location(__FILE__,__LINE__), 0) ? 0 : _test_shape_ok(v,a,b,c,d,e,f,g,h,i,NULL)
+
+#define test_shape_ok_valid_props2(v,a,b,c,d,e,f,g,h,i,j) \
+    (winetest_set_location(__FILE__,__LINE__), 0) ? 0 : _test_shape_ok(v,a,b,c,d,e,f,g,h,i,j)
 
 typedef struct tagRangeP {
     BYTE range;
@@ -1248,6 +1264,18 @@ static void test_ScriptShapeOpenType(HDC hdc)
                             {1,{{SCRIPT_JUSTIFY_CHARACTER,1,0,0,0,0},0}},
                             {1,{{SCRIPT_JUSTIFY_CHARACTER,1,0,0,0,0},0}},
                             {1,{{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0}} };
+    static const SCRIPT_GLYPHPROP phagspa_win10_props[] = {
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0} };
 
     /* Lao */
     static const WCHAR test_lao[] = {0x0ead, 0x0eb1, 0x0e81, 0x0eaa, 0x0ead, 0x0e99, 0x0ea5, 0x0eb2, 0x0ea7, 0};
@@ -1284,6 +1312,24 @@ static void test_ScriptShapeOpenType(HDC hdc)
                             {1,{{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0}},
                             {1,{{SCRIPT_JUSTIFY_NONE,0,0,0,0,0},0}},
                             {1,{{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0}} };
+    static const SCRIPT_GLYPHPROP tibetan_win10_props[] = {
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,0,1,1,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,0,1,1,0,0},0},
+                            {{SCRIPT_JUSTIFY_NONE,1,0,0,0,0},0} };
 
     /* Devanagari */
     static const WCHAR test_devanagari[] = {0x0926, 0x0947, 0x0935, 0x0928, 0x093e, 0x0917, 0x0930, 0x0940};
@@ -1467,7 +1513,8 @@ static void test_ScriptShapeOpenType(HDC hdc)
     test_valid = find_font_for_range(hdc, "Microsoft PhagsPa", 53, test_phagspa[0], &hfont, &hfont_orig);
     if (hfont != NULL)
     {
-        test_shape_ok_valid(test_valid, hdc, test_phagspa, 11, &Control, &State, 0, 11, phagspa_c, phagspa_g);
+        test_shape_ok_valid_props2(test_valid, hdc, test_phagspa, 11, &Control, &State, 0, 11,
+                                   phagspa_c, phagspa_g, phagspa_win10_props);
         SelectObject(hdc, hfont_orig);
         DeleteObject(hfont);
     }
@@ -1483,7 +1530,8 @@ static void test_ScriptShapeOpenType(HDC hdc)
     test_valid = find_font_for_range(hdc, "Microsoft Himalaya", 70, test_tibetan[0], &hfont, &hfont_orig);
     if (hfont != NULL)
     {
-        test_shape_ok_valid(test_valid, hdc, test_tibetan, 17, &Control, &State, 0, 17, tibetan_c, tibetan_g);
+        test_shape_ok_valid_props2(test_valid, hdc, test_tibetan, 17, &Control, &State, 0, 17,
+                                   tibetan_c, tibetan_g, tibetan_win10_props);
         SelectObject(hdc, hfont_orig);
         DeleteObject(hfont);
     }
@@ -1569,7 +1617,7 @@ static void test_ScriptShape(HDC hdc)
     SCRIPT_CACHE sc = NULL;
     WORD glyphs[4], glyphs2[4], logclust[4], glyphs3[4];
     SCRIPT_VISATTR attrs[4];
-    SCRIPT_ITEM items[2];
+    SCRIPT_ITEM items[4];
     int nb, i, j;
 
     hr = ScriptItemize(test1, 4, 2, NULL, NULL, items, NULL);
@@ -1699,9 +1747,33 @@ static void test_ScriptShape(HDC hdc)
     for (i = 0; i < 2; i++)
     {
         static const WCHAR space[]  = {' ', 0};
-        static const WCHAR blanks[] = {'\t', '\r', '\n', 0x001c, 0x001d, 0x001e, 0x001f,
-                                       0x200b, 0x200c, 0x200d, 0x200e, 0x200f,          /* ZWSP, ZWNJ, ZWJ, LRM, RLM */
-                                       0x202a, 0x202b, 0x202c, 0x202d, 0x202e, 0};      /* LRE, RLE, PDF, LRO, RLO */
+        static const struct
+        {
+            WCHAR c;
+            unsigned int item_count;
+            unsigned int item;
+        }
+        test_data[] =
+        {
+            {0x0009, 3, 1}, /* \t   */
+            {0x000a, 3, 1}, /* \n   */
+            {0x000d, 3, 1}, /* \r   */
+            {0x001c, 3, 1}, /* FS   */
+            {0x001d, 3, 1}, /* GS   */
+            {0x001e, 3, 1}, /* RS   */
+            {0x001f, 3, 1}, /* US   */
+            {0x200b, 1, 0}, /* ZWSP */
+            {0x200c, 1, 0}, /* ZWNJ */
+            {0x200d, 1, 0}, /* ZWJ  */
+            {0x200e, 3, 1}, /* LRM  */
+            {0x200f, 3, 1}, /* RLM  */
+            {0x202a, 3, 1}, /* LRE  */
+            {0x202b, 3, 1}, /* RLE  */
+            {0x202c, 3, 1}, /* PDF  */
+            {0x202d, 3, 1}, /* LRO  */
+            {0x202e, 3, 1}, /* RLO  */
+        };
+        WCHAR chars[3];
         HFONT font, oldfont = NULL;
         LOGFONTA lf;
 
@@ -1720,43 +1792,52 @@ static void test_ScriptShape(HDC hdc)
         ok(hr == S_OK, "%s: expected S_OK, got %08x\n", lf.lfFaceName, hr);
         ok(nb == 1, "%s: expected 1, got %d\n", lf.lfFaceName, nb);
 
-        for (j = 0; blanks[j]; j++)
+        chars[0] = 'A';
+        chars[2] = 'A';
+        for (j = 0; j < sizeof(test_data) / sizeof(*test_data); ++j)
         {
-            hr = ScriptItemize(&blanks[j], 1, 2, NULL, NULL, items, NULL);
-            ok(hr == S_OK, "%s: [%02x] expected S_OK, got %08x\n", lf.lfFaceName, blanks[j], hr);
+            WCHAR c = test_data[j].c;
+            SCRIPT_ITEM *item;
 
-            ok(!items[0].a.fNoGlyphIndex, "%s: [%02x] got unexpected fNoGlyphIndex %#x.\n",
-               lf.lfFaceName, blanks[j], items[0].a.fNoGlyphIndex);
-            hr = ScriptShape(hdc, &sc, &blanks[j], 1, 1, &items[0].a, glyphs2, logclust, attrs, &nb);
-            ok(hr == S_OK, "%s: [%02x] expected S_OK, got %08x\n", lf.lfFaceName, blanks[j], hr);
-            ok(nb == 1, "%s: [%02x] expected 1, got %d\n", lf.lfFaceName, blanks[j], nb);
-            ok(!items[0].a.fNoGlyphIndex, "%s: [%02x] got unexpected fNoGlyphIndex %#x.\n",
-               lf.lfFaceName, blanks[j], items[0].a.fNoGlyphIndex);
+            chars[1] = c;
+            hr = ScriptItemize(chars, 3, 4, NULL, NULL, items, &nb);
+            ok(hr == S_OK, "%s: [%02x] expected S_OK, got %08x\n", lf.lfFaceName, c, hr);
+            ok(nb == test_data[j].item_count, "%s: [%02x] Got unexpected item count %d.\n",
+               lf.lfFaceName, c, nb);
+            item = &items[test_data[j].item];
 
-            ok(glyphs[0] == glyphs2[0] ||
-               broken(glyphs2[0] == blanks[j] && (blanks[j] < 0x10)),
-               "%s: [%02x] expected %04x, got %04x\n", lf.lfFaceName, blanks[j], glyphs[0], glyphs2[0]);
-            ok(attrs[0].fZeroWidth || broken(!attrs[0].fZeroWidth && (blanks[j] < 0x10) /* Vista */),
-               "%s: [%02x] got unexpected fZeroWidth %#x.\n", lf.lfFaceName, blanks[j], attrs[0].fZeroWidth);
+            ok(!item->a.fNoGlyphIndex, "%s: [%02x] got unexpected fNoGlyphIndex %#x.\n",
+               lf.lfFaceName, c, item->a.fNoGlyphIndex);
+            hr = ScriptShape(hdc, &sc, chars, 3, 3, &item->a, glyphs2, logclust, attrs, &nb);
+            ok(hr == S_OK, "%s: [%02x] expected S_OK, got %08x\n", lf.lfFaceName, c, hr);
+            ok(nb == 3, "%s: [%02x] expected 3, got %d\n", lf.lfFaceName, c, nb);
+            ok(!item->a.fNoGlyphIndex, "%s: [%02x] got unexpected fNoGlyphIndex %#x.\n",
+               lf.lfFaceName, c, item->a.fNoGlyphIndex);
 
-            items[0].a.fNoGlyphIndex = 1;
-            hr = ScriptShape(hdc, &sc, &blanks[j], 1, 1, &items[0].a, glyphs2, logclust, attrs, &nb);
-            ok(hr == S_OK, "%s: [%02x] expected S_OK, got %08x\n", lf.lfFaceName, blanks[j], hr);
-            ok(nb == 1, "%s: [%02x] expected 1, got %d\n", lf.lfFaceName, blanks[j], nb);
+            ok(glyphs[0] == glyphs2[1] ||
+               broken(glyphs2[1] == c && (c < 0x10)),
+               "%s: [%02x] expected %04x, got %04x\n", lf.lfFaceName, c, glyphs[0], glyphs2[1]);
+            ok(attrs[1].fZeroWidth || broken(!attrs[1].fZeroWidth && (c < 0x10) /* Vista */),
+               "%s: [%02x] got unexpected fZeroWidth %#x.\n", lf.lfFaceName, c, attrs[1].fZeroWidth);
 
-            if (blanks[j] == 0x200b || blanks[j] == 0x200c || blanks[j] == 0x200d)
+            item->a.fNoGlyphIndex = 1;
+            hr = ScriptShape(hdc, &sc, chars, 3, 3, &item->a, glyphs2, logclust, attrs, &nb);
+            ok(hr == S_OK, "%s: [%02x] expected S_OK, got %08x\n", lf.lfFaceName, c, hr);
+            ok(nb == 3, "%s: [%02x] expected 1, got %d\n", lf.lfFaceName, c, nb);
+
+            if (c == 0x200b || c == 0x200c || c == 0x200d)
             {
-                ok(glyphs2[0] == 0x0020,
-                   "%s: [%02x] got unexpected %04x.\n", lf.lfFaceName, blanks[j], glyphs2[0]);
-                ok(attrs[0].fZeroWidth, "%s: [%02x] got unexpected fZeroWidth %#x.\n",
-                   lf.lfFaceName, blanks[j], attrs[0].fZeroWidth);
+                ok(glyphs2[1] == 0x0020,
+                   "%s: [%02x] got unexpected %04x.\n", lf.lfFaceName, c, glyphs2[1]);
+                ok(attrs[1].fZeroWidth, "%s: [%02x] got unexpected fZeroWidth %#x.\n",
+                   lf.lfFaceName, c, attrs[1].fZeroWidth);
             }
             else
             {
-                ok(glyphs2[0] == blanks[j],
-                   "%s: [%02x] got unexpected %04x.\n", lf.lfFaceName, blanks[j], glyphs2[0]);
-                ok(!attrs[0].fZeroWidth, "%s: [%02x] got unexpected fZeroWidth %#x.\n",
-                   lf.lfFaceName, blanks[j], attrs[0].fZeroWidth);
+                ok(glyphs2[1] == c,
+                   "%s: [%02x] got unexpected %04x.\n", lf.lfFaceName, c, glyphs2[1]);
+                ok(!attrs[1].fZeroWidth, "%s: [%02x] got unexpected fZeroWidth %#x.\n",
+                   lf.lfFaceName, c, attrs[1].fZeroWidth);
             }
         }
         if (oldfont)
