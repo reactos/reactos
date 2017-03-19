@@ -28,10 +28,17 @@
 FT_BEGIN_HEADER
 
 
+  /* CFF uses constant parser stack size; */
+  /* CFF2 can increase from default 193   */
 #define CFF_MAX_STACK_DEPTH  96
+#define CFF2_MAX_STACK      513
+#define CFF2_DEFAULT_STACK  193
 
-#define CFF_CODE_TOPDICT  0x1000
-#define CFF_CODE_PRIVATE  0x2000
+#define CFF_CODE_TOPDICT    0x1000
+#define CFF_CODE_PRIVATE    0x2000
+#define CFF2_CODE_TOPDICT   0x3000
+#define CFF2_CODE_FONTDICT  0x4000
+#define CFF2_CODE_PRIVATE   0x5000
 
 
   typedef struct  CFF_ParserRec_
@@ -41,8 +48,9 @@ FT_BEGIN_HEADER
     FT_Byte*    limit;
     FT_Byte*    cursor;
 
-    FT_Byte*    stack[CFF_MAX_STACK_DEPTH + 1];
+    FT_Byte**   stack;
     FT_Byte**   top;
+    FT_UInt     stackSize;  /* allocated size */
 
     FT_UInt     object_code;
     void*       object;
@@ -53,13 +61,21 @@ FT_BEGIN_HEADER
   } CFF_ParserRec, *CFF_Parser;
 
 
-  FT_LOCAL( void )
+  FT_LOCAL( FT_Long )
+  cff_parse_num( CFF_Parser  parser,
+                 FT_Byte**   d );
+
+  FT_LOCAL( FT_Error )
   cff_parser_init( CFF_Parser  parser,
                    FT_UInt     code,
                    void*       object,
                    FT_Library  library,
+                   FT_UInt     stackSize,
                    FT_UShort   num_designs,
                    FT_UShort   num_axes );
+
+  FT_LOCAL( void )
+  cff_parser_done( CFF_Parser  parser );
 
   FT_LOCAL( FT_Error )
   cff_parser_run( CFF_Parser  parser,
@@ -77,6 +93,7 @@ FT_BEGIN_HEADER
     cff_kind_bool,
     cff_kind_delta,
     cff_kind_callback,
+    cff_kind_blend,
 
     cff_kind_max  /* do not remove */
   };

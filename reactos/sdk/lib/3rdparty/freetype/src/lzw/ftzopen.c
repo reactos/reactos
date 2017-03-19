@@ -374,7 +374,7 @@
       {
         while ( state->stack_top > 0 )
         {
-          --state->stack_top;
+          state->stack_top--;
 
           if ( buffer )
             buffer[result] = state->stack[state->stack_top];

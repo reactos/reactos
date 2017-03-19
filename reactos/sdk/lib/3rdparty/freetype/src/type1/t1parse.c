@@ -437,7 +437,7 @@
                 *cur == '\t'               ||
                 (test_cr && *cur == '\r' ) ||
                 *cur == '\n'               ) )
-        ++cur;
+        cur++;
       if ( cur >= limit )
       {
         FT_ERROR(( "T1_Get_Private_Dict:"

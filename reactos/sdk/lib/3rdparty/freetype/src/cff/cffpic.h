@@ -32,6 +32,7 @@
 #define CFF_SERVICE_CID_INFO_GET         cff_service_cid_info
 #define CFF_SERVICE_PROPERTIES_GET       cff_service_properties
 #define CFF_SERVICES_GET                 cff_services
+#define CFF_SERVICE_MULTI_MASTERS_GET    cff_service_multi_masters
 #define CFF_CMAP_ENCODING_CLASS_REC_GET  cff_cmap_encoding_class_rec
 #define CFF_CMAP_UNICODE_CLASS_REC_GET   cff_cmap_unicode_class_rec
 #define CFF_FIELD_HANDLERS_GET           cff_field_handlers

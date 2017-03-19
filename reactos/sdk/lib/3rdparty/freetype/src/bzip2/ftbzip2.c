@@ -180,7 +180,7 @@
     bzstream->next_in  = (char*)zip->buffer;
 
     if ( BZ2_bzDecompressInit( bzstream, 0, 0 ) != BZ_OK ||
-         bzstream->next_in == NULL                       )
+         !bzstream->next_in                              )
       error = FT_THROW( Invalid_File_Format );
 
   Exit:

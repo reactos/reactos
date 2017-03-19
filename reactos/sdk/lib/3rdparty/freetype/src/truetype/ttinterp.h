@@ -408,6 +408,14 @@ FT_BEGIN_HEADER
 
 #endif /* TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY */
 
+    /* We maintain two counters (in addition to the instruction counter) */
+    /* that act as loop detectors for LOOPCALL and jump opcodes with     */
+    /* negative arguments.                                               */
+    FT_ULong           loopcall_counter;
+    FT_ULong           loopcall_counter_max;
+    FT_ULong           neg_jump_counter;
+    FT_ULong           neg_jump_counter_max;
+
   } TT_ExecContextRec;
 
 

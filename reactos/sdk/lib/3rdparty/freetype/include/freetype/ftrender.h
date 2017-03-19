@@ -75,6 +75,7 @@ FT_BEGIN_HEADER
   {
     FT_Long                 glyph_size;
     FT_Glyph_Format         glyph_format;
+
     FT_Glyph_InitFunc       glyph_init;
     FT_Glyph_DoneFunc       glyph_done;
     FT_Glyph_CopyFunc       glyph_copy;

@@ -214,7 +214,7 @@
       0x10000L,
       0x20000L,
 
-      0,    /* module-specific interface */
+      NULL,    /* module-specific interface */
 
       T42_Driver_Init,          /* FT_Module_Constructor  module_init   */
       T42_Driver_Done,          /* FT_Module_Destructor   module_done   */
@@ -234,9 +234,9 @@
 
     T42_GlyphSlot_Load,         /* FT_Slot_LoadFunc  load_glyph */
 
-    0,                          /* FT_Face_GetKerningFunc   get_kerning  */
-    0,                          /* FT_Face_AttachFunc       attach_file  */
-    0,                          /* FT_Face_GetAdvancesFunc  get_advances */
+    NULL,                       /* FT_Face_GetKerningFunc   get_kerning  */
+    NULL,                       /* FT_Face_AttachFunc       attach_file  */
+    NULL,                       /* FT_Face_GetAdvancesFunc  get_advances */
 
     T42_Size_Request,           /* FT_Size_RequestFunc  request_size */
     T42_Size_Select             /* FT_Size_SelectFunc   select_size  */

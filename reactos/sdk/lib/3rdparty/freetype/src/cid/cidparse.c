@@ -65,7 +65,7 @@
     FT_Byte   *arg1, *arg2;
 
 
-    FT_MEM_ZERO( parser, sizeof ( *parser ) );
+    FT_ZERO( parser );
     psaux->ps_parser_funcs->init( &parser->root, 0, 0, memory );
 
     parser->stream = stream;
@@ -138,13 +138,13 @@
                ft_strncmp( (char*)p, STARTDATA, STARTDATA_LEN ) == 0 )
           {
             /* save offset of binary data after `StartData' */
-            offset += (FT_ULong)( p - buffer ) + STARTDATA_LEN;
+            offset += (FT_ULong)( p - buffer ) + STARTDATA_LEN + 1;
             goto Found;
           }
           else if ( p[1] == 's'                                   &&
                     ft_strncmp( (char*)p, SFNTS, SFNTS_LEN ) == 0 )
           {
-            offset += (FT_ULong)( p - buffer ) + SFNTS_LEN;
+            offset += (FT_ULong)( p - buffer ) + SFNTS_LEN + 1;
             goto Found;
           }
         }

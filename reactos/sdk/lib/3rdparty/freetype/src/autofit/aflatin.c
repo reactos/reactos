@@ -1143,7 +1143,7 @@
                 "af_latin_metrics_scale_dim:"
                 " x height alignment (style `%s'):\n"
                 "                           "
-                " vertical scaling changed from %.4f to %.4f (by %d%%)\n"
+                " vertical scaling changed from %.5f to %.5f (by %d%%)\n"
                 "\n",
                 af_style_names[metrics->root.style_class->style],
                 scale / 65536.0,
@@ -2227,7 +2227,7 @@
                                 seg->serif->edge         &&
                                 seg->serif->edge != edge );
 
-          if ( ( seg->link && seg->link->edge != NULL ) || is_serif )
+          if ( ( seg->link && seg->link->edge ) || is_serif )
           {
             AF_Edge     edge2;
             AF_Segment  seg2;
@@ -3493,13 +3493,13 @@
 
     sizeof ( AF_LatinMetricsRec ),
 
-    (AF_WritingSystem_InitMetricsFunc) af_latin_metrics_init,
-    (AF_WritingSystem_ScaleMetricsFunc)af_latin_metrics_scale,
-    (AF_WritingSystem_DoneMetricsFunc) NULL,
-    (AF_WritingSystem_GetStdWidthsFunc)af_latin_get_standard_widths,
+    (AF_WritingSystem_InitMetricsFunc) af_latin_metrics_init,        /* style_metrics_init    */
+    (AF_WritingSystem_ScaleMetricsFunc)af_latin_metrics_scale,       /* style_metrics_scale   */
+    (AF_WritingSystem_DoneMetricsFunc) NULL,                         /* style_metrics_done    */
+    (AF_WritingSystem_GetStdWidthsFunc)af_latin_get_standard_widths, /* style_metrics_getstdw */
 
-    (AF_WritingSystem_InitHintsFunc)   af_latin_hints_init,
-    (AF_WritingSystem_ApplyHintsFunc)  af_latin_hints_apply
+    (AF_WritingSystem_InitHintsFunc)   af_latin_hints_init,          /* style_hints_init      */
+    (AF_WritingSystem_ApplyHintsFunc)  af_latin_hints_apply          /* style_hints_apply     */
   )
 
 

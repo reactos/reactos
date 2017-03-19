@@ -76,7 +76,7 @@
     source_pitch_sign = source->pitch < 0 ? -1 : 1;
     target_pitch_sign = target->pitch < 0 ? -1 : 1;
 
-    if ( source->buffer == NULL )
+    if ( !source->buffer )
     {
       *target = *source;
       if ( source_pitch_sign != target_pitch_sign )

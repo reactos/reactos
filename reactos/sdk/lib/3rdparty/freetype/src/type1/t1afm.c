@@ -208,7 +208,7 @@
       kp++;
     }
 
-    if ( oldcharmap != NULL )
+    if ( oldcharmap )
       error = FT_Set_Charmap( t1_face, oldcharmap );
     if ( error )
       goto Exit;
@@ -309,14 +309,14 @@
       {
         t1_face->face_flags |= FT_FACE_FLAG_KERNING;
         face->afm_data       = fi;
-        fi = NULL;
+        fi                   = NULL;
       }
     }
 
     FT_FRAME_EXIT();
 
   Exit:
-    if ( fi != NULL )
+    if ( fi )
       T1_Done_Metrics( memory, fi );
 
     return error;

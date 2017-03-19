@@ -177,7 +177,7 @@
 
     FT_Set_Char_Size( face, 0, font_size, 72, 72 );
 
-    for ( gid = 0; gid < face->num_glyphs; ++gid )
+    for ( gid = 0; gid < face->num_glyphs; gid++ )
     {
       if ( check_outlines         &&
            FT_IS_SCALABLE( face ) )
@@ -225,7 +225,7 @@
       num = face->num_faces;
       FT_Done_Face( face );
 
-      for ( i = 0; i < num; ++i )
+      for ( i = 0; i < num; i++ )
       {
         if ( !FT_New_Face( context, testfont, i, &face ) )
           TestFace( face );
@@ -246,16 +246,16 @@
     char*  pt;
 
 
-    if ( extensions == NULL )
+    if ( !extensions )
       return true;
 
     pt = strrchr( filename, '.' );
-    if ( pt == NULL )
+    if ( !pt )
       return false;
     if ( pt < strrchr( filename, '/' ) )
       return false;
 
-    for ( i = 0; extensions[i] != NULL; ++i )
+    for ( i = 0; extensions[i] != NULL; i++ )
       if ( strcasecmp( pt + 1, extensions[i] ) == 0 ||
            strcasecmp( pt,     extensions[i] ) == 0 )
         return true;
@@ -273,7 +273,7 @@
     item->isbinary = item->isascii = item->ishex = false;
 
     foo = fopen( item->name, "rb" );
-    if ( foo != NULL )
+    if ( foo )
     {
       /* Try to guess the file type from the first few characters... */
       int  ch1 = getc( foo );
@@ -300,8 +300,8 @@
       else if ( ch1 == '%' && ch2 == '!' )
       {
         /* Random PostScript */
-        if ( strstr( item->name, ".pfa" ) != NULL ||
-             strstr( item->name, ".PFA" ) != NULL )
+        if ( strstr( item->name, ".pfa" ) ||
+             strstr( item->name, ".PFA" ) )
           item->ishex = true;
         else
           item->isascii = true;
@@ -357,14 +357,14 @@
     max  = 0;
     fcnt = 0;
 
-    for ( i = 0; fontdirs[i] != NULL; ++i )
+    for ( i = 0; fontdirs[i] != NULL; i++ )
     {
       DIR*            examples;
       struct dirent*  ent;
 
 
       examples = opendir( fontdirs[i] );
-      if ( examples == NULL )
+      if ( !examples )
       {
         fprintf( stderr,
                  "Can't open example font directory `%s'\n",
@@ -378,13 +378,13 @@
                   "%s/%s", fontdirs[i], ent->d_name );
         if ( stat( buffer, &statb ) == -1 || S_ISDIR( statb.st_mode ) )
           continue;
-        if ( extensions == NULL || extmatch( buffer, extensions ) )
+        if ( !extensions || extmatch( buffer, extensions ) )
         {
           if ( fcnt >= max )
           {
             max += 100;
             fontlist = realloc( fontlist, max * sizeof ( struct fontlist ) );
-            if ( fontlist == NULL )
+            if ( !fontlist )
             {
               fprintf( stderr, "Can't allocate memory\n" );
               exit( 1 );
@@ -395,7 +395,7 @@
           fontlist[fcnt].len  = statb.st_size;
 
           figurefiletype( &fontlist[fcnt] );
-          ++fcnt;
+          fcnt++;
         }
       }
 
@@ -438,20 +438,20 @@
             char*             newfont )
   {
     static char   buffer[8096];
-    FILE          *good, *new;
+    FILE          *good, *newf;
     size_t        len;
     unsigned int  i, err_cnt;
 
 
     good = fopen( item->name, "r" );
-    if ( good == NULL )
+    if ( !good )
     {
       fprintf( stderr, "Can't open `%s'\n", item->name );
       return false;
     }
 
-    new = fopen( newfont, "w+" );
-    if ( new == NULL )
+    newf = fopen( newfont, "w+" );
+    if ( !newf )
     {
       fprintf( stderr, "Can't create temporary output file `%s'\n",
                newfont );
@@ -459,19 +459,19 @@
     }
 
     while ( ( len = fread( buffer, 1, sizeof ( buffer ), good ) ) > 0 )
-      fwrite( buffer, 1, len, new );
+      fwrite( buffer, 1, len, newf );
 
     fclose( good );
 
     err_cnt = getErrorCnt( item );
-    for ( i = 0; i < err_cnt; ++i )
+    for ( i = 0; i < err_cnt; i++ )
     {
-      fseek( new, getRandom( 0, (int)( item->len - 1 ) ), SEEK_SET );
+      fseek( newf, getRandom( 0, (int)( item->len - 1 ) ), SEEK_SET );
 
       if ( item->isbinary )
-        putc( getRandom( 0, 0xFF ), new );
+        putc( getRandom( 0, 0xFF ), newf );
       else if ( item->isascii )
-        putc( getRandom( 0x20, 0x7E ), new );
+        putc( getRandom( 0x20, 0x7E ), newf );
       else
       {
         int  hex = getRandom( 0, 15 );
@@ -482,18 +482,18 @@
         else
           hex += 'A' - 10;
 
-        putc( hex, new );
+        putc( hex, newf );
       }
     }
 
-    if ( ferror( new ) )
+    if ( ferror( newf ) )
     {
-      fclose( new );
+      fclose( newf );
       unlink( newfont );
       return false;
     }
 
-    fclose( new );
+    fclose( newf );
 
     return true;
   }
@@ -609,14 +609,14 @@
     dirs = calloc( (size_t)( argc + 1 ), sizeof ( char ** ) );
     exts = calloc( (size_t)( argc + 1 ), sizeof ( char ** ) );
 
-    for ( i = 1; i < argc; ++i )
+    for ( i = 1; i < argc; i++ )
     {
       char*  pt = argv[i];
       char*  end;
 
 
       if ( pt[0] == '-' && pt[1] == '-' )
-        ++pt;
+        pt++;
 
       if ( strcmp( pt, "-all" ) == 0 )
         allexts = true;
@@ -701,7 +701,7 @@
       dirs = default_dir_list;
     }
 
-    if ( testfile != NULL )
+    if ( testfile )
       ExecuteTest( testfile );         /* This should never return */
 
     time( &now );

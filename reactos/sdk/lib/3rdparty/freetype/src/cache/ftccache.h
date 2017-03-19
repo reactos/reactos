@@ -227,7 +227,7 @@ FT_BEGIN_HEADER
     for (;;)                                                             \
     {                                                                    \
       _node = *_pnode;                                                   \
-      if ( _node == NULL )                                               \
+      if ( !_node )                                                      \
         goto NewNode_;                                                   \
                                                                          \
       if ( _node->hash == _hash                             &&           \
@@ -245,7 +245,7 @@ FT_BEGIN_HEADER
       /* Update _pnode by possibly modified linked list */               \
       while ( *_pnode != _node )                                         \
       {                                                                  \
-        if ( *_pnode == NULL )                                           \
+        if ( !*_pnode )                                                  \
         {                                                                \
           FT_ERROR(( "FTC_CACHE_LOOKUP_CMP: oops!!! node missing\n" ));  \
           goto NewNode_;                                                 \
@@ -325,7 +325,7 @@ FT_BEGIN_HEADER
         break;                                                    \
                                                                   \
       _try_done = FTC_Manager_FlushN( _try_manager, _try_count ); \
-      if ( _try_done > 0 && ( list_changed != NULL ) )            \
+      if ( _try_done > 0 && list_changed != NULL )                \
         *(FT_Bool*)( list_changed ) = TRUE;                       \
                                                                   \
       if ( _try_done == 0 )                                       \

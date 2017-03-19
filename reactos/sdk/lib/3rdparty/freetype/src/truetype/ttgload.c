@@ -441,7 +441,7 @@
     flag       = (FT_Byte*)outline->tags;
     flag_limit = flag + n_points;
 
-    FT_ASSERT( flag != NULL );
+    FT_ASSERT( flag );
 
     while ( flag < flag_limit )
     {
@@ -886,13 +886,23 @@
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
 
-    if ( loader->face->doblend )
+    if ( loader->face->doblend && !loader->face->is_default_instance )
     {
       /* Deltas apply to the unscaled data. */
       error = TT_Vary_Apply_Glyph_Deltas( loader->face,
                                           loader->glyph_index,
                                           outline,
                                           (FT_UInt)n_points );
+
+      /* recalculate linear horizontal and vertical advances */
+      /* if we don't have HVAR and VVAR, respectively        */
+      if ( !( loader->face->variation_support & TT_FACE_FLAG_VAR_HADVANCE ) )
+        loader->linear = outline->points[n_points - 3].x -
+                         outline->points[n_points - 4].x;
+      if ( !( loader->face->variation_support & TT_FACE_FLAG_VAR_VADVANCE ) )
+        loader->vadvance = outline->points[n_points - 1].x -
+                           outline->points[n_points - 2].x;
+
       if ( error )
         return error;
     }
@@ -1487,7 +1497,7 @@
       offset            = 0;
       loader->byte_len  = glyph_data.length;
 
-      FT_MEM_ZERO( &inc_stream, sizeof ( inc_stream ) );
+      FT_ZERO( &inc_stream );
       FT_Stream_OpenMemory( &inc_stream,
                             glyph_data.pointer,
                             (FT_ULong)glyph_data.length );
@@ -1505,10 +1515,10 @@
     {
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
       /* for the incremental interface, `glyf_offset' is always zero */
-      if ( !loader->glyf_offset                        &&
+      if ( !face->glyf_offset                          &&
            !face->root.internal->incremental_interface )
 #else
-      if ( !loader->glyf_offset )
+      if ( !face->glyf_offset )
 #endif /* FT_CONFIG_OPTION_INCREMENTAL */
       {
         FT_TRACE2(( "no `glyf' table but non-zero `loca' entry\n" ));
@@ -1517,7 +1527,7 @@
       }
 
       error = face->access_glyph_frame( loader, glyph_index,
-                                        loader->glyf_offset + offset,
+                                        face->glyf_offset + offset,
                                         (FT_UInt)loader->byte_len );
       if ( error )
         goto Exit;
@@ -1564,7 +1574,7 @@
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
 
-      if ( loader->face->doblend )
+      if ( loader->face->doblend && !loader->face->is_default_instance )
       {
         /* a small outline structure with four elements for */
         /* communication with `TT_Vary_Apply_Glyph_Deltas'  */
@@ -1607,6 +1617,14 @@
         loader->pp3.y = points[2].y;
         loader->pp4.x = points[3].x;
         loader->pp4.y = points[3].y;
+
+
+        /* recalculate linear horizontal and vertical advances */
+        /* if we don't have HVAR and VVAR, respectively        */
+        if ( !( loader->face->variation_support & TT_FACE_FLAG_VAR_HADVANCE ) )
+          loader->linear = loader->pp2.x - loader->pp1.x;
+        if ( !( loader->face->variation_support & TT_FACE_FLAG_VAR_VADVANCE ) )
+          loader->vadvance = loader->pp4.x - loader->pp3.x;
       }
 
 #endif /* TT_CONFIG_OPTION_GX_VAR_SUPPORT */
@@ -1727,7 +1745,7 @@
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
 
-      if ( face->doblend )
+      if ( face->doblend && !face->is_default_instance )
       {
         short        i, limit;
         FT_SubGlyph  subglyph;
@@ -1796,11 +1814,11 @@
 
         /* this call provides additional offsets */
         /* for each component's translation      */
-        if ( ( error = TT_Vary_Apply_Glyph_Deltas(
-                         face,
-                         glyph_index,
-                         &outline,
-                         (FT_UInt)outline.n_points ) ) != 0 )
+        if ( FT_SET_ERROR( TT_Vary_Apply_Glyph_Deltas(
+                             face,
+                             glyph_index,
+                             &outline,
+                             (FT_UInt)outline.n_points ) ) )
           goto Exit1;
 
         subglyph = gloader->current.subglyphs;
@@ -1823,6 +1841,13 @@
         loader->pp3.y = points[i + 2].y;
         loader->pp4.x = points[i + 3].x;
         loader->pp4.y = points[i + 3].y;
+
+        /* recalculate linear horizontal and vertical advances */
+        /* if we don't have HVAR and VVAR, respectively        */
+        if ( !( face->variation_support & TT_FACE_FLAG_VAR_HADVANCE ) )
+          loader->linear = loader->pp2.x - loader->pp1.x;
+        if ( !( face->variation_support & TT_FACE_FLAG_VAR_VADVANCE ) )
+          loader->vadvance = loader->pp4.x - loader->pp3.x;
 
       Exit1:
         FT_FREE( outline.points );
@@ -1883,6 +1908,9 @@
         {
           FT_Vector  pp[4];
 
+          FT_Int  linear_hadvance;
+          FT_Int  linear_vadvance;
+
 
           /* Each time we call load_truetype_glyph in this loop, the   */
           /* value of `gloader.base.subglyphs' can change due to table */
@@ -1894,6 +1922,9 @@
           pp[1] = loader->pp2;
           pp[2] = loader->pp3;
           pp[3] = loader->pp4;
+
+          linear_hadvance = loader->linear;
+          linear_vadvance = loader->vadvance;
 
           num_base_points = (FT_UInt)gloader->base.outline.n_points;
 
@@ -1914,6 +1945,9 @@
             loader->pp2 = pp[1];
             loader->pp3 = pp[2];
             loader->pp4 = pp[3];
+
+            loader->linear   = linear_hadvance;
+            loader->vadvance = linear_vadvance;
           }
 
           num_points = (FT_UInt)gloader->base.outline.n_points;
@@ -2252,7 +2286,7 @@
     face   = (TT_Face)glyph->face;
     stream = face->root.stream;
 
-    FT_MEM_ZERO( loader, sizeof ( TT_LoaderRec ) );
+    FT_ZERO( loader );
 
 #ifdef TT_USE_BYTECODE_INTERPRETER
 
@@ -2497,32 +2531,6 @@
 
 #endif /* TT_USE_BYTECODE_INTERPRETER */
 
-    /* seek to the beginning of the glyph table -- for Type 42 fonts     */
-    /* the table might be accessed from a Postscript stream or something */
-    /* else...                                                           */
-
-#ifdef FT_CONFIG_OPTION_INCREMENTAL
-
-    if ( face->root.internal->incremental_interface )
-      loader->glyf_offset = 0;
-    else
-
-#endif
-
-    {
-      error = face->goto_table( face, TTAG_glyf, stream, 0 );
-
-      if ( FT_ERR_EQ( error, Table_Missing ) )
-        loader->glyf_offset = 0;
-      else if ( error )
-      {
-        FT_ERROR(( "tt_loader_init: could not access glyph table\n" ));
-        return error;
-      }
-      else
-        loader->glyf_offset = FT_STREAM_POS();
-    }
-
     /* get face's glyph loader */
     if ( !glyf_table_only )
     {
@@ -2593,17 +2601,21 @@
     FT_Error      error;
     TT_LoaderRec  loader;
 
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+#define IS_DEFAULT_INSTANCE  ( ( (TT_Face)glyph->face )->is_default_instance )
+#else
+#define IS_DEFAULT_INSTANCE  1
+#endif
+
 
     FT_TRACE1(( "TT_Load_Glyph: glyph index %d\n", glyph_index ));
 
 #ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
 
-    /* try to load embedded bitmap if any              */
-    /*                                                 */
-    /* XXX: The convention should be emphasized in     */
-    /*      the documents because it can be confusing. */
+    /* try to load embedded bitmap (if any) */
     if ( size->strike_index != 0xFFFFFFFFUL      &&
-         ( load_flags & FT_LOAD_NO_BITMAP ) == 0 )
+         ( load_flags & FT_LOAD_NO_BITMAP ) == 0 &&
+         IS_DEFAULT_INSTANCE                     )
     {
       error = load_sbit_image( size, glyph, glyph_index, load_flags );
       if ( !error )

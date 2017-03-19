@@ -109,13 +109,18 @@ THE SOFTWARE.
     if ( stream->size < 16 )
       return FT_THROW( Invalid_File_Format );
 
-    /* we need 16 bytes per TOC entry */
-    if ( toc->count > stream->size >> 4 )
+    /* We need 16 bytes per TOC entry.  Additionally, as a */
+    /* heuristic protection against gzip bombs (i.e., very */
+    /* small input files that expand to insanely large     */
+    /* files), we limit the number of TOC entries to 1024. */
+    if ( toc->count > stream->size >> 4 ||
+         toc->count > 1024              )
     {
       FT_TRACE0(( "pcf_read_TOC: adjusting number of tables"
                   " (from %d to %d)\n",
-                  toc->count, stream->size >> 4 ));
-      toc->count = stream->size >> 4;
+                  toc->count,
+                  FT_MIN( stream->size >> 4, 1024 ) ));
+      toc->count = FT_MIN( stream->size >> 4, 1024 );
     }
 
     if ( FT_NEW_ARRAY( face->toc.tables, toc->count ) )
@@ -319,7 +324,7 @@ THE SOFTWARE.
 
 
       /* parsing normal metrics */
-      fields = PCF_BYTE_ORDER( format ) == MSBFirst
+      fields = ( PCF_BYTE_ORDER( format ) == MSBFirst )
                ? pcf_metric_msb_header
                : pcf_metric_header;
 
@@ -1156,7 +1161,7 @@ THE SOFTWARE.
 
         len = lengths[nn];
 
-        if ( src == NULL )
+        if ( !src )
           continue;
 
         /* separate elements with a space */
@@ -1260,14 +1265,63 @@ THE SOFTWARE.
       if ( face->accel.constantWidth )
         root->face_flags |= FT_FACE_FLAG_FIXED_WIDTH;
 
-      if ( ( error = pcf_interpret_style( face ) ) != 0 )
-         goto Exit;
+      if ( FT_SET_ERROR( pcf_interpret_style( face ) ) )
+        goto Exit;
 
       prop = pcf_find_property( face, "FAMILY_NAME" );
       if ( prop && prop->isString )
       {
-        if ( FT_STRDUP( root->family_name, prop->value.atom ) )
-          goto Exit;
+        /* Prepend the foundry name plus a space to the family name.      */
+        /* There are many fonts just called `Fixed' which look completely */
+        /* different, and which have nothing to do with each other.  When */
+        /* selecting `Fixed' in KDE or Gnome one gets results that appear */
+        /* rather random, the style changes often if one changes the size */
+        /* and one cannot select some fonts at all.                       */
+        /*                                                                */
+        /* We also check whether we have `wide' characters; all put       */
+        /* together, we get family names like `Sony Fixed' or `Misc Fixed */
+        /* Wide'.                                                         */
+        PCF_Property  foundry_prop, point_size_prop, average_width_prop;
+
+        int  l    = ft_strlen( prop->value.atom ) + 1;
+        int  wide = 0;
+
+
+        foundry_prop       = pcf_find_property( face, "FOUNDRY" );
+        point_size_prop    = pcf_find_property( face, "POINT_SIZE" );
+        average_width_prop = pcf_find_property( face, "AVERAGE_WIDTH" );
+
+        if ( point_size_prop && average_width_prop )
+        {
+          if ( average_width_prop->value.l >= point_size_prop->value.l )
+          {
+            /* This font is at least square shaped or even wider */
+            wide = 1;
+            l   += ft_strlen( " Wide" );
+          }
+        }
+
+        if ( foundry_prop && foundry_prop->isString )
+        {
+          l += ft_strlen( foundry_prop->value.atom ) + 1;
+
+          if ( FT_NEW_ARRAY( root->family_name, l ) )
+            goto Exit;
+
+          ft_strcpy( root->family_name, foundry_prop->value.atom );
+          ft_strcat( root->family_name, " " );
+          ft_strcat( root->family_name, prop->value.atom );
+        }
+        else
+        {
+          if ( FT_NEW_ARRAY( root->family_name, l ) )
+            goto Exit;
+
+          ft_strcpy( root->family_name, prop->value.atom );
+        }
+
+        if ( wide )
+          ft_strcat( root->family_name, " Wide" );
       }
       else
         root->family_name = NULL;
@@ -1290,7 +1344,7 @@ THE SOFTWARE.
         FT_Short         resolution_x = 0, resolution_y = 0;
 
 
-        FT_MEM_ZERO( bsize, sizeof ( FT_Bitmap_Size ) );
+        FT_ZERO( bsize );
 
         /* for simplicity, we take absolute values of integer properties */
 

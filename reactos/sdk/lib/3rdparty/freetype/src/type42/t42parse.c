@@ -936,7 +936,7 @@
       if ( *cur == '/' || *cur == '(' )
       {
         FT_UInt  len;
-        FT_Bool  have_literal = ( *cur == '(' );
+        FT_Bool  have_literal = FT_BOOL( *cur == '(' );
 
 
         if ( cur + ( have_literal ? 3 : 2 ) >= limit )
@@ -1268,7 +1268,7 @@
   {
     FT_UNUSED( face );
 
-    FT_MEM_ZERO( loader, sizeof ( *loader ) );
+    FT_ZERO( loader );
     loader->num_glyphs = 0;
     loader->num_chars  = 0;
 

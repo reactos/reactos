@@ -168,7 +168,7 @@
       AF_Script_UniRange  range;
 
 
-      if ( script_class->script_uni_ranges == NULL )
+      if ( !script_class->script_uni_ranges )
         continue;
 
       /*
@@ -417,17 +417,8 @@
       globals->hb_buf = NULL;
 #endif
 
-      globals->glyph_count               = 0;
-      globals->stem_darkening_for_ppem   = 0;
-      globals->darken_x                  = 0;
-      globals->darken_y                  = 0;
-      globals->standard_vertical_width   = 0;
-      globals->standard_horizontal_width = 0;
-      globals->scale_down_factor         = 0;
-      /* no need to free this one! */
-      globals->glyph_styles              = NULL;
-      globals->face                      = NULL;
-
+      /* no need to free `globals->glyph_styles'; */
+      /* it is part of the `globals' array        */
       FT_FREE( globals );
     }
   }
@@ -465,7 +456,7 @@
                              [style_class->writing_system];
 
     metrics = globals->metrics[style];
-    if ( metrics == NULL )
+    if ( !metrics )
     {
       /* create the global metrics object if necessary */
       FT_Memory  memory = globals->face->memory;

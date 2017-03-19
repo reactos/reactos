@@ -326,7 +326,9 @@
       goto Exit;
 
     /* check the number of glyphs */
-    if ( num_glyphs > face->max_profile.numGlyphs || num_glyphs > 258 )
+    if ( num_glyphs > face->max_profile.numGlyphs ||
+         num_glyphs > 258                         ||
+         num_glyphs < 1                           )
     {
       error = FT_THROW( Invalid_File_Format );
       goto Exit;

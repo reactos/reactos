@@ -68,7 +68,7 @@
 
         OTV_LIMIT_CHECK( GlyphCount * 2 );        /* GlyphArray */
 
-        for ( i = 0; i < GlyphCount; ++i )
+        for ( i = 0; i < GlyphCount; i++ )
         {
           FT_UInt  gid;
 

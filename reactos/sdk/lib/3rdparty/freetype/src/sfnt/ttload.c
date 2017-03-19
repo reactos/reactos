@@ -679,7 +679,7 @@
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
-  /*    tt_face_load_max_profile                                           */
+  /*    tt_face_load_maxp                                                  */
   /*                                                                       */
   /* <Description>                                                         */
   /*    Loads the maximum profile into a face object.                      */

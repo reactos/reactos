@@ -22,6 +22,8 @@
 #include FT_SERVICE_POSTSCRIPT_CMAPS_H
 
 #include "psmodule.h"
+
+#define  DEFINE_PS_TABLES
 #include "pstables.h"
 
 #include "psnamerr.h"
@@ -525,6 +527,7 @@
 
   FT_DEFINE_SERVICE_PSCMAPSREC(
     pscmaps_interface,
+
     (PS_Unicode_ValueFunc)     ps_unicode_value,        /* unicode_value         */
     (PS_Unicodes_InitFunc)     ps_unicodes_init,        /* unicodes_init         */
     (PS_Unicodes_CharIndexFunc)ps_unicodes_char_index,  /* unicodes_char_index   */
@@ -534,12 +537,14 @@
     (PS_Adobe_Std_StringsFunc) ps_get_standard_strings, /* adobe_std_strings     */
 
     t1_standard_encoding,                               /* adobe_std_encoding    */
-    t1_expert_encoding )                                /* adobe_expert_encoding */
+    t1_expert_encoding                                  /* adobe_expert_encoding */
+  )
 
 #else
 
   FT_DEFINE_SERVICE_PSCMAPSREC(
     pscmaps_interface,
+
     NULL,                                               /* unicode_value         */
     NULL,                                               /* unicodes_init         */
     NULL,                                               /* unicodes_char_index   */
@@ -549,13 +554,15 @@
     (PS_Adobe_Std_StringsFunc) ps_get_standard_strings, /* adobe_std_strings     */
 
     t1_standard_encoding,                               /* adobe_std_encoding    */
-    t1_expert_encoding )                                /* adobe_expert_encoding */
+    t1_expert_encoding                                  /* adobe_expert_encoding */
+  )
 
 #endif /* FT_CONFIG_OPTION_ADOBE_GLYPH_LIST */
 
 
   FT_DEFINE_SERVICEDESCREC1(
     pscmaps_services,
+
     FT_SERVICE_ID_POSTSCRIPT_CMAPS, &PSCMAPS_INTERFACE_GET )
 
 
@@ -601,9 +608,11 @@
 
     PUT_PS_NAMES_SERVICE(
       (void*)&PSCMAPS_INTERFACE_GET ),   /* module specific interface */
-    (FT_Module_Constructor)NULL,
-    (FT_Module_Destructor) NULL,
-    (FT_Module_Requester)  PUT_PS_NAMES_SERVICE( psnames_get_service ) )
+
+    (FT_Module_Constructor)NULL,                                       /* module_init   */
+    (FT_Module_Destructor) NULL,                                       /* module_done   */
+    (FT_Module_Requester)  PUT_PS_NAMES_SERVICE( psnames_get_service ) /* get_interface */
+  )
 
 
 /* END */

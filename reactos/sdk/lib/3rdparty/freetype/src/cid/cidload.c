@@ -570,7 +570,7 @@
   {
     FT_UNUSED( face );
 
-    FT_MEM_ZERO( loader, sizeof ( *loader ) );
+    FT_ZERO( loader );
   }
 
 
@@ -733,9 +733,11 @@
       }
 
       /* we must convert the data section from hexadecimal to binary */
-      if ( FT_ALLOC( face->binary_data, parser->binary_length )         ||
-           cid_hex_to_binary( face->binary_data, parser->binary_length,
-                              parser->data_offset, face )               )
+      if ( FT_ALLOC( face->binary_data, parser->binary_length )    ||
+           FT_SET_ERROR( cid_hex_to_binary( face->binary_data,
+                                            parser->binary_length,
+                                            parser->data_offset,
+                                            face ) )               )
         goto Exit;
 
       FT_Stream_OpenMemory( face->cid_stream,

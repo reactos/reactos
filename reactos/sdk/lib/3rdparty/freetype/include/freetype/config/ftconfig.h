@@ -143,6 +143,14 @@ FT_BEGIN_HEADER
 #endif
 
 
+  /* Fix compiler warning with sgi compiler */
+#if defined( __sgi ) && !defined( __GNUC__ )
+#if defined( _COMPILER_VERSION ) && ( _COMPILER_VERSION >= 730 )
+#pragma set woff 3505
+#endif
+#endif
+
+
   /*************************************************************************/
   /*                                                                       */
   /* <Section>                                                             */
@@ -338,10 +346,11 @@ FT_BEGIN_HEADER
 
 
   /* typeof condition taken from gnulib's `intprops.h' header file */
-#if ( __GNUC__ >= 2                         || \
-      defined( __IBM__TYPEOF__ )            || \
-      ( __SUNPRO_C >= 0x5110 && !__STDC__ ) )
-#define FT_TYPEOF( type )  (__typeof__ (type))
+#if ( ( defined( __GNUC__ ) && __GNUC__ >= 2 )                       || \
+      ( defined( __IBMC__ ) && __IBMC__ >= 1210 &&                      \
+        defined( __IBM__TYPEOF__ ) )                                 || \
+      ( defined( __SUNPRO_C ) && __SUNPRO_C >= 0x5110 && !__STDC__ ) )
+#define FT_TYPEOF( type )  ( __typeof__ ( type ) )
 #else
 #define FT_TYPEOF( type )  /* empty */
 #endif

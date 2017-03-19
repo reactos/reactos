@@ -38,7 +38,8 @@ FT_BEGIN_HEADER
                  FT_Memory        memory,
                  FT_Byte*         data,
                  FT_UInt          png_len,
-                 FT_Bool          populate_map_and_metrics );
+                 FT_Bool          populate_map_and_metrics,
+                 FT_Bool          metrics_only );
 
 #endif
 

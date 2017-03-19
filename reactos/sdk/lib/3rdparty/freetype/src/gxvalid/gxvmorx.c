@@ -98,7 +98,7 @@
         FT_INVALID_FORMAT;
 
       func = fmt_funcs_table[type];
-      if ( func == NULL )
+      if ( !func )
         GXV_TRACE(( "morx type %d is reserved\n", type ));
 
       func( p, p + rest, gxvalid );

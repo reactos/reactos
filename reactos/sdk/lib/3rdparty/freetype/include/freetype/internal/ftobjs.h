@@ -193,6 +193,7 @@ FT_BEGIN_HEADER
   typedef struct  FT_CMap_ClassRec_
   {
     FT_ULong               size;
+
     FT_CMap_InitFunc       init;
     FT_CMap_DoneFunc       done;
     FT_CMap_CharIndexFunc  char_index;
@@ -530,7 +531,8 @@ FT_BEGIN_HEADER
 
   FT_BASE( FT_Pointer )
   ft_module_get_service( FT_Module    module,
-                         const char*  service_id );
+                         const char*  service_id,
+                         FT_Bool      global );
 
 #ifdef FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES
   FT_BASE( FT_Error )
@@ -874,7 +876,7 @@ FT_BEGIN_HEADER
 #ifdef FT_CONFIG_OPTION_SUBPIXEL_RENDERING
     FT_LcdFilter             lcd_filter;
     FT_Int                   lcd_extra;        /* number of extra pixels */
-    FT_Byte                  lcd_weights[7];   /* filter weights, if any */
+    FT_Byte                  lcd_weights[5];   /* filter weights, if any */
     FT_Bitmap_LcdFilterFunc  lcd_filter_func;  /* filtering callback     */
 #endif
 

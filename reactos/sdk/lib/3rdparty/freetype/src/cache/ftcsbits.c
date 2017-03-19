@@ -378,7 +378,7 @@
        *
        */
 
-      if ( sbit->buffer == NULL && sbit->width == 255 )
+      if ( !sbit->buffer && sbit->width == 255 )
       {
         FT_ULong  size;
         FT_Error  error;

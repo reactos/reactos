@@ -20,6 +20,11 @@
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_STREAM_H
 #include FT_TRUETYPE_TAGS_H
+
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+#include FT_SERVICE_METRICS_VARIATIONS_H
+#endif
+
 #include "ttmtx.h"
 
 #include "sferrors.h"
@@ -214,6 +219,11 @@
     FT_ULong        table_pos, table_size, table_end;
     FT_UShort       k;
 
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+    FT_Service_MetricsVariations  var =
+      (FT_Service_MetricsVariations)face->var;
+#endif
+
 
     if ( vertical )
     {
@@ -274,6 +284,34 @@
       *abearing = 0;
       *aadvance = 0;
     }
+
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+    if ( var )
+    {
+      FT_Face  f = FT_FACE( face );
+      FT_Int   a = (FT_Int)*aadvance;
+      FT_Int   b = (FT_Int)*abearing;
+
+
+      if ( vertical )
+      {
+        if ( var->vadvance_adjust )
+          var->vadvance_adjust( f, gindex, &a );
+        if ( var->tsb_adjust )
+          var->tsb_adjust( f, gindex, &b );
+      }
+      else
+      {
+        if ( var->hadvance_adjust )
+          var->hadvance_adjust( f, gindex, &a );
+        if ( var->lsb_adjust )
+          var->lsb_adjust( f, gindex, &b );
+      }
+
+      *aadvance = (FT_UShort)a;
+      *abearing = (FT_Short)b;
+    }
+#endif
   }
 
 

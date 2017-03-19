@@ -171,6 +171,7 @@ FT_BEGIN_HEADER
   {
     FT_Fixed*  coords;
     FT_UInt    strid;
+    FT_UInt    psid;   /* since 2.7.1 */
 
   } FT_Var_Named_Style;
 
@@ -337,6 +338,34 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
+  /*    FT_Get_Var_Design_Coordinates                                      */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    For Multiple Master and GX Var fonts, get the design coordinates   */
+  /*    of the currently selected interpolated font.                       */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    face       :: A handle to the source face.                         */
+  /*                                                                       */
+  /*    num_coords :: The number of design coordinates to retrieve.  If it */
+  /*                  is larger than the number of axes, set the excess    */
+  /*                  values to~0.                                         */
+  /*                                                                       */
+  /* <Output>                                                              */
+  /*    coords     :: The design coordinates array.                        */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0~means success.                             */
+  /*                                                                       */
+  FT_EXPORT( FT_Error )
+  FT_Get_Var_Design_Coordinates( FT_Face    face,
+                                 FT_UInt    num_coords,
+                                 FT_Fixed*  coords );
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
   /*    FT_Set_MM_Blend_Coordinates                                        */
   /*                                                                       */
   /* <Description>                                                         */
@@ -353,13 +382,43 @@ FT_BEGIN_HEADER
   /*                  use default values for the remaining axes.           */
   /*                                                                       */
   /*    coords     :: The design coordinates array (each element must be   */
-  /*                  between 0 and 1.0).                                  */
+  /*                  between 0 and 1.0 for MM fonts, and between -1.0 and */
+  /*                  1.0 for GX var fonts).                               */
   /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0~means success.                             */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Set_MM_Blend_Coordinates( FT_Face    face,
+                               FT_UInt    num_coords,
+                               FT_Fixed*  coords );
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
+  /*    FT_Get_MM_Blend_Coordinates                                        */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    For Multiple Masters and GX var fonts, get the normalized blend    */
+  /*    coordinates of the currently selected interpolated font.           */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    face       :: A handle to the source face.                         */
+  /*                                                                       */
+  /*    num_coords :: The number of normalized blend coordinates to        */
+  /*                  retrieve.  If it is larger than the number of axes,  */
+  /*                  set the excess values to~0.5 for MM fonts, and to~0  */
+  /*                  for GX var fonts.                                    */
+  /*                                                                       */
+  /* <Output>                                                              */
+  /*    coords     :: The normalized blend coordinates array.              */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0~means success.                             */
+  /*                                                                       */
+  FT_EXPORT( FT_Error )
+  FT_Get_MM_Blend_Coordinates( FT_Face    face,
                                FT_UInt    num_coords,
                                FT_Fixed*  coords );
 
@@ -374,6 +433,20 @@ FT_BEGIN_HEADER
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Set_Var_Blend_Coordinates( FT_Face    face,
+                                FT_UInt    num_coords,
+                                FT_Fixed*  coords );
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
+  /*    FT_Get_Var_Blend_Coordinates                                       */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    This is another name of @FT_Get_MM_Blend_Coordinates.              */
+  /*                                                                       */
+  FT_EXPORT( FT_Error )
+  FT_Get_Var_Blend_Coordinates( FT_Face    face,
                                 FT_UInt    num_coords,
                                 FT_Fixed*  coords );
 

@@ -405,9 +405,7 @@
                ( decoder->buildchar == NULL )  );
 
     if ( decoder->buildchar && decoder->len_buildchar > 0 )
-      ft_memset( &decoder->buildchar[0],
-                 0,
-                 sizeof ( decoder->buildchar[0] ) * decoder->len_buildchar );
+      FT_ARRAY_ZERO( decoder->buildchar, decoder->len_buildchar );
 
     FT_TRACE4(( "\n"
                 "Start charstring\n" ));
@@ -736,7 +734,7 @@
           if ( arg_cnt != 3 )
             goto Unexpected_OtherSubr;
 
-          if ( decoder->flex_state       == 0 ||
+          if ( !decoder->flex_state           ||
                decoder->num_flex_vectors != 7 )
           {
             FT_ERROR(( "t1_decoder_parse_charstrings:"
@@ -754,13 +752,12 @@
           if ( arg_cnt != 0 )
             goto Unexpected_OtherSubr;
 
+          if ( FT_SET_ERROR( t1_builder_start_point( builder, x, y ) ) ||
+               FT_SET_ERROR( t1_builder_check_points( builder, 6 ) )   )
+            goto Fail;
+
           decoder->flex_state        = 1;
           decoder->num_flex_vectors  = 0;
-          if ( ( error = t1_builder_start_point( builder, x, y ) )
-                 != FT_Err_Ok                                   ||
-               ( error = t1_builder_check_points( builder, 6 ) )
-                 != FT_Err_Ok                                   )
-            goto Fail;
           break;
 
         case 2:                     /* add flex vectors */
@@ -771,7 +768,7 @@
             if ( arg_cnt != 0 )
               goto Unexpected_OtherSubr;
 
-            if ( decoder->flex_state == 0 )
+            if ( !decoder->flex_state )
             {
               FT_ERROR(( "t1_decoder_parse_charstrings:"
                          " missing flex start\n" ));
@@ -876,7 +873,7 @@
             PS_Blend  blend = decoder->blend;
 
 
-            if ( arg_cnt != 1 || blend == NULL )
+            if ( arg_cnt != 1 || !blend )
               goto Unexpected_OtherSubr;
 
             idx = Fix2Int( top[0] );
@@ -944,7 +941,7 @@
             PS_Blend  blend = decoder->blend;
 
 
-            if ( arg_cnt != 2 || blend == NULL )
+            if ( arg_cnt != 2 || !blend )
               goto Unexpected_OtherSubr;
 
             idx = Fix2Int( top[1] );
@@ -965,7 +962,7 @@
             PS_Blend  blend = decoder->blend;
 
 
-            if ( arg_cnt != 1 || blend == NULL )
+            if ( arg_cnt != 1 || !blend )
               goto Unexpected_OtherSubr;
 
             idx = Fix2Int( top[0] );
@@ -1123,7 +1120,7 @@
 
             FT_TRACE4(( "BuildCharArray = [ " ));
 
-            for ( i = 0; i < decoder->len_buildchar; ++i )
+            for ( i = 0; i < decoder->len_buildchar; i++ )
               FT_TRACE4(( "%d ", decoder->buildchar[i] ));
 
             FT_TRACE4(( "]\n" ));
@@ -1201,8 +1198,7 @@
         case op_hlineto:
           FT_TRACE4(( " hlineto" ));
 
-          if ( ( error = t1_builder_start_point( builder, x, y ) )
-                 != FT_Err_Ok )
+          if ( FT_SET_ERROR( t1_builder_start_point( builder, x, y ) ) )
             goto Fail;
 
           x += top[0];
@@ -1223,10 +1219,8 @@
         case op_hvcurveto:
           FT_TRACE4(( " hvcurveto" ));
 
-          if ( ( error = t1_builder_start_point( builder, x, y ) )
-                 != FT_Err_Ok                                   ||
-               ( error = t1_builder_check_points( builder, 3 ) )
-                 != FT_Err_Ok                                   )
+          if ( FT_SET_ERROR( t1_builder_start_point( builder, x, y ) ) ||
+               FT_SET_ERROR( t1_builder_check_points( builder, 3 ) )   )
             goto Fail;
 
           x += top[0];
@@ -1241,16 +1235,14 @@
         case op_rlineto:
           FT_TRACE4(( " rlineto" ));
 
-          if ( ( error = t1_builder_start_point( builder, x, y ) )
-                 != FT_Err_Ok )
+          if ( FT_SET_ERROR( t1_builder_start_point( builder, x, y ) ) )
             goto Fail;
 
           x += top[0];
           y += top[1];
 
         Add_Line:
-          if ( ( error = t1_builder_add_point1( builder, x, y ) )
-                 != FT_Err_Ok )
+          if ( FT_SET_ERROR( t1_builder_add_point1( builder, x, y ) ) )
             goto Fail;
           break;
 
@@ -1270,10 +1262,8 @@
         case op_rrcurveto:
           FT_TRACE4(( " rrcurveto" ));
 
-          if ( ( error = t1_builder_start_point( builder, x, y ) )
-                 != FT_Err_Ok                                   ||
-               ( error = t1_builder_check_points( builder, 3 ) )
-                 != FT_Err_Ok                                   )
+          if ( FT_SET_ERROR( t1_builder_start_point( builder, x, y ) ) ||
+               FT_SET_ERROR( t1_builder_check_points( builder, 3 ) )   )
             goto Fail;
 
           x += top[0];
@@ -1292,10 +1282,8 @@
         case op_vhcurveto:
           FT_TRACE4(( " vhcurveto" ));
 
-          if ( ( error = t1_builder_start_point( builder, x, y ) )
-                 != FT_Err_Ok                                   ||
-               ( error = t1_builder_check_points( builder, 3 ) )
-                 != FT_Err_Ok                                   )
+          if ( FT_SET_ERROR( t1_builder_start_point( builder, x, y ) ) ||
+               FT_SET_ERROR( t1_builder_check_points( builder, 3 ) )   )
             goto Fail;
 
           y += top[0];
@@ -1310,8 +1298,7 @@
         case op_vlineto:
           FT_TRACE4(( " vlineto" ));
 
-          if ( ( error = t1_builder_start_point( builder, x, y ) )
-                 != FT_Err_Ok )
+          if ( FT_SET_ERROR( t1_builder_start_point( builder, x, y ) ) )
             goto Fail;
 
           y += top[0];
@@ -1336,7 +1323,7 @@
           /* otherwise, we divide numbers in 16.16 format --    */
           /* in both cases, it is the same operation            */
           *top = FT_DivFix( top[0], top[1] );
-          ++top;
+          top++;
 
           large_int = FALSE;
           break;
@@ -1591,7 +1578,7 @@
                    FT_Render_Mode       hint_mode,
                    T1_Decoder_Callback  parse_callback )
   {
-    FT_MEM_ZERO( decoder, sizeof ( *decoder ) );
+    FT_ZERO( decoder );
 
     /* retrieve PSNames interface from list of current modules */
     {

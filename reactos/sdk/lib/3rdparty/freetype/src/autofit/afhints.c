@@ -45,7 +45,7 @@
 
     if ( axis->num_segments < AF_SEGMENTS_EMBEDDED )
     {
-      if ( axis->segments == NULL )
+      if ( !axis->segments )
       {
         axis->segments     = axis->embedded.segments;
         axis->max_segments = AF_SEGMENTS_EMBEDDED;
@@ -110,7 +110,7 @@
 
     if ( axis->num_edges < AF_EDGES_EMBEDDED )
     {
-      if ( axis->edges == NULL )
+      if ( !axis->edges )
       {
         axis->edges     = axis->embedded.edges;
         axis->max_edges = AF_EDGES_EMBEDDED;
@@ -743,7 +743,7 @@
 
     if ( new_max <= AF_CONTOURS_EMBEDDED )
     {
-      if ( hints->contours == NULL )
+      if ( !hints->contours )
       {
         hints->contours     = hints->embedded.contours;
         hints->max_contours = AF_CONTOURS_EMBEDDED;
@@ -772,7 +772,7 @@
 
     if ( new_max <= AF_POINTS_EMBEDDED )
     {
-      if ( hints->points == NULL )
+      if ( !hints->points )
       {
         hints->points     = hints->embedded.points;
         hints->max_points = AF_POINTS_EMBEDDED;
@@ -1182,7 +1182,7 @@
         AF_Point  point, first, last;
 
 
-        if ( edge == NULL )
+        if ( !edge )
           continue;
 
         first = seg->first;
@@ -1208,7 +1208,7 @@
         AF_Point  point, first, last;
 
 
-        if ( edge == NULL )
+        if ( !edge )
           continue;
 
         first = seg->first;

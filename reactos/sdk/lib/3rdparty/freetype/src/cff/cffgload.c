@@ -391,7 +391,7 @@
 
 
     /* clear everything */
-    FT_MEM_ZERO( decoder, sizeof ( *decoder ) );
+    FT_ZERO( decoder );
 
     /* initialize builder */
     cff_builder_init( &decoder->builder, face, size, slot, hinting );
@@ -1026,7 +1026,7 @@
         if ( !( val & 0xFFFFL ) )
           FT_TRACE4(( " %hd", (FT_Short)( (FT_UInt32)val >> 16 ) ));
         else
-          FT_TRACE4(( " %.2f", val / 65536.0 ));
+          FT_TRACE4(( " %.5f", val / 65536.0 ));
 #endif
 
       }
@@ -2445,7 +2445,7 @@
 
         case cff_op_and:
           {
-            FT_Fixed  cond = args[0] && args[1];
+            FT_Fixed  cond = ( args[0] && args[1] );
 
 
             FT_TRACE4(( " and\n" ));
@@ -2457,7 +2457,7 @@
 
         case cff_op_or:
           {
-            FT_Fixed  cond = args[0] || args[1];
+            FT_Fixed  cond = ( args[0] || args[1] );
 
 
             FT_TRACE4(( " or\n" ));
@@ -2481,7 +2481,7 @@
 
         case cff_op_eq:
           {
-            FT_Fixed  cond = args[0] == args[1];
+            FT_Fixed  cond = ( args[0] == args[1] );
 
 
             FT_TRACE4(( " eq\n" ));

@@ -415,7 +415,7 @@ t1_expert_encoding = \
 # This data has been taken literally from the files `glyphlist.txt'
 # and `zapfdingbats.txt' version 2.0, Sept 2002.  It is available from
 #
-#   http://sourceforge.net/adobe/aglfn/
+#   https://github.com/adobe-type-tools/agl-aglfn
 #
 adobe_glyph_list = """\
 A;0041
@@ -4920,8 +4920,17 @@ class StringTable:
 
   def dump( self, file ):
     write = file.write
-    write( "  static const char  " + self.master_table +
-           "[" + repr( self.total ) + "] =\n" )
+    write( "#ifndef  DEFINE_PS_TABLES\n" )
+    write( "#ifdef  __cplusplus\n" )
+    write( '  extern "C"\n' )
+    write( "#else\n" )
+    write( "  extern\n" )
+    write( "#endif\n" )
+    write( "#endif\n" )
+    write( "  const char  " + self.master_table +
+           "[" + repr( self.total ) + "]\n" )
+    write( "#ifdef  DEFINE_PS_TABLES\n" )
+    write( "  =\n" )
     write( "  {\n" )
 
     line = ""
@@ -4930,7 +4939,10 @@ class StringTable:
       line += string.join( ( re.findall( ".", name ) ), "','" )
       line += "', 0,\n"
 
-    write( line + "  };\n\n\n" )
+    write( line )
+    write( "  }\n" )
+    write( "#endif /* DEFINE_PS_TABLES */\n" )
+    write( "  ;\n\n\n" )
 
   def dump_sublist( self, file, table_name, macro_name, sublist ):
     write = file.write
@@ -4938,8 +4950,17 @@ class StringTable:
 
     write( "  /* Values are offsets into the `" +
            self.master_table + "' table */\n\n" )
-    write( "  static const short  " + table_name +
-           "[" + macro_name + "] =\n" )
+    write( "#ifndef  DEFINE_PS_TABLES\n" )
+    write( "#ifdef  __cplusplus\n" )
+    write( '  extern "C"\n' )
+    write( "#else\n" )
+    write( "  extern\n" )
+    write( "#endif\n" )
+    write( "#endif\n" )
+    write( "  const short  " + table_name +
+           "[" + macro_name + "]\n" )
+    write( "#ifdef  DEFINE_PS_TABLES\n" )
+    write( "  =\n" )
     write( "  {\n" )
 
     line  = "    "
@@ -4955,7 +4976,11 @@ class StringTable:
         col   = 0
         comma = ",\n    "
 
-    write( line + "\n  };\n\n\n" )
+    write( line )
+    write( "\n" )
+    write( "  }\n" )
+    write( "#endif /* DEFINE_PS_TABLES */\n" )
+    write( "  ;\n\n\n" )
 
 
 # We now store the Adobe Glyph List in compressed form.  The list is put
@@ -5188,8 +5213,17 @@ def dump_encoding( file, encoding_name, encoding_list ):
 
   write = file.write
   write( "  /* the following are indices into the SID name table */\n" )
-  write( "  static const unsigned short  " + encoding_name +
-         "[" + repr( len( encoding_list ) ) + "] =\n" )
+  write( "#ifndef  DEFINE_PS_TABLES\n" )
+  write( "#ifdef  __cplusplus\n" )
+  write( '  extern "C"\n' )
+  write( "#else\n" )
+  write( "  extern\n" )
+  write( "#endif\n" )
+  write( "#endif\n" )
+  write( "  const unsigned short  " + encoding_name +
+         "[" + repr( len( encoding_list ) ) + "]\n" )
+  write( "#ifdef  DEFINE_PS_TABLES\n" )
+  write( "  =\n" )
   write( "  {\n" )
 
   line  = "    "
@@ -5204,14 +5238,27 @@ def dump_encoding( file, encoding_name, encoding_list ):
       col = 0
       comma = ",\n    "
 
-  write( line + "\n  };\n\n\n" )
+  write( line )
+  write( "\n" )
+  write( "  }\n" )
+  write( "#endif /* DEFINE_PS_TABLES */\n" )
+  write( "  ;\n\n\n" )
 
 
 def dump_array( the_array, write, array_name ):
   """dumps a given encoding"""
 
-  write( "  static const unsigned char  " + array_name +
-         "[" + repr( len( the_array ) ) + "L] =\n" )
+  write( "#ifndef  DEFINE_PS_TABLES\n" )
+  write( "#ifdef  __cplusplus\n" )
+  write( '  extern "C"\n' )
+  write( "#else\n" )
+  write( "  extern\n" )
+  write( "#endif\n" )
+  write( "#endif\n" )
+  write( "  const unsigned char  " + array_name +
+         "[" + repr( len( the_array ) ) + "L]\n" )
+  write( "#ifdef  DEFINE_PS_TABLES\n" )
+  write( "  =\n" )
   write( "  {\n" )
 
   line  = ""
@@ -5232,7 +5279,11 @@ def dump_array( the_array, write, array_name ):
       write( line )
       line = ""
 
-  write( line + "\n  };\n\n\n" )
+  write( line )
+  write( "\n" )
+  write( "  }\n" )
+  write( "#endif /* DEFINE_PS_TABLES */\n" )
+  write( "  ;\n\n\n" )
 
 
 def main():
@@ -5267,7 +5318,7 @@ def main():
   write( "/*                                                                         */\n" )
   write( "/*    PostScript glyph names.                                              */\n" )
   write( "/*                                                                         */\n" )
-  write( "/*  Copyright 2005-2015 by                                                 */\n" )
+  write( "/*  Copyright 2005-2016 by                                                 */\n" )
   write( "/*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */\n" )
   write( "/*                                                                         */\n" )
   write( "/*  This file is part of the FreeType project, and may only be used,       */\n" )
