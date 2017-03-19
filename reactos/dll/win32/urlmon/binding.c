@@ -512,8 +512,40 @@ static HRESULT WINAPI ProtocolStream_Seek(IStream *iface, LARGE_INTEGER dlibMove
                                          DWORD dwOrigin, ULARGE_INTEGER *plibNewPosition)
 {
     ProtocolStream *This = impl_from_IStream(iface);
-    FIXME("(%p)->(%d %08x %p)\n", This, dlibMove.u.LowPart, dwOrigin, plibNewPosition);
-    return E_NOTIMPL;
+    LARGE_INTEGER new_pos;
+    DWORD method;
+
+    TRACE("(%p)->(%d %08x %p)\n", This, dlibMove.u.LowPart, dwOrigin, plibNewPosition);
+
+    if(This->buf->file == INVALID_HANDLE_VALUE) {
+        /* We should probably call protocol handler's Seek. */
+        FIXME("no cache file, not supported\n");
+        return E_FAIL;
+    }
+
+    switch(dwOrigin) {
+    case STREAM_SEEK_SET:
+        method = FILE_BEGIN;
+        break;
+    case STREAM_SEEK_CUR:
+        method = FILE_CURRENT;
+        break;
+    case STREAM_SEEK_END:
+        method = FILE_END;
+        break;
+    default:
+        WARN("Invalid origin %x\n", dwOrigin);
+        return E_FAIL;
+    }
+
+    if(!SetFilePointerEx(This->buf->file, dlibMove, &new_pos, method)) {
+        FIXME("SetFilePointerEx failed: %u\n", GetLastError());
+        return E_FAIL;
+    }
+
+    if(plibNewPosition)
+        plibNewPosition->QuadPart = new_pos.QuadPart;
+    return S_OK;
 }
 
 static HRESULT WINAPI ProtocolStream_SetSize(IStream *iface, ULARGE_INTEGER libNewSize)

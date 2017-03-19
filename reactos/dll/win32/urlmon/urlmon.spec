@@ -65,7 +65,7 @@
 164 stdcall FaultInIEFeature(long ptr ptr long)
 #165 stub FindMediaType
 #166 stub FindMediaTypeClass
-167 stdcall FindMimeFromData(long ptr ptr long ptr long ptr long)
+167 stdcall FindMimeFromData(ptr ptr ptr long ptr long ptr long)
 #168 GetAddSitesFileUrl
 169 stdcall GetClassFileOrMime(ptr wstr ptr long wstr long ptr)
 #170 stub GetClassURL

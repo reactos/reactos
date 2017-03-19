@@ -482,7 +482,7 @@ HRESULT WINAPI CoInternetQueryInfo(LPCWSTR pwzUrl, QUERYOPTION QueryOption,
     IInternetProtocolInfo *protocol_info;
     HRESULT hres;
 
-    TRACE("(%s, %x, %x, %p, %x, %p, %x): stub\n", debugstr_w(pwzUrl),
+    TRACE("(%s, %x, %x, %p, %x, %p, %x)\n", debugstr_w(pwzUrl),
           QueryOption, dwQueryFlags, pvBuffer, cbBuffer, pcbBuffer, dwReserved);
 
     protocol_info = get_protocol_info(pwzUrl);
