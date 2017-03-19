@@ -82,6 +82,70 @@ ParseId(
 
 
 static
+BOOL
+ParseDaysOfMonth(
+    PWSTR pszBuffer,
+    PULONG pulDaysOfMonth)
+{
+    PWSTR startPtr, endPtr;
+    ULONG ulValue;
+
+    if (wcslen(pszBuffer) == 0)
+        return FALSE;
+
+    startPtr = pszBuffer;
+    endPtr = NULL;
+    for (;;)
+    {
+        ulValue = wcstoul(startPtr, &endPtr, 10);
+
+        if (ulValue > 0 && ulValue <= 31)
+            *pulDaysOfMonth |= (1 << (ulValue - 1));
+
+        if (endPtr != NULL && *endPtr == UNICODE_NULL)
+            return TRUE;
+
+        startPtr = endPtr + 1;
+        endPtr = NULL;
+    }
+
+    return FALSE;
+}
+
+
+static
+BOOL
+ParseDaysOfWeek(
+    PWSTR pszBuffer,
+    PUCHAR pucDaysOfWeek)
+{
+#if 0
+    PWSTR startPtr, endPtr;
+
+    if (wcslen(pszBuffer) == 0)
+        return FALSE;
+
+    startPtr = pszBuffer;
+    endPtr = NULL;
+    for (;;)
+    {
+        endPtr = wcschr(startPtr, L',');
+
+
+
+        if (endPtr == NULL)
+            return TRUE;
+
+        startPtr = endPtr + 1;
+        endPtr = NULL;
+    }
+#endif
+
+    return FALSE;
+}
+
+
+static
 VOID
 PrintErrorMessage(
     DWORD dwError)
@@ -133,6 +197,18 @@ GetTimeAsJobTime(VOID)
 
 
 static
+ULONG
+GetCurrentDayOfMonth(VOID)
+{
+    SYSTEMTIME Time;
+
+    GetLocalTime(&Time);
+
+    return 1UL << (Time.wDay - 1);
+}
+
+
+static
 VOID
 JobTimeToTimeString(
     PWSTR pszBuffer,
@@ -153,22 +229,23 @@ JobTimeToTimeString(
                   cchBuffer);
 }
 
+
 static
 INT
 PrintJobDetails(
     PWSTR pszComputerName,
     ULONG ulJobId)
 {
-    AT_INFO *pBuffer = NULL;
+    PAT_INFO pBuffer = NULL;
     DWORD_PTR CurrentTime;
     WCHAR szStatusBuffer[16];
-    WCHAR szDayBuffer[32];
+    WCHAR szScheduleBuffer[60];
     WCHAR szTimeBuffer[16];
     WCHAR szInteractiveBuffer[16];
+    WCHAR szDateBuffer[8];
+    INT i, nDateLength, nScheduleLength;
     HINSTANCE hInstance;
     NET_API_STATUS Status;
-
-    hInstance = GetModuleHandle(NULL);
 
     Status = NetScheduleJobGetInfo(pszComputerName,
                                    ulJobId,
@@ -179,41 +256,82 @@ PrintJobDetails(
         return 1;
     }
 
+    hInstance = GetModuleHandle(NULL);
+
     if (pBuffer->Flags & JOB_EXEC_ERROR)
-        LoadStringW(hInstance, IDS_ERROR, szStatusBuffer, ARRAYSIZE(szStatusBuffer));
+        LoadStringW(hInstance, IDS_ERROR, szStatusBuffer, _countof(szStatusBuffer));
     else
-        LoadStringW(hInstance, IDS_OK, szStatusBuffer, ARRAYSIZE(szStatusBuffer));
+        LoadStringW(hInstance, IDS_OK, szStatusBuffer, _countof(szStatusBuffer));
 
     if (pBuffer->DaysOfMonth != 0)
     {
-        wcscpy(szDayBuffer, L"TODO: DaysOfMonth!");
+        if (pBuffer->Flags & JOB_RUN_PERIODICALLY)
+            LoadStringW(hInstance, IDS_EVERY, szScheduleBuffer, _countof(szScheduleBuffer));
+        else
+            LoadStringW(hInstance, IDS_NEXT, szScheduleBuffer, _countof(szScheduleBuffer));
+
+        nScheduleLength = wcslen(szScheduleBuffer);
+        for (i = 0; i < 31; i++)
+        {
+            if (pBuffer->DaysOfMonth & (1 << i))
+            {
+                swprintf(szDateBuffer, L" %d", i + 1);
+                nDateLength = wcslen(szDateBuffer);
+                if (nScheduleLength + nDateLength <= 55)
+                {
+                    wcscat(szScheduleBuffer, szDateBuffer);
+                    nScheduleLength += nDateLength;
+                }
+                else
+                {
+                    wcscat(szScheduleBuffer, L"...");
+                    break;
+                }
+            }
+        }
     }
     else if (pBuffer->DaysOfWeek != 0)
     {
-        wcscpy(szDayBuffer, L"TODO: DaysOfWeek!");
+#if 0
+        if (pBuffer->Flags & JOB_RUN_PERIODICALLY)
+            LoadStringW(hInstance, IDS_EVERY, szScheduleBuffer, _countof(szScheduleBuffer));
+        else
+            LoadStringW(hInstance, IDS_NEXT, szScheduleBuffer, _countof(szScheduleBuffer));
+
+        nScheduleLength = wcslen(szScheduleBuffer);
+        for (i = 0; i < 7; i++)
+        {
+            if (pBuffer->DaysOfWeek & (1 << i))
+            {
+
+            }
+        }
+#endif
+
+        wcscpy(szScheduleBuffer, L"TODO: DaysOfWeek!");
     }
     else
     {
         CurrentTime = GetTimeAsJobTime();
         if (CurrentTime > pBuffer->JobTime)
-            LoadStringW(hInstance, IDS_TOMORROW, szDayBuffer, ARRAYSIZE(szDayBuffer));
+            LoadStringW(hInstance, IDS_TOMORROW, szScheduleBuffer, _countof(szScheduleBuffer));
         else
-            LoadStringW(hInstance, IDS_TODAY, szDayBuffer, ARRAYSIZE(szDayBuffer));
+            LoadStringW(hInstance, IDS_TODAY, szScheduleBuffer, _countof(szScheduleBuffer));
     }
 
     JobTimeToTimeString(szTimeBuffer,
-                        ARRAYSIZE(szTimeBuffer),
+                        _countof(szTimeBuffer),
                         (WORD)(pBuffer->JobTime / 3600000),
                         (WORD)((pBuffer->JobTime % 3600000) / 60000));
 
     if (pBuffer->Flags & JOB_NONINTERACTIVE)
-        LoadStringW(hInstance, IDS_NO, szInteractiveBuffer, ARRAYSIZE(szInteractiveBuffer));
+        LoadStringW(hInstance, IDS_NO, szInteractiveBuffer, _countof(szInteractiveBuffer));
     else
-        LoadStringW(hInstance, IDS_YES, szInteractiveBuffer, ARRAYSIZE(szInteractiveBuffer));
+        LoadStringW(hInstance, IDS_YES, szInteractiveBuffer, _countof(szInteractiveBuffer));
 
     ConResPrintf(StdOut, IDS_TASKID, ulJobId);
     ConResPrintf(StdOut, IDS_STATUS, szStatusBuffer);
-    ConResPrintf(StdOut, IDS_SCHEDULE, szDayBuffer);
+    ConResPrintf(StdOut, IDS_SCHEDULE, szScheduleBuffer);
     ConResPrintf(StdOut, IDS_TIME, szTimeBuffer);
     ConResPrintf(StdOut, IDS_INTERACTIVE, szInteractiveBuffer);
     ConResPrintf(StdOut, IDS_COMMAND, pBuffer->Command);
@@ -235,9 +353,11 @@ PrintAllJobs(
     DWORD_PTR CurrentTime;
     NET_API_STATUS Status;
 
-    WCHAR szDayBuffer[32];
+    WCHAR szScheduleBuffer[32];
     WCHAR szTimeBuffer[16];
+    WCHAR szDateBuffer[8];
     HINSTANCE hInstance;
+    INT j, nDateLength, nScheduleLength;
 
     Status = NetScheduleJobEnum(pszComputerName,
                                 (PBYTE *)&pBuffer,
@@ -266,30 +386,80 @@ PrintAllJobs(
     {
         if (pBuffer[i].DaysOfMonth != 0)
         {
-            wcscpy(szDayBuffer, L"TODO: DaysOfMonth");
+            if (pBuffer[i].Flags & JOB_RUN_PERIODICALLY)
+                LoadStringW(hInstance, IDS_EVERY, szScheduleBuffer, _countof(szScheduleBuffer));
+            else
+                LoadStringW(hInstance, IDS_NEXT, szScheduleBuffer, _countof(szScheduleBuffer));
+
+            nScheduleLength = wcslen(szScheduleBuffer);
+            for (j = 0; j < 31; j++)
+            {
+                if (pBuffer[i].DaysOfMonth & (1 << j))
+                {
+                    swprintf(szDateBuffer, L" %d", j + 1);
+                    nDateLength = wcslen(szDateBuffer);
+                    if (nScheduleLength + nDateLength <= 19)
+                    {
+                        wcscat(szScheduleBuffer, szDateBuffer);
+                        nScheduleLength += nDateLength;
+                    }
+                    else
+                    {
+                        wcscat(szScheduleBuffer, L"...");
+                        break;
+                    }
+                }
+            }
         }
         else if (pBuffer[i].DaysOfWeek != 0)
         {
-            wcscpy(szDayBuffer, L"TODO: DaysOfWeek");
+#if 0
+            if (pBuffer[i].Flags & JOB_RUN_PERIODICALLY)
+                LoadStringW(hInstance, IDS_EVERY, szScheduleBuffer, _countof(szScheduleBuffer));
+            else
+                LoadStringW(hInstance, IDS_NEXT, szScheduleBuffer, _countof(szScheduleBuffer));
+
+            nScheduleLength = wcslen(szScheduleBuffer);
+            for (j = 0; j < 7; j++)
+            {
+                if (pBuffer[i].DaysOfWeek & (1 << j))
+                {
+                    swprintf(szDateBuffer, L" %d", j + 1);
+                    nDateLength = wcslen(szDateBuffer);
+                    if (nScheduleLength + nDateLength <= 19)
+                    {
+                        wcscat(szScheduleBuffer, szDateBuffer);
+                        nScheduleLength += nDateLength;
+                    }
+                    else
+                    {
+                        wcscat(szScheduleBuffer, L"...");
+                        break;
+                    }
+                }
+            }
+#endif
+
+            wcscpy(szScheduleBuffer, L"TODO: DaysOfWeek");
         }
         else
         {
             CurrentTime = GetTimeAsJobTime();
             if (CurrentTime > pBuffer[i].JobTime)
-                LoadStringW(hInstance, IDS_TOMORROW, szDayBuffer, ARRAYSIZE(szDayBuffer));
+                LoadStringW(hInstance, IDS_TOMORROW, szScheduleBuffer, _countof(szScheduleBuffer));
             else
-                LoadStringW(hInstance, IDS_TODAY, szDayBuffer, ARRAYSIZE(szDayBuffer));
+                LoadStringW(hInstance, IDS_TODAY, szScheduleBuffer, _countof(szScheduleBuffer));
         }
 
         JobTimeToTimeString(szTimeBuffer,
-                            ARRAYSIZE(szTimeBuffer),
+                            _countof(szTimeBuffer),
                             (WORD)(pBuffer[i].JobTime / 3600000),
                             (WORD)((pBuffer[i].JobTime % 3600000) / 60000));
 
         ConPrintf(StdOut,
-                  L"  %7lu   %-22s   %-12s  %s\n",
+                  L"   %7lu   %-22s   %-11s   %s\n",
                   pBuffer[i].JobId,
-                  szDayBuffer,
+                  szScheduleBuffer,
                   szTimeBuffer,
                   pBuffer[i].Command);
     }
@@ -306,7 +476,10 @@ AddJob(
     PWSTR pszComputerName,
     ULONG ulJobHour,
     ULONG ulJobMinute,
+    ULONG ulDaysOfMonth,
+    UCHAR ucDaysOfWeek,
     BOOL bInteractiveJob,
+    BOOL bPeriodicJob,
     PWSTR pszCommand)
 {
     AT_INFO InfoBuffer;
@@ -315,9 +488,10 @@ AddJob(
 
     InfoBuffer.JobTime = (DWORD_PTR)ulJobHour * 3600000 + 
                          (DWORD_PTR)ulJobMinute * 60000;
-    InfoBuffer.DaysOfMonth = 0;
-    InfoBuffer.DaysOfWeek = 0;
-    InfoBuffer.Flags = bInteractiveJob ? 0 : JOB_NONINTERACTIVE;
+    InfoBuffer.DaysOfMonth = ulDaysOfMonth;
+    InfoBuffer.DaysOfWeek = ucDaysOfWeek;
+    InfoBuffer.Flags = (bInteractiveJob ? 0 : JOB_NONINTERACTIVE) |
+                       (bPeriodicJob ? JOB_RUN_PERIODICALLY : 0);
     InfoBuffer.Command = pszCommand;
 
     Status = NetScheduleJobAdd(pszComputerName,
@@ -371,8 +545,10 @@ int wmain(int argc, WCHAR **argv)
     ULONG ulJobHour = (ULONG)-1;
     ULONG ulJobMinute = (ULONG)-1;
     BOOL bDeleteJob = FALSE, bForceDelete = FALSE;
-    BOOL bInteractiveJob = FALSE;
+    BOOL bInteractiveJob = FALSE, bPeriodicJob = FALSE;
     BOOL bPrintUsage = FALSE;
+    ULONG ulDaysOfMonth = 0;
+    UCHAR ucDaysOfWeek = 0;
     INT nResult = 0;
     INT i, minIdx;
 
@@ -428,14 +604,28 @@ int wmain(int argc, WCHAR **argv)
             {
                 bInteractiveJob = TRUE;
             }
-/*
             else if (_wcsnicmp(argv[i], L"/every:", 7) == 0)
             {
+                bPeriodicJob = TRUE;
+                if (ParseDaysOfMonth(&(argv[i][7]), &ulDaysOfMonth) == FALSE)
+                {
+                    if (ParseDaysOfWeek(&(argv[i][7]), &ucDaysOfWeek) == FALSE)
+                    {
+                        ulDaysOfMonth = GetCurrentDayOfMonth();
+                    }
+                }
             }
             else if (_wcsnicmp(argv[i], L"/next:", 6) == 0)
             {
+                bPeriodicJob = FALSE;
+                if (ParseDaysOfMonth(&(argv[i][6]), &ulDaysOfMonth) == FALSE)
+                {
+                    if (ParseDaysOfWeek(&(argv[i][6]), &ucDaysOfWeek) == FALSE)
+                    {
+                        ulDaysOfMonth = GetCurrentDayOfMonth();
+                    }
+                }
             }
-*/
             else
             {
                 bPrintUsage = TRUE;
@@ -457,6 +647,8 @@ int wmain(int argc, WCHAR **argv)
         if (bInteractiveJob == TRUE ||
             ulJobHour != (ULONG)-1 ||
             ulJobMinute != (ULONG)-1 ||
+            ulDaysOfMonth != 0 ||
+            ucDaysOfWeek != 0 ||
             pszCommand != NULL)
         {
             bPrintUsage = TRUE;
@@ -464,14 +656,17 @@ int wmain(int argc, WCHAR **argv)
             goto done;
         }
 
-        nResult = DeleteJob(pszComputerName, ulJobId, bForceDelete);
+        nResult = DeleteJob(pszComputerName,
+                            ulJobId,
+                            bForceDelete);
     }
     else
     {
         if (ulJobHour != (ULONG)-1 && ulJobMinute != (ULONG)-1)
         {
             /* Check for invalid options or arguments */
-            if (bForceDelete == TRUE || pszCommand == NULL)
+            if (bForceDelete == TRUE ||
+                pszCommand == NULL)
             {
                 bPrintUsage = TRUE;
                 nResult = 1;
@@ -481,13 +676,20 @@ int wmain(int argc, WCHAR **argv)
             nResult = AddJob(pszComputerName,
                              ulJobHour,
                              ulJobMinute,
+                             ulDaysOfMonth,
+                             ucDaysOfWeek,
                              bInteractiveJob,
+                             bPeriodicJob,
                              pszCommand);
         }
         else
         {
             /* Check for invalid options or arguments */
-            if (bForceDelete == TRUE || bInteractiveJob == TRUE)
+            if (bForceDelete == TRUE ||
+                bInteractiveJob == TRUE ||
+                ulDaysOfMonth != 0 ||
+                ucDaysOfWeek != 0 ||
+                pszCommand != NULL)
             {
                 bPrintUsage = TRUE;
                 nResult = 1;
@@ -500,7 +702,8 @@ int wmain(int argc, WCHAR **argv)
             }
             else
             {
-                nResult = PrintJobDetails(pszComputerName, ulJobId);
+                nResult = PrintJobDetails(pszComputerName,
+                                          ulJobId);
             }
         }
     }

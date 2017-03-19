@@ -34,6 +34,8 @@ Zeit               Specifies the time when command is to run.\n\
 
     IDS_TODAY "Today"
     IDS_TOMORROW "Tomorrow"
+    IDS_EVERY "Every"
+    IDS_NEXT "Next"
 
     IDS_YES "Yes"
     IDS_NO "No"

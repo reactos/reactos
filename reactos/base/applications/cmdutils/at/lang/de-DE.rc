@@ -25,6 +25,8 @@ Zeit               Gibt die Zeit an, zu der ein Befehl ausgeführt werden soll.\
 
     IDS_TODAY "Heute"
     IDS_TOMORROW "Morgen"
+    IDS_EVERY "Jeden"
+    IDS_NEXT "Nächsten"
 
     IDS_YES "Ja"
     IDS_NO "Nein"

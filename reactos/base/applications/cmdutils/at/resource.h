@@ -9,6 +9,8 @@
 
 #define IDS_TODAY          109
 #define IDS_TOMORROW       110
+#define IDS_EVERY          111
+#define IDS_NEXT           112
 
 
 #define IDS_YES         101
