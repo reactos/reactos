@@ -1,0 +1,15 @@
+[Section]
+Name = Mesa3D Graphics Library
+Version = 17.0.0
+License = MIT
+Description = Build consits of mesa, gallium and llvmpipe. Provides a significant performance boost for systems with no OpenGL hardware acceleration.
+Size = 5.7 MiB
+Category = 5
+URLSite = https://www.mesa3d.org
+URLDownload = http://svn.reactos.org/packages/mesa3d_setup.exe
+SHA1 = 4c0d42844ff3693612edfdac51799fd7c63dcafd
+CDPath = none
+
+[Section.0407]
+Description = Beinhaltet Mesa, Gallium und llvmpipe. Signifikanter Geschwindigkeitsschub für Systeme ohne OpenGL Hardwarebeschleunigung.
+Size = 5,7 MiB
