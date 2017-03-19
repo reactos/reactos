@@ -387,8 +387,7 @@ static BOOL calc_length( URL_COMPONENTS *uc, DWORD flags, LPDWORD len )
         {
             WCHAR port[sizeof("65535")];
 
-            sprintfW( port, formatW, uc->nPort );
-            *len += strlenW( port );
+            *len += sprintfW( port, formatW, uc->nPort );
             *len += 1; /* ":" */
         }
         if (uc->lpszUrlPath && *uc->lpszUrlPath != '/') *len += 1; /* '/' */
@@ -405,13 +404,12 @@ BOOL WINAPI WinHttpCreateUrl( LPURL_COMPONENTS uc, DWORD flags, LPWSTR url, LPDW
 {
     static const WCHAR formatW[] = {'%','u',0};
     static const WCHAR twoslashW[] = {'/','/'};
-
     DWORD len;
     INTERNET_SCHEME scheme;
 
     TRACE("%p, 0x%08x, %p, %p\n", uc, flags, url, required);
 
-    if (!uc || uc->dwStructSize != sizeof(URL_COMPONENTS) || !required || !url)
+    if (!uc || uc->dwStructSize != sizeof(URL_COMPONENTS) || !required)
     {
         set_last_error( ERROR_INVALID_PARAMETER );
         return FALSE;
@@ -423,6 +421,11 @@ BOOL WINAPI WinHttpCreateUrl( LPURL_COMPONENTS uc, DWORD flags, LPWSTR url, LPDW
     {
         *required = len + 1;
         set_last_error( ERROR_INSUFFICIENT_BUFFER );
+        return FALSE;
+    }
+    if (!url)
+    {
+        set_last_error( ERROR_INVALID_PARAMETER );
         return FALSE;
     }
 
@@ -484,15 +487,10 @@ BOOL WINAPI WinHttpCreateUrl( LPURL_COMPONENTS uc, DWORD flags, LPWSTR url, LPDW
 
         if (!uses_default_port( scheme, uc->nPort ))
         {
-            WCHAR port[sizeof("65535")];
-
-            sprintfW( port, formatW, uc->nPort );
             *url = ':';
             url++;
 
-            len = strlenW( port );
-            memcpy( url, port, len * sizeof(WCHAR) );
-            url += len;
+            url += sprintfW( url, formatW, uc->nPort );
         }
 
         /* add slash between hostname and path if necessary */
