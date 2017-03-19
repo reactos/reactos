@@ -1121,6 +1121,12 @@ static IInternetProtocolSink protocol_sink = { &protocol_sink_vtbl };
 
 static HRESULT WINAPI MimeProtocolSink_QueryInterface(IInternetProtocolSink *iface, REFIID riid, void **ppv)
 {
+    if(IsEqualGUID(&IID_IUnknown, riid)
+            || IsEqualGUID(&IID_IInternetProtocolSink, riid)) {
+        *ppv = iface;
+        return S_OK;
+    }
+
     ok(0, "unexpected call\n");
     return E_NOTIMPL;
 }

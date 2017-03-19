@@ -122,6 +122,8 @@ typedef struct _uri_str_property {
     HRESULT     expected;
     BOOL        todo;
     const char* broken_value;
+    const char* value2;
+    HRESULT     expected2;
 } uri_str_property;
 
 typedef struct _uri_dword_property {
@@ -1964,7 +1966,7 @@ static const uri_properties uri_tests[] = {
             {"http://google.com.uk/",S_OK,FALSE},
             {"google.com.uk",S_OK,FALSE},
             {"http://google.com.uk/",S_OK,FALSE},
-            {"google.com.uk",S_OK,FALSE},
+            {"google.com.uk",S_OK,FALSE,NULL,"com.uk",S_OK},  /* cf. google.co.uk below */
             {"",S_FALSE,FALSE},
             {"",S_FALSE,FALSE},
             {"google.com.uk",S_OK,FALSE},
@@ -1973,6 +1975,31 @@ static const uri_properties uri_tests[] = {
             {"/",S_OK,FALSE},
             {"",S_FALSE,FALSE},
             {"http://google.com.uk",S_OK,FALSE},
+            {"http",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE}
+        },
+        {
+            {Uri_HOST_DNS,S_OK,FALSE},
+            {80,S_OK,FALSE},
+            {URL_SCHEME_HTTP,S_OK,FALSE},
+            {URLZONE_INVALID,E_NOTIMPL,FALSE}
+        }
+    },
+    {   "http://google.co.uk", 0, S_OK, FALSE,
+        {
+            {"http://google.co.uk/",S_OK,FALSE},
+            {"google.co.uk",S_OK,FALSE},
+            {"http://google.co.uk/",S_OK,FALSE},
+            {"google.co.uk",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE},
+            {"google.co.uk",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"/",S_OK,FALSE},
+            {"/",S_OK,FALSE},
+            {"",S_FALSE,FALSE},
+            {"http://google.co.uk",S_OK,FALSE},
             {"http",S_OK,FALSE},
             {"",S_FALSE,FALSE},
             {"",S_FALSE,FALSE}
@@ -2014,7 +2041,7 @@ static const uri_properties uri_tests[] = {
             {"http://google.uk.1/",S_OK,FALSE},
             {"google.uk.1",S_OK,FALSE},
             {"http://google.uk.1/",S_OK,FALSE},
-            {"google.uk.1",S_OK,FALSE},
+            {"google.uk.1",S_OK,FALSE,NULL,"uk.1",S_OK},
             {"",S_FALSE,FALSE},
             {"",S_FALSE,FALSE},
             {"google.uk.1",S_OK,FALSE},
@@ -2090,7 +2117,7 @@ static const uri_properties uri_tests[] = {
             {"http://.uk/",S_OK,FALSE},
             {".uk",S_OK,FALSE},
             {"http://.uk/",S_OK,FALSE},
-            {"",S_FALSE,FALSE},
+            {"",S_FALSE,FALSE,NULL,".uk",S_OK},
             {"",S_FALSE,FALSE},
             {"",S_FALSE,FALSE},
             {".uk",S_OK,FALSE},
@@ -2115,7 +2142,7 @@ static const uri_properties uri_tests[] = {
             {"http://www.co.google.com.[]/",S_OK,FALSE},
             {"www.co.google.com.[]",S_OK,FALSE},
             {"http://www.co.google.com.[]/",S_OK,FALSE},
-            {"google.com.[]",S_OK,FALSE},
+            {"google.com.[]",S_OK,FALSE,NULL,"com.[]",S_OK},
             {"",S_FALSE,FALSE},
             {"",S_FALSE,FALSE},
             {"www.co.google.com.[]",S_OK,FALSE},
@@ -7325,6 +7352,7 @@ typedef struct _uri_parse_test {
     const char  *property;
     HRESULT     expected;
     BOOL        todo;
+    const char  *property2;
 } uri_parse_test;
 
 static const uri_parse_test uri_parse_tests[] = {
@@ -7388,7 +7416,7 @@ static const uri_parse_test uri_parse_tests[] = {
     {"file://server/test",0,PARSE_SITE,0,"server",S_OK,FALSE},
 
     /* PARSE_DOMAIN tests. */
-    {"http://google.com.uk/",0,PARSE_DOMAIN,0,"google.com.uk",S_OK,FALSE},
+    {"http://google.com.uk/",0,PARSE_DOMAIN,0,"google.com.uk",S_OK,FALSE,"com.uk"},
     {"http://google.com.com/",0,PARSE_DOMAIN,0,"com.com",S_OK,FALSE},
     {"test/test",Uri_CREATE_ALLOW_RELATIVE,PARSE_DOMAIN,0,"",S_OK,FALSE},
     {"file://server/test",0,PARSE_DOMAIN,0,"",S_OK,FALSE},
@@ -7410,6 +7438,11 @@ static inline LPWSTR a2w(LPCSTR str) {
     }
 
     return ret;
+}
+
+static inline void *heap_alloc(size_t len)
+{
+    return HeapAlloc(GetProcessHeap(), 0, len);
 }
 
 static inline BOOL heap_free(void* mem) {
@@ -7617,9 +7650,12 @@ static void test_IUri_GetPropertyBSTR(void) {
 
                 hr = IUri_GetPropertyBSTR(uri, j, &received, 0);
                 todo_wine_if(prop.todo) {
-                    ok(hr == prop.expected, "GetPropertyBSTR returned 0x%08x, expected 0x%08x. On uri_tests[%d].str_props[%d].\n",
+                    ok(hr == prop.expected ||
+                       (prop.value2 && hr == prop.expected2),
+                       "GetPropertyBSTR returned 0x%08x, expected 0x%08x. On uri_tests[%d].str_props[%d].\n",
                             hr, prop.expected, i, j);
-                    ok(!strcmp_aw(prop.value, received) || broken(prop.broken_value && !strcmp_aw(prop.broken_value, received)),
+                    ok(!strcmp_aw(prop.value, received) || (prop.value2 && !strcmp_aw(prop.value2, received)) ||
+                       broken(prop.broken_value && !strcmp_aw(prop.broken_value, received)),
                             "Expected %s but got %s on uri_tests[%d].str_props[%d].\n",
                             prop.value, wine_dbgstr_w(received), i, j);
                 }
@@ -7802,9 +7838,11 @@ static void test_IUri_GetStrProperties(void) {
             prop = test.str_props[Uri_PROPERTY_DOMAIN];
             hr = IUri_GetDomain(uri, &received);
             todo_wine_if(prop.todo) {
-                ok(hr == prop.expected, "Error: GetDomain returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
+                ok(hr == prop.expected || (prop.value2 && hr == prop.expected2),
+                   "Error: GetDomain returned 0x%08x, expected 0x%08x on uri_tests[%d].\n",
                         hr, prop.expected, i);
-                ok(!strcmp_aw(prop.value, received), "Error: Expected %s but got %s on uri_tests[%d].\n",
+                ok(!strcmp_aw(prop.value, received) || (prop.value2 && !strcmp_aw(prop.value2, received)),
+                   "Error: Expected %s but got %s on uri_tests[%d].\n",
                         prop.value, wine_dbgstr_w(received), i);
             }
             SysFreeString(received);
@@ -8082,9 +8120,11 @@ static void test_IUri_GetPropertyLength(void) {
 
                 hr = IUri_GetPropertyLength(uri, j, &receivedLen, 0);
                 todo_wine_if(prop.todo) {
-                    ok(hr == prop.expected, "Error: GetPropertyLength returned 0x%08x, expected 0x%08x on uri_tests[%d].str_props[%d].\n",
+                    ok(hr == prop.expected || (prop.value2 && hr == prop.expected2),
+                       "Error: GetPropertyLength returned 0x%08x, expected 0x%08x on uri_tests[%d].str_props[%d].\n",
                             hr, prop.expected, i, j);
-                    ok(receivedLen == expectedLen || broken(prop.broken_value && receivedLen == lstrlenA(prop.broken_value)),
+                    ok(receivedLen == expectedLen || (prop.value2 && receivedLen == lstrlenA(prop.value2)) ||
+                       broken(prop.broken_value && receivedLen == lstrlenA(prop.broken_value)),
                             "Error: Expected a length of %d but got %d on uri_tests[%d].str_props[%d].\n",
                             expectedLen, receivedLen, i, j);
                 }
@@ -8097,18 +8137,25 @@ static void test_IUri_GetPropertyLength(void) {
     }
 }
 
-static DWORD compute_expected_props(uri_properties *test)
+static DWORD compute_expected_props(uri_properties *test, DWORD *mask)
 {
     DWORD ret = 0, i;
+
+    *mask = 0;
 
     for(i=Uri_PROPERTY_STRING_START; i <= Uri_PROPERTY_STRING_LAST; i++) {
         if(test->str_props[i-Uri_PROPERTY_STRING_START].expected == S_OK)
             ret |= 1<<i;
+        if(test->str_props[i-Uri_PROPERTY_STRING_START].value2 == NULL ||
+           test->str_props[i-Uri_PROPERTY_STRING_START].expected ==
+           test->str_props[i-Uri_PROPERTY_STRING_START].expected2)
+            *mask |= 1<<i;
     }
 
     for(i=Uri_PROPERTY_DWORD_START; i <= Uri_PROPERTY_DWORD_LAST; i++) {
         if(test->dword_props[i-Uri_PROPERTY_DWORD_START].expected == S_OK)
             ret |= 1<<i;
+        *mask |= 1<<i;
     }
 
     return ret;
@@ -8138,20 +8185,22 @@ static void test_IUri_GetProperties(void) {
             ok(hr == test.create_expected, "Error: CreateUri returned 0x%08x, expected 0x%08x.\n", hr, test.create_expected);
 
         if(SUCCEEDED(hr)) {
-            DWORD received = 0, expected_props;
+            DWORD received = 0, expected_props, mask;
             DWORD j;
 
             hr = IUri_GetProperties(uri, &received);
             ok(hr == S_OK, "Error: GetProperties returned 0x%08x, expected 0x%08x.\n", hr, S_OK);
 
-            expected_props = compute_expected_props(&test);
+            expected_props = compute_expected_props(&test, &mask);
 
             for(j = 0; j <= Uri_PROPERTY_DWORD_LAST; ++j) {
                 /* (1 << j) converts a Uri_PROPERTY to its corresponding Uri_HAS_* flag mask. */
-                if(expected_props & (1 << j))
-                    ok(received & (1 << j), "Error: Expected flag for property %d on uri_tests[%d].\n", j, i);
-                else
-                    ok(!(received & (1 << j)), "Error: Received flag for property %d when not expected on uri_tests[%d].\n", j, i);
+                if(mask & (1 << j)) {
+                    if(expected_props & (1 << j))
+                        ok(received & (1 << j), "Error: Expected flag for property %d on uri_tests[%d].\n", j, i);
+                    else
+                        ok(!(received & (1 << j)), "Error: Received flag for property %d when not expected on uri_tests[%d].\n", j, i);
+                }
             }
         }
 
@@ -8186,9 +8235,9 @@ static void test_IUri_HasProperty(void) {
             ok(hr == test.create_expected, "Error: CreateUri returned 0x%08x, expected 0x%08x.\n", hr, test.create_expected);
 
         if(SUCCEEDED(hr)) {
-            DWORD expected_props, j;
+            DWORD expected_props, j, mask;
 
-            expected_props = compute_expected_props(&test);
+            expected_props = compute_expected_props(&test, &mask);
 
             for(j = 0; j <= Uri_PROPERTY_DWORD_LAST; ++j) {
                 /* Assign -1, then explicitly test for TRUE or FALSE later. */
@@ -8198,10 +8247,12 @@ static void test_IUri_HasProperty(void) {
                 ok(hr == S_OK, "Error: HasProperty returned 0x%08x, expected 0x%08x for property %d on uri_tests[%d].\n",
                         hr, S_OK, j, i);
 
-                if(expected_props & (1 << j)) {
-                    ok(received == TRUE, "Error: Expected to have property %d on uri_tests[%d].\n", j, i);
-                } else {
-                    ok(received == FALSE, "Error: Wasn't expecting to have property %d on uri_tests[%d].\n", j, i);
+                if(mask & (1 << j)) {
+                    if(expected_props & (1 << j)) {
+                        ok(received == TRUE, "Error: Expected to have property %d on uri_tests[%d].\n", j, i);
+                    } else {
+                        ok(received == FALSE, "Error: Wasn't expecting to have property %d on uri_tests[%d].\n", j, i);
+                    }
                 }
             }
         }
@@ -10410,7 +10461,9 @@ static void test_CoInternetParseIUri_InvalidArgs(void) {
     HRESULT hr;
     IUri *uri = NULL;
     WCHAR tmp[3];
+    WCHAR *longurl, *copy;
     DWORD result = -1;
+    DWORD i, len;
 
     hr = pCoInternetParseIUri(NULL, PARSE_CANONICALIZE, 0, tmp, 3, &result, 0);
     ok(hr == E_INVALIDARG, "Error: CoInternetParseIUri returned 0x%08x, expected 0x%08x.\n",
@@ -10466,6 +10519,33 @@ static void test_CoInternetParseIUri_InvalidArgs(void) {
             expected_len, result);
     }
     if(uri) IUri_Release(uri);
+
+    /* a long url that causes a crash on Wine */
+    len = INTERNET_MAX_URL_LENGTH*2;
+    longurl = heap_alloc((len+1)*sizeof(WCHAR));
+    memcpy(longurl, http_urlW, sizeof(http_urlW));
+    for(i = sizeof(http_urlW)/sizeof(WCHAR)-1; i < len; i++)
+        longurl[i] = 'x';
+    longurl[len] = 0;
+
+    copy = heap_alloc((len+1)*sizeof(WCHAR));
+    memcpy(copy, longurl, (len+1)*sizeof(WCHAR));
+
+    hr = pCreateUri(longurl, 0, 0, &uri);
+    ok(SUCCEEDED(hr), "Error: CreateUri returned 0x%08x.\n", hr);
+    if(SUCCEEDED(hr)) {
+        result = -1;
+        memset(longurl, 0xcc, len*sizeof(WCHAR));
+        hr = pCoInternetParseIUri(uri, PARSE_CANONICALIZE, 0, longurl, len+1, &result, 0);
+        ok(SUCCEEDED(hr), "Error: CoInternetParseIUri returned 0x%08x.\n", hr);
+        ok(!lstrcmpW(longurl, copy), "Error: expected long url '%s' but was '%s'.\n",
+            wine_dbgstr_w(copy), wine_dbgstr_w(longurl));
+        ok(result == len, "Error: Expected 'result' to be %d, but was %d instead.\n",
+            len, result);
+    }
+    heap_free(longurl);
+    heap_free(copy);
+    if(uri) IUri_Release(uri);
 }
 
 static void test_CoInternetParseIUri(void) {
@@ -10491,10 +10571,10 @@ static void test_CoInternetParseIUri(void) {
                     hr, test.expected, i);
             if(SUCCEEDED(hr)) {
                 DWORD len = lstrlenA(test.property);
-                ok(!strcmp_aw(test.property, result),
+                ok(!strcmp_aw(test.property, result) || (test.property2 && !strcmp_aw(test.property2, result)),
                     "Error: Expected %s but got %s instead on uri_parse_tests[%d].\n",
                     test.property, wine_dbgstr_w(result), i);
-                ok(len == result_len,
+                ok(len == result_len || (test.property2 && lstrlenA(test.property2) == result_len),
                     "Error: Expected %d, but got %d instead on uri_parse_tests[%d].\n",
                     len, result_len, i);
             } else {
