@@ -11,27 +11,6 @@
 #define NDEBUG
 #include <debug.h>
 
-static const RGBQUAD EGAColorsQuads[16] =
-{
-    /* rgbBlue, rgbGreen, rgbRed, rgbReserved */
-    { 0x00, 0x00, 0x00, 0x00 },
-    { 0x00, 0x00, 0x80, 0x00 },
-    { 0x00, 0x80, 0x00, 0x00 },
-    { 0x00, 0x80, 0x80, 0x00 },
-    { 0x80, 0x00, 0x00, 0x00 },
-    { 0x80, 0x00, 0x80, 0x00 },
-    { 0x80, 0x80, 0x00, 0x00 },
-    { 0x80, 0x80, 0x80, 0x00 },
-    { 0xc0, 0xc0, 0xc0, 0x00 },
-    { 0x00, 0x00, 0xff, 0x00 },
-    { 0x00, 0xff, 0x00, 0x00 },
-    { 0x00, 0xff, 0xff, 0x00 },
-    { 0xff, 0x00, 0x00, 0x00 },
-    { 0xff, 0x00, 0xff, 0x00 },
-    { 0xff, 0xff, 0x00, 0x00 },
-    { 0xff, 0xff, 0xff, 0x00 }
-};
-
 static const RGBQUAD DefLogPaletteQuads[20] =   /* Copy of Default Logical Palette */
 {
     /* rgbBlue, rgbGreen, rgbRed, rgbReserved */
@@ -883,7 +862,12 @@ GreGetDIBitsInternal(
                     break;
 
                 case 4:
-                    RtlCopyMemory(rgbQuads, EGAColorsQuads, sizeof(EGAColorsQuads));
+                    /* The EGA palette is the first and last 8 colours of the default palette
+                       with the innermost pair swapped */
+                    RtlCopyMemory(rgbQuads,     DefLogPaletteQuads,      7 * sizeof(RGBQUAD));
+                    RtlCopyMemory(rgbQuads + 7, DefLogPaletteQuads + 12, 1 * sizeof(RGBQUAD));
+                    RtlCopyMemory(rgbQuads + 8, DefLogPaletteQuads +  7, 1 * sizeof(RGBQUAD));
+                    RtlCopyMemory(rgbQuads + 9, DefLogPaletteQuads + 13, 7 * sizeof(RGBQUAD));
                     break;
 
                 case 8:
