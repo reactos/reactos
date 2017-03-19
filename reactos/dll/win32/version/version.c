@@ -628,14 +628,7 @@ DWORD WINAPI GetFileVersionInfoSizeExW( DWORD flags, LPCWSTR filename, LPDWORD h
     HMODULE hModule;
     OFSTRUCT ofs;
 
-    if (flags)
-    {
-        FIXME("stub: %x %s %p\n", flags, wine_dbgstr_w(filename), handle);
-        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-        return 0;
-    }
-
-    TRACE("(%s,%p)\n", debugstr_w(filename), handle );
+    TRACE("(0x%x,%s,%p)\n", flags, debugstr_w(filename), handle );
 
     if (handle) *handle = 0;
 
@@ -649,6 +642,8 @@ DWORD WINAPI GetFileVersionInfoSizeExW( DWORD flags, LPCWSTR filename, LPDWORD h
         SetLastError(ERROR_BAD_PATHNAME);
         return 0;
     }
+    if (flags)
+        FIXME("flags 0x%x ignored\n", flags);
 
     if ((lzfd = LZOpenFileW( (LPWSTR)filename, &ofs, OF_READ )) != HFILE_ERROR)
     {
@@ -712,14 +707,14 @@ DWORD WINAPI GetFileVersionInfoSizeExA( DWORD flags, LPCSTR filename, LPDWORD ha
     UNICODE_STRING filenameW;
     DWORD retval;
 
-    TRACE("(%s,%p)\n", debugstr_a(filename), handle );
+    TRACE("(0x%x,%s,%p)\n", flags, debugstr_a(filename), handle );
 
     if(filename)
         RtlCreateUnicodeStringFromAsciiz(&filenameW, filename);
     else
         filenameW.Buffer = NULL;
 
-    retval = GetFileVersionInfoSizeExW(0, filenameW.Buffer, handle);
+    retval = GetFileVersionInfoSizeExW(flags, filenameW.Buffer, handle);
 
     RtlFreeUnicodeString(&filenameW);
 
@@ -738,21 +733,16 @@ BOOL WINAPI GetFileVersionInfoExW( DWORD flags, LPCWSTR filename, DWORD handle, 
     HMODULE hModule;
     VS_VERSION_INFO_STRUCT32* vvis = data;
 
-    if (flags)
-    {
-        FIXME("stub: %x %s %u %u %p\n", flags, wine_dbgstr_w(filename), handle, datasize, data);
-        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-        return 0;
-    }
-
-    TRACE("(%s,%d,size=%d,data=%p)\n",
-                debugstr_w(filename), handle, datasize, data );
+    TRACE("(0x%x,%s,%d,size=%d,data=%p)\n",
+          flags, debugstr_w(filename), handle, datasize, data );
 
     if (!data)
     {
         SetLastError(ERROR_INVALID_DATA);
         return FALSE;
     }
+    if (flags)
+        FIXME("flags 0x%x ignored\n", flags);
 
     if ((lzfd = LZOpenFileW( (LPWSTR)filename, &ofs, OF_READ )) != HFILE_ERROR)
     {
@@ -815,8 +805,8 @@ BOOL WINAPI GetFileVersionInfoExA( DWORD flags, LPCSTR filename, DWORD handle, D
     UNICODE_STRING filenameW;
     BOOL retval;
 
-    TRACE("(%s,%d,size=%d,data=%p)\n",
-                debugstr_a(filename), handle, datasize, data );
+    TRACE("(0x%x,%s,%d,size=%d,data=%p)\n",
+          flags, debugstr_a(filename), handle, datasize, data );
 
     if(filename)
         RtlCreateUnicodeStringFromAsciiz(&filenameW, filename);
