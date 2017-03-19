@@ -79,7 +79,7 @@ get_dc_data(HDC hdc)
         data->nb_icd_formats = data->icd_data->DrvDescribePixelFormat(hdc, 0, 0, NULL);
     else
         data->nb_icd_formats = 0;
-    TRACE("ICD %S has %u formats for HDC %x.\n", data->icd_data->DriverName, data->nb_icd_formats, hdc);
+    TRACE("ICD %S has %u formats for HDC %x.\n", data->icd_data ? data->icd_data->DriverName : NULL, data->nb_icd_formats, hdc);
     data->nb_sw_formats = sw_DescribePixelFormat(hdc, 0, 0, NULL);
     data->next = dc_data_list;
     dc_data_list = data;
@@ -927,6 +927,6 @@ IntDeleteAllContexts(void)
     {
         context = CONTAINING_RECORD(Entry, struct wgl_context, ListEntry);
         wglDeleteContext((HGLRC)context);
-        Entry = ContextListHead.Flink;
+        Entry = Entry->Flink;
     }
 }
