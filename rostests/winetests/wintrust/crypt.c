@@ -203,16 +203,10 @@ static void test_context(void)
        "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
     /* NULL GUID */
+    if (0) { /* crashes on 64-bit win10 */
     ret = pCryptCATAdminAcquireContext(&hca, NULL, 0);
     ok(ret, "Expected success, got FALSE with %d\n", GetLastError());
     ok(hca != NULL, "Expected a context handle, got NULL\n");
-
-    /* All NULL */
-    SetLastError(0xdeadbeef);
-    ret = pCryptCATAdminReleaseContext(NULL, 0);
-    ok(!ret, "Expected failure\n");
-    ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
     /* Proper release */
     SetLastError(0xdeadbeef);
@@ -222,6 +216,14 @@ static void test_context(void)
     /* Try to release a second time */
     SetLastError(0xdeadbeef);
     ret = pCryptCATAdminReleaseContext(hca, 0);
+    ok(!ret, "Expected failure\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
+       "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+    }
+
+    /* All NULL */
+    SetLastError(0xdeadbeef);
+    ret = pCryptCATAdminReleaseContext(NULL, 0);
     ok(!ret, "Expected failure\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
        "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
@@ -1020,8 +1022,11 @@ static void test_cdf_parsing(void)
     catmember = NULL;
     catmembertag = NULL;
     while ((catmembertag = pCryptCATCDFEnumMembersByCDFTagEx(catcdf, catmembertag, cdf_callback, &catmember, FALSE, NULL))) ;
-    todo_wine
-    CHECK_EXPECT(CRYPTCAT_E_AREA_MEMBER, CRYPTCAT_E_CDF_MEMBER_FILE_PATH);
+    ok(error_area == 0xffffffff || broken(error_area == CRYPTCAT_E_AREA_MEMBER) /* < win81 */,
+       "Expected area 0xffffffff, got %08x\n", error_area);
+    ok(local_error == 0xffffffff || broken(local_error == CRYPTCAT_E_CDF_MEMBER_FILE_PATH) /* < win81 */,
+       "Expected error 0xffffffff, got %08x\n", local_error);
+
     pCryptCATCDFClose(catcdf);
     DeleteFileA(cdffileA);
     todo_wine
