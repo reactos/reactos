@@ -1883,10 +1883,9 @@ static BOOL WINAPI CRYPT_AsnDecodeOidIgnoreTag(DWORD dwCertEncodingType,
                 LPSTR pszObjId = *(LPSTR *)pvStructInfo;
 
                 *pszObjId = 0;
-                sprintf(pszObjId, "%d.%d", pbEncoded[1 + lenBytes] / 40,
+                pszObjId += sprintf(pszObjId, "%d.%d", pbEncoded[1 + lenBytes] / 40,
                  pbEncoded[1 + lenBytes] - (pbEncoded[1 + lenBytes] /
                  40) * 40);
-                pszObjId += strlen(pszObjId);
                 for (ptr = pbEncoded + 2 + lenBytes; ret &&
                  ptr - pbEncoded - 1 - lenBytes < dataLen; )
                 {
@@ -1901,8 +1900,7 @@ static BOOL WINAPI CRYPT_AsnDecodeOidIgnoreTag(DWORD dwCertEncodingType,
                     }
                     val <<= 7;
                     val |= *ptr++;
-                    sprintf(pszObjId, ".%d", val);
-                    pszObjId += strlen(pszObjId);
+                    pszObjId += sprintf(pszObjId, ".%d", val);
                 }
             }
             else
