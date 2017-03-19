@@ -1002,7 +1002,10 @@ static void test_secure_connection(void)
     ok(req != NULL, "failed to open a request %u\n", GetLastError());
 
     ret = WinHttpSetOption(req, WINHTTP_OPTION_CLIENT_CERT_CONTEXT, WINHTTP_NO_CLIENT_CERT_CONTEXT, 0);
-    ok(!ret && GetLastError() == ERROR_WINHTTP_INCORRECT_HANDLE_STATE, "setting client cert context returned %x (%u)\n", ret, GetLastError());
+    err = GetLastError();
+    ok(!ret, "unexpected success\n");
+    ok(err == ERROR_WINHTTP_INCORRECT_HANDLE_STATE || broken(err == ERROR_INVALID_PARAMETER) /* winxp */,
+       "setting client cert context returned %u\n", err);
 
     ret = WinHttpSendRequest(req, NULL, 0, NULL, 0, 0, 0);
     err = GetLastError();
@@ -1028,7 +1031,8 @@ static void test_secure_connection(void)
     ok(req != NULL, "failed to open a request %u\n", GetLastError());
 
     ret = WinHttpSetOption(req, WINHTTP_OPTION_CLIENT_CERT_CONTEXT, WINHTTP_NO_CLIENT_CERT_CONTEXT, 0);
-    ok(ret, "failed to set client cert context %u\n", GetLastError());
+    err = GetLastError();
+    ok(ret || broken(!ret && err == ERROR_INVALID_PARAMETER) /* winxp */, "failed to set client cert context %u\n", err);
 
     WinHttpSetStatusCallback(req, cert_error, WINHTTP_CALLBACK_STATUS_SECURE_FAILURE, 0);
 
@@ -1220,21 +1224,28 @@ static DWORD get_default_proxy_reg_value( BYTE *buf, DWORD len, DWORD *type )
     return ret;
 }
 
+static void set_proxy( REGSAM access, BYTE *buf, DWORD len, DWORD type )
+{
+    HKEY hkey;
+    if (!RegCreateKeyExW( HKEY_LOCAL_MACHINE, Connections, 0, NULL, 0, access, NULL, &hkey, NULL ))
+    {
+        if (len) RegSetValueExW( hkey, WinHttpSettings, 0, type, buf, len );
+        else RegDeleteValueW( hkey, WinHttpSettings );
+        RegCloseKey( hkey );
+    }
+}
+
 static void set_default_proxy_reg_value( BYTE *buf, DWORD len, DWORD type )
 {
-    LONG l;
-    HKEY key;
-
-    l = RegCreateKeyExW( HKEY_LOCAL_MACHINE, Connections, 0, NULL, 0,
-        KEY_WRITE, NULL, &key, NULL );
-    if (!l)
+    BOOL wow64;
+    IsWow64Process( GetCurrentProcess(), &wow64 );
+    if (sizeof(void *) > sizeof(int) || wow64)
     {
-        if (len)
-            RegSetValueExW( key, WinHttpSettings, 0, type, buf, len );
-        else
-            RegDeleteValueW( key, WinHttpSettings );
-        RegCloseKey( key );
+        set_proxy( KEY_WRITE|KEY_WOW64_64KEY, buf, len, type );
+        set_proxy( KEY_WRITE|KEY_WOW64_32KEY, buf, len, type );
     }
+    else
+        set_proxy( KEY_WRITE, buf, len, type );
 }
 
 static void test_set_default_proxy_config(void)

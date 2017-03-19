@@ -118,7 +118,7 @@ static void WinHttpCreateUrl_test( void )
 {
     URL_COMPONENTS uc;
     WCHAR *url;
-    DWORD len;
+    DWORD len, err;
     BOOL ret;
 
     /* NULL components */
@@ -144,22 +144,33 @@ static void WinHttpCreateUrl_test( void )
     ok( !ret, "expected failure\n" );
     ok( GetLastError() == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER got %u\n", GetLastError() );
 
-    /* valid components, NULL url */
+    /* valid components, NULL url, insufficient length */
+    len = 0;
     SetLastError( 0xdeadbeef );
     ret = WinHttpCreateUrl( &uc, 0, NULL, &len );
     ok( !ret, "expected failure\n" );
-    ok( GetLastError() == ERROR_INSUFFICIENT_BUFFER ||
-        GetLastError() == ERROR_INVALID_PARAMETER,
-        "expected ERROR_INSUFFICIENT_BUFFER or ERROR_INVALID_PARAMETER got %u\n", GetLastError() );
+    ok( GetLastError() == ERROR_INSUFFICIENT_BUFFER, "expected ERROR_INSUFFICIENT_BUFFER got %u\n", GetLastError() );
+    ok( len == 57, "expected len 57 got %u\n", len );
+
+    /* valid components, NULL url, sufficient length */
+    SetLastError( 0xdeadbeef );
+    len = 256;
+    ret = WinHttpCreateUrl( &uc, 0, NULL, &len );
+    err = GetLastError();
+    ok( !ret, "expected failure\n" );
+    ok( err == ERROR_INVALID_PARAMETER || broken(err == ERROR_INSUFFICIENT_BUFFER) /* < win7 */,
+        "expected ERROR_INVALID_PARAMETER got %u\n", GetLastError() );
+    ok( len == 256 || broken(len == 57) /* < win7 */, "expected len 256 got %u\n", len );
 
     /* correct size, NULL url */
     fill_url_components( &uc );
     SetLastError( 0xdeadbeef );
     ret = WinHttpCreateUrl( &uc, 0, NULL, &len );
+    err = GetLastError();
     ok( !ret, "expected failure\n" );
-    ok( GetLastError() == ERROR_INSUFFICIENT_BUFFER ||
-        GetLastError() == ERROR_INVALID_PARAMETER,
-        "expected ERROR_INSUFFICIENT_BUFFER or ERROR_INVALID_PARAMETER got %u\n", GetLastError() );
+    ok( err == ERROR_INVALID_PARAMETER || broken(err == ERROR_INSUFFICIENT_BUFFER) /* < win7 */,
+        "expected ERROR_INVALID_PARAMETER got %u\n", GetLastError() );
+    ok( len == 256 || broken(len == 57) /* < win7 */, "expected len 256 got %u\n", len );
 
     /* valid components, allocated url, short length */
     SetLastError( 0xdeadbeef );
