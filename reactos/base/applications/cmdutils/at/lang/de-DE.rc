@@ -1,0 +1,40 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Mit dem AT Befeht können Befehle und Programme zu einem vorbestimmten\n\
+Termin gestartet werden. Der Zeitplandienst muss gestartet sein, um den\n\
+Befeht AT zu verwenden.\n\n\
+AT [\\\\Computername] [ [Kennung] [/DELETE] | /DELETE [/YES]]\n\
+AT [\\\\Computername] Zeit [/INTERACTIVE]\n\
+    [ /EVERY:Datum[,...] | /NEXT:Datum[,...]] ""Befehl""\n\n\
+\\\\Computername     ...\n\
+Kennung            ...\n\
+/DELETE            ...\n\
+/YES               ...\n\
+Zeit               Gibt die Zeit an, zu der ein Befehl ausgeführt werden soll.\n\
+/INTERACTIVE       ...\n\
+/EVERY:Datum[,...] ...\n\
+/NEXT:Datum[,...]  ...\n\
+""Befehl""           Ist der auszuführende Befehl oder das Stapelprogramm.\n"
+
+    IDS_CONFIRM_DELETE "Dieser Vorgang wird alle geplanten Aufräge löschen.\nMöchten Sie diesen Vorgang fortsetzen? (J/N) [N]"
+    IDS_NEW_JOB "Neuer Auftrag hinzugefügt. Kennung = %lu\n"
+    IDS_JOBS_LIST "Statuskenn. Tag                     Zeit          Befehlszeile\n"
+    IDS_NO_ENTRIES "Es sind keine Einträge in der Liste.\n"
+
+    IDS_TODAY "Heute"
+    IDS_TOMORROW "Morgen"
+
+    IDS_YES "Ja"
+    IDS_NO "Nein"
+    IDS_ERROR "ERROR"
+    IDS_OK "OK"
+
+    IDS_TASKID      "Taskkennung:   %lu\n"
+    IDS_STATUS      "Status:        %s\n"
+    IDS_SCHEDULE    "Zeitplan:      %s\n"
+    IDS_TIME        "Zeit:          %s\n"
+    IDS_INTERACTIVE "Interaktiv:    %s\n"
+    IDS_COMMAND     "Befehl:        %s\n"
+END

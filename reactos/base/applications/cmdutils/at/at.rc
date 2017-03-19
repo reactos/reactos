@@ -1,0 +1,17 @@
+#include <windef.h>
+
+#include "resource.h"
+
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS AT Command"
+#define REACTOS_STR_INTERNAL_NAME     "at"
+#define REACTOS_STR_ORIGINAL_FILENAME "at.exe"
+#include <reactos/version.rc>
+
+/* UTF-8 */
+#pragma code_page(65001)
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
