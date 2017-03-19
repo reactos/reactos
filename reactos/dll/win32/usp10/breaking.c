@@ -371,7 +371,7 @@ void BREAK_line(const WCHAR *chars, int count, const SCRIPT_ANALYSIS *sa, SCRIPT
                     if (break_class[i+1] == b_IN || break_class[i+1] == b_PO)
                         else_break(&break_before[i+1],b_x);
             }
-            if (break_class[i] == b_PO)
+            if (break_class[i] == b_PR)
             {
                 switch (break_class[i+1])
                 {
@@ -401,7 +401,7 @@ void BREAK_line(const WCHAR *chars, int count, const SCRIPT_ANALYSIS *sa, SCRIPT
                  break_class[i+1] == b_OP)
                 else_break(&break_before[i+1],b_x);
             if (break_class[i] == b_CP &&
-                (break_class[i+1] == b_AL || break_class[i] == b_HL || break_class[i] == b_NU))
+                (break_class[i+1] == b_AL || break_class[i+1] == b_HL || break_class[i+1] == b_NU))
                 else_break(&break_before[i+1],b_x);
 
             /* LB30a */

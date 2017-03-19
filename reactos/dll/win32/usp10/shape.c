@@ -1060,6 +1060,8 @@ static void ContextualShape_Arabic(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *p
     INT *context_shape;
     INT dirR, dirL;
     int i;
+    int char_index;
+    int glyph_index;
 
     if (*pcGlyphs != cChars)
     {
@@ -1103,38 +1105,63 @@ static void ContextualShape_Arabic(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *p
     }
 
     /* Contextual Shaping */
-    i = 0;
-    while(i < *pcGlyphs)
+    if (dirL > 0)
+        char_index = glyph_index = 0;
+    else
+        char_index = glyph_index = cChars-1;
+
+    while(char_index < cChars && char_index >= 0)
     {
         BOOL shaped = FALSE;
 
         if (psc->GSUB_Table)
         {
-            INT nextIndex;
+            INT nextIndex, offset = 0;
             INT prevCount = *pcGlyphs;
-            nextIndex = apply_GSUB_feature_to_glyph(hdc, psa, psc, pwOutGlyphs, i, dirL, pcGlyphs, contextual_features[context_shape[i]]);
+
+            /* Apply CCMP first */
+            apply_GSUB_feature_to_glyph(hdc, psa, psc, pwOutGlyphs, glyph_index, dirL, pcGlyphs, "ccmp");
+
+            if (prevCount != *pcGlyphs)
+            {
+                offset = *pcGlyphs - prevCount;
+                if (dirL < 0)
+                    glyph_index -= offset * dirL;
+            }
+
+            /* Apply the contextual feature */
+            nextIndex = apply_GSUB_feature_to_glyph(hdc, psa, psc, pwOutGlyphs, glyph_index, dirL, pcGlyphs, contextual_features[context_shape[char_index]]);
+
             if (nextIndex > GSUB_E_NOGLYPH)
             {
-                i = nextIndex;
-                UpdateClusters(nextIndex, *pcGlyphs - prevCount, dirL, cChars, pwLogClust);
+                UpdateClusters(glyph_index, *pcGlyphs - prevCount, dirL, cChars, pwLogClust);
+                char_index += dirL;
+                if (!offset)
+                    glyph_index = nextIndex;
+                else
+                {
+                    offset = *pcGlyphs - prevCount;
+                    glyph_index += dirL * (offset + 1);
+                }
             }
             shaped = (nextIndex > GSUB_E_NOGLYPH);
         }
 
         if (!shaped)
         {
-            if (context_shape[i] == Xn)
+            if (context_shape[char_index] == Xn)
             {
-                WORD newGlyph = pwOutGlyphs[i];
-                if (pwcChars[i] >= FIRST_ARABIC_CHAR && pwcChars[i] <= LAST_ARABIC_CHAR)
+                WORD newGlyph = pwOutGlyphs[glyph_index];
+                if (pwcChars[char_index] >= FIRST_ARABIC_CHAR && pwcChars[char_index] <= LAST_ARABIC_CHAR)
                 {
                     /* fall back to presentation form B */
-                    WCHAR context_char = wine_shaping_forms[pwcChars[i] - FIRST_ARABIC_CHAR][context_shape[i]];
-                    if (context_char != pwcChars[i] && GetGlyphIndicesW(hdc, &context_char, 1, &newGlyph, 0) != GDI_ERROR && newGlyph != 0x0000)
-                        pwOutGlyphs[i] = newGlyph;
+                    WCHAR context_char = wine_shaping_forms[pwcChars[char_index] - FIRST_ARABIC_CHAR][context_shape[char_index]];
+                    if (context_char != pwcChars[char_index] && GetGlyphIndicesW(hdc, &context_char, 1, &newGlyph, 0) != GDI_ERROR && newGlyph != 0x0000)
+                        pwOutGlyphs[glyph_index] = newGlyph;
                 }
             }
-            i++;
+            char_index += dirL;
+            glyph_index += dirL;
         }
     }
 
@@ -1281,6 +1308,8 @@ static void ContextualShape_Syriac(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *p
     INT *context_shape;
     INT dirR, dirL;
     int i;
+    int char_index;
+    int glyph_index;
 
     if (*pcGlyphs != cChars)
     {
@@ -1343,19 +1372,45 @@ right_join_causing(neighbour_joining_type(i,dirR,context_type,cChars,psa)))
     }
 
     /* Contextual Shaping */
-    i = 0;
-    while(i < *pcGlyphs)
+    if (dirL > 0)
+        char_index = glyph_index = 0;
+    else
+        char_index = glyph_index = cChars-1;
+
+    while(char_index < cChars && char_index >= 0)
     {
-        INT nextIndex;
+        INT nextIndex, offset = 0;
         INT prevCount = *pcGlyphs;
-        nextIndex = apply_GSUB_feature_to_glyph(hdc, psa, psc, pwOutGlyphs, i, dirL, pcGlyphs, contextual_features[context_shape[i]]);
+
+        /* Apply CCMP first */
+        apply_GSUB_feature_to_glyph(hdc, psa, psc, pwOutGlyphs, glyph_index, dirL, pcGlyphs, "ccmp");
+
+        if (prevCount != *pcGlyphs)
+        {
+            offset = *pcGlyphs - prevCount;
+            if (dirL < 0)
+                glyph_index -= offset * dirL;
+        }
+
+        /* Apply the contextual feature */
+        nextIndex = apply_GSUB_feature_to_glyph(hdc, psa, psc, pwOutGlyphs, glyph_index, dirL, pcGlyphs, contextual_features[context_shape[char_index]]);
         if (nextIndex > GSUB_E_NOGLYPH)
         {
             UpdateClusters(nextIndex, *pcGlyphs - prevCount, dirL, cChars, pwLogClust);
-            i = nextIndex;
+            char_index += dirL;
+            if (!offset)
+                glyph_index = nextIndex;
+            else
+            {
+                offset = *pcGlyphs - prevCount;
+                glyph_index += dirL * (offset + 1);
+            }
         }
         else
-            i++;
+        {
+            char_index += dirL;
+            glyph_index += dirL;
+        }
     }
 
     HeapFree(GetProcessHeap(),0,context_shape);
@@ -1415,6 +1470,8 @@ static void ContextualShape_Phags_pa(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS 
     INT *context_shape;
     INT dirR, dirL;
     int i;
+    int char_index;
+    int glyph_index;
 
     if (*pcGlyphs != cChars)
     {
@@ -1463,24 +1520,36 @@ static void ContextualShape_Phags_pa(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS 
     }
 
     /* Contextual Shaping */
-    i = 0;
-    while(i < *pcGlyphs)
+    if (dirL > 0)
+        char_index = glyph_index = 0;
+    else
+        char_index = glyph_index = cChars-1;
+
+    while(char_index < cChars && char_index >= 0)
     {
-        if (context_shape[i] >= 0)
+        if (context_shape[char_index] >= 0)
         {
             INT nextIndex;
             INT prevCount = *pcGlyphs;
-            nextIndex = apply_GSUB_feature_to_glyph(hdc, psa, psc, pwOutGlyphs, i, dirL, pcGlyphs, contextual_features[context_shape[i]]);
+            nextIndex = apply_GSUB_feature_to_glyph(hdc, psa, psc, pwOutGlyphs, glyph_index, dirL, pcGlyphs, contextual_features[context_shape[char_index]]);
+
             if (nextIndex > GSUB_E_NOGLYPH)
             {
                 UpdateClusters(nextIndex, *pcGlyphs - prevCount, dirL, cChars, pwLogClust);
-                i = nextIndex;
+                glyph_index = nextIndex;
+                char_index += dirL;
             }
             else
-                i++;
+            {
+                char_index += dirL;
+                glyph_index += dirL;
+            }
         }
         else
-            i++;
+        {
+            char_index += dirL;
+            glyph_index += dirL;
+        }
     }
 
     HeapFree(GetProcessHeap(),0,context_shape);
@@ -2143,7 +2212,7 @@ static inline int unicode_lex(WCHAR c)
     switch( type )
     {
         case 0x0d07: /* Unknown */
-        case 0x0e07: /* Unknwon */
+        case 0x0e07: /* Unknown */
         default: return lex_Generic;
         case 0x0001:
         case 0x0002:
@@ -2757,6 +2826,8 @@ static void ContextualShape_Mongolian(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS
     INT *context_shape;
     INT dirL;
     int i;
+    int char_index;
+    int glyph_index;
 
     if (*pcGlyphs != cChars)
     {
@@ -2793,19 +2864,28 @@ static void ContextualShape_Mongolian(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS
     }
 
     /* Contextual Shaping */
-    i = 0;
-    while(i < *pcGlyphs)
+    if (dirL > 0)
+        char_index = glyph_index = 0;
+    else
+        char_index = glyph_index = cChars-1;
+
+    while(char_index < cChars && char_index >= 0)
     {
         INT nextIndex;
         INT prevCount = *pcGlyphs;
-        nextIndex = apply_GSUB_feature_to_glyph(hdc, psa, psc, pwOutGlyphs, i, dirL, pcGlyphs, contextual_features[context_shape[i]]);
+        nextIndex = apply_GSUB_feature_to_glyph(hdc, psa, psc, pwOutGlyphs, glyph_index, dirL, pcGlyphs, contextual_features[context_shape[char_index]]);
+
         if (nextIndex > GSUB_E_NOGLYPH)
         {
             UpdateClusters(nextIndex, *pcGlyphs - prevCount, dirL, cChars, pwLogClust);
-            i = nextIndex;
+            glyph_index = nextIndex;
+            char_index += dirL;
         }
         else
-            i++;
+        {
+            char_index += dirL;
+            glyph_index += dirL;
+        }
     }
 
     HeapFree(GetProcessHeap(),0,context_shape);

@@ -1352,7 +1352,7 @@ static HRESULT _ItemizeInternal(const WCHAR *pwcInChars, int cInChars,
     for (i = 0; i < cInChars; i++)
     {
         /* Joiners get merged preferencially right */
-        if (i > 0 && (pwcInChars[i] == ZWJ || pwcInChars[i] == ZWNJ))
+        if (i > 0 && (pwcInChars[i] == ZWJ || pwcInChars[i] == ZWNJ || pwcInChars[i] == ZWSP))
         {
             int j;
             if (i+1 == cInChars)
@@ -1361,7 +1361,8 @@ static HRESULT _ItemizeInternal(const WCHAR *pwcInChars, int cInChars,
             {
                 for (j = i+1; j < cInChars; j++)
                 {
-                    if (pwcInChars[j] != ZWJ && pwcInChars[j] != ZWNJ && pwcInChars[j] != Numeric_space)
+                    if (pwcInChars[j] != ZWJ && pwcInChars[j] != ZWNJ
+                            && pwcInChars[j] != ZWSP && pwcInChars[j] != Numeric_space)
                     {
                         scripts[i] = scripts[j];
                         break;
@@ -1486,14 +1487,15 @@ static HRESULT _ItemizeInternal(const WCHAR *pwcInChars, int cInChars,
                 }
 
                 /* Joiners get merged preferencially right */
-                if (i > 0 && (pwcInChars[i] == ZWJ || pwcInChars[i] == ZWNJ))
+                if (i > 0 && (pwcInChars[i] == ZWJ || pwcInChars[i] == ZWNJ || pwcInChars[i] == ZWSP))
                 {
                     int j;
                     if (i+1 == cInChars && levels[i-1] == levels[i])
                         strength[i] = strength[i-1];
                     else
                         for (j = i+1; j < cInChars && levels[i] == levels[j]; j++)
-                            if (pwcInChars[j] != ZWJ && pwcInChars[j] != ZWNJ && pwcInChars[j] != Numeric_space)
+                            if (pwcInChars[j] != ZWJ && pwcInChars[j] != ZWNJ
+                                    && pwcInChars[j] != ZWSP && pwcInChars[j] != Numeric_space)
                             {
                                 strength[i] = strength[j];
                                 break;
@@ -3112,9 +3114,6 @@ HRESULT WINAPI ScriptShapeOpenType( HDC hdc, SCRIPT_CACHE *psc,
                         chInput = mirror_char(pwcChars[idx]);
                     else
                         chInput = pwcChars[idx];
-                    /* special case for tabs */
-                    if (chInput == 0x0009)
-                        chInput = 0x0020;
                     rChars[i] = chInput;
                 }
                 else
@@ -3154,6 +3153,20 @@ HRESULT WINAPI ScriptShapeOpenType( HDC hdc, SCRIPT_CACHE *psc,
         SHAPE_ContextualShaping(hdc, (ScriptCache *)*psc, psa, rChars, cChars, pwOutGlyphs, pcGlyphs, cMaxGlyphs, pwLogClust);
         SHAPE_ApplyDefaultOpentypeFeatures(hdc, (ScriptCache *)*psc, psa, pwOutGlyphs, pcGlyphs, cMaxGlyphs, cChars, pwLogClust);
         SHAPE_CharGlyphProp(hdc, (ScriptCache *)*psc, psa, pwcChars, cChars, pwOutGlyphs, *pcGlyphs, pwLogClust, pCharProps, pOutGlyphProps);
+
+        for (i = 0; i < cChars; ++i)
+        {
+            /* Special case for tabs and joiners. As control characters, ZWNJ
+             * and ZWJ would in principle get handled by the corresponding
+             * shaping functions. However, since ZWNJ and ZWJ can get merged
+             * into adjoining runs during itemisation, these don't generally
+             * get classified as Script_Control. */
+            if (pwcChars[i] == 0x0009 || pwcChars[i] == ZWSP || pwcChars[i] == ZWNJ || pwcChars[i] == ZWJ)
+            {
+                pwOutGlyphs[pwLogClust[i]] = ((ScriptCache *)*psc)->sfp.wgBlank;
+                pOutGlyphProps[pwLogClust[i]].sva.fZeroWidth = 1;
+            }
+        }
         heap_free(rChars);
     }
     else
@@ -3178,7 +3191,8 @@ HRESULT WINAPI ScriptShapeOpenType( HDC hdc, SCRIPT_CACHE *psc,
                     pOutGlyphProps[i].sva.fZeroWidth = 1;
                 }
             }
-            else if (psa->eScript == Script_Control)
+            else if (psa->eScript == Script_Control || pwcChars[idx] == ZWSP
+                    || pwcChars[idx] == ZWNJ || pwcChars[idx] == ZWJ)
             {
                 if (pwcChars[idx] == 0x0009 || pwcChars[idx] == 0x000A ||
                     pwcChars[idx] == 0x000D || pwcChars[idx] >= 0x001C)

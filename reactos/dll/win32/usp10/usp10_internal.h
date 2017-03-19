@@ -147,8 +147,8 @@
 
 #define NUM_PAGES         17
 
-#define GSUB_E_NOFEATURE -2
-#define GSUB_E_NOGLYPH -1
+#define GSUB_E_NOFEATURE -20
+#define GSUB_E_NOGLYPH -10
 
 #define FEATURE_ALL_TABLES 0
 #define FEATURE_GSUB_TABLE 1
