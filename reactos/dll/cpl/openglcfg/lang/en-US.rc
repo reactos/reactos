@@ -9,11 +9,11 @@ BEGIN
     GROUPBOX "Renderer settings", -1, 5, 25, 230, 90
     LTEXT "&Renderer:", -1, 15, 42, 37, 10
     COMBOBOX IDC_RENDERER, 55, 40, 160, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "Choose a system wide renderer. This will override the default settings for your graphics driver! Choose ""Default"" if you want to go back to your original settings. Choose ""ReactOS Software Implementation"" if you want to use the built-in software renderer.", -1, 15, 60, 210, 40
+    LTEXT "This will override the default settings for your graphics driver! Choose ""Default"" to go back to the original settings.", -1, 15, 60, 210, 40
     GROUPBOX "Debugging", -1, 5, 125, 230, 90
     LTEXT "DEBUGCHANNEL:", -1, 15, 142, 65, 10
     COMBOBOX IDC_DEBUG_OUTPUT, 80, 140, 135, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
-    LTEXT "This will set the DEBUGCHANNEL environment variable to enable/disable debug output from opengl32.\n\nWARNING: Choosing ""Set"" or ""Clear"" will overwrite the content of the DEBUGCHANNEL environment variable!", -1, 15, 165, 210, 40
+    LTEXT "Enables/disables debug output from opengl32.\n\nWARNING: Choosing ""Set"" or ""Clear"" will overwrite the content of the DEBUGCHANNEL environment variable!", -1, 15, 165, 210, 40
 END
 
 STRINGTABLE
