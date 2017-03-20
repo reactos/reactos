@@ -4845,16 +4845,16 @@ GreExtTextOutW(
         IntLPtoDP(dc, (POINT *)lprc, 2);
     }
 
-    if(pdcattr->lTextAlign & TA_UPDATECP)
+    if (pdcattr->lTextAlign & TA_UPDATECP)
     {
         Start.x = pdcattr->ptlCurrent.x;
         Start.y = pdcattr->ptlCurrent.y;
     } else {
         Start.x = XStart;
         Start.y = YStart;
-        IntLPtoDP(dc, &Start, 1);
     }
 
+    IntLPtoDP(dc, &Start, 1);
     RealXStart = ((LONGLONG)Start.x + dc->ptlDCOrig.x) << 6;
     YStart = Start.y + dc->ptlDCOrig.y;
 
