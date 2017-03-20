@@ -2,13 +2,17 @@
 Name = Mesa3D Graphics Library
 Version = 17.0.0
 License = MIT
-Description = Build consits of mesa, gallium and llvmpipe. Provides a significant performance boost for systems with no OpenGL hardware acceleration.
+Description = This build of the Mesa3D Graphics Library consits of Mesa, Gallium and llvmpipe. It provides a significant performance boost for systems with no OpenGL hardware acceleration. It can replace the OGL driver on your system - this can be set during setup or via the OpenGL Configuration control panel applet.
 Size = 5.7 MiB
-Category = 5
+Category = 14
 URLSite = https://www.mesa3d.org
 URLDownload = http://svn.reactos.org/packages/mesa3d_setup.exe
 SHA1 = 4c0d42844ff3693612edfdac51799fd7c63dcafd
 CDPath = none
+
+[Section.0405]
+Description = Grafická knihovna obsahujicí moduly Mesa, Gallium a llvmpipe. Poskytuje vyšší výkon na systémech bez hardwarové OpenGL akcelerace. Tato knihovna může nahradit výchozí OGL ovladač na Vašem systému - nastavení lze provést během instalace, nebo pomocí ovládacího panelu Nastavení OpenGL.
+Size = 5,7 MiB
 
 [Section.0407]
 Description = Beinhaltet Mesa, Gallium und llvmpipe. Signifikanter Geschwindigkeitsschub für Systeme ohne OpenGL Hardwarebeschleunigung.

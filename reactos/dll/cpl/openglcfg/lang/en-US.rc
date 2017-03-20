@@ -22,7 +22,7 @@ BEGIN
     IDS_RENDERER_RSWR "ReactOS Software Implementation"
     IDS_CPLNAME "OpenGL configuration"
     IDS_CPLDESCRIPTION "Configures OpenGL renderer."
-    IDS_DEBUG_SET "set"
-    IDS_DEBUG_CLEAR "clear"
-    IDS_DEBUG_DNM "do not modify"
+    IDS_DEBUG_SET "Set"
+    IDS_DEBUG_CLEAR "Clear"
+    IDS_DEBUG_DNM "Do not modify"
 END
