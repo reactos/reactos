@@ -1200,7 +1200,7 @@ KdpWriteIoSpaceExtended(IN PDBGKD_MANIPULATE_STATE64 State,
     ASSERT(Data->Length == 0);
 
     /* Call the internal routine */
-    State->ReturnStatus = KdpSysReadIoSpace(WriteIoExtended->InterfaceType,
+    State->ReturnStatus = KdpSysWriteIoSpace(WriteIoExtended->InterfaceType,
                                             WriteIoExtended->BusNumber,
                                             WriteIoExtended->AddressSpace,
                                             WriteIoExtended->IoAddress,
