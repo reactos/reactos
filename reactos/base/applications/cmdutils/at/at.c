@@ -20,6 +20,7 @@
 
 #include "resource.h"
 
+PWSTR pszDaysOfWeekArray[] = {L"M", L"T", L"W", L"TH", L"F", L"S", L"SU", NULL};
 
 static
 BOOL
@@ -98,6 +99,8 @@ ParseDaysOfMonth(
     for (;;)
     {
         ulValue = wcstoul(startPtr, &endPtr, 10);
+        if (ulValue == 0)
+            return FALSE;
 
         if (ulValue > 0 && ulValue <= 31)
             *pulDaysOfMonth |= (1 << (ulValue - 1));
@@ -119,8 +122,8 @@ ParseDaysOfWeek(
     PWSTR pszBuffer,
     PUCHAR pucDaysOfWeek)
 {
-#if 0
     PWSTR startPtr, endPtr;
+    INT nLength, i;
 
     if (wcslen(pszBuffer) == 0)
         return FALSE;
@@ -130,8 +133,20 @@ ParseDaysOfWeek(
     for (;;)
     {
         endPtr = wcschr(startPtr, L',');
+        if (endPtr == NULL)
+            nLength = wcslen(startPtr);
+        else
+            nLength = (INT)((ULONG_PTR)endPtr - (ULONG_PTR)startPtr) / sizeof(WCHAR);
 
-
+        for (i = 0; i < 7; i++)
+        {
+            if (nLength == wcslen(pszDaysOfWeekArray[i]) &&
+                _wcsnicmp(startPtr, pszDaysOfWeekArray[i], nLength) == 0)
+            {
+                *pucDaysOfWeek |= (1 << i);
+                break;
+            }
+        }
 
         if (endPtr == NULL)
             return TRUE;
@@ -139,7 +154,6 @@ ParseDaysOfWeek(
         startPtr = endPtr + 1;
         endPtr = NULL;
     }
-#endif
 
     return FALSE;
 }
@@ -160,7 +174,7 @@ PrintErrorMessage(
                    0,
                    NULL);
 
-    ConPuts(StdErr, pszBuffer);
+    ConPrintf(StdErr, L"%s\n", pszBuffer);
     LocalFree(pszBuffer);
 }
 
@@ -169,14 +183,14 @@ static
 VOID
 PrintHorizontalLine(VOID)
 {
-     WCHAR szBuffer[80];
-     INT i;
+    WCHAR szBuffer[80];
+    INT i;
 
-     for (i = 0; i < 79; i++)
-         szBuffer[i] = L'-';
-     szBuffer[79] = UNICODE_NULL;
+    for (i = 0; i < 79; i++)
+        szBuffer[i] = L'-';
+    szBuffer[79] = UNICODE_NULL;
 
-    ConPuts(StdOut, szBuffer);
+    ConPrintf(StdOut, L"%s\n", szBuffer);
 }
 
 
@@ -292,7 +306,6 @@ PrintJobDetails(
     }
     else if (pBuffer->DaysOfWeek != 0)
     {
-#if 0
         if (pBuffer->Flags & JOB_RUN_PERIODICALLY)
             LoadStringW(hInstance, IDS_EVERY, szScheduleBuffer, _countof(szScheduleBuffer));
         else
@@ -303,12 +316,20 @@ PrintJobDetails(
         {
             if (pBuffer->DaysOfWeek & (1 << i))
             {
-
+                swprintf(szDateBuffer, L" %s", pszDaysOfWeekArray[i]);
+                nDateLength = wcslen(szDateBuffer);
+                if (nScheduleLength + nDateLength <= 55)
+                {
+                    wcscat(szScheduleBuffer, szDateBuffer);
+                    nScheduleLength += nDateLength;
+                }
+                else
+                {
+                    wcscat(szScheduleBuffer, L"...");
+                    break;
+                }
             }
         }
-#endif
-
-        wcscpy(szScheduleBuffer, L"TODO: DaysOfWeek!");
     }
     else
     {
@@ -413,7 +434,6 @@ PrintAllJobs(
         }
         else if (pBuffer[i].DaysOfWeek != 0)
         {
-#if 0
             if (pBuffer[i].Flags & JOB_RUN_PERIODICALLY)
                 LoadStringW(hInstance, IDS_EVERY, szScheduleBuffer, _countof(szScheduleBuffer));
             else
@@ -424,9 +444,9 @@ PrintAllJobs(
             {
                 if (pBuffer[i].DaysOfWeek & (1 << j))
                 {
-                    swprintf(szDateBuffer, L" %d", j + 1);
+                    swprintf(szDateBuffer, L" %s", pszDaysOfWeekArray[j]);
                     nDateLength = wcslen(szDateBuffer);
-                    if (nScheduleLength + nDateLength <= 19)
+                    if (nScheduleLength + nDateLength <= 55)
                     {
                         wcscat(szScheduleBuffer, szDateBuffer);
                         nScheduleLength += nDateLength;
@@ -438,9 +458,6 @@ PrintAllJobs(
                     }
                 }
             }
-#endif
-
-            wcscpy(szScheduleBuffer, L"TODO: DaysOfWeek");
         }
         else
         {
@@ -457,7 +474,7 @@ PrintAllJobs(
                             (WORD)((pBuffer[i].JobTime % 3600000) / 60000));
 
         ConPrintf(StdOut,
-                  L"   %7lu   %-22s   %-11s   %s\n",
+                  L"   %6lu   %-21s   %-11s   %s\n",
                   pBuffer[i].JobId,
                   szScheduleBuffer,
                   szTimeBuffer,
