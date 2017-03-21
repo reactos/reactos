@@ -20,7 +20,55 @@
 
 #include "resource.h"
 
-PWSTR pszDaysOfWeekArray[] = {L"M", L"T", L"W", L"TH", L"F", L"S", L"SU", NULL};
+
+PWSTR pszDaysOfWeekArray[7] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+
+
+static
+VOID
+FreeDaysOfWeekArray(VOID)
+{
+    INT i;
+
+    for (i = 0; i < 7; i++)
+    {
+        if (pszDaysOfWeekArray[i] != NULL)
+            HeapFree(GetProcessHeap(), 0, pszDaysOfWeekArray[i]);
+    }
+}
+
+
+static
+BOOL
+InitDaysOfWeekArray(VOID)
+{
+    INT i, nLength;
+
+    for (i = 0; i < 7; i++)
+    {
+        nLength = GetLocaleInfo(LOCALE_USER_DEFAULT,
+                                LOCALE_SABBREVDAYNAME1 + i,
+                                NULL,
+                                0);
+
+        pszDaysOfWeekArray[i] = HeapAlloc(GetProcessHeap(),
+                                          HEAP_ZERO_MEMORY,
+                                          nLength * sizeof(WCHAR));
+        if (pszDaysOfWeekArray[i] == NULL)
+        {
+            FreeDaysOfWeekArray();
+            return FALSE;
+        }
+
+        GetLocaleInfo(LOCALE_USER_DEFAULT,
+                      LOCALE_SABBREVDAYNAME1 + i,
+                      pszDaysOfWeekArray[i],
+                      nLength);
+    }
+
+    return TRUE;
+}
+
 
 static
 BOOL
@@ -572,6 +620,9 @@ int wmain(int argc, WCHAR **argv)
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
 
+    if (!InitDaysOfWeekArray())
+        return 1;
+
     /* Parse the computer name */
     i = 1;
     minIdx = 1;
@@ -726,6 +777,8 @@ int wmain(int argc, WCHAR **argv)
     }
 
 done:
+    FreeDaysOfWeekArray();
+
     if (bPrintUsage == TRUE)
         ConResPuts(StdOut, IDS_USAGE);
 

@@ -27,7 +27,7 @@ Zeit               Specifies the time when command is to run.\n\
                    current day of the month is assumed.\n\
 ""command""          Is the command or batch program to be run.\n"
 
-    IDS_CONFIRM_DELETE "This operation will delete all seduled jobs.\nDo you want to continue this operation? (Y/N) [N]: "
+    IDS_CONFIRM_DELETE "This operation will delete all seduled jobs.\nDo you want to continue this operation? (Y/N) [N] "
     IDS_NEW_JOB "Added a new job with job ID = %lu\n"
     IDS_JOBS_LIST "Status ID   Day                     Time          Command Line\n"
     IDS_NO_ENTRIES "There are no entries in the list.\n"
