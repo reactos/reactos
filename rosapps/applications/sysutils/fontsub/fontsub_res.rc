@@ -29,6 +29,9 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 3 BITMAP "down.bmp"
 4 BITMAP "nil.bmp"
 
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif

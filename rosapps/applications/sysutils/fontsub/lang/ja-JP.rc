@@ -74,7 +74,7 @@ BEGIN
     IDS_ABOUT,          "FontSub (Font Substitute Editor) Version 0.5\r\nby Katayama Hirofumi MZ and The ReactOS Team\r\n\r\nThis software was released under CC0 1.0 license."
 END
 
-IDD_ADD DIALOG 0, 0, 315, 65
+IDD_ADD DIALOGEX 0, 0, 315, 65
 STYLE DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
 CAPTION "代替項目を追加する"
 FONT 10, "MS UI Gothic"
@@ -89,7 +89,7 @@ BEGIN
     CONTROL "キャンセル", IDCANCEL, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 240, 45, 60, 14
 END
 
-IDD_EDIT DIALOG 0, 0, 315, 65
+IDD_EDIT DIALOGEX 0, 0, 315, 65
 STYLE DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
 CAPTION "代替項目を編集する"
 FONT 10, "MS UI Gothic"

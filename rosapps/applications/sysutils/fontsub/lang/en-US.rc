@@ -70,11 +70,11 @@ BEGIN
     IDS_ENTERNAME2,     "Enter the font name."
     IDS_QUERYDELETE,    "Do you really want to delete this item?"
     IDS_CANTOPENKEY,    "Could not open the registry key."
-    IDS_REBOOTNOW,      "Registry was updated. Reboot Windows now?"
+    IDS_REBOOTNOW,      "Registry was updated. Reboot system now?"
     IDS_ABOUT,          "FontSub (Font Substitute Editor) Version 0.5\r\nby Katayama Hirofumi MZ and The ReactOS Team\r\n\r\nThis software was released under CC0 1.0 license."
 END
 
-IDD_ADD DIALOG 0, 0, 315, 65
+IDD_ADD DIALOGEX 0, 0, 315, 65
 STYLE DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
 CAPTION "Add Substitute Item"
 FONT 10, "MS Shell Dlg"
@@ -89,7 +89,7 @@ BEGIN
     CONTROL "Cancel", IDCANCEL, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 240, 45, 60, 14
 END
 
-IDD_EDIT DIALOG 0, 0, 315, 65
+IDD_EDIT DIALOGEX 0, 0, 315, 65
 STYLE DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
 CAPTION "Edit Substitute Item"
 FONT 10, "MS Shell Dlg"
