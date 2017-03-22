@@ -243,6 +243,57 @@ PrintHorizontalLine(VOID)
 
 
 static
+BOOL
+Confirm(VOID)
+{
+    HINSTANCE hInstance;
+    WCHAR szYesBuffer[8];
+    WCHAR szNoBuffer[8];
+    WCHAR szInput[80];
+    DWORD dwOldMode;
+    DWORD dwRead = 0;
+    BOOL ret = FALSE;
+    HANDLE hFile;
+
+    hInstance = GetModuleHandleW(NULL);
+    LoadStringW(hInstance, IDS_CONFIRM_YES, szYesBuffer, _countof(szYesBuffer));
+    LoadStringW(hInstance, IDS_CONFIRM_NO, szNoBuffer, _countof(szNoBuffer));
+
+    ZeroMemory(szInput, sizeof(szInput));
+
+    hFile = GetStdHandle(STD_INPUT_HANDLE);
+    GetConsoleMode(hFile, &dwOldMode);
+
+    SetConsoleMode(hFile, ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
+
+    for (;;)
+    {
+        ConResPrintf(StdOut, IDS_CONFIRM_QUESTION);
+
+        ReadConsoleW(hFile, szInput, _countof(szInput), &dwRead, NULL);
+
+        szInput[0] = towupper(szInput[0]);
+        if (szInput[0] == szYesBuffer[0])
+        {
+            ret = TRUE;
+            break;
+        }
+        else if (szInput[0] == 13 || szInput[0] == szNoBuffer[0])
+        {
+            ret = FALSE;
+            break;
+        }
+
+        ConResPrintf(StdOut, IDS_CONFIRM_INVALID);
+    }
+
+    SetConsoleMode(hFile, dwOldMode);
+
+    return ret;
+}
+
+
+static
 DWORD_PTR
 GetTimeAsJobTime(VOID)
 {
@@ -585,8 +636,9 @@ DeleteJob(
 
     if (ulJobId == (ULONG)-1 && bForceDelete == FALSE)
     {
-        ConResPrintf(StdOut, IDS_CONFIRM_DELETE);
-        return 0;
+        ConResPrintf(StdOut, IDS_DELETE_ALL);
+        if (!Confirm())
+            return 0;
     }
 
     Status = NetScheduleJobDel(pszComputerName,

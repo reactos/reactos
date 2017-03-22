@@ -16,8 +16,8 @@ id                 Is an identification number assigned to a scheduled\n\
                    scheduled commands on the computer are canceled.\n\
 /YES               Used with cancel all jobs command when no further\n\
                    confirmation is desired.\n\
-Zeit               Specifies the time when command is to run.\n\
-/INTERACTIVE       Allows the ob to interact with the desktop of the user\n\
+time               Specifies the time when command is to run.\n\
+/INTERACTIVE       Allows the job to interact with the desktop of the user\n\
                    who is logged on at the time the job runs.\n\
 /EVERY:date[,...]  Runs the command on each specified day(s) of the week or\n\
                    month. If date is omitted, the current day of the month\n\
@@ -27,10 +27,15 @@ Zeit               Specifies the time when command is to run.\n\
                    current day of the month is assumed.\n\
 ""command""          Is the command or batch program to be run.\n"
 
-    IDS_CONFIRM_DELETE "This operation will delete all seduled jobs.\nDo you want to continue this operation? (Y/N) [N] "
+    IDS_DELETE_ALL "This operation will delete all scheduled jobs.\n"
     IDS_NEW_JOB "Added a new job with job ID = %lu\n"
     IDS_JOBS_LIST "Status ID   Day                     Time          Command Line\n"
     IDS_NO_ENTRIES "There are no entries in the list.\n"
+
+    IDS_CONFIRM_QUESTION "Do you want to continue this operation? (Y/N) [N]: "
+    IDS_CONFIRM_INVALID  "\nThis is an invalid response.\n"
+    IDS_CONFIRM_YES "Y"
+    IDS_CONFIRM_NO "N"
 
     IDS_TODAY "Today"
     IDS_TOMORROW "Tomorrow"

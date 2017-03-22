@@ -2,7 +2,7 @@
 
 #define IDS_USAGE          100
 
-#define IDS_CONFIRM_DELETE 105
+#define IDS_DELETE_ALL     105
 #define IDS_NEW_JOB        106
 #define IDS_JOBS_LIST      107
 #define IDS_NO_ENTRIES     108
@@ -24,3 +24,8 @@
 #define IDS_TIME        125
 #define IDS_INTERACTIVE 126
 #define IDS_COMMAND     127
+
+#define IDS_CONFIRM_QUESTION 130
+#define IDS_CONFIRM_INVALID  131
+#define IDS_CONFIRM_YES      132
+#define IDS_CONFIRM_NO       133
