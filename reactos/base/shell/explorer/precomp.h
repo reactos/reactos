@@ -135,7 +135,6 @@ DECLARE_INTERFACE_(ITrayWindow, IUnknown)
     STDMETHOD_(HWND, GetHWND) (THIS) PURE;
     STDMETHOD_(BOOL, IsSpecialHWND) (THIS_ HWND hWnd) PURE;
     STDMETHOD_(BOOL, IsHorizontal) (THIS) PURE;
-    STDMETHOD_(HFONT, GetCaptionFonts) (THIS_ HFONT *phBoldCaption) PURE;
     STDMETHOD_(HWND, DisplayProperties) (THIS) PURE;
     STDMETHOD_(BOOL, ExecContextMenuCmd) (THIS_ UINT uiCmd) PURE;
     STDMETHOD_(BOOL, Lock) (THIS_ BOOL bLock) PURE;
@@ -153,7 +152,6 @@ DECLARE_INTERFACE_(ITrayWindow, IUnknown)
 #define ITrayWindow_GetHWND(p)              (p)->lpVtbl->GetHWND(p)
 #define ITrayWindow_IsSpecialHWND(p,a)      (p)->lpVtbl->IsSpecialHWND(p,a)
 #define ITrayWindow_IsHorizontal(p)         (p)->lpVtbl->IsHorizontal(p)
-#define ITrayWindow_GetCaptionFonts(p,a)    (p)->lpVtbl->GetCaptionFonts(p,a)
 #define ITrayWindow_DisplayProperties(p)    (p)->lpVtbl->DisplayProperties(p)
 #define ITrayWindow_ExecContextMenuCmd(p,a) (p)->lpVtbl->ExecContextMenuCmd(p,a)
 #define ITrayWindow_Lock(p,a)               (p)->lpVtbl->Lock(p,a)

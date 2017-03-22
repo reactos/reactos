@@ -241,8 +241,6 @@ public:
     }
     virtual ~CTaskSwitchWnd() { }
 
-    VOID TaskSwitchWnd_UpdateButtonsSize(IN BOOL bRedrawDisabled);
-
     INT GetWndTextFromTaskItem(IN PTASK_ITEM TaskItem, LPWSTR szBuf, DWORD cchBuf)
     {
         /* Get the window text without sending a message so we don't hang if an
@@ -1147,6 +1145,10 @@ public:
         LONG NewBtnSize;
         BOOL Horizontal;
 
+        int cx = GetSystemMetrics(SM_CXMINIMIZED);
+        int cy = m_ButtonSize.cy = GetSystemMetrics(SM_CYSIZE) + (2 * GetSystemMetrics(SM_CYEDGE));
+        m_TaskBar.SetButtonSize(cx, cy);
+
         if (GetClientRect(&rcClient) && !IsRectEmpty(&rcClient))
         {
             if (m_ButtonCount > 0)
@@ -1313,12 +1315,6 @@ public:
 
         m_ImageList = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 0, 1000);
         m_TaskBar.SetImageList(m_ImageList);
-
-        /* Calculate the default button size. Don't save this in m_ButtonSize.cx so that
-        the actual button width gets updated correctly on the first recalculation */
-        int cx = GetSystemMetrics(SM_CXMINIMIZED);
-        int cy = m_ButtonSize.cy = GetSystemMetrics(SM_CYSIZE) + (2 * GetSystemMetrics(SM_CYEDGE));
-        m_TaskBar.SetButtonSize(cx, cy);
 
         /* Set proper spacing between buttons */
         m_TaskBar.UpdateTbButtonSpacing(m_Tray->IsHorizontal(), m_Theme != NULL);
@@ -1813,6 +1809,22 @@ public:
         return TRUE;
     }
 
+    LRESULT OnSetFont(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        return m_TaskBar.SendMessageW(uMsg, wParam, lParam);
+    }
+
+    LRESULT OnSettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        if (wParam == SPI_SETNONCLIENTMETRICS)
+        {
+            /*  Don't update the font, this will be done when we get a WM_SETFONT from our parent */
+            UpdateButtonsSize(FALSE);
+        }
+
+        return 0;
+    }
+
     DECLARE_WND_CLASS_EX(szTaskSwitchWndClass, CS_DBLCLKS, COLOR_3DFACE)
 
     BEGIN_MSG_MAP(CTaskSwitchWnd)
@@ -1828,6 +1840,8 @@ public:
         MESSAGE_HANDLER(TSWM_UPDATETASKBARPOS, OnUpdateTaskbarPos)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
+        MESSAGE_HANDLER(WM_SETFONT, OnSetFont)
+        MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChanged)
         MESSAGE_HANDLER(m_ShellHookMsg, HandleShellHookMsg)
     END_MSG_MAP()
 
