@@ -26,7 +26,8 @@ DWORD  g_muteControlID;
 
 UINT g_mmDeviceChange;
 
-BOOL g_IsMute = FALSE;
+static BOOL g_IsMute = FALSE;
+static BOOL g_IsRunning = FALSE;
 
 static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
 {
@@ -161,6 +162,8 @@ HRESULT STDMETHODCALLTYPE Volume_Init(_In_ CSysTray * pSysTray)
 
     Volume_IsMute();
 
+    g_IsRunning = TRUE;
+
     HICON icon;
     if (g_IsMute)
         icon = g_hIconMute;
@@ -184,11 +187,13 @@ HRESULT STDMETHODCALLTYPE Volume_Update(_In_ CSysTray * pSysTray)
     {
         WCHAR strTooltip[128];
         HICON icon;
-        if (g_IsMute) {
+        if (g_IsMute)
+        {
             icon = g_hIconMute;
             LoadStringW(g_hInstance, IDS_VOL_MUTED, strTooltip, _countof(strTooltip));
         }
-        else {
+        else
+        {
             icon = g_hIconVolume;
             LoadStringW(g_hInstance, IDS_VOL_VOLUME, strTooltip, _countof(strTooltip));
         }
@@ -204,6 +209,8 @@ HRESULT STDMETHODCALLTYPE Volume_Update(_In_ CSysTray * pSysTray)
 HRESULT STDMETHODCALLTYPE Volume_Shutdown(_In_ CSysTray * pSysTray)
 {
     TRACE("Volume_Shutdown\n");
+
+    g_IsRunning = FALSE;
 
     return pSysTray->NotifyIcon(NIM_DELETE, ID_ICON_VOLUME, NULL, NULL);
 }
@@ -256,40 +263,70 @@ static void _ShowContextMenu(CSysTray * pSysTray)
     }
 }
 
-HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam)
+HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult)
 {
     if (uMsg == g_mmDeviceChange)
         return Volume_OnDeviceChange(pSysTray, wParam, lParam);
 
-    if (uMsg != ID_ICON_VOLUME)
+    switch (uMsg)
     {
-        TRACE("Volume_Message received for unknown ID %d, ignoring.\n");
-        return S_FALSE;
+        case WM_USER + 220:
+            TRACE("Volume_Message: WM_USER+220\n");
+            if (wParam == 4)
+            {
+                if (lParam == FALSE)
+                    return Volume_Init(pSysTray);
+                else
+                    return Volume_Shutdown(pSysTray);
+            }
+            return S_FALSE;
+
+        case WM_USER + 221:
+            TRACE("Volume_Message: WM_USER+221\n");
+            if (wParam == 4)
+            {
+                lResult = (LRESULT)g_IsRunning;
+                return S_OK;
+            }
+            return S_FALSE;
+
+        case ID_ICON_VOLUME:
+            TRACE("Volume_Message uMsg=%d, w=%x, l=%x\n", uMsg, wParam, lParam);
+
+            Volume_Update(pSysTray);
+
+            switch (lParam)
+            {
+                case WM_LBUTTONDOWN:
+                    break;
+
+                case WM_LBUTTONUP:
+                    TRACE("TODO: display volume slider\n");
+                    break;
+
+                case WM_LBUTTONDBLCLK:
+                    _RunVolume();
+                    break;
+
+                case WM_RBUTTONDOWN:
+                    break;
+
+                case WM_RBUTTONUP:
+                    _ShowContextMenu(pSysTray);
+                    break;
+
+                case WM_RBUTTONDBLCLK:
+                    break;
+
+                case WM_MOUSEMOVE:
+                    break;
+            }
+            return S_OK;
+
+        default:
+            TRACE("Volume_Message received for unknown ID %d, ignoring.\n");
+            return S_FALSE;
     }
 
-    TRACE("Volume_Message uMsg=%d, w=%x, l=%x\n", uMsg, wParam, lParam);
-
-    Volume_Update(pSysTray);
-
-    switch (lParam)
-    {
-    case WM_LBUTTONDOWN:
-        break;
-    case WM_LBUTTONUP:
-        TRACE("TODO: display volume slider\n");
-        break;
-    case WM_LBUTTONDBLCLK:
-        _RunVolume();
-        break;
-    case WM_RBUTTONDOWN:
-        break;
-    case WM_RBUTTONUP:
-        _ShowContextMenu(pSysTray);
-    case WM_RBUTTONDBLCLK:
-        break;
-    case WM_MOUSEMOVE:
-        break;
-    }
-
-    return S_OK;
+    return S_FALSE;
 }

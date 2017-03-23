@@ -39,13 +39,14 @@
 extern HINSTANCE g_hInstance;
 
 #define ID_ICON_VOLUME (WM_APP + 0x4CB)
+#define ID_ICON_POWER  (WM_APP + 0x4CC)
 
 #include "csystray.h"
 
 typedef HRESULT(STDMETHODCALLTYPE * PFNSTINIT)     (_In_ CSysTray * pSysTray);
 typedef HRESULT(STDMETHODCALLTYPE * PFNSTSHUTDOWN) (_In_ CSysTray * pSysTray);
 typedef HRESULT(STDMETHODCALLTYPE * PFNSTUPDATE)   (_In_ CSysTray * pSysTray);
-typedef HRESULT(STDMETHODCALLTYPE * PFNSTMESSAGE)  (_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam);
+typedef HRESULT(STDMETHODCALLTYPE * PFNSTMESSAGE)  (_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult);
 
 struct SysTrayIconHandlers_t
 {
@@ -63,4 +64,9 @@ extern const int g_NumIcons;
 extern HRESULT STDMETHODCALLTYPE Volume_Init(_In_ CSysTray * pSysTray);
 extern HRESULT STDMETHODCALLTYPE Volume_Shutdown(_In_ CSysTray * pSysTray);
 extern HRESULT STDMETHODCALLTYPE Volume_Update(_In_ CSysTray * pSysTray);
-extern HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam);
+extern HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult);
+
+extern HRESULT STDMETHODCALLTYPE Power_Init(_In_ CSysTray * pSysTray);
+extern HRESULT STDMETHODCALLTYPE Power_Shutdown(_In_ CSysTray * pSysTray);
+extern HRESULT STDMETHODCALLTYPE Power_Update(_In_ CSysTray * pSysTray);
+extern HRESULT STDMETHODCALLTYPE Power_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult);
