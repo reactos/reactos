@@ -18,6 +18,32 @@ static POWER_ACTION g_PowerButton[5];
 static POWER_ACTION g_SleepButton[5];
 
 
+static
+VOID
+SetSystrayPowerIconState(BOOL bEnabled)
+{
+    HWND hwndTaskBar;
+
+    hwndTaskBar = FindWindowW(L"SystemTray_Main", NULL);
+    if (hwndTaskBar == NULL)
+        return;
+
+    SendMessageW(hwndTaskBar, WM_USER + 220, 1, bEnabled);
+}
+
+static
+BOOL
+GetSystrayPowerIconState(VOID)
+{
+    HWND hwndTaskBar;
+
+    hwndTaskBar = FindWindowW(L"SystemTray_Main", NULL);
+    if (hwndTaskBar == NULL)
+        return FALSE;
+
+    return (BOOL)SendMessageW(hwndTaskBar, WM_USER + 221, 1, 0);
+}
+
 static VOID
 AddItem(HWND hDlgCtrl, INT ResourceId, LPARAM lParam, POWER_ACTION * lpAction)
 {
@@ -278,6 +304,11 @@ Adv_InitDialog(VOID)
 
     SYSTEM_POWER_CAPABILITIES spc;
 
+    if (GetSystrayPowerIconState())
+        gGPP.user.GlobalFlags |= EnableSysTrayBatteryMeter;
+    else
+        gGPP.user.GlobalFlags &= ~EnableSysTrayBatteryMeter;
+
     CheckDlgButton(hAdv,
         IDC_SYSTRAYBATTERYMETER,
         gGPP.user.GlobalFlags & EnableSysTrayBatteryMeter ? BST_CHECKED : BST_UNCHECKED);
@@ -351,7 +382,7 @@ Adv_InitDialog(VOID)
         ShowWindow(hList2, FALSE);
     }
 
-    hList3=GetDlgItem(hAdv, IDC_SLEEPBUTTON);
+    hList3 = GetDlgItem(hAdv, IDC_SLEEPBUTTON);
     SendMessage(hList3, CB_RESETCONTENT, 0, 0);
     memset(g_SleepButton, 0x0, sizeof(g_SleepButton));
 
@@ -469,6 +500,8 @@ Adv_SaveData(HWND hwndDlg)
     {
         MessageBox(hwndDlg, L"WriteGlobalPwrPolicy failed", NULL, MB_OK);
     }
+
+    SetSystrayPowerIconState(!bSystrayBatteryMeter);
 
     Adv_InitDialog();
 }
