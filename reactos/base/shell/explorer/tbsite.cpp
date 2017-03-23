@@ -40,7 +40,7 @@ class CTrayBandSite :
 
     CComPtr<IUnknown> m_Inner;
     CComPtr<IBandSite> m_BandSite;
-    CComPtr<ITaskBand> m_TaskBand;
+    CComPtr<IDeskBand> m_TaskBand;
     CComPtr<IWinEventHandler> m_WindowEventHandler;
     CComPtr<IContextMenu> m_ContextMenu;
 
@@ -447,38 +447,28 @@ public:
 
     virtual BOOL HasTaskBand()
     {
-        ASSERT(m_TaskBand != NULL);
+        CComPtr<IPersist> pBand;
+        CLSID BandCLSID;
+        DWORD dwBandID;
+        UINT uBand = 0;
 
-        return SUCCEEDED(m_TaskBand->GetRebarBandID(NULL));
-    }
-
-    virtual HRESULT AddTaskBand()
-    {
-#if 0
-        /* FIXME: This is the code for the simple taskbar */
-        IObjectWithSite *pOws;
-        HRESULT hRet;
-
-        hRet = TaskBand->QueryInterface(
-            &IID_IObjectWithSite,
-            (PVOID*) &pOws);
-        if (SUCCEEDED(hRet))
+        /* Enumerate all bands */
+        while (SUCCEEDED(m_BandSite->EnumBands(uBand, &dwBandID)))
         {
-            hRet = pOws->SetSite(
-                (IUnknown *)TaskBand);
-
-            pOws->Release();
+            if (SUCCEEDED(m_BandSite->GetBandObject(dwBandID, IID_PPV_ARG(IPersist, &pBand))))
+            {
+                if (SUCCEEDED(pBand->GetClassID(&BandCLSID)))
+                {
+                    if (IsEqualGUID(BandCLSID, CLSID_ITaskBand))
+                    {
+                        return TRUE;
+                    }
+                }
+            }
+            uBand++;
         }
 
-        return hRet;
-#else
-        if (!HasTaskBand())
-        {
-            return m_BandSite->AddBand(m_TaskBand);
-        }
-
-        return S_OK;
-#endif
+        return FALSE;
     }
 
     virtual HRESULT Update()
@@ -642,139 +632,103 @@ public:
         return hRet;
     }
 
-    HRESULT _Init(IN OUT ITrayWindow *tray, OUT HWND *phWndRebar, OUT HWND *phwndTaskSwitch)
+    HRESULT _Init(IN ITrayWindow *tray, IN IDeskBand* pTaskBand)
     {
         CComPtr<IDeskBarClient> pDbc;
         CComPtr<IDeskBand> pDb;
         CComPtr<IOleWindow> pOw;
         HRESULT hRet;
 
-        *phWndRebar = NULL;
-        *phwndTaskSwitch = NULL;
-
         m_Tray = tray;
+        m_TaskBand = pTaskBand;
 
-        /* Create a RebarBandSite provided by the shell */
+        /* Create the RebarBandSite */
         hRet = CoCreateInstance(CLSID_RebarBandSite,
-            static_cast<IBandSite*>(this),
-            CLSCTX_INPROC_SERVER,
-            IID_PPV_ARG(IUnknown, &m_Inner));
-        if (!SUCCEEDED(hRet))
-        {
+                                static_cast<IBandSite*>(this),
+                                CLSCTX_INPROC_SERVER,
+                                IID_PPV_ARG(IUnknown, &m_Inner));
+        if (FAILED_UNEXPECTEDLY(hRet))
             return hRet;
-        }
 
         hRet = m_Inner->QueryInterface(IID_PPV_ARG(IBandSite, &m_BandSite));
-        if (!SUCCEEDED(hRet))
-        {
+        if (FAILED_UNEXPECTEDLY(hRet))
             return hRet;
-        }
 
         hRet = m_Inner->QueryInterface(IID_PPV_ARG(IWinEventHandler, &m_WindowEventHandler));
-        if (!SUCCEEDED(hRet))
-        {
+        if (FAILED_UNEXPECTEDLY(hRet))
             return hRet;
-        }
 
-        m_TaskBand = CreateTaskBand(m_Tray);
-        if (m_TaskBand != NULL)
+        hRet = m_Inner->QueryInterface(IID_PPV_ARG(IDeskBarClient, &pDbc));
+        if (FAILED_UNEXPECTEDLY(hRet))
+            return hRet;
+
+
+
+
+        /* Crete the rebar in the tray */
+        hRet = pDbc->SetDeskBarSite(tray);
+        if (FAILED_UNEXPECTEDLY(hRet))
+            return hRet;
+
+        hRet = pDbc->GetWindow(&m_Rebar);
+        if (FAILED_UNEXPECTEDLY(hRet))
+            return hRet;
+
+        SetWindowStyle(m_Rebar, RBS_BANDBORDERS, 0);
+
+        /* Set the Desk Bar mode to the current one */
+        DWORD dwMode = 0;
+        /* FIXME: We need to set the mode (and update) whenever the user docks
+                  the tray window to another monitor edge! */
+        if (!m_Tray->IsHorizontal())
+            dwMode = DBIF_VIEWMODE_VERTICAL;
+
+        hRet = pDbc->SetModeDBC(dwMode);
+
+        /* Load the saved state of the task band site */
+        /* FIXME: We should delay loading shell extensions, also see DBID_DELAYINIT */
+        Load();
+
+        /* Add the task bar band if it hasn't been added while loading */
+        if (!HasTaskBand())
         {
-            /* Add the task band to the site */
-            hRet = m_BandSite->QueryInterface(IID_PPV_ARG(IDeskBarClient, &pDbc));
-            if (SUCCEEDED(hRet))
-            {
-                hRet = m_TaskBand->QueryInterface(IID_PPV_ARG(IOleWindow, &pOw));
-                if (SUCCEEDED(hRet))
-                {
-                    /* We cause IDeskBarClient to create the rebar control by passing the new
-                       task band to it. The band reports the tray window handle as window handle
-                       so that IDeskBarClient knows the parent window of the Rebar control that
-                       it wants to create. */
-                    hRet = pDbc->SetDeskBarSite(pOw);
-
-                    if (SUCCEEDED(hRet))
-                    {
-                        /* The Rebar control is now created, we can query the window handle */
-                        hRet = pDbc->GetWindow(&m_Rebar);
-
-                        if (SUCCEEDED(hRet))
-                        {
-                            /* We need to manually remove the RBS_BANDBORDERS style! */
-                            SetWindowStyle(m_Rebar, RBS_BANDBORDERS, 0);
-                        }
-                    }
-                }
-
-                if (SUCCEEDED(hRet))
-                {
-                    DWORD dwMode = 0;
-
-                    /* Set the Desk Bar mode to the current one */
-
-                    /* FIXME: We need to set the mode (and update) whenever the user docks
-                              the tray window to another monitor edge! */
-
-                    if (!m_Tray->IsHorizontal())
-                        dwMode = DBIF_VIEWMODE_VERTICAL;
-
-                    hRet = pDbc->SetModeDBC(dwMode);
-                }
-
-                pDbc->Release();
-            }
-
-            /* Load the saved state of the task band site */
-            /* FIXME: We should delay loading shell extensions, also see DBID_DELAYINIT */
-            Load();
-
-            /* Add the task bar band if it hasn't been added already */
-            hRet = AddTaskBand();
-            if (SUCCEEDED(hRet))
-            {
-                hRet = m_TaskBand->QueryInterface(IID_PPV_ARG(IDeskBand, &pDb));
-                if (SUCCEEDED(hRet))
-                {
-                    hRet = pDb->GetWindow(phwndTaskSwitch);
-                    if (!SUCCEEDED(hRet))
-                        *phwndTaskSwitch = NULL;
-                }
-            }
-
-            /* Should we send this after showing it? */
-            Update();
-
-            /* FIXME: When should we send this? Does anyone care anyway? */
-            FinishInit();
-
-            /* Activate the band site */
-            Show(
-                TRUE);
+            hRet = m_BandSite->AddBand(m_TaskBand);
+            if (FAILED_UNEXPECTEDLY(hRet))
+                return hRet;
         }
 
-        *phWndRebar = m_Rebar;
+        /* Should we send this after showing it? */
+        Update();
+
+        /* FIXME: When should we send this? Does anyone care anyway? */
+        FinishInit();
+
+        /* Activate the band site */
+        Show(TRUE);
 
         return S_OK;
     }
 };
 /*******************************************************************/
 
-ITrayBandSite*
-CreateTrayBandSite(IN OUT ITrayWindow *Tray,
-                   OUT HWND *phWndRebar,
-                   OUT HWND *phWndTaskSwitch)
+HRESULT CTrayBandSite_CreateInstance(IN ITrayWindow *tray, IN IDeskBand* pTaskBand, OUT ITrayBandSite** pBandSite)
 {
     HRESULT hr;
 
     CTrayBandSite * tb = new CTrayBandSite();
-
     if (!tb)
-        return NULL;
+        return E_FAIL;
 
     tb->AddRef();
 
-    hr = tb->_Init(Tray, phWndRebar, phWndTaskSwitch);
+    hr = tb->_Init(tray, pTaskBand);
     if (FAILED_UNEXPECTEDLY(hr))
+    {
         tb->Release();
+        return hr;
+    }
 
-    return tb;
+    *pBandSite = tb;
+
+    return S_OK;
 }

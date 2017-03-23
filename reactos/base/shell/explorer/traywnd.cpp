@@ -177,13 +177,15 @@ class CTrayWindow :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public CWindowImpl < CTrayWindow, CWindow, CControlWinTraits >,
     public ITrayWindow,
-    public IShellDesktopTray
+    public IShellDesktopTray,
+    public IOleWindow
 {
     CStartButton m_StartButton;
 
     CComPtr<IMenuBand>  m_StartMenuBand;
     CComPtr<IMenuPopup> m_StartMenuPopup;
 
+    CComPtr<IDeskBand> m_TaskBand;
     HTHEME m_Theme;
 
     HFONT m_Font;
@@ -2079,6 +2081,8 @@ ChangePos:
 
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
+        HRESULT hRet;
+
         ((ITrayWindow*)this)->AddRef();
 
         SetWindowTheme(m_hWnd, L"TaskBar", NULL);
@@ -2093,8 +2097,26 @@ ChangePos:
         HBITMAP hbmBanner = LoadBitmapW(hExplorerInstance, MAKEINTRESOURCEW(IDB_STARTMENU));
         m_StartMenuPopup = CreateStartMenu(this, &m_StartMenuBand, hbmBanner, 0);
 
-        /* Create the tray band site and its rebar */
-        m_TrayBandSite = CreateTrayBandSite(this, &m_Rebar, &m_TaskSwitch);
+        /* Create the task band */
+        hRet = CTaskBand_CreateInstance(this, IID_PPV_ARG(IDeskBand, &m_TaskBand));
+        if (FAILED_UNEXPECTEDLY(hRet))
+            return FALSE;
+
+        /* Create the rebar band site. This actually creates the rebar and the tasks toolbar. */
+        hRet = CTrayBandSite_CreateInstance(this, m_TaskBand, &m_TrayBandSite);
+        if (FAILED_UNEXPECTEDLY(hRet))
+            return FALSE;
+
+        /* Get the hwnd of the rebar */
+        hRet = IUnknown_GetWindow(m_TrayBandSite, &m_Rebar);
+        if (FAILED_UNEXPECTEDLY(hRet))
+            return FALSE;
+
+        /* Get the hwnd of the tasks toolbar */
+        hRet = IUnknown_GetWindow(m_TaskBand, &m_TaskSwitch);
+        if (FAILED_UNEXPECTEDLY(hRet))
+            return FALSE;
+
         SetWindowTheme(m_Rebar, L"TaskBar", NULL);
 
         /* Create the tray notification window */
@@ -2890,6 +2912,19 @@ HandleTrayContextMenu:
         return S_OK;
     }
 
+    HRESULT WINAPI GetWindow(HWND* phwnd)
+    {
+        if (!phwnd)
+            return E_INVALIDARG;
+        *phwnd = m_hWnd;
+        return S_OK;
+    }
+
+    HRESULT WINAPI ContextSensitiveHelp(BOOL fEnterMode)
+    {
+        return E_NOTIMPL;
+    }
+
     void _Init()
     {
         m_Position = (DWORD) -1;
@@ -2901,6 +2936,7 @@ HandleTrayContextMenu:
     BEGIN_COM_MAP(CTrayWindow)
         /*COM_INTERFACE_ENTRY_IID(IID_ITrayWindow, ITrayWindow)*/
         COM_INTERFACE_ENTRY_IID(IID_IShellDesktopTray, IShellDesktopTray)
+        COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
     END_COM_MAP()
 };
 

@@ -232,32 +232,8 @@ ShowCustomizeNotifyIcons(HINSTANCE, HWND);
  * taskband.cpp
  */
 
-/* Internal Task Band CLSID */
-extern const GUID CLSID_ITaskBand;
-
-#define INTERFACE ITaskBand
-DECLARE_INTERFACE_(ITaskBand, IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT, QueryInterface) (THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG, AddRef) (THIS) PURE;
-    STDMETHOD_(ULONG, Release) (THIS) PURE;
-    /*** ITaskBand methods ***/
-    STDMETHOD_(HRESULT, GetRebarBandID)(THIS_ DWORD *pdwBandID) PURE;
-};
-#undef INTERFACE
-
-#if defined(COBJMACROS)
-/*** IUnknown methods ***/
-#define ITaskBand_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
-#define ITaskBand_AddRef(p)             (p)->lpVtbl->AddRef(p)
-#define ITaskBand_Release(p)            (p)->lpVtbl->Release(p)
-/*** ITaskBand methods ***/
-#define ITaskBand_GetRebarBandID(p,a)   (p)->lpVtbl->GetRebarBandID(p,a)
-#endif
-
-ITaskBand *
-CreateTaskBand(IN OUT ITrayWindow *Tray);
+extern const GUID CLSID_ITaskBand;  /* Internal Task Band CLSID */
+HRESULT CTaskBand_CreateInstance(IN ITrayWindow *Tray,  REFIID riid, void **ppv);
 
 /*
  * tbsite.cpp
@@ -296,10 +272,7 @@ DECLARE_INTERFACE_(ITrayBandSite, IUnknown)
 #define ITrayBandSite_Lock(p,a)                         (p)->lpVtbl->Lock(p,a)
 #endif
 
-ITrayBandSite *
-CreateTrayBandSite(IN OUT ITrayWindow *Tray,
-OUT HWND *phWndRebar,
-OUT HWND *phWndTaskSwitch);
+HRESULT CTrayBandSite_CreateInstance(IN ITrayWindow *tray, IN IDeskBand* pTaskBand, OUT ITrayBandSite** pBandSite);
 
 /*
  * startmnu.cpp
