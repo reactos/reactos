@@ -8,7 +8,7 @@ FONT 8, "Ms Shell Dlg"
 BEGIN
     CONTROL "Energiestand", 1001, "Button", BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 9, 20, 234, 189
     CONTROL "Symbol in der &Taskleiste anzeigen", 1002, "Button", BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 6, 6, 123, 10
-    CONTROL "&Details für jede Batterie anzeigen", 1002, "Button", BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 129, 6, 123, 10
+    CONTROL "&Details für jede Batterie anzeigen", 1003, "Button", BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 129, 6, 123, 10
     CONTROL "", 1000, "Static", SS_LEFT | WS_CHILD | WS_GROUP, 11, 29, 229, 178
 END
 
