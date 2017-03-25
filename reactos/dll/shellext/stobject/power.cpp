@@ -8,6 +8,7 @@
  */
 
 #include "precomp.h"
+#include "powrprof.h"
 
 #include <mmsystem.h>
 #include <mmddk.h>
@@ -16,6 +17,13 @@
 #define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 
 WINE_DEFAULT_DEBUG_CHANNEL(stobject);
+
+typedef struct _PWRSCHEMECONTEXT
+{
+    HMENU hPopup;
+    UINT uiFirst;
+    UINT uiLast;
+} PWRSCHEMECONTEXT, *PPWRSCHEMECONTEXT;
 
 //static HICON g_hIconBattery = NULL;
 static HICON g_hIconAC = NULL;
@@ -120,6 +128,68 @@ static void _ShowContextMenu(CSysTray * pSysTray)
     }
 }
 
+static
+BOOLEAN
+CALLBACK
+PowerSchemesEnumProc(
+    UINT uiIndex,
+    DWORD dwName,
+    LPWSTR sName,
+    DWORD dwDesc,
+    LPWSTR sDesc,
+    PPOWER_POLICY pp,
+    LPARAM lParam)
+{
+    PPWRSCHEMECONTEXT PowerSchemeContext = (PPWRSCHEMECONTEXT)lParam;
+
+    if (AppendMenuW(PowerSchemeContext->hPopup, MF_STRING, uiIndex + 1, sName))
+    {
+        if (PowerSchemeContext->uiFirst == 0)
+            PowerSchemeContext->uiFirst = uiIndex + 1;
+
+        PowerSchemeContext->uiLast = uiIndex + 1;
+    }
+
+    return TRUE;
+}
+
+static
+VOID
+ShowPowerSchemesPopupMenu(
+    CSysTray *pSysTray)
+{
+    PWRSCHEMECONTEXT PowerSchemeContext = {NULL, 0, 0};
+    UINT uiActiveScheme;
+    DWORD id, msgPos;
+
+    PowerSchemeContext.hPopup = CreatePopupMenu();
+    EnumPwrSchemes(PowerSchemesEnumProc, (LPARAM)&PowerSchemeContext);
+
+    if (GetActivePwrScheme(&uiActiveScheme))
+    {
+        CheckMenuRadioItem(PowerSchemeContext.hPopup,
+                           PowerSchemeContext.uiFirst,
+                           PowerSchemeContext.uiLast,
+                           uiActiveScheme + 1,
+                           MF_BYCOMMAND);
+    }
+
+    msgPos = GetMessagePos();
+
+    SetForegroundWindow(pSysTray->GetHWnd());
+    id = TrackPopupMenuEx(PowerSchemeContext.hPopup,
+                          TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTALIGN | TPM_BOTTOMALIGN,
+                          GET_X_LPARAM(msgPos),
+                          GET_Y_LPARAM(msgPos),
+                          pSysTray->GetHWnd(),
+                          NULL);
+
+    DestroyMenu(PowerSchemeContext.hPopup);
+
+    if (id != 0)
+        SetActivePwrScheme(id - 1, NULL, NULL);
+}
+
 HRESULT STDMETHODCALLTYPE Power_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT &lResult)
 {
     TRACE("Power_Message uMsg=%d, wParam=%x, lParam=%x\n", uMsg, wParam, lParam);
@@ -155,7 +225,7 @@ HRESULT STDMETHODCALLTYPE Power_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPA
                     break;
 
                 case WM_LBUTTONUP:
-                    TRACE("TODO: display power options!\n");
+                    ShowPowerSchemesPopupMenu(pSysTray);
                     break;
 
                 case WM_LBUTTONDBLCLK:
@@ -167,6 +237,7 @@ HRESULT STDMETHODCALLTYPE Power_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPA
 
                 case WM_RBUTTONUP:
                     _ShowContextMenu(pSysTray);
+                    break;
 
                 case WM_RBUTTONDBLCLK:
                     break;

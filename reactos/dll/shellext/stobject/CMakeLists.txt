@@ -33,6 +33,7 @@ add_importlibs(stobject
     winmm
     ole32
     oleaut32
+    powrprof
     shlwapi
     shell32
     comctl32
