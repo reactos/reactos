@@ -40,6 +40,7 @@ class CTaskBand :
     CComPtr<IUnknown> m_Site;
 
     HWND m_hWnd;
+    HWND m_hWndStartButton;
     DWORD m_BandID;
 
 public:
@@ -124,7 +125,10 @@ public:
             }
             else
             {
-                pdbi->ptMinSize.y = GetSystemMetrics(SM_CYSIZE) + (2 * GetSystemMetrics(SM_CYEDGE)); /* FIXME: Query */
+                /* When the band is horizontal its minimum height is the height of the start button */
+                RECT rcButton;
+                GetWindowRect(m_hWndStartButton, &rcButton);
+                pdbi->ptMinSize.y = rcButton.bottom - rcButton.top;
                 pdbi->ptIntegral.y = pdbi->ptMinSize.y + (3 * GetSystemMetrics(SM_CYEDGE) / 2); /* FIXME: Query metrics */
                 /* We're not going to allow task bands where not even the minimum button size fits into the band */
                 pdbi->ptMinSize.x = pdbi->ptIntegral.y;
@@ -327,10 +331,11 @@ public:
 
     /*****************************************************************************/
 
-    HRESULT STDMETHODCALLTYPE Initialize(IN OUT ITrayWindow *tray)
+    HRESULT STDMETHODCALLTYPE Initialize(IN OUT ITrayWindow *tray, HWND hWndStartButton)
     {
         m_Tray = tray;
         m_BandID = (DWORD) -1;
+        m_hWndStartButton = hWndStartButton;
         return S_OK;
     }
 
@@ -348,7 +353,7 @@ public:
     END_COM_MAP()
 };
 
-HRESULT CTaskBand_CreateInstance(IN ITrayWindow *Tray,  REFIID riid, void **ppv)
+HRESULT CTaskBand_CreateInstance(IN ITrayWindow *Tray, HWND hWndStartButton, REFIID riid, void **ppv)
 {
-    return ShellObjectCreatorInit<CTaskBand>(Tray, riid, ppv);
+    return ShellObjectCreatorInit<CTaskBand>(Tray, hWndStartButton, riid, ppv);
 }

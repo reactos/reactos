@@ -101,10 +101,7 @@ public:
             Size.cx = 2 * GetSystemMetrics(SM_CXEDGE) + GetSystemMetrics(SM_CYCAPTION) * 3;
         }
 
-        if (GetWindowTheme(m_hWnd))
-            Size.cy = max(Size.cy, GetSystemMetrics(SM_CYCAPTION));
-        else
-            Size.cy = max(Size.cy, GetSystemMetrics(SM_CYSIZE) + (2 * GetSystemMetrics(SM_CYEDGE)));
+        Size.cy = max(Size.cy, GetSystemMetrics(SM_CYCAPTION));
 
         /* Save the size of the start button */
         m_Size = Size;
@@ -732,6 +729,10 @@ public:
 
     void UpdateFonts()
     {
+        /* There is nothing to do if themes are not enabled */
+        if (m_Theme)
+            return;
+
         m_StartButton.UpdateFont();
 
         NONCLIENTMETRICS ncm = {sizeof(ncm)};
@@ -902,7 +903,7 @@ GetPrimaryRect:
 
         *pRect = *pScreen;
 
-        if(!IsThemeActive())
+        if(!m_Theme)
         {
             /* Move the border outside of the screen */
             InflateRect(pRect,
@@ -1407,7 +1408,7 @@ ChangePos:
                entire window size, not just the client size. However, we
                use a thinner border than a standard thick border, so that
                the start button and bands are not stuck to the screen border. */
-            if(!IsThemeActive())
+            if(!m_Theme)
             {
                 sr.Size.cx = StartBtnSize.cx + (2 * (EdgeSize.cx + DlgFrameSize.cx));
                 sr.Size.cy = StartBtnSize.cy + (2 * (EdgeSize.cy + DlgFrameSize.cy));
@@ -1445,7 +1446,7 @@ ChangePos:
            loaded from the registry are at least. The windows explorer behaves
            the same way, it allows the user to save a zero width vertical tray
            window, but not a zero height horizontal tray window. */
-        if(!IsThemeActive())
+        if(!m_Theme)
         {
             WndSize.cx = 2 * (EdgeSize.cx + DlgFrameSize.cx);
             WndSize.cy = StartBtnSize.cy + (2 * (EdgeSize.cy + DlgFrameSize.cy));
@@ -1970,7 +1971,7 @@ ChangePos:
             dwExStyle |= WS_EX_TOPMOST;
 
         DWORD dwStyle = WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
-        if(!IsThemeActive())
+        if(!m_Theme)
         {
             dwStyle |= WS_THICKFRAME | WS_BORDER;
         }
@@ -2098,7 +2099,7 @@ ChangePos:
         m_StartMenuPopup = CreateStartMenu(this, &m_StartMenuBand, hbmBanner, 0);
 
         /* Create the task band */
-        hRet = CTaskBand_CreateInstance(this, IID_PPV_ARG(IDeskBand, &m_TaskBand));
+        hRet = CTaskBand_CreateInstance(this, m_StartButton.m_hWnd, IID_PPV_ARG(IDeskBand, &m_TaskBand));
         if (FAILED_UNEXPECTEDLY(hRet))
             return FALSE;
 
@@ -2153,10 +2154,7 @@ ChangePos:
         if (m_Theme)
             CloseThemeData(m_Theme);
 
-        if (IsThemeActive())
-            m_Theme = OpenThemeData(m_hWnd, L"TaskBar");
-        else
-            m_Theme = NULL;
+        m_Theme = OpenThemeData(m_hWnd, L"TaskBar");
 
         if (m_Theme)
         {
@@ -2690,7 +2688,7 @@ HandleTrayContextMenu:
     {
         RECT *rc = NULL;
         /* Ignore WM_NCCALCSIZE if we are not themed or locked */
-        if(!IsThemeActive() || Locked)
+        if(!m_Theme || Locked)
         {
             bHandled = FALSE;
             return 0;

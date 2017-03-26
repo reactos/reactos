@@ -1146,7 +1146,7 @@ public:
         BOOL Horizontal;
 
         int cx = GetSystemMetrics(SM_CXMINIMIZED);
-        int cy = m_ButtonSize.cy = GetSystemMetrics(SM_CYSIZE) + (2 * GetSystemMetrics(SM_CYEDGE));
+        int cy = m_ButtonSize.cy = GetSystemMetrics(SM_CYSIZE);
         m_TaskBar.SetButtonSize(cx, cy);
 
         if (GetClientRect(&rcClient) && !IsRectEmpty(&rcClient))

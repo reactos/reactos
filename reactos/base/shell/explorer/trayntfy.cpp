@@ -1206,6 +1206,7 @@ public:
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
         MESSAGE_HANDLER(WM_PRINTCLIENT, OnPaint)
+        MESSAGE_HANDLER(WM_THEMECHANGED, OnThemeChanged)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
         MESSAGE_HANDLER(WM_NCHITTEST, OnNcHitTest)
         MESSAGE_HANDLER(WM_SETFONT, OnSetFont)
@@ -1229,10 +1230,7 @@ public:
         Create(hWndParent, 0, NULL, dwStyle);
 
         if (m_hWnd != NULL)
-        {
             SetWindowTheme(m_hWnd, L"TrayNotify", NULL);
-            OnThemeChanged();
-        }
 
         return m_hWnd;
 

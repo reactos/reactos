@@ -233,7 +233,7 @@ ShowCustomizeNotifyIcons(HINSTANCE, HWND);
  */
 
 extern const GUID CLSID_ITaskBand;  /* Internal Task Band CLSID */
-HRESULT CTaskBand_CreateInstance(IN ITrayWindow *Tray,  REFIID riid, void **ppv);
+HRESULT CTaskBand_CreateInstance(IN ITrayWindow *Tray, HWND hWndStartButton, REFIID riid, void **ppv);
 
 /*
  * tbsite.cpp
