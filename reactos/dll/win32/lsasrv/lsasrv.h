@@ -479,6 +479,20 @@ LsapLoadString(HINSTANCE hInstance,
                LPWSTR lpBuffer,
                INT nBufferMax);
 
+INT
+LsapGetResourceStringLengthEx(
+    _In_ HINSTANCE hInstance,
+    _In_ UINT uId,
+    _In_ USHORT usLanguage);
+
+INT
+LsapLoadStringEx(
+    _In_ HINSTANCE hInstance,
+    _In_ UINT uId,
+    _In_ USHORT usLanguage,
+    _Out_ LPWSTR lpBuffer,
+    _Out_ INT nBufferMax);
+
 PSID
 LsapAppendRidToSid(
     PSID SrcSid,
