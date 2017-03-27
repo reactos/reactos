@@ -115,15 +115,15 @@ KiIdleLoop(VOID)
     PKPRCB Prcb = KeGetCurrentPrcb();
     PKTHREAD OldThread, NewThread;
 
-    /* Initialize the idle loop: disable interrupts */
-    _enable();
-    YieldProcessor();
-    YieldProcessor();
-    _disable();
-
     /* Now loop forever */
     while (TRUE)
     {
+        /* Start of the idle loop: disable interrupts */
+        _enable();
+        YieldProcessor();
+        YieldProcessor();
+        _disable();
+
         /* Check for pending timers, pending DPCs, or pending ready threads */
         if ((Prcb->DpcData[0].DpcQueueDepth) ||
             (Prcb->TimerRequest) ||
@@ -161,12 +161,6 @@ KiIdleLoop(VOID)
 
             /* Go back to DISPATCH_LEVEL */
             KeLowerIrql(DISPATCH_LEVEL);
-
-            /* We are back in the idle thread -- disable interrupts again */
-            _enable();
-            YieldProcessor();
-            YieldProcessor();
-            _disable();
         }
         else
         {
