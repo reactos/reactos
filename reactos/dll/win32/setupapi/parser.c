@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* Partially synced with Wine Staging 1.7.37 */
+/* Partially synced with Wine Staging 2.2 */
 
 #include "setupapi_private.h"
 
@@ -103,6 +103,7 @@ struct parser
     int               cur_section;  /* index of section being parsed*/
     struct line      *line;         /* current line */
     unsigned int      line_pos;     /* current line position in file */
+    unsigned int      broken_line;  /* first line containing invalid data (if any) */
     unsigned int      error;        /* error code */
     unsigned int      token_len;    /* current token len */
     WCHAR token[MAX_FIELD_LEN+1];   /* current token */
@@ -634,12 +635,15 @@ static const WCHAR *line_start_state( struct parser *parser, const WCHAR *pos )
             set_state( parser, SECTION_NAME );
             return p + 1;
         default:
-            if (!isspaceW(*p))
+            if (isspaceW(*p)) break;
+            if (parser->cur_section != -1)
             {
                 parser->start = p;
                 set_state( parser, KEY_NAME );
                 return p;
             }
+            if (!parser->broken_line)
+                parser->broken_line = parser->line_pos;
             break;
         }
     }
@@ -920,6 +924,7 @@ static DWORD parse_buffer( struct inf_file *file, const WCHAR *buffer, const WCH
     parser.stack_pos   = 0;
     parser.cur_section = -1;
     parser.line_pos    = 1;
+    parser.broken_line = 0;
     parser.error       = 0;
     parser.token_len   = 0;
 
@@ -950,6 +955,13 @@ static DWORD parse_buffer( struct inf_file *file, const WCHAR *buffer, const WCH
 
     /* find the [strings] section */
     file->strings_section = find_section( file, Strings );
+
+    if (file->strings_section == -1 && parser.broken_line)
+    {
+        if (error_line) *error_line = parser.broken_line;
+        return ERROR_EXPECTED_SECTION_NAME;
+    }
+
     return 0;
 }
 
