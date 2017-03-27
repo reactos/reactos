@@ -182,14 +182,18 @@ static void SCROLL_DrawInterior( PDRAW_CONTEXT pcontext, SCROLLBARINFO* psbi,
 {
     RECT r, rcPart;
 
+    /* thumbPos is relative to the edge of the scrollbar */
+
     r = psbi->rcScrollBar;
     if (vertical)
     {
+        thumbPos += pcontext->wi.rcClient.top - pcontext->wi.rcWindow.top;
         r.top    += psbi->dxyLineButton;
         r.bottom -= (psbi->dxyLineButton);
     }
     else
     {
+        thumbPos += pcontext->wi.rcClient.left - pcontext->wi.rcWindow.left;
         r.left  += psbi->dxyLineButton;
         r.right -= psbi->dxyLineButton;
     }
