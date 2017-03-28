@@ -1162,7 +1162,11 @@ public:
                     tbm.dwMask = TBMF_BUTTONSPACING;
                     m_TaskBar.GetMetrics(&tbm);
 
-                    uiRows = (rcClient.bottom + tbm.cyButtonSpacing) / (m_ButtonSize.cy + tbm.cyButtonSpacing);
+                    if (m_ButtonSize.cy + tbm.cyButtonSpacing != 0)
+                        uiRows = (rcClient.bottom + tbm.cyButtonSpacing) / (m_ButtonSize.cy + tbm.cyButtonSpacing);
+                    else
+                        uiRows = 1;
+
                     if (uiRows == 0)
                         uiRows = 1;
 
