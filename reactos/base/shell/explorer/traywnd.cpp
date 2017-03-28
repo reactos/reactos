@@ -1641,7 +1641,6 @@ ChangePos:
         case ABE_BOTTOM:
             rebarRect.top = rebarRect.bottom - (pRect->bottom - pRect->top - margins.cy);
             ::SendMessageW(m_Rebar, RB_SIZETORECT, RBSTR_CHANGERECT,  (LPARAM)&rebarRect);
-            ERR("rebarRect: %d, %d, %d,%d\n", rebarRect.top, rebarRect.left, rebarRect.right, rebarRect.bottom);
             pRect->top = pRect->bottom - (rebarRect.bottom - rebarRect.top + margins.cy);
             break;
         case ABE_LEFT:
