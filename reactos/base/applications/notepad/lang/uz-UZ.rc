@@ -1,4 +1,4 @@
-LANGUAGE LANG_UZBEK, SUBLANG_DEFAULT
+LANGUAGE LANG_UZBEK, SUBLANG_UZBEK_LATIN
 
 ID_ACCEL ACCELERATORS
 BEGIN
@@ -130,10 +130,10 @@ END
 
 IDD_ABOUTBOX DIALOGEX 22, 16, 284, 170
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "О программе Блокнот ReactOS"
+CAPTION "О программе Bloknot ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Блокнот ReactOS v1.0\r\nCopyright 1997,98 Marcel Baur\r\nCopyright 2000 Mike McCormack\r\nCopyright 2002 Sylvain Petreolle\r\nCopyright 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
+    CONTROL "Bloknot ReactOS v1.0\r\nCopyright 1997,98 Marcel Baur\r\nCopyright 2000 Mike McCormack\r\nCopyright 2002 Sylvain Petreolle\r\nCopyright 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
     CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
     DEFPUSHBUTTON "Закрыть", IDOK, 114, 149, 44, 15, WS_GROUP
     ICON IDI_NPICON, -1, 12, 9, 20, 30
@@ -149,14 +149,14 @@ STRINGTABLE
 BEGIN
     STRING_PAGESETUP_HEADERVALUE "&n" /* FIXME */
     STRING_PAGESETUP_FOOTERVALUE "Sahifa &s" /* FIXME */
-    STRING_PAGESETUP_LEFTVALUE "20 мм" /* FIXME */
-    STRING_PAGESETUP_RIGHTVALUE "20 мм" /* FIXME */
-    STRING_PAGESETUP_TOPVALUE "25 мм" /* FIXME */
-    STRING_PAGESETUP_BOTTOMVALUE "25 мм" /* FIXME */
+    STRING_PAGESETUP_LEFTVALUE "20 mm" /* FIXME */
+    STRING_PAGESETUP_RIGHTVALUE "20 mm" /* FIXME */
+    STRING_PAGESETUP_TOPVALUE "25 mm" /* FIXME */
+    STRING_PAGESETUP_BOTTOMVALUE "25 mm" /* FIXME */
     STRING_NOTEPAD "Bloknot"
-    STRING_ERROR "ОШИБКА"
-    STRING_WARNING "ВНИМАНИЕ"
-    STRING_INFO "Информация"
+    STRING_ERROR "XATO"
+    STRING_WARNING "DIQQAT"
+    STRING_INFO "Axborot"
     STRING_UNTITLED "Nomsiz"
     STRING_ALL_FILES "Barcha fayllar(*.*)"
     STRING_TEXT_FILES_TXT "Matn hujjatlari (*.txt)"
