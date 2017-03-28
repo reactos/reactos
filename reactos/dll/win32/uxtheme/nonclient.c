@@ -216,9 +216,7 @@ ThemeDrawCaptionButton(PDRAW_CONTEXT pcontext,
 {
     RECT rcPart;
     INT ButtonWidth, ButtonHeight, iPartId;
-    
-    ButtonHeight = GetSystemMetrics( pcontext->wi.dwExStyle & WS_EX_TOOLWINDOW ? SM_CYSMSIZE : SM_CYSIZE);
-    ButtonWidth = GetSystemMetrics( pcontext->wi.dwExStyle & WS_EX_TOOLWINDOW ? SM_CXSMSIZE : SM_CXSIZE);
+    SIZE ButtonSize;
 
     switch(buttonId)
     {
@@ -254,6 +252,11 @@ ThemeDrawCaptionButton(PDRAW_CONTEXT pcontext,
         //FIXME: Implement Help Button 
         return;
     }
+
+    GetThemePartSize(pcontext->theme, pcontext->hDC, iPartId, 0, NULL, TS_MIN, &ButtonSize);
+
+    ButtonHeight = GetSystemMetrics( pcontext->wi.dwExStyle & WS_EX_TOOLWINDOW ? SM_CYSMSIZE : SM_CYSIZE);
+    ButtonWidth = MulDiv(ButtonSize.cx, ButtonHeight, ButtonSize.cy);
 
     ButtonHeight -= 4;
     ButtonWidth -= 4;
