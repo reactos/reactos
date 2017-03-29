@@ -1051,7 +1051,19 @@ HRESULT WINAPI DrawThemeBackgroundEx(HTHEME hTheme, HDC hdc, int iPartId,
         hr = E_FAIL;
     }
     if(SUCCEEDED(hr))
-        hr = UXTHEME_DrawGlyph(hTheme, hdc, iPartId, iStateId, &rt, opts);
+    {
+        RECT rcGlyph = *pRect;
+        MARGINS margin;
+        hr = GetThemeMargins(hTheme, hdc, iPartId, iStateId, TMT_CONTENTMARGINS, NULL, &margin);
+        if(SUCCEEDED(hr))
+        {
+            rcGlyph.left += margin.cxLeftWidth;
+            rcGlyph.right -= margin.cxRightWidth;
+            rcGlyph.top += margin.cyTopHeight;
+            rcGlyph.bottom -= margin.cyBottomHeight;
+        }
+        hr = UXTHEME_DrawGlyph(hTheme, hdc, iPartId, iStateId, &rcGlyph, opts);
+    }
     if(opts->dwFlags & DTBG_CLIPRECT) {
         if(hasClip == 0)
             SelectClipRgn(hdc, NULL);
