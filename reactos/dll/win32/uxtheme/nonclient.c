@@ -814,6 +814,8 @@ ThemeHandleButton(HWND hWnd, WPARAM wParam)
 
     SetCapture(hWnd);
 
+    ht = wParam;
+
     for (;;)
     {
         if (GetMessageW(&Msg, 0, WM_MOUSEFIRST, WM_MOUSELAST) <= 0)
