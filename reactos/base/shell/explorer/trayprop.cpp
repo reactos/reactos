@@ -28,17 +28,18 @@ typedef struct _PROPSHEET_INFO
 
     HBITMAP hTaskbarBitmap;
     HBITMAP hTrayBitmap;
+    HBITMAP hStartBitmap;
 } PROPSHEET_INFO, *PPROPSHEET_INFO;
 
 
 static BOOL
-UpdateTaskbarBitmap(PPROPSHEET_INFO pPropInfo)
+UpdateBitmaps(PPROPSHEET_INFO pPropInfo)
 {
-    HWND hwndLock, hwndHide, hwndGroup, hwndShowQL, hwndClock, hwndSeconds, hwndHideInactive;
-    HWND hwndTaskbarBitmap, hwndTrayBitmap;
-    HWND hwndAdvancedButton;
+    HWND hwndLock, hwndHide, hwndGroup, hwndShowQL, hwndClock, hwndSeconds, hwndHideInactive, hwndModernStart, hwndClassicStart;
+    HWND hwndTaskbarBitmap, hwndTrayBitmap, hwndStartBitmap;
+    HWND hwndCustomizeNotifyButton, hwndCustomizeClassicStartButton, hwndCustomizeModernStartButton;
     BOOL bLock, bHide, bGroup, bShowQL, bShowClock, bShowSeconds, bHideInactive;
-    LPTSTR lpTaskBarImageName = NULL, lpTrayImageName = NULL;
+    LPTSTR lpTaskBarImageName = NULL, lpTrayImageName = NULL, lpStartImageName = NULL;
     BOOL bRet = FALSE;
 
     hwndLock = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_LOCK);
@@ -50,7 +51,15 @@ UpdateTaskbarBitmap(PPROPSHEET_INFO pPropInfo)
     hwndSeconds = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_SECONDS);
     hwndHideInactive = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_HIDEICONS);
     
-    hwndAdvancedButton = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_ICONCUST);
+    hwndCustomizeNotifyButton = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_ICONCUST);
+    
+    hwndModernStart = GetDlgItem(pPropInfo->hStartWnd, IDC_TASKBARPROP_STARTMENU);
+    hwndClassicStart = GetDlgItem(pPropInfo->hStartWnd, IDC_TASKBARPROP_STARTMENUCLASSIC);
+    
+    hwndCustomizeClassicStartButton = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_STARTMENUCLASSICCUST);
+    hwndCustomizeModernStartButton = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_STARTMENUCUST);
+    
+    
 
     if (hwndLock && hwndHide && hwndGroup && hwndShowQL && hwndClock && hwndSeconds && hwndHideInactive)
     {
@@ -112,7 +121,7 @@ UpdateTaskbarBitmap(PPROPSHEET_INFO pPropInfo)
         
         if (bHideInactive)
         {
-            EnableWindow(hwndAdvancedButton, TRUE);
+            EnableWindow(hwndCustomizeNotifyButton, TRUE);
             if (bShowClock)
             {
                 EnableWindow(hwndSeconds, TRUE);
@@ -130,7 +139,7 @@ UpdateTaskbarBitmap(PPROPSHEET_INFO pPropInfo)
         }
         else
         {
-            EnableWindow(hwndAdvancedButton, FALSE);
+            EnableWindow(hwndCustomizeNotifyButton, FALSE);
             if (bShowClock)
             {
                 EnableWindow(hwndSeconds, TRUE);
@@ -174,6 +183,49 @@ UpdateTaskbarBitmap(PPROPSHEET_INFO pPropInfo)
             }
         }
     }
+    
+    if(hwndClassicStart && hwndModernStart)
+    {
+        if(SendMessage(hwndModernStart, BM_GETCHECK, 0, 0) == BST_CHECKED)
+        {
+            EnableWindow(hwndCustomizeModernStartButton, TRUE);
+            EnableWindow(hwndCustomizeClassicStartButton, FALSE);
+            lpStartImageName = MAKEINTRESOURCEW(IDB_STARTPREVIEW);
+        }
+        else
+        {
+            EnableWindow(hwndCustomizeModernStartButton, FALSE);
+            EnableWindow(hwndCustomizeClassicStartButton, TRUE);
+            lpStartImageName = MAKEINTRESOURCEW(IDB_STARTPREVIEW_CLASSIC);
+        }
+        
+         if (lpStartImageName)
+        {
+            if (pPropInfo->hStartBitmap)
+            {
+                DeleteObject(pPropInfo->hStartBitmap);
+            }
+
+            pPropInfo->hStartBitmap = (HBITMAP)LoadImageW(hExplorerInstance,
+                                                  lpStartImageName,
+                                                  IMAGE_BITMAP,
+                                                  0,
+                                                  0,
+                                                  LR_DEFAULTCOLOR);
+            if (pPropInfo->hStartBitmap)
+            {
+                hwndStartBitmap = GetDlgItem(pPropInfo->hStartWnd,
+                                        IDC_TASKBARPROP_STARTMENU_BITMAP);
+                if (hwndStartBitmap)
+                {
+                    SendMessage(hwndStartBitmap,
+                                STM_SETIMAGE,
+                                IMAGE_BITMAP,
+                                (LPARAM)pPropInfo->hStartBitmap);
+                }
+            }
+        }
+    }
 
     return bRet;
 }
@@ -191,7 +243,18 @@ OnCreateTaskbarPage(HWND hwnd,
     // FIXME: check buttons
     CheckDlgButton(hwnd, IDC_TASKBARPROP_SECONDS, AdvancedSettings.bShowSeconds ? BST_CHECKED : BST_UNCHECKED);
 
-    UpdateTaskbarBitmap(pPropInfo);
+    UpdateBitmaps(pPropInfo);
+}
+
+static VOID
+OnCreateStartPage(HWND hwnd,
+                    PPROPSHEET_INFO pPropInfo)
+{
+    pPropInfo->hStartWnd = hwnd;
+
+    CheckDlgButton(hwnd, IDC_TASKBARPROP_STARTMENUCLASSIC, 1);    // HACK: This has to be read from registry!
+    
+    UpdateBitmaps(pPropInfo);
 }
 
 INT_PTR CALLBACK
@@ -228,7 +291,7 @@ TaskbarPageProc(HWND hwndDlg,
                 case IDC_TASKBARPROP_SECONDS:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        UpdateTaskbarBitmap(pPropInfo);
+                        UpdateBitmaps(pPropInfo);
 
                         /* Enable the 'Apply' button */
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
@@ -286,6 +349,7 @@ StartMenuPageProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
+            OnCreateStartPage(hwndDlg, (PPROPSHEET_INFO)((LPPROPSHEETPAGE)lParam)->lParam);
             break;
             
         case WM_COMMAND:
