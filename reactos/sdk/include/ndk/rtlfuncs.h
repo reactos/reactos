@@ -3230,6 +3230,14 @@ RtlClearAllBits(
 NTSYSAPI
 VOID
 NTAPI
+RtlClearBit(
+    _In_ PRTL_BITMAP BitMapHeader,
+    _In_range_(<, BitMapHeader->SizeOfBitMap) ULONG BitNumber
+);
+
+NTSYSAPI
+VOID
+NTAPI
 RtlClearBits(
     _In_ PRTL_BITMAP BitMapHeader,
     _In_range_(0, BitMapHeader->SizeOfBitMap - NumberToClear) ULONG StartingIndex,
@@ -3286,6 +3294,14 @@ CCHAR
 NTAPI
 RtlFindLeastSignificantBit(
     _In_ ULONGLONG Value
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlFindLongestRunClear(
+    _In_ PRTL_BITMAP BitMapHeader,
+    _Out_ PULONG StartingIndex
 );
 
 NTSYSAPI
@@ -3390,6 +3406,20 @@ RtlTestBit(
     _In_ PRTL_BITMAP BitMapHeader,
     _In_range_(<, BitMapHeader->SizeOfBitMap) ULONG BitNumber
 );
+
+#if defined(_M_AMD64)
+_Must_inspect_result_
+FORCEINLINE
+BOOLEAN
+RtlCheckBit(
+  _In_ PRTL_BITMAP BitMapHeader,
+  _In_range_(<, BitMapHeader->SizeOfBitMap) ULONG BitPosition)
+{
+  return BitTest64((LONG64 CONST*)BitMapHeader->Buffer, (LONG64)BitPosition);
+}
+#else
+#define RtlCheckBit(BMH,BP) (((((PLONG)(BMH)->Buffer)[(BP)/32]) >> ((BP)%32)) & 0x1)
+#endif /* defined(_M_AMD64) */
 
 //
 // Timer Functions

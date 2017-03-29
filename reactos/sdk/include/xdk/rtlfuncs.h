@@ -949,6 +949,12 @@ RtlTimeToTimeFields(
   _Out_ PTIME_FIELDS TimeFields);
 
 NTSYSAPI
+USHORT
+FASTCALL
+RtlUshortByteSwap(
+  _In_ USHORT Source);
+
+NTSYSAPI
 ULONG
 FASTCALL
 RtlUlongByteSwap(
@@ -1018,12 +1024,6 @@ WCHAR
 NTAPI
 RtlUpcaseUnicodeChar(
   _In_ WCHAR SourceCharacter);
-
-NTSYSAPI
-USHORT
-FASTCALL
-RtlUshortByteSwap(
-  _In_ USHORT Source);
 
 _IRQL_requires_max_(APC_LEVEL)
 _Must_inspect_result_
