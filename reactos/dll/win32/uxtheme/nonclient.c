@@ -99,12 +99,6 @@ WCHAR *UserGetWindowCaption(HWND hwnd)
     return text;
 }
 
-static void 
-ThemeDrawTitle(PDRAW_CONTEXT context, RECT* prcCurrent)
-{
-
-}
-
 HRESULT WINAPI ThemeDrawCaptionText(HTHEME hTheme, HDC hdc, int iPartId, int iStateId,
                              LPCWSTR pszText, int iCharCount, DWORD dwTextFlags,
                              DWORD dwTextFlags2, const RECT *pRect, BOOL Active)
