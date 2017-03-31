@@ -866,13 +866,13 @@ NtUserTestForInteractiveUser(
 DWORD
 APIENTRY
 NtUserCalcMenuBar(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4,
-    DWORD dwUnknown5)
+    HWND   hwnd,
+    DWORD  x,
+    DWORD  width, // Scale the edge thickness, offset?
+    DWORD  y,
+    LPRECT prc )
 {
-    STUB;
+    ERR("hwnd %p, X %d, Width %d, Y %d, prc 0x%x\n",hwnd,x,width,y,prc);
     return 0;
 }
 

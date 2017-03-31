@@ -1212,11 +1212,11 @@ NtUserBuildHimcList(
 DWORD
 NTAPI
 NtUserCalcMenuBar(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4,
-    DWORD dwUnknown5);
+    HWND   hwnd,
+    DWORD  x,
+    DWORD  width,
+    DWORD  y,
+    LPRECT prc);
 
 DWORD
 NTAPI
@@ -2718,7 +2718,7 @@ NtUserPaintMenuBar(
     ULONG left,
     ULONG right,
     ULONG top,
-    BOOL bActive);
+    BOOL bActive); // DWORD Flags);
 
 BOOL
 APIENTRY
