@@ -190,6 +190,7 @@ BOOL WINAPI SetShellWindowEx(HWND, HWND);
 
 BOOL WINAPI DrawCaptionTempA(HWND,HDC,const RECT*,HFONT,HICON,LPCSTR,UINT);
 BOOL WINAPI DrawCaptionTempW(HWND,HDC,const RECT*,HFONT,HICON,LPCWSTR,UINT);
+BOOL WINAPI PaintMenuBar(HWND hWnd, HDC hDC, ULONG left, ULONG right, ULONG top, BOOL bActive); 
 
 #ifdef UNICODE
 #define DrawCaptionTemp DrawCaptionTempW
