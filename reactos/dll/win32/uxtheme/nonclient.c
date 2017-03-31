@@ -481,145 +481,6 @@ DrawClassicFrame(PDRAW_CONTEXT context, RECT* prcCurrent)
     }
 }
 
-static void
-ThemeDrawMenuItem(PDRAW_CONTEXT pcontext, HMENU Menu, int imenu)
-{
-    PWCHAR Text;
-    BOOL flat_menu = FALSE;
-    MENUITEMINFOW Item;
-    RECT Rect,rcCalc;
-    WCHAR wstrItemText[20];
-    register int i = 0;
-    HFONT FontOld = NULL;
-    UINT uFormat = DT_CENTER | DT_VCENTER | DT_SINGLELINE;
-
-    Item.cbSize = sizeof(MENUITEMINFOW);
-    Item.fMask = MIIM_FTYPE | MIIM_STATE | MIIM_STRING;
-    Item.dwTypeData = wstrItemText;
-    Item.cch = 20;
-    if (!GetMenuItemInfoW(Menu, imenu, TRUE, &Item))
-        return;
-
-    if(Item.fType & MF_SEPARATOR)
-        return;
-
-    if(Item.cch >= 20)
-    {
-        Item.cch++;
-        Item.dwTypeData = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, Item.cch  * sizeof(WCHAR));
-        Item.fMask = MIIM_FTYPE | MIIM_STATE | MIIM_STRING;
-        GetMenuItemInfoW(Menu, imenu, TRUE, &Item);
-    }
-
-    if(Item.cch == 0)
-        return;
-
-    flat_menu = GetThemeSysBool(pcontext->theme, TMT_FLATMENUS);
-
-    GetMenuItemRect(pcontext->hWnd, Menu, imenu, &Rect);
-
-    OffsetRect(&Rect, -pcontext->wi.rcWindow.left, -pcontext->wi.rcWindow.top);
-    
-    SetBkColor(pcontext->hDC, GetSysColor(flat_menu ? COLOR_MENUBAR : COLOR_MENU));
-    SetTextColor(pcontext->hDC, GetSysColor(Item.fState & MF_GRAYED ? COLOR_GRAYTEXT : COLOR_MENUTEXT));
-
-    if (0 != (Item.fState & MFS_DEFAULT))
-    {
-        FontOld = (HFONT)SelectObject(pcontext->hDC, hMenuFontBold);
-    }
-
-    Rect.left += MENU_BAR_ITEMS_SPACE / 2;
-    Rect.right -= MENU_BAR_ITEMS_SPACE / 2;
-
-    Text = (PWCHAR) Item.dwTypeData;
-    if(Text)
-    {
-        for (i = 0; L'\0' != Text[i]; i++)
-        {
-            if (L'\t' == Text[i] || L'\b' == Text[i])
-            {
-                break;
-            }
-        }
-    }
-
-    SetBkMode(pcontext->hDC, OPAQUE);
-
-    if (0 != (Item.fState & MF_GRAYED))
-    {
-        if (0 == (Item.fState & MF_HILITE))
-        {
-            ++Rect.left; ++Rect.top; ++Rect.right; ++Rect.bottom;
-            SetTextColor(pcontext->hDC, RGB(0xff, 0xff, 0xff));
-            DrawTextW(pcontext->hDC, Text, i, &Rect, uFormat);
-            --Rect.left; --Rect.top; --Rect.right; --Rect.bottom;
-        }
-        SetTextColor(pcontext->hDC, RGB(0x80, 0x80, 0x80));
-        SetBkMode(pcontext->hDC, TRANSPARENT);
-    }
-    
-    DrawTextW(pcontext->hDC, Text, i, &Rect, uFormat);
-
-    /* Exclude from the clip region the area drawn by DrawText */
-    SetRect(&rcCalc, 0,0,0,0);
-    DrawTextW(pcontext->hDC, Text, i, &rcCalc, uFormat | DT_CALCRECT);
-    InflateRect( &Rect, 0, -(rcCalc.bottom+1)/2);
-    ExcludeClipRect(pcontext->hDC, Rect.left, Rect.top, Rect.right, Rect.bottom);
-
-    if (NULL != FontOld)
-    {
-        SelectObject(pcontext->hDC, FontOld);
-    }
-}
-
-void WINAPI
-ThemeDrawMenuBar(PDRAW_CONTEXT pcontext, PRECT prcCurrent)
-{
-    HMENU Menu;
-    MENUBARINFO MenuBarInfo;
-    int i;
-    HFONT FontOld = NULL;
-    BOOL flat_menu;
-    RECT Rect;
-    HPEN oldPen ;
-
-    if (!hMenuFont)
-        InitMenuFont();
-
-    flat_menu = GetThemeSysBool(pcontext->theme, TMT_FLATMENUS);
-
-    MenuBarInfo.cbSize = sizeof(MENUBARINFO);
-    if (! GetMenuBarInfo(pcontext->hWnd, OBJID_MENU, 0, &MenuBarInfo))
-        return;
-
-    Menu = GetMenu(pcontext->hWnd);
-    if (GetMenuItemCount(Menu) == 0)
-        return;
-
-    Rect = MenuBarInfo.rcBar;
-    OffsetRect(&Rect, -pcontext->wi.rcWindow.left, -pcontext->wi.rcWindow.top);
-
-    /* Draw a line under the menu */
-    oldPen = (HPEN)SelectObject(pcontext->hDC, GetStockObject(DC_PEN));
-    SetDCPenColor(pcontext->hDC, GetSysColor(COLOR_3DFACE));
-    MoveToEx(pcontext->hDC, Rect.left, Rect.bottom, NULL);
-    LineTo(pcontext->hDC, Rect.right, Rect.bottom);
-    SelectObject(pcontext->hDC, oldPen);
-
-    /* Draw menu items */
-    FontOld = (HFONT)SelectObject(pcontext->hDC, hMenuFont);
-
-    for (i = 0; i < GetMenuItemCount(Menu); i++)
-    {
-        ThemeDrawMenuItem(pcontext, Menu, i);
-    }
-
-    SelectObject(pcontext->hDC, FontOld);
-
-    /* Fill the menu background area that isn't painted yet */
-    FillRect(pcontext->hDC, &Rect, GetSysColorBrush(flat_menu ? COLOR_MENUBAR : COLOR_MENU));
-}
-
 static void 
 ThemePaintWindow(PDRAW_CONTEXT pcontext, RECT* prcCurrent, BOOL bDoDoubleBuffering)
 {
@@ -644,8 +505,8 @@ ThemePaintWindow(PDRAW_CONTEXT pcontext, RECT* prcCurrent, BOOL bDoDoubleBufferi
         return;
 
     if(HAS_MENU(pcontext->hWnd, pcontext->wi.dwStyle))
-        ThemeDrawMenuBar(pcontext, prcCurrent);
-    
+        PaintMenuBar(pcontext->hWnd, pcontext->hDC, prcCurrent->left, prcCurrent->right, prcCurrent->top, pcontext->Active);
+
     if(pcontext->wi.dwStyle & WS_HSCROLL)
         ThemeDrawScrollBar(pcontext, SB_HORZ , NULL);
 
