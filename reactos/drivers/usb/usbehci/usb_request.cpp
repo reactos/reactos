@@ -56,8 +56,8 @@ public:
     VOID DumpQueueHead(IN PQUEUE_HEAD QueueHead);
 
     // constructor / destructor
-    CUSBRequest(IUnknown *OuterUnknown){}
-    virtual ~CUSBRequest(){}
+    CUSBRequest(IUnknown *OuterUnknown);
+    virtual ~CUSBRequest();
 
 protected:
     LONG m_Ref;
@@ -136,6 +136,22 @@ protected:
     USB_DEVICE_SPEED m_Speed;
 
 };
+
+//----------------------------------------------------------------------------------------
+CUSBRequest::CUSBRequest(IUnknown *OuterUnknown) :
+    m_CompletionEvent(NULL)
+{
+    UNREFERENCED_PARAMETER(OuterUnknown);
+}
+
+//----------------------------------------------------------------------------------------
+CUSBRequest::~CUSBRequest()
+{
+    if (m_CompletionEvent != NULL)
+    {
+        ExFreePoolWithTag(m_CompletionEvent, TAG_USBEHCI);
+    }
+}
 
 //----------------------------------------------------------------------------------------
 NTSTATUS
