@@ -29,6 +29,8 @@ typedef enum _USERPREFMASKS
     UPM_TOOLTIPFADE = 0x1000,
     UPM_CURSORSHADOW = 0x2000,
     UPM_CLICKLOCK = 0x8000,
+    UPM_FLATMENU = 0x20000,
+    UPM_DROPSHADOW = 0x40000,
     // room for more
     UPM_UIEFFECTS = 0x80000000,
     UPM_DEFAULT = 0x80003E9E
@@ -124,9 +126,7 @@ typedef struct _SPIVALUES
     UINT uiFontSmoothingOrientation;
     BOOL bDragFullWindows;
     BOOL bMenuDropAlign;
-    BOOL bFlatMenu;
     DWORD dwMenuShowDelay;
-    BOOL bDropShadow;
     BOOL bBlockSendInputResets;
 #if(_WIN32_WINNT >= 0x0600)
     BOOL bClearType;

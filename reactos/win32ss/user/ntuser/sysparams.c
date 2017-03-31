@@ -289,11 +289,9 @@ SpiUpdatePerUserSystemParameters(VOID)
 
     gspv.tmCaptionFont.tmAveCharWidth = 6;
     gspv.bBeep = TRUE;
-    gspv.bFlatMenu = FALSE;
     gspv.uiFocusBorderWidth = 1;
     gspv.uiFocusBorderHeight = 1;
     gspv.bMenuDropAlign = 1;
-    gspv.bDropShadow = 1;
     gspv.dwMenuShowDelay = 100;
     gspv.dwForegroundFlashCount = 3;
 
@@ -1624,16 +1622,16 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiSetBool(&gspv.bMouseVanish, uiParam, KEY_MOUSE, L"", fl);
 
         case SPI_GETFLATMENU:
-            return SpiGetInt(pvParam, &gspv.bFlatMenu, fl);
+            return SpiGetUserPref(UPM_FLATMENU, pvParam, fl);
 
         case SPI_SETFLATMENU:
-            return SpiSetBool(&gspv.bFlatMenu, (BOOL)pvParam, KEY_MOUSE, L"", fl);
+            return SpiSetUserPref(UPM_FLATMENU, pvParam, fl);
 
         case SPI_GETDROPSHADOW:
-            return SpiGetInt(pvParam, &gspv.bDropShadow, fl);
+            return SpiGetUserPref(UPM_DROPSHADOW, pvParam, fl);
 
         case SPI_SETDROPSHADOW:
-            return SpiSetBool(&gspv.bDropShadow, uiParam, KEY_MOUSE, L"", fl);
+            return SpiSetUserPref(UPM_DROPSHADOW, pvParam, fl);
 
         case SPI_GETBLOCKSENDINPUTRESETS:
             return SpiGetInt(pvParam, &gspv.bBlockSendInputResets, fl);
