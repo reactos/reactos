@@ -6045,6 +6045,41 @@ CLEANUP:
 }
 
 
+DWORD
+APIENTRY
+NtUserPaintMenuBar(
+    HWND hWnd,
+    HDC hDC,
+    ULONG left,
+    ULONG right,
+    ULONG top,
+    BOOL bActive)
+{
+   PWND Window;
+   RECT Rect;
+
+   UserEnterExclusive();
+
+   if(!(Window = UserGetWindowObject(hWnd)))
+   {
+      EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
+      UserLeave();
+      return 0;
+   }
+
+   Rect.left = left;
+   Rect.right = right;
+   Rect.top = top;
+   Rect.bottom = 0;
+
+   MENU_DrawMenuBar(hDC, &Rect, Window, FALSE);
+
+   UserLeave();
+
+   /* I am not sure about what this function returns */
+   return 0;
+}
+
 /*
  * @implemented
  */

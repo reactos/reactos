@@ -878,21 +878,6 @@ NtUserCalcMenuBar(
 
 DWORD
 APIENTRY
-NtUserPaintMenuBar(
-    HWND hWnd,
-    HDC hDC,
-    ULONG left,
-    ULONG right,
-    ULONG top,
-    BOOL bActive)
-{
-    STUB;
-    return 0;
-}
-
-
-DWORD
-APIENTRY
 NtUserRemoteConnect(
     DWORD dwUnknown1,
     DWORD dwUnknown2,
