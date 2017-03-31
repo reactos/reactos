@@ -2715,10 +2715,10 @@ NTAPI
 NtUserPaintMenuBar(
     HWND hWnd,
     HDC hDC,
-    ULONG left,
-    ULONG right,
-    ULONG top,
-    BOOL bActive); // DWORD Flags);
+    ULONG left,    // x,
+    ULONG right,   // width, // Scale the edge thickness, offset?
+    ULONG top,     // y, 
+    BOOL bActive); // DWORD Flags); DC_ACTIVE or WS_ACTIVECAPTION, by checking WNDS_ACTIVEFRAME and foreground.
 
 BOOL
 APIENTRY
