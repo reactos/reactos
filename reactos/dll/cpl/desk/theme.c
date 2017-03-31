@@ -411,6 +411,8 @@ ApplyScheme(IN COLOR_SCHEME *scheme, IN PTHEME_SELECTION pSelectedTheme)
     /* Hide underlined letters for keyboard navigation until I press the Alt key */
     SYS_CONFIG(SPI_SETKEYBOARDCUES,              0, IntToPtr(scheme->Effects.bKeyboardCues));
 
+    SYS_CONFIG(SPI_SETFLATMENU,                  0, IntToPtr(scheme->bFlatMenus));
+
     // SYS_CONFIG(SPI_SETACTIVEWINDOWTRACKING,   0, IntToPtr(scheme->Effects.bActiveWindowTracking));
     // SYS_CONFIG(SPI_SETCOMBOBOXANIMATION,      0, IntToPtr(scheme->Effects.bComboBoxAnimation));
     // SYS_CONFIG(SPI_SETLISTBOXSMOOTHSCROLLING, 0, IntToPtr(scheme->Effects.bListBoxSmoothScrolling));
@@ -933,6 +935,8 @@ LoadSchemeFromTheme(OUT PCOLOR_SCHEME scheme, IN PTHEME_SELECTION pSelectedTheme
     GetThemeSysFont(hTheme, TMT_STATUSFONT, &scheme->ncMetrics.lfStatusFont);
     GetThemeSysFont(hTheme, TMT_MSGBOXFONT, &scheme->ncMetrics.lfMessageFont);
     GetThemeSysFont(hTheme, TMT_ICONTITLEFONT, &scheme->icMetrics.lfFont);
+
+    scheme->bFlatMenus = GetThemeSysBool(hTheme, TMT_FLATMENUS);
 
     CloseThemeData(hTheme);
 
