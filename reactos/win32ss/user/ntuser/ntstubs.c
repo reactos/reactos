@@ -879,12 +879,12 @@ NtUserCalcMenuBar(
 DWORD
 APIENTRY
 NtUserPaintMenuBar(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4,
-    DWORD dwUnknown5,
-    DWORD dwUnknown6)
+    HWND hWnd,
+    HDC hDC,
+    ULONG left,
+    ULONG right,
+    ULONG top,
+    BOOL bActive)
 {
     STUB;
     return 0;
