@@ -245,7 +245,7 @@ ThemeDrawCaptionButton(PDRAW_CONTEXT pcontext,
                 iStateId = BUTTON_DISABLED;
         }
  
-        iPartId = WP_MINBUTTON;
+        iPartId = pcontext->wi.dwStyle & WS_MINIMIZE ? WP_RESTOREBUTTON : WP_MINBUTTON;
         break;
 
     default:
@@ -329,7 +329,9 @@ ThemeDrawCaption(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
     CaptionText = UserGetWindowCaption(pcontext->hWnd);
 
     /* Get the caption part and state id */
-    if (pcontext->wi.dwExStyle & WS_EX_TOOLWINDOW)
+    if (pcontext->wi.dwStyle & WS_MINIMIZE)
+        iPart = WP_MINCAPTION;
+    else if (pcontext->wi.dwExStyle & WS_EX_TOOLWINDOW)
         iPart = WP_SMALLCAPTION;
     else if (pcontext->wi.dwStyle & WS_MAXIMIZE)
         iPart = WP_MAXCAPTION;
@@ -630,12 +632,6 @@ ThemePaintWindow(PDRAW_CONTEXT pcontext, RECT* prcCurrent, BOOL bDoDoubleBufferi
     if(!(pcontext->wi.dwStyle & WS_VISIBLE))
         return;
 
-    if(pcontext->wi.dwStyle & WS_MINIMIZE)
-    {
-        ThemeDrawTitle(pcontext, prcCurrent);
-        return;
-    }
-
     if((pcontext->wi.dwStyle & WS_CAPTION)==WS_CAPTION)
     {
         if (bDoDoubleBuffering)
@@ -649,6 +645,9 @@ ThemePaintWindow(PDRAW_CONTEXT pcontext, RECT* prcCurrent, BOOL bDoDoubleBufferi
     {
         DrawClassicFrame(pcontext, prcCurrent);
     }
+
+    if(pcontext->wi.dwStyle & WS_MINIMIZE)
+        return;
 
     if(HAS_MENU(pcontext->hWnd, pcontext->wi.dwStyle))
         ThemeDrawMenuBar(pcontext, prcCurrent);

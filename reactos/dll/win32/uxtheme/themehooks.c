@@ -97,7 +97,9 @@ void SetThemeRegion(HWND hWnd)
     GetWindowInfo(hWnd, &wi);
 
     /* Get the caption part id */
-    if (wi.dwExStyle & WS_EX_TOOLWINDOW)
+    if (wi.dwStyle & WS_MINIMIZE)
+        iPart = WP_MINCAPTION;
+    else if (wi.dwExStyle & WS_EX_TOOLWINDOW)
         iPart = WP_SMALLCAPTION;
     else if (wi.dwStyle & WS_MAXIMIZE)
         iPart = WP_MAXCAPTION;
