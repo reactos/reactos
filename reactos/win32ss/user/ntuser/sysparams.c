@@ -1627,7 +1627,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetInt(pvParam, &gspv.bFlatMenu, fl);
 
         case SPI_SETFLATMENU:
-            return SpiSetBool(&gspv.bFlatMenu, uiParam, KEY_MOUSE, L"", fl);
+            return SpiSetBool(&gspv.bFlatMenu, (BOOL)pvParam, KEY_MOUSE, L"", fl);
 
         case SPI_GETDROPSHADOW:
             return SpiGetInt(pvParam, &gspv.bDropShadow, fl);
