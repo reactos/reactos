@@ -721,6 +721,16 @@ IntDefWindowProc(
            ERR("WM_NCRBUTTONUP\n");
           break;
 
+      case WM_XBUTTONUP:
+      case WM_NCXBUTTONUP:
+          if (HIWORD(wParam) == XBUTTON1 || HIWORD(wParam) == XBUTTON2)
+          {
+              co_IntSendMessage(UserHMGetHandle(Wnd), WM_APPCOMMAND, (WPARAM)UserHMGetHandle(Wnd),
+                                MAKELPARAM(LOWORD(wParam), FAPPCOMMAND_MOUSE | HIWORD(wParam)));
+          }
+          break;
+
+
       case WM_CONTEXTMENU:
       {
             if (Wnd->style & WS_CHILD)

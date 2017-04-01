@@ -376,6 +376,15 @@ User32DefWindowProc(HWND hWnd,
            ERR("WM_NCRBUTTONUP\n");
             break;
 
+        case WM_XBUTTONUP:
+        case WM_NCXBUTTONUP:
+            if (HIWORD(wParam) == XBUTTON1 || HIWORD(wParam) == XBUTTON2)
+            {
+               SendMessageW(hWnd, WM_APPCOMMAND, (WPARAM)hWnd,
+                         MAKELPARAM(LOWORD(wParam), FAPPCOMMAND_MOUSE | HIWORD(wParam)));
+            }
+            break;
+
         case WM_CONTEXTMENU:
         {
             if (GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CHILD)
