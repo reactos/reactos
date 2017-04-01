@@ -47,6 +47,16 @@ IsWindowActive(HWND hWnd, DWORD ExStyle)
     return ret;
 }
 
+BOOL
+IsScrollBarVisible(HWND hWnd, INT hBar)
+{
+  SCROLLBARINFO sbi = {sizeof(SCROLLBARINFO)};
+  if(!GetScrollBarInfo(hWnd, hBar, &sbi))
+    return FALSE;
+
+  return !(sbi.rgstate[0] & STATE_SYSTEM_OFFSCREEN);
+}
+
 static BOOL 
 UserHasWindowEdge(DWORD Style, DWORD ExStyle)
 {
@@ -487,6 +497,39 @@ static void ThemeDrawMenuBar(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
                                     pcontext->Active);
 }
 
+static void ThemeDrawScrollBarsGrip(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
+{
+    RECT rcPart;
+    HWND hwndParent;
+    RECT ParentClientRect;
+    DWORD ParentStyle;
+
+    rcPart = *prcCurrent;
+
+    if (pcontext->wi.dwExStyle & WS_EX_LEFTSCROLLBAR)
+       rcPart.right = rcPart.left + GetSystemMetrics(SM_CXVSCROLL);
+    else
+       rcPart.left = rcPart.right - GetSystemMetrics(SM_CXVSCROLL);
+
+    rcPart.top = rcPart.bottom - GetSystemMetrics(SM_CYHSCROLL);
+
+    FillRect(pcontext->hDC, &rcPart, GetSysColorBrush(COLOR_BTNFACE));
+
+    hwndParent = GetParent(pcontext->hWnd);
+    GetClientRect(hwndParent, &ParentClientRect);
+    ParentStyle = GetWindowLongW(hwndParent, GWL_STYLE);
+
+    if (HASSIZEGRIP(pcontext->wi.dwStyle, pcontext->wi.dwExStyle, ParentStyle, pcontext->wi.rcWindow, ParentClientRect))
+    {
+        int iState;
+        if (pcontext->wi.dwExStyle & WS_EX_LEFTSCROLLBAR)
+            iState = pcontext->wi.dwExStyle & WS_EX_LEFTSCROLLBAR;
+        else
+            iState = SZB_RIGHTALIGN;
+        DrawThemeBackground(pcontext->scrolltheme, pcontext->hDC, SBP_SIZEBOX, iState, &rcPart, NULL);
+    }
+}
+
 static void 
 ThemePaintWindow(PDRAW_CONTEXT pcontext, RECT* prcCurrent, BOOL bDoDoubleBuffering)
 {
@@ -516,11 +559,18 @@ ThemePaintWindow(PDRAW_CONTEXT pcontext, RECT* prcCurrent, BOOL bDoDoubleBufferi
     if (pcontext->wi.dwExStyle & WS_EX_CLIENTEDGE)
         DrawEdge(pcontext->hDC, prcCurrent, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
 
-    if(pcontext->wi.dwStyle & WS_HSCROLL)
+    if((pcontext->wi.dwStyle & WS_HSCROLL) && IsScrollBarVisible(pcontext->hWnd, OBJID_HSCROLL))
         ThemeDrawScrollBar(pcontext, SB_HORZ , NULL);
 
-    if(pcontext->wi.dwStyle & WS_VSCROLL)
+    if((pcontext->wi.dwStyle & WS_VSCROLL) && IsScrollBarVisible(pcontext->hWnd, OBJID_VSCROLL))
         ThemeDrawScrollBar(pcontext, SB_VERT, NULL);
+
+    if((pcontext->wi.dwStyle & (WS_HSCROLL|WS_VSCROLL)) == (WS_HSCROLL|WS_VSCROLL) &&
+       IsScrollBarVisible(pcontext->hWnd, OBJID_HSCROLL) &&
+       IsScrollBarVisible(pcontext->hWnd, OBJID_VSCROLL))
+    {
+        ThemeDrawScrollBarsGrip(pcontext, prcCurrent);
+    }
 }
 
 /*
