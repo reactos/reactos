@@ -6050,13 +6050,14 @@ APIENTRY
 NtUserPaintMenuBar(
     HWND hWnd,
     HDC hDC,
-    ULONG left,
-    ULONG right,
+    ULONG leftBorder,
+    ULONG rightBorder,
     ULONG top,
     BOOL bActive)
 {
    PWND Window;
    RECT Rect;
+   DWORD ret;
 
    UserEnterExclusive();
 
@@ -6067,17 +6068,16 @@ NtUserPaintMenuBar(
       return 0;
    }
 
-   Rect.left = left;
-   Rect.right = right;
+   Rect.left = leftBorder;
+   Rect.right = Window->rcWindow.right - Window->rcWindow.left - rightBorder;
    Rect.top = top;
    Rect.bottom = 0;
 
-   MENU_DrawMenuBar(hDC, &Rect, Window, FALSE);
+   ret = MENU_DrawMenuBar(hDC, &Rect, Window, FALSE);
 
    UserLeave();
 
-   /* I am not sure about what this function returns */
-   return 0;
+   return ret;
 }
 
 /*

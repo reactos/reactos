@@ -474,11 +474,17 @@ DrawClassicFrame(PDRAW_CONTEXT context, RECT* prcCurrent)
 
         InflateRect(prcCurrent, -Width, -Height);
     }
+}
 
-    if (context->wi.dwExStyle & WS_EX_CLIENTEDGE)
-    {
-        DrawEdge(context->hDC, prcCurrent, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
-    }
+static void ThemeDrawMenuBar(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
+{
+    /* Let the window manager paint the menu */
+    prcCurrent->top += PaintMenuBar(pcontext->hWnd, 
+                                    pcontext->hDC, 
+                                    pcontext->wi.cxWindowBorders, 
+                                    pcontext->wi.cxWindowBorders,
+                                    prcCurrent->top, 
+                                    pcontext->Active);
 }
 
 static void 
@@ -505,7 +511,10 @@ ThemePaintWindow(PDRAW_CONTEXT pcontext, RECT* prcCurrent, BOOL bDoDoubleBufferi
         return;
 
     if(HAS_MENU(pcontext->hWnd, pcontext->wi.dwStyle))
-        PaintMenuBar(pcontext->hWnd, pcontext->hDC, prcCurrent->left, prcCurrent->right, prcCurrent->top, pcontext->Active);
+        ThemeDrawMenuBar(pcontext, prcCurrent);
+
+    if (pcontext->wi.dwExStyle & WS_EX_CLIENTEDGE)
+        DrawEdge(pcontext->hDC, prcCurrent, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
 
     if(pcontext->wi.dwStyle & WS_HSCROLL)
         ThemeDrawScrollBar(pcontext, SB_HORZ , NULL);
