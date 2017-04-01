@@ -32,6 +32,24 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(schedsvc);
 
+typedef struct _JOB
+{
+    LIST_ENTRY Entry;
+    DWORD JobId;
+
+    DWORD_PTR JobTime;
+    DWORD DaysOfMonth;
+    UCHAR DaysOfWeek;
+    UCHAR Flags;
+    WCHAR Command[1];
+} JOB, *PJOB;
+
+DWORD dwNextJobId = 0;
+DWORD dwJobCount = 0;
+LIST_ENTRY JobListHead;
+RTL_RESOURCE JobListLock;
+
+
 /* FUNCTIONS *****************************************************************/
 
 DWORD
@@ -85,6 +103,41 @@ NetrJobAdd(
     LPAT_INFO pAtInfo,
     LPDWORD pJobId)
 {
+    PJOB pJob;
+
+    TRACE("NetrJobAdd(%S %p %p)\n",
+          ServerName, pAtInfo, pJobId);
+
+    /* Allocate a new job object */
+    pJob = HeapAlloc(GetProcessHeap(),
+                     HEAP_ZERO_MEMORY,
+                     sizeof(JOB) + wcslen(pAtInfo->Command) * sizeof(WCHAR));
+    if (pJob == NULL)
+        return ERROR_OUTOFMEMORY;
+
+    /* Initialize the job object */
+    pJob->JobTime = pAtInfo->JobTime;
+    pJob->DaysOfMonth = pAtInfo->DaysOfMonth;
+    pJob->DaysOfWeek = pAtInfo->DaysOfWeek;
+    pJob->Flags = pAtInfo->Flags;
+    wcscpy(pJob->Command, pAtInfo->Command);
+
+    /* Acquire the job list lock exclusively */
+    RtlAcquireResourceExclusive(&JobListLock, TRUE);
+
+    /* Assign a new job ID */
+    pJob->JobId = dwNextJobId++;
+    dwJobCount++;
+
+    /* Append the new job to the job list */
+    InsertTailList(&JobListHead, &pJob->Entry);
+
+    /* Release the job list lock */
+    RtlReleaseResource(&JobListLock);
+
+    /* Return the new job ID */
+    *pJobId = pJob->JobId;
+
     return ERROR_SUCCESS;
 }
 
@@ -97,6 +150,38 @@ NetrJobDel(
     DWORD MinJobId,
     DWORD MaxJobId)
 {
+    PLIST_ENTRY JobEntry, NextEntry;
+    PJOB CurrentJob;
+
+    TRACE("NetrJobDel(%S %lu %lu)\n",
+          ServerName, MinJobId, MaxJobId);
+
+    /* Acquire the job list lock exclusively */
+    RtlAcquireResourceExclusive(&JobListLock, TRUE);
+
+    JobEntry = JobListHead.Flink;
+    while (JobEntry != &JobListHead)
+    {
+        CurrentJob = CONTAINING_RECORD(JobEntry, JOB, Entry);
+
+        if ((CurrentJob->JobId >= MinJobId) && (CurrentJob->JobId <= MaxJobId))
+        {
+            NextEntry = JobEntry->Flink;
+            if (RemoveEntryList(JobEntry))
+            {
+                dwJobCount--;
+                HeapFree(GetProcessHeap(), 0, CurrentJob);
+                JobEntry = NextEntry;
+                continue;
+            }
+        }
+
+        JobEntry = JobEntry->Flink;
+    }
+
+    /* Release the job list lock */
+    RtlReleaseResource(&JobListLock);
+
     return ERROR_SUCCESS;
 }
 
@@ -111,6 +196,8 @@ NetrJobEnum(
     LPDWORD pTotalEntries,
     LPDWORD pResumeHandle)
 {
+    TRACE("NetrJobEnum(%S %p %lu %p %p)\n",
+          ServerName, pEnumContainer, PreferedMaximumLength, pTotalEntries, pResumeHandle);
     return ERROR_SUCCESS;
 }
 
@@ -123,7 +210,62 @@ NetrJobGetInfo(
     DWORD JobId,
     LPAT_INFO *ppAtInfo)
 {
-    return ERROR_SUCCESS;
+    PLIST_ENTRY JobEntry;
+    PJOB CurrentJob;
+    PAT_INFO pInfo;
+    DWORD dwError = ERROR_FILE_NOT_FOUND;
+
+    TRACE("NetrJobGetInfo(%S %lu %p)\n",
+          ServerName, JobId, ppAtInfo);
+
+    /* Acquire the job list lock exclusively */
+    RtlAcquireResourceShared(&JobListLock, TRUE);
+
+    /* Traverse the job list */
+    JobEntry = JobListHead.Flink;
+    while (JobEntry != &JobListHead)
+    {
+        CurrentJob = CONTAINING_RECORD(JobEntry, JOB, Entry);
+
+        /* Do we have the right job? */
+        if (CurrentJob->JobId == JobId)
+        {
+            pInfo = midl_user_allocate(sizeof(AT_INFO));
+            if (pInfo == NULL)
+            {
+                dwError = ERROR_OUTOFMEMORY;
+                goto done;
+            }
+
+            pInfo->Command = midl_user_allocate((wcslen(CurrentJob->Command) + 1) * sizeof(WCHAR));
+            if (pInfo->Command == NULL)
+            {
+                midl_user_free(pInfo);
+                dwError = ERROR_OUTOFMEMORY;
+                goto done;
+            }
+
+            pInfo->JobTime = CurrentJob->JobTime;
+            pInfo->DaysOfMonth = CurrentJob->DaysOfMonth;
+            pInfo->DaysOfWeek = CurrentJob->DaysOfWeek;
+            pInfo->Flags = CurrentJob->Flags;
+            wcscpy(pInfo->Command, CurrentJob->Command);
+
+            *ppAtInfo = pInfo;
+
+            dwError = ERROR_SUCCESS;
+            goto done;
+        }
+
+        /* Next job */
+        JobEntry = JobEntry->Flink;
+    }
+
+done:
+    /* Release the job list lock */
+    RtlReleaseResource(&JobListLock);
+
+    return dwError;
 }
 
 /* EOF */

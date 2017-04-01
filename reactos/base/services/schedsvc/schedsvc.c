@@ -61,6 +61,7 @@ UpdateServiceStatus(DWORD dwState)
                      &ServiceStatus);
 }
 
+
 static DWORD WINAPI
 ServiceControlHandler(DWORD dwControl,
                       DWORD dwEventType,
@@ -114,20 +115,25 @@ ServiceInit(VOID)
 {
     HANDLE hThread;
 
+    /* Initialize the job list */
+    InitializeListHead(&JobListHead);
+
+    /* Initialize the job list lock */
+    RtlInitializeResource(&JobListLock);
+
     hThread = CreateThread(NULL,
                            0,
                            (LPTHREAD_START_ROUTINE)RpcThreadRoutine,
                            NULL,
                            0,
                            NULL);
-
     if (!hThread)
     {
         ERR("Can't create PortThread\n");
         return GetLastError();
     }
-    else
-        CloseHandle(hThread);
+
+    CloseHandle(hThread);
 
     return ERROR_SUCCESS;
 }

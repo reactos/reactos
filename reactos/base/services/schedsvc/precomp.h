@@ -10,9 +10,14 @@
 #include <winreg.h>
 #include <winsvc.h>
 
+#include <ndk/rtlfuncs.h>
+
 #include <atsvc_s.h>
 
 #include <wine/debug.h>
+
+extern LIST_ENTRY JobListHead;
+extern RTL_RESOURCE JobListLock;
 
 DWORD
 WINAPI
