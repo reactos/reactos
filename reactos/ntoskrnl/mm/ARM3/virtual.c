@@ -2670,7 +2670,7 @@ MmSecureVirtualMemory(IN PVOID Address,
                       IN SIZE_T Length,
                       IN ULONG Mode)
 {
-    static BOOLEAN Warn; if (!Warn++) UNIMPLEMENTED;
+    static ULONG Warn; if (!Warn++) UNIMPLEMENTED;
     return Address;
 }
 
@@ -2681,7 +2681,7 @@ VOID
 NTAPI
 MmUnsecureVirtualMemory(IN PVOID SecureMem)
 {
-    static BOOLEAN Warn; if (!Warn++) UNIMPLEMENTED;
+    static ULONG Warn; if (!Warn++) UNIMPLEMENTED;
 }
 
 /* SYSTEM CALLS ***************************************************************/
