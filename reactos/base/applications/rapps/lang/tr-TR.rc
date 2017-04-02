@@ -199,6 +199,7 @@ BEGIN
     IDS_APP_REG_REMOVE "Kurulan izlencenin girişini değer defterinden silmek istediğinizden emin misiniz?"
     IDS_INFORMATION "Bilgi"
     IDS_UNABLE_TO_DOWNLOAD "Paket indirilemez! Adres bulunamadı!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Paket indirilemez! Umûmî Ağ bağlantınızı yoklayınız!"
     IDS_UNABLE_TO_REMOVE "İzlencenin girişi değer defterinden silinemiyor."
     IDS_CERT_DOES_NOT_MATCH "SSL onay belgesi doğrulaması başarısız."
     IDS_INTEG_CHECK_TITLE "Paket bütünlüğü doğrulanıyor..."

@@ -1,4 +1,3 @@
-
 /* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -200,6 +199,7 @@ BEGIN
     IDS_APP_REG_REMOVE "您确定要从注册表删除该程序的数据吗？"
     IDS_INFORMATION "信息"
     IDS_UNABLE_TO_DOWNLOAD "无法下载该软件包 ！找不到网络的地址 ！"
+    IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
     IDS_UNABLE_TO_REMOVE "无法从注册表删除该程序的数据！"
     IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."
     IDS_INTEG_CHECK_TITLE "Verifying package integrity..."

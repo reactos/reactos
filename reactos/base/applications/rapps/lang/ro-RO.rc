@@ -1,4 +1,4 @@
-/* 
+/*
  * FILE:        base/applications/rapps/lang/ro-RO.rc
  *              ReactOS Project (http://www.reactos.org)
  * TRANSLATOR:  Ștefan Fulea (stefan dot fulea at mail dot md)
@@ -203,10 +203,11 @@ BEGIN
     IDS_APP_REG_REMOVE "Sigur doriți să ștergeți datele din registru pentru această aplicațe?"
     IDS_INFORMATION "Informație"
     IDS_UNABLE_TO_DOWNLOAD "Pachetul nu poate fi descărcat! Adresa nu este găsită!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Pachetul nu poate fi descărcat! Verificați conexiunea de Internet!"
     IDS_UNABLE_TO_REMOVE "Datele de registru pentru acest program nu au putut fi eliminate!"
     IDS_CERT_DOES_NOT_MATCH "Verificarea certificatului SSL a eșuat."    
     IDS_INTEG_CHECK_TITLE "Integritatea pachetului în verificare…"
     IDS_INTEG_CHECK_FAIL "Pachetul nu a trecut de verificarea de integritate. Utilizarea programului nu este recomandată."
     IDS_INTERRUPTED_DOWNLOAD "Descărcarea a fost întreruptă. Verificați conexiunea la Internet."
-    IDS_UNABLE_TO_WRITE "Eșec la scrierea pe disc. Una din cauze poate fi atingerea limitei de capacitate a discului."
+    IDS_UNABLE_TO_WRITE "Eșec la scriea pe disc. Una din cauze poate fi atingerea limitei de capacitate."
 END

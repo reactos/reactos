@@ -1,6 +1,7 @@
 #ifndef _RAPPS_H
 #define _RAPPS_H
 
+#include <tchar.h>
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
@@ -16,6 +17,7 @@
 #include <winuser.h>
 #include <wincon.h>
 #include <richedit.h>
+#include <shellapi.h>
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <stdio.h>
@@ -96,8 +98,6 @@ typedef struct
 
 } APPLICATION_INFO, *PAPPLICATION_INFO;
 
-BOOL VerifyInteg(LPCWSTR lpSHA1Hash, LPCWSTR lpFileName);
-
 typedef struct
 {
     HKEY hRootKey;
@@ -139,7 +139,7 @@ BOOL InstallApplication(INT Index);
 /* installed.c */
 typedef BOOL (CALLBACK *APPENUMPROC)(INT ItemIndex, LPWSTR lpName, PINSTALLED_INFO Info);
 BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc);
-BOOL GetApplicationString(HKEY hKey, LPWSTR lpKeyName, LPWSTR lpString);
+BOOL GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR lpString);
 BOOL ShowInstalledAppInfo(INT Index);
 BOOL UninstallApplication(INT Index, BOOL bModify);
 BOOL IsInstalledApplication(LPWSTR lpRegName, BOOL IsUserKey);
@@ -153,18 +153,9 @@ extern SETTINGS_INFO SettingsInfo;
 VOID SaveSettings(HWND hwnd);
 VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo);
 
-/* listview.c */
-extern HWND hListView;
-extern BOOL bAscending;
-BOOL CreateListView(HWND hwnd);
-BOOL ListViewAddColumn(INT Index, LPWSTR lpText, INT Width, INT Format);
-INT ListViewAddItem(INT ItemIndex, INT IconIndex, LPWSTR lpText, LPARAM lParam);
-INT CALLBACK ListViewCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
-PVOID ListViewGetlParam(INT Index);
-
 /* loaddlg.c */
 BOOL DownloadApplication(INT Index);
-VOID DownloadApplicationsDB(LPWSTR lpUrl);
+VOID DownloadApplicationsDB(LPCWSTR lpUrl);
 
 /* misc.c */
 INT GetSystemColorDepth(VOID);
@@ -185,39 +176,25 @@ BOOL WriteLogMessage(WORD wType, DWORD dwEventID, LPWSTR lpMsg);
 UINT ParserGetString(LPCWSTR lpKeyName, LPWSTR lpReturnedString, UINT nSize, LPCWSTR lpFileName);
 UINT ParserGetInt(LPCWSTR lpKeyName, LPCWSTR lpFileName);
 
-/* richedit.c */
-extern HWND hRichEdit;
-extern PWSTR pLink;
-BOOL CreateRichEdit(HWND hwnd);
-VOID RichEditOnLink(HWND hwnd, ENLINK *Link);
-VOID InsertRichEditText(LPCWSTR lpszText, DWORD dwEffects);
-VOID NewRichEditText(LPCWSTR lpszText, DWORD dwEffects);
-
 /* settingsdlg.c */
 VOID CreateSettingsDlg(HWND hwnd);
 
-/* splitter.c */
-extern HWND hVSplitter;
-extern HWND hHSplitter;
-BOOL CreateVSplitBar(HWND hwnd);
-BOOL CreateHSplitBar(HWND hwnd);
-int GetHSplitterPos(VOID);
-VOID SetHSplitterPos(int Pos);
+/* gui.cpp */
+HWND CreateMainWindow();
+DWORD_PTR ListViewGetlParam(INT item);
+INT ListViewAddItem(INT ItemIndex, INT IconIndex, PWSTR lpName, LPARAM lParam);
+VOID SetStatusBarText(PCWSTR szText);
+VOID NewRichEditText(PCWSTR szText, DWORD flags);
+VOID InsertRichEditText(PCWSTR szText, DWORD flags);
+extern HWND hListView;
+extern WCHAR szSearchPattern[MAX_STR_LEN];
 
-/* statusbar.c */
-extern HWND hStatusBar;
-BOOL CreateStatusBar(HWND hwnd);
-VOID SetStatusBarText(LPCWSTR lpszText);
+/* integrity.cpp */
+BOOL VerifyInteg(LPCWSTR lpSHA1Hash, LPCWSTR lpFileName);
 
-/* toolbar.c */
-extern HWND hToolBar;
-extern HWND hSearchBar;
-BOOL CreateToolBar(HWND hwnd);
-VOID ToolBarOnGetDispInfo(LPTOOLTIPTEXT lpttt);
+//extern HWND hTreeView;
+//BOOL CreateTreeView(HWND hwnd);
+//HTREEITEM TreeViewAddItem(HTREEITEM hParent, LPWSTR lpText, INT Image, INT SelectedImage, LPARAM lParam);
 
-/* treeview.c */
-extern HWND hTreeView;
-BOOL CreateTreeView(HWND hwnd);
-HTREEITEM TreeViewAddItem(HTREEITEM hParent, LPWSTR lpText, INT Image, INT SelectedImage, LPARAM lParam);
 
 #endif /* _RAPPS_H */

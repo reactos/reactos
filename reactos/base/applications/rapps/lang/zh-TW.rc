@@ -199,6 +199,7 @@ BEGIN
     IDS_APP_REG_REMOVE "您確定要從登錄檔刪除該程式的資料嗎？"
     IDS_INFORMATION "資訊"
     IDS_UNABLE_TO_DOWNLOAD "無法下載包!找不到的位址!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
     IDS_UNABLE_TO_REMOVE "無法從登錄檔刪除該程式的資料！"
     IDS_CERT_DOES_NOT_MATCH "SSL 憑證驗證失敗。"
     IDS_INTEG_CHECK_TITLE "驗證套裝軟體的完整性..."

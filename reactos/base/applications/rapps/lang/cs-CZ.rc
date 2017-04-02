@@ -202,6 +202,7 @@ BEGIN
     IDS_APP_REG_REMOVE "Určitě odstranit data instalovaného programu z registru?"
     IDS_INFORMATION "Informace"
     IDS_UNABLE_TO_DOWNLOAD "Soubor se nepodařilo stáhnout! Adresa nenalezena!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
     IDS_UNABLE_TO_REMOVE "Nepodařilo se odstranit data programu z registru!"
     IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."
     IDS_INTEG_CHECK_TITLE "Verifying package integrity..."

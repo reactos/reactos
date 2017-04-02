@@ -197,6 +197,7 @@ BEGIN
     IDS_APP_REG_REMOVE "Sind Sie sich sicher, dass Sie die Daten dieses Programms aus der Registry entfernen möchten?"
     IDS_INFORMATION "Informationen"
     IDS_UNABLE_TO_DOWNLOAD "Paket konnte nicht geladen werden! Addresse wurde nicht gefunden!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Paket konnte nicht geladen werden! Prüfen Sie Ihre Internetverbindung!"
     IDS_UNABLE_TO_REMOVE "Konnte die Daten nicht aus der Registry löschen!"
     IDS_CERT_DOES_NOT_MATCH "Überprüfung des SSL-Zertifikats fehlgeschlagen."
     IDS_INTEG_CHECK_TITLE "Verifying package integrity..."

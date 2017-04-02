@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Applications Manager
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/rapps_new/integrity.cpp
+ * FILE:            base/applications/rapps/integrity.cpp
  * PURPOSE:         Various integrity check mechanisms
  * PROGRAMMERS:     Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
  *                  Mark Jansen
