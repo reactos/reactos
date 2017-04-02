@@ -688,7 +688,7 @@ IopStartDevice2(IN PDEVICE_OBJECT DeviceObject)
     Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCapabilities);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopInitiatePnpIrp() failed (Status 0x%08lx)\n", Status);
+        DPRINT("IopInitiatePnpIrp() failed (Status 0x%08lx)\n", Status);
     }
 
     /* Invalidate device state so IRP_MN_QUERY_PNP_DEVICE_STATE is sent */
@@ -855,7 +855,10 @@ IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
                               &Stack);
    if (!NT_SUCCESS(Status))
    {
-       DPRINT1("IRP_MN_QUERY_CAPABILITIES failed with status 0x%x\n", Status);
+       if (Status != STATUS_NOT_SUPPORTED)
+       {
+          DPRINT1("IRP_MN_QUERY_CAPABILITIES failed with status 0x%lx\n", Status);
+       }
        return Status;
    }
 

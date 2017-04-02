@@ -510,7 +510,7 @@ done:
     if (ProfileHandle)
         NtClose(ProfileHandle);
 
-    DPRINT1("CmpCreateHardwareProfile() done\n");
+    DPRINT("CmpCreateHardwareProfile() done\n");
 
     return Status;
 }

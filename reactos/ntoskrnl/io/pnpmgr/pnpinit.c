@@ -452,7 +452,6 @@ IopInitializePlugPlayServices(VOID)
     if (Disposition == REG_CREATED_NEW_KEY)
     {
         /* FIXME: DACLs */
-        DPRINT1("Need to build DACL\n");
     }
 
     /* Create the root key */
