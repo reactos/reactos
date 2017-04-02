@@ -1189,6 +1189,10 @@ PnpRootPdoPnpControl(
             Status = PdoQueryId(DeviceObject, Irp, IrpSp);
             break;
 
+        case IRP_MN_QUERY_PNP_DEVICE_STATE: /* 0x14 */
+            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_PNP_DEVICE_STATE\n");
+            break;
+
         case IRP_MN_QUERY_BUS_INFORMATION: /* 0x15 */
             DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_BUS_INFORMATION\n");
             Status = PdoQueryBusInformation(DeviceObject, Irp, IrpSp);
