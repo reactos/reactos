@@ -723,12 +723,17 @@ i8042Pnp(
             }
             break;
         }
+        case IRP_MN_QUERY_CAPABILITIES: /* (optional) 0x09 */
+        {
+            TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_QUERY_CAPABILITIES\n");
+            return ForwardIrpAndForget(DeviceObject, Irp);
+        }
         case IRP_MN_FILTER_RESOURCE_REQUIREMENTS: /* (optional) 0x0d */
         {
             TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
             return ForwardIrpAndForget(DeviceObject, Irp);
         }
-        case IRP_MN_QUERY_PNP_DEVICE_STATE: /* 0x14 */
+        case IRP_MN_QUERY_PNP_DEVICE_STATE: /* (optional) 0x14 */
         {
             TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_QUERY_PNP_DEVICE_STATE\n");
             return ForwardIrpAndForget(DeviceObject, Irp);

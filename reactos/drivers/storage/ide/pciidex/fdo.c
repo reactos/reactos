@@ -462,6 +462,11 @@ PciIdeXFdoPnpDispatch(
 			DPRINT("IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
 			return ForwardIrpAndForget(DeviceObject, Irp);
 		}
+		case IRP_MN_QUERY_CAPABILITIES: /* 0x09 */
+		{
+			DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_CAPABILITIES\n");
+			return ForwardIrpAndForget(DeviceObject, Irp);
+		}
 		default:
 		{
 			DPRINT1("IRP_MJ_PNP / Unknown minor function 0x%lx\n", MinorFunction);
