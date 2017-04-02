@@ -13,7 +13,7 @@ typedef struct _AT_ENUM
     DWORD DaysOfMonth;
     unsigned char DaysOfWeek;
     unsigned char Flags;
-    wchar_t *Command;
+    [string] wchar_t *Command;
 } AT_ENUM, *PAT_ENUM, *LPAT_ENUM;
 
 typedef struct _AT_INFO
