@@ -142,8 +142,8 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::TileHorizontally()
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::ShutdownWindows()
 {
-    TRACE("(%p)\n", this);
-    return E_NOTIMPL;
+    ExitWindowsDialog(NULL);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::Suspend()
