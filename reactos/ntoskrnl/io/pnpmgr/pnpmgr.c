@@ -4126,7 +4126,10 @@ IoInvalidateDeviceState(IN PDEVICE_OBJECT PhysicalDeviceObject)
     Status = IopSynchronousCall(PhysicalDeviceObject, &Stack, (PVOID*)&PnPFlags);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IRP_MN_QUERY_PNP_DEVICE_STATE failed with status 0x%x\n", Status);
+        if (Status != STATUS_NOT_SUPPORTED)
+        {
+            DPRINT1("IRP_MN_QUERY_PNP_DEVICE_STATE failed with status 0x%lx\n", Status);
+        }
         return;
     }
 
