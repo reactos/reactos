@@ -21,7 +21,7 @@
  * PROJECT:          ReactOS Services
  * FILE:             base/services/schedsvc/rpcserver.c
  * PURPOSE:          Scheduler service
- * PROGRAMMER:       Eric Kohl
+ * PROGRAMMER:       Eric Kohl <eric.kohl@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/
@@ -31,6 +31,8 @@
 #include "lmerr.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(schedsvc);
+
+#define DWORD_MAX 0xffffffffUL
 
 typedef struct _JOB
 {
@@ -196,9 +198,124 @@ NetrJobEnum(
     LPDWORD pTotalEntries,
     LPDWORD pResumeHandle)
 {
+    PLIST_ENTRY JobEntry;
+    PJOB CurrentJob;
+    PAT_ENUM pEnum;
+    DWORD dwStartIndex, dwIndex;
+    DWORD dwEntriesToRead, dwEntriesRead;
+    DWORD dwRequiredSize, dwEntrySize;
+    PWSTR pString;
+    DWORD dwError = ERROR_SUCCESS;
+
     TRACE("NetrJobEnum(%S %p %lu %p %p)\n",
           ServerName, pEnumContainer, PreferedMaximumLength, pTotalEntries, pResumeHandle);
-    return ERROR_SUCCESS;
+
+    if (pEnumContainer == NULL)
+    {
+        *pTotalEntries = 0;
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    if (*pResumeHandle >= dwJobCount)
+    {
+        *pTotalEntries = 0;
+        return ERROR_SUCCESS;
+    }
+
+    dwStartIndex = *pResumeHandle;
+    TRACE("dwStartIndex: %lu\n", dwStartIndex);
+
+    /* Acquire the job list lock exclusively */
+    RtlAcquireResourceShared(&JobListLock, TRUE);
+
+    dwEntriesToRead = 0;
+    dwRequiredSize = 0;
+    dwIndex = 0;
+    JobEntry = JobListHead.Flink;
+    while (JobEntry != &JobListHead)
+    {
+        CurrentJob = CONTAINING_RECORD(JobEntry, JOB, Entry);
+
+        if (dwIndex >= dwStartIndex)
+        {
+            TRACE("dwIndex: %lu\n", dwIndex);
+            dwEntrySize = sizeof(AT_ENUM) +
+                          (wcslen(CurrentJob->Command) + 1) * sizeof(WCHAR);
+            TRACE("dwEntrySize: %lu\n", dwEntrySize);
+
+            if ((PreferedMaximumLength != DWORD_MAX) &&
+                (dwRequiredSize + dwEntrySize > PreferedMaximumLength))
+                break;
+
+            dwRequiredSize += dwEntrySize;
+            dwEntriesToRead++;
+        }
+
+        JobEntry = JobEntry->Flink;
+        dwIndex++;
+    }
+    TRACE("dwEntriesToRead: %lu\n", dwEntriesToRead);
+    TRACE("dwRequiredSize: %lu\n", dwRequiredSize);
+
+    if (PreferedMaximumLength != DWORD_MAX)
+        dwRequiredSize = PreferedMaximumLength;
+
+    TRACE("Allocating dwRequiredSize: %lu\n", dwRequiredSize);
+    pEnum = midl_user_allocate(dwRequiredSize);
+    if (pEnum == NULL)
+    {
+        dwError = ERROR_OUTOFMEMORY;
+        goto done;
+    }
+
+    pString = (PWSTR)((ULONG_PTR)pEnum + dwEntriesToRead * sizeof(AT_ENUM));
+
+    dwEntriesRead = 0;
+    dwIndex = 0;
+    JobEntry = JobListHead.Flink;
+    while (JobEntry != &JobListHead)
+    {
+        CurrentJob = CONTAINING_RECORD(JobEntry, JOB, Entry);
+
+        if (dwIndex >= dwStartIndex)
+        {
+            pEnum[dwIndex].JobId = CurrentJob->JobId;
+            pEnum[dwIndex].JobTime = CurrentJob->JobTime;
+            pEnum[dwIndex].DaysOfMonth = CurrentJob->DaysOfMonth;
+            pEnum[dwIndex].DaysOfWeek = CurrentJob->DaysOfWeek;
+            pEnum[dwIndex].Flags = CurrentJob->Flags;
+            pEnum[dwIndex].Command = pString;
+            wcscpy(pString, CurrentJob->Command);
+
+            pString = (PWSTR)((ULONG_PTR)pString + (wcslen(CurrentJob->Command) + 1) * sizeof(WCHAR));
+
+            dwEntriesRead++;
+        }
+
+        if (dwEntriesRead == dwEntriesToRead)
+            break;
+
+        /* Next job */
+        JobEntry = JobEntry->Flink;
+        dwIndex++;
+    }
+
+    pEnumContainer->EntriesRead = dwEntriesRead;
+    pEnumContainer->Buffer = pEnum;
+
+    *pTotalEntries = dwJobCount;
+    *pResumeHandle = dwIndex;
+
+    if (dwEntriesRead + dwStartIndex < dwJobCount)
+        dwError = ERROR_MORE_DATA;
+    else
+        dwError = ERROR_SUCCESS;
+
+done:
+    /* Release the job list lock */
+    RtlReleaseResource(&JobListLock);
+
+    return dwError;
 }
 
 
