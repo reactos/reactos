@@ -51,7 +51,7 @@ IDB_TASKBARPROP_NOLOCK_NOGROUP_NOQL BITMAP "res/bmp/153.bmp"
 IDB_SYSTRAYPROP_SHOW_SECONDS        BITMAP "res/bmp/154.bmp"
 IDB_SYSTRAYPROP_HIDE_SECONDS        BITMAP "res/bmp/155.bmp"
 IDB_STARTMENU                       BITMAP "res/bmp/158.bmp"
-IDB_STARTPREVIEW                    BITMAP "res/bmp/171.bmp" // We don't have a proper preview image for the modern start menu yet. Use the classic one so far.
+IDB_STARTPREVIEW                    BITMAP "res/bmp/170.bmp"
 IDB_STARTPREVIEW_CLASSIC            BITMAP "res/bmp/171.bmp"
 IDB_SYSTRAYPROP_HIDE_CLOCK          BITMAP "res/bmp/180.bmp"
 IDB_SYSTRAYPROP_HIDE_NOCLOCK        BITMAP "res/bmp/181.bmp"
