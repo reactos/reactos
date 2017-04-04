@@ -4105,6 +4105,7 @@ NtGdiGetRegionData(
                 RtlCopyMemory(lpRgnData, &prgn->rdh, sizeof(RGNDATAHEADER));
                 RtlCopyMemory(lpRgnData->Buffer, prgn->Buffer, cjRects);
                 lpRgnData->rdh.iType = RDH_RECTANGLES;
+                lpRgnData->rdh.nRgnSize = cjRects;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
