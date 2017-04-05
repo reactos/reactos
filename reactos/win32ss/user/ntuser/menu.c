@@ -4240,7 +4240,7 @@ static BOOL FASTCALL MENU_ExitTracking(PWND pWnd, BOOL bPopup, UINT wFlags)
  */
 VOID MENU_TrackMouseMenuBar( PWND pWnd, ULONG ht, POINT pt)
 {
-    PMENU pMenu = (ht == HTSYSMENU) ? get_win_sys_menu( UserHMGetHandle(pWnd) ) : IntGetMenu( UserHMGetHandle(pWnd) );
+    PMENU pMenu = (ht == HTSYSMENU) ? IntGetSystemMenu(pWnd, FALSE) : IntGetMenu( UserHMGetHandle(pWnd) );
     UINT wFlags = TPM_BUTTONDOWN | TPM_LEFTALIGN | TPM_LEFTBUTTON;
 
     TRACE("wnd=%p ht=0x%04x (%ld,%ld)\n", pWnd, ht, pt.x, pt.y);
