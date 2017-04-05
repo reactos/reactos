@@ -1050,7 +1050,7 @@ IoCancelIrp(IN PIRP Irp)
     Irp->Cancel = TRUE;
 
     /* Clear the cancel routine and get the old one */
-    CancelRoutine = (PVOID)IoSetCancelRoutine(Irp, NULL);
+    CancelRoutine = IoSetCancelRoutine(Irp, NULL);
     if (CancelRoutine)
     {
         /* We had a routine, make sure the IRP isn't completed */
