@@ -5288,6 +5288,54 @@ IntSetMenu(
 /*
  * @implemented
  */
+/* http://www.cyber-ta.org/releases/malware-analysis/public/SOURCES/b47155634ccb2c30630da7e3666d3d07/b47155634ccb2c30630da7e3666d3d07.trace.html#NtUserGetIconSize */
+DWORD
+APIENTRY
+NtUserCalcMenuBar(
+    HWND   hwnd,
+    DWORD  leftBorder,
+    DWORD  rightBorder,
+    DWORD  top,
+    LPRECT prc )
+{
+    HDC hdc;
+    PWND Window;
+    RECT Rect;
+    DWORD ret;
+
+    UserEnterExclusive();
+
+    if(!(Window = UserGetWindowObject(hwnd)))
+    {
+        EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
+        UserLeave();
+        return 0;
+    }
+
+    hdc = UserGetDCEx(NULL, NULL, DCX_CACHE);
+    if (!hdc)
+    {
+        UserLeave();
+        return 0;
+    }
+
+    Rect.left = leftBorder;
+    Rect.right = Window->rcWindow.right - Window->rcWindow.left - rightBorder;
+    Rect.top = top;
+    Rect.bottom = 0;
+
+    ret = MENU_DrawMenuBar(hdc, &Rect, Window, TRUE);
+
+    UserReleaseDC( 0, hdc, FALSE );
+
+    UserLeave();
+
+    return ret;
+}
+
+/*
+ * @implemented
+ */
 DWORD APIENTRY
 NtUserCheckMenuItem(
    HMENU hMenu,

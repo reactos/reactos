@@ -862,20 +862,6 @@ NtUserTestForInteractiveUser(
     return 0;
 }
 
-/* http://www.cyber-ta.org/releases/malware-analysis/public/SOURCES/b47155634ccb2c30630da7e3666d3d07/b47155634ccb2c30630da7e3666d3d07.trace.html#NtUserGetIconSize */
-DWORD
-APIENTRY
-NtUserCalcMenuBar(
-    HWND   hwnd,
-    DWORD  x,
-    DWORD  width, // Scale the edge thickness, offset?
-    DWORD  y,
-    LPRECT prc )
-{
-    ERR("hwnd %p, X %d, Width %d, Y %d, prc 0x%x\n",hwnd,x,width,y,prc);
-    return 0;
-}
-
 DWORD
 APIENTRY
 NtUserRemoteConnect(
