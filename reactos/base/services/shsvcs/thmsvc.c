@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             base/services/thmsvc/thmsvc.c
+ * FILE:             base/services/shsvcs/thmsvc.c
  * PURPOSE:          Themes service
  * PROGRAMMER:       Giannis Adamopoulos
  */
@@ -9,28 +9,21 @@
 /* INCLUDES *****************************************************************/
 
 #include <windows.h>
-#include <uxtheme.h>
-#include <uxundoc.h>
 #include <wine/debug.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(thmsvc);
-
+WINE_DEFAULT_DEBUG_CHANNEL(shsvcs);
 
 /* GLOBALS ******************************************************************/
 
-static VOID CALLBACK ServiceMain(DWORD argc, LPWSTR *argv);
 static WCHAR ServiceName[] = L"Themes";
-static SERVICE_TABLE_ENTRYW ServiceTable[] =
-{
-    {ServiceName, ServiceMain},
-    {NULL, NULL}
-};
 
 SERVICE_STATUS_HANDLE ServiceStatusHandle;
 SERVICE_STATUS ServiceStatus;
 
 
 /* FUNCTIONS *****************************************************************/
+
+HANDLE StartEvent, StopEvent;
 
 static VOID
 UpdateServiceStatus(DWORD dwState)
@@ -74,7 +67,10 @@ ServiceControlHandler(DWORD dwControl,
     {
         case SERVICE_CONTROL_STOP:
             TRACE("  SERVICE_CONTROL_STOP received\n");
-            ThemeHooksRemove();
+
+            /* Signal the theme server in winlogon to remove theme hooks */
+            ResetEvent(StartEvent);
+            SetEvent(StopEvent);
             UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 
@@ -105,42 +101,30 @@ ServiceControlHandler(DWORD dwControl,
     }
 }
 
-
-static VOID CALLBACK
-ServiceMain(DWORD argc, LPWSTR *argv)
+VOID
+WINAPI
+ThemeServiceMain(DWORD argc, LPTSTR *argv)
 {
     UNREFERENCED_PARAMETER(argc);
     UNREFERENCED_PARAMETER(argv);
-
-    TRACE("ServiceMain() called\n");
 
     ServiceStatusHandle = RegisterServiceCtrlHandlerExW(ServiceName,
                                                         ServiceControlHandler,
                                                         NULL);
+    if (!ServiceStatusHandle)
+    {
+        ERR("RegisterServiceCtrlHandlerExW() failed! (Error %lu)\n", GetLastError());
+        return;
+    }
 
-    TRACE("Calling SetServiceStatus()\n");
+    StartEvent = CreateEventW(NULL, TRUE, FALSE, L"Global\\ThemeStartEvent");
+    StopEvent = CreateEventW(NULL, TRUE, FALSE, L"Global\\ThemeStopEvent");
+
     UpdateServiceStatus(SERVICE_RUNNING);
-    TRACE("SetServiceStatus() called\n");
 
-    ThemeHooksInstall();
-
-    TRACE("ServiceMain() done\n");
-}
-
-
-int
-wmain(int argc, WCHAR *argv[])
-{
-    UNREFERENCED_PARAMETER(argc);
-    UNREFERENCED_PARAMETER(argv);
-
-    TRACE("thmsvc: main() started\n");
-
-    StartServiceCtrlDispatcher(ServiceTable);
-
-    TRACE("thmsvc: main() done\n");
-
-    return 0;
+    /* Signal the theme server in winlogon to install theme hooks */
+    ResetEvent(StopEvent);
+    SetEvent(StartEvent);
 }
 
 /* EOF */
