@@ -272,16 +272,441 @@ DrawEscape(HDC  hDC,
     return 0;
 }
 
+#define ALPHABLEND_NONE             0
+#define ALPHABLEND_BINARY           1
+#define ALPHABLEND_FULL             2
+
+typedef struct _MARGINS {
+    int cxLeftWidth;
+    int cxRightWidth;
+    int cyTopHeight;
+    int cyBottomHeight;
+} MARGINS, *PMARGINS;
+
+typedef struct GDI_DRAW_STREAM_TAG
+{
+	DWORD   signature;     // must be 0x44727753;//"Swrd"
+	DWORD   reserved;      // must be 0
+	HDC     hDC;           // handle to the device object of windiw to draw.
+	RECT    rcDest;        // desination rect of window to draw.
+	DWORD   unknown1;      // must be 1.
+	HBITMAP hImage;
+	DWORD   unknown2;      // must be 9.
+	RECT    rcClip;        // desination rect of window to draw.
+	RECT    rcSrc;         // source rect of bitmap to draw.
+	DWORD   drawOption;    // 0x2 is tile instead of stretch. 0x4 is transparent. 0x20 is true size
+	DWORD   leftSizingMargin;
+	DWORD   rightSizingMargin;
+	DWORD   topSizingMargin;
+	DWORD   bottomSizingMargin;
+	DWORD   crTransparent; // transparent color.
+
+} GDI_DRAW_STREAM, *PGDI_DRAW_STREAM;
+
+enum SIZINGTYPE {
+    ST_TRUESIZE = 0,
+    ST_STRETCH = 1,
+    ST_TILE = 2,
+};
+
+#define TransparentBlt GdiTransparentBlt
+#define AlphaBlend GdiAlphaBlend
+
+/***********************************************************************
+ *      UXTHEME_StretchBlt
+ *
+ * Pseudo TransparentBlt/StretchBlt
+ */
+static inline BOOL UXTHEME_StretchBlt(HDC hdcDst, int nXOriginDst, int nYOriginDst, int nWidthDst, int nHeightDst,
+                                      HDC hdcSrc, int nXOriginSrc, int nYOriginSrc, int nWidthSrc, int nHeightSrc,
+                                      INT transparent, COLORREF transcolor)
+{
+    static const BLENDFUNCTION blendFunc = 
+    {
+      AC_SRC_OVER, /* BlendOp */
+      0,           /* BlendFlag */
+      255,         /* SourceConstantAlpha */
+      AC_SRC_ALPHA /* AlphaFormat */
+    };
+
+    BOOL ret = TRUE;
+    int old_stretch_mode;
+    POINT old_brush_org;
+
+    old_stretch_mode = SetStretchBltMode(hdcDst, HALFTONE);
+    SetBrushOrgEx(hdcDst, nXOriginDst, nYOriginDst, &old_brush_org);
+
+    if (transparent == ALPHABLEND_BINARY) {
+        /* Ensure we don't pass any negative values to TransparentBlt */
+        ret = TransparentBlt(hdcDst, nXOriginDst, nYOriginDst, abs(nWidthDst), abs(nHeightDst),
+                              hdcSrc, nXOriginSrc, nYOriginSrc, abs(nWidthSrc), abs(nHeightSrc),
+                              transcolor);
+    } else if ((transparent == ALPHABLEND_NONE) ||
+        !AlphaBlend(hdcDst, nXOriginDst, nYOriginDst, nWidthDst, nHeightDst,
+                    hdcSrc, nXOriginSrc, nYOriginSrc, nWidthSrc, nHeightSrc,
+                    blendFunc))
+    {
+        ret = StretchBlt(hdcDst, nXOriginDst, nYOriginDst, nWidthDst, nHeightDst,
+                          hdcSrc, nXOriginSrc, nYOriginSrc, nWidthSrc, nHeightSrc,
+                          SRCCOPY);
+    }
+
+    SetBrushOrgEx(hdcDst, old_brush_org.x, old_brush_org.y, NULL);
+    SetStretchBltMode(hdcDst, old_stretch_mode);
+
+    return ret;
+}
+
+/***********************************************************************
+ *      UXTHEME_Blt
+ *
+ * Simplify sending same width/height for both source and dest
+ */
+static inline BOOL UXTHEME_Blt(HDC hdcDest, int nXOriginDest, int nYOriginDest, int nWidthDest, int nHeightDest,
+                               HDC hdcSrc, int nXOriginSrc, int nYOriginSrc,
+                               INT transparent, COLORREF transcolor)
+{
+    return UXTHEME_StretchBlt(hdcDest, nXOriginDest, nYOriginDest, nWidthDest, nHeightDest,
+                              hdcSrc, nXOriginSrc, nYOriginSrc, nWidthDest, nHeightDest,
+                              transparent, transcolor);
+}
+
+/***********************************************************************
+ *      UXTHEME_SizedBlt
+ *
+ * Stretches or tiles, depending on sizingtype.
+ */
+static inline BOOL UXTHEME_SizedBlt (HDC hdcDst, int nXOriginDst, int nYOriginDst, 
+                                     int nWidthDst, int nHeightDst,
+                                     HDC hdcSrc, int nXOriginSrc, int nYOriginSrc, 
+                                     int nWidthSrc, int nHeightSrc,
+                                     int sizingtype, 
+                                     INT transparent, COLORREF transcolor)
+{
+    if (sizingtype == ST_TILE)
+    {
+        HDC hdcTemp;
+        BOOL result = FALSE;
+
+        if (!nWidthSrc || !nHeightSrc) return TRUE;
+
+        /* For destination width/height less than or equal to source
+           width/height, do not bother with memory bitmap optimization */
+        if (nWidthSrc >= nWidthDst && nHeightSrc >= nHeightDst)
+        {
+            int bltWidth = min (nWidthDst, nWidthSrc);
+            int bltHeight = min (nHeightDst, nHeightSrc);
+
+            return UXTHEME_Blt (hdcDst, nXOriginDst, nYOriginDst, bltWidth, bltHeight,
+                                hdcSrc, nXOriginSrc, nYOriginSrc,
+                                transparent, transcolor);
+        }
+
+        /* Create a DC with a bitmap consisting of a tiling of the source
+           bitmap, with standard GDI functions. This is faster than an
+           iteration with UXTHEME_Blt(). */
+        hdcTemp = CreateCompatibleDC(hdcSrc);
+        if (hdcTemp != 0)
+        {
+            HBITMAP bitmapTemp;
+            HBITMAP bitmapOrig;
+            int nWidthTemp, nHeightTemp;
+            int xOfs, xRemaining;
+            int yOfs, yRemaining;
+            int growSize;
+
+            /* Calculate temp dimensions of integer multiples of source dimensions */
+            nWidthTemp = ((nWidthDst + nWidthSrc - 1) / nWidthSrc) * nWidthSrc;
+            nHeightTemp = ((nHeightDst + nHeightSrc - 1) / nHeightSrc) * nHeightSrc;
+            bitmapTemp = CreateCompatibleBitmap(hdcSrc, nWidthTemp, nHeightTemp);
+            bitmapOrig = SelectObject(hdcTemp, bitmapTemp);
+
+            /* Initial copy of bitmap */
+            BitBlt(hdcTemp, 0, 0, nWidthSrc, nHeightSrc, hdcSrc, nXOriginSrc, nYOriginSrc, SRCCOPY);
+
+            /* Extend bitmap in the X direction. Growth of width is exponential */
+            xOfs = nWidthSrc;
+            xRemaining = nWidthTemp - nWidthSrc;
+            growSize = nWidthSrc;
+            while (xRemaining > 0)
+            {
+                growSize = min(growSize, xRemaining);
+                BitBlt(hdcTemp, xOfs, 0, growSize, nHeightSrc, hdcTemp, 0, 0, SRCCOPY);
+                xOfs += growSize;
+                xRemaining -= growSize;
+                growSize *= 2;
+            }
+
+            /* Extend bitmap in the Y direction. Growth of height is exponential */
+            yOfs = nHeightSrc;
+            yRemaining = nHeightTemp - nHeightSrc;
+            growSize = nHeightSrc;
+            while (yRemaining > 0)
+            {
+                growSize = min(growSize, yRemaining);
+                BitBlt(hdcTemp, 0, yOfs, nWidthTemp, growSize, hdcTemp, 0, 0, SRCCOPY);
+                yOfs += growSize;
+                yRemaining -= growSize;
+                growSize *= 2;
+            }
+
+            /* Use temporary hdc for source */
+            result = UXTHEME_Blt (hdcDst, nXOriginDst, nYOriginDst, nWidthDst, nHeightDst,
+                          hdcTemp, 0, 0,
+                          transparent, transcolor);
+
+            SelectObject(hdcTemp, bitmapOrig);
+            DeleteObject(bitmapTemp);
+        }
+        DeleteDC(hdcTemp);
+        return result;
+    }
+    else
+    {
+        return UXTHEME_StretchBlt (hdcDst, nXOriginDst, nYOriginDst, nWidthDst, nHeightDst,
+                                   hdcSrc, nXOriginSrc, nYOriginSrc, nWidthSrc, nHeightSrc,
+                                   transparent, transcolor);
+    }
+}
+
+/***********************************************************************
+ *      UXTHEME_DrawImageBackground
+ *
+ * Draw an imagefile background
+ */
+static HRESULT UXTHEME_DrawImageBackground(HDC hdc, HBITMAP bmpSrc, RECT *prcSrc, INT transparent,
+                                    COLORREF transparentcolor, BOOL borderonly, int sizingtype, MARGINS *psm, RECT *pRect)
+{
+    HRESULT hr = S_OK;
+    HBITMAP bmpSrcResized = NULL;
+    HGDIOBJ oldSrc;
+    HDC hdcSrc, hdcOrigSrc = NULL;
+    RECT rcDst;
+    POINT dstSize;
+    POINT srcSize;
+    RECT rcSrc;
+    MARGINS sm;
+
+    rcDst = *pRect;
+    rcSrc = *prcSrc;
+    sm = *psm;
+
+    hdcSrc = CreateCompatibleDC(hdc);
+    if(!hdcSrc) {
+        hr = HRESULT_FROM_WIN32(GetLastError());
+        return hr;
+    }
+    oldSrc = SelectObject(hdcSrc, bmpSrc);
+
+    dstSize.x = rcDst.right-rcDst.left;
+    dstSize.y = rcDst.bottom-rcDst.top;
+    srcSize.x = rcSrc.right-rcSrc.left;
+    srcSize.y = rcSrc.bottom-rcSrc.top;
+
+    if(sizingtype == ST_TRUESIZE) {
+        if(!UXTHEME_StretchBlt(hdc, rcDst.left, rcDst.top, dstSize.x, dstSize.y,
+                                hdcSrc, rcSrc.left, rcSrc.top, srcSize.x, srcSize.y,
+                                transparent, transparentcolor))
+            hr = HRESULT_FROM_WIN32(GetLastError());
+    }
+    else {
+        HDC hdcDst = NULL;
+        POINT org;
+
+        dstSize.x = abs(dstSize.x);
+        dstSize.y = abs(dstSize.y);
+
+        /* Resize source image if destination smaller than margins */
+#ifndef __REACTOS__
+        /* Revert Wine Commit 2b650fa as it breaks themed Explorer Toolbar Separators
+           FIXME: Revisit this when the bug is fixed. CORE-9636 and Wine Bug #38538 */
+        if (sm.cyTopHeight + sm.cyBottomHeight > dstSize.y || sm.cxLeftWidth + sm.cxRightWidth > dstSize.x) {
+            if (sm.cyTopHeight + sm.cyBottomHeight > dstSize.y) {
+                sm.cyTopHeight = MulDiv(sm.cyTopHeight, dstSize.y, srcSize.y);
+                sm.cyBottomHeight = dstSize.y - sm.cyTopHeight;
+                srcSize.y = dstSize.y;
+            }
+
+            if (sm.cxLeftWidth + sm.cxRightWidth > dstSize.x) {
+                sm.cxLeftWidth = MulDiv(sm.cxLeftWidth, dstSize.x, srcSize.x);
+                sm.cxRightWidth = dstSize.x - sm.cxLeftWidth;
+                srcSize.x = dstSize.x;
+            }
+
+            hdcOrigSrc = hdcSrc;
+            hdcSrc = CreateCompatibleDC(NULL);
+            bmpSrcResized = CreateBitmap(srcSize.x, srcSize.y, 1, 32, NULL);
+            SelectObject(hdcSrc, bmpSrcResized);
+
+            UXTHEME_StretchBlt(hdcSrc, 0, 0, srcSize.x, srcSize.y, hdcOrigSrc, rcSrc.left, rcSrc.top,
+                               rcSrc.right - rcSrc.left, rcSrc.bottom - rcSrc.top, transparent, transparentcolor);
+
+            rcSrc.left = 0;
+            rcSrc.top = 0;
+            rcSrc.right = srcSize.x;
+            rcSrc.bottom = srcSize.y;
+        }
+#endif /* __REACTOS__ */
+
+        hdcDst = hdc;
+        OffsetViewportOrgEx(hdcDst, rcDst.left, rcDst.top, &org);
+
+        /* Upper left corner */
+        if(!UXTHEME_Blt(hdcDst, 0, 0, sm.cxLeftWidth, sm.cyTopHeight,
+                        hdcSrc, rcSrc.left, rcSrc.top, 
+                        transparent, transparentcolor)) {
+            hr = HRESULT_FROM_WIN32(GetLastError());
+            goto draw_error; 
+        }
+        /* Upper right corner */
+        if(!UXTHEME_Blt (hdcDst, dstSize.x-sm.cxRightWidth, 0, 
+                         sm.cxRightWidth, sm.cyTopHeight,
+                         hdcSrc, rcSrc.right-sm.cxRightWidth, rcSrc.top, 
+                         transparent, transparentcolor)) {
+            hr = HRESULT_FROM_WIN32(GetLastError());
+            goto draw_error; 
+        }
+        /* Lower left corner */
+        if(!UXTHEME_Blt (hdcDst, 0, dstSize.y-sm.cyBottomHeight, 
+                         sm.cxLeftWidth, sm.cyBottomHeight,
+                         hdcSrc, rcSrc.left, rcSrc.bottom-sm.cyBottomHeight, 
+                         transparent, transparentcolor)) {
+            hr = HRESULT_FROM_WIN32(GetLastError());
+            goto draw_error; 
+        }
+        /* Lower right corner */
+        if(!UXTHEME_Blt (hdcDst, dstSize.x-sm.cxRightWidth, dstSize.y-sm.cyBottomHeight, 
+                         sm.cxRightWidth, sm.cyBottomHeight,
+                         hdcSrc, rcSrc.right-sm.cxRightWidth, rcSrc.bottom-sm.cyBottomHeight, 
+                         transparent, transparentcolor)) {
+            hr = HRESULT_FROM_WIN32(GetLastError());
+            goto draw_error; 
+        }
+
+        if ((sizingtype == ST_STRETCH) || (sizingtype == ST_TILE)) {
+            int destCenterWidth  = dstSize.x - (sm.cxLeftWidth + sm.cxRightWidth);
+            int srcCenterWidth   = srcSize.x - (sm.cxLeftWidth + sm.cxRightWidth);
+            int destCenterHeight = dstSize.y - (sm.cyTopHeight + sm.cyBottomHeight);
+            int srcCenterHeight  = srcSize.y - (sm.cyTopHeight + sm.cyBottomHeight);
+
+            if(destCenterWidth > 0) {
+                /* Center top */
+                if(!UXTHEME_SizedBlt (hdcDst, sm.cxLeftWidth, 0, 
+                                      destCenterWidth, sm.cyTopHeight,
+                                      hdcSrc, rcSrc.left+sm.cxLeftWidth, rcSrc.top, 
+                                      srcCenterWidth, sm.cyTopHeight, 
+                                      sizingtype, transparent, transparentcolor)) {
+                    hr = HRESULT_FROM_WIN32(GetLastError());
+                    goto draw_error; 
+                }
+                /* Center bottom */
+                if(!UXTHEME_SizedBlt (hdcDst, sm.cxLeftWidth, dstSize.y-sm.cyBottomHeight, 
+                                      destCenterWidth, sm.cyBottomHeight,
+                                      hdcSrc, rcSrc.left+sm.cxLeftWidth, rcSrc.bottom-sm.cyBottomHeight, 
+                                      srcCenterWidth, sm.cyBottomHeight, 
+                                      sizingtype, transparent, transparentcolor)) {
+                    hr = HRESULT_FROM_WIN32(GetLastError());
+                    goto draw_error; 
+                }
+            }
+            if(destCenterHeight > 0) {
+                /* Left center */
+                if(!UXTHEME_SizedBlt (hdcDst, 0, sm.cyTopHeight, 
+                                      sm.cxLeftWidth, destCenterHeight,
+                                      hdcSrc, rcSrc.left, rcSrc.top+sm.cyTopHeight, 
+                                      sm.cxLeftWidth, srcCenterHeight, 
+                                      sizingtype, 
+                                      transparent, transparentcolor)) {
+                    hr = HRESULT_FROM_WIN32(GetLastError());
+                    goto draw_error; 
+                }
+                /* Right center */
+                if(!UXTHEME_SizedBlt (hdcDst, dstSize.x-sm.cxRightWidth, sm.cyTopHeight, 
+                                      sm.cxRightWidth, destCenterHeight,
+                                      hdcSrc, rcSrc.right-sm.cxRightWidth, rcSrc.top+sm.cyTopHeight, 
+                                      sm.cxRightWidth, srcCenterHeight, 
+                                      sizingtype, transparent, transparentcolor)) {
+                    hr = HRESULT_FROM_WIN32(GetLastError());
+                    goto draw_error; 
+                }
+            }
+            if(destCenterHeight > 0 && destCenterWidth > 0) {
+                if(!borderonly) {
+                    /* Center */
+                    if(!UXTHEME_SizedBlt (hdcDst, sm.cxLeftWidth, sm.cyTopHeight, 
+                                          destCenterWidth, destCenterHeight,
+                                          hdcSrc, rcSrc.left+sm.cxLeftWidth, rcSrc.top+sm.cyTopHeight, 
+                                          srcCenterWidth, srcCenterHeight, 
+                                          sizingtype, transparent, transparentcolor)) {
+                        hr = HRESULT_FROM_WIN32(GetLastError());
+                        goto draw_error; 
+                    }
+                }
+            }
+        }
+
+draw_error:
+        SetViewportOrgEx (hdcDst, org.x, org.y, NULL);
+    }
+    SelectObject(hdcSrc, oldSrc);
+    DeleteDC(hdcSrc);
+    if (bmpSrcResized) DeleteObject(bmpSrcResized);
+    if (hdcOrigSrc) DeleteDC(hdcOrigSrc);
+    *pRect = rcDst;
+    return hr;
+}
 
 /*
  * @unimplemented
  */
 BOOL
 WINAPI
-GdiDrawStream(HDC dc, ULONG l, VOID *v) // See Bug 4784
+GdiDrawStream(HDC dc, ULONG l, PGDI_DRAW_STREAM pDS)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    if (!pDS || l != sizeof(*pDS))
+    {
+        DPRINT1("GdiDrawStream: Invalid params\n");
+        return 0;
+    }
+
+    if (pDS->signature != 0x44727753 ||
+        pDS->reserved != 0 ||
+        pDS->unknown1 != 1 ||
+        pDS->unknown2 != 9)
+    {
+        DPRINT1("GdiDrawStream: Got unknown pDS data\n");
+        return 0;
+    }
+
+    {
+        MARGINS sm = {pDS->leftSizingMargin, pDS->rightSizingMargin, pDS->topSizingMargin, pDS->bottomSizingMargin};
+        INT transparent = 0;
+        int sizingtype;
+
+        if (pDS->drawOption & 0x4)
+            transparent = ALPHABLEND_FULL;
+        else if (pDS->drawOption & 0x8)
+            transparent = ALPHABLEND_BINARY;
+        else 
+            transparent = ALPHABLEND_NONE;
+
+        if (pDS->drawOption & 0x2)
+            sizingtype = ST_TILE;
+        else if (pDS->drawOption & 0x20)
+            sizingtype = ST_TRUESIZE;
+        else
+            sizingtype = ST_STRETCH;
+
+        UXTHEME_DrawImageBackground(pDS->hDC, 
+                                    pDS->hImage, 
+                                    &pDS->rcSrc, 
+                                    transparent, 
+                                    pDS->crTransparent, 
+                                    FALSE,
+                                    sizingtype,
+                                    &sm,
+                                    &pDS->rcDest);
+    }
     return 0;
 }
 
