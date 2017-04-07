@@ -1358,7 +1358,15 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
 
     if (!FT_IS_FIXED_WIDTH(Face))
     {
-        TM->tmPitchAndFamily = _TMPF_VARIABLE_PITCH;
+        switch (pOS2->panose[PAN_PROPORTION_INDEX])
+        {
+            case PAN_PROP_MONOSPACED:
+                TM->tmPitchAndFamily = 0;
+                break;
+            default:
+                TM->tmPitchAndFamily = _TMPF_VARIABLE_PITCH;
+                break;
+        }
     }
     else
     {
