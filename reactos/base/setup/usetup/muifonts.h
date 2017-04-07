@@ -137,6 +137,7 @@ MUI_SUBFONT ChineseTraditionalFonts[] =
     { L"Terminal",        L"DejaVu Sans Mono" },
     { L"Times New Roman", L"Liberation Serif" },
     { L"Ming Light",      L"Droid Sans Fallback" },
+    { L"MingLiU",         L"Droid Sans Fallback" },
     { L"PMingLiU",        L"Droid Sans Fallback" },
     { L"DLCMingMedium",   L"Droid Sans Fallback" },
     { L"DLCMingBold",     L"Droid Sans Fallback" },
@@ -169,6 +170,10 @@ MUI_SUBFONT JapaneseFonts[] =
     { L"Tahoma",          L"Droid Sans Fallback" },
     { L"Terminal",        L"DejaVu Sans Mono" },
     { L"Times New Roman", L"Liberation Serif" },
+    { L"MS Mincho",       L"Droid Sans Fallback" },
+    { L"MS PMincho",      L"Droid Sans Fallback" },
+    { L"MS Gothic",       L"Droid Sans Fallback" },
+    { L"MS PGothic",      L"Droid Sans Fallback" },
     /* localized names */
     { JF_LocalName0,      L"Droid Sans Fallback" },
     { JF_LocalName1,      L"Droid Sans Fallback" },
@@ -181,6 +186,8 @@ WCHAR KF_LocalName0[] = {0xBC14, 0xD0D5, 0};
 WCHAR KF_LocalName1[] = {0xBC14, 0xD0D5, 0xCCB4, 0};
 WCHAR KF_LocalName2[] = {0xAD81, 0xC11C, 0};
 WCHAR KF_LocalName3[] = {0xAD81, 0xC11C, 0xCCB4, 0};
+WCHAR KF_LocalName4[] = {0xAD74, 0xB9BC, 0};
+WCHAR KF_LocalName5[] = {0xAD74, 0xB9BC, 0xCCB4, 0};
 MUI_SUBFONT KoreanFonts[] =
 {
     { L"Arial",           L"Liberation Sans" },
@@ -202,11 +209,15 @@ MUI_SUBFONT KoreanFonts[] =
     { L"BatangChe",       L"Droid Sans Fallback" },
     { L"Gungsuh",         L"Droid Sans Fallback" },
     { L"GungsuhChe",      L"Droid Sans Fallback" },
+    { L"Gulim",           L"Droid Sans Fallback" },
+    { L"GulimChe",        L"Droid Sans Fallback" },
     /* localized names */
     { KF_LocalName0,      L"Droid Sans Fallback" },
     { KF_LocalName1,      L"Droid Sans Fallback" },
     { KF_LocalName2,      L"Droid Sans Fallback" },
     { KF_LocalName3,      L"Droid Sans Fallback" },
+    { KF_LocalName4,      L"Droid Sans Fallback" },
+    { KF_LocalName5,      L"Droid Sans Fallback" },
     { NULL, NULL }
 };
 
