@@ -525,7 +525,8 @@ EnumerateDevices(
         Status = IopOpenRegistryKeyEx(&SubKeyHandle, KeyHandle, &SubKeyName, KEY_ENUMERATE_SUB_KEYS);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT("IopOpenRegistryKeyEx() failed with status 0x%08lx\n", Status);
+            DPRINT("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
+                   &SubKeyName, Status);
             break;
         }
 
@@ -585,7 +586,8 @@ EnumerateDevices(
                 Status = IopOpenRegistryKeyEx(&DeviceKeyHandle, SubKeyHandle, &Device->InstanceID, KEY_READ);
                 if (!NT_SUCCESS(Status))
                 {
-                    DPRINT1("IopOpenRegistryKeyEx() failed with status 0x%08lx\n", Status);
+                    DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
+                            &Device->InstanceID, Status);
                     break;
                 }
 

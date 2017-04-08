@@ -268,7 +268,8 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
                                   KEY_READ);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopOpenRegistryKeyEx() failed with Status %08X\n", Status);
+        DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
+                &EnumRoot, Status);
         return Status;
     }
 
@@ -280,7 +281,8 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
     ZwClose(EnumRootKey);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("IopOpenRegistryKeyEx() failed with Status %08X\n", Status);
+        DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
+                &DeviceNode->InstancePath, Status);
         return Status;
     }
 
@@ -304,7 +306,8 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
         if (!NT_SUCCESS(Status))
         {
             /* No class key */
-            DPRINT1("IopOpenRegistryKeyEx() failed with Status %08X\n", Status);
+            DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
+                    &ControlClass, Status);
             ClassKey = NULL;
         }
         else
@@ -318,7 +321,8 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
             if (!NT_SUCCESS(Status))
             {
                 /* No class key */
-                DPRINT1("IopOpenRegistryKeyEx() failed with Status %08X\n", Status);
+                DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
+                        &ClassGuid, Status);
                 ClassKey = NULL;
             }
         }
@@ -336,7 +340,8 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
             if (!NT_SUCCESS(Status))
             {
                 /* No properties */
-                DPRINT("IopOpenRegistryKeyEx() failed with Status %08X\n", Status);
+                DPRINT("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
+                       &Properties, Status);
                 PropertiesKey = NULL;
             }
             else

@@ -337,7 +337,7 @@ IopLoadServiceModule(
         Status = IopOpenRegistryKeyEx(&CCSKey, NULL, &CCSName, KEY_READ);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with Status %08X\n",
+            DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
                     &CCSName, Status);
             return Status;
         }
@@ -346,7 +346,7 @@ IopLoadServiceModule(
         Status = IopOpenRegistryKeyEx(&ServiceKey, CCSKey, ServiceName, KEY_READ);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with Status %08X\n",
+            DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
                     ServiceName, Status);
             ZwClose(CCSKey);
             return Status;
@@ -656,7 +656,8 @@ IopAttachFilterDrivers(
                                   KEY_READ);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
+        DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
+                &EnumRoot, Status);
         return Status;
     }
 
@@ -667,7 +668,8 @@ IopAttachFilterDrivers(
                                   KEY_READ);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
+        DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
+                &DeviceNode->InstancePath, Status);
         ZwClose(EnumRootKey);
         return Status;
     }
@@ -731,7 +733,8 @@ IopAttachFilterDrivers(
                                       KEY_READ);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
+            DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
+                    &ControlClass, Status);
             return Status;
         }
 
@@ -743,7 +746,8 @@ IopAttachFilterDrivers(
         if (!NT_SUCCESS(Status))
         {
             /* It's okay if there's no class key */
-            DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
+            DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
+                    &Class, Status);
             ZwClose(EnumRootKey);
             return STATUS_SUCCESS;
         }
