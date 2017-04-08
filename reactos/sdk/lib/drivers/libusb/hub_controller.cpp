@@ -2672,7 +2672,7 @@ USBI_InterfaceReference(
 {
     CHubController * Controller = (CHubController*)BusContext;
 
-    DPRINT1("USBH_InterfaceReference\n");
+    DPRINT("USBI_InterfaceReference\n");
 
     //
     // add reference
@@ -2687,7 +2687,7 @@ USBI_InterfaceDereference(
 {
     CHubController * Controller = (CHubController*)BusContext;
 
-    DPRINT1("USBH_InterfaceDereference\n");
+    DPRINT("USBI_InterfaceDereference\n");
 
     //
     // release
