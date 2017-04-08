@@ -2,6 +2,7 @@
 include_directories(${REACTOS_SOURCE_DIR}/win32ss)
 
 list(APPEND SOURCE
+    AddFontMemResourceEx.c
     AddFontResource.c
     AddFontResourceEx.c
     BeginPath.c
