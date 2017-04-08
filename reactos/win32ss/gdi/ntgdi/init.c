@@ -21,6 +21,8 @@ GdiProcessCreate(PEPROCESS Process)
     ASSERT(ppiCurrent);
 
     InitializeListHead(&ppiCurrent->PrivateFontListHead);
+    InitializeListHead(&ppiCurrent->PrivateMemFontListHead);
+    ppiCurrent->PrivateMemFontHandleCount = 0;
     ExInitializeFastMutex(&ppiCurrent->PrivateFontListLock);
 
     InitializeListHead(&ppiCurrent->GDIBrushAttrFreeList);

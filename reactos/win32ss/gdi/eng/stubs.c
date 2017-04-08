@@ -838,22 +838,6 @@ NtGdiAddRemoteFontToDC(
 /*
  * @unimplemented
  */
-HANDLE
-APIENTRY
-NtGdiAddFontMemResourceEx(
-    IN PVOID pvBuffer,
-    IN DWORD cjBuffer,
-    IN DESIGNVECTOR *pdv,
-    IN ULONG cjDV,
-    OUT DWORD *pNumFonts)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 APIENTRY
 NtGdiRemoveMergeFont(
@@ -1324,18 +1308,6 @@ NtGdiGetStringBitmapW(
 {
     UNIMPLEMENTED;
     return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiRemoveFontMemResourceEx(
-    IN HANDLE hMMFont)
-{
-    UNIMPLEMENTED;
-    return FALSE;
 }
 
 /*

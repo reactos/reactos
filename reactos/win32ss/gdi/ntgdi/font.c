@@ -478,6 +478,71 @@ NtGdiAddFontResourceW(
     return Ret;
 }
 
+HANDLE
+APIENTRY
+NtGdiAddFontMemResourceEx(
+    IN PVOID pvBuffer,
+    IN DWORD cjBuffer,
+    IN DESIGNVECTOR *pdv,
+    IN ULONG cjDV,
+    OUT DWORD *pNumFonts)
+{
+    _SEH2_VOLATILE PVOID Buffer = NULL;
+    HANDLE Ret;
+    DWORD NumFonts = 0;
+
+    DPRINT("NtGdiAddFontMemResourceEx\n");
+    DBG_UNREFERENCED_PARAMETER(pdv);
+    DBG_UNREFERENCED_PARAMETER(cjDV);
+
+    if (!pvBuffer || !cjBuffer)
+        return NULL;
+
+    _SEH2_TRY
+    {
+        ProbeForRead(pvBuffer, cjBuffer, sizeof(BYTE));
+        Buffer = ExAllocatePoolWithQuotaTag(PagedPool, cjBuffer, TAG_FONT);
+        RtlCopyMemory(Buffer, pvBuffer, cjBuffer);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        if (Buffer != NULL)
+        {
+            ExFreePoolWithTag(Buffer, TAG_FONT);
+        }
+        _SEH2_YIELD(return NULL);
+    }
+    _SEH2_END;
+
+    Ret = IntGdiAddFontMemResource(Buffer, cjBuffer, &NumFonts);
+    ExFreePoolWithTag(Buffer, TAG_FONT);
+
+    _SEH2_TRY
+    {
+        ProbeForWrite(pNumFonts, sizeof(NumFonts), 1);
+        *pNumFonts = NumFonts;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Leak it? */
+        _SEH2_YIELD(return NULL);
+    }
+    _SEH2_END;
+
+
+    return Ret;
+}
+
+
+BOOL
+APIENTRY
+NtGdiRemoveFontMemResourceEx(
+    IN HANDLE hMMFont)
+{
+    return IntGdiRemoveFontMemResource(hMMFont);
+}
+
+
  /*
  * @unimplemented
  */
