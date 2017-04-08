@@ -1070,8 +1070,16 @@ IntGdiAddFontMemResource(PVOID Buffer, DWORD dwSize, PDWORD pNumAdded)
     INT FontCount;
     HANDLE Ret = 0;
 
+    /* We leak this buffer for now, same as all fonts do with their buffer! */
+    LoadFont.Buffer = ExAllocatePoolWithTag(PagedPool, dwSize, TAG_FONT);
+    if (!LoadFont.Buffer)
+    {
+        *pNumAdded = 0;
+        return NULL;
+    }
+    memcpy(LoadFont.Buffer, Buffer, dwSize);
+
     LoadFont.pFileName = NULL;
-    LoadFont.Buffer = Buffer;
     LoadFont.BufferSize = dwSize;
     LoadFont.Characteristics = FR_PRIVATE | FR_NOT_ENUM;
     RtlInitUnicodeString(&LoadFont.RegValueName, NULL);
