@@ -3565,16 +3565,17 @@ PnpEventThread(LPVOID lpParameter)
         }
         else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL, &RpcStatus))
         {
-            DWORD dwRecipient;
+//            DWORD dwRecipient;
 
             DPRINT("Device arrival: %S\n", PnpEvent->TargetDevice.DeviceIds);
 
-            dwRecipient = BSM_ALLDESKTOPS | BSM_APPLICATIONS;
-            BroadcastSystemMessageW(BSF_POSTMESSAGE,
-                                    &dwRecipient,
-                                    WM_DEVICECHANGE,
-                                    DBT_DEVNODES_CHANGED,
-                                    0);
+//            dwRecipient = BSM_ALLDESKTOPS | BSM_APPLICATIONS;
+//            BroadcastSystemMessageW(BSF_POSTMESSAGE,
+//                                    &dwRecipient,
+//                                    WM_DEVICECHANGE,
+//                                    DBT_DEVNODES_CHANGED,
+//                                    0);
+            SendMessageW(HWND_BROADCAST, WM_DEVICECHANGE, DBT_DEVNODES_CHANGED, 0);
         }
         else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_EJECT_VETOED, &RpcStatus))
         {
@@ -3586,29 +3587,31 @@ PnpEventThread(LPVOID lpParameter)
         }
         else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_SAFE_REMOVAL, &RpcStatus))
         {
-            DWORD dwRecipient;
+//            DWORD dwRecipient;
 
             DPRINT1("Safe removal: %S\n", PnpEvent->TargetDevice.DeviceIds);
 
-            dwRecipient = BSM_ALLDESKTOPS | BSM_APPLICATIONS;
-            BroadcastSystemMessageW(BSF_POSTMESSAGE,
-                                    &dwRecipient,
-                                    WM_DEVICECHANGE,
-                                    DBT_DEVNODES_CHANGED,
-                                    0);
+//            dwRecipient = BSM_ALLDESKTOPS | BSM_APPLICATIONS;
+//            BroadcastSystemMessageW(BSF_POSTMESSAGE,
+//                                    &dwRecipient,
+//                                    WM_DEVICECHANGE,
+//                                    DBT_DEVNODES_CHANGED,
+//                                    0);
+            SendMessageW(HWND_BROADCAST, WM_DEVICECHANGE, DBT_DEVNODES_CHANGED, 0);
         }
         else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_SURPRISE_REMOVAL, &RpcStatus))
         {
-            DWORD dwRecipient;
+//            DWORD dwRecipient;
 
             DPRINT1("Surprise removal: %S\n", PnpEvent->TargetDevice.DeviceIds);
 
-            dwRecipient = BSM_ALLDESKTOPS | BSM_APPLICATIONS;
-            BroadcastSystemMessageW(BSF_POSTMESSAGE,
-                                    &dwRecipient,
-                                    WM_DEVICECHANGE,
-                                    DBT_DEVNODES_CHANGED,
-                                    0);
+//            dwRecipient = BSM_ALLDESKTOPS | BSM_APPLICATIONS;
+//            BroadcastSystemMessageW(BSF_POSTMESSAGE,
+//                                    &dwRecipient,
+//                                    WM_DEVICECHANGE,
+//                                    DBT_DEVNODES_CHANGED,
+//                                    0);
+            SendMessageW(HWND_BROADCAST, WM_DEVICECHANGE, DBT_DEVNODES_CHANGED, 0);
         }
         else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_REMOVAL_VETOED, &RpcStatus))
         {
