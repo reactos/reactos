@@ -22,7 +22,7 @@
  * Wraps the component categories manager enum
  */
 
-#include "precomp.h"
+#include "shellbars.h"
 
 #define REGPATH L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Discardable\\PostSetup\\Component Categories"
 #define IMPLEMENTING L"Implementing"

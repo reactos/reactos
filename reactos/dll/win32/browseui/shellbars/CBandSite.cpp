@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include "shellbars.h"
 
 #ifndef ASSERT
 #define ASSERT(cond) \
@@ -828,4 +828,9 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::LoadFromStreamBS(IStream *, const GUID 
 HRESULT STDMETHODCALLTYPE CBandSiteBase::SaveToStreamBS(IUnknown *, IStream *)
 {
     return E_NOTIMPL;
+}
+
+HRESULT CBandSite_CreateInstance(REFIID riid, void **ppv)
+{
+    return ShellObjectCreator<CBandSite>(riid, ppv);
 }

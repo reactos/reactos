@@ -22,7 +22,7 @@
 This class knows how to contain base bar site in a cabinet window.
 */
 
-#include "precomp.h"
+#include "shellbars.h"
 
 /*
 Base bar that contains a vertical or horizontal explorer band. It also

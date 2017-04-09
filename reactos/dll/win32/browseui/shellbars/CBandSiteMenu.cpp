@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
+#include "shellbars.h"
 
 CBandSiteMenu::CBandSiteMenu()
 {
@@ -93,4 +93,9 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam
 {
     FIXME("CBandSiteMenu::HandleMenuMsg2 is UNIMPLEMENTED(%p, %u, %p, %p, %p)\n", this, uMsg, wParam, lParam, plResult);
     return E_NOTIMPL;
+}
+
+HRESULT CBandSiteMenu_CreateInstance(REFIID riid, void **ppv)
+{
+    return ShellObjectCreator<CBandSiteMenu>(riid, ppv);
 }
