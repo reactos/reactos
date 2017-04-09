@@ -32,25 +32,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(schedsvc);
 
-#define DWORD_MAX 0xffffffffUL
-
-typedef struct _JOB
-{
-    LIST_ENTRY Entry;
-    DWORD JobId;
-
-    DWORD_PTR JobTime;
-    DWORD DaysOfMonth;
-    UCHAR DaysOfWeek;
-    UCHAR Flags;
-    WCHAR Command[1];
-} JOB, *PJOB;
-
-DWORD dwNextJobId = 0;
-DWORD dwJobCount = 0;
-LIST_ENTRY JobListHead;
-RTL_RESOURCE JobListLock;
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -132,10 +113,19 @@ NetrJobAdd(
     dwJobCount++;
 
     /* Append the new job to the job list */
-    InsertTailList(&JobListHead, &pJob->Entry);
+    InsertTailList(&JobListHead, &pJob->JobEntry);
 
     /* Release the job list lock */
     RtlReleaseResource(&JobListLock);
+
+    /* Save the job in the registry */
+    SaveJob(pJob);
+
+    // Calculate start time
+
+    // Insert job into start list
+
+    // Update start timer
 
     /* Return the new job ID */
     *pJobId = pJob->JobId;
@@ -158,16 +148,27 @@ NetrJobDel(
     TRACE("NetrJobDel(%S %lu %lu)\n",
           ServerName, MinJobId, MaxJobId);
 
+    /* Check the job IDs */
+    if (MinJobId > MaxJobId)
+        return ERROR_INVALID_PARAMETER;
+
     /* Acquire the job list lock exclusively */
     RtlAcquireResourceExclusive(&JobListLock, TRUE);
 
     JobEntry = JobListHead.Flink;
     while (JobEntry != &JobListHead)
     {
-        CurrentJob = CONTAINING_RECORD(JobEntry, JOB, Entry);
+        CurrentJob = CONTAINING_RECORD(JobEntry, JOB, JobEntry);
 
         if ((CurrentJob->JobId >= MinJobId) && (CurrentJob->JobId <= MaxJobId))
         {
+            // Remove job from start list
+
+            // Update start timer
+
+            /* Remove the job from the registry */
+            DeleteJob(CurrentJob);
+
             NextEntry = JobEntry->Flink;
             if (RemoveEntryList(JobEntry))
             {
@@ -234,7 +235,7 @@ NetrJobEnum(
     JobEntry = JobListHead.Flink;
     while (JobEntry != &JobListHead)
     {
-        CurrentJob = CONTAINING_RECORD(JobEntry, JOB, Entry);
+        CurrentJob = CONTAINING_RECORD(JobEntry, JOB, JobEntry);
 
         if (dwIndex >= dwStartIndex)
         {
@@ -275,7 +276,7 @@ NetrJobEnum(
     JobEntry = JobListHead.Flink;
     while (JobEntry != &JobListHead)
     {
-        CurrentJob = CONTAINING_RECORD(JobEntry, JOB, Entry);
+        CurrentJob = CONTAINING_RECORD(JobEntry, JOB, JobEntry);
 
         if (dwIndex >= dwStartIndex)
         {
@@ -342,7 +343,7 @@ NetrJobGetInfo(
     JobEntry = JobListHead.Flink;
     while (JobEntry != &JobListHead)
     {
-        CurrentJob = CONTAINING_RECORD(JobEntry, JOB, Entry);
+        CurrentJob = CONTAINING_RECORD(JobEntry, JOB, JobEntry);
 
         /* Do we have the right job? */
         if (CurrentJob->JobId == JobId)
