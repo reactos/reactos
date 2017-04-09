@@ -830,7 +830,8 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::SaveToStreamBS(IUnknown *, IStream *)
     return E_NOTIMPL;
 }
 
-HRESULT CBandSite_CreateInstance(REFIID riid, void **ppv)
+extern "C"
+HRESULT WINAPI CBandSite_CreateInstance(REFIID riid, void **ppv)
 {
     return ShellObjectCreator<CBandSite>(riid, ppv);
 }

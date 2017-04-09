@@ -40,6 +40,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::QueryContextMenu(
     HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
 {
     BOOL ret;
+    WCHAR buffer[100];
 
     TRACE("CBandSiteMenu::QueryContextMenu(%p, %p, %u, %u, %u, 0x%x)\n", this, hmenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
@@ -54,7 +55,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::QueryContextMenu(
     if (!hm)
         return HRESULT_FROM_WIN32(GetLastError());
 
-    mii.dwTypeData = new WCHAR[mii.cch + 1];
+    mii.dwTypeData = buffer;
     mii.cch = mii.cch + 1;
 
     ret = GetMenuItemInfoW(hm, 0, TRUE, &mii);
@@ -62,8 +63,6 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::QueryContextMenu(
         return HRESULT_FROM_WIN32(GetLastError());
 
     ret = InsertMenuItemW(hmenu, 0, TRUE, &mii);
-
-    delete[] mii.dwTypeData;
 
     RemoveMenu(hm, 0, MF_BYPOSITION);
 
@@ -95,7 +94,8 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam
     return E_NOTIMPL;
 }
 
-HRESULT CBandSiteMenu_CreateInstance(REFIID riid, void **ppv)
+extern "C"
+HRESULT WINAPI CBandSiteMenu_CreateInstance(REFIID riid, void **ppv)
 {
     return ShellObjectCreator<CBandSiteMenu>(riid, ppv);
 }

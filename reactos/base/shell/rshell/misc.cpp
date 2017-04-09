@@ -18,7 +18,52 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "shellmenu.h"
+
+#include <stdio.h>
+#include <tchar.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#define COBJMACROS
+
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <winnls.h>
+#include <wincon.h>
+#include <shellapi.h>
+#include <shlobj.h>
+#include <shlobj_undoc.h>
+#include <shlwapi.h>
+#include <shlguid_undoc.h>
+#include <uxtheme.h>
+#include <strsafe.h>
+
+#include <atlbase.h>
+#include <atlcom.h>
+#include <atlwin.h>
+#include <undocshell.h>
+#include <undocuser.h>
+
+#include <shellutils.h>
+
+#include <wine/debug.h>
+
+extern "C"
+{
+extern HINSTANCE shell32_hInstance;
+
+HRESULT WINAPI CStartMenu_Constructor(REFIID riid, void **ppv);
+HRESULT WINAPI CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv);
+HRESULT WINAPI CMenuSite_Constructor(REFIID riid, LPVOID *ppv);
+HRESULT WINAPI CMenuBand_Constructor(REFIID riid, LPVOID *ppv);
+HRESULT WINAPI CMergedFolder_Constructor(REFIID riid, LPVOID *ppv);
+HRESULT WINAPI CBandSite_CreateInstance(REFIID riid, void **ppv);
+HRESULT WINAPI CBandSiteMenu_CreateInstance(REFIID riid, void **ppv);
+}
 
 DWORD WINAPI WinList_Init(void)
 {
@@ -196,9 +241,6 @@ public:
 
         if (IsEqualCLSID(m_Clsid, CLSID_MergedFolder))
             return CMergedFolder_Constructor(riid, ppvObject);
-
-        if (IsEqualCLSID(m_Clsid, CLSID_RebarBandSite))
-            return CBandSite_Constructor(riid, ppvObject);
 
         return E_NOINTERFACE;
     }
