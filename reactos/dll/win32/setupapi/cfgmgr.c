@@ -149,17 +149,69 @@ GetRegistryPropertyType(
 
 
 /***********************************************************************
- * CMP_Init_Detection [SETUPAPI.@]
+ * CMP_GetServerSideDeviceInstallFlags [SETUPAPI.@]
  */
-CONFIGRET WINAPI CMP_Init_Detection(
-    DWORD dwMagic)
+CONFIGRET
+WINAPI
+CMP_GetServerSideDeviceInstallFlags(
+    _Out_ PULONG pulSSDIFlags,
+    _In_ ULONG ulFlags,
+    _In_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     CONFIGRET ret;
 
-    TRACE("%lu\n", dwMagic);
+    TRACE("CMP_GetServerSideDeviceInstallFlags(%p %lx %p)\n",
+          pulSSDIFlags, ulFlags, hMachine);
 
-    if (dwMagic != CMP_MAGIC)
+    if (pulSSDIFlags == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    RpcTryExcept
+    {
+        ret = PNP_GetServerSideDeviceInstallFlags(BindingHandle,
+                                                  pulSSDIFlags,
+                                                  ulFlags);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return ret;
+}
+
+
+/***********************************************************************
+ * CMP_Init_Detection [SETUPAPI.@]
+ */
+CONFIGRET
+WINAPI
+CMP_Init_Detection(
+    _In_ ULONG ulMagic)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    CONFIGRET ret;
+
+    TRACE("CMP_Init_Detection(%lu)\n", ulMagic);
+
+    if (ulMagic != CMP_MAGIC)
         return CR_INVALID_DATA;
 
     if (!PnpGetLocalHandles(&BindingHandle, NULL))
@@ -185,23 +237,24 @@ CONFIGRET WINAPI CMP_Init_Detection(
 CONFIGRET
 WINAPI
 CMP_RegisterNotification(
-    IN HANDLE hRecipient,
-    IN LPVOID lpvNotificationFilter,
-    IN DWORD dwFlags,
-    OUT PHDEVNOTIFY phDevNotify)
+    _In_ HANDLE hRecipient,
+    _In_ LPVOID lpvNotificationFilter,
+    _In_ ULONG ulFlags,
+    _Out_ PHDEVNOTIFY phDevNotify)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     PNOTIFY_DATA pNotifyData = NULL;
     CONFIGRET ret = CR_SUCCESS;
 
-    TRACE("CMP_RegisterNotification(%p %p %lu %p)\n", hRecipient, lpvNotificationFilter, dwFlags, phDevNotify);
+    TRACE("CMP_RegisterNotification(%p %p %lu %p)\n",
+          hRecipient, lpvNotificationFilter, ulFlags, phDevNotify);
 
     if ((hRecipient == NULL) ||
         (lpvNotificationFilter == NULL) ||
         (phDevNotify == NULL))
         return CR_INVALID_POINTER;
 
-    if (dwFlags & ~0x7)
+    if (ulFlags & ~0x7)
         return CR_INVALID_FLAG;
 
     if (((PDEV_BROADCAST_HDR)lpvNotificationFilter)->dbch_size < sizeof(DEV_BROADCAST_HDR))
@@ -232,7 +285,7 @@ CMP_RegisterNotification(
     RpcTryExcept
     {
         ret = PNP_RegisterNotification(BindingHandle,
-                                       dwFlags,
+                                       ulFlags,
                                        &pNotifyData->ulNotifyData);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -260,9 +313,11 @@ CMP_RegisterNotification(
 /***********************************************************************
  * CMP_Report_LogOn [SETUPAPI.@]
  */
-CONFIGRET WINAPI CMP_Report_LogOn(
-    DWORD dwMagic,
-    DWORD dwProcessId)
+CONFIGRET
+WINAPI
+CMP_Report_LogOn(
+    _In_ DWORD dwMagic,
+    _In_ DWORD dwProcessId)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     CONFIGRET ret = CR_SUCCESS;
@@ -309,7 +364,7 @@ CONFIGRET WINAPI CMP_Report_LogOn(
 CONFIGRET
 WINAPI
 CMP_UnregisterNotification(
-    IN HDEVNOTIFY hDevNotify)
+    _In_ HDEVNOTIFY hDevNotify)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     PNOTIFY_DATA pNotifyData;
@@ -347,11 +402,15 @@ CMP_UnregisterNotification(
 /***********************************************************************
  * CMP_WaitNoPendingInstallEvents [SETUPAPI.@]
  */
-DWORD WINAPI CMP_WaitNoPendingInstallEvents(
-    DWORD dwTimeout)
+DWORD
+WINAPI
+CMP_WaitNoPendingInstallEvents(
+    _In_ DWORD dwTimeout)
 {
     HANDLE hEvent;
     DWORD ret;
+
+    TRACE("CMP_WaitNoPendingInstallEvents(%lu)\n", dwTimeout);
 
     hEvent = OpenEventW(SYNCHRONIZE, FALSE, L"Global\\PnP_No_Pending_Install_Events");
     if (hEvent == NULL)
@@ -368,11 +427,14 @@ DWORD WINAPI CMP_WaitNoPendingInstallEvents(
  */
 CONFIGRET
 WINAPI
-CMP_WaitServicesAvailable(HMACHINE hMachine)
+CMP_WaitServicesAvailable(
+    _In_ HMACHINE hMachine)
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
     CONFIGRET ret = CR_SUCCESS;
     WORD Version;
+
+    TRACE("CMP_WaitServicesAvailable(%p)\n", hMachine);
 
     if (!PnpGetLocalHandles(&BindingHandle, NULL))
         return CR_FAILURE;
