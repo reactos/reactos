@@ -3004,6 +3004,8 @@ PNP_GetVersionInternal(
     handle_t hBinding,
     WORD *pwVersion)
 {
+    UNREFERENCED_PARAMETER(hBinding);
+
     *pwVersion = 0x501;
     return CR_SUCCESS;
 }
@@ -3032,8 +3034,21 @@ PNP_GetServerSideDeviceInstallFlags(
     DWORD *pulSSDIFlags,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    UNREFERENCED_PARAMETER(hBinding);
+
+    DPRINT1("PNP_GetServerSideDeviceInstallFlags(%p %p %lu)\n",
+            hBinding, pulSSDIFlags, ulFlags);
+
+    if (pulSSDIFlags == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    /* FIXME */
+    *pulSSDIFlags = 0;
+
+    return CR_SUCCESS;
 }
 
 
