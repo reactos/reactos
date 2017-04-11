@@ -3461,7 +3461,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     RegPacket.RH_ChirpRootPort = EHCI_RH_ChirpRootPort;
     RegPacket.TakePortControl = EHCI_TakePortControl;
 
-    DriverObject->DriverUnload = (PDRIVER_UNLOAD)EHCI_Unload;
+    DriverObject->DriverUnload = EHCI_Unload;
 
     return USBPORT_RegisterUSBPortDriver(DriverObject, 200, &RegPacket);
 }
