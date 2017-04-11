@@ -2363,7 +2363,7 @@ OHCI_PassThru(IN PVOID ohciExtension,
 
 VOID
 NTAPI
-OHCI_Unload(IN PVOID ohciExtension)
+OHCI_Unload()
 {
 #if DBG
     DPRINT1("OHCI_Unload: Not supported\n");
@@ -2446,7 +2446,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     RegPacket.PassThru = OHCI_PassThru;
     RegPacket.FlushInterrupts = OHCI_Unload;
 
-    DriverObject->DriverUnload = (PDRIVER_UNLOAD)OHCI_Unload;
+    DriverObject->DriverUnload = OHCI_Unload;
 
     Status = USBPORT_RegisterUSBPortDriver(DriverObject, 100, &RegPacket);
 
