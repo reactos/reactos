@@ -234,7 +234,7 @@ EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
     QH->sqh.HwQH.Token.Status &= (UCHAR)~EHCI_TOKEN_STATUS_ACTIVE;
     QH->sqh.HwQH.Token.TransferBytes = 0;
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -741,7 +741,7 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
     WRITE_REGISTER_ULONG(OperationalRegs + EHCI_ASYNCLISTBASE,
                          NextLink.AsULONG);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -813,7 +813,7 @@ EHCI_InitializeHardware(IN PEHCI_EXTENSION EhciExtension)
     EhciExtension->InterruptMask.HostSystemError = 1;
     EhciExtension->InterruptMask.InterruptOnAsyncAdvance = 1;
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -821,7 +821,7 @@ NTAPI
 EHCI_TakeControlHC(IN PEHCI_EXTENSION EhciExtension)
 {
     DPRINT1("EHCI_TakeControlHC: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 VOID
@@ -1087,7 +1087,7 @@ EHCI_ResumeController(IN PVOID ehciExtension)
 
     EhciExtension->Flags &= ~EHCI_FLAGS_CONTROLLER_SUSPEND;
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 BOOLEAN
@@ -1867,7 +1867,7 @@ End:
     //EHCI_DPrintHwTD(FirstTD->NextHcdTD);
     //EHCI_DPrintHwTD(LastTD);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -2029,7 +2029,7 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
     ASSERT(EhciEndpoint->HcdTailP->NextHcdTD == 0);
     ASSERT(EhciEndpoint->HcdTailP->AltNextHcdTD == 0);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -2138,7 +2138,7 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
 
     EHCI_EnablePeriodicList(EhciExtension);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -2216,7 +2216,7 @@ EHCI_SubmitIsoTransfer(IN PVOID ehciExtension,
                        IN PVOID isoParameters)
 {
     DPRINT1("EHCI_SubmitIsoTransfer: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 VOID
@@ -3297,7 +3297,7 @@ EHCI_StartSendOnePacket(IN PVOID ehciExtension,
                         IN USBD_STATUS * pUSBDStatus)
 {
     DPRINT1("EHCI_StartSendOnePacket: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -3312,7 +3312,7 @@ EHCI_EndSendOnePacket(IN PVOID ehciExtension,
                       IN USBD_STATUS * pUSBDStatus)
 {
     DPRINT1("EHCI_EndSendOnePacket: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -3323,7 +3323,7 @@ EHCI_PassThru(IN PVOID ehciExtension,
               IN PVOID pParameters)
 {
     DPRINT1("EHCI_PassThru: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 VOID
@@ -3358,7 +3358,7 @@ EHCI_RH_ChirpRootPort(IN PVOID ehciExtension,
                       IN USHORT Port)
 {
     DPRINT1("EHCI_RH_ChirpRootPort: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 VOID
