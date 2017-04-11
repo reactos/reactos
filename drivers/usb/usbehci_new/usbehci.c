@@ -933,7 +933,7 @@ EHCI_StartController(IN PVOID ehciExtension,
 
     EhciExtension->IsStarted = 1;
 
-    if (Resources->IsHandleChirp)
+    if (Resources->IsChirpHandled)
     {
         DPRINT1("EHCI_StartController: FIXME\n");
         DbgBreakPoint();
