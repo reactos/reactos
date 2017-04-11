@@ -288,17 +288,4 @@ NTAPI
 EHCI_RH_EnableIrq(
   IN PVOID ohciExtension);
 
-/* usbehci.c */
-
-ULONG
-NTAPI
-USBPORT_GetHciMn(VOID);
-
-NTSTATUS
-NTAPI
-USBPORT_RegisterUSBPortDriver(
-  IN PDRIVER_OBJECT DriverObject,
-  IN ULONG Version,
-  IN PUSBPORT_REGISTRATION_PACKET RegistrationPacket);
-
 #endif /* USBEHCI_H__ */
