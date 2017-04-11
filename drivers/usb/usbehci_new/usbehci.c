@@ -931,7 +931,7 @@ EHCI_StartController(IN PVOID ehciExtension,
     Command.Run = 1; // execution of the schedule
     WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD, Command.AsULONG);
 
-    EhciExtension->IsStarted = 1;
+    EhciExtension->IsStarted = TRUE;
 
     if (Resources->IsChirpHandled)
     {
