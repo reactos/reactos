@@ -113,8 +113,8 @@ EHCI_InitializeQH(PEHCI_EXTENSION EhciExtension,
         }
     }
 
-    QH->sqh.HwQH.NextTD = 1;
-    QH->sqh.HwQH.AlternateNextTD = 1;
+    QH->sqh.HwQH.NextTD = TERMINATE_POINTER;
+    QH->sqh.HwQH.AlternateNextTD = TERMINATE_POINTER;
     QH->sqh.HwQH.Token.Status &= (UCHAR)~(EHCI_TOKEN_STATUS_ACTIVE |
                                           EHCI_TOKEN_STATUS_HALTED);
 
@@ -218,8 +218,8 @@ EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
     TD->TdFlags |= EHCI_HCD_TD_FLAG_DUMMY;
     TD->HwTD.Token.Status &= (UCHAR)~EHCI_TOKEN_STATUS_ACTIVE;
 
-    TD->HwTD.NextTD = 1;
-    TD->HwTD.AlternateNextTD = 1;
+    TD->HwTD.NextTD = TERMINATE_POINTER;
+    TD->HwTD.AlternateNextTD = TERMINATE_POINTER;
 
     TD->NextHcdTD = NULL;
     TD->AltNextHcdTD = NULL;
@@ -228,8 +228,8 @@ EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
     EhciEndpoint->HcdHeadP = TD;
 
     QH->sqh.HwQH.CurrentTD = (ULONG_PTR)TD->PhysicalAddress;
-    QH->sqh.HwQH.NextTD = 1;
-    QH->sqh.HwQH.AlternateNextTD = 1;
+    QH->sqh.HwQH.NextTD = TERMINATE_POINTER;
+    QH->sqh.HwQH.AlternateNextTD = TERMINATE_POINTER;
 
     QH->sqh.HwQH.Token.Status &= (UCHAR)~EHCI_TOKEN_STATUS_ACTIVE;
     QH->sqh.HwQH.Token.TransferBytes = 0;
@@ -575,8 +575,8 @@ EHCI_AddDummyQHs(IN PEHCI_EXTENSION EhciExtension)
         DummyQhVA->sqh.HwQH.EndpointCaps.SplitCompletionMask = 0;
         DummyQhVA->sqh.HwQH.EndpointCaps.PipeMultiplier = 1;
 
-        DummyQhVA->sqh.HwQH.AlternateNextTD = 1;
-        DummyQhVA->sqh.HwQH.NextTD = 1;
+        DummyQhVA->sqh.HwQH.NextTD = TERMINATE_POINTER;
+        DummyQhVA->sqh.HwQH.AlternateNextTD = TERMINATE_POINTER;
 
         StaticQH = EHCI_GetQhForFrame(EhciExtension, ix);
         DummyQhVA->sqh.StaticQH = StaticQH;
@@ -1653,7 +1653,7 @@ EHCI_LinkTransferToQueue(PEHCI_EXTENSION EhciExtension,
         if (QH->sqh.HwQH.CurrentTD == (ULONG_PTR)LinkTD->PhysicalAddress)
         {
             QH->sqh.HwQH.NextTD = (ULONG_PTR)NextTD->PhysicalAddress;
-            QH->sqh.HwQH.AlternateNextTD = 1;
+            QH->sqh.HwQH.AlternateNextTD = TERMINATE_POINTER;
         }
     }
 }
@@ -1710,8 +1710,8 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
 
     FirstTD->NextHcdTD = NULL;
 
-    FirstTD->HwTD.NextTD = 1;
-    FirstTD->HwTD.AlternateNextTD = 1;
+    FirstTD->HwTD.NextTD = TERMINATE_POINTER;
+    FirstTD->HwTD.AlternateNextTD = TERMINATE_POINTER;
     FirstTD->HwTD.Buffer[0] = (ULONG_PTR)&FirstTD->PhysicalAddress->SetupPacket;
 
     FirstTD->HwTD.Token.ErrorCounter = 3;
@@ -1743,8 +1743,8 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
     LastTD->HwTD.Buffer[4] = 0;
 
     LastTD->NextHcdTD = NULL;
-    LastTD->HwTD.NextTD = 1;
-    LastTD->HwTD.AlternateNextTD = 1;
+    LastTD->HwTD.NextTD = TERMINATE_POINTER;
+    LastTD->HwTD.AlternateNextTD = TERMINATE_POINTER;
     LastTD->HwTD.Token.ErrorCounter = 3;
 
     FirstTD->HwTD.AlternateNextTD = (ULONG_PTR)LastTD->PhysicalAddress;
@@ -1779,8 +1779,8 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
 
             TD->NextHcdTD = NULL;
 
-            TD->HwTD.NextTD = 1;
-            TD->HwTD.AlternateNextTD = 1;
+            TD->HwTD.NextTD = TERMINATE_POINTER;
+            TD->HwTD.AlternateNextTD = TERMINATE_POINTER;
             TD->HwTD.Token.ErrorCounter = 3;
 
             PrevTD->HwTD.NextTD = (ULONG_PTR)TD->PhysicalAddress;
@@ -1925,8 +1925,8 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
             TD->HwTD.Buffer[4] = 0;
 
             TD->NextHcdTD = NULL;
-            TD->HwTD.NextTD = 1;
-            TD->HwTD.AlternateNextTD = 1;
+            TD->HwTD.NextTD = TERMINATE_POINTER;
+            TD->HwTD.AlternateNextTD = TERMINATE_POINTER;
             TD->HwTD.Token.ErrorCounter = 3;
 
             if (EhciTransfer->PendingTDs == 1)
@@ -1989,8 +1989,8 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
         TD->HwTD.Buffer[3] = 0;
         TD->HwTD.Buffer[4] = 0;
 
-        TD->HwTD.NextTD = 1;
-        TD->HwTD.AlternateNextTD = 1;
+        TD->HwTD.NextTD = TERMINATE_POINTER;
+        TD->HwTD.AlternateNextTD = TERMINATE_POINTER;
         TD->HwTD.Token.ErrorCounter = 3;
         TD->NextHcdTD = NULL;
 
@@ -2082,8 +2082,8 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
             TD->HwTD.Buffer[3] = 0;
             TD->HwTD.Buffer[4] = 0;
 
-            TD->HwTD.NextTD = 1;
-            TD->HwTD.AlternateNextTD = 1;
+            TD->HwTD.NextTD = TERMINATE_POINTER;
+            TD->HwTD.AlternateNextTD = TERMINATE_POINTER;
             TD->HwTD.Token.ErrorCounter = 3;
             TD->NextHcdTD = NULL;
 
@@ -2346,7 +2346,7 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
             QH->sqh.HwQH.Token.TransferBytes = 0;
 
             QH->sqh.HwQH.NextTD = (ULONG)NextTD;
-            QH->sqh.HwQH.AlternateNextTD = 1;
+            QH->sqh.HwQH.AlternateNextTD = TERMINATE_POINTER;
 
             return;
         }
@@ -2886,8 +2886,8 @@ Next:
     }
 
     QH->sqh.HwQH.CurrentTD = (ULONG_PTR)EhciEndpoint->HcdTailP->PhysicalAddress;
-    QH->sqh.HwQH.NextTD = 1;
-    QH->sqh.HwQH.AlternateNextTD = 1;
+    QH->sqh.HwQH.NextTD = TERMINATE_POINTER;
+    QH->sqh.HwQH.AlternateNextTD = TERMINATE_POINTER;
     QH->sqh.HwQH.Token.TransferBytes = 0;
 
     EhciEndpoint->HcdHeadP = EhciEndpoint->HcdTailP;
@@ -2994,7 +2994,7 @@ EHCI_PollHaltedAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
     QH->sqh.HwQH.CurrentTD = (ULONG)EhciEndpoint->DummyTdVA;
     QH->sqh.HwQH.NextTD = (ULONG)TD->PhysicalAddress;
-    QH->sqh.HwQH.AlternateNextTD = 1;
+    QH->sqh.HwQH.AlternateNextTD = TERMINATE_POINTER;
     QH->sqh.HwQH.Token.TransferBytes = 0;
 
     if (IsSheduled)

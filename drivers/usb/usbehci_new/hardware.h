@@ -121,6 +121,9 @@ typedef union _EHCI_PORT_STATUS_CONTROL {
 #define EHCI_LINK_TYPE_siTD 2 // split transaction isochronous transfer
 #define EHCI_LINK_TYPE_FSTN 3 // frame span traversal node
 
+/* Used for QHs and qTDs to mark Pointers as the end */
+#define TERMINATE_POINTER   1
+
 typedef union _EHCI_LINK_POINTER {
   struct {
     ULONG Terminate : 1;
