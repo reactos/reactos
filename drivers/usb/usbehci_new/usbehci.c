@@ -158,7 +158,7 @@ EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
     if (EndpointProperties->TransferType == USBPORT_TRANSFER_TYPE_CONTROL)
     {
-        EhciEndpoint->EndpointStatus |= 4;
+        EhciEndpoint->EndpointStatus |= USBPORT_ENDPOINT_CONTROL;
     }
 
     EhciEndpoint->MaxTDs = TdCount;
@@ -3002,9 +3002,9 @@ EHCI_PollHaltedAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
         EHCI_UnlockQH(EhciExtension, QH);
     }
 
-    if (EhciEndpoint->EndpointStatus & 4)
+    if (EhciEndpoint->EndpointStatus & USBPORT_ENDPOINT_CONTROL)
     {
-        EhciEndpoint->EndpointStatus &= ~1;
+        EhciEndpoint->EndpointStatus &= ~USBPORT_ENDPOINT_HALT;
         QH->sqh.HwQH.Token.ErrorCounter = 0;
         QH->sqh.HwQH.Token.Status &= (UCHAR)~(EHCI_TOKEN_STATUS_ACTIVE |
                                               EHCI_TOKEN_STATUS_HALTED);
@@ -3042,7 +3042,7 @@ EHCI_PollAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
     }
     else
     {
-        EhciEndpoint->EndpointStatus |= 1;
+        EhciEndpoint->EndpointStatus |= USBPORT_ENDPOINT_HALT;
         EHCI_PollHaltedAsyncEndpoint(EhciExtension, EhciEndpoint);
     }
 
@@ -3223,7 +3223,7 @@ EHCI_GetEndpointStatus(IN PVOID ehciExtension,
 {
     PEHCI_ENDPOINT EhciEndpoint;
     ULONG TransferType;
-    ULONG Status = 0;
+    ULONG EndpointStatus = USBPORT_ENDPOINT_RUN;
 
     EhciEndpoint = (PEHCI_ENDPOINT)ehciEndpoint;
 
@@ -3233,15 +3233,15 @@ EHCI_GetEndpointStatus(IN PVOID ehciExtension,
 
     if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
     {
-        return Status;
+        return EndpointStatus;
     }
 
-    if (EhciEndpoint->EndpointStatus & 1)
+    if (EhciEndpoint->EndpointStatus & USBPORT_ENDPOINT_HALT)
     {
-        Status = 1;
+        EndpointStatus = USBPORT_ENDPOINT_HALT;
     }
 
-    return Status;
+    return EndpointStatus;
 }
 
 VOID
@@ -3265,9 +3265,9 @@ EHCI_SetEndpointStatus(IN PVOID ehciExtension,
     if (TransferType != USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
     {
 
-        if (EndpointStatus == 0)
+        if (EndpointStatus == USBPORT_ENDPOINT_RUN)
         {
-            EhciEndpoint->EndpointStatus &= ~1;
+            EhciEndpoint->EndpointStatus &= ~USBPORT_ENDPOINT_HALT;
 
             QH = EhciEndpoint->QH;
             QH->sqh.HwQH.Token.Status &= (UCHAR)~EHCI_TOKEN_STATUS_HALTED;
@@ -3275,7 +3275,7 @@ EHCI_SetEndpointStatus(IN PVOID ehciExtension,
             return;
         }
 
-        if (EndpointStatus == 1)
+        if (EndpointStatus == USBPORT_ENDPOINT_HALT)
         {
             DbgBreakPoint();
         }
