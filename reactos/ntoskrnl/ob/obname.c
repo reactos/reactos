@@ -153,6 +153,11 @@ ObpCreateDosDevicesDirectory(VOID)
     ExFreePoolWithTag(DosDevicesSD, TAG_SD);
     if (!NT_SUCCESS(Status)) return Status;
 
+    /* Create the system device map */
+    Status = ObpCreateDeviceMap(Handle);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
     /*********************************************\
     |*** HACK until we support device mappings ***|
     |*** Add a symlink \??\ <--> \GLOBAL??\    ***|
@@ -230,62 +235,8 @@ ObpCreateDosDevicesDirectory(VOID)
                                         &RootName);
     if (NT_SUCCESS(Status)) NtClose(SymHandle);
 
-    /* FIXME: Hack Hack! */
-    ObSystemDeviceMap = ExAllocatePoolWithTag(NonPagedPool,
-                                              sizeof(*ObSystemDeviceMap),
-                                              'mDbO');
-    if (!ObSystemDeviceMap) return STATUS_INSUFFICIENT_RESOURCES;
-    RtlZeroMemory(ObSystemDeviceMap, sizeof(*ObSystemDeviceMap));
-
     /* Return status */
     return Status;
-}
-
-VOID
-NTAPI
-ObDereferenceDeviceMap(IN PEPROCESS Process)
-{
-    PDEVICE_MAP DeviceMap;
-
-    /* Get the pointer to this process devicemap and reset it
-       holding devicemap lock */
-    KeAcquireGuardedMutex(&ObpDeviceMapLock);
-    DeviceMap = Process->DeviceMap;
-    Process->DeviceMap = NULL;
-    KeReleaseGuardedMutex(&ObpDeviceMapLock);
-
-    /* Continue only if there is a devicemap to dereference */
-    if (DeviceMap)
-    {
-        KeAcquireGuardedMutex(&ObpDeviceMapLock);
-
-        /* Delete the device map link and dereference it */
-        if (--DeviceMap->ReferenceCount)
-        {
-            /* Nobody is referencing it anymore, unlink the DOS directory */
-            DeviceMap->DosDevicesDirectory->DeviceMap = NULL;
-
-            /* Release the devicemap lock */
-            KeReleaseGuardedMutex(&ObpDeviceMapLock);
-
-            /* Dereference the DOS Devices Directory and free the Device Map */
-            ObDereferenceObject(DeviceMap->DosDevicesDirectory);
-            ExFreePool(DeviceMap);
-        }
-        else
-        {
-            /* Release the devicemap lock */
-            KeReleaseGuardedMutex(&ObpDeviceMapLock);
-        }
-    }
-}
-
-VOID
-NTAPI
-ObInheritDeviceMap(IN PEPROCESS Parent,
-                   IN PEPROCESS Process)
-{
-    /* FIXME: Devicemap Support */
 }
 
 /*++
@@ -1320,53 +1271,6 @@ ObQueryNameString(IN PVOID Object,
 
     /* Return success */
     return Status;
-}
-
-VOID
-NTAPI
-ObQueryDeviceMapInformation(IN PEPROCESS Process,
-                            IN PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo)
-{
-    /*
-    * FIXME: This is an ugly hack for now, to always return the System Device Map
-    * instead of returning the Process Device Map. Not important yet since we don't use it
-    */
-
-    KeAcquireGuardedMutex(&ObpDeviceMapLock);
-
-    /* Make a copy */
-    DeviceMapInfo->Query.DriveMap = ObSystemDeviceMap->DriveMap;
-    RtlCopyMemory(DeviceMapInfo->Query.DriveType,
-                  ObSystemDeviceMap->DriveType,
-                  sizeof(ObSystemDeviceMap->DriveType));
-
-    KeReleaseGuardedMutex(&ObpDeviceMapLock);
-}
-
-NTSTATUS
-NTAPI
-ObIsDosDeviceLocallyMapped(
-    IN ULONG Index,
-    OUT PUCHAR DosDeviceState)
-{
-    /* check parameters */
-    if (Index < 1 || Index > 26)
-    {
-        /* invalid index */
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    /* acquire lock */
-    KeAcquireGuardedMutex(&ObpDeviceMapLock);
-
-    /* get drive mapping status */
-    *DosDeviceState = (ObSystemDeviceMap->DriveMap & (1 << Index)) != 0;
-
-    /* release lock */
-    KeReleaseGuardedMutex(&ObpDeviceMapLock);
-
-    /* done */
-    return STATUS_SUCCESS;
 }
 
 /* EOF */

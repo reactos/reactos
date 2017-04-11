@@ -225,6 +225,7 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/region.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/rmap.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/section.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/ob/devicemap.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ob/obdir.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ob/obhandle.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ob/obinit.c

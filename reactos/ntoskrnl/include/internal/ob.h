@@ -387,6 +387,12 @@ ObpDeleteObjectType(
 //
 // DOS Devices Functions
 //
+NTSTATUS
+NTAPI
+ObpCreateDeviceMap(
+    IN HANDLE DirectoryHandle
+);
+
 VOID
 NTAPI
 ObDereferenceDeviceMap(
@@ -396,7 +402,7 @@ ObDereferenceDeviceMap(
 VOID
 FASTCALL
 ObfDereferenceDeviceMap(
-    IN PVOID DeviceMap
+    IN PDEVICE_MAP DeviceMap
 );
 
 VOID
