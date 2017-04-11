@@ -163,13 +163,4 @@ NTAPI
 UhciRHEnableIrq(
   IN PVOID uhciExtension);
 
-/* usbuhci.c */
-
-NTSTATUS
-NTAPI
-USBPORT_RegisterUSBPortDriver(
-  IN PDRIVER_OBJECT DriverObject,
-  IN ULONG Version,
-  IN PVOID RegistrationPacket);
-
 #endif /* USBUHCI_H__ */
