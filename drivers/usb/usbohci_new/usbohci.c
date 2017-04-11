@@ -220,7 +220,7 @@ OHCI_OpenControlEndpoint(IN POHCI_EXTENSION OhciExtension,
 
     OHCI_InsertEndpointInSchedule(OhciEndpoint);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -280,7 +280,7 @@ OHCI_OpenBulkEndpoint(IN POHCI_EXTENSION OhciExtension,
 
     OHCI_InsertEndpointInSchedule(OhciEndpoint);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -369,7 +369,7 @@ OHCI_OpenInterruptEndpoint(IN POHCI_EXTENSION OhciExtension,
 
     OHCI_InsertEndpointInSchedule(OhciEndpoint);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -469,7 +469,7 @@ OHCI_ReopenEndpoint(IN PVOID ohciExtension,
     ED->HwED.EndpointControl.MaximumPacketSize =
         OhciEndpoint->EndpointProperties.TotalMaxPacketSize;
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 VOID
@@ -541,7 +541,7 @@ NTAPI
 OHCI_TakeControlHC(IN POHCI_EXTENSION OhciExtension)
 {
     DPRINT1("OHCI_TakeControlHC: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -762,7 +762,7 @@ OHCI_StartController(IN PVOID ohciExtension,
     WRITE_REGISTER_ULONG(&OperationalRegs->HcRhStatus.AsULONG,
                          HcRhStatus.AsULONG);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 VOID
@@ -855,7 +855,7 @@ OHCI_ResumeController(IN PVOID ohciExtension)
     WRITE_REGISTER_ULONG(&OperationalRegs->HcControl.AsULONG,
                          control.AsULONG);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 BOOLEAN
@@ -1179,7 +1179,7 @@ OHCI_RemainTDs(IN POHCI_EXTENSION OhciExtension,
     return Result;
 }
 
-ULONG
+MPSTATUS
 NTAPI
 OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
                      IN POHCI_ENDPOINT OhciEndpoint,
@@ -1359,10 +1359,10 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
 
     OHCI_EnableList(OhciExtension, OhciEndpoint);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
-ULONG
+MPSTATUS
 NTAPI 
 OHCI_BulkOrInterruptTransfer(IN POHCI_EXTENSION OhciExtension,
                              IN POHCI_ENDPOINT OhciEndpoint,
@@ -1471,7 +1471,7 @@ OHCI_BulkOrInterruptTransfer(IN POHCI_EXTENSION OhciExtension,
 
     OHCI_EnableList(OhciExtension, OhciEndpoint);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -1535,7 +1535,7 @@ OHCI_SubmitIsoTransfer(IN PVOID ohciExtension,
                        IN PVOID isoParameters)
 {
     DPRINT1("OHCI_SubmitIsoTransfer: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 VOID
@@ -2332,7 +2332,7 @@ OHCI_StartSendOnePacket(IN PVOID ohciExtension,
                         IN USBD_STATUS * pUSBDStatus)
 {
     DPRINT1("OHCI_StartSendOnePacket: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -2347,7 +2347,7 @@ OHCI_EndSendOnePacket(IN PVOID ohciExtension,
                       IN USBD_STATUS * pUSBDStatus)
 {
     DPRINT1("OHCI_EndSendOnePacket: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -2358,7 +2358,7 @@ OHCI_PassThru(IN PVOID ohciExtension,
               IN PVOID pParameters)
 {
     DPRINT1("OHCI_PassThru: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 VOID
