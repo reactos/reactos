@@ -3388,7 +3388,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
            DriverObject,
            RegistryPath);
 
-    if (USBPORT_GetHciMn() != 0x10000001)
+    if (USBPORT_GetHciMn() != USBPORT_HCI_MN)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
