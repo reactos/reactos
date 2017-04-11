@@ -211,7 +211,7 @@ UhciGetEndpointStatus(IN PVOID uhciExtension,
                       IN PVOID uhciEndpoint)
 {
     DPRINT("UhciGetEndpointStatus: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return USBPORT_ENDPOINT_RUN;
 }
 
 VOID
