@@ -2736,9 +2736,9 @@ Next:
                 OperationalRegs = EhciExtension->OperationalRegs;
                 Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
 
-                if (!Command.InterruptAdvanceDoorbell &&
-                   (EhciExtension->Flags & 20))
+                if (!Command.InterruptAdvanceDoorbell)
                 {
+                    DPRINT_EHCI("EHCI_ProcessDoneAsyncTd: FIXME EhciExtension->Flags & 0x20\n");
                     EHCI_DisableAsyncList(EhciExtension);
                 }
             }
