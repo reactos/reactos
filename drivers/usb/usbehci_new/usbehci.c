@@ -2683,7 +2683,7 @@ EHCI_ProcessDoneAsyncTd(IN PEHCI_EXTENSION EhciExtension,
 
     EhciEndpoint = EhciTransfer->EhciEndpoint;
 
-    if (TD->TdFlags & 0x10)
+    if (TD->TdFlags & EHCI_HCD_TD_FLAG_ACTIVE)
     {
         goto Next;
     }
@@ -2829,7 +2829,7 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
             if (TD->HwTD.Token.Status & EHCI_TOKEN_STATUS_ACTIVE)
             {
-                TD->TdFlags |= 0x10;
+                TD->TdFlags |= EHCI_HCD_TD_FLAG_ACTIVE;
             }
 
             InsertTailList(&EhciEndpoint->ListTDs, &TD->DoneLink);
@@ -2877,7 +2877,7 @@ Next:
         {
             do
             {
-                TD->TdFlags |= 0x10;
+                TD->TdFlags |= EHCI_HCD_TD_FLAG_ACTIVE;
                 InsertTailList(&EhciEndpoint->ListTDs, &TD->DoneLink);
                 TD = TD->NextHcdTD;
             }
@@ -2957,7 +2957,7 @@ EHCI_PollHaltedAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
             if (TD->HwTD.Token.Status & EHCI_TOKEN_STATUS_ACTIVE)
             {
-                TD->TdFlags |= 0x10;
+                TD->TdFlags |= EHCI_HCD_TD_FLAG_ACTIVE;
             }
 
             TD->TdFlags |= EHCI_HCD_TD_FLAG_DONE;
@@ -2979,7 +2979,7 @@ EHCI_PollHaltedAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
         if (TD->HwTD.Token.Status & EHCI_TOKEN_STATUS_ACTIVE)
         {
-            TD->TdFlags |= 0x10;
+            TD->TdFlags |= EHCI_HCD_TD_FLAG_ACTIVE;
         }
 
         TD->TdFlags |= EHCI_HCD_TD_FLAG_DONE;
