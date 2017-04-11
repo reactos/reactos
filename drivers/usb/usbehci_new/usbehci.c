@@ -1028,7 +1028,7 @@ EHCI_SuspendController(IN PVOID ehciExtension)
     IntrEn.PortChangeInterrupt = 1;
     WRITE_REGISTER_ULONG((PULONG)(OperationalRegs + EHCI_USBINTR), IntrEn.AsULONG);
 
-    EhciExtension->Flags |= 1;
+    EhciExtension->Flags |= EHCI_FLAGS_CONTROLLER_SUSPEND;
 }
 
 MPSTATUS
@@ -1085,7 +1085,7 @@ EHCI_ResumeController(IN PVOID ehciExtension)
     WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBINTR,
                          EhciExtension->InterruptMask.AsULONG);
 
-    EhciExtension->Flags &= ~1;
+    EhciExtension->Flags &= ~EHCI_FLAGS_CONTROLLER_SUSPEND;
 
     return 0;
 }
@@ -1372,7 +1372,7 @@ EHCI_DisablePeriodicList(IN PEHCI_EXTENSION EhciExtension)
 
     DPRINT_EHCI("EHCI_DisablePeriodicList: ... \n");
 
-    if (EhciExtension->Flags & 0x20)
+    if (EhciExtension->Flags & EHCI_FLAGS_IDLE_SUPPORT)
     {
         OperationalRegs = (PULONG)EhciExtension->OperationalRegs;
 
@@ -2736,9 +2736,9 @@ Next:
                 OperationalRegs = EhciExtension->OperationalRegs;
                 Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
 
-                if (!Command.InterruptAdvanceDoorbell)
+                if (!Command.InterruptAdvanceDoorbell &&
+                   (EhciExtension->Flags & EHCI_FLAGS_IDLE_SUPPORT))
                 {
-                    DPRINT_EHCI("EHCI_ProcessDoneAsyncTd: FIXME EhciExtension->Flags & 0x20\n");
                     EHCI_DisableAsyncList(EhciExtension);
                 }
             }
@@ -3168,7 +3168,7 @@ EHCI_PollController(IN PVOID ehciExtension)
     EhciExtension = (PEHCI_EXTENSION)ehciExtension;
     OperationalRegs = EhciExtension->OperationalRegs;
 
-    if (!(EhciExtension->Flags & 1))
+    if (!(EhciExtension->Flags & EHCI_FLAGS_CONTROLLER_SUSPEND))
     {
         RegPacket.UsbPortInvalidateRootHub(EhciExtension);
         return;
