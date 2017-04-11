@@ -379,7 +379,7 @@ OHCI_OpenIsoEndpoint(IN POHCI_EXTENSION OhciExtension,
                      IN POHCI_ENDPOINT OhciEndpoint)
 {
     DPRINT1("OHCI_OpenIsoEndpoint: UNIMPLEMENTED. FIXME\n");
-    return 6;
+    return MP_STATUS_NOT_SUPPORTED;
 }
 
 MPSTATUS
@@ -1204,7 +1204,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
 
     if (SGList->SgElementCount + 2 > MaxTDs)
     {
-        return 1;
+        return MP_STATUS_FAILURE;
     }
 
     FirstTD = OhciEndpoint->HcdTailP;
@@ -1382,7 +1382,7 @@ OHCI_BulkOrInterruptTransfer(IN POHCI_EXTENSION OhciExtension,
 
     if (SGList->SgElementCount > MaxTDs)
     {
-        return 1;
+        return MP_STATUS_FAILURE;
     }
 
     TD = OhciEndpoint->HcdTailP;
@@ -1523,7 +1523,7 @@ OHCI_SubmitTransfer(IN PVOID ohciExtension,
                                             SGList);
     }
 
-    return 1;
+    return MP_STATUS_FAILURE;
 }
 
 MPSTATUS
