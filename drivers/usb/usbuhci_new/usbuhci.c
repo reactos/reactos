@@ -14,7 +14,7 @@ UhciOpenEndpoint(IN PVOID uhciExtension,
                  IN PVOID uhciEndpoint)
 {
     DPRINT("UhciOpenEndpoint: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -24,7 +24,7 @@ UhciReopenEndpoint(IN PVOID uhciExtension,
                    IN PVOID uhciEndpoint)
 {
     DPRINT("Uhci: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 VOID
@@ -51,7 +51,7 @@ UhciStartController(IN PVOID uhciExtension,
                     IN PUSBPORT_RESOURCES Resources)
 {
     DPRINT("UhciStartController: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 VOID
@@ -74,7 +74,7 @@ NTAPI
 UhciResumeController(IN PVOID uhciExtension)
 {
     DPRINT("UhciResumeController: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 BOOLEAN
@@ -102,7 +102,7 @@ UhciSubmitTransfer(IN PVOID uhciExtension,
                    IN PVOID sgList)
 {
     DPRINT("UhciSubmitTransfer: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -114,7 +114,7 @@ UhciIsochTransfer(IN PVOID ehciExtension,
                   IN PVOID isoParameters)
 {
     DPRINT("UhciIsochTransfer: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 VOID
@@ -242,7 +242,7 @@ UhciStartSendOnePacket(IN PVOID uhciExtension,
                        IN USBD_STATUS * pUSBDStatus)
 {
     DPRINT("UhciStartSendOnePacket: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -257,7 +257,7 @@ UhciEndSendOnePacket(IN PVOID uhciExtension,
                      IN USBD_STATUS * pUSBDStatus)
 {
     DPRINT("UhciEndSendOnePacket: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -268,7 +268,7 @@ UhciPassThru(IN PVOID uhciExtension,
              IN PVOID pParameters)
 {
     DPRINT("UhciPassThru: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 VOID
