@@ -229,13 +229,4 @@ NTAPI
 OHCI_RH_EnableIrq(
   IN PVOID ohciExtension);
 
-/* usbohci.c */
-
-NTSTATUS
-NTAPI
-USBPORT_RegisterUSBPortDriver(
-  IN PDRIVER_OBJECT DriverObject,
-  IN ULONG Version,
-  IN PVOID RegistrationPacket);
-
 #endif /* USBOHCI_H__ */
