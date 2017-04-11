@@ -212,7 +212,7 @@ EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
     if (!TD)
     {
-        return 2;
+        return MP_STATUS_NO_RESOURCES;
     }
 
     TD->TdFlags |= EHCI_HCD_TD_FLAG_DUMMY;
@@ -244,7 +244,7 @@ EHCI_OpenInterruptEndpoint(IN PEHCI_EXTENSION EhciExtension,
                            IN PEHCI_ENDPOINT EhciEndpoint)
 {
     DPRINT1("EHCI_OpenInterruptEndpoint: UNIMPLEMENTED. FIXME\n");
-    return 6;
+    return MP_STATUS_NOT_SUPPORTED;
 }
 
 MPSTATUS
@@ -254,7 +254,7 @@ EHCI_OpenHsIsoEndpoint(IN PEHCI_EXTENSION EhciExtension,
                        IN PEHCI_ENDPOINT EhciEndpoint)
 {
     DPRINT1("EHCI_OpenHsIsoEndpoint: UNIMPLEMENTED. FIXME\n");
-    return 6;
+    return MP_STATUS_NOT_SUPPORTED;
 }
 
 MPSTATUS
@@ -264,7 +264,7 @@ EHCI_OpenIsoEndpoint(IN PEHCI_EXTENSION EhciExtension,
                      IN PEHCI_ENDPOINT EhciEndpoint)
 {
     DPRINT1("EHCI_OpenIsoEndpoint: UNIMPLEMENTED. FIXME\n");
-    return 6;
+    return MP_STATUS_NOT_SUPPORTED;
 }
 
 MPSTATUS
@@ -851,7 +851,7 @@ EHCI_StartController(IN PVOID ehciExtension,
         DPRINT1("EHCI_StartController: Resources->TypesResources - %x\n",
                 Resources->TypesResources);
 
-        return 4;
+        return MP_STATUS_ERROR;
     }
 
     EhciExtension = (PEHCI_EXTENSION)ehciExtension;
@@ -1681,7 +1681,7 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
 
     if (EhciEndpoint->RemainTDs < 6)
     {
-        return 1;
+        return MP_STATUS_FAILURE;
     }
 
     ++EhciExtension->PendingTransfers;
@@ -1694,7 +1694,7 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
     if (!FirstTD)
     {
         RegPacket.UsbPortBugCheck(EhciExtension);
-        return 1;
+        return MP_STATUS_FAILURE;
     }
 
     ++EhciTransfer->PendingTDs;
@@ -1728,7 +1728,7 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
     if (!LastTD)
     {
         RegPacket.UsbPortBugCheck(EhciExtension);
-        return 1;
+        return MP_STATUS_FAILURE;
     }
 
     ++EhciTransfer->PendingTDs;
@@ -1827,7 +1827,7 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
         }
 
         RegPacket.UsbPortBugCheck(EhciExtension);
-        return 1;
+        return MP_STATUS_FAILURE;
     }
 
 End:
@@ -1889,8 +1889,8 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
 
     if (((TransferParameters->TransferBufferLength >> 14) + 1) > EhciEndpoint->RemainTDs)
     {
-        DPRINT1("EHCI_BulkTransfer: return 1\n");
-        return 1;
+        DPRINT1("EHCI_BulkTransfer: return MP_STATUS_FAILURE\n");
+        return MP_STATUS_FAILURE;
     }
 
     ++EhciExtension->PendingTransfers;
@@ -1910,7 +1910,7 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
             if (!TD)
             {
                 RegPacket.UsbPortBugCheck(EhciExtension);
-                return 1;
+                return MP_STATUS_FAILURE;
             }
 
             ++EhciTransfer->PendingTDs;
@@ -1975,7 +1975,7 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
         if (!TD)
         {
             RegPacket.UsbPortBugCheck(EhciExtension);
-            return 1;
+            return MP_STATUS_FAILURE;
         }
 
         ++EhciTransfer->PendingTDs;
@@ -2052,7 +2052,7 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
     if (!EhciEndpoint->RemainTDs)
     {
         DbgBreakPoint();
-        return 1;
+        return MP_STATUS_FAILURE;
     }
 
     ++EhciEndpoint->PendingTDs;
@@ -2068,7 +2068,7 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
             if (!TD)
             {
                 RegPacket.UsbPortBugCheck(EhciExtension);
-                return 1;
+                return MP_STATUS_FAILURE;
             }
 
             ++EhciTransfer->PendingTDs;
