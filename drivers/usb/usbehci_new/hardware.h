@@ -276,6 +276,7 @@ C_ASSERT(sizeof(EHCI_QUEUE_TD) == 52);
 /* Queue Head */
 
 #define EHCI_QH_FLAG_IN_SCHEDULE  0x01
+#define EHCI_QH_FLAG_CLOSED       0x02
 #define EHCI_QH_FLAG_STATIC       0x04
 #define EHCI_QH_FLAG_UPDATING     0x10
 #define EHCI_QH_FLAG_NUKED        0x20

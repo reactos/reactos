@@ -2553,7 +2553,7 @@ EHCI_SetAsyncEndpointState(IN PEHCI_EXTENSION EhciExtension,
             break;
 
         case USBPORT_ENDPOINT_CLOSED:
-            QH->sqh.QhFlags |= 2;
+            QH->sqh.QhFlags |= EHCI_QH_FLAG_CLOSED;
 
             if (TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
             {
@@ -3030,7 +3030,7 @@ EHCI_PollAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
     QH = EhciEndpoint->QH;
 
-    if (QH->sqh.QhFlags & 2)
+    if (QH->sqh.QhFlags & EHCI_QH_FLAG_CLOSED)
     {
         return;
     }
