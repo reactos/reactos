@@ -846,7 +846,8 @@ EHCI_StartController(IN PVOID ehciExtension,
 
     DPRINT_EHCI("EHCI_StartController: ... \n");
 
-    if ((Resources->TypesResources & 6) != 6) // (Interrupt | Memory)
+    if ((Resources->TypesResources & (USBPORT_RESOURCES_MEMORY | USBPORT_RESOURCES_INTERRUPT)) !=
+                                     (USBPORT_RESOURCES_MEMORY | USBPORT_RESOURCES_INTERRUPT)))
     {
         DPRINT1("EHCI_StartController: Resources->TypesResources - %x\n",
                 Resources->TypesResources);
