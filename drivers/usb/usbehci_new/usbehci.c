@@ -2873,15 +2873,11 @@ Next:
     {
         TD = CurrentTD->NextHcdTD;
   
-        if (TD != EhciEndpoint->HcdTailP)
+        while (TD != EhciEndpoint->HcdTailP)
         {
-            do
-            {
-                TD->TdFlags |= EHCI_HCD_TD_FLAG_ACTIVE;
-                InsertTailList(&EhciEndpoint->ListTDs, &TD->DoneLink);
-                TD = TD->NextHcdTD;
-            }
-            while (TD != EhciEndpoint->HcdTailP);
+            TD->TdFlags |= EHCI_HCD_TD_FLAG_ACTIVE;
+            InsertTailList(&EhciEndpoint->ListTDs, &TD->DoneLink);
+            TD = TD->NextHcdTD;
         }
     }
 
