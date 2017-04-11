@@ -1,6 +1,6 @@
 #include "usbohci.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #define NDEBUG_OHCI_TRACE
@@ -531,7 +531,7 @@ OHCI_CloseEndpoint(IN PVOID ohciExtension,
                    IN BOOLEAN IsDoDisablePeriodic)
 {
 #if DBG
-    DPRINT1("OHCI_Unload: Not supported\n");
+    DPRINT1("OHCI_CloseEndpoint: Not supported\n");
 #endif
     return;
 }
@@ -2262,7 +2262,7 @@ OHCI_GetEndpointStatus(IN PVOID ohciExtension,
 {
     POHCI_ENDPOINT OhciEndpoint;
     POHCI_HCD_ED ED;
-    ULONG EndpointStatus = 0;
+    ULONG EndpointStatus = USBPORT_ENDPOINT_RUN;
 
     DPRINT_OHCI("OHCI_GetEndpointStatus: ... \n");
 
@@ -2273,7 +2273,7 @@ OHCI_GetEndpointStatus(IN PVOID ohciExtension,
     if ((ED->HwED.HeadPointer & 1) && // Halted
         !(ED->Flags & OHCI_HCD_ED_FLAG_RESET_ON_HALT)) 
     {
-        EndpointStatus = 1;
+        EndpointStatus = USBPORT_ENDPOINT_HALT;
     }
 
     return EndpointStatus;
@@ -2298,13 +2298,14 @@ OHCI_SetEndpointStatus(IN PVOID ohciExtension,
 
     if (EndpointStatus)
     {
-        if (EndpointStatus == 1)
+        if (EndpointStatus == USBPORT_ENDPOINT_HALT)
         {
             ASSERT(FALSE);
         }
     }
     else
     {
+        /* EndpointStatus == USBPORT_ENDPOINT_RUN */
         ED = OhciEndpoint->HcdED;
         ED->HwED.HeadPointer &= ~1; // ~Halted
 
