@@ -16,7 +16,7 @@
 @ stub AdjustPointers
 @ stub AdjustPointersInStructuresArray
 @ stub AlignKMPtr
-@ stub AlignRpcPtr
+@ stdcall AlignRpcPtr(ptr ptr)
 @ stdcall AllocSplStr(ptr)
 @ stub AllowRemoteCalls
 @ stub AppendPrinterNotifyInfoData
@@ -165,7 +165,7 @@
 @ stdcall StartDocPrinterW(long long ptr)
 @ stdcall StartPagePrinter(long)
 @ stub UndoAlignKMPtr
-@ stub UndoAlignRpcPtr
+@ stdcall UndoAlignRpcPtr(ptr ptr long ptr)
 @ stub UnloadDriver
 @ stub UnloadDriverFile
 @ stub UpdateBufferSize

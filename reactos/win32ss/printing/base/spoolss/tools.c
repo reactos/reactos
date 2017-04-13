@@ -86,7 +86,7 @@ MarshallDownStructure(PVOID pStructure, PMARSHALL_DOWN_INFO pParameters, DWORD c
  * The strings are copied in reverse order, so this pointer will point to the last copied string of pSource.
  */
 PBYTE WINAPI
-PackStrings(PCWSTR* pSource, PBYTE pDest, PDWORD DestOffsets, PBYTE pEnd)
+PackStrings(PCWSTR* pSource, PBYTE pDest, const DWORD* DestOffsets, PBYTE pEnd)
 {
     DWORD cbString;
     ULONG_PTR StringAddress;
