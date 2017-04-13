@@ -1105,7 +1105,7 @@ HRESULT WINAPI DrawNCPreview(HDC hDC,
     if (!context.theme)
         return E_FAIL;
     context.scrolltheme = OpenThemeDataFromFile(hThemeFile, hwndDummy, L"SCROLLBAR", 0);
-    if (!context.theme)
+    if (!context.scrolltheme)
         return E_FAIL;
     context.Active = TRUE;
     context.wi.cbSize = sizeof(context.wi);
