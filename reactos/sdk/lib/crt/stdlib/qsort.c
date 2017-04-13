@@ -189,7 +189,6 @@ qsort(void *base0, size_t n, size_t size, int (__cdecl *compar)(const void*, con
 
   if (size == 0)
     return;
-  compar = compar;
   thresh = size * THRESH;
   max = base + n * size;
   if (n >= THRESH)
