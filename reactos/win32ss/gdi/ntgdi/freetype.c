@@ -2052,7 +2052,7 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, FT_Face Face,
     NTSTATUS Status = STATUS_NOT_FOUND;
     ANSI_STRING AnsiName;
 
-    RtlInitUnicodeString(pNameW, NULL);
+    RtlFreeUnicodeString(pNameW);
 
     Count = FT_Get_Sfnt_Name_Count(Face);
     for (i = 0; i < Count; ++i)
@@ -2202,6 +2202,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
     else
     {
         UNICODE_STRING NameW;
+        RtlInitUnicodeString(&NameW, NULL);
         status = IntGetFontLocalizedName(&NameW, Face, TT_NAME_ID_FONT_FAMILY,
                                          gusLanguageID);
         if (NT_SUCCESS(status))
@@ -2640,6 +2641,7 @@ ftGdiGlyphCacheSet(
     {
         DPRINT1("Conversion failed\n");
         ExFreePoolWithTag(NewEntry, TAG_FONT);
+        FT_Bitmap_Done(GlyphSlot->library, &AlignedBitmap);
         FT_Done_Glyph((FT_Glyph)BitmapGlyph);
         return NULL;
     }
