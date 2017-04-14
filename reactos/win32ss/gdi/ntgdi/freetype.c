@@ -2225,7 +2225,6 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
     {
         return;
     }
-    Info->EnumLogFontEx.elfLogFont.lfCharSet = DEFAULT_CHARSET;
     Info->EnumLogFontEx.elfScript[0] = UNICODE_NULL;
 
     IntLockFreeType;
@@ -2286,7 +2285,6 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
             }
             if (DEFAULT_CHARSET != CharSetInfo.ciCharset)
             {
-                Info->EnumLogFontEx.elfLogFont.lfCharSet = CharSetInfo.ciCharset;
                 if (ElfScripts[i])
                     wcscpy(Info->EnumLogFontEx.elfScript, ElfScripts[i]);
                 else
