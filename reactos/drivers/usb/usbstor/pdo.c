@@ -1183,6 +1183,7 @@ USBSTOR_SendIrp(
     // free resources
     //
     ExFreePoolWithTag(Request, USB_STOR_TAG);
+    IoFreeMdl(Irp->MdlAddress);
     IoFreeIrp(Irp);
     return Status;
 }
