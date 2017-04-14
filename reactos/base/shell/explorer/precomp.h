@@ -176,16 +176,25 @@ TrayMessageLoop(IN OUT ITrayWindow *Tray);
  */
 
 /* Structure to hold non-default options*/
-typedef struct _ADVANCED_SETTINGS
+typedef struct _TASKBAR_SETTINGS
 {
+    BOOL bLock;
+    BOOL bAutoHide;
+    BOOL bAlwaysOnTop;
+    BOOL bGroupButtons;
+    BOOL bShowQuickLaunch;
+    BOOL bShowClock;
     BOOL bShowSeconds;
-} ADVANCED_SETTINGS, *PADVANCED_SETTINGS;
+    BOOL bHideInactiveIcons;
+} TASKBAR_SETTINGS, *PTASKBAR_SETTINGS;
 
-extern ADVANCED_SETTINGS AdvancedSettings;
-extern const TCHAR szAdvancedSettingsKey [];
+extern TASKBAR_SETTINGS TaskBarSettings;
 
 VOID
-LoadAdvancedSettings(VOID);
+LoadTaskBarSettings(VOID);
+
+VOID
+SaveTaskBarSettings(VOID);
 
 BOOL
 SaveSettingDword(IN LPCWSTR pszKeyName,

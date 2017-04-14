@@ -132,7 +132,7 @@ StartWithDesktop(IN HINSTANCE hInstance)
     hExplorerInstance = hInstance;
     hProcessHeap = GetProcessHeap();
 
-    LoadAdvancedSettings();
+    LoadTaskBarSettings();
     InitCommonControls();
     OleInitialize(NULL);
 

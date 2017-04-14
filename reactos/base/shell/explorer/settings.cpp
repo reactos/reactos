@@ -20,16 +20,23 @@
 
 #include "precomp.h"
 
-ADVANCED_SETTINGS AdvancedSettings;
+TASKBAR_SETTINGS TaskBarSettings;
 const WCHAR szAdvancedSettingsKey[] = L"Software\\ReactOS\\Features\\Explorer";
 
 VOID
-LoadAdvancedSettings(VOID)
+LoadTaskBarSettings(VOID)
 {
     HKEY hKey;
 
     /* Set defaults */
-    AdvancedSettings.bShowSeconds = FALSE;
+    TaskBarSettings.bLock = TRUE;
+    TaskBarSettings.bAutoHide = FALSE;
+    TaskBarSettings.bAlwaysOnTop = FALSE;
+    TaskBarSettings.bGroupButtons = TRUE;
+    TaskBarSettings.bShowQuickLaunch = TRUE;
+    TaskBarSettings.bShowClock = TRUE;
+    TaskBarSettings.bShowSeconds = FALSE;
+    TaskBarSettings.bHideInactiveIcons = TRUE;
 
     /* Check registry */
     if (RegOpenKeyW(HKEY_CURRENT_USER, szAdvancedSettingsKey, &hKey) == ERROR_SUCCESS)
@@ -38,10 +45,16 @@ LoadAdvancedSettings(VOID)
 
         dwValueLength = sizeof(dwValue);
         if (RegQueryValueExW(hKey, L"ShowSeconds", NULL, &dwType, (PBYTE)&dwValue, &dwValueLength) == ERROR_SUCCESS && dwType == REG_DWORD)
-            AdvancedSettings.bShowSeconds = dwValue != 0;
+            TaskBarSettings.bShowSeconds = dwValue != 0;
 
         RegCloseKey(hKey);
     }
+}
+
+VOID
+SaveTaskBarSettings(VOID)
+{
+    SaveSettingDword(szAdvancedSettingsKey, TEXT("ShowSeconds"), TaskBarSettings.bShowSeconds);
 }
 
 BOOL

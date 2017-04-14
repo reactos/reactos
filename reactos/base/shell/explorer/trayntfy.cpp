@@ -867,7 +867,7 @@ public:
             if (ClockWndFormats[i].IsTime)
             {
                 iRet = GetTimeFormat(LOCALE_USER_DEFAULT,
-                    AdvancedSettings.bShowSeconds ? ClockWndFormats[i].dwFormatFlags : TIME_NOSECONDS,
+                    TaskBarSettings.bShowSeconds ? ClockWndFormats[i].dwFormatFlags : TIME_NOSECONDS,
                     &LocalTime,
                     ClockWndFormats[i].lpFormat,
                     szLines[i],
@@ -939,7 +939,7 @@ public:
         /* Calculate the due time */
         GetLocalTime(&LocalTime);
         uiDueTime = 1000 - (UINT) LocalTime.wMilliseconds;
-        if (AdvancedSettings.bShowSeconds)
+        if (TaskBarSettings.bShowSeconds)
             uiDueTime += (UINT) LocalTime.wSecond * 100;
         else
             uiDueTime += (59 - (UINT) LocalTime.wSecond) * 1000;
@@ -997,7 +997,7 @@ public:
 
         uiDueTime = CalculateDueTime();
 
-        if (AdvancedSettings.bShowSeconds)
+        if (TaskBarSettings.bShowSeconds)
         {
             uiWait1 = 1000 - 200;
             uiWait2 = 1000;
