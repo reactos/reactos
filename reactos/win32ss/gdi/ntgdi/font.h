@@ -54,8 +54,7 @@ typedef struct FONTSUBST_ENTRY
 typedef struct GDI_LOAD_FONT
 {
     PUNICODE_STRING     pFileName;
-    PVOID               Buffer;
-    ULONG               BufferSize;
+    PSHARED_MEM         Memory;
     DWORD               Characteristics;
     UNICODE_STRING      RegValueName;
     BOOL                IsTrueType;

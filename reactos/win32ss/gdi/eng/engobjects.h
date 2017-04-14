@@ -107,9 +107,17 @@ typedef struct _FLOATGDI {
   ULONG Dummy;
 } FLOATGDI;
 
+typedef struct _SHARED_MEM {
+  PVOID         Buffer;
+  ULONG         BufferSize;
+  BOOL          IsMapping;
+  LONG          RefCount;
+} SHARED_MEM, *PSHARED_MEM;
+
 typedef struct _SHARED_FACE {
-  FT_Face     Face;
-  LONG        RefCount;
+  FT_Face       Face;
+  LONG          RefCount;
+  PSHARED_MEM   Memory;
 } SHARED_FACE, *PSHARED_FACE;
 
 typedef struct _FONTGDI {

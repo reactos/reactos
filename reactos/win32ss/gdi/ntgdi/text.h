@@ -112,6 +112,7 @@ BOOL FASTCALL IntIsFontRenderingEnabled(VOID);
 VOID FASTCALL IntEnableFontRendering(BOOL Enable);
 ULONG FASTCALL FontGetObject(PTEXTOBJ TextObj, ULONG Count, PVOID Buffer);
 VOID FASTCALL IntLoadSystemFonts(VOID);
+VOID FASTCALL IntGdiCleanupPrivateFontsForProcess(VOID);
 INT FASTCALL IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics);
 HANDLE FASTCALL IntGdiAddFontMemResource(PVOID Buffer, DWORD dwSize, PDWORD pNumAdded);
 BOOL FASTCALL IntGdiRemoveFontMemResource(HANDLE hMMFont);

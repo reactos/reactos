@@ -50,6 +50,8 @@ GdiProcessDestroy(PEPROCESS Process)
     ASSERT(ppiCurrent);
     ASSERT(ppiCurrent->peProcess == Process);
 
+    IntGdiCleanupPrivateFontsForProcess();
+
     /* And GDI ones too */
     GDI_CleanupForProcess(Process);
 
