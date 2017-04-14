@@ -239,7 +239,7 @@ VdmpStartExecution(VOID)
         KeLowerIrql(OldIrql);
         return STATUS_INVALID_SYSTEM_SERVICE;
     }
-    
+
     /* Now do the VDM Swap */
     VdmSwapContext(VdmFrame, &VdmTib->MonitorContext, &VdmContext);
 
@@ -269,7 +269,7 @@ VdmEndExecution(IN PKTRAP_FRAME TrapFrame,
 
     /* Make a copy of the monitor context */
     Context = VdmTib->MonitorContext;
-    
+
     /* Check if V86 mode was enabled or the trap was edited */
     if ((Context.EFlags & EFLAGS_V86_MASK) || (Context.SegCs & FRAME_EDITED))
     {
@@ -291,7 +291,7 @@ VdmEndExecution(IN PKTRAP_FRAME TrapFrame,
                 /* Remove real IF flag */
                 VdmTib->VdmContext.EFlags &= ~EFLAGS_INTERRUPT_MASK;
             }
-            
+
             /* Turn off VIP and VIF */
             TrapFrame->EFlags &= ~(EFLAGS_VIP | EFLAGS_VIF);
             VdmTib->VdmContext.EFlags &= ~(EFLAGS_VIP | EFLAGS_VIF);
@@ -362,4 +362,45 @@ VdmDispatchBop(IN PKTRAP_FRAME TrapFrame)
     return TRUE;
 }
 
+BOOLEAN
+NTAPI
+VdmDispatchPageFault(
+    _In_ PKTRAP_FRAME TrapFrame)
+{
+    NTSTATUS Status;
+    PVDM_TIB VdmTib;
+
+    PAGED_CODE();
+
+    /* Get the VDM TIB so we can terminate V86 execution */
+    Status = VdmpGetVdmTib(&VdmTib);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Not a proper VDM fault, keep looking */
+        DPRINT1("VdmDispatchPageFault: no VDM TIB, Vdm=%p\n", NtCurrentTeb()->Vdm);
+        return FALSE;
+    }
+
+    /* Must be coming from V86 code */
+    ASSERT(TrapFrame->EFlags & EFLAGS_V86_MASK);
+
+    _SEH2_TRY
+    {
+        /* Fill out a VDM Event */
+        VdmTib->EventInfo.Event = VdmMemAccess;
+        VdmTib->EventInfo.InstructionSize = 0;
+
+        /* End VDM Execution */
+        VdmEndExecution(TrapFrame, VdmTib);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    /* Consider the exception handled if we succeeded */
+    DPRINT1("VdmDispatchPageFault EFlags %lx exit with 0x%lx\n", TrapFrame->EFlags, Status);
+    return NT_SUCCESS(Status);
+}
 

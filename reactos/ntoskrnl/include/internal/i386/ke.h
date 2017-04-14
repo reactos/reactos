@@ -481,6 +481,12 @@ VdmDispatchBop(
 );
 
 BOOLEAN
+NTAPI
+VdmDispatchPageFault(
+    _In_ PKTRAP_FRAME TrapFrame
+);
+
+BOOLEAN
 FASTCALL
 KiVdmOpcodePrefix(
     IN PKTRAP_FRAME TrapFrame,

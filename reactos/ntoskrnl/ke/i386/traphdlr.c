@@ -1304,8 +1304,20 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
         UNIMPLEMENTED_FATAL();
     }
 #endif
+
     /* Check for VDM trap */
-    ASSERT((KiVdmTrap(TrapFrame)) == FALSE);
+    if (KiVdmTrap(TrapFrame))
+    {
+        DPRINT1("VDM PAGE FAULT at %lx:%lx for address %lx\n",
+                TrapFrame->SegCs, TrapFrame->Eip, Cr2);
+        if (VdmDispatchPageFault(TrapFrame))
+        {
+            /* Return and end VDM execution */
+            DPRINT1("VDM page fault with status 0x%lx resolved\n", Status);
+            KiEoiHelper(TrapFrame);
+        }
+        DPRINT1("VDM page fault with status 0x%lx NOT resolved\n", Status);
+    }
 
     /* Either kernel or user trap (non VDM) so dispatch exception */
     if (Status == STATUS_ACCESS_VIOLATION)
