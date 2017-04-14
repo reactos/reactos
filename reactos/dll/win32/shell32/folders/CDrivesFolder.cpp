@@ -377,7 +377,7 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
 */
 HRESULT WINAPI CDrivesFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-    return ShellObjectCreatorInit<CDrivesFolderEnum>(hwndOwner, dwFlags, IID_IEnumIDList, ppEnumIDList);
+    return ShellObjectCreatorInit<CDrivesFolderEnum>(hwndOwner, dwFlags, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
 }
 
 /**************************************************************************

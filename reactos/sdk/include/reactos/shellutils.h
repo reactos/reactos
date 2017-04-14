@@ -213,273 +213,133 @@ HRESULT inline ShellDebugObjectCreator(REFIID riid, R ** ppv)
     return S_OK;
 }
 
-template<class T, class R>
-HRESULT inline ShellObjectCreator(REFIID riid, R ** ppv)
+template<class T>
+HRESULT inline ShellObjectCreator(REFIID riid, void ** ppv)
 {
-    CComPtr<T>       obj;
-    HRESULT          hResult;
+    _CComObject<T> *pobj;
+    HRESULT hResult;
 
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-ATLTRY(obj = new _CComObject<T>);
-    if (obj.p == NULL)
-        return E_OUTOFMEMORY;
-    hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(ppv));
-    if (FAILED(hResult))
-        return hResult;
-    return S_OK;
-}
-
-template<class T, class R>
-HRESULT inline ShellObjectCreatorInit(REFIID riid, R ** ppv)
-{
-    CComPtr<T>  obj;
-    CComPtr<R>  result;
-    HRESULT     hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY(obj = new _CComObject<T>);
-    if (obj.p == NULL)
-        return E_OUTOFMEMORY;
-    hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(&result));
+    hResult = _CComObject<T>::CreateInstance(&pobj);
     if (FAILED(hResult))
         return hResult;
 
-    hResult = obj->Initialize();
-    if (FAILED(hResult))
-        return hResult;
+    pobj->AddRef(); /* CreateInstance returns object with 0 ref count */
 
-    *ppv = result.Detach();
+    hResult = pobj->QueryInterface(riid, reinterpret_cast<void **>(ppv));
 
-    return S_OK;
+    pobj->Release(); /* In case of failure the object will be released */
+
+    return hResult;
 }
 
 template<class T>
 HRESULT inline ShellObjectCreatorInit(REFIID riid, void ** ppv)
 {
-    CComPtr<T>  obj;
-    CComPtr<IUnknown>  result;
-    HRESULT     hResult;
+    _CComObject<T> *pobj;
+    HRESULT hResult;
 
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY(obj = new _CComObject<T>);
-    if (obj.p == NULL)
-        return E_OUTOFMEMORY;
-    hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(&result));
+    hResult = _CComObject<T>::CreateInstance(&pobj);
     if (FAILED(hResult))
         return hResult;
 
-    hResult = obj->Initialize();
-    if (FAILED(hResult))
-        return hResult;
+    pobj->AddRef(); /* CreateInstance returns object with 0 ref count */
 
-    *ppv = result.Detach();
+    hResult = pobj->Initialize();
 
-    return S_OK;
+    if (SUCCEEDED(hResult))
+        hResult = pobj->QueryInterface(riid, reinterpret_cast<void **>(ppv));
+
+    pobj->Release(); /* In case of failure the object will be released */
+
+    return hResult;
 }
 
 template<class T, class T1>
 HRESULT inline ShellObjectCreatorInit(T1 initArg1, REFIID riid, void ** ppv)
 {
-    CComPtr<T>  obj;
-    HRESULT     hResult;
+    _CComObject<T> *pobj;
+    HRESULT hResult;
 
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY(obj = new _CComObject<T>);
-    if (obj.p == NULL)
-        return E_OUTOFMEMORY;
-    hResult = obj->QueryInterface(riid, ppv);
+    hResult = _CComObject<T>::CreateInstance(&pobj);
     if (FAILED(hResult))
         return hResult;
 
-    hResult = obj->Initialize(initArg1);
-    if (FAILED(hResult))
-        return hResult;
+    pobj->AddRef(); /* CreateInstance returns object with 0 ref count */
 
-    return S_OK;
+    hResult = pobj->Initialize(initArg1);
+
+    if (SUCCEEDED(hResult))
+        hResult = pobj->QueryInterface(riid, reinterpret_cast<void **>(ppv));
+
+    pobj->Release(); /* In case of failure the object will be released */
+
+    return hResult;
 }
 
 template<class T, class T1, class T2>
 HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, REFIID riid, void ** ppv)
 {
-    CComPtr<T>  obj;
-    HRESULT     hResult;
+    _CComObject<T> *pobj;
+    HRESULT hResult;
 
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY(obj = new _CComObject<T>);
-    if (obj.p == NULL)
-        return E_OUTOFMEMORY;
-    hResult = obj->QueryInterface(riid, ppv);
+    hResult = _CComObject<T>::CreateInstance(&pobj);
     if (FAILED(hResult))
         return hResult;
 
-    hResult = obj->Initialize(initArg1, initArg2);
-    if (FAILED(hResult))
-        return hResult;
+    pobj->AddRef(); /* CreateInstance returns object with 0 ref count */
 
-    return S_OK;
+    hResult = pobj->Initialize(initArg1, initArg2);
+
+    if (SUCCEEDED(hResult))
+        hResult = pobj->QueryInterface(riid, reinterpret_cast<void **>(ppv));
+
+    pobj->Release(); /* In case of failure the object will be released */
+
+    return hResult;
 }
 
 template<class T, class T1, class T2, class T3>
 HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, T3 initArg3, REFIID riid, void ** ppv)
 {
-    CComPtr<T>  obj;
-    HRESULT     hResult;
+    _CComObject<T> *pobj;
+    HRESULT hResult;
 
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY(obj = new _CComObject<T>);
-    if (obj.p == NULL)
-        return E_OUTOFMEMORY;
-    hResult = obj->QueryInterface(riid, ppv);
+    hResult = _CComObject<T>::CreateInstance(&pobj);
     if (FAILED(hResult))
         return hResult;
 
-    hResult = obj->Initialize(initArg1, initArg2, initArg3);
-    if (FAILED(hResult))
-        return hResult;
+    pobj->AddRef(); /* CreateInstance returns object with 0 ref count */
 
-    return S_OK;
+    hResult = pobj->Initialize(initArg1, initArg2, initArg3);
+
+    if (SUCCEEDED(hResult))
+        hResult = pobj->QueryInterface(riid, reinterpret_cast<void **>(ppv));
+
+    pobj->Release(); /* In case of failure the object will be released */
+
+    return hResult;
 }
 
-template<class T, class T1, class R>
-HRESULT inline ShellObjectCreatorInit(T1 initArg1, REFIID riid, R ** ppv)
+template<class T, class T1, class T2, class T3, class T4>
+HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, T3 initArg3, T4 initArg4, REFIID riid, void ** ppv)
 {
-    CComPtr<T>  obj;
-    CComPtr<R>  result;
-    HRESULT     hResult;
+    _CComObject<T> *pobj;
+    HRESULT hResult;
 
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY(obj = new _CComObject<T>);
-    if (obj.p == NULL)
-        return E_OUTOFMEMORY;
-    hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(&result));
+    hResult = _CComObject<T>::CreateInstance(&pobj);
     if (FAILED(hResult))
         return hResult;
 
-    hResult = obj->Initialize(initArg1);
-    if (FAILED(hResult))
-        return hResult;
+    pobj->AddRef(); /* CreateInstance returns object with 0 ref count */
 
-    *ppv = result.Detach();
+    hResult = pobj->Initialize(initArg1, initArg2, initArg3, initArg4);
 
-    return S_OK;
-}
+    if (SUCCEEDED(hResult))
+        hResult = pobj->QueryInterface(riid, reinterpret_cast<void **>(ppv));
 
-template<class T, class T1, class T2, class R>
-HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, REFIID riid, R ** ppv)
-{
-    CComPtr<T>  obj;
-    CComPtr<R>  result;
-    HRESULT     hResult;
+    pobj->Release(); /* In case of failure the object will be released */
 
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY(obj = new _CComObject<T>);
-    if (obj.p == NULL)
-        return E_OUTOFMEMORY;
-    hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(&result));
-    if (FAILED(hResult))
-        return hResult;
-
-    hResult = obj->Initialize(initArg1, initArg2);
-    if (FAILED(hResult))
-        return hResult;
-
-    *ppv = result.Detach();
-
-    return S_OK;
-}
-
-template<class T, class T1, class T2, class T3, class R>
-HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, T3 initArg3, REFIID riid, R ** ppv)
-{
-    CComPtr<T>  obj;
-    CComPtr<R>  result;
-    HRESULT     hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY(obj = new _CComObject<T>);
-    if (obj.p == NULL)
-        return E_OUTOFMEMORY;
-    hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(&result));
-    if (FAILED(hResult))
-        return hResult;
-
-    hResult = obj->Initialize(initArg1, initArg2, initArg3);
-    if (FAILED(hResult))
-        return hResult;
-
-    *ppv = result.Detach();
-
-    return S_OK;
-}
-
-template<class T, class T1, class T2, class T3, class T4, class R>
-HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, T3 initArg3, T4 initArg4, REFIID riid, R ** ppv)
-{
-    CComPtr<T>  obj;
-    CComPtr<R>  result;
-    HRESULT     hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY(obj = new _CComObject<T>);
-    if (obj.p == NULL)
-        return E_OUTOFMEMORY;
-    hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(&result));
-    if (FAILED(hResult))
-        return hResult;
-
-    hResult = obj->Initialize(initArg1, initArg2, initArg3, initArg4);
-    if (FAILED(hResult))
-        return hResult;
-
-    *ppv = result.Detach();
-
-    return S_OK;
-}
-
-template<class T, class T1, class T2, class T3, class T4, class T5, class R>
-HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, T3 initArg3, T4 initArg4, T5 initArg5, REFIID riid, R ** ppv)
-{
-    CComPtr<T>  obj;
-    CComPtr<R>  result;
-    HRESULT     hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY(obj = new _CComObject<T>);
-    if (obj.p == NULL)
-        return E_OUTOFMEMORY;
-    hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(&result));
-    if (FAILED(hResult))
-        return hResult;
-
-    hResult = obj->Initialize(initArg1, initArg2, initArg3, initArg4, initArg5);
-    if (FAILED(hResult))
-        return hResult;
-
-    *ppv = result.Detach();
-
-    return S_OK;
+    return hResult;
 }
 
 HRESULT inline SHSetStrRet(LPSTRRET pStrRet, LPCSTR pstrValue)

@@ -158,7 +158,7 @@ HRESULT WINAPI IDefClFImpl::LockServer(BOOL fLock)
 
 HRESULT IDefClF_fnConstructor(LPFNCREATEINSTANCE lpfnCI, PLONG pcRefDll, const IID *riidInst, IClassFactory **theFactory)
 {
-    return ShellObjectCreatorInit<IDefClFImpl>(lpfnCI, pcRefDll, riidInst, IID_IClassFactory, theFactory);
+    return ShellObjectCreatorInit<IDefClFImpl>(lpfnCI, pcRefDll, riidInst, IID_PPV_ARG(IClassFactory, theFactory));
 }
 
 /******************************************************************************

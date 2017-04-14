@@ -96,7 +96,6 @@ public:
     CCPLItemMenu();
     ~CCPLItemMenu();
     HRESULT WINAPI Initialize(UINT cidl, PCUITEMID_CHILD_ARRAY apidl);
-    HRESULT WINAPI FinalConstruct();
 
     // IContextMenu
     virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);

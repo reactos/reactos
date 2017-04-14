@@ -311,7 +311,7 @@ HRESULT WINAPI CControlPanelFolder::ParseDisplayName(
 */
 HRESULT WINAPI CControlPanelFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
-    return ShellObjectCreatorInit<CControlPanelEnum>(dwFlags, IID_IEnumIDList, ppEnumIDList);
+    return ShellObjectCreatorInit<CControlPanelEnum>(dwFlags, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
 }
 
 /**************************************************************************

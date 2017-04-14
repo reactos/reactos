@@ -253,7 +253,7 @@ HRESULT WINAPI CFSFolder::EnumObjects(
     DWORD dwFlags,
     LPENUMIDLIST *ppEnumIDList)
 {
-    return ShellObjectCreatorInit<CFileSysEnum>(sPathTarget, dwFlags, IID_IEnumIDList, ppEnumIDList);
+    return ShellObjectCreatorInit<CFileSysEnum>(sPathTarget, dwFlags, IID_PPV_ARG(IEnumIDList, ppEnumIDList));
 }
 
 /**************************************************************************

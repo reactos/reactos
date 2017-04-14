@@ -3156,7 +3156,7 @@ HRESULT CDefView::_MergeToolbar()
  */
 HRESULT WINAPI IShellView_Constructor(IShellFolder *pFolder, IShellView **newView)
 {
-    return ShellObjectCreatorInit<CDefView>(pFolder, IID_IShellView, newView);
+    return ShellObjectCreatorInit<CDefView>(pFolder, IID_PPV_ARG(IShellView, newView));
 }
 
 HRESULT WINAPI CDefView_Constructor(IShellFolder *pFolder, REFIID riid, LPVOID * ppvOut)

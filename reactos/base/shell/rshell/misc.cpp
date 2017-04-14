@@ -61,8 +61,6 @@ HRESULT WINAPI CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv);
 HRESULT WINAPI CMenuSite_Constructor(REFIID riid, LPVOID *ppv);
 HRESULT WINAPI CMenuBand_Constructor(REFIID riid, LPVOID *ppv);
 HRESULT WINAPI CMergedFolder_Constructor(REFIID riid, LPVOID *ppv);
-HRESULT WINAPI CBandSite_CreateInstance(REFIID riid, void **ppv);
-HRESULT WINAPI CBandSiteMenu_CreateInstance(REFIID riid, void **ppv);
 }
 
 DWORD WINAPI WinList_Init(void)

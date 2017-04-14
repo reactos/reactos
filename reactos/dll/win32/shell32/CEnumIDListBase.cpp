@@ -281,5 +281,5 @@ HRESULT WINAPI CEnumIDListBase::Clone(LPENUMIDLIST *ppenum)
  */
 HRESULT IEnumIDList_Constructor(IEnumIDList **enumerator)
 {
-    return ShellObjectCreator<CEnumIDListBase>(IID_IEnumIDList, enumerator);
+    return ShellObjectCreator<CEnumIDListBase>(IID_PPV_ARG(IEnumIDList, enumerator));
 }
