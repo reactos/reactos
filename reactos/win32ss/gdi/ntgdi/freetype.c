@@ -771,7 +771,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     FT_Face             Face;
     ANSI_STRING         AnsiFaceName;
     FT_WinFNT_HeaderRec WinFNT;
-    INT                 FontCount = 0, CharSetCount = 0;
+    INT                 FaceCount = 0, CharSetCount = 0;
     PUNICODE_STRING     pFileName       = pLoadFont->pFileName;
     DWORD               Characteristics = pLoadFont->Characteristics;
     PUNICODE_STRING     pValueName = &pLoadFont->RegValueName;
@@ -971,7 +971,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
         FontGDI->CharSet = SYMBOL_CHARSET;
     }
 
-    ++FontCount;
+    ++FaceCount;
     DPRINT("Font loaded: %s (%s)\n", Face->family_name, Face->style_name);
     DPRINT("Num glyphs: %d\n", Face->num_glyphs);
     DPRINT("CharSet: %d\n", FontGDI->CharSet);
@@ -1006,7 +1006,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
                 FT_Long i;
                 for (i = 1; i < TrueType->ttc_header.count; ++i)
                 {
-                    FontCount += IntGdiLoadFontsFromMemory(pLoadFont, NULL, i, -1);
+                    FaceCount += IntGdiLoadFontsFromMemory(pLoadFont, NULL, i, -1);
                 }
             }
         }
@@ -1042,11 +1042,12 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
 
         for (i = 1; i < CharSetCount; ++i)
         {
-            FontCount += IntGdiLoadFontsFromMemory(pLoadFont, SharedFace, FontIndex, i);
+            /* Do not count charsets towards 'faces' loaded */
+            IntGdiLoadFontsFromMemory(pLoadFont, SharedFace, FontIndex, i);
         }
     }
 
-    return FontCount;   /* number of loaded fonts */
+    return FaceCount;   /* number of loaded faces */
 }
 
 /*
@@ -1172,7 +1173,7 @@ IntGdiAddFontMemResource(PVOID Buffer, DWORD dwSize, PDWORD pNumAdded)
 {
     GDI_LOAD_FONT LoadFont;
     FONT_ENTRY_COLL_MEM* EntryCollection;
-    INT FontCount;
+    INT FaceCount;
     HANDLE Ret = 0;
 
     PVOID BufferCopy = ExAllocatePoolWithTag(PagedPool, dwSize, TAG_FONT);
@@ -1190,7 +1191,7 @@ IntGdiAddFontMemResource(PVOID Buffer, DWORD dwSize, PDWORD pNumAdded)
     RtlInitUnicodeString(&LoadFont.RegValueName, NULL);
     LoadFont.IsTrueType = FALSE;
     LoadFont.PrivateEntry = NULL;
-    FontCount = IntGdiLoadFontsFromMemory(&LoadFont, NULL, -1, -1);
+    FaceCount = IntGdiLoadFontsFromMemory(&LoadFont, NULL, -1, -1);
 
     RtlFreeUnicodeString(&LoadFont.RegValueName);
 
@@ -1199,7 +1200,7 @@ IntGdiAddFontMemResource(PVOID Buffer, DWORD dwSize, PDWORD pNumAdded)
     SharedMem_Release(LoadFont.Memory);
     IntUnLockFreeType;
 
-    if (FontCount > 0)
+    if (FaceCount > 0)
     {
         EntryCollection = ExAllocatePoolWithTag(PagedPool, sizeof(FONT_ENTRY_COLL_MEM), TAG_FONT);
         if (EntryCollection)
@@ -1213,7 +1214,7 @@ IntGdiAddFontMemResource(PVOID Buffer, DWORD dwSize, PDWORD pNumAdded)
             Ret = (HANDLE)EntryCollection->Handle;
         }
     }
-    *pNumAdded = FontCount;
+    *pNumAdded = FaceCount;
 
     return Ret;
 }
