@@ -48,6 +48,7 @@ extern const MATRIX gmxWorldToPageDefault;
 #define gmxWorldToDeviceDefault gmxWorldToPageDefault
 
 FT_Library  library;
+static const WORD gusEnglishUS = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
 
 /* special font names */
 static const UNICODE_STRING MarlettW = RTL_CONSTANT_STRING(L"Marlett");
@@ -2041,30 +2042,40 @@ SwapEndian(LPVOID pvData, DWORD Size)
 }
 
 static NTSTATUS
-IntGetFontLocalizedName(PUNICODE_STRING pLocalNameW, FT_Face Face)
+IntGetFontLocalizedName(PUNICODE_STRING pNameW, FT_Face Face,
+                        FT_UShort NameID, FT_UShort LangID)
 {
     FT_SfntName Name;
     INT i, Count;
-    WCHAR Buf[LF_FACESIZE];
+    WCHAR Buf[LF_FULLFACESIZE];
+    FT_Error Error;
     NTSTATUS Status = STATUS_NOT_FOUND;
+    ANSI_STRING AnsiName;
 
-    RtlInitUnicodeString(pLocalNameW, NULL);
+    RtlInitUnicodeString(pNameW, NULL);
 
     Count = FT_Get_Sfnt_Name_Count(Face);
     for (i = 0; i < Count; ++i)
     {
-        FT_Get_Sfnt_Name(Face, i, &Name);
+        Error = FT_Get_Sfnt_Name(Face, i, &Name);
+        if (Error)
+            continue;
+
         if (Name.platform_id != TT_PLATFORM_MICROSOFT ||
             Name.encoding_id != TT_MS_ID_UNICODE_CS)
         {
             continue;   /* not Microsoft Unicode name */
         }
 
-        if (Name.name_id != TT_NAME_ID_FONT_FAMILY ||
-            Name.string == NULL || Name.string_len == 0 ||
+        if (Name.name_id != NameID || Name.language_id != LangID)
+        {
+            continue;   /* mismatched */
+        }
+
+        if (Name.string == NULL || Name.string_len == 0 ||
             (Name.string[0] == 0 && Name.string[1] == 0))
         {
-            continue;   /* not family name */
+            continue;   /* invalid string */
         }
 
         if (sizeof(Buf) < Name.string_len + sizeof(UNICODE_NULL))
@@ -2078,12 +2089,22 @@ IntGetFontLocalizedName(PUNICODE_STRING pLocalNameW, FT_Face Face)
 
         /* Convert UTF-16 big endian to little endian */
         SwapEndian(Buf, Name.string_len);
-#if 0
-        DPRINT("IntGetFontLocalizedName: %S (%d)\n", Buf, Name.string_len);
-#endif
 
-        Status = RtlCreateUnicodeString(pLocalNameW, Buf);
+        Status = RtlCreateUnicodeString(pNameW, Buf);
         break;
+    }
+
+    if (Status == STATUS_NOT_FOUND)
+    {
+        if (LangID != gusEnglishUS)
+        {
+            Status = IntGetFontLocalizedName(pNameW, Face, NameID, gusEnglishUS);
+        }
+    }
+    if (Status == STATUS_NOT_FOUND)
+    {
+        RtlInitAnsiString(&AnsiName, Face->family_name);
+        Status = RtlAnsiStringToUnicodeString(pNameW, &AnsiName, TRUE);
     }
 
     return Status;
@@ -2167,36 +2188,33 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
 
     ExFreePoolWithTag(Otm, GDITAG_TEXT);
 
-    /* try the localized name */
-    status = STATUS_UNSUCCESSFUL;
-    if (CharSetFromLangID(gusLanguageID) == FontGDI->CharSet)
+    /* face name */
+    /* TODO: full name */
+    if (FaceName)
     {
-        /* get localized name */
-        UNICODE_STRING LocalNameW;
-        status = IntGetFontLocalizedName(&LocalNameW, Face);
-        if (NT_SUCCESS(status))
-        {
-            /* store it */
-            RtlStringCbCopyW(Info->EnumLogFontEx.elfLogFont.lfFaceName,
-                             sizeof(Info->EnumLogFontEx.elfLogFont.lfFaceName),
-                             LocalNameW.Buffer);
-            RtlStringCbCopyW(Info->EnumLogFontEx.elfFullName,
-                             sizeof(Info->EnumLogFontEx.elfFullName),
-                             LocalNameW.Buffer);
-        }
-        RtlFreeUnicodeString(&LocalNameW);
-    }
-
-    /* if localized name was unavailable */
-    if (!NT_SUCCESS(status))
-    {
-        /* store English name */
         RtlStringCbCopyW(Info->EnumLogFontEx.elfLogFont.lfFaceName,
                          sizeof(Info->EnumLogFontEx.elfLogFont.lfFaceName),
                          FaceName);
         RtlStringCbCopyW(Info->EnumLogFontEx.elfFullName,
                          sizeof(Info->EnumLogFontEx.elfFullName),
                          FaceName);
+    }
+    else
+    {
+        UNICODE_STRING NameW;
+        status = IntGetFontLocalizedName(&NameW, Face, TT_NAME_ID_FONT_FAMILY,
+                                         gusLanguageID);
+        if (NT_SUCCESS(status))
+        {
+            /* store it */
+            RtlStringCbCopyW(Info->EnumLogFontEx.elfLogFont.lfFaceName,
+                             sizeof(Info->EnumLogFontEx.elfLogFont.lfFaceName),
+                             NameW.Buffer);
+            RtlStringCbCopyW(Info->EnumLogFontEx.elfFullName,
+                             sizeof(Info->EnumLogFontEx.elfFullName),
+                             NameW.Buffer);
+            RtlFreeUnicodeString(&NameW);
+        }
     }
 
     RtlInitAnsiString(&StyleA, Face->style_name);
@@ -2207,19 +2225,9 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
     {
         return;
     }
-    if (StyleW.Length)
-    {
-        if (wcslen(Info->EnumLogFontEx.elfFullName) +
-            StyleW.Length / sizeof(WCHAR) + 1 <=
-                sizeof(Info->EnumLogFontEx.elfFullName))
-        {
-            wcscat(Info->EnumLogFontEx.elfFullName, L" ");
-            wcscat(Info->EnumLogFontEx.elfFullName, StyleW.Buffer);
-        }
-    }
-
     Info->EnumLogFontEx.elfLogFont.lfCharSet = DEFAULT_CHARSET;
-    Info->EnumLogFontEx.elfScript[0] = L'\0';
+    Info->EnumLogFontEx.elfScript[0] = UNICODE_NULL;
+
     IntLockFreeType;
     pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
 
@@ -3917,6 +3925,7 @@ GetFontPenalty(LOGFONTW *               LogFont,
     LONG    Long;
     BOOL    fFixedSys = FALSE, fNeedScaling = FALSE;
     const BYTE UserCharSet = CharSetFromLangID(gusLanguageID);
+    NTSTATUS Status;
 
     /* FIXME: Aspect Penalty 30 */
     /* FIXME: IntSizeSynth Penalty 20 */
@@ -4052,32 +4061,58 @@ GetFontPenalty(LOGFONTW *               LogFont,
 
     if (RequestedNameW->Buffer[0])
     {
-        if (RtlEqualUnicodeString(RequestedNameW, FullFaceNameW, TRUE))
+        BOOL Found = FALSE;
+        FT_Face Face = FontGDI->SharedFace->Face;
+
+        /* localized family name */
+        if (!Found)
         {
-            /* matched with full face name */
-        }
-        else if (RtlEqualUnicodeString(RequestedNameW, ActualNameW, TRUE))
-        {
-            /* matched with actual name */
-        }
-        else
-        {
-            /* try the localized name */
-            UNICODE_STRING LocalNameW;
-            FT_Face Face = FontGDI->SharedFace->Face;
-            IntGetFontLocalizedName(&LocalNameW, Face);
-            if (RtlEqualUnicodeString(RequestedNameW, &LocalNameW, TRUE))
+            Status = IntGetFontLocalizedName(ActualNameW, Face, TT_NAME_ID_FONT_FAMILY,
+                                             gusLanguageID);
+            if (NT_SUCCESS(Status))
             {
-                /* matched with localizied name */
+                Found = RtlEqualUnicodeString(RequestedNameW, ActualNameW, TRUE);
             }
-            else
+        }
+        /* localized full name */
+        if (!Found)
+        {
+            Status = IntGetFontLocalizedName(ActualNameW, Face, TT_NAME_ID_FULL_NAME,
+                                             gusLanguageID);
+            if (NT_SUCCESS(Status))
             {
-                /* FaceName Penalty 10000 */
-                /* Requested a face name, but the candidate's face name
-                   does not match. */
-                Penalty += 10000;
+                Found = RtlEqualUnicodeString(RequestedNameW, ActualNameW, TRUE);
             }
-            RtlFreeUnicodeString(&LocalNameW);
+        }
+        if (gusLanguageID != gusEnglishUS)
+        {
+            /* English family name */
+            if (!Found)
+            {
+                Status = IntGetFontLocalizedName(ActualNameW, Face, TT_NAME_ID_FONT_FAMILY,
+                                                 gusEnglishUS);
+                if (NT_SUCCESS(Status))
+                {
+                    Found = RtlEqualUnicodeString(RequestedNameW, ActualNameW, TRUE);
+                }
+            }
+            /* English full name */
+            if (!Found)
+            {
+                Status = IntGetFontLocalizedName(ActualNameW, Face, TT_NAME_ID_FULL_NAME,
+                                                 gusEnglishUS);
+                if (NT_SUCCESS(Status))
+                {
+                    Found = RtlEqualUnicodeString(RequestedNameW, ActualNameW, TRUE);
+                }
+            }
+        }
+        if (!Found)
+        {
+            /* FaceName Penalty 10000 */
+            /* Requested a face name, but the candidate's face name
+               does not match. */
+            Penalty += 10000;
         }
     }
 
