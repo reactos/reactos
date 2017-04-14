@@ -240,14 +240,14 @@ OnCreateTaskbarPage(HWND hwnd,
 
     pPropInfo->hTaskbarWnd = hwnd;
 
-    CheckDlgButton(hwnd, IDC_TASKBARPROP_SECONDS, TaskBarSettings.bLock ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hwnd, IDC_TASKBARPROP_SECONDS, TaskBarSettings.bAutoHide ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hwnd, IDC_TASKBARPROP_SECONDS, TaskBarSettings.bAlwaysOnTop ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hwnd, IDC_TASKBARPROP_SECONDS, TaskBarSettings.bGroupButtons ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hwnd, IDC_TASKBARPROP_SECONDS, TaskBarSettings.bShowQuickLaunch ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hwnd, IDC_TASKBARPROP_SECONDS, TaskBarSettings.bShowClock ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(hwnd, IDC_TASKBARPROP_LOCK, TaskBarSettings.bLock ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(hwnd, IDC_TASKBARPROP_HIDE, TaskBarSettings.bAutoHide ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(hwnd, IDC_TASKBARPROP_ONTOP, TaskBarSettings.bAlwaysOnTop ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(hwnd, IDC_TASKBARPROP_GROUP, TaskBarSettings.bGroupButtons ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(hwnd, IDC_TASKBARPROP_SHOWQL, TaskBarSettings.bShowQuickLaunch ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(hwnd, IDC_TASKBARPROP_CLOCK, TaskBarSettings.bShowClock ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(hwnd, IDC_TASKBARPROP_SECONDS, TaskBarSettings.bShowSeconds ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hwnd, IDC_TASKBARPROP_SECONDS, TaskBarSettings.bHideInactiveIcons ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(hwnd, IDC_TASKBARPROP_HIDEICONS, TaskBarSettings.bHideInactiveIcons ? BST_CHECKED : BST_UNCHECKED);
 
     UpdateBitmaps(pPropInfo);
 }
