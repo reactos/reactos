@@ -242,7 +242,7 @@ PDEVOBJ_pSurface(
         hsurf = ppdev->pldev->pfn.EnableSurface(ppdev->dhpdev);
         if (hsurf== NULL)
         {
-            DPRINT1("Failed to create PDEV surface!");
+            DPRINT1("Failed to create PDEV surface!\n");
             return NULL;
         }
 
