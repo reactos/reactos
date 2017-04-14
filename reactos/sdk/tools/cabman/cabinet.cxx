@@ -1163,6 +1163,7 @@ ULONG CCabinet::ExtractFile(char* FileName)
     {
         DPRINT(MIN_TRACE, ("SetFilePointer() failed, error code is %u.\n", (UINT)GetLastError()));
         CloseFile(DestFile);
+        FreeMemory(Buffer);
         return CAB_STATUS_INVALID_CAB;
     }
 #else
@@ -1170,6 +1171,7 @@ ULONG CCabinet::ExtractFile(char* FileName)
     {
         DPRINT(MIN_TRACE, ("fseek() failed.\n"));
         CloseFile(DestFile);
+        FreeMemory(Buffer);
         return CAB_STATUS_FAILURE;
     }
     Offset = ftell(FileHandle);
@@ -1252,7 +1254,11 @@ ULONG CCabinet::ExtractFile(char* FileName)
                     if (CFData.UncompSize == 0)
                     {
                         if (strlen(DiskNext) == 0)
+                        {
+                            CloseFile(DestFile);
+                            FreeMemory(Buffer);
                             return CAB_STATUS_NOFILE;
+                        }
 
                         /* CloseCabinet() will destroy all file entries so in case
                            FileName refers to the FileName field of a CFFOLDER_NODE
@@ -1267,7 +1273,11 @@ ULONG CCabinet::ExtractFile(char* FileName)
 
                         Status = Open();
                         if (Status != CAB_STATUS_SUCCESS)
+                        {
+                            CloseFile(DestFile);
+                            FreeMemory(Buffer);
                             return Status;
+                        }
 
                         /* The first data block of the file will not be
                            found as it is located in the previous file */
@@ -1275,6 +1285,8 @@ ULONG CCabinet::ExtractFile(char* FileName)
                         if (Status == CAB_STATUS_NOFILE)
                         {
                             DPRINT(MID_TRACE, ("Cannot locate file (%u).\n", (UINT)Status));
+                            CloseFile(DestFile);
+                            FreeMemory(Buffer);
                             return Status;
                         }
 
@@ -1289,12 +1301,16 @@ ULONG CCabinet::ExtractFile(char* FileName)
                                            FILE_BEGIN) == INVALID_SET_FILE_POINTER )
                         {
                             DPRINT(MIN_TRACE, ("SetFilePointer() failed, error code is %u.\n", (UINT)GetLastError()));
+                            CloseFile(DestFile);
+                            FreeMemory(Buffer);
                             return CAB_STATUS_INVALID_CAB;
                         }
 #else
                         if (fseek(FileHandle, (off_t)File->DataBlock->AbsoluteOffset, SEEK_SET) != 0)
                         {
                             DPRINT(MIN_TRACE, ("fseek() failed.\n"));
+                            CloseFile(DestFile);
+                            FreeMemory(Buffer);
                             return CAB_STATUS_INVALID_CAB;
                         }
 #endif
@@ -1329,6 +1345,8 @@ ULONG CCabinet::ExtractFile(char* FileName)
                 {
                     DPRINT(MID_TRACE, ("BytesToWrite (%u) != CFData.UncompSize (%d)\n",
                         (UINT)BytesToWrite, CFData.UncompSize));
+                    CloseFile(DestFile);
+                    FreeMemory(Buffer);
                     return CAB_STATUS_INVALID_CAB;
                 }
 
@@ -1364,6 +1382,8 @@ ULONG CCabinet::ExtractFile(char* FileName)
                                    FILE_BEGIN) == INVALID_SET_FILE_POINTER )
                 {
                     DPRINT(MIN_TRACE, ("SetFilePointer() failed, error code is %u.\n", (UINT)GetLastError()));
+                    CloseFile(DestFile);
+                    FreeMemory(Buffer);
                     return CAB_STATUS_INVALID_CAB;
                 }
 #else
@@ -1371,6 +1391,8 @@ ULONG CCabinet::ExtractFile(char* FileName)
                     CurrentDataNode->Data.CompSize, SEEK_SET) != 0)
                 {
                     DPRINT(MIN_TRACE, ("fseek() failed.\n"));
+                    CloseFile(DestFile);
+                    FreeMemory(Buffer);
                     return CAB_STATUS_INVALID_CAB;
                 }
 #endif
@@ -2060,7 +2082,6 @@ ULONG CCabinet::AddFile(char* FileName)
     if (FileNode->File.FileSize == (ULONG)-1)
     {
         DPRINT(MIN_TRACE, ("Cannot read from file.\n"));
-        FreeMemory(NewFileName);
         CloseFile(SrcFile);
         return CAB_STATUS_CANNOT_READ;
     }
@@ -2068,7 +2089,6 @@ ULONG CCabinet::AddFile(char* FileName)
     if (GetFileTimes(SrcFile, FileNode) != CAB_STATUS_SUCCESS)
     {
         DPRINT(MIN_TRACE, ("Cannot read file times.\n"));
-        FreeMemory(NewFileName);
         CloseFile(SrcFile);
         return CAB_STATUS_CANNOT_READ;
     }
@@ -2076,7 +2096,6 @@ ULONG CCabinet::AddFile(char* FileName)
     if (GetAttributesOnFile(FileNode) != CAB_STATUS_SUCCESS)
     {
         DPRINT(MIN_TRACE, ("Cannot read file attributes.\n"));
-        FreeMemory(NewFileName);
         CloseFile(SrcFile);
         return CAB_STATUS_CANNOT_READ;
     }
