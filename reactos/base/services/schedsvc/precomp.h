@@ -28,7 +28,7 @@ typedef struct _JOB
     LIST_ENTRY JobEntry;
 
     LIST_ENTRY StartEntry;
-    LARGE_INTEGER StartTime;
+    FILETIME StartTime;
     WCHAR Name[9];
 
     DWORD JobId;
@@ -64,6 +64,9 @@ DeleteJob(
 LONG
 LoadJobs(VOID);
 
+VOID
+CalculateNextStartTime(
+    PJOB pJob);
 
 /* rpcserver.c */
 

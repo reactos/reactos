@@ -282,7 +282,8 @@ LoadJobs(VOID)
                 /* Release the job list lock */
                 RtlReleaseResource(&JobListLock);
 
-                // Calculate start time
+                /* Calculate the next start time */
+                CalculateNextStartTime(pJob);
 
                 // Insert job into the start list
 
@@ -310,38 +311,62 @@ done:
 }
 
 
-#if 0
+static
+WORD
+DaysOfMonth(
+    WORD wMonth,
+    WORD wYear)
+{
+    WORD wDaysArray[13] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+
+    if (wMonth == 2 && wYear % 4 == 0 && wYear % 400 != 0)
+        return 29;
+
+    return wDaysArray[wMonth];
+}
+
+
 VOID
 CalculateNextStartTime(PJOB pJob)
 {
-    SYSTEMTIME Time;
-    DWORD_PTR JobTime;
-    WORD wDay;
-    BOOL bToday = FALSE;
+    SYSTEMTIME StartTime;
+    DWORD_PTR Now;
 
-    GetLocalTime(&Time);
+    GetLocalTime(&StartTime);
 
-    Now = (DWORD_PTR)Time.wHour * 3600000 + 
-          (DWORD_PTR)Time.wMinute * 60000;
-    if (pJob->JobTime > Now)
-        bToday = TRUE;
+    Now = (DWORD_PTR)StartTime.wHour * 3600000 +
+          (DWORD_PTR)StartTime.wMinute * 60000;
 
-    if (pJob->DaysOfMonth != 0)
+    StartTime.wMilliseconds = 0;
+    StartTime.wSecond = 0;
+    StartTime.wHour = (WORD)(pJob->JobTime / 3600000);
+    StartTime.wMinute = (WORD)((pJob->JobTime % 3600000) / 60000);
+
+    /* Start the job tomorrow */
+    if (Now > pJob->JobTime)
     {
-        wDay = 0;
-        for (i = Time.wDay - 1; i < 32; i++)
+        if (StartTime.wDay + 1 > DaysOfMonth(StartTime.wMonth, StartTime.wYear))
         {
-            if (pJob->DaysOfMonth && (1 << i))
+            if (StartTime.wMonth == 12)
             {
-                wDay = i;
-                break;
+                StartTime.wDay = 1;
+                StartTime.wMonth = 1;
+                StartTime.wYear++;
+            }
+            else
+            {
+                StartTime.wDay = 1;
+                StartTime.wMonth++;
             }
         }
-        ERR("Next day this month: %hu\n", wDay);
+        else
+        {
+            StartTime.wDay++;
+        }
     }
-    else if (pJob->DaysOfWeek != 0)
-    {
 
-    }
+    ERR("Next start: %02hu:%02hu %02hu.%02hu.%hu\n", StartTime.wHour,
+        StartTime.wMinute, StartTime.wDay, StartTime.wMonth, StartTime.wYear);
+
+    SystemTimeToFileTime(&StartTime, &pJob->StartTime);
 }
-#endif

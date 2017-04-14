@@ -121,11 +121,12 @@ NetrJobAdd(
     /* Save the job in the registry */
     SaveJob(pJob);
 
-    // Calculate start time
+    /* Calculate the next start time */
+    CalculateNextStartTime(pJob);
 
-    // Insert job into start list
+    // Insert job into the start list
 
-    // Update start timer
+    // Update the start timer
 
     /* Return the new job ID */
     *pJobId = pJob->JobId;
@@ -162,9 +163,9 @@ NetrJobDel(
 
         if ((CurrentJob->JobId >= MinJobId) && (CurrentJob->JobId <= MaxJobId))
         {
-            // Remove job from start list
+            // Remove job from the start list
 
-            // Update start timer
+            // Update the start timer
 
             /* Remove the job from the registry */
             DeleteJob(CurrentJob);
