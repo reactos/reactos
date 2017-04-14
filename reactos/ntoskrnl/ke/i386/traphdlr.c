@@ -529,7 +529,7 @@ KiTrap02(VOID)
     TrapFrame.Edi = Tss->Edi;
     TrapFrame.SegFs = Tss->Fs;
     TrapFrame.ExceptionList = PCR->NtTib.ExceptionList;
-    TrapFrame.PreviousPreviousMode = -1;
+    TrapFrame.PreviousPreviousMode = (ULONG)-1;
     TrapFrame.Eax = Tss->Eax;
     TrapFrame.Ecx = Tss->Ecx;
     TrapFrame.Edx = Tss->Edx;
@@ -1197,6 +1197,8 @@ FASTCALL
 KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread;
+    BOOLEAN Present;
+    BOOLEAN StoreInstruction;
     ULONG_PTR Cr2;
     NTSTATUS Status;
 
@@ -1222,14 +1224,18 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
     /* Enable interrupts */
     _enable();
 
+    /* Interpret the error code */
+    Present = (TrapFrame->ErrCode & 1) != 0;
+    StoreInstruction = (TrapFrame->ErrCode & 2) != 0;
+
     /* Check if we came in with interrupts disabled */
     if (!(TrapFrame->EFlags & EFLAGS_INTERRUPT_MASK))
     {
         /* This is completely illegal, bugcheck the system */
         KeBugCheckWithTf(IRQL_NOT_LESS_OR_EQUAL,
                          Cr2,
-                         -1,
-                         TrapFrame->ErrCode & 2 ? TRUE : FALSE,
+                         (ULONG_PTR)-1,
+                         StoreInstruction,
                          TrapFrame->Eip,
                          TrapFrame);
     }
@@ -1267,7 +1273,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
             /* Do what windows does and issue an invalid access violation */
             KiDispatchException2Args(KI_EXCEPTION_ACCESS_VIOLATION,
                                      TrapFrame->Eip,
-                                     TrapFrame->ErrCode & 2 ? TRUE : FALSE,
+                                     StoreInstruction,
                                      Cr2,
                                      TrapFrame);
 #endif
@@ -1275,7 +1281,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
     }
 
     /* Call the access fault handler */
-    Status = MmAccessFault(TrapFrame->ErrCode & 1,
+    Status = MmAccessFault(Present,
                            (PVOID)Cr2,
                            KiUserTrap(TrapFrame),
                            TrapFrame);
@@ -1307,7 +1313,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
         /* This status code is repurposed so we can recognize it later */
         KiDispatchException2Args(KI_EXCEPTION_ACCESS_VIOLATION,
                                  TrapFrame->Eip,
-                                 TrapFrame->ErrCode & 2 ? TRUE : FALSE,
+                                 StoreInstruction,
                                  Cr2,
                                  TrapFrame);
     }
@@ -1317,7 +1323,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
         /* These faults only have two parameters */
         KiDispatchException2Args(Status,
                                  TrapFrame->Eip,
-                                 TrapFrame->ErrCode & 2 ? TRUE : FALSE,
+                                 StoreInstruction,
                                  Cr2,
                                  TrapFrame);
     }
@@ -1327,7 +1333,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
                                      0,
                                      TrapFrame->Eip,
                                      3,
-                                     TrapFrame->ErrCode & 2 ? TRUE : FALSE,
+                                     StoreInstruction,
                                      Cr2,
                                      Status,
                                      TrapFrame);
@@ -1623,7 +1629,8 @@ KiSystemServiceHandler(IN PKTRAP_FRAME TrapFrame,
 {
     PKTHREAD Thread;
     PKSERVICE_TABLE_DESCRIPTOR DescriptorTable;
-    ULONG Id, Offset, StackBytes, Result;
+    ULONG Id, Offset, StackBytes;
+    NTSTATUS Status;
     PVOID Handler;
     ULONG SystemCallNumber = TrapFrame->Eax;
 
@@ -1681,18 +1688,18 @@ KiSystemServiceHandler(IN PKTRAP_FRAME TrapFrame,
         if (!(Offset & SERVICE_TABLE_TEST))
         {
             /* Fail the call */
-            Result = STATUS_INVALID_SYSTEM_SERVICE;
+            Status = STATUS_INVALID_SYSTEM_SERVICE;
             goto ExitCall;
         }
 
         /* Convert us to a GUI thread -- must wrap in ASM to get new EBP */
-        Result = KiConvertToGuiThread();
+        Status = KiConvertToGuiThread();
 
         /* Reload trap frame and descriptor table pointer from new stack */
         TrapFrame = *(volatile PVOID*)&Thread->TrapFrame;
         DescriptorTable = (PVOID)(*(volatile ULONG_PTR*)&Thread->ServiceTable + Offset);
 
-        if (!NT_SUCCESS(Result))
+        if (!NT_SUCCESS(Status))
         {
             /* Set the last error and fail */
             goto ExitCall;
@@ -1702,7 +1709,7 @@ KiSystemServiceHandler(IN PKTRAP_FRAME TrapFrame,
         if (Id >= DescriptorTable->Limit)
         {
             /* Fail the call */
-            Result = STATUS_INVALID_SYSTEM_SERVICE;
+            Status = STATUS_INVALID_SYSTEM_SERVICE;
             goto ExitCall;
         }
     }
@@ -1735,10 +1742,10 @@ KiSystemServiceHandler(IN PKTRAP_FRAME TrapFrame,
 
     /* Get the handler and make the system call */
     Handler = (PVOID)DescriptorTable->Base[Id];
-    Result = KiSystemCallTrampoline(Handler, Arguments, StackBytes);
+    Status = KiSystemCallTrampoline(Handler, Arguments, StackBytes);
 
     /* Call post-service debug hook */
-    Result = KiDbgPostServiceHook(SystemCallNumber, Result);
+    Status = KiDbgPostServiceHook(SystemCallNumber, Status);
 
     /* Make sure we're exiting correctly */
     KiExitSystemCallDebugChecks(Id, TrapFrame);
@@ -1748,14 +1755,14 @@ ExitCall:
     Thread->TrapFrame = (PKTRAP_FRAME)TrapFrame->Edx;
 
     /* Exit from system call */
-    KiServiceExit(TrapFrame, Result);
+    KiServiceExit(TrapFrame, Status);
 }
 
 VOID
 FASTCALL
 KiCheckForSListAddress(IN PKTRAP_FRAME TrapFrame)
 {
-    UNIMPLEMENTED;   
+    UNIMPLEMENTED;
 }
 
 /*
