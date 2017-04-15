@@ -112,11 +112,10 @@ NetrJobAdd(
     pJob->JobId = dwNextJobId++;
     dwJobCount++;
 
+    // Cancel the start timer
+
     /* Append the new job to the job list */
     InsertTailList(&JobListHead, &pJob->JobEntry);
-
-    /* Release the job list lock */
-    RtlReleaseResource(&JobListLock);
 
     /* Save the job in the registry */
     SaveJob(pJob);
@@ -124,9 +123,16 @@ NetrJobAdd(
     /* Calculate the next start time */
     CalculateNextStartTime(pJob);
 
-    // Insert job into the start list
+    /* Insert the job into the start list */
+    InsertJobIntoStartList(&StartListHead, pJob);
+#if 0
+    DumpStartList(&StartListHead);
+#endif
 
     // Update the start timer
+
+    /* Release the job list lock */
+    RtlReleaseResource(&JobListLock);
 
     /* Return the new job ID */
     *pJobId = pJob->JobId;
@@ -156,6 +162,8 @@ NetrJobDel(
     /* Acquire the job list lock exclusively */
     RtlAcquireResourceExclusive(&JobListLock, TRUE);
 
+    // Cancel the start timer
+
     JobEntry = JobListHead.Flink;
     while (JobEntry != &JobListHead)
     {
@@ -163,9 +171,11 @@ NetrJobDel(
 
         if ((CurrentJob->JobId >= MinJobId) && (CurrentJob->JobId <= MaxJobId))
         {
-            // Remove job from the start list
-
-            // Update the start timer
+            /* Remove the job from the start list */
+            RemoveEntryList(&CurrentJob->StartEntry);
+#if 0
+            DumpStartList(&StartListHead);
+#endif
 
             /* Remove the job from the registry */
             DeleteJob(CurrentJob);
@@ -182,6 +192,8 @@ NetrJobDel(
 
         JobEntry = JobEntry->Flink;
     }
+
+    // Update the start timer
 
     /* Release the job list lock */
     RtlReleaseResource(&JobListLock);
@@ -245,7 +257,7 @@ NetrJobEnum(
                           (wcslen(CurrentJob->Command) + 1) * sizeof(WCHAR);
             TRACE("dwEntrySize: %lu\n", dwEntrySize);
 
-            if ((PreferedMaximumLength != DWORD_MAX) &&
+            if ((PreferedMaximumLength != ULONG_MAX) &&
                 (dwRequiredSize + dwEntrySize > PreferedMaximumLength))
                 break;
 
@@ -259,7 +271,7 @@ NetrJobEnum(
     TRACE("dwEntriesToRead: %lu\n", dwEntriesToRead);
     TRACE("dwRequiredSize: %lu\n", dwRequiredSize);
 
-    if (PreferedMaximumLength != DWORD_MAX)
+    if (PreferedMaximumLength != ULONG_MAX)
         dwRequiredSize = PreferedMaximumLength;
 
     TRACE("Allocating dwRequiredSize: %lu\n", dwRequiredSize);

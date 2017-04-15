@@ -276,18 +276,24 @@ LoadJobs(VOID)
                 pJob->JobId = dwNextJobId++;
                 dwJobCount++;
 
+                // Cancel the start timer
+
                 /* Append the new job to the job list */
                 InsertTailList(&JobListHead, &pJob->JobEntry);
-
-                /* Release the job list lock */
-                RtlReleaseResource(&JobListLock);
 
                 /* Calculate the next start time */
                 CalculateNextStartTime(pJob);
 
-                // Insert job into the start list
+                /* Insert the job into the start list */
+                InsertJobIntoStartList(&StartListHead, pJob);
+#if 0
+                DumpStartList(&StartListHead);
+#endif
 
                 // Update the start timer
+
+                /* Release the job list lock */
+                RtlReleaseResource(&JobListLock);
 
                 pJob = NULL;
             }
@@ -330,7 +336,10 @@ VOID
 CalculateNextStartTime(PJOB pJob)
 {
     SYSTEMTIME StartTime;
+    FILETIME FileTime;
     DWORD_PTR Now;
+
+    TRACE("CalculateNextStartTime(%p)\n", pJob);
 
     GetLocalTime(&StartTime);
 
@@ -365,8 +374,82 @@ CalculateNextStartTime(PJOB pJob)
         }
     }
 
-    ERR("Next start: %02hu:%02hu %02hu.%02hu.%hu\n", StartTime.wHour,
-        StartTime.wMinute, StartTime.wDay, StartTime.wMonth, StartTime.wYear);
+    TRACE("Next start: %02hu:%02hu %02hu.%02hu.%hu\n", StartTime.wHour,
+          StartTime.wMinute, StartTime.wDay, StartTime.wMonth, StartTime.wYear);
 
-    SystemTimeToFileTime(&StartTime, &pJob->StartTime);
+    SystemTimeToFileTime(&StartTime, &FileTime);
+    pJob->StartTime.u.LowPart = FileTime.dwLowDateTime;
+    pJob->StartTime.u.HighPart = FileTime.dwHighDateTime;
 }
+
+
+VOID
+InsertJobIntoStartList(
+    _In_ PLIST_ENTRY StartListHead,
+    _In_ PJOB pJob)
+{
+    PLIST_ENTRY CurrentEntry, PreviousEntry;
+    PJOB CurrentJob;
+
+    if (IsListEmpty(StartListHead))
+    {
+         InsertHeadList(StartListHead, &pJob->StartEntry);
+         return;
+    }
+
+    CurrentEntry = StartListHead->Flink;
+    while (CurrentEntry != StartListHead)
+    {
+        CurrentJob = CONTAINING_RECORD(CurrentEntry, JOB, StartEntry);
+
+        if ((CurrentEntry == StartListHead->Flink) &&
+            (pJob->StartTime.QuadPart < CurrentJob->StartTime.QuadPart))
+        {
+            /* Insert before the first entry */
+            InsertHeadList(StartListHead, &pJob->StartEntry);
+            return;
+        }
+
+        if (pJob->StartTime.QuadPart < CurrentJob->StartTime.QuadPart)
+        {
+            /* Insert between the previous and the current entry */
+            PreviousEntry = CurrentEntry->Blink;
+            pJob->StartEntry.Blink = PreviousEntry;
+            pJob->StartEntry.Flink = CurrentEntry;
+            PreviousEntry->Flink = &pJob->StartEntry;
+            CurrentEntry->Blink = &pJob->StartEntry;
+            return;
+        }
+
+        if ((CurrentEntry->Flink == StartListHead) &&
+            (pJob->StartTime.QuadPart >= CurrentJob->StartTime.QuadPart))
+        {
+            /* Insert after the last entry */
+            InsertTailList(StartListHead, &pJob->StartEntry);
+            return;
+        }
+
+        CurrentEntry = CurrentEntry->Flink;
+    }
+}
+
+
+VOID
+DumpStartList(
+    _In_ PLIST_ENTRY StartListHead)
+{
+    PLIST_ENTRY CurrentEntry;
+    PJOB CurrentJob;
+
+    CurrentEntry = StartListHead->Flink;
+    while (CurrentEntry != StartListHead)
+    {
+        CurrentJob = CONTAINING_RECORD(CurrentEntry, JOB, StartEntry);
+
+        TRACE("%3lu: %016I64x\n", CurrentJob->JobId, CurrentJob->StartTime.QuadPart);
+
+        CurrentEntry = CurrentEntry->Flink;
+    }
+}
+
+/* EOF */

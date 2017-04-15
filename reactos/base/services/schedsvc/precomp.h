@@ -4,6 +4,7 @@
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
+#include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <windef.h>
@@ -28,7 +29,7 @@ typedef struct _JOB
     LIST_ENTRY JobEntry;
 
     LIST_ENTRY StartEntry;
-    FILETIME StartTime;
+    ULARGE_INTEGER StartTime;
     WCHAR Name[9];
 
     DWORD JobId;
@@ -39,7 +40,6 @@ typedef struct _JOB
     WCHAR Command[1];
 } JOB, *PJOB;
 
-#define DWORD_MAX 0xffffffffUL
 
 extern DWORD dwNextJobId;
 extern DWORD dwJobCount;
@@ -66,7 +66,17 @@ LoadJobs(VOID);
 
 VOID
 CalculateNextStartTime(
-    PJOB pJob);
+    _In_ PJOB pJob);
+
+VOID
+InsertJobIntoStartList(
+    _In_ PLIST_ENTRY StartListHead,
+    _In_ PJOB pJob);
+
+VOID
+DumpStartList(
+    _In_ PLIST_ENTRY StartListHead);
+
 
 /* rpcserver.c */
 
