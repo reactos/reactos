@@ -45,7 +45,7 @@ Wait_thread_proc(LPVOID Arg)
     PRTLP_WAIT Wait = (PRTLP_WAIT) Arg;
     NTSTATUS Status;
     BOOLEAN alertable = (Wait->Flags & WT_EXECUTEINIOTHREAD) != 0;
-    HANDLE handles[2] = { Wait->Object, Wait->CancelEvent };
+    HANDLE handles[2] = { Wait->CancelEvent, Wait->Object };
     LARGE_INTEGER timeout;
     HANDLE completion_event;
 
@@ -59,11 +59,11 @@ Wait_thread_proc(LPVOID Arg)
                                            alertable,
                                            get_nt_timeout( &timeout, Wait->Milliseconds ) );
 
-        if (Status == STATUS_WAIT_0 || Status == STATUS_TIMEOUT)
+        if (Status == STATUS_WAIT_1 || Status == STATUS_TIMEOUT)
         {
             BOOLEAN TimerOrWaitFired;
 
-            if (Status == STATUS_WAIT_0)
+            if (Status == STATUS_WAIT_1)
             {
    //             TRACE( "object %p signaled, calling callback %p with context %p\n",
    //                 Wait->Object, Wait->Callback,
