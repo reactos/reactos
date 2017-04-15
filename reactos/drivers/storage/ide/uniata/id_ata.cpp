@@ -1762,7 +1762,7 @@ IssueIdentify(
             // ATI/SII chipsets with memory-mapped IO hangs when
             // I call ReadBuffer(), probably due to PCI burst/prefetch enabled
             // Unfortunately, I don't know yet how to workaround it except
-            // specifying manual delay in the way you see below.
+            // spacifying manual delay in the way you see below.
             ReadBuffer(chan, (PUSHORT)&deviceExtension->FullIdentifyData, 256, PIO0_TIMING);
 
             // Work around for some IDE and one model Atapi that will present more than
@@ -1917,6 +1917,8 @@ IssueIdentify(
         // Check for HDDs > 8Gb
         if ((deviceExtension->FullIdentifyData.NumberOfCylinders == 0x3fff) &&
 /*            (deviceExtension->FullIdentifyData.TranslationFieldsValid) &&*/
+             deviceExtension->FullIdentifyData.NumberOfHeads &&
+             deviceExtension->FullIdentifyData.SectorsPerTrack &&
             (NumOfSectors < deviceExtension->FullIdentifyData.UserAddressableSectors)) {
             KdPrint2((PRINT_PREFIX "NumberOfCylinders == 0x3fff\n"));
             cylinders = 
@@ -1960,6 +1962,8 @@ IssueIdentify(
         if(LunExt->DeviceFlags & DFLAGS_LBA_ENABLED) {
             if(deviceExtension->FullIdentifyData.FeaturesSupport.Address48 &&
                deviceExtension->FullIdentifyData.FeaturesEnabled.Address48 &&
+               deviceExtension->FullIdentifyData.NumberOfHeads &&
+               deviceExtension->FullIdentifyData.SectorsPerTrack &&
                (deviceExtension->FullIdentifyData.UserAddressableSectors48 > NumOfSectors)
                ) {
                 KdPrint2((PRINT_PREFIX "LBA48\n"));
@@ -2093,8 +2097,21 @@ IssueIdentify(
 
         // fill IdentifyData with bogus geometry
         KdPrint2((PRINT_PREFIX "requested LunExt->GeomType=%x\n", LunExt->opt_GeomType));
-        tmp_cylinders = NumOfSectors / (deviceExtension->FullIdentifyData.CurrentSectorsPerTrack *
-                                        deviceExtension->FullIdentifyData.NumberOfCurrentHeads);
+        if(deviceExtension->FullIdentifyData.CurrentSectorsPerTrack &&
+           deviceExtension->FullIdentifyData.NumberOfCurrentHeads) {
+          tmp_cylinders = NumOfSectors / (deviceExtension->FullIdentifyData.CurrentSectorsPerTrack *
+                                          deviceExtension->FullIdentifyData.NumberOfCurrentHeads);
+        } else
+        if(deviceExtension->FullIdentifyData.SectorsPerTrack &&
+           deviceExtension->FullIdentifyData.NumberOfHeads) {
+            KdPrint2((PRINT_PREFIX "Current C/H = %#I64x/%#I64x\n",
+                deviceExtension->FullIdentifyData.CurrentSectorsPerTrack,
+                deviceExtension->FullIdentifyData.NumberOfCurrentHeads));
+            tmp_cylinders = NumOfSectors / (deviceExtension->FullIdentifyData.SectorsPerTrack *
+                                            deviceExtension->FullIdentifyData.NumberOfHeads);
+        } else {
+            tmp_cylinders = 0;
+        }
         KdPrint2((PRINT_PREFIX "tmp_cylinders = %#I64x\n", tmp_cylinders));
         if((tmp_cylinders < 0xffff) || (LunExt->opt_GeomType == GEOM_ORIG)) {
             // ok, we can keep original values
@@ -2114,6 +2131,11 @@ IssueIdentify(
                     LunExt->opt_GeomType = GEOM_UNIATA;
                 }
             }
+        }
+
+        if(!deviceExtension->FullIdentifyData.SectorsPerTrack ||
+           !deviceExtension->FullIdentifyData.NumberOfHeads) {
+            KdPrint2((PRINT_PREFIX "Zero S/H -> Force Use GEOM_STD\n"));
         }
 
         if(LunExt->opt_GeomType == GEOM_STD) {
@@ -5845,6 +5867,10 @@ continue_read_drq:
 
             statusByte = WaitOnBusy(chan);
 
+            if(wordCount&1 && atapiDev && (g_opt_VirtualMachine == VM_BOCHS)) {
+                KdPrint2((PRINT_PREFIX 
+                          "IdeIntr: unaligned ATAPI %#x Words\n", wordCount));
+            } else
             if(LunExt->DeviceFlags & DFLAGS_DWORDIO_ENABLED) {
                 KdPrint2((PRINT_PREFIX 
                           "IdeIntr: pre-Read %#x Dwords\n", wordCount/2));

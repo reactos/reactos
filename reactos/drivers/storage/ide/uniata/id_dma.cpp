@@ -107,6 +107,8 @@ AtapiVirtToPhysAddr_(
     PHYSICAL_ADDRESS ph_addr;
     ULONG addr;
 
+    *(volatile char*)data; // Touch memory, this will prevent condition of not-ready page table for valid addresses
+                           // See ROS-11894 bug
     ph_addr = MmGetPhysicalAddress(data);
     KdPrint3((PRINT_PREFIX "AtapiVirtToPhysAddr_: %x -> %8.8x:%8.8x\n", data, ph_addr.HighPart, ph_addr.LowPart));
     if(!ph_addru && ph_addr.HighPart) {
