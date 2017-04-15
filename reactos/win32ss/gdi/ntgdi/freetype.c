@@ -75,7 +75,7 @@ static BOOL RenderingEnabled = TRUE;
   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(FontListLock)
 
 #define ASSERT_GLOBALFONTS_LOCK_HELD() \
-  ASSERT(FreeTypeLock->Owner == KeGetCurrentThread())
+  ASSERT(FontListLock->Owner == KeGetCurrentThread())
 
 #define IntLockFreeType \
   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(FreeTypeLock)
