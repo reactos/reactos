@@ -8,7 +8,7 @@
 #include "precomp.h"
 
 // Local Constants
-static PCWSTR _pwszDatatypes[] = {
+static PWSTR _pwszDatatypes[] = {
     L"RAW",
     0
 };
@@ -114,7 +114,7 @@ EnumPrintProcessorDatatypesW(PWSTR pName, PWSTR pPrintProcessorName, DWORD Level
     DWORD dwDatatypeCount = 0;
     DWORD dwErrorCode;
     DWORD dwOffsets[_countof(_pwszDatatypes)];
-    PCWSTR* pCurrentDatatype;
+    PWSTR* pCurrentDatatype;
     PDWORD pCurrentOffset = dwOffsets;
 
     TRACE("EnumPrintProcessorDatatypesW(%S, %S, %lu, %p, %lu, %p, %p)\n", pName, pPrintProcessorName, Level, pDatatypes, cbBuf, pcbNeeded, pcReturned);
