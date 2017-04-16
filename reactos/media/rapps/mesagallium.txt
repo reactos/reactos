@@ -17,3 +17,7 @@ Size = 5,7 MiB
 [Section.0407]
 Description = Beinhaltet Mesa, Gallium und llvmpipe. Signifikanter Geschwindigkeitsschub für Systeme ohne OpenGL Hardwarebeschleunigung.
 Size = 5,7 MiB
+
+[Section.0419]
+Description = Сборка графической библиотеки Mesa3D. Содержит Mesa, Gallium и llvmpipe. Обеспечивает прирост производительности систем без аппаратного ускорения OpenGL. Библиотека может заменить собой системный драйвер OpenGL.
+Size = 5,7 МиБ
