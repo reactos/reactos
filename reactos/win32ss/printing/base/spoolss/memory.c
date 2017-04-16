@@ -28,6 +28,8 @@
 PVOID WINAPI
 AlignRpcPtr(PVOID pBuffer, PDWORD pcbBuffer)
 {
+    ASSERT(pcbBuffer);
+
     // Align down the buffer size in pcbBuffer to a 4-byte boundary.
     *pcbBuffer -= *pcbBuffer % sizeof(DWORD);
 
@@ -209,7 +211,7 @@ ReallocSplStr(PWSTR* ppwszString, PCWSTR pwszInput)
  * The original unaligned buffer, which you input as pBuffer to AlignRpcPtr.
  * The data from pSourceBuffer is copied into this buffer before pSourceBuffer is freed.
  * If AlignRpcPtr did not allocate a buffer, pDestinationBuffer equals pSourceBuffer and no memory is copied or freed.
- * This parameter may be NULL if pSourceBuffer is NULL.
+ * This parameter may be NULL if pSourceBuffer is NULL or cbBuffer is 0.
  *
  * @param pSourceBuffer
  * The aligned buffer, which is returned by AlignRpcPtr.
@@ -233,6 +235,9 @@ ReallocSplStr(PWSTR* ppwszString, PCWSTR pwszInput)
 PDWORD WINAPI
 UndoAlignRpcPtr(PVOID pDestinationBuffer, PVOID pSourceBuffer, DWORD cbBuffer, PDWORD pcbNeeded)
 {
+    // pDestinationBuffer is accessed unless pSourceBuffer equals pDestinationBuffer or cbBuffer is 0.
+    ASSERT(pDestinationBuffer || pSourceBuffer == pDestinationBuffer || cbBuffer == 0);
+
     // If pSourceBuffer is given, and source and destination pointers don't match,
     // we assume that pSourceBuffer is the buffer allocated by AlignRpcPtr.
     if (pSourceBuffer && pSourceBuffer != pDestinationBuffer)

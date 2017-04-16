@@ -54,13 +54,18 @@ START_TEST(AlignRpcPtr)
     ok(pOutputBuffer != pInputBuffer, "pOutputBuffer == pInputBuffer\n");
     ok(cbBuffer == 4, "cbBuffer is %lu\n", cbBuffer);
 
+    // Prove that AlignRpcPtr also works with a NULL buffer. The size should be aligned down.
+    cbBuffer = 6;
+    ok(!AlignRpcPtr(NULL, &cbBuffer), "AlignRpcPtr returns something\n");
+    ok(cbBuffer == 4, "cbBuffer is %lu\n", cbBuffer);
+
     // We can also test all parameters of UndoAlignRpcPtr here.
     // Because pOutputBuffer != pInputBuffer, it copies the given 4 bytes from (aligned) pOutputBuffer to (unaligned) pInputBuffer
     // while aligning up the given 7 bytes in our passed &cbBuffer.
     // &cbBuffer is also returned.
     strcpy(pOutputBuffer, "abc");
     strcpy(pInputBuffer, "XXXXXXXXX");
-    cbBuffer = 7;
+    cbBuffer = 5;
     pcbBuffer = UndoAlignRpcPtr(pInputBuffer, pOutputBuffer, 4, &cbBuffer);
     ok(strcmp(pInputBuffer, "abc") == 0, "pInputBuffer is %s\n", pInputBuffer);
     ok(pcbBuffer == &cbBuffer, "pcbBuffer != &cbBuffer\n");
@@ -68,14 +73,14 @@ START_TEST(AlignRpcPtr)
 
     // Prove that UndoAlignRpcPtr works without any parameters and doesn't try to copy data from NULL pointers.
     ok(!UndoAlignRpcPtr(NULL, NULL, 0, NULL), "UndoAlignRpcPtr returns something\n");
-    ok(!UndoAlignRpcPtr(NULL, NULL, 4, NULL), "UndoAlignRpcPtr returns something\n");
+    ok(!UndoAlignRpcPtr(NULL, NULL, 6, NULL), "UndoAlignRpcPtr returns something\n");
 
     // Prove that UndoAlignRpcPtr doesn't access source and destination memory at all when they are equal.
     // If it did, it should crash here, because I'm giving invalid memory addresses.
     ok(!UndoAlignRpcPtr((PVOID)1, (PVOID)1, 4, NULL), "UndoAlignRpcPtr returns something\n");
 
-    // Prove that the pcbNeeded parameter of UndoAlignRpcPtr works independently and aligns up everything up to a DWORD.
-    cbBuffer = 0xFFFFFFFF;
+    // Prove that the pcbNeeded parameter of UndoAlignRpcPtr works independently and aligns up to a DWORD.
+    cbBuffer = 0xFFFFFFFD;
     pcbBuffer = UndoAlignRpcPtr(NULL, NULL, 0, &cbBuffer);
     ok(pcbBuffer == &cbBuffer, "pcbBuffer != &cbBuffer\n");
     ok(cbBuffer == 0, "cbBuffer is %lu\n", cbBuffer);
