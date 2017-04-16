@@ -545,8 +545,15 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
             RequestedDisposition == FILE_OPEN_IF ||
             RequestedDisposition == FILE_OVERWRITE_IF ||
             RequestedDisposition == FILE_SUPERSEDE)
-        {
-            DPRINT1("Denying file creation request on NTFS volume\n");
+        {            
+            // Create the file record on disk
+            Status = NtfsCreateFileRecord(DeviceExt, FileObject);
+
+            // Update the parent directory index
+            // Still TODO
+
+            // Call NtfsOpenFile()
+
             return STATUS_CANNOT_MAKE;
         }
     }
@@ -595,6 +602,91 @@ NtfsCreate(PNTFS_IRP_CONTEXT IrpContext)
     Status = NtfsCreateFile(DeviceObject,
                             IrpContext->Irp);
     ExReleaseResourceLite(&DeviceExt->DirResource);
+
+    return Status;
+}
+
+/**
+* @name NtfsCreateFileRecord()
+* @implemented
+*
+* Creates a file record and saves it to the MFT.
+*
+* @param DeviceExt
+* Points to the target disk's DEVICE_EXTENSION
+*
+* @param FileObject
+* Pointer to a FILE_OBJECT describing the file to be created
+*
+* @return
+* STATUS_SUCCESS on success. 
+* STATUS_INSUFFICIENT_RESOURCES if unable to allocate memory for the file record.
+*/
+NTSTATUS
+NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
+                     PFILE_OBJECT FileObject)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PFILE_RECORD_HEADER FileRecord;
+    PNTFS_ATTR_RECORD NextAttribute;
+
+    // allocate memory for file record
+    FileRecord = ExAllocatePoolWithTag(NonPagedPool,
+                                       DeviceExt->NtfsInfo.BytesPerFileRecord,
+                                       TAG_NTFS);
+    if (!FileRecord)
+    {
+        DPRINT1("ERROR: Unable to allocate memory for file record!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlZeroMemory(FileRecord, DeviceExt->NtfsInfo.BytesPerFileRecord);
+
+    FileRecord->Ntfs.Type = NRH_FILE_TYPE;
+
+    // calculate USA offset and count
+    FileRecord->Ntfs.UsaOffset = FIELD_OFFSET(FILE_RECORD_HEADER, MFTRecordNumber) + sizeof(ULONG);
+
+    // size of USA (in ULONG's) will be 1 (for USA number) + 1 for every sector the file record uses
+    FileRecord->BytesAllocated = DeviceExt->NtfsInfo.BytesPerFileRecord;
+    FileRecord->Ntfs.UsaCount = (FileRecord->BytesAllocated / DeviceExt->NtfsInfo.BytesPerSector) + 1;
+
+    // setup other file record fields
+    FileRecord->SequenceNumber = 1;
+    FileRecord->AttributeOffset = FileRecord->Ntfs.UsaOffset + (2 * FileRecord->Ntfs.UsaCount);
+    FileRecord->AttributeOffset = ALIGN_UP_BY(FileRecord->AttributeOffset, 8);
+    FileRecord->Flags = FRH_IN_USE;
+    FileRecord->BytesInUse = FileRecord->AttributeOffset + sizeof(ULONG) * 2;
+   
+    // find where the first attribute will be added
+    NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
+
+    // mark the (temporary) end of the file-record
+    NextAttribute->Type = AttributeEnd;
+    NextAttribute->Length = FILE_RECORD_END;
+
+    // add first attribute, $STANDARD_INFORMATION
+    AddStandardInformation(FileRecord, NextAttribute);
+    
+    // advance NextAttribute pointer to the next attribute
+    NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)NextAttribute + (ULONG_PTR)NextAttribute->Length);
+
+    // Add the $FILE_NAME attribute
+    AddFileName(FileRecord, NextAttribute, DeviceExt, FileObject);
+
+    // advance NextAttribute pointer to the next attribute
+    NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)NextAttribute + (ULONG_PTR)NextAttribute->Length);
+
+    // add the $DATA attribute
+    AddData(FileRecord, NextAttribute);
+
+    // dump file record in memory (for debugging)
+    NtfsDumpFileRecord(DeviceExt, FileRecord);
+
+    // Now that we've built the file record in memory, we need to store it in the MFT.
+    Status = AddNewMftEntry(FileRecord, DeviceExt);
+
+    ExFreePoolWithTag(FileRecord, TAG_NTFS);
 
     return Status;
 }

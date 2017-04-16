@@ -172,7 +172,7 @@ AttributeDataLength(PNTFS_ATTR_RECORD AttrRecord)
         return AttrRecord->Resident.ValueLength;
 }
 
-void
+VOID
 InternalSetResidentAttributeLength(PNTFS_ATTR_CONTEXT AttrContext,
                                    PFILE_RECORD_HEADER FileRecord,
                                    ULONG AttrOffset,
@@ -201,14 +201,9 @@ InternalSetResidentAttributeLength(PNTFS_ATTR_CONTEXT AttrContext,
         Destination->Length += Padding;
     }
     
-    // advance Destination to the final "attribute" and write the end type
+    // advance Destination to the final "attribute" and set the file record end
     Destination = (PNTFS_ATTR_RECORD)((ULONG_PTR)Destination + Destination->Length);
-    Destination->Type = AttributeEnd;
-
-    // write the final marker (which shares the same offset and type as the Length field)
-    Destination->Length = FILE_RECORD_END;
-
-    FileRecord->BytesInUse = NextAttributeOffset + (sizeof(ULONG) * 2);
+    SetFileRecordEnd(FileRecord, Destination, FILE_RECORD_END);
 }
 
 /**
@@ -357,6 +352,41 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
     }
 
     return STATUS_SUCCESS;
+}
+
+/**
+* @name SetFileRecordEnd
+* @implemented
+*
+* This small function sets a new endpoint for the file record. It set's the final
+* AttrEnd->Type to AttributeEnd and recalculates the bytes used by the file record.
+*
+* @param FileRecord
+* Pointer to the file record whose endpoint (length) will be set.
+*
+* @param AttrEnd
+* Pointer to section of memory that will receive the AttributeEnd marker. This must point
+* to memory allocated for the FileRecord. Must be aligned to an 8-byte boundary (relative to FileRecord).
+*
+* @param EndMarker
+* This value will be written after AttributeEnd but isn't critical at all. When Windows resizes 
+* a file record, it preserves the final ULONG that previously ended the record, even though this 
+* value is (to my knowledge) never used. We emulate this behavior.
+* 
+*/
+VOID
+SetFileRecordEnd(PFILE_RECORD_HEADER FileRecord,
+                 PNTFS_ATTR_RECORD AttrEnd,
+                 ULONG EndMarker)
+{
+    // mark the end of attributes
+    AttrEnd->Type = AttributeEnd;
+
+    // Restore the "file-record-end marker." The value is never checked but this behavior is consistent with Win2k3.
+    AttrEnd->Length = EndMarker;
+
+    // recalculate bytes in use
+    FileRecord->BytesInUse = (ULONG_PTR)AttrEnd - (ULONG_PTR)FileRecord + sizeof(ULONG) * 2;
 }
 
 ULONG
@@ -711,7 +741,9 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
             {
                 // We reached the last assigned cluster
                 // TODO: assign new clusters to the end of the file. 
-                // (Presently, this code will never be reached, the write should have already failed by now)
+                // (Presently, this code will rarely be reached, the write will usually have already failed by now)
+                // [We can reach here by creating a new file record when the MFT isn't large enough]
+                DPRINT1("FIXME: Master File Table needs to be enlarged.\n");
                 return STATUS_END_OF_FILE;
             }
 
@@ -1070,25 +1102,39 @@ UpdateIndexEntryFileNameSize(PDEVICE_EXTENSION Vcb,
 }
 
 /**
-* UpdateFileRecord
+* @name UpdateFileRecord
 * @implemented
+*
 * Writes a file record to the master file table, at a given index.
+*
+* @param Vcb
+* Pointer to the DEVICE_EXTENSION of the target drive being written to.
+*
+* @param MftIndex
+* Target index in the master file table to store the file record.
+*
+* @param FileRecord
+* Pointer to the complete file record which will be written to the master file table.
+* 
+* @return 
+* STATUS_SUCCESSFUL on success. An error passed from WriteAttribute() otherwise.
+*
 */
 NTSTATUS
 UpdateFileRecord(PDEVICE_EXTENSION Vcb,
-                 ULONGLONG index,
-                 PFILE_RECORD_HEADER file)
+                 ULONGLONG MftIndex,
+                 PFILE_RECORD_HEADER FileRecord)
 {
     ULONG BytesWritten;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT("UpdateFileRecord(%p, %I64x, %p)\n", Vcb, index, file);
+    DPRINT("UpdateFileRecord(%p, 0x%I64x, %p)\n", Vcb, MftIndex, FileRecord);
 
     // Add the fixup array to prepare the data for writing to disk
-    AddFixupArray(Vcb, &file->Ntfs);
+    AddFixupArray(Vcb, &FileRecord->Ntfs);
 
     // write the file record to the master file table
-    Status = WriteAttribute(Vcb, Vcb->MFTContext, index * Vcb->NtfsInfo.BytesPerFileRecord, (const PUCHAR)file, Vcb->NtfsInfo.BytesPerFileRecord, &BytesWritten);
+    Status = WriteAttribute(Vcb, Vcb->MFTContext, MftIndex * Vcb->NtfsInfo.BytesPerFileRecord, (const PUCHAR)FileRecord, Vcb->NtfsInfo.BytesPerFileRecord, &BytesWritten);
 
     if (!NT_SUCCESS(Status))
     {
@@ -1096,7 +1142,7 @@ UpdateFileRecord(PDEVICE_EXTENSION Vcb,
     }
 
     // remove the fixup array (so the file record pointer can still be used)
-    FixupUpdateSequenceArray(Vcb, &file->Ntfs);
+    FixupUpdateSequenceArray(Vcb, &FileRecord->Ntfs);
 
     return Status;
 }
@@ -1131,6 +1177,117 @@ FixupUpdateSequenceArray(PDEVICE_EXTENSION Vcb,
     }
 
     return STATUS_SUCCESS;
+}
+
+/**
+* @name AddNewMftEntry
+* @implemented
+*
+* Adds a file record to the master file table of a given device.
+*
+* @param FileRecord
+* Pointer to a complete file record which will be saved to disk.
+*
+* @param DeviceExt
+* Pointer to the DEVICE_EXTENSION of the target drive.
+*
+* @return
+* STATUS_SUCCESS on success.
+* STATUS_OBJECT_NAME_NOT_FOUND if we can't find the MFT's $Bitmap or if we weren't able 
+* to read the attribute.
+* STATUS_INSUFFICIENT_RESOURCES if we can't allocate enough memory for a copy of $Bitmap.
+* STATUS_NOT_IMPLEMENTED if we need to increase the size of the MFT.
+* 
+*/
+NTSTATUS
+AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
+               PDEVICE_EXTENSION DeviceExt)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    ULONGLONG MftIndex;
+    RTL_BITMAP Bitmap;
+    ULONGLONG BitmapDataSize;
+    ULONGLONG AttrBytesRead;
+    PVOID BitmapData;
+    ULONG LengthWritten;
+
+    // First, we have to read the mft's $Bitmap attribute
+    PNTFS_ATTR_CONTEXT BitmapContext;
+    Status = FindAttribute(DeviceExt, DeviceExt->MasterFileTable, AttributeBitmap, L"", 0, &BitmapContext, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Couldn't find $Bitmap attribute of master file table!\n");
+        return Status;
+    }
+
+    // allocate a buffer for the $Bitmap attribute
+    BitmapDataSize = AttributeDataLength(&BitmapContext->Record);
+    BitmapData = ExAllocatePoolWithTag(NonPagedPool, BitmapDataSize, TAG_NTFS);
+    if (!BitmapData)
+    {
+        ReleaseAttributeContext(BitmapContext);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    // read $Bitmap attribute
+    AttrBytesRead = ReadAttribute(DeviceExt, BitmapContext, 0, BitmapData, BitmapDataSize);
+
+    if (AttrBytesRead == 0)
+    {
+        DPRINT1("ERROR: Unable to read $Bitmap attribute of master file table!\n");
+        ExFreePoolWithTag(BitmapData, TAG_NTFS);
+        ReleaseAttributeContext(BitmapContext);
+        return STATUS_OBJECT_NAME_NOT_FOUND;
+    }
+
+    // convert buffer into bitmap
+    RtlInitializeBitMap(&Bitmap, (PULONG)BitmapData, BitmapDataSize * 8);
+
+    // set next available bit, preferrably after 23rd bit
+    MftIndex = RtlFindClearBitsAndSet(&Bitmap, 1, 24);
+    if ((LONG)MftIndex == -1)
+    {
+        DPRINT1("ERROR: Couldn't find free space in MFT for file record!\n");
+
+        ExFreePoolWithTag(BitmapData, TAG_NTFS);
+        ReleaseAttributeContext(BitmapContext);
+
+        // TODO: increase mft size
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    DPRINT1("Creating file record at MFT index: %I64u\n", MftIndex);
+
+    // update file record with index
+    FileRecord->MFTRecordNumber = MftIndex;
+
+    // [BitmapData should have been updated via RtlFindClearBitsAndSet()]
+
+    // write the bitmap back to the MFT's $Bitmap attribute
+    Status = WriteAttribute(DeviceExt, BitmapContext, 0, BitmapData, BitmapDataSize, &LengthWritten);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR encountered when writing $Bitmap attribute!\n");
+        ExFreePoolWithTag(BitmapData, TAG_NTFS);
+        ReleaseAttributeContext(BitmapContext);
+        return Status;
+    }
+
+    // update the file record (write it to disk)
+    Status = UpdateFileRecord(DeviceExt, MftIndex, FileRecord);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Unable to write file record!\n");
+        ExFreePoolWithTag(BitmapData, TAG_NTFS);
+        ReleaseAttributeContext(BitmapContext);
+        return Status;
+    }
+
+    ExFreePoolWithTag(BitmapData, TAG_NTFS);
+    ReleaseAttributeContext(BitmapContext);
+
+    return Status;
 }
 
 NTSTATUS
