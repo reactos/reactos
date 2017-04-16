@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Spooler Router API Tests
  * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
  * PURPOSE:     Tests for PackStrings
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include <apitest.h>
@@ -21,8 +21,8 @@ EXAMPLE_STRUCT, *PEXAMPLE_STRUCT;
 
 START_TEST(PackStrings)
 {
-    PCWSTR Source1[] = { L"Test", L"String" };
-    PCWSTR Source2[] = { L"Test", NULL };
+    PWSTR Source1[] = { L"Test", L"String" };
+    PWSTR Source2[] = { L"Test", NULL };
 
     BYTE Buffer[50];
     PBYTE pEnd;
