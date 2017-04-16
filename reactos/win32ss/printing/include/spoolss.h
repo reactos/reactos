@@ -30,7 +30,7 @@ PBYTE WINAPI PackStrings(PCWSTR* pSource, PBYTE pDest, const DWORD* DestOffsets,
 PVOID WINAPI ReallocSplMem(PVOID pOldMem, DWORD cbOld, DWORD cbNew);
 BOOL WINAPI ReallocSplStr(PWSTR* ppwszString, PCWSTR pwszInput);
 BOOL WINAPI SplInitializeWinSpoolDrv(PVOID* pTable);
-DWORD WINAPI SpoolerInit();
+BOOL WINAPI SpoolerInit();
 PDWORD WINAPI UndoAlignRpcPtr(PVOID pDestinationBuffer, PVOID pSourceBuffer, DWORD cbBuffer, PDWORD pcbNeeded);
 
 #endif
