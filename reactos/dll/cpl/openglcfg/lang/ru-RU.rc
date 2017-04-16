@@ -1,0 +1,28 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Общее"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_CPLICON, IDI_CPLICON, 8, 0, 21, 20
+    GROUPBOX "Настройка вывода", -1, 5, 25, 230, 90
+    LTEXT "&Драйвер:", -1, 15, 42, 37, 10
+    COMBOBOX IDC_RENDERER, 55, 40, 160, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "Эта настройка заменит параметры по умолчанию для видео драйвера! Выбор ""По умолчанию"" вернёт начальные параметры.", -1, 15, 60, 210, 40
+    GROUPBOX "Отладка", -1, 5, 125, 230, 90
+    LTEXT "DEBUGCHANNEL:", -1, 15, 142, 65, 10
+    COMBOBOX IDC_DEBUG_OUTPUT, 80, 140, 135, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "Включить/выключить вывод отладочной информации opengl32.\n\nПРЕДУПРЕЖДЕНИЕ: Выбор ""Установить"" или ""Очистить"" перезапишет значение переменной среды DEBUGCHANNEL!", -1, 15, 165, 210, 40
+END
+
+STRINGTABLE
+BEGIN
+    IDS_RENDERER_DEFAULT "По умолчанию"
+    IDS_RENDERER_RSWR "Програмная реализация ReactOS"
+    IDS_CPLNAME "Настройки OpenGL"
+    IDS_CPLDESCRIPTION "Настройка драйвера вывода OpenGL."
+    IDS_DEBUG_SET "Установить"
+    IDS_DEBUG_CLEAR "Очистить"
+    IDS_DEBUG_DNM "Не изменять"
+END
