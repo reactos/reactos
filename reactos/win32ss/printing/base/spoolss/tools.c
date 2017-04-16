@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Spooler Router
  * LICENSE:     GNU LGPL v2.1 or any later version as published by the Free Software Foundation
  * PURPOSE:     Miscellaneous tool functions
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -86,7 +86,7 @@ MarshallDownStructure(PVOID pStructure, PMARSHALL_DOWN_INFO pParameters, DWORD c
  * The strings are copied in reverse order, so this pointer will point to the last copied string of pSource.
  */
 PBYTE WINAPI
-PackStrings(PCWSTR* pSource, PBYTE pDest, const DWORD* DestOffsets, PBYTE pEnd)
+PackStrings(PWSTR* pSource, PBYTE pDest, const DWORD* DestOffsets, PBYTE pEnd)
 {
     DWORD cbString;
     ULONG_PTR StringAddress;

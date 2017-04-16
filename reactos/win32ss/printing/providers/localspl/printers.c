@@ -386,9 +386,9 @@ _LocalEnumPrintersLevel1(DWORD Flags, PCWSTR Name, PBYTE pPrinterEnum, DWORD cbB
 {
     const WCHAR wszComma[] = L",";
 
-    DWORD cbName;
-    DWORD cbComment;
-    DWORD cbDescription;
+    size_t cbName;
+    size_t cbComment;
+    size_t cbDescription;
     DWORD cchComputerName = 0;
     DWORD dwErrorCode;
     DWORD i;

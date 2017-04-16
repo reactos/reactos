@@ -258,7 +258,7 @@ BOOL WriteJobShadowFile(PWSTR pwszFilePath, const PLOCAL_JOB pJob);
 extern const WCHAR wszCurrentEnvironment[];
 extern const DWORD cbCurrentEnvironment;
 extern const WCHAR wszDefaultDocumentName[];
-extern const WCHAR* wszPrintProviderInfo[3];
+extern PWSTR wszPrintProviderInfo[3];
 extern WCHAR wszSpoolDirectory[MAX_PATH];
 extern DWORD cchSpoolDirectory;
 

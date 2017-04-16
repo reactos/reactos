@@ -65,7 +65,6 @@ EndPagePrinter(HANDLE hPrinter)
 BOOL WINAPI
 EnumPrintersW(DWORD Flags, PWSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
-    BOOL bReturnValue;
     DWORD cbCallBuffer;
     DWORD cbNeeded;
     DWORD dwErrorCode = 0xFFFFFFFF;
@@ -94,7 +93,7 @@ EnumPrintersW(DWORD Flags, PWSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cb
         pPrintProvider = CONTAINING_RECORD(pEntry, SPOOLSS_PRINT_PROVIDER, Entry);
 
         // Call the EnumPrinters function of this Print Provider.
-        bReturnValue = pPrintProvider->PrintProvider.fpEnumPrinters(Flags, Name, Level, pCallBuffer, cbCallBuffer, &cbNeeded, &dwReturned);
+        pPrintProvider->PrintProvider.fpEnumPrinters(Flags, Name, Level, pCallBuffer, cbCallBuffer, &cbNeeded, &dwReturned);
 
         // Add the returned counts to the total values.
         *pcbNeeded += cbNeeded;

@@ -16,7 +16,7 @@ DWORD cchSpoolDirectory;
 
 const WCHAR wszDefaultDocumentName[] = L"Local Downlevel Document";
 
-const WCHAR* wszPrintProviderInfo[3] = {
+PWSTR wszPrintProviderInfo[3] = {
     L"Windows NT Local Print Providor",     // Name
     L"Locally connected Printers",          // Comment
     L"Windows NT Local Printers"            // Description
