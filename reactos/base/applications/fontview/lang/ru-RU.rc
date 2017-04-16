@@ -19,6 +19,6 @@ TrueType Font Collection (*.ttc)\0*.ttc\0\
 OpenType шрифты (*.otf)\0*.otf\0\
 OpenType Font Collection (*.otc)\0*.otc\0\
 Все файлы (*.*)\0*.*\0"
-    IDS_PREVIOUS "< P&revious"
-    IDS_NEXT "&Next >"
+    IDS_PREVIOUS "< &Предыдущий"
+    IDS_NEXT "&Следующий >"
 END
