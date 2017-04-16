@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Local Spooler
  * LICENSE:     GNU LGPL v2.1 or any later version as published by the Free Software Foundation
  * PURPOSE:     Main functions
- * COPYRIGHT:   Copyright 2015-2016 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -18,8 +18,8 @@ const WCHAR wszDefaultDocumentName[] = L"Local Downlevel Document";
 
 const WCHAR* wszPrintProviderInfo[3] = {
     L"Windows NT Local Print Providor",     // Name
-    L"Windows NT Local Printers",           // Description
-    L"Locally connected Printers"           // Comment
+    L"Locally connected Printers",          // Comment
+    L"Windows NT Local Printers"            // Description
 };
 
 // Local Constants

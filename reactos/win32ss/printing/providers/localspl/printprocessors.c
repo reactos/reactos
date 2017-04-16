@@ -160,10 +160,7 @@ InitializePrintProcessorList()
     // Open the environment registry key.
     dwErrorCode = _OpenEnvironment(wszCurrentEnvironment, &hKey);
     if (dwErrorCode != ERROR_SUCCESS)
-    {
-        ERR("_OpenEnvironment failed with error %lu!\n", dwErrorCode);
         goto Cleanup;
-    }
 
     // Open the "Print Processors" subkey.
     dwErrorCode = (DWORD)RegOpenKeyExW(hKey, L"Print Processors", 0, KEY_READ, &hSubKey);
@@ -494,10 +491,7 @@ LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE 
     // We use the registry and not the PrintProcessorList here, because the caller may request information about a different environment.
     dwErrorCode = _OpenEnvironment(pEnvironment, &hKey);
     if (dwErrorCode != ERROR_SUCCESS)
-    {
-        ERR("_OpenEnvironment failed with error %lu!\n", dwErrorCode);
         goto Cleanup;
-    }
 
     // Open the "Print Processors" subkey.
     dwErrorCode = (DWORD)RegOpenKeyExW(hKey, L"Print Processors", 0, KEY_READ, &hSubKey);

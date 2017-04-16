@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Local Spooler API Tests Injected DLL
  * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
  * PURPOSE:     Tests for fpEnumPrinters
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include <apitest.h>
@@ -22,6 +22,8 @@ extern BOOL GetLocalsplFuncs(LPPRINTPROVIDOR pp);
 
 START_TEST(fpEnumPrinters)
 {
+    BYTE TempBuffer[50];
+    BYTE ZeroBuffer[50];
     DWORD cbNeeded;
     DWORD cbTemp;
     DWORD dwReturned;
@@ -33,18 +35,30 @@ START_TEST(fpEnumPrinters)
     if (!GetLocalsplFuncs(&pp))
         return;
 
+    // Verify that fpEnumPrinters returns success and zeros cbNeeded and dwReturned (but not TempBuffer!) if no flag has been specified.
+    memset(TempBuffer, 0xDE, sizeof(TempBuffer));
+    memset(ZeroBuffer, 0, sizeof(ZeroBuffer));
+    cbNeeded = 0xDEADBEEF;
+    dwReturned = 0xDEADBEEF;
+    SetLastError(0xDEADBEEF);
+    ok(pp.fpEnumPrinters(0, NULL, 1, TempBuffer, sizeof(TempBuffer), &cbNeeded, &dwReturned), "fpEnumPrinters returns FALSE\n");
+    ok(GetLastError() == ERROR_SUCCESS, "fpEnumPrinters returns error %lu!\n", GetLastError());
+    ok(memcmp(TempBuffer, ZeroBuffer, sizeof(TempBuffer)) != 0, "TempBuffer has been zeroed!\n");
+    ok(cbNeeded == 0, "cbNeeded is %lu!\n", cbNeeded);
+    ok(dwReturned == 0, "dwReturned is %lu!\n", dwReturned);
+
     // Verify that localspl only returns information about a single print provider (namely itself).
     cbNeeded = 0xDEADBEEF;
     dwReturned = 0xDEADBEEF;
     SetLastError(0xDEADBEEF);
-    ok(!pp.fpEnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_NAME, NULL, 1, NULL, 0, &cbNeeded, &dwReturned), "fpEnumPrinters returns TRUE\n");
+    ok(!pp.fpEnumPrinters(PRINTER_ENUM_NAME, NULL, 1, NULL, 0, &cbNeeded, &dwReturned), "fpEnumPrinters returns TRUE\n");
     ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "fpEnumPrinters returns error %lu!\n", GetLastError());
     ok(cbNeeded > 0, "cbNeeded is 0!\n");
     ok(dwReturned == 0, "dwReturned is %lu!\n", dwReturned);
 
     SetLastError(0xDEADBEEF);
     pPrinterInfo1 = HeapAlloc(GetProcessHeap(), 0, cbNeeded);
-    ok(pp.fpEnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_NAME, NULL, 1, (PBYTE)pPrinterInfo1, cbNeeded, &cbNeeded, &dwReturned), "fpEnumPrinters returns FALSE\n");
+    ok(pp.fpEnumPrinters(PRINTER_ENUM_NAME, NULL, 1, (PBYTE)pPrinterInfo1, cbNeeded, &cbNeeded, &dwReturned), "fpEnumPrinters returns FALSE\n");
     ok(GetLastError() == ERROR_SUCCESS, "fpEnumPrinters returns error %lu!\n", GetLastError());
     ok(cbNeeded > 0, "cbNeeded is 0!\n");
     ok(dwReturned == 1, "dwReturned is %lu!\n", dwReturned);

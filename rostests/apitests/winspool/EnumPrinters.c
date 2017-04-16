@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Print Spooler DLL API Tests
  * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
  * PURPOSE:     Tests for EnumPrintersA/EnumPrintersW
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include <apitest.h>
@@ -15,12 +15,25 @@
 
 START_TEST(EnumPrinters)
 {
+    BYTE TempBuffer[50];
+    BYTE ZeroBuffer[50] = { 0 };
     DWORD cbNeeded;
     DWORD cbTemp;
     DWORD dwReturned;
     PVOID pMem;
     DWORD i;
     DWORD dwValidLevels[] = { 0, 1, 2, 4, 5 };
+
+    // Verify that EnumPrintersW returns success and zeroes all input variables even though no flag has been specified.
+    memset(TempBuffer, 0xDE, sizeof(TempBuffer));
+    cbNeeded = 0xDEADBEEF;
+    dwReturned = 0xDEADBEEF;
+    SetLastError(0xDEADBEEF);
+    ok(EnumPrintersW(0, NULL, 1, TempBuffer, sizeof(TempBuffer), &cbNeeded, &dwReturned), "EnumPrintersW returns FALSE\n");
+    ok(GetLastError() == ERROR_SUCCESS, "EnumPrintersW returns error %lu!\n", GetLastError());
+    ok(memcmp(TempBuffer, ZeroBuffer, sizeof(TempBuffer)) == 0, "TempBuffer has not been zeroed!\n");
+    ok(cbNeeded == 0, "cbNeeded is %lu!\n", cbNeeded);
+    ok(dwReturned == 0, "dwReturned is %lu!\n", dwReturned);
 
     // Level 5 is the highest supported under Windows Server 2003. Higher levels need to fail and leave the variables untouched!
     cbNeeded = 0xDEADBEEF;
@@ -69,7 +82,7 @@ START_TEST(EnumPrinters)
         ok(cbNeeded > 0, "cbNeeded is 0 for Level %lu!\n", dwValidLevels[i]);
         ok(dwReturned == 0, "dwReturned is %lu for Level %lu!\n", dwReturned, dwValidLevels[i]);
 
-        // Same error has to occur with a size to small.
+        // Same error has to occur with no buffer, but a size < 4 (AlignRpcPtr comes into play here).
         SetLastError(0xDEADBEEF);
         ok(!EnumPrintersW(PRINTER_ENUM_LOCAL, NULL, dwValidLevels[i], NULL, 1, &cbNeeded, &dwReturned), "EnumPrintersW returns TRUE for Level %lu!\n", dwValidLevels[i]);
         ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "EnumPrintersW returns error %lu for Level %lu!\n", GetLastError(), dwValidLevels[i]);

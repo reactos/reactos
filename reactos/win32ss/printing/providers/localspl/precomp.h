@@ -15,6 +15,7 @@
 
 #include <lmcons.h>
 #include <rpc.h>
+#include <strsafe.h>
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
@@ -114,6 +115,7 @@ struct _LOCAL_PRINTER
 
     DWORD dwAttributes;
     DWORD dwStatus;
+    PWSTR pwszLocation;
     PWSTR pwszPrinterDriver;
     PWSTR pwszDescription;
     PWSTR pwszDefaultDatatype;

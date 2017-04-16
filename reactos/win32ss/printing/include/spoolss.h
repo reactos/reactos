@@ -24,11 +24,13 @@ PWSTR WINAPI AllocSplStr(PCWSTR pwszInput);
 PVOID WINAPI DllAllocSplMem(DWORD dwBytes);
 BOOL WINAPI DllFreeSplMem(PVOID pMem);
 BOOL WINAPI DllFreeSplStr(PWSTR pwszString);
+BOOL WINAPI InitializeRouter(HANDLE SpoolerStatusHandle);
 BOOL WINAPI MarshallDownStructure(PVOID pStructure, PMARSHALL_DOWN_INFO pParameters, DWORD cbStructureSize, BOOL bSomeBoolean);
 PBYTE WINAPI PackStrings(PCWSTR* pSource, PBYTE pDest, const DWORD* DestOffsets, PBYTE pEnd);
 PVOID WINAPI ReallocSplMem(PVOID pOldMem, DWORD cbOld, DWORD cbNew);
 BOOL WINAPI ReallocSplStr(PWSTR* ppwszString, PCWSTR pwszInput);
 BOOL WINAPI SplInitializeWinSpoolDrv(PVOID* pTable);
+DWORD WINAPI SpoolerInit();
 PDWORD WINAPI UndoAlignRpcPtr(PVOID pDestinationBuffer, PVOID pSourceBuffer, DWORD cbBuffer, PDWORD pcbNeeded);
 
 #endif

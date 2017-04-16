@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Print Spooler Service
  * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
  * PURPOSE:     Functions related to Printers and printing
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -137,8 +137,7 @@ DWORD
 _RpcEnumPrinters(DWORD Flags, WINSPOOL_HANDLE Name, DWORD Level, BYTE* pPrinterEnum, DWORD cbBuf, DWORD* pcbNeeded, DWORD* pcReturned)
 {
     DWORD dwErrorCode;
-    DWORD i;
-    PBYTE p = pPrinterEnum;
+    PBYTE pPrinterEnumAligned;
 
     dwErrorCode = RpcImpersonateClient(NULL);
     if (dwErrorCode != ERROR_SUCCESS)
@@ -147,11 +146,15 @@ _RpcEnumPrinters(DWORD Flags, WINSPOOL_HANDLE Name, DWORD Level, BYTE* pPrinterE
         return dwErrorCode;
     }
 
-    EnumPrintersW(Flags, Name, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
+    pPrinterEnumAligned = AlignRpcPtr(pPrinterEnum, &cbBuf);
+    EnumPrintersW(Flags, Name, Level, pPrinterEnumAligned, cbBuf, pcbNeeded, pcReturned);
     dwErrorCode = GetLastError();
 
     if (dwErrorCode == ERROR_SUCCESS)
     {
+        DWORD i;
+        PBYTE p = pPrinterEnumAligned;
+
         // Replace absolute pointer addresses in the output by relative offsets.
         for (i = 0; i < *pcReturned; i++)
         {
@@ -165,6 +168,8 @@ _RpcEnumPrinters(DWORD Flags, WINSPOOL_HANDLE Name, DWORD Level, BYTE* pPrinterE
     }
 
     RpcRevertToSelf();
+    UndoAlignRpcPtr(pPrinterEnum, pPrinterEnumAligned, cbBuf, pcbNeeded);
+
     return dwErrorCode;
 }
 
