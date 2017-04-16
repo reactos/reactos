@@ -113,7 +113,7 @@ BEGIN
     IDS_USER_ENTER_PASSWORD2 "Повторите ввод пароля для подтверждения: "
     IDS_USER_NO_PASSWORD_MATCH "Пароли не совпадают!"
 
-    IDS_USE_NOW_CONNECTED "%s is now connected to %s\n"
+    IDS_USE_NOW_CONNECTED "%s сейчас подключен к %s\n"
 
     IDS_GENERIC_YES "Да"
     IDS_GENERIC_NO "Нет"
@@ -124,6 +124,6 @@ BEGIN
 
     IDS_ERROR_OPTION_NOT_SUPPORTED "Опция %s в данный момент не поддерживается.\n"
     IDS_ERROR_INVALID_OPTION_VALUE "Вы ввели неверный данные для данной опции %s.\n"
-    IDS_ERROR_SYSTEM_ERROR "The system error %d happened.\n"
-    IDS_ERROR_NO_ERROR "The command got executed successfully.\n"
+    IDS_ERROR_SYSTEM_ERROR "Произошла системная ошибка: %d.\n"
+    IDS_ERROR_NO_ERROR "Команда успешно выполнена.\n"
 END
