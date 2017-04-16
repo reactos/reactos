@@ -807,6 +807,25 @@ TEST="Testează"
 ; LANG_RUSSIAN SUBLANG_NEUTRAL
 [Strings.0019]
 CPLFILE_OPENWITH="Открыть с помощью Панели управления"
+CHMFILE="Скомпилированный HTML-файл справки"
+XMLFILE="Документ XML"
+XSLFILE="XSL таблица стилей"
+MSIPACK="Пакет установщика ReactOS"
+MSSTYLESFILE="Файл стиля оформления"
+THEMEFILE="Файл темы оформления"
+WAVFILE="Файл аудио Wave"
+MIDFILE="Файл MIDI"
+CDAFILE="CD аудиодорожка"
+AVIFILE="Видеозапись"
+CSSFILE="Каскадная таблица стилей"
+SCFFILE="Команда проводника ReactOS"
+WMZFILE="Сжатый расширенный метафайл"
+MERGE="Слияние"
+CONFIGURE="Настроить"
+INSTALL="Установить"
+UNINSTALL="Удалить"
+REPAIR="Исправить"
+TEST="Тест"
 
 
 ; LANG_TURKISH SUBLANG_DEFAULT
