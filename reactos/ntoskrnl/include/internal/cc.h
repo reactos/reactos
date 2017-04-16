@@ -153,7 +153,7 @@ typedef struct _ROS_SHARED_CACHE_MAP
     PCACHE_MANAGER_CALLBACKS Callbacks;
     PVOID LazyWriteContext;
     KSPIN_LOCK CacheMapLock;
-    ULONG RefCount;
+    ULONG OpenCount;
 #if DBG
     BOOLEAN Trace; /* enable extra trace output for this cache map and it's VACBs */
 #endif
