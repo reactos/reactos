@@ -103,7 +103,7 @@ HWND WINAPI SHCreateWorkerWindowW(LONG wndProc, HWND hWndParent, DWORD dwExStyle
 #define SHCreateWorkerWindow SHCreateWorkerWindowA
 #endif
 
-HRESULT WINAPI IUnknown_SetOwner(IUnknown *pUnk, ULONG arg);
+HRESULT WINAPI IUnknown_SetOwner(IUnknown *iface, IUnknown *pUnk);
 HRESULT WINAPI IUnknown_GetClassID(IUnknown *lpUnknown, CLSID *lpClassId);
 HRESULT WINAPI IUnknown_QueryServiceExec(IUnknown *lpUnknown, REFIID service, const GUID *group, DWORD cmdId, DWORD cmdOpt, VARIANT *pIn, VARIANT *pOut);
 HRESULT WINAPI IUnknown_UIActivateIO(IUnknown *unknown, BOOL activate, LPMSG msg);
