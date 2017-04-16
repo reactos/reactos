@@ -517,12 +517,26 @@ NtfsMarkIrpContextForQueue(PNTFS_IRP_CONTEXT IrpContext)
 //NtfsDumpAttribute(PATTRIBUTE Attribute);
 
 NTSTATUS
+AddData(PFILE_RECORD_HEADER FileRecord,
+        PNTFS_ATTR_RECORD AttributeAddress);
+
+NTSTATUS
 AddRun(PNTFS_VCB Vcb,
        PNTFS_ATTR_CONTEXT AttrContext,
        ULONG AttrOffset,
        PFILE_RECORD_HEADER FileRecord,
        ULONGLONG NextAssignedCluster,
        ULONG RunLength);
+
+NTSTATUS
+AddFileName(PFILE_RECORD_HEADER FileRecord,
+            PNTFS_ATTR_RECORD AttributeAddress,
+            PDEVICE_EXTENSION DeviceExt,
+            PFILE_OBJECT FileObject);
+
+NTSTATUS
+AddStandardInformation(PFILE_RECORD_HEADER FileRecord,
+                       PNTFS_ATTR_RECORD AttributeAddress);
 
 NTSTATUS
 ConvertDataRunsToLargeMCB(PUCHAR DataRun,
@@ -647,6 +661,9 @@ NtfsClose(PNTFS_IRP_CONTEXT IrpContext);
 NTSTATUS
 NtfsCreate(PNTFS_IRP_CONTEXT IrpContext);
 
+NTSTATUS
+NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
+                     PFILE_OBJECT FileObject);
 
 /* devctl.c */
 
@@ -786,6 +803,10 @@ NtfsFileSystemControl(PNTFS_IRP_CONTEXT IrpContext);
 
 
 /* mft.c */
+NTSTATUS
+AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
+               PDEVICE_EXTENSION DeviceExt);
+
 PNTFS_ATTR_CONTEXT
 PrepareAttributeContext(PNTFS_ATTR_RECORD AttrRecord);
 
@@ -817,6 +838,11 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
                        ULONG AttrOffset,
                        PFILE_RECORD_HEADER FileRecord,
                        PLARGE_INTEGER DataSize);
+
+VOID
+SetFileRecordEnd(PFILE_RECORD_HEADER FileRecord,
+                 PNTFS_ATTR_RECORD AttrEnd,
+                 ULONG EndMarker);
 
 ULONGLONG
 AttributeAllocatedLength(PNTFS_ATTR_RECORD AttrRecord);
@@ -855,8 +881,8 @@ UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
 
 NTSTATUS
 UpdateFileRecord(PDEVICE_EXTENSION Vcb,
-                 ULONGLONG index,
-                 PFILE_RECORD_HEADER file);
+                 ULONGLONG MftIndex,
+                 PFILE_RECORD_HEADER FileRecord);
 
 NTSTATUS
 FindAttribute(PDEVICE_EXTENSION Vcb,
@@ -918,6 +944,14 @@ NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
                PFILE_RECORD_HEADER *FileRecord,
                PULONGLONG MFTIndex,
                ULONGLONG CurrentMFTIndex);
+
+NTSTATUS
+NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
+                  ULONGLONG MFTIndex,
+                  PUNICODE_STRING FileName,
+                  PULONG FirstEntry,
+                  BOOLEAN DirSearch,
+                  ULONGLONG *OutMFTIndex);
 
 /* misc.c */
 

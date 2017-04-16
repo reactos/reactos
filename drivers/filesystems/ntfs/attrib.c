@@ -36,6 +36,185 @@
 /* FUNCTIONS ****************************************************************/
 
 /**
+* @name AddData
+* @implemented
+*
+* Adds a $DATA attribute to a given FileRecord.
+*
+* @param FileRecord
+* Pointer to a complete file record to add the attribute to. Caller is responsible for
+* ensuring FileRecord is large enough to contain $DATA.
+*
+* @param AttributeAddress
+* Pointer to the region of memory that will receive the $DATA attribute.
+* This address must reside within FileRecord. Must be aligned to an 8-byte boundary (relative to FileRecord).
+*
+* @return
+* STATUS_SUCCESS on success. STATUS_NOT_IMPLEMENTED if target address isn't at the end
+* of the given file record.
+*
+* @remarks
+* Only adding the attribute to the end of the file record is supported; AttributeAddress must
+* be of type AttributeEnd.
+* As it's implemented, this function is only intended to assist in creating new file records. It
+* could be made more general-purpose by considering file records with an $ATTRIBUTE_LIST.
+* It's the caller's responsibility to ensure the given file record has enough memory allocated
+* for the attribute.
+*/
+NTSTATUS
+AddData(PFILE_RECORD_HEADER FileRecord,
+        PNTFS_ATTR_RECORD AttributeAddress)
+{
+    ULONG ResidentHeaderLength = FIELD_OFFSET(NTFS_ATTR_RECORD, Resident.Reserved) + sizeof(UCHAR);
+    ULONG FileRecordEnd = AttributeAddress->Length;
+
+    if (AttributeAddress->Type != AttributeEnd)
+    {
+        DPRINT1("FIXME: Can only add $DATA attribute to the end of a file record.\n");
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    AttributeAddress->Type = AttributeData;
+    AttributeAddress->Length = ResidentHeaderLength;
+    AttributeAddress->Length = ALIGN_UP_BY(AttributeAddress->Length, 8);
+    AttributeAddress->Resident.ValueLength = 0;
+    AttributeAddress->Resident.ValueOffset = ResidentHeaderLength;
+
+    // for unnamed $DATA attributes, NameOffset equals header length
+    AttributeAddress->NameOffset = ResidentHeaderLength;
+    AttributeAddress->Instance = FileRecord->NextAttributeNumber++;
+
+    // move the attribute-end and file-record-end markers to the end of the file record
+    AttributeAddress = (PNTFS_ATTR_RECORD)((ULONG_PTR)AttributeAddress + AttributeAddress->Length);
+    SetFileRecordEnd(FileRecord, AttributeAddress, FileRecordEnd);
+
+    return STATUS_SUCCESS;
+}
+
+/**
+* @name AddFileName
+* @implemented
+*
+* Adds a $FILE_NAME attribute to a given FileRecord.
+*
+* @param FileRecord
+* Pointer to a complete file record to add the attribute to. Caller is responsible for
+* ensuring FileRecord is large enough to contain $FILE_NAME.
+*
+* @param AttributeAddress
+* Pointer to the region of memory that will receive the $FILE_NAME attribute.
+* This address must reside within FileRecord. Must be aligned to an 8-byte boundary (relative to FileRecord).
+*
+* @param DeviceExt
+* Points to the target disk's DEVICE_EXTENSION.
+*
+* @param FileObject
+* Pointer to the FILE_OBJECT which represents the new name.
+* This parameter is used to determine the filename and parent directory.
+*
+* @return
+* STATUS_SUCCESS on success. STATUS_NOT_IMPLEMENTED if target address isn't at the end
+* of the given file record.
+*
+* @remarks
+* Only adding the attribute to the end of the file record is supported; AttributeAddress must
+* be of type AttributeEnd.
+* As it's implemented, this function is only intended to assist in creating new file records. It
+* could be made more general-purpose by considering file records with an $ATTRIBUTE_LIST.
+* It's the caller's responsibility to ensure the given file record has enough memory allocated
+* for the attribute.
+*/
+NTSTATUS
+AddFileName(PFILE_RECORD_HEADER FileRecord,
+            PNTFS_ATTR_RECORD AttributeAddress,
+            PDEVICE_EXTENSION DeviceExt,
+            PFILE_OBJECT FileObject)
+{
+    ULONG ResidentHeaderLength = FIELD_OFFSET(NTFS_ATTR_RECORD, Resident.Reserved) + sizeof(UCHAR);
+    PFILENAME_ATTRIBUTE FileNameAttribute;
+    LARGE_INTEGER SystemTime;
+    ULONG FileRecordEnd = AttributeAddress->Length;
+    ULONGLONG CurrentMFTIndex = NTFS_FILE_ROOT;
+    UNICODE_STRING Current, Remaining;
+    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG FirstEntry = 0;
+
+    if (AttributeAddress->Type != AttributeEnd)
+    {
+        DPRINT1("FIXME: Can only add $FILE_NAME attribute to the end of a file record.\n");
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    AttributeAddress->Type = AttributeFileName;
+    AttributeAddress->Instance = FileRecord->NextAttributeNumber++;
+
+    FileNameAttribute = (PFILENAME_ATTRIBUTE)((LONG_PTR)AttributeAddress + ResidentHeaderLength);
+
+    // set timestamps
+    KeQuerySystemTime(&SystemTime);
+    FileNameAttribute->CreationTime = SystemTime.QuadPart;
+    FileNameAttribute->ChangeTime = SystemTime.QuadPart;
+    FileNameAttribute->LastWriteTime = SystemTime.QuadPart;
+    FileNameAttribute->LastAccessTime = SystemTime.QuadPart;
+
+    FileNameAttribute->FileAttributes = NTFS_FILE_TYPE_ARCHIVE;
+
+    // we need to extract the filename from the path
+    DPRINT1("Pathname: %wZ\n", &FileObject->FileName);
+
+    FsRtlDissectName(FileObject->FileName, &Current, &Remaining);
+
+    while (Current.Length != 0)
+    {
+        DPRINT1("Current: %wZ\n", &Current);
+
+        Status = NtfsFindMftRecord(DeviceExt, CurrentMFTIndex, &Current, &FirstEntry, FALSE, &CurrentMFTIndex);
+        if (!NT_SUCCESS(Status))
+        {
+            break;
+        }
+
+        if (Remaining.Length == 0)
+            break;
+
+        FsRtlDissectName(Current, &Current, &Remaining);
+    }
+
+    DPRINT1("MFT Index of parent: %I64u\n", CurrentMFTIndex);
+
+    // set reference to parent directory
+    FileNameAttribute->DirectoryFileReferenceNumber = CurrentMFTIndex;
+
+    // The highest 2 bytes should be the sequence number, unless the parent happens to be root
+    if (CurrentMFTIndex == NTFS_FILE_ROOT)
+        FileNameAttribute->DirectoryFileReferenceNumber |= (ULONGLONG)NTFS_FILE_ROOT << 48;
+    else
+        FileNameAttribute->DirectoryFileReferenceNumber |= (ULONGLONG)FileRecord->SequenceNumber << 48;
+
+    DPRINT1("FileNameAttribute->DirectoryFileReferenceNumber: 0x%I64x\n", FileNameAttribute->DirectoryFileReferenceNumber);
+
+    FileNameAttribute->NameLength = Current.Length / 2;
+    // TODO: Get proper nametype, add DOS links as needed
+    FileNameAttribute->NameType = NTFS_FILE_NAME_WIN32_AND_DOS;
+    RtlCopyMemory(FileNameAttribute->Name, Current.Buffer, Current.Length);
+    FileRecord->LinkCount++;
+
+    AttributeAddress->Length = ResidentHeaderLength +
+        FIELD_OFFSET(FILENAME_ATTRIBUTE, Name) + Current.Length;
+    AttributeAddress->Length = ALIGN_UP_BY(AttributeAddress->Length, 8);
+
+    AttributeAddress->Resident.ValueLength = FIELD_OFFSET(FILENAME_ATTRIBUTE, Name) + Current.Length;
+    AttributeAddress->Resident.ValueOffset = ResidentHeaderLength;
+    AttributeAddress->Resident.Flags = 1; // indexed
+
+    // move the attribute-end and file-record-end markers to the end of the file record
+    AttributeAddress = (PNTFS_ATTR_RECORD)((ULONG_PTR)AttributeAddress + AttributeAddress->Length);
+    SetFileRecordEnd(FileRecord, AttributeAddress, FileRecordEnd);
+
+    return Status;
+}
+
+/**
 * @name AddRun
 * @implemented
 *
@@ -190,6 +369,69 @@ AddRun(PNTFS_VCB Vcb,
     NtfsDumpDataRuns((PUCHAR)((ULONG_PTR)DestinationAttribute + DestinationAttribute->NonResident.MappingPairsOffset), 0);
 
     return Status;
+}
+
+/**
+* @name AddStandardInformation
+* @implemented
+*
+* Adds a $STANDARD_INFORMATION attribute to a given FileRecord.
+*
+* @param FileRecord
+* Pointer to a complete file record to add the attribute to. Caller is responsible for
+* ensuring FileRecord is large enough to contain $STANDARD_INFORMATION.
+*
+* @param AttributeAddress
+* Pointer to the region of memory that will receive the $STANDARD_INFORMATION attribute.
+* This address must reside within FileRecord. Must be aligned to an 8-byte boundary (relative to FileRecord).
+*
+* @return
+* STATUS_SUCCESS on success. STATUS_NOT_IMPLEMENTED if target address isn't at the end
+* of the given file record.
+*
+* @remarks
+* Only adding the attribute to the end of the file record is supported; AttributeAddress must
+* be of type AttributeEnd.
+* As it's implemented, this function is only intended to assist in creating new file records. It
+* could be made more general-purpose by considering file records with an $ATTRIBUTE_LIST.
+* It's the caller's responsibility to ensure the given file record has enough memory allocated
+* for the attribute.
+*/
+NTSTATUS
+AddStandardInformation(PFILE_RECORD_HEADER FileRecord,
+                       PNTFS_ATTR_RECORD AttributeAddress)
+{
+    ULONG ResidentHeaderLength = FIELD_OFFSET(NTFS_ATTR_RECORD, Resident.Reserved) + sizeof(UCHAR);
+    PSTANDARD_INFORMATION StandardInfo = (PSTANDARD_INFORMATION)((LONG_PTR)AttributeAddress + ResidentHeaderLength);
+    LARGE_INTEGER SystemTime;
+    ULONG FileRecordEnd = AttributeAddress->Length;
+
+    if (AttributeAddress->Type != AttributeEnd)
+    {
+        DPRINT1("FIXME: Can only add $STANDARD_INFORMATION attribute to the end of a file record.\n");
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    AttributeAddress->Type = AttributeStandardInformation;
+    AttributeAddress->Length = sizeof(STANDARD_INFORMATION) + ResidentHeaderLength;
+    AttributeAddress->Length = ALIGN_UP_BY(AttributeAddress->Length, 8);
+    AttributeAddress->Resident.ValueLength = sizeof(STANDARD_INFORMATION);
+    AttributeAddress->Resident.ValueOffset = ResidentHeaderLength;
+    AttributeAddress->Instance = FileRecord->NextAttributeNumber++;
+
+    // set dates and times
+    KeQuerySystemTime(&SystemTime);
+    StandardInfo->CreationTime = SystemTime.QuadPart;
+    StandardInfo->ChangeTime = SystemTime.QuadPart;
+    StandardInfo->LastWriteTime = SystemTime.QuadPart;
+    StandardInfo->LastAccessTime = SystemTime.QuadPart;
+    StandardInfo->FileAttribute = NTFS_FILE_TYPE_ARCHIVE;
+
+    // move the attribute-end and file-record-end markers to the end of the file record
+    AttributeAddress = (PNTFS_ATTR_RECORD)((ULONG_PTR)AttributeAddress + AttributeAddress->Length);
+    SetFileRecordEnd(FileRecord, AttributeAddress, FileRecordEnd);
+
+    return STATUS_SUCCESS;
 }
 
 /**
