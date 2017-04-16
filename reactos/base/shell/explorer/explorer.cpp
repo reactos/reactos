@@ -205,6 +205,8 @@ _tWinMain(IN HINSTANCE hInstance,
     */
     SetProcessShutdownParameters(2, 0);
 
+    InitRSHELL();
+
 #if !WIN7_COMPAT_MODE
     BOOL CreateShellDesktop = FALSE;
 

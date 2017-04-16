@@ -285,26 +285,17 @@ public:
         IN UINT uFlags,
         OUT IContextMenu **ppcm)
     {
+        HRESULT hRet;
+
         if (m_ContextMenu == NULL)
         {
-            HRESULT hRet;
-            CComPtr<IShellService> pSs;
-
             /* Cache the context menu so we don't need to CoCreateInstance all the time... */
-            hRet = CoCreateInstance(CLSID_BandSiteMenu, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IShellService, &pSs));
-            TRACE("CoCreateInstance(CLSID_BandSiteMenu) for IShellService returned: 0x%x\n", hRet);
-            if (!SUCCEEDED(hRet))
+            hRet = _CBandSiteMenu_CreateInstance(IID_PPV_ARG(IContextMenu, &m_ContextMenu));
+            if (FAILED_UNEXPECTEDLY(hRet))
                 return hRet;
 
-            hRet = pSs->SetOwner((IBandSite*)this);
-            if (!SUCCEEDED(hRet))
-            {
-                return hRet;
-            }
-
-            hRet = pSs->QueryInterface(IID_PPV_ARG(IContextMenu, &m_ContextMenu));
-
-            if (!SUCCEEDED(hRet))
+            hRet = IUnknown_SetOwner(m_ContextMenu, (IBandSite*)this);
+            if (FAILED_UNEXPECTEDLY(hRet))
                 return hRet;
         }
 
@@ -315,7 +306,11 @@ public:
         }
 
         /* Add the menu items */
-        return m_ContextMenu->QueryContextMenu(hmenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
+        hRet = m_ContextMenu->QueryContextMenu(hmenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
+        if (FAILED_UNEXPECTEDLY(hRet))
+            return hRet;
+
+        return S_OK;
     }
 
     virtual HRESULT STDMETHODCALLTYPE Lock(IN BOOL bLock)
@@ -643,10 +638,7 @@ public:
         m_TaskBand = pTaskBand;
 
         /* Create the RebarBandSite */
-        hRet = CoCreateInstance(CLSID_RebarBandSite,
-                                static_cast<IBandSite*>(this),
-                                CLSCTX_INPROC_SERVER,
-                                IID_PPV_ARG(IUnknown, &m_Inner));
+        hRet = _CBandSite_CreateInstance(static_cast<IBandSite*>(this), IID_PPV_ARG(IUnknown, &m_Inner));
         if (FAILED_UNEXPECTEDLY(hRet))
             return hRet;
 

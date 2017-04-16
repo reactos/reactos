@@ -20,20 +20,20 @@
 
 #include "precomp.h"
 
-static HINSTANCE hRShell = NULL;
+static HINSTANCE ghRShell = NULL;
 
 typedef HRESULT(WINAPI * PSTARTMENU_CONSTRUCTOR)(REFIID riid, void **ppv);
 
+VOID InitRSHELL(VOID)
+{
+    ghRShell = LoadLibraryW(L"rshell.dll");
+}
+
 HRESULT WINAPI _CStartMenu_Constructor(REFIID riid, void **ppv)
 {
-    if (!hRShell)
+    if (ghRShell)
     {
-        hRShell = LoadLibraryW(L"rshell.dll");
-    }
-
-    if (hRShell)
-    {
-        PSTARTMENU_CONSTRUCTOR func = (PSTARTMENU_CONSTRUCTOR)GetProcAddress(hRShell, "CStartMenu_Constructor");
+        PSTARTMENU_CONSTRUCTOR func = (PSTARTMENU_CONSTRUCTOR)GetProcAddress(ghRShell, "CStartMenu_Constructor");
         if (func)
         {
             return func(riid, ppv);
@@ -44,7 +44,7 @@ HRESULT WINAPI _CStartMenu_Constructor(REFIID riid, void **ppv)
                             NULL,
                             CLSCTX_INPROC_SERVER,
                             riid,
-                            ppv);   
+                            ppv);
 }
 
 typedef HANDLE(WINAPI * PSHCREATEDESKTOP)(IShellDesktopTray *ShellDesk);
@@ -53,14 +53,9 @@ HANDLE WINAPI _SHCreateDesktop(IShellDesktopTray *ShellDesk)
 {
     HINSTANCE hFallback;
 
-    if (!hRShell)
+    if (ghRShell)
     {
-        hRShell = LoadLibraryW(L"rshell.dll");
-    }
-
-    if (hRShell)
-    {
-        PSHCREATEDESKTOP func = (PSHCREATEDESKTOP)GetProcAddress(hRShell, "SHCreateDesktop");
+        PSHCREATEDESKTOP func = (PSHCREATEDESKTOP)GetProcAddress(ghRShell, "SHCreateDesktop");
         if (func)
         {
             return func(ShellDesk);
@@ -87,14 +82,9 @@ BOOL WINAPI _SHDesktopMessageLoop(HANDLE hDesktop)
 {
     HINSTANCE hFallback;
 
-    if (!hRShell)
+    if (ghRShell)
     {
-        hRShell = LoadLibraryW(L"rshell.dll");
-    }
-
-    if (hRShell)
-    {
-        PSHDESKTOPMESSAGELOOP func = (PSHDESKTOPMESSAGELOOP)GetProcAddress(hRShell, "SHDesktopMessageLoop");
+        PSHDESKTOPMESSAGELOOP func = (PSHDESKTOPMESSAGELOOP)GetProcAddress(ghRShell, "SHDesktopMessageLoop");
         if (func)
         {
             return func(hDesktop);
@@ -121,14 +111,9 @@ DWORD WINAPI _WinList_Init(void)
 {
     HINSTANCE hFallback;
 
-    if (!hRShell)
+    if (ghRShell)
     {
-        hRShell = LoadLibraryW(L"rshell.dll");
-    }
-
-    if (hRShell)
-    {
-        PWINLIST_INIT func = (PWINLIST_INIT)GetProcAddress(hRShell, "WinList_Init");
+        PWINLIST_INIT func = (PWINLIST_INIT)GetProcAddress(ghRShell, "WinList_Init");
         if (func)
         {
             return func();
@@ -155,14 +140,9 @@ void WINAPI _ShellDDEInit(BOOL bInit)
 {
     HINSTANCE hFallback;
 
-    if (!hRShell)
+    if (ghRShell)
     {
-        hRShell = LoadLibraryW(L"rshell.dll");
-    }
-
-    if (hRShell)
-    {
-        PSHELLDDEINIT func = (PSHELLDDEINIT)GetProcAddress(hRShell, "ShellDDEInit");
+        PSHELLDDEINIT func = (PSHELLDDEINIT)GetProcAddress(ghRShell, "ShellDDEInit");
         if (func)
         {
             func(bInit);
@@ -182,3 +162,42 @@ void WINAPI _ShellDDEInit(BOOL bInit)
         }
     }
 }
+
+typedef HRESULT (WINAPI *CBANDSITEMENU_CREATEINSTANCE)(REFIID riid, void **ppv);
+HRESULT WINAPI _CBandSiteMenu_CreateInstance(REFIID riid, void **ppv)
+{
+    if (ghRShell)
+    {
+        CBANDSITEMENU_CREATEINSTANCE func = (CBANDSITEMENU_CREATEINSTANCE)GetProcAddress(ghRShell, "CBandSiteMenu_CreateInstance");
+        if (func)
+        {
+            return func(riid, ppv);
+        }
+    }
+
+    return CoCreateInstance(CLSID_BandSiteMenu,
+                            NULL,
+                            CLSCTX_INPROC_SERVER,
+                            riid,
+                            ppv);
+}
+
+typedef HRESULT (WINAPI *CBANDSITE_CREATEINSTANCE)(LPUNKNOWN pUnkOuter, REFIID riid, void **ppv);
+HRESULT WINAPI _CBandSite_CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, void **ppv)
+{
+    if (ghRShell)
+    {
+        CBANDSITE_CREATEINSTANCE func = (CBANDSITE_CREATEINSTANCE)GetProcAddress(ghRShell, "CBandSite_CreateInstance");
+        if (func)
+        {
+            return func(pUnkOuter, riid, ppv);
+        }
+    }
+
+    return CoCreateInstance(CLSID_RebarBandSite,
+                            pUnkOuter,
+                            CLSCTX_INPROC_SERVER,
+                            riid,
+                            ppv);
+}
+

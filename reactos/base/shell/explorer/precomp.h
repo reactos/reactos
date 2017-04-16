@@ -108,11 +108,14 @@ GetExplorerRegValueSet(IN HKEY hKey,
  *  rshell.c
  */
 
+VOID InitRSHELL(VOID);
 HRESULT WINAPI _CStartMenu_Constructor(REFIID riid, void **ppv);
 HANDLE WINAPI _SHCreateDesktop(IShellDesktopTray *ShellDesk);
 BOOL WINAPI _SHDesktopMessageLoop(HANDLE hDesktop);
 DWORD WINAPI _WinList_Init(void);
 void WINAPI _ShellDDEInit(BOOL bInit);
+HRESULT WINAPI _CBandSiteMenu_CreateInstance(REFIID riid, void **ppv);
+HRESULT WINAPI _CBandSite_CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, void **ppv);
 
 /*
  * traywnd.c
