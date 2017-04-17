@@ -225,10 +225,6 @@ CcSetFileSizes (
 {
     KIRQL oldirql;
     PROS_SHARED_CACHE_MAP SharedCacheMap;
-    PLIST_ENTRY current_entry;
-    PROS_VACB current;
-    LIST_ENTRY FreeListHead;
-    NTSTATUS Status;
 
     CCTRACE(CC_API_DEBUG, "FileObject=%p FileSizes=%p\n",
         FileObject, FileSizes);
@@ -251,63 +247,16 @@ CcSetFileSizes (
 
     if (FileSizes->AllocationSize.QuadPart < SharedCacheMap->SectionSize.QuadPart)
     {
-        InitializeListHead(&FreeListHead);
-        KeAcquireGuardedMutex(&ViewLock);
-        KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldirql);
-
-        current_entry = SharedCacheMap->CacheMapVacbListHead.Flink;
-        while (current_entry != &SharedCacheMap->CacheMapVacbListHead)
-        {
-            current = CONTAINING_RECORD(current_entry,
-                                        ROS_VACB,
-                                        CacheMapVacbListEntry);
-            current_entry = current_entry->Flink;
-            if (current->FileOffset.QuadPart >= FileSizes->AllocationSize.QuadPart)
-            {
-                if ((current->ReferenceCount == 0) || ((current->ReferenceCount == 1) && current->Dirty))
-                {
-                    RemoveEntryList(&current->CacheMapVacbListEntry);
-                    RemoveEntryList(&current->VacbLruListEntry);
-                    if (current->Dirty)
-                    {
-                        RemoveEntryList(&current->DirtyVacbListEntry);
-                        DirtyPageCount -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
-                    }
-                    InsertHeadList(&FreeListHead, &current->CacheMapVacbListEntry);
-                }
-                else
-                {
-                    DPRINT1("Someone has referenced a VACB behind the new size.\n");
-                    KeBugCheck(CACHE_MANAGER);
-                }
-            }
-        }
-
-        SharedCacheMap->SectionSize = FileSizes->AllocationSize;
-        SharedCacheMap->FileSize = FileSizes->FileSize;
-        KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldirql);
-        KeReleaseGuardedMutex(&ViewLock);
-
-        current_entry = FreeListHead.Flink;
-        while(current_entry != &FreeListHead)
-        {
-            current = CONTAINING_RECORD(current_entry, ROS_VACB, CacheMapVacbListEntry);
-            current_entry = current_entry->Flink;
-            Status = CcRosInternalFreeVacb(current);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("CcRosInternalFreeVacb failed, status = %x\n", Status);
-                KeBugCheck(CACHE_MANAGER);
-            }
-        }
+        CcPurgeCacheSection(FileObject->SectionObjectPointer,
+                            &FileSizes->AllocationSize,
+                            0,
+                            FALSE);
     }
-    else
-    {
-        KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldirql);
-        SharedCacheMap->SectionSize = FileSizes->AllocationSize;
-        SharedCacheMap->FileSize = FileSizes->FileSize;
-        KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldirql);
-    }
+
+    KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldirql);
+    SharedCacheMap->SectionSize = FileSizes->AllocationSize;
+    SharedCacheMap->FileSize = FileSizes->FileSize;
+    KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldirql);
 }
 
 /*
