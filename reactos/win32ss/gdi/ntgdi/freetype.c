@@ -2090,7 +2090,8 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, FT_Face Face,
         /* Convert UTF-16 big endian to little endian */
         SwapEndian(Buf, Name.string_len);
 
-        Status = RtlCreateUnicodeString(pNameW, Buf);
+        RtlCreateUnicodeString(pNameW, Buf);
+        Status = STATUS_SUCCESS;
         break;
     }
 
@@ -2111,7 +2112,8 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, FT_Face Face,
 }
 
 static void FASTCALL
-FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
+FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
+                   LPCWSTR FullName, PFONTGDI FontGDI)
 {
     ANSI_STRING StyleA;
     UNICODE_STRING StyleW;
@@ -2126,7 +2128,9 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
     DWORD fs0;
     NTSTATUS status;
     FT_Face Face = FontGDI->SharedFace->Face;
+    UNICODE_STRING NameW;
 
+    RtlInitUnicodeString(&NameW, NULL);
     RtlZeroMemory(Info, sizeof(FONTFAMILYINFO));
     Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
     Otm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
@@ -2189,28 +2193,37 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
     ExFreePoolWithTag(Otm, GDITAG_TEXT);
 
     /* face name */
-    /* TODO: full name */
     if (FaceName)
     {
-        RtlStringCbCopyW(Info->EnumLogFontEx.elfLogFont.lfFaceName,
-                         sizeof(Info->EnumLogFontEx.elfLogFont.lfFaceName),
-                         FaceName);
-        RtlStringCbCopyW(Info->EnumLogFontEx.elfFullName,
-                         sizeof(Info->EnumLogFontEx.elfFullName),
-                         FaceName);
+        RtlStringCbCopyW(Lf->lfFaceName, sizeof(Lf->lfFaceName), FaceName);
     }
     else
     {
-        UNICODE_STRING NameW;
-        RtlInitUnicodeString(&NameW, NULL);
         status = IntGetFontLocalizedName(&NameW, Face, TT_NAME_ID_FONT_FAMILY,
                                          gusLanguageID);
         if (NT_SUCCESS(status))
         {
             /* store it */
-            RtlStringCbCopyW(Info->EnumLogFontEx.elfLogFont.lfFaceName,
-                             sizeof(Info->EnumLogFontEx.elfLogFont.lfFaceName),
+            RtlStringCbCopyW(Lf->lfFaceName, sizeof(Lf->lfFaceName),
                              NameW.Buffer);
+            RtlFreeUnicodeString(&NameW);
+        }
+    }
+
+    /* full name */
+    if (FullName)
+    {
+        RtlStringCbCopyW(Info->EnumLogFontEx.elfFullName,
+                         sizeof(Info->EnumLogFontEx.elfFullName),
+                         FullName);
+    }
+    else
+    {
+        status = IntGetFontLocalizedName(&NameW, Face, TT_NAME_ID_FULL_NAME,
+                                         gusLanguageID);
+        if (NT_SUCCESS(status))
+        {
+            /* store it */
             RtlStringCbCopyW(Info->EnumLogFontEx.elfFullName,
                              sizeof(Info->EnumLogFontEx.elfFullName),
                              NameW.Buffer);
@@ -2371,7 +2384,8 @@ GetFontFamilyInfoForList(LPLOGFONTW LogFont,
         {
             if (*Count < Size)
             {
-                FontFamilyFillInfo(Info + *Count, EntryFaceNameW.Buffer, FontGDI);
+                FontFamilyFillInfo(Info + *Count, EntryFaceNameW.Buffer,
+                                   NULL, FontGDI);
             }
             (*Count)++;
         }
@@ -2442,7 +2456,7 @@ FontFamilyInfoQueryRegistryCallback(IN PWSTR ValueName, IN ULONG ValueType,
         if (InfoContext->Count < InfoContext->Size)
         {
             FontFamilyFillInfo(InfoContext->Info + InfoContext->Count,
-                               RegistryName.Buffer, FontGDI);
+                               RegistryName.Buffer, NULL, FontGDI);
         }
         InfoContext->Count++;
         return STATUS_SUCCESS;
@@ -4715,7 +4729,7 @@ IntGdiGetFontResourceInfo(
 
         IsEqual = FALSE;
         FontFamilyFillInfo(&FamInfo[Count], FontEntry->FaceName.Buffer,
-                           FontEntry->Font);
+                           NULL, FontEntry->Font);
         for (i = 0; i < Count; ++i)
         {
             if (EqualFamilyInfo(&FamInfo[i], &FamInfo[Count]))
