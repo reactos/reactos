@@ -1010,6 +1010,12 @@ NoDriverDlgProc(
                             0,
                             NULL);
                     }
+                    else
+                    {
+                        SetFailedInstall(DevInstData->hDevInfo,
+                                         &DevInstData->devInfoData,
+                                         FALSE);
+                    }
                     break;
                 }
 
