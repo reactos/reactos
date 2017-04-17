@@ -324,7 +324,8 @@ EngCreateBitmap(
                                  pvBits);
     if (!psurf)
     {
-        DPRINT1("SURFACE_AllocSurface failed.\n");
+        DPRINT1("SURFACE_AllocSurface failed. (STYPE_BITMAP, sizl.cx=%ld, sizl.cy=%ld, iFormat=%lu, fl=%lu, lWidth=%ld, pvBits=0x%p)\n",
+                sizl.cx, sizl.cy, iFormat, fl, lWidth, pvBits);
         return NULL;
     }
 
@@ -363,7 +364,8 @@ EngCreateDeviceBitmap(
                                  NULL);
     if (!psurf)
     {
-        DPRINT1("SURFACE_AllocSurface failed.\n");
+        DPRINT1("SURFACE_AllocSurface failed. (STYPE_DEVBITMAP, sizl.cx=%ld, sizl.cy=%ld, iFormat=%lu)\n",
+                sizl.cx, sizl.cy, iFormat);
         return NULL;
     }
 
@@ -402,7 +404,8 @@ EngCreateDeviceSurface(
                                  NULL);
     if (!psurf)
     {
-        DPRINT1("SURFACE_AllocSurface failed.\n");
+        DPRINT1("SURFACE_AllocSurface failed. (STYPE_DEVICE, sizl.cx=%ld, sizl.cy=%ld, iFormat=%lu)\n",
+                sizl.cx, sizl.cy, iFormat);
         return NULL;
     }
 
