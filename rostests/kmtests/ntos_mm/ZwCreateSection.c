@@ -272,7 +272,7 @@ KmtInitTestFiles(PHANDLE ReadOnlyFile, PHANDLE WriteOnlyFile, PHANDLE Executable
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_ulongptr(IoStatusBlock.Information, FILE_CREATED);
     ok(*WriteOnlyFile != NULL, "WriteOnlyFile is NULL\n");
-    if (*WriteOnlyFile)
+    if (!skip(*WriteOnlyFile != NULL, "No WriteOnlyFile\n"))
     {
         FileOffset.QuadPart = 0;
         Status = ZwWriteFile(*WriteOnlyFile, NULL, NULL, NULL, &IoStatusBlock, (PVOID)TestString, TestStringSize, &FileOffset, NULL);
@@ -324,7 +324,7 @@ SimpleErrorChecks(HANDLE FileHandleReadOnly, HANDLE FileHandleWriteOnly, HANDLE 
     CREATE_SECTION(Section, SECTION_ALL_ACCESS, NULL, MaximumSize, PAGE_READWRITE, SEC_COMMIT, NULL, STATUS_INVALID_PARAMETER_4, IGNORE);
 
     //division by zero in ROS
-    if (!skip(SharedUserData->LargePageMinimum > 0, "LargePageMinimum is 0"))
+    if (!skip(SharedUserData->LargePageMinimum > 0, "LargePageMinimum is 0\n"))
     {
         MaximumSize.QuadPart = (_4mb / SharedUserData->LargePageMinimum) * SharedUserData->LargePageMinimum; //4mb
         CREATE_SECTION(Section, SECTION_ALL_ACCESS, NULL, MaximumSize, PAGE_READWRITE, (SEC_LARGE_PAGES | SEC_COMMIT), NULL, STATUS_SUCCESS, STATUS_SUCCESS);
@@ -425,7 +425,7 @@ SimpleErrorChecks(HANDLE FileHandleReadOnly, HANDLE FileHandleWriteOnly, HANDLE 
 
     //MaximumSize
     Status = ZwQueryInformationFile(FileHandleExecuteOnly, &IoStatusBlock, &FileStandardInfo, sizeof(FILE_STANDARD_INFORMATION), FileStandardInformation);
-    if (!skip(NT_SUCCESS(Status), "Cannot query file information"))
+    if (!skip(NT_SUCCESS(Status), "Cannot query file information\n"))
     {
         //as big as file
         MaximumSize = FileStandardInfo.EndOfFile;
@@ -503,7 +503,7 @@ START_TEST(ZwCreateSection)
 
     KmtInitTestFiles(&FileHandleReadOnly, &FileHandleWriteOnly, &FileHandleExecuteOnly);
 
-    if (FileHandleReadOnly && FileHandleWriteOnly && FileHandleExecuteOnly)
+    if (!skip(FileHandleReadOnly && FileHandleWriteOnly && FileHandleExecuteOnly, "Missing one or more file handles\n"))
     {
         FileSectionViewPermissionCheck(FileHandleReadOnly, FileHandleWriteOnly, FileHandleExecuteOnly);
         SimpleErrorChecks(FileHandleReadOnly, FileHandleWriteOnly, FileHandleExecuteOnly);

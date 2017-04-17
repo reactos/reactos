@@ -81,7 +81,7 @@ KmtInitTestFiles(PHANDLE ReadOnlyFile, PHANDLE WriteOnlyFile, PHANDLE Executable
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_ulongptr(IoStatusBlock.Information, FILE_CREATED);
     ok(*WriteOnlyFile != NULL, "WriteOnlyFile is NULL\n");
-    if (*WriteOnlyFile)
+    if (!skip(*WriteOnlyFile != NULL, "No WriteOnlyFile\n"))
     {
         FileOffset.QuadPart = 0;
         Status = ZwWriteFile(*WriteOnlyFile, NULL, NULL, NULL, &IoStatusBlock, (PVOID)TestString, TestStringSize, &FileOffset, NULL);
