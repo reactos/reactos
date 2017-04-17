@@ -135,10 +135,82 @@ CcPurgeCacheSection (
     IN ULONG Length,
     IN BOOLEAN UninitializeCacheMaps)
 {
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
+    LONGLONG StartOffset;
+    LONGLONG EndOffset;
+    LIST_ENTRY FreeList;
+    KIRQL OldIrql;
+    PLIST_ENTRY ListEntry;
+    PROS_VACB Vacb;
+    LONGLONG ViewEnd;
+
     CCTRACE(CC_API_DEBUG, "SectionObjectPointer=%p\n FileOffset=%p Length=%lu UninitializeCacheMaps=%d",
         SectionObjectPointer, FileOffset, Length, UninitializeCacheMaps);
 
-    //UNIMPLEMENTED;
+    if (UninitializeCacheMaps)
+    {
+        DPRINT1("FIXME: CcPurgeCacheSection not uninitializing private cache maps\n");
+    }
+
+    SharedCacheMap = SectionObjectPointer->SharedCacheMap;
+
+    StartOffset = FileOffset != NULL ? FileOffset->QuadPart : 0;
+    if (Length == 0 || FileOffset == NULL)
+    {
+        EndOffset = MAXLONGLONG;
+    }
+    else
+    {
+        EndOffset = StartOffset + Length;
+        ASSERT(EndOffset > StartOffset);
+    }
+
+    InitializeListHead(&FreeList);
+
+    KeAcquireGuardedMutex(&ViewLock);
+    KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &OldIrql);
+    ListEntry = SharedCacheMap->CacheMapVacbListHead.Flink;
+    while (ListEntry != &SharedCacheMap->CacheMapVacbListHead)
+    {
+        Vacb = CONTAINING_RECORD(ListEntry, ROS_VACB, CacheMapVacbListEntry);
+        ListEntry = ListEntry->Flink;
+
+        /* Skip VACBs outside the range, or only partially in range */
+        if (Vacb->FileOffset.QuadPart < StartOffset)
+        {
+            continue;
+        }
+        ViewEnd = min(Vacb->FileOffset.QuadPart + VACB_MAPPING_GRANULARITY,
+                      SharedCacheMap->SectionSize.QuadPart);
+        if (ViewEnd >= EndOffset)
+        {
+            break;
+        }
+
+        ASSERT((Vacb->ReferenceCount == 0) ||
+               (Vacb->ReferenceCount == 1 && Vacb->Dirty));
+
+        /* This VACB is in range, so unlink it and mark for free */
+        RemoveEntryList(&Vacb->VacbLruListEntry);
+        if (Vacb->Dirty)
+        {
+            RemoveEntryList(&Vacb->DirtyVacbListEntry);
+            DirtyPageCount -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+        }
+        RemoveEntryList(&Vacb->CacheMapVacbListEntry);
+        InsertHeadList(&FreeList, &Vacb->CacheMapVacbListEntry);
+    }
+    KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, OldIrql);
+    KeReleaseGuardedMutex(&ViewLock);
+
+    while (!IsListEmpty(&FreeList))
+    {
+        Vacb = CONTAINING_RECORD(RemoveHeadList(&FreeList),
+                                 ROS_VACB,
+                                 CacheMapVacbListEntry);
+        CcRosInternalFreeVacb(Vacb);
+    }
+
     return FALSE;
 }
 
