@@ -107,11 +107,12 @@ OptionsProc(HWND hwndDlg,
 
         case WM_NOTIFY:
         {
-            LPNMUPDOWN  lpnmud =  (LPNMUPDOWN)lParam;
-            LPPSHNOTIFY lppsn  = (LPPSHNOTIFY)lParam;
+            LPPSHNOTIFY lppsn = (LPPSHNOTIFY)lParam;
 
             if (lppsn->hdr.code == UDN_DELTAPOS)
             {
+                LPNMUPDOWN lpnmud = (LPNMUPDOWN)lParam;
+
                 if (lppsn->hdr.idFrom == IDC_UPDOWN_BUFFER_SIZE)
                 {
                     lpnmud->iPos = min(max(lpnmud->iPos + lpnmud->iDelta, 1), 999);

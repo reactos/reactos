@@ -131,7 +131,7 @@ PaintText(LPDRAWITEMSTRUCT drawItem,
                        FALSE,
                        FALSE,
                        FALSE,
-                       OEM_CHARSET,
+                       CodePageToCharSet(pConInfo->CodePage),
                        OUT_DEFAULT_PRECIS,
                        CLIP_DEFAULT_PRECIS,
                        DEFAULT_QUALITY,
@@ -233,11 +233,11 @@ LayoutProc(HWND hwndDlg,
 
         case WM_NOTIFY:
         {
-            LPNMUPDOWN  lpnmud =  (LPNMUPDOWN)lParam;
-            LPPSHNOTIFY lppsn  = (LPPSHNOTIFY)lParam;
+            LPPSHNOTIFY lppsn = (LPPSHNOTIFY)lParam;
 
             if (lppsn->hdr.code == UDN_DELTAPOS)
             {
+                LPNMUPDOWN lpnmud = (LPNMUPDOWN)lParam;
                 DWORD wheight, wwidth;
                 DWORD sheight, swidth;
                 DWORD left, top;
