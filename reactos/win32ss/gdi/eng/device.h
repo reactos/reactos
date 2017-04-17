@@ -29,6 +29,11 @@ EngpRegisterGraphicsDevice(
     _In_ PUNICODE_STRING pustrDescription,
     _In_ PDEVMODEW pdmDefault);
 
+BOOLEAN
+EngpPopulateDeviceModeList(
+    _Inout_ PGRAPHICS_DEVICE pGraphicsDevice,
+    _In_ PDEVMODEW pdmDefault);
+
 INIT_FUNCTION
 NTSTATUS
 NTAPI
