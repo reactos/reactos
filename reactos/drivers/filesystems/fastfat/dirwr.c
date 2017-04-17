@@ -132,7 +132,7 @@ vfatRenameEntry(
         Status = vfatUpdateFCB(DeviceExt, pFcb, &DirContext, pFcb->parentFcb);
         if (NT_SUCCESS(Status))
         {
-            CcPurgeCacheSection(&pFcb->parentFcb->SectionObjectPointers, NULL, 0, FALSE);
+            CcFlushCache(&pFcb->parentFcb->SectionObjectPointers, NULL, 0, NULL);
         }
 
         return Status;
@@ -987,7 +987,7 @@ VfatMoveEntry(
     }
 
     OldParent = pFcb->parentFcb;
-    CcPurgeCacheSection(&OldParent->SectionObjectPointers, NULL, 0, FALSE);
+    CcFlushCache(&OldParent->SectionObjectPointers, NULL, 0, NULL);
     MoveContext.InPlace = (OldParent == ParentFcb);
 
     /* Add our new entry with our cluster */
@@ -999,7 +999,7 @@ VfatMoveEntry(
                           *pFcb->Attributes,
                           &MoveContext);
 
-    CcPurgeCacheSection(&pFcb->parentFcb->SectionObjectPointers, NULL, 0, FALSE);
+    CcFlushCache(&pFcb->parentFcb->SectionObjectPointers, NULL, 0, NULL);
 
     return Status;
 }
