@@ -36,7 +36,7 @@
 #include <string.h>
 //#include <unistd.h>
 #include <sys/stat.h>
-#include <inttypes.h>
+//#include <inttypes.h>
 #ifdef REACTOS_ISOHYBRID_EFI_MAC_SUPPORT
 #include <uuid/uuid.h>
 #endif
