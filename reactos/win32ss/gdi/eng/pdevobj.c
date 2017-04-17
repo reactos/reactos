@@ -258,6 +258,45 @@ PDEVOBJ_pSurface(
     return ppdev->pSurface;
 }
 
+VOID
+NTAPI
+PDEVOBJ_vRefreshModeList(
+    PPDEVOBJ ppdev)
+{
+    PGRAPHICS_DEVICE pGraphicsDevice;
+    PDEVMODEINFO pdminfo, pdmiNext;
+    DEVMODEW dmDefault;
+
+    /* Lock the PDEV */
+    EngAcquireSemaphore(ppdev->hsemDevLock);
+
+    pGraphicsDevice = ppdev->pGraphicsDevice;
+
+    /* Remember our default mode */
+    dmDefault = *pGraphicsDevice->pDevModeList[pGraphicsDevice->iDefaultMode].pdm;
+
+    /* Clear out the modes */
+    for (pdminfo = pGraphicsDevice->pdevmodeInfo;
+         pdminfo;
+         pdminfo = pdmiNext)
+    {
+        pdmiNext = pdminfo->pdmiNext;
+        ExFreePoolWithTag(pdminfo, GDITAG_DEVMODE);
+    }
+    pGraphicsDevice->pdevmodeInfo = NULL;
+    ExFreePoolWithTag(pGraphicsDevice->pDevModeList, GDITAG_GDEVICE);
+    pGraphicsDevice->pDevModeList = NULL;
+
+    /* Now re-populate the list */
+    if (!EngpPopulateDeviceModeList(pGraphicsDevice, &dmDefault))
+    {
+        DPRINT1("FIXME: EngpPopulateDeviceModeList failed, we just destroyed a perfectly good mode list\n");
+    }
+
+    /* Unlock PDEV */
+    EngReleaseSemaphore(ppdev->hsemDevLock);
+}
+
 PDEVMODEW
 NTAPI
 PDEVOBJ_pdmMatchDevMode(
