@@ -9,6 +9,14 @@
 
 #include "precomp.h"
 
+
+typedef struct _PAGEDATA
+{
+    PSERVICEPROPSHEET dlgInfo;
+    BOOL bPageChanged;
+} PAGEDATA, *PPAGEDATA;
+
+
 static VOID
 SetButtonStates(PSERVICEPROPSHEET dlgInfo,
                 HWND hwndDlg)
@@ -184,8 +192,8 @@ InitGeneralPage(PSERVICEPROPSHEET dlgInfo,
                             0,
                             (LPARAM)pServiceConfig->lpBinaryPathName);
         HeapFree(ProcessHeap,
-                         0,
-                         pServiceConfig);
+                 0,
+                 pServiceConfig);
     }
 
 
@@ -197,10 +205,7 @@ InitGeneralPage(PSERVICEPROPSHEET dlgInfo,
 
     if (dlgInfo->Info->bIsUserAnAdmin)
     {
-        HWND hEdit = GetDlgItem(hwndDlg,
-                                IDC_EDIT);
-        EnableWindow(hEdit,
-                     TRUE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT), TRUE);
     }
 }
 
@@ -257,12 +262,12 @@ GeneralPageProc(HWND hwndDlg,
                 WPARAM wParam,
                 LPARAM lParam)
 {
-    PSERVICEPROPSHEET dlgInfo;
+    PPAGEDATA pPageData;
 
     /* Get the window context */
-    dlgInfo = (PSERVICEPROPSHEET)GetWindowLongPtr(hwndDlg,
-                                                  GWLP_USERDATA);
-    if (dlgInfo == NULL && uMsg != WM_INITDIALOG)
+    pPageData = (PPAGEDATA)GetWindowLongPtr(hwndDlg,
+                                            GWLP_USERDATA);
+    if (pPageData == NULL && uMsg != WM_INITDIALOG)
     {
         return FALSE;
     }
@@ -270,26 +275,36 @@ GeneralPageProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
-            dlgInfo = (PSERVICEPROPSHEET)(((LPPROPSHEETPAGE)lParam)->lParam);
-            if (dlgInfo != NULL)
+            pPageData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PAGEDATA));
+            if (pPageData != NULL)
             {
                 SetWindowLongPtr(hwndDlg,
                                  GWLP_USERDATA,
-                                 (LONG_PTR)dlgInfo);
-                InitGeneralPage(dlgInfo, hwndDlg);
-                SetButtonStates(dlgInfo, hwndDlg);
+                                 (LONG_PTR)pPageData);
+
+                pPageData->dlgInfo = (PSERVICEPROPSHEET)(((LPPROPSHEETPAGE)lParam)->lParam);
+                if (pPageData->dlgInfo != NULL)
+                {
+                    InitGeneralPage(pPageData->dlgInfo, hwndDlg);
+                    SetButtonStates(pPageData->dlgInfo, hwndDlg);
+                }
             }
-        }
-        break;
+            break;
+
+        case WM_DESTROY:
+            HeapFree(GetProcessHeap(), 0, pPageData);
+            break;
 
         case WM_COMMAND:
             switch(LOWORD(wParam))
             {
                 case IDC_START_TYPE:
                     if (HIWORD(wParam) == CBN_SELCHANGE)
+                    {
+                        pPageData->bPageChanged = TRUE;
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                break;
+                    }
+                    break;
 
                 case IDC_START:
                 {
@@ -300,90 +315,89 @@ GeneralPageProc(HWND hwndDlg,
                         lpStartParams = szStartParams;
 
                     RunActionWithProgress(hwndDlg,
-                                          dlgInfo->pService->lpServiceName,
-                                          dlgInfo->pService->lpDisplayName,
+                                          pPageData->dlgInfo->pService->lpServiceName,
+                                          pPageData->dlgInfo->pService->lpDisplayName,
                                           ACTION_START,
                                           lpStartParams);
 
-                    UpdateServiceStatus(dlgInfo->pService);
-                    ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
-                    SetButtonStates(dlgInfo, hwndDlg);
-                    SetServiceStatusText(dlgInfo, hwndDlg);
+                    UpdateServiceStatus(pPageData->dlgInfo->pService);
+                    ChangeListViewText(pPageData->dlgInfo->Info, pPageData->dlgInfo->pService, LVSTATUS);
+                    SetButtonStates(pPageData->dlgInfo, hwndDlg);
+                    SetServiceStatusText(pPageData->dlgInfo, hwndDlg);
                     break;
                 }
 
                 case IDC_STOP:
                     RunActionWithProgress(hwndDlg,
-                                          dlgInfo->pService->lpServiceName,
-                                          dlgInfo->pService->lpDisplayName,
+                                          pPageData->dlgInfo->pService->lpServiceName,
+                                          pPageData->dlgInfo->pService->lpDisplayName,
                                           ACTION_STOP,
                                           NULL);
 
-                    UpdateServiceStatus(dlgInfo->pService);
-                    ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
-                    SetButtonStates(dlgInfo, hwndDlg);
-                    SetServiceStatusText(dlgInfo, hwndDlg);
+                    UpdateServiceStatus(pPageData->dlgInfo->pService);
+                    ChangeListViewText(pPageData->dlgInfo->Info, pPageData->dlgInfo->pService, LVSTATUS);
+                    SetButtonStates(pPageData->dlgInfo, hwndDlg);
+                    SetServiceStatusText(pPageData->dlgInfo, hwndDlg);
                     break;
 
                 case IDC_PAUSE:
                     RunActionWithProgress(hwndDlg,
-                                          dlgInfo->pService->lpServiceName,
-                                          dlgInfo->pService->lpDisplayName,
+                                          pPageData->dlgInfo->pService->lpServiceName,
+                                          pPageData->dlgInfo->pService->lpDisplayName,
                                           ACTION_PAUSE,
                                           NULL);
 
-                    UpdateServiceStatus(dlgInfo->pService);
-                    ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
-                    SetButtonStates(dlgInfo, hwndDlg);
-                    SetServiceStatusText(dlgInfo, hwndDlg);
+                    UpdateServiceStatus(pPageData->dlgInfo->pService);
+                    ChangeListViewText(pPageData->dlgInfo->Info, pPageData->dlgInfo->pService, LVSTATUS);
+                    SetButtonStates(pPageData->dlgInfo, hwndDlg);
+                    SetServiceStatusText(pPageData->dlgInfo, hwndDlg);
                     break;
 
                 case IDC_RESUME:
                     RunActionWithProgress(hwndDlg,
-                                          dlgInfo->pService->lpServiceName,
-                                          dlgInfo->pService->lpDisplayName,
+                                          pPageData->dlgInfo->pService->lpServiceName,
+                                          pPageData->dlgInfo->pService->lpDisplayName,
                                           ACTION_RESUME,
                                           NULL);
 
-                    UpdateServiceStatus(dlgInfo->pService);
-                    ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
-                    SetButtonStates(dlgInfo, hwndDlg);
-                    SetServiceStatusText(dlgInfo, hwndDlg);
+                    UpdateServiceStatus(pPageData->dlgInfo->pService);
+                    ChangeListViewText(pPageData->dlgInfo->Info, pPageData->dlgInfo->pService, LVSTATUS);
+                    SetButtonStates(pPageData->dlgInfo, hwndDlg);
+                    SetServiceStatusText(pPageData->dlgInfo, hwndDlg);
                     break;
 
                 case IDC_EDIT:
-                {
-                    HWND hName, hDesc, hExePath;
-
-                    hName = GetDlgItem(hwndDlg, IDC_DISP_NAME);
-                    hDesc = GetDlgItem(hwndDlg, IDC_DESCRIPTION);
-                    hExePath = GetDlgItem(hwndDlg, IDC_EXEPATH);
-
-                    SendMessage(hName, EM_SETREADONLY, FALSE, 0);
-                    SendMessage(hDesc, EM_SETREADONLY, FALSE, 0);
-                    SendMessage(hExePath, EM_SETREADONLY, FALSE, 0);
+                    SendDlgItemMessage(hwndDlg, IDC_DISP_NAME, EM_SETREADONLY, FALSE, 0);
+                    SendDlgItemMessage(hwndDlg, IDC_DESCRIPTION, EM_SETREADONLY, FALSE, 0);
+                    SendDlgItemMessage(hwndDlg, IDC_EXEPATH, EM_SETREADONLY, FALSE, 0);
                     break;
-                }
 
+                case IDC_DISP_NAME:
+                case IDC_DESCRIPTION:
+                case IDC_EXEPATH:
                 case IDC_START_PARAM:
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    if (HIWORD(wParam) == EN_CHANGE)
+                    {
+                        pPageData->bPageChanged = TRUE;
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
                     break;
             }
             break;
 
         case WM_NOTIFY:
+            switch (((LPNMHDR)lParam)->code)
             {
-                LPNMHDR lpnm = (LPNMHDR)lParam;
-
-                switch (lpnm->code)
-                {
-                    case PSN_APPLY:
-                        SaveDlgInfo(dlgInfo, hwndDlg);
-                        SetButtonStates(dlgInfo, hwndDlg);
+                case PSN_APPLY:
+                    if (pPageData->bPageChanged)
+                    {
+                        SaveDlgInfo(pPageData->dlgInfo, hwndDlg);
+                        SetButtonStates(pPageData->dlgInfo, hwndDlg);
+                        pPageData->bPageChanged = FALSE;
+                    }
                     break;
-                }
             }
-        break;
+            break;
     }
 
     return FALSE;

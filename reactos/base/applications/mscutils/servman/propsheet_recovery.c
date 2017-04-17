@@ -15,7 +15,7 @@ typedef struct _RECOVERYDATA
 {
     ENUM_SERVICE_STATUS_PROCESS *pService;
     LPSERVICE_FAILURE_ACTIONS pServiceFailure;
-
+    BOOL bChanged;
 } RECOVERYDATA, *PRECOVERYDATA;
 
 static
@@ -367,6 +367,74 @@ BrowseFile(
 }
 
 
+static
+VOID
+SetFailureActions(
+    HWND hwndDlg)
+{
+    SERVICE_FAILURE_ACTIONS FailureActions;
+    BOOL bRestartService = FALSE;
+    BOOL bRunProgram = FALSE;
+    BOOL bRebootComputer = FALSE;
+    INT id, index;
+
+    ZeroMemory(&FailureActions, sizeof(FailureActions));
+
+    /* Count the number of valid failure actions */
+    for (id = IDC_FIRST_FAILURE; id <= IDC_SUBSEQUENT_FAILURES; id++)
+    {
+        index = SendDlgItemMessageW(hwndDlg,
+                                    id,
+                                    CB_GETCURSEL,
+                                    0,
+                                    0);
+        switch (index)
+        {
+            case 1: /* Restart Service */
+                bRestartService = TRUE;
+                FailureActions.cActions++;
+                break;
+
+            case 2: /* Run Program */
+                bRunProgram = TRUE;
+                FailureActions.cActions++;
+                break;
+
+            case 3: /* Reboot Computer */
+                bRebootComputer = TRUE;
+                FailureActions.cActions++;
+                break;
+        }
+    }
+
+    if (bRestartService)
+    {
+        // IDC_RESTART_TIME
+    }
+
+    if (bRunProgram)
+    {
+        // IDC_RESTART_TIME
+    }
+
+    if (bRebootComputer)
+    {
+        // IDC_RESTART_TIME
+    }
+
+
+#if 0
+typedef struct _SERVICE_FAILURE_ACTIONS {
+  DWORD     dwResetPeriod;
+  LPTSTR    lpRebootMsg;
+  LPTSTR    lpCommand;
+  DWORD     cActions;
+  SC_ACTION *lpsaActions;
+} SERVICE_FAILURE_ACTIONS, *LPSERVICE_FAILURE_ACTIONS;
+#endif
+}
+
+
 INT_PTR
 CALLBACK
 RecoveryPageProc(
@@ -423,12 +491,35 @@ RecoveryPageProc(
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
                         UpdateFailureActions(hwndDlg, pRecoveryData);
+                        pRecoveryData->bChanged = TRUE;
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
+
+                case IDC_RESET_TIME:
+                case IDC_RESTART_TIME:
+                case IDC_PROGRAM:
+                case IDC_PARAMETERS:
+                    if (HIWORD(wParam) == EN_CHANGE)
+                    {
+                        pRecoveryData->bChanged = TRUE;
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
+
+                case IDC_ADD_FAILCOUNT:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        pRecoveryData->bChanged = TRUE;
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
 
                 case IDC_BROWSE_PROGRAM:
                     BrowseFile(hwndDlg);
+                    break;
+
+                case IDC_RESTART_OPTIONS:
                     break;
             }
             break;
@@ -437,6 +528,11 @@ RecoveryPageProc(
             switch (((LPNMHDR)lParam)->code)
             {
                 case PSN_APPLY:
+                    if (pRecoveryData->bChanged)
+                    {
+                        SetFailureActions(hwndDlg);
+                        pRecoveryData->bChanged = FALSE;
+                    }
                     break;
             }
             break;
