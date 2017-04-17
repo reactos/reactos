@@ -129,9 +129,9 @@ EnumFontNamesProc(PLOGFONTW lplf,
      */
 
      /*
-      * In ReactOS, we relax some criteria:
+      * In ReactOS we relax some of the criteria:
       * - We allow fixed-pitch FF_MODERN (Monospace) TrueType fonts
-      *   that can be italic and have negative A or C space.
+      *   that can be italic or have negative A or C space.
       * - If it is not a TrueType font, it can be from another character set
       *   than OEM_CHARSET.
       * - We do not support Asian criteria at the moment.
@@ -147,7 +147,9 @@ EnumFontNamesProc(PLOGFONTW lplf,
         )
     {
         DPRINT1("Font '%S' rejected because it%s (lfPitchAndFamily = %d).\n",
-                pszName, !(lplf->lfPitchAndFamily & FIXED_PITCH) ? "'s not FIXED_PITCH" : (!(lpntm->ntmFlags & NTM_NONNEGATIVE_AC) ? " has negative A or C space" : " is broken"),
+                pszName, !(lplf->lfPitchAndFamily & FIXED_PITCH) ? "'s not FIXED_PITCH"
+                                                                 : (!(lpntm->ntmFlags & NTM_NONNEGATIVE_AC) ? " has negative A or C space"
+                                                                                                            : " is broken"),
                 lplf->lfPitchAndFamily);
         return TRUE;
     }
@@ -395,8 +397,11 @@ FontProc(HWND hwndDlg,
             DPRINT1("ConInfo->FaceName = '%S'\n", ConInfo->FaceName);
             idx = (INT)SendDlgItemMessageW(hwndDlg, IDC_LBOX_FONTTYPE,
                                            LB_FINDSTRINGEXACT, 0, (LPARAM)ConInfo->FaceName);
-            if (idx != LB_ERR) SendDlgItemMessageW(hwndDlg, IDC_LBOX_FONTTYPE,
-                                                   LB_SETCURSEL, (WPARAM)idx, 0);
+            if (idx != LB_ERR)
+            {
+                SendDlgItemMessageW(hwndDlg, IDC_LBOX_FONTTYPE,
+                                    LB_SETCURSEL, (WPARAM)idx, 0);
+            }
 
             FontTypeChange(hwndDlg, ConInfo);
 
