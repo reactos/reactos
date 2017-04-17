@@ -286,13 +286,34 @@ CcUninitializeCacheMap (
     IN PCACHE_UNINITIALIZE_EVENT UninitializeCompleteEvent OPTIONAL)
 {
     NTSTATUS Status;
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
+    KIRQL OldIrql;
 
     CCTRACE(CC_API_DEBUG, "FileObject=%p TruncateSize=%p UninitializeCompleteEvent=%p\n",
         FileObject, TruncateSize, UninitializeCompleteEvent);
 
+    if (TruncateSize != NULL &&
+        FileObject->SectionObjectPointer != NULL &&
+        FileObject->SectionObjectPointer->SharedCacheMap != NULL)
+    {
+        SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
+        KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &OldIrql);
+        if (SharedCacheMap->FileSize.QuadPart > TruncateSize->QuadPart)
+        {
+            SharedCacheMap->FileSize = *TruncateSize;
+        }
+        KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, OldIrql);
+        CcPurgeCacheSection(FileObject->SectionObjectPointer,
+                            TruncateSize,
+                            0,
+                            FALSE);
+    }
+
     Status = CcRosReleaseFileCache(FileObject);
     if (UninitializeCompleteEvent)
+    {
         KeSetEvent(&UninitializeCompleteEvent->Event, IO_NO_INCREMENT, FALSE);
+    }
     return NT_SUCCESS(Status);
 }
 
