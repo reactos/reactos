@@ -19,6 +19,7 @@
 #include <winbase.h>
 #include <wingdi.h> // For LF_FACESIZE
 #include <wincon.h>
+#include <winnls.h>
 #include <winreg.h>
 // #include <winuser.h>
 // #include <imm.h>
@@ -254,7 +255,13 @@ ConCfgReadUserSettings(IN OUT PCONSOLE_STATE_INFO ConsoleInfo,
                 Success = TRUE;
             }
         }
-        if (!wcscmp(szValueName, L"FaceName"))
+        if (!wcscmp(szValueName, L"CodePage"))
+        {
+            if (IsValidCodePage(Value))
+                ConsoleInfo->CodePage = Value;
+            Success = TRUE;
+        }
+        else if (!wcscmp(szValueName, L"FaceName"))
         {
             wcsncpy(ConsoleInfo->FaceName, szValue, LF_FACESIZE);
             ConsoleInfo->FaceName[LF_FACESIZE - 1] = UNICODE_NULL;
@@ -385,6 +392,7 @@ do {                                                                            
         SetConsoleSetting(szValueName, REG_DWORD, sizeof(DWORD), &ConsoleInfo->ColorTable[i], s_Colors[i]);
     }
 
+    SetConsoleSetting(L"CodePage", REG_DWORD, sizeof(DWORD), &ConsoleInfo->CodePage, CP_ACP /* CP_OEMCP */);
     SetConsoleSetting(L"FaceName", REG_SZ, (wcslen(ConsoleInfo->FaceName) + 1) * sizeof(WCHAR), ConsoleInfo->FaceName, UNICODE_NULL); // wcsnlen
     SetConsoleSetting(L"FontFamily", REG_DWORD, sizeof(DWORD), &ConsoleInfo->FontFamily, FF_DONTCARE);
 
@@ -487,7 +495,7 @@ ConCfgInitDefaultSettings(IN OUT PCONSOLE_STATE_INFO ConsoleInfo)
 
     RtlCopyMemory(ConsoleInfo->ColorTable, s_Colors, sizeof(s_Colors));
 
-    ConsoleInfo->CodePage = 0;
+    ConsoleInfo->CodePage = GetOEMCP();
 }
 
 VOID
