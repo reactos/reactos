@@ -22,9 +22,6 @@
 #include "shellbars.h"
 #include <strsafe.h>
 
-#define IDM_DESKBAND_BEGINCUSTOM     0x10
-#define IDM_DESKBAND_ENDCUSTOM       0x25
-
 CBandSiteMenu::CBandSiteMenu():
     m_menuDsa(NULL),
     m_hmenu(NULL)
