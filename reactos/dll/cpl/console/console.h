@@ -8,6 +8,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
+#include <winnls.h>
 #include <winreg.h>
 #include <winuser.h>
 #include <wincon.h>
@@ -32,6 +33,7 @@ typedef enum _TEXT_TYPE
 extern PCONSOLE_STATE_INFO ConInfo;
 
 VOID ApplyConsoleInfo(HWND hwndDlg);
+BYTE CodePageToCharSet(UINT CodePage);
 VOID PaintConsole(LPDRAWITEMSTRUCT drawItem, PCONSOLE_STATE_INFO pConInfo);
 BOOL PaintText(LPDRAWITEMSTRUCT drawItem, PCONSOLE_STATE_INFO pConInfo, TEXT_TYPE TextMode);
 
