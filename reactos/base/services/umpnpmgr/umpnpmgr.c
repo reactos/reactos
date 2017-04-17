@@ -21,7 +21,7 @@
  * PROJECT:          ReactOS kernel
  * FILE:             base/services/umpnpmgr/umpnpmgr.c
  * PURPOSE:          User-mode Plug and Play manager
- * PROGRAMMER:       Eric Kohl
+ * PROGRAMMER:       Eric Kohl (eric.kohl@reactos.org)
  *                   Hervé Poussineau (hpoussin@reactos.org)
  *                   Colin Finck (colin@reactos.org)
  */
@@ -3228,6 +3228,22 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
             DPRINT("No need to install: %S\n", DeviceInstance);
             RegCloseKey(DeviceKey);
             return TRUE;
+        }
+
+        BytesWritten = sizeof(DWORD);
+        if (RegQueryValueExW(DeviceKey,
+                             L"ConfigFlags",
+                             NULL,
+                             NULL,
+                             (PBYTE)&Value,
+                             &BytesWritten) == ERROR_SUCCESS)
+        {
+            if (Value & CONFIGFLAG_FAILEDINSTALL)
+            {
+                DPRINT("No need to install: %S\n", DeviceInstance);
+                RegCloseKey(DeviceKey);
+                return TRUE;
+            }
         }
 
         RegCloseKey(DeviceKey);
