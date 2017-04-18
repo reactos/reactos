@@ -1409,7 +1409,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 {
   MSG AnsiMsg;
   MSG UnicodeMsg;
-  BOOL Hook = FALSE, MsgOverride = FALSE, Dialog;
+  BOOL Hook = FALSE, MsgOverride = FALSE, Dialog, DlgOverride = FALSE;
   LRESULT Result = 0, PreResult = 0;
   DWORD Data = 0;
 
@@ -1427,10 +1427,9 @@ IntCallWindowProcW(BOOL IsAnsiProc,
   Hook = BeginIfHookedUserApiHook();
   if (Hook)
   {
-     if (!Dialog)
-        MsgOverride = IsMsgOverride( Msg, &guah.WndProcArray);
-     else
-        MsgOverride = IsMsgOverride( Msg, &guah.DlgProcArray);
+     if (Dialog)
+        DlgOverride = IsMsgOverride( Msg, &guah.DlgProcArray);
+     MsgOverride = IsMsgOverride( Msg, &guah.WndProcArray);
   }
 
   if (IsAnsiProc)
@@ -1447,11 +1446,11 @@ IntCallWindowProcW(BOOL IsAnsiProc,
           goto Exit;
       }
 
-      if (Hook && MsgOverride)
+      if (Hook && (MsgOverride || DlgOverride))
       {
          _SEH2_TRY
          {
-            if (!Dialog)
+            if (!DlgOverride)
                PreResult = guah.PreWndProc(AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam, (ULONG_PTR)&Result, &Data );
             else
                PreResult = guah.PreDefDlgProc(AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam, (ULONG_PTR)&Result, &Data );
@@ -1479,11 +1478,11 @@ IntCallWindowProcW(BOOL IsAnsiProc,
       _SEH2_END;
       }
 
-      if (Hook && MsgOverride)
+      if (Hook && (MsgOverride || DlgOverride))
       {
          _SEH2_TRY
          {
-            if (!Dialog)
+            if (!DlgOverride)
                guah.PostWndProc(AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam, (ULONG_PTR)&Result, &Data );
             else
                guah.PostDefDlgProc(AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam, (ULONG_PTR)&Result, &Data );
@@ -1501,11 +1500,11 @@ IntCallWindowProcW(BOOL IsAnsiProc,
   }
   else
   {
-      if (Hook && MsgOverride)
+      if (Hook && (MsgOverride || DlgOverride))
       {
          _SEH2_TRY
          {
-            if (!Dialog)
+            if (!DlgOverride)
                PreResult = guah.PreWndProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
             else
                PreResult = guah.PreDefDlgProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
@@ -1533,11 +1532,11 @@ IntCallWindowProcW(BOOL IsAnsiProc,
       _SEH2_END;
       }
 
-      if (Hook && MsgOverride)
+      if (Hook && (MsgOverride || DlgOverride))
       {
          _SEH2_TRY
          {
-            if (!Dialog)
+            if (!DlgOverride)
                guah.PostWndProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
             else
                guah.PostDefDlgProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
@@ -1565,7 +1564,7 @@ IntCallWindowProcA(BOOL IsAnsiProc,
 {
   MSG AnsiMsg;
   MSG UnicodeMsg;
-  BOOL Hook = FALSE, MsgOverride = FALSE, Dialog;
+  BOOL Hook = FALSE, MsgOverride = FALSE, Dialog, DlgOverride = FALSE;
   LRESULT Result = 0, PreResult = 0;
   DWORD Data = 0;
 
@@ -1586,19 +1585,18 @@ IntCallWindowProcA(BOOL IsAnsiProc,
   Hook = BeginIfHookedUserApiHook();
   if (Hook)
   {
-     if (!Dialog)
-        MsgOverride = IsMsgOverride( Msg, &guah.WndProcArray);
-     else
-        MsgOverride = IsMsgOverride( Msg, &guah.DlgProcArray);
+     if (Dialog)
+        DlgOverride = IsMsgOverride( Msg, &guah.DlgProcArray);
+     MsgOverride = IsMsgOverride( Msg, &guah.WndProcArray);
   }
 
   if (IsAnsiProc)
   {
-      if (Hook && MsgOverride)
+      if (Hook && (MsgOverride || DlgOverride))
       {
          _SEH2_TRY
          {
-            if (!Dialog)
+            if (!DlgOverride)
                PreResult = guah.PreWndProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
             else
                PreResult = guah.PreDefDlgProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
@@ -1626,11 +1624,11 @@ IntCallWindowProcA(BOOL IsAnsiProc,
       _SEH2_END;
       }
 
-      if (Hook && MsgOverride)
+      if (Hook && (MsgOverride || DlgOverride))
       {
          _SEH2_TRY
          {
-            if (!Dialog)
+            if (!DlgOverride)
                guah.PostWndProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
             else
                guah.PostDefDlgProc(hWnd, Msg, wParam, lParam, (ULONG_PTR)&Result, &Data );
@@ -1655,11 +1653,11 @@ IntCallWindowProcA(BOOL IsAnsiProc,
           goto Exit;
       }
 
-      if (Hook && MsgOverride)
+      if (Hook && (MsgOverride || DlgOverride))
       {
          _SEH2_TRY
          {
-            if (!Dialog)
+            if (!DlgOverride)
                PreResult = guah.PreWndProc(UnicodeMsg.hwnd, UnicodeMsg.message, UnicodeMsg.wParam, UnicodeMsg.lParam, (ULONG_PTR)&Result, &Data );
             else
                PreResult = guah.PreDefDlgProc(UnicodeMsg.hwnd, UnicodeMsg.message, UnicodeMsg.wParam, UnicodeMsg.lParam, (ULONG_PTR)&Result, &Data );
@@ -1687,11 +1685,11 @@ IntCallWindowProcA(BOOL IsAnsiProc,
       _SEH2_END;
       }
 
-      if (Hook && MsgOverride)
+      if (Hook && (MsgOverride || DlgOverride))
       {
          _SEH2_TRY
          {
-            if (!Dialog)
+            if (!DlgOverride)
                guah.PostWndProc(UnicodeMsg.hwnd, UnicodeMsg.message, UnicodeMsg.wParam, UnicodeMsg.lParam, (ULONG_PTR)&Result, &Data );
             else
                guah.PostDefDlgProc(UnicodeMsg.hwnd, UnicodeMsg.message, UnicodeMsg.wParam, UnicodeMsg.lParam, (ULONG_PTR)&Result, &Data );
