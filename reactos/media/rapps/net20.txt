@@ -41,7 +41,7 @@ Size = 22,4 МиБ
 [Section.041f]
 Name = Microsoft .NET Çatısı Sürüm 2.0 Yeniden Dağıtılabilir Paket
 License = Bilinmiyor
-Description = C# gibi orta düzey bir dilde derlenmiş yönetilen Windows uygulamalarını çalıştırmak için gerekli bileşenler.
+Description = C# gibi orta düzey bir dilde derlenmiş, yönetilen Windows uygulamalarını çalıştırmak için gerekli bileşenler.
 Size = 22,4 MiB
 
 [Section.0804]

@@ -1,15 +1,15 @@
-/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2017 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-1000, "Kara"
+1000, "Kara Gölge"
 }
 
 STRINGTABLE
 {
-2000, "Zarif Kara"
+2000, "Kara Gölge"
 }
 
 STRINGTABLE
@@ -28,11 +28,11 @@ STRINGTABLE
 
 STRINGTABLE
 {
-5000, "Zarif"
+5000, "Kara Gölge"
 5001, "Görmelik Biçim"
 5002, "ReactOS Vakfı"
-5003, "Pisarz, Luna Inspirat tabanlı"
-5004, "GNU/GPL 2.0 altında yayımlanmaktadır, 2011"
+5003, "David Quintana <gigaherz@gmail.com> eliyle resimler"
+5004, "Resimler CC-BY-SA 4.0 altında yayımlanmaktadır"
 5005, "http://www.reactos.org"
 5006, "1.0"
 5007, "ReactOS İçin Görmelik Biçim"

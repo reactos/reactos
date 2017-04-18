@@ -610,10 +610,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "Simge Değiştir"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Look for icons in this file:", -1, 7, 7, 179, 10
+    LTEXT "Bu kütükteki simgelere bak:", -1, 7, 7, 179, 10
     PUSHBUTTON "Göz At...", IDC_BUTTON_PATH, 135, 17, 50, 14
     EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
-    LTEXT "Select an icon from the list below:", -1, 7, 36, 179, 10
+    LTEXT "Aşağıdaki dizelgeden bir simge seç:", -1, 7, 36, 179, 10
     LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 120, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "Tamam", IDOK, 81, 179, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 135, 179, 50, 14
@@ -636,7 +636,7 @@ END
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
-    IDS_SHV_COLUMN1 "Kütük"
+    IDS_SHV_COLUMN1 "Ad"
     IDS_SHV_COLUMN2 "Boyut"
     IDS_SHV_COLUMN3 "Tür"
     IDS_SHV_COLUMN4 "Değiştirildi"
@@ -668,10 +668,10 @@ BEGIN
     IDS_ADMINISTRATIVETOOLS "Yönetim Araçları"
 
     /* special folders descriptions */
-    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Configure administrative settings for your computer."
-    IDS_FOLDER_OPTIONS_DESCRIPTION "Customize the display of files and folders and change file associations."
-    IDS_FONTS_DESCRIPTION "Add, change, and manage fonts on your computer."
-    IDS_PRINTERS_DESCRIPTION "Shows installed printers and fax printers and helps you add new ones."
+    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Bilgisayarınız için yönetim ayarlarını yapılandır."
+    IDS_FOLDER_OPTIONS_DESCRIPTION "Kütüklerin ve dizinlerin görünümünü husûsileştir ve kütük ilişkilendirmelerini değiştir."
+    IDS_FONTS_DESCRIPTION "Bilgisayarınızda yazı tiplerini ekle, değiştir ve yönet."
+    IDS_PRINTERS_DESCRIPTION "Kurulu yazıcıları ve belgegeçer yazıcılarını gösterir ve yenilerini eklemene yardımcı olur."
 
     /* context menus */
     IDS_VIEW_LARGE "&Büyük Simgeler"
@@ -802,7 +802,7 @@ BEGIN
     IDS_SCR_FILE "Görüntülük Koruyucu"
     IDS_SYS_FILE "Dizge Kütüğü"
     IDS_VXD_FILE "Farazî Aygıt Sürücüsü"
-    IDS_ANY_FILE "%s-file"
+    IDS_ANY_FILE "%s Kütüğü"
 
     IDS_OPEN_VERB "Aç"
     IDS_EXPLORE_VERB "Araştır"
@@ -838,23 +838,23 @@ BEGIN
     IDS_OBJECTS "%d Nesne"
     IDS_OBJECTS_SELECTED "%d Nesne Seçili"
 
-    IDS_ADVANCED_FOLDER "Files and Folders"
-    IDS_ADVANCED_NET_CRAWLER "Automatically search for network folders and printers"
-    IDS_ADVANCED_FOLDER_SIZE_TIP "Display file size information in folder tips"
-    IDS_ADVANCED_FRIENDLY_TREE "Display simple folder view in Explorer's Folders list"
-    IDS_ADVANCED_WEB_VIEW_BARRICADE "Display the contents of system folders"
-    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Display the full path in address bar"
-    IDS_ADVANCED_SHOW_FULL_PATH "Display the full path in the title bar"
-    IDS_ADVANCED_DISABLE_THUMB_CACHE "Do not cache thumbnails"
-    IDS_ADVANCED_HIDDEN "Hidden files and folders"
-    IDS_ADVANCED_DONT_SHOW_HIDDEN "Do not show hidden files and folders"
-    IDS_ADVANCED_SHOW_HIDDEN "Show hidden files and folders"
-    IDS_ADVANCED_HIDE_FILE_EXT "Hide extensions for known file types"
-    IDS_ADVANCED_SUPER_HIDDEN "Hide protected operating system files (Recommended)"
-    IDS_ADVANCED_DESKTOP_PROCESS "Launch folder windows in a separate process"
-    IDS_ADVANCED_CLASSIC_VIEW_STATE "Remember each folder's view settings"
-    IDS_ADVANCED_PERSIST_BROWSERS "Restore previous folder windows at logon"
-    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Show Control Panel in My Computer"
-    IDS_ADVANCED_SHOW_COMP_COLOR "Show encrypted or compressed NTFS files in color"
-    IDS_ADVANCED_SHOW_INFO_TIP "Show pop-up description for folder and desktop items"
+    IDS_ADVANCED_FOLDER "Kütükler ve Dizinler"
+    IDS_ADVANCED_NET_CRAWLER "Ağ dizinlerini ve yazıcıları kendiliğinden ara"
+    IDS_ADVANCED_FOLDER_SIZE_TIP "Dizin bilgi kutularında kütük boyutu bilgisini göster"
+    IDS_ADVANCED_FRIENDLY_TREE "Gezgin'in Dizinler dizelgesinde bayağı dizin görünümünü göster"
+    IDS_ADVANCED_WEB_VIEW_BARRICADE "Dizge dizinlerinin içeriğini göster"
+    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Konum çubuğunda tüm yolu göster"
+    IDS_ADVANCED_SHOW_FULL_PATH "Başlık çubuğunda tüm yolu göster"
+    IDS_ADVANCED_DISABLE_THUMB_CACHE "Küçük resimleri saklama"
+    IDS_ADVANCED_HIDDEN "Gizli kütükler ve dizinler"
+    IDS_ADVANCED_DONT_SHOW_HIDDEN "Gizli kütükler ve dizinleri gösterme"
+    IDS_ADVANCED_SHOW_HIDDEN "Gizli kütükler ve dizinleri göster"
+    IDS_ADVANCED_HIDE_FILE_EXT "Bilinen kütük türleri için eklentileri gizle"
+    IDS_ADVANCED_SUPER_HIDDEN "Korunan işletim dizgesi kütüklerini gizle (önerilir)"
+    IDS_ADVANCED_DESKTOP_PROCESS "Kütük penceresini ayrı bir işlemde başlat"
+    IDS_ADVANCED_CLASSIC_VIEW_STATE "Tüm dizinlerin görünüm ayarlarını anımsa"
+    IDS_ADVANCED_PERSIST_BROWSERS "Oturum açmada daha önceki dizin pencerelerini geri getir"
+    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Bilgisayarım'da Denetim Masası'nı göster"
+    IDS_ADVANCED_SHOW_COMP_COLOR "Şifrelenmiş veyâ sıkıştırılmış NTFS kütüklerini renkli göster"
+    IDS_ADVANCED_SHOW_INFO_TIP "Dizin ve masaüstü ögeleri için açılan tanım göster"
 END

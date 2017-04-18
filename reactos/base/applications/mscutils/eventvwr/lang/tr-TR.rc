@@ -139,7 +139,7 @@ BEGIN
     IDS_COPYRIGHT "Telif Hakkı: 2007 - Marc Piulachs (marc.piulachs@codexchange.net)"
     IDS_APP_TITLE "Olay Görüntüleyicisi"
     IDS_APP_TITLE_EX "%s - %s Oturum Aç \\\\"
-    IDS_STATUS_MSG "%s -> %lu olay var (listed: %lu)"
+    IDS_STATUS_MSG "%s -> %lu olay var (dizelgelenmiş: %lu)"
     IDS_LOADING_WAIT "Olay kayıtları yükleniyor. Lütfen bekleyiniz..."
     IDS_NO_ITEMS "Bu görünümde görüntülenecek bir öğe bile yok." // "No events in this log."
     IDS_EVENTLOG_SYSTEM "Dizge Kayıtları"

@@ -14,6 +14,11 @@ CDPath = none
 Description = Liefert Authentifizierungsanbieter für secur32.dll (wie NTLM ...) die für einige Anwendungen benötigt werden.
 Size = 10,8 MiB
 
+[Section.041f]
+License = GPL sürüm 3
+Description = Çalışan uygulamaların gereksinim duyduğu secur32.dll (ör: NTLM ...) yetkilendirme sağlayıcılarını sağlar.
+Size = 10,8 MiB
+
 [Section.0419]
 Description = Содержит поставщиков проверки подлинности для secur32.dll (например, NTLM ...), необходимых для работы приложений.
 Size = 10,8 МиБ

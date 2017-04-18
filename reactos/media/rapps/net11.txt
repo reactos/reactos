@@ -62,7 +62,7 @@ SHA1 = 1c4f247c1c0e914ac4553cac394fc8f174f650a2
 [Section.041f]
 Name = Microsoft .NET Çatısı Sürüm 1.1 Yeniden Dağıtılabilir Paket
 License = Bilinmiyor
-Description = C# gibi orta düzey bir dilde derlenmiş yönetilen Windows uygulamalarını çalıştırmak için gerekli bileşenler.
+Description = C# gibi orta düzey bir dilde derlenmiş, yönetilen Windows uygulamalarını çalıştırmak için gerekli bileşenler.
 Size = 23,1 MiB
 URLSite = http://www.microsoft.com/tr-TR/download/details.aspx?id=26
 URLDownload = http://download.microsoft.com/download/a/f/7/af738ebf-dc15-4c61-a20d-1c29306cd9bc/dotnetfx.exe

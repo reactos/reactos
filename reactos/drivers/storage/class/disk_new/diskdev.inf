@@ -94,7 +94,6 @@ DiskId1 = "Microsoft Corp. Installation Disk #1 (DiskDrive)"
 MS = "Microsoft Corp."
 disk.SvcDesc="Disk Drive"
 
-
 [Strings.0418]
 MS.DeviceDesc0 = "Dispozitiv de disc"
 MS.DeviceDesc1 = "Dispozitiv de disc optic"
@@ -102,3 +101,9 @@ DiskId1 = "Disc de instalare #1 (DiskDrive) al Microsoft Corp."
 MS = "Microsoft Corp."
 disk.SvcDesc="Dispozitiv de disc"
 
+[Strings.041f]
+MS.DeviceDesc0 = "Disk sürücüsü"
+MS.DeviceDesc1 = "Işıklık disk sürücüsü"
+DiskId1 = "Microsoft Ortaklığı Kurulum Diski #1 (DiskDrive)"
+MS = "Microsoft Ortaklığı"
+disk.SvcDesc="Disk Sürücüsü"

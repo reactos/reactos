@@ -69,6 +69,11 @@ ROS                     = "ReactOS"
 DeviceDesc              = "AHCI SATA Driver"
 SATA_AHCI.DeviceDesc    = "Standard SATA AHCI Controller"
 
+[Strings.041f]
+ROS                     = "ReactOS"
+DeviceDesc              = "AHCI SATA Sürücüsü"
+SATA_AHCI.DeviceDesc    = "Ölçünlü SATA AHCI Denetleyicisi"
+
 SPSVCINST_ASSOCSERVICE = 0x00000002
 SERVICE_KERNEL_DRIVER  = 1
 SERVICE_BOOT_START     = 0

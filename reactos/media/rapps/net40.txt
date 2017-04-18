@@ -46,7 +46,7 @@ Size = 48,1 МиБ
 [Section.041f]
 Name = Microsoft .NET Çatısı Sürüm 4.0
 License = Bilinmiyor
-Description = C# gibi orta düzey bir dilde derlenmiş yönetilen Windows uygulamalarını çalıştırmak için gerekli bileşenler.
+Description = C# gibi orta düzey bir dilde derlenmiş, yönetilen Windows uygulamalarını çalıştırmak için gerekli bileşenler.
 URLSite = http://www.microsoft.com/tr-TR/download/details.aspx?id=17718
 Size = 48,1 MiB
 

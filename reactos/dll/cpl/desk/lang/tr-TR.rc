@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013, 2014, 2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -180,7 +180,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARDEFFECT "Ölçünlü"
-    IDS_CLEARTYPEEFFECT "FreeType Antialiased"
+    IDS_CLEARTYPEEFFECT "FreeType Düzeltmesi"
 END
 
 STRINGTABLE

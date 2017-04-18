@@ -14,6 +14,11 @@ CDPath = none
 Description = Die Gecko Engine, welche normalerweise während des 1st stage Setups installiert wird, aber nur wenn zu diesem Zeitpunkt Internet verfügbar war. Wird für Anwendungen benötigt, die mshtml.dll einsetzen.
 Size = 26,7 MiB
 
+[Section.041f]
+Name = Wine Gecko Motoru
+Description = Gecko Motoru düzgülü olarak birinci kurulum aşamasında yalnızca İnternet bağlantısı olduğunda kurulurdu. mshtml.dll'yi kullanan uygulamalar için gereklidir.
+Size = 26,7 MiB
+
 [Section.0419]
 Description = Требуется для приложений, использующих mshtml.dll. Gecko Engine, как правило, установливается на 2-ом этапе установки системы, но только если доступно подключение к интернету.
 Size = 26,7 МиБ
