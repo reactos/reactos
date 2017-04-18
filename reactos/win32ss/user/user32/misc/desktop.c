@@ -306,10 +306,8 @@ RealSystemParametersInfoA(UINT uiAction,
 
         Ret = NtUserSystemParametersInfo(SPI_GETDESKWALLPAPER, MAX_PATH, awc, fWinIni);
         RtlInitUnicodeString(&ustrWallpaper, awc);
-        RtlUnicodeStringToAnsiString(&astrWallpaper, &ustrWallpaper, TRUE);
-
-        RtlCopyMemory(pvParam, astrWallpaper.Buffer, uiParam);
-        RtlFreeAnsiString(&astrWallpaper);
+        RtlInitEmptyAnsiString(&astrWallpaper, pvParam, uiParam);
+        RtlUnicodeStringToAnsiString(&astrWallpaper, &ustrWallpaper, FALSE);
         return Ret;
       }
 
