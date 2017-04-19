@@ -61,7 +61,8 @@ struct ICD_Data* IntGetIcdData(HDC hdc)
     Drv_Opengl_Info DrvInfo;
     pDrv_Opengl_Info pDrvInfo;
     struct ICD_Data* data;
-    HKEY OglKey, DrvKey, CustomKey;
+    HKEY OglKey = NULL;
+    HKEY DrvKey, CustomKey;
     WCHAR DllName[MAX_PATH];
     BOOL (WINAPI *DrvValidateVersion)(DWORD);
     void (WINAPI *DrvSetCallbackProcs)(int nProcs, PROC* pProcs);
