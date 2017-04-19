@@ -23,7 +23,7 @@
 #ifndef _CFSDROPTARGET_H_
 #define _CFSDROPTARGET_H_
 
-WCHAR *BuildPathsList(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls);
+WCHAR *BuildPathsList(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls, BOOL bRelative);
 
 class CFSDropTarget :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,

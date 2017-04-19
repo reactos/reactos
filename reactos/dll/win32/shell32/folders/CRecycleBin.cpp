@@ -1162,7 +1162,7 @@ HRESULT WINAPI DoDeleteDataObject(IDataObject *pda, DWORD fMask)
     *pwszFilename = L'\0';
 
     /* Build paths list */
-    LPWSTR pwszPaths = BuildPathsList(wszPath, lpcida->cidl, (LPCITEMIDLIST*) apidl);
+    LPWSTR pwszPaths = BuildPathsList(wszPath, lpcida->cidl, (LPCITEMIDLIST*) apidl, FALSE);
     if (!pwszPaths)
     {
         SHFree(pidl);

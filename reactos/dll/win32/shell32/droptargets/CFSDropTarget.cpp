@@ -31,7 +31,7 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
  * PIDLs relative to the given base folder
  */
 WCHAR *
-BuildPathsList(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls)
+BuildPathsList(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls, BOOL bRelative)
 {
     WCHAR *pwszPathsList;
     WCHAR *pwszListPos;
@@ -48,6 +48,10 @@ BuildPathsList(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls)
 
         wcscpy(pwszListPos, wszBasePath);
         pwszListPos += iPathLen;
+
+        if (_ILIsFolder(pidls[i]) && bRelative)
+            continue;
+
         /* FIXME: abort if path too long */
         _ILSimpleGetTextW(pidls[i], pwszListPos, MAX_PATH - iPathLen);
         pwszListPos += wcslen(pwszListPos) + 1;
@@ -95,8 +99,8 @@ HRESULT WINAPI CFSDropTarget::CopyItems(IShellFolder * pSFFrom, UINT cidl,
         wcscpy(szTargetPath, sPathTarget);
         pszTarget = PathAddBackslashW(szTargetPath);
 
-        pszSrcList = BuildPathsList(szSrcPath, cidl, apidl);
-        pszTargetList = BuildPathsList(szTargetPath, cidl, apidl);
+        pszSrcList = BuildPathsList(szSrcPath, cidl, apidl, FALSE);
+        pszTargetList = BuildPathsList(szTargetPath, cidl, apidl, TRUE);
 
         if (!pszSrcList || !pszTargetList)
         {
