@@ -460,6 +460,7 @@ again:
     */
     if (*cp && *cp > ' ') return FALSE;
 
+    if (pp >= parts + 4) return FALSE;
     *pp++ = val;
     /*
     * Concoct the address according to
