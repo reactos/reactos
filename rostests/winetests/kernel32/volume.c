@@ -978,7 +978,8 @@ static void test_GetVolumePathNamesForVolumeNameW(void)
 #ifdef __REACTOS__
     /* due to failing all calls to GetVolumeNameForVolumeMountPointW, this
      * buffer never gets initialized and could cause a buffer overflow later */
-    volume[0] = 0;
+    volume[0] = '$';
+    volume[1] = 0;
 #endif /* __REACTOS__ */
 
     if (!pGetVolumePathNamesForVolumeNameW || !pGetVolumeNameForVolumeMountPointW)
