@@ -341,9 +341,11 @@ ObtClose(
         if (!skip(ObBody[i] != NULL, "Nothing to dereference\n"))
         {
             if (ObHandle1[i]) CheckObject(ObHandle1[i], 3LU, 1LU);
+            Ret = ObReferenceObject(ObBody[i]);
+            if (ObHandle1[i]) CheckObject(ObHandle1[i], 4LU, 1LU);
             Ret = ObDereferenceObject(ObBody[i]);
-            ok_eq_longptr(Ret, (LONG_PTR)1);
-            if (ObHandle1[i]) CheckObject(ObHandle1[i], 2LU, 1LU);
+            ok_eq_longptr(Ret, (LONG_PTR)2);
+            if (ObHandle1[i]) CheckObject(ObHandle1[i], 3LU, 1LU);
             ObBody[i] = NULL;
         }
         if (!skip(ObHandle1[i] != NULL, "Nothing to close\n"))
