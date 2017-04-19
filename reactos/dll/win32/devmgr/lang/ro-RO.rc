@@ -31,7 +31,7 @@ BEGIN
     IDS_NOTDIGITALLYSIGNED "Nesemnat digital"
     IDS_NODRIVERS "Fie nu sunt necesare modúle-pilot, fie nu a fost încărcat niciunul."
     IDS_RESOURCE_COLUMN "Tip de resursă"
-    IDS_SETTING_COLUMN "Configuraţie"
+    IDS_SETTING_COLUMN "Configurație"
     IDS_RESOURCE_MEMORY_RANGE "Domeniu de memorie"
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"

@@ -1,0 +1,29 @@
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Generale"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_CPLICON, IDI_CPLICON, 8, 0, 21, 20
+    GROUPBOX "Opțiuni de redare", -1, 5, 25, 230, 90
+    LTEXT "&Motor de redare:", -1, 15, 42, 65, 10
+    COMBOBOX IDC_RENDERER, 80, 40, 135, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "Acesta va înlocui configurația implicită pentru modulul-pilot grafic! Alegeți „Implicit” pentru a reveni la configurația originală.", -1, 15, 60, 210, 40
+    GROUPBOX "Depanare", -1, 5, 125, 230, 90
+    LTEXT "DEBUGCHANNEL:", -1, 15, 142, 65, 10
+    COMBOBOX IDC_DEBUG_OUTPUT, 80, 140, 135, 10, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "Activează/dezactivează canalul de depanare al opengl32.\n\nAVERTISMENT: Alegând „instituie” sau „destituie” veți suprascrie conținutul variabilei de mediu DEBUGCHANNEL!", -1, 15, 165, 210, 40
+END
+
+STRINGTABLE
+BEGIN
+    IDS_RENDERER_DEFAULT "Implicit"
+    IDS_RENDERER_RSWR "Implementare emulată"
+    IDS_CPLNAME "Configurație OpenGL"
+    IDS_CPLDESCRIPTION "Configurează motorul de redare OpenGL."
+    IDS_DEBUG_SET "instituie"
+    IDS_DEBUG_CLEAR "destituie"
+    IDS_DEBUG_DNM "nu modificați"
+END

@@ -15,10 +15,10 @@ BEGIN
     IDS_FILTER_LIST "Toate fonturile recunoscute (*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc)\0*.fon;*.fnt;*.ttf;*.ttc;*.otf;*.otc\0\
 Fișiere de tip Font (*.fon;*.fnt)\0*.fon;*.fnt\0\
 Fonturi de tip TrueType (*.ttf)\0*.ttf\0\
-TrueType Font Collection (*.ttc)\0*.ttc\0\
+Colecție de fonturi TrueType (*.ttc)\0*.ttc\0\
 Fonturi de tip OpenType (*.otf)\0*.otf\0\
-OpenType Font Collection (*.otc)\0*.otc\0\
+Colecție de fonturi OpenType (*.otc)\0*.otc\0\
 Orice fișier (*.*)\0*.*\0"
-    IDS_PREVIOUS "< P&revious"
-    IDS_NEXT "&Next >"
+    IDS_PREVIOUS "< Înap&oi"
+    IDS_NEXT "În&ainte >"
 END
