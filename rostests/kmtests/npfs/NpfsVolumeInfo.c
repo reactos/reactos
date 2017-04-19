@@ -81,37 +81,11 @@ TestVolumeInfo(
     ok_eq_ulong(FileFsSizeInfo.BytesPerSector, 1);
     ok_eq_ulong(IoStatusBlock.Information, sizeof(FileFsSizeInfo));
 
-    RtlFillMemory(&FileFsSizeInfo, sizeof(FileFsSizeInfo), 0xFF);
-    Status = ZwQueryVolumeInformationFile(ServerHandle,
-                                          &IoStatusBlock,
-                                          &FileFsSizeInfo,
-                                          sizeof(FileFsSizeInfo) - 4,
-                                          FileFsSizeInformation);
-    ok_eq_hex(Status, STATUS_SUCCESS);
-    ok_eq_hex(IoStatusBlock.Status, STATUS_SUCCESS);
-    ok_eq_longlong(FileFsSizeInfo.TotalAllocationUnits.QuadPart, 0);
-    ok_eq_longlong(FileFsSizeInfo.AvailableAllocationUnits.QuadPart, 0);
-    ok_eq_ulong(FileFsSizeInfo.SectorsPerAllocationUnit, 1);
-    ok_eq_ulong(FileFsSizeInfo.BytesPerSector, 1);
-    ok_eq_ulong(IoStatusBlock.Information, sizeof(FileFsSizeInfo));
-
     RtlFillMemory(&FileFsDeviceInfo, sizeof(FileFsDeviceInfo), 0xFF);
     Status = ZwQueryVolumeInformationFile(ServerHandle,
                                           &IoStatusBlock,
                                           &FileFsDeviceInfo,
                                           sizeof(FileFsDeviceInfo),
-                                          FileFsDeviceInformation);
-    ok_eq_hex(Status, STATUS_SUCCESS);
-    ok_eq_hex(IoStatusBlock.Status, STATUS_SUCCESS);
-    ok_eq_ulong(FileFsDeviceInfo.Characteristics, 0);
-    ok_eq_ulong(FileFsDeviceInfo.DeviceType, FILE_DEVICE_NAMED_PIPE);
-    ok_eq_ulong(IoStatusBlock.Information, sizeof(FileFsDeviceInfo));
-
-    RtlFillMemory(&FileFsDeviceInfo, sizeof(FileFsDeviceInfo), 0xFF);
-    Status = ZwQueryVolumeInformationFile(ServerHandle,
-                                          &IoStatusBlock,
-                                          &FileFsDeviceInfo,
-                                          sizeof(FileFsDeviceInfo) - 4,
                                           FileFsDeviceInformation);
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_hex(IoStatusBlock.Status, STATUS_SUCCESS);
@@ -154,21 +128,6 @@ TestVolumeInfo(
                                           &IoStatusBlock,
                                           &FileFsFullSizeInfo,
                                           sizeof(FileFsFullSizeInfo),
-                                          FileFsFullSizeInformation);
-    ok_eq_hex(Status, STATUS_SUCCESS);
-    ok_eq_hex(IoStatusBlock.Status, STATUS_SUCCESS);
-    ok_eq_longlong(FileFsFullSizeInfo.TotalAllocationUnits.QuadPart, 0);
-    ok_eq_longlong(FileFsFullSizeInfo.CallerAvailableAllocationUnits.QuadPart, 0);
-    ok_eq_longlong(FileFsFullSizeInfo.ActualAvailableAllocationUnits.QuadPart, 0);
-    ok_eq_ulong(FileFsFullSizeInfo.SectorsPerAllocationUnit, 0);
-    ok_eq_ulong(FileFsFullSizeInfo.BytesPerSector, 0);
-    ok_eq_ulong(IoStatusBlock.Information, sizeof(FileFsFullSizeInfo));
-
-    RtlFillMemory(&FileFsFullSizeInfo, sizeof(FileFsFullSizeInfo), 0xFF);
-    Status = ZwQueryVolumeInformationFile(ServerHandle,
-                                          &IoStatusBlock,
-                                          &FileFsFullSizeInfo,
-                                          sizeof(FileFsFullSizeInfo) - 4,
                                           FileFsFullSizeInformation);
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_hex(IoStatusBlock.Status, STATUS_SUCCESS);
