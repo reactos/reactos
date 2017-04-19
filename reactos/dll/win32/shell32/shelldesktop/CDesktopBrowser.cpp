@@ -285,7 +285,7 @@ HRESULT STDMETHODCALLTYPE CDesktopBrowser::BrowseObject(LPCITEMIDLIST pidl, UINT
      */
 
     DWORD dwFlags = ((wFlags & SBSP_EXPLOREMODE) != 0) ? SH_EXPLORER_CMDLINE_FLAG_E : 0; 
-    return SHOpenNewFrame((LPITEMIDLIST)pidl, NULL, 0, dwFlags);
+    return SHOpenNewFrame(ILClone(pidl), NULL, 0, dwFlags);
 }
 
 HRESULT STDMETHODCALLTYPE CDesktopBrowser::GetViewStateStream(DWORD grfMode, IStream **ppStrm)
