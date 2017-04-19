@@ -275,6 +275,13 @@ MmAllocateSpecialPool(SIZE_T NumberOfBytes, ULONG Tag, POOL_TYPE PoolType, ULONG
                      0x30);
     }
 
+    /* Some allocations from Mm must never use special pool */
+    if (Tag == 'tSmM')
+    {
+        /* Reject and let normal pool handle it */
+        return NULL;
+    }
+
     /* TODO: Take into account various limitations */
 
     /* Heed the maximum limit of nonpaged pages */
