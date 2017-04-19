@@ -830,7 +830,7 @@ GetCharABCWidthsA(
 
     ret = NtGdiGetCharABCWidthsW( hdc,
                                   wstr[0],
-                                  (ULONG)count,
+                                  wlen - 1,
                                   (PWCHAR)wstr,
                                   GCABCW_NOFLOAT,
                                   (PVOID)lpabc);
