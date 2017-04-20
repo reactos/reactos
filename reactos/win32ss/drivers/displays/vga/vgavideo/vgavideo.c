@@ -369,6 +369,7 @@ void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta)
         stride = 0;
         rightcount = w;
     }
+    rightcount = (rightcount + 1) / 2;
 
     /* Reset the destination. */
     for (j = 0; j < h; j++)
@@ -414,7 +415,7 @@ void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta)
 
                 row = UnpackPixel[pixel] << plane;
 
-                /* Store the data for each pixel in the destination. */
+                /* Store the data for each byte in the destination. */
                 for (i = 0; i < rightcount; i++)
                 {
                     ((PUCHAR)destline)[i] |= (row & 0xFF);
