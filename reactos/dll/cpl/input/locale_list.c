@@ -97,7 +97,7 @@ LocaleList_Create(VOID)
         return NULL;
     }
 
-    dwSize = sizeof(szValue);
+    dwSize = ARRAYSIZE(szValue);
     dwIndex = 0;
 
     while (RegEnumValueW(hKey, dwIndex, szValue, &dwSize,
@@ -115,9 +115,11 @@ LocaleList_Create(VOID)
             LocaleList_Append(dwId, szName);
         }
 
-        dwSize = sizeof(szValue);
+        dwSize = ARRAYSIZE(szValue);
         ++dwIndex;
     }
+
+    RegCloseKey(hKey);
 
     return _LocaleList;
 }

@@ -104,7 +104,7 @@ LayoutList_Create(VOID)
         return;
     }
 
-    dwSize = sizeof(szLayoutId);
+    dwSize = ARRAYSIZE(szLayoutId);
 
     while (RegEnumKeyExW(hKey, dwIndex, szLayoutId, &dwSize,
                          NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
@@ -230,7 +230,7 @@ NotTranslated:
             RegCloseKey(hLayoutKey);
         }
 
-        dwSize = sizeof(szLayoutId);
+        dwSize = ARRAYSIZE(szLayoutId);
         ++dwIndex;
     }
 

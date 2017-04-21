@@ -22,9 +22,7 @@ ReadAttributes(VOID)
                       KEY_QUERY_VALUE,
                       &hKey) == ERROR_SUCCESS)
     {
-        DWORD dwSize;
-
-        dwSize = sizeof(dwSize);
+        DWORD dwSize = sizeof(dwAttributes);
 
         RegQueryValueExW(hKey,
                          L"Attributes",

@@ -1,7 +1,8 @@
 #ifndef _INPUT_H
 #define _INPUT_H
 
-#include <stdarg.h>
+#include <stdlib.h>
+#include <wchar.h>
 
 #define WIN32_NO_STATUS
 #include <windef.h>
@@ -13,9 +14,7 @@
 #include <commctrl.h>
 #include <windowsx.h>
 #include <setupapi.h>
-#include <wchar.h>
 #include <strsafe.h>
-#include <stdlib.h>
 
 #include "resource.h"
 
