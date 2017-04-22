@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Mark Jansen
+ * Copyright 2015-2017 Mark Jansen
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -43,21 +43,23 @@ public:
     INT_PTR OnCommand(HWND hWnd, WORD id);
     void UpdateControls(HWND hWnd);
     INT_PTR DisableControls(HWND hWnd);
+    BOOL HasChanges() const;
 
     void OnRefresh(HWND hWnd);
     void OnApply(HWND hWnd);
 
     static INT_PTR CALLBACK PropDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    /*static INT_PTR CALLBACK EditModesProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);*/
+    static INT_PTR CALLBACK EditModesProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 
 protected:
-    CComBSTR m_Filename;
+    CString m_Filename;
     BOOL m_IsSfcProtected;
     BOOL m_AllowPermLayer;
     DWORD m_LayerQueryFlags;
     DWORD m_RegistryOSMode, m_OSMode;
     DWORD m_RegistryEnabledLayers, m_EnabledLayers;
+    CSimpleArray<CString> m_RegistryCustomLayers, m_CustomLayers;
 
 public:
     DECLARE_REGISTRY_RESOURCEID(IDR_ACPPAGE)

@@ -3,6 +3,13 @@
 #define __ATLEXCEPT_H__
 
 
+#ifdef _ATL_NO_EXCEPTIONS
+#if !defined(STATUS_NO_MEMORY) && defined(WIN32_NO_STATUS)
+#define STATUS_NO_MEMORY ((DWORD)0xC0000017)
+#endif
+#endif
+
+
 //FIXME: Enable when RaiseException is marked as NORETURN
 //DECLSPEC_NORETURN
 inline void AtlThrowImp(HRESULT hr)
