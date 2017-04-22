@@ -1,0 +1,41 @@
+/* Translated by Sebastian Gasiorek, UTF-8 conversion by Caemyr (May, 2011) */
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+IDD_ACPPAGESHEET DIALOGEX 0, 0, 224, 226
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Zgodność"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "Jeżeli masz problemy z uruchamianiem tego programu w ReactOS, wybierz system operacyjny, który ReactOS powinien zgłaszać aplikacji.\nPlease note that this is a work in progress.", -1, 7, 7, 210, 31
+    GROUPBOX "Tryb zgodności", IDC_COMPATGROUP, 7, 41, 210, 49
+    CHECKBOX "Uruchom ten program w trybie zgodności z:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
+    GROUPBOX "Ustawienia ekranu", -1, 7, 99, 210, 61, BS_GROUPBOX
+    CHECKBOX "Uruchom w 256 kolorach", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Uruchom w rozdzielczości ekranu 640x480", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Wyłącz kompozycje wizualne", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    PUSHBUTTON "E&dytuj tryby zgodności...", IDC_EDITCOMPATIBILITYMODES, 117, 167, 100, 15
+    CONTROL "Dowiedz się więcej o <A>zgodności programów</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY
+END
+
+IDD_EDITCOMPATIBILITYMODES DIALOGEX 0, 0, 230, 139
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Edycja trybów zgodności"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    EDITTEXT IDC_NEWCOMPATIBILITYMODE, 9, 6, 148, 14, ES_AUTOHSCROLL
+    LISTBOX IDC_COMPATIBILITYMODE, 9, 25, 148, 86, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | LBS_WANTKEYBOARDINPUT | WS_BORDER
+    PUSHBUTTON "&Dodaj...", IDC_ADD, 162, 6, 60, 14, WS_DISABLED
+    PUSHBUTTON "&Edytuj...", IDC_EDIT, 162, 24, 60, 14, WS_DISABLED
+    PUSHBUTTON "&Usuń", IDC_DELETE, 162, 42, 60, 14, WS_DISABLED
+    PUSHBUTTON "&OK", IDOK, 95, 116, 60, 14
+    PUSHBUTTON "&Anuluj", IDCANCEL, 162, 116, 60, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TABTITLE "Compatibility"
+    IDS_FAILED_NETWORK "Compatibility modes cannot be set on this program because it is on a network drive."
+    IDS_FAILED_PROTECTED "Compatibility modes cannot be set on this program because it is a part of ReactOS."
+END

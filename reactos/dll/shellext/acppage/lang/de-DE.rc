@@ -1,0 +1,39 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+IDD_ACPPAGESHEET DIALOGEX 0, 0, 224, 226
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Kompatibilität"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "Falls dieses Programm Probleme verursacht, wählen Sie einen Kompatibilitätsmodus, unter dem das Programm möglicherweise korrekt funktioniert.\nPlease note that this is a work in progress.", -1, 7, 7, 210, 31
+    GROUPBOX "Kompatibilitätsmodus", IDC_COMPATGROUP, 7, 41, 210, 49
+    CHECKBOX "Programm im Kompatibilitätsmodus ausführen für:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
+    GROUPBOX "Anzeigeeinstellungen", -1, 7, 99, 210, 61, BS_GROUPBOX
+    CHECKBOX "Mit 256 Farben ausführen", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "In Bildschirmauflösung 640 x 480 ausführen", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Visuelle Designs deaktivieren", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    PUSHBUTTON "Kompatibilitätsmodus ändern", IDC_EDITCOMPATIBILITYMODES, 117, 167, 100, 15
+    CONTROL "Weitere Informationen über <A>Programmkompatibilität</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY
+END
+
+IDD_EDITCOMPATIBILITYMODES DIALOGEX 0, 0, 230, 139
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Kompatibilitätsmodus ändern"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    EDITTEXT IDC_NEWCOMPATIBILITYMODE, 9, 6, 148, 14, ES_AUTOHSCROLL
+    LISTBOX IDC_COMPATIBILITYMODE, 9, 25, 148, 86, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | LBS_WANTKEYBOARDINPUT | WS_BORDER
+    PUSHBUTTON "&Hinzufügen...", IDC_ADD, 162, 6, 60, 14, WS_DISABLED
+    PUSHBUTTON "&Ändern...", IDC_EDIT, 162, 24, 60, 14, WS_DISABLED
+    PUSHBUTTON "&Löschen", IDC_DELETE, 162, 42, 60, 14, WS_DISABLED
+    PUSHBUTTON "&OK", IDOK, 95, 116, 60, 14
+    PUSHBUTTON "&Abbrechen", IDCANCEL, 162, 116, 60, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TABTITLE "Compatibility"
+    IDS_FAILED_NETWORK "Compatibility modes cannot be set on this program because it is on a network drive."
+    IDS_FAILED_PROTECTED "Compatibility modes cannot be set on this program because it is a part of ReactOS."
+END

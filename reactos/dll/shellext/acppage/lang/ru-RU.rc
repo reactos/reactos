@@ -7,14 +7,14 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Совместимость"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Если у вас есть проблемы с запуском этой программы в ReactOS, выберите операционную систему, которой ReactOS будет представляться приложению.\nУчтите, работа над этим модулем продолжается, и на данном этапе он ничего не будет делать.", IDC_EXPLANATION, 7, 7 , 210, 31
+    LTEXT "Если у вас есть проблемы с запуском этой программы в ReactOS, выберите операционную систему, которой ReactOS будет представляться приложению.\nPlease note that this is a work in progress.", IDC_EXPLANATION, 7, 7 , 210, 31
     GROUPBOX "Режим совместимости", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "Запустить программу в режиме совместимости с:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
-    GROUPBOX "Параметры экрана", -1, 7, 99, 210, 61, BS_GROUPBOX | WS_DISABLED
-    CHECKBOX "Использовать 256 цветов", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
-    CHECKBOX "Использовать разрешение экрана 640x480", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
-    CHECKBOX "Отключить визуальное оформление", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
+    GROUPBOX "Параметры экрана", -1, 7, 99, 210, 61, BS_GROUPBOX
+    CHECKBOX "Использовать 256 цветов", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Использовать разрешение экрана 640x480", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Отключить визуальное оформление", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     PUSHBUTTON "Настроить режимы совместимости...", IDC_EDITCOMPATIBILITYMODES, 117, 167, 100, 15
     CONTROL "Узнать больше о <A>совместимости программ</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY
 END

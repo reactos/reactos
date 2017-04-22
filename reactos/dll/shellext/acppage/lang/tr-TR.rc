@@ -7,14 +7,14 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Uyumluluk"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "ReactOS'ta bu izlenceyi çalıştırırken sorunlarınız oluyorsa ReactOS'un uygulamaya bildireceği bir işletim dizgesi seçiniz.\nBunun gelişmekte olan bir iş olduğunu unutmayınız, ve bu aşamada hiçbir şey yapmayacaktır.", IDC_EXPLANATION, 7, 7, 210, 31
+    LTEXT "ReactOS'ta bu izlenceyi çalıştırırken sorunlarınız oluyorsa ReactOS'un uygulamaya bildireceği bir işletim dizgesi seçiniz.\nPlease note that this is a work in progress.", IDC_EXPLANATION, 7, 7, 210, 31
     GROUPBOX "Uyumluluk Kipi", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "Bu izlenceyi şu uyumluluk kipinde çalıştır:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
-    GROUPBOX "Görüntü Ayarları", -1, 7, 99, 210, 61, BS_GROUPBOX | WS_DISABLED
-    CHECKBOX "256 Renkte Çalıştır", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
-    CHECKBOX "640x480 Görüntülük Çözünürlüğünde Çalıştır", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
-    CHECKBOX "Görmelik Temaları Edilginleştir", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
+    GROUPBOX "Görüntü Ayarları", -1, 7, 99, 210, 61, BS_GROUPBOX
+    CHECKBOX "256 Renkte Çalıştır", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "640x480 Görüntülük Çözünürlüğünde Çalıştır", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Görmelik Temaları Edilginleştir", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     PUSHBUTTON "&Uyumluluk Kiplerini Düzenle...", IDC_EDITCOMPATIBILITYMODES, 117, 167, 100, 15
     CONTROL "<A>İzlence uyumluluğu</A> konusunda daha çok öğren.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY
 END

@@ -1,0 +1,39 @@
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+IDD_ACPPAGESHEET DIALOGEX 0, 0, 240, 226
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Съвместимост"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT "Ако имате затруднения при работата на приложението с РеактОС, изберете като коя операционна система да му се представя РеактОС.\nPlease note that this is a work in progress.", -1, 7, 7, 210, 31
+    GROUPBOX "Режими на съвместимост", IDC_COMPATGROUP, 7, 41, 225, 49
+    CHECKBOX "Изпълняване на приложението в режим на съвместимост за:", IDC_CHKRUNCOMPATIBILITY, 10, 57, 220, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    COMBOBOX IDC_COMPATIBILITYMODE, 10, 70, 220, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
+    GROUPBOX "Настройки на екрана", -1, 7, 99, 225, 61, BS_GROUPBOX
+    CHECKBOX "Работа с 256 цвята", IDC_CHKRUNIN256COLORS, 18, 114, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Разделителна способност 640х480", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Изключване на разцветките", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
+    PUSHBUTTON "Про&мяна на режимите за съвместимост...", IDC_EDITCOMPATIBILITYMODES, 60, 167, 157, 15
+    CONTROL "Learn more about <A>program compatibility</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY
+END
+
+IDD_EDITCOMPATIBILITYMODES DIALOGEX 0, 0, 230, 139
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Промяна на режимите за съвместимост"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    EDITTEXT IDC_NEWCOMPATIBILITYMODE, 9, 6, 148, 14, ES_AUTOHSCROLL
+    LISTBOX IDC_COMPATIBILITYMODE, 9, 25, 148, 86, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | LBS_WANTKEYBOARDINPUT | WS_BORDER
+    PUSHBUTTON "&Добавяне...", IDC_ADD, 162, 6, 60, 14, WS_DISABLED
+    PUSHBUTTON "&Обработка...", IDC_EDIT, 162, 24, 60, 14, WS_DISABLED
+    PUSHBUTTON "Из&триване", IDC_DELETE, 162, 42, 60, 14, WS_DISABLED
+    PUSHBUTTON "&Добре", IDOK, 95, 116, 60, 14
+    PUSHBUTTON "&Отказ", IDCANCEL, 162, 116, 60, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TABTITLE "Compatibility"
+    IDS_FAILED_NETWORK "Compatibility modes cannot be set on this program because it is on a network drive."
+    IDS_FAILED_PROTECTED "Compatibility modes cannot be set on this program because it is a part of ReactOS."
+END

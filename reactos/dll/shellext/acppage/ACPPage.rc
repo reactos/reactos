@@ -15,7 +15,7 @@ IDR_ACPPAGE REGISTRY "res/acppage.rgs"
 
 /* UTF-8 */
 #pragma code_page(65001)
-/*
+
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
 #endif
@@ -25,11 +25,9 @@ IDR_ACPPAGE REGISTRY "res/acppage.rgs"
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
 #endif
-*/
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif
-/*
 #ifdef LANGUAGE_ES_ES
     #include "lang/es-ES.rc"
 #endif
@@ -60,14 +58,12 @@ IDR_ACPPAGE REGISTRY "res/acppage.rgs"
 #ifdef LANGUAGE_PL_PL
     #include "lang/pl-PL.rc"
 #endif
-*/
 #ifdef LANGUAGE_RO_RO
     #include "lang/ro-RO.rc"
 #endif
 #ifdef LANGUAGE_RU_RU
     #include "lang/ru-RU.rc"
 #endif
-/*
 #ifdef LANGUAGE_SK_SK
     #include "lang/sk-SK.rc"
 #endif
@@ -77,15 +73,15 @@ IDR_ACPPAGE REGISTRY "res/acppage.rgs"
 #ifdef LANGUAGE_SV_SE
     #include "lang/sv-SE.rc"
 #endif
-*/
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.rc"
 #endif
-/*
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
 #endif
-*/
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
+#endif
