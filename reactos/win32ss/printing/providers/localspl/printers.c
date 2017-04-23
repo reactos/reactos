@@ -297,29 +297,61 @@ Cleanup:
 }
 
 /**
- * @name _IsLocalComputerName
+ * @name _LocalEnumPrintersCheckName
  *
- * Checks if the given Computer Name matches the local Computer Name.
+ * Checks the Name parameter supplied to a call to EnumPrinters.
+ *
+ * @param Flags
+ * Flags parameter of EnumPrinters.
  *
  * @param Name
- * Computer Name prepended with two backslashes to check.
+ * Name parameter of EnumPrinters to check.
  *
  * @param pwszComputerName
  * Pointer to a string able to hold 2 + MAX_COMPUTERNAME_LENGTH + 1 + 1 characters.
- * Will contain a string "\\COMPUTERNAME\" on success that can be prepended in EnumPrinters.
+ * On return, it may contain a computer name to prepend in EnumPrinters depending on the case.
  *
  * @param pcchComputerName
- * On success, this pointer receives the length in characters of pwszComputerName.
+ * If a string to prepend is returned, this pointer receives its length in characters.
  *
  * @return
- * ERROR_SUCCESS on success or an error code on failure.
+ * ERROR_SUCCESS if processing in EnumPrinters can be continued.
+ * ERROR_INVALID_NAME if the Name parameter is invalid for the given flags and this Print Provider.
+ * Any other error code if GetComputerNameW fails. Error codes indicating failure should then be returned by EnumPrinters.
  */
 static DWORD
-_IsLocalComputerName(PCWSTR Name, PWSTR pwszComputerName, PDWORD pcchComputerName)
+_LocalEnumPrintersCheckName(DWORD Flags, PCWSTR Name, PWSTR pwszComputerName, PDWORD pcchComputerName)
 {
-    DWORD dwErrorCode;
+    PCWSTR pName;
+    PCWSTR pComputerName;
 
-    // Prepend slashes to the computer name.
+    // If there is no Name parameter to check, we can just continue in EnumPrinters.
+    if (!Name)
+        return ERROR_SUCCESS;
+
+    // Check if Name does not begin with two backslashes (required for specifying Computer Names).
+    if (Name[0] != L'\\' || Name[1] != L'\\')
+    {
+        if (Flags & PRINTER_ENUM_NAME)
+        {
+            // If PRINTER_ENUM_NAME is specified, any given Name parameter may only contain the
+            // Print Provider Name or the local Computer Name.
+
+            // Compare with the Print Provider Name.
+            if (wcsicmp(Name, wszPrintProviderInfo[0]) == 0)
+                return ERROR_SUCCESS;
+
+            // Dismiss anything else.
+            return ERROR_INVALID_NAME;
+        }
+        else
+        {
+            // If PRINTER_ENUM_NAME is not specified, we just ignore anything that is not a Computer Name.
+            return ERROR_SUCCESS;
+        }
+    }
+
+    // Prepend the backslashes to the output computer name.
     pwszComputerName[0] = L'\\';
     pwszComputerName[1] = L'\\';
 
@@ -327,29 +359,59 @@ _IsLocalComputerName(PCWSTR Name, PWSTR pwszComputerName, PDWORD pcchComputerNam
     *pcchComputerName = MAX_COMPUTERNAME_LENGTH + 1;
     if (!GetComputerNameW(&pwszComputerName[2], pcchComputerName))
     {
-        dwErrorCode = GetLastError();
-        ERR("GetComputerNameW failed with error %lu!\n", dwErrorCode);
-        goto Cleanup;
+        ERR("GetComputerNameW failed with error %lu!\n", GetLastError());
+        return GetLastError();
     }
 
     // Add the leading slashes to the total length.
     *pcchComputerName += 2;
 
-    // Now compare this with the local computer name and reject it with ERROR_INVALID_NAME if it doesn't match.
-    if (wcsicmp(&Name[2], &pwszComputerName[2]) != 0)
+    // Compare both names.
+    pComputerName = &pwszComputerName[2];
+    pName = &Name[2];
+    for (;;)
     {
-        dwErrorCode = ERROR_INVALID_NAME;
-        goto Cleanup;
+        // Are we at the end of the local Computer Name string?
+        if (!*pComputerName)
+        {
+            // Are we also at the end of the supplied Name parameter?
+            // A terminating NUL character and a backslash are both treated as the end, but they are treated differently.
+            if (!*pName)
+            {
+                // If both names match and Name ends with a NUL character, the computer name will be prepended in EnumPrinters.
+                // Add a trailing backslash for that.
+                pwszComputerName[(*pcchComputerName)++] = L'\\';
+                pwszComputerName[*pcchComputerName] = 0;
+                return ERROR_SUCCESS;
+            }
+            else if (*pName == L'\\')
+            {
+                if (Flags & PRINTER_ENUM_NAME)
+                {
+                    // If PRINTER_ENUM_NAME is specified and a Name parameter is given, it must be exactly the local
+                    // Computer Name with two backslashes prepended. Anything else (like "\\COMPUTERNAME\") is dismissed.
+                    return ERROR_INVALID_NAME;
+                }
+                else
+                {
+                    // If PRINTER_ENUM_NAME is not specified and a Name parameter is given, it may also end with a backslash.
+                    // Only the Computer Name between the backslashes is checked then.
+                    // This is largely undocumented, but verified by tests (see winspool_apitest).
+                    // In this case, no computer name is prepended in EnumPrinters though.
+                    *pwszComputerName = 0;
+                    *pcchComputerName = 0;
+                    return ERROR_SUCCESS;
+                }
+            }
+        }
+
+        // Compare both Computer Names case-insensitively and reject with ERROR_INVALID_NAME if they don't match.
+        if (towlower(*pName) != towlower(*pComputerName))
+            return ERROR_INVALID_NAME;
+
+        pName++;
+        pComputerName++;
     }
-
-    // Add a trailing backslash to pwszComputerName, which will later be prepended in front of the printer names.
-    pwszComputerName[(*pcchComputerName)++] = L'\\';
-    pwszComputerName[*pcchComputerName] = 0;
-
-    dwErrorCode = ERROR_SUCCESS;
-
-Cleanup:
-    return dwErrorCode;
 }
 
 static DWORD
@@ -376,20 +438,19 @@ _DumpLevel1PrintProviderInformation(PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbN
 }
 
 static DWORD
-_LocalEnumPrintersLevel0(DWORD Flags, PCWSTR Name, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
+_LocalEnumPrintersLevel0(DWORD Flags, PCWSTR Name, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned, DWORD cchComputerName, PWSTR wszComputerName)
 {
     return ERROR_INVALID_LEVEL;
 }
 
 static DWORD
-_LocalEnumPrintersLevel1(DWORD Flags, PCWSTR Name, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
+_LocalEnumPrintersLevel1(DWORD Flags, PCWSTR Name, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned, DWORD cchComputerName, PWSTR wszComputerName)
 {
     const WCHAR wszComma[] = L",";
 
     size_t cbName;
     size_t cbComment;
     size_t cbDescription;
-    DWORD cchComputerName = 0;
     DWORD dwErrorCode;
     DWORD i;
     PBYTE pPrinterInfo;
@@ -398,34 +459,13 @@ _LocalEnumPrintersLevel1(DWORD Flags, PCWSTR Name, PBYTE pPrinterEnum, DWORD cbB
     PLOCAL_PRINTER pPrinter;
     PWSTR p;
     PWSTR pwszStrings[3];
-    WCHAR wszComputerName[2 + MAX_COMPUTERNAME_LENGTH + 1 + 1] = { 0 };
 
-    if (Flags & PRINTER_ENUM_NAME)
+    if (Flags & PRINTER_ENUM_NAME && !Name)
     {
-        if (Name)
-        {
-            // The user supplied a Computer Name (with leading double backslashes) or Print Provider Name.
-            // Only process what's directed at us.
-            if (Name[0] == L'\\' && Name[1] == L'\\')
-            {
-                dwErrorCode = _IsLocalComputerName(Name, wszComputerName, &cchComputerName);
-                if (dwErrorCode != ERROR_SUCCESS)
-                    goto Cleanup;
-            }
-            else if (wcsicmp(Name, wszPrintProviderInfo[0]) != 0)
-            {
-                // The user supplied a name that cannot be processed by the Local Print Provider.
-                dwErrorCode = ERROR_INVALID_NAME;
-                goto Cleanup;
-            }
-        }
-        else
-        {
-            // The caller wants information about this Print Provider.
-            // spoolss packs this into an array of information about all Print Providers.
-            dwErrorCode = _DumpLevel1PrintProviderInformation(pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
-            goto Cleanup;
-        }
+        // The caller wants information about this Print Provider.
+        // spoolss packs this into an array of information about all Print Providers.
+        dwErrorCode = _DumpLevel1PrintProviderInformation(pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
+        goto Cleanup;
     }
 
     // Count the required buffer size and the number of printers.
@@ -513,19 +553,19 @@ Cleanup:
 }
 
 static DWORD
-_LocalEnumPrintersLevel2(DWORD Flags, PCWSTR Name, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
+_LocalEnumPrintersLevel2(DWORD Flags, PCWSTR Name, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned, DWORD cchComputerName, PWSTR wszComputerName)
 {
     return ERROR_INVALID_LEVEL;
 }
 
 static DWORD
-_LocalEnumPrintersLevel4(DWORD Flags, PCWSTR Name, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
+_LocalEnumPrintersLevel4(DWORD Flags, PCWSTR Name, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned, DWORD cchComputerName, PWSTR wszComputerName)
 {
     return ERROR_INVALID_LEVEL;
 }
 
 static DWORD
-_LocalEnumPrintersLevel5(DWORD Flags, PCWSTR Name, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
+_LocalEnumPrintersLevel5(DWORD Flags, PCWSTR Name, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned, DWORD cchComputerName, PWSTR wszComputerName)
 {
     return ERROR_INVALID_LEVEL;
 }
@@ -533,9 +573,12 @@ _LocalEnumPrintersLevel5(DWORD Flags, PCWSTR Name, PBYTE pPrinterEnum, DWORD cbB
 BOOL WINAPI
 LocalEnumPrinters(DWORD Flags, LPWSTR Name, DWORD Level, LPBYTE pPrinterEnum, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned)
 {
+    DWORD cchComputerName = 0;
     DWORD dwErrorCode;
+    WCHAR wszComputerName[2 + MAX_COMPUTERNAME_LENGTH + 1 + 1] = { 0 };
 
-    // Do no sanity checks here. This is verified by localspl_apitest!
+    ASSERT(pcbNeeded);
+    ASSERT(pcReturned);
 
     // Begin counting.
     *pcbNeeded = 0;
@@ -558,25 +601,31 @@ LocalEnumPrinters(DWORD Flags, LPWSTR Name, DWORD Level, LPBYTE pPrinterEnum, DW
         goto Cleanup;
     }
 
+    // Check the supplied Name parameter (if any).
+    // This may return a Computer Name string we later prepend to the output.
+    dwErrorCode = _LocalEnumPrintersCheckName(Flags, Name, wszComputerName, &cchComputerName);
+    if (dwErrorCode != ERROR_SUCCESS)
+        goto Cleanup;
+
     if (Level == 0)
     {
-        dwErrorCode = _LocalEnumPrintersLevel0(Flags, Name, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
+        dwErrorCode = _LocalEnumPrintersLevel0(Flags, Name, pPrinterEnum, cbBuf, pcbNeeded, pcReturned, cchComputerName, wszComputerName);
     }
     else if (Level == 1)
     {
-        dwErrorCode = _LocalEnumPrintersLevel1(Flags, Name, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
+        dwErrorCode = _LocalEnumPrintersLevel1(Flags, Name, pPrinterEnum, cbBuf, pcbNeeded, pcReturned, cchComputerName, wszComputerName);
     }
     else if (Level == 2)
     {
-        dwErrorCode = _LocalEnumPrintersLevel2(Flags, Name, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
+        dwErrorCode = _LocalEnumPrintersLevel2(Flags, Name, pPrinterEnum, cbBuf, pcbNeeded, pcReturned, cchComputerName, wszComputerName);
     }
     else if (Level == 4)
     {
-        dwErrorCode = _LocalEnumPrintersLevel4(Flags, Name, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
+        dwErrorCode = _LocalEnumPrintersLevel4(Flags, Name, pPrinterEnum, cbBuf, pcbNeeded, pcReturned, cchComputerName, wszComputerName);
     }
     else if (Level == 5)
     {
-        dwErrorCode = _LocalEnumPrintersLevel5(Flags, Name, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
+        dwErrorCode = _LocalEnumPrintersLevel5(Flags, Name, pPrinterEnum, cbBuf, pcbNeeded, pcReturned, cchComputerName, wszComputerName);
     }
     else
     {
