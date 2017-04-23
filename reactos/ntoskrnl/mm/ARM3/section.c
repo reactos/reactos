@@ -3661,23 +3661,6 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
         }
     }
 
-    if (!(AllocationType & MEM_DOS_LIM))
-    {
-        /* Check for non-allocation-granularity-aligned BaseAddress */
-        if (SafeBaseAddress != ALIGN_DOWN_POINTER_BY(SafeBaseAddress, MM_VIRTMEM_GRANULARITY))
-        {
-           DPRINT("BaseAddress is not at 64-kilobyte address boundary.");
-           return STATUS_MAPPED_ALIGNMENT;
-        }
-
-        /* Do the same for the section offset */
-        if (SafeSectionOffset.LowPart != ALIGN_DOWN_BY(SafeSectionOffset.LowPart, MM_VIRTMEM_GRANULARITY))
-        {
-           DPRINT("SectionOffset is not at 64-kilobyte address boundary.");
-           return STATUS_MAPPED_ALIGNMENT;
-        }
-    }
-
     /* Reference the process */
     Status = ObReferenceObjectByHandle(ProcessHandle,
                                        PROCESS_VM_OPERATION,
@@ -3698,6 +3681,27 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
     {
         ObDereferenceObject(Process);
         return Status;
+    }
+
+    if (!(AllocationType & MEM_DOS_LIM))
+    {
+        /* Check for non-allocation-granularity-aligned BaseAddress */
+        if (SafeBaseAddress != ALIGN_DOWN_POINTER_BY(SafeBaseAddress, MM_VIRTMEM_GRANULARITY))
+        {
+           DPRINT("BaseAddress is not at 64-kilobyte address boundary.");
+           ObDereferenceObject(Section);
+           ObDereferenceObject(Process);
+           return STATUS_MAPPED_ALIGNMENT;
+        }
+
+        /* Do the same for the section offset */
+        if (SafeSectionOffset.LowPart != ALIGN_DOWN_BY(SafeSectionOffset.LowPart, MM_VIRTMEM_GRANULARITY))
+        {
+           DPRINT("SectionOffset is not at 64-kilobyte address boundary.");
+           ObDereferenceObject(Section);
+           ObDereferenceObject(Process);
+           return STATUS_MAPPED_ALIGNMENT;
+        }
     }
 
     /* Now do the actual mapping */
