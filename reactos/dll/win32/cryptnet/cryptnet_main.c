@@ -1028,7 +1028,7 @@ static BOOL WINAPI File_RetrieveEncodedObjectW(LPCWSTR pszURL,
 #ifdef __REACTOS__
             if ((hFile == INVALID_HANDLE_VALUE) && (lstrlenW(components.lpszUrlPath) > 1) && (components.lpszUrlPath[1] != ':'))
 #else
-            if ((hFile == INVALID_HANDLE_VALUE)
+            if (hFile == INVALID_HANDLE_VALUE)
 #endif
             {
                 /* Try again on the current drive */
