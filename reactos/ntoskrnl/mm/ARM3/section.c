@@ -3716,7 +3716,8 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
     if (NT_SUCCESS(Status))
     {
         /* Check if this is an image for the current process */
-        if ((Section->AllocationAttributes & SEC_IMAGE) &&
+        if (MiIsRosSectionObject(Section) &&
+            (Section->AllocationAttributes & SEC_IMAGE) &&
             (Process == PsGetCurrentProcess()) &&
             (Status != STATUS_IMAGE_NOT_AT_BASE))
         {
