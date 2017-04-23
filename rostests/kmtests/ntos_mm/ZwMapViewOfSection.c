@@ -142,6 +142,14 @@ SimpleErrorChecks(HANDLE FileHandleReadOnly, HANDLE FileHandleWriteOnly, HANDLE 
     BaseAddress = (PVOID)((char *)MmSystemRangeStart + 200);
     TestMapView(WriteSectionHandle, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_INVALID_PARAMETER_3, IGNORE);
 
+    //invalid section handle AND unaligned base address
+    BaseAddress = (PVOID)0x00567A20;
+    TestMapView((HANDLE)0xDEADBEEF, NtCurrentProcess(), &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_INVALID_HANDLE, IGNORE);
+
+    //invalid process handle AND unaligned base address
+    BaseAddress = (PVOID)0x00567A20;
+    TestMapView(WriteSectionHandle, (HANDLE)0xDEADBEEF, &BaseAddress, 0, 0, NULL, &ViewSize, ViewUnmap, 0, PAGE_READWRITE, STATUS_INVALID_HANDLE, IGNORE);
+
     //try mapping section to an already mapped address
     Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &AllocBase, 0, &AllocSize, MEM_COMMIT, PAGE_READWRITE);
     if (!skip(NT_SUCCESS(Status), "Cannot allocate memory\n"))
