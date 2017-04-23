@@ -53,16 +53,16 @@ DoStartService(LPWSTR ServiceName,
             lpChar++;
         }
 
-        /* Allocate the arguments vector and add one for the service name */
-        lpArgsVector = LocalAlloc(LMEM_FIXED, (dwArgsCount + 1) * sizeof(LPCWSTR));
+        /*
+         * Allocate the arguments vector.
+         * Do not add the service name here because services.exe does it for us!
+         */
+        lpArgsVector = LocalAlloc(LMEM_FIXED, dwArgsCount * sizeof(LPCWSTR));
         if (!lpArgsVector)
             return FALSE;
 
-        /* Make the service name the first argument */
-        lpArgsVector[0] = ServiceName;
-
         /* Fill the arguments vector */
-        dwArgsCount = 1;
+        dwArgsCount = 0;
         bWhiteSpace = TRUE;
         lpChar = lpStartParams;
         while (*lpChar != 0)

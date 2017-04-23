@@ -54,6 +54,7 @@ typedef struct _MAIN_WND_INFO
 
     ENUM_SERVICE_STATUS_PROCESS *pAllServices;
     ENUM_SERVICE_STATUS_PROCESS *pCurrentService;
+    DWORD NumServices;
 
     INT SelectedItem;/* selection number in the list view */
     INT SortSelection;
@@ -115,9 +116,10 @@ BOOL SetServiceConfig(LPQUERY_SERVICE_CONFIG pServiceConfig, LPWSTR lpServiceNam
 LPWSTR GetServiceDescription(LPWSTR lpServiceName);
 BOOL SetServiceDescription(LPWSTR lpServiceName, LPWSTR lpDescription);
 LPWSTR GetExecutablePath(LPWSTR lpServiceName);
+VOID FreeServiceList(PMAIN_WND_INFO Info);
 BOOL RefreshServiceList(PMAIN_WND_INFO Info);
 BOOL UpdateServiceStatus(ENUM_SERVICE_STATUS_PROCESS* pService);
-BOOL GetServiceList(PMAIN_WND_INFO Info, DWORD *NumServices);
+BOOL GetServiceList(PMAIN_WND_INFO Info);
 
 
 /* propsheet.c */

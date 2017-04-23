@@ -880,10 +880,7 @@ MainWndProc(HWND hwnd,
 
         case WM_CLOSE:
         {
-            HeapFree(ProcessHeap,
-                     0,
-                     Info->pAllServices);
-
+            FreeServiceList(Info);
             DestroyMenu(Info->hShortcutMenu);
             DestroyWindow(hwnd);
         }

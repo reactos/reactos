@@ -13,7 +13,10 @@
 typedef struct _PAGEDATA
 {
     PSERVICEPROPSHEET dlgInfo;
-    BOOL bPageChanged;
+    BOOL bDisplayNameChanged;
+    BOOL bDescriptionChanged;
+    BOOL bBinaryPathChanged;
+    BOOL bStartTypeChanged;
 } PAGEDATA, *PPAGEDATA;
 
 
@@ -53,11 +56,11 @@ SetButtonStates(PSERVICEPROPSHEET dlgInfo,
         EnableWindow (hButton, TRUE);
     }
 
-    if(lpServiceConfig)
-        HeapFree(GetProcessHeap(), 0, lpServiceConfig);
-
     hButton = GetDlgItem(hwndDlg, IDC_START_PARAM);
-    EnableWindow(hButton, (State == SERVICE_STOPPED));
+    EnableWindow(hButton, (State == SERVICE_STOPPED && lpServiceConfig && lpServiceConfig->dwStartType != SERVICE_DISABLED));
+
+    if (lpServiceConfig)
+        HeapFree(GetProcessHeap(), 0, lpServiceConfig);
 
     /* set the main toolbar */
     SetMenuAndButtonStates(dlgInfo->Info);
@@ -210,11 +213,13 @@ InitGeneralPage(PSERVICEPROPSHEET dlgInfo,
 }
 
 VOID
-SaveDlgInfo(PSERVICEPROPSHEET dlgInfo,
+SaveDlgInfo(PPAGEDATA pPageData,
             HWND hwndDlg)
 {
     LPQUERY_SERVICE_CONFIG pServiceConfig = NULL;
-    HWND hList;
+    PWSTR pDisplayName = NULL;
+    PWSTR pDescription;
+    INT nLength;
     DWORD StartUp;
 
     pServiceConfig = HeapAlloc(ProcessHeap,
@@ -224,31 +229,93 @@ SaveDlgInfo(PSERVICEPROPSHEET dlgInfo,
     {
         pServiceConfig->dwServiceType = SERVICE_NO_CHANGE;
         pServiceConfig->dwErrorControl = SERVICE_NO_CHANGE;
+        pServiceConfig->dwStartType = SERVICE_NO_CHANGE;
 
-        hList = GetDlgItem(hwndDlg, IDC_START_TYPE);
-        StartUp = SendMessage(hList,
-                              CB_GETCURSEL,
-                              0,
-                              0);
-        switch (StartUp)
+        if (pPageData->bStartTypeChanged)
         {
-            case 0: pServiceConfig->dwStartType = SERVICE_AUTO_START; break;
-            case 1: pServiceConfig->dwStartType = SERVICE_DEMAND_START; break;
-            case 2: pServiceConfig->dwStartType = SERVICE_DISABLED; break;
+            StartUp = SendDlgItemMessageW(hwndDlg, IDC_START_TYPE, CB_GETCURSEL, 0, 0);
+            switch (StartUp)
+            {
+                case 0:
+                    pServiceConfig->dwStartType = SERVICE_AUTO_START;
+                    break;
+
+                case 1:
+                    pServiceConfig->dwStartType = SERVICE_DEMAND_START;
+                    break;
+                case 2:
+                    pServiceConfig->dwStartType = SERVICE_DISABLED;
+                    break;
+            }
+        }
+
+        if (pPageData->bBinaryPathChanged)
+        {
+            nLength = SendDlgItemMessageW(hwndDlg, IDC_EXEPATH, WM_GETTEXTLENGTH, 0, 0);
+            pServiceConfig->lpBinaryPathName = HeapAlloc(ProcessHeap,
+                                                         HEAP_ZERO_MEMORY,
+                                                         (nLength + 1) * sizeof(WCHAR));
+            if (pServiceConfig->lpBinaryPathName != NULL)
+                SendDlgItemMessageW(hwndDlg, IDC_EXEPATH, WM_GETTEXT, nLength + 1, (LPARAM)pServiceConfig->lpBinaryPathName);
+        }
+
+        if (pPageData->bDisplayNameChanged)
+        {
+            nLength = SendDlgItemMessageW(hwndDlg, IDC_DISP_NAME, WM_GETTEXTLENGTH, 0, 0);
+            pDisplayName = HeapAlloc(ProcessHeap,
+                                     HEAP_ZERO_MEMORY,
+                                     (nLength + 1) * sizeof(WCHAR));
+            if (pDisplayName != NULL)
+            {
+                SendDlgItemMessageW(hwndDlg, IDC_DISP_NAME, WM_GETTEXT, nLength + 1, (LPARAM)pDisplayName);
+
+                if (pPageData->dlgInfo->pService->lpDisplayName)
+                    HeapFree(ProcessHeap, 0, pPageData->dlgInfo->pService->lpDisplayName);
+
+                pPageData->dlgInfo->pService->lpDisplayName = pDisplayName;
+                pServiceConfig->lpDisplayName = pDisplayName;
+            }
         }
 
         if (SetServiceConfig(pServiceConfig,
-                             dlgInfo->pService->lpServiceName,
+                             pPageData->dlgInfo->pService->lpServiceName,
                              NULL))
         {
-            ChangeListViewText(dlgInfo->Info,
-                               dlgInfo->pService,
-                               LVSTARTUP);
+            if (pPageData->bDisplayNameChanged)
+                ChangeListViewText(pPageData->dlgInfo->Info,
+                                   pPageData->dlgInfo->pService,
+                                   LVNAME);
+
+            if (pPageData->bStartTypeChanged)
+                ChangeListViewText(pPageData->dlgInfo->Info,
+                                   pPageData->dlgInfo->pService,
+                                   LVSTARTUP);
         }
 
-        HeapFree(ProcessHeap,
-                 0,
-                 pServiceConfig);
+        if (pServiceConfig->lpBinaryPathName != NULL)
+            HeapFree(ProcessHeap, 0, pServiceConfig->lpBinaryPathName);
+
+        HeapFree(ProcessHeap, 0, pServiceConfig);
+    }
+
+    if (pPageData->bDescriptionChanged)
+    {
+        nLength = SendDlgItemMessageW(hwndDlg, IDC_DESCRIPTION, WM_GETTEXTLENGTH, 0, 0);
+        pDescription = HeapAlloc(ProcessHeap, HEAP_ZERO_MEMORY, (nLength + 1) * sizeof(WCHAR));
+        if (pDescription != NULL)
+        {
+            SendDlgItemMessageW(hwndDlg, IDC_DESCRIPTION, WM_GETTEXT, nLength + 1, (LPARAM)pDescription);
+
+            if (SetServiceDescription(pPageData->dlgInfo->pService->lpServiceName,
+                                      pDescription))
+            {
+                ChangeListViewText(pPageData->dlgInfo->Info,
+                                   pPageData->dlgInfo->pService,
+                                   LVDESC);
+            }
+
+            HeapFree(ProcessHeap, 0, pDescription);
+        }
     }
 }
 
@@ -301,7 +368,31 @@ GeneralPageProc(HWND hwndDlg,
                 case IDC_START_TYPE:
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
-                        pPageData->bPageChanged = TRUE;
+                        pPageData->bStartTypeChanged = TRUE;
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
+
+                case IDC_DISP_NAME:
+                    if (HIWORD(wParam) == EN_CHANGE)
+                    {
+                        pPageData->bDisplayNameChanged = TRUE;
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
+
+                case IDC_DESCRIPTION:
+                    if (HIWORD(wParam) == EN_CHANGE)
+                    {
+                        pPageData->bDescriptionChanged = TRUE;
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
+
+                case IDC_EXEPATH:
+                    if (HIWORD(wParam) == EN_CHANGE)
+                    {
+                        pPageData->bBinaryPathChanged = TRUE;
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
@@ -313,6 +404,8 @@ GeneralPageProc(HWND hwndDlg,
 
                     if (GetDlgItemText(hwndDlg, IDC_START_PARAM, szStartParams, 256) > 0)
                         lpStartParams = szStartParams;
+
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_START_PARAM), FALSE);
 
                     RunActionWithProgress(hwndDlg,
                                           pPageData->dlgInfo->pService->lpServiceName,
@@ -370,17 +463,7 @@ GeneralPageProc(HWND hwndDlg,
                     SendDlgItemMessage(hwndDlg, IDC_DISP_NAME, EM_SETREADONLY, FALSE, 0);
                     SendDlgItemMessage(hwndDlg, IDC_DESCRIPTION, EM_SETREADONLY, FALSE, 0);
                     SendDlgItemMessage(hwndDlg, IDC_EXEPATH, EM_SETREADONLY, FALSE, 0);
-                    break;
-
-                case IDC_DISP_NAME:
-                case IDC_DESCRIPTION:
-                case IDC_EXEPATH:
-                case IDC_START_PARAM:
-                    if (HIWORD(wParam) == EN_CHANGE)
-                    {
-                        pPageData->bPageChanged = TRUE;
-                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                    }
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT), FALSE);
                     break;
             }
             break;
@@ -389,11 +472,17 @@ GeneralPageProc(HWND hwndDlg,
             switch (((LPNMHDR)lParam)->code)
             {
                 case PSN_APPLY:
-                    if (pPageData->bPageChanged)
+                    if (pPageData->bDisplayNameChanged ||
+                        pPageData->bDescriptionChanged ||
+                        pPageData->bBinaryPathChanged ||
+                        pPageData->bStartTypeChanged)
                     {
-                        SaveDlgInfo(pPageData->dlgInfo, hwndDlg);
+                        SaveDlgInfo(pPageData, hwndDlg);
                         SetButtonStates(pPageData->dlgInfo, hwndDlg);
-                        pPageData->bPageChanged = FALSE;
+                        pPageData->bDisplayNameChanged = FALSE;
+                        pPageData->bDescriptionChanged = FALSE;
+                        pPageData->bBinaryPathChanged = FALSE;
+                        pPageData->bStartTypeChanged = FALSE;
                     }
                     break;
             }
