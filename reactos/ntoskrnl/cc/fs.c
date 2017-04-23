@@ -153,6 +153,8 @@ CcPurgeCacheSection (
     }
 
     SharedCacheMap = SectionObjectPointer->SharedCacheMap;
+    if (!SharedCacheMap)
+        return FALSE;
 
     StartOffset = FileOffset != NULL ? FileOffset->QuadPart : 0;
     if (Length == 0 || FileOffset == NULL)
