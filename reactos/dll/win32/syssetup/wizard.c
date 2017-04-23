@@ -1476,11 +1476,24 @@ SetSystemLocalTime(HWND hwnd, PSETUPDATA SetupData)
     return Ret;
 }
 
+
+static VOID
+UpdateLocalSystemTime(HWND hwnd)
+{
+    SYSTEMTIME LocalTime;
+
+    GetLocalTime(&LocalTime);
+    DateTime_SetSystemtime(GetDlgItem(hwnd, IDC_DATEPICKER), GDT_VALID, &LocalTime);
+    DateTime_SetSystemtime(GetDlgItem(hwnd, IDC_TIMEPICKER), GDT_VALID, &LocalTime);
+}
+
+
 static BOOL
 WriteDateTimeSettings(HWND hwndDlg, PSETUPDATA SetupData)
 {
     WCHAR Title[64];
     WCHAR ErrorLocalTime[256];
+
     GetLocalSystemTime(hwndDlg, SetupData);
     SetLocalTimeZone(GetDlgItem(hwndDlg, IDC_TIMEZONELIST),
                      SetupData);
@@ -1504,6 +1517,7 @@ WriteDateTimeSettings(HWND hwndDlg, PSETUPDATA SetupData)
     return TRUE;
 }
 
+
 static INT_PTR CALLBACK
 DateTimePageDlgProc(HWND hwndDlg,
                     UINT uMsg,
@@ -1518,7 +1532,6 @@ DateTimePageDlgProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
             /* Save pointer to the global setup data */
             SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
             SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)SetupData);
@@ -1542,16 +1555,14 @@ DateTimePageDlgProc(HWND hwndDlg,
 
                 SendDlgItemMessage(hwndDlg, IDC_AUTODAYLIGHT, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
             }
+            break;
 
-        }
-        break;
-
+        case WM_TIMER:
+            UpdateLocalSystemTime(hwndDlg);
+            break;
 
         case WM_NOTIFY:
-        {
-            LPNMHDR lpnm = (LPNMHDR)lParam;
-
-            switch (lpnm->code)
+            switch (((LPNMHDR)lParam)->code)
             {
                 case PSN_SETACTIVE:
                     /* Enable the Back and Next buttons */
@@ -1561,13 +1572,17 @@ DateTimePageDlgProc(HWND hwndDlg,
                         SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, SetupData->uFirstNetworkWizardPage);
                         return TRUE;
                     }
+                    SetTimer(hwndDlg, 1, 1000, NULL);
+                    break;
+
+                case PSN_KILLACTIVE:
+                case DTN_DATETIMECHANGE:
+                    KillTimer(hwndDlg, 1);
                     break;
 
                 case PSN_WIZNEXT:
-                {
                     WriteDateTimeSettings(hwndDlg, SetupData);
-                }
-                break;
+                    break;
 
                 case PSN_WIZBACK:
                     SetupData->UnattendSetup = FALSE;
@@ -1576,8 +1591,7 @@ DateTimePageDlgProc(HWND hwndDlg,
                 default:
                     break;
             }
-        }
-        break;
+            break;
 
         case WM_DESTROY:
             DestroyTimeZoneList(SetupData);
