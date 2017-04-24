@@ -293,6 +293,8 @@ PDEVOBJ_vRefreshModeList(
         DPRINT1("FIXME: EngpPopulateDeviceModeList failed, we just destroyed a perfectly good mode list\n");
     }
 
+    ppdev->pdmwDev = pGraphicsDevice->pDevModeList[pGraphicsDevice->iCurrentMode].pdm;
+
     /* Unlock PDEV */
     EngReleaseSemaphore(ppdev->hsemDevLock);
 }
