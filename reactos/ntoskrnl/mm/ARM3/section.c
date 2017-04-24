@@ -1956,7 +1956,7 @@ MiFlushTbAndCapture(IN PMMVAD FoundVad,
                     IN PMMPTE PointerPte,
                     IN ULONG ProtectionMask,
                     IN PMMPFN Pfn1,
-                    IN BOOLEAN CaptureDirtyBit)
+                    IN BOOLEAN UpdateDirty)
 {
     MMPTE TempPte, PreviousPte;
     KIRQL OldIrql;
@@ -2032,7 +2032,13 @@ MiFlushTbAndCapture(IN PMMVAD FoundVad,
     //
     // Windows updates the relevant PFN1 information, we currently don't.
     //
-    if (CaptureDirtyBit) DPRINT1("Warning, not handling dirty bit\n");
+    if (UpdateDirty && PreviousPte.u.Hard.Dirty)
+    {
+        if (!Pfn1->u3.e1.Modified)
+        {
+            DPRINT1("FIXME: Mark PFN as dirty\n");
+        }
+    }
 
     //
     // Not supported in ARM3
