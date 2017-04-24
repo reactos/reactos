@@ -170,7 +170,7 @@ AddCodePage(
         iItem = 0;
     if (iDupItem != CB_ERR)
         return;
-    iItem = (INT)SendMessageW(hWndList, CB_INSERTSTRING, iItem, (LPARAM)CPInfo.CodePageName);
+    iItem = (UINT)SendMessageW(hWndList, CB_INSERTSTRING, iItem, (LPARAM)CPInfo.CodePageName);
     if (iItem != CB_ERR && iItem != CB_ERRSPACE)
         iItem = SendMessageW(hWndList, CB_SETITEMDATA, iItem, CodePage);
 }
