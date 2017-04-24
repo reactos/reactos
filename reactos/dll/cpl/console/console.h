@@ -2,6 +2,7 @@
 #define CONSOLE_H__
 
 #include <stdio.h>
+#include <wchar.h>
 
 #define WIN32_NO_STATUS
 
@@ -12,9 +13,10 @@
 #include <winreg.h>
 #include <winuser.h>
 #include <wincon.h>
-#include <wchar.h>
 #include <commctrl.h>
 #include <cpl.h>
+
+#include <strsafe.h>
 
 #include "resource.h"
 
