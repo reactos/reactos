@@ -12,6 +12,7 @@
 #include <winreg.h>
 #include <winuser.h>
 #include <wincon.h>
+#include <wchar.h>
 #include <commctrl.h>
 #include <cpl.h>
 
