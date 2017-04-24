@@ -98,7 +98,7 @@ BEGIN
     AUTOCHECKBOX "Émettre un son lors de l'activation/désactivation d'une fonctionnalité", IDC_NOTIFICATION_SOUND,
                  12, 90, 222, 14
     GROUPBOX "Périphériques Touches série", -1, 6, 115, 234, 47
-    LTEXT "Les périphériques Touches série représentent un une alternative pour accéder aux fonctionnalités du clavier et de la souris.",
+    LTEXT "Les périphériques Touches série représentent une alternative pour accéder aux fonctionnalités du clavier et de la souris.",
           -1, 12, 124, 222, 20
     AUTOCHECKBOX "U&tiliser les touches série", IDC_SERIAL_BOX, 12, 142, 126, 14
     PUSHBUTTON "&Paramètres", IDC_SERIAL_BUTTON, 144, 142, 90, 14
