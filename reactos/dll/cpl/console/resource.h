@@ -21,9 +21,10 @@
 #define IDC_UPDOWN_NUM_BUFFER        206
 #define IDC_RADIO_SMALL_CURSOR       207
 #define IDC_RADIO_MEDIUM_CURSOR      208
-#define	IDC_RADIO_LARGE_CURSOR       209
-#define	IDC_RADIO_DISPLAY_WINDOW     210
+#define IDC_RADIO_LARGE_CURSOR       209
+#define IDC_RADIO_DISPLAY_WINDOW     210
 #define IDC_RADIO_DISPLAY_FULL       211
+#define IDL_CODEPAGE                 212
 
 /* Apply dialog */
 #define IDC_RADIO_APPLY_ALL     300

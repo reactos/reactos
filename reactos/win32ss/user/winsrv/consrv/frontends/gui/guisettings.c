@@ -156,7 +156,9 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
             pSharedInfo->ScreenAttributes = DEFAULT_SCREEN_ATTRIB;
             pSharedInfo->PopupAttributes  = DEFAULT_POPUP_ATTRIB ;
         }
-        /// pSharedInfo->CodePage;
+
+        /* We display the output code page only */
+        pSharedInfo->CodePage = Console->OutputCodePage;
 
         /* GUI Information */
         wcsncpy(pSharedInfo->FaceName, GuiData->GuiInfo.FaceName, LF_FACESIZE);
@@ -317,7 +319,7 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
         ConInfo.HistoryBufferSize = pConInfo->HistoryBufferSize;
         ConInfo.NumberOfHistoryBuffers = pConInfo->NumberOfHistoryBuffers;
         ConInfo.HistoryNoDup = !!pConInfo->HistoryNoDup;
-        ConInfo.CodePage = pConInfo->CodePage;
+        ConInfo.CodePage = pConInfo->CodePage; // Done in ConSrvApplyUserSettings
 #endif
 
         /*
