@@ -238,7 +238,6 @@ EnumDisplaySettingsExA(
         COPYS(dmDeviceName, CCHDEVICENAME);
         COPYN(dmSpecVersion);
         COPYN(dmDriverVersion);
-        COPYN(dmDriverExtra);
         COPYN(dmFields);
         COPYN(dmPosition.x);
         COPYN(dmPosition.y);
@@ -288,7 +287,9 @@ EnumDisplaySettingsExA(
                 lpDevMode->dmDriverExtra = lpExtendedDevMode->dmDriverExtra;
 
             /* Copy extra data */
-            RtlCopyMemory(lpDevMode + OldSize, lpExtendedDevMode + 1, lpDevMode->dmDriverExtra);
+            RtlCopyMemory((PUCHAR)lpDevMode + OldSize,
+                          lpExtendedDevMode + 1,
+                          lpDevMode->dmDriverExtra);
         }
 
         /* If the size of source structure is less, than used, we clean unsupported flags */
@@ -363,14 +364,16 @@ EnumDisplaySettingsExW(
     Status = NtUserEnumDisplaySettings(pusDeviceName, iModeNum, lpExtendedDevMode, dwFlags);
     if (NT_SUCCESS(Status))
     {
-        /* Store old structure size */
+        /* Store old structure sizes */
         WORD OldSize = lpDevMode->dmSize;
+        WORD OldDriverExtra = lpDevMode->dmDriverExtra;
 
         /* Copy general data */
         RtlCopyMemory(lpDevMode, lpExtendedDevMode, OldSize);
 
-        /* Restore old size */
+        /* Restore old sizes */
         lpDevMode->dmSize = OldSize;
+        lpDevMode->dmDriverExtra = OldDriverExtra;
 
         /* Extra data presented? */
         if (lpDevMode->dmDriverExtra && lpExtendedDevMode->dmDriverExtra)
@@ -380,7 +383,9 @@ EnumDisplaySettingsExW(
                 lpDevMode->dmDriverExtra = lpExtendedDevMode->dmDriverExtra;
 
             /* Copy extra data */
-            RtlCopyMemory(lpDevMode + OldSize, lpExtendedDevMode + 1, lpDevMode->dmDriverExtra);
+            RtlCopyMemory((PUCHAR)lpDevMode + OldSize,
+                          lpExtendedDevMode + 1,
+                          lpDevMode->dmDriverExtra);
         }
 
         /* If the size of source structure is less, than used, we clean unsupported flags */
