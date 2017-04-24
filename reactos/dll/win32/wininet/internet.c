@@ -2388,7 +2388,11 @@ static DWORD query_global_option(DWORD option, void *buffer, DWORD *size, BOOL u
         if((ret = INTERNET_LoadProxySettings(&pi)))
             return ret;
 
+#ifdef __REACTOS__
+        WARN("INTERNET_OPTION_PER_CONNECTION_OPTION stub\n");
+#else
         FIXME("INTERNET_OPTION_PER_CONNECTION_OPTION stub\n");
+#endif
 
         if (*size < sizeof(INTERNET_PER_CONN_OPTION_LISTW)) {
             FreeProxyInfo(&pi);
@@ -2447,6 +2451,12 @@ static DWORD query_global_option(DWORD option, void *buffer, DWORD *size, BOOL u
                 memset(&optionW->Value, 0, sizeof(optionW->Value));
                 break;
 
+#ifdef __REACTOS__
+            case INTERNET_PER_CONN_FLAGS_UI:
+                WARN("Unhandled dwOption %d\n", optionW->dwOption);
+                break;
+
+#endif
             default:
                 FIXME("Unknown dwOption %d\n", optionW->dwOption);
                 res = ERROR_INVALID_PARAMETER;
