@@ -938,7 +938,11 @@ TRACKBAR_Refresh (TRACKBAR_INFO *infoPtr, HDC hdcDst)
         if (GetWindowTheme (infoPtr->hwndSelf)) {
             DrawThemeParentBackground (infoPtr->hwndSelf, hdc, 0);
         }
+#ifndef __REACTOS__
         else {
+#else
+        {
+#endif
             HBRUSH brush = (HBRUSH)SendMessageW(infoPtr->hwndNotify, WM_CTLCOLORSTATIC,
                     (WPARAM)hdc, (LPARAM)infoPtr->hwndSelf);
             FillRect (hdc, &rcClient, brush ? brush : GetSysColorBrush(COLOR_BTNFACE));

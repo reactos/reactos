@@ -113,6 +113,8 @@ static void PB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
     WCHAR *text = get_button_text(hwnd);
     PBUTTON_DATA pdata = _GetButtonData(hwnd);
     SIZE ImageSize;
+    HWND parent;
+    HBRUSH hBrush;
 
     GetClientRect(hwnd, &bgRect);
     GetThemeBackgroundContentRect(theme, hDC, BP_PUSHBUTTON, state, &bgRect, &textRect);
@@ -122,6 +124,11 @@ static void PB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
         if (IsThemeBackgroundPartiallyTransparent(theme, BP_PUSHBUTTON, state))
             DrawThemeParentBackground(hwnd, hDC, NULL);
     }
+
+    parent = GetParent(hwnd);
+    if (!parent) parent = hwnd;
+    hBrush = (HBRUSH)SendMessageW( parent, WM_CTLCOLORBTN, (WPARAM)hDC, (LPARAM)hwnd );
+    FillRect( hDC, &bgRect, hBrush );
 
     DrawThemeBackground(theme, hDC, BP_PUSHBUTTON, state, &bgRect, NULL);
 
@@ -186,6 +193,8 @@ static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
     WCHAR *text = get_button_text(hwnd);
     LOGFONTW lf;
     BOOL created_font = FALSE;
+    HWND parent;
+    HBRUSH hBrush;
 
     HRESULT hr = GetThemeFont(theme, hDC, part, state, TMT_FONT, &lf);
     if (SUCCEEDED(hr)) {
@@ -206,6 +215,21 @@ static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
         sz.cx = sz.cy = 13;
 
     GetClientRect(hwnd, &bgRect);
+
+    if (prfFlag == 0)
+    {
+        DrawThemeParentBackground(hwnd, hDC, NULL);
+    }
+
+    parent = GetParent(hwnd);
+    if (!parent) parent = hwnd;
+    hBrush = (HBRUSH)SendMessageW(parent, WM_CTLCOLORSTATIC,
+                                 (WPARAM)hDC, (LPARAM)hwnd);
+    if (!hBrush) /* did the app forget to call defwindowproc ? */
+        hBrush = (HBRUSH)DefWindowProcW(parent, WM_CTLCOLORSTATIC,
+                                        (WPARAM)hDC, (LPARAM)hwnd );
+    FillRect( hDC, &bgRect, hBrush );
+
     GetThemeBackgroundContentRect(theme, hDC, part, state, &bgRect, &textRect);
 
     if (dtFlags & DT_SINGLELINE) /* Center the checkbox / radio button to the text. */
@@ -215,11 +239,6 @@ static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
     bgRect.bottom = bgRect.top + sz.cy;
     bgRect.right = bgRect.left + sz.cx;
     textRect.left = bgRect.right + 6;
-
-    if (prfFlag == 0)
-    {
-        DrawThemeParentBackground(hwnd, hDC, NULL);
-    }
 
     DrawThemeBackground(theme, hDC, part, state, &bgRect, NULL);
     if (text)
@@ -257,6 +276,9 @@ static void GB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
     LOGFONTW lf;
     HFONT font, hPrevFont = NULL;
     BOOL created_font = FALSE;
+    HWND parent;
+    HBRUSH hBrush;
+    RECT clientRect;
 
     HRESULT hr = GetThemeFont(theme, hDC, BP_GROUPBOX, state, TMT_FONT, &lf);
     if (SUCCEEDED(hr)) {
@@ -295,6 +317,16 @@ static void GB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
         if (IsThemeBackgroundPartiallyTransparent(theme, BP_GROUPBOX, state))
             DrawThemeParentBackground(hwnd, hDC, NULL);
     }
+
+    parent = GetParent(hwnd);
+    if (!parent) parent = hwnd;
+    hBrush = (HBRUSH)SendMessageW(parent, WM_CTLCOLORSTATIC,
+                                  (WPARAM)hDC, (LPARAM)hwnd);
+    if (!hBrush) /* did the app forget to call defwindowproc ? */
+        hBrush = (HBRUSH)DefWindowProcW(parent, WM_CTLCOLORSTATIC,
+                                       (WPARAM)hDC, (LPARAM)hwnd );
+    GetClientRect(hwnd, &clientRect);
+    FillRect( hDC, &clientRect, hBrush );
 
     DrawThemeBackground(theme, hDC, BP_GROUPBOX, state, &bgRect, NULL);
 
