@@ -33,7 +33,7 @@ DEBUG_CHANNEL(nls);
 extern int wine_fold_string(int flags, const WCHAR *src, int srclen, WCHAR *dst, int dstlen);
 extern int wine_get_sortkey(int flags, const WCHAR *src, int srclen, char *dst, int dstlen);
 extern int wine_compare_string(int flags, const WCHAR *str1, int len1, const WCHAR *str2, int len2);
-extern DWORD GetLocalisedText(DWORD dwResId, WCHAR *lpszDest, DWORD dwDestSize);
+extern UINT GetLocalisedText(IN UINT uID, IN LPWSTR lpszDest, IN UINT cchDest);
 #define NLSRC_OFFSET 5000 /* FIXME */
 
 extern HMODULE kernel32_handle;
@@ -3093,33 +3093,16 @@ BOOL WINAPI EnumUILanguagesW(UILANGUAGE_ENUMPROCW pUILangEnumProc, DWORD dwFlags
 static int
 NLS_GetGeoFriendlyName(GEOID Location, LPWSTR szFriendlyName, int cchData)
 {
-    LPWSTR szBuffer;
-    DWORD dwSize;
-
     /* FIXME: move *.nls resources out of kernel32 into locale.nls */
     Location += NLSRC_OFFSET;
     Location &= 0xFFFF;
 
-    if(cchData == 0)
+    if (cchData == 0)
         return GetLocalisedText(Location, NULL, 0);
 
-    dwSize = cchData * sizeof(WCHAR);
-    szBuffer = HeapAlloc(GetProcessHeap(), 0, dwSize);
-
-    if (!szBuffer)
-    {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return 0;
-    }
-
-    if(GetLocalisedText(Location, szBuffer, dwSize))
-    {
-        memcpy(szFriendlyName, szBuffer, dwSize);
-        HeapFree(GetProcessHeap(), 0, szBuffer);
+    if (GetLocalisedText(Location, szFriendlyName, (UINT)cchData))
         return strlenW(szFriendlyName) + 1;
-    }
 
-    HeapFree(GetProcessHeap(), 0, szBuffer);
     return 0;
 }
 

@@ -1714,18 +1714,30 @@ static INT WideCharToUtf7(const WCHAR *src, int srclen, char *dst, int dstlen)
     return dest_index;
 }
 
-DWORD
-GetLocalisedText(DWORD dwResId, WCHAR *lpszDest, DWORD dwDestSize)
+/*
+ * A function similar to LoadStringW, but adapted for usage by GetCPInfoExW
+ * and GetGeoInfoW. It uses the current user localization, otherwise falls back
+ * to English (US). Contrary to LoadStringW which always saves the loaded string
+ * into the user-given buffer, truncating the string if needed, this function
+ * returns instead an ERROR_INSUFFICIENT_BUFFER error code if the user buffer
+ * is not large enough.
+ */
+UINT
+GetLocalisedText(
+    IN UINT uID,
+    IN LPWSTR lpszDest,
+    IN UINT cchDest)
 {
     HRSRC hrsrc;
+    HGLOBAL hmem;
     LCID lcid;
     LANGID langId;
-    DWORD dwId;
+    const WCHAR *p;
+    UINT i;
 
-    if (dwResId == 37)
-        dwId = dwResId * 100;
-    else
-        dwId = dwResId;
+    /* See HACK in winnls/lang/xx-XX.rc files */
+    if (uID == 37)
+        uID = uID * 100;
 
     lcid = GetUserDefaultLCID();
     lcid = ConvertDefaultLocale(lcid);
@@ -1737,53 +1749,60 @@ GetLocalisedText(DWORD dwResId, WCHAR *lpszDest, DWORD dwDestSize)
 
     hrsrc = FindResourceExW(hCurrentModule,
                             (LPWSTR)RT_STRING,
-                            MAKEINTRESOURCEW((dwId >> 4) + 1),
+                            MAKEINTRESOURCEW((uID >> 4) + 1),
                             langId);
 
-    /* english fallback */
-    if(!hrsrc)
+    /* English fallback */
+    if (!hrsrc)
     {
         hrsrc = FindResourceExW(hCurrentModule,
-                            (LPWSTR)RT_STRING,
-                            MAKEINTRESOURCEW((dwId >> 4) + 1),
-                            MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US));
+                                (LPWSTR)RT_STRING,
+                                MAKEINTRESOURCEW((uID >> 4) + 1),
+                                MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US));
     }
 
-    if (hrsrc)
+    if (!hrsrc)
+        goto NotFound;
+
+    hmem = LoadResource(hCurrentModule, hrsrc);
+    if (!hmem)
+        goto NotFound;
+
+    p = LockResource(hmem);
+
+    for (i = 0; i < (uID & 0x0F); i++)
+        p += *p + 1;
+
+    /* Needed for GetGeoInfo(): return the needed string size including the NULL terminator */
+    if (cchDest == 0)
+        return *p + 1;
+    /* Needed for GetGeoInfo(): bail out if the user buffer is not large enough */
+    if (*p + 1 > cchDest)
     {
-        HGLOBAL hmem = LoadResource(hCurrentModule, hrsrc);
-
-        if (hmem)
-        {
-            const WCHAR *p;
-            unsigned int i;
-            unsigned int len;
-
-            p = LockResource(hmem);
-
-            for (i = 0; i < (dwId & 0x0f); i++) p += *p + 1;
-
-            if(dwDestSize == 0)
-                return *p + 1;
-
-            len = *p * sizeof(WCHAR);
-
-            if(len + sizeof(WCHAR) > dwDestSize)
-            {
-                SetLastError(ERROR_INSUFFICIENT_BUFFER);
-                return FALSE;
-            }
-
-            memcpy(lpszDest, p + 1, len);
-            lpszDest[*p] = '\0';
-
-            return TRUE;
-        }
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return 0;
     }
 
-    DPRINT1("Resource not found: dwResId = %lu\n", dwResId);
+    i = *p;
+    if (i > 0)
+    {
+        memcpy(lpszDest, p + 1, i * sizeof(WCHAR));
+        lpszDest[i] = L'\0';
+        return i;
+    }
+#if 0
+    else
+    {
+        if (cchDest >= 1)
+            lpszDest[0] = L'\0';
+        /* Fall-back */
+    }
+#endif
+
+NotFound:
+    DPRINT1("Resource not found: uID = %lu\n", uID);
     SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
+    return 0;
 }
 
 /*
@@ -1849,7 +1868,7 @@ GetCPInfoExW(UINT CodePage,
              DWORD dwFlags,
              LPCPINFOEXW lpCPInfoEx)
 {
-    if (!GetCPInfo(CodePage, (LPCPINFO) lpCPInfoEx))
+    if (!GetCPInfo(CodePage, (LPCPINFO)lpCPInfoEx))
         return FALSE;
 
     switch(CodePage)
@@ -1858,7 +1877,9 @@ GetCPInfoExW(UINT CodePage,
         {
             lpCPInfoEx->CodePage = CP_UTF7;
             lpCPInfoEx->UnicodeDefaultChar = 0x3f;
-            return GetLocalisedText((DWORD)CodePage, lpCPInfoEx->CodePageName, sizeof(lpCPInfoEx->CodePageName)) != 0;
+            return GetLocalisedText(lpCPInfoEx->CodePage,
+                                    lpCPInfoEx->CodePageName,
+                                    ARRAYSIZE(lpCPInfoEx->CodePageName)) != 0;
         }
         break;
 
@@ -1866,7 +1887,9 @@ GetCPInfoExW(UINT CodePage,
         {
             lpCPInfoEx->CodePage = CP_UTF8;
             lpCPInfoEx->UnicodeDefaultChar = 0x3f;
-            return GetLocalisedText((DWORD)CodePage, lpCPInfoEx->CodePageName, sizeof(lpCPInfoEx->CodePageName)) != 0;
+            return GetLocalisedText(lpCPInfoEx->CodePage,
+                                    lpCPInfoEx->CodePageName,
+                                    ARRAYSIZE(lpCPInfoEx->CodePageName)) != 0;
         }
 
         default:
@@ -1876,14 +1899,16 @@ GetCPInfoExW(UINT CodePage,
             CodePageEntry = IntGetCodePageEntry(CodePage);
             if (CodePageEntry == NULL)
             {
-                DPRINT1("Could not get CodePage Entry! CodePageEntry = 0\n");
+                DPRINT1("Could not get CodePage Entry! CodePageEntry = NULL\n");
                 SetLastError(ERROR_INVALID_PARAMETER);
                 return FALSE;
             }
 
             lpCPInfoEx->CodePage = CodePageEntry->CodePageTable.CodePage;
             lpCPInfoEx->UnicodeDefaultChar = CodePageEntry->CodePageTable.UniDefaultChar;
-            return GetLocalisedText(CodePageEntry->CodePageTable.CodePage, lpCPInfoEx->CodePageName, sizeof(lpCPInfoEx->CodePageName)) != 0;
+            return GetLocalisedText(lpCPInfoEx->CodePage,
+                                    lpCPInfoEx->CodePageName,
+                                    ARRAYSIZE(lpCPInfoEx->CodePageName)) != 0;
         }
         break;
     }
