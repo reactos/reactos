@@ -85,6 +85,9 @@ typedef struct _THEME_FILE {
 
 typedef struct _UXINI_FILE *PUXINI_FILE;
 
+HRESULT UXTHEME_LoadImage(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, const RECT *pRect, BOOL glyph,
+                          HBITMAP *hBmp, RECT *bmpRect, BOOL* hasImageAlpha);
+
 BOOL MSSTYLES_LookupProperty(LPCWSTR pszPropertyName, int *dwPrimitive, int *dwId);
 BOOL MSSTYLES_LookupEnum(LPCWSTR pszValueName, int dwEnum, int *dwValue);
 BOOL MSSTYLES_LookupPartState(LPCWSTR pszClass, LPCWSTR pszPart, LPCWSTR pszState, int *iPartId, int *iStateId);
@@ -137,6 +140,8 @@ typedef struct _WND_CONTEXT
     BOOL HasThemeRgn;
     BOOL UpdatingRgn;
     BOOL DirtyThemeRegion;
+    HBRUSH hTabBackgroundBrush;
+    HBITMAP hTabBackgroundBmp;
 
     BOOL SCROLL_trackVertical;
     enum SCROLL_HITTEST SCROLL_trackHitTest;

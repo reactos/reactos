@@ -61,7 +61,7 @@ BOOL WINAPI IsThemeDialogTextureEnabled(HWND hwnd)
     dwDialogTextureFlags = HandleToUlong( GetPropW( hwnd, (LPCWSTR)MAKEINTATOM(atDialogThemeEnabled) ));
     if (dwDialogTextureFlags == 0) 
         /* Means EnableThemeDialogTexture wasn't called for this dialog */
-        return TRUE;
+        return FALSE;
 
     return (dwDialogTextureFlags & ETDT_ENABLE) && !(dwDialogTextureFlags & ETDT_DISABLE);
 }
@@ -224,7 +224,7 @@ static PTHEME_PROPERTY UXTHEME_SelectImage(HTHEME hTheme, HDC hdc, int iPartId, 
  *
  * Load image for part/state
  */
-static HRESULT UXTHEME_LoadImage(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, const RECT *pRect, BOOL glyph,
+HRESULT UXTHEME_LoadImage(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, const RECT *pRect, BOOL glyph,
                           HBITMAP *hBmp, RECT *bmpRect, BOOL* hasImageAlpha)
 {
     int imagelayout = IL_HORIZONTAL;
