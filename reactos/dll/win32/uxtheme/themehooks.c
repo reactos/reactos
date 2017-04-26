@@ -60,6 +60,8 @@ void ThemeDestroyWndContext(HWND hWnd)
 
     if (pContext->hTabBackgroundBrush != NULL)
     {
+        CloseThemeData(GetWindowTheme(hWnd));
+
         DeleteObject(pContext->hTabBackgroundBrush);
         pContext->hTabBackgroundBrush = NULL;
     }
@@ -281,7 +283,7 @@ ThemePostWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_PTR
         {
             return OnPostWinPosChanged(hWnd, (WINDOWPOS*)lParam);
         }
-        case WM_DESTROY:
+        case WM_NCDESTROY:
         {
             ThemeDestroyWndContext(hWnd);
             return 0;
@@ -304,10 +306,6 @@ HRESULT GetDiaogTextureBrush(HTHEME theme, HWND hwnd, HDC hdc, HBRUSH* result, B
         HBITMAP hbmp;
         RECT dummy, bmpRect;
         BOOL hasImageAlpha;
-        //HTHEME theme = GetWindowTheme(hwnd);
-        theme = MSSTYLES_OpenThemeClass(ActiveThemeFile, NULL, L"TAB");
-        if (!theme)
-            return E_FAIL;
 
         UXTHEME_LoadImage(theme, 0, TABP_BODY, 0, &dummy, FALSE, &hbmp, &bmpRect, &hasImageAlpha);
         if (changeOrigin)
@@ -384,7 +382,7 @@ ThemeDlgPostWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_
             HWND hwndTarget = (HWND)lParam;
             HDC hdc = (HDC)wParam;
             HBRUSH* phbrush = (HBRUSH*)ret;
-            HTHEME theme = GetWindowTheme ( hWnd );
+            HTHEME hTheme;
 
             if (!IsAppThemed())
                 break;
@@ -392,7 +390,14 @@ ThemeDlgPostWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_
             if (!IsThemeDialogTextureEnabled (hWnd))
                 break;
 
-            GetDiaogTextureBrush(theme, hwndTarget, hdc, phbrush, Msg != WM_CTLCOLORDLG);
+            hTheme = GetWindowTheme(hWnd);
+            if (!hTheme)
+                hTheme = OpenThemeData(hWnd, L"TAB");
+
+            if (!hTheme)
+                break;
+
+            GetDiaogTextureBrush(hTheme, hwndTarget, hdc, phbrush, Msg != WM_CTLCOLORDLG);
 
 #if 1 
             {
@@ -491,7 +496,7 @@ ThemeInitApiHook(UAPIHK State, PUSERAPIHOOK puah)
     puah->DefWndProcArray.Size = UAHOWP_MAX_SIZE;
     puah->WndProcArray.MsgBitArray = gabMSGPmessages;
     puah->WndProcArray.Size = UAHOWP_MAX_SIZE;
-    puah->DlgProcArray.MsgBitArray = gabMSGPmessages;
+    puah->DlgProcArray.MsgBitArray = gabDLGPmessages;
     puah->DlgProcArray.Size = UAHOWP_MAX_SIZE;
 
     puah->SetWindowRgn = ThemeSetWindowRgn;
