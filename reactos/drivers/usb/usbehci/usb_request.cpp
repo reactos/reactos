@@ -615,8 +615,9 @@ CUSBRequest::InitDescriptor(
     do
     {
         //
-        // get address
+        // get address (HACK)
         //
+        *(volatile char *)TransferBuffer;
         Address = MmGetPhysicalAddress(TransferBuffer);
 
         //
