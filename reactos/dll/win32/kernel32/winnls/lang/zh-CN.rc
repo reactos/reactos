@@ -191,6 +191,7 @@ BEGIN
     32+NLSRC_OFFSET "巴西"
     34+NLSRC_OFFSET "不丹"
     35+NLSRC_OFFSET "保加利亚"
+    37+NLSRC_OFFSET "Brunei"
     38+NLSRC_OFFSET "布隆迪"
     39+NLSRC_OFFSET "加拿大"
     40+NLSRC_OFFSET "柬埔寨"
