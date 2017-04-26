@@ -786,7 +786,7 @@ CUSBRequest::BuildIsochronousEndpoint(
         //
         // get physical page (HACK)
         //
-        *(volatile char *)TransferBuffer;
+        *(volatile char *)Buffer;
         Page = MmGetPhysicalAddress(Buffer).LowPart;
 
         //
