@@ -324,7 +324,7 @@ co_CallHook( INT HookId,
              WPARAM wParam,
              LPARAM lParam)
 {
-    LRESULT Result;
+    LRESULT Result = 0;
     PHOOK phk;
     PHOOKPACK pHP = (PHOOKPACK)lParam;
 
