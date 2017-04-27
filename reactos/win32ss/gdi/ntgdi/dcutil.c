@@ -241,6 +241,9 @@ GreSetBrushOrg(
         *pptOut = pdc->pdcattr->ptlBrushOrigin;
     }
 
+    pdc->pdcattr->ptlBrushOrigin.x = x;
+    pdc->pdcattr->ptlBrushOrigin.y = y;
+
     DC_vSetBrushOrigin(pdc, x, y);
 
     DC_UnlockDc(pdc);
