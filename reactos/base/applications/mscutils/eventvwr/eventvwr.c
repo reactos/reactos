@@ -1271,7 +1271,7 @@ GetEventUserName(IN PEVENTLOGRECORD pelr,
     SID_NAME_USE peUse;
     DWORD cchName = ARRAYSIZE(szName);
     DWORD cchDomain = ARRAYSIZE(szDomain);
-    BOOL Success;
+    BOOL Success = FALSE;
 
     /* Point to the SID */
     pCurrentSid = (PSID)((LPBYTE)pelr + pelr->UserSidOffset);
