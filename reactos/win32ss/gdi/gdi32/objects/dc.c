@@ -1426,7 +1426,7 @@ GdiSelectPen(
     pdcattr = GdiGetDcAttr(hdc);
     if (pdcattr == NULL)
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
+        SetLastError(ERROR_INVALID_HANDLE);
         return NULL;
     }
 
