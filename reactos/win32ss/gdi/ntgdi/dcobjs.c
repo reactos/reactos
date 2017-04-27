@@ -168,40 +168,30 @@ NtGdiSetBrushOrg(
     _In_ INT y,
     _Out_opt_ LPPOINT pptOut)
 {
-    PDC pdc;
 
-    /* Lock the DC */
-    pdc = DC_LockDc(hdc);
-    if (pdc == NULL)
+    POINT ptOut;
+                /* Call the internal function */
+    BOOL  Ret = GreSetBrushOrg( hdc, x, y, &ptOut);
+    if (Ret)
     {
-        EngSetLastError(ERROR_INVALID_HANDLE);
-        return FALSE;
+       /* Check if the old origin was requested */
+       if (pptOut != NULL)
+       {
+           /* Enter SEH for buffer transfer */
+           _SEH2_TRY
+           {
+               /* Probe and copy the old origin */
+               ProbeForWrite(pptOut, sizeof(POINT), 1);
+               *pptOut = ptOut;
+           }
+           _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+           {
+               _SEH2_YIELD(return FALSE);
+           }
+           _SEH2_END;
+       }
     }
-
-    /* Check if the old origin was requested */
-    if (pptOut != NULL)
-    {
-        /* Enter SEH for buffer transfer */
-        _SEH2_TRY
-        {
-            /* Probe and copy the old origin */
-            ProbeForWrite(pptOut, sizeof(POINT), 1);
-            *pptOut = pdc->pdcattr->ptlBrushOrigin;
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            DC_UnlockDc(pdc);
-            _SEH2_YIELD(return FALSE);
-        }
-        _SEH2_END;
-    }
-
-    /* Call the internal function */
-    DC_vSetBrushOrigin(pdc, x, y);
-
-    /* Unlock the DC and return success */
-    DC_UnlockDc(pdc);
-    return TRUE;
+    return Ret;
 }
 
 HPALETTE
