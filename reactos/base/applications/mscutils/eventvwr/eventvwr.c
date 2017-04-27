@@ -1261,7 +1261,7 @@ GetEventType(IN WORD dwEventType,
 
 BOOL
 GetEventUserName(IN PEVENTLOGRECORD pelr,
-                 IN OUT PSID pLastSid,
+                 IN OUT PSID *pLastSid,
                  OUT PWCHAR pszUser) // TODO: Add IN DWORD BufLen
 {
     PSID pCurrentSid;
@@ -1278,10 +1278,10 @@ GetEventUserName(IN PEVENTLOGRECORD pelr,
 
     if (!IsValidSid(pCurrentSid))
     {
-        pLastSid = NULL;
+        *pLastSid = NULL;
         return FALSE;
     }
-    else if (pLastSid && EqualSid(pLastSid, pCurrentSid))
+    else if (*pLastSid && EqualSid(*pLastSid, pCurrentSid))
     {
         return TRUE;
     }
@@ -1325,7 +1325,7 @@ GetEventUserName(IN PEVENTLOGRECORD pelr,
         }
     }
 
-    pLastSid = Success ? pCurrentSid : NULL;
+    *pLastSid = Success ? pCurrentSid : NULL;
 
     return Success;
 }
@@ -1604,7 +1604,7 @@ EnumEventsThread(IN LPVOID lpParameter)
             GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &time, NULL, szLocalTime, ARRAYSIZE(szLocalTime));
 
             /* Get the username that generated the event, and filter it */
-            lpszUsername = GetEventUserName(pEvlrTmp, pLastSid, szUsername) ? szUsername : szNoUsername;
+            lpszUsername = GetEventUserName(pEvlrTmp, &pLastSid, szUsername) ? szUsername : szNoUsername;
 
             if (!FilterByString(EventLogFilter->Users, lpszUsername))
                 goto SkipEvent;
