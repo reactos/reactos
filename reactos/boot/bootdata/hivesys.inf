@@ -1464,8 +1464,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\swenum","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\swenum","Type",0x00010001,0x00000001
 
 ; Audio Service
-HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","DisplayName",0x00000000,"Audio Service"
-HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","Description",0x00000000,"Provides audio facilities to applications"
+HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","DisplayName",0x00000000, "%AUDIO_SERVICE%"
+HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","Description",0x00000000,"%AUDIO_SERVICE_DESCRIPTION%"
 HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","Group",0x00000000,"Audio"
 HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","ImagePath",0x00020000,"%SystemRoot%\system32\audiosrv.exe"
@@ -1474,8 +1474,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","Start",0x00010001,0x000000
 HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","Type",0x00010001,0x00000010
 
 ; Background Intelligent Transfer Service (BITS)
-HKLM,"SYSTEM\CurrentControlSet\Services\BITS","DisplayName",0x00000000,"BITS"
-HKLM,"SYSTEM\CurrentControlSet\Services\BITS","Description",0x00000000,"Background Intelligent Transfer Service (BITS)"
+HKLM,"SYSTEM\CurrentControlSet\Services\BITS","DisplayName",0x00000000,"%BITS_SERVICE%"
+HKLM,"SYSTEM\CurrentControlSet\Services\BITS","Description",0x00000000,"%BITS_SERVICE_DESCRIPTION%"
 HKLM,"SYSTEM\CurrentControlSet\Services\BITS","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\BITS","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
 HKLM,"SYSTEM\CurrentControlSet\Services\BITS","ObjectName",0x00000000,"LocalSystem"
@@ -1506,8 +1506,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\sacdrv","Type",0x00010001,0x00000001
 
 ; Event logging service
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog",,0x00000010
-HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","DisplayName",0x00000000,"Event Logger"
-HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Description",0x00000000,"Logs events or messages sent by the operating system in a database accessible via the event log viewer"
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","DisplayName",0x00000000,"%EVENTLOG_SERVICE%"
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Description",0x00000000,"%EVENTLOG_SERVICE_DESCRIPTION%"
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Group",0x00000000,"Event Log"
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","ImagePath",0x00020000,"%SystemRoot%\system32\eventlog.exe"
@@ -1542,8 +1542,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Type",0x00010001,0x00000008
 
 ; Server service
-HKLM,"SYSTEM\CurrentControlSet\Services\lanmanserver","DisplayName",0x00000000,"Server service"
-HKLM,"SYSTEM\CurrentControlSet\Services\lanmanserver","Description",0x00000000,"Supports sharing for file, printers and resources on the network"
+HKLM,"SYSTEM\CurrentControlSet\Services\lanmanserver","DisplayName",0x00000000,"%SERVER_SERVICE%"
+HKLM,"SYSTEM\CurrentControlSet\Services\lanmanserver","Description",0x00000000,"%SERVER_SERVICE_DESCRIPTION%"
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanserver","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanserver","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanserver","ObjectName",0x00000000,"LocalSystem"
@@ -1552,8 +1552,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\lanmanserver","Type",0x00010001,0x000000
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanserver\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\srvsvc.dll"
 
 ; Workstation service
-HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","DisplayName",0x00000000,"Workstation service"
-HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Description",0x00000000,"Responsible for creating and maintaining network connections to servers"
+HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","DisplayName",0x00000000,"%WORKSTATION_SERVICE%"
+HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Description",0x00000000,"%WORKSTATION_SERVICE_DESCRIPTION%"
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Group",0x00000000,"Network Provider"
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
@@ -1585,8 +1585,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Type",0x00010001,0x00000001
 
 ; NetLogon
-;HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","DisplayName",0x00000000,"Net Logon"
-;HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","Description",0x00000000,"Sets up a secure channel to a domain controller for domain authentication"
+;HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","DisplayName",0x00000000,"%NETLOGON_SERVICE%"
+;HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","Description",0x00000000,"%NETLOGON_SERVICE_DESCRIPTION%"
 ;HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","ErrorControl",0x00010001,0x00000001
 ;HKLM,"SYSTEM\CurrentControlSet\Services\Netlogon","ImagePath",0x00020000,"%SystemRoot%\system32\lsass.exe"
 ;HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","Start",0x00010001,0x00000003
@@ -1895,8 +1895,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE002F",0x00030003,00
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","101300D6101880D6",0x00030003,00,00,00,00,00,00,00,00
 
 ; Plug and Play manager
-HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","DisplayName",0x00000000,"Plug and Play"
-HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Description",0x00000000,"Detects hardware changes and installs needed software if possible"
+HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","DisplayName",0x00000000,"%PLUGPLAY_SERVICE%"
+HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Description",0x00000000,"%PLUGPLAY_SERVICE_DESCRIPTION%"
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Group",0x00000000,"PlugPlay"
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k DcomLaunch"
@@ -1906,8 +1906,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Type",0x00010001,0x00000020
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\umpnpmgr.dll"
 
 ; RPC service
-HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","DisplayName",0x00000000,"Remote Procedure Call"
-HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Description",0x00000000,"RPC subsystem which is responsible for Remote procedure Calls on the local machine"
+HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","DisplayName",0x00000000,"%RPCSS_SERVICE%"
+HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Description",0x00000000,"%RPCSS_SERVICE_DESCRIPTION%"
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","FailureActions",0x00030003, \
     00,00,00,00,00,00,00,00,00,00,00,00,01,00,00,00,00,00,00,00,02,00,00,00,60,ea,00,00
@@ -1919,8 +1919,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Type",0x00010001,0x00000010
 
 ; Scheduler service
 HKLM,"SYSTEM\CurrentControlSet\Services\Schedule","DependOnService",0x00010000,"RPCSS"
-HKLM,"SYSTEM\CurrentControlSet\Services\Schedule","DisplayName",0x00000000,"Scheduler service"
-HKLM,"SYSTEM\CurrentControlSet\Services\Schedule","Description",0x00000000,"Allows starting of programs at specific times"
+HKLM,"SYSTEM\CurrentControlSet\Services\Schedule","Description",0x00000000,"SCHEDULE_SERVICE_DESCRIPTION%"
+HKLM,"SYSTEM\CurrentControlSet\Services\Schedule","DisplayName",0x00000000,"%SCHEDULE_SERVICE%"
 HKLM,"SYSTEM\CurrentControlSet\Services\Schedule","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Schedule","Group",0x00000000,"SchedulerGroup"
 HKLM,"SYSTEM\CurrentControlSet\Services\Schedule","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
@@ -1932,8 +1932,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Schedule\Parameters","ServiceMain",0x000
 
 ; Spooler service
 HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","DependOnService",0x00010000,"RPCSS"
-HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","DisplayName",0x00000000,"Printer Spooler"
-HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","Description",0x00000000,"Printer Spooler"
+HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","Description",0x00000000,"%SPOOLER_SERVICE_DESCRIPTION%"
+HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","DisplayName",0x00000000,"%SPOOLER_SERVICE%"
 HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","FailureActions",0x00000003, \
     60,54,00,00,00,00,00,00,00,00,00,00,03,00,00,00,00,00,00,00, \
@@ -1946,8 +1946,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","Type",0x00010001,0x00000110
 
 ; WLAN service
 HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","DependOnService",0x00010000,"RPCSS"
-HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","DisplayName",0x00000000,"WLAN Service"
-HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","Description",0x00000000,"WLAN Service"
+HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","DisplayName",0x00000000,"%WLANSVC_SERVICE%"
+HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","Description",0x00000000,"%WLANSVC_SERVICE_DESCRIPTION%"
 HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","Group",0x00000000,"TDI"
 HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","ImagePath",0x00020000,"%SystemRoot%\system32\wlansvc.exe"
@@ -1956,8 +1956,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","Start",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","Type",0x00010001,0x00000110
 
 ; Simple TCP services
-HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Description",0x00000000,"Supports the following TCP/IP services: Chargen, Daytime, Discard, Echo, QOTD"
-HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","DisplayName",0x00000000,"Simple TCP/IP Services"
+HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Description",0x00000000,"%TCPSVCS_SERVICE_DECRIPTION%"
+HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","DisplayName",0x00000000,"%TCPSVCS_SERVICE%"
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Group",0x00000000,"Network"
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","ImagePath",0x00020000,"%SystemRoot%\system32\tcpsvcs.exe"
@@ -1966,8 +1966,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Type",0x00010001,0x00000020
 
 ; ReactOS Telnet Service
-HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Description",0x00000000,"ReactOS Telnet Service"
-HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","DisplayName",0x00000000,"ReactOS Telnet Service"
+HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Description",0x00000000,"%TELNETD_SERVICE_DESCRIPTION%"
+HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","DisplayName",0x00000000,"%TELNETD_SERVICE%"
 HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Group",0x00000000,"Network"
 HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","ImagePath",0x00020000,"%SystemRoot%\system32\telnetd.exe"
@@ -1976,8 +1976,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Type",0x00010001,0x00000020
 
 ; Themes service
-HKLM,"SYSTEM\CurrentControlSet\Services\Themes","DisplayName",0x00000000,"Themes"
-HKLM,"SYSTEM\CurrentControlSet\Services\Themes","Description",0x00000000,"Themes support"
+HKLM,"SYSTEM\CurrentControlSet\Services\Themes","DisplayName",0x00000000,"%THEMES_SERVICE%"
+HKLM,"SYSTEM\CurrentControlSet\Services\Themes","Description",0x00000000,"%THEMES_SERVICE_DESCRIPTION%"
 HKLM,"SYSTEM\CurrentControlSet\Services\Themes","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Themes","FailureActions",0x00000003, \
     80,51,01,00,00,00,00,00,00,00,00,00,03,00,00,00,00,00,00,00, \
@@ -1992,8 +1992,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Themes\Parameters","ServiceMain",0x00000
 
 ; ReactOS Installer Service
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIServer","DependOnService",0x00010000,"RPCSS"
-HKLM,"SYSTEM\CurrentControlSet\Services\MSIServer","DisplayName",0x00000000,"ReactOS Installer"
-HKLM,"SYSTEM\CurrentControlSet\Services\MSIServer","Description",0x00000000,"Controls installation, maintenance, and removal of software packaged as an MSI (Windows Installer)"
+HKLM,"SYSTEM\CurrentControlSet\Services\MSIServer","DisplayName",0x00000000,"%MSISERVER_SERVICE%"
+HKLM,"SYSTEM\CurrentControlSet\Services\MSIServer","Description",0x00000000,"%MSISERVER_SERVICE_DESCRIPTION%"
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIServer","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIServer","ImagePath",0x00020000,"%SystemRoot%\system32\msiexec.exe /V"
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIServer","ObjectName",0x00000000,"LocalSystem"
@@ -2002,8 +2002,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\MSIServer","Type",0x00010001,0x00000020
 
 ; WMI Service
 HKLM,"SYSTEM\CurrentControlSet\Services\winmgmt","DependOnService",0x00010000,"RPCSS"
-HKLM,"SYSTEM\CurrentControlSet\Services\winmgmt","DisplayName",0x00000000,"ReactOS Management Infrastructure"
-HKLM,"SYSTEM\CurrentControlSet\Services\winmgmt","Description",0x00000000,"Provides interface to system management information"
+HKLM,"SYSTEM\CurrentControlSet\Services\winmgmt","DisplayName",0x00000000,"%WINMGMT_SERVICE%"
+HKLM,"SYSTEM\CurrentControlSet\Services\winmgmt","Description",0x00000000,"%WINMGMT_SERVICE_DESCRIPTION%"
 HKLM,"SYSTEM\CurrentControlSet\Services\winmgmt","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\winmgmt","Group",0x00000000,"WMI"
 HKLM,"SYSTEM\CurrentControlSet\Services\winmgmt","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
@@ -2104,5 +2104,54 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Disk","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Disk","Type",0x00010001,0x00000001
 
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Start",0x00010001,0x00000003
+
+[Strings]
+AUDIO_SERVICE="Audio Service"
+AUDIO_SERVICE_DESCRIPTION="Provides audio facilities to applications"
+
+BITS_SERVICE="Background Intelligent Transfer Service"
+BITS_SERVICE_DESCRIPTION="Transfers files in the background using idle network bandwidth."
+
+EVENTLOG_SERVICE="Event Logger"
+EVENTLOG_SERVICE_DESCRIPTION="Logs events or messages sent by the operating system in a database accessible via the event log viewer."
+
+MSISERVER_SERVICE="ReactOS Installer"
+MSISERVER_SERVICE_DESCRIPTION="Controls installation, maintenance, and removal of software packaged as an MSI (Windows Installer)."
+
+NETLOGON_SERVICE="Net Logon"
+NETLOGON_SERVICE_DESCRIPTION="Sets up a secure channel to a domain controller for domain authentication."
+
+PLUGPLAY_SERVICE="Plug and Play"
+PLUGPLAY_SERVICE_DESCRIPTION="Detects hardware changes and installs needed software if possible."
+
+RPCSS_SERVICE="Remote Procedure Call"
+RPCSS_SERVICE_DESCRIPTION="RPC subsystem which is responsible for Remote Procedure Calls on the local machine."
+
+SCHEDULE_SERVICE="Scheduler service"
+SCHEDULE_SERVICE_DESCRIPTION="Allows starting of programs at specific times."
+
+SERVER_SERVICE="Server"
+SERVER_SERVICE_DESCRIPTION="Supports sharing for file, printers and resources on the network."
+
+SPOOLER_SERVICE="Printer Spooler"
+SPOOLER_SERVICE_DESCRIPTION="Loads files to memory for later printing."
+
+TCPSVCS_SERVICE="Simple TCP/IP Services"
+TCPSVCS_SERVICE_DECRIPTION="Supports the following TCP/IP services: Chargen, Daytime, Discard, Echo, QOTD."
+
+TELNETD_SERVICE="ReactOS Telnet Service"
+TELNETD_SERVICE_DESCRIPTION="ReactOS Telnet Service"
+
+THEMES_SERVICE="Themes"
+THEMES_SERVICE_DESCRIPTION="Themes support"
+
+WINMGMT_SERVICE="ReactOS Management Infrastructure"
+WINMGMT_SERVICE_DESCRIPTION="Provides interface to system management information."
+
+WLANSVC_SERVICE="WLAN Service"
+WLANSVC_SERVICE_DESCRIPTION="WLAN Service"
+
+WORKSTATION_SERVICE="Workstation"
+WORKSTATION_SERVICE_DESCRIPTION="Responsible for creating and maintaining network connections to servers."
 
 ; EOF
