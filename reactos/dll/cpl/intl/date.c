@@ -55,9 +55,8 @@ FindDateSep(const WCHAR *szSourceStr)
     UINT nDateCompCount=0;
     UINT nDateSepCount=0;
 
-    pszFoundSep = (LPWSTR)malloc(MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
-
-    if(!pszFoundSep)
+    pszFoundSep = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
+    if (pszFoundSep == NULL)
         return NULL;
 
     wcscpy(pszFoundSep,STD_DATE_SEP);
@@ -171,15 +170,19 @@ SetShortDateFormat(HWND hwndDlg, PGLOBALDATA pGlobalData)
     }
 
     pszFoundSep = FindDateSep(szShortDateFmt);
+    if (pszFoundSep != NULL)
+    {
+        /* Substring replacement of separator */
+        wcscpy(szFoundDateSep, pszFoundSep);
+        pszResultStr = ReplaceSubStr(szShortDateFmt, szShortDateSep, szFoundDateSep);
+        if (pszResultStr != NULL)
+        {
+            wcscpy(szShortDateFmt, pszResultStr);
+            HeapFree(GetProcessHeap(), 0, pszResultStr);
+        }
 
-    /* Substring replacement of separator */
-    wcscpy(szFoundDateSep, pszFoundSep);
-    pszResultStr = ReplaceSubStr(szShortDateFmt, szShortDateSep, szFoundDateSep);
-    wcscpy(szShortDateFmt, pszResultStr);
-    free(pszResultStr);
-
-    if (pszFoundSep)
-        free(pszFoundSep);
+        HeapFree(GetProcessHeap(), 0, pszFoundSep);
+    }
 
     /* Save short date format */
     wcscpy(pGlobalData->szShortDateFormat, szShortDateFmt);
@@ -393,19 +396,19 @@ SetMaxDate(HWND hwndDlg, LCID lcid)
     hWndYearSpin = GetDlgItem(hwndDlg, IDC_SCR_MAX_YEAR);
 
     /* Get spin value */
-    nSpinVal=LOWORD(SendMessageW(hWndYearSpin,
-                    UDM_GETPOS,
-                    0,
-                    0));
+    nSpinVal = LOWORD(SendMessageW(hWndYearSpin,
+                                   UDM_GETPOS,
+                                   0,
+                                   0));
 
     /* convert to wide char */
     _itow(nSpinVal, szMaxDateVal, DECIMAL_RADIX);
 
     /* Save max date value */
     SetCalendarInfoW(lcid,
-                    CAL_GREGORIAN,
-                    48 , /* CAL_ITWODIGITYEARMAX */
-                    (PCWSTR)szMaxDateVal);
+                     CAL_GREGORIAN,
+                     48 , /* CAL_ITWODIGITYEARMAX */
+                     (PCWSTR)szMaxDateVal);
 }
 
 /* Get max date value from registry set */
@@ -457,13 +460,13 @@ InitMinMaxDateSpin(HWND hwndDlg, PGLOBALDATA pGlobalData)
 
     /* Limit text lengths */
     SendDlgItemMessageW(hwndDlg, IDC_FIRSTYEAR_EDIT,
-                EM_LIMITTEXT,
-                MAX_YEAR_EDIT,
-                0);
+                        EM_LIMITTEXT,
+                        MAX_YEAR_EDIT,
+                        0);
     SendDlgItemMessageW(hwndDlg, IDC_SECONDYEAR_EDIT,
-                EM_LIMITTEXT,
-                MAX_YEAR_EDIT,
-                0);
+                        EM_LIMITTEXT,
+                        MAX_YEAR_EDIT,
+                        0);
 
     hWndYearSpin = GetDlgItem(hwndDlg, IDC_SCR_MAX_YEAR);
 
@@ -584,7 +587,7 @@ DatePageProc(HWND hwndDlg,
                 if (!SetShortDateSep(hwndDlg, pGlobalData))
                     break;
 
-                pGlobalData->fUserLocaleChanged = TRUE;
+                pGlobalData->bUserLocaleChanged = TRUE;
 
                 SetMaxDate(hwndDlg, pGlobalData->UserLCID);
                 InitShortDateCB(hwndDlg, pGlobalData);

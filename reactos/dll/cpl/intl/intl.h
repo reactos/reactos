@@ -12,7 +12,6 @@
 #include <winuser.h>
 #include <cpl.h>
 #include <setupapi.h>
-#include <malloc.h>
 #include <ndk/exfuncs.h>
 
 #include "resource.h"
@@ -110,11 +109,11 @@ typedef struct _GLOBALDATA
 
     LCID UserLCID;
     LCID SystemLCID;
-    BOOL fUserLocaleChanged;
+    BOOL bUserLocaleChanged;
     BOOL bApplyToDefaultUser;
 
     GEOID geoid;
-    BOOL fGeoIdChanged;
+    BOOL bGeoIdChanged;
 
     /* Misc */
     BOOL bIsUserAdmin;
@@ -134,7 +133,7 @@ extern GROUPINGDATA GroupingFormats[MAX_GROUPINGFORMATS];
 /* intl.c */
 VOID PrintErrorMsgBox(UINT msg);
 
-VOID
+INT
 ResourceMessageBox(
     HWND hwnd,
     UINT uType,

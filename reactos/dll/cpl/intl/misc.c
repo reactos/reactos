@@ -9,7 +9,9 @@ InsSpacePos(PCWSTR szInsStr, const int nPos)
     INT nStrCnt;
     INT nStrSize;
 
-    pszDestStr = (PWSTR)malloc(MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
+    pszDestStr = (PWSTR)HeapAlloc(GetProcessHeap(), 0, MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
+    if (pszDestStr == NULL)
+        return NULL;
 
     wcscpy(pszDestStr, szInsStr);
 
@@ -45,7 +47,9 @@ InsSpacesFmt(PCWSTR szSourceStr, PCWSTR szFmtStr)
     INT nSpaceOffset = 0;
     BOOL wasNul=FALSE;
 
-    pszDestStr = (PWSTR)malloc(255 * sizeof(WCHAR));
+    pszDestStr = (PWSTR)HeapAlloc(GetProcessHeap(), 0, 255 * sizeof(WCHAR));
+    if (pszDestStr == NULL)
+        return NULL;
 
     wcscpy(pszDestStr, szSourceStr);
 
@@ -80,7 +84,7 @@ InsSpacesFmt(PCWSTR szSourceStr, PCWSTR szFmtStr)
             /* Insert space to finded position plus all pos before */
             pszTempStr = InsSpacePos(pszDestStr, nSpaceOffset);
             wcscpy(pszDestStr,pszTempStr);
-            free(pszTempStr);
+            HeapFree(GetProcessHeap(), 0, pszTempStr);
 
             /* Num of spaces total increment */
             if (!wasNul)
@@ -102,7 +106,7 @@ InsSpacesFmt(PCWSTR szSourceStr, PCWSTR szFmtStr)
         {
             pszTempStr = InsSpacePos(pszDestStr, nFmtCount);
             wcscpy(pszDestStr, pszTempStr);
-            free(pszTempStr);
+            HeapFree(GetProcessHeap(), 0, pszTempStr);
         }
     }
 
@@ -121,7 +125,9 @@ ReplaceSubStr(PCWSTR szSourceStr,
     UINT nDestStrCnt;
     UINT nFirstCharCnt;
 
-    szDestStr = (PWSTR)malloc(MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
+    szDestStr = (PWSTR)HeapAlloc(GetProcessHeap(), 0, MAX_SAMPLES_STR_SIZE * sizeof(WCHAR));
+    if (szDestStr == NULL)
+        return NULL;
 
     nDestStrCnt = 0;
     nFirstCharCnt = 0;

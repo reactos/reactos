@@ -198,7 +198,7 @@ SortPageProc(HWND hwndDlg,
 
                 /* Save the new LCID */
                 pGlobalData->UserLCID = NewLcid;
-                pGlobalData->fUserLocaleChanged = TRUE;
+                pGlobalData->bUserLocaleChanged = TRUE;
             }
             break;
     }

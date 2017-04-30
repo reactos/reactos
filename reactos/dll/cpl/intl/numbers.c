@@ -198,11 +198,14 @@ InitFieldDigNumCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
     for (nCBIndex = 0; nCBIndex < MAX_FIELD_DIG_SAMPLES; nCBIndex++)
     {
         pszFieldDigNumSmpl = InsSpacesFmt(SAMPLE_NUMBER, lpFieldDigNumSamples[nCBIndex]);
-        SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDGROUPING,
-                            CB_ADDSTRING,
-                            0,
-                            (LPARAM)pszFieldDigNumSmpl);
-        free(pszFieldDigNumSmpl);
+        if (pszFieldDigNumSmpl != NULL)
+        {
+            SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDGROUPING,
+                                CB_ADDSTRING,
+                                0,
+                                (LPARAM)pszFieldDigNumSmpl);
+            HeapFree(GetProcessHeap(), 0, pszFieldDigNumSmpl);
+        }
     }
 
     SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDGROUPING,
@@ -280,18 +283,24 @@ InitNegNumFmtCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
         pszResultStr = ReplaceSubStr(lpNegNumFmtSamples[nCBIndex],
                                      pGlobalData->szNumDecimalSep,
                                      L",");
-        wcscpy(szNewSample, pszResultStr);
-        free(pszResultStr);
+        if (pszResultStr != NULL)
+        {
+            wcscpy(szNewSample, pszResultStr);
+            HeapFree(GetProcessHeap(), 0, pszResultStr);
+        }
 
         /* Replace standard negative sign to setted */
         pszResultStr = ReplaceSubStr(szNewSample,
                                      pGlobalData->szNumNegativeSign,
                                      L"-");
-        SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNNUMFORMAT,
-                            CB_ADDSTRING,
-                            0,
-                            (LPARAM)pszResultStr);
-        free(pszResultStr);
+        if (pszResultStr != NULL)
+        {
+            SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNNUMFORMAT,
+                                CB_ADDSTRING,
+                                0,
+                                (LPARAM)pszResultStr);
+            HeapFree(GetProcessHeap(), 0, pszResultStr);
+        }
     }
 
     /* Set current item to value from registry */
@@ -320,11 +329,14 @@ InitLeadingZeroesCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
         pszResultStr = ReplaceSubStr(lpLeadNumFmtSamples[nCBIndex],
                                      pGlobalData->szNumDecimalSep,
                                      L",");
-        SendDlgItemMessage(hwndDlg, IDC_NUMBERSDISPLEADZER,
-                           CB_ADDSTRING,
-                           0,
-                           (LPARAM)pszResultStr);
-        free(pszResultStr);
+        if (pszResultStr != NULL)
+        {
+            SendDlgItemMessage(hwndDlg, IDC_NUMBERSDISPLEADZER,
+                               CB_ADDSTRING,
+                               0,
+                               (LPARAM)pszResultStr);
+            HeapFree(GetProcessHeap(), 0, pszResultStr);
+        }
     }
 
     /* Set current item to value from registry */
@@ -692,7 +704,7 @@ NumbersPageProc(HWND hwndDlg,
                 if (!SetNumUnitsSys(hwndDlg, pGlobalData))
                     break;
 
-                pGlobalData->fUserLocaleChanged = TRUE;
+                pGlobalData->bUserLocaleChanged = TRUE;
 
                 UpdateNumSamples(hwndDlg, pGlobalData);
             }

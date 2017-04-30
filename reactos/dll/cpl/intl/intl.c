@@ -51,16 +51,16 @@ APPLET Applets[NUM_APPLETS] =
 VOID
 PrintErrorMsgBox(UINT msg)
 {
-    TCHAR szErrorText[BUFFERSIZE];
-    TCHAR szErrorCaption[BUFFERSIZE];
+    WCHAR szErrorText[BUFFERSIZE];
+    WCHAR szErrorCaption[BUFFERSIZE];
 
-    LoadString(hApplet, msg, szErrorText, sizeof(szErrorText)/sizeof(TCHAR));
-    LoadString(hApplet, IDS_ERROR, szErrorCaption, sizeof(szErrorCaption)/sizeof(TCHAR));
+    LoadStringW(hApplet, msg, szErrorText, sizeof(szErrorText) / sizeof(WCHAR));
+    LoadStringW(hApplet, IDS_ERROR, szErrorCaption, sizeof(szErrorCaption) / sizeof(WCHAR));
 
-    MessageBox(NULL, szErrorText, szErrorCaption, MB_OK | MB_ICONERROR);
+    MessageBoxW(NULL, szErrorText, szErrorCaption, MB_OK | MB_ICONERROR);
 }
 
-VOID
+INT
 ResourceMessageBox(
     HWND hwnd,
     UINT uType,
@@ -73,7 +73,7 @@ ResourceMessageBox(
     LoadStringW(hApplet, uMessageId, szErrorText, sizeof(szErrorText) / sizeof(WCHAR));
     LoadStringW(hApplet, uCaptionId, szErrorCaption, sizeof(szErrorCaption) / sizeof(WCHAR));
 
-    MessageBoxW(hwnd, szErrorText, szErrorCaption, uType);
+    return MessageBoxW(hwnd, szErrorText, szErrorCaption, uType);
 }
 
 static VOID

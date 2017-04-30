@@ -439,7 +439,7 @@ CurrencyPageProc(HWND hwndDlg,
                 if (!SetCurrencyFieldSep(hwndDlg, pGlobalData))
                     break;
 
-                pGlobalData->fUserLocaleChanged = TRUE;
+                pGlobalData->bUserLocaleChanged = TRUE;
 
                 UpdateExamples(hwndDlg, pGlobalData);
             }

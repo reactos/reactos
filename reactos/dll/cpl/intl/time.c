@@ -53,30 +53,40 @@ UpdateTimeSample(HWND hWnd, PGLOBALDATA pGlobalData)
 static VOID
 GetSelectedComboEntry(HWND hwndDlg, DWORD dwIdc, WCHAR *Buffer, UINT uSize)
 {
-    int nIndex;
     HWND hChildWnd;
+    PWSTR tmp;
+    INT nIndex;
+    UINT uReqSize;
 
     /* Get handle to time format control */
     hChildWnd = GetDlgItem(hwndDlg, dwIdc);
+
     /* Get index to selected time format */
     nIndex = SendMessageW(hChildWnd, CB_GETCURSEL, 0, 0);
     if (nIndex == CB_ERR)
+    {
         /* No selection? Get content of the edit control */
         SendMessageW(hChildWnd, WM_GETTEXT, uSize, (LPARAM)Buffer);
-    else {
-        PWSTR tmp;
-        UINT   uReqSize;
-
+    }
+    else
+    {
         /* Get requested size, including the null terminator;
          * it shouldn't be required because the previous CB_LIMITTEXT,
          * but it would be better to check it anyways */
         uReqSize = SendMessageW(hChildWnd, CB_GETLBTEXTLEN, (WPARAM)nIndex, 0) + 1;
+
         /* Allocate enough space to be more safe */
-        tmp = (PWSTR)_alloca(uReqSize*sizeof(WCHAR));
-        /* Get selected time format text */
-        SendMessageW(hChildWnd, CB_GETLBTEXT, (WPARAM)nIndex, (LPARAM)tmp);
-        /* Finally, copy the result into the output */
-        wcsncpy(Buffer, tmp, uSize);
+        tmp = (PWSTR)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, uReqSize * sizeof(WCHAR));
+        if (tmp != NULL)
+        {
+            /* Get selected time format text */
+            SendMessageW(hChildWnd, CB_GETLBTEXT, (WPARAM)nIndex, (LPARAM)tmp);
+
+            /* Finally, copy the result into the output */
+            wcsncpy(Buffer, tmp, uSize);
+
+            HeapFree(GetProcessHeap(), 0, tmp);
+        }
     }
 }
 
@@ -239,7 +249,7 @@ TimePageProc(HWND hwndDlg,
             {
                 /* Get selected/typed time format text */
                 GetSelectedComboEntry(hwndDlg, IDC_TIMEFORMAT,
-                                      pGlobalData->szTimeFormat, 
+                                      pGlobalData->szTimeFormat,
                                       MAX_TIMEFORMAT);
 
                 /* Get selected/typed time separator text */
@@ -257,7 +267,7 @@ TimePageProc(HWND hwndDlg,
                                       pGlobalData->szTimePM,
                                       MAX_TIMEPMSYMBOL);
 
-                pGlobalData->fUserLocaleChanged = TRUE;
+                pGlobalData->bUserLocaleChanged = TRUE;
 
                 /* Update the time format sample */
                 UpdateTimeSample(hwndDlg, pGlobalData);

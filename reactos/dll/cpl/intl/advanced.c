@@ -188,15 +188,15 @@ LocalesEnumProc(PWSTR lpLocale)
 
     if (bNoShow == FALSE)
     {
-    index = SendMessageW(hLangList,
-                         CB_ADDSTRING,
-                         0,
-                         (LPARAM)lang);
+        index = SendMessageW(hLangList,
+                             CB_ADDSTRING,
+                             0,
+                             (LPARAM)lang);
 
-    SendMessageW(hLangList,
-                 CB_SETITEMDATA,
-                 index,
-                 (LPARAM)lcid);
+        SendMessageW(hLangList,
+                     CB_SETITEMDATA,
+                     index,
+                     (LPARAM)lcid);
     }
 
     return TRUE;
@@ -245,7 +245,10 @@ GetCurrentDPI(LPTSTR szDPI)
             return;
         }
     }
-    else wsprintf(szDPI, L"%d", dwDPI);
+    else
+    {
+        wsprintf(szDPI, L"%d", dwDPI);
+    }
 
     RegCloseKey(hKey);
 }
@@ -266,7 +269,6 @@ SaveFontSubstitutionSettings(
     wsprintf(szSection, L"Font.CP%s.%s", szDefCP, szDPI);
 
     hFontInf = SetupOpenInfFileW(L"font.inf", NULL, INF_STYLE_WIN4, NULL);
-
     if (hFontInf == INVALID_HANDLE_VALUE)
         return;
 
@@ -277,12 +279,15 @@ SaveFontSubstitutionSettings(
     }
 
     Count = (UINT) SetupGetLineCount(hFontInf, szSection);
-    if (Count <= 0) return;
+    if (Count <= 0)
+        return;
 
     if (!SetupInstallFromInfSectionW(hwnd, hFontInf, szSection, SPINST_REGISTRY & ~SPINST_FILES,
                                      NULL, NULL, 0, NULL, NULL, NULL, NULL))
+    {
         MessageBoxW(hwnd, L"Unable to install a new language for programs don't support unicode!",
                    NULL, MB_ICONERROR | MB_OK);
+    }
 
     SetupCloseInfFile(hFontInf);
 }
@@ -421,10 +426,7 @@ AdvancedPageProc(HWND hwndDlg,
             break;
 
         case WM_NOTIFY:
-        {
-            LPNMHDR lpnm = (LPNMHDR)lParam;
-
-            if (lpnm->code == (UINT)PSN_APPLY)
+            if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
             {
                 PropSheet_UnChanged(GetParent(hwndDlg), hwndDlg);
 
@@ -432,8 +434,7 @@ AdvancedPageProc(HWND hwndDlg,
                 SaveFontSubstitutionSettings(hwndDlg, pGlobalData);
                 SaveFontLinkingSettings(hwndDlg, pGlobalData);
             }
-        }
-        break;
+            break;
     }
 
     return FALSE;
