@@ -175,9 +175,18 @@ EBRUSHOBJ_vCleanup(EBRUSHOBJ *pebo)
     }
 
     /* Dereference the palettes */
-    PALETTE_ShareUnlockPalette(pebo->ppalSurf);
-    PALETTE_ShareUnlockPalette(pebo->ppalDC);
-    if (pebo->ppalDIB) PALETTE_ShareUnlockPalette(pebo->ppalDIB);
+    if (pebo->ppalSurf)
+    {
+        PALETTE_ShareUnlockPalette(pebo->ppalSurf);
+    }
+    if (pebo->ppalDC)
+    {
+        PALETTE_ShareUnlockPalette(pebo->ppalDC);
+    }
+    if (pebo->ppalDIB)
+    {
+        PALETTE_ShareUnlockPalette(pebo->ppalDIB);
+    }
 }
 
 VOID

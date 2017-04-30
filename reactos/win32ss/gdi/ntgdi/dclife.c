@@ -91,7 +91,6 @@ DC_AllocDcWithHandle(GDILOOBJTYPE eDcObjType)
     /* Insert the object */
     if (!GDIOBJ_hInsertObject(&pdc->BaseObject, GDI_OBJ_HMGR_POWNED))
     {
-        /// FIXME: this is broken, since the DC is not initialized yet...
         DPRINT1("Could not insert DC into handle table.\n");
         GDIOBJ_vFreeObject(&pdc->BaseObject);
         return NULL;
@@ -370,7 +369,8 @@ DC_vCleanup(PVOID ObjectBody)
     EBRUSHOBJ_vCleanup(&pdc->eboBackground);
 
     /* Release font */
-    LFONT_ShareUnlockFont(pdc->dclevel.plfnt);
+    if (pdc->dclevel.plfnt)
+        LFONT_ShareUnlockFont(pdc->dclevel.plfnt);
 
     /*  Free regions */
     if (pdc->dclevel.prgnClip)
@@ -394,10 +394,11 @@ DC_vCleanup(PVOID ObjectBody)
        pdc->dclevel.hPath = 0;
        pdc->dclevel.flPath = 0;
     }
-    if(pdc->dclevel.pSurface)
+    if (pdc->dclevel.pSurface)
         SURFACE_ShareUnlockSurface(pdc->dclevel.pSurface);
 
-    PDEVOBJ_vRelease(pdc->ppdev);
+    if (pdc->ppdev)
+        PDEVOBJ_vRelease(pdc->ppdev);
 }
 
 VOID
