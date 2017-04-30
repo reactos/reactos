@@ -10,11 +10,68 @@
 // Global Variables
 SKIPLIST PrinterList;
 
+// Forward Declarations
+static void _LocalGetPrinterLevel0(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_STRESS* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName);
+static void _LocalGetPrinterLevel1(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_1W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName);
+static void _LocalGetPrinterLevel2(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_2W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName);
+static void _LocalGetPrinterLevel3(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_3* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName);
+static void _LocalGetPrinterLevel4(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_4W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName);
+static void _LocalGetPrinterLevel5(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_5W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName);
+static void _LocalGetPrinterLevel6(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_6* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName);
+static void _LocalGetPrinterLevel7(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_7W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName);
+static void _LocalGetPrinterLevel8(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_8W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName);
+static void _LocalGetPrinterLevel9(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_9W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName);
+
 // Local Constants
+typedef void (*PLocalGetPrinterLevelFunc)(PLOCAL_PRINTER, PVOID, PBYTE*, PDWORD, DWORD, PWSTR);
+
+static const PLocalGetPrinterLevelFunc pfnGetPrinterLevels[] = {
+    (PLocalGetPrinterLevelFunc)&_LocalGetPrinterLevel0,
+    (PLocalGetPrinterLevelFunc)&_LocalGetPrinterLevel1,
+    (PLocalGetPrinterLevelFunc)&_LocalGetPrinterLevel2,
+    (PLocalGetPrinterLevelFunc)&_LocalGetPrinterLevel3,
+    (PLocalGetPrinterLevelFunc)&_LocalGetPrinterLevel4,
+    (PLocalGetPrinterLevelFunc)&_LocalGetPrinterLevel5,
+    (PLocalGetPrinterLevelFunc)&_LocalGetPrinterLevel6,
+    (PLocalGetPrinterLevelFunc)&_LocalGetPrinterLevel7,
+    (PLocalGetPrinterLevelFunc)&_LocalGetPrinterLevel8,
+    (PLocalGetPrinterLevelFunc)&_LocalGetPrinterLevel9
+};
+
+static DWORD dwPrinterInfo0Offsets[] = {
+    FIELD_OFFSET(PRINTER_INFO_STRESS, pPrinterName),
+    MAXDWORD
+};
+
 static DWORD dwPrinterInfo1Offsets[] = {
     FIELD_OFFSET(PRINTER_INFO_1W, pName),
     FIELD_OFFSET(PRINTER_INFO_1W, pComment),
     FIELD_OFFSET(PRINTER_INFO_1W, pDescription),
+    MAXDWORD
+};
+
+static DWORD dwPrinterInfo2Offsets[] = {
+    FIELD_OFFSET(PRINTER_INFO_2W, pPrinterName),
+    FIELD_OFFSET(PRINTER_INFO_2W, pShareName),
+    FIELD_OFFSET(PRINTER_INFO_2W, pPortName),
+    FIELD_OFFSET(PRINTER_INFO_2W, pDriverName),
+    FIELD_OFFSET(PRINTER_INFO_2W, pComment),
+    FIELD_OFFSET(PRINTER_INFO_2W, pLocation),
+    FIELD_OFFSET(PRINTER_INFO_2W, pSepFile),
+    FIELD_OFFSET(PRINTER_INFO_2W, pPrintProcessor),
+    FIELD_OFFSET(PRINTER_INFO_2W, pDatatype),
+    FIELD_OFFSET(PRINTER_INFO_2W, pParameters),
+    MAXDWORD
+};
+
+static DWORD dwPrinterInfo4Offsets[] = {
+    FIELD_OFFSET(PRINTER_INFO_4W, pPrinterName),
+    MAXDWORD
+};
+
+static DWORD dwPrinterInfo5Offsets[] = {
+    FIELD_OFFSET(PRINTER_INFO_5W, pPrinterName),
+    FIELD_OFFSET(PRINTER_INFO_5W, pPortName),
     MAXDWORD
 };
 
@@ -437,137 +494,378 @@ _DumpLevel1PrintProviderInformation(PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbN
     return ERROR_SUCCESS;
 }
 
-static DWORD
-_LocalEnumPrintersLevel0(DWORD Flags, PCWSTR Name, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned, DWORD cchComputerName, PWSTR wszComputerName)
+static void
+_LocalGetPrinterLevel0(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_STRESS* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName)
 {
-    return ERROR_INVALID_LEVEL;
+    size_t cbName;
+    PWSTR p;
+    PWSTR pwszStrings[1];
+    SYSTEM_INFO SystemInfo;
+
+    // Calculate the string lengths.
+    cbName = (cchComputerName + wcslen(pPrinter->pwszPrinterName) + 1) * sizeof(WCHAR);
+
+    if (!ppPrinterInfo)
+    {
+        *pcbNeeded += sizeof(PRINTER_INFO_STRESS) + cbName;
+        return;
+    }
+
+    // Set the general fields.
+    ZeroMemory(*ppPrinterInfo, sizeof(PRINTER_INFO_STRESS));
+    (*ppPrinterInfo)->cJobs = pPrinter->JobList.NodeCount;
+    (*ppPrinterInfo)->dwGetVersion = GetVersion();
+    (*ppPrinterInfo)->Status = pPrinter->dwStatus;
+
+#if !defined(DBG)
+    (*ppPrinterInfo)->fFreeBuild = 1;
+#endif
+
+    GetSystemInfo(&SystemInfo);
+    (*ppPrinterInfo)->dwNumberOfProcessors = SystemInfo.dwNumberOfProcessors;
+    (*ppPrinterInfo)->dwProcessorType = SystemInfo.dwProcessorType;
+    (*ppPrinterInfo)->wProcessorArchitecture = SystemInfo.wProcessorArchitecture;
+    (*ppPrinterInfo)->wProcessorLevel = SystemInfo.wProcessorLevel;
+
+    // Copy the Printer Name.
+    pwszStrings[0] = DllAllocSplMem(cbName);
+    p = pwszStrings[0];
+    StringCbCopyExW(p, cbName, wszComputerName, &p, &cbName, 0);
+    StringCbCopyExW(p, cbName, pPrinter->pwszPrinterName, &p, &cbName, 0);
+
+    // Finally copy the structure and advance to the next one in the output buffer.
+    *ppPrinterInfoEnd = PackStrings(pwszStrings, (PBYTE)(*ppPrinterInfo), dwPrinterInfo0Offsets, *ppPrinterInfoEnd);
+    (*ppPrinterInfo)++;
+
+    // Free the memory for temporary strings.
+    DllFreeSplMem(pwszStrings[0]);
 }
 
-static DWORD
-_LocalEnumPrintersLevel1(DWORD Flags, PCWSTR Name, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned, DWORD cchComputerName, PWSTR wszComputerName)
+static void
+_LocalGetPrinterLevel1(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_1W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName)
 {
     const WCHAR wszComma[] = L",";
 
     size_t cbName;
     size_t cbComment;
     size_t cbDescription;
-    DWORD dwErrorCode;
-    DWORD i;
-    PBYTE pPrinterInfo;
-    PBYTE pPrinterStrings;
-    PSKIPLIST_NODE pNode;
-    PLOCAL_PRINTER pPrinter;
     PWSTR p;
     PWSTR pwszStrings[3];
 
-    if (Flags & PRINTER_ENUM_NAME && !Name)
+    // Calculate the string lengths.
+    // Attention: pComment equals the "Description" registry value while pDescription is concatenated out of several strings.
+    // On top of this, the computer name is prepended to the printer name if the user supplied the local computer name during the query.
+    cbName = (cchComputerName + wcslen(pPrinter->pwszPrinterName) + 1) * sizeof(WCHAR);
+    cbComment = (wcslen(pPrinter->pwszDescription) + 1) * sizeof(WCHAR);
+    cbDescription = cbName + (wcslen(pPrinter->pwszPrinterDriver) + 1 + wcslen(pPrinter->pwszLocation) + 1) * sizeof(WCHAR);
+
+    if (!ppPrinterInfo)
     {
-        // The caller wants information about this Print Provider.
-        // spoolss packs this into an array of information about all Print Providers.
-        dwErrorCode = _DumpLevel1PrintProviderInformation(pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
-        goto Cleanup;
-    }
-
-    // Count the required buffer size and the number of printers.
-    i = 0;
-
-    for (pNode = PrinterList.Head.Next[0]; pNode; pNode = pNode->Next[0])
-    {
-        pPrinter = (PLOCAL_PRINTER)pNode->Element;
-
-        // TODO: If PRINTER_ENUM_SHARED is given, add this Printer if it's shared instead of just ignoring it.
-        if (Flags & PRINTER_ENUM_SHARED)
-            continue;
-
-        // Attention: pComment equals the "Description" registry value while pDescription is concatenated out of several strings.
-        // On top of this, the computer name is prepended to the printer name if the user supplied the local computer name during the query.
-        cbName = (cchComputerName + wcslen(pPrinter->pwszPrinterName) + 1) * sizeof(WCHAR);
-        cbComment = (wcslen(pPrinter->pwszDescription) + 1) * sizeof(WCHAR);
-        cbDescription = cbName + (wcslen(pPrinter->pwszPrinterDriver) + 1 + wcslen(pPrinter->pwszLocation) + 1) * sizeof(WCHAR);
-
         *pcbNeeded += sizeof(PRINTER_INFO_1W) + cbName + cbComment + cbDescription;
-        i++;
+        return;
     }
 
-    // Check if the supplied buffer is large enough.
-    if (cbBuf < *pcbNeeded)
+    // Indicate that this is a Printer.
+    (*ppPrinterInfo)->Flags = PRINTER_ENUM_ICON8;
+
+    // Copy the Printer Name.
+    pwszStrings[0] = DllAllocSplMem(cbName);
+    p = pwszStrings[0];
+    StringCbCopyExW(p, cbName, wszComputerName, &p, &cbName, 0);
+    StringCbCopyExW(p, cbName, pPrinter->pwszPrinterName, &p, &cbName, 0);
+
+    // Copy the Printer comment (equals the "Description" registry value).
+    pwszStrings[1] = pPrinter->pwszDescription;
+
+    // Copy the description, which for PRINTER_INFO_1W has the form "Name,Printer Driver,Location"
+    pwszStrings[2] = DllAllocSplMem(cbDescription);
+    p = pwszStrings[2];
+    StringCbCopyExW(p, cbDescription, wszComputerName, &p, &cbDescription, 0);
+    StringCbCopyExW(p, cbDescription, pPrinter->pwszPrinterName, &p, &cbDescription, 0);
+    StringCbCopyExW(p, cbDescription, wszComma, &p, &cbDescription, 0);
+    StringCbCopyExW(p, cbDescription, pPrinter->pwszPrinterDriver, &p, &cbDescription, 0);
+    StringCbCopyExW(p, cbDescription, wszComma, &p, &cbDescription, 0);
+    StringCbCopyExW(p, cbDescription, pPrinter->pwszLocation, &p, &cbDescription, 0);
+
+    // Finally copy the structure and advance to the next one in the output buffer.
+    *ppPrinterInfoEnd = PackStrings(pwszStrings, (PBYTE)(*ppPrinterInfo), dwPrinterInfo1Offsets, *ppPrinterInfoEnd);
+    (*ppPrinterInfo)++;
+
+    // Free the memory for temporary strings.
+    DllFreeSplMem(pwszStrings[0]);
+    DllFreeSplMem(pwszStrings[2]);
+}
+
+static void
+_LocalGetPrinterLevel2(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_2W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName)
+{
+    WCHAR wszEmpty[] = L"";
+
+    size_t cbDevMode;
+    size_t cbPrinterName;
+    size_t cbShareName;
+    size_t cbPortName;
+    size_t cbDriverName;
+    size_t cbComment;
+    size_t cbLocation;
+    size_t cbSepFile;
+    size_t cbPrintProcessor;
+    size_t cbDatatype;
+    size_t cbParameters;
+    PWSTR p;
+    PWSTR pwszStrings[10];
+
+    // Calculate the string lengths.
+    cbDevMode = pPrinter->pDefaultDevMode->dmSize + pPrinter->pDefaultDevMode->dmDriverExtra;
+    cbPrinterName = (cchComputerName + wcslen(pPrinter->pwszPrinterName) + 1) * sizeof(WCHAR);
+
+    if (!ppPrinterInfo)
     {
-        dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
-        goto Cleanup;
-    }
-
-    // Initialize the variables for filling the output buffer using PackStrings.
-    pPrinterInfo = pPrinterEnum;
-    pPrinterStrings = &pPrinterEnum[*pcbNeeded];
-
-    // Copy over the Printer information.
-    for (pNode = PrinterList.Head.Next[0]; pNode; pNode = pNode->Next[0])
-    {
-        pPrinter = (PLOCAL_PRINTER)pNode->Element;
-
-        // TODO: If PRINTER_ENUM_SHARED is given, add this Printer if it's shared instead of just ignoring it.
-        if (Flags & PRINTER_ENUM_SHARED)
-            continue;
-
-        // Indicate that this is a Printer.
-        ((PPRINTER_INFO_1W)pPrinterInfo)->Flags = PRINTER_ENUM_ICON8;
-
-        // Calculate the string lengths.
-        cbName = (cchComputerName + wcslen(pPrinter->pwszPrinterName) + 1) * sizeof(WCHAR);
+        // Attention: pComment equals the "Description" registry value.
+        cbShareName = sizeof(wszEmpty);
+        cbPortName = (wcslen(pPrinter->pPort->pwszName) + 1) * sizeof(WCHAR);
+        cbDriverName = (wcslen(pPrinter->pwszPrinterDriver) + 1) * sizeof(WCHAR);
         cbComment = (wcslen(pPrinter->pwszDescription) + 1) * sizeof(WCHAR);
-        cbDescription = cbName + (wcslen(pPrinter->pwszPrinterDriver) + 1 + wcslen(pPrinter->pwszLocation) + 1) * sizeof(WCHAR);
+        cbLocation = (wcslen(pPrinter->pwszLocation) + 1) * sizeof(WCHAR);
+        cbSepFile = sizeof(wszEmpty);
+        cbPrintProcessor = (wcslen(pPrinter->pPrintProcessor->pwszName) + 1) * sizeof(WCHAR);
+        cbDatatype = (wcslen(pPrinter->pwszDefaultDatatype) + 1) * sizeof(WCHAR);
+        cbParameters = sizeof(wszEmpty);
 
-        // Copy the Printer Name.
-        pwszStrings[0] = DllAllocSplMem(cbName);
-        p = pwszStrings[0];
-        StringCbCopyExW(p, cbName, wszComputerName, &p, &cbName, 0);
-        StringCbCopyExW(p, cbName, pPrinter->pwszPrinterName, &p, &cbName, 0);
-
-        // Copy the Printer comment (equals the "Description" registry value).
-        pwszStrings[1] = pPrinter->pwszDescription;
-
-        // Copy the description, which for PRINTER_INFO_1W has the form "Name,Printer Driver,Location"
-        pwszStrings[2] = DllAllocSplMem(cbDescription);
-        p = pwszStrings[2];
-        StringCbCopyExW(p, cbDescription, wszComputerName, &p, &cbDescription, 0);
-        StringCbCopyExW(p, cbDescription, pPrinter->pwszPrinterName, &p, &cbDescription, 0);
-        StringCbCopyExW(p, cbDescription, wszComma, &p, &cbDescription, 0);
-        StringCbCopyExW(p, cbDescription, pPrinter->pwszPrinterDriver, &p, &cbDescription, 0);
-        StringCbCopyExW(p, cbDescription, wszComma, &p, &cbDescription, 0);
-        StringCbCopyExW(p, cbDescription, pPrinter->pwszLocation, &p, &cbDescription, 0);
-
-        // Finally copy the structure and advance to the next one in the output buffer.
-        pPrinterStrings = PackStrings(pwszStrings, pPrinterInfo, dwPrinterInfo1Offsets, pPrinterStrings);
-        pPrinterInfo += sizeof(PRINTER_INFO_1W);
-
-        // Free the memory for temporary strings.
-        DllFreeSplMem(pwszStrings[0]);
-        DllFreeSplMem(pwszStrings[2]);
+        *pcbNeeded += sizeof(PRINTER_INFO_2W) + cbDevMode + cbPrinterName + cbShareName + cbPortName + cbDriverName + cbComment + cbLocation + cbSepFile + cbPrintProcessor + cbDatatype + cbParameters;
+        return;
     }
 
-    *pcReturned = i;
-    dwErrorCode = ERROR_SUCCESS;
+    // Set the general fields.
+    ZeroMemory(*ppPrinterInfo, sizeof(PRINTER_INFO_2W));
+    (*ppPrinterInfo)->Attributes = pPrinter->dwAttributes;
+    (*ppPrinterInfo)->cJobs = pPrinter->JobList.NodeCount;
+    (*ppPrinterInfo)->Status = pPrinter->dwStatus;
 
-Cleanup:
-    return dwErrorCode;
+    // Set the pDevMode field (and copy the DevMode).
+    *ppPrinterInfoEnd -= cbDevMode;
+    CopyMemory(*ppPrinterInfoEnd, pPrinter->pDefaultDevMode, cbDevMode);
+    (*ppPrinterInfo)->pDevMode = (PDEVMODEW)(*ppPrinterInfoEnd);
+
+    // Set the pPrinterName field.
+    pwszStrings[0] = DllAllocSplMem(cbPrinterName);
+    p = pwszStrings[0];
+    StringCbCopyExW(p, cbPrinterName, wszComputerName, &p, &cbPrinterName, 0);
+    StringCbCopyExW(p, cbPrinterName, pPrinter->pwszPrinterName, &p, &cbPrinterName, 0);
+
+    // Set the pShareName field.
+    pwszStrings[1] = wszEmpty;
+
+    // Set the pPortName field.
+    pwszStrings[2] = pPrinter->pPort->pwszName;
+
+    // Set the pDriverName field.
+    pwszStrings[3] = pPrinter->pwszPrinterDriver;
+
+    // Set the pComment field ((equals the "Description" registry value).
+    pwszStrings[4] = pPrinter->pwszDescription;
+
+    // Set the pLocation field.
+    pwszStrings[5] = pPrinter->pwszLocation;
+
+    // Set the pSepFile field.
+    pwszStrings[6] = wszEmpty;
+
+    // Set the pPrintProcessor field.
+    pwszStrings[7] = pPrinter->pPrintProcessor->pwszName;
+
+    // Set the pDatatype field.
+    pwszStrings[8] = pPrinter->pwszDefaultDatatype;
+
+    // Set the pParameters field.
+    pwszStrings[9] = wszEmpty;
+
+    // Finally copy the structure and advance to the next one in the output buffer.
+    *ppPrinterInfoEnd = PackStrings(pwszStrings, (PBYTE)(*ppPrinterInfo), dwPrinterInfo2Offsets, *ppPrinterInfoEnd);
+    (*ppPrinterInfo)++;
+
+    // Free the memory for temporary strings.
+    DllFreeSplMem(pwszStrings[0]);
 }
 
-static DWORD
-_LocalEnumPrintersLevel2(DWORD Flags, PCWSTR Name, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned, DWORD cchComputerName, PWSTR wszComputerName)
+static void
+_LocalGetPrinterLevel3(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_3* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName)
 {
-    return ERROR_INVALID_LEVEL;
+    SECURITY_DESCRIPTOR SecurityDescriptor = { 0 };
+
+    if (!ppPrinterInfo)
+    {
+        *pcbNeeded += sizeof(PRINTER_INFO_3) + sizeof(SECURITY_DESCRIPTOR);
+        return;
+    }
+
+    FIXME("Return a valid security descriptor for PRINTER_INFO_3\n");
+
+    // Set the pSecurityDescriptor field (and copy the Security Descriptor).
+    *ppPrinterInfoEnd -= sizeof(SECURITY_DESCRIPTOR);
+    CopyMemory(*ppPrinterInfoEnd, &SecurityDescriptor, sizeof(SECURITY_DESCRIPTOR));
+    (*ppPrinterInfo)->pSecurityDescriptor = (PSECURITY_DESCRIPTOR)(*ppPrinterInfoEnd);
+
+    // Advance to the next structure.
+    (*ppPrinterInfo)++;
 }
 
-static DWORD
-_LocalEnumPrintersLevel4(DWORD Flags, PCWSTR Name, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned, DWORD cchComputerName, PWSTR wszComputerName)
+static void
+_LocalGetPrinterLevel4(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_4W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName)
 {
-    return ERROR_INVALID_LEVEL;
+    size_t cbPrinterName;
+    PWSTR p;
+    PWSTR pwszStrings[1];
+
+    // Calculate the string lengths.
+    cbPrinterName = (cchComputerName + wcslen(pPrinter->pwszPrinterName) + 1) * sizeof(WCHAR);
+
+    if (!ppPrinterInfo)
+    {
+        *pcbNeeded += sizeof(PRINTER_INFO_4W) + cbPrinterName;
+        return;
+    }
+
+    // Set the general fields.
+    (*ppPrinterInfo)->pServerName = NULL;
+    (*ppPrinterInfo)->Attributes = pPrinter->dwAttributes;
+
+    // Set the pPrinterName field.
+    pwszStrings[0] = DllAllocSplMem(cbPrinterName);
+    p = pwszStrings[0];
+    StringCbCopyExW(p, cbPrinterName, wszComputerName, &p, &cbPrinterName, 0);
+    StringCbCopyExW(p, cbPrinterName, pPrinter->pwszPrinterName, &p, &cbPrinterName, 0);
+
+    // Finally copy the structure and advance to the next one in the output buffer.
+    *ppPrinterInfoEnd = PackStrings(pwszStrings, (PBYTE)(*ppPrinterInfo), dwPrinterInfo4Offsets, *ppPrinterInfoEnd);
+    (*ppPrinterInfo)++;
+
+    // Free the memory for temporary strings.
+    DllFreeSplMem(pwszStrings[0]);
 }
 
-static DWORD
-_LocalEnumPrintersLevel5(DWORD Flags, PCWSTR Name, PBYTE pPrinterEnum, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned, DWORD cchComputerName, PWSTR wszComputerName)
+static void
+_LocalGetPrinterLevel5(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_5W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName)
 {
-    return ERROR_INVALID_LEVEL;
+    size_t cbPrinterName;
+    size_t cbPortName;
+    PWSTR p;
+    PWSTR pwszStrings[1];
+
+    // Calculate the string lengths.
+    cbPrinterName = (cchComputerName + wcslen(pPrinter->pwszPrinterName) + 1) * sizeof(WCHAR);
+
+    if (!ppPrinterInfo)
+    {
+        cbPortName = (wcslen(pPrinter->pPort->pwszName) + 1) * sizeof(WCHAR);
+
+        *pcbNeeded += sizeof(PRINTER_INFO_5W) + cbPrinterName + cbPortName;
+        return;
+    }
+
+    // Set the general fields.
+    (*ppPrinterInfo)->Attributes = pPrinter->dwAttributes;
+    (*ppPrinterInfo)->DeviceNotSelectedTimeout = 0;
+    (*ppPrinterInfo)->TransmissionRetryTimeout = 0;
+
+    // Set the pPrinterName field.
+    pwszStrings[0] = DllAllocSplMem(cbPrinterName);
+    p = pwszStrings[0];
+    StringCbCopyExW(p, cbPrinterName, wszComputerName, &p, &cbPrinterName, 0);
+    StringCbCopyExW(p, cbPrinterName, pPrinter->pwszPrinterName, &p, &cbPrinterName, 0);
+
+    // Set the pPortName field.
+    pwszStrings[1] = pPrinter->pPort->pwszName;
+
+    // Finally copy the structure and advance to the next one in the output buffer.
+    *ppPrinterInfoEnd = PackStrings(pwszStrings, (PBYTE)(*ppPrinterInfo), dwPrinterInfo5Offsets, *ppPrinterInfoEnd);
+    (*ppPrinterInfo)++;
+
+    // Free the memory for temporary strings.
+    DllFreeSplMem(pwszStrings[0]);
+}
+
+static void
+_LocalGetPrinterLevel6(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_6* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName)
+{
+    if (!ppPrinterInfo)
+    {
+        *pcbNeeded += sizeof(PRINTER_INFO_6);
+        return;
+    }
+
+    // Set the general fields.
+    (*ppPrinterInfo)->dwStatus = pPrinter->dwStatus;
+
+    // Advance to the next structure.
+    (*ppPrinterInfo)++;
+}
+
+static void
+_LocalGetPrinterLevel7(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_7W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName)
+{
+    if (!ppPrinterInfo)
+    {
+        *pcbNeeded += sizeof(PRINTER_INFO_7W);
+        return;
+    }
+
+    FIXME("No Directory Support, returning DSPRINT_UNPUBLISH for PRINTER_INFO_7 all the time!\n");
+
+    // Set the general fields.
+    (*ppPrinterInfo)->dwAction = DSPRINT_UNPUBLISH;
+    (*ppPrinterInfo)->pszObjectGUID = NULL;
+
+    // Advance to the next structure.
+    (*ppPrinterInfo)++;
+}
+
+static void
+_LocalGetPrinterLevel8(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_8W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName)
+{
+    DWORD cbDevMode;
+
+    // Calculate the string lengths.
+    cbDevMode = pPrinter->pDefaultDevMode->dmSize + pPrinter->pDefaultDevMode->dmDriverExtra;
+
+    if (!ppPrinterInfo)
+    {
+        *pcbNeeded += sizeof(PRINTER_INFO_8W) + cbDevMode;
+        return;
+    }
+
+    // Set the pDevMode field (and copy the DevMode).
+    *ppPrinterInfoEnd -= cbDevMode;
+    CopyMemory(*ppPrinterInfoEnd, pPrinter->pDefaultDevMode, cbDevMode);
+    (*ppPrinterInfo)->pDevMode = (PDEVMODEW)(*ppPrinterInfoEnd);
+
+    // Advance to the next structure.
+    (*ppPrinterInfo)++;
+}
+
+static void
+_LocalGetPrinterLevel9(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_9W* ppPrinterInfo, PBYTE* ppPrinterInfoEnd, PDWORD pcbNeeded, DWORD cchComputerName, PWSTR wszComputerName)
+{
+    DWORD cbDevMode;
+
+    // Calculate the string lengths.
+    cbDevMode = pPrinter->pDefaultDevMode->dmSize + pPrinter->pDefaultDevMode->dmDriverExtra;
+
+    if (!ppPrinterInfo)
+    {
+        *pcbNeeded += sizeof(PRINTER_INFO_9W) + cbDevMode;
+        return;
+    }
+
+    FIXME("Per-user settings are not yet implemented, returning the global DevMode for PRINTER_INFO_9!\n");
+
+    // Set the pDevMode field (and copy the DevMode).
+    *ppPrinterInfoEnd -= cbDevMode;
+    CopyMemory(*ppPrinterInfoEnd, pPrinter->pDefaultDevMode, cbDevMode);
+    (*ppPrinterInfo)->pDevMode = (PDEVMODEW)(*ppPrinterInfoEnd);
+
+    // Advance to the next structure.
+    (*ppPrinterInfo)++;
 }
 
 BOOL WINAPI
@@ -575,7 +873,11 @@ LocalEnumPrinters(DWORD Flags, LPWSTR Name, DWORD Level, LPBYTE pPrinterEnum, DW
 {
     DWORD cchComputerName = 0;
     DWORD dwErrorCode;
+    DWORD i;
+    PBYTE pPrinterInfoEnd;
+    PSKIPLIST_NODE pNode;
     WCHAR wszComputerName[2 + MAX_COMPUTERNAME_LENGTH + 1 + 1] = { 0 };
+    PLOCAL_PRINTER pPrinter;
 
     ASSERT(pcbNeeded);
     ASSERT(pcReturned);
@@ -601,37 +903,111 @@ LocalEnumPrinters(DWORD Flags, LPWSTR Name, DWORD Level, LPBYTE pPrinterEnum, DW
         goto Cleanup;
     }
 
+    if (Level == 3 || Level > 5)
+    {
+        // The caller supplied an invalid level for EnumPrinters.
+        dwErrorCode = ERROR_INVALID_LEVEL;
+        goto Cleanup;
+    }
+
+    if (Level == 1 && Flags & PRINTER_ENUM_NAME && !Name)
+    {
+        // The caller wants information about this Print Provider.
+        // spoolss packs this into an array of information about all Print Providers.
+        dwErrorCode = _DumpLevel1PrintProviderInformation(pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
+        goto Cleanup;
+    }
+
     // Check the supplied Name parameter (if any).
     // This may return a Computer Name string we later prepend to the output.
     dwErrorCode = _LocalEnumPrintersCheckName(Flags, Name, wszComputerName, &cchComputerName);
     if (dwErrorCode != ERROR_SUCCESS)
         goto Cleanup;
 
-    if (Level == 0)
+    // Count the required buffer size and the number of printers.
+    i = 0;
+    for (pNode = PrinterList.Head.Next[0]; pNode; pNode = pNode->Next[0])
     {
-        dwErrorCode = _LocalEnumPrintersLevel0(Flags, Name, pPrinterEnum, cbBuf, pcbNeeded, pcReturned, cchComputerName, wszComputerName);
+        pPrinter = (PLOCAL_PRINTER)pNode->Element;
+
+        // TODO: If PRINTER_ENUM_SHARED is given, add this Printer if it's shared instead of just ignoring it.
+        if (Flags & PRINTER_ENUM_SHARED)
+        {
+            FIXME("Printer Sharing is not supported yet, returning no printers!\n");
+            continue;
+        }
+
+        pfnGetPrinterLevels[Level](pPrinter, NULL, NULL, pcbNeeded, cchComputerName, wszComputerName);
+        i++;
     }
-    else if (Level == 1)
+
+    // Check if the supplied buffer is large enough.
+    if (cbBuf < *pcbNeeded)
     {
-        dwErrorCode = _LocalEnumPrintersLevel1(Flags, Name, pPrinterEnum, cbBuf, pcbNeeded, pcReturned, cchComputerName, wszComputerName);
+        dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
+        goto Cleanup;
     }
-    else if (Level == 2)
+
+    // Copy over the Printer information.
+    pPrinterInfoEnd = &pPrinterEnum[*pcbNeeded];
+
+    for (pNode = PrinterList.Head.Next[0]; pNode; pNode = pNode->Next[0])
     {
-        dwErrorCode = _LocalEnumPrintersLevel2(Flags, Name, pPrinterEnum, cbBuf, pcbNeeded, pcReturned, cchComputerName, wszComputerName);
+        pPrinter = (PLOCAL_PRINTER)pNode->Element;
+
+        // TODO: If PRINTER_ENUM_SHARED is given, add this Printer if it's shared instead of just ignoring it.
+        if (Flags & PRINTER_ENUM_SHARED)
+            continue;
+
+        pfnGetPrinterLevels[Level](pPrinter, &pPrinterEnum, &pPrinterInfoEnd, NULL, cchComputerName, wszComputerName);
     }
-    else if (Level == 4)
+
+    *pcReturned = i;
+    dwErrorCode = ERROR_SUCCESS;
+
+Cleanup:
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
+}
+
+BOOL WINAPI
+LocalGetPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD pcbNeeded)
+{
+    DWORD dwErrorCode;
+    PBYTE pPrinterEnd;
+    PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
+    PLOCAL_PRINTER_HANDLE pPrinterHandle;
+
+    // Check if this is a printer handle.
+    if (pHandle->HandleType != HandleType_Printer)
     {
-        dwErrorCode = _LocalEnumPrintersLevel4(Flags, Name, pPrinterEnum, cbBuf, pcbNeeded, pcReturned, cchComputerName, wszComputerName);
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
     }
-    else if (Level == 5)
+
+    pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->pSpecificHandle;
+
+    if (Level > 9)
     {
-        dwErrorCode = _LocalEnumPrintersLevel5(Flags, Name, pPrinterEnum, cbBuf, pcbNeeded, pcReturned, cchComputerName, wszComputerName);
-    }
-    else
-    {
-        // The caller supplied an invalid level.
+        // The caller supplied an invalid level for GetPrinter.
         dwErrorCode = ERROR_INVALID_LEVEL;
+        goto Cleanup;
     }
+
+    // Count the required buffer size.
+    pfnGetPrinterLevels[Level](pPrinterHandle->pPrinter, NULL, NULL, pcbNeeded, 0, NULL);
+
+    // Check if the supplied buffer is large enough.
+    if (cbBuf < *pcbNeeded)
+    {
+        dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
+        goto Cleanup;
+    }
+
+    // Copy over the Printer information.
+    pPrinterEnd = &pPrinter[*pcbNeeded];
+    pfnGetPrinterLevels[Level](pPrinterHandle->pPrinter, &pPrinter, &pPrinterEnd, NULL, 0, NULL);
+    dwErrorCode = ERROR_SUCCESS;
 
 Cleanup:
     SetLastError(dwErrorCode);

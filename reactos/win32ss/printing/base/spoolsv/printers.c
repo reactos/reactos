@@ -8,23 +8,33 @@
 #include "precomp.h"
 
 static void
-_MarshallDownPrinterInfo(PBYTE pPrinterInfo, DWORD Level)
+_MarshallDownPrinterInfo(PBYTE* ppPrinterInfo, DWORD Level)
 {
-    PPRINTER_INFO_1W pPrinterInfo1;
-    PPRINTER_INFO_2W pPrinterInfo2;
-
     // Replace absolute pointer addresses in the output by relative offsets.
-    if (Level == 1)
+    if (Level == 0)
     {
-        pPrinterInfo1 = (PPRINTER_INFO_1W)pPrinterInfo;
+        PPRINTER_INFO_STRESS pPrinterInfo0 = (PPRINTER_INFO_STRESS)(*ppPrinterInfo);
+
+        pPrinterInfo0->pPrinterName = (PWSTR)((ULONG_PTR)pPrinterInfo0->pPrinterName - (ULONG_PTR)pPrinterInfo0);
+
+        if (pPrinterInfo0->pServerName)
+            pPrinterInfo0->pServerName = (PWSTR)((ULONG_PTR)pPrinterInfo0->pServerName - (ULONG_PTR)pPrinterInfo0);
+
+        *ppPrinterInfo += sizeof(PRINTER_INFO_STRESS);
+    }
+    else if (Level == 1)
+    {
+        PPRINTER_INFO_1W pPrinterInfo1 = (PPRINTER_INFO_1W)(*ppPrinterInfo);
 
         pPrinterInfo1->pName = (PWSTR)((ULONG_PTR)pPrinterInfo1->pName - (ULONG_PTR)pPrinterInfo1);
         pPrinterInfo1->pDescription = (PWSTR)((ULONG_PTR)pPrinterInfo1->pDescription - (ULONG_PTR)pPrinterInfo1);
         pPrinterInfo1->pComment = (PWSTR)((ULONG_PTR)pPrinterInfo1->pComment - (ULONG_PTR)pPrinterInfo1);
+
+        *ppPrinterInfo += sizeof(PRINTER_INFO_1W);
     }
     else if (Level == 2)
     {
-        pPrinterInfo2 = (PPRINTER_INFO_2W)pPrinterInfo;
+        PPRINTER_INFO_2W pPrinterInfo2 = (PPRINTER_INFO_2W)(*ppPrinterInfo);
 
         pPrinterInfo2->pPrinterName = (PWSTR)((ULONG_PTR)pPrinterInfo2->pPrinterName - (ULONG_PTR)pPrinterInfo2);
         pPrinterInfo2->pShareName = (PWSTR)((ULONG_PTR)pPrinterInfo2->pShareName - (ULONG_PTR)pPrinterInfo2);
@@ -42,7 +52,66 @@ _MarshallDownPrinterInfo(PBYTE pPrinterInfo, DWORD Level)
             pPrinterInfo2->pServerName = (PWSTR)((ULONG_PTR)pPrinterInfo2->pServerName - (ULONG_PTR)pPrinterInfo2);
 
         if (pPrinterInfo2->pSecurityDescriptor)
-            pPrinterInfo2->pSecurityDescriptor = (PWSTR)((ULONG_PTR)pPrinterInfo2->pSecurityDescriptor - (ULONG_PTR)pPrinterInfo2);
+            pPrinterInfo2->pSecurityDescriptor = (PSECURITY_DESCRIPTOR)((ULONG_PTR)pPrinterInfo2->pSecurityDescriptor - (ULONG_PTR)pPrinterInfo2);
+
+        *ppPrinterInfo += sizeof(PRINTER_INFO_2W);
+    }
+    else if (Level == 3)
+    {
+        PPRINTER_INFO_3 pPrinterInfo3 = (PPRINTER_INFO_3)(*ppPrinterInfo);
+
+        pPrinterInfo3->pSecurityDescriptor = (PSECURITY_DESCRIPTOR)((ULONG_PTR)pPrinterInfo3->pSecurityDescriptor - (ULONG_PTR)pPrinterInfo3);
+
+        *ppPrinterInfo += sizeof(PRINTER_INFO_3);
+    }
+    else if (Level == 4)
+    {
+        PPRINTER_INFO_4W pPrinterInfo4 = (PPRINTER_INFO_4W)(*ppPrinterInfo);
+
+        pPrinterInfo4->pPrinterName = (PWSTR)((ULONG_PTR)pPrinterInfo4->pPrinterName - (ULONG_PTR)pPrinterInfo4);
+
+        if (pPrinterInfo4->pServerName)
+            pPrinterInfo4->pServerName = (PWSTR)((ULONG_PTR)pPrinterInfo4->pServerName - (ULONG_PTR)pPrinterInfo4);
+
+        *ppPrinterInfo += sizeof(PRINTER_INFO_4W);
+    }
+    else if (Level == 5)
+    {
+        PPRINTER_INFO_5W pPrinterInfo5 = (PPRINTER_INFO_5W)(*ppPrinterInfo);
+
+        pPrinterInfo5->pPrinterName = (PWSTR)((ULONG_PTR)pPrinterInfo5->pPrinterName - (ULONG_PTR)pPrinterInfo5);
+        pPrinterInfo5->pPortName = (PWSTR)((ULONG_PTR)pPrinterInfo5->pPortName - (ULONG_PTR)pPrinterInfo5);
+
+        *ppPrinterInfo += sizeof(PRINTER_INFO_5W);
+    }
+    else if (Level == 6)
+    {
+        *ppPrinterInfo += sizeof(PRINTER_INFO_6);
+    }
+    else if (Level == 7)
+    {
+        PPRINTER_INFO_7W pPrinterInfo7 = (PPRINTER_INFO_7W)(*ppPrinterInfo);
+
+        if (pPrinterInfo7->pszObjectGUID)
+            pPrinterInfo7->pszObjectGUID = (PWSTR)((ULONG_PTR)pPrinterInfo7->pszObjectGUID - (ULONG_PTR)pPrinterInfo7);
+
+        *ppPrinterInfo += sizeof(PRINTER_INFO_7W);
+    }
+    else if (Level == 8)
+    {
+        PPRINTER_INFO_8W pPrinterInfo8 = (PPRINTER_INFO_8W)(*ppPrinterInfo);
+
+        pPrinterInfo8->pDevMode = (PDEVMODEW)((ULONG_PTR)pPrinterInfo8->pDevMode - (ULONG_PTR)pPrinterInfo8);
+
+        *ppPrinterInfo += sizeof(PRINTER_INFO_8W);
+    }
+    else if (Level == 9)
+    {
+        PPRINTER_INFO_9W pPrinterInfo9 = (PPRINTER_INFO_9W)(*ppPrinterInfo);
+
+        pPrinterInfo9->pDevMode = (PDEVMODEW)((ULONG_PTR)pPrinterInfo9->pDevMode - (ULONG_PTR)pPrinterInfo9);
+
+        *ppPrinterInfo += sizeof(PRINTER_INFO_9W);
     }
 }
 
@@ -155,16 +224,8 @@ _RpcEnumPrinters(DWORD Flags, WINSPOOL_HANDLE Name, DWORD Level, BYTE* pPrinterE
         DWORD i;
         PBYTE p = pPrinterEnumAligned;
 
-        // Replace absolute pointer addresses in the output by relative offsets.
         for (i = 0; i < *pcReturned; i++)
-        {
-            _MarshallDownPrinterInfo(p, Level);
-
-            if (Level == 1)
-                p += sizeof(PRINTER_INFO_1W);
-            else if (Level == 2)
-                p += sizeof(PRINTER_INFO_2W);
-        }
+            _MarshallDownPrinterInfo(&p, Level);
     }
 
     RpcRevertToSelf();
@@ -183,8 +244,30 @@ _RpcFlushPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, BYTE* pBuf, DWORD cbBuf, DWOR
 DWORD
 _RpcGetPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD Level, BYTE* pPrinter, DWORD cbBuf, DWORD* pcbNeeded)
 {
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
+    DWORD dwErrorCode;
+    PBYTE pPrinterAligned;
+
+    dwErrorCode = RpcImpersonateClient(NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RpcImpersonateClient failed with error %lu!\n", dwErrorCode);
+        return dwErrorCode;
+    }
+
+    pPrinterAligned = AlignRpcPtr(pPrinter, &cbBuf);
+    GetPrinterW(hPrinter, Level, pPrinterAligned, cbBuf, pcbNeeded);
+    dwErrorCode = GetLastError();
+
+    if (dwErrorCode == ERROR_SUCCESS)
+    {
+        PBYTE p = pPrinterAligned;
+        _MarshallDownPrinterInfo(&p, Level);
+    }
+
+    RpcRevertToSelf();
+    UndoAlignRpcPtr(pPrinter, pPrinterAligned, cbBuf, pcbNeeded);
+
+    return dwErrorCode;
 }
 
 DWORD

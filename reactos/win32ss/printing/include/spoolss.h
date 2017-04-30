@@ -19,6 +19,41 @@ typedef struct _MARSHALL_DOWN_INFO
 }
 MARSHALL_DOWN_INFO, *PMARSHALL_DOWN_INFO;
 
+/** From MS-RPRN, 2.2.1.10.1 */
+typedef struct _PRINTER_INFO_STRESS
+{
+    PWSTR pPrinterName;
+    PWSTR pServerName;
+    DWORD cJobs;
+    DWORD cTotalJobs;
+    DWORD cTotalBytes;
+    SYSTEMTIME stUpTime;
+    DWORD MaxcRef;
+    DWORD cTotalPagesPrinted;
+    DWORD dwGetVersion;
+    DWORD fFreeBuild;
+    DWORD cSpooling;
+    DWORD cMaxSpooling;
+    DWORD cRef;
+    DWORD cErrorOutOfPaper;
+    DWORD cErrorNotReady;
+    DWORD cJobError;
+    DWORD dwNumberOfProcessors;
+    DWORD dwProcessorType;
+    DWORD dwHighPartTotalBytes;
+    DWORD cChangeID;
+    DWORD dwLastError;
+    DWORD Status;
+    DWORD cEnumerateNetworkPrinters;
+    DWORD cAddNetPrinters;
+    USHORT wProcessorArchitecture;
+    USHORT wProcessorLevel;
+    DWORD cRefIC;
+    DWORD dwReserved2;
+    DWORD dwReserved3;
+}
+PRINTER_INFO_STRESS, *PPRINTER_INFO_STRESS;
+
 PVOID WINAPI AlignRpcPtr(PVOID pBuffer, PDWORD pcbBuffer);
 PWSTR WINAPI AllocSplStr(PCWSTR pwszInput);
 PVOID WINAPI DllAllocSplMem(DWORD dwBytes);

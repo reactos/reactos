@@ -31,7 +31,7 @@ static const PRINTPROVIDOR _PrintProviderFunctions = {
     NULL,                                       // fpAddPrinter
     NULL,                                       // fpDeletePrinter
     NULL,                                       // fpSetPrinter
-    NULL,                                       // fpGetPrinter
+    LocalGetPrinter,                            // fpGetPrinter
     LocalEnumPrinters,                          // fpEnumPrinters
     NULL,                                       // fpAddPrinterDriver
     NULL,                                       // fpEnumPrinterDrivers
