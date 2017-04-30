@@ -486,11 +486,7 @@ IopLogWorker(IN PVOID Parameter)
 
 VOID
 NTAPI
-IopFreeApc(IN PKAPC Apc,
-           IN PKNORMAL_ROUTINE *NormalRoutine,
-           IN PVOID *NormalContext,
-           IN PVOID *SystemArgument1,
-           IN PVOID *SystemArgument2)
+IopFreeApc(IN PKAPC Apc)
 {
     /* Free the APC */
     ExFreePool(Apc);
@@ -498,15 +494,13 @@ IopFreeApc(IN PKAPC Apc,
 
 VOID
 NTAPI
-IopRaiseHardError(IN PKAPC Apc,
-                  IN PKNORMAL_ROUTINE *NormalRoutine,
-                  IN PVOID *NormalContext,
-                  IN PVOID *SystemArgument1,
-                  IN PVOID *SystemArgument2)
+IopRaiseHardError(IN PVOID NormalContext,
+                  IN PVOID SystemArgument1,
+                  IN PVOID SystemArgument2)
 {
-    PIRP Irp = (PIRP)NormalContext;
-    //PVPB Vpb = (PVPB)SystemArgument1;
-    //PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)SystemArgument2;
+    PIRP Irp = NormalContext;
+    //PVPB Vpb = SystemArgument1;
+    //PDEVICE_OBJECT DeviceObject = SystemArgument2;
 
     UNIMPLEMENTED;
 
@@ -683,8 +677,8 @@ IoRaiseHardError(IN PIRP Irp,
                     &Thread->Tcb,
                     Irp->ApcEnvironment,
                     NULL,
-                    (PKRUNDOWN_ROUTINE)IopFreeApc,
-                    (PKNORMAL_ROUTINE)IopRaiseHardError,
+                    IopFreeApc,
+                    IopRaiseHardError,
                     KernelMode,
                     Irp);
 
