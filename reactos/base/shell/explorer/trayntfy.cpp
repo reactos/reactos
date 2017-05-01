@@ -714,19 +714,18 @@ public:
                 0,
                 TMT_TEXTCOLOR,
                 &textColor);
+
+            if (this->hFont != NULL)
+                DeleteObject(this->hFont);
+
+            SetFont(hFont, FALSE);
         }
         else
         {
-            NONCLIENTMETRICS ncm = { 0 };
-            ncm.cbSize = sizeof(ncm);
-            SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, FALSE);
-
-            hFont = CreateFontIndirectW(&ncm.lfMessageFont);
-
+            /* We don't need to set a font here, our parent will use 
+              * WM_SETFONT to set the right one when themes are not enabled. */
             textColor = RGB(0, 0, 0);
         }
-
-        SetFont(hFont, FALSE);
 
         CloseThemeData(clockTheme);
 
