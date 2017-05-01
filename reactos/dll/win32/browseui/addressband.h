@@ -41,6 +41,9 @@ private:
     HWND                                    fGoButton;
     HWND                                    fComboBox;
     bool                                    fGoButtonShown;
+    HIMAGELIST                              m_himlNormal;
+    HIMAGELIST                              m_himlHot;
+
 public:
     CAddressBand();
     virtual ~CAddressBand();
