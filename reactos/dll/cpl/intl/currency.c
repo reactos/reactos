@@ -252,6 +252,11 @@ InitDigitGroupCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
                            -1,
                            (LPARAM)szBuffer);
     }
+
+    SendDlgItemMessageW(hwndDlg, IDC_CURRENCYGRPNUM,
+                        CB_SETCURSEL,
+                        pGlobalData->nCurrGrouping,
+                        0);
 }
 
 
