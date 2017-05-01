@@ -1445,7 +1445,7 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
     POINT pt;
     BOOL has_alpha;
 #ifdef __REACTOS__
-    HDC hdcSaturated;
+    HDC hdcSaturated = NULL;
 #endif
 
     if (!pimldp || !(himl = pimldp->himl)) return FALSE;
