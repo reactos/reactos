@@ -409,10 +409,20 @@ TestPhysicalMemorySection(VOID)
     PHYSICAL_ADDRESS MyPagePhysical;
     PUCHAR ZeroPageContents;
     PHYSICAL_ADDRESS ZeroPagePhysical;
+    PHYSICAL_ADDRESS PhysicalAddress;
     PVOID Mapping;
+    SYSTEM_BASIC_INFORMATION BasicInfo;
     PUCHAR MappingBytes;
     SIZE_T ViewSize;
     SIZE_T EqualBytes;
+    struct
+    {
+        PVOID Mapping;
+        PHYSICAL_ADDRESS PhysicalAddress;
+        SIZE_T ViewSize;
+    } *UserStruct;
+    PVOID UserMem;
+    SIZE_T UserSize;
 
     MyPage = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE, 'MPmK');
     if (skip(MyPage != NULL, "Out of memory\n"))
@@ -444,7 +454,7 @@ TestPhysicalMemorySection(VOID)
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &SectionName,
-                               OBJ_KERNEL_HANDLE,
+                               0,
                                NULL,
                                NULL);
     Status = ZwOpenSection(&SectionHandle, SECTION_ALL_ACCESS, &ObjectAttributes);
@@ -539,7 +549,208 @@ TestPhysicalMemorySection(VOID)
             ok_eq_hex(Status, STATUS_SUCCESS);
         }
 
-        Status = ZwClose(SectionHandle);
+        /* Unaligned mapping will get aligned automatically */
+        Mapping = NULL;
+        ViewSize = PAGE_SIZE - 4;
+        PhysicalAddress.QuadPart = MyPagePhysical.QuadPart + 4;
+        Status = ZwMapViewOfSection(SectionHandle,
+                                    ZwCurrentProcess(),
+                                    &Mapping,
+                                    0,
+                                    0,
+                                    &PhysicalAddress,
+                                    &ViewSize,
+                                    ViewUnmap,
+                                    0,
+                                    PAGE_READWRITE);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+        if (!skip(NT_SUCCESS(Status), "No view\n"))
+        {
+            ok((LONG_PTR)Mapping > 0, "Mapping = %p\n", Mapping);
+            ok(((ULONG_PTR)Mapping % PAGE_SIZE) == 0, "Mapping = %p\n", Mapping);
+            ok_eq_ulong(ViewSize, PAGE_SIZE);
+
+            EqualBytes = RtlCompareMemory(Mapping,
+                                          MyPage,
+                                          PAGE_SIZE);
+            ok_eq_size(EqualBytes, PAGE_SIZE);
+
+            Status = ZwUnmapViewOfSection(ZwCurrentProcess(), Mapping);
+            ok_eq_hex(Status, STATUS_SUCCESS);
+        }
+
+        /* The following tests need to pass parameters in user mode */
+        UserStruct = NULL;
+        UserMem = NULL;
+        UserSize = PAGE_SIZE;
+        Status = ZwAllocateVirtualMemory(ZwCurrentProcess(),
+                                         &UserMem,
+                                         0,
+                                         &UserSize,
+                                         MEM_COMMIT,
+                                         PAGE_READWRITE);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+        if (NT_SUCCESS(Status))
+            UserStruct = UserMem;
+
+        /* Find highest physical page -- only kernel can map beyond this */
+        Status = ZwQuerySystemInformation(SystemBasicInformation,
+                                          &BasicInfo,
+                                          sizeof(BasicInfo),
+                                          NULL);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+        trace("HighestPhysicalPageNumber: %lx\n", BasicInfo.HighestPhysicalPageNumber);
+
+        /* Start one page before highest physical -- succeeds for user/kernel */
+        Mapping = NULL;
+        ViewSize = PAGE_SIZE;
+        PhysicalAddress.QuadPart = (ULONGLONG)(BasicInfo.HighestPhysicalPageNumber - 1) << PAGE_SHIFT;
+        Status = ZwMapViewOfSection(SectionHandle,
+                                    ZwCurrentProcess(),
+                                    &Mapping,
+                                    0,
+                                    0,
+                                    &PhysicalAddress,
+                                    &ViewSize,
+                                    ViewUnmap,
+                                    0,
+                                    PAGE_READWRITE);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+        if (NT_SUCCESS(Status))
+            ZwUnmapViewOfSection(ZwCurrentProcess(), Mapping);
+
+        /* Repeat from user mode */
+        if (!skip(UserStruct != NULL, "No user memory\n"))
+        {
+            KmtStartSeh()
+                UserStruct->Mapping = NULL;
+                UserStruct->PhysicalAddress.QuadPart = PhysicalAddress.QuadPart;
+                UserStruct->ViewSize = PAGE_SIZE;
+            KmtEndSeh(STATUS_SUCCESS);
+
+            Status = NtMapViewOfSection(SectionHandle,
+                                        NtCurrentProcess(),
+                                        &UserStruct->Mapping,
+                                        0,
+                                        0,
+                                        &UserStruct->PhysicalAddress,
+                                        &UserStruct->ViewSize,
+                                        ViewUnmap,
+                                        0,
+                                        PAGE_READWRITE);
+            ok_eq_hex(Status, STATUS_SUCCESS);
+            if (NT_SUCCESS(Status))
+            {
+                KmtStartSeh()
+                    ZwUnmapViewOfSection(ZwCurrentProcess(), UserStruct->Mapping);
+                KmtEndSeh(STATUS_SUCCESS);
+            }
+        }
+
+        /* Now start at highest physical -- fails for user */
+        Mapping = NULL;
+        ViewSize = PAGE_SIZE;
+        PhysicalAddress.QuadPart = (ULONGLONG)BasicInfo.HighestPhysicalPageNumber << PAGE_SHIFT;
+        Status = ZwMapViewOfSection(SectionHandle,
+                                    ZwCurrentProcess(),
+                                    &Mapping,
+                                    0,
+                                    0,
+                                    &PhysicalAddress,
+                                    &ViewSize,
+                                    ViewUnmap,
+                                    0,
+                                    PAGE_READWRITE);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+        if (NT_SUCCESS(Status))
+            ZwUnmapViewOfSection(ZwCurrentProcess(), Mapping);
+
+        /* Repeat from user mode */
+        if (!skip(UserStruct != NULL, "No user memory\n"))
+        {
+            KmtStartSeh()
+                UserStruct->Mapping = NULL;
+                UserStruct->PhysicalAddress.QuadPart = PhysicalAddress.QuadPart;
+                UserStruct->ViewSize = PAGE_SIZE;
+            KmtEndSeh(STATUS_SUCCESS);
+
+            Status = NtMapViewOfSection(SectionHandle,
+                                        NtCurrentProcess(),
+                                        &UserStruct->Mapping,
+                                        0,
+                                        0,
+                                        &UserStruct->PhysicalAddress,
+                                        &UserStruct->ViewSize,
+                                        ViewUnmap,
+                                        0,
+                                        PAGE_READWRITE);
+            ok_eq_hex(Status, STATUS_INVALID_PARAMETER_6);
+            if (NT_SUCCESS(Status))
+            {
+                KmtStartSeh()
+                    ZwUnmapViewOfSection(ZwCurrentProcess(), UserStruct->Mapping);
+                KmtEndSeh(STATUS_SUCCESS);
+            }
+        }
+
+        /* End of view crosses highest physical -- fails for user */
+        Mapping = NULL;
+        ViewSize = 2 * PAGE_SIZE;
+        PhysicalAddress.QuadPart = (ULONGLONG)(BasicInfo.HighestPhysicalPageNumber - 1) << PAGE_SHIFT;
+        Status = ZwMapViewOfSection(SectionHandle,
+                                    ZwCurrentProcess(),
+                                    &Mapping,
+                                    0,
+                                    0,
+                                    &PhysicalAddress,
+                                    &ViewSize,
+                                    ViewUnmap,
+                                    0,
+                                    PAGE_READWRITE);
+        ok_eq_hex(Status, STATUS_SUCCESS);
+        if (NT_SUCCESS(Status))
+            ZwUnmapViewOfSection(ZwCurrentProcess(), Mapping);
+
+        /* Repeat from user mode */
+        if (!skip(UserStruct != NULL, "No user memory\n"))
+        {
+            KmtStartSeh()
+                UserStruct->Mapping = NULL;
+                UserStruct->PhysicalAddress.QuadPart = PhysicalAddress.QuadPart;
+                UserStruct->ViewSize = 2 * PAGE_SIZE;
+            KmtEndSeh(STATUS_SUCCESS);
+
+            Status = NtMapViewOfSection(SectionHandle,
+                                        NtCurrentProcess(),
+                                        &UserStruct->Mapping,
+                                        0,
+                                        0,
+                                        &UserStruct->PhysicalAddress,
+                                        &UserStruct->ViewSize,
+                                        ViewUnmap,
+                                        0,
+                                        PAGE_READWRITE);
+            ok_eq_hex(Status, STATUS_INVALID_PARAMETER_6);
+            if (NT_SUCCESS(Status))
+            {
+                KmtStartSeh()
+                    ZwUnmapViewOfSection(ZwCurrentProcess(), UserStruct->Mapping);
+                KmtEndSeh(STATUS_SUCCESS);
+            }
+        }
+
+        /* Free user memory and close section */
+        if (!skip(UserStruct != NULL, "No user memory\n"))
+        {
+            UserSize = 0;
+            Status = ZwFreeVirtualMemory(ZwCurrentProcess(),
+                                         &UserMem,
+                                         &UserSize,
+                                         MEM_RELEASE);
+            ok_eq_hex(Status, STATUS_SUCCESS);
+        }
+
+        Status = ObCloseHandle(SectionHandle, UserMode);
         ok_eq_hex(Status, STATUS_SUCCESS);
     }
 
