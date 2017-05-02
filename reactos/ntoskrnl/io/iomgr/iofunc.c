@@ -1901,6 +1901,14 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
         return Status;
     }
 
+    /* Are there two associated completion routines? */
+    if (FileObject->CompletionContext != NULL && ApcRoutine != NULL)
+    {
+        ObDereferenceObject(FileObject);
+        if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_SYSB);
+        return STATUS_INVALID_PARAMETER;
+    }
+
     /* Check if we have an even handle */
     if (EventHandle)
     {
@@ -1914,6 +1922,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
         if (!NT_SUCCESS(Status))
         {
             /* Fail */
+            if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_SYSB);
             ObDereferenceObject(FileObject);
             return Status;
         }
