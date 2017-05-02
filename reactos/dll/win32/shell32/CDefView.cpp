@@ -2986,6 +2986,7 @@ HRESULT WINAPI CDefView::Drop(IDataObject* pDataObject, DWORD grfKeyState, POINT
 {
     ERR("GetKeyState(VK_LBUTTON): %d\n", GetKeyState(VK_LBUTTON));
 
+    ImageList_DragLeave(m_hWnd);
     ImageList_EndDrag();
 
     if ((m_iDragOverItem == -1 || m_pCurDropTarget == NULL) && 
