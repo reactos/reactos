@@ -5161,6 +5161,8 @@ MmCreateSection (OUT PVOID  * Section,
                                          MaximumSize,
                                          SectionPageProtection,
                                          AllocationAttributes);
+        if (FileObject)
+            ObDereferenceObject(FileObject);
     }
 
     return Status;
