@@ -3689,24 +3689,36 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
         return Status;
     }
 
-    if (!(AllocationType & MEM_DOS_LIM))
+    if (MiIsRosSectionObject(Section) &&
+        (Section->AllocationAttributes & SEC_PHYSICALMEMORY))
+    {
+        if (PreviousMode == UserMode &&
+            SafeSectionOffset.QuadPart + SafeViewSize > MmHighestPhysicalPage << PAGE_SHIFT)
+        {
+            DPRINT1("Denying map past highest physical page.\n");
+            ObDereferenceObject(Section);
+            ObDereferenceObject(Process);
+            return STATUS_INVALID_PARAMETER_6;
+        }
+    }
+    else if (!(AllocationType & MEM_DOS_LIM))
     {
         /* Check for non-allocation-granularity-aligned BaseAddress */
         if (SafeBaseAddress != ALIGN_DOWN_POINTER_BY(SafeBaseAddress, MM_VIRTMEM_GRANULARITY))
         {
-           DPRINT("BaseAddress is not at 64-kilobyte address boundary.");
-           ObDereferenceObject(Section);
-           ObDereferenceObject(Process);
-           return STATUS_MAPPED_ALIGNMENT;
+            DPRINT("BaseAddress is not at 64-kilobyte address boundary.\n");
+            ObDereferenceObject(Section);
+            ObDereferenceObject(Process);
+            return STATUS_MAPPED_ALIGNMENT;
         }
 
         /* Do the same for the section offset */
         if (SafeSectionOffset.LowPart != ALIGN_DOWN_BY(SafeSectionOffset.LowPart, MM_VIRTMEM_GRANULARITY))
         {
-           DPRINT("SectionOffset is not at 64-kilobyte address boundary.");
-           ObDereferenceObject(Section);
-           ObDereferenceObject(Process);
-           return STATUS_MAPPED_ALIGNMENT;
+            DPRINT("SectionOffset is not at 64-kilobyte address boundary.\n");
+            ObDereferenceObject(Section);
+            ObDereferenceObject(Process);
+            return STATUS_MAPPED_ALIGNMENT;
         }
     }
 
