@@ -394,6 +394,7 @@ VfatCreateFile(
     ULONG RequestedDisposition, RequestedOptions;
     PVFATFCB pFcb = NULL;
     PVFATFCB ParentFcb = NULL;
+    PVFATCCB pCcb = NULL;
     PWCHAR c, last;
     BOOLEAN PagingFileCreate;
     BOOLEAN Dots;
@@ -657,6 +658,12 @@ VfatCreateFile(
                 }
             }
 
+            pCcb = FileObject->FsContext2;
+            if (BooleanFlagOn(RequestedOptions, FILE_DELETE_ON_CLOSE))
+            {
+                pCcb->Flags |= CCB_DELETE_ON_CLOSE;
+            }
+
             pFcb->OpenHandleCount++;
             DeviceExt->OpenHandleCount++;
         }
@@ -904,6 +911,12 @@ VfatCreateFile(
     {
         IoUpdateShareAccess(FileObject,
                             &pFcb->FCBShareAccess);
+    }
+
+    pCcb = FileObject->FsContext2;
+    if (BooleanFlagOn(RequestedOptions, FILE_DELETE_ON_CLOSE))
+    {
+        pCcb->Flags |= CCB_DELETE_ON_CLOSE;
     }
 
     if (Irp->IoStatus.Information == FILE_CREATED)

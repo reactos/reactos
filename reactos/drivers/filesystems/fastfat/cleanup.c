@@ -24,6 +24,7 @@ VfatCleanupFile(
     PVFAT_IRP_CONTEXT IrpContext)
 {
     PVFATFCB pFcb;
+    PVFATCCB pCcb;
     PDEVICE_EXTENSION DeviceExt = IrpContext->DeviceExt;
     PFILE_OBJECT FileObject = IrpContext->FileObject;
 
@@ -56,6 +57,12 @@ VfatCleanupFile(
         {
             ExReleaseResourceLite(&pFcb->MainResource);
             return STATUS_PENDING;
+        }
+
+        pCcb = FileObject->FsContext2;
+        if (BooleanFlagOn(pCcb->Flags, CCB_DELETE_ON_CLOSE))
+        {
+            pFcb->Flags |= FCB_DELETE_PENDING;
         }
 
         /* Notify about the cleanup */

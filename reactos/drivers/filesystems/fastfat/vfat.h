@@ -486,9 +486,12 @@ typedef struct _VFATFCB
     ULONG LastOffset;
 } VFATFCB, *PVFATFCB;
 
+#define CCB_DELETE_ON_CLOSE     0x0001
+
 typedef struct _VFATCCB
 {
     LARGE_INTEGER  CurrentByteOffset;
+    ULONG Flags;
     /* for DirectoryControl */
     ULONG Entry;
     /* for DirectoryControl */
