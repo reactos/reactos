@@ -40,4 +40,33 @@ BYTE CodePageToCharSet(UINT CodePage);
 VOID PaintConsole(LPDRAWITEMSTRUCT drawItem, PCONSOLE_STATE_INFO pConInfo);
 BOOL PaintText(LPDRAWITEMSTRUCT drawItem, PCONSOLE_STATE_INFO pConInfo, TEXT_TYPE TextMode);
 
+
+struct _LIST_CTL;
+
+typedef INT (*PLIST_GETCOUNT)(IN struct _LIST_CTL* ListCtl);
+typedef ULONG_PTR (*PLIST_GETDATA)(IN struct _LIST_CTL* ListCtl, IN INT Index);
+
+typedef struct _LIST_CTL
+{
+    HWND hWndList;
+    PLIST_GETCOUNT GetCount;
+    PLIST_GETDATA  GetData;
+} LIST_CTL, *PLIST_CTL;
+
+UINT
+BisectListSortedByValueEx(
+    IN PLIST_CTL ListCtl,
+    IN ULONG_PTR Value,
+    IN UINT itemStart,
+    IN UINT itemEnd,
+    OUT PUINT pValueItem OPTIONAL,
+    IN BOOL BisectRightOrLeft);
+
+UINT
+BisectListSortedByValue(
+    IN PLIST_CTL ListCtl,
+    IN ULONG_PTR Value,
+    OUT PUINT pValueItem OPTIONAL,
+    IN BOOL BisectRightOrLeft);
+
 #endif /* CONSOLE_H__ */

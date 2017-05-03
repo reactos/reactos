@@ -15,126 +15,21 @@
 #define MAX_VALUE_NAME 16383
 
 
-/*
- * A function that locates the insertion point (index) for a given value 'Value'
- * in a list 'List' to maintain its sorted order by increasing values.
- *
- * - When 'BisectRightOrLeft' == TRUE, the bisection is performed to the right,
- *   i.e. the returned insertion point comes after (to the right of) any existing
- *   entries of 'Value' in 'List'.
- *   The returned insertion point 'i' partitions the list 'List' into two halves
- *   such that:
- *       all(val <= Value for val in List[start:i[) for the left side, and
- *       all(val >  Value for val in List[i:end+1[) for the right side.
- *
- * - When 'BisectRightOrLeft' == FALSE, the bisection is performed to the left,
- *   i.e. the returned insertion point comes before (to the left of) any existing
- *   entries of 'Value' in 'List'.
- *   The returned insertion point 'i' partitions the list 'List' into two halves
- *   such that:
- *       all(val <  Value for val in List[start:i[) for the left side, and
- *       all(val >= Value for val in List[i:end+1[) for the right side.
- *
- * The exact value of List[i] may, or may not, be equal to Value, depending on
- * whether or not 'Value' is actually present on the list.
- */
-static UINT
-BisectListSortedByValueEx(
-    IN HWND hWndList,
-    IN ULONG_PTR Value,
-    IN UINT itemStart,
-    IN UINT itemEnd,
-    OUT PUINT pValueItem OPTIONAL,
-    IN BOOL BisectRightOrLeft)
+static INT
+List_GetCount(IN PLIST_CTL ListCtl)
 {
-    UINT iItemStart, iItemEnd, iItem;
-    ULONG_PTR itemData;
-
-    /* Sanity checks */
-    if (itemStart > itemEnd)
-        return CB_ERR; // Fail
-
-    /* Initialize */
-    iItemStart = itemStart;
-    iItemEnd = itemEnd;
-    iItem = iItemStart;
-
-    if (pValueItem)
-        *pValueItem = CB_ERR;
-
-    while (iItemStart <= iItemEnd)
-    {
-        /*
-         * Bisect. Note the following:
-         * - if iItemEnd == iItemStart + 1, then iItem == iItemStart;
-         * - if iItemStart == iItemEnd, then iItemStart == iItem == iItemEnd.
-         * In all but the last case, iItemStart <= iItem < iItemEnd.
-         */
-        iItem = (iItemStart + iItemEnd) / 2;
-
-        itemData = (ULONG_PTR)SendMessageW(hWndList, CB_GETITEMDATA, (WPARAM)iItem, 0);
-        if (itemData == CB_ERR)
-            return CB_ERR; // Fail
-
-        if (Value == itemData)
-        {
-            /* Found a candidate */
-            if (pValueItem)
-                *pValueItem = iItem;
-
-            /*
-             * Try to find the last element (if BisectRightOrLeft == TRUE)
-             * or the first element (if BisectRightOrLeft == FALSE).
-             */
-            if (BisectRightOrLeft)
-            {
-                iItemStart = iItem + 1; // iItemStart may be > iItemEnd
-            }
-            else
-            {
-                if (iItem <= itemStart) break;
-                iItemEnd = iItem - 1;   // iItemEnd may be < iItemStart, i.e. iItemStart may be > iItemEnd
-            }
-        }
-        else if (Value < itemData)
-        {
-            if (iItem <= itemStart) break;
-            /* The value should be before iItem */
-            iItemEnd = iItem - 1;   // iItemEnd may be < iItemStart, i.e. iItemStart may be > iItemEnd, if iItem == iItemStart.
-        }
-        else // if (itemData < Value)
-        {
-            /* The value should be after iItem */
-            iItemStart = iItem + 1; // iItemStart may be > iItemEnd, if iItem == iItemEnd.
-        }
-
-        /* Here, iItemStart may be == iItemEnd */
-    }
-
-    return iItemStart;
+    return (INT)SendMessageW(ListCtl->hWndList, CB_GETCOUNT, 0, 0);
 }
 
-static UINT
-BisectListSortedByValue(
-    IN HWND hWndList,
-    IN ULONG_PTR Value,
-    OUT PUINT pValueItem OPTIONAL,
-    IN BOOL BisectRightOrLeft)
+static ULONG_PTR
+List_GetData(IN PLIST_CTL ListCtl, IN INT Index)
 {
-    INT iItemEnd = (INT)SendMessageW(hWndList, CB_GETCOUNT, 0, 0);
-    if (iItemEnd == CB_ERR || iItemEnd <= 0)
-        return CB_ERR; // Fail
-
-    return BisectListSortedByValueEx(hWndList, Value,
-                                     0, (UINT)(iItemEnd - 1),
-                                     pValueItem,
-                                     BisectRightOrLeft);
+    return (ULONG_PTR)SendMessageW(ListCtl->hWndList, CB_GETITEMDATA, (WPARAM)Index, 0);
 }
-
 
 static VOID
 AddCodePage(
-    IN HWND hWndList,
+    IN PLIST_CTL ListCtl,
     IN UINT CodePage)
 {
     UINT iItem, iDupItem;
@@ -160,25 +55,26 @@ AddCodePage(
     {
         /* We failed, just use the code page value as its name */
         // _ultow(CodePage, CPInfo.CodePageName, 10);
-        _snwprintf(CPInfo.CodePageName, ARRAYSIZE(CPInfo.CodePageName), L"%lu", CodePage);
+        StringCchPrintfW(CPInfo.CodePageName, ARRAYSIZE(CPInfo.CodePageName), L"%lu", CodePage);
     }
 
     /* Add the code page into the list, sorted by code page value. Avoid any duplicates. */
     iDupItem = CB_ERR;
-    iItem = BisectListSortedByValue(hWndList, CodePage, &iDupItem, TRUE);
+    iItem = BisectListSortedByValue(ListCtl, CodePage, &iDupItem, TRUE);
     if (iItem == CB_ERR)
         iItem = 0;
     if (iDupItem != CB_ERR)
         return;
-    iItem = (UINT)SendMessageW(hWndList, CB_INSERTSTRING, iItem, (LPARAM)CPInfo.CodePageName);
+    iItem = (UINT)SendMessageW(ListCtl->hWndList, CB_INSERTSTRING, iItem, (LPARAM)CPInfo.CodePageName);
     if (iItem != CB_ERR && iItem != CB_ERRSPACE)
-        iItem = SendMessageW(hWndList, CB_SETITEMDATA, iItem, CodePage);
+        iItem = SendMessageW(ListCtl->hWndList, CB_SETITEMDATA, iItem, CodePage);
 }
 
 static VOID
-BuildCodePageList(IN HWND hDlg)
+BuildCodePageList(
+    IN HWND hDlg)
 {
-    HWND hWndList;
+    LIST_CTL ListCtl;
     HKEY hKey;
     DWORD dwIndex, dwSize, dwType;
     UINT CodePage;
@@ -195,7 +91,9 @@ BuildCodePageList(IN HWND hDlg)
         return;
     }
 
-    hWndList = GetDlgItem(hDlg, IDL_CODEPAGE);
+    ListCtl.hWndList = GetDlgItem(hDlg, IDL_CODEPAGE);
+    ListCtl.GetCount = List_GetCount;
+    ListCtl.GetData  = List_GetData;
 
     /* Enumerate all the available code pages on the system */
     dwSize  = ARRAYSIZE(szValueName);
@@ -218,23 +116,23 @@ BuildCodePageList(IN HWND hDlg)
          */
         CodePage = (UINT)_wtol(szValueName);
         if (CodePage == 0) continue;
-        AddCodePage(hWndList, CodePage);
+        AddCodePage(&ListCtl, CodePage);
     }
 
     RegCloseKey(hKey);
 
     /* Add the special UTF-7 (CP_UTF7 65000) and UTF-8 (CP_UTF8 65001) code pages */
-    AddCodePage(hWndList, CP_UTF7);
-    AddCodePage(hWndList, CP_UTF8);
+    AddCodePage(&ListCtl, CP_UTF7);
+    AddCodePage(&ListCtl, CP_UTF8);
 
     /* Find and select the current code page in the sorted list */
-    if (BisectListSortedByValue(hWndList, ConInfo->CodePage, &CodePage, FALSE) == CB_ERR ||
+    if (BisectListSortedByValue(&ListCtl, ConInfo->CodePage, &CodePage, FALSE) == CB_ERR ||
         CodePage == CB_ERR)
     {
         /* Not found, select the first element */
         CodePage = 0;
     }
-    SendMessageW(hWndList, CB_SETCURSEL, (WPARAM)CodePage, 0);
+    SendMessageW(ListCtl.hWndList, CB_SETCURSEL, (WPARAM)CodePage, 0);
 }
 
 static VOID
