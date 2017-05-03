@@ -296,10 +296,7 @@ HRESULT CMenuToolbarBase::ShowDW(BOOL fShow)
     UpdateImageLists();
 
     // For custom-drawing
-    if (IsAppThemed())
-        GetThemeSysBool(GetWindowTheme(m_hWnd), TMT_FLATMENUS);
-    else
-        SystemParametersInfo(SPI_GETFLATMENU, 0, &m_useFlatMenus, 0);
+    SystemParametersInfo(SPI_GETFLATMENU, 0, &m_useFlatMenus, 0);
 
     return S_OK;
 }
@@ -387,10 +384,7 @@ HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
 
     SetWindowTheme(m_hWnd, L"", L"");
 
-    if (IsAppThemed())
-        GetThemeSysBool(GetWindowTheme(m_hWnd), TMT_FLATMENUS);
-    else
-        SystemParametersInfo(SPI_GETFLATMENU, 0, &m_useFlatMenus, 0);
+    SystemParametersInfo(SPI_GETFLATMENU, 0, &m_useFlatMenus, 0);
 
     m_menuBand->AdjustForTheme(m_useFlatMenus);
 
