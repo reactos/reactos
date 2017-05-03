@@ -9,35 +9,12 @@
 
 /* INCLUDES *******************************************************************/
 
-/* PSDK/NDK Headers */
-
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h> // For LF_FACESIZE
-#include <wincon.h>
-#include <winnls.h>
-#include <winreg.h>
-// #include <winuser.h>
-// #include <imm.h>
+#include "precomp.h"
 
 // /* Undocumented user definitions */
 // #include <undocuser.h>
 
-#define NTOS_MODE_USER
-// #include <ndk/cmfuncs.h>
-// #include <ndk/exfuncs.h>
-#include <ndk/obfuncs.h>
-// #include <ndk/psfuncs.h>
-#include <ndk/rtlfuncs.h>
-
 #include "settings.h"
-
-#include <stdio.h> // for swprintf
-#include <strsafe.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -45,6 +22,7 @@
 /* GLOBALS ********************************************************************/
 
 /* Default cursor size -- see conio_winsrv.h */
+// #define SMALL_SIZE 25
 #define CSR_DEFAULT_CURSOR_SIZE 25
 
 /* Default attributes -- see conio.h */
@@ -76,20 +54,15 @@ static const COLORREF s_Colors[16] =
     RGB(255, 255, 0),   // GREEN | RED   | INTENSITY
     RGB(255, 255, 255)  // BLUE  | GREEN | RED | INTENSITY
 };
-// /* Default attributes */
-// #define DEFAULT_SCREEN_ATTRIB   (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)
-// #define DEFAULT_POPUP_ATTRIB    (FOREGROUND_BLUE | FOREGROUND_RED | /
-                                 // BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_INTENSITY)
-// /* Cursor size */
-// #define CSR_DEFAULT_CURSOR_SIZE 25
 
 
 /* FUNCTIONS ******************************************************************/
 
 static VOID
-TranslateConsoleName(OUT LPWSTR DestString,
-                     IN LPCWSTR ConsoleName,
-                     IN UINT MaxStrLen)
+TranslateConsoleName(
+    OUT LPWSTR DestString,
+    IN  LPCWSTR ConsoleName,
+    IN  UINT MaxStrLen)
 {
 #define PATH_SEPARATOR L'\\'
 
@@ -117,10 +90,11 @@ TranslateConsoleName(OUT LPWSTR DestString,
 }
 
 BOOLEAN
-ConCfgOpenUserSettings(LPCWSTR ConsoleTitle,
-                       PHKEY hSubKey,
-                       REGSAM samDesired,
-                       BOOLEAN Create)
+ConCfgOpenUserSettings(
+    IN  LPCWSTR ConsoleTitle,
+    OUT PHKEY phSubKey,
+    IN  REGSAM samDesired,
+    IN  BOOLEAN Create)
 {
     BOOLEAN Success = TRUE;
     NTSTATUS Status;
@@ -171,7 +145,7 @@ ConCfgOpenUserSettings(LPCWSTR ConsoleTitle,
                                    REG_OPTION_NON_VOLATILE,
                                    samDesired,
                                    NULL,
-                                   hSubKey,
+                                   phSubKey,
                                    NULL) == ERROR_SUCCESS);
     }
     else
@@ -181,7 +155,7 @@ ConCfgOpenUserSettings(LPCWSTR ConsoleTitle,
                                  szBuffer,
                                  0,
                                  samDesired,
-                                 hSubKey) == ERROR_SUCCESS);
+                                 phSubKey) == ERROR_SUCCESS);
     }
 
     /* Close the parent key and return success or not */
@@ -190,8 +164,9 @@ ConCfgOpenUserSettings(LPCWSTR ConsoleTitle,
 }
 
 BOOLEAN
-ConCfgReadUserSettings(IN OUT PCONSOLE_STATE_INFO ConsoleInfo,
-                       IN BOOLEAN DefaultSettings)
+ConCfgReadUserSettings(
+    IN OUT PCONSOLE_STATE_INFO ConsoleInfo,
+    IN BOOLEAN DefaultSettings)
 {
     BOOLEAN Success = FALSE;
     HKEY  hKey;
@@ -263,8 +238,8 @@ ConCfgReadUserSettings(IN OUT PCONSOLE_STATE_INFO ConsoleInfo,
         }
         else if (!wcscmp(szValueName, L"FaceName"))
         {
-            wcsncpy(ConsoleInfo->FaceName, szValue, LF_FACESIZE);
-            ConsoleInfo->FaceName[LF_FACESIZE - 1] = UNICODE_NULL;
+            StringCchCopyNW(ConsoleInfo->FaceName, ARRAYSIZE(ConsoleInfo->FaceName),
+                            szValue, ARRAYSIZE(szValue));
             Success = TRUE;
         }
         else if (!wcscmp(szValueName, L"FontFamily"))
@@ -354,8 +329,9 @@ ConCfgReadUserSettings(IN OUT PCONSOLE_STATE_INFO ConsoleInfo,
 }
 
 BOOLEAN
-ConCfgWriteUserSettings(IN PCONSOLE_STATE_INFO ConsoleInfo,
-                        IN BOOLEAN DefaultSettings)
+ConCfgWriteUserSettings(
+    IN PCONSOLE_STATE_INFO ConsoleInfo,
+    IN BOOLEAN DefaultSettings)
 {
     HKEY hKey;
     DWORD Storage = 0;
@@ -445,7 +421,8 @@ do {                                                                            
 }
 
 VOID
-ConCfgInitDefaultSettings(IN OUT PCONSOLE_STATE_INFO ConsoleInfo)
+ConCfgInitDefaultSettings(
+    IN OUT PCONSOLE_STATE_INFO ConsoleInfo)
 {
     if (ConsoleInfo == NULL) return;
 
@@ -455,15 +432,15 @@ ConCfgInitDefaultSettings(IN OUT PCONSOLE_STATE_INFO ConsoleInfo)
 
     // wcsncpy(ConsoleInfo->FaceName, L"DejaVu Sans Mono", LF_FACESIZE);
     // ConsoleInfo->FontSize = MAKELONG(8, 12); // 0x000C0008; // font is 8x12
-    // ConsoleInfo->FontSize = MAKELONG(16, 16); // font is 16x16
 
-    wcsncpy(ConsoleInfo->FaceName, L"VGA", LF_FACESIZE); // HACK: !!
+    StringCchCopyW(ConsoleInfo->FaceName, ARRAYSIZE(ConsoleInfo->FaceName), L"VGA"); // HACK: !!
     // ConsoleInfo->FaceName[0] = UNICODE_NULL;
+    // ConsoleInfo->FontSize.X = 8;
+    // ConsoleInfo->FontSize.Y = 12;
+    ConsoleInfo->FontSize.X = 0;  // HACK: !!
+    ConsoleInfo->FontSize.Y = 16; // HACK: !!
     ConsoleInfo->FontFamily = FF_DONTCARE;
-    ConsoleInfo->FontSize.X = 0;
-    ConsoleInfo->FontSize.Y = 0;
-    ConsoleInfo->FontWeight = FW_NORMAL; // HACK: !!
-    // ConsoleInfo->FontWeight = FW_DONTCARE;
+    ConsoleInfo->FontWeight = FW_NORMAL; // FW_DONTCARE;
 
     /* Initialize the default properties */
 
@@ -488,7 +465,7 @@ ConCfgInitDefaultSettings(IN OUT PCONSOLE_STATE_INFO ConsoleInfo)
     ConsoleInfo->WindowPosition.x = 0;
     ConsoleInfo->WindowPosition.y = 0;
 
-    ConsoleInfo->CursorSize = CSR_DEFAULT_CURSOR_SIZE; // #define SMALL_SIZE 25
+    ConsoleInfo->CursorSize = CSR_DEFAULT_CURSOR_SIZE;
 
     ConsoleInfo->ScreenAttributes = DEFAULT_SCREEN_ATTRIB;
     ConsoleInfo->PopupAttributes  = DEFAULT_POPUP_ATTRIB;
@@ -499,7 +476,8 @@ ConCfgInitDefaultSettings(IN OUT PCONSOLE_STATE_INFO ConsoleInfo)
 }
 
 VOID
-ConCfgGetDefaultSettings(IN OUT PCONSOLE_STATE_INFO ConsoleInfo)
+ConCfgGetDefaultSettings(
+    IN OUT PCONSOLE_STATE_INFO ConsoleInfo)
 {
     if (ConsoleInfo == NULL) return;
 
