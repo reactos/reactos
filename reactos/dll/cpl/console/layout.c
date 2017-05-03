@@ -24,8 +24,9 @@ const WCHAR szPreviewText[] =
 
 
 VOID
-PaintConsole(LPDRAWITEMSTRUCT drawItem,
-             PCONSOLE_STATE_INFO pConInfo)
+PaintConsole(
+    IN LPDRAWITEMSTRUCT drawItem,
+    IN PCONSOLE_STATE_INFO pConInfo)
 {
     HBRUSH hBrush;
     RECT cRect, fRect;
@@ -91,13 +92,14 @@ PaintConsole(LPDRAWITEMSTRUCT drawItem,
     hBrush = CreateSolidBrush(pConInfo->ColorTable[BkgdAttribFromAttrib(pConInfo->ScreenAttributes)]);
     SetRect(&fRect, startx + 3, starty + 6, cRect.right - 6, cRect.bottom - 3);
     FillRect(drawItem->hDC, &fRect, hBrush);
-    DeleteObject((HGDIOBJ)hBrush);
+    DeleteObject(hBrush);
 }
 
 BOOL
-PaintText(LPDRAWITEMSTRUCT drawItem,
-          PCONSOLE_STATE_INFO pConInfo,
-          TEXT_TYPE TextMode)
+PaintText(
+    IN LPDRAWITEMSTRUCT drawItem,
+    IN PCONSOLE_STATE_INFO pConInfo,
+    IN TEXT_TYPE TextMode)
 {
     USHORT CurrentAttrib;
     COLORREF pbkColor, ptColor;
@@ -174,9 +176,6 @@ LayoutProc(HWND hwndDlg,
            WPARAM wParam,
            LPARAM lParam)
 {
-    UNREFERENCED_PARAMETER(hwndDlg);
-    UNREFERENCED_PARAMETER(wParam);
-
     switch (uMsg)
     {
         case WM_INITDIALOG:
@@ -343,166 +342,149 @@ LayoutProc(HWND hwndDlg,
 
         case WM_COMMAND:
         {
-            switch (LOWORD(wParam))
+            if (HIWORD(wParam) == EN_KILLFOCUS)
             {
+                switch (LOWORD(wParam))
+                {
                 case IDC_EDIT_SCREEN_BUFFER_WIDTH:
                 {
-                    if (HIWORD(wParam) == EN_KILLFOCUS)
+                    DWORD swidth, wwidth;
+
+                    swidth = GetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, NULL, FALSE);
+                    wwidth = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH  , NULL, FALSE);
+
+                    /* Be sure that the (new) screen buffer width is in the correct range */
+                    swidth = min(max(swidth, 1), 0xFFFF);
+
+                    /* Automatically adjust window size when screen buffer decreases */
+                    if (wwidth > swidth)
                     {
-                        DWORD swidth, wwidth;
-
-                        swidth = GetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, NULL, FALSE);
-                        wwidth = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH  , NULL, FALSE);
-
-                        /* Be sure that the (new) screen buffer width is in the correct range */
-                        swidth = min(max(swidth, 1), 0xFFFF);
-
-                        /* Automatically adjust window size when screen buffer decreases */
-                        if (wwidth > swidth)
-                        {
-                            wwidth = swidth;
-                            SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH, wwidth, TRUE);
-                        }
-
-                        ConInfo->ScreenBufferSize.X = (SHORT)swidth;
-                        ConInfo->WindowSize.X       = (SHORT)wwidth;
-                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        wwidth = swidth;
+                        SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH, wwidth, TRUE);
                     }
+
+                    ConInfo->ScreenBufferSize.X = (SHORT)swidth;
+                    ConInfo->WindowSize.X       = (SHORT)wwidth;
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
                 }
 
                 case IDC_EDIT_WINDOW_SIZE_WIDTH:
                 {
-                    if (HIWORD(wParam) == EN_KILLFOCUS)
+                    DWORD swidth, wwidth;
+
+                    swidth = GetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, NULL, FALSE);
+                    wwidth = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH  , NULL, FALSE);
+
+                    /* Automatically adjust screen buffer size when window size enlarges */
+                    if (wwidth >= swidth)
                     {
-                        DWORD swidth, wwidth;
+                        swidth = wwidth;
 
-                        swidth = GetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, NULL, FALSE);
-                        wwidth = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH  , NULL, FALSE);
+                        /* Be sure that the (new) screen buffer width is in the correct range */
+                        swidth = min(max(swidth, 1), 0xFFFF);
 
-                        /* Automatically adjust screen buffer size when window size enlarges */
-                        if (wwidth >= swidth)
-                        {
-                            swidth = wwidth;
-
-                            /* Be sure that the (new) screen buffer width is in the correct range */
-                            swidth = min(max(swidth, 1), 0xFFFF);
-
-                            SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, swidth, TRUE);
-                        }
-
-                        ConInfo->ScreenBufferSize.X = (SHORT)swidth;
-                        ConInfo->WindowSize.X       = (SHORT)wwidth;
-                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, swidth, TRUE);
                     }
+
+                    ConInfo->ScreenBufferSize.X = (SHORT)swidth;
+                    ConInfo->WindowSize.X       = (SHORT)wwidth;
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
                 }
 
                 case IDC_EDIT_SCREEN_BUFFER_HEIGHT:
                 {
-                    if (HIWORD(wParam) == EN_KILLFOCUS)
+                    DWORD sheight, wheight;
+
+                    sheight = GetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, NULL, FALSE);
+                    wheight = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT  , NULL, FALSE);
+
+                    /* Be sure that the (new) screen buffer width is in the correct range */
+                    sheight = min(max(sheight, 1), 0xFFFF);
+
+                    /* Automatically adjust window size when screen buffer decreases */
+                    if (wheight > sheight)
                     {
-                        DWORD sheight, wheight;
-
-                        sheight = GetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, NULL, FALSE);
-                        wheight = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT  , NULL, FALSE);
-
-                        /* Be sure that the (new) screen buffer width is in the correct range */
-                        sheight = min(max(sheight, 1), 0xFFFF);
-
-                        /* Automatically adjust window size when screen buffer decreases */
-                        if (wheight > sheight)
-                        {
-                            wheight = sheight;
-                            SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT, wheight, TRUE);
-                        }
-
-                        ConInfo->ScreenBufferSize.Y = (SHORT)sheight;
-                        ConInfo->WindowSize.Y       = (SHORT)wheight;
-                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        wheight = sheight;
+                        SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT, wheight, TRUE);
                     }
+
+                    ConInfo->ScreenBufferSize.Y = (SHORT)sheight;
+                    ConInfo->WindowSize.Y       = (SHORT)wheight;
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
                 }
 
                 case IDC_EDIT_WINDOW_SIZE_HEIGHT:
                 {
-                    if (HIWORD(wParam) == EN_KILLFOCUS)
+                    DWORD sheight, wheight;
+
+                    sheight = GetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, NULL, FALSE);
+                    wheight = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT  , NULL, FALSE);
+
+                    /* Automatically adjust screen buffer size when window size enlarges */
+                    if (wheight >= sheight)
                     {
-                        DWORD sheight, wheight;
+                        sheight = wheight;
 
-                        sheight = GetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, NULL, FALSE);
-                        wheight = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT  , NULL, FALSE);
+                        /* Be sure that the (new) screen buffer width is in the correct range */
+                        sheight = min(max(sheight, 1), 0xFFFF);
 
-                        /* Automatically adjust screen buffer size when window size enlarges */
-                        if (wheight >= sheight)
-                        {
-                            sheight = wheight;
-
-                            /* Be sure that the (new) screen buffer width is in the correct range */
-                            sheight = min(max(sheight, 1), 0xFFFF);
-
-                            SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, sheight, TRUE);
-                        }
-
-                        ConInfo->ScreenBufferSize.Y = (SHORT)sheight;
-                        ConInfo->WindowSize.Y       = (SHORT)wheight;
-                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, sheight, TRUE);
                     }
+
+                    ConInfo->ScreenBufferSize.Y = (SHORT)sheight;
+                    ConInfo->WindowSize.Y       = (SHORT)wheight;
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
                 }
 
                 case IDC_EDIT_WINDOW_POS_LEFT:
                 case IDC_EDIT_WINDOW_POS_TOP:
                 {
-                    if (HIWORD(wParam) == EN_KILLFOCUS)
-                    {
-                        DWORD left, top;
-
-                        left = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, NULL, TRUE);
-                        top  = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP , NULL, TRUE);
-
-                        ConInfo->WindowPosition.x = left;
-                        ConInfo->WindowPosition.y = top;
-                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                    }
+                    ConInfo->WindowPosition.x = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, NULL, TRUE);
+                    ConInfo->WindowPosition.y = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP , NULL, TRUE);
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
                 }
-
-                case IDC_CHECK_SYSTEM_POS_WINDOW:
-                {
-                    LONG res = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
-                    if (res == BST_CHECKED)
-                    {
-                        ULONG left, top;
-
-                        left = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, NULL, TRUE);
-                        top  = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP , NULL, TRUE);
-
-                        ConInfo->AutoPosition     = FALSE;
-                        ConInfo->WindowPosition.x = left;
-                        ConInfo->WindowPosition.y = top;
-                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-
-                        SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
-                        EnableDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, TRUE);
-                        EnableDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_TOP , TRUE);
-                        EnableDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_LEFT, TRUE);
-                        EnableDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_TOP , TRUE);
-                    }
-                    else if (res == BST_UNCHECKED)
-                    {
-                        ConInfo->AutoPosition = TRUE;
-                        // Do not touch ConInfo->WindowPosition !!
-                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-
-                        SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
-                        EnableDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, FALSE);
-                        EnableDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_TOP , FALSE);
-                        EnableDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_LEFT, FALSE);
-                        EnableDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_TOP , FALSE);
-                    }
                 }
             }
+            else
+            if (HIWORD(wParam) == BN_CLICKED &&
+                LOWORD(wParam) == IDC_CHECK_SYSTEM_POS_WINDOW)
+            {
+                if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_SYSTEM_POS_WINDOW) == BST_CHECKED)
+                {
+                    EnableDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, FALSE);
+                    EnableDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_TOP , FALSE);
+                    EnableDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_LEFT, FALSE);
+                    EnableDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_TOP , FALSE);
+
+                    ConInfo->AutoPosition = TRUE;
+                    // Do not touch ConInfo->WindowPosition !!
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                }
+                else
+                {
+                    ULONG left, top;
+
+                    left = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, NULL, TRUE);
+                    top  = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP , NULL, TRUE);
+
+                    EnableDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, TRUE);
+                    EnableDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_TOP , TRUE);
+                    EnableDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_LEFT, TRUE);
+                    EnableDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_TOP , TRUE);
+
+                    ConInfo->AutoPosition     = FALSE;
+                    ConInfo->WindowPosition.x = left;
+                    ConInfo->WindowPosition.y = top;
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                }
+            }
+
+            break;
         }
 
         default:

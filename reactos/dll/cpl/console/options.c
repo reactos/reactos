@@ -136,87 +136,74 @@ BuildCodePageList(
 }
 
 static VOID
-UpdateDialogElements(HWND hwndDlg, PCONSOLE_STATE_INFO pConInfo)
+UpdateDialogElements(
+    IN HWND hDlg,
+    IN PCONSOLE_STATE_INFO pConInfo)
 {
-    HWND hDlgCtrl;
-
-    /* Update cursor size */
+    /* Update the cursor size */
     if (pConInfo->CursorSize <= 25)
     {
         /* Small cursor */
-        hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_SMALL_CURSOR);
-        SendMessageW(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
-
-        hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_MEDIUM_CURSOR);
-        SendMessageW(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
-        hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_LARGE_CURSOR);
-        SendMessageW(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
+        CheckRadioButton(hDlg, IDC_RADIO_SMALL_CURSOR, IDC_RADIO_LARGE_CURSOR, IDC_RADIO_SMALL_CURSOR);
+        // CheckDlgButton(hDlg, IDC_RADIO_SMALL_CURSOR , BST_CHECKED);
+        // CheckDlgButton(hDlg, IDC_RADIO_MEDIUM_CURSOR, BST_UNCHECKED);
+        // CheckDlgButton(hDlg, IDC_RADIO_LARGE_CURSOR , BST_UNCHECKED);
     }
     else if (pConInfo->CursorSize <= 50)
     {
-        hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_MEDIUM_CURSOR);
-        SendMessageW(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
-
-        hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_SMALL_CURSOR);
-        SendMessageW(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
-        hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_LARGE_CURSOR);
-        SendMessageW(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
+        /* Medium cursor */
+        CheckRadioButton(hDlg, IDC_RADIO_SMALL_CURSOR, IDC_RADIO_LARGE_CURSOR, IDC_RADIO_MEDIUM_CURSOR);
+        // CheckDlgButton(hDlg, IDC_RADIO_SMALL_CURSOR , BST_UNCHECKED);
+        // CheckDlgButton(hDlg, IDC_RADIO_MEDIUM_CURSOR, BST_CHECKED);
+        // CheckDlgButton(hDlg, IDC_RADIO_LARGE_CURSOR , BST_UNCHECKED);
     }
     else /* if (pConInfo->CursorSize <= 100) */
     {
-        hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_LARGE_CURSOR);
-        SendMessageW(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
-
-        hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_SMALL_CURSOR);
-        SendMessageW(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
-        hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_MEDIUM_CURSOR);
-        SendMessageW(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
+        /* Large cursor */
+        CheckRadioButton(hDlg, IDC_RADIO_SMALL_CURSOR, IDC_RADIO_LARGE_CURSOR, IDC_RADIO_LARGE_CURSOR);
+        // CheckDlgButton(hDlg, IDC_RADIO_SMALL_CURSOR , BST_UNCHECKED);
+        // CheckDlgButton(hDlg, IDC_RADIO_MEDIUM_CURSOR, BST_UNCHECKED);
+        // CheckDlgButton(hDlg, IDC_RADIO_LARGE_CURSOR , BST_CHECKED);
     }
 
-    /* Update num buffers */
-    hDlgCtrl = GetDlgItem(hwndDlg, IDC_UPDOWN_NUM_BUFFER);
-    SendMessageW(hDlgCtrl, UDM_SETRANGE, 0, MAKELONG(999, 1));
-    SetDlgItemInt(hwndDlg, IDC_EDIT_NUM_BUFFER, pConInfo->NumberOfHistoryBuffers, FALSE);
+    /* Update the number of history buffers */
+    SendDlgItemMessageW(hDlg, IDC_UPDOWN_NUM_BUFFER, UDM_SETRANGE, 0, MAKELONG(999, 1));
+    SetDlgItemInt(hDlg, IDC_EDIT_NUM_BUFFER, pConInfo->NumberOfHistoryBuffers, FALSE);
 
-    /* Update buffer size */
-    hDlgCtrl = GetDlgItem(hwndDlg, IDC_UPDOWN_BUFFER_SIZE);
-    SendMessageW(hDlgCtrl, UDM_SETRANGE, 0, MAKELONG(999, 1));
-    SetDlgItemInt(hwndDlg, IDC_EDIT_BUFFER_SIZE, pConInfo->HistoryBufferSize, FALSE);
+    /* Update the history buffer size */
+    SendDlgItemMessageW(hDlg, IDC_UPDOWN_BUFFER_SIZE, UDM_SETRANGE, 0, MAKELONG(999, 1));
+    SetDlgItemInt(hDlg, IDC_EDIT_BUFFER_SIZE, pConInfo->HistoryBufferSize, FALSE);
 
     /* Update discard duplicates */
-    CheckDlgButton(hwndDlg, IDC_CHECK_DISCARD_DUPLICATES,
+    CheckDlgButton(hDlg, IDC_CHECK_DISCARD_DUPLICATES,
                    pConInfo->HistoryNoDup ? BST_CHECKED : BST_UNCHECKED);
 
-    /* Update full/window screen */
+    /* Update full/window screen state */
     if (pConInfo->FullScreen)
     {
-        hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_DISPLAY_FULL);
-        SendMessageW(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
-
-        hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_DISPLAY_WINDOW);
-        SendMessageW(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
+        CheckRadioButton(hDlg, IDC_RADIO_DISPLAY_WINDOW, IDC_RADIO_DISPLAY_FULL, IDC_RADIO_DISPLAY_FULL);
+        // CheckDlgButton(hDlg, IDC_RADIO_DISPLAY_WINDOW, BST_UNCHECKED);
+        // CheckDlgButton(hDlg, IDC_RADIO_DISPLAY_FULL  , BST_CHECKED);
     }
     else
     {
-        hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_DISPLAY_WINDOW);
-        SendMessageW(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
-
-        hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_DISPLAY_FULL);
-        SendMessageW(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
+        CheckRadioButton(hDlg, IDC_RADIO_DISPLAY_WINDOW, IDC_RADIO_DISPLAY_FULL, IDC_RADIO_DISPLAY_WINDOW);
+        // CheckDlgButton(hDlg, IDC_RADIO_DISPLAY_WINDOW, BST_CHECKED);
+        // CheckDlgButton(hDlg, IDC_RADIO_DISPLAY_FULL  , BST_UNCHECKED);
     }
 
-    /* Update quick edit */
-    CheckDlgButton(hwndDlg, IDC_CHECK_QUICK_EDIT,
+    /* Update "Quick-edit" state */
+    CheckDlgButton(hDlg, IDC_CHECK_QUICK_EDIT,
                    pConInfo->QuickEdit ? BST_CHECKED : BST_UNCHECKED);
 
-    /* Update insert mode */
-    CheckDlgButton(hwndDlg, IDC_CHECK_INSERT_MODE,
+    /* Update "Insert mode" state */
+    CheckDlgButton(hDlg, IDC_CHECK_INSERT_MODE,
                    pConInfo->InsertMode ? BST_CHECKED : BST_UNCHECKED);
 }
 
 INT_PTR
 CALLBACK
-OptionsProc(HWND hwndDlg,
+OptionsProc(HWND hDlg,
             UINT uMsg,
             WPARAM wParam,
             LPARAM lParam)
@@ -225,8 +212,8 @@ OptionsProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
-            BuildCodePageList(hwndDlg);
-            UpdateDialogElements(hwndDlg, ConInfo);
+            BuildCodePageList(hDlg);
+            UpdateDialogElements(hDlg, ConInfo);
             return TRUE;
         }
 
@@ -242,18 +229,18 @@ OptionsProc(HWND hwndDlg,
                 {
                     lpnmud->iPos = min(max(lpnmud->iPos + lpnmud->iDelta, 1), 999);
                     ConInfo->HistoryBufferSize = lpnmud->iPos;
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
                 }
                 else if (lppsn->hdr.idFrom == IDC_UPDOWN_NUM_BUFFER)
                 {
                     lpnmud->iPos = min(max(lpnmud->iPos + lpnmud->iDelta, 1), 999);
                     ConInfo->NumberOfHistoryBuffers = lpnmud->iPos;
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
                 }
             }
             else if (lppsn->hdr.code == PSN_APPLY)
             {
-                ApplyConsoleInfo(hwndDlg);
+                ApplyConsoleInfo(hDlg);
                 return TRUE;
             }
             break;
@@ -261,139 +248,112 @@ OptionsProc(HWND hwndDlg,
 
         case WM_COMMAND:
         {
-            LRESULT lResult;
-
-            switch (LOWORD(wParam))
+            if (HIWORD(wParam) == BN_CLICKED)
             {
+                switch (LOWORD(wParam))
+                {
                 case IDC_RADIO_SMALL_CURSOR:
                 {
                     ConInfo->CursorSize = 25;
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
                     break;
                 }
                 case IDC_RADIO_MEDIUM_CURSOR:
                 {
                     ConInfo->CursorSize = 50;
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
                     break;
                 }
                 case IDC_RADIO_LARGE_CURSOR:
                 {
                     ConInfo->CursorSize = 100;
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
                     break;
                 }
                 case IDC_RADIO_DISPLAY_WINDOW:
                 {
                     ConInfo->FullScreen = FALSE;
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
                     break;
                 }
                 case IDC_RADIO_DISPLAY_FULL:
                 {
                     ConInfo->FullScreen = TRUE;
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
                     break;
                 }
                 case IDC_CHECK_QUICK_EDIT:
                 {
-                    lResult = SendMessageW((HWND)lParam, BM_GETCHECK, 0, 0);
-                    if (lResult == BST_CHECKED)
-                    {
-                        ConInfo->QuickEdit = FALSE;
-                        SendMessageW((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
-                    }
-                    else if (lResult == BST_UNCHECKED)
-                    {
-                        ConInfo->QuickEdit = TRUE;
-                        SendMessageW((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
-                    }
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    ConInfo->QuickEdit = (IsDlgButtonChecked(hDlg, IDC_CHECK_QUICK_EDIT) == BST_CHECKED); // BST_UNCHECKED or BST_INDETERMINATE => FALSE
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
                     break;
                 }
                 case IDC_CHECK_INSERT_MODE:
                 {
-                    lResult = SendMessageW((HWND)lParam, BM_GETCHECK, 0, 0);
-                    if (lResult == BST_CHECKED)
-                    {
-                        ConInfo->InsertMode = FALSE;
-                        SendMessageW((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
-                    }
-                    else if (lResult == BST_UNCHECKED)
-                    {
-                        ConInfo->InsertMode = TRUE;
-                        SendMessageW((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
-                    }
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    ConInfo->InsertMode = (IsDlgButtonChecked(hDlg, IDC_CHECK_INSERT_MODE) == BST_CHECKED); // BST_UNCHECKED or BST_INDETERMINATE => FALSE
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
                     break;
                 }
                 case IDC_CHECK_DISCARD_DUPLICATES:
                 {
-                   lResult = SendMessageW((HWND)lParam, BM_GETCHECK, 0, 0);
-                    if (lResult == BST_CHECKED)
-                    {
-                        ConInfo->HistoryNoDup = FALSE;
-                        SendMessageW((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
-                    }
-                    else if (lResult == BST_UNCHECKED)
-                    {
-                        ConInfo->HistoryNoDup = TRUE;
-                        SendMessageW((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
-                    }
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    ConInfo->HistoryNoDup = (IsDlgButtonChecked(hDlg, IDC_CHECK_DISCARD_DUPLICATES) == BST_CHECKED); // BST_UNCHECKED or BST_INDETERMINATE => FALSE
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
                     break;
                 }
+                }
+            }
+            else
+            if (HIWORD(wParam) == EN_KILLFOCUS)
+            {
+                switch (LOWORD(wParam))
+                {
                 case IDC_EDIT_BUFFER_SIZE:
                 {
-                    if (HIWORD(wParam) == EN_KILLFOCUS)
-                    {
-                        DWORD sizeBuff;
+                    DWORD sizeBuff;
 
-                        sizeBuff = GetDlgItemInt(hwndDlg, IDC_EDIT_BUFFER_SIZE, NULL, FALSE);
-                        sizeBuff = min(max(sizeBuff, 1), 999);
+                    sizeBuff = GetDlgItemInt(hDlg, IDC_EDIT_BUFFER_SIZE, NULL, FALSE);
+                    sizeBuff = min(max(sizeBuff, 1), 999);
 
-                        ConInfo->HistoryBufferSize = sizeBuff;
-                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                    }
+                    ConInfo->HistoryBufferSize = sizeBuff;
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
                     break;
                 }
                 case IDC_EDIT_NUM_BUFFER:
                 {
-                    if (HIWORD(wParam) == EN_KILLFOCUS)
-                    {
-                        DWORD numBuff;
+                    DWORD numBuff;
 
-                        numBuff = GetDlgItemInt(hwndDlg, IDC_EDIT_NUM_BUFFER, NULL, FALSE);
-                        numBuff = min(max(numBuff, 1), 999);
+                    numBuff = GetDlgItemInt(hDlg, IDC_EDIT_NUM_BUFFER, NULL, FALSE);
+                    numBuff = min(max(numBuff, 1), 999);
 
-                        ConInfo->NumberOfHistoryBuffers = numBuff;
-                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                    }
+                    ConInfo->NumberOfHistoryBuffers = numBuff;
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
                     break;
                 }
-                case IDL_CODEPAGE:
-                {
-                    if (HIWORD(wParam) == CBN_SELENDOK)
-                    {
-                        INT iItem;
-                        UINT CodePage;
-
-                        iItem = (INT)SendMessageW((HWND)lParam, CB_GETCURSEL, 0, 0);
-                        if (iItem != CB_ERR)
-                        {
-                            CodePage = (UINT)SendMessageW((HWND)lParam, CB_GETITEMDATA, iItem, 0);
-                            if (CodePage != CB_ERR)
-                            {
-                                ConInfo->CodePage = CodePage;
-                                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                            }
-                        }
-                    }
-                    break;
                 }
-                default:
-                    break;
             }
+            else
+            if ((HIWORD(wParam) == CBN_SELCHANGE || HIWORD(wParam) == CBN_SELENDOK) &&
+                (LOWORD(wParam) == IDL_CODEPAGE))
+            {
+                HWND hWndList = GetDlgItem(hDlg, IDL_CODEPAGE);
+                INT iItem;
+                UINT CodePage;
+
+                iItem = (INT)SendMessageW(hWndList, CB_GETCURSEL, 0, 0);
+                if (iItem == CB_ERR)
+                    break;
+
+                CodePage = (UINT)SendMessageW(hWndList, CB_GETITEMDATA, iItem, 0);
+                if (CodePage == CB_ERR)
+                    break;
+
+                ConInfo->CodePage = CodePage;
+
+                /* Change the property sheet state only if the user validated */
+                if (HIWORD(wParam) == CBN_SELENDOK)
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
+            }
+
             break;
         }
 
