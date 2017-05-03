@@ -40,6 +40,8 @@ private:
     CComPtr<IDockingWindowSite> fDockSite;
     GUID                        fExecCommandCategory;
     CComPtr<IOleCommandTarget>  fExecCommandTarget;
+    HIMAGELIST m_himlNormal;
+    HIMAGELIST m_himlHot;
 public:
     CToolsBand();
     virtual ~CToolsBand();
@@ -294,36 +296,16 @@ HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite){
     SendMessage(TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_MIXEDBUTTONS | TBSTYLE_EX_DRAWDDARROWS);
 
     HINSTANCE shell32Instance = GetModuleHandle(_T("shell32.dll"));
-    HBITMAP imgNormal = reinterpret_cast<HBITMAP>(
-        LoadImage(shell32Instance, MAKEINTRESOURCE(214),
-            IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_CREATEDIBSECTION));
+    m_himlNormal = ImageList_LoadImageW(shell32Instance, MAKEINTRESOURCE(214),
+                                           0, 0, RGB(255, 0, 255), IMAGE_BITMAP, LR_DEFAULTSIZE | LR_CREATEDIBSECTION);
 
-    HBITMAP imgHot = reinterpret_cast<HBITMAP>(
-        LoadImage(shell32Instance, MAKEINTRESOURCE(215),
-        IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_CREATEDIBSECTION));
+    m_himlHot = ImageList_LoadImageW(shell32Instance, MAKEINTRESOURCE(215),
+                                           0, 0, RGB(255, 0, 255), IMAGE_BITMAP, LR_DEFAULTSIZE | LR_CREATEDIBSECTION);
 
-    if (imgNormal && imgHot)
-    {
-        BITMAP bitmapInfo;
-        GetObjectW(imgNormal, sizeof(bitmapInfo), &bitmapInfo);
-        HIMAGELIST himlNormal = ImageList_Create(bitmapInfo.bmHeight, bitmapInfo.bmHeight, ILC_COLOR32, 4, 4);
-        ImageList_Add(himlNormal, imgNormal, NULL);
-
-        GetObjectW(imgHot, sizeof(bitmapInfo), &bitmapInfo);
-        HIMAGELIST himlHot = ImageList_Create(bitmapInfo.bmHeight, bitmapInfo.bmHeight, ILC_COLOR32, 4, 4);
-        ImageList_Add(himlHot, imgHot, NULL);
-
-        SendMessage(TB_SETIMAGELIST, 0, (LPARAM) himlNormal);
-        SendMessage(TB_SETHOTIMAGELIST, 0, (LPARAM) himlHot);
-    }
-
+    SendMessage(TB_SETIMAGELIST, 0, (LPARAM) m_himlNormal);
+    SendMessage(TB_SETHOTIMAGELIST, 0, (LPARAM) m_himlHot);
     SendMessage(TB_ADDBUTTONSW, numShownButtons, (LPARAM)&tbButtonsAdd);
 
-    if (imgNormal)
-        DeleteObject(imgNormal);
-    if (imgHot)
-        DeleteObject(imgHot);
-    
     return hResult;
 }
 
@@ -344,7 +326,6 @@ HRESULT STDMETHODCALLTYPE CToolsBand::GetWindow(HWND *lphwnd)
 
 HRESULT STDMETHODCALLTYPE CToolsBand::ContextSensitiveHelp(BOOL fEnterMode)
 {
-
     return E_NOTIMPL;
 }
 
@@ -357,7 +338,14 @@ HRESULT STDMETHODCALLTYPE CToolsBand::CloseDW(DWORD dwReserved)
 
     m_hWnd = NULL;
 
-    if (fDockSite) fDockSite.Release();
+    if (fDockSite)
+        fDockSite.Release();
+
+    if (m_himlNormal)
+        ImageList_Destroy(m_himlNormal);
+    
+    if (m_himlHot)
+        ImageList_Destroy(m_himlHot);
 
     return S_OK;
 }
