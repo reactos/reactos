@@ -2,17 +2,20 @@
 #define CONSOLE_H__
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <wchar.h>
 
 #define WIN32_NO_STATUS
 
 #include <windef.h>
 #include <winbase.h>
+
+#include <wincon.h>
 #include <wingdi.h>
 #include <winnls.h>
 #include <winreg.h>
+
 #include <winuser.h>
-#include <wincon.h>
 #include <commctrl.h>
 #include <cpl.h>
 
@@ -24,7 +27,7 @@
     EnableWindow(GetDlgItem((hDlg), (nID)), (bEnable))
 
 /* Shared header with the GUI Terminal Front-End from consrv.dll */
-#include "settings.h" // in /winsrv/concfg/
+#include "concfg.h" // in /winsrv/concfg/
 
 typedef enum _TEXT_TYPE
 {
@@ -33,12 +36,22 @@ typedef enum _TEXT_TYPE
 } TEXT_TYPE;
 
 /* Globals */
+extern HINSTANCE hApplet;
 extern PCONSOLE_STATE_INFO ConInfo;
+extern HFONT hCurrentFont;
 
 VOID ApplyConsoleInfo(HWND hwndDlg);
-BYTE CodePageToCharSet(UINT CodePage);
-VOID PaintConsole(LPDRAWITEMSTRUCT drawItem, PCONSOLE_STATE_INFO pConInfo);
-BOOL PaintText(LPDRAWITEMSTRUCT drawItem, PCONSOLE_STATE_INFO pConInfo, TEXT_TYPE TextMode);
+
+VOID
+PaintConsole(
+    IN LPDRAWITEMSTRUCT drawItem,
+    IN PCONSOLE_STATE_INFO pConInfo);
+
+BOOL
+PaintText(
+    IN LPDRAWITEMSTRUCT drawItem,
+    IN PCONSOLE_STATE_INFO pConInfo,
+    IN TEXT_TYPE TextMode);
 
 
 struct _LIST_CTL;

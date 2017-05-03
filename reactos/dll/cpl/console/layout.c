@@ -105,9 +105,7 @@ PaintText(
     COLORREF pbkColor, ptColor;
     COLORREF nbkColor, ntColor;
     HBRUSH hBrush;
-    HFONT Font, OldFont;
-
-    COORD FontSize = pConInfo->FontSize;
+    HFONT hOldFont;
 
     if (TextMode == Screen)
         CurrentAttrib = pConInfo->ScreenAttributes;
@@ -122,37 +120,12 @@ PaintText(
     hBrush = CreateSolidBrush(nbkColor);
     if (!hBrush) return FALSE;
 
-    FontSize.Y = FontSize.Y > 0 ? -MulDiv(FontSize.Y, GetDeviceCaps(drawItem->hDC, LOGPIXELSY), 72)
-                                : FontSize.Y;
-
-    Font = CreateFontW(FontSize.Y,
-                       FontSize.X,
-                       0,
-                       TA_BASELINE,
-                       pConInfo->FontWeight,
-                       FALSE,
-                       FALSE,
-                       FALSE,
-                       CodePageToCharSet(pConInfo->CodePage),
-                       OUT_DEFAULT_PRECIS,
-                       CLIP_DEFAULT_PRECIS,
-                       DEFAULT_QUALITY,
-                       FIXED_PITCH | pConInfo->FontFamily,
-                       pConInfo->FaceName);
-    if (Font == NULL)
-    {
-        DPRINT1("PaintText: CreateFont failed\n");
-        DeleteObject(hBrush);
-        return FALSE;
-    }
-
-    OldFont = SelectObject(drawItem->hDC, Font);
-    if (OldFont == NULL)
-    {
-        DeleteObject(Font);
-        DeleteObject(hBrush);
-        return FALSE;
-    }
+    hOldFont = SelectObject(drawItem->hDC, hCurrentFont);
+    //if (hOldFont == NULL)
+    //{
+    //    DeleteObject(hBrush);
+    //    return FALSE;
+    //}
 
     FillRect(drawItem->hDC, &drawItem->rcItem, hBrush);
 
@@ -161,10 +134,10 @@ PaintText(
     DrawTextW(drawItem->hDC, szPreviewText, wcslen(szPreviewText), &drawItem->rcItem, 0);
     SetTextColor(drawItem->hDC, ptColor);
     SetBkColor(drawItem->hDC, pbkColor);
-    DeleteObject(hBrush);
 
-    SelectObject(drawItem->hDC, OldFont);
-    DeleteObject(Font);
+    SelectObject(drawItem->hDC, hOldFont);
+
+    DeleteObject(hBrush);
 
     return TRUE;
 }

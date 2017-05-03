@@ -88,7 +88,7 @@ VOID
 ApplyConsoleInfo(HWND hwndDlg)
 {
     static BOOL ConsoleInfoAlreadySaved = FALSE;
-    
+
     /*
      * We already applied all the console properties (and saved if needed).
      * Nothing more needs to be done.
@@ -210,6 +210,11 @@ InitApplet(HANDLE hSectionOrWnd)
         InitDefaultConsoleInfo(ConInfo);
     }
 
+    /* Initialize the font support */
+    hCurrentFont = CreateConsoleFont(ConInfo);
+    if (hCurrentFont == NULL)
+        DPRINT1("InitApplet: CreateConsoleFont failed\n");
+
     /* Initialize the property sheet structure */
     ZeroMemory(&psh, sizeof(psh));
     psh.dwSize = sizeof(psh);
@@ -250,8 +255,14 @@ InitApplet(HANDLE hSectionOrWnd)
     InitPropSheetPage(&psp[i++], IDD_PROPPAGELAYOUT , LayoutProc );
     InitPropSheetPage(&psp[i++], IDD_PROPPAGECOLORS , ColorsProc );
 
+    /* Display the property sheet */
     Result = PropertySheetW(&psh);
-    
+
+    /* First cleanup */
+    if (hCurrentFont) DeleteObject(hCurrentFont);
+    hCurrentFont = NULL;
+
+    /* Save the console settings */
     if (SetConsoleInfo)
     {
         HANDLE hSection;
@@ -286,9 +297,7 @@ InitApplet(HANDLE hSectionOrWnd)
         UnmapViewOfFile(pSharedInfo);
 
         /* Signal to CONSRV that it can apply the new configuration */
-        SendMessage(ConInfo->hWnd,
-                    WM_SETCONSOLEINFO,
-                    (WPARAM)hSection, 0);
+        SendMessageW(ConInfo->hWnd, WM_SETCONSOLEINFO, (WPARAM)hSection, 0);
 
         /* Close the section and return */
         CloseHandle(hSection);
@@ -299,7 +308,7 @@ InitApplet(HANDLE hSectionOrWnd)
         /* Default settings saved when ConInfo->hWnd == NULL */
         ConCfgWriteUserSettings(ConInfo, ConInfo->hWnd == NULL);
     }
-    
+
 Quit:
     /* Cleanup */
     HeapFree(GetProcessHeap(), 0, ConInfo);
