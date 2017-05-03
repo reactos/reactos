@@ -575,69 +575,6 @@ PcDiskGetCacheableBlockCount(UCHAR DriveNumber)
     }
 }
 
-
-static BOOLEAN
-FallbackDiskIsCdRomDrive(UCHAR DriveNumber)
-{
-    MASTER_BOOT_RECORD MasterBootRecord;
-
-    TRACE("FallbackDiskIsCdRomDrive(0x%x)\n", DriveNumber);
-
-    /* CD-ROM drive numbers are always > 0x80 */
-    if (DriveNumber <= 0x80)
-        return FALSE;
-
-    /*
-     * We suppose that a CD-ROM does not have a MBR
-     * (not always true: example of the Hybrid USB-ISOs).
-     */
-    return !DiskReadBootRecord(DriveNumber, 0, &MasterBootRecord);
-}
-
-BOOLEAN DiskIsCdRomDrive(UCHAR DriveNumber)
-{
-    REGS RegsIn, RegsOut;
-    PI386_CDROM_SPEC_PACKET Packet = (PI386_CDROM_SPEC_PACKET)(BIOSCALLBUFFER);
-
-    TRACE("DiskIsCdRomDrive(0x%x)\n", DriveNumber);
-
-    /* CD-ROM drive numbers are always > 0x80 */
-    if (DriveNumber <= 0x80)
-        return FALSE;
-
-    /* Setup disk address packet */
-    RtlZeroMemory(Packet, sizeof(*Packet));
-    Packet->PacketSize = sizeof(*Packet);
-
-    /*
-     * BIOS Int 13h, function 4B01h - Bootable CD-ROM - Get Disk Emulation Status
-     * AX = 4B01h
-     * DL = drive number
-     * DS:SI -> empty specification packet
-     * Return:
-     * CF clear if successful
-     * CF set on error
-     * AX = return codes
-     * DS:SI specification packet filled
-     */
-    RegsIn.w.ax = 0x4B01;
-    RegsIn.b.dl = DriveNumber;
-    RegsIn.x.ds = BIOSCALLBUFSEGMENT;   // DS:SI -> specification packet
-    RegsIn.w.si = BIOSCALLBUFOFFSET;
-
-    Int386(0x13, &RegsIn, &RegsOut);
-
-    // return (INT386_SUCCESS(RegsOut) && (Packet->DriveNumber == DriveNumber));
-    /*
-     * If the simple test failed, try to use the fallback code,
-     * but we can be on *very* thin ice.
-     */
-    if (!INT386_SUCCESS(RegsOut) || (Packet->DriveNumber != DriveNumber))
-        return FallbackDiskIsCdRomDrive(DriveNumber);
-    else
-        return TRUE;
-}
-
 BOOLEAN
 PcDiskGetBootPath(OUT PCHAR BootPath, IN ULONG Size)
 {

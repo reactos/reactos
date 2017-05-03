@@ -310,10 +310,15 @@ found_drive:
     mov cx, HEX(FFFF)
     call getfssec
 
-    // Fetch our stored drive number to DL and set the boot partition to 0 in DH.
-    mov dl, byte ptr ds:[DriveNumber]
-    mov dh, 0
+    // Pass two parameters to SETUPLDR:
+    //    DL = BIOS Drive Number
+    //    DH = Boot Partition (0 for HDD booting in hybrid mode, FFh for CD booting)
+    movzx dx, byte ptr ds:[DriveNumber]
+    cmp word ptr ds:[GetlinsecPtr], offset getlinsec_ebios
+    je .jump_to_setupldr
+    mov dh, HEX(FF)
 
+.jump_to_setupldr:
     // Transfer execution to the bootloader.
     ljmp16 0, FREELDR_BASE
 

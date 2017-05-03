@@ -100,10 +100,6 @@ BOOLEAN DiskIsDriveRemovable(UCHAR DriveNumber)
     return TRUE;
 }
 
-
-extern BOOLEAN
-DiskIsCdRomDrive(UCHAR DriveNumber);
-
 BOOLEAN DiskGetBootPath(OUT PCHAR BootPath, IN ULONG Size)
 {
     if (*FrldrBootPath)
@@ -121,9 +117,9 @@ BOOLEAN DiskGetBootPath(OUT PCHAR BootPath, IN ULONG Size)
         /* This is a floppy */
         sprintf(FrldrBootPath, "multi(0)disk(0)fdisk(%u)", FrldrBootDrive);
     }
-    else if (DiskIsCdRomDrive(FrldrBootDrive))
+    else if (FrldrBootPartition == 0xFF)
     {
-        /* This is a CD-ROM drive */
+        /* Boot Partition 0xFF is the magic value that indicates booting from CD-ROM (see isoboot.S) */
         sprintf(FrldrBootPath, "multi(0)disk(0)cdrom(%u)", FrldrBootDrive - 0x80);
     }
     else
