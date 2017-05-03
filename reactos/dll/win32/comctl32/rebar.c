@@ -1974,8 +1974,8 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
         HBRUSH hbrush = CreateSolidBrush(new);
         FillRgn(hdc, hrgn, hbrush);
         DeleteObject(hbrush);
-        DeleteObject(hrgn);
     }
+    DeleteObject(hrgn);
 #endif
     return TRUE;
 }
