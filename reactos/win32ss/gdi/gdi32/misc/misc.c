@@ -283,26 +283,6 @@ typedef struct _MARGINS {
     int cyBottomHeight;
 } MARGINS, *PMARGINS;
 
-typedef struct GDI_DRAW_STREAM_TAG
-{
-	DWORD   signature;     // must be 0x44727753;//"Swrd"
-	DWORD   reserved;      // must be 0
-	HDC     hDC;           // handle to the device object of windiw to draw.
-	RECT    rcDest;        // desination rect of window to draw.
-	DWORD   unknown1;      // must be 1.
-	HBITMAP hImage;
-	DWORD   unknown2;      // must be 9.
-	RECT    rcClip;        // desination rect of window to draw.
-	RECT    rcSrc;         // source rect of bitmap to draw.
-	DWORD   drawOption;    // 0x2 is tile instead of stretch. 0x4 is transparent. 0x20 is true size
-	DWORD   leftSizingMargin;
-	DWORD   rightSizingMargin;
-	DWORD   topSizingMargin;
-	DWORD   bottomSizingMargin;
-	DWORD   crTransparent; // transparent color.
-
-} GDI_DRAW_STREAM, *PGDI_DRAW_STREAM;
-
 enum SIZINGTYPE {
     ST_TRUESIZE = 0,
     ST_STRETCH = 1,
@@ -683,16 +663,16 @@ GdiDrawStream(HDC dc, ULONG l, PGDI_DRAW_STREAM pDS)
         INT transparent = 0;
         int sizingtype;
 
-        if (pDS->drawOption & 0x4)
+        if (pDS->drawOption & DS_TRANSPARENTALPHA)
             transparent = ALPHABLEND_FULL;
-        else if (pDS->drawOption & 0x8)
+        else if (pDS->drawOption & DS_TRANSPARENTCLR)
             transparent = ALPHABLEND_BINARY;
         else 
             transparent = ALPHABLEND_NONE;
 
-        if (pDS->drawOption & 0x2)
+        if (pDS->drawOption & DS_TILE)
             sizingtype = ST_TILE;
-        else if (pDS->drawOption & 0x20)
+        else if (pDS->drawOption & DS_TRUESIZE)
             sizingtype = ST_TRUESIZE;
         else
             sizingtype = ST_STRETCH;
