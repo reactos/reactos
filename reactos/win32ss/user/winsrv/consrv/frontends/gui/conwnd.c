@@ -18,6 +18,7 @@
 #define NDEBUG
 #include <debug.h>
 
+#include "font.h"
 #include "guiterm.h"
 #include "conwnd.h"
 #include "resource.h"
@@ -503,13 +504,13 @@ CreateDerivedFont(HFONT OrgFont,
                   BOOLEAN bUnderline,
                   BOOLEAN bStrikeOut)
 {
-    LOGFONT lf;
+    LOGFONTW lf;
 
     /* Initialize the LOGFONT structure */
     RtlZeroMemory(&lf, sizeof(lf));
 
     /* Retrieve the details of the current font */
-    if (GetObject(OrgFont, sizeof(lf), &lf) == 0)
+    if (GetObjectW(OrgFont, sizeof(lf), &lf) == 0)
         return NULL;
 
     /* Change the font attributes */
@@ -521,7 +522,7 @@ CreateDerivedFont(HFONT OrgFont,
     lf.lfStrikeOut = bStrikeOut;
 
     /* Build a new font */
-    return CreateFontIndirect(&lf);
+    return CreateFontIndirectW(&lf);
 }
 
 BOOL
@@ -532,65 +533,32 @@ InitFonts(PGUI_CONSOLE_DATA GuiData,
           ULONG  FontWeight)
 {
     HDC hDC;
-    HFONT OldFont, NewFont;
-    TEXTMETRICW Metrics;
-    SIZE CharSize;
-
-    hDC = GetDC(GuiData->hWindow);
+    HFONT hFont;
 
     /*
-     * Initialize a new NORMAL font and get its metrics.
+     * Initialize a new NORMAL font and get its character cell size.
      */
-
-    FontSize.Y = FontSize.Y > 0 ? -MulDiv(FontSize.Y, GetDeviceCaps(hDC, LOGPIXELSY), 72)
-                                : FontSize.Y;
-
-    NewFont = CreateFontW(FontSize.Y,
-                          FontSize.X,
-                          0,
-                          TA_BASELINE,
-                          FontWeight,
-                          FALSE,
-                          FALSE,
-                          FALSE,
-                          OEM_CHARSET,
-                          OUT_DEFAULT_PRECIS,
-                          CLIP_DEFAULT_PRECIS,
-                          DEFAULT_QUALITY,
-                          FIXED_PITCH | FontFamily,
-                          FaceName);
-    if (NewFont == NULL)
+    /* NOTE: FontSize is always in cell height/width units (pixels) */
+    hFont = CreateConsoleFontEx((LONG)(ULONG)FontSize.Y,
+                                (LONG)(ULONG)FontSize.X,
+                                FaceName,
+                                FontFamily,
+                                FontWeight,
+                                GuiData->Console->OutputCodePage);
+    if (hFont == NULL)
     {
-        DPRINT1("InitFonts: CreateFontW failed\n");
-        ReleaseDC(GuiData->hWindow, hDC);
+        DPRINT1("InitFonts: CreateConsoleFontEx failed\n");
         return FALSE;
     }
 
-    OldFont = SelectObject(hDC, NewFont);
-    if (OldFont == NULL)
+    hDC = GetDC(GuiData->hWindow);
+    if (!GetFontCellSize(hDC, hFont, &GuiData->CharHeight, &GuiData->CharWidth))
     {
-        DPRINT1("InitFonts: SelectObject failed\n");
+        DPRINT1("InitFonts: GetFontCellSize failed\n");
         ReleaseDC(GuiData->hWindow, hDC);
-        DeleteObject(NewFont);
+        DeleteObject(hFont);
         return FALSE;
     }
-
-    if (!GetTextMetricsW(hDC, &Metrics))
-    {
-        DPRINT1("InitFonts: GetTextMetrics failed\n");
-        SelectObject(hDC, OldFont);
-        ReleaseDC(GuiData->hWindow, hDC);
-        DeleteObject(NewFont);
-        return FALSE;
-    }
-    GuiData->CharWidth  = Metrics.tmMaxCharWidth;
-    GuiData->CharHeight = Metrics.tmHeight + Metrics.tmExternalLeading;
-
-    /* Measure real char width more precisely if possible */
-    if (GetTextExtentPoint32W(hDC, L"R", 1, &CharSize))
-        GuiData->CharWidth = CharSize.cx;
-
-    SelectObject(hDC, OldFont);
     ReleaseDC(GuiData->hWindow, hDC);
 
     /*
@@ -598,7 +566,7 @@ InitFonts(PGUI_CONSOLE_DATA GuiData,
      */
     // Delete all the old fonts first.
     DeleteFonts(GuiData);
-    GuiData->Font[FONT_NORMAL] = NewFont;
+    GuiData->Font[FONT_NORMAL] = hFont;
 
     /*
      * Now build the other fonts (bold, underlined, mixed).
@@ -624,8 +592,8 @@ InitFonts(PGUI_CONSOLE_DATA GuiData,
      */
     if (FaceName != GuiData->GuiInfo.FaceName)
     {
-        wcsncpy(GuiData->GuiInfo.FaceName, FaceName, LF_FACESIZE);
-        GuiData->GuiInfo.FaceName[LF_FACESIZE - 1] = UNICODE_NULL;
+        StringCchCopyNW(GuiData->GuiInfo.FaceName, ARRAYSIZE(GuiData->GuiInfo.FaceName),
+                        FaceName, LF_FACESIZE);
     }
     GuiData->GuiInfo.FontFamily = FontFamily;
     GuiData->GuiInfo.FontSize   = FontSize;
@@ -1012,7 +980,7 @@ UpdateSelection(PGUI_CONSOLE_DATA GuiData,
                 WindowTitle = ConsoleAllocHeap(0, Length);
 
                 wcsncpy(WindowTitle, SelTypeStr, SelTypeStrLength);
-                WindowTitle[SelTypeStrLength] = L'\0';
+                WindowTitle[SelTypeStrLength] = UNICODE_NULL;
                 wcscat(WindowTitle, L" - ");
                 wcscat(WindowTitle, Console->Title.Buffer);
 
