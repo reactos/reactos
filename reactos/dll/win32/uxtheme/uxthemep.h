@@ -14,6 +14,7 @@
 #include <winnls.h>
 #include <windowsx.h>
 #include <undocuser.h>
+#include <undocgdi.h>
 #include <uxtheme.h>
 #include <uxundoc.h>
 #include <vfwmsgs.h>
