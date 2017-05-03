@@ -1272,8 +1272,8 @@ GuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
 #endif
 
     // Font data
-    wcsncpy(GuiInitInfo->TermInfo.FaceName, ConsoleInfo->FaceName, LF_FACESIZE);
-    GuiInitInfo->TermInfo.FaceName[LF_FACESIZE - 1] = UNICODE_NULL;
+    StringCchCopyNW(GuiInitInfo->TermInfo.FaceName, ARRAYSIZE(GuiInitInfo->TermInfo.FaceName),
+                    ConsoleInfo->FaceName, ARRAYSIZE(ConsoleInfo->FaceName));
     GuiInitInfo->TermInfo.FontFamily = ConsoleInfo->FontFamily;
     GuiInitInfo->TermInfo.FontSize   = ConsoleInfo->FontSize;
     GuiInitInfo->TermInfo.FontWeight = ConsoleInfo->FontWeight;

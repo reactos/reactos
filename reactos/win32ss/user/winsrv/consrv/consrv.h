@@ -12,6 +12,8 @@
 /* Main header */
 #include "../winsrv.h"
 
+#include <strsafe.h>
+
 /* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS

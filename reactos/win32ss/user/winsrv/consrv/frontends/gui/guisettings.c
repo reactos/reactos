@@ -161,8 +161,8 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
         pSharedInfo->CodePage = Console->OutputCodePage;
 
         /* GUI Information */
-        wcsncpy(pSharedInfo->FaceName, GuiData->GuiInfo.FaceName, LF_FACESIZE);
-        pSharedInfo->FaceName[LF_FACESIZE - 1] = UNICODE_NULL;
+        StringCchCopyNW(pSharedInfo->FaceName, ARRAYSIZE(pSharedInfo->FaceName),
+                        GuiData->GuiInfo.FaceName, ARRAYSIZE(GuiData->GuiInfo.FaceName));
         pSharedInfo->FontFamily = GuiData->GuiInfo.FontFamily;
         pSharedInfo->FontSize   = GuiData->GuiInfo.FontSize;
         pSharedInfo->FontWeight = GuiData->GuiInfo.FontWeight;
