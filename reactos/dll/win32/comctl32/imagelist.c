@@ -1444,6 +1444,9 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
     HBRUSH hOldBrush;
     POINT pt;
     BOOL has_alpha;
+#ifdef __REACTOS__
+    HDC hdcSaturated = NULL;
+#endif
 
     if (!pimldp || !(himl = pimldp->himl)) return FALSE;
     if (!is_valid(himl)) return FALSE;
@@ -1500,9 +1503,10 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
      */
     if (fState & ILS_SATURATE)
     {
-        hImageListDC = saturate_image(himl, pimldp->hdcDst, pimldp->x, pimldp->y,
+        hdcSaturated = saturate_image(himl, pimldp->hdcDst, pimldp->x, pimldp->y,
                                       pt.x, pt.y, cx, cy, pimldp->rgbFg);
 
+        hImageListDC = hdcSaturated;
         /* shitty way of getting subroutines to blit at the right place (top left corner),
            as our modified imagelist only contains a single image for performance reasons */
         pt.x = 0;
@@ -1672,6 +1676,10 @@ end:
     SetTextColor(hImageDC, oldImageFg);
     SelectObject(hImageDC, hOldImageBmp);
 cleanup:
+#ifdef __REACTOS__
+    if (hdcSaturated)
+        DeleteDC(hdcSaturated);
+#endif
     DeleteObject(hBlendMaskBmp);
     DeleteObject(hImageBmp);
     DeleteDC(hImageDC);
