@@ -2,6 +2,7 @@
 add_subdirectory(redirptest)
 
 list(APPEND SOURCE
+    Console.c
     DefaultActCtx.c
     DeviceIoControl.c
     dosdev.c
