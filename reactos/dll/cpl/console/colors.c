@@ -130,7 +130,8 @@ ColorsProc(HWND hDlg,
 
         case WM_COMMAND:
         {
-            if (HIWORD(wParam) == BN_CLICKED)
+            /* NOTE: both BN_CLICKED and STN_CLICKED == 0 */
+            if (HIWORD(wParam) == BN_CLICKED || HIWORD(wParam) == STN_CLICKED)
             {
                 switch (LOWORD(wParam))
                 {
@@ -210,9 +211,49 @@ ColorsProc(HWND hDlg,
                     break;
                 }
                 }
+
+                if (IDC_STATIC_COLOR1 <= LOWORD(wParam) && LOWORD(wParam) <= IDC_STATIC_COLOR16)
+                {
+                    colorIndex = LOWORD(wParam) - IDC_STATIC_COLOR1;
+
+                    /* If the same static control was re-clicked, don't take it into account */
+                    if (colorIndex == ActiveStaticControl)
+                        break;
+
+                    color = ConInfo->ColorTable[colorIndex];
+
+                    SetDlgItemInt(hDlg, IDC_EDIT_COLOR_RED  , GetRValue(color), FALSE);
+                    SetDlgItemInt(hDlg, IDC_EDIT_COLOR_GREEN, GetGValue(color), FALSE);
+                    SetDlgItemInt(hDlg, IDC_EDIT_COLOR_BLUE , GetBValue(color), FALSE);
+
+                    if (IsDlgButtonChecked(hDlg, IDC_RADIO_SCREEN_TEXT))
+                    {
+                        ConInfo->ScreenAttributes = MakeAttrib(colorIndex, BkgdAttribFromAttrib(ConInfo->ScreenAttributes));
+                    }
+                    else if (IsDlgButtonChecked(hDlg, IDC_RADIO_SCREEN_BACKGROUND))
+                    {
+                        ConInfo->ScreenAttributes = MakeAttrib(TextAttribFromAttrib(ConInfo->ScreenAttributes), colorIndex);
+                    }
+                    else if (IsDlgButtonChecked(hDlg, IDC_RADIO_POPUP_TEXT))
+                    {
+                        ConInfo->PopupAttributes = MakeAttrib(colorIndex, BkgdAttribFromAttrib(ConInfo->PopupAttributes));
+                    }
+                    else if (IsDlgButtonChecked(hDlg, IDC_RADIO_POPUP_BACKGROUND))
+                    {
+                        ConInfo->PopupAttributes = MakeAttrib(TextAttribFromAttrib(ConInfo->PopupAttributes), colorIndex);
+                    }
+
+                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_COLOR1 + ActiveStaticControl), NULL, TRUE);
+                    ActiveStaticControl = colorIndex;
+                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_COLOR1 + ActiveStaticControl), NULL, TRUE);
+                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
+                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_POPUP_COLOR) , NULL, TRUE);
+
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
+                    break;
+                }
             }
-            else
-            if (HIWORD(wParam) == EN_KILLFOCUS)
+            else if (HIWORD(wParam) == EN_KILLFOCUS)
             {
                 switch (LOWORD(wParam))
                 {
@@ -282,51 +323,6 @@ ColorsProc(HWND hDlg,
                     break;
                 }
                 }
-            }
-            else
-            if ( HIWORD(wParam) == STN_CLICKED &&
-                 IDC_STATIC_COLOR1 <= LOWORD(wParam) && LOWORD(wParam) <= IDC_STATIC_COLOR16 )
-            {
-                colorIndex = LOWORD(wParam) - IDC_STATIC_COLOR1;
-
-                if (colorIndex == ActiveStaticControl)
-                {
-                    /* The same static control was re-clicked */
-                    break;
-                }
-
-                color = ConInfo->ColorTable[colorIndex];
-
-                SetDlgItemInt(hDlg, IDC_EDIT_COLOR_RED  , GetRValue(color), FALSE);
-                SetDlgItemInt(hDlg, IDC_EDIT_COLOR_GREEN, GetGValue(color), FALSE);
-                SetDlgItemInt(hDlg, IDC_EDIT_COLOR_BLUE , GetBValue(color), FALSE);
-
-                /* Update global struct */
-                if (IsDlgButtonChecked(hDlg, IDC_RADIO_SCREEN_TEXT))
-                {
-                    ConInfo->ScreenAttributes = MakeAttrib(colorIndex, BkgdAttribFromAttrib(ConInfo->ScreenAttributes));
-                }
-                else if (IsDlgButtonChecked(hDlg, IDC_RADIO_SCREEN_BACKGROUND))
-                {
-                    ConInfo->ScreenAttributes = MakeAttrib(TextAttribFromAttrib(ConInfo->ScreenAttributes), colorIndex);
-                }
-                else if (IsDlgButtonChecked(hDlg, IDC_RADIO_POPUP_TEXT))
-                {
-                    ConInfo->PopupAttributes = MakeAttrib(colorIndex, BkgdAttribFromAttrib(ConInfo->PopupAttributes));
-                }
-                else if (IsDlgButtonChecked(hDlg, IDC_RADIO_POPUP_BACKGROUND))
-                {
-                    ConInfo->PopupAttributes = MakeAttrib(TextAttribFromAttrib(ConInfo->PopupAttributes), colorIndex);
-                }
-
-                InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_COLOR1 + ActiveStaticControl), NULL, TRUE);
-                ActiveStaticControl = colorIndex;
-                InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_COLOR1 + ActiveStaticControl), NULL, TRUE);
-                InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
-                InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_POPUP_COLOR) , NULL, TRUE);
-
-                PropSheet_Changed(GetParent(hDlg), hDlg);
-                break;
             }
 
             break;
