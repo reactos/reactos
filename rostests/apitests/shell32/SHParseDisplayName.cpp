@@ -111,11 +111,13 @@ struct test_data Tests[] =
     {__LINE__, L"c:\\Program Files\\", L"C:\\Program Files", 0, S_OK, 0},
     /* Paths with . are valid for win+r dialog or address bar but not for ParseDisplayName */
     {__LINE__, L"c:\\Program Files\\.", NULL, 0, E_INVALIDARG, 0},
-    {__LINE__, L"c:\\Program Files\\..", NULL, 0, E_INVALIDARG, 0}, 
+    {__LINE__, L"c:\\Program Files\\..", NULL, 0, E_INVALIDARG, 0}, /* This gives C:\ when entered in address bar */
     {__LINE__, L".", NULL, 0, E_INVALIDARG, 0},
     {__LINE__, L"..", NULL, 0, E_INVALIDARG, 0},
     {__LINE__, L"C:\\.", NULL, 0, E_INVALIDARG, 0},
-    {__LINE__, L"C:\\..", NULL, 0, E_INVALIDARG, 0} /* C:\.. in the addressbar gives my computer! */
+    {__LINE__, L"fonts", NULL, 0, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), 0},  /* These three work for ShellExecute */
+    {__LINE__, L"winsxs", NULL, 0, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), 0},
+    {__LINE__, L"system32", NULL, 0, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), 0}
 };
 
 UINT get_host_os_flag()
