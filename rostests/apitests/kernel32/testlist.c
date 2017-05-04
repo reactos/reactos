@@ -29,7 +29,7 @@ extern void func_WideCharToMultiByte(void);
 
 const struct test winetest_testlist[] =
 {
-    { "Console",                     func_Console },
+    { "ConsoleCP",                   func_Console },
     { "DefaultActCtx",               func_DefaultActCtx },
     { "DeviceIoControl",             func_DeviceIoControl },
     { "dosdev",                      func_dosdev },
