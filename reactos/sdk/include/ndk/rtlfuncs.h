@@ -3202,6 +3202,8 @@ RtlQueryProcessDebugInformation(
 //
 // Bitmap Functions
 //
+#ifdef NTOS_MODE_USER
+
 NTSYSAPI
 BOOLEAN
 NTAPI
@@ -3420,6 +3422,9 @@ RtlCheckBit(
 #else
 #define RtlCheckBit(BMH,BP) (((((PLONG)(BMH)->Buffer)[(BP)/32]) >> ((BP)%32)) & 0x1)
 #endif /* defined(_M_AMD64) */
+
+#endif // NTOS_MODE_USER
+
 
 //
 // Timer Functions
