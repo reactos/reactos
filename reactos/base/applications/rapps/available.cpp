@@ -45,6 +45,7 @@ ShowAvailableAppInfo(INT Index)
     ADD_TEXT(IDS_AINFO_SIZE,        Info->szSize,    CFE_BOLD, 0);
     ADD_TEXT(IDS_AINFO_URLSITE,     Info->szUrlSite, CFE_BOLD, CFE_LINK);
     ADD_TEXT(IDS_AINFO_DESCRIPTION, Info->szDesc,    CFE_BOLD, 0);
+    ADD_TEXT(IDS_AINFO_URLDOWNLOAD, Info->szUrlDownload, CFE_BOLD, CFE_LINK);
 
     return TRUE;
 }

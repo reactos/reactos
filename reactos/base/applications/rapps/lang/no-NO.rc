@@ -156,6 +156,7 @@ BEGIN
     IDS_AINFO_SIZE "\nStørrelse: "
     IDS_AINFO_URLSITE "\nHjemmeside: "
     IDS_AINFO_LICENSE "\nLisens: "
+    IDS_AINFO_URLDOWNLOAD "\nNedlasting: "
 END
 
 STRINGTABLE

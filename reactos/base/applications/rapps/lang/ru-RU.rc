@@ -156,6 +156,7 @@ BEGIN
     IDS_AINFO_SIZE "\nРазмер: "
     IDS_AINFO_URLSITE "\nДомашняя страница: "
     IDS_AINFO_LICENSE "\nЛицензия: "
+    IDS_AINFO_URLDOWNLOAD "\nЗагрузить: "
 END
 
 STRINGTABLE

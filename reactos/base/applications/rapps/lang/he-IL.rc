@@ -158,6 +158,7 @@ BEGIN
     IDS_AINFO_SIZE "\nגודל: "
     IDS_AINFO_URLSITE "\nדף בית: "
     IDS_AINFO_LICENSE "\nרישיון: "
+    IDS_AINFO_URLDOWNLOAD "\nהורד: "
 END
 
 STRINGTABLE

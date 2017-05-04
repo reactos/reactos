@@ -160,6 +160,7 @@ BEGIN
     IDS_AINFO_SIZE "\nMasa: "
     IDS_AINFO_URLSITE "\nHome Page: "
     IDS_AINFO_LICENSE "\nLicenca: "
+    IDS_AINFO_URLDOWNLOAD "\nShkarko: "
 END
 
 STRINGTABLE

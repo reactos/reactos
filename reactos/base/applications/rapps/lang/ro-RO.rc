@@ -162,6 +162,7 @@ BEGIN
     IDS_AINFO_SIZE "\nDimensiune: "
     IDS_AINFO_URLSITE "\nPagină web: "
     IDS_AINFO_LICENSE "\nLicență: "
+    IDS_AINFO_URLDOWNLOAD "\nDescarca: "
 END
 
 STRINGTABLE

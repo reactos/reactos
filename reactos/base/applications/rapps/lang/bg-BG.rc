@@ -160,6 +160,7 @@ BEGIN
     IDS_AINFO_SIZE "\nРазмер: "
     IDS_AINFO_URLSITE "\nДомашна страница: "
     IDS_AINFO_LICENSE "\nРазрешително: "
+    IDS_AINFO_URLDOWNLOAD "\nИзтегляне: "
 END
 
 STRINGTABLE

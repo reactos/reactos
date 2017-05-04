@@ -156,6 +156,7 @@ BEGIN
     IDS_AINFO_SIZE          "\nサイズ: "
     IDS_AINFO_URLSITE       "\nホームページ: "
     IDS_AINFO_LICENSE       "\nライセンス: "
+    IDS_AINFO_URLDOWNLOAD    "\nダウンロード: "
 END
 
 STRINGTABLE

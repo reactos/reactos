@@ -158,6 +158,7 @@ BEGIN
     IDS_AINFO_SIZE "\nTamanho: "
     IDS_AINFO_URLSITE "\nPágina: "
     IDS_AINFO_LICENSE "\nLicença: "
+    IDS_AINFO_URLDOWNLOAD "\nTransferir: "
 END
 
 STRINGTABLE
