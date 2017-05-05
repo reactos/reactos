@@ -73,6 +73,7 @@ public:
         MESSAGE_HANDLER(WM_ACTIVATEAPP, _OnAppActivate)
         MESSAGE_HANDLER(WM_MOUSEACTIVATE, _OnMouseActivate)
         MESSAGE_HANDLER(WM_WININICHANGE , _OnWinIniChange)
+        MESSAGE_HANDLER(WM_NCPAINT, _OnNcPaint)
     END_MSG_MAP()
 
     BEGIN_COM_MAP(CMenuDeskBar)
@@ -140,6 +141,7 @@ private:
     LRESULT _OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT _OnAppActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT _OnWinIniChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT _OnNcPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
     HRESULT _AdjustForTheme(BOOL bFlatStyle);
     BOOL _IsSubMenuParent(HWND hwnd);

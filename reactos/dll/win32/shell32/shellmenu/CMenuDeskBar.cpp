@@ -817,6 +817,28 @@ LRESULT CMenuDeskBar::_OnWinIniChange(UINT uMsg, WPARAM wParam, LPARAM lParam, B
     return 0;
 }
 
+LRESULT CMenuDeskBar::_OnNcPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    /* If it is a flat style menu we need to handle WM_NCPAINT 
+     * and paint the border with the right colour */
+    if ((GetStyle() & WS_BORDER) == 0)
+    {
+        /* This isn't a flat style menu. */
+        bHandled = FALSE;
+        return 0;
+    }
+
+    HDC hdc;
+    RECT rcWindow;
+
+    hdc = GetWindowDC();
+    GetWindowRect(&rcWindow);
+    OffsetRect(&rcWindow, -rcWindow.left, -rcWindow.top);
+    FrameRect(hdc, &rcWindow, GetSysColorBrush(COLOR_BTNSHADOW));
+    ReleaseDC(hdc);
+    return 0;
+}
+
 HRESULT CMenuDeskBar::_AdjustForTheme(BOOL bFlatStyle)
 {
     DWORD style = bFlatStyle ? WS_BORDER : WS_CLIPCHILDREN|WS_DLGFRAME;
