@@ -617,6 +617,9 @@ TOOLBAR_DrawString (const TOOLBAR_INFO *infoPtr, RECT *rcText, LPCWSTR lpText,
     COLORREF clrOldBk = 0;
     int oldBkMode = 0;
     UINT state = tbcd->nmcd.uItemState;
+#ifdef __REACTOS__
+    HTHEME theme = GetWindowTheme (infoPtr->hwndSelf);
+#endif
 
     /* draw text */
     if (lpText && infoPtr->nMaxTextRows > 0) {
@@ -646,6 +649,25 @@ TOOLBAR_DrawString (const TOOLBAR_INFO *infoPtr, RECT *rcText, LPCWSTR lpText,
 	    clrOld = SetTextColor (hdc, tbcd->clrText);
 	}
 
+#ifdef __REACTOS__
+    if (theme)
+    {
+        int partId = TP_BUTTON;
+        int stateId = TS_NORMAL;
+
+        if (state & CDIS_DISABLED)
+            stateId = TS_DISABLED;
+        else if (state & CDIS_SELECTED)
+            stateId = TS_PRESSED;
+        else if (state & CDIS_CHECKED)
+            stateId = (state & CDIS_HOT) ? TS_HOTCHECKED : TS_HOT;
+        else if (state & CDIS_HOT)
+            stateId = TS_HOT;
+
+        DrawThemeText(theme, hdc, partId, stateId, lpText, -1, infoPtr->dwDTFlags, 0, rcText);
+    }
+    else
+#endif
 	DrawTextW (hdc, lpText, -1, rcText, infoPtr->dwDTFlags);
 	SetTextColor (hdc, clrOld);
 	if ((state & CDIS_MARKED) && !(dwItemCDFlag & TBCDRF_NOMARK))
