@@ -1269,6 +1269,7 @@ static BOOL CALLBACK BUTTON_DrawTextCallback(HDC hdc, LPARAM lp, WPARAM wp, int 
     }
 
     DrawTextW(hdc, text, -1, &rc, (UINT)wp);
+    HeapFree(GetProcessHeap(), 0, text);
     return TRUE;
 #endif
 }
