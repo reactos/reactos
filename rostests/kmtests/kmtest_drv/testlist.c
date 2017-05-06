@@ -70,6 +70,7 @@ KMT_TESTFUNC Test_RtlIsValidOemCharacter;
 KMT_TESTFUNC Test_RtlMemory;
 KMT_TESTFUNC Test_RtlRegistry;
 KMT_TESTFUNC Test_RtlSplayTree;
+KMT_TESTFUNC Test_RtlStack;
 KMT_TESTFUNC Test_RtlUnicodeString;
 KMT_TESTFUNC Test_ZwAllocateVirtualMemory;
 KMT_TESTFUNC Test_ZwCreateSection;
@@ -139,6 +140,7 @@ const KMT_TEST TestList[] =
     { "RtlMemoryKM",                        Test_RtlMemory },
     { "RtlRegistryKM",                      Test_RtlRegistry },
     { "RtlSplayTreeKM",                     Test_RtlSplayTree },
+    { "RtlStackKM",                         Test_RtlStack },
     { "RtlUnicodeStringKM",                 Test_RtlUnicodeString },
     { "SeInheritance",                      Test_SeInheritance },
     { "SeQueryInfoToken",                   Test_SeQueryInfoToken },
