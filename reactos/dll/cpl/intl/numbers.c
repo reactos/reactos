@@ -469,195 +469,105 @@ UpdateNumSamples(HWND hwndDlg,
                         (LPARAM)OutBuffer);
 }
 
-/* Set num decimal separator */
-static BOOL
-SetNumDecimalSep(HWND hwndDlg,
-                 PWSTR pszNumDecimalSep)
-{
-    /* Get setted decimal separator */
-    SendDlgItemMessageW(hwndDlg, IDC_NUMBERDSYMBOL,
-                        WM_GETTEXT,
-                        (WPARAM)MAX_NUMDECIMALSEP,
-                        (LPARAM)pszNumDecimalSep);
 
-    return TRUE;
-}
-
-/* Set number of fractional symbols */
-static BOOL
-SetFracSymNum(HWND hwndDlg,
-              PINT pnNumDigits)
-{
-    INT nCurrSel;
-
-    /* Get setted number of fractional symbols */
-    nCurrSel = SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNDIGDEC,
-                                   CB_GETCURSEL,
-                                   (WPARAM)0,
-                                   (LPARAM)0);
-    if (nCurrSel == CB_ERR)
-        return FALSE;
-
-    *pnNumDigits = nCurrSel;
-
-    return TRUE;
-}
-
-/* Set field separator */
-static BOOL
-SetNumFieldSep(HWND hwndDlg,
-               PWSTR pszNumThousandSep)
-{
-    /* Get thousand separator */
-    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDIGITGRSYM,
-                        WM_GETTEXT,
-                        (WPARAM)MAX_NUMTHOUSANDSEP,
-                        (LPARAM)pszNumThousandSep);
-
-    return TRUE;
-}
-
-/* Set number of digits in field */
-static BOOL
-SetFieldDigNum(HWND hwndDlg,
-               PINT pnNumGrouping)
-{
-    INT nCurrSel;
-
-    /* Get setted negative sum format */
-    nCurrSel = SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDGROUPING,
-                                   CB_GETCURSEL,
-                                   (WPARAM)0,
-                                   (LPARAM)0);
-    if (nCurrSel == CB_ERR)
-        return FALSE;
-
-    *pnNumGrouping = nCurrSel;
-
-    return TRUE;
-}
-
-/* Set negative sign */
-static BOOL
-SetNumNegSign(HWND hwndDlg,
-              PWSTR pszNumNegativeSign)
-{
-    /* Get setted negative sign */
-    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNSIGNSYM,
-                        WM_GETTEXT,
-                        (WPARAM)MAX_NUMNEGATIVESIGN,
-                        (LPARAM)pszNumNegativeSign);
-
-    return TRUE;
-}
-
-/* Set negative sum format */
-static BOOL
-SetNegSumFmt(HWND hwndDlg,
-             PINT pnNumNegFormat)
-{
-    INT nCurrSel;
-
-    /* Get setted negative sum format */
-    nCurrSel = SendDlgItemMessageW(hwndDlg, IDC_NUMBERSNNUMFORMAT,
-                                   CB_GETCURSEL,
-                                   (WPARAM)0,
-                                   (LPARAM)0);
-    if (nCurrSel == CB_ERR)
-        return FALSE;
-
-    *pnNumNegFormat = nCurrSel;
-
-    return TRUE;
-}
-
-/* Set leading zero */
-static BOOL
-SetNumLeadZero(HWND hwndDlg,
-               PINT pnNumLeadingZero)
-{
-    INT nCurrSel;
-
-    /* Get setted leading zero format */
-    nCurrSel = SendDlgItemMessageW(hwndDlg, IDC_NUMBERSDISPLEADZER,
-                                   CB_GETCURSEL,
-                                   (WPARAM)0,
-                                   (LPARAM)0);
-    if (nCurrSel == CB_ERR)
-        return FALSE;
-
-    *pnNumLeadingZero = nCurrSel;
-
-    return TRUE;
-}
-
-/* Set elements list separator */
-static BOOL
-SetNumListSep(HWND hwndDlg,
-              PWSTR pszNumListSep)
-{
-    /* Get setted list separator */
-    SendDlgItemMessageW(hwndDlg, IDC_NUMBERSLSEP,
-                        WM_GETTEXT,
-                        (WPARAM)MAX_NUMLISTSEP,
-                        (LPARAM)pszNumListSep);
-
-    return TRUE;
-}
-
-/* Set units system */
-static BOOL
-SetNumUnitsSys(HWND hwndDlg,
-               PINT pnNumMeasure)
-{
-    INT nCurrSel;
-
-    /* Get setted units system */
-    nCurrSel = SendDlgItemMessageW(hwndDlg, IDC_NUMBERSMEASSYS,
-                                   CB_GETCURSEL,
-                                   (WPARAM)0,
-                                   (LPARAM)0);
-    if (nCurrSel == CB_ERR)
-        return FALSE;
-
-    *pnNumMeasure = nCurrSel;
-
-    return TRUE;
-}
-
-static BOOL
-SetNumberSetting(HWND hwndDlg, PGLOBALDATA pGlobalData)
+static
+BOOL
+GetNumberSetting(
+    HWND hwndDlg,
+    PGLOBALDATA pGlobalData)
 {
     WCHAR szNumDecimalSep[MAX_NUMDECIMALSEP];
     WCHAR szNumThousandSep[MAX_NUMTHOUSANDSEP];
     WCHAR szNumNegativeSign[MAX_NUMNEGATIVESIGN];
     WCHAR szNumListSep[MAX_NUMLISTSEP];
-    WCHAR szNumNativeDigits[MAX_NUMNATIVEDIGITS];
-    int nNumGrouping;
-    int nNumDigits;
-    int nNumNegFormat;
-    int nNumLeadingZero;
-    int nNumMeasure;
+    INT nNumDigits;
+    INT nNumGrouping;
+    INT nNumNegFormat;
+    INT nNumLeadingZero;
+    INT nNumMeasure;
 
-    if (!SetNumDecimalSep(hwndDlg, szNumDecimalSep) ||
-        !SetNumFieldSep(hwndDlg, szNumThousandSep) ||
-        !SetNumNegSign(hwndDlg, szNumNegativeSign) ||
-        !SetNumListSep(hwndDlg, szNumListSep) ||
-        !SetFieldDigNum(hwndDlg, &nNumGrouping) ||
-        !SetFracSymNum(hwndDlg, &nNumDigits) ||
-        !SetNegSumFmt(hwndDlg, &nNumNegFormat) ||
-        !SetNumLeadZero(hwndDlg, &nNumLeadingZero) ||
-        !SetNumUnitsSys(hwndDlg, &nNumMeasure))
+    /* Decimal symbol */
+    GetSelectedComboBoxText(hwndDlg,
+                            IDC_NUMBERDSYMBOL,
+                            szNumDecimalSep,
+                            MAX_NUMDECIMALSEP);
+
+    if (szNumDecimalSep[0] == L'\0')
     {
+        /* TODO: Show error message */
+
         return FALSE;
     }
 
-    /* store to global data */
+    /* Number of digits after decimal */
+    GetSelectedComboBoxIndex(hwndDlg,
+                             IDC_NUMBERSNDIGDEC,
+                             &nNumDigits);
+
+    /* Digit grouping symbol */
+    GetSelectedComboBoxText(hwndDlg,
+                            IDC_NUMBERSDIGITGRSYM,
+                            szNumThousandSep,
+                            MAX_NUMTHOUSANDSEP);
+
+    if (szNumThousandSep[0] == L'\0')
+    {
+        /* TODO: Show error message */
+
+        return FALSE;
+    }
+
+    /* Digit grouping */
+    GetSelectedComboBoxIndex(hwndDlg,
+                             IDC_NUMBERSDGROUPING,
+                             &nNumGrouping);
+
+    /* Negative sign symbol */
+    GetSelectedComboBoxText(hwndDlg,
+                            IDC_NUMBERSNSIGNSYM,
+                            szNumNegativeSign,
+                            MAX_NUMNEGATIVESIGN);
+
+    if (szNumNegativeSign[0] == L'\0')
+    {
+        /* TODO: Show error message */
+
+        return FALSE;
+    }
+
+    /* Negative number format */
+    GetSelectedComboBoxIndex(hwndDlg,
+                             IDC_NUMBERSNNUMFORMAT,
+                             &nNumNegFormat);
+
+    /* Display leading zeros */
+    GetSelectedComboBoxIndex(hwndDlg,
+                             IDC_NUMBERSDISPLEADZER,
+                             &nNumLeadingZero);
+
+    /* List separator */
+    GetSelectedComboBoxText(hwndDlg,
+                            IDC_NUMBERSLSEP,
+                            szNumListSep,
+                            MAX_NUMLISTSEP);
+
+    if (szNumListSep[0] == L'\0')
+    {
+        /* TODO: Show error message */
+
+        return FALSE;
+    }
+
+    /* Measurement system */
+    GetSelectedComboBoxIndex(hwndDlg,
+                             IDC_NUMBERSMEASSYS,
+                             &nNumMeasure);
+
+    /* Store settings in global data */
     wcscpy(pGlobalData->szNumDecimalSep, szNumDecimalSep);
     wcscpy(pGlobalData->szNumThousandSep, szNumThousandSep);
     wcscpy(pGlobalData->szNumNegativeSign, szNumNegativeSign);
     wcscpy(pGlobalData->szNumListSep, szNumListSep);
-    wcscpy(pGlobalData->szNumNativeDigits, szNumNativeDigits);
     pGlobalData->nNumGrouping = nNumGrouping;
     pGlobalData->nNumDigits = nNumDigits;
     pGlobalData->nNumNegFormat = nNumNegFormat;
@@ -717,10 +627,9 @@ NumbersPageProc(HWND hwndDlg,
             break;
 
         case WM_NOTIFY:
-            /* If push apply button */
             if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
             {
-                if (SetNumberSetting(hwndDlg, pGlobalData))
+                if (GetNumberSetting(hwndDlg, pGlobalData))
                 {
                     pGlobalData->bUserLocaleChanged = TRUE;
                     UpdateNumSamples(hwndDlg, pGlobalData);

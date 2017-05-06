@@ -51,47 +51,6 @@ UpdateTimeSample(HWND hWnd, PGLOBALDATA pGlobalData)
 }
 
 
-static VOID
-GetSelectedComboEntry(HWND hwndDlg, DWORD dwIdc, WCHAR *Buffer, UINT uSize)
-{
-    HWND hChildWnd;
-    PWSTR tmp;
-    INT nIndex;
-    UINT uReqSize;
-
-    /* Get handle to time format control */
-    hChildWnd = GetDlgItem(hwndDlg, dwIdc);
-
-    /* Get index to selected time format */
-    nIndex = SendMessageW(hChildWnd, CB_GETCURSEL, 0, 0);
-    if (nIndex == CB_ERR)
-    {
-        /* No selection? Get content of the edit control */
-        SendMessageW(hChildWnd, WM_GETTEXT, uSize, (LPARAM)Buffer);
-    }
-    else
-    {
-        /* Get requested size, including the null terminator;
-         * it shouldn't be required because the previous CB_LIMITTEXT,
-         * but it would be better to check it anyways */
-        uReqSize = SendMessageW(hChildWnd, CB_GETLBTEXTLEN, (WPARAM)nIndex, 0) + 1;
-
-        /* Allocate enough space to be more safe */
-        tmp = (PWSTR)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, uReqSize * sizeof(WCHAR));
-        if (tmp != NULL)
-        {
-            /* Get selected time format text */
-            SendMessageW(hChildWnd, CB_GETLBTEXT, (WPARAM)nIndex, (LPARAM)tmp);
-
-            /* Finally, copy the result into the output */
-            wcsncpy(Buffer, tmp, uSize);
-
-            HeapFree(GetProcessHeap(), 0, tmp);
-        }
-    }
-}
-
-
 static
 VOID
 InitTimeFormatCB(
@@ -195,31 +154,59 @@ InitPmSymbol(
                         0);
 }
 
-static BOOL
-SetTimeSetting(HWND hwndDlg, PGLOBALDATA pGlobalData)
+
+static
+BOOL
+GetTimeSetting(
+    HWND hwndDlg,
+    PGLOBALDATA pGlobalData)
 {
     WCHAR szTimeFormat[MAX_TIMEFORMAT];
     WCHAR szTimeSep[MAX_TIMEFORMAT];
     WCHAR szTimeAM[MAX_TIMEFORMAT];
     WCHAR szTimePM[MAX_TIMEFORMAT];
 
-    /* Get selected/typed time format text */
-    GetSelectedComboEntry(hwndDlg, IDC_TIMEFORMAT, szTimeFormat, MAX_TIMEFORMAT);
+    /* Time format */
+    GetSelectedComboBoxText(hwndDlg,
+                            IDC_TIMEFORMAT,
+                            szTimeFormat,
+                            MAX_TIMEFORMAT);
 
-    /* Get selected/typed time separator text */
-    GetSelectedComboEntry(hwndDlg, IDC_TIMESEPARATOR, szTimeSep, MAX_TIMESEPARATOR);
+    /* Check the time format */
+    if (szTimeFormat[0] == L'\0')
+    {
+        /* TODO: Show error message */
 
-    /* Get selected/typed AM symbol text */
-    GetSelectedComboEntry(hwndDlg, IDC_TIMEAMSYMBOL, szTimeAM, MAX_TIMEAMSYMBOL);
-
-    /* Get selected/typed PM symbol text */
-    GetSelectedComboEntry(hwndDlg, IDC_TIMEPMSYMBOL, szTimePM, MAX_TIMEPMSYMBOL);
-
-    /* verify values */
-    if (szTimeFormat[0] == L'\0' || szTimeSep[0] == L'\0')
         return FALSE;
+    }
 
-    /* store to global data */
+    /* Time separator */
+    GetSelectedComboBoxText(hwndDlg,
+                            IDC_TIMESEPARATOR,
+                            szTimeSep,
+                            MAX_TIMESEPARATOR);
+
+    /* Check the time separator */
+    if (szTimeSep[0] == L'\0')
+    {
+        /* TODO: Show error message */
+
+        return FALSE;
+    }
+
+    /* AM symbol */
+    GetSelectedComboBoxText(hwndDlg,
+                            IDC_TIMEAMSYMBOL,
+                            szTimeAM,
+                            MAX_TIMEAMSYMBOL);
+
+    /* PM symbol */
+    GetSelectedComboBoxText(hwndDlg,
+                            IDC_TIMEPMSYMBOL,
+                            szTimePM,
+                            MAX_TIMEPMSYMBOL);
+
+    /* Store settings in global data */
     wcscpy(pGlobalData->szTimeFormat, szTimeFormat);
     wcscpy(pGlobalData->szTimeSep, szTimeSep);
     wcscpy(pGlobalData->szTimeAM, szTimeAM);
@@ -281,7 +268,7 @@ TimePageProc(HWND hwndDlg,
         case WM_NOTIFY:
             if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
             {
-                if (SetTimeSetting(hwndDlg, pGlobalData))
+                if (GetTimeSetting(hwndDlg, pGlobalData))
                 {
                     pGlobalData->bUserLocaleChanged = TRUE;
                     UpdateTimeSample(hwndDlg, pGlobalData);

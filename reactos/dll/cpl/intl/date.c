@@ -162,7 +162,6 @@ SetShortDateFormat(HWND hwndDlg, PWSTR pszShortDateFmt)
             PrintErrorMsgBox(IDS_ERROR_SYMBOL_FORMAT_SHORT);
             return FALSE;
         }
-
     }
 
     if (OpenApostFlg || nFmtStrSize == 0)
@@ -221,7 +220,6 @@ SetLongDateFormat(HWND hwndDlg, PWSTR pszLongDateFmt)
             PrintErrorMsgBox(IDS_ERROR_SYMBOL_FORMAT_LONG);
             return FALSE;
         }
-
     }
 
     if (OpenApostFlg || nFmtStrSize == 0)
@@ -515,24 +513,28 @@ UpdateDateLocaleSamples(HWND hwndDlg,
                         WM_SETTEXT, 0, (LPARAM)OutBuffer);
 }
 
-static BOOL
-SetDateSetting(HWND hwndDlg, PGLOBALDATA pGlobalData)
-{
-    WCHAR szLongDateFmt[MAX_SAMPLES_STR_SIZE];
-    WCHAR szShortDateFmt[MAX_SAMPLES_STR_SIZE];
-    WCHAR szShortDateSep[MAX_SAMPLES_STR_SIZE];
 
-    if (!SetLongDateFormat(hwndDlg, szLongDateFmt) ||
-        !SetShortDateFormat(hwndDlg, szShortDateFmt) ||
-        !SetShortDateSep(hwndDlg, szShortDateSep))
+static
+BOOL
+GetDateSetting(
+    HWND hwndDlg,
+    PGLOBALDATA pGlobalData)
+{
+    WCHAR szLongDateFormat[MAX_SAMPLES_STR_SIZE];
+    WCHAR szShortDateFormat[MAX_SAMPLES_STR_SIZE];
+    WCHAR szDateSeparator[MAX_SAMPLES_STR_SIZE];
+
+    if (!SetLongDateFormat(hwndDlg, szLongDateFormat) ||
+        !SetShortDateFormat(hwndDlg, szShortDateFormat) ||
+        !SetShortDateSep(hwndDlg, szDateSeparator))
     {
         return FALSE;
     }
 
-    /* store to global data */
-    wcscpy(pGlobalData->szLongDateFormat, szLongDateFmt);
-    wcscpy(pGlobalData->szShortDateFormat, szShortDateFmt);
-    wcscpy(pGlobalData->szDateSep, szShortDateSep);
+    /* Store settings in global data */
+    wcscpy(pGlobalData->szLongDateFormat, szLongDateFormat);
+    wcscpy(pGlobalData->szShortDateFormat, szShortDateFormat);
+    wcscpy(pGlobalData->szDateSep, szDateSeparator);
 
     return TRUE;
 }
@@ -560,22 +562,22 @@ DatePageProc(HWND hwndDlg,
             InitLongDateCB(hwndDlg, pGlobalData);
             InitShortDateSepSamples(hwndDlg, pGlobalData);
             /* TODO: Add other calendar types */
+            pGlobalData->bEnableYearNotification = TRUE;
             break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDC_SECONDYEAR_EDIT:
-                    if (HIWORD(wParam) == EN_CHANGE)
+                    if (HIWORD(wParam) == EN_CHANGE &&
+                        pGlobalData != NULL &&
+                        pGlobalData->bEnableYearNotification == TRUE)
                     {
                         SetMinDate(hwndDlg);
-                    }
-                    break;
 
-                case IDC_SCR_MAX_YEAR:
-                    /* Set "Apply" button enabled */
-                    /* FIXME */
-                    //PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        /* Enable the Apply button */
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
                     break;
 
                 case IDC_CALTYPE_COMBO:
@@ -583,7 +585,8 @@ DatePageProc(HWND hwndDlg,
                 case IDC_SHRTDATEFMT_COMBO:
                 case IDC_LONGDATEFMT_COMBO:
                 case IDC_SHRTDATESEP_COMBO:
-                    if (HIWORD(wParam) == CBN_SELCHANGE || HIWORD(wParam) == CBN_EDITCHANGE)
+                    if (HIWORD(wParam) == CBN_SELCHANGE ||
+                        HIWORD(wParam) == CBN_EDITCHANGE)
                     {
                         /* Enable the Apply button */
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
@@ -595,7 +598,7 @@ DatePageProc(HWND hwndDlg,
         case WM_NOTIFY:
             if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
             {
-                if (SetDateSetting(hwndDlg, pGlobalData))
+                if (GetDateSetting(hwndDlg, pGlobalData))
                 {
                     pGlobalData->bUserLocaleChanged = TRUE;
                     SetMaxDate(hwndDlg, pGlobalData->UserLCID);
