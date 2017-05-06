@@ -261,7 +261,9 @@ BEGIN
     5849 "Pregunta"
     5850 "Iniciar ReactOS"
     5851 "Menú Inicio"
-    5852 "Cierre de sesión de ReactOS"
-    5853 "Inicio de sesión en ReactOS"
+    IDS_REACTOS_LOGOFF "Cierre de sesión de ReactOS"
+    IDS_REACTOS_LOGON "Inicio de sesión en ReactOS"
     5854 "Explorador de ReactOS"
+    IDS_BROWSE_FOR_SOUND "Search for new sounds"
+    IDS_WAVE_FILES_FILTER "Wave Files (*.wav)|*.wav|"
 END

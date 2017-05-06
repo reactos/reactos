@@ -268,7 +268,9 @@ BEGIN
     5849 "问题"
     5850 "启动 ReactOS"
     5851 "「开始」菜单"
-    5852 "ReactOS 注销"
-    5853 "ReactOS 登录"
+    IDS_REACTOS_LOGOFF "ReactOS 注销"
+    IDS_REACTOS_LOGON "ReactOS 登录"
     5854 "ReactOS 浏览器"
+    IDS_BROWSE_FOR_SOUND "Search for new sounds"
+    IDS_WAVE_FILES_FILTER "Wave Files (*.wav)|*.wav|"
 END

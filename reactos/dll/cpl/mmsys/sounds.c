@@ -56,6 +56,23 @@ static PAPP_MAP s_App = NULL;
 
 TCHAR szDefault[MAX_PATH];
 
+/* A filter string is a list separated by NULL and ends with double NULLs. */
+LPWSTR MakeFilter(LPWSTR psz)
+{
+    WCHAR *pch;
+
+    ASSERT(psz[0] != UNICODE_NULL &&
+           psz[wcslen(psz) - 1] == L'|');
+    for (pch = psz; *pch != UNICODE_NULL; pch++)
+    {
+        /* replace vertical bar with NULL */
+        if (*pch == L'|')
+        {
+            *pch = UNICODE_NULL;
+        }
+    }
+    return psz;
+}
 
 PLABEL_MAP FindLabel(PAPP_MAP pAppMap, TCHAR * szName)
 {
@@ -337,7 +354,7 @@ AddSoundProfile(HWND hwndDlg, HKEY hKey, TCHAR * szSubKey, BOOL SetDefault)
     /* Associate the value with the item in the combobox */
     SendDlgItemMessage(hwndDlg, IDC_SOUND_SCHEME, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)pScheme);
 
-    /* Optionally, select the profile */ 
+    /* Optionally, select the profile */
     if (SetDefault)
         SendDlgItemMessage(hwndDlg, IDC_SOUND_SCHEME, CB_SETCURSEL, (WPARAM)lResult, (LPARAM)0);
 
@@ -922,6 +939,7 @@ SoundsDlgProc(HWND hwndDlg,
 {
     OPENFILENAMEW ofn;
     WCHAR filename[MAX_PATH];
+    WCHAR szFilter[256], szTitle[256];
     LPWSTR pFileName;
     LRESULT lResult;
 
@@ -964,11 +982,12 @@ SoundsDlgProc(HWND hwndDlg,
                     ofn.hwndOwner = hwndDlg;
                     ofn.lpstrFile = filename;
                     ofn.lpstrFile[0] = L'\0';
-                    ofn.nMaxFile = MAX_PATH;
-                    ofn.lpstrFilter = L"Wave Files (*.wav)\0*.wav\0"; //FIXME non-nls
+                    ofn.nMaxFile = _countof(filename);
+                    LoadStringW(hApplet, IDS_WAVE_FILES_FILTER, szFilter, _countof(szFilter));
+                    ofn.lpstrFilter = MakeFilter(szFilter);
                     ofn.nFilterIndex = 0;
-                    ofn.lpstrFileTitle = L"Search for new sounds"; //FIXME non-nls
-                    ofn.nMaxFileTitle = wcslen(ofn.lpstrFileTitle);
+                    LoadStringW(hApplet, IDS_BROWSE_FOR_SOUND, szTitle, _countof(szTitle));
+                    ofn.lpstrTitle = szTitle;
                     ofn.lpstrInitialDir = NULL;
                     ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
 

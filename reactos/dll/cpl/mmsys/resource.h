@@ -69,6 +69,8 @@
 #define IDS_REACTOS_LOGOFF         5852
 #define IDS_REACTOS_LOGON          5853
 #define IDS_REACTOS_DEFAULT_SCHEME 5856
+#define IDS_BROWSE_FOR_SOUND       6144
+#define IDS_WAVE_FILES_FILTER      6166
 
 /* Strings */
 #define IDS_CPLNAME        1000
