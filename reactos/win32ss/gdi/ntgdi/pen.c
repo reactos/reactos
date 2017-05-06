@@ -122,7 +122,7 @@ IntGdiExtCreatePen(
         dwWidth = 1;
 
     pbrushPen->lWidth = dwWidth;
-    pbrushPen->eWidth = (FLOAT)pbrushPen->lWidth;
+    FLOATOBJ_SetLong(&pbrushPen->eWidth, pbrushPen->lWidth);
     pbrushPen->ulPenStyle = dwPenStyle;
     pbrushPen->BrushAttr.lbColor = ulColor;
     pbrushPen->iBrushStyle = ulBrushStyle;
