@@ -262,7 +262,7 @@ LoadEventLabels()
     dwCount = 0;
     do
     {
-        dwName = sizeof(szName) / sizeof(szName[0]);
+        dwName = _countof(szName);
         dwResult = RegEnumKeyEx(hSubKey,
                                 dwCurKey,
                                 szName,
@@ -379,7 +379,7 @@ EnumerateSoundProfiles(HWND hwndDlg, HKEY hKey)
     dwCurKey = 0;
     do
     {
-        dwName = sizeof(szName) / sizeof(szName[0]);
+        dwName = _countof(szName);
         dwResult = RegEnumKeyEx(hSubKey,
                                 dwCurKey,
                                 szName,
@@ -482,8 +482,8 @@ ImportSoundLabel(HWND hwndDlg, HKEY hKey, TCHAR * szProfile, TCHAR * szLabelName
     }
     pLabelContext = FindLabelContext(pScheme, AppMap->szName, LabelMap->szName);
 
-    dwValue = ExpandEnvironmentStrings(szValue, szBuffer, sizeof(szBuffer) / sizeof(TCHAR));
-    if (dwValue == 0 || dwValue > (sizeof(szBuffer) / sizeof(TCHAR)))
+    dwValue = ExpandEnvironmentStrings(szValue, szBuffer, _countof(szBuffer));
+    if (dwValue == 0 || dwValue > _countof(szBuffer))
     {
         /* fixme */
         return FALSE;
@@ -530,7 +530,7 @@ ImportSoundEntry(HWND hwndDlg, HKEY hKey, TCHAR * szLabelName, TCHAR * szAppName
     dwCurKey = 0;
     do
     {
-        dwProfile = sizeof(szProfile) / sizeof(TCHAR);
+        dwProfile = _countof(szProfile);
         dwResult = RegEnumKeyEx(hSubKey,
                                 dwCurKey,
                                 szProfile,
@@ -624,7 +624,7 @@ ImportAppProfile(HWND hwndDlg, HKEY hKey, TCHAR * szAppName)
     dwNumEntry = 0;
     do
     {
-        dwName = sizeof(szName) / sizeof(TCHAR);
+        dwName = _countof(szName);
         dwResult = RegEnumKeyEx(hSubKey,
                               dwCurKey,
                               szName,
@@ -673,7 +673,7 @@ ImportSoundProfiles(HWND hwndDlg, HKEY hKey)
         dwResult = RegEnumKey(hSubKey,
                               dwCurKey,
                               szName,
-                              sizeof(szName) / sizeof(TCHAR));
+                              _countof(szName));
 
         if (dwResult == ERROR_SUCCESS)
         {
@@ -731,9 +731,9 @@ LoadSoundFiles(HWND hwndDlg)
     UINT length;
 
     /* Add no sound listview item */
-    if (LoadString(hApplet, IDS_NO_SOUND, szPath, MAX_PATH))
+    if (LoadString(hApplet, IDS_NO_SOUND, szPath, _countof(szPath)))
     {
-        szPath[(sizeof(szPath)/sizeof(WCHAR))-1] = L'\0';
+        szPath[_countof(szPath)-1] = L'\0';
         SendDlgItemMessageW(hwndDlg, IDC_SOUND_LIST, CB_ADDSTRING, (WPARAM)0, (LPARAM)szPath);
     }
 
@@ -815,7 +815,7 @@ ShowSoundScheme(HWND hwndDlg)
 
     /*  add column for app */
     GetClientRect(hList, &rect);
-    ZeroMemory(&dummy, sizeof(LV_COLUMN));
+    ZeroMemory(&dummy, sizeof(dummy));
     dummy.mask      = LVCF_WIDTH;
     dummy.iSubItem  = 0;
     dummy.cx        = rect.right - rect.left - GetSystemMetrics(SM_CXVSCROLL);
@@ -828,7 +828,7 @@ ShowSoundScheme(HWND hwndDlg)
         PLABEL_MAP pLabelMap = pAppMap->LabelMap;
         while (pLabelMap)
         {
-            ZeroMemory(&listItem, sizeof(LV_ITEM));
+            ZeroMemory(&listItem, sizeof(listItem));
             listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE;
             listItem.pszText    = pLabelMap->szDesc;
             listItem.lParam     = (LPARAM)FindLabelContext(pScheme, pAppMap->szName, pLabelMap->szName);
@@ -959,8 +959,8 @@ SoundsDlgProc(HWND hwndDlg,
             {
                 case IDC_BROWSE_SOUND:
                 {
-                    ZeroMemory(&ofn, sizeof(OPENFILENAMEW));
-                    ofn.lStructSize = sizeof(OPENFILENAMEW);
+                    ZeroMemory(&ofn, sizeof(ofn));
+                    ofn.lStructSize = sizeof(ofn);
                     ofn.hwndOwner = hwndDlg;
                     ofn.lpstrFile = filename;
                     ofn.lpstrFile[0] = L'\0';
@@ -974,7 +974,7 @@ SoundsDlgProc(HWND hwndDlg,
 
                     if (GetOpenFileNameW(&ofn) == TRUE)
                     {
-                         // FIXME search if list already contains that sound
+                        // FIXME search if list already contains that sound
 
                         // extract file name
                         pFileName = wcsrchr(filename, L'\\');
@@ -1040,7 +1040,7 @@ SoundsDlgProc(HWND hwndDlg,
                         {
                             break;
                         }
-                        ZeroMemory(&item, sizeof(LVITEM));
+                        ZeroMemory(&item, sizeof(item));
                         item.mask = LVIF_PARAM;
                         item.iItem = SelCount;
                         if (ListView_GetItem(GetDlgItem(hwndDlg, IDC_SCHEME_LIST), &item))
@@ -1104,7 +1104,7 @@ SoundsDlgProc(HWND hwndDlg,
                     {
                         return FALSE;
                     }
-                    ZeroMemory(&item, sizeof(LVITEM));
+                    ZeroMemory(&item, sizeof(item));
                     item.mask = LVIF_PARAM;
                     item.iItem = nm->iItem;
 

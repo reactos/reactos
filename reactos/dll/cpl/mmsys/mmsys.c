@@ -703,10 +703,7 @@ MmSysApplet(HWND hwnd,
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(uMsg);
 
-    LoadString(hApplet,
-               IDS_CPLNAME,
-               Caption,
-               sizeof(Caption) / sizeof(TCHAR));
+    LoadString(hApplet, IDS_CPLNAME, Caption, _countof(Caption));
 
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE;
