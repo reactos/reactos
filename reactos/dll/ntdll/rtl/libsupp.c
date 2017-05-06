@@ -20,22 +20,6 @@ PVOID MmHighestUserAddress = (PVOID)MI_HIGHEST_USER_ADDRESS;
 
 /* FUNCTIONS ***************************************************************/
 
-#ifndef _M_AMD64
-// FIXME: Why "Not implemented"???
-/*
- * @implemented
- */
-ULONG
-NTAPI
-RtlWalkFrameChain(OUT PVOID *Callers,
-                  IN ULONG Count,
-                  IN ULONG Flags)
-{
-    /* Not implemented for user-mode */
-    return 0;
-}
-#endif
-
 BOOLEAN
 NTAPI
 RtlpCheckForActiveDebugger(VOID)
@@ -233,6 +217,113 @@ RtlpCaptureStackLimits(IN ULONG_PTR Ebp,
     *StackEnd = (ULONG_PTR)NtCurrentTeb()->NtTib.StackBase;
     return TRUE;
 }
+
+#ifndef _M_AMD64
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
+RtlWalkFrameChain(OUT PVOID *Callers,
+                  IN ULONG Count,
+                  IN ULONG Flags)
+{
+    ULONG_PTR Stack, NewStack, StackBegin, StackEnd = 0;
+    ULONG Eip;
+    BOOLEAN Result, StopSearch = FALSE;
+    ULONG i = 0;
+
+    /* Get current EBP */
+#if defined(_M_IX86)
+#if defined __GNUC__
+    __asm__("mov %%ebp, %0" : "=r" (Stack) : );
+#elif defined(_MSC_VER)
+    __asm mov Stack, ebp
+#endif
+#elif defined(_M_MIPS)
+        __asm__("move $sp, %0" : "=r" (Stack) : );
+#elif defined(_M_PPC)
+    __asm__("mr %0,1" : "=r" (Stack) : );
+#elif defined(_M_ARM)
+    __asm__("mov sp, %0" : "=r"(Stack) : );
+#else
+#error Unknown architecture
+#endif
+
+    /* Set it as the stack begin limit as well */
+    StackBegin = (ULONG_PTR)Stack;
+
+    /* Check if we're called for non-logging mode */
+    if (!Flags)
+    {
+        /* Get the actual safe limits */
+        Result = RtlpCaptureStackLimits((ULONG_PTR)Stack,
+                                        &StackBegin,
+                                        &StackEnd);
+        if (!Result) return 0;
+    }
+
+    /* Use a SEH block for maximum protection */
+    _SEH2_TRY
+    {
+        /* Loop the frames */
+        for (i = 0; i < Count; i++)
+        {
+            /*
+             * Leave if we're past the stack,
+             * if we're before the stack,
+             * or if we've reached ourselves.
+             */
+            if ((Stack >= StackEnd) ||
+                (!i ? (Stack < StackBegin) : (Stack <= StackBegin)) ||
+                ((StackEnd - Stack) < (2 * sizeof(ULONG_PTR))))
+            {
+                /* We're done or hit a bad address */
+                break;
+            }
+
+            /* Get new stack and EIP */
+            NewStack = *(PULONG_PTR)Stack;
+            Eip = *(PULONG_PTR)(Stack + sizeof(ULONG_PTR));
+
+            /* Check if the new pointer is above the oldone and past the end */
+            if (!((Stack < NewStack) && (NewStack < StackEnd)))
+            {
+                /* Stop searching after this entry */
+                StopSearch = TRUE;
+            }
+
+            /* Also make sure that the EIP isn't a stack address */
+            if ((StackBegin < Eip) && (Eip < StackEnd)) break;
+
+            /* FIXME: Check that EIP is inside a loaded module */
+
+            /* Save this frame */
+            Callers[i] = (PVOID)Eip;
+
+            /* Check if we should continue */
+            if (StopSearch)
+            {
+                /* Return the next index */
+                i++;
+                break;
+            }
+
+            /* Move to the next stack */
+            Stack = NewStack;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* No index */
+        i = 0;
+    }
+    _SEH2_END;
+
+    /* Return frames parsed */
+    return i;
+}
+#endif
 
 #ifdef _AMD64_
 VOID
