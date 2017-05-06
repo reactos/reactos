@@ -20,7 +20,8 @@
  * PROJECT:         ReactOS International Control Panel
  * FILE:            dll/cpl/intl/currency.c
  * PURPOSE:         Currency property page
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMERS:     Eric Kohl
+ *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "intl.h"
@@ -262,7 +263,7 @@ InitDigitGroupCB(HWND hwndDlg, PGLOBALDATA pGlobalData)
 
 /* Set number of digits in field  */
 static BOOL
-SetCurrencyDigNum(HWND hwndDlg, PGLOBALDATA pGlobalData)
+SetCurrencyDigNum(HWND hwndDlg, PINT pnCurrGrouping)
 {
     INT nCurrSel;
 
@@ -271,30 +272,30 @@ SetCurrencyDigNum(HWND hwndDlg, PGLOBALDATA pGlobalData)
                                    CB_GETCURSEL,
                                    (WPARAM)0,
                                    (LPARAM)0);
+    if (nCurrSel == CB_ERR)
+        return FALSE;
 
-    /* Save number of digits in field */
-    if (nCurrSel != CB_ERR)
-        pGlobalData->nCurrGrouping = nCurrSel;
+    *pnCurrGrouping = nCurrSel;
 
     return TRUE;
 }
 
 /* Set currency field separator */
 static BOOL
-SetCurrencyFieldSep(HWND hwndDlg, PGLOBALDATA pGlobalData)
+SetCurrencyFieldSep(HWND hwndDlg, PWSTR pszCurrThousandSep)
 {
     /* Get setted currency field separator */
     SendDlgItemMessageW(hwndDlg, IDC_CURRENCYGRPSEP,
                         WM_GETTEXT,
-                        (WPARAM)MAX_SAMPLES_STR_SIZE,
-                        (LPARAM)pGlobalData->szCurrThousandSep);
+                        (WPARAM)MAX_CURRTHOUSANDSEP,
+                        (LPARAM)pszCurrThousandSep);
 
     return TRUE;
 }
 
 /* Set number of fractional symbols */
 static BOOL
-SetCurrencyFracSymNum(HWND hwndDlg, PGLOBALDATA pGlobalData)
+SetCurrencyFracSymNum(HWND hwndDlg, PINT pnCurrDigits)
 {
     INT nCurrSel;
 
@@ -306,27 +307,27 @@ SetCurrencyFracSymNum(HWND hwndDlg, PGLOBALDATA pGlobalData)
     if (nCurrSel == CB_ERR)
         return FALSE;
 
-    pGlobalData->nCurrDigits = nCurrSel;
+    *pnCurrDigits = nCurrSel;
 
     return TRUE;
 }
 
 /* Set currency separator */
 static BOOL
-SetCurrencySep(HWND hwndDlg, PGLOBALDATA pGlobalData)
+SetCurrencySep(HWND hwndDlg, PWSTR pszCurrDecimalSep)
 {
     /* Get setted currency decimal separator */
     SendDlgItemMessageW(hwndDlg, IDC_CURRENCYDECSEP,
                         WM_GETTEXT,
-                        (WPARAM)MAX_SAMPLES_STR_SIZE,
-                        (LPARAM)pGlobalData->szCurrDecimalSep);
+                        (WPARAM)MAX_CURRDECIMALSEP,
+                        (LPARAM)pszCurrDecimalSep);
 
     return TRUE;
 }
 
 /* Set negative currency sum format */
 static BOOL
-SetNegCurrencySumFmt(HWND hwndDlg, PGLOBALDATA pGlobalData)
+SetNegCurrencySumFmt(HWND hwndDlg, PINT pnCurrNegFormat)
 {
     INT nCurrSel;
 
@@ -338,14 +339,14 @@ SetNegCurrencySumFmt(HWND hwndDlg, PGLOBALDATA pGlobalData)
     if (nCurrSel == CB_ERR)
         return FALSE;
 
-    pGlobalData->nCurrNegFormat = nCurrSel;
+    *pnCurrNegFormat = nCurrSel;
 
     return TRUE;
 }
 
 /* Set positive currency sum format */
 static BOOL
-SetPosCurrencySumFmt(HWND hwndDlg, PGLOBALDATA pGlobalData)
+SetPosCurrencySumFmt(HWND hwndDlg, PINT pnCurrPosFormat)
 {
     INT nCurrSel;
 
@@ -357,20 +358,55 @@ SetPosCurrencySumFmt(HWND hwndDlg, PGLOBALDATA pGlobalData)
     if (nCurrSel == CB_ERR)
         return FALSE;
 
-    pGlobalData->nCurrPosFormat = nCurrSel;
+    *pnCurrPosFormat = nCurrSel;
 
     return TRUE;
 }
 
 /* Set currency symbol */
 static BOOL
-SetCurrencySymbol(HWND hwndDlg, PGLOBALDATA pGlobalData)
+SetCurrencySymbol(HWND hwndDlg, PWSTR pszCurrSymbol)
 {
     /* Get setted currency unit */
     SendDlgItemMessageW(hwndDlg, IDC_CURRENCYSYMBOL,
                         WM_GETTEXT,
-                        (WPARAM)MAX_SAMPLES_STR_SIZE,
-                        (LPARAM)(PCWSTR)pGlobalData->szCurrSymbol);
+                        (WPARAM)MAX_CURRSYMBOL,
+                        (LPARAM)pszCurrSymbol);
+
+    return TRUE;
+}
+
+
+static BOOL
+SetCurrencySetting(HWND hwndDlg, PGLOBALDATA pGlobalData)
+{
+    WCHAR szCurrSymbol[MAX_CURRSYMBOL];
+    WCHAR szCurrDecimalSep[MAX_CURRDECIMALSEP];
+    WCHAR szCurrThousandSep[MAX_CURRTHOUSANDSEP];
+    INT nCurrGrouping;
+    INT nCurrPosFormat;
+    INT nCurrNegFormat;
+    INT nCurrDigits;
+
+    if (!SetCurrencySymbol(hwndDlg, szCurrSymbol) ||
+        !SetCurrencyDigNum(hwndDlg, &nCurrGrouping) ||
+        !SetPosCurrencySumFmt(hwndDlg, &nCurrPosFormat) ||
+        !SetNegCurrencySumFmt(hwndDlg, &nCurrNegFormat) ||
+        !SetCurrencySep(hwndDlg, szCurrDecimalSep) ||
+        !SetCurrencyFracSymNum(hwndDlg, &nCurrDigits) ||
+        !SetCurrencyFieldSep(hwndDlg, szCurrThousandSep))
+    {
+        return FALSE;
+    }
+
+    /* store to global data */
+    wcscpy(pGlobalData->szCurrSymbol, szCurrSymbol);
+    pGlobalData->nCurrGrouping = nCurrGrouping;
+    wcscpy(pGlobalData->szCurrDecimalSep, szCurrDecimalSep);
+    wcscpy(pGlobalData->szCurrThousandSep, szCurrThousandSep);
+    pGlobalData->nCurrPosFormat = nCurrPosFormat;
+    pGlobalData->nCurrNegFormat = nCurrNegFormat;
+    pGlobalData->nCurrDigits = nCurrDigits;
 
     return TRUE;
 }
@@ -414,7 +450,7 @@ CurrencyPageProc(HWND hwndDlg,
                 case IDC_CURRENCYGRPNUM:
                     if (HIWORD(wParam) == CBN_SELCHANGE || HIWORD(wParam) == CBN_EDITCHANGE)
                     {
-                        /* Set "Apply" button enabled */
+                        /* Enable the Apply button */
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
             }
@@ -423,30 +459,11 @@ CurrencyPageProc(HWND hwndDlg,
         case WM_NOTIFY:
             if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
             {
-                if (!SetCurrencySymbol(hwndDlg, pGlobalData))
-                    break;
-
-                if (!SetCurrencyDigNum(hwndDlg, pGlobalData))
-                    break;
-
-                if (!SetPosCurrencySumFmt(hwndDlg, pGlobalData))
-                    break;
-
-                if (!SetNegCurrencySumFmt(hwndDlg, pGlobalData))
-                    break;
-
-                if (!SetCurrencySep(hwndDlg, pGlobalData))
-                    break;
-
-                if (!SetCurrencyFracSymNum(hwndDlg, pGlobalData))
-                    break;
-
-                if (!SetCurrencyFieldSep(hwndDlg, pGlobalData))
-                    break;
-
-                pGlobalData->bUserLocaleChanged = TRUE;
-
-                UpdateExamples(hwndDlg, pGlobalData);
+                if (SetCurrencySetting(hwndDlg, pGlobalData))
+                {
+                    pGlobalData->bUserLocaleChanged = TRUE;
+                    UpdateExamples(hwndDlg, pGlobalData);
+                }
             }
             break;
     }

@@ -1494,6 +1494,9 @@ GeneralPageProc(HWND hwndDlg,
                 }
 
                 AddNewKbLayoutsByLcid(pGlobalData->UserLCID);
+
+                /* Post WM_WININICHANGE messages to system */
+                PostMessageW(HWND_BROADCAST, WM_WININICHANGE, 0, (LPARAM)L"intl");
             }
             break;
     }
