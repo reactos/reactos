@@ -178,8 +178,7 @@ BOOL
 LoadEventLabel(HKEY hKey, TCHAR * szSubKey)
 {
     HKEY hSubKey;
-    DWORD dwData;
-    DWORD dwDesc;
+    DWORD cbValue;
     TCHAR szDesc[MAX_PATH];
     TCHAR szData[MAX_PATH];
     PLABEL_MAP pMap;
@@ -193,25 +192,25 @@ LoadEventLabel(HKEY hKey, TCHAR * szSubKey)
         return FALSE;
     }
 
-    dwDesc = sizeof(szDesc) / sizeof(TCHAR);
+    cbValue = sizeof(szDesc);
     if (RegQueryValueEx(hSubKey,
                       NULL,
                       NULL,
                       NULL,
                       (LPBYTE)szDesc,
-                      &dwDesc) != ERROR_SUCCESS)
+                      &cbValue) != ERROR_SUCCESS)
     {
         RegCloseKey(hSubKey);
         return FALSE;
     }
 
-    dwData = sizeof(szDesc) / sizeof(TCHAR);
+    cbValue = sizeof(szData);
     if (RegQueryValueEx(hSubKey,
                         _T("DispFileName"),
                         NULL,
                         NULL,
                         (LPBYTE)szData,
-                        &dwData) != ERROR_SUCCESS)
+                        &cbValue) != ERROR_SUCCESS)
     {
         RegCloseKey(hSubKey);
         return FALSE;
@@ -293,7 +292,7 @@ AddSoundProfile(HWND hwndDlg, HKEY hKey, TCHAR * szSubKey, BOOL SetDefault)
 {
     HKEY hSubKey;
     TCHAR szValue[MAX_PATH];
-    DWORD dwValue, dwResult;
+    DWORD cbValue, dwResult;
     LRESULT lResult;
     PSOUND_SCHEME_CONTEXT pScheme;
 
@@ -306,13 +305,13 @@ AddSoundProfile(HWND hwndDlg, HKEY hKey, TCHAR * szSubKey, BOOL SetDefault)
         return FALSE;
     }
 
-    dwValue = sizeof(szValue) / sizeof(TCHAR);
+    cbValue = sizeof(szValue);
     dwResult = RegQueryValueEx(hSubKey,
                                NULL,
                                NULL,
                                NULL,
                                (LPBYTE)szValue,
-                               &dwValue);
+                               &cbValue);
     RegCloseKey(hSubKey);
 
     if (dwResult != ERROR_SUCCESS)
@@ -351,15 +350,16 @@ EnumerateSoundProfiles(HWND hwndDlg, HKEY hKey)
 {
     HKEY hSubKey;
     DWORD dwName, dwCurKey, dwResult, dwNumSchemes;
+    DWORD cbDefault;
     TCHAR szName[MAX_PATH];
 
-    dwName = sizeof(szDefault) / sizeof(TCHAR);
+    cbDefault = sizeof(szDefault);
     if (RegQueryValueEx(hKey,
                         NULL,
                         NULL,
                         NULL,
                         (LPBYTE)szDefault,
-                        &dwName) != ERROR_SUCCESS)
+                        &cbDefault) != ERROR_SUCCESS)
     {
         return FALSE;
     }
@@ -440,7 +440,7 @@ ImportSoundLabel(HWND hwndDlg, HKEY hKey, TCHAR * szProfile, TCHAR * szLabelName
     HKEY hSubKey;
     TCHAR szValue[MAX_PATH];
     TCHAR szBuffer[MAX_PATH];
-    DWORD dwValue;
+    DWORD cbValue, cchLength;
     PSOUND_SCHEME_CONTEXT pScheme;
     PLABEL_CONTEXT pLabelContext;
     BOOL bCurrentProfile, bActiveProfile;
@@ -459,13 +459,13 @@ ImportSoundLabel(HWND hwndDlg, HKEY hKey, TCHAR * szProfile, TCHAR * szLabelName
         return FALSE;
     }
 
-    dwValue = sizeof(szValue) / sizeof(TCHAR);
+    cbValue = sizeof(szValue);
     if (RegQueryValueEx(hSubKey,
                         NULL,
                         NULL,
                         NULL,
                         (LPBYTE)szValue,
-                        &dwValue) != ERROR_SUCCESS)
+                        &cbValue) != ERROR_SUCCESS)
     {
         return FALSE;
     }
@@ -482,8 +482,8 @@ ImportSoundLabel(HWND hwndDlg, HKEY hKey, TCHAR * szProfile, TCHAR * szLabelName
     }
     pLabelContext = FindLabelContext(pScheme, AppMap->szName, LabelMap->szName);
 
-    dwValue = ExpandEnvironmentStrings(szValue, szBuffer, _countof(szBuffer));
-    if (dwValue == 0 || dwValue > _countof(szBuffer))
+    cchLength = ExpandEnvironmentStrings(szValue, szBuffer, _countof(szBuffer));
+    if (cchLength == 0 || cchLength > _countof(szBuffer))
     {
         /* fixme */
         return FALSE;
@@ -562,7 +562,7 @@ ImportAppProfile(HWND hwndDlg, HKEY hKey, TCHAR * szAppName)
 {
     HKEY hSubKey;
     TCHAR szDefault[MAX_PATH];
-    DWORD dwDefault;
+    DWORD cbValue;
     DWORD dwCurKey;
     DWORD dwResult;
     DWORD dwNumEntry;
@@ -587,26 +587,26 @@ ImportAppProfile(HWND hwndDlg, HKEY hKey, TCHAR * szAppName)
         return 0;
     }
 
-    dwDefault = sizeof(szDefault) / sizeof(TCHAR);
+    cbValue = sizeof(szDefault);
     if (RegQueryValueEx(hSubKey,
                         NULL,
                         NULL,
                         NULL,
                         (LPBYTE)szDefault,
-                        &dwDefault) != ERROR_SUCCESS)
+                        &cbValue) != ERROR_SUCCESS)
     {
         RegCloseKey(hSubKey);
         HeapFree(GetProcessHeap(), 0, AppMap);
         return 0;
     }
 
-    dwDefault = sizeof(szIcon) / sizeof(TCHAR);
+    cbValue = sizeof(szIcon);
     if (RegQueryValueEx(hSubKey,
                         _T("DispFileName"),
                         NULL,
                         NULL,
                         (LPBYTE)szIcon,
-                        &dwDefault) != ERROR_SUCCESS)
+                        &cbValue) != ERROR_SUCCESS)
     {
         szIcon[0] = _T('\0');
     }
