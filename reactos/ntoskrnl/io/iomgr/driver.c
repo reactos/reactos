@@ -884,7 +884,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
     PDEVICE_NODE DeviceNode;
     PDRIVER_OBJECT DriverObject;
     NTSTATUS Status;
-    PWCHAR FileNameWithoutPath;
+    PWCHAR Buffer, FileNameWithoutPath;
     PWSTR FileExtension;
     PUNICODE_STRING ModuleName = &BootLdrEntry->BaseDllName;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
@@ -898,13 +898,19 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
     IopDisplayLoadingMessage(ModuleName);
     InbvIndicateProgress();
 
+    Buffer = ExAllocatePool(PagedPool, ModuleName->Length + sizeof(UNICODE_NULL));
+    ASSERT(Buffer);
+
+    RtlCopyMemory(Buffer, ModuleName->Buffer, ModuleName->Length);
+    Buffer[ModuleName->Length / sizeof(WCHAR)] = UNICODE_NULL;
+
     /*
      * Generate filename without path (not needed by freeldr)
      */
-    FileNameWithoutPath = wcsrchr(ModuleName->Buffer, L'\\');
+    FileNameWithoutPath = wcsrchr(Buffer, L'\\');
     if (FileNameWithoutPath == NULL)
     {
-        FileNameWithoutPath = ModuleName->Buffer;
+        FileNameWithoutPath = Buffer;
     }
     else
     {
@@ -915,6 +921,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
      * Strip the file extension from ServiceName
      */
     Success = RtlCreateUnicodeString(&ServiceName, FileNameWithoutPath);
+    ExFreePool(Buffer);
     if (!Success)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -924,7 +931,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
     if (FileExtension != NULL)
     {
         ServiceName.Length -= (USHORT)wcslen(FileExtension) * sizeof(WCHAR);
-        FileExtension[0] = 0;
+        FileExtension[0] = UNICODE_NULL;
     }
 
     /*
