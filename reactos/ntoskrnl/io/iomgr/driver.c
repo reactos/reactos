@@ -885,7 +885,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
     PDRIVER_OBJECT DriverObject;
     NTSTATUS Status;
     PWCHAR FileNameWithoutPath;
-    LPWSTR FileExtension;
+    PWSTR FileExtension;
     PUNICODE_STRING ModuleName = &BootLdrEntry->BaseDllName;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PLIST_ENTRY NextEntry;
@@ -920,7 +920,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    FileExtension = wcsrchr(ServiceName.Buffer, '.');
+    FileExtension = wcsrchr(ServiceName.Buffer, L'.');
     if (FileExtension != NULL)
     {
         ServiceName.Length -= (USHORT)wcslen(FileExtension) * sizeof(WCHAR);
@@ -939,7 +939,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
-        return(Status);
+        return Status;
     }
 
     /* Lookup the new Ldr entry in PsLoadedModuleList */
@@ -951,7 +951,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
                                      InLoadOrderLinks);
         if (RtlEqualUnicodeString(ModuleName, &LdrEntry->BaseDllName, TRUE))
         {
-                break;
+            break;
         }
 
         NextEntry = NextEntry->Flink;
@@ -1251,7 +1251,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     PDEVICE_OBJECT DeviceObject;
     PEXTENDED_DEVOBJ_EXTENSION DeviceExtension;
     NTSTATUS Status;
-    LPWSTR Start;
+    PWSTR Start;
     BOOLEAN SafeToUnload = TRUE;
 
     DPRINT("IopUnloadDriver('%wZ', %u)\n", DriverServiceName, UnloadPnpDrivers);
@@ -1261,7 +1261,6 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     /*
      * Get the service name from the registry key name
      */
-
     Start = wcsrchr(DriverServiceName->Buffer, L'\\');
     if (Start == NULL)
         Start = DriverServiceName->Buffer;
@@ -1273,14 +1272,13 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     /*
      * Construct the driver object name
      */
-
     ObjectName.Length = ((USHORT)wcslen(Start) + 8) * sizeof(WCHAR);
     ObjectName.MaximumLength = ObjectName.Length + sizeof(WCHAR);
     ObjectName.Buffer = ExAllocatePool(PagedPool, ObjectName.MaximumLength);
     if (!ObjectName.Buffer) return STATUS_INSUFFICIENT_RESOURCES;
     wcscpy(ObjectName.Buffer, DRIVER_ROOT_NAME);
     memcpy(ObjectName.Buffer + 8, Start, ObjectName.Length - 8 * sizeof(WCHAR));
-    ObjectName.Buffer[ObjectName.Length/sizeof(WCHAR)] = 0;
+    ObjectName.Buffer[ObjectName.Length/sizeof(WCHAR)] = UNICODE_NULL;
 
     /*
      * Find the driver object
@@ -1301,9 +1299,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
         return Status;
     }
 
-    /*
-     * Free the buffer for driver object name
-     */
+    /* Free the buffer for driver object name */
     ExFreePool(ObjectName.Buffer);
 
     /* Check that driver is not already unloading */
@@ -1350,9 +1346,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
         return Status;
     }
 
-    /*
-     * Free the service path
-     */
+    /* Free the service path */
     ExFreePool(ImagePath.Buffer);
 
     /*
