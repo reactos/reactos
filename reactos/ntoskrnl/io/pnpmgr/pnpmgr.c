@@ -1144,6 +1144,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
 
       if (!NT_SUCCESS(Status))
       {
+          ExFreePool(Node->ServiceName.Buffer);
           ExFreePoolWithTag(Node, TAG_IO_DEVNODE);
           return Status;
       }
@@ -1437,7 +1438,7 @@ IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
     HANDLE hParent = NULL, hKey;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
-    LPCWSTR Current, Last;
+    PCWSTR Current, Last;
     USHORT Length;
     NTSTATUS Status;
 
@@ -1462,7 +1463,7 @@ IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
     /* Go up to the end of the string */
     while (Current <= Last)
     {
-        if (Current != Last && *Current != '\\')
+        if (Current != Last && *Current != L'\\')
         {
             /* Not the end of the string and not a separator */
             Current++;
@@ -1510,7 +1511,7 @@ IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
         /* Start with this new parent key */
         hParent = hKey;
         Current++;
-        KeyName.Buffer = (LPWSTR)Current;
+        KeyName.Buffer = (PWSTR)Current;
     }
 
     return STATUS_UNSUCCESSFUL;
@@ -4258,7 +4259,7 @@ IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
    static WCHAR EnumKeyName[] = L"Enum\\";
    static WCHAR DeviceParametersKeyName[] = L"Device Parameters";
    ULONG KeyNameLength;
-   LPWSTR KeyNameBuffer;
+   PWSTR KeyNameBuffer;
    UNICODE_STRING KeyName;
    ULONG DriverKeyLength;
    OBJECT_ATTRIBUTES ObjectAttributes;
