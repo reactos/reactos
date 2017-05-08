@@ -30,13 +30,13 @@ LoadTaskBarSettings(VOID)
     DWORD dwValue = NULL;
     
     LoadSettingDword(szAdvancedSettingsKey, TEXT("TaskbarSizeMove"), dwValue);
-    TaskBarSettings.bLock = (dwValue != 0) ? TRUE : FALSE;
+    TaskBarSettings.bLock = (dwValue != 0) ? FALSE : TRUE;
     
     LoadSettingDword(szAdvancedSettingsKey, TEXT("ShowSeconds"), dwValue);
     TaskBarSettings.bShowSeconds = (dwValue != 0) ? TRUE : FALSE;
     
     LoadSettingDword(szSettingsKey, TEXT("EnableAutotray"), dwValue);
-    TaskBarSettings.bHideInactiveIcons = TRUE; 
+    TaskBarSettings.bHideInactiveIcons = (dwValue != 0) ? TRUE : FALSE; 
     
     LoadSettingDword(szAdvancedSettingsKey, TEXT("TaskbarGlomming"), dwValue);
     TaskBarSettings.bGroupButtons = (dwValue != 0) ? TRUE : FALSE;
