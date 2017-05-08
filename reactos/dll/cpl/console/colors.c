@@ -133,12 +133,34 @@ ColorsProc(HWND hDlg,
             /* NOTE: both BN_CLICKED and STN_CLICKED == 0 */
             if (HIWORD(wParam) == BN_CLICKED || HIWORD(wParam) == STN_CLICKED)
             {
-                switch (LOWORD(wParam))
+                if (LOWORD(wParam) == IDC_RADIO_SCREEN_TEXT       ||
+                    LOWORD(wParam) == IDC_RADIO_SCREEN_BACKGROUND ||
+                    LOWORD(wParam) == IDC_RADIO_POPUP_TEXT        ||
+                    LOWORD(wParam) == IDC_RADIO_POPUP_BACKGROUND)
                 {
-                case IDC_RADIO_SCREEN_TEXT:
-                {
-                    /* Get the color of the screen foreground */
-                    colorIndex = TextAttribFromAttrib(ConInfo->ScreenAttributes);
+                    switch (LOWORD(wParam))
+                    {
+                    case IDC_RADIO_SCREEN_TEXT:
+                        /* Get the colour of the screen foreground */
+                        colorIndex = TextAttribFromAttrib(ConInfo->ScreenAttributes);
+                        break;
+
+                    case IDC_RADIO_SCREEN_BACKGROUND:
+                        /* Get the colour of the screen background */
+                        colorIndex = BkgdAttribFromAttrib(ConInfo->ScreenAttributes);
+                        break;
+
+                    case IDC_RADIO_POPUP_TEXT:
+                        /* Get the colour of the popup foreground */
+                        colorIndex = TextAttribFromAttrib(ConInfo->PopupAttributes);
+                        break;
+
+                    case IDC_RADIO_POPUP_BACKGROUND:
+                        /* Get the colour of the popup background */
+                        colorIndex = BkgdAttribFromAttrib(ConInfo->PopupAttributes);
+                        break;
+                    }
+
                     color = ConInfo->ColorTable[colorIndex];
 
                     /* Set the values of the colour indicators */
@@ -149,69 +171,9 @@ ColorsProc(HWND hDlg,
                     InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_COLOR1 + ActiveStaticControl), NULL, TRUE);
                     ActiveStaticControl = colorIndex;
                     InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_COLOR1 + ActiveStaticControl), NULL, TRUE);
-                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
-                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_POPUP_COLOR) , NULL, TRUE);
                     break;
                 }
-
-                case IDC_RADIO_SCREEN_BACKGROUND:
-                {
-                    /* Get the color of the screen background */
-                    colorIndex = BkgdAttribFromAttrib(ConInfo->ScreenAttributes);
-                    color = ConInfo->ColorTable[colorIndex];
-
-                    /* Set the values of the colour indicators */
-                    SetDlgItemInt(hDlg, IDC_EDIT_COLOR_RED  , GetRValue(color), FALSE);
-                    SetDlgItemInt(hDlg, IDC_EDIT_COLOR_GREEN, GetGValue(color), FALSE);
-                    SetDlgItemInt(hDlg, IDC_EDIT_COLOR_BLUE , GetBValue(color), FALSE);
-
-                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_COLOR1 + ActiveStaticControl), NULL, TRUE);
-                    ActiveStaticControl = colorIndex;
-                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_COLOR1 + ActiveStaticControl), NULL, TRUE);
-                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
-                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_POPUP_COLOR) , NULL, TRUE);
-                    break;
-                }
-
-                case IDC_RADIO_POPUP_TEXT:
-                {
-                    /* Get the color of the popup foreground */
-                    colorIndex = TextAttribFromAttrib(ConInfo->PopupAttributes);
-                    color = ConInfo->ColorTable[colorIndex];
-
-                    /* Set the values of the colour indicators */
-                    SetDlgItemInt(hDlg, IDC_EDIT_COLOR_RED  , GetRValue(color), FALSE);
-                    SetDlgItemInt(hDlg, IDC_EDIT_COLOR_GREEN, GetGValue(color), FALSE);
-                    SetDlgItemInt(hDlg, IDC_EDIT_COLOR_BLUE , GetBValue(color), FALSE);
-
-                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_COLOR1 + ActiveStaticControl), NULL, TRUE);
-                    ActiveStaticControl = colorIndex;
-                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_COLOR1 + ActiveStaticControl), NULL, TRUE);
-                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
-                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_POPUP_COLOR) , NULL, TRUE);
-                    break;
-                }
-
-                case IDC_RADIO_POPUP_BACKGROUND:
-                {
-                    /* Get the color of the popup background */
-                    colorIndex = BkgdAttribFromAttrib(ConInfo->PopupAttributes);
-                    color = ConInfo->ColorTable[colorIndex];
-
-                    /* Set the values of the colour indicators */
-                    SetDlgItemInt(hDlg, IDC_EDIT_COLOR_RED  , GetRValue(color), FALSE);
-                    SetDlgItemInt(hDlg, IDC_EDIT_COLOR_GREEN, GetGValue(color), FALSE);
-                    SetDlgItemInt(hDlg, IDC_EDIT_COLOR_BLUE , GetBValue(color), FALSE);
-
-                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_COLOR1 + ActiveStaticControl), NULL, TRUE);
-                    ActiveStaticControl = colorIndex;
-                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_COLOR1 + ActiveStaticControl), NULL, TRUE);
-                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
-                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_POPUP_COLOR) , NULL, TRUE);
-                    break;
-                }
-                }
-
+                else
                 if (IDC_STATIC_COLOR1 <= LOWORD(wParam) && LOWORD(wParam) <= IDC_STATIC_COLOR16)
                 {
                     colorIndex = LOWORD(wParam) - IDC_STATIC_COLOR1;
@@ -222,6 +184,7 @@ ColorsProc(HWND hDlg,
 
                     color = ConInfo->ColorTable[colorIndex];
 
+                    /* Set the values of the colour indicators */
                     SetDlgItemInt(hDlg, IDC_EDIT_COLOR_RED  , GetRValue(color), FALSE);
                     SetDlgItemInt(hDlg, IDC_EDIT_COLOR_GREEN, GetGValue(color), FALSE);
                     SetDlgItemInt(hDlg, IDC_EDIT_COLOR_BLUE , GetBValue(color), FALSE);
@@ -255,20 +218,37 @@ ColorsProc(HWND hDlg,
             }
             else if (HIWORD(wParam) == EN_KILLFOCUS)
             {
-                switch (LOWORD(wParam))
+                if (LOWORD(wParam) == IDC_EDIT_COLOR_RED   ||
+                    LOWORD(wParam) == IDC_EDIT_COLOR_GREEN ||
+                    LOWORD(wParam) == IDC_EDIT_COLOR_BLUE)
                 {
-                case IDC_EDIT_COLOR_RED:
-                {
-                    DWORD red;
+                    DWORD value;
 
-                    /* Get the current color */
+                    /* Get the current colour */
                     colorIndex = ActiveStaticControl;
                     color = ConInfo->ColorTable[colorIndex];
 
-                    red = GetDlgItemInt(hDlg, IDC_EDIT_COLOR_RED, NULL, FALSE);
-                    red = min(max(red, 0), 255);
+                    /* Modify the colour component */
+                    switch (LOWORD(wParam))
+                    {
+                    case IDC_EDIT_COLOR_RED:
+                        value = GetDlgItemInt(hDlg, IDC_EDIT_COLOR_RED, NULL, FALSE);
+                        value = min(max(value, 0), 255);
+                        color = RGB(value, GetGValue(color), GetBValue(color));
+                        break;
 
-                    color = RGB(red, GetGValue(color), GetBValue(color));
+                    case IDC_EDIT_COLOR_GREEN:
+                        value = GetDlgItemInt(hDlg, IDC_EDIT_COLOR_GREEN, NULL, FALSE);
+                        value = min(max(value, 0), 255);
+                        color = RGB(GetRValue(color), value, GetBValue(color));
+                        break;
+
+                    case IDC_EDIT_COLOR_BLUE:
+                        value = GetDlgItemInt(hDlg, IDC_EDIT_COLOR_BLUE, NULL, FALSE);
+                        value = min(max(value, 0), 255);
+                        color = RGB(GetRValue(color), GetGValue(color), value);
+                        break;
+                    }
 
                     ConInfo->ColorTable[colorIndex] = color;
                     InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_COLOR1 + colorIndex), NULL, TRUE);
@@ -277,51 +257,6 @@ ColorsProc(HWND hDlg,
 
                     PropSheet_Changed(GetParent(hDlg), hDlg);
                     break;
-                }
-
-                case IDC_EDIT_COLOR_GREEN:
-                {
-                    DWORD green;
-
-                    /* Get the current color */
-                    colorIndex = ActiveStaticControl;
-                    color = ConInfo->ColorTable[colorIndex];
-
-                    green = GetDlgItemInt(hDlg, IDC_EDIT_COLOR_GREEN, NULL, FALSE);
-                    green = min(max(green, 0), 255);
-
-                    color = RGB(GetRValue(color), green, GetBValue(color));
-
-                    ConInfo->ColorTable[colorIndex] = color;
-                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_COLOR1 + colorIndex), NULL, TRUE);
-                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
-                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_POPUP_COLOR) , NULL, TRUE);
-
-                    PropSheet_Changed(GetParent(hDlg), hDlg);
-                    break;
-                }
-
-                case IDC_EDIT_COLOR_BLUE:
-                {
-                    DWORD blue;
-
-                    /* Get the current color */
-                    colorIndex = ActiveStaticControl;
-                    color = ConInfo->ColorTable[colorIndex];
-
-                    blue = GetDlgItemInt(hDlg, IDC_EDIT_COLOR_BLUE, NULL, FALSE);
-                    blue = min(max(blue, 0), 255);
-
-                    color = RGB(GetRValue(color), GetGValue(color), blue);
-
-                    ConInfo->ColorTable[colorIndex] = color;
-                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_COLOR1 + colorIndex), NULL, TRUE);
-                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
-                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_POPUP_COLOR) , NULL, TRUE);
-
-                    PropSheet_Changed(GetParent(hDlg), hDlg);
-                    break;
-                }
                 }
             }
 
