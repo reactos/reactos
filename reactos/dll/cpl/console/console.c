@@ -256,7 +256,9 @@ InitApplet(HANDLE hSectionOrWnd)
     InitPropSheetPage(&psp[i++], IDD_PROPPAGECOLORS , ColorsProc );
 
     /* Display the property sheet */
+    RegisterWinPrevClass(hApplet);
     Result = PropertySheetW(&psh);
+    UnRegisterWinPrevClass(hApplet);
 
     /* First cleanup */
     if (hCurrentFont) DeleteObject(hCurrentFont);

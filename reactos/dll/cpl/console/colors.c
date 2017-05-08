@@ -14,11 +14,10 @@
 
 static DWORD ActiveStaticControl = 0;
 
-static BOOL
+static VOID
 PaintStaticControls(
-    IN HWND hDlg,
-    IN PCONSOLE_STATE_INFO pConInfo,
-    IN LPDRAWITEMSTRUCT drawItem)
+    IN LPDRAWITEMSTRUCT drawItem,
+    IN PCONSOLE_STATE_INFO pConInfo)
 {
     HBRUSH hBrush;
     DWORD index;
@@ -27,15 +26,13 @@ PaintStaticControls(
                 ARRAYSIZE(pConInfo->ColorTable) - 1);
 
     hBrush = CreateSolidBrush(pConInfo->ColorTable[index]);
-    if (!hBrush) return FALSE;
+    if (!hBrush) return;
 
     FillRect(drawItem->hDC, &drawItem->rcItem, hBrush);
     DeleteObject(hBrush);
 
     if (ActiveStaticControl == index)
         DrawFocusRect(drawItem->hDC, &drawItem->rcItem);
-
-    return TRUE;
 }
 
 INT_PTR CALLBACK
@@ -67,14 +64,14 @@ ColorsProc(HWND hDlg,
         {
             LPDRAWITEMSTRUCT drawItem = (LPDRAWITEMSTRUCT)lParam;
 
-            if (drawItem->CtlID >= IDC_STATIC_COLOR1 && drawItem->CtlID <= IDC_STATIC_COLOR16)
-                return PaintStaticControls(hDlg, ConInfo, drawItem);
+            if (IDC_STATIC_COLOR1 <= drawItem->CtlID && drawItem->CtlID <= IDC_STATIC_COLOR16)
+                PaintStaticControls(drawItem, ConInfo);
             else if (drawItem->CtlID == IDC_STATIC_SCREEN_COLOR)
-                return PaintText(drawItem, ConInfo, Screen);
+                PaintText(drawItem, ConInfo, Screen);
             else if (drawItem->CtlID == IDC_STATIC_POPUP_COLOR)
-                return PaintText(drawItem, ConInfo, Popup);
+                PaintText(drawItem, ConInfo, Popup);
 
-            break;
+            return TRUE;
         }
 
         case WM_NOTIFY:

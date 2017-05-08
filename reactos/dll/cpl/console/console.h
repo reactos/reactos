@@ -42,12 +42,17 @@ extern HFONT hCurrentFont;
 
 VOID ApplyConsoleInfo(HWND hwndDlg);
 
-VOID
-PaintConsole(
-    IN LPDRAWITEMSTRUCT drawItem,
-    IN PCONSOLE_STATE_INFO pConInfo);
+/* Preview Windows */
+BOOL
+RegisterWinPrevClass(
+    IN HINSTANCE hInstance);
 
 BOOL
+UnRegisterWinPrevClass(
+    IN HINSTANCE hInstance);
+
+
+VOID
 PaintText(
     IN LPDRAWITEMSTRUCT drawItem,
     IN PCONSOLE_STATE_INFO pConInfo,

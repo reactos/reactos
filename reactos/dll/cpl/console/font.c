@@ -716,12 +716,18 @@ FontProc(HWND hDlg,
         {
             LPDRAWITEMSTRUCT drawItem = (LPDRAWITEMSTRUCT)lParam;
 
-            if (drawItem->CtlID == IDC_STATIC_FONT_WINDOW_PREVIEW)
-                PaintConsole(drawItem, ConInfo);
-            else if (drawItem->CtlID == IDC_STATIC_SELECT_FONT_PREVIEW)
+            if (drawItem->CtlID == IDC_STATIC_SELECT_FONT_PREVIEW)
                 PaintText(drawItem, ConInfo, Screen);
 
             return TRUE;
+        }
+
+        case WM_DISPLAYCHANGE:
+        {
+            /* Retransmit to the preview window */
+            SendDlgItemMessageW(hDlg, IDC_STATIC_FONT_WINDOW_PREVIEW,
+                                WM_DISPLAYCHANGE, wParam, lParam);
+            break;
         }
 
         case WM_NOTIFY:
