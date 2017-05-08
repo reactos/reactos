@@ -878,7 +878,7 @@ IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
                              &ValueName,
                              0,
                              REG_DWORD,
-                             (PVOID)&DeviceNode->CapabilityFlags,
+                             &DeviceNode->CapabilityFlags,
                              sizeof(ULONG));
 
       /* Set 'UINumber' value */
@@ -1077,6 +1077,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("PnpRootCreateDevice() failed with status 0x%08X\n", Status);
+         ExFreePool(FullServiceName.Buffer);
          ExFreePoolWithTag(Node, TAG_IO_DEVNODE);
          return Status;
       }
@@ -1086,8 +1087,8 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
       if (!NT_SUCCESS(Status))
       {
           ZwClose(InstanceHandle);
-          ExFreePoolWithTag(Node, TAG_IO_DEVNODE);
           ExFreePool(FullServiceName.Buffer);
+          ExFreePoolWithTag(Node, TAG_IO_DEVNODE);
           return Status;
       }
 
@@ -1095,8 +1096,8 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
       if (!Node->ServiceName.Buffer)
       {
           ZwClose(InstanceHandle);
-          ExFreePoolWithTag(Node, TAG_IO_DEVNODE);
           ExFreePool(FullServiceName.Buffer);
+          ExFreePoolWithTag(Node, TAG_IO_DEVNODE);
           return Status;
       }
 
@@ -1738,7 +1739,7 @@ IopGetParentIdPrefix(PDEVICE_NODE DeviceNode,
                            &ValueName,
                            0,
                            REG_SZ,
-                           (PVOID)KeyValue.Buffer,
+                           KeyValue.Buffer,
                            ((ULONG)wcslen(KeyValue.Buffer) + 1) * sizeof(WCHAR));
 
 cleanup:
@@ -1859,11 +1860,11 @@ IopQueryCompatibleIds(PDEVICE_NODE DeviceNode,
 
       RtlInitUnicodeString(&ValueName, L"CompatibleIDs");
       Status = ZwSetValueKey(InstanceKey,
-         &ValueName,
-         0,
-         REG_MULTI_SZ,
-         (PVOID)IoStatusBlock.Information,
-         (TotalLength + 1) * sizeof(WCHAR));
+                             &ValueName,
+                             0,
+                             REG_MULTI_SZ,
+                             (PVOID)IoStatusBlock.Information,
+                             (TotalLength + 1) * sizeof(WCHAR));
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("ZwSetValueKey() failed (Status %lx) or no Compatible ID returned\n", Status);
