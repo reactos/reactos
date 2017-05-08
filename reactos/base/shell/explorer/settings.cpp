@@ -29,17 +29,17 @@ LoadTaskBarSettings(VOID)
 {
     DWORD dwValue = NULL;
     
-    LoadSettingDword(szAdvancedSettingsKey, TEXT("TaskbarSizeMove"), dwValue);
-    TaskBarSettings.bLock = (dwValue != 0) ? FALSE : TRUE;
+    LoadSettingDword(szAdvancedSettingsKey, L"TaskbarSizeMove", dwValue);
+    TaskBarSettings.bLock = (dwValue == 0);
     
-    LoadSettingDword(szAdvancedSettingsKey, TEXT("ShowSeconds"), dwValue);
-    TaskBarSettings.bShowSeconds = (dwValue != 0) ? TRUE : FALSE;
+    LoadSettingDword(szAdvancedSettingsKey, L"ShowSeconds", dwValue);
+    TaskBarSettings.bShowSeconds = (dwValue != 0);
     
-    LoadSettingDword(szSettingsKey, TEXT("EnableAutotray"), dwValue);
-    TaskBarSettings.bHideInactiveIcons = (dwValue != 0) ? TRUE : FALSE; 
+    LoadSettingDword(szSettingsKey, L"EnableAutotray", dwValue);
+    TaskBarSettings.bHideInactiveIcons = (dwValue != 0); 
     
-    LoadSettingDword(szAdvancedSettingsKey, TEXT("TaskbarGlomming"), dwValue);
-    TaskBarSettings.bGroupButtons = (dwValue != 0) ? TRUE : FALSE;
+    LoadSettingDword(szAdvancedSettingsKey, L"TaskbarGlomming", dwValue);
+    TaskBarSettings.bGroupButtons = (dwValue != 0);
     
     TaskBarSettings.bShowQuickLaunch = TRUE;    //FIXME: Where is this stored, and how?
     
@@ -53,10 +53,10 @@ LoadTaskBarSettings(VOID)
 VOID
 SaveTaskBarSettings(VOID)
 {
-    SaveSettingDword(szAdvancedSettingsKey, TEXT("TaskbarSizeMove"), TaskBarSettings.bLock);
-    SaveSettingDword(szAdvancedSettingsKey, TEXT("ShowSeconds"), TaskBarSettings.bShowSeconds);
-    SaveSettingDword(szSettingsKey, TEXT("EnableAutotray"), TaskBarSettings.bHideInactiveIcons);
-    SaveSettingDword(szAdvancedSettingsKey, TEXT("TaskbarGlomming"), TaskBarSettings.bGroupButtons);
+    SaveSettingDword(szAdvancedSettingsKey, L"TaskbarSizeMove", TaskBarSettings.bLock);
+    SaveSettingDword(szAdvancedSettingsKey, L"ShowSeconds", TaskBarSettings.bShowSeconds);
+    SaveSettingDword(szSettingsKey, L"EnableAutotray", TaskBarSettings.bHideInactiveIcons);
+    SaveSettingDword(szAdvancedSettingsKey, L"TaskbarGlomming", TaskBarSettings.bGroupButtons);
     
     /* FIXME: Show Clock, AutoHide and Always on top are stored in the stuckrects2 key but are not written to it with a click on apply. How is this done instead?
        AutoHide writes something to HKEY_CURRENT_USER\Software\Microsoft\Internet Explorer\Desktop\Components\0 figure out what and why */
