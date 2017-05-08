@@ -319,7 +319,14 @@ TaskbarPageProc(HWND hwndDlg,
                     break;
 
                 case PSN_APPLY:
+                    TaskBarSettings.bLock = IsDlgButtonChecked(hwndDlg, IDC_TASKBARPROP_LOCK);
+                    TaskBarSettings.bAutoHide = IsDlgButtonChecked(hwndDlg, IDC_TASKBARPROP_HIDE);
+                    TaskBarSettings.bAlwaysOnTop = IsDlgButtonChecked(hwndDlg, IDC_TASKBARPROP_ONTOP);
+                    TaskBarSettings.bGroupButtons = IsDlgButtonChecked(hwndDlg, IDC_TASKBARPROP_GROUP);
+                    TaskBarSettings.bShowQuickLaunch = IsDlgButtonChecked(hwndDlg, IDC_TASKBARPROP_SHOWQL);
+                    TaskBarSettings.bShowClock = IsDlgButtonChecked(hwndDlg, IDC_TASKBARPROP_CLOCK);
                     TaskBarSettings.bShowSeconds = IsDlgButtonChecked(hwndDlg, IDC_TASKBARPROP_SECONDS);
+                    TaskBarSettings.bHideInactiveIcons = IsDlgButtonChecked(hwndDlg, IDC_TASKBARPROP_HIDEICONS);
                     SaveTaskBarSettings();
                     break;
             }

@@ -21,40 +21,66 @@
 #include "precomp.h"
 
 TASKBAR_SETTINGS TaskBarSettings;
-const WCHAR szAdvancedSettingsKey[] = L"Software\\ReactOS\\Features\\Explorer";
+const WCHAR szSettingsKey[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer";
+const WCHAR szAdvancedSettingsKey[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced";
 
 VOID
 LoadTaskBarSettings(VOID)
 {
-    HKEY hKey;
-
-    /* Set defaults */
-    TaskBarSettings.bLock = TRUE;
+    DWORD dwValue = NULL;
+    
+    LoadSettingDword(szAdvancedSettingsKey, TEXT("TaskbarSizeMove"), dwValue);
+    TaskBarSettings.bLock = (dwValue != 0) ? TRUE : FALSE;
+    
+    LoadSettingDword(szAdvancedSettingsKey, TEXT("ShowSeconds"), dwValue);
+    TaskBarSettings.bShowSeconds = (dwValue != 0) ? TRUE : FALSE;
+    
+    LoadSettingDword(szSettingsKey, TEXT("EnableAutotray"), dwValue);
+    TaskBarSettings.bHideInactiveIcons = TRUE; 
+    
+    LoadSettingDword(szAdvancedSettingsKey, TEXT("TaskbarGlomming"), dwValue);
+    TaskBarSettings.bGroupButtons = (dwValue != 0) ? TRUE : FALSE;
+    
+    TaskBarSettings.bShowQuickLaunch = TRUE;    //FIXME: Where is this stored, and how?
+    
+    /* FIXME: The following settings are stored in stuckrects2, do they have to be load here too? */
+    TaskBarSettings.bShowClock = TRUE;
     TaskBarSettings.bAutoHide = FALSE;
     TaskBarSettings.bAlwaysOnTop = FALSE;
-    TaskBarSettings.bGroupButtons = TRUE;
-    TaskBarSettings.bShowQuickLaunch = TRUE;
-    TaskBarSettings.bShowClock = TRUE;
-    TaskBarSettings.bShowSeconds = FALSE;
-    TaskBarSettings.bHideInactiveIcons = TRUE;
 
-    /* Check registry */
-    if (RegOpenKeyW(HKEY_CURRENT_USER, szAdvancedSettingsKey, &hKey) == ERROR_SUCCESS)
-    {
-        DWORD dwValue, dwValueLength, dwType;
-
-        dwValueLength = sizeof(dwValue);
-        if (RegQueryValueExW(hKey, L"ShowSeconds", NULL, &dwType, (PBYTE)&dwValue, &dwValueLength) == ERROR_SUCCESS && dwType == REG_DWORD)
-            TaskBarSettings.bShowSeconds = dwValue != 0;
-
-        RegCloseKey(hKey);
-    }
 }
 
 VOID
 SaveTaskBarSettings(VOID)
 {
+    SaveSettingDword(szAdvancedSettingsKey, TEXT("TaskbarSizeMove"), TaskBarSettings.bLock);
     SaveSettingDword(szAdvancedSettingsKey, TEXT("ShowSeconds"), TaskBarSettings.bShowSeconds);
+    SaveSettingDword(szSettingsKey, TEXT("EnableAutotray"), TaskBarSettings.bHideInactiveIcons);
+    SaveSettingDword(szAdvancedSettingsKey, TEXT("TaskbarGlomming"), TaskBarSettings.bGroupButtons);
+    
+    /* FIXME: Show Clock, AutoHide and Always on top are stored in the stuckrects2 key but are not written to it with a click on apply. How is this done instead?
+       AutoHide writes something to HKEY_CURRENT_USER\Software\Microsoft\Internet Explorer\Desktop\Components\0 figure out what and why */
+}
+
+BOOL
+LoadSettingDword(IN LPCWSTR pszKeyName,
+                 IN LPCWSTR pszValueName,
+                 OUT DWORD &dwValue)
+{
+    BOOL ret = FALSE;
+    HKEY hKey;
+    
+    if (RegOpenKeyW(HKEY_CURRENT_USER, pszKeyName, &hKey) == ERROR_SUCCESS)
+    {
+        DWORD dwValueLength, dwType;
+
+        dwValueLength = sizeof(dwValue);
+        ret = RegQueryValueExW(hKey, pszValueName, NULL, &dwType, (PBYTE)&dwValue, &dwValueLength) == ERROR_SUCCESS && dwType == REG_DWORD;
+        
+        RegCloseKey(hKey);
+    }
+    
+    return ret;
 }
 
 BOOL

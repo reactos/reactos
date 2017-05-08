@@ -200,6 +200,10 @@ VOID
 SaveTaskBarSettings(VOID);
 
 BOOL
+LoadSettingDword(IN LPCWSTR pszKeyName,
+                 IN LPCWSTR pszValueName,
+                 OUT DWORD &dwValue);
+BOOL
 SaveSettingDword(IN LPCWSTR pszKeyName,
                  IN LPCWSTR pszValueName,
                  IN DWORD dwValue);
