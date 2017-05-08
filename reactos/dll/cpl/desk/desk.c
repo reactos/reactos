@@ -8,7 +8,7 @@
  */
 
 #include "desk.h"
-#include <Shellapi.h>
+#include <shellapi.h>
 #include <cplext.h>
 #include <debug.h>
 
