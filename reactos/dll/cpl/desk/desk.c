@@ -126,7 +126,6 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     PROPSHEETHEADER psh;
     HPSXA hpsxa;
     TCHAR Caption[1024];
-    LONG ret;
     UINT i;
     LPWSTR *argv = NULL;
     LPCWSTR pwszSelectedTab = NULL;
@@ -211,7 +210,7 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     /* NOTE: Don't call SHAddFromPropSheetExtArray here because this applet only allows
              replacing the background page but not extending the applet by more pages */
 
-    ret = (LONG)(PropertySheet(&psh) != -1);
+    PropertySheet(&psh);
 
     if (hpsxa != NULL)
         SHDestroyPropSheetExtArray(hpsxa);
