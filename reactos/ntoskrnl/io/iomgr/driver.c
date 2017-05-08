@@ -898,7 +898,9 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
     IopDisplayLoadingMessage(ModuleName);
     InbvIndicateProgress();
 
-    Buffer = ExAllocatePool(PagedPool, ModuleName->Length + sizeof(UNICODE_NULL));
+    Buffer = ExAllocatePoolWithTag(PagedPool,
+                                   ModuleName->Length + sizeof(UNICODE_NULL),
+                                   TAG_IO);
     if (Buffer == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -924,7 +926,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
      * Strip the file extension from ServiceName
      */
     Success = RtlCreateUnicodeString(&ServiceName, FileNameWithoutPath);
-    ExFreePool(Buffer);
+    ExFreePoolWithTag(Buffer, TAG_IO);
     if (!Success)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -1284,7 +1286,9 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
      */
     ObjectName.Length = ((USHORT)wcslen(Start) + 8) * sizeof(WCHAR);
     ObjectName.MaximumLength = ObjectName.Length + sizeof(WCHAR);
-    ObjectName.Buffer = ExAllocatePool(PagedPool, ObjectName.MaximumLength);
+    ObjectName.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                              ObjectName.MaximumLength,
+                                              TAG_IO);
     if (!ObjectName.Buffer) return STATUS_INSUFFICIENT_RESOURCES;
     wcscpy(ObjectName.Buffer, DRIVER_ROOT_NAME);
     memcpy(ObjectName.Buffer + 8, Start, ObjectName.Length - 8 * sizeof(WCHAR));
@@ -1305,12 +1309,12 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Can't locate driver object for %wZ\n", &ObjectName);
-        ExFreePool(ObjectName.Buffer);
+        ExFreePoolWithTag(ObjectName.Buffer, TAG_IO);
         return Status;
     }
 
     /* Free the buffer for driver object name */
-    ExFreePool(ObjectName.Buffer);
+    ExFreePoolWithTag(ObjectName.Buffer, TAG_IO);
 
     /* Check that driver is not already unloading */
     if (DriverObject->Flags & DRVO_UNLOAD_INVOKED)
