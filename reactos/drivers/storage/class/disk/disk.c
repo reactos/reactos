@@ -2286,7 +2286,7 @@ Return Value:
             outputBuffer->PartitionType = diskData->PartitionType;
             outputBuffer->StartingOffset = deviceExtension->StartingOffset;
             outputBuffer->PartitionLength.QuadPart = (diskData->PartitionNumber) ?
-                deviceExtension->PartitionLength.QuadPart : 2305843009213693951LL; // HACK
+                deviceExtension->PartitionLength.QuadPart : 0x1FFFFFFFFFFFFFFFLL; // HACK
             outputBuffer->HiddenSectors = diskData->HiddenSectors;
             outputBuffer->PartitionNumber = diskData->PartitionNumber;
             outputBuffer->BootIndicator = diskData->BootIndicator;
@@ -3921,6 +3921,17 @@ Return Value:
                 ZwClose(targetKey);
 
                 if (!NT_SUCCESS(status)) {
+                    ExFreePool(keyData);
+                    continue;
+                }
+
+                if (keyData->DataLength < 9*sizeof(WCHAR)) {
+                    //
+                    // the data is too short to use (we subtract 9 chars in normal path)
+                    //
+                    DebugPrint((1, "EnumerateBusKey: Saved data was invalid, "
+                                "not enough data in registry!\n"));
+                    ExFreePool(keyData);
                     continue;
                 }
 
@@ -3943,6 +3954,7 @@ Return Value:
                                                  TRUE);
 
                 if (!NT_SUCCESS(status)) {
+                    ExFreePool(keyData);
                     continue;
                 }
 
@@ -4124,6 +4136,7 @@ Return Value:
         DebugPrint((1,
                    "SCSIDISK: ExtractBiosGeometry: Can't query configuration data (%x)\n",
                    status));
+        ZwClose(hardwareKey);
         ExFreePool(keyData);
         return;
     }
