@@ -144,7 +144,7 @@ PaintText(
 
 INT_PTR
 CALLBACK
-LayoutProc(HWND hwndDlg,
+LayoutProc(HWND hDlg,
            UINT uMsg,
            WPARAM wParam,
            LPARAM lParam)
@@ -158,7 +158,6 @@ LayoutProc(HWND hwndDlg,
             LONG cxVirtScr, cyVirtScr; // Width and Height of the virtual screen
             LONG cxFrame  , cyFrame  ; // Thickness of the window frame
 
-            /* Multi-monitor support */
             xVirtScr  = GetSystemMetrics(SM_XVIRTUALSCREEN);
             yVirtScr  = GetSystemMetrics(SM_YVIRTUALSCREEN);
             cxVirtScr = GetSystemMetrics(SM_CXVIRTUALSCREEN);
@@ -166,32 +165,32 @@ LayoutProc(HWND hwndDlg,
             cxFrame   = GetSystemMetrics(SM_CXFRAME);
             cyFrame   = GetSystemMetrics(SM_CYFRAME);
 
-            SendDlgItemMessageW(hwndDlg, IDC_UPDOWN_SCREEN_BUFFER_HEIGHT, UDM_SETRANGE, 0, (LPARAM)MAKELONG(9999, 1));
-            SendDlgItemMessageW(hwndDlg, IDC_UPDOWN_SCREEN_BUFFER_WIDTH , UDM_SETRANGE, 0, (LPARAM)MAKELONG(9999, 1));
-            SendDlgItemMessageW(hwndDlg, IDC_UPDOWN_WINDOW_SIZE_HEIGHT, UDM_SETRANGE, 0, (LPARAM)MAKELONG(9999, 1));
-            SendDlgItemMessageW(hwndDlg, IDC_UPDOWN_WINDOW_SIZE_WIDTH , UDM_SETRANGE, 0, (LPARAM)MAKELONG(9999, 1));
+            SendDlgItemMessageW(hDlg, IDC_UPDOWN_SCREEN_BUFFER_HEIGHT, UDM_SETRANGE, 0, (LPARAM)MAKELONG(9999, 1));
+            SendDlgItemMessageW(hDlg, IDC_UPDOWN_SCREEN_BUFFER_WIDTH , UDM_SETRANGE, 0, (LPARAM)MAKELONG(9999, 1));
+            SendDlgItemMessageW(hDlg, IDC_UPDOWN_WINDOW_SIZE_HEIGHT, UDM_SETRANGE, 0, (LPARAM)MAKELONG(9999, 1));
+            SendDlgItemMessageW(hDlg, IDC_UPDOWN_WINDOW_SIZE_WIDTH , UDM_SETRANGE, 0, (LPARAM)MAKELONG(9999, 1));
 
-            SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, ConInfo->ScreenBufferSize.Y, FALSE);
-            SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH , ConInfo->ScreenBufferSize.X, FALSE);
-            SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT, ConInfo->WindowSize.Y, FALSE);
-            SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH , ConInfo->WindowSize.X, FALSE);
+            SetDlgItemInt(hDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, ConInfo->ScreenBufferSize.Y, FALSE);
+            SetDlgItemInt(hDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH , ConInfo->ScreenBufferSize.X, FALSE);
+            SetDlgItemInt(hDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT, ConInfo->WindowSize.Y, FALSE);
+            SetDlgItemInt(hDlg, IDC_EDIT_WINDOW_SIZE_WIDTH , ConInfo->WindowSize.X, FALSE);
 
-            SendDlgItemMessageW(hwndDlg, IDC_UPDOWN_WINDOW_POS_LEFT, UDM_SETRANGE, 0,
+            SendDlgItemMessageW(hDlg, IDC_UPDOWN_WINDOW_POS_LEFT, UDM_SETRANGE, 0,
                                 (LPARAM)MAKELONG(xVirtScr + cxVirtScr - cxFrame, xVirtScr - cxFrame));
-            SendDlgItemMessageW(hwndDlg, IDC_UPDOWN_WINDOW_POS_TOP , UDM_SETRANGE, 0,
+            SendDlgItemMessageW(hDlg, IDC_UPDOWN_WINDOW_POS_TOP , UDM_SETRANGE, 0,
                                 (LPARAM)MAKELONG(yVirtScr + cyVirtScr - cyFrame, yVirtScr - cyFrame));
 
-            SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, ConInfo->WindowPosition.x, TRUE);
-            SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP , ConInfo->WindowPosition.y, TRUE);
+            SetDlgItemInt(hDlg, IDC_EDIT_WINDOW_POS_LEFT, ConInfo->WindowPosition.x, TRUE);
+            SetDlgItemInt(hDlg, IDC_EDIT_WINDOW_POS_TOP , ConInfo->WindowPosition.y, TRUE);
 
             if (ConInfo->AutoPosition)
             {
-                EnableDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, FALSE);
-                EnableDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_TOP , FALSE);
-                EnableDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_LEFT, FALSE);
-                EnableDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_TOP , FALSE);
+                EnableDlgItem(hDlg, IDC_EDIT_WINDOW_POS_LEFT, FALSE);
+                EnableDlgItem(hDlg, IDC_EDIT_WINDOW_POS_TOP , FALSE);
+                EnableDlgItem(hDlg, IDC_UPDOWN_WINDOW_POS_LEFT, FALSE);
+                EnableDlgItem(hDlg, IDC_UPDOWN_WINDOW_POS_TOP , FALSE);
             }
-            CheckDlgButton(hwndDlg, IDC_CHECK_SYSTEM_POS_WINDOW,
+            CheckDlgButton(hDlg, IDC_CHECK_SYSTEM_POS_WINDOW,
                            ConInfo->AutoPosition ? BST_CHECKED : BST_UNCHECKED);
 
             return TRUE;
@@ -220,7 +219,7 @@ LayoutProc(HWND hwndDlg,
                 }
                 else
                 {
-                    wwidth = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH, NULL, FALSE);
+                    wwidth = GetDlgItemInt(hDlg, IDC_EDIT_WINDOW_SIZE_WIDTH, NULL, FALSE);
                 }
 
                 if (lppsn->hdr.idFrom == IDC_UPDOWN_WINDOW_SIZE_HEIGHT)
@@ -229,7 +228,7 @@ LayoutProc(HWND hwndDlg,
                 }
                 else
                 {
-                    wheight = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT, NULL, FALSE);
+                    wheight = GetDlgItemInt(hDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT, NULL, FALSE);
                 }
 
                 if (lppsn->hdr.idFrom == IDC_UPDOWN_SCREEN_BUFFER_WIDTH)
@@ -238,7 +237,7 @@ LayoutProc(HWND hwndDlg,
                 }
                 else
                 {
-                    swidth = GetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, NULL, FALSE);
+                    swidth = GetDlgItemInt(hDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, NULL, FALSE);
                 }
 
                 if (lppsn->hdr.idFrom == IDC_UPDOWN_SCREEN_BUFFER_HEIGHT)
@@ -247,7 +246,7 @@ LayoutProc(HWND hwndDlg,
                 }
                 else
                 {
-                    sheight = GetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, NULL, FALSE);
+                    sheight = GetDlgItemInt(hDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, NULL, FALSE);
                 }
 
                 if (lppsn->hdr.idFrom == IDC_UPDOWN_WINDOW_POS_LEFT)
@@ -256,7 +255,7 @@ LayoutProc(HWND hwndDlg,
                 }
                 else
                 {
-                    left = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, NULL, TRUE);
+                    left = GetDlgItemInt(hDlg, IDC_EDIT_WINDOW_POS_LEFT, NULL, TRUE);
                 }
 
                 if (lppsn->hdr.idFrom == IDC_UPDOWN_WINDOW_POS_TOP)
@@ -265,7 +264,7 @@ LayoutProc(HWND hwndDlg,
                 }
                 else
                 {
-                    top = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP, NULL, TRUE);
+                    top = GetDlgItemInt(hDlg, IDC_EDIT_WINDOW_POS_TOP, NULL, TRUE);
                 }
 
                 if (lppsn->hdr.idFrom == IDC_UPDOWN_WINDOW_SIZE_WIDTH || lppsn->hdr.idFrom == IDC_UPDOWN_WINDOW_SIZE_HEIGHT)
@@ -273,12 +272,12 @@ LayoutProc(HWND hwndDlg,
                     /* Automatically adjust screen buffer size when window size enlarges */
                     if (wwidth >= swidth)
                     {
-                        SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, wwidth, TRUE);
+                        SetDlgItemInt(hDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, wwidth, TRUE);
                         swidth = wwidth;
                     }
                     if (wheight >= sheight)
                     {
-                        SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, wheight, TRUE);
+                        SetDlgItemInt(hDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, wheight, TRUE);
                         sheight = wheight;
                     }
                 }
@@ -292,12 +291,12 @@ LayoutProc(HWND hwndDlg,
                     /* Automatically adjust window size when screen buffer decreases */
                     if (wwidth > swidth)
                     {
-                        SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH, swidth, TRUE);
+                        SetDlgItemInt(hDlg, IDC_EDIT_WINDOW_SIZE_WIDTH, swidth, TRUE);
                         wwidth = swidth;
                     }
                     if (wheight > sheight)
                     {
-                        SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT, sheight, TRUE);
+                        SetDlgItemInt(hDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT, sheight, TRUE);
                         wheight = sheight;
                     }
                 }
@@ -308,7 +307,9 @@ LayoutProc(HWND hwndDlg,
                 ConInfo->WindowSize.Y = (SHORT)wheight;
                 ConInfo->WindowPosition.x = left;
                 ConInfo->WindowPosition.y = top;
-                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+
+                InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_LAYOUT_WINDOW_PREVIEW), NULL, TRUE);
+                PropSheet_Changed(GetParent(hDlg), hDlg);
             }
             break;
         }
@@ -323,8 +324,8 @@ LayoutProc(HWND hwndDlg,
                 {
                     DWORD swidth, wwidth;
 
-                    swidth = GetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, NULL, FALSE);
-                    wwidth = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH  , NULL, FALSE);
+                    swidth = GetDlgItemInt(hDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, NULL, FALSE);
+                    wwidth = GetDlgItemInt(hDlg, IDC_EDIT_WINDOW_SIZE_WIDTH  , NULL, FALSE);
 
                     /* Be sure that the (new) screen buffer width is in the correct range */
                     swidth = min(max(swidth, 1), 0xFFFF);
@@ -333,12 +334,14 @@ LayoutProc(HWND hwndDlg,
                     if (wwidth > swidth)
                     {
                         wwidth = swidth;
-                        SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH, wwidth, TRUE);
+                        SetDlgItemInt(hDlg, IDC_EDIT_WINDOW_SIZE_WIDTH, wwidth, TRUE);
                     }
 
                     ConInfo->ScreenBufferSize.X = (SHORT)swidth;
                     ConInfo->WindowSize.X       = (SHORT)wwidth;
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+
+                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_LAYOUT_WINDOW_PREVIEW), NULL, TRUE);
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
                     break;
                 }
 
@@ -346,8 +349,8 @@ LayoutProc(HWND hwndDlg,
                 {
                     DWORD swidth, wwidth;
 
-                    swidth = GetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, NULL, FALSE);
-                    wwidth = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH  , NULL, FALSE);
+                    swidth = GetDlgItemInt(hDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, NULL, FALSE);
+                    wwidth = GetDlgItemInt(hDlg, IDC_EDIT_WINDOW_SIZE_WIDTH  , NULL, FALSE);
 
                     /* Automatically adjust screen buffer size when window size enlarges */
                     if (wwidth >= swidth)
@@ -357,12 +360,14 @@ LayoutProc(HWND hwndDlg,
                         /* Be sure that the (new) screen buffer width is in the correct range */
                         swidth = min(max(swidth, 1), 0xFFFF);
 
-                        SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, swidth, TRUE);
+                        SetDlgItemInt(hDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, swidth, TRUE);
                     }
 
                     ConInfo->ScreenBufferSize.X = (SHORT)swidth;
                     ConInfo->WindowSize.X       = (SHORT)wwidth;
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+
+                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_LAYOUT_WINDOW_PREVIEW), NULL, TRUE);
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
                     break;
                 }
 
@@ -370,8 +375,8 @@ LayoutProc(HWND hwndDlg,
                 {
                     DWORD sheight, wheight;
 
-                    sheight = GetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, NULL, FALSE);
-                    wheight = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT  , NULL, FALSE);
+                    sheight = GetDlgItemInt(hDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, NULL, FALSE);
+                    wheight = GetDlgItemInt(hDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT  , NULL, FALSE);
 
                     /* Be sure that the (new) screen buffer width is in the correct range */
                     sheight = min(max(sheight, 1), 0xFFFF);
@@ -380,12 +385,14 @@ LayoutProc(HWND hwndDlg,
                     if (wheight > sheight)
                     {
                         wheight = sheight;
-                        SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT, wheight, TRUE);
+                        SetDlgItemInt(hDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT, wheight, TRUE);
                     }
 
                     ConInfo->ScreenBufferSize.Y = (SHORT)sheight;
                     ConInfo->WindowSize.Y       = (SHORT)wheight;
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+
+                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_LAYOUT_WINDOW_PREVIEW), NULL, TRUE);
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
                     break;
                 }
 
@@ -393,8 +400,8 @@ LayoutProc(HWND hwndDlg,
                 {
                     DWORD sheight, wheight;
 
-                    sheight = GetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, NULL, FALSE);
-                    wheight = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT  , NULL, FALSE);
+                    sheight = GetDlgItemInt(hDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, NULL, FALSE);
+                    wheight = GetDlgItemInt(hDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT  , NULL, FALSE);
 
                     /* Automatically adjust screen buffer size when window size enlarges */
                     if (wheight >= sheight)
@@ -404,21 +411,25 @@ LayoutProc(HWND hwndDlg,
                         /* Be sure that the (new) screen buffer width is in the correct range */
                         sheight = min(max(sheight, 1), 0xFFFF);
 
-                        SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, sheight, TRUE);
+                        SetDlgItemInt(hDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, sheight, TRUE);
                     }
 
                     ConInfo->ScreenBufferSize.Y = (SHORT)sheight;
                     ConInfo->WindowSize.Y       = (SHORT)wheight;
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+
+                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_LAYOUT_WINDOW_PREVIEW), NULL, TRUE);
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
                     break;
                 }
 
                 case IDC_EDIT_WINDOW_POS_LEFT:
                 case IDC_EDIT_WINDOW_POS_TOP:
                 {
-                    ConInfo->WindowPosition.x = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, NULL, TRUE);
-                    ConInfo->WindowPosition.y = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP , NULL, TRUE);
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    ConInfo->WindowPosition.x = GetDlgItemInt(hDlg, IDC_EDIT_WINDOW_POS_LEFT, NULL, TRUE);
+                    ConInfo->WindowPosition.y = GetDlgItemInt(hDlg, IDC_EDIT_WINDOW_POS_TOP , NULL, TRUE);
+
+                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_LAYOUT_WINDOW_PREVIEW), NULL, TRUE);
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
                     break;
                 }
                 }
@@ -427,33 +438,37 @@ LayoutProc(HWND hwndDlg,
             if (HIWORD(wParam) == BN_CLICKED &&
                 LOWORD(wParam) == IDC_CHECK_SYSTEM_POS_WINDOW)
             {
-                if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_SYSTEM_POS_WINDOW) == BST_CHECKED)
+                if (IsDlgButtonChecked(hDlg, IDC_CHECK_SYSTEM_POS_WINDOW) == BST_CHECKED)
                 {
-                    EnableDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, FALSE);
-                    EnableDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_TOP , FALSE);
-                    EnableDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_LEFT, FALSE);
-                    EnableDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_TOP , FALSE);
+                    EnableDlgItem(hDlg, IDC_EDIT_WINDOW_POS_LEFT, FALSE);
+                    EnableDlgItem(hDlg, IDC_EDIT_WINDOW_POS_TOP , FALSE);
+                    EnableDlgItem(hDlg, IDC_UPDOWN_WINDOW_POS_LEFT, FALSE);
+                    EnableDlgItem(hDlg, IDC_UPDOWN_WINDOW_POS_TOP , FALSE);
 
                     ConInfo->AutoPosition = TRUE;
                     // Do not touch ConInfo->WindowPosition !!
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+
+                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_LAYOUT_WINDOW_PREVIEW), NULL, TRUE);
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
                 }
                 else
                 {
                     ULONG left, top;
 
-                    left = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, NULL, TRUE);
-                    top  = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP , NULL, TRUE);
+                    left = GetDlgItemInt(hDlg, IDC_EDIT_WINDOW_POS_LEFT, NULL, TRUE);
+                    top  = GetDlgItemInt(hDlg, IDC_EDIT_WINDOW_POS_TOP , NULL, TRUE);
 
-                    EnableDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, TRUE);
-                    EnableDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_TOP , TRUE);
-                    EnableDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_LEFT, TRUE);
-                    EnableDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_TOP , TRUE);
+                    EnableDlgItem(hDlg, IDC_EDIT_WINDOW_POS_LEFT, TRUE);
+                    EnableDlgItem(hDlg, IDC_EDIT_WINDOW_POS_TOP , TRUE);
+                    EnableDlgItem(hDlg, IDC_UPDOWN_WINDOW_POS_LEFT, TRUE);
+                    EnableDlgItem(hDlg, IDC_UPDOWN_WINDOW_POS_TOP , TRUE);
 
                     ConInfo->AutoPosition     = FALSE;
                     ConInfo->WindowPosition.x = left;
                     ConInfo->WindowPosition.y = top;
-                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+
+                    InvalidateRect(GetDlgItem(hDlg, IDC_STATIC_LAYOUT_WINDOW_PREVIEW), NULL, TRUE);
+                    PropSheet_Changed(GetParent(hDlg), hDlg);
                 }
             }
 
