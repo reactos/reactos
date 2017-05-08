@@ -674,6 +674,14 @@ User32EnumWindows(HDESK hDesktop,
     if (!NT_SUCCESS(Status))
         return FALSE;
 
+    if (!dwCount)
+    {
+       if (!dwThreadId)
+          return FALSE;
+       else
+          return TRUE;
+    }
+
     /* allocate buffer to receive HWND handles */
     hHeap = GetProcessHeap();
     pHwnd = HeapAlloc(hHeap, 0, sizeof(HWND)*(dwCount+1));
@@ -696,14 +704,6 @@ User32EnumWindows(HDESK hDesktop,
         if (pHwnd)
             HeapFree(hHeap, 0, pHwnd);
         return FALSE;
-    }
-
-    if (!dwCount)
-    {
-       if (!dwThreadId)
-          return FALSE;
-       else
-          return TRUE;
     }
 
     /* call the user's callback function until we're done or
