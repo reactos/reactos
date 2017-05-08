@@ -33,7 +33,7 @@ private:
 	ENUMLIST				*mpCurrent;
 public:
 	CEnumIDListBase();
-	~CEnumIDListBase();
+	virtual ~CEnumIDListBase();
 	BOOL AddToEnumList(LPITEMIDLIST pidl);
 	BOOL DeleteList();
 	BOOL HasItemWithCLSID(LPITEMIDLIST pidl);

@@ -22,15 +22,16 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-CEnumIDListBase::CEnumIDListBase()
+CEnumIDListBase::CEnumIDListBase() :
+    mpFirst(NULL),
+    mpLast(NULL),
+    mpCurrent(NULL)
 {
-    mpFirst = NULL;
-    mpLast = NULL;
-    mpCurrent = NULL;
 }
 
 CEnumIDListBase::~CEnumIDListBase()
 {
+    DeleteList();
 }
 
 /**************************************************************************
