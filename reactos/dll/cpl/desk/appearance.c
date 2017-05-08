@@ -117,8 +117,48 @@ AppearancePage_OnInit(HWND hwndDlg)
     g->pThemes = LoadThemes();
     if (g->pThemes)
     {
-        if (!GetActiveTheme(g->pThemes, &g->ActiveTheme))
-            g->ActiveTheme.ThemeActive = FALSE;
+        PTHEME pLoadedTheme = NULL;
+        
+        if (g_GlobalData.pwszAction && 
+            g_GlobalData.pwszFile && 
+            wcscmp(g_GlobalData.pwszAction, L"OpenMSTheme") == 0)
+        {
+            /* Check if the theme specified was already loaded */
+            for (pTheme = g->pThemes; pTheme; pTheme = pTheme->NextTheme)
+            {
+                if (pTheme->ThemeFileName && wcsicmp(pTheme->ThemeFileName, g_GlobalData.pwszFile) == 0)
+                {
+                    pLoadedTheme = pTheme;
+                    break;
+                }
+
+                if (!pTheme->NextTheme)
+                    break;
+            }
+
+            if (!pLoadedTheme)
+            {
+                /* Load it now and insert it in the list */
+                pLoadedTheme = LoadTheme(g_GlobalData.pwszFile, g_GlobalData.pwszFile);
+                if (pLoadedTheme)
+                    pTheme->NextTheme = pLoadedTheme;
+            }
+        }
+
+        if (pLoadedTheme)
+        {
+            g->ActiveTheme.ThemeActive = TRUE;
+            g->ActiveTheme.Theme = pLoadedTheme;
+            g->ActiveTheme.Color = pLoadedTheme->ColoursList;
+            g->ActiveTheme.Size = pLoadedTheme->SizesList;
+        }
+        else
+        {
+            if (!GetActiveTheme(g->pThemes, &g->ActiveTheme))
+            {
+                g->ActiveTheme.ThemeActive = FALSE;
+            }
+        }
 
         /*
          * Keep a copy of the selected classic theme in order to select this

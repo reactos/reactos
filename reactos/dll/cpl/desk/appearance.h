@@ -135,6 +135,7 @@ typedef struct tagGLOBALS
 VOID SchemeSetMetric(COLOR_SCHEME *scheme, int id, int value);
 int SchemeGetMetric(COLOR_SCHEME *scheme, int id);
 PLOGFONTW SchemeGetFont(COLOR_SCHEME *scheme, int id);
+PTHEME LoadTheme(IN LPCWSTR pszThemeFileName,IN LPCWSTR pszThemeName);
 PTHEME LoadThemes(VOID);
 BOOL GetActiveTheme(PTHEME pThemeList, PTHEME_SELECTION pSelectedTheme);
 BOOL GetActiveClassicTheme(PTHEME pThemeList, PTHEME_SELECTION pSelectedTheme);

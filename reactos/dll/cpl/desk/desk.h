@@ -104,6 +104,8 @@ typedef struct _DISPLAY_DEVICE_ENTRY
 typedef struct _GLOBAL_DATA
 {
     COLORREF desktop_color;
+    LPCWSTR pwszFile;
+    LPCWSTR pwszAction;
 } GLOBAL_DATA, *PGLOBAL_DATA;
 
 extern GLOBAL_DATA g_GlobalData;

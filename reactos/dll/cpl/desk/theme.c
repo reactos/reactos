@@ -704,6 +704,23 @@ EnumThemeStyles(IN LPCWSTR pszThemeFileName, IN ENUMTHEMESTYLE pfnEnumTheme)
     return List;
 }
 
+PTHEME LoadTheme(IN LPCWSTR pszThemeFileName,IN LPCWSTR pszThemeName)
+{
+    PTHEME pTheme = CreateTheme(pszThemeFileName, pszThemeName);
+    if (pTheme == NULL) 
+        return NULL;
+
+    pTheme->SizesList = EnumThemeStyles( pszThemeFileName, (ENUMTHEMESTYLE)EnumThemeSizes);
+    pTheme->ColoursList = EnumThemeStyles( pszThemeFileName, (ENUMTHEMESTYLE)EnumThemeColors);
+    if(pTheme->SizesList == NULL || pTheme->ColoursList == NULL)
+    {
+        CleanupThemes(pTheme);
+        return NULL;
+    }
+
+    return pTheme;
+}
+
 BOOL CALLBACK
 EnumThemeProc(IN LPVOID lpReserved,
               IN LPCWSTR pszThemeFileName,
@@ -715,17 +732,8 @@ EnumThemeProc(IN LPVOID lpReserved,
     PTHEME *List, pTheme;
 
     List = (PTHEME*)lpData;
-
-    pTheme = CreateTheme(pszThemeFileName, pszThemeName);
+    pTheme = LoadTheme(pszThemeFileName, pszThemeName);
     if (pTheme == NULL) return FALSE;
-
-    pTheme->SizesList = EnumThemeStyles( pszThemeFileName, (ENUMTHEMESTYLE)EnumThemeSizes);
-    pTheme->ColoursList = EnumThemeStyles( pszThemeFileName, (ENUMTHEMESTYLE)EnumThemeColors);
-    if(pTheme->SizesList == NULL || pTheme->ColoursList == NULL)
-    {
-        CleanupThemes(pTheme);
-        return FALSE;
-    }
 
     pTheme->NextTheme = *List;
     *List = pTheme;
