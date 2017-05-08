@@ -1738,6 +1738,10 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI,
     FillTMEx(TM, FontGDI, pOS2, pHori, pFNT, FALSE);
 }
 
+static NTSTATUS
+IntGetFontLocalizedName(PUNICODE_STRING pNameW, FT_Face Face,
+                        FT_UShort NameID, FT_UShort LangID);
+
 /*************************************************************
  * IntGetOutlineTextMetrics
  *
@@ -1752,57 +1756,40 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     TT_HoriHeader *pHori;
     TT_Postscript *pPost;
     FT_Fixed XScale, YScale;
-    ANSI_STRING FamilyNameA, StyleNameA;
-    UNICODE_STRING FamilyNameW, StyleNameW, Regular;
     FT_WinFNT_HeaderRec Win;
     FT_Error Error;
     char *Cp;
-    NTSTATUS status;
     FT_Face Face = FontGDI->SharedFace->Face;
+    UNICODE_STRING FamilyNameW, FaceNameW, StyleNameW, FullNameW;
+
+    /* family name */
+    RtlInitUnicodeString(&FamilyNameW, NULL);
+    IntGetFontLocalizedName(&FamilyNameW, Face, TT_NAME_ID_FONT_FAMILY, gusLanguageID);
+
+    /* face name */
+    RtlInitUnicodeString(&FaceNameW, NULL);
+    IntGetFontLocalizedName(&FaceNameW, Face, TT_NAME_ID_FULL_NAME, gusLanguageID);
+
+    /* style name */
+    RtlInitUnicodeString(&StyleNameW, NULL);
+    IntGetFontLocalizedName(&StyleNameW, Face, TT_NAME_ID_FONT_SUBFAMILY, gusLanguageID);
+
+    /* unique name (full name) */
+    RtlInitUnicodeString(&FullNameW, NULL);
+    IntGetFontLocalizedName(&FullNameW, Face, TT_NAME_ID_UNIQUE_ID, gusLanguageID);
 
     Needed = sizeof(OUTLINETEXTMETRICW);
-
-    RtlInitAnsiString(&FamilyNameA, Face->family_name);
-    status = RtlAnsiStringToUnicodeString(&FamilyNameW, &FamilyNameA, TRUE);
-    if (!NT_SUCCESS(status))
-    {
-        return 0;
-    }
-
-    RtlInitAnsiString(&StyleNameA, Face->style_name);
-    status = RtlAnsiStringToUnicodeString(&StyleNameW, &StyleNameA, TRUE);
-    if (!NT_SUCCESS(status))
-    {
-        RtlFreeUnicodeString(&FamilyNameW);
-        return 0;
-    }
-
-    /* These names should be read from the TT name table */
-
-    /* Length of otmpFamilyName */
     Needed += FamilyNameW.Length + sizeof(WCHAR);
-
-    RtlInitUnicodeString(&Regular, L"Regular");
-    /* Length of otmpFaceName */
-    if (RtlEqualUnicodeString(&StyleNameW, &Regular, TRUE))
-    {
-        Needed += FamilyNameW.Length + sizeof(WCHAR); /* Just the family name */
-    }
-    else
-    {
-        Needed += FamilyNameW.Length + StyleNameW.Length + (sizeof(WCHAR) << 1); /* family + " " + style */
-    }
-
-    /* Length of otmpStyleName */
+    Needed += FaceNameW.Length + sizeof(WCHAR);
     Needed += StyleNameW.Length + sizeof(WCHAR);
-
-    /* Length of otmpFullName */
-    Needed += FamilyNameW.Length + StyleNameW.Length + (sizeof(WCHAR) << 1);
+    Needed += FullNameW.Length + sizeof(WCHAR);
 
     if (Size < Needed)
     {
         RtlFreeUnicodeString(&FamilyNameW);
+        RtlFreeUnicodeString(&FaceNameW);
         RtlFreeUnicodeString(&StyleNameW);
+        RtlFreeUnicodeString(&FullNameW);
         return Needed;
     }
 
@@ -1815,8 +1802,10 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     {
         IntUnLockFreeType;
         DPRINT1("Can't find OS/2 table - not TT font?\n");
-        RtlFreeUnicodeString(&StyleNameW);
         RtlFreeUnicodeString(&FamilyNameW);
+        RtlFreeUnicodeString(&FaceNameW);
+        RtlFreeUnicodeString(&StyleNameW);
+        RtlFreeUnicodeString(&FullNameW);
         return 0;
     }
 
@@ -1825,8 +1814,10 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     {
         IntUnLockFreeType;
         DPRINT1("Can't find HHEA table - not TT font?\n");
-        RtlFreeUnicodeString(&StyleNameW);
         RtlFreeUnicodeString(&FamilyNameW);
+        RtlFreeUnicodeString(&FaceNameW);
+        RtlFreeUnicodeString(&StyleNameW);
+        RtlFreeUnicodeString(&FullNameW);
         return 0;
     }
 
@@ -1882,33 +1873,34 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
 
     IntUnLockFreeType;
 
-    /* otmp* members should clearly have type ptrdiff_t, but M$ knows best */
     Cp = (char*) Otm + sizeof(OUTLINETEXTMETRICW);
+
+    /* family name */
     Otm->otmpFamilyName = (LPSTR)(Cp - (char*) Otm);
     wcscpy((WCHAR*) Cp, FamilyNameW.Buffer);
     Cp += FamilyNameW.Length + sizeof(WCHAR);
+
+    /* face name */
+    Otm->otmpFaceName = (LPSTR)(Cp - (char*) Otm);
+    wcscpy((WCHAR*) Cp, FaceNameW.Buffer);
+    Cp += FaceNameW.Length + sizeof(WCHAR);
+
+    /* style name */
     Otm->otmpStyleName = (LPSTR)(Cp - (char*) Otm);
     wcscpy((WCHAR*) Cp, StyleNameW.Buffer);
     Cp += StyleNameW.Length + sizeof(WCHAR);
-    Otm->otmpFaceName = (LPSTR)(Cp - (char*) Otm);
-    wcscpy((WCHAR*) Cp, FamilyNameW.Buffer);
-    if (!RtlEqualUnicodeString(&StyleNameW, &Regular, TRUE))
-    {
-        wcscat((WCHAR*) Cp, L" ");
-        wcscat((WCHAR*) Cp, StyleNameW.Buffer);
-        Cp += FamilyNameW.Length + StyleNameW.Length + (sizeof(WCHAR) << 1);
-    }
-    else
-    {
-        Cp += FamilyNameW.Length + sizeof(WCHAR);
-    }
-    Otm->otmpFullName = (LPSTR)(Cp - (char*) Otm);
-    wcscpy((WCHAR*) Cp, FamilyNameW.Buffer);
-    wcscat((WCHAR*) Cp, L" ");
-    wcscat((WCHAR*) Cp, StyleNameW.Buffer);
 
-    RtlFreeUnicodeString(&StyleNameW);
+    /* unique name (full name) */
+    Otm->otmpFullName = (LPSTR)(Cp - (char*) Otm);
+    wcscpy((WCHAR*) Cp, FullNameW.Buffer);
+    Cp += FullNameW.Length + sizeof(WCHAR);
+
+    ASSERT(Cp - (char*)Otm == Needed);
+
     RtlFreeUnicodeString(&FamilyNameW);
+    RtlFreeUnicodeString(&FaceNameW);
+    RtlFreeUnicodeString(&StyleNameW);
+    RtlFreeUnicodeString(&FullNameW);
 
     return Needed;
 }
@@ -2099,13 +2091,19 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, FT_Face Face,
     {
         if (LangID != gusEnglishUS)
         {
+            /* Retry with English US */
             Status = IntGetFontLocalizedName(pNameW, Face, NameID, gusEnglishUS);
         }
-    }
-    if (Status == STATUS_NOT_FOUND)
-    {
-        RtlInitAnsiString(&AnsiName, Face->family_name);
-        Status = RtlAnsiStringToUnicodeString(pNameW, &AnsiName, TRUE);
+        else if (NameID == TT_NAME_ID_FONT_SUBFAMILY)
+        {
+            RtlInitAnsiString(&AnsiName, Face->style_name);
+            Status = RtlAnsiStringToUnicodeString(pNameW, &AnsiName, TRUE);
+        }
+        else
+        {
+            RtlInitAnsiString(&AnsiName, Face->family_name);
+            Status = RtlAnsiStringToUnicodeString(pNameW, &AnsiName, TRUE);
+        }
     }
 
     return Status;
