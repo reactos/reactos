@@ -899,7 +899,10 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
     InbvIndicateProgress();
 
     Buffer = ExAllocatePool(PagedPool, ModuleName->Length + sizeof(UNICODE_NULL));
-    ASSERT(Buffer);
+    if (Buffer == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     RtlCopyMemory(Buffer, ModuleName->Buffer, ModuleName->Length);
     Buffer[ModuleName->Length / sizeof(WCHAR)] = UNICODE_NULL;

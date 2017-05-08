@@ -892,6 +892,8 @@ IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
                                 &DeviceCaps->UINumber,
                                 sizeof(ULONG));
       }
+
+      ZwClose(InstanceKey);
    }
 
    return Status;
@@ -1086,7 +1088,6 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
       Status = IopCreateDeviceKeyPath(&Node->InstancePath, REG_OPTION_VOLATILE, &InstanceHandle);
       if (!NT_SUCCESS(Status))
       {
-          ZwClose(InstanceHandle);
           ExFreePool(FullServiceName.Buffer);
           ExFreePoolWithTag(Node, TAG_IO_DEVNODE);
           return Status;
