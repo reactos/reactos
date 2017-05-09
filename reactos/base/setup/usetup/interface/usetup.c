@@ -4442,9 +4442,6 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
     wcscpy(SourceMbrPathBuffer, SourceRootPath.Buffer);
     wcscat(SourceMbrPathBuffer, L"\\loader\\dosmbr.bin");
 
-    DPRINT1("Install MBR bootcode: %S ==> %S\n",
-            SourceMbrPathBuffer, DestinationDevicePathBuffer);
-
     if (IsThereAValidBootSector(DestinationDevicePathBuffer))
     {
         /* Save current MBR */
@@ -4460,6 +4457,8 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
         }
     }
 
+    DPRINT1("Install MBR bootcode: %S ==> %S\n",
+            SourceMbrPathBuffer, DestinationDevicePathBuffer);
     Status = InstallMbrBootCodeToDisk(SourceMbrPathBuffer,
                                       DestinationDevicePathBuffer);
     if (!NT_SUCCESS(Status))

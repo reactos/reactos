@@ -630,12 +630,14 @@ BOOLEAN
 IsThereAValidBootSector(PWSTR RootPath)
 {
     /*
-     * Check the first DWORD (4 bytes) of the bootsector for a potential
-     * "valid" instruction (the BIOS starts execution of the bootsector
-     * at its beginning). Currently the criterium is that this DWORD must
-     * be non-zero.
+     * We first demand that the bootsector has a valid signature at its end.
+     * We then check the first 3 bytes (as a ULONG) of the bootsector for a
+     * potential "valid" instruction (the BIOS starts execution of the bootsector
+     * at its beginning). Currently this criterium is that this ULONG must be
+     * non-zero. If both these tests pass, then the bootsector is valid; otherwise
+     * it is invalid and certainly needs to be overwritten.
      */
-
+    BOOLEAN IsValid = FALSE;
     NTSTATUS Status;
     UNICODE_STRING Name;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -666,10 +668,9 @@ IsThereAValidBootSector(PWSTR RootPath)
                         0,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, BootSector);
-        return FALSE; // Status;
-    }
+        goto Quit;
+
+    RtlZeroMemory(BootSector, SECTORSIZE);
 
     FileOffset.QuadPart = 0ULL;
     Status = NtReadFile(FileHandle,
@@ -682,16 +683,20 @@ IsThereAValidBootSector(PWSTR RootPath)
                         &FileOffset,
                         NULL);
     NtClose(FileHandle);
+    if (!NT_SUCCESS(Status))
+        goto Quit;
 
-    Instruction = *(PULONG)BootSector;
+    /* Check the instruction; we use a ULONG to read three bytes */
+    Instruction = (*(PULONG)BootSector) & 0x00FFFFFF;
+    IsValid = (Instruction != 0x00000000);
 
+    /* Check the bootsector signature */
+    IsValid &= (*(PUSHORT)(BootSector + 0x1fe) == 0xaa55);
+
+Quit:
     /* Free the boot sector */
     RtlFreeHeap(ProcessHeap, 0, BootSector);
-
-    if (!NT_SUCCESS(Status))
-        return FALSE; // Status;
-
-    return (Instruction != 0x00000000);
+    return IsValid; // Status;
 }
 
 NTSTATUS
