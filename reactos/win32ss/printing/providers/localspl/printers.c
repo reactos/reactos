@@ -75,6 +75,12 @@ static DWORD dwPrinterInfo5Offsets[] = {
     MAXDWORD
 };
 
+/** These values serve no purpose anymore, but are still used in PRINTER_INFO_5 and
+    HKEY_CURRENT_USER\Software\Microsoft\Windows NT\CurrentVersion\PrinterPorts */
+static const DWORD dwDeviceNotSelectedTimeout = 15000;
+static const DWORD dwTransmissionRetryTimeout = 45000;
+
+
 /**
  * @name _PrinterListCompareRoutine
  *
@@ -765,8 +771,8 @@ _LocalGetPrinterLevel5(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_5W* ppPrinterInfo,
 
     // Set the general fields.
     (*ppPrinterInfo)->Attributes = pPrinter->dwAttributes;
-    (*ppPrinterInfo)->DeviceNotSelectedTimeout = 0;
-    (*ppPrinterInfo)->TransmissionRetryTimeout = 0;
+    (*ppPrinterInfo)->DeviceNotSelectedTimeout = dwDeviceNotSelectedTimeout;
+    (*ppPrinterInfo)->TransmissionRetryTimeout = dwTransmissionRetryTimeout;
 
     // Set the pPrinterName field.
     pwszStrings[0] = DllAllocSplMem(cbPrinterName);

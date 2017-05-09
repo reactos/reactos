@@ -26,6 +26,6 @@ add_library(winspool SHARED
 set_target_properties(winspool PROPERTIES SUFFIX ".drv")
 set_module_type(winspool win32dll UNICODE)
 target_link_libraries(winspool wine ${PSEH_LIB})
-add_importlibs(winspool gdi32 rpcrt4 msvcrt kernel32 ntdll)
+add_importlibs(winspool advapi32 gdi32 rpcrt4 msvcrt kernel32 ntdll)
 add_pch(winspool precomp.h SOURCE)
 add_cd_file(TARGET winspool DESTINATION reactos/system32 FOR all)

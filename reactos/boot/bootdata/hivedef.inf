@@ -1837,13 +1837,13 @@ HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Run","kbswitch.exe",2,"kbswitch.
 
 HKCU,"SOFTWARE\Microsoft\Windows NT",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion",,0x00000012
-HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Devices",,0x00000012
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Devices","Dummy Printer On LPT1",2,"winspool,LPT1:"
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Network",,0x00000012
-HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\PrinterPorts",,0x00000012
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\PrinterPorts","Dummy Printer On LPT1",2,"winspool,LPT1:,15,45"
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Program Manager",,0x00000012
 
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","DebugOptions",2,"2048"
-HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","device",2,""
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","Device",2,"Dummy Printer On LPT1,winspool,LPT1:"
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","Documents",2,""
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","DosPrint",2,"no"
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","load",2,""

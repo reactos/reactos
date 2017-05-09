@@ -1,12 +1,15 @@
 /*
  * PROJECT:     ReactOS Printing Include files
  * LICENSE:     GNU LGPLv2 or any later version as published by the Free Software Foundation
- * PURPOSE:     Undocumented APIs of the Spooler Router "spoolss.dll"
+ * PURPOSE:     Undocumented APIs of the Spooler Router "spoolss.dll" and internally shared interfaces
  * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #ifndef _REACTOS_SPOOLSS_H
 #define _REACTOS_SPOOLSS_H
+
+// Constants
+#define MAX_PRINTER_NAME        220
 
 typedef struct _MARSHALL_DOWN_INFO
 {

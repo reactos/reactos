@@ -7,6 +7,13 @@
 
 #include "precomp.h"
 
+// Local Constants
+
+/** And the award for the most confusingly named setting goes to "Device", for storing the default printer of the current user.
+    Ok, I admit that this has historical reasons. It's still not straightforward in any way though! */
+static const WCHAR wszWindowsKey[] = L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows";
+static const WCHAR wszDeviceValue[] = L"Device";
+
 static void
 _MarshallUpPrinterInfo(PBYTE* ppPrinterInfo, DWORD Level)
 {
@@ -415,13 +422,131 @@ Cleanup:
 BOOL WINAPI
 GetDefaultPrinterA(LPSTR pszBuffer, LPDWORD pcchBuffer)
 {
-    return FALSE;
+    DWORD dwErrorCode;
+    PWSTR pwszBuffer = NULL;
+
+    // Sanity check.
+    if (!pcchBuffer)
+    {
+        dwErrorCode = ERROR_INVALID_PARAMETER;
+        goto Cleanup;
+    }
+
+    // Check if an ANSI buffer was given and if so, allocate a Unicode buffer of the same size.
+    if (pszBuffer && *pcchBuffer)
+    {
+        pwszBuffer = HeapAlloc(hProcessHeap, 0, *pcchBuffer * sizeof(WCHAR));
+        if (!pwszBuffer)
+        {
+            dwErrorCode = GetLastError();
+            ERR("HeapAlloc failed with error %lu!\n", dwErrorCode);
+            goto Cleanup;
+        }
+    }
+
+    if (!GetDefaultPrinterW(pwszBuffer, pcchBuffer))
+    {
+        dwErrorCode = GetLastError();
+        goto Cleanup;
+    }
+
+    dwErrorCode = ERROR_SUCCESS;
+
+Cleanup:
+    if (pwszBuffer)
+        HeapFree(hProcessHeap, 0, pwszBuffer);
+
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 BOOL WINAPI
 GetDefaultPrinterW(LPWSTR pszBuffer, LPDWORD pcchBuffer)
 {
-    return FALSE;
+    DWORD cbNeeded;
+    DWORD cchInputBuffer;
+    DWORD dwErrorCode;
+    HKEY hWindowsKey = NULL;
+    PWSTR pwszDevice = NULL;
+    PWSTR pwszComma;
+
+    // Sanity check.
+    if (!pcchBuffer)
+    {
+        dwErrorCode = ERROR_INVALID_PARAMETER;
+        goto Cleanup;
+    }
+
+    cchInputBuffer = *pcchBuffer;
+
+    // Open the registry key where the default printer for the current user is stored.
+    dwErrorCode = (DWORD)RegOpenKeyExW(HKEY_CURRENT_USER, wszWindowsKey, 0, KEY_READ, &hWindowsKey);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RegOpenKeyExW failed with status %lu!\n", dwErrorCode);
+        goto Cleanup;
+    }
+
+    // Determine the size of the required buffer.
+    dwErrorCode = (DWORD)RegQueryValueExW(hWindowsKey, wszDeviceValue, NULL, NULL, NULL, &cbNeeded);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RegQueryValueExW failed with status %lu!\n", dwErrorCode);
+        goto Cleanup;
+    }
+
+    // Allocate it.
+    pwszDevice = HeapAlloc(hProcessHeap, 0, cbNeeded);
+    if (!pwszDevice)
+    {
+        dwErrorCode = GetLastError();
+        ERR("HeapAlloc failed with error %lu!\n", dwErrorCode);
+        goto Cleanup;
+    }
+
+    // Now get the actual value.
+    dwErrorCode = RegQueryValueExW(hWindowsKey, wszDeviceValue, NULL, NULL, (PBYTE)pwszDevice, &cbNeeded);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RegQueryValueExW failed with status %lu!\n", dwErrorCode);
+        goto Cleanup;
+    }
+
+    // We get a string "<Printer Name>,winspool,<Port>:".
+    // Extract the printer name from it.
+    pwszComma = wcschr(pwszDevice, L',');
+    if (!pwszComma)
+    {
+        ERR("Found no or invalid default printer: %S!\n", pwszDevice);
+        dwErrorCode = ERROR_INVALID_NAME;
+        goto Cleanup;
+    }
+
+    // Store the length of the Printer Name (including the terminating NUL character!) in *pcchBuffer.
+    *pcchBuffer = pwszComma - pwszDevice + 1;
+
+    // Check if the supplied buffer is large enough.
+    if (cchInputBuffer < *pcchBuffer)
+    {
+        dwErrorCode = ERROR_INSUFFICIENT_BUFFER;
+        goto Cleanup;
+    }
+
+    // Copy the default printer.
+    *pwszComma = 0;
+    CopyMemory(pszBuffer, pwszDevice, *pcchBuffer * sizeof(WCHAR));
+
+    dwErrorCode = ERROR_SUCCESS;
+
+Cleanup:
+    if (hWindowsKey)
+        RegCloseKey(hWindowsKey);
+
+    if (pwszDevice)
+        HeapFree(hProcessHeap, 0, pwszDevice);
+
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 BOOL WINAPI
@@ -630,6 +755,147 @@ ResetPrinterW(HANDLE hPrinter, PPRINTER_DEFAULTSW pDefault)
 {
     UNIMPLEMENTED;
     return FALSE;
+}
+
+BOOL WINAPI
+SetDefaultPrinterA(LPCSTR pszPrinter)
+{
+    BOOL bReturnValue = FALSE;
+    DWORD cch;
+    PWSTR pwszPrinter = NULL;
+
+    if (pszPrinter)
+    {
+        // Convert pszPrinter to a Unicode string pwszPrinter
+        cch = strlen(pszPrinter);
+
+        pwszPrinter = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
+        if (!pwszPrinter)
+        {
+            ERR("HeapAlloc failed for pwszPrinter with last error %lu!\n", GetLastError());
+            goto Cleanup;
+        }
+
+        MultiByteToWideChar(CP_ACP, 0, pszPrinter, -1, pwszPrinter, cch + 1);
+    }
+
+    bReturnValue = SetDefaultPrinterW(pwszPrinter);
+
+Cleanup:
+    if (pwszPrinter)
+        HeapFree(hProcessHeap, 0, pwszPrinter);
+
+    return bReturnValue;
+}
+
+BOOL WINAPI
+SetDefaultPrinterW(LPCWSTR pszPrinter)
+{
+    const WCHAR wszDevicesKey[] = L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Devices";
+
+    DWORD cbDeviceValueData;
+    DWORD cbPrinterValueData = 0;
+    DWORD cchPrinter;
+    DWORD dwErrorCode;
+    HKEY hDevicesKey = NULL;
+    HKEY hWindowsKey = NULL;
+    PWSTR pwszDeviceValueData = NULL;
+    WCHAR wszPrinter[MAX_PRINTER_NAME + 1];
+
+    // Open the Devices registry key.
+    dwErrorCode = (DWORD)RegOpenKeyExW(HKEY_CURRENT_USER, wszDevicesKey, 0, KEY_READ, &hDevicesKey);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RegOpenKeyExW failed with status %lu!\n", dwErrorCode);
+        goto Cleanup;
+    }
+
+    // Did the caller give us a printer to set as default?
+    if (pszPrinter && *pszPrinter)
+    {
+        // Check if the given printer exists and query the value data size.
+        dwErrorCode = (DWORD)RegQueryValueExW(hDevicesKey, pszPrinter, NULL, NULL, NULL, &cbPrinterValueData);
+        if (dwErrorCode == ERROR_FILE_NOT_FOUND)
+        {
+            // The caller gave us an invalid printer name, return with ERROR_FILE_NOT_FOUND.
+            goto Cleanup;
+        }
+        else if (dwErrorCode != ERROR_SUCCESS)
+        {
+            ERR("RegQueryValueExW failed with status %lu!\n", dwErrorCode);
+            goto Cleanup;
+        }
+
+        cchPrinter = wcslen(pszPrinter);
+    }
+    else
+    {
+        // If there is already a default printer, we're done!
+        cchPrinter = _countof(wszPrinter);
+        if (GetDefaultPrinterW(wszPrinter, &cchPrinter))
+        {
+            dwErrorCode = ERROR_SUCCESS;
+            goto Cleanup;
+        }
+
+        // Otherwise, get us the first printer from the "Devices" key to later set it as default and query the value data size.
+        cchPrinter = _countof(wszPrinter);
+        dwErrorCode = (DWORD)RegEnumValueW(hDevicesKey, 0, wszPrinter, &cchPrinter, NULL, NULL, NULL, &cbPrinterValueData);
+        if (dwErrorCode != ERROR_MORE_DATA)
+            goto Cleanup;
+
+        pszPrinter = wszPrinter;
+    }
+
+    // We now need to query the value data, which has the format "winspool,<Port>:"
+    // and make "<Printer Name>,winspool,<Port>:" out of it.
+    // Allocate a buffer large enough for the final data.
+    cbDeviceValueData = (cchPrinter + 1) * sizeof(WCHAR) + cbPrinterValueData;
+    pwszDeviceValueData = HeapAlloc(hProcessHeap, 0, cbDeviceValueData);
+    if (!pwszDeviceValueData)
+    {
+        dwErrorCode = GetLastError();
+        ERR("HeapAlloc failed with error %lu\n", dwErrorCode);
+        goto Cleanup;
+    }
+
+    // Copy the Printer Name and a comma into it.
+    CopyMemory(pwszDeviceValueData, pszPrinter, cchPrinter * sizeof(WCHAR));
+    pwszDeviceValueData[cchPrinter] = L',';
+
+    // Append the value data, which has the format "winspool,<Port>:"
+    dwErrorCode = (DWORD)RegQueryValueExW(hDevicesKey, pszPrinter, NULL, NULL, (PBYTE)&pwszDeviceValueData[cchPrinter + 1], &cbPrinterValueData);
+    if (dwErrorCode != ERROR_SUCCESS)
+        goto Cleanup;
+
+    // Open the Windows registry key.
+    dwErrorCode = (DWORD)RegOpenKeyExW(HKEY_CURRENT_USER, wszWindowsKey, 0, KEY_SET_VALUE, &hWindowsKey);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RegOpenKeyExW failed with status %lu!\n", dwErrorCode);
+        goto Cleanup;
+    }
+
+    // Store our new default printer.
+    dwErrorCode = (DWORD)RegSetValueExW(hWindowsKey, wszDeviceValue, 0, REG_SZ, (PBYTE)pwszDeviceValueData, cbDeviceValueData);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RegSetValueExW failed with status %lu!\n", dwErrorCode);
+        goto Cleanup;
+    }
+
+Cleanup:
+    if (hDevicesKey)
+        RegCloseKey(hDevicesKey);
+
+    if (hWindowsKey)
+        RegCloseKey(hWindowsKey);
+
+    if (pwszDeviceValueData)
+        HeapFree(hProcessHeap, 0, pwszDeviceValueData);
+
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 BOOL WINAPI

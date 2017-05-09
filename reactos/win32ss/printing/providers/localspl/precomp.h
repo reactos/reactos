@@ -36,7 +36,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(localspl);
 #define IS_VALID_PRIORITY(P)    (P >= MIN_PRIORITY && P <= MAX_PRIORITY)
 
 // Constants
-#define MAX_PRINTER_NAME        220
 #define SHD_WIN2003_SIGNATURE   0x4968
 
 // Function pointers

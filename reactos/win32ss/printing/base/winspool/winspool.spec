@@ -100,9 +100,9 @@
 199 stub EnumPrinterDriversA
 200 stdcall EnumPrinterDriversW(wstr wstr long ptr long ptr ptr)
 201 stdcall GetDefaultPrinterA(ptr ptr)
-202 stub SetDefaultPrinterA
+202 stdcall SetDefaultPrinterA(str)
 203 stdcall GetDefaultPrinterW(ptr ptr)
-204 stub SetDefaultPrinterW
+204 stdcall SetDefaultPrinterW(wstr)
 205 stub -noname SplReadPrinter
 206 stub -noname AddPerMachineConnectionA
 207 stub -noname AddPerMachineConnectionW
