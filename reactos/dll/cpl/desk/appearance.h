@@ -137,6 +137,7 @@ int SchemeGetMetric(COLOR_SCHEME *scheme, int id);
 PLOGFONTW SchemeGetFont(COLOR_SCHEME *scheme, int id);
 PTHEME LoadTheme(IN LPCWSTR pszThemeFileName,IN LPCWSTR pszThemeName);
 PTHEME LoadThemes(VOID);
+BOOL FindOrAppendTheme(IN PTHEME pThemeList, IN LPCWSTR pwszThemeFileName, IN LPCWSTR pwszColorBuff, IN LPCWSTR pwszSizeBuff, OUT PTHEME_SELECTION pSelectedTheme);
 BOOL GetActiveTheme(PTHEME pThemeList, PTHEME_SELECTION pSelectedTheme);
 BOOL GetActiveClassicTheme(PTHEME pThemeList, PTHEME_SELECTION pSelectedTheme);
 BOOL LoadCurrentScheme(PCOLOR_SCHEME scheme);

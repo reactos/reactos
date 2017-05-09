@@ -784,8 +784,61 @@ LoadThemes(VOID)
 }
 
 /*
+ * FindSelectedTheme: Finds the specified theme in the list of themes 
+ *                    or loads it if it was not loaded already.
+ */
+BOOL
+FindOrAppendTheme(IN PTHEME pThemeList, 
+                  IN LPCWSTR pwszThemeFileName,
+                  IN LPCWSTR pwszColorBuff,
+                  IN LPCWSTR pwszSizeBuff,
+                  OUT PTHEME_SELECTION pSelectedTheme)
+{
+    PTHEME pTheme;
+    PTHEME pFoundTheme = NULL;
+
+    ZeroMemory(pSelectedTheme, sizeof(THEME_SELECTION));
+
+    for (pTheme = pThemeList; pTheme; pTheme = pTheme->NextTheme)
+    {
+        if (pTheme->ThemeFileName &&
+           _wcsicmp(pTheme->ThemeFileName, pwszThemeFileName) == 0)
+        {
+            pFoundTheme = pTheme;
+            break;
+        }
+
+        if (pTheme->NextTheme == NULL)
+            break;
+    }
+
+    if (!pFoundTheme)
+    {
+        pFoundTheme = LoadTheme(pwszThemeFileName, pwszThemeFileName);
+        if (!pFoundTheme)
+            return FALSE;
+
+        pTheme->NextTheme = pFoundTheme;
+    }
+
+    pSelectedTheme->ThemeActive = TRUE;
+    pSelectedTheme->Theme = pFoundTheme;
+    if (pwszColorBuff)
+        pSelectedTheme->Color = FindStyle(pFoundTheme->ColoursList, pwszColorBuff);
+    else
+        pSelectedTheme->Color = pFoundTheme->ColoursList;
+
+    if (pwszSizeBuff)
+        pSelectedTheme->Size = FindStyle(pFoundTheme->SizesList, pwszSizeBuff);
+    else
+        pSelectedTheme->Size = pFoundTheme->SizesList;
+
+    return TRUE;
+}
+
+/*
  * GetActiveTheme: Gets the active theme and populates pSelectedTheme
- *                 with entries from the list of loaded themes
+ *                 with entries from the list of loaded themes.
  */
 BOOL
 GetActiveTheme(IN PTHEME pThemeList, OUT PTHEME_SELECTION pSelectedTheme)
@@ -793,10 +846,7 @@ GetActiveTheme(IN PTHEME pThemeList, OUT PTHEME_SELECTION pSelectedTheme)
     WCHAR szThemeFileName[MAX_PATH];
     WCHAR szColorBuff[MAX_PATH];
     WCHAR szSizeBuff[MAX_PATH];
-    PTHEME pTheme;
     HRESULT hret;
-
-    ZeroMemory(pSelectedTheme, sizeof(THEME_SELECTION));
 
     /* Retrieve the name of the current theme */
     hret = GetCurrentThemeName(szThemeFileName,
@@ -805,25 +855,10 @@ GetActiveTheme(IN PTHEME pThemeList, OUT PTHEME_SELECTION pSelectedTheme)
                                MAX_PATH,
                                szSizeBuff,
                                MAX_PATH);
-    if (FAILED(hret))  return FALSE;
+    if (FAILED(hret))  
+        return FALSE;
 
-    for (pTheme = pThemeList; pTheme; pTheme = pTheme->NextTheme)
-    {
-        if (pTheme->ThemeFileName &&
-           _wcsicmp(pTheme->ThemeFileName, szThemeFileName) == 0)
-        {
-            break;
-        }
-    }
-
-    if (pTheme == NULL) return FALSE;
-
-    pSelectedTheme->ThemeActive = TRUE;
-    pSelectedTheme->Theme = pTheme;
-    pSelectedTheme->Color = FindStyle(pTheme->ColoursList, szColorBuff);
-    pSelectedTheme->Size = FindStyle(pTheme->SizesList, szSizeBuff);
-
-    return TRUE;
+    return FindOrAppendTheme(pThemeList, szThemeFileName, szColorBuff, szSizeBuff, pSelectedTheme);
 }
 
 /*

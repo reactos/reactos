@@ -117,40 +117,27 @@ AppearancePage_OnInit(HWND hwndDlg)
     g->pThemes = LoadThemes();
     if (g->pThemes)
     {
-        PTHEME pLoadedTheme = NULL;
-        
+        BOOL bLoadedTheme = FALSE;
+
         if (g_GlobalData.pwszAction && 
             g_GlobalData.pwszFile && 
             wcscmp(g_GlobalData.pwszAction, L"OpenMSTheme") == 0)
         {
-            /* Check if the theme specified was already loaded */
-            for (pTheme = g->pThemes; pTheme; pTheme = pTheme->NextTheme)
-            {
-                if (pTheme->ThemeFileName && wcsicmp(pTheme->ThemeFileName, g_GlobalData.pwszFile) == 0)
-                {
-                    pLoadedTheme = pTheme;
-                    break;
-                }
-
-                if (!pTheme->NextTheme)
-                    break;
-            }
-
-            if (!pLoadedTheme)
-            {
-                /* Load it now and insert it in the list */
-                pLoadedTheme = LoadTheme(g_GlobalData.pwszFile, g_GlobalData.pwszFile);
-                if (pLoadedTheme)
-                    pTheme->NextTheme = pLoadedTheme;
-            }
+            bLoadedTheme = FindOrAppendTheme(g->pThemes, 
+                                             g_GlobalData.pwszFile,
+                                             NULL,
+                                             NULL,
+                                             &g->ActiveTheme);
         }
 
-        if (pLoadedTheme)
+        if (bLoadedTheme)
         {
-            g->ActiveTheme.ThemeActive = TRUE;
-            g->ActiveTheme.Theme = pLoadedTheme;
-            g->ActiveTheme.Color = pLoadedTheme->ColoursList;
-            g->ActiveTheme.Size = pLoadedTheme->SizesList;
+            g->bThemeChanged = TRUE;
+            g->bSchemeChanged = TRUE;
+
+            PostMessageW(GetParent(hwndDlg), PSM_CHANGED, (WPARAM)hwndDlg, 0);
+
+            AppearancePage_LoadSelectedScheme(hwndDlg, g);
         }
         else
         {
