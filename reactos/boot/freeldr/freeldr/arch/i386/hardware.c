@@ -35,6 +35,8 @@ DBG_DEFAULT_CHANNEL(HWDETECT);
 #define LATCH (CLOCK_TICK_RATE / HZ)
 
 static unsigned int delay_count = 1;
+
+/* Used for BIOS disks pre-enumeration performed when detecting the boot devices in InitializeBootDevices() */
 extern UCHAR PcBiosDiskCount;
 
 /* This function is slightly different in its PC and XBOX versions */

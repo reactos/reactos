@@ -44,6 +44,7 @@ extern ARC_DISK_SIGNATURE_EX reactos_arc_disk_info[];
 
 static CHAR Hex[] = "0123456789abcdef";
 
+/* Data cache for BIOS disks pre-enumeration */
 UCHAR PcBiosDiskCount = 0;
 static CHAR PcDiskIdentifier[32][20];
 
@@ -323,8 +324,8 @@ PcInitializeBootDevices(VOID)
         }
         if (!Changed)
         {
-            TRACE("BIOS reports success for disk %d but data didn't change\n",
-                  (int)DiskCount);
+            TRACE("BIOS reports success for disk %d (0x%02X) but data didn't change\n",
+                  (int)DiskCount, DriveNumber);
             break;
         }
 
@@ -340,6 +341,8 @@ PcInitializeBootDevices(VOID)
         memset(DiskReadBuffer, 0xcd, DiskReadBufferSize);
     }
     DiskReportError(TRUE);
+
+    PcBiosDiskCount = DiskCount;
     TRACE("BIOS reports %d harddisk%s\n",
           (int)DiskCount, (DiskCount == 1) ? "" : "s");
 
@@ -384,12 +387,9 @@ PcInitializeBootDevices(VOID)
         reactos_disk_count++;
 
         FsRegisterDevice(BootPath, &DiskVtbl);
-        DiskCount++;
+        DiskCount++; // This is not accounted for in the number of pre-enumerated BIOS drives!
+        TRACE("Additional boot drive detected: 0x%02X\n", (int)FrldrBootDrive);
     }
-
-    PcBiosDiskCount = DiskCount;
-    TRACE("BIOS reports %d harddisk%s\n",
-          (int)DiskCount, (DiskCount == 1) ? "": "s");
 
     return (DiskCount != 0);
 }
