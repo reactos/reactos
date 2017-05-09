@@ -3550,8 +3550,8 @@ PrimaryPartitionCreationChecks(
     if (PartEntry->IsPartitioned == TRUE)
         return ERROR_NEW_PARTITION;
 
-    /* Fail if there are more than 4 partitions in the list */
-    if (GetPrimaryPartitionCount(DiskEntry) > 4)
+    /* Fail if there are already 4 primary partitions in the list */
+    if (GetPrimaryPartitionCount(DiskEntry) >= 4)
         return ERROR_PARTITION_TABLE_FULL;
 
     return ERROR_SUCCESS;
@@ -3572,8 +3572,8 @@ ExtendedPartitionCreationChecks(
     if (PartEntry->IsPartitioned == TRUE)
         return ERROR_NEW_PARTITION;
 
-    /* Fail if there are more than 4 partitions in the list */
-    if (GetPrimaryPartitionCount(DiskEntry) > 4)
+    /* Fail if there are already 4 primary partitions in the list */
+    if (GetPrimaryPartitionCount(DiskEntry) >= 4)
         return ERROR_PARTITION_TABLE_FULL;
 
     /* Fail if there is another extended partition in the list */
