@@ -3,6 +3,7 @@
 #define STANDALONE
 #include <wine/test.h>
 
+extern void func_AddCommas(void);
 extern void func_CFSFolder(void);
 extern void func_CMyComputer(void);
 extern void func_CShellDesktop(void);
@@ -13,6 +14,7 @@ extern void func_SHParseDisplayName(void);
 
 const struct test winetest_testlist[] =
 {
+    { "AddCommas", func_AddCommas },
     { "CFSFolder", func_CFSFolder },
     { "CMyComputer", func_CMyComputer },
     { "CShellDesktop", func_CShellDesktop },

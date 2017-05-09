@@ -42,20 +42,19 @@ AddCommasW(DWORD lValue, LPWSTR lpNumber)
 
     numFormat.NumDigits     = 0;
     numFormat.LeadingZero   = 0;
-    numFormat.Grouping      = 0; // FIXME! Use GetLocaleInfoW with LOCALE_SGROUPING and interpret the result.
+    numFormat.Grouping      = 3; // FIXME! Use GetLocaleInfoW with LOCALE_SGROUPING and interpret the result.
     numFormat.lpDecimalSep  = szSeparator;
     numFormat.lpThousandSep = szSeparator;
     numFormat.NegativeOrder = 0;
 
-    swprintf(szValue, L"%llu", lValue);
-    //_ultow(lValue, szValue, 10);
+    swprintf(szValue, L"%lu", lValue);
 
     if (GetNumberFormatW(LOCALE_USER_DEFAULT,
                          0,
                          szValue,
                          &numFormat,
                          lpNumber,
-                         wcslen(lpNumber)) != 0)
+                         MAX_PATH) != 0)
     {
         return lpNumber;
     }

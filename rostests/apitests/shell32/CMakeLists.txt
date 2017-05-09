@@ -4,6 +4,7 @@ set_cpp(WITH_RUNTIME)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 
 add_executable(shell32_apitest
+    AddCommas.c
     CFSFolder.cpp
     CMyComputer.cpp
     CShellDesktop.cpp
