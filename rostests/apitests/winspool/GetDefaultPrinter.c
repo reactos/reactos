@@ -45,5 +45,10 @@ START_TEST(GetDefaultPrinter)
     ok(SetDefaultPrinterW(pwszDefaultPrinter), "SetDefaultPrinterW returns FALSE!\n");
     ok(GetLastError() == ERROR_SUCCESS, "SetDefaultPrinterW returns error %lu!\n", GetLastError());
 
+    // SetDefaultPrinterW with an invalid printer name needs to fail with ERROR_INVALID_PRINTER_NAME.
+    SetLastError(0xDEADBEEF);
+    ok(!SetDefaultPrinterW(L"INVALID PRINTER NAME!!!"), "SetDefaultPrinterW returns TRUE!\n");
+    ok(GetLastError() == ERROR_INVALID_PRINTER_NAME, "SetDefaultPrinterW returns error %lu!\n", GetLastError());
+
     HeapFree(GetProcessHeap(), 0, pwszDefaultPrinter);
 }

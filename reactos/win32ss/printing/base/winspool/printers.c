@@ -817,7 +817,7 @@ SetDefaultPrinterW(LPCWSTR pszPrinter)
         dwErrorCode = (DWORD)RegQueryValueExW(hDevicesKey, pszPrinter, NULL, NULL, NULL, &cbPrinterValueData);
         if (dwErrorCode == ERROR_FILE_NOT_FOUND)
         {
-            // The caller gave us an invalid printer name, return with ERROR_FILE_NOT_FOUND.
+            dwErrorCode = ERROR_INVALID_PRINTER_NAME;
             goto Cleanup;
         }
         else if (dwErrorCode != ERROR_SUCCESS)
