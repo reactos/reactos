@@ -1022,8 +1022,10 @@ MmMdFindSatisfyingRegion (
     _In_ ULONG Alignment
     )
 {
-    ULONGLONG BaseMin, BaseMax;
+    ULONGLONG BaseMin, BaseMax, AlignedMin;
     ULONGLONG VirtualPage, BasePage;
+    ULONGLONG BaseDelta, AlignedBase;
+    ULONGLONG VirtualMin, VirtualMax;
 
     /* Extract the minimum and maximum range */
     BaseMin = BaseRange->Minimum;
@@ -1050,11 +1052,15 @@ MmMdFindSatisfyingRegion (
     /* Align the base as required */
     if (Alignment != 1)
     {
-        BaseMin = ALIGN_UP_BY(BaseMin, Alignment);
+        AlignedMin = ALIGN_UP_BY(BaseMin, Alignment);
+    }
+    else
+    {
+        AlignedMin = BaseMin;
     }
 
     /* Check for range overflow */
-    if (((BaseMin + Pages - 1) < BaseMin) || ((BaseMin + Pages - 1) > BaseMax))
+    if (((AlignedMin + Pages - 1) < AlignedMin) || ((AlignedMin + Pages - 1) > BaseMax))
     {
         return FALSE;
     }
@@ -1067,13 +1073,22 @@ MmMdFindSatisfyingRegion (
         if (Alignment != 1)
         {
             /* Align it as needed */
-            BasePage = ALIGN_DOWN_BY(BasePage, Alignment);
+            AlignedBase = ALIGN_DOWN_BY(BasePage, Alignment);
         }
+        else
+        {
+            AlignedBase = BasePage;
+        }
+
+        /* Calculate the delta between max address and our aligned base */
+        BaseDelta = BasePage - AlignedBase;
+        BasePage -= BaseDelta;
     }
     else
     {
         /* Otherwise, get the lowest page possible */
-        BasePage = BaseMin;
+        BasePage = AlignedMin;
+        BaseDelta = 0;
     }
 
     /* If a virtual address range was passed in, this must be a virtual descriptor */
@@ -1086,8 +1101,49 @@ MmMdFindSatisfyingRegion (
     /* Any mapped page already? */
     if (Descriptor->VirtualPage)
     {
-        EfiPrintf(L"Virtual memory not yet supported\r\n");
-        return FALSE;
+        /* Get virtual min/max */
+        VirtualMin = VirtualRange->Minimum;
+        VirtualMax = VirtualRange->Maximum;
+
+        /* Don't go below where the descriptor maps */
+        if (VirtualMin <= Descriptor->VirtualPage)
+        {
+            VirtualMin = Descriptor->VirtualPage;
+        }
+
+        /* Don't go above where the descriptor maps */
+        if (VirtualMax >= (Descriptor->VirtualPage + Descriptor->PageCount - 1))
+        {
+            VirtualMax = Descriptor->VirtualPage + Descriptor->PageCount - 1;
+        }
+
+        /* Don't let the base overflow */
+        if (VirtualMin > VirtualMax)
+        {
+            return 0;
+        }
+
+        /* Adjust the base by the alignment delta */
+        VirtualMin += AlignedMin - BaseMin;
+
+        /* Check that the bounds don't overflow or underflow */
+        if (((VirtualMin + Pages - 1) < VirtualMin) ||
+            ((VirtualMin + Pages - 1) > VirtualMax))
+        {
+            return 0;
+        }
+
+        /* Finally, pick the correct address based on direction */
+        if (TopDown)
+        {
+            /* Highest possible base address, aligned */
+            VirtualPage = VirtualMax - Pages + 1 - BaseDelta;
+        }
+        else
+        {
+            /* Lowest possible base address, aligned */
+            VirtualPage = VirtualMin;
+        }
     }
     else
     {

@@ -187,12 +187,34 @@ MmPapAllocateRegionFromMdl (
     /* Remove the descriptor from the original list it was on */
     MmMdRemoveDescriptorFromList(CurrentList, FoundDescriptor);
 
+    /* Get the end pages */
+    LocalEndPage = LocalDescriptor.PageCount + LocalDescriptor.BasePage;
+    FoundEndPage = FoundDescriptor->PageCount + FoundDescriptor->BasePage;
+
     /* Are we allocating from the virtual memory list? */
     if (CurrentList == &MmMdlMappedUnallocated)
     {
-        EfiPrintf(L"not yet implemented in %S\r\n", __FUNCTION__);
-        EfiStall(1000000);
-        return STATUS_NOT_IMPLEMENTED;
+        /* Check if the region matches perfectly */
+        if ((LocalDescriptor.BasePage == FoundDescriptor->BasePage) &&
+            (LocalEndPage == FoundEndPage))
+        {
+            /* Check if the original descriptor had the flag set */
+            if ((FoundDescriptor->Flags & 0x40000000) && (Descriptor))
+            {
+                /* Make our local one have it too, even if not needed */
+                LocalDescriptor.Flags |= 0x40000000;
+            }
+        }
+        else
+        {
+            /* Write the 'incomplete mapping' flag */
+            FoundDescriptor->Flags |= 0x40000000;
+            if (Descriptor)
+            {
+                /* Including on the local one if there's one passed in */
+                LocalDescriptor.Flags |= 0x40000000;
+            }
+        }
     }
 
     /* Does the memory we received not exactly fall onto the beginning of its descriptor? */
@@ -212,8 +234,6 @@ MmPapAllocateRegionFromMdl (
     }
 
     /* Does the memory we received not exactly fall onto the end of its descriptor? */
-    LocalEndPage = LocalDescriptor.PageCount + LocalDescriptor.BasePage;
-    FoundEndPage = FoundDescriptor->PageCount + FoundDescriptor->BasePage;
     LocalVirtualEndPage = LocalDescriptor.VirtualPage ?
                           LocalDescriptor.VirtualPage + LocalDescriptor.PageCount : 0;
     if (LocalEndPage != FoundEndPage)
@@ -303,7 +323,7 @@ MmPaAllocatePages (
     /* Are we failing due to some attributes? */
     if (Request->Flags & BlMemoryValidAllocationAttributeMask)
     {
-        EfiPrintf(L"not yet implemented in %S\r\n", __FUNCTION__);
+        EfiPrintf(L"alloc fail not yet implemented %lx in %S\r\n", Status, __FUNCTION__);
         EfiStall(1000000);
         return STATUS_NOT_IMPLEMENTED;
     }
@@ -532,7 +552,6 @@ MmPapPageAllocatorExtend (
                                       AllocationFlags | CacheAttributes,
                                       NewDescriptor.PageCount << PAGE_SHIFT,
                                       PhysicalAddress);
-    EfiPrintf(L"MAP status: %lx\r\n", Status);
     if (Status == STATUS_SUCCESS)
     {
         /* Add the cache attributes now that the mapping worked */
@@ -627,7 +646,7 @@ MmPapAllocatePagesInRange (
         if (Range)
         {
             /* We don't support virtual memory yet @TODO */
-            EfiPrintf(L"not yet implemented in %S\r\n", __FUNCTION__);
+            EfiPrintf(L"virt range not yet implemented in %S\r\n", __FUNCTION__);
             EfiStall(1000000);
             Status = STATUS_NOT_IMPLEMENTED;
             goto Exit;
@@ -643,26 +662,26 @@ MmPapAllocatePagesInRange (
         if (Attributes & BlMemoryFixed)
         {
             /* We don't support virtual memory yet @TODO */
-            EfiPrintf(L"not yet implemented in %S\r\n", __FUNCTION__);
+            EfiPrintf(L"fixed not yet implemented in %S\r\n", __FUNCTION__);
             EfiStall(1000000);
             Status = STATUS_NOT_IMPLEMENTED;
             goto Exit;
         }
         else
         {
-            /* Check if non-fixed was specifically requested */
+            /* Check if kernel range was specifically requested */
             if (Attributes & BlMemoryKernelRange)
             {
-                /* We don't support virtual memory yet @TODO */
-                EfiPrintf(L"not yet implemented in %S\r\n", __FUNCTION__);
-                EfiStall(1000000);
-                Status = STATUS_NOT_IMPLEMENTED;
-                goto Exit;
+                /* Use the kernel range */
+                Request.VirtualRange.Minimum = MmArchKsegAddressRange.Minimum >> PAGE_SHIFT;
+                Request.VirtualRange.Maximum = MmArchKsegAddressRange.Maximum >> PAGE_SHIFT;
             }
-
-            /* Set the virtual address range */
-            Request.VirtualRange.Minimum = 0;
-            Request.VirtualRange.Maximum = 0xFFFFFFFF >> PAGE_SHIFT;
+            else
+            {
+                /* Set the virtual address range */
+                Request.VirtualRange.Minimum = 0;
+                Request.VirtualRange.Maximum = 0xFFFFFFFF >> PAGE_SHIFT;
+            }
         }
 
         /* Check what type of allocation was requested */
@@ -702,7 +721,7 @@ MmPapAllocatePagesInRange (
             if (!NT_SUCCESS(Status))
             {
                 /* Fail since we're out of memory */
-                EfiPrintf(L"OUT OF MEMORY: %lx\r\n", Status);
+                EfiPrintf(L"EXTEND OUT OF MEMORY: %lx\r\n", Status);
                 Status = STATUS_NO_MEMORY;
                 goto Exit;
             }
@@ -716,7 +735,7 @@ MmPapAllocatePagesInRange (
             if (!NT_SUCCESS(Status))
             {
                 /* Fail since we're out of memory */
-                EfiPrintf(L"OUT OF MEMORY: %lx\r\n", Status);
+                EfiPrintf(L"PALLOC OUT OF MEMORY: %lx\r\n", Status);
                 goto Exit;
             }
         }
@@ -1082,7 +1101,7 @@ MmPapFreePages (
     /* Handle virtual memory scenario */
     if (MmTranslationType != BlNone)
     {
-        EfiPrintf(L"Unimplemented free virtual path\r\n");
+        EfiPrintf(L"Unimplemented free virtual path: %p %lx\r\n", Address, WhichList);
         return STATUS_SUCCESS;
     }
 

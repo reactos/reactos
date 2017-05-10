@@ -171,7 +171,10 @@ BlpArchSwitchContext (
 
     /* In real mode, use EFI, otherwise, use the application mode */
     Context = &FirmwareExecutionContext;
-    if (NewMode != BlProtectedMode) Context = &ApplicationExecutionContext;
+    if (NewMode != BlRealMode)
+    {
+        Context = &ApplicationExecutionContext;
+    }
 
     /* Are we in a different mode? */
     if (CurrentExecutionContext->Mode != NewMode)
@@ -179,6 +182,40 @@ BlpArchSwitchContext (
         /* Switch to the new one */
         ArchSwitchContext(Context, CurrentExecutionContext);
         CurrentExecutionContext = Context;
+    }
+}
+
+VOID
+BlpArchEnableTranslation (
+    VOID
+    )
+{
+    PBL_ARCH_CONTEXT Context;
+
+    /* Does the current execution context already have paging enabled? */
+    Context = CurrentExecutionContext;
+    if (!(Context->ContextFlags & BL_CONTEXT_PAGING_ON))
+    {
+        /* No -- does it have interrupts enabled? */
+        if (Context->ContextFlags & BL_CONTEXT_INTERRUPTS_ON)
+        {
+            /* Disable them */
+            _disable();
+            Context->ContextFlags &= ~BL_CONTEXT_INTERRUPTS_ON;
+        }
+
+        /* Are we enabling PAE? */
+        if (Context->TranslationType == BlPae)
+        {
+            /* Make sure CR4 reflects this */
+            __writecr4(__readcr4() | CR4_PAE);
+        }
+
+        /* Enable paging in the CPU */
+        __writecr0(__readcr0() | CR0_PG);
+
+        /* Reflect that paging is enabled */
+        Context->ContextFlags |= BL_CONTEXT_PAGING_ON;
     }
 }
 

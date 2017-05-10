@@ -39,10 +39,11 @@ OslMain (
     /* Setup the boot library parameters for this application */
     BlSetupDefaultParameters(&LibraryParameters);
     LibraryParameters.TranslationType = BlVirtual;
-    LibraryParameters.LibraryFlags = BL_LIBRARY_FLAG_INITIALIZATION_COMPLETED;
+    LibraryParameters.LibraryFlags = BL_LIBRARY_FLAG_ZERO_HEAP_ALLOCATIONS_ON_FREE |
+                                     BL_LIBRARY_FLAG_REINITIALIZE_ALL;
     LibraryParameters.MinimumAllocationCount = 1024;
     LibraryParameters.MinimumHeapSize = 2 * 1024 * 1024;
-    LibraryParameters.HeapAllocationAttributes = 0x20000;
+    LibraryParameters.HeapAllocationAttributes = BlMemoryKernelRange;
     LibraryParameters.FontBaseDirectory = L"\\Reactos\\Boot\\Fonts";
     LibraryParameters.DescriptorCount = 512;
     Status = BlInitializeLibrary(BootParameters, &LibraryParameters);

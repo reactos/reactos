@@ -2008,6 +2008,11 @@ BlpArchSwitchContext (
     );
 
 VOID
+BlpArchEnableTranslation (
+    VOID
+    );
+
+VOID
 Archx86TransferTo32BitApplicationAsm (
     VOID
     );

@@ -1042,8 +1042,10 @@ MmDefInitializeTranslation (
         goto Quickie;
     }
 
-    EfiPrintf(L"Ready to turn on motherfucking paging, brah!\r\n");
-    Status = STATUS_NOT_IMPLEMENTED;
+    /* Turn on paging with the new CR3 */
+    __writecr3((ULONG_PTR)MmPdpt);
+    BlpArchEnableTranslation();
+    EfiPrintf(L"Paging... ON\r\n");
 
 Quickie:
     /* Free reference page if we allocated it */
