@@ -112,6 +112,21 @@ SHSetUnreadMailCountW(LPCWSTR pszMailAddress,
 /*
  * Unimplemented
  */
+EXTERN_C HRESULT
+WINAPI
+SHEnumerateUnreadMailAccountsW(HKEY user,
+                               DWORD idx,
+                               LPWSTR mailaddress,
+                               INT mailaddresslen)
+{
+    FIXME("SHEnumerateUnreadMailAccountsW(%p %d %p %d) stub\n",
+        user, idx, mailaddress, mailaddresslen);
+    return E_NOTIMPL;
+}
+
+/*
+ * Unimplemented
+ */
 EXTERN_C VOID
 WINAPI
 CheckDiskSpace(VOID)

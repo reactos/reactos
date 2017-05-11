@@ -283,7 +283,7 @@
 284 stdcall SHEmptyRecycleBinA(long str long)
 285 stdcall SHEmptyRecycleBinW(long wstr long)
 286 stub SHEnableServiceObject
-287 stub SHEnumerateUnreadMailAccountsW
+287 stdcall SHEnumerateUnreadMailAccountsW(ptr long ptr long)
 288 stdcall SHExtractIconsW(wstr long long long ptr ptr long long) user32.PrivateExtractIconsW
 289 stdcall SHFileOperation(ptr) SHFileOperationA
 290 stdcall SHFileOperationA(ptr)
