@@ -312,14 +312,13 @@ HRESULT GetDiaogTextureBrush(HTHEME theme, HWND hwnd, HDC hdc, HBRUSH* result, B
         {
             /* Unfortunately SetBrushOrgEx doesn't work at all */
             RECT rcWindow, rcParent;
-            POINT pt;
+            UINT y;
             HDC hdcPattern, hdcHackPattern;
             HBITMAP hbmpOld1, hbmpold2, hbmpHack;
 
             GetWindowRect(hwnd, &rcWindow);
             GetWindowRect(GetParent(hwnd), &rcParent);
-            pt.x = rcWindow.left - rcParent.left;
-            pt.y = rcWindow.top - rcParent.top;
+            y = (rcWindow.top - rcParent.top) % bmpRect.bottom;
 
             hdcPattern = CreateCompatibleDC(hdc);
             hbmpOld1 = (HBITMAP)SelectObject(hdcPattern, hbmp);
@@ -328,8 +327,8 @@ HRESULT GetDiaogTextureBrush(HTHEME theme, HWND hwnd, HDC hdc, HBRUSH* result, B
             hbmpHack = CreateCompatibleBitmap(hdc, bmpRect.right, bmpRect.bottom);
             hbmpold2 = (HBITMAP)SelectObject(hdcHackPattern, hbmpHack);
 
-            BitBlt(hdcHackPattern, 0, 0, bmpRect.right, bmpRect.bottom - pt.y, hdcPattern, 0, pt.y, SRCCOPY);
-            BitBlt(hdcHackPattern, 0, bmpRect.bottom - pt.y, bmpRect.right, pt.y, hdcPattern, 0, 0, SRCCOPY);
+            BitBlt(hdcHackPattern, 0, 0, bmpRect.right, bmpRect.bottom - y, hdcPattern, 0, y, SRCCOPY);
+            BitBlt(hdcHackPattern, 0, bmpRect.bottom - y, bmpRect.right, y, hdcPattern, 0, 0, SRCCOPY);
 
             hbmpold2 = (HBITMAP)SelectObject(hdcHackPattern, hbmpold2);
             hbmpOld1 = (HBITMAP)SelectObject(hdcPattern, hbmpOld1);
