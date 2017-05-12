@@ -437,6 +437,7 @@ typedef struct _NTFS_ATTR_CONTEXT
     ULONGLONG            CacheRunLength;
     LONGLONG            CacheRunLastLCN;
     ULONGLONG            CacheRunCurrentOffset;
+    LARGE_MCB           DataRunsMCB;
     ULONGLONG           FileMFTIndex;
     NTFS_ATTR_RECORD    Record;
 } NTFS_ATTR_CONTEXT, *PNTFS_ATTR_CONTEXT;

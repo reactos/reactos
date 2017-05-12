@@ -50,8 +50,10 @@ PrepareAttributeContext(PNTFS_ATTR_RECORD AttrRecord)
     {
         LONGLONG DataRunOffset;
         ULONGLONG DataRunLength;
+        ULONGLONG NextVBN = 0;
+        PUCHAR DataRun = (PUCHAR)&Context->Record + Context->Record.NonResident.MappingPairsOffset;
 
-        Context->CacheRun = (PUCHAR)&Context->Record + Context->Record.NonResident.MappingPairsOffset;
+        Context->CacheRun = DataRun;
         Context->CacheRunOffset = 0;
         Context->CacheRun = DecodeRun(Context->CacheRun, &DataRunOffset, &DataRunLength);
         Context->CacheRunLength = DataRunLength;
@@ -68,6 +70,14 @@ PrepareAttributeContext(PNTFS_ATTR_RECORD AttrRecord)
             Context->CacheRunLastLCN = 0;
         }
         Context->CacheRunCurrentOffset = 0;
+
+        // Convert the data runs to a map control block
+        if (!NT_SUCCESS(ConvertDataRunsToLargeMCB(DataRun, &Context->DataRunsMCB, &NextVBN)))
+        {
+            DPRINT1("Unable to convert data runs to MCB!\n");
+            ExFreePoolWithTag(Context, TAG_NTFS);
+            return NULL;
+        }
     }
 
     return Context;
@@ -77,6 +87,11 @@ PrepareAttributeContext(PNTFS_ATTR_RECORD AttrRecord)
 VOID
 ReleaseAttributeContext(PNTFS_ATTR_CONTEXT Context)
 {
+    if (Context->Record.IsNonResident)
+    {
+        FsRtlUninitializeLargeMcb(&Context->DataRunsMCB);
+    }
+
     ExFreePoolWithTag(Context, TAG_NTFS);
 }
 
@@ -246,10 +261,30 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
             ULONG NextAssignedCluster;
             ULONG AssignedClusters;
 
-            NTSTATUS Status = GetLastClusterInDataRun(Fcb->Vcb, &AttrContext->Record, (PULONGLONG)&LastClusterInDataRun.QuadPart);
+            if (ExistingClusters == 0)
+            {
+               LastClusterInDataRun.QuadPart = 0;
+            }
+            else
+            {
+                if (!FsRtlLookupLargeMcbEntry(&AttrContext->DataRunsMCB,
+                                              (LONGLONG)AttrContext->Record.NonResident.HighestVCN,
+                                              (PLONGLONG)&LastClusterInDataRun.QuadPart,
+                                              NULL,
+                                              NULL,
+                                              NULL,
+                                              NULL))
+                {
+                    DPRINT1("Error looking up final large MCB entry!\n");
 
-            DPRINT1("GetLastClusterInDataRun returned: %I64u\n", LastClusterInDataRun.QuadPart);
-            DPRINT1("Highest VCN of record: %I64u\n", AttrContext->Record.NonResident.HighestVCN);
+                    // Most likely, HighestVCN went above the largest mapping
+                    DPRINT1("Highest VCN of record: %I64u\n", AttrContext->Record.NonResident.HighestVCN);
+                    return STATUS_INVALID_PARAMETER;
+                }
+            }
+
+            DPRINT("LastClusterInDataRun: %I64u\n", LastClusterInDataRun.QuadPart);
+            DPRINT("Highest VCN of record: %I64u\n", AttrContext->Record.NonResident.HighestVCN);
 
             while (ClustersNeeded > 0)
             {
@@ -405,6 +440,9 @@ ReadAttribute(PDEVICE_EXTENSION Vcb,
     ULONG ReadLength;
     ULONG AlreadyRead;
     NTSTATUS Status;
+    
+    //TEMPTEMP
+    PUCHAR TempBuffer;
 
     if (!Context->Record.IsNonResident)
     {
@@ -438,9 +476,20 @@ ReadAttribute(PDEVICE_EXTENSION Vcb,
     }
     else
     {
+        //TEMPTEMP
+        ULONG UsedBufferSize;
+        TempBuffer = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+
         LastLCN = 0;
-        DataRun = (PUCHAR)&Context->Record + Context->Record.NonResident.MappingPairsOffset;
         CurrentOffset = 0;
+
+        // This will be rewritten in the next iteration to just use the DataRuns MCB directly
+        ConvertLargeMCBToDataRuns(&Context->DataRunsMCB,
+                                  TempBuffer,
+                                  Vcb->NtfsInfo.BytesPerFileRecord,
+                                  &UsedBufferSize);
+
+        DataRun = TempBuffer;
 
         while (1)
         {
@@ -558,6 +607,10 @@ ReadAttribute(PDEVICE_EXTENSION Vcb,
 
     } /* if Disk */
 
+    // TEMPTEMP
+    if (Context->Record.IsNonResident)
+        ExFreePoolWithTag(TempBuffer, TAG_NTFS);
+
     Context->CacheRun = DataRun;
     Context->CacheRunOffset = Offset + AlreadyRead;
     Context->CacheRunStartLCN = DataRunStartLCN;
@@ -622,6 +675,10 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
     NTSTATUS Status;
     PUCHAR SourceBuffer = Buffer;
     LONGLONG StartingOffset;
+    
+    //TEMPTEMP
+    PUCHAR TempBuffer;
+        
 
     DPRINT("WriteAttribute(%p, %p, %I64u, %p, %lu, %p)\n", Vcb, Context, Offset, Buffer, Length, RealLengthWritten);
 
@@ -707,9 +764,19 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
     }
     else*/
     {
+        ULONG UsedBufferSize;
         LastLCN = 0;
-        DataRun = (PUCHAR)&Context->Record + Context->Record.NonResident.MappingPairsOffset;
-        CurrentOffset = 0;
+        CurrentOffset = 0;  
+
+        // This will be rewritten in the next iteration to just use the DataRuns MCB directly
+        TempBuffer = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);        
+
+        ConvertLargeMCBToDataRuns(&Context->DataRunsMCB,
+                                  TempBuffer,
+                                  Vcb->NtfsInfo.BytesPerFileRecord,
+                                  &UsedBufferSize);
+
+        DataRun = TempBuffer;
 
         while (1)
         {
@@ -863,6 +930,10 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
             DataRunStartLCN = -1;
         }
     } // end while (Length > 0) [more data to write]
+
+    // TEMPTEMP
+    if(Context->Record.IsNonResident)
+        ExFreePoolWithTag(TempBuffer, TAG_NTFS);
 
     Context->CacheRun = DataRun;
     Context->CacheRunOffset = Offset + *RealLengthWritten;
