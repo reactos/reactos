@@ -424,7 +424,7 @@ CheckUnattendedSetup(VOID)
     INT IntValue;
     PWCHAR Value;
 
-    if (DoesFileExist(SourcePath.Buffer, L"unattend.inf") == FALSE)
+    if (DoesFileExist(NULL, SourcePath.Buffer, L"unattend.inf") == FALSE)
     {
         DPRINT("Does not exist: %S\\%S\n", SourcePath.Buffer, L"unattend.inf");
         return;
@@ -4462,7 +4462,7 @@ BootLoaderFloppyPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)    /* ENTER */
         {
-            if (DoesFileExist(L"\\Device\\Floppy0", L"\\") == FALSE)
+            if (DoesFileExist(NULL, L"\\Device\\Floppy0", L"\\") == FALSE)
             {
                 MUIDisplayError(ERROR_NO_FLOPPY, Ir, POPUP_WAIT_ENTER);
                 return BOOT_LOADER_FLOPPY_PAGE;
