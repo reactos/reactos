@@ -1604,32 +1604,32 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else if (PartitionList->CurrentPartition->LogicalPartition)
         {
-             if (PartitionList->CurrentPartition->IsPartitioned)
-             {
-                 CONSOLE_SetStatusText(MUIGetString(STRING_DELETEPARTITION));
-             }
-             else
-             {
-                 CONSOLE_SetStatusText(MUIGetString(STRING_INSTALLCREATELOGICAL));
-             }
+            if (PartitionList->CurrentPartition->IsPartitioned)
+            {
+                CONSOLE_SetStatusText(MUIGetString(STRING_DELETEPARTITION));
+            }
+            else
+            {
+                CONSOLE_SetStatusText(MUIGetString(STRING_INSTALLCREATELOGICAL));
+            }
         }
         else
         {
-             if (PartitionList->CurrentPartition->IsPartitioned)
-             {
-                 if (IsContainerPartition(PartitionList->CurrentPartition->PartitionType))
-                 {
-                     CONSOLE_SetStatusText(MUIGetString(STRING_DELETEPARTITION));
-                 }
-                 else
-                 {
-                     CONSOLE_SetStatusText(MUIGetString(STRING_INSTALLDELETEPARTITION));
-                 }
-             }
-             else
-             {
-                 CONSOLE_SetStatusText(MUIGetString(STRING_INSTALLCREATEPARTITION));
-             }
+            if (PartitionList->CurrentPartition->IsPartitioned)
+            {
+                if (IsContainerPartition(PartitionList->CurrentPartition->PartitionType))
+                {
+                    CONSOLE_SetStatusText(MUIGetString(STRING_DELETEPARTITION));
+                }
+                else
+                {
+                    CONSOLE_SetStatusText(MUIGetString(STRING_INSTALLDELETEPARTITION));
+                }
+            }
+            else
+            {
+                CONSOLE_SetStatusText(MUIGetString(STRING_INSTALLCREATEPARTITION));
+            }
         }
 
         CONSOLE_ConInKey(Ir);
@@ -1661,7 +1661,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN)  /* ENTER */
         {
             if (IsContainerPartition(PartitionList->CurrentPartition->PartitionType))
-                continue; //return SELECT_PARTITION_PAGE;
+                continue; // return SELECT_PARTITION_PAGE;
 
             if (PartitionList->CurrentPartition == NULL ||
                 PartitionList->CurrentPartition->IsPartitioned == FALSE)
@@ -2674,7 +2674,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     DiskEntry = PartitionList->TempDisk;
     PartEntry = PartitionList->TempPartition;
 
-    /* adjust disk size */
+    /* Adjust disk size */
     DiskSize = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
     if (DiskSize >= 10737418240) /* 10 GB */
     {
@@ -2687,7 +2687,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         DiskUnit = MUIGetString(STRING_MB);
     }
 
-    /* adjust partition size */
+    /* Adjust partition size */
     PartSize = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
     if (PartSize >= 10737418240) /* 10 GB */
     {
@@ -2700,7 +2700,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         PartUnit = MUIGetString(STRING_MB);
     }
 
-    /* adjust partition type */
+    /* Adjust partition type */
     GetPartTypeStringFromPartitionType(PartEntry->PartitionType,
                                        PartTypeString,
                                        ARRAYSIZE(PartTypeString));
@@ -2727,7 +2727,6 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
                             &DiskEntry->DriverName);
 
         CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_PARTFORMAT));
-
 
         PartEntry->AutoCreate = FALSE;
     }
@@ -2853,7 +2852,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         {
             if (!FileSystemList->Selected->FormatFunc)
             {
-                  return SELECT_FILE_SYSTEM_PAGE;
+                return SELECT_FILE_SYSTEM_PAGE;
             }
             else
             {
