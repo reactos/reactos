@@ -105,8 +105,7 @@ DoesPathExist(
     HANDLE FileHandle;
     NTSTATUS Status;
 
-    RtlInitUnicodeString(&Name,
-                         PathName);
+    RtlInitUnicodeString(&Name, PathName);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
@@ -120,14 +119,10 @@ DoesPathExist(
                         &IoStatusBlock,
                         0,
                         FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        return FALSE;
-    }
+    if (NT_SUCCESS(Status))
+        NtClose(FileHandle);
 
-    NtClose(FileHandle);
-
-    return TRUE;
+    return NT_SUCCESS(Status);
 }
 
 
@@ -523,8 +518,8 @@ DoesFileExist(
                         &IoStatusBlock,
                         0,
                         FILE_SYNCHRONOUS_IO_NONALERT);
-
-    NtClose(FileHandle);
+    if (NT_SUCCESS(Status))
+        NtClose(FileHandle);
 
     return NT_SUCCESS(Status);
 }
