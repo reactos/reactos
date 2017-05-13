@@ -1,6 +1,5 @@
 
 list(APPEND SOURCE
-    shimdbgsupp.c
     shimlib.c
     shimlib.h
     # These .inl functions are included so they show up in vs

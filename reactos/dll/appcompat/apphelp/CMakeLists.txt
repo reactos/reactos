@@ -15,6 +15,7 @@ list(APPEND SOURCE
     sdbread.c
     sdbstringtable.c
     sdbwrite.c
+    shimeng.c
     apphelp.spec
     apphelp.h
     ${CMAKE_CURRENT_BINARY_DIR}/apphelp_stubs.c)

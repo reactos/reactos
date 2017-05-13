@@ -49,15 +49,17 @@ BOOL WINAPI ShimLib_NotifyShims(DWORD fdwReason, PVOID ptr);
 
 
 typedef enum _SEI_LOG_LEVEL {
-    SEI_ERR = 1,
-    SEI_WARN = 2,
-    SEI_INFO = 3,
+    SEI_MSG = 1,
+    SEI_FAIL = 2,
+    SEI_WARN = 3,
+    SEI_INFO = 4,
 } SEI_LOG_LEVEL;
 
-BOOL WINAPIV SeiDbgPrint(SEI_LOG_LEVEL Level, PCSTR FunctionName, PCSTR Format, ...);
+BOOL WINAPIV SeiDbgPrint(SEI_LOG_LEVEL Level, PCSTR Function, PCSTR Format, ...);
 extern ULONG g_ShimEngDebugLevel;
 
-#define SHIMENG_ERR(fmt, ...)  do { if (g_ShimEngDebugLevel) SeiDbgPrint(SEI_ERR, __FUNCTION__, fmt, ##__VA_ARGS__ ); } while (0)
+#define SHIMENG_MSG(fmt, ...)  do { if (g_ShimEngDebugLevel) SeiDbgPrint(SEI_MSG, __FUNCTION__, fmt, ##__VA_ARGS__ ); } while (0)
+#define SHIMENG_FAIL(fmt, ...)  do { if (g_ShimEngDebugLevel) SeiDbgPrint(SEI_FAIL, __FUNCTION__, fmt, ##__VA_ARGS__ ); } while (0)
 #define SHIMENG_WARN(fmt, ...)  do { if (g_ShimEngDebugLevel) SeiDbgPrint(SEI_WARN, __FUNCTION__, fmt, ##__VA_ARGS__ ); } while (0)
 #define SHIMENG_INFO(fmt, ...)  do { if (g_ShimEngDebugLevel) SeiDbgPrint(SEI_INFO, __FUNCTION__, fmt, ##__VA_ARGS__ ); } while (0)
 
