@@ -70,6 +70,7 @@
 #include "cabinet.h"
 #include "filesup.h"
 #include "genlist.h"
+#include "osdetect.h"
 #include "mui.h"
 
 extern HANDLE ProcessHeap;

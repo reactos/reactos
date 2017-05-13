@@ -27,6 +27,7 @@ list(APPEND SOURCE
     inicache.c
     keytrans.c
     mui.c
+    osdetect.c
     partlist.c
     progress.c
     registry.c
