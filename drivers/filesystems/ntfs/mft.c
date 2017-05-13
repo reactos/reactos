@@ -437,7 +437,7 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
                     if (!NT_SUCCESS(Status))
                     {
                         DPRINT1("ERROR: Unable to migrate resident attribute!\n");
-                        if(AttribData != NULL)
+                        if (AttribDataSize.QuadPart > 0)
                             ExFreePoolWithTag(AttribData, TAG_NTFS);
                         return Status;
                     }
