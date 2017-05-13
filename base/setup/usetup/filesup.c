@@ -509,8 +509,7 @@ DoesFileExist(
         wcscat(FullName, FileName);
     }
 
-    RtlInitUnicodeString(&Name,
-                         FullName);
+    RtlInitUnicodeString(&Name, FullName);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
@@ -524,14 +523,10 @@ DoesFileExist(
                         &IoStatusBlock,
                         0,
                         FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-      return FALSE;
-    }
 
     NtClose(FileHandle);
 
-    return TRUE;
+    return NT_SUCCESS(Status);
 }
 
 /* EOF */
