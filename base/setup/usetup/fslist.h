@@ -31,7 +31,7 @@
 typedef struct _FILE_SYSTEM_ITEM
 {
     LIST_ENTRY ListEntry;
-    LPCWSTR FileSystemName; /* Not owned by the item */
+    PCWSTR FileSystemName; /* Not owned by the item */
     FORMATEX FormatFunc;
     CHKDSKEX ChkdskFunc;
     BOOLEAN QuickFormat;
@@ -48,14 +48,14 @@ typedef struct _FILE_SYSTEM_LIST
 VOID
 FS_AddProvider(
     IN OUT PFILE_SYSTEM_LIST List,
-    IN LPCWSTR FileSystemName,
+    IN PCWSTR FileSystemName,
     IN FORMATEX FormatFunc,
     IN CHKDSKEX ChkdskFunc);
 
 PFILE_SYSTEM_ITEM
 GetFileSystemByName(
     IN PFILE_SYSTEM_LIST List,
-    IN LPWSTR FileSystemName);
+    IN PWSTR FileSystemName);
 
 struct _PARTENTRY; // Defined in partlist.h
 PFILE_SYSTEM_ITEM
@@ -68,7 +68,7 @@ CreateFileSystemList(
     IN SHORT Left,
     IN SHORT Top,
     IN BOOLEAN ForceFormat,
-    IN LPCWSTR ForceFileSystem);
+    IN PCWSTR SelectFileSystem);
 
 VOID
 DestroyFileSystemList(

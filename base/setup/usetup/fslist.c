@@ -35,7 +35,7 @@
 VOID
 FS_AddProvider(
     IN OUT PFILE_SYSTEM_LIST List,
-    IN LPCWSTR FileSystemName,
+    IN PCWSTR FileSystemName,
     IN FORMATEX FormatFunc,
     IN CHKDSKEX ChkdskFunc)
 {
@@ -69,7 +69,7 @@ FS_AddProvider(
 PFILE_SYSTEM_ITEM
 GetFileSystemByName(
     IN PFILE_SYSTEM_LIST List,
-    IN LPWSTR FileSystemName)
+    IN PWSTR FileSystemName)
 {
     PLIST_ENTRY ListEntry;
     PFILE_SYSTEM_ITEM Item;
@@ -87,6 +87,80 @@ GetFileSystemByName(
     return NULL;
 }
 
+#if 0 // FIXME: To be fully enabled when our storage stack & al. will work better!
+
+/* NOTE: Ripped & adapted from base/system/autochk/autochk.c */
+static NTSTATUS
+_MyGetFileSystem(
+    IN struct _PARTENTRY* PartEntry,
+    IN OUT PWSTR FileSystemName,
+    IN SIZE_T FileSystemNameSize)
+{
+    NTSTATUS Status;
+    HANDLE FileHandle;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PFILE_FS_ATTRIBUTE_INFORMATION FileFsAttribute;
+    UCHAR Buffer[sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + MAX_PATH * sizeof(WCHAR)];
+
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING PartitionRootPath;
+    WCHAR PathBuffer[MAX_PATH];
+
+    FileFsAttribute = (PFILE_FS_ATTRIBUTE_INFORMATION)Buffer;
+
+    /* Set PartitionRootPath */
+    swprintf(PathBuffer,
+             // L"\\Device\\Harddisk%lu\\Partition%lu", // Should work! But because ReactOS sucks atm. it actually doesn't work!!
+             L"\\Device\\Harddisk%lu\\Partition%lu\\",  // HACK: Use this as a temporary hack!
+             PartEntry->DiskEntry->DiskNumber,
+             PartEntry->PartitionNumber);
+    RtlInitUnicodeString(&PartitionRootPath, PathBuffer);
+    DPRINT("PartitionRootPath: %wZ\n", &PartitionRootPath);
+
+    /* Open the partition */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &PartitionRootPath,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenFile(&FileHandle, // PartitionHandle,
+                        FILE_GENERIC_READ /* | SYNCHRONIZE */,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ,
+                        0 /* FILE_SYNCHRONOUS_IO_NONALERT */);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to open partition %wZ, Status 0x%08lx\n", &PartitionRootPath, Status);
+        return Status;
+    }
+
+    /* Retrieve the FS attributes */
+    Status = NtQueryVolumeInformationFile(FileHandle,
+                                          &IoStatusBlock,
+                                          FileFsAttribute,
+                                          sizeof(Buffer),
+                                          FileFsAttributeInformation);
+    NtClose(FileHandle);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtQueryVolumeInformationFile failed for partition %wZ, Status 0x%08lx\n", &PartitionRootPath, Status);
+        return Status;
+    }
+
+    if (FileSystemNameSize * sizeof(WCHAR) < FileFsAttribute->FileSystemNameLength + sizeof(WCHAR))
+        return STATUS_BUFFER_TOO_SMALL;
+
+    RtlCopyMemory(FileSystemName,
+                  FileFsAttribute->FileSystemName,
+                  FileFsAttribute->FileSystemNameLength);
+    FileSystemName[FileFsAttribute->FileSystemNameLength / sizeof(WCHAR)] = UNICODE_NULL;
+
+    return STATUS_SUCCESS;
+}
+
+#endif
 
 PFILE_SYSTEM_ITEM
 GetFileSystem(
@@ -94,7 +168,11 @@ GetFileSystem(
     IN struct _PARTENTRY* PartEntry)
 {
     PFILE_SYSTEM_ITEM CurrentFileSystem;
-    LPWSTR FileSystemName = NULL;
+    PWSTR FileSystemName = NULL;
+#if 0 // For code temporarily disabled below
+    NTSTATUS Status;
+    WCHAR FsRecFileSystemName[MAX_PATH];
+#endif
 
     CurrentFileSystem = PartEntry->FileSystem;
 
@@ -105,6 +183,26 @@ GetFileSystem(
     DPRINT1("File system not found, try to guess one...\n");
 
     CurrentFileSystem = NULL;
+
+#if 0 // FIXME: To be fully enabled when our storage stack & al. will work better!
+
+    /*
+     * We don't have one...
+     *
+     * Try to infer one using NT file system recognition.
+     */
+    Status = _MyGetFileSystem(PartEntry, FsRecFileSystemName, ARRAYSIZE(FsRecFileSystemName));
+    if (NT_SUCCESS(Status) && *FsRecFileSystemName)
+    {
+        /* Temporary HACK: map FAT32 back to FAT */
+        if (wcscmp(FsRecFileSystemName, L"FAT32") == 0)
+            wcscpy(FsRecFileSystemName, L"FAT");
+
+        FileSystemName = FsRecFileSystemName;
+        goto Quit;
+    }
+
+#endif
 
     /*
      * We don't have one...
@@ -141,12 +239,19 @@ GetFileSystem(
         FileSystemName = L"NTFS"; /* FIXME: Not quite correct! */
     }
 
+#if 0
+Quit: // For code temporarily disabled above
+#endif
+
     // HACK: WARNING: We cannot write on this FS yet!
-    if (PartEntry->PartitionType == PARTITION_EXT2 || PartEntry->PartitionType == PARTITION_IFS)
-        DPRINT1("Recognized file system %S that doesn't support write support yet!\n", FileSystemName);
+    if (FileSystemName)
+    {
+        if (PartEntry->PartitionType == PARTITION_EXT2 || PartEntry->PartitionType == PARTITION_IFS)
+            DPRINT1("Recognized file system %S that doesn't support write support yet!\n", FileSystemName);
+    }
 
     DPRINT1("GetFileSystem -- PartitionType: 0x%02X ; FileSystemName (guessed): %S\n",
-            PartEntry->PartitionType, FileSystemName);
+            PartEntry->PartitionType, FileSystemName ? FileSystemName : L"None");
 
     if (FileSystemName != NULL)
         CurrentFileSystem = GetFileSystemByName(FileSystemList, FileSystemName);
@@ -160,7 +265,7 @@ CreateFileSystemList(
     IN SHORT Left,
     IN SHORT Top,
     IN BOOLEAN ForceFormat,
-    IN LPCWSTR ForceFileSystem)
+    IN PCWSTR SelectFileSystem)
 {
     PFILE_SYSTEM_LIST List;
     PFILE_SYSTEM_ITEM Item;
@@ -179,16 +284,16 @@ CreateFileSystemList(
 
     if (!ForceFormat)
     {
-        /* Add 'Keep' provider */
-       FS_AddProvider(List, NULL, NULL, NULL);
+        /* Add the 'Keep existing filesystem' dummy provider */
+        FS_AddProvider(List, NULL, NULL, NULL);
     }
 
-    /* Search for ForceFileSystem in list */
+    /* Search for SelectFileSystem in list */
     ListEntry = List->ListHead.Flink;
     while (ListEntry != &List->ListHead)
     {
         Item = CONTAINING_RECORD(ListEntry, FILE_SYSTEM_ITEM, ListEntry);
-        if (Item->FileSystemName && wcscmp(ForceFileSystem, Item->FileSystemName) == 0)
+        if (Item->FileSystemName && wcscmp(SelectFileSystem, Item->FileSystemName) == 0)
         {
             List->Selected = Item;
             break;
@@ -200,7 +305,6 @@ CreateFileSystemList(
 
     return List;
 }
-
 
 VOID
 DestroyFileSystemList(
@@ -221,7 +325,6 @@ DestroyFileSystemList(
     }
     RtlFreeHeap(ProcessHeap, 0, List);
 }
-
 
 VOID
 DrawFileSystemList(
@@ -260,7 +363,9 @@ DrawFileSystemList(
                 snprintf(Buffer, sizeof(Buffer), MUIGetString(STRING_FORMATDISK2), Item->FileSystemName);
         }
         else
+        {
             snprintf(Buffer, sizeof(Buffer), MUIGetString(STRING_KEEPFORMAT));
+        }
 
         if (ListEntry == &List->Selected->ListEntry)
             CONSOLE_SetInvertedTextXY(List->Left,
@@ -275,7 +380,6 @@ DrawFileSystemList(
     }
 }
 
-
 VOID
 ScrollDownFileSystemList(
     IN PFILE_SYSTEM_LIST List)
@@ -286,7 +390,6 @@ ScrollDownFileSystemList(
         DrawFileSystemList(List);
     }
 }
-
 
 VOID
 ScrollUpFileSystemList(
