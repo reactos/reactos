@@ -2590,9 +2590,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 
     /* Find or set the active system partition */
     CheckActiveSystemPartition(PartitionList, FileSystemList);
-
-    if (PartitionList->SystemDisk == NULL ||
-        PartitionList->SystemPartition == NULL)
+    if (PartitionList->SystemPartition == NULL)
     {
         /* FIXME: show an error dialog */
         return QUIT_PAGE;
@@ -2604,7 +2602,6 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         case Start:
             if (PartitionList->CurrentPartition != PartitionList->SystemPartition)
             {
-                PartitionList->TempDisk = PartitionList->SystemDisk;
                 PartitionList->TempPartition = PartitionList->SystemPartition;
                 PartitionList->TempPartition->NeedsCheck = TRUE;
 
@@ -2613,7 +2610,6 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
             }
             else
             {
-                PartitionList->TempDisk = PartitionList->CurrentDisk;
                 PartitionList->TempPartition = PartitionList->CurrentPartition;
                 PartitionList->TempPartition->NeedsCheck = TRUE;
 
@@ -2623,7 +2619,6 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
             break;
 
         case FormatSystemPartition:
-            PartitionList->TempDisk = PartitionList->CurrentDisk;
             PartitionList->TempPartition = PartitionList->CurrentPartition;
             PartitionList->TempPartition->NeedsCheck = TRUE;
 
@@ -2633,7 +2628,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 
         case FormatInstallPartition:
             if (GetNextUnformattedPartition(PartitionList,
-                                            &PartitionList->TempDisk,
+                                            NULL,
                                             &PartitionList->TempPartition))
             {
                 PartitionList->FormatState = FormatOtherPartition;
@@ -2650,7 +2645,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 
         case FormatOtherPartition:
             if (GetNextUnformattedPartition(PartitionList,
-                                            &PartitionList->TempDisk,
+                                            NULL,
                                             &PartitionList->TempPartition))
             {
                 PartitionList->FormatState = FormatOtherPartition;
@@ -2671,8 +2666,8 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
             return QUIT_PAGE;
     }
 
-    DiskEntry = PartitionList->TempDisk;
     PartEntry = PartitionList->TempPartition;
+    DiskEntry = PartEntry->DiskEntry;
 
     /* Adjust disk size */
     DiskSize = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
@@ -2903,15 +2898,14 @@ FormatPartitionPage(PINPUT_RECORD Ir)
     MUIDisplayPage(FORMAT_PARTITION_PAGE);
 
     if (PartitionList == NULL ||
-        PartitionList->TempDisk == NULL ||
         PartitionList->TempPartition == NULL)
     {
         /* FIXME: show an error dialog */
         return QUIT_PAGE;
     }
 
-    DiskEntry = PartitionList->TempDisk;
     PartEntry = PartitionList->TempPartition;
+    DiskEntry = PartEntry->DiskEntry;
 
     while (TRUE)
     {
@@ -2937,7 +2931,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
                 if (PartEntry->SectorCount.QuadPart < 8192)
                 {
                     /* FAT12 CHS partition (disk is smaller than 4.1MB) */
-                    PartEntry->PartitionType = PARTITION_FAT_12;
+                    SetPartitionType(PartEntry, PARTITION_FAT_12);
                 }
                 else if (PartEntry->StartSector.QuadPart < 1450560)
                 {
@@ -2946,17 +2940,17 @@ FormatPartitionPage(PINPUT_RECORD Ir)
                     if (PartEntry->SectorCount.QuadPart < 65536)
                     {
                         /* FAT16 CHS partition (partition size < 32MB) */
-                        PartEntry->PartitionType = PARTITION_FAT_16;
+                        SetPartitionType(PartEntry, PARTITION_FAT_16);
                     }
                     else if (PartEntry->SectorCount.QuadPart < 1048576)
                     {
                         /* FAT16 CHS partition (partition size < 512MB) */
-                        PartEntry->PartitionType = PARTITION_HUGE;
+                        SetPartitionType(PartEntry, PARTITION_HUGE);
                     }
                     else
                     {
                         /* FAT32 CHS partition (partition size >= 512MB) */
-                        PartEntry->PartitionType = PARTITION_FAT32;
+                        SetPartitionType(PartEntry, PARTITION_FAT32);
                     }
                 }
                 else
@@ -2966,35 +2960,23 @@ FormatPartitionPage(PINPUT_RECORD Ir)
                     if (PartEntry->SectorCount.QuadPart < 1048576)
                     {
                         /* FAT16 LBA partition (partition size < 512MB) */
-                        PartEntry->PartitionType = PARTITION_XINT13;
+                        SetPartitionType(PartEntry, PARTITION_XINT13);
                     }
                     else
                     {
                         /* FAT32 LBA partition (partition size >= 512MB) */
-                        PartEntry->PartitionType = PARTITION_FAT32_XINT13;
+                        SetPartitionType(PartEntry, PARTITION_FAT32_XINT13);
                     }
                 }
-
-                DiskEntry->Dirty = TRUE;
-                DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].PartitionType = PartEntry->PartitionType;
-                DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].RewritePartition = TRUE;
             }
 #if 0
             else if (wcscmp(PartEntry->FileSystem->FileSystemName, L"EXT2") == 0)
             {
-                PartEntry->PartitionType = PARTITION_EXT2;
-
-                DiskEntry->Dirty = TRUE;
-                DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].PartitionType = PartEntry->PartitionType;
-                DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].RewritePartition = TRUE;
+                SetPartitionType(PartEntry, PARTITION_EXT2);
             }
             else if (wcscmp(PartEntry->FileSystem->FileSystemName, L"NTFS") == 0)
             {
-                PartEntry->PartitionType = PARTITION_IFS;
-
-                DiskEntry->Dirty = TRUE;
-                DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].PartitionType = PartEntry->PartitionType;
-                DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].RewritePartition = TRUE;
+                SetPartitionType(PartEntry, PARTITION_IFS);
             }
 #endif
             else if (!PartEntry->FileSystem->FormatFunc)
@@ -4163,7 +4145,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
     RtlFreeUnicodeString(&SystemRootPath);
     swprintf(PathBuffer,
              L"\\Device\\Harddisk%lu\\Partition%lu",
-             PartitionList->SystemDisk->DiskNumber,
+             PartitionList->SystemPartition->DiskEntry->DiskNumber,
              PartitionList->SystemPartition->PartitionNumber);
     RtlCreateUnicodeString(&SystemRootPath, PathBuffer);
     DPRINT1("SystemRootPath: %wZ\n", &SystemRootPath);
@@ -4436,7 +4418,7 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
     /* Step 2: Write the MBR */
     swprintf(DestinationDevicePathBuffer,
              L"\\Device\\Harddisk%d\\Partition0",
-             PartitionList->SystemDisk->DiskNumber);
+             PartitionList->SystemPartition->DiskEntry->DiskNumber);
 
     wcscpy(SourceMbrPathBuffer, SourceRootPath.Buffer);
     wcscat(SourceMbrPathBuffer, L"\\loader\\dosmbr.bin");

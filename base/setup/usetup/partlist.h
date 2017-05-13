@@ -51,20 +51,22 @@ typedef struct _PARTENTRY
 {
     LIST_ENTRY ListEntry;
 
+    /* The disk this partition belongs to */
     struct _DISKENTRY *DiskEntry;
 
+    /* Partition geometry */
     ULARGE_INTEGER StartSector;
     ULARGE_INTEGER SectorCount;
 
     BOOLEAN BootIndicator;
     UCHAR PartitionType;
     ULONG HiddenSectors;
-    ULONG PartitionNumber;
-    ULONG PartitionIndex;
+    ULONG PartitionNumber;  /* Enumerated partition number (primary partitions first -- excluding the extended partition container --, then the logical partitions) */
+    ULONG PartitionIndex;   /* Index in the LayoutBuffer->PartitionEntry[] cached array of the corresponding DiskEntry */
 
     CHAR DriveLetter;
-    CHAR VolumeLabel[17];
-    CHAR FileSystemName[9];
+    // CHAR VolumeLabel[17];    // NOTE: On 1st-stage Win setup, the volume label is also displayed in the list
+    // CHAR FileSystemName[9];  // NOTE: Superseded by the FileSystem member
 
     BOOLEAN LogicalPartition;
 
@@ -77,12 +79,12 @@ typedef struct _PARTENTRY
     /* Partition was created automatically */
     BOOLEAN AutoCreate;
 
-    FORMATSTATE FormatState;
-
     /* Partition must be checked */
     BOOLEAN NeedsCheck;
 
+    FORMATSTATE FormatState;
     struct _FILE_SYSTEM_ITEM *FileSystem;
+
 } PARTENTRY, *PPARTENTRY;
 
 
@@ -102,6 +104,8 @@ typedef struct _DISKENTRY
 {
     LIST_ENTRY ListEntry;
 
+    /* Disk geometry */
+
     ULONGLONG Cylinders;
     ULONG TracksPerCylinder;
     ULONG SectorsPerTrack;
@@ -111,11 +115,13 @@ typedef struct _DISKENTRY
     ULONG SectorAlignment;
     ULONG CylinderAlignment;
 
+    /* BIOS parameters */
     BOOLEAN BiosFound;
     ULONG BiosDiskNumber;
 //    ULONG Signature;
 //    ULONG Checksum;
 
+    /* SCSI parameters */
     ULONG DiskNumber;
     USHORT Port;
     USHORT Bus;
@@ -125,12 +131,17 @@ typedef struct _DISKENTRY
     BOOLEAN Dirty;
 
     BOOLEAN NewDisk;
-    BOOLEAN NoMbr; /* MBR is absent */
+    BOOLEAN NoMbr; /* MBR is absent */  // See r40437
 
     UNICODE_STRING DriverName;
 
     PDRIVE_LAYOUT_INFORMATION LayoutBuffer;
+    // TODO: When adding support for GPT disks:
+    // Use PDRIVE_LAYOUT_INFORMATION_EX which indicates whether
+    // the disk is MBR, GPT, or unknown (uninitialized).
+    // Depending on the style, either use the MBR or GPT partition info.
 
+    /* Pointer to the unique extended partition on this disk */
     PPARTENTRY ExtendedPartition;
 
     LIST_ENTRY PrimaryPartListHead;
@@ -141,6 +152,7 @@ typedef struct _DISKENTRY
 
 typedef struct _PARTLIST
 {
+    /* UI stuff */
     SHORT Left;
     SHORT Top;
     SHORT Right;
@@ -149,23 +161,32 @@ typedef struct _PARTLIST
     SHORT Line;
     SHORT Offset;
 
+    /*
+     * NOTE that when CurrentPartition != NULL, then CurrentPartition->DiskEntry
+     * must be the same as CurrentDisk. We should however keep the two members
+     * separated as we can have a current (selected) disk without any current
+     * partition, if the former does not contain any.
+     */
     PDISKENTRY CurrentDisk;
     PPARTENTRY CurrentPartition;
 
-    /* The system disk and partition where the boot manager resides */
-    PDISKENTRY SystemDisk;
+    /*
+     * The system partition where the boot manager resides.
+     * The corresponding system disk is obtained via:
+     *    SystemPartition->DiskEntry.
+     */
     PPARTENTRY SystemPartition;
     /*
-     * The original system disk and partition in case we are redefining them
-     * because we do not have write support on them.
-     * Please not that this is partly a HACK and MUST NEVER happen on
+     * The original system partition in case we are redefining it because
+     * we do not have write support on it.
+     * Please note that this is partly a HACK and MUST NEVER happen on
      * architectures where real system partitions are mandatory (because then
      * they are formatted in FAT FS and we support write operation on them).
+     * The corresponding original system disk is obtained via:
+     *    OriginalSystemPartition->DiskEntry.
      */
-    PDISKENTRY OriginalSystemDisk;
     PPARTENTRY OriginalSystemPartition;
 
-    PDISKENTRY TempDisk;
     PPARTENTRY TempPartition;
     FORMATMACHINESTATE FormatState;
 
@@ -279,6 +300,11 @@ WritePartitionsToDisk(
 BOOLEAN
 SetMountedDeviceValues(
     IN PPARTLIST List);
+
+VOID
+SetPartitionType(
+    IN PPARTENTRY PartEntry,
+    IN UCHAR PartitionType);
 
 ULONG
 PrimaryPartitionCreationChecks(
