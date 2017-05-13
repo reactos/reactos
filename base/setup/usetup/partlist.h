@@ -211,6 +211,12 @@ typedef struct
     ULONG Signature;
 } BIOS_DISK, *PBIOS_DISK;
 
+VOID
+GetPartTypeStringFromPartitionType(
+    IN UCHAR partitionType,
+    OUT PCHAR strPartType,
+    IN ULONG cchPartType);
+
 PPARTLIST
 CreatePartitionList(
     SHORT Left,
@@ -220,50 +226,46 @@ CreatePartitionList(
 
 VOID
 DestroyPartitionList(
-    PPARTLIST List);
+    IN PPARTLIST List);
 
 VOID
 DrawPartitionList(
-    PPARTLIST List);
+    IN PPARTLIST List);
 
-DWORD
+ULONG
 SelectPartition(
-    PPARTLIST List,
-    ULONG DiskNumber,
-    ULONG PartitionNumber);
-
-BOOL
-SetMountedDeviceValues(
-    PPARTLIST List);
+    IN PPARTLIST List,
+    IN ULONG DiskNumber,
+    IN ULONG PartitionNumber);
 
 BOOL
 ScrollDownPartitionList(
-    PPARTLIST List);
+    IN PPARTLIST List);
 
 BOOL
 ScrollUpPartitionList(
-    PPARTLIST List);
+    IN PPARTLIST List);
 
 VOID
 CreatePrimaryPartition(
-    PPARTLIST List,
-    ULONGLONG SectorCount,
-    BOOLEAN AutoCreate);
+    IN PPARTLIST List,
+    IN ULONGLONG SectorCount,
+    IN BOOLEAN AutoCreate);
 
 VOID
 CreateExtendedPartition(
-    PPARTLIST List,
-    ULONGLONG SectorCount);
+    IN PPARTLIST List,
+    IN ULONGLONG SectorCount);
 
 VOID
 CreateLogicalPartition(
-    PPARTLIST List,
-    ULONGLONG SectorCount,
-    BOOLEAN AutoCreate);
+    IN PPARTLIST List,
+    IN ULONGLONG SectorCount,
+    IN BOOLEAN AutoCreate);
 
 VOID
 DeleteCurrentPartition(
-    PPARTLIST List);
+    IN PPARTLIST List);
 
 VOID
 CheckActiveSystemPartition(
@@ -272,7 +274,11 @@ CheckActiveSystemPartition(
 
 BOOLEAN
 WritePartitionsToDisk(
-    PPARTLIST List);
+    IN PPARTLIST List);
+
+BOOLEAN
+SetMountedDeviceValues(
+    IN PPARTLIST List);
 
 ULONG
 PrimaryPartitionCreationChecks(
@@ -286,22 +292,16 @@ ULONG
 LogicalPartitionCreationChecks(
     IN PPARTLIST List);
 
-BOOL
+BOOLEAN
 GetNextUnformattedPartition(
     IN PPARTLIST List,
-    OUT PDISKENTRY *pDiskEntry,
+    OUT PDISKENTRY *pDiskEntry OPTIONAL,
     OUT PPARTENTRY *pPartEntry);
 
-BOOL
+BOOLEAN
 GetNextUncheckedPartition(
     IN PPARTLIST List,
-    OUT PDISKENTRY *pDiskEntry,
+    OUT PDISKENTRY *pDiskEntry OPTIONAL,
     OUT PPARTENTRY *pPartEntry);
-
-VOID
-GetPartTypeStringFromPartitionType(
-    UCHAR partitionType,
-    PCHAR strPartType,
-    DWORD cchPartType);
 
 /* EOF */
