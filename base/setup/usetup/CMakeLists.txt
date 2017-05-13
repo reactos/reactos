@@ -28,6 +28,7 @@ list(APPEND SOURCE
     inffile.c
     inicache.c
     mui.c
+    osdetect.c
     partlist.c
     progress.c
     registry.c
