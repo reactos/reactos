@@ -1343,8 +1343,11 @@ MmFwpGetOsMemoryType (
             break;
 
         case EfiRuntimeServicesCode:
+            OsType = BlEfiRuntimeCodeMemory;
+            break;
+
         case EfiRuntimeServicesData:
-            OsType = BlEfiRuntimeMemory;
+            OsType = BlEfiRuntimeDataMemory;
             break;
 
         case EfiConventionalMemory:

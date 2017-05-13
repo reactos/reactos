@@ -329,12 +329,14 @@ typedef enum _BL_MEMORY_TYPE
     BlUnusableMemory = 0xF0000002,
     BlReservedMemory = 0xF0000003,
     BlEfiBootMemory = 0xF0000004,
-    BlEfiRuntimeMemory = 0xF0000006,
+    BlConventionalZeroedMemory = 0xF000005,
+    BlEfiRuntimeCodeMemory = 0xF0000006,
     BlAcpiReclaimMemory = 0xF0000008,
     BlAcpiNvsMemory = 0xF0000009,
     BlDeviceIoMemory = 0xF000000A,
     BlDevicePortMemory = 0xF000000B,
     BlPalMemory = 0xF000000C,
+    BlEfiRuntimeDataMemory = 0xF000000E,
 } BL_MEMORY_TYPE;
 
 typedef enum _BL_MEMORY_ATTR

@@ -790,7 +790,8 @@ Mmx86pMapMemoryRegions (
             /* Check if this is a UEFI-related descriptor, unless it's the self-map page */
             Descriptor = CONTAINING_RECORD(NextEntry, BL_MEMORY_DESCRIPTOR, ListEntry);
             if (((Descriptor->Type == BlEfiBootMemory) ||
-                 (Descriptor->Type == BlEfiRuntimeMemory) ||
+                 (Descriptor->Type == BlEfiRuntimeCodeMemory) ||
+                 (Descriptor->Type == BlEfiRuntimeDataMemory) || // WINBUG?
                  (Descriptor->Type == BlLoaderMemory)) &&
                 ((Descriptor->BasePage << PAGE_SHIFT) != Mmx86SelfMapBase.QuadPart))
             {
