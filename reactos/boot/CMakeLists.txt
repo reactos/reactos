@@ -17,7 +17,7 @@ endif()
 
 add_custom_target(efisys
     COMMAND native-fatten ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin -format 2880 EFIBOOT -boot ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/fat.bin -mkdir EFI -mkdir EFI/BOOT -add $<TARGET_FILE:bootmgfw> EFI/BOOT/boot${EFI_PLATFORM_ID}.efi
-    DEPENDS native-fatten fat bootmgfw bcd_hive
+    DEPENDS native-fatten fat bootmgfw
     VERBATIM)
 
 
