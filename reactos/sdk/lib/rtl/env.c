@@ -508,7 +508,7 @@ found:
  */
 NTSTATUS NTAPI
 RtlQueryEnvironmentVariable_U(PWSTR Environment,
-                              PUNICODE_STRING Name,
+                              PCUNICODE_STRING Name,
                               PUNICODE_STRING Value)
 {
    NTSTATUS Status;

@@ -2967,7 +2967,7 @@ NTSTATUS
 NTAPI
 RtlQueryEnvironmentVariable_U(
     _In_opt_ PWSTR Environment,
-    _In_ PUNICODE_STRING Name,
+    _In_ PCUNICODE_STRING Name,
     _Out_ PUNICODE_STRING Value
 );
 
