@@ -127,21 +127,21 @@ NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
                                          TAG_NTFS);
     if (BitmapRecord == NULL)
     {
-        return 0;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     Status = ReadFileRecord(DeviceExt, NTFS_FILE_BITMAP, BitmapRecord);
     if (!NT_SUCCESS(Status))
     {
         ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
-        return 0;
+        return Status;
     }
 
     Status = FindAttribute(DeviceExt, BitmapRecord, AttributeData, L"", 0, &DataContext, NULL);
     if (!NT_SUCCESS(Status))
     {
         ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
-        return 0;
+        return Status;
     }
 
     BitmapDataSize = AttributeDataLength(&DataContext->Record);
@@ -152,7 +152,7 @@ NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
     {
         ReleaseAttributeContext(DataContext);
         ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
-        return 0;
+        return  STATUS_INSUFFICIENT_RESOURCES;
     }
 
     DPRINT1("Total clusters: %I64x\n", DeviceExt->NtfsInfo.ClusterCount);

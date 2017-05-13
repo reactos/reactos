@@ -356,8 +356,106 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
 
                 if (MaxValueLength < DataSize->LowPart || NextAttribute->Type != AttributeEnd)
                 {
-                    DPRINT1("FIXME: Need to convert attribute to non-resident!\n");
-                    return STATUS_NOT_IMPLEMENTED;
+                    // convert attribute to non-resident
+                    PNTFS_ATTR_RECORD Destination = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + AttrOffset);
+                    LARGE_INTEGER AttribDataSize;
+                    PVOID AttribData;
+                    ULONG EndAttributeOffset;
+                    ULONG LengthWritten;
+
+                    DPRINT1("Converting attribute to non-resident.\n");
+
+                    AttribDataSize.QuadPart = AttrContext->Record.Resident.ValueLength;
+
+                    // Is there existing data we need to back-up?
+                    if (AttribDataSize.QuadPart > 0)
+                    {
+                        AttribData = ExAllocatePoolWithTag(NonPagedPool, AttribDataSize.QuadPart, TAG_NTFS);
+                        if (AttribData == NULL)
+                        {
+                            DPRINT1("ERROR: Couldn't allocate memory for attribute data. Can't migrate to non-resident!\n");
+                            return STATUS_INSUFFICIENT_RESOURCES;
+                        }
+
+                        // read data to temp buffer
+                        Status = ReadAttribute(Fcb->Vcb, AttrContext, 0, AttribData, AttribDataSize.QuadPart);
+                        if (!NT_SUCCESS(Status))
+                        {
+                            DPRINT1("ERROR: Unable to read attribute before migrating!\n");
+                            ExFreePoolWithTag(AttribData, TAG_NTFS);
+                            return Status;
+                        }
+                    }
+
+                    // Start by turning this attribute into a 0-length, non-resident attribute, then enlarge it.
+                    
+                    // Zero out the NonResident structure
+                    RtlZeroMemory(&AttrContext->Record.NonResident.LowestVCN,
+                                  FIELD_OFFSET(NTFS_ATTR_RECORD, NonResident.CompressedSize) - FIELD_OFFSET(NTFS_ATTR_RECORD, NonResident.LowestVCN));
+                    RtlZeroMemory(&Destination->NonResident.LowestVCN,
+                                  FIELD_OFFSET(NTFS_ATTR_RECORD, NonResident.CompressedSize) - FIELD_OFFSET(NTFS_ATTR_RECORD, NonResident.LowestVCN));
+                    
+                    // update the mapping pairs offset, which will be 0x40 + length in bytes of the name
+                    AttrContext->Record.NonResident.MappingPairsOffset = Destination->NonResident.MappingPairsOffset = 0x40 + (Destination->NameLength * 2);
+                    
+                    // mark the attribute as non-resident
+                    AttrContext->Record.IsNonResident = Destination->IsNonResident = 1;
+                   
+                    // update the end of the file record
+                    // calculate position of end markers (1 byte for empty data run)
+                    EndAttributeOffset = AttrOffset + AttrContext->Record.NonResident.MappingPairsOffset + 1;
+                    EndAttributeOffset = ALIGN_UP_BY(EndAttributeOffset, 8);
+
+                    // Update the length
+                    Destination->Length = EndAttributeOffset - AttrOffset;
+                    AttrContext->Record.Length = Destination->Length;
+
+                    // Update the file record end
+                    SetFileRecordEnd(FileRecord,
+                                     (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + EndAttributeOffset),
+                                     FILE_RECORD_END);
+
+                    // update file record on disk
+                    Status = UpdateFileRecord(Fcb->Vcb, AttrContext->FileMFTIndex, FileRecord);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        DPRINT1("ERROR: Couldn't update file record to continue migration!\n");
+                        if (AttribDataSize.QuadPart > 0)
+                            ExFreePoolWithTag(AttribData, TAG_NTFS);
+                        return Status;
+                    }
+
+                    // Initialize the MCB, potentially catch an exception
+                    _SEH2_TRY{
+                        FsRtlInitializeLargeMcb(&AttrContext->DataRunsMCB, NonPagedPool);
+                    } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+                        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                    } _SEH2_END;
+
+                    // Now we can treat the attribute as non-resident and enlarge it normally
+                    Status = SetAttributeDataLength(FileObject, Fcb, AttrContext, AttrOffset, FileRecord, DataSize);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        DPRINT1("ERROR: Unable to migrate resident attribute!\n");
+                        if(AttribData != NULL)
+                            ExFreePoolWithTag(AttribData, TAG_NTFS);
+                        return Status;
+                    }
+
+                    // restore the back-up attribute, if we made one
+                    if (AttribDataSize.QuadPart > 0)
+                    {
+                        Status = WriteAttribute(Fcb->Vcb, AttrContext, 0, AttribData, AttribDataSize.QuadPart, &LengthWritten);
+                        if (!NT_SUCCESS(Status))
+                        {
+                            DPRINT1("ERROR: Unable to write attribute data to non-resident clusters during migration!\n");
+                            // TODO: Reverse migration so no data is lost
+                            ExFreePoolWithTag(AttribData, TAG_NTFS);
+                            return Status;
+                        }
+
+                        ExFreePoolWithTag(AttribData, TAG_NTFS);
+                    }
                 }
             }
         }
@@ -371,7 +469,9 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
             }
         }
 
-        InternalSetResidentAttributeLength(AttrContext, FileRecord, AttrOffset, DataSize->LowPart);
+        // set the new length of the resident attribute (if we didn't migrate it)
+        if(!AttrContext->Record.IsNonResident)
+            InternalSetResidentAttributeLength(AttrContext, FileRecord, AttrOffset, DataSize->LowPart);
     }
 
     //NtfsDumpFileAttributes(Fcb->Vcb, FileRecord);
