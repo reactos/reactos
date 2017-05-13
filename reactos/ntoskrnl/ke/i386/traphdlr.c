@@ -15,6 +15,8 @@
 VOID __cdecl KiFastCallEntry(VOID);
 VOID __cdecl KiFastCallEntryWithSingleStep(VOID);
 
+extern PVOID KeUserPopEntrySListFault;
+extern PVOID KeUserPopEntrySListResume;
 extern PVOID FrRestore;
 VOID FASTCALL Ke386LoadFpuState(IN PFX_SAVE_AREA SaveArea);
 
@@ -1240,10 +1242,46 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
                          TrapFrame);
     }
 
-    /* Check for S-LIST fault in kernel mode */
-    if (TrapFrame->Eip == (ULONG_PTR)ExpInterlockedPopEntrySListFault)
+    /* Check for S-List fault
+
+       Explanation: An S-List fault can occur due to a race condition between 2
+       threads simultaneously trying to pop an element from the S-List. After
+       thread 1 has read the pointer to the top element on the S-List it is
+       preempted and thread 2 calls InterlockedPopEntrySlist on the same S-List,
+       removing the top element and freeing it's memory. After that thread 1
+       resumes and tries to read the address of the Next pointer from the top
+       element, which it assumes will be the next top element.
+       But since that memory has been freed, we get a page fault. To handle this
+       race condition, we let thread 1 repeat the operation.
+       We do NOT invoke the page fault handler in this case, since we do not
+       want to trigger any side effects, like paging or a guard page fault.
+
+       Sequence of operations:
+
+           Thread 1 : mov eax, [ebp] <= eax now points to the first element
+           Thread 1 : mov edx, [ebp + 4] <= edx is loaded with Depth and Sequence
+            *** preempted ***
+           Thread 2 : calls InterlockedPopEntrySlist, changing the top element
+           Thread 2 : frees the memory of the element that was popped
+            *** preempted ***
+           Thread 1 : checks if eax is NULL
+           Thread 1 : InterlockedPopEntrySListFault: mov ebx, [eax] <= faults
+
+        To be sure that we are dealing with exactly the case described above, we
+        check whether the ListHeader has changed. If Thread 2 only popped one
+        entry, the Next field in the S-List-header has changed.
+        If after thread 1 has faulted, thread 2 allocates a new element, by
+        chance getting the same address as the previously freed element and
+        pushes it on the list again, we will see the same top element, but the
+        Sequence member of the S-List header has changed. Therefore we check
+        both fields to make sure we catch any concurrent modification of the
+        S-List-header.
+    */
+    if ((TrapFrame->Eip == (ULONG_PTR)ExpInterlockedPopEntrySListFault) ||
+        (TrapFrame->Eip == (ULONG_PTR)KeUserPopEntrySListFault))
     {
-        PSLIST_HEADER SListHeader;
+        ULARGE_INTEGER SListHeader;
+        PVOID ResumeAddress;
 
         /* Sanity check that the assembly is correct:
            This must be mov ebx, [eax]
@@ -1255,30 +1293,50 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
                (((UCHAR*)TrapFrame->Eip)[4] == 0x4D) &&
                (((UCHAR*)TrapFrame->Eip)[5] == 0x00));
 
-        /* Get the pointer to the SLIST_HEADER */
-        SListHeader = (PSLIST_HEADER)TrapFrame->Ebp;
-
-        /* Check if the Next member of the SLIST_HEADER was changed */
-        if (SListHeader->Next.Next != (PSLIST_ENTRY)TrapFrame->Eax)
+        /* Check if this is a user fault */
+        if (TrapFrame->Eip == (ULONG_PTR)KeUserPopEntrySListFault)
         {
+            /* EBP points to the S-List-header. Copy it inside SEH, to protect
+               against a bogus pointer from user mode */
+            _SEH2_TRY
+            {
+                ProbeForRead((PVOID)TrapFrame->Ebp,
+                             sizeof(ULARGE_INTEGER),
+                             TYPE_ALIGNMENT(SLIST_HEADER));
+                SListHeader = *(PULARGE_INTEGER)TrapFrame->Ebp;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* The S-List pointer is not valid! */
+                goto NotSListFault;
+            }
+            _SEH2_END;
+            ResumeAddress = KeUserPopEntrySListResume;
+        }
+        else
+        {
+            SListHeader = *(PULARGE_INTEGER)TrapFrame->Ebp;
+            ResumeAddress = ExpInterlockedPopEntrySListResume;
+        }
+
+        /* Check if either the Next pointer or the Sequence member in the
+           S-List-header has changed. If any of these has changed, we restart
+           the operation. Otherwise we only have a bogus pointer and let the
+           page fault handler deal with it. */
+        if ((SListHeader.LowPart != TrapFrame->Eax) ||
+            (SListHeader.HighPart != TrapFrame->Edx))
+        {
+            DPRINT1("*** Got an S-List-Fault ***\n");
+            KeGetCurrentThread()->SListFaultCount++;
+
             /* Restart the operation */
-            TrapFrame->Eip = (ULONG_PTR)ExpInterlockedPopEntrySListResume;
+            TrapFrame->Eip = (ULONG_PTR)ResumeAddress;
 
             /* Continue execution */
             KiEoiHelper(TrapFrame);
         }
-        else
-        {
-#if 0
-            /* Do what windows does and issue an invalid access violation */
-            KiDispatchException2Args(KI_EXCEPTION_ACCESS_VIOLATION,
-                                     TrapFrame->Eip,
-                                     StoreInstruction,
-                                     Cr2,
-                                     TrapFrame);
-#endif
-        }
     }
+NotSListFault:
 
     /* Call the access fault handler */
     Status = MmAccessFault(Present,
