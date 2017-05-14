@@ -390,6 +390,7 @@ MmMdInitByteGranularDescriptor (
     if (MmGlobalMemoryDescriptorsUsed >= MmGlobalMemoryDescriptorCount)
     {
         EfiPrintf(L"Out of descriptors!\r\n");
+        EfiStall(1000000);
         return NULL;
     }
 
@@ -409,9 +410,9 @@ MmMdInitByteGranularDescriptor (
 
 BOOLEAN
 MmMdpTruncateDescriptor (
-    __in PBL_MEMORY_DESCRIPTOR_LIST MdList,
-    __in PBL_MEMORY_DESCRIPTOR MemoryDescriptor,
-    __in ULONG Flags
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList,
+    _In_ PBL_MEMORY_DESCRIPTOR MemoryDescriptor,
+    _In_ ULONG Flags
     )
 {
     PBL_MEMORY_DESCRIPTOR NextDescriptor, PreviousDescriptor;
@@ -435,12 +436,14 @@ MmMdpTruncateDescriptor (
     if ((PreviousEntry != MdList->First) && (MemoryDescriptor->BasePage < PreviousEndPage))
     {
         EfiPrintf(L"Overlap detected -- this is unexpected on x86/x64 platforms\r\n");
+        EfiStall(1000000);
     }
 
     /* Check for forward overlap */
     if ((NextEntry != MdList->First) && (NextDescriptor->BasePage < EndPage))
     {
         EfiPrintf(L"Overlap detected -- this is unexpected on x86/x64 platforms\r\n");
+        EfiStall(1000000);
     }
 
     /* Nothing to do */
@@ -449,9 +452,9 @@ MmMdpTruncateDescriptor (
 
 BOOLEAN
 MmMdpCoalesceDescriptor (
-    __in PBL_MEMORY_DESCRIPTOR_LIST MdList,
-    __in PBL_MEMORY_DESCRIPTOR MemoryDescriptor,
-    __in ULONG Flags
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList,
+    _In_ PBL_MEMORY_DESCRIPTOR MemoryDescriptor,
+    _In_ ULONG Flags
     )
 {
     PBL_MEMORY_DESCRIPTOR NextDescriptor, PreviousDescriptor;
@@ -623,28 +626,25 @@ MmMdRemoveRegionFromMdlEx (
     BOOLEAN HaveNewList, UseVirtualPage;
     NTSTATUS Status;
     PLIST_ENTRY ListHead, NextEntry;
-    PBL_MEMORY_DESCRIPTOR Descriptor;
-    //BL_MEMORY_DESCRIPTOR NewDescriptor;
+    PBL_MEMORY_DESCRIPTOR Descriptor, NewDescriptor, ListDescriptor;
+    BL_MEMORY_DESCRIPTOR OldDescriptor;
     ULONGLONG RegionSize;
-    ULONGLONG FoundBasePage, FoundEndPage, FoundPageCount, EndPage;
+    ULONGLONG FoundBasePage, FoundEndPage, FoundPageCount, EndPage, VirtualPage;
 
     /* Set initial status */
     Status = STATUS_SUCCESS;
+    ListDescriptor = NULL;
+    NewDescriptor = NULL;
+    HaveNewList = FALSE;
 
     /* Check if removed descriptors should go into a new list */
     if (NewMdList != NULL)
     {
         /* Initialize it */
-        MmMdInitializeListHead(NewMdList);
-        NewMdList->Type = MdList->Type;
+        MmMdInitializeList(NewMdList, MdList->Type, NULL);
 
         /* Remember for later */
         HaveNewList = TRUE;
-    }
-    else
-    {
-        /* For later */
-        HaveNewList = FALSE;
     }
 
     /* Is the region being removed physical? */
@@ -684,7 +684,7 @@ MmMdRemoveRegionFromMdlEx (
         EndPage = PageCount + BasePage;
 
         /* Make a copy of the original descriptor */
-        //NewDescriptor = *Descriptor; // FIXME: Need to use this somewhere...
+        OldDescriptor = *Descriptor;
 
         /* Check if the region to be removed starts after the found region starts */
         if ((BasePage > FoundBasePage) || (FoundBasePage >= EndPage))
@@ -695,13 +695,14 @@ MmMdRemoveRegionFromMdlEx (
                 /* Check if the found region starts after the region or ends before the region */
                 if ((FoundBasePage >= BasePage) || (EndPage >= FoundEndPage))
                 {
-                    /* This descriptor doesn't cover any part of the range -- nothing to do */
-                    NOTHING;
+                    /* This is a fully-mapped descriptor -- change nothing */
+                    OldDescriptor.PageCount = 0;
                 }
                 else
                 {
                     /* This descriptor fully covers the entire allocation */
                     FoundBasePage = Descriptor->BasePage;
+                    VirtualPage = Descriptor->VirtualPage;
                     FoundPageCount = BasePage - FoundBasePage;
 
                     /* This is how many pages we will eat away from the descriptor */
@@ -710,29 +711,40 @@ MmMdRemoveRegionFromMdlEx (
                     /* Update the descriptor to account for the consumed pages */
                     Descriptor->BasePage += RegionSize;
                     Descriptor->PageCount -= RegionSize;
-                    if (Descriptor->VirtualPage)
+                    if (VirtualPage)
                     {
                         Descriptor->VirtualPage += RegionSize;
                     }
                     
                     /* Initialize a descriptor for the start of the region */
-                    Descriptor = MmMdInitByteGranularDescriptor(Descriptor->Flags,
-                                                                Descriptor->Type,
-                                                                FoundBasePage,
-                                                                Descriptor->VirtualPage,
-                                                                FoundPageCount);
-                    if (!Descriptor)
+                    NewDescriptor = MmMdInitByteGranularDescriptor(Descriptor->Flags,
+                                                                   Descriptor->Type,
+                                                                   FoundBasePage,
+                                                                   VirtualPage,
+                                                                   FoundPageCount);
+                    if (!NewDescriptor)
                     {
                         Status = STATUS_NO_MEMORY;
                         goto Quickie;
                     }
 
                     /* Add it into the list */
-                    Status = MmMdAddDescriptorToList(MdList, Descriptor, Flags);
+                    Status = MmMdAddDescriptorToList(MdList, NewDescriptor, Flags);
                     if (!NT_SUCCESS(Status))
                     {
                         Status = STATUS_NO_MEMORY;
                         goto Quickie;
+                    }
+
+                    /* Don't free it on exit path */
+                    NewDescriptor = NULL;
+
+                    /* Adjust the leftover descriptor */
+                    OldDescriptor.BasePage += FoundPageCount;
+                    OldDescriptor.PageCount = PageCount;
+                    if (OldDescriptor.VirtualPage)
+                    {
+                        OldDescriptor.VirtualPage += FoundPageCount;
                     }
                 }
             }
@@ -741,9 +753,17 @@ MmMdRemoveRegionFromMdlEx (
                 /* This descriptor contains the entire allocation */
                 RegionSize = FoundEndPage - BasePage;
                 Descriptor->PageCount -= RegionSize;
+
+                /* Adjust the leftover descriptor */
+                OldDescriptor.BasePage += Descriptor->PageCount;
+                OldDescriptor.PageCount = RegionSize;
+                if (OldDescriptor.VirtualPage)
+                {
+                    OldDescriptor.VirtualPage += FoundPageCount;
+                }
             }
 
-            /* Keep going */
+            /* Go to the next entry */
             NextEntry = NextEntry->Flink;
         }
         else
@@ -764,14 +784,14 @@ MmMdRemoveRegionFromMdlEx (
             }
 
             /* This is how many pages we will eat away from the descriptor */
-            RegionSize = FoundEndPage - FoundBasePage;
+            FoundPageCount = FoundEndPage - FoundBasePage;
 
             /* Update the descriptor to account for the consumed pages */
-            Descriptor->BasePage += RegionSize;
-            Descriptor->PageCount -= RegionSize;
+            Descriptor->BasePage += FoundPageCount;
+            Descriptor->PageCount -= FoundPageCount;
             if (Descriptor->VirtualPage)
             {
-                Descriptor->VirtualPage += RegionSize;
+                Descriptor->VirtualPage += FoundPageCount;
             }
 
             /* Go to the next entry */
@@ -782,15 +802,53 @@ MmMdRemoveRegionFromMdlEx (
             {
                 /* Remove it */
                 MmMdRemoveDescriptorFromList(MdList, Descriptor);
-                MmMdFreeDescriptor(Descriptor);
 
                 /* Check if we're supposed to insert it into a new list */
                 if (HaveNewList)
                 {
-                    EfiPrintf(L"Not yet implemented\r\n");
-                    Status = STATUS_NOT_IMPLEMENTED;
+                    /* This is the one to add */
+                    ListDescriptor = Descriptor;
+                }
+                else
+                {
+                    /* Nope -- just get rid of it */
+                    MmMdFreeDescriptor(Descriptor);
+                }
+            }
+        }
+
+        /* Is there a remainder descriptor, and do we have a list for it */
+        if ((OldDescriptor.PageCount) && (HaveNewList))
+        {
+            /* Did we already chop off the descriptor? */
+            if (ListDescriptor)
+            {
+                /* Use what we previously chopped */
+                *ListDescriptor = OldDescriptor;
+            }
+            else
+            {
+                /* First time, so build a descriptor to describe the leftover */
+                ListDescriptor = MmMdInitByteGranularDescriptor(OldDescriptor.Flags,
+                                                                OldDescriptor.Type,
+                                                                OldDescriptor.BasePage,
+                                                                OldDescriptor.VirtualPage,
+                                                                OldDescriptor.PageCount);
+                if (!ListDescriptor)
+                {
+                    Status = STATUS_NO_MEMORY;
                     goto Quickie;
                 }
+
+                /* Add it into the list */
+                Status = MmMdAddDescriptorToList(NewMdList, ListDescriptor, 0);
+                if (!NT_SUCCESS(Status))
+                {
+                    goto Quickie;
+                }
+
+                /* Don't free on exit path */
+                ListDescriptor = NULL;
             }
         }
     }
@@ -804,11 +862,23 @@ Quickie:
         {
             /* Free and re-initialize it */
             MmMdFreeList(NewMdList);
-            MmMdInitializeListHead(NewMdList);
-            NewMdList->Type = MdList->Type;
+            MmMdInitializeList(NewMdList, MdList->Type, NULL);
+        }
+
+        /* Check if we had a list descriptor, and free it */
+        if (ListDescriptor)
+        {
+            MmMdFreeDescriptor(ListDescriptor);
+        }
+
+        /* Check if we had a new descriptor, and free it */
+        if (NewDescriptor)
+        {
+            MmMdFreeDescriptor(NewDescriptor);
         }
     }
 
+    /* All done */
     return Status;
 }
 
