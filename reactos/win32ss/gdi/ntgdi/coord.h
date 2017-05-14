@@ -166,3 +166,5 @@ BOOL APIENTRY GreGetDCPoint(HDC,UINT,PPOINTL);
 BOOL WINAPI GreGetWindowExtEx( _In_ HDC hdc, _Out_ LPSIZE lpSize);
 BOOL WINAPI GreGetViewportExtEx( _In_ HDC hdc, _Out_ LPSIZE lpSize);
 BOOL FASTCALL GreSetViewportOrgEx(HDC,int,int,LPPOINT);
+BOOL WINAPI GreGetDCOrgEx(_In_ HDC, _Out_ PPOINTL, _Out_ PRECTL);
+BOOL WINAPI GreSetDCOrg(_In_  HDC, _In_ LONG, _In_ LONG, _In_opt_ PRECTL);

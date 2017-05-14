@@ -396,8 +396,8 @@ IntSetDefaultRegion(PDC pdc)
         pdc->erclWindow = rclWnd;
         pdc->erclClip = rclClip;
         /* Might be an InitDC or DCE... */
-        pdc->ptlFillOrigin.x = pdc->dcattr.VisRectRegion.Rect.right;
-        pdc->ptlFillOrigin.y = pdc->dcattr.VisRectRegion.Rect.bottom;
+        pdc->ptlFillOrigin.x = pdc->dcattr.ptlBrushOrigin.x;
+        pdc->ptlFillOrigin.y = pdc->dcattr.ptlBrushOrigin.y;
         return TRUE;
     }
 
