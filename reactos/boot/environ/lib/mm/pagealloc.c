@@ -48,12 +48,71 @@ BL_MEMORY_DESCRIPTOR_LIST MmMdlMappingTrackers;
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
+MmPaTruncateMemory (
+    _In_ ULONGLONG BasePage
+    )
+{
+    NTSTATUS Status;
+
+    /* Increase nesting depth */
+    ++MmDescriptorCallTreeCount;
+
+    /* Set the maximum page to the truncated request */
+    if (BasePage < PapMaximumPhysicalPage)
+    {
+        PapMaximumPhysicalPage = BasePage;
+    }
+
+    /* Truncate mapped and allocated memory */
+    Status = MmMdTruncateDescriptors(&MmMdlMappedAllocated,
+                                     &MmMdlTruncatedMemory,
+                                     BasePage);
+    if (NT_SUCCESS(Status))
+    {
+        /* Truncate unmapped and allocated memory */
+        Status = MmMdTruncateDescriptors(&MmMdlUnmappedAllocated,
+                                         &MmMdlTruncatedMemory,
+                                         BasePage);
+        if (NT_SUCCESS(Status))
+        {
+            /* Truncate mapped and unallocated memory */
+            Status = MmMdTruncateDescriptors(&MmMdlMappedUnallocated,
+                                             &MmMdlTruncatedMemory,
+                                             BasePage);
+            if (NT_SUCCESS(Status))
+            {
+                /* Truncate unmapped and unallocated memory */
+                Status = MmMdTruncateDescriptors(&MmMdlUnmappedUnallocated,
+                                                 &MmMdlTruncatedMemory,
+                                                 BasePage);
+                if (NT_SUCCESS(Status))
+                {
+                    /* Truncate reserved memory */
+                    Status = MmMdTruncateDescriptors(&MmMdlReservedAllocated,
+                                                     &MmMdlTruncatedMemory,
+                                                     BasePage);
+                }
+            }
+        }
+    }
+
+    /* Restore the nesting depth */
+    MmMdFreeGlobalDescriptors();
+    --MmDescriptorCallTreeCount;
+    return Status;
+}
+
+NTSTATUS
 BlpMmInitializeConstraints (
     VOID
     )
 {
-    NTSTATUS Status;
+    NTSTATUS Status, ReturnStatus;
     ULONGLONG LowestAddressValid, HighestAddressValid;
+    ULONGLONG LowestPage, HighestPage;
+
+    /* Assume success */
+    ReturnStatus = STATUS_SUCCESS;
 
     /* Check for LOWMEM */
     Status = BlGetBootOptionInteger(BlpApplicationEntry.BcdData,
@@ -61,8 +120,15 @@ BlpMmInitializeConstraints (
                                     &LowestAddressValid);
     if (NT_SUCCESS(Status))
     {
-        EfiPrintf(L"/LOWMEM not supported\r\n");
-        return STATUS_NOT_IMPLEMENTED;
+        /* Align the address */
+        LowestAddressValid = (ULONG_PTR)PAGE_ALIGN(LowestAddressValid);
+        LowestPage = LowestAddressValid >> PAGE_SHIFT;
+
+        /* Make sure it's below 4GB */
+        if (LowestPage <= 0x100000)
+        {
+            PapMinimumPhysicalPage = LowestPage;
+        }
     }
 
     /* Check for MAXMEM */
@@ -71,12 +137,15 @@ BlpMmInitializeConstraints (
                                     &HighestAddressValid);
     if (NT_SUCCESS(Status))
     {
-        EfiPrintf(L"/MAXMEM not supported\r\n");
-        return STATUS_NOT_IMPLEMENTED;
+        /* Get the page */
+        HighestPage = HighestAddressValid >> PAGE_SHIFT;
+
+        /* Truncate memory above this page */
+        ReturnStatus = MmPaTruncateMemory(HighestPage);
     }
 
     /* Return back to the caller */
-    return STATUS_SUCCESS;
+    return ReturnStatus;
 }
 
 NTSTATUS

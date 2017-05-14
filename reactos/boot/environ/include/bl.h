@@ -2088,6 +2088,13 @@ MmMdAddDescriptorToList (
     _In_ ULONG Flags
     );
 
+NTSTATUS
+MmMdTruncateDescriptors (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList,
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST NewList,
+    _In_ ULONGLONG BasePage
+    );
+
 VOID
 MmMdRemoveDescriptorFromList (
     _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList,
@@ -2122,6 +2129,11 @@ MmMdFreeDescriptor (
     );
 
 /* PAGE ALLOCATOR ROUTINES ***************************************************/
+
+NTSTATUS
+MmPaTruncateMemory (
+    _In_ ULONGLONG BasePage
+    );
 
 NTSTATUS
 BlMmAllocatePhysicalPages(

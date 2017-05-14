@@ -939,10 +939,8 @@ MmDefInitializeTranslation (
     Mmx86SelfMapBase.QuadPart = 0;
     MmArchReferencePage = NULL;
 
-    /* Truncate all memory above 4GB so that we don't use it @TODO: FIXME */
-    EfiPrintf(L"Warning: not truncating > 4GB memory. Don't boot with more than 4GB of RAM!\r\n");
-    //Status = MmPaTruncateMemory(0x100000);
-    Status = STATUS_SUCCESS;
+    /* Truncate all memory above 4GB so that we don't use it */
+    Status = MmPaTruncateMemory(0x100000);
     if (!NT_SUCCESS(Status))
     {
         goto Quickie;

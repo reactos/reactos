@@ -408,6 +408,82 @@ MmMdInitByteGranularDescriptor (
     return MemoryDescriptor;
 }
 
+NTSTATUS
+MmMdTruncateDescriptors (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList,
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST NewList,
+    _In_ ULONGLONG BasePage
+    )
+{
+    PLIST_ENTRY ListHead, NextEntry;
+    PBL_MEMORY_DESCRIPTOR Descriptor, NewDescriptor;
+    ULONGLONG FoundEndPage;
+
+    /* Search the descriptor list */
+    ListHead = MdList->First;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        /* Get the current descriptor */
+        Descriptor = CONTAINING_RECORD(NextEntry,
+                                       BL_MEMORY_DESCRIPTOR,
+                                       ListEntry);
+
+        /* Go to the next entry in case we have to remove */
+        NextEntry = NextEntry->Flink;
+
+        /* Don't touch anything else but free RAM */
+        if (((Descriptor->Type >> BL_MEMORY_CLASS_SHIFT) == BlSystemClass) &&
+            (Descriptor->Type != BlConventionalMemory))
+        {
+            continue;
+        }
+
+        /* Check if this page is within the descriptor's region */
+        FoundEndPage = Descriptor->BasePage + Descriptor->PageCount;
+        if (BasePage > Descriptor->BasePage)
+        {
+            /* Check if it doesn't go beyond the descriptor */
+            if (BasePage < FoundEndPage)
+            {
+                /* Create a new descriptor to describe this region */
+                EfiPrintf(L"Truncating descriptor type %lx base: %llx end: %llx\r\n",
+                          Descriptor->Type, Descriptor->BasePage, FoundEndPage);
+                NewDescriptor = MmMdInitByteGranularDescriptor(Descriptor->Flags,
+                                                               Descriptor->Type,
+                                                               BasePage,
+                                                               0,
+                                                               FoundEndPage - BasePage);
+                if (!NewDescriptor)
+                {
+                    return STATUS_NO_MEMORY;
+                }
+
+                /* Cut off this descriptor to make it shorter */
+                Descriptor->PageCount = BasePage - Descriptor->BasePage;
+
+                /* Add the region to the new list */
+                MmMdAddDescriptorToList(NewList,
+                                        NewDescriptor,
+                                        BL_MM_ADD_DESCRIPTOR_COALESCE_FLAG);
+            }
+        }
+        else
+        {
+            /* This whole descriptor covers the truncated area */
+            EfiPrintf(L"Truncating descriptor type %lx base: %llx end: %llx\r\n",
+                      Descriptor->Type, Descriptor->BasePage, FoundEndPage);
+            MmMdRemoveDescriptorFromList(MdList, Descriptor);
+            MmMdAddDescriptorToList(NewList,
+                                    Descriptor,
+                                    BL_MM_ADD_DESCRIPTOR_COALESCE_FLAG);
+        }
+    }
+
+    /* All good if we got here */
+    return STATUS_SUCCESS;
+}
+
 BOOLEAN
 MmMdpTruncateDescriptor (
     _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList,
