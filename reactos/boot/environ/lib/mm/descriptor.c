@@ -1267,7 +1267,7 @@ MmMdFindSatisfyingRegion (
         /* Don't let the base overflow */
         if (VirtualMin > VirtualMax)
         {
-            return 0;
+            return FALSE;
         }
 
         /* Adjust the base by the alignment delta */
@@ -1277,7 +1277,7 @@ MmMdFindSatisfyingRegion (
         if (((VirtualMin + Pages - 1) < VirtualMin) ||
             ((VirtualMin + Pages - 1) > VirtualMax))
         {
-            return 0;
+            return FALSE;
         }
 
         /* Finally, pick the correct address based on direction */
@@ -1302,7 +1302,7 @@ MmMdFindSatisfyingRegion (
     if ((((Flags & 0xFF) & (Descriptor->Flags & 0xFF)) != (Flags & 0xFF)) ||
         (((Flags & 0xFF00) & (Descriptor->Flags & 0xFF00)) != (Flags & 0xFF00)))
     {
-        EfiPrintf(L"Incorrect memory attributes\r\n");
+        //EfiPrintf(L"Incorrect memory attributes\r\n");
         return FALSE;
     }
 

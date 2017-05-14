@@ -148,6 +148,31 @@ BlpMmInitializeConstraints (
     return ReturnStatus;
 }
 
+PWCHAR
+MmMdListPointerToName (_In_ PBL_MEMORY_DESCRIPTOR_LIST MdList)
+{
+    if (MdList == &MmMdlUnmappedAllocated)
+    {
+        return L"UnmapAlloc";
+    }
+    else if (MdList == &MmMdlUnmappedUnallocated)
+    {
+        return L"UnmapUnalloc";
+    }
+    else if (MdList == &MmMdlMappedAllocated)
+    {
+        return L"MapAlloc";
+    }
+    else if (MdList == &MmMdlMappedUnallocated)
+    {
+        return L"MapUnalloc";
+    }
+    else
+    {
+        return L"Other";
+    }
+}
+
 NTSTATUS
 MmPapAllocateRegionFromMdl (
     _In_ PBL_MEMORY_DESCRIPTOR_LIST NewList,
@@ -207,7 +232,6 @@ MmPapAllocateRegionFromMdl (
                                      Request->Flags,
                                      Request->Alignment))
         {
-            /* It does, get out */
             break;
         }
 
@@ -225,7 +249,6 @@ MmPapAllocateRegionFromMdl (
     /* Check if we exhausted the list */
     if (NextEntry == ListHead)
     {
-        EfiPrintf(L"No matching memory found\r\n");
         return Status;
     }
 
@@ -246,6 +269,7 @@ MmPapAllocateRegionFromMdl (
         if (!NT_SUCCESS(Status))
         {
             EfiPrintf(L"EFI memory allocation failure\r\n");
+            EfiStall(10000000);
             return Status;
         }
 
@@ -392,9 +416,18 @@ MmPaAllocatePages (
     /* Are we failing due to some attributes? */
     if (Request->Flags & BlMemoryValidAllocationAttributeMask)
     {
-        EfiPrintf(L"alloc fail not yet implemented %lx in %S\r\n", Status, __FUNCTION__);
-        EfiStall(1000000);
-        return STATUS_NOT_IMPLEMENTED;
+        if (Request->Flags & BlMemoryLargePages)
+        {
+            EfiPrintf(L"large alloc fail not yet implemented %lx\r\n", Status);
+            EfiStall(1000000);
+            return STATUS_NOT_IMPLEMENTED;
+        }
+        if (Request->Flags & BlMemoryFixed)
+        {
+            EfiPrintf(L"fixed alloc fail not yet implemented %lx\r\n", Status);
+            EfiStall(1000000);
+            return STATUS_NOT_IMPLEMENTED;
+        }
     }
 
     /* Nope, just fail the entire call */
@@ -601,7 +634,7 @@ MmPapPageAllocatorExtend (
                                BlConventionalMemory);
     if (!NT_SUCCESS(Status))
     {
-        EfiPrintf(L"Failed to get unmapped,unallocated memory!\r\n");
+        EfiPrintf(L"Failed to get unmapped, unallocated memory!\r\n");
         EfiStall(10000000);
         return Status;
     }

@@ -2023,9 +2023,10 @@ Archx86TransferTo32BitApplicationAsm (
 
 VOID
 MmMdDbgDumpList (
-    _In_ PBL_MEMORY_DESCRIPTOR_LIST DescriptorList
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST DescriptorList,
+    _In_opt_ ULONG MaxCount
 );
-    
+
 VOID
 MmMdInitializeList (
     _In_ PBL_MEMORY_DESCRIPTOR_LIST DescriptorList,

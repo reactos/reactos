@@ -176,6 +176,8 @@ EfiOpenProtocol (
     {
         /* We need complex tracking to make this work */
         //Status = EfiVmOpenProtocol(Handle, Protocol, Interface);
+        EfiPrintf(L"Paging path hit!\r\n");
+        EfiStall(1000000);
         Status = STATUS_NOT_SUPPORTED;
     }
     else
@@ -185,6 +187,8 @@ EfiOpenProtocol (
         if (OldMode != BlRealMode)
         {
             /* FIXME: Not yet implemented */
+            EfiPrintf(L"Paging path hit!\r\n");
+            EfiStall(1000000);
             return STATUS_NOT_IMPLEMENTED;
         }
 

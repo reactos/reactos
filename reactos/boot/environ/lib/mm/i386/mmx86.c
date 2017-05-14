@@ -127,7 +127,7 @@ BlMmIsTranslationEnabled (
 {
     /* Return if paging is on */
     return ((CurrentExecutionContext) &&
-            (CurrentExecutionContext->Mode & BL_CONTEXT_PAGING_ON));
+            (CurrentExecutionContext->ContextFlags & BL_CONTEXT_PAGING_ON));
 }
 
 VOID
@@ -327,6 +327,8 @@ MmDefpMapPhysicalAddress (
                                                        0);
             if (!NT_SUCCESS(Status))
             {
+                EfiPrintf(L"PDE alloc failed!\r\n");
+                EfiStall(1000000);
                 return STATUS_NO_MEMORY;
             }
 
@@ -583,6 +585,7 @@ MmMapPhysicalAddress (
     if (!NT_SUCCESS(Status))
     {
         EfiPrintf(L"Failed to map!: %lx\r\n", Status);
+        EfiStall(1000000);
         return Status;
     }
 
@@ -641,30 +644,43 @@ Mmx86MapInitStructure (
 
 VOID
 MmMdDbgDumpList (
-    _In_ PBL_MEMORY_DESCRIPTOR_LIST DescriptorList
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST DescriptorList,
+    _In_opt_ ULONG MaxCount
     )
 {
     ULONGLONG EndPage, VirtualEndPage;
     PBL_MEMORY_DESCRIPTOR MemoryDescriptor;
     PLIST_ENTRY NextEntry;
 
-    NextEntry = DescriptorList->First->Flink;
-    while (NextEntry != DescriptorList->First)
+    /* If no maximum was provided, use essentially infinite */
+    if (MaxCount == 0)
     {
+        MaxCount = 0xFFFFFFFF;
+    }
+
+    /* Loop the list as long as there's entries and max isn't reached */
+    NextEntry = DescriptorList->First->Flink;
+    while ((NextEntry != DescriptorList->First) && (MaxCount--))
+    {
+        /* Get the descriptor */
         MemoryDescriptor = CONTAINING_RECORD(NextEntry,
                                              BL_MEMORY_DESCRIPTOR,
                                              ListEntry);
 
+        /* Get the descriptor end page, and see if it was virtually mapepd */
         EndPage = MemoryDescriptor->BasePage + MemoryDescriptor->PageCount;
-        if (MemoryDescriptor->VirtualPage != 0)
+        if (MemoryDescriptor->VirtualPage)
         {
-            VirtualEndPage = MemoryDescriptor->VirtualPage + MemoryDescriptor->PageCount;
+            /* Get the virtual end page too, then */
+            VirtualEndPage = MemoryDescriptor->VirtualPage +
+                             MemoryDescriptor->PageCount;
         }
         else
         {
             VirtualEndPage = 0;
         }
 
+        /* Print out the descriptor, physical range, virtual range, and type */
         EfiPrintf(L"%p - [%08llx-%08llx @ %08llx-%08llx]:%x\r\n",
                     MemoryDescriptor,
                     MemoryDescriptor->BasePage << PAGE_SHIFT,
@@ -673,6 +689,7 @@ MmMdDbgDumpList (
                     VirtualEndPage ? (VirtualEndPage << PAGE_SHIFT) - 1 : 0,
                     (ULONG)MemoryDescriptor->Type);
 
+        /* Next entry */
         NextEntry = NextEntry->Flink;
     }
 }
@@ -943,7 +960,7 @@ MmDefInitializeTranslation (
     Status = MmPaTruncateMemory(0x100000);
     if (!NT_SUCCESS(Status))
     {
-        goto Quickie;
+        goto Failure;
     }
 
     /* Allocate a page directory */
@@ -957,7 +974,7 @@ MmDefInitializeTranslation (
                                                0);
     if (!NT_SUCCESS(Status))
     {
-        goto Quickie;
+        goto Failure;
     }
 
     /* Zero out the page directory */
@@ -978,7 +995,7 @@ MmDefInitializeTranslation (
                                                0);
     if (!NT_SUCCESS(Status))
     {
-        goto Quickie;
+        goto Failure;
     }
 
     /* Set the reference page */
@@ -993,7 +1010,7 @@ MmDefInitializeTranslation (
                                      (4 * 1024 * 1024) >> PAGE_SHIFT);
     if (!NT_SUCCESS(Status))
     {
-        goto Quickie;
+        goto Failure;
     }
 
     /* Zero them out */
@@ -1020,7 +1037,7 @@ MmDefInitializeTranslation (
                                        0);
     if (!NT_SUCCESS(Status))
     {
-        goto Quickie;
+        goto Failure;
     }
 
     /* Remove HAL_HEAP from free virtual memory */
@@ -1031,22 +1048,25 @@ MmDefInitializeTranslation (
                                        0);
     if (!NT_SUCCESS(Status))
     {
-        goto Quickie;
+        goto Failure;
     }
 
     /* Initialize the virtual->physical memory mappings */
     Status = Mmx86InitializeMemoryMap(1, MemoryData);
     if (!NT_SUCCESS(Status))
     {
-        goto Quickie;
+        goto Failure;
     }
 
     /* Turn on paging with the new CR3 */
     __writecr3((ULONG_PTR)MmPdpt);
     BlpArchEnableTranslation();
-    EfiPrintf(L"Paging... ON\r\n");
+    EfiPrintf(L"Paging... %d\r\n", BlMmIsTranslationEnabled());
 
-Quickie:
+    /* Return success */
+    return Status;
+
+Failure:
     /* Free reference page if we allocated it */
     if (MmArchReferencePage)
     {
