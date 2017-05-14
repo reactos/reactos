@@ -39,12 +39,6 @@ DriverEntry(
     PUNICODE_STRING RegistryPath
 );
 
-NTSTATUS
-DfsDriverEntry(
-    PDRIVER_OBJECT DriverObject,
-    PUNICODE_STRING RegistryPath
-);
-
 VOID
 MupInitializeData(
     VOID
@@ -57,7 +51,6 @@ MupInitializeVcb(
 
 #if defined(ALLOC_PRAGMA)
 #pragma alloc_text(INIT, DriverEntry)
-#pragma alloc_text(INIT, DfsDriverEntry)
 #pragma alloc_text(INIT, MupInitializeData)
 #pragma alloc_text(INIT, MupInitializeVcb)
 #endif
@@ -788,14 +781,6 @@ Cleanup:
 
 NTSTATUS
 NTAPI
-DfsVolumePassThrough(PDEVICE_OBJECT DeviceObject,
-                     PIRP Irp)
-{
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
 MupForwardIoRequest(PDEVICE_OBJECT DeviceObject,
                     PIRP Irp)
 {
@@ -1273,13 +1258,6 @@ RegisterUncProvider(PDEVICE_OBJECT DeviceObject,
     _SEH2_END;
 
     return Status;
-}
-
-NTSTATUS
-DfsFsdFileSystemControl(PDEVICE_OBJECT DeviceObject,
-                        PIRP Irp)
-{
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -1913,14 +1891,6 @@ Cleanup:
 }
 
 NTSTATUS
-DfsFsdCreate(PDEVICE_OBJECT DeviceObject,
-             PIRP Irp)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
 CreateRedirectedFile(PIRP Irp,
                      PFILE_OBJECT FileObject,
                      PIO_SECURITY_CONTEXT SecurityContext)
@@ -2323,14 +2293,6 @@ MupCloseUncProvider(PMUP_UNC UncProvider)
 }
 
 NTSTATUS
-DfsFsdCleanup(PDEVICE_OBJECT DeviceObject,
-              PIRP Irp)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
 NTAPI
 MupCleanup(PDEVICE_OBJECT DeviceObject,
            PIRP Irp)
@@ -2454,14 +2416,6 @@ MupCloseFcb(PDEVICE_OBJECT DeviceObject,
 }
 
 NTSTATUS
-DfsFsdClose(PDEVICE_OBJECT DeviceObject,
-            PIRP Irp)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
 NTAPI
 MupClose(PDEVICE_OBJECT DeviceObject,
          PIRP Irp)
@@ -2533,12 +2487,6 @@ MupClose(PDEVICE_OBJECT DeviceObject,
 }
 
 VOID
-DfsUnload(PDRIVER_OBJECT DriverObject)
-{
-    UNIMPLEMENTED;
-}
-
-VOID
 NTAPI
 MupUnload(PDRIVER_OBJECT DriverObject)
 {
@@ -2550,18 +2498,6 @@ MupUnload(PDRIVER_OBJECT DriverObject)
     }
 
     MupUninitializeData();
-}
-
-INIT_SECTION
-NTSTATUS
-DfsDriverEntry(PDRIVER_OBJECT DriverObject,
-               PUNICODE_STRING RegistryPath)
-{
-    /* We don't support DFS yet, so
-     * fail to make sure it remains disabled
-     */
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 /*

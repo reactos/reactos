@@ -1,6 +1,8 @@
 
 list(APPEND SOURCE
+     dfs.c
      mup.c
+     dfs.h
      mup.h)
 
 add_library(mup SHARED ${SOURCE} mup.rc)
