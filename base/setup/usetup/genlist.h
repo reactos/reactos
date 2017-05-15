@@ -36,93 +36,115 @@ CreateGenericList(VOID);
 
 VOID
 DestroyGenericList(
-    PGENERIC_LIST List,
-    BOOLEAN FreeUserData);
+    IN OUT PGENERIC_LIST List,
+    IN BOOLEAN FreeUserData);
 
 BOOLEAN
 AppendGenericListEntry(
-    PGENERIC_LIST List,
-    PCHAR Text,
-    PVOID UserData,
-    BOOLEAN Current);
-
-VOID
-DrawGenericList(
-    PGENERIC_LIST List,
-    SHORT Left,
-    SHORT Top,
-    SHORT Right,
-    SHORT Bottom);
-
-VOID
-ScrollDownGenericList(
-    PGENERIC_LIST List);
-
-VOID
-ScrollUpGenericList(
-    PGENERIC_LIST List);
-
-VOID
-ScrollPageDownGenericList(
-    PGENERIC_LIST List);
-
-VOID
-ScrollPageUpGenericList(
-    PGENERIC_LIST List);
-
-VOID
-ScrollToPositionGenericList(
-    PGENERIC_LIST List,
-    ULONG uIndex);
-
-VOID
-RedrawGenericList(
-    PGENERIC_LIST List);
+    IN OUT PGENERIC_LIST List,
+    IN PCHAR Text,
+    IN PVOID UserData,
+    IN BOOLEAN Current);
 
 VOID
 SetCurrentListEntry(
-    PGENERIC_LIST List,
-    PGENERIC_LIST_ENTRY Entry);
+    IN PGENERIC_LIST List,
+    IN PGENERIC_LIST_ENTRY Entry);
 
 PGENERIC_LIST_ENTRY
 GetCurrentListEntry(
-    PGENERIC_LIST List);
+    IN PGENERIC_LIST List);
 
 PGENERIC_LIST_ENTRY
 GetFirstListEntry(
-    PGENERIC_LIST List);
+    IN PGENERIC_LIST List);
 
 PGENERIC_LIST_ENTRY
 GetNextListEntry(
-    PGENERIC_LIST_ENTRY Entry);
+    IN PGENERIC_LIST_ENTRY Entry);
 
 PVOID
 GetListEntryUserData(
-    PGENERIC_LIST_ENTRY Entry);
+    IN PGENERIC_LIST_ENTRY Entry);
 
 LPCSTR
 GetListEntryText(
-    PGENERIC_LIST_ENTRY Entry);
+    IN PGENERIC_LIST_ENTRY Entry);
 
 ULONG
 GetNumberOfListEntries(
-    PGENERIC_LIST List);
+    IN PGENERIC_LIST List);
 
 VOID
 SaveGenericListState(
-    PGENERIC_LIST List);
+    IN PGENERIC_LIST List);
 
 VOID
 RestoreGenericListState(
-    PGENERIC_LIST List);
+    IN PGENERIC_LIST List);
+
+BOOLEAN
+GenericListHasSingleEntry(
+    IN PGENERIC_LIST List);
+
+
+
+
+typedef struct _GENERIC_LIST_UI
+{
+    PGENERIC_LIST List;
+
+    PLIST_ENTRY FirstShown;
+    PLIST_ENTRY LastShown;
+
+    SHORT Left;
+    SHORT Top;
+    SHORT Right;
+    SHORT Bottom;
+    BOOL Redraw;
+} GENERIC_LIST_UI, *PGENERIC_LIST_UI;
+
+VOID
+InitGenericListUi(
+    IN OUT PGENERIC_LIST_UI ListUi,
+    IN PGENERIC_LIST List);
+
+VOID
+DrawGenericList(
+    IN PGENERIC_LIST_UI ListUi,
+    IN SHORT Left,
+    IN SHORT Top,
+    IN SHORT Right,
+    IN SHORT Bottom);
+
+VOID
+ScrollDownGenericList(
+    IN PGENERIC_LIST_UI ListUi);
+
+VOID
+ScrollUpGenericList(
+    IN PGENERIC_LIST_UI ListUi);
+
+VOID
+ScrollPageDownGenericList(
+    IN PGENERIC_LIST_UI ListUi);
+
+VOID
+ScrollPageUpGenericList(
+    IN PGENERIC_LIST_UI ListUi);
+
+VOID
+ScrollToPositionGenericList(
+    IN PGENERIC_LIST_UI ListUi,
+    IN ULONG uIndex);
+
+VOID
+RedrawGenericList(
+    IN PGENERIC_LIST_UI ListUi);
 
 VOID
 GenericListKeyPress(
-    PGENERIC_LIST GenericList,
-    CHAR AsciiChar);
-
-BOOL
-GenericListHasSingleEntry(
-    PGENERIC_LIST List);
+    IN PGENERIC_LIST_UI ListUi,
+    IN CHAR AsciiChar);
 
 /* EOF */

@@ -639,6 +639,7 @@ UpdateKBLayout(VOID)
 static PAGE_NUMBER
 LanguagePage(PINPUT_RECORD Ir)
 {
+    GENERIC_LIST_UI ListUi;
     PWCHAR NewLanguageId;
     BOOL RefreshPage = FALSE;
 
@@ -646,7 +647,6 @@ LanguagePage(PINPUT_RECORD Ir)
     if (LanguageList == NULL)
     {
         LanguageList = CreateLanguageList(SetupInf, DefaultLanguage);
-
         if (LanguageList == NULL)
         {
            PopupError("Setup failed to initialize available translations", NULL, NULL, POPUP_WAIT_NONE);
@@ -667,13 +667,14 @@ LanguagePage(PINPUT_RECORD Ir)
         return INTRO_PAGE;
     }
 
-    DrawGenericList(LanguageList,
+    InitGenericListUi(&ListUi, LanguageList);
+    DrawGenericList(&ListUi,
                     2,
                     18,
                     xScreen - 3,
                     yScreen - 3);
 
-    ScrollToPositionGenericList(LanguageList, GetDefaultLanguageIndex());
+    ScrollToPositionGenericList(&ListUi, GetDefaultLanguageIndex());
 
     MUIDisplayPage(LANGUAGE_PAGE);
 
@@ -684,25 +685,25 @@ LanguagePage(PINPUT_RECORD Ir)
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))  /* DOWN */
         {
-            ScrollDownGenericList(LanguageList);
+            ScrollDownGenericList(&ListUi);
             RefreshPage = TRUE;
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP))  /* UP */
         {
-            ScrollUpGenericList(LanguageList);
+            ScrollUpGenericList(&ListUi);
             RefreshPage = TRUE;
         }
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_NEXT))  /* PAGE DOWN */
         {
-            ScrollPageDownGenericList(LanguageList);
+            ScrollPageDownGenericList(&ListUi);
             RefreshPage = TRUE;
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_PRIOR))  /* PAGE UP */
         {
-            ScrollPageUpGenericList(LanguageList);
+            ScrollPageUpGenericList(&ListUi);
             RefreshPage = TRUE;
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
@@ -711,7 +712,7 @@ LanguagePage(PINPUT_RECORD Ir)
             if (ConfirmQuit(Ir) != FALSE)
                 return QUIT_PAGE;
             else
-                RedrawGenericList(LanguageList);
+                RedrawGenericList(&ListUi);
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)  /* ENTER */
         {
@@ -732,7 +733,7 @@ LanguagePage(PINPUT_RECORD Ir)
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar > 0x60) && (Ir->Event.KeyEvent.uChar.AsciiChar < 0x7b))
         {
             /* a-z */
-            GenericListKeyPress(LanguageList, Ir->Event.KeyEvent.uChar.AsciiChar);
+            GenericListKeyPress(&ListUi, Ir->Event.KeyEvent.uChar.AsciiChar);
             RefreshPage = TRUE;
         }
 
@@ -914,12 +915,11 @@ SetupStartPage(PINPUT_RECORD Ir)
         LanguageList = CreateLanguageList(SetupInf, DefaultLanguage);
 
         /* new part */
-        wcscpy(SelectedLanguageId,LocaleID);
+        wcscpy(SelectedLanguageId, LocaleID);
         LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
 
         /* first we hack LanguageList */
         ListEntry = GetFirstListEntry(LanguageList);
-
         while (ListEntry != NULL)
         {
             if (!wcsicmp(LocaleID, GetListEntryUserData(ListEntry)))
@@ -934,7 +934,6 @@ SetupStartPage(PINPUT_RECORD Ir)
 
         /* now LayoutList */
         ListEntry = GetFirstListEntry(LayoutList);
-
         while (ListEntry != NULL)
         {
             if (!wcsicmp(LocaleID, GetListEntryUserData(ListEntry)))
@@ -1318,7 +1317,7 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
  * Ir: The PINPUT_RECORD
  */
 static PAGE_NUMBER
-HandleGenericList(PGENERIC_LIST GenericList,
+HandleGenericList(PGENERIC_LIST_UI ListUi,
                   PAGE_NUMBER nextPage,
                   PINPUT_RECORD Ir)
 {
@@ -1329,36 +1328,36 @@ HandleGenericList(PGENERIC_LIST GenericList,
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))  /* DOWN */
         {
-            ScrollDownGenericList(GenericList);
+            ScrollDownGenericList(ListUi);
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP))  /* UP */
         {
-            ScrollUpGenericList(GenericList);
+            ScrollUpGenericList(ListUi);
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_NEXT))  /* PAGE DOWN */
         {
-            ScrollPageDownGenericList(GenericList);
+            ScrollPageDownGenericList(ListUi);
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_PRIOR))  /* PAGE UP */
         {
-            ScrollPageUpGenericList(GenericList);
+            ScrollPageUpGenericList(ListUi);
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
         {
             if (ConfirmQuit(Ir) != FALSE)
                 return QUIT_PAGE;
-
-            continue;
+            else
+                RedrawGenericList(ListUi);
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))  /* ESC */
         {
-            RestoreGenericListState(GenericList);
-            return nextPage;
+            RestoreGenericListState(ListUi->List);
+            return nextPage;    // Use some "prevPage;" instead?
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
         {
@@ -1367,7 +1366,7 @@ HandleGenericList(PGENERIC_LIST GenericList,
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar > 0x60) && (Ir->Event.KeyEvent.uChar.AsciiChar < 0x7b))
         {
             /* a-z */
-            GenericListKeyPress(GenericList, Ir->Event.KeyEvent.uChar.AsciiChar);
+            GenericListKeyPress(ListUi, Ir->Event.KeyEvent.uChar.AsciiChar);
         }
     }
 }
@@ -1386,9 +1385,11 @@ HandleGenericList(PGENERIC_LIST GenericList,
 static PAGE_NUMBER
 ComputerSettingsPage(PINPUT_RECORD Ir)
 {
+    GENERIC_LIST_UI ListUi;
     MUIDisplayPage(COMPUTER_SETTINGS_PAGE);
 
-    DrawGenericList(ComputerList,
+    InitGenericListUi(&ListUi, ComputerList);
+    DrawGenericList(&ListUi,
                     2,
                     18,
                     xScreen - 3,
@@ -1396,7 +1397,7 @@ ComputerSettingsPage(PINPUT_RECORD Ir)
 
     SaveGenericListState(ComputerList);
 
-    return HandleGenericList(ComputerList, DEVICE_SETTINGS_PAGE, Ir);
+    return HandleGenericList(&ListUi, DEVICE_SETTINGS_PAGE, Ir);
 }
  
  
@@ -1413,9 +1414,11 @@ ComputerSettingsPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 DisplaySettingsPage(PINPUT_RECORD Ir)
 {
+    GENERIC_LIST_UI ListUi;
     MUIDisplayPage(DISPLAY_SETTINGS_PAGE);
 
-    DrawGenericList(DisplayList,
+    InitGenericListUi(&ListUi, DisplayList);
+    DrawGenericList(&ListUi,
                     2,
                     18,
                     xScreen - 3,
@@ -1423,7 +1426,7 @@ DisplaySettingsPage(PINPUT_RECORD Ir)
 
     SaveGenericListState(DisplayList);
 
-    return HandleGenericList(DisplayList, DEVICE_SETTINGS_PAGE, Ir);
+    return HandleGenericList(&ListUi, DEVICE_SETTINGS_PAGE, Ir);
 }
 
 
@@ -1440,9 +1443,11 @@ DisplaySettingsPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 KeyboardSettingsPage(PINPUT_RECORD Ir)
 {
+    GENERIC_LIST_UI ListUi;
     MUIDisplayPage(KEYBOARD_SETTINGS_PAGE);
 
-    DrawGenericList(KeyboardList,
+    InitGenericListUi(&ListUi, KeyboardList);
+    DrawGenericList(&ListUi,
                     2,
                     18,
                     xScreen - 3,
@@ -1450,7 +1455,7 @@ KeyboardSettingsPage(PINPUT_RECORD Ir)
 
     SaveGenericListState(KeyboardList);
 
-    return HandleGenericList(KeyboardList, DEVICE_SETTINGS_PAGE, Ir);
+    return HandleGenericList(&ListUi, DEVICE_SETTINGS_PAGE, Ir);
 }
 
 
@@ -1467,9 +1472,11 @@ KeyboardSettingsPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 LayoutSettingsPage(PINPUT_RECORD Ir)
 {
+    GENERIC_LIST_UI ListUi;
     MUIDisplayPage(LAYOUT_SETTINGS_PAGE);
 
-    DrawGenericList(LayoutList,
+    InitGenericListUi(&ListUi, LayoutList);
+    DrawGenericList(&ListUi,
                     2,
                     18,
                     xScreen - 3,
@@ -1477,7 +1484,7 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
 
     SaveGenericListState(LayoutList);
 
-    return HandleGenericList(LayoutList, DEVICE_SETTINGS_PAGE, Ir);
+    return HandleGenericList(&ListUi, DEVICE_SETTINGS_PAGE, Ir);
 }
 
 
@@ -2878,7 +2885,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
  * RETURNS
  *   Number of the next page.
  */
-static ULONG
+static PAGE_NUMBER
 FormatPartitionPage(PINPUT_RECORD Ir)
 {
     UNICODE_STRING PartitionRootPath;
@@ -3068,7 +3075,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
  * RETURNS
  *   Number of the next page.
  */
-static ULONG
+static PAGE_NUMBER
 CheckFileSystemPage(PINPUT_RECORD Ir)
 {
     PFILE_SYSTEM_ITEM CurrentFileSystem;
@@ -3875,8 +3882,7 @@ FileCopyCallback(PVOID Context,
  * RETURNS
  *   Number of the next page.
  */
-static
-PAGE_NUMBER
+static PAGE_NUMBER
 FileCopyPage(PINPUT_RECORD Ir)
 {
     COPYCONTEXT CopyContext;
@@ -4073,7 +4079,6 @@ RegistryPage(PINPUT_RECORD Ir)
     }
 
     /* Set GeoID */
-
     if (!SetGeoID(MUIGetGeoID()))
     {
         MUIDisplayError(ERROR_UPDATE_GEOID, Ir, POPUP_WAIT_ENTER);
@@ -4307,7 +4312,7 @@ BootLoaderFloppyPage(PINPUT_RECORD Ir)
 
     MUIDisplayPage(BOOT_LOADER_FLOPPY_PAGE);
 
-//  SetStatusText("   Please wait...");
+//  CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
     while (TRUE)
     {
@@ -4471,48 +4476,49 @@ QuitPage(PINPUT_RECORD Ir)
 {
     MUIDisplayPage(QUIT_PAGE);
 
-    /* Destroy partition list */
+    /* Destroy the partition list */
     if (PartitionList != NULL)
     {
         DestroyPartitionList(PartitionList);
         PartitionList = NULL;
     }
 
-    /* Destroy filesystem list */
+    /* Destroy the filesystem list */
     if (FileSystemList != NULL)
     {
         DestroyFileSystemList(FileSystemList);
         FileSystemList = NULL;
     }
 
-    /* Destroy computer settings list */
+    /* Destroy the computer settings list */
     if (ComputerList != NULL)
     {
         DestroyGenericList(ComputerList, TRUE);
         ComputerList = NULL;
     }
 
-    /* Destroy display settings list */
+    /* Destroy the display settings list */
     if (DisplayList != NULL)
     {
         DestroyGenericList(DisplayList, TRUE);
         DisplayList = NULL;
     }
 
-    /* Destroy keyboard settings list */
+    /* Destroy the keyboard settings list */
     if (KeyboardList != NULL)
     {
         DestroyGenericList(KeyboardList, TRUE);
         KeyboardList = NULL;
     }
 
-    /* Destroy keyboard layout list */
+    /* Destroy the keyboard layout list */
     if (LayoutList != NULL)
     {
         DestroyGenericList(LayoutList, TRUE);
         LayoutList = NULL;
     }
 
+    /* Destroy the languages list */
     if (LanguageList != NULL)
     {
         DestroyGenericList(LanguageList, FALSE);
@@ -4602,6 +4608,7 @@ RunUSetup(VOID)
 
     NtQuerySystemTime(&Time);
 
+    /* Create the PnP thread in suspended state */
     Status = RtlCreateUserThread(NtCurrentProcess(),
                                  NULL,
                                  TRUE,
@@ -4679,9 +4686,7 @@ RunUSetup(VOID)
             case SCSI_CONTROLLER_PAGE:
                 Page = ScsiControllerPage(&Ir);
                 break;
-#endif
 
-#if 0
             case OEM_DRIVER_PAGE:
                 Page = OemDriverPage(&Ir);
                 break;
@@ -4736,11 +4741,11 @@ RunUSetup(VOID)
                 break;
 
             case FORMAT_PARTITION_PAGE:
-                Page = (PAGE_NUMBER) FormatPartitionPage(&Ir);
+                Page = FormatPartitionPage(&Ir);
                 break;
 
             case CHECK_FILE_SYSTEM_PAGE:
-                Page = (PAGE_NUMBER) CheckFileSystemPage(&Ir);
+                Page = CheckFileSystemPage(&Ir);
                 break;
 
             case INSTALL_DIRECTORY_PAGE:
