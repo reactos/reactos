@@ -1,60 +1,68 @@
 #include "intl.h"
 
+#include <debug.h>
+
 typedef struct CPStruct
 {
-    WORD    Status;
-    UINT    CPage;
-    HANDLE  hCPage;
-    TCHAR   Name[MAX_PATH];
-    struct  CPStruct *NextItem;
-} CPAGE, *LPCPAGE;
+    WORD Status;
+    UINT CodePage;
+    WCHAR Name[MAX_PATH];
+    struct CPStruct *NextItem;
+} CPAGE, *PCPAGE;
 
-static LPCPAGE PCPage = NULL;
-static HINF hIntlInf;
+static PCPAGE PCPage = NULL;
 static BOOL bSpain = FALSE;
 static HWND hLangList;
 
 static BOOL
-GetSupportedCP(VOID)
+GetSupportedCP(
+    HINF hInf)
 {
-    UINT uiCPage, Number;
-    LONG Count;
-    INFCONTEXT infCont;
-    LPCPAGE lpCPage;
-    HANDLE hCPage;
+    INFCONTEXT Context;
+    PCPAGE pCodePage;
     CPINFOEX cpInfEx;
-    //TCHAR Section[MAX_PATH];
+    UINT uiCodePage;
 
-    Count = SetupGetLineCountW(hIntlInf, L"CodePages");
-    if (Count <= 0) return FALSE;
+    if (!SetupFindFirstLine(hInf,
+                            L"CodePages",
+                            NULL,
+                            &Context))
+        return FALSE;
 
-    for (Number = 0; Number < (UINT)Count; Number++)
+    for (;;)
     {
-        if (SetupGetLineByIndexW(hIntlInf, L"CodePages", Number, &infCont) &&
-            SetupGetIntField(&infCont, 0, (PINT)&uiCPage))
+        if (SetupGetIntField(&Context, 0, (PINT)&uiCodePage))
         {
-            if (!(hCPage = GlobalAlloc(GHND, sizeof(CPAGE)))) return FALSE;
+            pCodePage = HeapAlloc(GetProcessHeap(), 0, sizeof(CPAGE));
+            if (pCodePage == NULL)
+                return FALSE;
 
-            lpCPage            = GlobalLock(hCPage);
-            lpCPage->CPage     = uiCPage;
-            lpCPage->hCPage    = hCPage;
-            lpCPage->Status    = 0;
-            (lpCPage->Name)[0] = 0;
+            pCodePage->CodePage = uiCodePage;
+            pCodePage->Status = 0;
+            (pCodePage->Name)[0] = UNICODE_NULL;
 
-            if (GetCPInfoEx(uiCPage, 0, &cpInfEx))
+            if (GetCPInfoExW(uiCodePage, 0, &cpInfEx))
             {
-                wcscpy(lpCPage->Name, cpInfEx.CodePageName);
+                wcscpy(pCodePage->Name, cpInfEx.CodePageName);
             }
-            else if (!SetupGetStringFieldW(&infCont, 1, lpCPage->Name, MAX_PATH, NULL))
+            else
             {
-                GlobalUnlock(hCPage);
-                GlobalFree(hCPage);
-                continue;
+                SetupGetStringFieldW(&Context, 1, pCodePage->Name, MAX_PATH, NULL);
             }
 
-            lpCPage->NextItem = PCPage;
-            PCPage = lpCPage;
+            if (wcslen(pCodePage->Name) != 0)
+            {
+                pCodePage->NextItem = PCPage;
+                PCPage = pCodePage;
+            }
+            else
+            {
+                HeapFree(GetProcessHeap(), 0, pCodePage);
+            }
         }
+
+        if (!SetupFindNextLine(&Context, &Context))
+            break;
     }
 
     return TRUE;
@@ -63,7 +71,7 @@ GetSupportedCP(VOID)
 static BOOL CALLBACK
 InstalledCPProc(PWSTR lpStr)
 {
-    LPCPAGE lpCP;
+    PCPAGE lpCP;
     UINT uiCP;
 
     lpCP = PCPage;
@@ -71,12 +79,15 @@ InstalledCPProc(PWSTR lpStr)
 
     for (;;)
     {
-        if (!lpCP) break;
-        if (lpCP->CPage == uiCP)
+        if (!lpCP)
+            break;
+
+        if (lpCP->CodePage == uiCP)
         {
             lpCP->Status |= 0x0001;
             break;
         }
+
         lpCP = lpCP->NextItem;
     }
 
@@ -86,17 +97,15 @@ InstalledCPProc(PWSTR lpStr)
 static VOID
 InitCodePagesList(HWND hwndDlg)
 {
-    LPCPAGE lpCPage;
+    PCPAGE pCodePage;
     INT ItemIndex;
     HWND hList;
     LV_COLUMN column;
     LV_ITEM item;
     RECT ListRect;
-
-    hList = GetDlgItem(hwndDlg, IDC_CONV_TABLES);
+    HINF hIntlInf;
 
     hIntlInf = SetupOpenInfFileW(L"intl.inf", NULL, INF_STYLE_WIN4, NULL);
-
     if (hIntlInf == INVALID_HANDLE_VALUE)
         return;
 
@@ -107,40 +116,46 @@ InitCodePagesList(HWND hwndDlg)
         return;
     }
 
-    if (!GetSupportedCP())
+    if (!GetSupportedCP(hIntlInf))
         return;
 
     SetupCloseInfFile(hIntlInf);
 
-    if (!EnumSystemCodePages(InstalledCPProc, CP_INSTALLED))
-        return;
+    if (!EnumSystemCodePagesW(InstalledCPProc, CP_INSTALLED))
+    {
+        /* Hack: EnumSystemCodePages returns FALSE on successful completion! */
+        /* return; */
+    }
+
+    hList = GetDlgItem(hwndDlg, IDC_CONV_TABLES);
 
     ZeroMemory(&column, sizeof(LV_COLUMN));
-    column.mask = LVCF_FMT|LVCF_TEXT|LVCF_WIDTH;
-    column.fmt  = LVCFMT_LEFT;
+    column.mask = LVCF_FMT | LVCF_WIDTH;
+    column.fmt = LVCFMT_LEFT;
     GetClientRect(hList, &ListRect);
-    column.cx   = ListRect.right - GetSystemMetrics(SM_CYHSCROLL);
-    (VOID) ListView_InsertColumn(hList, 0, &column);
+    column.cx = ListRect.right - GetSystemMetrics(SM_CYHSCROLL);
+    ListView_InsertColumn(hList, 0, &column);
 
-    (VOID) ListView_SetExtendedListViewStyle(hList, LVS_EX_CHECKBOXES|LVS_EX_FULLROWSELECT);
+    (VOID) ListView_SetExtendedListViewStyle(hList, LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT);
 
-    lpCPage = PCPage;
+    pCodePage = PCPage;
 
     for (;;)
     {
-        if (!lpCPage) break;
+        if (pCodePage == NULL)
+            break;
+
         ZeroMemory(&item, sizeof(LV_ITEM));
-        item.mask      = LVIF_TEXT|LVIF_PARAM|LVIF_STATE;
+        item.mask      = LVIF_TEXT | LVIF_PARAM | LVIF_STATE;
         item.state     = 0;
         item.stateMask = LVIS_STATEIMAGEMASK;
-        item.pszText   = lpCPage->Name;
-        item.lParam    = (LPARAM)lpCPage;
+        item.pszText   = pCodePage->Name;
+        item.lParam    = (LPARAM)pCodePage;
 
         ItemIndex = ListView_InsertItem(hList, &item);
-
-        if (ItemIndex >= 0)
+        if (ItemIndex != -1)
         {
-            if (lpCPage->Status & 0x0001)
+            if (pCodePage->Status & 0x0001)
             {
                 ListView_SetItemState(hList, ItemIndex,
                                       INDEXTOSTATEIMAGEMASK(LVIS_SELECTED),
@@ -154,7 +169,7 @@ InitCodePagesList(HWND hwndDlg)
             }
         }
 
-        lpCPage = lpCPage->NextItem;
+        pCodePage = pCodePage->NextItem;
     }
 }
 
@@ -278,7 +293,7 @@ SaveFontSubstitutionSettings(
         return;
     }
 
-    Count = (UINT) SetupGetLineCount(hFontInf, szSection);
+    Count = (UINT)SetupGetLineCount(hFontInf, szSection);
     if (Count <= 0)
         return;
 
