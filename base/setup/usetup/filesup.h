@@ -41,14 +41,41 @@ SetupExtractFile(
     PWCHAR SourceFileName,
     PWCHAR DestinationFileName);
 
-BOOLEAN
-DoesFileExist(
-    PWSTR PathName,
-    PWSTR FileName);
 
 BOOLEAN
 IsValidPath(
-    PWCHAR InstallDir,
-    ULONG Length);
+    IN PWCHAR InstallDir,
+    IN ULONG Length);
+
+HRESULT
+ConcatPaths(
+    IN OUT PWSTR PathElem1,
+    IN SIZE_T cchPathSize,
+    IN PCWSTR PathElem2 OPTIONAL);
+
+BOOLEAN
+DoesPathExist(
+    IN HANDLE RootDirectory OPTIONAL,
+    IN PCWSTR PathName);
+
+BOOLEAN
+DoesFileExist(
+    IN HANDLE RootDirectory OPTIONAL,
+    IN PCWSTR PathName OPTIONAL,
+    IN PCWSTR FileName);
+
+NTSTATUS
+OpenAndMapFile(
+    IN HANDLE RootDirectory OPTIONAL,
+    IN PCWSTR PathName OPTIONAL,
+    IN PCWSTR FileName,             // OPTIONAL
+    OUT PHANDLE FileHandle,         // IN OUT PHANDLE OPTIONAL
+    OUT PHANDLE SectionHandle,
+    OUT PVOID* BaseAddress);
+
+BOOLEAN
+UnMapFile(
+    IN HANDLE SectionHandle,
+    IN PVOID BaseAddress);
 
 /* EOF */

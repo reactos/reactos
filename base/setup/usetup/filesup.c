@@ -93,59 +93,6 @@ SetupCreateSingleDirectory(
     return Status;
 }
 
-
-static
-BOOLEAN
-DoesPathExist(
-    PWSTR PathName)
-{
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
-    UNICODE_STRING Name;
-    HANDLE FileHandle;
-    NTSTATUS Status;
-
-    RtlInitUnicodeString(&Name, PathName);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (NT_SUCCESS(Status))
-        NtClose(FileHandle);
-
-    return NT_SUCCESS(Status);
-}
-
-
-BOOLEAN
-IsValidPath(
-    PWCHAR InstallDir,
-    ULONG Length)
-{
-    UINT i;
-
-    // TODO: Add check for 8.3 too.
-
-    /* Check for whitespaces */
-    for (i = 0; i < Length; i++)
-    {
-        if (isspace(InstallDir[i]))
-            return FALSE;
-    }
-
-    return TRUE;
-}
-
-
 NTSTATUS
 SetupCreateDirectory(
     PWCHAR PathName)
@@ -183,7 +130,7 @@ SetupCreateDirectory(
             *Ptr = 0;
 
             DPRINT("PathBuffer: %S\n", PathBuffer);
-            if (!DoesPathExist(PathBuffer))
+            if (!DoesPathExist(NULL, PathBuffer))
             {
                 DPRINT("Create: %S\n", PathBuffer);
                 Status = SetupCreateSingleDirectory(PathBuffer);
@@ -197,7 +144,7 @@ SetupCreateDirectory(
         Ptr++;
     }
 
-    if (!DoesPathExist(PathBuffer))
+    if (!DoesPathExist(NULL, PathBuffer))
     {
         DPRINT("Create: %S\n", PathBuffer);
         Status = SetupCreateSingleDirectory(PathBuffer);
@@ -212,7 +159,6 @@ done:
 
     return Status;
 }
-
 
 NTSTATUS
 SetupCopyFile(
@@ -233,7 +179,6 @@ SetupCopyFile(
     SIZE_T SourceSectionSize = 0;
     LARGE_INTEGER ByteOffset;
 
-#ifdef __REACTOS__
     RtlInitUnicodeString(&FileName,
                          SourceFileName);
 
@@ -254,20 +199,6 @@ SetupCopyFile(
         DPRINT1("NtOpenFile failed: %x, %wZ\n", Status, &FileName);
         goto done;
     }
-#else
-    FileHandleSource = CreateFileW(SourceFileName,
-                                   GENERIC_READ,
-                                   FILE_SHARE_READ,
-                                   NULL,
-                                   OPEN_EXISTING,
-                                   0,
-                                   NULL);
-    if (FileHandleSource == INVALID_HANDLE_VALUE)
-    {
-        Status = STATUS_UNSUCCESSFUL;
-        goto done;
-    }
-#endif
 
     Status = NtQueryInformationFile(FileHandleSource,
                                     &IoStatusBlock,
@@ -484,44 +415,254 @@ SetupExtractFile(
 }
 #endif
 
+
+BOOLEAN
+IsValidPath(
+    IN PWCHAR InstallDir,
+    IN ULONG Length)
+{
+    UINT i;
+
+    // TODO: Add check for 8.3 too.
+
+    /* Check for whitespaces */
+    for (i = 0; i < Length; i++)
+    {
+        if (isspace(InstallDir[i]))
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+HRESULT
+ConcatPaths(
+    IN OUT PWSTR PathElem1,
+    IN SIZE_T cchPathSize,
+    IN PCWSTR PathElem2 OPTIONAL)
+{
+    HRESULT hr;
+    SIZE_T cchPathLen;
+
+    if (!PathElem2)
+        return S_OK;
+    if (cchPathSize <= 1)
+        return S_OK;
+
+    cchPathLen = min(cchPathSize, wcslen(PathElem1));
+
+    if (PathElem2[0] != L'\\' && cchPathLen > 0 && PathElem1[cchPathLen-1] != L'\\')
+    {
+        /* PathElem2 does not start with '\' and PathElem1 does not end with '\' */
+        hr = StringCchCatW(PathElem1, cchPathSize, L"\\");
+        if (FAILED(hr))
+            return hr;
+    }
+    else if (PathElem2[0] == L'\\' && cchPathLen > 0 && PathElem1[cchPathLen-1] == L'\\')
+    {
+        /* PathElem2 starts with '\' and PathElem1 ends with '\' */
+        while (*PathElem2 == L'\\')
+            ++PathElem2; // Skip any backslash
+    }
+    hr = StringCchCatW(PathElem1, cchPathSize, PathElem2);
+    return hr;
+}
+
+//
+// NOTE: It may be possible to merge both DoesPathExist and DoesFileExist...
+//
+BOOLEAN
+DoesPathExist(
+    IN HANDLE RootDirectory OPTIONAL,
+    IN PCWSTR PathName)
+{
+    NTSTATUS Status;
+    HANDLE FileHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    UNICODE_STRING Name;
+
+    RtlInitUnicodeString(&Name, PathName);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               RootDirectory,
+                               NULL);
+
+    Status = NtOpenFile(&FileHandle,
+                        FILE_LIST_DIRECTORY | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_DIRECTORY_FILE);
+    if (NT_SUCCESS(Status))
+        NtClose(FileHandle);
+    else
+        DPRINT1("Failed to open directory %wZ, Status 0x%08lx\n", &Name, Status);
+
+    return NT_SUCCESS(Status);
+}
+
 BOOLEAN
 DoesFileExist(
-    PWSTR PathName,
-    PWSTR FileName)
+    IN HANDLE RootDirectory OPTIONAL,
+    IN PCWSTR PathName OPTIONAL,
+    IN PCWSTR FileName)
 {
+    NTSTATUS Status;
+    HANDLE FileHandle;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
     UNICODE_STRING Name;
     WCHAR FullName[MAX_PATH];
-    HANDLE FileHandle;
-    NTSTATUS Status;
 
-    wcscpy(FullName, PathName);
-    if (FileName != NULL)
-    {
-        if (FileName[0] != L'\\')
-            wcscat(FullName, L"\\");
-        wcscat(FullName, FileName);
-    }
+    if (PathName)
+        StringCchCopyW(FullName, ARRAYSIZE(FullName), PathName);
+    else
+        FullName[0] = UNICODE_NULL;
+
+    if (FileName)
+        ConcatPaths(FullName, ARRAYSIZE(FullName), FileName);
 
     RtlInitUnicodeString(&Name, FullName);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
                                OBJ_CASE_INSENSITIVE,
-                               NULL,
+                               RootDirectory,
                                NULL);
 
     Status = NtOpenFile(&FileHandle,
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
     if (NT_SUCCESS(Status))
         NtClose(FileHandle);
+    else
+        DPRINT1("Failed to open file %wZ, Status 0x%08lx\n", &Name, Status);
 
     return NT_SUCCESS(Status);
+}
+
+NTSTATUS
+OpenAndMapFile(
+    IN HANDLE RootDirectory OPTIONAL,
+    IN PCWSTR PathName OPTIONAL,
+    IN PCWSTR FileName,             // OPTIONAL
+    OUT PHANDLE FileHandle,         // IN OUT PHANDLE OPTIONAL
+    OUT PHANDLE SectionHandle,
+    OUT PVOID* BaseAddress)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    SIZE_T ViewSize;
+    PVOID ViewBase;
+    UNICODE_STRING Name;
+    WCHAR FullName[MAX_PATH];
+
+    if (PathName)
+        StringCchCopyW(FullName, ARRAYSIZE(FullName), PathName);
+    else
+        FullName[0] = UNICODE_NULL;
+
+    if (FileName)
+        ConcatPaths(FullName, ARRAYSIZE(FullName), FileName);
+
+    RtlInitUnicodeString(&Name, FullName);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               RootDirectory,
+                               NULL);
+
+    *FileHandle = NULL;
+    *SectionHandle = NULL;
+
+    Status = NtOpenFile(FileHandle,
+                        GENERIC_READ | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ,
+                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to open file %wZ, Status 0x%08lx\n", &Name, Status);
+        return Status;
+    }
+
+    /* Map the file in memory */
+
+    /* Create the section */
+    Status = NtCreateSection(SectionHandle,
+                             SECTION_MAP_READ,
+                             NULL,
+                             NULL,
+                             PAGE_READONLY,
+                             SEC_COMMIT /* | SEC_IMAGE (_NO_EXECUTE) */,
+                             *FileHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create a memory section for file %wZ, Status 0x%08lx\n", &Name, Status);
+        NtClose(*FileHandle);
+        *FileHandle = NULL;
+        return Status;
+    }
+
+    /* Map the section */
+    ViewSize = 0;
+    ViewBase = NULL;
+    Status = NtMapViewOfSection(*SectionHandle,
+                                NtCurrentProcess(),
+                                &ViewBase,
+                                0, 0,
+                                NULL,
+                                &ViewSize,
+                                ViewShare,
+                                0,
+                                PAGE_READONLY);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to map a view for file %wZ, Status 0x%08lx\n", &Name, Status);
+        NtClose(*SectionHandle);
+        *SectionHandle = NULL;
+        NtClose(*FileHandle);
+        *FileHandle = NULL;
+        return Status;
+    }
+
+    *BaseAddress = ViewBase;
+    return STATUS_SUCCESS;
+}
+
+BOOLEAN
+UnMapFile(
+    IN HANDLE SectionHandle,
+    IN PVOID BaseAddress)
+{
+    NTSTATUS Status;
+    BOOLEAN Success = TRUE;
+
+    Status = NtUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("UnMapFile: NtUnmapViewOfSection(0x%p) failed with Status 0x%08lx\n",
+                BaseAddress, Status);
+        Success = FALSE;
+    }
+    Status = NtClose(SectionHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("UnMapFile: NtClose(0x%p) failed with Status 0x%08lx\n",
+                SectionHandle, Status);
+        Success = FALSE;
+    }
+
+    return Success;
 }
 
 /* EOF */
