@@ -82,7 +82,7 @@ static MUI_ENTRY ptBRWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Para instalar o ReactOS agora, pressione ENTER.",
+        "\x07  Press ENTER to install or upgrade ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -464,6 +464,76 @@ static MUI_ENTRY ptBRRepairPageEntries[] =
         0,
         0,
         "ESC=P gina principal  U=Atualizar  R=Recuperar  ENTER=Reiniciar",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY ptBRUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  Press UP or DOWN to select an OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Press U for upgrading the selected OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press ESC to continue with a new installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1666,6 +1736,10 @@ MUI_PAGE ptBRPages[] =
     {
         REPAIR_INTRO_PAGE,
         ptBRRepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        ptBRUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,

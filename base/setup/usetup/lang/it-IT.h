@@ -82,7 +82,7 @@ static MUI_ENTRY itITWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Premere INVIO per installare ReactOS.",
+        "\x07  Press ENTER to install or upgrade ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -425,52 +425,122 @@ static MUI_ENTRY itITRepairPageEntries[] =
         TEXT_STYLE_UNDERLINE
     },
     {
-        6, 
+        6,
         8,
         "Il setup di ReactOS \x8A ancora in una fase preliminare.",
         TEXT_STYLE_NORMAL
     },
     {
-        6, 
+        6,
         9,
         "Non ha ancora tutte le funzioni di installazione.",
         TEXT_STYLE_NORMAL
     },
     {
-        6, 
+        6,
         12,
         "Le funzioni di ripristino non sono state ancora implementate.",
         TEXT_STYLE_NORMAL
     },
     {
-        8, 
+        8,
         15,
         "\x07  Premere U per aggiornare il SO.",
         TEXT_STYLE_NORMAL
     },
     {
-        8, 
+        8,
         17,
         "\x07  Premere R per la console di ripristino.",
         TEXT_STYLE_NORMAL
     },
     {
-        8, 
+        8,
         19,
         "\x07  Premere ESC tornare al men\x97 principale.",
         TEXT_STYLE_NORMAL
     },
     {
-        8, 
+        8,
         21,
         "\x07  Premere INVIO per riavviare il computer.",
         TEXT_STYLE_NORMAL
     },
     {
-        0, 
+        0,
         0,
         "ESC = Men\x97 iniziale INVIO = Riavvio",
         TEXT_TYPE_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY itITUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  Press UP or DOWN to select an OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Press U for upgrading the selected OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press ESC to continue with a new installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1641,6 +1711,10 @@ MUI_PAGE itITPages[] =
     {
         REPAIR_INTRO_PAGE,
         itITRepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        itITUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,

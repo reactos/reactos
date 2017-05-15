@@ -81,13 +81,14 @@ static MUI_ENTRY enUSWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Press ENTER to install ReactOS.",
+        "\x07  Press ENTER to install or upgrade ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press R to repair or update ReactOS.",
+     // "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
+        "\x07  Press R to repair a ReactOS installation.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -478,6 +479,77 @@ static MUI_ENTRY enUSRepairPageEntries[] =
         0
     }
 };
+
+static MUI_ENTRY enUSUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  Press UP or DOWN to select an OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Press U for upgrading the selected OS installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Press ESC to continue with a new installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY enUSComputerPageEntries[] =
 {
     {
@@ -923,7 +995,6 @@ static MUI_ENTRY enUSConfirmDeleteSystemPartitionEntries[] =
         0
     }
 };
-
 
 static MUI_ENTRY enUSFormatPartitionEntries[] =
 {
@@ -1634,6 +1705,10 @@ MUI_PAGE enUSPages[] =
     {
         REPAIR_INTRO_PAGE,
         enUSRepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        enUSUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,

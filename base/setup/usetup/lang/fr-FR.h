@@ -82,7 +82,7 @@ static MUI_ENTRY frFRWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Appuyer sur ENTRêE pour installer ReactOS.",
+        "\x07  Appuyer sur ENTRêE pour installer ou mettre Ö jour ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -463,7 +463,7 @@ static MUI_ENTRY frFRRepairPageEntries[] =
     {
         8,
         19,
-        "\x07  Appuyer sur êCHAP pour retourner Ö la page principale.",
+        "\x07  Appuyer sur êCHAP pour revenir Ö la page principale.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -476,6 +476,76 @@ static MUI_ENTRY frFRRepairPageEntries[] =
         0,
         0,
         "êCHAP = Page principale  ENTRêE = RedÇmarrer",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY frFRUpgradePageEntries[] =
+{
+    {
+        4,
+        3,
+        " Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "Le programme d'installation de ReactOS peut mettre Ö jour l'une des",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        9,
+        "installations de ReactOS listÇes ci-dessous, ou bien, si l'une d'elles",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "est endommagÇe, le programme d'installation peut essayer de la rÇparer.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        12,
+        "Les fonctions de rÇparation ne sont pas toutes implÇmentÇes.",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        8,
+        15,
+        "\x07  Appuyer sur HAUT ou BAS pour sÇlectionner une installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Appuyer sur U pour mettre Ö jour l'installation sÇlectionnÇe.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        19,
+        "\x07  Appuyer sur êCHAP pour effectuer une nouvelle installation.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Appuyer sur F3 pour quitter sans installer ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        0,
+        0,
+        "U = Mettre Ö jour   êCHAP = Annuler   F3 = Quitter",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -921,7 +991,7 @@ static MUI_ENTRY frFRConfirmDeleteSystemPartitionEntries[] =
     {
         8,
         26,
-        "\x07  Appuyer sur êCHAP pour retourner Ö la page principale. La partition",
+        "\x07  Appuyer sur êCHAP pour revenir Ö la page principale. La partition",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1653,6 +1723,10 @@ MUI_PAGE frFRPages[] =
     {
         REPAIR_INTRO_PAGE,
         frFRRepairPageEntries
+    },
+    {
+        UPGRADE_REPAIR_PAGE,
+        frFRUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
