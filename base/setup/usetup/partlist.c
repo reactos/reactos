@@ -1418,11 +1418,7 @@ AddDiskToList(
 
 
 PPARTLIST
-CreatePartitionList(
-    SHORT Left,
-    SHORT Top,
-    SHORT Right,
-    SHORT Bottom)
+CreatePartitionList(VOID)
 {
     PPARTLIST List;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -1441,14 +1437,6 @@ CreatePartitionList(
     if (List == NULL)
         return NULL;
 
-    List->Left = Left;
-    List->Top = Top;
-    List->Right = Right;
-    List->Bottom = Bottom;
-
-    List->Line = 0;
-    List->Offset = 0;
-
     List->CurrentDisk = NULL;
     List->CurrentPartition = NULL;
 
@@ -1465,10 +1453,11 @@ CreatePartitionList(
 
     Status = NtQuerySystemInformation(SystemDeviceInformation,
                                       &Sdi,
-                                      sizeof(SYSTEM_DEVICE_INFORMATION),
+                                      sizeof(Sdi),
                                       &ReturnSize);
     if (!NT_SUCCESS(Status))
     {
+        DPRINT1("NtQuerySystemInformation() failed, Status 0x%08lx", Status);
         RtlFreeHeap(ProcessHeap, 0, List);
         return NULL;
     }
@@ -1592,23 +1581,47 @@ DestroyPartitionList(
 }
 
 
+VOID
+InitPartitionListUi(
+    IN OUT PPARTLIST_UI ListUi,
+    IN PPARTLIST List,
+    IN SHORT Left,
+    IN SHORT Top,
+    IN SHORT Right,
+    IN SHORT Bottom)
+{
+    ListUi->List = List;
+    // ListUi->FirstShown = NULL;
+    // ListUi->LastShown = NULL;
+
+    ListUi->Left = Left;
+    ListUi->Top = Top;
+    ListUi->Right = Right;
+    ListUi->Bottom = Bottom;
+
+    ListUi->Line = 0;
+    ListUi->Offset = 0;
+
+    // ListUi->Redraw = TRUE;
+}
+
 static
 VOID
 PrintEmptyLine(
-    IN PPARTLIST List)
+    IN PPARTLIST_UI ListUi)
 {
     COORD coPos;
     ULONG Written;
     USHORT Width;
     USHORT Height;
 
-    Width = List->Right - List->Left - 1;
-    Height = List->Bottom - List->Top - 2;
+    Width = ListUi->Right - ListUi->Left - 1;
+    Height = ListUi->Bottom - ListUi->Top - 2;
 
-    coPos.X = List->Left + 1;
-    coPos.Y = List->Top + 1 + List->Line;
+    coPos.X = ListUi->Left + 1;
+    coPos.Y = ListUi->Top + 1 + ListUi->Line;
 
-    if (List->Line >= 0 && List->Line <= Height)
+    if (ListUi->Line >= 0 && ListUi->Line <= Height)
     {
         FillConsoleOutputAttribute(StdOutput,
                                    FOREGROUND_WHITE | BACKGROUND_BLUE,
@@ -1623,17 +1636,18 @@ PrintEmptyLine(
                                     &Written);
     }
 
-    List->Line++;
+    ListUi->Line++;
 }
 
 
 static
 VOID
 PrintPartitionData(
-    IN PPARTLIST List,
+    IN PPARTLIST_UI ListUi,
     IN PDISKENTRY DiskEntry,
     IN PPARTENTRY PartEntry)
 {
+    PPARTLIST List = ListUi->List;
     CHAR LineBuffer[128];
     COORD coPos;
     ULONG Written;
@@ -1643,14 +1657,13 @@ PrintPartitionData(
     PCHAR Unit;
     UCHAR Attribute;
     CHAR PartTypeString[32];
-    PCHAR PartType;
-    PartType = PartTypeString;
+    PCHAR PartType = PartTypeString;
 
-    Width = List->Right - List->Left - 1;
-    Height = List->Bottom - List->Top - 2;
+    Width = ListUi->Right - ListUi->Left - 1;
+    Height = ListUi->Bottom - ListUi->Top - 2;
 
-    coPos.X = List->Left + 1;
-    coPos.Y = List->Top + 1 + List->Line;
+    coPos.X = ListUi->Left + 1;
+    coPos.Y = ListUi->Top + 1 + ListUi->Line;
 
     if (PartEntry->IsPartitioned == FALSE)
     {
@@ -1750,7 +1763,7 @@ PrintPartitionData(
                  FOREGROUND_BLUE | BACKGROUND_WHITE :
                  FOREGROUND_WHITE | BACKGROUND_BLUE;
 
-    if (List->Line >= 0 && List->Line <= Height)
+    if (ListUi->Line >= 0 && ListUi->Line <= Height)
     {
         FillConsoleOutputCharacterA(StdOutput,
                                     ' ',
@@ -1760,7 +1773,7 @@ PrintPartitionData(
     }
     coPos.X += 4;
     Width -= 8;
-    if (List->Line >= 0 && List->Line <= Height)
+    if (ListUi->Line >= 0 && ListUi->Line <= Height)
     {
         FillConsoleOutputAttribute(StdOutput,
                                    Attribute,
@@ -1770,7 +1783,7 @@ PrintPartitionData(
     }
     coPos.X++;
     Width -= 2;
-    if (List->Line >= 0 && List->Line <= Height)
+    if (ListUi->Line >= 0 && ListUi->Line <= Height)
     {
         WriteConsoleOutputCharacterA(StdOutput,
                                      LineBuffer,
@@ -1779,16 +1792,17 @@ PrintPartitionData(
                                      &Written);
     }
 
-    List->Line++;
+    ListUi->Line++;
 }
 
 
 static
 VOID
 PrintDiskData(
-    IN PPARTLIST List,
+    IN PPARTLIST_UI ListUi,
     IN PDISKENTRY DiskEntry)
 {
+    // PPARTLIST List = ListUi->List;
     PPARTENTRY PrimaryPartEntry, LogicalPartEntry;
     PLIST_ENTRY PrimaryEntry, LogicalEntry;
     CHAR LineBuffer[128];
@@ -1799,11 +1813,11 @@ PrintDiskData(
     ULARGE_INTEGER DiskSize;
     PCHAR Unit;
 
-    Width = List->Right - List->Left - 1;
-    Height = List->Bottom - List->Top - 2;
+    Width = ListUi->Right - ListUi->Left - 1;
+    Height = ListUi->Bottom - ListUi->Top - 2;
 
-    coPos.X = List->Left + 1;
-    coPos.Y = List->Top + 1 + List->Line;
+    coPos.X = ListUi->Left + 1;
+    coPos.Y = ListUi->Top + 1 + ListUi->Line;
 
     DiskSize.QuadPart = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
     if (DiskSize.QuadPart >= 10737418240) /* 10 GB */
@@ -1843,7 +1857,7 @@ PrintDiskData(
                 DiskEntry->Id);
     }
 
-    if (List->Line >= 0 && List->Line <= Height)
+    if (ListUi->Line >= 0 && ListUi->Line <= Height)
     {
         FillConsoleOutputAttribute(StdOutput,
                                    FOREGROUND_WHITE | BACKGROUND_BLUE,
@@ -1859,7 +1873,7 @@ PrintDiskData(
     }
 
     coPos.X++;
-    if (List->Line >= 0 && List->Line <= Height)
+    if (ListUi->Line >= 0 && ListUi->Line <= Height)
     {
         WriteConsoleOutputCharacterA(StdOutput,
                                      LineBuffer,
@@ -1868,10 +1882,10 @@ PrintDiskData(
                                      &Written);
     }
 
-    List->Line++;
+    ListUi->Line++;
 
     /* Print separator line */
-    PrintEmptyLine(List);
+    PrintEmptyLine(ListUi);
 
     /* Print partition lines */
     PrimaryEntry = DiskEntry->PrimaryPartListHead.Flink;
@@ -1879,7 +1893,7 @@ PrintDiskData(
     {
         PrimaryPartEntry = CONTAINING_RECORD(PrimaryEntry, PARTENTRY, ListEntry);
 
-        PrintPartitionData(List,
+        PrintPartitionData(ListUi,
                            DiskEntry,
                            PrimaryPartEntry);
 
@@ -1890,7 +1904,7 @@ PrintDiskData(
             {
                 LogicalPartEntry = CONTAINING_RECORD(LogicalEntry, PARTENTRY, ListEntry);
 
-                PrintPartitionData(List,
+                PrintPartitionData(ListUi,
                                    DiskEntry,
                                    LogicalPartEntry);
 
@@ -1902,14 +1916,15 @@ PrintDiskData(
     }
 
     /* Print separator line */
-    PrintEmptyLine(List);
+    PrintEmptyLine(ListUi);
 }
 
 
 VOID
 DrawPartitionList(
-    IN PPARTLIST List)
+    IN PPARTLIST_UI ListUi)
 {
+    PPARTLIST List = ListUi->List;
     PLIST_ENTRY Entry, Entry2;
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry = NULL;
@@ -2000,37 +2015,37 @@ DrawPartitionList(
     }
 
     /* If it possible, make the disk name visible */
-    if (CurrentPartLine < List->Offset)
+    if (CurrentPartLine < ListUi->Offset)
     {
-        List->Offset = CurrentPartLine;
+        ListUi->Offset = CurrentPartLine;
     }
-    else if (CurrentPartLine - List->Offset > List->Bottom - List->Top - 2)
+    else if (CurrentPartLine - ListUi->Offset > ListUi->Bottom - ListUi->Top - 2)
     {
-        List->Offset = CurrentPartLine - (List->Bottom - List->Top - 2);
-    }
-
-    if (CurrentDiskLine < List->Offset && CurrentPartLine - CurrentDiskLine < List->Bottom - List->Top - 2)
-    {
-        List->Offset = CurrentDiskLine;
+        ListUi->Offset = CurrentPartLine - (ListUi->Bottom - ListUi->Top - 2);
     }
 
-    /* draw upper left corner */
-    coPos.X = List->Left;
-    coPos.Y = List->Top;
+    if (CurrentDiskLine < ListUi->Offset && CurrentPartLine - CurrentDiskLine < ListUi->Bottom - ListUi->Top - 2)
+    {
+        ListUi->Offset = CurrentDiskLine;
+    }
+
+    /* Draw upper left corner */
+    coPos.X = ListUi->Left;
+    coPos.Y = ListUi->Top;
     FillConsoleOutputCharacterA(StdOutput,
                                 0xDA, // '+',
                                 1,
                                 coPos,
                                 &Written);
 
-    /* draw upper edge */
-    coPos.X = List->Left + 1;
-    coPos.Y = List->Top;
-    if (List->Offset == 0)
+    /* Draw upper edge */
+    coPos.X = ListUi->Left + 1;
+    coPos.Y = ListUi->Top;
+    if (ListUi->Offset == 0)
     {
         FillConsoleOutputCharacterA(StdOutput,
                                     0xC4, // '-',
-                                    List->Right - List->Left - 1,
+                                    ListUi->Right - ListUi->Left - 1,
                                     coPos,
                                     &Written);
     }
@@ -2038,16 +2053,16 @@ DrawPartitionList(
     {
         FillConsoleOutputCharacterA(StdOutput,
                                     0xC4, // '-',
-                                    List->Right - List->Left - 5,
+                                    ListUi->Right - ListUi->Left - 5,
                                     coPos,
                                     &Written);
-        coPos.X = List->Right - 5;
+        coPos.X = ListUi->Right - 5;
         WriteConsoleOutputCharacterA(StdOutput,
                                      "(\x18)", // "(up)"
                                      3,
                                      coPos,
                                      &Written);
-        coPos.X = List->Right - 2;
+        coPos.X = ListUi->Right - 2;
         FillConsoleOutputCharacterA(StdOutput,
                                     0xC4, // '-',
                                     2,
@@ -2055,19 +2070,19 @@ DrawPartitionList(
                                     &Written);
     }
 
-    /* draw upper right corner */
-    coPos.X = List->Right;
-    coPos.Y = List->Top;
+    /* Draw upper right corner */
+    coPos.X = ListUi->Right;
+    coPos.Y = ListUi->Top;
     FillConsoleOutputCharacterA(StdOutput,
                                 0xBF, // '+',
                                 1,
                                 coPos,
                                 &Written);
 
-    /* draw left and right edge */
-    for (i = List->Top + 1; i < List->Bottom; i++)
+    /* Draw left and right edge */
+    for (i = ListUi->Top + 1; i < ListUi->Bottom; i++)
     {
-        coPos.X = List->Left;
+        coPos.X = ListUi->Left;
         coPos.Y = i;
         FillConsoleOutputCharacterA(StdOutput,
                                     0xB3, // '|',
@@ -2075,7 +2090,7 @@ DrawPartitionList(
                                     coPos,
                                     &Written);
 
-        coPos.X = List->Right;
+        coPos.X = ListUi->Right;
         FillConsoleOutputCharacterA(StdOutput,
                                     0xB3, //'|',
                                     1,
@@ -2083,23 +2098,23 @@ DrawPartitionList(
                                     &Written);
     }
 
-    /* draw lower left corner */
-    coPos.X = List->Left;
-    coPos.Y = List->Bottom;
+    /* Draw lower left corner */
+    coPos.X = ListUi->Left;
+    coPos.Y = ListUi->Bottom;
     FillConsoleOutputCharacterA(StdOutput,
                                 0xC0, // '+',
                                 1,
                                 coPos,
                                 &Written);
 
-    /* draw lower edge */
-    coPos.X = List->Left + 1;
-    coPos.Y = List->Bottom;
-    if (LastLine - List->Offset <= List->Bottom - List->Top - 2)
+    /* Draw lower edge */
+    coPos.X = ListUi->Left + 1;
+    coPos.Y = ListUi->Bottom;
+    if (LastLine - ListUi->Offset <= ListUi->Bottom - ListUi->Top - 2)
     {
         FillConsoleOutputCharacterA(StdOutput,
                                     0xC4, // '-',
-                                    List->Right - List->Left - 1,
+                                    ListUi->Right - ListUi->Left - 1,
                                     coPos,
                                     &Written);
     }
@@ -2107,16 +2122,16 @@ DrawPartitionList(
     {
         FillConsoleOutputCharacterA(StdOutput,
                                     0xC4, // '-',
-                                    List->Right - List->Left - 5,
+                                    ListUi->Right - ListUi->Left - 5,
                                     coPos,
                                     &Written);
-        coPos.X = List->Right - 5;
+        coPos.X = ListUi->Right - 5;
         WriteConsoleOutputCharacterA(StdOutput,
                                      "(\x19)", // "(down)"
                                      3,
                                      coPos,
                                      &Written);
-       coPos.X = List->Right - 2;
+       coPos.X = ListUi->Right - 2;
        FillConsoleOutputCharacterA(StdOutput,
                                    0xC4, // '-',
                                    2,
@@ -2124,9 +2139,9 @@ DrawPartitionList(
                                    &Written);
     }
 
-    /* draw lower right corner */
-    coPos.X = List->Right;
-    coPos.Y = List->Bottom;
+    /* Draw lower right corner */
+    coPos.X = ListUi->Right;
+    coPos.Y = ListUi->Bottom;
     FillConsoleOutputCharacterA(StdOutput,
                                 0xD9, // '+',
                                 1,
@@ -2134,7 +2149,7 @@ DrawPartitionList(
                                 &Written);
 
     /* print list entries */
-    List->Line = - List->Offset;
+    ListUi->Line = - ListUi->Offset;
 
     Entry = List->DiskListHead.Flink;
     while (Entry != &List->DiskListHead)
@@ -2142,8 +2157,7 @@ DrawPartitionList(
         DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
 
         /* Print disk entry */
-        PrintDiskData(List,
-                      DiskEntry);
+        PrintDiskData(ListUi, DiskEntry);
 
         Entry = Entry->Flink;
     }
@@ -2158,8 +2172,7 @@ SelectPartition(
 {
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
-    PLIST_ENTRY Entry1;
-    PLIST_ENTRY Entry2;
+    PLIST_ENTRY Entry1, Entry2;
 
     /* Check for empty disks */
     if (IsListEmpty(&List->DiskListHead))
@@ -2180,10 +2193,9 @@ SelectPartition(
 
                 if (PartEntry->PartitionNumber == PartitionNumber)
                 {
-                     List->CurrentDisk = DiskEntry;
-                     List->CurrentPartition = PartEntry;
-                     DrawPartitionList(List);
-                     return TRUE;
+                    List->CurrentDisk = DiskEntry;
+                    List->CurrentPartition = PartEntry;
+                    return TRUE;
                 }
 
                 Entry2 = Entry2->Flink;
@@ -2199,8 +2211,8 @@ SelectPartition(
 }
 
 
-BOOL
-ScrollDownPartitionList(
+PPARTENTRY
+GetNextPartition(
     IN PPARTLIST List)
 {
     PLIST_ENTRY DiskListEntry;
@@ -2210,7 +2222,7 @@ ScrollDownPartitionList(
 
     /* Fail, if no disks are available */
     if (IsListEmpty(&List->DiskListHead))
-        return FALSE;
+        return NULL;
 
     /* Check for next usable entry on current disk */
     if (List->CurrentPartition != NULL)
@@ -2226,7 +2238,7 @@ ScrollDownPartitionList(
                 PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
 
                 List->CurrentPartition = PartEntry;
-                return TRUE;
+                return List->CurrentPartition;
             }
             else
             {
@@ -2236,7 +2248,7 @@ ScrollDownPartitionList(
                     PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
 
                     List->CurrentPartition = PartEntry;
-                    return TRUE;
+                    return List->CurrentPartition;
                 }
             }
         }
@@ -2254,7 +2266,7 @@ ScrollDownPartitionList(
                     PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
 
                     List->CurrentPartition = PartEntry;
-                    return TRUE;
+                    return List->CurrentPartition;
                 }
             }
             else
@@ -2266,7 +2278,7 @@ ScrollDownPartitionList(
                     PartEntry = CONTAINING_RECORD(PartListEntry, PARTENTRY, ListEntry);
 
                     List->CurrentPartition = PartEntry;
-                    return TRUE;
+                    return List->CurrentPartition;
                 }
             }
         }
@@ -2285,18 +2297,17 @@ ScrollDownPartitionList(
 
             List->CurrentDisk = DiskEntry;
             List->CurrentPartition = PartEntry;
-            return TRUE;
+            return List->CurrentPartition;
         }
 
         DiskListEntry = DiskListEntry->Flink;
     }
 
-    return FALSE;
+    return NULL;
 }
 
-
-BOOL
-ScrollUpPartitionList(
+PPARTENTRY
+GetPrevPartition(
     IN PPARTLIST List)
 {
     PLIST_ENTRY DiskListEntry;
@@ -2306,7 +2317,7 @@ ScrollUpPartitionList(
 
     /* Fail, if no disks are available */
     if (IsListEmpty(&List->DiskListHead))
-        return FALSE;
+        return NULL;
 
     /* Check for previous usable entry on current disk */
     if (List->CurrentPartition != NULL)
@@ -2322,12 +2333,12 @@ ScrollUpPartitionList(
             }
             else
             {
-                /* Extended partition*/
+                /* Extended partition */
                 PartEntry = List->CurrentDisk->ExtendedPartition;
             }
 
             List->CurrentPartition = PartEntry;
-            return TRUE;
+            return List->CurrentPartition;
         }
         else
         {
@@ -2346,9 +2357,8 @@ ScrollUpPartitionList(
                 }
 
                 List->CurrentPartition = PartEntry;
-                return TRUE;
+                return List->CurrentPartition;
             }
-
         }
     }
 
@@ -2373,21 +2383,39 @@ ScrollUpPartitionList(
 
                     List->CurrentDisk = DiskEntry;
                     List->CurrentPartition = PartEntry;
-                    return TRUE;
+                    return List->CurrentPartition;
                 }
             }
             else
             {
                 List->CurrentDisk = DiskEntry;
                 List->CurrentPartition = PartEntry;
-                return TRUE;
+                return List->CurrentPartition;
             }
         }
 
         DiskListEntry = DiskListEntry->Blink;
     }
 
-    return FALSE;
+    return NULL;
+}
+
+
+
+VOID
+ScrollDownPartitionList(
+    IN PPARTLIST_UI ListUi)
+{
+    if (GetNextPartition(ListUi->List))
+        DrawPartitionList(ListUi);
+}
+
+VOID
+ScrollUpPartitionList(
+    IN PPARTLIST_UI ListUi)
+{
+    if (GetPrevPartition(ListUi->List))
+        DrawPartitionList(ListUi);
 }
 
 

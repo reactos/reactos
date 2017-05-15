@@ -789,38 +789,15 @@ LanguagePage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 SetupStartPage(PINPUT_RECORD Ir)
 {
-    //SYSTEM_DEVICE_INFORMATION Sdi;
     NTSTATUS Status;
     WCHAR FileNameBuffer[MAX_PATH];
     INFCONTEXT Context;
     PWCHAR Value;
     UINT ErrorLine;
-    //ULONG ReturnSize;
     PGENERIC_LIST_ENTRY ListEntry;
     INT IntValue;
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
-
-#if 0
-    /* Check whether a harddisk is available */
-    Status = NtQuerySystemInformation(SystemDeviceInformation,
-                                      &Sdi,
-                                      sizeof(SYSTEM_DEVICE_INFORMATION),
-                                      &ReturnSize);
-
-    if (!NT_SUCCESS(Status))
-    {
-        CONSOLE_PrintTextXY(6, 15, "NtQuerySystemInformation() failed (Status 0x%08lx)", Status);
-        MUIDisplayError(ERROR_DRIVE_INFORMATION, Ir, POPUP_WAIT_ENTER);
-        return QUIT_PAGE;
-    }
-
-    if (Sdi.NumberOfDisks == 0)
-    {
-        MUIDisplayError(ERROR_NO_HDD, Ir, POPUP_WAIT_ENTER);
-        return QUIT_PAGE;
-    }
-#endif
 
     /* Get the source path and source root path */
     Status = GetSourcePaths(&SourcePath,
@@ -895,7 +872,7 @@ SetupStartPage(PINPUT_RECORD Ir)
 
     RequiredPartitionDiskSpace = (ULONG)IntValue;
 
-    /* Start PnP thread */
+    /* Start the PnP thread */
     if (hPnpThread != INVALID_HANDLE_VALUE)
     {
         NtResumeThread(hPnpThread, NULL);
@@ -906,8 +883,7 @@ SetupStartPage(PINPUT_RECORD Ir)
 
     if (IsUnattendedSetup)
     {
-        //TODO
-        //read options from inf
+        // TODO: Read options from inf
         ComputerList = CreateComputerTypeList(SetupInf);
         DisplayList = CreateDisplayDriverList(SetupInf);
         KeyboardList = CreateKeyboardDriverList(SetupInf);
@@ -992,7 +968,7 @@ IntroPage(PINPUT_RECORD Ir)
         {
             return REPAIR_INTRO_PAGE;
         }
-        else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'L') /* R */
+        else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'L') /* L */
         {
             return LICENSE_PAGE;
         }
@@ -1532,19 +1508,18 @@ IsDiskSizeValid(PPARTENTRY PartEntry)
 static PAGE_NUMBER
 SelectPartitionPage(PINPUT_RECORD Ir)
 {
+    PARTLIST_UI ListUi;
     ULONG Error;
 
     MUIDisplayPage(SELECT_PARTITION_PAGE);
 
     if (PartitionList == NULL)
     {
-        PartitionList = CreatePartitionList(2,
-                                            23,
-                                            xScreen - 3,
-                                            yScreen - 3);
+        PartitionList = CreatePartitionList();
         if (PartitionList == NULL)
         {
             /* FIXME: show an error dialog */
+            MUIDisplayError(ERROR_DRIVE_INFORMATION, Ir, POPUP_WAIT_ENTER);
             return QUIT_PAGE;
         }
         else if (IsListEmpty(&PartitionList->DiskListHead))
@@ -1554,7 +1529,12 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
     }
 
-    DrawPartitionList(PartitionList);
+    InitPartitionListUi(&ListUi, PartitionList,
+                        2,
+                        23,
+                        xScreen - 3,
+                        yScreen - 3);
+    DrawPartitionList(&ListUi);
 
     if (IsUnattendedSetup)
     {
@@ -1575,6 +1555,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                                            TRUE);
                 }
 
+// FIXME?? Aren't we going to enter an infinite loop, if this test fails??
                 if (!IsDiskSizeValid(PartitionList->CurrentPartition))
                 {
                     MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
@@ -1589,6 +1570,9 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else
         {
+            DrawPartitionList(&ListUi);
+
+// FIXME?? Aren't we going to enter an infinite loop, if this test fails??
             if (!IsDiskSizeValid(PartitionList->CurrentPartition))
             {
                 MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
@@ -1656,14 +1640,12 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))  /* DOWN */
         {
-            if (ScrollDownPartitionList(PartitionList))
-                DrawPartitionList(PartitionList);
+            ScrollDownPartitionList(&ListUi);
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP))  /* UP */
         {
-            if (ScrollUpPartitionList(PartitionList))
-                DrawPartitionList(PartitionList);
+            ScrollUpPartitionList(&ListUi);
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN)  /* ENTER */
         {

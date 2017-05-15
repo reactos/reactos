@@ -152,16 +152,9 @@ typedef struct _DISKENTRY
 
 typedef struct _PARTLIST
 {
-    /* UI stuff */
-    SHORT Left;
-    SHORT Top;
-    SHORT Right;
-    SHORT Bottom;
-
-    SHORT Line;
-    SHORT Offset;
-
     /*
+     * Disk & Partition iterators.
+     *
      * NOTE that when CurrentPartition != NULL, then CurrentPartition->DiskEntry
      * must be the same as CurrentDisk. We should however keep the two members
      * separated as we can have a current (selected) disk without any current
@@ -239,18 +232,10 @@ GetPartTypeStringFromPartitionType(
     IN ULONG cchPartType);
 
 PPARTLIST
-CreatePartitionList(
-    SHORT Left,
-    SHORT Top,
-    SHORT Right,
-    SHORT Bottom);
+CreatePartitionList(VOID);
 
 VOID
 DestroyPartitionList(
-    IN PPARTLIST List);
-
-VOID
-DrawPartitionList(
     IN PPARTLIST List);
 
 ULONG
@@ -259,12 +244,12 @@ SelectPartition(
     IN ULONG DiskNumber,
     IN ULONG PartitionNumber);
 
-BOOL
-ScrollDownPartitionList(
+PPARTENTRY
+GetNextPartition(
     IN PPARTLIST List);
 
-BOOL
-ScrollUpPartitionList(
+PPARTENTRY
+GetPrevPartition(
     IN PPARTLIST List);
 
 VOID
@@ -329,5 +314,48 @@ GetNextUncheckedPartition(
     IN PPARTLIST List,
     OUT PDISKENTRY *pDiskEntry OPTIONAL,
     OUT PPARTENTRY *pPartEntry);
+
+
+
+
+
+typedef struct _PARTLIST_UI
+{
+    PPARTLIST List;
+
+    // PLIST_ENTRY FirstShown;
+    // PLIST_ENTRY LastShown;
+
+    SHORT Left;
+    SHORT Top;
+    SHORT Right;
+    SHORT Bottom;
+
+    SHORT Line;
+    SHORT Offset;
+
+    // BOOL Redraw;
+} PARTLIST_UI, *PPARTLIST_UI;
+
+VOID
+InitPartitionListUi(
+    IN OUT PPARTLIST_UI ListUi,
+    IN PPARTLIST List,
+    IN SHORT Left,
+    IN SHORT Top,
+    IN SHORT Right,
+    IN SHORT Bottom);
+
+VOID
+ScrollDownPartitionList(
+    IN PPARTLIST_UI ListUi);
+
+VOID
+ScrollUpPartitionList(
+    IN PPARTLIST_UI ListUi);
+
+VOID
+DrawPartitionList(
+    IN PPARTLIST_UI ListUi);
 
 /* EOF */
