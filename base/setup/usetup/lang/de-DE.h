@@ -88,7 +88,7 @@ static MUI_ENTRY deDEWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Dr…ken Sie R, um ReactOS zu reparieren oder aktualisieren.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -410,7 +410,7 @@ static MUI_ENTRY deDEDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY deDERepairPageEntries[] =
+static MUI_ENTRY deDEUpgradePageEntries[] =
 {
     {
         4,
@@ -421,55 +421,55 @@ static MUI_ENTRY deDERepairPageEntries[] =
     {
         6,
         8,
-        "Der Installationsassistent ist noch der Entwicklungsphase.",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "Er unterst》zt noch nicht alle Funktionen eines vollst�ndig",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "nutzbaren Setups.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
-        6,
-        14,
-        "Die Reparaturfunktionen sind noch nicht implementiert.",
+        8,
+        15,
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        16,
-        "\x07  Dr…ken Sie U, um ReactOS zu aktualisieren.",
+        17,
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Dr…ken Sie R, f〉 die Wiederherstellungskonsole.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        20,
-        "\x07  Dr…ken Sie ESC, um zur Hauptseite zur…kzukehren.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        22,
-        "\x07  Dr…ken Sie die EINGABETASTE, um den Computer neu zu starten.",
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Zur…k  U = Aktualisieren  R = Wiederherst.  EINGABETASTE = Neustart",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1614,7 +1614,7 @@ MUI_PAGE deDEPages[] =
         deDELanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         deDEWelcomePageEntries
     },
     {
@@ -1630,8 +1630,8 @@ MUI_PAGE deDEPages[] =
         deDEDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        deDERepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        deDEUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,

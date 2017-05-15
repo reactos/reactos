@@ -88,7 +88,7 @@ static MUI_ENTRY jaJPWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  ReactOS ¦ ¼­³Ì¸ Ó¼¸Ê º³¼Ý ½ÙÆÊ R ·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -410,7 +410,7 @@ static MUI_ENTRY jaJPDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY jaJPRepairPageEntries[] =
+static MUI_ENTRY jaJPUpgradePageEntries[] =
 {
     {
         4,
@@ -421,49 +421,55 @@ static MUI_ENTRY jaJPRepairPageEntries[] =
     {
         6,
         8,
-        "ReactOS ¾¯Ä±¯ÌßÊ ¼®·¶²ÊÂ ÀÞÝ¶²Æ ±ØÏ½¡ ¿ÉÀÒ¤ ÏÀÞ",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "¼Þ­³ÌÞÝÆ ØÖ³ ÃÞ·Ù ¾¯Ä±¯Ìß ±ÌßØ¹°¼®ÝÉ ½ÍÞÃÉ ·É³Ê »Îß°Ä »ÚÏ¾Ý¡",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "¼­³Ì¸·É³Ê ÏÀÞ ¼Þ¯¿³ »ÚÃ ²Ï¾Ý¡",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  OS ¦ º³¼Ý ½ÙÆÊ U ·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  ¶²Ì¸ ºÝ¿°Ù¦ Ë×¸ÆÊ R ·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Ò²ÝÍß°¼ÞÆ ÓÄÞÙÆÊ ESC ·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  ºÝËß­°À¦ »²·ÄÞ³ ½ÙÆÊ ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Ò²ÝÍß°¼Þ  U = º³¼Ý  R = ¶²Ì¸  ENTER = »²·ÄÞ³",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1612,7 +1618,7 @@ MUI_PAGE jaJPPages[] =
         jaJPLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         jaJPWelcomePageEntries
     },
     {
@@ -1628,8 +1634,8 @@ MUI_PAGE jaJPPages[] =
         jaJPDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        jaJPRepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        jaJPUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,

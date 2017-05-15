@@ -88,7 +88,7 @@ static MUI_ENTRY itITWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Premere R per riparare ReactOS.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -416,7 +416,7 @@ static MUI_ENTRY itITDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY itITRepairPageEntries[] =
+static MUI_ENTRY itITUpgradePageEntries[] =
 {
     {
         4, 
@@ -425,52 +425,58 @@ static MUI_ENTRY itITRepairPageEntries[] =
         TEXT_STYLE_UNDERLINE
     },
     {
-        6, 
+        6,
         8,
-        "Il setup di ReactOS Š ancora in una fase preliminare.",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
-        6, 
+        6,
         9,
-        "Non ha ancora tutte le funzioni di installazione.",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
         TEXT_STYLE_NORMAL
     },
     {
-        6, 
+        6,
+        10,
+        "can attempt to repair it.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
         12,
-        "Le funzioni di ripristino non sono state ancora implementate.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
-        8, 
+        8,
         15,
-        "\x07  Premere U per aggiornare il SO.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
-        8, 
+        8,
         17,
-        "\x07  Premere R per la console di ripristino.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
-        8, 
+        8,
         19,
-        "\x07  Premere ESC tornare al men— principale.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
-        8, 
+        8,
         21,
-        "\x07  Premere INVIO per riavviare il computer.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
-        0, 
         0,
-        "ESC = Men— iniziale INVIO = Riavvio",
-        TEXT_TYPE_STATUS
+        0,
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1617,7 +1623,7 @@ MUI_PAGE itITPages[] =
         itITLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         itITWelcomePageEntries
     },
     {
@@ -1633,8 +1639,8 @@ MUI_PAGE itITPages[] =
         itITDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        itITRepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        itITUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,

@@ -91,7 +91,7 @@ static MUI_ENTRY sqALWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Kliko R p‰r t‰ riparuar ose apdejtuar ReactOS.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -413,7 +413,7 @@ static MUI_ENTRY sqALDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY sqALRepairPageEntries[] =
+static MUI_ENTRY sqALUpgradePageEntries[] =
 {
     {
         4,
@@ -424,49 +424,55 @@ static MUI_ENTRY sqALRepairPageEntries[] =
     {
         6,
         8,
-        "Instalimi i ReactOS ‰sht‰ n‰ fazat e zhvillimit. Ajo ende nuk i",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "mb‰shtet t‰ gjitha funksionet e nj‰ instalimi plot‰sisht t‰ p‰rdorsh‰m.",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Funksionet e riparim nuk jan‰ implem‰ntuar ende.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Klikoni U p‰r t‰ Apdejtuar OS'in.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Klikoni R p‰r modulin e riparimit.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Kliko ESC p‰r ty kthyer tek menuja kryesore.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Kliko ENTER t‰ rinisni kompjuterin tuaj.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Menuja Kryesore  U = Apdejto  R = Riparo  ENTER = Rinis sistemin",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1615,7 +1621,7 @@ MUI_PAGE sqALPages[] =
         sqALLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         sqALWelcomePageEntries
     },
     {
@@ -1631,8 +1637,8 @@ MUI_PAGE sqALPages[] =
         sqALDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        sqALRepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        sqALUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,

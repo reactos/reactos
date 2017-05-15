@@ -95,15 +95,15 @@ static MUI_ENTRY roROWelcomePageEntries[] =
     {
         8,
         18,
-        "\x07  Tastaþi R pentru a reface un sistem deteriorat sau pentru",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
-    {
-        8,
-        19,
-        "   a actualiza ReactOS.",
-        TEXT_STYLE_NORMAL
-    },
+    // {
+        // 8,
+        // 19,
+        // "   a actualiza ReactOS.",
+        // TEXT_STYLE_NORMAL
+    // },
     {
         8,
         21,
@@ -466,7 +466,7 @@ static MUI_ENTRY roRODevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY roRORepairPageEntries[] =
+static MUI_ENTRY roROUpgradePageEntries[] =
 {
     {
         4,
@@ -477,49 +477,55 @@ static MUI_ENTRY roRORepairPageEntries[] =
     {
         6,
         8,
-        "Programul de instalare ReactOS este încã într-o fazã incipientã de",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "dezvoltare ºi nu posedã o funcþionalitate completã.",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Funcþionalitatea de refacere încã nu este implementatã.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Tastaþi U pentru actualizarea sistemului.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Tastaþi R pentru consola de Recuperare.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Apãsaþi ESC pentru a reveni la pagina principalã.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Apãsaþi ENTER pentru a reporni calculatorul.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Revenire  U = Actualizare  R = Recuperare  ENTER = Repornire",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1682,7 +1688,7 @@ MUI_PAGE roROPages[] =
         roROLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         roROWelcomePageEntries
     },
     {
@@ -1698,8 +1704,8 @@ MUI_PAGE roROPages[] =
         roRODevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        roRORepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        roROUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,

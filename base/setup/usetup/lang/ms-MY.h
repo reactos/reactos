@@ -87,7 +87,7 @@ static MUI_ENTRY msMYWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Tekan R untuk memperbaiki atau mengemaskini ReactOS.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -409,7 +409,7 @@ static MUI_ENTRY msMYDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY msMYRepairPageEntries[] =
+static MUI_ENTRY msMYUpgradePageEntries[] =
 {
     {
         4,
@@ -420,49 +420,55 @@ static MUI_ENTRY msMYRepairPageEntries[] =
     {
         6,
         8,
-        "ReactOS persediaan sedang untuk fasa pembangunan awal. Ia belum lagi",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "menyokong semua fungsi aplikasi persediaan sepenuhnya digunakan.",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Fungsi pembaikan tidak dilaksanakan lagi.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Tekan U untuk mengemaskini ReactOS.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Tekan R bagi konsol pemulihan.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Tekan ESC untuk kembali ke halaman utama.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Tekan ENTER untuk memulakan semula sistem komputer anda.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Halaman Utama  U = Mengemaskini  R = Pemulihan  ENTER = But Semula",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1503,7 +1509,7 @@ MUI_PAGE msMYPages[] =
         msMYLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         msMYWelcomePageEntries
     },
     {
@@ -1519,8 +1525,8 @@ MUI_PAGE msMYPages[] =
         msMYDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        msMYRepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        msMYUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,

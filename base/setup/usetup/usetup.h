@@ -118,13 +118,16 @@ extern BOOLEAN InfGetStringField(PINFCONTEXT Context,
 #define _PAGE_NUMBER_DEFINED
 typedef enum _PAGE_NUMBER
 {
-    START_PAGE,
     LANGUAGE_PAGE,
     INTRO_PAGE,
+    WELCOME_PAGE,
     LICENSE_PAGE,
     INSTALL_INTRO_PAGE,
 
 //    SCSI_CONTROLLER_PAGE,
+
+//    REPAIR_INTRO_PAGE,
+    UPGRADE_REPAIR_PAGE,
 
     DEVICE_SETTINGS_PAGE,
     COMPUTER_SETTINGS_PAGE,
@@ -152,13 +155,11 @@ typedef enum _PAGE_NUMBER
     BOOT_LOADER_HARDDISK_MBR_PAGE,
     BOOT_LOADER_HARDDISK_VBR_PAGE,
 
-    REPAIR_INTRO_PAGE,
-
     SUCCESS_PAGE,
     QUIT_PAGE,
     FLUSH_PAGE,
-    REBOOT_PAGE,		/* virtual page */
-    RECOVERY_PAGE,		/* virtual page */
+    REBOOT_PAGE,    /* Virtual page */
+    RECOVERY_PAGE,  /* Virtual page */
 } PAGE_NUMBER, *PPAGE_NUMBER;
 #endif
 

@@ -95,7 +95,7 @@ static MUI_ENTRY csCZWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Stisknut¡m R zah j¡te opravu nebo aktualizaci ReactOS.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -417,7 +417,7 @@ static MUI_ENTRY csCZDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY csCZRepairPageEntries[] =
+static MUI_ENTRY csCZUpgradePageEntries[] =
 {
     {
         4,
@@ -428,49 +428,55 @@ static MUI_ENTRY csCZRepairPageEntries[] =
     {
         6,
         8,
-        "Instalace ReactOS je v ran‚ vìvojov‚ f zi. Zat¡m nejsou",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "podporov ny vçechny funkce plnØ pou§iteln‚ instalaŸn¡ aplikace.",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Opravn‚ funkce zat¡m nejsou implementov ny.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Stisknut¡m U zah j¡te Update syst‚mu.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Stisknut¡m R spust¡te Konzoli obnoven¡.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Stisknut¡m ESC se vr t¡te na hlavn¡ str nku.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Stisknut¡m kl vesy ENTER restartujete poŸ¡taŸ.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Hlavn¡ str nka  U = Aktualizovat  R = Z chrana  ENTER = Restartovat",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1618,7 +1624,7 @@ MUI_PAGE csCZPages[] =
         csCZLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         csCZWelcomePageEntries
     },
     {
@@ -1634,8 +1640,8 @@ MUI_PAGE csCZPages[] =
         csCZDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        csCZRepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        csCZUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,

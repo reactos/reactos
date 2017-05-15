@@ -93,7 +93,7 @@ static MUI_ENTRY ukUAWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Натиснiть R для оновлення ReactOS.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -415,7 +415,7 @@ static MUI_ENTRY ukUADevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY ukUARepairPageEntries[] =
+static MUI_ENTRY ukUAUpgradePageEntries[] =
 {
     {
         4,
@@ -426,49 +426,55 @@ static MUI_ENTRY ukUARepairPageEntries[] =
     {
         6,
         8,
-        "Встановлювач ReactOS знаходиться в раннiй стадiї розробки i ще не",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "пiдтримує всi функцiї повноцiнної програми встановлення.",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Функцiї вiдновлення ще не впровадженi.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Натиснiть U щоб оновити OS.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Натиснiть R для запуску Консолi Вiдновлення.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Натиснiть ESC для повернення до головної сторiнки.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Натиснiть ENTER щоб перезавантажити комп'ютер.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Головна Сторiнка  U = Оновити  R = Вiдновити  ENTER = Перезавантажити",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1618,7 +1624,7 @@ MUI_PAGE ukUAPages[] =
         ukUALanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         ukUAWelcomePageEntries
     },
     {
@@ -1634,8 +1640,8 @@ MUI_PAGE ukUAPages[] =
         ukUADevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        ukUARepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        ukUAUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,

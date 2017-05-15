@@ -97,7 +97,7 @@ static MUI_ENTRY ltLTWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Spauskite R, jei norite taisyti ReactOS.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -419,7 +419,7 @@ static MUI_ENTRY ltLTDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY ltLTRepairPageEntries[] =
+static MUI_ENTRY ltLTUpgradePageEntries[] =
 {
     {
         4,
@@ -430,49 +430,55 @@ static MUI_ENTRY ltLTRepairPageEntries[] =
     {
         6,
         8,
-        "ReactOS Setup is in an early development phase. It does not yet",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "support all the functions of a fully usable setup application.",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "The repair functions are not implemented yet.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Press U for Updating OS.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press R for the Recovery Console.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press ESC to return to the main page.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press ENTER to reboot your computer.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Main page  ENTER = Reboot",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1620,7 +1626,7 @@ MUI_PAGE ltLTPages[] =
         ltLTLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         ltLTWelcomePageEntries
     },
     {
@@ -1636,8 +1642,8 @@ MUI_PAGE ltLTPages[] =
         ltLTDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        ltLTRepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        ltLTUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,

@@ -97,7 +97,7 @@ static MUI_ENTRY nlNLWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Druk op R om ReactOS te repareren of bij te werken.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -431,7 +431,7 @@ static MUI_ENTRY nlNLDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY nlNLRepairPageEntries[] =
+static MUI_ENTRY nlNLUpgradePageEntries[] =
 {
     {
         4,
@@ -442,55 +442,55 @@ static MUI_ENTRY nlNLRepairPageEntries[] =
     {
         6,
         8,
-        "ReactOS Setup is nog in een vroege ontwikkelingsfase",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "Het ondersteunt nog niet alle functies van een volledig",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "setup programma.",
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "De herstelfuncties zijn nog niet ge\x8Bmplementeerd.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Druk op U om ReactOS bij te werken.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Druk op R voor de Herstelconsole.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Druk op ESC om terug naar het hoofdscherm te gaan.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Druk op ENTER om de computer opnieuw op te starten.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Hoofdscherm   U = Bijwerken   R = Herstelconsole   ENTER = Reboot",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1650,7 +1650,7 @@ MUI_PAGE nlNLPages[] =
         nlNLLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         nlNLWelcomePageEntries
     },
     {
@@ -1666,8 +1666,8 @@ MUI_PAGE nlNLPages[] =
         nlNLDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        nlNLRepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        nlNLUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,

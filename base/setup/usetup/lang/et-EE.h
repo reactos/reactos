@@ -87,7 +87,7 @@ static MUI_ENTRY etEEWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Vajuta R, et ReactOSi parandada.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -409,7 +409,7 @@ static MUI_ENTRY etEEDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY etEERepairPageEntries[] =
+static MUI_ENTRY etEEUpgradePageEntries[] =
 {
     {
         4,
@@ -420,49 +420,55 @@ static MUI_ENTRY etEERepairPageEntries[] =
     {
         6,
         8,
-        "ReactOSi paigaldusprogramm on varajases arendusfaasis. Praegu ei ole",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "veel k‰ik korraliku paigaldusprogrammi funktsioonid toetatud.",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Parandamine ei ole veel toetatud.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Vajuta U, et sÅsteemi uuendada.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Vajuta R, et kasutada taastuskonsooli.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Vajuta ESC, et minna tagasi pealehele.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Vajuta ENTER, et arvuti taaskÑivitada.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Pealeht  U = Uuenda  R = Taastamine  ENTER = TaaskÑivitus",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1608,7 +1614,7 @@ MUI_PAGE etEEPages[] =
         etEELanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         etEEWelcomePageEntries
     },
     {
@@ -1624,8 +1630,8 @@ MUI_PAGE etEEPages[] =
         etEEDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        etEERepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        etEEUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,

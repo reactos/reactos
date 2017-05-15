@@ -91,7 +91,7 @@ static MUI_ENTRY trTRWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  ReactOS'u onarmak veyÉ yÅkseltmek iáin R'ye basçnçz.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -408,7 +408,7 @@ static MUI_ENTRY trTRDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY trTRRepairPageEntries[] =
+static MUI_ENTRY trTRUpgradePageEntries[] =
 {
     {
         4,
@@ -419,49 +419,55 @@ static MUI_ENTRY trTRRepairPageEntries[] =
     {
         6,
         8,
-        "ReactOS Kur, bir în geliüme evresindedir. Daha tÅmÅyle kullançülç",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "bir kurulum uygulamasçnçn tÅm iülevlerini desteklemez.",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Onarma iülevleri daha bitirilmemiütir.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  òületim dizgesini yÅkseltmek iáin U'ya basçnçz.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Kurtarma Konsolu iáin R'ye basçnçz.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Ana sayfaya geri dînmek iáin Äçkçü'a basçnçz.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Bilgisayarçnçzç yeniden baülatmak iáin Giriü'e basçnçz.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Äçkçü = Ana Sayfa  U = YÅkselt  R = Kurtarma  Giriü = Yeniden Baülat",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1591,7 +1597,7 @@ MUI_PAGE trTRPages[] =
         trTRLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         trTRWelcomePageEntries
     },
     {
@@ -1607,8 +1613,8 @@ MUI_PAGE trTRPages[] =
         trTRDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        trTRRepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        trTRUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,

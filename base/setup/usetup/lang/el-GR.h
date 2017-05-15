@@ -88,7 +88,7 @@ static MUI_ENTRY elGRWelcomePageEntries[] =
     {
         7,
         17,
-        "\x07  ˜«ã©«œ R š ˜ ¤˜ œ§ › ¦¨Ÿé©œ«œ «¦ ReactOS.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -410,7 +410,7 @@ static MUI_ENTRY elGRDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY elGRRepairPageEntries[] =
+static MUI_ENTRY elGRUpgradePageEntries[] =
 {
     {
         4,
@@ -421,50 +421,56 @@ static MUI_ENTRY elGRRepairPageEntries[] =
     {
         6,
         8,
-        "† œš¡˜«á©«˜© «¦¬ ReactOS ™¨å©¡œ«˜  ©œ §¨é £¦ ©«á› ¦ ˜¤á§«¬¥ª ¡˜ ",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "›œ¤ ¬§¦©«¨åœ  ˜¡æ£˜ æ¢œª « ª ›¬¤˜«æ««œª £ ˜ª §¢ã¨¦¬ª œš¡˜«á©«˜©ª.",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "  ¢œ «¦¬¨šåœª œ§ › æ¨Ÿà©ª ›œ¤ â®¦¬¤ ¬¢¦§¦ Ÿœå ˜¡æ£˜.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  ˜«ã©«œ U š ˜ ˜¤˜¤âà© «¦¬ ¢œ «¨¦¬¨š ¡¦ç.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  ˜«ã©«œ R š ˜ ¤˜ œ¡«œ¢â©œ«œ «¤ ¡¦¤©æ¢˜ œ§ › æ¨Ÿà©ª.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  ˜«ã©«œ ESC š ˜ ¤˜ œ§ ©«¨â¯œ«œ ©«¤ ¡ç¨ ˜ ©œ¢å›˜.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  ˜«ã©«œ ENTER š ˜ ¤˜ œ§˜¤œ¡¡ ¤ã©œ«œ «¦¤ ¬§¦¢¦š ©«ã.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ESC = ‰ç¨ ˜ ©œ¢å›˜  ENTER = „§˜¤œ¡¡å¤©",
-        TEXT_TYPE_STATUS
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1627,7 +1633,7 @@ MUI_PAGE elGRPages[] =
         elGRLanguagePageEntries
     },
     {
-       START_PAGE,
+       WELCOME_PAGE,
        elGRWelcomePageEntries
     },
     {
@@ -1643,8 +1649,8 @@ MUI_PAGE elGRPages[] =
         elGRDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        elGRRepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        elGRUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,

@@ -98,7 +98,7 @@ static MUI_ENTRY plPLWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Naci˜nij R, aby naprawi† zainstalowany system ReactOS.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -420,7 +420,7 @@ static MUI_ENTRY plPLDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY plPLRepairPageEntries[] =
+static MUI_ENTRY plPLUpgradePageEntries[] =
 {
     {
         4,
@@ -431,49 +431,55 @@ static MUI_ENTRY plPLRepairPageEntries[] =
     {
         6,
         8,
-        "Instalator ReactOS wci¥¾ jest we wczesnej fazie rozwoju. Nadal nie",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "obsˆuguje wszystkich funkcji, niezb©dnych dla programu instalacyjnego.",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Naprawa istniej¥cej instalacji systemu nie jest jeszcze mo¾liwa.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Naci˜nij U ¾eby uaktualni† system.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Naci˜nij R, by uruchomi† Konsol© Odtwarzania.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Naci˜nij ESC, by powr¢ci† do gˆ¢wnego menu.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Naci˜nij ENTER, by zrestartowa† komputer.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Menu gˆ¢wne  ENTER = Restart",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1621,7 +1627,7 @@ MUI_PAGE plPLPages[] =
         plPLLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         plPLWelcomePageEntries
     },
     {
@@ -1637,8 +1643,8 @@ MUI_PAGE plPLPages[] =
         plPLDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        plPLRepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        plPLUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,

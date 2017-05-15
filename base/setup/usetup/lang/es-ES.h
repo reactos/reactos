@@ -90,7 +90,7 @@ static MUI_ENTRY esESWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Presione R para reparar ReactOS.",
+        "\x07  Press R to repair a ReactOS installation using the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -418,7 +418,7 @@ static MUI_ENTRY esESDevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY esESRepairPageEntries[] =
+static MUI_ENTRY esESUpgradePageEntries[] =
 {
     {
         4,
@@ -429,49 +429,55 @@ static MUI_ENTRY esESRepairPageEntries[] =
     {
         6,
         8,
-        "El instalador de ReactOS se encuentra en una etapa preliminar.",
+        "The ReactOS Setup can upgrade one of the available ReactOS installations",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "A£n no posee todas las funciones de un instalador.",
+        "listed below, or, if a ReactOS installation is damaged, the Setup program",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        10,
+        "can attempt to repair it.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Las funciones de reparaci¢n no han sido a£n implementadas.",
-        TEXT_STYLE_NORMAL
+        "The repair functions are not all implemented yet.",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         15,
-        "\x07  Presione U para actualizar el sistema operativo.",
+        "\x07  Press UP or DOWN to select an OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Presione R para la consola de recuperaci¢n.",
+        "\x07  Press U for upgrading the selected OS installation.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Presione ESC para volver al men£ principal.",
+        "\x07  Press ESC to continue a new installation without upgrading.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Presione INTRO para reiniciar su equipo.",
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Men£ inicial  U = Actualizar  R = Recuperar  INTRO = Reiniciar",
+        "U = Upgrade   ESC = Do not upgrade   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1620,7 +1626,7 @@ MUI_PAGE esESPages[] =
         esESLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         esESWelcomePageEntries
     },
     {
@@ -1636,8 +1642,8 @@ MUI_PAGE esESPages[] =
         esESDevicePageEntries
     },
     {
-        REPAIR_INTRO_PAGE,
-        esESRepairPageEntries
+        UPGRADE_REPAIR_PAGE,
+        esESUpgradePageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
