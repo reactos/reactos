@@ -45,6 +45,7 @@ typedef struct _GENERIC_LIST_ENTRY
 typedef struct _GENERIC_LIST
 {
     LIST_ENTRY ListHead;
+    ULONG NumOfEntries;
 
     PLIST_ENTRY FirstShown;
     PLIST_ENTRY LastShown;
@@ -70,6 +71,7 @@ CreateGenericList(VOID)
         return NULL;
 
     InitializeListHead(&List->ListHead);
+    List->NumOfEntries = 0;
 
     List->Left = 0;
     List->Top = 0;
@@ -78,6 +80,7 @@ CreateGenericList(VOID)
     List->Redraw = TRUE;
 
     List->CurrentEntry = NULL;
+    List->BackupEntry = NULL;
 
     return List;
 }
@@ -131,6 +134,7 @@ AppendGenericListEntry(
 
     InsertTailList(&List->ListHead,
                    &Entry->Entry);
+    List->NumOfEntries++;
 
     if (Current || List->CurrentEntry == NULL)
     {
@@ -609,17 +613,25 @@ GetNextListEntry(
 
 PVOID
 GetListEntryUserData(
-    PGENERIC_LIST_ENTRY List)
+    PGENERIC_LIST_ENTRY Entry)
 {
-    return List->UserData;
+    return Entry->UserData;
 }
 
 
 LPCSTR
 GetListEntryText(
-    PGENERIC_LIST_ENTRY List)
+    PGENERIC_LIST_ENTRY Entry)
 {
-    return List->Text;
+    return Entry->Text;
+}
+
+
+ULONG
+GetNumberOfListEntries(
+    PGENERIC_LIST List)
+{
+    return List->NumOfEntries;
 }
 
 

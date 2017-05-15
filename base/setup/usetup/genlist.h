@@ -98,11 +98,15 @@ GetNextListEntry(
 
 PVOID
 GetListEntryUserData(
-    PGENERIC_LIST_ENTRY List);
+    PGENERIC_LIST_ENTRY Entry);
 
 LPCSTR
 GetListEntryText(
-    PGENERIC_LIST_ENTRY List);
+    PGENERIC_LIST_ENTRY Entry);
+
+ULONG
+GetNumberOfListEntries(
+    PGENERIC_LIST List);
 
 VOID
 SaveGenericListState(
@@ -114,8 +118,8 @@ RestoreGenericListState(
 
 VOID
 GenericListKeyPress(
-    PGENERIC_LIST List,
-    CHAR AsciChar);
+    PGENERIC_LIST GenericList,
+    CHAR AsciiChar);
 
 BOOL
 GenericListHasSingleEntry(
