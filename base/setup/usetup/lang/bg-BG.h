@@ -1629,7 +1629,7 @@ MUI_PAGE bgBGPages[] =
         bgBGLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         bgBGWelcomePageEntries
     },
     {

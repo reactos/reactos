@@ -1624,7 +1624,7 @@ MUI_PAGE svSEPages[] =
         svSELanguagePageEntries
     },
     {
-       START_PAGE,
+       WELCOME_PAGE,
        svSEWelcomePageEntries
     },
     {

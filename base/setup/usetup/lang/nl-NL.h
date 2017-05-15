@@ -1644,7 +1644,7 @@ MUI_PAGE nlNLPages[] =
         nlNLLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         nlNLWelcomePageEntries
     },
     {

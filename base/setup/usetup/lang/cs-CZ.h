@@ -1624,7 +1624,7 @@ MUI_PAGE csCZPages[] =
         csCZLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         csCZWelcomePageEntries
     },
     {

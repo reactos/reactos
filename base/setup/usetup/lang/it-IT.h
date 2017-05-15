@@ -1623,7 +1623,7 @@ MUI_PAGE itITPages[] =
         itITLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         itITWelcomePageEntries
     },
     {

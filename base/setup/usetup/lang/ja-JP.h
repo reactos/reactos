@@ -1618,7 +1618,7 @@ MUI_PAGE jaJPPages[] =
         jaJPLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         jaJPWelcomePageEntries
     },
     {

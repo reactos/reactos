@@ -1635,7 +1635,7 @@ MUI_PAGE frFRPages[] =
         frFRLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         frFRWelcomePageEntries
     },
     {

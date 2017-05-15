@@ -1616,7 +1616,7 @@ MUI_PAGE bnBDPages[] =
         bnBDLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         bnBDWelcomePageEntries
     },
     {

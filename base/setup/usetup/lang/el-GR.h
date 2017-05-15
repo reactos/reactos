@@ -1633,7 +1633,7 @@ MUI_PAGE elGRPages[] =
         elGRLanguagePageEntries
     },
     {
-       START_PAGE,
+       WELCOME_PAGE,
        elGRWelcomePageEntries
     },
     {

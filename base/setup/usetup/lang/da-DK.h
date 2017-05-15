@@ -1630,7 +1630,7 @@ MUI_PAGE daDKPages[] =
         daDKLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         daDKWelcomePageEntries
     },
     {

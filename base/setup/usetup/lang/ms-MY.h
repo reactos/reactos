@@ -1509,7 +1509,7 @@ MUI_PAGE msMYPages[] =
         msMYLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         msMYWelcomePageEntries
     },
     {

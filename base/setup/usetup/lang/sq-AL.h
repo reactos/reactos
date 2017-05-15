@@ -1621,7 +1621,7 @@ MUI_PAGE sqALPages[] =
         sqALLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         sqALWelcomePageEntries
     },
     {

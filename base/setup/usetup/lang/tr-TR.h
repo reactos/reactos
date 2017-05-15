@@ -1597,7 +1597,7 @@ MUI_PAGE trTRPages[] =
         trTRLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         trTRWelcomePageEntries
     },
     {

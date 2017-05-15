@@ -1620,7 +1620,7 @@ MUI_PAGE esESPages[] =
         esESLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         esESWelcomePageEntries
     },
     {

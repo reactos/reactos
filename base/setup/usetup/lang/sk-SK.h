@@ -1628,7 +1628,7 @@ MUI_PAGE skSKPages[] =
         skSKLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         skSKWelcomePageEntries
     },
     {

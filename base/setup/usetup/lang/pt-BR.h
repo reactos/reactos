@@ -1648,7 +1648,7 @@ MUI_PAGE ptBRPages[] =
         ptBRLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         ptBRWelcomePageEntries
     },
     {

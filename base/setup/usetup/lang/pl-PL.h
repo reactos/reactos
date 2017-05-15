@@ -1627,7 +1627,7 @@ MUI_PAGE plPLPages[] =
         plPLLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         plPLWelcomePageEntries
     },
     {

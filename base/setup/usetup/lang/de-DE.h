@@ -1620,7 +1620,7 @@ MUI_PAGE deDEPages[] =
         deDELanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         deDEWelcomePageEntries
     },
     {

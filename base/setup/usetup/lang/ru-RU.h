@@ -1617,7 +1617,7 @@ MUI_PAGE ruRUPages[] =
         ruRULanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         ruRUWelcomePageEntries
     },
     {

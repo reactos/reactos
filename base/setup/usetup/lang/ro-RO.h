@@ -1670,7 +1670,7 @@ MUI_PAGE roROPages[] =
         roROLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         roROWelcomePageEntries
     },
     {

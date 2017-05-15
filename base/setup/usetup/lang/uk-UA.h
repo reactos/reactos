@@ -1624,7 +1624,7 @@ MUI_PAGE ukUAPages[] =
         ukUALanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         ukUAWelcomePageEntries
     },
     {

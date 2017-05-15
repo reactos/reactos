@@ -1616,7 +1616,7 @@ MUI_PAGE enUSPages[] =
         enUSLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         enUSWelcomePageEntries
     },
     {

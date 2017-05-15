@@ -420,7 +420,7 @@ ConfirmQuit(PINPUT_RECORD Ir)
 }
 
 
-VOID
+static VOID
 CheckUnattendedSetup(VOID)
 {
     WCHAR UnattendInfPath[MAX_PATH];
@@ -593,7 +593,7 @@ CheckUnattendedSetup(VOID)
 }
 
 
-VOID
+static VOID
 UpdateKBLayout(VOID)
 {
     PGENERIC_LIST_ENTRY ListEntry;
@@ -633,7 +633,7 @@ UpdateKBLayout(VOID)
 /*
  * Displays the LanguagePage.
  *
- * Next pages: IntroPage, QuitPage
+ * Next pages: WelcomePage, QuitPage
  *
  * SIDEEFFECTS
  *  Init SelectedLanguageId
@@ -656,7 +656,7 @@ LanguagePage(PINPUT_RECORD Ir)
         if (LanguageList == NULL)
         {
            PopupError("Setup failed to initialize available translations", NULL, NULL, POPUP_WAIT_NONE);
-           return INTRO_PAGE;
+           return WELCOME_PAGE;
         }
     }
 
@@ -670,7 +670,7 @@ LanguagePage(PINPUT_RECORD Ir)
     if (GenericListHasSingleEntry(LanguageList))
     {
         LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
-        return INTRO_PAGE;
+        return WELCOME_PAGE;
     }
 
     InitGenericListUi(&ListUi, LanguageList);
@@ -734,7 +734,7 @@ LanguagePage(PINPUT_RECORD Ir)
             /* Load the font */
             SetConsoleCodePage();
 
-            return INTRO_PAGE;
+            return WELCOME_PAGE;
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar > 0x60) && (Ir->Event.KeyEvent.uChar.AsciiChar < 0x7b))
         {
@@ -765,7 +765,7 @@ LanguagePage(PINPUT_RECORD Ir)
         }
     }
 
-    return INTRO_PAGE;
+    return WELCOME_PAGE;
 }
 
 
@@ -930,7 +930,7 @@ SetupStartPage(PINPUT_RECORD Ir)
 
 
 /*
- * Displays the IntroPage.
+ * Displays the WelcomePage.
  *
  * Next pages:
  *  InstallIntroPage (default)
@@ -942,9 +942,9 @@ SetupStartPage(PINPUT_RECORD Ir)
  *   Number of the next page.
  */
 static PAGE_NUMBER
-IntroPage(PINPUT_RECORD Ir)
+WelcomePage(PINPUT_RECORD Ir)
 {
-    MUIDisplayPage(START_PAGE);
+    MUIDisplayPage(WELCOME_PAGE);
 
     while (TRUE)
     {
@@ -972,7 +972,7 @@ IntroPage(PINPUT_RECORD Ir)
         }
     }
 
-    return INTRO_PAGE;
+    return WELCOME_PAGE;
 }
 
 
@@ -980,7 +980,7 @@ IntroPage(PINPUT_RECORD Ir)
  * Displays the License page.
  *
  * Next page:
- *  IntroPage (default)
+ *  WelcomePage (default)
  *
  * RETURNS
  *   Number of the next page.
@@ -996,7 +996,7 @@ LicensePage(PINPUT_RECORD Ir)
 
         if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)  /* ENTER */
         {
-            return INTRO_PAGE;
+            return WELCOME_PAGE;
         }
     }
 
@@ -1041,7 +1041,7 @@ RepairIntroPage(PINPUT_RECORD Ir)
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))  /* ESC */
         {
-            return INTRO_PAGE;
+            return WELCOME_PAGE;
         }
     }
 
@@ -1063,8 +1063,6 @@ RepairIntroPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 InstallIntroPage(PINPUT_RECORD Ir)
 {
-    MUIDisplayPage(INSTALL_INTRO_PAGE);
-
     if (RepairUpdateFlag)
     {
         //return SELECT_PARTITION_PAGE;
@@ -1072,9 +1070,9 @@ InstallIntroPage(PINPUT_RECORD Ir)
     }
 
     if (IsUnattendedSetup)
-    {
         return SELECT_PARTITION_PAGE;
-    }
+
+    MUIDisplayPage(INSTALL_INTRO_PAGE);
 
     while (TRUE)
     {
@@ -1103,19 +1101,20 @@ InstallIntroPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 ScsiControllerPage(PINPUT_RECORD Ir)
 {
-    SetTextXY(6, 8, "Setup detected the following mass storage devices:");
+    // MUIDisplayPage(SCSI_CONTROLLER_PAGE);
+
+    CONSOLE_SetTextXY(6, 8, "Setup detected the following mass storage devices:");
 
     /* FIXME: print loaded mass storage driver descriptions */
 #if 0
-    SetTextXY(8, 10, "TEST device");
+    CONSOLE_SetTextXY(8, 10, "TEST device");
 #endif
 
-
-    SetStatusText("   ENTER = Continue   F3 = Quit");
+    CONSOLE_SetStatusText("   ENTER = Continue   F3 = Quit");
 
     while (TRUE)
     {
-        ConInKey(Ir);
+        CONSOLE_ConInKey(Ir);
 
         if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
             (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
@@ -1132,6 +1131,38 @@ ScsiControllerPage(PINPUT_RECORD Ir)
     }
 
     return SCSI_CONTROLLER_PAGE;
+}
+
+static PAGE_NUMBER
+OemDriverPage(PINPUT_RECORD Ir)
+{
+    // MUIDisplayPage(OEM_DRIVER_PAGE);
+
+    CONSOLE_SetTextXY(6, 8, "This is the OEM driver page!");
+
+    /* FIXME: Implement!! */
+
+    CONSOLE_SetStatusText("   ENTER = Continue   F3 = Quit");
+
+    while (TRUE)
+    {
+        CONSOLE_ConInKey(Ir);
+
+        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
+        {
+            if (ConfirmQuit(Ir) == TRUE)
+                return QUIT_PAGE;
+
+            break;
+        }
+        else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
+        {
+            return DEVICE_SETTINGS_PAGE;
+        }
+    }
+
+    return OEM_DRIVER_PAGE;
 }
 #endif
 
@@ -1161,7 +1192,6 @@ static PAGE_NUMBER
 DeviceSettingsPage(PINPUT_RECORD Ir)
 {
     static ULONG Line = 16;
-    MUIDisplayPage(DEVICE_SETTINGS_PAGE);
 
     /* Initialize the computer settings list */
     if (ComputerList == NULL)
@@ -1208,20 +1238,20 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
         }
     }
 
+    if (RepairUpdateFlag)
+        return SELECT_PARTITION_PAGE;
+
+    // if (IsUnattendedSetup)
+        // return SELECT_PARTITION_PAGE;
+
     MUIDisplayPage(DEVICE_SETTINGS_PAGE);
 
-
-    CONSOLE_SetTextXY(25, 11, GetListEntryText(GetCurrentListEntry((ComputerList))));
-    CONSOLE_SetTextXY(25, 12, GetListEntryText(GetCurrentListEntry((DisplayList))));
-    CONSOLE_SetTextXY(25, 13, GetListEntryText(GetCurrentListEntry((KeyboardList))));
-    CONSOLE_SetTextXY(25, 14, GetListEntryText(GetCurrentListEntry((LayoutList))));
+    CONSOLE_SetTextXY(25, 11, GetListEntryText(GetCurrentListEntry(ComputerList)));
+    CONSOLE_SetTextXY(25, 12, GetListEntryText(GetCurrentListEntry(DisplayList)));
+    CONSOLE_SetTextXY(25, 13, GetListEntryText(GetCurrentListEntry(KeyboardList)));
+    CONSOLE_SetTextXY(25, 14, GetListEntryText(GetCurrentListEntry(LayoutList)));
 
     CONSOLE_InvertTextXY(24, Line, 48, 1);
-
-    if (RepairUpdateFlag)
-    {
-        return SELECT_PARTITION_PAGE;
-    }
 
     while (TRUE)
     {
@@ -1509,8 +1539,6 @@ SelectPartitionPage(PINPUT_RECORD Ir)
     PARTLIST_UI ListUi;
     ULONG Error;
 
-    MUIDisplayPage(SELECT_PARTITION_PAGE);
-
     if (PartitionList == NULL)
     {
         PartitionList = CreatePartitionList();
@@ -1529,6 +1557,8 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         TempPartition = NULL;
         FormatState = Start;
     }
+
+    MUIDisplayPage(SELECT_PARTITION_PAGE);
 
     InitPartitionListUi(&ListUi, PartitionList,
                         2,
@@ -3180,9 +3210,8 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
 }
 
 
-static
-VOID
-BuildInstallPaths(PWCHAR InstallDir,
+static VOID
+BuildInstallPaths(PWSTR InstallDir,
                   PDISKENTRY DiskEntry,
                   PPARTENTRY PartEntry)
 {
@@ -4033,6 +4062,8 @@ RegistryPage(PINPUT_RECORD Ir)
 
     if (RepairUpdateFlag)
     {
+        // FIXME!
+        DPRINT1("FIXME: Updating / repairing the registry is NOT implemented yet!\n");
         return SUCCESS_PAGE;
     }
 
@@ -4872,35 +4903,34 @@ RunUSetup(VOID)
     /* Hide the cursor */
     CONSOLE_SetCursorType(TRUE, FALSE);
 
-    Page = START_PAGE;
+    /* Global Initialization page */
+    CONSOLE_ClearScreen();
+    CONSOLE_Flush();
+    Page = SetupStartPage(&Ir);
+
     while (Page != REBOOT_PAGE && Page != RECOVERY_PAGE)
     {
         CONSOLE_ClearScreen();
         CONSOLE_Flush();
 
-        //CONSOLE_SetUnderlinedTextXY(4, 3, " ReactOS " KERNEL_VERSION_STR " Setup ");
-        //CONSOLE_Flush();
+        // CONSOLE_SetUnderlinedTextXY(4, 3, " ReactOS " KERNEL_VERSION_STR " Setup ");
+        // CONSOLE_Flush();
 
         switch (Page)
         {
-            /* Start page */
-            case START_PAGE:
-                Page = SetupStartPage(&Ir);
-                break;
-
             /* Language page */
             case LANGUAGE_PAGE:
                 Page = LanguagePage(&Ir);
                 break;
 
+            /* Welcome page */
+            case WELCOME_PAGE:
+                Page = WelcomePage(&Ir);
+                break;
+
             /* License page */
             case LICENSE_PAGE:
                 Page = LicensePage(&Ir);
-                break;
-
-            /* Intro page */
-            case INTRO_PAGE:
-                Page = IntroPage(&Ir);
                 break;
 
             /* Install pages */

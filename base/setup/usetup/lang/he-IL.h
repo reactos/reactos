@@ -1617,7 +1617,7 @@ MUI_PAGE heILPages[] =
         heILLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         heILWelcomePageEntries
     },
     {

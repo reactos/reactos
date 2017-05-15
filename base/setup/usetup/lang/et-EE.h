@@ -1614,7 +1614,7 @@ MUI_PAGE etEEPages[] =
         etEELanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         etEEWelcomePageEntries
     },
     {

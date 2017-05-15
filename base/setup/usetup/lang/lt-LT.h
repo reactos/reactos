@@ -1626,7 +1626,7 @@ MUI_PAGE ltLTPages[] =
         ltLTLanguagePageEntries
     },
     {
-        START_PAGE,
+        WELCOME_PAGE,
         ltLTWelcomePageEntries
     },
     {
