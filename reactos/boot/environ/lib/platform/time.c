@@ -78,7 +78,6 @@ BlpTimeCalibratePerformanceCounter (
             {
                 /* Read the TSC frequency from the MSR */
                 BlpTimePerformanceFrequency = __readmsr(0x40000022);
-                EfiPrintf(L"Using Hyper-V frequency as: %I64d\r\n", BlpTimePerformanceFrequency);
                 return STATUS_SUCCESS;
             }
         }

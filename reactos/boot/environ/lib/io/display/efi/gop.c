@@ -114,7 +114,7 @@ ConsoleEfiGopEnable (
     {
         /* Switch modes */
         Status = EfiGopSetMode(Protocol, Mode);
-        if (Status < 0)
+        if (!NT_SUCCESS(Status))
         {
             return Status;
         }

@@ -174,9 +174,7 @@ MmMdFreeDescriptor (
     else
     {
         /* It's a dynamic descriptor, so free it */
-        EfiPrintf(L"Freeing dynamic descriptors not yet supported\r\n");
-        EfiStall(10000000);
-        Status = STATUS_NOT_IMPLEMENTED;
+        Status = BlMmFreeHeap(MemoryDescriptor);
     }
 
     /* Done */

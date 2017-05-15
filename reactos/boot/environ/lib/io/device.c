@@ -1413,7 +1413,7 @@ BlockIoFirmwareOpen (
     }
 
     /* Build a hash entry, with the value inline */
-    HashEntry.Flags = 1;
+    HashEntry.Flags = BL_HT_VALUE_IS_INLINE;
     HashEntry.Size = sizeof(EFI_HANDLE);
 
     /* Loop each device we got */
@@ -1459,10 +1459,9 @@ BlockIoFirmwareOpen (
                                TblDoNotPurgeEntry);
         if (!NT_SUCCESS(Status))
         {
-            EfiPrintf(L"Failure path not implemented: %lx\r\n", Status);
-#if 0
-            BlHtDelete(HashTableId, &HashKey);
-#endif
+            /* Remove it from teh hash table */
+            BlHtDelete(HashTableId, &HashEntry);
+
             /* Free the block I/O device data */
             BlockIopFreeAllocations(DeviceEntry->DeviceSpecificData);
 

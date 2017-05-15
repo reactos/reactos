@@ -1828,6 +1828,12 @@ BlHtStore (
     );
 
 NTSTATUS
+BlHtDelete (
+    _In_ ULONG TableId,
+    _In_ PBL_HASH_ENTRY Entry
+    );
+
+NTSTATUS
 BlHtLookup (
     _In_ ULONG TableId,
     _In_ PBL_HASH_ENTRY Entry,

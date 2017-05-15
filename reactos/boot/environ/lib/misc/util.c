@@ -718,6 +718,61 @@ Quickie:
     return Status;
 }
 
+NTSTATUS
+BlHtDelete (
+    _In_ ULONG TableId,
+    _In_ PBL_HASH_ENTRY Entry
+    )
+{
+    PBL_HASH_TABLE HashTable;
+    ULONG HashValue;
+    NTSTATUS Status;
+    PLIST_ENTRY HashLinkHead, HashLink;
+    PBL_HASH_NODE HashNode;
+
+    /* Check if the table ID is invalid, or we have no entry, or it's malformed */
+    if ((HtTableSize <= TableId) ||
+        !(Entry) ||
+        !(Entry->Size) ||
+        !(Entry->Value) ||
+        ((Entry->Flags & BL_HT_VALUE_IS_INLINE) && (Entry->Size != sizeof(ULONG))))
+    {
+        /* Fail */
+        Status = STATUS_INVALID_PARAMETER;
+    }
+    else
+    {
+        /* Otherwise, get the hash table for this index */
+        HashTable = HtTableArray[TableId];
+
+        /* Get the hash bucket */
+        HashValue = HashTable->HashFunction(Entry, HashTable->Size);
+
+        /* Start iterating each entry in the bucket, assuming failure */
+        Status = STATUS_NOT_FOUND;
+        HashLinkHead = &HashTable->HashLinks[HashValue];
+        HashLink = HashLinkHead->Flink;
+        while (HashLink != HashLinkHead)
+        {
+            /* Get a node in this bucket, and compare the value */
+            HashNode = CONTAINING_RECORD(HashLink, BL_HASH_NODE, ListEntry);
+            if (HashTable->CompareFunction(&HashNode->Entry, Entry))
+            {
+                /* Remove it from the list and free it */
+                RemoveEntryList(&HashNode->ListEntry);
+                BlMmFreeHeap(HashNode);
+                return STATUS_SUCCESS;
+            }
+
+            /* Try the next node */
+            HashLink = HashLink->Flink;
+        }
+    }
+
+    /* Return back to the caller */
+    return Status;
+}
+
 ULONG
 BlUtlCheckSum (
     _In_ ULONG PartialSum,

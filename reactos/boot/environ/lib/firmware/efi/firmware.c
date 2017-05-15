@@ -160,11 +160,216 @@ EfiPrintf (
     va_end(args);
 }
 
+BOOLEAN EfiProtHashTableInitialized;
+ULONG EfiProtHashTableId;
+
+typedef struct _BL_EFI_PROTOCOL
+{
+    LIST_ENTRY ListEntry;
+    EFI_GUID* Protocol;
+    PVOID Interface;
+    LONG ReferenceCount;
+    BOOLEAN AddressMapped;
+} BL_EFI_PROTOCOL, *PBL_EFI_PROTOCOL;
+
+NTSTATUS
+EfiVmOpenProtocol (
+    _In_ EFI_HANDLE Handle,
+    _In_ EFI_GUID* Protocol,
+    _Outptr_ PVOID* Interface
+    )
+{
+    BOOLEAN AddressMapped;
+    PLIST_ENTRY HashList, NextEntry;
+    PHYSICAL_ADDRESS InterfaceAddress, TranslatedAddress;
+    NTSTATUS Status;
+    BL_HASH_ENTRY HashEntry;
+    PBL_HASH_VALUE HashValue;
+    PBL_EFI_PROTOCOL EfiProtocol;
+    BL_ARCH_MODE OldMode;
+    EFI_STATUS EfiStatus;
+    PVOID InterfaceVa;
+
+    /* Initialize failure paths */
+    AddressMapped = FALSE;
+    HashList = NULL;
+    InterfaceAddress.QuadPart = 0;
+
+    /* Have we initialized the protocol table yet? */
+    if (!EfiProtHashTableInitialized)
+    {
+        /* Nope -- create the hash table */
+        Status = BlHtCreate(0, NULL, NULL, &EfiProtHashTableId);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+
+        /* Remember for next time */
+        EfiProtHashTableInitialized = TRUE;
+    }
+
+    /* Check if we already have a list of protocols for this handle */
+    HashEntry.Flags = BL_HT_VALUE_IS_INLINE;
+    HashEntry.Size = sizeof(Handle);
+    HashEntry.Value = Handle;
+    Status = BlHtLookup(EfiProtHashTableId, &HashEntry, &HashValue);
+    if (NT_SUCCESS(Status))
+    {
+        /* We do -- the hash value is the list itself */
+        HashList = (PLIST_ENTRY)HashValue->Data;
+        NextEntry = HashList->Flink;
+
+        /* Iterate over it */
+        while (NextEntry != HashList)
+        {
+            /* Get each protocol in the list, checking for a match */
+            EfiProtocol = CONTAINING_RECORD(NextEntry,
+                                            BL_EFI_PROTOCOL,
+                                            ListEntry);
+            if (EfiProtocol->Protocol == Protocol)
+            {
+                /* Match found -- add a reference and return it */
+                EfiProtocol->ReferenceCount++;
+                *Interface = EfiProtocol->Interface;
+                return STATUS_SUCCESS;
+            }
+
+            /* Try the next entry */
+            NextEntry = NextEntry->Flink;
+        }
+    }
+
+    /* Switch to real mode for firmware call */
+    OldMode = CurrentExecutionContext->Mode;
+    if (OldMode != BlRealMode)
+    {
+        BlpArchSwitchContext(BlRealMode);
+    }
+
+    /* Check if this is EFI 1.02 */
+    if (EfiST->Hdr.Revision == EFI_1_02_SYSTEM_TABLE_REVISION)
+    {
+        /* Use the old call */
+        EfiStatus = EfiBS->HandleProtocol(Handle,
+                                          Protocol,
+                                          (PVOID*)&InterfaceAddress);
+    }
+    else
+    {
+        /* Use the EFI 2.00 API instead */
+        EfiStatus = EfiBS->OpenProtocol(Handle,
+                                        Protocol,
+                                        (PVOID*)&InterfaceAddress,
+                                        EfiImageHandle,
+                                        NULL,
+                                        EFI_OPEN_PROTOCOL_GET_PROTOCOL);
+    }
+
+    /* Switch back to protected mode if needed */
+    if (OldMode != BlRealMode)
+    {
+        BlpArchSwitchContext(OldMode);
+    }
+
+    /* Check the result, and bail out on failure */
+    Status = EfiGetNtStatusCode(EfiStatus);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Check what address the interface lives at, and translate it */
+    InterfaceVa = (PVOID)InterfaceAddress.LowPart;
+    if (BlMmTranslateVirtualAddress(InterfaceVa, &TranslatedAddress))
+    {
+        /* We expect firmware to be 1:1 mapped, fail if not */
+        if (InterfaceAddress.QuadPart != TranslatedAddress.QuadPart)
+        {
+            return STATUS_NOT_SUPPORTED;
+        }
+    }
+    else
+    {
+        /* Create a virtual (1:1) mapping for the interface */
+        Status = BlMmMapPhysicalAddressEx(&InterfaceVa,
+                                          BlMemoryFixed,
+                                          PAGE_SIZE,
+                                          InterfaceAddress);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+
+        /* Remember for cleanup */
+        AddressMapped = TRUE;
+    }
+
+    /* The caller now has the interface */
+    *Interface = InterfaceVa;
+
+    /* Did we already have some protocols on this handle? */
+    if (!HashList)
+    {
+        /* Nope, this is the first time -- so allocate the list */
+        HashList = BlMmAllocateHeap(sizeof(*HashList));
+        if (!HashList)
+        {
+            Status = STATUS_NO_MEMORY;
+            goto Quickie;
+        }
+
+        /* Initialize it */
+        InitializeListHead(HashList);
+
+        /* And then store it in the hash table for this handle */
+        Status = BlHtStore(EfiProtHashTableId,
+                           &HashEntry,
+                           HashList,
+                           sizeof(*HashList));
+        if (!NT_SUCCESS(Status))
+        {
+            BlMmFreeHeap(HashList);
+            goto Quickie;
+        }
+    }
+
+    /* Finally, allocate a protocol tracker structure */
+    EfiProtocol = BlMmAllocateHeap(sizeof(*EfiProtocol));
+    if (!EfiProtocol)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Quickie;
+    }
+
+    /* And store this information in case the protocol is needed again */
+    EfiProtocol->Protocol = Protocol;
+    EfiProtocol->Interface = *Interface;
+    EfiProtocol->ReferenceCount = 1;
+    EfiProtocol->AddressMapped = AddressMapped;
+    InsertTailList(HashList, &EfiProtocol->ListEntry);
+
+    /* Passthru to success case */
+    AddressMapped = FALSE;
+
+Quickie:
+    /* Failure path -- did we map anything ?*/
+    if (AddressMapped)
+    {
+        /* Get rid of it */
+        BlMmUnmapVirtualAddressEx(InterfaceVa, PAGE_SIZE);
+        *Interface = NULL;
+    }
+
+    /* Return the failure */
+    return Status;
+}
+
 NTSTATUS
 EfiOpenProtocol (
     _In_ EFI_HANDLE Handle, 
     _In_ EFI_GUID *Protocol, 
-    _Out_ PVOID* Interface
+    _Outptr_ PVOID* Interface
     )
 {
     EFI_STATUS EfiStatus;
@@ -175,10 +380,7 @@ EfiOpenProtocol (
     if (MmTranslationType != BlNone)
     {
         /* We need complex tracking to make this work */
-        //Status = EfiVmOpenProtocol(Handle, Protocol, Interface);
-        EfiPrintf(L"Paging path hit!\r\n");
-        EfiStall(1000000);
-        Status = STATUS_NOT_SUPPORTED;
+        Status = EfiVmOpenProtocol(Handle, Protocol, Interface);
     }
     else
     {
@@ -186,10 +388,8 @@ EfiOpenProtocol (
         OldMode = CurrentExecutionContext->Mode;
         if (OldMode != BlRealMode)
         {
-            /* FIXME: Not yet implemented */
-            EfiPrintf(L"Paging path hit!\r\n");
-            EfiStall(1000000);
-            return STATUS_NOT_IMPLEMENTED;
+            /* Switch to real mode */
+            BlpArchSwitchContext(BlRealMode);
         }
 
         /* Are we on legacy 1.02? */
@@ -229,6 +429,155 @@ EfiOpenProtocol (
 }
 
 NTSTATUS
+EfiVmpCloseProtocol (
+    _In_ EFI_HANDLE Handle,
+    _In_ EFI_GUID* Protocol
+    )
+{
+    EFI_STATUS EfiStatus;
+    BL_ARCH_MODE OldMode;
+
+    /* Are we in protected mode? */
+    OldMode = CurrentExecutionContext->Mode;
+    if (OldMode != BlRealMode)
+    {
+        /* Switch to real mode */
+        BlpArchSwitchContext(BlRealMode);
+    }
+
+    /* Are we on legacy 1.02? */
+    if (EfiST->FirmwareRevision == EFI_1_02_SYSTEM_TABLE_REVISION)
+    {
+        /* Nothing to close */
+        EfiStatus = EFI_SUCCESS;
+    }
+    else
+    {
+        /* Use the UEFI version */
+        EfiStatus = EfiBS->CloseProtocol(Handle,
+                                         Protocol,
+                                         EfiImageHandle,
+                                         NULL);
+
+        /* Normalize not found as success */
+        if (EfiStatus == EFI_NOT_FOUND)
+        {
+            EfiStatus = EFI_SUCCESS;
+        }
+    }
+
+    /* Switch back to protected mode if we came from there */
+    if (OldMode != BlRealMode)
+    {
+        BlpArchSwitchContext(OldMode);
+    }
+
+    /* Convert to NT status */
+    return EfiGetNtStatusCode(EfiStatus);
+}
+
+NTSTATUS
+EfiVmpFreeInterfaceEntry (
+    _In_ EFI_HANDLE Handle,
+    _In_ PBL_EFI_PROTOCOL EfiProtocol
+    )
+{
+    NTSTATUS Status;
+    BL_HASH_ENTRY HashEntry;
+
+    /* Assume success */
+    Status = STATUS_SUCCESS;
+
+    /* Is this the last protocol on this handle? */
+    if (IsListEmpty(&EfiProtocol->ListEntry))
+    {
+        /* Delete the hash table entry for this handle */
+        HashEntry.Value = Handle;
+        HashEntry.Size = sizeof(Handle);
+        HashEntry.Flags = BL_HT_VALUE_IS_INLINE;
+        Status = BlHtDelete(EfiProtHashTableId, &HashEntry);
+
+        /* This will free the list head itself */
+        BlMmFreeHeap(EfiProtocol->ListEntry.Flink);
+    }
+    else
+    {
+        /* Simply remove this entry */
+        RemoveEntryList(&EfiProtocol->ListEntry);
+    }
+
+    /* Had we virtually mapped this protocol? */
+    if (EfiProtocol->AddressMapped)
+    {
+        /* Unmap it */
+        BlMmUnmapVirtualAddressEx(EfiProtocol->Interface, PAGE_SIZE);
+    }
+
+    /* Free the protocol entry, and return */
+    BlMmFreeHeap(EfiProtocol);
+    return Status;
+}
+
+NTSTATUS
+EfiVmCloseProtocol (
+    _In_ EFI_HANDLE Handle,
+    _In_ EFI_GUID* Protocol
+    )
+{
+    BL_HASH_ENTRY HashEntry;
+    PLIST_ENTRY ListHead, NextEntry;
+    NTSTATUS Status, CloseStatus;
+    PBL_HASH_VALUE HashValue;
+    PBL_EFI_PROTOCOL EfiProtocol;
+
+    /* Lookup the list entry for this handle */
+    HashEntry.Size = sizeof(Handle);
+    HashEntry.Flags = BL_HT_VALUE_IS_INLINE;
+    HashEntry.Value = Handle;
+    Status = BlHtLookup(EfiProtHashTableId, &HashEntry, &HashValue);
+    if (!NT_SUCCESS(Status))
+    {
+        /* This handle was never used for any protocols  */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Iterate through the list of opened protocols */
+    ListHead = (PLIST_ENTRY)HashValue->Data;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        /* Get this protocol entry and check for a match */
+        EfiProtocol = CONTAINING_RECORD(NextEntry, BL_EFI_PROTOCOL, ListEntry);
+        if (EfiProtocol->Protocol == Protocol)
+        {
+            /* Drop a reference -- was it the last one? */
+            if (EfiProtocol->ReferenceCount-- == 1)
+            {
+                /* Yep -- free this entry */
+                Status = EfiVmpFreeInterfaceEntry(Handle, EfiProtocol);
+
+                /* Call firmware to close the protocol */
+                CloseStatus = EfiVmpCloseProtocol(Handle, Protocol);
+                if (!NT_SUCCESS(CloseStatus))
+                {
+                    /* Override free status if close was a failure */
+                    Status = CloseStatus;
+                }
+
+                /* Return final status */
+                return Status;
+            }
+        }
+
+        /* Next entry */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* This protocol was never opened */
+    return STATUS_INVALID_PARAMETER;
+}
+
+NTSTATUS
 EfiCloseProtocol (
     _In_ EFI_HANDLE Handle,
     _In_ EFI_GUID *Protocol
@@ -242,8 +591,7 @@ EfiCloseProtocol (
     if (MmTranslationType != BlNone)
     {
         /* We need complex tracking to make this work */
-        //Status = EfiVmOpenProtocol(Handle, Protocol, Interface);
-        Status = STATUS_NOT_SUPPORTED;
+        Status = EfiVmCloseProtocol(Handle, Protocol);
     }
     else
     {
@@ -251,7 +599,7 @@ EfiCloseProtocol (
         if (EfiST->FirmwareRevision == EFI_1_02_SYSTEM_TABLE_REVISION)
         {
             /* Nothing to close */
-            EfiStatus = STATUS_SUCCESS;
+            EfiStatus = EFI_SUCCESS;
         }
         else
         {
@@ -259,8 +607,8 @@ EfiCloseProtocol (
             OldMode = CurrentExecutionContext->Mode;
             if (OldMode != BlRealMode)
             {
-                /* FIXME: Not yet implemented */
-                return STATUS_NOT_IMPLEMENTED;
+                /* Switch to real mode */
+                BlpArchSwitchContext(BlRealMode);
             }
 
             /* Use the UEFI version */
@@ -306,6 +654,8 @@ EfiGetVariable (
     if (OldMode != BlRealMode)
     {
         /* FIXME: Not yet implemented */
+        EfiPrintf(L"getvar vm path\r\n");
+        EfiStall(10000000);
         return STATUS_NOT_IMPLEMENTED;
     }
 
@@ -453,6 +803,8 @@ EfiConInReset (
     if (OldMode != BlRealMode)
     {
         /* FIXME: Not yet implemented */
+        EfiPrintf(L"coninreset vm path\r\n");
+        EfiStall(10000000);
         return STATUS_NOT_IMPLEMENTED;
     }
 
@@ -482,6 +834,8 @@ EfiConInExReset (
     if (OldMode != BlRealMode)
     {
         /* FIXME: Not yet implemented */
+        EfiPrintf(L"conreset vm path\r\n");
+        EfiStall(10000000);
         return STATUS_NOT_IMPLEMENTED;
     }
 
@@ -506,13 +860,20 @@ EfiConInExSetState (
 {
     BL_ARCH_MODE OldMode;
     EFI_STATUS EfiStatus;
+    PHYSICAL_ADDRESS ConInExPhys, KeyTogglePhys;
 
     /* Are we in protected mode? */
     OldMode = CurrentExecutionContext->Mode;
     if (OldMode != BlRealMode)
     {
-        /* FIXME: Not yet implemented */
-        return STATUS_NOT_IMPLEMENTED;
+        /* Translate pointers from virtual to physical */
+        BlMmTranslateVirtualAddress(ConInEx, &ConInExPhys);
+        ConInEx = (EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL*)ConInExPhys.LowPart;
+        BlMmTranslateVirtualAddress(KeyToggleState, &KeyTogglePhys);
+        KeyToggleState = (EFI_KEY_TOGGLE_STATE*)KeyTogglePhys.LowPart;
+
+        /* Switch to real mode */
+        BlpArchSwitchContext(BlRealMode);
     }
 
     /* Make the EFI call */
@@ -540,8 +901,8 @@ EfiSetWatchdogTimer (
     OldMode = CurrentExecutionContext->Mode;
     if (OldMode != BlRealMode)
     {
-        /* FIXME: Not yet implemented */
-        return STATUS_NOT_IMPLEMENTED;
+        /* Switch to real mode */
+        BlpArchSwitchContext(BlRealMode);
     }
 
     /* Make the EFI call */
@@ -588,7 +949,7 @@ EfiGetMemoryMap (
         DescriptorVersion = (UINTN*)DescriptorVersionPhysical.LowPart;
 
         /* Switch to real mode */
-        BlpArchSwitchContext(BlProtectedMode);
+        BlpArchSwitchContext(BlRealMode);
     }
 
     /* Make the EFI call */
@@ -622,7 +983,7 @@ EfiFreePages (
     if (OldMode != BlRealMode)
     {
         /* Switch to real mode */
-        BlpArchSwitchContext(BlProtectedMode);
+        BlpArchSwitchContext(BlRealMode);
     }
 
     /* Make the EFI call */
@@ -651,7 +1012,7 @@ EfiStall (
     if (OldMode != BlRealMode)
     {
         /* Switch to real mode */
-        BlpArchSwitchContext(BlProtectedMode);
+        BlpArchSwitchContext(BlRealMode);
     }
 
     /* Make the EFI call */
@@ -683,6 +1044,8 @@ EfiConOutQueryMode (
     if (OldMode != BlRealMode)
     {
         /* FIXME: Not yet implemented */
+        EfiPrintf(L"conqmode vm path\r\n");
+        EfiStall(10000000);
         return STATUS_NOT_IMPLEMENTED;
     }
 
@@ -713,6 +1076,8 @@ EfiConOutSetMode (
     if (OldMode != BlRealMode)
     {
         /* FIXME: Not yet implemented */
+        EfiPrintf(L"setmode vm path\r\n");
+        EfiStall(10000000);
         return STATUS_NOT_IMPLEMENTED;
     }
 
@@ -743,6 +1108,8 @@ EfiConOutSetAttribute (
     if (OldMode != BlRealMode)
     {
         /* FIXME: Not yet implemented */
+        EfiPrintf(L"sattr vm path\r\n");
+        EfiStall(10000000);
         return STATUS_NOT_IMPLEMENTED;
     }
 
@@ -774,6 +1141,8 @@ EfiConOutSetCursorPosition (
     if (OldMode != BlRealMode)
     {
         /* FIXME: Not yet implemented */
+        EfiPrintf(L"setcursor vm path\r\n");
+        EfiStall(10000000);
         return STATUS_NOT_IMPLEMENTED;
     }
 
@@ -804,6 +1173,8 @@ EfiConOutEnableCursor (
     if (OldMode != BlRealMode)
     {
         /* FIXME: Not yet implemented */
+        EfiPrintf(L"enablecurso vm path\r\n");
+        EfiStall(10000000);
         return STATUS_NOT_IMPLEMENTED;
     }
 
@@ -834,6 +1205,8 @@ EfiConOutOutputString (
     if (OldMode != BlRealMode)
     {
         /* FIXME: Not yet implemented */
+        EfiPrintf(L"output string vm path\r\n");
+        EfiStall(10000000);
         return STATUS_NOT_IMPLEMENTED;
     }
 
@@ -850,7 +1223,6 @@ EfiConOutOutputString (
     return EfiGetNtStatusCode(EfiStatus);
 }
 
-
 VOID
 EfiConOutReadCurrentMode (
     _In_ SIMPLE_TEXT_OUTPUT_INTERFACE *TextInterface,
@@ -864,6 +1236,8 @@ EfiConOutReadCurrentMode (
     if (OldMode != BlRealMode)
     {
         /* FIXME: Not yet implemented */
+        EfiPrintf(L"readmode vm path\r\n");
+        EfiStall(10000000);
         return;
     }
 
@@ -885,13 +1259,26 @@ EfiGopGetFrameBuffer (
     )
 {
     BL_ARCH_MODE OldMode;
+    PHYSICAL_ADDRESS GopInterfacePhys, FrameBufferPhys, FrameBufferSizePhys;
 
     /* Are we in protected mode? */
     OldMode = CurrentExecutionContext->Mode;
     if (OldMode != BlRealMode)
     {
-        /* FIXME: Not yet implemented */
-        return;
+        /* Translate pointer to physical */
+        BlMmTranslateVirtualAddress(GopInterface, &GopInterfacePhys);
+        GopInterface = (PVOID)GopInterfacePhys.LowPart;
+
+        /* Translate pointer to physical */
+        BlMmTranslateVirtualAddress(FrameBuffer, &FrameBufferPhys);
+        FrameBuffer = (PVOID)FrameBufferPhys.LowPart;
+
+        /* Translate pointer to physical */
+        BlMmTranslateVirtualAddress(FrameBufferSize, &FrameBufferSizePhys);
+        FrameBufferSize = (PVOID)FrameBufferSizePhys.LowPart;
+
+        /* Switch to real mode */
+        BlpArchSwitchContext(BlRealMode);
     }
 
     /* Make the EFI call */
@@ -913,13 +1300,35 @@ EfiGopGetCurrentMode (
     )
 {
     BL_ARCH_MODE OldMode;
+    PHYSICAL_ADDRESS GopInterfacePhys, ModePhys, InformationPhys;
 
     /* Are we in protected mode? */
     OldMode = CurrentExecutionContext->Mode;
     if (OldMode != BlRealMode)
     {
-        /* FIXME: Not yet implemented */
-        return STATUS_NOT_IMPLEMENTED;
+        /* Translate pointer to physical */
+        if (!BlMmTranslateVirtualAddress(GopInterface, &GopInterfacePhys))
+        {
+            return STATUS_UNSUCCESSFUL;
+        }
+        GopInterface = (PVOID)GopInterfacePhys.LowPart;
+
+        /* Translate pointer to physical */
+        if (!BlMmTranslateVirtualAddress(Mode, &ModePhys))
+        {
+            return STATUS_UNSUCCESSFUL;
+        }
+        Mode = (PVOID)ModePhys.LowPart;
+
+        /* Translate pointer to physical */
+        if (!BlMmTranslateVirtualAddress(Information, &InformationPhys))
+        {
+            return STATUS_UNSUCCESSFUL;
+        }
+        Information = (PVOID)InformationPhys.LowPart;
+
+        /* Switch to real mode */
+        BlpArchSwitchContext(BlRealMode);
     }
 
     /* Make the EFI call */
@@ -952,6 +1361,8 @@ EfiGopSetMode (
     if (OldMode != BlRealMode)
     {
         /* FIXME: Not yet implemented */
+        EfiPrintf(L"gopsmode vm path\r\n");
+        EfiStall(10000000);
         return STATUS_NOT_IMPLEMENTED;
     }
 
@@ -995,6 +1406,9 @@ EfiLocateHandleBuffer (
     BL_ARCH_MODE OldMode;
     EFI_STATUS EfiStatus;
     UINTN BufferSize;
+    PVOID InputBuffer;
+    BOOLEAN TranslateResult;
+    PHYSICAL_ADDRESS BufferPhys;
 
     /* Bail out if we're missing parameters */
     if (!(Buffer) || !(HandleCount))
@@ -1003,7 +1417,8 @@ EfiLocateHandleBuffer (
     }
 
     /* Check if a buffer was passed in*/
-    if (*Buffer)
+    InputBuffer = *Buffer;
+    if (InputBuffer)
     {
         /* Then we should already have a buffer size*/
         BufferSize = sizeof(EFI_HANDLE) * *HandleCount;
@@ -1018,12 +1433,28 @@ EfiLocateHandleBuffer (
     OldMode = CurrentExecutionContext->Mode;
     if (OldMode != BlRealMode)
     {
-        /* FIXME: Not yet implemented */
-        return STATUS_NOT_IMPLEMENTED;
+        /* Translate the input buffer from virtual to physical */
+        TranslateResult = BlMmTranslateVirtualAddress(InputBuffer, &BufferPhys);
+        InputBuffer = TranslateResult ? (PVOID)BufferPhys.LowPart : NULL;
+
+        /* Switch to real mode */
+        BlpArchSwitchContext(BlRealMode);
     }
 
     /* Try the first time */
-    EfiStatus = EfiBS->LocateHandle(SearchType, Protocol, NULL, &BufferSize, *Buffer);
+    EfiStatus = EfiBS->LocateHandle(SearchType,
+                                    Protocol,
+                                    NULL,
+                                    &BufferSize,
+                                    InputBuffer);
+
+    /* Switch back to protected mode if we came from there */
+    if (OldMode != BlRealMode)
+    {
+        BlpArchSwitchContext(OldMode);
+    }
+
+    /* Check result of first search */
     if (EfiStatus == EFI_BUFFER_TOO_SMALL)
     {
         /* Did we have an existing buffer? */
@@ -1034,15 +1465,31 @@ EfiLocateHandleBuffer (
         }
 
         /* Allocate a new one */
-        *Buffer = BlMmAllocateHeap(BufferSize);
-        if (!(*Buffer))
+        InputBuffer = BlMmAllocateHeap(BufferSize);
+        *Buffer = InputBuffer;
+        if (!InputBuffer)
         {
             /* No space, fail */
             return STATUS_NO_MEMORY;
         }
 
+        if (OldMode != BlRealMode)
+        {
+            /* Translate the input buffer from virtual to physical */
+            TranslateResult = BlMmTranslateVirtualAddress(InputBuffer,
+                                                          &BufferPhys);
+            InputBuffer = TranslateResult ? (PVOID)BufferPhys.LowPart : NULL;
+
+            /* Switch to real mode */
+            BlpArchSwitchContext(BlRealMode);
+        }
+
         /* Try again */
-        EfiStatus = EfiBS->LocateHandle(SearchType, Protocol, NULL, &BufferSize, *Buffer);
+        EfiStatus = EfiBS->LocateHandle(SearchType,
+                                        Protocol,
+                                        NULL,
+                                        &BufferSize,
+                                        InputBuffer);
 
         /* Switch back to protected mode if we came from there */
         if (OldMode != BlRealMode)
@@ -1070,6 +1517,8 @@ EfiResetSystem (
     if (OldMode != BlRealMode)
     {
         /* FIXME: Not yet implemented */
+        EfiPrintf(L"reset vm path\r\n");
+        EfiStall(10000000);
         return;
     }
 
@@ -1097,6 +1546,8 @@ EfiConnectController (
     if (OldMode != BlRealMode)
     {
         /* FIXME: Not yet implemented */
+        EfiPrintf(L"connectctrl vm path\r\n");
+        EfiStall(10000000);
         return STATUS_NOT_IMPLEMENTED;
     }
 
@@ -1133,7 +1584,7 @@ EfiAllocatePages (
         Memory = (EFI_PHYSICAL_ADDRESS*)MemoryPhysical.LowPart;
 
         /* Switch to real mode */
-        BlpArchSwitchContext(BlProtectedMode);
+        BlpArchSwitchContext(BlRealMode);
     }
 
     /* Make the EFI call */
