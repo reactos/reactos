@@ -100,16 +100,7 @@ UserGetWindowIcon(PDRAW_CONTEXT pcontext)
     return hIcon;
 }
 
-WCHAR *UserGetWindowCaption(HWND hwnd)
-{
-    INT len = 512;
-    WCHAR *text;
-    text = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, len  * sizeof(WCHAR));
-    if (text) InternalGetWindowText(hwnd, text, len);
-    return text;
-}
-
-HRESULT WINAPI ThemeDrawCaptionText(PDRAW_CONTEXT pcontext, RECT* pRect, int iPartId, int iStateId, LPCWSTR pszText)
+HRESULT WINAPI ThemeDrawCaptionText(PDRAW_CONTEXT pcontext, RECT* pRect, int iPartId, int iStateId)
 {
     HRESULT hr;
     HFONT hFont = NULL;
@@ -117,6 +108,25 @@ HRESULT WINAPI ThemeDrawCaptionText(PDRAW_CONTEXT pcontext, RECT* pRect, int iPa
     LOGFONTW logfont;
     COLORREF textColor;
     COLORREF oldTextColor;
+
+    WCHAR buffer[50];
+    WCHAR *pszText = buffer;
+    INT len;
+
+    len = InternalGetWindowText(pcontext->hWnd, NULL, 0);
+    if (!len)
+        return S_OK;
+
+    len++; /* From now on this is the size of the buffer so include the null */
+
+    if (len > 50)
+    {
+        pszText = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, len  * sizeof(WCHAR));
+        if (!pszText)
+            return E_FAIL;
+    }
+
+    InternalGetWindowText(pcontext->hWnd, pszText, len);
 
     hr = GetThemeSysFont(0,TMT_CAPTIONFONT,&logfont);
     if(SUCCEEDED(hr))
@@ -136,16 +146,20 @@ HRESULT WINAPI ThemeDrawCaptionText(PDRAW_CONTEXT pcontext, RECT* pRect, int iPa
                   iPartId, 
                   iStateId, 
                   pszText, 
-                  lstrlenW(pszText), 
+                  len - 1, 
                   DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS, 
                   0, 
                   pRect);
     SetTextColor(pcontext->hDC, oldTextColor);
 
-    if(hFont)
+    if (hFont)
     {
         SelectObject(pcontext->hDC, oldFont);
         DeleteObject(hFont);
+    }
+    if (pszText != buffer)
+    {
+        HeapFree(GetProcessHeap(), 0, pszText);
     }
     return S_OK;
 }
@@ -320,7 +334,6 @@ ThemeDrawCaption(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
     RECT rcPart;
     int iPart, iState;
     HICON hIcon;
-    WCHAR *CaptionText;
 
     // See also win32ss/user/ntuser/nonclient.c!UserDrawCaptionBar
     // and win32ss/user/ntuser/nonclient.c!UserDrawCaption
@@ -328,8 +341,6 @@ ThemeDrawCaption(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
         hIcon = UserGetWindowIcon(pcontext);
     else
         hIcon = NULL;
-
-    CaptionText = UserGetWindowCaption(pcontext->hWnd);
 
     /* Get the caption part and state id */
     if (pcontext->wi.dwStyle & WS_MINIMIZE)
@@ -378,11 +389,7 @@ ThemeDrawCaption(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
     rcPart.right -= 4;
 
     /* Draw the caption */
-    if (CaptionText)
-    {
-        ThemeDrawCaptionText(pcontext, &rcPart, iPart, iState, CaptionText);
-        HeapFree(GetProcessHeap(), 0, CaptionText);
-    }
+    ThemeDrawCaptionText(pcontext, &rcPart, iPart, iState);
 }
 
 static void 
