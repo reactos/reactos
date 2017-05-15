@@ -109,9 +109,7 @@ WCHAR *UserGetWindowCaption(HWND hwnd)
     return text;
 }
 
-HRESULT WINAPI ThemeDrawCaptionText(HTHEME hTheme, HDC hdc, int iPartId, int iStateId,
-                             LPCWSTR pszText, int iCharCount, DWORD dwTextFlags,
-                             DWORD dwTextFlags2, const RECT *pRect, BOOL Active)
+HRESULT WINAPI ThemeDrawCaptionText(PDRAW_CONTEXT pcontext, RECT* pRect, int iPartId, int iStateId, LPCWSTR pszText)
 {
     HRESULT hr;
     HFONT hFont = NULL;
@@ -119,33 +117,34 @@ HRESULT WINAPI ThemeDrawCaptionText(HTHEME hTheme, HDC hdc, int iPartId, int iSt
     LOGFONTW logfont;
     COLORREF textColor;
     COLORREF oldTextColor;
-    int oldBkMode;
-    RECT rt;
-    
-    hr = GetThemeSysFont(0,TMT_CAPTIONFONT,&logfont);
 
-    if(SUCCEEDED(hr)) {
+    hr = GetThemeSysFont(0,TMT_CAPTIONFONT,&logfont);
+    if(SUCCEEDED(hr))
         hFont = CreateFontIndirectW(&logfont);
-    }
-    CopyRect(&rt, pRect);
+
     if(hFont)
-        oldFont = SelectObject(hdc, hFont);
+        oldFont = SelectObject(pcontext->hDC, hFont);
         
-    if(dwTextFlags2 & DTT_GRAYED)
-        textColor = GetSysColor(COLOR_GRAYTEXT);
-    else if (!Active)
+    if (!pcontext->Active)
         textColor = GetSysColor(COLOR_INACTIVECAPTIONTEXT);
     else
         textColor = GetSysColor(COLOR_CAPTIONTEXT);
-    
-    oldTextColor = SetTextColor(hdc, textColor);
-    oldBkMode = SetBkMode(hdc, TRANSPARENT);
-    DrawThemeText(hTheme, hdc, iPartId, iStateId, pszText, iCharCount, dwTextFlags, dwTextFlags, pRect);
-    SetBkMode(hdc, oldBkMode);
-    SetTextColor(hdc, oldTextColor);
 
-    if(hFont) {
-        SelectObject(hdc, oldFont);
+    oldTextColor = SetTextColor(pcontext->hDC, textColor);
+    DrawThemeText(pcontext->theme, 
+                  pcontext->hDC, 
+                  iPartId, 
+                  iStateId, 
+                  pszText, 
+                  lstrlenW(pszText), 
+                  DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS, 
+                  0, 
+                  pRect);
+    SetTextColor(pcontext->hDC, oldTextColor);
+
+    if(hFont)
+    {
+        SelectObject(pcontext->hDC, oldFont);
         DeleteObject(hFont);
     }
     return S_OK;
@@ -381,17 +380,7 @@ ThemeDrawCaption(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
     /* Draw the caption */
     if (CaptionText)
     {
-        /* FIXME: Use DrawThemeTextEx */
-        ThemeDrawCaptionText(pcontext->theme, 
-                             pcontext->hDC, 
-                             iPart,
-                             iState, 
-                             CaptionText, 
-                             lstrlenW(CaptionText), 
-                             DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS, 
-                             0, 
-                             &rcPart,
-                             pcontext->Active);
+        ThemeDrawCaptionText(pcontext, &rcPart, iPart, iState, CaptionText);
         HeapFree(GetProcessHeap(), 0, CaptionText);
     }
 }
