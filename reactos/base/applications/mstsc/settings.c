@@ -374,7 +374,6 @@ SaveRdpSettingsToFile(LPWSTR lpFile,
     /* use default file */
     if (lpFile == NULL)
     {
-#ifndef __REACTOS__
         HRESULT hr;
         LPITEMIDLIST lpidl= NULL;
 
@@ -392,10 +391,6 @@ SaveRdpSettingsToFile(LPWSTR lpFile,
                 CoTaskMemFree(lpidl);
             }
         }
-#else
-        wcscpy(pszPath, L"C:\\Default.rdp");
-        lpFile = pszPath;
-#endif
     }
 
     if (lpFile)
@@ -427,7 +422,6 @@ LoadRdpSettingsFromFile(PRDPSETTINGS pRdpSettings,
     /* use default file */
     if (lpFile == NULL)
     {
-#ifndef __REACTOS__  // remove when this is working
         HRESULT hr;
         LPITEMIDLIST lpidl= NULL;
 
@@ -445,10 +439,6 @@ LoadRdpSettingsFromFile(PRDPSETTINGS pRdpSettings,
                 CoTaskMemFree(lpidl);
             }
         }
-#else
-        wcscpy(pszPath, L"C:\\Default.rdp");
-        lpFile = pszPath;
-#endif
     }
 
     if (lpFile)
