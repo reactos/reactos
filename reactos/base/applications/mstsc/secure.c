@@ -58,6 +58,19 @@ rdssl_mod_exp(char* out, int out_len, char* in, int in_len,
 int
 rdssl_sign_ok(char* e_data, int e_len, char* n_data, int n_len,
               char* sign_data, int sign_len, char* sign_data2, int sign_len2, char* testkey);
+PCCERT_CONTEXT
+rdssl_cert_read(uint8 * data, uint32 len);
+void
+rdssl_cert_free(PCCERT_CONTEXT context);
+uint8 *
+rdssl_cert_to_rkey(PCCERT_CONTEXT cert, uint32 * key_len);
+RD_BOOL
+rdssl_certs_ok(PCCERT_CONTEXT server_cert, PCCERT_CONTEXT cacert);
+int
+rdssl_rkey_get_exp_mod(uint8 * rkey, uint8 * exponent, uint32 max_exp_len, uint8 * modulus,
+    uint32 max_mod_len);
+void
+rdssl_rkey_free(uint8 * rkey);
 
 extern char g_hostname[16];
 extern int g_width;
@@ -640,9 +653,9 @@ sec_parse_crypt_info(STREAM s, uint32 * rc4_key_size,
 		     uint8 ** server_random, uint8 * modulus, uint8 * exponent)
 {
 	uint32 crypt_level, random_len, rsa_info_len;
-	uint32 /*cacert_len, cert_len,*/ flags;
-	//RDSSL_CERT *cacert, *server_cert;
-	//RDSSL_RKEY *server_public_key;
+	uint32 cacert_len, cert_len, flags;
+    PCCERT_CONTEXT cacert, server_cert;
+	BYTE *server_public_key;
 	uint16 tag, length;
 	uint8 *next_tag, *end;
 
@@ -706,7 +719,6 @@ sec_parse_crypt_info(STREAM s, uint32 * rc4_key_size,
 	}
 	else
 	{
-#if 0
 		uint32 certcount;
 
 		DEBUG_RDP5(("We're going for the RDP5-style encryption\n"));
@@ -719,7 +731,7 @@ sec_parse_crypt_info(STREAM s, uint32 * rc4_key_size,
 		for (; certcount > 2; certcount--)
 		{		/* ignore all the certificates between the root and the signing CA */
 			uint32 ignorelen;
-			RDSSL_CERT *ignorecert;
+            PCCERT_CONTEXT ignorecert;
 
 			DEBUG_RDP5(("Ignored certs left: %d\n", certcount));
 			in_uint32_le(s, ignorelen);
@@ -797,7 +809,6 @@ sec_parse_crypt_info(STREAM s, uint32 * rc4_key_size,
 		}
 		rdssl_rkey_free(server_public_key);
 		return True;	/* There's some garbage here we don't care about */
-#endif
 	}
 	return s_check_end(s);
 }
