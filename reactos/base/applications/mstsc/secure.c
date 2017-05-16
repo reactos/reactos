@@ -21,43 +21,43 @@
 #include "precomp.h"
 
 void *
-ssl_sha1_info_create(void);
+rdssl_sha1_info_create(void);
 void
-ssl_sha1_info_delete(void * sha1_info);
+rdssl_sha1_info_delete(void * sha1_info);
 void
-ssl_sha1_clear(void * sha1_info);
+rdssl_sha1_clear(void * sha1_info);
 void
-ssl_sha1_transform(void * sha1_info, char * data, int len);
+rdssl_sha1_transform(void * sha1_info, char * data, int len);
 void
-ssl_sha1_complete(void * sha1_info, char * data);
+rdssl_sha1_complete(void * sha1_info, char * data);
 void *
-ssl_md5_info_create(void);
+rdssl_md5_info_create(void);
 void
-ssl_md5_info_delete(void * md5_info);
+rdssl_md5_info_delete(void * md5_info);
 void *
-ssl_md5_info_create(void);
+rdssl_md5_info_create(void);
 void
-ssl_md5_info_delete(void * md5_info);
+rdssl_md5_info_delete(void * md5_info);
 void
-ssl_md5_clear(void * md5_info);
+rdssl_md5_clear(void * md5_info);
 void
-ssl_md5_transform(void * md5_info, char * data, int len);
+rdssl_md5_transform(void * md5_info, char * data, int len);
 void
-ssl_md5_complete(void * md5_info, char * data);
+rdssl_md5_complete(void * md5_info, char * data);
 void *
-ssl_rc4_info_create(void);
+rdssl_rc4_info_create(void);
 void
-ssl_rc4_info_delete(void * rc4_info);
+rdssl_rc4_info_delete(void * rc4_info);
 void
-ssl_rc4_set_key(void * rc4_info, char * key, int len);
+rdssl_rc4_set_key(void * rc4_info, char * key, int len);
 void
-ssl_rc4_crypt(void * rc4_info, char * in_data, char * out_data, int len);
+rdssl_rc4_crypt(void * rc4_info, char * in_data, char * out_data, int len);
 int
-ssl_mod_exp(char* out, int out_len, char* in, int in_len,
+rdssl_mod_exp(char* out, int out_len, char* in, int in_len,
             char* mod, int mod_len, char* exp, int exp_len);
-//int
-//ssl_sig_ok(char * exp, int exp_size, char * mod, int mod_len,
-//            char * sig, int sig_len);
+int
+rdssl_sign_ok(char* e_data, int e_len, char* n_data, int n_len,
+    char* sign_data, int sign_len, char* sign_data2, int sign_len2, char* testkey);
 
 extern char g_hostname[16];
 extern int g_width;
@@ -96,37 +96,6 @@ static int g_sec_encrypt_use_count = 0;
 static int g_sec_decrypt_use_count = 0;
 
 #define SEC_MODULUS_SIZE 64
-
-static uint8 g_ppk_n[72] =
-{
-    0x3D, 0x3A, 0x5E, 0xBD, 0x72, 0x43, 0x3E, 0xC9,
-    0x4D, 0xBB, 0xC1, 0x1E, 0x4A, 0xBA, 0x5F, 0xCB,
-    0x3E, 0x88, 0x20, 0x87, 0xEF, 0xF5, 0xC1, 0xE2,
-    0xD7, 0xB7, 0x6B, 0x9A, 0xF2, 0x52, 0x45, 0x95,
-    0xCE, 0x63, 0x65, 0x6B, 0x58, 0x3A, 0xFE, 0xEF,
-    0x7C, 0xE7, 0xBF, 0xFE, 0x3D, 0xF6, 0x5C, 0x7D,
-    0x6C, 0x5E, 0x06, 0x09, 0x1A, 0xF5, 0x61, 0xBB,
-    0x20, 0x93, 0x09, 0x5F, 0x05, 0x6D, 0xEA, 0x87,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
-
-static uint8 g_ppk_d[108] =
-{
-    0x87, 0xA7, 0x19, 0x32, 0xDA, 0x11, 0x87, 0x55,
-    0x58, 0x00, 0x16, 0x16, 0x25, 0x65, 0x68, 0xF8,
-    0x24, 0x3E, 0xE6, 0xFA, 0xE9, 0x67, 0x49, 0x94,
-    0xCF, 0x92, 0xCC, 0x33, 0x99, 0xE8, 0x08, 0x60,
-    0x17, 0x9A, 0x12, 0x9F, 0x24, 0xDD, 0xB1, 0x24,
-    0x99, 0xC7, 0x3A, 0xB8, 0x0A, 0x7B, 0x0D, 0xDD,
-    0x35, 0x07, 0x79, 0x17, 0x0B, 0x51, 0x9B, 0xB3,
-    0xC7, 0x10, 0x01, 0x13, 0xE7, 0x3F, 0xF3, 0x5F,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00
-};
 
 static uint8 g_testkey[176] =
 {
@@ -181,20 +150,20 @@ sec_hash_48(uint8 * out, uint8 * in, uint8 * salt1, uint8 * salt2, uint8 salt)
 	for (i = 0; i < 3; i++)
 	{
 		memset(pad, salt + i, i + 1);
-		sha = ssl_sha1_info_create();
-		ssl_sha1_clear(sha);
-		ssl_sha1_transform(sha, (char *)pad, i + 1);
-		ssl_sha1_transform(sha, (char *)in, 48);
-		ssl_sha1_transform(sha, (char *)salt1, 32);
-		ssl_sha1_transform(sha, (char *)salt2, 32);
-		ssl_sha1_complete(sha, (char *)shasig);
-		ssl_sha1_info_delete(sha);
-		md5 = ssl_md5_info_create();
-		ssl_md5_clear(md5);
-        ssl_md5_transform(md5, (char *)in, 48);
-        ssl_md5_transform(md5, (char *)shasig, 20);
-		ssl_md5_complete(md5, (char *)out + i * 16);
-		ssl_md5_info_delete(md5);
+		sha = rdssl_sha1_info_create();
+		rdssl_sha1_clear(sha);
+		rdssl_sha1_transform(sha, (char *)pad, i + 1);
+		rdssl_sha1_transform(sha, (char *)in, 48);
+		rdssl_sha1_transform(sha, (char *)salt1, 32);
+		rdssl_sha1_transform(sha, (char *)salt2, 32);
+		rdssl_sha1_complete(sha, (char *)shasig);
+		rdssl_sha1_info_delete(sha);
+		md5 = rdssl_md5_info_create();
+		rdssl_md5_clear(md5);
+        rdssl_md5_transform(md5, (char *)in, 48);
+        rdssl_md5_transform(md5, (char *)shasig, 20);
+		rdssl_md5_complete(md5, (char *)out + i * 16);
+		rdssl_md5_info_delete(md5);
 	}
 }
 
@@ -206,13 +175,13 @@ sec_hash_16(uint8 * out, uint8 * in, uint8 * salt1, uint8 * salt2)
 {
 	void * md5;
 	
-	md5 = ssl_md5_info_create();
-	ssl_md5_clear(md5);
-	ssl_md5_transform(md5, (char *)in, 16);
-	ssl_md5_transform(md5, (char *)salt1, 32);
-	ssl_md5_transform(md5, (char *)salt2, 32);
-    ssl_md5_complete(md5, (char *)out);
-	ssl_md5_info_delete(md5);
+	md5 = rdssl_md5_info_create();
+	rdssl_md5_clear(md5);
+	rdssl_md5_transform(md5, (char *)in, 16);
+	rdssl_md5_transform(md5, (char *)salt1, 32);
+	rdssl_md5_transform(md5, (char *)salt2, 32);
+    rdssl_md5_complete(md5, (char *)out);
+	rdssl_md5_info_delete(md5);
 }
 
 /*
@@ -222,12 +191,12 @@ void
 sec_hash_sha1_16(uint8 * out, uint8 * in, uint8 * salt1)
 {
 	void * sha;
-	sha = ssl_sha1_info_create();
-	ssl_sha1_clear(sha);
-	ssl_sha1_transform(&sha, (char *)in, 16);
-	ssl_sha1_transform(&sha, (char *)salt1, 16);
-	ssl_sha1_complete(&sha, (char *)out);
-	ssl_sha1_info_delete(sha);
+	sha = rdssl_sha1_info_create();
+	rdssl_sha1_clear(sha);
+	rdssl_sha1_transform(&sha, (char *)in, 16);
+	rdssl_sha1_transform(&sha, (char *)salt1, 16);
+	rdssl_sha1_complete(&sha, (char *)out);
+	rdssl_sha1_info_delete(sha);
 }
 
 /* create string from hash */
@@ -294,13 +263,13 @@ sec_generate_keys(uint8 * client_random, uint8 * server_random, int rc4_key_size
 
 	/* Initialise RC4 state arrays */
 
-    ssl_rc4_info_delete(g_rc4_decrypt_key);
-	g_rc4_decrypt_key = ssl_rc4_info_create(); 
-	ssl_rc4_set_key(g_rc4_decrypt_key, (char *)g_sec_decrypt_key, g_rc4_key_len); 
+    rdssl_rc4_info_delete(g_rc4_decrypt_key);
+	g_rc4_decrypt_key = rdssl_rc4_info_create(); 
+	rdssl_rc4_set_key(g_rc4_decrypt_key, (char *)g_sec_decrypt_key, g_rc4_key_len); 
 
-    ssl_rc4_info_delete(g_rc4_encrypt_key);
-	g_rc4_encrypt_key = ssl_rc4_info_create(); 
-	ssl_rc4_set_key(g_rc4_encrypt_key, (char *)g_sec_encrypt_key, g_rc4_key_len); 
+    rdssl_rc4_info_delete(g_rc4_encrypt_key);
+	g_rc4_encrypt_key = rdssl_rc4_info_create(); 
+	rdssl_rc4_set_key(g_rc4_encrypt_key, (char *)g_sec_encrypt_key, g_rc4_key_len); 
 }
 
 static uint8 pad_54[40] = {
@@ -339,22 +308,22 @@ sec_sign(uint8 * signature, int siglen, uint8 * session_key, int keylen, uint8 *
 
 	buf_out_uint32(lenhdr, datalen);
 
-	sha = ssl_sha1_info_create();
-	ssl_sha1_clear(sha);
-    ssl_sha1_transform(sha, (char *)session_key, keylen);
-	ssl_sha1_transform(sha, (char *)pad_54, 40);
-	ssl_sha1_transform(sha, (char *)lenhdr, 4);
-	ssl_sha1_transform(sha, (char *)data, datalen);
-	ssl_sha1_complete(sha, (char *)shasig);
-	ssl_sha1_info_delete(sha);
+	sha = rdssl_sha1_info_create();
+	rdssl_sha1_clear(sha);
+    rdssl_sha1_transform(sha, (char *)session_key, keylen);
+	rdssl_sha1_transform(sha, (char *)pad_54, 40);
+	rdssl_sha1_transform(sha, (char *)lenhdr, 4);
+	rdssl_sha1_transform(sha, (char *)data, datalen);
+	rdssl_sha1_complete(sha, (char *)shasig);
+	rdssl_sha1_info_delete(sha);
 
-	md5 = ssl_md5_info_create();
-	ssl_md5_clear(md5);
-    ssl_md5_transform(md5, (char *)session_key, keylen);
-	ssl_md5_transform(md5, (char *)pad_92, 48);
-	ssl_md5_transform(md5, (char *)shasig, 20);
-	ssl_md5_complete(md5, (char *)md5sig);
-	ssl_md5_info_delete(md5);	
+	md5 = rdssl_md5_info_create();
+	rdssl_md5_clear(md5);
+    rdssl_md5_transform(md5, (char *)session_key, keylen);
+	rdssl_md5_transform(md5, (char *)pad_92, 48);
+	rdssl_md5_transform(md5, (char *)shasig, 20);
+	rdssl_md5_complete(md5, (char *)md5sig);
+	rdssl_md5_info_delete(md5);	
 
 	memcpy(signature, md5sig, siglen);
 }
@@ -368,27 +337,27 @@ sec_update(uint8 * key, uint8 * update_key)
 	void * md5;
 	void * update;
 
-	sha = ssl_sha1_info_create();
-	ssl_sha1_clear(sha);
-	ssl_sha1_transform(sha, (char *)update_key, g_rc4_key_len);
-	ssl_sha1_transform(sha, (char *)pad_54, 40);
-	ssl_sha1_transform(sha, (char *)key, g_rc4_key_len);
-	ssl_sha1_complete(sha, (char *)shasig);
-	ssl_sha1_info_delete(sha);
+	sha = rdssl_sha1_info_create();
+	rdssl_sha1_clear(sha);
+	rdssl_sha1_transform(sha, (char *)update_key, g_rc4_key_len);
+	rdssl_sha1_transform(sha, (char *)pad_54, 40);
+	rdssl_sha1_transform(sha, (char *)key, g_rc4_key_len);
+	rdssl_sha1_complete(sha, (char *)shasig);
+	rdssl_sha1_info_delete(sha);
 
-	md5 = ssl_md5_info_create();
-	ssl_md5_clear(md5);
-    ssl_md5_transform(md5, (char *)update_key, g_rc4_key_len);
-	ssl_md5_transform(md5, (char *)pad_92, 48);
-	ssl_md5_transform(md5, (char *)shasig, 20);
-	ssl_md5_complete(md5, (char *)key);
-	ssl_md5_info_delete(md5);
+	md5 = rdssl_md5_info_create();
+	rdssl_md5_clear(md5);
+    rdssl_md5_transform(md5, (char *)update_key, g_rc4_key_len);
+	rdssl_md5_transform(md5, (char *)pad_92, 48);
+	rdssl_md5_transform(md5, (char *)shasig, 20);
+	rdssl_md5_complete(md5, (char *)key);
+	rdssl_md5_info_delete(md5);
 
 
-	update = ssl_rc4_info_create();
-	ssl_rc4_set_key(update, (char *)key, g_rc4_key_len);
-	ssl_rc4_crypt(update, (char *)key, (char *)key, g_rc4_key_len);
-	ssl_rc4_info_delete(update);
+	update = rdssl_rc4_info_create();
+	rdssl_rc4_set_key(update, (char *)key, g_rc4_key_len);
+	rdssl_rc4_crypt(update, (char *)key, (char *)key, g_rc4_key_len);
+	rdssl_rc4_info_delete(update);
 
 	if (g_rc4_key_len == 8)
 		sec_make_40bit(key);
@@ -401,11 +370,11 @@ sec_encrypt(uint8 * data, int length)
 	if (g_sec_encrypt_use_count == 4096)
 	{
 		sec_update(g_sec_encrypt_key, g_sec_encrypt_update_key);
-		ssl_rc4_set_key(g_rc4_encrypt_key, (char *)g_sec_encrypt_key, g_rc4_key_len);
+		rdssl_rc4_set_key(g_rc4_encrypt_key, (char *)g_sec_encrypt_key, g_rc4_key_len);
 		g_sec_encrypt_use_count = 0;
 	}
 
-	ssl_rc4_crypt(g_rc4_encrypt_key, (char *)data, (char *)data, length);
+	rdssl_rc4_crypt(g_rc4_encrypt_key, (char *)data, (char *)data, length);
 	g_sec_encrypt_use_count++;
 }
 
@@ -416,11 +385,11 @@ sec_decrypt(uint8 * data, int length)
 	if (g_sec_decrypt_use_count == 4096)
 	{
 		sec_update(g_sec_decrypt_key, g_sec_decrypt_update_key);
-		ssl_rc4_set_key(g_rc4_decrypt_key, (char *)g_sec_decrypt_key, g_rc4_key_len);
+		rdssl_rc4_set_key(g_rc4_decrypt_key, (char *)g_sec_decrypt_key, g_rc4_key_len);
 		g_sec_decrypt_use_count = 0;
 	}
 
-	ssl_rc4_crypt(g_rc4_decrypt_key,(char *)data, (char *)data, length);
+	rdssl_rc4_crypt(g_rc4_decrypt_key,(char *)data, (char *)data, length);
 	g_sec_decrypt_use_count++;
 }
 
@@ -429,48 +398,7 @@ static void
 sec_rsa_encrypt(uint8 * out, uint8 * in, int len, uint32 modulus_size, uint8 * modulus,
 		uint8 * exponent)
 {
-	ssl_mod_exp((char *)out, 64, (char *)in, 32, (char *)modulus, 64, (char *)exponent, 4);
-}
-
-static int
-sec_sign_ok(char* e_data, int e_len, char* n_data, int n_len,
-         char* sign_data, int sign_len, char* sign_data2, int sign_len2, char* testkey)
-{
-    char* key;
-    char* md5_final;
-    void* md5;
-
-    if ((e_len != 4) || (n_len != 64) || (sign_len != 64) || (sign_len2 != 64))
-    {
-        return 1;
-    }
-    key = (char*)xmalloc(176);
-    md5_final = (char*)xmalloc(64);
-    md5 = ssl_md5_info_create();
-    // copy the test key
-    memcpy(key, testkey, 176);
-    // replace e and n
-    memcpy(key + 32, e_data, 4);
-    memcpy(key + 36, n_data, 64);
-    ssl_md5_clear(md5);
-    // the first 108 bytes
-    ssl_md5_transform(md5, key, 108);
-    // set the whole thing with 0xff
-    memset(md5_final, 0xff, 64);
-    // digest 16 bytes
-    ssl_md5_complete(md5, md5_final);
-    // set non 0xff array items
-    md5_final[16] = 0;
-    md5_final[62] = 1;
-    md5_final[63] = 0;
-    // encrypt
-    ssl_mod_exp(sign_data, 64, md5_final, 64, (char*)g_ppk_n, 64,
-                (char*)g_ppk_d, 64);
-    // cleanup
-    ssl_md5_info_delete(md5);
-    xfree(key);
-    xfree(md5_final);
-    return memcmp(sign_data, sign_data2, sign_len2);
+	rdssl_mod_exp((char *)out, 64, (char *)in, 32, (char *)modulus, 64, (char *)exponent, 4);
 }
 
 /* Initialise secure transport packet */
@@ -539,7 +467,7 @@ static void
 sec_establish_key(void)
 {
 	uint32 length = g_server_public_key_len + SEC_PADDING_SIZE;
-	uint32 flags = SEC_CLIENT_RANDOM;
+	uint32 flags = SEC_EXCHANGE_PKT;
 	STREAM s;
 
 	s = sec_init(flags, length + 4);
@@ -698,8 +626,8 @@ sec_parse_public_sig(STREAM s, uint32 len, uint8 * modulus, uint8 * exponent)
 	memset(signature, 0, sizeof(signature));
 	sig_len = len - 8;
 	in_uint8a(s, signature, sig_len);
-    if(sec_sign_ok((char *)exponent, SEC_EXPONENT_SIZE, (char *)modulus, g_server_public_key_len,
-                (char *)signature_, SEC_MODULUS_SIZE, (char *)signature, sig_len, (char *)g_testkey))
+    if(rdssl_sign_ok((char *)exponent, SEC_EXPONENT_SIZE, (char *)modulus, g_server_public_key_len,
+                     (char *)signature_, SEC_MODULUS_SIZE, (char *)signature, sig_len, (char *)g_testkey))
     {
         DEBUG_RDP5(("key signature doesn't match test key\n"));
     }
@@ -963,7 +891,8 @@ sec_process_mcs_data(STREAM s)
 STREAM
 sec_recv(uint8 * rdpver)
 {
-	uint32 sec_flags;
+	uint16 sec_flags;
+	uint16 sec_flags_hi;
 	uint16 channel;
 	STREAM s;
 
@@ -983,7 +912,9 @@ sec_recv(uint8 * rdpver)
 		}
 		if (g_encryption || (!g_licence_issued && !g_licence_error_result))
 		{
-			in_uint32_le(s, sec_flags);
+            /* TS_SECURITY_HEADER */
+            in_uint16_le(s, sec_flags);
+            in_uint16_le(s, sec_flags_hi);
 
 			if (g_encryption)
 			{
@@ -993,13 +924,13 @@ sec_recv(uint8 * rdpver)
 					sec_decrypt(s->p, s->end - s->p);
 				}
 
-				if (sec_flags & SEC_LICENCE_NEG)
+				if (sec_flags & SEC_LICENSE_PKT)
 				{
 					licence_process(s);
 					continue;
 				}
 
-				if (sec_flags & 0x0400)	/* SEC_REDIRECT_ENCRYPT */
+				if (sec_flags & SEC_REDIRECTION_PKT)	/* SEC_REDIRECT_ENCRYPT */
 				{
 					uint8 swapbyte;
 
@@ -1035,8 +966,8 @@ sec_recv(uint8 * rdpver)
 			}
 			else
 			{
-				if ((sec_flags & 0xffff) == SEC_LICENCE_NEG)
-				{
+                if (sec_flags & SEC_LICENSE_PKT)
+                {
 					licence_process(s);
 					continue;
 				}

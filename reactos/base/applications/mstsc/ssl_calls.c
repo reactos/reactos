@@ -59,21 +59,21 @@ struct rc4_state
 
 /*****************************************************************************/
 void* APP_CC
-ssl_rc4_info_create(void)
+rdssl_rc4_info_create(void)
 {
   return g_malloc(sizeof(struct rc4_state), 1);
 }
 
 /*****************************************************************************/
 void APP_CC
-ssl_rc4_info_delete(void* rc4_info)
+rdssl_rc4_info_delete(void* rc4_info)
 {
   g_free(rc4_info);
 }
 
 /*****************************************************************************/
 void APP_CC
-ssl_rc4_set_key(void* rc4_info, char* key, int len)
+rdssl_rc4_set_key(void* rc4_info, char* key, int len)
 {
   int i;
   int j;
@@ -108,7 +108,7 @@ ssl_rc4_set_key(void* rc4_info, char* key, int len)
 
 /*****************************************************************************/
 void APP_CC
-ssl_rc4_crypt(void* rc4_info, char* in_data, char* out_data, int len)
+rdssl_rc4_crypt(void* rc4_info, char* in_data, char* out_data, int len)
 {
   int i;
   int x;
@@ -152,21 +152,21 @@ struct sha1_context
 
 /*****************************************************************************/
 void* APP_CC
-ssl_sha1_info_create(void)
+rdssl_sha1_info_create(void)
 {
   return g_malloc(sizeof(struct sha1_context), 1);
 }
 
 /*****************************************************************************/
 void APP_CC
-ssl_sha1_info_delete(void* sha1_info)
+rdssl_sha1_info_delete(void* sha1_info)
 {
   g_free(sha1_info);
 }
 
 /*****************************************************************************/
 void APP_CC
-ssl_sha1_clear(void* sha1_info)
+rdssl_sha1_clear(void* sha1_info)
 {
   struct sha1_context* ctx;
 
@@ -370,7 +370,7 @@ sha1_process(struct sha1_context* ctx, char* in_data)
 
 /*****************************************************************************/
 void APP_CC
-ssl_sha1_transform(void* sha1_info, char* data, int len)
+rdssl_sha1_transform(void* sha1_info, char* data, int len)
 {
   int left;
   int fill;
@@ -419,7 +419,7 @@ static unsigned char sha1_padding[64] =
 
 /*****************************************************************************/
 void APP_CC
-ssl_sha1_complete(void* sha1_info, char* data)
+rdssl_sha1_complete(void* sha1_info, char* data)
 {
   int last;
   int padn;
@@ -435,8 +435,8 @@ ssl_sha1_complete(void* sha1_info, char* data)
   PUT_UINT32(low, msglen, 4);
   last = ctx->total[0] & 0x3F;
   padn = (last < 56) ? (56 - last) : (120 - last);
-  ssl_sha1_transform(ctx, (char *)sha1_padding, padn);
-  ssl_sha1_transform(ctx, msglen, 8);
+  rdssl_sha1_transform(ctx, (char *)sha1_padding, padn);
+  rdssl_sha1_transform(ctx, msglen, 8);
   PUT_UINT32(ctx->state[0], data, 0);
   PUT_UINT32(ctx->state[1], data, 4);
   PUT_UINT32(ctx->state[2], data, 8);
@@ -461,21 +461,21 @@ struct md5_context
 
 /*****************************************************************************/
 void* APP_CC
-ssl_md5_info_create(void)
+rdssl_md5_info_create(void)
 {
   return g_malloc(sizeof(struct md5_context), 1);
 }
 
 /*****************************************************************************/
 void APP_CC
-ssl_md5_info_delete(void* md5_info)
+rdssl_md5_info_delete(void* md5_info)
 {
   g_free(md5_info);
 }
 
 /*****************************************************************************/
 void APP_CC
-ssl_md5_clear(void* md5_info)
+rdssl_md5_clear(void* md5_info)
 {
   struct md5_context* ctx;
 
@@ -640,7 +640,7 @@ md5_process(struct md5_context* ctx, char* in_data)
 
 /*****************************************************************************/
 void APP_CC
-ssl_md5_transform(void* md5_info, char* data, int len)
+rdssl_md5_transform(void* md5_info, char* data, int len)
 {
   int left;
   int fill;
@@ -689,7 +689,7 @@ static unsigned char md5_padding[64] =
 
 /*****************************************************************************/
 void APP_CC
-ssl_md5_complete(void* md5_info, char* data)
+rdssl_md5_complete(void* md5_info, char* data)
 {
   int last;
   int padn;
@@ -705,15 +705,16 @@ ssl_md5_complete(void* md5_info, char* data)
   PUT_UINT32(high, msglen, 4);
   last = ctx->total[0] & 0x3F;
   padn = (last < 56) ? (56 - last) : (120 - last);
-  ssl_md5_transform(ctx, (char *)md5_padding, padn);
-  ssl_md5_transform(ctx, msglen, 8);
+  rdssl_md5_transform(ctx, (char *)md5_padding, padn);
+  rdssl_md5_transform(ctx, msglen, 8);
   PUT_UINT32(ctx->state[0], data, 0);
   PUT_UINT32(ctx->state[1], data, 4);
   PUT_UINT32(ctx->state[2], data, 8);
   PUT_UINT32(ctx->state[3], data, 12);
 }
 
-void APP_CC ssl_hmac_md5(char* key, int keylen, char* data, int len, char* output)
+void APP_CC
+rdssl_hmac_md5(char* key, int keylen, char* data, int len, char* output)
 {
     int i;
     char ipad[64];
@@ -723,10 +724,10 @@ void APP_CC ssl_hmac_md5(char* key, int keylen, char* data, int len, char* outpu
 
     if( keylen > 64 )
     {
-        ctx = ssl_md5_info_create();
-        ssl_md5_transform(ctx, key, keylen);
-        ssl_md5_complete(ctx, sum);
-        ssl_md5_info_delete(ctx);
+        ctx = rdssl_md5_info_create();
+        rdssl_md5_transform(ctx, key, keylen);
+        rdssl_md5_complete(ctx, sum);
+        rdssl_md5_info_delete(ctx);
         keylen = 16;
         key = sum;
     }
@@ -739,15 +740,15 @@ void APP_CC ssl_hmac_md5(char* key, int keylen, char* data, int len, char* outpu
         ipad[i] = ipad[i] ^ key[i];
         opad[i] = opad[i] ^ key[i];
     }
-    ctx = ssl_md5_info_create();
-    ssl_md5_transform(ctx, ipad, sizeof(ipad));
-    ssl_md5_transform(ctx, data, len);
-    ssl_md5_complete(ctx, sum);
-    ssl_md5_info_delete(ctx);
-    ctx = ssl_md5_info_create();
-    ssl_md5_transform(ctx, opad, sizeof(opad));
-    ssl_md5_complete(ctx, output);
-    ssl_md5_info_delete(ctx);
+    ctx = rdssl_md5_info_create();
+    rdssl_md5_transform(ctx, ipad, sizeof(ipad));
+    rdssl_md5_transform(ctx, data, len);
+    rdssl_md5_complete(ctx, sum);
+    rdssl_md5_info_delete(ctx);
+    ctx = rdssl_md5_info_create();
+    rdssl_md5_transform(ctx, opad, sizeof(opad));
+    rdssl_md5_complete(ctx, output);
+    rdssl_md5_info_delete(ctx);
 }
 
 /*****************************************************************************/
@@ -1602,8 +1603,8 @@ mpModMult(DIGIT_T* a, DIGIT_T* x, DIGIT_T* y,
 
 /*****************************************************************************/
 int APP_CC
-ssl_mod_exp(char* out, int out_len, char* in, int in_len,
-            char* mod, int mod_len, char* exp, int exp_len)
+rdssl_mod_exp(char* out, int out_len, char* in, int in_len,
+              char* mod, int mod_len, char* exp, int exp_len)
 {
   /* Computes y = x ^ e mod m */
   /* Binary left-to-right method */
@@ -1677,5 +1678,77 @@ ssl_mod_exp(char* out, int out_len, char* in, int in_len,
   g_free(l_mod);
   g_free(l_exp);
   return out_len;
+}
+
+static uint8 g_ppk_n[72] =
+{
+    0x3D, 0x3A, 0x5E, 0xBD, 0x72, 0x43, 0x3E, 0xC9,
+    0x4D, 0xBB, 0xC1, 0x1E, 0x4A, 0xBA, 0x5F, 0xCB,
+    0x3E, 0x88, 0x20, 0x87, 0xEF, 0xF5, 0xC1, 0xE2,
+    0xD7, 0xB7, 0x6B, 0x9A, 0xF2, 0x52, 0x45, 0x95,
+    0xCE, 0x63, 0x65, 0x6B, 0x58, 0x3A, 0xFE, 0xEF,
+    0x7C, 0xE7, 0xBF, 0xFE, 0x3D, 0xF6, 0x5C, 0x7D,
+    0x6C, 0x5E, 0x06, 0x09, 0x1A, 0xF5, 0x61, 0xBB,
+    0x20, 0x93, 0x09, 0x5F, 0x05, 0x6D, 0xEA, 0x87,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+static uint8 g_ppk_d[108] =
+{
+    0x87, 0xA7, 0x19, 0x32, 0xDA, 0x11, 0x87, 0x55,
+    0x58, 0x00, 0x16, 0x16, 0x25, 0x65, 0x68, 0xF8,
+    0x24, 0x3E, 0xE6, 0xFA, 0xE9, 0x67, 0x49, 0x94,
+    0xCF, 0x92, 0xCC, 0x33, 0x99, 0xE8, 0x08, 0x60,
+    0x17, 0x9A, 0x12, 0x9F, 0x24, 0xDD, 0xB1, 0x24,
+    0x99, 0xC7, 0x3A, 0xB8, 0x0A, 0x7B, 0x0D, 0xDD,
+    0x35, 0x07, 0x79, 0x17, 0x0B, 0x51, 0x9B, 0xB3,
+    0xC7, 0x10, 0x01, 0x13, 0xE7, 0x3F, 0xF3, 0x5F,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00
+};
+
+int
+rdssl_sign_ok(char* e_data, int e_len, char* n_data, int n_len,
+    char* sign_data, int sign_len, char* sign_data2, int sign_len2, char* testkey)
+{
+    char* key;
+    char* md5_final;
+    void* md5;
+
+    if ((e_len != 4) || (n_len != 64) || (sign_len != 64) || (sign_len2 != 64))
+    {
+        return 1;
+    }
+    key = (char*)xmalloc(176);
+    md5_final = (char*)xmalloc(64);
+    md5 = rdssl_md5_info_create();
+    // copy the test key
+    memcpy(key, testkey, 176);
+    // replace e and n
+    memcpy(key + 32, e_data, 4);
+    memcpy(key + 36, n_data, 64);
+    rdssl_md5_clear(md5);
+    // the first 108 bytes
+    rdssl_md5_transform(md5, key, 108);
+    // set the whole thing with 0xff
+    memset(md5_final, 0xff, 64);
+    // digest 16 bytes
+    rdssl_md5_complete(md5, md5_final);
+    // set non 0xff array items
+    md5_final[16] = 0;
+    md5_final[62] = 1;
+    md5_final[63] = 0;
+    // encrypt
+    rdssl_mod_exp(sign_data, 64, md5_final, 64, (char*)g_ppk_n, 64,
+        (char*)g_ppk_d, 64);
+    // cleanup
+    rdssl_md5_info_delete(md5);
+    xfree(key);
+    xfree(md5_final);
+    return memcmp(sign_data, sign_data2, sign_len2);
 }
 

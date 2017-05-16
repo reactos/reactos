@@ -24,12 +24,6 @@
 extern "C" {
 #endif
 /* *INDENT-ON* */
-/* utils.c */
-char *utils_string_escape(const char *str);
-char *utils_string_unescape(const char *str);
-int utils_locale_to_utf8(const char *src, size_t is, char *dest, size_t os);
-int utils_mkdir_safe(const char *path, int mask);
-int utils_mkdir_p(const char *path, int mask);
 /* bitmap.c */
 RD_BOOL bitmap_decompress(uint8 * output, int width, int height, uint8 * input, int size, int Bpp);
 /* cache.c */
