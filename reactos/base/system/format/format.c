@@ -360,7 +360,7 @@ static VOID Usage(LPWSTR ProgramName)
 int wmain(int argc, WCHAR *argv[])
 {
     int badArg;
-    DWORD media = FMIFS_HARDDISK;
+    FMIFS_MEDIA_FLAG media = FMIFS_HARDDISK;
     DWORD driveType;
     WCHAR fileSystem[1024];
     WCHAR volumeName[1024];
