@@ -352,8 +352,9 @@ rdp_send_logon_info(uint32 flags, char *domain, char *user,
 	int len_directory = 2 * strlen(directory);
 
 	/* length of strings in TS_EXTENDED_PACKET includes null terminator */
+	char dllName[MAX_PATH];
 	int len_ip = 2 * strlen(ipaddr) + 2;
-	int len_dll = 2 * strlen("C:\\") + 2;
+	int len_dll = 0;
 
 	int packetlen = 0;
 	uint32 sec_flags = g_encryption ? (SEC_INFO_PKT | SEC_ENCRYPT) : SEC_INFO_PKT;
@@ -362,9 +363,11 @@ rdp_send_logon_info(uint32 flags, char *domain, char *user,
 	time_t tzone;
 	uint8 security_verifier[16];
 
+	GetModuleFileNameA(NULL, dllName, ARRAYSIZE(dllName));
+	len_dll = 2 * strlen(dllName) + 2;
+
 	if (g_rdp_version == RDP_V4 || 1 == g_server_rdp_version)
 	{
-		DEBUG_RDP5(("Sending RDP4-style Logon packet\n"));
 
 		s = sec_init(sec_flags, 18 + len_domain + len_user + len_password
 			     + len_program + len_directory + 10);
@@ -462,7 +465,7 @@ rdp_send_logon_info(uint32 flags, char *domain, char *user,
 		out_uint16_le(s, len_ip);	/* cbClientAddress */
 		rdp_out_unistr_mandatory_null(s, ipaddr, len_ip - 2);	/* clientAddress */
 		out_uint16_le(s, len_dll);	/* cbClientDir */
-		rdp_out_unistr(s, "C:\\", len_dll - 2);	/* clientDir */
+		rdp_out_unistr(s, dllName, len_dll - 2);	/* clientDir */
 
 		/* TS_TIME_ZONE_INFORMATION */
 		tzone = (mktime(gmtime(&t)) - mktime(localtime(&t))) / 60;
