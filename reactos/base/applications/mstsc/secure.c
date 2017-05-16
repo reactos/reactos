@@ -54,10 +54,10 @@ void
 rdssl_rc4_crypt(void * rc4_info, char * in_data, char * out_data, int len);
 int
 rdssl_mod_exp(char* out, int out_len, char* in, int in_len,
-            char* mod, int mod_len, char* exp, int exp_len);
+              char* mod, int mod_len, char* exp, int exp_len);
 int
 rdssl_sign_ok(char* e_data, int e_len, char* n_data, int n_len,
-    char* sign_data, int sign_len, char* sign_data2, int sign_len2, char* testkey);
+              char* sign_data, int sign_len, char* sign_data2, int sign_len2, char* testkey);
 
 extern char g_hostname[16];
 extern int g_width;
@@ -892,7 +892,7 @@ STREAM
 sec_recv(uint8 * rdpver)
 {
 	uint16 sec_flags;
-	uint16 sec_flags_hi;
+	/* uint16 sec_flags_hi; */
 	uint16 channel;
 	STREAM s;
 
@@ -914,7 +914,7 @@ sec_recv(uint8 * rdpver)
 		{
             /* TS_SECURITY_HEADER */
             in_uint16_le(s, sec_flags);
-            in_uint16_le(s, sec_flags_hi);
+            in_uint8s(s, 2); /* sec_flags_hi */
 
 			if (g_encryption)
 			{

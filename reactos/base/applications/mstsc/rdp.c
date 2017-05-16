@@ -495,7 +495,7 @@ rdp_send_logon_info(uint32 flags, char *domain, char *user,
 			out_uint32_le(s, 1);	/* Version */
 			out_uint32_le(s, g_reconnect_logonid);	/* LogonId */
 			rdssl_hmac_md5(g_reconnect_random, sizeof(g_reconnect_random),
-				           g_client_random, SEC_RANDOM_SIZE, security_verifier);
+				           (char *)g_client_random, SEC_RANDOM_SIZE, (char *)security_verifier);
 			out_uint8a(s, security_verifier, sizeof(security_verifier));
 		}
 		else
