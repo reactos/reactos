@@ -57,6 +57,8 @@ acpi_evaluate_reference (
 	ACPI_STRING             pathname,
 	struct acpi_object_list *arguments,
 	struct acpi_handle_list *list);
+NTSTATUS
+acpi_create_volatile_registry_tables(void);
 
 enum acpi_bus_removal_type {
 	ACPI_BUS_REMOVAL_NORMAL	= 0,
