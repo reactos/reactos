@@ -368,6 +368,7 @@ rdp_send_logon_info(uint32 flags, char *domain, char *user,
 
 	if (g_rdp_version == RDP_V4 || 1 == g_server_rdp_version)
 	{
+        DEBUG_RDP5(("Sending RDP4-style Logon packet\n"));
 
 		s = sec_init(sec_flags, 18 + len_domain + len_user + len_password
 			     + len_program + len_directory + 10);
