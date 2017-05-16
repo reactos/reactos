@@ -886,6 +886,7 @@ mi_paint_rect(char * data, int width, int height, int x, int y, int cx, int cy)
   int red;
   int green;
   int blue;
+  int index;
 
   ZeroMemory(&bi, sizeof(bi));
   bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
@@ -942,7 +943,22 @@ mi_paint_rect(char * data, int width, int height, int x, int y, int cx, int cy)
       }
     }
   }
-  else if (g_server_depth == 24 || g_server_depth == 32)
+  else if (g_server_depth == 24)
+  {
+    for (i = cy - 1; i >= 0; i--)
+    {
+      for (j = cx - 1; j >= 0; j--)
+      {
+        index = (i * cx + j) * 3;
+        red = ((unsigned char*)data)[index + 2];
+        green = ((unsigned char*)data)[index + 1];
+        blue = ((unsigned char*)data)[index];
+        MAKE_COLOUR32(colour, red, green, blue);
+        ((unsigned int*)bits)[i * cx + j] = colour;
+      }
+    }
+  }
+  else if (g_server_depth == 32)
   {
     memcpy(bits, data, cx*cy*4);
   }

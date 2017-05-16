@@ -199,7 +199,7 @@ ui_create_cursor(unsigned int x, unsigned int y,
       {
         bs_set_pixel_on(am, j, 31 - i, 32, 1, 1);
       }
-      if (bs_is_pixel_on((char *)xormask, j, i, 32, 24))
+      if (bs_is_pixel_on((char *)xormask, j, i, 32, xor_bpp))
       {
         bs_set_pixel_on(xm, j, 31 - i, 32, 1, 1);
       }
