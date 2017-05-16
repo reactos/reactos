@@ -473,6 +473,8 @@ FormatDrive(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     HWND hDlgCtrl;
     BOOL QuickFormat;
     DWORD ClusterSize;
+    DWORD DriveType;
+    FMIFS_MEDIA_FLAG MediaFlag = FMIFS_HARDDISK;
 
     /* set volume path */
     szDrive[0] = pContext->Drive + L'A';
@@ -539,8 +541,32 @@ FormatDrive(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
      */
     FormatDrvDialog = hwndDlg;
 
+    /* See if the drive is removable or not */
+    DriveType = GetDriveTypeW(szDrive);
+    switch (DriveType)
+    {
+        case DRIVE_UNKNOWN:
+        case DRIVE_REMOTE:
+        case DRIVE_CDROM:
+        case DRIVE_NO_ROOT_DIR:
+        {
+            FIXME("\n");
+            return;
+        }
+
+        case DRIVE_REMOVABLE:
+            MediaFlag = FMIFS_FLOPPY;
+            break;
+
+        case DRIVE_FIXED:
+        case DRIVE_RAMDISK:
+            MediaFlag = FMIFS_HARDDISK;
+            break;
+    }
+
+    /* Format the drive */
     FormatEx(szDrive,
-             FMIFS_HARDDISK, /* FIXME */
+             MediaFlag,
              szFileSys,
              szLabel,
              QuickFormat,
@@ -559,7 +585,7 @@ FormatDrive(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     }
     else
     {
-        pContext->Result =  FALSE;
+        pContext->Result = FALSE;
     }
 }
 
