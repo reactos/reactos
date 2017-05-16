@@ -519,7 +519,7 @@ acpi_create_registry_table(HANDLE ParentKeyHandle, ACPI_TABLE_HEADER *OutTable, 
 }
 
 NTSTATUS
-acpi_create_volatile_registry_tables()
+acpi_create_volatile_registry_tables(void)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING HardwareKeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\HARDWARE\\ACPI");
