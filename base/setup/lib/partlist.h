@@ -17,19 +17,6 @@ typedef enum _FORMATSTATE
     Formatted
 } FORMATSTATE, *PFORMATSTATE;
 
-typedef enum _FORMATMACHINESTATE
-{
-    Start,
-    FormatSystemPartition,
-    FormatInstallPartition,
-    FormatOtherPartition,
-    FormatDone,
-    CheckSystemPartition,
-    CheckInstallPartition,
-    CheckOtherPartition,
-    CheckDone
-} FORMATMACHINESTATE, *PFORMATMACHINESTATE;
-
 struct _FILE_SYSTEM;
 
 typedef struct _PARTENTRY
@@ -163,9 +150,6 @@ typedef struct _PARTLIST
      */
     PPARTENTRY OriginalSystemPartition;
 
-    PPARTENTRY TempPartition;
-    FORMATMACHINESTATE FormatState;
-
     LIST_ENTRY DiskListHead;
     LIST_ENTRY BiosDiskListHead;
 
@@ -234,7 +218,7 @@ VOID
 DestroyPartitionList(
     IN PPARTLIST List);
 
-ULONG
+BOOLEAN
 SelectPartition(
     IN PPARTLIST List,
     IN ULONG DiskNumber,
@@ -271,9 +255,7 @@ DeleteCurrentPartition(
 
 VOID
 CheckActiveSystemPartition(
-    IN PPARTLIST List // ,
-    // IN PFILE_SYSTEM_LIST FileSystemList /* Needed for checking the FS of the candidate system partition */
-    );
+    IN PPARTLIST List);
 
 BOOLEAN
 WritePartitionsToDisk(

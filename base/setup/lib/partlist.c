@@ -487,6 +487,7 @@ AddPartitionToDisk(
     PPARTENTRY PartEntry;
 
     PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[PartitionIndex];
+
     if (PartitionInfo->PartitionType == PARTITION_ENTRY_UNUSED ||
         ((LogicalPartition != FALSE) && IsContainerPartition(PartitionInfo->PartitionType)))
     {
@@ -497,9 +498,7 @@ AddPartitionToDisk(
                                 HEAP_ZERO_MEMORY,
                                 sizeof(PARTENTRY));
     if (PartEntry == NULL)
-    {
         return;
-    }
 
     PartEntry->DiskEntry = DiskEntry;
 
@@ -523,12 +522,10 @@ AddPartitionToDisk(
         if (LogicalPartition == FALSE && DiskEntry->ExtendedPartition == NULL)
             DiskEntry->ExtendedPartition = PartEntry;
     }
-#if 0
     else if (IsRecognizedPartition(PartEntry->PartitionType))
     {
-        // FIXME FIXME! We should completely rework how we get this 'FileSystemList' available...
-        PartEntry->FileSystem = GetFileSystem(/*FileSystemList,*/ PartEntry);
-        if (!PartEntry->FileSystem)
+        PartEntry->FileSystem = GetFileSystem(PartEntry);
+        if (PartEntry->FileSystem)
             PartEntry->FormatState = Preformatted;
         else
             PartEntry->FormatState = Unformatted;
@@ -536,63 +533,7 @@ AddPartitionToDisk(
     }
     else
     {
-        /* Unknown partition, so unknown partition format (may or may not be actually formatted) */
-        PartEntry->FormatState = UnknownFormat;
-    }
-#endif
-    else if ((PartEntry->PartitionType == PARTITION_FAT_12) ||
-             (PartEntry->PartitionType == PARTITION_FAT_16) ||
-             (PartEntry->PartitionType == PARTITION_HUGE) ||
-             (PartEntry->PartitionType == PARTITION_XINT13) ||
-             (PartEntry->PartitionType == PARTITION_FAT32) ||
-             (PartEntry->PartitionType == PARTITION_FAT32_XINT13))
-    {
-#if 0
-        if (CheckFatFormat())
-        {
-            PartEntry->FormatState = Preformatted;
-        }
-        else
-        {
-            PartEntry->FormatState = Unformatted;
-        }
-#endif
-        PartEntry->FormatState = Preformatted;
-    }
-    else if (PartEntry->PartitionType == PARTITION_EXT2)
-    {
-#if 0
-        if (CheckExt2Format())
-        {
-            PartEntry->FormatState = Preformatted;
-        }
-        else
-        {
-            PartEntry->FormatState = Unformatted;
-        }
-#endif
-        PartEntry->FormatState = Preformatted;
-    }
-    else if (PartEntry->PartitionType == PARTITION_IFS)
-    {
-#if 0
-        if (CheckNtfsFormat())
-        {
-            PartEntry->FormatState = Preformatted;
-        }
-        else if (CheckHpfsFormat())
-        {
-            PartEntry->FormatState = Preformatted;
-        }
-        else
-        {
-            PartEntry->FormatState = Unformatted;
-        }
-#endif
-        PartEntry->FormatState = Preformatted;
-    }
-    else
-    {
+        /* Unknown partition, hence unknown partition format (may or may not be actually formatted) */
         PartEntry->FormatState = UnknownFormat;
     }
 
@@ -1257,9 +1198,6 @@ CreatePartitionList(VOID)
     List->SystemPartition = NULL;
     List->OriginalSystemPartition = NULL;
 
-    List->TempPartition = NULL;
-    List->FormatState = Start;
-
     InitializeListHead(&List->DiskListHead);
     InitializeListHead(&List->BiosDiskListHead);
 
@@ -1392,7 +1330,10 @@ DestroyPartitionList(
     RtlFreeHeap(ProcessHeap, 0, List);
 }
 
-ULONG
+//
+// FIXME: This function is COMPLETELY BROKEN!!!!
+//
+BOOLEAN
 SelectPartition(
     IN PPARTLIST List,
     IN ULONG DiskNumber,
@@ -2396,9 +2337,7 @@ DeleteCurrentPartition(
 
 VOID
 CheckActiveSystemPartition(
-    IN PPARTLIST List // ,
-    // IN PFILE_SYSTEM_LIST FileSystemList /* Needed for checking the FS of the candidate system partition */
-    )
+    IN PPARTLIST List)
 {
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
@@ -2575,7 +2514,7 @@ CheckActiveSystemPartition(
      * NOTE also that for those architectures looking for a
      * partition boot indicator is insufficient.
      */
-    FileSystem = GetFileSystem(/*FileSystemList,*/ List->OriginalSystemPartition);
+    FileSystem = GetFileSystem(List->OriginalSystemPartition);
     if (FileSystem == NULL)
     {
         DPRINT1("System partition %lu in disk %lu with no FS?!\n",
@@ -2584,7 +2523,7 @@ CheckActiveSystemPartition(
         goto FindAndUseAlternativeSystemPartition;
     }
     // HACK: WARNING: We cannot write on this FS yet!
-    // See fslist.c:GetFileSystem()
+    // See fsutil.c:GetFileSystem()
     if (List->OriginalSystemPartition->PartitionType == PARTITION_EXT2 ||
         List->OriginalSystemPartition->PartitionType == PARTITION_IFS)
     {

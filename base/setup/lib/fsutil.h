@@ -31,4 +31,10 @@ GetFileSystem(
     // IN PFILE_SYSTEM_LIST FileSystemList,
     IN struct _PARTENTRY* PartEntry);
 
+
+BOOLEAN
+PreparePartitionForFormatting(
+    IN struct _PARTENTRY* PartEntry,
+    IN PFILE_SYSTEM FileSystem);
+
 /* EOF */
