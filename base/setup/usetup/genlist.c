@@ -33,103 +33,6 @@
 
 /* FUNCTIONS ****************************************************************/
 
-typedef struct _GENERIC_LIST_ENTRY
-{
-    LIST_ENTRY Entry;
-    PGENERIC_LIST List;
-    PVOID UserData;
-    CHAR Text[1];       // FIXME: UI stuff
-} GENERIC_LIST_ENTRY;
-
-
-typedef struct _GENERIC_LIST
-{
-    LIST_ENTRY ListHead;
-    ULONG NumOfEntries;
-
-    PGENERIC_LIST_ENTRY CurrentEntry;
-    PGENERIC_LIST_ENTRY BackupEntry;
-} GENERIC_LIST;
-
-
-PGENERIC_LIST
-CreateGenericList(VOID)
-{
-    PGENERIC_LIST List;
-
-    List = (PGENERIC_LIST)RtlAllocateHeap(ProcessHeap,
-                                          0,
-                                          sizeof(GENERIC_LIST));
-    if (List == NULL)
-        return NULL;
-
-    InitializeListHead(&List->ListHead);
-    List->NumOfEntries = 0;
-
-    List->CurrentEntry = NULL;
-    List->BackupEntry = NULL;
-
-    return List;
-}
-
-VOID
-DestroyGenericList(
-    IN OUT PGENERIC_LIST List,
-    IN BOOLEAN FreeUserData)
-{
-    PGENERIC_LIST_ENTRY ListEntry;
-    PLIST_ENTRY Entry;
-
-    /* Release list entries */
-    while (!IsListEmpty (&List->ListHead))
-    {
-        Entry = RemoveHeadList (&List->ListHead);
-        ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
-
-        /* Release user data */
-        if (FreeUserData && ListEntry->UserData != NULL)
-            RtlFreeHeap (ProcessHeap, 0, ListEntry->UserData);
-
-        /* Release list entry */
-        RtlFreeHeap (ProcessHeap, 0, ListEntry);
-    }
-
-    /* Release list head */
-    RtlFreeHeap (ProcessHeap, 0, List);
-}
-
-BOOLEAN
-AppendGenericListEntry(
-    IN OUT PGENERIC_LIST List,
-    IN PCHAR Text,
-    IN PVOID UserData,
-    IN BOOLEAN Current)
-{
-    PGENERIC_LIST_ENTRY Entry;
-
-    Entry = (PGENERIC_LIST_ENTRY)RtlAllocateHeap(ProcessHeap,
-                                                 0,
-                                                 sizeof(GENERIC_LIST_ENTRY) + strlen(Text));
-    if (Entry == NULL)
-        return FALSE;
-
-    strcpy (Entry->Text, Text);
-    Entry->List = List;
-    Entry->UserData = UserData;
-
-    InsertTailList(&List->ListHead,
-                   &Entry->Entry);
-    List->NumOfEntries++;
-
-    if (Current || List->CurrentEntry == NULL)
-    {
-        List->CurrentEntry = Entry;
-    }
-
-    return TRUE;
-}
-
-
 VOID
 InitGenericListUi(
     IN OUT PGENERIC_LIST_UI ListUi,
@@ -229,7 +132,6 @@ DrawListFrame(
                                  &Written);
 }
 
-
 static
 VOID
 DrawListEntries(
@@ -249,7 +151,7 @@ DrawListEntries(
     Entry = ListUi->FirstShown;
     while (Entry != &List->ListHead)
     {
-        ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
+        ListEntry = CONTAINING_RECORD(Entry, GENERIC_LIST_ENTRY, Entry);
 
         if (coPos.Y == ListUi->Bottom)
             break;
@@ -298,7 +200,6 @@ DrawListEntries(
     }
 }
 
-
 static
 VOID
 DrawScrollBarGenericList(
@@ -346,7 +247,6 @@ DrawScrollBarGenericList(
                                      &Written);
     }
 }
-
 
 static
 VOID
@@ -398,7 +298,6 @@ CenterCurrentListItem(
     }
 }
 
-
 VOID
 DrawGenericList(
     IN PGENERIC_LIST_UI ListUi,
@@ -425,53 +324,6 @@ DrawGenericList(
     DrawListEntries(ListUi);
     DrawScrollBarGenericList(ListUi);
 }
-
-
-VOID
-ScrollPageDownGenericList(
-    IN PGENERIC_LIST_UI ListUi)
-{
-    SHORT i;
-
-    /* Suspend auto-redraw */
-    ListUi->Redraw = FALSE;
-
-    for (i = ListUi->Top + 1; i < ListUi->Bottom - 1; i++)
-    {
-        ScrollDownGenericList(ListUi);
-    }
-
-    /* Update user interface */
-    DrawListEntries(ListUi);
-    DrawScrollBarGenericList(ListUi);
-
-    /* Re enable auto-redraw */
-    ListUi->Redraw = TRUE;
-}
-
-
-VOID
-ScrollPageUpGenericList(
-    IN PGENERIC_LIST_UI ListUi)
-{
-    SHORT i;
-
-    /* Suspend auto-redraw */
-    ListUi->Redraw = FALSE;
-
-    for (i = ListUi->Bottom - 1; i > ListUi->Top + 1; i--)
-    {
-         ScrollUpGenericList(ListUi);
-    }
-
-    /* Update user interface */
-    DrawListEntries(ListUi);
-    DrawScrollBarGenericList(ListUi);
-
-    /* Re enable auto-redraw */
-    ListUi->Redraw = TRUE;
-}
-
 
 VOID
 ScrollDownGenericList(
@@ -501,6 +353,77 @@ ScrollDownGenericList(
     }
 }
 
+VOID
+ScrollUpGenericList(
+    IN PGENERIC_LIST_UI ListUi)
+{
+    PGENERIC_LIST List = ListUi->List;
+    PLIST_ENTRY Entry;
+
+    if (List->CurrentEntry == NULL)
+        return;
+
+    if (List->CurrentEntry->Entry.Blink != &List->ListHead)
+    {
+        Entry = List->CurrentEntry->Entry.Blink;
+        if (ListUi->FirstShown == &List->CurrentEntry->Entry)
+        {
+            ListUi->FirstShown = ListUi->FirstShown->Blink;
+            ListUi->LastShown = ListUi->LastShown->Blink;
+        }
+        List->CurrentEntry = CONTAINING_RECORD(Entry, GENERIC_LIST_ENTRY, Entry);
+
+        if (ListUi->Redraw)
+        {
+            DrawListEntries(ListUi);
+            DrawScrollBarGenericList(ListUi);
+        }
+    }
+}
+
+VOID
+ScrollPageDownGenericList(
+    IN PGENERIC_LIST_UI ListUi)
+{
+    SHORT i;
+
+    /* Suspend auto-redraw */
+    ListUi->Redraw = FALSE;
+
+    for (i = ListUi->Top + 1; i < ListUi->Bottom - 1; i++)
+    {
+        ScrollDownGenericList(ListUi);
+    }
+
+    /* Update user interface */
+    DrawListEntries(ListUi);
+    DrawScrollBarGenericList(ListUi);
+
+    /* Re enable auto-redraw */
+    ListUi->Redraw = TRUE;
+}
+
+VOID
+ScrollPageUpGenericList(
+    IN PGENERIC_LIST_UI ListUi)
+{
+    SHORT i;
+
+    /* Suspend auto-redraw */
+    ListUi->Redraw = FALSE;
+
+    for (i = ListUi->Bottom - 1; i > ListUi->Top + 1; i--)
+    {
+         ScrollUpGenericList(ListUi);
+    }
+
+    /* Update user interface */
+    DrawListEntries(ListUi);
+    DrawScrollBarGenericList(ListUi);
+
+    /* Re enable auto-redraw */
+    ListUi->Redraw = TRUE;
+}
 
 VOID
 ScrollToPositionGenericList(
@@ -537,36 +460,6 @@ ScrollToPositionGenericList(
     }
 }
 
-
-VOID
-ScrollUpGenericList(
-    IN PGENERIC_LIST_UI ListUi)
-{
-    PGENERIC_LIST List = ListUi->List;
-    PLIST_ENTRY Entry;
-
-    if (List->CurrentEntry == NULL)
-        return;
-
-    if (List->CurrentEntry->Entry.Blink != &List->ListHead)
-    {
-        Entry = List->CurrentEntry->Entry.Blink;
-        if (ListUi->FirstShown == &List->CurrentEntry->Entry)
-        {
-            ListUi->FirstShown = ListUi->FirstShown->Blink;
-            ListUi->LastShown = ListUi->LastShown->Blink;
-        }
-        List->CurrentEntry = CONTAINING_RECORD(Entry, GENERIC_LIST_ENTRY, Entry);
-
-        if (ListUi->Redraw)
-        {
-            DrawListEntries(ListUi);
-            DrawScrollBarGenericList(ListUi);
-        }
-    }
-}
-
-
 VOID
 RedrawGenericList(
     IN PGENERIC_LIST_UI ListUi)
@@ -580,76 +473,6 @@ RedrawGenericList(
         DrawScrollBarGenericList(ListUi);
     }
 }
-
-
-
-VOID
-SetCurrentListEntry(
-    IN PGENERIC_LIST List,
-    IN PGENERIC_LIST_ENTRY Entry)
-{
-    if (Entry->List != List)
-        return;
-    List->CurrentEntry = Entry;
-}
-
-
-PGENERIC_LIST_ENTRY
-GetCurrentListEntry(
-    IN PGENERIC_LIST List)
-{
-    return List->CurrentEntry;
-}
-
-
-PGENERIC_LIST_ENTRY
-GetFirstListEntry(
-    IN PGENERIC_LIST List)
-{
-    PLIST_ENTRY Entry = List->ListHead.Flink;
-
-    if (Entry == &List->ListHead)
-        return NULL;
-    return CONTAINING_RECORD(Entry, GENERIC_LIST_ENTRY, Entry);
-}
-
-
-PGENERIC_LIST_ENTRY
-GetNextListEntry(
-    IN PGENERIC_LIST_ENTRY Entry)
-{
-    PLIST_ENTRY Next = Entry->Entry.Flink;
-
-    if (Next == &Entry->List->ListHead)
-        return NULL;
-    return CONTAINING_RECORD(Next, GENERIC_LIST_ENTRY, Entry);
-}
-
-
-PVOID
-GetListEntryUserData(
-    IN PGENERIC_LIST_ENTRY Entry)
-{
-    return Entry->UserData;
-}
-
-
-LPCSTR
-GetListEntryText(
-    IN PGENERIC_LIST_ENTRY Entry)
-{
-    return Entry->Text;
-}
-
-
-ULONG
-GetNumberOfListEntries(
-    IN PGENERIC_LIST List)
-{
-    return List->NumOfEntries;
-}
-
-
 
 VOID
 GenericListKeyPress(
@@ -712,35 +535,6 @@ End:
     DrawScrollBarGenericList(ListUi);
 
     ListUi->Redraw = TRUE;
-}
-
-
-VOID
-SaveGenericListState(
-    IN PGENERIC_LIST List)
-{
-    List->BackupEntry = List->CurrentEntry;
-}
-
-
-VOID
-RestoreGenericListState(
-    IN PGENERIC_LIST List)
-{
-    List->CurrentEntry = List->BackupEntry;
-}
-
-
-BOOLEAN
-GenericListHasSingleEntry(
-    IN PGENERIC_LIST List)
-{
-    if (!IsListEmpty(&List->ListHead) && List->ListHead.Flink == List->ListHead.Blink)
-        return TRUE;
-
-    /* if both list head pointers (which normally point to the first and last list member, respectively)
-       point to the same entry then it means that there's just a single thing in there, otherwise... false! */
-    return FALSE;
 }
 
 /* EOF */
