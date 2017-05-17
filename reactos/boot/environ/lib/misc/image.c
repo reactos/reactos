@@ -507,6 +507,7 @@ BlImgLoadImageWithProgress2 (
 
     /* Check if we should compute hash and/or signatures */
     ComputeSignature = ImageFlags & BL_LOAD_IMG_COMPUTE_SIGNATURE;
+    ComputeHash = FALSE;
     if ((ComputeSignature) || (ImageFlags & BL_LOAD_IMG_COMPUTE_HASH))
     {
         ComputeHash = TRUE;
@@ -561,7 +562,7 @@ BlImgLoadImageWithProgress2 (
     }
 
     /* Is the read fully complete? We need to finalize the hash if requested */
-    if (ComputeHash != RemainingLength)
+    if (ComputeHash)
     {
         // todo: CRYPTO IS HARD
     }
