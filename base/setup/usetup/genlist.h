@@ -26,69 +26,7 @@
 
 #pragma once
 
-struct _GENERIC_LIST_ENTRY;
-typedef struct _GENERIC_LIST_ENTRY *PGENERIC_LIST_ENTRY;
-struct _GENERIC_LIST;
-typedef struct _GENERIC_LIST *PGENERIC_LIST;
-
-PGENERIC_LIST
-CreateGenericList(VOID);
-
-VOID
-DestroyGenericList(
-    IN OUT PGENERIC_LIST List,
-    IN BOOLEAN FreeUserData);
-
-BOOLEAN
-AppendGenericListEntry(
-    IN OUT PGENERIC_LIST List,
-    IN PCHAR Text,
-    IN PVOID UserData,
-    IN BOOLEAN Current);
-
-VOID
-SetCurrentListEntry(
-    IN PGENERIC_LIST List,
-    IN PGENERIC_LIST_ENTRY Entry);
-
-PGENERIC_LIST_ENTRY
-GetCurrentListEntry(
-    IN PGENERIC_LIST List);
-
-PGENERIC_LIST_ENTRY
-GetFirstListEntry(
-    IN PGENERIC_LIST List);
-
-PGENERIC_LIST_ENTRY
-GetNextListEntry(
-    IN PGENERIC_LIST_ENTRY Entry);
-
-PVOID
-GetListEntryUserData(
-    IN PGENERIC_LIST_ENTRY Entry);
-
-LPCSTR
-GetListEntryText(
-    IN PGENERIC_LIST_ENTRY Entry);
-
-ULONG
-GetNumberOfListEntries(
-    IN PGENERIC_LIST List);
-
-VOID
-SaveGenericListState(
-    IN PGENERIC_LIST List);
-
-VOID
-RestoreGenericListState(
-    IN PGENERIC_LIST List);
-
-BOOLEAN
-GenericListHasSingleEntry(
-    IN PGENERIC_LIST List);
-
-
-
+#include "../lib/genlist.h"
 
 typedef struct _GENERIC_LIST_UI
 {

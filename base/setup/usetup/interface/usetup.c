@@ -2564,6 +2564,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
+#if 0
     /*** HACK! ***/
     if (FileSystemList == NULL)
     {
@@ -2576,9 +2577,10 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 
         /* FIXME: Add file systems to list */
     }
+#endif
 
     /* Find or set the active system partition */
-    CheckActiveSystemPartition(PartitionList, FileSystemList);
+    CheckActiveSystemPartition(PartitionList /*, FileSystemList*/);
     if (PartitionList->SystemPartition == NULL)
     {
         /* FIXME: show an error dialog */
@@ -2775,6 +2777,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 
     if (FileSystemList == NULL)
     {
+        /* Create the file system list, and by default select the "FAT" file system */
         FileSystemList = CreateFileSystemList(6, 26, PartEntry->New, L"FAT");
         if (FileSystemList == NULL)
         {
@@ -2797,7 +2800,14 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     {
         if (UnattendFormatPartition)
         {
-            PartEntry->FileSystem = GetFileSystemByName(FileSystemList, L"FAT");
+            /*
+             * We use whatever currently selected file system we have
+             * (by default, this is "FAT", as per the initialization
+             * performed above). Note that it may be interesting to specify
+             * which file system to use in unattended installations, in the
+             * txtsetup.sif file.
+             */
+            // PartEntry->FileSystem = GetFileSystemByName(FileSystemList, L"FAT");
             return FORMAT_PARTITION_PAGE;
         }
 
@@ -2834,13 +2844,13 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN) /* ENTER */
         {
-            if (!FileSystemList->Selected->FormatFunc)
+            if (!FileSystemList->Selected->FileSystem)
             {
                 return SELECT_FILE_SYSTEM_PAGE;
             }
             else
             {
-                PartEntry->FileSystem = FileSystemList->Selected;
+                // PartEntry->FileSystem = FileSystemList->Selected;
                 return FORMAT_PARTITION_PAGE;
             }
         }
@@ -2874,6 +2884,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
     WCHAR PathBuffer[MAX_PATH];
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
+    PFILE_SYSTEM_ITEM SelectedFileSystem;
     NTSTATUS Status;
 
 #ifndef NDEBUG
@@ -2896,6 +2907,8 @@ FormatPartitionPage(PINPUT_RECORD Ir)
     PartEntry = PartitionList->TempPartition;
     DiskEntry = PartEntry->DiskEntry;
 
+    SelectedFileSystem = FileSystemList->Selected; // PartEntry->FileSystem; // FIXME!!!!
+
     while (TRUE)
     {
         if (!IsUnattendedSetup)
@@ -2915,7 +2928,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
         {
             CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
-            if (wcscmp(PartEntry->FileSystem->FileSystemName, L"FAT") == 0)
+            if (wcscmp(SelectedFileSystem->FileSystemName, L"FAT") == 0)
             {
                 if (PartEntry->SectorCount.QuadPart < 8192)
                 {
@@ -2959,16 +2972,16 @@ FormatPartitionPage(PINPUT_RECORD Ir)
                 }
             }
 #if 0
-            else if (wcscmp(PartEntry->FileSystem->FileSystemName, L"EXT2") == 0)
+            else if (wcscmp(SelectedFileSystem->FileSystemName, L"EXT2") == 0)
             {
                 SetPartitionType(PartEntry, PARTITION_EXT2);
             }
-            else if (wcscmp(PartEntry->FileSystem->FileSystemName, L"NTFS") == 0)
+            else if (wcscmp(SelectedFileSystem->FileSystemName, L"NTFS") == 0)
             {
                 SetPartitionType(PartEntry, PARTITION_IFS);
             }
 #endif
-            else if (!PartEntry->FileSystem->FormatFunc)
+            else if (!SelectedFileSystem->FileSystem)
             {
                 /* FIXME: show an error dialog */
                 return QUIT_PAGE;
@@ -3017,10 +3030,10 @@ FormatPartitionPage(PINPUT_RECORD Ir)
                                  PathBuffer);
             DPRINT("PartitionRootPath: %wZ\n", &PartitionRootPath);
 
-            if (PartEntry->FileSystem->FormatFunc)
+            if (SelectedFileSystem->FileSystem)
             {
                 Status = FormatPartition(&PartitionRootPath,
-                                         PartEntry->FileSystem);
+                                         SelectedFileSystem);
                 if (!NT_SUCCESS(Status))
                 {
                     DPRINT1("FormatPartition() failed with status 0x%08lx\n", Status);
@@ -3060,7 +3073,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 CheckFileSystemPage(PINPUT_RECORD Ir)
 {
-    PFILE_SYSTEM_ITEM CurrentFileSystem;
+    PFILE_SYSTEM CurrentFileSystem;
     UNICODE_STRING PartitionRootPath;
     WCHAR PathBuffer[MAX_PATH];
     CHAR Buffer[MAX_PATH];
@@ -3091,7 +3104,7 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
-    CurrentFileSystem = GetFileSystem(FileSystemList, PartEntry);
+    CurrentFileSystem = PartEntry->FileSystem;
     DPRINT1("CheckFileSystemPage -- PartitionType: 0x%02X ; FileSystemName: %S\n",
             PartEntry->PartitionType, (CurrentFileSystem ? CurrentFileSystem->FileSystemName : L"n/a"));
 

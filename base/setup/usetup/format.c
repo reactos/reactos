@@ -88,11 +88,12 @@ FormatCallback(
 NTSTATUS
 FormatPartition(
     IN PUNICODE_STRING DriveRoot,
-    IN PFILE_SYSTEM_ITEM FileSystem)
+    IN PFILE_SYSTEM_ITEM FileSystemItem)
 {
     NTSTATUS Status;
+    PFILE_SYSTEM FileSystem = FileSystemItem->FileSystem;
 
-    if (!FileSystem->FormatFunc)
+    if (!FileSystem || !FileSystem->FormatFunc)
         return STATUS_NOT_SUPPORTED;
 
     FormatProgressBar = CreateProgressBar(6,
@@ -107,11 +108,11 @@ FormatPartition(
     ProgressSetStepCount(FormatProgressBar, 100);
 
     Status = FileSystem->FormatFunc(DriveRoot,
-                                    FMIFS_HARDDISK,          /* MediaFlag */
-                                    NULL,                    /* Label */
-                                    FileSystem->QuickFormat, /* QuickFormat */
-                                    0,                       /* ClusterSize */
-                                    FormatCallback);         /* Callback */
+                                    FMIFS_HARDDISK,              /* MediaFlag */
+                                    NULL,                        /* Label */
+                                    FileSystemItem->QuickFormat, /* QuickFormat */
+                                    0,                           /* ClusterSize */
+                                    FormatCallback);             /* Callback */
 
     DestroyProgressBar(FormatProgressBar);
     FormatProgressBar = NULL;

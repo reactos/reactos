@@ -2671,17 +2671,24 @@ InstallFatBootcodeToFloppy(
 {
 #ifdef __REACTOS__
     NTSTATUS Status;
+    PFILE_SYSTEM FatFS;
     UNICODE_STRING FloppyDevice = RTL_CONSTANT_STRING(L"\\Device\\Floppy0");
     WCHAR SrcPath[MAX_PATH];
     WCHAR DstPath[MAX_PATH];
 
     /* Format the floppy first */
-    Status = VfatFormat(&FloppyDevice,
-                        FMIFS_FLOPPY,
-                        NULL,
-                        TRUE,
-                        0,
-                        NULL);
+    FatFS = GetFileSystemByName(L"FAT");
+    if (!FatFS)
+    {
+        DPRINT1("FAT FS non existent on this system?!\n");
+        return STATUS_NOT_SUPPORTED;
+    }
+    Status = FatFS->FormatFunc(&FloppyDevice,
+                               FMIFS_FLOPPY,
+                               NULL,
+                               TRUE,
+                               0,
+                               NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("VfatFormat() failed (Status %lx)\n", Status);
