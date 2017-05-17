@@ -27,7 +27,6 @@
 
 #include "../lib/partlist.h"
 
-#if 0
 typedef enum _FORMATMACHINESTATE
 {
     Start,
@@ -40,7 +39,6 @@ typedef enum _FORMATMACHINESTATE
     CheckOtherPartition,
     CheckDone
 } FORMATMACHINESTATE, *PFORMATMACHINESTATE;
-#endif
 
 typedef struct _PARTLIST_UI
 {
