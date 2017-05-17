@@ -24,7 +24,13 @@ GetFileSystem(
     IN struct _PARTENTRY* PartEntry);
 
 
-#if 0 // Unused anymore. This portion of code is actually called in format.c "FormatPartition" function...
+BOOLEAN
+PreparePartitionForFormatting(
+    IN struct _PARTENTRY* PartEntry,
+    IN PFILE_SYSTEM FileSystem);
+
+
+#if 0 // Not used anymore. This portion of code is actually called in format.c "FormatPartition" function...
 #define HOST_FormatPartition      NATIVE_FormatPartition
 
 BOOLEAN

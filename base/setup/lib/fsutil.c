@@ -15,14 +15,12 @@
 #include "fsutil.h"
 #include "partlist.h"
 
-/** For FileSystems **/
 #include <fslib/vfatlib.h>
-#include <fslib/ext2lib.h>
+// #include <fslib/ext2lib.h>
 // #include <fslib/ntfslib.h>
 
 #define NDEBUG
 #include <debug.h>
-
 
 
 FILE_SYSTEM RegisteredFileSystems[] =
@@ -30,8 +28,15 @@ FILE_SYSTEM RegisteredFileSystems[] =
     { L"FAT"  , VfatFormat, VfatChkdsk },
 //  { L"FAT32", VfatFormat, VfatChkdsk },
 #if 0
+    { L"FATX" , VfatxFormat, VfatxChkdsk },
+    { L"NTFS" , NtfsFormat, NtfsChkdsk },
+
     { L"EXT2" , Ext2Format, Ext2Chkdsk },
-    { L"NTFS" , NtfsFormat, NtfsChkdsk }
+    { L"EXT3" , Ext2Format, Ext2Chkdsk },
+    { L"EXT4" , Ext2Format, Ext2Chkdsk },
+    { L"BTRFS", BtrfsFormatEx, BtrfsChkdskEx },
+    { L"FFS"  , FfsFormat , FfsChkdsk  },
+    { L"REISERFS", ReiserfsFormat, ReiserfsChkdsk },
 #endif
 };
 
@@ -189,7 +194,44 @@ GetFileSystem(
 
     CurrentFileSystem = NULL;
 
-#if 0 // FIXME: To be fully enabled when our storage stack & al. will work better!
+#if 0 // This is an example of old code...
+
+    if ((PartEntry->PartitionType == PARTITION_FAT_12) ||
+        (PartEntry->PartitionType == PARTITION_FAT_16) ||
+        (PartEntry->PartitionType == PARTITION_HUGE) ||
+        (PartEntry->PartitionType == PARTITION_XINT13) ||
+        (PartEntry->PartitionType == PARTITION_FAT32) ||
+        (PartEntry->PartitionType == PARTITION_FAT32_XINT13))
+    {
+        if (CheckFatFormat())
+            FileSystemName = L"FAT";
+        else
+            FileSystemName = NULL;
+    }
+    else if (PartEntry->PartitionType == PARTITION_EXT2)
+    {
+        if (CheckExt2Format())
+            FileSystemName = L"EXT2";
+        else
+            FileSystemName = NULL;
+    }
+    else if (PartEntry->PartitionType == PARTITION_IFS)
+    {
+        if (CheckNtfsFormat())
+            FileSystemName = L"NTFS";
+        else if (CheckHpfsFormat())
+            FileSystemName = L"HPFS";
+        else
+            FileSystemName = NULL;
+    }
+    else
+    {
+        FileSystemName = NULL;
+    }
+
+#endif
+
+#if 0 // FIXME: To be fully enabled when our storage stack & al. work better!
 
     /*
      * We don't have one...
@@ -237,11 +279,13 @@ GetFileSystem(
     {
         // WARNING: See the warning above.
         FileSystemName = L"EXT2";
+        // FIXME: We may have EXT3, 4 too...
     }
     else if (PartEntry->PartitionType == PARTITION_IFS)
     {
         // WARNING: See the warning above.
         FileSystemName = L"NTFS"; /* FIXME: Not quite correct! */
+        // FIXME: We may have HPFS too...
     }
 
 #if 0
@@ -259,17 +303,102 @@ Quit: // For code temporarily disabled above
             PartEntry->PartitionType, FileSystemName ? FileSystemName : L"None");
 
     if (FileSystemName != NULL)
-        CurrentFileSystem = GetFileSystemByName(/*FileSystemList,*/ FileSystemName);
+        CurrentFileSystem = GetFileSystemByName(FileSystemName);
 
     return CurrentFileSystem;
 }
 
 
 //
-// Unused code (for now??)
+// Formatting routines
 //
 
-#if 0 // Unused anymore. This portion of code is actually called in format.c "FormatPartition" function...
+BOOLEAN
+PreparePartitionForFormatting(
+    IN struct _PARTENTRY* PartEntry,
+    IN PFILE_SYSTEM FileSystem)
+{
+    if (!FileSystem)
+    {
+        DPRINT1("No file system specified?\n");
+        return FALSE;
+    }
+
+    if (wcscmp(FileSystem->FileSystemName, L"FAT") == 0)
+    {
+        if (PartEntry->SectorCount.QuadPart < 8192)
+        {
+            /* FAT12 CHS partition (disk is smaller than 4.1MB) */
+            SetPartitionType(PartEntry, PARTITION_FAT_12);
+        }
+        else if (PartEntry->StartSector.QuadPart < 1450560)
+        {
+            /* Partition starts below the 8.4GB boundary ==> CHS partition */
+
+            if (PartEntry->SectorCount.QuadPart < 65536)
+            {
+                /* FAT16 CHS partition (partition size < 32MB) */
+                SetPartitionType(PartEntry, PARTITION_FAT_16);
+            }
+            else if (PartEntry->SectorCount.QuadPart < 1048576)
+            {
+                /* FAT16 CHS partition (partition size < 512MB) */
+                SetPartitionType(PartEntry, PARTITION_HUGE);
+            }
+            else
+            {
+                /* FAT32 CHS partition (partition size >= 512MB) */
+                SetPartitionType(PartEntry, PARTITION_FAT32);
+            }
+        }
+        else
+        {
+            /* Partition starts above the 8.4GB boundary ==> LBA partition */
+
+            if (PartEntry->SectorCount.QuadPart < 1048576)
+            {
+                /* FAT16 LBA partition (partition size < 512MB) */
+                SetPartitionType(PartEntry, PARTITION_XINT13);
+            }
+            else
+            {
+                /* FAT32 LBA partition (partition size >= 512MB) */
+                SetPartitionType(PartEntry, PARTITION_FAT32_XINT13);
+            }
+        }
+    }
+#if 0
+    else if (wcscmp(FileSystem->FileSystemName, L"EXT2") == 0)
+    {
+        SetPartitionType(PartEntry, PARTITION_EXT2);
+    }
+    else if (wcscmp(FileSystem->FileSystemName, L"NTFS") == 0)
+    {
+        SetPartitionType(PartEntry, PARTITION_IFS);
+    }
+#endif
+    else
+    {
+        /* Unknown file system? */
+        DPRINT1("Unknown file system \"%S\"?\n", FileSystem->FileSystemName);
+        return FALSE;
+    }
+
+//
+// FIXME: Do this now, or after the partition was actually formatted??
+//
+    /* Set the new partition's file system proper */
+    PartEntry->FormatState = Formatted; // Well... This may be set after the real formatting takes place (in which case we should change the FormatState to another value)
+    PartEntry->FileSystem  = FileSystem;
+
+    return TRUE;
+}
+
+
+
+// Unused code (for now??)
+
+#if 0 // Not used anymore. This portion of code is actually called in format.c "FormatPartition" function...
 BOOLEAN
 NATIVE_FormatPartition(
     IN PFILE_SYSTEM FileSystem, // IN PFILE_SYSTEM_ITEM FileSystem,
