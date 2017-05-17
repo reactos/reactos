@@ -1125,6 +1125,7 @@ wWinMain(HINSTANCE hInstance,
                                                       pRdpSettings))
                 {
                     char szValue[MAXVALUE];
+                    DWORD dwSize = MAXVALUE;
 
                     uni_to_str(szValue, GetStringFromSettings(pRdpSettings, L"full address"));
 
@@ -1134,7 +1135,10 @@ wWinMain(HINSTANCE hInstance,
                     uni_to_str(szValue, GetStringFromSettings(pRdpSettings, L"username"));
                     SetDomainAndUsername(szValue);
                     strcpy(g_password, "");
-                    strcpy(g_hostname, tcp_get_address());
+                    if (GetComputerNameA(szValue, &dwSize))
+                        strcpy(g_hostname, szValue);
+                    else
+                        strcpy(g_hostname, tcp_get_address());
                     g_server_depth = GetIntegerFromSettings(pRdpSettings, L"session bpp");
                     g_screen_width = GetSystemMetrics(SM_CXSCREEN);
                     g_screen_height = GetSystemMetrics(SM_CYSCREEN);
