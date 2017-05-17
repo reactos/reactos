@@ -275,7 +275,10 @@ ParseSettings(PRDPSETTINGS pRdpSettings,
                 else if (lpToken[0] == L's')
                 {
                     pRdpSettings->pSettings[i].Type = lpToken[0];
-                    lpToken = wcstok(NULL, szNewline);
+                    if (lpToken[2] == 13 || lpToken[2] == 10 || lpToken[2] == 0)
+                        lpToken[0] = 0; // terminate string
+                    else
+                        lpToken = wcstok(NULL, szNewline);
                     if (lpToken != NULL)
                         wcscpy(pRdpSettings->pSettings[i].Value.s, lpToken);
                 }
