@@ -186,7 +186,7 @@ xHalpGetRDiskCount(VOID)
     Skip = 0;
     while (NT_SUCCESS(Status))
     {
-        Status = NtQueryDirectoryObject (DirectoryHandle,
+        Status = ZwQueryDirectoryObject (DirectoryHandle,
             DirectoryInfo,
             2 * PAGE_SIZE,
             FALSE,
@@ -223,6 +223,9 @@ xHalpGetRDiskCount(VOID)
             }
         }
     }
+
+    ZwClose(DirectoryHandle);
+
     ExFreePoolWithTag(DirectoryInfo, TAG_FILE_SYSTEM);
     return RDiskCount;
 }
