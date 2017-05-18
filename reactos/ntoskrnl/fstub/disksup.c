@@ -173,7 +173,7 @@ xHalpGetRDiskCount(VOID)
         NULL);
 
     Status = ZwOpenDirectoryObject (&DirectoryHandle,
-        SYMBOLIC_LINK_ALL_ACCESS,
+        DIRECTORY_ALL_ACCESS,
         &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
