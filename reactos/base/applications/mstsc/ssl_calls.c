@@ -1675,6 +1675,18 @@ uint8 *rdssl_cert_to_rkey(PCCERT_CONTEXT cert, uint32 * key_len)
     if (!ret)
     {
         dwErr = GetLastError();
+        if (dwErr == NTE_BAD_KEYSET)
+        {
+            ret = CryptAcquireContext(&hCryptProv,
+                                      L"MSTSC",
+                                      MS_ENHANCED_PROV,
+                                      PROV_RSA_FULL,
+                                      CRYPT_NEWKEYSET);
+        }
+    }
+    if (!ret)
+    {
+        dwErr = GetLastError();
         error("CryptAcquireContext call failed with %lx\n", dwErr);
         return NULL;
     }
