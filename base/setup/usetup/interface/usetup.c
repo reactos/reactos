@@ -58,7 +58,11 @@ WCHAR DefaultLanguage[20];
 WCHAR DefaultKBLayout[20];
 BOOLEAN RepairUpdateFlag = FALSE;
 HANDLE hPnpThread = INVALID_HANDLE_VALUE;
+
 PPARTLIST PartitionList = NULL;
+PPARTENTRY TempPartition = NULL;
+FORMATMACHINESTATE FormatState = Start;
+
 
 /* LOCALS *******************************************************************/
 
@@ -86,11 +90,14 @@ static UNICODE_STRING DestinationPath;
 static UNICODE_STRING DestinationArcPath;
 static UNICODE_STRING DestinationRootPath;
 
-static WCHAR DestinationDriveLetter;
+static WCHAR DestinationDriveLetter;    // FIXME: Is it really useful??
 
 static HINF SetupInf;
 
 static HSPFILEQ SetupFileQueue = NULL;
+
+static PNTOS_INSTALLATION CurrentInstallation = NULL;
+static PGENERIC_LIST NtOsInstallsList = NULL;
 
 static PGENERIC_LIST ComputerList = NULL;
 static PGENERIC_LIST DisplayList = NULL;
@@ -936,7 +943,7 @@ SetupStartPage(PINPUT_RECORD Ir)
  *
  * Next pages:
  *  InstallIntroPage (default)
- *  RepairIntroPage
+ *  RecoveryPage
  *  LicensePage
  *  QuitPage
  *
@@ -966,7 +973,7 @@ WelcomePage(PINPUT_RECORD Ir)
         }
         else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'R') /* R */
         {
-            return REPAIR_INTRO_PAGE;
+            return RECOVERY_PAGE;
         }
         else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'L') /* L */
         {
@@ -1007,48 +1014,127 @@ LicensePage(PINPUT_RECORD Ir)
 
 
 /*
- * Displays the RepairIntroPage.
+ * Displays the UpgradeRepairPage.
  *
  * Next pages:
  *  RebootPage (default)
  *  InstallIntroPage
  *  RecoveryPage
- *  IntroPage
+ *  WelcomePage
  *
  * RETURNS
  *   Number of the next page.
  */
 static PAGE_NUMBER
-RepairIntroPage(PINPUT_RECORD Ir)
+UpgradeRepairPage(PINPUT_RECORD Ir)
 {
-    MUIDisplayPage(REPAIR_INTRO_PAGE);
+    GENERIC_LIST_UI ListUi;
 
-    while(TRUE)
+/*** HACK!! ***/
+    if (PartitionList == NULL)
+    {
+        PartitionList = CreatePartitionList();
+        if (PartitionList == NULL)
+        {
+            /* FIXME: show an error dialog */
+            MUIDisplayError(ERROR_DRIVE_INFORMATION, Ir, POPUP_WAIT_ENTER);
+            return QUIT_PAGE;
+        }
+        else if (IsListEmpty(&PartitionList->DiskListHead))
+        {
+            MUIDisplayError(ERROR_NO_HDD, Ir, POPUP_WAIT_ENTER);
+            return QUIT_PAGE;
+        }
+
+        TempPartition = NULL;
+        FormatState = Start;
+    }
+/**************/
+
+    NtOsInstallsList = CreateNTOSInstallationsList(PartitionList);
+    if (!NtOsInstallsList)
+        DPRINT1("Failed to get a list of NTOS installations; continue installation...\n");
+    if (!NtOsInstallsList || GetNumberOfListEntries(NtOsInstallsList) == 0)
+    {
+        RepairUpdateFlag = FALSE;
+
+        // return INSTALL_INTRO_PAGE;
+        return DEVICE_SETTINGS_PAGE;
+        // return SCSI_CONTROLLER_PAGE;
+    }
+
+    MUIDisplayPage(UPGRADE_REPAIR_PAGE);
+
+    InitGenericListUi(&ListUi, NtOsInstallsList);
+    DrawGenericList(&ListUi,
+                    2, 23,
+                    xScreen - 3,
+                    yScreen - 3);
+
+    SaveGenericListState(NtOsInstallsList);
+
+    // return HandleGenericList(&ListUi, DEVICE_SETTINGS_PAGE, Ir);
+    while (TRUE)
     {
         CONSOLE_ConInKey(Ir);
 
-        if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)  /* ENTER */
+        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))  /* DOWN */
         {
-            return REBOOT_PAGE;
+            ScrollDownGenericList(&ListUi);
         }
-        else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'U')  /* U */
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP))  /* UP */
         {
-            RepairUpdateFlag = TRUE;
-            return INSTALL_INTRO_PAGE;
+            ScrollUpGenericList(&ListUi);
         }
-        else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'R')  /* R */
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_NEXT))  /* PAGE DOWN */
         {
-            return RECOVERY_PAGE;
+            ScrollPageDownGenericList(&ListUi);
+        }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_PRIOR))  /* PAGE UP */
+        {
+            ScrollPageUpGenericList(&ListUi);
+        }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
+        {
+            if (ConfirmQuit(Ir) == TRUE)
+                return QUIT_PAGE;
+            else
+                RedrawGenericList(&ListUi);
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))  /* ESC */
         {
-            return WELCOME_PAGE;
+            RestoreGenericListState(NtOsInstallsList);
+            // return nextPage;    // prevPage;
+        }
+        // else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
+        else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'U')  /* U */
+        {
+            /* Retrieve the current installation */
+            CurrentInstallation = (PNTOS_INSTALLATION)GetListEntryUserData(GetCurrentListEntry(NtOsInstallsList));
+            DPRINT1("Selected installation for repair: \"%S\" ; DiskNumber = %d , PartitionNumber = %d\n",
+                    CurrentInstallation->InstallationName, CurrentInstallation->DiskNumber, CurrentInstallation->PartitionNumber);
+
+            RepairUpdateFlag = TRUE;
+
+            // return nextPage;
+            /***/return INSTALL_INTRO_PAGE;/***/
+        }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar > 0x60) && (Ir->Event.KeyEvent.uChar.AsciiChar < 0x7b))
+        {
+            /* a-z */
+            GenericListKeyPress(&ListUi, Ir->Event.KeyEvent.uChar.AsciiChar);
         }
     }
 
-    return REPAIR_INTRO_PAGE;
+    return UPGRADE_REPAIR_PAGE;
 }
+
 
 /*
  * Displays the InstallIntroPage.
@@ -1067,8 +1153,17 @@ InstallIntroPage(PINPUT_RECORD Ir)
 {
     if (RepairUpdateFlag)
     {
-        //return SELECT_PARTITION_PAGE;
+#if 1 /* Old code that looks good */
+
+        // return SELECT_PARTITION_PAGE;
         return DEVICE_SETTINGS_PAGE;
+
+#else /* Possible new code? */
+
+        return DEVICE_SETTINGS_PAGE;
+        // return SCSI_CONTROLLER_PAGE;
+
+#endif
     }
 
     if (IsUnattendedSetup)
@@ -1090,8 +1185,7 @@ InstallIntroPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
         {
-            return DEVICE_SETTINGS_PAGE;
-            // return SCSI_CONTROLLER_PAGE;
+            return UPGRADE_REPAIR_PAGE;
         }
     }
 
@@ -1555,6 +1649,25 @@ SelectPartitionPage(PINPUT_RECORD Ir)
             MUIDisplayError(ERROR_NO_HDD, Ir, POPUP_WAIT_ENTER);
             return QUIT_PAGE;
         }
+
+        TempPartition = NULL;
+        FormatState = Start;
+    }
+
+    if (RepairUpdateFlag)
+    {
+        /* Determine the selected installation disk & partition */
+        if (!SelectPartition(PartitionList,
+                             CurrentInstallation->DiskNumber,
+                             CurrentInstallation->PartitionNumber))
+        {
+            DPRINT1("Whaaaaaat?!?! ASSERT!\n");
+            ASSERT(FALSE);
+        }
+
+        DestinationDriveLetter = (WCHAR)PartitionList->CurrentPartition->DriveLetter;
+
+        return SELECT_FILE_SYSTEM_PAGE;
     }
 
     MUIDisplayPage(SELECT_PARTITION_PAGE);
@@ -2602,25 +2715,25 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
-    PreviousFormatState = PartitionList->FormatState;
-    switch (PartitionList->FormatState)
+    PreviousFormatState = FormatState;
+    switch (FormatState)
     {
         case Start:
         {
             if (PartitionList->CurrentPartition != PartitionList->SystemPartition)
             {
-                PartitionList->TempPartition = PartitionList->SystemPartition;
-                PartitionList->TempPartition->NeedsCheck = TRUE;
+                TempPartition = PartitionList->SystemPartition;
+                TempPartition->NeedsCheck = TRUE;
 
-                PartitionList->FormatState = FormatSystemPartition;
+                FormatState = FormatSystemPartition;
                 DPRINT1("FormatState: Start --> FormatSystemPartition\n");
             }
             else
             {
-                PartitionList->TempPartition = PartitionList->CurrentPartition;
-                PartitionList->TempPartition->NeedsCheck = TRUE;
+                TempPartition = PartitionList->CurrentPartition;
+                TempPartition->NeedsCheck = TRUE;
 
-                PartitionList->FormatState = FormatInstallPartition;
+                FormatState = FormatInstallPartition;
                 DPRINT1("FormatState: Start --> FormatInstallPartition\n");
             }
             break;
@@ -2628,10 +2741,10 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 
         case FormatSystemPartition:
         {
-            PartitionList->TempPartition = PartitionList->CurrentPartition;
-            PartitionList->TempPartition->NeedsCheck = TRUE;
+            TempPartition = PartitionList->CurrentPartition;
+            TempPartition->NeedsCheck = TRUE;
 
-            PartitionList->FormatState = FormatInstallPartition;
+            FormatState = FormatInstallPartition;
             DPRINT1("FormatState: FormatSystemPartition --> FormatInstallPartition\n");
             break;
         }
@@ -2640,15 +2753,15 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         {
             if (GetNextUnformattedPartition(PartitionList,
                                             NULL,
-                                            &PartitionList->TempPartition))
+                                            &TempPartition))
             {
-                PartitionList->FormatState = FormatOtherPartition;
-                PartitionList->TempPartition->NeedsCheck = TRUE;
+                FormatState = FormatOtherPartition;
+                TempPartition->NeedsCheck = TRUE;
                 DPRINT1("FormatState: FormatInstallPartition --> FormatOtherPartition\n");
             }
             else
             {
-                PartitionList->FormatState = FormatDone;
+                FormatState = FormatDone;
                 DPRINT1("FormatState: FormatInstallPartition --> FormatDone\n");
                 return CHECK_FILE_SYSTEM_PAGE;
             }
@@ -2659,15 +2772,15 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         {
             if (GetNextUnformattedPartition(PartitionList,
                                             NULL,
-                                            &PartitionList->TempPartition))
+                                            &TempPartition))
             {
-                PartitionList->FormatState = FormatOtherPartition;
-                PartitionList->TempPartition->NeedsCheck = TRUE;
+                FormatState = FormatOtherPartition;
+                TempPartition->NeedsCheck = TRUE;
                 DPRINT1("FormatState: FormatOtherPartition --> FormatOtherPartition\n");
             }
             else
             {
-                PartitionList->FormatState = FormatDone;
+                FormatState = FormatDone;
                 DPRINT1("FormatState: FormatOtherPartition --> FormatDone\n");
                 return CHECK_FILE_SYSTEM_PAGE;
             }
@@ -2682,7 +2795,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         }
     }
 
-    PartEntry = PartitionList->TempPartition;
+    PartEntry = TempPartition;
     DiskEntry = PartEntry->DiskEntry;
 
     /* Adjust disk size */
@@ -2743,7 +2856,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     }
     else if (PartEntry->New != FALSE)
     {
-        switch (PartitionList->FormatState)
+        switch (FormatState)
         {
             case FormatSystemPartition:
                 CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_NONFORMATTEDSYSTEMPART));
@@ -2851,7 +2964,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))  /* ESC */
         {
-            PartitionList->FormatState = Start;
+            FormatState = Start;
             return SELECT_PARTITION_PAGE;
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
@@ -2873,7 +2986,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         }
     }
 
-    PartitionList->FormatState = PreviousFormatState;
+    FormatState = PreviousFormatState;
 
     return SELECT_FILE_SYSTEM_PAGE;
 }
@@ -2914,14 +3027,13 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 
     MUIDisplayPage(FORMAT_PARTITION_PAGE);
 
-    if (PartitionList == NULL ||
-        PartitionList->TempPartition == NULL)
+    if (PartitionList == NULL || TempPartition == NULL)
     {
         /* FIXME: show an error dialog */
         return QUIT_PAGE;
     }
 
-    PartEntry = PartitionList->TempPartition;
+    PartEntry = TempPartition;
     DiskEntry = PartEntry->DiskEntry;
 
     SelectedFileSystem = FileSystemList->Selected;
@@ -3238,6 +3350,8 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 
     if (IsUnattendedSetup)
         wcscpy(InstallDir, UnattendInstallationDirectory);
+    else if (RepairUpdateFlag)
+        wcscpy(InstallDir, CurrentInstallation->SystemRoot);
     else
         wcscpy(InstallDir, L"\\ReactOS");
 
@@ -3248,6 +3362,13 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     // FIXME: Check the validity of the InstallDir; however what to do
     // if it is invalid but we are in unattended setup? (case of somebody
     // specified an invalid installation directory in the unattended file).
+
+    if (RepairUpdateFlag)
+    {
+        return InstallDirectoryPage1(InstallDir,
+                                     DiskEntry,
+                                     PartEntry);
+    }
 
     if (IsUnattendedSetup)
     {
@@ -4441,12 +4562,21 @@ QuitPage(PINPUT_RECORD Ir)
 {
     MUIDisplayPage(QUIT_PAGE);
 
+    /* Destroy the NTOS installations list */
+    if (NtOsInstallsList != NULL)
+    {
+        DestroyGenericList(NtOsInstallsList, TRUE);
+        NtOsInstallsList = NULL;
+    }
+
     /* Destroy the partition list */
     if (PartitionList != NULL)
     {
         DestroyPartitionList(PartitionList);
         PartitionList = NULL;
     }
+    TempPartition = NULL;
+    FormatState = Start;
 
     /* Destroy the filesystem list */
     if (FileSystemList != NULL)
@@ -4745,8 +4875,8 @@ RunUSetup(VOID)
                 break;
 
             /* Repair pages */
-            case REPAIR_INTRO_PAGE:
-                Page = RepairIntroPage(&Ir);
+            case UPGRADE_REPAIR_PAGE:
+                Page = UpgradeRepairPage(&Ir);
                 break;
 
             case SUCCESS_PAGE:

@@ -72,6 +72,7 @@
 #include "cabinet.h"
 #include "filesup.h"
 #include "genlist.h"
+#include "osdetect.h"
 #include "host.h"
 #include "mui.h"
 

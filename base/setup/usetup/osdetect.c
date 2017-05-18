@@ -563,16 +563,6 @@ IsValidNTOSInstallation(
     return Success;
 }
 
-typedef struct _NTOS_INSTALLATION
-{
-    LIST_ENTRY ListEntry;
-    ULONG DiskNumber;
-    ULONG PartitionNumber;
-// Vendor????
-    WCHAR SystemRoot[MAX_PATH];
-/**/WCHAR InstallationName[MAX_PATH];/**/
-} NTOS_INSTALLATION, *PNTOS_INSTALLATION;
-
 static VOID
 ListNTOSInstalls(
     IN PGENERIC_LIST List)
@@ -682,6 +672,7 @@ FindNTOSInstallations(
     PVOID ViewBase;
     WCHAR PathBuffer[MAX_PATH];
     WCHAR SystemRoot[MAX_PATH];
+    WCHAR InstallNameW[MAX_PATH];
 
     /* Set PartitionRootPath */
     swprintf(PathBuffer,
@@ -741,7 +732,9 @@ FindNTOSInstallations(
         {
             DPRINT1("Found a valid NTOS installation in disk #%d, partition #%d, SystemRoot %S\n",
                     DiskNumber, PartitionNumber, SystemRoot);
-            AddNTOSInstallation(List, DiskNumber, PartitionNumber, SystemRoot, L"Install_Windows");
+            StringCchPrintfW(InstallNameW, ARRAYSIZE(InstallNameW), L"%C: \\Device\\Harddisk%lu\\Partition%lu\\%s    \"%s\"",
+                             'X' /* FIXME: Partition letter */, DiskNumber, PartitionNumber, SystemRoot, L"Windows (placeholder)");
+            AddNTOSInstallation(List, DiskNumber, PartitionNumber, SystemRoot, InstallNameW);
         }
 
         // Here we get a SystemRootPath for each installation // FIXME!
@@ -751,7 +744,9 @@ FindNTOSInstallations(
         {
             DPRINT1("Found a valid NTOS installation in disk #%d, partition #%d, SystemRoot %S\n",
                     DiskNumber, PartitionNumber, SystemRoot);
-            AddNTOSInstallation(List, DiskNumber, PartitionNumber, SystemRoot, L"Install_ReactOS");
+            StringCchPrintfW(InstallNameW, ARRAYSIZE(InstallNameW), L"%C: \\Device\\Harddisk%lu\\Partition%lu\\%s    \"%s\"",
+                             'X' /* FIXME: Partition letter */, DiskNumber, PartitionNumber, SystemRoot, L"ReactOS (placeholder)");
+            AddNTOSInstallation(List, DiskNumber, PartitionNumber, SystemRoot, InstallNameW);
         }
 
         /* Finally, unmap and close the file */
