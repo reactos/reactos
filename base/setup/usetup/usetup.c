@@ -59,7 +59,11 @@ WCHAR DefaultLanguage[20];
 WCHAR DefaultKBLayout[20];
 BOOLEAN RepairUpdateFlag = FALSE;
 HANDLE hPnpThread = INVALID_HANDLE_VALUE;
+
 PPARTLIST PartitionList = NULL;
+PPARTENTRY TempPartition = NULL;
+FORMATMACHINESTATE FormatState = Start;
+
 
 /* LOCALS *******************************************************************/
 
@@ -87,7 +91,7 @@ static UNICODE_STRING DestinationPath;
 static UNICODE_STRING DestinationArcPath;
 static UNICODE_STRING DestinationRootPath;
 
-static WCHAR DestinationDriveLetter;
+static WCHAR DestinationDriveLetter;    // FIXME: Is it really useful??
 
 static HINF SetupInf;
 
@@ -1528,6 +1532,9 @@ SelectPartitionPage(PINPUT_RECORD Ir)
             MUIDisplayError(ERROR_NO_HDD, Ir, POPUP_WAIT_ENTER);
             return QUIT_PAGE;
         }
+
+        TempPartition = NULL;
+        FormatState = Start;
     }
 
     InitPartitionListUi(&ListUi, PartitionList,
@@ -2631,100 +2638,95 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
-#if 0
-    /*** HACK! ***/
-    if (FileSystemList == NULL)
-    {
-        FileSystemList = CreateFileSystemList(6, 26, PartitionList->CurrentPartition->New, L"FAT");
-        if (FileSystemList == NULL)
-        {
-            /* FIXME: show an error dialog */
-            return QUIT_PAGE;
-        }
-
-        /* FIXME: Add file systems to list */
-    }
-#endif
-
     /* Find or set the active system partition */
-    CheckActiveSystemPartition(PartitionList /*, FileSystemList*/);
+    CheckActiveSystemPartition(PartitionList);
     if (PartitionList->SystemPartition == NULL)
     {
         /* FIXME: show an error dialog */
         return QUIT_PAGE;
     }
 
-    PreviousFormatState = PartitionList->FormatState;
-    switch (PartitionList->FormatState)
+    PreviousFormatState = FormatState;
+    switch (FormatState)
     {
         case Start:
+        {
             if (PartitionList->CurrentPartition != PartitionList->SystemPartition)
             {
-                PartitionList->TempPartition = PartitionList->SystemPartition;
-                PartitionList->TempPartition->NeedsCheck = TRUE;
+                TempPartition = PartitionList->SystemPartition;
+                TempPartition->NeedsCheck = TRUE;
 
-                PartitionList->FormatState = FormatSystemPartition;
+                FormatState = FormatSystemPartition;
                 DPRINT1("FormatState: Start --> FormatSystemPartition\n");
             }
             else
             {
-                PartitionList->TempPartition = PartitionList->CurrentPartition;
-                PartitionList->TempPartition->NeedsCheck = TRUE;
+                TempPartition = PartitionList->CurrentPartition;
+                TempPartition->NeedsCheck = TRUE;
 
-                PartitionList->FormatState = FormatInstallPartition;
+                FormatState = FormatInstallPartition;
                 DPRINT1("FormatState: Start --> FormatInstallPartition\n");
             }
             break;
+        }
 
         case FormatSystemPartition:
-            PartitionList->TempPartition = PartitionList->CurrentPartition;
-            PartitionList->TempPartition->NeedsCheck = TRUE;
+        {
+            TempPartition = PartitionList->CurrentPartition;
+            TempPartition->NeedsCheck = TRUE;
 
-            PartitionList->FormatState = FormatInstallPartition;
+            FormatState = FormatInstallPartition;
             DPRINT1("FormatState: FormatSystemPartition --> FormatInstallPartition\n");
             break;
+        }
 
         case FormatInstallPartition:
+        {
             if (GetNextUnformattedPartition(PartitionList,
                                             NULL,
-                                            &PartitionList->TempPartition))
+                                            &TempPartition))
             {
-                PartitionList->FormatState = FormatOtherPartition;
-                PartitionList->TempPartition->NeedsCheck = TRUE;
+                FormatState = FormatOtherPartition;
+                TempPartition->NeedsCheck = TRUE;
                 DPRINT1("FormatState: FormatInstallPartition --> FormatOtherPartition\n");
             }
             else
             {
-                PartitionList->FormatState = FormatDone;
+                FormatState = FormatDone;
                 DPRINT1("FormatState: FormatInstallPartition --> FormatDone\n");
                 return CHECK_FILE_SYSTEM_PAGE;
             }
             break;
+        }
 
         case FormatOtherPartition:
+        {
             if (GetNextUnformattedPartition(PartitionList,
                                             NULL,
-                                            &PartitionList->TempPartition))
+                                            &TempPartition))
             {
-                PartitionList->FormatState = FormatOtherPartition;
-                PartitionList->TempPartition->NeedsCheck = TRUE;
+                FormatState = FormatOtherPartition;
+                TempPartition->NeedsCheck = TRUE;
                 DPRINT1("FormatState: FormatOtherPartition --> FormatOtherPartition\n");
             }
             else
             {
-                PartitionList->FormatState = FormatDone;
+                FormatState = FormatDone;
                 DPRINT1("FormatState: FormatOtherPartition --> FormatDone\n");
                 return CHECK_FILE_SYSTEM_PAGE;
             }
             break;
+        }
 
         default:
-            DPRINT1("FormatState: Invalid value %ld\n", PartitionList->FormatState);
+        {
+            DPRINT1("FormatState: Invalid value %ld\n", FormatState);
             /* FIXME: show an error dialog */
             return QUIT_PAGE;
+        }
     }
 
-    PartEntry = PartitionList->TempPartition;
+    PartEntry = TempPartition;
     DiskEntry = PartEntry->DiskEntry;
 
     /* Adjust disk size */
@@ -2785,7 +2787,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     }
     else if (PartEntry->New != FALSE)
     {
-        switch (PartitionList->FormatState)
+        switch (FormatState)
         {
             case FormatSystemPartition:
                 CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_NONFORMATTEDSYSTEMPART));
@@ -2851,8 +2853,6 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
             /* FIXME: show an error dialog */
             return QUIT_PAGE;
         }
-
-        /* FIXME: Add file systems to list */
     }
 
     DrawFileSystemList(FileSystemList);
@@ -2874,7 +2874,6 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
              * which file system to use in unattended installations, in the
              * txtsetup.sif file.
              */
-            // PartEntry->FileSystem = GetFileSystemByName(FileSystemList, L"FAT");
             return FORMAT_PARTITION_PAGE;
         }
 
@@ -2896,7 +2895,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))  /* ESC */
         {
-            PartitionList->FormatState = Start;
+            FormatState = Start;
             return SELECT_PARTITION_PAGE;
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
@@ -2912,18 +2911,13 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN) /* ENTER */
         {
             if (!FileSystemList->Selected->FileSystem)
-            {
                 return SELECT_FILE_SYSTEM_PAGE;
-            }
             else
-            {
-                // PartEntry->FileSystem = FileSystemList->Selected;
                 return FORMAT_PARTITION_PAGE;
-            }
         }
     }
 
-    PartitionList->FormatState = PreviousFormatState;
+    FormatState = PreviousFormatState;
 
     return SELECT_FILE_SYSTEM_PAGE;
 }
@@ -2964,17 +2958,16 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 
     MUIDisplayPage(FORMAT_PARTITION_PAGE);
 
-    if (PartitionList == NULL ||
-        PartitionList->TempPartition == NULL)
+    if (PartitionList == NULL || TempPartition == NULL)
     {
         /* FIXME: show an error dialog */
         return QUIT_PAGE;
     }
 
-    PartEntry = PartitionList->TempPartition;
+    PartEntry = TempPartition;
     DiskEntry = PartEntry->DiskEntry;
 
-    SelectedFileSystem = FileSystemList->Selected; // PartEntry->FileSystem; // FIXME!!!!
+    SelectedFileSystem = FileSystemList->Selected;
 
     while (TRUE)
     {
@@ -2995,60 +2988,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
         {
             CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
-            if (wcscmp(SelectedFileSystem->FileSystemName, L"FAT") == 0)
-            {
-                if (PartEntry->SectorCount.QuadPart < 8192)
-                {
-                    /* FAT12 CHS partition (disk is smaller than 4.1MB) */
-                    SetPartitionType(PartEntry, PARTITION_FAT_12);
-                }
-                else if (PartEntry->StartSector.QuadPart < 1450560)
-                {
-                    /* Partition starts below the 8.4GB boundary ==> CHS partition */
-
-                    if (PartEntry->SectorCount.QuadPart < 65536)
-                    {
-                        /* FAT16 CHS partition (partition size < 32MB) */
-                        SetPartitionType(PartEntry, PARTITION_FAT_16);
-                    }
-                    else if (PartEntry->SectorCount.QuadPart < 1048576)
-                    {
-                        /* FAT16 CHS partition (partition size < 512MB) */
-                        SetPartitionType(PartEntry, PARTITION_HUGE);
-                    }
-                    else
-                    {
-                        /* FAT32 CHS partition (partition size >= 512MB) */
-                        SetPartitionType(PartEntry, PARTITION_FAT32);
-                    }
-                }
-                else
-                {
-                    /* Partition starts above the 8.4GB boundary ==> LBA partition */
-
-                    if (PartEntry->SectorCount.QuadPart < 1048576)
-                    {
-                        /* FAT16 LBA partition (partition size < 512MB) */
-                        SetPartitionType(PartEntry, PARTITION_XINT13);
-                    }
-                    else
-                    {
-                        /* FAT32 LBA partition (partition size >= 512MB) */
-                        SetPartitionType(PartEntry, PARTITION_FAT32_XINT13);
-                    }
-                }
-            }
-#if 0
-            else if (wcscmp(SelectedFileSystem->FileSystemName, L"EXT2") == 0)
-            {
-                SetPartitionType(PartEntry, PARTITION_EXT2);
-            }
-            else if (wcscmp(SelectedFileSystem->FileSystemName, L"NTFS") == 0)
-            {
-                SetPartitionType(PartEntry, PARTITION_IFS);
-            }
-#endif
-            else if (!SelectedFileSystem->FileSystem)
+            if (!PreparePartitionForFormatting(PartEntry, SelectedFileSystem->FileSystem))
             {
                 /* FIXME: show an error dialog */
                 return QUIT_PAGE;
@@ -3081,7 +3021,8 @@ FormatPartitionPage(PINPUT_RECORD Ir)
             }
 #endif
 
-            if (WritePartitionsToDisk(PartitionList) == FALSE)
+            /* Commit the partition changes to the disk */
+            if (!WritePartitionsToDisk(PartitionList))
             {
                 DPRINT("WritePartitionsToDisk() failed\n");
                 MUIDisplayError(ERROR_WRITE_PTABLE, Ir, POPUP_WAIT_ENTER);
@@ -3097,6 +3038,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
                                  PathBuffer);
             DPRINT("PartitionRootPath: %wZ\n", &PartitionRootPath);
 
+            /* Format the partition */
             if (SelectedFileSystem->FileSystem)
             {
                 Status = FormatPartition(&PartitionRootPath,
@@ -3108,6 +3050,8 @@ FormatPartitionPage(PINPUT_RECORD Ir)
                     return QUIT_PAGE;
                 }
 
+                PartEntry->FormatState = Formatted;
+                // PartEntry->FileSystem  = FileSystem;
                 PartEntry->New = FALSE;
             }
 
@@ -4598,6 +4542,8 @@ QuitPage(PINPUT_RECORD Ir)
         DestroyPartitionList(PartitionList);
         PartitionList = NULL;
     }
+    TempPartition = NULL;
+    FormatState = Start;
 
     /* Destroy the filesystem list */
     if (FileSystemList != NULL)
