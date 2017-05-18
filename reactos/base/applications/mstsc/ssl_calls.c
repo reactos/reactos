@@ -59,10 +59,22 @@ rdssl_rc4_info_create(void)
         return NULL;
     }
     ret = CryptAcquireContext(&info->hCryptProv,
-                              NULL,
+                              L"MSTSC",
                               MS_ENHANCED_PROV,
                               PROV_RSA_FULL,
                               0);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        if (dwErr == NTE_BAD_KEYSET)
+        {
+            ret = CryptAcquireContext(&info->hCryptProv,
+                                      L"MSTSC",
+                                      MS_ENHANCED_PROV,
+                                      PROV_RSA_FULL,
+                                      CRYPT_NEWKEYSET);
+        }
+    }
     if (!ret)
     {
         dwErr = GetLastError();
@@ -214,10 +226,22 @@ rdssl_hash_info_create(ALG_ID id)
         return NULL;
     }
     ret = CryptAcquireContext(&info->hCryptProv,
-                              NULL,
+                              L"MSTSC",
                               MS_ENHANCED_PROV,
                               PROV_RSA_FULL,
                               0);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        if (dwErr == NTE_BAD_KEYSET)
+        {
+            ret = CryptAcquireContext(&info->hCryptProv,
+                                      L"MSTSC",
+                                      MS_ENHANCED_PROV,
+                                      PROV_RSA_FULL,
+                                      CRYPT_NEWKEYSET);
+        }
+    }
     if (!ret)
     {
         dwErr = GetLastError();
@@ -451,10 +475,22 @@ rdssl_hmac_md5(char* key, int keylen, char* data, int len, char* output)
         return;
     }
     ret = CryptAcquireContext(&hCryptProv,
-                              NULL,
+                              L"MSTSC",
                               MS_ENHANCED_PROV,
                               PROV_RSA_FULL,
                               0);
+    if (!ret)
+    {
+        dwErr = GetLastError();
+        if (dwErr == NTE_BAD_KEYSET)
+        {
+            ret = CryptAcquireContext(&hCryptProv,
+                                      L"MSTSC",
+                                      MS_ENHANCED_PROV,
+                                      PROV_RSA_FULL,
+                                      CRYPT_NEWKEYSET);
+        }
+    }
     if (!ret)
     {
         dwErr = GetLastError();
@@ -1566,9 +1602,13 @@ rdssl_sign_ok(char* e_data, int e_len, char* n_data, int n_len,
     {
         return 1;
     }
+    md5 = rdssl_md5_info_create();
+    if (!md5)
+    {
+        return 1;
+    }
     key = (char*)xmalloc(176);
     md5_final = (char*)xmalloc(64);
-    md5 = rdssl_md5_info_create();
     // copy the test key
     memcpy(key, testkey, 176);
     // replace e and n
