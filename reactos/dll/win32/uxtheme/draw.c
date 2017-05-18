@@ -1410,8 +1410,6 @@ HRESULT WINAPI DrawThemeText(HTHEME hTheme, HDC hdc, int iPartId, int iStateId,
     hr = GetThemeEnumValue(hTheme, iPartId, iStateId, TMT_TEXTSHADOWTYPE, &iShadowType);
     if (SUCCEEDED(hr))
     {
-        ERR("Got shadow type %d\n", iShadowType);
-
         hr = GetThemeColor(hTheme, iPartId, iStateId, TMT_TEXTSHADOWCOLOR, &shadowColor);
         if (FAILED(hr))
         {
