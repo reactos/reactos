@@ -60,6 +60,18 @@ FilterUnload(_In_ LPCWSTR lpFilterName)
 
 /* PRIVATE FUNCTIONS ****************************************************************/
 
+HRESULT
+NtStatusToHResult(_In_ NTSTATUS Status)
+{
+    HRESULT hr;
+    hr = RtlNtStatusToDosError(Status);
+    if (hr != ERROR_SUCCESS)
+    {
+        hr = (ULONG)hr | 0x80070000;
+    }
+    return hr;
+}
+
 static
 HRESULT
 FilterLoadUnload(_In_z_ LPCWSTR lpFilterName,
@@ -103,7 +115,7 @@ FilterLoadUnload(_In_z_ LPCWSTR lpFilterName,
 
     /* Tell the filter manager to load the filter for us */
     dwError = SendIoctl(hFltMgr,
-                        Load ? IOCTL_LOAD_FILTER : IOCTL_UNLOAD_FILTER,
+                        Load ? IOCTL_FILTER_LOAD : IOCTL_FILTER_UNLOAD,
                         FilterName,
                         BufferLength);
 

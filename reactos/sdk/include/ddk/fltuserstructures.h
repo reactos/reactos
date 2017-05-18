@@ -35,7 +35,9 @@
 
 typedef HANDLE HFILTER, HFILTER_INSTANCE, HFILTER_VOLUME;
 
+#ifndef _NTDEF_H
 typedef _Return_type_success_(return >= 0) LONG NTSTATUS, *PNTSTATUS;
+#endif
 
 /* Known File System Types */
 

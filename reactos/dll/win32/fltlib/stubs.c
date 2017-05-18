@@ -6,10 +6,6 @@
 * PROGRAMMERS:     Ged Murphy (ged.murphy@reactos.org)
 */
 
-// Hack - our SDK reports NTDDI_VERSION as 0x05020100 (from _WIN32_WINNT 0x502)
-// which doesn't pass the FLT_MGR_BASELINE check in fltkernel.h
-#define NTDDI_VERSION NTDDI_WS03SP1
-
 #include <stdarg.h>
 #include "windef.h"
 #include "winbase.h"
@@ -319,73 +315,6 @@ FilterInstanceGetInformation(_In_ HFILTER_INSTANCE hInstance,
     UNREFERENCED_PARAMETER(lpBuffer);
     UNREFERENCED_PARAMETER(dwBufferSize);
     UNREFERENCED_PARAMETER(lpBytesReturned);
-    return E_NOTIMPL;
-}
-
-
-_Must_inspect_result_
-HRESULT
-WINAPI
-FilterConnectCommunicationPort(_In_ LPCWSTR lpPortName,
-                               _In_ DWORD dwOptions,
-                               _In_reads_bytes_opt_(wSizeOfContext) LPCVOID lpContext,
-                               _In_ WORD wSizeOfContext,
-                               _In_opt_ LPSECURITY_ATTRIBUTES lpSecurityAttributes,
-                               _Outptr_ HANDLE *hPort)
-{
-    UNREFERENCED_PARAMETER(lpPortName);
-    UNREFERENCED_PARAMETER(dwOptions);
-    UNREFERENCED_PARAMETER(lpContext);
-    UNREFERENCED_PARAMETER(wSizeOfContext);
-    UNREFERENCED_PARAMETER(lpSecurityAttributes);
-    UNREFERENCED_PARAMETER(hPort);
-    return E_NOTIMPL;
-}
-
-_Must_inspect_result_
-HRESULT
-WINAPI
-FilterSendMessage(_In_ HANDLE hPort,
-                  _In_reads_bytes_(dwInBufferSize) LPVOID lpInBuffer,
-                  _In_ DWORD dwInBufferSize,
-                  _Out_writes_bytes_to_opt_(dwOutBufferSize, *lpBytesReturned) LPVOID lpOutBuffer,
-                  _In_ DWORD dwOutBufferSize,
-                  _Out_ LPDWORD lpBytesReturned)
-{
-    UNREFERENCED_PARAMETER(hPort);
-    UNREFERENCED_PARAMETER(lpInBuffer);
-    UNREFERENCED_PARAMETER(dwInBufferSize);
-    UNREFERENCED_PARAMETER(lpOutBuffer);
-    UNREFERENCED_PARAMETER(dwOutBufferSize);
-    UNREFERENCED_PARAMETER(lpBytesReturned);
-    return E_NOTIMPL;
-}
-
-_Must_inspect_result_
-HRESULT
-WINAPI
-FilterGetMessage(_In_ HANDLE hPort,
-                 _Out_writes_bytes_(dwMessageBufferSize) PFILTER_MESSAGE_HEADER lpMessageBuffer,
-                 _In_ DWORD dwMessageBufferSize,
-                 _Inout_opt_ LPOVERLAPPED lpOverlapped)
-{
-    UNREFERENCED_PARAMETER(hPort);
-    UNREFERENCED_PARAMETER(lpMessageBuffer);
-    UNREFERENCED_PARAMETER(dwMessageBufferSize);
-    UNREFERENCED_PARAMETER(lpOverlapped);
-    return E_NOTIMPL;
-}
-
-_Must_inspect_result_
-HRESULT
-WINAPI
-FilterReplyMessage(_In_ HANDLE hPort,
-                   _In_reads_bytes_(dwReplyBufferSize) PFILTER_REPLY_HEADER lpReplyBuffer,
-                   _In_ DWORD dwReplyBufferSize)
-{
-    UNREFERENCED_PARAMETER(hPort);
-    UNREFERENCED_PARAMETER(lpReplyBuffer);
-    UNREFERENCED_PARAMETER(dwReplyBufferSize);
     return E_NOTIMPL;
 }
 
