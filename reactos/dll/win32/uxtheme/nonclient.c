@@ -119,11 +119,11 @@ HRESULT WINAPI ThemeDrawCaptionText(PDRAW_CONTEXT pcontext, RECT* pRect, int iPa
 
     len++; /* From now on this is the size of the buffer so include the null */
 
-    if (len > 50)
+    if (len > ARRAYSIZE(buffer))
     {
-        pszText = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, len  * sizeof(WCHAR));
+        pszText = HeapAlloc(GetProcessHeap(), 0, len  * sizeof(WCHAR));
         if (!pszText)
-            return E_FAIL;
+            return E_OUTOFMEMORY;
     }
 
     InternalGetWindowText(pcontext->hWnd, pszText, len);
