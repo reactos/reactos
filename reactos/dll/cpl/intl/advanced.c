@@ -1,14 +1,20 @@
 #include "intl.h"
+#include <wingdi.h>
 
 #include <debug.h>
 
 typedef struct CPStruct
 {
-    WORD Status;
     UINT CodePage;
+    DWORD Flags;
     WCHAR Name[MAX_PATH];
     struct CPStruct *NextItem;
 } CPAGE, *PCPAGE;
+
+#define CODEPAGE_INSTALLED      0x00000001
+#define CODEPAGE_NOT_REMOVEABLE 0x00000002
+#define CODEPAGE_INSTALL        0x00000004
+#define CODEPAGE_REMOVE         0x00000008
 
 static PCPAGE PCPage = NULL;
 static BOOL bSpain = FALSE;
@@ -18,7 +24,8 @@ static BOOL
 GetSupportedCP(
     HINF hInf)
 {
-    INFCONTEXT Context;
+    WCHAR szSection[MAX_PATH];
+    INFCONTEXT Context, Context2;
     PCPAGE pCodePage;
     CPINFOEX cpInfEx;
     UINT uiCodePage;
@@ -38,7 +45,7 @@ GetSupportedCP(
                 return FALSE;
 
             pCodePage->CodePage = uiCodePage;
-            pCodePage->Status = 0;
+            pCodePage->Flags = 0;
             (pCodePage->Name)[0] = UNICODE_NULL;
 
             if (GetCPInfoExW(uiCodePage, 0, &cpInfEx))
@@ -58,6 +65,14 @@ GetSupportedCP(
             else
             {
                 HeapFree(GetProcessHeap(), 0, pCodePage);
+            }
+
+            wsprintf(szSection, L"CODEPAGE_REMOVE_%d", uiCodePage);
+            if ((uiCodePage == GetACP()) ||
+                (uiCodePage == GetOEMCP()) ||
+                (!SetupFindFirstLineW(hInf, szSection, L"AddReg", &Context2)))
+            {
+                pCodePage->Flags |= CODEPAGE_NOT_REMOVEABLE;
             }
         }
 
@@ -84,7 +99,7 @@ InstalledCPProc(PWSTR lpStr)
 
         if (lpCP->CodePage == uiCP)
         {
-            lpCP->Status |= 0x0001;
+            lpCP->Flags |= CODEPAGE_INSTALLED;
             break;
         }
 
@@ -155,7 +170,7 @@ InitCodePagesList(HWND hwndDlg)
         ItemIndex = ListView_InsertItem(hList, &item);
         if (ItemIndex != -1)
         {
-            if (pCodePage->Status & 0x0001)
+            if (pCodePage->Flags & CODEPAGE_INSTALLED)
             {
                 ListView_SetItemState(hList, ItemIndex,
                                       INDEXTOSTATEIMAGEMASK(LVIS_SELECTED),
@@ -374,6 +389,37 @@ SaveSystemSettings(
 }
 
 
+LRESULT
+ListViewCustomDraw(
+    LPARAM lParam)
+{
+    LPNMLVCUSTOMDRAW lplvcd = (LPNMLVCUSTOMDRAW)lParam;
+
+    switch (lplvcd->nmcd.dwDrawStage)
+    {
+        case CDDS_PREPAINT:
+            return CDRF_NOTIFYITEMDRAW;
+
+        case CDDS_ITEMPREPAINT:
+            if (((PCPAGE)lplvcd->nmcd.lItemlParam)->Flags & CODEPAGE_NOT_REMOVEABLE)
+            {
+                lplvcd->clrText   = GetSysColor(COLOR_GRAYTEXT);
+                lplvcd->clrTextBk = GetSysColor(COLOR_WINDOW);
+                return CDRF_NEWFONT;
+            }
+            else
+            {
+                lplvcd->clrText   = GetSysColor(COLOR_WINDOWTEXT);
+                lplvcd->clrTextBk = GetSysColor(COLOR_WINDOW);
+                return CDRF_NEWFONT;
+            }
+            break;
+    }
+
+    return CDRF_DODEFAULT;
+}
+
+
 /* Property page dialog callback */
 INT_PTR CALLBACK
 AdvancedPageProc(HWND hwndDlg,
@@ -441,13 +487,21 @@ AdvancedPageProc(HWND hwndDlg,
             break;
 
         case WM_NOTIFY:
-            if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
+            if (((LPNMHDR)lParam)->code == PSN_APPLY)
             {
                 PropSheet_UnChanged(GetParent(hwndDlg), hwndDlg);
 
                 SaveSystemSettings(pGlobalData);
                 SaveFontSubstitutionSettings(hwndDlg, pGlobalData);
                 SaveFontLinkingSettings(hwndDlg, pGlobalData);
+            }
+            else if (((LPNMHDR)lParam)->idFrom == IDC_CONV_TABLES &&
+                     ((LPNMHDR)lParam)->code == NM_CUSTOMDRAW)
+            {
+                SetWindowLong(hwndDlg,
+                              DWL_MSGRESULT,
+                              (LONG)ListViewCustomDraw(lParam));
+                return TRUE;
             }
             break;
     }
