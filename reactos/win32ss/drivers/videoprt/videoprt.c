@@ -33,6 +33,7 @@
 ULONG CsrssInitialized = FALSE;
 PKPROCESS Csrss = NULL;
 ULONG VideoPortDeviceNumber = 0;
+KMUTEX VideoPortInt10Mutex;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -464,8 +465,15 @@ VideoPortInitialize(
     NTSTATUS Status;
     PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
     BOOLEAN PnpDriver = FALSE, LegacyDetection = FALSE;
+    static BOOLEAN Int10MutexInitialized;
 
     TRACE_(VIDEOPRT, "VideoPortInitialize\n");
+
+    if (!Int10MutexInitialized)
+    {
+        KeInitializeMutex(&VideoPortInt10Mutex, 0);
+        Int10MutexInitialized = TRUE;
+    }
 
     /* As a first thing do parameter checks. */
     if (HwInitializationData->HwInitDataSize > sizeof(VIDEO_HW_INITIALIZATION_DATA))
