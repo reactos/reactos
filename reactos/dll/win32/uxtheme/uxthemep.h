@@ -134,7 +134,7 @@ enum SCROLL_HITTEST
 };
 
 /* The window context stores data for the window needed through the life of the window */
-typedef struct _WND_CONTEXT
+typedef struct _WND_DATA
 {
     UINT lastHitTest;
     BOOL HasAppDefinedRgn;
@@ -151,7 +151,7 @@ typedef struct _WND_CONTEXT
     INT  SCROLL_TrackingBar;
     INT  SCROLL_TrackingPos;
     INT  SCROLL_TrackingVal;
-} WND_CONTEXT, *PWND_CONTEXT;
+} WND_DATA, *PWND_DATA;
 
 /* The draw context stores data that are needed by the drawing operations in the non client area of the window */
 typedef struct _DRAW_CONTEXT
@@ -228,7 +228,7 @@ void  ThemeDrawScrollBar(PDRAW_CONTEXT pcontext, INT Bar, POINT* pt);
 VOID NC_TrackScrollBar(HWND Wnd, WPARAM wParam, POINT Pt);
 void ThemeInitDrawContext(PDRAW_CONTEXT pcontext, HWND hWnd, HRGN hRgn);
 void ThemeCleanupDrawContext(PDRAW_CONTEXT pcontext);
-PWND_CONTEXT ThemeGetWndContext(HWND hWnd);
+PWND_DATA ThemeGetWndData(HWND hWnd);
 
 extern HINSTANCE hDllInst;
 extern ATOM atWindowTheme;

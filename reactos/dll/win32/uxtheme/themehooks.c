@@ -14,72 +14,72 @@ BYTE gabMSGPmessages[UAHOWP_MAX_SIZE];
 BYTE gabDLGPmessages[UAHOWP_MAX_SIZE];
 BOOL gbThemeHooksActive = FALSE;
 
-PWND_CONTEXT ThemeGetWndContext(HWND hWnd)
+PWND_DATA ThemeGetWndData(HWND hWnd)
 {
-    PWND_CONTEXT pcontext;
+    PWND_DATA pwndData;
 
-    pcontext = (PWND_CONTEXT)GetPropW(hWnd, (LPCWSTR)MAKEINTATOM(atWndContext));
-    if(pcontext == NULL)
+    pwndData = (PWND_DATA)GetPropW(hWnd, (LPCWSTR)MAKEINTATOM(atWndContext));
+    if(pwndData == NULL)
     {
-        pcontext = HeapAlloc(GetProcessHeap(), 
+        pwndData = HeapAlloc(GetProcessHeap(), 
                             HEAP_ZERO_MEMORY, 
-                            sizeof(WND_CONTEXT));
-        if(pcontext == NULL)
+                            sizeof(WND_DATA));
+        if(pwndData == NULL)
         {
             return NULL;
         }
         
-        SetPropW( hWnd, (LPCWSTR)MAKEINTATOM(atWndContext), pcontext);
+        SetPropW( hWnd, (LPCWSTR)MAKEINTATOM(atWndContext), pwndData);
     }
 
-    return pcontext;
+    return pwndData;
 }
 
-void ThemeDestroyWndContext(HWND hWnd)
+void ThemeDestroyWndData(HWND hWnd)
 {
-    PWND_CONTEXT pContext;
+    PWND_DATA pwndData;
     DWORD ProcessId;
 
-    /*Do not destroy WND_CONTEXT of a window that belong to another process */
+    /*Do not destroy WND_DATA of a window that belong to another process */
     GetWindowThreadProcessId(hWnd, &ProcessId);
     if(ProcessId != GetCurrentProcessId())
     {
         return;
     }
 
-    pContext = (PWND_CONTEXT)GetPropW(hWnd, (LPCWSTR)MAKEINTATOM(atWndContext));
-    if(pContext == NULL)
+    pwndData = (PWND_DATA)GetPropW(hWnd, (LPCWSTR)MAKEINTATOM(atWndContext));
+    if(pwndData == NULL)
     {
         return;
     }
 
-    if(pContext->HasThemeRgn)
+    if(pwndData->HasThemeRgn)
     {
         user32ApiHook.SetWindowRgn(hWnd, 0, TRUE);
     }
 
-    if (pContext->hTabBackgroundBrush != NULL)
+    if (pwndData->hTabBackgroundBrush != NULL)
     {
         CloseThemeData(GetWindowTheme(hWnd));
 
-        DeleteObject(pContext->hTabBackgroundBrush);
-        pContext->hTabBackgroundBrush = NULL;
+        DeleteObject(pwndData->hTabBackgroundBrush);
+        pwndData->hTabBackgroundBrush = NULL;
     }
 
-    if (pContext->hTabBackgroundBmp != NULL)
+    if (pwndData->hTabBackgroundBmp != NULL)
     {
-        DeleteObject(pContext->hTabBackgroundBmp);
-        pContext->hTabBackgroundBmp = NULL;
+        DeleteObject(pwndData->hTabBackgroundBmp);
+        pwndData->hTabBackgroundBmp = NULL;
     }
 
-    HeapFree(GetProcessHeap(), 0, pContext);
+    HeapFree(GetProcessHeap(), 0, pwndData);
 
     SetPropW( hWnd, (LPCWSTR)MAKEINTATOM(atWndContext), NULL);
 }
 
 static BOOL CALLBACK ThemeCleanupChildWndContext (HWND hWnd, LPARAM msg)
 {
-    ThemeDestroyWndContext(hWnd);
+    ThemeDestroyWndData(hWnd);
     return TRUE;
 }
 
@@ -91,7 +91,7 @@ static BOOL CALLBACK ThemeCleanupWndContext(HWND hWnd, LPARAM msg)
     }
     else
     {
-        ThemeDestroyWndContext(hWnd);
+        ThemeDestroyWndData(hWnd);
         EnumChildWindows (hWnd, ThemeCleanupChildWndContext, 0);
     }
 
@@ -150,7 +150,7 @@ void SetThemeRegion(HWND hWnd)
 
 int OnPostWinPosChanged(HWND hWnd, WINDOWPOS* pWinPos)
 {
-    PWND_CONTEXT pcontext;
+    PWND_DATA pwndData;
     DWORD style;
 
     /* We only proceed to change the window shape if it has a caption */
@@ -159,37 +159,37 @@ int OnPostWinPosChanged(HWND hWnd, WINDOWPOS* pWinPos)
         return 0;
 
     /* Get theme data for this window */
-    pcontext = ThemeGetWndContext(hWnd);
-    if (pcontext == NULL)
+    pwndData = ThemeGetWndData(hWnd);
+    if (pwndData == NULL)
         return 0;
 
     /* Do not change the region of the window if its size wasn't changed */
-    if ((pWinPos->flags & SWP_NOSIZE) != 0 && pcontext->DirtyThemeRegion == FALSE)
+    if ((pWinPos->flags & SWP_NOSIZE) != 0 && pwndData->DirtyThemeRegion == FALSE)
         return 0;
 
     /* We don't touch the shape of the window if the application sets it on its own */
-    if (pcontext->HasAppDefinedRgn == TRUE)
+    if (pwndData->HasAppDefinedRgn == TRUE)
         return 0;
 
     /* Calling SetWindowRgn will call SetWindowPos again so we need to avoid this recursion */
-    if (pcontext->UpdatingRgn == TRUE)
+    if (pwndData->UpdatingRgn == TRUE)
         return 0;
 
     if(!IsAppThemed())
     {
-        if(pcontext->HasThemeRgn)
+        if(pwndData->HasThemeRgn)
         {
-            pcontext->HasThemeRgn = FALSE;
+            pwndData->HasThemeRgn = FALSE;
             user32ApiHook.SetWindowRgn(hWnd, 0, TRUE);
         }
         return 0;
     }
 
-    pcontext->DirtyThemeRegion = FALSE;
-    pcontext->HasThemeRgn = TRUE;
-    pcontext->UpdatingRgn = TRUE;
+    pwndData->DirtyThemeRegion = FALSE;
+    pwndData->HasThemeRgn = TRUE;
+    pwndData->UpdatingRgn = TRUE;
     SetThemeRegion(hWnd);
-    pcontext->UpdatingRgn = FALSE;
+    pwndData->UpdatingRgn = FALSE;
 
      return 0;
  }
@@ -241,32 +241,32 @@ ThemePreWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_PTR 
     {
         case WM_THEMECHANGED:
         {
-            PWND_CONTEXT pcontext = ThemeGetWndContext(hWnd);
+            PWND_DATA pwndData = ThemeGetWndData(hWnd);
 
             if (GetAncestor(hWnd, GA_PARENT) == GetDesktopWindow())
                 UXTHEME_LoadTheme(TRUE);
 
-            if (pcontext == NULL)
+            if (pwndData == NULL)
                 return 0;
 
-            if (pcontext->hTabBackgroundBrush != NULL)
+            if (pwndData->hTabBackgroundBrush != NULL)
             {
-                DeleteObject(pcontext->hTabBackgroundBrush);
-                pcontext->hTabBackgroundBrush = NULL;
+                DeleteObject(pwndData->hTabBackgroundBrush);
+                pwndData->hTabBackgroundBrush = NULL;
             }
 
-            if (pcontext->hTabBackgroundBmp != NULL)
+            if (pwndData->hTabBackgroundBmp != NULL)
             {
-                DeleteObject(pcontext->hTabBackgroundBmp);
-                pcontext->hTabBackgroundBmp = NULL;
+                DeleteObject(pwndData->hTabBackgroundBmp);
+                pwndData->hTabBackgroundBmp = NULL;
             }
         }
         case WM_NCCREATE:
         {
-            PWND_CONTEXT pcontext = ThemeGetWndContext(hWnd);
-            if (pcontext == NULL)
+            PWND_DATA pwndData = ThemeGetWndData(hWnd);
+            if (pwndData == NULL)
                 return 0;
-            pcontext->DirtyThemeRegion = TRUE;
+            pwndData->DirtyThemeRegion = TRUE;
         }
     }
 
@@ -285,7 +285,7 @@ ThemePostWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_PTR
         }
         case WM_NCDESTROY:
         {
-            ThemeDestroyWndContext(hWnd);
+            ThemeDestroyWndData(hWnd);
             return 0;
         }
     }
@@ -295,13 +295,13 @@ ThemePostWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_PTR
 
 HRESULT GetDiaogTextureBrush(HTHEME theme, HWND hwnd, HDC hdc, HBRUSH* result, BOOL changeOrigin)
 {
-    PWND_CONTEXT pcontext;
+    PWND_DATA pwndData;
 
-    pcontext = ThemeGetWndContext(hwnd);
-    if (pcontext == NULL)
+    pwndData = ThemeGetWndData(hwnd);
+    if (pwndData == NULL)
         return E_FAIL;
 
-    if (pcontext->hTabBackgroundBrush == NULL)
+    if (pwndData->hTabBackgroundBrush == NULL)
     {
         HBITMAP hbmp;
         RECT dummy, bmpRect;
@@ -337,18 +337,18 @@ HRESULT GetDiaogTextureBrush(HTHEME theme, HWND hwnd, HDC hdc, HBRUSH* result, B
             DeleteDC(hdcHackPattern);
 
             /* Keep the handle of the bitmap we created so that it can be used later */
-            pcontext->hTabBackgroundBmp = hbmpHack;
+            pwndData->hTabBackgroundBmp = hbmpHack;
             hbmp = hbmpHack;
         }
 
         /* hbmp is cached so there is no need to free it */
-        pcontext->hTabBackgroundBrush = CreatePatternBrush(hbmp);
+        pwndData->hTabBackgroundBrush = CreatePatternBrush(hbmp);
     }
 
-    if (!pcontext->hTabBackgroundBrush)
+    if (!pwndData->hTabBackgroundBrush)
         return E_FAIL;
 
-    *result = pcontext->hTabBackgroundBrush;
+    *result = pwndData->hTabBackgroundBrush;
     return S_OK;
 }
 
@@ -417,11 +417,11 @@ ThemeDlgPostWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_
 
 int WINAPI ThemeSetWindowRgn(HWND hWnd, HRGN hRgn, BOOL bRedraw)
 {
-    PWND_CONTEXT pcontext = ThemeGetWndContext(hWnd);
-    if(pcontext)
+    PWND_DATA pwndData = ThemeGetWndData(hWnd);
+    if(pwndData)
     {
-        pcontext->HasAppDefinedRgn = TRUE;
-        pcontext->HasThemeRgn = FALSE;
+        pwndData->HasAppDefinedRgn = TRUE;
+        pwndData->HasThemeRgn = FALSE;
     }
 
     return user32ApiHook.SetWindowRgn(hWnd, hRgn, bRedraw);
@@ -429,7 +429,7 @@ int WINAPI ThemeSetWindowRgn(HWND hWnd, HRGN hRgn, BOOL bRedraw)
 
 BOOL WINAPI ThemeGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
 {
-    PWND_CONTEXT pwndContext;
+    PWND_DATA pwndData;
     DWORD style;
     BOOL ret;
 
@@ -441,8 +441,8 @@ BOOL WINAPI ThemeGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
     if((style & (WS_HSCROLL|WS_VSCROLL))==0)
         goto dodefault;
 
-    pwndContext = ThemeGetWndContext(hwnd);
-    if (pwndContext == NULL)
+    pwndData = ThemeGetWndData(hwnd);
+    if (pwndData == NULL)
         goto dodefault;
 
     /* 
@@ -454,10 +454,10 @@ BOOL WINAPI ThemeGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
     ret = user32ApiHook.GetScrollInfo(hwnd, fnBar, lpsi);
     if ( lpsi && 
         (lpsi->fMask & SIF_TRACKPOS) &&
-         pwndContext->SCROLL_TrackingWin == hwnd && 
-         pwndContext->SCROLL_TrackingBar == fnBar)
+         pwndData->SCROLL_TrackingWin == hwnd && 
+         pwndData->SCROLL_TrackingBar == fnBar)
     {
-        lpsi->nTrackPos = pwndContext->SCROLL_TrackingVal;
+        lpsi->nTrackPos = pwndData->SCROLL_TrackingVal;
     }
     return ret;
 

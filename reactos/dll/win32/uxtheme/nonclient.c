@@ -596,7 +596,7 @@ ThemeHandleNcMouseMove(HWND hWnd, DWORD ht, POINT* pt)
     DRAW_CONTEXT context;
     TRACKMOUSEEVENT tme;
     DWORD style;
-    PWND_CONTEXT pcontext;
+    PWND_DATA pwndData;
 
     /* First of all check if we have something to do here */
     style = GetWindowLongW(hWnd, GWL_STYLE);
@@ -604,8 +604,8 @@ ThemeHandleNcMouseMove(HWND hWnd, DWORD ht, POINT* pt)
         return 0;
 
     /* Get theme data for this window */
-    pcontext = ThemeGetWndContext(hWnd);
-    if (pcontext == NULL)
+    pwndData = ThemeGetWndData(hWnd);
+    if (pwndData == NULL)
         return 0;
 
     /* Begin tracking in the non client area if we are not tracking yet */
@@ -623,24 +623,24 @@ ThemeHandleNcMouseMove(HWND hWnd, DWORD ht, POINT* pt)
     ThemeInitDrawContext(&context, hWnd, 0);
     if (context.wi.dwStyle & WS_SYSMENU)
     {
-        if (HT_ISBUTTON(ht) || HT_ISBUTTON(pcontext->lastHitTest))
+        if (HT_ISBUTTON(ht) || HT_ISBUTTON(pwndData->lastHitTest))
             ThemeDrawCaptionButtons(&context, ht, 0);
     }
 
    if (context.wi.dwStyle & WS_HSCROLL)
    {
-       if (ht == HTHSCROLL || pcontext->lastHitTest == HTHSCROLL)
+       if (ht == HTHSCROLL || pwndData->lastHitTest == HTHSCROLL)
            ThemeDrawScrollBar(&context, SB_HORZ , ht == HTHSCROLL ? pt : NULL);
    }
 
     if (context.wi.dwStyle & WS_VSCROLL)
     {
-        if (ht == HTVSCROLL || pcontext->lastHitTest == HTVSCROLL)
+        if (ht == HTVSCROLL || pwndData->lastHitTest == HTVSCROLL)
             ThemeDrawScrollBar(&context, SB_VERT, ht == HTVSCROLL ? pt : NULL);
     }
     ThemeCleanupDrawContext(&context);
 
-    pcontext->lastHitTest = ht;
+    pwndData->lastHitTest = ht;
 
     return 0;
 }
@@ -650,7 +650,7 @@ ThemeHandleNcMouseLeave(HWND hWnd)
 {
     DRAW_CONTEXT context;
     DWORD style;
-    PWND_CONTEXT pWndContext;
+    PWND_DATA pwndData;
 
     /* First of all check if we have something to do here */
     style = GetWindowLongW(hWnd, GWL_STYLE);
@@ -658,23 +658,23 @@ ThemeHandleNcMouseLeave(HWND hWnd)
         return 0;
 
     /* Get theme data for this window */
-    pWndContext = ThemeGetWndContext(hWnd);
-    if (pWndContext == NULL)
+    pwndData = ThemeGetWndData(hWnd);
+    if (pwndData == NULL)
         return 0;
 
     ThemeInitDrawContext(&context, hWnd, 0);
-    if (context.wi.dwStyle & WS_SYSMENU && HT_ISBUTTON(pWndContext->lastHitTest))
+    if (context.wi.dwStyle & WS_SYSMENU && HT_ISBUTTON(pwndData->lastHitTest))
         ThemeDrawCaptionButtons(&context, 0, 0);
 
-   if (context.wi.dwStyle & WS_HSCROLL && pWndContext->lastHitTest == HTHSCROLL)
+   if (context.wi.dwStyle & WS_HSCROLL && pwndData->lastHitTest == HTHSCROLL)
         ThemeDrawScrollBar(&context, SB_HORZ,  NULL);
 
-    if (context.wi.dwStyle & WS_VSCROLL && pWndContext->lastHitTest == HTVSCROLL)
+    if (context.wi.dwStyle & WS_VSCROLL && pwndData->lastHitTest == HTVSCROLL)
         ThemeDrawScrollBar(&context, SB_VERT, NULL);
 
     ThemeCleanupDrawContext(&context);
 
-    pWndContext->lastHitTest = HTNOWHERE;
+    pwndData->lastHitTest = HTNOWHERE;
 
     return 0;
 }
@@ -687,7 +687,7 @@ ThemeHandleButton(HWND hWnd, WPARAM wParam)
     WPARAM SCMsg, ht;
     ULONG Style;
     DRAW_CONTEXT context;
-    PWND_CONTEXT pWndContext;
+    PWND_DATA pwndData;
 
     Style = GetWindowLongW(hWnd, GWL_STYLE);
     if (!((Style & WS_CAPTION) && (Style & WS_SYSMENU)))
@@ -713,13 +713,13 @@ ThemeHandleButton(HWND hWnd, WPARAM wParam)
     }
 
     /* Get theme data for this window */
-    pWndContext = ThemeGetWndContext(hWnd);
-    if (pWndContext == NULL)
+    pwndData = ThemeGetWndData(hWnd);
+    if (pwndData == NULL)
         return;
 
     ThemeInitDrawContext(&context, hWnd, 0);
     ThemeDrawCaptionButtons(&context, 0,  wParam);
-    pWndContext->lastHitTest = wParam;
+    pwndData->lastHitTest = wParam;
 
     SetCapture(hWnd);
 
@@ -740,11 +740,11 @@ ThemeHandleButton(HWND hWnd, WPARAM wParam)
         Pressed = (ht == wParam);
 
         /* Only draw the buttons if the hit test changed */
-        if (ht != pWndContext->lastHitTest &&
-            (HT_ISBUTTON(ht) || HT_ISBUTTON(pWndContext->lastHitTest)))
+        if (ht != pwndData->lastHitTest &&
+            (HT_ISBUTTON(ht) || HT_ISBUTTON(pwndData->lastHitTest)))
         {
             ThemeDrawCaptionButtons(&context, 0, Pressed ? wParam: 0);
-            pWndContext->lastHitTest = ht;
+            pwndData->lastHitTest = ht;
         }
     }
 
