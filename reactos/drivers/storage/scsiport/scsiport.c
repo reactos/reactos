@@ -101,7 +101,7 @@ SpiSendInquiry(IN PDEVICE_OBJECT DeviceObject,
                IN OUT PSCSI_LUN_INFO LunInfo);
 
 static VOID
-SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
+SpiScanAdapter(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
 
 static NTSTATUS
 SpiGetInquiryData (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
@@ -3911,6 +3911,14 @@ SpiScanAdapter(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
                     DPRINT("SpiScanAdapter(): Found device of type %d at bus %d tid %d lun %d\n",
                         InquiryData->DeviceType, Bus, Target, Lun);
 
+                    /*
+                     * Cache the inquiry data into the LUN extension (or alternatively
+                     * we could save a pointer to LunInfo within the LunExtension?)
+                     */
+                    RtlCopyMemory(&LunExtension->InquiryData,
+                                  InquiryData,
+                                  INQUIRYDATABUFFERSIZE);
+
                     /* Add this info to the linked list */
                     LunInfo->Next = NULL;
                     if (LastLunInfo)
@@ -3956,10 +3964,10 @@ SpiScanAdapter(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 
         /* Free allocated buffers */
         if (LunExtension)
-            ExFreePool(LunExtension);
+            ExFreePoolWithTag(LunExtension, TAG_SCSIPORT);
 
         if (LunInfo)
-            ExFreePool(LunInfo);
+            ExFreePoolWithTag(LunInfo, TAG_SCSIPORT);
 
         /* Sum what we found */
         BusScanInfo->LogicalUnitsCount += (UCHAR)DevicesFound;
