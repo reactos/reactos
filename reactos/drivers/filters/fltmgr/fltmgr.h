@@ -1,11 +1,9 @@
 #ifndef _FLTMGR_H
 #define _FLTMGR_H
 
-// Hack - our SDK reports NTDDI_VERSION as 0x05020100 (from _WIN32_WINNT 0x502)
-// which doesn't pass the FLT_MGR_BASELINE check in fltkernel.h
-#define NTDDI_VERSION NTDDI_WS03SP1
-
 #include <ntifs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/exfuncs.h>
 #include <fltkernel.h>
 #include <pseh/pseh2.h>
 
