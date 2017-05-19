@@ -83,7 +83,7 @@ SpiAdapterControl(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                   PVOID MapRegisterBase, PVOID Context);
 
 static PSCSI_PORT_LUN_EXTENSION
-SpiAllocateLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
+SpiAllocateLunExtension(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
 
 static PSCSI_PORT_LUN_EXTENSION
 SpiGetLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
@@ -97,8 +97,8 @@ SpiAllocateSrbStructures(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
                          PSCSI_REQUEST_BLOCK Srb);
 
 static NTSTATUS
-SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
-		IN PSCSI_LUN_INFO LunInfo);
+SpiSendInquiry(IN PDEVICE_OBJECT DeviceObject,
+               IN OUT PSCSI_LUN_INFO LunInfo);
 
 static VOID
 SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
@@ -136,8 +136,8 @@ ScsiPortAllocateAdapterChannel(IN PDEVICE_OBJECT DeviceObject,
                                IN PVOID Context);
 
 static NTSTATUS
-SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
-		   PUNICODE_STRING RegistryPath);
+SpiBuildDeviceMap(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+                  IN PUNICODE_STRING RegistryPath);
 
 static NTSTATUS
 SpiStatusSrbToNt(UCHAR SrbStatus);
@@ -3322,17 +3322,16 @@ SpiAdapterControl(PDEVICE_OBJECT DeviceObject,
 }
 
 static PSCSI_PORT_LUN_EXTENSION
-SpiAllocateLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
+SpiAllocateLunExtension(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 {
     PSCSI_PORT_LUN_EXTENSION LunExtension;
     ULONG LunExtensionSize;
 
-    DPRINT("SpiAllocateLunExtension (%p)\n",
-        DeviceExtension);
+    DPRINT("SpiAllocateLunExtension(%p)\n", DeviceExtension);
 
     /* Round LunExtensionSize first to the sizeof LONGLONG */
     LunExtensionSize = (DeviceExtension->LunExtensionSize +
-        sizeof(LONGLONG) - 1) & ~(sizeof(LONGLONG) - 1);
+                        sizeof(LONGLONG) - 1) & ~(sizeof(LONGLONG) - 1);
 
     LunExtensionSize += sizeof(SCSI_PORT_LUN_EXTENSION);
     DPRINT("LunExtensionSize %lu\n", LunExtensionSize);
@@ -3357,7 +3356,7 @@ SpiAllocateLunExtension (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
     LunExtension->MaxQueueCount = 256;
 
     /* Initialize request queue */
-    KeInitializeDeviceQueue (&LunExtension->DeviceQueue);
+    KeInitializeDeviceQueue(&LunExtension->DeviceQueue);
 
     return LunExtension;
 }
@@ -3547,8 +3546,8 @@ SpiAllocateSrbStructures(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 
 
 static NTSTATUS
-SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
-                IN PSCSI_LUN_INFO LunInfo)
+SpiSendInquiry(IN PDEVICE_OBJECT DeviceObject,
+               IN OUT PSCSI_LUN_INFO LunInfo)
 {
     IO_STATUS_BLOCK IoStatusBlock;
     PIO_STACK_LOCATION IrpStack;
@@ -3677,9 +3676,9 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
             DPRINT("SpiSendInquiry(): the queue is frozen at TargetId %d\n", Srb.TargetId);
 
             LunExtension = SpiGetLunExtension(DeviceExtension,
-                                                LunInfo->PathId,
-                                                LunInfo->TargetId,
-                                                LunInfo->Lun);
+                                              LunInfo->PathId,
+                                              LunInfo->TargetId,
+                                              LunInfo->Lun);
 
             /* Clear frozen flag */
             LunExtension->Flags &= ~LUNEX_FROZEN_QUEUE;
@@ -3711,7 +3710,7 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
             KeepTrying = FALSE;
         }
         else if ((Srb.SrbStatus & SRB_STATUS_AUTOSENSE_VALID) &&
-            SenseBuffer->SenseKey == SCSI_SENSE_ILLEGAL_REQUEST)
+                 SenseBuffer->SenseKey == SCSI_SENSE_ILLEGAL_REQUEST)
         {
             /* LUN is not valid, but some device responds there.
                 Mark it as invalid anyway */
@@ -3801,7 +3800,6 @@ SpiScanAdapter(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
         {
             /* We need to allocate this buffer */
             BusScanInfo = ExAllocatePoolWithTag(NonPagedPool, sizeof(SCSI_BUS_SCAN_INFO), TAG_SCSIPORT);
-
             if (!BusScanInfo)
             {
                 DPRINT1("Out of resources!\n");
@@ -3823,8 +3821,7 @@ SpiScanAdapter(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 
         /* Create LUN information structure */
         LunInfo = ExAllocatePoolWithTag(PagedPool, sizeof(SCSI_LUN_INFO), TAG_SCSIPORT);
-
-        if (LunInfo == NULL)
+        if (!LunInfo)
         {
             DPRINT1("Out of resources!\n");
             return;
@@ -3833,7 +3830,7 @@ SpiScanAdapter(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
         RtlZeroMemory(LunInfo, sizeof(SCSI_LUN_INFO));
 
         /* Create LunExtension */
-        LunExtension = SpiAllocateLunExtension (DeviceExtension);
+        LunExtension = SpiAllocateLunExtension(DeviceExtension);
 
         /* And send INQUIRY to every target */
         for (Target = 0; Target < DeviceExtension->PortConfig->MaximumNumberOfTargets; Target++)
@@ -3878,7 +3875,7 @@ SpiScanAdapter(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 
                 /* Fill Path, Target, Lun fields */
                 LunExtension->PathId = LunInfo->PathId = (UCHAR)Bus;
-                LunExtension->TargetId = LunInfo->TargetId = (UCHAR) Target;
+                LunExtension->TargetId = LunInfo->TargetId = (UCHAR)Target;
                 LunExtension->Lun = LunInfo->Lun = (UCHAR)Lun;
 
                 /* Set flag to prevent race conditions */
@@ -3929,7 +3926,6 @@ SpiScanAdapter(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 
                     /* Allocate another buffer */
                     LunInfo = ExAllocatePoolWithTag(PagedPool, sizeof(SCSI_LUN_INFO), TAG_SCSIPORT);
-
                     if (!LunInfo)
                     {
                         DPRINT1("Out of resources!\n");
@@ -3966,11 +3962,11 @@ SpiScanAdapter(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
             ExFreePool(LunInfo);
 
         /* Sum what we found */
-        BusScanInfo->LogicalUnitsCount += (UCHAR) DevicesFound;
+        BusScanInfo->LogicalUnitsCount += (UCHAR)DevicesFound;
         DPRINT("    Found %d devices on bus %d\n", DevicesFound, Bus);
     }
 
-    DPRINT ("SpiScanAdapter() done\n");
+    DPRINT("SpiScanAdapter() done\n");
 }
 
 
@@ -4008,8 +4004,7 @@ SpiGetInquiryData(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
         sizeof(ULONG) - 1) & ~(sizeof(ULONG) - 1));
 
     /* Calculate data size */
-    Length = sizeof(SCSI_ADAPTER_BUS_INFO) + (BusCount - 1) *
-        sizeof(SCSI_BUS_DATA);
+    Length = sizeof(SCSI_ADAPTER_BUS_INFO) + (BusCount - 1) * sizeof(SCSI_BUS_DATA);
 
     Length += InquiryDataSize * LunCount;
 
@@ -4031,7 +4026,7 @@ SpiGetInquiryData(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 
     /* Point InquiryData to the corresponding place inside Buffer */
     InquiryData = (PSCSI_INQUIRY_DATA)(Buffer + sizeof(SCSI_ADAPTER_BUS_INFO) +
-        (BusCount - 1) * sizeof(SCSI_BUS_DATA));
+                    (BusCount - 1) * sizeof(SCSI_BUS_DATA));
 
     /* Loop each bus */
     for (Bus = 0; Bus < BusCount; Bus++)
@@ -4056,7 +4051,7 @@ SpiGetInquiryData(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
         while (LunInfo != NULL)
         {
             DPRINT("(Bus %lu Target %lu Lun %lu)\n",
-                Bus, LunInfo->TargetId, LunInfo->Lun);
+                   Bus, LunInfo->TargetId, LunInfo->Lun);
 
             /* Fill InquiryData with values */
             InquiryData->PathId = LunInfo->PathId;
@@ -4079,7 +4074,7 @@ SpiGetInquiryData(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 
         /* Either mark the end, or set offset to 0 */
         if (BusData->NumberOfLogicalUnits != 0)
-            ((PSCSI_INQUIRY_DATA) ((PCHAR) InquiryData - InquiryDataSize))->NextInquiryDataOffset = 0;
+            ((PSCSI_INQUIRY_DATA) ((PCHAR)InquiryData - InquiryDataSize))->NextInquiryDataOffset = 0;
         else
             BusData->InquiryDataOffset = 0;
     }
