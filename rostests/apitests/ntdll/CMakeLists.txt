@@ -40,6 +40,7 @@ list(APPEND SOURCE
     RtlGetFullPathName_UstrEx.c
     RtlGetLengthWithoutTrailingPathSeperators.c
     RtlGetLongestNtPathLength.c
+    RtlHandle.c
     RtlImageRvaToVa.c
     RtlInitializeBitMap.c
     RtlIsNameLegalDOS8Dot3.c
