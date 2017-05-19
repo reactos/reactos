@@ -5,6 +5,7 @@
  * PROGRAMMERS:     Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 #include <apitest.h>
+#include <winuser.h>
 #include <wingdi.h>
 #include <winnls.h>
 #include <stdio.h>
@@ -16,6 +17,7 @@ BOOL WINAPI GetFontResourceInfoW(LPCWSTR lpFileName, DWORD *pdwBufSize, void* lp
 typedef struct GFRI_ENTRY
 {
     LPCWSTR     File;
+    BOOL        Preinstalled;
     WCHAR       FontInfo[64];
     INT         FontCount;
     WCHAR       FaceNames[10][64];
@@ -24,9 +26,9 @@ typedef struct GFRI_ENTRY
 /* test entries */
 static const GFRI_ENTRY TestEntries[] =
 {
-    { L"symbol.ttf", L"Symbol|", 1, { L"Symbol" } },
-    { L"tahoma.ttf", L"Tahoma|", 1, { L"Tahoma" } },
-    { L"tahomabd.ttf", L"Tahoma Bold|", 1, { L"Tahoma" } }
+    { L"symbol.ttf", TRUE, L"Symbol|", 1, { L"Symbol" } },
+    { L"tahoma.ttf", TRUE, L"Tahoma|", 1, { L"Tahoma" } },
+    { L"tahomabd.ttf", TRUE, L"Tahoma Bold|", 1, { L"Tahoma" } }
 };
 
 /* Japanese */
@@ -34,7 +36,7 @@ static const GFRI_ENTRY AdditionalTestEntriesJapanese[] =
 {
     {
         /* MS Gothic & MS UI Gothic & MS PGothic */
-        L"msgothic.ttc",
+        L"msgothic.ttc", TRUE, 
         {
             0xFF2D, 0xFF33, 0x0020, 0x30B4, 0x30B7, 0x30C3, 0x30AF, 0x0020,
             0x0026, 0x0020, 0x004D, 0x0053, 0x0020, 0x0055, 0x0049, 0x0020,
@@ -51,6 +53,14 @@ static const GFRI_ENTRY AdditionalTestEntriesJapanese[] =
             { 0xFF2D, 0xFF33, 0x0020, 0xFF30, 0x30B4, 0x30B7, 0x30C3, 0x30AF, 0 },
             { L'@', 0xFF2D, 0xFF33, 0x0020, 0xFF30, 0x30B4, 0x30B7, 0x30C3, 0x30AF, 0 }
         }
+    },
+    {
+        L"ExampleFont.ttf", FALSE,
+        L"JapaneseDisplayName|",
+        1,
+        {
+            L"JapaneseFamilyName"
+        }
     }
 };
 
@@ -59,7 +69,7 @@ static const GFRI_ENTRY AdditionalTestEntriesEnglish[] =
 {
     {
         /* MS Gothic & MS UI Gothic & MS PGothic */
-        L"msgothic.ttc",
+        L"msgothic.ttc", TRUE,
         L"MS Gothic & MS UI Gothic & MS PGothic|",
         6,
         {
@@ -69,6 +79,14 @@ static const GFRI_ENTRY AdditionalTestEntriesEnglish[] =
             L"@MS UI Gothic",
             L"MS PGothic",
             L"@MS PGothic"
+        }
+    },
+    {
+        L"ExampleFont.ttf", FALSE,
+        L"EnglishDisplayName|",
+        1,
+        {
+            L"EnglishFamilyName"
         }
     }
 };
@@ -381,14 +399,56 @@ Test_GetFontResourceInfoW_case5(LPCWSTR pszFilePath, const GFRI_ENTRY *Entry)
 static void
 DoEntry(const GFRI_ENTRY *Entry)
 {
-    WCHAR szPath[MAX_PATH];
+    WCHAR szPath[MAX_PATH], szTempPath[MAX_PATH];
+    BOOL Installed = FALSE;
 
-    GetSystemFontPath(szPath, Entry->File);
-    printf("GetSystemFontPath: %S\n", szPath);
-    if (GetFileAttributesW(szPath) == 0xFFFFFFFF)
+    if (Entry->Preinstalled)
     {
-        skip("Font file \"%S\" was not found\n", szPath);
-        return;
+        GetSystemFontPath(szPath, Entry->File);
+        printf("GetSystemFontPath: %S\n", szPath);
+        if (GetFileAttributesW(szPath) == INVALID_FILE_ATTRIBUTES)
+        {
+            skip("Font file \"%S\" was not found\n", szPath);
+            return;
+        }
+    }
+    else
+    {
+        /* load font data from resource */
+        HANDLE hFile;
+        HMODULE hMod = GetModuleHandleW(NULL);
+        HRSRC hRsrc = FindResourceW(hMod, Entry->File, (LPCWSTR)RT_RCDATA);
+        HGLOBAL hGlobal = LoadResource(hMod, hRsrc);
+        DWORD Size = SizeofResource(hMod, hRsrc);
+        LPVOID pFont = LockResource(hGlobal);
+
+        /* get temporary file name */
+        GetTempPathW(_countof(szTempPath), szTempPath);
+        GetTempFileNameW(szTempPath, L"FNT", 0, szPath);
+        printf("GetTempFileNameW: %S\n", szPath);
+
+        /* write to file */
+        hFile = CreateFileW(szPath, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        WriteFile(hFile, pFont, Size, &Size, NULL);
+        CloseHandle(hFile);
+
+        /* check existence */
+        if (GetFileAttributesW(szPath) == INVALID_FILE_ATTRIBUTES)
+        {
+            skip("Font file \"%S\" was not stored\n", szPath);
+            return;
+        }
+
+        /* install */
+        Installed = !!AddFontResourceW(szPath);
+        if (!Installed)
+        {
+            skip("Font file \"%S\" was not installed\n", szPath);
+            RemoveFontResourceW(szPath);
+            DeleteFileW(szPath);
+            return;
+        }
     }
 
     Test_GetFontResourceInfoW_case0(szPath, Entry);
@@ -397,6 +457,15 @@ DoEntry(const GFRI_ENTRY *Entry)
     Test_GetFontResourceInfoW_case3(szPath, Entry);
     Test_GetFontResourceInfoW_case4(szPath, Entry);
     Test_GetFontResourceInfoW_case5(szPath, Entry);
+
+    if (!Entry->Preinstalled)
+    {
+        if (Installed)
+        {
+            RemoveFontResourceW(szPath);
+            DeleteFileW(szPath);
+        }
+    }
 }
 
 START_TEST(GetFontResourceInfoW)
