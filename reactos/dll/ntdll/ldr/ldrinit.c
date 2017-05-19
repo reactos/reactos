@@ -2223,11 +2223,11 @@ LdrpInit(PCONTEXT Context,
                                       1,
                                       0) == 1)
     {
-        /* Set the timeout to 30 seconds */
+        /* Set the timeout to 30 milliseconds */
         Timeout.QuadPart = Int32x32To64(30, -10000);
 
         /* Make sure the status hasn't changed */
-        while (!LdrpProcessInitialized)
+        while (LdrpProcessInitialized == 1)
         {
             /* Do the wait */
             ZwDelayExecution(FALSE, &Timeout);
