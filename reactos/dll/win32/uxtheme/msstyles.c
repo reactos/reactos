@@ -78,9 +78,6 @@ HRESULT MSSTYLES_OpenThemeFile(LPCWSTR lpThemeFile, LPCWSTR pszColorName, LPCWST
     LPWSTR pszSelectedSize = NULL;
     LPWSTR tmp;
 
-    if (!gbThemeHooksActive)
-        return E_FAIL;
-
     TRACE("Opening %s\n", debugstr_w(lpThemeFile));
 
     hTheme = LoadLibraryExW(lpThemeFile, NULL, LOAD_LIBRARY_AS_DATAFILE);

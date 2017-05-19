@@ -20,6 +20,10 @@
 #include <vfwmsgs.h>
 #include <tmschema.h>
 
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
+#include <ndk/rtltypes.h>
+
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
 
@@ -85,6 +89,14 @@ typedef struct _THEME_FILE {
 } THEME_FILE, *PTHEME_FILE;
 
 typedef struct _UXINI_FILE *PUXINI_FILE;
+
+typedef struct _UXTHEME_HANDLE 
+{
+    RTL_HANDLE_TABLE_ENTRY Handle;
+    PTHEME_CLASS pClass;
+} UXTHEME_HANDLE, *PUXTHEME_HANDLE;
+
+PTHEME_CLASS ValidateHandle(HTHEME hTheme);
 
 HRESULT UXTHEME_LoadImage(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, const RECT *pRect, BOOL glyph,
                           HBITMAP *hBmp, RECT *bmpRect, BOOL* hasImageAlpha);

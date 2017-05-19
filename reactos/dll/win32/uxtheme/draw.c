@@ -146,16 +146,19 @@ HRESULT WINAPI DrawThemeBackground(HTHEME hTheme, HDC hdc, int iPartId,
  */
 static PTHEME_PROPERTY UXTHEME_SelectImage(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, const RECT *pRect, BOOL glyph)
 {
+    PTHEME_CLASS pClass;
     PTHEME_PROPERTY tp;
     int imageselecttype = IST_NONE;
     int i;
     int image;
+
     if(glyph)
         image = TMT_GLYPHIMAGEFILE;
     else
         image = TMT_IMAGEFILE;
 
-    if((tp=MSSTYLES_FindProperty(hTheme, iPartId, iStateId, TMT_FILENAME, image)))
+    pClass = ValidateHandle(hTheme);
+    if((tp=MSSTYLES_FindProperty(pClass, iPartId, iStateId, TMT_FILENAME, image)))
         return tp;
     GetThemeEnumValue(hTheme, iPartId, iStateId, TMT_IMAGESELECTTYPE, &imageselecttype);
 
@@ -167,19 +170,19 @@ static PTHEME_PROPERTY UXTHEME_SelectImage(HTHEME hTheme, HDC hdc, int iPartId, 
             if(SUCCEEDED(GetThemeInt(hTheme, iPartId, iStateId, i + TMT_MINDPI1, &reqdpi))) {
                 if(reqdpi != 0 && screendpi >= reqdpi) {
                     TRACE("Using %d DPI, image %d\n", reqdpi, i + TMT_IMAGEFILE1);
-                    return MSSTYLES_FindProperty(hTheme, iPartId, iStateId, TMT_FILENAME, i + TMT_IMAGEFILE1);
+                    return MSSTYLES_FindProperty(pClass, iPartId, iStateId, TMT_FILENAME, i + TMT_IMAGEFILE1);
                 }
             }
         }
         /* If an image couldn't be selected, choose the first one */
-        return MSSTYLES_FindProperty(hTheme, iPartId, iStateId, TMT_FILENAME, TMT_IMAGEFILE1);
+        return MSSTYLES_FindProperty(pClass, iPartId, iStateId, TMT_FILENAME, TMT_IMAGEFILE1);
     }
     else if(imageselecttype == IST_SIZE) {
         POINT size = {pRect->right-pRect->left, pRect->bottom-pRect->top};
         POINT reqsize;
         for(i=4; i>=0; i--) {
             PTHEME_PROPERTY fileProp = 
-                MSSTYLES_FindProperty(hTheme, iPartId, iStateId, TMT_FILENAME, i + TMT_IMAGEFILE1);
+                MSSTYLES_FindProperty(pClass, iPartId, iStateId, TMT_FILENAME, i + TMT_IMAGEFILE1);
             if (!fileProp) continue;
             if(FAILED(GetThemePosition(hTheme, iPartId, iStateId, i + TMT_MINSIZE1, &reqsize))) {
                 /* fall back to size of Nth image */
@@ -192,7 +195,7 @@ static PTHEME_PROPERTY UXTHEME_SelectImage(HTHEME hTheme, HDC hdc, int iPartId, 
 
                 lstrcpynW(szPath, fileProp->lpValue, 
                     min(fileProp->dwValueLen+1, sizeof(szPath)/sizeof(szPath[0])));
-                hBmp = MSSTYLES_LoadBitmap(hTheme, szPath, &hasAlpha);
+                hBmp = MSSTYLES_LoadBitmap(pClass, szPath, &hasAlpha);
                 if(!hBmp) continue;
 
                 GetThemeEnumValue(hTheme, iPartId, iStateId, TMT_IMAGELAYOUT, &imagelayout);
@@ -214,7 +217,7 @@ static PTHEME_PROPERTY UXTHEME_SelectImage(HTHEME hTheme, HDC hdc, int iPartId, 
             }
         }
         /* If an image couldn't be selected, choose the smallest one */
-        return MSSTYLES_FindProperty(hTheme, iPartId, iStateId, TMT_FILENAME, TMT_IMAGEFILE1);
+        return MSSTYLES_FindProperty(pClass, iPartId, iStateId, TMT_FILENAME, TMT_IMAGEFILE1);
     }
     return NULL;
 }
@@ -232,13 +235,20 @@ HRESULT UXTHEME_LoadImage(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, con
     int imagenum;
     BITMAP bmp;
     WCHAR szPath[MAX_PATH];
-    PTHEME_PROPERTY tp = UXTHEME_SelectImage(hTheme, hdc, iPartId, iStateId, pRect, glyph);
+    PTHEME_PROPERTY tp;
+    PTHEME_CLASS pClass;
+
+    pClass = ValidateHandle(hTheme);
+    if (!pClass)
+            return E_HANDLE;
+
+    tp = UXTHEME_SelectImage(hTheme, hdc, iPartId, iStateId, pRect, glyph);
     if(!tp) {
         FIXME("Couldn't determine image for part/state %d/%d, invalid theme?\n", iPartId, iStateId);
         return E_PROP_ID_UNSUPPORTED;
     }
     lstrcpynW(szPath, tp->lpValue, min(tp->dwValueLen+1, sizeof(szPath)/sizeof(szPath[0])));
-    *hBmp = MSSTYLES_LoadBitmap(hTheme, szPath, hasImageAlpha);
+    *hBmp = MSSTYLES_LoadBitmap(pClass, szPath, hasImageAlpha);
     if(!*hBmp) {
         TRACE("Failed to load bitmap %s\n", debugstr_w(szPath));
         return HRESULT_FROM_WIN32(GetLastError());

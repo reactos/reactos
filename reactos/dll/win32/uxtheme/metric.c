@@ -28,12 +28,11 @@ BOOL WINAPI GetThemeSysBool(HTHEME hTheme, int iBoolID)
     HRESULT hr;
     PTHEME_PROPERTY tp;
     BOOL ret;
+    PTHEME_CLASS ptc = ValidateHandle(hTheme);
 
     TRACE("(%p, %d)\n", hTheme, iBoolID);
     SetLastError(0);
-    if(hTheme) {
-        PTHEME_CLASS ptc = (PTHEME_CLASS) hTheme;
-
+    if(ptc) {
         if((tp = MSSTYLES_FindMetric(ptc->tf, TMT_BOOL, iBoolID))) {
             hr = MSSTYLES_GetPropertyBool(tp, &ret);
             if(SUCCEEDED(hr))
@@ -60,11 +59,11 @@ COLORREF WINAPI GetThemeSysColor(HTHEME hTheme, int iColorID)
 {
     HRESULT hr;
     PTHEME_PROPERTY tp;
+    PTHEME_CLASS ptc = ValidateHandle(hTheme);
 
     TRACE("(%p, %d)\n", hTheme, iColorID);
     SetLastError(0);
-    if(hTheme) {
-        PTHEME_CLASS ptc = (PTHEME_CLASS) hTheme;
+    if(ptc) {
         if((tp = MSSTYLES_FindMetric(ptc->tf, TMT_COLOR, iColorID + TMT_FIRSTCOLOR))) {
             COLORREF color;
             hr = MSSTYLES_GetPropertyColor(tp, &color);
@@ -93,10 +92,10 @@ HRESULT WINAPI GetThemeSysFont(HTHEME hTheme, int iFontID, LOGFONTW *plf)
 {
     HRESULT hr = S_OK;
     PTHEME_PROPERTY tp;
+    PTHEME_CLASS ptc = ValidateHandle(hTheme);
 
     TRACE("(%p, %d)\n", hTheme, iFontID);
-    if(hTheme) {
-        PTHEME_CLASS ptc = (PTHEME_CLASS) hTheme;
+    if(ptc) {
         if((tp = MSSTYLES_FindMetric(ptc->tf, TMT_FONT, iFontID))) {
             HDC hdc = GetDC(NULL);
             hr = MSSTYLES_GetPropertyFont(tp, hdc, plf);
@@ -135,10 +134,10 @@ HRESULT WINAPI GetThemeSysFont(HTHEME hTheme, int iFontID, LOGFONTW *plf)
 HRESULT WINAPI GetThemeSysInt(HTHEME hTheme, int iIntID, int *piValue)
 {
     PTHEME_PROPERTY tp;
-    PTHEME_CLASS ptc = (PTHEME_CLASS) hTheme;
+    PTHEME_CLASS ptc = ValidateHandle(hTheme);
 
     TRACE("(%p, %d)\n", hTheme, iIntID);
-    if(!hTheme)
+    if(!ptc)
         return E_HANDLE;
     if(iIntID < TMT_FIRSTINT || iIntID > TMT_LASTINT) {
         WARN("Unknown IntID: %d\n", iIntID);
@@ -168,10 +167,9 @@ int WINAPI GetThemeSysSize(HTHEME hTheme, int iSizeID)
         SM_CXMENUSIZE, TMT_MENUBARWIDTH,
         SM_CYMENUSIZE, TMT_MENUBARHEIGHT
     };
+    PTHEME_CLASS ptc = ValidateHandle(hTheme);
 
-    if(hTheme) {
-        PTHEME_CLASS ptc = (PTHEME_CLASS) hTheme;
-
+    if(ptc) {
         for(i=0; i<sizeof(metricMap)/sizeof(metricMap[0]); i+=2) {
             if(metricMap[i] == iSizeID) {
                 id = metricMap[i+1];
@@ -208,10 +206,10 @@ HRESULT WINAPI GetThemeSysString(HTHEME hTheme, int iStringID,
                                  LPWSTR pszStringBuff, int cchMaxStringChars)
 {
     PTHEME_PROPERTY tp;
-    PTHEME_CLASS ptc = (PTHEME_CLASS) hTheme;
+    PTHEME_CLASS ptc = ValidateHandle(hTheme);
 
     TRACE("(%p, %d)\n", hTheme, iStringID);
-    if(!hTheme)
+    if(!ptc)
         return E_HANDLE;
     if(iStringID < TMT_FIRSTSTRING || iStringID > TMT_LASTSTRING) {
         WARN("Unknown StringID: %d\n", iStringID);

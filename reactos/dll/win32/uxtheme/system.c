@@ -53,6 +53,9 @@ ATOM atWndContext;
 
 PTHEME_FILE ActiveThemeFile;
 
+RTL_HANDLE_TABLE g_UxThemeHandleTable;
+int g_cHandles;
+
 /***********************************************************************/
 
 static BOOL CALLBACK UXTHEME_broadcast_msg_enumchild (HWND hWnd, LPARAM msg)
@@ -189,7 +192,7 @@ void UXTHEME_LoadTheme(BOOL bLoad)
     WCHAR szCurrentSize[64];
     BOOL bThemeActive = FALSE;
 
-    if(bLoad == TRUE) 
+    if(bLoad == TRUE && gbThemeHooksActive) 
     {
         /* Get current theme configuration */
         if(!RegOpenKeyW(HKEY_CURRENT_USER, szThemeManager, &hKey)) {
@@ -582,6 +585,9 @@ void UXTHEME_InitSystem(HINSTANCE hInst)
     atSubIdList          = GlobalAddAtomW(szSubIdList);
     atDialogThemeEnabled = GlobalAddAtomW(szDialogThemeEnabled);
     atWndContext        = GlobalAddAtomW(L"ux_WndContext");
+
+    RtlInitializeHandleTable(0xFFF, sizeof(UXTHEME_HANDLE), &g_UxThemeHandleTable);
+    g_cHandles = 0;
 }
 
 /***********************************************************************
@@ -708,6 +714,23 @@ static LPWSTR UXTHEME_GetWindowProperty(HWND hwnd, ATOM aProp, LPWSTR pszBuffer,
     return NULL;
 }
 
+PTHEME_CLASS ValidateHandle(HTHEME hTheme)
+{
+    PUXTHEME_HANDLE pHandle;
+
+    if (!gbThemeHooksActive || !hTheme || hTheme == INVALID_HANDLE_VALUE)
+        return NULL;
+
+    if (!RtlIsValidHandle(&g_UxThemeHandleTable, (PRTL_HANDLE_TABLE_ENTRY)hTheme))
+    {
+        ERR("Invalid handle 0x%x!\n", hTheme);
+        return NULL;
+    }
+
+    pHandle = hTheme;
+    return pHandle->pClass;
+}
+
 static HTHEME WINAPI
 OpenThemeDataInternal(PTHEME_FILE ThemeFile, HWND hwnd, LPCWSTR pszClassList, DWORD flags)
 {
@@ -732,11 +755,31 @@ OpenThemeDataInternal(PTHEME_FILE ThemeFile, HWND hwnd, LPCWSTR pszClassList, DW
         if(!pszUseClassList)
             pszUseClassList = pszClassList;
 
-        if (pszUseClassList)
-        {
-            if (!ThemeFile->classes)
-                MSSTYLES_ParseThemeIni(ThemeFile);
-            hTheme = MSSTYLES_OpenThemeClass(ThemeFile, pszAppName, pszUseClassList);
+         if (pszUseClassList)
+         {
+            PTHEME_CLASS pClass;
+            PUXTHEME_HANDLE pHandle;
+
+             if (!ThemeFile->classes)
+                 MSSTYLES_ParseThemeIni(ThemeFile);
+            pClass = MSSTYLES_OpenThemeClass(ThemeFile, pszAppName, pszUseClassList);
+
+            if (pClass)
+            {
+                pHandle = (PUXTHEME_HANDLE)RtlAllocateHandle(&g_UxThemeHandleTable, NULL);
+                if (pHandle)
+                {
+                    g_cHandles++;
+                    TRACE("Created handle 0x%x for class 0x%x, app %S, class %S. Count: %d\n", pHandle, pClass, pszAppName, pszUseClassList, g_cHandles);
+                    pHandle->pClass = pClass;
+                    pHandle->Handle.Flags = RTL_HANDLE_VALID;
+                    hTheme = pHandle;
+                }
+                else
+                {
+                    MSSTYLES_CloseThemeClass(pClass);
+                }
+            }
         }
     }
 
@@ -894,12 +937,22 @@ void WINAPI SetThemeAppProperties(DWORD dwFlags)
  */
 HRESULT WINAPI CloseThemeData(HTHEME hTheme)
 {
+    PUXTHEME_HANDLE pHandle = hTheme;
+    HRESULT hr;
+
     TRACE("(%p)\n", hTheme);
-    if(!hTheme || hTheme == INVALID_HANDLE_VALUE)
+
+    if (!RtlIsValidHandle(&g_UxThemeHandleTable, (PRTL_HANDLE_TABLE_ENTRY)hTheme))
         return E_HANDLE;
-    if(IsBadReadPtr (hTheme, sizeof(THEME_CLASS))) /* This check is a hack! */
-        return E_HANDLE;
-    return MSSTYLES_CloseThemeClass(hTheme);
+
+    hr = MSSTYLES_CloseThemeClass(pHandle->pClass);
+    if (SUCCEEDED(hr))
+    {
+        RtlFreeHandle(&g_UxThemeHandleTable, (PRTL_HANDLE_TABLE_ENTRY)pHandle);
+        g_cHandles--;
+        TRACE("Destroying handle 0x%x for class 0x%x. Count: %d\n", pHandle, pHandle->pClass, g_cHandles);
+    }
+    return hr;
 }
 
 /***********************************************************************
@@ -911,7 +964,7 @@ HRESULT WINAPI HitTestThemeBackground(HTHEME hTheme, HDC hdc, int iPartId,
                                      POINT ptTest, WORD *pwHitTestCode)
 {
     FIXME("%d %d 0x%08x: stub\n", iPartId, iStateId, dwOptions);
-    if(!hTheme)
+    if (!ValidateHandle(hTheme))
         return E_HANDLE;
     return E_NOTIMPL;
 }
@@ -921,12 +974,17 @@ HRESULT WINAPI HitTestThemeBackground(HTHEME hTheme, HDC hdc, int iPartId,
  */
 BOOL WINAPI IsThemePartDefined(HTHEME hTheme, int iPartId, int iStateId)
 {
+    PTHEME_CLASS pClass;
+
     TRACE("(%p,%d,%d)\n", hTheme, iPartId, iStateId);
-    if(!hTheme) {
+
+    pClass = ValidateHandle(hTheme);
+    if (!pClass)
+    {
         SetLastError(E_HANDLE);
         return FALSE;
     }
-    if(MSSTYLES_FindPartState(hTheme, iPartId, iStateId, NULL))
+    if(MSSTYLES_FindPartState(pClass, iPartId, iStateId, NULL))
         return TRUE;
     return FALSE;
 }
@@ -959,6 +1017,9 @@ HRESULT WINAPI GetThemeDocumentationProperty(LPCWSTR pszThemeName,
     int iDocId;
     TRACE("(%s,%s,%p,%d)\n", debugstr_w(pszThemeName), debugstr_w(pszPropertyName),
           pszValueBuff, cchMaxValChars);
+
+    if (!gbThemeHooksActive)
+        return E_FAIL;
 
     hr = MSSTYLES_OpenThemeFile(pszThemeName, NULL, NULL, &pt);
     if(FAILED(hr)) return hr;
@@ -1032,6 +1093,10 @@ HRESULT WINAPI OpenThemeFile(LPCWSTR pszThemeFileName, LPCWSTR pszColorName,
     TRACE("(%s,%s,%s,%p,%d)\n", debugstr_w(pszThemeFileName),
           debugstr_w(pszColorName), debugstr_w(pszSizeName),
           hThemeFile, unknown);
+
+    if (!gbThemeHooksActive)
+        return E_FAIL;
+
     return MSSTYLES_OpenThemeFile(pszThemeFileName, pszColorName, pszSizeName, (PTHEME_FILE*)hThemeFile);
 }
 
@@ -1112,6 +1177,9 @@ HRESULT WINAPI GetThemeDefaults(LPCWSTR pszThemeFileName, LPWSTR pszColorName,
     TRACE("(%s,%p,%d,%p,%d)\n", debugstr_w(pszThemeFileName),
           pszColorName, dwColorNameLen,
           pszSizeName, dwSizeNameLen);
+
+    if (!gbThemeHooksActive)
+        return E_FAIL;
 
     hr = MSSTYLES_OpenThemeFile(pszThemeFileName, NULL, NULL, &pt);
     if(FAILED(hr)) return hr;
@@ -1231,6 +1299,9 @@ HRESULT WINAPI EnumThemeColors(LPWSTR pszThemeFileName, LPWSTR pszSizeName,
     TRACE("(%s,%s,%d)\n", debugstr_w(pszThemeFileName),
           debugstr_w(pszSizeName), dwColorNum);
 
+    if (!gbThemeHooksActive)
+        return E_FAIL;
+
     hr = MSSTYLES_OpenThemeFile(pszThemeFileName, NULL, pszSizeName, &pt);
     if(FAILED(hr)) return hr;
 
@@ -1290,6 +1361,9 @@ HRESULT WINAPI EnumThemeSizes(LPWSTR pszThemeFileName, LPWSTR pszColorName,
     UINT resourceId = dwSizeNum + 3000;
     TRACE("(%s,%s,%d)\n", debugstr_w(pszThemeFileName),
           debugstr_w(pszColorName), dwSizeNum);
+
+    if (!gbThemeHooksActive)
+        return E_FAIL;
 
     hr = MSSTYLES_OpenThemeFile(pszThemeFileName, pszColorName, NULL, &pt);
     if(FAILED(hr)) return hr;
@@ -1359,6 +1433,10 @@ HRESULT WINAPI CheckThemeSignature(LPCWSTR pszThemeFileName)
     PTHEME_FILE pt;
     HRESULT hr;
     TRACE("(%s)\n", debugstr_w(pszThemeFileName));
+
+    if (!gbThemeHooksActive)
+        return E_FAIL;
+
     hr = MSSTYLES_OpenThemeFile(pszThemeFileName, NULL, NULL, &pt);
     if(FAILED(hr))
         return hr;
