@@ -47,16 +47,48 @@ FltpDeviceControlHandler(_In_ PDEVICE_OBJECT DeviceObject,
     ControlCode = StackPtr->Parameters.DeviceIoControl.IoControlCode;
     switch (ControlCode)
     {
-        case IOCTL_LOAD_FILTER:
+        case IOCTL_FILTER_LOAD:
             Status = HandleLoadUnloadIoctl(DeviceObject, Irp);
             break;
 
-        case IOCTL_UNLOAD_FILTER:
+        case IOCTL_FILTER_UNLOAD:
             Status = HandleLoadUnloadIoctl(DeviceObject, Irp);
             break;
 
-        case IOCTL_FIND_FIRST_FILTER:
-            Status = HandleFindFirstIoctl(DeviceObject, Irp);
+        case IOCTL_FILTER_CREATE:
+            Status = STATUS_NOT_SUPPORTED;
+            break;
+
+        case IOCTL_FILTER_ATTATCH:
+            Status = STATUS_NOT_SUPPORTED;
+            break;
+
+        case IOCTL_FILTER_DETATCH:
+            Status = STATUS_NOT_SUPPORTED;
+            break;
+
+        case IOCTL_FILTER_SEND_MESSAGE:
+            Status = STATUS_NOT_SUPPORTED;
+            break;
+
+        case IOCTL_FILTER_GET_MESSAGE:
+            Status = STATUS_NOT_SUPPORTED;
+            break;
+
+        case IOCTL_FILTER_REPLY_MESSAGE:
+            Status = STATUS_NOT_SUPPORTED;
+            break;
+
+        case IOCTL_FILTER_FIND_FIRST:
+            Status = STATUS_NOT_SUPPORTED;
+            break;
+
+        case IOCTL_FILTER_FIND_NEXT:
+            Status = STATUS_NOT_SUPPORTED;
+            break;
+
+        case IOCTL_FILTER_GET_INFO:
+            Status = STATUS_NOT_SUPPORTED;
             break;
 
         default:
@@ -92,13 +124,14 @@ HandleLoadUnloadIoctl(_In_ PDEVICE_OBJECT DeviceObject,
     PFILTER_NAME FilterName;
     ULONG BufferLength;
     ULONG ControlCode;
+    NTSTATUS Status;
 
     /* Get the IOCTL data from the stack pointer */
     StackPtr = IoGetCurrentIrpStackLocation(Irp);
     BufferLength = StackPtr->Parameters.DeviceIoControl.InputBufferLength;
     ControlCode = StackPtr->Parameters.DeviceIoControl.IoControlCode;
 
-    FLT_ASSERT(ControlCode == IOCTL_LOAD_FILTER || ControlCode == IOCTL_UNLOAD_FILTER);
+    FLT_ASSERT(ControlCode == IOCTL_FILTER_LOAD || ControlCode == IOCTL_FILTER_UNLOAD);
 
     /* Make sure the buffer is valid */
     if (BufferLength < sizeof(FILTER_NAME))
@@ -111,19 +144,14 @@ HandleLoadUnloadIoctl(_In_ PDEVICE_OBJECT DeviceObject,
     Name.Buffer = (PWCH)((PCHAR)FilterName + FIELD_OFFSET(FILTER_NAME, FilterName[0]));
 
     /* Forward the request to our Flt routines */
-    if (ControlCode == IOCTL_LOAD_FILTER)
+    if (ControlCode == IOCTL_FILTER_LOAD)
     {
-        return FltLoadFilter(&Name);
+        Status = FltLoadFilter(&Name);
     }
     else
     {
-        return FltUnloadFilter(&Name);
+        Status = FltUnloadFilter(&Name);
     }
-}
 
-NTSTATUS
-HandleFindFirstIoctl(_In_ PDEVICE_OBJECT DeviceObject,
-                     _Inout_ PIRP Irp)
-{
-    return STATUS_NOT_SUPPORTED;
+    return Status;
 }
