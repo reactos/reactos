@@ -3565,7 +3565,7 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
     PSCSI_PORT_LUN_EXTENSION LunExtension;
     PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
 
-    DPRINT ("SpiSendInquiry() called\n");
+    DPRINT("SpiSendInquiry() called\n");
 
     DeviceExtension = (PSCSI_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
@@ -3576,7 +3576,7 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
     SenseBuffer = ExAllocatePoolWithTag(NonPagedPool, SENSE_BUFFER_SIZE, TAG_SCSIPORT);
     if (SenseBuffer == NULL)
     {
-        ExFreePool(InquiryBuffer);
+        ExFreePoolWithTag(InquiryBuffer, TAG_SCSIPORT);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -3600,7 +3600,11 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
         if (Irp == NULL)
         {
             DPRINT("IoBuildDeviceIoControlRequest() failed\n");
-            return STATUS_INSUFFICIENT_RESOURCES;
+
+            /* Quit the loop */
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            KeepTrying = FALSE;
+            continue;
         }
 
         /* Prepare SRB */
@@ -3656,6 +3660,7 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
                           InquiryBuffer,
                           INQUIRYDATABUFFERSIZE);
 
+            /* Quit the loop */
             Status = STATUS_SUCCESS;
             KeepTrying = FALSE;
             continue;
@@ -3701,6 +3706,7 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
                             (Srb.DataTransferLength > INQUIRYDATABUFFERSIZE) ?
                             INQUIRYDATABUFFERSIZE : Srb.DataTransferLength);
 
+            /* Quit the loop */
             Status = STATUS_SUCCESS;
             KeepTrying = FALSE;
         }
@@ -3710,6 +3716,7 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
             /* LUN is not valid, but some device responds there.
                 Mark it as invalid anyway */
 
+            /* Quit the loop */
             Status = STATUS_INVALID_DEVICE_REQUEST;
             KeepTrying = FALSE;
         }
@@ -3725,7 +3732,7 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
             }
             else
             {
-                /* That's all, go to exit */
+                /* That's all, quit the loop */
                 KeepTrying = FALSE;
 
                 /* Set status according to SRB status */
@@ -3743,8 +3750,8 @@ SpiSendInquiry (IN PDEVICE_OBJECT DeviceObject,
     }
 
     /* Free buffers */
-    ExFreePool(InquiryBuffer);
-    ExFreePool(SenseBuffer);
+    ExFreePoolWithTag(InquiryBuffer, TAG_SCSIPORT);
+    ExFreePoolWithTag(SenseBuffer, TAG_SCSIPORT);
 
     DPRINT("SpiSendInquiry() done with Status 0x%08X\n", Status);
 
@@ -5574,6 +5581,11 @@ SpiBuildDeviceMap(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
                 }
 
                 /* Set 'Type' (REG_SZ) value */
+                /*
+                 * See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/identifiers-for-ide-devices
+                 * and https://docs.microsoft.com/en-us/windows-hardware/drivers/install/identifiers-for-scsi-devices
+                 * for a list of types with their human-readable forms.
+                 */
                 switch (LunExtension->InquiryData.DeviceType)
                 {
                     case 0:
@@ -5585,6 +5597,7 @@ SpiBuildDeviceMap(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
                     case 2:
                         TypeName = L"PrinterPeripheral";
                         break;
+                    // case 3: "ProcessorPeripheral", classified as 'other': fall back to default case.
                     case 4:
                         TypeName = L"WormPeripheral";
                         break;
@@ -5601,8 +5614,29 @@ SpiBuildDeviceMap(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
                         TypeName = L"MediumChangerPeripheral";
                         break;
                     case 9:
-                        TypeName = L"CommunicationPeripheral";
+                        TypeName = L"CommunicationsPeripheral";
                         break;
+
+                    /* New peripheral types (SCSI only) */
+                    case 10: case 11:
+                        TypeName = L"ASCPrePressGraphicsPeripheral";
+                        break;
+                    case 12:
+                        TypeName = L"ArrayPeripheral";
+                        break;
+                    case 13:
+                        TypeName = L"EnclosurePeripheral";
+                        break;
+                    case 14:
+                        TypeName = L"RBCPeripheral";
+                        break;
+                    case 15:
+                        TypeName = L"CardReaderPeripheral";
+                        break;
+                    case 16:
+                        TypeName = L"BridgePeripheral";
+                        break;
+
                     default:
                         TypeName = L"OtherPeripheral";
                         break;
