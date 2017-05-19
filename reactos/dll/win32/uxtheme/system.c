@@ -724,9 +724,6 @@ OpenThemeDataInternal(PTHEME_FILE ThemeFile, HWND hwnd, LPCWSTR pszClassList, DW
         return NULL;
     }
 
-    if(flags)
-        FIXME("unhandled flags: %x\n", flags);
-
     if (ThemeFile)
     {
         pszAppName = UXTHEME_GetWindowProperty(hwnd, atSubAppName, szAppBuff, sizeof(szAppBuff)/sizeof(szAppBuff[0]));
@@ -745,7 +742,10 @@ OpenThemeDataInternal(PTHEME_FILE ThemeFile, HWND hwnd, LPCWSTR pszClassList, DW
 
     if(IsWindow(hwnd))
     {
-        SetPropW(hwnd, (LPCWSTR)MAKEINTATOM(atWindowTheme), hTheme);
+        if ((flags & OTD_NONCLIENT) == 0)
+        {
+            SetPropW(hwnd, (LPCWSTR)MAKEINTATOM(atWindowTheme), hTheme);
+        }
     }
     else
     {

@@ -173,8 +173,8 @@ ThemeInitDrawContext(PDRAW_CONTEXT pcontext,
     GetWindowInfo(hWnd, &pcontext->wi);
     pcontext->hWnd = hWnd;
     pcontext->Active = IsWindowActive(hWnd, pcontext->wi.dwExStyle);
-    pcontext->theme = MSSTYLES_OpenThemeClass(ActiveThemeFile, NULL, L"WINDOW");
-    pcontext->scrolltheme = MSSTYLES_OpenThemeClass(ActiveThemeFile, NULL, L"SCROLLBAR");
+    pcontext->theme = GetNCCaptionTheme(hWnd, pcontext->wi.dwStyle);
+    pcontext->scrolltheme = GetNCScrollbarTheme(hWnd, pcontext->wi.dwStyle);
 
     pcontext->CaptionHeight = pcontext->wi.cyWindowBorders;
     pcontext->CaptionHeight += GetSystemMetrics(pcontext->wi.dwExStyle & WS_EX_TOOLWINDOW ? SM_CYSMCAPTION : SM_CYCAPTION );
@@ -192,9 +192,6 @@ void
 ThemeCleanupDrawContext(PDRAW_CONTEXT pcontext)
 {
     ReleaseDC(pcontext->hWnd ,pcontext->hDC);
-
-    CloseThemeData (pcontext->theme);
-    CloseThemeData (pcontext->scrolltheme);
 
     if(pcontext->hRgn != NULL)
     {
@@ -1115,7 +1112,10 @@ HRESULT WINAPI DrawNCPreview(HDC hDC,
     /* Paint the window on the preview hDC */
     rcCurrent = context.wi.rcWindow;
     ThemePaintWindow(&context, &rcCurrent, FALSE);
+    
     context.hDC = NULL;
+    CloseThemeData (context.theme);
+    CloseThemeData (context.scrolltheme);
     ThemeCleanupDrawContext(&context);
 
     /* Cleanup */

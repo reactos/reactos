@@ -63,18 +63,66 @@ void ThemeDestroyWndData(HWND hWnd)
         CloseThemeData(GetWindowTheme(hWnd));
 
         DeleteObject(pwndData->hTabBackgroundBrush);
-        pwndData->hTabBackgroundBrush = NULL;
     }
 
     if (pwndData->hTabBackgroundBmp != NULL)
     {
         DeleteObject(pwndData->hTabBackgroundBmp);
-        pwndData->hTabBackgroundBmp = NULL;
+    }
+
+    if (pwndData->hthemeWindow)
+    {
+        CloseThemeData(pwndData->hthemeWindow);
+    }
+
+    if (pwndData->hthemeScrollbar)
+    {
+        CloseThemeData(pwndData->hthemeScrollbar);
     }
 
     HeapFree(GetProcessHeap(), 0, pwndData);
 
     SetPropW( hWnd, (LPCWSTR)MAKEINTATOM(atWndContext), NULL);
+}
+
+HTHEME GetNCCaptionTheme(HWND hWnd, DWORD style)
+{
+    PWND_DATA pwndData;
+
+    /* We only get the theme for the window class if the window has a caption */
+    if((style & WS_CAPTION) != WS_CAPTION)
+        return NULL;
+
+    /* Get theme data for this window */
+    pwndData = ThemeGetWndData(hWnd);
+    if (pwndData == NULL)
+        return NULL;
+
+    /* If the theme data was not cached, open it now */
+    if (!pwndData->hthemeWindow)
+        pwndData->hthemeWindow = OpenThemeDataEx(hWnd, L"WINDOW", OTD_NONCLIENT);
+
+    return pwndData->hthemeWindow;
+}
+
+HTHEME GetNCScrollbarTheme(HWND hWnd, DWORD style)
+{
+    PWND_DATA pwndData;
+
+    /* We only get the theme for the scrollbar class if the window has a scrollbar */
+    if((style & (WS_HSCROLL|WS_VSCROLL)) == 0)
+        return NULL;
+
+    /* Get theme data for this window */
+    pwndData = ThemeGetWndData(hWnd);
+    if (pwndData == NULL)
+        return NULL;
+
+    /* If the theme data was not cached, open it now */
+    if (!pwndData->hthemeScrollbar)
+        pwndData->hthemeScrollbar = OpenThemeDataEx(hWnd, L"SCROLLBAR", OTD_NONCLIENT);
+
+    return pwndData->hthemeScrollbar;
 }
 
 static BOOL CALLBACK ThemeCleanupChildWndContext (HWND hWnd, LPARAM msg)
@@ -130,9 +178,8 @@ void SetThemeRegion(HWND hWnd)
     rcWindow.top = 0;
     rcWindow.left = 0;
 
-    hTheme = MSSTYLES_OpenThemeClass(ActiveThemeFile, NULL, L"WINDOW");
+    hTheme = GetNCCaptionTheme(hWnd, wi.dwStyle);
     GetThemeBackgroundRegion(hTheme, 0, iPart, FS_ACTIVE, &rcWindow, &hrgn);
-    CloseThemeData(hTheme);
 
     GetWindowRect(hWnd, &rcWindow);
     rcWindow.right -= rcWindow.left;
@@ -260,6 +307,18 @@ ThemePreWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_PTR 
                 DeleteObject(pwndData->hTabBackgroundBmp);
                 pwndData->hTabBackgroundBmp = NULL;
             }
+
+            if (pwndData->hthemeWindow)
+            {
+                CloseThemeData(pwndData->hthemeWindow);
+                pwndData->hthemeWindow = NULL;
+            }
+
+            if (pwndData->hthemeScrollbar)
+            {
+                CloseThemeData(pwndData->hthemeScrollbar);
+                pwndData->hthemeScrollbar = NULL;
+            }
         }
         case WM_NCCREATE:
         {
@@ -306,8 +365,12 @@ HRESULT GetDiaogTextureBrush(HTHEME theme, HWND hwnd, HDC hdc, HBRUSH* result, B
         HBITMAP hbmp;
         RECT dummy, bmpRect;
         BOOL hasImageAlpha;
+        HRESULT hr;
 
-        UXTHEME_LoadImage(theme, 0, TABP_BODY, 0, &dummy, FALSE, &hbmp, &bmpRect, &hasImageAlpha);
+        hr = UXTHEME_LoadImage(theme, 0, TABP_BODY, 0, &dummy, FALSE, &hbmp, &bmpRect, &hasImageAlpha);
+        if (FAILED(hr))
+            return hr;
+
         if (changeOrigin)
         {
             /* Unfortunately SetBrushOrgEx doesn't work at all */

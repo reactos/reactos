@@ -136,6 +136,9 @@ enum SCROLL_HITTEST
 /* The window context stores data for the window needed through the life of the window */
 typedef struct _WND_DATA
 {
+    HTHEME hthemeWindow;
+    HTHEME hthemeScrollbar;
+
     UINT lastHitTest;
     BOOL HasAppDefinedRgn;
     BOOL HasThemeRgn;
@@ -229,6 +232,8 @@ VOID NC_TrackScrollBar(HWND Wnd, WPARAM wParam, POINT Pt);
 void ThemeInitDrawContext(PDRAW_CONTEXT pcontext, HWND hWnd, HRGN hRgn);
 void ThemeCleanupDrawContext(PDRAW_CONTEXT pcontext);
 PWND_DATA ThemeGetWndData(HWND hWnd);
+HTHEME GetNCCaptionTheme(HWND hWnd, DWORD style);
+HTHEME GetNCScrollbarTheme(HWND hWnd, DWORD style);
 
 extern HINSTANCE hDllInst;
 extern ATOM atWindowTheme;
