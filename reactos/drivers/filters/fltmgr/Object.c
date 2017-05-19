@@ -20,7 +20,18 @@
 
 /* DATA *********************************************************************/
 
+#define ExpChangePushlock(x, y, z) InterlockedCompareExchangePointer((PVOID*)x, (PVOID)y, (PVOID)z)
 
+//
+// Pushlock bits
+//
+#define EX_PUSH_LOCK_LOCK_V             ((ULONG_PTR)0x0)
+#define EX_PUSH_LOCK_LOCK               ((ULONG_PTR)0x1)
+#define EX_PUSH_LOCK_WAITING            ((ULONG_PTR)0x2)
+#define EX_PUSH_LOCK_WAKING             ((ULONG_PTR)0x4)
+#define EX_PUSH_LOCK_MULTIPLE_SHARED    ((ULONG_PTR)0x8)
+#define EX_PUSH_LOCK_SHARE_INC          ((ULONG_PTR)0x10)
+#define EX_PUSH_LOCK_PTR_BITS           ((ULONG_PTR)0xf)
 
 /* EXPORTED FUNCTIONS ******************************************************/
 
@@ -42,6 +53,85 @@ FLTAPI
 FltObjectDereference(_Inout_ PVOID Object)
 {
     FltpExReleaseRundownProtection(&((PFLT_OBJECT)Object)->RundownRef);
+}
+
+
+_Acquires_lock_(_Global_critical_region_)
+_IRQL_requires_max_(APC_LEVEL)
+VOID
+FLTAPI
+FltAcquirePushLockExclusive(_Inout_ _Requires_lock_not_held_(*_Curr_) _Acquires_lock_(*_Curr_) PEX_PUSH_LOCK PushLock)
+{
+    KeEnterCriticalRegion();
+
+    /* Try acquiring the lock */
+    if (InterlockedBitTestAndSet((PLONG)PushLock, EX_PUSH_LOCK_LOCK_V))
+    {
+        /* Someone changed it, use the slow path */
+        ExfAcquirePushLockExclusive(PushLock);
+    }
+
+    /* Sanity check */
+    FLT_ASSERT(PushLock->Locked);
+}
+
+
+_Acquires_lock_(_Global_critical_region_)
+_IRQL_requires_max_(APC_LEVEL)
+VOID
+FLTAPI
+FltAcquirePushLockShared(_Inout_ _Requires_lock_not_held_(*_Curr_) _Acquires_lock_(*_Curr_) PEX_PUSH_LOCK PushLock)
+{
+    EX_PUSH_LOCK NewValue;
+
+    KeEnterCriticalRegion();
+
+    /* Try acquiring the lock */
+    NewValue.Value = EX_PUSH_LOCK_LOCK | EX_PUSH_LOCK_SHARE_INC;
+    if (ExpChangePushlock(PushLock, NewValue.Ptr, 0))
+    {
+        /* Someone changed it, use the slow path */
+        ExfAcquirePushLockShared(PushLock);
+    }
+
+    /* Sanity checks */
+    ASSERT(PushLock->Locked);
+}
+
+_Releases_lock_(_Global_critical_region_)
+_IRQL_requires_max_(APC_LEVEL)
+VOID
+FLTAPI
+FltReleasePushLock(_Inout_ _Requires_lock_held_(*_Curr_) _Releases_lock_(*_Curr_) PEX_PUSH_LOCK PushLock)
+{
+    EX_PUSH_LOCK OldValue = *PushLock;
+    EX_PUSH_LOCK NewValue;
+
+    /* Sanity checks */
+    FLT_ASSERT(OldValue.Locked);
+
+    /* Check if the pushlock is shared */
+    if (OldValue.Shared > 1)
+    {
+        /* Decrease the share count */
+        NewValue.Value = OldValue.Value - EX_PUSH_LOCK_SHARE_INC;
+    }
+    else
+    {
+        /* Clear the pushlock entirely */
+        NewValue.Value = 0;
+    }
+
+    /* Check if nobody is waiting on us and try clearing the lock here */
+    if ((OldValue.Waiting) ||
+        (ExpChangePushlock(PushLock, NewValue.Ptr, OldValue.Ptr) !=
+         OldValue.Ptr))
+    {
+        /* We have waiters, use the long path */
+        ExfReleasePushLock(PushLock);
+    }
+
+    KeLeaveCriticalRegion();
 }
 
 
@@ -156,4 +246,27 @@ FltpGetObjectName(_In_ PVOID Object,
     }
 
     return Status;
+}
+
+ULONG
+FltpObjectPointerReference(_In_ PFLT_OBJECT Object)
+{
+    PULONG Result;
+
+    /* Store the old count and increment */
+    Result = &Object->PointerCount;
+    InterlockedIncrement((PLONG)&Object->PointerCount);
+
+    /* Return the initial value */
+    return *Result;
+}
+
+VOID
+FltpObjectPointerDereference(_In_ PFLT_OBJECT Object)
+{
+    if (!InterlockedDecrement((PLONG)Object->PointerCount))
+    {
+        // Cleanup
+        FLT_ASSERT(FALSE);
+    }
 }
