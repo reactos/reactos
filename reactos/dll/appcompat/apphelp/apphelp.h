@@ -1,6 +1,6 @@
 /*
  * Copyright 2013 Mislav Blažević
- * Copyright 2015,2016 Mark Jansen
+ * Copyright 2015-2017 Mark Jansen
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -63,6 +63,10 @@ typedef struct tagATTRINFO {
 #define SHIMREG_DISABLE_LAYER (0x00000020)
 #define SHIMREG_DISABLE_DRIVER (0x00000040)
 
+/* Flags for dwFlags */
+#define SHIMREG_HAS_ENVIRONMENT (0x1)
+
+/* Flags for SdbGetMatchingExe */
 #define SDBGMEF_IGNORE_ENVIRONMENT (0x1)
 
 typedef struct tagSDBQUERYRESULT {
@@ -100,6 +104,7 @@ TAG WINAPI SdbGetTagFromTagID(PDB db, TAGID tagid);
 TAGID WINAPI SdbFindFirstTag(PDB db, TAGID parent, TAG tag);
 TAGID WINAPI SdbFindNextTag(PDB db, TAGID parent, TAGID prev_child);
 BOOL WINAPI SdbGetDatabaseID(PDB db, GUID* Guid);
+DWORD WINAPI SdbReadDWORDTag(PDB db, TAGID tagid, DWORD ret);
 
 /* sdbfileattr.c*/
 BOOL WINAPI SdbFreeFileAttributes(PATTRINFO attr_info);
@@ -110,6 +115,7 @@ BOOL WINAPI SdbGetPermLayerKeys(PCWSTR wszPath, PWSTR pwszLayers, PDWORD pdwByte
 BOOL WINAPI SetPermLayerState(PCWSTR wszPath, PCWSTR wszLayer, DWORD dwFlags, BOOL bMachine, BOOL bEnable);
 
 /* hsdb.c */
+BOOL WINAPI SdbGetMatchingExe(HSDB hsdb, LPCWSTR path, LPCWSTR module_name, LPCWSTR env, DWORD flags, PSDBQUERYRESULT result);
 BOOL WINAPI SdbTagIDToTagRef(HSDB hsdb, PDB pdb, TAGID tiWhich, TAGREF* ptrWhich);
 
 

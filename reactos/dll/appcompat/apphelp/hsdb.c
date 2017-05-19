@@ -1,7 +1,7 @@
 /*
  * Copyright 2011 André Hentschel
  * Copyright 2013 Mislav Blažević
- * Copyright 2015,2016 Mark Jansen
+ * Copyright 2015-2017 Mark Jansen
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,12 +26,214 @@
 
 #include "wine/unicode.h"
 
+#define MAX_LAYER_LENGTH            256
+#define GPLK_USER                   1
+#define GPLK_MACHINE                2
 
 static BOOL WINAPI SdbpFileExists(LPCWSTR path)
 {
     DWORD attr = GetFileAttributesW(path);
     return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
 }
+
+static BOOL WINAPI SdbpMatchExe(PDB db, TAGID exe, WCHAR* dir)
+{
+    static const WCHAR fmt[] = {'%','s','%','s',0};
+    WCHAR buffer[256];  /* FIXME: rewrite using a buffer that can grow if needed, f.e. RtlInitBuffer stuff! */
+    TAGID matching_file;
+
+    /* TODO: check size/checksum from the main exe as well as from the extra files */
+    for (matching_file = SdbFindFirstTag(db, exe, TAG_MATCHING_FILE);
+            matching_file != TAGID_NULL; matching_file = SdbFindNextTag(db, exe, matching_file))
+    {
+        TAGID tagName = SdbFindFirstTag(db, matching_file, TAG_NAME);
+        LPWSTR name = SdbGetStringTagPtr(db, tagName);
+
+        if (!wcscmp(name, L"*"))
+        {
+            // if attributes dont match main file, return FALSE!
+            continue;
+        }
+
+        snprintfW(buffer, _countof(buffer), fmt, dir, name);
+        if (!SdbpFileExists(buffer))
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+static void SdbpAddDatabaseGuid(PDB db, PSDBQUERYRESULT result)
+{
+    size_t n;
+
+    for (n = 0; n < _countof(result->rgGuidDB); ++n)
+    {
+        if (!memcmp(&result->rgGuidDB[n], &db->database_id, sizeof(db->database_id)))
+            return;
+
+        if (result->dwCustomSDBMap & (1<<n))
+            continue;
+
+        memcpy(&result->rgGuidDB[n], &db->database_id, sizeof(result->rgGuidDB[n]));
+        result->dwCustomSDBMap |= (1<<n);
+        return;
+    }
+}
+
+static BOOL SdbpAddSingleLayerMatch(TAGREF layer, PSDBQUERYRESULT result)
+{
+    size_t n;
+
+    for (n = 0; n < result->dwLayerCount; ++n)
+    {
+        if (result->atrLayers[n] == layer)
+            return FALSE;
+    }
+
+    if (n >= _countof(result->atrLayers))
+        return FALSE;
+
+    result->atrLayers[n] = layer;
+    result->dwLayerCount++;
+
+    return TRUE;
+}
+
+
+static BOOL SdbpAddNamedLayerMatch(HSDB hsdb, PCWSTR layerName, PSDBQUERYRESULT result)
+{
+    TAGID database, layer;
+    TAGREF tr;
+    PDB db = hsdb->db;
+
+    database = SdbFindFirstTag(db, TAGID_ROOT, TAG_DATABASE);
+    if (database == TAGID_NULL)
+        return FALSE;
+
+    layer = SdbFindFirstNamedTag(db, database, TAG_LAYER, TAG_NAME, layerName);
+    if (layer == TAGID_NULL)
+        return FALSE;
+
+    if (!SdbTagIDToTagRef(hsdb, db, layer, &tr))
+        return FALSE;
+
+    if (!SdbpAddSingleLayerMatch(tr, result))
+        return FALSE;
+
+    SdbpAddDatabaseGuid(db, result);
+    return TRUE;
+}
+
+static void SdbpAddExeLayers(HSDB hsdb, PDB db, TAGID tagExe, PSDBQUERYRESULT result)
+{
+    TAGID layer = SdbFindFirstTag(db, tagExe, TAG_LAYER);
+
+    while (layer != TAGID_NULL)
+    {
+        TAGREF tr;
+        TAGID layerIdTag = SdbFindFirstTag(db, layer, TAG_LAYER_TAGID);
+        DWORD tagId = SdbReadDWORDTag(db, layerIdTag, TAGID_NULL);
+
+        if (layerIdTag != TAGID_NULL &&
+            tagId != TAGID_NULL &&
+            SdbTagIDToTagRef(hsdb, db, tagId, &tr))
+        {
+            SdbpAddSingleLayerMatch(tr, result);
+        }
+        else
+        {
+            /* Try a name lookup */
+            TAGID layerTag = SdbFindFirstTag(db, layer, TAG_NAME);
+            if (layerTag != TAGID_NULL)
+            {
+                LPCWSTR layerName = SdbGetStringTagPtr(db, layerTag);
+                if (layerName)
+                {
+                    SdbpAddNamedLayerMatch(hsdb, layerName, result);
+                }
+            }
+        }
+
+        layer = SdbFindNextTag(db, tagExe, layer);
+    }
+}
+
+static void SdbpAddExeMatch(HSDB hsdb, PDB db, TAGID tagExe, PSDBQUERYRESULT result)
+{
+    size_t n;
+    TAGREF tr;
+
+    if (!SdbTagIDToTagRef(hsdb, db, tagExe, &tr))
+        return;
+
+    for (n = 0; n < result->dwExeCount; ++n)
+    {
+        if (result->atrExes[n] == tr)
+            return;
+    }
+
+    if (n >= _countof(result->atrExes))
+        return;
+
+    result->atrExes[n] = tr;
+    result->dwExeCount++;
+
+    SdbpAddExeLayers(hsdb, db, tagExe, result);
+
+    SdbpAddDatabaseGuid(db, result);
+}
+
+static ULONG SdbpAddLayerMatches(HSDB hsdb, PWSTR pwszLayers, DWORD pdwBytes, PSDBQUERYRESULT result)
+{
+    PWSTR start = pwszLayers, p;
+    ULONG Added = 0;
+
+    const PWSTR end = pwszLayers + (pdwBytes / sizeof(WCHAR));
+    while (start < end && (*start == L'!' || *start == L'#' || *start == L' ' || *start == L'\t'))
+        start++;
+
+    if (start == end)
+        return 0;
+
+    do
+    {
+        while (*start == L' ' || *start == L'\t')
+            ++start;
+
+        if (*start == UNICODE_NULL)
+            break;
+        p = wcspbrk(start, L" \t");
+
+        if (p)
+            *p = UNICODE_NULL;
+
+        if (SdbpAddNamedLayerMatch(hsdb, start, result))
+            Added++;
+
+        start = p + 1;
+    } while (start < end && p);
+
+    return Added;
+}
+
+static BOOL SdbpPropagateEnvLayers(HSDB hsdb, LPWSTR Environment, PSDBQUERYRESULT Result)
+{
+    static const UNICODE_STRING EnvKey = RTL_CONSTANT_STRING(L"__COMPAT_LAYER");
+    UNICODE_STRING EnvValue;
+    NTSTATUS Status;
+    WCHAR Buffer[MAX_LAYER_LENGTH];
+
+    RtlInitEmptyUnicodeString(&EnvValue, Buffer, sizeof(Buffer));
+
+    Status = RtlQueryEnvironmentVariable_U(Environment, &EnvKey, &EnvValue);
+
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    return SdbpAddLayerMatches(hsdb, Buffer, EnvValue.Length, Result) > 0;
+}
+
 
 
 /**
@@ -50,12 +252,12 @@ HSDB WINAPI SdbInitDatabase(DWORD flags, LPCWSTR path)
     static const WCHAR drivers[] = {'\\','d','r','v','m','a','i','n','.','s','d','b',0};
     LPCWSTR name;
     WCHAR buffer[128];
-    HSDB sdb;
+    HSDB hsdb;
 
-    sdb = SdbAlloc(sizeof(SDB));
-    if (!sdb)
+    hsdb = SdbAlloc(sizeof(SDB));
+    if (!hsdb)
         return NULL;
-    sdb->auto_loaded = 0;
+    hsdb->auto_loaded = 0;
 
     /* Check for predefined databases */
     if ((flags & HID_DATABASE_TYPE_MASK) && path == NULL)
@@ -66,23 +268,24 @@ HSDB WINAPI SdbInitDatabase(DWORD flags, LPCWSTR path)
             case SDB_DATABASE_MAIN_MSI: name = msi; break;
             case SDB_DATABASE_MAIN_DRIVERS: name = drivers; break;
             default:
-                SdbReleaseDatabase(sdb);
+                SdbReleaseDatabase(hsdb);
                 return NULL;
         }
         SdbGetAppPatchDir(NULL, buffer, 128);
-        memcpy(buffer + lstrlenW(buffer), name, SdbpStrlen(name));
+        memcpy(buffer + lstrlenW(buffer), name, SdbpStrsize(name));
+        flags = HID_DOS_PATHS;
     }
 
-    sdb->db = SdbOpenDatabase(path ? path : buffer, (flags & 0xF) - 1);
+    hsdb->db = SdbOpenDatabase(path ? path : buffer, (flags & 0xF) - 1);
 
     /* If database could not be loaded, a handle doesn't make sense either */
-    if (!sdb->db)
+    if (!hsdb->db)
     {
-        SdbReleaseDatabase(sdb);
+        SdbReleaseDatabase(hsdb);
         return NULL;
     }
 
-    return sdb;
+    return hsdb;
 }
 
 /**
@@ -103,7 +306,7 @@ void WINAPI SdbReleaseDatabase(HSDB hsdb)
  * @param [in]  hsdb        Handle to the shim database.
  * @param [in]  path        Path to executable for which we query database.
  * @param [in]  module_name Unused.
- * @param [in]  env         Unused.
+ * @param [in]  env         The environment block to use
  * @param [in]  flags       0 or SDBGMEF_IGNORE_ENVIRONMENT.
  * @param [out] result      Pointer to structure in which query result shall be stored.
  *
@@ -112,14 +315,16 @@ void WINAPI SdbReleaseDatabase(HSDB hsdb)
 BOOL WINAPI SdbGetMatchingExe(HSDB hsdb, LPCWSTR path, LPCWSTR module_name,
                               LPCWSTR env, DWORD flags, PSDBQUERYRESULT result)
 {
-    static const WCHAR fmt[] = {'%','s','%','s',0};
-    BOOL ok, ret;
-    TAGID database, iter, attr;
+    BOOL ret = FALSE;
+    TAGID database, iter, name;
     PATTRINFO attribs = NULL;
     /*DWORD attr_count;*/
+    RTL_UNICODE_STRING_BUFFER DosApplicationName = { { 0 } };
+    WCHAR DosPathBuffer[MAX_PATH];
+    ULONG PathType = 0;
     LPWSTR file_name;
-    WCHAR dir_path[128];
-    WCHAR buffer[256];
+    WCHAR wszLayers[MAX_LAYER_LENGTH];
+    DWORD dwSize;
     PDB db;
 
     /* Load default database if one is not specified */
@@ -128,21 +333,49 @@ BOOL WINAPI SdbGetMatchingExe(HSDB hsdb, LPCWSTR path, LPCWSTR module_name,
         /* To reproduce windows behaviour HID_DOS_PATHS needs
          * to be specified when loading default database */
         hsdb = SdbInitDatabase(HID_DOS_PATHS | SDB_DATABASE_MAIN_SHIM, NULL);
-        if(hsdb)
+        if (hsdb)
             hsdb->auto_loaded = TRUE;
     }
 
+    ZeroMemory(result, sizeof(*result));
+
     /* No database could be loaded */
-    if (!hsdb)
+    if (!hsdb || !path)
         return FALSE;
 
+    /* We do not support multiple db's yet! */
     db = hsdb->db;
 
-    /* Extract file name */
-    file_name = strrchrW(path, '\\') + 1;
+    RtlInitUnicodeString(&DosApplicationName.String, path);
+    RtlInitBuffer(&DosApplicationName.ByteBuffer, (PUCHAR)DosPathBuffer, sizeof(DosPathBuffer));
+    if (!NT_SUCCESS(RtlEnsureBufferSize(RTL_SKIP_BUFFER_COPY, &DosApplicationName.ByteBuffer, DosApplicationName.String.MaximumLength)))
+    {
+        SHIM_ERR("Failed to convert allocate buffer.");
+        goto Cleanup;
+    }
+    /* Update the internal buffer to contain the string */
+    memcpy(DosApplicationName.ByteBuffer.Buffer, path, DosApplicationName.String.MaximumLength);
+    /* Make sure the string uses our internal buffer (we want to modify the buffer,
+        and RtlNtPathNameToDosPathName does not always modify the String to point to the Buffer)! */
+    DosApplicationName.String.Buffer = (PWSTR)DosApplicationName.ByteBuffer.Buffer;
 
-    /* Extract directory path */
-    memcpy(dir_path, path, (size_t)(file_name - path) * sizeof(WCHAR));
+    if (!NT_SUCCESS(RtlNtPathNameToDosPathName(0, &DosApplicationName, &PathType, NULL)))
+    {
+        SHIM_ERR("Failed to convert %S to DOS Path.", path);
+        goto Cleanup;
+    }
+
+
+    /* Extract file name */
+    file_name = strrchrW(DosApplicationName.String.Buffer, '\\');
+    if (!file_name)
+    {
+        SHIM_ERR("Failed to find Exe name in %wZ.", &DosApplicationName.String);
+        goto Cleanup;
+    }
+
+    /* We will use the buffer for exe name and directory. */
+    *(file_name++) = UNICODE_NULL;
 
     /* Get information about executable required to match it with database entry */
     /*if (!SdbGetFileAttributes(path, &attribs, &attr_count))
@@ -151,38 +384,28 @@ BOOL WINAPI SdbGetMatchingExe(HSDB hsdb, LPCWSTR path, LPCWSTR module_name,
     /* DATABASE is list TAG which contains all executables */
     database = SdbFindFirstTag(db, TAGID_ROOT, TAG_DATABASE);
     if (database == TAGID_NULL)
-        return FALSE;
+    {
+        goto Cleanup;
+    }
 
     /* EXE is list TAG which contains data required to match executable */
     iter = SdbFindFirstTag(db, database, TAG_EXE);
 
-    /* Search for entry in database */
+    /* Search for entry in database, we should look into indexing tags! */
     while (iter != TAGID_NULL)
     {
+        LPWSTR foundName;
         /* Check if exe name matches */
-        attr = SdbFindFirstTag(db, iter, TAG_NAME);
-        if (lstrcmpiW(SdbGetStringTagPtr(db, attr), file_name) == 0)
+        name = SdbFindFirstTag(db, iter, TAG_NAME);
+        /* If this is a malformed DB, (no TAG_NAME), we should not crash. */
+        foundName = SdbGetStringTagPtr(db, name);
+        if (foundName && !lstrcmpiW(foundName, file_name))
         {
-            /* Assume that entry is found (in case there are no "matching files") */
-            ok = TRUE;
-
-            /* Check if all "matching files" exist */
-            /* TODO: check size/checksum as well */
-            for (attr = SdbFindFirstTag(db, attr, TAG_MATCHING_FILE);
-                 attr != TAGID_NULL; attr = SdbFindNextTag(db, iter, attr))
+            /* We have a null terminator before the application name, so DosApplicationName only contains the path. */
+            if (SdbpMatchExe(db, iter, DosApplicationName.String.Buffer))
             {
-                snprintfW(buffer, 256, fmt, dir_path, SdbGetStringTagPtr(db, attr));
-                if (!SdbpFileExists(buffer))
-                    ok = FALSE;
-            }
-
-            /* Found it! */
-            if (ok)
-            {
-                /* TODO: fill result data */
-                /* TODO: there may be multiple matches */
                 ret = TRUE;
-                goto cleanup;
+                SdbpAddExeMatch(hsdb, db, iter, result);
             }
         }
 
@@ -190,12 +413,31 @@ BOOL WINAPI SdbGetMatchingExe(HSDB hsdb, LPCWSTR path, LPCWSTR module_name,
         iter = SdbFindNextTag(db, database, iter);
     }
 
-    /* Exe not found */
-    ret = FALSE;
+    /* Restore the full path. */
+    *(--file_name) = L'\\';
 
-cleanup:
-    SdbFreeFileAttributes(attribs);
-    if (hsdb->auto_loaded) SdbReleaseDatabase(hsdb);
+    dwSize = sizeof(wszLayers);
+    if (SdbGetPermLayerKeys(DosApplicationName.String.Buffer, wszLayers, &dwSize, GPLK_MACHINE | GPLK_USER))
+    {
+        SdbpAddLayerMatches(hsdb, wszLayers, dwSize, result);
+        ret = TRUE;
+    }
+
+    if (!(flags & SDBGMEF_IGNORE_ENVIRONMENT))
+    {
+        if (SdbpPropagateEnvLayers(hsdb, (LPWSTR)env, result))
+        {
+            ret = TRUE;
+            result->dwFlags |= SHIMREG_HAS_ENVIRONMENT;
+        }
+    }
+
+Cleanup:
+    RtlFreeBuffer(&DosApplicationName.ByteBuffer);
+    if (attribs)
+        SdbFreeFileAttributes(attribs);
+    if (hsdb->auto_loaded)
+        SdbReleaseDatabase(hsdb);
     return ret;
 }
 
