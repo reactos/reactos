@@ -4,6 +4,7 @@ include_directories(${SHIMLIB_DIR})
 spec2def(acgenral.dll genral.spec)
 
 list(APPEND SOURCE
+    ignoredbgout.c
     main.c
     themes.c
     genral.spec)
