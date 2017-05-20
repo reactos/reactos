@@ -114,10 +114,18 @@ typedef struct _SHARED_MEM {
   LONG          RefCount;
 } SHARED_MEM, *PSHARED_MEM;
 
+typedef struct _SHARED_FACE_CACHE {
+    UINT OutlineRequiredSize;
+    UNICODE_STRING FontFamily;
+    UNICODE_STRING FullName;
+} SHARED_FACE_CACHE, *PSHARED_FACE_CACHE;
+
 typedef struct _SHARED_FACE {
   FT_Face       Face;
   LONG          RefCount;
   PSHARED_MEM   Memory;
+  SHARED_FACE_CACHE EnglishUS;
+  SHARED_FACE_CACHE UserLanguage;
 } SHARED_FACE, *PSHARED_FACE;
 
 typedef struct _FONTGDI {

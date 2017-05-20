@@ -86,6 +86,9 @@ static BOOL RenderingEnabled = TRUE;
 #define ASSERT_FREETYPE_LOCK_HELD() \
   ASSERT(FreeTypeLock->Owner == KeGetCurrentThread())
 
+#define ASSERT_FREETYPE_LOCK_NOT_HELD() \
+  ASSERT(FreeTypeLock->Owner != KeGetCurrentThread())
+
 #define MAX_FONT_CACHE 256
 
 static LIST_ENTRY FontCacheListHead;
@@ -171,6 +174,14 @@ SharedMem_AddRef(PSHARED_MEM Ptr)
     ++Ptr->RefCount;
 }
 
+static void
+SharedFaceCache_Init(PSHARED_FACE_CACHE Cache)
+{
+    Cache->OutlineRequiredSize = 0;
+    RtlInitUnicodeString(&Cache->FontFamily, NULL);
+    RtlInitUnicodeString(&Cache->FullName, NULL);
+}
+
 static PSHARED_FACE
 SharedFace_Create(FT_Face Face, PSHARED_MEM Memory)
 {
@@ -181,6 +192,9 @@ SharedFace_Create(FT_Face Face, PSHARED_MEM Memory)
         Ptr->Face = Face;
         Ptr->RefCount = 1;
         Ptr->Memory = Memory;
+        SharedFaceCache_Init(&Ptr->EnglishUS);
+        SharedFaceCache_Init(&Ptr->UserLanguage);
+
         SharedMem_AddRef(Memory);
         DPRINT("Creating SharedFace for %s\n", Face->family_name);
     }
@@ -265,6 +279,13 @@ static void SharedMem_Release(PSHARED_MEM Ptr)
 }
 
 static void
+SharedFaceCache_Release(PSHARED_FACE_CACHE Cache)
+{
+    RtlFreeUnicodeString(&Cache->FontFamily);
+    RtlFreeUnicodeString(&Cache->FullName);
+}
+
+static void
 SharedFace_Release(PSHARED_FACE Ptr)
 {
     IntLockFreeType;
@@ -280,6 +301,8 @@ SharedFace_Release(PSHARED_FACE Ptr)
         RemoveCacheEntries(Ptr->Face);
         FT_Done_Face(Ptr->Face);
         SharedMem_Release(Ptr->Memory);
+        SharedFaceCache_Release(&Ptr->EnglishUS);
+        SharedFaceCache_Release(&Ptr->UserLanguage);
         ExFreePoolWithTag(Ptr, TAG_FONT);
     }
     IntUnLockFreeType;
@@ -1739,7 +1762,7 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI,
 }
 
 static NTSTATUS
-IntGetFontLocalizedName(PUNICODE_STRING pNameW, FT_Face Face,
+IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
                         FT_UShort NameID, FT_UShort LangID);
 
 /*************************************************************
@@ -1751,7 +1774,6 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
                          UINT Size,
                          OUTLINETEXTMETRICW *Otm)
 {
-    unsigned Needed;
     TT_OS2 *pOS2;
     TT_HoriHeader *pHori;
     TT_Postscript *pPost;
@@ -1759,38 +1781,51 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     FT_WinFNT_HeaderRec Win;
     FT_Error Error;
     char *Cp;
-    FT_Face Face = FontGDI->SharedFace->Face;
     UNICODE_STRING FamilyNameW, FaceNameW, StyleNameW, FullNameW;
+    PSHARED_FACE SharedFace = FontGDI->SharedFace;
+    PSHARED_FACE_CACHE Cache = (gusLanguageID == gusEnglishUS) ? &SharedFace->EnglishUS : &SharedFace->UserLanguage;
+    FT_Face Face = SharedFace->Face;
+
+    if (Cache->OutlineRequiredSize && Size < Cache->OutlineRequiredSize)
+    {
+        return Cache->OutlineRequiredSize;
+    }
 
     /* family name */
     RtlInitUnicodeString(&FamilyNameW, NULL);
-    IntGetFontLocalizedName(&FamilyNameW, Face, TT_NAME_ID_FONT_FAMILY, gusLanguageID);
+    IntGetFontLocalizedName(&FamilyNameW, SharedFace, TT_NAME_ID_FONT_FAMILY, gusLanguageID);
 
     /* face name */
     RtlInitUnicodeString(&FaceNameW, NULL);
-    IntGetFontLocalizedName(&FaceNameW, Face, TT_NAME_ID_FULL_NAME, gusLanguageID);
+    IntGetFontLocalizedName(&FaceNameW, SharedFace, TT_NAME_ID_FULL_NAME, gusLanguageID);
 
     /* style name */
     RtlInitUnicodeString(&StyleNameW, NULL);
-    IntGetFontLocalizedName(&StyleNameW, Face, TT_NAME_ID_FONT_SUBFAMILY, gusLanguageID);
+    IntGetFontLocalizedName(&StyleNameW, SharedFace, TT_NAME_ID_FONT_SUBFAMILY, gusLanguageID);
 
     /* unique name (full name) */
     RtlInitUnicodeString(&FullNameW, NULL);
-    IntGetFontLocalizedName(&FullNameW, Face, TT_NAME_ID_UNIQUE_ID, gusLanguageID);
+    IntGetFontLocalizedName(&FullNameW, SharedFace, TT_NAME_ID_UNIQUE_ID, gusLanguageID);
 
-    Needed = sizeof(OUTLINETEXTMETRICW);
-    Needed += FamilyNameW.Length + sizeof(WCHAR);
-    Needed += FaceNameW.Length + sizeof(WCHAR);
-    Needed += StyleNameW.Length + sizeof(WCHAR);
-    Needed += FullNameW.Length + sizeof(WCHAR);
+    if (!Cache->OutlineRequiredSize)
+    {
+        UINT Needed;
+        Needed = sizeof(OUTLINETEXTMETRICW);
+        Needed += FamilyNameW.Length + sizeof(WCHAR);
+        Needed += FaceNameW.Length + sizeof(WCHAR);
+        Needed += StyleNameW.Length + sizeof(WCHAR);
+        Needed += FullNameW.Length + sizeof(WCHAR);
 
-    if (Size < Needed)
+        Cache->OutlineRequiredSize = Needed;
+    }
+
+    if (Size < Cache->OutlineRequiredSize)
     {
         RtlFreeUnicodeString(&FamilyNameW);
         RtlFreeUnicodeString(&FaceNameW);
         RtlFreeUnicodeString(&StyleNameW);
         RtlFreeUnicodeString(&FullNameW);
-        return Needed;
+        return Cache->OutlineRequiredSize;
     }
 
     XScale = Face->size->metrics.x_scale;
@@ -1825,7 +1860,7 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
 
     Error = FT_Get_WinFNT_Header(Face , &Win);
 
-    Otm->otmSize = Needed;
+    Otm->otmSize = Cache->OutlineRequiredSize;
 
     FillTM(&Otm->otmTextMetrics, FontGDI, pOS2, pHori, !Error ? &Win : 0);
 
@@ -1895,14 +1930,14 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     wcscpy((WCHAR*) Cp, FullNameW.Buffer);
     Cp += FullNameW.Length + sizeof(WCHAR);
 
-    ASSERT(Cp - (char*)Otm == Needed);
+    ASSERT(Cp - (char*)Otm == Cache->OutlineRequiredSize);
 
     RtlFreeUnicodeString(&FamilyNameW);
     RtlFreeUnicodeString(&FaceNameW);
     RtlFreeUnicodeString(&StyleNameW);
     RtlFreeUnicodeString(&FullNameW);
 
-    return Needed;
+    return Cache->OutlineRequiredSize;
 }
 
 static PFONTGDI FASTCALL
@@ -2034,7 +2069,30 @@ SwapEndian(LPVOID pvData, DWORD Size)
 }
 
 static NTSTATUS
-IntGetFontLocalizedName(PUNICODE_STRING pNameW, FT_Face Face,
+DuplicateUnicodeString(PUNICODE_STRING Source, PUNICODE_STRING Destination)
+{
+    NTSTATUS Status = STATUS_NO_MEMORY;
+    UNICODE_STRING Tmp;
+
+    Tmp.Buffer = ExAllocatePoolWithTag(PagedPool, Source->MaximumLength, TAG_USTR);
+    if (Tmp.Buffer)
+    {
+        Tmp.MaximumLength = Source->MaximumLength;
+        Tmp.Length = 0;
+        RtlCopyUnicodeString(&Tmp, Source);
+
+        Destination->MaximumLength = Tmp.MaximumLength;
+        Destination->Length = Tmp.Length;
+        Destination->Buffer = Tmp.Buffer;
+
+        Status = STATUS_SUCCESS;
+    }
+
+    return Status;
+}
+
+static NTSTATUS
+IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
                         FT_UShort NameID, FT_UShort LangID)
 {
     FT_SfntName Name;
@@ -2043,8 +2101,20 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, FT_Face Face,
     FT_Error Error;
     NTSTATUS Status = STATUS_NOT_FOUND;
     ANSI_STRING AnsiName;
+    PSHARED_FACE_CACHE Cache = (LangID == gusEnglishUS) ? &SharedFace->EnglishUS : &SharedFace->UserLanguage;
+    FT_Face Face = SharedFace->Face;
 
     RtlFreeUnicodeString(pNameW);
+
+    if (NameID == TT_NAME_ID_FONT_FAMILY && Cache->FontFamily.Buffer)
+    {
+        return DuplicateUnicodeString(&Cache->FontFamily, pNameW);
+    }
+
+    if (NameID == TT_NAME_ID_FULL_NAME && Cache->FullName.Buffer)
+    {
+        return DuplicateUnicodeString(&Cache->FullName, pNameW);
+    }
 
     Count = FT_Get_Sfnt_Name_Count(Face);
     for (i = 0; i < Count; ++i)
@@ -2092,7 +2162,7 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, FT_Face Face,
         if (LangID != gusEnglishUS)
         {
             /* Retry with English US */
-            Status = IntGetFontLocalizedName(pNameW, Face, NameID, gusEnglishUS);
+            Status = IntGetFontLocalizedName(pNameW, SharedFace, NameID, gusEnglishUS);
         }
         else if (NameID == TT_NAME_ID_FONT_SUBFAMILY)
         {
@@ -2104,6 +2174,23 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, FT_Face Face,
             RtlInitAnsiString(&AnsiName, Face->family_name);
             Status = RtlAnsiStringToUnicodeString(pNameW, &AnsiName, TRUE);
         }
+    }
+
+    if (NameID == TT_NAME_ID_FONT_FAMILY)
+    {
+        ASSERT_FREETYPE_LOCK_NOT_HELD();
+        IntLockFreeType;
+        if (!Cache->FontFamily.Buffer)
+            DuplicateUnicodeString(pNameW, &Cache->FontFamily);
+        IntUnLockFreeType;
+    }
+    else if (NameID == TT_NAME_ID_FULL_NAME)
+    {
+        ASSERT_FREETYPE_LOCK_NOT_HELD();
+        IntLockFreeType;
+        if (!Cache->FullName.Buffer)
+            DuplicateUnicodeString(pNameW, &Cache->FullName);
+        IntUnLockFreeType;
     }
 
     return Status;
@@ -2125,7 +2212,8 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
     NEWTEXTMETRICW *Ntm;
     DWORD fs0;
     NTSTATUS status;
-    FT_Face Face = FontGDI->SharedFace->Face;
+    PSHARED_FACE SharedFace = FontGDI->SharedFace;
+    FT_Face Face = SharedFace->Face;
     UNICODE_STRING NameW;
 
     RtlInitUnicodeString(&NameW, NULL);
@@ -2197,7 +2285,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
     }
     else
     {
-        status = IntGetFontLocalizedName(&NameW, Face, TT_NAME_ID_FONT_FAMILY,
+        status = IntGetFontLocalizedName(&NameW, SharedFace, TT_NAME_ID_FONT_FAMILY,
                                          gusLanguageID);
         if (NT_SUCCESS(status))
         {
@@ -2217,7 +2305,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
     }
     else
     {
-        status = IntGetFontLocalizedName(&NameW, Face, TT_NAME_ID_FULL_NAME,
+        status = IntGetFontLocalizedName(&NameW, SharedFace, TT_NAME_ID_FULL_NAME,
                                          gusLanguageID);
         if (NT_SUCCESS(status))
         {
@@ -4074,12 +4162,12 @@ GetFontPenalty(LOGFONTW *               LogFont,
     if (RequestedNameW->Buffer[0])
     {
         BOOL Found = FALSE;
-        FT_Face Face = FontGDI->SharedFace->Face;
+        PSHARED_FACE SharedFace = FontGDI->SharedFace;
 
         /* localized family name */
         if (!Found)
         {
-            Status = IntGetFontLocalizedName(ActualNameW, Face, TT_NAME_ID_FONT_FAMILY,
+            Status = IntGetFontLocalizedName(ActualNameW, SharedFace, TT_NAME_ID_FONT_FAMILY,
                                              gusLanguageID);
             if (NT_SUCCESS(Status))
             {
@@ -4089,7 +4177,7 @@ GetFontPenalty(LOGFONTW *               LogFont,
         /* localized full name */
         if (!Found)
         {
-            Status = IntGetFontLocalizedName(ActualNameW, Face, TT_NAME_ID_FULL_NAME,
+            Status = IntGetFontLocalizedName(ActualNameW, SharedFace, TT_NAME_ID_FULL_NAME,
                                              gusLanguageID);
             if (NT_SUCCESS(Status))
             {
@@ -4101,7 +4189,7 @@ GetFontPenalty(LOGFONTW *               LogFont,
             /* English family name */
             if (!Found)
             {
-                Status = IntGetFontLocalizedName(ActualNameW, Face, TT_NAME_ID_FONT_FAMILY,
+                Status = IntGetFontLocalizedName(ActualNameW, SharedFace, TT_NAME_ID_FONT_FAMILY,
                                                  gusEnglishUS);
                 if (NT_SUCCESS(Status))
                 {
@@ -4111,7 +4199,7 @@ GetFontPenalty(LOGFONTW *               LogFont,
             /* English full name */
             if (!Found)
             {
-                Status = IntGetFontLocalizedName(ActualNameW, Face, TT_NAME_ID_FULL_NAME,
+                Status = IntGetFontLocalizedName(ActualNameW, SharedFace, TT_NAME_ID_FULL_NAME,
                                                  gusEnglishUS);
                 if (NT_SUCCESS(Status))
                 {

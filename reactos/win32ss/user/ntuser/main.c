@@ -997,14 +997,14 @@ DriverEntry(
     NT_ROF(InitTimerImpl());
     NT_ROF(InitDCEImpl());
 
+    gusLanguageID = UserGetLanguageID();
+
     /* Initialize FreeType library */
     if (!InitFontSupport())
     {
         DPRINT1("Unable to initialize font support\n");
         return Status;
     }
-
-    gusLanguageID = UserGetLanguageID();
 
     return STATUS_SUCCESS;
 }
