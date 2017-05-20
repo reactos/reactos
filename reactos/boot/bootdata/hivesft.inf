@@ -380,6 +380,9 @@ HKLM,"SOFTWARE\Microsoft\Command Processor","AutoRun",0x00020000,""
 ; Uninstall Application list
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",,0x00000012
 
+; Empty App Compat Layers
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers","",0x00000000,""
+
 ; Version Information
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","InstallDate",0x00010003,0
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","ProductName",2,"ReactOS"

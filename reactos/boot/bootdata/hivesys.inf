@@ -1391,9 +1391,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager","GlobalFlag", 0x00010003
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager","ObjectDirectories",0x00010000, \
  "\Windows", \
  "\RPC Control"
-# This is an empty app compat cache
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\AppCompatCache","AppCompatCache", 0x00000001, \
-  fe,0f,dc,ba,00,00,00,00
 
 ; DOS devices
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","AUX",0x00000000,"\DosDevices\COM1"
@@ -1450,6 +1447,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\SubSystems","Windows",0x0
 
 ; App Compat -- Disable on ReactOS
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\AppCompatibility","DisableAppCompat",0x00010003, 0x00000001
+
+; This is an empty App Compat cache
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\AppCompatCache","AppCompatCache", 0x00000001, \
+  fe,0f,dc,ba,00,00,00,00
 
 ; WOW Support
 HKLM,"SYSTEM\CurrentControlSet\Control\Wow","",0x00000000,""
