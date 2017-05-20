@@ -4354,6 +4354,8 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty, LOGFONTW *LogFont,
     while (Entry != Head)
     {
         CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
+        Entry = Entry->Flink;
+
         FontGDI = CurrentEntry->Font;
         ASSERT(FontGDI);
         Face = FontGDI->SharedFace->Face;
@@ -4363,8 +4365,6 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty, LOGFONTW *LogFont,
         Status = RtlAnsiStringToUnicodeString(&ActualNameW, &ActualNameA, TRUE);
         if (!NT_SUCCESS(Status))
         {
-            /* next entry */
-            Entry = Entry->Flink;
             continue;
         }
 
@@ -4391,8 +4391,6 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty, LOGFONTW *LogFont,
             {
                 RtlFreeUnicodeString(&ActualNameW);
                 RtlFreeUnicodeString(&FullFaceNameW);
-                /* next entry */
-                Entry = Entry->Flink;
                 continue;
             }
 
@@ -4414,9 +4412,6 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty, LOGFONTW *LogFont,
 
         /* free strings */
         RtlFreeUnicodeString(&ActualNameW);
-
-        /* next entry */
-        Entry = Entry->Flink;
     }
 
     if (Otm)
