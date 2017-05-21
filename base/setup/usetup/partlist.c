@@ -458,25 +458,27 @@ PrintDiskData(
     if (DiskEntry->DriverName.Length > 0)
     {
         sprintf(LineBuffer,
-                MUIGetString(STRING_HDINFOPARTSELECT),
+                MUIGetString(STRING_HDINFOPARTSELECT_1),
                 DiskSize.u.LowPart,
                 Unit,
                 DiskEntry->DiskNumber,
                 DiskEntry->Port,
                 DiskEntry->Bus,
                 DiskEntry->Id,
-                DiskEntry->DriverName.Buffer);
+                &DiskEntry->DriverName,
+                DiskEntry->NoMbr ? "GPT" : "MBR");
     }
     else
     {
         sprintf(LineBuffer,
-                MUIGetString(STRING_HDDINFOUNK6),
+                MUIGetString(STRING_HDINFOPARTSELECT_2),
                 DiskSize.u.LowPart,
                 Unit,
                 DiskEntry->DiskNumber,
                 DiskEntry->Port,
                 DiskEntry->Bus,
-                DiskEntry->Id);
+                DiskEntry->Id,
+                DiskEntry->NoMbr ? "GPT" : "MBR");
     }
 
     if (ListUi->Line >= 0 && ListUi->Line <= Height)
