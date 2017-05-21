@@ -63,6 +63,13 @@ DoesFileExist(
     IN PCWSTR PathName OPTIONAL,
     IN PCWSTR FileName);
 
+BOOLEAN
+NtPathToDiskPartComponents(
+    IN PCWSTR NtPath,
+    OUT PULONG pDiskNumber,
+    OUT PULONG pPartNumber,
+    OUT PCWSTR* PathComponent OPTIONAL);
+
 NTSTATUS
 OpenAndMapFile(
     IN HANDLE RootDirectory OPTIONAL,
@@ -70,7 +77,8 @@ OpenAndMapFile(
     IN PCWSTR FileName,             // OPTIONAL
     OUT PHANDLE FileHandle,         // IN OUT PHANDLE OPTIONAL
     OUT PHANDLE SectionHandle,
-    OUT PVOID* BaseAddress);
+    OUT PVOID* BaseAddress,
+    OUT PULONG FileSize OPTIONAL);
 
 BOOLEAN
 UnMapFile(
