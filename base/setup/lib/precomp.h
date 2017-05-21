@@ -33,11 +33,6 @@
 /* Filesystem headers */
 #include <reactos/rosioctl.h>   // For extra partition IDs
 
-/** For FileSystems **/
-// #include <fslib/vfatlib.h>
-// #include <fslib/ext2lib.h>
-// // #include <fslib/ntfslib.h>
-
 //
 ///* Internal Headers */
 //#include "interface/consup.h"

@@ -28,6 +28,7 @@ extern HANDLE ProcessHeap;
 
 #include "errorcode.h"
 #include "linklist.h"
+#include "ntverrsrc.h"
 #include "fsutil.h"
 #include "genlist.h"
 #include "partlist.h"
