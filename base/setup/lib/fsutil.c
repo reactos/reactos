@@ -119,11 +119,11 @@ _MyGetFileSystem(
     FileFsAttribute = (PFILE_FS_ATTRIBUTE_INFORMATION)Buffer;
 
     /* Set PartitionRootPath */
-    swprintf(PathBuffer,
-             // L"\\Device\\Harddisk%lu\\Partition%lu", // Should work! But because ReactOS sucks atm. it actually doesn't work!!
-             L"\\Device\\Harddisk%lu\\Partition%lu\\",  // HACK: Use this as a temporary hack!
-             PartEntry->DiskEntry->DiskNumber,
-             PartEntry->PartitionNumber);
+    StringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+                     // L"\\Device\\Harddisk%lu\\Partition%lu", // Should work! But because ReactOS sucks atm. it actually doesn't work!!
+                     L"\\Device\\Harddisk%lu\\Partition%lu\\",  // HACK: Use this as a temporary hack!
+                     PartEntry->DiskEntry->DiskNumber,
+                     PartEntry->PartitionNumber);
     RtlInitUnicodeString(&PartitionRootPath, PathBuffer);
     DPRINT("PartitionRootPath: %wZ\n", &PartitionRootPath);
 

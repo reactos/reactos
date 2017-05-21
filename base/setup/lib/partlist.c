@@ -109,15 +109,13 @@ GetDriverName(
     WCHAR KeyName[32];
     NTSTATUS Status;
 
-    RtlInitUnicodeString(&DiskEntry->DriverName,
-                         NULL);
+    RtlInitUnicodeString(&DiskEntry->DriverName, NULL);
 
-    swprintf(KeyName,
-             L"\\Scsi\\Scsi Port %hu",
-             DiskEntry->Port);
+    StringCchPrintfW(KeyName, ARRAYSIZE(KeyName),
+                     L"\\Scsi\\Scsi Port %hu",
+                     DiskEntry->Port);
 
-    RtlZeroMemory(&QueryTable,
-                  sizeof(QueryTable));
+    RtlZeroMemory(&QueryTable, sizeof(QueryTable));
 
     QueryTable[0].Name = L"Driver";
     QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
@@ -366,9 +364,10 @@ EnumerateBiosDiskEntries(
     }
 
     AdapterCount = 0;
-    while (1)
+    while (TRUE)
     {
-        swprintf(Name, L"%s\\%lu", ROOT_NAME, AdapterCount);
+        StringCchPrintfW(Name, ARRAYSIZE(Name),
+                         L"%s\\%lu", ROOT_NAME, AdapterCount);
         Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
                                         Name,
                                         &QueryTable[2],
@@ -379,7 +378,8 @@ EnumerateBiosDiskEntries(
             break;
         }
 
-        swprintf(Name, L"%s\\%lu\\DiskController", ROOT_NAME, AdapterCount);
+        StringCchPrintfW(Name, ARRAYSIZE(Name),
+                         L"%s\\%lu\\DiskController", ROOT_NAME, AdapterCount);
         Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
                                         Name,
                                         &QueryTable[2],
@@ -387,9 +387,10 @@ EnumerateBiosDiskEntries(
                                         NULL);
         if (NT_SUCCESS(Status))
         {
-            while (1)
+            while (TRUE)
             {
-                swprintf(Name, L"%s\\%lu\\DiskController\\0", ROOT_NAME, AdapterCount);
+                StringCchPrintfW(Name, ARRAYSIZE(Name),
+                                 L"%s\\%lu\\DiskController\\0", ROOT_NAME, AdapterCount);
                 Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
                                                 Name,
                                                 &QueryTable[2],
@@ -401,7 +402,8 @@ EnumerateBiosDiskEntries(
                     return;
                 }
 
-                swprintf(Name, L"%s\\%lu\\DiskController\\0\\DiskPeripheral", ROOT_NAME, AdapterCount);
+                StringCchPrintfW(Name, ARRAYSIZE(Name),
+                                 L"%s\\%lu\\DiskController\\0\\DiskPeripheral", ROOT_NAME, AdapterCount);
                 Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
                                                 Name,
                                                 &QueryTable[2],
@@ -415,7 +417,7 @@ EnumerateBiosDiskEntries(
                     QueryTable[1].QueryRoutine = DiskConfigurationDataQueryRoutine;
 
                     DiskCount = 0;
-                    while (1)
+                    while (TRUE)
                     {
                         BiosDiskEntry = (BIOSDISKENTRY*)RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, sizeof(BIOSDISKENTRY));
                         if (BiosDiskEntry == NULL)
@@ -423,7 +425,8 @@ EnumerateBiosDiskEntries(
                             break;
                         }
 
-                        swprintf(Name, L"%s\\%lu\\DiskController\\0\\DiskPeripheral\\%lu", ROOT_NAME, AdapterCount, DiskCount);
+                        StringCchPrintfW(Name, ARRAYSIZE(Name),
+                                         L"%s\\%lu\\DiskController\\0\\DiskPeripheral\\%lu", ROOT_NAME, AdapterCount, DiskCount);
                         Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
                                                         Name,
                                                         QueryTable,
@@ -820,7 +823,7 @@ SetDiskSignature(
 
     Buffer = (PUCHAR)&DiskEntry->LayoutBuffer->Signature;
 
-    while (1)
+    while (TRUE)
     {
         NtQuerySystemTime(&SystemTime);
         RtlTimeToTimeFields(&SystemTime, &TimeFields);
@@ -976,7 +979,8 @@ AddDiskToList(
     }
     Checksum = ~Checksum + 1;
 
-    swprintf(Identifier, L"%08x-%08x-A", Checksum, Signature);
+    StringCchPrintfW(Identifier, ARRAYSIZE(Identifier),
+                     L"%08x-%08x-A", Checksum, Signature);
     DPRINT("Identifier: %S\n", Identifier);
 
     DiskEntry = RtlAllocateHeap(ProcessHeap,
@@ -1217,11 +1221,10 @@ CreatePartitionList(VOID)
 
     for (DiskNumber = 0; DiskNumber < Sdi.NumberOfDisks; DiskNumber++)
     {
-        swprintf(Buffer,
-                 L"\\Device\\Harddisk%d\\Partition0",
-                 DiskNumber);
-        RtlInitUnicodeString(&Name,
-                             Buffer);
+        StringCchPrintfW(Buffer, ARRAYSIZE(Buffer),
+                         L"\\Device\\Harddisk%lu\\Partition0",
+                         DiskNumber);
+        RtlInitUnicodeString(&Name, Buffer);
 
         InitializeObjectAttributes(&ObjectAttributes,
                                    &Name,
@@ -1238,7 +1241,6 @@ CreatePartitionList(VOID)
         if (NT_SUCCESS(Status))
         {
             AddDiskToList(FileHandle, DiskNumber, List);
-
             NtClose(FileHandle);
         }
     }
@@ -1313,7 +1315,6 @@ DestroyPartitionList(
         /* Release layout buffer */
         if (DiskEntry->LayoutBuffer != NULL)
             RtlFreeHeap(ProcessHeap, 0, DiskEntry->LayoutBuffer);
-
 
         /* Release disk entry */
         RtlFreeHeap(ProcessHeap, 0, DiskEntry);
@@ -1570,7 +1571,8 @@ GetPrevPartition(
     return NULL;
 }
 
-static
+// static
+FORCEINLINE
 BOOLEAN
 IsEmptyLayoutEntry(
     IN PPARTITION_INFORMATION PartitionInfo)
@@ -1582,7 +1584,8 @@ IsEmptyLayoutEntry(
     return FALSE;
 }
 
-static
+// static
+FORCEINLINE
 BOOLEAN
 IsSamePrimaryLayoutEntry(
     IN PPARTITION_INFORMATION PartitionInfo,
@@ -2585,11 +2588,10 @@ WritePartitions(
 
     DPRINT("WritePartitions() Disk: %lu\n", DiskEntry->DiskNumber);
 
-    swprintf(DstPath,
-             L"\\Device\\Harddisk%d\\Partition0",
-             DiskEntry->DiskNumber);
-    RtlInitUnicodeString(&Name,
-                         DstPath);
+    StringCchPrintfW(DstPath, ARRAYSIZE(DstPath),
+                     L"\\Device\\Harddisk%lu\\Partition0",
+                     DiskEntry->DiskNumber);
+    RtlInitUnicodeString(&Name, DstPath);
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
                                0,
@@ -2686,7 +2688,8 @@ SetMountedDeviceValue(
     NTSTATUS Status;
     HANDLE KeyHandle;
 
-    swprintf(ValueNameBuffer, L"\\DosDevices\\%C:", Letter);
+    StringCchPrintfW(ValueNameBuffer, ARRAYSIZE(ValueNameBuffer),
+                     L"\\DosDevices\\%C:", Letter);
     RtlInitUnicodeString(&ValueName, ValueNameBuffer);
 
     InitializeObjectAttributes(&ObjectAttributes,
