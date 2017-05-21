@@ -428,7 +428,7 @@ IsValidPath(
     /* Check for whitespaces */
     for (i = 0; i < Length; i++)
     {
-        if (isspace(InstallDir[i]))
+        if (iswspace(InstallDir[i]))
             return FALSE;
     }
 
@@ -547,6 +547,117 @@ DoesFileExist(
     return NT_SUCCESS(Status);
 }
 
+/*
+ * The format of NtPath should be:
+ *    \Device\HarddiskXXX\PartitionYYY[\path] ,
+ * where XXX and YYY respectively represent the hard disk and partition numbers,
+ * and [\path] represent an optional path (separated by '\\').
+ *
+ * If a NT path of such a form is correctly parsed, the function returns respectively:
+ * - in pDiskNumber: the hard disk number XXX,
+ * - in pPartNumber: the partition number YYY,
+ * - in PathComponent: pointer value (inside NtPath) to the beginning of \path.
+ *
+ * NOTE: The function does not accept leading whitespace.
+ */
+BOOLEAN
+NtPathToDiskPartComponents(
+    IN PCWSTR NtPath,
+    OUT PULONG pDiskNumber,
+    OUT PULONG pPartNumber,
+    OUT PCWSTR* PathComponent OPTIONAL)
+{
+    ULONG DiskNumber, PartNumber;
+    PCWSTR Path;
+
+    *pDiskNumber = 0;
+    *pPartNumber = 0;
+    if (PathComponent) *PathComponent = NULL;
+
+    Path = NtPath;
+
+    if (_wcsnicmp(Path, L"\\Device\\Harddisk", 16) != 0)
+    {
+        /* The NT path doesn't start with the prefix string, thus it cannot be a hard disk device path */
+        DPRINT1("'%S' : Not a possible hard disk device.\n", NtPath);
+        return FALSE;
+    }
+
+    Path += 16;
+
+    /* A number must be present now */
+    if (!iswdigit(*Path))
+    {
+        DPRINT1("'%S' : expected a number! Not a regular hard disk device.\n", Path);
+        return FALSE;
+    }
+    DiskNumber = wcstoul(Path, (PWSTR*)&Path, 10);
+
+    /* Either NULL termination, or a path separator must be present now */
+    if (!Path)
+    {
+        DPRINT1("An error happened!\n");
+        return FALSE;
+    }
+    else if (*Path && *Path != OBJ_NAME_PATH_SEPARATOR)
+    {
+        DPRINT1("'%S' : expected a path separator!\n", Path);
+        return FALSE;
+    }
+
+    if (!*Path)
+    {
+        DPRINT1("The path only specified a hard disk (and nothing else, like a partition...), so we stop there.\n");
+        goto Quit;
+    }
+
+    /* Here, *Path == L'\\' */
+
+    if (_wcsnicmp(Path, L"\\Partition", 10) != 0)
+    {
+        /* Actually, \Partition is optional so, if we don't have it, we still return success. Or should we? */
+        DPRINT1("'%S' : unexpected format!\n", NtPath);
+        goto Quit;
+    }
+
+    Path += 10;
+
+    /* A number must be present now */
+    if (!iswdigit(*Path))
+    {
+        /* If we don't have a number it means this part of path is actually not a partition specifier, so we shouldn't fail either. Or should we? */
+        DPRINT1("'%S' : expected a number!\n", Path);
+        goto Quit;
+    }
+    PartNumber = wcstoul(Path, (PWSTR*)&Path, 10);
+
+    /* Either NULL termination, or a path separator must be present now */
+    if (!Path)
+    {
+        /* We fail here because wcstoul failed for whatever reason */
+        DPRINT1("An error happened!\n");
+        return FALSE;
+    }
+    else if (*Path && *Path != OBJ_NAME_PATH_SEPARATOR)
+    {
+        /* We shouldn't fail here because it just means this part of path is actually not a partition specifier. Or should we? */
+        DPRINT1("'%S' : expected a path separator!\n", Path);
+        goto Quit;
+    }
+
+    /* OK, here we really have a partition specifier: return its number */
+    *pPartNumber = PartNumber;
+
+Quit:
+    /* Return the disk number */
+    *pDiskNumber = DiskNumber;
+
+    /* Return the path component also, if the user wants it */
+    if (PathComponent) *PathComponent = Path;
+
+    return TRUE;
+}
+
 NTSTATUS
 OpenAndMapFile(
     IN HANDLE RootDirectory OPTIONAL,
@@ -554,7 +665,8 @@ OpenAndMapFile(
     IN PCWSTR FileName,             // OPTIONAL
     OUT PHANDLE FileHandle,         // IN OUT PHANDLE OPTIONAL
     OUT PHANDLE SectionHandle,
-    OUT PVOID* BaseAddress)
+    OUT PVOID* BaseAddress,
+    OUT PULONG FileSize OPTIONAL)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -593,6 +705,31 @@ OpenAndMapFile(
     {
         DPRINT1("Failed to open file %wZ, Status 0x%08lx\n", &Name, Status);
         return Status;
+    }
+
+    if (FileSize)
+    {
+        /* Query the file size */
+        FILE_STANDARD_INFORMATION FileInfo;
+        Status = NtQueryInformationFile(*FileHandle,
+                                        &IoStatusBlock,
+                                        &FileInfo,
+                                        sizeof(FileInfo),
+                                        FileStandardInformation);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("NtQueryInformationFile() failed (Status %lx)\n", Status);
+            NtClose(*FileHandle);
+            *FileHandle = NULL;
+            return Status;
+        }
+
+        if (FileInfo.EndOfFile.HighPart != 0)
+            DPRINT1("WARNING!! The file %wZ is too large!\n", Name);
+
+        *FileSize = FileInfo.EndOfFile.LowPart;
+
+        DPRINT("File size: %lu\n", *FileSize);
     }
 
     /* Map the file in memory */
