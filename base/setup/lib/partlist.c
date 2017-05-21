@@ -107,15 +107,13 @@ GetDriverName(
     WCHAR KeyName[32];
     NTSTATUS Status;
 
-    RtlInitUnicodeString(&DiskEntry->DriverName,
-                         NULL);
+    RtlInitUnicodeString(&DiskEntry->DriverName, NULL);
 
     RtlStringCchPrintfW(KeyName, ARRAYSIZE(KeyName),
                         L"\\Scsi\\Scsi Port %hu",
                         DiskEntry->Port);
 
-    RtlZeroMemory(&QueryTable,
-                  sizeof(QueryTable));
+    RtlZeroMemory(&QueryTable, sizeof(QueryTable));
 
     QueryTable[0].Name = L"Driver";
     QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
@@ -364,7 +362,7 @@ EnumerateBiosDiskEntries(
     }
 
     AdapterCount = 0;
-    while (1)
+    while (TRUE)
     {
         RtlStringCchPrintfW(Name, ARRAYSIZE(Name),
                             L"%s\\%lu",
@@ -389,7 +387,7 @@ EnumerateBiosDiskEntries(
                                         NULL);
         if (NT_SUCCESS(Status))
         {
-            while (1)
+            while (TRUE)
             {
                 RtlStringCchPrintfW(Name, ARRAYSIZE(Name),
                                     L"%s\\%lu\\DiskController\\0",
@@ -421,7 +419,7 @@ EnumerateBiosDiskEntries(
                     QueryTable[1].QueryRoutine = DiskConfigurationDataQueryRoutine;
 
                     DiskCount = 0;
-                    while (1)
+                    while (TRUE)
                     {
                         BiosDiskEntry = (BIOSDISKENTRY*)RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, sizeof(BIOSDISKENTRY));
                         if (BiosDiskEntry == NULL)
@@ -828,7 +826,7 @@ SetDiskSignature(
 
     Buffer = (PUCHAR)&DiskEntry->LayoutBuffer->Signature;
 
-    while (1)
+    while (TRUE)
     {
         NtQuerySystemTime(&SystemTime);
         RtlTimeToTimeFields(&SystemTime, &TimeFields);
@@ -1264,7 +1262,6 @@ CreatePartitionList(VOID)
         if (NT_SUCCESS(Status))
         {
             AddDiskToList(FileHandle, DiskNumber, List);
-
             NtClose(FileHandle);
         }
     }
@@ -1755,7 +1752,8 @@ GetPrevPartition(
     return NULL;
 }
 
-static
+// static
+FORCEINLINE
 BOOLEAN
 IsEmptyLayoutEntry(
     IN PPARTITION_INFORMATION PartitionInfo)
@@ -1769,7 +1767,8 @@ IsEmptyLayoutEntry(
     return FALSE;
 }
 
-static
+// static
+FORCEINLINE
 BOOLEAN
 IsSamePrimaryLayoutEntry(
     IN PPARTITION_INFORMATION PartitionInfo,
