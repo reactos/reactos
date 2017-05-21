@@ -2323,46 +2323,22 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
     if (0 == (TM->tmPitchAndFamily & TMPF_VECTOR))
         Info->FontType |= RASTER_FONTTYPE;
 
-    ExFreePoolWithTag(Otm, GDITAG_TEXT);
 
     /* face name */
-    if (FaceName)
-    {
-        RtlStringCbCopyW(Lf->lfFaceName, sizeof(Lf->lfFaceName), FaceName);
-    }
-    else
-    {
-        status = IntGetFontLocalizedName(&NameW, SharedFace, TT_NAME_ID_FONT_FAMILY,
-                                         gusLanguageID);
-        if (NT_SUCCESS(status))
-        {
-            /* store it */
-            RtlStringCbCopyW(Lf->lfFaceName, sizeof(Lf->lfFaceName),
-                             NameW.Buffer);
-            RtlFreeUnicodeString(&NameW);
-        }
-    }
+    if (!FaceName)
+        FaceName = (WCHAR*)((ULONG_PTR)Otm + (ULONG_PTR)Otm->otmpFamilyName);
+
+    RtlStringCbCopyW(Lf->lfFaceName, sizeof(Lf->lfFaceName), FaceName);
 
     /* full name */
-    if (FullName)
-    {
-        RtlStringCbCopyW(Info->EnumLogFontEx.elfFullName,
-                         sizeof(Info->EnumLogFontEx.elfFullName),
-                         FullName);
-    }
-    else
-    {
-        status = IntGetFontLocalizedName(&NameW, SharedFace, TT_NAME_ID_FULL_NAME,
-                                         gusLanguageID);
-        if (NT_SUCCESS(status))
-        {
-            /* store it */
-            RtlStringCbCopyW(Info->EnumLogFontEx.elfFullName,
-                             sizeof(Info->EnumLogFontEx.elfFullName),
-                             NameW.Buffer);
-            RtlFreeUnicodeString(&NameW);
-        }
-    }
+    if (!FullName)
+        FullName = (WCHAR*)((ULONG_PTR) Otm + (ULONG_PTR)Otm->otmpFaceName);
+    
+    RtlStringCbCopyW(Info->EnumLogFontEx.elfFullName,
+                     sizeof(Info->EnumLogFontEx.elfFullName),
+                     FullName);
+
+    ExFreePoolWithTag(Otm, GDITAG_TEXT);
 
     RtlInitAnsiString(&StyleA, Face->style_name);
     StyleW.Buffer = Info->EnumLogFontEx.elfStyle;
@@ -4059,12 +4035,8 @@ ftGdiGetFontData(
 static UINT FASTCALL
 GetFontPenalty(LOGFONTW *               LogFont,
                PUNICODE_STRING          RequestedNameW,
-               PUNICODE_STRING          ActualNameW,
-               PUNICODE_STRING          FullFaceNameW,
                BYTE                     RequestedCharSet,
-               PFONTGDI                 FontGDI,
                OUTLINETEXTMETRICW *     Otm,
-               TEXTMETRICW *            TM,
                const char *             style_name)
 {
     ULONG   Penalty = 0;
@@ -4072,7 +4044,8 @@ GetFontPenalty(LOGFONTW *               LogFont,
     LONG    Long;
     BOOL    fFixedSys = FALSE, fNeedScaling = FALSE;
     const BYTE UserCharSet = CharSetFromLangID(gusLanguageID);
-    NTSTATUS Status;
+    TEXTMETRICW * TM = &Otm->otmTextMetrics;
+    UNICODE_STRING ActualNameW;
 
     /* FIXME: Aspect Penalty 30 */
     /* FIXME: IntSizeSynth Penalty 20 */
@@ -4206,53 +4179,22 @@ GetFontPenalty(LOGFONTW *               LogFont,
         }
     }
 
+    RtlInitUnicodeString(&ActualNameW, (WCHAR*)((ULONG_PTR)Otm + (ULONG_PTR)Otm->otmpFamilyName));
+
     if (RequestedNameW->Buffer[0])
     {
         BOOL Found = FALSE;
-        PSHARED_FACE SharedFace = FontGDI->SharedFace;
 
         /* localized family name */
         if (!Found)
         {
-            Status = IntGetFontLocalizedName(ActualNameW, SharedFace, TT_NAME_ID_FONT_FAMILY,
-                                             gusLanguageID);
-            if (NT_SUCCESS(Status))
-            {
-                Found = RtlEqualUnicodeString(RequestedNameW, ActualNameW, TRUE);
-            }
+            Found = RtlEqualUnicodeString(RequestedNameW, &ActualNameW, TRUE);
         }
         /* localized full name */
         if (!Found)
         {
-            Status = IntGetFontLocalizedName(ActualNameW, SharedFace, TT_NAME_ID_FULL_NAME,
-                                             gusLanguageID);
-            if (NT_SUCCESS(Status))
-            {
-                Found = RtlEqualUnicodeString(RequestedNameW, ActualNameW, TRUE);
-            }
-        }
-        if (gusLanguageID != gusEnglishUS)
-        {
-            /* English family name */
-            if (!Found)
-            {
-                Status = IntGetFontLocalizedName(ActualNameW, SharedFace, TT_NAME_ID_FONT_FAMILY,
-                                                 gusEnglishUS);
-                if (NT_SUCCESS(Status))
-                {
-                    Found = RtlEqualUnicodeString(RequestedNameW, ActualNameW, TRUE);
-                }
-            }
-            /* English full name */
-            if (!Found)
-            {
-                Status = IntGetFontLocalizedName(ActualNameW, SharedFace, TT_NAME_ID_FULL_NAME,
-                                                 gusEnglishUS);
-                if (NT_SUCCESS(Status))
-                {
-                    Found = RtlEqualUnicodeString(RequestedNameW, ActualNameW, TRUE);
-                }
-            }
+            RtlInitUnicodeString(&ActualNameW, (WCHAR*)((ULONG_PTR)Otm + (ULONG_PTR)Otm->otmpFaceName));
+            Found = RtlEqualUnicodeString(RequestedNameW, &ActualNameW, TRUE);
         }
         if (!Found)
         {
@@ -4451,7 +4393,7 @@ GetFontPenalty(LOGFONTW *               LogFont,
         DPRINT("WARNING: Penalty:%ld < 200: RequestedNameW:%ls, "
             "ActualNameW:%ls, lfCharSet:%d, lfWeight:%ld, "
             "tmCharSet:%d, tmWeight:%ld\n",
-            Penalty, RequestedNameW->Buffer, ActualNameW->Buffer,
+            Penalty, RequestedNameW->Buffer, ActualNameW.Buffer,
             LogFont->lfCharSet, LogFont->lfWeight,
             TM->tmCharSet, TM->tmWeight);
     }
@@ -4462,27 +4404,26 @@ GetFontPenalty(LOGFONTW *               LogFont,
 static __inline VOID
 FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty, LOGFONTW *LogFont,
                      PUNICODE_STRING pRequestedNameW,
-                     PUNICODE_STRING pActualNameW, BYTE RequestedCharSet,
+                     BYTE RequestedCharSet,
                      PLIST_ENTRY Head)
 {
     ULONG Penalty;
-    NTSTATUS Status;
     PLIST_ENTRY Entry;
     PFONT_ENTRY CurrentEntry;
     FONTGDI *FontGDI;
-    ANSI_STRING ActualNameA;
-    UNICODE_STRING ActualNameW, FullFaceNameW;
     OUTLINETEXTMETRICW *Otm = NULL;
     UINT OtmSize, OldOtmSize = 0;
-    TEXTMETRICW *TM;
     FT_Face Face;
-    LPBYTE pb;
 
     ASSERT(FontObj);
     ASSERT(MatchPenalty);
     ASSERT(LogFont);
     ASSERT(pRequestedNameW);
     ASSERT(Head);
+
+    /* Start with a pretty big buffer */
+    OldOtmSize = 0x200;
+    Otm = ExAllocatePoolWithTag(PagedPool, OldOtmSize, GDITAG_TEXT);
 
     /* get the FontObj of lowest penalty */
     Entry = Head->Flink;
@@ -4494,14 +4435,6 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty, LOGFONTW *LogFont,
         FontGDI = CurrentEntry->Font;
         ASSERT(FontGDI);
         Face = FontGDI->SharedFace->Face;
-
-        /* create actual name */
-        RtlInitAnsiString(&ActualNameA, Face->family_name);
-        Status = RtlAnsiStringToUnicodeString(&ActualNameW, &ActualNameA, TRUE);
-        if (!NT_SUCCESS(Status))
-        {
-            continue;
-        }
 
         /* get text metrics */
         OtmSize = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
@@ -4516,37 +4449,16 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty, LOGFONTW *LogFont,
         if (Otm)
         {
             IntGetOutlineTextMetrics(FontGDI, OtmSize, Otm);
-            TM = &Otm->otmTextMetrics;
             OldOtmSize = OtmSize;
 
-            /* create full name */
-            pb = (LPBYTE)Otm + (WORD)(DWORD_PTR)Otm->otmpFullName;
-            Status = RtlCreateUnicodeString(&FullFaceNameW, (LPWSTR)pb);
-            if (!NT_SUCCESS(Status))
-            {
-                RtlFreeUnicodeString(&ActualNameW);
-                RtlFreeUnicodeString(&FullFaceNameW);
-                continue;
-            }
-
-            Penalty = GetFontPenalty(LogFont, pRequestedNameW, &ActualNameW,
-                                     &FullFaceNameW, RequestedCharSet,
-                                     FontGDI, Otm, TM, Face->style_name);
+            Penalty = GetFontPenalty(LogFont, pRequestedNameW, RequestedCharSet,
+                                     Otm, Face->style_name);
             if (*MatchPenalty == 0xFFFFFFFF || Penalty < *MatchPenalty)
             {
-                DPRINT("%ls Penalty: %lu\n", FullFaceNameW.Buffer, Penalty);
-                RtlFreeUnicodeString(pActualNameW);
-                RtlCreateUnicodeString(pActualNameW, ActualNameW.Buffer);
-
                 *FontObj = GDIToObj(FontGDI, FONT);
                 *MatchPenalty = Penalty;
             }
-
-            RtlFreeUnicodeString(&FullFaceNameW);
         }
-
-        /* free strings */
-        RtlFreeUnicodeString(&ActualNameW);
     }
 
     if (Otm)
@@ -4591,7 +4503,7 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PTEXTOBJ TextObj;
-    UNICODE_STRING ActualNameW, RequestedNameW;
+    UNICODE_STRING RequestedNameW;
     PPROCESSINFO Win32Process;
     ULONG MatchPenalty;
     LOGFONTW *pLogFont;
@@ -4617,8 +4529,6 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
         TextObj = pTextObj;
     }
 
-    RtlInitUnicodeString(&ActualNameW, NULL);
-
     pLogFont = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     if (!RtlCreateUnicodeString(&RequestedNameW, pLogFont->lfFaceName))
     {
@@ -4641,14 +4551,14 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
     /* Search private fonts */
     IntLockProcessPrivateFonts(Win32Process);
     FindBestFontFromList(&TextObj->Font, &MatchPenalty, pLogFont,
-                         &RequestedNameW, &ActualNameW, RequestedCharSet,
+                         &RequestedNameW, RequestedCharSet,
                          &Win32Process->PrivateFontListHead);
     IntUnLockProcessPrivateFonts(Win32Process);
 
     /* Search system fonts */
     IntLockGlobalFonts;
     FindBestFontFromList(&TextObj->Font, &MatchPenalty, pLogFont,
-                         &RequestedNameW, &ActualNameW, RequestedCharSet,
+                         &RequestedNameW, RequestedCharSet,
                          &FontListHead);
     IntUnLockGlobalFonts;
 
@@ -4683,14 +4593,9 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
 
         TextObj->fl |= TEXTOBJECT_INIT;
         Status = STATUS_SUCCESS;
-
-        DPRINT("RequestedNameW: %ls (CharSet: %d) -> ActualNameW: %ls (CharSet: %d)\n",
-            RequestedNameW.Buffer, pLogFont->lfCharSet,
-            ActualNameW.Buffer, FontGdi->CharSet);
     }
 
     RtlFreeUnicodeString(&RequestedNameW);
-    RtlFreeUnicodeString(&ActualNameW);
     if (!pTextObj) TEXTOBJ_UnlockText(TextObj);
 
     ASSERT((NT_SUCCESS(Status) ^ (NULL == TextObj->Font)) != 0);
