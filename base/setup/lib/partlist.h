@@ -90,11 +90,12 @@ typedef struct _DISKENTRY
     /* BIOS parameters */
     BOOLEAN BiosFound;
     ULONG BiosDiskNumber;
-//    ULONG Signature;
+//    ULONG Signature;  // Obtained from LayoutBuffer->Signature
 //    ULONG Checksum;
 
     /* SCSI parameters */
     ULONG DiskNumber;
+//  SCSI_ADDRESS;
     USHORT Port;
     USHORT Bus;
     USHORT Id;
@@ -219,6 +220,42 @@ CreatePartitionList(VOID);
 VOID
 DestroyPartitionList(
     IN PPARTLIST List);
+
+PDISKENTRY
+GetDiskByBiosNumber(
+    IN PPARTLIST List,
+    IN ULONG BiosDiskNumber);
+
+PDISKENTRY
+GetDiskByNumber(
+    IN PPARTLIST List,
+    IN ULONG DiskNumber);
+
+PDISKENTRY
+GetDiskBySCSI(
+    IN PPARTLIST List,
+    IN USHORT Port,
+    IN USHORT Bus,
+    IN USHORT Id);
+
+PDISKENTRY
+GetDiskBySignature(
+    IN PPARTLIST List,
+    IN ULONG Signature);
+
+PPARTENTRY
+GetPartition(
+    // IN PPARTLIST List,
+    IN PDISKENTRY DiskEntry,
+    IN ULONG PartitionNumber);
+
+BOOLEAN
+GetDiskOrPartition(
+    IN PPARTLIST List,
+    IN ULONG DiskNumber,
+    IN ULONG PartitionNumber OPTIONAL,
+    OUT PDISKENTRY* pDiskEntry,
+    OUT PPARTENTRY* pPartEntry OPTIONAL);
 
 BOOLEAN
 SelectPartition(

@@ -1073,6 +1073,21 @@ AddDiskToList(
     DiskEntry->Id = ScsiAddress.TargetId;
 
     GetDriverName(DiskEntry);
+    /*
+     * Actually it would be more correct somehow to use:
+     *
+     * OBJECT_NAME_INFORMATION NameInfo; // ObjectNameInfo;
+     * ULONG ReturnedLength;
+     *
+     * Status = NtQueryObject(SomeHandleToTheDisk,
+     *                        ObjectNameInformation,
+     *                        &NameInfo,
+     *                        sizeof(NameInfo),
+     *                        &ReturnedLength);
+     * etc...
+     *
+     * See examples in https://git.reactos.org/?p=reactos.git;a=blob;f=reactos/ntoskrnl/io/iomgr/error.c;hb=2f3a93ee9cec8322a86bf74b356f1ad83fc912dc#l267
+     */
 
     InsertAscendingList(&List->DiskListHead, DiskEntry, DISKENTRY, ListEntry, DiskNumber);
 
@@ -1333,8 +1348,204 @@ DestroyPartitionList(
     RtlFreeHeap(ProcessHeap, 0, List);
 }
 
+PDISKENTRY
+GetDiskByBiosNumber(
+    IN PPARTLIST List,
+    IN ULONG BiosDiskNumber)
+{
+    PDISKENTRY DiskEntry;
+    PLIST_ENTRY Entry;
+
+    /* Check for empty disks */
+    if (IsListEmpty(&List->DiskListHead))
+        return NULL;
+
+    /* Loop over the disks and find the correct one */
+    Entry = List->DiskListHead.Flink;
+    while (Entry != &List->DiskListHead)
+    {
+        DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
+        Entry = Entry->Flink;
+
+        if (DiskEntry->BiosDiskNumber == BiosDiskNumber)
+        {
+            /* Disk found */
+            return DiskEntry;
+        }
+    }
+
+    /* Disk not found, stop there */
+    return NULL;
+}
+
+PDISKENTRY
+GetDiskByNumber(
+    IN PPARTLIST List,
+    IN ULONG DiskNumber)
+{
+    PDISKENTRY DiskEntry;
+    PLIST_ENTRY Entry;
+
+    /* Check for empty disks */
+    if (IsListEmpty(&List->DiskListHead))
+        return NULL;
+
+    /* Loop over the disks and find the correct one */
+    Entry = List->DiskListHead.Flink;
+    while (Entry != &List->DiskListHead)
+    {
+        DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
+        Entry = Entry->Flink;
+
+        if (DiskEntry->DiskNumber == DiskNumber)
+        {
+            /* Disk found */
+            return DiskEntry;
+        }
+    }
+
+    /* Disk not found, stop there */
+    return NULL;
+}
+
+PDISKENTRY
+GetDiskBySCSI(
+    IN PPARTLIST List,
+    IN USHORT Port,
+    IN USHORT Bus,
+    IN USHORT Id)
+{
+    PDISKENTRY DiskEntry;
+    PLIST_ENTRY Entry;
+
+    /* Check for empty disks */
+    if (IsListEmpty(&List->DiskListHead))
+        return NULL;
+
+    /* Loop over the disks and find the correct one */
+    Entry = List->DiskListHead.Flink;
+    while (Entry != &List->DiskListHead)
+    {
+        DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
+        Entry = Entry->Flink;
+
+        if (DiskEntry->Port == Port &&
+            DiskEntry->Bus  == Bus  &&
+            DiskEntry->Id   == Id)
+        {
+            /* Disk found */
+            return DiskEntry;
+        }
+    }
+
+    /* Disk not found, stop there */
+    return NULL;
+}
+
+PDISKENTRY
+GetDiskBySignature(
+    IN PPARTLIST List,
+    IN ULONG Signature)
+{
+    PDISKENTRY DiskEntry;
+    PLIST_ENTRY Entry;
+
+    /* Check for empty disks */
+    if (IsListEmpty(&List->DiskListHead))
+        return NULL;
+
+    /* Loop over the disks and find the correct one */
+    Entry = List->DiskListHead.Flink;
+    while (Entry != &List->DiskListHead)
+    {
+        DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
+        Entry = Entry->Flink;
+
+        if (DiskEntry->LayoutBuffer->Signature == Signature)
+        {
+            /* Disk found */
+            return DiskEntry;
+        }
+    }
+
+    /* Disk not found, stop there */
+    return NULL;
+}
+
+PPARTENTRY
+GetPartition(
+    // IN PPARTLIST List,
+    IN PDISKENTRY DiskEntry,
+    IN ULONG PartitionNumber)
+{
+    PPARTENTRY PartEntry;
+    PLIST_ENTRY Entry;
+
+    /* Disk found, loop over the primary partitions first... */
+    Entry = DiskEntry->PrimaryPartListHead.Flink;
+    while (Entry != &DiskEntry->PrimaryPartListHead)
+    {
+        PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+        Entry = Entry->Flink;
+
+        if (PartEntry->PartitionNumber == PartitionNumber)
+        {
+            /* Partition found */
+            return PartEntry;
+        }
+    }
+
+    /* ... then over the logical partitions if needed */
+    Entry = DiskEntry->LogicalPartListHead.Flink;
+    while (Entry != &DiskEntry->LogicalPartListHead)
+    {
+        PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+        Entry = Entry->Flink;
+
+        if (PartEntry->PartitionNumber == PartitionNumber)
+        {
+            /* Partition found */
+            return PartEntry;
+        }
+    }
+
+    /* The partition was not found on the disk, stop there */
+    return NULL;
+}
+
+BOOLEAN
+GetDiskOrPartition(
+    IN PPARTLIST List,
+    IN ULONG DiskNumber,
+    IN ULONG PartitionNumber OPTIONAL,
+    OUT PDISKENTRY* pDiskEntry,
+    OUT PPARTENTRY* pPartEntry OPTIONAL)
+{
+    PDISKENTRY DiskEntry;
+    PPARTENTRY PartEntry = NULL;
+
+    /* Find the disk */
+    DiskEntry = GetDiskByNumber(List, DiskNumber);
+    if (!DiskEntry)
+        return FALSE;
+
+    /* If we have a partition (PartitionNumber != 0), find it */
+    if (PartitionNumber != 0)
+    {
+        PartEntry = GetPartition(/*List,*/ DiskEntry, PartitionNumber);
+        if (!PartEntry)
+            return FALSE;
+        ASSERT(PartEntry->DiskEntry == DiskEntry);
+    }
+
+    /* Return the disk (and optionally the partition) */
+    *pDiskEntry = DiskEntry;
+    if (pPartEntry) *pPartEntry = PartEntry;
+    return TRUE;
+}
+
 //
-// FIXME: This function is COMPLETELY BROKEN!!!!
+// NOTE: Was introduced broken in r6258 by Casper
 //
 BOOLEAN
 SelectPartition(
@@ -1344,42 +1555,22 @@ SelectPartition(
 {
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
-    PLIST_ENTRY Entry1, Entry2;
 
-    /* Check for empty disks */
-    if (IsListEmpty(&List->DiskListHead))
+    DiskEntry = GetDiskByNumber(List, DiskNumber);
+    if (!DiskEntry)
         return FALSE;
 
-    /* Check for first usable entry on next disk */
-    Entry1 = List->CurrentDisk->ListEntry.Flink;
-    while (Entry1 != &List->DiskListHead)
-    {
-        DiskEntry = CONTAINING_RECORD(Entry1, DISKENTRY, ListEntry);
+    PartEntry = GetPartition(/*List,*/ DiskEntry, PartitionNumber);
+    if (!PartEntry)
+        return FALSE;
 
-        if (DiskEntry->DiskNumber == DiskNumber)
-        {
-            Entry2 = DiskEntry->PrimaryPartListHead.Flink;
-            while (Entry2 != &DiskEntry->PrimaryPartListHead)
-            {
-                PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
+    ASSERT(PartEntry->DiskEntry == DiskEntry);
+    ASSERT(DiskEntry->DiskNumber == DiskNumber);
+    ASSERT(PartEntry->PartitionNumber == PartitionNumber);
 
-                if (PartEntry->PartitionNumber == PartitionNumber)
-                {
-                    List->CurrentDisk = DiskEntry;
-                    List->CurrentPartition = PartEntry;
-                    return TRUE;
-                }
-
-                Entry2 = Entry2->Flink;
-            }
-
-            return FALSE;
-        }
-
-        Entry1 = Entry1->Flink;
-    }
-
-    return FALSE;
+    List->CurrentDisk = DiskEntry;
+    List->CurrentPartition = PartEntry;
+    return TRUE;
 }
 
 PPARTENTRY
