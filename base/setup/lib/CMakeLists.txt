@@ -2,6 +2,7 @@
 list(APPEND SOURCE
     fsutil.c
     genlist.c
+    ntverrsrc.c
     partlist.c
     precomp.h)
 
