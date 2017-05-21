@@ -467,6 +467,101 @@ IniCacheGetKeyValue(
 /* PUBLIC FUNCTIONS *********************************************************/
 
 NTSTATUS
+IniCacheLoadFromMemory(
+    PINICACHE *Cache,
+    PCHAR FileBuffer,
+    ULONG FileLength,
+    BOOLEAN String)
+{
+    PCHAR Ptr;
+
+    PINICACHESECTION Section;
+    PINICACHEKEY Key;
+
+    PCHAR SectionName;
+    ULONG SectionNameSize;
+
+    PCHAR KeyName;
+    ULONG KeyNameSize;
+
+    PCHAR KeyValue;
+    ULONG KeyValueSize;
+
+    /* Allocate inicache header */
+    *Cache = (PINICACHE)RtlAllocateHeap(ProcessHeap,
+                                        HEAP_ZERO_MEMORY,
+                                        sizeof(INICACHE));
+    if (*Cache == NULL)
+    {
+        DPRINT("RtlAllocateHeap() failed\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Parse ini file */
+    Section = NULL;
+    Ptr = FileBuffer;
+    while (Ptr != NULL && *Ptr != 0)
+    {
+        Ptr = IniCacheSkipWhitespace(Ptr);
+        if (Ptr == NULL)
+            continue;
+
+        if (*Ptr == '[')
+        {
+            Section = NULL;
+            Ptr++;
+
+            Ptr = IniCacheGetSectionName(Ptr,
+                                         &SectionName,
+                                         &SectionNameSize);
+
+            DPRINT1("[%.*s]\n", SectionNameSize, SectionName);
+
+            Section = IniCacheAddSection(*Cache,
+                                         SectionName,
+                                         SectionNameSize);
+            if (Section == NULL)
+            {
+                DPRINT("IniCacheAddSection() failed\n");
+                Ptr = IniCacheSkipToNextSection(Ptr);
+                continue;
+            }
+        }
+        else
+        {
+            if (Section == NULL)
+            {
+                Ptr = IniCacheSkipToNextSection(Ptr);
+                continue;
+            }
+
+            Ptr = IniCacheGetKeyName(Ptr,
+                                     &KeyName,
+                                     &KeyNameSize);
+
+            Ptr = IniCacheGetKeyValue(Ptr,
+                                      &KeyValue,
+                                      &KeyValueSize,
+                                      String);
+
+            DPRINT1("'%.*s' = '%.*s'\n", KeyNameSize, KeyName, KeyValueSize, KeyValue);
+
+            Key = IniCacheAddKey(Section,
+                                 KeyName,
+                                 KeyNameSize,
+                                 KeyValue,
+                                 KeyValueSize);
+            if (Key == NULL)
+            {
+                DPRINT("IniCacheAddKey() failed\n");
+            }
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
 IniCacheLoad(
     PINICACHE *Cache,
     PWCHAR FileName,
@@ -480,20 +575,7 @@ IniCacheLoad(
     NTSTATUS Status;
     PCHAR FileBuffer;
     ULONG FileLength;
-    PCHAR Ptr;
     LARGE_INTEGER FileOffset;
-
-    PINICACHESECTION Section;
-    PINICACHEKEY Key;
-
-    PCHAR SectionName;
-    ULONG SectionNameSize;
-
-    PCHAR KeyName;
-    ULONG KeyNameSize;
-
-    PCHAR KeyValue;
-    ULONG KeyValueSize;
 
     *Cache = NULL;
 
@@ -568,84 +650,18 @@ IniCacheLoad(
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtReadFile() failed (Status %lx)\n", Status);
-        RtlFreeHeap(ProcessHeap, 0, FileBuffer);
-        return Status;
+        goto Quit;
     }
 
-    /* Allocate inicache header */
-    *Cache = (PINICACHE)RtlAllocateHeap(ProcessHeap,
-                                        HEAP_ZERO_MEMORY,
-                                        sizeof(INICACHE));
-    if (*Cache == NULL)
+    Status = IniCacheLoadFromMemory(Cache, FileBuffer, FileLength, String);
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT("RtlAllocateHeap() failed\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
+        DPRINT1("IniCacheLoadFromMemory() failed (Status %lx)\n", Status);
     }
 
-    /* Parse ini file */
-    Section = NULL;
-    Ptr = FileBuffer;
-    while (Ptr != NULL && *Ptr != 0)
-    {
-        Ptr = IniCacheSkipWhitespace(Ptr);
-        if (Ptr == NULL)
-            continue;
-
-        if (*Ptr == '[')
-        {
-            Section = NULL;
-            Ptr++;
-
-            Ptr = IniCacheGetSectionName(Ptr,
-                                         &SectionName,
-                                         &SectionNameSize);
-
-            DPRINT1("[%.*s]\n", SectionNameSize, SectionName);
-
-            Section = IniCacheAddSection(*Cache,
-                                         SectionName,
-                                         SectionNameSize);
-            if (Section == NULL)
-            {
-                DPRINT("IniCacheAddSection() failed\n");
-                Ptr = IniCacheSkipToNextSection(Ptr);
-                continue;
-            }
-        }
-        else
-        {
-            if (Section == NULL)
-            {
-                Ptr = IniCacheSkipToNextSection(Ptr);
-                continue;
-            }
-
-            Ptr = IniCacheGetKeyName(Ptr,
-                                     &KeyName,
-                                     &KeyNameSize);
-
-            Ptr = IniCacheGetKeyValue(Ptr,
-                                      &KeyValue,
-                                      &KeyValueSize,
-                                      String);
-
-            DPRINT1("'%.*s' = '%.*s'\n", KeyNameSize, KeyName, KeyValueSize, KeyValue);
-
-            Key = IniCacheAddKey(Section,
-                                 KeyName,
-                                 KeyNameSize,
-                                 KeyValue,
-                                 KeyValueSize);
-            if (Key == NULL)
-            {
-                DPRINT("IniCacheAddKey() failed\n");
-            }
-        }
-    }
-
-    /* Free file buffer */
+Quit:
+    /* Free the file buffer, and return */
     RtlFreeHeap(ProcessHeap, 0, FileBuffer);
-
     return Status;
 }
 

@@ -74,6 +74,13 @@ typedef enum
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
+IniCacheLoadFromMemory(
+    PINICACHE *Cache,
+    PCHAR FileBuffer,
+    ULONG FileLength,
+    BOOLEAN String);
+
+NTSTATUS
 IniCacheLoad(
     PINICACHE *Cache,
     PWCHAR FileName,
