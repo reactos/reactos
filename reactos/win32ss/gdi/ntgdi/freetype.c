@@ -1783,7 +1783,7 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     char *Cp;
     UNICODE_STRING FamilyNameW, FaceNameW, StyleNameW, FullNameW;
     PSHARED_FACE SharedFace = FontGDI->SharedFace;
-    PSHARED_FACE_CACHE Cache = (gusLanguageID == gusEnglishUS) ? &SharedFace->EnglishUS : &SharedFace->UserLanguage;
+    PSHARED_FACE_CACHE Cache = (PRIMARYLANGID(gusLanguageID) == LANG_ENGLISH) ? &SharedFace->EnglishUS : &SharedFace->UserLanguage;
     FT_Face Face = SharedFace->Face;
 
     if (Cache->OutlineRequiredSize && Size < Cache->OutlineRequiredSize)
@@ -2096,42 +2096,58 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
                         FT_UShort NameID, FT_UShort LangID)
 {
     FT_SfntName Name;
-    INT i, Count;
+    INT i, Count, BestIndex, Score, BestScore;
     WCHAR Buf[LF_FULLFACESIZE];
     FT_Error Error;
     NTSTATUS Status = STATUS_NOT_FOUND;
     ANSI_STRING AnsiName;
-    PSHARED_FACE_CACHE Cache = (LangID == gusEnglishUS) ? &SharedFace->EnglishUS : &SharedFace->UserLanguage;
+    PSHARED_FACE_CACHE Cache;
     FT_Face Face = SharedFace->Face;
 
     RtlFreeUnicodeString(pNameW);
 
+    /* select cache */
+    if (PRIMARYLANGID(LangID) == LANG_ENGLISH)
+    {
+        Cache = &SharedFace->EnglishUS;
+    }
+    else
+    {
+        Cache = &SharedFace->UserLanguage;
+    }
+
+    /* use cache if available */
     if (NameID == TT_NAME_ID_FONT_FAMILY && Cache->FontFamily.Buffer)
     {
         return DuplicateUnicodeString(&Cache->FontFamily, pNameW);
     }
-
     if (NameID == TT_NAME_ID_FULL_NAME && Cache->FullName.Buffer)
     {
         return DuplicateUnicodeString(&Cache->FullName, pNameW);
     }
+
+    BestIndex = -1;
+    BestScore = 0;
 
     Count = FT_Get_Sfnt_Name_Count(Face);
     for (i = 0; i < Count; ++i)
     {
         Error = FT_Get_Sfnt_Name(Face, i, &Name);
         if (Error)
-            continue;
-
-        if (Name.platform_id != TT_PLATFORM_MICROSOFT ||
-            Name.encoding_id != TT_MS_ID_UNICODE_CS)
         {
-            continue;   /* not Microsoft Unicode name */
+            continue;   /* failure */
         }
 
-        if (Name.name_id != NameID || Name.language_id != LangID)
+        if (Name.name_id != NameID)
         {
             continue;   /* mismatched */
+        }
+
+        if (Name.platform_id != TT_PLATFORM_MICROSOFT ||
+            (Name.encoding_id != TT_MS_ID_UNICODE_CS &&
+             Name.encoding_id != TT_MS_ID_SYMBOL_CS))
+        {
+            continue;   /* not Microsoft Unicode name */
         }
 
         if (Name.string == NULL || Name.string_len == 0 ||
@@ -2145,26 +2161,53 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
             continue;   /* name too long */
         }
 
-        /* NOTE: Name.string is not null-terminated */
-        RtlCopyMemory(Buf, Name.string, Name.string_len);
-        Buf[Name.string_len / sizeof(WCHAR)] = UNICODE_NULL;
+        if (Name.language_id == LangID)
+        {
+            Score = 30;
+            BestIndex = i;
+            break;      /* best match */
+        }
+        else if (PRIMARYLANGID(Name.language_id) == PRIMARYLANGID(LangID))
+        {
+            Score = 20;
+        }
+        else if (PRIMARYLANGID(Name.language_id) == LANG_ENGLISH)
+        {
+            Score = 10;
+        }
+        else
+        {
+            Score = 0;
+        }
 
-        /* Convert UTF-16 big endian to little endian */
-        SwapEndian(Buf, Name.string_len);
-
-        RtlCreateUnicodeString(pNameW, Buf);
-        Status = STATUS_SUCCESS;
-        break;
+        if (Score > BestScore)
+        {
+            BestScore = Score;
+            BestIndex = i;
+        }
     }
 
-    if (Status == STATUS_NOT_FOUND)
+    if (BestIndex >= 0)
     {
-        if (LangID != gusEnglishUS)
+        /* store the best name */
+        Error = (Score == 30) ? 0 : FT_Get_Sfnt_Name(Face, BestIndex, &Name);
+        if (!Error)
         {
-            /* Retry with English US */
-            Status = IntGetFontLocalizedName(pNameW, SharedFace, NameID, gusEnglishUS);
+            /* NOTE: Name.string is not null-terminated */
+            RtlCopyMemory(Buf, Name.string, Name.string_len);
+            Buf[Name.string_len / sizeof(WCHAR)] = UNICODE_NULL;
+
+            /* Convert UTF-16 big endian to little endian */
+            SwapEndian(Buf, Name.string_len);
+
+            Status = RtlCreateUnicodeString(pNameW, Buf);
         }
-        else if (NameID == TT_NAME_ID_FONT_SUBFAMILY)
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* defaulted */
+        if (NameID == TT_NAME_ID_FONT_SUBFAMILY)
         {
             RtlInitAnsiString(&AnsiName, Face->style_name);
             Status = RtlAnsiStringToUnicodeString(pNameW, &AnsiName, TRUE);
@@ -2176,21 +2219,25 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
         }
     }
 
-    if (NameID == TT_NAME_ID_FONT_FAMILY)
+    if (NT_SUCCESS(Status))
     {
-        ASSERT_FREETYPE_LOCK_NOT_HELD();
-        IntLockFreeType;
-        if (!Cache->FontFamily.Buffer)
-            DuplicateUnicodeString(pNameW, &Cache->FontFamily);
-        IntUnLockFreeType;
-    }
-    else if (NameID == TT_NAME_ID_FULL_NAME)
-    {
-        ASSERT_FREETYPE_LOCK_NOT_HELD();
-        IntLockFreeType;
-        if (!Cache->FullName.Buffer)
-            DuplicateUnicodeString(pNameW, &Cache->FullName);
-        IntUnLockFreeType;
+        /* make cache */
+        if (NameID == TT_NAME_ID_FONT_FAMILY)
+        {
+            ASSERT_FREETYPE_LOCK_NOT_HELD();
+            IntLockFreeType;
+            if (!Cache->FontFamily.Buffer)
+                DuplicateUnicodeString(pNameW, &Cache->FontFamily);
+            IntUnLockFreeType;
+        }
+        else if (NameID == TT_NAME_ID_FULL_NAME)
+        {
+            ASSERT_FREETYPE_LOCK_NOT_HELD();
+            IntLockFreeType;
+            if (!Cache->FullName.Buffer)
+                DuplicateUnicodeString(pNameW, &Cache->FullName);
+            IntUnLockFreeType;
+        }
     }
 
     return Status;
