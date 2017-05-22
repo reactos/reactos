@@ -186,8 +186,13 @@ static inline void list_splice_init(struct list_head *list,
  * @type:	the type of the struct this is embedded in.
  * @member:	the name of the list_struct within the struct.
  */
+#ifdef __REACTOS__
+#define list_entry(ptr, type, member) \
+	((type *)((char *)(ptr)-(size_t)(&((type *)0)->member)))
+#else /* __REACTOS__ */
 #define list_entry(ptr, type, member) \
 	((type *)((char *)(ptr)-(unsigned long)(&((type *)0)->member)))
+#endif /* __REACTOS__ */
 
 /**
  * list_for_each	-	iterate over a list
