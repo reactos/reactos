@@ -24,13 +24,6 @@
 #include "arcname.h"
 
 
-BOOLEAN
-NTAPI
-RtlEqualUnicodeString(
-    IN CONST UNICODE_STRING *s1,
-    IN CONST UNICODE_STRING *s2,
-    IN BOOLEAN  CaseInsensitive);
-
 #define OBJ_NAME_PATH_SEPARATOR ((WCHAR)L'\\')
 
 
