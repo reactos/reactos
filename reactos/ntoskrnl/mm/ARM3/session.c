@@ -511,6 +511,7 @@ MiSessionInitializeWorkingSetList(VOID)
     if (AllocatedPageTable != FALSE)
     {
         /* Get a zeroed colored zero page */
+        MI_SET_USAGE(MI_USAGE_INIT_MEMORY);
         Color = MI_GET_NEXT_COLOR();
         PageFrameIndex = MiRemoveZeroPageSafe(Color);
         if (!PageFrameIndex)
@@ -542,6 +543,7 @@ MiSessionInitializeWorkingSetList(VOID)
     }
 
     /* Get a zeroed colored zero page */
+    MI_SET_USAGE(MI_USAGE_INIT_MEMORY);
     Color = MI_GET_NEXT_COLOR();
     PageFrameIndex = MiRemoveZeroPageSafe(Color);
     if (!PageFrameIndex)
@@ -679,6 +681,7 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     for (i = 0; i < MiSessionDataPages; i++)
     {
         /* Get a zeroed colored zero page */
+        MI_SET_USAGE(MI_USAGE_INIT_MEMORY);
         Color = MI_GET_NEXT_COLOR();
         DataPage[i] = MiRemoveZeroPageSafe(Color);
         if (!DataPage[i])
@@ -701,6 +704,7 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     SessionGlobal = MiPteToAddress(SessionPte);
 
     /* Get a zeroed colored zero page */
+    MI_SET_USAGE(MI_USAGE_INIT_MEMORY);
     Color = MI_GET_NEXT_COLOR();
     SessionPageDirIndex = MiRemoveZeroPageSafe(Color);
     if (!SessionPageDirIndex)
@@ -742,6 +746,7 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     for (i = 0; i < MiSessionTagPages; i++)
     {
         /* Grab a zeroed colored page */
+        MI_SET_USAGE(MI_USAGE_INIT_MEMORY);
         Color = MI_GET_NEXT_COLOR();
         TagPage[i] = MiRemoveZeroPageSafe(Color);
         if (!TagPage[i])

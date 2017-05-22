@@ -607,6 +607,7 @@ CcRosMapVacb(
     {
         PFN_NUMBER PageFrameNumber;
 
+        MI_SET_USAGE(MI_USAGE_CACHE);
         Status = MmRequestPageMemoryConsumer(MC_CACHE, TRUE, &PageFrameNumber);
         if (PageFrameNumber == 0)
         {
@@ -741,8 +742,15 @@ CcRosCreateVacb (
         PWCHAR pos = NULL;
         ULONG len = 0;
         pos = wcsrchr(SharedCacheMap->FileObject->FileName.Buffer, '\\');
-        len = wcslen(pos) * sizeof(WCHAR);
-        if (pos) snprintf(MI_PFN_CURRENT_PROCESS_NAME, min(16, len), "%S", pos);
+        if (pos)
+        {
+            len = wcslen(pos) * sizeof(WCHAR);
+            snprintf(MI_PFN_CURRENT_PROCESS_NAME, min(16, len), "%S", pos);
+        }
+        else
+        {
+            snprintf(MI_PFN_CURRENT_PROCESS_NAME, min(16, len), "%wZ", &SharedCacheMap->FileObject->FileName);
+        }
     }
 #endif
 

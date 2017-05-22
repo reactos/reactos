@@ -994,6 +994,8 @@ _WARN("MiSessionCommitPageTables halfplemented for amd64")
 
             /* Acquire the PFN lock and grab a zero page */
             OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+            MI_SET_USAGE(MI_USAGE_PAGE_TABLE);
+            MI_SET_PROCESS2(PsGetCurrentProcess()->ImageFileName);
             Color = (++MmSessionSpace->Color) & MmSecondaryColorMask;
             PageFrameNumber = MiRemoveZeroPage(Color);
             TempPde.u.Hard.PageFrameNumber = PageFrameNumber;

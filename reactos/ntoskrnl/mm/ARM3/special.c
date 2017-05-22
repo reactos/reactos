@@ -328,6 +328,15 @@ MmAllocateSpecialPool(SIZE_T NumberOfBytes, ULONG Tag, POOL_TYPE PoolType, ULONG
     MiSpecialPoolFirstPte = MmSystemPteBase + PointerPte->u.List.NextEntry;
 
     /* Allocate a physical page */
+    if (PoolType == PagedPool)
+    {
+        MI_SET_USAGE(MI_USAGE_PAGED_POOL);
+    }
+    else
+    {
+        MI_SET_USAGE(MI_USAGE_NONPAGED_POOL);
+    }
+    MI_SET_PROCESS2("Kernel-Special");
     PageFrameNumber = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
 
     /* Initialize PFN and make it valid */
