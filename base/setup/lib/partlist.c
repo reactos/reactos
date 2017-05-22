@@ -1356,10 +1356,6 @@ GetDiskByBiosNumber(
     PDISKENTRY DiskEntry;
     PLIST_ENTRY Entry;
 
-    /* Check for empty disks */
-    if (IsListEmpty(&List->DiskListHead))
-        return NULL;
-
     /* Loop over the disks and find the correct one */
     Entry = List->DiskListHead.Flink;
     while (Entry != &List->DiskListHead)
@@ -1385,10 +1381,6 @@ GetDiskByNumber(
 {
     PDISKENTRY DiskEntry;
     PLIST_ENTRY Entry;
-
-    /* Check for empty disks */
-    if (IsListEmpty(&List->DiskListHead))
-        return NULL;
 
     /* Loop over the disks and find the correct one */
     Entry = List->DiskListHead.Flink;
@@ -1418,10 +1410,6 @@ GetDiskBySCSI(
     PDISKENTRY DiskEntry;
     PLIST_ENTRY Entry;
 
-    /* Check for empty disks */
-    if (IsListEmpty(&List->DiskListHead))
-        return NULL;
-
     /* Loop over the disks and find the correct one */
     Entry = List->DiskListHead.Flink;
     while (Entry != &List->DiskListHead)
@@ -1449,10 +1437,6 @@ GetDiskBySignature(
 {
     PDISKENTRY DiskEntry;
     PLIST_ENTRY Entry;
-
-    /* Check for empty disks */
-    if (IsListEmpty(&List->DiskListHead))
-        return NULL;
 
     /* Loop over the disks and find the correct one */
     Entry = List->DiskListHead.Flink;

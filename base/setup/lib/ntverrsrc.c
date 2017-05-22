@@ -105,13 +105,13 @@ static PCVS_VERSION_INFO_STRUCT32
 VersionInfo32_FindChild(
     IN PCVS_VERSION_INFO_STRUCT32 info,
     IN PCWSTR szKey,
-    IN UINT cbKey)
+    IN UINT cchKey)
 {
     PCVS_VERSION_INFO_STRUCT32 child = VersionInfo32_Children(info);
 
     while ((ULONG_PTR)child < (ULONG_PTR)info + info->wLength)
     {
-        if (!_wcsnicmp(child->szKey, szKey, cbKey) && !child->szKey[cbKey])
+        if (!_wcsnicmp(child->szKey, szKey, cchKey) && !child->szKey[cchKey])
             return child;
 
         if (child->wLength == 0) return NULL;

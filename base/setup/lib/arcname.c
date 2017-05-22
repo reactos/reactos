@@ -143,7 +143,7 @@ ArcGetNextTokenA(
     KeyValue = strtoul(p, (PSTR*)&p, 10);
 
     /* Skip any trailing whitespace */
-    while (*p && isspace(*p)) ++p;
+    while (isspace(*p)) ++p;
 
     /* The token must terminate with ')' */
     if (*p != ')')
@@ -203,10 +203,9 @@ ArcGetNextTokenU(
      */
     // KeyValue = _wtoi(p);
     KeyValue = wcstoul(p, (PWSTR*)&p, 10);
-    ASSERT(p);
 
     /* Skip any trailing whitespace */
-    while (*p && iswspace(*p)) ++p;
+    while (iswspace(*p)) ++p;
 
     /* The token must terminate with ')' */
     if (*p != L')')
