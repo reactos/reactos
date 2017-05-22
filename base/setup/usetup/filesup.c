@@ -679,12 +679,7 @@ NtPathToDiskPartComponents(
     DiskNumber = wcstoul(Path, (PWSTR*)&Path, 10);
 
     /* Either NULL termination, or a path separator must be present now */
-    if (!Path)
-    {
-        DPRINT1("An error happened!\n");
-        return FALSE;
-    }
-    else if (*Path && *Path != OBJ_NAME_PATH_SEPARATOR)
+    if (*Path && *Path != OBJ_NAME_PATH_SEPARATOR)
     {
         DPRINT1("'%S' : expected a path separator!\n", Path);
         return FALSE;
@@ -717,13 +712,7 @@ NtPathToDiskPartComponents(
     PartNumber = wcstoul(Path, (PWSTR*)&Path, 10);
 
     /* Either NULL termination, or a path separator must be present now */
-    if (!Path)
-    {
-        /* We fail here because wcstoul failed for whatever reason */
-        DPRINT1("An error happened!\n");
-        return FALSE;
-    }
-    else if (*Path && *Path != OBJ_NAME_PATH_SEPARATOR)
+    if (*Path && *Path != OBJ_NAME_PATH_SEPARATOR)
     {
         /* We shouldn't fail here because it just means this part of path is actually not a partition specifier. Or should we? */
         DPRINT1("'%S' : expected a path separator!\n", Path);
@@ -788,7 +777,7 @@ OpenAndMapFile(
                         FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to open file %wZ, Status 0x%08lx\n", &Name, Status);
+        DPRINT1("Failed to open file '%wZ', Status 0x%08lx\n", &Name, Status);
         return Status;
     }
 
@@ -810,7 +799,7 @@ OpenAndMapFile(
         }
 
         if (FileInfo.EndOfFile.HighPart != 0)
-            DPRINT1("WARNING!! The file %wZ is too large!\n", Name);
+            DPRINT1("WARNING!! The file '%wZ' is too large!\n", &Name);
 
         *FileSize = FileInfo.EndOfFile.LowPart;
 
@@ -829,7 +818,7 @@ OpenAndMapFile(
                              *FileHandle);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to create a memory section for file %wZ, Status 0x%08lx\n", &Name, Status);
+        DPRINT1("Failed to create a memory section for file '%wZ', Status 0x%08lx\n", &Name, Status);
         NtClose(*FileHandle);
         *FileHandle = NULL;
         return Status;
