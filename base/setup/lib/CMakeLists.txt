@@ -1,5 +1,6 @@
 
 list(APPEND SOURCE
+    arcname.c
     fsutil.c
     genlist.c
     ntverrsrc.c
