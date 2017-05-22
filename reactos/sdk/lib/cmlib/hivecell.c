@@ -33,7 +33,7 @@ HvpGetCellHeader(
     }
     else
     {
-        ASSERT((CellIndex & HCELL_TYPE_MASK) == Stable);
+        ASSERT(HvGetCellType(CellIndex) == Stable);
         return (PVOID)((ULONG_PTR)RegistryHive->BaseBlock + HBLOCK_SIZE +
                        CellIndex);
     }
