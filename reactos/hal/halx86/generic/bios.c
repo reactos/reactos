@@ -390,7 +390,7 @@ HalpStoreAndClearIopm(VOID)
     //
     // Loop the I/O Map
     //
-    for (i = j = 0; i < (IOPM_SIZE) / 2; i++)
+    for (i = j = 0; i < IOPM_SIZE / sizeof(USHORT); i++)
     {
         //
         // Check for non-FFFF entry
@@ -415,7 +415,10 @@ HalpStoreAndClearIopm(VOID)
     //
     // Terminate it
     //
-    while (i++ < (IOPM_FULL_SIZE / 2)) *Entry++ = 0xFFFF;
+    while (i++ < IOPM_FULL_SIZE / sizeof(USHORT))
+    {
+        *Entry++ = 0xFFFF;
+    }
 
     //
     // Return the entries we saved
@@ -542,7 +545,7 @@ HalpSetupRealModeIoPermissionsAndTask(VOID)
     //
     // Save a copy of the I/O Map and delete it
     //
-    HalpSavedIoMap = (PUSHORT)&(KeGetPcr()->TSS->IoMaps[0]);
+    HalpSavedIoMap = (PUSHORT)KeGetPcr()->TSS->IoMaps[0].IoMap;
     HalpStoreAndClearIopm();
 
     //
