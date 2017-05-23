@@ -1,3 +1,13 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS text-mode setup
+ * FILE:            base/setup/usetup/osdetect.c
+ * PURPOSE:         NT 5.x family (MS Windows <= 2003, and ReactOS)
+ *                  operating systems detection code.
+ * PROGRAMMER:      Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ */
+
+#pragma once
 
 typedef struct _NTOS_INSTALLATION
 {
@@ -17,3 +27,5 @@ typedef struct _NTOS_INSTALLATION
 PGENERIC_LIST
 CreateNTOSInstallationsList(
     IN PPARTLIST List);
+
+/* EOF */

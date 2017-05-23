@@ -30,9 +30,12 @@ extern HANDLE ProcessHeap;
 #include "linklist.h"
 #include "ntverrsrc.h"
 // #include "arcname.h"
+#include "filesup.h"
 #include "fsutil.h"
 #include "genlist.h"
+#include "inicache.h"
 #include "partlist.h"
 #include "arcname.h"
+#include "osdetect.h"
 
 /* EOF */

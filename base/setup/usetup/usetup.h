@@ -60,7 +60,6 @@
 /* Internal Headers */
 #include "interface/consup.h"
 #include "inffile.h"
-#include "inicache.h"
 #include "progress.h"
 #ifdef __REACTOS__
 #include "infros.h"
@@ -72,7 +71,6 @@
 #include "cabinet.h"
 #include "filesup.h"
 #include "genlist.h"
-#include "osdetect.h"
 #include "host.h"
 #include "mui.h"
 

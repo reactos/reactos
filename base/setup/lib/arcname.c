@@ -24,6 +24,7 @@
 
 #include "precomp.h"
 
+#include "filesup.h"
 #include "partlist.h"
 #include "arcname.h"
 
@@ -706,47 +707,6 @@ Quit:
     *ArcNamePath = p;
     return STATUS_SUCCESS;
 }
-
-
-/**** FIXME: Redundant with filesup.c ! ****\
-|** (but filesup.c is not yet included in **|
-\**    setuplib, hence this code copy)    **/
-
-static
-HRESULT
-ConcatPaths(
-    IN OUT PWSTR PathElem1,
-    IN SIZE_T cchPathSize,
-    IN PCWSTR PathElem2 OPTIONAL)
-{
-    HRESULT hr;
-    SIZE_T cchPathLen;
-
-    if (!PathElem2)
-        return S_OK;
-    if (cchPathSize <= 1)
-        return S_OK;
-
-    cchPathLen = min(cchPathSize, wcslen(PathElem1));
-
-    if (PathElem2[0] != L'\\' && cchPathLen > 0 && PathElem1[cchPathLen-1] != L'\\')
-    {
-        /* PathElem2 does not start with '\' and PathElem1 does not end with '\' */
-        hr = StringCchCatW(PathElem1, cchPathSize, L"\\");
-        if (FAILED(hr))
-            return hr;
-    }
-    else if (PathElem2[0] == L'\\' && cchPathLen > 0 && PathElem1[cchPathLen-1] == L'\\')
-    {
-        /* PathElem2 starts with '\' and PathElem1 ends with '\' */
-        while (*PathElem2 == L'\\')
-            ++PathElem2; // Skip any backslash
-    }
-    hr = StringCchCatW(PathElem1, cchPathSize, PathElem2);
-    return hr;
-}
-
-/*******************************************/
 
 
 BOOLEAN

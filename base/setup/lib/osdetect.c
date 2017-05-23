@@ -7,15 +7,22 @@
  * PROGRAMMER:      Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
-#include "usetup.h"
+#include "precomp.h"
+
+#include "ntverrsrc.h"
+// #include "arcname.h"
+#include "filesup.h"
+#include "genlist.h"
+#include "inicache.h"
+#include "partlist.h"
+#include "arcname.h"
+#include "osdetect.h"
 
 #define NDEBUG
 #include <debug.h>
 
 
 /* GLOBALS ******************************************************************/
-
-extern PPARTLIST PartitionList;
 
 /* Language-independent Vendor strings */
 static const PCWSTR KnownVendors[] = { L"ReactOS", L"Microsoft" };
