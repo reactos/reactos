@@ -685,11 +685,11 @@ CONSOLE_SetStyledText(
 
     if (Flags & TEXT_ALIGN_CENTER)
     {
-        coPos.X = (xScreen - Length) /2; 
+        coPos.X = (xScreen - Length) /2;
     }
     else if(Flags & TEXT_ALIGN_RIGHT)
     {
-        coPos.X = coPos.X - Length; 
+        coPos.X = coPos.X - Length;
 
         if (Flags & TEXT_PADDING_SMALL)
         {
@@ -697,7 +697,7 @@ CONSOLE_SetStyledText(
         }
         else if (Flags & TEXT_PADDING_MEDIUM)
         {
-            coPos.X -= 2; 
+            coPos.X -= 2;
         }
         else if (Flags & TEXT_PADDING_BIG)
         {
@@ -712,8 +712,8 @@ CONSOLE_SetStyledText(
         }
         else if (Flags & TEXT_PADDING_MEDIUM)
         {
-            coPos.X += 2; 
-        }       
+            coPos.X += 2;
+        }
         else if (Flags & TEXT_PADDING_BIG)
         {
             coPos.X += 3;

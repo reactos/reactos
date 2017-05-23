@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Setup
- * FILE:            base/setup/usetup/lang/sv-SE.h  
+ * FILE:            base/setup/usetup/lang/sv-SE.h
  * PURPOSE:         Swedish resource file
  * Translation:     Jaix Bly plus perhaps GreatLord if blame and translate.reactos.se is consulted.
  */

@@ -56,7 +56,7 @@ static MUI_ENTRY itITLanguagePageEntries[] =
 static MUI_ENTRY itITWelcomePageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -92,7 +92,7 @@ static MUI_ENTRY itITWelcomePageEntries[] =
         TEXT_STYLE_NORMAL
     },
     {
-        8, 
+        8,
         19,
         "\x07  Premere L per vedere i termini e condizioni della licenza.",
         TEXT_STYLE_NORMAL
@@ -104,14 +104,14 @@ static MUI_ENTRY itITWelcomePageEntries[] =
         TEXT_STYLE_NORMAL
     },
     {
-        6, 
+        6,
         23,
         "Per maggiori informazioni riguardo ReactOS, visitate il sito:",
         TEXT_STYLE_NORMAL
     },
     {
-        6, 
-        24, 
+        6,
+        24,
         "http://www.reactos.org",
         TEXT_STYLE_HIGHLIGHT
     },
@@ -188,7 +188,7 @@ static MUI_ENTRY itITIntroPageEntries[] =
     {
         0,
         0,
-        "ENTER = Continua   F3 = Termina",
+        "INVIO = Continua   F3 = Termina",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -202,7 +202,7 @@ static MUI_ENTRY itITIntroPageEntries[] =
 static MUI_ENTRY itITLicensePageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -279,43 +279,43 @@ static MUI_ENTRY itITLicensePageEntries[] =
         "della licenza GNU GPL con ReactOS, visiti il sito:",
         TEXT_STYLE_NORMAL
     },
-    {           
+    {
         8,
         20,
         "http://www.gnu.org/licenses/licenses.html",
         TEXT_STYLE_HIGHLIGHT
     },
-    {           
+    {
         8,
         22,
         "Garanzia:",
         TEXT_STYLE_HIGHLIGHT
     },
-    {           
+    {
         8,
         24,
         "Questo software \x8A libero; vedere il codice per le condizioni di copia.",
         TEXT_STYLE_NORMAL
     },
-    {           
+    {
         8,
         25,
         "NON esiste garanzia; n\x8A di COMMERCIABILIT\x85",
         TEXT_STYLE_NORMAL
     },
-    {           
+    {
         8,
         26,
         "o adeguatezza ad un uso particolare",
         TEXT_STYLE_NORMAL
     },
-    {           
+    {
         0,
         0,
         "   INVIO = Ritorna",
         TEXT_TYPE_STATUS
     },
-    {           
+    {
         0,
         0,
         NULL,
@@ -326,13 +326,13 @@ static MUI_ENTRY itITLicensePageEntries[] =
 static MUI_ENTRY itITDevicePageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
-        6, 
+        6,
         8,
         "L'elenco che segue mostra le impostazioni correnti delle periferiche.",
         TEXT_STYLE_NORMAL
@@ -368,7 +368,7 @@ static MUI_ENTRY itITDevicePageEntries[] =
         TEXT_STYLE_NORMAL
     },
     {
-        25, 
+        25,
         16, "Accettare queste impostazioni",
         TEXT_STYLE_NORMAL
     },
@@ -379,25 +379,25 @@ static MUI_ENTRY itITDevicePageEntries[] =
         TEXT_STYLE_NORMAL
     },
     {
-        6, 
-        20, 
+        6,
+        20,
         "e modificarlo premendo INVIO per selezionare un valore alternativo.",
         TEXT_STYLE_NORMAL
     },
     {
-        6, 
+        6,
         21,
         " ",
         TEXT_STYLE_NORMAL
     },
     {
-        6, 
-        23, 
+        6,
+        23,
         "Quando le impostazioni saranno corrette, selezionare",
         TEXT_STYLE_NORMAL
     },
     {
-        6, 
+        6,
         24,
         "\"Accettare queste impostazioni\" e premere INVIO.",
         TEXT_STYLE_NORMAL
@@ -419,7 +419,7 @@ static MUI_ENTRY itITDevicePageEntries[] =
 static MUI_ENTRY itITRepairPageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -483,7 +483,7 @@ static MUI_ENTRY itITRepairPageEntries[] =
 static MUI_ENTRY itITComputerPageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -499,7 +499,7 @@ static MUI_ENTRY itITComputerPageEntries[] =
         10,
         "\x07  Premere i tasti SU e GI\xEB per scegliere il tipo.",
         TEXT_STYLE_NORMAL
-    },    
+    },
     {
         8,
         11,
@@ -535,7 +535,7 @@ static MUI_ENTRY itITComputerPageEntries[] =
 static MUI_ENTRY itITFlushPageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -575,7 +575,7 @@ static MUI_ENTRY itITFlushPageEntries[] =
 static MUI_ENTRY itITQuitPageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -621,7 +621,7 @@ static MUI_ENTRY itITQuitPageEntries[] =
 static MUI_ENTRY itITDisplayPageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -672,7 +672,7 @@ static MUI_ENTRY itITDisplayPageEntries[] =
 static MUI_ENTRY itITSuccessPageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -718,7 +718,7 @@ static MUI_ENTRY itITSuccessPageEntries[] =
 static MUI_ENTRY itITBootPageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -765,7 +765,7 @@ static MUI_ENTRY itITBootPageEntries[] =
 static MUI_ENTRY itITSelectPartitionEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -835,7 +835,7 @@ static MUI_ENTRY itITSelectPartitionEntries[] =
 static MUI_ENTRY itITConfirmDeleteSystemPartitionEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -935,7 +935,7 @@ static MUI_ENTRY itITConfirmDeleteSystemPartitionEntries[] =
 static MUI_ENTRY itITFormatPartitionEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -969,7 +969,7 @@ static MUI_ENTRY itITFormatPartitionEntries[] =
 static MUI_ENTRY itITInstallDirectoryEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -1021,7 +1021,7 @@ static MUI_ENTRY itITInstallDirectoryEntries[] =
 static MUI_ENTRY itITFileCopyEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -1061,7 +1061,7 @@ static MUI_ENTRY itITFileCopyEntries[] =
 static MUI_ENTRY itITBootLoaderEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -1113,7 +1113,7 @@ static MUI_ENTRY itITBootLoaderEntries[] =
 static MUI_ENTRY itITKeyboardSettingsEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -1165,7 +1165,7 @@ static MUI_ENTRY itITKeyboardSettingsEntries[] =
 static MUI_ENTRY itITLayoutSettingsEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -1218,7 +1218,7 @@ static MUI_ENTRY itITLayoutSettingsEntries[] =
 static MUI_ENTRY itITPrepareCopyEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -1247,7 +1247,7 @@ static MUI_ENTRY itITPrepareCopyEntries[] =
 static MUI_ENTRY itITSelectFSEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
@@ -1294,7 +1294,7 @@ static MUI_ENTRY itITSelectFSEntries[] =
 static MUI_ENTRY itITDeletePartitionEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE

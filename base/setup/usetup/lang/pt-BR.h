@@ -1054,7 +1054,7 @@ static MUI_ENTRY ptBRFileCopyEntries[] =
     {
         50,
         0,
-        "\xB3 Por favor, aguarde...",     
+        "\xB3 Por favor, aguarde...",
         TEXT_TYPE_STATUS
     },
     {
