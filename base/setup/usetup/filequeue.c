@@ -369,46 +369,32 @@ SetupCommitFileQueueW(
     while (Entry != NULL)
     {
         /* Build the full source path */
-        wcscpy(FileSrcPath, Entry->SourceRootPath);
-        if (Entry->SourcePath != NULL)
-            wcscat(FileSrcPath, Entry->SourcePath);
-        wcscat(FileSrcPath, L"\\");
-        wcscat(FileSrcPath, Entry->SourceFilename);
+        CombinePaths(FileSrcPath, ARRAYSIZE(FileSrcPath), 3,
+                     Entry->SourceRootPath, Entry->SourcePath,
+                     Entry->SourceFilename);
 
         /* Build the full target path */
         wcscpy(FileDstPath, TargetRootPath);
-        if (Entry->TargetDirectory[0] == 0)
+        if (Entry->TargetDirectory[0] == UNICODE_NULL)
         {
             /* Installation path */
 
             /* Add the installation path */
-            if (TargetPath != NULL)
-            {
-                if (TargetPath[0] != L'\\')
-                    wcscat(FileDstPath, L"\\");
-                wcscat(FileDstPath, TargetPath);
-            }
+            ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 1, TargetPath);
         }
         else if (Entry->TargetDirectory[0] == L'\\')
         {
             /* Absolute path */
-            if (Entry->TargetDirectory[1] != 0)
-                wcscat(FileDstPath, Entry->TargetDirectory);
+            if (Entry->TargetDirectory[1] != UNICODE_NULL)
+                ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 1, Entry->TargetDirectory);
         }
         else // if (Entry->TargetDirectory[0] != L'\\')
         {
             /* Path relative to the installation path */
 
             /* Add the installation path */
-            if (TargetPath != NULL)
-            {
-                if (TargetPath[0] != L'\\')
-                    wcscat(FileDstPath, L"\\");
-                wcscat(FileDstPath, TargetPath);
-            }
-
-            wcscat(FileDstPath, L"\\");
-            wcscat(FileDstPath, Entry->TargetDirectory);
+            ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 2,
+                        TargetPath, Entry->TargetDirectory);
         }
 
         /*
@@ -417,11 +403,10 @@ SetupCommitFileQueueW(
          */
         if (Entry->SourceCabinet == NULL)
         {
-            wcscat(FileDstPath, L"\\");
             if (Entry->TargetFilename != NULL)
-                wcscat(FileDstPath, Entry->TargetFilename);
+                ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 1, Entry->TargetFilename);
             else
-                wcscat(FileDstPath, Entry->SourceFilename);
+                ConcatPaths(FileDstPath, ARRAYSIZE(FileDstPath), 1, Entry->SourceFilename);
         }
 
         /* FIXME: Do it! */
@@ -435,11 +420,9 @@ SetupCommitFileQueueW(
         if (Entry->SourceCabinet != NULL)
         {
             /* Extract the file */
-            wcscpy(CabinetName, Entry->SourceRootPath);
-            if (Entry->SourcePath != NULL)
-                wcscat(CabinetName, Entry->SourcePath);
-            wcscat(CabinetName, L"\\");
-            wcscat(CabinetName, Entry->SourceCabinet);
+            CombinePaths(CabinetName, ARRAYSIZE(CabinetName), 3,
+                         Entry->SourceRootPath, Entry->SourcePath,
+                         Entry->SourceCabinet);
             Status = SetupExtractFile(CabinetName, Entry->SourceFilename, FileDstPath);
         }
         else

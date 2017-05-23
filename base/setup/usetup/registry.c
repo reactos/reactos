@@ -627,9 +627,8 @@ ImportRegistryFile(
     UINT ErrorLine;
 
     /* Load inf file from install media. */
-    wcscpy(FileNameBuffer, SourcePath.Buffer);
-    wcscat(FileNameBuffer, L"\\");
-    wcscat(FileNameBuffer, Filename);
+    CombinePaths(FileNameBuffer, ARRAYSIZE(FileNameBuffer), 2,
+                 SourcePath.Buffer, Filename);
 
     hInf = SetupOpenInfFileW(FileNameBuffer,
                              NULL,

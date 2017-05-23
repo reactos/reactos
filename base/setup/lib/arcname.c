@@ -787,7 +787,7 @@ ArcPathToNtPath(
     if (BeginOfPath && *BeginOfPath)
     {
         HRESULT hr;
-        hr = ConcatPaths(NtPath->Buffer, NtPath->MaximumLength / sizeof(WCHAR), BeginOfPath);
+        hr = ConcatPaths(NtPath->Buffer, NtPath->MaximumLength / sizeof(WCHAR), 1, BeginOfPath);
         if (FAILED(hr))
         {
             /* Buffer not large enough, or whatever...: just bail out */

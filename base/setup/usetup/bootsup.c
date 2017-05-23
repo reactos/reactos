@@ -1272,7 +1272,10 @@ InstallMbrBootCodeToDisk(
         return Status;
     }
 
-    /* Copy partition table from old MBR to new */
+    /*
+     * Copy the disk signature, the reserved fields and
+     * the partition table from the old MBR to the new one.
+     */
     RtlCopyMemory(&NewBootSector->Signature,
                   &OrigBootSector->Signature,
                   sizeof(PARTITION_SECTOR) - offsetof(PARTITION_SECTOR, Signature) /* Length of partition table */);
@@ -2262,10 +2265,8 @@ InstallFatBootcodeToPartition(
     DPRINT("System path: '%wZ'\n", SystemRootPath);
 
     /* Copy FreeLoader to the system partition */
-    wcscpy(SrcPath, SourceRootPath->Buffer);
-    wcscat(SrcPath, L"\\loader\\freeldr.sys");
-    wcscpy(DstPath, SystemRootPath->Buffer);
-    wcscat(DstPath, L"\\freeldr.sys");
+    CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\freeldr.sys");
+    CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"\\freeldr.sys");
 
     DPRINT("Copy: %S ==> %S\n", SrcPath, DstPath);
     Status = SetupCopyFile(SrcPath, DstPath);
@@ -2276,10 +2277,9 @@ InstallFatBootcodeToPartition(
     }
 
     /* Prepare for possibly copying 'freeldr.ini' */
-    wcscpy(DstPath, SystemRootPath->Buffer);
-    wcscat(DstPath, L"\\freeldr.ini");
+    CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"\\freeldr.ini");
 
-    DoesFreeLdrExist = DoesFileExist(SystemRootPath->Buffer, L"freeldr.ini");
+    DoesFreeLdrExist = DoesFileExist(NULL, NULL, DstPath);
     if (DoesFreeLdrExist)
     {
         /* Update existing 'freeldr.ini' */
@@ -2296,8 +2296,8 @@ InstallFatBootcodeToPartition(
     /* Check for NT and other bootloaders */
 
     // FIXME: Check for Vista+ bootloader!
-    if (DoesFileExist(SystemRootPath->Buffer, L"ntldr") == TRUE ||
-        DoesFileExist(SystemRootPath->Buffer, L"boot.ini") == TRUE)
+    if (DoesFileExist(NULL, SystemRootPath->Buffer, L"ntldr") == TRUE ||
+        DoesFileExist(NULL, SystemRootPath->Buffer, L"boot.ini") == TRUE)
     {
         /* Search root directory for 'ntldr' and 'boot.ini' */
         DPRINT1("Found Microsoft Windows NT/2000/XP boot loader\n");
@@ -2307,8 +2307,7 @@ InstallFatBootcodeToPartition(
         {
             /* Create new 'freeldr.ini' */
             DPRINT1("Create new 'freeldr.ini'\n");
-            // wcscpy(DstPath, SystemRootPath->Buffer);
-            // wcscat(DstPath, L"\\freeldr.ini");
+            // CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"\\freeldr.ini");
 
             Status = CreateFreeLoaderIniForReactOS(DstPath, DestinationArcPath->Buffer);
             if (!NT_SUCCESS(Status))
@@ -2318,15 +2317,13 @@ InstallFatBootcodeToPartition(
             }
 
             /* Install new bootcode into a file */
-            wcscpy(DstPath, SystemRootPath->Buffer);
-            wcscat(DstPath, L"\\bootsect.ros");
+            CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"\\bootsect.ros");
 
             if (PartitionType == PARTITION_FAT32 ||
                 PartitionType == PARTITION_FAT32_XINT13)
             {
                 /* Install FAT32 bootcode */
-                wcscpy(SrcPath, SourceRootPath->Buffer);
-                wcscat(SrcPath, L"\\loader\\fat32.bin");
+                CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\fat32.bin");
 
                 DPRINT1("Install FAT32 bootcode: %S ==> %S\n", SrcPath, DstPath);
                 Status = InstallFat32BootCodeToFile(SrcPath, DstPath,
@@ -2340,8 +2337,7 @@ InstallFatBootcodeToPartition(
             else
             {
                 /* Install FAT16 bootcode */
-                wcscpy(SrcPath, SourceRootPath->Buffer);
-                wcscat(SrcPath, L"\\loader\\fat.bin");
+                CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\fat.bin");
 
                 DPRINT1("Install FAT bootcode: %S ==> %S\n", SrcPath, DstPath);
                 Status = InstallFat16BootCodeToFile(SrcPath, DstPath,
@@ -2355,8 +2351,7 @@ InstallFatBootcodeToPartition(
         }
 
         /* Update 'boot.ini' */
-        wcscpy(DstPath, SystemRootPath->Buffer);
-        wcscat(DstPath, L"\\boot.ini");
+        CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"\\boot.ini");
 
         DPRINT1("Update 'boot.ini': %S\n", DstPath);
         Status = UpdateBootIni(DstPath,
@@ -2379,8 +2374,8 @@ InstallFatBootcodeToPartition(
         PWCHAR BootSector;
         PWCHAR BootSectorFileName;
 
-        if (DoesFileExist(SystemRootPath->Buffer, L"io.sys") == TRUE ||
-            DoesFileExist(SystemRootPath->Buffer, L"msdos.sys") == TRUE)
+        if (DoesFileExist(NULL, SystemRootPath->Buffer, L"io.sys") == TRUE ||
+            DoesFileExist(NULL, SystemRootPath->Buffer, L"msdos.sys") == TRUE)
         {
             /* Search for root directory for 'io.sys' and 'msdos.sys' */
             DPRINT1("Found Microsoft DOS or Windows 9x boot loader\n");
@@ -2394,7 +2389,7 @@ InstallFatBootcodeToPartition(
             BootSectorFileName = L"\\bootsect.dos";
         }
         else
-        if (DoesFileExist(SystemRootPath->Buffer, L"kernel.sys") == TRUE)
+        if (DoesFileExist(NULL, SystemRootPath->Buffer, L"kernel.sys") == TRUE)
         {
             /* Search for root directory for 'kernel.sys' */
             DPRINT1("Found FreeDOS boot loader\n");
@@ -2426,8 +2421,7 @@ InstallFatBootcodeToPartition(
         {
             /* Create new 'freeldr.ini' */
             DPRINT1("Create new 'freeldr.ini'\n");
-            // wcscpy(DstPath, SystemRootPath->Buffer);
-            // wcscat(DstPath, L"\\freeldr.ini");
+            // CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"\\freeldr.ini");
 
             if (IsThereAValidBootSector(SystemRootPath->Buffer))
             {
@@ -2442,8 +2436,7 @@ InstallFatBootcodeToPartition(
                 }
 
                 /* Save current bootsector */
-                wcscpy(DstPath, SystemRootPath->Buffer);
-                wcscat(DstPath, BootSectorFileName);
+                CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, BootSectorFileName);
 
                 DPRINT1("Save bootsector: %S ==> %S\n", SystemRootPath->Buffer, DstPath);
                 Status = SaveBootSector(SystemRootPath->Buffer, DstPath, SECTORSIZE);
@@ -2468,8 +2461,7 @@ InstallFatBootcodeToPartition(
                 PartitionType == PARTITION_FAT32_XINT13)
             {
                 /* Install FAT32 bootcode */
-                wcscpy(SrcPath, SourceRootPath->Buffer);
-                wcscat(SrcPath, L"\\loader\\fat32.bin");
+                CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\fat32.bin");
 
                 DPRINT1("Install FAT32 bootcode: %S ==> %S\n", SrcPath, SystemRootPath->Buffer);
                 Status = InstallFat32BootCodeToDisk(SrcPath, SystemRootPath->Buffer);
@@ -2482,8 +2474,7 @@ InstallFatBootcodeToPartition(
             else
             {
                 /* Install FAT16 bootcode */
-                wcscpy(SrcPath, SourceRootPath->Buffer);
-                wcscat(SrcPath, L"\\loader\\fat.bin");
+                CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\fat.bin");
 
                 DPRINT1("Install FAT16 bootcode: %S ==> %S\n", SrcPath, SystemRootPath->Buffer);
                 Status = InstallFat16BootCodeToDisk(SrcPath, SystemRootPath->Buffer);
@@ -2520,10 +2511,8 @@ InstallExt2BootcodeToPartition(
     DPRINT("System path: '%wZ'\n", SystemRootPath);
 
     /* Copy FreeLoader to the system partition */
-    wcscpy(SrcPath, SourceRootPath->Buffer);
-    wcscat(SrcPath, L"\\loader\\freeldr.sys");
-    wcscpy(DstPath, SystemRootPath->Buffer);
-    wcscat(DstPath, L"\\freeldr.sys");
+    CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\freeldr.sys");
+    CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"\\freeldr.sys");
 
     DPRINT("Copy: %S ==> %S\n", SrcPath, DstPath);
     Status = SetupCopyFile(SrcPath, DstPath);
@@ -2534,10 +2523,9 @@ InstallExt2BootcodeToPartition(
     }
 
     /* Prepare for possibly copying 'freeldr.ini' */
-    wcscpy(DstPath, SystemRootPath->Buffer);
-    wcscat(DstPath, L"\\freeldr.ini");
+    CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"\\freeldr.ini");
 
-    DoesFreeLdrExist = DoesFileExist(SystemRootPath->Buffer, L"freeldr.ini");
+    DoesFreeLdrExist = DoesFileExist(NULL, NULL, DstPath);
     if (DoesFreeLdrExist)
     {
         /* Update existing 'freeldr.ini' */
@@ -2558,8 +2546,7 @@ InstallExt2BootcodeToPartition(
     {
         /* Create new 'freeldr.ini' */
         DPRINT1("Create new 'freeldr.ini'\n");
-        wcscpy(DstPath, SystemRootPath->Buffer);
-        wcscat(DstPath, L"\\freeldr.ini");
+        CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"\\freeldr.ini");
 
         /* Certainly SysLinux, GRUB, LILO... or an unknown boot loader */
         DPRINT1("*nix or unknown boot loader found\n");
@@ -2577,8 +2564,7 @@ InstallExt2BootcodeToPartition(
             }
 
             /* Save current bootsector */
-            wcscpy(DstPath, SystemRootPath->Buffer);
-            wcscat(DstPath, L"\\bootsect.old");
+            CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"\\bootsect.old");
 
             DPRINT1("Save bootsector: %S ==> %S\n", SystemRootPath->Buffer, DstPath);
             Status = SaveBootSector(SystemRootPath->Buffer, DstPath, sizeof(EXT2_BOOTSECTOR));
@@ -2602,8 +2588,7 @@ InstallExt2BootcodeToPartition(
         // if (PartitionType == PARTITION_EXT2)
         {
             /* Install EXT2 bootcode */
-            wcscpy(SrcPath, SourceRootPath->Buffer);
-            wcscat(SrcPath, L"\\loader\\ext2.bin");
+            CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\ext2.bin");
 
             DPRINT1("Install EXT2 bootcode: %S ==> %S\n", SrcPath, SystemRootPath->Buffer);
             Status = InstallExt2BootCodeToDisk(SrcPath, SystemRootPath->Buffer);
@@ -2696,10 +2681,9 @@ InstallFatBootcodeToFloppy(
     }
 
     /* Copy FreeLoader to the boot partition */
-    wcscpy(SrcPath, SourceRootPath->Buffer);
-    wcscat(SrcPath, L"\\loader\\freeldr.sys");
+    CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\freeldr.sys");
 
-    wcscpy(DstPath, L"\\Device\\Floppy0\\freeldr.sys");
+    StringCchCopyW(DstPath, ARRAYSIZE(DstPath), L"\\Device\\Floppy0\\freeldr.sys");
 
     DPRINT("Copy: %S ==> %S\n", SrcPath, DstPath);
     Status = SetupCopyFile(SrcPath, DstPath);
@@ -2710,7 +2694,7 @@ InstallFatBootcodeToFloppy(
     }
 
     /* Create new 'freeldr.ini' */
-    wcscpy(DstPath, L"\\Device\\Floppy0\\freeldr.ini");
+    StringCchCopyW(DstPath, ARRAYSIZE(DstPath), L"\\Device\\Floppy0\\freeldr.ini");
 
     DPRINT("Create new 'freeldr.ini'\n");
     Status = CreateFreeLoaderIniForReactOS(DstPath, DestinationArcPath->Buffer);
@@ -2721,10 +2705,9 @@ InstallFatBootcodeToFloppy(
     }
 
     /* Install FAT12/16 boosector */
-    wcscpy(SrcPath, SourceRootPath->Buffer);
-    wcscat(SrcPath, L"\\loader\\fat.bin");
+    CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\fat.bin");
 
-    wcscpy(DstPath, L"\\Device\\Floppy0");
+    StringCchCopyW(DstPath, ARRAYSIZE(DstPath), L"\\Device\\Floppy0");
 
     DPRINT("Install FAT bootcode: %S ==> %S\n", SrcPath, DstPath);
     Status = InstallFat12BootCodeToFloppy(SrcPath, DstPath);
