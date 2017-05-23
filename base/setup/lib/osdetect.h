@@ -6,6 +6,8 @@
  * COPYRIGHT:   Copyright 2017-2018 Hermes Belusca-Maito
  */
 
+#pragma once
+
 typedef struct _NTOS_INSTALLATION
 {
     LIST_ENTRY ListEntry;
@@ -24,3 +26,5 @@ typedef struct _NTOS_INSTALLATION
 PGENERIC_LIST
 CreateNTOSInstallationsList(
     IN PPARTLIST List);
+
+/* EOF */
