@@ -13,36 +13,113 @@
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
+
 NTSTATUS
-ConcatPaths(
-    IN OUT PWSTR PathElem1,
+ConcatPathsV(
+    IN OUT PWSTR PathBuffer,
     IN SIZE_T cchPathSize,
-    IN PCWSTR PathElem2 OPTIONAL)
+    IN ULONG NumberOfPathComponents,
+    IN va_list PathComponentsList)
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     SIZE_T cchPathLen;
+    PCWSTR PathComponent;
 
-    if (!PathElem2)
+    if (cchPathSize < 1)
         return STATUS_SUCCESS;
-    if (cchPathSize <= 1)
-        return STATUS_SUCCESS;
 
-    cchPathLen = min(cchPathSize, wcslen(PathElem1));
-
-    if (PathElem2[0] != L'\\' && cchPathLen > 0 && PathElem1[cchPathLen-1] != L'\\')
+    while (NumberOfPathComponents--)
     {
-        /* PathElem2 does not start with '\' and PathElem1 does not end with '\' */
-        Status = RtlStringCchCatW(PathElem1, cchPathSize, L"\\");
+        PathComponent = va_arg(PathComponentsList, PCWSTR);
+        if (!PathComponent)
+            continue;
+
+        cchPathLen = min(cchPathSize, wcslen(PathBuffer));
+        if (cchPathLen >= cchPathSize)
+            return STATUS_BUFFER_OVERFLOW;
+
+        if (PathComponent[0] != OBJ_NAME_PATH_SEPARATOR &&
+            cchPathLen > 0 && PathBuffer[cchPathLen-1] != OBJ_NAME_PATH_SEPARATOR)
+        {
+            /* PathComponent does not start with '\' and PathBuffer does not end with '\' */
+            Status = RtlStringCchCatW(PathBuffer, cchPathSize, L"\\");
+            if (!NT_SUCCESS(Status))
+                return Status;
+        }
+        else if (PathComponent[0] == OBJ_NAME_PATH_SEPARATOR &&
+                 cchPathLen > 0 && PathBuffer[cchPathLen-1] == OBJ_NAME_PATH_SEPARATOR)
+        {
+            /* PathComponent starts with '\' and PathBuffer ends with '\' */
+            while (*PathComponent == OBJ_NAME_PATH_SEPARATOR)
+                ++PathComponent; // Skip any backslash
+        }
+        Status = RtlStringCchCatW(PathBuffer, cchPathSize, PathComponent);
         if (!NT_SUCCESS(Status))
             return Status;
     }
-    else if (PathElem2[0] == L'\\' && cchPathLen > 0 && PathElem1[cchPathLen-1] == L'\\')
-    {
-        /* PathElem2 starts with '\' and PathElem1 ends with '\' */
-        while (*PathElem2 == L'\\')
-            ++PathElem2; // Skip any backslash
-    }
-    Status = RtlStringCchCatW(PathElem1, cchPathSize, PathElem2);
+
+    return Status;
+}
+
+NTSTATUS
+CombinePathsV(
+    OUT PWSTR PathBuffer,
+    IN SIZE_T cchPathSize,
+    IN ULONG NumberOfPathComponents,
+    IN va_list PathComponentsList)
+{
+    if (cchPathSize < 1)
+        return STATUS_SUCCESS;
+
+    *PathBuffer = UNICODE_NULL;
+    return ConcatPathsV(PathBuffer, cchPathSize,
+                        NumberOfPathComponents,
+                        PathComponentsList);
+}
+
+NTSTATUS
+ConcatPaths(
+    IN OUT PWSTR PathBuffer,
+    IN SIZE_T cchPathSize,
+    IN ULONG NumberOfPathComponents,
+    IN /* PCWSTR */ ...)
+{
+    NTSTATUS Status;
+    va_list PathComponentsList;
+
+    if (cchPathSize < 1)
+        return STATUS_SUCCESS;
+
+    va_start(PathComponentsList, NumberOfPathComponents);
+    Status = ConcatPathsV(PathBuffer, cchPathSize,
+                          NumberOfPathComponents,
+                          PathComponentsList);
+    va_end(PathComponentsList);
+
+    return Status;
+}
+
+NTSTATUS
+CombinePaths(
+    OUT PWSTR PathBuffer,
+    IN SIZE_T cchPathSize,
+    IN ULONG NumberOfPathComponents,
+    IN /* PCWSTR */ ...)
+{
+    NTSTATUS Status;
+    va_list PathComponentsList;
+
+    if (cchPathSize < 1)
+        return STATUS_SUCCESS;
+
+    *PathBuffer = UNICODE_NULL;
+
+    va_start(PathComponentsList, NumberOfPathComponents);
+    Status = CombinePathsV(PathBuffer, cchPathSize,
+                           NumberOfPathComponents,
+                           PathComponentsList);
+    va_end(PathComponentsList);
+
     return Status;
 }
 
@@ -95,14 +172,7 @@ DoesFileExist(
     UNICODE_STRING Name;
     WCHAR FullName[MAX_PATH];
 
-    if (PathName)
-        RtlStringCchCopyW(FullName, ARRAYSIZE(FullName), PathName);
-    else
-        FullName[0] = UNICODE_NULL;
-
-    if (FileName)
-        ConcatPaths(FullName, ARRAYSIZE(FullName), FileName);
-
+    CombinePaths(FullName, ARRAYSIZE(FullName), 2, PathName, FileName);
     RtlInitUnicodeString(&Name, FullName);
 
     InitializeObjectAttributes(&ObjectAttributes,
@@ -243,14 +313,7 @@ OpenAndMapFile(
     UNICODE_STRING Name;
     WCHAR FullName[MAX_PATH];
 
-    if (PathName)
-        RtlStringCchCopyW(FullName, ARRAYSIZE(FullName), PathName);
-    else
-        FullName[0] = UNICODE_NULL;
-
-    if (FileName)
-        ConcatPaths(FullName, ARRAYSIZE(FullName), FileName);
-
+    CombinePaths(FullName, ARRAYSIZE(FullName), 2, PathName, FileName);
     RtlInitUnicodeString(&Name, FullName);
 
     InitializeObjectAttributes(&ObjectAttributes,
