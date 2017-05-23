@@ -764,7 +764,7 @@ CabinetFindNext(PCAB_SEARCH Search)
                     Search->CFData = NULL;
                     Search->Offset = 0;
                 }
-                
+
                 /* don't match the file we started with */
                 if (wcscmp(Search->Search, L"*") == 0)
                 {
@@ -1032,7 +1032,7 @@ CabinetExtractFile(PCAB_SEARCH Search)
         CurrentOffset += CFData->UncompSize;
         CFData = (PCFDATA)((char *)(CFData + 1) + DataReserved + CFData->CompSize);
     }
-    
+
     Search->CFData = CFData;
     Search->Offset = CurrentOffset;
 

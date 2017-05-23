@@ -1415,7 +1415,7 @@ MUI_ERROR trTRErrorEntries[] =
         //ERROR_WARN_PARTITION,
         "Kur, dzgn y”netilemeyen bir uyumsuz b”lm tablosu i‡eren en az\n"
         "bir sƒbit disk buldu!\n"
-        "\n"         
+        "\n"
         "B”lmleri oluŸturmak veyƒ silmek b”lm tablosunu yok edebilir.\n"
         "\n"
         "  \x07  Kur'dan ‡kmak i‡in F3'e basnz.\n"

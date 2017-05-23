@@ -44,7 +44,7 @@ static MUI_ENTRY nlNLLanguagePageEntries[] =
     },
     {
         8,
-        13,    
+        13,
         "\x07  Deze taal wordt later als standaard taal door het systeem gebruikt.",
         TEXT_STYLE_NORMAL
     },
@@ -1481,7 +1481,7 @@ MUI_ERROR nlNLErrorEntries[] =
         NULL
     },
     {
-        //ERROR_DELETE_SPACE, 
+        //ERROR_DELETE_SPACE,
         "U kunt ongebruikte schijfruimte voor partities niet verwijderen!\n"
         "\n"
         "  * Druk op een willekeurige toets om door te gaan.",

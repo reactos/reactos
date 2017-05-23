@@ -1,7 +1,7 @@
 /*
  *      translated by Artem Reznikov, Igor Paliychuk, 2010
  *      http://www.reactos.org/uk/
- */ 
+ */
 
 #pragma once
 
