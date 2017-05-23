@@ -2264,7 +2264,12 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
     {
         return;
     }
-    IntGetOutlineTextMetrics(FontGDI, Size, Otm);
+    Size = IntGetOutlineTextMetrics(FontGDI, Size, Otm);
+    if (!Size)
+    {
+        ExFreePoolWithTag(Otm, GDITAG_TEXT);
+        return;
+    }
 
     Lf = &Info->EnumLogFontEx.elfLogFont;
     TM = &Otm->otmTextMetrics;
@@ -3182,7 +3187,14 @@ ftGdiGetGlyphOutline(
         TEXTOBJ_UnlockText(TextObj);
         return GDI_ERROR;
     }
-    IntGetOutlineTextMetrics(FontGDI, Size, potm);
+    Size = IntGetOutlineTextMetrics(FontGDI, Size, potm);
+    if (!Size)
+    {
+        /* FIXME: last error? */
+        ExFreePoolWithTag(potm, GDITAG_TEXT);
+        TEXTOBJ_UnlockText(TextObj);
+        return GDI_ERROR;
+    }
 
     IntLockFreeType;
     TextIntUpdateSize(dc, TextObj, FontGDI, FALSE);
@@ -4441,7 +4453,10 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
         /* update FontObj if lowest penalty */
         if (Otm)
         {
-            IntGetOutlineTextMetrics(FontGDI, OtmSize, Otm);
+            OtmSize = IntGetOutlineTextMetrics(FontGDI, OtmSize, Otm);
+            if (!OtmSize)
+                continue;
+
             OldOtmSize = OtmSize;
 
             Penalty = GetFontPenalty(LogFont, Otm, Face->style_name);
@@ -6467,8 +6482,9 @@ NtGdiGetGlyphIndicesW(
                 cwc = GDI_ERROR;
                 goto ErrorRet;
             }
-            IntGetOutlineTextMetrics(FontGDI, Size, potm);
-            DefChar = potm->otmTextMetrics.tmDefaultChar;
+            Size = IntGetOutlineTextMetrics(FontGDI, Size, potm);
+            if (Size)
+                DefChar = potm->otmTextMetrics.tmDefaultChar;
             ExFreePoolWithTag(potm, GDITAG_TEXT);
         }
     }
