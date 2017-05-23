@@ -17,10 +17,32 @@ IsValidPath(
 #endif
 
 HRESULT
-ConcatPaths(
-    IN OUT PWSTR PathElem1,
+ConcatPathsV(
+    IN OUT PWSTR PathBuffer,
     IN SIZE_T cchPathSize,
-    IN PCWSTR PathElem2 OPTIONAL);
+    IN ULONG NumberOfPathComponents,
+    IN va_list PathComponentsList);
+
+HRESULT
+CombinePathsV(
+    OUT PWSTR PathBuffer,
+    IN SIZE_T cchPathSize,
+    IN ULONG NumberOfPathComponents,
+    IN va_list PathComponentsList);
+
+HRESULT
+ConcatPaths(
+    IN OUT PWSTR PathBuffer,
+    IN SIZE_T cchPathSize,
+    IN ULONG NumberOfPathComponents,
+    IN /* PCWSTR */ ...);
+
+HRESULT
+CombinePaths(
+    OUT PWSTR PathBuffer,
+    IN SIZE_T cchPathSize,
+    IN ULONG NumberOfPathComponents,
+    IN /* PCWSTR */ ...);
 
 BOOLEAN
 DoesPathExist(
