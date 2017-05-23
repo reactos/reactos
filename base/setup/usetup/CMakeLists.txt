@@ -13,9 +13,9 @@ list(APPEND SOURCE
     interface/usetup.c
     interface/devinst.c
     interface/consup.c
-    native/utils/keytrans.c
-    native/utils/console.c
     native/console.c
+    native/keytrans.c
+    native/host_native.c
     bootsup.c
     cabinet.c
     chkdsk.c
