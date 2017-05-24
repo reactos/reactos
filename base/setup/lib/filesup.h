@@ -52,6 +52,11 @@ DoesPathExist(
 BOOLEAN
 DoesFileExist(
     IN HANDLE RootDirectory OPTIONAL,
+    IN PCWSTR PathNameToFile);
+
+// FIXME: DEPRECATED! HACKish function that needs to be deprecated!
+BOOLEAN
+DoesFileExist_2(
     IN PCWSTR PathName OPTIONAL,
     IN PCWSTR FileName);
 
@@ -65,8 +70,7 @@ NtPathToDiskPartComponents(
 NTSTATUS
 OpenAndMapFile(
     IN HANDLE RootDirectory OPTIONAL,
-    IN PCWSTR PathName OPTIONAL,
-    IN PCWSTR FileName,             // OPTIONAL
+    IN PCWSTR PathNameToFile,
     OUT PHANDLE FileHandle,         // IN OUT PHANDLE OPTIONAL
     OUT PHANDLE SectionHandle,
     OUT PVOID* BaseAddress,

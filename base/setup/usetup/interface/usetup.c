@@ -432,7 +432,7 @@ CheckUnattendedSetup(VOID)
 
     CombinePaths(UnattendInfPath, ARRAYSIZE(UnattendInfPath), 2, SourcePath.Buffer, L"\\unattend.inf");
 
-    if (DoesFileExist(NULL, NULL, UnattendInfPath) == FALSE)
+    if (DoesFileExist(NULL, UnattendInfPath) == FALSE)
     {
         DPRINT("Does not exist: %S\n", UnattendInfPath);
         return;

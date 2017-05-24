@@ -2279,7 +2279,7 @@ InstallFatBootcodeToPartition(
     /* Prepare for possibly copying 'freeldr.ini' */
     CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"\\freeldr.ini");
 
-    DoesFreeLdrExist = DoesFileExist(NULL, NULL, DstPath);
+    DoesFreeLdrExist = DoesFileExist(NULL, DstPath);
     if (DoesFreeLdrExist)
     {
         /* Update existing 'freeldr.ini' */
@@ -2296,8 +2296,8 @@ InstallFatBootcodeToPartition(
     /* Check for NT and other bootloaders */
 
     // FIXME: Check for Vista+ bootloader!
-    if (DoesFileExist(NULL, SystemRootPath->Buffer, L"ntldr") == TRUE ||
-        DoesFileExist(NULL, SystemRootPath->Buffer, L"boot.ini") == TRUE)
+    if (DoesFileExist_2(SystemRootPath->Buffer, L"ntldr") == TRUE ||
+        DoesFileExist_2(SystemRootPath->Buffer, L"boot.ini") == TRUE)
     {
         /* Search root directory for 'ntldr' and 'boot.ini' */
         DPRINT1("Found Microsoft Windows NT/2000/XP boot loader\n");
@@ -2374,8 +2374,8 @@ InstallFatBootcodeToPartition(
         PWCHAR BootSector;
         PWCHAR BootSectorFileName;
 
-        if (DoesFileExist(NULL, SystemRootPath->Buffer, L"io.sys") == TRUE ||
-            DoesFileExist(NULL, SystemRootPath->Buffer, L"msdos.sys") == TRUE)
+        if (DoesFileExist_2(SystemRootPath->Buffer, L"io.sys") == TRUE ||
+            DoesFileExist_2(SystemRootPath->Buffer, L"msdos.sys") == TRUE)
         {
             /* Search for root directory for 'io.sys' and 'msdos.sys' */
             DPRINT1("Found Microsoft DOS or Windows 9x boot loader\n");
@@ -2389,7 +2389,7 @@ InstallFatBootcodeToPartition(
             BootSectorFileName = L"\\bootsect.dos";
         }
         else
-        if (DoesFileExist(NULL, SystemRootPath->Buffer, L"kernel.sys") == TRUE)
+        if (DoesFileExist_2(SystemRootPath->Buffer, L"kernel.sys") == TRUE)
         {
             /* Search for root directory for 'kernel.sys' */
             DPRINT1("Found FreeDOS boot loader\n");
@@ -2525,7 +2525,7 @@ InstallExt2BootcodeToPartition(
     /* Prepare for possibly copying 'freeldr.ini' */
     CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"\\freeldr.ini");
 
-    DoesFreeLdrExist = DoesFileExist(NULL, NULL, DstPath);
+    DoesFreeLdrExist = DoesFileExist(NULL, DstPath);
     if (DoesFreeLdrExist)
     {
         /* Update existing 'freeldr.ini' */

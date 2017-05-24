@@ -103,9 +103,12 @@ NTOS_BOOT_LOADER_FILES NtosBootLoaders[] =
 
 
 static BOOLEAN
+IsValidNTOSInstallation_UStr(
+    IN PUNICODE_STRING SystemRootPath);
+
+/*static*/ BOOLEAN
 IsValidNTOSInstallation(
-    IN HANDLE SystemRootDirectory OPTIONAL,
-    IN PCWSTR SystemRoot OPTIONAL);
+    IN PCWSTR SystemRoot);
 
 static PNTOS_INSTALLATION
 FindExistingNTOSInstall(
@@ -140,9 +143,6 @@ FreeLdrEnumerateInstallations(
     PWCHAR SectionName, KeyData;
     UNICODE_STRING InstallName;
 
-    HANDLE SystemRootDirectory;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
     PNTOS_INSTALLATION NtOsInstall;
     UNICODE_STRING SystemRootPath;
     WCHAR SystemRoot[MAX_PATH];
@@ -262,25 +262,7 @@ FreeLdrEnumerateInstallations(
         /* Set SystemRootPath */
         DPRINT1("FreeLdrEnumerateInstallations: SystemRootPath: '%wZ'\n", &SystemRootPath);
 
-        /* Open SystemRootPath */
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &SystemRootPath,
-                                   OBJ_CASE_INSENSITIVE,
-                                   NULL,
-                                   NULL);
-        Status = NtOpenFile(&SystemRootDirectory,
-                            FILE_LIST_DIRECTORY | SYNCHRONIZE,
-                            &ObjectAttributes,
-                            &IoStatusBlock,
-                            FILE_SHARE_READ | FILE_SHARE_WRITE,
-                            FILE_SYNCHRONOUS_IO_NONALERT | FILE_DIRECTORY_FILE);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failed to open SystemRoot '%wZ', Status 0x%08lx\n", &SystemRootPath, Status);
-            continue;
-        }
-
-        if (IsValidNTOSInstallation(SystemRootDirectory, NULL))
+        if (IsValidNTOSInstallation_UStr(&SystemRootPath))
         {
             ULONG DiskNumber = 0, PartitionNumber = 0;
             PCWSTR PathComponent = NULL;
@@ -320,8 +302,6 @@ FreeLdrEnumerateInstallations(
                                 DiskNumber, PartitionNumber, PartEntry,
                                 InstallNameW);
         }
-
-        NtClose(SystemRootDirectory);
     }
     while (IniCacheFindNextValue(Iterator, &SectionName, &KeyData));
 
@@ -347,9 +327,6 @@ NtLdrEnumerateInstallations(
     PWCHAR SectionName, KeyData;
     UNICODE_STRING InstallName;
 
-    HANDLE SystemRootDirectory;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
     PNTOS_INSTALLATION NtOsInstall;
     UNICODE_STRING SystemRootPath;
     WCHAR SystemRoot[MAX_PATH];
@@ -437,25 +414,7 @@ NtLdrEnumerateInstallations(
         /* Set SystemRootPath */
         DPRINT1("NtLdrEnumerateInstallations: SystemRootPath: '%wZ'\n", &SystemRootPath);
 
-        /* Open SystemRootPath */
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &SystemRootPath,
-                                   OBJ_CASE_INSENSITIVE,
-                                   NULL,
-                                   NULL);
-        Status = NtOpenFile(&SystemRootDirectory,
-                            FILE_LIST_DIRECTORY | SYNCHRONIZE,
-                            &ObjectAttributes,
-                            &IoStatusBlock,
-                            FILE_SHARE_READ | FILE_SHARE_WRITE,
-                            FILE_SYNCHRONOUS_IO_NONALERT | FILE_DIRECTORY_FILE);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failed to open SystemRoot '%wZ', Status 0x%08lx\n", &SystemRootPath, Status);
-            continue;
-        }
-
-        if (IsValidNTOSInstallation(SystemRootDirectory, NULL))
+        if (IsValidNTOSInstallation_UStr(&SystemRootPath))
         {
             ULONG DiskNumber = 0, PartitionNumber = 0;
             PCWSTR PathComponent = NULL;
@@ -495,8 +454,6 @@ NtLdrEnumerateInstallations(
                                 DiskNumber, PartitionNumber, PartEntry,
                                 InstallNameW);
         }
-
-        NtClose(SystemRootDirectory);
     }
     while (IniCacheFindNextValue(Iterator, &SectionName, &KeyData));
 
@@ -540,8 +497,7 @@ PCWSTR FindSubStrI(PCWSTR str, PCWSTR strSearch)
 static BOOLEAN
 CheckForValidPEAndVendor(
     IN HANDLE RootDirectory OPTIONAL,
-    IN PCWSTR PathName OPTIONAL,
-    IN PCWSTR FileName,     // OPTIONAL
+    IN PCWSTR PathNameToFile,
     OUT PUNICODE_STRING VendorName
     )
 {
@@ -560,18 +516,18 @@ CheckForValidPEAndVendor(
     *VendorName->Buffer = UNICODE_NULL;
     VendorName->Length = 0;
 
-    Status = OpenAndMapFile(RootDirectory, PathName, FileName,
+    Status = OpenAndMapFile(RootDirectory, PathNameToFile,
                             &FileHandle, &SectionHandle, &ViewBase, NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to open and map file '%S', Status 0x%08lx\n", FileName, Status);
+        DPRINT1("Failed to open and map file '%S', Status 0x%08lx\n", PathNameToFile, Status);
         return FALSE; // Status;
     }
 
     /* Make sure it's a valid PE file */
     if (!RtlImageNtHeader(ViewBase))
     {
-        DPRINT1("File '%S' does not seem to be a valid PE, bail out\n", FileName);
+        DPRINT1("File '%S' does not seem to be a valid PE, bail out\n", PathNameToFile);
         Status = STATUS_INVALID_IMAGE_FORMAT;
         goto UnmapFile;
     }
@@ -583,7 +539,7 @@ CheckForValidPEAndVendor(
     Status = NtGetVersionResource((PVOID)((ULONG_PTR)ViewBase | 1), &VersionBuffer, NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to get version resource for file '%S', Status 0x%08lx\n", FileName, Status);
+        DPRINT1("Failed to get version resource for file '%S', Status 0x%08lx\n", PathNameToFile, Status);
         goto UnmapFile;
     }
 
@@ -609,7 +565,7 @@ CheckForValidPEAndVendor(
         if (NT_SUCCESS(Status) /*&& pvData*/)
         {
             /* BufLen includes the NULL terminator count */
-            DPRINT1("Found version vendor: \"%S\" for file '%S'\n", pvData, FileName);
+            DPRINT1("Found version vendor: \"%S\" for file '%S'\n", pvData, PathNameToFile);
 
             StringCbCopyNW(VendorName->Buffer, VendorName->MaximumLength,
                            pvData, BufLen * sizeof(WCHAR));
@@ -620,7 +576,7 @@ CheckForValidPEAndVendor(
     }
 
     if (!NT_SUCCESS(Status))
-        DPRINT1("No version vendor found for file '%S'\n", FileName);
+        DPRINT1("No version vendor found for file '%S'\n", PathNameToFile);
 
 UnmapFile:
     /* Finally, unmap and close the file */
@@ -637,48 +593,30 @@ UnmapFile:
 // - if it's broken or not (aka. needs for repair, or just upgrading).
 //
 static BOOLEAN
-IsValidNTOSInstallation(
-    IN HANDLE SystemRootDirectory OPTIONAL,
-    IN PCWSTR SystemRoot OPTIONAL)
+IsValidNTOSInstallationByHandle(
+    IN HANDLE SystemRootDirectory)
 {
     BOOLEAN Success = FALSE;
     USHORT i;
     UNICODE_STRING VendorName;
-    WCHAR PathBuffer[MAX_PATH];
-
-    /*
-     * Use either the 'SystemRootDirectory' handle or the 'SystemRoot' string,
-     * depending on what the user gave to us in entry.
-     */
-    if (SystemRootDirectory)
-        SystemRoot = NULL;
-    // else SystemRootDirectory == NULL and SystemRoot is what it is.
-
-    /* If both the parameters are NULL we cannot do anything else more */
-    if (!SystemRootDirectory && !SystemRoot)
-        return FALSE;
-
-    // DoesPathExist(SystemRootDirectory, SystemRoot, L"System32\\"); etc...
+    WCHAR VendorNameBuffer[MAX_PATH];
 
     /* Check for the existence of \SystemRoot\System32 */
-    StringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer), L"%s%s", SystemRoot ? SystemRoot : L"", L"System32\\");
-    if (!DoesPathExist(SystemRootDirectory, PathBuffer))
+    if (!DoesPathExist(SystemRootDirectory, L"System32\\"))
     {
         // DPRINT1("Failed to open directory '%wZ', Status 0x%08lx\n", &FileName, Status);
         return FALSE;
     }
 
     /* Check for the existence of \SystemRoot\System32\drivers */
-    StringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer), L"%s%s", SystemRoot ? SystemRoot : L"", L"System32\\drivers\\");
-    if (!DoesPathExist(SystemRootDirectory, PathBuffer))
+    if (!DoesPathExist(SystemRootDirectory, L"System32\\drivers\\"))
     {
         // DPRINT1("Failed to open directory '%wZ', Status 0x%08lx\n", &FileName, Status);
         return FALSE;
     }
 
     /* Check for the existence of \SystemRoot\System32\config */
-    StringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer), L"%s%s", SystemRoot ? SystemRoot : L"", L"System32\\config\\");
-    if (!DoesPathExist(SystemRootDirectory, PathBuffer))
+    if (!DoesPathExist(SystemRootDirectory, L"System32\\config\\"))
     {
         // DPRINT1("Failed to open directory '%wZ', Status 0x%08lx\n", &FileName, Status);
         return FALSE;
@@ -689,22 +627,22 @@ IsValidNTOSInstallation(
      * Check for the existence of SYSTEM and SOFTWARE hives in \SystemRoot\System32\config
      * (but we don't check here whether they are actually valid).
      */
-    if (!DoesFileExist(SystemRootDirectory, SystemRoot, L"System32\\config\\SYSTEM"))
+    if (!DoesFileExist(SystemRootDirectory, L"System32\\config\\SYSTEM"))
     {
         // DPRINT1("Failed to open file '%wZ', Status 0x%08lx\n", &FileName, Status);
         return FALSE;
     }
-    if (!DoesFileExist(SystemRootDirectory, SystemRoot, L"System32\\config\\SOFTWARE"))
+    if (!DoesFileExist(SystemRootDirectory, L"System32\\config\\SOFTWARE"))
     {
         // DPRINT1("Failed to open file '%wZ', Status 0x%08lx\n", &FileName, Status);
         return FALSE;
     }
 #endif
 
-    RtlInitEmptyUnicodeString(&VendorName, PathBuffer, sizeof(PathBuffer));
+    RtlInitEmptyUnicodeString(&VendorName, VendorNameBuffer, sizeof(VendorNameBuffer));
 
     /* Check for the existence of \SystemRoot\System32\ntoskrnl.exe and retrieves its vendor name */
-    Success = CheckForValidPEAndVendor(SystemRootDirectory, SystemRoot, L"System32\\ntoskrnl.exe", &VendorName);
+    Success = CheckForValidPEAndVendor(SystemRootDirectory, L"System32\\ntoskrnl.exe", &VendorName);
     if (!Success)
         DPRINT1("Kernel file ntoskrnl.exe is either not a PE file, or does not have any vendor?\n");
 
@@ -726,7 +664,7 @@ IsValidNTOSInstallation(
     /* OPTIONAL: Check for the existence of \SystemRoot\System32\ntkrnlpa.exe */
 
     /* Check for the existence of \SystemRoot\System32\ntdll.dll and retrieves its vendor name */
-    Success = CheckForValidPEAndVendor(SystemRootDirectory, SystemRoot, L"System32\\ntdll.dll", &VendorName);
+    Success = CheckForValidPEAndVendor(SystemRootDirectory, L"System32\\ntdll.dll", &VendorName);
     if (!Success)
         DPRINT1("User-mode file ntdll.dll is either not a PE file, or does not have any vendor?\n");
     if (Success)
@@ -743,6 +681,50 @@ IsValidNTOSInstallation(
     }
 
     return Success;
+}
+
+static BOOLEAN
+IsValidNTOSInstallation_UStr(
+    IN PUNICODE_STRING SystemRootPath)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE SystemRootDirectory;
+    BOOLEAN Success;
+
+    /* Open SystemRootPath */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               SystemRootPath,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenFile(&SystemRootDirectory,
+                        FILE_LIST_DIRECTORY | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_DIRECTORY_FILE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to open SystemRoot '%wZ', Status 0x%08lx\n", SystemRootPath, Status);
+        return FALSE;
+    }
+
+    Success = IsValidNTOSInstallationByHandle(SystemRootDirectory);
+
+    /* Done! */
+    NtClose(SystemRootDirectory);
+    return Success;
+}
+
+/*static*/ BOOLEAN
+IsValidNTOSInstallation(
+    IN PCWSTR SystemRoot)
+{
+    UNICODE_STRING SystemRootPath;
+    RtlInitUnicodeString(&SystemRootPath, SystemRoot);
+    return IsValidNTOSInstallationByHandle(&SystemRootPath);
 }
 
 static VOID
@@ -932,7 +914,7 @@ FindNTOSInstallations(
     for (i = 0; i < ARRAYSIZE(NtosBootLoaders); ++i)
     {
         /* Check whether the loader executable exists */
-        if (!DoesFileExist(PartitionHandle, NULL, NtosBootLoaders[i].LoaderExecutable))
+        if (!DoesFileExist(PartitionHandle, NtosBootLoaders[i].LoaderExecutable))
         {
             /* The loader does not exist, continue with another one */
             DPRINT1("Loader executable '%S' does not exist, continue with another one...\n", NtosBootLoaders[i].LoaderExecutable);
@@ -940,7 +922,7 @@ FindNTOSInstallations(
         }
 
         /* Check whether the loader configuration file exists */
-        Status = OpenAndMapFile(PartitionHandle, NULL, NtosBootLoaders[i].LoaderConfigurationFile,
+        Status = OpenAndMapFile(PartitionHandle, NtosBootLoaders[i].LoaderConfigurationFile,
                                 &FileHandle, &SectionHandle, &ViewBase, &FileSize);
         if (!NT_SUCCESS(Status))
         {
