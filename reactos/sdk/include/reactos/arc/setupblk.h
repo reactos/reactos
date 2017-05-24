@@ -73,7 +73,7 @@ typedef struct _DETECTED_DEVICE
     BOOLEAN ThirdPartyOptionSelected;
     ULONG FileTypeBits;
     PDETECTED_DEVICE_FILE Files;
-    PCHAR BasedllName;
+    PCHAR BaseDllName;
     BOOLEAN MigratedDriver;
     PPNP_HARDWARE_ID HardwareIds;
 } DETECTED_DEVICE, *PDETECTED_DEVICE;
