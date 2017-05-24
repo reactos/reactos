@@ -154,7 +154,7 @@ DoesPathExist(
     if (NT_SUCCESS(Status))
         NtClose(FileHandle);
     else
-        DPRINT1("Failed to open directory %wZ, Status 0x%08lx\n", &Name, Status);
+        DPRINT1("Failed to open directory '%wZ', Status 0x%08lx\n", &Name, Status);
 
     return NT_SUCCESS(Status);
 }
@@ -162,21 +162,18 @@ DoesPathExist(
 BOOLEAN
 DoesFileExist(
     IN HANDLE RootDirectory OPTIONAL,
-    IN PCWSTR PathName OPTIONAL,
-    IN PCWSTR FileName)
+    IN PCWSTR PathNameToFile)
 {
     NTSTATUS Status;
+    UNICODE_STRING FileName;
     HANDLE FileHandle;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
-    UNICODE_STRING Name;
-    WCHAR FullName[MAX_PATH];
 
-    CombinePaths(FullName, ARRAYSIZE(FullName), 2, PathName, FileName);
-    RtlInitUnicodeString(&Name, FullName);
+    RtlInitUnicodeString(&FileName, PathNameToFile);
 
     InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
+                               &FileName,
                                OBJ_CASE_INSENSITIVE,
                                RootDirectory,
                                NULL);
@@ -190,9 +187,20 @@ DoesFileExist(
     if (NT_SUCCESS(Status))
         NtClose(FileHandle);
     else
-        DPRINT1("Failed to open file %wZ, Status 0x%08lx\n", &Name, Status);
+        DPRINT1("Failed to open file '%wZ', Status 0x%08lx\n", &FileName, Status);
 
     return NT_SUCCESS(Status);
+}
+
+// FIXME: DEPRECATED! HACKish function that needs to be deprecated!
+BOOLEAN
+DoesFileExist_2(
+    IN PCWSTR PathName OPTIONAL,
+    IN PCWSTR FileName)
+{
+    WCHAR FullName[MAX_PATH];
+    CombinePaths(FullName, ARRAYSIZE(FullName), 2, PathName, FileName);
+    return DoesFileExist(NULL, FullName);
 }
 
 /*
@@ -298,26 +306,23 @@ Quit:
 NTSTATUS
 OpenAndMapFile(
     IN HANDLE RootDirectory OPTIONAL,
-    IN PCWSTR PathName OPTIONAL,
-    IN PCWSTR FileName,             // OPTIONAL
+    IN PCWSTR PathNameToFile,
     OUT PHANDLE FileHandle,         // IN OUT PHANDLE OPTIONAL
     OUT PHANDLE SectionHandle,
     OUT PVOID* BaseAddress,
     OUT PULONG FileSize OPTIONAL)
 {
     NTSTATUS Status;
+    UNICODE_STRING FileName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
     SIZE_T ViewSize;
     PVOID ViewBase;
-    UNICODE_STRING Name;
-    WCHAR FullName[MAX_PATH];
 
-    CombinePaths(FullName, ARRAYSIZE(FullName), 2, PathName, FileName);
-    RtlInitUnicodeString(&Name, FullName);
+    RtlInitUnicodeString(&FileName, PathNameToFile);
 
     InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
+                               &FileName,
                                OBJ_CASE_INSENSITIVE,
                                RootDirectory,
                                NULL);
@@ -333,7 +338,7 @@ OpenAndMapFile(
                         FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to open file '%wZ', Status 0x%08lx\n", &Name, Status);
+        DPRINT1("Failed to open file '%wZ', Status 0x%08lx\n", &FileName, Status);
         return Status;
     }
 
@@ -355,7 +360,7 @@ OpenAndMapFile(
         }
 
         if (FileInfo.EndOfFile.HighPart != 0)
-            DPRINT1("WARNING!! The file '%wZ' is too large!\n", &Name);
+            DPRINT1("WARNING!! The file '%wZ' is too large!\n", &FileName);
 
         *FileSize = FileInfo.EndOfFile.LowPart;
 
@@ -374,7 +379,7 @@ OpenAndMapFile(
                              *FileHandle);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to create a memory section for file '%wZ', Status 0x%08lx\n", &Name, Status);
+        DPRINT1("Failed to create a memory section for file '%wZ', Status 0x%08lx\n", &FileName, Status);
         NtClose(*FileHandle);
         *FileHandle = NULL;
         return Status;
@@ -394,7 +399,7 @@ OpenAndMapFile(
                                 PAGE_READONLY);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to map a view for file %wZ, Status 0x%08lx\n", &Name, Status);
+        DPRINT1("Failed to map a view for file '%wZ', Status 0x%08lx\n", &FileName, Status);
         NtClose(*SectionHandle);
         *SectionHandle = NULL;
         NtClose(*FileHandle);
