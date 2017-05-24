@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReiserFS File System Management
- * FILE:            dll/win32/ureiserfs/ureiserfs.c
- * PURPOSE:         ureiserfs DLL initialisation
- * PROGRAMMERS:     Pierre Schweitzer
+ * PROJECT:         FATX File System Management
+ * FILE:            dll/win32/ufatx/ufatx.c
+ * PURPOSE:         ufatx DLL initialisation
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #include <windef.h>

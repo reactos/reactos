@@ -82,13 +82,13 @@ FORCEINLINE VOID InsertTailList(PLIST_ENTRY ListHead, PLIST_ENTRY Entry) {
 #endif
 
 #if defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_WIN7)
-NTSTATUS WINAPI RtlUnicodeToUTF8N(CHAR *utf8_dest, ULONG utf8_bytes_max,
-                                  ULONG *utf8_bytes_written,
-                                  const WCHAR *uni_src, ULONG uni_bytes);
+NTSTATUS NTAPI RtlUnicodeToUTF8N(CHAR *utf8_dest, ULONG utf8_bytes_max,
+                                 ULONG *utf8_bytes_written,
+                                 const WCHAR *uni_src, ULONG uni_bytes);
 #endif /* defined(__REACTOS__) && (NTDDI_VERSION < NTDDI_WIN7) */
 
 #ifdef __REACTOS__
-ULONG WINAPI NtGetTickCount(VOID);
+ULONG NTAPI NtGetTickCount(VOID);
 #endif
 
 typedef struct {
@@ -237,7 +237,7 @@ static UINT32 calc_crc32c(UINT32 seed, UINT8* msg, ULONG msglen) {
 #ifndef __REACTOS__
 NTSTATUS WINAPI ChkdskEx(PUNICODE_STRING DriveRoot, BOOLEAN FixErrors, BOOLEAN Verbose, BOOLEAN CheckOnlyIfDirty,
 #else
-NTSTATUS WINAPI BtrfsChkdskEx(PUNICODE_STRING DriveRoot, BOOLEAN FixErrors, BOOLEAN Verbose, BOOLEAN CheckOnlyIfDirty,
+NTSTATUS NTAPI BtrfsChkdskEx(PUNICODE_STRING DriveRoot, BOOLEAN FixErrors, BOOLEAN Verbose, BOOLEAN CheckOnlyIfDirty,
 #endif
                          BOOLEAN ScanDrive, PFMIFSCALLBACK Callback) {
     // STUB
