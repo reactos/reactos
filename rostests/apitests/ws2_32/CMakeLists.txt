@@ -1,5 +1,6 @@
 
 list(APPEND SOURCE
+    bind.c
     getaddrinfo.c
     getnameinfo.c
     getservbyname.c
@@ -21,3 +22,7 @@ target_link_libraries(ws2_32_apitest wine ${PSEH_LIB})
 set_module_type(ws2_32_apitest win32cui)
 add_importlibs(ws2_32_apitest ws2_32 msvcrt iphlpapi kernel32 ntdll)
 add_rostests_file(TARGET ws2_32_apitest)
+
+if((NOT MSVC) AND (NOT CMAKE_C_COMPILER_ID STREQUAL "Clang"))
+    add_target_compile_flags(ws2_32_apitest "-Wno-missing-braces")
+endif()
