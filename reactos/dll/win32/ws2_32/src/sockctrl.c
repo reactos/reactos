@@ -236,6 +236,9 @@ getsockname(IN SOCKET s,
             }
             else
             {
+                /* Deference the Socket Context */
+                WsSockDereference(Socket);
+
                 /* name or namelen not valid */
                 ErrorCode = WSAEFAULT;
             }
