@@ -1,6 +1,7 @@
 
 list(APPEND SOURCE
     arcname.c
+    bldrsup.c
     filesup.c
     fsutil.c
     genlist.c

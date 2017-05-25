@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS text-mode setup
+ * PROJECT:         ReactOS Setup Library
  * FILE:            base/setup/lib/osdetect.c
  * PURPOSE:         NT 5.x family (MS Windows <= 2003, and ReactOS)
  *                  operating systems detection code.
@@ -13,9 +13,9 @@
 
 #include "ntverrsrc.h"
 // #include "arcname.h"
+#include "bldrsup.h"
 #include "filesup.h"
 #include "genlist.h"
-#include "inicache.h"
 #include "partlist.h"
 #include "arcname.h"
 #include "osdetect.h"
@@ -76,31 +76,6 @@ BOOL IsWindowsOS(VOID)
 
 #endif
 
-typedef enum _NTOS_BOOT_LOADER_TYPE
-{
-    FreeLdr,    // ReactOS' FreeLDR
-    NtLdr,      // Windows <= 2k3 NTLDR
-//  BootMgr,    // Vista+ BCD-oriented BOOTMGR
-} NTOS_BOOT_LOADER_TYPE;
-
-typedef struct _NTOS_BOOT_LOADER_FILES
-{
-    NTOS_BOOT_LOADER_TYPE Type;
-    PCWSTR LoaderExecutable;
-    PCWSTR LoaderConfigurationFile;
-    // EnumerateInstallations;
-} NTOS_BOOT_LOADER_FILES, *PNTOS_BOOT_LOADER_FILES;
-
-// Question 1: What if config file is optional?
-// Question 2: What if many config files are possible?
-NTOS_BOOT_LOADER_FILES NtosBootLoaders[] =
-{
-    {FreeLdr, L"freeldr.sys", L"freeldr.ini"},
-    {NtLdr  , L"ntldr"      , L"boot.ini"},
-    {NtLdr  , L"setupldr"   , L"txtsetup.sif"},
-//  {BootMgr, L"bootmgr"    , ???}
-};
-
 
 static BOOLEAN
 IsValidNTOSInstallation_UStr(
@@ -128,339 +103,146 @@ AddNTOSInstallation(
     IN PPARTENTRY PartEntry OPTIONAL,
     IN PCWSTR InstallationName);
 
-static NTSTATUS
-FreeLdrEnumerateInstallations(
-    IN OUT PGENERIC_LIST List,
-    IN PPARTLIST PartList,
-    // IN PPARTENTRY PartEntry,
-    IN PCHAR FileBuffer,
-    IN ULONG FileLength)
+typedef struct _ENUM_INSTALLS_DATA
 {
-    NTSTATUS Status;
-    PINICACHE IniCache;
-    PINICACHEITERATOR Iterator;
-    PINICACHESECTION IniSection, OsIniSection;
-    PWCHAR SectionName, KeyData;
-    UNICODE_STRING InstallName;
+    IN OUT PGENERIC_LIST List;
+    IN PPARTLIST PartList;
+    // IN PPARTENTRY PartEntry;
+} ENUM_INSTALLS_DATA, *PENUM_INSTALLS_DATA;
+
+// PENUM_BOOT_ENTRIES_ROUTINE
+static NTSTATUS
+NTAPI
+EnumerateInstallations(
+    IN NTOS_BOOT_LOADER_TYPE Type,
+    IN PNTOS_BOOT_ENTRY BootEntry,
+    IN PVOID Parameter OPTIONAL)
+{
+    PENUM_INSTALLS_DATA Data = (PENUM_INSTALLS_DATA)Parameter;
 
     PNTOS_INSTALLATION NtOsInstall;
     UNICODE_STRING SystemRootPath;
     WCHAR SystemRoot[MAX_PATH];
     WCHAR InstallNameW[MAX_PATH];
 
-    /* Open an *existing* FreeLdr.ini configuration file */
-    Status = IniCacheLoadFromMemory(&IniCache, FileBuffer, FileLength, FALSE);
-    if (!NT_SUCCESS(Status))
-        return Status;
+    ULONG DiskNumber = 0, PartitionNumber = 0;
+    PCWSTR PathComponent = NULL;
+    PDISKENTRY DiskEntry = NULL;
+    PPARTENTRY PartEntry = NULL;
 
-    /* Get the "Operating Systems" section */
-    IniSection = IniCacheGetSection(IniCache, L"Operating Systems");
-    if (IniSection == NULL)
+    /* We have a boot entry */
+
+    UNICODE_STRING InstallName;
+    // /**/RtlInitUnicodeString(&InstallName, BootEntry->FriendlyName);/**/
+    InstallName = *BootEntry->FriendlyName;
+
+#if 0
+    if (Type == FreeLdr)
     {
-        IniCacheDestroy(IniCache);
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    /* Enumerate all the valid installations */
-    Iterator = IniCacheFindFirstValue(IniSection, &SectionName, &KeyData);
-    if (!Iterator) goto Quit;
-    do
-    {
-        // FIXME: Poor-man quotes removal (improvement over bootsup.c:UpdateFreeLoaderIni).
-        if (KeyData[0] == L'"')
-        {
-            /* Quoted name, copy up to the closing quote */
-            PWCHAR Begin = &KeyData[1];
-            PWCHAR End   = wcschr(Begin, L'"');
-            if (!End)
-                End = Begin + wcslen(Begin);
-            RtlInitEmptyUnicodeString(&InstallName, Begin, (ULONG_PTR)End - (ULONG_PTR)Begin);
-            InstallName.Length = InstallName.MaximumLength;
-        }
-        else
-        {
-            /* Non-quoted name, copy everything */
-            RtlInitUnicodeString(&InstallName, KeyData);
-        }
-
-        DPRINT1("Possible installation '%wZ' in OS section '%S'\n", &InstallName, SectionName);
-
-        /* Search for an existing ReactOS entry */
-        OsIniSection = IniCacheGetSection(IniCache, SectionName);
-        if (!OsIniSection)
-            continue;
-
         /* Check for supported boot type "Windows2003" */
-        Status = IniCacheGetKey(OsIniSection, L"BootType", &KeyData);
-        if (NT_SUCCESS(Status))
+
+        // TODO: What to do with "Windows" ; "WindowsNT40" ; "ReactOSSetup" ?
+        if ((BootType == NULL) ||
+            ( (_wcsicmp(BootType, L"Windows2003") != 0) &&
+              (_wcsicmp(BootType, L"\"Windows2003\"") != 0) ))
         {
-            // TODO: What to do with "Windows" ; "WindowsNT40" ; "ReactOSSetup" ?
-            if ((KeyData == NULL) ||
-                ( (_wcsicmp(KeyData, L"Windows2003") != 0) &&
-                  (_wcsicmp(KeyData, L"\"Windows2003\"") != 0) ))
-            {
-                /* This is not a ReactOS entry */
-                continue;
-            }
-        }
-        else
-        {
+            /* This is not a ReactOS entry */
             /* Certainly not a ReactOS installation */
-            continue;
-        }
-
-        /* BootType is Windows2003. Now check SystemPath. */
-        Status = IniCacheGetKey(OsIniSection, L"SystemPath", &KeyData);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("    A Win2k3 install '%wZ' without an ARC path?!\n", &InstallName);
-            continue;
-        }
-
-        DPRINT1("    Found a candidate Win2k3 install '%wZ' with ARC path '%S'\n", &InstallName, KeyData);
-
-        // TODO: Normalize the ARC path.
-
-        /*
-         * Check whether we already have an installation with this ARC path.
-         * If this is the case, stop there.
-         */
-        NtOsInstall = FindExistingNTOSInstall(List, KeyData, NULL);
-        if (NtOsInstall)
-        {
-            DPRINT1("    An NTOS installation with name \"%S\" already exists in SystemRoot '%wZ'\n",
-                    NtOsInstall->InstallationName, &NtOsInstall->SystemArcPath);
-            continue;
-        }
-
-        /*
-         * Convert the ARC path into an NT path, from which we will deduce
-         * the real disk drive & partition on which the candidate installation
-         * resides, as well verifying whether it is indeed an NTOS installation.
-         */
-        RtlInitEmptyUnicodeString(&SystemRootPath, SystemRoot, sizeof(SystemRoot));
-        if (!ArcPathToNtPath(&SystemRootPath, KeyData, PartList))
-        {
-            DPRINT1("ArcPathToNtPath(%S) failed, skip the installation.\n", KeyData);
-            continue;
-        }
-
-        DPRINT1("ArcPathToNtPath() succeeded: '%S' --> '%wZ'\n", KeyData, &SystemRootPath);
-
-        /*
-         * Check whether we already have an installation with this NT path.
-         * If this is the case, stop there.
-         */
-        NtOsInstall = FindExistingNTOSInstall(List, NULL /*KeyData*/, &SystemRootPath);
-        if (NtOsInstall)
-        {
-            DPRINT1("    An NTOS installation with name \"%S\" already exists in SystemRoot '%wZ'\n",
-                    NtOsInstall->InstallationName, &NtOsInstall->SystemNtPath);
-            continue;
-        }
-
-        /* Set SystemRootPath */
-        DPRINT1("FreeLdrEnumerateInstallations: SystemRootPath: '%wZ'\n", &SystemRootPath);
-
-        if (IsValidNTOSInstallation_UStr(&SystemRootPath))
-        {
-            ULONG DiskNumber = 0, PartitionNumber = 0;
-            PCWSTR PathComponent = NULL;
-            PDISKENTRY DiskEntry = NULL;
-            PPARTENTRY PartEntry = NULL;
-
-            DPRINT1("Found a valid NTOS installation in SystemRoot ARC path '%S', NT path '%wZ'\n", KeyData, &SystemRootPath);
-
-            /* From the NT path, compute the disk, partition and path components */
-            if (NtPathToDiskPartComponents(SystemRootPath.Buffer, &DiskNumber, &PartitionNumber, &PathComponent))
-            {
-                DPRINT1("SystemRootPath = '%wZ' points to disk #%d, partition #%d, path '%S'\n",
-                        &SystemRootPath, DiskNumber, PartitionNumber, PathComponent);
-
-                /* Retrieve the corresponding disk and partition */
-                if (!GetDiskOrPartition(PartList, DiskNumber, PartitionNumber, &DiskEntry, &PartEntry))
-                    DPRINT1("GetDiskOrPartition(disk #%d, partition #%d) failed\n", DiskNumber, PartitionNumber);
-            }
-            else
-            {
-                DPRINT1("NtPathToDiskPartComponents(%wZ) failed\n", &SystemRootPath);
-            }
-
-            if (PartEntry && PartEntry->DriveLetter)
-            {
-                /* We have retrieved a partition that is mounted */
-                StringCchPrintfW(InstallNameW, ARRAYSIZE(InstallNameW), L"%C:%s  \"%wZ\"",
-                                 PartEntry->DriveLetter, PathComponent, &InstallName);
-            }
-            else
-            {
-                /* We failed somewhere, just show the NT path */
-                StringCchPrintfW(InstallNameW, ARRAYSIZE(InstallNameW), L"%wZ  \"%wZ\"",
-                                 &SystemRootPath, &InstallName);
-            }
-            AddNTOSInstallation(List, KeyData, &SystemRootPath, PathComponent,
-                                DiskNumber, PartitionNumber, PartEntry,
-                                InstallNameW);
+            return STATUS_SUCCESS;
         }
     }
-    while (IniCacheFindNextValue(Iterator, &SectionName, &KeyData));
+#endif
 
-    IniCacheFindClose(Iterator);
+    DPRINT1("    Found a candidate Win2k3 install '%wZ' with ARC path '%S'\n",
+            &InstallName, BootEntry->OsLoadPath);
+    // DPRINT1("    Found a Win2k3 install '%wZ' with ARC path '%S'\n",
+            // &InstallName, BootEntry->OsLoadPath);
 
-Quit:
-    IniCacheDestroy(IniCache);
-    return STATUS_SUCCESS;
-}
+    // TODO: Normalize the ARC path.
 
-static NTSTATUS
-NtLdrEnumerateInstallations(
-    IN OUT PGENERIC_LIST List,
-    IN PPARTLIST PartList,
-    // IN PPARTENTRY PartEntry,
-    IN PCHAR FileBuffer,
-    IN ULONG FileLength)
-{
-    NTSTATUS Status;
-    PINICACHE IniCache;
-    PINICACHEITERATOR Iterator;
-    PINICACHESECTION IniSection;
-    PWCHAR SectionName, KeyData;
-    UNICODE_STRING InstallName;
-
-    PNTOS_INSTALLATION NtOsInstall;
-    UNICODE_STRING SystemRootPath;
-    WCHAR SystemRoot[MAX_PATH];
-    WCHAR InstallNameW[MAX_PATH];
-
-    /* Open an *existing* FreeLdr.ini configuration file */
-    Status = IniCacheLoadFromMemory(&IniCache, FileBuffer, FileLength, FALSE);
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    /* Get the "Operating Systems" section */
-    IniSection = IniCacheGetSection(IniCache, L"operating systems");
-    if (IniSection == NULL)
+    /*
+     * Check whether we already have an installation with this ARC path.
+     * If this is the case, stop there.
+     */
+    NtOsInstall = FindExistingNTOSInstall(Data->List, BootEntry->OsLoadPath, NULL);
+    if (NtOsInstall)
     {
-        IniCacheDestroy(IniCache);
-        return STATUS_UNSUCCESSFUL;
+        DPRINT1("    An NTOS installation with name \"%S\" already exists in SystemRoot '%wZ'\n",
+                NtOsInstall->InstallationName, &NtOsInstall->SystemArcPath);
+        return STATUS_SUCCESS;
     }
 
-    /* Enumerate all the valid installations */
-    Iterator = IniCacheFindFirstValue(IniSection, &SectionName, &KeyData);
-    if (!Iterator) goto Quit;
-    do
+    /*
+     * Convert the ARC path into an NT path, from which we will deduce
+     * the real disk drive & partition on which the candidate installation
+     * resides, as well verifying whether it is indeed an NTOS installation.
+     */
+    RtlInitEmptyUnicodeString(&SystemRootPath, SystemRoot, sizeof(SystemRoot));
+    if (!ArcPathToNtPath(&SystemRootPath, BootEntry->OsLoadPath, Data->PartList))
     {
-        // FIXME: Poor-man quotes removal (improvement over bootsup.c:UpdateFreeLoaderIni).
-        if (KeyData[0] == L'"')
+        DPRINT1("ArcPathToNtPath(%S) failed, skip the installation.\n", BootEntry->OsLoadPath);
+        return STATUS_SUCCESS;
+    }
+
+    DPRINT1("ArcPathToNtPath() succeeded: '%S' --> '%wZ'\n",
+            BootEntry->OsLoadPath, &SystemRootPath);
+
+    /*
+     * Check whether we already have an installation with this NT path.
+     * If this is the case, stop there.
+     */
+    NtOsInstall = FindExistingNTOSInstall(Data->List, NULL /*BootEntry->OsLoadPath*/, &SystemRootPath);
+    if (NtOsInstall)
+    {
+        DPRINT1("    An NTOS installation with name \"%S\" already exists in SystemRoot '%wZ'\n",
+                NtOsInstall->InstallationName, &NtOsInstall->SystemNtPath);
+        return STATUS_SUCCESS;
+    }
+
+    DPRINT1("EnumerateInstallations: SystemRootPath: '%wZ'\n", &SystemRootPath);
+
+    /* Check if this is a valid NTOS installation; stop there if it isn't one */
+    if (!IsValidNTOSInstallation_UStr(&SystemRootPath))
+        return STATUS_SUCCESS;
+
+    DPRINT1("Found a valid NTOS installation in SystemRoot ARC path '%S', NT path '%wZ'\n",
+            BootEntry->OsLoadPath, &SystemRootPath);
+
+    /* From the NT path, compute the disk, partition and path components */
+    if (NtPathToDiskPartComponents(SystemRootPath.Buffer, &DiskNumber, &PartitionNumber, &PathComponent))
+    {
+        DPRINT1("SystemRootPath = '%wZ' points to disk #%d, partition #%d, path '%S'\n",
+                &SystemRootPath, DiskNumber, PartitionNumber, PathComponent);
+
+        /* Retrieve the corresponding disk and partition */
+        if (!GetDiskOrPartition(Data->PartList, DiskNumber, PartitionNumber, &DiskEntry, &PartEntry))
         {
-            /* Quoted name, copy up to the closing quote */
-            PWCHAR Begin = &KeyData[1];
-            PWCHAR End   = wcschr(Begin, L'"');
-            if (!End)
-                End = Begin + wcslen(Begin);
-            RtlInitEmptyUnicodeString(&InstallName, Begin, (ULONG_PTR)End - (ULONG_PTR)Begin);
-            InstallName.Length = InstallName.MaximumLength;
-        }
-        else
-        {
-            /* Non-quoted name, copy everything */
-            RtlInitUnicodeString(&InstallName, KeyData);
-        }
-
-        DPRINT1("Possible installation '%wZ' with ARC path '%S'\n", &InstallName, SectionName);
-
-        DPRINT1("    Found a Win2k3 install '%wZ' with ARC path '%S'\n", &InstallName, SectionName);
-
-        // TODO: Normalize the ARC path.
-
-        /*
-         * Check whether we already have an installation with this ARC path.
-         * If this is the case, stop there.
-         */
-        NtOsInstall = FindExistingNTOSInstall(List, SectionName, NULL);
-        if (NtOsInstall)
-        {
-            DPRINT1("    An NTOS installation with name \"%S\" already exists in SystemRoot '%wZ'\n",
-                    NtOsInstall->InstallationName, &NtOsInstall->SystemArcPath);
-            continue;
-        }
-
-        /*
-         * Convert the ARC path into an NT path, from which we will deduce
-         * the real disk drive & partition on which the candidate installation
-         * resides, as well verifying whether it is indeed an NTOS installation.
-         */
-        RtlInitEmptyUnicodeString(&SystemRootPath, SystemRoot, sizeof(SystemRoot));
-        if (!ArcPathToNtPath(&SystemRootPath, SectionName, PartList))
-        {
-            DPRINT1("ArcPathToNtPath(%S) failed, skip the installation.\n", SectionName);
-            continue;
-        }
-
-        DPRINT1("ArcPathToNtPath() succeeded: '%S' --> '%wZ'\n", SectionName, &SystemRootPath);
-
-        /*
-         * Check whether we already have an installation with this NT path.
-         * If this is the case, stop there.
-         */
-        NtOsInstall = FindExistingNTOSInstall(List, NULL /*SectionName*/, &SystemRootPath);
-        if (NtOsInstall)
-        {
-            DPRINT1("    An NTOS installation with name \"%S\" already exists in SystemRoot '%wZ'\n",
-                    NtOsInstall->InstallationName, &NtOsInstall->SystemNtPath);
-            continue;
-        }
-
-        /* Set SystemRootPath */
-        DPRINT1("NtLdrEnumerateInstallations: SystemRootPath: '%wZ'\n", &SystemRootPath);
-
-        if (IsValidNTOSInstallation_UStr(&SystemRootPath))
-        {
-            ULONG DiskNumber = 0, PartitionNumber = 0;
-            PCWSTR PathComponent = NULL;
-            PDISKENTRY DiskEntry = NULL;
-            PPARTENTRY PartEntry = NULL;
-
-            DPRINT1("Found a valid NTOS installation in SystemRoot ARC path '%S', NT path '%wZ'\n", SectionName, &SystemRootPath);
-
-            /* From the NT path, compute the disk, partition and path components */
-            if (NtPathToDiskPartComponents(SystemRootPath.Buffer, &DiskNumber, &PartitionNumber, &PathComponent))
-            {
-                DPRINT1("SystemRootPath = '%wZ' points to disk #%d, partition #%d, path '%S'\n",
-                        &SystemRootPath, DiskNumber, PartitionNumber, PathComponent);
-
-                /* Retrieve the corresponding disk and partition */
-                if (!GetDiskOrPartition(PartList, DiskNumber, PartitionNumber, &DiskEntry, &PartEntry))
-                    DPRINT1("GetDiskOrPartition(disk #%d, partition #%d) failed\n", DiskNumber, PartitionNumber);
-            }
-            else
-            {
-                DPRINT1("NtPathToDiskPartComponents(%wZ) failed\n", &SystemRootPath);
-            }
-
-            if (PartEntry && PartEntry->DriveLetter)
-            {
-                /* We have retrieved a partition that is mounted */
-                StringCchPrintfW(InstallNameW, ARRAYSIZE(InstallNameW), L"%C:%s  \"%wZ\"",
-                                 PartEntry->DriveLetter, PathComponent, &InstallName);
-            }
-            else
-            {
-                /* We failed somewhere, just show the NT path */
-                StringCchPrintfW(InstallNameW, ARRAYSIZE(InstallNameW), L"%wZ  \"%wZ\"",
-                                 &SystemRootPath, &InstallName);
-            }
-            AddNTOSInstallation(List, SectionName, &SystemRootPath, PathComponent,
-                                DiskNumber, PartitionNumber, PartEntry,
-                                InstallNameW);
+            DPRINT1("GetDiskOrPartition(disk #%d, partition #%d) failed\n",
+                    DiskNumber, PartitionNumber);
         }
     }
-    while (IniCacheFindNextValue(Iterator, &SectionName, &KeyData));
+    else
+    {
+        DPRINT1("NtPathToDiskPartComponents(%wZ) failed\n", &SystemRootPath);
+    }
 
-    IniCacheFindClose(Iterator);
+    if (PartEntry && PartEntry->DriveLetter)
+    {
+        /* We have retrieved a partition that is mounted */
+        StringCchPrintfW(InstallNameW, ARRAYSIZE(InstallNameW), L"%C:%s  \"%wZ\"",
+                         PartEntry->DriveLetter, PathComponent, &InstallName);
+    }
+    else
+    {
+        /* We failed somewhere, just show the NT path */
+        StringCchPrintfW(InstallNameW, ARRAYSIZE(InstallNameW), L"%wZ  \"%wZ\"",
+                         &SystemRootPath, &InstallName);
+    }
+    AddNTOSInstallation(Data->List, BootEntry->OsLoadPath,
+                        &SystemRootPath, PathComponent,
+                        DiskNumber, PartitionNumber, PartEntry,
+                        InstallNameW);
 
-Quit:
-    IniCacheDestroy(IniCache);
     return STATUS_SUCCESS;
 }
 
@@ -597,28 +379,32 @@ IsValidNTOSInstallationByHandle(
     IN HANDLE SystemRootDirectory)
 {
     BOOLEAN Success = FALSE;
+    PCWSTR PathName;
     USHORT i;
     UNICODE_STRING VendorName;
     WCHAR VendorNameBuffer[MAX_PATH];
 
     /* Check for the existence of \SystemRoot\System32 */
-    if (!DoesPathExist(SystemRootDirectory, L"System32\\"))
+    PathName = L"System32\\";
+    if (!DoesPathExist(SystemRootDirectory, PathName))
     {
-        // DPRINT1("Failed to open directory '%wZ', Status 0x%08lx\n", &FileName, Status);
+        // DPRINT1("Failed to open directory '%S', Status 0x%08lx\n", PathName, Status);
         return FALSE;
     }
 
     /* Check for the existence of \SystemRoot\System32\drivers */
-    if (!DoesPathExist(SystemRootDirectory, L"System32\\drivers\\"))
+    PathName = L"System32\\drivers\\";
+    if (!DoesPathExist(SystemRootDirectory, PathName))
     {
-        // DPRINT1("Failed to open directory '%wZ', Status 0x%08lx\n", &FileName, Status);
+        // DPRINT1("Failed to open directory '%S', Status 0x%08lx\n", PathName, Status);
         return FALSE;
     }
 
     /* Check for the existence of \SystemRoot\System32\config */
-    if (!DoesPathExist(SystemRootDirectory, L"System32\\config\\"))
+    PathName = L"System32\\config\\";
+    if (!DoesPathExist(SystemRootDirectory, PathName))
     {
-        // DPRINT1("Failed to open directory '%wZ', Status 0x%08lx\n", &FileName, Status);
+        // DPRINT1("Failed to open directory '%S', Status 0x%08lx\n", PathName, Status);
         return FALSE;
     }
 
@@ -627,14 +413,16 @@ IsValidNTOSInstallationByHandle(
      * Check for the existence of SYSTEM and SOFTWARE hives in \SystemRoot\System32\config
      * (but we don't check here whether they are actually valid).
      */
-    if (!DoesFileExist(SystemRootDirectory, L"System32\\config\\SYSTEM"))
+    PathName = L"System32\\config\\SYSTEM";
+    if (!DoesFileExist(SystemRootDirectory, PathName))
     {
-        // DPRINT1("Failed to open file '%wZ', Status 0x%08lx\n", &FileName, Status);
+        // DPRINT1("Failed to open file '%S', Status 0x%08lx\n", PathName, Status);
         return FALSE;
     }
-    if (!DoesFileExist(SystemRootDirectory, L"System32\\config\\SOFTWARE"))
+    PathName = L"System32\\config\\SOFTWARE";
+    if (!DoesFileExist(SystemRootDirectory, PathName))
     {
-        // DPRINT1("Failed to open file '%wZ', Status 0x%08lx\n", &FileName, Status);
+        // DPRINT1("Failed to open file '%S', Status 0x%08lx\n", PathName, Status);
         return FALSE;
     }
 #endif
@@ -642,9 +430,10 @@ IsValidNTOSInstallationByHandle(
     RtlInitEmptyUnicodeString(&VendorName, VendorNameBuffer, sizeof(VendorNameBuffer));
 
     /* Check for the existence of \SystemRoot\System32\ntoskrnl.exe and retrieves its vendor name */
-    Success = CheckForValidPEAndVendor(SystemRootDirectory, L"System32\\ntoskrnl.exe", &VendorName);
+    PathName = L"System32\\ntoskrnl.exe";
+    Success = CheckForValidPEAndVendor(SystemRootDirectory, PathName, &VendorName);
     if (!Success)
-        DPRINT1("Kernel file ntoskrnl.exe is either not a PE file, or does not have any vendor?\n");
+        DPRINT1("Kernel executable '%S' is either not a PE file, or does not have any vendor?\n", PathName);
 
     /* The kernel gives the OS its flavour */
     if (Success)
@@ -664,9 +453,10 @@ IsValidNTOSInstallationByHandle(
     /* OPTIONAL: Check for the existence of \SystemRoot\System32\ntkrnlpa.exe */
 
     /* Check for the existence of \SystemRoot\System32\ntdll.dll and retrieves its vendor name */
-    Success = CheckForValidPEAndVendor(SystemRootDirectory, L"System32\\ntdll.dll", &VendorName);
+    PathName = L"System32\\ntdll.dll";
+    Success = CheckForValidPEAndVendor(SystemRootDirectory, PathName, &VendorName);
     if (!Success)
-        DPRINT1("User-mode file ntdll.dll is either not a PE file, or does not have any vendor?\n");
+        DPRINT1("User-mode DLL '%S' is either not a PE file, or does not have any vendor?\n", PathName);
     if (Success)
     {
         for (i = 0; i < ARRAYSIZE(KnownVendors); ++i)
@@ -674,7 +464,7 @@ IsValidNTOSInstallationByHandle(
             if (!!FindSubStrI(VendorName.Buffer, KnownVendors[i]))
             {
                 /* We have found a correct vendor combination */
-                DPRINT1("IsValidNTOSInstallation: The user-mode file ntdll.dll is from %S\n", KnownVendors[i]);
+                DPRINT1("IsValidNTOSInstallation: The user-mode DLL '%S' is from %S\n", PathName, KnownVendors[i]);
                 break;
             }
         }
@@ -874,15 +664,13 @@ FindNTOSInstallations(
     NTSTATUS Status;
     ULONG DiskNumber = PartEntry->DiskEntry->DiskNumber;
     ULONG PartitionNumber = PartEntry->PartitionNumber;
-    HANDLE PartitionHandle, FileHandle;
+    HANDLE PartitionHandle;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
     UNICODE_STRING PartitionRootPath;
-    UINT i;
-    HANDLE SectionHandle;
-    // SIZE_T ViewSize;
-    ULONG FileSize;
-    PVOID ViewBase;
+    NTOS_BOOT_LOADER_TYPE Type;
+    ENUM_INSTALLS_DATA Data;
+    ULONG Version;
     WCHAR PathBuffer[MAX_PATH];
 
     /* Set PartitionRootPath */
@@ -910,49 +698,26 @@ FindNTOSInstallations(
         return;
     }
 
-    /* Try to see whether we recognize some NT boot loaders */
-    for (i = 0; i < ARRAYSIZE(NtosBootLoaders); ++i)
-    {
-        /* Check whether the loader executable exists */
-        if (!DoesFileExist(PartitionHandle, NtosBootLoaders[i].LoaderExecutable))
-        {
-            /* The loader does not exist, continue with another one */
-            DPRINT1("Loader executable '%S' does not exist, continue with another one...\n", NtosBootLoaders[i].LoaderExecutable);
-            continue;
-        }
+    Data.List = List;
+    Data.PartList = PartList;
 
-        /* Check whether the loader configuration file exists */
-        Status = OpenAndMapFile(PartitionHandle, NtosBootLoaders[i].LoaderConfigurationFile,
-                                &FileHandle, &SectionHandle, &ViewBase, &FileSize);
+    /* Try to see whether we recognize some NT boot loaders */
+    for (Type = FreeLdr; Type < BldrTypeMax; ++Type)
+    {
+        Status = FindNTOSBootLoader(PartitionHandle, Type, &Version);
         if (!NT_SUCCESS(Status))
         {
             /* The loader does not exist, continue with another one */
-            // FIXME: Consider it might be optional??
-            DPRINT1("Loader configuration file '%S' does not exist, continue with another one...\n", NtosBootLoaders[i].LoaderConfigurationFile);
+            DPRINT1("Loader type '%d' does not exist, or an error happened (Status 0x%08lx), continue with another one...\n",
+                    Type, Status);
             continue;
         }
 
-        /* The loader configuration file exists, interpret it to find valid installations */
-        DPRINT1("Analyse the OS installations inside '%S' in disk #%d, partition #%d\n",
-                NtosBootLoaders[i].LoaderConfigurationFile, DiskNumber, PartitionNumber);
-        switch (NtosBootLoaders[i].Type)
-        {
-        case FreeLdr:
-            Status = FreeLdrEnumerateInstallations(List, PartList, ViewBase, FileSize);
-            break;
+        /* The loader exists, try to enumerate its boot entries */
+        DPRINT1("Analyse the OS installations for loader type '%d' in disk #%d, partition #%d\n",
+                Type, DiskNumber, PartitionNumber);
 
-        case NtLdr:
-            Status = NtLdrEnumerateInstallations(List, PartList, ViewBase, FileSize);
-            break;
-
-        default:
-            DPRINT1("Loader type %d is currently unsupported!\n", NtosBootLoaders[i].Type);
-            Status = STATUS_SUCCESS;
-        }
-
-        /* Finally, unmap and close the file */
-        UnMapFile(SectionHandle, ViewBase);
-        NtClose(FileHandle);
+        EnumerateNTOSBootEntries(PartitionHandle, Type, EnumerateInstallations, &Data);
     }
 
     /* Close the partition */
