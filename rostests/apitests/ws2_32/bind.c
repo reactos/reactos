@@ -34,22 +34,22 @@ TestBind(IN_ADDR Address)
         struct sockaddr_in ExpectedAddr;
     } Tests[] =
     {
-        { SOCK_STREAM, IPPROTO_TCP, { AF_INET, PORT, { 0x7f, 0x00, 0x00, 0x01 } }, 0, 0, { AF_INET, PORT, { 0x7f, 0x00, 0x00, 0x01 } } },
-        { SOCK_STREAM, IPPROTO_TCP, { AF_INET, PORT, { 0x00, 0x00, 0x00, 0x00 } }, 0, 0, { AF_INET, PORT, { 0x00, 0x00, 0x00, 0x00 } } },
+        { SOCK_STREAM, IPPROTO_TCP, { AF_INET, PORT, {{{ 0x7f, 0x00, 0x00, 0x01 }}} }, 0, 0, { AF_INET, PORT, {{{ 0x7f, 0x00, 0x00, 0x01 }}} } },
+        { SOCK_STREAM, IPPROTO_TCP, { AF_INET, PORT, {{{ 0x00, 0x00, 0x00, 0x00 }}} }, 0, 0, { AF_INET, PORT, {{{ 0x00, 0x00, 0x00, 0x00 }}} } },
         { SOCK_STREAM, IPPROTO_TCP, { AF_INET, PORT, Address }, 0, 0, { AF_INET, PORT, Address } },
-        { SOCK_STREAM, IPPROTO_TCP, { AF_INET, PORT, { 0xff, 0xff, 0xff, 0xff } }, SOCKET_ERROR, WSAEADDRNOTAVAIL },
-        { SOCK_STREAM, IPPROTO_TCP, { AF_INET, 0, { 0x7f, 0x00, 0x00, 0x01 } }, 0, 0, { AF_INET, 0, { 0x7f, 0x00, 0x00, 0x01 } } },
-        { SOCK_STREAM, IPPROTO_TCP, { AF_INET, 0, { 0x00, 0x00, 0x00, 0x00 } } },
+        { SOCK_STREAM, IPPROTO_TCP, { AF_INET, PORT, {{{ 0xff, 0xff, 0xff, 0xff }}} }, SOCKET_ERROR, WSAEADDRNOTAVAIL },
+        { SOCK_STREAM, IPPROTO_TCP, { AF_INET, 0, {{{ 0x7f, 0x00, 0x00, 0x01 }}} }, 0, 0, { AF_INET, 0, {{{ 0x7f, 0x00, 0x00, 0x01 }}} } },
+        { SOCK_STREAM, IPPROTO_TCP, { AF_INET, 0, {{{ 0x00, 0x00, 0x00, 0x00 }}} } },
         { SOCK_STREAM, IPPROTO_TCP, { AF_INET, 0, Address }, 0, 0, { AF_INET, 0, Address } },
-        { SOCK_STREAM, IPPROTO_TCP, { AF_INET, 0, { 0xff, 0xff, 0xff, 0xff } }, SOCKET_ERROR, WSAEADDRNOTAVAIL },
-        { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, PORT, { 0x7f, 0x00, 0x00, 0x01 } }, 0, 0, { AF_INET, PORT, { 0x7f, 0x00, 0x00, 0x01 } } },
-        { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, PORT, { 0x00, 0x00, 0x00, 0x00 } }, 0, 0, { AF_INET, PORT, { 0x00, 0x00, 0x00, 0x00 } } },
+        { SOCK_STREAM, IPPROTO_TCP, { AF_INET, 0, {{{ 0xff, 0xff, 0xff, 0xff }}} }, SOCKET_ERROR, WSAEADDRNOTAVAIL },
+        { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, PORT, {{{ 0x7f, 0x00, 0x00, 0x01 }}} }, 0, 0, { AF_INET, PORT, {{{ 0x7f, 0x00, 0x00, 0x01 }}} } },
+        { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, PORT, {{{ 0x00, 0x00, 0x00, 0x00 }}} }, 0, 0, { AF_INET, PORT, {{{ 0x00, 0x00, 0x00, 0x00 }}} } },
         { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, PORT, Address }, 0, 0, { AF_INET, PORT, Address } },
-        { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, PORT, { 0xff, 0xff, 0xff, 0xff } }, SOCKET_ERROR, WSAEADDRNOTAVAIL },
-        { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, 0, { 0x7f, 0x00, 0x00, 0x01 } }, 0, 0, { AF_INET, 0, { 0x7f, 0x00, 0x00, 0x01 } } },
-        { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, 0, { 0x00, 0x00, 0x00, 0x00 } } },
+        { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, PORT, {{{ 0xff, 0xff, 0xff, 0xff }}} }, SOCKET_ERROR, WSAEADDRNOTAVAIL },
+        { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, 0, {{{ 0x7f, 0x00, 0x00, 0x01 }}} }, 0, 0, { AF_INET, 0, {{{ 0x7f, 0x00, 0x00, 0x01 }}} } },
+        { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, 0, {{{ 0x00, 0x00, 0x00, 0x00 }}} } },
         { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, 0, Address }, 0, 0,{ AF_INET, 0, Address } },
-        { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, 0, { 0xff, 0xff, 0xff, 0xff } }, SOCKET_ERROR, WSAEADDRNOTAVAIL },
+        { SOCK_DGRAM, IPPROTO_UDP, { AF_INET, 0, {{{ 0xff, 0xff, 0xff, 0xff }}} }, SOCKET_ERROR, WSAEADDRNOTAVAIL },
     };
     const INT TestCount = _countof(Tests);
     INT i, AddrSize;
