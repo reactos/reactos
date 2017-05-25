@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS text-mode setup
+ * PROJECT:         ReactOS Setup Library
  * FILE:            base/setup/lib/setuplib.h
- * PURPOSE:         Console settings management - Public header
+ * PURPOSE:         Setup Library - Public header
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
@@ -15,10 +15,7 @@
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#include <wingdi.h> // For LF_FACESIZE and TranslateCharsetInfo()
-#include <wincon.h>
-#include <winnls.h> // For code page support
-#include <winreg.h>
+#include <winxxx.h>
 
 #endif
 
@@ -30,6 +27,7 @@ extern HANDLE ProcessHeap;
 #include "linklist.h"
 #include "ntverrsrc.h"
 // #include "arcname.h"
+#include "bldrsup.h"
 #include "filesup.h"
 #include "fsutil.h"
 #include "genlist.h"

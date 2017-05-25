@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS text-mode setup
- * FILE:            base/setup/lib/osdetect.c
+ * PROJECT:         ReactOS Setup Library
+ * FILE:            base/setup/lib/osdetect.h
  * PURPOSE:         NT 5.x family (MS Windows <= 2003, and ReactOS)
  *                  operating systems detection code.
  * PROGRAMMER:      Hermes Belusca-Maito (hermes.belusca@sfr.fr)

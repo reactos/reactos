@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS text-mode setup
+ * PROJECT:         ReactOS Setup Library
  * FILE:            base/setup/lib/genlist.h
  * PURPOSE:         Generic list functions
  * PROGRAMMER:      Eric Kohl

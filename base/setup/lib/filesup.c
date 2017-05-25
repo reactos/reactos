@@ -1,10 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS text-mode setup
+ * PROJECT:         ReactOS Setup Library
  * FILE:            base/setup/lib/filesup.c
  * PURPOSE:         File support functions
- * PROGRAMMER:      Eric Kohl
- *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * PROGRAMMER:      Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 /* INCLUDES *****************************************************************/

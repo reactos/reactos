@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS text-mode setup
+ * PROJECT:         ReactOS Setup Library
  * FILE:            base/setup/lib/filesup.h
  * PURPOSE:         File support functions
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMER:      Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 #pragma once

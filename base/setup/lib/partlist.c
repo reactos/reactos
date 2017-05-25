@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS text-mode setup
+ * PROJECT:         ReactOS Setup Library
  * FILE:            base/setup/lib/partlist.c
  * PURPOSE:         Partition list functions
  * PROGRAMMERS:     Eric Kohl
@@ -1208,7 +1208,7 @@ CreatePartitionList(VOID)
 
     List = (PPARTLIST)RtlAllocateHeap(ProcessHeap,
                                       0,
-                                      sizeof (PARTLIST));
+                                      sizeof(PARTLIST));
     if (List == NULL)
         return NULL;
 
@@ -2459,7 +2459,7 @@ DeleteCurrentPartition(
         RtlFreeHeap(ProcessHeap, 0, PartEntry);
 
         /* Remove the next entry */
-        RemoveEntryList (&NextPartEntry->ListEntry);
+        RemoveEntryList(&NextPartEntry->ListEntry);
         RtlFreeHeap(ProcessHeap, 0, NextPartEntry);
 
         /* Update current partition */

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS text-mode setup
+ * PROJECT:         ReactOS Setup Library
  * FILE:            base/setup/lib/arcname.c
  * PURPOSE:         ARC path to-and-from NT path resolver.
  * PROGRAMMER:      Hermes Belusca-Maito (hermes.belusca@sfr.fr)

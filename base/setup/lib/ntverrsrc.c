@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS text-mode setup
+ * PROJECT:         ReactOS Setup Library
  * FILE:            base/setup/lib/ntverrsrc.c
  * PURPOSE:         NT Version Resource Management API
  * PROGRAMMER:      Hermes Belusca-Maito (hermes.belusca@sfr.fr)
