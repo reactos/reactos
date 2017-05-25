@@ -77,6 +77,7 @@ TestBind(IN_ADDR Address)
         else
         {
             ok_dec(WSAGetLastError(), 0);
+            AddrSize = sizeof(Addr);
             Error = getsockname(Socket, (struct sockaddr *) &Addr, &AddrSize);
             ok(Error == 0, "Error getsockname for test %d, Error %d\n", i, Error);
             ok_dec(WSAGetLastError(), 0);
