@@ -1,6 +1,6 @@
 #define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Text-Mode Setup"
 #define REACTOS_STR_INTERNAL_NAME     "usetup"
-#define REACTOS_STR_ORIGINAL_FILENAME "usetup.dll"
+#define REACTOS_STR_ORIGINAL_FILENAME "usetup.exe"
 #ifdef __REACTOS__
 #include <reactos/version.rc>
 #endif
