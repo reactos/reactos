@@ -174,7 +174,7 @@ add_library(acpica
     acpica/utilities/utglobal.c)
 
 add_pch(acpica acpica/include/acpi.h ACPICA_SOURCE)
-set_target_properties(acpica PROPERTIES COMPILE_DEFINITIONS "ACPI_USE_LOCAL_CACHE;ACPI_USE_SYSTEM_INTTYPES")
+set_target_properties(acpica PROPERTIES COMPILE_DEFINITIONS "ACPI_USE_LOCAL_CACHE;ACPI_USE_SYSTEM_INTTYPES;ACPI_USE_NATIVE_DIVIDE")
 add_dependencies(acpica bugcodes xdk)
 
 list(APPEND ACPI_SOURCE
