@@ -48,19 +48,27 @@ bind(IN SOCKET s,
         /* Get the Socket Context */
         if ((Socket = WsSockGetSocket(s)))
         {
-            /* Make the call */
-            Status = Socket->Provider->Service.lpWSPBind(s,
-                                                         name,
-                                                         namelen,
-                                                         &ErrorCode);
-            /* Deference the Socket Context */
-            WsSockDereference(Socket);
+            if (name && (namelen >= sizeof(struct sockaddr)))
+            {
+                /* Make the call */
+                Status = Socket->Provider->Service.lpWSPBind(s,
+                                                             name,
+                                                             namelen,
+                                                             &ErrorCode);
+                /* Deference the Socket Context */
+                WsSockDereference(Socket);
 
-            /* Return Provider Value */
-            if (Status == ERROR_SUCCESS) return Status;
+                /* Return Provider Value */
+                if (Status == ERROR_SUCCESS) return Status;
 
-            /* If everything seemed fine, then the WSP call failed itself */
-            if (ErrorCode == NO_ERROR) ErrorCode = WSASYSCALLFAILURE;
+                /* If everything seemed fine, then the WSP call failed itself */
+                if (ErrorCode == NO_ERROR) ErrorCode = WSASYSCALLFAILURE;
+            }
+            else
+            {
+                /* name or namelen not valid */
+                ErrorCode = WSAEFAULT;
+            }
         }
         else
         {
