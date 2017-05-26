@@ -126,7 +126,7 @@ typedef struct _SETUP_LOADER_BLOCK
     ULONG UnsupDriversInfFileLength;
     PVOID BootFontFile;
     ULONG BootFontFileLength;
-    MONITOR_CONFIGURATION_DATA Monitor;
+    PMONITOR_CONFIGURATION_DATA Monitor;
     PCHAR MonitorId;
     PDETECTED_DEVICE BootBusExtenders;
     PDETECTED_DEVICE BusExtenders;
