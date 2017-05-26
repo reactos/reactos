@@ -677,14 +677,15 @@ WSPCloseSocket(IN SOCKET Handle,
         if (lpErrno) *lpErrno = WSAENOTSOCK;
         return SOCKET_ERROR;
     }
-    /* Set the state to close */
-    OldState = Socket->SharedData->State;
-    Socket->SharedData->State = SocketClosed;
 
     /* Decrement reference count on SharedData */
     References = InterlockedDecrement(&Socket->SharedData->RefCount);
     if (References)
         goto ok;
+
+    /* Set the state to close */
+    OldState = Socket->SharedData->State;
+    Socket->SharedData->State = SocketClosed;
 
     /* If SO_LINGER is ON and the Socket is connected, we need to disconnect */
     /* FIXME: Should we do this on Datagram Sockets too? */
