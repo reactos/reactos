@@ -4,6 +4,7 @@
 #include <apitest.h>
 
 extern void func_bind(void);
+extern void func_close(void);
 extern void func_getaddrinfo(void);
 extern void func_getnameinfo(void);
 extern void func_getservbyname(void);
@@ -21,6 +22,7 @@ extern void func_WSAStartup(void);
 const struct test winetest_testlist[] =
 {
     { "bind", func_bind },
+    { "close", func_close },
     { "getaddrinfo", func_getaddrinfo },
     { "getnameinfo", func_getnameinfo },
     { "getservbyname", func_getservbyname },
