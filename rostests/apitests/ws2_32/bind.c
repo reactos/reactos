@@ -128,12 +128,12 @@ TestBind(IN_ADDR Address)
     ok(Error == 0, "Unexpected error %d on closesocket for double bind test\n", Error);
     ok(WSAGetLastError() == 0, "Unexpected wsa error %d on closesocket for double bind test\n", WSAGetLastError());
     /* Check SO_BROADCAST and bind to broadcast address */
-    Socket = socket(AF_INET, Tests[10].Type, Tests[10].Proto);
+    Socket = socket(AF_INET, Tests[11].Type, Tests[11].Proto);
     ok(Socket != INVALID_SOCKET, "Failed to create socket with error %d for broadcast test, next tests might be wrong\n", WSAGetLastError());
     Error = setsockopt(Socket, SOL_SOCKET, SO_BROADCAST, (const char *) &Broadcast, sizeof(Broadcast));
     ok(Error == 0, "Unexpected error %d on setsockopt for broadcast test\n", Error);
     ok(WSAGetLastError() == 0, "Unexpected wsa error %d on setsockopt for broadcast test\n", WSAGetLastError());
-    Error = bind(Socket, (const struct sockaddr *) &Tests[10].Addr, sizeof(Tests[10].Addr));
+    Error = bind(Socket, (const struct sockaddr *) &Tests[11].Addr, sizeof(Tests[11].Addr));
     ok(Error == 0, "Unexpected error %d on bind for broadcast test\n", Error);
     ok(WSAGetLastError() == 0, "Unexpected wsa error %d on bind for broadcast test\n", WSAGetLastError());
     Error = closesocket(Socket);
