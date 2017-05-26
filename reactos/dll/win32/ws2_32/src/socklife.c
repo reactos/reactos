@@ -59,7 +59,11 @@ bind(IN SOCKET s,
                 WsSockDereference(Socket);
 
                 /* Return Provider Value */
-                if (Status == ERROR_SUCCESS) return Status;
+                if (Status == ERROR_SUCCESS)
+                {
+                    SetLastError(ErrorCode);
+                    return Status;
+                }
 
                 /* If everything seemed fine, then the WSP call failed itself */
                 if (ErrorCode == NO_ERROR) ErrorCode = WSASYSCALLFAILURE;
@@ -120,7 +124,11 @@ closesocket(IN SOCKET s)
                 WsSockDereference(Socket);
 
                 /* Return success if everything is OK */
-                if (ErrorCode == ERROR_SUCCESS) return ErrorCode;
+                if (ErrorCode == ERROR_SUCCESS)
+                {
+                    SetLastError(ErrorCode);
+                    return ErrorCode;
+                }
             }
         }
         else
@@ -347,6 +355,7 @@ WSAAccept(IN SOCKET s,
                 }
 
                 /* Return */
+                SetLastError(ErrorCode);
                 return Status;
             }
         }
@@ -421,6 +430,7 @@ WSAJoinLeaf(IN SOCKET s,
                 }
 
                 /* Return */
+                SetLastError(ErrorCode);
                 return Status;
             }
         }
@@ -582,6 +592,7 @@ DoLookup:
         {
             /* Add an API reference and return */
             WsSockAddApiReference(Status);
+            SetLastError(ErrorCode);
             return Status;
         }
     }
