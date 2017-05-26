@@ -320,7 +320,8 @@ static void transform_and_round_points(GpGraphics *graphics, POINT *pti,
 static void gdi_alpha_blend(GpGraphics *graphics, INT dst_x, INT dst_y, INT dst_width, INT dst_height,
                             HDC hdc, INT src_x, INT src_y, INT src_width, INT src_height)
 {
-    if (GetDeviceCaps(graphics->hdc, SHADEBLENDCAPS) == SB_NONE)
+    if (GetDeviceCaps(graphics->hdc, TECHNOLOGY) == DT_RASPRINTER &&
+        GetDeviceCaps(graphics->hdc, SHADEBLENDCAPS) == SB_NONE)
     {
         TRACE("alpha blending not supported by device, fallback to StretchBlt\n");
 
@@ -400,7 +401,8 @@ static GpStatus alpha_blend_hdc_pixels(GpGraphics *graphics, INT dst_x, INT dst_
     hbitmap = CreateDIBSection(hdc, (BITMAPINFO*)&bih, DIB_RGB_COLORS,
         (void**)&temp_bits, NULL, 0);
 
-    if (GetDeviceCaps(graphics->hdc, SHADEBLENDCAPS) == SB_NONE ||
+    if ((GetDeviceCaps(graphics->hdc, TECHNOLOGY) == DT_RASPRINTER &&
+         GetDeviceCaps(graphics->hdc, SHADEBLENDCAPS) == SB_NONE) ||
             fmt & PixelFormatPAlpha)
         memcpy(temp_bits, src, src_width * src_height * 4);
     else
