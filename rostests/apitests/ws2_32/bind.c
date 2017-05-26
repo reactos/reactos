@@ -74,11 +74,9 @@ TestBind(IN_ADDR Address)
         }
         else
         {
-            ok(WSAGetLastError() == 0, "Unexpected error %d on bind for test %d\n", WSAGetLastError(), i);
             AddrSize = sizeof(Addr);
             Error = getsockname(Socket, (struct sockaddr *) &Addr, &AddrSize);
-            ok(Error == 0, "Unexpected error %d on getsockname for test %d\n", Error, i);
-            ok(WSAGetLastError() == 0, "Unexpected error %d on getsockname for test %d\n", WSAGetLastError(), i);
+            ok(Error == 0, "Unexpected error %d %d on getsockname for test %d\n", Error, WSAGetLastError(), i);
             ok(AddrSize == sizeof(Addr), "Returned size %d differs from expected %d for test %d\n", AddrSize, sizeof(Addr), i);
             ok(Addr.sin_addr.s_addr == Tests[i].ExpectedAddr.sin_addr.s_addr, "Expected address %lx differs from returned address %lx for test %d\n", Tests[i].ExpectedAddr.sin_addr.s_addr, Addr.sin_addr.s_addr, i);
             if (Tests[i].ExpectedAddr.sin_port)
@@ -91,8 +89,7 @@ TestBind(IN_ADDR Address)
             }
         }
         Error = closesocket(Socket);
-        ok(Error == 0, "Unexpected error %d on closesocket for test %d\n", Error, i);
-        ok(WSAGetLastError() == 0, "Unexpected wsa error %d on closesocket for test %d\n", WSAGetLastError(), i);
+        ok(Error == 0, "Unexpected error %d %d on closesocket for test %d\n", Error, WSAGetLastError(), i);
     }
     /* Check double bind */
     Socket = socket(AF_INET, Tests[0].Type, Tests[0].Proto);
@@ -105,11 +102,9 @@ TestBind(IN_ADDR Address)
     }
     else
     {
-        ok(WSAGetLastError() == 0, "Unexpected error %d on bind for double bind test\n", WSAGetLastError());
         AddrSize = sizeof(Addr);
         Error = getsockname(Socket, (struct sockaddr *) &Addr, &AddrSize);
-        ok(Error == 0, "Unexpected error %d on getsockname for double bind test\n", Error);
-        ok(WSAGetLastError() == 0, "Unexpected error %d on getsockname for double bind test\n", WSAGetLastError());
+        ok(Error == 0, "Unexpected error %d %d on getsockname for double bind test\n", Error, WSAGetLastError());
         ok(AddrSize == sizeof(Addr), "Returned size %d differs from expected %d for double bind test\n", AddrSize, sizeof(Addr));
         ok(Addr.sin_addr.s_addr == Tests[0].ExpectedAddr.sin_addr.s_addr, "Expected address %lx differs from returned address %lx for double bind test\n", Tests[0].ExpectedAddr.sin_addr.s_addr, Addr.sin_addr.s_addr);
         if (Tests[0].ExpectedAddr.sin_port)
@@ -121,24 +116,19 @@ TestBind(IN_ADDR Address)
             ok(Addr.sin_port != 0, "Port remained zero for double bind test\n");
         }
         Error = bind(Socket, (const struct sockaddr *) &Tests[2].Addr, sizeof(Tests[2].Addr));
-        ok(Error == SOCKET_ERROR, "Unexpected result %d expected %d for double bind test\n", Error, SOCKET_ERROR);
-        ok(WSAGetLastError() == WSAEINVAL, "Unexpected wsa result %d expected %ld for double bind test\n", WSAGetLastError(), WSAEINVAL);
+        ok(Error == SOCKET_ERROR && WSAGetLastError() == WSAEINVAL, "Unexpected result %d expected %d and wsa result %d expected %ld for double bind test\n", Error, SOCKET_ERROR, WSAGetLastError(), WSAEINVAL);
     }
     Error = closesocket(Socket);
-    ok(Error == 0, "Unexpected error %d on closesocket for double bind test\n", Error);
-    ok(WSAGetLastError() == 0, "Unexpected wsa error %d on closesocket for double bind test\n", WSAGetLastError());
+    ok(Error == 0, "Unexpected error %d %d on closesocket for double bind test\n", Error, WSAGetLastError());
     /* Check SO_BROADCAST and bind to broadcast address */
-    Socket = socket(AF_INET, Tests[11].Type, Tests[11].Proto);
+    Socket = socket(AF_INET, Tests[10].Type, Tests[10].Proto);
     ok(Socket != INVALID_SOCKET, "Failed to create socket with error %d for broadcast test, next tests might be wrong\n", WSAGetLastError());
     Error = setsockopt(Socket, SOL_SOCKET, SO_BROADCAST, (const char *) &Broadcast, sizeof(Broadcast));
-    ok(Error == 0, "Unexpected error %d on setsockopt for broadcast test\n", Error);
-    ok(WSAGetLastError() == 0, "Unexpected wsa error %d on setsockopt for broadcast test\n", WSAGetLastError());
-    Error = bind(Socket, (const struct sockaddr *) &Tests[11].Addr, sizeof(Tests[11].Addr));
-    ok(Error == 0, "Unexpected error %d on bind for broadcast test\n", Error);
-    ok(WSAGetLastError() == 0, "Unexpected wsa error %d on bind for broadcast test\n", WSAGetLastError());
+    ok(Error == 0, "Unexpected error %d %d on setsockopt for broadcast test\n", Error, WSAGetLastError());
+    Error = bind(Socket, (const struct sockaddr *) &Tests[10].Addr, sizeof(Tests[10].Addr));
+    ok(Error == 0, "Unexpected error %d %d on bind for broadcast test\n", Error, WSAGetLastError());
     Error = closesocket(Socket);
-    ok(Error == 0, "Unexpected error %d on closesocket for broadcast test\n", Error);
-    ok(WSAGetLastError() == 0, "Unexpected wsa error %d on closesocket for broadcast test\n", WSAGetLastError());
+    ok(Error == 0, "Unexpected error %d %d on closesocket for broadcast test\n", Error, WSAGetLastError());
 }
 
 START_TEST(bind)
@@ -218,7 +208,7 @@ START_TEST(bind)
         ok_dec(Error, SOCKET_ERROR);
         ok_dec(WSAGetLastError(), WSAEFAULT);
         closesocket(Socket);
-    EndSeh(STATUS_ACCESS_VIOLATION);
+    EndSeh(STATUS_SUCCESS);
     StartSeh()
         Socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         Error = bind(Socket, (const struct sockaddr *) &Addr, 0);
