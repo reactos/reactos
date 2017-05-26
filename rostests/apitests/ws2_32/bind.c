@@ -82,7 +82,7 @@ TestBind(IN_ADDR Address)
             ok(Error == 0, "Unexpected error %d on getsockname for test %d\n", Error, i);
             ok(WSAGetLastError() == 0, "Unexpected error %d on getsockname for test %d\n", WSAGetLastError(), i);
             ok(AddrSize == sizeof(Addr), "Returned size %d differs from expected %d for test %d\n", AddrSize, sizeof(Addr), i);
-            ok(Addr.sin_addr.s_addr == Tests[i].ExpectedAddr.sin_addr.s_addr, "Expected address %x differs from returned address %x for test %d\n", Tests[i].ExpectedAddr.sin_addr.s_addr, Addr.sin_addr.s_addr, i);
+            ok(Addr.sin_addr.s_addr == Tests[i].ExpectedAddr.sin_addr.s_addr, "Expected address %lx differs from returned address %lx for test %d\n", Tests[i].ExpectedAddr.sin_addr.s_addr, Addr.sin_addr.s_addr, i);
             if (Tests[i].ExpectedAddr.sin_port)
             {
                 ok(Addr.sin_port == Tests[i].ExpectedAddr.sin_port, "Returned port %d differs from expected %d for test %d\n", Addr.sin_port, Tests[i].ExpectedAddr.sin_port, i);
