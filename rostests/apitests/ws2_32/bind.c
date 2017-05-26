@@ -65,35 +65,36 @@ TestBind(IN_ADDR Address)
         Socket = socket(AF_INET, Tests[i].Type, Tests[i].Proto);
         if (Socket == INVALID_SOCKET)
         {
-            skip("Failed to create socket, skipping");
+            skip("Failed to create socket with error %d for test %d, skipping\n", WSAGetLastError(), i);
             continue;
         }
         Error = bind(Socket, (const struct sockaddr *) &Tests[i].Addr, sizeof(Tests[i].Addr));
-        ok_dec(Error, Tests[i].ExpectedResult);
+        ok(Error == Tests[i].ExpectedResult, "Error %d differs from expected %d for test %d\n", Error, Tests[i].ExpectedResult, i);
         if (Error)
         {
-            ok_dec(WSAGetLastError(), Tests[i].ExpectedWSAResult);
+            ok(WSAGetLastError() == Tests[i].ExpectedWSAResult, "Error %d differs from expected %d for test %d\n", WSAGetLastError(), Tests[i].ExpectedWSAResult, i);
         }
         else
         {
-            ok_dec(WSAGetLastError(), 0);
+            ok(WSAGetLastError() == 0, "Unexpected error %d on bind for test %d\n", WSAGetLastError(), i);
             AddrSize = sizeof(Addr);
             Error = getsockname(Socket, (struct sockaddr *) &Addr, &AddrSize);
-            ok(Error == 0, "Error getsockname for test %d, Error %d\n", i, Error);
-            ok_dec(WSAGetLastError(), 0);
-            ok_dec(AddrSize, sizeof(Addr));
-            ok_dec(Addr.sin_addr.s_addr, Tests[i].ExpectedAddr.sin_addr.s_addr);
+            ok(Error == 0, "Unexpected error %d on getsockname for test %d\n", Error, i);
+            ok(WSAGetLastError() == 0, "Unexpected error %d on getsockname for test %d\n", WSAGetLastError(), i);
+            ok(AddrSize == sizeof(Addr), "Returned size %d differs from expected %d for test %d\n", AddrSize, sizeof(Addr), i);
+            ok(Addr.sin_addr.s_addr == Tests[i].ExpectedAddr.sin_addr.s_addr, "Expected address %x differs from returned address %x for test %d\n", Tests[i].ExpectedAddr.sin_addr.s_addr, Addr.sin_addr.s_addr, i);
             if (Tests[i].ExpectedAddr.sin_port)
             {
-                ok_dec(Addr.sin_port, Tests[i].ExpectedAddr.sin_port);
+                ok(Addr.sin_port == Tests[i].ExpectedAddr.sin_port, "Returned port %d differs from expected %d for test %d\n", Addr.sin_port, Tests[i].ExpectedAddr.sin_port, i);
             }
             else
             {
-                ok(Addr.sin_port != 0, "Port remained zero\n");
+                ok(Addr.sin_port != 0, "Port remained zero for test %d\n", i);
             }
         }
         Error = closesocket(Socket);
-        ok_dec(Error, 0);
+        ok(Error == 0, "Unexpected error %d on closesocket for test %d\n", Error, i);
+        ok(WSAGetLastError() == 0, "Unexpected error %d on closesocket for test %d\n", WSAGetLastError(), i);
     }
 #if 0
     /* Check double bind */
