@@ -1718,16 +1718,29 @@ RxDereference(
     RefCount = InterlockedDecrement((volatile long *)&Node->NodeReferenceCount);
     ASSERT(RefCount >= 0);
 
-    /* TODO: trace */
+    /* Trace refcount */
     switch (NodeType)
     {
         case RDBSS_NTC_SRVCALL:
-        case RDBSS_NTC_NETROOT:
-        case RDBSS_NTC_V_NETROOT:
-        case RDBSS_NTC_SRVOPEN:
-        case RDBSS_NTC_FOBX:
-            UNIMPLEMENTED;
+            PRINT_REF_COUNT(SRVCALL, Node->NodeReferenceCount);
             break;
+
+        case RDBSS_NTC_NETROOT:
+            PRINT_REF_COUNT(NETROOT, Node->NodeReferenceCount);
+            break;
+
+        case RDBSS_NTC_V_NETROOT:
+            PRINT_REF_COUNT(VNETROOT, Node->NodeReferenceCount);
+            break;
+
+        case RDBSS_NTC_SRVOPEN:
+            PRINT_REF_COUNT(SRVOPEN, Node->NodeReferenceCount);
+            break;
+
+        case RDBSS_NTC_FOBX:
+            PRINT_REF_COUNT(NETFOBX, Node->NodeReferenceCount);
+            break;
+
         default:
             ASSERT(FALSE);
             break;
@@ -4752,16 +4765,29 @@ RxReference(
     Node = (PNODE_TYPE_AND_SIZE)Instance;
     InterlockedIncrement((volatile long *)&Node->NodeReferenceCount);
 
-    /* And that's not implemented! (yay, we leak :-D) */
+    /* Trace refcount if asked */
     switch (NodeType)
     {
         case RDBSS_NTC_SRVCALL:
-        case RDBSS_NTC_NETROOT:
-        case RDBSS_NTC_V_NETROOT:
-        case RDBSS_NTC_SRVOPEN:
-        case RDBSS_NTC_FOBX:
-            UNIMPLEMENTED;
+            PRINT_REF_COUNT(SRVCALL, Node->NodeReferenceCount);
             break;
+
+        case RDBSS_NTC_NETROOT:
+            PRINT_REF_COUNT(NETROOT, Node->NodeReferenceCount);
+            break;
+
+        case RDBSS_NTC_V_NETROOT:
+            PRINT_REF_COUNT(VNETROOT, Node->NodeReferenceCount);
+            break;
+
+        case RDBSS_NTC_SRVOPEN:
+            PRINT_REF_COUNT(SRVOPEN, Node->NodeReferenceCount);
+            break;
+
+        case RDBSS_NTC_FOBX:
+            PRINT_REF_COUNT(NETFOBX, Node->NodeReferenceCount);
+            break;
+
         default:
             ASSERT(FALSE);
             break;

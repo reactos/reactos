@@ -324,6 +324,7 @@ typedef struct _FOBX
 #define RDBSS_REF_TRACK_NETFOBX  0x00000008
 #define RDBSS_REF_TRACK_NETFCB   0x00000010
 #define RDBSS_REF_TRACK_SRVOPEN  0x00000020
+#define RX_PRINT_REF_TRACKING    0x40000000
 
 extern ULONG RdbssReferenceTracingValue;
 
@@ -340,6 +341,14 @@ RxpTrackDereference(
     _In_ PCSTR FileName,
     _In_ ULONG Line,
     _In_ PVOID Instance);
+
+#define REF_TRACING_ON(TraceMask) (TraceMask & RdbssReferenceTracingValue)
+#define PRINT_REF_COUNT(TYPE, Count)                          \
+    if (REF_TRACING_ON( RDBSS_REF_TRACK_ ## TYPE) &&          \
+        (RdbssReferenceTracingValue & RX_PRINT_REF_TRACKING)) \
+    {                                                         \
+        DbgPrint("%ld\n", Count);                             \
+    }
 
 #define RxReferenceSrvCall(SrvCall)                                         \
    RxpTrackReference(RDBSS_REF_TRACK_SRVCALL, __FILE__, __LINE__, SrvCall); \
