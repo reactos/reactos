@@ -1,25 +1,25 @@
 [Section]
 Name = 7-Zip
-Version = 15.14
+Version = 16.04
 License = LGPL
 Description = A file archiving utility with support for 7zip, zip, tar, rar and many other archive formats.
-Size = 1.2 MiB
+Size = 1.1 MiB
 Category = 12
 URLSite = http://www.7-zip.org/
-URLDownload = http://www.7-zip.org/a/7z1514.msi
-SHA1 = 16a24530d0db17a94383f839e2f6941125bd0c00
+URLDownload = http://www.7-zip.org/a/7z1604.exe
+SHA1 = dd1cb1163c5572951c9cd27f5a8dd550b33c58a4
 CDPath = none
 
 [Section.0407]
 Description = Dateiarchivierungswerkzeug zum Erstellen und Öffnen von 7zip, zip, tar, rar und vielen anderen Archivformaten.
-Size = 1,2 MiB
+Size = 1,1 MiB
 
 [Section.0a]
 Description = Utilidad para crear y abrir 7zip, zip, tar, rar y otros archivos comprimidos.
 
 [Section.040c]
 Description = Utilitaire pour créer et ouvrir les fichiers 7zip, zip, tar, rar et d'autres archives.
-Size = 1,2 Mio
+Size = 1,1 Mio
 
 [Section.0410]
 Description = Utilità per creare e aprire 7zip, zip, tar, rar e altri file archivio.
@@ -32,15 +32,15 @@ Description = Narzędzie do tworzenia i otwierania plików typu 7zip, zip, tar, 
 
 [Section.0418]
 Description = Utilitar de arhivare a fișierelor, compatibil cu 7zip, zip, tar, rar și multe alte formate de arhive.
-Size = 1,2 Mio
+Size = 1,1 Mio
 
 [Section.0419]
 Description = Утилита для создания и открытия 7zip, zip, tar, rar и других архивных файлов.
-Size = 1,2 МиБ
+Size = 1,1 MiБ
 
 [Section.041f]
 Description = 7zip, zip, tar, rar ve başka birçok belgelik biçimi destekli bir kütük belgelikleme aracı.
-Size = 1,2 MiB
+Size = 1,1 MiB
 
 [Section.0422]
 Description = Утиліта для створення та відкриття 7zip, zip, tar, rar та інших архівних файлів.
