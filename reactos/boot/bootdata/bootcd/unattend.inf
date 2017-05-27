@@ -56,3 +56,11 @@ LocaleID = 409
 ; [GuiRunOnce]
 ; %SystemRoot%\system32\cmd.exe
 
+
+; enable this section to change resolution / bpp
+; setting a value to 0 or skipping it will leave it unchanged
+; [Display]
+; BitsPerPel = 32
+; XResolution = 1440
+; YResolution = 900
+; VRefresh = 0
