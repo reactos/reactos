@@ -5436,11 +5436,112 @@ RxUpdateCondition(
     }
 }
 
+/*
+ * @implemented
+ */
 VOID
 RxVerifyOperationIsLegal(
     IN PRX_CONTEXT RxContext)
 {
-    UNIMPLEMENTED;
+    PIRP Irp;
+    PMRX_FOBX Fobx;
+    BOOLEAN FlagSet;
+    PFILE_OBJECT FileObject;
+    PIO_STACK_LOCATION Stack;
+
+    PAGED_CODE();
+
+    Irp = RxContext->CurrentIrp;
+    Stack = RxContext->CurrentIrpSp;
+    FileObject = Stack->FileObject;
+
+    /* We'll only check stuff on opened files, this requires an IRP and a FO */
+    if (Irp == NULL || FileObject == NULL)
+    {
+        return;
+    }
+
+    /* Set no exception for breakpoint - remember whether is was already set */
+    FlagSet = BooleanFlagOn(RxContext->Flags, RX_CONTEXT_FLAG_NO_EXCEPTION_BREAKPOINT);
+    SetFlag(RxContext->Flags, RX_CONTEXT_FLAG_NO_EXCEPTION_BREAKPOINT);
+
+    /* If we have a CCB, perform a few checks on opened file */
+    Fobx = RxContext->pFobx;
+    if (Fobx != NULL)
+    {
+        PMRX_SRV_OPEN SrvOpen;
+
+        SrvOpen = Fobx->pSrvOpen;
+        if (SrvOpen != NULL)
+        {
+            UCHAR MajorFunction;
+
+            MajorFunction = RxContext->MajorFunction;
+            /* Only allow closing/cleanup operations on renamed files */
+            if (MajorFunction != IRP_MJ_CLEANUP && MajorFunction != IRP_MJ_CLOSE &&
+                BooleanFlagOn(SrvOpen->Flags, SRVOPEN_FLAG_FILE_RENAMED))
+            {
+                RxContext->IoStatusBlock.Status = STATUS_FILE_RENAMED;
+                ExRaiseStatus(STATUS_FILE_RENAMED);
+            }
+
+            /* Only allow closing/cleanup operations on deleted files */
+            if (MajorFunction != IRP_MJ_CLEANUP && MajorFunction != IRP_MJ_CLOSE &&
+                BooleanFlagOn(SrvOpen->Flags, SRVOPEN_FLAG_FILE_DELETED))
+            {
+                RxContext->IoStatusBlock.Status = STATUS_FILE_DELETED;
+                ExRaiseStatus(STATUS_FILE_DELETED);
+            }
+        }
+    }
+
+    /* If that's an open operation */
+    if (RxContext->MajorFunction == IRP_MJ_CREATE)
+    {
+        PFILE_OBJECT RelatedFileObject;
+
+        /* We won't allow an open operation relative to a file to be deleted */
+        RelatedFileObject = FileObject->RelatedFileObject;
+        if (RelatedFileObject != NULL)
+        {
+            PMRX_FCB Fcb;
+
+            Fcb = RelatedFileObject->FsContext;
+            if (BooleanFlagOn(Fcb->FcbState, FCB_STATE_DELETE_ON_CLOSE))
+            {
+                RxContext->IoStatusBlock.Status = STATUS_DELETE_PENDING;
+                ExRaiseStatus(STATUS_DELETE_PENDING);
+            }
+        }
+    }
+
+    /* If cleanup was completed */
+    if (BooleanFlagOn(FileObject->Flags, FO_CLEANUP_COMPLETE))
+    {
+        if (!BooleanFlagOn(Irp->Flags, IRP_PAGING_IO))
+        {
+            UCHAR MajorFunction;
+
+            /* We only allow a subset of operations (see FatVerifyOperationIsLegal for instance) */
+            MajorFunction = Stack->MajorFunction;
+            if (MajorFunction != IRP_MJ_CLOSE && MajorFunction != IRP_MJ_QUERY_INFORMATION &&
+                MajorFunction != IRP_MJ_SET_INFORMATION)
+            {
+                if ((MajorFunction != IRP_MJ_READ && MajorFunction != IRP_MJ_WRITE) ||
+                    !BooleanFlagOn(Stack->MinorFunction, IRP_MN_COMPLETE))
+                {
+                    RxContext->IoStatusBlock.Status = STATUS_FILE_CLOSED;
+                    ExRaiseStatus(STATUS_FILE_CLOSED);
+                }
+            }
+        }
+    }
+
+    /* If flag was already set, don't clear it */
+    if (!FlagSet)
+    {
+        ClearFlag(RxContext->Flags, RX_CONTEXT_FLAG_NO_EXCEPTION_BREAKPOINT);
+    }
 }
 
 /*
