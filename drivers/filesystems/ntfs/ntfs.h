@@ -796,6 +796,15 @@ NtfsMakeFCBFromDirEntry(PNTFS_VCB Vcb,
 NTSTATUS
 NtfsQueryInformation(PNTFS_IRP_CONTEXT IrpContext);
 
+NTSTATUS
+NtfsSetEndOfFile(PNTFS_FCB Fcb,
+                 PFILE_OBJECT FileObject,
+                 PDEVICE_EXTENSION DeviceExt,
+                 ULONG IrpFlags,
+                 PLARGE_INTEGER NewFileSize);
+
+NTSTATUS
+NtfsSetInformation(PNTFS_IRP_CONTEXT IrpContext);
 
 /* fsctl.c */
 

@@ -81,6 +81,10 @@ NtfsDispatch(PNTFS_IRP_CONTEXT IrpContext)
             Status = NtfsQueryInformation(IrpContext);
             break;
 
+        case IRP_MJ_SET_INFORMATION:
+            Status = NtfsSetInformation(IrpContext);
+            break;
+
         case IRP_MJ_DIRECTORY_CONTROL:
             Status = NtfsDirectoryControl(IrpContext);
             break;
