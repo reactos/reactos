@@ -4572,6 +4572,17 @@ VOID
 RxpUndoScavengerFinalizationMarking(
    PVOID Instance)
 {
+    PNODE_TYPE_AND_SIZE Node;
+
+    PAGED_CODE();
+
+    Node = (PNODE_TYPE_AND_SIZE)Instance;
+    /* There's no marking - nothing to do */
+    if (!BooleanFlagOn(Node->NodeTypeCode, RX_SCAVENGER_MASK))
+    {
+        return;
+    }
+
     UNIMPLEMENTED;
 }
 
@@ -5254,6 +5265,9 @@ RxTableLookupName_ExactLengthMatch(
     return NULL;
 }
 
+/*
+ * @implemented
+ */
 VOID
 RxTrackerUpdateHistory(
     _Inout_opt_ PRX_CONTEXT RxContext,
@@ -5263,7 +5277,74 @@ RxTrackerUpdateHistory(
     _In_ PCSTR FileName,
     _In_ ULONG SerialNumber)
 {
-    UNIMPLEMENTED;
+    PFCB Fcb;
+    RX_FCBTRACKER_CASES Case;
+
+    /* Check for null or special context */
+    if (RxContext == NULL)
+    {
+        Case = RX_FCBTRACKER_CASE_NULLCONTEXT;
+    }
+    else if ((ULONG_PTR)RxContext == -1)
+    {
+        Case = RX_FCBTRACKER_CASE_CBS_CONTEXT;
+    }
+    else if ((ULONG_PTR)RxContext == -2)
+    {
+        Case = RX_FCBTRACKER_CASE_CBS_WAIT_CONTEXT;
+    }
+    else
+    {
+        ASSERT(NodeType(RxContext) == RDBSS_NTC_RX_CONTEXT);
+        Case = RX_FCBTRACKER_CASE_NORMAL;
+    }
+
+    /* If caller provided a FCB, update its history */
+    if (MrxFcb != NULL)
+    {
+        Fcb = (PFCB)MrxFcb;
+        ASSERT(NodeTypeIsFcb(Fcb));
+
+        /* Only one acquire operation, so many release operations... */
+        if (Operation == TRACKER_ACQUIRE_FCB)
+        {
+            ++Fcb->FcbAcquires[Case];
+        }
+        else
+        {
+            ++Fcb->FcbReleases[Case];
+        }
+    }
+
+    /* If we have a normal context, update its history about this function calls */
+    if (Case == RX_FCBTRACKER_CASE_NORMAL)
+    {
+        ULONG TrackerHistoryPointer;
+
+        /* Only one acquire operation, so many release operations... */
+        if (Operation == TRACKER_ACQUIRE_FCB)
+        {
+            InterlockedIncrement(&RxContext->AcquireReleaseFcbTrackerX);
+        }
+        else
+        {
+            InterlockedDecrement(&RxContext->AcquireReleaseFcbTrackerX);
+        }
+
+        /* We only keep track of the 32 first calls */
+        TrackerHistoryPointer = InterlockedExchangeAdd((volatile long *)&RxContext->TrackerHistoryPointer, 1);
+        if (TrackerHistoryPointer < RDBSS_TRACKER_HISTORY_SIZE)
+        {
+            RxContext->TrackerHistory[TrackerHistoryPointer].AcquireRelease = Operation;
+            RxContext->TrackerHistory[TrackerHistoryPointer].LineNumber = LineNumber;
+            RxContext->TrackerHistory[TrackerHistoryPointer].FileName = (PSZ)FileName;
+            RxContext->TrackerHistory[TrackerHistoryPointer].SavedTrackerValue = RxContext->AcquireReleaseFcbTrackerX;
+            RxContext->TrackerHistory[TrackerHistoryPointer].Flags = RxContext->Flags;
+        }
+
+        /* If it's negative, then we released once more than we acquired it?! */
+        ASSERT(RxContext->AcquireReleaseFcbTrackerX >= 0);
+    }
 }
 
 VOID
