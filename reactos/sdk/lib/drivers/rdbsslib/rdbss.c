@@ -5513,7 +5513,8 @@ RxRegisterMinirdr(
         RxInitializePrefixTable(RDBSSDevice->pRxNetNameTable, 0, FALSE);
         RDBSSDevice->RxNetNameTableInDeviceObject.IsNetNameTable = TRUE;
         ScavengerTimeLimit.QuadPart = MrdrDispatch->ScavengerTimeout * 10000000LL;
-        RxInitializeRdbssScavenger(&RDBSSDevice->RdbssScavengerInDeviceObject, ScavengerTimeLimit);
+        RDBSSDevice->pRdbssScavenger = &RDBSSDevice->RdbssScavengerInDeviceObject;
+        RxInitializeRdbssScavenger(RDBSSDevice->pRdbssScavenger, ScavengerTimeLimit);
     }
 
     RDBSSDevice->pAsynchronousRequestsCompletionEvent = NULL;
