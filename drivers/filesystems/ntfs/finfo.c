@@ -396,4 +396,248 @@ NtfsQueryInformation(PNTFS_IRP_CONTEXT IrpContext)
     return Status;
 }
 
+/**
+* @name NtfsSetEndOfFile
+* @implemented
+*
+* Sets the end of file (file size) for a given file.
+*
+* @param Fcb
+* Pointer to an NTFS_FCB which describes the target file. Fcb->MainResource should have been
+* acquired with ExAcquireResourceSharedLite().
+*
+* @param FileObject
+* Pointer to a FILE_OBJECT describing the target file.
+*
+* @param DeviceExt
+* Points to the target disk's DEVICE_EXTENSION
+*
+* @param IrpFlags
+* ULONG describing the flags of the original IRP request (Irp->Flags).
+*
+* @param NewFileSize
+* Pointer to a LARGE_INTEGER which indicates the new end of file (file size).
+*
+* @return
+* STATUS_SUCCESS if successful,
+* STATUS_USER_MAPPED_FILE if trying to truncate a file but MmCanFileBeTruncated() returned false,
+* STATUS_OBJECT_NAME_NOT_FOUND if there was no $DATA attribute associated with the target file,
+* STATUS_INVALID_PARAMETER if there was no $FILENAME attribute associated with the target file,
+* STATUS_INSUFFICIENT_RESOURCES if an allocation failed,
+* STATUS_ACCESS_DENIED if target file is a volume or if paging is involved.
+*
+* @remarks As this function sets the size of a file at the file-level 
+* (and not at the attribute level) it's not recommended to use this 
+* function alongside functions that operate on the data attribute directly.
+*
+*/
+NTSTATUS
+NtfsSetEndOfFile(PNTFS_FCB Fcb,
+                 PFILE_OBJECT FileObject,
+                 PDEVICE_EXTENSION DeviceExt,
+                 ULONG IrpFlags,
+                 PLARGE_INTEGER NewFileSize)
+{
+    LARGE_INTEGER CurrentFileSize;
+    PFILE_RECORD_HEADER FileRecord;
+    PNTFS_ATTR_CONTEXT DataContext;
+    ULONG AttributeOffset;
+    NTSTATUS Status = STATUS_SUCCESS;
+    ULONGLONG AllocationSize;
+    PFILENAME_ATTRIBUTE fileNameAttribute;
+    ULONGLONG ParentMFTId;
+    UNICODE_STRING filename;
+
+
+    // Allocate non-paged memory for the file record
+    FileRecord = ExAllocatePoolWithTag(NonPagedPool, DeviceExt->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+    if (FileRecord == NULL)
+    {
+        DPRINT1("Couldn't allocate memory for file record!");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    // read the file record
+    DPRINT("Reading file record...\n");
+    Status = ReadFileRecord(DeviceExt, Fcb->MFTIndex, FileRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        // We couldn't get the file's record. Free the memory and return the error
+        DPRINT1("Can't find record for %wS!\n", Fcb->ObjectName);
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        return Status;
+    }
+
+    DPRINT("Found record for %wS\n", Fcb->ObjectName);
+
+    CurrentFileSize.QuadPart = NtfsGetFileSize(DeviceExt, FileRecord, L"", 0, (PULONGLONG)&CurrentFileSize);
+
+    // Are we trying to decrease the file size?
+    if (NewFileSize->QuadPart < CurrentFileSize.QuadPart)
+    {
+        // Is the file mapped?
+        if (!MmCanFileBeTruncated(FileObject->SectionObjectPointer,
+                                  NewFileSize))
+        {
+            DPRINT1("Couldn't decrease file size!\n");
+            return STATUS_USER_MAPPED_FILE;
+        }
+    }
+
+    // Find the attribute with the data stream for our file
+    DPRINT("Finding Data Attribute...\n");
+    Status = FindAttribute(DeviceExt,
+                           FileRecord,
+                           AttributeData,
+                           Fcb->Stream,
+                           wcslen(Fcb->Stream),
+                           &DataContext,
+                           &AttributeOffset);
+
+    // Did we fail to find the attribute?
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("No '%S' data stream associated with file!\n", Fcb->Stream);
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        return Status;
+    }
+
+    // Get the size of the data attribute
+    CurrentFileSize.QuadPart = AttributeDataLength(&DataContext->Record);
+
+    // Are we enlarging the attribute?
+    if (NewFileSize->QuadPart > CurrentFileSize.QuadPart)
+    {
+        // is increasing the stream size not allowed?
+        if ((Fcb->Flags & FCB_IS_VOLUME) ||
+            (IrpFlags & IRP_PAGING_IO))
+        {
+            // TODO - just fail for now
+            ReleaseAttributeContext(DataContext);
+            ExFreePoolWithTag(FileRecord, TAG_NTFS);
+            return STATUS_ACCESS_DENIED;
+        }
+    }
+
+    // set the attribute data length
+    Status = SetAttributeDataLength(FileObject, Fcb, DataContext, AttributeOffset, FileRecord, NewFileSize);
+    if (!NT_SUCCESS(Status))
+    {
+        ReleaseAttributeContext(DataContext);
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        return Status;
+    }
+
+    // now we need to update this file's size in every directory index entry that references it
+    // TODO: expand to work with every filename / hardlink stored in the file record.
+    fileNameAttribute = GetBestFileNameFromRecord(Fcb->Vcb, FileRecord);
+    if (fileNameAttribute == NULL)
+    {
+        DPRINT1("Unable to find FileName attribute associated with file!\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    ParentMFTId = fileNameAttribute->DirectoryFileReferenceNumber & NTFS_MFT_MASK;
+
+    filename.Buffer = fileNameAttribute->Name;
+    filename.Length = fileNameAttribute->NameLength * sizeof(WCHAR);
+    filename.MaximumLength = filename.Length;
+
+    AllocationSize = ROUND_UP(NewFileSize->QuadPart, Fcb->Vcb->NtfsInfo.BytesPerCluster);
+
+    Status = UpdateFileNameRecord(Fcb->Vcb, ParentMFTId, &filename, FALSE, NewFileSize->QuadPart, AllocationSize);
+
+    ReleaseAttributeContext(DataContext);
+    ExFreePoolWithTag(FileRecord, TAG_NTFS);
+
+    return Status;
+}
+
+/**
+* @name NtfsSetInformation
+* @implemented
+*
+* Sets the specified file information.
+*
+* @param IrpContext
+* Points to an NTFS_IRP_CONTEXT which describes the set operation
+*
+* @return
+* STATUS_SUCCESS if successful,
+* STATUS_NOT_IMPLEMENTED if trying to set an unimplemented information class,
+* STATUS_USER_MAPPED_FILE if trying to truncate a file but MmCanFileBeTruncated() returned false,
+* STATUS_OBJECT_NAME_NOT_FOUND if there was no $DATA attribute associated with the target file,
+* STATUS_INVALID_PARAMETER if there was no $FILENAME attribute associated with the target file,
+* STATUS_INSUFFICIENT_RESOURCES if an allocation failed,
+* STATUS_ACCESS_DENIED if target file is a volume or if paging is involved.
+*
+* @remarks Called by NtfsDispatch() in response to an IRP_MJ_SET_INFORMATION request.
+* Only the FileEndOfFileInformation InformationClass is fully implemented. FileAllocationInformation
+* is a hack and not a true implementation, but it's enough to make SetEndOfFile() work. 
+* All other information classes are TODO.
+*
+*/
+NTSTATUS
+NtfsSetInformation(PNTFS_IRP_CONTEXT IrpContext)
+{
+    FILE_INFORMATION_CLASS FileInformationClass;
+    PIO_STACK_LOCATION Stack;
+    PDEVICE_EXTENSION DeviceExt;
+    PFILE_OBJECT FileObject;
+    PNTFS_FCB Fcb;
+    PVOID SystemBuffer;
+    ULONG BufferLength;
+    PIRP Irp;
+    PDEVICE_OBJECT DeviceObject;
+    NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
+
+    DPRINT1("NtfsSetInformation(%p)\n", IrpContext);
+
+    Irp = IrpContext->Irp;
+    Stack = IrpContext->Stack;
+    DeviceObject = IrpContext->DeviceObject;
+    DeviceExt = DeviceObject->DeviceExtension;
+    FileInformationClass = Stack->Parameters.QueryFile.FileInformationClass;
+    FileObject = IrpContext->FileObject;
+    Fcb = FileObject->FsContext;
+
+    SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
+    BufferLength = Stack->Parameters.QueryFile.Length;
+
+    if (!ExAcquireResourceSharedLite(&Fcb->MainResource,
+                                     BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+    {
+        return NtfsMarkIrpContextForQueue(IrpContext);
+    }
+
+    switch (FileInformationClass)
+    {
+        PFILE_END_OF_FILE_INFORMATION EndOfFileInfo;
+
+        /* TODO: Allocation size is not actually the same as file end for NTFS, 
+           however, few applications are likely to make the distinction. */
+        case FileAllocationInformation: 
+            DPRINT1("FIXME: Using hacky method of setting FileAllocationInformation.\n");
+        case FileEndOfFileInformation:
+            EndOfFileInfo = (PFILE_END_OF_FILE_INFORMATION)SystemBuffer;
+            Status = NtfsSetEndOfFile(Fcb, FileObject, DeviceExt, Irp->Flags, &EndOfFileInfo->EndOfFile);
+            break;
+            
+        // TODO: all other information classes
+
+        default:
+            DPRINT1("FIXME: Unimplemented information class %u\n", FileInformationClass);
+            Status = STATUS_NOT_IMPLEMENTED;
+    }
+
+    ExReleaseResourceLite(&Fcb->MainResource);
+
+    if (NT_SUCCESS(Status))
+        Irp->IoStatus.Information =
+        Stack->Parameters.QueryFile.Length - BufferLength;
+    else
+        Irp->IoStatus.Information = 0;
+
+    return Status;
+}
 /* EOF */
