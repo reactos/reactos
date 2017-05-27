@@ -58,6 +58,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(DEVICE_NAME);
     NTSTATUS Status;
     PDEVICE_OBJECT DeviceObject;
+    OBJECT_ATTRIBUTES Attributes;
+    HANDLE DriverKey = NULL;
 
     TRACE_(NTFS, "DriverEntry(%p, '%wZ')\n", DriverObject, RegistryPath);
 
@@ -83,6 +85,42 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     NtfsGlobalData->Identifier.Size = sizeof(NTFS_GLOBAL_DATA);
 
     ExInitializeResourceLite(&NtfsGlobalData->Resource);
+
+    NtfsGlobalData->EnableWriteSupport = FALSE;
+
+    // Read registry to determine if write support should be enabled
+    InitializeObjectAttributes(&Attributes,
+                               RegistryPath,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+
+    Status = ZwOpenKey(&DriverKey, KEY_READ, &Attributes);
+    if (NT_SUCCESS(Status))
+    {
+        UNICODE_STRING ValueName;
+        UCHAR Buffer[sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(ULONG)];
+        PKEY_VALUE_PARTIAL_INFORMATION Value = (PKEY_VALUE_PARTIAL_INFORMATION)Buffer;
+        ULONG ValueLength = sizeof(Buffer);
+        ULONG ResultLength;
+
+        RtlInitUnicodeString(&ValueName, L"MyDataDoesNotMatterSoEnableExperimentalWriteSupportForEveryNTFSVolume");
+
+        Status = ZwQueryValueKey(DriverKey,
+                                 &ValueName,
+                                 KeyValuePartialInformation,
+                                 Value,
+                                 ValueLength,
+                                 &ResultLength);
+
+        if (NT_SUCCESS(Status) && Value->Data[0] == TRUE)
+        {
+            DPRINT1("\tEnabling write support on ALL NTFS volumes!\n");
+            NtfsGlobalData->EnableWriteSupport = TRUE;
+        }
+
+        ZwClose(DriverKey);
+    }
 
     /* Keep trace of Driver Object */
     NtfsGlobalData->DriverObject = DriverObject;
@@ -118,7 +156,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     IoRegisterFileSystem(NtfsGlobalData->DeviceObject);
     ObReferenceObject(NtfsGlobalData->DeviceObject);
 
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 
