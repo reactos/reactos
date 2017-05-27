@@ -4611,8 +4611,15 @@ RxpTrackDereference(
     _In_ ULONG Line,
     _In_ PVOID Instance)
 {
+    PAGED_CODE();
+
+    if (!BooleanFlagOn(RdbssReferenceTracingValue, TraceType))
+    {
+        return TRUE;
+    }
+
     UNIMPLEMENTED;
-    return FALSE;
+    return TRUE;
 }
 
 VOID
@@ -4622,6 +4629,11 @@ RxpTrackReference(
     _In_ ULONG Line,
     _In_ PVOID Instance)
 {
+    if (!BooleanFlagOn(RdbssReferenceTracingValue, TraceType))
+    {
+        return;
+    }
+
     UNIMPLEMENTED;
 }
 
