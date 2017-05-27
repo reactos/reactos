@@ -850,22 +850,31 @@ GetPrimaryRect:
 
     VOID AdjustSizerRect(RECT *rc, DWORD pos)
     {
+        int iSizerPart[4] = {TBP_SIZINGBARLEFT, TBP_SIZINGBARTOP, TBP_SIZINGBARRIGHT, TBP_SIZINGBARBOTTOM};
+        SIZE size;
+
+        if (pos > ABE_BOTTOM)
+            pos = ABE_BOTTOM;
+
+        HRESULT hr = GetThemePartSize(m_Theme, NULL, iSizerPart[pos], 0, NULL, TS_TRUE, &size);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return;
+
         switch (pos)
         {
             case ABE_TOP:
-                rc->bottom -= GetSystemMetrics(SM_CXSIZEFRAME);
+                rc->bottom -= size.cy;
                 break;
             case ABE_BOTTOM:
-                rc->top += GetSystemMetrics(SM_CXSIZEFRAME);
+                rc->top += size.cy;
                 break;
             case ABE_LEFT:
-                rc->right -= GetSystemMetrics(SM_CYSIZEFRAME);
+                rc->right -= size.cx;
                 break;
             case ABE_RIGHT:
-                rc->left += GetSystemMetrics(SM_CYSIZEFRAME);
+                rc->left += size.cx;
                 break;
         }
-
     }
 
     VOID MakeTrayRectWithSize(IN DWORD Position,
@@ -1876,41 +1885,31 @@ ChangePos:
     LRESULT EraseBackgroundWithTheme(HDC hdc)
     {
         RECT rect;
-        int partId;
-        HRESULT res;
+        int iSBkgndPart[4] = {TBP_BACKGROUNDLEFT, TBP_BACKGROUNDTOP, TBP_BACKGROUNDRIGHT, TBP_BACKGROUNDBOTTOM};
 
-        GetClientRect(&rect);
+        ASSERT(m_Position <= ABE_BOTTOM);
 
         if (m_Theme)
         {
             GetClientRect(&rect);
-            switch (m_Position)
-            {
-            case ABE_LEFT:
-                partId = TBP_BACKGROUNDLEFT;
-                break;
-            case ABE_TOP:
-                partId = TBP_BACKGROUNDTOP;
-                break;
-            case ABE_RIGHT:
-                partId = TBP_BACKGROUNDRIGHT;
-                break;
-            case ABE_BOTTOM:
-            default:
-                partId = TBP_BACKGROUNDBOTTOM;
-                break;
-            }
-            res = DrawThemeBackground(m_Theme, hdc, partId, 0, &rect, 0);
+            DrawThemeBackground(m_Theme, hdc, iSBkgndPart[m_Position], 0, &rect, 0);
         }
 
-        return res;
+        return 0;
     }
 
     int DrawSizerWithTheme(IN HRGN hRgn)
     {
         HDC hdc;
         RECT rect;
-        int backgroundPart;
+        int iSizerPart[4] = {TBP_SIZINGBARLEFT, TBP_SIZINGBARTOP, TBP_SIZINGBARRIGHT, TBP_SIZINGBARBOTTOM};
+        SIZE size;
+
+        ASSERT(m_Position <= ABE_BOTTOM);
+
+        HRESULT hr = GetThemePartSize(m_Theme, NULL, iSizerPart[m_Position], 0, NULL, TS_TRUE, &size);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return 0;
 
         GetWindowRect(&rect);
         OffsetRect(&rect, -rect.left, -rect.top);
@@ -1920,28 +1919,21 @@ ChangePos:
         switch (m_Position)
         {
         case ABE_LEFT:
-            backgroundPart = TBP_SIZINGBARLEFT;
-            rect.left = rect.right - GetSystemMetrics(SM_CXSIZEFRAME);
+            rect.left = rect.right - size.cx;
             break;
         case ABE_TOP:
-            backgroundPart = TBP_SIZINGBARTOP;
-            rect.top = rect.bottom - GetSystemMetrics(SM_CYSIZEFRAME);
+            rect.top = rect.bottom - size.cy;
             break;
         case ABE_RIGHT:
-            backgroundPart = TBP_SIZINGBARRIGHT;
-            rect.right = rect.left + GetSystemMetrics(SM_CXSIZEFRAME);
+            rect.right = rect.left + size.cx;
             break;
         case ABE_BOTTOM:
         default:
-            backgroundPart = TBP_SIZINGBARBOTTOM;
-            rect.bottom = rect.top + GetSystemMetrics(SM_CYSIZEFRAME);
+            rect.bottom = rect.top + size.cy;
             break;
         }
-        if (IsThemeBackgroundPartiallyTransparent(m_Theme, backgroundPart, 0))
-        {
-            DrawThemeParentBackground(m_hWnd, hdc, &rect);
-        }
-        DrawThemeBackground(m_Theme, hdc, backgroundPart, 0, &rect, 0);
+
+        DrawThemeBackground(m_Theme, hdc, iSizerPart[m_Position], 0, &rect, 0);
 
         ReleaseDC(hdc);
         return 0;
