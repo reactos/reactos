@@ -1334,25 +1334,17 @@ public:
         m_pager = new CSysPagerWnd();
         m_pager->_Init(m_hWnd, !HideClock);
 
-        OnThemeChanged();
-
         return TRUE;
     }
 
-    BOOL GetMinimumSize(IN BOOL Horizontal, IN OUT PSIZE pSize)
+    BOOL GetMinimumSize(IN OUT PSIZE pSize)
     {
         SIZE szClock = { 0, 0 };
         SIZE szTray = { 0, 0 };
 
-        IsHorizontal = Horizontal;
-        if (IsHorizontal)
-            SetWindowTheme(m_hWnd, L"TrayNotifyHoriz", NULL);
-        else
-            SetWindowTheme(m_hWnd, L"TrayNotifyVert", NULL);
-
         if (!HideClock)
         {
-            if (Horizontal)
+            if (IsHorizontal)
             {
                 szClock.cy = pSize->cy - 2 * TRAY_NOTIFY_WND_SPACING_Y;
                 if (szClock.cy <= 0)
@@ -1365,7 +1357,7 @@ public:
                     goto NoClock;
             }
 
-            m_clock->SendMessage(TCWM_GETMINIMUMSIZE, (WPARAM) Horizontal, (LPARAM) &szClock);
+            m_clock->SendMessage(TCWM_GETMINIMUMSIZE, (WPARAM) IsHorizontal, (LPARAM) &szClock);
 
             szTrayClockMin = szClock;
         }
@@ -1373,7 +1365,7 @@ public:
         NoClock:
         szTrayClockMin = szClock;
 
-        if (Horizontal)
+        if (IsHorizontal)
         {
             szTray.cy = pSize->cy - 2 * TRAY_NOTIFY_WND_SPACING_Y;
         }
@@ -1382,11 +1374,11 @@ public:
             szTray.cx = pSize->cx - 2 * TRAY_NOTIFY_WND_SPACING_X;
         }
 
-        m_pager->GetSize(Horizontal, &szTray);
+        m_pager->GetSize(IsHorizontal, &szTray);
 
         szTrayNotify = szTray;
 
-        if (Horizontal)
+        if (IsHorizontal)
         {
             pSize->cx = 2 * TRAY_NOTIFY_WND_SPACING_X;
 
@@ -1513,7 +1505,18 @@ public:
 
     LRESULT OnGetMinimumSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        return (LRESULT) GetMinimumSize((BOOL) wParam, (PSIZE) lParam);
+        BOOL Horizontal = (BOOL) wParam;
+
+        if (Horizontal != IsHorizontal)
+        {
+            IsHorizontal = Horizontal;
+            if (IsHorizontal)
+                SetWindowTheme(m_hWnd, L"TrayNotifyHoriz", NULL);
+            else
+                SetWindowTheme(m_hWnd, L"TrayNotifyVert", NULL);
+        }
+
+        return (LRESULT) GetMinimumSize((PSIZE) lParam);
     }
 
     LRESULT OnUpdateTime(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
