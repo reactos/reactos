@@ -69,6 +69,24 @@ NTAPI
 RxWorkItemDispatcher(
     PVOID Context);
 
+PVOID
+NTAPI
+_RxAllocatePoolWithTag(
+    _In_ POOL_TYPE PoolType,
+    _In_ SIZE_T NumberOfBytes,
+    _In_ ULONG Tag);
+
+VOID
+NTAPI
+_RxFreePool(
+    _In_ PVOID Buffer);
+
+VOID
+NTAPI
+_RxFreePoolWithTag(
+    _In_ PVOID Buffer,
+    _In_ ULONG Tag);
+
 extern ULONG ReadAheadGranularity;
 
 volatile LONG RxNumberOfActiveFcbs = 0;
@@ -86,12 +104,14 @@ RX_DISPATCHER RxDispatcher;
 RX_WORK_QUEUE_DISPATCHER RxDispatcherWorkQueues;
 FAST_MUTEX RxLowIoPagingIoSyncMutex;
 BOOLEAN RxContinueFromAssert = TRUE;
+ULONG RxExplodePoolTags = 1;
 #if DBG
 BOOLEAN DumpDispatchRoutine = TRUE;
 #else
 BOOLEAN DumpDispatchRoutine = FALSE;
 #endif
 
+#if RDBSS_ASSERTS
 #ifdef ASSERT
 #undef ASSERT
 #endif
@@ -101,6 +121,18 @@ BOOLEAN DumpDispatchRoutine = FALSE;
     {                                             \
         RxAssert(#exp, __FILE__, __LINE__, NULL); \
     }
+#endif
+
+#if RX_POOL_WRAPPER
+#undef RxAllocatePool
+#undef RxAllocatePoolWithTag
+#undef RxFreePool
+
+#define RxAllocatePool(P, S) _RxAllocatePoolWithTag(P, S, 0)
+#define RxAllocatePoolWithTag _RxAllocatePoolWithTag
+#define RxFreePool _RxFreePool
+#define RxFreePoolWithTag _RxFreePoolWithTag
+#endif
 
 /* FUNCTIONS ****************************************************************/
 
@@ -225,7 +257,7 @@ RxAllocateFcbObject(
     /* Otherwise, allocate it */
     else
     {
-        Buffer = ExAllocatePoolWithTag(PoolType, NameSize + FcbSize + SrvOpenSize + FobxSize + NonPagedSize, RX_FCB_POOLTAG);
+        Buffer = RxAllocatePoolWithTag(PoolType, NameSize + FcbSize + SrvOpenSize + FobxSize + NonPagedSize, RX_FCB_POOLTAG);
         if (Buffer == NULL)
         {
             return NULL;
@@ -260,10 +292,10 @@ RxAllocateFcbObject(
         /* If we were not allocated from non paged, allocate the NON_PAGED_FCB now */
         if (PoolType != NonPagedPool)
         {
-            NonPagedFcb = ExAllocatePoolWithTag(NonPagedPool, sizeof(NON_PAGED_FCB), RX_NONPAGEDFCB_POOLTAG);
+            NonPagedFcb = RxAllocatePoolWithTag(NonPagedPool, sizeof(NON_PAGED_FCB), RX_NONPAGEDFCB_POOLTAG);
             if (NonPagedFcb == NULL)
             {
-                ExFreePoolWithTag(Buffer, RX_FCB_POOLTAG);
+                RxFreePoolWithTag(Buffer, RX_FCB_POOLTAG);
                 return NULL;
             }
 
@@ -399,7 +431,7 @@ RxAllocateObject(
 
     /* Now, allocate the object */
     ObjectSize = ExtensionSize + StructSize + NameLength;
-    Object = ExAllocatePoolWithTag(NonPagedPool, ObjectSize, Tag);
+    Object = RxAllocatePoolWithTag(NonPagedPool, ObjectSize, Tag);
     if (Object == NULL)
     {
         return NULL;
@@ -731,7 +763,7 @@ RxConstructNetRoot(
     ASSERT(*LockHoldingState == LHS_ExclusiveLockHeld);
 
     /* Allocate the context */
-    Context = ExAllocatePoolWithTag(PagedPool, sizeof(MRX_CREATENETROOT_CONTEXT), RX_SRVCALL_POOLTAG);
+    Context = RxAllocatePoolWithTag(PagedPool, sizeof(MRX_CREATENETROOT_CONTEXT), RX_SRVCALL_POOLTAG);
     if (Context == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -797,7 +829,7 @@ RxConstructNetRoot(
     RxTransitionVNetRoot(VirtualNetRoot, VRootCondition);
 
     /* Context is not longer needed */
-    ExFreePoolWithTag(Context, RX_SRVCALL_POOLTAG);
+    RxFreePoolWithTag(Context, RX_SRVCALL_POOLTAG);
 
     DPRINT("Status: %x\n", Status);
 
@@ -829,7 +861,7 @@ RxConstructSrvCall(
     ASSERT(*LockHoldingState == LHS_ExclusiveLockHeld);
 
     /* Allocate the context for mini-rdr */
-    Calldown = ExAllocatePoolWithTag(NonPagedPool, sizeof(MRX_SRVCALLDOWN_STRUCTURE), RX_SRVCALL_POOLTAG);
+    Calldown = RxAllocatePoolWithTag(NonPagedPool, sizeof(MRX_SRVCALLDOWN_STRUCTURE), RX_SRVCALL_POOLTAG);
     if (Calldown == NULL)
     {
         SrvCall->Context = NULL;
@@ -1893,7 +1925,7 @@ RxDispatchToWorkerThread(
     PRX_WORK_DISPATCH_ITEM DispatchItem;
 
     /* Allocate a bit of context */
-    DispatchItem = ExAllocatePoolWithTag(PagedPool, sizeof(RX_WORK_DISPATCH_ITEM), RX_WORKQ_POOLTAG);
+    DispatchItem = RxAllocatePoolWithTag(PagedPool, sizeof(RX_WORK_DISPATCH_ITEM), RX_WORKQ_POOLTAG);
     if (DispatchItem == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -1909,7 +1941,7 @@ RxDispatchToWorkerThread(
     Status = RxInsertWorkQueueItem(pMRxDeviceObject, WorkQueueType, DispatchItem);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(DispatchItem, RX_WORKQ_POOLTAG);
+        RxFreePoolWithTag(DispatchItem, RX_WORKQ_POOLTAG);
         DPRINT1("RxInsertWorkQueueItem failed! Queue: %ld, Routine: %p, Context: %p, Status: %lx\n", WorkQueueType, Routine, pContext, Status);
     }
 
@@ -2188,7 +2220,7 @@ RxFinalizeNetFcb(
                 Entry = ThisFcb->BufferedLocks.List;
                 ThisFcb->BufferedLocks.List = Entry->Next;
 
-                ExFreePool(Entry);
+                RxFreePool(Entry);
             }
         }
 
@@ -2221,7 +2253,7 @@ RxFinalizeNetFcb(
     /* Now, release everything */
     if (ThisFcb->pBufferingStateChangeCompletedEvent != NULL)
     {
-        ExFreePool(ThisFcb->pBufferingStateChangeCompletedEvent);
+        RxFreePool(ThisFcb->pBufferingStateChangeCompletedEvent);
     }
 
     if (ThisFcb->MRxDispatch != NULL)
@@ -2965,7 +2997,7 @@ RxFinishSrvCallConstruction(
 
     RxAcquirePrefixTableLockExclusive(PrefixTable, TRUE);
     RxTransitionSrvCall(SrvCall, Condition);
-    ExFreePoolWithTag(Calldown, RX_SRVCALL_POOLTAG);
+    RxFreePoolWithTag(Calldown, RX_SRVCALL_POOLTAG);
 
     /* If async, finish it here, otherwise, caller has already finished the stuff */
     if (BooleanFlagOn(Context->Flags, RX_CONTEXT_FLAG_ASYNC_OPERATION))
@@ -2994,7 +3026,7 @@ RxFinishSrvCallConstruction(
             {
                 if (Context->Info.Buffer != NULL)
                 {
-                    ExFreePool(Context->Info.Buffer);
+                    RxFreePool(Context->Info.Buffer);
                     Context->Info.Buffer = NULL;
                 }
             }
@@ -5397,17 +5429,17 @@ RxUninitializeVNetRootParameters(
     /* Only free what could have been allocated */
     if (UserName != NULL)
     {
-        ExFreePool(UserName);
+        RxFreePool(UserName);
     }
 
     if (UserDomainName != NULL)
     {
-        ExFreePool(UserDomainName);
+        RxFreePool(UserDomainName);
     }
 
     if (Password != NULL)
     {
-        ExFreePool(Password);
+        RxFreePool(Password);
     }
 
     /* And remove the possibly set CSC agent flag */
@@ -5639,7 +5671,43 @@ RxWorkItemDispatcher(
 
     DispatchItem->DispatchRoutine(DispatchItem->DispatchRoutineParameter);
 
-    ExFreePoolWithTag(DispatchItem, RX_WORKQ_POOLTAG);
+    RxFreePoolWithTag(DispatchItem, RX_WORKQ_POOLTAG);
+}
+
+/*
+ * @implemented
+ */
+PVOID
+NTAPI
+_RxAllocatePoolWithTag(
+    _In_ POOL_TYPE PoolType,
+    _In_ SIZE_T NumberOfBytes,
+    _In_ ULONG Tag)
+{
+    return ExAllocatePoolWithTagPriority(PoolType, NumberOfBytes, Tag, LowPoolPriority);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+_RxFreePool(
+    _In_ PVOID Buffer)
+{
+    ExFreePoolWithTag(Buffer, 0);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+_RxFreePoolWithTag(
+    _In_ PVOID Buffer,
+    _In_ ULONG Tag)
+{
+    ExFreePoolWithTag(Buffer, Tag);
 }
 
 NTSTATUS

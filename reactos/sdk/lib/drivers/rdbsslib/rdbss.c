@@ -61,6 +61,13 @@ VOID
 RxAddToTopLevelIrpAllocatedContextsList(
     PRX_TOPLEVELIRP_CONTEXT TopLevelContext);
 
+VOID
+RxAssert(
+    PVOID Assert,
+    PVOID File,
+    ULONG Line,
+    PVOID Message);
+
 NTSTATUS
 NTAPI
 RxCommonCleanup(
@@ -450,6 +457,24 @@ NTSTATUS
 RxXXXControlFileCallthru(
     PRX_CONTEXT Context);
 
+PVOID
+NTAPI
+_RxAllocatePoolWithTag(
+    _In_ POOL_TYPE PoolType,
+    _In_ SIZE_T NumberOfBytes,
+    _In_ ULONG Tag);
+
+VOID
+NTAPI
+_RxFreePool(
+    _In_ PVOID Buffer);
+
+VOID
+NTAPI
+_RxFreePoolWithTag(
+    _In_ PVOID Buffer,
+    _In_ ULONG Tag);
+
 WCHAR RxStarForTemplate = '*';
 WCHAR Rx8QMdot3QM[] = L">>>>>>>>.>>>*";
 BOOLEAN DisableByteRangeLockingOnReadOnlyFiles = FALSE;
@@ -536,6 +561,29 @@ LIST_ENTRY TopLevelIrpAllocatedContextsList;
 BOOLEAN RxForceQFIPassThrough = FALSE;
 
 DECLARE_CONST_UNICODE_STRING(unknownId, L"???");
+
+#if RDBSS_ASSERTS
+#ifdef ASSERT
+#undef ASSERT
+#endif
+
+#define ASSERT(exp)                               \
+    if (!(exp))                                   \
+    {                                             \
+        RxAssert(#exp, __FILE__, __LINE__, NULL); \
+    }
+#endif
+
+#if RX_POOL_WRAPPER
+#undef RxAllocatePool
+#undef RxAllocatePoolWithTag
+#undef RxFreePool
+
+#define RxAllocatePool(P, S) _RxAllocatePoolWithTag(P, S, 0)
+#define RxAllocatePoolWithTag _RxAllocatePoolWithTag
+#define RxFreePool _RxFreePool
+#define RxFreePoolWithTag _RxFreePoolWithTag
+#endif
 
 /* FUNCTIONS ****************************************************************/
 
@@ -715,7 +763,7 @@ RxAllocateCanonicalNameBuffer(
         return STATUS_OBJECT_PATH_INVALID;
     }
 
-    CanonicalName->Buffer = ExAllocatePoolWithTag(PagedPool | POOL_COLD_ALLOCATION, CanonicalLength, RX_MISC_POOLTAG);
+    CanonicalName->Buffer = RxAllocatePoolWithTag(PagedPool | POOL_COLD_ALLOCATION, CanonicalLength, RX_MISC_POOLTAG);
     if (CanonicalName->Buffer == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -3102,7 +3150,7 @@ RxDriverEntry(
 
         RxInitializeDispatcher();
 
-        ExInitializeNPagedLookasideList(&RxContextLookasideList, ExAllocatePoolWithTag, ExFreePool, 0, sizeof(RX_CONTEXT), RX_IRPC_POOLTAG, 4);
+        ExInitializeNPagedLookasideList(&RxContextLookasideList, RxAllocatePoolWithTag, RxFreePool, 0, sizeof(RX_CONTEXT), RX_IRPC_POOLTAG, 4);
 
         InitializeListHead(&RxIrpsList);
         KeInitializeSpinLock(&RxIrpsListSpinLock);
@@ -3276,7 +3324,6 @@ RxFindOrCreateFcb(
     VNetRoot = (PV_NET_ROOT)RxContext->Create.pVNetRoot;
     ASSERT(NetRoot == VNetRoot->NetRoot);
 
-    TableAcquired = FALSE;
     Status = STATUS_SUCCESS;
     AcquiredExclusive = FALSE;
 
@@ -3553,7 +3600,7 @@ RxFreeCanonicalNameBuffer(
 
     if (Context->Create.CanonicalNameBuffer != NULL)
     {
-        ExFreePoolWithTag(Context->Create.CanonicalNameBuffer, RX_MISC_POOLTAG);
+        RxFreePoolWithTag(Context->Create.CanonicalNameBuffer, RX_MISC_POOLTAG);
         Context->Create.CanonicalNameBuffer = NULL;
         Context->AlsoCanonicalNameBuffer = NULL;
     }
@@ -4825,7 +4872,7 @@ RxPrefixClaim(
         RxContext->MajorFunction = IRP_MJ_CREATE;
 
         /* Fake canon name */
-        RxContext->PrefixClaim.SuppliedPathName.Buffer = ExAllocatePoolWithTag(NonPagedPool, QueryRequest->PathNameLength, RX_MISC_POOLTAG);
+        RxContext->PrefixClaim.SuppliedPathName.Buffer = RxAllocatePoolWithTag(NonPagedPool, QueryRequest->PathNameLength, RX_MISC_POOLTAG);
         if (RxContext->PrefixClaim.SuppliedPathName.Buffer == NULL)
         {
             Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -4885,7 +4932,7 @@ Leave:
     {
         if (RxContext->PrefixClaim.SuppliedPathName.Buffer != NULL)
         {
-            ExFreePoolWithTag(RxContext->PrefixClaim.SuppliedPathName.Buffer, RX_MISC_POOLTAG);
+            RxFreePoolWithTag(RxContext->PrefixClaim.SuppliedPathName.Buffer, RX_MISC_POOLTAG);
         }
 
         RxpPrepareCreateContextForReuse(RxContext);
@@ -5151,14 +5198,14 @@ RxQueryDirectory(
             {
                 Fobx->ContainsWildCards = FsRtlDoesNameContainWildCards(FileName);
 
-                Fobx->UnicodeQueryTemplate.Buffer = RxAllocatePoolWithTag(PagedPool, FileName->Length, 'cDxR');
+                Fobx->UnicodeQueryTemplate.Buffer = RxAllocatePoolWithTag(PagedPool, FileName->Length, RX_DIRCTL_POOLTAG);
                 if (Fobx->UnicodeQueryTemplate.Buffer != NULL)
                 {
                     /* UNICODE_STRING; length has to be even */
                     if ((FileName->Length & 1) != 0)
                     {
                         Status = STATUS_INVALID_PARAMETER;
-                        RxFreePool(Fobx->UnicodeQueryTemplate.Buffer);
+                        RxFreePoolWithTag(Fobx->UnicodeQueryTemplate.Buffer, RX_DIRCTL_POOLTAG);
                     }
                     else
                     {
@@ -6001,7 +6048,7 @@ RxTryToBecomeTheTopLevelIrp(
     /* If not TLC provider, allocate one */
     if (TopLevelContext == NULL)
     {
-        TopLevelContext = RxAllocatePoolWithTag(NonPagedPool, sizeof(RX_TOPLEVELIRP_CONTEXT), '??xR');
+        TopLevelContext = RxAllocatePoolWithTag(NonPagedPool, sizeof(RX_TOPLEVELIRP_CONTEXT), RX_TLC_POOLTAG);
         if (TopLevelContext == NULL)
         {
             return FALSE;
@@ -6129,7 +6176,7 @@ RxUnwindTopLevelIrp(
     if (BooleanFlagOn(TopLevelContext->Flags, RX_TOPLEVELCTX_FLAG_FROM_POOL))
     {
         RxRemoveFromTopLevelIrpAllocatedContextsList(TopLevelContext);
-        ExFreePool(TopLevelContext);
+        RxFreePoolWithTag(TopLevelContext, RX_TLC_POOLTAG);
     }
 }
 
