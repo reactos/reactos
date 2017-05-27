@@ -151,6 +151,7 @@ typedef struct
     FAST_IO_DISPATCH FastIoDispatch;
     NPAGED_LOOKASIDE_LIST IrpContextLookasideList;
     NPAGED_LOOKASIDE_LIST FcbLookasideList;
+    BOOLEAN EnableWriteSupport;
 } NTFS_GLOBAL_DATA, *PNTFS_GLOBAL_DATA;
 
 
