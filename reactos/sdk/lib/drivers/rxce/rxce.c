@@ -4367,12 +4367,25 @@ RxpDereferenceAndFinalizeNetFcb(
     return Freed;
 }
 
+/*
+ * @implemented
+ */
 LONG
 RxpDereferenceNetFcb(
    PFCB Fcb)
 {
-    UNIMPLEMENTED;
-    return 0;
+    LONG NewCount;
+
+    PAGED_CODE();
+
+    ASSERT(NodeTypeIsFcb(Fcb));
+
+    NewCount = InterlockedDecrement((volatile long *)&Fcb->NodeReferenceCount);
+    ASSERT(NewCount >= 0);
+
+    PRINT_REF_COUNT(NETFCB, NewCount);
+
+    return NewCount;
 }
 
 /*
@@ -4491,12 +4504,24 @@ RxPrefixTableLookupName(
     return Container;
 }
 
+/*
+ * @implemented
+ */
 LONG
 RxpReferenceNetFcb(
    PFCB Fcb)
 {
-    UNIMPLEMENTED;
-    return 0;
+    LONG NewCount;
+
+    PAGED_CODE();
+
+    ASSERT(NodeTypeIsFcb(Fcb));
+
+    NewCount = InterlockedIncrement((volatile long *)&Fcb->NodeReferenceCount);
+
+    PRINT_REF_COUNT(NETFCB, Fcb->NodeReferenceCount);
+
+    return NewCount;
 }
 
 /*
