@@ -16,7 +16,20 @@
 /* GLOBALS ********************************************************************/
 
 ULONG g_ShimsEnabled;
- 
+static BOOL g_ApphelpInitialized = FALSE;
+static PVOID g_pApphelpCheckRunAppEx;
+static PVOID g_pSdbPackAppCompatData;
+
+typedef BOOL (WINAPI *tApphelpCheckRunAppEx)(HANDLE FileHandle, PVOID Unk1, PVOID Unk2, PWCHAR ApplicationName, PVOID Environment, USHORT ExeType, PULONG Reason,
+                                             PVOID* SdbQueryAppCompatData, PULONG SdbQueryAppCompatDataSize, PVOID* SxsData, PULONG SxsDataSize,
+                                             PULONG FusionFlags, PULONG64 SomeFlag1, PULONG SomeFlag2);
+typedef BOOL (WINAPI *tSdbPackAppCompatData)(PVOID hsdb, PVOID pQueryResult, PVOID* ppData, DWORD *dwSize);
+
+#define APPHELP_VALID_RESULT        0x10000
+#define APPHELP_RESULT_NOTFOUND     0x20000
+#define APPHELP_RESULT_FOUND        0x40000
+
+
 /* FUNCTIONS ******************************************************************/
 
 BOOLEAN
@@ -136,7 +149,120 @@ BaseCheckAppcompatCache(IN PWCHAR ApplicationName,
     DPRINT("BaseCheckAppcompatCache is UNIMPLEMENTED\n");
 
     if (Reason) *Reason = 0;
-    return TRUE;
+
+    // We don't know this app.
+    return FALSE;
+}
+
+static
+VOID
+BaseInitApphelp(VOID)
+{
+    WCHAR Buffer[MAX_PATH*2];
+    UNICODE_STRING DllPath = {0};
+    PVOID ApphelpAddress;
+    PVOID pApphelpCheckRunAppEx = NULL, pSdbPackAppCompatData = NULL;
+
+    RtlInitEmptyUnicodeString(&DllPath, Buffer, sizeof(Buffer));
+    RtlCopyUnicodeString(&DllPath, &BaseWindowsDirectory);
+    RtlAppendUnicodeToString(&DllPath, L"\\system32\\apphelp.dll");
+
+    if (NT_SUCCESS(LdrLoadDll(NULL, NULL, &DllPath, &ApphelpAddress)))
+    {
+        ANSI_STRING ProcName;
+
+        RtlInitAnsiString(&ProcName, "ApphelpCheckRunAppEx");
+        if (!NT_SUCCESS(LdrGetProcedureAddress(ApphelpAddress, &ProcName, 0, &pApphelpCheckRunAppEx)))
+            pApphelpCheckRunAppEx = NULL;
+
+        RtlInitAnsiString(&ProcName, "SdbPackAppCompatData");
+        if (!NT_SUCCESS(LdrGetProcedureAddress(ApphelpAddress, &ProcName, 0, &pSdbPackAppCompatData)))
+            pSdbPackAppCompatData = NULL;
+    }
+
+    if (InterlockedCompareExchangePointer(&g_pApphelpCheckRunAppEx, RtlEncodeSystemPointer(pApphelpCheckRunAppEx), NULL) == NULL)
+    {
+        g_pSdbPackAppCompatData = RtlEncodeSystemPointer(pSdbPackAppCompatData);
+    }
+}
+
+/*
+ *
+ */
+BOOL
+WINAPI
+BaseCheckRunApp(IN HANDLE FileHandle,
+                 IN PWCHAR ApplicationName,
+                 IN PWCHAR Environment,
+                 IN USHORT ExeType,
+                 IN PULONG pReason,
+                 IN PVOID* SdbQueryAppCompatData,
+                 IN PULONG SdbQueryAppCompatDataSize,
+                 IN PVOID* SxsData,
+                 IN PULONG SxsDataSize,
+                 OUT PULONG FusionFlags)
+{
+    ULONG Reason = 0;
+    ULONG64 Flags1 = 0;
+    ULONG Flags2 = 0;
+    BOOL Continue, NeedCleanup = FALSE;
+    tApphelpCheckRunAppEx pApphelpCheckRunAppEx;
+    tSdbPackAppCompatData pSdbPackAppCompatData;
+    PVOID QueryResult = NULL;
+    ULONG QueryResultSize = 0;
+
+    if (!g_ApphelpInitialized)
+    {
+        BaseInitApphelp();
+        g_ApphelpInitialized = TRUE;
+    }
+
+    pApphelpCheckRunAppEx = RtlDecodeSystemPointer(g_pApphelpCheckRunAppEx);
+    pSdbPackAppCompatData = RtlDecodeSystemPointer(g_pSdbPackAppCompatData);
+
+    if (!pApphelpCheckRunAppEx || !pSdbPackAppCompatData)
+        return TRUE;
+
+    if (pReason)
+        Reason = *pReason;
+
+    Continue = pApphelpCheckRunAppEx(FileHandle, NULL, NULL, ApplicationName, Environment, ExeType, &Reason,
+        &QueryResult, &QueryResultSize, SxsData, SxsDataSize, FusionFlags, &Flags1, &Flags2);
+
+    if (pReason)
+        *pReason = Reason;
+
+    if (Continue)
+    {
+        if ((Reason & (APPHELP_VALID_RESULT|APPHELP_RESULT_FOUND)) == (APPHELP_VALID_RESULT|APPHELP_RESULT_FOUND))
+        {
+            if (!pSdbPackAppCompatData(NULL, QueryResult, SdbQueryAppCompatData, SdbQueryAppCompatDataSize))
+            {
+                DPRINT1("SdbPackAppCompatData returned a failure!\n");
+                NeedCleanup = TRUE;
+            }
+        }
+        else
+        {
+            NeedCleanup = TRUE;
+        }
+    }
+
+    if (QueryResult)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, QueryResult);
+
+    if (NeedCleanup)
+    {
+        BasepFreeAppCompatData(*SdbQueryAppCompatData, *SxsData);
+        *SdbQueryAppCompatData = NULL;
+        if (SdbQueryAppCompatDataSize)
+            *SdbQueryAppCompatDataSize = 0;
+        *SxsData = NULL;
+        if (SxsDataSize)
+            *SxsDataSize = 0;
+    }
+
+    return Continue;
 }
 
 /*
@@ -171,9 +297,11 @@ BasepCheckBadapp(IN HANDLE FileHandle,
                                      Environment,
                                      &Reason))
         {
-            /* We don't support this yet */
-            UNIMPLEMENTED;
-            Status = STATUS_ACCESS_DENIED;
+            if (!BaseCheckRunApp(FileHandle, ApplicationName, Environment, ExeType, &Reason,
+                                SdbQueryAppCompatData, SdbQueryAppCompatDataSize, SxsData, SxsDataSize, FusionFlags))
+            {
+                Status = STATUS_ACCESS_DENIED;
+            }
         }
     }
 

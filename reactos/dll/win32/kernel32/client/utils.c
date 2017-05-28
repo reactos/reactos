@@ -904,26 +904,6 @@ BaseMarkFileForDelete(IN HANDLE FileHandle,
 /*
  * @unimplemented
  */
-BOOL
-WINAPI
-BaseCheckRunApp(IN DWORD Unknown1,
-                IN DWORD Unknown2,
-                IN DWORD Unknown3,
-                IN DWORD Unknown4,
-                IN DWORD Unknown5,
-                IN DWORD Unknown6,
-                IN DWORD Unknown7,
-                IN DWORD Unknown8,
-                IN DWORD Unknown9,
-                IN DWORD Unknown10)
-{
-    STUB;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
 NTSTATUS
 WINAPI
 BasepCheckWinSaferRestrictions(IN HANDLE UserToken,
