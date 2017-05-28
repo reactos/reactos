@@ -32,7 +32,6 @@
 #include "ntfs.h"
 
 #define NDEBUG
-#undef NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
