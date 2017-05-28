@@ -36,11 +36,11 @@ set REACTOS_SOURCE_DIR=%~dp0
 REM Ensure there's no spaces in the source path
 echo %REACTOS_SOURCE_DIR%| find " " > NUL
 if %ERRORLEVEL% == 0 (
-	echo. && echo   Your source path contains at least one space.
-	echo   This will cause problems with building.
-	echo   Please rename your folders so there are no spaces in the source path,
-	echo   or move your source to a different folder.
-	goto quit
+    echo. && echo   Your source path contains at least one space.
+    echo   This will cause problems with building.
+    echo   Please rename your folders so there are no spaces in the source path,
+    echo   or move your source to a different folder.
+    goto quit
 )
 
 REM Set default generator
@@ -109,8 +109,8 @@ REM Parse command line parameters
         ) else if /I "%1" == "RTC" (
             echo. && echo 	Warning: RTC switch is ignored outside of a Visual Studio environment. && echo.
         ) else if /I "%1" NEQ "" (
-			echo. && echo   Warning: Unrecognized switch "%1" && echo.			
-		) else (
+            echo. && echo   Warning: Unrecognized switch "%1" && echo.
+        ) else (
             goto continue
         )
     ) else (
@@ -175,8 +175,8 @@ REM Parse command line parameters
             echo Runtime checks enabled
             set VS_RUNTIME_CHECKS=1
         ) else if /I "%1" NEQ "" (
-			echo. && echo   Warning: Unrecognized switch "%1" && echo.			
-		) else (
+            echo. && echo   Warning: Unrecognized switch "%1" && echo.
+        ) else (
             goto continue
         )
     )
@@ -214,13 +214,13 @@ if "%VS_SOLUTION%" == "1" (
         echo. && echo Error: This directory has already been configured for ninja.
         echo An output folder configured for ninja can't be reconfigured for VSSolution.
         echo Use an empty folder or delete the contents of this folder, then try again.
-		goto quit
+        goto quit
     )
 ) else if exist REACTOS.sln (
     echo. && echo Error: This directory has already been configured for Visual Studio.
     echo An output folder configured for VSSolution can't be reconfigured for ninja.
     echo Use an empty folder or delete the contents of this folder, then try again. && echo.
-	goto quit
+    goto quit
 )
 
 if "%NEW_STYLE_BUILD%"=="0" (
@@ -279,18 +279,18 @@ if "%NEW_STYLE_BUILD%"=="0" (
 )
 
 if %ERRORLEVEL% NEQ 0 (
-	goto quit
+    goto quit
 )
 
 if "%CD_SAME_AS_SOURCE%" == "1" (
-	set ENDV= from %REACTOS_OUTPUT_PATH%
+    set ENDV= from %REACTOS_OUTPUT_PATH%
 )
 
 if "%VS_SOLUTION%" == "1" (
-	set ENDV= You can now open REACTOS.sln%ENDV%.
+    set ENDV= You can now open REACTOS.sln%ENDV%.
 ) else (
-	set ENDV= Execute appropriate build commands ^(ex: ninja, make, nmake, etc...^)%ENDV%
-	)
+    set ENDV= Execute appropriate build commands ^(ex: ninja, make, nmake, etc...^)%ENDV%
+    )
 )
 
 echo. && echo Configure script complete^^!%ENDV%
