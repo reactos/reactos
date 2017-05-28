@@ -21,9 +21,6 @@
 #include "precomp.h"
 #include <commoncontrols.h>
 
-#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
-#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
-
 /* Set DUMP_TASKS to 1 to enable a dump of the tasks and task groups every
    5 seconds */
 #define DUMP_TASKS  0
