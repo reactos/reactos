@@ -6,7 +6,9 @@ typedef enum _MSG_TYPE
     SENT,
     POST,
     HOOK,
-    EVENT
+    EVENT,
+    SENT_RET,
+    MARKER
 } MSG_TYPE;
 
 typedef struct _MSG_ENTRY
