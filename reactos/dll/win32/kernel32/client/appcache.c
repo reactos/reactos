@@ -15,7 +15,7 @@
 
 /* GLOBALS ********************************************************************/
 
-ULONG g_ShimsEnabled;
+ULONG g_ShimsEnabled = -1;
 static BOOL g_ApphelpInitialized = FALSE;
 static PVOID g_pApphelpCheckRunAppEx;
 static PVOID g_pSdbPackAppCompatData;
