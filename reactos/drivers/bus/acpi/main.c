@@ -37,8 +37,8 @@ Bus_AddDevice(
     NTSTATUS            status;
     PDEVICE_OBJECT      deviceObject = NULL;
     PFDO_DEVICE_DATA    deviceData = NULL;
-    PWCHAR              deviceName = NULL;
 #ifndef NDEBUG
+    PWCHAR              deviceName = NULL;
     ULONG               nameLength;
 #endif
 
@@ -159,9 +159,11 @@ Bus_AddDevice(
     deviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
 End:
+#ifndef NDEBUG
     if (deviceName){
         ExFreePoolWithTag(deviceName, 'MpcA');
     }
+#endif
     if (!NT_SUCCESS(status) && deviceObject){
         if (deviceData && deviceData->NextLowerDriver){
             IoDetachDevice (deviceData->NextLowerDriver);

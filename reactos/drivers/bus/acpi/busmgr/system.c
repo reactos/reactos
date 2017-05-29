@@ -65,7 +65,6 @@ static int
 acpi_system_add (
 	struct acpi_device	*device)
 {
-	int			result = 0;
 	ACPI_STATUS		status = AE_OK;
 	struct acpi_system	*system = NULL;
 	UINT8			i = 0;
@@ -114,10 +113,7 @@ acpi_system_add (
 //	}
 //#endif
 
-	if (result)
-		ExFreePoolWithTag(system, 'IPCA');
-
-	return_VALUE(result);
+	return_VALUE(0);
 }
 
 static int
