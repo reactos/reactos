@@ -16,7 +16,6 @@ list(APPEND SOURCE
     bitmap.c
     bootdata.c
     compress.c
-    condvar.c
     crc32.c
     critical.c
     dbgbuffer.c
@@ -56,7 +55,6 @@ list(APPEND SOURCE
     security.c
     slist.c
     sid.c
-    srw.c
     splaytree.c
     thread.c
     time.c
