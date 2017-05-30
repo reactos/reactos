@@ -646,6 +646,7 @@ IopAttachFilterDrivers(
     UNICODE_STRING Class;
     WCHAR ClassBuffer[40];
     UNICODE_STRING EnumRoot = RTL_CONSTANT_STRING(ENUM_ROOT);
+    UNICODE_STRING ControlClass = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Class");
     HANDLE EnumRootKey, SubKey;
     NTSTATUS Status;
 
@@ -720,65 +721,66 @@ IopAttachFilterDrivers(
     ZwClose(SubKey);
     ZwClose(EnumRootKey);
 
+    /* If there is no class GUID, we're done */
+    if (!NT_SUCCESS(Status))
+    {
+        return STATUS_SUCCESS;
+    }
+
     /*
      * Load the class filter driver
      */
-    if (NT_SUCCESS(Status))
+    Status = IopOpenRegistryKeyEx(&EnumRootKey,
+                                  NULL,
+                                  &ControlClass,
+                                  KEY_READ);
+    if (!NT_SUCCESS(Status))
     {
-        UNICODE_STRING ControlClass = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Class");
+        DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
+                &ControlClass, Status);
+        return Status;
+    }
 
-        Status = IopOpenRegistryKeyEx(&EnumRootKey,
-                                      NULL,
-                                      &ControlClass,
-                                      KEY_READ);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
-                    &ControlClass, Status);
-            return Status;
-        }
+    /* Open subkey */
+    Status = IopOpenRegistryKeyEx(&SubKey,
+                                  EnumRootKey,
+                                  &Class,
+                                  KEY_READ);
+    if (!NT_SUCCESS(Status))
+    {
+        /* It's okay if there's no class key */
+        DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
+                &Class, Status);
+        ZwClose(EnumRootKey);
+        return STATUS_SUCCESS;
+    }
 
-        /* Open subkey */
-        Status = IopOpenRegistryKeyEx(&SubKey,
-                                      EnumRootKey,
-                                      &Class,
-                                      KEY_READ);
-        if (!NT_SUCCESS(Status))
-        {
-            /* It's okay if there's no class key */
-            DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
-                    &Class, Status);
-            ZwClose(EnumRootKey);
-            return STATUS_SUCCESS;
-        }
+    QueryTable[0].QueryRoutine = IopAttachFilterDriversCallback;
+    if (Lower)
+        QueryTable[0].Name = L"LowerFilters";
+    else
+        QueryTable[0].Name = L"UpperFilters";
+    QueryTable[0].EntryContext = NULL;
+    QueryTable[0].Flags = 0;
+    QueryTable[0].DefaultType = REG_NONE;
 
-        QueryTable[0].QueryRoutine = IopAttachFilterDriversCallback;
-        if (Lower)
-            QueryTable[0].Name = L"LowerFilters";
-        else
-            QueryTable[0].Name = L"UpperFilters";
-        QueryTable[0].EntryContext = NULL;
-        QueryTable[0].Flags = 0;
-        QueryTable[0].DefaultType = REG_NONE;
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
+                                    (PWSTR)SubKey,
+                                    QueryTable,
+                                    DeviceNode,
+                                    NULL);
 
-        Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
-                                        (PWSTR)SubKey,
-                                        QueryTable,
-                                        DeviceNode,
-                                        NULL);
+    /* Clean up */
+    ZwClose(SubKey);
+    ZwClose(EnumRootKey);
 
-        /* Clean up */
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to load class %s filters: %08X\n",
+                Lower ? "lower" : "upper", Status);
         ZwClose(SubKey);
         ZwClose(EnumRootKey);
-
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failed to load class %s filters: %08X\n",
-                    Lower ? "lower" : "upper", Status);
-            ZwClose(SubKey);
-            ZwClose(EnumRootKey);
-            return Status;
-        }
+        return Status;
     }
 
     return STATUS_SUCCESS;
