@@ -1,6 +1,9 @@
 
 remove_definitions(-D_WIN32_WINNT=0x502 -DWINVER=0x502)
-add_definitions(-D_WIN32_WINNT=0x600 -DWINVER=0x600)
+add_definitions(-D_WIN32_WINNT=0x600 -DWINVER=0x600
+    -D__NTDLL__
+    -D_NTOSKRNL_
+    -D_NTSYSTEM_)
 
 spec2def(ntdll_vista.dll ntdll_vista.spec ADD_IMPORTLIB)
 
