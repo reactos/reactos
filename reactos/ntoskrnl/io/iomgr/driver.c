@@ -648,6 +648,7 @@ IopAttachFilterDrivers(
     UNICODE_STRING EnumRoot = RTL_CONSTANT_STRING(ENUM_ROOT);
     UNICODE_STRING ControlClass = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Class");
     HANDLE EnumRootKey, SubKey;
+    HANDLE ControlKey, ClassKey;
     NTSTATUS Status;
 
     /* Open enumeration root key */
@@ -667,11 +668,11 @@ IopAttachFilterDrivers(
                                   EnumRootKey,
                                   &DeviceNode->InstancePath,
                                   KEY_READ);
+    ZwClose(EnumRootKey);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
                 &DeviceNode->InstancePath, Status);
-        ZwClose(EnumRootKey);
         return Status;
     }
 
@@ -696,7 +697,6 @@ IopAttachFilterDrivers(
         DPRINT1("Failed to load device %s filters: %08X\n",
                 Lower ? "lower" : "upper", Status);
         ZwClose(SubKey);
-        ZwClose(EnumRootKey);
         return Status;
     }
 
@@ -717,9 +717,8 @@ IopAttachFilterDrivers(
                                     DeviceNode,
                                     NULL);
 
-    /* Close handles */
+    /* Close subkey */
     ZwClose(SubKey);
-    ZwClose(EnumRootKey);
 
     /* If there is no class GUID, we're done */
     if (!NT_SUCCESS(Status))
@@ -730,7 +729,7 @@ IopAttachFilterDrivers(
     /*
      * Load the class filter driver
      */
-    Status = IopOpenRegistryKeyEx(&EnumRootKey,
+    Status = IopOpenRegistryKeyEx(&ControlKey,
                                   NULL,
                                   &ControlClass,
                                   KEY_READ);
@@ -742,8 +741,8 @@ IopAttachFilterDrivers(
     }
 
     /* Open subkey */
-    Status = IopOpenRegistryKeyEx(&SubKey,
-                                  EnumRootKey,
+    Status = IopOpenRegistryKeyEx(&ClassKey,
+                                  ControlKey,
                                   &Class,
                                   KEY_READ);
     if (!NT_SUCCESS(Status))
@@ -751,7 +750,7 @@ IopAttachFilterDrivers(
         /* It's okay if there's no class key */
         DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
                 &Class, Status);
-        ZwClose(EnumRootKey);
+        ZwClose(ControlKey);
         return STATUS_SUCCESS;
     }
 
@@ -765,21 +764,19 @@ IopAttachFilterDrivers(
     QueryTable[0].DefaultType = REG_NONE;
 
     Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
-                                    (PWSTR)SubKey,
+                                    (PWSTR)ClassKey,
                                     QueryTable,
                                     DeviceNode,
                                     NULL);
 
     /* Clean up */
-    ZwClose(SubKey);
-    ZwClose(EnumRootKey);
+    ZwClose(ClassKey);
+    ZwClose(ControlKey);
 
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to load class %s filters: %08X\n",
                 Lower ? "lower" : "upper", Status);
-        ZwClose(SubKey);
-        ZwClose(EnumRootKey);
         return Status;
     }
 

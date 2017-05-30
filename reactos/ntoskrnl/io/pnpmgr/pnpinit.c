@@ -290,6 +290,7 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
     Status = IopGetRegistryValue(SubKey,
                                  REGSTR_VAL_CLASSGUID,
                                  &KeyValueInformation);
+    ZwClose(SubKey);
     if (NT_SUCCESS(Status))
     {
         /* Convert to unicode string */
