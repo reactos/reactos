@@ -493,7 +493,6 @@ RtlWakeAllConditionVariable(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable)
     InternalWake(ConditionVariable, TRUE);
 }
 
-NTSYSAPI
 NTSTATUS
 NTAPI
 RtlSleepConditionVariableCS(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable,
@@ -507,7 +506,6 @@ RtlSleepConditionVariableCS(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable,
                          TimeOut);
 }
 
-NTSYSAPI
 NTSTATUS
 NTAPI
 RtlSleepConditionVariableSRW(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable,
