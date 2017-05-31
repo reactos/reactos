@@ -14,6 +14,18 @@
 #define NDEBUG
 #include <debug.h>
 
+NTSTATUS
+NTAPI
+USBSTOR_SyncCompletionRoutine(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    IN PVOID Context)
+{
+    DPRINT("USBSTOR_SyncCompletionRoutine: ... \n");
+    KeSetEvent((PRKEVENT)Context, IO_NO_INCREMENT, FALSE);
+    return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
 LPCSTR
 USBSTOR_GetDeviceType(
     IN PUFI_INQUIRY_RESPONSE InquiryData,
