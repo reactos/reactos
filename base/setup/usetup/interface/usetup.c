@@ -42,9 +42,9 @@
 /* GLOBALS ******************************************************************/
 
 HANDLE ProcessHeap;
-UNICODE_STRING SourceRootPath;
-UNICODE_STRING SourceRootDir;
-UNICODE_STRING SourcePath;
+static UNICODE_STRING SourceRootPath;
+static UNICODE_STRING SourceRootDir;
+/* static */ UNICODE_STRING SourcePath;
 BOOLEAN IsUnattendedSetup = FALSE;
 LONG UnattendDestinationDiskNumber;
 LONG UnattendDestinationPartitionNumber;
@@ -430,7 +430,7 @@ CheckUnattendedSetup(VOID)
     INT IntValue;
     PWCHAR Value;
 
-    CombinePaths(UnattendInfPath, ARRAYSIZE(UnattendInfPath), 2, SourcePath.Buffer, L"\\unattend.inf");
+    CombinePaths(UnattendInfPath, ARRAYSIZE(UnattendInfPath), 2, SourcePath.Buffer, L"unattend.inf");
 
     if (DoesFileExist(NULL, UnattendInfPath) == FALSE)
     {
@@ -583,7 +583,7 @@ CheckUnattendedSetup(VOID)
         if (INF_GetData(&Context, NULL, &Value))
         {
             LONG Id = wcstol(Value, NULL, 16);
-            swprintf(LocaleID,L"%08lx", Id);
+            swprintf(LocaleID, L"%08lx", Id);
        }
     }
 
@@ -809,24 +809,18 @@ SetupStartPage(PINPUT_RECORD Ir)
     Status = GetSourcePaths(&SourcePath,
                             &SourceRootPath,
                             &SourceRootDir);
-
     if (!NT_SUCCESS(Status))
     {
         CONSOLE_PrintTextXY(6, 15, "GetSourcePaths() failed (Status 0x%08lx)", Status);
         MUIDisplayError(ERROR_NO_SOURCE_DRIVE, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
-#if 0
-    else
-    {
-        CONSOLE_PrintTextXY(6, 15, "SourcePath: '%wZ'", &SourcePath);
-        CONSOLE_PrintTextXY(6, 16, "SourceRootPath: '%wZ'", &SourceRootPath);
-        CONSOLE_PrintTextXY(6, 17, "SourceRootDir: '%wZ'", &SourceRootDir);
-    }
-#endif
+    DPRINT1("SourcePath: '%wZ'", &SourcePath);
+    DPRINT1("SourceRootPath: '%wZ'", &SourceRootPath);
+    DPRINT1("SourceRootDir: '%wZ'", &SourceRootDir);
 
     /* Load txtsetup.sif from install media. */
-    CombinePaths(FileNameBuffer, ARRAYSIZE(FileNameBuffer), 2, SourcePath.Buffer, L"\\txtsetup.sif");
+    CombinePaths(FileNameBuffer, ARRAYSIZE(FileNameBuffer), 2, SourcePath.Buffer, L"txtsetup.sif");
     SetupInf = SetupOpenInfFileW(FileNameBuffer,
                                  NULL,
                                  INF_STYLE_WIN4,
@@ -2717,6 +2711,13 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     if (PartitionList->SystemPartition == NULL)
     {
         /* FIXME: show an error dialog */
+        //
+        // Error dialog should say that we cannot find a suitable
+        // system partition and create one on the system. At this point,
+        // it may be nice to ask the user whether he wants to continue,
+        // or use an external drive as the system drive/partition
+        // (e.g. floppy, USB drive, etc...)
+        //
         return QUIT_PAGE;
     }
 
@@ -3106,12 +3107,11 @@ FormatPartitionPage(PINPUT_RECORD Ir)
             }
 
             /* Set PartitionRootPath */
-            swprintf(PathBuffer,
-                     L"\\Device\\Harddisk%lu\\Partition%lu",
-                     DiskEntry->DiskNumber,
-                     PartEntry->PartitionNumber);
-            RtlInitUnicodeString(&PartitionRootPath,
-                                 PathBuffer);
+            StringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+                    L"\\Device\\Harddisk%lu\\Partition%lu",
+                    DiskEntry->DiskNumber,
+                    PartEntry->PartitionNumber);
+            RtlInitUnicodeString(&PartitionRootPath, PathBuffer);
             DPRINT("PartitionRootPath: %wZ\n", &PartitionRootPath);
 
             /* Format the partition */
@@ -3180,10 +3180,10 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     }
 
     /* Set PartitionRootPath */
-    swprintf(PathBuffer,
-             L"\\Device\\Harddisk%lu\\Partition%lu",
-             DiskEntry->DiskNumber,
-             PartEntry->PartitionNumber);
+    StringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+            L"\\Device\\Harddisk%lu\\Partition%lu",
+            DiskEntry->DiskNumber,
+            PartEntry->PartitionNumber);
     RtlInitUnicodeString(&PartitionRootPath, PathBuffer);
     DPRINT("PartitionRootPath: %wZ\n", &PartitionRootPath);
 
@@ -3284,10 +3284,10 @@ InstallDirectoryPage1(PWSTR InstallDir,
 
     /* Create 'DestinationRootPath' string */
     RtlFreeUnicodeString(&DestinationRootPath);
-    swprintf(PathBuffer,
-             L"\\Device\\Harddisk%lu\\Partition%lu",
-             DiskEntry->DiskNumber,
-             PartEntry->PartitionNumber);
+    StringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+            L"\\Device\\Harddisk%lu\\Partition%lu\\",
+            DiskEntry->DiskNumber,
+            PartEntry->PartitionNumber);
     RtlCreateUnicodeString(&DestinationRootPath, PathBuffer);
     DPRINT("DestinationRootPath: %wZ\n", &DestinationRootPath);
 
@@ -3299,10 +3299,10 @@ InstallDirectoryPage1(PWSTR InstallDir,
 
     /* Create 'DestinationArcPath' */
     RtlFreeUnicodeString(&DestinationArcPath);
-    swprintf(PathBuffer,
-             L"multi(0)disk(0)rdisk(%lu)partition(%lu)",
-             DiskEntry->BiosDiskNumber,
-             PartEntry->PartitionNumber);
+    StringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+            L"multi(0)disk(0)rdisk(%lu)partition(%lu)\\",
+            DiskEntry->BiosDiskNumber,
+            PartEntry->PartitionNumber);
     ConcatPaths(PathBuffer, ARRAYSIZE(PathBuffer), 1, InstallDir);
     RtlCreateUnicodeString(&DestinationArcPath, PathBuffer);
 
@@ -3446,18 +3446,23 @@ AddSectionToCopyQueueCab(HINF InfFile,
     PWCHAR DirKeyValue;
     PWCHAR TargetFileName;
 
+    /*
+     * This code enumerates the list of files in reactos.dff / reactos.inf
+     * that need to be extracted from reactos.cab and be installed in their
+     * respective directories.
+     */
+
     /* Search for the SectionName section */
     if (!SetupFindFirstLineW(InfFile, SectionName, NULL, &FilesContext))
     {
-        char Buffer[128];
+        CHAR Buffer[128];
         sprintf(Buffer, MUIGetString(STRING_TXTSETUPFAILED), SectionName);
         PopupError(Buffer, MUIGetString(STRING_REBOOTCOMPUTER), Ir, POPUP_WAIT_ENTER);
         return FALSE;
     }
 
     /*
-     * Enumerate the files in the section
-     * and add them to the file queue.
+     * Enumerate the files in the section and add them to the file queue.
      */
     do
     {
@@ -3520,24 +3525,27 @@ AddSectionToCopyQueue(HINF InfFile,
     PWCHAR FileKeyValue;
     PWCHAR DirKeyValue;
     PWCHAR TargetFileName;
-    ULONG Length;
-    WCHAR CompleteOrigDirName[512];
+    WCHAR CompleteOrigDirName[512]; // FIXME: MAX_PATH is not enough?
 
     if (SourceCabinet)
         return AddSectionToCopyQueueCab(InfFile, L"SourceFiles", SourceCabinet, DestinationPath, Ir);
 
+    /*
+     * This code enumerates the list of files in txtsetup.sif
+     * that need to be installed in their respective directories.
+     */
+
     /* Search for the SectionName section */
     if (!SetupFindFirstLineW(InfFile, SectionName, NULL, &FilesContext))
     {
-        char Buffer[128];
+        CHAR Buffer[128];
         sprintf(Buffer, MUIGetString(STRING_TXTSETUPFAILED), SectionName);
         PopupError(Buffer, MUIGetString(STRING_REBOOTCOMPUTER), Ir, POPUP_WAIT_ENTER);
         return FALSE;
     }
 
     /*
-     * Enumerate the files in the section
-     * and add them to the file queue.
+     * Enumerate the files in the section and add them to the file queue.
      */
     do
     {
@@ -3583,25 +3591,32 @@ AddSectionToCopyQueue(HINF InfFile,
         if ((DirKeyValue[0] == UNICODE_NULL) || (DirKeyValue[0] == L'\\' && DirKeyValue[1] == UNICODE_NULL))
         {
             /* Installation path */
-            wcscpy(CompleteOrigDirName, SourceRootDir.Buffer);
+            DPRINT("InstallationPath: '%S'\n", DirKeyValue);
+
+            StringCchCopyW(CompleteOrigDirName, ARRAYSIZE(CompleteOrigDirName),
+                           SourceRootDir.Buffer);
+
+            DPRINT("InstallationPath(2): '%S'\n", CompleteOrigDirName);
         }
         else if (DirKeyValue[0] == L'\\')
         {
             /* Absolute path */
-            wcscpy(CompleteOrigDirName, DirKeyValue);
+            DPRINT("AbsolutePath: '%S'\n", DirKeyValue);
+
+            StringCchCopyW(CompleteOrigDirName, ARRAYSIZE(CompleteOrigDirName),
+                           DirKeyValue);
+
+            DPRINT("AbsolutePath(2): '%S'\n", CompleteOrigDirName);
         }
         else // if (DirKeyValue[0] != L'\\')
         {
             /* Path relative to the installation path */
+            DPRINT("RelativePath: '%S'\n", DirKeyValue);
+
             CombinePaths(CompleteOrigDirName, ARRAYSIZE(CompleteOrigDirName), 2,
                          SourceRootDir.Buffer, DirKeyValue);
-        }
 
-        /* Remove trailing backslash */
-        Length = wcslen(CompleteOrigDirName);
-        if ((Length > 0) && (CompleteOrigDirName[Length - 1] == L'\\'))
-        {
-            CompleteOrigDirName[Length - 1] = UNICODE_NULL;
+            DPRINT("RelativePath(2): '%S'\n", CompleteOrigDirName);
         }
 
         if (!SetupQueueCopy(SetupFileQueue,
@@ -3626,12 +3641,11 @@ PrepareCopyPageInfFile(HINF InfFile,
                        PWCHAR SourceCabinet,
                        PINPUT_RECORD Ir)
 {
-    WCHAR PathBuffer[MAX_PATH];
+    NTSTATUS Status;
     INFCONTEXT DirContext;
     PWCHAR AdditionalSectionName = NULL;
     PWCHAR DirKeyValue;
-    ULONG Length;
-    NTSTATUS Status;
+    WCHAR PathBuffer[MAX_PATH];
 
     /* Add common files */
     if (!AddSectionToCopyQueue(InfFile, L"SourceDisksFiles", SourceCabinet, &DestinationPath, Ir))
@@ -3654,28 +3668,22 @@ PrepareCopyPageInfFile(HINF InfFile,
 
     /*
      * FIXME:
-     * - Install directories like '\reactos\test' are not handled yet.
-     * - Copying files to DestinationRootPath should be done from within
-     *   the SystemPartitionFiles section.
-     *   At the moment we check whether we specify paths like '\foo' or '\\' for that.
-     *   For installing to DestinationPath specify just '\' .
+     * Copying files to DestinationRootPath should be done from within
+     * the SystemPartitionFiles section.
+     * At the moment we check whether we specify paths like '\foo' or '\\' for that.
+     * For installing to DestinationPath specify just '\' .
      */
 
     /* Get destination path */
-    wcscpy(PathBuffer, DestinationPath.Buffer);
+    StringCchCopyW(PathBuffer, ARRAYSIZE(PathBuffer), DestinationPath.Buffer);
 
-    /* Remove trailing backslash */
-    Length = wcslen(PathBuffer);
-    if ((Length > 0) && (PathBuffer[Length - 1] == L'\\'))
-    {
-        PathBuffer[Length - 1] = UNICODE_NULL;
-    }
+    DPRINT("FullPath(1): '%S'\n", PathBuffer);
 
     /* Create the install directory */
     Status = SetupCreateDirectory(PathBuffer);
     if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
     {
-        DPRINT1("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
+        DPRINT1("Creating directory '%S' failed: Status = 0x%08lx\n", PathBuffer, Status);
         MUIDisplayError(ERROR_CREATE_INSTALL_DIR, Ir, POPUP_WAIT_ENTER);
         return FALSE;
     }
@@ -3709,26 +3717,20 @@ PrepareCopyPageInfFile(HINF InfFile,
             /* Installation path */
             DPRINT("InstallationPath: '%S'\n", DirKeyValue);
 
-            wcscpy(PathBuffer, DestinationPath.Buffer);
+            StringCchCopyW(PathBuffer, ARRAYSIZE(PathBuffer),
+                           DestinationPath.Buffer);
 
-            DPRINT("FullPath: '%S'\n", PathBuffer);
+            DPRINT("InstallationPath(2): '%S'\n", PathBuffer);
         }
         else if (DirKeyValue[0] == L'\\')
         {
             /* Absolute path */
-            DPRINT("Absolute Path: '%S'\n", DirKeyValue);
+            DPRINT("AbsolutePath: '%S'\n", DirKeyValue);
 
             CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 2,
                          DestinationRootPath.Buffer, DirKeyValue);
 
-            /* Remove trailing backslash */
-            Length = wcslen(PathBuffer);
-            if ((Length > 0) && (PathBuffer[Length - 1] == L'\\'))
-            {
-                PathBuffer[Length - 1] = UNICODE_NULL;
-            }
-
-            DPRINT("FullPath: '%S'\n", PathBuffer);
+            DPRINT("AbsolutePath(2): '%S'\n", PathBuffer);
 
             Status = SetupCreateDirectory(PathBuffer);
             if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
@@ -3746,14 +3748,7 @@ PrepareCopyPageInfFile(HINF InfFile,
             CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 2,
                          DestinationPath.Buffer, DirKeyValue);
 
-            /* Remove trailing backslash */
-            Length = wcslen(PathBuffer);
-            if ((Length > 0) && (PathBuffer[Length - 1] == L'\\'))
-            {
-                PathBuffer[Length - 1] = UNICODE_NULL;
-            }
-
-            DPRINT("FullPath: '%S'\n", PathBuffer);
+            DPRINT("RelativePath(2): '%S'\n", PathBuffer);
 
             Status = SetupCreateDirectory(PathBuffer);
             if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
@@ -4075,12 +4070,14 @@ RegistryPage(PINPUT_RECORD Ir)
         return SUCCESS_PAGE;
     }
 
+    /************************ HACK!!!!!!!!!!! *********************************/
     if (!SetInstallPathValue(&DestinationPath))
     {
         DPRINT1("SetInstallPathValue() failed\n");
         MUIDisplayError(ERROR_INITIALIZE_REGISTRY, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
+    /************************ HACK!!!!!!!!!!! *********************************/
 
     /* Create the default hives */
     Status = NtInitializeRegistry(CM_BOOT_FLAG_SETUP);
@@ -4230,10 +4227,10 @@ BootLoaderPage(PINPUT_RECORD Ir)
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
     RtlFreeUnicodeString(&SystemRootPath);
-    swprintf(PathBuffer,
-             L"\\Device\\Harddisk%lu\\Partition%lu",
-             PartitionList->SystemPartition->DiskEntry->DiskNumber,
-             PartitionList->SystemPartition->PartitionNumber);
+    StringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+            L"\\Device\\Harddisk%lu\\Partition%lu\\",
+            PartitionList->SystemPartition->DiskEntry->DiskNumber,
+            PartitionList->SystemPartition->PartitionNumber);
     RtlCreateUnicodeString(&SystemRootPath, PathBuffer);
     DPRINT1("SystemRootPath: %wZ\n", &SystemRootPath);
 
@@ -4472,7 +4469,7 @@ BootLoaderHarddiskVbrPage(PINPUT_RECORD Ir)
  *
  * SIDEEFFECTS
  *  Calls InstallVBRToPartition()
- *  CallsInstallMbrBootCodeToDisk()
+ *  Calls InstallMbrBootCodeToDisk()
  *
  * RETURNS
  *   Number of the next page.
@@ -4497,16 +4494,16 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
     }
 
     /* Step 2: Write the MBR */
-    swprintf(DestinationDevicePathBuffer,
-             L"\\Device\\Harddisk%d\\Partition0",
-             PartitionList->SystemPartition->DiskEntry->DiskNumber);
+    StringCchPrintfW(DestinationDevicePathBuffer, ARRAYSIZE(DestinationDevicePathBuffer),
+            L"\\Device\\Harddisk%d\\Partition0",
+            PartitionList->SystemPartition->DiskEntry->DiskNumber);
 
     CombinePaths(SourceMbrPathBuffer, ARRAYSIZE(SourceMbrPathBuffer), 2, SourceRootPath.Buffer, L"\\loader\\dosmbr.bin");
 
     if (IsThereAValidBootSector(DestinationDevicePathBuffer))
     {
         /* Save current MBR */
-        CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath.Buffer, L"\\mbr.old");
+        CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath.Buffer, L"mbr.old");
 
         DPRINT1("Save MBR: %S ==> %S\n", DestinationDevicePathBuffer, DstPath);
         Status = SaveBootSector(DestinationDevicePathBuffer, DstPath, sizeof(PARTITION_SECTOR));
