@@ -56,14 +56,14 @@ SetupCreateSingleDirectory(
                                NULL);
 
     Status = NtCreateFile(&DirectoryHandle,
-                          DIRECTORY_ALL_ACCESS,
+                          FILE_LIST_DIRECTORY | FILE_TRAVERSE | FILE_ADD_FILE | FILE_ADD_SUBDIRECTORY | SYNCHRONIZE,
                           &ObjectAttributes,
                           &IoStatusBlock,
                           NULL,
                           FILE_ATTRIBUTE_DIRECTORY,
                           FILE_SHARE_READ | FILE_SHARE_WRITE,
                           FILE_OPEN_IF,
-                          FILE_DIRECTORY_FILE,
+                          FILE_OPEN_FOR_BACKUP_INTENT | FILE_DIRECTORY_FILE,
                           NULL,
                           0);
     if (NT_SUCCESS(Status))
