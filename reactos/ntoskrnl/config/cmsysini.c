@@ -1192,6 +1192,8 @@ CmpGetRegistryPath(OUT PWCHAR ConfigPath)
     /* Check if we are booted in setup */
     if (ExpInTextModeSetup)
     {
+        DPRINT1("CmpGetRegistryPath TextMode setup HACK!!\n");
+
         /* Setup the object attributes */
         InitializeObjectAttributes(&ObjectAttributes,
                                    &KeyName,
@@ -1244,6 +1246,8 @@ CmpGetRegistryPath(OUT PWCHAR ConfigPath)
 
     /* Add registry path */
     wcscat(ConfigPath, L"\\System32\\Config\\");
+
+    DPRINT1("CmpGetRegistryPath: ConfigPath = '%S'\n", ConfigPath);
 
     /* Done */
     return STATUS_SUCCESS;
