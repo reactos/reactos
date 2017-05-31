@@ -61,6 +61,12 @@ IniCacheLoadFromMemory(
     BOOLEAN String);
 
 NTSTATUS
+IniCacheLoadByHandle(
+    PINICACHE *Cache,
+    HANDLE FileHandle,
+    BOOLEAN String);
+
+NTSTATUS
 IniCacheLoad(
     PINICACHE *Cache,
     PWCHAR FileName,
@@ -108,6 +114,11 @@ IniCacheInsertKey(
 
 PINICACHE
 IniCacheCreate(VOID);
+
+NTSTATUS
+IniCacheSaveByHandle(
+    PINICACHE Cache,
+    HANDLE FileHandle);
 
 NTSTATUS
 IniCacheSave(
