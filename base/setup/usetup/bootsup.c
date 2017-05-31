@@ -626,6 +626,204 @@ UpdateFreeLoaderIni(
     return STATUS_SUCCESS;
 }
 
+static
+NTSTATUS
+UnprotectBootIni(
+    PWSTR FileName,
+    PULONG Attributes)
+{
+    NTSTATUS Status;
+    UNICODE_STRING Name;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    FILE_BASIC_INFORMATION FileInfo;
+    HANDLE FileHandle;
+
+    RtlInitUnicodeString(&Name, FileName);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&FileHandle,
+                        GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        0,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (Status == STATUS_NO_SUCH_FILE)
+    {
+        DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
+        *Attributes = 0;
+        return STATUS_SUCCESS;
+    }
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
+        return Status;
+    }
+
+    Status = NtQueryInformationFile(FileHandle,
+                                    &IoStatusBlock,
+                                    &FileInfo,
+                                    sizeof(FILE_BASIC_INFORMATION),
+                                    FileBasicInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtQueryInformationFile() failed (Status %lx)\n", Status);
+        NtClose(FileHandle);
+        return Status;
+    }
+
+    *Attributes = FileInfo.FileAttributes;
+
+    /* Delete attributes SYSTEM, HIDDEN and READONLY */
+    FileInfo.FileAttributes = FileInfo.FileAttributes &
+                              ~(FILE_ATTRIBUTE_SYSTEM |
+                                FILE_ATTRIBUTE_HIDDEN |
+                                FILE_ATTRIBUTE_READONLY);
+
+    Status = NtSetInformationFile(FileHandle,
+                                  &IoStatusBlock,
+                                  &FileInfo,
+                                  sizeof(FILE_BASIC_INFORMATION),
+                                  FileBasicInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtSetInformationFile() failed (Status %lx)\n", Status);
+    }
+
+    NtClose(FileHandle);
+    return Status;
+}
+
+static
+NTSTATUS
+ProtectBootIni(
+    PWSTR FileName,
+    ULONG Attributes)
+{
+    NTSTATUS Status;
+    UNICODE_STRING Name;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    FILE_BASIC_INFORMATION FileInfo;
+    HANDLE FileHandle;
+
+    RtlInitUnicodeString(&Name, FileName);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&FileHandle,
+                        GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        0,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
+        return Status;
+    }
+
+    Status = NtQueryInformationFile(FileHandle,
+                                    &IoStatusBlock,
+                                    &FileInfo,
+                                    sizeof(FILE_BASIC_INFORMATION),
+                                    FileBasicInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtQueryInformationFile() failed (Status %lx)\n", Status);
+        NtClose(FileHandle);
+        return Status;
+    }
+
+    FileInfo.FileAttributes = FileInfo.FileAttributes | Attributes;
+
+    Status = NtSetInformationFile(FileHandle,
+                                  &IoStatusBlock,
+                                  &FileInfo,
+                                  sizeof(FILE_BASIC_INFORMATION),
+                                  FileBasicInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtSetInformationFile() failed (Status %lx)\n", Status);
+    }
+
+    NtClose(FileHandle);
+    return Status;
+}
+
+static
+NTSTATUS
+UpdateBootIni(
+    PWSTR BootIniPath,
+    PWSTR EntryName,
+    PWSTR EntryValue)
+{
+    NTSTATUS Status;
+    PINICACHE Cache = NULL;
+    PINICACHESECTION Section = NULL;
+    ULONG FileAttribute;
+    PWCHAR OldValue = NULL;
+
+    Status = IniCacheLoad(&Cache, BootIniPath, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    Section = IniCacheGetSection(Cache,
+                                 L"operating systems");
+    if (Section == NULL)
+    {
+        IniCacheDestroy(Cache);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Check - maybe record already exists */
+    Status = IniCacheGetKey(Section, EntryName, &OldValue);
+
+    /* If either key was not found, or contains something else - add new one */
+    if (!NT_SUCCESS(Status) || wcscmp(OldValue, EntryValue))
+    {
+        IniCacheInsertKey(Section,
+                          NULL,
+                          INSERT_LAST,
+                          EntryName,
+                          EntryValue);
+    }
+
+    Status = UnprotectBootIni(BootIniPath,
+                              &FileAttribute);
+    if (!NT_SUCCESS(Status))
+    {
+        IniCacheDestroy(Cache);
+        return Status;
+    }
+
+    Status = IniCacheSave(Cache, BootIniPath);
+    if (!NT_SUCCESS(Status))
+    {
+        IniCacheDestroy(Cache);
+        return Status;
+    }
+
+    FileAttribute |= (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY);
+    Status = ProtectBootIni(BootIniPath, FileAttribute);
+
+    IniCacheDestroy(Cache);
+
+    return Status;
+}
+
+
 BOOLEAN
 IsThereAValidBootSector(PWSTR RootPath)
 {
@@ -795,369 +993,6 @@ SaveBootSector(
 
     /* Free the boot sector */
     RtlFreeHeap(ProcessHeap, 0, BootSector);
-
-    return Status;
-}
-
-static
-NTSTATUS
-InstallFat16BootCodeToFile(
-    PWSTR SrcPath,
-    PWSTR DstPath,
-    PWSTR RootPath)
-{
-    NTSTATUS Status;
-    UNICODE_STRING Name;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
-    HANDLE FileHandle;
-    LARGE_INTEGER FileOffset;
-    PFAT_BOOTSECTOR OrigBootSector;
-    PFAT_BOOTSECTOR NewBootSector;
-
-    /* Allocate buffer for original bootsector */
-    OrigBootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
-    if (OrigBootSector == NULL)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    /* Read current boot sector into buffer */
-    RtlInitUnicodeString(&Name, RootPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        return Status;
-    }
-
-    FileOffset.QuadPart = 0ULL;
-    Status = NtReadFile(FileHandle,
-                        NULL,
-                        NULL,
-                        NULL,
-                        &IoStatusBlock,
-                        OrigBootSector,
-                        SECTORSIZE,
-                        &FileOffset,
-                        NULL);
-    NtClose(FileHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        return Status;
-    }
-
-    /* Allocate buffer for new bootsector */
-    NewBootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
-    if (NewBootSector == NULL)
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* Read new bootsector from SrcPath */
-    RtlInitUnicodeString(&Name, SrcPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    FileOffset.QuadPart = 0ULL;
-    Status = NtReadFile(FileHandle,
-                        NULL,
-                        NULL,
-                        NULL,
-                        &IoStatusBlock,
-                        NewBootSector,
-                        SECTORSIZE,
-                        &FileOffset,
-                        NULL);
-    NtClose(FileHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    /* Adjust bootsector (copy a part of the FAT BPB) */
-    memcpy(&NewBootSector->OemName,
-           &OrigBootSector->OemName,
-           FIELD_OFFSET(FAT_BOOTSECTOR, BootCodeAndData) -
-           FIELD_OFFSET(FAT_BOOTSECTOR, OemName));
-
-    /* Free the original boot sector */
-    RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-
-    /* Write new bootsector to DstPath */
-    RtlInitUnicodeString(&Name, DstPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               0,
-                               NULL,
-                               NULL);
-
-    Status = NtCreateFile(&FileHandle,
-                          GENERIC_WRITE | SYNCHRONIZE,
-                          &ObjectAttributes,
-                          &IoStatusBlock,
-                          NULL,
-                          FILE_ATTRIBUTE_NORMAL,
-                          0,
-                          FILE_OVERWRITE_IF,
-                          FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
-                          NULL,
-                          0);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    FileOffset.QuadPart = 0ULL;
-    Status = NtWriteFile(FileHandle,
-                         NULL,
-                         NULL,
-                         NULL,
-                         &IoStatusBlock,
-                         NewBootSector,
-                         SECTORSIZE,
-                         NULL,
-                         NULL);
-    NtClose(FileHandle);
-
-    /* Free the new boot sector */
-    RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-
-    return Status;
-}
-
-static
-NTSTATUS
-InstallFat32BootCodeToFile(
-    PWSTR SrcPath,
-    PWSTR DstPath,
-    PWSTR RootPath)
-{
-    NTSTATUS Status;
-    UNICODE_STRING Name;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
-    HANDLE FileHandle;
-    LARGE_INTEGER FileOffset;
-    PFAT32_BOOTSECTOR OrigBootSector;
-    PFAT32_BOOTSECTOR NewBootSector;
-
-    /* Allocate buffer for original bootsector */
-    OrigBootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
-    if (OrigBootSector == NULL)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    /* Read current boot sector into buffer */
-    RtlInitUnicodeString(&Name, RootPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        return Status;
-    }
-
-    FileOffset.QuadPart = 0ULL;
-    Status = NtReadFile(FileHandle,
-                        NULL,
-                        NULL,
-                        NULL,
-                        &IoStatusBlock,
-                        OrigBootSector,
-                        SECTORSIZE,
-                        NULL,
-                        NULL);
-    NtClose(FileHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        return Status;
-    }
-
-    /* Allocate buffer for new bootsector (2 sectors) */
-    NewBootSector = RtlAllocateHeap(ProcessHeap, 0, 2 * SECTORSIZE);
-    if (NewBootSector == NULL)
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* Read new bootsector from SrcPath */
-    RtlInitUnicodeString(&Name, SrcPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    Status = NtReadFile(FileHandle,
-                        NULL,
-                        NULL,
-                        NULL,
-                        &IoStatusBlock,
-                        NewBootSector,
-                        2 * SECTORSIZE,
-                        NULL,
-                        NULL);
-    NtClose(FileHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    /* Adjust bootsector (copy a part of the FAT32 BPB) */
-    memcpy(&NewBootSector->OemName,
-           &OrigBootSector->OemName,
-           FIELD_OFFSET(FAT32_BOOTSECTOR, BootCodeAndData) -
-           FIELD_OFFSET(FAT32_BOOTSECTOR, OemName));
-
-    /* Disable the backup boot sector */
-    NewBootSector->BackupBootSector = 0;
-
-    /* Free the original boot sector */
-    RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-
-    /* Write the first sector of the new bootcode to DstPath */
-    RtlInitUnicodeString(&Name, DstPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               0,
-                               NULL,
-                               NULL);
-
-    Status = NtCreateFile(&FileHandle,
-                          GENERIC_WRITE | SYNCHRONIZE,
-                          &ObjectAttributes,
-                          &IoStatusBlock,
-                          NULL,
-                          FILE_ATTRIBUTE_NORMAL,
-                          0,
-                          FILE_SUPERSEDE,
-                          FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
-                          NULL,
-                          0);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    FileOffset.QuadPart = 0ULL;
-    Status = NtWriteFile(FileHandle,
-                         NULL,
-                         NULL,
-                         NULL,
-                         &IoStatusBlock,
-                         NewBootSector,
-                         SECTORSIZE,
-                         NULL,
-                         NULL);
-    NtClose(FileHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    /* Write the second sector of the new bootcode to boot disk sector 14 */
-    RtlInitUnicodeString(&Name, RootPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               0,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_WRITE | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    FileOffset.QuadPart = (ULONGLONG)(14 * SECTORSIZE);
-    Status = NtWriteFile(FileHandle,
-                         NULL,
-                         NULL,
-                         NULL,
-                         &IoStatusBlock,
-                         ((PUCHAR)NewBootSector + SECTORSIZE),
-                         SECTORSIZE,
-                         &FileOffset,
-                         NULL);
-    if (!NT_SUCCESS(Status))
-    {
-    }
-    NtClose(FileHandle);
-
-    /* Free the new boot sector */
-    RtlFreeHeap(ProcessHeap, 0, NewBootSector);
 
     return Status;
 }
@@ -1481,6 +1316,166 @@ InstallFat12BootCodeToFloppy(
 
 static
 NTSTATUS
+InstallFat16BootCodeToFile(
+    PWSTR SrcPath,
+    PWSTR DstPath,
+    PWSTR RootPath)
+{
+    NTSTATUS Status;
+    UNICODE_STRING Name;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE FileHandle;
+    LARGE_INTEGER FileOffset;
+    PFAT_BOOTSECTOR OrigBootSector;
+    PFAT_BOOTSECTOR NewBootSector;
+
+    /* Allocate buffer for original bootsector */
+    OrigBootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
+    if (OrigBootSector == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Read current boot sector into buffer */
+    RtlInitUnicodeString(&Name, RootPath);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&FileHandle,
+                        GENERIC_READ | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        0,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
+        return Status;
+    }
+
+    FileOffset.QuadPart = 0ULL;
+    Status = NtReadFile(FileHandle,
+                        NULL,
+                        NULL,
+                        NULL,
+                        &IoStatusBlock,
+                        OrigBootSector,
+                        SECTORSIZE,
+                        &FileOffset,
+                        NULL);
+    NtClose(FileHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
+        return Status;
+    }
+
+    /* Allocate buffer for new bootsector */
+    NewBootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
+    if (NewBootSector == NULL)
+    {
+        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Read new bootsector from SrcPath */
+    RtlInitUnicodeString(&Name, SrcPath);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&FileHandle,
+                        GENERIC_READ | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        0,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
+        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
+        return Status;
+    }
+
+    FileOffset.QuadPart = 0ULL;
+    Status = NtReadFile(FileHandle,
+                        NULL,
+                        NULL,
+                        NULL,
+                        &IoStatusBlock,
+                        NewBootSector,
+                        SECTORSIZE,
+                        &FileOffset,
+                        NULL);
+    NtClose(FileHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
+        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
+        return Status;
+    }
+
+    /* Adjust bootsector (copy a part of the FAT BPB) */
+    memcpy(&NewBootSector->OemName,
+           &OrigBootSector->OemName,
+           FIELD_OFFSET(FAT_BOOTSECTOR, BootCodeAndData) -
+           FIELD_OFFSET(FAT_BOOTSECTOR, OemName));
+
+    /* Free the original boot sector */
+    RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
+
+    /* Write new bootsector to DstPath */
+    RtlInitUnicodeString(&Name, DstPath);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               0,
+                               NULL,
+                               NULL);
+
+    Status = NtCreateFile(&FileHandle,
+                          GENERIC_WRITE | SYNCHRONIZE,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          FILE_ATTRIBUTE_NORMAL,
+                          0,
+                          FILE_OVERWRITE_IF,
+                          FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
+                          NULL,
+                          0);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
+        return Status;
+    }
+
+    FileOffset.QuadPart = 0ULL;
+    Status = NtWriteFile(FileHandle,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &IoStatusBlock,
+                         NewBootSector,
+                         SECTORSIZE,
+                         NULL,
+                         NULL);
+    NtClose(FileHandle);
+
+    /* Free the new boot sector */
+    RtlFreeHeap(ProcessHeap, 0, NewBootSector);
+
+    return Status;
+}
+
+static
+NTSTATUS
 InstallFat16BootCodeToDisk(
     PWSTR SrcPath,
     PWSTR RootPath)
@@ -1625,6 +1620,209 @@ InstallFat16BootCodeToDisk(
                          SECTORSIZE,
                          &FileOffset,
                          NULL);
+    NtClose(FileHandle);
+
+    /* Free the new boot sector */
+    RtlFreeHeap(ProcessHeap, 0, NewBootSector);
+
+    return Status;
+}
+
+static
+NTSTATUS
+InstallFat32BootCodeToFile(
+    PWSTR SrcPath,
+    PWSTR DstPath,
+    PWSTR RootPath)
+{
+    NTSTATUS Status;
+    UNICODE_STRING Name;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE FileHandle;
+    LARGE_INTEGER FileOffset;
+    PFAT32_BOOTSECTOR OrigBootSector;
+    PFAT32_BOOTSECTOR NewBootSector;
+
+    /* Allocate buffer for original bootsector */
+    OrigBootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
+    if (OrigBootSector == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Read current boot sector into buffer */
+    RtlInitUnicodeString(&Name, RootPath);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&FileHandle,
+                        GENERIC_READ | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        0,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
+        return Status;
+    }
+
+    FileOffset.QuadPart = 0ULL;
+    Status = NtReadFile(FileHandle,
+                        NULL,
+                        NULL,
+                        NULL,
+                        &IoStatusBlock,
+                        OrigBootSector,
+                        SECTORSIZE,
+                        NULL,
+                        NULL);
+    NtClose(FileHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
+        return Status;
+    }
+
+    /* Allocate buffer for new bootsector (2 sectors) */
+    NewBootSector = RtlAllocateHeap(ProcessHeap, 0, 2 * SECTORSIZE);
+    if (NewBootSector == NULL)
+    {
+        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Read new bootsector from SrcPath */
+    RtlInitUnicodeString(&Name, SrcPath);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&FileHandle,
+                        GENERIC_READ | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        0,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
+        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
+        return Status;
+    }
+
+    Status = NtReadFile(FileHandle,
+                        NULL,
+                        NULL,
+                        NULL,
+                        &IoStatusBlock,
+                        NewBootSector,
+                        2 * SECTORSIZE,
+                        NULL,
+                        NULL);
+    NtClose(FileHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
+        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
+        return Status;
+    }
+
+    /* Adjust bootsector (copy a part of the FAT32 BPB) */
+    memcpy(&NewBootSector->OemName,
+           &OrigBootSector->OemName,
+           FIELD_OFFSET(FAT32_BOOTSECTOR, BootCodeAndData) -
+           FIELD_OFFSET(FAT32_BOOTSECTOR, OemName));
+
+    /* Disable the backup boot sector */
+    NewBootSector->BackupBootSector = 0;
+
+    /* Free the original boot sector */
+    RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
+
+    /* Write the first sector of the new bootcode to DstPath */
+    RtlInitUnicodeString(&Name, DstPath);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               0,
+                               NULL,
+                               NULL);
+
+    Status = NtCreateFile(&FileHandle,
+                          GENERIC_WRITE | SYNCHRONIZE,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          FILE_ATTRIBUTE_NORMAL,
+                          0,
+                          FILE_SUPERSEDE,
+                          FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
+                          NULL,
+                          0);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
+        return Status;
+    }
+
+    FileOffset.QuadPart = 0ULL;
+    Status = NtWriteFile(FileHandle,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &IoStatusBlock,
+                         NewBootSector,
+                         SECTORSIZE,
+                         NULL,
+                         NULL);
+    NtClose(FileHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
+        return Status;
+    }
+
+    /* Write the second sector of the new bootcode to boot disk sector 14 */
+    RtlInitUnicodeString(&Name, RootPath);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               0,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenFile(&FileHandle,
+                        GENERIC_WRITE | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        0,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
+        return Status;
+    }
+
+    FileOffset.QuadPart = (ULONGLONG)(14 * SECTORSIZE);
+    Status = NtWriteFile(FileHandle,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &IoStatusBlock,
+                         ((PUCHAR)NewBootSector + SECTORSIZE),
+                         SECTORSIZE,
+                         &FileOffset,
+                         NULL);
+    if (!NT_SUCCESS(Status))
+    {
+    }
     NtClose(FileHandle);
 
     /* Free the new boot sector */
@@ -1838,6 +2036,7 @@ InstallFat32BootCodeToDisk(
     return Status;
 }
 
+// FIXME: This function does not really work
 static
 NTSTATUS
 InstallExt2BootCodeToDisk(
@@ -2046,203 +2245,6 @@ InstallExt2BootCodeToDisk(
 
     /* Free the new boot sector */
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-
-    return Status;
-}
-
-static
-NTSTATUS
-UnprotectBootIni(
-    PWSTR FileName,
-    PULONG Attributes)
-{
-    NTSTATUS Status;
-    UNICODE_STRING Name;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
-    FILE_BASIC_INFORMATION FileInfo;
-    HANDLE FileHandle;
-
-    RtlInitUnicodeString(&Name, FileName);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (Status == STATUS_NO_SUCH_FILE)
-    {
-        DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
-        *Attributes = 0;
-        return STATUS_SUCCESS;
-    }
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
-        return Status;
-    }
-
-    Status = NtQueryInformationFile(FileHandle,
-                                    &IoStatusBlock,
-                                    &FileInfo,
-                                    sizeof(FILE_BASIC_INFORMATION),
-                                    FileBasicInformation);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtQueryInformationFile() failed (Status %lx)\n", Status);
-        NtClose(FileHandle);
-        return Status;
-    }
-
-    *Attributes = FileInfo.FileAttributes;
-
-    /* Delete attributes SYSTEM, HIDDEN and READONLY */
-    FileInfo.FileAttributes = FileInfo.FileAttributes &
-                              ~(FILE_ATTRIBUTE_SYSTEM |
-                                FILE_ATTRIBUTE_HIDDEN |
-                                FILE_ATTRIBUTE_READONLY);
-
-    Status = NtSetInformationFile(FileHandle,
-                                  &IoStatusBlock,
-                                  &FileInfo,
-                                  sizeof(FILE_BASIC_INFORMATION),
-                                  FileBasicInformation);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtSetInformationFile() failed (Status %lx)\n", Status);
-    }
-
-    NtClose(FileHandle);
-    return Status;
-}
-
-static
-NTSTATUS
-ProtectBootIni(
-    PWSTR FileName,
-    ULONG Attributes)
-{
-    NTSTATUS Status;
-    UNICODE_STRING Name;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
-    FILE_BASIC_INFORMATION FileInfo;
-    HANDLE FileHandle;
-
-    RtlInitUnicodeString(&Name, FileName);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
-        return Status;
-    }
-
-    Status = NtQueryInformationFile(FileHandle,
-                                    &IoStatusBlock,
-                                    &FileInfo,
-                                    sizeof(FILE_BASIC_INFORMATION),
-                                    FileBasicInformation);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtQueryInformationFile() failed (Status %lx)\n", Status);
-        NtClose(FileHandle);
-        return Status;
-    }
-
-    FileInfo.FileAttributes = FileInfo.FileAttributes | Attributes;
-
-    Status = NtSetInformationFile(FileHandle,
-                                  &IoStatusBlock,
-                                  &FileInfo,
-                                  sizeof(FILE_BASIC_INFORMATION),
-                                  FileBasicInformation);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtSetInformationFile() failed (Status %lx)\n", Status);
-    }
-
-    NtClose(FileHandle);
-    return Status;
-}
-
-static
-NTSTATUS
-UpdateBootIni(
-    PWSTR BootIniPath,
-    PWSTR EntryName,
-    PWSTR EntryValue)
-{
-    NTSTATUS Status;
-    PINICACHE Cache = NULL;
-    PINICACHESECTION Section = NULL;
-    ULONG FileAttribute;
-    PWCHAR OldValue = NULL;
-
-    Status = IniCacheLoad(&Cache, BootIniPath, FALSE);
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
-
-    Section = IniCacheGetSection(Cache,
-                                 L"operating systems");
-    if (Section == NULL)
-    {
-        IniCacheDestroy(Cache);
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    /* Check - maybe record already exists */
-    Status = IniCacheGetKey(Section, EntryName, &OldValue);
-
-    /* If either key was not found, or contains something else - add new one */
-    if (!NT_SUCCESS(Status) || wcscmp(OldValue, EntryValue))
-    {
-        IniCacheInsertKey(Section,
-                          NULL,
-                          INSERT_LAST,
-                          EntryName,
-                          EntryValue);
-    }
-
-    Status = UnprotectBootIni(BootIniPath,
-                              &FileAttribute);
-    if (!NT_SUCCESS(Status))
-    {
-        IniCacheDestroy(Cache);
-        return Status;
-    }
-
-    Status = IniCacheSave(Cache, BootIniPath);
-    if (!NT_SUCCESS(Status))
-    {
-        IniCacheDestroy(Cache);
-        return Status;
-    }
-
-    FileAttribute |= (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY);
-    Status = ProtectBootIni(BootIniPath, FileAttribute);
-
-    IniCacheDestroy(Cache);
 
     return Status;
 }
