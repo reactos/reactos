@@ -263,8 +263,8 @@ typedef struct _RX_CONTEXT
     PWCH AlsoCanonicalNameBuffer;
     PUNICODE_STRING LoudCompletionString;
 #ifdef RDBSS_TRACKER
-    __volatile LONG AcquireReleaseFcbTrackerX;
-    __volatile ULONG TrackerHistoryPointer;
+    volatile LONG AcquireReleaseFcbTrackerX;
+    volatile ULONG TrackerHistoryPointer;
     RX_FCBTRACKER_CALLINFO TrackerHistory[RDBSS_TRACKER_HISTORY_SIZE];
 #endif
 #if DBG
