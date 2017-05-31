@@ -995,9 +995,12 @@ AddDiskToList(
 //    DiskEntry->Signature = Signature;
     DiskEntry->BiosFound = FALSE;
 
-    /* Check if this disk has a valid MBR */
-    // FIXME: Check for the MBR signature as well, etc...
-    if (Mbr->BootCode[0] == 0 && Mbr->BootCode[1] == 0)
+    /*
+     * Check if this disk has a valid MBR: verify its signature,
+     * and whether its two first bytes are a valid instruction
+     * (related to this, see IsThereAValidBootSector() in partlist.c).
+     */
+    if (Mbr->Magic != 0xaa55 || (*(PUSHORT)Mbr->BootCode) == 0x0000)
         DiskEntry->NoMbr = TRUE;
     else
         DiskEntry->NoMbr = FALSE;

@@ -90,7 +90,7 @@ FindNTOSBootLoader( // By handle
 #if 0
     /* Check whether the loader configuration file exists */
     Status = OpenAndMapFile(PartitionHandle, NtosBootLoaders[Type].LoaderConfigurationFile,
-                            &FileHandle, &SectionHandle, &ViewBase, &FileSize);
+                            &FileHandle, &SectionHandle, &ViewBase, &FileSize, FALSE);
     if (!NT_SUCCESS(Status))
     {
         /* The loader does not exist, continue with another one */
@@ -315,7 +315,7 @@ EnumerateNTOSBootEntries(
 
     /* Check whether the loader configuration file exists */
     Status = OpenAndMapFile(PartitionHandle, NtosBootLoaders[Type].LoaderConfigurationFile,
-                            &FileHandle, &SectionHandle, &ViewBase, &FileSize);
+                            &FileHandle, &SectionHandle, &ViewBase, &FileSize, FALSE);
     if (!NT_SUCCESS(Status))
     {
         /* The loader does not exist, continue with another one */

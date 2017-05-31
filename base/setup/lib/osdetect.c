@@ -148,6 +148,8 @@ EnumerateInstallations(
         {
             /* This is not a ReactOS entry */
             /* Certainly not a ReactOS installation */
+            DPRINT1("    A Win2k3 install '%wZ' without an ARC path?!\n", &InstallName);
+            /* Continue the enumeration */
             return STATUS_SUCCESS;
         }
     }
@@ -169,6 +171,7 @@ EnumerateInstallations(
     {
         DPRINT1("    An NTOS installation with name \"%S\" already exists in SystemRoot '%wZ'\n",
                 NtOsInstall->InstallationName, &NtOsInstall->SystemArcPath);
+        /* Continue the enumeration */
         return STATUS_SUCCESS;
     }
 
@@ -181,6 +184,7 @@ EnumerateInstallations(
     if (!ArcPathToNtPath(&SystemRootPath, BootEntry->OsLoadPath, Data->PartList))
     {
         DPRINT1("ArcPathToNtPath(%S) failed, skip the installation.\n", BootEntry->OsLoadPath);
+        /* Continue the enumeration */
         return STATUS_SUCCESS;
     }
 
@@ -196,6 +200,7 @@ EnumerateInstallations(
     {
         DPRINT1("    An NTOS installation with name \"%S\" already exists in SystemRoot '%wZ'\n",
                 NtOsInstall->InstallationName, &NtOsInstall->SystemNtPath);
+        /* Continue the enumeration */
         return STATUS_SUCCESS;
     }
 
@@ -203,7 +208,10 @@ EnumerateInstallations(
 
     /* Check if this is a valid NTOS installation; stop there if it isn't one */
     if (!IsValidNTOSInstallation_UStr(&SystemRootPath))
+    {
+        /* Continue the enumeration */
         return STATUS_SUCCESS;
+    }
 
     DPRINT1("Found a valid NTOS installation in SystemRoot ARC path '%S', NT path '%wZ'\n",
             BootEntry->OsLoadPath, &SystemRootPath);
@@ -226,6 +234,7 @@ EnumerateInstallations(
         DPRINT1("NtPathToDiskPartComponents(%wZ) failed\n", &SystemRootPath);
     }
 
+    /* Add the discovered NTOS installation into the list */
     if (PartEntry && PartEntry->DriveLetter)
     {
         /* We have retrieved a partition that is mounted */
@@ -243,6 +252,7 @@ EnumerateInstallations(
                         DiskNumber, PartitionNumber, PartEntry,
                         InstallNameW);
 
+    /* Continue the enumeration */
     return STATUS_SUCCESS;
 }
 
@@ -299,7 +309,8 @@ CheckForValidPEAndVendor(
     VendorName->Length = 0;
 
     Status = OpenAndMapFile(RootDirectory, PathNameToFile,
-                            &FileHandle, &SectionHandle, &ViewBase, NULL);
+                            &FileHandle, &SectionHandle, &ViewBase,
+                            NULL, FALSE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to open and map file '%S', Status 0x%08lx\n", PathNameToFile, Status);
