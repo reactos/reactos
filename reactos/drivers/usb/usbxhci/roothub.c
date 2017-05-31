@@ -1,10 +1,10 @@
-#include "usbehci.h"
+#include "usbxhci.h"
 
 //#define NDEBUG
 #include <debug.h>
 
 #define NDEBUG_EHCI_ROOT_HUB
-#include "dbg_ehci.h"
+#include "dbg_xhci.h"
 
 VOID
 NTAPI
