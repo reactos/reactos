@@ -3371,7 +3371,7 @@ EHCI_TakePortControl(IN PVOID ohciExtension)
 
 VOID
 NTAPI
-EHCI_Unload()
+EHCI_Unload(IN PDRIVER_OBJECT DriverObject)
 {
     DPRINT1("EHCI_Unload: UNIMPLEMENTED. FIXME\n");
 }
