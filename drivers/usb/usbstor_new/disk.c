@@ -502,8 +502,8 @@ USBSTOR_HandleQueryProperty(
         //
         AdapterDescriptor->Version = sizeof(STORAGE_ADAPTER_DESCRIPTOR);
         AdapterDescriptor->Size = sizeof(STORAGE_ADAPTER_DESCRIPTOR);
-        AdapterDescriptor->MaximumTransferLength = MAXULONG; //FIXME compute some sane value
-        AdapterDescriptor->MaximumPhysicalPages = 25; //FIXME compute some sane value
+        AdapterDescriptor->MaximumTransferLength = 0x10000; // FIXME
+        AdapterDescriptor->MaximumPhysicalPages = 17; // See CORE-10515 and CORE-10755
         AdapterDescriptor->AlignmentMask = 0;
         AdapterDescriptor->AdapterUsesPio = FALSE;
         AdapterDescriptor->AdapterScansDown = FALSE;
@@ -594,8 +594,8 @@ USBSTOR_HandleDeviceControl(
 
         if (Capabilities)
         {
-            Capabilities->MaximumTransferLength = MAXULONG;
-            Capabilities->MaximumPhysicalPages = 25;
+            Capabilities->MaximumTransferLength = 0x10000; // FIXME 
+            Capabilities->MaximumPhysicalPages = 17; // See CORE-10515 and CORE-10755
             Capabilities->SupportedAsynchronousEvents = 0;
             Capabilities->AlignmentMask = 0;
             Capabilities->TaggedQueuing = FALSE;
