@@ -69,12 +69,13 @@ NtPathToDiskPartComponents(
 
 NTSTATUS
 OpenAndMapFile(
-    IN HANDLE RootDirectory OPTIONAL,
-    IN PCWSTR PathNameToFile,
+    IN  HANDLE RootDirectory OPTIONAL,
+    IN  PCWSTR PathNameToFile,
     OUT PHANDLE FileHandle,         // IN OUT PHANDLE OPTIONAL
     OUT PHANDLE SectionHandle,
     OUT PVOID* BaseAddress,
-    OUT PULONG FileSize OPTIONAL);
+    OUT PULONG FileSize OPTIONAL,
+    IN  BOOLEAN ReadWriteAccess);
 
 BOOLEAN
 UnMapFile(

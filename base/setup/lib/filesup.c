@@ -200,7 +200,7 @@ DoesFileExist(
                                NULL);
 
     Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | SYNCHRONIZE,
+                        FILE_GENERIC_READ, // Contains SYNCHRONIZE
                         &ObjectAttributes,
                         &IoStatusBlock,
                         FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -326,19 +326,23 @@ Quit:
 
 NTSTATUS
 OpenAndMapFile(
-    IN HANDLE RootDirectory OPTIONAL,
-    IN PCWSTR PathNameToFile,
+    IN  HANDLE RootDirectory OPTIONAL,
+    IN  PCWSTR PathNameToFile,
     OUT PHANDLE FileHandle,         // IN OUT PHANDLE OPTIONAL
     OUT PHANDLE SectionHandle,
     OUT PVOID* BaseAddress,
-    OUT PULONG FileSize OPTIONAL)
+    OUT PULONG FileSize OPTIONAL,
+    IN  BOOLEAN ReadWriteAccess)
 {
     NTSTATUS Status;
     UNICODE_STRING FileName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
+    ULONG SectionPageProtection;
     SIZE_T ViewSize;
     PVOID ViewBase;
+
+    /* Open the file */
 
     RtlInitUnicodeString(&FileName, PathNameToFile);
 
@@ -352,7 +356,8 @@ OpenAndMapFile(
     *SectionHandle = NULL;
 
     Status = NtOpenFile(FileHandle,
-                        GENERIC_READ | SYNCHRONIZE,
+                        FILE_GENERIC_READ | // Contains SYNCHRONIZE
+                            (ReadWriteAccess ? FILE_GENERIC_WRITE : 0),
                         &ObjectAttributes,
                         &IoStatusBlock,
                         FILE_SHARE_READ,
@@ -390,12 +395,16 @@ OpenAndMapFile(
 
     /* Map the file in memory */
 
+    SectionPageProtection = (ReadWriteAccess ? PAGE_READWRITE : PAGE_READONLY);
+
     /* Create the section */
     Status = NtCreateSection(SectionHandle,
-                             SECTION_MAP_READ,
+                             STANDARD_RIGHTS_REQUIRED | SECTION_QUERY |
+                             SECTION_MAP_READ |
+                                (ReadWriteAccess ? SECTION_MAP_WRITE : 0),
                              NULL,
                              NULL,
-                             PAGE_READONLY,
+                             SectionPageProtection,
                              SEC_COMMIT /* | SEC_IMAGE (_NO_EXECUTE) */,
                              *FileHandle);
     if (!NT_SUCCESS(Status))
@@ -417,7 +426,7 @@ OpenAndMapFile(
                                 &ViewSize,
                                 ViewShare,
                                 0,
-                                PAGE_READONLY);
+                                SectionPageProtection);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to map a view for file '%wZ', Status 0x%08lx\n", &FileName, Status);
