@@ -2371,6 +2371,16 @@ OHCI_Unload(IN PDRIVER_OBJECT DriverObject)
     return;
 }
 
+VOID
+NTAPI
+OHCI_FlushInterrupts(IN PVOID uhciExtension)
+{
+#if DBG
+    DPRINT1("OHCI_FlushInterrupts: Not supported\n");
+#endif
+    return;
+}
+
 NTSTATUS
 NTAPI
 DriverEntry(IN PDRIVER_OBJECT DriverObject,
@@ -2444,7 +2454,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     RegPacket.StartSendOnePacket = OHCI_StartSendOnePacket;
     RegPacket.EndSendOnePacket = OHCI_EndSendOnePacket;
     RegPacket.PassThru = OHCI_PassThru;
-    RegPacket.FlushInterrupts = OHCI_Unload;
+    RegPacket.FlushInterrupts = OHCI_FlushInterrupts;
 
     DriverObject->DriverUnload = OHCI_Unload;
 
