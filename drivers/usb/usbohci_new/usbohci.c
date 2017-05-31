@@ -2363,7 +2363,7 @@ OHCI_PassThru(IN PVOID ohciExtension,
 
 VOID
 NTAPI
-OHCI_Unload()
+OHCI_Unload(IN PDRIVER_OBJECT DriverObject)
 {
 #if DBG
     DPRINT1("OHCI_Unload: Not supported\n");
