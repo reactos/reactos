@@ -4728,7 +4728,7 @@ RxpWorkerThreadDispatcher(
             {
                 PKEVENT TearDownEvent;
 
-                TearDownEvent = InterlockedExchangePointer((volatile PVOID)&DeviceObject->DispatcherContext.pTearDownEvent, NULL);
+                TearDownEvent = InterlockedExchangePointer((void * volatile*)&DeviceObject->DispatcherContext.pTearDownEvent, NULL);
                 if (TearDownEvent != NULL)
                 {
                     KeSetEvent(TearDownEvent, IO_NO_INCREMENT, FALSE);
