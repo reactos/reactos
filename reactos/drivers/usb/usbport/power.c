@@ -1,10 +1,3 @@
-/*
- * PROJECT:     ReactOS USB Port Driver
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     USBPort power handling functions
- * COPYRIGHT:   Copyright 2017 Vadim Galyant <vgal@rambler.ru>
- */
-
 #include "usbport.h"
 
 #define NDEBUG
@@ -22,9 +15,9 @@ USBPORT_CompletePdoWaitWake(IN PDEVICE_OBJECT FdoDevice)
 
     DPRINT("USBPORT_CompletePdoWaitWake: ... \n");
 
-    FdoExtension = FdoDevice->DeviceExtension;
+    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
     PdoDevice = FdoExtension->RootHubPdo;
-    PdoExtension = PdoDevice->DeviceExtension;
+    PdoExtension = (PUSBPORT_RHDEVICE_EXTENSION)PdoDevice->DeviceExtension;
 
     KeAcquireSpinLock(&FdoExtension->PowerWakeSpinLock, &OldIrql);
 
@@ -66,7 +59,7 @@ USBPORT_HcQueueWakeDpc(IN PDEVICE_OBJECT FdoDevice)
 
     DPRINT("USBPORT_HcQueueWakeDpc: ... \n");
 
-    FdoExtension = FdoDevice->DeviceExtension;
+    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
     KeInsertQueueDpc(&FdoExtension->HcWakeDpc, NULL, NULL);
 }
 
@@ -81,9 +74,9 @@ USBPORT_CompletePendingIdleIrp(IN PDEVICE_OBJECT PdoDevice)
 
     DPRINT("USBPORT_CompletePendingIdleIrp: ... \n");
 
-    PdoExtension = PdoDevice->DeviceExtension;
+    PdoExtension = (PUSBPORT_RHDEVICE_EXTENSION)PdoDevice->DeviceExtension;
     FdoDevice = PdoExtension->FdoDevice;
-    FdoExtension = FdoDevice->DeviceExtension;
+    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
 
     Irp = IoCsqRemoveNextIrp(&FdoExtension->IdleIoCsq, 0);
 
@@ -118,29 +111,27 @@ USBPORT_SuspendController(IN PDEVICE_OBJECT FdoDevice)
 
     DPRINT1("USBPORT_SuspendController \n");
 
-    FdoExtension = FdoDevice->DeviceExtension;
+    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
     Packet = &FdoExtension->MiniPortInterface->Packet;
 
     FdoExtension->TimerFlags |= USBPORT_TMFLAG_RH_SUSPENDED;
 
     USBPORT_FlushController(FdoDevice);
 
-    if (FdoExtension->Flags & USBPORT_FLAG_HC_SUSPEND)
+    if (!(FdoExtension->Flags & USBPORT_FLAG_HC_SUSPEND))
     {
-        return;
+        FdoExtension->TimerFlags |= USBPORT_TMFLAG_HC_SUSPENDED;
+
+        if (FdoExtension->MiniPortFlags & USBPORT_MPFLAG_INTERRUPTS_ENABLED)
+        {
+            FdoExtension->MiniPortFlags |= USBPORT_MPFLAG_SUSPENDED;
+
+            USBPORT_Wait(FdoDevice, 10);
+            Packet->SuspendController(FdoExtension->MiniPortExt);
+        }
+
+        FdoExtension->Flags |= USBPORT_FLAG_HC_SUSPEND;
     }
-
-    FdoExtension->TimerFlags |= USBPORT_TMFLAG_HC_SUSPENDED;
-
-    if (FdoExtension->MiniPortFlags & USBPORT_MPFLAG_INTERRUPTS_ENABLED)
-    {
-        FdoExtension->MiniPortFlags |= USBPORT_MPFLAG_SUSPENDED;
-
-        USBPORT_Wait(FdoDevice, 10);
-        Packet->SuspendController(FdoExtension->MiniPortExt);
-    }
-
-    FdoExtension->Flags |= USBPORT_FLAG_HC_SUSPEND;
 }
 
 NTSTATUS
@@ -155,7 +146,7 @@ USBPORT_ResumeController(IN PDEVICE_OBJECT FdoDevice)
 
     DPRINT1("USBPORT_ResumeController: ... \n");
 
-    FdoExtension = FdoDevice->DeviceExtension;
+    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
     Packet = &FdoExtension->MiniPortInterface->Packet;
 
     if (!(FdoExtension->Flags & USBPORT_FLAG_HC_SUSPEND))
@@ -187,8 +178,7 @@ USBPORT_ResumeController(IN PDEVICE_OBJECT FdoDevice)
     }
 
     KeAcquireSpinLock(&FdoExtension->TimerFlagsSpinLock, &OldIrql);
-    FdoExtension->TimerFlags |= (USBPORT_TMFLAG_HC_SUSPENDED |
-                                 USBPORT_TMFLAG_HC_RESUME);
+    FdoExtension->TimerFlags |= (USBPORT_TMFLAG_HC_SUSPENDED | USBPORT_TMFLAG_HC_RESUME);
     KeReleaseSpinLock(&FdoExtension->TimerFlagsSpinLock, OldIrql);
 
     USBPORT_MiniportInterrupts(FdoDevice, FALSE);
@@ -241,9 +231,9 @@ USBPORT_PdoDevicePowerState(IN PDEVICE_OBJECT PdoDevice,
     NTSTATUS Status = STATUS_SUCCESS;
     POWER_STATE State;
 
-    PdoExtension = PdoDevice->DeviceExtension;
+    PdoExtension = (PUSBPORT_RHDEVICE_EXTENSION)PdoDevice->DeviceExtension;
     FdoDevice = PdoExtension->FdoDevice;
-    FdoExtension = FdoDevice->DeviceExtension;
+    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     State = IoStack->Parameters.Power.State;
@@ -271,7 +261,7 @@ USBPORT_PdoDevicePowerState(IN PDEVICE_OBJECT PdoDevice,
         }
         else
         {
-            DPRINT1("USBPORT_PdoDevicePowerState: FdoExtension->Flags - %lx\n",
+            DPRINT1("USBPORT_PdoDevicePowerState: FdoExtension->Flags - %p\n",
                     FdoExtension->Flags);
 
             DbgBreakPoint();
@@ -302,8 +292,8 @@ USBPORT_CancelPendingWakeIrp(IN PDEVICE_OBJECT PdoDevice,
     DPRINT("USBPORT_CancelPendingWakeIrp: ... \n");
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
-    PdoExtension = PdoDevice->DeviceExtension;
-    FdoExtension = PdoExtension->FdoDevice->DeviceExtension;
+    PdoExtension = (PUSBPORT_RHDEVICE_EXTENSION)PdoDevice->DeviceExtension;
+    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)PdoExtension->FdoDevice->DeviceExtension;
 
     KeAcquireSpinLock(&FdoExtension->PowerWakeSpinLock, &OldIrql);
 
@@ -333,9 +323,9 @@ USBPORT_PdoPower(IN PDEVICE_OBJECT PdoDevice,
 
     DPRINT("USBPORT_PdoPower: Irp - %p\n", Irp);
 
-    PdoExtension = PdoDevice->DeviceExtension;
+    PdoExtension = (PUSBPORT_RHDEVICE_EXTENSION)PdoDevice->DeviceExtension;
     FdoDevice = PdoExtension->FdoDevice;
-    FdoExtension = FdoDevice->DeviceExtension;
+    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     Status = Irp->IoStatus.Status;
@@ -376,7 +366,6 @@ USBPORT_PdoPower(IN PDEVICE_OBJECT PdoDevice,
           {
               /* The driver received the IRP
                  and is waiting for the device to signal wake-up. */
-
               DPRINT("USBPORT_PdoPower: IRP_MN_WAIT_WAKE - No WakeIrp\n");
 
               IoMarkIrpPending(Irp);
@@ -387,10 +376,8 @@ USBPORT_PdoPower(IN PDEVICE_OBJECT PdoDevice,
           }
           else
           {
-              /* An IRP_MN_WAIT_WAKE request is already pending and must be
-                 completed or canceled before another IRP_MN_WAIT_WAKE request
-                 can be issued. */
-
+              /* An IRP_MN_WAIT_WAKE request is already pending and must be completed
+                 or canceled before another IRP_MN_WAIT_WAKE request can be issued. */
               if (IoSetCancelRoutine(Irp, NULL))
               {
                   DPRINT("USBPORT_PdoPower: IRP_MN_WAIT_WAKE - STATUS_DEVICE_BUSY\n");
@@ -420,22 +407,22 @@ USBPORT_PdoPower(IN PDEVICE_OBJECT PdoDevice,
           {
               DPRINT("USBPORT_PdoPower: IRP_MN_SET_POWER/DevicePowerState\n");
               Status = USBPORT_PdoDevicePowerState(PdoDevice, Irp);
-              PoStartNextPowerIrp(Irp);
-              break;
-          }
-
-          DPRINT("USBPORT_PdoPower: IRP_MN_SET_POWER/SystemPowerState \n");
-
-          if (IoStack->Parameters.Power.State.SystemState == PowerSystemWorking)
-          {
-              FdoExtension->TimerFlags |= USBPORT_TMFLAG_WAKE;
           }
           else
           {
-              FdoExtension->TimerFlags &= ~USBPORT_TMFLAG_WAKE;
-          }
+              DPRINT("USBPORT_PdoPower: IRP_MN_SET_POWER/SystemPowerState \n");
 
-          Status = STATUS_SUCCESS;
+              if (IoStack->Parameters.Power.State.SystemState == PowerSystemWorking)
+              {
+                  FdoExtension->TimerFlags |= USBPORT_TMFLAG_WAKE;
+              }
+              else
+              {
+                  FdoExtension->TimerFlags &= ~USBPORT_TMFLAG_WAKE;
+              }
+
+              Status = STATUS_SUCCESS;
+          }
 
           PoStartNextPowerIrp(Irp);
           break;
@@ -497,7 +484,7 @@ USBPORT_FdoPower(IN PDEVICE_OBJECT FdoDevice,
 
     DPRINT("USBPORT_FdoPower: ... \n");
 
-    FdoExtension = FdoDevice->DeviceExtension;
+    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     switch (IoStack->MinorFunction)
@@ -559,12 +546,12 @@ USBPORT_DoIdleNotificationCallback(IN PVOID Context)
 
     DPRINT("USBPORT_DoIdleNotificationCallback \n");
 
-    IdleQueueItem = Context;
+    IdleQueueItem = (PTIMER_WORK_QUEUE_ITEM)Context;
 
     FdoDevice = IdleQueueItem->FdoDevice;
-    FdoExtension = FdoDevice->DeviceExtension;
+    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
     PdoDevice = FdoExtension->RootHubPdo;
-    PdoExtension = PdoDevice->DeviceExtension;
+    PdoExtension = (PUSBPORT_RHDEVICE_EXTENSION)PdoDevice->DeviceExtension;
 
     KeQuerySystemTime(&CurrentTime);
 
@@ -579,10 +566,11 @@ USBPORT_DoIdleNotificationCallback(IN PVOID Context)
             if (NextIrp)
             {
                 IoStack = IoGetCurrentIrpStackLocation(NextIrp);
-                IdleCallbackInfo = IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+                IdleCallbackInfo = (PUSB_IDLE_CALLBACK_INFO)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
 
                 if (IdleCallbackInfo && IdleCallbackInfo->IdleCallback)
                 {
+                    //DbgBreakPoint();
                     IdleCallbackInfo->IdleCallback(IdleCallbackInfo->IdleContext);
                 }
 
@@ -606,7 +594,7 @@ USBPORT_DoIdleNotificationCallback(IN PVOID Context)
     FdoExtension->TimerFlags &= ~USBPORT_TMFLAG_IDLE_QUEUEITEM_ON;
     KeReleaseSpinLock(&FdoExtension->TimerFlagsSpinLock, OldIrql);
 
-    ExFreePoolWithTag(IdleQueueItem, USB_PORT_TAG);
+    ExFreePool(IdleQueueItem);
 }
 
 NTSTATUS
@@ -622,9 +610,9 @@ USBPORT_IdleNotification(IN PDEVICE_OBJECT PdoDevice,
 
     DPRINT("USBPORT_IdleNotification: Irp - %p\n", Irp);
 
-    PdoExtension = PdoDevice->DeviceExtension;
+    PdoExtension = (PUSBPORT_RHDEVICE_EXTENSION)PdoDevice->DeviceExtension;
     FdoDevice = PdoExtension->FdoDevice;
-    FdoExtension = FdoDevice->DeviceExtension;
+    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
 
     LockCounter = InterlockedIncrement(&FdoExtension->IdleLockCounter);
 
@@ -676,13 +664,11 @@ USBPORT_AdjustDeviceCapabilities(IN PDEVICE_OBJECT FdoDevice,
 
     DPRINT("USBPORT_AdjustDeviceCapabilities: ... \n");
 
-    FdoExtension = FdoDevice->DeviceExtension;
-    PdoExtension = PdoDevice->DeviceExtension;
+    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
+    PdoExtension = (PUSBPORT_RHDEVICE_EXTENSION)PdoDevice->DeviceExtension;
     Capabilities = &PdoExtension->Capabilities;
 
-    RtlCopyMemory(Capabilities,
-                  &FdoExtension->Capabilities,
-                  sizeof(DEVICE_CAPABILITIES));
+    RtlCopyMemory(Capabilities, &FdoExtension->Capabilities, sizeof(DEVICE_CAPABILITIES));
 
     Capabilities->DeviceD1 = FALSE;
     Capabilities->DeviceD2 = TRUE;

@@ -1,10 +1,3 @@
-/*
- * PROJECT:     ReactOS USB Port Driver
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     USBPort I/O control functions
- * COPYRIGHT:   Copyright 2017 Vadim Galyant <vgal@rambler.ru>
- */
-
 #include "usbport.h"
 
 //#define NDEBUG
@@ -23,7 +16,7 @@ USBPORT_UserGetHcName(IN PDEVICE_OBJECT FdoDevice,
 
     DPRINT("USBPORT_UserGetHcName: ... \n");
 
-    FdoExtension = FdoDevice->DeviceExtension;
+    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
 
     Length = ControllerName->Header.RequestBufferLength -
              sizeof(USBUSER_CONTROLLER_UNICODE_NAME);
@@ -64,15 +57,15 @@ USBPORT_GetSymbolicName(IN PDEVICE_OBJECT RootHubPdo,
 {
     PUSBPORT_RHDEVICE_EXTENSION PdoExtension;
     PUNICODE_STRING RootHubName;
-    PWCHAR Buffer;
+    PUSHORT Buffer;
     SIZE_T LengthName;
     SIZE_T Length;
     PWSTR SourceString;
-    WCHAR Character;
+    USHORT Symbol;
 
     DPRINT("USBPORT_GetSymbolicName: ... \n");
 
-    PdoExtension = RootHubPdo->DeviceExtension;
+    PdoExtension = (PUSBPORT_RHDEVICE_EXTENSION)RootHubPdo->DeviceExtension;
     RootHubName = &PdoExtension->CommonExtension.SymbolicLinkName;
     Buffer = RootHubName->Buffer;
 
@@ -93,37 +86,37 @@ USBPORT_GetSymbolicName(IN PDEVICE_OBJECT RootHubPdo,
 
     RtlZeroMemory(SourceString, LengthName);
 
-    if (*Buffer == L'\\')
+    if (*Buffer == 0x005C) // '\'
     {
          Buffer += 1;
 
-        if (*Buffer == L'\\')
+        if (*Buffer == 0x005C)
         {
             Buffer += 1;
             goto Exit;
         }
 
-        Character = *Buffer;
+        Symbol = *Buffer;
 
         do
         {
-            if (Character == UNICODE_NULL)
+            if (Symbol == 0)
             {
                 break;
             }
 
             Buffer += 1;
-            Character = *Buffer;
+            Symbol = *Buffer;
         }
-        while (*Buffer != L'\\');
+        while (*Buffer != 0x005C);
 
-        if (*Buffer == L'\\')
+        if (*Buffer == 0x005C)
         {
             Buffer += 1;
         }
 
 Exit:
-        Length = (ULONG_PTR)Buffer - (ULONG_PTR)RootHubName->Buffer;
+        Length = (ULONG)Buffer - (ULONG)RootHubName->Buffer;
     }
     else
     {
@@ -131,11 +124,10 @@ Exit:
     }
 
     RtlCopyMemory(SourceString,
-                  (PVOID)((ULONG_PTR)RootHubName->Buffer + Length),
+                  (PVOID)((ULONG)RootHubName->Buffer + Length),
                   RootHubName->Length - Length);
 
-    RtlInitUnicodeString(DestinationString, SourceString);
-
+    RtlInitUnicodeString(DestinationString, (PCWSTR)SourceString);
     DPRINT("USBPORT_RegisterDeviceInterface: DestinationString  - %wZ\n",
            DestinationString);
 
@@ -151,12 +143,12 @@ USBPORT_UserGetRootHubName(IN PDEVICE_OBJECT FdoDevice,
     PUSBPORT_DEVICE_EXTENSION FdoExtension;
     UNICODE_STRING UnicodeString;
     ULONG Length;
-    ULONG ResultLength = 0;
+    ULONG ResultLength;
     NTSTATUS Status;
 
     DPRINT("USBPORT_UserGetRootHubName: ... \n");
 
-    FdoExtension = FdoDevice->DeviceExtension;
+    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
 
     Length = RootHubName->Header.RequestBufferLength -
              sizeof(USBUSER_CONTROLLER_UNICODE_NAME);
@@ -224,7 +216,7 @@ USBPORT_GetUnicodeName(IN PDEVICE_OBJECT FdoDevice,
     DPRINT("USBPORT_GetUnicodeName: ... \n");
 
     *Information = 0;
-    DriverKey = Irp->AssociatedIrp.SystemBuffer;
+    DriverKey = (PUSB_HCD_DRIVERKEY_NAME)Irp->AssociatedIrp.SystemBuffer;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     OutputBufferLength = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
@@ -239,9 +231,7 @@ USBPORT_GetUnicodeName(IN PDEVICE_OBJECT FdoDevice,
 
     while (TRUE)
     {
-        ControllerName = ExAllocatePoolWithTag(PagedPool,
-                                               Length,
-                                               USB_PORT_TAG);
+        ControllerName = ExAllocatePoolWithTag(PagedPool, Length, USB_PORT_TAG);
 
         if (!ControllerName)
         {
@@ -271,7 +261,7 @@ USBPORT_GetUnicodeName(IN PDEVICE_OBJECT FdoDevice,
 
         Length = ControllerName->Header.ActualBufferLength;
 
-        ExFreePoolWithTag(ControllerName, USB_PORT_TAG);
+        ExFreePool(ControllerName);
     }
 
     if (ControllerName->Header.UsbUserStatusCode != UsbUserSuccess)
@@ -297,7 +287,7 @@ USBPORT_GetUnicodeName(IN PDEVICE_OBJECT FdoDevice,
         *Information = DriverKey->ActualLength;
     }
 
-    ExFreePoolWithTag(ControllerName, USB_PORT_TAG);
+    ExFreePool(ControllerName);
 
     return STATUS_SUCCESS;
 }
@@ -313,85 +303,6 @@ USBPORT_PdoDeviceControl(IN PDEVICE_OBJECT PdoDevice,
 
 NTSTATUS
 NTAPI
-USBPORT_PdoInternalDeviceControl(IN PDEVICE_OBJECT PdoDevice,
-                                 IN PIRP Irp)
-{
-    PUSBPORT_RHDEVICE_EXTENSION PdoExtension;
-    PIO_STACK_LOCATION IoStack;
-    ULONG IoCtl;
-    NTSTATUS Status;
-
-    PdoExtension = PdoDevice->DeviceExtension;
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-    IoCtl = IoStack->Parameters.DeviceIoControl.IoControlCode;
-
-    DPRINT("USBPORT_PdoInternalDeviceControl: PdoDevice - %p, Irp - %p, IoCtl - %x\n",
-           PdoDevice,
-           Irp,
-           IoCtl);
-
-    if (IoCtl == IOCTL_INTERNAL_USB_SUBMIT_URB)
-    {
-        return USBPORT_HandleSubmitURB(PdoDevice, Irp, URB_FROM_IRP(Irp));
-    }
-
-    if (IoCtl == IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO)
-    {
-        DPRINT("USBPORT_PdoInternalDeviceControl: IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO\n");
-
-        if (IoStack->Parameters.Others.Argument1)
-            *(PVOID *)IoStack->Parameters.Others.Argument1 = PdoDevice;
-
-        if (IoStack->Parameters.Others.Argument2)
-            *(PVOID *)IoStack->Parameters.Others.Argument2 = PdoDevice;
-
-        Status = STATUS_SUCCESS;
-        goto Exit;
-    }
-
-    if (IoCtl == IOCTL_INTERNAL_USB_GET_HUB_COUNT)
-    {
-        DPRINT("USBPORT_PdoInternalDeviceControl: IOCTL_INTERNAL_USB_GET_HUB_COUNT\n");
-
-        if (IoStack->Parameters.Others.Argument1)
-        {
-            ++*(PULONG)IoStack->Parameters.Others.Argument1;
-        }
-
-        Status = STATUS_SUCCESS;
-        goto Exit;
-    }
-
-    if (IoCtl == IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE)
-    {
-        DPRINT("USBPORT_PdoInternalDeviceControl: IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE\n");
-
-        if (IoStack->Parameters.Others.Argument1)
-        {
-            *(PVOID *)IoStack->Parameters.Others.Argument1 = &PdoExtension->DeviceHandle;
-        }
-
-        Status = STATUS_SUCCESS;
-        goto Exit;
-    }
-
-    if (IoCtl == IOCTL_INTERNAL_USB_SUBMIT_IDLE_NOTIFICATION)
-    {
-        DPRINT("USBPORT_PdoInternalDeviceControl: IOCTL_INTERNAL_USB_SUBMIT_IDLE_NOTIFICATION\n");
-        return USBPORT_IdleNotification(PdoDevice, Irp);
-    }
-
-    DPRINT("USBPORT_PdoInternalDeviceControl: INVALID INTERNAL DEVICE CONTROL\n");
-    Status = STATUS_INVALID_DEVICE_REQUEST;
-
-Exit:
-    Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return Status;
-}
-
-NTSTATUS
-NTAPI
 USBPORT_FdoDeviceControl(IN PDEVICE_OBJECT FdoDevice,
                          IN PIRP Irp)
 {
@@ -399,38 +310,38 @@ USBPORT_FdoDeviceControl(IN PDEVICE_OBJECT FdoDevice,
     PIO_STACK_LOCATION IoStack;
     ULONG ControlCode;
     NTSTATUS Status = STATUS_INVALID_DEVICE_REQUEST;
-    ULONG_PTR Information = 0;
+    ULONG Information = 0;
 
     DPRINT("USBPORT_FdoDeviceControl: Irp - %p\n", Irp);
 
-    FdoExtension = FdoDevice->DeviceExtension;
+    FdoExtension = (PUSBPORT_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     ControlCode = IoStack->Parameters.DeviceIoControl.IoControlCode;
 
     switch (ControlCode)
     {
-        case IOCTL_USB_DIAGNOSTIC_MODE_ON:
+        case IOCTL_USB_DIAGNOSTIC_MODE_ON: // 220400
             DPRINT("USBPORT_FdoDeviceControl: IOCTL_USB_DIAGNOSTIC_MODE_ON\n");
             FdoExtension->Flags |= USBPORT_FLAG_DIAGNOSTIC_MODE;
             break;
 
-        case IOCTL_USB_DIAGNOSTIC_MODE_OFF:
+        case IOCTL_USB_DIAGNOSTIC_MODE_OFF: // 0x220404
             DPRINT("USBPORT_FdoDeviceControl: IOCTL_USB_DIAGNOSTIC_MODE_OFF\n");
             FdoExtension->Flags &= ~USBPORT_FLAG_DIAGNOSTIC_MODE;
             break;
 
-        case IOCTL_USB_GET_NODE_INFORMATION:
+        case IOCTL_USB_GET_NODE_INFORMATION: // 0x220408
             DPRINT1("USBPORT_FdoDeviceControl: IOCTL_USB_GET_NODE_INFORMATION\n");
             Status = USBPORT_GetUnicodeName(FdoDevice, Irp, &Information);
             break;
 
-        case IOCTL_GET_HCD_DRIVERKEY_NAME:
+        case IOCTL_GET_HCD_DRIVERKEY_NAME: // 0x220424
             DPRINT1("USBPORT_FdoDeviceControl: IOCTL_GET_HCD_DRIVERKEY_NAME\n");
             Status = USBPORT_GetUnicodeName(FdoDevice, Irp, &Information);
             break;
 
-        case IOCTL_USB_USER_REQUEST:
+        case IOCTL_USB_USER_REQUEST: // 0x220438
             DPRINT1("USBPORT_FdoDeviceControl: IOCTL_USB_USER_REQUEST UNIMPLEMENTED. FIXME\n");
             break;
 
@@ -450,9 +361,9 @@ USBPORT_FdoDeviceControl(IN PDEVICE_OBJECT FdoDevice,
 
 NTSTATUS
 NTAPI
-USBPORT_FdoInternalDeviceControl(IN PDEVICE_OBJECT FdoDevice,
-                                 IN PIRP Irp)
+USBPORT_FdoScsi(IN PDEVICE_OBJECT FdoDevice,
+                IN PIRP Irp)
 {
-    DPRINT1("USBPORT_FdoInternalDeviceControl: UNIMPLEMENTED. FIXME. \n");
+    DPRINT1("USBPORT_FdoScsi: UNIMPLEMENTED. FIXME. \n");
     return 0;
 }

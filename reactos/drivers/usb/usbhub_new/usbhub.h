@@ -1,27 +1,17 @@
-/*
- * PROJECT:     ReactOS USB Hub Driver
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     USBHub declarations
- * COPYRIGHT:   Copyright 2017 Vadim Galyant <vgal@rambler.ru>
- */
-
 #ifndef _USBHUB_H_
 #define _USBHUB_H_
 
 #include <ntddk.h>
 #include <windef.h>
 #include <stdio.h>
+#include <wdm.h>
 #include <wmistr.h>
 #include <wmilib.h>
 #include <wdmguid.h>
-#include <ntstrsafe.h>
-#include <usb.h>
-#include <usbioctl.h>
 #include <hubbusif.h>
 #include <usbbusif.h>
 #include <usbdlib.h>
-#include <ks.h>
-#include <drivers/usbport/usbmport.h>
+#include "..\usbmport.h"
 
 #define USB_HUB_TAG 'BUHU'
 
@@ -30,61 +20,61 @@
 #define USBH_EXTENSION_TYPE_PARENT     0x04
 #define USBH_EXTENSION_TYPE_FUNCTION   0x08
 
-#define USBHUB_FDO_FLAG_DEVICE_STARTED    (1 << 0)
-#define USBHUB_FDO_FLAG_DEVICE_STOPPING   (1 << 2)
-#define USBHUB_FDO_FLAG_DEVICE_FAILED     (1 << 3)
-#define USBHUB_FDO_FLAG_REMOTE_WAKEUP     (1 << 4)
-#define USBHUB_FDO_FLAG_DEVICE_STOPPED    (1 << 5)
-#define USBHUB_FDO_FLAG_HUB_BUSY          (1 << 6)
-#define USBHUB_FDO_FLAG_PENDING_WAKE_IRP  (1 << 7)
-#define USBHUB_FDO_FLAG_RESET_PORT_LOCK   (1 << 8)
-#define USBHUB_FDO_FLAG_ESD_RECOVERING    (1 << 9)
-#define USBHUB_FDO_FLAG_SET_D0_STATE      (1 << 10)
-#define USBHUB_FDO_FLAG_NOT_D0_STATE      (1 << 11)
-#define USBHUB_FDO_FLAG_WAIT_IDLE_REQUEST (1 << 12)
-#define USBHUB_FDO_FLAG_STATE_CHANGING    (1 << 13)
-#define USBHUB_FDO_FLAG_DEVICE_REMOVED    (1 << 14)
-#define USBHUB_FDO_FLAG_USB20_HUB         (1 << 15)
-#define USBHUB_FDO_FLAG_DEFER_CHECK_IDLE  (1 << 16)
-#define USBHUB_FDO_FLAG_WAKEUP_START      (1 << 17)
-#define USBHUB_FDO_FLAG_MULTIPLE_TTS      (1 << 18)  // High-speed Operating Hub with Multiple TTs
-#define USBHUB_FDO_FLAG_ENUM_POST_RECOVER (1 << 19)
-#define USBHUB_FDO_FLAG_DO_ENUMERATION    (1 << 20)
-#define USBHUB_FDO_FLAG_CHECK_IDLE_LOCK   (1 << 21)
-#define USBHUB_FDO_FLAG_HIBERNATE_STATE   (1 << 22)
-#define USBHUB_FDO_FLAG_NOT_ENUMERATED    (1 << 23)
-#define USBHUB_FDO_FLAG_DO_SUSPENSE       (1 << 24)
-#define USBHUB_FDO_FLAG_GOING_IDLE        (1 << 25)
-#define USBHUB_FDO_FLAG_DEVICE_SUSPENDED  (1 << 26)
-#define USBHUB_FDO_FLAG_WITEM_INIT        (1 << 27)
+#define USBHUB_FDO_FLAG_DEVICE_STARTED    (1 << 0)    // 0x00000001
+#define USBHUB_FDO_FLAG_DEVICE_STOPPING   (1 << 2)    // 0x00000004
+#define USBHUB_FDO_FLAG_DEVICE_FAILED     (1 << 3)    // 0x00000008
+#define USBHUB_FDO_FLAG_REMOTE_WAKEUP     (1 << 4)    // 0x00000010
+#define USBHUB_FDO_FLAG_DEVICE_STOPPED    (1 << 5)    // 0x00000020
+#define USBHUB_FDO_FLAG_HUB_BUSY          (1 << 6)    // 0x00000040
+#define USBHUB_FDO_FLAG_PENDING_WAKE_IRP  (1 << 7)    // 0x00000080
+#define USBHUB_FDO_FLAG_RESET_PORT_LOCK   (1 << 8)    // 0x00000100
+#define USBHUB_FDO_FLAG_ESD_RECOVERING    (1 << 9)    // 0x00000200
+#define USBHUB_FDO_FLAG_SET_D0_STATE      (1 << 10)   // 0x00000400
+#define USBHUB_FDO_FLAG_NOT_D0_STATE      (1 << 11)   // 0x00000800
+#define USBHUB_FDO_FLAG_WAIT_IDLE_REQUEST (1 << 12)   // 0x00001000
+#define USBHUB_FDO_FLAG_STATE_CHANGING    (1 << 13)   // 0x00002000
+#define USBHUB_FDO_FLAG_DEVICE_REMOVED    (1 << 14)   // 0x00004000
+#define USBHUB_FDO_FLAG_USB20_HUB         (1 << 15)   // 0x00008000
+#define USBHUB_FDO_FLAG_DEFER_CHECK_IDLE  (1 << 16)   // 0x00010000
+#define USBHUB_FDO_FLAG_WAKEUP_START      (1 << 17)   // 0x00020000
+#define USBHUB_FDO_FLAG_MULTIPLE_TTS      (1 << 18)   // 0x00040000 // High-speed Operating Hub with Multiple TTs
+#define USBHUB_FDO_FLAG_ENUM_POST_RECOVER (1 << 19)   // 0x00080000
+#define USBHUB_FDO_FLAG_DO_ENUMERATION    (1 << 20)   // 0x00100000
+#define USBHUB_FDO_FLAG_CHECK_IDLE_LOCK   (1 << 21)   // 0x00200000
+#define USBHUB_FDO_FLAG_HIBERNATE_STATE   (1 << 22)   // 0x00400000
+#define USBHUB_FDO_FLAG_NOT_ENUMERATED    (1 << 23)   // 0x00800000
+#define USBHUB_FDO_FLAG_DO_SUSPENSE       (1 << 24)   // 0x01000000
+#define USBHUB_FDO_FLAG_GOING_IDLE        (1 << 25)   // 0x02000000
+#define USBHUB_FDO_FLAG_DEVICE_SUSPENDED  (1 << 26)   // 0x04000000
+#define USBHUB_FDO_FLAG_WITEM_INIT        (1 << 27)   // 0x08000000
 
-#define USBHUB_PDO_FLAG_HUB_DEVICE        (1 << 0)
-#define USBHUB_PDO_FLAG_MULTI_INTERFACE   (1 << 1)
-#define USBHUB_PDO_FLAG_INIT_PORT_FAILED  (1 << 2)
-#define USBHUB_PDO_FLAG_PORT_LOW_SPEED    (1 << 3)
-#define USBHUB_PDO_FLAG_REMOTE_WAKEUP     (1 << 4)
-#define USBHUB_PDO_FLAG_WAIT_WAKE         (1 << 5)
-#define USBHUB_PDO_FLAG_NOT_CONNECTED     (1 << 6)
-#define USBHUB_PDO_FLAG_DELETE_PENDING    (1 << 7)
-#define USBHUB_PDO_FLAG_POWER_D3          (1 << 8)
-#define USBHUB_PDO_FLAG_DEVICE_STARTED    (1 << 9)
-#define USBHUB_PDO_FLAG_HS_USB1_DUALMODE  (1 << 10)
-#define USBHUB_PDO_FLAG_REG_DEV_INTERFACE (1 << 11)  // SymbolicLink
-#define USBHUB_PDO_FLAG_PORT_RESTORE_FAIL (1 << 12)
-#define USBHUB_PDO_FLAG_POWER_D1_OR_D2    (1 << 13)
-#define USBHUB_PDO_FLAG_OVERCURRENT_PORT  (1 << 14)
-#define USBHUB_PDO_FLAG_REMOVING_PORT_PDO (1 << 15)
-#define USBHUB_PDO_FLAG_INSUFFICIENT_PWR  (1 << 16)
-#define USBHUB_PDO_FLAG_ALLOC_BNDW_FAILED (1 << 18)
-#define USBHUB_PDO_FLAG_PORT_RESSETING    (1 << 19)
-#define USBHUB_PDO_FLAG_IDLE_NOTIFICATION (1 << 22)
-#define USBHUB_PDO_FLAG_PORT_HIGH_SPEED   (1 << 23)
-#define USBHUB_PDO_FLAG_ENUMERATED        (1 << 26)
+#define USBHUB_PDO_FLAG_HUB_DEVICE        (1 << 0)    // 0x00000001
+#define USBHUB_PDO_FLAG_MULTI_INTERFACE   (1 << 1)    // 0x00000002
+#define USBHUB_PDO_FLAG_INIT_PORT_FAILED  (1 << 2)    // 0x00000004
+#define USBHUB_PDO_FLAG_PORT_LOW_SPEED    (1 << 3)    // 0x00000008
+#define USBHUB_PDO_FLAG_REMOTE_WAKEUP     (1 << 4)    // 0x00000010
+#define USBHUB_PDO_FLAG_WAIT_WAKE         (1 << 5)    // 0x00000020
+#define USBHUB_PDO_FLAG_NOT_CONNECTED     (1 << 6)    // 0x00000040
+#define USBHUB_PDO_FLAG_DELETE_PENDING    (1 << 7)    // 0x00000080
+#define USBHUB_PDO_FLAG_POWER_D3          (1 << 8)    // 0x00000100
+#define USBHUB_PDO_FLAG_DEVICE_STARTED    (1 << 9)    // 0x00000200
+#define USBHUB_PDO_FLAG_HS_USB1_DUALMODE  (1 << 10)   // 0x00000400
+#define USBHUB_PDO_FLAG_REG_DEV_INTERFACE (1 << 11)   // 0x00000800 // SymbolicLink
+#define USBHUB_PDO_FLAG_PORT_RESTORE_FAIL (1 << 12)   // 0x00001000
+#define USBHUB_PDO_FLAG_POWER_D1_OR_D2    (1 << 13)   // 0x00002000
+#define USBHUB_PDO_FLAG_OVERCURRENT_PORT  (1 << 14)   // 0x00004000
+#define USBHUB_PDO_FLAG_REMOVING_PORT_PDO (1 << 15)   // 0x00008000
+#define USBHUB_PDO_FLAG_INSUFFICIENT_PWR  (1 << 16)   // 0x00010000
+#define USBHUB_PDO_FLAG_ALLOC_BNDW_FAILED (1 << 18)   // 0x00040000
+#define USBHUB_PDO_FLAG_PORT_RESSETING    (1 << 19)   // 0x00080000
+#define USBHUB_PDO_FLAG_IDLE_NOTIFICATION (1 << 22)   // 0x00400000
+#define USBHUB_PDO_FLAG_PORT_HIGH_SPEED   (1 << 23)   // 0x00800000
 
 #define USBHUB_ENUM_FLAG_DEVICE_PRESENT   0x01
 #define USBHUB_ENUM_FLAG_GHOST_DEVICE     0x02
 
 /* Hub Class Feature Selectors */
+
 #define USBHUB_FEATURE_USBHUB_FEATURE_C_HUB_LOCAL_POWER  0
 #define USBHUB_FEATURE_C_HUB_OVER_CURRENT                1
 
@@ -103,19 +93,10 @@
 #define USBHUB_FEATURE_PORT_TEST           21
 #define USBHUB_FEATURE_PORT_INDICATOR      22
 
-#define USBHUB_MAX_CASCADE_LEVELS  6
-#define USBHUB_RESET_PORT_MAX_RETRY  3
-#define USBHUB_MAX_REQUEST_ERRORS    3
-
-
-#define USBHUB_FAIL_NO_FAIL            5
-#define USBHUB_FAIL_NESTED_TOO_DEEPLY  6
-#define USBHUB_FAIL_OVERCURRENT        7
-
-extern PWSTR GenericUSBDeviceString;
+extern PVOID GenericUSBDeviceString;
 
 typedef struct _USBHUB_PORT_DATA {
-  USB_PORT_STATUS_AND_CHANGE PortStatus;
+  USBHUB_PORT_STATUS PortStatus;
   PDEVICE_OBJECT DeviceObject;
   USB_CONNECTION_STATUS ConnectionStatus;
   ULONG PortAttributes;
@@ -159,7 +140,7 @@ typedef struct _USBHUB_FDO_EXTENSION {
   DEVICE_POWER_STATE DeviceWake;
   POWER_STATE CurrentPowerState;
   POWER_STATE SystemPowerState;
-  ULONG MaxPowerPerPort;
+  ULONG MaxPower;
   USB_DEVICE_DESCRIPTOR HubDeviceDescriptor;
   USHORT Port;
   PUSB_CONFIGURATION_DESCRIPTOR HubConfigDescriptor;
@@ -169,7 +150,7 @@ typedef struct _USBHUB_FDO_EXTENSION {
   USBD_PIPE_INFORMATION PipeInfo;
   PIRP SCEIrp;
   PIRP ResetPortIrp;
-  PVOID SCEBitmap; // 11.12.4 Hub and Port Status Change Bitmap (USB 2.0 Specification)
+  PVOID SCEBitmap;
   ULONG SCEBitmapLength;
   KEVENT RootHubNotificationEvent;
   struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST SCEWorkerUrb;
@@ -196,7 +177,7 @@ typedef struct _USBHUB_FDO_EXTENSION {
   KSEMAPHORE HubSemaphore;
   PUSBHUB_IO_WORK_ITEM WorkItemToQueue;
   USB_IDLE_CALLBACK_INFO IdleCallbackInfo;
-  USB_PORT_STATUS_AND_CHANGE PortStatus;
+  USBHUB_PORT_STATUS PortStatus;
   PIRP PowerIrp;
 } USBHUB_FDO_EXTENSION, *PUSBHUB_FDO_EXTENSION;
 
@@ -245,7 +226,7 @@ typedef struct _USBHUB_URB_TIMEOUT_CONTEXT {
 
 typedef struct _USBHUB_STATUS_CHANGE_CONTEXT {
   ULONG Reserved;
-  BOOL IsRequestErrors;
+  BOOL RequestErrors;
   PUSBHUB_FDO_EXTENSION HubExtension;
 } USBHUB_STATUS_CHANGE_CONTEXT, *PUSBHUB_STATUS_CHANGE_CONTEXT;
 
@@ -272,22 +253,24 @@ typedef struct _USBHUB_RESET_PORT_CONTEXT {
 } USBHUB_RESET_PORT_CONTEXT, *PUSBHUB_RESET_PORT_CONTEXT;
 
 /* debug.c */
+
 VOID
 NTAPI
-USBHUB_DumpingDeviceDescriptor(
+USBPORT_DumpingDeviceDescriptor(
   IN PUSB_DEVICE_DESCRIPTOR DeviceDescriptor);
 
 VOID
 NTAPI
-USBHUB_DumpingConfiguration(
+USBPORT_DumpingConfiguration(
   IN PUSB_CONFIGURATION_DESCRIPTOR ConfigDescriptor);
 
 VOID
 NTAPI
-USBHUB_DumpingIDs(
+USBPORT_DumpingIDs(
   IN PVOID Id);
 
 /* ioctl.c */
+
 NTSTATUS
 NTAPI
 USBH_DeviceControl(
@@ -301,6 +284,7 @@ USBH_PdoInternalControl(
   IN PIRP Irp);
 
 /* pnp.c */
+
 NTSTATUS
 NTAPI
 USBH_PdoRemoveDevice(
@@ -323,6 +307,7 @@ USBH_PdoPnP(
   OUT BOOLEAN * IsCompleteIrp);
 
 /* power.c */
+
 VOID
 NTAPI
 USBH_CompletePowerIrp(
@@ -368,6 +353,7 @@ USBH_IdleCancelPowerHubWorker(
   IN PVOID Context);
 
 /* usbhub.c */
+
 NTSTATUS
 NTAPI
 USBH_Wait(
@@ -487,7 +473,7 @@ NTAPI
 USBH_SyncGetPortStatus(
   IN PUSBHUB_FDO_EXTENSION HubExtension,
   IN USHORT Port,
-  IN PUSB_PORT_STATUS_AND_CHANGE PortStatus,
+  IN PUSBHUB_PORT_STATUS PortStatus,
   IN ULONG Length);
 
 NTSTATUS
@@ -577,7 +563,7 @@ NTAPI
 USBH_AllocateWorkItem(
   IN PUSBHUB_FDO_EXTENSION HubExtension,
   OUT PUSBHUB_IO_WORK_ITEM * OutHubIoWorkItem,
-  IN PUSBHUB_WORKER_ROUTINE WorkerRoutine,
+  IN PVOID WorkerRoutine,
   IN SIZE_T BufferLength,
   OUT PVOID * OutHubWorkItemBuffer,
   IN WORK_QUEUE_TYPE Type);

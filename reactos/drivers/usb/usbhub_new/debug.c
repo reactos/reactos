@@ -1,10 +1,3 @@
-/*
- * PROJECT:     ReactOS USB Hub Driver
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     USBHub debugging functions
- * COPYRIGHT:   Copyright 2017 Vadim Galyant <vgal@rambler.ru>
- */
-
 #include "usbhub.h"
 
 //#define NDEBUG
@@ -12,7 +5,7 @@
 
 VOID
 NTAPI
-USBHUB_DumpingDeviceDescriptor(IN PUSB_DEVICE_DESCRIPTOR DeviceDescriptor)
+USBPORT_DumpingDeviceDescriptor(IN PUSB_DEVICE_DESCRIPTOR DeviceDescriptor)
 {
     if (!DeviceDescriptor)
     {
@@ -38,7 +31,7 @@ USBHUB_DumpingDeviceDescriptor(IN PUSB_DEVICE_DESCRIPTOR DeviceDescriptor)
 
 VOID
 NTAPI
-USBHUB_DumpingConfiguration(IN PUSB_CONFIGURATION_DESCRIPTOR ConfigDescriptor)
+USBPORT_DumpingConfiguration(IN PUSB_CONFIGURATION_DESCRIPTOR ConfigDescriptor)
 {
     PUSB_COMMON_DESCRIPTOR Descriptor;
     PUSB_CONFIGURATION_DESCRIPTOR cDescriptor;
@@ -52,10 +45,14 @@ USBHUB_DumpingConfiguration(IN PUSB_CONFIGURATION_DESCRIPTOR ConfigDescriptor)
 
     Descriptor = (PUSB_COMMON_DESCRIPTOR)ConfigDescriptor;
 
-    while ((ULONG_PTR)Descriptor < 
-           ((ULONG_PTR)ConfigDescriptor + ConfigDescriptor->wTotalLength) &&
-           Descriptor->bLength)
+    do
     {
+        if (((ULONG)Descriptor) >= ((ULONG)ConfigDescriptor +
+                                    ConfigDescriptor->wTotalLength))
+        {
+            break;
+        }
+
         if (Descriptor->bDescriptorType == USB_CONFIGURATION_DESCRIPTOR_TYPE)
         {
             cDescriptor = (PUSB_CONFIGURATION_DESCRIPTOR)Descriptor;
@@ -102,26 +99,32 @@ USBHUB_DumpingConfiguration(IN PUSB_CONFIGURATION_DESCRIPTOR ConfigDescriptor)
             DPRINT("bDescriptorType - %x\n", Descriptor->bDescriptorType);
         }
 
-        Descriptor = (PUSB_COMMON_DESCRIPTOR)((ULONG_PTR)Descriptor +
+        if (!Descriptor->bLength) 
+        {
+            break;
+        }
+
+        Descriptor = (PUSB_COMMON_DESCRIPTOR)((ULONG)Descriptor +
                                               Descriptor->bLength);
-    }
+
+    } while (TRUE);
 }
 
 VOID
 NTAPI
-USBHUB_DumpingIDs(IN PVOID Id)
+USBPORT_DumpingIDs(IN PVOID Id)
 {
     PWSTR Ptr;
     ULONG Length;
     ULONG TotalLength = 0;
 
-    Ptr = Id;
-    DPRINT("USBHUB_DumpingIDs:\n");
+    Ptr = (PWSTR)Id;
+    DPRINT("USBPORT_DumpingIDs:\n");
 
     while (*Ptr)
     {
         DPRINT("  %S\n", Ptr);
-        Length = wcslen(Ptr) + 1;
+        Length = (ULONG)wcslen(Ptr) + 1;
 
         Ptr += Length;
         TotalLength += Length;

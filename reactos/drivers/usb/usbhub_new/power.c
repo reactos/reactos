@@ -1,17 +1,7 @@
-/*
- * PROJECT:     ReactOS USB Hub Driver
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     USBHub power handling functions
- * COPYRIGHT:   Copyright 2017 Vadim Galyant <vgal@rambler.ru>
- */
-
 #include "usbhub.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
-
-#define NDEBUG_USBHUB_POWER
-#include "dbg_uhub.h"
 
 VOID
 NTAPI
@@ -19,7 +9,7 @@ USBH_CompletePowerIrp(IN PUSBHUB_FDO_EXTENSION HubExtension,
                       IN PIRP Irp,
                       IN NTSTATUS NtStatus)
 {
-    DPRINT("USBH_CompletePowerIrp: HubExtension - %p, Irp - %p, NtStatus - %lX\n",
+    DPRINT("USBH_CompletePowerIrp: HubExtension - %p, Irp - %p, NtStatus - %p\n",
            HubExtension,
            Irp,
            NtStatus);
@@ -93,7 +83,7 @@ USBH_HubSetD0(IN PUSBHUB_FDO_EXTENSION HubExtension)
 
     if (HubExtension->HubFlags & USBHUB_FDO_FLAG_WAIT_IDLE_REQUEST)
     {
-        DPRINT("USBH_HubSetD0: HubFlags - %lX\n", HubExtension->HubFlags);
+        DPRINT("USBH_HubSetD0: HubFlags - %p\n", HubExtension->HubFlags);
 
         KeWaitForSingleObject(&HubExtension->IdleEvent,
                               Suspended,
@@ -140,7 +130,7 @@ USBH_IdleCancelPowerHubWorker(IN PUSBHUB_FDO_EXTENSION HubExtension,
 
     DPRINT("USBH_IdleCancelPowerHubWorker: ... \n");
 
-    WorkItemIdlePower = Context;
+    WorkItemIdlePower = (PUSBHUB_IDLE_PORT_CANCEL_CONTEXT)Context;
 
     if (HubExtension &&
         HubExtension->CurrentPowerState.DeviceState != PowerDeviceD0 &&
@@ -175,21 +165,24 @@ USBH_HubQueuePortWakeIrps(IN PUSBHUB_FDO_EXTENSION HubExtension,
 
     IoAcquireCancelSpinLock(&OldIrql);
 
-    for (Port = 0; Port < NumPorts; ++Port)
+    if (NumPorts)
     {
-        PortDevice = HubExtension->PortData[Port].DeviceObject;
-
-        if (PortDevice)
+        for (Port = 0; Port < NumPorts; ++Port)
         {
-            PortExtension = PortDevice->DeviceExtension;
+            PortDevice = HubExtension->PortData[Port].DeviceObject;
 
-            WakeIrp = PortExtension->PdoWaitWakeIrp;
-            PortExtension->PdoWaitWakeIrp = NULL;
-
-            if (WakeIrp)
+            if (PortDevice)
             {
-                DPRINT1("USBH_HubQueuePortWakeIrps: UNIMPLEMENTED. FIXME\n");
-                DbgBreakPoint();
+                PortExtension = PortDevice->DeviceExtension;
+
+                WakeIrp = PortExtension->PdoWaitWakeIrp;
+                PortExtension->PdoWaitWakeIrp = NULL;
+
+                if (WakeIrp)
+                {
+                    DPRINT1("USBH_HubQueuePortWakeIrps: UNIMPLEMENTED. FIXME. \n");
+                    DbgBreakPoint();
+                }
             }
         }
     }
@@ -207,7 +200,7 @@ USBH_HubCompleteQueuedPortWakeIrps(IN PUSBHUB_FDO_EXTENSION HubExtension,
 
     while (!IsListEmpty(ListIrps))
     {
-        DPRINT1("USBH_HubCompleteQueuedPortWakeIrps: UNIMPLEMENTED. FIXME\n");
+        DPRINT1("USBH_HubCompleteQueuedPortWakeIrps: UNIMPLEMENTED. FIXME. \n");
         DbgBreakPoint();
     }
 }
@@ -243,7 +236,7 @@ USBH_FdoPoRequestD0Completion(IN PDEVICE_OBJECT DeviceObject,
 
     DPRINT("USBH_FdoPoRequestD0Completion ... \n");
 
-    HubExtension = Context;
+    HubExtension = (PUSBHUB_FDO_EXTENSION)Context;
 
     USBH_HubCompletePortWakeIrps(HubExtension, STATUS_SUCCESS);
 
@@ -262,7 +255,7 @@ NTAPI
 USBH_CompletePortWakeIrpsWorker(IN PUSBHUB_FDO_EXTENSION HubExtension,
                                 IN PVOID Context)
 {
-    DPRINT1("USBH_CompletePortWakeIrpsWorker: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("USBH_CompletePortWakeIrpsWorker: UNIMPLEMENTED. FIXME. \n");
     DbgBreakPoint();
 }
 
@@ -282,7 +275,7 @@ USBH_FdoWWIrpIoCompletion(IN PDEVICE_OBJECT DeviceObject,
             DeviceObject,
             Irp);
 
-    HubExtension = Context;
+    HubExtension = (PUSBHUB_FDO_EXTENSION)Context;
 
     Status = Irp->IoStatus.Status;
 
@@ -302,7 +295,7 @@ USBH_FdoWWIrpIoCompletion(IN PDEVICE_OBJECT DeviceObject,
 
     IoReleaseCancelSpinLock(OldIrql);
 
-    DPRINT("USBH_FdoWWIrpIoCompletion: Status - %lX\n", Status);
+    DPRINT("USBH_FdoWWIrpIoCompletion: Status - %p\n", Status);
 
     if (!NT_SUCCESS(Status))
     {
@@ -334,7 +327,7 @@ USBH_FdoWWIrpIoCompletion(IN PDEVICE_OBJECT DeviceObject,
         }
     }
 
-    DPRINT("USBH_FdoWWIrpIoCompletion: Status - %lX\n", Status);
+    DPRINT("USBH_FdoWWIrpIoCompletion: Status - %p\n", Status);
 
     if (Status != STATUS_MORE_PROCESSING_REQUIRED)
     {
@@ -360,13 +353,13 @@ USBH_PowerIrpCompletion(IN PDEVICE_OBJECT DeviceObject,
            DeviceObject,
            Irp);
 
-    HubExtension = Context;
+    HubExtension = (PUSBHUB_FDO_EXTENSION)Context;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     PowerState = IoStack->Parameters.Power.State;
 
     Status = Irp->IoStatus.Status;
-    DPRINT("USBH_PowerIrpCompletion: Status - %lX\n", Status);
+    DPRINT("USBH_PowerIrpCompletion: Status - %p\n", Status);
 
     if (!NT_SUCCESS(Status))
     {
@@ -387,7 +380,7 @@ USBH_PowerIrpCompletion(IN PDEVICE_OBJECT DeviceObject,
 
         if (HubExtension->HubFlags & USBHUB_FDO_FLAG_HIBERNATE_STATE)
         {
-            DPRINT1("USBH_PowerIrpCompletion: USBHUB_FDO_FLAG_HIBERNATE_STATE. FIXME\n");
+            DPRINT1("USBH_PowerIrpCompletion: USBHUB_FDO_FLAG_HIBERNATE_STATE. FIXME. \n");
             DbgBreakPoint();
         }
 
@@ -395,7 +388,7 @@ USBH_PowerIrpCompletion(IN PDEVICE_OBJECT DeviceObject,
 
         if (OldDeviceState == PowerDeviceD3)
         {
-            DPRINT1("USBH_PowerIrpCompletion: PowerDeviceD3. FIXME\n");
+            DPRINT1("USBH_PowerIrpCompletion: PowerDeviceD3. FIXME. \n");
             DbgBreakPoint();
         }
 
@@ -405,7 +398,7 @@ USBH_PowerIrpCompletion(IN PDEVICE_OBJECT DeviceObject,
             USBH_SubmitStatusChangeTransfer(HubExtension);
         }
 
-        DPRINT("USBH_PowerIrpCompletion: Status - %lX\n", Status);
+        DPRINT("USBH_PowerIrpCompletion: Status - %p\n", Status);
 
         if (Status != STATUS_MORE_PROCESSING_REQUIRED)
         {
@@ -432,13 +425,13 @@ USBH_FdoDeferPoRequestCompletion(IN PDEVICE_OBJECT DeviceObject,
 
     DPRINT("USBH_FdoDeferPoRequestCompletion ... \n");
 
-    Extension = Context;
+    Extension = (PUSBHUB_FDO_EXTENSION)Context;
 
     PowerIrp = Extension->PowerIrp;
 
     if (Extension->Common.ExtensionType == USBH_EXTENSION_TYPE_HUB)
     {
-        HubExtension = Context;
+        HubExtension = (PUSBHUB_FDO_EXTENSION)Context;
     }
 
     IoStack = IoGetCurrentIrpStackLocation(PowerIrp);
@@ -471,278 +464,292 @@ USBH_FdoPower(IN PUSBHUB_FDO_EXTENSION HubExtension,
     PUSBHUB_PORT_PDO_EXTENSION PortExtension;
     ULONG Port;
 
-    DPRINT_PWR("USBH_FdoPower: HubExtension - %p, Irp - %p, Minor - %X\n",
-               HubExtension,
-               Irp,
-               Minor);
+    DPRINT("USBH_FdoPower: HubExtension - %p, Irp - %p, Minor - %x\n",
+           HubExtension,
+           Irp,
+           Minor);
 
     switch (Minor)
     {
-        case IRP_MN_WAIT_WAKE:
-            DPRINT_PWR("USBH_FdoPower: IRP_MN_WAIT_WAKE\n");
+      case IRP_MN_WAIT_WAKE:
+          DPRINT("USBH_FdoPower: IRP_MN_WAIT_WAKE\n");
+          IoCopyCurrentIrpStackLocationToNext(Irp);
 
-            IoCopyCurrentIrpStackLocationToNext(Irp);
+          IoSetCompletionRoutine(Irp,
+                                 USBH_FdoWWIrpIoCompletion,
+                                 HubExtension,
+                                 TRUE,
+                                 TRUE,
+                                 TRUE);
 
-            IoSetCompletionRoutine(Irp,
-                                   USBH_FdoWWIrpIoCompletion,
-                                   HubExtension,
-                                   TRUE,
-                                   TRUE,
-                                   TRUE);
+          PoStartNextPowerIrp(Irp);
+          IoMarkIrpPending(Irp);
 
-            PoStartNextPowerIrp(Irp);
-            IoMarkIrpPending(Irp);
-            PoCallDriver(HubExtension->LowerDevice, Irp);
+          PoCallDriver(HubExtension->LowerDevice, Irp);
 
-            return STATUS_PENDING;
+          return STATUS_PENDING;
 
-        case IRP_MN_POWER_SEQUENCE:
-            DPRINT_PWR("USBH_FdoPower: IRP_MN_POWER_SEQUENCE\n");
-            break;
+      case IRP_MN_POWER_SEQUENCE:
+          DPRINT("USBH_FdoPower: IRP_MN_POWER_SEQUENCE\n");
+          break;
 
-        case IRP_MN_SET_POWER:
-            DPRINT_PWR("USBH_FdoPower: IRP_MN_SET_POWER\n");
+      case IRP_MN_SET_POWER:
+          DPRINT("USBH_FdoPower: IRP_MN_SET_POWER\n");
 
-            IoStack = IoGetCurrentIrpStackLocation(Irp);
-            DPRINT_PWR("USBH_FdoPower: IRP_MN_SET_POWER/DevicePowerState\n");
-            PowerState = IoStack->Parameters.Power.State;
+          IoStack = IoGetCurrentIrpStackLocation(Irp);
+          DPRINT("USBH_FdoPower: IRP_MN_SET_POWER/DevicePowerState\n");
+          PowerState = IoStack->Parameters.Power.State;
 
-            if (IoStack->Parameters.Power.Type == DevicePowerState)
-            {
-                DPRINT_PWR("USBH_FdoPower: PowerState - %x\n",
-                           PowerState.DeviceState);
+          if (IoStack->Parameters.Power.Type == DevicePowerState)
+          {
+              DPRINT("USBH_FdoPower: PowerState - %x\n", PowerState);
 
-                if (HubExtension->CurrentPowerState.DeviceState == PowerState.DeviceState)
-                {
+              if (HubExtension->CurrentPowerState.DeviceState == PowerState.DeviceState)
+              {
                     IoCopyCurrentIrpStackLocationToNext(Irp);
-
                     PoStartNextPowerIrp(Irp);
                     IoMarkIrpPending(Irp);
+
                     PoCallDriver(HubExtension->LowerDevice, Irp);
 
                     return STATUS_PENDING;
-                }
+              }
 
-                switch (PowerState.DeviceState)
-                {
-                    case PowerDeviceD0:
-                        if (!(HubExtension->HubFlags & USBHUB_FDO_FLAG_SET_D0_STATE))
-                        {
-                            HubExtension->HubFlags &= ~(USBHUB_FDO_FLAG_NOT_D0_STATE |
-                                                        USBHUB_FDO_FLAG_DEVICE_STOPPING);
+              switch (PowerState.DeviceState)
+              {
+                  case PowerDeviceD0:
+                      if (!(HubExtension->HubFlags & USBHUB_FDO_FLAG_SET_D0_STATE))
+                      {
+                          HubExtension->HubFlags &= ~(USBHUB_FDO_FLAG_NOT_D0_STATE |
+                                                      USBHUB_FDO_FLAG_DEVICE_STOPPING);
 
-                            HubExtension->HubFlags |= USBHUB_FDO_FLAG_SET_D0_STATE;
+                          HubExtension->HubFlags |= USBHUB_FDO_FLAG_SET_D0_STATE;
 
-                            IoCopyCurrentIrpStackLocationToNext(Irp);
+                          IoCopyCurrentIrpStackLocationToNext(Irp);
 
-                            IoSetCompletionRoutine(Irp,
-                                                   USBH_PowerIrpCompletion,
-                                                   HubExtension,
-                                                   TRUE,
-                                                   TRUE,
-                                                   TRUE);
-                        }
-                        else
-                        {
-                            IoCopyCurrentIrpStackLocationToNext(Irp);
-                            PoStartNextPowerIrp(Irp);
-                        }
+                          IoSetCompletionRoutine(Irp,
+                                                 USBH_PowerIrpCompletion,
+                                                 HubExtension,
+                                                 TRUE,
+                                                 TRUE,
+                                                 TRUE);
+                      }
+                      else
+                      {
+                          IoCopyCurrentIrpStackLocationToNext(Irp);
+                          PoStartNextPowerIrp(Irp);
+                      }
 
-                        IoMarkIrpPending(Irp);
-                        PoCallDriver(HubExtension->LowerDevice, Irp);
-                        return STATUS_PENDING;
+                      IoMarkIrpPending(Irp);
+                      PoCallDriver(HubExtension->LowerDevice, Irp);
+                      return STATUS_PENDING;
 
-                    case PowerDeviceD1:
-                    case PowerDeviceD2:
-                    case PowerDeviceD3:
-                        if (HubExtension->ResetRequestCount)
-                        {
-                            IoCancelIrp(HubExtension->ResetPortIrp);
+                  case PowerDeviceD1:
+                  case PowerDeviceD2:
+                  case PowerDeviceD3:
+                      if (HubExtension->ResetRequestCount)
+                      {
+                          IoCancelIrp(HubExtension->ResetPortIrp);
 
-                            KeWaitForSingleObject(&HubExtension->ResetEvent,
-                                                  Executive,
-                                                  KernelMode,
-                                                  FALSE,
-                                                  NULL);
-                        }
+                          KeWaitForSingleObject(&HubExtension->ResetEvent,
+                                                Executive,
+                                                KernelMode,
+                                                FALSE,
+                                                NULL);
+                      }
 
-                        if (!(HubExtension->HubFlags & USBHUB_FDO_FLAG_DEVICE_STOPPED))
-                        {
-                            HubExtension->HubFlags |= (USBHUB_FDO_FLAG_NOT_D0_STATE |
-                                                       USBHUB_FDO_FLAG_DEVICE_STOPPING);
+                      if (!(HubExtension->HubFlags & USBHUB_FDO_FLAG_DEVICE_STOPPED))
+                      {
+                          HubExtension->HubFlags |= (USBHUB_FDO_FLAG_NOT_D0_STATE |
+                                                     USBHUB_FDO_FLAG_DEVICE_STOPPING);
 
-                            IoCancelIrp(HubExtension->SCEIrp);
+                          IoCancelIrp(HubExtension->SCEIrp);
 
-                            KeWaitForSingleObject(&HubExtension->StatusChangeEvent,
-                                                  Executive,
-                                                  KernelMode,
-                                                  FALSE,
-                                                  NULL);
-                        }
+                          KeWaitForSingleObject(&HubExtension->StatusChangeEvent,
+                                                Executive,
+                                                KernelMode,
+                                                FALSE,
+                                                NULL);
+                      }
 
-                        HubExtension->CurrentPowerState.DeviceState = PowerState.DeviceState;
+                      HubExtension->CurrentPowerState.DeviceState = PowerState.DeviceState;
 
-                        if (HubExtension->HubFlags & USBHUB_FDO_FLAG_DO_SUSPENSE &&
-                            USBH_CheckIdleAbort(HubExtension, TRUE, TRUE) == TRUE)
-                        {
-                            HubExtension->HubFlags &= ~(USBHUB_FDO_FLAG_NOT_D0_STATE |
-                                                        USBHUB_FDO_FLAG_DEVICE_STOPPING);
+                      if (HubExtension->HubFlags & USBHUB_FDO_FLAG_DO_SUSPENSE &&
+                          USBH_CheckIdleAbort(HubExtension, TRUE, TRUE) == TRUE)
+                      {
+                          HubExtension->HubFlags &= ~(USBHUB_FDO_FLAG_NOT_D0_STATE |
+                                                      USBHUB_FDO_FLAG_DEVICE_STOPPING);
 
-                            HubExtension->CurrentPowerState.DeviceState = PowerDeviceD0;
+                          HubExtension->CurrentPowerState.DeviceState = PowerDeviceD0;
 
-                            USBH_SubmitStatusChangeTransfer(HubExtension);
+                          USBH_SubmitStatusChangeTransfer(HubExtension);
 
-                            PoStartNextPowerIrp(Irp);
+                          PoStartNextPowerIrp(Irp);
 
-                            Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-                            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                          Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+                          IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-                            HubExtension->HubFlags &= ~USBHUB_FDO_FLAG_DO_SUSPENSE;
+                          HubExtension->HubFlags &= ~USBHUB_FDO_FLAG_DO_SUSPENSE;
 
-                            KeReleaseSemaphore(&HubExtension->IdleSemaphore,
-                                               LOW_REALTIME_PRIORITY,
-                                               1,
-                                               FALSE);
+                          KeReleaseSemaphore(&HubExtension->IdleSemaphore,
+                                             LOW_REALTIME_PRIORITY,
+                                             1,
+                                             FALSE);
 
-                            return STATUS_UNSUCCESSFUL;
-                        }
+                          return STATUS_UNSUCCESSFUL;
+                      }
 
-                        IoCopyCurrentIrpStackLocationToNext(Irp);
+                      IoCopyCurrentIrpStackLocationToNext(Irp);
 
-                        IoSetCompletionRoutine(Irp,
-                                               USBH_PowerIrpCompletion,
-                                               HubExtension,
-                                               TRUE,
-                                               TRUE,
-                                               TRUE);
+                      IoSetCompletionRoutine(Irp,
+                                             USBH_PowerIrpCompletion,
+                                             HubExtension,
+                                             TRUE,
+                                             TRUE,
+                                             TRUE);
 
-                        PoStartNextPowerIrp(Irp);
-                        IoMarkIrpPending(Irp);
-                        PoCallDriver(HubExtension->LowerDevice, Irp);
+                      PoStartNextPowerIrp(Irp);
 
-                        if (HubExtension->HubFlags & USBHUB_FDO_FLAG_DO_SUSPENSE)
-                        {
-                            HubExtension->HubFlags &= ~USBHUB_FDO_FLAG_DO_SUSPENSE;
+                      IoMarkIrpPending(Irp);
+                      PoCallDriver(HubExtension->LowerDevice, Irp);
 
-                            KeReleaseSemaphore(&HubExtension->IdleSemaphore,
-                                               LOW_REALTIME_PRIORITY,
-                                               1,
-                                               FALSE);
-                        }
+                      if (HubExtension->HubFlags & USBHUB_FDO_FLAG_DO_SUSPENSE)
+                      {
+                          HubExtension->HubFlags &= ~USBHUB_FDO_FLAG_DO_SUSPENSE;
 
-                        return STATUS_PENDING;
+                          KeReleaseSemaphore(&HubExtension->IdleSemaphore,
+                                             LOW_REALTIME_PRIORITY,
+                                             1,
+                                             FALSE);
+                      }
 
-                    default:
-                        DPRINT1("USBH_FdoPower: Unsupported PowerState.DeviceState\n");
-                        DbgBreakPoint();
-                        break;
-                }
-            }
-            else
-            {
-                if (PowerState.SystemState != PowerSystemWorking)
-                {
-                    USBH_GetRootHubExtension(HubExtension)->SystemPowerState.SystemState =
-                                                            PowerState.SystemState;
-                }
+                      return STATUS_PENDING;
 
-                if (PowerState.SystemState == PowerSystemHibernate)
-                {
-                    HubExtension->HubFlags |= USBHUB_FDO_FLAG_HIBERNATE_STATE;
-                }
+                  default:
+                      DPRINT1("USBH_FdoPower: Unsupported PowerState.DeviceState\n");
+                      DbgBreakPoint();
+                      break;
+              }
+          }
+          else
+          {
+              if (PowerState.SystemState != PowerSystemWorking)
+              {
+                  USBH_GetRootHubExtension(HubExtension)->SystemPowerState.SystemState =
+                                                          PowerState.SystemState;
+              }
 
-                PortData = HubExtension->PortData;
+              if (PowerState.SystemState == PowerSystemHibernate)
+              {
+                  HubExtension->HubFlags |= USBHUB_FDO_FLAG_HIBERNATE_STATE;
+              }
 
-                IsAllPortsD3 = TRUE;
+              PortData = HubExtension->PortData;
 
-                if (PortData && HubExtension->HubDescriptor)
-                {
-                    for (Port = 0;
-                         Port < HubExtension->HubDescriptor->bNumberOfPorts;
-                         Port++)
-                    {
-                        PdoDevice = PortData[Port].DeviceObject;
+              IsAllPortsD3 = 1;
 
-                        if (PdoDevice)
-                        {
-                            PortExtension = PdoDevice->DeviceExtension;
+              if (PortData)
+              {
+                  if (HubExtension->HubDescriptor &&
+                      HubExtension->HubDescriptor->bNumberOfPorts)
+                  {
+                      Port = 0;
 
-                            if (PortExtension->CurrentPowerState.DeviceState != PowerDeviceD3)
-                            {
-                                IsAllPortsD3 = FALSE;
-                                break;
-                            }
-                        }
-                    }
-                }
+                      while (TRUE)
+                      {
+                          PdoDevice = PortData[Port].DeviceObject;
 
-                if (PowerState.SystemState == PowerSystemWorking)
-                {
-                    DevicePwrState.DeviceState = PowerDeviceD0;
-                }
-                else if (HubExtension->HubFlags & USBHUB_FDO_FLAG_PENDING_WAKE_IRP ||
-                         !IsAllPortsD3)
-                {
-                    DevicePwrState.DeviceState = HubExtension->DeviceState[PowerState.SystemState];
+                          if (PdoDevice)
+                          {
+                              PortExtension = (PUSBHUB_PORT_PDO_EXTENSION)PdoDevice->DeviceExtension;
 
-                    if (DevicePwrState.DeviceState == PowerDeviceUnspecified)
-                    {
-                        goto Exit;
-                    }
-                }
-                else
-                {
-                    DevicePwrState.DeviceState = PowerDeviceD3;
-                }
+                              if (PortExtension->CurrentPowerState.DeviceState != PowerDeviceD3)
+                              {
+                                  break;
+                              }
+                          }
 
-                if (DevicePwrState.DeviceState != HubExtension->CurrentPowerState.DeviceState &&
-                    HubExtension->HubFlags & USBHUB_FDO_FLAG_DEVICE_STARTED)
-                {
-                    HubExtension->PowerIrp = Irp;
+                          ++Port;
 
-                    IoMarkIrpPending(Irp);
+                          if (Port >= HubExtension->HubDescriptor->bNumberOfPorts)
+                          {
+                              goto Next;
+                          }
+                      }
 
-                    if (PoRequestPowerIrp(HubExtension->LowerPDO,
-                                          IRP_MN_SET_POWER,
-                                          DevicePwrState,
-                                          USBH_FdoDeferPoRequestCompletion,
-                                          (PVOID)HubExtension,
-                                          NULL) == STATUS_PENDING)
-                    {
-                        return STATUS_PENDING;
-                    }
+                      IsAllPortsD3 = FALSE;
+                  }
+              }
 
-                    IoCopyCurrentIrpStackLocationToNext(Irp);
-                    PoStartNextPowerIrp(Irp);
-                    PoCallDriver(HubExtension->LowerDevice, Irp);
+          Next:
 
-                    return STATUS_PENDING;
-                }
+              if (PowerState.SystemState == PowerSystemWorking)
+              {
+                  DevicePwrState.DeviceState = PowerDeviceD0;
+              }
+              else if (HubExtension->HubFlags & USBHUB_FDO_FLAG_PENDING_WAKE_IRP ||
+                      !IsAllPortsD3)
+              {
+                  DevicePwrState.DeviceState = HubExtension->DeviceState[PowerState.SystemState];
 
-            Exit:
+                  if (DevicePwrState.DeviceState == PowerDeviceUnspecified)
+                  {
+                      goto Exit;
+                  }
+              }
+              else
+              {
+                  DevicePwrState.DeviceState = PowerDeviceD3;
+              }
 
-                HubExtension->SystemPowerState.SystemState = PowerState.SystemState;
+              if (DevicePwrState.DeviceState != HubExtension->CurrentPowerState.DeviceState &&
+                  HubExtension->HubFlags & USBHUB_FDO_FLAG_DEVICE_STARTED)
+              {
+                  HubExtension->PowerIrp = Irp;
 
-                if (PowerState.SystemState == PowerSystemWorking)
-                {
-                    USBH_CheckIdleDeferred(HubExtension);
-                }
+                  IoMarkIrpPending(Irp);
 
-                IoCopyCurrentIrpStackLocationToNext(Irp);
-                PoStartNextPowerIrp(Irp);
+                  if (PoRequestPowerIrp(HubExtension->LowerPDO,
+                                        IRP_MN_SET_POWER,
+                                        DevicePwrState,
+                                        USBH_FdoDeferPoRequestCompletion,
+                                        (PVOID)HubExtension,
+                                        0) == STATUS_PENDING)
+                  {
+                      return STATUS_PENDING;
+                  }
 
-                return PoCallDriver(HubExtension->LowerDevice, Irp);
-            }
+                  IoCopyCurrentIrpStackLocationToNext(Irp);
+                  PoStartNextPowerIrp(Irp);
+                  PoCallDriver(HubExtension->LowerDevice, Irp);
 
-            break;
+                  return STATUS_PENDING;
+              }
 
-        case IRP_MN_QUERY_POWER:
-            DPRINT_PWR("USBH_FdoPower: IRP_MN_QUERY_POWER\n");
-            break;
+          Exit:
 
-        default:
-            DPRINT1("USBH_FdoPower: unknown IRP_MN_POWER!\n");
-            break;
+              HubExtension->SystemPowerState.SystemState = PowerState.SystemState;
+
+              if (PowerState.SystemState == PowerSystemWorking)
+              {
+                  USBH_CheckIdleDeferred(HubExtension);
+              }
+
+              IoCopyCurrentIrpStackLocationToNext(Irp);
+              PoStartNextPowerIrp(Irp);
+
+              return PoCallDriver(HubExtension->LowerDevice, Irp);
+          }
+
+          break;
+
+      case IRP_MN_QUERY_POWER:
+          DPRINT("USBH_FdoPower: IRP_MN_QUERY_POWER\n");
+          break;
+
+      default:
+          DPRINT1("USBH_FdoPower: unknown IRP_MN_POWER!\n");
+          break;
     }
 
     IoCopyCurrentIrpStackLocationToNext(Irp);
@@ -760,35 +767,35 @@ USBH_PdoPower(IN PUSBHUB_PORT_PDO_EXTENSION PortExtension,
 {
     NTSTATUS Status = Irp->IoStatus.Status;
 
-    DPRINT_PWR("USBH_FdoPower: PortExtension - %p, Irp - %p, Minor - %X\n",
-               PortExtension,
-               Irp,
-               Minor);
+    DPRINT("USBH_FdoPower: PortExtension - %p, Irp - %p, Minor - %x\n",
+           PortExtension,
+           Irp,
+           Minor);
 
     switch (Minor)
     {
       case IRP_MN_WAIT_WAKE:
-          DPRINT_PWR("USBHUB_PdoPower: IRP_MN_WAIT_WAKE\n");
+          DPRINT("USBPORT_PdoPower: IRP_MN_WAIT_WAKE\n");
           PoStartNextPowerIrp(Irp);
           break;
 
       case IRP_MN_POWER_SEQUENCE:
-          DPRINT_PWR("USBHUB_PdoPower: IRP_MN_POWER_SEQUENCE\n");
+          DPRINT("USBPORT_PdoPower: IRP_MN_POWER_SEQUENCE\n");
           PoStartNextPowerIrp(Irp);
           break;
 
       case IRP_MN_SET_POWER:
-          DPRINT_PWR("USBHUB_PdoPower: IRP_MN_SET_POWER\n");
+          DPRINT("USBPORT_PdoPower: IRP_MN_SET_POWER\n");
           PoStartNextPowerIrp(Irp);
           break;
 
       case IRP_MN_QUERY_POWER:
-          DPRINT_PWR("USBHUB_PdoPower: IRP_MN_QUERY_POWER\n");
+          DPRINT("USBPORT_PdoPower: IRP_MN_QUERY_POWER\n");
           PoStartNextPowerIrp(Irp);
           break;
 
       default:
-          DPRINT1("USBHUB_PdoPower: unknown IRP_MN_POWER!\n");
+          DPRINT1("USBPORT_PdoPower: unknown IRP_MN_POWER!\n");
           PoStartNextPowerIrp(Irp);
           break;
     }

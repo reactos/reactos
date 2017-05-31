@@ -1,37 +1,34 @@
-/*
- * PROJECT:     ReactOS USB Port Driver
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     USBPort declarations
- * COPYRIGHT:   Copyright 2017 Vadim Galyant <vgal@rambler.ru>
- */
-
 #ifndef USBPORT_H__
 #define USBPORT_H__
 
 #include <ntddk.h>
 #include <windef.h>
 #include <stdio.h>
+#include <wdm.h>
 #include <wdmguid.h>
-#include <ntstrsafe.h>
 #include <usb.h>
 #include <hubbusif.h>
 #include <usbbusif.h>
 #include <usbdlib.h>
 #include <usbuser.h>
-#include <drivers/usbport/usbmport.h>
+#include "..\usbmport.h"
 
 #define PCI_INTERFACE_USB_ID_UHCI 0x00
 #define PCI_INTERFACE_USB_ID_OHCI 0x10
 #define PCI_INTERFACE_USB_ID_EHCI 0x20
 #define PCI_INTERFACE_USB_ID_XHCI 0x30
 
-#ifdef USBD_TRANSFER_DIRECTION // due hubbusif.h included usbdi.h (Which overwrites...)
+#ifdef USBD_TRANSFER_DIRECTION
 #undef USBD_TRANSFER_DIRECTION
 #define USBD_TRANSFER_DIRECTION 0x00000001
 #endif
 
 #define USBPORT_RECIPIENT_ROOT_HUB  BMREQUEST_TO_DEVICE
 #define USBPORT_RECIPIENT_ROOT_PORT BMREQUEST_TO_OTHER
+
+#define INVALIDATE_CONTROLLER_RESET           1
+#define INVALIDATE_CONTROLLER_SURPRISE_REMOVE 2
+#define INVALIDATE_CONTROLLER_SOFT_INTERRUPT  3
 
 #define INVALIDATE_ENDPOINT_ONLY           0
 #define INVALIDATE_ENDPOINT_WORKER_THREAD  1
@@ -63,6 +60,7 @@
 #define FEATURE_C_HUB_OVER_CURRENT 1
 
 /* Flags */
+
 #define USBPORT_FLAG_INT_CONNECTED     0x00000001
 #define USBPORT_FLAG_HC_STARTED        0x00000002
 #define USBPORT_FLAG_HC_POLLING        0x00000004
@@ -82,13 +80,8 @@
 #define USBPORT_FLAG_POWER_AND_CHIRP_OK 0x40000000
 #define USBPORT_FLAG_RH_INIT_CALLBACK  0x80000000
 
-/* PnP state Flags */
-#define USBPORT_PNP_STATE_NOT_INIT  0x00000001
-#define USBPORT_PNP_STATE_STARTED   0x00000002
-#define USBPORT_PNP_STATE_FAILED    0x00000004
-#define USBPORT_PNP_STATE_STOPPED   0x00000008
-
 /* Timer Flags */
+
 #define USBPORT_TMFLAG_TIMER_QUEUED       0x00000001
 #define USBPORT_TMFLAG_HC_SUSPENDED       0x00000002
 #define USBPORT_TMFLAG_HC_RESUME          0x00000004
@@ -98,15 +91,18 @@
 #define USBPORT_TMFLAG_IDLE_QUEUEITEM_ON  0x00000040
 
 /* Miniport Flags */
+
 #define USBPORT_MPFLAG_INTERRUPTS_ENABLED  0x00000001
 #define USBPORT_MPFLAG_SUSPENDED           0x00000002
 
 /* Device handle Flags (USBPORT_DEVICE_HANDLE) */
+
 #define DEVICE_HANDLE_FLAG_ROOTHUB     0x00000002
 #define DEVICE_HANDLE_FLAG_REMOVED     0x00000008
 #define DEVICE_HANDLE_FLAG_INITIALIZED 0x00000010
 
 /* Endpoint Flags (USBPORT_ENDPOINT) */
+
 #define ENDPOINT_FLAG_DMA_TYPE      0x00000001
 #define ENDPOINT_FLAG_ROOTHUB_EP0   0x00000002
 #define ENDPOINT_FLAG_NUKE          0x00000008
@@ -117,25 +113,26 @@
 #define ENDPOINT_FLAG_CLOSED        0x00000400
 
 /* UsbdFlags Flags (URB) */
+
 #define USBD_FLAG_ALLOCATED_MDL      0x00000002
 #define USBD_FLAG_NOT_ISO_TRANSFER   0x00000010
 #define USBD_FLAG_ALLOCATED_TRANSFER 0x00000020
 
 /* Pipe handle Flags (USBPORT_PIPE_HANDLE) */
+
 #define PIPE_HANDLE_FLAG_CLOSED 0x00000001
 #define PIPE_HANDLE_FLAG_NULL_PACKET_SIZE 0x00000002
 
+
 /* Transfer Flags (USBPORT_TRANSFER) */
+
 #define TRANSFER_FLAG_CANCELED   0x00000001
 #define TRANSFER_FLAG_DMA_MAPPED 0x00000002
-#define TRANSFER_FLAG_HIGH_SPEED 0x00000004
 #define TRANSFER_FLAG_SUBMITED   0x00000008
 #define TRANSFER_FLAG_ABORTED    0x00000010
 #define TRANSFER_FLAG_ISO        0x00000020
 #define TRANSFER_FLAG_DEVICE_GONE 0x00000080
 #define TRANSFER_FLAG_SPLITED    0x00000100
-#define TRANSFER_FLAG_COMPLETED  0x00000200
-#define TRANSFER_FLAG_PARENT     0x00000400
 
 extern KSPIN_LOCK USBPORT_SpinLock;
 extern LIST_ENTRY USBPORT_MiniPortDrivers;
@@ -163,18 +160,18 @@ typedef struct _USBPORT_PIPE_HANDLE {
 } USBPORT_PIPE_HANDLE, *PUSBPORT_PIPE_HANDLE;
 
 typedef struct _USBPORT_CONFIGURATION_HANDLE {
-  PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;
-  LIST_ENTRY InterfaceHandleList;
-  //USB_CONFIGURATION_DESCRIPTOR CfgDescriptor; // Body.
+  PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor; // 00
+  LIST_ENTRY InterfaceHandleList; // 04
+  //USB_CONFIGURATION_DESCRIPTOR CfgDescriptor; // 12 Body
 } USBPORT_CONFIGURATION_HANDLE, *PUSBPORT_CONFIGURATION_HANDLE;
 
 typedef struct _USBPORT_INTERFACE_HANDLE {
-  LIST_ENTRY InterfaceLink;
-  UCHAR AlternateSetting;
-  UCHAR Pad1[3];
-  USB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
-  UCHAR Pad2[3];
-  USBPORT_PIPE_HANDLE PipeHandle[1];
+  LIST_ENTRY InterfaceLink; // 00
+  UCHAR AlternateSetting; // 08
+  UCHAR Pad1[3]; // 09
+  USB_INTERFACE_DESCRIPTOR InterfaceDescriptor; // 12
+  UCHAR Pad2[3]; // 21
+  USBPORT_PIPE_HANDLE PipeHandle[1]; // 24
 } USBPORT_INTERFACE_HANDLE, *PUSBPORT_INTERFACE_HANDLE;
 
 typedef struct _USBPORT_DEVICE_HANDLE {
@@ -187,7 +184,7 @@ typedef struct _USBPORT_DEVICE_HANDLE {
   LIST_ENTRY PipeHandleList;
   PUSBPORT_CONFIGURATION_HANDLE ConfigHandle;
   struct _USBPORT_DEVICE_HANDLE *HubDeviceHandle;
-  USB_DEVICE_DESCRIPTOR DeviceDescriptor;
+  USB_DEVICE_DESCRIPTOR DeviceDescriptor; // 0x12
   LIST_ENTRY DeviceHandleLink;
   LONG DeviceHandleLock;
   ULONG TtCount;
@@ -228,8 +225,6 @@ typedef struct _USBPORT_ENDPOINT {
   LIST_ENTRY FlushAbortLink;
 } USBPORT_ENDPOINT, *PUSBPORT_ENDPOINT;
 
-typedef struct _USBPORT_ISO_BLOCK *PUSBPORT_ISO_BLOCK;
-
 typedef struct _USBPORT_TRANSFER {
   ULONG Flags;
   PIRP Irp;
@@ -249,15 +244,8 @@ typedef struct _USBPORT_TRANSFER {
   PVOID MapRegisterBase;
   ULONG TimeOut;
   LARGE_INTEGER Time;
-  struct _USBPORT_TRANSFER * ParentTransfer;
-  KSPIN_LOCK TransferSpinLock;
-  LIST_ENTRY SplitTransfersList; // for parent transfers
-  LIST_ENTRY SplitLink; // for splitted transfers
-  ULONG Period;
-  PUSBPORT_ISO_BLOCK IsoBlockPtr; // pointer on IsoBlock
   // SgList should be LAST field
-  USBPORT_SCATTER_GATHER_LIST SgList; // variable length
-  //USBPORT_ISO_BLOCK IsoBlock; // variable length
+  USBPORT_SCATTER_GATHER_LIST SgList; // Non IsoTransfer
 } USBPORT_TRANSFER, *PUSBPORT_TRANSFER;
 
 typedef struct _USBPORT_IRP_TABLE {
@@ -374,28 +362,17 @@ typedef struct _USBPORT_DEVICE_EXTENSION {
   KSPIN_LOCK SetPowerD0SpinLock;
   KDPC WorkerRequestDpc;
   KDPC HcWakeDpc;
-
-  /* Miniport extension should be aligned on 0x100 */
-#if !defined(_M_X64)
-  ULONG Padded[34];
-#else
-  ULONG Padded[0];
-#endif
-
+  ULONG Padded[34]; // Miniport extension should be aligned on 0x100
 } USBPORT_DEVICE_EXTENSION, *PUSBPORT_DEVICE_EXTENSION;
 
-#if !defined(_M_X64)
 C_ASSERT(sizeof(USBPORT_DEVICE_EXTENSION) == 0x400);
-#else
-C_ASSERT(sizeof(USBPORT_DEVICE_EXTENSION) == 0x600);
-#endif
 
 typedef struct _USBPORT_RH_DESCRIPTORS {
-  USB_DEVICE_DESCRIPTOR DeviceDescriptor;
-  USB_CONFIGURATION_DESCRIPTOR ConfigDescriptor;
-  USB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
-  USB_ENDPOINT_DESCRIPTOR EndPointDescriptor;
-  USB_HUB_DESCRIPTOR Descriptor; // Size may be: 7 + 2[1..32] (7 + 2..64)
+  USB_DEVICE_DESCRIPTOR DeviceDescriptor; // 18
+  USB_CONFIGURATION_DESCRIPTOR ConfigDescriptor; // 9
+  USB_INTERFACE_DESCRIPTOR InterfaceDescriptor; // 9
+  USB_ENDPOINT_DESCRIPTOR EndPointDescriptor; // 7
+  USB_HUB_DESCRIPTOR Descriptor; // 7 + 2[1..32] (7 + 2..64)
 } USBPORT_RH_DESCRIPTORS, *PUSBPORT_RH_DESCRIPTORS;
 
 typedef struct _USBPORT_RHDEVICE_EXTENSION {
@@ -413,6 +390,11 @@ typedef struct _USBPORT_RHDEVICE_EXTENSION {
   PIRP WakeIrp;
 } USBPORT_RHDEVICE_EXTENSION, *PUSBPORT_RHDEVICE_EXTENSION;
 
+typedef VOID
+(NTAPI ASYNC_TIMER_CALLBACK)(
+  IN PVOID MiniportExtension,
+  IN PVOID CallBackContext);
+
 typedef struct _USBPORT_ASYNC_CALLBACK_DATA {
   ULONG Reserved;
   PDEVICE_OBJECT FdoDevice;
@@ -422,7 +404,7 @@ typedef struct _USBPORT_ASYNC_CALLBACK_DATA {
   ULONG CallbackContext;
 } USBPORT_ASYNC_CALLBACK_DATA, *PUSBPORT_ASYNC_CALLBACK_DATA;
 
-C_ASSERT(sizeof(USBPORT_ASYNC_CALLBACK_DATA) == 16 + 18 * sizeof(PVOID));
+C_ASSERT(sizeof(USBPORT_ASYNC_CALLBACK_DATA) == 88);
 
 typedef struct _TIMER_WORK_QUEUE_ITEM {
   WORK_QUEUE_ITEM WqItem;
@@ -431,6 +413,7 @@ typedef struct _TIMER_WORK_QUEUE_ITEM {
 } TIMER_WORK_QUEUE_ITEM, *PTIMER_WORK_QUEUE_ITEM;
 
 /* usbport.c */
+
 NTSTATUS
 NTAPI
 USBPORT_USBDStatusToNtStatus(
@@ -440,7 +423,7 @@ USBPORT_USBDStatusToNtStatus(
 NTSTATUS
 NTAPI
 USBPORT_Wait(
-  IN PVOID MiniPortExtension,
+  IN PVOID Context,
   IN ULONG Milliseconds);
 
 VOID
@@ -542,7 +525,7 @@ NTSTATUS
 NTAPI
 USBPORT_SetRegistryKeyValue(
   IN PDEVICE_OBJECT DeviceObject,
-  IN BOOL UseDriverKey,
+  IN HANDLE KeyHandle,
   IN ULONG Type,
   IN PCWSTR ValueNameString,
   IN PVOID Data,
@@ -553,7 +536,7 @@ NTAPI
 USBPORT_GetRegistryKeyValueFullInfo(
   IN PDEVICE_OBJECT FdoDevice,
   IN PDEVICE_OBJECT PdoDevice,
-  IN BOOL UseDriverKey,
+  IN ULONG Type,
   IN PCWSTR SourceString,
   IN ULONG LengthStr,
   IN PVOID Buffer,
@@ -586,35 +569,30 @@ USBPORT_FindCompanionControllers(
   IN BOOLEAN IsObRefer,
   IN BOOLEAN IsFDOsReturned);
 
-VOID
-NTAPI
-USBPORT_InvalidateControllerHandler(
-  IN PDEVICE_OBJECT FdoDevice,
-  IN ULONG Type);
-
-VOID
-NTAPI
-USBPORT_DoneTransfer(
-  IN PUSBPORT_TRANSFER Transfer);
-
 /* debug.c */
+
 ULONG
 NTAPI
 USBPORT_DbgPrint(
-  IN PVOID MiniPortExtension,
+  IN PVOID Context,
   IN ULONG Level,
   IN PCH Format,
-  ...);
+  IN ULONG Arg1,
+  IN ULONG Arg2,
+  IN ULONG Arg3,
+  IN ULONG Arg4,
+  IN ULONG Arg5,
+  IN ULONG Arg6);
 
 ULONG
 NTAPI
 USBPORT_TestDebugBreak(
-  IN PVOID MiniPortExtension);
+  IN PVOID Context);
 
 ULONG
 NTAPI
 USBPORT_AssertFailure(
-  PVOID MiniPortExtension,
+  PVOID Context,
   PVOID FailedAssertion,
   PVOID FileName,
   ULONG LineNumber,
@@ -623,14 +601,14 @@ USBPORT_AssertFailure(
 VOID
 NTAPI
 USBPORT_BugCheck(
-  IN PVOID MiniPortExtension);
+  IN PVOID Context);
 
 ULONG
 NTAPI
 USBPORT_LogEntry(
-  IN PVOID MiniPortExtension,
-  IN ULONG DriverTag,
-  IN ULONG EnumTag,
+  IN PVOID BusContext,
+  IN PVOID DriverTag,
+  IN PVOID EnumTag,
   IN ULONG P1,
   IN ULONG P2,
   IN ULONG P3);
@@ -660,12 +638,8 @@ NTAPI
 USBPORT_DumpingURB(
   IN PURB Urb);
 
-VOID
-NTAPI
-USBPORT_DumpingIDs(
-  IN PVOID Buffer);
-
 /* device.c */
+
 NTSTATUS
 NTAPI
 USBPORT_HandleSelectConfiguration(
@@ -755,6 +729,7 @@ USBPORT_Initialize20Hub(
   IN ULONG TtCount);
 
 /* endpoint.c */
+
 NTSTATUS
 NTAPI
 USBPORT_OpenPipe(
@@ -848,6 +823,7 @@ USBPORT_EndpointHasQueuedTransfers(
   IN PULONG TransferCount);
 
 /* iface.c */
+
 NTSTATUS
 NTAPI
 USBPORT_PdoQueryInterface(
@@ -856,6 +832,7 @@ USBPORT_PdoQueryInterface(
   IN PIRP Irp);
 
 /* ioctl.c */
+
 NTSTATUS
 NTAPI
 USBPORT_PdoDeviceControl(
@@ -870,13 +847,7 @@ USBPORT_FdoDeviceControl(
 
 NTSTATUS
 NTAPI
-USBPORT_FdoInternalDeviceControl(
-  IN PDEVICE_OBJECT FdoDevice,
-  IN PIRP Irp);
-
-NTSTATUS
-NTAPI
-USBPORT_PdoInternalDeviceControl(
+USBPORT_FdoScsi(
   IN PDEVICE_OBJECT FdoDevice,
   IN PIRP Irp);
 
@@ -886,23 +857,8 @@ USBPORT_GetSymbolicName(
   IN PDEVICE_OBJECT RootHubPdo,
   IN PUNICODE_STRING DestinationString);
 
-/* iso.c */
-USBD_STATUS
-NTAPI
-USBPORT_InitializeIsoTransfer(
-  IN PDEVICE_OBJECT FdoDevice,
-  IN struct _URB_ISOCH_TRANSFER * Urb,
-  IN PUSBPORT_TRANSFER Transfer);
-
-ULONG
-NTAPI
-USBPORT_CompleteIsoTransfer(
-  IN PVOID MiniPortExtension,
-  IN PVOID MiniPortEndpoint,
-  IN PVOID TransferParameters,
-  IN ULONG TransferLength);
-
 /* pnp.c */
+
 NTSTATUS
 NTAPI
 USBPORT_FdoPnP(
@@ -916,6 +872,7 @@ USBPORT_PdoPnP(
   IN PIRP Irp);
 
 /* power.c */
+
 NTSTATUS
 NTAPI
 USBPORT_PdoPower(
@@ -969,6 +926,7 @@ USBPORT_HcQueueWakeDpc(
   IN PDEVICE_OBJECT FdoDevice);
 
 /* queue.c */
+
 VOID
 NTAPI
 USBPORT_InsertIdleIrp(
@@ -1123,6 +1081,7 @@ USBPORT_AbortEndpoint(
   IN PIRP Irp);
 
 /* roothub.c */
+
 VOID
 NTAPI
 USBPORT_RootHubEndpointWorker(
@@ -1137,33 +1096,15 @@ USBPORT_RootHubCreateDevice(
 ULONG
 NTAPI
 USBPORT_InvalidateRootHub(
-  PVOID MiniPortExtension);
+  PVOID Context);
 
 VOID
 NTAPI
 USBPORT_RootHubPowerAndChirpAllCcPorts(
   IN PDEVICE_OBJECT FdoDevice);
 
-/* trfsplit.c */
-VOID
-NTAPI
-USBPORT_SplitTransfer(
-  IN PDEVICE_OBJECT FdoDevice,
-  IN PUSBPORT_ENDPOINT Endpoint,
-  IN PUSBPORT_TRANSFER Transfer,
-  IN PLIST_ENTRY List);
-
-VOID
-NTAPI
-USBPORT_DoneSplitTransfer(
-  IN PUSBPORT_TRANSFER SplitTransfer);
-
-VOID
-NTAPI
-USBPORT_CancelSplitTransfer(
-  IN PUSBPORT_TRANSFER SplitTransfer);
-
 /* urb.c */
+
 NTSTATUS
 NTAPI
 USBPORT_HandleSubmitURB(
@@ -1172,6 +1113,7 @@ USBPORT_HandleSubmitURB(
   IN PURB Urb);
 
 /* usb2.c */
+
 BOOLEAN
 NTAPI
 USBPORT_AllocateBandwidthUSB2(

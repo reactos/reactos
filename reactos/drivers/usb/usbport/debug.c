@@ -1,10 +1,3 @@
-/*
- * PROJECT:     ReactOS USB Port Driver
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     USBPort debugging functions
- * COPYRIGHT:   Copyright 2017 Vadim Galyant <vgal@rambler.ru>
- */
-
 #include "usbport.h"
 
 #define NDEBUG
@@ -16,18 +9,23 @@
 
 ULONG
 NTAPI
-USBPORT_DbgPrint(IN PVOID MiniPortExtension,
+USBPORT_DbgPrint(IN PVOID Context,
                  IN ULONG Level,
                  IN PCH Format,
-                 ...)
+                 IN ULONG Arg1,
+                 IN ULONG Arg2,
+                 IN ULONG Arg3,
+                 IN ULONG Arg4,
+                 IN ULONG Arg5,
+                 IN ULONG Arg6)
 {
     DPRINT("USBPORT_DbgPrint: UNIMPLEMENTED. FIXME. \n");
-    return 0;
+    return Level;
 }
 
 ULONG
 NTAPI
-USBPORT_TestDebugBreak(IN PVOID MiniPortExtension)
+USBPORT_TestDebugBreak(IN PVOID Context)
 {
     DPRINT("USBPORT_TestDebugBreak: UNIMPLEMENTED. FIXME. \n");
     return 0;
@@ -35,7 +33,7 @@ USBPORT_TestDebugBreak(IN PVOID MiniPortExtension)
 
 ULONG
 NTAPI
-USBPORT_AssertFailure(PVOID MiniPortExtension,
+USBPORT_AssertFailure(PVOID Context,
                       PVOID FailedAssertion,
                       PVOID FileName,
                       ULONG LineNumber,
@@ -48,30 +46,30 @@ USBPORT_AssertFailure(PVOID MiniPortExtension,
 
 VOID
 NTAPI
-USBPORT_BugCheck(IN PVOID MiniPortExtension)
+USBPORT_BugCheck(IN PVOID Context)
 {
     DPRINT1("USBPORT_BugCheck: FIXME \n");
-    //KeBugCheckEx(BUGCODE_USB_DRIVER, ...);
+    //KeBugCheckEx(...);
     ASSERT(FALSE);
 }
 
 ULONG
 NTAPI
-USBPORT_LogEntry(IN PVOID MiniPortExtension,
-                 IN ULONG DriverTag,
-                 IN ULONG EnumTag,
+USBPORT_LogEntry(IN PVOID BusContext,
+                 IN PVOID DriverTag,
+                 IN PVOID EnumTag,
                  IN ULONG P1,
                  IN ULONG P2,
                  IN ULONG P3)
 {
-    DPRINT_MINIPORT("USBPORT_LogEntry: MiniPortExtension - %p, EnumTag - %lx, P1 - %lx, P2 - %lx, P3 - %lx\n",
-           MiniPortExtension,
+    DPRINT_MINIPORT("USBPORT_LogEntry: BusContext - %p, EnumTag - %p, P1 - %p, P2 - %p, P3 - %p\n",
+           BusContext,
            EnumTag,
            P1,
            P2,
            P3);
 
-    return 0;
+    return (ULONG)BusContext;
 }
 
 VOID
@@ -251,27 +249,3 @@ USBPORT_DumpingURB(IN PURB Urb)
     SetupPacket = (PUSB_DEFAULT_PIPE_SETUP_PACKET)&Urb->UrbControlTransfer.SetupPacket;
     USBPORT_DumpingSetupPacket(SetupPacket);
 }
-
-VOID
-NTAPI
-USBPORT_DumpingIDs(IN PVOID Buffer)
-{
-    PWSTR Ptr;
-    ULONG Length;
-    ULONG TotalLength = 0;
-
-    Ptr = (PWSTR)Buffer;
-
-    while (*Ptr)
-    {
-        DPRINT("  %S\n", Ptr);
-        Length = (ULONG)wcslen(Ptr) + 1;
-
-        Ptr += Length;
-        TotalLength += Length;
-    }
-
-    DPRINT("TotalLength: %hu\n", TotalLength);
-    DPRINT("\n");
-}
-
