@@ -3,7 +3,8 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/bootsup.c
  * PURPOSE:         Bootloader support functions
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMERS:     Eric Kohl
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 #include "usetup.h"
@@ -11,6 +12,20 @@
 #define NDEBUG
 #include <debug.h>
 
+/*
+ * BIG FIXME!!
+ * ===========
+ *
+ * All that stuff *MUST* go into the fsutil.c module.
+ * Indeed, all that relates to filesystem formatting details and as such
+ * *MUST* be abstracted out from this module (bootsup.c).
+ * However, bootsup.c can still deal with MBR code (actually it'll have
+ * at some point to share or give it to partlist.c, because when we'll
+ * support GPT disks, things will change a bit).
+ * And, bootsup.c can still manage initializing / adding boot entries
+ * into NTLDR and FREELDR, and installing the latter, and saving the old
+ * MBR / boot sectors in files.
+ */
 #define SECTORSIZE 512
 
 #include <pshpack1.h>
@@ -90,10 +105,21 @@ typedef struct _EXT2_BOOTSECTOR
 
 #include <poppack.h>
 
-extern PPARTLIST PartitionList;
+/* End of BIG FIXME!! */
+
 
 /* FUNCTIONS ****************************************************************/
 
+static VOID
+TrimTrailingPathSeparators_UStr(
+    IN OUT PUNICODE_STRING UnicodeString)
+{
+    while (UnicodeString->Length >= sizeof(WCHAR) &&
+           UnicodeString->Buffer[UnicodeString->Length / sizeof(WCHAR) - 1] == OBJ_NAME_PATH_SEPARATOR)
+    {
+        UnicodeString->Length -= sizeof(WCHAR);
+    }
+}
 
 static
 VOID
@@ -825,7 +851,8 @@ UpdateBootIni(
 
 
 BOOLEAN
-IsThereAValidBootSector(PWSTR RootPath)
+IsThereAValidBootSector(
+    IN PCWSTR RootPath)
 {
     /*
      * We first demand that the bootsector has a valid signature at its end.
@@ -835,9 +862,10 @@ IsThereAValidBootSector(PWSTR RootPath)
      * non-zero. If both these tests pass, then the bootsector is valid; otherwise
      * it is invalid and certainly needs to be overwritten.
      */
+
     BOOLEAN IsValid = FALSE;
     NTSTATUS Status;
-    UNICODE_STRING Name;
+    UNICODE_STRING RootPartition;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
     HANDLE FileHandle;
@@ -849,12 +877,14 @@ IsThereAValidBootSector(PWSTR RootPath)
     BootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
     if (BootSector == NULL)
         return FALSE; // STATUS_INSUFFICIENT_RESOURCES;
+    RtlZeroMemory(BootSector, SECTORSIZE);
 
-    /* Read current boot sector into buffer */
-    RtlInitUnicodeString(&Name, RootPath);
+    /* Open the root partition - Remove any trailing backslash if needed */
+    RtlInitUnicodeString(&RootPartition, RootPath);
+    TrimTrailingPathSeparators_UStr(&RootPartition);
 
     InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
+                               &RootPartition,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
@@ -868,8 +898,7 @@ IsThereAValidBootSector(PWSTR RootPath)
     if (!NT_SUCCESS(Status))
         goto Quit;
 
-    RtlZeroMemory(BootSector, SECTORSIZE);
-
+    /* Read current boot sector into buffer */
     FileOffset.QuadPart = 0ULL;
     Status = NtReadFile(FileHandle,
                         NULL,
@@ -899,9 +928,9 @@ Quit:
 
 NTSTATUS
 SaveBootSector(
-    PWSTR RootPath,
-    PWSTR DstPath,
-    ULONG Length)
+    IN PCWSTR RootPath,
+    IN PCWSTR DstPath,
+    IN ULONG Length)
 {
     NTSTATUS Status;
     UNICODE_STRING Name;
@@ -916,8 +945,9 @@ SaveBootSector(
     if (BootSector == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Read current boot sector into buffer */
+    /* Open the root partition - Remove any trailing backslash if needed */
     RtlInitUnicodeString(&Name, RootPath);
+    TrimTrailingPathSeparators_UStr(&Name);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
@@ -937,6 +967,7 @@ SaveBootSector(
         return Status;
     }
 
+    /* Read current boot sector into buffer */
     FileOffset.QuadPart = 0ULL;
     Status = NtReadFile(FileHandle,
                         NULL,
@@ -997,11 +1028,10 @@ SaveBootSector(
     return Status;
 }
 
-
 NTSTATUS
 InstallMbrBootCodeToDisk(
-    PWSTR SrcPath,
-    PWSTR RootPath)
+    IN PCWSTR SrcPath,
+    IN PCWSTR RootPath)
 {
     NTSTATUS Status;
     UNICODE_STRING Name;
@@ -1013,15 +1043,13 @@ InstallMbrBootCodeToDisk(
     PPARTITION_SECTOR NewBootSector;
 
     /* Allocate buffer for original bootsector */
-    OrigBootSector = (PPARTITION_SECTOR)RtlAllocateHeap(ProcessHeap,
-                     0,
-                     sizeof(PARTITION_SECTOR));
+    OrigBootSector = RtlAllocateHeap(ProcessHeap, 0, sizeof(PARTITION_SECTOR));
     if (OrigBootSector == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Read current boot sector into buffer */
-    RtlInitUnicodeString(&Name,
-                         RootPath);
+    /* Open the root partition - Remove any trailing backslash if needed */
+    RtlInitUnicodeString(&Name, RootPath);
+    TrimTrailingPathSeparators_UStr(&Name);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
@@ -1041,6 +1069,7 @@ InstallMbrBootCodeToDisk(
         return Status;
     }
 
+    /* Read current boot sector into buffer */
     FileOffset.QuadPart = 0ULL;
     Status = NtReadFile(FileHandle,
                         NULL,
@@ -1059,9 +1088,7 @@ InstallMbrBootCodeToDisk(
     }
 
     /* Allocate buffer for new bootsector */
-    NewBootSector = (PPARTITION_SECTOR)RtlAllocateHeap(ProcessHeap,
-                    0,
-                    sizeof(PARTITION_SECTOR));
+    NewBootSector = RtlAllocateHeap(ProcessHeap, 0, sizeof(PARTITION_SECTOR));
     if (NewBootSector == NULL)
     {
         RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -1113,7 +1140,8 @@ InstallMbrBootCodeToDisk(
      */
     RtlCopyMemory(&NewBootSector->Signature,
                   &OrigBootSector->Signature,
-                  sizeof(PARTITION_SECTOR) - offsetof(PARTITION_SECTOR, Signature) /* Length of partition table */);
+                  sizeof(PARTITION_SECTOR) - offsetof(PARTITION_SECTOR, Signature)
+                    /* Length of partition table */);
 
     /* Free the original boot sector */
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -1158,11 +1186,12 @@ InstallMbrBootCodeToDisk(
     return Status;
 }
 
+
 static
 NTSTATUS
 InstallFat12BootCodeToFloppy(
-    PWSTR SrcPath,
-    PWSTR RootPath)
+    IN PCWSTR SrcPath,
+    IN PCWSTR RootPath)
 {
     NTSTATUS Status;
     UNICODE_STRING Name;
@@ -1178,8 +1207,9 @@ InstallFat12BootCodeToFloppy(
     if (OrigBootSector == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Read current boot sector into buffer */
+    /* Open the root partition - Remove any trailing backslash if needed */
     RtlInitUnicodeString(&Name, RootPath);
+    TrimTrailingPathSeparators_UStr(&Name);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
@@ -1199,6 +1229,7 @@ InstallFat12BootCodeToFloppy(
         return Status;
     }
 
+    /* Read current boot sector into buffer */
     FileOffset.QuadPart = 0ULL;
     Status = NtReadFile(FileHandle,
                         NULL,
@@ -1316,10 +1347,10 @@ InstallFat12BootCodeToFloppy(
 
 static
 NTSTATUS
-InstallFat16BootCodeToFile(
-    PWSTR SrcPath,
-    PWSTR DstPath,
-    PWSTR RootPath)
+InstallFat16BootCode(
+    IN PCWSTR SrcPath,          // FAT16 bootsector source file (on the installation medium)
+    IN HANDLE DstPath,          // Where to save the bootsector built from the source + partition information
+    IN HANDLE RootPartition)    // Partition holding the (old) FAT16 information
 {
     NTSTATUS Status;
     UNICODE_STRING Name;
@@ -1330,34 +1361,14 @@ InstallFat16BootCodeToFile(
     PFAT_BOOTSECTOR OrigBootSector;
     PFAT_BOOTSECTOR NewBootSector;
 
-    /* Allocate buffer for original bootsector */
+    /* Allocate a buffer for the original bootsector */
     OrigBootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
     if (OrigBootSector == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Read current boot sector into buffer */
-    RtlInitUnicodeString(&Name, RootPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        return Status;
-    }
-
+    /* Read the current partition boot sector into the buffer */
     FileOffset.QuadPart = 0ULL;
-    Status = NtReadFile(FileHandle,
+    Status = NtReadFile(RootPartition,
                         NULL,
                         NULL,
                         NULL,
@@ -1366,14 +1377,13 @@ InstallFat16BootCodeToFile(
                         SECTORSIZE,
                         &FileOffset,
                         NULL);
-    NtClose(FileHandle);
     if (!NT_SUCCESS(Status))
     {
         RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
         return Status;
     }
 
-    /* Allocate buffer for new bootsector */
+    /* Allocate a buffer for the new bootsector */
     NewBootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
     if (NewBootSector == NULL)
     {
@@ -1381,15 +1391,13 @@ InstallFat16BootCodeToFile(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    /* Read new bootsector from SrcPath */
+    /* Read the new bootsector from SrcPath */
     RtlInitUnicodeString(&Name, SrcPath);
-
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
-
     Status = NtOpenFile(&FileHandle,
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
@@ -1421,7 +1429,7 @@ InstallFat16BootCodeToFile(
         return Status;
     }
 
-    /* Adjust bootsector (copy a part of the FAT BPB) */
+    /* Adjust the bootsector (copy a part of the FAT16 BPB) */
     memcpy(&NewBootSector->OemName,
            &OrigBootSector->OemName,
            FIELD_OFFSET(FAT_BOOTSECTOR, BootCodeAndData) -
@@ -1430,15 +1438,66 @@ InstallFat16BootCodeToFile(
     /* Free the original boot sector */
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
 
-    /* Write new bootsector to DstPath */
-    RtlInitUnicodeString(&Name, DstPath);
+    /* Write the new bootsector to DstPath */
+    FileOffset.QuadPart = 0ULL;
+    Status = NtWriteFile(DstPath,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &IoStatusBlock,
+                         NewBootSector,
+                         SECTORSIZE,
+                         &FileOffset,
+                         NULL);
+
+    /* Free the new boot sector */
+    RtlFreeHeap(ProcessHeap, 0, NewBootSector);
+
+    return Status;
+}
+
+static
+NTSTATUS
+InstallFat16BootCodeToFile(
+    IN PCWSTR SrcPath,
+    IN PCWSTR DstPath,
+    IN PCWSTR RootPath)
+{
+    NTSTATUS Status;
+    UNICODE_STRING Name;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE PartitionHandle, FileHandle;
+
+    /*
+     * Open the root partition from which the boot sector
+     * parameters will be obtained.
+     * Remove any trailing backslash if needed.
+     */
+    RtlInitUnicodeString(&Name, RootPath);
+    TrimTrailingPathSeparators_UStr(&Name);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
-                               0,
+                               OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
+    Status = NtOpenFile(&PartitionHandle,
+                        GENERIC_READ | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        0,
+                        FILE_SYNCHRONOUS_IO_NONALERT /* | FILE_SEQUENTIAL_ONLY */);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
+    /* Open or create the file where the new bootsector will be saved */
+    RtlInitUnicodeString(&Name, DstPath);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               0, // OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
     Status = NtCreateFile(&FileHandle,
                           GENERIC_WRITE | SYNCHRONIZE,
                           &ObjectAttributes,
@@ -1452,24 +1511,17 @@ InstallFat16BootCodeToFile(
                           0);
     if (!NT_SUCCESS(Status))
     {
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
+        DPRINT1("NtCreateFile() failed (Status %lx)\n", Status);
+        NtClose(PartitionHandle);
         return Status;
     }
 
-    FileOffset.QuadPart = 0ULL;
-    Status = NtWriteFile(FileHandle,
-                         NULL,
-                         NULL,
-                         NULL,
-                         &IoStatusBlock,
-                         NewBootSector,
-                         SECTORSIZE,
-                         NULL,
-                         NULL);
-    NtClose(FileHandle);
+    /* Install the FAT16 boot sector */
+    Status = InstallFat16BootCode(SrcPath, FileHandle, PartitionHandle);
 
-    /* Free the new boot sector */
-    RtlFreeHeap(ProcessHeap, 0, NewBootSector);
+    /* Close the file and the partition */
+    NtClose(FileHandle);
+    NtClose(PartitionHandle);
 
     return Status;
 }
@@ -1477,365 +1529,53 @@ InstallFat16BootCodeToFile(
 static
 NTSTATUS
 InstallFat16BootCodeToDisk(
-    PWSTR SrcPath,
-    PWSTR RootPath)
+    IN PCWSTR SrcPath,
+    IN PCWSTR RootPath)
 {
     NTSTATUS Status;
     UNICODE_STRING Name;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
-    HANDLE FileHandle;
-    LARGE_INTEGER FileOffset;
-    PFAT_BOOTSECTOR OrigBootSector;
-    PFAT_BOOTSECTOR NewBootSector;
+    HANDLE PartitionHandle;
 
-    /* Allocate buffer for original bootsector */
-    OrigBootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
-    if (OrigBootSector == NULL)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    /* Read current boot sector into buffer */
+    /*
+     * Open the root partition from which the boot sector parameters will be
+     * obtained; this is also where we will write the updated boot sector.
+     * Remove any trailing backslash if needed.
+     */
     RtlInitUnicodeString(&Name, RootPath);
+    TrimTrailingPathSeparators_UStr(&Name);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        return Status;
-    }
-
-    FileOffset.QuadPart = 0ULL;
-    Status = NtReadFile(FileHandle,
-                        NULL,
-                        NULL,
-                        NULL,
-                        &IoStatusBlock,
-                        OrigBootSector,
-                        SECTORSIZE,
-                        &FileOffset,
-                        NULL);
-    NtClose(FileHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        return Status;
-    }
-
-    /* Allocate buffer for new bootsector */
-    NewBootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
-    if (NewBootSector == NULL)
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* Read new bootsector from SrcPath */
-    RtlInitUnicodeString(&Name, SrcPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    Status = NtReadFile(FileHandle,
-                        NULL,
-                        NULL,
-                        NULL,
-                        &IoStatusBlock,
-                        NewBootSector,
-                        SECTORSIZE,
-                        NULL,
-                        NULL);
-    NtClose(FileHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    /* Adjust bootsector (copy a part of the FAT16 BPB) */
-    memcpy(&NewBootSector->OemName,
-           &OrigBootSector->OemName,
-           FIELD_OFFSET(FAT_BOOTSECTOR, BootCodeAndData) -
-           FIELD_OFFSET(FAT_BOOTSECTOR, OemName));
-
-    /* Free the original boot sector */
-    RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-
-    /* Write new bootsector to RootPath */
-    RtlInitUnicodeString(&Name, RootPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               0,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_WRITE | SYNCHRONIZE,
+    Status = NtOpenFile(&PartitionHandle,
+                        GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         0,
                         FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY);
     if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
         return Status;
-    }
 
-    FileOffset.QuadPart = 0ULL;
-    Status = NtWriteFile(FileHandle,
-                         NULL,
-                         NULL,
-                         NULL,
-                         &IoStatusBlock,
-                         NewBootSector,
-                         SECTORSIZE,
-                         &FileOffset,
-                         NULL);
-    NtClose(FileHandle);
+    /* Install the FAT16 boot sector */
+    Status = InstallFat16BootCode(SrcPath, PartitionHandle, PartitionHandle);
 
-    /* Free the new boot sector */
-    RtlFreeHeap(ProcessHeap, 0, NewBootSector);
+    /* Close the partition */
+    NtClose(PartitionHandle);
 
     return Status;
 }
 
-static
-NTSTATUS
-InstallFat32BootCodeToFile(
-    PWSTR SrcPath,
-    PWSTR DstPath,
-    PWSTR RootPath)
-{
-    NTSTATUS Status;
-    UNICODE_STRING Name;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
-    HANDLE FileHandle;
-    LARGE_INTEGER FileOffset;
-    PFAT32_BOOTSECTOR OrigBootSector;
-    PFAT32_BOOTSECTOR NewBootSector;
-
-    /* Allocate buffer for original bootsector */
-    OrigBootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
-    if (OrigBootSector == NULL)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    /* Read current boot sector into buffer */
-    RtlInitUnicodeString(&Name, RootPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        return Status;
-    }
-
-    FileOffset.QuadPart = 0ULL;
-    Status = NtReadFile(FileHandle,
-                        NULL,
-                        NULL,
-                        NULL,
-                        &IoStatusBlock,
-                        OrigBootSector,
-                        SECTORSIZE,
-                        NULL,
-                        NULL);
-    NtClose(FileHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        return Status;
-    }
-
-    /* Allocate buffer for new bootsector (2 sectors) */
-    NewBootSector = RtlAllocateHeap(ProcessHeap, 0, 2 * SECTORSIZE);
-    if (NewBootSector == NULL)
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* Read new bootsector from SrcPath */
-    RtlInitUnicodeString(&Name, SrcPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    Status = NtReadFile(FileHandle,
-                        NULL,
-                        NULL,
-                        NULL,
-                        &IoStatusBlock,
-                        NewBootSector,
-                        2 * SECTORSIZE,
-                        NULL,
-                        NULL);
-    NtClose(FileHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    /* Adjust bootsector (copy a part of the FAT32 BPB) */
-    memcpy(&NewBootSector->OemName,
-           &OrigBootSector->OemName,
-           FIELD_OFFSET(FAT32_BOOTSECTOR, BootCodeAndData) -
-           FIELD_OFFSET(FAT32_BOOTSECTOR, OemName));
-
-    /* Disable the backup boot sector */
-    NewBootSector->BackupBootSector = 0;
-
-    /* Free the original boot sector */
-    RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-
-    /* Write the first sector of the new bootcode to DstPath */
-    RtlInitUnicodeString(&Name, DstPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               0,
-                               NULL,
-                               NULL);
-
-    Status = NtCreateFile(&FileHandle,
-                          GENERIC_WRITE | SYNCHRONIZE,
-                          &ObjectAttributes,
-                          &IoStatusBlock,
-                          NULL,
-                          FILE_ATTRIBUTE_NORMAL,
-                          0,
-                          FILE_SUPERSEDE,
-                          FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
-                          NULL,
-                          0);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    FileOffset.QuadPart = 0ULL;
-    Status = NtWriteFile(FileHandle,
-                         NULL,
-                         NULL,
-                         NULL,
-                         &IoStatusBlock,
-                         NewBootSector,
-                         SECTORSIZE,
-                         NULL,
-                         NULL);
-    NtClose(FileHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    /* Write the second sector of the new bootcode to boot disk sector 14 */
-    RtlInitUnicodeString(&Name, RootPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               0,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_WRITE | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    FileOffset.QuadPart = (ULONGLONG)(14 * SECTORSIZE);
-    Status = NtWriteFile(FileHandle,
-                         NULL,
-                         NULL,
-                         NULL,
-                         &IoStatusBlock,
-                         ((PUCHAR)NewBootSector + SECTORSIZE),
-                         SECTORSIZE,
-                         &FileOffset,
-                         NULL);
-    if (!NT_SUCCESS(Status))
-    {
-    }
-    NtClose(FileHandle);
-
-    /* Free the new boot sector */
-    RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-
-    return Status;
-}
 
 static
 NTSTATUS
-InstallFat32BootCodeToDisk(
-    PWSTR SrcPath,
-    PWSTR RootPath)
+InstallFat32BootCode(
+    IN PCWSTR SrcPath,          // FAT32 bootsector source file (on the installation medium)
+    IN HANDLE DstPath,          // Where to save the bootsector built from the source + partition information
+    IN HANDLE RootPartition)    // Partition holding the (old) FAT32 information
 {
     NTSTATUS Status;
     UNICODE_STRING Name;
@@ -1847,34 +1587,14 @@ InstallFat32BootCodeToDisk(
     PFAT32_BOOTSECTOR NewBootSector;
     USHORT BackupBootSector;
 
-    /* Allocate buffer for original bootsector */
+    /* Allocate a buffer for the original bootsector */
     OrigBootSector = RtlAllocateHeap(ProcessHeap, 0, SECTORSIZE);
     if (OrigBootSector == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Read current boot sector into buffer */
-    RtlInitUnicodeString(&Name, RootPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
-        return Status;
-    }
-
+    /* Read the current boot sector into the buffer */
     FileOffset.QuadPart = 0ULL;
-    Status = NtReadFile(FileHandle,
+    Status = NtReadFile(RootPartition,
                         NULL,
                         NULL,
                         NULL,
@@ -1883,15 +1603,13 @@ InstallFat32BootCodeToDisk(
                         SECTORSIZE,
                         &FileOffset,
                         NULL);
-    NtClose(FileHandle);
     if (!NT_SUCCESS(Status))
     {
         RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
         return Status;
     }
 
-
-    /* Allocate buffer for new bootsector (2 sectors) */
+    /* Allocate a buffer for the new bootsector (2 sectors) */
     NewBootSector = RtlAllocateHeap(ProcessHeap, 0, 2 * SECTORSIZE);
     if (NewBootSector == NULL)
     {
@@ -1899,15 +1617,13 @@ InstallFat32BootCodeToDisk(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    /* Read new bootsector from SrcPath */
+    /* Read the new bootsector from SrcPath */
     RtlInitUnicodeString(&Name, SrcPath);
-
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
-
     Status = NtOpenFile(&FileHandle,
                         GENERIC_READ | SYNCHRONIZE,
                         &ObjectAttributes,
@@ -1921,6 +1637,7 @@ InstallFat32BootCodeToDisk(
         return Status;
     }
 
+    FileOffset.QuadPart = 0ULL;
     Status = NtReadFile(FileHandle,
                         NULL,
                         NULL,
@@ -1928,7 +1645,7 @@ InstallFat32BootCodeToDisk(
                         &IoStatusBlock,
                         NewBootSector,
                         2 * SECTORSIZE,
-                        NULL,
+                        &FileOffset,
                         NULL);
     NtClose(FileHandle);
     if (!NT_SUCCESS(Status))
@@ -1938,43 +1655,33 @@ InstallFat32BootCodeToDisk(
         return Status;
     }
 
-    /* Adjust bootsector (copy a part of the FAT32 BPB) */
+    /* Adjust the bootsector (copy a part of the FAT32 BPB) */
     memcpy(&NewBootSector->OemName,
            &OrigBootSector->OemName,
            FIELD_OFFSET(FAT32_BOOTSECTOR, BootCodeAndData) -
            FIELD_OFFSET(FAT32_BOOTSECTOR, OemName));
 
-    /* Get the location of the backup boot sector */
-    BackupBootSector = OrigBootSector->BackupBootSector;
+    /*
+     * We know we copy the boot code to a file only when DstPath != RootPartition,
+     * otherwise the boot code is copied to the specified root partition.
+     */
+    if (DstPath != RootPartition)
+    {
+        /* Copy to a file: Disable the backup boot sector */
+        NewBootSector->BackupBootSector = 0;
+    }
+    else
+    {
+        /* Copy to a disk: Get the location of the backup boot sector */
+        BackupBootSector = OrigBootSector->BackupBootSector;
+    }
 
     /* Free the original boot sector */
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
 
-    /* Write the first sector of the new bootcode to DstPath */
-    RtlInitUnicodeString(&Name, RootPath);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               0,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_WRITE | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
-        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-        return Status;
-    }
-
-    /* Write sector 0 */
+    /* Write the first sector of the new bootcode to DstPath sector 0 */
     FileOffset.QuadPart = 0ULL;
-    Status = NtWriteFile(FileHandle,
+    Status = NtWriteFile(DstPath,
                          NULL,
                          NULL,
                          NULL,
@@ -1986,36 +1693,38 @@ InstallFat32BootCodeToDisk(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
-        NtClose(FileHandle);
         RtlFreeHeap(ProcessHeap, 0, NewBootSector);
         return Status;
     }
 
-    /* Write backup boot sector */
-    if ((BackupBootSector != 0x0000) && (BackupBootSector != 0xFFFF))
+    if (DstPath == RootPartition)
     {
-        FileOffset.QuadPart = (ULONGLONG)((ULONG)BackupBootSector * SECTORSIZE);
-        Status = NtWriteFile(FileHandle,
-                             NULL,
-                             NULL,
-                             NULL,
-                             &IoStatusBlock,
-                             NewBootSector,
-                             SECTORSIZE,
-                             &FileOffset,
-                             NULL);
-        if (!NT_SUCCESS(Status))
+        /* Copy to a disk: Write the backup boot sector */
+        if ((BackupBootSector != 0x0000) && (BackupBootSector != 0xFFFF))
         {
-            DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
-            NtClose(FileHandle);
-            RtlFreeHeap(ProcessHeap, 0, NewBootSector);
-            return Status;
+            FileOffset.QuadPart = (ULONGLONG)((ULONG)BackupBootSector * SECTORSIZE);
+            Status = NtWriteFile(DstPath,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 &IoStatusBlock,
+                                 NewBootSector,
+                                 SECTORSIZE,
+                                 &FileOffset,
+                                 NULL);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
+                RtlFreeHeap(ProcessHeap, 0, NewBootSector);
+                return Status;
+            }
         }
     }
 
-    /* Write sector 14 */
+    /* Write the second sector of the new bootcode to boot disk sector 14 */
+    // FileOffset.QuadPart = (ULONGLONG)(14 * SECTORSIZE);
     FileOffset.QuadPart = 14 * SECTORSIZE;
-    Status = NtWriteFile(FileHandle,
+    Status = NtWriteFile(DstPath,   // or really RootPartition ???
                          NULL,
                          NULL,
                          NULL,
@@ -2028,13 +1737,130 @@ InstallFat32BootCodeToDisk(
     {
         DPRINT1("NtWriteFile() failed (Status %lx)\n", Status);
     }
-    NtClose(FileHandle);
 
     /* Free the new boot sector */
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
 
     return Status;
 }
+
+static
+NTSTATUS
+InstallFat32BootCodeToFile(
+    IN PCWSTR SrcPath,
+    IN PCWSTR DstPath,
+    IN PCWSTR RootPath)
+{
+    NTSTATUS Status;
+    UNICODE_STRING Name;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE PartitionHandle, FileHandle;
+
+    /*
+     * Open the root partition from which the boot sector parameters
+     * will be obtained.
+     * FIXME? It might be possible that we need to also open it for writing
+     * access in case we really need to still write the second portion of
+     * the boot sector ????
+     *
+     * Remove any trailing backslash if needed.
+     */
+    RtlInitUnicodeString(&Name, RootPath);
+    TrimTrailingPathSeparators_UStr(&Name);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenFile(&PartitionHandle,
+                        GENERIC_READ | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        0,
+                        FILE_SYNCHRONOUS_IO_NONALERT /* | FILE_SEQUENTIAL_ONLY */);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Open or create the file where (the first sector of ????) the new bootsector will be saved */
+    RtlInitUnicodeString(&Name, DstPath);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               0, // OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtCreateFile(&FileHandle,
+                          GENERIC_WRITE | SYNCHRONIZE,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          FILE_ATTRIBUTE_NORMAL,
+                          0,
+                          FILE_SUPERSEDE, // FILE_OVERWRITE_IF, <- is used for FAT16
+                          FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
+                          NULL,
+                          0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtCreateFile() failed (Status %lx)\n", Status);
+        NtClose(PartitionHandle);
+        return Status;
+    }
+
+    /* Install the FAT32 boot sector */
+    Status = InstallFat32BootCode(SrcPath, FileHandle, PartitionHandle);
+
+    /* Close the file and the partition */
+    NtClose(FileHandle);
+    NtClose(PartitionHandle);
+
+    return Status;
+}
+
+static
+NTSTATUS
+InstallFat32BootCodeToDisk(
+    IN PCWSTR SrcPath,
+    IN PCWSTR RootPath)
+{
+    NTSTATUS Status;
+    UNICODE_STRING Name;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE PartitionHandle;
+
+    /*
+     * Open the root partition from which the boot sector parameters will be
+     * obtained; this is also where we will write the updated boot sector.
+     * Remove any trailing backslash if needed.
+     */
+    RtlInitUnicodeString(&Name, RootPath);
+    TrimTrailingPathSeparators_UStr(&Name);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenFile(&PartitionHandle,
+                        GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        0,
+                        FILE_SYNCHRONOUS_IO_NONALERT /* | FILE_SEQUENTIAL_ONLY */);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Install the FAT32 boot sector */
+    Status = InstallFat32BootCode(SrcPath, PartitionHandle, PartitionHandle);
+
+    /* Close the partition */
+    NtClose(PartitionHandle);
+
+    return Status;
+}
+
 
 // FIXME: This function does not really work
 static
@@ -2059,8 +1885,9 @@ InstallExt2BootCodeToDisk(
     if (OrigBootSector == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Read current boot sector into buffer */
+    /* Open the root partition - Remove any trailing backslash if needed */
     RtlInitUnicodeString(&Name, RootPath);
+    TrimTrailingPathSeparators_UStr(&Name);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
@@ -2080,6 +1907,7 @@ InstallExt2BootCodeToDisk(
         return Status;
     }
 
+    /* Read current boot sector into buffer */
     FileOffset.QuadPart = 0ULL;
     Status = NtReadFile(FileHandle,
                         NULL,
@@ -2151,8 +1979,6 @@ InstallExt2BootCodeToDisk(
            &OrigBootSector->OemName,
            FIELD_OFFSET(FAT32_BOOTSECTOR, BootCodeAndData) -
            FIELD_OFFSET(FAT32_BOOTSECTOR, OemName));
-
-    NewBootSector->HiddenSectors = PartitionList->CurrentDisk->SectorsPerTrack;
 
     /* Get the location of the backup boot sector */
     BackupBootSector = OrigBootSector->BackupBootSector;
