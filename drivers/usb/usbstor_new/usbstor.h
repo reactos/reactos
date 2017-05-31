@@ -61,6 +61,8 @@ typedef struct
     ULONG SrbErrorHandlingActive;                                                        // error handling of srb is activated
     ULONG TimerWorkQueueEnabled;                                                         // timer work queue enabled
     ULONG InstanceCount;                                                                 // pdo instance count
+    KSPIN_LOCK StorSpinLock;
+    KEVENT TimeOutEvent;
 }FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 typedef struct
