@@ -62,6 +62,26 @@ USBSTOR_ResetPipeWithHandle(
 
 VOID
 NTAPI
+USBSTOR_BulkResetPipeWorkItem(
+    IN PDEVICE_OBJECT FdoDevice,
+    IN PVOID Context)
+{
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+
+    DPRINT("USBSTOR_BulkResetPipeWorkItem: \n");
+
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
+
+    USBSTOR_ResetPipeWithHandle(FDODeviceExtension->LowerDeviceObject,
+                                FDODeviceExtension->Urb.PipeHandle);
+
+    USBSTOR_CswTransfer(FDODeviceExtension, FdoDevice->CurrentIrp);
+
+    //FIXME RemoveLock
+}
+
+VOID
+NTAPI
 USBSTOR_BulkQueueResetPipe(
     IN PFDO_DEVICE_EXTENSION FDODeviceExtension)
 {

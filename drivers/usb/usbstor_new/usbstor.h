@@ -532,19 +532,8 @@ USBSTOR_HandleExecuteSCSI(
 
 NTSTATUS
 NTAPI
-USBSTOR_CSWCompletionRoutine(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp,
-    PVOID Ctx);
-
-NTSTATUS
-USBSTOR_SendCBW(
-    PIRP_CONTEXT Context,
-    PIRP Irp);
-
-VOID
-USBSTOR_SendCSW(
-    PIRP_CONTEXT Context,
+USBSTOR_CswTransfer(
+    PFDO_DEVICE_EXTENSION FDODeviceExtension,
     PIRP Irp);
 
 NTSTATUS
