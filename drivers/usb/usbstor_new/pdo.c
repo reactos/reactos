@@ -32,58 +32,54 @@ USBSTOR_GetDeviceType(
     IN UCHAR IsFloppy)
 {
     //
-    // check if device type is zero
-    //
-    if (InquiryData->DeviceType == 0)
-    {
-        if (IsFloppy)
-        {
-            //
-            // floppy device
-            //
-            return "SFloppy";
-        }
-
-        //
-        // direct access device
-        //
-        return "Disk";
-    }
-
-    //
-    // FIXME: use constant - derived from http://en.wikipedia.org/wiki/SCSI_Peripheral_Device_Type
+    // check device type
     //
     switch (InquiryData->DeviceType)
     {
-        case 1:
+        case USBSTOR_SCSI_DEVICE_TYPE_DIRECT:
+        {
+            if (IsFloppy)
+            {
+                //
+                // floppy device
+                //
+                return "SFloppy";
+            }
+
+            //
+            // direct access device
+            //
+            return "Disk";
+        }
+        case USBSTOR_SCSI_DEVICE_TYPE_SEQUENTIAL:
         {
             //
             // sequential device, i.e magnetic tape
             //
             return "Sequential";
         }
-        case 4:
+        case USBSTOR_SCSI_DEVICE_TYPE_WORM:
         {
             //
             // write once device
             //
             return "Worm";
         }
-        case 5:
+        case USBSTOR_SCSI_DEVICE_TYPE_CDROM:
         {
             //
             // CDROM device
             //
             return "CdRom";
         }
-        case 7:
+        case USBSTOR_SCSI_DEVICE_TYPE_OPTICAL:
         {
             //
             // optical memory device
             //
             return "Optical";
         }
-        case 8:
+        case USBSTOR_SCSI_DEVICE_TYPE_MEDIA_CHANGER:
         {
             //
             // medium change device
