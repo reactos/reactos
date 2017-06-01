@@ -10,6 +10,49 @@
 #define USB_STOR_TAG 'sbsu'
 #define USB_MAXCHILDREN              (16)
 
+/*
+ * Ported from linux.
+ * Device and/or Interface Class codes
+ * as found in bDeviceClass or bInterfaceClass
+ * and defined by www.usb.org documents
+ */
+
+/* Storage class code */
+
+#define USB_CLASS_MASS_STORAGE  0x08
+
+/* Storage subclass codes */
+
+#define USB_SUBCLASS_RBC        0x01    /* Typically, flash devices */
+#define USB_SUBCLASS_8020       0x02    /* CD-ROM */
+#define USB_SUBCLASS_QIC        0x03    /* QIC-157 Tapes */
+#define USB_SUBCLASS_UFI        0x04    /* Floppy */
+#define USB_SUBCLASS_8070       0x05    /* Removable media */
+#define USB_SUBCLASS_SCSI       0x06    /* Transparent */
+#define USB_SUBCLASS_LOCKABLE   0x07    /* Password-protected */
+
+#define USB_SUBCLASS_ISD200     0xF0    /* ISD200 ATA */
+#define USB_SUBCLASS_CYP_ATACB  0xF1    /* Cypress ATACB */
+#define USB_SUBCLASS_VENDOR     0xFF    /* Use vendor specific */
+
+/* Storage protocol codes */
+
+#define USB_PROTOCOL_CBI          0x00    /* Control/Bulk/Interrupt */
+#define USB_PROTOCOL_CB           0x01    /* Control/Bulk w/o interrupt */
+#define USB_PROTOCOL_BULK         0x50    /* bulk only */
+#define USB_PROTOCOL_UAS          0x62    /* USB Attached SCSI */
+#define USB_PROTOCOL_USBAT        0x80    /* SCM-ATAPI bridge */
+#define USB_PROTOCOL_EUSB_SDDR09  0x81    /* SCM-SCSI bridge for SDDR-09 */
+#define USB_PROTOCOL_SDDR55       0x82    /* SDDR-55 (made up) */
+
+#define USB_PROTOCOL_DPCM_USB     0xF0    /* Combination CB/SDDR09 */
+#define USB_PROTOCOL_FREECOM      0xF1    /* Freecom */
+#define USB_PROTOCOL_DATAFAB      0xF2    /* Datafab chipsets */
+#define USB_PROTOCOL_JUMPSHOT     0xF3    /* Lexar Jumpshot */
+#define USB_PROTOCOL_ALAUDA       0xF4    /* Alauda chipsets */
+#define USB_PROTOCOL_KARMA        0xF5    /* Rio Karma */
+#define USB_PROTOCOL_VENDOR       0xFF    /* Use vendor specific */
+
 #define HTONS(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
 #define NTOHS(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
 
