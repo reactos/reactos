@@ -60,7 +60,7 @@ typedef struct
     BOOLEAN IrpListFreeze;                                                               // if true the irp list is freezed
     BOOLEAN ResetInProgress;                                                             // if hard reset is in progress
     ULONG IrpPendingCount;                                                               // count of irp pending
-    PSCSI_REQUEST_BLOCK ActiveSrb;                                                       // stores the current active SRB
+    PSCSI_REQUEST_BLOCK CurrentSrb;                                                       // stores the current active SRB
     KEVENT NoPendingRequests;                                                            // set if no pending or in progress requests
     PSCSI_REQUEST_BLOCK LastTimerActiveSrb;                                              // last timer tick active srb
     ULONG SrbErrorHandlingActive;                                                        // error handling of srb is activated

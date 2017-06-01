@@ -345,7 +345,7 @@ USBSTOR_TimerRoutine(
     //
     FDODeviceExtension = (PFDO_DEVICE_EXTENSION)Context;
     DPRINT1("[USBSTOR] TimerRoutine entered\n");
-    DPRINT1("[USBSTOR] ActiveSrb %p ResetInProgress %x LastTimerActiveSrb %p\n", FDODeviceExtension->ActiveSrb, FDODeviceExtension->ResetInProgress, FDODeviceExtension->LastTimerActiveSrb);
+    DPRINT1("[USBSTOR] CurrentSrb %p ResetInProgress %x LastTimerActiveSrb %p\n", FDODeviceExtension->CurrentSrb, FDODeviceExtension->ResetInProgress, FDODeviceExtension->LastTimerActiveSrb);
 
     //
     // acquire spinlock
@@ -355,14 +355,14 @@ USBSTOR_TimerRoutine(
     //
     // is there an active srb and no global reset is in progress
     //
-    if (FDODeviceExtension->ActiveSrb && FDODeviceExtension->ResetInProgress == FALSE && FDODeviceExtension->TimerWorkQueueEnabled)
+    if (FDODeviceExtension->CurrentSrb && FDODeviceExtension->ResetInProgress == FALSE && FDODeviceExtension->TimerWorkQueueEnabled)
     {
-        if (FDODeviceExtension->LastTimerActiveSrb != NULL && FDODeviceExtension->LastTimerActiveSrb == FDODeviceExtension->ActiveSrb)
+        if (FDODeviceExtension->LastTimerActiveSrb != NULL && FDODeviceExtension->LastTimerActiveSrb == FDODeviceExtension->CurrentSrb)
         {
             //
             // check if empty
             //
-            DPRINT1("[USBSTOR] ActiveSrb %p hang detected\n", FDODeviceExtension->ActiveSrb);
+            DPRINT1("[USBSTOR] CurrentSrb %p hang detected\n", FDODeviceExtension->CurrentSrb);
             ResetDevice = TRUE;
         }
         else
@@ -370,7 +370,7 @@ USBSTOR_TimerRoutine(
             //
             // update pointer
             //
-            FDODeviceExtension->LastTimerActiveSrb = FDODeviceExtension->ActiveSrb;
+            FDODeviceExtension->LastTimerActiveSrb = FDODeviceExtension->CurrentSrb;
         }
     }
     else

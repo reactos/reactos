@@ -404,7 +404,7 @@ USBSTOR_FdoHandlePnp(
            // we can if nothing is pending
            //
            if (DeviceExtension->IrpPendingCount != 0 ||
-               DeviceExtension->ActiveSrb != NULL)
+               DeviceExtension->CurrentSrb != NULL)
 #else
            if (TRUE)
 #endif

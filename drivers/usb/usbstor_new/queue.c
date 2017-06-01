@@ -217,15 +217,15 @@ USBSTOR_QueueAddIrp(
     //
     if (SrbProcessing)
     {
-        ASSERT(FDODeviceExtension->ActiveSrb != NULL);
+        ASSERT(FDODeviceExtension->CurrentSrb != NULL);
 
         OldDriverCancel = IoSetCancelRoutine(Irp, USBSTOR_Cancel);
     }
     else
     {
-        ASSERT(FDODeviceExtension->ActiveSrb == NULL);
+        ASSERT(FDODeviceExtension->CurrentSrb == NULL);
 
-        FDODeviceExtension->ActiveSrb = Request;
+        FDODeviceExtension->CurrentSrb = Request;
         OldDriverCancel = IoSetCancelRoutine(Irp, USBSTOR_CancelIo);
     }
 
@@ -363,19 +363,19 @@ USBSTOR_QueueTerminateRequest(
     //
     // check if this was our current active SRB
     //
-    if (FDODeviceExtension->ActiveSrb == Request)
+    if (FDODeviceExtension->CurrentSrb == Request)
     {
         //
         // indicate processing is completed
         //
-        FDODeviceExtension->ActiveSrb = NULL;
+        FDODeviceExtension->CurrentSrb = NULL;
     }
 
     //
     // Set the event if nothing else is pending
     //
     if (FDODeviceExtension->IrpPendingCount == 0 &&
-        FDODeviceExtension->ActiveSrb == NULL)
+        FDODeviceExtension->CurrentSrb == NULL)
     {
         KeSetEvent(&FDODeviceExtension->NoPendingRequests, IO_NO_INCREMENT, FALSE);
     }
@@ -409,7 +409,7 @@ USBSTOR_QueueNextRequest(
     //
     // check first if there's already a request pending or the queue is frozen
     //
-    if (FDODeviceExtension->ActiveSrb != NULL ||
+    if (FDODeviceExtension->CurrentSrb != NULL ||
         FDODeviceExtension->IrpListFreeze)
     {
         //
@@ -453,7 +453,7 @@ USBSTOR_QueueNextRequest(
     //
     // set the active SRB
     //
-    FDODeviceExtension->ActiveSrb = Request;
+    FDODeviceExtension->CurrentSrb = Request;
 
     //
     // start next packet
