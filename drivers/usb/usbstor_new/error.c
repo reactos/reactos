@@ -60,6 +60,16 @@ USBSTOR_ResetPipeWithHandle(
     return Status;
 }
 
+NTSTATUS
+NTAPI
+USBSTOR_ResetDevice(
+    IN PDEVICE_OBJECT FdoDevice)
+{
+    DPRINT1("USBSTOR_ResetDevice: UNIMPLEMENTED. FIXME.\n");
+    DbgBreakPoint();
+    return 0;
+}
+
 VOID
 NTAPI
 USBSTOR_BulkResetPipeWorkItem(
