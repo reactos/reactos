@@ -97,6 +97,94 @@ USBSTOR_BulkQueueResetPipe(
 
 VOID
 NTAPI
+USBSTOR_ResetDeviceWorkItem(
+    IN PDEVICE_OBJECT FdoDevice,
+    IN PVOID Context)
+{
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+    PPDO_DEVICE_EXTENSION PDODeviceExtension;
+    ULONG nx;
+    NTSTATUS Status;
+    KIRQL OldIrql;
+
+    DPRINT("USBSTOR_ResetDeviceWorkItem: \n");
+
+    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)Context;
+    FDODeviceExtension = FdoDevice->DeviceExtension;
+
+    if (FDODeviceExtension->CurrentIrp)
+    {
+        IoCancelIrp(FDODeviceExtension->CurrentIrp);
+
+        KeWaitForSingleObject(&FDODeviceExtension->TimeOutEvent,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+
+        if (!Context)
+        {
+            PIO_STACK_LOCATION IoStack;
+
+            IoStack = FDODeviceExtension->CurrentIrp->Tail.Overlay.CurrentStackLocation;
+            PDODeviceExtension = IoStack->Parameters.Others.Argument2;
+        }
+
+        KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+        IoCompleteRequest(FDODeviceExtension->CurrentIrp, IO_NO_INCREMENT);
+        KeLowerIrql(OldIrql);
+
+        FDODeviceExtension->CurrentIrp = NULL;
+    }
+
+    nx = 0;
+
+    do
+    {
+        Status = USBSTOR_IsDeviceConnected(FdoDevice);
+
+        if (!NT_SUCCESS(Status))
+        {
+            break;
+        }
+
+        Status = USBSTOR_ResetDevice(FdoDevice);
+
+        if (NT_SUCCESS(Status))
+        {
+            break;
+        }
+
+        ++nx;
+    }
+    while (nx < 3);
+
+    KeAcquireSpinLock(&FDODeviceExtension->StorSpinLock, &OldIrql);
+
+    FDODeviceExtension->Flags &= ~USBSTOR_FDO_FLAGS_DEVICE_RESETTING;
+
+    if (!NT_SUCCESS(Status))
+    {
+        FDODeviceExtension->Flags |= USBSTOR_FDO_FLAGS_DEVICE_ERROR;
+    }
+
+    KeReleaseSpinLock(&FDODeviceExtension->StorSpinLock, OldIrql);
+
+    if (!FDODeviceExtension->DriverFlags)
+    {
+        FDODeviceExtension->DriverFlags = 1;
+    }
+
+    if (PDODeviceExtension)
+    {
+        USBSTOR_QueueNextRequest(FdoDevice);
+    }
+
+    //FIXME RemoveLock
+}
+
+VOID
+NTAPI
 USBSTOR_QueueResetDevice(
     IN PFDO_DEVICE_EXTENSION FDODeviceExtension, 
     IN PPDO_DEVICE_EXTENSION PDODeviceExtension)
