@@ -169,6 +169,7 @@ typedef struct
     ULONG RetryCount;
     USBSTOR_BULK_ONLY_BUFFER BulkBuffer;                                                 // Transfer Buffer CBW/CSW
     ULONG Flags;
+    ULONG DriverFlags;                                                                   // 1 - BulkOnly
     KSPIN_LOCK StorSpinLock;
     KEVENT TimeOutEvent;
 }FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
@@ -521,7 +522,7 @@ USBSTOR_GetPipeHandles(
 //
 // scsi.c routines
 //
-NTSTATUS
+VOID
 USBSTOR_HandleExecuteSCSI(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,

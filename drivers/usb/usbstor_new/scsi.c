@@ -1980,7 +1980,7 @@ USBSTOR_CbwTransfer(
 }
 
 
-NTSTATUS
+VOID
 USBSTOR_HandleExecuteSCSI(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -1991,11 +1991,13 @@ USBSTOR_HandleExecuteSCSI(
     PIO_STACK_LOCATION IoStack;
     PSCSI_REQUEST_BLOCK Request;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
 
     //
-    // get PDO device extension
+    // get device extensions
     //
     PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    FDODeviceExtension = PDODeviceExtension->LowerDeviceObject->DeviceExtension;
 
     //
     // sanity check
@@ -2010,7 +2012,7 @@ USBSTOR_HandleExecuteSCSI(
     //
     // get request block
     //
-    Request = (PSCSI_REQUEST_BLOCK)IoStack->Parameters.Others.Argument1;
+    Request = IoStack->Parameters.Scsi.Srb;
 
     //
     // get SCSI command data block
@@ -2019,6 +2021,34 @@ USBSTOR_HandleExecuteSCSI(
 
     DPRINT("USBSTOR_HandleExecuteSCSI Operation Code %x\n", pCDB->AsByte[0]);
 
+
+    if (pCDB->MODE_SENSE.OperationCode == SCSIOP_MODE_SENSE)
+    {
+        //FIXME CheckModeSenseDataProtect
+
+        DPRINT("SCSIOP_MODE_SENSE DataTransferLength %lu\n", Request->DataTransferLength);
+        ASSERT(pCDB->MODE_SENSE.AllocationLength == Request->DataTransferLength);
+        ASSERT(Request->DataBuffer);
+
+        //
+        // send mode sense command
+        //
+        Status = USBSTOR_SendModeSense(DeviceObject, Irp, RetryCount);
+        return;
+    }
+
+    if (FDODeviceExtension->DriverFlags == 1) // BulkOnly (FIXME const)
+    {
+        Status = USBSTOR_CbwTransfer(FDODeviceExtension, Irp);
+        DPRINT("USBSTOR_HandleExecuteSCSI: Status - %08X\n", Status);
+        return;
+    }
+
+    DPRINT1("USBSTOR_HandleExecuteSCSI: Not BulkOnly. UNIMPLEMENTED. FIXME. \n");
+
+    ASSERT(FALSE);
+
+#if 0 // Old code
     if (pCDB->AsByte[0] == SCSIOP_READ_CAPACITY)
     {
         //
@@ -2028,17 +2058,6 @@ USBSTOR_HandleExecuteSCSI(
 
         DPRINT("SCSIOP_READ_CAPACITY Length %lu\n", Request->DataTransferLength);
         Status = USBSTOR_SendCapacity(DeviceObject, Irp, RetryCount);
-    }
-    else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_MODE_SENSE)
-    {
-        DPRINT("SCSIOP_MODE_SENSE DataTransferLength %lu\n", Request->DataTransferLength);
-        ASSERT(pCDB->MODE_SENSE.AllocationLength == Request->DataTransferLength);
-        ASSERT(Request->DataBuffer);
-
-        //
-        // send mode sense command
-        //
-        Status = USBSTOR_SendModeSense(DeviceObject, Irp, RetryCount);
     }
     else if (pCDB->AsByte[0] == SCSIOP_READ_FORMATTED_CAPACITY)
     {
@@ -2085,7 +2104,7 @@ USBSTOR_HandleExecuteSCSI(
         //
         USBSTOR_QueueNextRequest(PDODeviceExtension->LowerDeviceObject);
 
-        return STATUS_SUCCESS;
+        return;// STATUS_SUCCESS;
     }
     else if (pCDB->MODE_SENSE.OperationCode == SCSIOP_TEST_UNIT_READY)
     {
@@ -2096,6 +2115,15 @@ USBSTOR_HandleExecuteSCSI(
         //
         Status = USBSTOR_SendTestUnit(DeviceObject, Irp, RetryCount);
     }
+    else if (pCDB->CDB6INQUIRY.OperationCode == SCSIOP_REQUEST_SENSE)
+    {
+        DPRINT("SCSIOP_REQUEST_SENSE\n");
+
+        //
+        // send test unit command
+        //
+        Status = USBSTOR_SendUnknownRequest(DeviceObject, Irp, RetryCount);
+    }
     else
     {
         // Unknown request. Simply forward
@@ -2103,5 +2131,6 @@ USBSTOR_HandleExecuteSCSI(
         Status = USBSTOR_SendUnknownRequest(DeviceObject, Irp, RetryCount);
     }
 
-    return Status;
+    DPRINT("USBSTOR_HandleExecuteSCSI: Status - %08X\n", Status);
+#endif
 }
