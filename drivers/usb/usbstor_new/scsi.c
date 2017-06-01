@@ -14,6 +14,16 @@
 #define NDEBUG
 #include <debug.h>
 
+VOID
+DumpCBW(
+    PUCHAR Block)
+{
+    DPRINT("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
+        Block[0], Block[1], Block[2], Block[3], Block[4], Block[5], Block[6], Block[7], Block[8], Block[9],
+        Block[10], Block[11], Block[12], Block[13], Block[14], Block[15], Block[16], Block[17], Block[18], Block[19],
+        Block[20], Block[21], Block[22], Block[23], Block[24], Block[25], Block[26], Block[27], Block[28], Block[29], Block[30]);
+}
+
 NTSTATUS
 USBSTOR_BuildCBW(
     IN ULONG Tag,
@@ -573,18 +583,6 @@ USBSTOR_CBWCompletionRoutine(
     IoCallDriver(Context->FDODeviceExtension->LowerDeviceObject, Irp);
 
     return STATUS_MORE_PROCESSING_REQUIRED;
-}
-
-VOID
-DumpCBW(
-    PUCHAR Block)
-{
-    DPRINT("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
-        Block[0] & 0xFF, Block[1] & 0xFF, Block[2] & 0xFF, Block[3] & 0xFF, Block[4] & 0xFF, Block[5] & 0xFF, Block[6] & 0xFF, Block[7] & 0xFF, Block[8] & 0xFF, Block[9] & 0xFF,
-        Block[10] & 0xFF, Block[11] & 0xFF, Block[12] & 0xFF, Block[13] & 0xFF, Block[14] & 0xFF, Block[15] & 0xFF, Block[16] & 0xFF, Block[17] & 0xFF, Block[18] & 0xFF, Block[19] & 0xFF,
-        Block[20] & 0xFF, Block[21] & 0xFF, Block[22] & 0xFF, Block[23] & 0xFF, Block[24] & 0xFF, Block[25] & 0xFF, Block[26] & 0xFF, Block[27] & 0xFF, Block[28] & 0xFF, Block[29] & 0xFF,
-        Block[30] & 0xFF);
-
 }
 
 NTSTATUS
