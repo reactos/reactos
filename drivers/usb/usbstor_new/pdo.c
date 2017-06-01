@@ -982,6 +982,144 @@ USBSTOR_PdoHandlePnp(
 
 NTSTATUS
 NTAPI
+USBSTOR_SendInternalCdb(
+    PDEVICE_OBJECT PdoDevice,
+    PVOID DataBuffer,
+    PULONG OutDataTransferLength,
+    PVOID Buffer,
+    UCHAR CdbLength,
+    ULONG TimeOutValue)
+{
+    PSCSI_REQUEST_BLOCK Srb;
+    PSENSE_DATA SenseBuffer;
+    PIO_STACK_LOCATION IoStack;
+    KEVENT Event;
+    PIRP Irp = NULL;
+    PMDL Mdl = NULL;
+    ULONG ix;
+    NTSTATUS Status = STATUS_INSUFFICIENT_RESOURCES;
+    UCHAR SrbStatus;
+
+    DPRINT("USBSTOR_IssueInternalCdb: ... \n");
+
+    Srb = ExAllocatePoolWithTag(NonPagedPool,
+                                sizeof(SCSI_REQUEST_BLOCK),
+                                USB_STOR_TAG);
+
+    if (Srb)
+    {
+        SenseBuffer = ExAllocatePoolWithTag(NonPagedPool,
+                                            SENSE_BUFFER_SIZE,
+                                            USB_STOR_TAG);
+
+        if (SenseBuffer)
+        {
+            ix = 0;
+
+            do
+            {
+                Irp = IoAllocateIrp(PdoDevice->StackSize, FALSE);
+
+                if (!Irp)
+                {
+                    break;
+                }
+
+                IoStack = IoGetNextIrpStackLocation(Irp);
+                IoStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
+                IoStack->Parameters.Scsi.Srb = Srb;
+
+                RtlZeroMemory(Srb, sizeof(SCSI_REQUEST_BLOCK));
+
+                Srb->Length = sizeof(SCSI_REQUEST_BLOCK);
+                Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
+                Srb->CdbLength = CdbLength;
+                Srb->SenseInfoBufferLength = SENSE_BUFFER_SIZE;
+                Srb->SrbFlags = SRB_FLAGS_DATA_IN | SRB_FLAGS_NO_QUEUE_FREEZE;
+                Srb->DataTransferLength = *OutDataTransferLength;
+                Srb->TimeOutValue = TimeOutValue;
+                Srb->DataBuffer = DataBuffer;
+                Srb->SenseInfoBuffer = SenseBuffer;
+
+                RtlCopyMemory(Srb->Cdb, Buffer, CdbLength);
+
+                if (!ix)
+                {
+                    Mdl = IoAllocateMdl(DataBuffer,
+                                        *OutDataTransferLength,
+                                        FALSE,
+                                        FALSE,
+                                        NULL);
+
+                    if (!Mdl)
+                    {
+                        Status = STATUS_INSUFFICIENT_RESOURCES;
+                        break;
+                    }
+
+                    MmBuildMdlForNonPagedPool(Mdl);
+                }
+
+                Irp->MdlAddress = Mdl;
+
+                KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+
+                IoSetCompletionRoutine(Irp,
+                                       USBSTOR_SyncCompletionRoutine,
+                                       &Event,
+                                       TRUE,
+                                       TRUE,
+                                       TRUE);
+
+                if (IoCallDriver(PdoDevice, Irp) == STATUS_PENDING)
+                {
+                    KeWaitForSingleObject(&Event,
+                                          Executive,
+                                          KernelMode,
+                                          FALSE,
+                                          NULL);
+                }
+
+                SrbStatus = SRB_STATUS(Srb->SrbStatus);
+
+                if (SrbStatus == SRB_STATUS_SUCCESS ||
+                     SrbStatus == SRB_STATUS_DATA_OVERRUN)
+                {
+                    Status = STATUS_SUCCESS;
+                    *OutDataTransferLength = Srb->DataTransferLength;
+                    break;
+                }
+
+                Status = STATUS_UNSUCCESSFUL;
+
+                IoFreeIrp(Irp);
+
+                ++ix;
+                Irp = 0;
+            }
+            while (ix < 3);
+
+            if (Mdl)
+            {
+                IoFreeMdl(Mdl);
+            }
+
+            ExFreePool(SenseBuffer);
+        }
+
+        ExFreePool(Srb);
+
+        if (Irp)
+        {
+            IoFreeIrp(Irp);
+        }
+    }
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
 USBSTOR_GetInquiryData(
     PDEVICE_OBJECT PdoDevice)
 {
