@@ -809,7 +809,7 @@ RxCanonicalizeFileNameByServerSpecs(
     }
 
     /* Validate name is correct */
-    for (NextChar = 0; CurChar + 1 < MaxChars; NextChar = CurChar + 1)
+    for (NextChar = 0, CurChar = 0; CurChar + 1 < MaxChars; NextChar = CurChar + 1)
     {
         USHORT i;
 
