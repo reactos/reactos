@@ -1394,6 +1394,103 @@ USBSTOR_SendUnknownRequest(
 
 NTSTATUS
 NTAPI
+USBSTOR_DataTransfer(
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension,
+    IN PIRP Irp)
+{
+    PSCSI_REQUEST_BLOCK Srb;
+    PUSBD_PIPE_INFORMATION Pipe;
+    PMDL Mdl;
+    ULONG TransferFlags;
+    PVOID TransferBuffer;
+    PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
+    UCHAR PipeIndex;
+
+    DPRINT("USBSTOR_DataTransfer: ... \n");
+
+    IoStack = Irp->Tail.Overlay.CurrentStackLocation;
+    Srb = IoStack->Parameters.Scsi.Srb;
+
+    if ((Srb->SrbFlags & SRB_FLAGS_UNSPECIFIED_DIRECTION) == SRB_FLAGS_DATA_IN)
+    {
+        PipeIndex = FDODeviceExtension->BulkInPipeIndex;
+        TransferFlags = USBD_SHORT_TRANSFER_OK;
+    }
+    else if ((Srb->SrbFlags & SRB_FLAGS_UNSPECIFIED_DIRECTION) == SRB_FLAGS_DATA_OUT)
+    {
+        PipeIndex = FDODeviceExtension->BulkOutPipeIndex;
+        TransferFlags = 0;
+    }
+    else
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Mdl = NULL;
+    TransferBuffer = NULL;
+
+    Pipe = &FDODeviceExtension->InterfaceInformation->Pipes[PipeIndex];
+
+    if (Srb == FDODeviceExtension->CurrentSrb)
+    {
+        if (MmGetMdlVirtualAddress(Irp->MdlAddress) == Srb->DataBuffer)
+        {
+            Mdl = Irp->MdlAddress;
+        }
+        else
+        {
+            Mdl = IoAllocateMdl(Srb->DataBuffer,
+                                Srb->DataTransferLength,
+                                FALSE,
+                                FALSE,
+                                NULL);
+    
+            if (Mdl)
+            {
+                IoBuildPartialMdl(Irp->MdlAddress,
+                                  Mdl,
+                                  Srb->DataBuffer,
+                                  Srb->DataTransferLength);
+            }
+            else
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+            }
+        }
+
+        if (!Mdl)
+        {
+            DPRINT("USBSTOR_DataTransfer: Mdl - %p\n", Mdl);
+            return Status;
+        }
+    }
+    else
+    {
+        TransferBuffer = Srb->DataBuffer;
+
+        if (!Srb->DataBuffer)
+        {
+            DPRINT("USBSTOR_DataTransfer: Srb->DataBuffer == NULL!!!\n");
+            return STATUS_INVALID_PARAMETER;
+        }
+    }
+
+    USBSTOR_IssueBulkOrInterruptRequest(FDODeviceExtension,
+                                        Irp,
+                                        Pipe->PipeHandle,
+                                        TransferFlags,
+                                        Srb->DataTransferLength,
+                                        TransferBuffer,
+                                        Mdl,
+                                        USBSTOR_DataCompletion,
+                                        NULL);//Context
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 USBSTOR_CbwCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
