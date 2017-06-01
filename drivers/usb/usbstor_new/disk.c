@@ -14,6 +14,70 @@
 #define NDEBUG
 #include <debug.h>
 
+BOOLEAN
+NTAPI
+IsRequestValid(PIRP Irp)
+{
+    ULONG TransferLength;
+    PIO_STACK_LOCATION IoStack;
+    PSCSI_REQUEST_BLOCK Srb;
+
+    DPRINT("IsRequestValid: ... \n");
+
+    IoStack = Irp->Tail.Overlay.CurrentStackLocation;
+    Srb = IoStack->Parameters.Scsi.Srb;
+
+    if (Srb->SrbFlags & (SRB_FLAGS_DATA_IN | SRB_FLAGS_DATA_OUT))
+    {
+        if ((Srb->SrbFlags & SRB_FLAGS_UNSPECIFIED_DIRECTION) ==
+                             SRB_FLAGS_UNSPECIFIED_DIRECTION)
+        {
+            DPRINT("IsRequestValid: Not valid Srb! Srb->SrbFlags - %p\n", Srb->SrbFlags);
+            return FALSE;
+        }
+
+        TransferLength = Srb->DataTransferLength;
+
+        if (Irp->MdlAddress == NULL)
+        {
+            DPRINT("IsRequestValid: Not valid Srb. Irp->MdlAddress == NULL\n");
+            return FALSE;
+        }
+
+        if (TransferLength == 0)
+        {
+            DPRINT("IsRequestValid: Not valid Srb. TransferLength == 0\n");
+            return FALSE;
+        }
+
+        if (TransferLength > 0x10000) // FIXME consatnt (default MaximumTransferLength)
+        {
+            DPRINT("IsRequestValid: Not valid Srb. TransferLength > 0x10000\n");
+            return FALSE;
+        }
+    }
+
+    if (Srb->DataTransferLength)
+    {
+        DPRINT("IsRequestValid: Not valid Srb. Srb->DataTransferLength != 0\n");
+        return FALSE;
+    }
+
+    if (Srb->DataBuffer)
+    {
+        DPRINT("IsRequestValid: Not valid Srb. Srb->DataBuffer != NULL\n");
+        return FALSE;
+    }
+
+    if (Irp->MdlAddress)
+    {
+        DPRINT("IsRequestValid: Not valid Srb. Irp->MdlAddress != NULL\n");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 NTSTATUS
 USBSTOR_HandleInternalDeviceControl(
     IN PDEVICE_OBJECT DeviceObject,
