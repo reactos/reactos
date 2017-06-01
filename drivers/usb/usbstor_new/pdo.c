@@ -980,6 +980,16 @@ USBSTOR_PdoHandlePnp(
     return Status;
 }
 
+BOOLEAN
+NTAPI
+USBSTOR_IsFloppyDevice(
+    PDEVICE_OBJECT DeviceObject)
+{
+    DPRINT1("USBSTOR_IsFloppyDevice: UNIMPLEMENTED. FIXME. \n");
+//ASSERT(FALSE);
+    return FALSE;
+}
+
 NTSTATUS
 USBSTOR_CreatePDO(
     IN PDEVICE_OBJECT DeviceObject,
