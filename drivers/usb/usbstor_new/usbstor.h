@@ -27,6 +27,47 @@
 #define USB_RECOVERABLE_ERRORS (USBD_STATUS_STALL_PID | USBD_STATUS_DEV_NOT_RESPONDING \
 	| USBD_STATUS_ENDPOINT_HALTED | USBD_STATUS_NO_BANDWIDTH)
 
+#include <pshpack1.h>
+
+#define CBW_SIGNATURE 0x43425355
+#define CSW_SIGNATURE 0x53425355
+
+typedef struct {
+   ULONG Signature;                                                 // CBW signature
+   ULONG Tag;                                                       // CBW Tag of operation
+   ULONG DataTransferLength;                                        // data transfer length
+   UCHAR Flags;                                                     // CBW Flags endpoint direction
+   UCHAR LUN;                                                       // lun unit
+   UCHAR CommandBlockLength;                                        // Command block length
+   UCHAR CommandBlock[16];
+} CBW, *PCBW;
+
+C_ASSERT(sizeof(CBW) == 31);
+
+#define CSW_STATUS_COMMAND_PASSED 0x00
+#define CSW_STATUS_COMMAND_FAILED 0x01
+#define CSW_STATUS_PHASE_ERROR    0x02
+
+typedef struct {
+    ULONG Signature;                                                 // CSW signature
+    ULONG Tag;                                                       // CSW tag
+    ULONG DataResidue;                                               // CSW data transfer diff
+    UCHAR Status;                                                    // CSW status
+} CSW, *PCSW;
+
+typedef union _USBSTOR_BULK_ONLY_BUFFER {
+    struct {
+        CBW Cbw;
+        UCHAR Pad1[512 - sizeof(CBW)];
+    };
+    struct {
+        CSW Csw;
+        UCHAR Pad2[512 - sizeof(CSW)];
+    };
+} USBSTOR_BULK_ONLY_BUFFER, *PUSBSTOR_BULK_ONLY_BUFFER;
+
+C_ASSERT(sizeof(USBSTOR_BULK_ONLY_BUFFER) == 512);
+
 typedef struct __COMMON_DEVICE_EXTENSION__
 {
     BOOLEAN IsFDO;
@@ -68,6 +109,8 @@ typedef struct
     ULONG InstanceCount;                                                                 // pdo instance count
     PIRP CurrentIrp;
     struct _URB_BULK_OR_INTERRUPT_TRANSFER Urb;
+    ULONG RetryCount;
+    USBSTOR_BULK_ONLY_BUFFER BulkBuffer;                                                 // Transfer Buffer CBW/CSW
     ULONG Flags;
     KSPIN_LOCK StorSpinLock;
     KEVENT TimeOutEvent;
@@ -95,33 +138,7 @@ typedef struct
 #define USB_BULK_GET_MAX_LUN             0xFE
 #define USB_BULK_RESET_DEVICE             0xFF
 
-#include <pshpack1.h>
-typedef struct
-{
-    ULONG Signature;                                                 // CBW signature
-    ULONG Tag;                                                       // CBW Tag of operation
-    ULONG DataTransferLength;                                        // data transfer length
-    UCHAR Flags;                                                     // CBW Flags endpoint direction
-    UCHAR LUN;                                                       // lun unit
-    UCHAR CommandBlockLength;                                        // Command block length
-    UCHAR CommandBlock[16];
-}CBW, *PCBW;
-
-C_ASSERT(sizeof(CBW) == 31);
-
-
-#define CBW_SIGNATURE 0x43425355
-#define CSW_SIGNATURE 0x53425355
-
 #define MAX_LUN 0xF
-
-typedef struct
-{
-    ULONG Signature;                                                 // CSW signature
-    ULONG Tag;                                                       // CSW tag
-    ULONG DataResidue;                                               // CSW data transfer diff
-    UCHAR Status;                                                    // CSW status
-}CSW, *PCSW;
 
 //--------------------------------------------------------------------------------------------------------------------------------------------
 //
