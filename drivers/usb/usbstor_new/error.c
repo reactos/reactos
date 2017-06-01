@@ -62,6 +62,16 @@ USBSTOR_ResetPipeWithHandle(
 
 NTSTATUS
 NTAPI
+USBSTOR_IsDeviceConnected(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    DPRINT1("USBSTOR_IsDeviceConnected: UNIMPLEMENTED. FIXME.\n");
+    DbgBreakPoint();
+    return 0;
+}
+
+NTSTATUS
+NTAPI
 USBSTOR_ResetDevice(
     IN PDEVICE_OBJECT FdoDevice)
 {
