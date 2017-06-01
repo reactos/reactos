@@ -386,7 +386,7 @@ USBSTOR_GetMaxLUN(
         // 3.2  Get Max LUN (class-specific request) :
         // Devices that do not support multiple LUNs may STALL this command.
         //
-        USBSTOR_ResetDevice(DeviceExtension->LowerDeviceObject, DeviceExtension);
+        USBSTOR_BulkResetDevice(DeviceExtension->LowerDeviceObject, DeviceExtension);
 
         DeviceExtension->MaxLUN = 0;
         Status = STATUS_SUCCESS;
@@ -401,11 +401,10 @@ USBSTOR_GetMaxLUN(
     // done
     //
     return Status;
-
 }
 
 NTSTATUS
-USBSTOR_ResetDevice(
+USBSTOR_BulkResetDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN PFDO_DEVICE_EXTENSION DeviceExtension)
 {

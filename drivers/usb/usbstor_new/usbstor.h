@@ -492,7 +492,7 @@ USBSTOR_SyncForwardIrpCompletionRoutine(
     PVOID Context);
 
 NTSTATUS
-USBSTOR_ResetDevice(
+USBSTOR_BulkResetDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN PFDO_DEVICE_EXTENSION DeviceExtension);
 
