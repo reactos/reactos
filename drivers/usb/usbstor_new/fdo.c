@@ -409,9 +409,13 @@ USBSTOR_FdoHandlePnp(
            if (TRUE)
 #endif
            {
-               /* We have pending requests */
-               DPRINT1("Failing removal/stop request due to pending requests present\n");
-               Status = STATUS_UNSUCCESSFUL;
+               ///* We have pending requests */
+               //DPRINT1("Failing removal/stop request due to pending requests present\n");
+               //Status = STATUS_UNSUCCESSFUL;
+
+               Irp->IoStatus.Status = STATUS_SUCCESS;
+               IoSkipCurrentIrpStackLocation(Irp);
+               return IoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
            }
            else
            {
