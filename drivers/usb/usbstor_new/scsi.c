@@ -65,6 +65,69 @@ USBSTOR_SrbStatusToNtStatus(
     }
 }
 
+BOOLEAN
+NTAPI
+USBSTOR_IsRequestTimeOut(
+    IN PDEVICE_OBJECT FdoDevice,
+    IN PIRP Irp,
+    IN OUT NTSTATUS * OutStatus)
+{
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+    KIRQL OldIrql;
+    PSCSI_REQUEST_BLOCK Srb;
+    BOOLEAN Result;
+    BOOLEAN IsTimeOut;
+    PIO_STACK_LOCATION IoStack;
+
+    DPRINT("USBSTOR_IsRequestTimeOut: ... \n");
+
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
+    IsTimeOut = FALSE;
+
+    KeAcquireSpinLock(&FDODeviceExtension->StorSpinLock, &OldIrql);
+
+    FDODeviceExtension->Flags &= ~USBSTOR_FDO_FLAGS_TRANSFER_FINISHED;
+
+    if (FDODeviceExtension->Flags & USBSTOR_FDO_FLAGS_DEVICE_RESETTING)
+    {
+        IsTimeOut = TRUE;
+    }
+
+    KeReleaseSpinLock(&FDODeviceExtension->StorSpinLock, OldIrql);
+
+    if (IsTimeOut)
+    {
+        Srb = FDODeviceExtension->CurrentSrb;
+
+        DPRINT1("USBSTOR_IsRequestTimeOut: Irp - %p, Srb - %p\n", Irp, Srb);
+
+        IoStack = Irp->Tail.Overlay.CurrentStackLocation;
+        IoStack->Parameters.Scsi.Srb = Srb;
+
+        Irp->IoStatus.Status = STATUS_IO_TIMEOUT;
+        Irp->IoStatus.Information = 0;
+
+        Srb->SrbStatus = SRB_STATUS_TIMEOUT;
+
+        USBSTOR_HandleCDBComplete(FDODeviceExtension, Irp, Srb);
+
+        *OutStatus = STATUS_MORE_PROCESSING_REQUIRED;
+
+        KeSetEvent(&FDODeviceExtension->TimeOutEvent,
+                   IO_NO_INCREMENT,
+                   FALSE);
+
+        Result = TRUE;
+    }
+    else
+    {
+        FDODeviceExtension->CurrentIrp = NULL;
+        Result = FALSE;
+    }
+
+    return Result;
+}
+
 NTSTATUS
 NTAPI
 USBSTOR_IssueBulkOrInterruptRequest(
