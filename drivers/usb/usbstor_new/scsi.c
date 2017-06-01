@@ -1392,6 +1392,55 @@ USBSTOR_SendUnknownRequest(
 }
 
 NTSTATUS
+NTAPI
+USBSTOR_CbwTransfer(
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension,
+    IN PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack;
+    PPDO_DEVICE_EXTENSION PDODeviceExtension;
+    PSCSI_REQUEST_BLOCK Srb;
+    PCBW Cbw;
+    PUSBD_PIPE_INFORMATION Pipe;
+    UCHAR PipeIndex;
+
+    DPRINT("USBSTOR_CbwTransfer: ... \n");
+
+    FDODeviceExtension->RetryCount = 0;
+
+    IoStack = Irp->Tail.Overlay.CurrentStackLocation;
+    PDODeviceExtension = IoStack->DeviceObject->DeviceExtension;
+    Srb = IoStack->Parameters.Scsi.Srb;
+
+    Cbw = &FDODeviceExtension->BulkBuffer.Cbw;
+
+    Cbw->Signature = CBW_SIGNATURE;
+    Cbw->Tag = (ULONG)Irp;
+    Cbw->DataTransferLength = Srb->DataTransferLength;
+    Cbw->Flags = ((UCHAR)Srb->SrbFlags & SRB_FLAGS_UNSPECIFIED_DIRECTION) << 1;
+    Cbw->LUN = PDODeviceExtension->LUN;
+    Cbw->CommandBlockLength = Srb->CdbLength;
+
+    RtlCopyMemory(FDODeviceExtension->BulkBuffer.Cbw.CommandBlock,
+                  Srb->Cdb,
+                  sizeof(CDB));
+
+    PipeIndex = FDODeviceExtension->BulkOutPipeIndex;
+    Pipe = &FDODeviceExtension->InterfaceInformation->Pipes[PipeIndex];
+
+    return USBSTOR_IssueBulkOrInterruptRequest(FDODeviceExtension,
+                                               Irp,
+                                               Pipe->PipeHandle,
+                                               0,//TransferFlags ?USBD_TRANSFER_DIRECTION_OUT? FIXME
+                                               sizeof(CBW),
+                                               &FDODeviceExtension->BulkBuffer.Cbw,
+                                               NULL,//TransferBufferMDL
+                                               USBSTOR_CbwCompletion,
+                                               NULL);//Context
+}
+
+
+NTSTATUS
 USBSTOR_HandleExecuteSCSI(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
