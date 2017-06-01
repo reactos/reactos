@@ -165,6 +165,7 @@ typedef struct
     ULONG InstanceCount;                                                                 // pdo instance count
     PIRP CurrentIrp;
     struct _URB_BULK_OR_INTERRUPT_TRANSFER Urb;
+    CDB CurrentCdb;
     ULONG RetryCount;
     USBSTOR_BULK_ONLY_BUFFER BulkBuffer;                                                 // Transfer Buffer CBW/CSW
     ULONG Flags;
