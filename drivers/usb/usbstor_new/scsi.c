@@ -1391,6 +1391,81 @@ USBSTOR_SendUnknownRequest(
     return USBSTOR_SendRequest(DeviceObject, Irp, Request->CdbLength, (PUCHAR)&Cmd, Request->DataTransferLength, Request->DataBuffer, RetryCount);
 }
 
+
+NTSTATUS
+NTAPI
+USBSTOR_CbwCompletion(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    IN PVOID Context)
+{
+    PIO_STACK_LOCATION IoStack;
+    PDEVICE_OBJECT FdoDevice;
+    PSCSI_REQUEST_BLOCK CurrentSrb;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+    NTSTATUS Status;
+    PSCSI_REQUEST_BLOCK Srb;
+    PPDO_DEVICE_EXTENSION PDODeviceExtension;
+
+    DPRINT("USBSTOR_CbwCompletion: ... \n");
+
+    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    FdoDevice = PDODeviceExtension->LowerDeviceObject;
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
+
+    IoStack = Irp->Tail.Overlay.CurrentStackLocation;
+    Srb = IoStack->Parameters.Scsi.Srb;
+
+    if (USBSTOR_IsRequestTimeOut(FdoDevice, Irp, &Status))
+    {
+        return Status;
+    }
+
+    if (!NT_SUCCESS(Irp->IoStatus.Status))
+    {
+        CurrentSrb = FDODeviceExtension->CurrentSrb;
+        IoStack->Parameters.Scsi.Srb = CurrentSrb;
+
+        Irp->IoStatus.Status = STATUS_IO_DEVICE_ERROR;
+        Irp->IoStatus.Information = 0;
+
+        CurrentSrb->SrbStatus = SRB_STATUS_BUS_RESET;
+
+        USBSTOR_HandleCDBComplete(FDODeviceExtension, Irp, CurrentSrb);
+        USBSTOR_QueueResetDevice(FDODeviceExtension, PDODeviceExtension);
+
+        return STATUS_IO_DEVICE_ERROR;
+    }
+
+    if (Irp->MdlAddress || Srb != FDODeviceExtension->CurrentSrb)
+    {
+        Status = USBSTOR_DataTransfer(FDODeviceExtension, Irp);
+
+        if (!NT_SUCCESS(Status))
+        {
+            CurrentSrb = FDODeviceExtension->CurrentSrb;
+            IoStack->Parameters.Scsi.Srb = CurrentSrb;
+
+            Irp->IoStatus.Status = Status;
+            Irp->IoStatus.Information = 0;
+
+            CurrentSrb->SrbStatus = SRB_STATUS_ERROR;
+
+            USBSTOR_HandleCDBComplete(FDODeviceExtension, Irp, CurrentSrb);
+            USBSTOR_QueueResetDevice(FDODeviceExtension, PDODeviceExtension);
+
+            return Status;
+        }
+    }
+    else
+    {
+        Srb->SrbStatus = SRB_STATUS_SUCCESS;
+        USBSTOR_CswTransfer(FDODeviceExtension, Irp);
+    }
+
+    return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
 NTSTATUS
 NTAPI
 USBSTOR_CbwTransfer(
