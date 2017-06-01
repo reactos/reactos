@@ -83,6 +83,24 @@
 #define USB_RECOVERABLE_ERRORS (USBD_STATUS_STALL_PID | USBD_STATUS_DEV_NOT_RESPONDING \
 	| USBD_STATUS_ENDPOINT_HALTED | USBD_STATUS_NO_BANDWIDTH)
 
+//
+// UFI INQUIRY command response
+//
+typedef struct
+{
+    UCHAR DeviceType;                                                // device type
+    UCHAR RMB;                                                       // removable media bit
+    UCHAR Version;                                                   // contains version 0x00
+    UCHAR Format;                                                    // response format
+    UCHAR Length;                                                    // additional length
+    UCHAR Reserved[3];                                               // reserved
+    UCHAR Vendor[8];                                                 // vendor identification string
+    UCHAR Product[16];                                               // product identification string
+    UCHAR Revision[4];                                               // product revision code
+}UFI_INQUIRY_RESPONSE, *PUFI_INQUIRY_RESPONSE;
+
+C_ASSERT(sizeof(UFI_INQUIRY_RESPONSE) == 36);
+
 #include <pshpack1.h>
 
 #define CBW_SIGNATURE 0x43425355
@@ -181,7 +199,7 @@ typedef struct
     USBSTOR_COMMON_DEVICE_EXTENSION Common;
     PDEVICE_OBJECT LowerDeviceObject;                                                    // points to FDO
     UCHAR LUN;                                                                           // lun id
-    PVOID InquiryData;                                                                   // USB SCSI inquiry data
+    UFI_INQUIRY_RESPONSE InquiryData;                                                    // USB SCSI inquiry data
     PUCHAR FormatData;                                                                   // USB SCSI Read Format Capacity Data
     UCHAR Claimed;                                                                       // indicating if it has been claimed by upper driver
     ULONG BlockLength;                                                                   // length of block
@@ -217,24 +235,6 @@ typedef struct
 C_ASSERT(sizeof(UFI_INQUIRY_CMD) == 12);
 
 #define UFI_INQUIRY_CMD_LEN 0x6
-
-//
-// UFI INQUIRY command response
-//
-typedef struct
-{
-    UCHAR DeviceType;                                                // device type
-    UCHAR RMB;                                                       // removable media bit
-    UCHAR Version;                                                   // contains version 0x00
-    UCHAR Format;                                                    // response format
-    UCHAR Length;                                                    // additional length
-    UCHAR Reserved[3];                                               // reserved
-    UCHAR Vendor[8];                                                 // vendor identification string
-    UCHAR Product[16];                                               // product identification string
-    UCHAR Revision[4];                                               // product revision code
-}UFI_INQUIRY_RESPONSE, *PUFI_INQUIRY_RESPONSE;
-
-C_ASSERT(sizeof(UFI_INQUIRY_RESPONSE) == 36);
 
 //--------------------------------------------------------------------------------------------------------------------------------------------
 //

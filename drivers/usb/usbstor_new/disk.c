@@ -380,7 +380,7 @@ USBSTOR_HandleQueryProperty(
         //
         // get inquiry data
         //
-        InquiryData = (PUFI_INQUIRY_RESPONSE)PDODeviceExtension->InquiryData;
+        InquiryData = &PDODeviceExtension->InquiryData;
         ASSERT(InquiryData);
 
         //
@@ -679,7 +679,7 @@ USBSTOR_HandleDeviceControl(
         //
         // get inquiry data
         //
-        UFIInquiryResponse = (PUFI_INQUIRY_RESPONSE)PDODeviceExtension->InquiryData;
+        UFIInquiryResponse = &PDODeviceExtension->InquiryData;
         ASSERT(UFIInquiryResponse);
 
 
