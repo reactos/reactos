@@ -615,4 +615,10 @@ NTAPI
 USBSTOR_BulkQueueResetPipe(
     PFDO_DEVICE_EXTENSION FDODeviceExtension);
 
+VOID
+NTAPI
+USBSTOR_QueueResetDevice(
+    PFDO_DEVICE_EXTENSION FDODeviceExtension, 
+    PPDO_DEVICE_EXTENSION PDODeviceExtension);
+
 #endif /* _USBSTOR_H_ */

@@ -95,3 +95,25 @@ USBSTOR_BulkQueueResetPipe(
                     0);
 }
 
+VOID
+NTAPI
+USBSTOR_QueueResetDevice(
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension, 
+    IN PPDO_DEVICE_EXTENSION PDODeviceExtension)
+{
+    KIRQL OldIrql;
+
+    DPRINT("USBSTOR_QueueResetDevice: ... \n");
+
+    KeAcquireSpinLock(&FDODeviceExtension->StorSpinLock, &OldIrql);
+    FDODeviceExtension->Flags |= USBSTOR_FDO_FLAGS_DEVICE_RESETTING;
+    KeReleaseSpinLock(&FDODeviceExtension->StorSpinLock, OldIrql);
+
+    //FIXME RemoveLock
+
+    IoQueueWorkItem(FDODeviceExtension->ResetDeviceWorkItem,
+                    USBSTOR_ResetDeviceWorkItem,
+                    CriticalWorkQueue,
+                    PDODeviceExtension);
+}
+
