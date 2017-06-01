@@ -65,6 +65,56 @@ USBSTOR_SrbStatusToNtStatus(
     }
 }
 
+VOID
+NTAPI
+USBSTOR_HandleCDBComplete(
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension,
+    IN PIRP Irp,
+    IN PSCSI_REQUEST_BLOCK Srb)
+{
+    UCHAR OperationCode;
+    UCHAR SrbStatus;
+    PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
+
+    DPRINT("USBSTOR_HandleCDBComplete: ... \n");
+
+    InterfaceDescriptor = (PUSB_INTERFACE_DESCRIPTOR)(
+                           (ULONG_PTR)FDODeviceExtension->ConfigurationDescriptor +
+                           sizeof(USB_CONFIGURATION_DESCRIPTOR));
+
+    if (InterfaceDescriptor->bInterfaceSubClass != USB_SUBCLASS_SCSI)
+    {
+        OperationCode = Srb->Cdb[0];
+
+        if (OperationCode != FDODeviceExtension->CurrentCdb.CDB6GENERIC.OperationCode)
+        {
+            if (OperationCode == SCSIOP_MODE_SENSE10)
+            {
+                DPRINT("USBSTOR_HandleCDBComplete: FIXME SCSIOP_MODE_SENSE10\n");
+            }
+
+            RtlCopyMemory(Srb->Cdb,
+                          &FDODeviceExtension->CurrentCdb,
+                          sizeof(CDB));
+        }
+    }
+
+    if (SRB_STATUS(Srb->SrbStatus) != SRB_STATUS_SUCCESS &&
+        !(Srb->SrbFlags & SRB_FLAGS_NO_QUEUE_FREEZE))
+    {
+        Srb->SrbStatus |= SRB_STATUS_QUEUE_FROZEN;
+        DPRINT("USBSTOR_HandleCDBComplete: FIXME Queue Freeze\n");
+    }
+
+    SrbStatus = SRB_STATUS(Srb->SrbStatus);
+
+    if (SrbStatus != SRB_STATUS_SUCCESS)
+    {
+        SrbStatus = USBSTOR_SrbStatusToNtStatus(Srb);
+        Irp->IoStatus.Status = SrbStatus;
+    }
+}
+
 BOOLEAN
 NTAPI
 USBSTOR_IsRequestTimeOut(
