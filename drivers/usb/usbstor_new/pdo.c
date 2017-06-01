@@ -980,6 +980,63 @@ USBSTOR_PdoHandlePnp(
     return Status;
 }
 
+NTSTATUS
+NTAPI
+USBSTOR_GetInquiryData(
+    PDEVICE_OBJECT PdoDevice)
+{
+    PPDO_DEVICE_EXTENSION PDODeviceExtension;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+    NTSTATUS Status;
+    ULONG TransferLength;
+    CDB Cdb;
+    PUFI_INQUIRY_RESPONSE Response;
+
+    DPRINT("USBSTOR_GetInquiryData: ... \n");
+
+    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)PdoDevice->DeviceExtension;
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)PDODeviceExtension->LowerDeviceObject->DeviceExtension;
+
+    TransferLength = INQUIRYDATABUFFERSIZE;
+
+    RtlZeroMemory(&Cdb, sizeof(Cdb));
+
+    Cdb.CDB6INQUIRY.OperationCode = SCSIOP_INQUIRY;
+    Cdb.CDB6INQUIRY.AllocationLength = INQUIRYDATABUFFERSIZE;
+
+    Status = USBSTOR_SendInternalCdb(PdoDevice,
+                                     &PDODeviceExtension->InquiryData,
+                                     &TransferLength,
+                                     &Cdb,
+                                     0x06, // CdbLength
+                                     20);  // TimeOutValue
+
+    if (NT_SUCCESS(Status) && !FDODeviceExtension->DriverFlags)
+    {
+        DPRINT("USBSTOR_GetInquiryData: DriverFlags = 3 \n");
+        FDODeviceExtension->DriverFlags = 3;
+    }
+
+    Response = (PUFI_INQUIRY_RESPONSE)&PDODeviceExtension->InquiryData;
+
+    DPRINT1("Response %p\n", Response);
+    DPRINT1("DeviceType %x\n", Response->DeviceType);
+    DPRINT1("RMB %x\n", Response->RMB);
+    DPRINT1("Version %x\n", Response->Version);
+    DPRINT1("Format %x\n", Response->Format);
+    DPRINT1("Length %x\n", Response->Length);
+    DPRINT1("Reserved %p\n", Response->Reserved);
+    DPRINT1("Vendor %c%c%c%c%c%c%c%c\n", Response->Vendor[0], Response->Vendor[1], Response->Vendor[2], Response->Vendor[3], Response->Vendor[4], Response->Vendor[5], Response->Vendor[6], Response->Vendor[7]);
+    DPRINT1("Product %c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\n", Response->Product[0], Response->Product[1], Response->Product[2], Response->Product[3],
+                                                          Response->Product[4], Response->Product[5], Response->Product[6], Response->Product[7], 
+                                                          Response->Product[8], Response->Product[9], Response->Product[10], Response->Product[11],
+                                                          Response->Product[12], Response->Product[13], Response->Product[14], Response->Product[15]);
+
+    DPRINT1("Revision %c%c%c%c\n", Response->Revision[0], Response->Revision[1], Response->Revision[2], Response->Revision[3]);
+
+    return Status;
+}
+
 BOOLEAN
 NTAPI
 USBSTOR_IsFloppyDevice(
