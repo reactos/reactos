@@ -132,8 +132,9 @@ USBSTOR_FdoHandleRemoveDevice(
 
     DPRINT("Handling FDO removal %p\n", DeviceObject);
 
-    /* FIXME: wait for devices finished processing */
-    for(Index = 0; Index < 16; Index++)
+    //FIXME RemoveLock
+
+    for (Index = 0; Index < USB_MAXCHILDREN; Index++)
     {
         if (DeviceExtension->ChildPDO[Index] != NULL)
         {
@@ -144,6 +145,7 @@ USBSTOR_FdoHandleRemoveDevice(
 
     /* Send the IRP down the stack */
     IoSkipCurrentIrpStackLocation(Irp);
+    Irp->IoStatus.Status = STATUS_SUCCESS;
     Status = IoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
 
     /* Detach from the device stack */

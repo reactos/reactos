@@ -8,7 +8,7 @@
 #include <classpnp.h>
 
 #define USB_STOR_TAG 'sbsu'
-#define USB_MAXCHILDREN              (16)
+#define USB_MAXCHILDREN (15)
 
 /*
  * Ported from linux.
@@ -151,7 +151,7 @@ typedef struct
     UCHAR BulkInPipeIndex;                                                               // bulk in pipe index
     UCHAR BulkOutPipeIndex;                                                              // bulk out pipe index
     UCHAR MaxLUN;                                                                        // max lun for device
-    PDEVICE_OBJECT ChildPDO[16];                                                         // max 16 child pdo devices
+    PDEVICE_OBJECT ChildPDO[USB_MAXCHILDREN];                                            // max 15 child pdo devices
     KSPIN_LOCK IrpListLock;                                                              // irp list lock
     LIST_ENTRY IrpListHead;                                                              // irp list head
     BOOLEAN IrpListFreeze;                                                               // if true the irp list is freezed
