@@ -102,58 +102,54 @@ USBSTOR_GetGenericType(
     IN UCHAR IsFloppy)
 {
     //
-    // check if device type is zero
-    //
-    if (InquiryData->DeviceType == 0)
-    {
-        if (IsFloppy)
-        {
-            //
-            // floppy device
-            //
-            return "GenSFloppy";
-        }
-
-        //
-        // direct access device
-        //
-        return "GenDisk";
-    }
-
-    //
-    // FIXME: use constant - derived from http://en.wikipedia.org/wiki/SCSI_Peripheral_Device_Type
+    // check device type
     //
     switch (InquiryData->DeviceType)
     {
-        case 1:
+        case USBSTOR_SCSI_DEVICE_TYPE_DIRECT:
+        {
+            if (IsFloppy)
+            {
+                //
+                // floppy device
+                //
+                return "GenSFloppy";
+            }
+
+            //
+            // direct access device
+            //
+            return "GenDisk";
+        }
+        case USBSTOR_SCSI_DEVICE_TYPE_SEQUENTIAL:
         {
             //
             // sequential device, i.e magnetic tape
             //
             return "GenSequential";
         }
-        case 4:
+        case USBSTOR_SCSI_DEVICE_TYPE_WORM:
         {
             //
             // write once device
             //
             return "GenWorm";
         }
-        case 5:
+        case USBSTOR_SCSI_DEVICE_TYPE_CDROM:
         {
             //
             // CDROM device
             //
             return "GenCdRom";
         }
-        case 7:
+        case USBSTOR_SCSI_DEVICE_TYPE_OPTICAL:
         {
             //
             // optical memory device
             //
             return "GenOptical";
         }
-        case 8:
+        case USBSTOR_SCSI_DEVICE_TYPE_MEDIA_CHANGER:
         {
             //
             // medium change device
