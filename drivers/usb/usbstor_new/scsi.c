@@ -1979,6 +1979,41 @@ USBSTOR_CbwTransfer(
                                                NULL);//Context
 }
 
+NTSTATUS
+NTAPI
+USBSTOR_IssueRequestSense(
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension,
+    IN PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack;
+    PSCSI_REQUEST_BLOCK CurrentSrb;
+    PSCSI_REQUEST_BLOCK SenseSrb;
+
+    DPRINT("USBSTOR_IssueRequestSense: \n");
+
+    CurrentSrb = FDODeviceExtension->CurrentSrb;
+    SenseSrb = &FDODeviceExtension->SenseSrb;
+    IoStack = Irp->Tail.Overlay.CurrentStackLocation;
+    IoStack->Parameters.Scsi.Srb = SenseSrb;
+
+    RtlZeroMemory(SenseSrb, sizeof(FDODeviceExtension->SenseSrb));
+
+    SenseSrb->Function = SRB_FUNCTION_EXECUTE_SCSI;
+    SenseSrb->Length = sizeof(FDODeviceExtension->SenseSrb);
+    SenseSrb->CdbLength = 12;
+
+    SenseSrb->SrbFlags = SRB_FLAGS_DATA_IN |
+                         SRB_FLAGS_NO_QUEUE_FREEZE |
+                         SRB_FLAGS_DISABLE_AUTOSENSE;
+
+    SenseSrb->DataTransferLength = CurrentSrb->SenseInfoBufferLength;
+    SenseSrb->DataBuffer = CurrentSrb->SenseInfoBuffer;
+
+    SenseSrb->Cdb[0] = SCSIOP_REQUEST_SENSE;
+    SenseSrb->Cdb[4] = CurrentSrb->SenseInfoBufferLength;
+
+    return USBSTOR_CbwTransfer(FDODeviceExtension, Irp);
+}
 
 VOID
 USBSTOR_HandleExecuteSCSI(

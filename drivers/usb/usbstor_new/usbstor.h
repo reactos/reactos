@@ -165,6 +165,7 @@ typedef struct
     ULONG InstanceCount;                                                                 // pdo instance count
     PIRP CurrentIrp;
     struct _URB_BULK_OR_INTERRUPT_TRANSFER Urb;
+    SCSI_REQUEST_BLOCK SenseSrb;
     CDB CurrentCdb;
     ULONG RetryCount;
     USBSTOR_BULK_ONLY_BUFFER BulkBuffer;                                                 // Transfer Buffer CBW/CSW
@@ -545,6 +546,11 @@ USBSTOR_SendCSW(
     PIRP_CONTEXT Context,
     PIRP Irp);
 
+NTSTATUS
+NTAPI
+USBSTOR_IssueRequestSense(
+    PFDO_DEVICE_EXTENSION FDODeviceExtension,
+    PIRP Irp);
 
 //---------------------------------------------------------------------
 //
