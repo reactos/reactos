@@ -1464,6 +1464,11 @@ WSPAccept(SOCKET Handle,
        if (lpErrno) *lpErrno = WSAENOTSOCK;
        return SOCKET_ERROR;
     }
+    if (!Socket->SharedData->Listening)
+    {
+       if (lpErrno) *lpErrno = WSAEINVAL;
+       return SOCKET_ERROR;
+    }
     if ((SocketAddress && !SocketAddressLength) ||
         (SocketAddressLength && !SocketAddress) ||
         (SocketAddressLength && *SocketAddressLength < sizeof(SOCKADDR)))
