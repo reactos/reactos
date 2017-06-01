@@ -60,3 +60,18 @@ USBSTOR_ResetPipeWithHandle(
     return Status;
 }
 
+VOID
+NTAPI
+USBSTOR_BulkQueueResetPipe(
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension)
+{
+    DPRINT("USBSTOR_BulkQueueResetPipe: \n");
+
+    //FIXME RemoveLock
+
+    IoQueueWorkItem(FDODeviceExtension->ResetDeviceWorkItem,
+                    USBSTOR_BulkResetPipeWorkItem,
+                    CriticalWorkQueue,
+                    0);
+}
+

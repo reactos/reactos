@@ -621,4 +621,9 @@ USBSTOR_TimerRoutine(
     PDEVICE_OBJECT DeviceObject,
      PVOID Context);
 
+VOID
+NTAPI
+USBSTOR_BulkQueueResetPipe(
+    PFDO_DEVICE_EXTENSION FDODeviceExtension);
+
 #endif /* _USBSTOR_H_ */
