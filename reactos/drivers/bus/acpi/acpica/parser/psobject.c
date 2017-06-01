@@ -129,12 +129,23 @@ AcpiPsGetAmlOpcode (
                 WalkState->Opcode,
                 (UINT32) (AmlOffset + sizeof (ACPI_TABLE_HEADER)));
 
+            ACPI_ERROR ((AE_INFO,
+                "Aborting disassembly, AML byte code is corrupt"));
+
             /* Dump the context surrounding the invalid opcode */
 
             AcpiUtDumpBuffer (((UINT8 *) WalkState->ParserState.Aml - 16),
                 48, DB_BYTE_DISPLAY,
                 (AmlOffset + sizeof (ACPI_TABLE_HEADER) - 16));
             AcpiOsPrintf (" */\n");
+
+            /*
+             * Just abort the disassembly, cannot continue because the
+             * parser is essentially lost. The disassembler can then
+             * randomly fail because an ill-constructed parse tree
+             * can result.
+             */
+            return_ACPI_STATUS (AE_AML_BAD_OPCODE);
 #endif
         }
 
@@ -349,6 +360,10 @@ AcpiPsCreateOp (
     if (Status == AE_CTRL_PARSE_CONTINUE)
     {
         return_ACPI_STATUS (AE_CTRL_PARSE_CONTINUE);
+    }
+    if (ACPI_FAILURE (Status))
+    {
+        return_ACPI_STATUS (Status);
     }
 
     /* Create Op structure and append to parent's argument list */

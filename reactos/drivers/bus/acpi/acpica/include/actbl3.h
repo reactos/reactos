@@ -121,6 +121,11 @@ typedef struct acpi_table_bgrt
 
 } ACPI_TABLE_BGRT;
 
+/* Flags for Status field above */
+
+#define ACPI_BGRT_DISPLAYED                 (1)
+#define ACPI_BGRT_ORIENTATION_OFFSET        (3 << 1)
+
 
 /*******************************************************************************
  *
@@ -543,7 +548,7 @@ typedef struct acpi_mpst_shared
 /*******************************************************************************
  *
  * PCCT - Platform Communications Channel Table (ACPI 5.0)
- *        Version 1
+ *        Version 2 (ACPI 6.2)
  *
  ******************************************************************************/
 
@@ -566,7 +571,9 @@ enum AcpiPcctType
     ACPI_PCCT_TYPE_GENERIC_SUBSPACE             = 0,
     ACPI_PCCT_TYPE_HW_REDUCED_SUBSPACE          = 1,
     ACPI_PCCT_TYPE_HW_REDUCED_SUBSPACE_TYPE2    = 2,    /* ACPI 6.1 */
-    ACPI_PCCT_TYPE_RESERVED                     = 3     /* 3 and greater are reserved */
+    ACPI_PCCT_TYPE_EXT_PCC_MASTER_SUBSPACE      = 3,    /* ACPI 6.2 */
+    ACPI_PCCT_TYPE_EXT_PCC_SLAVE_SUBSPACE       = 4,    /* ACPI 6.2 */
+    ACPI_PCCT_TYPE_RESERVED                     = 5     /* 5 and greater are reserved */
 };
 
 /*
@@ -596,7 +603,7 @@ typedef struct acpi_pcct_subspace
 typedef struct acpi_pcct_hw_reduced
 {
     ACPI_SUBTABLE_HEADER    Header;
-    UINT32                  DoorbellInterrupt;
+    UINT32                  PlatformInterrupt;
     UINT8                   Flags;
     UINT8                   Reserved;
     UINT64                  BaseAddress;
@@ -616,7 +623,7 @@ typedef struct acpi_pcct_hw_reduced
 typedef struct acpi_pcct_hw_reduced_type2
 {
     ACPI_SUBTABLE_HEADER    Header;
-    UINT32                  DoorbellInterrupt;
+    UINT32                  PlatformInterrupt;
     UINT8                   Flags;
     UINT8                   Reserved;
     UINT64                  BaseAddress;
@@ -627,11 +634,73 @@ typedef struct acpi_pcct_hw_reduced_type2
     UINT32                  Latency;
     UINT32                  MaxAccessRate;
     UINT16                  MinTurnaroundTime;
-    ACPI_GENERIC_ADDRESS    DoorbellAckRegister;
+    ACPI_GENERIC_ADDRESS    PlatformAckRegister;
     UINT64                  AckPreserveMask;
     UINT64                  AckWriteMask;
 
 } ACPI_PCCT_HW_REDUCED_TYPE2;
+
+
+/* 3: Extended PCC Master Subspace Type 3 (ACPI 6.2) */
+
+typedef struct acpi_pcct_ext_pcc_master
+{
+    ACPI_SUBTABLE_HEADER    Header;
+    UINT32                  PlatformInterrupt;
+    UINT8                   Flags;
+    UINT8                   Reserved1;
+    UINT64                  BaseAddress;
+    UINT32                  Length;
+    ACPI_GENERIC_ADDRESS    DoorbellRegister;
+    UINT64                  PreserveMask;
+    UINT64                  WriteMask;
+    UINT32                  Latency;
+    UINT32                  MaxAccessRate;
+    UINT32                  MinTurnaroundTime;
+    ACPI_GENERIC_ADDRESS    PlatformAckRegister;
+    UINT64                  AckPreserveMask;
+    UINT64                  AckSetMask;
+    UINT64                  Reserved2;
+    ACPI_GENERIC_ADDRESS    CmdCompleteRegister;
+    UINT64                  CmdCompleteMask;
+    ACPI_GENERIC_ADDRESS    CmdUpdateRegister;
+    UINT64                  CmdUpdatePreserveMask;
+    UINT64                  CmdUpdateSetMask;
+    ACPI_GENERIC_ADDRESS    ErrorStatusRegister;
+    UINT64                  ErrorStatusMask;
+
+} ACPI_PCCT_EXT_PCC_MASTER;
+
+
+/* 4: Extended PCC Slave Subspace Type 4 (ACPI 6.2) */
+
+typedef struct acpi_pcct_ext_pcc_slave
+{
+    ACPI_SUBTABLE_HEADER    Header;
+    UINT32                  PlatformInterrupt;
+    UINT8                   Flags;
+    UINT8                   Reserved1;
+    UINT64                  BaseAddress;
+    UINT32                  Length;
+    ACPI_GENERIC_ADDRESS    DoorbellRegister;
+    UINT64                  PreserveMask;
+    UINT64                  WriteMask;
+    UINT32                  Latency;
+    UINT32                  MaxAccessRate;
+    UINT32                  MinTurnaroundTime;
+    ACPI_GENERIC_ADDRESS    PlatformAckRegister;
+    UINT64                  AckPreserveMask;
+    UINT64                  AckSetMask;
+    UINT64                  Reserved2;
+    ACPI_GENERIC_ADDRESS    CmdCompleteRegister;
+    UINT64                  CmdCompleteMask;
+    ACPI_GENERIC_ADDRESS    CmdUpdateRegister;
+    UINT64                  CmdUpdatePreserveMask;
+    UINT64                  CmdUpdateSetMask;
+    ACPI_GENERIC_ADDRESS    ErrorStatusRegister;
+    UINT64                  ErrorStatusMask;
+
+} ACPI_PCCT_EXT_PCC_SLAVE;
 
 
 /* Values for doorbell flags above */
@@ -653,6 +722,18 @@ typedef struct acpi_pcct_shared_memory
     UINT16                  Status;
 
 } ACPI_PCCT_SHARED_MEMORY;
+
+
+/* Extended PCC Subspace Shared Memory Region (ACPI 6.2) */
+
+typedef struct acpi_pcct_ext_pcc_shared_memory
+{
+    UINT32                  Signature;
+    UINT32                  Flags;
+    UINT32                  Length;
+    UINT32                  Command;
+
+} ACPI_PCCT_EXT_PCC_SHARED_MEMORY;
 
 
 /*******************************************************************************

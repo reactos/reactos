@@ -155,7 +155,9 @@ typedef enum
     ACPI_RSD_UINT16,
     ACPI_RSD_UINT32,
     ACPI_RSD_UINT64,
-    ACPI_RSD_WORDLIST
+    ACPI_RSD_WORDLIST,
+    ACPI_RSD_LABEL,
+    ACPI_RSD_SOURCE_LABEL,
 
 } ACPI_RSDUMP_OPCODES;
 
@@ -387,6 +389,11 @@ extern ACPI_RSCONVERT_INFO      AcpiRsConvertFixedDma[];
 extern ACPI_RSCONVERT_INFO      AcpiRsConvertI2cSerialBus[];
 extern ACPI_RSCONVERT_INFO      AcpiRsConvertSpiSerialBus[];
 extern ACPI_RSCONVERT_INFO      AcpiRsConvertUartSerialBus[];
+extern ACPI_RSCONVERT_INFO      AcpiRsConvertPinFunction[];
+extern ACPI_RSCONVERT_INFO      AcpiRsConvertPinConfig[];
+extern ACPI_RSCONVERT_INFO      AcpiRsConvertPinGroup[];
+extern ACPI_RSCONVERT_INFO      AcpiRsConvertPinGroupFunction[];
+extern ACPI_RSCONVERT_INFO      AcpiRsConvertPinGroupConfig[];
 
 /* These resources require separate get/set tables */
 
@@ -431,12 +438,17 @@ extern ACPI_RSDUMP_INFO         AcpiRsDumpExtAddress64[];
 extern ACPI_RSDUMP_INFO         AcpiRsDumpExtIrq[];
 extern ACPI_RSDUMP_INFO         AcpiRsDumpGenericReg[];
 extern ACPI_RSDUMP_INFO         AcpiRsDumpGpio[];
+extern ACPI_RSDUMP_INFO         AcpiRsDumpPinFunction[];
 extern ACPI_RSDUMP_INFO         AcpiRsDumpFixedDma[];
 extern ACPI_RSDUMP_INFO         AcpiRsDumpCommonSerialBus[];
 extern ACPI_RSDUMP_INFO         AcpiRsDumpI2cSerialBus[];
 extern ACPI_RSDUMP_INFO         AcpiRsDumpSpiSerialBus[];
 extern ACPI_RSDUMP_INFO         AcpiRsDumpUartSerialBus[];
 extern ACPI_RSDUMP_INFO         AcpiRsDumpGeneralFlags[];
+extern ACPI_RSDUMP_INFO         AcpiRsDumpPinConfig[];
+extern ACPI_RSDUMP_INFO         AcpiRsDumpPinGroup[];
+extern ACPI_RSDUMP_INFO         AcpiRsDumpPinGroupFunction[];
+extern ACPI_RSDUMP_INFO         AcpiRsDumpPinGroupConfig[];
 #endif
 
 #endif  /* __ACRESRC_H__ */

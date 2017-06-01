@@ -84,6 +84,11 @@ ACPI_RSCONVERT_INFO         *AcpiGbl_SetResourceDispatch[] =
     AcpiRsConvertGpio,              /* 0x11, ACPI_RESOURCE_TYPE_GPIO */
     AcpiRsConvertFixedDma,          /* 0x12, ACPI_RESOURCE_TYPE_FIXED_DMA */
     NULL,                           /* 0x13, ACPI_RESOURCE_TYPE_SERIAL_BUS - Use subtype table below */
+    AcpiRsConvertPinFunction,       /* 0x14, ACPI_RESOURCE_TYPE_PIN_FUNCTION */
+    AcpiRsConvertPinConfig,         /* 0x15, ACPI_RESOURCE_TYPE_PIN_CONFIG */
+    AcpiRsConvertPinGroup,          /* 0x16, ACPI_RESOURCE_TYPE_PIN_GROUP */
+    AcpiRsConvertPinGroupFunction,  /* 0x17, ACPI_RESOURCE_TYPE_PIN_GROUP_FUNCTION */
+    AcpiRsConvertPinGroupConfig,    /* 0x18, ACPI_RESOURCE_TYPE_PIN_GROUP_CONFIG */
 };
 
 /* Dispatch tables for AML-to-resource (Get Resource) conversion functions */
@@ -124,8 +129,12 @@ ACPI_RSCONVERT_INFO         *AcpiGbl_GetResourceDispatch[] =
     AcpiRsConvertAddress64,         /* 0x0A, ACPI_RESOURCE_NAME_ADDRESS64 */
     AcpiRsConvertExtAddress64,      /* 0x0B, ACPI_RESOURCE_NAME_EXTENDED_ADDRESS64 */
     AcpiRsConvertGpio,              /* 0x0C, ACPI_RESOURCE_NAME_GPIO */
-    NULL,                           /* 0x0D, Reserved */
+    AcpiRsConvertPinFunction,       /* 0x0D, ACPI_RESOURCE_NAME_PIN_FUNCTION */
     NULL,                           /* 0x0E, ACPI_RESOURCE_NAME_SERIAL_BUS - Use subtype table below */
+    AcpiRsConvertPinConfig,         /* 0x0F, ACPI_RESOURCE_NAME_PIN_CONFIG */
+    AcpiRsConvertPinGroup,          /* 0x10, ACPI_RESOURCE_NAME_PIN_GROUP */
+    AcpiRsConvertPinGroupFunction,  /* 0x11, ACPI_RESOURCE_NAME_PIN_GROUP_FUNCTION */
+    AcpiRsConvertPinGroupConfig,    /* 0x12, ACPI_RESOURCE_NAME_PIN_GROUP_CONFIG */
 };
 
 /* Subtype table for SerialBus -- I2C, SPI, and UART */
@@ -165,6 +174,11 @@ ACPI_RSDUMP_INFO            *AcpiGbl_DumpResourceDispatch[] =
     AcpiRsDumpGpio,                 /* ACPI_RESOURCE_TYPE_GPIO */
     AcpiRsDumpFixedDma,             /* ACPI_RESOURCE_TYPE_FIXED_DMA */
     NULL,                           /* ACPI_RESOURCE_TYPE_SERIAL_BUS */
+    AcpiRsDumpPinFunction,          /* ACPI_RESOURCE_TYPE_PIN_FUNCTION */
+    AcpiRsDumpPinConfig,            /* ACPI_RESOURCE_TYPE_PIN_CONFIG */
+    AcpiRsDumpPinGroup,             /* ACPI_RESOURCE_TYPE_PIN_GROUP */
+    AcpiRsDumpPinGroupFunction,     /* ACPI_RESOURCE_TYPE_PIN_GROUP_FUNCTION */
+    AcpiRsDumpPinGroupConfig,       /* ACPI_RESOURCE_TYPE_PIN_GROUP_CONFIG */
 };
 
 ACPI_RSDUMP_INFO            *AcpiGbl_DumpSerialBusDispatch[] =
@@ -204,6 +218,11 @@ const UINT8                 AcpiGbl_AmlResourceSizes[] =
     sizeof (AML_RESOURCE_GPIO),             /* ACPI_RESOURCE_TYPE_GPIO */
     sizeof (AML_RESOURCE_FIXED_DMA),        /* ACPI_RESOURCE_TYPE_FIXED_DMA */
     sizeof (AML_RESOURCE_COMMON_SERIALBUS), /* ACPI_RESOURCE_TYPE_SERIAL_BUS */
+    sizeof (AML_RESOURCE_PIN_FUNCTION),     /* ACPI_RESOURCE_TYPE_PIN_FUNCTION */
+    sizeof (AML_RESOURCE_PIN_CONFIG),       /* ACPI_RESOURCE_TYPE_PIN_CONFIG */
+    sizeof (AML_RESOURCE_PIN_GROUP),        /* ACPI_RESOURCE_TYPE_PIN_GROUP */
+    sizeof (AML_RESOURCE_PIN_GROUP_FUNCTION), /* ACPI_RESOURCE_TYPE_PIN_GROUP_FUNCTION */
+    sizeof (AML_RESOURCE_PIN_GROUP_CONFIG), /* ACPI_RESOURCE_TYPE_PIN_GROUP_CONFIG */
 };
 
 
@@ -243,7 +262,12 @@ const UINT8                 AcpiGbl_ResourceStructSizes[] =
     ACPI_RS_SIZE (ACPI_RESOURCE_ADDRESS64),
     ACPI_RS_SIZE (ACPI_RESOURCE_EXTENDED_ADDRESS64),
     ACPI_RS_SIZE (ACPI_RESOURCE_GPIO),
-    ACPI_RS_SIZE (ACPI_RESOURCE_COMMON_SERIALBUS)
+    ACPI_RS_SIZE (ACPI_RESOURCE_PIN_FUNCTION),
+    ACPI_RS_SIZE (ACPI_RESOURCE_COMMON_SERIALBUS),
+    ACPI_RS_SIZE (ACPI_RESOURCE_PIN_CONFIG),
+    ACPI_RS_SIZE (ACPI_RESOURCE_PIN_GROUP),
+    ACPI_RS_SIZE (ACPI_RESOURCE_PIN_GROUP_FUNCTION),
+    ACPI_RS_SIZE (ACPI_RESOURCE_PIN_GROUP_CONFIG),
 };
 
 const UINT8                 AcpiGbl_AmlResourceSerialBusSizes[] =

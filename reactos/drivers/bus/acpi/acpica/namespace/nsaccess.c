@@ -47,6 +47,9 @@
 #include "acnamesp.h"
 #include "acdispat.h"
 
+#ifdef ACPI_ASL_COMPILER
+    #include "acdisasm.h"
+#endif
 
 #define _COMPONENT          ACPI_NAMESPACE
         ACPI_MODULE_NAME    ("nsaccess")
@@ -601,6 +604,30 @@ AcpiNsLookup (
                     (char *) &SimpleName, (char *) &CurrentNode->Name,
                     CurrentNode));
             }
+
+#ifdef ACPI_ASL_COMPILER
+            /*
+             * If this ACPI name already exists within the namespace as an
+             * external declaration, then mark the external as a conflicting
+             * declaration and proceed to process the current node as if it did
+             * not exist in the namespace. If this node is not processed as
+             * normal, then it could cause improper namespace resolution
+             * by failing to open a new scope.
+             */
+            if (AcpiGbl_DisasmFlag &&
+                (Status == AE_ALREADY_EXISTS) &&
+                ((ThisNode->Flags & ANOBJ_IS_EXTERNAL) ||
+                    (WalkState && WalkState->Opcode == AML_EXTERNAL_OP)))
+            {
+                ThisNode->Flags &= ~ANOBJ_IS_EXTERNAL;
+                ThisNode->Type = (UINT8)ThisSearchType;
+                if (WalkState->Opcode != AML_EXTERNAL_OP)
+                {
+                    AcpiDmMarkExternalConflict (ThisNode);
+                }
+                break;
+            }
+#endif
 
             *ReturnNode = ThisNode;
             return_ACPI_STATUS (Status);

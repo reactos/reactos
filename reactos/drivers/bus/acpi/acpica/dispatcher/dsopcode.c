@@ -245,10 +245,9 @@ AcpiDsInitBufferField (
         (8 * (UINT32) BufferDesc->Buffer.Length))
     {
         ACPI_ERROR ((AE_INFO,
-            "Field [%4.4s] at %u exceeds Buffer [%4.4s] size %u (bits)",
-            AcpiUtGetNodeName (ResultDesc),
-            BitOffset + BitCount,
-            AcpiUtGetNodeName (BufferDesc->Buffer.Node),
+            "Field [%4.4s] at bit offset/length %u/%u "
+            "exceeds size of target Buffer (%u bits)",
+            AcpiUtGetNodeName (ResultDesc), BitOffset, BitCount,
             8 * (UINT32) BufferDesc->Buffer.Length));
         Status = AE_AML_BUFFER_LIMIT;
         goto Cleanup;

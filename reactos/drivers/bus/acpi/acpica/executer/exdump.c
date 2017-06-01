@@ -667,12 +667,13 @@ AcpiExDumpOperand (
 
     if (Depth > 0)
     {
-        ACPI_DEBUG_PRINT ((ACPI_DB_EXEC, "%*s[%u] %p ",
-            Depth, " ", Depth, ObjDesc));
+        ACPI_DEBUG_PRINT ((ACPI_DB_EXEC, "%*s[%u] %p Refs=%u ",
+            Depth, " ", Depth, ObjDesc, ObjDesc->Common.ReferenceCount));
     }
     else
     {
-        ACPI_DEBUG_PRINT ((ACPI_DB_EXEC, "%p ", ObjDesc));
+        ACPI_DEBUG_PRINT ((ACPI_DB_EXEC, "%p Refs=%u ",
+            ObjDesc, ObjDesc->Common.ReferenceCount));
     }
 
     /* Decode object type */
@@ -710,8 +711,10 @@ AcpiExDumpOperand (
 
         case ACPI_REFCLASS_NAME:
 
-            AcpiOsPrintf ("- [%4.4s]\n",
-                ObjDesc->Reference.Node->Name.Ascii);
+            AcpiUtRepairName (ObjDesc->Reference.Node->Name.Ascii);
+            AcpiOsPrintf ("- [%4.4s] (Node %p)\n",
+                ObjDesc->Reference.Node->Name.Ascii,
+                ObjDesc->Reference.Node);
             break;
 
         case ACPI_REFCLASS_ARG:
@@ -1050,12 +1053,15 @@ AcpiExDumpReferenceObj (
             &RetBuf, TRUE);
         if (ACPI_FAILURE (Status))
         {
-            AcpiOsPrintf (" Could not convert name to pathname\n");
+            AcpiOsPrintf (" Could not convert name to pathname: %s\n",
+                AcpiFormatException (Status));
         }
         else
         {
-           AcpiOsPrintf ("%s\n", (char *) RetBuf.Pointer);
-           ACPI_FREE (RetBuf.Pointer);
+            AcpiOsPrintf ("%s: %s\n",
+                AcpiUtGetTypeName (ObjDesc->Reference.Node->Type),
+                (char *) RetBuf.Pointer);
+            ACPI_FREE (RetBuf.Pointer);
         }
     }
     else if (ObjDesc->Reference.Object)
@@ -1173,9 +1179,8 @@ AcpiExDumpPackageObj (
 
     case ACPI_TYPE_LOCAL_REFERENCE:
 
-        AcpiOsPrintf ("[Object Reference] Type [%s] %2.2X",
-            AcpiUtGetReferenceName (ObjDesc),
-            ObjDesc->Reference.Class);
+        AcpiOsPrintf ("[Object Reference] Class [%s]",
+            AcpiUtGetReferenceName (ObjDesc));
         AcpiExDumpReferenceObj (ObjDesc);
         break;
 

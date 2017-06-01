@@ -363,6 +363,15 @@ AcpiRsGetAmlLength (
 
             break;
 
+        case ACPI_RESOURCE_TYPE_PIN_FUNCTION:
+
+            TotalSize = (ACPI_RS_LENGTH) (TotalSize +
+                (Resource->Data.PinFunction.PinTableLength * 2) +
+                Resource->Data.PinFunction.ResourceSource.StringLength +
+                Resource->Data.PinFunction.VendorLength);
+
+            break;
+
 
         case ACPI_RESOURCE_TYPE_SERIAL_BUS:
 
@@ -372,6 +381,42 @@ AcpiRsGetAmlLength (
             TotalSize = (ACPI_RS_LENGTH) (TotalSize +
                 Resource->Data.I2cSerialBus.ResourceSource.StringLength +
                 Resource->Data.I2cSerialBus.VendorLength);
+
+            break;
+
+        case ACPI_RESOURCE_TYPE_PIN_CONFIG:
+
+            TotalSize = (ACPI_RS_LENGTH) (TotalSize +
+                (Resource->Data.PinConfig.PinTableLength * 2) +
+                Resource->Data.PinConfig.ResourceSource.StringLength +
+                Resource->Data.PinConfig.VendorLength);
+
+            break;
+
+        case ACPI_RESOURCE_TYPE_PIN_GROUP:
+
+            TotalSize = (ACPI_RS_LENGTH) (TotalSize +
+                (Resource->Data.PinGroup.PinTableLength * 2) +
+                Resource->Data.PinGroup.ResourceLabel.StringLength +
+                Resource->Data.PinGroup.VendorLength);
+
+            break;
+
+        case ACPI_RESOURCE_TYPE_PIN_GROUP_FUNCTION:
+
+            TotalSize = (ACPI_RS_LENGTH) (TotalSize +
+                Resource->Data.PinGroupFunction.ResourceSource.StringLength +
+                Resource->Data.PinGroupFunction.ResourceSourceLabel.StringLength +
+                Resource->Data.PinGroupFunction.VendorLength);
+
+            break;
+
+        case ACPI_RESOURCE_TYPE_PIN_GROUP_CONFIG:
+
+            TotalSize = (ACPI_RS_LENGTH) (TotalSize +
+                Resource->Data.PinGroupConfig.ResourceSource.StringLength +
+                Resource->Data.PinGroupConfig.ResourceSourceLabel.StringLength +
+                Resource->Data.PinGroupConfig.VendorLength);
 
             break;
 
@@ -560,6 +605,26 @@ AcpiRsGetListLength (
             }
             break;
 
+        case ACPI_RESOURCE_NAME_PIN_FUNCTION:
+
+            /* Vendor data is optional */
+
+            if (AmlResource->PinFunction.VendorLength)
+            {
+                ExtraStructBytes +=
+                    AmlResource->PinFunction.VendorOffset -
+                    AmlResource->PinFunction.PinTableOffset +
+                    AmlResource->PinFunction.VendorLength;
+            }
+            else
+            {
+                ExtraStructBytes +=
+                    AmlResource->LargeHeader.ResourceLength +
+                    sizeof (AML_RESOURCE_LARGE_HEADER) -
+                    AmlResource->PinFunction.PinTableOffset;
+            }
+            break;
+
         case ACPI_RESOURCE_NAME_SERIAL_BUS:
 
             MinimumAmlResourceLength = AcpiGbl_ResourceAmlSerialBusSizes[
@@ -567,6 +632,53 @@ AcpiRsGetListLength (
             ExtraStructBytes +=
                 AmlResource->CommonSerialBus.ResourceLength -
                 MinimumAmlResourceLength;
+            break;
+
+        case ACPI_RESOURCE_NAME_PIN_CONFIG:
+
+            /* Vendor data is optional */
+
+            if (AmlResource->PinConfig.VendorLength)
+            {
+                ExtraStructBytes +=
+                    AmlResource->PinConfig.VendorOffset -
+                    AmlResource->PinConfig.PinTableOffset +
+                    AmlResource->PinConfig.VendorLength;
+            }
+            else
+            {
+                ExtraStructBytes +=
+                    AmlResource->LargeHeader.ResourceLength +
+                    sizeof (AML_RESOURCE_LARGE_HEADER) -
+                    AmlResource->PinConfig.PinTableOffset;
+            }
+            break;
+
+        case ACPI_RESOURCE_NAME_PIN_GROUP:
+
+            ExtraStructBytes +=
+                AmlResource->PinGroup.VendorOffset -
+                AmlResource->PinGroup.PinTableOffset +
+                AmlResource->PinGroup.VendorLength;
+
+            break;
+
+        case ACPI_RESOURCE_NAME_PIN_GROUP_FUNCTION:
+
+            ExtraStructBytes +=
+                AmlResource->PinGroupFunction.VendorOffset -
+                AmlResource->PinGroupFunction.ResSourceOffset +
+                AmlResource->PinGroupFunction.VendorLength;
+
+            break;
+
+        case ACPI_RESOURCE_NAME_PIN_GROUP_CONFIG:
+
+            ExtraStructBytes +=
+                AmlResource->PinGroupConfig.VendorOffset -
+                AmlResource->PinGroupConfig.ResSourceOffset +
+                AmlResource->PinGroupConfig.VendorLength;
+
             break;
 
         default:
