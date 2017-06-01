@@ -601,18 +601,6 @@ USBSTOR_QueueInitialize(
     PFDO_DEVICE_EXTENSION FDODeviceExtension);
 
 VOID
-NTAPI
-ErrorHandlerWorkItemRoutine(
-	PVOID Context);
-
-VOID
-NTAPI
-ResetHandlerWorkItemRoutine(
-    PVOID Context);
-
-
-
-VOID
 USBSTOR_QueueNextRequest(
     IN PDEVICE_OBJECT DeviceObject);
 
@@ -622,12 +610,6 @@ USBSTOR_QueueTerminateRequest(
     IN PIRP Irp);
 
 /* error.c */
-NTSTATUS
-USBSTOR_GetEndpointStatus(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN UCHAR bEndpointAddress,
-    OUT PUSHORT Value);
-
 NTSTATUS
 USBSTOR_ResetPipeWithHandle(
     IN PDEVICE_OBJECT DeviceObject,
