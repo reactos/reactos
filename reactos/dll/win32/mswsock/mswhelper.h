@@ -69,7 +69,8 @@ BOOL
 mswBufferAppendBlob_Hostent(
   _Inout_ PMSW_BUFFER mswBuf,
   _Inout_ LPWSAQUERYSETW lpRes,
-  _In_ char* hostnameA,
+    _In_ char** hostAliasesA,
+    _In_ char* hostnameA,
   _In_ DWORD ip4addr);
 
 BOOL

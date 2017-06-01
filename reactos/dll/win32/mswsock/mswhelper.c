@@ -226,6 +226,7 @@ mswBufferAppendStrLstA(_Inout_ PMSW_BUFFER mswBuf,
 BOOL
 mswBufferAppendBlob_Hostent(_Inout_ PMSW_BUFFER mswBuf,
                             _Inout_ LPWSAQUERYSETW lpRes,
+                            _In_ char** hostAliasesA,
                             _In_ char* hostnameA,
                             _In_ DWORD ip4addr)
 {
@@ -256,8 +257,18 @@ mswBufferAppendBlob_Hostent(_Inout_ PMSW_BUFFER mswBuf,
     /* aliases */
     phe->h_aliases = (char**)(mswBufferEndPtr(mswBuf) - bytesOfs);
 
-    if (!mswBufferAppendPtr(mswBuf, NULL))
-        return FALSE;
+    if (hostAliasesA)
+    {
+        if (!mswBufferAppendStrLstA(mswBuf,
+                                    (void**)hostAliasesA,
+                                    -(DWORD)bytesOfs))
+            return FALSE;
+    }
+    else
+    {
+        if (!mswBufferAppendPtr(mswBuf, NULL))
+            return FALSE;
+    }
 
     /* addr_list */
     RtlZeroMemory(lst, sizeof(lst));
@@ -308,10 +319,18 @@ mswBufferAppendBlob_Servent(_Inout_ PMSW_BUFFER mswBuf,
 
     pse->s_aliases = (char**)(mswBufferEndPtr(mswBuf) - bytesOfs);
 
-    if (!mswBufferAppendStrLstA(mswBuf,
-                                (void**)serviceAliasesA,
-                                -(DWORD)bytesOfs))
-        return FALSE;
+    if (serviceAliasesA)
+    {
+        if (!mswBufferAppendStrLstA(mswBuf,
+                                    (void**)serviceAliasesA,
+                                    -(DWORD)bytesOfs))
+            return FALSE;
+    }
+    else
+    {
+        if (!mswBufferAppendPtr(mswBuf, NULL))
+            return FALSE;
+    }
 
     pse->s_name = (char*)(mswBufferEndPtr(mswBuf) - bytesOfs);
 
