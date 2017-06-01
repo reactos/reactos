@@ -1093,15 +1093,9 @@ restart your computer.
 MessageId=0x7C
 Severity=Success
 Facility=System
-SymbolicName=MORAL_EXCEPTION_ERROR
+SymbolicName=BUGCODE_NDIS_DRIVER
 Language=English
-An attempt was made to execute a proprietary machine code instruction.
-The system has been shut down to prevent damage to your conscience.
-
-If this is the first time you have seen this error screen, read
-<http://www.gnu.org/philosophy/free-sw.html>.
-
-If problems continue, remove all nonfree software from your computer.
+BUGCODE_NDIS_DRIVER
 .
 
 MessageId=0x7D
@@ -1197,6 +1191,20 @@ Facility=System
 SymbolicName=INVALID_WORK_QUEUE_ITEM
 Language=English
 INVALID_WORK_QUEUE_ITEM
+.
+
+MessageId=0x9A
+Severity=Success
+Facility=System
+SymbolicName=MORAL_EXCEPTION_ERROR
+Language=English
+An attempt was made to execute a proprietary machine code instruction.
+The system has been shut down to prevent damage to your conscience.
+
+If this is the first time you have seen this error screen, read
+<http://www.gnu.org/philosophy/free-sw.html>.
+
+If problems continue, remove all nonfree software from your computer.
 .
 
 MessageId=0xA0
