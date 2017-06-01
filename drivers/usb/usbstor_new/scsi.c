@@ -25,6 +25,56 @@ DumpCBW(
 }
 
 NTSTATUS
+NTAPI
+USBSTOR_IssueBulkOrInterruptRequest(
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension,
+    IN PIRP Irp,
+    IN USBD_PIPE_HANDLE PipeHandle,
+    IN ULONG TransferFlags,
+    IN ULONG TransferBufferLength,
+    IN PVOID TransferBuffer,
+    IN PMDL TransferBufferMDL,
+    IN PIO_COMPLETION_ROUTINE CompletionRoutine,
+    IN PVOID Context)
+{
+    PIO_STACK_LOCATION NextStack;
+    KIRQL OldIrql;
+
+    DPRINT("USBSTOR_IssueBulkOrInterruptRequest: ... \n");
+
+    RtlZeroMemory(&FDODeviceExtension->Urb,
+                  sizeof (struct _URB_BULK_OR_INTERRUPT_TRANSFER));
+
+    FDODeviceExtension->Urb.Hdr.Length = sizeof (struct _URB_BULK_OR_INTERRUPT_TRANSFER);
+    FDODeviceExtension->Urb.Hdr.Function = URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER;
+
+    FDODeviceExtension->Urb.PipeHandle = PipeHandle;
+    FDODeviceExtension->Urb.TransferFlags = TransferFlags;
+    FDODeviceExtension->Urb.TransferBufferLength = TransferBufferLength;
+    FDODeviceExtension->Urb.TransferBuffer = TransferBuffer;
+    FDODeviceExtension->Urb.TransferBufferMDL = TransferBufferMDL;
+
+    NextStack = IoGetNextIrpStackLocation(Irp); 
+    NextStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL; 
+    NextStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_INTERNAL_USB_SUBMIT_URB; 
+    NextStack->Parameters.Others.Argument1 = &FDODeviceExtension->Urb; 
+
+    IoSetCompletionRoutine(Irp,
+                           CompletionRoutine,
+                           Context,
+                           TRUE,
+                           TRUE,
+                           TRUE); 
+
+    KeAcquireSpinLock(&FDODeviceExtension->StorSpinLock, &OldIrql);
+    FDODeviceExtension->Flags |= USBSTOR_FDO_FLAGS_TRANSFER_FINISHED;
+    FDODeviceExtension->CurrentIrp = Irp;
+    KeReleaseSpinLock(&FDODeviceExtension->StorSpinLock, OldIrql);
+
+    return IoCallDriver(FDODeviceExtension->LowerDeviceObject, Irp);
+}
+
+NTSTATUS
 USBSTOR_BuildCBW(
     IN ULONG Tag,
     IN ULONG DataTransferLength,

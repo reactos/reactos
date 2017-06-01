@@ -33,6 +33,11 @@ typedef struct __COMMON_DEVICE_EXTENSION__
 
 }USBSTOR_COMMON_DEVICE_EXTENSION, *PUSBSTOR_COMMON_DEVICE_EXTENSION;
 
+#define USBSTOR_FDO_FLAGS_TRANSFER_FINISHED  0x00000002
+#define USBSTOR_FDO_FLAGS_NEED_SENSE_REQUEST 0x00000004
+#define USBSTOR_FDO_FLAGS_DEVICE_RESETTING   0x00000008
+#define USBSTOR_FDO_FLAGS_DEVICE_ERROR       0x00000010
+
 typedef struct
 {
     USBSTOR_COMMON_DEVICE_EXTENSION Common;                                                      // common device extension
@@ -61,6 +66,9 @@ typedef struct
     ULONG SrbErrorHandlingActive;                                                        // error handling of srb is activated
     ULONG TimerWorkQueueEnabled;                                                         // timer work queue enabled
     ULONG InstanceCount;                                                                 // pdo instance count
+    PIRP CurrentIrp;
+    struct _URB_BULK_OR_INTERRUPT_TRANSFER Urb;
+    ULONG Flags;
     KSPIN_LOCK StorSpinLock;
     KEVENT TimeOutEvent;
 }FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
