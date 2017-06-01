@@ -169,6 +169,7 @@ typedef struct
     CDB CurrentCdb;
     ULONG RetryCount;
     USBSTOR_BULK_ONLY_BUFFER BulkBuffer;                                                 // Transfer Buffer CBW/CSW
+    PIO_WORKITEM ResetDeviceWorkItem;
     ULONG Flags;
     ULONG DriverFlags;                                                                   // 1 - BulkOnly
     KSPIN_LOCK StorSpinLock;

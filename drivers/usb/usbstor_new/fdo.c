@@ -166,6 +166,7 @@ USBSTOR_FdoHandleStartDevice(
     PUSB_INTERFACE_DESCRIPTOR InterfaceDesc;
     NTSTATUS Status;
     UCHAR Index = 0;
+    PIO_WORKITEM WorkItem;
 
     //
     // forward irp to lower device
@@ -178,6 +179,17 @@ USBSTOR_FdoHandleStartDevice(
         //
         DPRINT1("USBSTOR_FdoHandleStartDevice Lower device failed to start %x\n", Status);
         return Status;
+    }
+
+    if (!DeviceExtension->ResetDeviceWorkItem)
+    {
+        WorkItem = IoAllocateWorkItem(DeviceObject);
+        DeviceExtension->ResetDeviceWorkItem = WorkItem;
+
+        if (!WorkItem)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
     }
 
     //
@@ -213,22 +225,33 @@ USBSTOR_FdoHandleStartDevice(
     //
     ASSERT(InterfaceDesc->bDescriptorType == USB_INTERFACE_DESCRIPTOR_TYPE);
     ASSERT(InterfaceDesc->bLength == sizeof(USB_INTERFACE_DESCRIPTOR));
+    ASSERT(InterfaceDesc->bInterfaceClass == USB_CLASS_MASS_STORAGE);
 
     DPRINT("bInterfaceSubClass %x\n", InterfaceDesc->bInterfaceSubClass);
-    if (InterfaceDesc->bInterfaceProtocol != 0x50)
-    {
-        DPRINT1("USB Device is not a bulk only device and is not currently supported\n");
-        return STATUS_NOT_SUPPORTED;
-    }
 
-    if (InterfaceDesc->bInterfaceSubClass != 0x06)
+    if (InterfaceDesc->bInterfaceClass == USB_CLASS_MASS_STORAGE &&
+        InterfaceDesc->bInterfaceProtocol == USB_PROTOCOL_BULK &&
+        !DeviceExtension->DriverFlags)
     {
-        //
-        // FIXME: need to pad CDBs to 12 byte
-        // mode select commands must be translated from 1AH / 15h to 5AH / 55h
-        //
-        DPRINT1("[USBSTOR] Error: need to pad CDBs\n");
-        return STATUS_NOT_IMPLEMENTED;
+        DeviceExtension->DriverFlags = 1;
+    }
+    else
+    {
+        if (InterfaceDesc->bInterfaceProtocol != USB_PROTOCOL_BULK)
+        {
+            DPRINT1("USB Device is not a bulk only device and is not currently supported\n");
+            return STATUS_NOT_SUPPORTED;
+        }
+
+        if (InterfaceDesc->bInterfaceSubClass != USB_SUBCLASS_SCSI)
+        {
+            //
+            // FIXME: need to pad CDBs to 12 byte
+            // mode select commands must be translated from 1AH / 15h to 5AH / 55h
+            //
+            DPRINT1("[USBSTOR] Error: need to pad CDBs\n");
+            return STATUS_NOT_IMPLEMENTED;
+        }
     }
 
     //
@@ -256,6 +279,11 @@ USBSTOR_FdoHandleStartDevice(
         DPRINT1("USBSTOR_FdoHandleStartDevice no pipe handles %x\n", Status);
         return Status;
     }
+
+    //
+    // start the timer
+    //
+    IoStartTimer(DeviceObject);
 
     //
     // get num of lun which are supported
@@ -314,13 +342,6 @@ USBSTOR_FdoHandleStartDevice(
         return Status;
     }
 #endif
-
-
-    //
-    // start the timer
-    //
-    //IoStartTimer(DeviceObject);
-
 
     //
     // fdo is now initialized
