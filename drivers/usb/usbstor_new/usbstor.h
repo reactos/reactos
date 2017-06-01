@@ -185,6 +185,7 @@ typedef struct
     struct _URB_BULK_OR_INTERRUPT_TRANSFER Urb;
     SCSI_REQUEST_BLOCK SenseSrb;
     CDB CurrentCdb;
+    ULONG SrbTimeOutValue;
     ULONG RetryCount;
     USBSTOR_BULK_ONLY_BUFFER BulkBuffer;                                                 // Transfer Buffer CBW/CSW
     PIO_WORKITEM ResetDeviceWorkItem;

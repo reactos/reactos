@@ -205,3 +205,44 @@ USBSTOR_QueueResetDevice(
                     PDODeviceExtension);
 }
 
+VOID
+NTAPI
+USBSTOR_TimerRoutine(
+    IN PDEVICE_OBJECT FdoDevice,
+    IN PVOID Context)
+{
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+    BOOLEAN IsResetDevice = FALSE;
+
+    DPRINT("USBSTOR_TimerRoutine: ... \n");
+
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
+
+    KefAcquireSpinLockAtDpcLevel(&FDODeviceExtension->StorSpinLock);
+
+    if (!(FDODeviceExtension->Flags & USBSTOR_FDO_FLAGS_DEVICE_RESETTING))
+    {
+        if (FDODeviceExtension->Flags & USBSTOR_FDO_FLAGS_TRANSFER_FINISHED)
+        {
+            FDODeviceExtension->SrbTimeOutValue--;
+
+            if (FDODeviceExtension->SrbTimeOutValue == 1)
+            {
+                FDODeviceExtension->Flags |= USBSTOR_FDO_FLAGS_DEVICE_RESETTING;
+                IsResetDevice = TRUE;
+            }
+        }
+    }
+
+    KeReleaseSpinLockFromDpcLevel(&FDODeviceExtension->StorSpinLock);
+
+    if (IsResetDevice)
+    {
+        //FIXME RemoveLock
+
+        IoQueueWorkItem(FDODeviceExtension->ResetDeviceWorkItem,
+                        USBSTOR_ResetDeviceWorkItem,
+                        CriticalWorkQueue,
+                        0);
+    }
+}
