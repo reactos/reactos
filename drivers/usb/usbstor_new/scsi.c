@@ -1394,6 +1394,47 @@ USBSTOR_SendUnknownRequest(
 
 NTSTATUS
 NTAPI
+USBSTOR_CswTransfer(
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension,
+    IN PIRP Irp)
+{
+    PVOID TransferBuffer;
+    PUSBD_PIPE_INFORMATION PipeIn;
+    ULONG TransferBufferLength;
+    ULONG TransferFlags;
+    UCHAR PipeIndex;
+
+    DPRINT("USBSTOR_CswTransfer: ... \n");
+
+    TransferBuffer = &FDODeviceExtension->BulkBuffer.Csw;
+
+    PipeIndex = FDODeviceExtension->BulkInPipeIndex;
+    PipeIn = &FDODeviceExtension->InterfaceInformation->Pipes[PipeIndex];
+
+    if (PipeIn->MaximumPacketSize == 512)
+    {
+        TransferFlags = USBD_SHORT_TRANSFER_OK;
+        TransferBufferLength = 512;
+    }
+    else
+    {
+        TransferFlags = 0;
+        TransferBufferLength = sizeof(CSW);
+    }
+
+    return USBSTOR_IssueBulkOrInterruptRequest(FDODeviceExtension,
+                                               Irp,
+                                               PipeIn->PipeHandle,
+                                               TransferFlags,
+                                               TransferBufferLength,
+                                               TransferBuffer,
+                                               NULL,//TransferBufferMDL
+                                               USBSTOR_CswCompletion,
+                                               NULL);//Context
+}
+
+NTSTATUS
+NTAPI
 USBSTOR_DataCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
