@@ -26,6 +26,47 @@ DumpCBW(
 
 NTSTATUS
 NTAPI
+USBSTOR_SrbStatusToNtStatus(
+    IN PSCSI_REQUEST_BLOCK Srb)
+{
+    UCHAR SrbStatus;
+
+    SrbStatus = SRB_STATUS(Srb->SrbStatus);
+
+    DPRINT("USBSTOR_SrbStatusToNtStatus: Srb - %p, SrbStatus - %x\n",
+           Srb,
+           SrbStatus);
+
+    switch (SrbStatus)
+    {
+        case SRB_STATUS_DATA_OVERRUN:
+            return STATUS_BUFFER_OVERFLOW;
+
+        case SRB_STATUS_BAD_FUNCTION:
+        case SRB_STATUS_BAD_SRB_BLOCK_LENGTH:
+            return STATUS_INVALID_DEVICE_REQUEST;
+
+        case SRB_STATUS_INVALID_LUN:
+        case SRB_STATUS_INVALID_TARGET_ID:
+        case SRB_STATUS_NO_HBA:
+        case SRB_STATUS_NO_DEVICE:
+            return STATUS_DEVICE_DOES_NOT_EXIST;
+
+        case SRB_STATUS_TIMEOUT:
+            return STATUS_IO_TIMEOUT;
+
+        case SRB_STATUS_BUS_RESET:
+        case SRB_STATUS_COMMAND_TIMEOUT:
+        case SRB_STATUS_SELECTION_TIMEOUT:
+            return STATUS_DEVICE_NOT_CONNECTED;
+
+        default:
+            return STATUS_IO_DEVICE_ERROR;
+    }
+}
+
+NTSTATUS
+NTAPI
 USBSTOR_IssueBulkOrInterruptRequest(
     IN PFDO_DEVICE_EXTENSION FDODeviceExtension,
     IN PIRP Irp,
