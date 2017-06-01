@@ -1394,6 +1394,86 @@ USBSTOR_SendUnknownRequest(
 
 NTSTATUS
 NTAPI
+USBSTOR_DataCompletion(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    IN PVOID Context)
+{
+    PPDO_DEVICE_EXTENSION PDODeviceExtension;
+    PSCSI_REQUEST_BLOCK Srb;
+    PDEVICE_OBJECT FdoDevice;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+    PSCSI_REQUEST_BLOCK CurrentSrb;
+    PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
+
+    DPRINT("USBSTOR_DataCompletion: ... \n");
+
+    PDODeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    FdoDevice = PDODeviceExtension->LowerDeviceObject;
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)FdoDevice->DeviceExtension;
+
+    IoStack = Irp->Tail.Overlay.CurrentStackLocation;
+    Srb = IoStack->Parameters.Scsi.Srb;
+
+    if (Srb == FDODeviceExtension->CurrentSrb &&
+        FDODeviceExtension->Urb.TransferBufferMDL != Irp->MdlAddress)
+    {
+        IoFreeMdl(FDODeviceExtension->Urb.TransferBufferMDL);
+    }
+
+    if (USBSTOR_IsRequestTimeOut(FdoDevice, Irp, &Status))
+    {
+        return Status;
+    }
+
+    if (NT_SUCCESS(Irp->IoStatus.Status))
+    {
+        if (FDODeviceExtension->Urb.TransferBufferLength < Srb->DataTransferLength)
+        {
+            Srb->SrbStatus = SRB_STATUS_DATA_OVERRUN;
+        }
+        else
+        {
+            Srb->SrbStatus = SRB_STATUS_SUCCESS;
+        }
+
+        Srb->DataTransferLength = FDODeviceExtension->Urb.TransferBufferLength;
+
+        USBSTOR_CswTransfer(FDODeviceExtension, Irp);
+
+        return STATUS_MORE_PROCESSING_REQUIRED;
+    }
+
+    if (USBD_STATUS(FDODeviceExtension->Urb.Hdr.Status) == 
+        USBD_STATUS(USBD_STATUS_STALL_PID))
+    {
+        ++FDODeviceExtension->RetryCount;
+
+        Srb->DataTransferLength = FDODeviceExtension->Urb.TransferBufferLength;
+        Srb->SrbStatus = SRB_STATUS_DATA_OVERRUN;
+
+        USBSTOR_BulkQueueResetPipe(FDODeviceExtension);
+
+        return STATUS_MORE_PROCESSING_REQUIRED;
+    }
+
+    CurrentSrb = FDODeviceExtension->CurrentSrb;
+    IoStack->Parameters.Scsi.Srb = CurrentSrb;
+
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = STATUS_IO_DEVICE_ERROR;
+
+    CurrentSrb->SrbStatus = SRB_STATUS_BUS_RESET;
+
+    USBSTOR_HandleCDBComplete(FDODeviceExtension, Irp, CurrentSrb);
+    USBSTOR_QueueResetDevice(FDODeviceExtension, PDODeviceExtension);
+
+    return STATUS_IO_DEVICE_ERROR;
+}
+
+NTSTATUS
+NTAPI
 USBSTOR_DataTransfer(
     IN PFDO_DEVICE_EXTENSION FDODeviceExtension,
     IN PIRP Irp)
