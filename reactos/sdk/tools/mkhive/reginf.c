@@ -120,11 +120,10 @@ append_multi_sz_value(
     IN HKEY KeyHandle,
     IN PWCHAR ValueName,
     IN PWCHAR Strings,
-    IN ULONG StringSize)
+    IN ULONG StringSize) // In characters
 {
-    ULONG Size;
+    ULONG Size, Total;   // In bytes
     ULONG Type;
-    ULONG Total;
     PWCHAR Buffer;
     PWCHAR p;
     size_t len;
@@ -139,7 +138,7 @@ append_multi_sz_value(
     if ((Error != ERROR_SUCCESS) || (Type != REG_MULTI_SZ))
         return;
 
-    Buffer = malloc ((Size + StringSize) * sizeof(WCHAR));
+    Buffer = malloc(Size + StringSize * sizeof(WCHAR));
     if (Buffer == NULL)
         return;
 
@@ -164,9 +163,9 @@ append_multi_sz_value(
 
         if (*p == 0)  /* not found, need to append it */
         {
-            memcpy (p, Strings, len);
+            memcpy(p, Strings, len * sizeof(WCHAR));
             p[len] = 0;
-            Total += len;
+            Total += len * sizeof(WCHAR);
         }
         Strings += len;
     }
@@ -179,7 +178,7 @@ append_multi_sz_value(
                        0,
                        REG_MULTI_SZ,
                        (PUCHAR)Buffer,
-                       Total * sizeof(WCHAR));
+                       Total + sizeof(WCHAR));
     }
 
 done:

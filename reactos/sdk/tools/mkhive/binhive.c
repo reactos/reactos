@@ -41,7 +41,7 @@ ExportBinaryHive(
     printf("  Creating binary hive: %s\n", FileName);
 
     /* Create new hive file */
-    File = fopen(FileName, "w+b");
+    File = fopen(FileName, "wb");
     if (File == NULL)
     {
         printf("    Error creating/opening file\n");
