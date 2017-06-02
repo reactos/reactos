@@ -423,7 +423,7 @@ StrA2WHeapAlloc(_In_opt_ HANDLE hHeap,
         return NULL;
     }
 
-    ret = MultiByteToWideChar(1252,
+    ret = MultiByteToWideChar(CP_ACP,
                               0,
                               aStr,
                               aStrByteLen,
@@ -464,7 +464,7 @@ StrW2AHeapAlloc(_In_opt_ HANDLE hHeap,
         return NULL;
     }
 
-    ret = WideCharToMultiByte(1252,
+    ret = WideCharToMultiByte(CP_ACP,
                               0,
                               wStr,
                               charLen,
@@ -553,7 +553,7 @@ StrAryCpyHeapAllocA(_In_opt_ HANDLE hHeap,
         if (aCount >= MAX_ARRAY_SIZE)
             return NULL;
 
-        bItmLen = (strlen(*aSrcPtr) + 1) * sizeof(char);
+        bItmLen = strlen(*aSrcPtr) + 1;
         aStrByteLen[aCount] = bItmLen;
 
         bLen += sizeof(*aSrcPtr) + bItmLen;
@@ -584,6 +584,96 @@ StrAryCpyHeapAllocA(_In_opt_ HANDLE hHeap,
         aDstNextStr = (char*)((DWORD)aDstNextStr + (DWORD)bItmLen);
         aDstPtr++;
         aSrcPtr++;
+    }
+
+    /* terminate with NULL */
+    *aDstPtr = NULL;
+
+    return resA;
+}
+
+char**
+StrAryCpyHeapAllocWToA(_In_opt_ HANDLE hHeap,
+    _In_ WCHAR** wStrAry)
+{
+    WCHAR** wSrcPtr;
+    char** aDstPtr;
+    char* aDstNextStr;
+    DWORD aStrByteLen[MAX_ARRAY_SIZE];
+    int bLen;
+    int bItmLen;
+    int aCount;
+    int i1;
+    char** resA;
+    int ret;
+    char* aStr;
+
+    if (hHeap == 0)
+        hHeap = GetProcessHeap();
+
+    /* Calculating size of array ... */
+    wSrcPtr = wStrAry;
+    bLen = 0;
+    aCount = 0;
+
+    while (*wSrcPtr != NULL)
+    {
+        if (aCount >= MAX_ARRAY_SIZE)
+            return NULL;
+
+        bItmLen = wcslen(*wSrcPtr) + 1;
+        aStrByteLen[aCount] = bItmLen;
+
+        bLen += sizeof(*wSrcPtr) + bItmLen;
+
+        wSrcPtr++;
+        aCount++;
+    }
+
+    /* size for NULL-terminator */
+    bLen += sizeof(*wSrcPtr);
+
+    /* get memory */
+    resA = HeapAlloc(hHeap, 0, bLen);
+
+    /* copy data */
+    wSrcPtr = wStrAry;
+    aDstPtr = resA;
+
+    /* pos for the first string */
+    aDstNextStr = (char*)(resA + aCount + 1);
+    for (i1 = 0; i1 < aCount; i1++)
+    {
+        bItmLen = aStrByteLen[i1];
+
+        *aDstPtr = aDstNextStr;
+
+        aStr = HeapAlloc(hHeap, 0, bItmLen);
+        if (aStr == NULL)
+        {
+            HeapFree(hHeap, 0, aStr);
+            return NULL;
+        }
+
+        ret = WideCharToMultiByte(CP_ACP,
+                                  0,
+                                  *wSrcPtr,
+                                  bItmLen,
+                                  aStr,
+                                  bItmLen,
+                                  NULL,
+                                  NULL);
+        if (ret != bItmLen)
+        {
+            HeapFree(hHeap, 0, aStr);
+            return NULL;
+        }
+        RtlCopyMemory(*aDstPtr, aStr, bItmLen);
+        HeapFree(hHeap, 0, aStr);
+
+        aDstNextStr = (char*)((DWORD)aDstNextStr + (DWORD)bItmLen);
+        aDstPtr++;
+        wSrcPtr++;
     }
 
     /* terminate with NULL */

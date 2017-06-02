@@ -469,12 +469,14 @@ NSP_GetHostByNameHeapAllocW(_In_ PWSHANDLEINTERN data,
                             _Out_ PWSHOSTINFOINTERN hostinfo)
 {
     HANDLE hHeap = GetProcessHeap();
-    DNS_STATUS dns_status = {0};
+    DNS_STATUS dns_status = { 0 };
     /* include/WinDNS.h -- look up DNS_RECORD on MSDN */
-    PDNS_RECORD dp;
-    PDNS_RECORD curr;
+    PDNS_RECORDW dp;
+    PDNS_RECORDW curr;
     INT result = ERROR_SUCCESS;
     DWORD dwQueryFlags = DNS_QUERY_STANDARD;
+    PWCHAR Aliases[WS2_INTERNAL_MAX_ALIAS] = { 0 };
+    int AliasIndex = 0;
 
     /* needed to be cleaned up if != NULL */
     dp = NULL;
@@ -492,13 +494,12 @@ NSP_GetHostByNameHeapAllocW(_In_ PWSHANDLEINTERN data,
 
     /* DNS_TYPE_A: include/WinDNS.h */
     /* DnsQuery -- lib/dnsapi/dnsapi/query.c */
-    dns_status = DnsQuery(data->hostnameW,
-                          DNS_TYPE_A,
-                          dwQueryFlags,
-                          /* extra dns servers */ 0,
-                          &dp,
-                          0);
-
+    dns_status = DnsQuery_W(data->hostnameW,
+                            DNS_TYPE_A,
+                            dwQueryFlags,
+                            NULL /* extra dns servers */,
+                            &dp,
+                            NULL);
     if (dns_status == ERROR_INVALID_NAME)
     {
         WSASetLastError(WSAEFAULT);
@@ -517,7 +518,10 @@ NSP_GetHostByNameHeapAllocW(_In_ PWSHANDLEINTERN data,
     curr = dp;
     while ((curr->pNext != NULL) || (curr->wType != DNS_TYPE_A))
     {
-        /* FIXME build aliases list */
+        if (curr->wType == DNS_TYPE_CNAME)
+        {
+            Aliases[AliasIndex++] = curr->Data.Cname.pNameHost;
+        }
         curr = curr->pNext;
     }
 
@@ -526,10 +530,12 @@ NSP_GetHostByNameHeapAllocW(_In_ PWSHANDLEINTERN data,
         result = WSASERVICE_NOT_FOUND;
         goto cleanup;
     }
-
     hostinfo->hostnameW = StrCpyHeapAllocW(hHeap, curr->pName);
     hostinfo->addr4 = curr->Data.A.IpAddress;
-    /* FIXME attach built aliases list */
+    if (AliasIndex)
+    {
+        hostinfo->servaliasesA = StrAryCpyHeapAllocWToA(hHeap, (WCHAR**)&Aliases);
+    }
     result = ERROR_SUCCESS;
 
 cleanup:
