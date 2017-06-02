@@ -128,6 +128,7 @@ list(APPEND KMTEST_SOURCE
     ntos_io/IoCreateFile_user.c
     ntos_io/IoDeviceObject_user.c
     ntos_io/IoReadWrite_user.c
+    ntos_mm/MmMapLockedPagesSpecifyCache_user.c
     ntos_mm/NtCreateSection_user.c
     ntos_po/PoIrp_user.c
     tcpip/TcpIp_user.c
@@ -157,6 +158,7 @@ add_dependencies(kmtest_drivers
     iodeviceobject_drv
     iohelper_drv
     ioreadwrite_drv
+    mmmaplockedpagesspecifycache_drv
     ntcreatesection_drv
     poirp_drv
     tcpip_drv
