@@ -21,8 +21,9 @@
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/mkhive.c
  * PURPOSE:         Hive maker
- * PROGRAMMER:      Eric Kohl
- *                  Herv� Poussineau
+ * PROGRAMMERS:     Eric Kohl
+ *                  Hervé Poussineau
+ *                  Hermès Bélusca-Maïto
  */
 
 #include <limits.h>
@@ -48,11 +49,13 @@
 #endif
 
 
-void usage (void)
+void usage(void)
 {
-    printf ("Usage: mkhive <dstdir> <inffiles>\n\n");
-    printf ("  dstdir   - binary hive files are created in this directory\n");
-    printf ("  inffiles - inf files with full path\n");
+    printf("Usage: mkhive -h:hive1[,hiveN...] -d:<dstdir> <inffiles>\n\n"
+           "  -h:hiveN  - Comma-separated list of hives to create. Possible values are:\n"
+           "              SETUPREG, SYSTEM, SOFTWARE, DEFAULT, SAM, SECURITY, BCD.\n"
+           "  -d:dstdir - The binary hive files are created in this directory.\n"
+           "  inffiles  - List of INF files with full path.\n");
 }
 
 void convert_path(char *dst, char *src)
@@ -83,83 +86,106 @@ void convert_path(char *dst, char *src)
     dst[i] = 0;
 }
 
-int main (int argc, char *argv[])
+int main(int argc, char *argv[])
 {
-    char FileName[PATH_MAX];
-    int i;
+    INT ret;
+    UINT i;
+    PCSTR HiveList = NULL;
+    CHAR DestPath[PATH_MAX] = "";
+    CHAR FileName[PATH_MAX];
 
-    if (argc < 3)
+    if (argc < 4)
     {
-        usage ();
-        return 1;
+        usage();
+        return -1;
     }
 
-    printf ("Binary hive maker\n");
+    printf("Binary hive maker\n");
 
-    RegInitializeRegistry ();
-
-    for (i = 2; i < argc; i++)
+    /* Read the options */
+    for (i = 1; i < argc && *argv[i] == '-'; i++)
     {
-        convert_path (FileName, argv[i]);
-        if (!ImportRegistryFile (FileName))
+        if (argv[i][1] == 'h' && (argv[i][2] == ':' || argv[i][2] == '='))
         {
-            return 1;
+            HiveList = argv[i] + 3;
+        }
+        else if (argv[i][1] == 'd' && (argv[i][2] == ':' || argv[i][2] == '='))
+        {
+            convert_path(DestPath, argv[i] + 3);
+        }
+        else
+        {
+            fprintf(stderr, "Unrecognized option: %s\n", argv[i]);
+            return -1;
         }
     }
 
-    convert_path (FileName, argv[1]);
-    strcat (FileName, DIR_SEPARATOR_STRING);
-    strcat (FileName, "default");
-    if (!ExportBinaryHive (FileName, &DefaultHive))
+    /* Check whether we have all the parameters needed */
+    if (!HiveList || !*HiveList)
     {
-        return 1;
+        fprintf(stderr, "The mandatory list of hives is missing.\n");
+        return -1;
+    }
+    if (!*DestPath)
+    {
+        fprintf(stderr, "The mandatory output directory is missing.\n");
+        return -1;
+    }
+    if (i >= argc)
+    {
+        fprintf(stderr, "Not enough parameters, or the list of INF files is missing.\n");
+        return -1;
     }
 
-    convert_path (FileName, argv[1]);
-    strcat (FileName, DIR_SEPARATOR_STRING);
-    strcat (FileName, "sam");
-    if (!ExportBinaryHive (FileName, &SamHive))
+    /* Initialize the registry */
+    RegInitializeRegistry(HiveList);
+
+    /* Default to failure */
+    ret = -1;
+
+    /* Now we should have the list of INF files: parse it */
+    for (; i < argc; ++i)
     {
-        return 1;
+        convert_path(FileName, argv[i]);
+        if (!ImportRegistryFile(FileName))
+            goto Quit;
     }
 
-    convert_path (FileName, argv[1]);
-    strcat (FileName, DIR_SEPARATOR_STRING);
-    strcat (FileName, "security");
-    if (!ExportBinaryHive (FileName, &SecurityHive))
+    for (i = 0; i < MAX_NUMBER_OF_REGISTRY_HIVES; ++i)
     {
-        return 1;
+        /* Skip this registry hive if it's not in the list */
+        if (!strstr(HiveList, RegistryHives[i].HiveName))
+            continue;
+
+        strcpy(FileName, DestPath);
+        strcat(FileName, DIR_SEPARATOR_STRING);
+        strcat(FileName, RegistryHives[i].HiveName);
+
+        /* Exception for the special setup registry hive */
+        // if (strcmp(RegistryHives[i].HiveName, "SETUPREG") == 0)
+        if (i == 0)
+            strcat(FileName, ".HIV");
+
+        if (!ExportBinaryHive(FileName, RegistryHives[i].CmHive))
+            goto Quit;
+
+        /* If we happen to deal with the special setup registry hive, stop there */
+        // if (strcmp(RegistryHives[i].HiveName, "SETUPREG") == 0)
+        if (i == 0)
+            break;
     }
 
-    convert_path (FileName, argv[1]);
-    strcat (FileName, DIR_SEPARATOR_STRING);
-    strcat (FileName, "software");
-    if (!ExportBinaryHive (FileName, &SoftwareHive))
-    {
-        return 1;
-    }
+    /* Success */
+    ret = 0;
 
-    convert_path (FileName, argv[1]);
-    strcat (FileName, DIR_SEPARATOR_STRING);
-    strcat (FileName, "system");
-    if (!ExportBinaryHive (FileName, &SystemHive))
-    {
-        return 1;
-    }
+Quit:
+    /* Shut down the registry */
+    RegShutdownRegistry();
 
-    convert_path (FileName, argv[1]);
-    strcat (FileName, DIR_SEPARATOR_STRING);
-    strcat (FileName, "BCD");
-    if (!ExportBinaryHive (FileName, &BcdHive))
-    {
-        return 1;
-    }
+    if (ret == 0)
+        printf("  Done.\n");
 
-    RegShutdownRegistry ();
-
-    printf ("  Done.\n");
-
-    return 0;
+    return ret;
 }
 
 /* EOF */
