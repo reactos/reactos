@@ -9,6 +9,7 @@
 /* INCLUDES ***************************************************************/
 
 #include <freeldr.h>
+#include "winldr.h"
 #include "registry.h"
 
 #include <debug.h>

@@ -22,20 +22,20 @@
 
 #include <arc/setupblk.h>
 
+// See freeldr/ntldr/winldr.h
 #define TAG_WLDR_DTE 'eDlW'
 #define TAG_WLDR_BDE 'dBlW'
 #define TAG_WLDR_NAME 'mNlW'
 
-/* Entry-point to kernel */
-typedef VOID (NTAPI *KERNEL_ENTRY_POINT) (PLOADER_PARAMETER_BLOCK LoaderBlock);
-
 
 // Some definitions
+
+// FIXME: This one has nothing to do here!!
 #define SECTOR_SIZE 512
 
 // Descriptors
-#define NUM_GDT 128 // Must be 128
-#define NUM_IDT 0x100 // only 16 are used though. Must be 0x100
+#define NUM_GDT 128     // Must be 128
+#define NUM_IDT 0x100   // Only 16 are used though. Must be 0x100
 
 #include <pshpack1.h>
 typedef struct  /* Root System Descriptor Pointer */
@@ -58,27 +58,6 @@ typedef struct _ARC_DISK_SIGNATURE_EX
     CHAR ArcName[MAX_PATH];
 } ARC_DISK_SIGNATURE_EX, *PARC_DISK_SIGNATURE_EX;
 
-#define MAX_OPTIONS_LENGTH 255
-
-typedef struct _LOADER_SYSTEM_BLOCK
-{
-    LOADER_PARAMETER_BLOCK LoaderBlock;
-    LOADER_PARAMETER_EXTENSION Extension;
-    SETUP_LOADER_BLOCK SetupBlock;
-#ifdef _M_IX86
-    HEADLESS_LOADER_BLOCK HeadlessLoaderBlock;
-#endif
-    NLS_DATA_BLOCK NlsDataBlock;
-    CHAR LoadOptions[MAX_OPTIONS_LENGTH+1];
-    CHAR ArcBootDeviceName[MAX_PATH+1];
-    // CHAR ArcHalDeviceName[MAX_PATH];
-    CHAR NtBootPathName[MAX_PATH+1];
-    CHAR NtHalPathName[MAX_PATH+1];
-    ARC_DISK_INFORMATION ArcDiskInformation;
-} LOADER_SYSTEM_BLOCK, *PLOADER_SYSTEM_BLOCK;
-
-extern PLOADER_SYSTEM_BLOCK WinLdrSystemBlock;
-
 ///////////////////////////////////////////////////////////////////////////////////////
 //
 // ReactOS Loading Functions
@@ -87,18 +66,22 @@ extern PLOADER_SYSTEM_BLOCK WinLdrSystemBlock;
 VOID LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
                         IN USHORT OperatingSystemVersion);
 
-// conversion.c
+VOID
+LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
+                 IN USHORT OperatingSystemVersion);
+
+
+// conversion.c and conversion.h
 PVOID VaToPa(PVOID Va);
 PVOID PaToVa(PVOID Pa);
 VOID List_PaToVa(_In_ LIST_ENTRY *ListEntry);
-VOID ConvertConfigToVA(PCONFIGURATION_COMPONENT_DATA Start);
+
 
 // peloader.c
 BOOLEAN
 WinLdrLoadImage(IN PCHAR FileName,
                 TYPE_OF_MEMORY MemoryType,
                 OUT PVOID *ImageBasePA);
-
 
 BOOLEAN
 WinLdrAllocateDataTableEntry(IN OUT PLIST_ENTRY ModuleListHead,
@@ -112,54 +95,13 @@ WinLdrScanImportDescriptorTable(IN OUT PLIST_ENTRY ModuleListHead,
                                 IN PCCH DirectoryPath,
                                 IN PLDR_DATA_TABLE_ENTRY ScanDTE);
 
-// winldr.c
-PVOID WinLdrLoadModule(PCSTR ModuleName, ULONG *Size,
-                       TYPE_OF_MEMORY MemoryType);
-
-// wlmemory.c
-BOOLEAN
-WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock);
-
-// wlregistry.c
-BOOLEAN WinLdrInitSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                             IN LPCSTR DirectoryPath);
-
-BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                             IN LPCSTR DirectoryPath);
-
-
 BOOLEAN
 WinLdrCheckForLoadedDll(IN OUT PLIST_ENTRY ModuleListHead,
                         IN PCH DllName,
                         OUT PLDR_DATA_TABLE_ENTRY *LoadedEntry);
 
-VOID
-WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
-                       LPCSTR Options,
-                       LPCSTR SystemPath,
-                       LPCSTR BootPath,
-                       USHORT VersionToBoot);
-BOOLEAN
-WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                  IN LPCSTR DirectoryPath,
-                  IN LPCSTR AnsiFileName,
-                  IN LPCSTR OemFileName,
-                  IN LPCSTR LanguageFileName);
-BOOLEAN
-WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
-                      LPWSTR RegistryPath,
-                      LPWSTR ImagePath,
-                      LPWSTR ServiceName);
 
-VOID
-WinLdrpDumpMemoryDescriptors(PLOADER_PARAMETER_BLOCK LoaderBlock);
-
-VOID
-WinLdrpDumpBootDriver(PLOADER_PARAMETER_BLOCK LoaderBlock);
-
-VOID
-WinLdrpDumpArcDisks(PLOADER_PARAMETER_BLOCK LoaderBlock);
-
+// arch/xxx/winldr.c
 BOOLEAN
 MempSetupPaging(IN PFN_NUMBER StartPage,
                 IN PFN_NUMBER NumberOfPages,
@@ -169,19 +111,7 @@ VOID
 MempUnmapPage(PFN_NUMBER Page);
 
 VOID
-MempDump();
-
-VOID
-LoadAndBootWindowsCommon(
-    USHORT OperatingSystemVersion,
-    PLOADER_PARAMETER_BLOCK LoaderBlock,
-    LPCSTR BootOptions,
-    LPCSTR BootPath,
-    BOOLEAN Setup);
-
-VOID
-LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
-                 IN USHORT OperatingSystemVersion);
+MempDump(VOID);
 
 VOID
 WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock);
