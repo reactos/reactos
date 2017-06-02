@@ -12,6 +12,9 @@
 #include <winsock2.h>
 #include <mswsock.h>
 
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(mswsock);
+
 LPFN_TRANSMITFILE pfnTransmitFile = NULL;
 LPFN_GETACCEPTEXSOCKADDRS pfnGetAcceptExSockaddrs = NULL;
 LPFN_ACCEPTEX pfnAcceptEx = NULL;
@@ -28,29 +31,37 @@ TransmitFile(SOCKET Socket,
              LPTRANSMIT_FILE_BUFFERS TransmitBuffers,
              DWORD Flags)
 {
-    GUID TransmitFileGUID = WSAID_TRANSMITFILE;
+    GUID  TransmitFileGUID = WSAID_TRANSMITFILE;
     DWORD cbBytesReturned;
+    BOOL  Ret;
 
-    if (WSAIoctl(Socket,
-                 SIO_GET_EXTENSION_FUNCTION_POINTER,
-                 &TransmitFileGUID,
-                 sizeof(TransmitFileGUID),
-                 &pfnTransmitFile,
-                 sizeof(pfnTransmitFile),
-                 &cbBytesReturned,
-                 NULL,
-                 NULL) == SOCKET_ERROR)
+    TRACE("TransmitFile %p %p %ld %ld %p %p %lx\n", Socket, File, NumberOfBytesToWrite, NumberOfBytesPerSend, Overlapped, TransmitBuffers, Flags);
+    if (!pfnTransmitFile && WSAIoctl(Socket,
+                                     SIO_GET_EXTENSION_FUNCTION_POINTER,
+                                     &TransmitFileGUID,
+                                     sizeof(TransmitFileGUID),
+                                     &pfnTransmitFile,
+                                     sizeof(pfnTransmitFile),
+                                     &cbBytesReturned,
+                                     NULL,
+                                     NULL) == SOCKET_ERROR)
     {
+        ERR("TransmitFile WSAIoctl %lx\n", WSAGetLastError());
         return FALSE;
     }
 
-    return pfnTransmitFile(Socket,
-                           File,
-                           NumberOfBytesToWrite,
-                           NumberOfBytesPerSend,
-                           Overlapped,
-                           TransmitBuffers,
-                           Flags);
+    Ret = pfnTransmitFile(Socket,
+                          File,
+                          NumberOfBytesToWrite,
+                          NumberOfBytesPerSend,
+                          Overlapped,
+                          TransmitBuffers,
+                          Flags);
+    if (!Ret)
+    {
+        ERR("TransmitFile %lx\n", WSAGetLastError());
+    }
+    return Ret;
 }
 
 /*
@@ -70,42 +81,51 @@ AcceptEx(SOCKET ListenSocket,
     GUID AcceptExGUID = WSAID_ACCEPTEX;
     GUID GetAcceptExSockaddrsGUID = WSAID_GETACCEPTEXSOCKADDRS;
     DWORD cbBytesReturned;
+    BOOL  Ret;
 
-    if (WSAIoctl(ListenSocket,
-                 SIO_GET_EXTENSION_FUNCTION_POINTER,
-                 &AcceptExGUID,
-                 sizeof(AcceptExGUID),
-                 &pfnAcceptEx,
-                 sizeof(pfnAcceptEx),
-                 &cbBytesReturned,
-                 NULL,
-                 NULL) == SOCKET_ERROR)
+    TRACE("AcceptEx %p %p %p %ld %ld %ld %p %p\n", ListenSocket, AcceptSocket, OutputBuffer, ReceiveDataLength, LocalAddressLength, RemoteAddressLength, BytesReceived, Overlapped);
+    if (!pfnAcceptEx && WSAIoctl(ListenSocket,
+                                 SIO_GET_EXTENSION_FUNCTION_POINTER,
+                                 &AcceptExGUID,
+                                 sizeof(AcceptExGUID),
+                                 &pfnAcceptEx,
+                                 sizeof(pfnAcceptEx),
+                                 &cbBytesReturned,
+                                 NULL,
+                                 NULL) == SOCKET_ERROR)
     {
+        ERR("AcceptEx WSAIoctl %lx\n", WSAGetLastError());
         return FALSE;
     }
 
-    if (WSAIoctl(ListenSocket,
-                 SIO_GET_EXTENSION_FUNCTION_POINTER,
-                 &GetAcceptExSockaddrsGUID,
-                 sizeof(GetAcceptExSockaddrsGUID),
-                 &pfnGetAcceptExSockaddrs,
-                 sizeof(pfnGetAcceptExSockaddrs),
-                 &cbBytesReturned,
-                 NULL,
-                 NULL) == SOCKET_ERROR)
+    if (!pfnGetAcceptExSockaddrs && WSAIoctl(ListenSocket,
+                                             SIO_GET_EXTENSION_FUNCTION_POINTER,
+                                             &GetAcceptExSockaddrsGUID,
+                                             sizeof(GetAcceptExSockaddrsGUID),
+                                             &pfnGetAcceptExSockaddrs,
+                                             sizeof(pfnGetAcceptExSockaddrs),
+                                             &cbBytesReturned,
+                                             NULL,
+                                             NULL) == SOCKET_ERROR)
     {
+        ERR("GetAcceptExSockaddrs WSAIoctl %lx\n", WSAGetLastError());
         pfnAcceptEx = NULL;
         return FALSE;
     }
 
-    return pfnAcceptEx(ListenSocket,
-                       AcceptSocket,
-                       OutputBuffer,
-                       ReceiveDataLength,
-                       LocalAddressLength,
-                       RemoteAddressLength,
-                       BytesReceived,
-                       Overlapped);
+    Ret = pfnAcceptEx(ListenSocket,
+                      AcceptSocket,
+                      OutputBuffer,
+                      ReceiveDataLength,
+                      LocalAddressLength,
+                      RemoteAddressLength,
+                      BytesReceived,
+                      Overlapped);
+    if (!Ret)
+    {
+        ERR("AcceptEx %lx\n", WSAGetLastError());
+    }
+    return Ret;
 }
 
 
@@ -123,16 +143,19 @@ GetAcceptExSockaddrs(PVOID OutputBuffer,
                      LPSOCKADDR* RemoteSockaddr,
                      LPINT RemoteSockaddrLength)
 {
-    if (pfnGetAcceptExSockaddrs)
+    TRACE("AcceptEx %p %ld %ld %ld %p %p %p %p\n", OutputBuffer, ReceiveDataLength, LocalAddressLength, RemoteAddressLength, LocalSockaddr, LocalSockaddrLength, RemoteSockaddr, RemoteSockaddrLength);
+    if (!pfnGetAcceptExSockaddrs)
     {
-        pfnGetAcceptExSockaddrs(OutputBuffer,
-                                ReceiveDataLength,
-                                LocalAddressLength,
-                                RemoteAddressLength,
-                                LocalSockaddr,
-                                LocalSockaddrLength,
-                                RemoteSockaddr,
-                                RemoteSockaddrLength);
+        ERR("GetAcceptExSockaddrs is NULL\n");
+        return;
     }
+    pfnGetAcceptExSockaddrs(OutputBuffer,
+                            ReceiveDataLength,
+                            LocalAddressLength,
+                            RemoteAddressLength,
+                            LocalSockaddr,
+                            LocalSockaddrLength,
+                            RemoteSockaddr,
+                            RemoteSockaddrLength);
 }
 /* EOF */
