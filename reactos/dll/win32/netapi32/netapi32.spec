@@ -225,13 +225,13 @@
 @ stub NetSessionGetInfo
 @ stub NetSetPrimaryComputerName
 @ stdcall NetShareAdd(wstr long ptr ptr)
-@ stub NetShareCheck
+@ stdcall NetShareCheck(wstr wstr ptr)
 @ stdcall NetShareDel(wstr wstr long)
-@ stub NetShareDelSticky
+@ stdcall NetShareDelSticky(wstr wstr long)
 @ stdcall NetShareEnum(wstr long ptr long ptr ptr ptr)
-@ stub NetShareEnumSticky
+@ stdcall NetShareEnumSticky(wstr long ptr long ptr ptr ptr)
 @ stdcall NetShareGetInfo(wstr wstr long ptr)
-@ stub NetShareSetInfo
+@ stdcall NetShareSetInfo(wstr wstr long ptr ptr)
 @ stdcall NetStatisticsGet(wstr wstr long long ptr)
 @ stub NetUnjoinDomain
 @ stub NetUnregisterDomainNameChangeNotification

@@ -57,62 +57,6 @@ NET_API_STATUS WINAPI NetSessionEnum(LMSTR servername, LMSTR UncClientName,
 }
 
 /************************************************************
- * NetShareEnum  (NETAPI32.@)
- *
- * PARAMS
- *   servername    [I]   Pointer to a string with the name of the server
- *   level         [I]   Data information level
- *   bufptr        [O]   Buffer to the data
- *   prefmaxlen    [I]   Preferred maximum length of the data
- *   entriesread   [O]   Pointer to the number of entries enumerated
- *   totalentries  [O]   Pointer to the possible number of entries
- *   resume_handle [I/O] Pointer to a handle for subsequent searches
- *
- * RETURNS
- *   If successful, the function returns NERR_Success
- *   On failure it returns a system error code (FIXME: find out which)
- *
- */
-NET_API_STATUS WINAPI NetShareEnum( LMSTR servername, DWORD level, LPBYTE* bufptr,
-    DWORD prefmaxlen, LPDWORD entriesread, LPDWORD totalentries, LPDWORD resume_handle)
-{
-    FIXME("Stub (%s %d %p %d %p %p %p)\n", debugstr_w(servername), level, bufptr,
-        prefmaxlen, entriesread, totalentries, resume_handle);
-
-    return ERROR_NOT_SUPPORTED;
-}
-
-/************************************************************
- * NetShareDel  (NETAPI32.@)
- */
-NET_API_STATUS WINAPI NetShareDel(LMSTR servername, LMSTR netname, DWORD reserved)
-{
-    FIXME("Stub (%s %s %d)\n", debugstr_w(servername), debugstr_w(netname), reserved);
-    return NERR_Success;
-}
-
-/************************************************************
- * NetShareGetInfo  (NETAPI32.@)
- */
-NET_API_STATUS WINAPI NetShareGetInfo(LMSTR servername, LMSTR netname,
-    DWORD level, LPBYTE *bufptr)
-{
-    FIXME("Stub (%s %s %d %p)\n", debugstr_w(servername),
-        debugstr_w(netname),level, bufptr);
-    return NERR_NetNameNotFound;
-}
-
-/************************************************************
- * NetShareAdd  (NETAPI32.@)
- */
-NET_API_STATUS WINAPI NetShareAdd(LMSTR servername,
-    DWORD level, LPBYTE buf, LPDWORD parm_err)
-{
-    FIXME("Stub (%s %d %p %p)\n", debugstr_w(servername), level, buf, parm_err);
-    return ERROR_NOT_SUPPORTED;
-}
-
-/************************************************************
  *                NetFileEnum  (NETAPI32.@)
  */
 NET_API_STATUS WINAPI NetFileEnum(
