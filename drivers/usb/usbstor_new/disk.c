@@ -56,23 +56,25 @@ IsRequestValid(PIRP Irp)
             return FALSE;
         }
     }
-
-    if (Srb->DataTransferLength)
+    else
     {
-        DPRINT("IsRequestValid: Not valid Srb. Srb->DataTransferLength != 0\n");
-        return FALSE;
-    }
+        if (Srb->DataTransferLength)
+        {
+            DPRINT("IsRequestValid: Not valid Srb. Srb->DataTransferLength != 0\n");
+            return FALSE;
+        }
 
-    if (Srb->DataBuffer)
-    {
-        DPRINT("IsRequestValid: Not valid Srb. Srb->DataBuffer != NULL\n");
-        return FALSE;
-    }
+        if (Srb->DataBuffer)
+        {
+            DPRINT("IsRequestValid: Not valid Srb. Srb->DataBuffer != NULL\n");
+            return FALSE;
+        }
 
-    if (Irp->MdlAddress)
-    {
-        DPRINT("IsRequestValid: Not valid Srb. Irp->MdlAddress != NULL\n");
-        return FALSE;
+        if (Irp->MdlAddress)
+        {
+            DPRINT("IsRequestValid: Not valid Srb. Irp->MdlAddress != NULL\n");
+            return FALSE;
+        }
     }
 
     return TRUE;
