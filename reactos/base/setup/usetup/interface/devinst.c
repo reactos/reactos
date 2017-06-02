@@ -341,7 +341,7 @@ EventThread(IN LPVOID lpParameter)
     }
 
     InitializeObjectAttributes(&ObjectAttributes, &ServicesU, OBJ_CASE_INSENSITIVE, NULL, NULL);
-    Status = NtCreateKey(&hServices, 0, &ObjectAttributes, 0, NULL, 0, NULL);
+    Status = NtCreateKey(&hServices, KEY_ALL_ACCESS, &ObjectAttributes, 0, NULL, 0, NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtCreateKey('%wZ') failed with status 0x%08lx\n", &ServicesU, Status);
