@@ -950,7 +950,8 @@ NtInitializeRegistry(IN USHORT Flag)
     PAGED_CODE();
 
     /* Always do this as kernel mode */
-    if (KeGetPreviousMode() == UserMode) return ZwInitializeRegistry(Flag);
+    if (KeGetPreviousMode() == UserMode)
+        return ZwInitializeRegistry(Flag);
 
     /* Enough of the system has booted by now */
     Ki386PerfEnd();
@@ -992,8 +993,8 @@ NtInitializeRegistry(IN USHORT Flag)
     if (!CmFirstTime) return STATUS_ACCESS_DENIED;
     CmFirstTime = FALSE;
 
-    /* Acquire registry lock */
-    //CmpLockRegistryExclusive();
+    /* Lock the registry exclusively */
+    CmpLockRegistryExclusive();
 
     /* Initialize the hives and lazy flusher */
     CmpCmdInit(SetupBoot);
@@ -1002,7 +1003,7 @@ NtInitializeRegistry(IN USHORT Flag)
     CmpSetVersionData();
 
     /* Release the registry lock */
-    //CmpUnlockRegistry();
+    CmpUnlockRegistry();
     return STATUS_SUCCESS;
 }
 
