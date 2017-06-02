@@ -111,7 +111,7 @@ NetShareAdd(
     TRACE("NetShareAdd(%s %lu %p %p)\n",
           debugstr_w(servername), level, buf, parm_err);
 
-    if (level != 2 || level != 502 || level != 503)
+    if (level != 2 && level != 502 && level != 503)
         return ERROR_INVALID_LEVEL;
 
     RpcTryExcept
@@ -233,11 +233,94 @@ NetShareEnum(
     _Out_ LPDWORD totalentries,
     _Inout_ LPDWORD resume_handle)
 {
-    FIXME("NetShareEnum(%s %lu %p %lu %p %p %p)\n",
+    SHARE_ENUM_STRUCT EnumStruct;
+    SHARE_INFO_0_CONTAINER Level0Container = {0, NULL};
+    SHARE_INFO_1_CONTAINER Level1Container = {0, NULL};
+    SHARE_INFO_2_CONTAINER Level2Container = {0, NULL};
+    SHARE_INFO_502_CONTAINER Level502Container = {0, NULL};
+    NET_API_STATUS status;
+
+    TRACE("NetShareEnum(%s %lu %p %lu %p %p %p)\n",
           debugstr_w(servername), level, bufptr, prefmaxlen,
           entriesread, totalentries, resume_handle);
 
-    return ERROR_NOT_SUPPORTED;
+    if (level > 2 && level != 502)
+        return ERROR_INVALID_LEVEL;
+
+    *bufptr = NULL;
+    *entriesread = 0;
+    *totalentries = 0;
+
+    EnumStruct.Level = level;
+    switch (level)
+    {
+        case 0:
+            EnumStruct.ShareInfo.Level0 = &Level0Container;
+            break;
+
+        case 1:
+            EnumStruct.ShareInfo.Level1 = &Level1Container;
+            break;
+
+        case 2:
+            EnumStruct.ShareInfo.Level2 = &Level2Container;
+            break;
+
+        case 502:
+            EnumStruct.ShareInfo.Level502 = &Level502Container;
+            break;
+    }
+
+    RpcTryExcept
+    {
+        status = NetrShareEnum(servername,
+                               &EnumStruct,
+                               prefmaxlen,
+                               totalentries,
+                               resume_handle);
+
+        switch (level)
+        {
+            case 0:
+                if (EnumStruct.ShareInfo.Level0->Buffer != NULL)
+                {
+                    *bufptr = (LPBYTE)EnumStruct.ShareInfo.Level0->Buffer;
+                    *entriesread = EnumStruct.ShareInfo.Level0->EntriesRead;
+                }
+                break;
+
+            case 1:
+                if (EnumStruct.ShareInfo.Level1->Buffer != NULL)
+                {
+                    *bufptr = (LPBYTE)EnumStruct.ShareInfo.Level1->Buffer;
+                    *entriesread = EnumStruct.ShareInfo.Level1->EntriesRead;
+                }
+                break;
+
+            case 2:
+                if (EnumStruct.ShareInfo.Level2->Buffer != NULL)
+                {
+                    *bufptr = (LPBYTE)EnumStruct.ShareInfo.Level2->Buffer;
+                    *entriesread = EnumStruct.ShareInfo.Level2->EntriesRead;
+                }
+                break;
+
+            case 502:
+                if (EnumStruct.ShareInfo.Level502->Buffer != NULL)
+                {
+                    *bufptr = (LPBYTE)EnumStruct.ShareInfo.Level502->Buffer;
+                    *entriesread = EnumStruct.ShareInfo.Level502->EntriesRead;
+                }
+                break;
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
 }
 
 
@@ -252,11 +335,94 @@ NetShareEnumSticky(
     _Out_ LPDWORD totalentries,
     _Inout_ LPDWORD resume_handle)
 {
-    FIXME("NetShareEnumSticky(%s %lu %p %lu %p %p %p)\n",
+    SHARE_ENUM_STRUCT EnumStruct;
+    SHARE_INFO_0_CONTAINER Level0Container = {0, NULL};
+    SHARE_INFO_1_CONTAINER Level1Container = {0, NULL};
+    SHARE_INFO_2_CONTAINER Level2Container = {0, NULL};
+    SHARE_INFO_502_CONTAINER Level502Container = {0, NULL};
+    NET_API_STATUS status;
+
+    TRACE("NetShareEnumSticky(%s %lu %p %lu %p %p %p)\n",
           debugstr_w(servername), level, bufptr, prefmaxlen,
           entriesread, totalentries, resume_handle);
 
-    return ERROR_NOT_SUPPORTED;
+    if (level > 2 && level != 502)
+        return ERROR_INVALID_LEVEL;
+
+    *bufptr = NULL;
+    *entriesread = 0;
+    *totalentries = 0;
+
+    EnumStruct.Level = level;
+    switch (level)
+    {
+        case 0:
+            EnumStruct.ShareInfo.Level0 = &Level0Container;
+            break;
+
+        case 1:
+            EnumStruct.ShareInfo.Level1 = &Level1Container;
+            break;
+
+        case 2:
+            EnumStruct.ShareInfo.Level2 = &Level2Container;
+            break;
+
+        case 502:
+            EnumStruct.ShareInfo.Level502 = &Level502Container;
+            break;
+    }
+
+    RpcTryExcept
+    {
+        status = NetrShareEnum(servername,
+                               (LPSHARE_ENUM_STRUCT)&EnumStruct,
+                               prefmaxlen,
+                               totalentries,
+                               resume_handle);
+
+        switch (level)
+        {
+            case 0:
+                if (EnumStruct.ShareInfo.Level0->Buffer != NULL)
+                {
+                    *bufptr = (LPBYTE)EnumStruct.ShareInfo.Level0->Buffer;
+                    *entriesread = EnumStruct.ShareInfo.Level0->EntriesRead;
+                }
+                break;
+
+            case 1:
+                if (EnumStruct.ShareInfo.Level1->Buffer != NULL)
+                {
+                    *bufptr = (LPBYTE)EnumStruct.ShareInfo.Level1->Buffer;
+                    *entriesread = EnumStruct.ShareInfo.Level1->EntriesRead;
+                }
+                break;
+
+            case 2:
+                if (EnumStruct.ShareInfo.Level2->Buffer != NULL)
+                {
+                    *bufptr = (LPBYTE)EnumStruct.ShareInfo.Level2->Buffer;
+                    *entriesread = EnumStruct.ShareInfo.Level2->EntriesRead;
+                }
+                break;
+
+            case 502:
+                if (EnumStruct.ShareInfo.Level502->Buffer != NULL)
+                {
+                    *bufptr = (LPBYTE)EnumStruct.ShareInfo.Level502->Buffer;
+                    *entriesread = EnumStruct.ShareInfo.Level502->EntriesRead;
+                }
+                break;
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
 }
 
 
@@ -268,10 +434,33 @@ NetShareGetInfo(
     _In_ DWORD level,
     _Out_ LPBYTE *bufptr)
 {
-    FIXME("NetShareGetInfo(%s %s %lu %p)\n",
+    NET_API_STATUS status;
+
+    TRACE("NetShareGetInfo(%s %s %lu %p)\n",
           debugstr_w(servername), debugstr_w(netname), level, bufptr);
 
-    return ERROR_NOT_SUPPORTED;
+    if (level > 2 && level != 502 && level != 1005)
+        return ERROR_INVALID_LEVEL;
+
+    if (netname == NULL || *netname == 0)
+        return ERROR_INVALID_PARAMETER;
+
+    *bufptr = NULL;
+
+    RpcTryExcept
+    {
+        status = NetrShareGetInfo(servername,
+                                  netname,
+                                  level,
+                                  (LPSHARE_INFO)bufptr);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
 }
 
 
@@ -284,10 +473,30 @@ NetShareSetInfo(
     _In_  LPBYTE buf,
     _Out_ LPDWORD parm_err)
 {
-    FIXME("NetShareSetInfo(%s %s %lu %p %p)\n",
+    NET_API_STATUS status;
+
+    TRACE("NetShareSetInfo(%s %s %lu %p %p)\n",
           debugstr_w(servername), debugstr_w(netname), level, buf, parm_err);
 
-    return ERROR_NOT_SUPPORTED;
+    if (level != 2 && level != 502 && level != 503 && level != 1004 &&
+        level != 1005 && level != 1006 && level != 1501)
+        return ERROR_INVALID_LEVEL;
+
+    RpcTryExcept
+    {
+        status = NetrShareSetInfo(servername,
+                                  netname,
+                                  level,
+                                  (LPSHARE_INFO)&buf,
+                                  parm_err);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
 }
 
 /* EOF */
