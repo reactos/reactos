@@ -766,7 +766,7 @@ function(create_registry_hives)
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/SETUPREG.HIV
         COMMAND native-mkhive -h:SETUPREG -d:${CMAKE_BINARY_DIR}/boot/bootdata ${CMAKE_BINARY_DIR}/boot/bootdata/hivesys_utf16.inf
-        DEPENDS native-mkhive ${CMAKE_SOURCE_DIR}/boot/bootdata/hivesys.inf)
+        DEPENDS native-mkhive ${CMAKE_BINARY_DIR}/boot/bootdata/hivesys_utf16.inf)
 
     add_custom_target(bootcd_hives
         DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/SETUPREG.HIV)
@@ -814,7 +814,7 @@ function(create_registry_hives)
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/BCD
         COMMAND native-mkhive -h:BCD -d:${CMAKE_BINARY_DIR}/boot/bootdata ${CMAKE_BINARY_DIR}/boot/bootdata/hivebcd_utf16.inf
-        DEPENDS native-mkhive ${CMAKE_SOURCE_DIR}/boot/bootdata/hivebcd.inf)
+        DEPENDS native-mkhive ${CMAKE_BINARY_DIR}/boot/bootdata/hivebcd_utf16.inf)
 
     add_custom_target(bcd_hive
         DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/BCD)
