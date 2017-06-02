@@ -264,7 +264,7 @@ USBSTOR_SendModeSense(
     //
     // get request block
     //
-    Request = (PSCSI_REQUEST_BLOCK)IoStack->Parameters.Others.Argument1;
+    Request = IoStack->Parameters.Scsi.Srb;
 
     RtlZeroMemory(Request->DataBuffer, Request->DataTransferLength);
     Request->SrbStatus = SRB_STATUS_SUCCESS;

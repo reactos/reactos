@@ -151,7 +151,7 @@ USBSTOR_QueueAddIrp(
     BOOLEAN IrpListFreeze;
     BOOLEAN SrbProcessing;
     PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
-    PSCSI_REQUEST_BLOCK Request = (PSCSI_REQUEST_BLOCK)IoStack->Parameters.Others.Argument1;
+    PSCSI_REQUEST_BLOCK Request = IoStack->Parameters.Scsi.Srb;
 
     //
     // get FDO device extension
@@ -162,11 +162,6 @@ USBSTOR_QueueAddIrp(
     // sanity check
     //
     ASSERT(FDODeviceExtension->Common.IsFDO);
-
-    //
-    // mark irp pending
-    //
-    IoMarkIrpPending(Irp);
 
     //
     // acquire lock
@@ -338,7 +333,7 @@ USBSTOR_QueueTerminateRequest(
     KIRQL OldLevel;
     PFDO_DEVICE_EXTENSION FDODeviceExtension;
     PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
-    PSCSI_REQUEST_BLOCK Request = (PSCSI_REQUEST_BLOCK)IoStack->Parameters.Others.Argument1;
+    PSCSI_REQUEST_BLOCK Request = IoStack->Parameters.Scsi.Srb;
 
     //
     // get FDO device extension
@@ -443,7 +438,7 @@ USBSTOR_QueueNextRequest(
     //
     // get srb
     //
-    Request = (PSCSI_REQUEST_BLOCK)IoStack->Parameters.Others.Argument1;
+    Request = IoStack->Parameters.Scsi.Srb;
 
     //
     // sanity check
@@ -525,7 +520,7 @@ USBSTOR_QueueRelease(
     //
     // get srb
     //
-    Request = (PSCSI_REQUEST_BLOCK)IoStack->Parameters.Others.Argument1;
+    Request = IoStack->Parameters.Scsi.Srb;
 
     //
     // start new packet
@@ -535,7 +530,6 @@ USBSTOR_QueueRelease(
                   &Request->QueueSortKey, 
                   USBSTOR_CancelIo);
 }
-
 
 VOID
 NTAPI
@@ -548,6 +542,7 @@ USBSTOR_StartIo(
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     KIRQL OldLevel;
     BOOLEAN ResetInProgress;
+    PSCSI_REQUEST_BLOCK Srb;
 
     DPRINT("USBSTOR_StartIo\n");
 
@@ -634,6 +629,10 @@ USBSTOR_StartIo(
     //
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
+    Srb = IoStack->Parameters.Scsi.Srb;
+    FDODeviceExtension->CurrentSrb = Srb;
+    DPRINT("USBSTOR_StartIo: Srb - %p\n", Srb);
+
     //
     // get pdo device extension
     //
@@ -652,10 +651,16 @@ USBSTOR_StartIo(
         //
         // hard reset is in progress
         //
+        Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
+        Srb->DataTransferLength = 0;
+
         Irp->IoStatus.Information = 0;
         Irp->IoStatus.Status = STATUS_DEVICE_DOES_NOT_EXIST;
+
         USBSTOR_QueueTerminateRequest(DeviceObject, Irp);
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        USBSTOR_QueueNextRequest(DeviceObject);
+
         return;
     }
 
