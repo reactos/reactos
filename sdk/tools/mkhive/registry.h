@@ -26,12 +26,17 @@ typedef struct _MEMKEY
 #define HKEY_TO_MEMKEY(hKey) ((PMEMKEY)(hKey))
 #define MEMKEY_TO_HKEY(memKey) ((HKEY)(memKey))
 
-extern CMHIVE DefaultHive;  /* \Registry\User\.DEFAULT */
-extern CMHIVE SamHive;      /* \Registry\Machine\SAM */
-extern CMHIVE SecurityHive; /* \Registry\Machine\SECURITY */
-extern CMHIVE SoftwareHive; /* \Registry\Machine\SOFTWARE */
-extern CMHIVE SystemHive;   /* \Registry\Machine\SYSTEM */
-extern CMHIVE BcdHive;      /* \Registry\Machine\BCD00000000 */
+typedef struct _HIVE_LIST_ENTRY
+{
+    PCSTR   HiveName;
+    PCWSTR  HiveRegistryPath;
+    PCMHIVE CmHive;
+    PUCHAR  SecurityDescriptor;
+    ULONG   SecurityDescriptorLength;
+} HIVE_LIST_ENTRY, *PHIVE_LIST_ENTRY;
+
+#define MAX_NUMBER_OF_REGISTRY_HIVES    7
+extern HIVE_LIST_ENTRY RegistryHives[];
 
 #define ERROR_SUCCESS                    0L
 #define ERROR_UNSUCCESSFUL               1L
@@ -57,7 +62,8 @@ extern CMHIVE BcdHive;      /* \Registry\Machine\BCD00000000 */
 #define REG_QWORD_LITTLE_ENDIAN            11
 
 VOID
-RegInitializeRegistry(VOID);
+RegInitializeRegistry(
+    IN PCSTR HiveList);
 
 VOID
 RegShutdownRegistry(VOID);

@@ -21,7 +21,7 @@
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/mkhive.h
  * PURPOSE:         Hive maker
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMERS:     Eric Kohl
  *                  Hervé Poussineau
  */
 

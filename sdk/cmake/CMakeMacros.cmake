@@ -581,20 +581,12 @@ function(set_module_type MODULE TYPE)
         set_subsystem(${MODULE} ${__subsystem})
     endif()
 
-    # Set the PE image version numbers from the NT OS version ReactOS is based on
-    if (MSVC)
-        add_target_link_flags(${MODULE} "/VERSION:5.01")
-    else()
-        add_target_link_flags(${MODULE} "-Wl,--major-image-version,5 -Wl,--minor-image-version,01")
-        add_target_link_flags(${MODULE} "-Wl,--major-os-version,5 -Wl,--minor-os-version,01")
-    endif()
-
-    # Set unicode definitions
+    #set unicode definitions
     if(__module_UNICODE)
         add_target_compile_definitions(${MODULE} UNICODE _UNICODE)
     endif()
 
-    # Set entry point
+    # set entry point
     if(__module_ENTRYPOINT OR (__module_ENTRYPOINT STREQUAL "0"))
         list(GET __module_ENTRYPOINT 0 __entrypoint)
         list(LENGTH __module_ENTRYPOINT __length)
@@ -641,7 +633,7 @@ function(set_module_type MODULE TYPE)
         endif()
     endif()
 
-    # Set base address
+    #set base address
     if(__module_IMAGEBASE)
         set_image_base(${MODULE} ${__module_IMAGEBASE})
     elseif(${TYPE} STREQUAL win32dll)
@@ -670,7 +662,7 @@ function(set_module_type MODULE TYPE)
         set_target_properties(${MODULE} PROPERTIES SUFFIX ".cpl")
     endif()
 
-    # Do compiler specific stuff
+    # do compiler specific stuff
     set_module_type_toolchain(${MODULE} ${TYPE})
 endfunction()
 
@@ -770,6 +762,22 @@ function(create_registry_hives)
                 NO_CAB
                 FOR bootcd regtest)
 
+    # bootcd setup system hive
+    add_custom_command(
+        OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/SETUPREG.HIV
+        COMMAND native-mkhive -h:SETUPREG -d:${CMAKE_BINARY_DIR}/boot/bootdata ${CMAKE_BINARY_DIR}/boot/bootdata/hivesys_utf16.inf
+        DEPENDS native-mkhive ${CMAKE_SOURCE_DIR}/boot/bootdata/hivesys.inf)
+
+    add_custom_target(bootcd_hives
+        DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/SETUPREG.HIV)
+
+    add_cd_file(
+        FILE ${CMAKE_BINARY_DIR}/boot/bootdata/SETUPREG.HIV
+        TARGET bootcd_hives
+        DESTINATION reactos
+        NO_CAB
+        FOR bootcd regtest)
+
     # livecd hives
     list(APPEND _livecd_inf_files
         ${_registry_inf}
@@ -777,36 +785,43 @@ function(create_registry_hives)
         ${CMAKE_SOURCE_DIR}/boot/bootdata/hiveinst.inf)
 
     add_custom_command(
-        OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/sam
-            ${CMAKE_BINARY_DIR}/boot/bootdata/default
-            ${CMAKE_BINARY_DIR}/boot/bootdata/security
-            ${CMAKE_BINARY_DIR}/boot/bootdata/software
-            ${CMAKE_BINARY_DIR}/boot/bootdata/system
-            ${CMAKE_BINARY_DIR}/boot/bootdata/BCD
-        COMMAND native-mkhive ${CMAKE_BINARY_DIR}/boot/bootdata ${_livecd_inf_files}
+        OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/system
+               ${CMAKE_BINARY_DIR}/boot/bootdata/software
+               ${CMAKE_BINARY_DIR}/boot/bootdata/default
+               ${CMAKE_BINARY_DIR}/boot/bootdata/sam
+               ${CMAKE_BINARY_DIR}/boot/bootdata/security
+        COMMAND native-mkhive -h:SYSTEM,SOFTWARE,DEFAULT,SAM,SECURITY -d:${CMAKE_BINARY_DIR}/boot/bootdata ${_livecd_inf_files}
         DEPENDS native-mkhive ${_livecd_inf_files})
 
     add_custom_target(livecd_hives
-        DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/sam
-            ${CMAKE_BINARY_DIR}/boot/bootdata/default
-            ${CMAKE_BINARY_DIR}/boot/bootdata/security
-            ${CMAKE_BINARY_DIR}/boot/bootdata/software
-            ${CMAKE_BINARY_DIR}/boot/bootdata/system
-            ${CMAKE_BINARY_DIR}/boot/bootdata/BCD)
+        DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/system
+                ${CMAKE_BINARY_DIR}/boot/bootdata/software
+                ${CMAKE_BINARY_DIR}/boot/bootdata/default
+                ${CMAKE_BINARY_DIR}/boot/bootdata/sam
+                ${CMAKE_BINARY_DIR}/boot/bootdata/security)
 
     add_cd_file(
-        FILE ${CMAKE_BINARY_DIR}/boot/bootdata/sam
-            ${CMAKE_BINARY_DIR}/boot/bootdata/default
-            ${CMAKE_BINARY_DIR}/boot/bootdata/security
-            ${CMAKE_BINARY_DIR}/boot/bootdata/software
-            ${CMAKE_BINARY_DIR}/boot/bootdata/system
+        FILE ${CMAKE_BINARY_DIR}/boot/bootdata/system
+             ${CMAKE_BINARY_DIR}/boot/bootdata/software
+             ${CMAKE_BINARY_DIR}/boot/bootdata/default
+             ${CMAKE_BINARY_DIR}/boot/bootdata/sam
+             ${CMAKE_BINARY_DIR}/boot/bootdata/security
         TARGET livecd_hives
         DESTINATION reactos/system32/config
         FOR livecd)
 
+    # BCD Hive
+    add_custom_command(
+        OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/BCD
+        COMMAND native-mkhive -h:BCD -d:${CMAKE_BINARY_DIR}/boot/bootdata ${CMAKE_BINARY_DIR}/boot/bootdata/hivebcd_utf16.inf
+        DEPENDS native-mkhive ${CMAKE_SOURCE_DIR}/boot/bootdata/hivebcd.inf)
+
+    add_custom_target(bcd_hive
+        DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/BCD)
+
     add_cd_file(
         FILE ${CMAKE_BINARY_DIR}/boot/bootdata/BCD
-        TARGET livecd_hives
+        TARGET bcd_hive
         DESTINATION efi/boot
         NO_CAB
         FOR bootcd regtest livecd)
