@@ -20,6 +20,7 @@
  */
 
 #include <freeldr.h>
+#include "winldr.h"
 #include "registry.h"
 
 #include <ndk/ldrtypes.h>

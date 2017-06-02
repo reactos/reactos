@@ -19,6 +19,7 @@
  */
 
 #include <freeldr.h>
+#include "winldr.h"
 
 #include <ndk/ldrtypes.h>
 #include <arc/setupblk.h>
@@ -27,12 +28,6 @@
 
 DBG_DEFAULT_CHANNEL(WINDOWS);
 #define TAG_BOOT_OPTIONS 'pOtB'
-
-void
-WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock);
-
-VOID
-WinLdrSetProcessorContext(void);
 
 // TODO: Move to .h
 VOID AllocateAndInitLPB(PLOADER_PARAMETER_BLOCK *OutLoaderBlock);
