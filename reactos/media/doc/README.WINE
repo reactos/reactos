@@ -235,7 +235,7 @@ reactos/base/applications/cmdutils/wscript  # Synced to WineStaging-1.9.16
 reactos/base/applications/cmdutils/xcopy    # Synced to WineStaging-2.9
 reactos/base/applications/games/winmine     # Synced to WineStaging-1.9.16 with our own resources.
 reactos/base/applications/extrac32          # Synced to WineStaging-1.9.11
-reactos/base/applications/iexplore          # Synced to WineStaging-1.9.11
+reactos/base/applications/iexplore          # Synced to WineStaging-2.9
 reactos/base/applications/notepad           # Forked at Wine-20041201
 reactos/base/applications/regedit           # Out of sync
 reactos/base/applications/winhlp32          # Synced to WineStaging-1.9.16
