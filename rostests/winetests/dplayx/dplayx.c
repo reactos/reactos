@@ -64,6 +64,7 @@ static HRESULT (WINAPI *pDirectPlayCreate)( GUID *GUID, LPDIRECTPLAY *lplpDP, IU
 DEFINE_GUID(appGuid, 0xbdcfe03e, 0xf0ec, 0x415b, 0x82, 0x11, 0x6f, 0x86, 0xd8, 0x19, 0x7f, 0xe1);
 DEFINE_GUID(appGuid2, 0x93417d3f, 0x7d26, 0x46ba, 0xb5, 0x76, 0xfe, 0x4b, 0x20, 0xbb, 0xad, 0x70);
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
+DEFINE_GUID(invalid_guid, 0x7b48b707, 0x0034, 0xc000, 0x02, 0x00, 0x00, 0x00, 0xec, 0xf6, 0x32, 0x00);
 
 
 typedef struct tagCallbackData
@@ -699,7 +700,7 @@ static void init_TCPIP_provider( IDirectPlay4 *pDP, LPCSTR strIPAddressString, W
     checkHR( DP_OK, hr );
 
     HeapFree( GetProcessHeap(), 0, pAddress );
-
+    IDirectPlayLobby_Release(pDPL);
 }
 
 static BOOL CALLBACK EnumSessions_cb_join( LPCDPSESSIONDESC2 lpThisSD,
@@ -939,6 +940,8 @@ static BOOL CALLBACK EnumConnections_cb( LPCGUID lpguidSP,
 
     callbackData->dwCounter1++;
 
+    IDirectPlayLobby_Release(pDPL);
+
     return TRUE;
 }
 
@@ -1088,7 +1091,7 @@ static void test_GetCaps(void)
 
     /* dpcaps not ininitialized */
     hr = IDirectPlayX_GetCaps( pDP, &dpcaps, 0 );
-    todo_wine checkHR( DPERR_INVALIDPARAMS, hr );
+    checkHR( DPERR_INVALIDPARAMS, hr );
 
     dpcaps.dwSize = sizeof(DPCAPS);
 
@@ -1098,39 +1101,81 @@ static void test_GetCaps(void)
     {
 
         hr = IDirectPlayX_GetCaps( pDP, &dpcaps, dwFlags );
-        todo_wine checkHR( DP_OK, hr );
+        checkHR( DP_OK, hr );
+        check( sizeof(DPCAPS), dpcaps.dwSize );
+        check( DPCAPS_ASYNCSUPPORTED |
+               DPCAPS_GUARANTEEDOPTIMIZED |
+               DPCAPS_GUARANTEEDSUPPORTED,
+               dpcaps.dwFlags );
+        check( 0,     dpcaps.dwMaxQueueSize );
+        check( 0,     dpcaps.dwHundredBaud );
+        check( 500,   dpcaps.dwLatency );
+        check( 65536, dpcaps.dwMaxLocalPlayers );
+        check( 20,    dpcaps.dwHeaderLength );
+        check( 5000,  dpcaps.dwTimeout );
 
-
-        if ( hr == DP_OK )
+        switch (dwFlags)
         {
-            check( sizeof(DPCAPS), dpcaps.dwSize );
-            check( DPCAPS_ASYNCSUPPORTED |
-                   DPCAPS_GUARANTEEDOPTIMIZED |
-                   DPCAPS_GUARANTEEDSUPPORTED,
-                   dpcaps.dwFlags );
-            check( 0,     dpcaps.dwMaxQueueSize );
-            check( 0,     dpcaps.dwHundredBaud );
-            check( 500,   dpcaps.dwLatency );
-            check( 65536, dpcaps.dwMaxLocalPlayers );
-            check( 20,    dpcaps.dwHeaderLength );
-            check( 5000,  dpcaps.dwTimeout );
-
-            switch (dwFlags)
-            {
-            case 0:
-                check( 65479,   dpcaps.dwMaxBufferSize );
-                check( 65536,   dpcaps.dwMaxPlayers );
-                break;
-            case DPGETCAPS_GUARANTEED:
-                check( 1048547, dpcaps.dwMaxBufferSize );
-                check( 64,      dpcaps.dwMaxPlayers );
-                break;
-            default: break;
-            }
+        case 0:
+            check( 65479,   dpcaps.dwMaxBufferSize );
+            check( 65536,   dpcaps.dwMaxPlayers );
+            break;
+        case DPGETCAPS_GUARANTEED:
+            check( 1048547, dpcaps.dwMaxBufferSize );
+            check( 64,      dpcaps.dwMaxPlayers );
+            break;
+        default: break;
         }
     }
 
     IDirectPlayX_Release( pDP );
+}
+
+static void test_EnumAddressTypes(void)
+{
+    IDirectPlay4 *pDP;
+    HRESULT hr;
+    DPCOMPOUNDADDRESSELEMENT addressElements[2];
+    LPVOID pAddress = NULL;
+    DWORD dwAddressSize = 0;
+    IDirectPlayLobby3 *pDPL;
+    WORD port = 6001;
+
+    hr = CoCreateInstance( &CLSID_DirectPlay, NULL, CLSCTX_ALL,
+                           &IID_IDirectPlay4A, (LPVOID*) &pDP );
+    ok( SUCCEEDED(hr), "CCI of CLSID_DirectPlay / IID_IDirectPlay4A failed\n" );
+    if (FAILED(hr))
+        return;
+
+    hr = CoCreateInstance( &CLSID_DirectPlayLobby, NULL, CLSCTX_ALL,
+                           &IID_IDirectPlayLobby3A, (LPVOID*) &pDPL );
+    ok (SUCCEEDED (hr), "CCI of CLSID_DirectPlayLobby / IID_IDirectPlayLobby3A failed\n");
+    if (FAILED (hr)) return;
+
+    addressElements[0].guidDataType = DPAID_ServiceProvider;
+    addressElements[0].dwDataSize   = sizeof(GUID);
+    addressElements[0].lpData       = (void*) &DPSPGUID_TCPIP;
+
+    addressElements[1].guidDataType = invalid_guid;
+    addressElements[1].dwDataSize   = sizeof(WORD);
+    addressElements[1].lpData       = &port;
+
+    hr = IDirectPlayLobby_CreateCompoundAddress( pDPL, addressElements, 2, NULL, &dwAddressSize );
+    checkHR( DPERR_BUFFERTOOSMALL, hr );
+
+    if( hr == DPERR_BUFFERTOOSMALL )
+    {
+        pAddress = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, dwAddressSize );
+        hr = IDirectPlayLobby_CreateCompoundAddress( pDPL, addressElements, 2,
+                                                     pAddress, &dwAddressSize );
+        checkHR( DP_OK, hr );
+    }
+
+    IDirectPlayX_Close(pDP);
+    IDirectPlayX_Release(pDP);
+    IDirectPlayLobby_Release(pDPL);
+
+    HeapFree( GetProcessHeap(), 0, pAddress );
 }
 
 /* Open */
@@ -2189,7 +2234,6 @@ static void test_GetPlayerCaps(void)
     hr = IDirectPlayX_GetPlayerCaps( pDP[0], dpid[0], &playerCaps, 0 );
     checkHR( DPERR_INVALIDPARAMS, hr );
 
-
     /* Invalid player */
     playerCaps.dwSize = sizeof(DPCAPS);
 
@@ -2202,6 +2246,8 @@ static void test_GetPlayerCaps(void)
     hr = IDirectPlayX_GetPlayerCaps( pDP[0], dpid[0], &playerCaps, 0 );
     checkHR( DP_OK, hr );
 
+    hr = IDirectPlayX_GetPlayerCaps( pDP[0], dpid[0], NULL, 0 );
+    checkHR( DPERR_INVALIDPARAMS, hr );
 
     /* Regular parameters */
     for (i=0; i<2; i++)
@@ -3031,7 +3077,7 @@ static void test_GetPlayerAddress(void)
     if ( hr == DP_OK )
     {
         todo_wine win_skip( "GetPlayerAddress not implemented\n" );
-        return;
+        goto cleanup;
     }
 
     init_TCPIP_provider( pDP[0], "127.0.0.1", 0 );
@@ -3127,9 +3173,11 @@ static void test_GetPlayerAddress(void)
 
 
     HeapFree( GetProcessHeap(), 0, lpData );
+
+cleanup:
     IDirectPlayX_Release( pDP[0] );
     IDirectPlayX_Release( pDP[1] );
-
+    IDirectPlayLobby_Release(pDPL);
 }
 
 /* GetPlayerFlags */
@@ -6506,8 +6554,8 @@ static void test_COM(void)
     HRESULT hr;
 
     /* COM aggregation */
-    hr = CoCreateInstance(&CLSID_DirectPlay, (IUnknown*)&dp4, CLSCTX_INPROC_SERVER, &IID_IUnknown,
-            (void**)&dp4);
+    hr = CoCreateInstance(&CLSID_DirectPlay, (IUnknown*)0xdeadbeef, CLSCTX_INPROC_SERVER,
+            &IID_IUnknown, (void**)&dp4);
     ok(hr == CLASS_E_NOAGGREGATION || broken(hr == E_INVALIDARG),
             "DirectPlay create failed: %08x, expected CLASS_E_NOAGGREGATION\n", hr);
     ok(!dp4 || dp4 == (IDirectPlay4*)0xdeadbeef, "dp4 = %p\n", dp4);
@@ -6593,7 +6641,7 @@ static void test_COM_dplobby(void)
     HRESULT hr;
 
     /* COM aggregation */
-    hr = CoCreateInstance(&CLSID_DirectPlayLobby, (IUnknown*)&dpl, CLSCTX_INPROC_SERVER,
+    hr = CoCreateInstance(&CLSID_DirectPlayLobby, (IUnknown*)0xdeadbeef, CLSCTX_INPROC_SERVER,
             &IID_IUnknown, (void**)&dpl);
     ok(hr == CLASS_E_NOAGGREGATION || broken(hr == E_INVALIDARG),
             "DirectPlayLobby create failed: %08x, expected CLASS_E_NOAGGREGATION\n", hr);
@@ -6760,7 +6808,7 @@ static HRESULT set_firewall( enum firewall_op op )
     hr = INetFwPolicy_get_CurrentProfile( policy, &profile );
     if (hr != S_OK) goto done;
 
-    INetFwProfile_get_AuthorizedApplications( profile, &apps );
+    hr = INetFwProfile_get_AuthorizedApplications( profile, &apps );
     ok( hr == S_OK, "got %08x\n", hr );
     if (hr != S_OK) goto done;
 
@@ -6898,6 +6946,7 @@ START_TEST(dplayx)
     test_EnumConnections();
     test_InitializeConnection();
     test_GetCaps();
+    test_EnumAddressTypes();
 
     if (!winetest_interactive)
     {
