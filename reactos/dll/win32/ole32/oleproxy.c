@@ -21,6 +21,126 @@
 
 #include "precomp.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL(ole);
+
+static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFIID riid, void **ppv)
+{
+    TRACE("(%p)->(%s %p)\n", iface, debugstr_guid(riid), ppv);
+
+    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IClassFactory))
+    {
+        *ppv = iface;
+        return S_OK;
+    }
+
+    *ppv = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI ClassFactory_AddRef(IClassFactory *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI ClassFactory_Release(IClassFactory *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI ClassFactory_LockServer(IClassFactory *iface, BOOL fLock)
+{
+    TRACE("(%x)\n", fLock);
+    return S_OK;
+}
+
+static const IClassFactoryVtbl FileMonikerCFVtbl =
+{
+    ClassFactory_QueryInterface,
+    ClassFactory_AddRef,
+    ClassFactory_Release,
+    FileMoniker_CreateInstance,
+    ClassFactory_LockServer
+};
+
+static IClassFactory FileMonikerCF = { &FileMonikerCFVtbl };
+
+static const IClassFactoryVtbl ItemMonikerCFVtbl =
+{
+    ClassFactory_QueryInterface,
+    ClassFactory_AddRef,
+    ClassFactory_Release,
+    ItemMoniker_CreateInstance,
+    ClassFactory_LockServer
+};
+
+static IClassFactory ItemMonikerCF = { &ItemMonikerCFVtbl };
+
+static const IClassFactoryVtbl AntiMonikerCFVtbl =
+{
+    ClassFactory_QueryInterface,
+    ClassFactory_AddRef,
+    ClassFactory_Release,
+    AntiMoniker_CreateInstance,
+    ClassFactory_LockServer
+};
+
+static IClassFactory AntiMonikerCF = { &AntiMonikerCFVtbl };
+
+static const IClassFactoryVtbl CompositeMonikerCFVtbl =
+{
+    ClassFactory_QueryInterface,
+    ClassFactory_AddRef,
+    ClassFactory_Release,
+    CompositeMoniker_CreateInstance,
+    ClassFactory_LockServer
+};
+
+static IClassFactory CompositeMonikerCF = { &CompositeMonikerCFVtbl };
+
+static const IClassFactoryVtbl ClassMonikerCFVtbl =
+{
+    ClassFactory_QueryInterface,
+    ClassFactory_AddRef,
+    ClassFactory_Release,
+    ClassMoniker_CreateInstance,
+    ClassFactory_LockServer
+};
+
+static IClassFactory ClassMonikerCF = { &ClassMonikerCFVtbl };
+
+static const IClassFactoryVtbl PointerMonikerCFVtbl =
+{
+    ClassFactory_QueryInterface,
+    ClassFactory_AddRef,
+    ClassFactory_Release,
+    PointerMoniker_CreateInstance,
+    ClassFactory_LockServer
+};
+
+static IClassFactory PointerMonikerCF = { &PointerMonikerCFVtbl };
+
+static const IClassFactoryVtbl ComCatCFVtbl =
+{
+    ClassFactory_QueryInterface,
+    ClassFactory_AddRef,
+    ClassFactory_Release,
+    ComCat_CreateInstance,
+    ClassFactory_LockServer
+};
+
+static IClassFactory ComCatCF = { &ComCatCFVtbl };
+
+static const IClassFactoryVtbl GlobalOptionsCFVtbl =
+{
+    ClassFactory_QueryInterface,
+    ClassFactory_AddRef,
+    ClassFactory_Release,
+    GlobalOptions_CreateInstance,
+    ClassFactory_LockServer
+};
+
+IClassFactory GlobalOptionsCF = { &GlobalOptionsCFVtbl };
+
 /***********************************************************************
  *           DllGetClassObject [OLE32.@]
  */
@@ -38,19 +158,19 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv)
     if (IsEqualIID(rclsid,&CLSID_StdGlobalInterfaceTable) && (IsEqualIID(iid,&IID_IClassFactory) || IsEqualIID(iid,&IID_IUnknown)))
         return StdGlobalInterfaceTable_GetFactory(ppv);
     if (IsEqualCLSID(rclsid, &CLSID_FileMoniker))
-        return FileMonikerCF_Create(iid, ppv);
+        return IClassFactory_QueryInterface(&FileMonikerCF, iid, ppv);
     if (IsEqualCLSID(rclsid, &CLSID_ItemMoniker))
-        return ItemMonikerCF_Create(iid, ppv);
+        return IClassFactory_QueryInterface(&ItemMonikerCF, iid, ppv);
     if (IsEqualCLSID(rclsid, &CLSID_AntiMoniker))
-        return AntiMonikerCF_Create(iid, ppv);
+        return IClassFactory_QueryInterface(&AntiMonikerCF, iid, ppv);
     if (IsEqualCLSID(rclsid, &CLSID_CompositeMoniker))
-        return CompositeMonikerCF_Create(iid, ppv);
+        return IClassFactory_QueryInterface(&CompositeMonikerCF, iid, ppv);
     if (IsEqualCLSID(rclsid, &CLSID_ClassMoniker))
-        return ClassMonikerCF_Create(iid, ppv);
+        return IClassFactory_QueryInterface(&ClassMonikerCF, iid, ppv);
     if (IsEqualCLSID(rclsid, &CLSID_PointerMoniker))
-        return PointerMonikerCF_Create(iid, ppv);
+        return IClassFactory_QueryInterface(&PointerMonikerCF, iid, ppv);
     if (IsEqualGUID(rclsid, &CLSID_StdComponentCategoriesMgr))
-        return ComCatCF_Create(iid, ppv);
+        return IClassFactory_QueryInterface(&ComCatCF, iid, ppv);
 
     hr = OLE32_DllGetClassObject(rclsid, iid, ppv);
     if (SUCCEEDED(hr))

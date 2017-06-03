@@ -1976,30 +1976,8 @@ MonikerCommonPrefixWith(IMoniker* pmkThis,IMoniker* pmkOther,IMoniker** ppmkComm
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI CompositeMonikerCF_QueryInterface(IClassFactory *iface, REFIID riid, void **ppv)
-{
-    *ppv = NULL;
-    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IClassFactory))
-    {
-        *ppv = iface;
-        IClassFactory_AddRef(iface);
-        return S_OK;
-    }
-    return E_NOINTERFACE;
-}
-
-static ULONG WINAPI CompositeMonikerCF_AddRef(LPCLASSFACTORY iface)
-{
-    return 2; /* non-heap based object */
-}
-
-static ULONG WINAPI CompositeMonikerCF_Release(LPCLASSFACTORY iface)
-{
-    return 1; /* non-heap based object */
-}
-
-static HRESULT WINAPI CompositeMonikerCF_CreateInstance(LPCLASSFACTORY iface,
-    LPUNKNOWN pUnk, REFIID riid, LPVOID *ppv)
+HRESULT WINAPI CompositeMoniker_CreateInstance(IClassFactory *iface,
+    IUnknown *pUnk, REFIID riid, void **ppv)
 {
     IMoniker* pMoniker;
     HRESULT  hr;
@@ -2020,25 +1998,4 @@ static HRESULT WINAPI CompositeMonikerCF_CreateInstance(LPCLASSFACTORY iface,
     }
 
     return hr;
-}
-
-static HRESULT WINAPI CompositeMonikerCF_LockServer(LPCLASSFACTORY iface, BOOL fLock)
-{
-    FIXME("(%d), stub!\n",fLock);
-    return S_OK;
-}
-
-static const IClassFactoryVtbl CompositeMonikerCFVtbl =
-{
-    CompositeMonikerCF_QueryInterface,
-    CompositeMonikerCF_AddRef,
-    CompositeMonikerCF_Release,
-    CompositeMonikerCF_CreateInstance,
-    CompositeMonikerCF_LockServer
-};
-static const IClassFactoryVtbl *CompositeMonikerCF = &CompositeMonikerCFVtbl;
-
-HRESULT CompositeMonikerCF_Create(REFIID riid, LPVOID *ppv)
-{
-    return IClassFactory_QueryInterface((IClassFactory *)&CompositeMonikerCF, riid, ppv);
 }
