@@ -206,6 +206,7 @@ typedef struct tagMSIPATCHINFO
     LPWSTR filename;
     LPWSTR localfile;
     MSIPATCHSTATE state;
+    DWORD uninstallable;
     BOOL delete_on_close;
     BOOL registered;
     UINT disk_id;
@@ -1213,6 +1214,7 @@ static const WCHAR szData[] = {'D','a','t','a',0};
 static const WCHAR szLangResource[] = {'\\','V','a','r','F','i','l','e','I','n','f','o','\\','T','r','a','n','s','l','a','t','i','o','n',0};
 static const WCHAR szInstallLocation[] = {'I','n','s','t','a','l','l','L','o','c','a','t','i','o','n',0};
 static const WCHAR szProperty[] = {'P','r','o','p','e','r','t','y',0};
+static const WCHAR szUninstallable[] = {'U','n','i','n','s','t','a','l','l','a','b','l','e',0};
 
 /* memory allocation macro functions */
 static void *msi_alloc( size_t len ) __WINE_ALLOC_SIZE(1);

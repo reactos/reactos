@@ -1174,11 +1174,11 @@ UINT WINAPI MsiGetFeatureCostA(MSIHANDLE hInstall, LPCSTR szFeature,
 static INT feature_cost( MSIFEATURE *feature )
 {
     INT cost = 0;
-    MSICOMPONENT *comp;
+    ComponentList *cl;
 
-    LIST_FOR_EACH_ENTRY( comp, &feature->Components, MSICOMPONENT, entry )
+    LIST_FOR_EACH_ENTRY( cl, &feature->Components, ComponentList, entry )
     {
-        cost += comp->Cost;
+        cost += cl->component->Cost;
     }
     return cost;
 }

@@ -405,13 +405,11 @@ static UINT read_table_from_storage( MSIDATABASE *db, MSITABLE *t, IStorage *stg
         goto err;
     }
 
-    t->row_count = rawsize / row_size;
-    t->data = msi_alloc_zero( t->row_count * sizeof (USHORT*) );
-    if( !t->data )
-        goto err;
-    t->data_persistent = msi_alloc_zero( t->row_count * sizeof(BOOL));
-    if ( !t->data_persistent )
-        goto err;
+    if ((t->row_count = rawsize / row_size))
+    {
+        if (!(t->data = msi_alloc_zero( t->row_count * sizeof(USHORT *) ))) goto err;
+        if (!(t->data_persistent = msi_alloc_zero( t->row_count * sizeof(BOOL) ))) goto err;
+    }
 
     /* transpose all the data */
     TRACE("Transposing data from %d rows\n", t->row_count );
