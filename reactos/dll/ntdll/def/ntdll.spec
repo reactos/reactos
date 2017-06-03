@@ -502,7 +502,7 @@
 501 stdcall RtlConvertSharedToExclusive(ptr)
 502 stdcall RtlConvertSidToUnicodeString(ptr ptr long)
 503 stdcall RtlConvertToAutoInheritSecurityObject(ptr ptr ptr ptr long ptr)
-# stdcall RtlConvertUiListToApiList
+504 stdcall RtlConvertUiListToApiList(ptr ptr long)
 505 stdcall -arch=win32 -ret64 RtlConvertUlongToLargeInteger(long)
 506 stdcall RtlCopyLuid(ptr ptr)
 507 stdcall RtlCopyLuidAndAttributesArray(long ptr ptr)
