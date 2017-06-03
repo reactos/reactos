@@ -376,6 +376,80 @@ static void test_render_run(const WCHAR *file)
     CloseHandle(h);
 }
 
+static DWORD WINAPI call_RenderFile_multithread(LPVOID lParam)
+{
+    IFilterGraph2 *filter_graph = lParam;
+    HRESULT hr;
+    WCHAR mp3file[] = {'t','e','s','t','.','m','p','3',0};
+    HANDLE handle;
+
+    handle = CreateFileW(mp3file, 0, 0, NULL, CREATE_ALWAYS, 0, NULL);
+    if (handle == INVALID_HANDLE_VALUE)
+    {
+        skip("Could not read test file %s, skipping test\n", wine_dbgstr_w(mp3file));
+        return 1;
+    }
+    CloseHandle(handle);
+
+    hr = IFilterGraph2_RenderFile(filter_graph, mp3file, NULL);
+    todo_wine ok(hr == VFW_E_CANNOT_RENDER || /* xp or older */
+                 hr == VFW_E_NO_TRANSPORT, /* win7 or newer */
+                 "Expected 0x%08x or 0x%08x, returned 0x%08x\n", VFW_E_CANNOT_RENDER, VFW_E_NO_TRANSPORT, hr);
+
+    DeleteFileW(mp3file);
+    return 0;
+}
+
+static void test_render_with_multithread(void)
+{
+    HRESULT hr;
+    HMODULE hmod;
+    static HRESULT (WINAPI *pDllGetClassObject)(REFCLSID rclsid, REFIID riid, void **out);
+    IClassFactory *classfactory = NULL;
+    static IGraphBuilder *graph_builder;
+    static IFilterGraph2 *filter_graph;
+    HANDLE thread;
+
+    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+
+    hmod = LoadLibraryA("quartz.dll");
+    if (!hmod)
+    {
+        skip("Fail to load quartz.dll.\n");
+        return;
+    }
+
+    pDllGetClassObject = (void*)GetProcAddress(hmod, "DllGetClassObject");
+    if (!pDllGetClassObject)
+    {
+         skip("Fail to get DllGetClassObject.\n");
+         return;
+    }
+
+    hr = pDllGetClassObject(&CLSID_FilterGraph, &IID_IClassFactory, (void **)&classfactory);
+    ok(hr == S_OK, "DllGetClassObject failed 0x%08x\n", hr);
+    if (FAILED(hr))
+    {
+         skip("Can't create IClassFactory 0x%08x.\n", hr);
+         return;
+    }
+
+    hr = IClassFactory_CreateInstance(classfactory, NULL, &IID_IUnknown, (LPVOID*)&graph_builder);
+    ok(hr == S_OK, "IClassFactory_CreateInstance failed 0x%08x\n", hr);
+
+    hr = IGraphBuilder_QueryInterface(graph_builder, &IID_IFilterGraph2, (void**)&filter_graph);
+    ok(hr == S_OK, "IGraphBuilder_QueryInterface failed 0x%08x\n", hr);
+
+    thread = CreateThread(NULL, 0, call_RenderFile_multithread, filter_graph, 0, NULL);
+
+    WaitForSingleObject(thread, 1000);
+    IFilterGraph2_Release(filter_graph);
+    IGraphBuilder_Release(graph_builder);
+    IClassFactory_Release(classfactory);
+    CoUninitialize();
+    return;
+}
+
 static void test_graph_builder(void)
 {
     HRESULT hr;
@@ -2235,4 +2309,5 @@ START_TEST(filtergraph)
     test_render_filter_priority();
     test_aggregate_filter_graph();
     CoUninitialize();
+    test_render_with_multithread();
 }
