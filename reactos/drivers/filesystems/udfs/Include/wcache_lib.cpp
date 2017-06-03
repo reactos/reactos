@@ -58,7 +58,7 @@ OSSTATUS __fastcall WCacheDecodeFlags(IN PW_CACHE Cache,
 #define USE_WC_PRINT
 
 #ifdef USE_WC_PRINT
- #define WcPrint KdPrint
+ #define WcPrint UDFPrint
 #else
  #define WcPrint(x) {;}
 #endif
@@ -182,41 +182,41 @@ WCacheInit__(
     _SEH2_TRY {
         // check input parameters
         if(Mode == WCACHE_MODE_R) {
-            KdPrint(("Disable Async-Write for WORM media\n"));
+            UDFPrint(("Disable Async-Write for WORM media\n"));
             WriteProcAsync = NULL;
         }
         if((MaxBlocks % PacketSize) || !MaxBlocks) {
-            KdPrint(("Total number of sectors must be packet-size-aligned\n"));
+            UDFPrint(("Total number of sectors must be packet-size-aligned\n"));
             try_return(RC = STATUS_INVALID_PARAMETER);
         }
         if(BlocksPerFrame % PacketSize) {
-            KdPrint(("Number of sectors per Frame must be packet-size-aligned\n"));
+            UDFPrint(("Number of sectors per Frame must be packet-size-aligned\n"));
             try_return(RC = STATUS_INVALID_PARAMETER);
         }
         if(!ReadProc) {
-            KdPrint(("Read routine pointer must be valid\n"));
+            UDFPrint(("Read routine pointer must be valid\n"));
             try_return(RC = STATUS_INVALID_PARAMETER);
         }
         if(FirstLba >= LastLba) {
-            KdPrint(("Invalid cached area parameters: (%x - %x)\n",FirstLba, LastLba));
+            UDFPrint(("Invalid cached area parameters: (%x - %x)\n",FirstLba, LastLba));
             try_return(RC = STATUS_INVALID_PARAMETER);
         }
         if(!MaxFrames) {
-            KdPrint(("Total frame number must be non-zero\n",FirstLba, LastLba));
+            UDFPrint(("Total frame number must be non-zero\n",FirstLba, LastLba));
             try_return(RC = STATUS_INVALID_PARAMETER);
         }
         if(Mode > WCACHE_MODE_MAX) {
-            KdPrint(("Invalid media mode. Should be 0-%x\n",WCACHE_MODE_MAX));
+            UDFPrint(("Invalid media mode. Should be 0-%x\n",WCACHE_MODE_MAX));
             try_return(RC = STATUS_INVALID_PARAMETER);
         }
         if(FramesToKeepFree >= MaxFrames/2) {
-            KdPrint(("Invalid FramesToKeepFree (%x). Should be Less or equal to MaxFrames/2 (%x)\n", FramesToKeepFree, MaxFrames/2));
+            UDFPrint(("Invalid FramesToKeepFree (%x). Should be Less or equal to MaxFrames/2 (%x)\n", FramesToKeepFree, MaxFrames/2));
             try_return(RC = STATUS_INVALID_PARAMETER);
         }
         // check 'features'
         if(!WriteProc) {
-            KdPrint(("Write routine not specified\n"));
-            KdPrint(("Read-only mode enabled\n"));
+            UDFPrint(("Write routine not specified\n"));
+            UDFPrint(("Read-only mode enabled\n"));
         }
         MaxBlocks = max(MaxBlocks, BlocksPerFrame*3);
         // initialize required structures
@@ -224,22 +224,22 @@ WCacheInit__(
         // avoid system crashes caused by pool fragmentation
         if(!(Cache->FrameList =
             (PW_CACHE_FRAME)MyAllocatePoolTag__(NonPagedPool, l1 = (((LastLba >> BlocksPerFrameSh)+1)*sizeof(W_CACHE_FRAME)), MEM_WCFRM_TAG) )) {
-            KdPrint(("Cache init err 1\n"));
+            UDFPrint(("Cache init err 1\n"));
             try_return(RC = STATUS_INSUFFICIENT_RESOURCES);
         }
         if(!(Cache->CachedBlocksList =
             (PULONG)MyAllocatePoolTag__(NonPagedPool, l2 = ((MaxBlocks+2)*sizeof(lba_t)), MEM_WCFRM_TAG) )) {
-            KdPrint(("Cache init err 2\n"));
+            UDFPrint(("Cache init err 2\n"));
             try_return(RC = STATUS_INSUFFICIENT_RESOURCES);
         }
         if(!(Cache->CachedModifiedBlocksList =
             (PULONG)MyAllocatePoolTag__(NonPagedPool, l2, MEM_WCFRM_TAG) )) {
-            KdPrint(("Cache init err 3\n"));
+            UDFPrint(("Cache init err 3\n"));
             try_return(RC = STATUS_INSUFFICIENT_RESOURCES);
         }
         if(!(Cache->CachedFramesList =
             (PULONG)MyAllocatePoolTag__(NonPagedPool, l3 = ((MaxFrames+2)*sizeof(lba_t)), MEM_WCFRM_TAG) )) {
-            KdPrint(("Cache init err 4\n"));
+            UDFPrint(("Cache init err 4\n"));
             try_return(RC = STATUS_INSUFFICIENT_RESOURCES);
         }
         RtlZeroMemory(Cache->FrameList, l1);
@@ -278,21 +278,21 @@ WCacheInit__(
         // init permanent tmp buffers
         if(!(Cache->tmp_buff =
             (PCHAR)MyAllocatePoolTag__(NonPagedPool, PacketSize*BlockSize, MEM_WCFRM_TAG))) {
-            KdPrint(("Cache init err 5.W\n"));
+            UDFPrint(("Cache init err 5.W\n"));
             try_return(RC = STATUS_INSUFFICIENT_RESOURCES);
         }
         if(!(Cache->tmp_buff_r =
             (PCHAR)MyAllocatePoolTag__(NonPagedPool, PacketSize*BlockSize, MEM_WCFRM_TAG))) {
-            KdPrint(("Cache init err 5.R\n"));
+            UDFPrint(("Cache init err 5.R\n"));
             try_return(RC = STATUS_INSUFFICIENT_RESOURCES);
         }
         if(!(Cache->reloc_tab =
             (PULONG)MyAllocatePoolTag__(NonPagedPool, Cache->PacketSize*sizeof(ULONG), MEM_WCFRM_TAG))) {
-            KdPrint(("Cache init err 6\n"));
+            UDFPrint(("Cache init err 6\n"));
             try_return(RC = STATUS_INSUFFICIENT_RESOURCES);
         }
         if(!OS_SUCCESS(RC = ExInitializeResourceLite(&(Cache->WCacheLock)))) {
-            KdPrint(("Cache init err (res)\n"));
+            UDFPrint(("Cache init err (res)\n"));
             try_return(RC);
         }
         res_init_flags |= WCLOCK_RES;
@@ -1402,7 +1402,7 @@ Try_Another_Frame:
         if(!Cache->FrameCount || !Cache->BlockCount) {
             //ASSERT(!Cache->FrameCount);
             if(Cache->FrameCount) {
-                KdPrint(("ASSERT: Cache->FrameCount = %d, when 0 is expected\n", Cache->FrameCount));
+                UDFPrint(("ASSERT: Cache->FrameCount = %d, when 0 is expected\n", Cache->FrameCount));
             }
             ASSERT(!Cache->BlockCount);
             if(!Cache->FrameCount)
@@ -1435,7 +1435,7 @@ Try_Another_Frame:
         block_array = Cache->FrameList[frame].Frame;
 
         if(!block_array) {
-            KdPrint(("Hmm...\n"));
+            UDFPrint(("Hmm...\n"));
             BrutePoint();
             return STATUS_DRIVER_INTERNAL_ERROR;
         }
@@ -1701,7 +1701,7 @@ Try_Another_Frame:
         block_array = Cache->FrameList[frame].Frame;
 
         if(!block_array) {
-            KdPrint(("Hmm...\n"));
+            UDFPrint(("Hmm...\n"));
             BrutePoint();
             return STATUS_DRIVER_INTERNAL_ERROR;
         }
@@ -1784,7 +1784,7 @@ WCachePurgeAllRAM(
         block_array = Cache->FrameList[frame].Frame;
 
         if(!block_array) {
-            KdPrint(("Hmm...\n"));
+            UDFPrint(("Hmm...\n"));
             BrutePoint();
             return STATUS_DRIVER_INTERNAL_ERROR;
         }
@@ -1832,7 +1832,7 @@ WCacheFlushAllRAM(
         block_array = Cache->FrameList[frame].Frame;
 
         if(!block_array) {
-            KdPrint(("Hmm...\n"));
+            UDFPrint(("Hmm...\n"));
             BrutePoint();
             return STATUS_DRIVER_INTERNAL_ERROR;
         }
@@ -2172,7 +2172,7 @@ WCacheReadBlocks__(
                 *ReadBytes += BS*n;
             }
 //        } else {
-//            KdPrint(("Unaligned\n"));
+//            UDFPrint(("Unaligned\n"));
         }
         // read non-cached extent (if any)
         // firstable, we'll get total number of sectors to read
@@ -2309,7 +2309,7 @@ WCacheWriteBlocks__(
     WcPrint(("WC:W %x (%x)\n", Lba, BCount));
 
     *WrittenBytes = 0;
-//    KdPrint(("BCount:%x\n",BCount));
+//    UDFPrint(("BCount:%x\n",BCount));
     // check if we try to read too much data
     if(BCount >= Cache->MaxBlocks) {
         i = 0;
@@ -2318,7 +2318,7 @@ WCacheWriteBlocks__(
             goto EO_WCache_W2;
         }
         while(TRUE) {
-//            KdPrint(("  BCount:%x\n",BCount));
+//            UDFPrint(("  BCount:%x\n",BCount));
             status = WCacheWriteBlocks__(Cache, Context, Buffer + (i<<BSh), Lba, min(PS,BCount), &_WrittenBytes, FALSE);
             (*WrittenBytes) += _WrittenBytes;
             BCount -= PS;
@@ -2387,7 +2387,7 @@ WCacheWriteBlocks__(
     }
 
     Cache->FrameList[frame].UpdateCount++;
-//    KdPrint(("    BCount:%x\n",BCount));
+//    UDFPrint(("    BCount:%x\n",BCount));
     while(BCount) {
         if(i >= Cache->BlocksPerFrame) {
             frame++;
@@ -2407,7 +2407,7 @@ WCacheWriteBlocks__(
         while(BCount &&
               (i < Cache->BlocksPerFrame) &&
               (addr = (PCHAR)WCacheSectorAddr(block_array, i)) ) {
-//            KdPrint(("addr:%x:Buffer:%x:BS:%x:BCount:%x\n",addr, Buffer, BS, BCount));
+//            UDFPrint(("addr:%x:Buffer:%x:BS:%x:BCount:%x\n",addr, Buffer, BS, BCount));
             block_type = Cache->CheckUsedProc(Context, Lba+saved_BC-BCount);
             if(Cache->NoWriteBB &&
                /*WCacheGetBadFlag(block_array,i)*/
@@ -2434,7 +2434,7 @@ WCacheWriteBlocks__(
                 status = STATUS_INSUFFICIENT_RESOURCES;
                 goto EO_WCache_W;
             }
-//            KdPrint(("addr:%x:Buffer:%x:BS:%x:BCount:%x\n",block_array[i].Sector, Buffer, BS, BCount));
+//            UDFPrint(("addr:%x:Buffer:%x:BS:%x:BCount:%x\n",block_array[i].Sector, Buffer, BS, BCount));
             DbgCopyMemory(block_array[i].Sector, Buffer, BS);
             WCacheSetModFlag(block_array, i);
             i++;
@@ -2495,7 +2495,7 @@ WCacheWriteBlocks__(
                 status = STATUS_INSUFFICIENT_RESOURCES;
                 goto EO_WCache_W;
             }
-//            KdPrint(("addr:%x:Buffer:%x:BS:%x:BCount:%x\n",block_array[i].Sector, Buffer, BS, BCount));
+//            UDFPrint(("addr:%x:Buffer:%x:BS:%x:BCount:%x\n",block_array[i].Sector, Buffer, BS, BCount));
             DbgCopyMemory(block_array[i].Sector, Buffer, BS);
             WCacheSetModFlag(block_array, i);
             i++;
@@ -2910,7 +2910,7 @@ WCacheFlushBlocks__(
     // check if we try to access beyond cached area
     if((Lba < Cache->FirstLba) ||
        (Lba+BCount-1 > Cache->LastLba)) {
-        KdPrint(("LBA %#x (%x) is beyond cacheable area\n", Lba, BCount));
+        UDFPrint(("LBA %#x (%x) is beyond cacheable area\n", Lba, BCount));
         BrutePoint();
         status = STATUS_INVALID_PARAMETER;
         goto EO_WCache_F;
@@ -2972,7 +2972,7 @@ WCacheDirect__(
     // check if we try to access beyond cached area
     if((Lba < Cache->FirstLba) ||
        (Lba > Cache->LastLba)) {
-        KdPrint(("LBA %#x is beyond cacheable area\n", Lba));
+        UDFPrint(("LBA %#x is beyond cacheable area\n", Lba));
         BrutePoint();
         status = STATUS_INVALID_PARAMETER;
         goto EO_WCache_D;
@@ -3057,7 +3057,7 @@ WCacheDirect__(
         ASSERT(block_type & WCACHE_BLOCK_USED);
 #else
         if(!(block_type & WCACHE_BLOCK_USED)) {
-            KdPrint(("LBA %#x is not marked as used\n", Lba));
+            UDFPrint(("LBA %#x is not marked as used\n", Lba));
         }
 #endif
         if(Modified &&
@@ -3533,7 +3533,7 @@ WCacheDiscardBlocks__(
 
     ExAcquireResourceExclusiveLite(&(Cache->WCacheLock), TRUE);
 
-    KdPrint(("  Discard req: %x@%x\n",BCount, ReqLba));
+    UDFPrint(("  Discard req: %x@%x\n",BCount, ReqLba));
 
     List = Cache->CachedBlocksList;
     if(!List) {
@@ -3609,7 +3609,7 @@ WCacheDecodeFlags(
 {
     //ULONG OldFlags;
     if(Flags & ~WCACHE_VALID_FLAGS) {
-        KdPrint(("Invalid flags: %x\n", Flags & ~WCACHE_VALID_FLAGS));
+        UDFPrint(("Invalid flags: %x\n", Flags & ~WCACHE_VALID_FLAGS));
         return STATUS_INVALID_PARAMETER;
     }
     Cache->CacheWholePacket = (Flags & WCACHE_CACHE_WHOLE_PACKET) ? TRUE : FALSE;

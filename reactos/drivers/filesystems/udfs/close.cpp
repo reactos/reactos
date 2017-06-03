@@ -567,7 +567,7 @@ UDFCleanUpFcbChain(
                     NtReqFcb->CommonFCBHeader.Resource =
                     NtReqFcb->CommonFCBHeader.PagingIoResource = NULL;
                     UDFDeassignAcl(NtReqFcb, AutoInherited);
-                    KdPrint(("UDFReleaseNtReqFCB: %x\n", NtReqFcb));
+                    UDFPrint(("UDFReleaseNtReqFCB: %x\n", NtReqFcb));
 #ifdef DBG
 //                    NtReqFcb->FileObject->FsContext2 = NULL;
 //                    ASSERT(NtReqFcb->FileObject);
@@ -816,7 +816,7 @@ UDFBuildTreeItemsList(
     PUDF_FILE_INFO     SDirInfo;
     ULONG              i;
 
-    KdPrint(("    UDFBuildTreeItemsList():\n"));
+    UDFPrint(("    UDFBuildTreeItemsList():\n"));
     if(!(*PassedList) || !(*FoundList)) {
 
         (*PassedList) = (PUDF_FILE_INFO*)
@@ -935,7 +935,7 @@ UDFCloseAllXXXDelayedInDir(
 
     _SEH2_TRY {
 
-        KdPrint(("    UDFCloseAllXXXDelayedInDir(): Acquire DelayedCloseResource\n"));
+        UDFPrint(("    UDFCloseAllXXXDelayedInDir(): Acquire DelayedCloseResource\n"));
         // Acquire DelayedCloseResource
         UDFAcquireResourceExclusive(&(UDFGlobalData.DelayedCloseResource), TRUE);
         ResAcq = TRUE;
@@ -948,7 +948,7 @@ UDFCloseAllXXXDelayedInDir(
                 &PassedList, &PassedListSize, &FoundList, &FoundListSize);
 
         if(!NT_SUCCESS(RC)) {
-            KdPrint(("    UDFBuildTreeItemsList(): error %x\n", RC));
+            UDFPrint(("    UDFBuildTreeItemsList(): error %x\n", RC));
             try_return(RC);
         }
 
@@ -959,7 +959,7 @@ UDFCloseAllXXXDelayedInDir(
         // build array of referenced pointers
         ListPtrArray = (PFE_LIST_ENTRY*)(MyAllocatePool__(NonPagedPool, FoundListSize*sizeof(PFE_LIST_ENTRY)));
         if(!ListPtrArray) {
-            KdPrint(("    Can't alloc ListPtrArray for %x items\n", FoundListSize));
+            UDFPrint(("    Can't alloc ListPtrArray for %x items\n", FoundListSize));
             try_return(RC = STATUS_INSUFFICIENT_RESOURCES);
         }
 
@@ -971,7 +971,7 @@ UDFCloseAllXXXDelayedInDir(
                 if(!CurFileInfo->ListPtr) {
                     CurFileInfo->ListPtr = (PFE_LIST_ENTRY)(MyAllocatePool__(NonPagedPool, sizeof(FE_LIST_ENTRY)));
                     if(!CurFileInfo->ListPtr) {
-                        KdPrint(("    Can't alloc ListPtrEntry for items %x\n", i));
+                        UDFPrint(("    Can't alloc ListPtrEntry for items %x\n", i));
                         try_return(RC = STATUS_INSUFFICIENT_RESOURCES);
                     }
                     CurFileInfo->ListPtr->FileInfo = CurFileInfo;

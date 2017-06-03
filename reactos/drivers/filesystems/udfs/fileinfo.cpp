@@ -139,26 +139,26 @@ UDFCommonFileInfo(
         TopIrp = IoGetTopLevelIrp();
         switch((ULONG)TopIrp) {
         case FSRTL_FSP_TOP_LEVEL_IRP:
-            KdPrint(("  FSRTL_FSP_TOP_LEVEL_IRP\n"));
+            UDFPrint(("  FSRTL_FSP_TOP_LEVEL_IRP\n"));
             break;
         case FSRTL_CACHE_TOP_LEVEL_IRP:
-            KdPrint(("  FSRTL_CACHE_TOP_LEVEL_IRP\n"));
+            UDFPrint(("  FSRTL_CACHE_TOP_LEVEL_IRP\n"));
             break;
         case FSRTL_MOD_WRITE_TOP_LEVEL_IRP:
-            KdPrint(("  FSRTL_MOD_WRITE_TOP_LEVEL_IRP\n"));
+            UDFPrint(("  FSRTL_MOD_WRITE_TOP_LEVEL_IRP\n"));
             break;
         case FSRTL_FAST_IO_TOP_LEVEL_IRP:
-            KdPrint(("  FSRTL_FAST_IO_TOP_LEVEL_IRP\n"));
+            UDFPrint(("  FSRTL_FAST_IO_TOP_LEVEL_IRP\n"));
             BrutePoint()
             break;
         case NULL:
-            KdPrint(("  NULL TOP_LEVEL_IRP\n"));
+            UDFPrint(("  NULL TOP_LEVEL_IRP\n"));
             break;
         default:
             if(TopIrp == Irp) {
-                KdPrint(("  TOP_LEVEL_IRP\n"));
+                UDFPrint(("  TOP_LEVEL_IRP\n"));
             } else {
-                KdPrint(("  RECURSIVE_IRP, TOP = %x\n", TopIrp));
+                UDFPrint(("  RECURSIVE_IRP, TOP = %x\n", TopIrp));
             }
         }
 
@@ -2029,7 +2029,7 @@ UDFRename(
             // removed (in UDFRenameMoveFile__()). Otherwise
             // return STATUS_ACCESS_DENIED
             if(UDFHasAStreamDir(File1)) {
-                KdPrint(("TODO: We should remove Streams from source file\n"));
+                UDFPrint(("TODO: We should remove Streams from source file\n"));
                 try_return (RC = STATUS_ACCESS_DENIED);
             }
 #else  //UDF_ENABLE_SECURITY

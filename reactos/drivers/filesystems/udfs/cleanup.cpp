@@ -63,7 +63,7 @@ UDFCleanup(
         Irp->IoStatus.Information = 0;
 
         if(UDFGlobalData.AutoFormatCount == IoGetCurrentIrpStackLocation(Irp)->FileObject) {
-            KdPrint(("Deregister Autoformat\n"));
+            UDFPrint(("Deregister Autoformat\n"));
             UDFGlobalData.AutoFormatCount = NULL;
         }
 

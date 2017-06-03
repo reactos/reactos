@@ -51,7 +51,7 @@ THREAD_REC_BLOCK DLDThreadAcquireChain[DLD_MAX_REC_LEVEL];
 VOID DLDInit(ULONG MaxThrdCount /// Maximum supported number of threads
 ) {
     if (KeNumberProcessors>1) {
-        KdPrint(("Deadlock Detector is designed for uniprocessor machines only!\n"));
+        UDFPrint(("Deadlock Detector is designed for uniprocessor machines only!\n"));
         BrutePoint();
     }
     DLDpTimeout.QuadPart = -40000000I64;
@@ -84,7 +84,7 @@ PTHREAD_STRUCT DLDAllocFindThread(ULONG ThreadId) {
     // Not found. Allocate new one.
     if (i == MaxThreadCount) {
         if (FirstEmpty == -1) {
-            KdPrint(("Not enough table entries. Try to increase MaxThrdCount on next build"));
+            UDFPrint(("Not enough table entries. Try to increase MaxThrdCount on next build"));
             BrutePoint();
         }
         i = FirstEmpty;
@@ -127,18 +127,18 @@ BOOLEAN DLDProcessThread(PTHREAD_STRUCT ThrdOwner,
 
     if (ThrdOwner == ThrdStruct) {
         // ERESOURCE wait cycle. Deadlock detected.
-        KdPrint(("DLD: *********DEADLOCK DETECTED*********\n"));
-        KdPrint(("Thread %x holding resource %x\n",ThrdOwner->ThreadId,Resource));
+        UDFPrint(("DLD: *********DEADLOCK DETECTED*********\n"));
+        UDFPrint(("Thread %x holding resource %x\n",ThrdOwner->ThreadId,Resource));
         return TRUE;
     }
 
     for (int i=RecLevel+1;i<DLD_MAX_REC_LEVEL;i++) {
         if (DLDThreadAcquireChain[i].Thread->ThreadId == ThrdOwner->ThreadId) {
             // ERESOURCE wait cycle. Deadlock detected.
-            KdPrint(("DLD: *********DEADLOCK DETECTED*********\n"));
-            KdPrint(("Thread %x holding resource %x\n",ThrdOwner->ThreadId,Resource));
+            UDFPrint(("DLD: *********DEADLOCK DETECTED*********\n"));
+            UDFPrint(("Thread %x holding resource %x\n",ThrdOwner->ThreadId,Resource));
             for (int j=RecLevel+1;j<=i;j++) {
-                KdPrint((" awaited by thread %x at (BugCheckId:%x:Line:%d) holding resource %x\n",
+                UDFPrint((" awaited by thread %x at (BugCheckId:%x:Line:%d) holding resource %x\n",
                 DLDThreadAcquireChain[i].Thread->ThreadId,
                 DLDThreadAcquireChain[i].Thread->BugCheckId, 
                 DLDThreadAcquireChain[i].Thread->Line,
@@ -154,7 +154,7 @@ BOOLEAN DLDProcessThread(PTHREAD_STRUCT ThrdOwner,
     // Find resource, awaited by thread
     if (ThrdOwner->WaitingResource) {
         if (DLDProcessResource(ThrdOwner->WaitingResource, ThrdStruct,RecLevel)) {
-            KdPrint((" awaited by thread %x at (BugCheckId:%x:Line:%d) holding resource %x\n",
+            UDFPrint((" awaited by thread %x at (BugCheckId:%x:Line:%d) holding resource %x\n",
             ThrdOwner->ThreadId, 
             ThrdOwner->BugCheckId, 
             ThrdOwner->Line, 
@@ -239,7 +239,7 @@ VOID DLDpWaitForResource(
             ResourceWaitCount = 0;
 
             if (DLDProcessResource(Resource, ThrdStruct,DLD_MAX_REC_LEVEL)) {
-                KdPrint((" which thread %x has tried to acquire at (BugCheckId:%x:Line:%d)\n",
+                UDFPrint((" which thread %x has tried to acquire at (BugCheckId:%x:Line:%d)\n",
                 ThrdStruct->ThreadId,
                 ThrdStruct->BugCheckId,
                 ThrdStruct->Line      

@@ -27,7 +27,7 @@ UDFClrModified(
     IN PVCB        Vcb
     )
 {
-    KdPrint(("ClrModified\n"));
+    UDFPrint(("ClrModified\n"));
     UDFInterlockedDecrement((PLONG)&(Vcb->Modified));
 } // end UDFClrModified()
 

@@ -62,7 +62,7 @@ UDFGetSecurity(
     PtrUDFIrpContext    PtrIrpContext = NULL;
     BOOLEAN             AreWeTopLevel = FALSE;
 
-    KdPrint(("UDFGetSecurity\n"));
+    UDFPrint(("UDFGetSecurity\n"));
 //    BrutePoint();
 
     FsRtlEnterFileSystem();
@@ -137,7 +137,7 @@ UDFCommonGetSecurity(
     PVOID               PtrSystemBuffer = NULL;
     ULONG               BufferLength = 0;
 
-    KdPrint(("UDFCommonGetSecurity\n"));
+    UDFPrint(("UDFCommonGetSecurity\n"));
 
     _SEH2_TRY {
 
@@ -241,7 +241,7 @@ UDFSetSecurity(
     PtrUDFIrpContext    PtrIrpContext = NULL;
     BOOLEAN             AreWeTopLevel = FALSE;
 
-    KdPrint(("UDFSetSecurity\n"));
+    UDFPrint(("UDFSetSecurity\n"));
 //    BrutePoint();
 
     FsRtlEnterFileSystem();
@@ -314,7 +314,7 @@ UDFCommonSetSecurity(
     PtrUDFCCB           Ccb = NULL;
     ACCESS_MASK         DesiredAccess = 0;
 
-    KdPrint(("UDFCommonSetSecurity\n"));
+    UDFPrint(("UDFCommonSetSecurity\n"));
 
     _SEH2_TRY {
 
@@ -362,7 +362,7 @@ UDFCommonSetSecurity(
             UDFConvertToSelfRelative(&(NtReqFcb->SecurityDesc));
 
             KdDump(NtReqFcb->SecurityDesc, RtlLengthSecurityDescriptor(NtReqFcb->SecurityDesc));
-            KdPrint(("\n"));
+            UDFPrint(("\n"));
 
             RC = SeSetSecurityDescriptorInfo(/*FileObject*/ NULL,
                                           &(IrpSp->Parameters.SetSecurity.SecurityInformation),
@@ -431,18 +431,18 @@ UDFReadSecurity(
     ULONG NumberBytesRead;
     PERESOURCE Res1 = NULL;
 
-    KdPrint(("UDFReadSecurity\n"));
+    UDFPrint(("UDFReadSecurity\n"));
 
     _SEH2_TRY {
 
         FileInfo = Fcb->FileInfo;
         ASSERT(FileInfo);
         if(!FileInfo) {
-            KdPrint(("  Volume Security\n"));
+            UDFPrint(("  Volume Security\n"));
             try_return(RC = STATUS_NO_SECURITY_ON_OBJECT);
         }
         if(Vcb->VCBFlags & UDF_VCB_FLAGS_RAW_DISK) {
-            KdPrint(("  No Security on blank volume\n"));
+            UDFPrint(("  No Security on blank volume\n"));
             try_return(RC = STATUS_NO_SECURITY_ON_OBJECT);
         }
 
@@ -532,7 +532,7 @@ UDFConvertToSelfRelative(
     PSECURITY_DESCRIPTOR NewSD;
     ULONG Len;
 
-    KdPrint(("  UDFConvertToSelfRelative\n"));
+    UDFPrint(("  UDFConvertToSelfRelative\n"));
 
     if(!(*SecurityDesc))
         return STATUS_NO_SECURITY_ON_OBJECT;
@@ -569,7 +569,7 @@ UDFInheritAcl(
     SECURITY_INFORMATION SecurityInformation;
     ULONG Len;
 
-    KdPrint(("  UDFInheritAcl\n"));
+    UDFPrint(("  UDFInheritAcl\n"));
 
     if(!(*ParentSecurityDesc)) {
         *SecurityDesc = NULL;
@@ -603,7 +603,7 @@ UDFBuildEmptyAcl(
     NTSTATUS RC;
     ULONG Len = 2 * (sizeof(ACL) + sizeof(ACCESS_ALLOWED_ACE) + sizeof(ULONG)*4 /*RtlLengthSid(SeExports->SeWorldSid)*/);
 
-    KdPrint(("  UDFBuildEmptyAcl\n"));
+    UDFPrint(("  UDFBuildEmptyAcl\n"));
     // Create Security Descriptor
     (*SecurityDesc) = (PSECURITY_DESCRIPTOR)DbgAllocatePool(NonPagedPool,
            sizeof(SECURITY_DESCRIPTOR) + Len);
@@ -629,7 +629,7 @@ UDFBuildFullControlAcl(
     PACL Acl;
     ULONG Len = sizeof(ACL) + 2*(sizeof(ACCESS_ALLOWED_ACE) + sizeof(ULONG)*4 /*- sizeof(ULONG)*/ /*+ RtlLengthSid(SeExports->SeWorldSid)*/);
 
-    KdPrint(("  UDFBuildFullControlAcl\n"));
+    UDFPrint(("  UDFBuildFullControlAcl\n"));
     // Create Security Descriptor
     RC = UDFBuildEmptyAcl(Vcb, SecurityDesc);
     if(!NT_SUCCESS(RC))
@@ -714,7 +714,7 @@ UDFAssignAcl(
 #ifdef UDF_ENABLE_SECURITY
 //    SECURITY_INFORMATION SecurityInformation;
 
-//    KdPrint(("  UDFAssignAcl\n"));
+//    UDFPrint(("  UDFAssignAcl\n"));
     if(!NtReqFcb->SecurityDesc) {
 
         PSECURITY_DESCRIPTOR ExplicitSecurity = NULL;
@@ -777,7 +777,7 @@ UDFDeassignAcl(
 #ifdef UDF_ENABLE_SECURITY
 //    NTSTATUS RC = STATUS_SUCCESS;
 
-//    KdPrint(("  UDFDeassignAcl\n"));
+//    UDFPrint(("  UDFDeassignAcl\n"));
     if(!NtReqFcb->SecurityDesc)
         return;
 
@@ -807,7 +807,7 @@ UDFWriteSecurity(
     NTSTATUS RC;
     ULONG NumberBytesRead;
 
-//    KdPrint(("UDFWriteSecurity\n"));
+//    UDFPrint(("UDFWriteSecurity\n"));
 
 #if !defined(UDF_READ_ONLY_BUILD)
 
@@ -826,7 +826,7 @@ UDFWriteSecurity(
         FileInfo = Fcb->FileInfo;
         ASSERT(FileInfo);
         if(!FileInfo) {
-            KdPrint(("  Volume Security\n"));
+            UDFPrint(("  Volume Security\n"));
             try_return(RC = STATUS_SUCCESS);
         }
 
