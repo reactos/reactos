@@ -252,6 +252,10 @@ static HRESULT WINAPI DataObjectImpl_GetData(IDataObject* iface, FORMATETC *pfor
 
     DataObjectImpl_GetData_calls++;
 
+    ok(pmedium->tymed == 0, "pmedium->tymed = %u\n", pmedium->tymed);
+    ok(U(*pmedium).hGlobal == NULL, "pmedium->hGlobal = %p\n", U(*pmedium).hGlobal);
+    ok(pmedium->pUnkForRelease == NULL, "pmedium->pUnkForRelease = %p\n", pmedium->pUnkForRelease);
+
     if(pformatetc->lindex != -1)
         return DV_E_FORMATETC;
 
@@ -1189,9 +1193,21 @@ static void test_consumer_refs(void)
     IDataObject_Release(get1);
 
     IDataObject_Release(src2);
-    IDataObject_Release(src);
+
+    /* Show that OleUninitialize() doesn't release the
+       dataobject's ref, and thus the object is leaked. */
+    old_refs = count_refs(src);
+    ok(old_refs == 1, "%d\n", old_refs);
+
+    OleSetClipboard(src);
+    refs = count_refs(src);
+    ok(refs > old_refs, "%d %d\n", refs, old_refs);
 
     OleUninitialize();
+    refs = count_refs(src);
+    ok(refs == 2, "%d\n", refs);
+
+    IDataObject_Release(src);
 }
 
 static void test_flushed_getdata(void)
