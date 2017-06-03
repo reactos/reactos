@@ -993,6 +993,7 @@ static void test_StrXXX_overflows(void)
     WCHAR wstr1[2*MAX_PATH+1], wbuf[2*MAX_PATH];
     const WCHAR fmt[] = {'%','s',0};
     STRRET strret;
+    HRESULT hres;
     int ret;
     int i;
 
@@ -1064,9 +1065,27 @@ if (0)
         memset(wbuf, 0xbf, sizeof(wbuf));
         strret.uType = STRRET_WSTR;
         U(strret).pOleStr = StrDupW(wstr1);
-        expect_eq2(pStrRetToBufW(&strret, NULL, wbuf, 10), S_OK, E_NOT_SUFFICIENT_BUFFER /* Vista */, HRESULT, "%x");
+        hres = pStrRetToBufW(&strret, NULL, wbuf, 10);
+        ok(hres == E_NOT_SUFFICIENT_BUFFER || broken(hres == S_OK) /* winxp */,
+           "StrRetToBufW returned %08x\n", hres);
+        if (hres == E_NOT_SUFFICIENT_BUFFER)
+            expect_eq(wbuf[0], 0, WCHAR, "%x");
         expect_eq(wbuf[9], 0, WCHAR, "%x");
         expect_eq(wbuf[10], (WCHAR)0xbfbf, WCHAR, "%x");
+
+        memset(wbuf, 0xbf, sizeof(wbuf));
+        strret.uType = STRRET_CSTR;
+        StrCpyNA(U(strret).cStr, str1, MAX_PATH);
+        hres = pStrRetToBufW(&strret, NULL, wbuf, 10);
+        ok(hres == S_OK, "StrRetToBufW returned %08x\n", hres);
+        ok(!memcmp(wbuf, wstr1, 9*sizeof(WCHAR)) && !wbuf[9], "StrRetToBuf returned %s\n", wine_dbgstr_w(wbuf));
+
+        memset(wbuf, 0xbf, sizeof(wbuf));
+        strret.uType = STRRET_WSTR;
+        U(strret).pOleStr = NULL;
+        hres = pStrRetToBufW(&strret, NULL, wbuf, 10);
+        ok(hres == E_FAIL, "StrRetToBufW returned %08x\n", hres);
+        ok(!wbuf[0], "StrRetToBuf returned %s\n", wine_dbgstr_w(wbuf));
     }
     else
         win_skip("StrRetToBufW() is not available\n");
