@@ -61,7 +61,7 @@ reactos/dll/win32/credui              # Synced to WineStaging-2.9
 reactos/dll/win32/crypt32             # Synced to WineStaging-2.9
 reactos/dll/win32/cryptdlg            # Synced to WineStaging-1.9.11
 reactos/dll/win32/cryptdll            # Synced to WineStaging-1.9.11
-reactos/dll/win32/cryptnet            # Synced to WineStaging-1.9.11
+reactos/dll/win32/cryptnet            # Synced to WineStaging-2.9
 reactos/dll/win32/cryptui             # Synced to WineStaging-1.9.16
 reactos/dll/win32/dbghelp             # Synced to WineStaging-1.9.23
 reactos/dll/win32/dciman32            # Synced to WineStaging-1.9.11
