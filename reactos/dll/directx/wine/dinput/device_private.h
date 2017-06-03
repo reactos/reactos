@@ -73,7 +73,6 @@ struct IDirectInputDeviceImpl
     /* Action mapping */
     int                         num_actions; /* number of actions mapped */
     ActionMap                  *action_map;  /* array of mappings */
-    WCHAR                       username[MAX_PATH];
 };
 
 extern BOOL get_app_key(HKEY*, HKEY*) DECLSPEC_HIDDEN;

@@ -1294,11 +1294,24 @@ HRESULT WINAPI IDirectInputDevice2WImpl_GetProperty(LPDIRECTINPUTDEVICE8W iface,
         case (DWORD_PTR) DIPROP_USERNAME:
         {
             LPDIPROPSTRING ps = (LPDIPROPSTRING)pdiph;
+            struct DevicePlayer *device_player;
 
             if (pdiph->dwSize != sizeof(DIPROPSTRING)) return DIERR_INVALIDPARAM;
 
-            lstrcpynW(ps->wsz, This->username, sizeof(ps->wsz)/sizeof(WCHAR));
-            break;
+            LIST_FOR_EACH_ENTRY(device_player, &This->dinput->device_players,
+                struct DevicePlayer, entry)
+            {
+                if (IsEqualGUID(&device_player->instance_guid, &This->guid))
+                {
+                    if (*device_player->username)
+                    {
+                        lstrcpynW(ps->wsz, device_player->username, sizeof(ps->wsz)/sizeof(WCHAR));
+                        return DI_OK;
+                    }
+                    else break;
+                }
+            }
+            return S_FALSE;
         }
         case (DWORD_PTR) DIPROP_VIDPID:
             FIXME("DIPROP_VIDPID not implemented\n");
@@ -1376,10 +1389,29 @@ HRESULT WINAPI IDirectInputDevice2WImpl_SetProperty(
         case (DWORD_PTR) DIPROP_USERNAME:
         {
             LPCDIPROPSTRING ps = (LPCDIPROPSTRING)pdiph;
+            struct DevicePlayer *device_player;
+            BOOL found = FALSE;
 
             if (pdiph->dwSize != sizeof(DIPROPSTRING)) return DIERR_INVALIDPARAM;
 
-            lstrcpynW(This->username, ps->wsz, sizeof(This->username)/sizeof(WCHAR));
+            LIST_FOR_EACH_ENTRY(device_player, &This->dinput->device_players,
+                struct DevicePlayer, entry)
+            {
+                if (IsEqualGUID(&device_player->instance_guid, &This->guid))
+                {
+                    found = TRUE;
+                    break;
+                }
+            }
+            if (!found && (device_player =
+                    HeapAlloc(GetProcessHeap(), 0, sizeof(struct DevicePlayer))))
+            {
+                list_add_tail(&This->dinput->device_players, &device_player->entry);
+                device_player->instance_guid = This->guid;
+            }
+            if (device_player)
+                lstrcpynW(device_player->username, ps->wsz,
+                    sizeof(device_player->username)/sizeof(WCHAR));
             break;
         }
         default:

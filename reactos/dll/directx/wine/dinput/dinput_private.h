@@ -62,6 +62,7 @@ struct IDirectInputImpl
     DWORD                       evsequence;     /* unique sequence number for events */
     DWORD                       dwVersion;      /* direct input version number */
     struct list                 devices_list;   /* list of all created dinput devices */
+    struct list                 device_players; /* device instance guid to player name */
 };
 
 /* Function called by all devices that Wine supports */
@@ -70,6 +71,12 @@ struct dinput_device {
     HRESULT (*enum_deviceA)(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEA lpddi, DWORD version, int id);
     HRESULT (*enum_deviceW)(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEW lpddi, DWORD version, int id);
     HRESULT (*create_device)(IDirectInputImpl *dinput, REFGUID rguid, REFIID riid, LPVOID *pdev, int unicode);
+};
+
+struct DevicePlayer {
+    GUID instance_guid;
+    WCHAR username[MAX_PATH];
+    struct list entry;
 };
 
 extern const struct dinput_device mouse_device DECLSPEC_HIDDEN;
