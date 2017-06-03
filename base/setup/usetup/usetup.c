@@ -816,9 +816,9 @@ SetupStartPage(PINPUT_RECORD Ir)
         MUIDisplayError(ERROR_NO_SOURCE_DRIVE, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
-    DPRINT1("SourcePath: '%wZ'", &SourcePath);
-    DPRINT1("SourceRootPath: '%wZ'", &SourceRootPath);
-    DPRINT1("SourceRootDir: '%wZ'", &SourceRootDir);
+    DPRINT1("SourcePath: '%wZ'\n", &SourcePath);
+    DPRINT1("SourceRootPath: '%wZ'\n", &SourceRootPath);
+    DPRINT1("SourceRootDir: '%wZ'\n", &SourceRootDir);
 
     /* Load txtsetup.sif from install media. */
     CombinePaths(FileNameBuffer, ARRAYSIZE(FileNameBuffer), 2, SourcePath.Buffer, L"txtsetup.sif");
@@ -4046,8 +4046,7 @@ FileCopyPage(PINPUT_RECORD Ir)
  *  QuitPage
  *
  * SIDEEFFECTS
- *  Calls SetInstallPathValue
- *  Calls NtInitializeRegistry
+ *  Calls RegInitializeRegistry
  *  Calls ImportRegistryFile
  *  Calls SetDefaultPagefile
  *  Calls SetMountedDeviceValues
@@ -4074,21 +4073,23 @@ RegistryPage(PINPUT_RECORD Ir)
         return SUCCESS_PAGE;
     }
 
-    /************************ HACK!!!!!!!!!!! *********************************/
-    if (!SetInstallPathValue(&DestinationPath))
-    {
-        DPRINT1("SetInstallPathValue() failed\n");
-        MUIDisplayError(ERROR_INITIALIZE_REGISTRY, Ir, POPUP_WAIT_ENTER);
-        return QUIT_PAGE;
-    }
-    /************************ HACK!!!!!!!!!!! *********************************/
-
-    /* Create the default hives */
-    Status = NtInitializeRegistry(CM_BOOT_FLAG_SETUP);
+    /* Initialize the registry and setup the default installation hives */
+    Status = RegInitializeRegistry(&DestinationPath);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtInitializeRegistry() failed (Status %lx)\n", Status);
-        MUIDisplayError(ERROR_CREATE_HIVE, Ir, POPUP_WAIT_ENTER);
+        DPRINT1("RegInitializeRegistry() failed\n");
+        /********** HACK!!!!!!!!!!! **********/
+        if (Status == STATUS_NOT_IMPLEMENTED)
+        {
+            /* The hack was called, display its corresponding error */
+            MUIDisplayError(ERROR_INITIALIZE_REGISTRY, Ir, POPUP_WAIT_ENTER);
+        }
+        else
+        /*************************************/
+        {
+            /* Something else (correct) failed */
+            MUIDisplayError(ERROR_CREATE_HIVE, Ir, POPUP_WAIT_ENTER);
+        }
         return QUIT_PAGE;
     }
 
@@ -4098,6 +4099,7 @@ RegistryPage(PINPUT_RECORD Ir)
     if (!SetupFindFirstLineW(SetupInf, L"HiveInfs.Install", NULL, &InfContext))
     {
         DPRINT1("SetupFindFirstLine() failed\n");
+        RegCleanupRegistry();
         MUIDisplayError(ERROR_FIND_REGISTRY, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
@@ -4132,6 +4134,7 @@ RegistryPage(PINPUT_RECORD Ir)
         {
             DPRINT1("Importing %S failed\n", File);
 
+            RegCleanupRegistry();
             MUIDisplayError(ERROR_IMPORT_HIVE, Ir, POPUP_WAIT_ENTER);
             return QUIT_PAGE;
         }
@@ -4141,6 +4144,7 @@ RegistryPage(PINPUT_RECORD Ir)
     CONSOLE_SetStatusText(MUIGetString(STRING_DISPLAYETTINGSUPDATE));
     if (!ProcessDisplayRegistry(SetupInf, DisplayList))
     {
+        RegCleanupRegistry();
         MUIDisplayError(ERROR_UPDATE_DISPLAY_SETTINGS, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
@@ -4149,6 +4153,7 @@ RegistryPage(PINPUT_RECORD Ir)
     CONSOLE_SetStatusText(MUIGetString(STRING_LOCALESETTINGSUPDATE));
     if (!ProcessLocaleRegistry(LanguageList))
     {
+        RegCleanupRegistry();
         MUIDisplayError(ERROR_UPDATE_LOCALESETTINGS, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
@@ -4157,6 +4162,7 @@ RegistryPage(PINPUT_RECORD Ir)
     CONSOLE_SetStatusText(MUIGetString(STRING_ADDKBLAYOUTS));
     if (!AddKeyboardLayouts())
     {
+        RegCleanupRegistry();
         MUIDisplayError(ERROR_ADDING_KBLAYOUTS, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
@@ -4164,6 +4170,7 @@ RegistryPage(PINPUT_RECORD Ir)
     /* Set GeoID */
     if (!SetGeoID(MUIGetGeoID()))
     {
+        RegCleanupRegistry();
         MUIDisplayError(ERROR_UPDATE_GEOID, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
@@ -4174,6 +4181,7 @@ RegistryPage(PINPUT_RECORD Ir)
         CONSOLE_SetStatusText(MUIGetString(STRING_KEYBOARDSETTINGSUPDATE));
         if (!ProcessKeyboardLayoutRegistry(LayoutList))
         {
+            RegCleanupRegistry();
             MUIDisplayError(ERROR_UPDATE_KBSETTINGS, Ir, POPUP_WAIT_ENTER);
             return QUIT_PAGE;
         }
@@ -4183,6 +4191,7 @@ RegistryPage(PINPUT_RECORD Ir)
     CONSOLE_SetStatusText(MUIGetString(STRING_CODEPAGEINFOUPDATE));
     if (!AddCodePage())
     {
+        RegCleanupRegistry();
         MUIDisplayError(ERROR_ADDING_CODEPAGE, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
@@ -4192,6 +4201,12 @@ RegistryPage(PINPUT_RECORD Ir)
 
     /* Update the mounted devices list */
     SetMountedDeviceValues(PartitionList);
+
+    //
+    // TODO: Unload all the registry stuff, perform cleanup,
+    // and copy the created hive files into .sav ones.
+    //
+    RegCleanupRegistry();
 
     CONSOLE_SetStatusText(MUIGetString(STRING_DONE));
 
@@ -4211,8 +4226,7 @@ RegistryPage(PINPUT_RECORD Ir)
  *  QuitPage
  *
  * SIDEEFFECTS
- *  Calls SetInstallPathValue
- *  Calls NtInitializeRegistry
+ *  Calls RegInitializeRegistry
  *  Calls ImportRegistryFile
  *  Calls SetDefaultPagefile
  *  Calls SetMountedDeviceValues
@@ -4865,12 +4879,10 @@ RunUSetup(VOID)
 
     InfSetHeap(ProcessHeap);
 
-#if 0
     /* Tell the Cm this is a setup boot, and it has to behave accordingly */
     Status = NtInitializeRegistry(CM_BOOT_FLAG_SETUP);
     if (!NT_SUCCESS(Status))
         DPRINT1("NtInitializeRegistry() failed (Status 0x%08lx)\n", Status);
-#endif
 
     /* Create the PnP thread in suspended state */
     Status = RtlCreateUserThread(NtCurrentProcess(),

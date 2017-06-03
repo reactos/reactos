@@ -297,11 +297,11 @@ AddHotkeySettings(
     NTSTATUS Status;
 
     RtlInitUnicodeString(&KeyName,
-                         L"\\Registry\\User\\.DEFAULT\\Keyboard Layout\\Toggle");
+                         L".DEFAULT\\Keyboard Layout\\Toggle");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
-                               NULL,
+                               GetRootKeyByPredefKey(HKEY_USERS, NULL),
                                NULL);
 
     Status =  NtCreateKey(&KeyHandle,
@@ -384,17 +384,16 @@ AddKbLayoutsToRegistry(
     ULONG Disposition;
     ULONG uIndex = 0;
     ULONG uCount = 0;
-    WCHAR szKeyName[48] = L"\\Registry\\User\\.DEFAULT\\Keyboard Layout";
+    WCHAR szKeyName[48] = L".DEFAULT\\Keyboard Layout";
     WCHAR szValueName[3 + 1];
     WCHAR szLangID[8 + 1];
 
     // Open the keyboard layout key
-    RtlInitUnicodeString(&KeyName,
-                         szKeyName);
+    RtlInitUnicodeString(&KeyName, szKeyName);
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
-                               NULL,
+                               GetRootKeyByPredefKey(HKEY_USERS, NULL),
                                NULL);
 
     Status =  NtCreateKey(&KeyHandle,
@@ -416,7 +415,7 @@ AddKbLayoutsToRegistry(
     KeyName.MaximumLength = sizeof(szKeyName);
     Status = RtlAppendUnicodeToString(&KeyName, L"\\Preload");
 
-    if(!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         DPRINT1("RtlAppend failed! (%lx)\n", Status);
         DPRINT1("String is %wZ\n", &KeyName);
@@ -426,7 +425,7 @@ AddKbLayoutsToRegistry(
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
-                               NULL,
+                               GetRootKeyByPredefKey(HKEY_USERS, NULL),
                                NULL);
 
     Status = NtCreateKey(&KeyHandle,
@@ -443,11 +442,11 @@ AddKbLayoutsToRegistry(
         return FALSE;
     }
 
-    RtlInitUnicodeString(&KeyName, L"\\Registry\\User\\.DEFAULT\\Keyboard Layout\\Substitutes");
+    RtlInitUnicodeString(&KeyName, L".DEFAULT\\Keyboard Layout\\Substitutes");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
-                               NULL,
+                               GetRootKeyByPredefKey(HKEY_USERS, NULL),
                                NULL);
 
     Status =  NtCreateKey(&SubKeyHandle,
@@ -577,15 +576,15 @@ AddCodepageToRegistry(
 
     // Open the nls codepage key
     RtlInitUnicodeString(&KeyName,
-                         L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage");
+                         L"SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
-                               NULL,
+                               GetRootKeyByPredefKey(HKEY_LOCAL_MACHINE, NULL),
                                NULL);
-    Status =  NtOpenKey(&KeyHandle,
-                        KEY_WRITE,
-                        &ObjectAttributes);
+    Status = NtOpenKey(&KeyHandle,
+                       KEY_WRITE,
+                       &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
@@ -656,15 +655,15 @@ AddFontsSettingsToRegistry(
     ULONG uIndex = 0;
 
     RtlInitUnicodeString(&KeyName,
-                         L"\\Registry\\Machine\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes");
+                         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
-                               NULL,
+                               GetRootKeyByPredefKey(HKEY_LOCAL_MACHINE, NULL),
                                NULL);
-    Status =  NtOpenKey(&KeyHandle,
-                        KEY_WRITE,
-                        &ObjectAttributes);
+    Status = NtOpenKey(&KeyHandle,
+                       KEY_WRITE,
+                       &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);

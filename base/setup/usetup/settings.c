@@ -214,7 +214,7 @@ GetComputerIdentifier(
                                NULL);
 
     Status = NtOpenKey(&ProcessorsKey,
-                       KEY_QUERY_VALUE ,
+                       KEY_QUERY_VALUE,
                        &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
@@ -676,14 +676,17 @@ ProcessDisplayRegistry(
     HINF InfFile,
     PGENERIC_LIST List)
 {
+    NTSTATUS Status;
     PGENERIC_LIST_ENTRY Entry;
     INFCONTEXT Context;
+    PWCHAR Buffer;
     PWCHAR ServiceName;
     ULONG StartValue;
-    NTSTATUS Status;
-    WCHAR RegPath [255];
-    PWCHAR Buffer;
     ULONG Width, Height, Bpp;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName;
+    HANDLE KeyHandle;
+    WCHAR RegPath[255];
 
     DPRINT("ProcessDisplayRegistry() called\n");
 
@@ -700,7 +703,7 @@ ProcessDisplayRegistry(
         return FALSE;
     }
 
-    /* Enable the right driver */
+    /* Enable the correct driver */
     if (!INF_GetDataField(&Context, 3, &ServiceName))
     {
         DPRINT1("INF_GetDataField() failed\n");
@@ -708,15 +711,31 @@ ProcessDisplayRegistry(
     }
 
     ASSERT(wcslen(ServiceName) < 10);
-    DPRINT("Service name: %S\n", ServiceName);
+    DPRINT1("Service name: '%S'\n", ServiceName);
+
+    swprintf(RegPath, L"System\\CurrentControlSet\\Services\\%s", ServiceName);
+    RtlInitUnicodeString(&KeyName, RegPath);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               GetRootKeyByPredefKey(HKEY_LOCAL_MACHINE, NULL),
+                               NULL);
+    Status = NtOpenKey(&KeyHandle,
+                       KEY_SET_VALUE,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
+        return FALSE;
+    }
 
     StartValue = 1;
-    Status = RtlWriteRegistryValue(RTL_REGISTRY_SERVICES,
-                                   ServiceName,
+    Status = RtlWriteRegistryValue(RTL_REGISTRY_HANDLE, KeyHandle,
                                    L"Start",
                                    REG_DWORD,
                                    &StartValue,
-                                   sizeof(ULONG));
+                                   sizeof(StartValue));
+    NtClose(KeyHandle);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
@@ -724,7 +743,6 @@ ProcessDisplayRegistry(
     }
 
     /* Set the resolution */
-    swprintf(RegPath, L"\\Registry\\Machine\\System\\CurrentControlSet\\Hardware Profiles\\Current\\System\\CurrentControlSet\\Services\\%s\\Device0", ServiceName);
 
     if (!INF_GetDataField(&Context, 4, &Buffer))
     {
@@ -732,56 +750,79 @@ ProcessDisplayRegistry(
         return FALSE;
     }
 
+    swprintf(RegPath,
+             L"System\\CurrentControlSet\\Hardware Profiles\\Current\\System\\CurrentControlSet\\Services\\%s\\Device0",
+             ServiceName);
+    DPRINT1("RegPath: '%S'\n", RegPath);
+    RtlInitUnicodeString(&KeyName, RegPath);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               GetRootKeyByPredefKey(HKEY_LOCAL_MACHINE, NULL),
+                               NULL);
+    Status = NtOpenKey(&KeyHandle,
+                       KEY_SET_VALUE,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
+        return FALSE;
+    }
+
     Width = wcstoul(Buffer, NULL, 10);
-    Status = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE,
-                                   RegPath,
+    Status = RtlWriteRegistryValue(RTL_REGISTRY_HANDLE, KeyHandle,
                                    L"DefaultSettings.XResolution",
                                    REG_DWORD,
                                    &Width,
-                                   sizeof(ULONG));
+                                   sizeof(Width));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
+        NtClose(KeyHandle);
         return FALSE;
     }
 
     if (!INF_GetDataField(&Context, 5, &Buffer))
     {
         DPRINT1("INF_GetDataField() failed\n");
+        NtClose(KeyHandle);
         return FALSE;
     }
 
     Height = wcstoul(Buffer, 0, 0);
-    Status = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE,
-                                   RegPath,
+    Status = RtlWriteRegistryValue(RTL_REGISTRY_HANDLE, KeyHandle,
                                    L"DefaultSettings.YResolution",
                                    REG_DWORD,
                                    &Height,
-                                   sizeof(ULONG));
+                                   sizeof(Height));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
+        NtClose(KeyHandle);
         return FALSE;
     }
 
     if (!INF_GetDataField(&Context, 6, &Buffer))
     {
         DPRINT1("INF_GetDataField() failed\n");
+        NtClose(KeyHandle);
         return FALSE;
     }
 
     Bpp = wcstoul(Buffer, 0, 0);
-    Status = RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE,
-                                   RegPath,
+    Status = RtlWriteRegistryValue(RTL_REGISTRY_HANDLE, KeyHandle,
                                    L"DefaultSettings.BitsPerPel",
                                    REG_DWORD,
                                    &Bpp,
-                                   sizeof(ULONG));
+                                   sizeof(Bpp));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
+        NtClose(KeyHandle);
         return FALSE;
     }
+
+    NtClose(KeyHandle);
 
     DPRINT("ProcessDisplayRegistry() done\n");
 
@@ -814,17 +855,17 @@ ProcessLocaleRegistry(
 
     /* Open the default users locale key */
     RtlInitUnicodeString(&KeyName,
-                         L"\\Registry\\User\\.DEFAULT\\Control Panel\\International");
+                         L".DEFAULT\\Control Panel\\International");
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
-                               NULL,
+                               GetRootKeyByPredefKey(HKEY_USERS, NULL),
                                NULL);
 
-    Status =  NtOpenKey(&KeyHandle,
-                        KEY_SET_VALUE,
-                        &ObjectAttributes);
+    Status = NtOpenKey(&KeyHandle,
+                       KEY_SET_VALUE,
+                       &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
@@ -832,8 +873,7 @@ ProcessLocaleRegistry(
     }
 
     /* Set default user locale */
-    RtlInitUnicodeString(&ValueName,
-                         L"Locale");
+    RtlInitUnicodeString(&ValueName, L"Locale");
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,
                            0,
@@ -853,17 +893,17 @@ ProcessLocaleRegistry(
 
     /* Open the NLS language key */
     RtlInitUnicodeString(&KeyName,
-                         L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language");
+                         L"SYSTEM\\CurrentControlSet\\Control\\NLS\\Language");
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
-                               NULL,
+                               GetRootKeyByPredefKey(HKEY_LOCAL_MACHINE, NULL),
                                NULL);
 
-    Status =  NtOpenKey(&KeyHandle,
-                        KEY_SET_VALUE,
-                        &ObjectAttributes);
+    Status = NtOpenKey(&KeyHandle,
+                       KEY_SET_VALUE,
+                       &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
@@ -871,8 +911,7 @@ ProcessLocaleRegistry(
     }
 
     /* Set default language */
-    RtlInitUnicodeString(&ValueName,
-                         L"Default");
+    RtlInitUnicodeString(&ValueName, L"Default");
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,
                            0,
@@ -887,14 +926,13 @@ ProcessLocaleRegistry(
     }
 
     /* Set install language */
-    RtlInitUnicodeString(&ValueName,
-                         L"InstallLanguage");
-    Status = NtSetValueKey (KeyHandle,
-                            &ValueName,
-                            0,
-                            REG_SZ,
-                            (PVOID)LanguageId,
-                            (wcslen(LanguageId) + 1) * sizeof(WCHAR));
+    RtlInitUnicodeString(&ValueName, L"InstallLanguage");
+    Status = NtSetValueKey(KeyHandle,
+                           &ValueName,
+                           0,
+                           REG_SZ,
+                           (PVOID)LanguageId,
+                           (wcslen(LanguageId) + 1) * sizeof(WCHAR));
     NtClose(KeyHandle);
     if (!NT_SUCCESS(Status))
     {
@@ -1191,22 +1229,18 @@ BOOLEAN
 SetGeoID(
     PWCHAR Id)
 {
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName;
-    UNICODE_STRING ValueName;
-    HANDLE KeyHandle;
-    WCHAR szKeyName[] = L"\\Registry\\User\\.DEFAULT\\Control Panel\\International\\Geo";
-    WCHAR szValueName[] = L"Nation";
     NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING Name;
+    HANDLE KeyHandle;
 
-    RtlInitUnicodeString(&KeyName,
-                         szKeyName);
+    RtlInitUnicodeString(&Name,
+                         L".DEFAULT\\Control Panel\\International\\Geo");
     InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
+                               &Name,
                                OBJ_CASE_INSENSITIVE,
-                               NULL,
+                               GetRootKeyByPredefKey(HKEY_USERS, NULL),
                                NULL);
-
     Status =  NtOpenKey(&KeyHandle,
                         KEY_SET_VALUE,
                         &ObjectAttributes);
@@ -1216,9 +1250,9 @@ SetGeoID(
         return FALSE;
     }
 
-    RtlInitUnicodeString(&ValueName, szValueName);
+    RtlInitUnicodeString(&Name, L"Nation");
     Status = NtSetValueKey(KeyHandle,
-                           &ValueName,
+                           &Name,
                            0,
                            REG_SZ,
                            (PVOID)Id,

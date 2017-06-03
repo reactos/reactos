@@ -26,6 +26,16 @@
 
 #pragma once
 
+HANDLE
+GetRootKeyByPredefKey(
+    IN HANDLE KeyHandle,
+    OUT PCWSTR* RootKeyMountPoint OPTIONAL);
+
+HANDLE
+GetRootKeyByName(
+    IN PCWSTR RootKeyName,
+    OUT PCWSTR* RootKeyMountPoint OPTIONAL);
+
 BOOLEAN
 ImportRegistryFile(
     PWSTR Filename,
@@ -33,9 +43,12 @@ ImportRegistryFile(
     LCID LocaleId,
     BOOLEAN Delete);
 
-BOOLEAN
-SetInstallPathValue(
-    PUNICODE_STRING InstallPath);
+NTSTATUS
+RegInitializeRegistry(
+    IN PUNICODE_STRING InstallPath);
+
+VOID
+RegCleanupRegistry(VOID);
 
 VOID
 SetDefaultPagefile(
