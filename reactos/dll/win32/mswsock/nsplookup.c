@@ -14,8 +14,8 @@
 
 #include "mswhelper.h"
 
-#include <wine/debug.h>
-WINE_DEFAULT_DEBUG_CHANNEL(mswsock);
+#define NDEBUG
+#include <debug.h>
 
 #define NSP_CALLID_DNS 0x0001
 #define NSP_CALLID_HOSTNAME 0x0002
@@ -23,32 +23,34 @@ WINE_DEFAULT_DEBUG_CHANNEL(mswsock);
 #define NSP_CALLID_SERVICEBYNAME 0x0004
 
 #ifndef BUFSIZ
-  #define BUFSIZ 1024
+#define BUFSIZ 1024
 #endif // BUFSIZ
 #ifndef WS2_INTERNAL_MAX_ALIAS
-  #define WS2_INTERNAL_MAX_ALIAS 512
+#define WS2_INTERNAL_MAX_ALIAS 512
 #endif // WS2_INTERNAL_MAX_ALIAS
+
+//#define IP_LOCALHOST 0x0100007F
 
 //#define NSP_REDIRECT
 
 typedef struct {
-    WCHAR* hostnameW;
-    DWORD addr4;
-    WCHAR* servnameW;
-    WCHAR* servprotoW;
-    CHAR** servaliasesA; /* array */
-    WORD servport;
+  WCHAR* hostnameW;
+  DWORD addr4;
+  WCHAR* servnameW;
+  WCHAR* servprotoW;
+  CHAR** servaliasesA; /* array */
+  WORD servport;
 } WSHOSTINFOINTERN, *PWSHOSTINFOINTERN;
 
 typedef struct {
-    GUID providerId; /* Provider-ID */
-    DWORD dwControlFlags; /* dwControlFlags (WSALookupServiceBegin) */
-    DWORD CallID; /* List for LookupServiceNext-Calls */
-    DWORD CallIDCounter; /* call-count of the current CallID. */
-    WCHAR* hostnameW; /* hostbyname */
+  GUID providerId; /* Provider-ID */
+  DWORD dwControlFlags; /* dwControlFlags (WSALookupServiceBegin) */
+  DWORD CallID; /* List for LookupServiceNext-Calls */
+  DWORD CallIDCounter; /* call-count of the current CallID. */
+  WCHAR* hostnameW; /* hostbyname */
 #ifdef NSP_REDIRECT
-    HANDLE rdrLookup;
-    NSP_ROUTINE rdrproc;
+  HANDLE rdrLookup;
+  NSP_ROUTINE rdrproc;
 #endif
 } WSHANDLEINTERN, *PWSHANDLEINTERN;
 
@@ -87,7 +89,314 @@ NSP_ROUTINE rdrproc_nla;
 
 #endif /* NSP_REDIRECT */
 
+/* Forwards */
+INT
+WINAPI
+mswNSPStartup(
+  LPGUID lpProviderId,
+  LPNSP_ROUTINE lpRout);
+
+INT
+NSP_LookupServiceBeginW(
+  PWSHANDLEINTERN data,
+  CHAR* hostnameA,
+  WCHAR* hostnameW,
+  DWORD CallID);
+
+INT
+NSP_LookupServiceNextW(
+  _In_ PWSHANDLEINTERN data,
+  _In_ DWORD dwControlFlags,
+  _Inout_ LPWSAQUERYSETW lpRes,
+  _Inout_ LPDWORD lpResLen);
+
+INT
+NSP_GetHostNameHeapAllocW(
+  _Out_ WCHAR** hostname);
+
+INT
+NSP_GetHostByNameHeapAllocW(
+  _In_ PWSHANDLEINTERN data,
+  _In_ DWORD dwControlFlags,
+  _Out_ PWSHOSTINFOINTERN hostinfo);
+
+INT
+NSP_GetServiceByNameHeapAllocW(
+  _In_ PWSHANDLEINTERN data,
+  _In_ DWORD dwControlFlags,
+  _Out_ PWSHOSTINFOINTERN hostinfo);
+
 /* Implementations - Internal */
+
+INT
+WSAAPI
+mwsNSPCleanUp(_In_ LPGUID lpProviderId)
+{
+    //WSASetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    //return ERROR_CALL_NOT_IMPLEMENTED;
+    return ERROR_SUCCESS;
+}
+
+INT
+mwsNSPInit(VOID)
+{
+    return ERROR_SUCCESS;
+}
+
+INT
+WSAAPI
+mwsNSPLookupServiceBegin(_In_ LPGUID lpProviderId,
+                         _In_ LPWSAQUERYSETW lpqsRestrictions,
+                         _In_ LPWSASERVICECLASSINFOW lpServiceClassInfo,
+                         _In_ DWORD dwControlFlags,
+                         _Out_ LPHANDLE lphLookup)
+{
+    PWSHANDLEINTERN pLook;
+    int wsaErr;
+
+    if (IsEqualGUID(lpProviderId, &guid_mswsock_TcpIp))
+    {
+        //OK
+    }
+    else if (IsEqualGUID(lpProviderId, &guid_mswsock_NLA))
+    {
+        WSASetLastError(WSASERVICE_NOT_FOUND);
+        return SOCKET_ERROR;
+    }
+    else
+    {
+        return ERROR_CALL_NOT_IMPLEMENTED;
+    }
+
+    /* allocate internal structure */
+    pLook = HeapAlloc(GetProcessHeap(), 0, sizeof(WSHANDLEINTERN));
+    if (!pLook)
+    {
+        WSASetLastError(WSAEFAULT);
+        return SOCKET_ERROR;
+    }
+
+    *lphLookup = (HANDLE)pLook;
+
+    RtlZeroMemory(pLook, sizeof(*pLook));
+
+    /* Anyway the ControlFlags "should" be needed
+       in NSPLookupServiceNext. (see doku) But
+       thats not the fact ATM. */
+    pLook->dwControlFlags = dwControlFlags;
+    pLook->providerId = *lpProviderId;
+
+#ifdef NSP_REDIRECT
+
+    if (IsEqualGUID(lpProviderId, &guid_mswsock_TcpIp))
+    {
+        pLook->rdrproc = rdrproc_tcpip;
+    }
+    else if (IsEqualGUID(lpProviderId, &guid_mswsock_NLA))
+    {
+        pLook->rdrproc = rdrproc_nla;
+    }
+    else
+    {
+        return ERROR_CALL_NOT_IMPLEMENTED;
+    }
+
+    if (pLook->rdrproc.NSPLookupServiceBegin(lpProviderId,
+                                             lpqsRestrictions,
+                                             lpServiceClassInfo,
+                                             dwControlFlags,
+                                             &pLook->rdrLookup) == NO_ERROR)
+    {
+        wsaErr = NO_ERROR;
+    }
+    else
+    {
+        wsaErr = WSAGetLastError();
+    }
+
+    /*
+    if (res)
+        res = WSAGetLastError();
+    */
+
+#else /* NSP_REDIRECT */
+
+    wsaErr = ERROR_CALL_NOT_IMPLEMENTED;
+    if (IsEqualGUID(lpqsRestrictions->lpServiceClassId, &guid_NULL))
+    {
+        wsaErr = ERROR_CALL_NOT_IMPLEMENTED;
+    }
+    else if (IsEqualGUID(lpqsRestrictions->lpServiceClassId, &guid_HOSTNAME))
+    {
+        wsaErr = NSP_LookupServiceBeginW(pLook,
+                                         NULL,
+                                         NULL,
+                                         NSP_CALLID_HOSTNAME);
+    }
+    else if (IsEqualGUID(lpqsRestrictions->lpServiceClassId,
+                         &guid_INET_HOSTADDRBYNAME))
+    {
+       wsaErr = NSP_LookupServiceBeginW(pLook,
+                                        NULL,
+                                        lpqsRestrictions->lpszServiceInstanceName,
+                                        NSP_CALLID_HOSTBYNAME);
+    }
+    else if (IsEqualGUID(lpqsRestrictions->lpServiceClassId,
+                         &guid_INET_SERVICEBYNAME))
+    {
+       wsaErr = NSP_LookupServiceBeginW(pLook,
+                                        NULL,
+                                        lpqsRestrictions->lpszServiceInstanceName,
+                                        NSP_CALLID_SERVICEBYNAME);
+    }
+    else if (IsEqualGUID(lpqsRestrictions->lpServiceClassId,
+                         &guid_INET_HOSTADDRBYINETSTRING))
+    {
+        wsaErr = ERROR_CALL_NOT_IMPLEMENTED;
+    }
+
+#endif /* NSP_REDIRECT */
+
+    if (wsaErr != NO_ERROR)
+    {
+        WSASetLastError(wsaErr);
+        return SOCKET_ERROR;
+    }
+    return NO_ERROR;
+}
+
+INT
+WSAAPI
+mwsNSPLookupServiceNext(_In_ HANDLE hLookup,
+                        _In_ DWORD dwControlFlags,
+                        _Inout_ LPDWORD lpdwBufferLength,
+                        //_Out_writes_bytes_to_(*lpdwBufferLength, *lpdwBufferLength)
+                        LPWSAQUERYSETW lpqsResults)
+{
+    PWSHANDLEINTERN pLook = hLookup;
+    int wsaErr = 0;
+
+#ifdef NSP_REDIRECT
+
+    INT res = pLook->rdrproc.NSPLookupServiceNext(pLook->rdrLookup,
+                                                  dwControlFlags,
+                                                  lpdwBufferLength,
+                                                  lpqsResults);
+    wsaErr = WSAGetLastError();
+    if (res != ERROR_SUCCESS)
+    {
+        wsaErr = WSAGetLastError();
+
+        if (wsaErr == 0)
+            wsaErr = 0xFFFFFFFF;
+    }
+
+#else /* NSP_REDIRECT */
+
+    if ((lpdwBufferLength == NULL) || (*lpdwBufferLength == 0))
+    {
+        wsaErr = WSA_NOT_ENOUGH_MEMORY;
+        goto End;
+    }
+
+    RtlZeroMemory(lpqsResults, *lpdwBufferLength);
+    lpqsResults->dwSize = sizeof(*lpqsResults);
+
+    wsaErr = NSP_LookupServiceNextW(pLook,
+                                    dwControlFlags,
+                                    lpqsResults,
+                                    lpdwBufferLength);
+
+
+#endif /* NSP_REDIRECT */
+
+End:
+    if (wsaErr != 0)
+    {
+        WSASetLastError(wsaErr);
+        return SOCKET_ERROR;
+    }
+    return NO_ERROR;
+}
+
+INT
+WSAAPI
+mwsNSPIoCtl(_In_ HANDLE hLookup,
+            _In_ DWORD dwControlCode,
+            _In_reads_bytes_(cbInBuffer) LPVOID lpvInBuffer,
+            _In_ DWORD cbInBuffer,
+            _Out_writes_bytes_to_(cbOutBuffer, *lpcbBytesReturned) LPVOID lpvOutBuffer,
+            _In_ DWORD cbOutBuffer,
+            _Out_ LPDWORD lpcbBytesReturned,
+            _In_opt_ LPWSACOMPLETION lpCompletion,
+            _In_ LPWSATHREADID lpThreadId)
+{
+    WSASetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+INT
+WSAAPI
+mwsNSPLookupServiceEnd(_In_ HANDLE hLookup)
+{
+    PWSHANDLEINTERN pLook;
+    HANDLE hHeap;
+    INT res;
+
+    res = NO_ERROR;
+    pLook = (PWSHANDLEINTERN)hLookup;
+    hHeap = GetProcessHeap();
+
+#ifdef NSP_REDIRECT
+    res = pLook->rdrproc.NSPLookupServiceEnd(pLook->rdrLookup);
+#endif
+
+    if (pLook->hostnameW != NULL)
+        HeapFree(hHeap, 0, pLook->hostnameW);
+
+    HeapFree(hHeap, 0, pLook);
+    return res;
+}
+
+INT
+WSAAPI
+mwsNSPSetService(_In_ LPGUID lpProviderId,
+                 _In_ LPWSASERVICECLASSINFOW lpServiceClassInfo,
+                 _In_ LPWSAQUERYSETW lpqsRegInfo,
+                 _In_ WSAESETSERVICEOP essOperation,
+                 _In_ DWORD dwControlFlags)
+{
+    WSASetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+INT
+WSAAPI
+mwsNSPInstallServiceClass(_In_ LPGUID lpProviderId,
+                          _In_ LPWSASERVICECLASSINFOW lpServiceClassInfo)
+{
+    WSASetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+INT
+WSAAPI
+mwsNSPRemoveServiceClass(_In_ LPGUID lpProviderId,
+                         _In_ LPGUID lpServiceClassId)
+{
+    WSASetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+INT
+WSAAPI
+mwsNSPGetServiceClassInfo(_In_ LPGUID lpProviderId,
+                          _In_ LPDWORD lpdwBufSize,
+                          _In_ LPWSASERVICECLASSINFOW lpServiceClassInfo)
+{
+    WSASetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
 
 /*
     hostnameA / hostnameW
@@ -103,7 +412,6 @@ NSP_LookupServiceBeginW(PWSHANDLEINTERN data,
 {
     HANDLE hHeap;
 
-    TRACE("NSP_LookupServiceBeginW %p %p %p %lx\n", data, hostnameA, hostnameW, CallID);
     if (data->CallID != 0)
         return WSAEFAULT;
 
@@ -126,12 +434,8 @@ NSP_LookupServiceBeginW(PWSHANDLEINTERN data,
             data->hostnameW = StrCpyHeapAllocW(hHeap, hostnameW);
         }
     }
-    else
-    {
-        ERR("NSP_LookupServiceBeginW unsupported CallID\n");
-        WSASetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-        return ERROR_CALL_NOT_IMPLEMENTED;
-    }
+
+    WSASetLastError(0);
 
     return ERROR_SUCCESS;
 }
@@ -141,23 +445,15 @@ NSP_GetHostNameHeapAllocW(_Out_ WCHAR** hostname)
 {
     WCHAR* name;
     HANDLE hHeap = GetProcessHeap();
-    DWORD bufCharLen = 0;
+    DWORD bufCharLen = MAX_COMPUTERNAME_LENGTH + 1;
+    DWORD bufByteLen = bufCharLen * sizeof(WCHAR);
 
-    TRACE("NSP_GetHostNameHeapAllocW %p\n", hostname);
-    /* FIXME Use DnsGetHostName_W when available */
-    GetComputerNameExW(ComputerNameDnsHostname, NULL, &bufCharLen);
-    if (!bufCharLen)
-    {
-        ERR("NSP_GetHostNameHeapAllocW zero size for computername returned\n");
-        WSASetLastError(WSAEFAULT);
-        return SOCKET_ERROR;
-    }
-    name = HeapAlloc(hHeap, 0, bufCharLen*sizeof(WCHAR));
+    name = HeapAlloc(hHeap, 0, bufByteLen);
+
     if (!GetComputerNameExW(ComputerNameDnsHostname,
                             name,
                             &bufCharLen))
     {
-        ERR("NSP_GetHostNameHeapAllocW error obtaining computername %lx\n", GetLastError());
         HeapFree(hHeap, 0, name);
         WSASetLastError(WSAEFAULT);
         return SOCKET_ERROR;
@@ -182,11 +478,10 @@ NSP_GetHostByNameHeapAllocW(_In_ PWSHANDLEINTERN data,
     PWCHAR Aliases[WS2_INTERNAL_MAX_ALIAS] = { 0 };
     int AliasIndex = 0;
 
-    TRACE("NSP_GetHostByNameHeapAllocW %p %lx %p\n", data, dwControlFlags, hostinfo);
     /* needed to be cleaned up if != NULL */
     dp = NULL;
 
-    if (!data->hostnameW)
+    if (data->hostnameW == NULL)
     {
         result = ERROR_INVALID_PARAMETER;
         goto cleanup;
@@ -194,7 +489,6 @@ NSP_GetHostByNameHeapAllocW(_In_ PWSHANDLEINTERN data,
 
     if ((data->dwControlFlags & LUP_DEEP) == 0)
     {
-        TRACE("NSP_GetHostByNameHeapAllocW LUP_DEEP is not specified. Disabling recursion\n");
         dwQueryFlags |= DNS_QUERY_NO_RECURSION;
     }
 
@@ -208,7 +502,6 @@ NSP_GetHostByNameHeapAllocW(_In_ PWSHANDLEINTERN data,
                             NULL);
     if (dns_status == ERROR_INVALID_NAME)
     {
-        ERR("NSP_GetHostByNameHeapAllocW invalid name\n");
         WSASetLastError(WSAEFAULT);
         result = ERROR_INVALID_PARAMETER;
         goto cleanup;
@@ -216,7 +509,6 @@ NSP_GetHostByNameHeapAllocW(_In_ PWSHANDLEINTERN data,
 
     if ((dns_status != 0) || (dp == NULL))
     {
-        ERR("NSP_GetHostByNameHeapAllocW not found %lx %p\n", dns_status, dp);
         result = WSAHOST_NOT_FOUND;
         goto cleanup;
     }
@@ -228,7 +520,6 @@ NSP_GetHostByNameHeapAllocW(_In_ PWSHANDLEINTERN data,
     {
         if (curr->wType == DNS_TYPE_CNAME)
         {
-            TRACE("NSP_GetHostByNameHeapAllocW found alias %ws\n", curr->Data.Cname.pNameHost);
             Aliases[AliasIndex++] = curr->Data.Cname.pNameHost;
         }
         curr = curr->pNext;
@@ -236,7 +527,6 @@ NSP_GetHostByNameHeapAllocW(_In_ PWSHANDLEINTERN data,
 
     if (curr->wType != DNS_TYPE_A)
     {
-        ERR("NSP_GetHostByNameHeapAllocW last record is not of type A %d\n", curr->wType);
         result = WSASERVICE_NOT_FOUND;
         goto cleanup;
     }
@@ -325,9 +615,8 @@ OpenNetworkDatabase(_In_ LPCWSTR Name)
     DWORD RegType;
     DWORD RegSize = 0;
     size_t StringLength;
-    HANDLE Handle;
+    HANDLE ret;
 
-    TRACE("OpenNetworkDatabase %p\n", Name);
     ExpandedPath = HeapAlloc(GetProcessHeap(), 0, MAX_PATH*sizeof(WCHAR));
     if (!ExpandedPath)
         return INVALID_HANDLE_VALUE;
@@ -340,7 +629,6 @@ OpenNetworkDatabase(_In_ LPCWSTR Name)
                              &DatabaseKey);
     if (ErrorCode == NO_ERROR)
     {
-        TRACE("OpenNetworkDatabase registry key for network database exist\n");
         /* Read the actual path */
         ErrorCode = RegQueryValueEx(DatabaseKey,
                                     L"DatabasePath",
@@ -349,18 +637,9 @@ OpenNetworkDatabase(_In_ LPCWSTR Name)
                                     NULL,
                                     &RegSize);
 
-        if (!RegSize)
-        {
-            ERR("OpenNetworkDatabase RegQueryValueEx failed to return size for DatabasePath %lx\n", ErrorCode);
-            RegCloseKey(DatabaseKey);
-            HeapFree(GetProcessHeap(), 0, ExpandedPath);
-            return INVALID_HANDLE_VALUE;
-        }
         DatabasePath = HeapAlloc(GetProcessHeap(), 0, RegSize);
         if (!DatabasePath)
         {
-            ERR("OpenNetworkDatabase could not allocate %d for DatabasePath\n", RegSize);
-            RegCloseKey(DatabaseKey);
             HeapFree(GetProcessHeap(), 0, ExpandedPath);
             return INVALID_HANDLE_VALUE;
         }
@@ -376,14 +655,6 @@ OpenNetworkDatabase(_In_ LPCWSTR Name)
         /* Close the key */
         RegCloseKey(DatabaseKey);
 
-        if (ErrorCode)
-        {
-            ERR("OpenNetworkDatabase RegQueryValueEx failed to return value for DatabasePath %lx\n", ErrorCode);
-            HeapFree(GetProcessHeap(), 0, DatabasePath);
-            HeapFree(GetProcessHeap(), 0, ExpandedPath);
-            return INVALID_HANDLE_VALUE;
-        }
-
         /* Expand the name */
         ExpandEnvironmentStrings(DatabasePath, ExpandedPath, MAX_PATH);
 
@@ -391,7 +662,6 @@ OpenNetworkDatabase(_In_ LPCWSTR Name)
     }
     else
     {
-        TRACE("OpenNetworkDatabase registry key for network database doesn't exist\n");
         /* Use defalt path */
         GetSystemDirectory(ExpandedPath, MAX_PATH);
         StringCchLength(ExpandedPath, MAX_PATH, &StringLength);
@@ -415,16 +685,16 @@ OpenNetworkDatabase(_In_ LPCWSTR Name)
     StringCchCat(ExpandedPath, MAX_PATH, Name);
 
     /* Return a handle to the file */
-    Handle = CreateFile(ExpandedPath,
-                        FILE_READ_DATA,
-                        FILE_SHARE_READ,
-                        NULL,
-                        OPEN_EXISTING,
-                        FILE_ATTRIBUTE_NORMAL,
-                        NULL);
+    ret = CreateFile(ExpandedPath,
+                      FILE_READ_DATA,
+                      FILE_SHARE_READ,
+                      NULL,
+                      OPEN_EXISTING,
+                      FILE_ATTRIBUTE_NORMAL,
+                      NULL);
 
     HeapFree(GetProcessHeap(), 0, ExpandedPath);
-    return Handle;
+    return ret;
 }
 
 INT
@@ -434,10 +704,10 @@ NSP_GetServiceByNameHeapAllocW(_In_ PWSHANDLEINTERN data,
 {
     BOOL Found = FALSE;
     HANDLE ServicesFile;
-    CHAR ServiceDBData[BUFSIZ * sizeof(WCHAR)] = { 0 };
+    CHAR ServiceDBData[BUFSIZ * sizeof(WCHAR)] = {0};
     PCHAR ThisLine = 0, NextLine = 0, ServiceName = 0, PortNumberStr = 0,
     ProtocolStr = 0, Comment = 0, EndValid;
-    PCHAR Aliases[WS2_INTERNAL_MAX_ALIAS] = { 0 };
+    PCHAR Aliases[WS2_INTERNAL_MAX_ALIAS] = {0};
     PCHAR* AliasPtr;
     UINT i = 0;
     DWORD ReadSize = 0;
@@ -447,10 +717,8 @@ NSP_GetServiceByNameHeapAllocW(_In_ PWSHANDLEINTERN data,
     PCHAR nameProtoA = NULL;
     INT res = WSANO_RECOVERY;
     
-    TRACE("NSP_GetServiceByNameHeapAllocW %p %lx %p\n", data, dwControlFlags, hostinfo);
     if (!data->hostnameW)
     {
-        ERR("NSP_GetServiceByNameHeapAllocW service name not provided\n");
         res = WSANO_RECOVERY;
         goto End;
     }
@@ -463,7 +731,6 @@ NSP_GetServiceByNameHeapAllocW(_In_ PWSHANDLEINTERN data,
     nameProtoA = strchr(nameA, '/');
     if (nameProtoA == NULL)
     {
-        ERR("NSP_GetServiceByNameHeapAllocW invalid service name %s\n", nameA);
         res = WSANO_RECOVERY;
         goto End;
     }
@@ -477,7 +744,6 @@ NSP_GetServiceByNameHeapAllocW(_In_ PWSHANDLEINTERN data,
     ServicesFile = OpenNetworkDatabase(L"services");
     if (ServicesFile == INVALID_HANDLE_VALUE)
     {
-        ERR("NSP_GetServiceByNameHeapAllocW unable to open services file\n");
         return WSANO_RECOVERY;
     }
 
@@ -489,16 +755,11 @@ NSP_GetServiceByNameHeapAllocW(_In_ PWSHANDLEINTERN data,
     */
 
     /* Initial Read */
-    if (!ReadFile(ServicesFile,
-                  ServiceDBData,
-                  sizeof( ServiceDBData ) - 1,
-                  &ReadSize,
-                  NULL))
-    {
-        ERR("NSP_GetServiceByNameHeapAllocW can't read services file %lx\n", GetLastError());
-        CloseHandle(ServicesFile);
-        return WSANO_RECOVERY;
-    }
+    ReadFile(ServicesFile,
+             ServiceDBData,
+             sizeof( ServiceDBData ) - 1,
+             &ReadSize,
+             NULL);
 
     ThisLine = NextLine = ServiceDBData;
     EndValid = ServiceDBData + ReadSize;
@@ -514,21 +775,17 @@ NSP_GetServiceByNameHeapAllocW(_In_ PWSHANDLEINTERN data,
 
                 if (ThisLine == ServiceDBData)
                 {
-                    ERR("NSP_GetServiceByNameHeapAllocW line too long\n");
-                    CloseHandle(ServicesFile);
+                    //WS_DbgPrint(MIN_TRACE,("Line too long"));
                     return WSANO_RECOVERY;
                 }
 
                 memmove(ServiceDBData, ThisLine, LineLen);
 
-                if (!ReadFile(ServicesFile,
-                              ServiceDBData + LineLen,
-                              sizeof( ServiceDBData )-1 - LineLen,
-                              &ReadSize,
-                              NULL))
-                {
-                    break;
-                }
+                ReadFile(ServicesFile,
+                         ServiceDBData + LineLen,
+                         sizeof( ServiceDBData )-1 - LineLen,
+                         &ReadSize,
+                         NULL);
 
                 EndValid = ServiceDBData + LineLen + ReadSize;
                 NextLine = ServiceDBData + LineLen;
@@ -571,7 +828,6 @@ NSP_GetServiceByNameHeapAllocW(_In_ PWSHANDLEINTERN data,
 
     if (!Found)
     {
-        ERR("NSP_GetServiceByNameHeapAllocW service not found\n");
         return WSANO_DATA;
     }
 
@@ -584,10 +840,10 @@ NSP_GetServiceByNameHeapAllocW(_In_ PWSHANDLEINTERN data,
     res = NO_ERROR;
 
 End:
-    if (nameA)
+    if (nameA != NULL)
         HeapFree(hHeap, 0, nameA);
 
-    if (nameServiceA)
+    if (nameServiceA != NULL)
         HeapFree(hHeap, 0, nameServiceA);
 
     return res;
@@ -608,9 +864,6 @@ NSP_LookupServiceNextW(_In_ PWSHANDLEINTERN data,
     CHAR* ServiceInstanceNameA = NULL;
     CHAR* ServiceProtocolNameA = NULL;
 
-    TRACE("NSP_LookupServiceNextW %p %lx %p %p\n", data, dwControlFlags, lpRes, lpResLen);
-    if (!data || (dwControlFlags & (~(DWORD)LUP_FLUSHPREVIOUS)) != 0 || !lpRes || !lpResLen || *lpResLen == 0)
-        return WSAEINVAL;
     RtlZeroMemory(&hostinfo, sizeof(hostinfo));
 
     /* init and build result-buffer */
@@ -625,18 +878,15 @@ NSP_LookupServiceNextW(_In_ PWSHANDLEINTERN data,
         (data->CallID == NSP_CALLID_HOSTBYNAME) ||
         (data->CallID == NSP_CALLID_SERVICEBYNAME))
     {
-        /* FIXME remember what was returned and continue from there */
         if (data->CallIDCounter >= 1)
         {
-            ERR("NSP_LookupServiceNextW LUP_FLUSHPREVIOUS and more than one call not supported yet\n", data, dwControlFlags, lpRes, lpResLen);
-            result = WSA_E_NO_MORE;
+            result = WSAENOMORE;
             goto End;
         }
     }
     else
     {
-        ERR("NSP_LookupServiceNextW unsupported CallID %lx\n", data->CallID);
-        result = WSAEOPNOTSUPP;
+        result = WSANO_RECOVERY;
         goto End;
     }
     data->CallIDCounter++;
@@ -660,7 +910,7 @@ NSP_LookupServiceNextW(_In_ PWSHANDLEINTERN data,
     }
     else
     {
-        //ASSERT(data->CallID == NSP_CALLID_SERVICEBYNAME);
+        ASSERT(data->CallID == NSP_CALLID_SERVICEBYNAME);
         result = NSP_GetServiceByNameHeapAllocW(data,
                                                 dwControlFlags,
                                                 &hostinfo);
@@ -675,29 +925,29 @@ NSP_LookupServiceNextW(_In_ PWSHANDLEINTERN data,
         {
             ServiceInstanceNameW = hostinfo.hostnameW;
             ServiceInstanceNameA = StrW2AHeapAlloc(hHeap, ServiceInstanceNameW);
-            if (!ServiceInstanceNameA)
+            if (ServiceInstanceNameA == NULL)
             {
-                ERR("NSP_LookupServiceNextW not enough memory\n");
-                result = WSA_NOT_ENOUGH_MEMORY;
+                result = WSAEFAULT;
                 goto End;
+
             }
         }
         if (data->CallID == NSP_CALLID_SERVICEBYNAME)
         {
             ServiceInstanceNameW = hostinfo.servnameW;
             ServiceInstanceNameA = StrW2AHeapAlloc(hHeap, ServiceInstanceNameW);
-            if (!ServiceInstanceNameA)
+            if (ServiceInstanceNameA == NULL)
             {
-                ERR("NSP_LookupServiceNextW not enough memory\n");
-                result = WSA_NOT_ENOUGH_MEMORY;
+                result = WSAEFAULT;
                 goto End;
+
             }
             ServiceProtocolNameA = StrW2AHeapAlloc(hHeap, hostinfo.servprotoW);
-            if (!ServiceProtocolNameA)
+            if (ServiceProtocolNameA == NULL)
             {
-                ERR("NSP_LookupServiceNextW not enough memory\n");
-                result = WSA_NOT_ENOUGH_MEMORY;
+                result = WSAEFAULT;
                 goto End;
+
             }
         }
     }
@@ -706,7 +956,6 @@ NSP_LookupServiceNextW(_In_ PWSHANDLEINTERN data,
     {
         if (!mswBufferAppendAddr_AddrInfoW(&buf, lpRes, hostinfo.addr4))
         {
-            ERR("NSP_LookupServiceNextW provided buffer is too small\n");
             *lpResLen = buf.bytesUsed;
             result = WSAEFAULT;
             goto End;
@@ -724,7 +973,6 @@ NSP_LookupServiceNextW(_In_ PWSHANDLEINTERN data,
                                              ServiceInstanceNameA,
                                              hostinfo.addr4))
             {
-                ERR("NSP_LookupServiceNextW provided buffer is too small\n");
                 *lpResLen = buf.bytesUsed;
                 result = WSAEFAULT;
                 goto End;
@@ -740,7 +988,6 @@ NSP_LookupServiceNextW(_In_ PWSHANDLEINTERN data,
                                              ServiceProtocolNameA,
                                              hostinfo.servport))
             {
-                ERR("NSP_LookupServiceNextW provided buffer is too small\n");
                 *lpResLen = buf.bytesUsed;
                 result = WSAEFAULT;
                 goto End;
@@ -748,8 +995,7 @@ NSP_LookupServiceNextW(_In_ PWSHANDLEINTERN data,
         }
         else
         {
-            ERR("NSP_LookupServiceNextW LUP_RETURN_BLOB is supported only for NSP_CALLID_HOSTBYNAME and NSP_CALLID_SERVICEBYNAME\n");
-            result = WSAEINVAL;
+            result = WSANO_RECOVERY;
             goto End;
         }
     }
@@ -761,7 +1007,6 @@ NSP_LookupServiceNextW(_In_ PWSHANDLEINTERN data,
         lpRes->lpszServiceInstanceName = (LPWSTR)mswBufferEndPtr(&buf);
         if (!mswBufferAppendStrW(&buf, ServiceInstanceNameW))
         {
-            ERR("NSP_LookupServiceNextW provided buffer is too small\n");
             lpRes->lpszServiceInstanceName = NULL;
             *lpResLen = buf.bytesUsed;
             result = WSAEFAULT;
@@ -789,291 +1034,7 @@ End:
     if (hostinfo.servprotoW != NULL)
         HeapFree(hHeap, 0, hostinfo.servprotoW);
 
-    TRACE("NSP_LookupServiceNextW returns %d needed bytes %ld\n", result, buf.bytesUsed);
     return result;
-}
-
-INT
-WSAAPI
-mwsNSPCleanUp(_In_ LPGUID lpProviderId)
-{
-    return ERROR_SUCCESS;
-}
-
-INT
-mwsNSPInit(VOID)
-{
-    return ERROR_SUCCESS;
-}
-
-INT
-WSAAPI
-mwsNSPLookupServiceBegin(_In_ LPGUID lpProviderId,
-                         _In_ LPWSAQUERYSETW lpqsRestrictions,
-                         _In_ LPWSASERVICECLASSINFOW lpServiceClassInfo,
-                         _In_ DWORD dwControlFlags,
-                         _Out_ LPHANDLE lphLookup)
-{
-    PWSHANDLEINTERN pLook;
-    int wsaErr;
-
-    TRACE("mwsNSPLookupServiceBegin %p %p %p %lx %p\n", lpProviderId, lpqsRestrictions, lpServiceClassInfo, dwControlFlags, lphLookup);
-    if (IsEqualGUID(lpProviderId, &guid_mswsock_TcpIp))
-    {
-        //OK
-        TRACE("TCPIP query\n");
-    }
-    else if (IsEqualGUID(lpProviderId, &guid_mswsock_NLA))
-    {
-        ERR("NLA queries are not supported yet\n");
-        WSASetLastError(WSASERVICE_NOT_FOUND);
-        return SOCKET_ERROR;
-    }
-    else
-    {
-        ERR("Unsupported GUID\n");
-        return ERROR_CALL_NOT_IMPLEMENTED;
-    }
-
-    /* allocate internal structure */
-    pLook = HeapAlloc(GetProcessHeap(), 0, sizeof(WSHANDLEINTERN));
-    if (!pLook)
-    {
-        ERR("Error allocating %d for handle\n", sizeof(WSHANDLEINTERN));
-        WSASetLastError(WSAEFAULT);
-        return SOCKET_ERROR;
-    }
-
-    *lphLookup = (HANDLE)pLook;
-
-    RtlZeroMemory(pLook, sizeof(*pLook));
-
-    /* Anyway the ControlFlags "should" be needed
-       in NSPLookupServiceNext. (see doku) But
-       thats not the fact ATM. */
-    pLook->dwControlFlags = dwControlFlags;
-    pLook->providerId = *lpProviderId;
-
-#ifdef NSP_REDIRECT
-
-    if (IsEqualGUID(lpProviderId, &guid_mswsock_TcpIp))
-    {
-        pLook->rdrproc = rdrproc_tcpip;
-    }
-    else if (IsEqualGUID(lpProviderId, &guid_mswsock_NLA))
-    {
-        pLook->rdrproc = rdrproc_nla;
-    }
-    else
-    {
-        return ERROR_CALL_NOT_IMPLEMENTED;
-    }
-
-    if (pLook->rdrproc.NSPLookupServiceBegin(lpProviderId,
-                                             lpqsRestrictions,
-                                             lpServiceClassInfo,
-                                             dwControlFlags,
-                                             &pLook->rdrLookup) == NO_ERROR)
-    {
-        wsaErr = NO_ERROR;
-    }
-    else
-    {
-        wsaErr = WSAGetLastError();
-    }
-
-    /*
-    if (res)
-        res = WSAGetLastError();
-    */
-
-#else /* NSP_REDIRECT */
-
-    wsaErr = ERROR_CALL_NOT_IMPLEMENTED;
-    if (IsEqualGUID(lpqsRestrictions->lpServiceClassId, &guid_NULL))
-    {
-        ERR("NULL GUID service class is not implemented yet\n");
-        wsaErr = ERROR_CALL_NOT_IMPLEMENTED;
-    }
-    else if (IsEqualGUID(lpqsRestrictions->lpServiceClassId, &guid_HOSTNAME))
-    {
-        TRACE("HOSTNAME GUID\n");
-        wsaErr = NSP_LookupServiceBeginW(pLook,
-                                         NULL,
-                                         NULL,
-                                         NSP_CALLID_HOSTNAME);
-    }
-    else if (IsEqualGUID(lpqsRestrictions->lpServiceClassId,
-                         &guid_INET_HOSTADDRBYNAME))
-    {
-        TRACE("INET_HOSTADDRBYNAME GUID\n");
-        wsaErr = NSP_LookupServiceBeginW(pLook,
-                                         NULL,
-                                         lpqsRestrictions->lpszServiceInstanceName,
-                                         NSP_CALLID_HOSTBYNAME);
-    }
-    else if (IsEqualGUID(lpqsRestrictions->lpServiceClassId,
-                         &guid_INET_SERVICEBYNAME))
-    {
-        TRACE("INET_SERVICEBYNAME\n");
-        wsaErr = NSP_LookupServiceBeginW(pLook,
-                                         NULL,
-                                         lpqsRestrictions->lpszServiceInstanceName,
-                                         NSP_CALLID_SERVICEBYNAME);
-    }
-    else if (IsEqualGUID(lpqsRestrictions->lpServiceClassId,
-                         &guid_INET_HOSTADDRBYINETSTRING))
-    {
-        ERR("INET_HOSTADDRBYINETSTRING GUID service class is not implemented yet\n");
-        wsaErr = ERROR_CALL_NOT_IMPLEMENTED;
-    }
-
-#endif /* NSP_REDIRECT */
-
-    if (wsaErr != NO_ERROR)
-    {
-        ERR("mwsNSPLookupServiceBegin wsaErr = %d\n", wsaErr);
-        WSASetLastError(wsaErr);
-        return SOCKET_ERROR;
-    }
-    return NO_ERROR;
-}
-
-INT
-WSAAPI
-mwsNSPLookupServiceNext(_In_ HANDLE hLookup,
-                        _In_ DWORD dwControlFlags,
-                        _Inout_ LPDWORD lpdwBufferLength,
-                        //_Out_writes_bytes_to_(*lpdwBufferLength, *lpdwBufferLength)
-                        LPWSAQUERYSETW lpqsResults)
-{
-    PWSHANDLEINTERN pLook = hLookup;
-    int wsaErr = 0;
-
-    TRACE("mwsNSPLookupServiceNext %p %lx %p %p\n", pLook, dwControlFlags, lpdwBufferLength, lpqsResults);
-#ifdef NSP_REDIRECT
-
-    INT res = pLook->rdrproc.NSPLookupServiceNext(pLook->rdrLookup,
-                                                  dwControlFlags,
-                                                  lpdwBufferLength,
-                                                  lpqsResults);
-    wsaErr = WSAGetLastError();
-    if (res != ERROR_SUCCESS)
-    {
-        wsaErr = WSAGetLastError();
-
-        if (wsaErr == 0)
-            wsaErr = 0xFFFFFFFF;
-    }
-
-#else /* NSP_REDIRECT */
-
-    if ((lpdwBufferLength == NULL) || (*lpdwBufferLength == 0))
-    {
-        wsaErr = WSA_NOT_ENOUGH_MEMORY;
-        goto End;
-    }
-
-    RtlZeroMemory(lpqsResults, *lpdwBufferLength);
-    lpqsResults->dwSize = sizeof(*lpqsResults);
-
-    wsaErr = NSP_LookupServiceNextW(pLook,
-                                    dwControlFlags,
-                                    lpqsResults,
-                                    lpdwBufferLength);
-
-
-#endif /* NSP_REDIRECT */
-
-End:
-    if (wsaErr != 0)
-    {
-        ERR("mwsNSPLookupServiceNext wsaErr = %d\n", wsaErr);
-        WSASetLastError(wsaErr);
-        return SOCKET_ERROR;
-    }
-    return NO_ERROR;
-}
-
-INT
-WSAAPI
-mwsNSPIoCtl(_In_ HANDLE hLookup,
-            _In_ DWORD dwControlCode,
-            _In_reads_bytes_(cbInBuffer) LPVOID lpvInBuffer,
-            _In_ DWORD cbInBuffer,
-            _Out_writes_bytes_to_(cbOutBuffer, *lpcbBytesReturned) LPVOID lpvOutBuffer,
-            _In_ DWORD cbOutBuffer,
-            _Out_ LPDWORD lpcbBytesReturned,
-            _In_opt_ LPWSACOMPLETION lpCompletion,
-            _In_ LPWSATHREADID lpThreadId)
-{
-    ERR("mwsNSPIoCtl not implemented %p %lx %p %ld %p %ld %p %p %p\n", hLookup, dwControlCode, lpvInBuffer, cbInBuffer, lpvOutBuffer, cbOutBuffer, lpcbBytesReturned, lpCompletion, lpThreadId);
-    WSASetLastError(WSAEOPNOTSUPP);
-    return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-INT
-WSAAPI
-mwsNSPLookupServiceEnd(_In_ HANDLE hLookup)
-{
-    PWSHANDLEINTERN pLook = (PWSHANDLEINTERN)hLookup;
-    HANDLE hHeap = GetProcessHeap();
-    INT res = NO_ERROR;
-
-    TRACE("mwsNSPLookupServiceEnd %p\n", pLook);
-#ifdef NSP_REDIRECT
-    res = pLook->rdrproc.NSPLookupServiceEnd(pLook->rdrLookup);
-#endif
-
-    if (pLook->hostnameW != NULL)
-        HeapFree(hHeap, 0, pLook->hostnameW);
-
-    HeapFree(hHeap, 0, pLook);
-    return res;
-}
-
-INT
-WSAAPI
-mwsNSPSetService(_In_ LPGUID lpProviderId,
-                 _In_ LPWSASERVICECLASSINFOW lpServiceClassInfo,
-                 _In_ LPWSAQUERYSETW lpqsRegInfo,
-                 _In_ WSAESETSERVICEOP essOperation,
-                 _In_ DWORD dwControlFlags)
-{
-    ERR("mwsNSPSetService not implemented %p %p %p %d %lx %ld %p %p %p\n", lpProviderId, lpServiceClassInfo, lpqsRegInfo, essOperation, dwControlFlags);
-    WSASetLastError(WSAEOPNOTSUPP);
-    return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-INT
-WSAAPI
-mwsNSPInstallServiceClass(_In_ LPGUID lpProviderId,
-                          _In_ LPWSASERVICECLASSINFOW lpServiceClassInfo)
-{
-    ERR("mwsNSPInstallServiceClass not implemented %p %p\n", lpProviderId, lpServiceClassInfo);
-    WSASetLastError(WSAEOPNOTSUPP);
-    return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-INT
-WSAAPI
-mwsNSPRemoveServiceClass(_In_ LPGUID lpProviderId,
-                         _In_ LPGUID lpServiceClassId)
-{
-    ERR("mwsNSPRemoveServiceClass not implemented %p %p\n", lpProviderId, lpServiceClassId);
-    WSASetLastError(WSAEOPNOTSUPP);
-    return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-INT
-WSAAPI
-mwsNSPGetServiceClassInfo(_In_ LPGUID lpProviderId,
-                          _In_ LPDWORD lpdwBufSize,
-                          _In_ LPWSASERVICECLASSINFOW lpServiceClassInfo)
-{
-    ERR("mwsNSPGetServiceClassInfo not implemented %p %p %p\n", lpProviderId, lpdwBufSize, lpServiceClassInfo);
-    WSASetLastError(WSAEOPNOTSUPP);
-    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 /* Implementations - Exports */
@@ -1087,11 +1048,10 @@ NSPStartup(_In_ LPGUID lpProviderId,
 {
     INT ret;
 
-    TRACE("NSPStartup %p %p\n", lpProviderId, lpRout);
-    if (!lpRout || (lpRout->cbSize != sizeof(NSP_ROUTINE)))
+    if ((lpRout == NULL) ||
+        (lpRout->cbSize != sizeof(NSP_ROUTINE)))
     {
-        ERR("NSPStartup invalid parameter\n");
-        WSASetLastError(WSAEINVAL);
+        WSASetLastError(ERROR_INVALID_PARAMETER);
         return ERROR_INVALID_PARAMETER;
     }
 
