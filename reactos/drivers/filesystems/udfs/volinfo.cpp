@@ -462,8 +462,15 @@ UDFQueryFsDeviceInfo(
 
     KdPrint(("  UDFQueryFsDeviceInfo: \n"));
     //  Update the output buffer.
-    ASSERT(! (Vcb->TargetDeviceObject->Characteristics & (FILE_READ_ONLY_DEVICE | FILE_WRITE_ONCE_MEDIA)));
-    Buffer->Characteristics = Vcb->TargetDeviceObject->Characteristics & ~(FILE_READ_ONLY_DEVICE | FILE_WRITE_ONCE_MEDIA);
+    if (Vcb->TargetDeviceObject->DeviceType != FILE_DEVICE_CD_ROM && Vcb->TargetDeviceObject->DeviceType != FILE_DEVICE_DVD)
+    {
+        ASSERT(! (Vcb->TargetDeviceObject->Characteristics & (FILE_READ_ONLY_DEVICE | FILE_WRITE_ONCE_MEDIA)));
+        Buffer->Characteristics = Vcb->TargetDeviceObject->Characteristics & ~(FILE_READ_ONLY_DEVICE | FILE_WRITE_ONCE_MEDIA);
+    }
+    else
+    {
+        Buffer->Characteristics = Vcb->TargetDeviceObject->Characteristics;
+    }
     Buffer->DeviceType = Vcb->TargetDeviceObject->DeviceType;
     KdPrint(("    Characteristics %x, DeviceType %x\n", Buffer->Characteristics, Buffer->DeviceType));
     //  Adjust the length variable
