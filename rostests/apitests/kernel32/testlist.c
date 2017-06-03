@@ -15,6 +15,7 @@ extern void func_GetCurrentDirectory(void);
 extern void func_GetDriveType(void);
 extern void func_GetModuleFileName(void);
 extern void func_interlck(void);
+extern void func_IsDBCSLeadByteEx(void);
 extern void func_LoadLibraryExW(void);
 extern void func_lstrcpynW(void);
 extern void func_lstrlen(void);
@@ -42,6 +43,7 @@ const struct test winetest_testlist[] =
     { "GetDriveType",                func_GetDriveType },
     { "GetModuleFileName",           func_GetModuleFileName },
     { "interlck",                    func_interlck },
+    { "IsDBCSLeadByteEx",            func_IsDBCSLeadByteEx },
     { "LoadLibraryExW",              func_LoadLibraryExW },
     { "lstrcpynW",                   func_lstrcpynW },
     { "lstrlen",                     func_lstrlen },

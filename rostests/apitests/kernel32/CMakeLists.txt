@@ -14,6 +14,7 @@ list(APPEND SOURCE
     GetDriveType.c
     GetModuleFileName.c
     interlck.c
+    IsDBCSLeadByteEx.c
     LoadLibraryExW.c
     lstrcpynW.c
     lstrlen.c
