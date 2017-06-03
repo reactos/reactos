@@ -105,7 +105,7 @@ BOOL MCIAVI_RegisterClass(void)
     return FALSE;
 }
 
-BOOL    MCIAVI_CreateWindow(WINE_MCIAVI* wma, DWORD dwFlags, LPMCI_DGV_OPEN_PARMSW lpOpenParms)
+BOOL    MCIAVI_CreateWindow(WINE_MCIAVI* wma, DWORD dwFlags, LPMCI_DGV_OPEN_PARMSW lpParms)
 {
     static const WCHAR captionW[] = {'W','i','n','e',' ','M','C','I','-','A','V','I',' ','p','l','a','y','e','r',0};
     HWND	hParent = 0;
@@ -115,8 +115,8 @@ BOOL    MCIAVI_CreateWindow(WINE_MCIAVI* wma, DWORD dwFlags, LPMCI_DGV_OPEN_PARM
     /* what should be done ? */
     if (wma->hWnd) return TRUE;
 
-    if (dwFlags & MCI_DGV_OPEN_PARENT)	hParent = lpOpenParms->hWndParent;
-    if (dwFlags & MCI_DGV_OPEN_WS)	dwStyle = lpOpenParms->dwStyle;
+    if (dwFlags & MCI_DGV_OPEN_PARENT)	hParent = lpParms->hWndParent;
+    if (dwFlags & MCI_DGV_OPEN_WS)	dwStyle = lpParms->dwStyle;
 
     if (wma->hic)
         SetRect(&rc, 0, 0, wma->outbih->biWidth, wma->outbih->biHeight);
@@ -137,6 +137,9 @@ BOOL    MCIAVI_CreateWindow(WINE_MCIAVI* wma, DWORD dwFlags, LPMCI_DGV_OPEN_PARM
                               hParent, 0, MCIAVI_hInstance,
                               ULongToPtr(wma->wDevID));
     wma->hWndPaint = wma->hWnd;
+
+    TRACE("(%04x, %08X, %p, style %x, parent %p, dimensions %dx%d, hwnd %p)\n", wma->wDevID,
+          dwFlags, lpParms, dwStyle, hParent, rc.right - rc.left, rc.bottom - rc.top, wma->hWnd);
     return wma->hWnd != 0;
 }
 

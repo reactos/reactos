@@ -351,6 +351,7 @@ static	DWORD	MCIAVI_player(WINE_MCIAVI *wma, DWORD dwFlags, LPMCI_PLAY_PARMS lpP
     DWORD		numEvents = 1;
     HANDLE		events[2];
     double next_frame_us;
+    BOOL wait_audio = TRUE;
 
     EnterCriticalSection(&wma->cs);
 
@@ -417,19 +418,37 @@ static	DWORD	MCIAVI_player(WINE_MCIAVI *wma, DWORD dwFlags, LPMCI_PLAY_PARMS lpP
         else
             delta = 0;
 
+        /* check if the playback was cancelled */
+        if ((wma->mci_break.flags & MCI_BREAK_KEY) &&
+            (GetAsyncKeyState(wma->mci_break.parms.nVirtKey) & 0x8000))
+        {
+            if (!(wma->mci_break.flags & MCI_BREAK_HWND) ||
+                GetForegroundWindow() == wma->mci_break.parms.hwndBreak)
+            {
+                /* we queue audio blocks ahead so ignore them otherwise the audio
+                 * will keep playing until the buffer is empty */
+                wait_audio = FALSE;
+
+                TRACE("playback cancelled using break key\n");
+                break;
+            }
+        }
+
         LeaveCriticalSection(&wma->cs);
         ret = WaitForMultipleObjects(numEvents, events, FALSE, delta / 1000);
         EnterCriticalSection(&wma->cs);
         if (ret == WAIT_OBJECT_0 || wma->dwStatus != MCI_MODE_PLAY) break;
     }
 
-    if (wma->lpWaveFormat) {
-       while (wma->dwEventCount != nHdr - 1)
-        {
-            LeaveCriticalSection(&wma->cs);
-            Sleep(100);
-            EnterCriticalSection(&wma->cs);
-        }
+    if (wma->lpWaveFormat)
+    {
+        if (wait_audio)
+            while (wma->dwEventCount != nHdr - 1)
+            {
+                LeaveCriticalSection(&wma->cs);
+                Sleep(100);
+                EnterCriticalSection(&wma->cs);
+            }
 
 	/* just to get rid of some race conditions between play, stop and pause */
 	LeaveCriticalSection(&wma->cs);
@@ -869,6 +888,30 @@ static	DWORD	MCIAVI_mciCue(UINT wDevID, DWORD dwFlags, LPMCI_DGV_CUE_PARMS lpPar
 }
 
 /******************************************************************************
+ * 				MCIAVI_mciBreak			[internal]
+ */
+static	DWORD	MCIAVI_mciBreak(UINT wDevID, DWORD dwFlags, LPMCI_BREAK_PARMS lpParms)
+{
+    WINE_MCIAVI *wma;
+
+    TRACE("(%04x, %08x, %p)\n", wDevID, dwFlags, lpParms);
+
+    if (lpParms == NULL)	return MCIERR_NULL_PARAMETER_BLOCK;
+
+    wma = MCIAVI_mciGetOpenDev(wDevID);
+    if (wma == NULL)		return MCIERR_INVALID_DEVICE_ID;
+
+    EnterCriticalSection(&wma->cs);
+
+    wma->mci_break.flags = dwFlags;
+    wma->mci_break.parms = *lpParms;
+
+    LeaveCriticalSection(&wma->cs);
+
+    return 0;
+}
+
+/******************************************************************************
  * 				MCIAVI_mciSetAudio			[internal]
  */
 static	DWORD	MCIAVI_mciSetAudio(UINT wDevID, DWORD dwFlags, LPMCI_DGV_SETAUDIO_PARMSW lpParms)
@@ -986,6 +1029,7 @@ LRESULT CALLBACK MCIAVI_DriverProc(DWORD_PTR dwDevID, HDRVR hDriv, UINT wMsg,
     case MCI_WHERE:		return MCIAVI_mciWhere	   (dwDevID, dwParam1, (LPMCI_DGV_RECT_PARMS)      dwParam2);
     case MCI_STEP:		return MCIAVI_mciStep      (dwDevID, dwParam1, (LPMCI_DGV_STEP_PARMS)      dwParam2);
     case MCI_CUE:		return MCIAVI_mciCue       (dwDevID, dwParam1, (LPMCI_DGV_CUE_PARMS)       dwParam2);
+    case MCI_BREAK:		return MCIAVI_mciBreak     (dwDevID, dwParam1, (LPMCI_BREAK_PARMS)         dwParam2);
 	/* Digital Video specific */
     case MCI_SETAUDIO:		return MCIAVI_mciSetAudio  (dwDevID, dwParam1, (LPMCI_DGV_SETAUDIO_PARMSW) dwParam2);
     case MCI_SIGNAL:		return MCIAVI_mciSignal    (dwDevID, dwParam1, (LPMCI_DGV_SIGNAL_PARMS)    dwParam2);
