@@ -217,7 +217,7 @@ static void CredDialogCreateBalloonTip(HWND hwndDlg, struct cred_dialog_params *
     toolinfo.uFlags = TTF_TRACK;
     toolinfo.hwnd = hwndDlg;
     toolinfo.uId = TOOLID_INCORRECTPASSWORD;
-    memset(&toolinfo.rect, 0, sizeof(toolinfo.rect));
+    SetRectEmpty(&toolinfo.rect);
     toolinfo.hinst = NULL;
     toolinfo.lpszText = wszText;
     toolinfo.lParam = 0;
