@@ -1912,6 +1912,8 @@ static HRESULT WINAPI istream_QueryInterface(IStream *iface, REFIID riid, void *
 {
     *ppvObject = NULL;
 
+    ok(!IsEqualGUID(riid, &IID_IPersistStream), "Did not expect QI for IPersistStream\n");
+
     if(IsEqualGUID(riid, &IID_IStream) || IsEqualGUID(riid, &IID_IUnknown))
         *ppvObject = iface;
     else
@@ -2222,6 +2224,16 @@ static void test_saxreader(void)
         ok_sequence(sequences, CONTENT_HANDLER_INDEX, test_seq, "content test 1: from safe array", FALSE);
 
         SafeArrayDestroy(sa);
+
+        V_VT(&var) = VT_UNKNOWN;
+        V_UNKNOWN(&var) = NULL;
+        hr = ISAXXMLReader_parse(reader, var);
+        ok(hr == E_INVALIDARG, "got %#x\n", hr);
+
+        V_VT(&var) = VT_DISPATCH;
+        V_DISPATCH(&var) = NULL;
+        hr = ISAXXMLReader_parse(reader, var);
+        ok(hr == E_INVALIDARG, "got %#x\n", hr);
 
         stream = create_test_stream(testXML, -1);
         V_VT(&var) = VT_UNKNOWN;
