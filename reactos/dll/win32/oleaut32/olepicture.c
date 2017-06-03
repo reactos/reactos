@@ -978,25 +978,6 @@ static HRESULT WINAPI OLEPictureImpl_IsDirty(
   return E_NOTIMPL;
 }
 
-static HRESULT OLEPictureImpl_LoadDIB(OLEPictureImpl *This, BYTE *xbuf, ULONG xread)
-{
-    BITMAPFILEHEADER	*bfh = (BITMAPFILEHEADER*)xbuf;
-    BITMAPINFO		*bi = (BITMAPINFO*)(bfh+1);
-    void *bits;
-    BITMAP bmp;
-
-    This->desc.u.bmp.hbitmap = CreateDIBSection(0, bi, DIB_RGB_COLORS, &bits, NULL, 0);
-    if (This->desc.u.bmp.hbitmap == 0)
-        return E_FAIL;
-
-    GetObjectA(This->desc.u.bmp.hbitmap, sizeof(bmp), &bmp);
-    memcpy(bits, xbuf + bfh->bfOffBits, bmp.bmHeight * bmp.bmWidthBytes);
-
-    This->desc.picType = PICTYPE_BITMAP;
-    OLEPictureImpl_SetBitmap(This);
-    return S_OK;
-}
-
 static HRESULT OLEPictureImpl_LoadWICSource(OLEPictureImpl *This, IWICBitmapSource *src)
 {
     HRESULT hr;
@@ -1477,7 +1458,7 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface, IStream *pStm) 
     hr = OLEPictureImpl_LoadWICDecoder(This, &CLSID_WICJpegDecoder, xbuf, xread);
     break;
   case BITMAP_FORMAT_BMP: /* Bitmap */
-    hr = OLEPictureImpl_LoadDIB(This, xbuf, xread);
+    hr = OLEPictureImpl_LoadWICDecoder(This, &CLSID_WICBmpDecoder, xbuf, xread);
     break;
   case BITMAP_FORMAT_PNG: /* PNG */
     hr = OLEPictureImpl_LoadWICDecoder(This, &CLSID_WICPngDecoder, xbuf, xread);

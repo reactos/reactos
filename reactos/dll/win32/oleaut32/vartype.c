@@ -119,15 +119,12 @@ static HRESULT VARIANT_FromDisp(IDispatch* pdispIn, LCID lcid, void* pOut,
   if (SUCCEEDED(hRet))
   {
     /* Convert the property to the requested type */
-    V_VT(&dstVar) = VT_EMPTY;
+    VariantInit(&dstVar);
     hRet = VariantChangeTypeEx(&dstVar, &srcVar, lcid, dwFlags, vt);
     VariantClear(&srcVar);
 
     if (SUCCEEDED(hRet))
-    {
       VARIANT_CopyData(&dstVar, vt, pOut);
-      VariantClear(&srcVar);
-    }
   }
   else
     hRet = DISP_E_TYPEMISMATCH;
@@ -7669,7 +7666,7 @@ HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pd
       dp.dwCount++;
       strIn--;
     }
-    else if (isalpha(*strIn))
+    else if (isalphaW(*strIn))
     {
       BOOL bFound = FALSE;
 
