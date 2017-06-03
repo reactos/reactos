@@ -104,6 +104,7 @@ GetRootKey(
  *
  * Append a multisz string to a multisz registry value.
  */
+// NOTE: Synced with setupapi/install.c ; see also mkhive/reginf.c
 #if 0
 static void
 append_multi_sz_value (HANDLE hkey,
@@ -117,7 +118,7 @@ append_multi_sz_value (HANDLE hkey,
     if (RegQueryValueExW( hkey, value, NULL, &type, NULL, &size )) return;
     if (type != REG_MULTI_SZ) return;
 
-    if (!(buffer = HeapAlloc( GetProcessHeap(), 0, (size + str_size) * sizeof(WCHAR) ))) return;
+    if (!(buffer = HeapAlloc( GetProcessHeap(), 0, size + str_size * sizeof(WCHAR) ))) return;
     if (RegQueryValueExW( hkey, value, NULL, NULL, (BYTE *)buffer, &size )) goto done;
 
     /* compare each string against all the existing ones */
@@ -198,7 +199,7 @@ do_reg_operation(HANDLE KeyHandle,
                  PINFCONTEXT Context,
                  ULONG Flags)
 {
-  WCHAR EmptyStr = (WCHAR)0;
+  WCHAR EmptyStr = 0;
   ULONG Type;
   ULONG Size;
 
@@ -223,7 +224,7 @@ do_reg_operation(HANDLE KeyHandle,
 #if 0
   if (Flags & (FLG_ADDREG_NOCLOBBER | FLG_ADDREG_OVERWRITEONLY))
     {
-      BOOL exists = !RegQueryValueExW( hkey, value, NULL, NULL, NULL, NULL );
+      BOOL exists = !RegQueryValueExW( hkey, ValueName, NULL, NULL, NULL, NULL );
       if (exists && (flags & FLG_ADDREG_NOCLOBBER))
         return TRUE;
       if (!exists & (flags & FLG_ADDREG_OVERWRITEONLY))
@@ -274,7 +275,7 @@ do_reg_operation(HANDLE KeyHandle,
 
           if (Size)
             {
-              Str = (WCHAR*) RtlAllocateHeap (ProcessHeap, 0, Size * sizeof(WCHAR));
+              Str = (WCHAR*) RtlAllocateHeap(ProcessHeap, 0, Size * sizeof(WCHAR));
               if (Str == NULL)
                 return FALSE;
 
@@ -286,6 +287,7 @@ do_reg_operation(HANDLE KeyHandle,
               if (Str == NULL)
                 return TRUE;
 
+              DPRINT1("append_multi_sz_value '%S' commented out, WHY??\n", ValueName);
 //            append_multi_sz_value( hkey, value, str, size );
 
               RtlFreeHeap (ProcessHeap, 0, Str);
@@ -295,16 +297,16 @@ do_reg_operation(HANDLE KeyHandle,
         }
       else
         {
-          if (!SetupGetStringFieldW (Context, 5, NULL, 0, &Size))
+          if (!SetupGetStringFieldW(Context, 5, NULL, 0, &Size))
             Size = 0;
 
           if (Size)
             {
-              Str = (WCHAR*) RtlAllocateHeap (ProcessHeap, 0, Size * sizeof(WCHAR));
+              Str = (WCHAR*)RtlAllocateHeap(ProcessHeap, 0, Size * sizeof(WCHAR));
               if (Str == NULL)
                 return FALSE;
 
-              SetupGetStringFieldW (Context, 5, Str, Size, NULL);
+              SetupGetStringFieldW(Context, 5, Str, Size, NULL);
             }
         }
 
@@ -314,16 +316,12 @@ do_reg_operation(HANDLE KeyHandle,
 
           DPRINT("setting dword %wZ to %lx\n", ValueName, dw);
 
-#ifdef __REACTOS__
           NtSetValueKey (KeyHandle,
                          ValueName,
                          0,
                          Type,
                          (PVOID)&dw,
                          sizeof(ULONG));
-#else
-          RegSetValueExW(KeyHandle, ValueName, 0, Type, (const UCHAR*)&dw, sizeof(ULONG));
-#endif
         }
       else
         {
@@ -331,29 +329,21 @@ do_reg_operation(HANDLE KeyHandle,
 
           if (Str)
             {
-#ifdef __REACTOS__
               NtSetValueKey (KeyHandle,
                              ValueName,
                              0,
                              Type,
                              (PVOID)Str,
                              Size * sizeof(WCHAR));
-#else
-              RegSetValueExW(KeyHandle, ValueName, 0, Type, (const UCHAR*)Str, Size * sizeof(WCHAR));
-#endif
             }
           else
             {
-#ifdef __REACTOS__
               NtSetValueKey (KeyHandle,
                              ValueName,
                              0,
                              Type,
                              (PVOID)&EmptyStr,
                              sizeof(WCHAR));
-#else
-              RegSetValueExW(KeyHandle, ValueName, 0, Type, (const UCHAR*)&EmptyStr, sizeof(WCHAR));
-#endif
             }
         }
       RtlFreeHeap (ProcessHeap, 0, Str);
@@ -367,7 +357,7 @@ do_reg_operation(HANDLE KeyHandle,
 
       if (Size)
         {
-          Data = (unsigned char*) RtlAllocateHeap (ProcessHeap, 0, Size);
+          Data = (unsigned char*) RtlAllocateHeap(ProcessHeap, 0, Size);
           if (Data == NULL)
             return FALSE;
 
@@ -375,16 +365,12 @@ do_reg_operation(HANDLE KeyHandle,
           SetupGetBinaryField (Context, 5, Data, Size, NULL);
         }
 
-#ifdef __REACTOS__
       NtSetValueKey (KeyHandle,
                      ValueName,
                      0,
                      Type,
                      (PVOID)Data,
                      Size);
-#else
-      RegSetValueExW(KeyHandle, ValueName, 0, Type, (const UCHAR*)Data, Size);
-#endif
 
       RtlFreeHeap (ProcessHeap, 0, Data);
     }
@@ -392,99 +378,97 @@ do_reg_operation(HANDLE KeyHandle,
   return TRUE;
 }
 
-#ifdef __REACTOS__
 NTSTATUS
-CreateNestedKey (PHANDLE KeyHandle,
-                 ACCESS_MASK DesiredAccess,
-                 POBJECT_ATTRIBUTES ObjectAttributes)
+CreateNestedKey(PHANDLE KeyHandle,
+                ACCESS_MASK DesiredAccess,
+                POBJECT_ATTRIBUTES ObjectAttributes)
 {
-  OBJECT_ATTRIBUTES LocalObjectAttributes;
-  UNICODE_STRING LocalKeyName;
-  ULONG Disposition;
-  NTSTATUS Status;
-  USHORT FullNameLength;
-  PWCHAR Ptr;
-  HANDLE LocalKeyHandle;
+    OBJECT_ATTRIBUTES LocalObjectAttributes;
+    UNICODE_STRING LocalKeyName;
+    ULONG Disposition;
+    NTSTATUS Status;
+    USHORT FullNameLength;
+    PWCHAR Ptr;
+    HANDLE LocalKeyHandle;
 
-  Status = NtCreateKey (KeyHandle,
-                        KEY_ALL_ACCESS,
-                        ObjectAttributes,
-                        0,
-                        NULL,
-                        0,
-                        &Disposition);
-  DPRINT("NtCreateKey(%wZ) called (Status %lx)\n", ObjectAttributes->ObjectName, Status);
-  if (Status != STATUS_OBJECT_NAME_NOT_FOUND)
+    Status = NtCreateKey(KeyHandle,
+                         KEY_ALL_ACCESS,
+                         ObjectAttributes,
+                         0,
+                         NULL,
+                         0,
+                         &Disposition);
+    DPRINT("NtCreateKey(%wZ) called (Status %lx)\n", ObjectAttributes->ObjectName, Status);
+    if (Status != STATUS_OBJECT_NAME_NOT_FOUND)
+        return Status;
+
+    /* Copy object attributes */
+    RtlCopyMemory(&LocalObjectAttributes,
+                  ObjectAttributes,
+                  sizeof(OBJECT_ATTRIBUTES));
+    RtlCreateUnicodeString(&LocalKeyName,
+                           ObjectAttributes->ObjectName->Buffer);
+    LocalObjectAttributes.ObjectName = &LocalKeyName;
+    FullNameLength = LocalKeyName.Length;
+
+    /* Remove the last part of the key name and try to create the key again. */
+    while (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        Ptr = wcsrchr (LocalKeyName.Buffer, '\\');
+        if (Ptr == NULL || Ptr == LocalKeyName.Buffer)
+        {
+            Status = STATUS_UNSUCCESSFUL;
+            break;
+        }
+        *Ptr = (WCHAR)0;
+        LocalKeyName.Length = wcslen (LocalKeyName.Buffer) * sizeof(WCHAR);
+
+        Status = NtCreateKey(&LocalKeyHandle,
+                             KEY_ALL_ACCESS,
+                             &LocalObjectAttributes,
+                             0,
+                             NULL,
+                             0,
+                             &Disposition);
+        DPRINT("NtCreateKey(%wZ) called (Status %lx)\n", &LocalKeyName, Status);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        RtlFreeUnicodeString (&LocalKeyName);
+        return Status;
+    }
+
+    /* Add removed parts of the key name and create them too. */
+    while (TRUE)
+    {
+        if (LocalKeyName.Length == FullNameLength)
+        {
+            Status = STATUS_SUCCESS;
+            *KeyHandle = LocalKeyHandle;
+            break;
+        }
+        NtClose(LocalKeyHandle);
+
+        LocalKeyName.Buffer[LocalKeyName.Length / sizeof(WCHAR)] = L'\\';
+        LocalKeyName.Length = wcslen (LocalKeyName.Buffer) * sizeof(WCHAR);
+
+        Status = NtCreateKey(&LocalKeyHandle,
+                             KEY_ALL_ACCESS,
+                             &LocalObjectAttributes,
+                             0,
+                             NULL,
+                             0,
+                             &Disposition);
+        DPRINT("NtCreateKey(%wZ) called (Status %lx)\n", &LocalKeyName, Status);
+        if (!NT_SUCCESS(Status))
+            break;
+    }
+
+    RtlFreeUnicodeString(&LocalKeyName);
+
     return Status;
-
-  /* Copy object attributes */
-  RtlCopyMemory (&LocalObjectAttributes,
-                 ObjectAttributes,
-                 sizeof(OBJECT_ATTRIBUTES));
-  RtlCreateUnicodeString (&LocalKeyName,
-                          ObjectAttributes->ObjectName->Buffer);
-  LocalObjectAttributes.ObjectName = &LocalKeyName;
-  FullNameLength = LocalKeyName.Length;
-
-  /* Remove the last part of the key name and try to create the key again. */
-  while (Status == STATUS_OBJECT_NAME_NOT_FOUND)
-    {
-      Ptr = wcsrchr (LocalKeyName.Buffer, '\\');
-      if (Ptr == NULL || Ptr == LocalKeyName.Buffer)
-        {
-          Status = STATUS_UNSUCCESSFUL;
-          break;
-        }
-      *Ptr = (WCHAR)0;
-      LocalKeyName.Length = wcslen (LocalKeyName.Buffer) * sizeof(WCHAR);
-
-      Status = NtCreateKey (&LocalKeyHandle,
-                            KEY_ALL_ACCESS,
-                            &LocalObjectAttributes,
-                            0,
-                            NULL,
-                            0,
-                            &Disposition);
-      DPRINT("NtCreateKey(%wZ) called (Status %lx)\n", &LocalKeyName, Status);
-    }
-
-  if (!NT_SUCCESS(Status))
-    {
-      RtlFreeUnicodeString (&LocalKeyName);
-      return Status;
-    }
-
-  /* Add removed parts of the key name and create them too. */
-  while (TRUE)
-    {
-      if (LocalKeyName.Length == FullNameLength)
-        {
-          Status = STATUS_SUCCESS;
-          *KeyHandle = LocalKeyHandle;
-          break;
-        }
-      NtClose (LocalKeyHandle);
-
-      LocalKeyName.Buffer[LocalKeyName.Length / sizeof(WCHAR)] = L'\\';
-      LocalKeyName.Length = wcslen (LocalKeyName.Buffer) * sizeof(WCHAR);
-
-      Status = NtCreateKey (&LocalKeyHandle,
-                            KEY_ALL_ACCESS,
-                            &LocalObjectAttributes,
-                            0,
-                            NULL,
-                            0,
-                            &Disposition);
-      DPRINT("NtCreateKey(%wZ) called (Status %lx)\n", &LocalKeyName, Status);
-      if (!NT_SUCCESS(Status))
-        break;
-    }
-
-  RtlFreeUnicodeString (&LocalKeyName);
-
-  return Status;
 }
-#endif
 
 /***********************************************************************
  *            registry_callback
@@ -494,124 +478,95 @@ CreateNestedKey (PHANDLE KeyHandle,
 static BOOLEAN
 registry_callback(HINF hInf, PCWSTR Section, BOOLEAN Delete)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  WCHAR Buffer[MAX_INF_STRING_LENGTH];
-  UNICODE_STRING Name;
-  UNICODE_STRING Value;
-  PUNICODE_STRING ValuePtr;
-  NTSTATUS Status;
-  UINT Flags;
-  ULONG Length;
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING Name, Value;
+    PUNICODE_STRING ValuePtr;
+    UINT Flags;
+    ULONG Length;
+    WCHAR Buffer[MAX_INF_STRING_LENGTH];
 
-  INFCONTEXT Context;
-  HANDLE KeyHandle;
-  BOOLEAN Ok;
+    INFCONTEXT Context;
+    HANDLE KeyHandle;
+    BOOLEAN Ok;
 
+    Ok = SetupFindFirstLineW(hInf, Section, NULL, &Context);
+    if (!Ok)
+        return TRUE; /* Don't fail if the section isn't present */
 
-  Ok = SetupFindFirstLineW (hInf, Section, NULL, &Context);
-
-  if (Ok)
+    for (;Ok; Ok = SetupFindNextLine (&Context, &Context))
     {
-      for (;Ok; Ok = SetupFindNextLine (&Context, &Context))
-        {
-          /* get root */
-          if (!SetupGetStringFieldW (&Context, 1, Buffer, MAX_INF_STRING_LENGTH, NULL))
-              continue;
-          if (!GetRootKey (Buffer))
+        /* get root */
+        if (!SetupGetStringFieldW(&Context, 1, Buffer, sizeof(Buffer)/sizeof(WCHAR), NULL))
+            continue;
+        if (!GetRootKey (Buffer))
             continue;
 
-          /* get key */
-          Length = wcslen (Buffer);
-          if (!SetupGetStringFieldW (&Context, 2, Buffer + Length, MAX_INF_STRING_LENGTH - Length, NULL))
+        /* get key */
+        Length = wcslen(Buffer);
+        if (!SetupGetStringFieldW(&Context, 2, Buffer + Length, sizeof(Buffer)/sizeof(WCHAR) - Length, NULL))
             *Buffer = 0;
 
-          DPRINT("KeyName: <%S>\n", Buffer);
+        DPRINT("KeyName: <%S>\n", Buffer);
 
-          /* get flags */
-          if (!SetupGetIntField (&Context, 4, (PINT)&Flags))
+        /* get flags */
+        if (!SetupGetIntField(&Context, 4, (PINT)&Flags))
             Flags = 0;
 
-          DPRINT("Flags: %lx\n", Flags);
+        DPRINT("Flags: %lx\n", Flags);
 
-#ifdef __REACTOS__
-          RtlInitUnicodeString (&Name,
-                                Buffer);
+        RtlInitUnicodeString(&Name, Buffer);
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &Name,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   NULL);
 
-          InitializeObjectAttributes (&ObjectAttributes,
-                                      &Name,
-                                      OBJ_CASE_INSENSITIVE,
-                                      NULL,
-                                      NULL);
-
-          if (Delete || (Flags & FLG_ADDREG_OVERWRITEONLY))
+        if (Delete || (Flags & FLG_ADDREG_OVERWRITEONLY))
+        {
+            Status = NtOpenKey(&KeyHandle,
+                               KEY_ALL_ACCESS,
+                               &ObjectAttributes);
+            if (!NT_SUCCESS(Status))
             {
-              Status = NtOpenKey (&KeyHandle,
-                                  KEY_ALL_ACCESS,
-                                  &ObjectAttributes);
-              if (!NT_SUCCESS(Status))
-                {
-                  DPRINT1("NtOpenKey(%wZ) failed (Status %lx)\n", &Name, Status);
-                  continue;  /* ignore if it doesn't exist */
-                }
+                DPRINT1("NtOpenKey(%wZ) failed (Status %lx)\n", &Name, Status);
+                continue;  /* ignore if it doesn't exist */
             }
-          else
-            {
-              Status = CreateNestedKey (&KeyHandle,
-                                        KEY_ALL_ACCESS,
-                                        &ObjectAttributes);
-              if (!NT_SUCCESS(Status))
-                {
-                  DPRINT1("CreateNestedKey(%wZ) failed (Status %lx)\n", &Name, Status);
-                  continue;
-                }
-            }
-#else
-          if (Delete || (Flags & FLG_ADDREG_OVERWRITEONLY))
-             {
-                LONG rc = RegOpenKeyW(NULL, Buffer, &KeyHandle);
-                if (rc != ERROR_SUCCESS)
-                  {
-                    DPRINT("RegOpenKeyW(%S) failed (error %lu)\n", Buffer, rc);
-                    continue; /* ignore if it doesn't exist */
-                  }
-              }
-              else
-              {
-                  LONG rc = RegCreateKeyW(NULL, Buffer, &KeyHandle);
-                  if (rc != ERROR_SUCCESS)
-                  {
-                    DPRINT("RegCreateKeyW(%S) failed (error %lu)\n", Buffer, rc);
-                    continue;
-                  }
-              }
-#endif
-
-          /* get value name */
-          if (SetupGetStringFieldW (&Context, 3, Buffer, MAX_INF_STRING_LENGTH, NULL))
-            {
-              RtlInitUnicodeString (&Value,
-                                    Buffer);
-              ValuePtr = &Value;
-            }
-          else
-            {
-              ValuePtr = NULL;
-            }
-
-          /* and now do it */
-          if (!do_reg_operation (KeyHandle, ValuePtr, &Context, Flags))
-            {
-              NtClose (KeyHandle);
-              return FALSE;
-            }
-
-#ifdef __REACTOS__
-          NtClose (KeyHandle);
-#endif
         }
+        else
+        {
+            Status = CreateNestedKey(&KeyHandle,
+                                     KEY_ALL_ACCESS,
+                                     &ObjectAttributes);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("CreateNestedKey(%wZ) failed (Status %lx)\n", &Name, Status);
+                continue;
+            }
+        }
+
+        /* get value name */
+        if (SetupGetStringFieldW(&Context, 3, Buffer, sizeof(Buffer)/sizeof(WCHAR), NULL))
+        {
+            RtlInitUnicodeString(&Value, Buffer);
+            ValuePtr = &Value;
+        }
+        else
+        {
+            ValuePtr = NULL;
+        }
+
+        /* and now do it */
+        if (!do_reg_operation(KeyHandle, ValuePtr, &Context, Flags))
+        {
+            NtClose(KeyHandle);
+            return FALSE;
+        }
+
+        NtClose(KeyHandle);
     }
 
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -641,60 +596,30 @@ ImportRegistryFile(
         return FALSE;
     }
 
+#if 0
+    if (!registry_callback(hInf, L"DelReg", FALSE))
+    {
+        DPRINT1("registry_callback() failed\n");
+        InfCloseFile(hInf);
+        return FALSE;
+    }
+#endif
+
     if (!registry_callback(hInf, L"AddReg", FALSE))
     {
         DPRINT1("registry_callback() failed\n");
+        InfCloseFile(hInf);
+        return FALSE;
     }
 
     if (!registry_callback(hInf, L"AddReg.NT" Architecture, FALSE))
     {
         DPRINT1("registry_callback() failed\n");
+        InfCloseFile(hInf);
+        return FALSE;
     }
 
     InfCloseFile(hInf);
-
-    return TRUE;
-}
-
-
-BOOLEAN
-SetInstallPathValue(
-    PUNICODE_STRING InstallPath)
-{
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\HARDWARE");
-    UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"InstallPath");
-    HANDLE KeyHandle;
-    NTSTATUS Status;
-
-    /* Create the 'secret' InstallPath key */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-    Status =  NtOpenKey(&KeyHandle,
-                        KEY_ALL_ACCESS,
-                        &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
-        return FALSE;
-    }
-
-    Status = NtSetValueKey(KeyHandle,
-                           &ValueName,
-                           0,
-                           REG_SZ,
-                           (PVOID)InstallPath->Buffer,
-                           InstallPath->Length + sizeof(WCHAR));
-    NtClose(KeyHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-        return FALSE;
-    }
-
     return TRUE;
 }
 
