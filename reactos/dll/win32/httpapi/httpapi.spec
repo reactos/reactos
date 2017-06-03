@@ -6,6 +6,7 @@
 @ stub HttpCreateConfigGroup
 @ stub HttpCreateFilter
 @ stdcall HttpCreateHttpHandle(ptr long)
+@ stdcall HttpCreateServerSession(long ptr long)
 @ stub HttpDeleteConfigGroup
 @ stdcall HttpDeleteServiceConfiguration(ptr long ptr long ptr)
 @ stub HttpFilterAccept
