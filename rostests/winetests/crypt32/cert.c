@@ -29,7 +29,6 @@
 
 #include <wine/test.h>
 
-static BOOL (WINAPI *pCertAddStoreToCollection)(HCERTSTORE,HCERTSTORE,DWORD,DWORD);
 static PCCERT_CONTEXT (WINAPI *pCertCreateSelfSignCertificate)(HCRYPTPROV_OR_NCRYPT_KEY_HANDLE,PCERT_NAME_BLOB,DWORD,PCRYPT_KEY_PROV_INFO,PCRYPT_ALGORITHM_IDENTIFIER,PSYSTEMTIME,PSYSTEMTIME,PCERT_EXTENSIONS);
 static BOOL (WINAPI *pCertGetValidUsages)(DWORD,PCCERT_CONTEXT*,int*,LPSTR*,DWORD*);
 static BOOL (WINAPI *pCryptAcquireCertificatePrivateKey)(PCCERT_CONTEXT,DWORD,void*,HCRYPTPROV_OR_NCRYPT_KEY_HANDLE*,DWORD*,BOOL*);
@@ -50,7 +49,6 @@ static void init_function_pointers(void)
     if(!p ## func) \
       trace("GetProcAddress(%s) failed\n", #func);
 
-    GET_PROC(hCrypt32, CertAddStoreToCollection)
     GET_PROC(hCrypt32, CertCreateSelfSignCertificate)
     GET_PROC(hCrypt32, CertGetValidUsages)
     GET_PROC(hCrypt32, CryptAcquireCertificatePrivateKey)
@@ -279,10 +277,10 @@ static void testAddCert(void)
     collection = CertOpenStore(CERT_STORE_PROV_COLLECTION, 0, 0,
      CERT_STORE_CREATE_NEW_FLAG, NULL);
     ok(collection != NULL, "CertOpenStore failed: %08x\n", GetLastError());
-    if (collection && pCertAddStoreToCollection)
+    if (collection)
     {
         /* Add store to the collection, but disable updates */
-        pCertAddStoreToCollection(collection, store, 0, 0);
+        CertAddStoreToCollection(collection, store, 0, 0);
 
         context = CertCreateCertificateContext(X509_ASN_ENCODING, bigCert2,
          sizeof(bigCert2));
