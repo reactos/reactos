@@ -264,6 +264,8 @@ ok(tmp === 3, "tmp = " + tmp);
 eval("testRes(); testRes()");
 tmp = eval("3; if(false) {4;} else {};;;")
 ok(tmp === 3, "tmp = " + tmp);
+tmp = eval("try { 1; } finally { 2; }")
+ok(tmp === 2, "tmp = " + tmp);
 
 testNoRes();
 testRes() && testRes();
@@ -979,6 +981,164 @@ case 3:
     return i;
 })();
 
+(function() {
+    var ret, x;
+
+    function unreachable() {
+        ok(false, "unreachable");
+    }
+
+    function expect(value, expect_value) {
+        ok(value === expect_value, "got " + value + " expected " + expect_value);
+    }
+
+    ret = (function() {
+        try {
+            return "try";
+            unreachable();
+        }catch(e) {
+            unreachable();
+        }finally {
+            return "finally";
+            unreachable();
+        }
+        unreachable();
+    })();
+    expect(ret, "finally");
+
+    x = "";
+    ret = (function() {
+        try {
+            x += "try,";
+            return x;
+            unreachable();
+        }catch(e) {
+            unreachable();
+        }finally {
+            x += "finally,";
+        }
+        unreachable();
+    })();
+    expect(ret, "try,");
+    expect(x, "try,finally,");
+
+    x = "";
+    ret = (function() {
+        try {
+            x += "try,"
+            throw 1;
+            unreachable();
+        }catch(e) {
+            x += "catch,";
+            return "catch";
+            unreachable();
+        }finally {
+            x += "finally,";
+            return "finally";
+            unreachable();
+        }
+        unreachable();
+    })();
+    expect(ret, "finally");
+    expect(x, "try,catch,finally,");
+
+    x = "";
+    ret = (function() {
+        try {
+            x += "try,"
+            throw 1;
+            unreachable();
+        }catch(e) {
+            x += "catch,";
+            return "catch";
+            unreachable();
+        }finally {
+            x += "finally,";
+        }
+        unreachable();
+    })();
+    expect(ret, "catch");
+    expect(x, "try,catch,finally,");
+
+    x = "";
+    ret = (function() {
+        try {
+            x += "try,"
+            try {
+                x += "try2,";
+                return "try2";
+            }catch(e) {
+                unreachable();
+            }finally {
+                x += "finally2,";
+            }
+            unreachable();
+        }catch(e) {
+            unreachable();
+        }finally {
+            x += "finally,";
+        }
+        unreachable();
+    })();
+    expect(ret, "try2");
+    expect(x, "try,try2,finally2,finally,");
+
+    x = "";
+    ret = (function() {
+        while(true) {
+            try {
+                x += "try,"
+                try {
+                    x += "try2,";
+                    break;
+                }catch(e) {
+                    unreachable();
+                }finally {
+                    x += "finally2,";
+                }
+                unreachable();
+            }catch(e) {
+                unreachable();
+            }finally {
+                x += "finally,";
+            }
+            unreachable();
+        }
+        x += "ret";
+        return "ret";
+    })();
+    expect(ret, "ret");
+    expect(x, "try,try2,finally2,finally,ret");
+
+    x = "";
+    ret = (function() {
+        while(true) {
+            try {
+                x += "try,"
+                try {
+                    x += "try2,";
+                    continue;
+                }catch(e) {
+                    unreachable();
+                }finally {
+                    x += "finally2,";
+                }
+                unreachable();
+            }catch(e) {
+                unreachable();
+            }finally {
+                x += "finally,";
+                break;
+            }
+            unreachable();
+        }
+        x += "ret";
+        return "ret";
+    })();
+    expect(ret, "ret");
+    expect(x, "try,try2,finally2,finally,ret");
+})();
+
 tmp = eval("1");
 ok(tmp === 1, "eval(\"1\") !== 1");
 eval("{ ok(tmp === 1, 'eval: tmp !== 1'); } tmp = 2;");
@@ -1594,6 +1754,15 @@ tmp = (function() {
     var ret = false;
     with({ret: true})
         return ret;
+})();
+ok(tmp, "tmp = " + tmp);
+
+tmp = (function() {
+    for(var iter in [1,2,3,4]) {
+        var ret = false;
+        with({ret: true})
+            return ret;
+    }
 })();
 ok(tmp, "tmp = " + tmp);
 
