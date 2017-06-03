@@ -2333,12 +2333,14 @@ UDFLoadImpUseVolDesc(
     int8*     Buf
     )
 {
+#ifdef UDF_DBG
     ImpUseVolDesc* iuvd = (ImpUseVolDesc*)Buf;
     ImpUseVolDescImpUse* iuvdiu = (ImpUseVolDescImpUse*)&(iuvd->impUse);
     UDFPrint(("UDF: Imp Use Vol Desc:\n"));
     UDFPrint((" volDescSeqNum = %x\n", iuvd->volDescSeqNum));
     UDFPrint(("UDF: Imp Use Vol Desc Imp Use:\n"));
     KdDump(iuvdiu, sizeof(ImpUseVolDescImpUse));
+#endif
     return STATUS_SUCCESS;
 } // UDFLoadImpUseVolDesc()
 

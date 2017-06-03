@@ -835,7 +835,7 @@ try_exit: NOTHING;
             Irp->Tail.Overlay.CurrentStackLocation++;
 
             // Now call the appropriate file system driver with the request.
-            return IoCallDriver( filterDevExt->lowerFSDeviceObject, Irp );
+            RC = IoCallDriver( filterDevExt->lowerFSDeviceObject, Irp );
 
         }
 
