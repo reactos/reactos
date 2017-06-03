@@ -206,3 +206,13 @@ BEGIN
     IDS_INTERRUPTED_DOWNLOAD "The download was interrupted. Check connection to Internet."
     IDS_UNABLE_TO_WRITE "Unable to write to disk. Disk may be at capacity."
 END
+
+STRINGTABLE
+BEGIN
+    IDS_STATUS_INSTALLED "Installed"
+    IDS_STATUS_NOTINSTALLED "Not installed"
+    IDS_STATUS_DOWNLOADED "Downloaded"
+    IDS_STATUS_UPDATE_AVAILABLE "Update available"
+    IDS_STATUS_DOWNLOADING "Downloading…"
+    IDS_STATUS_INSTALLING "Installing…"
+END

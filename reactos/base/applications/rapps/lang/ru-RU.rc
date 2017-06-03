@@ -206,3 +206,13 @@ BEGIN
     IDS_INTERRUPTED_DOWNLOAD "Загрузка была прервана. Проверьте подключение к сети Интернет."
     IDS_UNABLE_TO_WRITE "Не удалось записать данные на диск. Возможно, недостаточно свободного места на диске."
 END
+
+STRINGTABLE
+BEGIN
+    IDS_STATUS_INSTALLED "Установлено"
+    IDS_STATUS_NOTINSTALLED "Не установлено"
+    IDS_STATUS_DOWNLOADED "Загружено"
+    IDS_STATUS_UPDATE_AVAILABLE "Есть обновления"
+    IDS_STATUS_DOWNLOADING "Загружается…"
+    IDS_STATUS_INSTALLING "Установка…"
+END
