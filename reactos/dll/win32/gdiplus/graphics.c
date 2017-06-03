@@ -519,12 +519,23 @@ static GpStatus alpha_blend_pixels(GpGraphics *graphics, INT dst_x, INT dst_y,
     return alpha_blend_pixels_hrgn(graphics, dst_x, dst_y, src, src_width, src_height, src_stride, NULL, fmt);
 }
 
+/* NOTE: start and end pixels must be in pre-multiplied ARGB format */
+static inline ARGB blend_colors_premult(ARGB start, ARGB end, REAL position)
+{
+    UINT pos = position * 255.0f + 0.5f;
+    return
+        (((((start >> 24)       ) << 8) + (((end >> 24)       ) - ((start >> 24)       )) * pos) >> 8) << 24 |
+        (((((start >> 16) & 0xff) << 8) + (((end >> 16) & 0xff) - ((start >> 16) & 0xff)) * pos) >> 8) << 16 |
+        (((((start >>  8) & 0xff) << 8) + (((end >>  8) & 0xff) - ((start >>  8) & 0xff)) * pos) >> 8) <<  8 |
+        (((((start      ) & 0xff) << 8) + (((end      ) & 0xff) - ((start      ) & 0xff)) * pos) >> 8);
+}
+
 static ARGB blend_colors(ARGB start, ARGB end, REAL position)
 {
     INT start_a, end_a, final_a;
     INT pos;
 
-    pos = gdip_round(position * 0xff);
+    pos = (INT)(position * 255.0f + 0.5f);
 
     start_a = ((start >> 24) & 0xff) * (pos ^ 0xff);
     end_a = ((end >> 24) & 0xff) * pos;
@@ -926,6 +937,11 @@ static ARGB sample_bitmap_pixel(GDIPCONST GpRect *src_rect, LPBYTE bits, UINT wi
     return ((DWORD*)(bits))[(x - src_rect->X) + (y - src_rect->Y) * src_rect->Width];
 }
 
+static inline int positive_ceilf(float f)
+{
+    return f - (int)f > 0.0f ? f + 1.0f : f;
+}
+
 static ARGB resample_bitmap_pixel(GDIPCONST GpRect *src_rect, LPBYTE bits, UINT width,
     UINT height, GpPointF *point, GDIPCONST GpImageAttributes *attributes,
     InterpolationMode interpolation, PixelOffsetMode offset_mode)
@@ -946,12 +962,12 @@ static ARGB resample_bitmap_pixel(GDIPCONST GpRect *src_rect, LPBYTE bits, UINT 
         ARGB top, bottom;
         float x_offset;
 
-        leftxf = floorf(point->X);
-        leftx = (INT)leftxf;
-        rightx = (INT)ceilf(point->X);
-        topyf = floorf(point->Y);
-        topy = (INT)topyf;
-        bottomy = (INT)ceilf(point->Y);
+        leftx = (INT)point->X;
+        leftxf = (REAL)leftx;
+        rightx = positive_ceilf(point->X);
+        topy = (INT)point->Y;
+        topyf = (REAL)topy;
+        bottomy = positive_ceilf(point->Y);
 
         if (leftx == rightx && topy == bottomy)
             return sample_bitmap_pixel(src_rect, bits, width, height,
@@ -995,17 +1011,95 @@ static ARGB resample_bitmap_pixel(GDIPCONST GpRect *src_rect, LPBYTE bits, UINT 
     }
 }
 
+static ARGB resample_bitmap_pixel_premult(GDIPCONST GpRect *src_rect, LPBYTE bits, UINT width,
+    UINT height, GpPointF *point, GDIPCONST GpImageAttributes *attributes,
+    InterpolationMode interpolation, PixelOffsetMode offset_mode)
+{
+    static int fixme;
+
+    switch (interpolation)
+    {
+    default:
+        if (!fixme++)
+            FIXME("Unimplemented interpolation %i\n", interpolation);
+        /* fall-through */
+    case InterpolationModeBilinear:
+    {
+        REAL leftxf, topyf;
+        INT leftx, rightx, topy, bottomy;
+        ARGB topleft, topright, bottomleft, bottomright;
+        ARGB top, bottom;
+        float x_offset;
+
+        leftx = (INT)point->X;
+        leftxf = (REAL)leftx;
+        rightx = positive_ceilf(point->X);
+        topy = (INT)point->Y;
+        topyf = (REAL)topy;
+        bottomy = positive_ceilf(point->Y);
+
+        if (leftx == rightx && topy == bottomy)
+            return sample_bitmap_pixel(src_rect, bits, width, height,
+                leftx, topy, attributes);
+
+        topleft = sample_bitmap_pixel(src_rect, bits, width, height,
+            leftx, topy, attributes);
+        topright = sample_bitmap_pixel(src_rect, bits, width, height,
+            rightx, topy, attributes);
+        bottomleft = sample_bitmap_pixel(src_rect, bits, width, height,
+            leftx, bottomy, attributes);
+        bottomright = sample_bitmap_pixel(src_rect, bits, width, height,
+            rightx, bottomy, attributes);
+
+        x_offset = point->X - leftxf;
+        top = blend_colors_premult(topleft, topright, x_offset);
+        bottom = blend_colors_premult(bottomleft, bottomright, x_offset);
+
+        return blend_colors_premult(top, bottom, point->Y - topyf);
+    }
+    case InterpolationModeNearestNeighbor:
+    {
+        FLOAT pixel_offset;
+        switch (offset_mode)
+        {
+        default:
+        case PixelOffsetModeNone:
+        case PixelOffsetModeHighSpeed:
+            pixel_offset = 0.5;
+            break;
+
+        case PixelOffsetModeHalf:
+        case PixelOffsetModeHighQuality:
+            pixel_offset = 0.0;
+            break;
+        }
+        return sample_bitmap_pixel(src_rect, bits, width, height,
+            floorf(point->X + pixel_offset), point->Y + pixel_offset, attributes);
+    }
+
+    }
+}
+
 static REAL intersect_line_scanline(const GpPointF *p1, const GpPointF *p2, REAL y)
 {
     return (p1->X - p2->X) * (p2->Y - y) / (p2->Y - p1->Y) + p2->X;
 }
 
-static BOOL brush_can_fill_path(GpBrush *brush)
+/* is_fill is TRUE if filling regions, FALSE for drawing primitives */
+static BOOL brush_can_fill_path(GpBrush *brush, BOOL is_fill)
 {
     switch (brush->bt)
     {
     case BrushTypeSolidColor:
-        return TRUE;
+    {
+        if (is_fill)
+            return TRUE;
+        else
+        {
+            /* cannot draw semi-transparent colors */
+            return (((GpSolidFill*)brush)->color & 0xff000000) == 0xff000000;
+        }
+    }
     case BrushTypeHatchFill:
     {
         GpHatch *hatch = (GpHatch*)brush;
@@ -3003,8 +3097,10 @@ GpStatus WINGDIPAPI GdipDrawImagePointsRect(GpGraphics *graphics, GpImage *image
             lockeddata.Scan0 = src_data;
             if (!do_resampling && bitmap->format == PixelFormat32bppPARGB)
                 lockeddata.PixelFormat = apply_image_attributes(imageAttributes, NULL, 0, 0, 0, ColorAdjustTypeBitmap, bitmap->format);
-            else
+            else if (imageAttributes != &defaultImageAttributes)
                 lockeddata.PixelFormat = PixelFormat32bppARGB;
+            else
+                lockeddata.PixelFormat = PixelFormat32bppPARGB;
 
             stat = GdipBitmapLockBits(bitmap, &src_area, ImageLockModeRead|ImageLockModeUserInputBuf,
                 lockeddata.PixelFormat, &lockeddata);
@@ -3024,6 +3120,8 @@ GpStatus WINGDIPAPI GdipDrawImagePointsRect(GpGraphics *graphics, GpImage *image
 
             if (do_resampling)
             {
+                REAL delta_xx, delta_xy, delta_yx, delta_yy;
+
                 /* Transform the bits as needed to the destination. */
                 dst_data = dst_dyn_data = heap_alloc_zero(sizeof(ARGB) * (dst_area.right - dst_area.left) * (dst_area.bottom - dst_area.top));
                 if (!dst_data)
@@ -3041,24 +3139,42 @@ GpStatus WINGDIPAPI GdipDrawImagePointsRect(GpGraphics *graphics, GpImage *image
                 y_dx = dst_to_src_points[2].X - dst_to_src_points[0].X;
                 y_dy = dst_to_src_points[2].Y - dst_to_src_points[0].Y;
 
-                for (x=dst_area.left; x<dst_area.right; x++)
+                delta_yy = dst_area.top * y_dy;
+                delta_yx = dst_area.top * y_dx;
+
+                for (y=dst_area.top; y<dst_area.bottom; y++)
                 {
-                    for (y=dst_area.top; y<dst_area.bottom; y++)
+                    delta_xx = dst_area.left * x_dx;
+                    delta_xy = dst_area.left * x_dy;
+
+                    for (x=dst_area.left; x<dst_area.right; x++)
                     {
                         GpPointF src_pointf;
                         ARGB *dst_color;
 
-                        src_pointf.X = dst_to_src_points[0].X + x * x_dx + y * y_dx;
-                        src_pointf.Y = dst_to_src_points[0].Y + x * x_dy + y * y_dy;
+                        src_pointf.X = dst_to_src_points[0].X + delta_xx + delta_yx;
+                        src_pointf.Y = dst_to_src_points[0].Y + delta_xy + delta_yy;
 
                         dst_color = (ARGB*)(dst_data + dst_stride * (y - dst_area.top) + sizeof(ARGB) * (x - dst_area.left));
 
                         if (src_pointf.X >= srcx && src_pointf.X < srcx + srcwidth && src_pointf.Y >= srcy && src_pointf.Y < srcy+srcheight)
-                            *dst_color = resample_bitmap_pixel(&src_area, src_data, bitmap->width, bitmap->height, &src_pointf,
-                                                               imageAttributes, interpolation, offset_mode);
+                        {
+                            if (lockeddata.PixelFormat != PixelFormat32bppPARGB)
+                                *dst_color = resample_bitmap_pixel(&src_area, src_data, bitmap->width, bitmap->height, &src_pointf,
+                                                                   imageAttributes, interpolation, offset_mode);
+                            else
+                                *dst_color = resample_bitmap_pixel_premult(&src_area, src_data, bitmap->width, bitmap->height, &src_pointf,
+                                                                           imageAttributes, interpolation, offset_mode);
+                        }
                         else
                             *dst_color = 0;
+
+                        delta_xx += x_dx;
+                        delta_yx += y_dx;
                     }
+
+                    delta_xy += x_dy;
+                    delta_yy += y_dy;
                 }
             }
             else
@@ -3784,7 +3900,7 @@ GpStatus WINGDIPAPI GdipDrawPath(GpGraphics *graphics, GpPen *pen, GpPath *path)
     if (path->pathdata.Count == 0)
         return Ok;
 
-    if (!graphics->hdc)
+    if (!graphics->hdc || !brush_can_fill_path(pen->brush, FALSE))
         retval = SOFTWARE_GdipDrawPath(graphics, pen, path);
     else
         retval = GDI32_GdipDrawPath(graphics, pen, path);
@@ -4034,7 +4150,7 @@ static GpStatus GDI32_GdipFillPath(GpGraphics *graphics, GpBrush *brush, GpPath 
     GpStatus retval;
     HRGN hrgn=NULL;
 
-    if(!graphics->hdc || !brush_can_fill_path(brush))
+    if(!graphics->hdc || !brush_can_fill_path(brush, TRUE))
         return NotImplemented;
 
     save_state = SaveDC(graphics->hdc);
@@ -4327,7 +4443,7 @@ static GpStatus GDI32_GdipFillRegion(GpGraphics* graphics, GpBrush* brush,
     HRGN hrgn;
     RECT rc;
 
-    if(!graphics->hdc || !brush_can_fill_path(brush))
+    if(!graphics->hdc || !brush_can_fill_path(brush, TRUE))
         return NotImplemented;
 
     status = GdipGetRegionHRgn(region, graphics, &hrgn);
@@ -4908,7 +5024,6 @@ GpStatus gdip_format_string(HDC hdc,
     INT hotkeyprefix_count=0;
     INT hotkeyprefix_pos=0, hotkeyprefix_end_pos=0;
     BOOL seen_prefix = FALSE;
-    GpStringFormat *dyn_format=NULL;
 
     if(length == -1) length = lstrlenW(string);
 
@@ -4916,15 +5031,7 @@ GpStatus gdip_format_string(HDC hdc,
     if(!stringdup) return OutOfMemory;
 
     if (!format)
-    {
-        stat = GdipStringFormatGetGenericDefault(&dyn_format);
-        if (stat != Ok)
-        {
-            heap_free(stringdup);
-            return stat;
-        }
-        format = dyn_format;
-    }
+        format = &default_drawstring_format;
 
     nwidth = rect->Width;
     nheight = rect->Height;
@@ -5074,7 +5181,6 @@ GpStatus gdip_format_string(HDC hdc,
 
     heap_free(stringdup);
     heap_free(hotkeyprefix_offsets);
-    GdipDeleteStringFormat(dyn_format);
 
     return stat;
 }
@@ -5426,19 +5532,19 @@ GpStatus WINGDIPAPI GdipDrawString(GpGraphics *graphics, GDIPCONST WCHAR *string
 
         /* Should be no need to explicitly test for StringAlignmentNear as
          * that is default behavior if no alignment is passed. */
-        if(format->vertalign != StringAlignmentNear){
+        if(format->line_align != StringAlignmentNear){
             RectF bounds, in_rect = *rect;
             in_rect.Height = 0.0; /* avoid height clipping */
             GdipMeasureString(graphics, string, length, font, &in_rect, format, &bounds, 0, 0);
 
             TRACE("bounds %s\n", debugstr_rectf(&bounds));
 
-            if(format->vertalign == StringAlignmentCenter)
+            if(format->line_align == StringAlignmentCenter)
                 offsety = (rect->Height - bounds.Height) / 2;
-            else if(format->vertalign == StringAlignmentFar)
+            else if(format->line_align == StringAlignmentFar)
                 offsety = (rect->Height - bounds.Height);
         }
-        TRACE("vertical align %d, offsety %f\n", format->vertalign, offsety);
+        TRACE("line align %d, offsety %f\n", format->line_align, offsety);
     }
 
     save_state = SaveDC(hdc);

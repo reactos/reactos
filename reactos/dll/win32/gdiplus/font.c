@@ -543,6 +543,8 @@ GpStatus WINGDIPAPI GdipGetFontHeight(GDIPCONST GpFont *font,
 
     TRACE("%p %p %p\n", font, graphics, height);
 
+    if (!font || !height) return InvalidParameter;
+
     stat = GdipGetFontHeightGivenDPI(font, font->family->dpi, &font_height);
     if (stat != Ok) return stat;
 

@@ -120,7 +120,7 @@
 120 stdcall GdipCreateRegionRectI(ptr ptr)
 121 stdcall GdipCreateRegionRgnData(ptr long ptr)
 122 stdcall GdipCreateSolidFill(long ptr)
-123 stdcall GdipCreateStreamOnFile(ptr long ptr)
+123 stdcall GdipCreateStreamOnFile(wstr long ptr)
 124 stdcall GdipCreateStringFormat(long long ptr)
 125 stdcall GdipCreateTexture2(ptr long float float float float ptr)
 126 stdcall GdipCreateTexture2I(ptr long long long long long ptr)
