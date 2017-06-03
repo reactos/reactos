@@ -2826,15 +2826,14 @@ static BOOL import_private_key(HCRYPTPROV hProv, const BYTE *pbData, DWORD dwDat
 /******************************************************************************
  * import_public_key [Internal]
  *
- * Import a BLOB'ed public key into a key container.
+ * Import a BLOB'ed public key.
  *
  * PARAMS
- *  hProv     [I] Key container into which the public key is to be imported.
+ *  hProv     [I] A CSP.
  *  pbData    [I] Pointer to a buffer which holds the public key BLOB.
  *  dwDataLen [I] Length of data in buffer at pbData.
  *  dwFlags   [I] One of:
  *                CRYPT_EXPORTABLE: the imported key is marked exportable
- *  fStoreKey [I] If TRUE, the imported key is stored to the registry.
  *  phKey     [O] Handle to the imported key.
  *
  *
@@ -2847,9 +2846,8 @@ static BOOL import_private_key(HCRYPTPROV hProv, const BYTE *pbData, DWORD dwDat
  *  Failure: FALSE.
  */
 static BOOL import_public_key(HCRYPTPROV hProv, const BYTE *pbData, DWORD dwDataLen,
-                              DWORD dwFlags, BOOL fStoreKey, HCRYPTKEY *phKey)
+                              DWORD dwFlags, HCRYPTKEY *phKey)
 {
-    KEYCONTAINER *pKeyContainer;
     CRYPTKEY *pCryptKey;
     const BLOBHEADER *pBlobHeader = (const BLOBHEADER*)pbData;
     const RSAPUBKEY *pRSAPubKey = (const RSAPUBKEY*)(pBlobHeader+1);
@@ -2862,8 +2860,6 @@ static BOOL import_public_key(HCRYPTPROV hProv, const BYTE *pbData, DWORD dwData
         SetLastError(NTE_BAD_FLAGS);
         return FALSE;
     }
-    if (!(pKeyContainer = get_key_container(hProv)))
-        return FALSE;
 
     if ((dwDataLen < sizeof(BLOBHEADER) + sizeof(RSAPUBKEY)) ||
         (pRSAPubKey->magic != RSAENH_MAGIC_RSA1) ||
@@ -2885,15 +2881,6 @@ static BOOL import_public_key(HCRYPTPROV hProv, const BYTE *pbData, DWORD dwData
     if (ret) {
         if (dwFlags & CRYPT_EXPORTABLE)
             pCryptKey->dwPermissions |= CRYPT_EXPORT;
-        switch (pBlobHeader->aiKeyAlg)
-        {
-        case AT_KEYEXCHANGE:
-        case CALG_RSA_KEYX:
-            TRACE("installing public key\n");
-            release_and_install_key(hProv, *phKey, &pKeyContainer->hKeyExchangeKeyPair,
-                                    fStoreKey);
-            break;
-        }
     }
     return ret;
 }
@@ -3107,7 +3094,7 @@ static BOOL import_key(HCRYPTPROV hProv, const BYTE *pbData, DWORD dwDataLen, HC
                 
         case PUBLICKEYBLOB:
             return import_public_key(hProv, pbData, dwDataLen, dwFlags,
-                                     fStoreKey, phKey);
+                                     phKey);
                 
         case SIMPLEBLOB:
             return import_symmetric_key(hProv, pbData, dwDataLen, hPubKey,
