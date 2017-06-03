@@ -25,12 +25,11 @@
 #include <oleauto.h>
 #include <propvarutil.h>
 
-static HRESULT PROPVAR_ConvertFILETIME(PROPVARIANT *ppropvarDest,
-                                       REFPROPVARIANT propvarSrc, VARTYPE vt)
+static HRESULT PROPVAR_ConvertFILETIME(const FILETIME *ft, PROPVARIANT *ppropvarDest, VARTYPE vt)
 {
     SYSTEMTIME time;
 
-    FileTimeToSystemTime(&propvarSrc->u.filetime, &time);
+    FileTimeToSystemTime(ft, &time);
 
     switch (vt)
     {
@@ -39,13 +38,15 @@ static HRESULT PROPVAR_ConvertFILETIME(PROPVARIANT *ppropvarDest,
             static const char format[] = "%04d/%02d/%02d:%02d:%02d:%02d.%03d";
 
             ppropvarDest->u.pszVal = HeapAlloc(GetProcessHeap(), 0,
-                                             lstrlenA(format) + 1);
+                                             sizeof(format));
             if (!ppropvarDest->u.pszVal)
                 return E_OUTOFMEMORY;
 
-            sprintf(ppropvarDest->u.pszVal, format, time.wYear, time.wMonth,
-                    time.wDay, time.wHour, time.wMinute,
-                    time.wSecond, time.wMilliseconds);
+            snprintf( ppropvarDest->u.pszVal, sizeof(format),
+                      format,
+                      time.wYear, time.wMonth, time.wDay,
+                      time.wHour, time.wMinute, time.wSecond,
+                      time.wMilliseconds );
 
             return S_OK;
         }
@@ -99,6 +100,15 @@ static HRESULT PROPVAR_ConvertNumber(REFPROPVARIANT pv, int dest_bits,
     case VT_EMPTY:
         src_signed = FALSE;
         *res = 0;
+        break;
+    case VT_LPSTR:
+        *res = _strtoi64(pv->u.pszVal, NULL, 0);
+        src_signed = *res < 0;
+        break;
+    case VT_LPWSTR:
+    case VT_BSTR:
+        *res = strtolW(pv->u.pwszVal, NULL, 0);
+        src_signed = *res < 0;
         break;
     default:
         FIXME("unhandled vt %d\n", pv->vt);
@@ -211,6 +221,7 @@ HRESULT WINAPI PropVariantToStringAlloc(REFPROPVARIANT propvarIn, WCHAR **ret)
             res = CoTaskMemAlloc(1*sizeof(WCHAR));
             res[0] = '\0';
             break;
+
         case VT_LPSTR:
             if(propvarIn->u.pszVal)
             {
@@ -224,6 +235,18 @@ HRESULT WINAPI PropVariantToStringAlloc(REFPROPVARIANT propvarIn, WCHAR **ret)
                 MultiByteToWideChar(CP_ACP, 0, propvarIn->u.pszVal, -1, res, len);
             }
             break;
+
+        case VT_LPWSTR:
+        case VT_BSTR:
+            if (propvarIn->u.pwszVal)
+            {
+                DWORD size = (strlenW(propvarIn->u.pwszVal) + 1) * sizeof(WCHAR);
+                res = CoTaskMemAlloc(size);
+                if(!res) return E_OUTOFMEMORY;
+                memcpy(res, propvarIn->u.pwszVal, size);
+            }
+            break;
+
         default:
             FIXME("Unsupported conversion (%d)\n", propvarIn->vt);
             hr = E_FAIL;
@@ -246,11 +269,40 @@ HRESULT WINAPI PropVariantChangeType(PROPVARIANT *ppropvarDest, REFPROPVARIANT p
     FIXME("(%p, %p, %d, %d, %d): semi-stub!\n", ppropvarDest, propvarSrc,
           propvarSrc->vt, flags, vt);
 
-    if(vt == propvarSrc->vt)
+    if (vt == propvarSrc->vt)
         return PropVariantCopy(ppropvarDest, propvarSrc);
+
+    if (propvarSrc->vt == VT_FILETIME)
+        return PROPVAR_ConvertFILETIME(&propvarSrc->u.filetime, ppropvarDest, vt);
 
     switch (vt)
     {
+    case VT_I1:
+    {
+        LONGLONG res;
+
+        hr = PROPVAR_ConvertNumber(propvarSrc, 8, TRUE, &res);
+        if (SUCCEEDED(hr))
+        {
+            ppropvarDest->vt = VT_I1;
+            ppropvarDest->u.cVal = (char)res;
+        }
+        return hr;
+    }
+
+    case VT_UI1:
+    {
+        LONGLONG res;
+
+        hr = PROPVAR_ConvertNumber(propvarSrc, 8, FALSE, &res);
+        if (SUCCEEDED(hr))
+        {
+            ppropvarDest->vt = VT_UI1;
+            ppropvarDest->u.bVal = (UCHAR)res;
+        }
+        return hr;
+    }
+
     case VT_I2:
     {
         SHORT res;
@@ -317,7 +369,9 @@ HRESULT WINAPI PropVariantChangeType(PROPVARIANT *ppropvarDest, REFPROPVARIANT p
         }
         return hr;
     }
+
     case VT_LPWSTR:
+    case VT_BSTR:
     {
         WCHAR *res;
         hr = PropVariantToStringAlloc(propvarSrc, &res);
@@ -328,17 +382,36 @@ HRESULT WINAPI PropVariantChangeType(PROPVARIANT *ppropvarDest, REFPROPVARIANT p
         }
         return hr;
     }
-    }
 
-    switch (propvarSrc->vt)
+    case VT_LPSTR:
     {
-        case VT_FILETIME:
-            return PROPVAR_ConvertFILETIME(ppropvarDest, propvarSrc, vt);
-        default:
-            FIXME("Unhandled source type: %d\n", propvarSrc->vt);
+        WCHAR *resW;
+        hr = PropVariantToStringAlloc(propvarSrc, &resW);
+        if (SUCCEEDED(hr))
+        {
+            char *res;
+            DWORD len;
+
+            len = WideCharToMultiByte(CP_ACP, 0, resW, -1, NULL, 0, NULL, NULL);
+            res = CoTaskMemAlloc(len);
+            if (res)
+            {
+                WideCharToMultiByte(CP_ACP, 0, resW, -1, res, len, NULL, NULL);
+                ppropvarDest->vt = VT_LPSTR;
+                ppropvarDest->u.pszVal = res;
+            }
+            else
+                hr = E_OUTOFMEMORY;
+
+            CoTaskMemFree(resW);
+        }
+        return hr;
     }
 
-    return E_FAIL;
+    default:
+        FIXME("Unhandled dest type: %d\n", vt);
+        return E_FAIL;
+    }
 }
 
 static void PROPVAR_GUIDToWSTR(REFGUID guid, WCHAR *str)
@@ -623,8 +696,19 @@ INT WINAPI PropVariantCompareEx(REFPROPVARIANT propvar1, REFPROPVARIANT propvar2
         CMP_INT_VALUE(uhVal.QuadPart);
         break;
     case VT_BSTR:
-        /* FIXME: Use string flags. */
-        res = lstrcmpW(propvar1->u.bstrVal, propvar2->u.bstrVal);
+    case VT_LPWSTR:
+        /* FIXME: Use other string flags. */
+        if (flags & (PVCF_USESTRCMPI | PVCF_USESTRCMPIC))
+            res = lstrcmpiW(propvar1->u.bstrVal, propvar2_converted->u.bstrVal);
+        else
+            res = lstrcmpW(propvar1->u.bstrVal, propvar2_converted->u.bstrVal);
+        break;
+    case VT_LPSTR:
+        /* FIXME: Use other string flags. */
+        if (flags & (PVCF_USESTRCMPI | PVCF_USESTRCMPIC))
+            res = lstrcmpiA(propvar1->u.pszVal, propvar2_converted->u.pszVal);
+        else
+            res = lstrcmpA(propvar1->u.pszVal, propvar2_converted->u.pszVal);
         break;
     default:
         FIXME("vartype %d not handled\n", propvar1->vt);
