@@ -1860,7 +1860,9 @@ UDFMarkAllocatedAsRecorded(
             UDFPackMapping(Vcb, ExtInfo);
         }
         AdPrint(("Alloc->Rec (1) new %x\n", ExtInfo->Mapping));
+#ifdef UDF_DBG
         ASSERT(check_size == UDFGetExtentLength(ExtInfo->Mapping));
+#endif
         AdPrint(("Alloc->Rec: ExtInfo %x, Extent %x\n", ExtInfo, ExtInfo->Mapping));
         return STATUS_SUCCESS;
     }
@@ -1928,8 +1930,10 @@ UDFMarkAllocatedAsRecorded(
     ExtInfo->Mapping = NewExtent;
     if(TryPack)
         UDFPackMapping(Vcb, ExtInfo);
+#ifdef UDF_DBG
     ASSERT(check_size == UDFGetExtentLength(ExtInfo->Mapping));
     ASSERT(!(check_size & (LBS-1)));
+#endif
 
     AdPrint(("Alloc->Rec: ExtInfo %x, Extent %x\n", ExtInfo, ExtInfo->Mapping));
 
@@ -2828,8 +2832,10 @@ UDFPackMapping(
     NewMap[j].extLength =
     NewMap[j].extLocation = 0;
 
+#ifdef UDF_DBG
     ASSERT(check_size == UDFGetExtentLength(ExtInfo->Mapping));
     ASSERT(check_size == UDFGetExtentLength(NewMap));
+#endif
 
     AdPrint(("Pack ExtInfo %x, NewMap %x, OldMap %x\n", ExtInfo, NewMap, OldMap));
     

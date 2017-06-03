@@ -2419,7 +2419,9 @@ UDFCleanUpFile__(
 
         if(!KeepDloc) {
 
+#ifdef UDF_DBG
             ASSERT(!Modified);
+#endif
 
 #ifndef UDF_TRACK_ONDISK_ALLOCATION
             if(Dloc->DataLoc.Mapping)  MyFreePool__(Dloc->DataLoc.Mapping);
