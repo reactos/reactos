@@ -300,9 +300,7 @@ static void test_GetProcessMemoryInfo(void)
 
     SetLastError(0xdeadbeef);
     ret = pGetProcessMemoryInfo(hpSR, &pmc, sizeof(pmc));
-todo_wine
     ok(!ret, "GetProcessMemoryInfo should fail\n");
-todo_wine
     ok(GetLastError() == ERROR_ACCESS_DENIED, "expected error=ERROR_ACCESS_DENIED but got %d\n", GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -329,14 +327,7 @@ static BOOL nt_get_mapped_file_name(HANDLE process, LPVOID addr, LPWSTR name, DW
 
     ret_len = 0xdeadbeef;
     status = pNtQueryVirtualMemory(process, addr, MemorySectionName, buf, buf_len, &ret_len);
-todo_wine
     ok(!status, "NtQueryVirtualMemory error %x\n", status);
-    /* FIXME: remove once Wine is fixed */
-    if (status)
-    {
-        HeapFree(GetProcessHeap(), 0, buf);
-        return FALSE;
-    }
 
     section_name = (MEMORY_SECTION_NAME *)buf;
     ok(ret_len == section_name->SectionFileName.MaximumLength + sizeof(*section_name), "got %lu, %u\n",
@@ -362,31 +353,30 @@ static void test_GetMappedFileName(void)
     char temp_path[MAX_PATH], file_name[MAX_PATH], map_name[MAX_PATH], device_name[MAX_PATH], drive[3];
     WCHAR map_nameW[MAX_PATH], nt_map_name[MAX_PATH];
     HANDLE hfile, hmap;
+    HANDLE current_process;
+
+    DuplicateHandle( GetCurrentProcess(), GetCurrentProcess(),
+                     GetCurrentProcess(), &current_process, 0, 0, DUPLICATE_SAME_ACCESS );
 
     SetLastError(0xdeadbeef);
     ret = pGetMappedFileNameA(NULL, hMod, szMapPath, sizeof(szMapPath));
     ok(!ret, "GetMappedFileName should fail\n");
-todo_wine
     ok(GetLastError() == ERROR_INVALID_HANDLE, "expected error=ERROR_INVALID_HANDLE but got %d\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = pGetMappedFileNameA(hpSR, hMod, szMapPath, sizeof(szMapPath));
     ok(!ret, "GetMappedFileName should fail\n");
-todo_wine
     ok(GetLastError() == ERROR_ACCESS_DENIED, "expected error=ERROR_ACCESS_DENIED but got %d\n", GetLastError());
 
     SetLastError( 0xdeadbeef );
     ret = pGetMappedFileNameA(hpQI, hMod, szMapPath, sizeof(szMapPath));
-todo_wine
     ok( ret || broken(GetLastError() == ERROR_UNEXP_NET_ERR), /* win2k */
         "GetMappedFileNameA failed with error %u\n", GetLastError() );
     if (ret)
     {
         ok(ret == strlen(szMapPath), "szMapPath=\"%s\" ret=%d\n", szMapPath, ret);
-        todo_wine
         ok(szMapPath[0] == '\\', "szMapPath=\"%s\"\n", szMapPath);
         szMapBaseName = strrchr(szMapPath, '\\'); /* That's close enough for us */
-        todo_wine
         ok(szMapBaseName && *szMapBaseName, "szMapPath=\"%s\"\n", szMapPath);
         if (szMapBaseName)
         {
@@ -424,36 +414,30 @@ todo_wine
     SetLastError(0xdeadbeef);
     ret = pGetMappedFileNameA(GetCurrentProcess(), base, map_name, 0);
     ok(!ret, "GetMappedFileName should fail\n");
-todo_wine
     ok(GetLastError() == ERROR_INVALID_PARAMETER || GetLastError() == ERROR_INSUFFICIENT_BUFFER,
        "wrong error %d\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = pGetMappedFileNameA(GetCurrentProcess(), base, 0, sizeof(map_name));
     ok(!ret, "GetMappedFileName should fail\n");
-todo_wine
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = pGetMappedFileNameA(GetCurrentProcess(), base, map_name, 1);
-todo_wine
     ok(ret == 1, "GetMappedFileName error %d\n", GetLastError());
     ok(!map_name[0] || broken(map_name[0] == device_name[0]) /* before win2k */, "expected 0, got %c\n", map_name[0]);
 
     SetLastError(0xdeadbeef);
     ret = pGetMappedFileNameA(GetCurrentProcess(), base, map_name, sizeof(map_name));
-todo_wine {
     ok(ret, "GetMappedFileName error %d\n", GetLastError());
     ok(ret > strlen(device_name), "map_name should be longer than device_name\n");
     ok(memcmp(map_name, device_name, strlen(device_name)) == 0, "map name does not start with a device name: %s\n", map_name);
-}
 
     SetLastError(0xdeadbeef);
     ret = pGetMappedFileNameW(GetCurrentProcess(), base, map_nameW, sizeof(map_nameW)/sizeof(map_nameW[0]));
-todo_wine {
     ok(ret, "GetMappedFileNameW error %d\n", GetLastError());
     ok(ret > strlen(device_name), "map_name should be longer than device_name\n");
-}
+
     if (nt_get_mapped_file_name(GetCurrentProcess(), base, nt_map_name, sizeof(nt_map_name)/sizeof(nt_map_name[0])))
     {
         ok(memcmp(map_nameW, nt_map_name, lstrlenW(map_nameW)) == 0, "map name does not start with a device name: %s\n", map_name);
@@ -462,17 +446,26 @@ todo_wine {
     }
 
     SetLastError(0xdeadbeef);
+    ret = pGetMappedFileNameW(current_process, base, map_nameW, sizeof(map_nameW)/sizeof(map_nameW[0]));
+    ok(ret, "GetMappedFileNameW error %d\n", GetLastError());
+    ok(ret > strlen(device_name), "map_name should be longer than device_name\n");
+
+    if (nt_get_mapped_file_name(current_process, base, nt_map_name, sizeof(nt_map_name)/sizeof(nt_map_name[0])))
+    {
+        ok(memcmp(map_nameW, nt_map_name, lstrlenW(map_nameW)) == 0, "map name does not start with a device name: %s\n", map_name);
+        WideCharToMultiByte(CP_ACP, 0, map_nameW, -1, map_name, MAX_PATH, NULL, NULL);
+        ok(memcmp(map_name, device_name, strlen(device_name)) == 0, "map name does not start with a device name: %s\n", map_name);
+    }
+
+    SetLastError(0xdeadbeef);
     ret = pGetMappedFileNameA(GetCurrentProcess(), base + 0x2000, map_name, sizeof(map_name));
-todo_wine {
     ok(ret, "GetMappedFileName error %d\n", GetLastError());
     ok(ret > strlen(device_name), "map_name should be longer than device_name\n");
     ok(memcmp(map_name, device_name, strlen(device_name)) == 0, "map name does not start with a device name: %s\n", map_name);
-}
 
     SetLastError(0xdeadbeef);
     ret = pGetMappedFileNameA(GetCurrentProcess(), base + 0x4000, map_name, sizeof(map_name));
     ok(!ret, "GetMappedFileName should fail\n");
-todo_wine
     ok(GetLastError() == ERROR_UNEXP_NET_ERR, "expected ERROR_UNEXP_NET_ERR, got %d\n", GetLastError());
 
     SetLastError(0xdeadbeef);
@@ -484,7 +477,6 @@ todo_wine
     SetLastError(0xdeadbeef);
     ret = pGetMappedFileNameA(0, base, map_name, sizeof(map_name));
     ok(!ret, "GetMappedFileName should fail\n");
-todo_wine
     ok(GetLastError() == ERROR_INVALID_HANDLE, "expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
 
     UnmapViewOfFile(base);
@@ -503,9 +495,9 @@ todo_wine
     SetLastError(0xdeadbeef);
     ret = pGetMappedFileNameA(GetCurrentProcess(), base, map_name, sizeof(map_name));
     ok(!ret, "GetMappedFileName should fail\n");
-todo_wine
     ok(GetLastError() == ERROR_FILE_INVALID, "expected ERROR_FILE_INVALID, got %d\n", GetLastError());
 
+    CloseHandle(current_process);
     UnmapViewOfFile(base);
     CloseHandle(hmap);
 }
@@ -552,8 +544,8 @@ static void test_GetProcessImageFileName(void)
     if(ret && ret1)
     {
         /* Windows returns 2*strlen-1 */
-        todo_wine ok(ret >= strlen(szImgPath), "szImgPath=\"%s\" ret=%d\n", szImgPath, ret);
-        todo_wine ok(!strcmp(szImgPath, szMapPath), "szImgPath=\"%s\" szMapPath=\"%s\"\n", szImgPath, szMapPath);
+        ok(ret >= strlen(szImgPath), "szImgPath=\"%s\" ret=%d\n", szImgPath, ret);
+        ok(!strcmp(szImgPath, szMapPath), "szImgPath=\"%s\" szMapPath=\"%s\"\n", szImgPath, szMapPath);
     }
 
     SetLastError(0xdeadbeef);
