@@ -343,7 +343,7 @@ static void translateinfstringex_test(void)
     }
 
     create_inf_file();
-    
+
     /* need to see if there are any flags */
 
     /* try a NULL filename */
@@ -430,6 +430,12 @@ static void translateinfstringex_test(void)
 
     /* open the inf with the install section */
     hr = pOpenINFEngine(inf_file, "section", 0, &hinf, NULL);
+    if (hr == E_FAIL)
+    {
+        skip("can't open engine with install section (needs admin rights)\n");
+        DeleteFileA(inf_file);
+        return;
+    }
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
 
     /* translate the string with the install section specified */
