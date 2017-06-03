@@ -839,6 +839,12 @@ LRESULT CMenuDeskBar::_OnNcPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     return 0;
 }
 
+LRESULT CMenuDeskBar::_OnClose(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    /* Prevent the CMenuDeskBar from destroying on being sent a WM_CLOSE */
+    return 0;
+}
+
 HRESULT CMenuDeskBar::_AdjustForTheme(BOOL bFlatStyle)
 {
     DWORD style = bFlatStyle ? WS_BORDER : WS_CLIPCHILDREN|WS_DLGFRAME;
