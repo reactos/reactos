@@ -338,6 +338,23 @@ HKLM,"SYSTEM\CurrentControlSet\Control\FileSystem","Win31FileSystem",0x00010001,
 HKLM,"SYSTEM\CurrentControlSet\Control\FileSystem","Win95TruncatedExtensions",0x00010001,1
 
 ; Device classes (this list is incomplete... and should be generated from .inf files during installation)
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{36FC9E60-C465-11CF-8056-444553540000}",,0x00000000,"Universal Serial Bus controllers"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{36FC9E60-C465-11CF-8056-444553540000}","Class",0x00000000,"USB"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{36FC9E60-C465-11CF-8056-444553540000}","Icon",0x00000000,"-20"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{36FC9E60-C465-11CF-8056-444553540000}","NoInstallClass",0x00000000,"1"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Keyboard"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"Keyboard"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE10318}","Icon",0x00000000,"-3"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE10318}","Installer32",0x00000000,"SysSetup.Dll,KeyboardClassInstaller"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE10318}","NoInstallClass",0x00000000,"1"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96F-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Mouse"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96F-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"Mouse"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96F-E325-11CE-BFC1-08002BE10318}","Icon",0x00000000,"-2"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96F-E325-11CE-BFC1-08002BE10318}","Installer32",0x00000000,"SysSetup.Dll,MouseClassInstaller"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96F-E325-11CE-BFC1-08002BE10318}","NoInstallClass",0x00000000,"1"
+
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E973-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Client"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E973-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"NetClient"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E973-E325-11CE-BFC1-08002BE10318}","Icon",0x00000000,"-7"
@@ -358,6 +375,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E975-E325-11CE-BFC1-08002BE103
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E975-E325-11CE-BFC1-08002BE10318}","Installer32",0x00000000,"NetCfgx.dll,NetClassInstaller"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E975-E325-11CE-BFC1-08002BE10318}","NoDisplayClass",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E975-E325-11CE-BFC1-08002BE10318}","NoInstallClass",0x00000000,"1"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E97D-E325-11CE-BFC1-08002BE10318}",,0x00000000,"System Devices"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E97D-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"System"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E97D-E325-11CE-BFC1-08002BE10318}","Icon",0x00000000,"-27"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{9D6D66A6-0B0C-4563-9077-A0E9A7955AE4}",,0x00000000,"Ramdisk"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{9D6D66A6-0B0C-4563-9077-A0E9A7955AE4}","Class",0x00000000,"Ramdisk"
