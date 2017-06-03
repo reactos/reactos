@@ -3415,6 +3415,8 @@ static void test_VarDateFromStr(void)
   SYSTEMTIME st;
   OLECHAR buff[128];
   size_t i;
+  OLECHAR with_ideographic_spaceW[] = { '6','/','3','0','/','2','0','1','1',0x3000,
+                                        '1',':','2','0',':','3','4',0 };
 
   lcid = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
 
@@ -3537,6 +3539,11 @@ static void test_VarDateFromStr(void)
   DFS("6/30/2011 01:20:34 AM");       EXPECT_DBL(40724.05594907407);
   DFS("6/30/2011 01:20:34 PM");       EXPECT_DBL(40724.55594907407);
   /* Native fails "1999 January 3, 9AM". I consider that a bug in native */
+
+  /* test a data with ideographic space */
+  out = 0.0;
+  hres = pVarDateFromStr(with_ideographic_spaceW, lcid, LOCALE_NOUSEROVERRIDE, &out);
+  EXPECT_DBL(40724.05594907407);
 
   /* test a non-english data string */
   DFS("02.01.1970"); EXPECT_MISMATCH;

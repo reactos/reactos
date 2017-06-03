@@ -101,6 +101,150 @@ static BOOL has_i8;
 #define R8_MAX DBL_MAX
 #define R8_MIN DBL_MIN
 
+#define DEFINE_EXPECT(func) \
+    static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
+
+#define SET_EXPECT(func) \
+    do { called_ ## func = FALSE; expect_ ## func = TRUE; } while(0)
+
+#define CHECK_EXPECT2(func) \
+    do { \
+        ok(expect_ ##func, "unexpected call " #func "\n"); \
+        called_ ## func = TRUE; \
+    }while(0)
+
+#define CHECK_EXPECT(func) \
+    do { \
+        CHECK_EXPECT2(func); \
+        expect_ ## func = FALSE; \
+    }while(0)
+
+#define CHECK_CALLED(func) \
+    do { \
+        ok(called_ ## func, "expected " #func "\n"); \
+        expect_ ## func = called_ ## func = FALSE; \
+    }while(0)
+
+DEFINE_EXPECT(dispatch_invoke);
+
+typedef struct
+{
+    IDispatch IDispatch_iface;
+    VARTYPE vt;
+    HRESULT result;
+} DummyDispatch;
+
+static inline DummyDispatch *impl_from_IDispatch(IDispatch *iface)
+{
+    return CONTAINING_RECORD(iface, DummyDispatch, IDispatch_iface);
+}
+
+static ULONG WINAPI DummyDispatch_AddRef(IDispatch *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI DummyDispatch_Release(IDispatch *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI DummyDispatch_QueryInterface(IDispatch *iface,
+                                                   REFIID riid,
+                                                   void** ppvObject)
+{
+    *ppvObject = NULL;
+
+    if (IsEqualIID(riid, &IID_IDispatch) ||
+        IsEqualIID(riid, &IID_IUnknown))
+    {
+        *ppvObject = iface;
+        IDispatch_AddRef(iface);
+    }
+
+    return *ppvObject ? S_OK : E_NOINTERFACE;
+}
+
+static HRESULT WINAPI DummyDispatch_GetTypeInfoCount(IDispatch *iface, UINT *pctinfo)
+{
+    ok(0, "Unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI DummyDispatch_GetTypeInfo(IDispatch *iface, UINT tinfo, LCID lcid, ITypeInfo **ti)
+{
+    ok(0, "Unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI DummyDispatch_GetIDsOfNames(IDispatch *iface, REFIID riid, LPOLESTR *names,
+    UINT cnames, LCID lcid, DISPID *dispid)
+{
+    ok(0, "Unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI DummyDispatch_Invoke(IDispatch *iface,
+                                           DISPID dispid, REFIID riid,
+                                           LCID lcid, WORD wFlags,
+                                           DISPPARAMS *params,
+                                           VARIANT *res,
+                                           EXCEPINFO *ei,
+                                           UINT *arg_err)
+{
+    DummyDispatch *This = impl_from_IDispatch(iface);
+
+    CHECK_EXPECT(dispatch_invoke);
+
+    ok(dispid == DISPID_VALUE, "got dispid %d\n", dispid);
+    ok(IsEqualIID(riid, &IID_NULL), "go riid %s\n", wine_dbgstr_guid(riid));
+    ok(wFlags == DISPATCH_PROPERTYGET, "Flags wrong\n");
+
+    ok(params->rgvarg == NULL, "got %p\n", params->rgvarg);
+    ok(params->rgdispidNamedArgs == NULL, "got %p\n", params->rgdispidNamedArgs);
+    ok(params->cArgs == 0, "got %d\n", params->cArgs);
+    ok(params->cNamedArgs == 0, "got %d\n", params->cNamedArgs);
+
+    ok(res != NULL, "got %p\n", res);
+    ok(V_VT(res) == VT_EMPTY, "got %d\n", V_VT(res));
+    ok(ei == NULL, "got %p\n", ei);
+    ok(arg_err == NULL, "got %p\n", arg_err);
+
+    if (FAILED(This->result))
+        return This->result;
+
+    V_VT(res) = This->vt;
+    if (This->vt == VT_UI1)
+        V_UI1(res) = 34;
+    else if (This->vt == VT_NULL)
+    {
+        V_VT(res) = VT_NULL;
+        V_BSTR(res) = NULL;
+    }
+    else
+        memset(res, 0, sizeof(*res));
+
+    return S_OK;
+}
+
+static const IDispatchVtbl DummyDispatch_VTable =
+{
+    DummyDispatch_QueryInterface,
+    DummyDispatch_AddRef,
+    DummyDispatch_Release,
+    DummyDispatch_GetTypeInfoCount,
+    DummyDispatch_GetTypeInfo,
+    DummyDispatch_GetIDsOfNames,
+    DummyDispatch_Invoke
+};
+
+static void init_test_dispatch(VARTYPE vt, DummyDispatch *dispatch)
+{
+    dispatch->IDispatch_iface.lpVtbl = &DummyDispatch_VTable;
+    dispatch->vt = vt;
+    dispatch->result = S_OK;
+}
+
 typedef struct IRecordInfoImpl
 {
     IRecordInfo IRecordInfo_iface;
@@ -5611,6 +5755,7 @@ static void test_VarCat(void)
     HRESULT hres;
     HRESULT expected_error_num;
     int cmp;
+    DummyDispatch dispatch;
 
     CHECKPTR(VarCat);
 
@@ -5944,6 +6089,67 @@ static void test_VarCat(void)
     VariantClear(&right);
     VariantClear(&result);
     VariantClear(&expected);
+
+    /* Dispatch conversion */
+    init_test_dispatch(VT_NULL, &dispatch);
+    V_VT(&left) = VT_DISPATCH;
+    V_DISPATCH(&left) = &dispatch.IDispatch_iface;
+
+    SET_EXPECT(dispatch_invoke);
+    hres = VarCat(&left, &right, &result);
+    todo_wine ok(hres == S_OK, "got 0x%08x\n", hres);
+    ok(V_VT(&result) == VT_BSTR, "got %d\n", V_VT(&result));
+    ok(SysStringLen(V_BSTR(&result)) == 0, "got %d\n", SysStringLen(V_BSTR(&result)));
+    CHECK_CALLED(dispatch_invoke);
+
+    VariantClear(&left);
+    VariantClear(&right);
+    VariantClear(&result);
+
+    init_test_dispatch(VT_NULL, &dispatch);
+    V_VT(&right) = VT_DISPATCH;
+    V_DISPATCH(&right) = &dispatch.IDispatch_iface;
+
+    SET_EXPECT(dispatch_invoke);
+    hres = VarCat(&left, &right, &result);
+    todo_wine ok(hres == S_OK, "got 0x%08x\n", hres);
+    ok(V_VT(&result) == VT_BSTR, "got %d\n", V_VT(&result));
+    ok(SysStringLen(V_BSTR(&result)) == 0, "got %d\n", SysStringLen(V_BSTR(&result)));
+    CHECK_CALLED(dispatch_invoke);
+
+    VariantClear(&left);
+    VariantClear(&right);
+    VariantClear(&result);
+
+    init_test_dispatch(VT_UI1, &dispatch);
+    V_VT(&right) = VT_DISPATCH;
+    V_DISPATCH(&right) = &dispatch.IDispatch_iface;
+
+    V_VT(&left) = VT_BSTR;
+    V_BSTR(&left) = SysAllocString(sz12);
+    SET_EXPECT(dispatch_invoke);
+    hres = pVarCat(&left,&right,&result);
+    ok(hres == S_OK, "VarCat failed with error 0x%08x\n", hres);
+    CHECK_CALLED(dispatch_invoke);
+    ok(!strcmp_wa(V_BSTR(&result), "1234"), "got %s\n", wine_dbgstr_w(V_BSTR(&result)));
+
+    VariantClear(&left);
+    VariantClear(&right);
+    VariantClear(&result);
+
+    init_test_dispatch(VT_NULL, &dispatch);
+    dispatch.result = E_OUTOFMEMORY;
+    V_VT(&right) = VT_DISPATCH;
+    V_DISPATCH(&right) = &dispatch.IDispatch_iface;
+
+    SET_EXPECT(dispatch_invoke);
+    hres = VarCat(&left, &right, &result);
+    todo_wine ok(hres == E_OUTOFMEMORY, "got 0x%08x\n", hres);
+    CHECK_CALLED(dispatch_invoke);
+
+    VariantClear(&left);
+    VariantClear(&right);
+    VariantClear(&result);
 
     /* Test boolean conversion */
     V_VT(&left) = VT_BOOL;
