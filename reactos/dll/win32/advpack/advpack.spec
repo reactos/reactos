@@ -24,9 +24,9 @@
 24 stdcall ExecuteCab(ptr ptr ptr) ExecuteCabA
 25 stdcall ExecuteCabA(ptr ptr ptr)
 26 stdcall ExecuteCabW(ptr ptr ptr)
-27 stdcall ExtractFiles(str str long ptr ptr long) ExtractFilesA
-28 stdcall ExtractFilesA(str str long ptr ptr long)
-29 stdcall ExtractFilesW(wstr wstr long ptr ptr long)
+27 stdcall ExtractFiles(str str long str ptr long) ExtractFilesA
+28 stdcall ExtractFilesA(str str long str ptr long)
+29 stdcall ExtractFilesW(wstr wstr long wstr ptr long)
 30 stdcall FileSaveMarkNotExist(str str str) FileSaveMarkNotExistA
 31 stdcall FileSaveMarkNotExistA(str str str)
 32 stdcall FileSaveMarkNotExistW(wstr wstr wstr)
