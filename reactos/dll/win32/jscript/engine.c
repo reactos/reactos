@@ -18,6 +18,8 @@
 
 #include "jscript.h"
 
+WINE_DECLARE_DEBUG_CHANNEL(jscript_except);
+
 static const WCHAR booleanW[] = {'b','o','o','l','e','a','n',0};
 static const WCHAR functionW[] = {'f','u','n','c','t','i','o','n',0};
 static const WCHAR numberW[] = {'n','u','m','b','e','r',0};
@@ -30,7 +32,7 @@ struct _except_frame_t {
     unsigned stack_top;
     scope_chain_t *scope;
     unsigned catch_off;
-    BSTR ident;
+    unsigned finally_off;
 
     except_frame_t *next;
 };
@@ -891,35 +893,21 @@ static HRESULT interp_throw_type(script_ctx_t *ctx)
 /* ECMA-262 3rd Edition    12.14 */
 static HRESULT interp_push_except(script_ctx_t *ctx)
 {
-    const unsigned arg1 = get_op_uint(ctx, 0);
-    const BSTR arg2 = get_op_bstr(ctx, 1);
+    const unsigned catch_off = get_op_uint(ctx, 0);
+    const unsigned finally_off = get_op_uint(ctx, 1);
     call_frame_t *frame = ctx->call_ctx;
     except_frame_t *except;
-    unsigned stack_top;
 
     TRACE("\n");
-
-    stack_top = ctx->stack_top;
-
-    if(!arg2) {
-        HRESULT hres;
-
-        hres = stack_push(ctx, jsval_bool(TRUE));
-        if(FAILED(hres))
-            return hres;
-        hres = stack_push(ctx, jsval_bool(TRUE));
-        if(FAILED(hres))
-            return hres;
-    }
 
     except = heap_alloc(sizeof(*except));
     if(!except)
         return E_OUTOFMEMORY;
 
-    except->stack_top = stack_top;
+    except->stack_top = ctx->stack_top;
     except->scope = frame->scope;
-    except->catch_off = arg1;
-    except->ident = arg2;
+    except->catch_off = catch_off;
+    except->finally_off = finally_off;
     except->next = frame->except_frame;
     frame->except_frame = except;
     return S_OK;
@@ -928,22 +916,41 @@ static HRESULT interp_push_except(script_ctx_t *ctx)
 /* ECMA-262 3rd Edition    12.14 */
 static HRESULT interp_pop_except(script_ctx_t *ctx)
 {
+    const unsigned ret_off = get_op_uint(ctx, 0);
     call_frame_t *frame = ctx->call_ctx;
     except_frame_t *except;
+    unsigned finally_off;
 
-    TRACE("\n");
+    TRACE("%u\n", ret_off);
 
     except = frame->except_frame;
     assert(except != NULL);
 
+    finally_off = except->finally_off;
     frame->except_frame = except->next;
     heap_free(except);
+
+    if(finally_off) {
+        HRESULT hres;
+
+        hres = stack_push(ctx, jsval_number(ret_off));
+        if(FAILED(hres))
+            return hres;
+        hres = stack_push(ctx, jsval_bool(TRUE));
+        if(FAILED(hres))
+            return hres;
+        frame->ip = finally_off;
+    }else {
+        frame->ip = ret_off;
+    }
+
     return S_OK;
 }
 
 /* ECMA-262 3rd Edition    12.14 */
 static HRESULT interp_end_finally(script_ctx_t *ctx)
 {
+    call_frame_t *frame = ctx->call_ctx;
     jsval_t v;
 
     TRACE("\n");
@@ -958,8 +965,30 @@ static HRESULT interp_end_finally(script_ctx_t *ctx)
         return DISP_E_EXCEPTION;
     }
 
-    stack_pop(ctx);
+    v = stack_pop(ctx);
+    assert(is_number(v));
+    frame->ip = get_number(v);
     return S_OK;
+}
+
+static HRESULT interp_enter_catch(script_ctx_t *ctx)
+{
+    const BSTR ident = get_op_bstr(ctx, 0);
+    jsdisp_t *scope_obj;
+    jsval_t v;
+    HRESULT hres;
+
+    hres = create_dispex(ctx, NULL, NULL, &scope_obj);
+    if(FAILED(hres))
+        return hres;
+
+    v = stack_pop(ctx);
+    hres = jsdisp_propput_name(scope_obj, ident, v);
+    jsval_release(v);
+    if(SUCCEEDED(hres))
+        hres = scope_push(ctx->call_ctx->scope, scope_obj, to_disp(scope_obj), &ctx->call_ctx->scope);
+    jsdisp_release(scope_obj);
+    return hres;
 }
 
 /* ECMA-262 3rd Edition    13 */
@@ -2626,13 +2655,71 @@ static void pop_call_frame(script_ctx_t *ctx)
     heap_free(frame);
 }
 
+static void print_backtrace(script_ctx_t *ctx)
+{
+    unsigned depth = 0, i;
+    call_frame_t *frame;
+
+    for(frame = ctx->call_ctx; frame; frame = frame->prev_frame) {
+        TRACE_(jscript_except)("%u\t", depth);
+        depth++;
+
+        if(frame->this_obj && frame->this_obj != to_disp(ctx->global) && frame->this_obj != ctx->host_global)
+            TRACE_(jscript_except)("%p->", frame->this_obj);
+        TRACE_(jscript_except)("%s(", frame->function->name ? debugstr_w(frame->function->name) : "[unnamed]");
+        if(frame->base_scope && frame->base_scope->frame) {
+            for(i=0; i < frame->argc; i++) {
+                if(i < frame->function->param_cnt)
+                    TRACE_(jscript_except)("%s%s=%s", i ? ", " : "",
+                                           debugstr_w(frame->function->params[i]),
+                                           debugstr_jsval(ctx->stack[local_off(frame, -i-1)]));
+                else
+                    TRACE_(jscript_except)("%s%s", i ? ", " : "",
+                                           debugstr_jsval(ctx->stack[local_off(frame, -i-1)]));
+            }
+        }else {
+            TRACE_(jscript_except)("[detached frame]");
+        }
+        TRACE_(jscript_except)(")\n");
+
+        if(!(frame->flags & EXEC_RETURN_TO_INTERP)) {
+            TRACE_(jscript_except)("%u\t[native code]\n", depth);
+            depth++;
+        }
+    }
+}
+
 static HRESULT unwind_exception(script_ctx_t *ctx, HRESULT exception_hres)
 {
     except_frame_t *except_frame;
     call_frame_t *frame;
     jsval_t except_val;
-    BSTR ident;
+    unsigned catch_off;
     HRESULT hres;
+
+    TRACE("%08x\n", exception_hres);
+
+    if(TRACE_ON(jscript_except)) {
+        jsdisp_t *error_obj;
+        jsval_t msg;
+
+        static const WCHAR messageW[] = {'m','e','s','s','a','g','e',0};
+
+        TRACE_(jscript_except)("Exception %08x %s", exception_hres, debugstr_jsval(ctx->ei.val));
+        if(jsval_type(ctx->ei.val) == JSV_OBJECT) {
+            error_obj = to_jsdisp(get_object(ctx->ei.val));
+            if(error_obj) {
+                hres = jsdisp_propget_name(error_obj, messageW, &msg);
+                if(SUCCEEDED(hres)) {
+                    TRACE_(jscript_except)(" (message %s)", debugstr_jsval(msg));
+                    jsval_release(msg);
+                }
+            }
+        }
+        TRACE_(jscript_except)(" in:\n");
+
+        print_backtrace(ctx);
+    }
 
     for(frame = ctx->call_ctx; !frame->except_frame; frame = ctx->call_ctx) {
         DWORD flags;
@@ -2649,7 +2736,7 @@ static HRESULT unwind_exception(script_ctx_t *ctx, HRESULT exception_hres)
     }
 
     except_frame = frame->except_frame;
-    frame->except_frame = except_frame->next;
+    catch_off = except_frame->catch_off;
 
     assert(except_frame->stack_top <= ctx->stack_top);
     stack_popn(ctx, ctx->stack_top - except_frame->stack_top);
@@ -2657,38 +2744,27 @@ static HRESULT unwind_exception(script_ctx_t *ctx, HRESULT exception_hres)
     while(except_frame->scope != frame->scope)
         scope_pop(&frame->scope);
 
-    frame->ip = except_frame->catch_off;
+    frame->ip = catch_off ? catch_off : except_frame->finally_off;
+    if(catch_off) assert(frame->bytecode->instrs[frame->ip].op == OP_enter_catch);
 
     except_val = ctx->ei.val;
     ctx->ei.val = jsval_undefined();
     clear_ei(ctx);
 
-    ident = except_frame->ident;
-    heap_free(except_frame);
-
-    if(ident) {
-        jsdisp_t *scope_obj;
-
-        hres = create_dispex(ctx, NULL, NULL, &scope_obj);
-        if(SUCCEEDED(hres)) {
-            hres = jsdisp_propput_name(scope_obj, ident, except_val);
-            if(FAILED(hres))
-                jsdisp_release(scope_obj);
-        }
-        jsval_release(except_val);
-        if(FAILED(hres))
-            return hres;
-
-        hres = scope_push(frame->scope, scope_obj, to_disp(scope_obj), &frame->scope);
-        jsdisp_release(scope_obj);
+    /* keep current except_frame if we're entering catch block with finally block associated */
+    if(catch_off && except_frame->finally_off) {
+        except_frame->catch_off = 0;
     }else {
-        hres = stack_push(ctx, except_val);
-        if(FAILED(hres))
-            return hres;
-
-        hres = stack_push(ctx, jsval_bool(FALSE));
+        frame->except_frame = except_frame->next;
+        heap_free(except_frame);
     }
 
+    hres = stack_push(ctx, except_val);
+    if(FAILED(hres))
+        return hres;
+
+    if(!catch_off)
+        hres = stack_push(ctx, jsval_bool(FALSE));
     return hres;
 }
 
@@ -2705,8 +2781,6 @@ static HRESULT enter_bytecode(script_ctx_t *ctx, jsval_t *r)
         op = frame->bytecode->instrs[frame->ip].op;
         hres = op_funcs[op](ctx);
         if(FAILED(hres)) {
-            TRACE("EXCEPTION %08x\n", hres);
-
             hres = unwind_exception(ctx, hres);
             if(FAILED(hres))
                 return hres;
