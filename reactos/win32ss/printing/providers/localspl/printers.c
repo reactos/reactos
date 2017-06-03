@@ -756,7 +756,7 @@ _LocalGetPrinterLevel5(PLOCAL_PRINTER pPrinter, PPRINTER_INFO_5W* ppPrinterInfo,
     size_t cbPrinterName;
     size_t cbPortName;
     PWSTR p;
-    PWSTR pwszStrings[1];
+    PWSTR pwszStrings[2];
 
     // Calculate the string lengths.
     cbPrinterName = (cchComputerName + wcslen(pPrinter->pwszPrinterName) + 1) * sizeof(WCHAR);
