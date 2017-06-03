@@ -32,7 +32,7 @@
 /* ##### */
 
 static HMODULE  hdll;
-static HANDLE (WINAPI *pPSetupCreateMonitorInfo)(LPVOID, LPVOID, LPVOID);
+static HANDLE (WINAPI *pPSetupCreateMonitorInfo)(DWORD, const WCHAR *);
 static VOID   (WINAPI *pPSetupDestroyMonitorInfo)(HANDLE);
 static BOOL   (WINAPI *pPSetupEnumMonitor)(HANDLE, DWORD, LPWSTR, LPDWORD);
 
@@ -66,10 +66,12 @@ static LPCSTR load_functions(void)
 static void test_PSetupCreateMonitorInfo(VOID)
 {
     HANDLE  mi;
-    BYTE    buffer[1024] ;
+    WCHAR buffer[1024] = {'\\','\\'};
+    UINT len = sizeof(buffer) / sizeof(buffer[0]) - 2;
+    GetComputerNameW(buffer + 2, &len);
 
     SetLastError(0xdeadbeef);
-    mi = pPSetupCreateMonitorInfo(NULL, NULL, NULL);
+    mi = pPSetupCreateMonitorInfo(0, NULL);
     if (!mi && (GetLastError() == RPC_S_SERVER_UNAVAILABLE)) {
         win_skip("The service 'Spooler' is required for many tests\n");
         return;
@@ -77,13 +79,18 @@ static void test_PSetupCreateMonitorInfo(VOID)
     ok( mi != NULL, "got %p with %u (expected '!= NULL')\n", mi, GetLastError());
     if (mi) pPSetupDestroyMonitorInfo(mi);
 
-
-    memset(buffer, 0, sizeof(buffer));
     SetLastError(0xdeadbeef);
-    mi = pPSetupCreateMonitorInfo(buffer, NULL, NULL);
+    mi = pPSetupCreateMonitorInfo(0, buffer);
     ok( mi != NULL, "got %p with %u (expected '!= NULL')\n", mi, GetLastError());
     if (mi) pPSetupDestroyMonitorInfo(mi);
 
+    SetLastError(0xdeadbeef);
+    mi = pPSetupCreateMonitorInfo(0, buffer + 1);
+    todo_wine {
+    ok( mi == NULL, "got %p\n", mi );
+    ok( GetLastError() == ERROR_INVALID_NAME, "got %d\n", GetLastError() );
+    }
+    if (mi) pPSetupDestroyMonitorInfo(mi);
 }
 
 /* ########################### */
@@ -99,7 +106,7 @@ static void test_PSetupDestroyMonitorInfo(VOID)
     trace("returned with %u\n", GetLastError());
 
     SetLastError(0xdeadbeef);
-    mi = pPSetupCreateMonitorInfo(NULL, NULL, NULL);
+    mi = pPSetupCreateMonitorInfo(0, NULL);
     if (!mi && (GetLastError() == RPC_S_SERVER_UNAVAILABLE)) {
         win_skip("The service 'Spooler' is required for many tests\n");
         return;
@@ -134,7 +141,7 @@ static void test_PSetupEnumMonitor(VOID)
     DWORD   index=0;
 
     SetLastError(0xdeadbeef);
-    mi = pPSetupCreateMonitorInfo(NULL, NULL, NULL);
+    mi = pPSetupCreateMonitorInfo(0, NULL);
     if (!mi) {
         skip("PSetupCreateMonitorInfo\n");
         return;
