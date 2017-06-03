@@ -696,15 +696,49 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
     IEnumCodePage_Release(iEnumCP);
 }
 
-static void test_GetCharsetInfo_alias(IMultiLanguage *ml)
+static void test_GetCharsetInfo_other(IMultiLanguage *ml)
 {
     WCHAR asciiW[] = {'a','s','c','i','i',0};
+    WCHAR iso88591_1W[] =    {'I','S','O','-','8','8','5','9','-','1',0};
+    WCHAR iso88591_1retW[] = {'i','s','o','-','8','8','5','9','-','1',0};
+    WCHAR iso88591_2W[] =    {'I','S','O','8','8','5','9','-','1',0};
+    WCHAR iso88591_2retW[] = {'i','s','o','8','8','5','9','-','1',0};
+    WCHAR iso88591_3W[] =    {'I','S','O','8','8','5','9','1',0};
+    WCHAR iso88591_4W[] =    {'I','S','O','-','8','8','5','9','1',0};
+    WCHAR iso88591_5W[] =    {'I','S','O','8','8','-','5','9','1',0};
+    WCHAR iso88591_6W[] =    {'-','I','S','O','8','8','5','9','1',0};
+    WCHAR iso88591_7W[] =    {' ','I','S','O','-','8','8','5','9','-','1',0};
+    struct other {
+        int todo;
+        HRESULT hr;
+        WCHAR* charset;
+        WCHAR* ret_charset;
+    } other[] = {
+        { 0, S_OK,   asciiW, asciiW },
+        { 0, S_OK,   iso88591_1W, iso88591_1retW },
+        { 1, S_OK,   iso88591_2W, iso88591_2retW },
+        { 0, E_FAIL, iso88591_3W, 0 },
+        { 0, E_FAIL, iso88591_4W, 0 },
+        { 0, E_FAIL, iso88591_5W, 0 },
+        { 0, E_FAIL, iso88591_6W, 0 },
+        { 0, E_FAIL, iso88591_7W, 0 },
+    };
     MIMECSETINFO info;
     HRESULT hr;
+    int i;
 
-    hr = IMultiLanguage_GetCharsetInfo(ml, asciiW, &info);
-    ok(hr == S_OK, "got %08x\n", hr);
-    ok(!lstrcmpW(info.wszCharset, asciiW), "got %s\n", wine_dbgstr_w(info.wszCharset));
+    for (i = 0; i < sizeof(other)/sizeof(*other); i++)
+    {
+        hr = IMultiLanguage_GetCharsetInfo(ml, other[i].charset, &info);
+
+        todo_wine_if(other[i].todo)
+        ok(hr == other[i].hr, "#%d: got %08x, expected %08x\n", i, hr, other[i].hr);
+
+        if (hr == S_OK)
+            todo_wine_if(other[i].todo)
+            ok(!lstrcmpW(info.wszCharset, other[i].ret_charset), "#%d: got %s, expected %s\n",
+                i, wine_dbgstr_w(info.wszCharset), wine_dbgstr_w(other[i].ret_charset));
+    }
 }
 
 static void scriptinfo_cmp(SCRIPTINFO *sinfo1, SCRIPTINFO *sinfo2)
@@ -2206,7 +2240,7 @@ START_TEST(mlang)
 
     test_GetNumberOfCodePageInfo((IMultiLanguage2 *)iML);
     test_IMLangConvertCharset(iML);
-    test_GetCharsetInfo_alias(iML);
+    test_GetCharsetInfo_other(iML);
     IMultiLanguage_Release(iML);
 
 
