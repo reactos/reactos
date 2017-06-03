@@ -122,7 +122,7 @@ TestMessageHandler(
                 Length = QueryBuffer->Length;
                 ok(Length > 0, "Null size!\n");
 
-                CurrentBuffer = ExAllocatePoolWithTag(NonPagedPool, Length + 0x8, 'MLPC');
+                CurrentBuffer = ExAllocatePoolWithTag(NonPagedPool, Length, 'MLPC');
                 ok(CurrentBuffer != NULL, "ExAllocatePool failed!\n");
                 CurrentUser = NULL;
                 if (!skip(CurrentBuffer != NULL, "ExAllocatePool failed!\n"))
@@ -195,14 +195,15 @@ TestMessageHandler(
                     if (ReadBuffer->Buffer != NULL)
                     {
                         USHORT i;
-                        PUSHORT KBuffer = MmGetSystemAddressForMdlSafe(CurrentMdl, NormalPagePriority);
+                        PULONG KBuffer = MmGetSystemAddressForMdlSafe(CurrentMdl, NormalPagePriority);
                         ok(KBuffer != NULL, "Failed to get kmode ptr\n");
+                        ok(ReadBuffer->Length % sizeof(ULONG) == 0, "Invalid size: %d\n", ReadBuffer->Length);
 
                         if (!skip(Buffer != NULL, "Failed to get kmode ptr\n"))
                         {
-                            for (i = 0; i < ReadBuffer->Length / sizeof(USHORT); ++i)
+                            for (i = 0; i < ReadBuffer->Length / sizeof(ULONG); ++i)
                             {
-                                ok_eq_ulong((ULONG)KBuffer[i], (ULONG)ReadBuffer->Pattern);
+                                ok_eq_ulong(KBuffer[i], ReadBuffer->Pattern);
                             }
                         }
                     }

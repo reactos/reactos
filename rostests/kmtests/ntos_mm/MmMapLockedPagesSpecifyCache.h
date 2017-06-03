@@ -20,10 +20,12 @@ typedef struct _READ_BUFFER
 {
     USHORT Length;
     PVOID Buffer;
-    USHORT Pattern;
+    ULONG Pattern;
 } READ_BUFFER, *PREAD_BUFFER;
 
 #define IOCTL_QUERY_BUFFER 1
 #define IOCTL_READ_BUFFER  2
+
+#define WRITE_PATTERN 0xA4A5A6A7
 
 #endif /* !defined _KMTEST_MMMAPLOCKEDPAGESSPECIFYCACHE_H_ */
