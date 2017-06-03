@@ -750,7 +750,7 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
     /* Load the system hive */
     UiDrawBackdrop();
     UiDrawProgressBarCenter(15, 100, "Loading system hive...");
-    Success = WinLdrInitSystemHive(LoaderBlock, BootPath);
+    Success = WinLdrInitSystemHive(LoaderBlock, BootPath, FALSE);
     TRACE("SYSTEM hive %s\n", (Success ? "loaded" : "not loaded"));
     /* Bail out if failure */
     if (!Success)

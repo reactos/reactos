@@ -30,20 +30,21 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
 
 /* FUNCTIONS **************************************************************/
 
-BOOLEAN
-WinLdrLoadSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                     IN LPCSTR DirectoryPath,
-                     IN LPCSTR HiveName)
+static BOOLEAN
+WinLdrLoadSystemHive(
+    IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+    IN PCSTR DirectoryPath,
+    IN PCSTR HiveName)
 {
     ULONG FileId;
-    CHAR FullHiveName[256];
+    CHAR FullHiveName[MAX_PATH];
     ARC_STATUS Status;
     FILEINFORMATION FileInfo;
     ULONG HiveFileSize;
     ULONG_PTR HiveDataPhysical;
     PVOID HiveDataVirtual;
     ULONG BytesRead;
-    LPCWSTR FsService;
+    PCWSTR FsService;
 
     /* Concatenate path and filename to get the full name */
     strcpy(FullHiveName, DirectoryPath);
@@ -94,7 +95,7 @@ WinLdrLoadSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
         return FALSE;
     }
 
-    // Add boot filesystem driver to the list
+    /* Add boot filesystem driver to the list */
     FsService = FsGetServiceName(FileId);
     if (FsService)
     {
@@ -116,25 +117,40 @@ WinLdrLoadSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     return TRUE;
 }
 
-BOOLEAN WinLdrInitSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                             IN LPCSTR DirectoryPath)
+BOOLEAN
+WinLdrInitSystemHive(
+    IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+    IN PCSTR SystemRoot,
+    IN BOOLEAN Setup)
 {
     CHAR SearchPath[1024];
+    PCSTR HiveName;
     BOOLEAN Success;
 
-    // There is a simple logic here: try to load usual hive (system), if it
-    // fails, then give system.alt a try, and finally try a system.sav
+    if (Setup)
+    {
+        strcpy(SearchPath, SystemRoot);
+        HiveName = "SETUPREG.HIV";
+    }
+    else
+    {
+        // There is a simple logic here: try to load usual hive (system), if it
+        // fails, then give system.alt a try, and finally try a system.sav
 
-    // FIXME: For now we only try system
-    strcpy(SearchPath, DirectoryPath);
-    strcat(SearchPath, "SYSTEM32\\CONFIG\\");
-    Success = WinLdrLoadSystemHive(LoaderBlock, SearchPath, "SYSTEM");
+        // FIXME: For now we only try system
+        strcpy(SearchPath, SystemRoot);
+        strcat(SearchPath, "SYSTEM32\\CONFIG\\");
+        HiveName = "SYSTEM";
+    }
 
-    // Fail if failed...
+    ERR("WinLdrInitSystemHive: try to load hive %s%s\n", SearchPath, HiveName);
+    Success = WinLdrLoadSystemHive(LoaderBlock, SearchPath, HiveName);
+
+    /* Fail if failed... */
     if (!Success)
         return FALSE;
 
-    // Import what was loaded
+    /* Import what was loaded */
     Success = RegImportBinaryHive(VaToPa(LoaderBlock->RegistryBase), LoaderBlock->RegistryLength);
     if (!Success)
     {
@@ -142,7 +158,7 @@ BOOLEAN WinLdrInitSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
         return FALSE;
     }
 
-    // Initialize the 'CurrentControlSet' link
+    /* Initialize the 'CurrentControlSet' link */
     if (RegInitCurrentControlSet(FALSE) != ERROR_SUCCESS)
     {
         UiMessageBox("Initializing CurrentControlSet link failed!");
@@ -159,10 +175,10 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     CHAR AnsiName[256], OemName[256], LangName[256];
     BOOLEAN Success;
 
-    // Scan registry and prepare boot drivers list
+    /* Scan registry and prepare boot drivers list */
     WinLdrScanRegistry(&LoaderBlock->BootDriverListHead, DirectoryPath);
 
-    // Get names of NLS files
+    /* Get names of NLS files */
     Success = WinLdrGetNLSNames(AnsiName, OemName, LangName);
     if (!Success)
     {
@@ -172,13 +188,15 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
     TRACE("NLS data %s %s %s\n", AnsiName, OemName, LangName);
 
-    // Load NLS data
+    /* Load NLS data */
     strcpy(SearchPath, DirectoryPath);
     strcat(SearchPath, "SYSTEM32\\");
     Success = WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
     TRACE("NLS data loading %s\n", Success ? "successful" : "failed");
 
     /* TODO: Load OEM HAL font */
+    // In HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Nls\CodePage,
+    // REG_SZ value "OEMHAL"
 
     return TRUE;
 }
@@ -208,7 +226,7 @@ WinLdrGetNLSNames(LPSTR AnsiName,
         return FALSE;
     }
 
-    /* get ANSI codepage */
+    /* Get ANSI codepage */
     BufferSize = sizeof(szIdBuffer);
     rc = RegQueryValue(hKey, L"ACP", NULL, (PUCHAR)szIdBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
@@ -227,7 +245,7 @@ WinLdrGetNLSNames(LPSTR AnsiName,
     }
     sprintf(AnsiName, "%S", NameBuffer);
 
-    /* get OEM codepage */
+    /* Get OEM codepage */
     BufferSize = sizeof(szIdBuffer);
     rc = RegQueryValue(hKey, L"OEMCP", NULL, (PUCHAR)szIdBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
@@ -246,7 +264,7 @@ WinLdrGetNLSNames(LPSTR AnsiName,
     }
     sprintf(OemName, "%S", NameBuffer);
 
-    /* open the language key */
+    /* Open the language key */
     rc = RegOpenKey(NULL,
         L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language",
         &hKey);
@@ -256,7 +274,7 @@ WinLdrGetNLSNames(LPSTR AnsiName,
         return FALSE;
     }
 
-    /* get the Unicode case table */
+    /* Get the Unicode case table */
     BufferSize = sizeof(szIdBuffer);
     rc = RegQueryValue(hKey, L"Default", NULL, (PUCHAR)szIdBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS)
