@@ -1183,6 +1183,8 @@ static BOOL elf_load_file_from_fmap(struct process* pcs, const WCHAR* filename,
             char*           ptr = (char*)fmap->u.elf.sect[ism.sidx].shdr.sh_addr;
             unsigned long   len;
 
+            if (load_offset) ptr += load_offset - fmap->u.elf.elf_start;
+
             do
             {
                 if (!ReadProcessMemory(pcs->handle, ptr, &dyn, sizeof(dyn), &len) ||
@@ -1550,7 +1552,13 @@ static BOOL elf_enum_modules_internal(const struct process* pcs,
  */
 static BOOL elf_search_loader(struct process* pcs, struct elf_info* elf_info)
 {
-    return elf_search_and_load_file(pcs, get_wine_loader_name(), 0, 0, elf_info);
+    PROCESS_BASIC_INFORMATION pbi;
+    ULONG_PTR base = 0;
+
+    if (!NtQueryInformationProcess( pcs->handle, ProcessBasicInformation, &pbi, sizeof(pbi), NULL ))
+        ReadProcessMemory( pcs->handle, &pbi.PebBaseAddress->Reserved[0], &base, sizeof(base), NULL );
+
+    return elf_search_and_load_file(pcs, get_wine_loader_name(), base, 0, elf_info);
 }
 
 /******************************************************************
