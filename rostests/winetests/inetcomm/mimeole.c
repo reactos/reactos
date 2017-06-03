@@ -323,7 +323,12 @@ static ULONG WINAPI Stream_AddRef(IStream *iface)
 static ULONG WINAPI Stream_Release(IStream *iface)
 {
     TestStream *This = impl_from_IStream(iface);
-    return InterlockedDecrement(&This->ref);
+    ULONG ref = InterlockedDecrement(&This->ref);
+
+    if (!ref)
+        HeapFree(GetProcessHeap(), 0, This);
+
+    return ref;
 }
 
 static HRESULT WINAPI Stream_Read(IStream *iface, void *pv, ULONG cb, ULONG *pcbRead)
