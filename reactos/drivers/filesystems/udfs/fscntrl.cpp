@@ -348,7 +348,7 @@ UDFMountVolume(
 //    KdPrint(("Build " VER_STR_PRODUCT "\n\n"));
 
     fsDeviceObject = PtrIrpContext->TargetDeviceObject;
-    KdPrint(("Mount on device object %x\n"));
+    KdPrint(("Mount on device object %x\n", fsDeviceObject));
     filterDevExt = (PFILTER_DEV_EXTENSION)fsDeviceObject->DeviceExtension;
     if (filterDevExt->NodeIdentifier.NodeType == UDF_NODE_TYPE_FILTER_DEVOBJ &&
         filterDevExt->NodeIdentifier.NodeSize == sizeof(FILTER_DEV_EXTENSION)) {
