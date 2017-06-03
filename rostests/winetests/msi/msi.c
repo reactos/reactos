@@ -3427,6 +3427,327 @@ static void test_MsiGetComponentPath(void)
     LocalFree(usersid);
 }
 
+static void test_MsiGetComponentPathEx(void)
+{
+    HKEY key_comp, key_installprop, key_prod;
+    char prod[MAX_PATH], prod_squashed[MAX_PATH];
+    char comp[MAX_PATH], comp_base85[MAX_PATH], comp_squashed[MAX_PATH];
+    char path[MAX_PATH], path_key[MAX_PATH], *usersid;
+    INSTALLSTATE state;
+    DWORD size, val;
+    REGSAM access = KEY_ALL_ACCESS;
+    LONG res;
+
+    if (!pMsiGetComponentPathExA)
+    {
+        win_skip( "MsiGetComponentPathExA not present\n" );
+        return;
+    }
+
+    if (is_wow64) access |= KEY_WOW64_64KEY;
+
+    create_test_guid( prod, prod_squashed );
+    compose_base85_guid( comp, comp_base85, comp_squashed );
+    usersid = get_user_sid();
+
+    /* NULL product */
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( NULL, comp, NULL, MSIINSTALLCONTEXT_USERMANAGED, path, &size );
+    ok( state == INSTALLSTATE_INVALIDARG, "got %d\n", state );
+    todo_wine ok( !size, "got %u\n", size );
+
+    /* NULL component */
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( prod, NULL, NULL, MSIINSTALLCONTEXT_USERMANAGED, path, &size );
+    ok( state == INSTALLSTATE_INVALIDARG, "got %d\n", state );
+    todo_wine ok( !size, "got %u\n", size );
+
+    /* non-NULL usersid, MSIINSTALLCONTEXT_MACHINE */
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( prod, comp, usersid, MSIINSTALLCONTEXT_MACHINE, path, &size);
+    ok( state == INSTALLSTATE_INVALIDARG, "got %d\n", state );
+    todo_wine ok( !size, "got %u\n", size );
+
+    /* NULL buf */
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( prod, comp, NULL, MSIINSTALLCONTEXT_MACHINE, NULL, &size );
+    ok( state == INSTALLSTATE_UNKNOWN, "got %d\n", state );
+    todo_wine ok( size == MAX_PATH * 2, "got %u\n", size );
+
+    /* NULL buflen */
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( prod, comp, NULL, MSIINSTALLCONTEXT_MACHINE, path, NULL );
+    ok( state == INSTALLSTATE_INVALIDARG, "got %d\n", state );
+    ok( size == MAX_PATH, "got %u\n", size );
+
+    /* all params valid */
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( prod, comp, NULL, MSIINSTALLCONTEXT_MACHINE, path, &size );
+    ok( state == INSTALLSTATE_UNKNOWN, "got %d\n", state );
+    todo_wine ok( !size, "got %u\n", size );
+
+    lstrcpyA( path_key, "Software\\Microsoft\\Windows\\CurrentVersion\\" );
+    lstrcatA( path_key, "Installer\\UserData\\S-1-5-18\\Components\\" );
+    lstrcatA( path_key, comp_squashed );
+
+    res = RegCreateKeyExA( HKEY_LOCAL_MACHINE, path_key, 0, NULL, 0, access, NULL, &key_comp, NULL );
+    if (res == ERROR_ACCESS_DENIED)
+    {
+        skip( "insufficient rights\n" );
+        LocalFree( usersid );
+        return;
+    }
+    ok( res == ERROR_SUCCESS, "got %d\n", res );
+
+    /* local system component key exists */
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( prod, comp, NULL, MSIINSTALLCONTEXT_MACHINE, path, &size );
+    ok( state == INSTALLSTATE_UNKNOWN, "got %d\n", state );
+
+    res = RegSetValueExA( key_comp, prod_squashed, 0, REG_SZ, (const BYTE *)"c:\\testcomponentpath", 20 );
+    ok( res == ERROR_SUCCESS, "got %d\n", res );
+
+    /* product value exists */
+    path[0] = 0;
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( prod, comp, NULL, MSIINSTALLCONTEXT_MACHINE, path, &size );
+    ok( state == INSTALLSTATE_ABSENT, "got %d\n", state );
+    ok( !lstrcmpA( path, "c:\\testcomponentpath" ), "got %s\n", path );
+    ok( size == 20, "got %u\n", size );
+
+    lstrcpyA( path_key, "Software\\Microsoft\\Windows\\CurrentVersion\\" );
+    lstrcatA( path_key, "Installer\\UserData\\S-1-5-18\\Products\\" );
+    lstrcatA( path_key, prod_squashed );
+    lstrcatA( path_key, "\\InstallProperties" );
+
+    res = RegCreateKeyExA( HKEY_LOCAL_MACHINE, path_key, 0, NULL, 0, access, NULL, &key_installprop, NULL );
+    ok( res == ERROR_SUCCESS, "got %d\n", res );
+
+    val = 1;
+    res = RegSetValueExA( key_installprop, "WindowsInstaller", 0, REG_DWORD, (const BYTE *)&val, sizeof(val) );
+    ok( res == ERROR_SUCCESS, "got %d\n", res );
+
+    /* install properties key exists */
+    path[0] = 0;
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( prod, comp, NULL, MSIINSTALLCONTEXT_MACHINE, path, &size );
+    ok( state == INSTALLSTATE_ABSENT, "got %d\n", state );
+    ok( !lstrcmpA( path, "c:\\testcomponentpath"), "got %s\n", path );
+    ok( size == 20, "got %u\n", size );
+
+    create_file( "c:\\testcomponentpath", "c:\\testcomponentpath", 21 );
+
+    /* file exists */
+    path[0] = 0;
+    size = 0;
+    state = pMsiGetComponentPathExA( prod, comp, NULL, MSIINSTALLCONTEXT_MACHINE, path, &size );
+    ok( state == INSTALLSTATE_MOREDATA, "got %d\n", state );
+    ok( !path[0], "got %s\n", path );
+    todo_wine ok( size == 40, "got %u\n", size );
+
+    path[0] = 0;
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( prod, comp, NULL, MSIINSTALLCONTEXT_MACHINE, path, &size );
+    ok( state == INSTALLSTATE_LOCAL, "got %d\n", state );
+    ok( !lstrcmpA( path, "c:\\testcomponentpath" ), "got %s\n", path );
+    ok( size == 20, "got %d\n", size );
+
+    RegDeleteValueA( key_comp, prod_squashed );
+    delete_key( key_comp, "", access & KEY_WOW64_64KEY );
+    RegDeleteValueA( key_installprop, "WindowsInstaller" );
+    delete_key( key_installprop, "", access & KEY_WOW64_64KEY );
+    RegCloseKey( key_comp );
+    RegCloseKey( key_installprop );
+    DeleteFileA( "c:\\testcomponentpath" );
+
+    lstrcpyA( path_key, "Software\\Microsoft\\Installer\\Products\\" );
+    lstrcatA( path_key, prod_squashed );
+
+    res = RegCreateKeyA( HKEY_CURRENT_USER, path_key, &key_prod );
+    ok( res == ERROR_SUCCESS, "got %d\n", res );
+
+    /* user unmanaged product key exists */
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( prod, comp, NULL, MSIINSTALLCONTEXT_USERUNMANAGED, path, &size );
+    ok( state == INSTALLSTATE_UNKNOWN, "got %d\n", state );
+    todo_wine ok(!size, "got %u\n", size);
+
+    lstrcpyA( path_key, "Software\\Microsoft\\Windows\\CurrentVersion\\" );
+    lstrcatA( path_key, "Installer\\UserData\\" );
+    lstrcatA( path_key, usersid );
+    lstrcatA( path_key, "\\Components\\" );
+    lstrcatA( path_key, comp_squashed );
+
+    res = RegCreateKeyExA( HKEY_LOCAL_MACHINE, path_key, 0, NULL, 0, access, NULL, &key_comp, NULL );
+    ok( res == ERROR_SUCCESS, "got %d\n", res );
+
+    /* user unmanaged component key exists */
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( prod, comp, NULL, MSIINSTALLCONTEXT_USERUNMANAGED, path, &size );
+    ok( state == INSTALLSTATE_UNKNOWN, "got %d\n", state );
+    todo_wine ok(!size, "got %u\n", size);
+
+    res = RegSetValueExA( key_comp, prod_squashed, 0, REG_SZ, (const BYTE *)"c:\\testcomponentpath", 20 );
+    ok( res == ERROR_SUCCESS, "got %d\n", res );
+
+    /* product value exists */
+    path[0] = 0;
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( prod, comp, NULL, MSIINSTALLCONTEXT_USERUNMANAGED, path, &size );
+    ok( state == INSTALLSTATE_ABSENT, "got %d\n", state );
+    ok( !lstrcmpA( path, "c:\\testcomponentpath"), "got %s\n", path );
+    ok( size == 20, "got %u\n", size );
+
+    create_file( "c:\\testcomponentpath", "c:\\testcomponentpath", 21 );
+
+    /* file exists */
+    path[0] = 0;
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( prod, comp, NULL, MSIINSTALLCONTEXT_USERUNMANAGED, path, &size );
+    ok( state == INSTALLSTATE_LOCAL, "got %d\n", state );
+    ok( !lstrcmpA( path, "c:\\testcomponentpath"), "got %s\n", path );
+    ok( size == 20, "got %u\n", size );
+
+    RegDeleteValueA( key_comp, prod_squashed );
+    RegDeleteKeyA( key_prod, "" );
+    delete_key( key_comp, "", access & KEY_WOW64_64KEY );
+    RegCloseKey( key_prod );
+    RegCloseKey( key_comp );
+    DeleteFileA( "c:\\testcomponentpath" );
+
+    lstrcpyA( path_key, "Software\\Microsoft\\Windows\\CurrentVersion\\" );
+    lstrcatA( path_key, "Installer\\Managed\\" );
+    lstrcatA( path_key, usersid );
+    lstrcatA( path_key, "\\Installer\\Products\\" );
+    lstrcatA( path_key, prod_squashed );
+
+    res = RegCreateKeyExA( HKEY_LOCAL_MACHINE, path_key, 0, NULL, 0, access, NULL, &key_prod, NULL );
+    ok( res == ERROR_SUCCESS, "got %d\n", res );
+
+    /* user managed product key exists */
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( prod, comp, NULL, MSIINSTALLCONTEXT_USERMANAGED, path, &size );
+    ok( state == INSTALLSTATE_UNKNOWN, "got %d\n", state );
+
+    lstrcpyA( path_key, "Software\\Microsoft\\Windows\\CurrentVersion\\" );
+    lstrcatA( path_key, "Installer\\UserData\\" );
+    lstrcatA( path_key, usersid );
+    lstrcatA( path_key, "\\Components\\" );
+    lstrcatA( path_key, comp_squashed );
+
+    res = RegCreateKeyExA( HKEY_LOCAL_MACHINE, path_key, 0, NULL, 0, access, NULL, &key_comp, NULL );
+    ok( res == ERROR_SUCCESS, "got %d\n", res );
+
+    /* user managed component key exists */
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( prod, comp, NULL, MSIINSTALLCONTEXT_USERMANAGED, path, &size );
+    ok( state == INSTALLSTATE_UNKNOWN, "got %d\n", state );
+
+    res = RegSetValueExA( key_comp, prod_squashed, 0, REG_SZ, (const BYTE *)"c:\\testcomponentpath", 20 );
+    ok( res == ERROR_SUCCESS, "got %d\n", res );
+
+    /* product value exists */
+    path[0] = 0;
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( prod, comp, NULL, MSIINSTALLCONTEXT_USERMANAGED, path, &size );
+    ok( state == INSTALLSTATE_ABSENT, "got %d\n", state );
+    ok( !lstrcmpA( path, "c:\\testcomponentpath" ), "got %s\n", path );
+    ok( size == 20, "got %u\n", size );
+
+    lstrcpyA( path_key, "Software\\Microsoft\\Windows\\CurrentVersion\\" );
+    lstrcatA( path_key, "Installer\\UserData\\S-1-5-18\\Products\\" );
+    lstrcatA( path_key, prod_squashed );
+    lstrcatA( path_key, "\\InstallProperties" );
+
+    res = RegCreateKeyExA( HKEY_LOCAL_MACHINE, path_key, 0, NULL, 0, access, NULL, &key_installprop, NULL );
+    ok( res == ERROR_SUCCESS, "got %d\n", res );
+
+    val = 1;
+    res = RegSetValueExA( key_installprop, "WindowsInstaller", 0, REG_DWORD, (const BYTE *)&val, sizeof(val) );
+    ok( res == ERROR_SUCCESS, "got %d\n", res );
+
+    /* install properties key exists */
+    path[0] = 0;
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( prod, comp, NULL, MSIINSTALLCONTEXT_USERMANAGED, path, &size );
+    ok( state == INSTALLSTATE_ABSENT, "got %d\n", state );
+    ok( !lstrcmpA( path, "c:\\testcomponentpath" ), "got %s\n", path );
+    ok( size == 20, "got %u\n", size );
+
+    create_file( "c:\\testcomponentpath", "C:\\testcomponentpath", 21 );
+
+    /* file exists */
+    path[0] = 0;
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( prod, comp, NULL, MSIINSTALLCONTEXT_USERMANAGED, path, &size );
+    ok( state == INSTALLSTATE_LOCAL, "got %d\n", state );
+    ok( !lstrcmpA( path, "c:\\testcomponentpath" ), "got %s\n", path );
+    ok( size == 20, "got %u\n", size );
+
+    RegDeleteValueA( key_comp, prod_squashed );
+    delete_key( key_prod, "", access & KEY_WOW64_64KEY );
+    delete_key( key_comp, "", access & KEY_WOW64_64KEY );
+    RegDeleteValueA( key_installprop, "WindowsInstaller" );
+    delete_key( key_installprop, "", access & KEY_WOW64_64KEY );
+    RegCloseKey( key_prod );
+    RegCloseKey( key_comp );
+    RegCloseKey( key_installprop );
+    DeleteFileA( "c:\\testcomponentpath" );
+    lstrcpyA( path_key, "Software\\Classes\\Installer\\Products\\" );
+    lstrcatA( path_key, prod_squashed );
+
+    res = RegCreateKeyExA( HKEY_LOCAL_MACHINE, path_key, 0, NULL, 0, access, NULL, &key_prod, NULL );
+    ok( res == ERROR_SUCCESS, "got %d\n", res );
+
+    /* local classes product key exists */
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( prod, comp, NULL, MSIINSTALLCONTEXT_MACHINE, path, &size );
+    ok( state == INSTALLSTATE_UNKNOWN, "got %d\n", state );
+    todo_wine ok(!size, "got %u\n", size);
+
+    lstrcpyA( path_key, "Software\\Microsoft\\Windows\\CurrentVersion\\" );
+    lstrcatA( path_key, "Installer\\UserData\\S-1-5-18\\Components\\" );
+    lstrcatA( path_key, comp_squashed );
+
+    res = RegCreateKeyExA( HKEY_LOCAL_MACHINE,  path_key, 0, NULL, 0, access, NULL, &key_comp, NULL );
+    ok( res == ERROR_SUCCESS, "got %d\n", res );
+
+    /* local user component key exists */
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( prod, comp, NULL, MSIINSTALLCONTEXT_MACHINE, path, &size );
+    ok( state == INSTALLSTATE_UNKNOWN, "got %d\n", state );
+    todo_wine ok(!size, "got %u\n", size);
+
+    res = RegSetValueExA( key_comp, prod_squashed, 0, REG_SZ, (const BYTE *)"c:\\testcomponentpath", 20 );
+    ok( res == ERROR_SUCCESS, "got %d\n", res );
+
+    /* product value exists */
+    path[0] = 0;
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( prod, comp, NULL, MSIINSTALLCONTEXT_MACHINE, path, &size );
+    ok( state == INSTALLSTATE_ABSENT, "got %d\n", state );
+    ok( !lstrcmpA( path, "c:\\testcomponentpath" ), "got %s\n", path );
+    ok( size == 20, "got %u\n", size );
+
+    create_file( "c:\\testcomponentpath", "c:\\testcomponentpath", 21 );
+
+    /* file exists */
+    path[0] = 0;
+    size = MAX_PATH;
+    state = pMsiGetComponentPathExA( prod, comp, NULL, MSIINSTALLCONTEXT_MACHINE, path, &size );
+    ok( state == INSTALLSTATE_LOCAL, "got %d\n", state );
+    ok( !lstrcmpA( path, "c:\\testcomponentpath" ), "got %s\n", path );
+    ok( size == 20, "got %u\n", size );
+
+    RegDeleteValueA( key_comp, prod_squashed );
+    delete_key( key_prod, "", access & KEY_WOW64_64KEY );
+    delete_key( key_comp, "", access & KEY_WOW64_64KEY );
+    RegCloseKey( key_prod );
+    RegCloseKey( key_comp );
+    DeleteFileA( "c:\\testcomponentpath" );
+    LocalFree( usersid );
+}
+
 static void test_MsiProvideComponent(void)
 {
     static const WCHAR sourcedirW[] =
@@ -10894,18 +11215,18 @@ static void test_MsiEnumPatchesEx_machine(void)
     ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
 
     delete_key(hpatch, "", access & KEY_WOW64_64KEY);
+    RegDeleteValueA(hpatch, "State");
     RegCloseKey(hpatch);
     delete_key(udpatch, "", access & KEY_WOW64_64KEY);
     RegCloseKey(udpatch);
+    delete_key(udprod, "", access & KEY_WOW64_64KEY);
+    RegCloseKey(udprod);
 
 done:
     RegDeleteValueA(patches, patch_squashed);
     RegDeleteValueA(patches, "Patches");
     delete_key(patches, "", access & KEY_WOW64_64KEY);
     RegCloseKey(patches);
-    RegDeleteValueA(hpatch, "State");
-    delete_key(udprod, "", access & KEY_WOW64_64KEY);
-    RegCloseKey(udprod);
     delete_key(prodkey, "", access & KEY_WOW64_64KEY);
     RegCloseKey(prodkey);
 }
@@ -12352,7 +12673,22 @@ static void test_MsiGetPatchInfoEx(void)
                             MSIINSTALLCONTEXT_USERMANAGED,
                             INSTALLPROPERTY_PATCHSTATEA, val, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    todo_wine ok(!lstrcmpA(val, "1"), "Expected \"1\", got \"%s\"\n", val);
+    ok(!lstrcmpA(val, "1"), "Expected \"1\", got \"%s\"\n", val);
+    ok(size == 1, "Expected 1, got %d\n", size);
+
+    size = 1;
+    res = RegSetValueExA(hpatch, "Uninstallable", 0, REG_DWORD,
+                         (const BYTE *)&size, sizeof(DWORD));
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* Uninstallable value exists */
+    size = MAX_PATH;
+    lstrcpyA(val, "apple");
+    r = pMsiGetPatchInfoExA(patchcode, prodcode, usersid,
+                            MSIINSTALLCONTEXT_USERMANAGED,
+                            INSTALLPROPERTY_UNINSTALLABLEA, val, &size);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(!lstrcmpA(val, "1"), "Expected \"1\", got \"%s\"\n", val);
     ok(size == 1, "Expected 1, got %d\n", size);
 
     res = RegSetValueExA(hpatch, "DisplayName", 0, REG_SZ,
@@ -14566,6 +14902,7 @@ START_TEST(msi)
         test_MsiQueryFeatureState();
         test_MsiQueryComponentState();
         test_MsiGetComponentPath();
+        test_MsiGetComponentPathEx();
         test_MsiProvideComponent();
         test_MsiGetProductCode();
         test_MsiEnumClients();
