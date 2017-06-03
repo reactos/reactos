@@ -147,7 +147,7 @@ reactos/dll/win32/oledlg              # Synced to WineStaging-2.9
 reactos/dll/win32/olepro32            # Synced to WineStaging-1.9.11
 reactos/dll/win32/olesvr32            # Synced to WineStaging-1.9.11
 reactos/dll/win32/olethk32            # Synced to WineStaging-1.9.11
-reactos/dll/win32/pdh                 # Synced to WineStaging-1.9.11
+reactos/dll/win32/pdh                 # Synced to WineStaging-2.9
 reactos/dll/win32/pidgen              # Synced to WineStaging-1.9.11
 reactos/dll/win32/powrprof            # Forked at Wine-1.0rc5
 reactos/dll/win32/printui             # Synced to WineStaging-1.9.11
