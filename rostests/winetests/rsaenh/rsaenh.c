@@ -110,23 +110,21 @@ static void printBytes(const char *heading, const BYTE *pb, size_t cb)
 
 static BOOL (WINAPI *pCryptDuplicateHash) (HCRYPTHASH, DWORD*, DWORD, HCRYPTHASH*);
 
-/*
 static void trace_hex(BYTE *pbData, DWORD dwLen) {
     char szTemp[256];
     DWORD i, j;
 
     for (i = 0; i < dwLen-7; i+=8) {
-        sprintf(szTemp, "0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x,\n", 
-            pbData[i], pbData[i+1], pbData[i+2], pbData[i+3], pbData[i+4], pbData[i+5], 
-            pbData[i+6], pbData[i+7]);
-        trace(szTemp);
+        trace("0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x,\n",
+              pbData[i], pbData[i+1], pbData[i+2], pbData[i+3], pbData[i+4], pbData[i+5],
+              pbData[i+6], pbData[i+7]);
     }
     for (j=0; i<dwLen; j++,i++) {
-        sprintf(szTemp+6*j, "0x%02x,\n", pbData[i]);
+        sprintf(szTemp+6*j, "0x%02x, ", pbData[i]);
     }
-    trace(szTemp);
+    if (j)
+        trace("%s\n", szTemp);
 }
-*/
 
 static BOOL init_base_environment(const char *provider, DWORD dwKeyFlags)
 {
@@ -2377,7 +2375,7 @@ static void test_import_export(void)
     HCRYPTKEY hPublicKey, hPrivKey;
     BOOL result;
     ALG_ID algID;
-    BYTE emptyKey[2048], *exported_key;
+    BYTE emptyKey[2048], *exported_key, *exported_key2;
     static BYTE abPlainPublicKey[84] = {
         0x06, 0x02, 0x00, 0x00, 0x00, 0xa4, 0x00, 0x00,
         0x52, 0x53, 0x41, 0x31, 0x00, 0x02, 0x00, 0x00,
@@ -2571,6 +2569,7 @@ static void test_import_export(void)
 
     CryptDestroyKey(hPublicKey);
 
+    /* imports into AT_SIGNATURE key container */
     result = CryptImportKey(hProv, priv_key_with_high_bit,
         sizeof(priv_key_with_high_bit), 0, CRYPT_EXPORTABLE, &hPrivKey);
     ok(result, "CryptImportKey failed: %08x\n", GetLastError());
@@ -2590,6 +2589,69 @@ static void test_import_export(void)
     HeapFree(GetProcessHeap(), 0, exported_key);
 
     CryptDestroyKey(hPrivKey);
+
+    /* imports into AT_KEYEXCHANGE key container */
+    result = CryptImportKey(hProv, abPlainPrivateKey,
+                            sizeof(abPlainPrivateKey), 0, 0, &hPrivKey);
+    ok(result, "CryptImportKey failed: %08x\n", GetLastError());
+
+    result = CryptExportKey(hPrivKey, 0, PUBLICKEYBLOB, 0, NULL, &dwDataLen);
+    ok(result, "CryptExportKey failed: %08x\n", GetLastError());
+    exported_key = HeapAlloc(GetProcessHeap(), 0, dwDataLen);
+    result = CryptExportKey(hPrivKey, 0, PUBLICKEYBLOB, 0, exported_key,
+        &dwDataLen);
+    ok(result, "CryptExportKey failed: %08x\n", GetLastError());
+    CryptDestroyKey(hPrivKey);
+
+    /* getting the public key from AT_KEYEXCHANGE, and compare it */
+    result = CryptGetUserKey(hProv, AT_KEYEXCHANGE, &hPrivKey);
+    ok(result, "CryptGetUserKey failed: %08x\n", GetLastError());
+    result = CryptExportKey(hPrivKey, 0, PUBLICKEYBLOB, 0, NULL, &dwDataLen);
+    ok(result, "CryptExportKey failed: %08x\n", GetLastError());
+    exported_key2 = HeapAlloc(GetProcessHeap(), 0, dwDataLen);
+    result = CryptExportKey(hPrivKey, 0, PUBLICKEYBLOB, 0, exported_key2,
+        &dwDataLen);
+    ok(result, "CryptExportKey failed: %08x\n", GetLastError());
+    CryptDestroyKey(hPrivKey);
+
+    result = !memcmp(exported_key, exported_key2, dwDataLen);
+    ok(result, "unexpected value\n");
+    if (!result && winetest_debug > 1) {
+        trace("Expected public key (%u):\n", dwDataLen);
+        trace_hex(exported_key, dwDataLen);
+        trace("AT_KEYEXCHANGE public key (%u):\n", dwDataLen);
+        trace_hex(exported_key2, dwDataLen);
+    }
+    HeapFree(GetProcessHeap(), 0, exported_key2);
+
+    /* importing a public key doesn't update key container at all */
+    result = CryptImportKey(hProv, abPlainPublicKey,
+                            sizeof(abPlainPublicKey), 0, 0, &hPublicKey);
+    ok(result, "failed to import the public key\n");
+    CryptDestroyKey(hPublicKey);
+
+    /* getting the public key again, and compare it */
+    result = CryptGetUserKey(hProv, AT_KEYEXCHANGE, &hPrivKey);
+    ok(result, "CryptGetUserKey failed: %08x\n", GetLastError());
+    result = CryptExportKey(hPrivKey, 0, PUBLICKEYBLOB, 0, NULL, &dwDataLen);
+    ok(result, "CryptExportKey failed: %08x\n", GetLastError());
+    exported_key2 = HeapAlloc(GetProcessHeap(), 0, dwDataLen);
+    result = CryptExportKey(hPrivKey, 0, PUBLICKEYBLOB, 0, exported_key2,
+        &dwDataLen);
+    ok(result, "CryptExportKey failed: %08x\n", GetLastError());
+    CryptDestroyKey(hPrivKey);
+
+    result = !memcmp(exported_key, exported_key2, dwDataLen);
+    ok(result, "unexpected value\n");
+    if (!result && winetest_debug > 1) {
+        trace("Expected public key (%u):\n", dwDataLen);
+        trace_hex(exported_key, dwDataLen);
+        trace("AT_KEYEXCHANGE public key (%u):\n", dwDataLen);
+        trace_hex(exported_key2, dwDataLen);
+    }
+
+    HeapFree(GetProcessHeap(), 0, exported_key);
+    HeapFree(GetProcessHeap(), 0, exported_key2);
 }
 
 static void test_import_hmac(void)
