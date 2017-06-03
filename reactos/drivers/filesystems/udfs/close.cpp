@@ -1109,6 +1109,7 @@ UDFQueueDelayedClose(
 {
     PtrUDFIrpContextLite    IrpContextLite;
     BOOLEAN                 StartWorker = FALSE;
+    BOOLEAN                 AcquiredVcb = FALSE;
     NTSTATUS                RC;
 
     AdPrint(("  UDFQueueDelayedClose\n"));
@@ -1118,6 +1119,7 @@ UDFQueueDelayedClose(
         UDFAcquireResourceExclusive(&(UDFGlobalData.DelayedCloseResource), TRUE);
 
         UDFAcquireResourceShared(&(Fcb->Vcb->VCBResource), TRUE);
+        AcquiredVcb = TRUE;
 
         if(Fcb->FCBFlags & UDF_FCB_DELETE_ON_CLOSE) {
             try_return(RC = STATUS_DELETE_PENDING);
@@ -1181,7 +1183,9 @@ try_exit:    NOTHING;
         if(!NT_SUCCESS(RC)) {
             Fcb->FCBFlags &= ~UDF_FCB_DELAY_CLOSE;
         }
-        UDFReleaseResource(&(Fcb->Vcb->VCBResource));
+        if(AcquiredVcb) {
+            UDFReleaseResource(&(Fcb->Vcb->VCBResource));
+        }
         // Release DelayedCloseResource
         UDFReleaseResource(&(UDFGlobalData.DelayedCloseResource));
     } _SEH2_END;
