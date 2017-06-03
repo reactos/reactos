@@ -30,7 +30,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
-#include <winnls.h>
+#include <wine/unicode.h>
 #include <wine/debug.h>
 
 #include <odbcinst.h>
@@ -40,6 +40,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(odbc);
 /* Registry key names */
 static const WCHAR drivers_key[] = {'S','o','f','t','w','a','r','e','\\','O','D','B','C','\\','O','D','B','C','I','N','S','T','.','I','N','I','\\','O','D','B','C',' ','D','r','i','v','e','r','s',0};
 static const WCHAR odbcW[] = {'S','o','f','t','w','a','r','e','\\','O','D','B','C',0};
+static const WCHAR odbcini[] = {'S','o','f','t','w','a','r','e','\\','O','D','B','C','\\','O','D','B','C','I','N','S','T','.','I','N','I','\\',0};
+static const WCHAR odbcdrivers[] = {'O','D','B','C',' ','D','r','i','v','e','r','s',0};
+static const WCHAR odbctranslators[] = {'O','D','B','C',' ','T','r','a','n','s','l','a','t','o','r','s',0};
 
 /* This config mode is known to be process-wide.
  * MSDN documentation suggests that the value is hidden somewhere in the registry but I haven't found it yet.
@@ -60,6 +63,10 @@ static const WCHAR odbc_error_component_not_found[] = {'C','o','m','p','o','n','
 static const WCHAR odbc_error_out_of_mem[] = {'O','u','t',' ','o','f',' ','m','e','m','o','r','y',0};
 static const WCHAR odbc_error_invalid_param_sequence[] = {'I','n','v','a','l','i','d',' ','p','a','r','a','m','e','t','e','r',' ','s','e','q','u','e','n','c','e',0};
 static const WCHAR odbc_error_invalid_param_string[] = {'I','n','v','a','l','i','d',' ','p','a','r','a','m','e','t','e','r',' ','s','t','r','i','n','g',0};
+static const WCHAR odbc_error_invalid_dsn[] = {'I','n','v','a','l','i','d',' ','D','S','N',0};
+static const WCHAR odbc_error_load_lib_failed[] = {'L','o','a','d',' ','L','i','b','r','a','r','y',' ','F','a','i','l','e','d',0};
+static const WCHAR odbc_error_request_failed[] = {'R','e','q','u','e','s','t',' ','F','a','i','l','e','d',0};
+static const WCHAR odbc_error_invalid_keyword[] = {'I','n','v','a','l','i','d',' ','k','e','y','w','o','r','d',' ','v','a','l','u','e',0};
 
 /* Push an error onto the error stack, taking care of ranges etc. */
 static void push_error(int code, LPCWSTR msg)
@@ -78,9 +85,9 @@ static void clear_errors(void)
     num_errors = 0;
 }
 
-static inline void * heap_alloc(size_t len)
+static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
 {
-    return HeapAlloc(GetProcessHeap(), 0, len);
+    return HeapAlloc(GetProcessHeap(), 0, size);
 }
 
 static inline BOOL heap_free(void *mem)
@@ -246,22 +253,200 @@ BOOL WINAPI SQLConfigDataSource(HWND hwndParent, WORD fRequest,
     return TRUE;
 }
 
-BOOL WINAPI SQLConfigDriverW(HWND hwndParent, WORD fRequest, LPCWSTR lpszDriver,
-               LPCWSTR lpszArgs, LPWSTR lpszMsg, WORD cbMsgMax, WORD *pcbMsgOut)
+static HMODULE load_config_driver(const WCHAR *driver)
 {
-    clear_errors();
-    FIXME("(%p %d %s %s %p %d %p)\n", hwndParent, fRequest, debugstr_w(lpszDriver),
-          debugstr_w(lpszArgs), lpszMsg, cbMsgMax, pcbMsgOut);
-    return TRUE;
+    static WCHAR reg_driver[] = {'d','r','i','v','e','r',0};
+    long ret;
+    HMODULE hmod;
+    WCHAR *filename = NULL;
+    DWORD size = 0, type;
+    HKEY hkey;
+
+    if ((ret = RegOpenKeyW(HKEY_LOCAL_MACHINE, odbcini, &hkey)) == ERROR_SUCCESS)
+    {
+        HKEY hkeydriver;
+
+        if ((ret = RegOpenKeyW(hkey, driver, &hkeydriver)) == ERROR_SUCCESS)
+        {
+            ret = RegGetValueW(hkeydriver, NULL, reg_driver, RRF_RT_REG_SZ, &type, NULL, &size);
+            if(ret == ERROR_MORE_DATA)
+            {
+                filename = HeapAlloc(GetProcessHeap(), 0, size);
+                if(!filename)
+                {
+                    RegCloseKey(hkeydriver);
+                    RegCloseKey(hkey);
+                    push_error(ODBC_ERROR_OUT_OF_MEM, odbc_error_out_of_mem);
+
+                    return NULL;
+                }
+                ret = RegGetValueW(hkeydriver, NULL, driver, RRF_RT_REG_SZ, &type, filename, &size);
+            }
+
+            RegCloseKey(hkeydriver);
+        }
+
+        RegCloseKey(hkey);
+    }
+
+    if(ret != ERROR_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, filename);
+        push_error(ODBC_ERROR_INVALID_DSN, odbc_error_invalid_dsn);
+        return NULL;
+    }
+
+    hmod = LoadLibraryW(filename);
+    HeapFree(GetProcessHeap(), 0, filename);
+
+    if(!hmod)
+        push_error(ODBC_ERROR_LOAD_LIB_FAILED, odbc_error_load_lib_failed);
+
+    return hmod;
 }
 
-BOOL WINAPI SQLConfigDriver(HWND hwndParent, WORD fRequest, LPCSTR lpszDriver,
-               LPCSTR lpszArgs, LPSTR lpszMsg, WORD cbMsgMax, WORD *pcbMsgOut)
+static BOOL write_config_value(const WCHAR *driver, const WCHAR *args)
 {
+    long ret;
+    HKEY hkey, hkeydriver;
+    WCHAR *name = NULL;
+
+    if(!args)
+        return FALSE;
+
+    if((ret = RegOpenKeyW(HKEY_LOCAL_MACHINE, odbcini, &hkey)) == ERROR_SUCCESS)
+    {
+        if((ret = RegOpenKeyW(hkey, driver, &hkeydriver)) == ERROR_SUCCESS)
+        {
+            WCHAR *divider, *value;
+
+            name = heap_alloc( (strlenW(args) + 1) * sizeof(WCHAR));
+            if(!name)
+            {
+                push_error(ODBC_ERROR_OUT_OF_MEM, odbc_error_out_of_mem);
+                goto fail;
+            }
+            lstrcpyW(name, args);
+
+            divider = strchrW(name,'=');
+            if(!divider)
+            {
+                push_error(ODBC_ERROR_INVALID_KEYWORD_VALUE, odbc_error_invalid_keyword);
+                goto fail;
+            }
+
+            value = divider + 1;
+            *divider = '\0';
+
+            TRACE("Write pair: %s = %s\n", debugstr_w(name), debugstr_w(value));
+            if(RegSetValueExW(hkeydriver, name, 0, REG_SZ, (BYTE*)value,
+                               (strlenW(value)+1) * sizeof(WCHAR)) != ERROR_SUCCESS)
+                ERR("Failed to write registry installed key\n");
+            heap_free(name);
+
+            RegCloseKey(hkeydriver);
+        }
+
+        RegCloseKey(hkey);
+    }
+
+    if(ret != ERROR_SUCCESS)
+        push_error(ODBC_ERROR_COMPONENT_NOT_FOUND, odbc_error_component_not_found);
+
+    return ret == ERROR_SUCCESS;
+
+fail:
+    RegCloseKey(hkeydriver);
+    RegCloseKey(hkey);
+    heap_free(name);
+
+    return FALSE;
+}
+
+BOOL WINAPI SQLConfigDriverW(HWND hwnd, WORD request, LPCWSTR driver,
+               LPCWSTR args, LPWSTR msg, WORD msgmax, WORD *msgout)
+{
+    BOOL (WINAPI *pConfigDriverW)(HWND hwnd, WORD request, const WCHAR *driver, const WCHAR *args, const WCHAR *msg, WORD msgmax, WORD *msgout);
+    HMODULE hmod;
+    BOOL funcret = FALSE;
+
     clear_errors();
-    FIXME("(%p %d %s %s %p %d %p)\n", hwndParent, fRequest, debugstr_a(lpszDriver),
-          debugstr_a(lpszArgs), lpszMsg, cbMsgMax, pcbMsgOut);
-    return TRUE;
+    TRACE("(%p %d %s %s %p %d %p)\n", hwnd, request, debugstr_w(driver),
+          debugstr_w(args), msg, msgmax, msgout);
+
+    if(request == ODBC_CONFIG_DRIVER)
+    {
+        return write_config_value(driver, args);
+    }
+
+    hmod = load_config_driver(driver);
+    if(!hmod)
+        return FALSE;
+
+    pConfigDriverW = (void*)GetProcAddress(hmod, "ConfigDriverW");
+    if(pConfigDriverW)
+        funcret = pConfigDriverW(hwnd, request, driver, args, msg, msgmax, msgout);
+
+    if(!funcret)
+        push_error(ODBC_ERROR_REQUEST_FAILED, odbc_error_request_failed);
+
+    FreeLibrary(hmod);
+
+    return funcret;
+}
+
+BOOL WINAPI SQLConfigDriver(HWND hwnd, WORD request, LPCSTR driver,
+               LPCSTR args, LPSTR msg, WORD msgmax, WORD *msgout)
+{
+    BOOL (WINAPI *pConfigDriverA)(HWND hwnd, WORD request, const char *driver, const char *args, const char *msg, WORD msgmax, WORD *msgout);
+    HMODULE hmod;
+    WCHAR *driverW;
+    BOOL funcret = FALSE;
+
+    clear_errors();
+    TRACE("(%p %d %s %s %p %d %p)\n", hwnd, request, debugstr_a(driver),
+          debugstr_a(args), msg, msgmax, msgout);
+
+    driverW = heap_strdupAtoW(driver);
+    if(!driverW)
+    {
+        push_error(ODBC_ERROR_OUT_OF_MEM, odbc_error_out_of_mem);
+        return FALSE;
+    }
+    if(request == ODBC_CONFIG_DRIVER)
+    {
+        BOOL ret = FALSE;
+        WCHAR *argsW = heap_strdupAtoW(args);
+        if(argsW)
+        {
+            ret = write_config_value(driverW, argsW);
+            HeapFree(GetProcessHeap(), 0, argsW);
+        }
+        else
+        {
+            push_error(ODBC_ERROR_OUT_OF_MEM, odbc_error_out_of_mem);
+        }
+
+        HeapFree(GetProcessHeap(), 0, driverW);
+
+        return ret;
+    }
+
+    hmod = load_config_driver(driverW);
+    HeapFree(GetProcessHeap(), 0, driverW);
+    if(!hmod)
+        return FALSE;
+
+    pConfigDriverA = (void*)GetProcAddress(hmod, "ConfigDriver");
+    if(pConfigDriverA)
+        funcret = pConfigDriverA(hwnd, request, driver, args, msg, msgmax, msgout);
+
+    if(!funcret)
+        push_error(ODBC_ERROR_REQUEST_FAILED, odbc_error_request_failed);
+
+    FreeLibrary(hmod);
+
+    return funcret;
 }
 
 BOOL WINAPI SQLCreateDataSourceW(HWND hwnd, LPCWSTR lpszDS)
@@ -628,12 +813,117 @@ BOOL WINAPI SQLInstallDriver(LPCSTR lpszInfFile, LPCSTR lpszDriver,
                               pcbPathOut, ODBC_INSTALL_COMPLETE, &usage);
 }
 
+static void write_registry_values(const WCHAR *regkey, const WCHAR *driver, const  WCHAR *path_in, WCHAR *path,
+                                  DWORD *usage_count)
+{
+    static const WCHAR installed[] = {'I','n','s','t','a','l','l','e','d',0};
+    static const WCHAR slash[] = {'\\', 0};
+    static const WCHAR driverW[] = {'D','r','i','v','e','r',0};
+    static const WCHAR setupW[] = {'S','e','t','u','p',0};
+    static const WCHAR translator[] = {'T','r','a','n','s','l','a','t','o','r',0};
+    HKEY hkey, hkeydriver;
+
+    if (RegCreateKeyW(HKEY_LOCAL_MACHINE, odbcini, &hkey) == ERROR_SUCCESS)
+    {
+        if (RegCreateKeyW(hkey, regkey, &hkeydriver) == ERROR_SUCCESS)
+        {
+            if(RegSetValueExW(hkeydriver, driver, 0, REG_SZ, (BYTE*)installed, sizeof(installed)) != ERROR_SUCCESS)
+                ERR("Failed to write registry installed key\n");
+
+            RegCloseKey(hkeydriver);
+        }
+
+        if (RegCreateKeyW(hkey, driver, &hkeydriver) == ERROR_SUCCESS)
+        {
+            WCHAR entry[1024];
+            const WCHAR *p;
+            DWORD usagecount = 0;
+            DWORD type, size;
+
+            /* Skip name entry */
+            p = driver;
+            p += lstrlenW(p) + 1;
+
+            if (!path_in)
+                GetSystemDirectoryW(path, MAX_PATH);
+            else
+                lstrcpyW(path, path_in);
+
+            /* Store Usage */
+            size = sizeof(usagecount);
+            RegGetValueA(hkeydriver, NULL, "UsageCount", RRF_RT_DWORD, &type, &usagecount, &size);
+            TRACE("Usage count %d\n", usagecount);
+
+            for (; *p; p += lstrlenW(p) + 1)
+            {
+                WCHAR *divider = strchrW(p,'=');
+
+                if (divider)
+                {
+                    WCHAR *value;
+                    int len;
+
+                    /* Write pair values to the registry. */
+                    lstrcpynW(entry, p, divider - p + 1);
+
+                    divider++;
+                    TRACE("Writing pair %s,%s\n", debugstr_w(entry), debugstr_w(divider));
+
+                    /* Driver, Setup, Translator entries use the system path unless a path is specified. */
+                    if(lstrcmpiW(driverW, entry) == 0 || lstrcmpiW(setupW, entry) == 0 ||
+                       lstrcmpiW(translator, entry) == 0)
+                    {
+                        len = lstrlenW(path) + lstrlenW(slash) + lstrlenW(divider) + 1;
+                        value = heap_alloc(len * sizeof(WCHAR));
+                        if(!value)
+                        {
+                            ERR("Out of memory\n");
+                            return;
+                        }
+
+                        lstrcpyW(value, path);
+                        lstrcatW(value, slash);
+                        lstrcatW(value, divider);
+                    }
+                    else
+                    {
+                        len = lstrlenW(divider) + 1;
+                        value = heap_alloc(len * sizeof(WCHAR));
+                        lstrcpyW(value, divider);
+                    }
+
+                    if (RegSetValueExW(hkeydriver, entry, 0, REG_SZ, (BYTE*)value,
+                                    (lstrlenW(value)+1)*sizeof(WCHAR)) != ERROR_SUCCESS)
+                        ERR("Failed to write registry data %s %s\n", debugstr_w(entry), debugstr_w(value));
+                    heap_free(value);
+                }
+                else
+                {
+                    ERR("No pair found. %s\n", debugstr_w(p));
+                    break;
+                }
+            }
+
+            /* Set Usage Count */
+            usagecount++;
+            if (RegSetValueExA(hkeydriver, "UsageCount", 0, REG_DWORD, (BYTE*)&usagecount, sizeof(usagecount)) != ERROR_SUCCESS)
+                ERR("Failed to write registry UsageCount key\n");
+
+            if (usage_count)
+                *usage_count = usagecount;
+
+            RegCloseKey(hkeydriver);
+        }
+
+        RegCloseKey(hkey);
+    }
+}
+
 BOOL WINAPI SQLInstallDriverExW(LPCWSTR lpszDriver, LPCWSTR lpszPathIn,
                LPWSTR lpszPathOut, WORD cbPathOutMax, WORD *pcbPathOut,
                WORD fRequest, LPDWORD lpdwUsageCount)
 {
     UINT len;
-    LPCWSTR p;
     WCHAR path[MAX_PATH];
 
     clear_errors();
@@ -641,15 +931,12 @@ BOOL WINAPI SQLInstallDriverExW(LPCWSTR lpszDriver, LPCWSTR lpszPathIn,
           debugstr_w(lpszPathIn), lpszPathOut, cbPathOutMax, pcbPathOut,
           fRequest, lpdwUsageCount);
 
-    for (p = lpszDriver; *p; p += lstrlenW(p) + 1)
-        TRACE("%s\n", debugstr_w(p));
+    write_registry_values(odbcdrivers, lpszDriver, lpszPathIn, path, lpdwUsageCount);
 
-    len = GetSystemDirectoryW(path, MAX_PATH);
+    len = lstrlenW(path);
 
     if (pcbPathOut)
         *pcbPathOut = len;
-
-    len = GetSystemDirectoryW(path, MAX_PATH);
 
     if (lpszPathOut && cbPathOutMax > len)
     {
@@ -663,7 +950,6 @@ BOOL WINAPI SQLInstallDriverEx(LPCSTR lpszDriver, LPCSTR lpszPathIn,
                LPSTR lpszPathOut, WORD cbPathOutMax, WORD *pcbPathOut,
                WORD fRequest, LPDWORD lpdwUsageCount)
 {
-    LPCSTR p;
     LPWSTR driver, pathin;
     WCHAR pathout[MAX_PATH];
     BOOL ret;
@@ -673,9 +959,6 @@ BOOL WINAPI SQLInstallDriverEx(LPCSTR lpszDriver, LPCSTR lpszPathIn,
     TRACE("%s %s %p %d %p %d %p\n", debugstr_a(lpszDriver),
           debugstr_a(lpszPathIn), lpszPathOut, cbPathOutMax, pcbPathOut,
           fRequest, lpdwUsageCount);
-
-    for (p = lpszDriver; *p; p += lstrlenA(p) + 1)
-        TRACE("%s\n", debugstr_a(p));
 
     driver = SQLInstall_strdup_multi(lpszDriver);
     pathin = SQLInstall_strdup(lpszPathIn);
@@ -879,7 +1162,6 @@ BOOL WINAPI SQLInstallTranslatorExW(LPCWSTR lpszTranslator, LPCWSTR lpszPathIn,
                WORD fRequest, LPDWORD lpdwUsageCount)
 {
     UINT len;
-    LPCWSTR p;
     WCHAR path[MAX_PATH];
 
     clear_errors();
@@ -887,10 +1169,9 @@ BOOL WINAPI SQLInstallTranslatorExW(LPCWSTR lpszTranslator, LPCWSTR lpszPathIn,
           debugstr_w(lpszPathIn), lpszPathOut, cbPathOutMax, pcbPathOut,
           fRequest, lpdwUsageCount);
 
-    for (p = lpszTranslator; *p; p += lstrlenW(p) + 1)
-        TRACE("%s\n", debugstr_w(p));
+    write_registry_values(odbctranslators, lpszTranslator, lpszPathIn, path, lpdwUsageCount);
 
-    len = GetSystemDirectoryW(path, MAX_PATH);
+    len = lstrlenW(path);
 
     if (pcbPathOut)
         *pcbPathOut = len;
@@ -1035,22 +1316,76 @@ BOOL WINAPI SQLRemoveDefaultDataSource(void)
     return FALSE;
 }
 
-BOOL WINAPI SQLRemoveDriverW(LPCWSTR lpszDriver, BOOL fRemoveDSN,
-               LPDWORD lpdwUsageCount)
+BOOL WINAPI SQLRemoveDriverW(LPCWSTR drivername, BOOL remove_dsn, LPDWORD usage_count)
 {
+    HKEY hkey;
+    DWORD usagecount = 1;
+
     clear_errors();
-    FIXME("%s %d %p\n", debugstr_w(lpszDriver), fRemoveDSN, lpdwUsageCount);
-    if (lpdwUsageCount) *lpdwUsageCount = 1;
+    TRACE("%s %d %p\n", debugstr_w(drivername), remove_dsn, usage_count);
+
+    if (RegOpenKeyW(HKEY_LOCAL_MACHINE, odbcini, &hkey) == ERROR_SUCCESS)
+    {
+        HKEY hkeydriver;
+
+        if (RegOpenKeyW(hkey, drivername, &hkeydriver) == ERROR_SUCCESS)
+        {
+            DWORD size, type;
+            DWORD count;
+
+            size = sizeof(usagecount);
+            RegGetValueA(hkeydriver, NULL, "UsageCount", RRF_RT_DWORD, &type, &usagecount, &size);
+            TRACE("Usage count %d\n", usagecount);
+            count = usagecount - 1;
+            if (count)
+            {
+                 if (RegSetValueExA(hkeydriver, "UsageCount", 0, REG_DWORD, (BYTE*)&count, sizeof(count)) != ERROR_SUCCESS)
+                    ERR("Failed to write registry UsageCount key\n");
+            }
+
+            RegCloseKey(hkeydriver);
+        }
+
+        if (usagecount)
+            usagecount--;
+
+        if (!usagecount)
+        {
+            if (RegDeleteKeyW(hkey, drivername) != ERROR_SUCCESS)
+                ERR("Failed to delete registry key: %s\n", debugstr_w(drivername));
+
+            if (RegOpenKeyW(hkey, odbcdrivers, &hkeydriver) == ERROR_SUCCESS)
+            {
+                if(RegDeleteValueW(hkeydriver, drivername) != ERROR_SUCCESS)
+                    ERR("Failed to delete registry value: %s\n", debugstr_w(drivername));
+                RegCloseKey(hkeydriver);
+            }
+        }
+
+        RegCloseKey(hkey);
+    }
+
+    if (usage_count)
+        *usage_count = usagecount;
+
     return TRUE;
 }
 
 BOOL WINAPI SQLRemoveDriver(LPCSTR lpszDriver, BOOL fRemoveDSN,
                LPDWORD lpdwUsageCount)
 {
+    WCHAR *driver;
+    BOOL ret;
+
     clear_errors();
-    FIXME("%s %d %p\n", debugstr_a(lpszDriver), fRemoveDSN, lpdwUsageCount);
-    if (lpdwUsageCount) *lpdwUsageCount = 1;
-    return TRUE;
+    TRACE("%s %d %p\n", debugstr_a(lpszDriver), fRemoveDSN, lpdwUsageCount);
+
+    driver = SQLInstall_strdup(lpszDriver);
+
+    ret =  SQLRemoveDriverW(driver, fRemoveDSN, lpdwUsageCount);
+
+    HeapFree(GetProcessHeap(), 0, driver);
+    return ret;
 }
 
 BOOL WINAPI SQLRemoveDriverManager(LPDWORD pdwUsageCount)
@@ -1077,20 +1412,84 @@ BOOL WINAPI SQLRemoveDSNFromIni(LPCSTR lpszDSN)
     return FALSE;
 }
 
-BOOL WINAPI SQLRemoveTranslatorW(LPCWSTR lpszTranslator, LPDWORD lpdwUsageCount)
+BOOL WINAPI SQLRemoveTranslatorW(const WCHAR *translator, DWORD *usage_count)
 {
+    HKEY hkey;
+    DWORD usagecount = 1;
+    BOOL ret = TRUE;
+
     clear_errors();
-    FIXME("%s %p\n", debugstr_w(lpszTranslator), lpdwUsageCount);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    TRACE("%s %p\n", debugstr_w(translator), usage_count);
+
+    if (RegOpenKeyW(HKEY_LOCAL_MACHINE, odbcini, &hkey) == ERROR_SUCCESS)
+    {
+        HKEY hkeydriver;
+
+        if (RegOpenKeyW(hkey, translator, &hkeydriver) == ERROR_SUCCESS)
+        {
+            DWORD size, type;
+            DWORD count;
+
+            size = sizeof(usagecount);
+            RegGetValueA(hkeydriver, NULL, "UsageCount", RRF_RT_DWORD, &type, &usagecount, &size);
+            TRACE("Usage count %d\n", usagecount);
+            count = usagecount - 1;
+            if (count)
+            {
+                 if (RegSetValueExA(hkeydriver, "UsageCount", 0, REG_DWORD, (BYTE*)&count, sizeof(count)) != ERROR_SUCCESS)
+                    ERR("Failed to write registry UsageCount key\n");
+            }
+
+            RegCloseKey(hkeydriver);
+        }
+
+        if (usagecount)
+            usagecount--;
+
+        if (!usagecount)
+        {
+            if(RegDeleteKeyW(hkey, translator) != ERROR_SUCCESS)
+            {
+                push_error(ODBC_ERROR_COMPONENT_NOT_FOUND, odbc_error_component_not_found);
+                WARN("Failed to delete registry key: %s\n", debugstr_w(translator));
+                ret = FALSE;
+            }
+
+            if (ret && RegOpenKeyW(hkey, odbctranslators, &hkeydriver) == ERROR_SUCCESS)
+            {
+                if(RegDeleteValueW(hkeydriver, translator) != ERROR_SUCCESS)
+                {
+                    push_error(ODBC_ERROR_COMPONENT_NOT_FOUND, odbc_error_component_not_found);
+                    WARN("Failed to delete registry key: %s\n", debugstr_w(translator));
+                    ret = FALSE;
+                }
+
+                RegCloseKey(hkeydriver);
+            }
+        }
+
+        RegCloseKey(hkey);
+    }
+
+    if (ret && usage_count)
+        *usage_count = usagecount;
+
+    return ret;
 }
 
 BOOL WINAPI SQLRemoveTranslator(LPCSTR lpszTranslator, LPDWORD lpdwUsageCount)
 {
+    WCHAR *translator;
+    BOOL ret;
+
     clear_errors();
-    FIXME("%s %p\n", debugstr_a(lpszTranslator), lpdwUsageCount);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    TRACE("%s %p\n", debugstr_a(lpszTranslator), lpdwUsageCount);
+
+    translator = SQLInstall_strdup(lpszTranslator);
+    ret =  SQLRemoveTranslatorW(translator, lpdwUsageCount);
+
+    HeapFree(GetProcessHeap(), 0, translator);
+    return ret;
 }
 
 BOOL WINAPI SQLSetConfigMode(UWORD wConfigMode)
