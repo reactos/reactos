@@ -32,7 +32,8 @@ typedef struct _RpcServerProtseq
   LPSTR Protseq; /* RO */
   UINT MaxCalls; /* RO */
   /* list of listening connections */
-  RpcConnection* conn; /* CS cs */
+  struct list listeners; /* CS cs */
+  struct list connections; /* CS cs */
   CRITICAL_SECTION cs;
 
   /* is the server currently listening? */
