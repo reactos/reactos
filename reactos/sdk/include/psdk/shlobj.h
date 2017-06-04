@@ -84,6 +84,8 @@ typedef struct
 DECLARE_HANDLE(HPSXA);
 #endif
 
+typedef int GPFIDL_FLAGS;
+
 UINT
 WINAPI
 SHAddFromPropSheetExtArray(
