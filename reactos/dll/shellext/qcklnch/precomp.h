@@ -38,6 +38,8 @@
 
 #undef DbgPrint
 
+#include "CQuickLaunchBand.h"
+
 /*extern HINSTANCE g_hInstance;
 
 #define ID_ICON_VOLUME (WM_APP + 0x4CB)

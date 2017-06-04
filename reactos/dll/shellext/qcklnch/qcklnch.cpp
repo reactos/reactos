@@ -10,10 +10,10 @@
 
 #include <atlwin.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(ntobjshex);
+WINE_DEFAULT_DEBUG_CHANNEL(qcklnch);
 
 BEGIN_OBJECT_MAP(ObjectMap)    
-    //OBJECT_ENTRY(CLSID_RegistryFolder, CRegistryFolder)
+    //OBJECT_ENTRY(CLSID_QuickLaunchBand, CQuickLaunchBand)
 END_OBJECT_MAP()
 
 HINSTANCE  g_hInstance;
