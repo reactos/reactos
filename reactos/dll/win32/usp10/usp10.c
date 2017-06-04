@@ -32,16 +32,16 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(uniscribe);
 
-typedef struct _scriptRange
+static const struct usp10_script_range
 {
-    WORD script;
+    enum usp10_script script;
     DWORD rangeFirst;
     DWORD rangeLast;
-    WORD numericScript;
-    WORD punctScript;
-} scriptRange;
-
-static const scriptRange scriptRanges[] = {
+    enum usp10_script numericScript;
+    enum usp10_script punctScript;
+}
+script_ranges[] =
+{
     /* Basic Latin: U+0000–U+007A */
     { Script_Latin,      0x00,   0x07a ,  Script_Numeric, Script_Punctuation},
     /* Latin-1 Supplement: U+0080–U+00FF */
@@ -285,8 +285,6 @@ static const scriptRange scriptRanges[] = {
     { Script_Osmanya,    0x10480, 0x104AF,  Script_Osmanya_Numeric, 0},
     /* Mathematical Alphanumeric Symbols: U+1D400–U+1D7FF */
     { Script_MathAlpha,  0x1D400, 0x1D7FF,  0, 0},
-    /* END */
-    { SCRIPT_UNDEFINED,  0, 0, 0}
 };
 
 /* this must be in order so that the index matches the Script value */
@@ -699,19 +697,34 @@ typedef struct {
     WORD target;
 } FindGlyph_struct;
 
-static inline void *heap_alloc(SIZE_T size)
+BOOL usp10_array_reserve(void **elements, SIZE_T *capacity, SIZE_T count, SIZE_T size)
 {
-    return HeapAlloc(GetProcessHeap(), 0, size);
-}
+    SIZE_T max_capacity, new_capacity;
+    void *new_elements;
 
-static inline void *heap_alloc_zero(SIZE_T size)
-{
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
-}
+    if (count <= *capacity)
+        return TRUE;
 
-static inline BOOL heap_free(LPVOID mem)
-{
-    return HeapFree(GetProcessHeap(), 0, mem);
+    max_capacity = ~(SIZE_T)0 / size;
+    if (count > max_capacity)
+        return FALSE;
+
+    new_capacity = max(1, *capacity);
+    while (new_capacity < count && new_capacity <= max_capacity / 2)
+        new_capacity *= 2;
+    if (new_capacity < count)
+        new_capacity = count;
+
+    if (!*elements)
+        new_elements = heap_alloc_zero(new_capacity * size);
+    else
+        new_elements = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, *elements, new_capacity * size);
+    if (!new_elements)
+        return FALSE;
+
+    *elements = new_elements;
+    *capacity = new_capacity;
+    return TRUE;
 }
 
 /* TODO Fix font properties on Arabic locale */
@@ -866,7 +879,7 @@ static WCHAR mirror_char( WCHAR ch )
     return ch + wine_mirror_map[wine_mirror_map[ch >> 8] + (ch & 0xff)];
 }
 
-static inline DWORD decode_surrogate_pair(LPCWSTR str, INT index, INT end)
+static DWORD decode_surrogate_pair(const WCHAR *str, unsigned int index, unsigned int end)
 {
     if (index < end-1 && IS_SURROGATE_PAIR(str[index],str[index+1]))
     {
@@ -877,12 +890,25 @@ static inline DWORD decode_surrogate_pair(LPCWSTR str, INT index, INT end)
     return 0;
 }
 
-static WORD get_char_script( LPCWSTR str, INT index, INT end, INT *consumed)
+static int usp10_compare_script_range(const void *key, const void *value)
+{
+    const struct usp10_script_range *range = value;
+    const DWORD *ch = key;
+
+    if (*ch < range->rangeFirst)
+        return -1;
+    if (*ch > range->rangeLast)
+        return 1;
+    return 0;
+}
+
+static enum usp10_script get_char_script(const WCHAR *str, unsigned int index,
+        unsigned int end, unsigned int *consumed)
 {
     static const WCHAR latin_punc[] = {'#','$','&','\'',',',';','<','>','?','@','\\','^','_','`','{','|','}','~', 0x00a0, 0};
+    struct usp10_script_range *range;
     WORD type = 0, type2 = 0;
     DWORD ch;
-    int i;
 
     *consumed = 1;
 
@@ -924,24 +950,15 @@ static WORD get_char_script( LPCWSTR str, INT index, INT end, INT *consumed)
     else
         ch = str[index];
 
-    i = 0;
-    do
-    {
-        if (ch < scriptRanges[i].rangeFirst || scriptRanges[i].script == SCRIPT_UNDEFINED)
-            break;
+    if (!(range = bsearch(&ch, script_ranges, ARRAY_SIZE(script_ranges),
+            sizeof(*script_ranges), usp10_compare_script_range)))
+        return Script_Undefined;
 
-        if (ch >= scriptRanges[i].rangeFirst && ch <= scriptRanges[i].rangeLast)
-        {
-            if (scriptRanges[i].numericScript && (type & C1_DIGIT || type2 == C2_ARABICNUMBER))
-                return scriptRanges[i].numericScript;
-            if (scriptRanges[i].punctScript && type & C1_PUNCT)
-                return scriptRanges[i].punctScript;
-            return scriptRanges[i].script;
-        }
-        i++;
-    } while (1);
-
-    return SCRIPT_UNDEFINED;
+    if (range->numericScript && (type & C1_DIGIT || type2 == C2_ARABICNUMBER))
+        return range->numericScript;
+    if (range->punctScript && type & C1_PUNCT)
+        return range->punctScript;
+    return range->script;
 }
 
 static int compare_FindGlyph(const void *a, const void* b)
@@ -1140,7 +1157,8 @@ HRESULT WINAPI ScriptRecordDigitSubstitution(LCID locale, SCRIPT_DIGITSUBSTITUTE
         sds->NationalDigitLanguage = LANG_ENGLISH;
 
     if (!GetLocaleInfoW(locale, LOCALE_IDIGITSUBSTITUTION | LOCALE_RETURN_NUMBER,
-                        (LPWSTR)&sub, sizeof(sub)/sizeof(WCHAR))) return E_INVALIDARG;
+            (WCHAR *)&sub, sizeof(sub) / sizeof(WCHAR)))
+        return E_INVALIDARG;
 
     switch (sub)
     {
@@ -1209,12 +1227,12 @@ HRESULT WINAPI ScriptApplyDigitSubstitution(const SCRIPT_DIGITSUBSTITUTE *sds,
     }
 }
 
-static inline BOOL is_indic(WORD script)
+static inline BOOL is_indic(enum usp10_script script)
 {
     return (script >= Script_Devanagari && script <= Script_Malayalam_Numeric);
 }
 
-static inline WORD base_indic(WORD script)
+static inline enum usp10_script base_indic(enum usp10_script script)
 {
     switch (script)
     {
@@ -1239,11 +1257,11 @@ static inline WORD base_indic(WORD script)
         case Script_Malayalam:
         case Script_Malayalam_Numeric: return Script_Malayalam;
         default:
-            return -1;
+            return Script_Undefined;
     };
 }
 
-static BOOL script_is_numeric(WORD script)
+static BOOL script_is_numeric(enum usp10_script script)
 {
     return scriptInformation[script].props.fNumeric;
 }
@@ -1259,21 +1277,21 @@ static HRESULT _ItemizeInternal(const WCHAR *pwcInChars, int cInChars,
 #define ZWNJ 0x200C
 #define ZWJ  0x200D
 
+    enum usp10_script last_indic = Script_Undefined;
     int   cnt = 0, index = 0, str = 0;
-    int   New_Script = -1;
+    enum usp10_script New_Script = -1;
     int   i;
     WORD  *levels = NULL;
     WORD  *layout_levels = NULL;
     WORD  *overrides = NULL;
     WORD  *strength = NULL;
-    WORD  *scripts = NULL;
+    enum usp10_script *scripts;
     WORD  baselevel = 0;
     WORD  baselayout = 0;
     BOOL  new_run;
-    WORD  last_indic = -1;
     WORD layoutRTL = 0;
     BOOL forceLevels = FALSE;
-    INT consumed = 0;
+    unsigned int consumed = 0;
     HRESULT res = E_OUTOFMEMORY;
 
     TRACE("%s,%d,%d,%p,%p,%p,%p\n", debugstr_wn(pwcInChars, cInChars), cInChars, cMaxItems, 
@@ -1282,13 +1300,12 @@ static HRESULT _ItemizeInternal(const WCHAR *pwcInChars, int cInChars,
     if (!pwcInChars || !cInChars || !pItems || cMaxItems < 2)
         return E_INVALIDARG;
 
-    scripts = heap_alloc(cInChars * sizeof(WORD));
-    if (!scripts)
+    if (!(scripts = heap_alloc(cInChars * sizeof(*scripts))))
         return E_OUTOFMEMORY;
 
     for (i = 0; i < cInChars; i++)
     {
-        if (consumed <= 0)
+        if (!consumed)
         {
             scripts[i] = get_char_script(pwcInChars,i,cInChars,&consumed);
             consumed --;
@@ -1300,7 +1317,7 @@ static HRESULT _ItemizeInternal(const WCHAR *pwcInChars, int cInChars,
         }
         /* Devanagari danda (U+0964) and double danda (U+0965) are used for
            all Indic scripts */
-        if ((pwcInChars[i] == 0x964 || pwcInChars[i] ==0x965) && last_indic > 0)
+        if ((pwcInChars[i] == 0x964 || pwcInChars[i] ==0x965) && last_indic != Script_Undefined)
             scripts[i] = last_indic;
         else if (is_indic(scripts[i]))
             last_indic = base_indic(scripts[i]);
@@ -1327,10 +1344,10 @@ static HRESULT _ItemizeInternal(const WCHAR *pwcInChars, int cInChars,
                 {
                     int j;
                     BOOL asian = FALSE;
-                    WORD first_script = scripts[i-1];
+                    enum usp10_script first_script = scripts[i-1];
                     for (j = i-1; j >= 0 &&  scripts[j] == first_script && pwcInChars[j] != Numeric_space; j--)
                     {
-                        WORD original = scripts[j];
+                        enum usp10_script original = scripts[j];
                         if (original == Script_Ideograph || original == Script_Kana || original == Script_Yi || original == Script_CJK_Han || original == Script_Bopomofo)
                         {
                             asian = TRUE;
@@ -1866,7 +1883,7 @@ static BOOL requires_fallback(HDC hdc, SCRIPT_CACHE *psc, SCRIPT_ANALYSIS *psa,
     return FALSE;
 }
 
-static void find_fallback_font(DWORD scriptid, LPWSTR FaceName)
+static void find_fallback_font(enum usp10_script scriptid, WCHAR *FaceName)
 {
     HKEY hkey;
 
@@ -1878,7 +1895,7 @@ static void find_fallback_font(DWORD scriptid, LPWSTR FaceName)
         DWORD type;
 
         sprintfW(value, szFmt, scriptInformation[scriptid].scriptTag);
-        if (RegQueryValueExW(hkey, value, 0, &type, (LPBYTE)FaceName, &count))
+        if (RegQueryValueExW(hkey, value, 0, &type, (BYTE *)FaceName, &count))
             lstrcpyW(FaceName,scriptInformation[scriptid].fallbackFont);
         RegCloseKey(hkey);
     }
@@ -1966,7 +1983,9 @@ HRESULT WINAPI ScriptStringAnalyse(HDC hdc, const void *pString, int cString,
         if ((analysis->logattrs = heap_alloc(sizeof(SCRIPT_LOGATTR) * cString)))
         {
             for (i = 0; i < analysis->numItems; i++)
-                ScriptBreak(&((LPWSTR)pString)[analysis->pItem[i].iCharPos], analysis->pItem[i+1].iCharPos - analysis->pItem[i].iCharPos, &analysis->pItem[i].a, &analysis->logattrs[analysis->pItem[i].iCharPos]);
+                ScriptBreak(&((WCHAR *)pString)[analysis->pItem[i].iCharPos],
+                        analysis->pItem[i + 1].iCharPos - analysis->pItem[i].iCharPos,
+                        &analysis->pItem[i].a, &analysis->logattrs[analysis->pItem[i].iCharPos]);
         }
         else
             goto error;
@@ -2984,14 +3003,16 @@ HRESULT WINAPI ScriptBreak(const WCHAR *chars, int count, const SCRIPT_ANALYSIS 
  */
 HRESULT WINAPI ScriptIsComplex(const WCHAR *chars, int len, DWORD flag)
 {
-    int i;
-    INT consumed = 0;
+    enum usp10_script script;
+    unsigned int i, consumed;
 
     TRACE("(%s,%d,0x%x)\n", debugstr_wn(chars, len), len, flag);
 
+    if (!chars || len < 0)
+        return E_INVALIDARG;
+
     for (i = 0; i < len; i+=consumed)
     {
-        int script;
         if (i >= len)
             break;
 
@@ -3336,15 +3357,24 @@ HRESULT WINAPI ScriptPlaceOpenType( HDC hdc, SCRIPT_CACHE *psc, SCRIPT_ANALYSIS 
         }
         else if (!get_cache_glyph_widths(psc, pwGlyphs[i], &abc))
         {
+            BOOL ret;
             if (!hdc) return E_PENDING;
-            if ((get_cache_pitch_family(psc) & TMPF_TRUETYPE) && !psa->fNoGlyphIndex)
+            if (get_cache_pitch_family(psc) & TMPF_TRUETYPE)
             {
-                if (!GetCharABCWidthsI(hdc, 0, 1, (WORD *)&pwGlyphs[i], &abc)) return S_FALSE;
+                if (psa->fNoGlyphIndex)
+                    ret = GetCharABCWidthsW(hdc, pwGlyphs[i], pwGlyphs[i], &abc);
+                else
+                    ret = GetCharABCWidthsI(hdc, 0, 1, (WORD *)&pwGlyphs[i], &abc);
+                if (!ret) return S_FALSE;
             }
             else
             {
                 INT width;
-                if (!GetCharWidth32W(hdc, pwGlyphs[i], pwGlyphs[i], &width)) return S_FALSE;
+                if (psa->fNoGlyphIndex)
+                    ret = GetCharWidth32W(hdc, pwGlyphs[i], pwGlyphs[i], &width);
+                else
+                    ret = GetCharWidthI(hdc, 0, 1, (WORD *)&pwGlyphs[i], &width);
+                if (!ret) return S_FALSE;
                 abc.abcB = width;
                 abc.abcA = abc.abcC = 0;
             }
