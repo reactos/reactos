@@ -252,27 +252,24 @@ HRESULT service_stop_service(IWbemClassObject *, IWbemClassObject *, IWbemClassO
 HRESULT security_get_sd(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
 HRESULT security_set_sd(IWbemClassObject *, IWbemClassObject *, IWbemClassObject **) DECLSPEC_HIDDEN;
 
-static void *heap_alloc( size_t len ) __WINE_ALLOC_SIZE(1);
-static inline void *heap_alloc( size_t len )
+static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
 {
-    return HeapAlloc( GetProcessHeap(), 0, len );
+    return HeapAlloc(GetProcessHeap(), 0, size);
 }
 
-static void *heap_realloc( void *mem, size_t len ) __WINE_ALLOC_SIZE(2);
-static inline void *heap_realloc( void *mem, size_t len )
+static inline void* __WINE_ALLOC_SIZE(1) heap_alloc_zero(size_t size)
 {
-    return HeapReAlloc( GetProcessHeap(), 0, mem, len );
+    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
 }
 
-static void *heap_alloc_zero( size_t len ) __WINE_ALLOC_SIZE(1);
-static inline void *heap_alloc_zero( size_t len )
+static inline void* __WINE_ALLOC_SIZE(2) heap_realloc(void *mem, size_t size)
 {
-    return HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, len );
+    return HeapReAlloc(GetProcessHeap(), 0, mem, size);
 }
 
-static inline BOOL heap_free( void *mem )
+static inline BOOL heap_free(void *mem)
 {
-    return HeapFree( GetProcessHeap(), 0, mem );
+    return HeapFree(GetProcessHeap(), 0, mem);
 }
 
 static inline WCHAR *heap_strdupW( const WCHAR *src )

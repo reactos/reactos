@@ -324,6 +324,7 @@ void free_table( struct table *table )
         TRACE("destroying %p\n", table);
         heap_free( (WCHAR *)table->name );
         free_columns( (struct column *)table->columns, table->num_cols );
+        heap_free( table->data );
         list_remove( &table->entry );
         heap_free( table );
     }
