@@ -16,8 +16,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windows.h>
+#include <stdarg.h>
+
+#include <windef.h>
+#include <winsvc.h>
 #include <stdio.h>
+#include <winbase.h>
+#include <winuser.h>
 
 #include "wine/test.h"
 
@@ -61,6 +66,67 @@ static void service_ok(int cnd, const char *msg, ...)
     send_msg(cnd ? "OK" : "FAIL", buf);
 }
 
+static void test_winstation(void)
+{
+    HWINSTA winstation;
+    USEROBJECTFLAGS flags;
+    BOOL r;
+
+    winstation = GetProcessWindowStation();
+    service_ok(winstation != NULL, "winstation = NULL\n");
+
+    r = GetUserObjectInformationA(winstation, UOI_FLAGS, &flags, sizeof(flags), NULL);
+    service_ok(r, "GetUserObjectInformation(UOI_NAME) failed: %u\n", GetLastError());
+    service_ok(!(flags.dwFlags & WSF_VISIBLE), "winstation has flags %x\n", flags.dwFlags);
+}
+
+/*
+ * Test creating window in a service process. Although services run in non-interactive,
+ * they may create windows that will never be visible.
+ */
+static void test_create_window(void)
+{
+    DWORD style;
+    ATOM class;
+    HWND hwnd;
+    BOOL r;
+
+    static WNDCLASSEXA wndclass = {
+        sizeof(WNDCLASSEXA),
+        0,
+        DefWindowProcA,
+        0, 0, NULL, NULL, NULL, NULL, NULL,
+        "service_test",
+        NULL
+    };
+
+    hwnd = GetDesktopWindow();
+    service_ok(IsWindow(hwnd), "GetDesktopWindow returned invalid window %p\n", hwnd);
+
+    class = RegisterClassExA(&wndclass);
+    service_ok(class, "RegisterClassFailed\n");
+
+    hwnd = CreateWindowA("service_test", "service_test",
+            WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+            515, 530, NULL, NULL, NULL, NULL);
+    service_ok(hwnd != NULL, "CreateWindow failed: %u\n", GetLastError());
+
+    style = GetWindowLongW(hwnd, GWL_STYLE);
+    service_ok(!(style & WS_VISIBLE), "style = %x, expected invisible\n", style);
+
+    r = ShowWindow(hwnd, SW_SHOW);
+    service_ok(!r, "ShowWindow returned %x\n", r);
+
+    style = GetWindowLongW(hwnd, GWL_STYLE);
+    service_ok(style & WS_VISIBLE, "style = %x, expected visible\n", style);
+
+    r = ShowWindow(hwnd, SW_SHOW);
+    service_ok(r, "ShowWindow returned %x\n", r);
+
+    r = DestroyWindow(hwnd);
+    service_ok(r, "DestroyWindow failed: %08x\n", GetLastError());
+}
+
 static DWORD WINAPI service_handler(DWORD ctrl, DWORD event_type, void *event_data, void *context)
 {
     SERVICE_STATUS status;
@@ -83,6 +149,8 @@ static DWORD WINAPI service_handler(DWORD ctrl, DWORD event_type, void *event_da
         SetEvent(service_stop_event);
         return NO_ERROR;
     case 128:
+        test_winstation();
+        test_create_window();
         service_event("CUSTOM");
         return 0xdeadbeef;
     default:
