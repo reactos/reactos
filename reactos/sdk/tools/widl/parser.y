@@ -429,6 +429,7 @@ importlib: tIMPORTLIB '(' aSTRING ')'
 	;
 
 libraryhdr: tLIBRARY aIDENTIFIER		{ $$ = $2; }
+	|   tLIBRARY aKNOWNTYPE			{ $$ = $2; }
 	;
 library_start: attributes libraryhdr '{'	{ $$ = make_library($2, check_library_attrs($2, $1));
 						  if (!parse_only) start_typelib($$);
