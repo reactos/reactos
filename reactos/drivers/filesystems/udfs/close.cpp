@@ -1109,7 +1109,7 @@ UDFQueueDelayedClose(
 {
     PtrUDFIrpContextLite    IrpContextLite;
     BOOLEAN                 StartWorker = FALSE;
-    BOOLEAN                 AcquiredVcb = FALSE;
+    volatile BOOLEAN        AcquiredVcb = FALSE;
     NTSTATUS                RC;
 
     AdPrint(("  UDFQueueDelayedClose\n"));
