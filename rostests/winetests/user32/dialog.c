@@ -1550,17 +1550,32 @@ static void test_timer_message(void)
     DialogBoxA(g_hinst, "RADIO_TEST_DIALOG", NULL, timer_message_dlg_proc);
 }
 
-static INT_PTR CALLBACK custom_test_dialog_proc(HWND hdlg, UINT msg, WPARAM wparam, LPARAM lparam)
+static LRESULT CALLBACK msgbox_hook_proc(INT code, WPARAM wParam, LPARAM lParam)
 {
-    if (msg == WM_INITDIALOG)
-        EndDialog(hdlg, 0);
+    if (code == HCBT_ACTIVATE)
+    {
+        HWND msgbox = (HWND)wParam, msghwnd;
+        char text[64];
 
-    return FALSE;
-}
+        if (msgbox)
+        {
+            text[0] = 0;
+            GetWindowTextA(msgbox, text, sizeof(text));
+            ok(!strcmp(text, "MSGBOX caption"), "Unexpected window text \"%s\"\n", text);
 
-static void test_dialog_custom_data(void)
-{
-    DialogBoxA(g_hinst, "CUSTOM_TEST_DIALOG", NULL, custom_test_dialog_proc);
+            msghwnd = GetDlgItem(msgbox, 0xffff);
+            ok(msghwnd != NULL, "Expected static control\n");
+
+            text[0] = 0;
+            GetWindowTextA(msghwnd, text, sizeof(text));
+            ok(!strcmp(text, "Text"), "Unexpected window text \"%s\"\n", text);
+
+            SendDlgItemMessageA(msgbox, IDCANCEL, WM_LBUTTONDOWN, 0, 0);
+            SendDlgItemMessageA(msgbox, IDCANCEL, WM_LBUTTONUP, 0, 0);
+        }
+    }
+
+    return CallNextHookEx(NULL, code, wParam, lParam);
 }
 
 struct create_window_params
@@ -1623,9 +1638,18 @@ static void test_MessageBox(void)
         { MB_OK | MB_TASKMODAL, 0 },
         { MB_OK | MB_SYSTEMMODAL, WS_EX_TOPMOST },
     };
-    DWORD tid, i;
-    HANDLE thread;
     struct create_window_params params;
+    HANDLE thread;
+    DWORD tid, i;
+    HHOOK hook;
+    int ret;
+
+    hook = SetWindowsHookExA(WH_CBT, msgbox_hook_proc, NULL, GetCurrentThreadId());
+
+    ret = MessageBoxA(NULL, "Text", "MSGBOX caption", MB_OKCANCEL);
+    ok(ret == IDCANCEL, "got %d\n", ret);
+
+    UnhookWindowsHookEx(hook);
 
     sprintf(params.caption, "pid %08x, tid %08x, time %08x",
             GetCurrentProcessId(), GetCurrentThreadId(), GetCurrentTime());
@@ -1673,13 +1697,25 @@ static void test_MessageBox(void)
     }
 }
 
+static INT_PTR CALLBACK custom_test_dialog_proc(HWND hdlg, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+    if (msg == WM_INITDIALOG)
+        EndDialog(hdlg, 0);
+
+    return FALSE;
+}
+
+static void test_dialog_custom_data(void)
+{
+    DialogBoxA(g_hinst, "CUSTOM_TEST_DIALOG", NULL, custom_test_dialog_proc);
+}
+
 START_TEST(dialog)
 {
     g_hinst = GetModuleHandleA (0);
 
     if (!RegisterWindowClasses()) assert(0);
 
-    test_MessageBox();
     test_dialog_custom_data();
     test_GetNextDlgItem();
     test_IsDialogMessage();
@@ -1692,4 +1728,5 @@ START_TEST(dialog)
     test_MessageBoxFontTest();
     test_SaveRestoreFocus();
     test_timer_message();
+    test_MessageBox();
 }

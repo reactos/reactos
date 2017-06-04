@@ -26,6 +26,7 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "winerror.h"
+#include "winnls.h"
 
 #define MODIFIED(rect) (rect.left == 10 && rect.right != 100 && rect.top == 10 && rect.bottom != 100)
 #define EMPTY(rect) (rect.left == rect.right && rect.bottom == rect.top)
@@ -746,6 +747,8 @@ static void test_CharToOem_OemToChar(void)
     };
     BOOL ret;
     int i;
+    char oem;
+    WCHAR uni, expect;
 
     for (i = 0; i < sizeof(tests)/sizeof(tests[0]); i++)
     {
@@ -806,6 +809,15 @@ static void test_CharToOem_OemToChar(void)
         ret = OemToCharBuffW(src, dst, sizeof(helloWorld));
         ok(ret == tests[i].ret, "test %d: expected %d, got %d\n", i, tests[i].ret, ret);
         ok(!lstrcmpW(buf, expected), "test %d: got '%s'\n", i, wine_dbgstr_w(buf));
+    }
+
+    for (i = 0; i < 0x100; i++)
+    {
+        oem = i;
+        ret = OemToCharBuffW( &oem, &uni, 1 );
+        ok( ret, "%02x: returns FALSE\n", i );
+        MultiByteToWideChar( CP_OEMCP, MB_PRECOMPOSED | MB_USEGLYPHCHARS, &oem, 1, &expect, 1 );
+        ok( uni == expect, "%02x: got %04x expected %04x\n", i, uni, expect );
     }
 }
 

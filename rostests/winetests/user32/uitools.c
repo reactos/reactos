@@ -169,7 +169,7 @@ static void test_IsRectEmpty(void)
         {{-11, -13, -19, -23}, TRUE},
         {{11, 13, -17, 19}, TRUE},
         {{11, 13, 17, 11}, TRUE},
-        /* Non emty rects */
+        /* Non empty rects */
         {{101, 103, 107, 109}, FALSE},
         {{1, -9, 7, 3}, FALSE},
         {{-109, -107, -103, -101}, FALSE},
