@@ -29,18 +29,7 @@
 
 #include "wine/test.h"
 
-static HMODULE secdll;
-
-static ACQUIRE_CREDENTIALS_HANDLE_FN_A pAcquireCredentialsHandleA;
-static ENUMERATE_SECURITY_PACKAGES_FN_A pEnumerateSecurityPackagesA;
-static FREE_CONTEXT_BUFFER_FN pFreeContextBuffer;
-static FREE_CREDENTIALS_HANDLE_FN pFreeCredentialsHandle;
-static QUERY_CREDENTIALS_ATTRIBUTES_FN_A pQueryCredentialsAttributesA;
-static INITIALIZE_SECURITY_CONTEXT_FN_A pInitializeSecurityContextA;
 static QUERY_CONTEXT_ATTRIBUTES_FN_A pQueryContextAttributesA;
-static DELETE_SECURITY_CONTEXT_FN pDeleteSecurityContext;
-static DECRYPT_MESSAGE_FN pDecryptMessage;
-static ENCRYPT_MESSAGE_FN pEncryptMessage;
 
 static const BYTE bigCert[] = { 0x30, 0x7a, 0x02, 0x01, 0x01, 0x30, 0x02, 0x06,
  0x00, 0x30, 0x15, 0x31, 0x13, 0x30, 0x11, 0x06, 0x03, 0x55, 0x04, 0x03, 0x13,
@@ -106,31 +95,6 @@ static const BYTE selfSignedCert[] = {
  0xa8, 0x76, 0x57, 0x92, 0x36 };
 
 static CHAR unisp_name_a[] = UNISP_NAME_A;
-
-static void InitFunctionPtrs(void)
-{
-    secdll = LoadLibraryA("secur32.dll");
-    if(!secdll)
-        secdll = LoadLibraryA("security.dll");
-
-#define GET_PROC(h, func)  p ## func = (void*)GetProcAddress(h, #func)
-
-    if(secdll)
-    {
-        GET_PROC(secdll, AcquireCredentialsHandleA);
-        GET_PROC(secdll, EnumerateSecurityPackagesA);
-        GET_PROC(secdll, FreeContextBuffer);
-        GET_PROC(secdll, FreeCredentialsHandle);
-        GET_PROC(secdll, QueryCredentialsAttributesA);
-        GET_PROC(secdll, InitializeSecurityContextA);
-        GET_PROC(secdll, QueryContextAttributesA);
-        GET_PROC(secdll, DeleteSecurityContext);
-        GET_PROC(secdll, DecryptMessage);
-        GET_PROC(secdll, EncryptMessage);
-    }
-
-#undef GET_PROC
-}
 
 static const char *algid_to_str(ALG_ID alg)
 {
@@ -212,7 +176,7 @@ static void test_strength(PCredHandle handle)
     SecPkgCred_CipherStrengths strength = {-1,-1};
     SECURITY_STATUS st;
 
-    st = pQueryCredentialsAttributesA(handle, SECPKG_ATTR_CIPHER_STRENGTHS, &strength);
+    st = QueryCredentialsAttributesA(handle, SECPKG_ATTR_CIPHER_STRENGTHS, &strength);
     ok(st == SEC_E_OK, "QueryCredentialsAttributesA failed: %u\n", GetLastError());
     ok(strength.dwMinimumCipherStrength, "dwMinimumCipherStrength not changed\n");
     ok(strength.dwMaximumCipherStrength, "dwMaximumCipherStrength not changed\n");
@@ -224,7 +188,7 @@ static void test_supported_protocols(CredHandle *handle, unsigned exprots)
     SecPkgCred_SupportedProtocols protocols;
     SECURITY_STATUS status;
 
-    status = pQueryCredentialsAttributesA(handle, SECPKG_ATTR_SUPPORTED_PROTOCOLS, &protocols);
+    status = QueryCredentialsAttributesA(handle, SECPKG_ATTR_SUPPORTED_PROTOCOLS, &protocols);
     ok(status == SEC_E_OK, "QueryCredentialsAttributes failed: %08x\n", status);
 
     if(exprots)
@@ -250,7 +214,7 @@ static void test_supported_algs(CredHandle *handle)
     SECURITY_STATUS status;
     unsigned i;
 
-    status = pQueryCredentialsAttributesA(handle, SECPKG_ATTR_SUPPORTED_ALGS, &algs);
+    status = QueryCredentialsAttributesA(handle, SECPKG_ATTR_SUPPORTED_ALGS, &algs);
     todo_wine ok(status == SEC_E_OK, "QueryCredentialsAttributes failed: %08x\n", status);
     if(status != SEC_E_OK)
         return;
@@ -259,7 +223,7 @@ static void test_supported_algs(CredHandle *handle)
     for(i=0; i < algs.cSupportedAlgs; i++)
         trace("    %s\n", algid_to_str(algs.palgSupportedAlgs[i]));
 
-    pFreeContextBuffer(algs.palgSupportedAlgs);
+    FreeContextBuffer(algs.palgSupportedAlgs);
 }
 
 static void test_cread_attrs(void)
@@ -268,31 +232,31 @@ static void test_cread_attrs(void)
     SECURITY_STATUS status;
     CredHandle cred;
 
-    status = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
+    status = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
             NULL, NULL, NULL, NULL, &cred, NULL);
     ok(status == SEC_E_OK, "AcquireCredentialsHandleA failed: %x\n", status);
 
     test_supported_protocols(&cred, 0);
     test_supported_algs(&cred);
 
-    status = pQueryCredentialsAttributesA(&cred, SECPKG_ATTR_SUPPORTED_PROTOCOLS, NULL);
+    status = QueryCredentialsAttributesA(&cred, SECPKG_ATTR_SUPPORTED_PROTOCOLS, NULL);
     ok(status == SEC_E_INTERNAL_ERROR, "QueryCredentialsAttributes failed: %08x, expected SEC_E_INTERNAL_ERROR\n", status);
 
-    status = pQueryCredentialsAttributesA(&cred, SECPKG_ATTR_SUPPORTED_ALGS, NULL);
+    status = QueryCredentialsAttributesA(&cred, SECPKG_ATTR_SUPPORTED_ALGS, NULL);
     ok(status == SEC_E_INTERNAL_ERROR, "QueryCredentialsAttributes failed: %08x, expected SEC_E_INTERNAL_ERROR\n", status);
 
-    pFreeCredentialsHandle(&cred);
+    FreeCredentialsHandle(&cred);
 
     init_cred(&schannel_cred);
     schannel_cred.grbitEnabledProtocols = SP_PROT_TLS1_CLIENT;
-    status = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
+    status = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
             NULL, &schannel_cred, NULL, NULL, &cred, NULL);
     ok(status == SEC_E_OK, "AcquireCredentialsHandleA failed: %x\n", status);
 
     test_supported_protocols(&cred, SP_PROT_TLS1_CLIENT);
     test_supported_algs(&cred);
 
-    pFreeCredentialsHandle(&cred);
+    FreeCredentialsHandle(&cred);
 }
 
 static void testAcquireSecurityContext(void)
@@ -312,15 +276,8 @@ static void testAcquireSecurityContext(void)
     HCRYPTKEY key;
     CRYPT_KEY_PROV_INFO keyProvInfo;
 
-    if (!pAcquireCredentialsHandleA ||
-        !pEnumerateSecurityPackagesA || !pFreeContextBuffer ||
-        !pFreeCredentialsHandle)
-    {
-        win_skip("Needed functions are not available\n");
-        return;
-    }
 
-    if (SUCCEEDED(pEnumerateSecurityPackagesA(&i, &package_info)))
+    if (SUCCEEDED(EnumerateSecurityPackagesA(&i, &package_info)))
     {
         while(i--)
         {
@@ -330,7 +287,7 @@ static void testAcquireSecurityContext(void)
                 break;
             }
         }
-        pFreeContextBuffer(package_info);
+        FreeContextBuffer(package_info);
     }
     if (!has_schannel)
     {
@@ -361,55 +318,55 @@ static void testAcquireSecurityContext(void)
         return;
     }
 
-    st = pAcquireCredentialsHandleA(NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL,
+    st = AcquireCredentialsHandleA(NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL,
      NULL);
     ok(st == SEC_E_SECPKG_NOT_FOUND,
      "Expected SEC_E_SECPKG_NOT_FOUND, got %08x\n", st);
     if (0)
     {
         /* Crashes on Win2K */
-        st = pAcquireCredentialsHandleA(NULL, unisp_name_a, 0, NULL, NULL, NULL,
+        st = AcquireCredentialsHandleA(NULL, unisp_name_a, 0, NULL, NULL, NULL,
          NULL, NULL, NULL);
         ok(st == SEC_E_NO_CREDENTIALS, "Expected SEC_E_NO_CREDENTIALS, got %08x\n", st);
 
         /* Crashes on WinNT */
-        st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_BOTH, NULL,
+        st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_BOTH, NULL,
          NULL, NULL, NULL, NULL, NULL);
         ok(st == SEC_E_NO_CREDENTIALS, "Expected SEC_E_NO_CREDENTIALS, got %08x\n", st);
 
-        st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
+        st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
          NULL, NULL, NULL, NULL, NULL, NULL);
         ok(st == SEC_E_NO_CREDENTIALS, "Expected SEC_E_NO_CREDENTIALS, got %08x\n", st);
 
         /* Crashes */
-        pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
+        AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
          NULL, NULL, NULL, NULL, NULL, NULL);
     }
-    st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
+    st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
      NULL, NULL, NULL, NULL, &cred, NULL);
     ok(st == SEC_E_OK, "AcquireCredentialsHandleA failed: %08x\n", st);
     if(st == SEC_E_OK)
-        pFreeCredentialsHandle(&cred);
+        FreeCredentialsHandle(&cred);
     memset(&cred, 0, sizeof(cred));
-    st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
+    st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
      NULL, NULL, NULL, NULL, &cred, &exp);
     ok(st == SEC_E_OK, "AcquireCredentialsHandleA failed: %08x\n", st);
     /* expriy is indeterminate in win2k3 */
     trace("expiry: %08x%08x\n", exp.HighPart, exp.LowPart);
 
-    st = pQueryCredentialsAttributesA(&cred, SECPKG_CRED_ATTR_NAMES, &names);
+    st = QueryCredentialsAttributesA(&cred, SECPKG_CRED_ATTR_NAMES, &names);
     ok(st == SEC_E_NO_CREDENTIALS || st == SEC_E_UNSUPPORTED_FUNCTION /* before Vista */, "expected SEC_E_NO_CREDENTIALS, got %08x\n", st);
 
-    pFreeCredentialsHandle(&cred);
+    FreeCredentialsHandle(&cred);
 
     /* Bad version in SCHANNEL_CRED */
     memset(&schanCred, 0, sizeof(schanCred));
-    st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
+    st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
      NULL, &schanCred, NULL, NULL, NULL, NULL);
     ok(st == SEC_E_INTERNAL_ERROR ||
        st == SEC_E_UNKNOWN_CREDENTIALS /* Vista/win2k8 */ ||
        st == SEC_E_INVALID_TOKEN /* WinNT */, "st = %08x\n", st);
-    st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
+    st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
      NULL, &schanCred, NULL, NULL, NULL, NULL);
     ok(st == SEC_E_INTERNAL_ERROR ||
        st == SEC_E_UNKNOWN_CREDENTIALS /* Vista/win2k8 */ ||
@@ -417,12 +374,12 @@ static void testAcquireSecurityContext(void)
 
     /* No cert in SCHANNEL_CRED succeeds for outbound.. */
     schanCred.dwVersion = SCHANNEL_CRED_VERSION;
-    st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
+    st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
      NULL, &schanCred, NULL, NULL, &cred, NULL);
     ok(st == SEC_E_OK, "AcquireCredentialsHandleA failed: %08x\n", st);
-    pFreeCredentialsHandle(&cred);
+    FreeCredentialsHandle(&cred);
     /* but fails for inbound. */
-    st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
+    st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
      NULL, &schanCred, NULL, NULL, &cred, NULL);
     ok(st == SEC_E_NO_CREDENTIALS ||
        st == SEC_E_OK /* Vista/win2k8 */,
@@ -432,7 +389,7 @@ static void testAcquireSecurityContext(void)
     {
         /* Crashes with bad paCred pointer */
         schanCred.cCreds = 1;
-        pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
+        AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
          NULL, &schanCred, NULL, NULL, NULL, NULL);
     }
 
@@ -441,12 +398,12 @@ static void testAcquireSecurityContext(void)
      */
     schanCred.cCreds = 1;
     schanCred.paCred = &certs[0];
-    st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
+    st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
      NULL, &schanCred, NULL, NULL, NULL, NULL);
     ok(st == SEC_E_UNKNOWN_CREDENTIALS ||
        st == SEC_E_NO_CREDENTIALS ||
        st == SEC_E_INVALID_TOKEN /* WinNT */, "st = %08x\n", st);
-    st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
+    st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
      NULL, &schanCred, NULL, NULL, NULL, NULL);
     ok(st == SEC_E_UNKNOWN_CREDENTIALS ||
        st == SEC_E_NO_CREDENTIALS ||
@@ -457,13 +414,13 @@ static void testAcquireSecurityContext(void)
      */
     schanCred.cCreds = 1;
     schanCred.paCred = &certs[1];
-    st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
+    st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
      NULL, &schanCred, NULL, NULL, &cred, NULL);
     ok(st == SEC_E_UNKNOWN_CREDENTIALS || st == SEC_E_NO_CREDENTIALS ||
        st == SEC_E_INTERNAL_ERROR, /* win2k */
      "Expected SEC_E_UNKNOWN_CREDENTIALS, SEC_E_NO_CREDENTIALS "
      "or SEC_E_INTERNAL_ERROR, got %08x\n", st);
-    st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
+    st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
      NULL, &schanCred, NULL, NULL, NULL, NULL);
     ok(st == SEC_E_UNKNOWN_CREDENTIALS || st == SEC_E_NO_CREDENTIALS ||
        st == SEC_E_INTERNAL_ERROR, /* win2k */
@@ -475,11 +432,11 @@ static void testAcquireSecurityContext(void)
           CERT_KEY_PROV_INFO_PROP_ID, 0, &keyProvInfo);
     schanCred.dwVersion = SCH_CRED_V3;
     ok(ret, "CertSetCertificateContextProperty failed: %08x\n", GetLastError());
-    st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
+    st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
         NULL, &schanCred, NULL, NULL, &cred, NULL);
     ok(st == SEC_E_UNKNOWN_CREDENTIALS || st == SEC_E_INTERNAL_ERROR /* WinNT */,
        "Expected SEC_E_UNKNOWN_CREDENTIALS or SEC_E_INTERNAL_ERROR, got %08x\n", st);
-    st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
+    st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
         NULL, &schanCred, NULL, NULL, &cred, NULL);
     ok(st == SEC_E_UNKNOWN_CREDENTIALS || st == SEC_E_INTERNAL_ERROR /* WinNT */,
         "Expected SEC_E_UNKNOWN_CREDENTIALS or SEC_E_INTERNAL_ERROR, got %08x\n", st);
@@ -498,29 +455,29 @@ static void testAcquireSecurityContext(void)
         if (0)
         {
             /* Crashes */
-            pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
+            AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
              NULL, &schanCred, NULL, NULL, NULL, NULL);
 
             /* Crashes on WinNT */
             /* Good cert with private key, bogus version */
             schanCred.dwVersion = SCH_CRED_V1;
-            st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
+            st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
                 NULL, &schanCred, NULL, NULL, &cred, NULL);
             ok(st == SEC_E_INTERNAL_ERROR ||
                 st == SEC_E_UNKNOWN_CREDENTIALS /* Vista/win2k8 */,
                 "Expected SEC_E_INTERNAL_ERROR or SEC_E_UNKNOWN_CREDENTIALS, got %08x\n", st);
-            st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
+            st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
                 NULL, &schanCred, NULL, NULL, &cred, NULL);
             ok(st == SEC_E_INTERNAL_ERROR ||
                 st == SEC_E_UNKNOWN_CREDENTIALS /* Vista/win2k8 */,
                 "Expected SEC_E_INTERNAL_ERROR or SEC_E_UNKNOWN_CREDENTIALS, got %08x\n", st);
             schanCred.dwVersion = SCH_CRED_V2;
-            st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
+            st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
                 NULL, &schanCred, NULL, NULL, &cred, NULL);
             ok(st == SEC_E_INTERNAL_ERROR ||
                 st == SEC_E_UNKNOWN_CREDENTIALS /* Vista/win2k8 */,
                 "Expected SEC_E_INTERNAL_ERROR or SEC_E_UNKNOWN_CREDENTIALS, got %08x\n", st);
-            st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
+            st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
                 NULL, &schanCred, NULL, NULL, &cred, NULL);
             ok(st == SEC_E_INTERNAL_ERROR ||
                 st == SEC_E_UNKNOWN_CREDENTIALS /* Vista/win2k8 */,
@@ -529,38 +486,38 @@ static void testAcquireSecurityContext(void)
 
         /* Succeeds on V3 or higher */
         schanCred.dwVersion = SCH_CRED_V3;
-        st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
+        st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
          NULL, &schanCred, NULL, NULL, &cred, NULL);
         ok(st == SEC_E_OK, "AcquireCredentialsHandleA failed: %08x\n", st);
-        pFreeCredentialsHandle(&cred);
-        st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
+        FreeCredentialsHandle(&cred);
+        st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
          NULL, &schanCred, NULL, NULL, &cred, NULL);
         ok(st == SEC_E_OK ||
            st == SEC_E_UNKNOWN_CREDENTIALS, /* win2k3 */
            "AcquireCredentialsHandleA failed: %08x\n", st);
-        pFreeCredentialsHandle(&cred);
+        FreeCredentialsHandle(&cred);
         schanCred.dwVersion = SCHANNEL_CRED_VERSION;
-        st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
+        st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
          NULL, &schanCred, NULL, NULL, &cred, NULL);
         ok(st == SEC_E_OK, "AcquireCredentialsHandleA failed: %08x\n", st);
-        pFreeCredentialsHandle(&cred);
-        st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
+        FreeCredentialsHandle(&cred);
+        st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
          NULL, &schanCred, NULL, NULL, &cred, NULL);
         ok(st == SEC_E_OK ||
            st == SEC_E_UNKNOWN_CREDENTIALS, /* win2k3 */
            "AcquireCredentialsHandleA failed: %08x\n", st);
         if (st == SEC_E_OK) test_strength(&cred);
-        pFreeCredentialsHandle(&cred);
+        FreeCredentialsHandle(&cred);
 
         /* How about more than one cert? */
         schanCred.cCreds = 2;
         schanCred.paCred = certs;
-        st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
+        st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
          NULL, &schanCred, NULL, NULL, &cred, NULL);
         ok(st == SEC_E_UNKNOWN_CREDENTIALS ||
            st == SEC_E_NO_CREDENTIALS /* Vista/win2k8 */ ||
            st == SEC_E_INVALID_TOKEN /* WinNT */, "st = %08x\n", st);
-        st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
+        st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
          NULL, &schanCred, NULL, NULL, &cred, NULL);
         ok(st == SEC_E_UNKNOWN_CREDENTIALS ||
            st == SEC_E_NO_CREDENTIALS ||
@@ -568,12 +525,12 @@ static void testAcquireSecurityContext(void)
         tmp = certs[0];
         certs[0] = certs[1];
         certs[1] = tmp;
-        st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
+        st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_OUTBOUND,
          NULL, &schanCred, NULL, NULL, &cred, NULL);
         ok(st == SEC_E_UNKNOWN_CREDENTIALS ||
            st == SEC_E_NO_CREDENTIALS ||
            st == SEC_E_INVALID_TOKEN /* WinNT */, "st = %08x\n", st);
-        st = pAcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
+        st = AcquireCredentialsHandleA(NULL, unisp_name_a, SECPKG_CRED_INBOUND,
          NULL, &schanCred, NULL, NULL, &cred, NULL);
         ok(st == SEC_E_UNKNOWN_CREDENTIALS,
          "Expected SEC_E_UNKNOWN_CREDENTIALS, got %08x\n", st);
@@ -679,6 +636,36 @@ static int receive_data(SOCKET sock, SecBuffer *buf)
     return received;
 }
 
+static void test_InitializeSecurityContext(void)
+{
+    SCHANNEL_CRED cred;
+    CredHandle cred_handle;
+    CtxtHandle context;
+    SECURITY_STATUS status;
+    SecBuffer out_buffer = {1000, SECBUFFER_TOKEN, NULL};
+    SecBuffer in_buffer = {0, SECBUFFER_EMPTY, NULL};
+    SecBufferDesc out_buffers = {SECBUFFER_VERSION, 1, &out_buffer};
+    SecBufferDesc in_buffers  = {SECBUFFER_VERSION, 1, &in_buffer};
+    ULONG attrs;
+
+    init_cred(&cred);
+    cred.grbitEnabledProtocols = SP_PROT_TLS1_CLIENT;
+    cred.dwFlags = SCH_CRED_NO_DEFAULT_CREDS|SCH_CRED_MANUAL_CRED_VALIDATION;
+    status = AcquireCredentialsHandleA(NULL, (SEC_CHAR *)UNISP_NAME_A, SECPKG_CRED_OUTBOUND, NULL,
+        &cred, NULL, NULL, &cred_handle, NULL);
+    ok(status == SEC_E_OK, "AcquireCredentialsHandleA failed: %08x\n", status);
+    if (status != SEC_E_OK) return;
+
+    status = InitializeSecurityContextA(&cred_handle, NULL, (SEC_CHAR *)"localhost",
+        ISC_REQ_CONFIDENTIALITY|ISC_REQ_STREAM|ISC_REQ_ALLOCATE_MEMORY,
+        0, 0, &in_buffers, 0, &context, &out_buffers, &attrs, NULL);
+    ok(status == SEC_I_CONTINUE_NEEDED, "Expected SEC_I_CONTINUE_NEEDED, got %08x\n", status);
+
+    FreeContextBuffer(out_buffer.pvBuffer);
+    DeleteSecurityContext(&context);
+    FreeCredentialsHandle(&cred_handle);
+}
+
 static void test_communication(void)
 {
     int ret;
@@ -697,6 +684,7 @@ static void test_communication(void)
     SecPkgCredentials_NamesA names;
     SecPkgContext_StreamSizes sizes;
     SecPkgContext_ConnectionInfo conn_info;
+    SecPkgContext_KeyInfoA key_info;
     CERT_CONTEXT *cert;
 
     SecBufferDesc buffers[2];
@@ -705,11 +693,9 @@ static void test_communication(void)
     unsigned char *data;
     unsigned data_size;
 
-    if (!pAcquireCredentialsHandleA || !pFreeCredentialsHandle ||
-        !pInitializeSecurityContextA || !pDeleteSecurityContext ||
-        !pQueryContextAttributesA || !pDecryptMessage || !pEncryptMessage)
+    if (!pQueryContextAttributesA)
     {
-        skip("Required secur32 functions not available\n");
+        win_skip("Required secur32 functions not available\n");
         return;
     }
 
@@ -750,7 +736,7 @@ static void test_communication(void)
     cred.grbitEnabledProtocols = SP_PROT_TLS1_CLIENT;
     cred.dwFlags = SCH_CRED_NO_DEFAULT_CREDS|SCH_CRED_MANUAL_CRED_VALIDATION;
 
-    status = pAcquireCredentialsHandleA(NULL, (SEC_CHAR *)UNISP_NAME_A, SECPKG_CRED_OUTBOUND, NULL,
+    status = AcquireCredentialsHandleA(NULL, (SEC_CHAR *)UNISP_NAME_A, SECPKG_CRED_OUTBOUND, NULL,
         &cred, NULL, NULL, &cred_handle, NULL);
     ok(status == SEC_E_OK, "AcquireCredentialsHandleA failed: %08x\n", status);
     if (status != SEC_E_OK) return;
@@ -760,7 +746,7 @@ static void test_communication(void)
     init_buffers(&buffers[1], 4, buf_size);
 
     buffers[0].pBuffers[0].BufferType = SECBUFFER_TOKEN;
-    status = pInitializeSecurityContextA(&cred_handle, NULL, (SEC_CHAR *)"localhost",
+    status = InitializeSecurityContextA(&cred_handle, NULL, (SEC_CHAR *)"localhost",
         ISC_REQ_CONFIDENTIALITY|ISC_REQ_STREAM,
         0, 0, NULL, 0, &context, &buffers[0], &attrs, NULL);
     ok(status == SEC_I_CONTINUE_NEEDED, "Expected SEC_I_CONTINUE_NEEDED, got %08x\n", status);
@@ -769,7 +755,7 @@ static void test_communication(void)
     buffers[1].pBuffers[0].BufferType = SECBUFFER_TOKEN;
     buffers[0].pBuffers[0].cbBuffer = 1;
     memset(buffers[1].pBuffers[0].pvBuffer, 0xfa, buf_size);
-    status = pInitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
+    status = InitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
             ISC_REQ_CONFIDENTIALITY|ISC_REQ_STREAM,
             0, 0, &buffers[1], 0, NULL, &buffers[0], &attrs, NULL);
 todo_wine
@@ -781,14 +767,14 @@ todo_wine
     buffers[1].pBuffers[0].BufferType = SECBUFFER_TOKEN;
     buffers[0].pBuffers[0].cbBuffer = 1;
     memset(buffers[1].pBuffers[0].pvBuffer, 0, buf_size);
-    status = pInitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
+    status = InitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
             ISC_REQ_CONFIDENTIALITY|ISC_REQ_STREAM,
             0, 0, &buffers[1], 0, NULL, &buffers[0], &attrs, NULL);
     ok(status == SEC_E_INVALID_TOKEN, "Expected SEC_E_INVALID_TOKEN, got %08x\n", status);
     ok(buffers[0].pBuffers[0].cbBuffer == 0, "Output buffer size was not set to 0.\n");
 
     buffers[0].pBuffers[0].cbBuffer = 0;
-    status = pInitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
+    status = InitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
             ISC_REQ_CONFIDENTIALITY|ISC_REQ_STREAM,
             0, 0, &buffers[1], 0, NULL, &buffers[0], &attrs, NULL);
 todo_wine
@@ -796,14 +782,14 @@ todo_wine
        "Expected SEC_E_INSUFFICIENT_MEMORY or SEC_E_INVALID_TOKEN, got %08x\n", status);
     ok(buffers[0].pBuffers[0].cbBuffer == 0, "Output buffer size was not set to 0.\n");
 
-    status = pInitializeSecurityContextA(&cred_handle, NULL, (SEC_CHAR *)"localhost",
+    status = InitializeSecurityContextA(&cred_handle, NULL, (SEC_CHAR *)"localhost",
             ISC_REQ_CONFIDENTIALITY|ISC_REQ_STREAM,
             0, 0, NULL, 0, &context, NULL, &attrs, NULL);
 todo_wine
     ok(status == SEC_E_INVALID_TOKEN, "Expected SEC_E_INVALID_TOKEN, got %08x\n", status);
 
     buffers[0].pBuffers[0].cbBuffer = buf_size;
-    status = pInitializeSecurityContextA(&cred_handle, NULL, (SEC_CHAR *)"localhost",
+    status = InitializeSecurityContextA(&cred_handle, NULL, (SEC_CHAR *)"localhost",
             ISC_REQ_CONFIDENTIALITY|ISC_REQ_STREAM,
             0, 0, NULL, 0, &context, &buffers[0], &attrs, NULL);
     ok(status == SEC_I_CONTINUE_NEEDED, "Expected SEC_I_CONTINUE_NEEDED, got %08x\n", status);
@@ -812,7 +798,7 @@ todo_wine
     send(sock, buf->pvBuffer, buf->cbBuffer, 0);
     buf->cbBuffer = buf_size;
 
-    status = pInitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
+    status = InitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
             ISC_REQ_CONFIDENTIALITY|ISC_REQ_STREAM,
             0, 0, NULL, 0, NULL, &buffers[0], &attrs, NULL);
     ok(status == SEC_E_INCOMPLETE_MESSAGE, "Got unexpected status %#x.\n", status);
@@ -822,7 +808,7 @@ todo_wine
     buffers[1].cBuffers = 4;
     buffers[1].pBuffers[0].cbBuffer = 0;
 
-    status = pInitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
+    status = InitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
             ISC_REQ_CONFIDENTIALITY|ISC_REQ_STREAM,
             0, 0, &buffers[1], 0, NULL, &buffers[0], &attrs, NULL);
     ok(status == SEC_E_INCOMPLETE_MESSAGE, "Got unexpected status %#x.\n", status);
@@ -836,23 +822,25 @@ todo_wine
         return;
 
     buffers[1].pBuffers[0].cbBuffer = 4;
-    status = pInitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
+    status = InitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
             ISC_REQ_CONFIDENTIALITY|ISC_REQ_STREAM,
             0, 0, &buffers[1], 0, NULL, &buffers[0], &attrs, NULL);
-    ok(status == SEC_E_INCOMPLETE_MESSAGE, "Got unexpected status %#x.\n", status);
+    ok(status == SEC_E_INCOMPLETE_MESSAGE || status == SEC_E_INVALID_TOKEN,
+       "Got unexpected status %#x.\n", status);
     ok(buffers[0].pBuffers[0].cbBuffer == buf_size, "Output buffer size changed.\n");
     ok(buffers[0].pBuffers[0].BufferType == SECBUFFER_TOKEN, "Output buffer type changed.\n");
 
     buffers[1].pBuffers[0].cbBuffer = 5;
-    status = pInitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
+    status = InitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
             ISC_REQ_CONFIDENTIALITY|ISC_REQ_STREAM,
             0, 0, &buffers[1], 0, NULL, &buffers[0], &attrs, NULL);
-    ok(status == SEC_E_INCOMPLETE_MESSAGE, "Got unexpected status %#x.\n", status);
+    ok(status == SEC_E_INCOMPLETE_MESSAGE || status == SEC_E_INVALID_TOKEN,
+       "Got unexpected status %#x.\n", status);
     ok(buffers[0].pBuffers[0].cbBuffer == buf_size, "Output buffer size changed.\n");
     ok(buffers[0].pBuffers[0].BufferType == SECBUFFER_TOKEN, "Output buffer type changed.\n");
 
     buffers[1].pBuffers[0].cbBuffer = ret;
-    status = pInitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
+    status = InitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
             ISC_REQ_CONFIDENTIALITY|ISC_REQ_STREAM,
             0, 0, &buffers[1], 0, NULL, &buffers[0], &attrs, NULL);
     buffers[1].pBuffers[0].cbBuffer = buf_size;
@@ -869,7 +857,7 @@ todo_wine
 
         buf->BufferType = SECBUFFER_TOKEN;
 
-        status = pInitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
+        status = InitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
             ISC_REQ_CONFIDENTIALITY|ISC_REQ_STREAM,
             0, 0, &buffers[1], 0, NULL, &buffers[0], &attrs, NULL);
         buffers[1].pBuffers[0].cbBuffer = buf_size;
@@ -883,13 +871,55 @@ todo_wine
         return;
     }
 
-    status = pQueryCredentialsAttributesA(&cred_handle, SECPKG_CRED_ATTR_NAMES, &names);
+    status = QueryCredentialsAttributesA(&cred_handle, SECPKG_CRED_ATTR_NAMES, &names);
     ok(status == SEC_E_NO_CREDENTIALS || status == SEC_E_UNSUPPORTED_FUNCTION /* before Vista */, "expected SEC_E_NO_CREDENTIALS, got %08x\n", status);
 
     status = pQueryContextAttributesA(&context, SECPKG_ATTR_REMOTE_CERT_CONTEXT, (void*)&cert);
     ok(status == SEC_E_OK, "QueryContextAttributesW(SECPKG_ATTR_REMOTE_CERT_CONTEXT) failed: %08x\n", status);
     if(status == SEC_E_OK) {
+        SecPkgContext_Bindings bindings = {0xdeadbeef, (void*)0xdeadbeef};
+
         test_remote_cert(cert);
+
+        status = pQueryContextAttributesA(&context, SECPKG_ATTR_ENDPOINT_BINDINGS, &bindings);
+        ok(status == SEC_E_OK || broken(status == SEC_E_UNSUPPORTED_FUNCTION),
+           "QueryContextAttributesW(SECPKG_ATTR_ENDPOINT_BINDINGS) failed: %08x\n", status);
+        if(status == SEC_E_OK) {
+            static const char prefix[] = "tls-server-end-point:";
+            const char *p;
+            BYTE hash[64];
+            DWORD hash_size;
+
+            ok(bindings.BindingsLength == sizeof(*bindings.Bindings) + sizeof(prefix)-1 + 32 /* hash size */,
+               "bindings.BindingsLength = %u\n", bindings.BindingsLength);
+            ok(!bindings.Bindings->dwInitiatorAddrType, "dwInitiatorAddrType = %x\n", bindings.Bindings->dwInitiatorAddrType);
+            ok(!bindings.Bindings->cbInitiatorLength, "cbInitiatorLength = %x\n", bindings.Bindings->cbInitiatorLength);
+            ok(!bindings.Bindings->dwInitiatorOffset, "dwInitiatorOffset = %x\n", bindings.Bindings->dwInitiatorOffset);
+            ok(!bindings.Bindings->dwAcceptorAddrType, "dwAcceptorAddrType = %x\n", bindings.Bindings->dwAcceptorAddrType);
+            ok(!bindings.Bindings->cbAcceptorLength, "cbAcceptorLength = %x\n", bindings.Bindings->cbAcceptorLength);
+            ok(!bindings.Bindings->dwAcceptorOffset, "dwAcceptorOffset = %x\n", bindings.Bindings->dwAcceptorOffset);
+            ok(sizeof(*bindings.Bindings) + bindings.Bindings->cbApplicationDataLength == bindings.BindingsLength,
+               "cbApplicationDataLength = %x\n", bindings.Bindings->cbApplicationDataLength);
+            ok(bindings.Bindings->dwApplicationDataOffset == sizeof(*bindings.Bindings),
+               "dwApplicationDataOffset = %x\n", bindings.Bindings->dwApplicationDataOffset);
+            p = (const char*)(bindings.Bindings+1);
+            ok(!memcmp(p, prefix, sizeof(prefix)-1), "missing prefix\n");
+            p += sizeof(prefix)-1;
+
+            hash_size = sizeof(hash);
+            ret = CryptHashCertificate(0, CALG_SHA_256, 0, cert->pbCertEncoded, cert->cbCertEncoded, hash, &hash_size);
+            if(ret) {
+                ok(hash_size == 32, "hash_size = %u\n", hash_size);
+                ok(!memcmp(hash, p, hash_size), "unexpected hash part\n");
+            }else {
+                win_skip("SHA 256 hash not supported.\n");
+            }
+
+            FreeContextBuffer(bindings.Bindings);
+        }else {
+            win_skip("SECPKG_ATTR_ENDPOINT_BINDINGS not supported\n");
+        }
+
         CertFreeCertificateContext(cert);
     }
 
@@ -898,6 +928,18 @@ todo_wine
     if(status == SEC_E_OK) {
         ok(conn_info.dwCipherStrength >= 128, "conn_info.dwCipherStrength = %d\n", conn_info.dwCipherStrength);
         ok(conn_info.dwHashStrength >= 128, "conn_info.dwHashStrength = %d\n", conn_info.dwHashStrength);
+    }
+
+    status = pQueryContextAttributesA(&context, SECPKG_ATTR_KEY_INFO, &key_info);
+    ok(status == SEC_E_OK, "QueryContextAttributesW(SECPKG_ATTR_KEY_INFO) failed: %08x\n", status);
+    if(status == SEC_E_OK) {
+        ok(broken(key_info.SignatureAlgorithm == 0 /* WinXP,2003 */) ||
+           key_info.SignatureAlgorithm == CALG_RSA_SIGN,
+           "key_info.SignatureAlgorithm = %04x\n", key_info.SignatureAlgorithm);
+        ok(broken(key_info.SignatureAlgorithm == 0 /* WinXP,2003 */) ||
+           !strcmp(key_info.sSignatureAlgorithmName, "RSA"),
+           "key_info.sSignatureAlgorithmName = %s\n", key_info.sSignatureAlgorithmName);
+        ok(key_info.KeySize >= 128, "key_info.KeySize = %d\n", key_info.KeySize);
     }
 
     status = pQueryContextAttributesA(&context, SECPKG_ATTR_STREAM_SIZES, &sizes);
@@ -920,7 +962,7 @@ todo_wine
     buf->pvBuffer = data + sizes.cbHeader + sizeof(http_request) -1;
     buf->cbBuffer = sizes.cbTrailer;
 
-    status = pEncryptMessage(&context, 0, &buffers[0], 0);
+    status = EncryptMessage(&context, 0, &buffers[0], 0);
     ok(status == SEC_E_OK, "EncryptMessage failed: %08x\n", status);
     if (status != SEC_E_OK)
         return;
@@ -934,29 +976,29 @@ todo_wine
 
     /* Too few buffers */
     --buffers[0].cBuffers;
-    status = pDecryptMessage(&context, &buffers[0], 0, NULL);
+    status = DecryptMessage(&context, &buffers[0], 0, NULL);
     ok(status == SEC_E_INVALID_TOKEN, "Expected SEC_E_INVALID_TOKEN, got %08x\n", status);
 
     /* No data buffer */
     ++buffers[0].cBuffers;
-    status = pDecryptMessage(&context, &buffers[0], 0, NULL);
+    status = DecryptMessage(&context, &buffers[0], 0, NULL);
     ok(status == SEC_E_INVALID_TOKEN, "Expected SEC_E_INVALID_TOKEN, got %08x\n", status);
 
     /* Two data buffers */
     buffers[0].pBuffers[0].BufferType = SECBUFFER_DATA;
     buffers[0].pBuffers[1].BufferType = SECBUFFER_DATA;
-    status = pDecryptMessage(&context, &buffers[0], 0, NULL);
+    status = DecryptMessage(&context, &buffers[0], 0, NULL);
     ok(status == SEC_E_INVALID_TOKEN, "Expected SEC_E_INVALID_TOKEN, got %08x\n", status);
 
     /* Too few empty buffers */
     buffers[0].pBuffers[1].BufferType = SECBUFFER_EXTRA;
-    status = pDecryptMessage(&context, &buffers[0], 0, NULL);
+    status = DecryptMessage(&context, &buffers[0], 0, NULL);
     ok(status == SEC_E_INVALID_TOKEN, "Expected SEC_E_INVALID_TOKEN, got %08x\n", status);
 
     /* Incomplete data */
     buffers[0].pBuffers[1].BufferType = SECBUFFER_EMPTY;
     buffers[0].pBuffers[0].cbBuffer = (data[3]<<8) | data[4];
-    status = pDecryptMessage(&context, &buffers[0], 0, NULL);
+    status = DecryptMessage(&context, &buffers[0], 0, NULL);
     ok(status == SEC_E_INCOMPLETE_MESSAGE, "Expected SEC_E_INCOMPLETE_MESSAGE, got %08x\n", status);
     ok(buffers[0].pBuffers[0].BufferType == SECBUFFER_MISSING, "Expected first buffer to be SECBUFFER_MISSING\n");
     ok(buffers[0].pBuffers[0].cbBuffer == 5, "Expected first buffer to be a five bytes\n");
@@ -964,7 +1006,7 @@ todo_wine
     buffers[0].pBuffers[0].cbBuffer = data_size;
     buffers[0].pBuffers[0].BufferType = SECBUFFER_DATA;
     buffers[0].pBuffers[1].BufferType = SECBUFFER_EMPTY;
-    status = pDecryptMessage(&context, &buffers[0], 0, NULL);
+    status = DecryptMessage(&context, &buffers[0], 0, NULL);
     ok(status == SEC_E_OK, "DecryptMessage failed: %08x\n", status);
     if (status == SEC_E_OK)
     {
@@ -976,8 +1018,8 @@ todo_wine
         data[buffers[0].pBuffers[1].cbBuffer] = 0;
     }
 
-    pDeleteSecurityContext(&context);
-    pFreeCredentialsHandle(&cred_handle);
+    DeleteSecurityContext(&context);
+    FreeCredentialsHandle(&cred_handle);
 
     free_buffers(&buffers[0]);
     free_buffers(&buffers[1]);
@@ -987,12 +1029,10 @@ todo_wine
 
 START_TEST(schannel)
 {
-    InitFunctionPtrs();
+    pQueryContextAttributesA = (void*)GetProcAddress(GetModuleHandleA("secur32.dll"), "QueryContextAttributesA");
 
     test_cread_attrs();
     testAcquireSecurityContext();
+    test_InitializeSecurityContext();
     test_communication();
-
-    if(secdll)
-        FreeLibrary(secdll);
 }

@@ -22,6 +22,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winnls.h>
+#include <wincred.h>
 #define SECURITY_WIN32
 #include <security.h>
 #include <schannel.h>
@@ -38,6 +39,8 @@ static void (SEC_ENTRY *pSspiFreeAuthIdentity)
     (PSEC_WINNT_AUTH_IDENTITY_OPAQUE);
 static void (SEC_ENTRY *pSspiLocalFree)
     (void *);
+static SECURITY_STATUS (SEC_ENTRY *pSspiPrepareForCredWrite)
+    (PSEC_WINNT_AUTH_IDENTITY_OPAQUE, PCWSTR, PULONG, PCWSTR *, PCWSTR *, PUCHAR *, PULONG);
 static void (SEC_ENTRY *pSspiZeroAuthIdentity)
     (PSEC_WINNT_AUTH_IDENTITY_OPAQUE);
 
@@ -315,6 +318,60 @@ static void test_SspiEncodeStringsAsAuthIdentity(void)
     pSspiFreeAuthIdentity( id );
 }
 
+static void test_SspiPrepareForCredWrite(void)
+{
+    static const WCHAR usernameW[] =
+        {'u','s','e','r','n','a','m','e',0};
+    static const WCHAR domainnameW[] =
+        {'d','o','m','a','i','n','n','a','m','e',0};
+    static const WCHAR passwordW[] =
+        {'p','a','s','s','w','o','r','d',0};
+    static const WCHAR targetW[] =
+        {'d','o','m','a','i','n','n','a','m','e','\\','u','s','e','r','n','a','m','e',0};
+    static const WCHAR target2W[] =
+        {'d','o','m','a','i','n','n','a','m','e','2','\\','u','s','e','r','n','a','m','e','2',0};
+    const WCHAR *target, *username;
+    PSEC_WINNT_AUTH_IDENTITY_OPAQUE id;
+    SECURITY_STATUS status;
+    ULONG type, size;
+    UCHAR *blob;
+
+    if (!pSspiPrepareForCredWrite)
+    {
+        win_skip( "SspiPrepareForCredWrite not exported by secur32.dll\n" );
+        return;
+    }
+
+    status = pSspiEncodeStringsAsAuthIdentity( usernameW, domainnameW, passwordW, &id );
+    ok( status == SEC_E_OK, "got %08x\n", status );
+
+    type = size = 0;
+    status = pSspiPrepareForCredWrite( id, NULL, &type, &target, &username, &blob, &size );
+    ok( status == SEC_E_OK, "got %08x\n", status );
+    ok( type == CRED_TYPE_DOMAIN_PASSWORD, "got %u\n", type );
+    ok( !lstrcmpW( target, targetW ), "got %s\n", wine_dbgstr_w(target) );
+    ok( !lstrcmpW( username, targetW ), "got %s\n", wine_dbgstr_w(username) );
+    ok( !memcmp( blob, passwordW, sizeof(passwordW) - sizeof(WCHAR) ), "wrong data\n" );
+    ok( size == sizeof(passwordW) - sizeof(WCHAR), "got %u\n", size );
+    pSspiLocalFree( (void *)target );
+    pSspiLocalFree( (void *)username );
+    pSspiLocalFree( blob );
+
+    type = size = 0;
+    status = pSspiPrepareForCredWrite( id, target2W, &type, &target, &username, &blob, &size );
+    ok( status == SEC_E_OK, "got %08x\n", status );
+    ok( type == CRED_TYPE_DOMAIN_PASSWORD, "got %u\n", type );
+    ok( !lstrcmpW( target, target2W ), "got %s\n", wine_dbgstr_w(target) );
+    ok( !lstrcmpW( username, targetW ), "got %s\n", wine_dbgstr_w(username) );
+    ok( !memcmp( blob, passwordW, sizeof(passwordW) - sizeof(WCHAR) ), "wrong data\n" );
+    ok( size == sizeof(passwordW) - sizeof(WCHAR), "got %u\n", size );
+    pSspiLocalFree( (void *)target );
+    pSspiLocalFree( (void *)username );
+    pSspiLocalFree( blob );
+
+    pSspiFreeAuthIdentity( id );
+}
+
 static void test_kerberos(void)
 {
     SecPkgInfoA *info;
@@ -377,6 +434,7 @@ START_TEST(secur32)
         pSspiEncodeStringsAsAuthIdentity = (void *)GetProcAddress(secdll, "SspiEncodeStringsAsAuthIdentity");
         pSspiFreeAuthIdentity = (void *)GetProcAddress(secdll, "SspiFreeAuthIdentity");
         pSspiLocalFree = (void *)GetProcAddress(secdll, "SspiLocalFree");
+        pSspiPrepareForCredWrite = (void *)GetProcAddress(secdll, "SspiPrepareForCredWrite");
         pSspiZeroAuthIdentity = (void *)GetProcAddress(secdll, "SspiZeroAuthIdentity");
         pGetComputerObjectNameA = (PVOID)GetProcAddress(secdll, "GetComputerObjectNameA");
         pGetComputerObjectNameW = (PVOID)GetProcAddress(secdll, "GetComputerObjectNameW");
@@ -384,7 +442,7 @@ START_TEST(secur32)
         pGetUserNameExW = (PVOID)GetProcAddress(secdll, "GetUserNameExW");
         pInitSecurityInterfaceA = (PVOID)GetProcAddress(secdll, "InitSecurityInterfaceA");
         pInitSecurityInterfaceW = (PVOID)GetProcAddress(secdll, "InitSecurityInterfaceW");
- 
+
         if (pGetComputerObjectNameA)
             testGetComputerObjectNameA();
         else
@@ -407,6 +465,7 @@ START_TEST(secur32)
 
         test_InitSecurityInterface();
         test_SspiEncodeStringsAsAuthIdentity();
+        test_SspiPrepareForCredWrite();
 
         FreeLibrary(secdll);
     }
