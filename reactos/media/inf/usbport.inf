@@ -30,6 +30,7 @@ HKR, , NoInstallClass, 0, 1
 %PCI\CC_0C0300.DeviceDesc%=UHCI_Inst,PCI\CC_0C0300
 %PCI\CC_0C0310.DeviceDesc%=OHCI_Inst,PCI\CC_0C0310
 %PCI\CC_0C0320.DeviceDesc%=EHCI_Inst,PCI\CC_0C0320
+%PCI\CC_0C0330.DeviceDesc%=XHCI_Inst,PCI\CC_0C0330
 %USB\ROOT_HUB.DeviceDesc%=RootHub_Inst,USB\ROOT_HUB
 %USB\ROOT_HUB.DeviceDesc%=RootHub_Inst,USB\ROOT_HUB20
 
@@ -94,6 +95,24 @@ ErrorControl  = 1
 ServiceBinary = %12%\usbehci.sys
 LoadOrderGroup = Base
 
+;------------------------------ XHCI DRIVER -----------------------------
+
+[XHCI_Inst.NT]
+CopyFiles = XHCI_CopyFiles.NT
+
+[XHCI_CopyFiles.NT]
+usbport.sys
+usbxhci.sys
+
+[XHCI_Inst.NT.Services]
+AddService = usbxhci, 0x00000002, usbxhci_Service_Inst
+
+[usbxhci_Service_Inst]
+ServiceType   = 1
+StartType     = 0
+ErrorControl  = 1
+ServiceBinary = %12%\usbxhci.sys
+LoadOrderGroup = Base
 ;---------------------------- ROOT HUB DRIVER ---------------------------
 
 [RootHub_Inst.NT]
