@@ -53,8 +53,8 @@
 @ stub ForceNexusLookupExW
 @ stdcall FreeUrlCacheSpaceA(str long long)
 @ stdcall FreeUrlCacheSpaceW(wstr long long)
-@ stdcall FtpCommandA(long long long str ptr ptr)
-@ stdcall FtpCommandW(long long long wstr ptr ptr)
+@ stdcall FtpCommandA(long long long str long ptr)
+@ stdcall FtpCommandW(long long long wstr long ptr)
 @ stdcall FtpCreateDirectoryA(ptr str)
 @ stdcall FtpCreateDirectoryW(ptr wstr)
 @ stdcall FtpDeleteFileA(ptr str)
@@ -119,8 +119,8 @@
 @ stdcall InternetAutodialHangup(long)
 @ stdcall InternetCanonicalizeUrlA(str ptr ptr long)
 @ stdcall InternetCanonicalizeUrlW(wstr ptr ptr long)
-@ stdcall InternetCheckConnectionA(ptr long long)
-@ stdcall InternetCheckConnectionW(ptr long long)
+@ stdcall InternetCheckConnectionA(str long long)
+@ stdcall InternetCheckConnectionW(wstr long long)
 @ stdcall InternetClearAllPerSiteCookieDecisions()
 @ stdcall InternetCloseHandle(long)
 @ stdcall InternetCombineUrlA(str str str ptr long)
@@ -150,10 +150,10 @@
 @ stdcall InternetGetConnectedStateEx(ptr ptr long long) InternetGetConnectedStateExA
 @ stdcall InternetGetConnectedStateExA(ptr ptr long long)
 @ stdcall InternetGetConnectedStateExW(ptr ptr long long)
-@ stdcall InternetGetCookieA(str str ptr long)
+@ stdcall InternetGetCookieA(str str ptr ptr)
 @ stdcall InternetGetCookieExA(str str ptr ptr long ptr)
 @ stdcall InternetGetCookieExW(wstr wstr ptr ptr long ptr)
-@ stdcall InternetGetCookieW(wstr wstr ptr long)
+@ stdcall InternetGetCookieW(wstr wstr ptr ptr)
 @ stdcall InternetGetLastResponseInfoA(ptr ptr ptr)
 @ stdcall InternetGetLastResponseInfoW(ptr ptr ptr)
 @ stdcall InternetGetPerSiteCookieDecisionA(str ptr)
@@ -183,8 +183,8 @@
 @ stub InternetSecurityProtocolToStringW
 @ stub InternetServerPushParse
 @ stdcall InternetSetCookieA(str str str)
-@ stdcall InternetSetCookieExA(str str str long ptr)
-@ stdcall InternetSetCookieExW(wstr wstr wstr long ptr)
+@ stdcall InternetSetCookieExA(str str str long long)
+@ stdcall InternetSetCookieExW(wstr wstr wstr long long)
 @ stdcall InternetSetCookieW(wstr wstr wstr)
 @ stub InternetSetDialState
 @ stub InternetSetDialStateA
