@@ -697,6 +697,7 @@ UDFGetNetworkInformation(
         PtrBuffer->CreationTime = Fcb->NTRequiredFCB->CreationTime;
         PtrBuffer->LastAccessTime = Fcb->NTRequiredFCB->LastAccessTime;
         PtrBuffer->LastWriteTime = Fcb->NTRequiredFCB->LastWriteTime;
+        PtrBuffer->ChangeTime = Fcb->NTRequiredFCB->ChangeTime;
 
         FileInfo = Fcb->FileInfo;
 
@@ -711,6 +712,13 @@ UDFGetNetworkInformation(
 #ifdef UDF_DBG
             if(!FileInfo->Dloc->DirIndex) AdPrint(("*****!!!!! Directory has no DirIndex !!!!!*****\n"));
 #endif
+        } else {
+            if(Fcb->NTRequiredFCB->CommonFCBHeader.AllocationSize.LowPart == 0xffffffff) {
+                Fcb->NTRequiredFCB->CommonFCBHeader.AllocationSize.QuadPart =
+                    UDFSysGetAllocSize(Fcb->Vcb, UDFGetFileSize(FileInfo));
+            }
+            PtrBuffer->AllocationSize = Fcb->NTRequiredFCB->CommonFCBHeader.AllocationSize;
+            PtrBuffer->EndOfFile = Fcb->NTRequiredFCB->CommonFCBHeader.FileSize;
         }
         // Similarly, fill in attributes indicating a hidden file, system
         // file, compressed file, temporary file, etc. if the FSD supports
