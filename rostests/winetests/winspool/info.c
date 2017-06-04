@@ -434,7 +434,9 @@ static void test_AddMonitor(void)
     mi2a.pDLLName = entry->dllname;
     SetLastError(MAGIC_DEAD);
     res = AddMonitorA(NULL, 2, (LPBYTE) &mi2a);
-    ok(res, "returned %d with %d (expected '!= 0')\n", res, GetLastError());
+    /* Some apps depend on the result of GetLastError() also on success of AddMonitor */
+    ok(res && (GetLastError() == ERROR_SUCCESS),
+        "returned %d with %d (expected '!= 0' with ERROR_SUCCESS)\n", res, GetLastError());
 
     /* add a monitor twice */
     SetLastError(MAGIC_DEAD);
@@ -667,6 +669,50 @@ static void test_ConfigurePort(void)
         SetLastError(0xdeadbeef);
         res = ConfigurePortA(NULL, 0, portname_file);
         trace("'%s' returned %d with %d\n", portname_file, res, GetLastError());
+    }
+}
+
+/* ########################### */
+
+static void test_ClosePrinter(void)
+{
+    HANDLE printer = 0;
+    BOOL res;
+
+    /* NULL is handled */
+    SetLastError(0xdeadbeef);
+    res = ClosePrinter(NULL);
+    ok(!res && (GetLastError() == ERROR_INVALID_HANDLE),
+        "got %d with %d (expected FALSE with ERROR_INVALID_HANDLE)\n",
+        res, GetLastError());
+
+    /* A random value as HANDLE is handled */
+    SetLastError(0xdeadbeef);
+    res = ClosePrinter( (void *) -1);
+    if (is_spooler_deactivated(res, GetLastError())) return;
+    ok(!res && (GetLastError() == ERROR_INVALID_HANDLE),
+        "got %d with %d (expected FALSE with ERROR_INVALID_HANDLE)\n",
+         res, GetLastError());
+
+
+    /* Normal use (The Spooler service is needed) */
+    SetLastError(0xdeadbeef);
+    res = OpenPrinterA(default_printer, &printer, NULL);
+    if (is_spooler_deactivated(res, GetLastError())) return;
+    if (res)
+    {
+        SetLastError(0xdeadbeef);
+        res = ClosePrinter(printer);
+        ok(res, "got %d with %d (expected TRUE)\n", res, GetLastError());
+
+
+        /* double free is handled */
+        SetLastError(0xdeadbeef);
+        res = ClosePrinter(printer);
+        ok(!res && (GetLastError() == ERROR_INVALID_HANDLE),
+            "got %d with %d (expected FALSE with ERROR_INVALID_HANDLE)\n",
+            res, GetLastError());
+
     }
 }
 
@@ -3023,6 +3069,7 @@ START_TEST(info)
     test_AddPort();
     test_AddPortEx();
     test_ConfigurePort();
+    test_ClosePrinter();
     test_DeleteMonitor();
     test_DeletePort();
     test_DeviceCapabilities();
@@ -3047,7 +3094,9 @@ START_TEST(info)
     test_GetDefaultPrinter();
     test_GetPrinterDriverDirectory();
     test_GetPrintProcessorDirectory();
+    test_IsValidDevmodeW();
     test_OpenPrinter();
+    test_OpenPrinter_defaults();
     test_GetPrinter();
     test_GetPrinterData();
     test_GetPrinterDataEx();
@@ -3055,8 +3104,6 @@ START_TEST(info)
     test_SetDefaultPrinter();
     test_XcvDataW_MonitorUI();
     test_XcvDataW_PortIsValid();
-    test_IsValidDevmodeW();
-    test_OpenPrinter_defaults();
 
     /* Cleanup our temporary file */
     DeleteFileA(tempfileA);
