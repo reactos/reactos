@@ -72,14 +72,148 @@ SRVSVC_HANDLE_unbind(SRVSVC_HANDLE pszSystemName,
 
 NET_API_STATUS
 WINAPI
+NetFileClose(
+    _In_ LMSTR servername,
+    _In_ DWORD fileid)
+{
+    NET_API_STATUS status;
+
+    TRACE("NetFileClose(%s %lu)\n",
+          debugstr_w(servername), fileid);
+
+    RpcTryExcept
+    {
+        status = NetrFileClose(servername,
+                               fileid);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetFileEnum(
+    _In_ LMSTR servername,
+    _In_ LMSTR basepath,
+    _In_ LMSTR username,
+    _In_ DWORD level,
+    _Out_ LPBYTE *bufptr,
+    _In_ DWORD prefmaxlen,
+    _Out_ LPDWORD entriesread,
+    _Out_ LPDWORD totalentries,
+    _Inout_ PDWORD_PTR resume_handle)
+{
+    FILE_ENUM_STRUCT EnumStruct;
+    FILE_INFO_2_CONTAINER Level2Container = {0, NULL};
+    FILE_INFO_3_CONTAINER Level3Container = {0, NULL};
+    NET_API_STATUS status;
+
+    TRACE("NetFileEnum(%s %s %s %lu %p %lu %p %p %p)\n",
+          debugstr_w(servername), debugstr_w(basepath), debugstr_w(username),
+          level, bufptr, prefmaxlen, entriesread, totalentries, resume_handle);
+
+    if (level != 2 && level != 3)
+        return ERROR_INVALID_LEVEL;
+
+    EnumStruct.Level = level;
+    switch (level)
+    {
+        case 2:
+            EnumStruct.FileInfo.Level2 = &Level2Container;
+            break;
+
+        case 3:
+            EnumStruct.FileInfo.Level3 = &Level3Container;
+            break;
+    }
+
+    RpcTryExcept
+    {
+        status = NetrFileEnum(servername,
+                              basepath,
+                              username,
+                              &EnumStruct,
+                              prefmaxlen,
+                              totalentries,
+                              (PDWORD)resume_handle);
+
+        switch (level)
+        {
+            case 2:
+                if (EnumStruct.FileInfo.Level2->Buffer != NULL)
+                {
+                    *bufptr = (LPBYTE)EnumStruct.FileInfo.Level2->Buffer;
+                    *entriesread = EnumStruct.FileInfo.Level2->EntriesRead;
+                }
+                break;
+
+            case 3:
+                if (EnumStruct.FileInfo.Level3->Buffer != NULL)
+                {
+                    *bufptr = (LPBYTE)EnumStruct.FileInfo.Level3->Buffer;
+                    *entriesread = EnumStruct.FileInfo.Level3->EntriesRead;
+                }
+                break;
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetFileGetInfo(
+    _In_ LMSTR servername,
+    _In_ DWORD fileid,
+    _In_ DWORD level,
+    _Out_ LPBYTE *bufptr)
+{
+    NET_API_STATUS status;
+
+    TRACE("NetFileGetInfo(%s %lu %lu %p)\n",
+          debugstr_w(servername), fileid, level, bufptr);
+
+    *bufptr = NULL;
+
+    RpcTryExcept
+    {
+        status = NetrFileGetInfo(servername,
+                                 fileid,
+                                 level,
+                                 (LPFILE_INFO)bufptr);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
 NetRemoteTOD(
     _In_ LPCWSTR UncServerName,
     _Out_ LPBYTE *BufferPtr)
 {
     NET_API_STATUS status;
 
-    TRACE("NetRemoteTOD(%s, %p)\n", debugstr_w(UncServerName),
-          BufferPtr);
+    TRACE("NetRemoteTOD(%s %p)\n",
+          debugstr_w(UncServerName), BufferPtr);
 
     *BufferPtr = NULL;
 
@@ -147,7 +281,7 @@ NetSessionEnum(
     SESSION_INFO_502_CONTAINER Level502Container = {0, NULL};
     NET_API_STATUS status;
 
-    FIXME("NetSessionEnum(%s %s %s %lu %p %lu %p %p %p)\n",
+    TRACE("NetSessionEnum(%s %s %s %lu %p %lu %p %p %p)\n",
           debugstr_w(servername), debugstr_w(UncClientName), debugstr_w(username),
           level, bufptr, prefmaxlen, entriesread, totalentries, resume_handle);
 
@@ -264,7 +398,7 @@ NetSessionGetInfo(
     DWORD dwTotalEntries;
     NET_API_STATUS status;
 
-    FIXME("NetSessionGetInfo(%s %s %s %lu %p)\n",
+    TRACE("NetSessionGetInfo(%s %s %s %lu %p)\n",
           debugstr_w(servername), debugstr_w(UncClientName),
           debugstr_w(username), level, bufptr);
 

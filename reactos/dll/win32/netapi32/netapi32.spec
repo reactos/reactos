@@ -144,9 +144,9 @@
 @ stub NetErrorLogClear
 @ stub NetErrorLogRead
 @ stub NetErrorLogWrite
-@ stub NetFileClose
+@ stdcall NetFileClose(wstr long)
 @ stdcall NetFileEnum(wstr wstr wstr long ptr long ptr ptr ptr)
-@ stub NetFileGetInfo
+@ stdcall NetFileGetInfo(wstr long long ptr)
 @ stdcall NetGetAnyDCName(wstr wstr ptr)
 @ stdcall NetGetDCName(wstr wstr ptr)
 @ stub NetGetDisplayInformationIndex

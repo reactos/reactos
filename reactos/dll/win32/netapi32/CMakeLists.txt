@@ -26,7 +26,6 @@ list(APPEND SOURCE
     netapi32.c
     netbios.c
     schedule.c
-    share.c
     srvsvc.c
     user.c
     wksta.c
