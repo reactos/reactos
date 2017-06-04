@@ -2827,11 +2827,21 @@ static void test__stricmp(void)
 static void test__wcstoi64(void)
 {
     static const WCHAR digit[] = { '9', 0 };
+    static const WCHAR space[] = { ' ', 0 };
     static const WCHAR stock[] = { 0x3231, 0 }; /* PARENTHESIZED IDEOGRAPH STOCK */
+    static const WCHAR cjk_1[] = { 0x4e00, 0 }; /* CJK Ideograph, First */
     static const WCHAR tamil[] = { 0x0bef, 0 }; /* TAMIL DIGIT NINE */
     static const WCHAR thai[]  = { 0x0e59, 0 }; /* THAI DIGIT NINE */
     static const WCHAR fullwidth[] = { 0xff19, 0 }; /* FULLWIDTH DIGIT NINE */
+    static const WCHAR superscript1[] = { 0xb9, 0 }; /* SUPERSCRIPT ONE */
+    static const WCHAR minus_0x91[]  = { '-', 0x0e50, 'x', 0xff19, '1', 0 };
+    static const WCHAR plus_071[]  = { '+', 0x0e50, 0xff17, '1', 0 };
     static const WCHAR hex[] = { 0xff19, 'f', 0x0e59, 0xff46, 0 };
+    static const WCHAR zeros[] = {
+        0x660, 0x6f0, 0x966, 0x9e6, 0xa66, 0xae6, 0xb66, 0xc66, 0xce6,
+        0xd66, 0xe50, 0xed0, 0xf20, 0x1040, 0x17e0, 0x1810, 0xff10
+    };
+    int i;
 
     __int64 res;
     unsigned __int64 ures;
@@ -2844,21 +2854,33 @@ static void test__wcstoi64(void)
 
     res = p_wcstoi64(digit, NULL, 10);
     ok(res == 9, "res != 9\n");
+    res = p_wcstoi64(space, &endpos, 0);
+    ok(endpos == space, "endpos != space\n");
     res = p_wcstoi64(stock, &endpos, 10);
     ok(res == 0, "res != 0\n");
     ok(endpos == stock, "Incorrect endpos (%p-%p)\n", stock, endpos);
+    res = p_wcstoi64(cjk_1, NULL, 0);
+    ok(res == 0, "res != 0\n");
     res = p_wcstoi64(tamil, &endpos, 10);
     ok(res == 0, "res != 0\n");
     ok(endpos == tamil, "Incorrect endpos (%p-%p)\n", tamil, endpos);
     res = p_wcstoi64(thai, NULL, 10);
-    todo_wine ok(res == 9, "res != 9\n");
+    ok(res == 9, "res != 9\n");
     res = p_wcstoi64(fullwidth, NULL, 10);
-    todo_wine ok(res == 9, "res != 9\n");
+    ok(res == 9, "res != 9\n");
+    res = p_wcstoi64(superscript1, NULL, 10);
+    ok(res == 0, "res != 0\n");
     res = p_wcstoi64(hex, NULL, 16);
-    todo_wine ok(res == 0x9f9, "res != 0x9f9\n");
+    ok(res == 0x9f9, "res != 0x9f9\n");
+    res = p_wcstoi64(minus_0x91, NULL, 0);
+    ok(res == -0x91, "res != -0x91\n");
+    res = p_wcstoi64(plus_071, NULL, 0);
+    ok(res == 071, "res != 071\n");
 
     ures = p_wcstoui64(digit, NULL, 10);
     ok(ures == 9, "ures != 9\n");
+    ures = p_wcstoui64(space, &endpos, 0);
+    ok(endpos == space, "endpos != space\n");
     ures = p_wcstoui64(stock, &endpos, 10);
     ok(ures == 0, "ures != 0\n");
     ok(endpos == stock, "Incorrect endpos (%p-%p)\n", stock, endpos);
@@ -2866,11 +2888,25 @@ static void test__wcstoi64(void)
     ok(ures == 0, "ures != 0\n");
     ok(endpos == tamil, "Incorrect endpos (%p-%p)\n", tamil, endpos);
     ures = p_wcstoui64(thai, NULL, 10);
-    todo_wine ok(ures == 9, "ures != 9\n");
+    ok(ures == 9, "ures != 9\n");
     ures = p_wcstoui64(fullwidth, NULL, 10);
-    todo_wine ok(ures == 9, "ures != 9\n");
+    ok(ures == 9, "ures != 9\n");
+    ures = p_wcstoui64(superscript1, NULL, 10);
+    ok(ures == 0, "ures != 0\n");
     ures = p_wcstoui64(hex, NULL, 16);
-    todo_wine ok(ures == 0x9f9, "ures != 0x9f9\n");
+    ok(ures == 0x9f9, "ures != 0x9f9\n");
+    ures = p_wcstoui64(plus_071, NULL, 0);
+    ok(ures == 071, "ures != 071\n");
+
+    /* Test various unicode digits */
+    for (i = 0; i < sizeof(zeros) / sizeof(zeros[0]); ++i) {
+        WCHAR tmp[] = {zeros[i] + 4, zeros[i], zeros[i] + 5, 0};
+        res = p_wcstoi64(tmp, NULL, 0);
+        ok(res == 405, "with zero = U+%04X: got %d, expected 405\n", zeros[i], (int)res);
+        tmp[1] = zeros[i] + 10;
+        res = p_wcstoi64(tmp, NULL, 16);
+        ok(res == 4, "with zero = U+%04X: got %d, expected 4\n", zeros[i], (int)res);
+    }
 
     return;
 }

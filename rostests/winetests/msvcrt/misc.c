@@ -58,6 +58,8 @@ static void (__cdecl *p_qsort_s)(void*, MSVCRT_size_t, MSVCRT_size_t,
 static double (__cdecl *p_atan)(double);
 static double (__cdecl *p_exp)(double);
 static double (__cdecl *p_tanh)(double);
+static void *(__cdecl *p_lfind_s)(const void*, const void*, unsigned int*,
+        size_t, int (__cdecl *)(void*, const void*, const void*), void*);
 
 static void init(void)
 {
@@ -75,6 +77,7 @@ static void init(void)
     p_atan = (void *)GetProcAddress(hmod, "atan");
     p_exp = (void *)GetProcAddress(hmod, "exp");
     p_tanh = (void *)GetProcAddress(hmod, "tanh");
+    p_lfind_s = (void *)GetProcAddress(hmod, "_lfind_s");
 }
 
 static void test_rand_s(void)
@@ -558,7 +561,7 @@ static void test_thread_handle_close(void)
     DWORD ret;
 
     /* _beginthread: handle is not closed on ExitThread and _endthreadex */
-    hThread = (HANDLE)_beginthread(test_thread_func, 0, (void*)0);
+    hThread = (HANDLE)_beginthread(test_thread_func, 0, NULL);
     ok(hThread != INVALID_HANDLE_VALUE, "_beginthread failed (%d)\n", errno);
     WaitForSingleObject(hThread, INFINITE);
     ret = CloseHandle(hThread);
@@ -596,6 +599,74 @@ static void test_thread_handle_close(void)
     ok(ret, "ret = %d\n", ret);
 }
 
+static int __cdecl _lfind_s_comp(void *ctx, const void *l, const void *r)
+{
+    *(int *)ctx = 0xdeadc0de;
+    return *(int *)l - *(int *)r;
+}
+
+static void test__lfind_s(void)
+{
+    static const int tests[] = {9000, 8001, 7002, 6003, 1003, 5004, 4005, 3006, 2007};
+    unsigned int num;
+    void *found;
+    int ctx;
+    int key;
+
+    if (!p_lfind_s)
+    {
+        win_skip("_lfind_s is not available\n");
+        return;
+    }
+
+    key = 1234;
+    num = sizeof(tests)/sizeof(tests[0]);
+
+    errno = 0xdeadbeef;
+    found = p_lfind_s(NULL, tests, &num, sizeof(int), _lfind_s_comp, NULL);
+    ok(errno == EINVAL, "errno = %d\n", errno);
+    ok(!found, "Expected NULL, got %p\n", found);
+
+    errno = 0xdeadbeef;
+    found = p_lfind_s(&key, NULL, &num, sizeof(int), _lfind_s_comp, NULL);
+    ok(errno == EINVAL, "errno = %d\n", errno);
+    ok(!found, "Expected NULL, got %p\n", found);
+
+    errno = 0xdeadbeef;
+    found = p_lfind_s(&key, tests, &num, 0, _lfind_s_comp, NULL);
+    ok(errno == EINVAL, "errno = %d\n", errno);
+    ok(!found, "Expected NULL, got %p\n", found);
+
+    errno = 0xdeadbeef;
+    found = p_lfind_s(&key, tests, &num, sizeof(int), NULL, NULL);
+    ok(errno == EINVAL, "errno = %d\n", errno);
+    ok(!found, "Expected NULL, got %p\n", found);
+
+    ctx = -1;
+    key = 9000;
+    errno = 0xdeadbeef;
+    found = p_lfind_s(&key, tests, &num, sizeof(int), _lfind_s_comp, &ctx);
+    ok(errno == 0xdeadbeef, "errno = %d\n", errno);
+    ok(found == tests, "Expected %p, got %p\n", tests, found);
+    ok(ctx == 0xdeadc0de, "Expected 0xdeadc0de, got %x\n", ctx);
+
+    ctx = -1;
+    key = 2007;
+    errno = 0xdeadbeef;
+    found = p_lfind_s(&key, tests, &num, sizeof(int), _lfind_s_comp, &ctx);
+    ok(errno == 0xdeadbeef, "errno = %d\n", errno);
+    ok(found == tests+8, "Expected %p, got %p\n", tests+8, found);
+    ok(ctx == 0xdeadc0de, "Expected 0xdeadc0de, got %x\n", ctx);
+
+    ctx = -1;
+    key = 1234;
+    errno = 0xdeadbeef;
+    found = p_lfind_s(&key, tests, &num, sizeof(int), _lfind_s_comp, &ctx);
+    ok(errno == 0xdeadbeef, "errno = %d\n", errno);
+    ok(!found, "Expected NULL, got %p\n", found);
+    ok(ctx == 0xdeadc0de, "Expected 0xdeadc0de, got %x\n", ctx);
+}
+
 START_TEST(misc)
 {
     int arg_c;
@@ -625,4 +696,5 @@ START_TEST(misc)
     test_qsort_s();
     test_math_functions();
     test_thread_handle_close();
+    test__lfind_s();
 }
