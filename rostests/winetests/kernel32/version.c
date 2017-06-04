@@ -156,6 +156,9 @@ static void test_GetVersionEx(void)
     ok(ret ||
        broken(ret == 0), /* win95 */
        "Expected GetVersionExA to succeed\n");
+
+    if (!infoExA.wServicePackMajor && !infoExA.wServicePackMinor)
+        ok(!infoExA.szCSDVersion[0], "got '%s'\n", infoExA.szCSDVersion);
 }
 
 static void test_VerifyVersionInfo(void)

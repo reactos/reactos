@@ -244,6 +244,61 @@ static const char manifest5[] =
 "</dependency>"
 "</assembly>";
 
+static const char manifest6[] =
+"<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
+"<assemblyIdentity version=\"1.0.0.0\"  name=\"Wine.Test\" type=\"win32\"></assemblyIdentity>"
+"<trustInfo xmlns=\"urn:schemas-microsoft-com:asm.v1\">"
+"    <security>"
+"        <requestedPrivileges>"
+"            <requestedExecutionLevel level=\"ASINVOKER\" uiAccess=\"false\"/>"
+"        </requestedPrivileges>"
+"    </security>"
+"</trustInfo>"
+"</assembly>";
+
+static const char manifest7[] =
+"<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
+"<assemblyIdentity version=\"1.0.0.0\"  name=\"Wine.Test\" type=\"win32\"></assemblyIdentity>"
+"<trustInfo xmlns=\"urn:schemas-microsoft-com:asm.v2\">"
+"    <security>"
+"        <requestedPrivileges>"
+"            <requestedExecutionLevel level=\"requireAdministrator\" uiAccess=\"TRUE\"/>"
+"        </requestedPrivileges>"
+"    </security>"
+"</trustInfo>"
+"</assembly>";
+
+static const char manifest8[] =
+"<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
+"<assemblyIdentity version=\"1.0.0.0\"  name=\"Wine.Test\" type=\"win32\"></assemblyIdentity>"
+"<trustInfo xmlns=\"urn:schemas-microsoft-com:asm.v2\">"
+"    <security>"
+"        <requestedPrivileges>"
+"            <requestedExecutionLevel level=\"requireAdministrator\" uiAccess=\"true\">"
+"            </requestedExecutionLevel>"
+"        </requestedPrivileges>"
+"    </security>"
+"</trustInfo>"
+"</assembly>";
+
+static const char manifest9[] =
+"<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
+"<assemblyIdentity version=\"1.0.0.0\"  name=\"Wine.Test\" type=\"win32\"></assemblyIdentity>"
+"<trustInfo xmlns=\"urn:schemas-microsoft-com:asm.v2\">"
+"    <security>"
+"        <requestedPrivileges>"
+"            <requestedExecutionLevel level=\"requireAdministrator\"/>"
+"        </requestedPrivileges>"
+"    </security>"
+"</trustInfo>"
+"<trustInfo xmlns=\"urn:schemas-microsoft-com:asm.v2\">"
+"    <security>"
+"        <requestedPrivileges>"
+"        </requestedPrivileges>"
+"    </security>"
+"</trustInfo>"
+"</assembly>";
+
 static const char testdep_manifest1[] =
 "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
 "<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.3\" processorArchitecture=\"" ARCH "\"/>"
@@ -308,6 +363,38 @@ static const char wrong_manifest8[] =
 "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
 "<assemblyIdentity version=\"1.2.3.4\"  name=\"Wine.Test\" type=\"win32\"></assemblyIdentity>"
 "<file></file>"
+"</assembly>";
+
+static const char wrong_manifest9[] =
+"<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
+"<assemblyIdentity version=\"1.0.0.0\"  name=\"Wine.Test\" type=\"win32\"></assemblyIdentity>"
+"<trustInfo xmlns=\"urn:schemas-microsoft-com:asm.v2\">"
+"    <security>"
+"        <requestedPrivileges>"
+"            <requestedExecutionLevel level=\"requireAdministrator\"/>"
+"            <requestedExecutionLevel uiAccess=\"true\"/>"
+"        </requestedPrivileges>"
+"    </security>"
+"</trustInfo>"
+"</assembly>";
+
+static const char wrong_manifest10[] =
+"<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
+"<assemblyIdentity version=\"1.0.0.0\"  name=\"Wine.Test\" type=\"win32\"></assemblyIdentity>"
+"<trustInfo xmlns=\"urn:schemas-microsoft-com:asm.v2\">"
+"    <security>"
+"        <requestedPrivileges>"
+"            <requestedExecutionLevel level=\"requireAdministrator\"/>"
+"        </requestedPrivileges>"
+"    </security>"
+"</trustInfo>"
+"<trustInfo xmlns=\"urn:schemas-microsoft-com:asm.v2\">"
+"    <security>"
+"        <requestedPrivileges>"
+"            <requestedExecutionLevel uiAccess=\"true\"/>"
+"        </requestedPrivileges>"
+"    </security>"
+"</trustInfo>"
 "</assembly>";
 
 static const char wrong_depmanifest1[] =
@@ -732,6 +819,57 @@ static void test_file_info(HANDLE handle, ULONG assid, ULONG fileid, LPCWSTR fil
     HeapFree(GetProcessHeap(), 0, info);
 }
 
+typedef struct {
+    ACTCTX_REQUESTED_RUN_LEVEL run_level;
+    DWORD ui_access;
+} runlevel_info_t;
+
+static const runlevel_info_t runlevel_info0 = {
+    ACTCTX_RUN_LEVEL_UNSPECIFIED, FALSE,
+};
+
+static const runlevel_info_t runlevel_info6 = {
+    ACTCTX_RUN_LEVEL_AS_INVOKER, FALSE,
+};
+
+static const runlevel_info_t runlevel_info7 = {
+    ACTCTX_RUN_LEVEL_REQUIRE_ADMIN, TRUE,
+};
+
+static const runlevel_info_t runlevel_info8 = {
+    ACTCTX_RUN_LEVEL_REQUIRE_ADMIN, TRUE,
+};
+
+static const runlevel_info_t runlevel_info9 = {
+    ACTCTX_RUN_LEVEL_REQUIRE_ADMIN, FALSE,
+};
+
+static void test_runlevel_info(HANDLE handle, const runlevel_info_t *exinfo, int line)
+{
+    ACTIVATION_CONTEXT_RUN_LEVEL_INFORMATION runlevel_info;
+    SIZE_T size, retsize;
+    BOOL b;
+
+    size = sizeof(runlevel_info);
+    b = pQueryActCtxW(0, handle, NULL,
+                      RunlevelInformationInActivationContext, &runlevel_info,
+                      sizeof(runlevel_info), &retsize);
+    if (!b && GetLastError() == ERROR_INVALID_PARAMETER)
+    {
+        win_skip("RunlevelInformationInActivationContext not supported.\n");
+        return;
+    }
+
+    ok_(__FILE__, line)(b, "QueryActCtx failed: %u\n", GetLastError());
+    ok_(__FILE__, line)(retsize == size, "size=%ld, expected %ld\n", retsize, size);
+
+    ok_(__FILE__, line)(runlevel_info.ulFlags == 0, "runlevel_info.ulFlags=%x\n", runlevel_info.ulFlags);
+    ok_(__FILE__, line)(runlevel_info.RunLevel == exinfo->run_level,
+       "runlevel_info.RunLevel=%u, expected %u\n", runlevel_info.RunLevel, exinfo->run_level);
+    ok_(__FILE__, line)(runlevel_info.UiAccess == exinfo->ui_access,
+       "runlevel_info.UiAccess=%u, expected %u\n", runlevel_info.UiAccess, exinfo->ui_access);
+}
+
 static HANDLE test_create(const char *file)
 {
     ACTCTXW actctx;
@@ -837,6 +975,10 @@ static void test_create_fail(void)
     test_create_and_fail(wrong_manifest7, NULL, 1 );
     trace("wrong_manifest8\n");
     test_create_and_fail(wrong_manifest8, NULL, 0 );
+    trace("wrong_manifest9\n");
+    test_create_and_fail(wrong_manifest9, NULL, 0 );
+    trace("wrong_manifest10\n");
+    test_create_and_fail(wrong_manifest10, NULL, 0 );
     trace("UTF-16 manifest1 without BOM\n");
     test_create_wide_and_fail(manifest1, FALSE );
     trace("manifest2\n");
@@ -1784,6 +1926,7 @@ static void test_actctx(void)
     if(b) {
         test_basic_info(handle, __LINE__);
         test_detailed_info(handle, &detailed_info0, __LINE__);
+        test_runlevel_info(handle, &runlevel_info0, __LINE__);
         pReleaseActCtx(handle);
     }
 
@@ -1954,6 +2097,70 @@ static void test_actctx(void)
         ok(b, "DeactivateActCtx failed: %u\n", GetLastError());
         pReleaseActCtx(handle);
     }
+
+    trace("manifest6\n");
+
+    if(create_manifest_file("test6.manifest", manifest6, -1, NULL, NULL)) {
+        handle = test_create("test6.manifest");
+        ok(handle != INVALID_HANDLE_VALUE, "handle == INVALID_HANDLE_VALUE, error %u\n", GetLastError());
+        DeleteFileA("test6.manifest");
+        DeleteFileA("testdep.manifest");
+        if(handle != INVALID_HANDLE_VALUE)
+        {
+            test_runlevel_info(handle, &runlevel_info6, __LINE__);
+            pReleaseActCtx(handle);
+        }
+    }
+    else
+        skip("Could not create manifest file 6\n");
+
+    trace("manifest7\n");
+
+    if(create_manifest_file("test7.manifest", manifest7, -1, NULL, NULL)) {
+        handle = test_create("test7.manifest");
+        ok(handle != INVALID_HANDLE_VALUE, "handle == INVALID_HANDLE_VALUE, error %u\n", GetLastError());
+        DeleteFileA("test7.manifest");
+        DeleteFileA("testdep.manifest");
+        if(handle != INVALID_HANDLE_VALUE)
+        {
+            test_runlevel_info(handle, &runlevel_info7, __LINE__);
+            pReleaseActCtx(handle);
+        }
+    }
+    else
+        skip("Could not create manifest file 7\n");
+
+    trace("manifest8\n");
+
+    if(create_manifest_file("test8.manifest", manifest8, -1, NULL, NULL)) {
+        handle = test_create("test8.manifest");
+        ok(handle != INVALID_HANDLE_VALUE, "handle == INVALID_HANDLE_VALUE, error %u\n", GetLastError());
+        DeleteFileA("test8.manifest");
+        DeleteFileA("testdep.manifest");
+        if(handle != INVALID_HANDLE_VALUE)
+        {
+            test_runlevel_info(handle, &runlevel_info8, __LINE__);
+            pReleaseActCtx(handle);
+        }
+    }
+    else
+        skip("Could not create manifest file 8\n");
+
+    trace("manifest9\n");
+
+    if(create_manifest_file("test9.manifest", manifest9, -1, NULL, NULL)) {
+        handle = test_create("test9.manifest");
+        ok(handle != INVALID_HANDLE_VALUE, "handle == INVALID_HANDLE_VALUE, error %u\n", GetLastError());
+        DeleteFileA("test9.manifest");
+        DeleteFileA("testdep.manifest");
+        if(handle != INVALID_HANDLE_VALUE)
+        {
+            test_runlevel_info(handle, &runlevel_info9, __LINE__);
+            pReleaseActCtx(handle);
+        }
+    }
+    else
+        skip("Could not create manifest file 9\n");
 
     trace("manifest4\n");
 
