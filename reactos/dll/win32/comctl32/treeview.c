@@ -4333,7 +4333,12 @@ TREEVIEW_RButtonDown(TREEVIEW_INFO *infoPtr, LPARAM lParam)
     ht.pt.x = (short)LOWORD(lParam);
     ht.pt.y = (short)HIWORD(lParam);
 
-    TREEVIEW_HitTest(infoPtr, &ht);
+    if (TREEVIEW_HitTest(infoPtr, &ht))
+    {
+        infoPtr->focusedItem = ht.hItem;
+        TREEVIEW_InvalidateItem(infoPtr, infoPtr->focusedItem);
+        TREEVIEW_InvalidateItem(infoPtr, infoPtr->selectedItem);
+    }
 
     if (TREEVIEW_TrackMouse(infoPtr, ht.pt))
     {
@@ -4352,6 +4357,13 @@ TREEVIEW_RButtonDown(TREEVIEW_INFO *infoPtr, LPARAM lParam)
 	    SendMessageW(infoPtr->hwndNotify, WM_CONTEXTMENU,
 		(WPARAM)infoPtr->hwnd, (LPARAM)GetMessagePos());
 	}
+    }
+
+    if (ht.hItem)
+    {
+        TREEVIEW_InvalidateItem(infoPtr, infoPtr->focusedItem);
+        infoPtr->focusedItem = infoPtr->selectedItem;
+        TREEVIEW_InvalidateItem(infoPtr, infoPtr->focusedItem);
     }
 
     return 0;
@@ -5434,10 +5446,15 @@ static BOOL TREEVIEW_NCPaint (const TREEVIEW_INFO *infoPtr, HRGN region, LPARAM 
         CombineRgn (cliprgn, cliprgn, region, RGN_AND);
     OffsetRect(&r, -r.left, -r.top);
 
+#ifdef __REACTOS__ /* r73789 */
     dc = GetWindowDC(infoPtr->hwnd);
     /* Exclude client part */
     ExcludeClipRect(dc, r.left + cxEdge, r.top + cyEdge,
         r.right - cxEdge, r.bottom -cyEdge);
+#else
+    dc = GetDCEx(infoPtr->hwnd, region, DCX_WINDOW|DCX_INTERSECTRGN);
+    OffsetRect(&r, -r.left, -r.top);
+#endif
 
     if (IsThemeBackgroundPartiallyTransparent (theme, 0, 0))
         DrawThemeParentBackground(infoPtr->hwnd, dc, &r);

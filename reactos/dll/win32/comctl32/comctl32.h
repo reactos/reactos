@@ -45,8 +45,9 @@
 #include <uxtheme.h>
 #include <vssym32.h>
 
-#include <wine/unicode.h>
 #include <wine/debug.h>
+#include <wine/list.h>
+#include <wine/unicode.h>
 
 #include "resource.h"
 
