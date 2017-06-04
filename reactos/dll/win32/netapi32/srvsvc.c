@@ -100,6 +100,247 @@ NetRemoteTOD(
 
 NET_API_STATUS
 WINAPI
+NetSessionDel(
+    _In_ LMSTR servername,
+    _In_ LMSTR UncClientName,
+    _In_ LMSTR username)
+{
+    NET_API_STATUS status;
+
+    TRACE("NetSessionDel(%s %s %s)\n",
+          debugstr_w(servername), debugstr_w(UncClientName), debugstr_w(username));
+
+    RpcTryExcept
+    {
+        status = NetrSessionDel(servername,
+                                UncClientName,
+                                username);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetSessionEnum(
+    _In_ LMSTR servername,
+    _In_ LMSTR UncClientName,
+    _In_ LMSTR username,
+    _In_ DWORD level,
+    _Out_ LPBYTE *bufptr,
+    _In_ DWORD prefmaxlen,
+    _Out_ LPDWORD entriesread,
+    _Out_ LPDWORD totalentries,
+    _Inout_ LPDWORD resume_handle)
+{
+    SESSION_ENUM_STRUCT EnumStruct;
+    SESSION_INFO_0_CONTAINER Level0Container = {0, NULL};
+    SESSION_INFO_1_CONTAINER Level1Container = {0, NULL};
+    SESSION_INFO_2_CONTAINER Level2Container = {0, NULL};
+    SESSION_INFO_10_CONTAINER Level10Container = {0, NULL};
+    SESSION_INFO_502_CONTAINER Level502Container = {0, NULL};
+    NET_API_STATUS status;
+
+    FIXME("NetSessionEnum(%s %s %s %lu %p %lu %p %p %p)\n",
+          debugstr_w(servername), debugstr_w(UncClientName), debugstr_w(username),
+          level, bufptr, prefmaxlen, entriesread, totalentries, resume_handle);
+
+    if (level > 2 && level != 10 && level != 502)
+        return ERROR_INVALID_LEVEL;
+
+    if (UncClientName == NULL || username == NULL)
+        return ERROR_INVALID_PARAMETER;
+
+    *bufptr = NULL;
+    *entriesread = 0;
+
+    EnumStruct.Level = level;
+    switch (level)
+    {
+        case 0:
+            EnumStruct.SessionInfo.Level0 = &Level0Container;
+            break;
+
+        case 1:
+            EnumStruct.SessionInfo.Level1 = &Level1Container;
+            break;
+
+        case 2:
+            EnumStruct.SessionInfo.Level2 = &Level2Container;
+            break;
+
+        case 10:
+            EnumStruct.SessionInfo.Level10 = &Level10Container;
+            break;
+
+        case 502:
+            EnumStruct.SessionInfo.Level502 = &Level502Container;
+            break;
+    }
+
+    RpcTryExcept
+    {
+        status = NetrSessionEnum(servername,
+                                 UncClientName,
+                                 username,
+                                 &EnumStruct,
+                                 prefmaxlen,
+                                 totalentries,
+                                 resume_handle);
+
+        switch (level)
+        {
+            case 0:
+                if (EnumStruct.SessionInfo.Level0->Buffer != NULL)
+                {
+                    *bufptr = (LPBYTE)EnumStruct.SessionInfo.Level0->Buffer;
+                    *entriesread = EnumStruct.SessionInfo.Level0->EntriesRead;
+                }
+                break;
+
+            case 1:
+                if (EnumStruct.SessionInfo.Level1->Buffer != NULL)
+                {
+                    *bufptr = (LPBYTE)EnumStruct.SessionInfo.Level1->Buffer;
+                    *entriesread = EnumStruct.SessionInfo.Level1->EntriesRead;
+                }
+                break;
+
+            case 2:
+                if (EnumStruct.SessionInfo.Level2->Buffer != NULL)
+                {
+                    *bufptr = (LPBYTE)EnumStruct.SessionInfo.Level2->Buffer;
+                    *entriesread = EnumStruct.SessionInfo.Level2->EntriesRead;
+                }
+                break;
+
+            case 10:
+                if (EnumStruct.SessionInfo.Level10->Buffer != NULL)
+                {
+                    *bufptr = (LPBYTE)EnumStruct.SessionInfo.Level10->Buffer;
+                    *entriesread = EnumStruct.SessionInfo.Level10->EntriesRead;
+                }
+                break;
+
+            case 502:
+                if (EnumStruct.SessionInfo.Level502->Buffer != NULL)
+                {
+                    *bufptr = (LPBYTE)EnumStruct.SessionInfo.Level502->Buffer;
+                    *entriesread = EnumStruct.SessionInfo.Level502->EntriesRead;
+                }
+                break;
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetSessionGetInfo(
+    _In_ LMSTR servername,
+    _In_ LMSTR UncClientName,
+    _In_ LMSTR username,
+    _In_ DWORD level,
+    _Out_ LPBYTE *bufptr)
+{
+    SESSION_ENUM_STRUCT EnumStruct;
+    SESSION_INFO_0_CONTAINER Level0Container = {0, NULL};
+    SESSION_INFO_1_CONTAINER Level1Container = {0, NULL};
+    SESSION_INFO_2_CONTAINER Level2Container = {0, NULL};
+    SESSION_INFO_10_CONTAINER Level10Container = {0, NULL};
+    DWORD dwTotalEntries;
+    NET_API_STATUS status;
+
+    FIXME("NetSessionGetInfo(%s %s %s %lu %p)\n",
+          debugstr_w(servername), debugstr_w(UncClientName),
+          debugstr_w(username), level, bufptr);
+
+    if (level > 2 && level != 10)
+        return ERROR_INVALID_LEVEL;
+
+    if (UncClientName == NULL || username == NULL)
+        return ERROR_INVALID_PARAMETER;
+
+    *bufptr = NULL;
+
+    EnumStruct.Level = level;
+    switch (level)
+    {
+        case 0:
+            EnumStruct.SessionInfo.Level0 = &Level0Container;
+            break;
+
+        case 1:
+            EnumStruct.SessionInfo.Level1 = &Level1Container;
+            break;
+
+        case 2:
+            EnumStruct.SessionInfo.Level2 = &Level2Container;
+            break;
+
+        case 10:
+            EnumStruct.SessionInfo.Level10 = &Level10Container;
+            break;
+    }
+
+    RpcTryExcept
+    {
+        status = NetrSessionEnum(servername,
+                                 UncClientName,
+                                 username,
+                                 &EnumStruct,
+                                 MAX_PREFERRED_LENGTH, //(DWORD)-1,
+                                 &dwTotalEntries,
+                                 NULL);
+
+        switch (level)
+        {
+            case 0:
+                if (EnumStruct.SessionInfo.Level0->Buffer != NULL)
+                    *bufptr = (LPBYTE)EnumStruct.SessionInfo.Level0->Buffer;
+                break;
+
+            case 1:
+                if (EnumStruct.SessionInfo.Level1->Buffer != NULL)
+                    *bufptr = (LPBYTE)EnumStruct.SessionInfo.Level1->Buffer;
+                break;
+
+            case 2:
+                if (EnumStruct.SessionInfo.Level2->Buffer != NULL)
+                    *bufptr = (LPBYTE)EnumStruct.SessionInfo.Level2->Buffer;
+                break;
+
+            case 10:
+                if (EnumStruct.SessionInfo.Level10->Buffer != NULL)
+                    *bufptr = (LPBYTE)EnumStruct.SessionInfo.Level10->Buffer;
+                break;
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
 NetShareAdd(
     _In_ LMSTR servername,
     _In_ DWORD level,
@@ -156,7 +397,6 @@ NetShareCheck(
     RpcEndExcept;
 
     return status;
-
 }
 
 

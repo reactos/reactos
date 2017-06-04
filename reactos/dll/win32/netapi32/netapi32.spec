@@ -220,9 +220,9 @@
 @ stub NetServiceEnum
 @ stub NetServiceGetInfo
 @ stub NetServiceInstall
-@ stub NetSessionDel
+@ stdcall NetSessionDel(wstr wstr wstr)
 @ stdcall NetSessionEnum(wstr wstr wstr long ptr long ptr ptr ptr)
-@ stub NetSessionGetInfo
+@ stdcall NetSessionGetInfo(wstr wstr wstr long ptr)
 @ stub NetSetPrimaryComputerName
 @ stdcall NetShareAdd(wstr long ptr ptr)
 @ stdcall NetShareCheck(wstr wstr ptr)
