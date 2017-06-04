@@ -250,10 +250,8 @@ static void test_rpc_ncacn_ip_tcp(void)
     ok(status == RPC_S_OK, "RpcServerListen failed (%u)\n", status);
 
     status = RpcServerListen(1, 20, TRUE);
-todo_wine {
     ok(status == RPC_S_ALREADY_LISTENING,
        "wrong RpcServerListen error (%u)\n", status);
-}
 
     status = RpcStringBindingComposeA(NULL, ncacn_ip_tcp, address,
                                      endpoint, NULL, &binding);
@@ -301,9 +299,7 @@ todo_wine {
     ok(status == RPC_S_OK, "RpcServerUnregisterIf failed (%u)\n", status);
 
     status = RpcMgmtWaitServerListen();
-todo_wine {
     ok(status == RPC_S_OK, "RpcMgmtWaitServerListen failed (%u)\n", status);
-}
 
     status = RpcStringFreeA(&binding);
     ok(status == RPC_S_OK, "RpcStringFree failed (%u)\n", status);
@@ -1150,7 +1146,7 @@ static HRESULT set_firewall( enum firewall_op op )
     hr = INetFwPolicy_get_CurrentProfile( policy, &profile );
     if (hr != S_OK) goto done;
 
-    INetFwProfile_get_AuthorizedApplications( profile, &apps );
+    hr = INetFwProfile_get_AuthorizedApplications( profile, &apps );
     ok( hr == S_OK, "got %08x\n", hr );
     if (hr != S_OK) goto done;
 
