@@ -357,25 +357,21 @@ static int get_header_index( request_t *request, LPCWSTR field, int requested_in
 
 static BOOL insert_header( request_t *request, header_t *header )
 {
-    DWORD count;
+    DWORD count = request->num_headers + 1;
     header_t *hdrs;
 
-    count = request->num_headers + 1;
-    if (count > 1)
+    if (request->headers)
         hdrs = heap_realloc_zero( request->headers, sizeof(header_t) * count );
     else
-        hdrs = heap_alloc_zero( sizeof(header_t) * count );
+        hdrs = heap_alloc_zero( sizeof(header_t) );
+    if (!hdrs) return FALSE;
 
-    if (hdrs)
-    {
-        request->headers = hdrs;
-        request->headers[count - 1].field = strdupW( header->field );
-        request->headers[count - 1].value = strdupW( header->value );
-        request->headers[count - 1].is_request = header->is_request;
-        request->num_headers++;
-        return TRUE;
-    }
-    return FALSE;
+    request->headers = hdrs;
+    request->headers[count - 1].field = strdupW( header->field );
+    request->headers[count - 1].value = strdupW( header->value );
+    request->headers[count - 1].is_request = header->is_request;
+    request->num_headers = count;
+    return TRUE;
 }
 
 static BOOL delete_header( request_t *request, DWORD index )
@@ -1106,6 +1102,205 @@ static void clear_response_headers( request_t *request )
     }
 }
 
+/* remove some amount of data from the read buffer */
+static void remove_data( request_t *request, int count )
+{
+    if (!(request->read_size -= count)) request->read_pos = 0;
+    else request->read_pos += count;
+}
+
+/* read some more data into the read buffer */
+static BOOL read_more_data( request_t *request, int maxlen, BOOL notify )
+{
+    int len;
+    BOOL ret;
+
+    if (request->read_chunked_eof) return FALSE;
+
+    if (request->read_size && request->read_pos)
+    {
+        /* move existing data to the start of the buffer */
+        memmove( request->read_buf, request->read_buf + request->read_pos, request->read_size );
+        request->read_pos = 0;
+    }
+    if (maxlen == -1) maxlen = sizeof(request->read_buf);
+
+    if (notify) send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE, NULL, 0 );
+
+    ret = netconn_recv( &request->netconn, request->read_buf + request->read_size,
+                        maxlen - request->read_size, 0, &len );
+
+    if (notify) send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_RESPONSE_RECEIVED, &len, sizeof(len) );
+
+    request->read_size += len;
+    return ret;
+}
+
+/* discard data contents until we reach end of line */
+static BOOL discard_eol( request_t *request, BOOL notify )
+{
+    do
+    {
+        char *eol = memchr( request->read_buf + request->read_pos, '\n', request->read_size );
+        if (eol)
+        {
+            remove_data( request, (eol + 1) - (request->read_buf + request->read_pos) );
+            break;
+        }
+        request->read_pos = request->read_size = 0;  /* discard everything */
+        if (!read_more_data( request, -1, notify )) return FALSE;
+    } while (request->read_size);
+    return TRUE;
+}
+
+/* read the size of the next chunk */
+static BOOL start_next_chunk( request_t *request, BOOL notify )
+{
+    DWORD chunk_size = 0;
+
+    assert(!request->read_chunked_size || request->read_chunked_size == ~0u);
+
+    if (request->read_chunked_eof) return FALSE;
+
+    /* read terminator for the previous chunk */
+    if (!request->read_chunked_size && !discard_eol( request, notify )) return FALSE;
+
+    for (;;)
+    {
+        while (request->read_size)
+        {
+            char ch = request->read_buf[request->read_pos];
+            if (ch >= '0' && ch <= '9') chunk_size = chunk_size * 16 + ch - '0';
+            else if (ch >= 'a' && ch <= 'f') chunk_size = chunk_size * 16 + ch - 'a' + 10;
+            else if (ch >= 'A' && ch <= 'F') chunk_size = chunk_size * 16 + ch - 'A' + 10;
+            else if (ch == ';' || ch == '\r' || ch == '\n')
+            {
+                TRACE("reading %u byte chunk\n", chunk_size);
+
+                if (request->content_length == ~0u) request->content_length = chunk_size;
+                else request->content_length += chunk_size;
+
+                request->read_chunked_size = chunk_size;
+                if (!chunk_size) request->read_chunked_eof = TRUE;
+
+                return discard_eol( request, notify );
+            }
+            remove_data( request, 1 );
+        }
+        if (!read_more_data( request, -1, notify )) return FALSE;
+        if (!request->read_size)
+        {
+            request->content_length = request->content_read = 0;
+            request->read_chunked_size = 0;
+            return TRUE;
+        }
+    }
+}
+
+static BOOL refill_buffer( request_t *request, BOOL notify )
+{
+    int len = sizeof(request->read_buf);
+
+    if (request->read_chunked)
+    {
+        if (request->read_chunked_eof) return FALSE;
+        if (request->read_chunked_size == ~0u || !request->read_chunked_size)
+        {
+            if (!start_next_chunk( request, notify )) return FALSE;
+        }
+        len = min( len, request->read_chunked_size );
+    }
+    else if (request->content_length != ~0u)
+    {
+        len = min( len, request->content_length - request->content_read );
+    }
+
+    if (len <= request->read_size) return TRUE;
+    if (!read_more_data( request, len, notify )) return FALSE;
+    if (!request->read_size) request->content_length = request->content_read = 0;
+    return TRUE;
+}
+
+static void finished_reading( request_t *request )
+{
+    static const WCHAR closeW[] = {'c','l','o','s','e',0};
+
+    BOOL close = FALSE;
+    WCHAR connection[20];
+    DWORD size = sizeof(connection);
+
+    if (request->hdr.disable_flags & WINHTTP_DISABLE_KEEP_ALIVE) close = TRUE;
+    else if (query_headers( request, WINHTTP_QUERY_CONNECTION, NULL, connection, &size, NULL ) ||
+             query_headers( request, WINHTTP_QUERY_PROXY_CONNECTION, NULL, connection, &size, NULL ))
+    {
+        if (!strcmpiW( connection, closeW )) close = TRUE;
+    }
+    else if (!strcmpW( request->version, http1_0 )) close = TRUE;
+    if (close) close_connection( request );
+}
+
+/* return the size of data available to be read immediately */
+static DWORD get_available_data( request_t *request )
+{
+    if (request->read_chunked) return min( request->read_chunked_size, request->read_size );
+    return request->read_size;
+}
+
+/* check if we have reached the end of the data to read */
+static BOOL end_of_read_data( request_t *request )
+{
+    if (!request->content_length) return TRUE;
+    if (request->read_chunked) return request->read_chunked_eof;
+    if (request->content_length == ~0u) return FALSE;
+    return (request->content_length == request->content_read);
+}
+
+static BOOL read_data( request_t *request, void *buffer, DWORD size, DWORD *read, BOOL async )
+{
+    int count, bytes_read = 0;
+
+    if (end_of_read_data( request )) goto done;
+
+    while (size)
+    {
+        if (!(count = get_available_data( request )))
+        {
+            if (!refill_buffer( request, async )) goto done;
+            if (!(count = get_available_data( request ))) goto done;
+        }
+        count = min( count, size );
+        memcpy( (char *)buffer + bytes_read, request->read_buf + request->read_pos, count );
+        remove_data( request, count );
+        if (request->read_chunked) request->read_chunked_size -= count;
+        size -= count;
+        bytes_read += count;
+        request->content_read += count;
+        if (end_of_read_data( request )) goto done;
+    }
+    if (request->read_chunked && !request->read_chunked_size) refill_buffer( request, async );
+
+done:
+    TRACE( "retrieved %u bytes (%u/%u)\n", bytes_read, request->content_read, request->content_length );
+
+    if (async) send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_READ_COMPLETE, buffer, bytes_read );
+    if (read) *read = bytes_read;
+    if (end_of_read_data( request )) finished_reading( request );
+    return TRUE;
+}
+
+/* read any content returned by the server so that the connection can be reused */
+static void drain_content( request_t *request )
+{
+    DWORD bytes_read;
+    char buffer[2048];
+
+    refill_buffer( request, FALSE );
+    for (;;)
+    {
+        if (!read_data( request, buffer, sizeof(buffer), &bytes_read, FALSE ) || !bytes_read) return;
+    }
+}
+
 static BOOL send_request( request_t *request, LPCWSTR headers, DWORD headers_len, LPVOID optional,
                           DWORD optional_len, DWORD total_len, DWORD_PTR context, BOOL async )
 {
@@ -1122,6 +1317,7 @@ static BOOL send_request( request_t *request, LPCWSTR headers, DWORD headers_len
     DWORD len;
 
     clear_response_headers( request );
+    drain_content( request );
 
     if (session->agent)
         process_header( request, attr_user_agent, session->agent, WINHTTP_ADDREQ_FLAG_ADD_IF_NEW, TRUE );
@@ -1300,7 +1496,7 @@ static DWORD auth_scheme_from_header( WCHAR *header )
 
 static BOOL query_auth_schemes( request_t *request, DWORD level, LPDWORD supported, LPDWORD first )
 {
-    DWORD index = 0;
+    DWORD index = 0, supported_schemes = 0, first_scheme = 0;
     BOOL ret = FALSE;
 
     for (;;)
@@ -1321,14 +1517,18 @@ static BOOL query_auth_schemes( request_t *request, DWORD level, LPDWORD support
         }
         scheme = auth_scheme_from_header( buffer );
         heap_free( buffer );
-        if (!scheme) break;
+        if (!scheme) continue;
 
-        if (first && index == 1)
-            *first = *supported = scheme;
-        else
-            *supported |= scheme;
+        if (!first_scheme) first_scheme = scheme;
+        supported_schemes |= scheme;
 
         ret = TRUE;
+    }
+
+    if (ret)
+    {
+        *supported = supported_schemes;
+        *first = first_scheme;
     }
     return ret;
 }
@@ -1894,40 +2094,6 @@ static DWORD set_content_length( request_t *request, DWORD status )
     return request->content_length;
 }
 
-/* read some more data into the read buffer */
-static BOOL read_more_data( request_t *request, int maxlen, BOOL notify )
-{
-    int len;
-    BOOL ret;
-
-    if (request->read_chunked_eof) return FALSE;
-
-    if (request->read_size && request->read_pos)
-    {
-        /* move existing data to the start of the buffer */
-        memmove( request->read_buf, request->read_buf + request->read_pos, request->read_size );
-        request->read_pos = 0;
-    }
-    if (maxlen == -1) maxlen = sizeof(request->read_buf);
-
-    if (notify) send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE, NULL, 0 );
-
-    ret = netconn_recv( &request->netconn, request->read_buf + request->read_size,
-                        maxlen - request->read_size, 0, &len );
-
-    if (notify) send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_RESPONSE_RECEIVED, &len, sizeof(len) );
-
-    request->read_size += len;
-    return ret;
-}
-
-/* remove some amount of data from the read buffer */
-static void remove_data( request_t *request, int count )
-{
-    if (!(request->read_size -= count)) request->read_pos = 0;
-    else request->read_pos += count;
-}
-
 static BOOL read_line( request_t *request, char *buffer, DWORD *len )
 {
     int count, bytes_read, pos = 0;
@@ -1963,107 +2129,6 @@ static BOOL read_line( request_t *request, char *buffer, DWORD *len )
     }
     buffer[*len - 1] = 0;
     TRACE("returning %s\n", debugstr_a(buffer));
-    return TRUE;
-}
-
-/* discard data contents until we reach end of line */
-static BOOL discard_eol( request_t *request, BOOL notify )
-{
-    do
-    {
-        char *eol = memchr( request->read_buf + request->read_pos, '\n', request->read_size );
-        if (eol)
-        {
-            remove_data( request, (eol + 1) - (request->read_buf + request->read_pos) );
-            break;
-        }
-        request->read_pos = request->read_size = 0;  /* discard everything */
-        if (!read_more_data( request, -1, notify )) return FALSE;
-    } while (request->read_size);
-    return TRUE;
-}
-
-/* read the size of the next chunk */
-static BOOL start_next_chunk( request_t *request, BOOL notify )
-{
-    DWORD chunk_size = 0;
-
-    assert(!request->read_chunked_size || request->read_chunked_size == ~0u);
-
-    if (request->read_chunked_eof) return FALSE;
-
-    /* read terminator for the previous chunk */
-    if (!request->read_chunked_size && !discard_eol( request, notify )) return FALSE;
-
-    for (;;)
-    {
-        while (request->read_size)
-        {
-            char ch = request->read_buf[request->read_pos];
-            if (ch >= '0' && ch <= '9') chunk_size = chunk_size * 16 + ch - '0';
-            else if (ch >= 'a' && ch <= 'f') chunk_size = chunk_size * 16 + ch - 'a' + 10;
-            else if (ch >= 'A' && ch <= 'F') chunk_size = chunk_size * 16 + ch - 'A' + 10;
-            else if (ch == ';' || ch == '\r' || ch == '\n')
-            {
-                TRACE("reading %u byte chunk\n", chunk_size);
-
-                if (request->content_length == ~0u) request->content_length = chunk_size;
-                else request->content_length += chunk_size;
-
-                request->read_chunked_size = chunk_size;
-                if (!chunk_size) request->read_chunked_eof = TRUE;
-
-                return discard_eol( request, notify );
-            }
-            remove_data( request, 1 );
-        }
-        if (!read_more_data( request, -1, notify )) return FALSE;
-        if (!request->read_size)
-        {
-            request->content_length = request->content_read = 0;
-            request->read_chunked_size = 0;
-            return TRUE;
-        }
-    }
-}
-
-/* return the size of data available to be read immediately */
-static DWORD get_available_data( request_t *request )
-{
-    if (request->read_chunked) return min( request->read_chunked_size, request->read_size );
-    return request->read_size;
-}
-
-/* check if we have reached the end of the data to read */
-static BOOL end_of_read_data( request_t *request )
-{
-    if (!request->content_length) return TRUE;
-    if (request->read_chunked) return request->read_chunked_eof;
-    if (request->content_length == ~0u) return FALSE;
-    return (request->content_length == request->content_read);
-}
-
-static BOOL refill_buffer( request_t *request, BOOL notify )
-{
-    int len = sizeof(request->read_buf);
-
-    if (request->read_chunked)
-    {
-        if (request->read_chunked_eof) return FALSE;
-        if (request->read_chunked_size == ~0u || !request->read_chunked_size)
-        {
-            if (!start_next_chunk( request, notify )) return FALSE;
-        }
-        len = min( len, request->read_chunked_size );
-    }
-    else if (request->content_length != ~0u)
-    {
-        len = min( len, request->content_length - request->content_read );
-    }
-
-    if (len <= request->read_size) return TRUE;
-    if (!read_more_data( request, len, notify )) return FALSE;
-    if (!request->read_size) request->content_length = request->content_read = 0;
     return TRUE;
 }
 
@@ -2169,70 +2234,6 @@ static BOOL read_reply( request_t *request )
     return TRUE;
 }
 
-static void finished_reading( request_t *request )
-{
-    static const WCHAR closeW[] = {'c','l','o','s','e',0};
-
-    BOOL close = FALSE;
-    WCHAR connection[20];
-    DWORD size = sizeof(connection);
-
-    if (request->hdr.disable_flags & WINHTTP_DISABLE_KEEP_ALIVE) close = TRUE;
-    else if (query_headers( request, WINHTTP_QUERY_CONNECTION, NULL, connection, &size, NULL ) ||
-             query_headers( request, WINHTTP_QUERY_PROXY_CONNECTION, NULL, connection, &size, NULL ))
-    {
-        if (!strcmpiW( connection, closeW )) close = TRUE;
-    }
-    else if (!strcmpW( request->version, http1_0 )) close = TRUE;
-    if (close) close_connection( request );
-}
-
-static BOOL read_data( request_t *request, void *buffer, DWORD size, DWORD *read, BOOL async )
-{
-    int count, bytes_read = 0;
-
-    if (end_of_read_data( request )) goto done;
-
-    while (size)
-    {
-        if (!(count = get_available_data( request )))
-        {
-            if (!refill_buffer( request, async )) goto done;
-            if (!(count = get_available_data( request ))) goto done;
-        }
-        count = min( count, size );
-        memcpy( (char *)buffer + bytes_read, request->read_buf + request->read_pos, count );
-        remove_data( request, count );
-        if (request->read_chunked) request->read_chunked_size -= count;
-        size -= count;
-        bytes_read += count;
-        request->content_read += count;
-        if (end_of_read_data( request )) goto done;
-    }
-    if (request->read_chunked && !request->read_chunked_size) refill_buffer( request, async );
-
-done:
-    TRACE( "retrieved %u bytes (%u/%u)\n", bytes_read, request->content_read, request->content_length );
-
-    if (async) send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_READ_COMPLETE, buffer, bytes_read );
-    if (read) *read = bytes_read;
-    if (end_of_read_data( request )) finished_reading( request );
-    return TRUE;
-}
-
-/* read any content returned by the server so that the connection can be reused */
-static void drain_content( request_t *request )
-{
-    DWORD bytes_read;
-    char buffer[2048];
-
-    refill_buffer( request, FALSE );
-    for (;;)
-    {
-        if (!read_data( request, buffer, sizeof(buffer), &bytes_read, FALSE ) || !bytes_read) return;
-    }
-}
-
 static void record_cookies( request_t *request )
 {
     unsigned int i;
@@ -2299,7 +2300,6 @@ static BOOL handle_redirect( request_t *request, DWORD status )
         heap_free( request->path );
         request->path = path;
 
-        drain_content( request );
         send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_REDIRECT, location, len_url + 1 );
     }
     else
@@ -2316,7 +2316,6 @@ static BOOL handle_redirect( request_t *request, DWORD status )
             request->hdr.flags |= WINHTTP_FLAG_SECURE;
         }
 
-        drain_content( request );
         send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_REDIRECT, location, len_url + 1 );
 
         len = uc.dwHostNameLength;
@@ -2407,7 +2406,6 @@ static BOOL receive_response( request_t *request, BOOL async )
             if (request->hdr.disable_flags & WINHTTP_DISABLE_AUTHENTICATION) break;
 
             if (!handle_authorization( request, status )) break;
-            drain_content( request );
 
             /* recurse synchronously */
             if ((ret = send_request( request, NULL, 0, request->optional, request->optional_len, 0, 0, FALSE ))) continue;
