@@ -90,8 +90,8 @@ static LRESULT WINAPI editbox_subclass_proc(HWND hwnd, UINT message, WPARAM wPar
 {
     WNDPROC oldproc = (WNDPROC)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
     static LONG defwndproc_counter = 0;
+    struct message msg = { 0 };
     LRESULT ret;
-    struct message msg;
 
     msg.message = message;
     msg.flags = sent|wparam|lparam;

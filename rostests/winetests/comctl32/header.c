@@ -394,7 +394,7 @@ static char pszOutOfRangeItem[] = "Out Of Range Item";
 
 static char *str_items[] =
     {pszFirstItem, pszSecondItem, pszThirdItem, pszFourthItem, pszReplaceItem, pszOutOfRangeItem};
-    
+
 static char pszUniTestA[]  = "TST";
 static WCHAR pszUniTestW[] = {'T','S','T',0};
 
@@ -414,15 +414,14 @@ static LRESULT WINAPI header_subclass_proc(HWND hwnd, UINT message, WPARAM wPara
 {
     WNDPROC oldproc = (WNDPROC)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
     static LONG defwndproc_counter = 0;
+    struct message msg = { 0 };
     LRESULT ret;
-    struct message msg;
 
     msg.message = message;
     msg.flags = sent|wparam|lparam;
     if (defwndproc_counter) msg.flags |= defwinproc;
     msg.wParam = wParam;
     msg.lParam = lParam;
-    msg.id = 0;
     add_message(sequences, HEADER_SEQ_INDEX, &msg);
 
     defwndproc_counter++;
@@ -1572,7 +1571,6 @@ static void test_header_order (void)
     {
         hdi.lParam = i;
         SendMessageA(hWndHeader, HDM_INSERTITEMA, rand1[i], (LPARAM)&hdi);
-        rand();
     }
     check_order(ids1, ord1, 5, "insert without iOrder");
 
@@ -1582,7 +1580,6 @@ static void test_header_order (void)
         hdi.lParam = i + 5;
         hdi.iOrder = rand2[i];
         SendMessageA(hWndHeader, HDM_INSERTITEMA, rand3[i], (LPARAM)&hdi);
-        rand(); rand();
     }
     check_order(ids2, ord2, 10, "insert with order");
 
@@ -1591,7 +1588,6 @@ static void test_header_order (void)
     {
         hdi.iOrder = rand5[i];
         SendMessageA(hWndHeader, HDM_SETITEMA, rand4[i], (LPARAM)&hdi);
-        rand(); rand();
     }
     check_order(ids2, ord3, 10, "setitems changing order");
 

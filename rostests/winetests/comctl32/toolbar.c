@@ -2276,7 +2276,8 @@ static void test_save(void)
 {
     HWND wnd = NULL;
     TBSAVEPARAMSW params;
-    static const WCHAR subkey[] = {'S','o','f','t','w','a','r','e','\\','W','i','n','e','T','e','s','t',0};
+    static const WCHAR subkey[] = {'S','o','f','t','w','a','r','e','\\','W','i','n','e','\\',
+                                   'W','i','n','e','T','e','s','t',0};
     static const WCHAR value[] = {'t','o','o','l','b','a','r','t','e','s','t',0};
     LONG res;
     HKEY key;

@@ -371,7 +371,7 @@ static void ok_sequence_(struct msg_sequence **seq, int sequence_index,
 
     if(todo && !failcount) /* succeeded yet marked todo */
     {
-        dump++;
+        if (!strcmp(winetest_platform, "wine")) dump++;
         todo_wine
         {
             ok_(file, line)(TRUE, "%s: marked \"todo_wine\" but succeeds\n", context);

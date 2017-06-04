@@ -713,7 +713,7 @@ static const struct message property_sheet_seq[] = {
 
 static void save_message(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, INT receiver)
 {
-    struct message msg;
+    struct message msg = { 0 };
 
     if (message < WM_USER &&
         message != WM_GETICON &&
@@ -990,6 +990,141 @@ if (0)
     DestroyWindow(hdlg);
 }
 
+struct custom_proppage
+{
+    union
+    {
+        PROPSHEETPAGEA pageA;
+        PROPSHEETPAGEW pageW;
+    } u;
+    unsigned int addref_called;
+    unsigned int release_called;
+};
+
+static UINT CALLBACK proppage_callback_a(HWND hwnd, UINT msg, PROPSHEETPAGEA *psp)
+{
+    struct custom_proppage *cpage = (struct custom_proppage *)psp->lParam;
+    PROPSHEETPAGEA *psp_orig = &cpage->u.pageA;
+
+    ok(hwnd == NULL, "Expected NULL hwnd, got %p\n", hwnd);
+
+    ok(psp->lParam && psp->lParam != (LPARAM)psp, "Expected newly allocated page description, got %lx, %p\n",
+            psp->lParam, psp);
+    ok(psp_orig->pszTitle == psp->pszTitle, "Expected same page title pointer\n");
+    ok(!lstrcmpA(psp_orig->pszTitle, psp->pszTitle), "Expected same page title string\n");
+
+    switch (msg)
+    {
+    case PSPCB_ADDREF:
+        ok(psp->dwSize > PROPSHEETPAGEA_V1_SIZE, "Expected ADDREF for V2+ only, got size %u\n", psp->dwSize);
+        cpage->addref_called++;
+        break;
+    case PSPCB_RELEASE:
+        ok(psp->dwSize >= PROPSHEETPAGEA_V1_SIZE, "Unexpected RELEASE, got size %u\n", psp->dwSize);
+        cpage->release_called++;
+        break;
+    default:
+        ok(0, "Unexpected message %u\n", msg);
+    }
+
+    return 1;
+}
+
+static UINT CALLBACK proppage_callback_w(HWND hwnd, UINT msg, PROPSHEETPAGEW *psp)
+{
+    struct custom_proppage *cpage = (struct custom_proppage *)psp->lParam;
+    PROPSHEETPAGEW *psp_orig = &cpage->u.pageW;
+
+    ok(hwnd == NULL, "Expected NULL hwnd, got %p\n", hwnd);
+    ok(psp->lParam && psp->lParam != (LPARAM)psp, "Expected newly allocated page description, got %lx, %p\n",
+            psp->lParam, psp);
+    ok(psp_orig->pszTitle == psp->pszTitle, "Expected same page title pointer\n");
+    ok(!lstrcmpW(psp_orig->pszTitle, psp->pszTitle), "Expected same page title string\n");
+
+    switch (msg)
+    {
+    case PSPCB_ADDREF:
+        ok(psp->dwSize > PROPSHEETPAGEW_V1_SIZE, "Expected ADDREF for V2+ only, got size %u\n", psp->dwSize);
+        cpage->addref_called++;
+        break;
+    case PSPCB_RELEASE:
+        ok(psp->dwSize >= PROPSHEETPAGEW_V1_SIZE, "Unexpected RELEASE, got size %u\n", psp->dwSize);
+        cpage->release_called++;
+        break;
+    default:
+        ok(0, "Unexpected message %u\n", msg);
+    }
+
+    return 1;
+}
+
+static void test_CreatePropertySheetPage(void)
+{
+    static const WCHAR titleW[] = {'T','i','t','l','e',0};
+    struct custom_proppage page;
+    HPROPSHEETPAGE hpsp;
+    BOOL ret;
+
+    memset(&page.u.pageA, 0, sizeof(page.u.pageA));
+    page.u.pageA.dwFlags = PSP_USECALLBACK;
+    page.u.pageA.pfnDlgProc = page_dlg_proc_messages;
+    page.u.pageA.pfnCallback = proppage_callback_a;
+    page.u.pageA.lParam = (LPARAM)&page;
+    page.u.pageA.pszTitle = "Title";
+
+    /* Only minimal size validation is performed */
+    for (page.u.pageA.dwSize = PROPSHEETPAGEA_V1_SIZE - 1; page.u.pageA.dwSize <= PROPSHEETPAGEA_V4_SIZE + 1; page.u.pageA.dwSize++)
+    {
+        page.addref_called = 0;
+        hpsp = CreatePropertySheetPageA(&page.u.pageA);
+
+        if (page.u.pageA.dwSize < PROPSHEETPAGEA_V1_SIZE)
+            ok(hpsp == NULL, "Expected failure, size %u\n", page.u.pageA.dwSize);
+        else
+        {
+            ok(hpsp != NULL, "Failed to create a page, size %u\n", page.u.pageA.dwSize);
+            ok(page.addref_called == (page.u.pageA.dwSize > PROPSHEETPAGEA_V1_SIZE) ? 1 : 0, "Expected ADDREF callback message\n");
+        }
+
+        if (hpsp)
+        {
+            page.release_called = 0;
+            ret = DestroyPropertySheetPage(hpsp);
+            ok(ret, "Failed to destroy a page\n");
+            ok(page.release_called == 1, "Expected RELEASE callback message\n");
+        }
+    }
+
+    memset(&page.u.pageW, 0, sizeof(page.u.pageW));
+    page.u.pageW.dwFlags = PSP_USECALLBACK;
+    page.u.pageW.pfnDlgProc = page_dlg_proc_messages;
+    page.u.pageW.pfnCallback = proppage_callback_w;
+    page.u.pageW.lParam = (LPARAM)&page;
+    page.u.pageW.pszTitle = titleW;
+
+    for (page.u.pageW.dwSize = PROPSHEETPAGEW_V1_SIZE - 1; page.u.pageW.dwSize <= PROPSHEETPAGEW_V4_SIZE + 1; page.u.pageW.dwSize++)
+    {
+        page.addref_called = 0;
+        hpsp = CreatePropertySheetPageW(&page.u.pageW);
+
+        if (page.u.pageW.dwSize < PROPSHEETPAGEW_V1_SIZE)
+            ok(hpsp == NULL, "Expected failure, size %u\n", page.u.pageW.dwSize);
+        else
+        {
+            ok(hpsp != NULL, "Failed to create a page, size %u\n", page.u.pageW.dwSize);
+            ok(page.addref_called == (page.u.pageW.dwSize > PROPSHEETPAGEW_V1_SIZE) ? 1 : 0, "Expected ADDREF callback message\n");
+        }
+
+        if (hpsp)
+        {
+            page.release_called = 0;
+            ret = DestroyPropertySheetPage(hpsp);
+            ok(ret, "Failed to destroy a page\n");
+            ok(page.release_called == 1, "Expected RELEASE callback message\n");
+        }
+    }
+}
+
 START_TEST(propsheet)
 {
     test_title();
@@ -1001,4 +1136,5 @@ START_TEST(propsheet)
     test_messages();
     test_PSM_ADDPAGE();
     test_PSM_INSERTPAGE();
+    test_CreatePropertySheetPage();
 }

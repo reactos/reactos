@@ -24,6 +24,7 @@ list(APPEND SOURCE
     subclass.c
     syslink.c
     tab.c
+    taskdialog.c
     toolbar.c
     tooltips.c
     trackbar.c

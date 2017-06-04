@@ -160,8 +160,9 @@ static void test_play(void)
 
     SetLastError(0xdeadbeef);
     res = SendMessageA(hAnimateWnd, ACM_PLAY, (WPARAM) -1, MAKELONG(0, -1));
+    err = GetLastError();
     ok(res == 0, "Play should have failed\n");
-    ok(err == ERROR_RESOURCE_NAME_NOT_FOUND, "Expected 1814, got %u\n", err);
+    ok(err == 0xdeadbeef, "Expected 0xdeadbeef, got %u\n", err);
     destroy_animate();
 
     create_animate(0, 0);

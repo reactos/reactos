@@ -146,15 +146,14 @@ static WNDPROC syslink_oldproc;
 static LRESULT WINAPI syslink_subclass_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static LONG defwndproc_counter = 0;
+    struct message msg = { 0 };
     LRESULT ret;
-    struct message msg;
 
     msg.message = message;
     msg.flags = sent|wparam|lparam;
     if (defwndproc_counter) msg.flags |= defwinproc;
     msg.wParam = wParam;
     msg.lParam = lParam;
-    msg.id = 0;
     add_message(sequences, SYSLINK_SEQ_INDEX, &msg);
 
     defwndproc_counter++;
