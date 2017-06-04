@@ -13,6 +13,20 @@ WINE_DEFAULT_DEBUG_CHANNEL(qcklnch);
 // {260CB95D-4544-44F6-A079-575BAA60B72F}
 static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0x57, 0x5b, 0xaa, 0x60, 0xb7, 0x2f } };
 
+//RegComCat function
+HRESULT RegisterComCat()
+{
+    ICatRegister *pcr;
+    HRESULT hr = CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL, CLSCTX_INPROC_SERVER, IID_ICatRegister, (void**)&pcr);
+    if (SUCCEEDED(hr))
+    {
+        CATID catid = CATID_DeskBand;
+        hr = pcr->RegisterClassImplCategories(CLSID_QuickLaunchBand, 1, &catid);
+        pcr->Release();
+    }
+    return hr;
+}
+
 //CQuickLaunchBand
 
     CQuickLaunchBand::CQuickLaunchBand() :
@@ -59,9 +73,9 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
         IN REFIID riid,
         OUT VOID **ppvSite)
     {
-        /*TRACE("CQuickLaunchBand::GetSite(0x%p,0x%p)\n", riid, ppvSite);
+        TRACE("CQuickLaunchBand::GetSite(0x%p,0x%p)\n", riid, ppvSite);
 
-        if (m_Site != NULL)
+       /* if (m_Site != NULL)
         {
             return m_Site->QueryInterface(riid, ppvSite);
         }
@@ -117,8 +131,7 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
         IN DWORD dwViewMode,
         IN OUT DESKBANDINFO *pdbi)
     {
-        //TRACE("CQuickLaunchBand::GetBandInfo(0x%x,0x%x,0x%p) hWnd=0x%p\n", dwBandID, dwViewMode, pdbi, m_hWnd);
-
+        TRACE("CQuickLaunchBand::GetBandInfo(0x%x,0x%x,0x%p) hWnd=0x%p\n", dwBandID, dwViewMode, pdbi, m_hWnd);
         return E_FAIL;
     }    
 
@@ -127,14 +140,14 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
     HRESULT STDMETHODCALLTYPE CQuickLaunchBand::SetClient(
         IN IUnknown *punkClient)
     {
-        /*TRACE("IDeskBar::SetClient(0x%p)\n", punkClient);*/
+        TRACE("IDeskBar::SetClient(0x%p)\n", punkClient);
         return E_NOTIMPL;
     }
 
     HRESULT STDMETHODCALLTYPE CQuickLaunchBand::GetClient(
         OUT IUnknown **ppunkClient)
     {
-        /*TRACE("IDeskBar::GetClient(0x%p)\n", ppunkClient);*/
+        TRACE("IDeskBar::GetClient(0x%p)\n", ppunkClient);
         return E_NOTIMPL;
     }
 
@@ -155,7 +168,7 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
     {
         TRACE("CQuickLaunchBand::GetClassID(0x%p)\n", pClassID);
         /* We're going to return the (internal!) CLSID of the task band interface */
-        //*pClassID = CLSID_ITaskBand;
+        *pClassID = CLSID_QuickLaunchBand;
         return S_OK;
     }
 
@@ -168,7 +181,7 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
     HRESULT STDMETHODCALLTYPE CQuickLaunchBand::Load(
         IN IStream *pStm)
     {
-        //TRACE("CQuickLaunchBand::Load called\n");
+        TRACE("CQuickLaunchBand::Load called\n");
         /* Nothing to do */
         return S_OK;
     }
@@ -200,7 +213,7 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
         IN LPARAM lParam,
         OUT LRESULT *plrResult)
     {
-        //TRACE("CQuickLaunchBand: IWinEventHandler::ProcessMessage(0x%p, 0x%x, 0x%p, 0x%p, 0x%p)\n", hWnd, uMsg, wParam, lParam, plrResult);
+        TRACE("CQuickLaunchBand: IWinEventHandler::ProcessMessage(0x%p, 0x%x, 0x%p, 0x%p, 0x%p)\n", hWnd, uMsg, wParam, lParam, plrResult);
         return E_NOTIMPL;
     }
 
@@ -252,18 +265,3 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
         return E_NOTIMPL;
     }  
 
-
-
-
-
-
-/*****************************************************************************/
-
- /*   HRESULT STDMETHODCALLTYPE Initialize(IN OUT ITrayWindow *tray, HWND hWndStartButton)
-    {
-        m_Tray = tray;
-        m_BandID = (DWORD) -1;
-        m_hWndStartButton = hWndStartButton;
-        return S_OK;
-    }
-*/

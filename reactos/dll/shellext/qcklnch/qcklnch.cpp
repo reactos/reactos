@@ -13,7 +13,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(qcklnch);
 
 BEGIN_OBJECT_MAP(ObjectMap)    
-    //OBJECT_ENTRY(CLSID_QuickLaunchBand, CQuickLaunchBand)
+    OBJECT_ENTRY(CLSID_QuickLaunchBand, CQuickLaunchBand)
 END_OBJECT_MAP()
 
 HINSTANCE  g_hInstance;
@@ -45,7 +45,12 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 STDAPI
 DllRegisterServer(void)
 {
-    return g_Module.DllRegisterServer(FALSE);
+    HRESULT hr = g_Module.DllRegisterServer(FALSE);
+
+    if (FAILED(hr)) 
+        return hr;
+    else
+        return RegisterComCat();
 }
 
 STDAPI

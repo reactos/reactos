@@ -1,0 +1,10 @@
+#include <windef.h>
+#include <winuser.h>
+#include <commctrl.h>
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+1001 REGISTRY "rgs/qcklnch.rgs"
+
+#include <reactos/manifest_dll.rc>
+

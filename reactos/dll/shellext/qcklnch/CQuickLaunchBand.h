@@ -9,6 +9,8 @@
 
 extern const GUID CLSID_QuickLaunchBand;
 
+HRESULT RegisterComCat();
+
 class CQuickLaunchBand :
     public CComCoClass<CQuickLaunchBand, &CLSID_QuickLaunchBand>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -147,7 +149,8 @@ public:
     );
 
 //*****************************************************************************************************
-    
+
+    DECLARE_REGISTRY_RESOURCEID(1001)
     DECLARE_NOT_AGGREGATABLE(CQuickLaunchBand)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 

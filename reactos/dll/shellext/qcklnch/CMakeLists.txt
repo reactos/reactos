@@ -16,6 +16,7 @@ spec2def(qcklnch.dll qcklnch.spec)
 
 add_library(qcklnch SHARED    
     qcklnch.cpp
+    qcklnch.rc
     CQuickLaunchBand.cpp    
     ${CMAKE_CURRENT_BINARY_DIR}/qcklnch.def)
 
