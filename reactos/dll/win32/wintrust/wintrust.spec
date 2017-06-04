@@ -1,6 +1,6 @@
 @ stub AddPersonalTrustDBPages
 @ stub CatalogCompactHashDatabase
-@ stdcall CryptCATAdminAcquireContext(long ptr long)
+@ stdcall CryptCATAdminAcquireContext(ptr ptr long)
 @ stdcall CryptCATAdminAddCatalog(long wstr wstr long)
 @ stdcall CryptCATAdminCalcHashFromFileHandle(long ptr ptr long)
 @ stdcall CryptCATAdminEnumCatalogFromHash(long ptr long long ptr)
