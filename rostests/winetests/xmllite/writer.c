@@ -39,12 +39,21 @@
 #include <initguid.h>
 DEFINE_GUID(IID_IXmlWriterOutput, 0xc1131708, 0x0f59, 0x477f, 0x93, 0x59, 0x7d, 0x33, 0x24, 0x51, 0xbc, 0x1a);
 
+#define EXPECT_REF(obj, ref) _expect_ref((IUnknown *)obj, ref, __LINE__)
+static void _expect_ref(IUnknown *obj, ULONG ref, int line)
+{
+    ULONG refcount;
+    IUnknown_AddRef(obj);
+    refcount = IUnknown_Release(obj);
+    ok_(__FILE__, line)(refcount == ref, "expected refcount %d, got %d\n", ref, refcount);
+}
+
 static void check_output(IStream *stream, const char *expected, BOOL todo, int line)
 {
-    HGLOBAL hglobal;
     int len = strlen(expected), size;
-    char *ptr;
+    HGLOBAL hglobal;
     HRESULT hr;
+    char *ptr;
 
     hr = GetHGlobalFromStream(stream, &hglobal);
     ok_(__FILE__, line)(hr == S_OK, "got 0x%08x\n", hr);
@@ -56,10 +65,10 @@ static void check_output(IStream *stream, const char *expected, BOOL todo, int l
         if (size != len)
         {
             ok_(__FILE__, line)(0, "data size mismatch, expected %u, got %u\n", len, size);
-            ok_(__FILE__, line)(0, "got %s, expected %s\n", ptr, expected);
+            ok_(__FILE__, line)(0, "got |%s|, expected |%s|\n", ptr, expected);
         }
         else
-            ok_(__FILE__, line)(!strncmp(ptr, expected, len), "got %s, expected %s\n", ptr, expected);
+            ok_(__FILE__, line)(!strncmp(ptr, expected, len), "got |%s|, expected |%s|\n", ptr, expected);
     }
     GlobalUnlock(hglobal);
 }
@@ -236,6 +245,7 @@ static void test_writer_create(void)
     HRESULT hr;
     IXmlWriter *writer;
     LONG_PTR value;
+    IUnknown *unk;
 
     /* crashes native */
     if (0)
@@ -243,6 +253,17 @@ static void test_writer_create(void)
         CreateXmlWriter(&IID_IXmlWriter, NULL, NULL);
         CreateXmlWriter(NULL, (void**)&writer, NULL);
     }
+
+    hr = CreateXmlWriter(&IID_IStream, (void **)&unk, NULL);
+    ok(hr == E_NOINTERFACE, "got %08x\n", hr);
+
+    hr = CreateXmlWriter(&IID_IUnknown, (void **)&unk, NULL);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    hr = IUnknown_QueryInterface(unk, &IID_IXmlWriter, (void **)&writer);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(unk == (IUnknown *)writer, "unexpected interface pointer\n");
+    IUnknown_Release(unk);
+    IXmlWriter_Release(writer);
 
     hr = CreateXmlWriter(&IID_IXmlWriter, (void**)&writer, NULL);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
@@ -274,6 +295,7 @@ static void test_writer_create(void)
 static void test_writeroutput(void)
 {
     static const WCHAR utf16W[] = {'u','t','f','-','1','6',0};
+    static const WCHAR usasciiW[] = {'u','s','-','a','s','c','i','i',0};
     IXmlWriterOutput *output;
     IUnknown *unk;
     HRESULT hr;
@@ -281,6 +303,7 @@ static void test_writeroutput(void)
     output = NULL;
     hr = CreateXmlWriterOutputWithEncodingName(&testoutput, NULL, NULL, &output);
     ok(hr == S_OK, "got %08x\n", hr);
+    EXPECT_REF(output, 1);
     IUnknown_Release(output);
 
     hr = CreateXmlWriterOutputWithEncodingName(&testoutput, NULL, utf16W, &output);
@@ -288,8 +311,12 @@ static void test_writeroutput(void)
     unk = NULL;
     hr = IUnknown_QueryInterface(output, &IID_IXmlWriterOutput, (void**)&unk);
     ok(hr == S_OK, "got %08x\n", hr);
-    ok(unk != NULL, "got %p\n", unk);
+todo_wine
+    ok(unk != NULL && unk != output, "got %p, output %p\n", unk, output);
+    EXPECT_REF(output, 2);
     /* releasing 'unk' crashes on native */
+    IUnknown_Release(output);
+    EXPECT_REF(output, 1);
     IUnknown_Release(output);
 
     output = NULL;
@@ -305,14 +332,24 @@ static void test_writeroutput(void)
     ok(unk != NULL, "got %p\n", unk);
     /* releasing 'unk' crashes on native */
     IUnknown_Release(output);
+    IUnknown_Release(output);
+
+    /* create with us-ascii */
+    output = NULL;
+    hr = CreateXmlWriterOutputWithEncodingName(&testoutput, NULL, usasciiW, &output);
+    ok(hr == S_OK, "got %08x\n", hr);
+    IUnknown_Release(output);
 }
 
 static void test_writestartdocument(void)
 {
     static const char fullprolog[] = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>";
+    static const char *prologversion2 = "<?xml version=\"1.0\" encoding=\"uS-asCii\"?>";
     static const char prologversion[] = "<?xml version=\"1.0\"?>";
     static const WCHAR versionW[] = {'v','e','r','s','i','o','n','=','"','1','.','0','"',0};
+    static const WCHAR usasciiW[] = {'u','S','-','a','s','C','i','i',0};
     static const WCHAR xmlW[] = {'x','m','l',0};
+    IXmlWriterOutput *output;
     IXmlWriter *writer;
     IStream *stream;
     HRESULT hr;
@@ -372,6 +409,32 @@ static void test_writestartdocument(void)
 
     IStream_Release(stream);
     IXmlWriter_Release(writer);
+
+    /* create with us-ascii */
+    hr = CreateStreamOnHGlobal(NULL, TRUE, &stream);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    output = NULL;
+    hr = CreateXmlWriterOutputWithEncodingName((IUnknown *)stream, NULL, usasciiW, &output);
+    ok(hr == S_OK, "got %08x\n", hr);
+
+    hr = CreateXmlWriter(&IID_IXmlWriter, (void **)&writer, NULL);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    hr = IXmlWriter_SetOutput(writer, output);
+    ok(hr == S_OK, "got %08x\n", hr);
+
+    hr = IXmlWriter_WriteStartDocument(writer, XmlStandalone_Omit);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IXmlWriter_Flush(writer);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    CHECK_OUTPUT(stream, prologversion2);
+
+    IStream_Release(stream);
+    IXmlWriter_Release(writer);
+    IUnknown_Release(output);
 }
 
 static void test_flush(void)
@@ -1266,6 +1329,83 @@ static void test_WriteCharEntity(void)
     IStream_Release(stream);
 }
 
+static void test_WriteString(void)
+{
+    static const WCHAR markupW[] = {'<','&','"','>','=',0};
+    static const WCHAR aW[] = {'a',0};
+    static const WCHAR bW[] = {'b',0};
+    static const WCHAR emptyW[] = {0};
+    IXmlWriter *writer;
+    IStream *stream;
+    HRESULT hr;
+
+    hr = CreateXmlWriter(&IID_IXmlWriter, (void**)&writer, NULL);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    hr = IXmlWriter_SetProperty(writer, XmlWriterProperty_OmitXmlDeclaration, TRUE);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IXmlWriter_WriteString(writer, aW);
+    ok(hr == E_UNEXPECTED, "got 0x%08x\n", hr);
+
+    hr = IXmlWriter_WriteString(writer, NULL);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IXmlWriter_WriteString(writer, emptyW);
+    ok(hr == E_UNEXPECTED, "got 0x%08x\n", hr);
+
+    stream = writer_set_output(writer);
+
+    hr = IXmlWriter_WriteStartElement(writer, NULL, bW, NULL);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IXmlWriter_WriteString(writer, NULL);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IXmlWriter_WriteString(writer, emptyW);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IXmlWriter_WriteString(writer, aW);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    /* WriteString automatically escapes markup characters */
+    hr = IXmlWriter_WriteString(writer, markupW);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IXmlWriter_Flush(writer);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    CHECK_OUTPUT(stream,
+        "<b>a&lt;&amp;\"&gt;=");
+    IStream_Release(stream);
+
+    stream = writer_set_output(writer);
+
+    hr = IXmlWriter_WriteStartElement(writer, NULL, bW, NULL);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IXmlWriter_WriteString(writer, NULL);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IXmlWriter_Flush(writer);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    CHECK_OUTPUT(stream,
+        "<b");
+
+    hr = IXmlWriter_WriteString(writer, emptyW);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IXmlWriter_Flush(writer);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    CHECK_OUTPUT(stream,
+        "<b>");
+
+    IXmlWriter_Release(writer);
+    IStream_Release(stream);
+}
+
 START_TEST(writer)
 {
     test_writer_create();
@@ -1285,4 +1425,5 @@ START_TEST(writer)
     test_WriteAttributeString();
     test_WriteFullEndElement();
     test_WriteCharEntity();
+    test_WriteString();
 }
