@@ -831,20 +831,22 @@ UDFGetFullNameInformation(
  IN OUT PLONG                      PtrReturnedLength
     )
 {
+    ULONG BytesToCopy;
     NTSTATUS RC = STATUS_SUCCESS;
 
 
     AdPrint(("UDFGetFullNameInformation\n"));
 
     PtrBuffer->FileNameLength = FileObject->FileName.Length;
+    BytesToCopy = FileObject->FileName.Length;
 
     if (PtrBuffer->FileNameLength + sizeof( ULONG ) > (ULONG)(*PtrReturnedLength)) {
 
-        PtrBuffer->FileNameLength = *PtrReturnedLength - sizeof( ULONG );
+        BytesToCopy = *PtrReturnedLength - sizeof( ULONG );
         RC = STATUS_BUFFER_OVERFLOW;
     }
 
-    RtlCopyMemory( PtrBuffer->FileName, FileObject->FileName.Buffer, PtrBuffer->FileNameLength );
+    RtlCopyMemory( PtrBuffer->FileName, FileObject->FileName.Buffer, BytesToCopy );
 
     //  Reduce the available bytes by the amount stored into this buffer.
     *PtrReturnedLength -= sizeof( ULONG ) + PtrBuffer->FileNameLength;
