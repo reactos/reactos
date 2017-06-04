@@ -30,10 +30,12 @@
 
 #include "wine/test.h"
 
-/* Do not allow more than 1 deviation here */
-#define match_off_by_1(a, b, exact) (abs((a) - (b)) <= ((exact) ? 0 : 1))
-
-#define near_match(a, b) (abs((a) - (b)) <= 6)
+static inline BOOL match_off_by_n(int a, int b, unsigned int n)
+{
+    return abs(a - b) <= n;
+}
+#define match_off_by_1(a, b, exact) match_off_by_n((a), (b), (exact) ? 0 : 1)
+#define near_match(a, b) match_off_by_n((a), (b), 6)
 #define expect(expected, got) ok(got == expected, "Expected %.8x, got %.8x\n", expected, got)
 
 static LONG  (WINAPI *pGdiGetCharDimensions)(HDC hdc, LPTEXTMETRICW lptm, LONG *height);
@@ -107,20 +109,20 @@ static void init(void)
     system_lang_id = PRIMARYLANGID(GetSystemDefaultLangID());
 }
 
-static void *heap_alloc( size_t len )
+static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
 {
-    return HeapAlloc( GetProcessHeap(), 0, len );
+    return HeapAlloc(GetProcessHeap(), 0, size);
 }
 
-static void *heap_realloc( void *p, size_t len )
+static inline void* __WINE_ALLOC_SIZE(2) heap_realloc(void *mem, size_t size)
 {
-    if (!p) return heap_alloc( len );
-    return HeapReAlloc( GetProcessHeap(), 0, p, len );
+    if (!mem) return heap_alloc(size);
+    return HeapReAlloc(GetProcessHeap(), 0, mem, size);
 }
 
-static void heap_free( void *p )
+static inline BOOL heap_free(void *mem)
 {
-    HeapFree( GetProcessHeap(), 0, p );
+    return HeapFree(GetProcessHeap(), 0, mem);
 }
 
 static INT CALLBACK is_truetype_font_installed_proc(const LOGFONTA *elf, const TEXTMETRICA *ntm, DWORD type, LPARAM lParam)
@@ -4908,6 +4910,37 @@ static void test_GetTextMetrics2(const char *fontname, int font_height)
     ok(ratio >= 90 && ratio <= 110, "expected width/height ratio 90-110, got %d\n", ratio);
 }
 
+static void test_GetCharacterPlacement(void)
+{
+    GCP_RESULTSA result;
+    DWORD size, size2;
+    WCHAR glyphs[20];
+    HDC hdc;
+
+    hdc = CreateCompatibleDC(0);
+    ok(!!hdc, "CreateCompatibleDC failed\n");
+
+    memset(&result, 0, sizeof(result));
+    result.lStructSize = sizeof(result);
+    result.lpGlyphs = glyphs;
+    result.nGlyphs  = 20;
+
+    size = GetCharacterPlacementA(hdc, "Wine Test", 9, 0, &result, 0);
+    ok(size, "GetCharacterPlacementA failed!\n");
+
+    size2 = GetCharacterPlacementA(hdc, "Wine Test", 9, 0, NULL, 0);
+    ok(size2, "GetCharacterPlacementA failed!\n");
+    ok(size == size2, "GetCharacterPlacementA returned different result: %u vs %u\n", size2, size);
+
+    size2 = GetCharacterPlacementA(hdc, "Wine Test", 9, 1024, NULL, GCP_REORDER);
+    ok(size2, "GetCharacterPlacementA failed!\n");
+    ok(size == size2, "GetCharacterPlacementA returned different result: %u vs %u\n", size2, size);
+
+    size = GetCharacterPlacementA(hdc, "Wine Test", 9, 1024, &result, GCP_REORDER);
+    ok(size, "GetCharacterPlacementA failed!\n");
+    ok(size == size2, "GetCharacterPlacementA returned different result: %u vs %u\n", size2, size);
+}
+
 static void test_CreateFontIndirect(void)
 {
     LOGFONTA lf, getobj_lf;
@@ -5303,10 +5336,13 @@ static void test_EnumFonts_subst(void)
     ret = EnumFontFamiliesExA(hdc, &lf, enum_ms_shell_dlg_proc, (LPARAM)&efnd, 0);
     ok(!ret, "MS Shell Dlg should be enumerated\n");
     ok(efnd.total > 0, "MS Shell Dlg should be enumerated\n");
-    ret = strcmp((const char *)efnd.elf[0].elfLogFont.lfFaceName, "MS Shell Dlg");
-    ok(!ret, "expected MS Shell Dlg, got %s\n", efnd.elf[0].elfLogFont.lfFaceName);
-    ret = strcmp((const char *)efnd.elf[0].elfFullName, "MS Shell Dlg");
-    ok(ret, "did not expect MS Shell Dlg\n");
+    if (efnd.total)
+    {
+        ret = strcmp((const char *)efnd.elf[0].elfLogFont.lfFaceName, "MS Shell Dlg");
+        ok(!ret, "expected MS Shell Dlg, got %s\n", efnd.elf[0].elfLogFont.lfFaceName);
+        ret = strcmp((const char *)efnd.elf[0].elfFullName, "MS Shell Dlg");
+        ok(ret, "did not expect MS Shell Dlg\n");
+    }
 
     efnd.total = 0;
     ret = EnumFontFamiliesExA(hdc, NULL, enum_ms_shell_dlg2_proc, (LPARAM)&efnd, 0);
@@ -5318,10 +5354,13 @@ static void test_EnumFonts_subst(void)
     ret = EnumFontFamiliesExA(hdc, &lf, enum_ms_shell_dlg2_proc, (LPARAM)&efnd, 0);
     ok(!ret, "MS Shell Dlg 2 should be enumerated\n");
     ok(efnd.total > 0, "MS Shell Dlg 2 should be enumerated\n");
-    ret = strcmp((const char *)efnd.elf[0].elfLogFont.lfFaceName, "MS Shell Dlg 2");
-    ok(!ret, "expected MS Shell Dlg 2, got %s\n", efnd.elf[0].elfLogFont.lfFaceName);
-    ret = strcmp((const char *)efnd.elf[0].elfFullName, "MS Shell Dlg 2");
-    ok(ret, "did not expect MS Shell Dlg 2\n");
+    if (efnd.total)
+    {
+        ret = strcmp((const char *)efnd.elf[0].elfLogFont.lfFaceName, "MS Shell Dlg 2");
+        ok(!ret, "expected MS Shell Dlg 2, got %s\n", efnd.elf[0].elfLogFont.lfFaceName);
+        ret = strcmp((const char *)efnd.elf[0].elfFullName, "MS Shell Dlg 2");
+        ok(ret, "did not expect MS Shell Dlg 2\n");
+    }
 
     heap_free(efnd.elf);
     DeleteDC(hdc);
@@ -5646,6 +5685,45 @@ todo_wine
     ReleaseDC(NULL, hdc);
 }
 
+static void test_fstype_fixup(void)
+{
+    HDC hdc;
+    LOGFONTA lf;
+    HFONT hfont, hfont_prev;
+    DWORD ret;
+    OUTLINETEXTMETRICA *otm;
+    DWORD otm_size;
+
+    memset(&lf, 0, sizeof(lf));
+    lf.lfHeight = 72;
+    lstrcpyA(lf.lfFaceName, "wine_test");
+
+    SetLastError(0xdeadbeef);
+    hfont = CreateFontIndirectA(&lf);
+    ok(hfont != 0, "CreateFontIndirectA error %u\n", GetLastError());
+
+    hdc = GetDC(NULL);
+
+    hfont_prev = SelectObject(hdc, hfont);
+    ok(hfont_prev != NULL, "SelectObject failed\n");
+
+    otm_size = GetOutlineTextMetricsA(hdc, 0, NULL);
+    otm = HeapAlloc(GetProcessHeap(), 0, otm_size);
+    otm->otmSize = sizeof(*otm);
+    ret = GetOutlineTextMetricsA(hdc, otm->otmSize, otm);
+    ok(ret == otm->otmSize, "expected %u, got %u, error %d\n", otm->otmSize, ret, GetLastError());
+
+    /* Test font has fsType set to 0x7fff, test that reserved bits are filtered out,
+       valid bits are 1, 2, 3, 8, 9. */
+    ok((otm->otmfsType & ~0x30e) == 0, "fsType %#x\n", otm->otmfsType);
+
+    HeapFree(GetProcessHeap(), 0, otm);
+
+    SelectObject(hdc, hfont_prev);
+    DeleteObject(hfont);
+    ReleaseDC(NULL, hdc);
+}
+
 static void test_CreateScalableFontResource(void)
 {
     char ttf_name[MAX_PATH];
@@ -5729,6 +5807,7 @@ static void test_CreateScalableFontResource(void)
 
     test_GetGlyphOutline_empty_contour();
     test_GetGlyphOutline_metric_clipping();
+    test_fstype_fixup();
 
     ret = pRemoveFontResourceExA(fot_name, FR_PRIVATE, 0);
     ok(!ret, "RemoveFontResourceEx() with not matching flags should fail\n");
@@ -6589,6 +6668,48 @@ static void test_bitmap_font_glyph_index(void)
     DeleteDC(hdc);
 }
 
+static void test_GetCharWidthI(void)
+{
+    static const char *teststr = "wine ";
+    HFONT hfont, prev_hfont;
+    WORD glyphs[5];
+    INT widths[5];
+    LOGFONTA lf;
+    ABC abc[5];
+    int len, i;
+    DWORD nb;
+    BOOL ret;
+    HDC hdc;
+
+    memset(&lf, 0, sizeof(lf));
+    strcpy(lf.lfFaceName, "Tahoma");
+    lf.lfHeight = -20;
+
+    hdc = GetDC(0);
+
+    hfont = CreateFontIndirectA(&lf);
+    prev_hfont = SelectObject(hdc, hfont);
+
+    len = strlen(teststr);
+    nb = GetGlyphIndicesA(hdc, teststr, len, glyphs, 0);
+    ok(nb == len, "\n");
+
+    memset(abc, 0xcc, sizeof(abc));
+    ret = GetCharABCWidthsI(hdc, 0, len, glyphs, abc);
+    ok(ret, "GetCharABCWidthsI failed\n");
+
+    memset(widths, 0xcc, sizeof(widths));
+    ret = GetCharWidthI(hdc, 0, len, glyphs, widths);
+    ok(ret, "GetCharWidthI failed\n");
+
+    for (i = 0; i < len; i++)
+        ok(widths[i] == abc[i].abcA + abc[i].abcB + abc[i].abcC, "%u, glyph %u, got width %d\n",
+            i, glyphs[i], widths[i]);
+
+    DeleteObject(SelectObject(hdc, prev_hfont));
+    ReleaseDC(0, hdc);
+}
+
 START_TEST(font)
 {
     init();
@@ -6640,6 +6761,7 @@ START_TEST(font)
     test_GetTextMetrics2("Arial", -11);
     test_GetTextMetrics2("Arial", -55);
     test_GetTextMetrics2("Arial", -110);
+    test_GetCharacterPlacement();
     test_CreateFontIndirect();
     test_CreateFontIndirectEx();
     test_oemcharset();
@@ -6651,6 +6773,7 @@ START_TEST(font)
     test_GetCharWidth32();
     test_fake_bold_font();
     test_bitmap_font_glyph_index();
+    test_GetCharWidthI();
 
     /* These tests should be last test until RemoveFontResource
      * is properly implemented.
