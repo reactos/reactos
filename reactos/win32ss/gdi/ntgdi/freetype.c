@@ -814,7 +814,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
 
         IntUnLockFreeType;
 
-        if (FT_IS_SFNT(Face))
+        if (!Error && FT_IS_SFNT(Face))
             pLoadFont->IsTrueType = TRUE;
 
         if (Error || SharedFace == NULL)
