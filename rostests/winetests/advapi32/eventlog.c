@@ -20,12 +20,15 @@
 
 #include <stdarg.h>
 
+#include "initguid.h"
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
 #include "winnt.h"
 #include "winreg.h"
 #include "sddl.h"
+#include "wmistr.h"
+#include "evntrace.h"
 
 #include "wine/test.h"
 
@@ -909,6 +912,7 @@ static void test_readwrite(void)
 
     /* Read all events from our created eventlog, one by one */
     handle = OpenEventLogA(NULL, eventlogname);
+    ok(handle != NULL, "Failed to open Event Log, got %d\n", GetLastError());
     i = 0;
     for (;;)
     {
@@ -924,14 +928,13 @@ static void test_readwrite(void)
         SetLastError(0xdeadbeef);
         ret = ReadEventLogA(handle, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ,
                             0, buf, sizeof(EVENTLOGRECORD), &read, &needed);
-        if (!ret && GetLastError() == ERROR_HANDLE_EOF)
+        ok(!ret, "Expected failure\n");
+        if (!ret && GetLastError() != ERROR_INSUFFICIENT_BUFFER)
         {
             HeapFree(GetProcessHeap(), 0, buf);
+            ok(GetLastError() == ERROR_HANDLE_EOF, "record %d, got %d\n", i, GetLastError());
             break;
         }
-        ok(!ret, "Expected failure\n");
-        ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER,
-           "Expected ERROR_INVALID_PARAMETER, got %d\n",GetLastError());
 
         buf = HeapReAlloc(GetProcessHeap(), 0, buf, needed);
         ret = ReadEventLogA(handle, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ,
@@ -1010,6 +1013,7 @@ static void test_readwrite(void)
 
     /* Test clearing a real eventlog */
     handle = OpenEventLogA(NULL, eventlogname);
+    ok(handle != NULL, "Failed to open Event Log, got %d\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = ClearEventLogA(handle, NULL);
@@ -1142,6 +1146,98 @@ static void cleanup_eventlog(void)
     ok(bret, "Expected MoveFileEx to succeed: %d\n", GetLastError());
 }
 
+static void test_start_trace(void)
+{
+    const char sessionname[] = "wine";
+    const char filepath[] = "wine.etl";
+    const char filepath2[] = "eniw.etl";
+    EVENT_TRACE_PROPERTIES *properties;
+    TRACEHANDLE handle;
+    LONG buffersize;
+    LONG ret;
+
+    buffersize = sizeof(EVENT_TRACE_PROPERTIES) + sizeof(sessionname) + sizeof(filepath);
+    properties = (EVENT_TRACE_PROPERTIES *) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, buffersize);
+    properties->Wnode.BufferSize = buffersize;
+    properties->Wnode.Flags = WNODE_FLAG_TRACED_GUID;
+    properties->LogFileMode = EVENT_TRACE_FILE_MODE_NONE;
+    properties->LoggerNameOffset = sizeof(EVENT_TRACE_PROPERTIES);
+    properties->LogFileNameOffset = sizeof(EVENT_TRACE_PROPERTIES) + sizeof(sessionname);
+    strcpy((char *)properties + properties->LogFileNameOffset, filepath);
+
+    properties->Wnode.BufferSize = 0;
+    ret = StartTraceA(&handle, sessionname, properties);
+    todo_wine
+    ok(ret == ERROR_BAD_LENGTH ||
+       ret == ERROR_INVALID_PARAMETER, /* XP and 2k3 */
+       "Expected ERROR_BAD_LENGTH, got %d\n", ret);
+    properties->Wnode.BufferSize = buffersize;
+
+    ret = StartTraceA(&handle, "this name is too long", properties);
+    todo_wine
+    ok(ret == ERROR_BAD_LENGTH, "Expected ERROR_BAD_LENGTH, got %d\n", ret);
+
+    ret = StartTraceA(&handle, sessionname, NULL);
+    todo_wine
+    ok(ret == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", ret);
+
+    ret = StartTraceA(NULL, sessionname, properties);
+    todo_wine
+    ok(ret == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", ret);
+
+    properties->LogFileNameOffset = 1;
+    ret = StartTraceA(&handle, sessionname, properties);
+    todo_wine
+    ok(ret == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", ret);
+    properties->LogFileNameOffset = sizeof(EVENT_TRACE_PROPERTIES) + sizeof(sessionname);
+
+    properties->LoggerNameOffset = 1;
+    ret = StartTraceA(&handle, sessionname, properties);
+    todo_wine
+    ok(ret == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", ret);
+    properties->LoggerNameOffset = sizeof(EVENT_TRACE_PROPERTIES);
+
+    properties->LogFileMode = EVENT_TRACE_FILE_MODE_SEQUENTIAL | EVENT_TRACE_FILE_MODE_CIRCULAR;
+    ret = StartTraceA(&handle, sessionname, properties);
+    todo_wine
+    ok(ret == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", ret);
+    properties->LogFileMode = EVENT_TRACE_FILE_MODE_NONE;
+    /* XP creates a file we can't delete, so change the filepath to something else */
+    strcpy((char *)properties + properties->LogFileNameOffset, filepath2);
+
+    properties->Wnode.Guid = SystemTraceControlGuid;
+    ret = StartTraceA(&handle, sessionname, properties);
+    todo_wine
+    ok(ret == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", ret);
+    properties->Wnode.Guid = (GUID){0};
+
+    properties->LogFileNameOffset = 0;
+    ret = StartTraceA(&handle, sessionname, properties);
+    todo_wine
+    ok(ret == ERROR_BAD_PATHNAME, "Expected ERROR_BAD_PATHNAME, got %d\n", ret);
+    properties->LogFileNameOffset = sizeof(EVENT_TRACE_PROPERTIES) + sizeof(sessionname);
+
+    ret = StartTraceA(&handle, sessionname, properties);
+    if (ret == ERROR_ACCESS_DENIED)
+    {
+        skip("need admin rights\n");
+        goto done;
+    }
+    ok(ret == ERROR_SUCCESS, "Expected success, got %d\n", ret);
+
+    ret = StartTraceA(&handle, sessionname, properties);
+    todo_wine
+    ok(ret == ERROR_ALREADY_EXISTS ||
+       ret == ERROR_SHARING_VIOLATION, /* 2k3 */
+       "Expected ERROR_ALREADY_EXISTS, got %d\n", ret);
+
+    /* clean up */
+    ControlTraceA(handle, sessionname, properties, EVENT_TRACE_CONTROL_STOP);
+done:
+    HeapFree(GetProcessHeap(), 0, properties);
+    DeleteFileA(filepath);
+}
+
 START_TEST(eventlog)
 {
     SetLastError(0xdeadbeef);
@@ -1171,4 +1267,7 @@ START_TEST(eventlog)
         test_autocreation();
         cleanup_eventlog();
     }
+
+    /* Trace tests */
+    test_start_trace();
 }

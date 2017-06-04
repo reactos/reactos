@@ -44,8 +44,10 @@ static NTSTATUS (WINAPI *pLsaFreeMemory)(PVOID);
 static NTSTATUS (WINAPI *pLsaOpenPolicy)(PLSA_UNICODE_STRING,PLSA_OBJECT_ATTRIBUTES,ACCESS_MASK,PLSA_HANDLE);
 static NTSTATUS (WINAPI *pLsaQueryInformationPolicy)(LSA_HANDLE,POLICY_INFORMATION_CLASS,PVOID*);
 static BOOL     (WINAPI *pConvertSidToStringSidA)(PSID,LPSTR*);
+static BOOL     (WINAPI *pConvertStringSidToSidA)(LPCSTR,PSID*);
 static NTSTATUS (WINAPI *pLsaLookupNames2)(LSA_HANDLE,ULONG,ULONG,PLSA_UNICODE_STRING,PLSA_REFERENCED_DOMAIN_LIST*,PLSA_TRANSLATED_SID2*);
 static NTSTATUS (WINAPI *pLsaLookupSids)(LSA_HANDLE,ULONG,PSID*,LSA_REFERENCED_DOMAIN_LIST**,LSA_TRANSLATED_NAME**);
+static PVOID    (WINAPI *pFreeSid)(PSID);
 
 static BOOL init(void)
 {
@@ -57,10 +59,12 @@ static BOOL init(void)
     pLsaOpenPolicy = (void*)GetProcAddress(hadvapi32, "LsaOpenPolicy");
     pLsaQueryInformationPolicy = (void*)GetProcAddress(hadvapi32, "LsaQueryInformationPolicy");
     pConvertSidToStringSidA = (void*)GetProcAddress(hadvapi32, "ConvertSidToStringSidA");
+    pConvertStringSidToSidA = (void*)GetProcAddress(hadvapi32, "ConvertStringSidToSidA");
     pLsaLookupNames2 = (void*)GetProcAddress(hadvapi32, "LsaLookupNames2");
     pLsaLookupSids = (void*)GetProcAddress(hadvapi32, "LsaLookupSids");
+    pFreeSid = (void*)GetProcAddress(hadvapi32, "FreeSid");
 
-    if (pLsaClose && pLsaEnumerateAccountRights && pLsaFreeMemory && pLsaOpenPolicy && pLsaQueryInformationPolicy && pConvertSidToStringSidA)
+    if (pLsaClose && pLsaEnumerateAccountRights && pLsaFreeMemory && pLsaOpenPolicy && pLsaQueryInformationPolicy && pConvertSidToStringSidA && pConvertStringSidToSidA && pFreeSid)
         return TRUE;
 
     return FALSE;
@@ -68,12 +72,22 @@ static BOOL init(void)
 
 static void test_lsa(void)
 {
+    static WCHAR machineW[] = {'W','i','n','e','N','o','M','a','c','h','i','n','e',0};
+    LSA_UNICODE_STRING machine;
     NTSTATUS status;
     LSA_HANDLE handle;
     LSA_OBJECT_ATTRIBUTES object_attributes;
 
     ZeroMemory(&object_attributes, sizeof(object_attributes));
     object_attributes.Length = sizeof(object_attributes);
+
+    machine.Buffer = machineW;
+    machine.Length = sizeof(machineW) - 2;
+    machine.MaximumLength = sizeof(machineW);
+
+    status = pLsaOpenPolicy( &machine, &object_attributes, POLICY_LOOKUP_NAMES, &handle);
+    ok(status == RPC_NT_SERVER_UNAVAILABLE,
+       "LsaOpenPolicy(POLICY_LOOKUP_NAMES) for invalid machine returned 0x%08x\n", status);
 
     status = pLsaOpenPolicy( NULL, &object_attributes, POLICY_ALL_ACCESS, &handle);
     ok(status == STATUS_SUCCESS || status == STATUS_ACCESS_DENIED,
@@ -407,6 +421,48 @@ static void test_LsaLookupSids(void)
     ok(status == STATUS_SUCCESS, "got 0x%08x\n", status);
 }
 
+static void test_LsaLookupSids_NullBuffers(void)
+{
+    LSA_REFERENCED_DOMAIN_LIST *list;
+    LSA_OBJECT_ATTRIBUTES attrs;
+    LSA_TRANSLATED_NAME *names;
+    LSA_HANDLE policy;
+    NTSTATUS status;
+    BOOL ret;
+    PSID sid;
+
+    memset(&attrs, 0, sizeof(attrs));
+    attrs.Length = sizeof(attrs);
+
+    status = pLsaOpenPolicy(NULL, &attrs, POLICY_LOOKUP_NAMES, &policy);
+    ok(status == STATUS_SUCCESS, "got 0x%08x\n", status);
+
+    ret = pConvertStringSidToSidA("S-1-1-0", &sid);
+    ok(ret == TRUE, "pConvertStringSidToSidA returned false\n");
+
+    status = pLsaLookupSids(policy, 1, &sid, &list, &names);
+    ok(status == STATUS_SUCCESS, "got 0x%08x\n", status);
+
+    ok(list->Entries > 0, "got %d\n", list->Entries);
+
+    if (list->Entries)
+    {
+       ok((char*)list->Domains - (char*)list > 0, "%p, %p\n", list, list->Domains);
+       ok((char*)list->Domains[0].Sid - (char*)list->Domains > 0, "%p, %p\n", list->Domains, list->Domains[0].Sid);
+       ok(list->Domains[0].Name.MaximumLength > list->Domains[0].Name.Length, "got %d, %d\n", list->Domains[0].Name.MaximumLength,
+           list->Domains[0].Name.Length);
+       ok(list->Domains[0].Name.Buffer != NULL, "domain[0] name buffer is null\n");
+    }
+
+    pLsaFreeMemory(names);
+    pLsaFreeMemory(list);
+
+    pFreeSid(sid);
+
+    status = pLsaClose(policy);
+    ok(status == STATUS_SUCCESS, "got 0x%08x\n", status);
+}
+
 START_TEST(lsa)
 {
     if (!init()) {
@@ -417,4 +473,5 @@ START_TEST(lsa)
     test_lsa();
     test_LsaLookupNames2();
     test_LsaLookupSids();
+    test_LsaLookupSids_NullBuffers();
 }
