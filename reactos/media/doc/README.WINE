@@ -209,7 +209,7 @@ reactos/dll/win32/winscard            # Synced to WineStaging-2.2
 reactos/dll/win32/wintrust            # Synced to WineStaging-2.9
 reactos/dll/win32/wldap32             # Synced to WineStaging-2.2
 reactos/dll/win32/wmi                 # Synced to WineStaging-1.9.11
-reactos/dll/win32/wmiutils            # Synced to WineStaging-1.9.11
+reactos/dll/win32/wmiutils            # Synced to WineStaging-2.9
 reactos/dll/win32/wmvcore             # Synced to WineStaging-2.2
 reactos/dll/win32/wshom.ocx           # Synced to WineStaging-2.2
 reactos/dll/win32/wtsapi32            # Synced to WineStaging-1.9.11
