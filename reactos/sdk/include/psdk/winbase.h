@@ -1342,6 +1342,33 @@ typedef RTL_SRWLOCK SRWLOCK, *PSRWLOCK;
 typedef RTL_CONDITION_VARIABLE CONDITION_VARIABLE, *PCONDITION_VARIABLE;
 #endif
 
+typedef struct _PROC_THREAD_ATTRIBUTE_LIST *PPROC_THREAD_ATTRIBUTE_LIST, *LPPROC_THREAD_ATTRIBUTE_LIST;
+
+#define PROC_THREAD_ATTRIBUTE_NUMBER 0x0000ffff
+#define PROC_THREAD_ATTRIBUTE_THREAD 0x00010000
+#define PROC_THREAD_ATTRIBUTE_INPUT 0x00020000
+#define PROC_THREAD_ATTRIBUTE_ADDITIVE 0x00040000
+
+typedef enum _PROC_THREAD_ATTRIBUTE_NUM {
+  ProcThreadAttributeParentProcess = 0,
+  ProcThreadAttributeHandleList = 2,
+  ProcThreadAttributeGroupAffinity = 3,
+  ProcThreadAttributeIdealProcessor = 5,
+  ProcThreadAttributeUmsThread = 6,
+  ProcThreadAttributeMitigationPolicy = 7,
+  ProcThreadAttributeSecurityCapabilities = 9,
+  ProcThreadAttributeProtectionLevel = 11,
+  ProcThreadAttributeJobList = 13,
+  ProcThreadAttributeChildProcessPolicy = 14,
+  ProcThreadAttributeAllApplicationPackagesPolicy = 15,
+  ProcThreadAttributeWin32kFilter = 16,
+  ProcThreadAttributeSafeOpenPromptOriginClaim = 17,
+} PROC_THREAD_ATTRIBUTE_NUM;
+
+#define PROC_THREAD_ATTRIBUTE_IDEAL_PROCESSOR (ProcThreadAttributeIdealProcessor | PROC_THREAD_ATTRIBUTE_THREAD | PROC_THREAD_ATTRIBUTE_INPUT)
+#define PROC_THREAD_ATTRIBUTE_HANDLE_LIST (ProcThreadAttributeHandleList | PROC_THREAD_ATTRIBUTE_INPUT)
+#define PROC_THREAD_ATTRIBUTE_PARENT_PROCESS (ProcThreadAttributeParentProcess | PROC_THREAD_ATTRIBUTE_INPUT)
+
 typedef DWORD
 (WINAPI *PFE_EXPORT_FUNC)(
   _In_reads_bytes_(ulLength) PBYTE pbData,
