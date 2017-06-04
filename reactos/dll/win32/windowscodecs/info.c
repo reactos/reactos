@@ -2269,6 +2269,12 @@ HRESULT CreateComponentEnumerator(DWORD componentTypes, DWORD options, IEnumUnkn
     return hr;
 }
 
+static BOOL is_1bpp_format(const WICPixelFormatGUID *format)
+{
+    return IsEqualGUID(format, &GUID_WICPixelFormatBlackWhite) ||
+           IsEqualGUID(format, &GUID_WICPixelFormat1bppIndexed);
+}
+
 HRESULT WINAPI WICConvertBitmapSource(REFWICPixelFormatGUID dstFormat, IWICBitmapSource *pISrc, IWICBitmapSource **ppIDst)
 {
     HRESULT res;
@@ -2281,10 +2287,12 @@ HRESULT WINAPI WICConvertBitmapSource(REFWICPixelFormatGUID dstFormat, IWICBitma
     BOOL canconvert;
     ULONG num_fetched;
 
+    TRACE("%s,%p,%p\n", debugstr_guid(dstFormat), pISrc, ppIDst);
+
     res = IWICBitmapSource_GetPixelFormat(pISrc, &srcFormat);
     if (FAILED(res)) return res;
 
-    if (IsEqualGUID(&srcFormat, dstFormat))
+    if (IsEqualGUID(&srcFormat, dstFormat) || (is_1bpp_format(&srcFormat) && is_1bpp_format(dstFormat)))
     {
         IWICBitmapSource_AddRef(pISrc);
         *ppIDst = pISrc;
@@ -2330,7 +2338,6 @@ HRESULT WINAPI WICConvertBitmapSource(REFWICPixelFormatGUID dstFormat, IWICBitma
                             IWICFormatConverter_Release(converter);
                             converter = NULL;
                         }
-                        res = S_OK;
                     }
                 }
 
