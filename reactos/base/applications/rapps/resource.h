@@ -111,7 +111,7 @@
 #define IDS_TOOLTIP_SETTINGS     203
 #define IDS_TOOLTIP_REFRESH      204
 #define IDS_TOOLTIP_EXIT         205
-#define IDS_TOOLTIP_UPDATE_DB            206
+#define IDS_TOOLTIP_UPDATE_DB    206
 
 /* Columns info */
 #define IDS_APP_NAME             250
@@ -161,6 +161,15 @@
 #define IDS_CAT_SCIENCE          712
 #define IDS_CAT_TOOLS            713
 #define IDS_CAT_VIDEO            714
+
+/* App installation status */
+#define IDS_STATUS_INSTALLED          800     
+#define IDS_STATUS_NOTINSTALLED       801
+#define IDS_STATUS_DOWNLOADED         802
+#define IDS_STATUS_UPDATE_AVAILABLE   803
+#define IDS_STATUS_DOWNLOADING        804
+#define IDS_STATUS_INSTALLING         805
+
 
 /* Accelerators */
 #define HOTKEYS                  715

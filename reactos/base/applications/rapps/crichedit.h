@@ -90,7 +90,6 @@ public:
         return m_hWnd;
     }
 
-public:
     virtual VOID OnLink(ENLINK *Link)
     {
     }

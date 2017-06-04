@@ -372,33 +372,28 @@ private:
 
     VOID InitCategoriesList(VOID)
     {
-        HTREEITEM hRootItem1, hRootItem2;
+        HTREEITEM hRootItem;
 
-        hRootItem1 = AddCategory(TVI_ROOT, IDS_INSTALLED, IDI_CATEGORY);
-        AddCategory(hRootItem1, IDS_APPLICATIONS, IDI_APPS);
-        AddCategory(hRootItem1, IDS_UPDATES, IDI_APPUPD);
-
-        hRootItem2 = AddCategory(TVI_ROOT, IDS_AVAILABLEFORINST, IDI_CATEGORY);
-        AddCategory(hRootItem2, IDS_CAT_AUDIO, IDI_CAT_AUDIO);
-        AddCategory(hRootItem2, IDS_CAT_VIDEO, IDI_CAT_VIDEO);
-        AddCategory(hRootItem2, IDS_CAT_GRAPHICS, IDI_CAT_GRAPHICS);
-        AddCategory(hRootItem2, IDS_CAT_GAMES, IDI_CAT_GAMES);
-        AddCategory(hRootItem2, IDS_CAT_INTERNET, IDI_CAT_INTERNET);
-        AddCategory(hRootItem2, IDS_CAT_OFFICE, IDI_CAT_OFFICE);
-        AddCategory(hRootItem2, IDS_CAT_DEVEL, IDI_CAT_DEVEL);
-        AddCategory(hRootItem2, IDS_CAT_EDU, IDI_CAT_EDU);
-        AddCategory(hRootItem2, IDS_CAT_ENGINEER, IDI_CAT_ENGINEER);
-        AddCategory(hRootItem2, IDS_CAT_FINANCE, IDI_CAT_FINANCE);
-        AddCategory(hRootItem2, IDS_CAT_SCIENCE, IDI_CAT_SCIENCE);
-        AddCategory(hRootItem2, IDS_CAT_TOOLS, IDI_CAT_TOOLS);
-        AddCategory(hRootItem2, IDS_CAT_DRIVERS, IDI_CAT_DRIVERS);
-        AddCategory(hRootItem2, IDS_CAT_LIBS, IDI_CAT_LIBS);
-        AddCategory(hRootItem2, IDS_CAT_OTHER, IDI_CAT_OTHER);
+        hRootItem = AddCategory(TVI_ROOT, IDS_AVAILABLEFORINST, IDI_CATEGORY);
+        AddCategory(hRootItem, IDS_CAT_AUDIO, IDI_CAT_AUDIO);
+        AddCategory(hRootItem, IDS_CAT_VIDEO, IDI_CAT_VIDEO);
+        AddCategory(hRootItem, IDS_CAT_GRAPHICS, IDI_CAT_GRAPHICS);
+        AddCategory(hRootItem, IDS_CAT_GAMES, IDI_CAT_GAMES);
+        AddCategory(hRootItem, IDS_CAT_INTERNET, IDI_CAT_INTERNET);
+        AddCategory(hRootItem, IDS_CAT_OFFICE, IDI_CAT_OFFICE);
+        AddCategory(hRootItem, IDS_CAT_DEVEL, IDI_CAT_DEVEL);
+        AddCategory(hRootItem, IDS_CAT_EDU, IDI_CAT_EDU);
+        AddCategory(hRootItem, IDS_CAT_ENGINEER, IDI_CAT_ENGINEER);
+        AddCategory(hRootItem, IDS_CAT_FINANCE, IDI_CAT_FINANCE);
+        AddCategory(hRootItem, IDS_CAT_SCIENCE, IDI_CAT_SCIENCE);
+        AddCategory(hRootItem, IDS_CAT_TOOLS, IDI_CAT_TOOLS);
+        AddCategory(hRootItem, IDS_CAT_DRIVERS, IDI_CAT_DRIVERS);
+        AddCategory(hRootItem, IDS_CAT_LIBS, IDI_CAT_LIBS);
+        AddCategory(hRootItem, IDS_CAT_OTHER, IDI_CAT_OTHER);
 
         m_TreeView->SetImageList(hImageTreeView, TVSIL_NORMAL);
-        m_TreeView->Expand(hRootItem2, TVE_EXPAND);
-        m_TreeView->Expand(hRootItem1, TVE_EXPAND);
-        m_TreeView->SelectItem(hRootItem1);
+        m_TreeView->Expand(hRootItem, TVE_EXPAND);
+        m_TreeView->SelectItem(hRootItem);
     }
 
     BOOL CreateStatusBar()
@@ -1138,17 +1133,10 @@ private:
             return TRUE;
         }
 
-        /* Only add a ListView entry if...
-        - no RegName was supplied (so we cannot determine whether the application is installed or not) or
-        -  a RegName was supplied and the application is not installed
-        */
-        if (!*Info->szRegName || (!IsInstalledApplication(Info->szRegName, FALSE) && !IsInstalledApplication(Info->szRegName, TRUE)))
-        {
-            Index = ListViewAddItem(Info->Category, 0, Info->szName, (LPARAM) Info);
+        Index = ListViewAddItem(Info->Category, 0, Info->szName, (LPARAM) Info);
 
-            ListView_SetItemText(hListView, Index, 1, Info->szVersion);
-            ListView_SetItemText(hListView, Index, 2, Info->szDesc);
-        }
+        ListView_SetItemText(hListView, Index, 1, Info->szVersion);
+        ListView_SetItemText(hListView, Index, 2, Info->szDesc);
 
         return TRUE;
     }
@@ -1183,14 +1171,15 @@ private:
 
         ImageList_AddIcon(hImageListView, hIcon);
         DestroyIcon(hIcon);
-
+        /*
         if (IS_INSTALLED_ENUM(EnumType))
         {
-            /* Enum installed applications and updates */
+            / Enum installed applications and updates 
             EnumInstalledApplications(EnumType, TRUE, s_EnumInstalledAppProc);
             EnumInstalledApplications(EnumType, FALSE, s_EnumInstalledAppProc);
         }
-        else if (IS_AVAILABLE_ENUM(EnumType))
+
+        else */if (IS_AVAILABLE_ENUM(EnumType))
         {
             /* Enum available applications */
             EnumAvailableApplications(EnumType, s_EnumAvailableAppProc);

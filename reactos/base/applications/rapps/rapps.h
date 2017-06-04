@@ -142,7 +142,7 @@ BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumP
 BOOL GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR lpString);
 BOOL ShowInstalledAppInfo(INT Index);
 BOOL UninstallApplication(INT Index, BOOL bModify);
-BOOL IsInstalledApplication(LPWSTR lpRegName, BOOL IsUserKey);
+BOOL IsInstalledApplicationEx(LPWSTR lpRegName, BOOL IsUserKey, REGSAM keyWow);
 VOID RemoveAppFromRegistry(INT Index);
 
 /* winmain.c */

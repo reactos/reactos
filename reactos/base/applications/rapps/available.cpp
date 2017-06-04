@@ -17,6 +17,12 @@
         InsertRichEditText(b, d); \
     } \
 
+#define ADD_TEXT_NEWL(a, b) \
+  LoadStringW(hInst, a, szText, _countof(szText)); \
+  InsertRichEditText(L"\n", 0); \
+  InsertRichEditText(szText, b); \
+  InsertRichEditText(L"\n", 0);
+
 #define GET_STRING1(a, b)  \
     if (!ParserGetString(a, b, _countof(b), FindFileData.cFileName)) \
         continue;
@@ -24,6 +30,16 @@
 #define GET_STRING2(a, b)  \
     if (!ParserGetString(a, b, _countof(b), FindFileData.cFileName)) \
         b[0] = '\0';
+
+//App is "installed" if the RegName is in the registry
+#define APP_INSTALL_CHECK_K(Info, key) \
+ (*Info->szRegName && (IsInstalledApplicationEx(Info->szRegName, FALSE, key) \
+                        || IsInstalledApplicationEx(Info->szRegName, TRUE, key)))
+
+//Check both registry keys in 64bit system
+//TODO: check system type beforehand to avoid double checks?
+#define APP_INSTALL_CHECK(Info) \
+  (APP_INSTALL_CHECK_K(Info, KEY_WOW64_32KEY) || APP_INSTALL_CHECK_K(Info, KEY_WOW64_64KEY))
 
 LIST_ENTRY CachedEntriesHead = { &CachedEntriesHead, &CachedEntriesHead };
 PLIST_ENTRY pCachedEntry = &CachedEntriesHead;
@@ -37,8 +53,13 @@ ShowAvailableAppInfo(INT Index)
     if (!Info) return FALSE;
 
     NewRichEditText(Info->szName, CFE_BOLD);
-
-    InsertRichEditText(L"\n", 0);
+    if (APP_INSTALL_CHECK(Info))
+    {
+      ADD_TEXT_NEWL(IDS_STATUS_INSTALLED, CFE_ITALIC);
+    } else 
+    {
+      ADD_TEXT_NEWL(IDS_STATUS_NOTINSTALLED, CFE_ITALIC);
+    }
 
     ADD_TEXT(IDS_AINFO_VERSION,     Info->szVersion, CFE_BOLD, 0);
     ADD_TEXT(IDS_AINFO_LICENSE,     Info->szLicense, CFE_BOLD, 0);

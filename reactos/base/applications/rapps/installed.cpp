@@ -28,9 +28,8 @@ GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR lpString)
     return FALSE;
 }
 
-
 BOOL
-IsInstalledApplication(LPWSTR lpRegName, BOOL IsUserKey)
+IsInstalledApplicationEx(LPWSTR lpRegName, BOOL IsUserKey, REGSAM keyWow)
 {
     DWORD dwSize = MAX_PATH, dwType;
     WCHAR szName[MAX_PATH];
@@ -38,8 +37,8 @@ IsInstalledApplication(LPWSTR lpRegName, BOOL IsUserKey)
     HKEY hKey, hSubKey;
     INT ItemIndex = 0;
 
-    if (RegOpenKeyW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
-                    L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+    if (RegOpenKeyExW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
+                    L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall", 0, keyWow | KEY_ENUMERATE_SUB_KEYS,
                     &hKey) != ERROR_SUCCESS)
     {
         return FALSE;
@@ -47,8 +46,9 @@ IsInstalledApplication(LPWSTR lpRegName, BOOL IsUserKey)
 
     while (RegEnumKeyExW(hKey, ItemIndex, szName, &dwSize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
     {
-        if (RegOpenKeyW(hKey, szName, &hSubKey) == ERROR_SUCCESS)
+        if (RegOpenKeyExW(hKey, szName, 0, keyWow | KEY_READ, &hSubKey) == ERROR_SUCCESS)
         {
+
             dwType = REG_SZ;
             dwSize = sizeof(szDisplayName);
             if (RegQueryValueExW(hSubKey,
@@ -63,15 +63,13 @@ IsInstalledApplication(LPWSTR lpRegName, BOOL IsUserKey)
                     RegCloseKey(hSubKey);
                     RegCloseKey(hKey);
                     return TRUE;
-                }
+                } 
             }
         }
-
         RegCloseKey(hSubKey);
         dwSize = MAX_PATH;
         ItemIndex++;
     }
-
     RegCloseKey(hKey);
     return FALSE;
 }
