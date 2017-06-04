@@ -231,6 +231,11 @@ static void test_SetupCopyOEMInf(void)
     strcat(path, tmpfile);
     SetLastError(0xdeadbeef);
     res = pSetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, NULL, 0, NULL, NULL);
+    if (!res && GetLastError() == ERROR_ACCESS_DENIED)
+    {
+        skip("SetupCopyOEMInfA() failed on insufficient permissions\n");
+        return;
+    }
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
     ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
     ok(file_exists(path), "Expected source inf to exist\n");
@@ -792,7 +797,7 @@ static void test_SetupLogError(void)
     ret = SetupOpenLog(FALSE);
     if (!ret && GetLastError() == ERROR_ACCESS_DENIED)
     {
-        win_skip("SetupOpenLog() failed on insufficient permissions\n");
+        skip("SetupOpenLog() failed on insufficient permissions\n");
         return;
     }
     ok(ret, "SetupOpenLog failed, error %d\n", GetLastError());
