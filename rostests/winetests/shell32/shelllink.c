@@ -27,9 +27,12 @@
 #include "shobjidl.h"
 #include "shlobj.h"
 #include "shellapi.h"
+#include "commoncontrols.h"
 #include "wine/test.h"
 
 #include "shell32_test.h"
+
+#include <reactos/undocshell.h>
 
 #ifndef SLDF_HAS_LOGO3ID
 #  define SLDF_HAS_LOGO3ID 0x00000800 /* not available in the Vista SDK */
@@ -43,6 +46,7 @@ static HRESULT (WINAPI *pSHGetStockIconInfo)(SHSTOCKICONID, UINT, SHSTOCKICONINF
 static DWORD (WINAPI *pGetLongPathNameA)(LPCSTR, LPSTR, DWORD);
 static DWORD (WINAPI *pGetShortPathNameA)(LPCSTR, LPSTR, DWORD);
 static UINT (WINAPI *pSHExtractIconsW)(LPCWSTR, int, int, int, HICON *, UINT *, UINT, UINT);
+static BOOL (WINAPI *pIsProcessDPIAware)(void);
 
 static const GUID _IID_IShellLinkDataList = {
     0x45e2b4ae, 0xb1c3, 0x11d0,
@@ -1150,11 +1154,257 @@ static void test_propertystore(void)
     IShellLinkW_Release(linkW);
 }
 
+static void test_ExtractIcon(void)
+{
+    static const WCHAR nameW[] = {'\\','e','x','t','r','a','c','t','i','c','o','n','_','t','e','s','t','.','t','x','t',0};
+    static const WCHAR shell32W[] = {'s','h','e','l','l','3','2','.','d','l','l',0};
+    WCHAR pathW[MAX_PATH];
+    HICON hicon, hicon2;
+    char path[MAX_PATH];
+    HANDLE file;
+    int r;
+    ICONINFO info;
+    BITMAP bm;
+
+    /* specified instance handle */
+    hicon = ExtractIconA(GetModuleHandleA("shell32.dll"), NULL, 0);
+todo_wine
+    ok(hicon == NULL, "Got icon %p\n", hicon);
+    hicon2 = ExtractIconA(GetModuleHandleA("shell32.dll"), "shell32.dll", -1);
+    ok(hicon2 != NULL, "Got icon %p\n", hicon2);
+
+    /* existing index */
+    hicon = ExtractIconA(NULL, "shell32.dll", 0);
+    ok(hicon != NULL && HandleToLong(hicon) != -1, "Got icon %p\n", hicon);
+    DestroyIcon(hicon);
+
+    /* returns number of resources */
+    hicon = ExtractIconA(NULL, "shell32.dll", -1);
+    ok(HandleToLong(hicon) > 1 && hicon == hicon2, "Got icon %p\n", hicon);
+
+    /* invalid index, valid dll name */
+    hicon = ExtractIconA(NULL, "shell32.dll", 3000);
+    ok(hicon == NULL, "Got icon %p\n", hicon);
+
+    /* Create a temporary non-executable file */
+    GetTempPathA(sizeof(path), path);
+    strcat(path, "\\extracticon_test.txt");
+    file = CreateFileA(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "Failed to create a test file\n");
+    CloseHandle(file);
+
+    hicon = ExtractIconA(NULL, path, 0);
+todo_wine
+    ok(hicon == NULL, "Got icon %p\n", hicon);
+
+    hicon = ExtractIconA(NULL, path, -1);
+    ok(hicon == NULL, "Got icon %p\n", hicon);
+
+    hicon = ExtractIconA(NULL, path, 1);
+todo_wine
+    ok(hicon == NULL, "Got icon %p\n", hicon);
+
+    r = DeleteFileA(path);
+    ok(r, "failed to delete file %s (%d)\n", path, GetLastError());
+
+    /* same for W variant */
+if (0)
+{
+    /* specified instance handle, crashes on XP, 2k3 */
+    hicon = ExtractIconW(GetModuleHandleA("shell32.dll"), NULL, 0);
+    ok(hicon == NULL, "Got icon %p\n", hicon);
+}
+    hicon2 = ExtractIconW(GetModuleHandleA("shell32.dll"), shell32W, -1);
+    ok(hicon2 != NULL, "Got icon %p\n", hicon2);
+
+    /* existing index */
+    hicon = ExtractIconW(NULL, shell32W, 0);
+    ok(hicon != NULL && HandleToLong(hicon) != -1, "Got icon %p\n", hicon);
+    GetIconInfo(hicon, &info);
+    GetObjectW(info.hbmColor, sizeof(bm), &bm);
+    ok(bm.bmWidth == GetSystemMetrics(SM_CXICON), "got %d\n", bm.bmWidth);
+    ok(bm.bmHeight == GetSystemMetrics(SM_CYICON), "got %d\n", bm.bmHeight);
+    DestroyIcon(hicon);
+
+    /* returns number of resources */
+    hicon = ExtractIconW(NULL, shell32W, -1);
+    ok(HandleToLong(hicon) > 1 && hicon == hicon2, "Got icon %p\n", hicon);
+
+    /* invalid index, valid dll name */
+    hicon = ExtractIconW(NULL, shell32W, 3000);
+    ok(hicon == NULL, "Got icon %p\n", hicon);
+
+    /* Create a temporary non-executable file */
+    GetTempPathW(sizeof(pathW)/sizeof(pathW[0]), pathW);
+    lstrcatW(pathW, nameW);
+    file = CreateFileW(pathW, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "Failed to create a test file\n");
+    CloseHandle(file);
+
+    hicon = ExtractIconW(NULL, pathW, 0);
+todo_wine
+    ok(hicon == NULL, "Got icon %p\n", hicon);
+
+    hicon = ExtractIconW(NULL, pathW, -1);
+    ok(hicon == NULL, "Got icon %p\n", hicon);
+
+    hicon = ExtractIconW(NULL, pathW, 1);
+todo_wine
+    ok(hicon == NULL, "Got icon %p\n", hicon);
+
+    r = DeleteFileW(pathW);
+    ok(r, "failed to delete file %s (%d)\n", path, GetLastError());
+}
+
+static void test_ExtractAssociatedIcon(void)
+{
+    char pathA[MAX_PATH];
+    HICON hicon;
+    WORD index;
+
+    /* empty path */
+    index = 0;
+    *pathA = 0;
+    hicon = ExtractAssociatedIconA(NULL, pathA, &index);
+todo_wine {
+    ok(hicon != NULL, "Got icon %p\n", hicon);
+    ok(!*pathA, "Unexpected path %s\n", pathA);
+    ok(index == 0, "Unexpected index %u\n", index);
+}
+    DestroyIcon(hicon);
+
+    /* by index */
+    index = 0;
+    strcpy(pathA, "shell32.dll");
+    hicon = ExtractAssociatedIconA(NULL, pathA, &index);
+    ok(hicon != NULL, "Got icon %p\n", hicon);
+    ok(!strcmp(pathA, "shell32.dll"), "Unexpected path %s\n", pathA);
+    ok(index == 0, "Unexpected index %u\n", index);
+    DestroyIcon(hicon);
+
+    /* valid dll name, invalid index */
+    index = 5000;
+    strcpy(pathA, "user32.dll");
+    hicon = ExtractAssociatedIconA(NULL, pathA, &index);
+    CharLowerBuffA(pathA, strlen(pathA));
+todo_wine {
+    ok(hicon != NULL, "Got icon %p\n", hicon);
+    ok(!!strstr(pathA, "shell32.dll"), "Unexpected path %s\n", pathA);
+}
+    ok(index != 5000, "Unexpected index %u\n", index);
+    DestroyIcon(hicon);
+
+    /* associated icon */
+    index = 0xcaca;
+    strcpy(pathA, "dummy.exe");
+    hicon = ExtractAssociatedIconA(NULL, pathA, &index);
+    CharLowerBuffA(pathA, strlen(pathA));
+todo_wine {
+    ok(hicon != NULL, "Got icon %p\n", hicon);
+    ok(!!strstr(pathA, "shell32.dll"), "Unexpected path %s\n", pathA);
+}
+    ok(index != 0xcaca, "Unexpected index %u\n", index);
+    DestroyIcon(hicon);
+}
+
+static int get_shell_icon_size(void)
+{
+    char buf[10];
+    DWORD value = 32, size = sizeof(buf), type;
+    HKEY key;
+
+    if (!RegOpenKeyA( HKEY_CURRENT_USER, "Control Panel\\Desktop\\WindowMetrics", &key ))
+    {
+        if (!RegQueryValueExA( key, "Shell Icon Size", NULL, &type, (BYTE *)buf, &size ) && type == REG_SZ)
+            value = atoi( buf );
+        RegCloseKey( key );
+    }
+    return value;
+}
+
+static void test_SHGetImageList(void)
+{
+    HRESULT hr;
+    IImageList *list, *list2;
+    BOOL ret;
+    HIMAGELIST lg, sm;
+    ULONG start_refs, refs;
+    int i, width, height, expect;
+    BOOL dpi_aware = pIsProcessDPIAware && pIsProcessDPIAware();
+
+    hr = SHGetImageList( SHIL_LARGE, &IID_IImageList, (void **)&list );
+    ok( hr == S_OK, "got %08x\n", hr );
+    start_refs = IImageList_AddRef( list );
+    IImageList_Release( list );
+
+    hr = SHGetImageList( SHIL_LARGE, &IID_IImageList, (void **)&list2 );
+    ok( hr == S_OK, "got %08x\n", hr );
+    ok( list == list2, "lists differ\n" );
+    refs = IImageList_AddRef( list );
+    IImageList_Release( list );
+    ok( refs == start_refs + 1, "got %d, start_refs %d\n", refs, start_refs );
+    IImageList_Release( list2 );
+
+    hr = SHGetImageList( SHIL_SMALL, &IID_IImageList, (void **)&list2 );
+    ok( hr == S_OK, "got %08x\n", hr );
+
+    ret = Shell_GetImageLists( &lg, &sm );
+    ok( ret, "got %d\n", ret );
+    ok( lg == (HIMAGELIST)list, "mismatch\n" );
+    ok( sm == (HIMAGELIST)list2, "mismatch\n" );
+
+    /* Shell_GetImageLists doesn't take a reference */
+    refs = IImageList_AddRef( list );
+    IImageList_Release( list );
+    ok( refs == start_refs, "got %d, start_refs %d\n", refs, start_refs );
+
+    IImageList_Release( list2 );
+    IImageList_Release( list );
+
+    /* Test the icon sizes */
+    for (i = 0; i <= SHIL_LAST; i++)
+    {
+        hr = SHGetImageList( i, &IID_IImageList, (void **)&list );
+        ok( hr == S_OK ||
+            broken( i == SHIL_JUMBO && hr == E_INVALIDARG ), /* XP and 2003 */
+            "%d: got %08x\n", i, hr );
+        if (FAILED(hr)) continue;
+        IImageList_GetIconSize( list, &width, &height );
+        switch (i)
+        {
+        case SHIL_LARGE:
+            if (dpi_aware) expect = GetSystemMetrics( SM_CXICON );
+            else expect = get_shell_icon_size();
+            break;
+        case SHIL_SMALL:
+            if (dpi_aware) expect = GetSystemMetrics( SM_CXICON ) / 2;
+            else expect = GetSystemMetrics( SM_CXSMICON );
+            break;
+        case SHIL_EXTRALARGE:
+            expect = (GetSystemMetrics( SM_CXICON ) * 3) / 2;
+            break;
+        case SHIL_SYSSMALL:
+            expect = GetSystemMetrics( SM_CXSMICON );
+            break;
+        case SHIL_JUMBO:
+            expect = 256;
+            break;
+        }
+        todo_wine_if(i == SHIL_SYSSMALL && dpi_aware && expect != GetSystemMetrics( SM_CXICON ) / 2)
+        {
+            ok( width == expect, "%d: got %d expect %d\n", i, width, expect );
+            ok( height == expect, "%d: got %d expect %d\n", i, height, expect );
+        }
+        IImageList_Release( list );
+    }
+}
+
 START_TEST(shelllink)
 {
     HRESULT r;
     HMODULE hmod = GetModuleHandleA("shell32.dll");
     HMODULE hkernel32 = GetModuleHandleA("kernel32.dll");
+    HMODULE huser32 = GetModuleHandleA("user32.dll");
 
     pILFree = (void *)GetProcAddress(hmod, (LPSTR)155);
     pILIsEqual = (void *)GetProcAddress(hmod, (LPSTR)21);
@@ -1164,6 +1414,7 @@ START_TEST(shelllink)
     pGetLongPathNameA = (void *)GetProcAddress(hkernel32, "GetLongPathNameA");
     pGetShortPathNameA = (void *)GetProcAddress(hkernel32, "GetShortPathNameA");
     pSHExtractIconsW = (void *)GetProcAddress(hmod, "SHExtractIconsW");
+    pIsProcessDPIAware = (void *)GetProcAddress(huser32, "IsProcessDPIAware");
 
     r = CoInitialize(NULL);
     ok(r == S_OK, "CoInitialize failed (0x%08x)\n", r);
@@ -1178,6 +1429,9 @@ START_TEST(shelllink)
     test_SHGetStockIconInfo();
     test_SHExtractIcons();
     test_propertystore();
+    test_ExtractIcon();
+    test_ExtractAssociatedIcon();
+    test_SHGetImageList();
 
     CoUninitialize();
 }
