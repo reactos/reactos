@@ -198,7 +198,7 @@ static void test_mciParser(HWND hwnd)
 
     buf[0]='z';
     err = mciSendStringA("", buf, sizeof(buf), NULL);
-    todo_wine ok(err==MCIERR_MISSING_COMMAND_STRING,"empty string: %s\n", dbg_mcierr(err));
+    ok(err==MCIERR_MISSING_COMMAND_STRING,"empty string: %s\n", dbg_mcierr(err));
     ok(!buf[0], "error buffer %s\n", buf);
 
     buf[0]='d';
@@ -364,6 +364,10 @@ static void test_mciParser(HWND hwnd)
     err = mciSendStringA("capability x device type", buf, sizeof(buf), hwnd);
     ok(!err,"capability device type: %s\n", dbg_mcierr(err));
     if(!err) ok(!strcmp(buf, "waveaudio"), "capability device type is %s\n", buf);
+
+    err = mciSendStringA("info a version", buf, sizeof(buf), hwnd);
+    ok(!err,"info version: %s\n", dbg_mcierr(err));
+    if(!err) ok(!strcmp(buf, "1.1"), "info version is %s\n", buf);
 
     err = mciSendCommandA(wDeviceID, MCI_CLOSE, 0, 0);
     ok(!err,"mciCommand close returned %s\n", dbg_mcierr(err));
@@ -667,10 +671,6 @@ static void test_recordWAVE(HWND hwnd)
     err = mciSendStringA("status x samplespersec", buf, sizeof(buf), NULL);
     ok(!err,"mci status samplespersec returned %s\n", dbg_mcierr(err));
     if(!err) ok(!strcmp(buf,"11025"), "mci status samplespersec expected 11025, got: %s\n", buf);
-
-    /* MCI seems to solely support PCM, no need for ACM conversion. */
-    err = mciSendStringA("set x format tag 2", NULL, 0, NULL);
-    ok(err==MCIERR_OUTOFRANGE,"mci set format tag 2 returned %s\n", dbg_mcierr(err));
 
     /* MCI appears to scan the available devices for support of this format,
      * returning MCIERR_OUTOFRANGE on machines with no sound.
@@ -1116,6 +1116,8 @@ static void test_asyncWAVE(HWND hwnd)
     trace("position after resume: %sms\n",buf);
     test_notification(hwnd,"play (aborted by pause/resume/pause)",0);
 
+    /* A small Sleep() here prevents the notification test failing with MCI_NOTIFY_SUCCESSFUL */
+    Sleep(10);
     err = mciSendStringA("close mysound wait", NULL, 0, NULL);
     ok(!err,"mci close wait returned %s\n", dbg_mcierr(err));
     test_notification(hwnd,"play (aborted by close)",MCI_NOTIFY_ABORTED);

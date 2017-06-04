@@ -82,7 +82,9 @@ static void test_api(void)
         ret = joyGetDevCapsA(JOYSTICKID1 + i, &jc, sizeof(jc));
         if (ret == JOYERR_NOERROR)
         {
-            joyid = JOYSTICKID1 + i;
+            if (joyid == -1) /* Cache the first found joystick to run advanced tests below */
+              joyid = JOYSTICKID1 + i;
+
             trace("Joystick[%d] - name: '%s', axes: %d, buttons: %d, period range: %d - %d\n",
                   JOYSTICKID1 + i, jc.szPname, jc.wNumAxes, jc.wNumButtons, jc.wPeriodMin, jc.wPeriodMax);
             ret = joyGetDevCapsW(JOYSTICKID1 + i, &jcw, sizeof(jcw));
@@ -93,7 +95,6 @@ static void test_api(void)
                 ok(jc.wNumButtons == jcw.wNumButtons, "Expected %d == %d\n", jc.wNumButtons, jcw.wNumButtons);
             }
             else win98++;
-            break;
         }
         else
         {

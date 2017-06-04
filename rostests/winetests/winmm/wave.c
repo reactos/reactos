@@ -1600,6 +1600,7 @@ static void test_fragmentsize(void)
     rc = waveOutClose(wout);
     ok(rc == MMSYSERR_NOERROR, "waveOutClose failed: %s\n", wave_out_error(rc));
 
+    HeapFree(GetProcessHeap(), 0, hdr[0].lpData);
     CloseHandle(hevent);
 }
 
@@ -1659,6 +1660,12 @@ static void test_PlaySound(void)
 {
     BOOL br;
     char test_file[MAX_PATH], temp[MAX_PATH], *exts;
+    void *psound_ordinal, *psound_name;
+    HMODULE dll = GetModuleHandleA("winmm.dll");
+
+    psound_name = GetProcAddress(dll, "PlaySound");
+    psound_ordinal = GetProcAddress(dll, (LPCSTR) 2);
+    ok(psound_name == psound_ordinal, "Expected ordinal 2 to be PlaySound function\n");
 
     if(waveOutGetNumDevs() == 0) {
         skip("No output devices available\n");
