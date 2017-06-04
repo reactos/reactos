@@ -84,6 +84,10 @@ static int   (WINAPI *pWSAEnumNameSpaceProvidersA)(LPDWORD,LPWSANAMESPACE_INFOA)
 static int   (WINAPI *pWSAEnumNameSpaceProvidersW)(LPDWORD,LPWSANAMESPACE_INFOW);
 static int   (WINAPI *pWSAPoll)(WSAPOLLFD *,ULONG,INT);
 
+/* Function pointers from ntdll */
+static NTSTATUS (WINAPI *pNtSetInformationFile)(HANDLE, PIO_STATUS_BLOCK, PVOID, ULONG, FILE_INFORMATION_CLASS);
+static NTSTATUS (WINAPI *pNtQueryInformationFile)(HANDLE, PIO_STATUS_BLOCK, PVOID, ULONG, FILE_INFORMATION_CLASS);
+
 /* Function pointers from iphlpapi */
 static DWORD (WINAPI *pGetAdaptersInfo)(PIP_ADAPTER_INFO,PULONG);
 static DWORD (WINAPI *pGetIpForwardTable)(PMIB_IPFORWARDTABLE,PULONG,BOOL);
@@ -1225,6 +1229,7 @@ static void Init (void)
     WORD ver = MAKEWORD (2, 2);
     WSADATA data;
     HMODULE hws2_32 = GetModuleHandleA("ws2_32.dll"), hiphlpapi;
+    HMODULE hntdll = GetModuleHandleA("ntdll.dll");
 
     pfreeaddrinfo = (void *)GetProcAddress(hws2_32, "freeaddrinfo");
     pgetaddrinfo = (void *)GetProcAddress(hws2_32, "getaddrinfo");
@@ -1240,6 +1245,9 @@ static void Init (void)
     pWSAEnumNameSpaceProvidersA = (void *)GetProcAddress(hws2_32, "WSAEnumNameSpaceProvidersA");
     pWSAEnumNameSpaceProvidersW = (void *)GetProcAddress(hws2_32, "WSAEnumNameSpaceProvidersW");
     pWSAPoll = (void *)GetProcAddress(hws2_32, "WSAPoll");
+
+    pNtSetInformationFile = (void *)GetProcAddress(hntdll, "NtSetInformationFile");
+    pNtQueryInformationFile = (void *)GetProcAddress(hntdll, "NtQueryInformationFile");
 
     hiphlpapi = LoadLibraryA("iphlpapi.dll");
     if (hiphlpapi)
@@ -1568,6 +1576,8 @@ todo_wine
     /* test SO_PROTOCOL_INFO structure returned for different protocols */
     for (i = 0; i < sizeof(prottest) / sizeof(prottest[0]); i++)
     {
+        int k;
+
         s = socket(prottest[i].family, prottest[i].type, prottest[i].proto);
         if (s == INVALID_SOCKET && prottest[i].family == AF_INET6) continue;
 
@@ -1611,6 +1621,76 @@ todo_wine
            prottest[i].type, infoA.iSocketType);
         ok(infoA.iProtocol == prottest[i].proto, "socket protocol invalid, expected %d received %d\n",
            prottest[i].proto, infoA.iProtocol);
+
+        /* IP_HDRINCL is supported only on SOCK_RAW but passed to SOCK_DGRAM by Impossible Creatures */
+        size = sizeof(i);
+        k = 1;
+        SetLastError(0xdeadbeef);
+        err = setsockopt(s, IPPROTO_IP, IP_HDRINCL, (char *) &k, size);
+        if (err == -1) /* >= Vista */
+        {
+            todo_wine {
+            ok(GetLastError() == WSAEINVAL, "Expected 10022, got %d\n", GetLastError());
+            k = 99;
+            SetLastError(0xdeadbeef);
+            err = getsockopt(s, IPPROTO_IP, IP_HDRINCL, (char *) &k, &size);
+            ok(err == -1, "Expected -1, got %d\n", err);
+            ok(GetLastError() == WSAEINVAL, "Expected 10022, got %d\n", GetLastError());
+            ok(k == 99, "Expected 99, got %d\n", k);
+
+            size = sizeof(k);
+            k = 0;
+            SetLastError(0xdeadbeef);
+            err = setsockopt(s, IPPROTO_IP, IP_HDRINCL, (char *) &k, size);
+            }
+            ok(err == -1, "Expected -1, got %d\n", err);
+            todo_wine {
+            ok(GetLastError() == WSAEINVAL, "Expected 10022, got %d\n", GetLastError());
+            k = 99;
+            SetLastError(0xdeadbeef);
+            err = getsockopt(s, IPPROTO_IP, IP_HDRINCL, (char *) &k, &size);
+            ok(err == -1, "Expected -1, got %d\n", err);
+            ok(GetLastError() == WSAEINVAL, "Expected 10022, got %d\n", GetLastError());
+            ok(k == 99, "Expected 99, got %d\n", k);
+            }
+        }
+        else /* <= 2003 the tests differ between TCP and UDP, UDP silenty accepts */
+        {
+            SetLastError(0xdeadbeef);
+            k = 99;
+            err = getsockopt(s, IPPROTO_IP, IP_HDRINCL, (char *) &k, &size);
+            if (prottest[i].type == SOCK_DGRAM)
+            {
+                ok(err == 0, "Expected 0, got %d\n", err);
+                ok(k == 1, "Expected 1, got %d\n", k);
+            }
+            else
+            {
+                /* contratry to what we could expect the function returns error but k is changed */
+                ok(err == -1, "Expected -1, got %d\n", err);
+                ok(GetLastError() == WSAENOPROTOOPT, "Expected 10042, got %d\n", GetLastError());
+                ok(k == 0, "Expected 0, got %d\n", k);
+            }
+
+            k = 0;
+            err = setsockopt(s, IPPROTO_IP, IP_HDRINCL, (char *) &k, size);
+            ok(err == 0, "Expected 0, got %d\n", err);
+
+            k = 99;
+            err = getsockopt(s, IPPROTO_IP, IP_HDRINCL, (char *) &k, &size);
+            if (prottest[i].type == SOCK_DGRAM)
+            {
+                ok(err == 0, "Expected 0, got %d\n", err);
+                ok(k == 0, "Expected 0, got %d\n", k);
+            }
+            else
+            {
+                /* contratry to what we could expect the function returns error but k is changed */
+                ok(err == -1, "Expected -1, got %d\n", err);
+                ok(GetLastError() == WSAENOPROTOOPT, "Expected 10042, got %d\n", GetLastError());
+                ok(k == 0, "Expected 0, got %d\n", k);
+            }
+        }
 
         closesocket(s);
     }
@@ -1724,6 +1804,57 @@ todo_wine
 
     closesocket(s);
     closesocket(s2);
+
+    for (i = 0; i < 2; i++)
+    {
+        int family, level;
+
+        if (i)
+        {
+            family = AF_INET6;
+            level = IPPROTO_IPV6;
+        }
+        else
+        {
+            family = AF_INET;
+            level = IPPROTO_IP;
+        }
+
+        s = socket(family, SOCK_DGRAM, 0);
+        if (s == INVALID_SOCKET && i)
+        {
+            skip("IPv6 is not supported\n");
+            break;
+        }
+        ok(s != INVALID_SOCKET, "socket failed with error %d\n", GetLastError());
+
+        size = sizeof(value);
+        value = 0xdead;
+        err = getsockopt(s, level, IP_DONTFRAGMENT, (char *) &value, &size);
+        ok(!err, "Expected 0, got %d with error %d\n", err, GetLastError());
+        ok(value == 0, "Expected 0, got %d\n", value);
+
+        size = sizeof(value);
+        value = 1;
+        err = setsockopt(s, level, IP_DONTFRAGMENT, (char *) &value, size);
+        ok(!err, "Expected 0, got %d with error %d\n", err, GetLastError());
+
+        value = 0xdead;
+        err = getsockopt(s, level, IP_DONTFRAGMENT, (char *) &value, &size);
+        ok(!err, "Expected 0, got %d with error %d\n", err, GetLastError());
+        ok(value == 1, "Expected 1, got %d\n", value);
+
+        size = sizeof(value);
+        value = 0xdead;
+        err = setsockopt(s, level, IP_DONTFRAGMENT, (char *) &value, size);
+        ok(!err, "Expected 0, got %d with error %d\n", err, GetLastError());
+
+        err = getsockopt(s, level, IP_DONTFRAGMENT, (char *) &value, &size);
+        ok(!err, "Expected 0, got %d with error %d\n", err, GetLastError());
+        ok(value == 1, "Expected 1, got %d\n", value);
+
+        closesocket(s);
+    }
 }
 
 static void test_so_reuseaddr(void)
@@ -1735,7 +1866,7 @@ static void test_so_reuseaddr(void)
     DWORD err;
 
     saddr.sin_family      = AF_INET;
-    saddr.sin_port        = htons(9375);
+    saddr.sin_port        = htons(SERVERPORT+1);
     saddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
     s1=socket(AF_INET, SOCK_STREAM, 0);
@@ -3278,15 +3409,27 @@ static void test_WSAStringToAddressA(void)
         (ret == SOCKET_ERROR && (GLE == ERROR_INVALID_PARAMETER || GLE == WSAEINVAL)),
         "WSAStringToAddressA() failed unexpectedly: %d\n", GLE );
 
+    len = sizeof(sockaddr);
+
+    ret = WSAStringToAddressA( address9, AF_INET, NULL, (SOCKADDR*)&sockaddr, &len );
+    GLE = WSAGetLastError();
+    ok( (ret == SOCKET_ERROR && GLE == WSAEINVAL),
+        "WSAStringToAddressA() should have failed with %d\n", GLE );
+
     len = sizeof(sockaddr6);
     memset(&sockaddr6, 0, len);
     sockaddr6.sin6_family = AF_INET6;
 
     ret = WSAStringToAddressA( address6, AF_INET6, NULL, (SOCKADDR*)&sockaddr6,
             &len );
+    if (ret == SOCKET_ERROR)
+    {
+        win_skip("IPv6 not supported\n");
+        return;
+    }
+
     GLE = WSAGetLastError();
-    ok( ret == 0 || (ret == SOCKET_ERROR && GLE == WSAEINVAL),
-        "WSAStringToAddressA() failed for IPv6 address: %d\n", GLE);
+    ok( ret == 0, "WSAStringToAddressA() failed for IPv6 address: %d\n", GLE);
 
     len = sizeof(sockaddr6);
     memset(&sockaddr6, 0, len);
@@ -3295,8 +3438,7 @@ static void test_WSAStringToAddressA(void)
     ret = WSAStringToAddressA( address7, AF_INET6, NULL, (SOCKADDR*)&sockaddr6,
             &len );
     GLE = WSAGetLastError();
-    ok( ret == 0 || (ret == SOCKET_ERROR && GLE == WSAEINVAL),
-        "WSAStringToAddressA() failed for IPv6 address: %d\n", GLE);
+    ok( ret == 0, "WSAStringToAddressA() failed for IPv6 address: %d\n", GLE);
 
     len = sizeof(sockaddr6);
     memset(&sockaddr6, 0, len);
@@ -3305,16 +3447,22 @@ static void test_WSAStringToAddressA(void)
     ret = WSAStringToAddressA( address8, AF_INET6, NULL, (SOCKADDR*)&sockaddr6,
             &len );
     GLE = WSAGetLastError();
-    ok( (ret == 0 && sockaddr6.sin6_port == 0xffff) ||
-        (ret == SOCKET_ERROR && GLE == WSAEINVAL),
+    ok( ret == 0 && sockaddr6.sin6_port == 0xffff,
         "WSAStringToAddressA() failed for IPv6 address: %d\n", GLE);
 
-    len = sizeof(sockaddr);
+    len = sizeof(sockaddr6);
 
-    ret = WSAStringToAddressA( address9, AF_INET, NULL, (SOCKADDR*)&sockaddr, &len );
+    ret = WSAStringToAddressA( address7 + 1, AF_INET6, NULL, (SOCKADDR*)&sockaddr, &len );
     GLE = WSAGetLastError();
     ok( (ret == SOCKET_ERROR && GLE == WSAEINVAL),
-        "WSAStringToAddressA() should have failed with %d\n", GLE );
+        "WSAStringToAddressW() should have failed with %d\n", GLE );
+
+    len = sizeof(sockaddr6);
+
+    ret = WSAStringToAddressA( address8 + 1, AF_INET6, NULL, (SOCKADDR*)&sockaddr, &len );
+    GLE = WSAGetLastError();
+    ok( (ret == SOCKET_ERROR && GLE == WSAEINVAL),
+        "WSAStringToAddressW() should have failed with %d\n", GLE );
 }
 
 static void test_WSAStringToAddressW(void)
@@ -3401,15 +3549,27 @@ static void test_WSAStringToAddressW(void)
         broken(len == sizeof(SOCKADDR_STORAGE)) /* NT4/2k */,
         "unexpected length %d\n", len );
 
+    len = sizeof(sockaddr);
+
+    ret = WSAStringToAddressW( address9, AF_INET, NULL, (SOCKADDR*)&sockaddr, &len );
+    GLE = WSAGetLastError();
+    ok( (ret == SOCKET_ERROR && GLE == WSAEINVAL),
+        "WSAStringToAddressW() should have failed with %d\n", GLE );
+
     len = sizeof(sockaddr6);
     memset(&sockaddr6, 0, len);
     sockaddr6.sin6_family = AF_INET6;
 
     ret = WSAStringToAddressW( address6, AF_INET6, NULL, (SOCKADDR*)&sockaddr6,
             &len );
+    if (ret == SOCKET_ERROR)
+    {
+        win_skip("IPv6 not supported\n");
+        return;
+    }
+
     GLE = WSAGetLastError();
-    ok( ret == 0 || (ret == SOCKET_ERROR && GLE == WSAEINVAL),
-        "WSAStringToAddressW() failed for IPv6 address: %d\n", GLE);
+    ok( ret == 0, "WSAStringToAddressW() failed for IPv6 address: %d\n", GLE);
 
     len = sizeof(sockaddr6);
     memset(&sockaddr6, 0, len);
@@ -3418,8 +3578,7 @@ static void test_WSAStringToAddressW(void)
     ret = WSAStringToAddressW( address7, AF_INET6, NULL, (SOCKADDR*)&sockaddr6,
             &len );
     GLE = WSAGetLastError();
-    ok( ret == 0 || (ret == SOCKET_ERROR && GLE == WSAEINVAL),
-        "WSAStringToAddressW() failed for IPv6 address: %d\n", GLE);
+    ok( ret == 0, "WSAStringToAddressW() failed for IPv6 address: %d\n", GLE);
 
     len = sizeof(sockaddr6);
     memset(&sockaddr6, 0, len);
@@ -3428,13 +3587,19 @@ static void test_WSAStringToAddressW(void)
     ret = WSAStringToAddressW( address8, AF_INET6, NULL, (SOCKADDR*)&sockaddr6,
             &len );
     GLE = WSAGetLastError();
-    ok( (ret == 0 && sockaddr6.sin6_port == 0xffff) ||
-        (ret == SOCKET_ERROR && GLE == WSAEINVAL),
+    ok( ret == 0 && sockaddr6.sin6_port == 0xffff,
         "WSAStringToAddressW() failed for IPv6 address: %d\n", GLE);
 
-    len = sizeof(sockaddr);
+    len = sizeof(sockaddr6);
 
-    ret = WSAStringToAddressW( address9, AF_INET, NULL, (SOCKADDR*)&sockaddr, &len );
+    ret = WSAStringToAddressW( address7 + 1, AF_INET6, NULL, (SOCKADDR*)&sockaddr, &len );
+    GLE = WSAGetLastError();
+    ok( (ret == SOCKET_ERROR && GLE == WSAEINVAL),
+        "WSAStringToAddressW() should have failed with %d\n", GLE );
+
+    len = sizeof(sockaddr6);
+
+    ret = WSAStringToAddressW( address8 + 1, AF_INET6, NULL, (SOCKADDR*)&sockaddr, &len );
     GLE = WSAGetLastError();
     ok( (ret == SOCKET_ERROR && GLE == WSAEINVAL),
         "WSAStringToAddressW() should have failed with %d\n", GLE );
@@ -5757,6 +5922,11 @@ static void test_events(int useMessages)
         goto end;
     }
 
+    SetLastError(0xdeadbeef);
+    ret = connect(src, NULL, 0);
+    ok(ret == SOCKET_ERROR, "expected -1, got %d\n", ret);
+    ok(GetLastError() == WSAEFAULT, "expected 10014, got %d\n", GetLastError());
+
     ret = connect(src, (struct sockaddr*)&addr, sizeof(addr));
     if (ret == SOCKET_ERROR && WSAGetLastError() != WSAEWOULDBLOCK)
     {
@@ -6144,11 +6314,10 @@ end:
 
 static void test_ipv6only(void)
 {
-    SOCKET v4 = INVALID_SOCKET,
-           v6 = INVALID_SOCKET;
+    SOCKET v4 = INVALID_SOCKET, v6;
     struct sockaddr_in sin4;
     struct sockaddr_in6 sin6;
-    int ret;
+    int ret, enabled, len = sizeof(enabled);
 
     memset(&sin4, 0, sizeof(sin4));
     sin4.sin_family = AF_INET;
@@ -6159,27 +6328,131 @@ static void test_ipv6only(void)
     sin6.sin6_port = htons(SERVERPORT);
 
     v6 = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
-    if (v6 == INVALID_SOCKET) {
-        skip("Could not create IPv6 socket (LastError: %d; %d expected if IPv6 not available).\n",
-            WSAGetLastError(), WSAEAFNOSUPPORT);
+    if (v6 == INVALID_SOCKET)
+    {
+        skip("Could not create IPv6 socket (LastError: %d)\n", WSAGetLastError());
         goto end;
     }
+
+    enabled = 2;
+    ret = getsockopt(v6, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&enabled, &len);
+    ok(!ret, "getsockopt(IPV6_ONLY) failed (LastError: %d)\n", WSAGetLastError());
+    ok(enabled == 1, "expected 1, got %d\n", enabled);
+
     ret = bind(v6, (struct sockaddr*)&sin6, sizeof(sin6));
-    if (ret) {
-        skip("Could not bind IPv6 address (LastError: %d).\n",
-            WSAGetLastError());
+    if (ret)
+    {
+        skip("Could not bind IPv6 address (LastError: %d)\n", WSAGetLastError());
         goto end;
     }
 
     v4 = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (v4 == INVALID_SOCKET) {
-        skip("Could not create IPv4 socket (LastError: %d).\n",
-            WSAGetLastError());
-        goto end;
-    }
+    ok(v4 != INVALID_SOCKET, "Could not create IPv4 socket (LastError: %d)\n", WSAGetLastError());
+
+todo_wine {
+    enabled = 2;
+    ret = getsockopt(v4, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&enabled, &len);
+    ok(!ret, "getsockopt(IPV6_ONLY) failed (LastError: %d)\n", WSAGetLastError());
+    ok(enabled == 1, "expected 1, got %d\n", enabled);
+}
+
+    enabled = 0;
+    len = sizeof(enabled);
+    ret = setsockopt(v4, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&enabled, len);
+    ok(!ret, "setsockopt(IPV6_ONLY) failed (LastError: %d)\n", WSAGetLastError());
+
+todo_wine {
+    enabled = 2;
+    ret = getsockopt(v4, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&enabled, &len);
+    ok(!ret, "getsockopt(IPV6_ONLY) failed (LastError: %d)\n", WSAGetLastError());
+    ok(!enabled, "expected 0, got %d\n", enabled);
+}
+
+    enabled = 1;
+    len = sizeof(enabled);
+    ret = setsockopt(v4, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&enabled, len);
+    ok(!ret, "setsockopt(IPV6_ONLY) failed (LastError: %d)\n", WSAGetLastError());
+
+    /* bind on IPv4 socket should succeed - IPV6_V6ONLY is enabled by default */
     ret = bind(v4, (struct sockaddr*)&sin4, sizeof(sin4));
-    ok(!ret, "Could not bind IPv4 address (LastError: %d; %d expected if IPv6 binds to IPv4 as well).\n",
-        WSAGetLastError(), WSAEADDRINUSE);
+    ok(!ret, "Could not bind IPv4 address (LastError: %d)\n", WSAGetLastError());
+
+todo_wine {
+    enabled = 2;
+    ret = getsockopt(v4, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&enabled, &len);
+    ok(!ret, "getsockopt(IPV6_ONLY) failed (LastError: %d)\n", WSAGetLastError());
+    ok(enabled == 1, "expected 1, got %d\n", enabled);
+}
+
+    enabled = 0;
+    len = sizeof(enabled);
+    ret = setsockopt(v4, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&enabled, len);
+    ok(ret, "setsockopt(IPV6_ONLY) succeeded (LastError: %d)\n", WSAGetLastError());
+
+todo_wine {
+    enabled = 0;
+    ret = getsockopt(v4, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&enabled, &len);
+    ok(!ret, "getsockopt(IPV6_ONLY) failed (LastError: %d)\n", WSAGetLastError());
+    ok(enabled == 1, "expected 1, got %d\n", enabled);
+}
+
+    enabled = 1;
+    len = sizeof(enabled);
+    ret = setsockopt(v4, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&enabled, len);
+    ok(ret, "setsockopt(IPV6_ONLY) succeeded (LastError: %d)\n", WSAGetLastError());
+
+    closesocket(v4);
+    closesocket(v6);
+
+    /* Test again, this time disabling IPV6_V6ONLY. */
+    sin4.sin_port = htons(SERVERPORT+2);
+    sin6.sin6_port = htons(SERVERPORT+2);
+
+    v6 = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+    ok(v6 != INVALID_SOCKET, "Could not create IPv6 socket (LastError: %d; %d expected if IPv6 not available).\n",
+        WSAGetLastError(), WSAEAFNOSUPPORT);
+
+    enabled = 0;
+    ret = setsockopt(v6, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&enabled, len);
+    ok(!ret, "Could not disable IPV6_V6ONLY (LastError: %d).\n", WSAGetLastError());
+
+    enabled = 2;
+    ret = getsockopt(v6, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&enabled, &len);
+    ok(!ret, "getsockopt(IPV6_ONLY) failed (LastError: %d)\n", WSAGetLastError());
+    ok(!enabled, "expected 0, got %d\n", enabled);
+
+    /*
+        Observaition:
+        On Windows, bind on both IPv4 and IPv6 with IPV6_V6ONLY disabled succeeds by default.
+        Application must set SO_EXCLUSIVEADDRUSE on first socket to disallow another successful bind.
+        In general, a standard application should not use SO_REUSEADDR.
+        Setting both SO_EXCLUSIVEADDRUSE and SO_REUSEADDR on the same socket is not possible in
+        either order, the later setsockopt call always fails.
+    */
+    enabled = 1;
+    ret = setsockopt(v6, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (char*)&enabled, len);
+    ok(!ret, "Could not set SO_EXCLUSIVEADDRUSE on IPv6 socket (LastError: %d)\n", WSAGetLastError());
+
+    ret = bind(v6, (struct sockaddr*)&sin6, sizeof(sin6));
+    ok(!ret, "Could not bind IPv6 address (LastError: %d)\n", WSAGetLastError());
+
+    enabled = 2;
+    len = sizeof(enabled);
+    getsockopt(v6, IPPROTO_IPV6, IPV6_V6ONLY, (char*)&enabled, &len);
+    ok(!ret, "getsockopt(IPV6_ONLY) failed (LastError: %d)\n", WSAGetLastError());
+    ok(!enabled, "IPV6_V6ONLY is enabled after bind\n");
+
+    v4 = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    ok(v4 != INVALID_SOCKET, "Could not create IPv4 socket (LastError: %d)\n", WSAGetLastError());
+
+    enabled = 1;
+    ret = setsockopt(v4, SOL_SOCKET, SO_REUSEADDR, (char*)&enabled, len);
+    ok(!ret, "Could not set SO_REUSEADDR on IPv4 socket (LastError: %d)\n", WSAGetLastError());
+
+    WSASetLastError(0xdeadbeef);
+    ret = bind(v4, (struct sockaddr*)&sin4, sizeof(sin4));
+    ok(ret, "bind succeeded unexpectedly for the IPv4 socket\n");
+    ok(WSAGetLastError() == WSAEACCES, "Expected 10013, got %d\n", WSAGetLastError());
 
 end:
     if (v4 != INVALID_SOCKET)
@@ -6430,11 +6703,18 @@ static DWORD WINAPI recv_thread(LPVOID arg)
     return 0;
 }
 
+static int completion_called;
+
+static void WINAPI io_completion(DWORD error, DWORD transferred, WSAOVERLAPPED *overlapped, DWORD flags)
+{
+    completion_called++;
+}
+
 static void test_WSARecv(void)
 {
     SOCKET src, dest, server = INVALID_SOCKET;
     char buf[20];
-    WSABUF bufs;
+    WSABUF bufs[2];
     WSAOVERLAPPED ov;
     DWORD bytesReturned, flags, id;
     struct linger ling;
@@ -6442,7 +6722,7 @@ static void test_WSARecv(void)
     int iret, len;
     DWORD dwret;
     BOOL bret;
-    HANDLE thread;
+    HANDLE thread, event = NULL, io_port;
 
     tcp_socketpair(&src, &dest);
     if (src == INVALID_SOCKET || dest == INVALID_SOCKET)
@@ -6453,8 +6733,8 @@ static void test_WSARecv(void)
 
     memset(&ov, 0, sizeof(ov));
     flags = 0;
-    bufs.len = 2;
-    bufs.buf = buf;
+    bufs[0].len = 2;
+    bufs[0].buf = buf;
 
     /* Send 4 bytes and receive in two calls of 2 */
     SetLastError(0xdeadbeef);
@@ -6463,34 +6743,52 @@ static void test_WSARecv(void)
     ok(GetLastError() == ERROR_SUCCESS, "Expected 0, got %d\n", GetLastError());
     SetLastError(0xdeadbeef);
     bytesReturned = 0xdeadbeef;
-    iret = WSARecv(dest, &bufs, 1, &bytesReturned, &flags, NULL, NULL);
+    iret = WSARecv(dest, bufs, 1, &bytesReturned, &flags, NULL, NULL);
     ok(!iret, "Expected 0, got %d\n", iret);
-    ok(bytesReturned, "Expected 2, got %d\n", bytesReturned);
+    ok(bytesReturned == 2, "Expected 2, got %d\n", bytesReturned);
     ok(GetLastError() == ERROR_SUCCESS, "Expected 0, got %d\n", GetLastError());
     SetLastError(0xdeadbeef);
     bytesReturned = 0xdeadbeef;
-    iret = WSARecv(dest, &bufs, 1, &bytesReturned, &flags, NULL, NULL);
+    iret = WSARecv(dest, bufs, 1, &bytesReturned, &flags, NULL, NULL);
     ok(!iret, "Expected 0, got %d\n", iret);
-    ok(bytesReturned, "Expected 2, got %d\n", bytesReturned);
+    ok(bytesReturned == 2, "Expected 2, got %d\n", bytesReturned);
     ok(GetLastError() == ERROR_SUCCESS, "Expected 0, got %d\n", GetLastError());
 
-    bufs.len = 4;
+    bufs[0].len = 4;
     SetLastError(0xdeadbeef);
     iret = send(src, "test", 4, 0);
     ok(iret == 4, "Expected 4, got %d\n", iret);
     ok(GetLastError() == ERROR_SUCCESS, "Expected 0, got %d\n", GetLastError());
     SetLastError(0xdeadbeef);
     bytesReturned = 0xdeadbeef;
-    iret = WSARecv(dest, &bufs, 1, &bytesReturned, &flags, NULL, NULL);
+    iret = WSARecv(dest, bufs, 1, &bytesReturned, &flags, NULL, NULL);
     ok(!iret, "Expected 0, got %d\n", iret);
-    ok(bytesReturned, "Expected 4, got %d\n", bytesReturned);
+    ok(bytesReturned == 4, "Expected 4, got %d\n", bytesReturned);
     ok(GetLastError() == ERROR_SUCCESS, "Expected 0, got %d\n", GetLastError());
 
-    bufs.len = sizeof(buf);
+    /* Test 2 buffers */
+    bufs[0].len = 4;
+    bufs[1].len = 5;
+    bufs[1].buf = buf + 10;
+    SetLastError(0xdeadbeef);
+    iret = send(src, "deadbeefs", 9, 0);
+    ok(iret == 9, "Expected 9, got %d\n", iret);
+    ok(GetLastError() == ERROR_SUCCESS, "Expected 0, got %d\n", GetLastError());
+    SetLastError(0xdeadbeef);
+    bytesReturned = 0xdeadbeef;
+    iret = WSARecv(dest, bufs, 2, &bytesReturned, &flags, NULL, NULL);
+    ok(!iret, "Expected 0, got %d\n", iret);
+    ok(bytesReturned == 9, "Expected 9, got %d\n", bytesReturned);
+    bufs[0].buf[4] = '\0';
+    bufs[1].buf[5] = '\0';
+    ok(!strcmp(bufs[0].buf, "dead"), "buf[0] doesn't match: %s != dead\n", bufs[0].buf);
+    ok(!strcmp(bufs[1].buf, "beefs"), "buf[1] doesn't match: %s != beefs\n", bufs[1].buf);
+    ok(GetLastError() == ERROR_SUCCESS, "Expected 0, got %d\n", GetLastError());
 
-    ov.hEvent = CreateEventA(NULL, FALSE, FALSE, NULL);
+    bufs[0].len = sizeof(buf);
+    ov.hEvent = event = CreateEventA(NULL, FALSE, FALSE, NULL);
     ok(ov.hEvent != NULL, "could not create event object, errno = %d\n", GetLastError());
-    if (!ov.hEvent)
+    if (!event)
         goto end;
 
     ling.l_onoff = 1;
@@ -6498,10 +6796,10 @@ static void test_WSARecv(void)
     iret = setsockopt (src, SOL_SOCKET, SO_LINGER, (char *) &ling, sizeof(ling));
     ok(!iret, "Failed to set linger %d\n", GetLastError());
 
-    iret = WSARecv(dest, &bufs, 1, NULL, &flags, &ov, NULL);
+    iret = WSARecv(dest, bufs, 1, NULL, &flags, &ov, NULL);
     ok(iret == SOCKET_ERROR && GetLastError() == ERROR_IO_PENDING, "WSARecv failed - %d error %d\n", iret, GetLastError());
 
-    iret = WSARecv(dest, &bufs, 1, &bytesReturned, &flags, &ov, NULL);
+    iret = WSARecv(dest, bufs, 1, &bytesReturned, &flags, &ov, NULL);
     ok(iret == SOCKET_ERROR && GetLastError() == ERROR_IO_PENDING, "WSARecv failed - %d error %d\n", iret, GetLastError());
 
     closesocket(src);
@@ -6551,6 +6849,34 @@ static void test_WSARecv(void)
     WaitForSingleObject(thread, 3000);
     CloseHandle(thread);
 
+    memset(&ov, 0, sizeof(ov));
+    ov.hEvent = event;
+    ResetEvent(event);
+    iret = WSARecv(dest, bufs, 1, NULL, &flags, &ov, io_completion);
+    ok(iret == SOCKET_ERROR && GetLastError() == ERROR_IO_PENDING, "WSARecv failed - %d error %d\n", iret, GetLastError());
+    send(src, "test message", sizeof("test message"), 0);
+
+    completion_called = 0;
+    dwret = SleepEx(1000, TRUE);
+    ok(dwret == WAIT_IO_COMPLETION, "got %u\n", dwret);
+    ok(completion_called == 1, "completion not called\n");
+
+    dwret = WaitForSingleObject(event, 1);
+    ok(dwret == WAIT_TIMEOUT, "got %u\n", dwret);
+
+    io_port = CreateIoCompletionPort( (HANDLE)dest, NULL, 0, 0 );
+    ok(io_port != NULL, "failed to create completion port %u\n", GetLastError());
+
+    /* Using completion function on socket associated with completion port is not allowed. */
+    memset(&ov, 0, sizeof(ov));
+    completion_called = 0;
+    iret = WSARecv(dest, bufs, 1, NULL, &flags, &ov, io_completion);
+    todo_wine
+    ok(iret == SOCKET_ERROR && GetLastError() == WSAEINVAL, "WSARecv failed - %d error %d\n", iret, GetLastError());
+    ok(!completion_called, "completion called\n");
+
+    CloseHandle(io_port);
+
 end:
     if (server != INVALID_SOCKET)
         closesocket(server);
@@ -6558,8 +6884,8 @@ end:
         closesocket(dest);
     if (src != INVALID_SOCKET)
         closesocket(src);
-    if (ov.hEvent)
-        WSACloseEvent(ov.hEvent);
+    if (event)
+        WSACloseEvent(event);
 }
 
 #define POLL_CLEAR() ix = 0
@@ -6795,6 +7121,11 @@ static void test_GetAddrInfoW(void)
     ADDRINFOW *result, *result2, *p, hint;
     WCHAR name[256];
     DWORD size = sizeof(name)/sizeof(WCHAR);
+    /* te su to.winehq.org written in katakana */
+    static const WCHAR idn_domain[] =
+        {0x30C6,0x30B9,0x30C8,'.','w','i','n','e','h','q','.','o','r','g',0};
+    static const WCHAR idn_punycode[] =
+        {'x','n','-','-','z','c','k','z','a','h','.','w','i','n','e','h','q','.','o','r','g',0};
 
     if (!pGetAddrInfoW || !pFreeAddrInfoW)
     {
@@ -6977,6 +7308,78 @@ static void test_GetAddrInfoW(void)
                 ok(0, "test %d: GetAddrInfoW failed with %d (err %d)\n", i, ret, err);
         }
     }
+
+    /* Test IDN resolution (Internationalized Domain Names) present since Windows 8 */
+    trace("Testing punycode IDN %s\n", wine_dbgstr_w(idn_punycode));
+    result = NULL;
+    ret = pGetAddrInfoW(idn_punycode, NULL, NULL, &result);
+    ok(!ret, "got %d expected success\n", ret);
+    ok(result != NULL, "got %p\n", result);
+    pFreeAddrInfoW(result);
+
+    hint.ai_family = AF_INET;
+    hint.ai_socktype = 0;
+    hint.ai_protocol = 0;
+    hint.ai_flags = 0;
+
+    result = NULL;
+    ret = pGetAddrInfoW(idn_punycode, NULL, &hint, &result);
+    ok(!ret, "got %d expected success\n", ret);
+    ok(result != NULL, "got %p\n", result);
+
+    trace("Testing unicode IDN %s\n", wine_dbgstr_w(idn_domain));
+    result2 = NULL;
+    ret = pGetAddrInfoW(idn_domain, NULL, NULL, &result2);
+    if (ret == WSAHOST_NOT_FOUND && broken(1))
+    {
+        pFreeAddrInfoW(result);
+        win_skip("IDN resolution not supported in Win <= 7\n");
+        return;
+    }
+
+    ok(!ret, "got %d expected success\n", ret);
+    ok(result2 != NULL, "got %p\n", result2);
+    pFreeAddrInfoW(result2);
+
+    hint.ai_family = AF_INET;
+    hint.ai_socktype = 0;
+    hint.ai_protocol = 0;
+    hint.ai_flags = 0;
+
+    result2 = NULL;
+    ret = pGetAddrInfoW(idn_domain, NULL, &hint, &result2);
+    ok(!ret, "got %d expected success\n", ret);
+    ok(result2 != NULL, "got %p\n", result2);
+
+    /* ensure manually resolved punycode and unicode hosts result in same data */
+    compare_addrinfow(result, result2);
+
+    pFreeAddrInfoW(result);
+    pFreeAddrInfoW(result2);
+
+    hint.ai_family = AF_INET;
+    hint.ai_socktype = 0;
+    hint.ai_protocol = 0;
+    hint.ai_flags = 0;
+
+    result2 = NULL;
+    ret = pGetAddrInfoW(idn_domain, NULL, &hint, &result2);
+    ok(!ret, "got %d expected success\n", ret);
+    ok(result2 != NULL, "got %p\n", result2);
+    pFreeAddrInfoW(result2);
+
+    /* Disable IDN resolution and test again*/
+    hint.ai_family = AF_INET;
+    hint.ai_socktype = 0;
+    hint.ai_protocol = 0;
+    hint.ai_flags = AI_DISABLE_IDN_ENCODING;
+
+    SetLastError(0xdeadbeef);
+    result2 = NULL;
+    ret = pGetAddrInfoW(idn_domain, NULL, &hint, &result2);
+    ok(ret == WSAHOST_NOT_FOUND, "got %d expected WSAHOST_NOT_FOUND\n", ret);
+    ok(WSAGetLastError() == WSAHOST_NOT_FOUND, "expected 11001, got %d\n", WSAGetLastError());
+    ok(result2 == NULL, "got %p\n", result2);
 }
 
 static void test_getaddrinfo(void)
@@ -7068,6 +7471,14 @@ static void test_getaddrinfo(void)
     ok(!ret, "getaddrinfo failed with %d\n", WSAGetLastError());
     ok(WSAGetLastError() == 0, "expected 0, got %d\n", WSAGetLastError());
     pfreeaddrinfo(result);
+
+    hint.ai_flags = AI_NUMERICHOST;
+    result = (void*)0xdeadbeef;
+    ret = pgetaddrinfo("localhost", "80", &hint, &result);
+    ok(ret == WSAHOST_NOT_FOUND, "getaddrinfo failed with %d\n", WSAGetLastError());
+    ok(WSAGetLastError() == WSAHOST_NOT_FOUND, "expected WSAHOST_NOT_FOUND, got %d\n", WSAGetLastError());
+    ok(!result, "result = %p\n", result);
+    hint.ai_flags = 0;
 
     /* try to get information from the computer name, result is the same
      * as if requesting with an empty host name. */
@@ -8063,7 +8474,7 @@ static void test_TransmitFile(void)
     /* Setup a properly connected socket for transfers */
     memset(&bindAddress, 0, sizeof(bindAddress));
     bindAddress.sin_family = AF_INET;
-    bindAddress.sin_port = htons(9375);
+    bindAddress.sin_port = htons(SERVERPORT+1);
     bindAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
     iret = bind(server, (struct sockaddr*)&bindAddress, sizeof(bindAddress));
     if (iret != 0)
@@ -8104,17 +8515,17 @@ static void test_TransmitFile(void)
 
     /* Test TransmitFile with only buffer data */
     buffers.Head = &header_msg[0];
-    buffers.HeadLength = sizeof(header_msg)+1;
+    buffers.HeadLength = sizeof(header_msg);
     buffers.Tail = &footer_msg[0];
-    buffers.TailLength = sizeof(footer_msg)+1;
+    buffers.TailLength = sizeof(footer_msg);
     bret = pTransmitFile(client, NULL, 0, 0, NULL, &buffers, 0);
     ok(bret, "TransmitFile failed unexpectedly.\n");
     iret = recv(dest, buf, sizeof(buf), 0);
-    ok(iret == sizeof(header_msg)+sizeof(footer_msg)+2,
+    ok(iret == sizeof(header_msg)+sizeof(footer_msg),
        "Returned an unexpected buffer from TransmitFile: %d\n", iret );
-    ok(memcmp(&buf[0], &header_msg[0], sizeof(header_msg)+1) == 0,
+    ok(memcmp(&buf[0], &header_msg[0], sizeof(header_msg)) == 0,
        "TransmitFile header buffer did not match!\n");
-    ok(memcmp(&buf[sizeof(header_msg)+1], &footer_msg[0], sizeof(footer_msg)+1) == 0,
+    ok(memcmp(&buf[sizeof(header_msg)], &footer_msg[0], sizeof(footer_msg)) == 0,
        "TransmitFile footer buffer did not match!\n");
 
     /* Test TransmitFile with only file data */
@@ -8124,18 +8535,18 @@ static void test_TransmitFile(void)
 
     /* Test TransmitFile with both file and buffer data */
     buffers.Head = &header_msg[0];
-    buffers.HeadLength = sizeof(header_msg)+1;
+    buffers.HeadLength = sizeof(header_msg);
     buffers.Tail = &footer_msg[0];
-    buffers.TailLength = sizeof(footer_msg)+1;
+    buffers.TailLength = sizeof(footer_msg);
     SetFilePointer(file, 0, NULL, FILE_BEGIN);
     bret = pTransmitFile(client, file, 0, 0, NULL, &buffers, 0);
     ok(bret, "TransmitFile failed unexpectedly.\n");
-    iret = recv(dest, buf, sizeof(header_msg)+1, 0);
-    ok(memcmp(buf, &header_msg[0], sizeof(header_msg)+1) == 0,
+    iret = recv(dest, buf, sizeof(header_msg), 0);
+    ok(memcmp(buf, &header_msg[0], sizeof(header_msg)) == 0,
        "TransmitFile header buffer did not match!\n");
     compare_file(file, dest, 0);
-    iret = recv(dest, buf, sizeof(footer_msg)+1, 0);
-    ok(memcmp(buf, &footer_msg[0], sizeof(footer_msg)+1) == 0,
+    iret = recv(dest, buf, sizeof(footer_msg), 0);
+    ok(memcmp(buf, &footer_msg[0], sizeof(footer_msg)) == 0,
        "TransmitFile footer buffer did not match!\n");
 
     /* Test overlapped TransmitFile */
@@ -8189,9 +8600,9 @@ static void test_TransmitFile(void)
         goto cleanup;
     }
     buffers.Head = &header_msg[0];
-    buffers.HeadLength = sizeof(header_msg)+1;
+    buffers.HeadLength = sizeof(header_msg);
     buffers.Tail = &footer_msg[0];
-    buffers.TailLength = sizeof(footer_msg)+1;
+    buffers.TailLength = sizeof(footer_msg);
     SetFilePointer(file, 0, NULL, FILE_BEGIN);
     ov.Offset = 0;
     bret = pTransmitFile(client, file, 0, 0, &ov, &buffers, 0);
@@ -8204,12 +8615,12 @@ static void test_TransmitFile(void)
     ok(total_sent == (file_size + buffers.HeadLength + buffers.TailLength),
        "Overlapped TransmitFile sent an unexpected number of bytes (%d != %d).\n",
        total_sent, file_size  + buffers.HeadLength + buffers.TailLength);
-    iret = recv(dest, buf, sizeof(header_msg)+1, 0);
-    ok(memcmp(buf, &header_msg[0], sizeof(header_msg)+1) == 0,
+    iret = recv(dest, buf, sizeof(header_msg), 0);
+    ok(memcmp(buf, &header_msg[0], sizeof(header_msg)) == 0,
        "TransmitFile header buffer did not match!\n");
     compare_file(file, dest, 0);
-    iret = recv(dest, buf, sizeof(footer_msg)+1, 0);
-    ok(memcmp(buf, &footer_msg[0], sizeof(footer_msg)+1) == 0,
+    iret = recv(dest, buf, sizeof(footer_msg), 0);
+    ok(memcmp(buf, &footer_msg[0], sizeof(footer_msg)) == 0,
        "TransmitFile footer buffer did not match!\n");
 
     /* Test TransmitFile w/ TF_DISCONNECT */
@@ -8394,12 +8805,15 @@ static void test_sioAddressListChange(void)
 {
     struct sockaddr_in bindAddress;
     struct in_addr net_address;
-    WSAOVERLAPPED overlapped;
+    WSAOVERLAPPED overlapped, *olp;
     struct hostent *h;
     DWORD num_bytes, error, tick;
     SOCKET sock, sock2, sock3;
     WSAEVENT event2, event3;
+    HANDLE io_port;
+    ULONG_PTR key;
     int acount;
+    BOOL bret;
     int ret;
 
     /* Use gethostbyname to find the list of local network interfaces */
@@ -8436,7 +8850,6 @@ static void test_sioAddressListChange(void)
     ret = WSAIoctl(sock, SIO_ADDRESS_LIST_CHANGE, NULL, 0, NULL, 0, &num_bytes, &overlapped, NULL);
     error = GetLastError();
     ok (ret == SOCKET_ERROR, "WSAIoctl(SIO_ADDRESS_LIST_CHANGE) failed with error %d\n", error);
-todo_wine
     ok (error == ERROR_IO_PENDING, "expected 0x3e5, got 0x%x\n", error);
 
     CloseHandle(overlapped.hEvent);
@@ -8475,7 +8888,6 @@ todo_wine
     ret = WSAIoctl(sock, SIO_ADDRESS_LIST_CHANGE, NULL, 0, NULL, 0, &num_bytes, &overlapped, NULL);
     error = GetLastError();
     ok (ret == SOCKET_ERROR, "WSAIoctl(SIO_ADDRESS_LIST_CHANGE) failed with error %d\n", error);
-todo_wine
     ok (error == ERROR_IO_PENDING, "expected 0x3e5, got 0x%x\n", error);
 
     CloseHandle(overlapped.hEvent);
@@ -8516,7 +8928,32 @@ todo_wine
     ok (ret == SOCKET_ERROR, "WSAIoctl(SIO_ADDRESS_LIST_CHANGE) failed with error %d\n", error);
     ok (error == WSAEWOULDBLOCK, "expected 10035, got %d\n", error);
 
+    io_port = CreateIoCompletionPort( (HANDLE)sock, NULL, 0, 0 );
+    ok (io_port != NULL, "failed to create completion port %u\n", GetLastError());
+
+    set_blocking(sock, FALSE);
+    memset(&overlapped, 0, sizeof(overlapped));
+    SetLastError(0xdeadbeef);
+    ret = WSAIoctl(sock, SIO_ADDRESS_LIST_CHANGE, NULL, 0, NULL, 0, &num_bytes, &overlapped, NULL);
+    error = GetLastError();
+    ok (ret == SOCKET_ERROR, "WSAIoctl(SIO_ADDRESS_LIST_CHANGE) failed with error %u\n", error);
+    ok (error == ERROR_IO_PENDING, "expected ERROR_IO_PENDING got %u\n", error);
+
+    olp = (WSAOVERLAPPED *)0xdeadbeef;
+    bret = GetQueuedCompletionStatus( io_port, &num_bytes, &key, &olp, 0 );
+    ok(!bret, "failed to get completion status %u\n", bret);
+    ok(GetLastError() == WAIT_TIMEOUT, "Last error was %d\n", GetLastError());
+    ok(!olp, "Overlapped structure is at %p\n", olp);
+
     closesocket(sock);
+
+    olp = (WSAOVERLAPPED *)0xdeadbeef;
+    bret = GetQueuedCompletionStatus( io_port, &num_bytes, &key, &olp, 0 );
+    ok(!bret, "failed to get completion status %u\n", bret);
+    ok(GetLastError() == ERROR_OPERATION_ABORTED, "Last error was %u\n", GetLastError());
+    ok(olp == &overlapped, "Overlapped structure is at %p\n", olp);
+
+    CloseHandle(io_port);
 
     /* Misuse of the API by using a blocking socket and not using an overlapped structure,
      * this leads to a hang forever. */
@@ -8798,10 +9235,13 @@ end:
 
 static void test_completion_port(void)
 {
+    FILE_IO_COMPLETION_NOTIFICATION_INFORMATION io_info;
     HANDLE previous_port, io_port;
     WSAOVERLAPPED ov, *olp;
     SOCKET src, dest, dup, connector = INVALID_SOCKET;
     WSAPROTOCOL_INFOA info;
+    IO_STATUS_BLOCK io;
+    NTSTATUS status;
     char buf[1024];
     WSABUF bufs;
     DWORD num_bytes, flags;
@@ -8812,6 +9252,7 @@ static void test_completion_port(void)
     struct sockaddr_in bindAddress;
     GUID acceptExGuid = WSAID_ACCEPTEX;
     LPFN_ACCEPTEX pAcceptEx = NULL;
+    fd_set fds_recv;
 
     memset(buf, 0, sizeof(buf));
     previous_port = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
@@ -8926,6 +9367,167 @@ static void test_completion_port(void)
 
     if (dest != INVALID_SOCKET)
         closesocket(dest);
+
+    /* Test IOCP response on successful immediate read. */
+    tcp_socketpair(&src, &dest);
+    if (src == INVALID_SOCKET || dest == INVALID_SOCKET)
+    {
+        skip("failed to create sockets\n");
+        goto end;
+    }
+
+    bufs.len = sizeof(buf);
+    bufs.buf = buf;
+    flags = 0;
+    SetLastError(0xdeadbeef);
+
+    iret = WSASend(src, &bufs, 1, &num_bytes, 0, &ov, NULL);
+    ok(!iret, "WSASend failed - %d, last error %u\n", iret, GetLastError());
+    ok(num_bytes == sizeof(buf), "Managed to send %d\n", num_bytes);
+
+    io_port = CreateIoCompletionPort((HANDLE)dest, previous_port, 125, 0);
+    ok(io_port != NULL, "failed to create completion port %u\n", GetLastError());
+    set_blocking(dest, FALSE);
+
+    FD_ZERO(&fds_recv);
+    FD_SET(dest, &fds_recv);
+    select(dest + 1, &fds_recv, NULL, NULL, NULL);
+
+    num_bytes = 0xdeadbeef;
+    flags = 0;
+
+    iret = WSARecv(dest, &bufs, 1, &num_bytes, &flags, &ov, NULL);
+    ok(!iret, "WSARecv failed - %d, last error %u\n", iret, GetLastError());
+    ok(num_bytes == sizeof(buf), "Managed to read %d\n", num_bytes);
+
+    SetLastError(0xdeadbeef);
+    key = 0xdeadbeef;
+    num_bytes = 0xdeadbeef;
+    olp = (WSAOVERLAPPED *)0xdeadbeef;
+
+    bret = GetQueuedCompletionStatus( io_port, &num_bytes, &key, &olp, 200 );
+    ok(bret == TRUE, "failed to get completion status %u\n", bret);
+    ok(GetLastError() == 0xdeadbeef, "Last error was %d\n", GetLastError());
+    ok(key == 125, "Key is %lu\n", key);
+    ok(num_bytes == sizeof(buf), "Number of bytes transferred is %u\n", num_bytes);
+    ok(olp == &ov, "Overlapped structure is at %p\n", olp);
+
+    /* Test IOCP response on graceful shutdown. */
+    closesocket(src);
+
+    FD_ZERO(&fds_recv);
+    FD_SET(dest, &fds_recv);
+    select(dest + 1, &fds_recv, NULL, NULL, NULL);
+
+    num_bytes = 0xdeadbeef;
+    flags = 0;
+    memset(&ov, 0, sizeof(ov));
+
+    iret = WSARecv(dest, &bufs, 1, &num_bytes, &flags, &ov, NULL);
+    ok(!iret, "WSARecv failed - %d, last error %u\n", iret, GetLastError());
+    ok(!num_bytes, "Managed to read %d\n", num_bytes);
+
+    SetLastError(0xdeadbeef);
+    key = 0xdeadbeef;
+    num_bytes = 0xdeadbeef;
+    olp = (WSAOVERLAPPED *)0xdeadbeef;
+
+    bret = GetQueuedCompletionStatus( io_port, &num_bytes, &key, &olp, 200 );
+    ok(bret == TRUE, "failed to get completion status %u\n", bret);
+    ok(GetLastError() == 0xdeadbeef, "Last error was %d\n", GetLastError());
+    ok(key == 125, "Key is %lu\n", key);
+    ok(!num_bytes, "Number of bytes transferred is %u\n", num_bytes);
+    ok(olp == &ov, "Overlapped structure is at %p\n", olp);
+
+    closesocket(src);
+    src = INVALID_SOCKET;
+    closesocket(dest);
+    dest = INVALID_SOCKET;
+
+    /* Test IOCP response on hard shutdown. This was the condition that triggered
+     * a crash in an actual app (bug 38980). */
+    tcp_socketpair(&src, &dest);
+    if (src == INVALID_SOCKET || dest == INVALID_SOCKET)
+    {
+        skip("failed to create sockets\n");
+        goto end;
+    }
+
+    bufs.len = sizeof(buf);
+    bufs.buf = buf;
+    flags = 0;
+    memset(&ov, 0, sizeof(ov));
+
+    ling.l_onoff = 1;
+    ling.l_linger = 0;
+    iret = setsockopt (src, SOL_SOCKET, SO_LINGER, (char *) &ling, sizeof(ling));
+    ok(!iret, "Failed to set linger %d\n", GetLastError());
+
+    io_port = CreateIoCompletionPort((HANDLE)dest, previous_port, 125, 0);
+    ok(io_port != NULL, "failed to create completion port %u\n", GetLastError());
+    set_blocking(dest, FALSE);
+
+    closesocket(src);
+    src = INVALID_SOCKET;
+
+    FD_ZERO(&fds_recv);
+    FD_SET(dest, &fds_recv);
+    select(dest + 1, &fds_recv, NULL, NULL, NULL);
+
+    num_bytes = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+
+    /* Somehow a hard shutdown doesn't work on my Linux box. It seems SO_LINGER is ignored. */
+    iret = WSARecv(dest, &bufs, 1, &num_bytes, &flags, &ov, NULL);
+    todo_wine ok(iret == SOCKET_ERROR, "WSARecv failed - %d\n", iret);
+    todo_wine ok(GetLastError() == WSAECONNRESET, "Last error was %d\n", GetLastError());
+    todo_wine ok(num_bytes == 0xdeadbeef, "Managed to read %d\n", num_bytes);
+
+    SetLastError(0xdeadbeef);
+    key = 0xdeadbeef;
+    num_bytes = 0xdeadbeef;
+    olp = (WSAOVERLAPPED *)0xdeadbeef;
+
+    bret = GetQueuedCompletionStatus( io_port, &num_bytes, &key, &olp, 200 );
+    todo_wine ok(bret == FALSE, "GetQueuedCompletionStatus returned %u\n", bret );
+    todo_wine ok(GetLastError() == WAIT_TIMEOUT, "Last error was %d\n", GetLastError());
+    todo_wine ok(key == 0xdeadbeef, "Key is %lu\n", key);
+    todo_wine ok(num_bytes == 0xdeadbeef, "Number of bytes transferred is %u\n", num_bytes);
+    todo_wine ok(!olp, "Overlapped structure is at %p\n", olp);
+
+    closesocket(dest);
+
+    /* Test reading from a non-connected socket, mostly because the above test is marked todo. */
+    dest = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    ok(dest != INVALID_SOCKET, "socket() failed\n");
+
+    io_port = CreateIoCompletionPort((HANDLE)dest, previous_port, 125, 0);
+    ok(io_port != NULL, "failed to create completion port %u\n", GetLastError());
+    set_blocking(dest, FALSE);
+
+    num_bytes = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    memset(&ov, 0, sizeof(ov));
+
+    iret = WSARecv(dest, &bufs, 1, &num_bytes, &flags, &ov, NULL);
+    ok(iret == SOCKET_ERROR, "WSARecv failed - %d\n", iret);
+    ok(GetLastError() == WSAENOTCONN, "Last error was %d\n", GetLastError());
+    ok(num_bytes == 0xdeadbeef, "Managed to read %d\n", num_bytes);
+
+    SetLastError(0xdeadbeef);
+    key = 0xdeadbeef;
+    num_bytes = 0xdeadbeef;
+    olp = (WSAOVERLAPPED *)0xdeadbeef;
+
+    bret = GetQueuedCompletionStatus( io_port, &num_bytes, &key, &olp, 200 );
+    ok(bret == FALSE, "GetQueuedCompletionStatus returned %u\n", bret );
+    ok(GetLastError() == WAIT_TIMEOUT, "Last error was %d\n", GetLastError());
+    ok(key == 0xdeadbeef, "Key is %lu\n", key);
+    ok(num_bytes == 0xdeadbeef, "Number of bytes transferred is %u\n", num_bytes);
+    ok(!olp, "Overlapped structure is at %p\n", olp);
+
+    num_bytes = 0xdeadbeef;
+    closesocket(dest);
 
     dest = socket(AF_INET, SOCK_STREAM, 0);
     if (dest == INVALID_SOCKET)
@@ -9251,6 +9853,11 @@ static void test_completion_port(void)
     io_port = CreateIoCompletionPort((HANDLE)dest, previous_port, 236, 0);
     ok(io_port != NULL, "failed to create completion port %u\n", GetLastError());
 
+    io_info.Flags = FILE_SKIP_COMPLETION_PORT_ON_SUCCESS;
+    status = pNtSetInformationFile((HANDLE)dest, &io, &io_info, sizeof(io_info), FileIoCompletionNotificationInformation);
+    ok(status == STATUS_SUCCESS || broken(status == STATUS_INVALID_INFO_CLASS) /* XP */,
+       "expected STATUS_SUCCESS, got %08x\n", status);
+
     bret = pAcceptEx(src, dest, buf, sizeof(buf) - 2*(sizeof(struct sockaddr_in) + 16),
             sizeof(struct sockaddr_in) + 16, sizeof(struct sockaddr_in) + 16,
             &num_bytes, &ov);
@@ -9275,6 +9882,13 @@ static void test_completion_port(void)
     ok(num_bytes == 0, "Number of bytes transferred is %u\n", num_bytes);
     ok(olp == &ov, "Overlapped structure is at %p\n", olp);
     ok(olp && (olp->Internal == (ULONG)STATUS_SUCCESS), "Internal status is %lx\n", olp ? olp->Internal : 0);
+
+    io_info.Flags = 0;
+    status = pNtQueryInformationFile((HANDLE)dest, &io, &io_info, sizeof(io_info), FileIoCompletionNotificationInformation);
+    ok(status == STATUS_SUCCESS || broken(status == STATUS_INVALID_INFO_CLASS) /* XP */,
+       "expected STATUS_SUCCESS, got %08x\n", status);
+    if (status == STATUS_SUCCESS)
+        ok((io_info.Flags & FILE_SKIP_COMPLETION_PORT_ON_SUCCESS) != 0, "got %08x\n", io_info.Flags);
 
     SetLastError(0xdeadbeef);
     key = 0xdeadbeef;
