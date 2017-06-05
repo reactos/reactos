@@ -26,6 +26,7 @@ UDFKeyWaiter(
     This routine checks for User Eject request & initiates Dismount
  */
 void
+NTAPI
 UDFEjectReqWaiter(
     IN void* Context
     )

@@ -179,7 +179,7 @@ DriverEntry(
             InitializeListHead( &UDFGlobalData.DirDelayedCloseQueue );
 
             ExInitializeWorkItem( &UDFGlobalData.CloseItem,
-                                  (PWORKER_THREAD_ROUTINE) UDFDelayedClose,
+                                  UDFDelayedClose,
                                   NULL );
 
             UDFGlobalData.DelayedCloseCount = 0;
@@ -312,7 +312,7 @@ DriverEntry(
             FsRegistered = TRUE;
 
             UDFPrint(("UDF: IoRegisterFsRegistrationChange()\n"));
-            IoRegisterFsRegistrationChange( DriverObject, (PDRIVER_FS_NOTIFICATION)UDFFsNotification );
+            IoRegisterFsRegistrationChange( DriverObject, UDFFsNotification );
 
 //            delay.QuadPart = -10000000;
 //            KeDelayExecutionThread(KernelMode, FALSE, &delay);        //10 microseconds

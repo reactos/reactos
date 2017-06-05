@@ -1174,7 +1174,7 @@ UDFPostRequest(
         KeReleaseSpinLock( &(Vcb->OverflowQueueSpinLock), SavedIrql );
 
         // queue up the request
-        ExInitializeWorkItem(&(PtrIrpContext->WorkQueueItem), (PWORKER_THREAD_ROUTINE)UDFCommonDispatch, PtrIrpContext);
+        ExInitializeWorkItem(&(PtrIrpContext->WorkQueueItem), UDFCommonDispatch, PtrIrpContext);
 
         ExQueueWorkItem(&(PtrIrpContext->WorkQueueItem), CriticalWorkQueue);
     //    ExQueueWorkItem(&(PtrIrpContext->WorkQueueItem), DelayedWorkQueue);
@@ -1204,6 +1204,7 @@ UDFPostRequest(
 *
 *************************************************************************/
 VOID
+NTAPI
 UDFCommonDispatch(
     IN PVOID Context   // actually is a pointer to IRPContext structure
     )

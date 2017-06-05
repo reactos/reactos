@@ -900,7 +900,7 @@ UDFStartEjectWaiter(
         // terminates automatically
         ASSERT(!(Vcb->VCBFlags & UDF_VCB_FLAGS_STOP_WAITER_EVENT));
         Vcb->VCBFlags |= UDF_VCB_FLAGS_STOP_WAITER_EVENT;
-        ExInitializeWorkItem(&(Vcb->EjectWaiter->EjectReqWorkQueueItem), (PWORKER_THREAD_ROUTINE)UDFEjectReqWaiter, Vcb->EjectWaiter);
+        ExInitializeWorkItem(&(Vcb->EjectWaiter->EjectReqWorkQueueItem), UDFEjectReqWaiter, Vcb->EjectWaiter);
         UDFPrint(("UDFStartEjectWaiter: create thread\n"));
         ExQueueWorkItem(&(Vcb->EjectWaiter->EjectReqWorkQueueItem), DelayedWorkQueue);
     } else {

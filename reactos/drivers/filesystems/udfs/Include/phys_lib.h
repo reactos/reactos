@@ -96,7 +96,7 @@ extern OSSTATUS UDFGetBlockSize(PDEVICE_OBJECT DeviceObject, // the target devic
 extern OSSTATUS UDFGetDiskInfo(IN PDEVICE_OBJECT DeviceObject, // the target device object
                                IN PVCB           Vcb);         // Volume control block from this DevObj
 
-extern VOID     UDFEjectReqWaiter(IN PVOID Context);
+extern VOID NTAPI UDFEjectReqWaiter(IN PVOID Context);
 
 extern VOID     UDFStopEjectWaiter(PVCB Vcb);
 

@@ -686,6 +686,7 @@ UDFDoDelayedClose(
     It operates until reach lower threshold
  */
 VOID
+NTAPI
 UDFDelayedClose(
     PVOID unused
     )

@@ -537,10 +537,12 @@ UDFVForget(
 } // end UDFVForget()
 
 VOID
+NTAPI
 UDFVWorkItem(
-    PUDF_VERIFY_REQ VerifyReq
+    PVOID Context
     )
 {
+    PUDF_VERIFY_REQ VerifyReq = (PUDF_VERIFY_REQ)Context;
     PVCB Vcb = VerifyReq->Vcb;
     ULONG ReadBytes;
 //    OSSTATUS RC;
@@ -703,7 +705,7 @@ UDFVVerify(
                         InterlockedIncrement((PLONG)&(VerifyCtx->QueuedCount));
 #ifndef _CONSOLE
                         ExInitializeWorkItem( &(VerifyReq->VerifyItem),
-                                              (PWORKER_THREAD_ROUTINE) UDFVWorkItem,
+                                              UDFVWorkItem,
                                               VerifyReq );
                         ExQueueWorkItem( &(VerifyReq->VerifyItem), CriticalWorkQueue );
 #else
