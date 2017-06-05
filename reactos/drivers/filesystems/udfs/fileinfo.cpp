@@ -1242,7 +1242,7 @@ UDFMarkStreamsForDeletion(
                                                         UDF_FCB_DELETE_PARENT);
                         } else {
                             AdPrint(("    CLEAR stream DeleteOnClose\n"));
-                            FileInfo->Fcb->FCBFlags &= !(UDF_FCB_DELETE_ON_CLOSE |
+                            FileInfo->Fcb->FCBFlags &= ~(UDF_FCB_DELETE_ON_CLOSE |
                                                          UDF_FCB_DELETE_PARENT);
                         }
                     }

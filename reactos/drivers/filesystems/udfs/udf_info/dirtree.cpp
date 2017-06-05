@@ -612,6 +612,7 @@ UDFIndexDirectory(
     if(DirNdx->FileEntryLoc.logicalBlockNum == (ULONG)-1) {
         DirPrint(("  err: FileEntryLoc=-1\n"));
         DbgFreePool(buff);
+        UDFDirIndexFree(hDirNdx);
         return STATUS_FILE_CORRUPT_ERROR;
     }
     DirNdx->FileCharacteristics = (FileInfo->FileIdent) ?

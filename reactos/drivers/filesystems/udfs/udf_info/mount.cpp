@@ -391,7 +391,7 @@ UDFUpdateLogicalVolInt(
     LVID_iUse = UDFGetLVIDiUse(Vcb);
 
     if((LVID_iUse->minUDFReadRev  == Vcb->minUDFReadRev) &&
-       (LVID_iUse->minUDFReadRev  == Vcb->minUDFReadRev) &&
+       (LVID_iUse->minUDFWriteRev == Vcb->minUDFWriteRev) &&
        (LVID_iUse->maxUDFWriteRev == Vcb->maxUDFWriteRev) &&
        (LVID_iUse->numFiles == Vcb->numFiles) &&
        (LVID_iUse->numDirs  == Vcb->numDirs))

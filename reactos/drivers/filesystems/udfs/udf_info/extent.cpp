@@ -2640,6 +2640,7 @@ UDFBuildAllocDescs(
     InitSz = Vcb->LBlockSize - FileInfo->Dloc->FileEntryLen;
     Allocs = (int8*)MyAllocatePool__(NonPagedPool, InitSz);
     if(!Allocs) {
+        *AllocData = NULL;
         AdPrint(("BuildAllocDesc: cant alloc %x bytes for Allocs\n", InitSz));
         return STATUS_INSUFFICIENT_RESOURCES;
     }

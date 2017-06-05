@@ -241,7 +241,7 @@ UDFIsMatchAllMask(
             if((*Buffer) != DOS_QM)
                 return FALSE;
         }
-        if(*DosOpen)
+        if(DosOpen)
             *DosOpen = TRUE;
         return TRUE;
     } else
@@ -253,7 +253,7 @@ UDFIsMatchAllMask(
             return FALSE;
         if(Buffer[2] != DOS_STAR)
             return FALSE;
-        if(*DosOpen)
+        if(DosOpen)
             *DosOpen = TRUE;
         return TRUE;
     } else {
