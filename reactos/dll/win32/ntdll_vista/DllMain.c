@@ -7,6 +7,8 @@
 #include <winreg.h>
 #include <winuser.h>
 #include <winwlx.h>
+#include <ndk/rtltypes.h>
+#include <ndk/umfuncs.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -25,7 +27,7 @@ DllMain(HANDLE hDll,
 {
     if (dwReason == DLL_PROCESS_ATTACH)
     {
-        DisableThreadLibraryCalls(hDll);
+        LdrDisableThreadCalloutsForDll(hDll);
         RtlpInitializeKeyedEvent();
     }
     else if (dwReason == DLL_PROCESS_DETACH)
