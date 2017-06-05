@@ -586,7 +586,7 @@ public:
 
     DECLARE_WND_CLASS_EX(szSysPagerWndClass, CS_DBLCLKS, COLOR_3DFACE)
 
-    BEGIN_MSG_MAP(CTaskSwitchWnd)
+    BEGIN_MSG_MAP(CSysPagerWnd)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
@@ -1195,7 +1195,7 @@ public:
 
     DECLARE_WND_CLASS_EX(szTrayClockWndClass, CS_DBLCLKS, COLOR_3DFACE)
 
-    BEGIN_MSG_MAP(CTaskSwitchWnd)
+    BEGIN_MSG_MAP(CTrayClockWnd)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
@@ -1588,7 +1588,7 @@ public:
 
     DECLARE_WND_CLASS_EX(szTrayNotifyWndClass, CS_DBLCLKS, COLOR_3DFACE)
 
-    BEGIN_MSG_MAP(CTaskSwitchWnd)
+    BEGIN_MSG_MAP(CTrayNotifyWnd)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_THEMECHANGED, OnThemeChanged)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
