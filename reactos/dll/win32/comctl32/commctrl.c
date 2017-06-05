@@ -207,7 +207,7 @@ static HANDLE CreateComctl32ActCtx(BOOL bV6)
     return ret;
 }
 
-static void RegisterControls()
+static void RegisterControls(BOOL bV6)
 {
     ANIMATE_Register ();
     COMBOEX_Register ();
@@ -225,14 +225,23 @@ static void RegisterControls()
     STATUS_Register ();
     SYSLINK_Register ();
     TAB_Register ();
-    TOOLBAR_Register ();
     TOOLTIPS_Register ();
     TRACKBAR_Register ();
     TREEVIEW_Register ();
     UPDOWN_Register ();
+
+    if (!bV6)
+    {
+        TOOLBAR_Register ();
+    }
+    else
+    {
+        BUTTON_Register();
+        TOOLBARv6_Register();
+    }
 }
 
-static void UnregisterControls()
+static void UnregisterControls(BOOL bV6)
 {
     ANIMATE_Unregister ();
     COMBOEX_Unregister ();
@@ -250,11 +259,21 @@ static void UnregisterControls()
     STATUS_Unregister ();
     SYSLINK_Unregister ();
     TAB_Unregister ();
-    TOOLBAR_Unregister ();
     TOOLTIPS_Unregister ();
     TRACKBAR_Unregister ();
     TREEVIEW_Unregister ();
     UPDOWN_Unregister ();
+
+    if (!bV6)
+    {
+        TOOLBAR_Unregister ();
+    }
+    else
+    {
+        BUTTON_Unregister();
+        TOOLBARv6_Unregister ();
+    }
+
 }
 
 static void InitializeClasses()
@@ -267,15 +286,14 @@ static void InitializeClasses()
     /* Register the classes once no matter what */
     hActCtx5 = CreateComctl32ActCtx(FALSE);
     activated = (hActCtx5 != INVALID_HANDLE_VALUE ? ActivateActCtx(hActCtx5, &ulCookie) : FALSE);
-    RegisterControls();      /* Register the classes pretending to be v5 */
+    RegisterControls(FALSE);      /* Register the classes pretending to be v5 */
     if (activated) DeactivateActCtx(0, ulCookie);
 
     hActCtx6 = CreateComctl32ActCtx(TRUE);
     if (hActCtx6 != INVALID_HANDLE_VALUE)
     {
         activated = ActivateActCtx(hActCtx6, &ulCookie);
-        RegisterControls();      /* Register the classes pretending to be v6 */
-        BUTTON_Register();
+        RegisterControls(TRUE);      /* Register the classes pretending to be v6 */
         if (activated) DeactivateActCtx(0, ulCookie);
 
         /* Initialize the themed controls only when the v6 manifest is present */
@@ -291,7 +309,7 @@ static void UninitializeClasses()
 
     hActCtx5 = CreateComctl32ActCtx(FALSE);
     activated = (hActCtx5 != INVALID_HANDLE_VALUE ? ActivateActCtx(hActCtx5, &ulCookie) : FALSE);
-    UnregisterControls();
+    UnregisterControls(FALSE);
     if (activated) DeactivateActCtx(0, ulCookie);
 
     hActCtx6 = CreateComctl32ActCtx(TRUE);
@@ -299,8 +317,7 @@ static void UninitializeClasses()
     {
         activated = ActivateActCtx(hActCtx6, &ulCookie);
         THEMING_Uninitialize();
-        UnregisterControls();
-        BUTTON_Unregister();
+        UnregisterControls(TRUE);
         if (activated) DeactivateActCtx(0, ulCookie);
     }
 }

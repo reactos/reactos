@@ -5268,6 +5268,16 @@ TOOLBAR_SetVersion (TOOLBAR_INFO *infoPtr, INT iVersion)
 {
     INT iOldVersion = infoPtr->iVersion;
 
+#ifdef __REACTOS__
+    /* The v6 control doesn't support changing its version */
+    if (iOldVersion == 6)
+        return iOldVersion;
+
+    /* And a control that is not v6 can't be set to be a v6 one */
+    if (iVersion >= 6)
+        return -1;
+#endif
+
     infoPtr->iVersion = iVersion;
 
     if (infoPtr->iVersion >= 5)
@@ -6178,7 +6188,11 @@ TOOLBAR_NCCalcSize (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
+#ifdef __REACTOS__
+TOOLBAR_NCCreate (HWND hwnd, WPARAM wParam, const CREATESTRUCTW *lpcs, int iVersion)
+#else
 TOOLBAR_NCCreate (HWND hwnd, WPARAM wParam, const CREATESTRUCTW *lpcs)
+#endif
 {
     TOOLBAR_INFO *infoPtr;
     DWORD styleadd = 0;
@@ -6212,7 +6226,11 @@ TOOLBAR_NCCreate (HWND hwnd, WPARAM wParam, const CREATESTRUCTW *lpcs)
     infoPtr->dwDTFlags = (lpcs->style & TBSTYLE_LIST) ? DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS: DT_CENTER | DT_END_ELLIPSIS;
     infoPtr->bAnchor = FALSE; /* no anchor highlighting */
     infoPtr->bDragOutSent = FALSE;
+#ifdef __REACTOS__
+    infoPtr->iVersion = iVersion;
+#else
     infoPtr->iVersion = 0;
+#endif
     infoPtr->hwndSelf = hwnd;
     infoPtr->bDoRedraw = TRUE;
     infoPtr->clrBtnHighlight = CLR_DEFAULT;
@@ -7003,7 +7021,11 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return TOOLBAR_NCCalcSize (hwnd, wParam, lParam);
 
 	case WM_NCCREATE:
+#ifdef __REACTOS__
+	    return TOOLBAR_NCCreate (hwnd, wParam, (CREATESTRUCTW*)lParam, 0);
+#else
 	    return TOOLBAR_NCCreate (hwnd, wParam, (CREATESTRUCTW*)lParam);
+#endif
 
 	case WM_NCPAINT:
 	    return TOOLBAR_NCPaint (hwnd, wParam, lParam);
@@ -7088,6 +7110,40 @@ TOOLBAR_Unregister (void)
 {
     UnregisterClassW (TOOLBARCLASSNAMEW, NULL);
 }
+
+#ifdef __REACTOS__
+static LRESULT WINAPI
+ToolbarV6WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (uMsg == WM_NCCREATE)
+        return TOOLBAR_NCCreate (hwnd, wParam, (CREATESTRUCTW*)lParam, 6);
+    else
+        return ToolbarWindowProc(hwnd, uMsg, wParam, lParam);
+}
+
+VOID
+TOOLBARv6_Register (void)
+{
+    WNDCLASSW wndClass;
+
+    ZeroMemory (&wndClass, sizeof(WNDCLASSW));
+    wndClass.style         = CS_GLOBALCLASS | CS_DBLCLKS;
+    wndClass.lpfnWndProc   = ToolbarV6WindowProc;
+    wndClass.cbClsExtra    = 0;
+    wndClass.cbWndExtra    = sizeof(TOOLBAR_INFO *);
+    wndClass.hCursor       = LoadCursorW (0, (LPWSTR)IDC_ARROW);
+    wndClass.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wndClass.lpszClassName = TOOLBARCLASSNAMEW;
+
+    RegisterClassW (&wndClass);
+}
+
+VOID
+TOOLBARv6_Unregister (void)
+{
+    UnregisterClassW (TOOLBARCLASSNAMEW, NULL);
+}
+#endif
 
 static HIMAGELIST TOOLBAR_InsertImageList(PIMLENTRY **pies, INT *cies, HIMAGELIST himl, INT id)
 {
