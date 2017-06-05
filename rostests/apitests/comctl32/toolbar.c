@@ -109,7 +109,7 @@ START_TEST(toolbar)
     TestVersionMessage();
 
     hV5ActCtx = _CreateV5ActCtx();
-    ok (hV5ActCtx != INVALID_HANDLE_VALUE, "");
+    ok (hV5ActCtx != INVALID_HANDLE_VALUE, "CreateActCtxW failed\n");
     if (hV5ActCtx)
     {
         ULONG_PTR cookie;
