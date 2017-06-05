@@ -2188,7 +2188,12 @@ static DWORD CALLBACK server_thread(LPVOID param)
             else
             {
                 send(c, largeauth, sizeof largeauth - 1, 0);
+#ifdef __REACTOS__
+                memset(buffer, 'A', sizeof(buffer));
+                for (i = 0; i < (10240 / sizeof(buffer)); i++) send(c, buffer, sizeof(buffer), 0);
+#else
                 for (i = 0; i < 10240; i++) send(c, "A", 1, 0);
+#endif
                 continue;
             }
         }
