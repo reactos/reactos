@@ -126,11 +126,11 @@ OHCI_InitializeED(IN POHCI_ENDPOINT OhciEndpoint,
     }
     else if (EndpointProperties->Direction)
     {
-        EndpointControl.Direction = OHCI_ED_DATA_FLOW_DIRECTION_OUT;
+        EndpointControl.Direction = OHCI_ED_DATA_FLOW_DIRECTION_IN;
     }
     else
     {
-        EndpointControl.Direction = OHCI_ED_DATA_FLOW_DIRECTION_IN;
+        EndpointControl.Direction = OHCI_ED_DATA_FLOW_DIRECTION_OUT;
     }
 
     ED->HwED.EndpointControl = EndpointControl;
