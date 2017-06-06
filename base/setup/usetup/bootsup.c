@@ -2208,7 +2208,7 @@ InstallFatBootcodeToPartition(
         {
             DPRINT1("Found COMPAQ MS-DOS 1.x (1.11, 1.12) / MS-DOS 1.25 boot loader\n");
 
-            Section       = L"DOS";
+            Section       = L"CPQDOS";
             Description   = L"\"COMPAQ MS-DOS 1.x / MS-DOS 1.25\"";
             BootDrive     = L"hd0";
             BootPartition = L"1";
@@ -2222,7 +2222,7 @@ InstallFatBootcodeToPartition(
         {
             DPRINT1("Found Microsoft DOS or Windows 9x boot loader\n");
 
-            Section       = L"DOS";
+            Section       = L"MSDOS";
             Description   = L"\"MS-DOS/Windows\"";
             BootDrive     = L"hd0";
             BootPartition = L"1";
@@ -2236,7 +2236,7 @@ InstallFatBootcodeToPartition(
         {
             DPRINT1("Found IBM PC-DOS or DR-DOS 5.x or IBM OS/2 1.0\n");
 
-            Section       = L"DOS";
+            Section       = L"IBMDOS";
             Description   = L"\"IBM PC-DOS or DR-DOS 5.x or IBM OS/2 1.0\"";
             BootDrive     = L"hd0";
             BootPartition = L"1";
@@ -2249,8 +2249,21 @@ InstallFatBootcodeToPartition(
         {
             DPRINT1("Found DR-DOS 3.x\n");
 
-            Section       = L"DOS";
+            Section       = L"DRDOS";
             Description   = L"\"DR-DOS 3.x\"";
+            BootDrive     = L"hd0";
+            BootPartition = L"1";
+            BootSector    = L"BOOTSECT.DOS";
+        }
+        else
+        /* Search for Dell Real-Mode Kernel (DRMK) OS */
+        if (DoesFileExist_2(SystemRootPath->Buffer, L"DELLBIO.BIN") == TRUE ||
+            DoesFileExist_2(SystemRootPath->Buffer, L"DELLRMK.BIN") == TRUE)
+        {
+            DPRINT1("Found Dell Real-Mode Kernel OS\n");
+
+            Section       = L"DRMK";
+            Description   = L"\"Dell Real-Mode Kernel OS\"";
             BootDrive     = L"hd0";
             BootPartition = L"1";
             BootSector    = L"BOOTSECT.DOS";
@@ -2263,7 +2276,7 @@ InstallFatBootcodeToPartition(
         {
             DPRINT1("Found MS OS/2 1.x\n");
 
-            Section       = L"DOS";
+            Section       = L"MSOS2";
             Description   = L"\"MS OS/2 1.x\"";
             BootDrive     = L"hd0";
             BootPartition = L"1";
@@ -2277,7 +2290,7 @@ InstallFatBootcodeToPartition(
         {
             DPRINT1("Found MS/IBM OS/2\n");
 
-            Section       = L"DOS";
+            Section       = L"IBMOS2";
             Description   = L"\"MS/IBM OS/2\"";
             BootDrive     = L"hd0";
             BootPartition = L"1";
@@ -2289,7 +2302,7 @@ InstallFatBootcodeToPartition(
         {
             DPRINT1("Found FreeDOS boot loader\n");
 
-            Section       = L"DOS";
+            Section       = L"FDOS";
             Description   = L"\"FreeDOS\"";
             BootDrive     = L"hd0";
             BootPartition = L"1";
