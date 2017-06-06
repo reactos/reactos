@@ -253,12 +253,11 @@ static LRESULT TOOLBAR_SetButtonInfo(TOOLBAR_INFO *infoPtr, INT Id,
 
 static inline int default_top_margin(const TOOLBAR_INFO *infoPtr)
 {
-#ifndef __REACTOS__
-    return (infoPtr->dwStyle & TBSTYLE_FLAT ? 0 : TOP_BORDER);
-#else /* r65766 */
-    /* This is the behaviour in comctl32 v6 */
-    return 0;
+#ifdef __REACTOS__
+    if (infoPtr->iVersion == 6)
+        return 0;
 #endif
+    return (infoPtr->dwStyle & TBSTYLE_FLAT ? 0 : TOP_BORDER);
 }
 
 static inline BOOL TOOLBAR_HasDropDownArrows(DWORD exStyle)
