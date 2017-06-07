@@ -299,7 +299,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
     RegPacket.MiniPortFlags = USB_MINIPORT_FLAGS_INTERRUPT |
                               USB_MINIPORT_FLAGS_PORT_IO |
-                              0x40 |
+                              USB_MINIPORT_FLAGS_NOT_LOCK_INT |
                               USB_MINIPORT_FLAGS_POLLING |
                               USB_MINIPORT_FLAGS_WAKE_SUPPORT;
 
