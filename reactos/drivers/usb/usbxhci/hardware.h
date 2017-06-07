@@ -172,3 +172,26 @@ typedef union _XHCI_PORT_STATUS_CONTROL {
   };
   ULONG AsULONG;
 } XHCI_PORT_STATUS_CONTROL;
+
+typedef union _XHCI_COMMAND_RING_CONTROL { //typedef ulongulong for better readability
+  struct {
+    unsigned long long RCS                       : 1;
+    unsigned long long CS                        : 1;
+    unsigned long long CA                        : 1;
+    unsigned long long CRR                       : 1;
+    unsigned long long Rsvd                      : 2;
+    unsigned long long CommandRingPointerLo      : 26;
+    unsigned long long CommandRingPointerHi      : 32;
+  };
+  unsigned long long AsULONGULONG;
+} XHCI_COMMAND_RING_CONTROL;
+
+typedef union _XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY { 
+  struct {
+    unsigned long long Rsvd                      : 6;
+    unsigned long long DCBAALo                   : 26;
+    unsigned long long DCBAAHi                   : 32;
+  };
+  unsigned long long AsULONGULONG;
+} XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY;
+
