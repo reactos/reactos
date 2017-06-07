@@ -41,7 +41,7 @@ GetJobName(
     HKEY hJobsKey,
     PWSTR pszJobName)
 {
-    WCHAR szNameBuffer[9];
+    WCHAR szNameBuffer[JOB_NAME_LENGTH];
     FILETIME SystemTime;
     ULONG ulSeed, ulValue;
     HKEY hKey;
@@ -179,7 +179,7 @@ LONG
 LoadJobs(VOID)
 {
     SCHEDULE Schedule;
-    WCHAR szNameBuffer[32];
+    WCHAR szNameBuffer[JOB_NAME_LENGTH];
     DWORD dwNameLength, dwIndex, dwSize;
     HKEY hJobsKey = NULL, hJobKey = NULL;
     PJOB pJob = NULL;
@@ -201,7 +201,7 @@ LoadJobs(VOID)
 
     for (dwIndex = 0; dwIndex < 1000; dwIndex++)
     {
-        dwNameLength = 32;
+        dwNameLength = JOB_NAME_LENGTH;
         lError = RegEnumKeyEx(hJobsKey,
                               dwIndex,
                               szNameBuffer,
