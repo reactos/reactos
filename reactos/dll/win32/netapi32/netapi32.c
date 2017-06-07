@@ -85,24 +85,6 @@ NET_API_STATUS WINAPI NetServerEnumEx(
 }
 
 /************************************************************
- *                NetServerDiskEnum (NETAPI32.@)
- */
-NET_API_STATUS WINAPI NetServerDiskEnum(
-    LMSTR ServerName,
-    DWORD Level,
-    LPBYTE *Bufptr,
-    DWORD PrefMaxlen,
-    LPDWORD EntriesRead,
-    LPDWORD totalentries,
-    LPDWORD Resume_Handle)
-{
-    FIXME("Stub (%s %d %p %d %p %p %p)\n", debugstr_w(ServerName),
-     Level, Bufptr, PrefMaxlen, EntriesRead, totalentries, Resume_Handle);
-
-    return ERROR_NO_BROWSER_SERVERS_FOUND;
-}
-
-/************************************************************
  *                NetServerGetInfo  (NETAPI32.@)
  */
 NET_API_STATUS WINAPI NetServerGetInfo(LMSTR servername, DWORD level, LPBYTE* bufptr)

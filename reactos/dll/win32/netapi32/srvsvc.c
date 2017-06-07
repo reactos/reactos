@@ -234,6 +234,126 @@ NetRemoteTOD(
 
 NET_API_STATUS
 WINAPI
+NetServerDiskEnum(
+    _In_ LMSTR servername,
+    _In_ DWORD level,
+    _Out_ LPBYTE *bufptr,
+    _In_ DWORD prefmaxlen,
+    _Out_ LPDWORD entriesread,
+    _Out_ LPDWORD totalentries,
+    _Inout_ LPDWORD resume_handle)
+{
+    DISK_ENUM_CONTAINER EnumContainer;
+    NET_API_STATUS status;
+
+    TRACE("NetServerDiskEnum(%s %lu %p %lu %p %p %p)\n",
+          debugstr_w(servername), level, bufptr, prefmaxlen,
+          entriesread, totalentries, resume_handle);
+
+    EnumContainer.EntriesRead = 0;
+    EnumContainer.Buffer = NULL;
+
+    RpcTryExcept
+    {
+        status = NetrServerDiskEnum(servername,
+                                    level,
+                                    &EnumContainer,
+                                    prefmaxlen,
+                                    totalentries,
+                                    resume_handle);
+
+        if (EnumContainer.Buffer != NULL)
+        {
+            *bufptr = (LPBYTE)EnumContainer.Buffer;
+        }
+        else
+        {
+            *bufptr = NULL;
+        }
+
+        if (EnumContainer.EntriesRead > 0)
+        {
+            *entriesread = EnumContainer.EntriesRead - 1;
+        }
+        else
+        {
+            *entriesread = 0;
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+#if 0
+NET_API_STATUS
+WINAPI
+NetServerGetInfo(
+    LMSTR servername,
+    DWORD level,
+    LPBYTE *bufptr)
+{
+    NET_API_STATUS status;
+
+    TRACE("NetServerGetInfo(%s %lu %p)\n",
+          debugstr_w(servername), level, bufptr);
+
+    *bufptr = NULL;
+
+    RpcTryExcept
+    {
+        status = NetrServerGetInfo(servername,
+                                   level,
+                                   (LPSERVER_INFO)bufptr);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+#endif
+
+
+NET_API_STATUS
+WINAPI
+NetServerSetInfo(
+    _In_ LPWSTR servername,
+    _In_ DWORD level,
+    _In_ LPBYTE buf,
+    _Out_ LPDWORD parm_err)
+{
+    NET_API_STATUS status;
+
+    TRACE("NetServerSetInfo(%s %lu %p %p)\n",
+          debugstr_w(servername), level, buf, parm_err);
+
+    RpcTryExcept
+    {
+        status = NetrServerSetInfo(servername,
+                                   level,
+                                   (LPSERVER_INFO)&buf,
+                                   parm_err);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
 NetSessionDel(
     _In_ LMSTR servername,
     _In_ LMSTR UncClientName,
