@@ -212,10 +212,10 @@
 @ stdcall NetServerEnumEx(wstr long ptr long ptr ptr long wstr wstr)
 @ stdcall NetServerGetInfo(wstr long ptr)
 @ stdcall NetServerSetInfo(wstr long ptr ptr)
-@ stub NetServerTransportAdd
-@ stub NetServerTransportAddEx
-@ stub NetServerTransportDel
-@ stub NetServerTransportEnum
+@ stdcall NetServerTransportAdd(wstr long ptr)
+@ stdcall NetServerTransportAddEx(wstr long ptr)
+@ stdcall NetServerTransportDel(wstr long ptr)
+@ stdcall NetServerTransportEnum(wstr long ptr long ptr ptr ptr)
 @ stub NetServiceControl
 @ stub NetServiceEnum
 @ stub NetServiceGetInfo
