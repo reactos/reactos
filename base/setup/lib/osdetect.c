@@ -19,9 +19,6 @@
 #include "arcname.h"
 #include "osdetect.h"
 
-// HACK!
-#include <strsafe.h>
-
 #define NDEBUG
 #include <debug.h>
 
@@ -33,51 +30,6 @@ static const PCWSTR KnownVendors[] = { L"ReactOS", L"Microsoft" };
 
 
 /* FUNCTIONS ****************************************************************/
-
-#if 0
-
-BOOL IsWindowsOS(VOID)
-{
-    // TODO? :
-    // Load the "SystemRoot\System32\Config\SOFTWARE" hive and mount it,
-    // then go to (SOFTWARE\\)Microsoft\\Windows NT\\CurrentVersion,
-    // check the REG_SZ value "ProductName" and see whether it's "Windows"
-    // or "ReactOS". One may also check the REG_SZ "CurrentVersion" value,
-    // the REG_SZ "SystemRoot" and "PathName" values (what are the differences??).
-    //
-    // Optionally, looking at the SYSTEM hive, CurrentControlSet\\Control,
-    // REG_SZ values "SystemBootDevice" (and "FirmwareBootDevice" ??)...
-    //
-
-    /* ReactOS reports as Windows NT 5.2 */
-    HKEY hKey = NULL;
-
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                      L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
-                      0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
-    {
-        LONG ret;
-        DWORD dwType = 0, dwBufSize = 0;
-
-        ret = RegQueryValueExW(hKey, L"ProductName", NULL, &dwType, NULL, &dwBufSize);
-        if (ret == ERROR_SUCCESS && dwType == REG_SZ)
-        {
-            LPTSTR lpszProductName = (LPTSTR)MemAlloc(0, dwBufSize);
-            RegQueryValueExW(hKey, L"ProductName", NULL, &dwType, (LPBYTE)lpszProductName, &dwBufSize);
-
-            bIsWindowsOS = (FindSubStrI(lpszProductName, _T("Windows")) != NULL);
-
-            MemFree(lpszProductName);
-        }
-
-        RegCloseKey(hKey);
-    }
-
-    return bIsWindowsOS;
-}
-
-#endif
-
 
 static BOOLEAN
 IsValidNTOSInstallation_UStr(
@@ -134,33 +86,31 @@ EnumerateInstallations(
 
     /* We have a boot entry */
 
-    UNICODE_STRING InstallName;
-    // /**/RtlInitUnicodeString(&InstallName, BootEntry->FriendlyName);/**/
-    InstallName = *BootEntry->FriendlyName;
-
-#if 0
-    if (Type == FreeLdr)
+    /* Check for supported boot type "Windows2003" */
+    // TODO: What to do with "Windows" ; "WindowsNT40" ; "ReactOSSetup" ?
+    if ((BootEntry->Version == NULL) ||
+        ( (_wcsicmp(BootEntry->Version, L"Windows2003")     != 0) &&
+          (_wcsicmp(BootEntry->Version, L"\"Windows2003\"") != 0) ))
     {
-        /* Check for supported boot type "Windows2003" */
-
-        // TODO: What to do with "Windows" ; "WindowsNT40" ; "ReactOSSetup" ?
-        if ((BootType == NULL) ||
-            ( (_wcsicmp(BootType, L"Windows2003") != 0) &&
-              (_wcsicmp(BootType, L"\"Windows2003\"") != 0) ))
-        {
-            /* This is not a ReactOS entry */
-            /* Certainly not a ReactOS installation */
-            DPRINT1("    A Win2k3 install '%wZ' without an ARC path?!\n", &InstallName);
-            /* Continue the enumeration */
-            return STATUS_SUCCESS;
-        }
+        /* This is not a ReactOS entry */
+        DPRINT1("    An installation '%S' of unsupported type '%S'\n",
+                BootEntry->FriendlyName, BootEntry->Version ? BootEntry->Version : L"n/a");
+        /* Continue the enumeration */
+        return STATUS_SUCCESS;
     }
-#endif
 
-    DPRINT1("    Found a candidate Win2k3 install '%wZ' with ARC path '%S'\n",
-            &InstallName, BootEntry->OsLoadPath);
-    // DPRINT1("    Found a Win2k3 install '%wZ' with ARC path '%S'\n",
-            // &InstallName, BootEntry->OsLoadPath);
+    if (!BootEntry->OsLoadPath || !*BootEntry->OsLoadPath)
+    {
+        /* Certainly not a ReactOS installation */
+        DPRINT1("    A Win2k3 install '%S' without an ARC path?!\n", BootEntry->FriendlyName);
+        /* Continue the enumeration */
+        return STATUS_SUCCESS;
+    }
+
+    DPRINT1("    Found a candidate Win2k3 install '%S' with ARC path '%S'\n",
+            BootEntry->FriendlyName, BootEntry->OsLoadPath);
+    // DPRINT1("    Found a Win2k3 install '%S' with ARC path '%S'\n",
+            // BootEntry->FriendlyName, BootEntry->OsLoadPath);
 
     // TODO: Normalize the ARC path.
 
@@ -240,14 +190,19 @@ EnumerateInstallations(
     if (PartEntry && PartEntry->DriveLetter)
     {
         /* We have retrieved a partition that is mounted */
-        StringCchPrintfW(InstallNameW, ARRAYSIZE(InstallNameW), L"%C:%s  \"%wZ\"",
-                         PartEntry->DriveLetter, PathComponent, &InstallName);
+        RtlStringCchPrintfW(InstallNameW, ARRAYSIZE(InstallNameW),
+                            L"%C:%s  \"%s\"",
+                            PartEntry->DriveLetter,
+                            PathComponent,
+                            BootEntry->FriendlyName);
     }
     else
     {
         /* We failed somewhere, just show the NT path */
-        StringCchPrintfW(InstallNameW, ARRAYSIZE(InstallNameW), L"%wZ  \"%wZ\"",
-                         &SystemRootPath, &InstallName);
+        RtlStringCchPrintfW(InstallNameW, ARRAYSIZE(InstallNameW),
+                            L"%wZ  \"%s\"",
+                            &SystemRootPath,
+                            BootEntry->FriendlyName);
     }
     AddNTOSInstallation(Data->List, BootEntry->OsLoadPath,
                         &SystemRootPath, PathComponent,
@@ -347,9 +302,9 @@ CheckForValidPEAndVendor(
         wCodePage = LOWORD(*(ULONG*)pvData);
         wLangID   = HIWORD(*(ULONG*)pvData);
 
-        StringCchPrintfW(FileInfo, ARRAYSIZE(FileInfo),
-                         L"StringFileInfo\\%04X%04X\\CompanyName",
-                         wCodePage, wLangID);
+        RtlStringCchPrintfW(FileInfo, ARRAYSIZE(FileInfo),
+                            L"StringFileInfo\\%04X%04X\\CompanyName",
+                            wCodePage, wLangID);
 
         Status = NtVerQueryValue(VersionBuffer, FileInfo, &pvData, &BufLen);
 
@@ -362,8 +317,8 @@ CheckForValidPEAndVendor(
             /* BufLen includes the NULL terminator count */
             DPRINT1("Found version vendor: \"%S\" for file '%S'\n", pvData, PathNameToFile);
 
-            StringCbCopyNW(VendorName->Buffer, VendorName->MaximumLength,
-                           pvData, BufLen * sizeof(WCHAR));
+            RtlStringCbCopyNW(VendorName->Buffer, VendorName->MaximumLength,
+                              pvData, BufLen * sizeof(WCHAR));
             VendorName->Length = wcslen(VendorName->Buffer) * sizeof(WCHAR);
 
             Success = TRUE;
@@ -503,7 +458,7 @@ IsValidNTOSInstallation_UStr(
                                NULL,
                                NULL);
     Status = NtOpenFile(&SystemRootDirectory,
-                        FILE_LIST_DIRECTORY | SYNCHRONIZE,
+                        FILE_LIST_DIRECTORY | FILE_TRAVERSE | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -659,10 +614,12 @@ AddNTOSInstallation(
     NtOsInstall->PathComponent = NtOsInstall->SystemNtPath.Buffer +
                                     (PathComponent - SystemRootNtPath->Buffer);
 
-    StringCchCopyW(NtOsInstall->InstallationName, ARRAYSIZE(NtOsInstall->InstallationName), InstallationName);
+    RtlStringCchCopyW(NtOsInstall->InstallationName,
+                      ARRAYSIZE(NtOsInstall->InstallationName),
+                      InstallationName);
 
     // Having the GENERIC_LIST storing the display item string plainly sucks...
-    StringCchPrintfA(InstallNameA, ARRAYSIZE(InstallNameA), "%S", InstallationName);
+    RtlStringCchPrintfA(InstallNameA, ARRAYSIZE(InstallNameA), "%S", InstallationName);
     AppendGenericListEntry(List, InstallNameA, NtOsInstall, FALSE);
 
     return NtOsInstall;
@@ -677,19 +634,20 @@ FindNTOSInstallations(
     NTSTATUS Status;
     ULONG DiskNumber = PartEntry->DiskEntry->DiskNumber;
     ULONG PartitionNumber = PartEntry->PartitionNumber;
-    HANDLE PartitionHandle;
+    HANDLE PartitionDirectoryHandle;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
     UNICODE_STRING PartitionRootPath;
     NTOS_BOOT_LOADER_TYPE Type;
+    PVOID BootStoreHandle;
     ENUM_INSTALLS_DATA Data;
     ULONG Version;
     WCHAR PathBuffer[MAX_PATH];
 
     /* Set PartitionRootPath */
-    StringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
-                     L"\\Device\\Harddisk%lu\\Partition%lu\\",
-                     DiskNumber, PartitionNumber);
+    RtlStringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
+                        L"\\Device\\Harddisk%lu\\Partition%lu\\",
+                        DiskNumber, PartitionNumber);
     RtlInitUnicodeString(&PartitionRootPath, PathBuffer);
     DPRINT1("FindNTOSInstallations: PartitionRootPath: '%wZ'\n", &PartitionRootPath);
 
@@ -699,8 +657,8 @@ FindNTOSInstallations(
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
-    Status = NtOpenFile(&PartitionHandle,
-                        FILE_LIST_DIRECTORY | SYNCHRONIZE,
+    Status = NtOpenFile(&PartitionDirectoryHandle,
+                        FILE_LIST_DIRECTORY | FILE_TRAVERSE | SYNCHRONIZE,
                         &ObjectAttributes,
                         &IoStatusBlock,
                         FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -717,7 +675,7 @@ FindNTOSInstallations(
     /* Try to see whether we recognize some NT boot loaders */
     for (Type = FreeLdr; Type < BldrTypeMax; ++Type)
     {
-        Status = FindNTOSBootLoader(PartitionHandle, Type, &Version);
+        Status = FindNTOSBootLoader(PartitionDirectoryHandle, Type, &Version);
         if (!NT_SUCCESS(Status))
         {
             /* The loader does not exist, continue with another one */
@@ -730,11 +688,19 @@ FindNTOSInstallations(
         DPRINT1("Analyse the OS installations for loader type '%d' in disk #%d, partition #%d\n",
                 Type, DiskNumber, PartitionNumber);
 
-        EnumerateNTOSBootEntries(PartitionHandle, Type, EnumerateInstallations, &Data);
+        Status = OpenNTOSBootLoaderStoreByHandle(&BootStoreHandle, PartitionDirectoryHandle, Type, FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Could not open the NTOS boot store of type '%d' (Status 0x%08lx), continue with another one...\n",
+                    Type, Status);
+            continue;
+        }
+        EnumerateNTOSBootEntries(BootStoreHandle, EnumerateInstallations, &Data);
+        CloseNTOSBootLoaderStore(BootStoreHandle);
     }
 
     /* Close the partition */
-    NtClose(PartitionHandle);
+    NtClose(PartitionDirectoryHandle);
 }
 
 // static
