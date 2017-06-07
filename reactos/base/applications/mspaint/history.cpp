@@ -129,6 +129,11 @@ void ImageModel::Crop(int nWidth, int nHeight, int nOffsetX, int nOffsetY)
     int oldWidth = GetWidth();
     int oldHeight = GetHeight();
 
+    if (nWidth <= 0)
+        nWidth = 1;
+    if (nHeight <= 0)
+        nHeight = 1;
+
     SelectObject(hDrawingDC, hBms[currInd]);
     DeleteObject(hBms[(currInd + 1) % HISTORYSIZE]);
     hBms[(currInd + 1) % HISTORYSIZE] = CreateDIBWithProperties(nWidth, nHeight);

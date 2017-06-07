@@ -12,9 +12,9 @@
 
 /* FUNCTIONS ********************************************************/
 
-BOOL resizing = FALSE;
-short xOrig;
-short yOrig;
+static BOOL resizing = FALSE;
+static short xOrig;
+static short yOrig;
 
 LRESULT CSizeboxWindow::OnSetCursor(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
@@ -76,8 +76,6 @@ LRESULT CSizeboxWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
     {
         short xRel;
         short yRel;
-        ReleaseCapture();
-        resizing = FALSE;
         int imgXRes = imageModel.GetWidth();
         int imgYRes = imageModel.GetHeight();
         xRel = (GET_X_LPARAM(lParam) - xOrig) * 1000 / toolsModel.GetZoom();
@@ -100,5 +98,13 @@ LRESULT CSizeboxWindow::OnLButtonUp(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
             imageModel.Crop(imgXRes + xRel, imgYRes + yRel, 0, 0);
         SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) _T(""));
     }
+    ReleaseCapture();
+    resizing = FALSE;
+    return 0;
+}
+
+LRESULT CSizeboxWindow::OnCancelMode(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    resizing = FALSE;
     return 0;
 }
