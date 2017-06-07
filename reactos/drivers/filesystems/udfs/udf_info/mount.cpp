@@ -2554,6 +2554,13 @@ UDFLoadFileset(
         UDFPrint(("SysStream at block=%x, partition=%d\n",
             sysstream->logicalBlockNum, sysstream->partitionReferenceNum));
     }
+#define CUR_IDENT_SZ (sizeof(fset->logicalVolIdent))
+    if (Vcb->VolIdent.Buffer) {
+        MyFreePool__(Vcb->VolIdent.Buffer);
+    }
+    UDFGetDstring(&(Vcb->VolIdent), (dstring*)&(fset->logicalVolIdent), CUR_IDENT_SZ);
+#undef CUR_IDENT_SZ
+    UDFPrint(("volIdent[] = '%ws'\n", Vcb->VolIdent.Buffer));
     // Get current UDF revision
     // Get Read-Only flags
     UDFReadEntityID_Domain(Vcb, &(fset->domainIdent));
