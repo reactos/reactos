@@ -2707,6 +2707,13 @@ static void test_WaitForJobObject(void)
 
     if (dwret == WAIT_TIMEOUT) /* Win 2000/XP */
     {
+#ifdef __REACTOS__
+        if (!ret)
+        {
+            ok(0, "HACK: Killing process to speed up the test\n");
+            TerminateProcess(pi.hProcess, 0);
+        }
+#endif
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
         CloseHandle(job);
