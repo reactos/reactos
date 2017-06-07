@@ -442,7 +442,7 @@ typedef VOID
 #define USB_MINIPORT_VERSION_OHCI 0x01
 #define USB_MINIPORT_VERSION_UHCI 0x02
 #define USB_MINIPORT_VERSION_EHCI 0x03
-#define USB_MINIPORT_VERSION_XHCI 0x03 //miniport version for xhci 
+#define USB_MINIPORT_VERSION_XHCI 0x04 //miniport version for xhci 
 
 #define USB_MINIPORT_FLAGS_INTERRUPT    0x0001
 #define USB_MINIPORT_FLAGS_PORT_IO      0x0002

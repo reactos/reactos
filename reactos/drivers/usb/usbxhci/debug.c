@@ -5,7 +5,7 @@
 
 VOID
 NTAPI
-EHCI_DumpHwTD(IN PEHCI_HCD_TD TD)
+XHCI_DumpHwTD(IN PXHCI_HCD_TD TD)
 {
     if (!TD)
     {
@@ -21,7 +21,7 @@ EHCI_DumpHwTD(IN PEHCI_HCD_TD TD)
 
 VOID
 NTAPI
-EHCI_DumpHwQH(IN PEHCI_HCD_QH QH)
+XHCI_DumpHwQH(IN PXHCI_HCD_QH QH)
 {
     if (!QH)
     {

@@ -1,325 +1,197 @@
-/* EHCI hardware registers */
+/* XHCI hardware registers */
 
-#define EHCI_USBCMD            0
-#define EHCI_USBSTS            1
-#define EHCI_USBINTR           2
-#define EHCI_FRINDEX           3
-#define EHCI_CTRLDSSEGMENT     4
-#define EHCI_PERIODICLISTBASE  5
-#define EHCI_ASYNCLISTBASE     6
-#define EHCI_CONFIGFLAG        16
-#define EHCI_PORTSC            17
-
-typedef union _EHCI_HC_STRUCTURAL_PARAMS {
+typedef union _XHCI_HC_STRUCTURAL_PARAMS_1 {
   struct {
-    ULONG PortCount            : 4;
-    ULONG PortPowerControl     : 1;
-    ULONG Reserved1            : 2;
-    ULONG PortRouteRules       : 1;
-    ULONG PortsPerCompanion    : 4;
-    ULONG CompanionControllers : 4;
-    ULONG PortIndicators       : 1;
-    ULONG Reserved2            : 3;
-    ULONG DebugPortNumber      : 4; //Optional
-    ULONG Reserved3            : 8;
+    ULONG MaxDeviceSlots     : 8;
+    ULONG MaxInterrupters    : 11;
+    ULONG Rsvd               : 5;
+    ULONG MaxPorts           : 8;
   };
   ULONG AsULONG;
-} EHCI_HC_STRUCTURAL_PARAMS;
+} XHCI_HC_STRUCTURAL_PARAMS_1;
 
-typedef union _EHCI_HC_CAPABILITY_PARAMS {
+typedef union _XHCI_HC_STRUCTURAL_PARAMS_2 {
   struct {
-    ULONG Addressing64bitCapability : 1;
-    ULONG IsProgrammableFrameList   : 1;
-    ULONG IsScheduleParkSupport     : 1;
-    ULONG Reserved1                 : 1;
-    ULONG IsoSchedulingThreshold    : 4;
-    ULONG ExtCapabilitiesPointer    : 8; // (EECP)
-    ULONG Reserved2                 : 16;
+    ULONG Ist               : 4; // Isochronous Scheduling Treshold 
+    ULONG ERSTMax           : 4; //Even ring segment table max
+    ULONG Rsvd              : 13;
+    ULONG MaxSPBuffersHi    : 5; //Max Scratchpad buffers high
+    ULONG SPR               : 1; //Scratchpad Restore
+    ULONG MaxSPBuffersLo    : 5; //Max Scratchpad buffers Low
   };
   ULONG AsULONG;
-} EHCI_HC_CAPABILITY_PARAMS;
+} XHCI_HC_STRUCTURAL_PARAMS_2;
 
-typedef union _EHCI_USB_COMMAND {
+typedef union _XHCI_HC_STRUCTURAL_PARAMS_3 {
   struct {
-    ULONG Run                        : 1;
-    ULONG Reset                      : 1;
-    ULONG FrameListSize              : 2;
-    ULONG PeriodicEnable             : 1;
-    ULONG AsynchronousEnable         : 1;
-    ULONG InterruptAdvanceDoorbell   : 1;
-    ULONG LightResetHC               : 1; // optional
-    ULONG AsynchronousParkModeCount  : 2; // optional
-    ULONG Reserved1                  : 1;
-    ULONG AsynchronousParkModeEnable : 1; // optional
-    ULONG Reserved2                  : 4;
-    ULONG InterruptThreshold         : 8;
-    ULONG Reserved3                  : 8;
+    ULONG U1DeviceExitLatecy : 8;
+    ULONG Rsvd               : 8;
+    ULONG U2DeviceExitLatecy : 16;
   };
   ULONG AsULONG;
-} EHCI_USB_COMMAND;
+} XHCI_HC_STRUCTURAL_PARAMS_3;
 
-typedef union _EHCI_USB_STATUS {
+typedef union _XHCI_HC_CAPABILITY_PARAMS_1 {  // need to comment full forms, pg 291 in xHCI documentation 
   struct {
-    ULONG Interrupt               : 1;
-    ULONG ErrorInterrupt          : 1;
-    ULONG PortChangeDetect        : 1;
-    ULONG FrameListRollover       : 1;
-    ULONG HostSystemError         : 1;
-    ULONG InterruptOnAsyncAdvance : 1;
-    ULONG Reserved1               : 6;
-    ULONG HCHalted                : 1;
-    ULONG Reclamation             : 1;
-    ULONG PeriodicStatus          : 1;
-    ULONG AsynchronousStatus      : 1;
-    ULONG Reserved2               : 16;
+    ULONG AC64               : 1;
+    ULONG BNC                : 1;
+    ULONG CSZ                : 1;
+    ULONG PPC                : 1;
+    ULONG PIND               : 1;
+    ULONG LHRC               : 1;
+    ULONG LTC                : 1;
+    ULONG NSS                : 1;
+    ULONG PAE                : 1;
+    ULONG SPC                : 1;
+    ULONG SEC                : 1;
+    ULONG CFC                : 1;
+    ULONG MaxPSASize         : 4;
+    ULONG xECP               : 16;
   };
   ULONG AsULONG;
-} EHCI_USB_STATUS;
+} XHCI_HC_CAPABILITY_PARAMS_1;
 
-typedef union _EHCI_INTERRUPT_ENABLE {
+typedef union _XHCI_DOORBELL_OFFSET {
   struct {
-    ULONG Interrupt               : 1;
-    ULONG ErrorInterrupt          : 1;
-    ULONG PortChangeInterrupt     : 1;
-    ULONG FrameListRollover       : 1;
-    ULONG HostSystemError         : 1;
-    ULONG InterruptOnAsyncAdvance : 1;
-    ULONG Reserved                : 26;
+    ULONG Rsvd               : 2;
+    ULONG DBArrayOffset      : 30;
   };
   ULONG AsULONG;
-} EHCI_INTERRUPT_ENABLE;
+} XHCI_DOORBELL_OFFSET;
 
-typedef union _EHCI_PORT_STATUS_CONTROL {
+typedef union _XHCI_RT_REGISTER_SPACE_OFFSET { //RUNTIME REGISTER SPACE OFFSET
   struct {
-    ULONG CurrentConnectStatus    : 1;
-    ULONG ConnectStatusChange     : 1;
-    ULONG PortEnabledDisabled     : 1;
-    ULONG PortEnableDisableChange : 1;
-    ULONG OverCurrentActive       : 1;
-    ULONG OverCurrentChange       : 1;
-    ULONG ForcePortResume         : 1;
-    ULONG Suspend                 : 1;
-    ULONG PortReset               : 1;
-    ULONG Reserved1               : 1;
-    ULONG LineStatus              : 2;
-    ULONG PortPower               : 1;
-    ULONG PortOwner               : 1;
-    ULONG PortIndicatorControl    : 2;
-    ULONG PortTestControl         : 4;
-    ULONG WakeOnConnectEnable     : 1;
-    ULONG WakeOnDisconnectEnable  : 1;
-    ULONG WakeOnOverCurrentEnable : 1;
-    ULONG Reserved2               : 9;
+    ULONG Rsvd               : 2;
+    ULONG RTSOffset          : 30;
   };
   ULONG AsULONG;
-} EHCI_PORT_STATUS_CONTROL;
+} XHCI_RT_REGISTER_SPACE_OFFSET;
 
-/* Link Pointer */
-
-#define EHCI_LINK_TYPE_iTD  0 // isochronous transfer descriptor
-#define EHCI_LINK_TYPE_QH   1 // queue head
-#define EHCI_LINK_TYPE_siTD 2 // split transaction isochronous transfer
-#define EHCI_LINK_TYPE_FSTN 3 // frame span traversal node
-
-/* Used for QHs and qTDs to mark Pointers as the end */
-#define TERMINATE_POINTER   1
-
-typedef union _EHCI_LINK_POINTER {
+typedef union _XHCI_HC_CAPABILITY_PARAMS_2 {
   struct {
-    ULONG Terminate : 1;
-    ULONG Type      : 2;
-    ULONG Reserved  : 2;
-    ULONG Adress    : 27;
+    ULONG U3C                : 1;
+    ULONG CMC                : 1;
+    ULONG FSC                : 1;
+    ULONG CTC                : 1;
+    ULONG LEC                : 1;
+    ULONG CIC                : 1;
+    ULONG Rsvd               : 26;
   };
   ULONG AsULONG;
-} EHCI_LINK_POINTER;
+} XHCI_HC_CAPABILITY_PARAMS_2;
 
-/* Isochronous (High-Speed) Transfer Descriptor (iTD) */
-
-typedef union _EHCI_TRANSACTION_CONTROL {
+typedef union _XHCI_USB_COMMAND {
   struct {
-    ULONG xOffset             : 12;
-    ULONG PageSelect          : 3;
-    ULONG InterruptOnComplete : 1;
-    ULONG xLength             : 12;
-    ULONG Status              : 4;
+    ULONG RunStop            : 1;
+    ULONG HCReset            : 1;
+    ULONG INTEnable          : 1;
+    ULONG HSEEnable          : 1;
+    ULONG RsvdP1             : 3;
+    ULONG LHCReset           : 1;
+    ULONG CSS                : 1; 
+    ULONG CRS                : 1; 
+    ULONG EWE                : 1;
+    ULONG EU3S               : 1; 
+    ULONG RsvdP2             : 1;
+    ULONG CME                : 1;
+    ULONG RsvdP3             : 18;
   };
   ULONG AsULONG;
-} EHCI_TRANSACTION_CONTROL;
+} XHCI_USB_COMMAND;
 
-typedef union _EHCI_TRANSACTION_BUFFER {
+typedef union _XHCI_USB_STATUS {
   struct {
-    ULONG DeviceAddress  : 7;
-    ULONG Reserved1      : 1;
-    ULONG EndpointNumber : 4;
-    ULONG DataBuffer0    : 20;
-  };
-  struct {
-    ULONG MaximumPacketSize : 11;
-    ULONG Direction         : 1;
-    ULONG DataBuffer1       : 20;
-  };
-  struct {
-    ULONG Multi       : 2;
-    ULONG Reserved2   : 10;
-    ULONG DataBuffer2 : 20;
-  };
-  struct {
-    ULONG Reserved3  : 12;
-    ULONG DataBuffer : 20;
+    ULONG HCH               : 1;
+    ULONG RsvdZ1            : 1;
+    ULONG HSE               : 1;
+    ULONG EINT              : 1;
+    ULONG PCD               : 1;
+    ULONG RsvdZ2            : 3;
+    ULONG SSS               : 1; 
+    ULONG RSS               : 1; 
+    ULONG SRE               : 1;
+    ULONG CNR               : 1; 
+    ULONG HCE               : 1;
+    ULONG RsvdZ3            : 19;
   };
   ULONG AsULONG;
-} EHCI_TRANSACTION_BUFFER;
+} XHCI_USB_STATUS;
 
-typedef struct _EHCI_ISOCHRONOUS_TD { // must be aligned on a 32-byte boundary
-  EHCI_LINK_POINTER NextLink;
-  EHCI_TRANSACTION_CONTROL Transaction[8];
-  EHCI_TRANSACTION_BUFFER Buffer[7];
-  ULONG_PTR ExtendedBuffer[7];
-} EHCI_ISOCHRONOUS_TD, *PEHCI_ISOCHRONOUS_TD;
-
-C_ASSERT(sizeof(EHCI_ISOCHRONOUS_TD) == 92);
-
-/* Split Transaction Isochronous Transfer Descriptor (siTD) */
-
-typedef union _EHCI_FS_ENDPOINT_PARAMS {
+typedef union _XHCI_PAGE_SIZE { 
   struct {
-    ULONG DeviceAddress  : 7;
-    ULONG Reserved1      : 1;
-    ULONG EndpointNumber : 4;
-    ULONG Reserved2      : 4;
-    ULONG HubAddress     : 7;
-    ULONG Reserved3      : 1;
-    ULONG PortNumber     : 7;
-    ULONG Direction      : 1;
+    ULONG PageSize           : 16;
+    ULONG Rsvd               : 16;
   };
   ULONG AsULONG;
-} EHCI_FS_ENDPOINT_PARAMS;
+} XHCI_PAGE_SIZE;
 
-typedef union _EHCI_MICROFRAME_CONTROL {
+typedef union _XHCI_DEVICE_NOTIFICATION_CONTROL { 
   struct {
-    ULONG StartMask      : 8;
-    ULONG CompletionMask : 8;
-    ULONG Reserved       : 16;
+    ULONG NotificationEnable : 16;
+    ULONG Rsvd               : 16;
   };
   ULONG AsULONG;
-} EHCI_MICROFRAME_CONTROL;
+} XHCI_DEVICE_NOTIFICATION_CONTROL;
 
-typedef union _EHCI_SPLIT_TRANSFER_STATE {
+typedef union _XHCI_CONFIGURE { 
   struct {
-    ULONG Status              : 8;
-    ULONG ProgressMask        : 8;
-    ULONG TotalBytes          : 10;
-    ULONG Reserved            : 4;
-    ULONG PageSelect          : 1;
-    ULONG InterruptOnComplete : 1;
+    ULONG MaxDeviceSlot      : 8;
+    ULONG U3E                : 1;
+    ULONG CIE                : 1;
+    ULONG Rsvd               : 21;
   };
   ULONG AsULONG;
-} EHCI_SPLIT_TRANSFER_STATE;
+} XHCI_CONFIGURE;
 
-typedef union _EHCI_SPLIT_BUFFER_POINTER {
+typedef union _XHCI_PORT_STATUS_CONTROL {
   struct {
-    ULONG CurrentOffset : 12;
-    ULONG DataBuffer0   : 20;
-  };
-  struct {
-    ULONG TransactionCount    : 3;
-    ULONG TransactionPosition : 2;
-    ULONG Reserved            : 7;
-    ULONG DataBuffer1         : 20;
-  };
-  ULONG AsULONG;
-} EHCI_SPLIT_BUFFER_POINTER;
-
-typedef struct _EHCI_SPLIT_ISOCHRONOUS_TD { // must be aligned on a 32-byte boundary
-  EHCI_LINK_POINTER NextLink;
-  EHCI_FS_ENDPOINT_PARAMS EndpointCharacteristics;
-  EHCI_MICROFRAME_CONTROL MicroFrameControl;
-  EHCI_SPLIT_TRANSFER_STATE TransferState;
-  EHCI_SPLIT_BUFFER_POINTER Buffer[2];
-  ULONG_PTR BackPointer;
-} EHCI_SPLIT_ISOCHRONOUS_TD, *PEHCI_SPLIT_ISOCHRONOUS_TD;
-
-C_ASSERT(sizeof(EHCI_SPLIT_ISOCHRONOUS_TD) == 28);
-
-/* Queue Element Transfer Descriptor (qTD) */
-
-#define	EHCI_TOKEN_STATUS_ACTIVE            (1 << 7)
-#define	EHCI_TOKEN_STATUS_HALTED            (1 << 6)
-#define	EHCI_TOKEN_STATUS_DATA_BUFFER_ERROR (1 << 5)
-#define	EHCI_TOKEN_STATUS_BABBLE_DETECTED   (1 << 4)
-#define	EHCI_TOKEN_STATUS_TRANSACTION_ERROR (1 << 3)
-#define	EHCI_TOKEN_STATUS_MISSED_MICROFRAME (1 << 2)
-#define	EHCI_TOKEN_STATUS_SPLIT_STATE       (1 << 1)
-#define	EHCI_TOKEN_STATUS_PING_STATE        (1 << 0)
-
-typedef union _EHCI_TD_TOKEN {
-  struct {
-    ULONG Status              : 8;
-    ULONG PIDCode             : 2;
-    ULONG ErrorCounter        : 2;
-    ULONG CurrentPage         : 3;
-    ULONG InterruptOnComplete : 1;
-    ULONG TransferBytes       : 15;
-    ULONG DataToggle          : 1;
+    ULONG CCS                : 1;
+    ULONG PED                : 1;
+    ULONG RsvdZ1             : 1;
+    ULONG OCA                : 1;
+    ULONG PR                 : 1;
+    ULONG PLS                : 4;
+    ULONG PP                 : 1;
+    ULONG PortSpeed          : 4;
+    ULONG PIC                : 2;
+    ULONG LWS                : 1;
+    ULONG CSC                : 1;
+    ULONG PEC                : 1;
+    ULONG WRC                : 1;
+    ULONG OCC                : 1;
+    ULONG PRC                : 1;
+    ULONG PLC                : 1;
+    ULONG CEC                : 1;
+    ULONG CAS                : 1;
+    ULONG WCE                : 1;
+    ULONG WDE                : 1;
+    ULONG WOE                : 1;
+    ULONG RsvdZ2             : 2;
+    ULONG DR                 : 1;
+    ULONG WPR                : 1;
   };
   ULONG AsULONG;
-} EHCI_TD_TOKEN, *PEHCI_TD_TOKEN;
+} XHCI_PORT_STATUS_CONTROL;
 
-typedef struct _EHCI_QUEUE_TD { // must be aligned on 32-byte boundaries
-  ULONG_PTR NextTD;
-  ULONG_PTR AlternateNextTD;
-  EHCI_TD_TOKEN Token;
-  ULONG_PTR Buffer[5];
-  ULONG_PTR ExtendedBuffer[5];
-} EHCI_QUEUE_TD, *PEHCI_QUEUE_TD;
-
-C_ASSERT(sizeof(EHCI_QUEUE_TD) == 52);
-
-/* Queue Head */
-
-#define EHCI_QH_FLAG_IN_SCHEDULE  0x01
-#define EHCI_QH_FLAG_CLOSED       0x02
-#define EHCI_QH_FLAG_STATIC       0x04
-#define EHCI_QH_FLAG_UPDATING     0x10
-#define EHCI_QH_FLAG_NUKED        0x20
-
-typedef union _EHCI_QH_EP_PARAMS {
+typedef union _XHCI_COMMAND_RING_CONTROL { //typedef ulongulong for better readability
   struct {
-    ULONG DeviceAddress               : 7;
-    ULONG InactivateOnNextTransaction : 1;
-    ULONG EndpointNumber              : 4;
-    ULONG EndpointSpeed               : 2;
-    ULONG DataToggleControl           : 1;
-    ULONG HeadReclamationListFlag     : 1;
-    ULONG MaximumPacketLength         : 11; // corresponds to the maximum packet size of the associated endpoint (wMaxPacketSize).
-    ULONG ControlEndpointFlag         : 1;
-    ULONG NakCountReload              : 4;
+    unsigned long long RCS                       : 1;
+    unsigned long long CS                        : 1;
+    unsigned long long CA                        : 1;
+    unsigned long long CRR                       : 1;
+    unsigned long long Rsvd                      : 2;
+    unsigned long long CommandRingPointerLo      : 26;
+    unsigned long long CommandRingPointerHi      : 32;
   };
-  ULONG AsULONG;
-} EHCI_QH_EP_PARAMS;
+  unsigned long long AsULONGULONG;
+} XHCI_COMMAND_RING_CONTROL;
 
-typedef union _EHCI_QH_EP_CAPS {
+typedef union _XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY { 
   struct {
-    ULONG InterruptMask       : 8;
-    ULONG SplitCompletionMask : 8;
-    ULONG HubAddr             : 7;
-    ULONG PortNumber          : 7;
-    ULONG PipeMultiplier      : 2;
+    unsigned long long Rsvd                      : 6;
+    unsigned long long DCBAALo                   : 26;
+    unsigned long long DCBAAHi                   : 32;
   };
-  ULONG AsULONG;
-} EHCI_QH_EP_CAPS;
+  unsigned long long AsULONGULONG;
+} XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY;
 
-typedef struct _EHCI_QUEUE_HEAD { // must be aligned on 32-byte boundaries
-  EHCI_LINK_POINTER HorizontalLink;
-  EHCI_QH_EP_PARAMS EndpointParams;
-  EHCI_QH_EP_CAPS EndpointCaps;
-  ULONG_PTR CurrentTD;
-  ULONG_PTR NextTD;
-  ULONG_PTR AlternateNextTD;
-  EHCI_TD_TOKEN Token;
-  ULONG_PTR Buffer[5];
-  ULONG_PTR ExtendedBuffer[5];
-} EHCI_QUEUE_HEAD, *PEHCI_QUEUE_HEAD;
-
-C_ASSERT(sizeof(EHCI_QUEUE_HEAD) == 68);
