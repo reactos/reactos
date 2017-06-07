@@ -51,7 +51,7 @@ static ATOM atSubAppName;
 static ATOM atSubIdList;
 ATOM atWndContext;
 
-PTHEME_FILE ActiveThemeFile;
+PTHEME_FILE g_ActiveThemeFile;
 
 RTL_HANDLE_TABLE g_UxThemeHandleTable;
 int g_cHandles;
@@ -131,44 +131,44 @@ static DWORD query_reg_path (HKEY hKey, LPCWSTR lpszValue,
 
 static HRESULT UXTHEME_SetActiveTheme(PTHEME_FILE tf)
 {
-    if(ActiveThemeFile)
-        MSSTYLES_CloseThemeFile(ActiveThemeFile);
-    ActiveThemeFile = tf;
-    if (ActiveThemeFile)
+    if(g_ActiveThemeFile)
+        MSSTYLES_CloseThemeFile(g_ActiveThemeFile);
+    g_ActiveThemeFile = tf;
+    if (g_ActiveThemeFile)
     {
-        MSSTYLES_ReferenceTheme(ActiveThemeFile);
-        MSSTYLES_ParseThemeIni(ActiveThemeFile);
+        MSSTYLES_ReferenceTheme(g_ActiveThemeFile);
+        MSSTYLES_ParseThemeIni(g_ActiveThemeFile);
     }
     return S_OK;
 }
 
 static BOOL bIsThemeActive(LPCWSTR pszTheme, LPCWSTR pszColor, LPCWSTR pszSize)
 {
-    if (ActiveThemeFile == NULL)
+    if (g_ActiveThemeFile == NULL)
         return FALSE;
 
-    if (wcscmp(pszTheme, ActiveThemeFile->szThemeFile) != 0)
+    if (wcscmp(pszTheme, g_ActiveThemeFile->szThemeFile) != 0)
         return FALSE;
 
     if (!pszColor[0])
     {
-        if (ActiveThemeFile->pszAvailColors != ActiveThemeFile->pszSelectedColor)
+        if (g_ActiveThemeFile->pszAvailColors != g_ActiveThemeFile->pszSelectedColor)
             return FALSE;
     }
     else
     {
-        if (wcscmp(pszColor, ActiveThemeFile->pszSelectedColor) != 0)
+        if (wcscmp(pszColor, g_ActiveThemeFile->pszSelectedColor) != 0)
             return FALSE;
     }
 
     if (!pszSize[0])
     {
-        if (ActiveThemeFile->pszAvailSizes != ActiveThemeFile->pszSelectedSize)
+        if (g_ActiveThemeFile->pszAvailSizes != g_ActiveThemeFile->pszSelectedSize)
             return FALSE;
     }
     else
     {
-        if (wcscmp(pszSize, ActiveThemeFile->pszSelectedSize) != 0)
+        if (wcscmp(pszSize, g_ActiveThemeFile->pszSelectedSize) != 0)
             return FALSE;
     }
 
@@ -192,7 +192,7 @@ void UXTHEME_LoadTheme(BOOL bLoad)
     WCHAR szCurrentSize[64];
     BOOL bThemeActive = FALSE;
 
-    if(bLoad == TRUE && gbThemeHooksActive) 
+    if(bLoad == TRUE && g_bThemeHooksActive) 
     {
         /* Get current theme configuration */
         if(!RegOpenKeyW(HKEY_CURRENT_USER, szThemeManager, &hKey)) {
@@ -517,7 +517,7 @@ static HRESULT UXTHEME_ApplyTheme(PTHEME_FILE tf)
 
     TRACE("UXTHEME_ApplyTheme\n");
 
-    if (tf && !ActiveThemeFile)
+    if (tf && !g_ActiveThemeFile)
     {
         UXTHEME_BackupSystemMetrics();
     }
@@ -533,10 +533,10 @@ static HRESULT UXTHEME_ApplyTheme(PTHEME_FILE tf)
 
     TRACE("Writing theme config to registry\n");
     if(!RegCreateKeyW(HKEY_CURRENT_USER, szThemeManager, &hKey)) {
-        tmp[0] = ActiveThemeFile?'1':'0';
+        tmp[0] = g_ActiveThemeFile ? '1' : '0';
         tmp[1] = '\0';
         RegSetValueExW(hKey, szThemeActive, 0, REG_SZ, (const BYTE*)tmp, sizeof(WCHAR)*2);
-        if (ActiveThemeFile) {
+        if (g_ActiveThemeFile) {
             RegSetValueExW(hKey, szColorName, 0, REG_SZ, (const BYTE*)tf->pszSelectedColor, 
 		(lstrlenW(tf->pszSelectedColor)+1)*sizeof(WCHAR));
             RegSetValueExW(hKey, szSizeName, 0, REG_SZ, (const BYTE*)tf->pszSelectedSize, 
@@ -597,7 +597,7 @@ BOOL WINAPI IsAppThemed(void)
 {
     TRACE("\n");
     SetLastError(ERROR_SUCCESS);
-    return (ActiveThemeFile != NULL);
+    return (g_ActiveThemeFile != NULL);
 }
 
 /***********************************************************************
@@ -614,10 +614,10 @@ BOOL WINAPI IsThemeActive(void)
     TRACE("IsThemeActive\n");
     SetLastError(ERROR_SUCCESS);
 
-    if (ActiveThemeFile) 
+    if (g_ActiveThemeFile) 
         return TRUE;
 
-    if (gbThemeHooksActive)
+    if (g_bThemeHooksActive)
         return FALSE;
 
     bActive = FALSE;
@@ -646,7 +646,7 @@ HRESULT WINAPI EnableTheming(BOOL fEnable)
 
     TRACE("(%d)\n", fEnable);
 
-    if (fEnable != (ActiveThemeFile != NULL)) {
+    if (fEnable != (g_ActiveThemeFile != NULL)) {
         if(fEnable) 
             UXTHEME_BackupSystemMetrics();
         else
@@ -718,7 +718,7 @@ PTHEME_CLASS ValidateHandle(HTHEME hTheme)
 {
     PUXTHEME_HANDLE pHandle;
 
-    if (!gbThemeHooksActive || !hTheme || hTheme == INVALID_HANDLE_VALUE)
+    if (!g_bThemeHooksActive || !hTheme || hTheme == INVALID_HANDLE_VALUE)
         return NULL;
 
     if (!RtlIsValidHandle(&g_UxThemeHandleTable, (PRTL_HANDLE_TABLE_ENTRY)hTheme))
@@ -806,7 +806,7 @@ OpenThemeDataInternal(PTHEME_FILE ThemeFile, HWND hwnd, LPCWSTR pszClassList, DW
  */
 HTHEME WINAPI OpenThemeDataEx(HWND hwnd, LPCWSTR pszClassList, DWORD flags)
 {
-    return OpenThemeDataInternal(ActiveThemeFile, hwnd, pszClassList, flags);
+    return OpenThemeDataInternal(g_ActiveThemeFile, hwnd, pszClassList, flags);
 }
 
 /***********************************************************************
@@ -822,7 +822,7 @@ HTHEME WINAPI OpenThemeDataFromFile(HTHEMEFILE hThemeFile, HWND hwnd, LPCWSTR ps
  */
 HTHEME WINAPI OpenThemeData(HWND hwnd, LPCWSTR classlist)
 {
-    return OpenThemeDataInternal(ActiveThemeFile, hwnd, classlist, 0);
+    return OpenThemeDataInternal(g_ActiveThemeFile, hwnd, classlist, 0);
 }
 
 /***********************************************************************
@@ -885,31 +885,31 @@ HRESULT WINAPI GetCurrentThemeName(LPWSTR pszThemeFileName, int dwMaxNameChars,
 {
     int cchar;
 
-    if(ActiveThemeFile == NULL)
+    if(g_ActiveThemeFile == NULL)
          return E_PROP_ID_UNSUPPORTED;
 
     if (pszThemeFileName && dwMaxNameChars) 
     {
-        cchar = lstrlenW(ActiveThemeFile->szThemeFile) + 1;
+        cchar = lstrlenW(g_ActiveThemeFile->szThemeFile) + 1;
         if(cchar > dwMaxNameChars)
            return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
-        lstrcpynW(pszThemeFileName, ActiveThemeFile->szThemeFile, cchar);
+        lstrcpynW(pszThemeFileName, g_ActiveThemeFile->szThemeFile, cchar);
     }
 
     if (pszColorBuff && cchMaxColorChars) 
     {
-        cchar = lstrlenW(ActiveThemeFile->pszSelectedColor) + 1;
+        cchar = lstrlenW(g_ActiveThemeFile->pszSelectedColor) + 1;
         if(cchar > cchMaxColorChars)
             return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
-        lstrcpynW(pszColorBuff, ActiveThemeFile->pszSelectedColor, cchar);
+        lstrcpynW(pszColorBuff, g_ActiveThemeFile->pszSelectedColor, cchar);
     }
 
    if (pszSizeBuff && cchMaxSizeChars) 
     {
-        cchar = lstrlenW(ActiveThemeFile->pszSelectedSize) + 1;
+        cchar = lstrlenW(g_ActiveThemeFile->pszSelectedSize) + 1;
         if(cchar > cchMaxSizeChars)
             return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
-        lstrcpynW(pszSizeBuff, ActiveThemeFile->pszSelectedSize, cchar);
+        lstrcpynW(pszSizeBuff, g_ActiveThemeFile->pszSelectedSize, cchar);
     }
 
     return S_OK;
@@ -1018,7 +1018,7 @@ HRESULT WINAPI GetThemeDocumentationProperty(LPCWSTR pszThemeName,
     TRACE("(%s,%s,%p,%d)\n", debugstr_w(pszThemeName), debugstr_w(pszPropertyName),
           pszValueBuff, cchMaxValChars);
 
-    if (!gbThemeHooksActive)
+    if (!g_bThemeHooksActive)
         return E_FAIL;
 
     hr = MSSTYLES_OpenThemeFile(pszThemeName, NULL, NULL, &pt);
@@ -1094,7 +1094,7 @@ HRESULT WINAPI OpenThemeFile(LPCWSTR pszThemeFileName, LPCWSTR pszColorName,
           debugstr_w(pszColorName), debugstr_w(pszSizeName),
           hThemeFile, unknown);
 
-    if (!gbThemeHooksActive)
+    if (!g_bThemeHooksActive)
         return E_FAIL;
 
     return MSSTYLES_OpenThemeFile(pszThemeFileName, pszColorName, pszSizeName, (PTHEME_FILE*)hThemeFile);
@@ -1178,7 +1178,7 @@ HRESULT WINAPI GetThemeDefaults(LPCWSTR pszThemeFileName, LPWSTR pszColorName,
           pszColorName, dwColorNameLen,
           pszSizeName, dwSizeNameLen);
 
-    if (!gbThemeHooksActive)
+    if (!g_bThemeHooksActive)
         return E_FAIL;
 
     hr = MSSTYLES_OpenThemeFile(pszThemeFileName, NULL, NULL, &pt);
@@ -1299,7 +1299,7 @@ HRESULT WINAPI EnumThemeColors(LPWSTR pszThemeFileName, LPWSTR pszSizeName,
     TRACE("(%s,%s,%d)\n", debugstr_w(pszThemeFileName),
           debugstr_w(pszSizeName), dwColorNum);
 
-    if (!gbThemeHooksActive)
+    if (!g_bThemeHooksActive)
         return E_FAIL;
 
     hr = MSSTYLES_OpenThemeFile(pszThemeFileName, NULL, pszSizeName, &pt);
@@ -1362,7 +1362,7 @@ HRESULT WINAPI EnumThemeSizes(LPWSTR pszThemeFileName, LPWSTR pszColorName,
     TRACE("(%s,%s,%d)\n", debugstr_w(pszThemeFileName),
           debugstr_w(pszColorName), dwSizeNum);
 
-    if (!gbThemeHooksActive)
+    if (!g_bThemeHooksActive)
         return E_FAIL;
 
     hr = MSSTYLES_OpenThemeFile(pszThemeFileName, pszColorName, NULL, &pt);
@@ -1434,7 +1434,7 @@ HRESULT WINAPI CheckThemeSignature(LPCWSTR pszThemeFileName)
     HRESULT hr;
     TRACE("(%s)\n", debugstr_w(pszThemeFileName));
 
-    if (!gbThemeHooksActive)
+    if (!g_bThemeHooksActive)
         return E_FAIL;
 
     hr = MSSTYLES_OpenThemeFile(pszThemeFileName, NULL, NULL, &pt);

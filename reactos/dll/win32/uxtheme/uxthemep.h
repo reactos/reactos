@@ -250,8 +250,7 @@ HTHEME GetNCScrollbarTheme(HWND hWnd, DWORD style);
 extern HINSTANCE hDllInst;
 extern ATOM atWindowTheme;
 extern ATOM atWndContext;
-extern BOOL gbThemeHooksActive;
-extern PTHEME_FILE ActiveThemeFile;
+extern BOOL g_bThemeHooksActive;
 
 void UXTHEME_InitSystem(HINSTANCE hInst);
 void UXTHEME_LoadTheme(BOOL bLoad);
