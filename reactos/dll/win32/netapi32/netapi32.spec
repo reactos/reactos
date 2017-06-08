@@ -106,13 +106,13 @@
 @ stdcall NetApiBufferFree(ptr)
 @ stdcall NetApiBufferReallocate(ptr long ptr)
 @ stdcall NetApiBufferSize(ptr ptr)
-@ stub NetAuditClear
-@ stub NetAuditRead
-@ stub NetAuditWrite
+@ stdcall NetAuditClear(wstr wstr wstr)
+@ stdcall NetAuditRead(wstr wstr ptr long ptr long long ptr long ptr ptr)
+@ stdcall NetAuditWrite(long ptr long wstr ptr)
 @ stub NetBrowserStatisticsGet
-@ stub NetConfigGet
-@ stub NetConfigGetAll
-@ stub NetConfigSet
+@ stdcall NetConfigGet(wstr wstr wstr ptr)
+@ stdcall NetConfigGetAll(wstr wstr ptr)
+@ stdcall NetConfigSet(wstr wstr wstr long long ptr long)
 @ stub NetConnectionEnum
 @ stub NetDfsAdd
 @ stub NetDfsAddFtRoot
