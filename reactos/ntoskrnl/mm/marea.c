@@ -545,7 +545,7 @@ MiRosCleanupMemoryArea(
 
     if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
     {
-        Status = MiRosUnmapViewOfSection(Process, BaseAddress, 0);
+        Status = MiRosUnmapViewOfSection(Process, BaseAddress, Process->ProcessExiting);
     }
     else if (MemoryArea->Type == MEMORY_AREA_CACHE)
     {

@@ -834,7 +834,7 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
     if ((MemoryArea) && (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3))
     {
         /* Call Mm API */
-        return MiRosUnmapViewOfSection(Process, BaseAddress, Flags);
+        return MiRosUnmapViewOfSection(Process, BaseAddress, Process->ProcessExiting);
     }
 
     /* Check if we should attach to the process */

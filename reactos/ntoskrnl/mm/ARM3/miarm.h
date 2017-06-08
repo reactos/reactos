@@ -2104,7 +2104,7 @@ NTAPI
 MiRosUnmapViewOfSection(
     IN PEPROCESS Process,
     IN PVOID BaseAddress,
-    IN ULONG Flags
+    IN BOOLEAN SkipDebuggerNotify
 );
 
 VOID

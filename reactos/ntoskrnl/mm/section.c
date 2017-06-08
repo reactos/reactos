@@ -4142,7 +4142,7 @@ NTSTATUS
 NTAPI
 MiRosUnmapViewOfSection(IN PEPROCESS Process,
                         IN PVOID BaseAddress,
-                        IN ULONG Flags)
+                        IN BOOLEAN SkipDebuggerNotify)
 {
     NTSTATUS Status;
     PMEMORY_AREA MemoryArea;
@@ -4230,7 +4230,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
     MmUnlockAddressSpace(AddressSpace);
 
     /* Notify debugger */
-    if (ImageBaseAddress) DbgkUnMapViewOfSection(ImageBaseAddress);
+    if (ImageBaseAddress && !SkipDebuggerNotify) DbgkUnMapViewOfSection(ImageBaseAddress);
 
     return(STATUS_SUCCESS);
 }
