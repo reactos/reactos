@@ -1403,11 +1403,8 @@ public:
 
         case HSHELL_RUDEAPPACTIVATED:
         case HSHELL_WINDOWACTIVATED:
-            if (lParam)
-            {
-                ActivateTask((HWND) lParam);
-                Ret = TRUE;
-            }
+            ActivateTask((HWND) lParam);
+            Ret = TRUE;
             break;
 
         case HSHELL_FLASH:
@@ -1797,6 +1794,11 @@ public:
         return FALSE;
     }
 
+    LRESULT OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        return MA_NOACTIVATE;
+    }
+
     LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
 #if DUMP_TASKS != 0
@@ -1844,6 +1846,8 @@ public:
         MESSAGE_HANDLER(WM_SETFONT, OnSetFont)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChanged)
         MESSAGE_HANDLER(m_ShellHookMsg, HandleShellHookMsg)
+        MESSAGE_HANDLER(WM_MOUSEACTIVATE, OnMouseActivate)
+        MESSAGE_HANDLER(WM_KLUDGEMINRECT, OnKludgeItemRect)
     END_MSG_MAP()
 
     HWND _Init(IN HWND hWndParent, IN OUT ITrayWindow *tray)
