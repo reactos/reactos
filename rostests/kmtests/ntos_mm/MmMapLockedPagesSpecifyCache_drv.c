@@ -18,6 +18,7 @@ static KMT_MESSAGE_HANDLER TestMessageHandler;
 static PVOID CurrentBuffer;
 static PMDL CurrentMdl;
 static PVOID CurrentUser;
+static SIZE_T NonCachedLength;
 
 NTSTATUS
 TestEntry(
@@ -86,7 +87,14 @@ TestCleanEverything(VOID)
     _SEH2_END;
     ok_eq_hex(SehStatus, STATUS_SUCCESS);
     IoFreeMdl(CurrentMdl);
-    ExFreePoolWithTag(CurrentBuffer, 'MLPC');
+    if (NonCachedLength)
+    {
+        MmFreeNonCachedMemory(CurrentBuffer, NonCachedLength);
+    }
+    else
+    {
+        ExFreePoolWithTag(CurrentBuffer, 'MLPC');
+    }
     CurrentMdl = NULL;
 }
 
@@ -128,8 +136,22 @@ TestMessageHandler(
 
                 if (!skip(Length > 0, "Null size!\n"))
                 {
-                    CurrentBuffer = ExAllocatePoolWithTag(NonPagedPool, Length, 'MLPC');
-                    ok(CurrentBuffer != NULL, "ExAllocatePool failed!\n");
+                    if (QueryBuffer->Cached)
+                    {
+                        CurrentBuffer = ExAllocatePoolWithTag(NonPagedPool, Length, 'MLPC');
+                        ok(CurrentBuffer != NULL, "ExAllocatePool failed!\n");
+                        NonCachedLength = 0;
+                    }
+                    else
+                    {
+                        CurrentBuffer = MmAllocateNonCachedMemory(Length);
+                        ok(CurrentBuffer != NULL, "MmAllocateNonCachedMemory failed!\n");
+                        if (CurrentBuffer)
+                        {
+                            RtlZeroMemory(CurrentBuffer, Length);
+                            NonCachedLength = Length;
+                        }
+                    }
                     if (!skip(CurrentBuffer != NULL, "ExAllocatePool failed!\n"))
                     {
                         CurrentMdl = IoAllocateMdl(CurrentBuffer, Length, FALSE, FALSE, NULL);
@@ -163,17 +185,8 @@ TestMessageHandler(
                                 SehStatus = _SEH2_GetExceptionCode();
                             }
                             _SEH2_END;
-
-                            if (QueryBuffer->Cached)
-                            {
-                                ok_eq_hex(SehStatus, STATUS_SUCCESS);
-                                ok(CurrentUser != NULL, "MmMapLockedPagesSpecifyCache failed!\n");
-                            }
-                            else
-                            {
-                                ok_eq_hex(SehStatus, STATUS_INVALID_ADDRESS);
-                                ok_eq_pointer(CurrentUser, NULL);
-                            }
+                            ok_eq_hex(SehStatus, STATUS_SUCCESS);
+                            ok(CurrentUser != NULL, "MmMapLockedPagesSpecifyCache failed!\n");
                         }
                         else
                         {
