@@ -38,6 +38,7 @@ static fnt_test test_data[] =
         {
             {
                 /* .FontName = */ "PanosePitchTest",
+                {
                 /* .tm.tmHeight = */ 11,
                 /* .tm.tmAscent = */ 11,
                 /* .tm.tmDescent = */ 0,
@@ -58,9 +59,11 @@ static fnt_test test_data[] =
                 /* .tm.tmStruckOut = */ 0,
                 /* .tm.tmPitchAndFamily = */ TMPF_TRUETYPE | TMPF_VECTOR,
                 /* .tm.tmCharSet = */ SHIFTJIS_CHARSET,
+                }
             },
             {
                 /* .FontName = */ "@PanosePitchTest",
+                {
                 /* .tm.tmHeight = */ 11,
                 /* .tm.tmAscent = */ 11,
                 /* .tm.tmDescent = */ 0,
@@ -81,6 +84,7 @@ static fnt_test test_data[] =
                 /* .tm.tmStruckOut = */ 0,
                 /* .tm.tmPitchAndFamily = */ TMPF_TRUETYPE | TMPF_VECTOR,
                 /* .tm.tmCharSet = */ SHIFTJIS_CHARSET,
+                }
             },
         },
     },
@@ -91,6 +95,7 @@ static fnt_test test_data[] =
         {
             {
                 /* .FontName = */ "No1Of3in1",
+                {
                 /* .tm.tmHeight = */ 12,
                 /* .tm.tmAscent = */ 12,
                 /* .tm.tmDescent = */ 0,
@@ -111,9 +116,11 @@ static fnt_test test_data[] =
                 /* .tm.tmStruckOut = */ 0,
                 /* .tm.tmPitchAndFamily = */ TMPF_TRUETYPE | TMPF_VECTOR | TMPF_FIXED_PITCH,
                 /* .tm.tmCharSet = */ ANSI_CHARSET,
+                }
             },
             {
                 /* .FontName = */ "No2Of3in1",
+                {
                 /* .tm.tmHeight = */ 12,
                 /* .tm.tmAscent = */ 12,
                 /* .tm.tmDescent = */ 0,
@@ -134,9 +141,11 @@ static fnt_test test_data[] =
                 /* .tm.tmStruckOut = */ 0,
                 /* .tm.tmPitchAndFamily = */ TMPF_TRUETYPE | TMPF_VECTOR | TMPF_FIXED_PITCH,
                 /* .tm.tmCharSet = */ ANSI_CHARSET,
+                }
             },
             {
                 /* .FontName = */ "No3Of3in1V",
+                {
                 /* .tm.tmHeight = */ 12,
                 /* .tm.tmAscent = */ 12,
                 /* .tm.tmDescent = */ 0,
@@ -157,6 +166,7 @@ static fnt_test test_data[] =
                 /* .tm.tmStruckOut = */ 0,
                 /* .tm.tmPitchAndFamily = */ FF_MODERN | TMPF_TRUETYPE | TMPF_VECTOR,
                 /* .tm.tmCharSet = */ ANSI_CHARSET,
+                }
             },
         },
     },
@@ -167,6 +177,7 @@ static fnt_test test_data[] =
         {
             {
                 /* .FontName = */ "ufaXaAlLOxCUGYJ7KN51UP2Q==",
+                {
                 /* .tm.tmHeight = */ 26,
                 /* .tm.tmAscent = */ 19,
                 /* .tm.tmDescent = */ 7,
@@ -187,6 +198,7 @@ static fnt_test test_data[] =
                 /* .tm.tmStruckOut = */ 0,
                 /* .tm.tmPitchAndFamily = */ TMPF_TRUETYPE | TMPF_VECTOR | TMPF_FIXED_PITCH,
                 /* .tm.tmCharSet = */ ANSI_CHARSET,
+                }
             },
         },
     },
