@@ -867,37 +867,52 @@ CreateNTOSEntry(
     /* Create a new section */
     IniSection = IniCacheAppendSection(BootStore->IniCache, Section);
 
-    /* BootType= */
-    IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"BootType", BootEntry->Version);
-
-    if (_wcsicmp(BootEntry->Version, L"Windows2003") == 0)
+    // if (_wcsicmp(BootEntry->Version, L"Windows2003") == 0)
+    if (BootEntry->OsOptionsLength >= sizeof(NTOS_OPTIONS) &&
+        RtlCompareMemory(&BootEntry->OsOptions /* Signature */,
+                         NTOS_OPTIONS_SIGNATURE,
+                         RTL_FIELD_SIZE(NTOS_OPTIONS, Signature)) ==
+                         RTL_FIELD_SIZE(NTOS_OPTIONS, Signature))
     {
+        PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
+
+        /* BootType= */
+        IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
+                          L"BootType", L"Windows2003");
+
         /* SystemPath= */
         IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          L"SystemPath", (PWSTR)BootEntry->OsLoadPath);
+                          L"SystemPath", (PWSTR)Options->OsLoadPath);
 
         /* Options= */
         IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          L"Options", (PWSTR)BootEntry->OsLoadOptions);
+                          L"Options", (PWSTR)Options->OsLoadOptions);
     }
     else
-    if (_wcsicmp(BootEntry->Version, L"BootSector") == 0)
+    // if (_wcsicmp(BootEntry->Version, L"BootSector") == 0)
+    if (BootEntry->OsOptionsLength >= sizeof(BOOT_SECTOR_OPTIONS) &&
+        RtlCompareMemory(&BootEntry->OsOptions /* Signature */,
+                         BOOT_SECTOR_OPTIONS_SIGNATURE,
+                         RTL_FIELD_SIZE(BOOT_SECTOR_OPTIONS, Signature)) ==
+                         RTL_FIELD_SIZE(BOOT_SECTOR_OPTIONS, Signature))
     {
+        PBOOT_SECTOR_OPTIONS Options = (PBOOT_SECTOR_OPTIONS)&BootEntry->OsOptions;
+
+        /* BootType= */
+        IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
+                          L"BootType", L"BootSector");
+
         /* BootDrive= */
         IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          L"BootDrive",
-                          /*BootDrive*/ (PWSTR)BootEntry->OsLoadPath); // OsLoadPath ??
+                          L"BootDrive", (PWSTR)Options->Drive);
 
-        // /* BootPartition= */
-        // IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          // L"BootPartition",
-                          // BootPartition);       // OsLoadPath
+        /* BootPartition= */
+        IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
+                          L"BootPartition", (PWSTR)Options->Partition);
 
         /* BootSector= */
         IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                          L"BootSectorFile",
-                          /*BootSector*/ (PWSTR)BootEntry->BootFilePath);
+                          L"BootSectorFile", (PWSTR)Options->BootSectorFileName);
     }
     else
     {
@@ -940,19 +955,25 @@ AddNTOSBootEntry(
     else
     if (BootStore->Type == NtLdr)
     {
+        PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
         PWCHAR Buffer;
         ULONG BufferLength;
         PCWSTR InstallName, OsOptions;
         // ULONG InstallNameLength, OsOptionsLength;
 
-        if (_wcsicmp(BootEntry->Version, L"Windows2003") != 0)
+        // if (_wcsicmp(BootEntry->Version, L"Windows2003") != 0)
+        if (BootEntry->OsOptionsLength < sizeof(NTOS_OPTIONS) ||
+            RtlCompareMemory(&BootEntry->OsOptions /* Signature */,
+                             NTOS_OPTIONS_SIGNATURE,
+                             RTL_FIELD_SIZE(NTOS_OPTIONS, Signature)) !=
+                             RTL_FIELD_SIZE(NTOS_OPTIONS, Signature))
         {
             DPRINT1("Unsupported BootType '%S'\n", BootEntry->Version);
             return STATUS_SUCCESS; // STATUS_NOT_SUPPORTED;
         }
 
         InstallName = BootEntry->FriendlyName;
-        OsOptions = BootEntry->OsLoadOptions;
+        OsOptions = Options->OsLoadOptions;
 
         // if (InstallNameLength == 0) InstallName = NULL;
         // if (OsOptionsLength == 0) OsOptions = NULL;
@@ -977,7 +998,7 @@ AddNTOSBootEntry(
 
         /* Insert the entry into the "Operating Systems" section */
         IniCacheInsertKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OsIniSection, NULL, INSERT_LAST,
-                          (PWSTR)BootEntry->OsLoadPath, Buffer);
+                          (PWSTR)Options->OsLoadPath, Buffer);
 
         RtlFreeHeap(ProcessHeap, 0, Buffer);
         return STATUS_SUCCESS;
@@ -1216,8 +1237,9 @@ FreeLdrEnumerateBootEntries(
     PINICACHEITERATOR Iterator;
     PINICACHESECTION OsIniSection;
     PWCHAR SectionName, KeyData;
-/**/NTOS_BOOT_ENTRY xxBootEntry;/**/
-    PNTOS_BOOT_ENTRY BootEntry = &xxBootEntry;
+    UCHAR xxBootEntry[FIELD_OFFSET(NTOS_BOOT_ENTRY, OsOptions) +
+                      max(sizeof(NTOS_OPTIONS), sizeof(BOOT_SECTOR_OPTIONS))];
+    PNTOS_BOOT_ENTRY BootEntry = (PNTOS_BOOT_ENTRY)&xxBootEntry;
     PWCHAR Buffer;
 
     /* Enumerate all the valid installations listed in the "Operating Systems" section */
@@ -1272,10 +1294,8 @@ FreeLdrEnumerateBootEntries(
         BootEntry->Version = NULL;
         BootEntry->BootEntryKey = MAKESTRKEY(SectionName);
         BootEntry->FriendlyName = InstallName;
-        BootEntry->OsLoadPath = NULL;
         BootEntry->BootFilePath = NULL;
-        // BootEntry->OsOptions = NULL;
-        BootEntry->OsLoadOptions = NULL;
+        BootEntry->OsOptionsLength = 0;
 
         /* Search for an existing boot entry section */
         OsIniSection = IniCacheGetSection(BootStore->IniCache, SectionName);
@@ -1296,50 +1316,70 @@ FreeLdrEnumerateBootEntries(
             (_wcsicmp(KeyData, L"\"Windows2003\"") == 0))
         {
             /* BootType is Windows2003 */
+            PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
+
             BootEntry->Version = L"Windows2003";
             DPRINT1("This is a '%S' boot entry\n", BootEntry->Version);
+
+            BootEntry->OsOptionsLength = sizeof(NTOS_OPTIONS);
+            RtlCopyMemory(Options->Signature,
+                          NTOS_OPTIONS_SIGNATURE,
+                          RTL_FIELD_SIZE(NTOS_OPTIONS, Signature));
+
+            // BootEntry->BootFilePath = NULL;
 
             /* Check its SystemPath */
             Status = IniCacheGetKey(OsIniSection, L"SystemPath", &KeyData);
             if (!NT_SUCCESS(Status))
-                BootEntry->OsLoadPath = NULL;
+                Options->OsLoadPath = NULL;
             else
-                BootEntry->OsLoadPath = KeyData;
+                Options->OsLoadPath = KeyData;
             // KeyData == SystemRoot;
-
-            BootEntry->BootFilePath = NULL;
-            // BootEntry->OsOptions = NULL;
 
             /* Check the optional Options */
             Status = IniCacheGetKey(OsIniSection, L"Options", &KeyData);
             if (!NT_SUCCESS(Status))
-                BootEntry->OsLoadOptions = NULL;
+                Options->OsLoadOptions = NULL;
             else
-                BootEntry->OsLoadOptions = KeyData;
+                Options->OsLoadOptions = KeyData;
         }
         else
         if ((_wcsicmp(KeyData, L"BootSector")     == 0) ||
             (_wcsicmp(KeyData, L"\"BootSector\"") == 0))
         {
             /* BootType is BootSector */
+            PBOOT_SECTOR_OPTIONS Options = (PBOOT_SECTOR_OPTIONS)&BootEntry->OsOptions;
+
             BootEntry->Version = L"BootSector";
             DPRINT1("This is a '%S' boot entry\n", BootEntry->Version);
+
+            BootEntry->OsOptionsLength = sizeof(BOOT_SECTOR_OPTIONS);
+            RtlCopyMemory(Options->Signature,
+                          BOOT_SECTOR_OPTIONS_SIGNATURE,
+                          RTL_FIELD_SIZE(BOOT_SECTOR_OPTIONS, Signature));
+
+            // BootEntry->BootFilePath = NULL;
 
             /* Check its BootDrive */
             Status = IniCacheGetKey(OsIniSection, L"BootDrive", &KeyData);
             if (!NT_SUCCESS(Status))
-                BootEntry->OsLoadPath = NULL;
+                Options->Drive = NULL;
             else
-                BootEntry->OsLoadPath = KeyData;
+                Options->Drive = KeyData;
 
-            /* FIXME: Check its BootPartition ???? */
+            /* Check its BootPartition */
+            Status = IniCacheGetKey(OsIniSection, L"BootPartition", &KeyData);
+            if (!NT_SUCCESS(Status))
+                Options->Partition = NULL;
+            else
+                Options->Partition = KeyData;
 
             /* Check its BootSector */
             Status = IniCacheGetKey(OsIniSection, L"BootSectorFile", &KeyData);
             if (!NT_SUCCESS(Status))
-                BootEntry->BootFilePath = NULL;
+                Options->BootSectorFileName = NULL;
             else
-                BootEntry->BootFilePath = KeyData;
+                Options->BootSectorFileName = KeyData;
         }
         else
         {
@@ -1376,8 +1416,9 @@ NtLdrEnumerateBootEntries(
     NTSTATUS Status = STATUS_SUCCESS;
     PINICACHEITERATOR Iterator;
     PWCHAR SectionName, KeyData;
-/**/NTOS_BOOT_ENTRY xxBootEntry;/**/
-    PNTOS_BOOT_ENTRY BootEntry = &xxBootEntry;
+    UCHAR xxBootEntry[FIELD_OFFSET(NTOS_BOOT_ENTRY, OsOptions) + sizeof(NTOS_OPTIONS)];
+    PNTOS_BOOT_ENTRY BootEntry = (PNTOS_BOOT_ENTRY)&xxBootEntry;
+    PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
     PWCHAR Buffer;
     ULONG BufferLength;
 
@@ -1472,10 +1513,15 @@ NtLdrEnumerateBootEntries(
         BootEntry->Version = L"Windows2003";
         BootEntry->BootEntryKey = 0; // FIXME??
         BootEntry->FriendlyName = InstallName;
-        BootEntry->OsLoadPath   = SectionName;
         BootEntry->BootFilePath = NULL;
-        // BootEntry->OsOptions = NULL;
-        BootEntry->OsLoadOptions = OsOptions;
+
+        BootEntry->OsOptionsLength = sizeof(NTOS_OPTIONS);
+        RtlCopyMemory(Options->Signature,
+                      NTOS_OPTIONS_SIGNATURE,
+                      RTL_FIELD_SIZE(NTOS_OPTIONS, Signature));
+
+        Options->OsLoadPath    = SectionName;
+        Options->OsLoadOptions = OsOptions;
 
         /* Call the user enumeration routine callback */
         Status = EnumBootEntriesRoutine(NtLdr, BootEntry, Parameter);

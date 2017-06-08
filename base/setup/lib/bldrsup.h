@@ -11,7 +11,7 @@
 
 #pragma once
 
-typedef enum _NTOS_BOOT_LOADER_TYPE
+typedef enum _NTOS_BOOT_LOADER_TYPE     // _BOOT_STORE_TYPE
 {
     FreeLdr,    // ReactOS' FreeLoader
     NtLdr,      // Windows <= 2k3 NT "FlexBoot" OS Loader NTLDR
@@ -29,7 +29,7 @@ typedef enum _NTOS_BOOT_LOADER_TYPE
  * This structure is inspired from the EFI boot entry structure
  * BOOT_OPTIONS that is defined in ndk/iotypes.h .
  */
-typedef struct _NTOS_BOOT_OPTIONS
+typedef struct _NTOS_BOOT_OPTIONS       // _BOOT_STORE_OPTIONS
 {
     // ULONG Version;
     // ULONG Length;
@@ -60,7 +60,7 @@ typedef struct _NTOS_BOOT_OPTIONS
  * This structure is inspired from the EFI boot entry structures
  * BOOT_ENTRY and FILE_PATH that are defined in ndk/iotypes.h .
  */
-typedef struct _NTOS_BOOT_ENTRY
+typedef struct _NTOS_BOOT_ENTRY         // _BOOT_STORE_ENTRY
 {
     // ULONG Version; // Equivalent of the "BootType" in FreeLdr
     PWCHAR Version; // HACK!!!
@@ -68,10 +68,50 @@ typedef struct _NTOS_BOOT_ENTRY
     ULONG_PTR BootEntryKey; // Boot entry "key"
     PCWSTR FriendlyName;    // Human-readable boot entry description        // LoadIdentifier
     PCWSTR BootFilePath;    // Path to e.g. osloader.exe, or winload.efi    // EfiOsLoaderFilePath
-    PCWSTR OsLoadPath;      // The OS SystemRoot path                       // OsLoaderFilePath
-    // PCWSTR OsOptions;                                                    // OsLoadOptions
-    PCWSTR OsLoadOptions;
+    ULONG OsOptionsLength;  // Loader-specific options blob (can be a string, or a binary structure...)
+    UCHAR OsOptions[ANYSIZE_ARRAY];
+/*
+ * In packed form, this structure would contain offsets to 'FriendlyName'
+ * and 'BootFilePath' strings and, after the OsOptions blob, there would
+ * be the following data:
+ *
+ *  WCHAR FriendlyName[ANYSIZE_ARRAY];
+ *  FILE_PATH BootFilePath;
+ */
 } NTOS_BOOT_ENTRY, *PNTOS_BOOT_ENTRY;
+
+/* "NTOS" (aka. ReactOS or MS Windows NT) <= 5.x options */
+typedef struct _NTOS_OPTIONS
+{
+    UCHAR Signature[8];     // "NTOS_5\0\0"
+    // ULONG Version;
+    // ULONG Length;
+    PCWSTR OsLoadPath;      // The OS SystemRoot path                       // OsLoaderFilePath // OsFilePath
+    PCWSTR OsLoadOptions;                                                   // OsLoadOptions
+/*
+ * In packed form, this structure would contain an offset to the 'OsLoadPath'
+ * string, and the 'OsLoadOptions' member would be:
+ *  WCHAR OsLoadOptions[ANYSIZE_ARRAY];
+ * followed by:
+ *  FILE_PATH OsLoadPath;
+ */
+} NTOS_OPTIONS, *PNTOS_OPTIONS;
+
+#define NTOS_OPTIONS_SIGNATURE "NTOS_5\0\0"
+
+/* Options for boot-sector boot entries */
+typedef struct _BOOT_SECTOR_OPTIONS
+{
+    UCHAR Signature[8];     // "BootSect"
+    // ULONG Version;
+    // ULONG Length;
+    PCWSTR Drive;
+    PCWSTR Partition;
+    PCWSTR BootSectorFileName;
+} BOOT_SECTOR_OPTIONS, *PBOOT_SECTOR_OPTIONS;
+
+#define BOOT_SECTOR_OPTIONS_SIGNATURE "BootSect"
+
 
 typedef NTSTATUS
 (NTAPI *PENUM_BOOT_ENTRIES_ROUTINE)(
