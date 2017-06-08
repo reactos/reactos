@@ -222,15 +222,88 @@ ThemeEndBufferedPaint(PDRAW_CONTEXT pcontext, int x, int y, int cx, int cy)
     pcontext->hDC = pcontext->hDCScreen;
 }
 
+void ThemeCalculateCaptionButtonsPos(HWND hWnd, HTHEME htheme)
+{
+    PWND_DATA pwndData;
+    DWORD style;
+    INT ButtonWidth, ButtonHeight, iPartId, i;
+    WINDOWINFO wi = {sizeof(wi)};
+    RECT rcCurrent;
+
+    /* First of all check if we have something to do here */
+    style = GetWindowLongW(hWnd, GWL_STYLE);
+    if((style & (WS_CAPTION | WS_SYSMENU)) != (WS_CAPTION | WS_SYSMENU))
+        return;
+
+    /* Get theme data for this window */
+    pwndData = ThemeGetWndData(hWnd);
+    if (pwndData == NULL)
+        return;
+
+    if (!htheme)
+        htheme = pwndData->hthemeWindow;
+
+    if(!GetWindowInfo(hWnd, &wi))
+        return;
+
+    /* Calculate the area of the caption */
+    rcCurrent.top = rcCurrent.left = 0;
+    rcCurrent.right = wi.rcWindow.right - wi.rcWindow.left;
+    rcCurrent.bottom = wi.rcWindow.bottom - wi.rcWindow.top;
+
+    /* Add a padding around the objects of the caption */
+    InflateRect(&rcCurrent, -(int)wi.cyWindowBorders-BUTTON_GAP_SIZE, 
+                            -(int)wi.cyWindowBorders-BUTTON_GAP_SIZE);
+
+    for (i = CLOSEBUTTON; i <= HELPBUTTON; i++)
+    {
+        SIZE ButtonSize;
+
+        switch(i)
+        {
+            case CLOSEBUTTON:
+                iPartId = wi.dwExStyle & WS_EX_TOOLWINDOW ? WP_SMALLCLOSEBUTTON : WP_CLOSEBUTTON;
+                break;
+
+            case MAXBUTTON:
+                iPartId = wi.dwStyle & WS_MAXIMIZE ? WP_RESTOREBUTTON : WP_MAXBUTTON;
+                break;
+
+            case MINBUTTON:
+                iPartId = wi.dwStyle & WS_MINIMIZE ? WP_RESTOREBUTTON : WP_MINBUTTON;
+                break;
+
+            default:
+                iPartId = WP_HELPBUTTON ;
+        }
+
+        GetThemePartSize(htheme, NULL, iPartId, 0, NULL, TS_MIN, &ButtonSize);
+
+        ButtonHeight = GetSystemMetrics( wi.dwExStyle & WS_EX_TOOLWINDOW ? SM_CYSMSIZE : SM_CYSIZE);
+        ButtonWidth = MulDiv(ButtonSize.cx, ButtonHeight, ButtonSize.cy);
+
+        ButtonHeight -= 4;
+        ButtonWidth -= 4;
+
+        SetRect(&pwndData->rcCaptionButtons[i],
+                rcCurrent.right - ButtonWidth,
+                rcCurrent.top,
+                rcCurrent.right,
+                rcCurrent.top + ButtonHeight);
+
+        rcCurrent.right -= ButtonWidth + BUTTON_GAP_SIZE;
+    }
+}
+
 static void 
 ThemeDrawCaptionButton(PDRAW_CONTEXT pcontext, 
-                       RECT* prcCurrent, 
                        CAPTIONBUTTON buttonId, 
                        INT iStateId)
 {
-    RECT rcPart;
-    INT ButtonWidth, ButtonHeight, iPartId;
-    SIZE ButtonSize;
+    INT iPartId;
+    PWND_DATA pwndData = ThemeGetWndData(pcontext->hWnd);
+    if (!pwndData)
+        return;
 
     switch(buttonId)
     {
@@ -267,22 +340,7 @@ ThemeDrawCaptionButton(PDRAW_CONTEXT pcontext,
         return;
     }
 
-    GetThemePartSize(pcontext->theme, pcontext->hDC, iPartId, 0, NULL, TS_MIN, &ButtonSize);
-
-    ButtonHeight = GetSystemMetrics( pcontext->wi.dwExStyle & WS_EX_TOOLWINDOW ? SM_CYSMSIZE : SM_CYSIZE);
-    ButtonWidth = MulDiv(ButtonSize.cx, ButtonHeight, ButtonSize.cy);
-
-    ButtonHeight -= 4;
-    ButtonWidth -= 4;
-
-    /* Calculate the position */
-    rcPart.top = prcCurrent->top;
-    rcPart.right = prcCurrent->right;
-    rcPart.bottom = rcPart.top + ButtonHeight ;
-    rcPart.left = rcPart.right - ButtonWidth ;
-    prcCurrent->right -= ButtonWidth + BUTTON_GAP_SIZE;
-
-    DrawThemeBackground(pcontext->theme, pcontext->hDC, iPartId, iStateId, &rcPart, NULL);
+    DrawThemeBackground(pcontext->theme, pcontext->hDC, iPartId, iStateId, &pwndData->rcCaptionButtons[buttonId], NULL);
 }
 
 static DWORD
@@ -302,25 +360,14 @@ ThemeGetButtonState(DWORD htCurrect, DWORD htHot, DWORD htDown, BOOL Active)
 static void 
 ThemeDrawCaptionButtons(PDRAW_CONTEXT pcontext, DWORD htHot, DWORD htDown)
 {
-    RECT rcCurrent;
-
-    /* Calculate the area of the caption */
-    rcCurrent.top = rcCurrent.left = 0;
-    rcCurrent.right = pcontext->wi.rcWindow.right - pcontext->wi.rcWindow.left;
-    rcCurrent.bottom = pcontext->CaptionHeight;
-    
-    /* Add a padding around the objects of the caption */
-    InflateRect(&rcCurrent, -(int)pcontext->wi.cyWindowBorders-BUTTON_GAP_SIZE, 
-                            -(int)pcontext->wi.cyWindowBorders-BUTTON_GAP_SIZE);
-
     /* Draw the buttons */
-    ThemeDrawCaptionButton(pcontext, &rcCurrent, CLOSEBUTTON, 
+    ThemeDrawCaptionButton(pcontext, CLOSEBUTTON, 
                            ThemeGetButtonState(HTCLOSE, htHot, htDown, pcontext->Active));
-    ThemeDrawCaptionButton(pcontext, &rcCurrent, MAXBUTTON,  
+    ThemeDrawCaptionButton(pcontext, MAXBUTTON,  
                            ThemeGetButtonState(HTMAXBUTTON, htHot, htDown, pcontext->Active));
-    ThemeDrawCaptionButton(pcontext, &rcCurrent, MINBUTTON,
+    ThemeDrawCaptionButton(pcontext, MINBUTTON,
                            ThemeGetButtonState(HTMINBUTTON, htHot, htDown, pcontext->Active));
-    ThemeDrawCaptionButton(pcontext, &rcCurrent, HELPBUTTON,
+    ThemeDrawCaptionButton(pcontext, HELPBUTTON,
                            ThemeGetButtonState(HTHELP, htHot, htDown, pcontext->Active));
 }
 
@@ -366,10 +413,10 @@ ThemeDrawCaption(PDRAW_CONTEXT pcontext, RECT* prcCurrent)
     {
         iState = pcontext->Active ? BUTTON_NORMAL : BUTTON_INACTIVE;
 
-        ThemeDrawCaptionButton(pcontext, &rcPart, CLOSEBUTTON, iState);
-        ThemeDrawCaptionButton(pcontext, &rcPart, MAXBUTTON, iState);
-        ThemeDrawCaptionButton(pcontext, &rcPart, MINBUTTON, iState);
-        ThemeDrawCaptionButton(pcontext, &rcPart, HELPBUTTON, iState);
+        ThemeDrawCaptionButton(pcontext, CLOSEBUTTON, iState);
+        ThemeDrawCaptionButton(pcontext, MAXBUTTON, iState);
+        ThemeDrawCaptionButton(pcontext, MINBUTTON, iState);
+        ThemeDrawCaptionButton(pcontext, HELPBUTTON, iState);
     }
     
     rcPart.top += 3 ;
@@ -851,23 +898,11 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
 
         if (!PtInRect(&WindowRect, Point))
         {
-            INT ButtonWidth;
-
-            if (wi.dwExStyle & WS_EX_TOOLWINDOW)
-                ButtonWidth = GetSystemMetrics(SM_CXSMSIZE);
-            else
-                ButtonWidth = GetSystemMetrics(SM_CXSIZE);
-
-            ButtonWidth -= 4;
-            ButtonWidth += BUTTON_GAP_SIZE;
-
             if (wi.dwStyle & WS_SYSMENU)
             {
-                if (wi.dwExStyle & WS_EX_TOOLWINDOW)
-                {
-                    WindowRect.right -= ButtonWidth;
-                }
-                else
+                PWND_DATA pwndData = ThemeGetWndData(hWnd);
+
+                if (!(wi.dwExStyle & WS_EX_TOOLWINDOW))
                 {
                     // if(!(wi.dwExStyle & WS_EX_DLGMODALFRAME))
                     // FIXME: The real test should check whether there is
@@ -876,22 +911,22 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
                     // See win32ss/user/user32/windows/nonclient.c!DefWndNCHitTest
                     // and win32ss/user/ntuser/nonclient.c!GetNCHitEx which does
                     // the test better.
-                        WindowRect.left += ButtonWidth;
-                    WindowRect.right -= ButtonWidth;
+                        WindowRect.left += GetSystemMetrics(SM_CXSMICON);
+                }
+
+                if (pwndData)
+                {
+                    POINT pt = {Point.x - wi.rcWindow.left, Point.y - wi.rcWindow.top};
+                    if (PtInRect(&pwndData->rcCaptionButtons[CLOSEBUTTON], pt))
+                        return HTCLOSE;
+                    if (PtInRect(&pwndData->rcCaptionButtons[MAXBUTTON], pt))
+                        return HTMAXBUTTON;
+                    if (PtInRect(&pwndData->rcCaptionButtons[MINBUTTON], pt))
+                        return HTMINBUTTON;
                 }
             }
             if (Point.x < WindowRect.left)
                 return HTSYSMENU;
-            if (WindowRect.right <= Point.x)
-                return HTCLOSE;
-            if (wi.dwStyle & WS_MAXIMIZEBOX || wi.dwStyle & WS_MINIMIZEBOX)
-                WindowRect.right -= ButtonWidth;
-            if (Point.x >= WindowRect.right)
-                return HTMAXBUTTON;
-            if (wi.dwStyle & WS_MINIMIZEBOX)
-                WindowRect.right -= ButtonWidth;
-            if (Point.x >= WindowRect.right)
-                return HTMINBUTTON;
             return HTCAPTION;
         }
     }
@@ -1111,8 +1146,12 @@ HRESULT WINAPI DrawNCPreview(HDC hDC,
 
     /* Paint the window on the preview hDC */
     rcCurrent = context.wi.rcWindow;
+    OffsetRect( &rcCurrent, -context.wi.rcWindow.left, -context.wi.rcWindow.top);
+    SetViewportOrgEx(hDC, context.wi.rcWindow.left, context.wi.rcWindow.top, NULL);
+    ThemeCalculateCaptionButtonsPos(hwndDummy, context.theme);
     ThemePaintWindow(&context, &rcCurrent, FALSE);
-    
+    SetViewportOrgEx(hDC, 0, 0, NULL);
+
     context.hDC = NULL;
     CloseThemeData (context.theme);
     CloseThemeData (context.scrolltheme);

@@ -151,6 +151,7 @@ typedef struct _WND_DATA
     HTHEME hthemeWindow;
     HTHEME hthemeScrollbar;
 
+    RECT rcCaptionButtons[4];
     UINT lastHitTest;
     BOOL HasAppDefinedRgn;
     BOOL HasThemeRgn;
@@ -239,6 +240,7 @@ typedef enum {
 #define SCROLL_MIN_RECT  4
 
 LRESULT CALLBACK ThemeWndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, WNDPROC DefWndProc);
+void ThemeCalculateCaptionButtonsPos(HWND hWnd, HTHEME htheme);
 void  ThemeDrawScrollBar(PDRAW_CONTEXT pcontext, INT Bar, POINT* pt);
 VOID NC_TrackScrollBar(HWND Wnd, WPARAM wParam, POINT Pt);
 void ThemeInitDrawContext(PDRAW_CONTEXT pcontext, HWND hWnd, HRGN hRgn);

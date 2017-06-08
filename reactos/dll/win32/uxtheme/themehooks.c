@@ -286,6 +286,14 @@ ThemePreWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_PTR 
 {
     switch(Msg)
     {
+        case WM_CREATE:
+        case WM_STYLECHANGED:
+        case WM_SIZE:
+        case WM_WINDOWPOSCHANGED:
+        {
+            ThemeCalculateCaptionButtonsPos(hWnd, NULL);
+            break;
+        }
         case WM_THEMECHANGED:
         {
             PWND_DATA pwndData = ThemeGetWndData(hWnd);
@@ -319,6 +327,8 @@ ThemePreWindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, ULONG_PTR 
                 CloseThemeData(pwndData->hthemeScrollbar);
                 pwndData->hthemeScrollbar = NULL;
             }
+
+            ThemeCalculateCaptionButtonsPos(hWnd, NULL);
         }
         case WM_NCCREATE:
         {
