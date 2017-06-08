@@ -62,7 +62,7 @@ static const WCHAR szTrayWndClass[] = L"Shell_TrayWnd";
 const GUID IID_IShellDesktopTray = { 0x213e2df9, 0x9a14, 0x4328, { 0x99, 0xb1, 0x69, 0x61, 0xf9, 0x14, 0x3c, 0xe9 } };
 
 class CStartButton
-    : public CWindow
+    : public CWindowImpl<CStartButton>
 {
     HIMAGELIST m_ImageList;
     SIZE       m_Size;
@@ -125,6 +125,7 @@ public:
 
     VOID Initialize()
     {
+        SubclassWindow(m_hWnd);
         SetWindowTheme(m_hWnd, L"Start", NULL);
 
         m_ImageList = ImageList_LoadImageW(hExplorerInstance,
@@ -167,6 +168,20 @@ public:
 
         return m_hWnd;
     }
+
+    LRESULT OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        if (uMsg == WM_KEYUP && wParam != VK_SPACE)
+            return 0;
+
+        GetParent().PostMessage(TWM_OPENSTARTMENU);
+        return 0;
+    }
+
+    BEGIN_MSG_MAP(CStartButton)
+        MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
+    END_MSG_MAP()
+
 };
 
 class CTrayWindow :
@@ -2696,7 +2711,6 @@ HandleTrayContextMenu:
 
         if ((HWND) lParam == m_StartButton.m_hWnd)
         {
-            PopupStartMenu();
             return FALSE;
         }
 
