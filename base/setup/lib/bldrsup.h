@@ -2,8 +2,8 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Setup Library
  * FILE:            base/setup/lib/bldrsup.h
- * PURPOSE:         NT 5.x family (MS Windows <= 2003, and ReactOS)
- *                  boot loaders management.
+ * PURPOSE:         Boot Stores Management functionality, with support for
+ *                  NT 5.x family (MS Windows <= 2003, and ReactOS) bootloaders.
  * PROGRAMMER:      Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
@@ -11,13 +11,13 @@
 
 #pragma once
 
-typedef enum _NTOS_BOOT_LOADER_TYPE     // _BOOT_STORE_TYPE
+typedef enum _BOOT_STORE_TYPE
 {
     FreeLdr,    // ReactOS' FreeLoader
     NtLdr,      // Windows <= 2k3 NT "FlexBoot" OS Loader NTLDR
 //  BootMgr,    // Vista+ BCD-oriented BOOTMGR
     BldrTypeMax
-} NTOS_BOOT_LOADER_TYPE;
+} BOOT_STORE_TYPE;
 
 /*
  * Some references about EFI boot entries:
@@ -29,25 +29,25 @@ typedef enum _NTOS_BOOT_LOADER_TYPE     // _BOOT_STORE_TYPE
  * This structure is inspired from the EFI boot entry structure
  * BOOT_OPTIONS that is defined in ndk/iotypes.h .
  */
-typedef struct _NTOS_BOOT_OPTIONS       // _BOOT_STORE_OPTIONS
+typedef struct _BOOT_STORE_OPTIONS
 {
-    // ULONG Version;
+    ULONG Version;          // BOOT_STORE_TYPE value
     // ULONG Length;
     ULONG Timeout;
     ULONG_PTR CurrentBootEntryKey;
     // ULONG_PTR NextBootEntryKey;
     // WCHAR HeadlessRedirection[1];
-} NTOS_BOOT_OPTIONS, *PNTOS_BOOT_OPTIONS;
+} BOOT_STORE_OPTIONS, *PBOOT_STORE_OPTIONS;
 
 /*
  * These macros are used to set a value for the BootEntryKey member of a
- * NTOS_BOOT_ENTRY structure, much in the same idea as MAKEINTRESOURCE and
+ * BOOT_STORE_ENTRY structure, much in the same idea as MAKEINTRESOURCE and
  * IS_INTRESOURCE macros for Win32 resources.
  *
- * A key consists of either a boot ID number,
- * comprised between 0 and MAX_USHORT == 0xFFFF == 65535, or can be a pointer
- * to a human-readable string (section name), as in the case of FreeLDR, or
- * to a GUID, as in the case of BOOTMGR.
+ * A key consists of either a boot ID number, comprised between 0 and
+ * MAX_USHORT == 0xFFFF == 65535, or can be a pointer to a human-readable
+ * string (section name), as in the case of FreeLDR, or to a GUID, as in the
+ * case of BOOTMGR.
  *
  * If IS_INTKEY(BootEntryKey) == TRUE, i.e. the key is <= 65535, this means
  * the key is a boot ID number, otherwise it is typically a pointer to a string.
@@ -60,10 +60,9 @@ typedef struct _NTOS_BOOT_OPTIONS       // _BOOT_STORE_OPTIONS
  * This structure is inspired from the EFI boot entry structures
  * BOOT_ENTRY and FILE_PATH that are defined in ndk/iotypes.h .
  */
-typedef struct _NTOS_BOOT_ENTRY         // _BOOT_STORE_ENTRY
+typedef struct _BOOT_STORE_ENTRY
 {
-    // ULONG Version; // Equivalent of the "BootType" in FreeLdr
-    PWCHAR Version; // HACK!!!
+    ULONG Version;          // BOOT_STORE_TYPE value
     // ULONG Length;
     ULONG_PTR BootEntryKey; // Boot entry "key"
     PCWSTR FriendlyName;    // Human-readable boot entry description        // LoadIdentifier
@@ -78,7 +77,7 @@ typedef struct _NTOS_BOOT_ENTRY         // _BOOT_STORE_ENTRY
  *  WCHAR FriendlyName[ANYSIZE_ARRAY];
  *  FILE_PATH BootFilePath;
  */
-} NTOS_BOOT_ENTRY, *PNTOS_BOOT_ENTRY;
+} BOOT_STORE_ENTRY, *PBOOT_STORE_ENTRY;
 
 /* "NTOS" (aka. ReactOS or MS Windows NT) <= 5.x options */
 typedef struct _NTOS_OPTIONS
@@ -86,8 +85,8 @@ typedef struct _NTOS_OPTIONS
     UCHAR Signature[8];     // "NTOS_5\0\0"
     // ULONG Version;
     // ULONG Length;
-    PCWSTR OsLoadPath;      // The OS SystemRoot path                       // OsLoaderFilePath // OsFilePath
-    PCWSTR OsLoadOptions;                                                   // OsLoadOptions
+    PCWSTR OsLoadPath;      // The OS SystemRoot path   // OsLoaderFilePath // OsFilePath
+    PCWSTR OsLoadOptions;                               // OsLoadOptions
 /*
  * In packed form, this structure would contain an offset to the 'OsLoadPath'
  * string, and the 'OsLoadOptions' member would be:
@@ -115,79 +114,79 @@ typedef struct _BOOT_SECTOR_OPTIONS
 
 typedef NTSTATUS
 (NTAPI *PENUM_BOOT_ENTRIES_ROUTINE)(
-    IN NTOS_BOOT_LOADER_TYPE Type,
-    IN PNTOS_BOOT_ENTRY BootEntry,
+    IN BOOT_STORE_TYPE Type,
+    IN PBOOT_STORE_ENTRY BootEntry,
     IN PVOID Parameter OPTIONAL);
 
 
 NTSTATUS
-FindNTOSBootLoader( // By handle
+FindBootStore( // By handle
     IN HANDLE PartitionDirectoryHandle, // OPTIONAL
-    IN NTOS_BOOT_LOADER_TYPE Type,
-    OUT PULONG Version);
+    IN BOOT_STORE_TYPE Type,
+    OUT PULONG VersionNumber OPTIONAL);
 
 
 NTSTATUS
-OpenNTOSBootLoaderStoreByHandle(
+OpenBootStoreByHandle(
     OUT PVOID* Handle,
     IN HANDLE PartitionDirectoryHandle, // OPTIONAL
-    IN NTOS_BOOT_LOADER_TYPE Type,
+    IN BOOT_STORE_TYPE Type,
     IN BOOLEAN CreateNew);
 
 NTSTATUS
-OpenNTOSBootLoaderStore_UStr(
+OpenBootStore_UStr(
     OUT PVOID* Handle,
     IN PUNICODE_STRING SystemPartitionPath,
-    IN NTOS_BOOT_LOADER_TYPE Type,
+    IN BOOT_STORE_TYPE Type,
     IN BOOLEAN CreateNew);
 
 NTSTATUS
-OpenNTOSBootLoaderStore(
+OpenBootStore(
     OUT PVOID* Handle,
     IN PCWSTR SystemPartition,
-    IN NTOS_BOOT_LOADER_TYPE Type,
+    IN BOOT_STORE_TYPE Type,
     IN BOOLEAN CreateNew);
 
 NTSTATUS
-CloseNTOSBootLoaderStore(
+CloseBootStore(
     IN PVOID Handle);
 
 NTSTATUS
-AddNTOSBootEntry(
+AddBootStoreEntry(
     IN PVOID Handle,
-    IN PNTOS_BOOT_ENTRY BootEntry,
+    IN PBOOT_STORE_ENTRY BootEntry,
     IN ULONG_PTR BootEntryKey);
 
 NTSTATUS
-DeleteNTOSBootEntry(
+DeleteBootStoreEntry(
     IN PVOID Handle,
     IN ULONG_PTR BootEntryKey);
 
 NTSTATUS
-ModifyNTOSBootEntry(
+ModifyBootStoreEntry(
     IN PVOID Handle,
-    IN PNTOS_BOOT_ENTRY BootEntry);
+    IN PBOOT_STORE_ENTRY BootEntry);
 
 NTSTATUS
-QueryNTOSBootEntry(
+QueryBootStoreEntry(
     IN PVOID Handle,
     IN ULONG_PTR BootEntryKey,
-    OUT PNTOS_BOOT_ENTRY BootEntry); // Technically this should be PNTOS_BOOT_ENTRY*
+    OUT PBOOT_STORE_ENTRY BootEntry); // Technically this should be PBOOT_STORE_ENTRY*
 
 NTSTATUS
-QueryNTOSBootOptions(
+QueryBootStoreOptions(
     IN PVOID Handle,
-    IN OUT PNTOS_BOOT_OPTIONS BootOptions
+    IN OUT PBOOT_STORE_OPTIONS BootOptions
 /* , IN PULONG BootOptionsLength */ );
 
 NTSTATUS
-SetNTOSBootOptions(
+SetBootStoreOptions(
     IN PVOID Handle,
-    IN PNTOS_BOOT_OPTIONS BootOptions,
+    IN PBOOT_STORE_OPTIONS BootOptions,
     IN ULONG FieldsToChange);
 
 NTSTATUS
-EnumerateNTOSBootEntries(
+EnumerateBootStoreEntries(
     IN PVOID Handle,
 //  IN ULONG Flags, // Determine which data to retrieve
     IN PENUM_BOOT_ENTRIES_ROUTINE EnumBootEntriesRoutine,

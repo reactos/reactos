@@ -2,8 +2,8 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Setup Library
  * FILE:            base/setup/lib/bldrsup.c
- * PURPOSE:         NT 5.x family (MS Windows <= 2003, and ReactOS)
- *                  boot loaders management.
+ * PURPOSE:         Boot Stores Management functionality, with support for
+ *                  NT 5.x family (MS Windows <= 2003, and ReactOS) bootloaders.
  * PROGRAMMER:      Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
@@ -27,7 +27,7 @@ typedef NTSTATUS
 (*POPEN_BOOT_STORE)(
     OUT PVOID* Handle,
     IN HANDLE PartitionDirectoryHandle, // OPTIONAL
-    IN NTOS_BOOT_LOADER_TYPE Type,
+    IN BOOT_STORE_TYPE Type,
     IN BOOLEAN CreateNew);
 
 typedef NTSTATUS
@@ -43,7 +43,7 @@ typedef NTSTATUS
 
 typedef struct _NTOS_BOOT_LOADER_FILES
 {
-    NTOS_BOOT_LOADER_TYPE Type;
+    BOOT_STORE_TYPE Type;
     PCZZWSTR LoaderExecutables;
     PCWSTR LoaderConfigurationFile;
     POPEN_BOOT_STORE OpenBootStore;
@@ -57,7 +57,7 @@ typedef struct _NTOS_BOOT_LOADER_FILES
  */
 typedef struct _BOOT_STORE_CONTEXT
 {
-    NTOS_BOOT_LOADER_TYPE Type;
+    BOOT_STORE_TYPE Type;
 //  PNTOS_BOOT_LOADER_FILES ??
 /*
     PVOID PrivateData;
@@ -96,7 +96,7 @@ static NTSTATUS
 OpenIniBootLoaderStore(
     OUT PVOID* Handle,
     IN HANDLE PartitionDirectoryHandle, // OPTIONAL
-    IN NTOS_BOOT_LOADER_TYPE Type,
+    IN BOOT_STORE_TYPE Type,
     IN BOOLEAN CreateNew);
 
 static NTSTATUS
@@ -135,10 +135,10 @@ C_ASSERT(_countof(NtosBootLoaders) == BldrTypeMax);
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
-FindNTOSBootLoader( // By handle
+FindBootStore( // By handle
     IN HANDLE PartitionDirectoryHandle, // OPTIONAL
-    IN NTOS_BOOT_LOADER_TYPE Type,
-    OUT PULONG Version OPTIONAL)
+    IN BOOT_STORE_TYPE Type,
+    OUT PULONG VersionNumber OPTIONAL)
 // OUT PHANDLE ConfigFileHande OPTIONAL ????
 {
     PCWSTR LoaderExecutable;
@@ -147,8 +147,8 @@ FindNTOSBootLoader( // By handle
     if (Type >= BldrTypeMax)
         return STATUS_INVALID_PARAMETER;
 
-    if (Version)
-        *Version = 0;
+    if (VersionNumber)
+        *VersionNumber = 0;
 
     /* Check whether any of the loader executables exist */
     LoaderExecutable = NtosBootLoaders[Type].LoaderExecutables;
@@ -173,10 +173,10 @@ FindNTOSBootLoader( // By handle
     }
 
     /* Check for loader version if needed */
-    if (Version)
+    if (VersionNumber)
     {
-        *Version = 0;
-        // TODO: Check for BLDR version ONLY if Version != NULL
+        *VersionNumber = 0;
+        // TODO: Check for BLDR version!
     }
 
     /* Check whether the loader configuration file exists */
@@ -340,7 +340,7 @@ static NTSTATUS
 OpenIniBootLoaderStore(
     OUT PVOID* Handle,
     IN HANDLE PartitionDirectoryHandle, // OPTIONAL
-    IN NTOS_BOOT_LOADER_TYPE Type,
+    IN BOOT_STORE_TYPE Type,
     IN BOOLEAN CreateNew)
 {
     NTSTATUS Status;
@@ -733,10 +733,10 @@ Quit:
 
 
 NTSTATUS
-OpenNTOSBootLoaderStoreByHandle(
+OpenBootStoreByHandle(
     OUT PVOID* Handle,
     IN HANDLE PartitionDirectoryHandle, // OPTIONAL
-    IN NTOS_BOOT_LOADER_TYPE Type,
+    IN BOOT_STORE_TYPE Type,
     IN BOOLEAN CreateNew)
 {
     /*
@@ -760,10 +760,10 @@ OpenNTOSBootLoaderStoreByHandle(
 }
 
 NTSTATUS
-OpenNTOSBootLoaderStore_UStr(
+OpenBootStore_UStr(
     OUT PVOID* Handle,
     IN PUNICODE_STRING SystemPartitionPath,
-    IN NTOS_BOOT_LOADER_TYPE Type,
+    IN BOOT_STORE_TYPE Type,
     IN BOOLEAN CreateNew)
 {
     NTSTATUS Status;
@@ -803,7 +803,7 @@ OpenNTOSBootLoaderStore_UStr(
         return Status;
     }
 
-    Status = OpenNTOSBootLoaderStoreByHandle(Handle, PartitionDirectoryHandle, Type, CreateNew);
+    Status = OpenBootStoreByHandle(Handle, PartitionDirectoryHandle, Type, CreateNew);
 
     /* Done! */
     NtClose(PartitionDirectoryHandle);
@@ -811,19 +811,19 @@ OpenNTOSBootLoaderStore_UStr(
 }
 
 NTSTATUS
-OpenNTOSBootLoaderStore(
+OpenBootStore(
     OUT PVOID* Handle,
     IN PCWSTR SystemPartition,
-    IN NTOS_BOOT_LOADER_TYPE Type,
+    IN BOOT_STORE_TYPE Type,
     IN BOOLEAN CreateNew)
 {
     UNICODE_STRING SystemPartitionPath;
     RtlInitUnicodeString(&SystemPartitionPath, SystemPartition);
-    return OpenNTOSBootLoaderStore_UStr(Handle, &SystemPartitionPath, Type, CreateNew);
+    return OpenBootStore_UStr(Handle, &SystemPartitionPath, Type, CreateNew);
 }
 
 NTSTATUS
-CloseNTOSBootLoaderStore(
+CloseBootStore(
     IN PVOID Handle)
 {
     PBOOT_STORE_CONTEXT BootStore = (PBOOT_STORE_CONTEXT)Handle;
@@ -855,7 +855,7 @@ NTSTATUS
 CreateNTOSEntry(
     IN PBOOT_STORE_INI_CONTEXT BootStore,
     IN ULONG_PTR BootEntryKey,
-    IN PNTOS_BOOT_ENTRY BootEntry)
+    IN PBOOT_STORE_ENTRY BootEntry)
 {
     PINICACHESECTION IniSection;
     PWCHAR Section = (PWCHAR)BootEntryKey;
@@ -867,7 +867,6 @@ CreateNTOSEntry(
     /* Create a new section */
     IniSection = IniCacheAppendSection(BootStore->IniCache, Section);
 
-    // if (_wcsicmp(BootEntry->Version, L"Windows2003") == 0)
     if (BootEntry->OsOptionsLength >= sizeof(NTOS_OPTIONS) &&
         RtlCompareMemory(&BootEntry->OsOptions /* Signature */,
                          NTOS_OPTIONS_SIGNATURE,
@@ -889,7 +888,6 @@ CreateNTOSEntry(
                           L"Options", (PWSTR)Options->OsLoadOptions);
     }
     else
-    // if (_wcsicmp(BootEntry->Version, L"BootSector") == 0)
     if (BootEntry->OsOptionsLength >= sizeof(BOOT_SECTOR_OPTIONS) &&
         RtlCompareMemory(&BootEntry->OsOptions /* Signature */,
                          BOOT_SECTOR_OPTIONS_SIGNATURE,
@@ -916,16 +914,18 @@ CreateNTOSEntry(
     }
     else
     {
-        DPRINT1("Unsupported BootType '%S'\n", BootEntry->Version);
+        // DPRINT1("Unsupported BootType %lu/'%*.s'\n",
+                // BootEntry->OsOptionsLength, 8, &BootEntry->OsOptions);
+        DPRINT1("Unsupported BootType %lu\n", BootEntry->OsOptionsLength);
     }
 
     return STATUS_SUCCESS;
 }
 
 NTSTATUS
-AddNTOSBootEntry(
+AddBootStoreEntry(
     IN PVOID Handle,
-    IN PNTOS_BOOT_ENTRY BootEntry,
+    IN PBOOT_STORE_ENTRY BootEntry,
     IN ULONG_PTR BootEntryKey)
 {
     PBOOT_STORE_CONTEXT BootStore = (PBOOT_STORE_CONTEXT)Handle;
@@ -949,6 +949,9 @@ AddNTOSBootEntry(
 
     if (BootStore->Type == FreeLdr)
     {
+        if (BootEntry->Version != FreeLdr)
+            return STATUS_INVALID_PARAMETER;
+
         return CreateNTOSEntry((PBOOT_STORE_INI_CONTEXT)BootStore,
                                BootEntryKey, BootEntry);
     }
@@ -960,15 +963,19 @@ AddNTOSBootEntry(
         ULONG BufferLength;
         PCWSTR InstallName, OsOptions;
         // ULONG InstallNameLength, OsOptionsLength;
+        BOOLEAN IsNameNotQuoted;
 
-        // if (_wcsicmp(BootEntry->Version, L"Windows2003") != 0)
+        if (BootEntry->Version != NtLdr)
+            return STATUS_INVALID_PARAMETER;
+
         if (BootEntry->OsOptionsLength < sizeof(NTOS_OPTIONS) ||
             RtlCompareMemory(&BootEntry->OsOptions /* Signature */,
                              NTOS_OPTIONS_SIGNATURE,
                              RTL_FIELD_SIZE(NTOS_OPTIONS, Signature)) !=
                              RTL_FIELD_SIZE(NTOS_OPTIONS, Signature))
         {
-            DPRINT1("Unsupported BootType '%S'\n", BootEntry->Version);
+            // DPRINT1("Unsupported BootType '%S'\n", BootEntry->Version);
+            DPRINT1("Unsupported BootType %lu\n", BootEntry->OsOptionsLength);
             return STATUS_SUCCESS; // STATUS_NOT_SUPPORTED;
         }
 
@@ -978,7 +985,9 @@ AddNTOSBootEntry(
         // if (InstallNameLength == 0) InstallName = NULL;
         // if (OsOptionsLength == 0) OsOptions = NULL;
 
-        BufferLength = 2 /* Quotes for FriendlyName*/ + wcslen(InstallName);
+        IsNameNotQuoted = (InstallName[0] != L'\"' || InstallName[wcslen(InstallName)-1] != L'\"');
+
+        BufferLength = (IsNameNotQuoted ? 2 /* Quotes for FriendlyName*/ : 0) + wcslen(InstallName);
         if (OsOptions)
             BufferLength += 1 /* Space between FriendlyName and options */ + wcslen(OsOptions);
         BufferLength++; /* NULL-termination */
@@ -987,9 +996,10 @@ AddNTOSBootEntry(
         if (!Buffer)
             return STATUS_INSUFFICIENT_RESOURCES;
 
-        wcscpy(Buffer, L"\"");
+        *Buffer = UNICODE_NULL;
+        if (IsNameNotQuoted) wcscat(Buffer, L"\"");
         wcscat(Buffer, InstallName);
-        wcscat(Buffer, L"\"");
+        if (IsNameNotQuoted) wcscat(Buffer, L"\"");
         if (OsOptions)
         {
             wcscat(Buffer, L" ");
@@ -1011,7 +1021,7 @@ AddNTOSBootEntry(
 }
 
 NTSTATUS
-DeleteNTOSBootEntry(
+DeleteBootStoreEntry(
     IN PVOID Handle,
     IN ULONG_PTR BootEntryKey)
 {
@@ -1045,9 +1055,9 @@ DeleteNTOSBootEntry(
 }
 
 NTSTATUS
-ModifyNTOSBootEntry(
+ModifyBootStoreEntry(
     IN PVOID Handle,
-    IN PNTOS_BOOT_ENTRY BootEntry)
+    IN PBOOT_STORE_ENTRY BootEntry)
 {
     PBOOT_STORE_CONTEXT BootStore = (PBOOT_STORE_CONTEXT)Handle;
 
@@ -1079,10 +1089,10 @@ ModifyNTOSBootEntry(
 }
 
 NTSTATUS
-QueryNTOSBootEntry(
+QueryBootStoreEntry(
     IN PVOID Handle,
     IN ULONG_PTR BootEntryKey,
-    OUT PNTOS_BOOT_ENTRY BootEntry) // Technically this should be PNTOS_BOOT_ENTRY*
+    OUT PBOOT_STORE_ENTRY BootEntry) // Technically this should be PBOOT_STORE_ENTRY*
 {
     PBOOT_STORE_CONTEXT BootStore = (PBOOT_STORE_CONTEXT)Handle;
 
@@ -1114,9 +1124,9 @@ QueryNTOSBootEntry(
 }
 
 NTSTATUS
-QueryNTOSBootOptions(
+QueryBootStoreOptions(
     IN PVOID Handle,
-    IN OUT PNTOS_BOOT_OPTIONS BootOptions
+    IN OUT PBOOT_STORE_OPTIONS BootOptions
 /* , IN PULONG BootOptionsLength */ )
 {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -1147,6 +1157,8 @@ QueryNTOSBootOptions(
 
     if (BootStore->Type == FreeLdr)
     {
+        BootOptions->Version = FreeLdr;
+
         Status = IniCacheGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
                                 L"DefaultOS", (PWCHAR*)&BootOptions->CurrentBootEntryKey);
         if (!NT_SUCCESS(Status))
@@ -1161,6 +1173,8 @@ QueryNTOSBootOptions(
     }
     else if (BootStore->Type == NtLdr)
     {
+        BootOptions->Version = NtLdr;
+
         Status = IniCacheGetKey(((PBOOT_STORE_INI_CONTEXT)BootStore)->OptionsIniSection,
                                 L"default", (PWCHAR*)&BootOptions->CurrentBootEntryKey);
         if (!NT_SUCCESS(Status))
@@ -1178,9 +1192,9 @@ QueryNTOSBootOptions(
 }
 
 NTSTATUS
-SetNTOSBootOptions(
+SetBootStoreOptions(
     IN PVOID Handle,
-    IN PNTOS_BOOT_OPTIONS BootOptions,
+    IN PBOOT_STORE_OPTIONS BootOptions,
     IN ULONG FieldsToChange)
 {
     PBOOT_STORE_CONTEXT BootStore = (PBOOT_STORE_CONTEXT)Handle;
@@ -1207,6 +1221,9 @@ SetNTOSBootOptions(
         DPRINT1("Loader type %d is currently unsupported!\n", NtosBootLoaders[BootStore->Type].Type);
         return STATUS_NOT_SUPPORTED;
     }
+
+    if (BootOptions->Version != FreeLdr)
+        return STATUS_INVALID_PARAMETER;
 
     //
     // TODO: Depending on the flags set in 'FieldsToChange',
@@ -1237,9 +1254,9 @@ FreeLdrEnumerateBootEntries(
     PINICACHEITERATOR Iterator;
     PINICACHESECTION OsIniSection;
     PWCHAR SectionName, KeyData;
-    UCHAR xxBootEntry[FIELD_OFFSET(NTOS_BOOT_ENTRY, OsOptions) +
+    UCHAR xxBootEntry[FIELD_OFFSET(BOOT_STORE_ENTRY, OsOptions) +
                       max(sizeof(NTOS_OPTIONS), sizeof(BOOT_SECTOR_OPTIONS))];
-    PNTOS_BOOT_ENTRY BootEntry = (PNTOS_BOOT_ENTRY)&xxBootEntry;
+    PBOOT_STORE_ENTRY BootEntry = (PBOOT_STORE_ENTRY)&xxBootEntry;
     PWCHAR Buffer;
 
     /* Enumerate all the valid installations listed in the "Operating Systems" section */
@@ -1291,7 +1308,7 @@ FreeLdrEnumerateBootEntries(
 
         DPRINT1("Boot entry '%S' in OS section '%S'\n", InstallName, SectionName);
 
-        BootEntry->Version = NULL;
+        BootEntry->Version = FreeLdr;
         BootEntry->BootEntryKey = MAKESTRKEY(SectionName);
         BootEntry->FriendlyName = InstallName;
         BootEntry->BootFilePath = NULL;
@@ -1318,8 +1335,7 @@ FreeLdrEnumerateBootEntries(
             /* BootType is Windows2003 */
             PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
 
-            BootEntry->Version = L"Windows2003";
-            DPRINT1("This is a '%S' boot entry\n", BootEntry->Version);
+            DPRINT1("This is a '%S' boot entry\n", KeyData);
 
             BootEntry->OsOptionsLength = sizeof(NTOS_OPTIONS);
             RtlCopyMemory(Options->Signature,
@@ -1350,8 +1366,7 @@ FreeLdrEnumerateBootEntries(
             /* BootType is BootSector */
             PBOOT_SECTOR_OPTIONS Options = (PBOOT_SECTOR_OPTIONS)&BootEntry->OsOptions;
 
-            BootEntry->Version = L"BootSector";
-            DPRINT1("This is a '%S' boot entry\n", BootEntry->Version);
+            DPRINT1("This is a '%S' boot entry\n", KeyData);
 
             BootEntry->OsOptionsLength = sizeof(BOOT_SECTOR_OPTIONS);
             RtlCopyMemory(Options->Signature,
@@ -1384,7 +1399,6 @@ FreeLdrEnumerateBootEntries(
         else
         {
             DPRINT1("Unrecognized BootType value '%S'\n", KeyData);
-            // BootEntry->Version = KeyData;
             // goto DoEnum;
         }
 
@@ -1416,8 +1430,8 @@ NtLdrEnumerateBootEntries(
     NTSTATUS Status = STATUS_SUCCESS;
     PINICACHEITERATOR Iterator;
     PWCHAR SectionName, KeyData;
-    UCHAR xxBootEntry[FIELD_OFFSET(NTOS_BOOT_ENTRY, OsOptions) + sizeof(NTOS_OPTIONS)];
-    PNTOS_BOOT_ENTRY BootEntry = (PNTOS_BOOT_ENTRY)&xxBootEntry;
+    UCHAR xxBootEntry[FIELD_OFFSET(BOOT_STORE_ENTRY, OsOptions) + sizeof(NTOS_OPTIONS)];
+    PBOOT_STORE_ENTRY BootEntry = (PBOOT_STORE_ENTRY)&xxBootEntry;
     PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
     PWCHAR Buffer;
     ULONG BufferLength;
@@ -1510,7 +1524,7 @@ NtLdrEnumerateBootEntries(
         DPRINT1("Boot entry '%S' in OS section (path) '%S'\n", InstallName, SectionName);
         // SectionName == SystemRoot;
 
-        BootEntry->Version = L"Windows2003";
+        BootEntry->Version = NtLdr;
         BootEntry->BootEntryKey = 0; // FIXME??
         BootEntry->FriendlyName = InstallName;
         BootEntry->BootFilePath = NULL;
@@ -1541,7 +1555,7 @@ NtLdrEnumerateBootEntries(
 }
 
 NTSTATUS
-EnumerateNTOSBootEntries(
+EnumerateBootStoreEntries(
     IN PVOID Handle,
 //  IN ULONG Flags, // Determine which data to retrieve
     IN PENUM_BOOT_ENTRIES_ROUTINE EnumBootEntriesRoutine,

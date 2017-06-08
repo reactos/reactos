@@ -69,8 +69,8 @@ typedef struct _ENUM_INSTALLS_DATA
 static NTSTATUS
 NTAPI
 EnumerateInstallations(
-    IN NTOS_BOOT_LOADER_TYPE Type,
-    IN PNTOS_BOOT_ENTRY BootEntry,
+    IN BOOT_STORE_TYPE Type,
+    IN PBOOT_STORE_ENTRY BootEntry,
     IN PVOID Parameter OPTIONAL)
 {
     PENUM_INSTALLS_DATA Data = (PENUM_INSTALLS_DATA)Parameter;
@@ -96,8 +96,10 @@ EnumerateInstallations(
                          RTL_FIELD_SIZE(NTOS_OPTIONS, Signature))
     {
         /* This is not a ReactOS entry */
-        DPRINT1("    An installation '%S' of unsupported type '%S'\n",
-                BootEntry->FriendlyName, BootEntry->Version ? BootEntry->Version : L"n/a");
+        // DPRINT1("    An installation '%S' of unsupported type '%S'\n",
+                // BootEntry->FriendlyName, BootEntry->Version ? BootEntry->Version : L"n/a");
+        DPRINT1("    An installation '%S' of unsupported type %lu\n",
+                BootEntry->FriendlyName, BootEntry->OsOptionsLength);
         /* Continue the enumeration */
         return STATUS_SUCCESS;
     }
@@ -635,7 +637,7 @@ FindNTOSInstallations(
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
     UNICODE_STRING PartitionRootPath;
-    NTOS_BOOT_LOADER_TYPE Type;
+    BOOT_STORE_TYPE Type;
     PVOID BootStoreHandle;
     ENUM_INSTALLS_DATA Data;
     ULONG Version;
@@ -672,7 +674,7 @@ FindNTOSInstallations(
     /* Try to see whether we recognize some NT boot loaders */
     for (Type = FreeLdr; Type < BldrTypeMax; ++Type)
     {
-        Status = FindNTOSBootLoader(PartitionDirectoryHandle, Type, &Version);
+        Status = FindBootStore(PartitionDirectoryHandle, Type, &Version);
         if (!NT_SUCCESS(Status))
         {
             /* The loader does not exist, continue with another one */
@@ -685,15 +687,15 @@ FindNTOSInstallations(
         DPRINT1("Analyse the OS installations for loader type '%d' in disk #%d, partition #%d\n",
                 Type, DiskNumber, PartitionNumber);
 
-        Status = OpenNTOSBootLoaderStoreByHandle(&BootStoreHandle, PartitionDirectoryHandle, Type, FALSE);
+        Status = OpenBootStoreByHandle(&BootStoreHandle, PartitionDirectoryHandle, Type, FALSE);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Could not open the NTOS boot store of type '%d' (Status 0x%08lx), continue with another one...\n",
                     Type, Status);
             continue;
         }
-        EnumerateNTOSBootEntries(BootStoreHandle, EnumerateInstallations, &Data);
-        CloseNTOSBootLoaderStore(BootStoreHandle);
+        EnumerateBootStoreEntries(BootStoreHandle, EnumerateInstallations, &Data);
+        CloseBootStore(BootStoreHandle);
     }
 
     /* Close the partition */

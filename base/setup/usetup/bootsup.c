@@ -127,12 +127,12 @@ CreateFreeLoaderReactOSEntries(
     IN PVOID BootStoreHandle,
     IN PCWSTR ArcPath)
 {
-    UCHAR xxBootEntry[FIELD_OFFSET(NTOS_BOOT_ENTRY, OsOptions) + sizeof(NTOS_OPTIONS)];
-    PNTOS_BOOT_ENTRY BootEntry = (PNTOS_BOOT_ENTRY)&xxBootEntry;
+    UCHAR xxBootEntry[FIELD_OFFSET(BOOT_STORE_ENTRY, OsOptions) + sizeof(NTOS_OPTIONS)];
+    PBOOT_STORE_ENTRY BootEntry = (PBOOT_STORE_ENTRY)&xxBootEntry;
     PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
-    NTOS_BOOT_OPTIONS BootOptions;
+    BOOT_STORE_OPTIONS BootOptions;
 
-    BootEntry->Version = L"Windows2003";
+    BootEntry->Version = FreeLdr;
     BootEntry->BootFilePath = NULL;
 
     BootEntry->OsOptionsLength = sizeof(NTOS_OPTIONS);
@@ -146,20 +146,20 @@ CreateFreeLoaderReactOSEntries(
     // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS");
     BootEntry->FriendlyName = L"\"ReactOS\"";
     Options->OsLoadOptions  = NULL; // L"";
-    AddNTOSBootEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS"));
+    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS"));
 
     /* ReactOS_Debug */
     // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_Debug");
     BootEntry->FriendlyName = L"\"ReactOS (Debug)\"";
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS";
-    AddNTOSBootEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_Debug"));
+    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_Debug"));
 
 #ifdef _WINKD_
     /* ReactOS_VBoxDebug */
     // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_VBoxDebug");
     BootEntry->FriendlyName = L"\"ReactOS (VBoxDebug)\"";
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=VBOX /SOS";
-    AddNTOSBootEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_VBoxDebug"));
+    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_VBoxDebug"));
 #endif
 #if DBG
 #ifndef _WINKD_
@@ -167,34 +167,34 @@ CreateFreeLoaderReactOSEntries(
     // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_KdSerial");
     BootEntry->FriendlyName = L"\"ReactOS (RosDbg)\"";
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /KDSERIAL";
-    AddNTOSBootEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_KdSerial"));
+    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_KdSerial"));
 #endif
 
     /* ReactOS_Screen */
     // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_Screen");
     BootEntry->FriendlyName = L"\"ReactOS (Screen)\"";
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=SCREEN /SOS";
-    AddNTOSBootEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_Screen"));
+    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_Screen"));
 
     /* ReactOS_LogFile */
     // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_LogFile");
     BootEntry->FriendlyName = L"\"ReactOS (Log file)\"";
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=FILE /SOS";
-    AddNTOSBootEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_LogFile"));
+    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_LogFile"));
 
     /* ReactOS_Ram */
     // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_Ram");
     BootEntry->FriendlyName = L"\"ReactOS (RAM Disk)\"";
     Options->OsLoadPath     = L"ramdisk(0)\\ReactOS";
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /RDPATH=reactos.img /RDIMAGEOFFSET=32256";
-    AddNTOSBootEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_Ram"));
+    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_Ram"));
 
     /* ReactOS_EMS */
     // BootEntry->BootEntryKey = MAKESTRKEY(L"ReactOS_EMS");
     BootEntry->FriendlyName = L"\"ReactOS (Emergency Management Services)\"";
     Options->OsLoadPath     = ArcPath;
     Options->OsLoadOptions  = L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /redirect=com2 /redirectbaudrate=115200";
-    AddNTOSBootEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_EMS"));
+    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(L"ReactOS_EMS"));
 #endif
 
 
@@ -230,7 +230,8 @@ CreateFreeLoaderReactOSEntries(
     }
 #endif
 
-    SetNTOSBootOptions(BootStoreHandle, &BootOptions, 2 | 1);
+    BootOptions.Version = FreeLdr;
+    SetBootStoreOptions(BootStoreHandle, &BootOptions, 2 | 1);
 }
 
 static NTSTATUS
@@ -242,7 +243,7 @@ CreateFreeLoaderIniForReactOS(
     PVOID BootStoreHandle;
 
     /* Initialize the INI file and create the common FreeLdr sections */
-    Status = OpenNTOSBootLoaderStore(&BootStoreHandle, IniPath, FreeLdr, TRUE);
+    Status = OpenBootStore(&BootStoreHandle, IniPath, FreeLdr, TRUE);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -250,7 +251,7 @@ CreateFreeLoaderIniForReactOS(
     CreateFreeLoaderReactOSEntries(BootStoreHandle, ArcPath);
 
     /* Close the INI file */
-    CloseNTOSBootLoaderStore(BootStoreHandle);
+    CloseBootStore(BootStoreHandle);
     return STATUS_SUCCESS;
 }
 
@@ -266,19 +267,19 @@ CreateFreeLoaderIniForReactOSAndBootSector(
 {
     NTSTATUS Status;
     PVOID BootStoreHandle;
-    UCHAR xxBootEntry[FIELD_OFFSET(NTOS_BOOT_ENTRY, OsOptions) + sizeof(BOOT_SECTOR_OPTIONS)];
-    PNTOS_BOOT_ENTRY BootEntry = (PNTOS_BOOT_ENTRY)&xxBootEntry;
+    UCHAR xxBootEntry[FIELD_OFFSET(BOOT_STORE_ENTRY, OsOptions) + sizeof(BOOT_SECTOR_OPTIONS)];
+    PBOOT_STORE_ENTRY BootEntry = (PBOOT_STORE_ENTRY)&xxBootEntry;
     PBOOT_SECTOR_OPTIONS Options = (PBOOT_SECTOR_OPTIONS)&BootEntry->OsOptions;
 
     /* Initialize the INI file and create the common FreeLdr sections */
-    Status = OpenNTOSBootLoaderStore(&BootStoreHandle, IniPath, FreeLdr, TRUE);
+    Status = OpenBootStore(&BootStoreHandle, IniPath, FreeLdr, TRUE);
     if (!NT_SUCCESS(Status))
         return Status;
 
     /* Add the ReactOS entries */
     CreateFreeLoaderReactOSEntries(BootStoreHandle, ArcPath);
 
-    /**/BootEntry->Version = L"BootSector";/**/
+    BootEntry->Version = FreeLdr;
     BootEntry->BootFilePath = NULL;
 
     BootEntry->OsOptionsLength = sizeof(BOOT_SECTOR_OPTIONS);
@@ -292,10 +293,10 @@ CreateFreeLoaderIniForReactOSAndBootSector(
 
     // BootEntry->BootEntryKey = MAKESTRKEY(Section);
     BootEntry->FriendlyName = Description;
-    AddNTOSBootEntry(BootStoreHandle, BootEntry, MAKESTRKEY(Section));
+    AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(Section));
 
     /* Close the INI file */
-    CloseNTOSBootLoaderStore(BootStoreHandle);
+    CloseBootStore(BootStoreHandle);
     return STATUS_SUCCESS;
 }
 
@@ -318,8 +319,8 @@ typedef struct _ENUM_REACTOS_ENTRIES_DATA
 static NTSTATUS
 NTAPI
 EnumerateReactOSEntries(
-    IN NTOS_BOOT_LOADER_TYPE Type,
-    IN PNTOS_BOOT_ENTRY BootEntry,
+    IN BOOT_STORE_TYPE Type,
+    IN PBOOT_STORE_ENTRY BootEntry,
     IN PVOID Parameter OPTIONAL)
 {
     PENUM_REACTOS_ENTRIES_DATA Data = (PENUM_REACTOS_ENTRIES_DATA)Parameter;
@@ -336,9 +337,10 @@ EnumerateReactOSEntries(
                          RTL_FIELD_SIZE(NTOS_OPTIONS, Signature))
     {
         /* This is not a ReactOS entry */
-        DPRINT1("    An installation '%S' of unsupported type '%S'\n",
-                BootEntry->FriendlyName,
-                BootEntry->Version ? BootEntry->Version : L"n/a");
+        // DPRINT1("    An installation '%S' of unsupported type '%S'\n",
+                // BootEntry->FriendlyName, BootEntry->Version ? BootEntry->Version : L"n/a");
+        DPRINT1("    An installation '%S' of unsupported type %lu\n",
+                BootEntry->FriendlyName, BootEntry->OsOptionsLength);
         /* Continue the enumeration */
         goto SkipThisEntry;
     }
@@ -397,12 +399,12 @@ UpdateFreeLoaderIni(
     NTSTATUS Status;
     PVOID BootStoreHandle;
     ENUM_REACTOS_ENTRIES_DATA Data;
-    UCHAR xxBootEntry[FIELD_OFFSET(NTOS_BOOT_ENTRY, OsOptions) + sizeof(NTOS_OPTIONS)];
-    PNTOS_BOOT_ENTRY BootEntry = (PNTOS_BOOT_ENTRY)&xxBootEntry;
+    UCHAR xxBootEntry[FIELD_OFFSET(BOOT_STORE_ENTRY, OsOptions) + sizeof(NTOS_OPTIONS)];
+    PBOOT_STORE_ENTRY BootEntry = (PBOOT_STORE_ENTRY)&xxBootEntry;
     PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
 
     /* Open the INI file */
-    Status = OpenNTOSBootLoaderStore(&BootStoreHandle, IniPath, FreeLdr, /*TRUE*/ FALSE);
+    Status = OpenBootStore(&BootStoreHandle, IniPath, FreeLdr, /*TRUE*/ FALSE);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -414,10 +416,10 @@ UpdateFreeLoaderIni(
     StringCchCopyW(Data.OsName, ARRAYSIZE(Data.OsName), L"\"ReactOS\"");
 
     //
-    // FIXME: We temporarily use EnumerateNTOSBootEntries, until
-    // both QueryNTOSBootEntry and ModifyNTOSBootEntry get implemented.
+    // FIXME: We temporarily use EnumerateBootStoreEntries, until
+    // both QueryBootStoreEntry and ModifyBootStoreEntry get implemented.
     //
-    Status = EnumerateNTOSBootEntries(BootStoreHandle, EnumerateReactOSEntries, &Data);
+    Status = EnumerateBootStoreEntries(BootStoreHandle, EnumerateReactOSEntries, &Data);
 
     /* Create a new "ReactOS" entry if there is none already existing that suits us */
     if (!Data.UseExistingEntry)
@@ -425,7 +427,7 @@ UpdateFreeLoaderIni(
         // StringCchPrintfW(Data.SectionName, ARRAYSIZE(Data.SectionName), L"ReactOS_%lu", Data.i);
         // StringCchPrintfW(Data.OsName, ARRAYSIZE(Data.OsName), L"\"ReactOS %lu\"", Data.i);
 
-        BootEntry->Version = L"Windows2003";
+        BootEntry->Version = FreeLdr;
         BootEntry->BootFilePath = NULL;
 
         BootEntry->OsOptionsLength = sizeof(NTOS_OPTIONS);
@@ -438,11 +440,11 @@ UpdateFreeLoaderIni(
         // BootEntry->BootEntryKey = MAKESTRKEY(Data.SectionName);
         BootEntry->FriendlyName = Data.OsName;
         Options->OsLoadOptions  = NULL; // L"";
-        AddNTOSBootEntry(BootStoreHandle, BootEntry, MAKESTRKEY(Data.SectionName));
+        AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(Data.SectionName));
     }
 
     /* Close the INI file */
-    CloseNTOSBootLoaderStore(BootStoreHandle);
+    CloseBootStore(BootStoreHandle);
     return STATUS_SUCCESS;
 }
 
@@ -458,12 +460,12 @@ UpdateBootIni(
     ENUM_REACTOS_ENTRIES_DATA Data;
 
     // NOTE: Technically it would be "BootSector"...
-    UCHAR xxBootEntry[FIELD_OFFSET(NTOS_BOOT_ENTRY, OsOptions) + sizeof(NTOS_OPTIONS)];
-    PNTOS_BOOT_ENTRY BootEntry = (PNTOS_BOOT_ENTRY)&xxBootEntry;
+    UCHAR xxBootEntry[FIELD_OFFSET(BOOT_STORE_ENTRY, OsOptions) + sizeof(NTOS_OPTIONS)];
+    PBOOT_STORE_ENTRY BootEntry = (PBOOT_STORE_ENTRY)&xxBootEntry;
     PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
 
     /* Open the INI file */
-    Status = OpenNTOSBootLoaderStore(&BootStoreHandle, IniPath, NtLdr, FALSE);
+    Status = OpenBootStore(&BootStoreHandle, IniPath, NtLdr, FALSE);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -475,16 +477,16 @@ UpdateBootIni(
     StringCchCopyW(Data.OsName, ARRAYSIZE(Data.OsName), L"\"ReactOS\"");
 
     //
-    // FIXME: We temporarily use EnumerateNTOSBootEntries, until
-    // both QueryNTOSBootEntry and ModifyNTOSBootEntry get implemented.
+    // FIXME: We temporarily use EnumerateBootStoreEntries, until
+    // both QueryBootStoreEntry and ModifyBootStoreEntry get implemented.
     //
-    Status = EnumerateNTOSBootEntries(BootStoreHandle, EnumerateReactOSEntries, &Data);
+    Status = EnumerateBootStoreEntries(BootStoreHandle, EnumerateReactOSEntries, &Data);
 
     /* If either the key was not found, or contains something else, add a new one */
     if (!Data.UseExistingEntry /* ||
         ( (Status == STATUS_NO_MORE_ENTRIES) && wcscmp(Data.OsName, EntryValue) ) */)
     {
-        BootEntry->Version = L"Windows2003";    // NOTE: See remark above
+        BootEntry->Version = NtLdr;
         BootEntry->BootFilePath = NULL;
 
         BootEntry->OsOptionsLength = sizeof(NTOS_OPTIONS);
@@ -498,11 +500,11 @@ UpdateBootIni(
         // BootEntry->FriendlyName = Data.OsName;
         BootEntry->FriendlyName = EntryValue;
         Options->OsLoadOptions  = NULL; // L"";
-        AddNTOSBootEntry(BootStoreHandle, BootEntry, MAKESTRKEY(0 /*Data.SectionName*/));
+        AddBootStoreEntry(BootStoreHandle, BootEntry, MAKESTRKEY(0 /*Data.SectionName*/));
     }
 
     /* Close the INI file */
-    CloseNTOSBootLoaderStore(BootStoreHandle);
+    CloseBootStore(BootStoreHandle);
     return STATUS_SUCCESS; // Status;
 }
 
@@ -1777,8 +1779,8 @@ InstallFatBootcodeToPartition(
     /* Check for NT and other bootloaders */
 
     // FIXME: Check for Vista+ bootloader!
-    /*** Status = FindNTOSBootLoader(PartitionHandle, NtLdr, &Version); ***/
-    /*** Status = FindNTOSBootLoader(PartitionHandle, BootMgr, &Version); ***/
+    /*** Status = FindBootStore(PartitionHandle, NtLdr, &Version); ***/
+    /*** Status = FindBootStore(PartitionHandle, BootMgr, &Version); ***/
     if (DoesFileExist_2(SystemRootPath->Buffer, L"NTLDR") == TRUE ||
         DoesFileExist_2(SystemRootPath->Buffer, L"BOOT.INI") == TRUE)
     {
