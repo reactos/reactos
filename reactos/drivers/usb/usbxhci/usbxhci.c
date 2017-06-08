@@ -8,193 +8,6 @@
 USBPORT_REGISTRATION_PACKET RegPacket;
 
 
-//---------------------------------------roothub functions copied over-----------------------------------------------
-
-/*
-VOID
-NTAPI
-XHCI_RH_GetRootHubData(IN PVOID xhciExtension,
-                       IN PVOID rootHubData)
-{
-    
-}
-
-MPSTATUS
-NTAPI
-XHCI_RH_GetStatus(IN PVOID xhciExtension,
-                  IN PUSHORT Status)
-{
-    
-    return 0;
-}
-
-MPSTATUS
-NTAPI
-XHCI_RH_GetPortStatus(IN PVOID xhciExtension,
-                      IN USHORT Port,
-                      IN PULONG PortStatus)
-{
-    
-
-    return 0;
-}
-
-MPSTATUS
-NTAPI
-XHCI_RH_GetHubStatus(IN PVOID xhciExtension,
-                     IN PULONG HubStatus)
-{
-    
-    return 0;
-}
-
-VOID
-NTAPI
-XHCI_RH_FinishReset(IN PVOID xhciExtension,
-                    IN PUSHORT Port)
-{
-    
-}
-
-ULONG
-NTAPI
-XHCI_RH_PortResetComplete(IN PVOID xhciExtension,
-                          IN PUSHORT Port)
-{
-    return 0;
-}
-
-MPSTATUS
-NTAPI
-XHCI_RH_SetFeaturePortReset(IN PVOID xhciExtension,
-                            IN USHORT Port)
-{
-    
-    return 0;
-}
-
-MPSTATUS
-NTAPI
-XHCI_RH_SetFeaturePortPower(IN PVOID xhciExtension,
-                            IN USHORT Port)
-{
-   
-    return 0;
-}
-MPSTATUS
-NTAPI
-XHCI_RH_SetFeaturePortEnable(IN PVOID xhciExtension,
-                             IN USHORT Port)
-{
-    DPRINT_RH("XHCI_RH_SetFeaturePortEnable: Not supported\n");
-    return 0;
-}
-
-MPSTATUS
-NTAPI
-XHCI_RH_SetFeaturePortSuspend(IN PVOID xhciExtension,
-                              IN USHORT Port)
-{
-    
-    return 0;
-}
-
-MPSTATUS
-NTAPI
-XHCI_RH_ClearFeaturePortEnable(IN PVOID xhciExtension,
-                               IN USHORT Port)
-{
-   
-    return 0;
-}
-
-MPSTATUS
-NTAPI
-XHCI_RH_ClearFeaturePortPower(IN PVOID xhciExtension,
-                              IN USHORT Port)
-{
-  
-    return 0;
-}
-
-VOID
-NTAPI
-XHCI_RH_PortResumeComplete(IN PULONG xhciExtension,
-                           IN PUSHORT Port)
-{
-   
-}
-
-MPSTATUS
-NTAPI
-XHCI_RH_ClearFeaturePortSuspend(IN PVOID xhciExtension,
-                                IN USHORT Port)
-{
-  
-    return 0;
-}
-
-MPSTATUS
-NTAPI
-XHCI_RH_ClearFeaturePortEnableChange(IN PVOID xhciExtension,
-                                     IN USHORT Port)
-{
-    
-    return 0;
-}
-
-MPSTATUS
-NTAPI
-XHCI_RH_ClearFeaturePortConnectChange(IN PVOID xhciExtension,
-                                      IN USHORT Port)
-{
-    return 0;
-}
-
-MPSTATUS
-NTAPI
-XHCI_RH_ClearFeaturePortResetChange(IN PVOID xhciExtension,
-                                    IN USHORT Port)
-{
-    return 0;
-}
-
-MPSTATUS
-NTAPI
-XHCI_RH_ClearFeaturePortSuspendChange(IN PVOID xhciExtension,
-                                      IN USHORT Port)
-{
-    
-    return 0;
-}
-
-MPSTATUS
-NTAPI
-XHCI_RH_ClearFeaturePortOvercurrentChange(IN PVOID xhciExtension,
-                                          IN USHORT Port)
-{
-    
-    return 0;
-}
-
-VOID
-NTAPI
-XHCI_RH_DisableIrq(IN PVOID xhciExtension)
-{
-   
-}
-
-VOID
-NTAPI
-XHCI_RH_EnableIrq(IN PVOID xhciExtension)
-{
-   
-}
-
-*/
-
-//-------------------------------------------------------------------------------------------------------------------
-
 MPSTATUS
 NTAPI
 XHCI_OpenEndpoint(IN PVOID xhciExtension,
@@ -233,10 +46,133 @@ XHCI_CloseEndpoint(IN PVOID xhciExtension,
 
 MPSTATUS
 NTAPI
+XHCI_InitializeSchedule(IN PXHCI_EXTENSION XhciExtension,
+                        IN PVOID resourcesStartVA,
+                        IN PVOID resourcesStartPA)
+{
+    return MP_STATUS_SUCCESS;
+}
+
+MPSTATUS
+NTAPI
+XHCI_InitializeHardware(IN PXHCI_EXTENSION XhciExtension)
+{
+    PULONG BaseIoAdress;
+    PULONG OperationalRegs;
+    XHCI_USB_COMMAND Command;
+    XHCI_USB_STATUS Status;
+    LARGE_INTEGER CurrentTime = {{0, 0}};
+    LARGE_INTEGER LastTime = {{0, 0}};
+    XHCI_HC_STRUCTURAL_PARAMS_1 StructuralParams_1;
+
+    DPRINT1("EHCI_InitializeHardware: ... \n");
+
+    OperationalRegs = XhciExtension->OperationalRegs;
+    BaseIoAdress = XhciExtension->BaseIoAdress;
+    
+    
+    KeQuerySystemTime(&CurrentTime);
+    CurrentTime.QuadPart += 100 * 10000; // 100 msec
+    
+    Status.AsULONG = READ_REGISTER_ULONG(OperationalRegs + XHCI_USBSTS);
+    ASSERT(Status.ControllerNotReady != 1); // this is needed before writing anything to the operaational or doorbell registers
+
+    Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + XHCI_USBCMD);
+    Command.HCReset = 1;
+    while(TRUE)
+    {
+        KeQuerySystemTime(&LastTime);
+        
+        Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + XHCI_USBCMD);
+       
+        if (Command.HCReset != 1)
+        {
+            break;
+        }
+
+        if (LastTime.QuadPart >= CurrentTime.QuadPart)
+        {
+            if (Command.HCReset == 1)
+            {
+                DPRINT1("EHCI_InitializeHardware: Software Reset failed!\n");
+                return 7;
+            }
+
+            break;
+        }
+    }
+    DPRINT("EHCI_InitializeHardware: Reset - OK\n");
+    
+    StructuralParams_1.AsULONG = READ_REGISTER_ULONG(BaseIoAdress + XHCI_HCSP1); // HCSPARAMS1 register
+
+    XhciExtension->NumberOfPorts = StructuralParams_1.NumberOfPorts;
+    //EhciExtension->PortPowerControl = StructuralParams.PortPowerControl;
+    DbgBreakPoint();
+    return MP_STATUS_SUCCESS;
+}
+
+MPSTATUS
+NTAPI
 XHCI_StartController(IN PVOID xhciExtension,
                      IN PUSBPORT_RESOURCES Resources)
 {
-    DPRINT1("XHCI_StartController: UNIMPLEMENTED. FIXME\n");
+    PXHCI_EXTENSION XhciExtension;
+    PULONG BaseIoAdress;
+    PULONG OperationalRegs;
+    MPSTATUS MPStatus;
+    XHCI_USB_COMMAND Command;
+    UCHAR CapabilityRegLength;
+    UCHAR Fladj;
+
+    DPRINT1("XHCI_StartController: function initiated\n");
+
+    if ((Resources->TypesResources & (USBPORT_RESOURCES_MEMORY | USBPORT_RESOURCES_INTERRUPT)) !=
+                                     (USBPORT_RESOURCES_MEMORY | USBPORT_RESOURCES_INTERRUPT))
+    {
+        DPRINT1("XHCI_StartController: Resources->TypesResources - %x\n",
+                Resources->TypesResources);
+
+        return MP_STATUS_ERROR;
+    }
+    XhciExtension = (PXHCI_EXTENSION)xhciExtension;
+
+    BaseIoAdress = (PULONG)Resources->ResourceBase;
+    XhciExtension->BaseIoAdress = BaseIoAdress;
+
+    CapabilityRegLength = (UCHAR)READ_REGISTER_ULONG(BaseIoAdress);
+    OperationalRegs = (PULONG)((ULONG)BaseIoAdress + CapabilityRegLength);
+    XhciExtension->OperationalRegs = OperationalRegs;
+
+    DPRINT("XHCI_StartController: BaseIoAdress    - %p\n", BaseIoAdress);
+    DPRINT("XHCI_StartController: OperationalRegs - %p\n", OperationalRegs);
+    
+    RegPacket.UsbPortReadWriteConfigSpace(XhciExtension,
+                                          1,
+                                          &Fladj,
+                                          0x61,
+                                          1);
+
+    XhciExtension->FrameLengthAdjustment = Fladj;
+    
+    MPStatus = XHCI_InitializeHardware(XhciExtension);
+
+    if (MPStatus)
+    {
+        DPRINT1("XHCI_StartController: Unsuccessful InitializeHardware()\n");
+        return MPStatus;
+    }
+
+    MPStatus = XHCI_InitializeSchedule(XhciExtension,
+                                       Resources->StartVA,
+                                       Resources->StartPA);
+
+    if (MPStatus)
+    {
+        DPRINT1("XHCI_StartController: Unsuccessful InitializeSchedule()\n");
+        return MPStatus;
+    }
+
+    //DPRINT1("XHCI_StartController: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
 }
 

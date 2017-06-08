@@ -19,6 +19,11 @@ typedef struct _XHCI_EXTENSION {
   PULONG BaseIoAdress;
   PULONG OperationalRegs;
   UCHAR FrameLengthAdjustment;
+  BOOLEAN IsStarted;
+  USHORT HcSystemErrors;
+  ULONG PortRoutingControl;
+  USHORT NumberOfPorts; // HCSPARAMS1 => N_PORTS 
+  USHORT PortPowerControl; // HCSPARAMS => Port Power Control (PPC)
   
 } XHCI_EXTENSION, *PXHCI_EXTENSION;
 
