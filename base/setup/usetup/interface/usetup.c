@@ -90,7 +90,8 @@ static UNICODE_STRING DestinationPath;
 static UNICODE_STRING DestinationArcPath;
 static UNICODE_STRING DestinationRootPath;
 
-static WCHAR DestinationDriveLetter;    // FIXME: Is it really useful??
+// FIXME: Is it really useful?? Just used for SetDefaultPagefile...
+static WCHAR DestinationDriveLetter;
 
 static HINF SetupInf;
 
@@ -1614,7 +1615,6 @@ IsDiskSizeValid(PPARTENTRY PartEntry)
  *  QuitPage
  *
  * SIDEEFFECTS
- *  Init DestinationDriveLetter (only if unattended or not free space is selected)
  *  Set InstallShortcut (only if not unattended + free space is selected)
  *
  * RETURNS
@@ -1656,8 +1656,6 @@ SelectPartitionPage(PINPUT_RECORD Ir)
             ASSERT(FALSE);
         }
 
-        DestinationDriveLetter = (WCHAR)PartitionList->CurrentPartition->DriveLetter;
-
         return SELECT_FILE_SYSTEM_PAGE;
     }
 
@@ -1697,8 +1695,6 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                     return SELECT_PARTITION_PAGE; /* let the user select another partition */
                 }
 
-                DestinationDriveLetter = (WCHAR)PartitionList->CurrentPartition->DriveLetter;
-
                 return SELECT_FILE_SYSTEM_PAGE;
             }
         }
@@ -1713,8 +1709,6 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                                 RequiredPartitionDiskSpace);
                 return SELECT_PARTITION_PAGE; /* let the user select another partition */
             }
-
-            DestinationDriveLetter = (WCHAR)PartitionList->CurrentPartition->DriveLetter;
 
             return SELECT_FILE_SYSTEM_PAGE;
         }
@@ -1809,8 +1803,6 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                                 RequiredPartitionDiskSpace);
                 return SELECT_PARTITION_PAGE; /* let the user select another partition */
             }
-
-            DestinationDriveLetter = (WCHAR)PartitionList->CurrentPartition->DriveLetter;
 
             return SELECT_FILE_SYSTEM_PAGE;
         }
@@ -3267,6 +3259,7 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
  *  Inits DestinationRootPath
  *  Inits DestinationPath
  *  Inits DestinationArcPath
+ *  Inits DestinationDriveLetter
  *
  * RETURNS
  *   Number of the next page.
@@ -3305,6 +3298,9 @@ InstallDirectoryPage1(PWSTR InstallDir,
             PartEntry->PartitionNumber);
     ConcatPaths(PathBuffer, ARRAYSIZE(PathBuffer), 1, InstallDir);
     RtlCreateUnicodeString(&DestinationArcPath, PathBuffer);
+
+    /* Initialize DestinationDriveLetter */
+    DestinationDriveLetter = (WCHAR)PartEntry->DriveLetter;
 
     return PREPARE_COPY_PAGE;
 }
