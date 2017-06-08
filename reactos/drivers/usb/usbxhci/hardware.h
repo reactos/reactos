@@ -1,11 +1,25 @@
 /* XHCI hardware registers */
 
+#define XHCI_HCSP1            1
+#define XHCI_HCSP2            2
+#define XHCI_HCSP3            3
+#define XHCI_HCCP1            4
+#define XHCI_DBOFF            5
+#define XHCI_HCCP2            6
+
+#define XHCI_USBCMD           0
+#define XHCI_USBSTS           1
+#define XHCI_DNCTRL           5
+#define XHCI_CRCR             6
+#define XHCI_DCBAAP           12
+#define XHCI_CONFIG           14
+
 typedef union _XHCI_HC_STRUCTURAL_PARAMS_1 {
   struct {
-    ULONG MaxDeviceSlots     : 8;
-    ULONG MaxInterrupters    : 11;
-    ULONG Rsvd               : 5;
-    ULONG MaxPorts           : 8;
+    ULONG NumberOfDeviceSlots     : 8;
+    ULONG NumberOfInterrupters    : 11;
+    ULONG Rsvd                    : 5;
+    ULONG NumberOfPorts           : 8;
   };
   ULONG AsULONG;
 } XHCI_HC_STRUCTURAL_PARAMS_1;
@@ -82,37 +96,37 @@ typedef union _XHCI_HC_CAPABILITY_PARAMS_2 {
 
 typedef union _XHCI_USB_COMMAND {
   struct {
-    ULONG RunStop            : 1;
-    ULONG HCReset            : 1;
-    ULONG INTEnable          : 1;
-    ULONG HSEEnable          : 1;
-    ULONG RsvdP1             : 3;
-    ULONG LHCReset           : 1;
-    ULONG CSS                : 1; 
-    ULONG CRS                : 1; 
-    ULONG EWE                : 1;
-    ULONG EU3S               : 1; 
-    ULONG RsvdP2             : 1;
-    ULONG CME                : 1;
-    ULONG RsvdP3             : 18;
+    ULONG RunStop                    : 1;
+    ULONG HCReset                    : 1;
+    ULONG InterrupterEnable          : 1;
+    ULONG HostSystemErrorEnable      : 1;
+    ULONG RsvdP1                     : 3;
+    ULONG LightHCReset               : 1;
+    ULONG ControllerSaveState        : 1; 
+    ULONG ControllerRestoreState     : 1; 
+    ULONG EnableWrapEvent            : 1;
+    ULONG EnableU3Stop               : 1; 
+    ULONG RsvdP2                     : 1;
+    ULONG CEMEnable                  : 1;
+    ULONG RsvdP3                     : 18;
   };
   ULONG AsULONG;
 } XHCI_USB_COMMAND;
 
 typedef union _XHCI_USB_STATUS {
   struct {
-    ULONG HCH               : 1;
-    ULONG RsvdZ1            : 1;
-    ULONG HSE               : 1;
-    ULONG EINT              : 1;
-    ULONG PCD               : 1;
-    ULONG RsvdZ2            : 3;
-    ULONG SSS               : 1; 
-    ULONG RSS               : 1; 
-    ULONG SRE               : 1;
-    ULONG CNR               : 1; 
-    ULONG HCE               : 1;
-    ULONG RsvdZ3            : 19;
+    ULONG HCHalted               : 1;
+    ULONG RsvdZ1                 : 1;
+    ULONG HostSystemError        : 1;
+    ULONG EventInterrupt         : 1;
+    ULONG PortChangeDetect       : 1;
+    ULONG RsvdZ2                 : 3;
+    ULONG SaveStateStatus        : 1; 
+    ULONG RestoreStateStatus     : 1; 
+    ULONG SaveRestoreError       : 1;
+    ULONG ControllerNotReady     : 1; 
+    ULONG HCError                : 1;
+    ULONG RsvdZ3                 : 19;
   };
   ULONG AsULONG;
 } XHCI_USB_STATUS;

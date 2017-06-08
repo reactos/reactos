@@ -11,7 +11,28 @@ NTAPI
 XHCI_RH_GetRootHubData(IN PVOID xhciExtension,
                        IN PVOID rootHubData)
 {
-    
+    PXHCI_EXTENSION XhciExtension;
+    PUSBPORT_ROOT_HUB_DATA RootHubData;
+
+    XhciExtension = (PXHCI_EXTENSION)xhciExtension;
+
+    DPRINT_RH("XHCI_RH_GetRootHubData: XhciExtension - %p, rootHubData - %p\n",
+              XhciExtension,
+              rootHubData);
+
+    RootHubData = (PUSBPORT_ROOT_HUB_DATA)rootHubData;
+
+    RootHubData->NumberOfPorts = XhciExtension->NumberOfPorts;
+
+   
+    /* 
+        Identifies a Compound Device: Hub is not part of a compound device.
+        Over-current Protection Mode: Global Over-current Protection.
+    */
+    RootHubData->HubCharacteristics &= 3;
+
+    RootHubData->PowerOnToPowerGood = 2;
+    RootHubData->HubControlCurrent = 0;
 }
 
 MPSTATUS
