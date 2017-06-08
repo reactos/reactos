@@ -25,6 +25,7 @@ list(APPEND SOURCE
     nbt.c
     netapi32.c
     netbios.c
+    obsolete.c
     schedule.c
     srvsvc.c
     user.c

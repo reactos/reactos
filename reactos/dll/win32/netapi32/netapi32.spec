@@ -100,8 +100,8 @@
 @ stub I_NetlogonComputeServerDigest
 @ stub I_NetlogonGetTrustRid
 @ stub NetAddAlternateComputerName
-@ stub NetAlertRaise
-@ stub NetAlertRaiseEx
+@ stdcall NetAlertRaise(wstr ptr long)
+@ stdcall NetAlertRaiseEx(wstr ptr long wstr)
 @ stdcall NetApiBufferAllocate(long ptr)
 @ stdcall NetApiBufferFree(ptr)
 @ stdcall NetApiBufferReallocate(ptr long ptr)
@@ -175,11 +175,11 @@
 @ stdcall NetLocalGroupSetMembers(wstr wstr long ptr long)
 @ stub NetLogonGetTimeServiceParentDomain
 @ stub NetLogonSetServiceBits
-@ stub NetMessageBufferSend
-@ stub NetMessageNameAdd
-@ stub NetMessageNameDel
-@ stub NetMessageNameEnum
-@ stub NetMessageNameGetInfo
+@ stdcall NetMessageBufferSend(wstr wstr wstr ptr long)
+@ stdcall NetMessageNameAdd(wstr wstr)
+@ stdcall NetMessageNameDel(wstr wstr)
+@ stdcall NetMessageNameEnum(wstr long ptr long ptr ptr ptr)
+@ stdcall NetMessageNameGetInfo(wstr wstr long ptr)
 @ stdcall NetQueryDisplayInformation(wstr long long long long ptr ptr)
 @ stub NetRegisterDomainNameChangeNotification
 @ stub NetRemoteComputerSupports
