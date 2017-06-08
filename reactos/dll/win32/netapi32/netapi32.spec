@@ -141,9 +141,9 @@
 @ stub NetDfsSetStdContainerSecurity
 @ stub NetEnumerateComputerNames
 @ stdcall NetEnumerateTrustedDomains(wstr ptr)
-@ stub NetErrorLogClear
-@ stub NetErrorLogRead
-@ stub NetErrorLogWrite
+@ stdcall NetErrorLogClear(wstr wstr ptr)
+@ stdcall NetErrorLogRead(wstr wstr ptr long ptr long long ptr long ptr ptr)
+@ stdcall NetErrorLogWrite(ptr long wstr ptr long ptr long ptr)
 @ stdcall NetFileClose(wstr long)
 @ stdcall NetFileEnum(wstr wstr wstr long ptr long ptr ptr ptr)
 @ stdcall NetFileGetInfo(wstr long long ptr)
@@ -216,10 +216,10 @@
 @ stdcall NetServerTransportAddEx(wstr long ptr)
 @ stdcall NetServerTransportDel(wstr long ptr)
 @ stdcall NetServerTransportEnum(wstr long ptr long ptr ptr ptr)
-@ stub NetServiceControl
-@ stub NetServiceEnum
-@ stub NetServiceGetInfo
-@ stub NetServiceInstall
+@ stdcall NetServiceControl(wstr wstr long long ptr)
+@ stdcall NetServiceEnum(wstr long ptr long ptr ptr ptr)
+@ stdcall NetServiceGetInfo(wstr wstr long ptr)
+@ stdcall NetServiceInstall(wstr wstr long ptr ptr)
 @ stdcall NetSessionDel(wstr wstr wstr)
 @ stdcall NetSessionEnum(wstr wstr wstr long ptr long ptr ptr ptr)
 @ stdcall NetSessionGetInfo(wstr wstr wstr long ptr)

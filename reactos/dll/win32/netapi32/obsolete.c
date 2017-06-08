@@ -12,6 +12,9 @@
 #include <lmalert.h>
 #include <lmaudit.h>
 #include <lmconfig.h>
+#include <lmerrlog.h>
+#include <lmmsg.h>
+#include <lmsvc.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
 
@@ -123,6 +126,52 @@ NetConfigSet(
 
 NET_API_STATUS
 WINAPI
+NetErrorLogClear(
+    _In_opt_ LPCWSTR UncServerName,
+    _In_opt_ LPCWSTR BackupFile,
+    _In_opt_ LPBYTE Reserved)
+{
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetErrorLogRead(
+    _In_opt_ LPCWSTR UncServerName,
+    _In_opt_ LPWSTR Reserved1,
+    _In_ LPHLOG ErrorLogHandle,
+    _In_ DWORD Offset,
+    _In_opt_ LPDWORD Reserved2,
+    _In_ DWORD Reserved3,
+    _In_ DWORD OffsetFlag,
+    _Deref_out_ LPBYTE *BufPtr,
+    _In_ DWORD PrefMaxSize,
+    _Out_ LPDWORD BytesRead,
+    _Out_ LPDWORD TotalAvailable)
+{
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetErrorLogWrite(
+    _In_opt_ LPBYTE Reserved1,
+    _In_ DWORD Code,
+    _In_ LPCWSTR Component,
+    _In_ LPBYTE Buffer,
+    _In_ DWORD NumBytes,
+    _In_ LPBYTE MsgBuf,
+    _In_ DWORD StrCount,
+    _In_opt_ LPBYTE Reserved2)
+{
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
 NetMessageBufferSend(
     _In_ LPCWSTR servername,
     _In_ LPCWSTR msgname,
@@ -176,6 +225,59 @@ NetMessageNameGetInfo(
     _In_ LPCWSTR msgname,
     _In_ DWORD level,
     _Out_ LPBYTE *bufptr)
+{
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetServiceControl(
+    __in_opt LPCWSTR servername,
+    __in LPCWSTR service,
+    __in DWORD opcode,
+    __in DWORD arg,
+    __deref_out LPBYTE *bufptr)
+{
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetServiceEnum(
+    __in_opt LPCWSTR servername,
+    __in DWORD level,
+    __deref_out LPBYTE *bufptr,
+    __in DWORD prefmaxlen,
+    __out LPDWORD entriesread,
+    __out LPDWORD totalentries,
+    __inout_opt LPDWORD resume_handle)
+{
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetServiceGetInfo(
+    __in_opt LPCWSTR servername,
+    __in LPCWSTR service,
+    __in DWORD level,
+    __deref_out LPBYTE *bufptr)
+{
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetServiceInstall(
+    __in_opt LPCWSTR servername,
+    __in LPCWSTR service,
+    __in DWORD argc,
+    __in_ecount(argc) LPCWSTR argv[],
+    __deref_out LPBYTE *bufptr)
 {
     return ERROR_NOT_SUPPORTED;
 }
