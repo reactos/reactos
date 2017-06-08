@@ -39,15 +39,3 @@
 #undef DbgPrint
 
 #include "CQuickLaunchBand.h"
-
-/*extern HINSTANCE g_hInstance;
-
-#define ID_ICON_VOLUME (WM_APP + 0x4CB)
-
-// {845B0FB2-66E0-416B-8F91-314E23F7C12D}
-DEFINE_GUID(CLSID_NtObjectFolder,
-    0x845b0fb2, 0x66e0, 0x416b, 0x8f, 0x91, 0x31, 0x4e, 0x23, 0xf7, 0xc1, 0x2d);
-
-//#include "ntobjfolder.h"
-//#include "regfolder.h"
-*/

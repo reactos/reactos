@@ -2,7 +2,7 @@ HKCR
 {
 	NoRemove CLSID
 	{
-		ForceRemove {260CB95D-4544-44F6-A079-575BAA60B72F} = s 'QuickLaunchBand'
+		ForceRemove {260CB95D-4544-44F6-A079-575BAA60B72F} = s 'Quick Launch'
 		{
 			InprocServer32 = s '%MODULE%'
 			{

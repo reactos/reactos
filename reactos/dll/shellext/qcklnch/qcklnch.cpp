@@ -56,7 +56,12 @@ DllRegisterServer(void)
 STDAPI
 DllUnregisterServer(void)
 {
-    return g_Module.DllUnregisterServer(FALSE);
+    HRESULT hr = g_Module.DllUnregisterServer(FALSE);
+
+    if (FAILED(hr))
+        return hr;
+    else
+        return UnregisterComCat();
 }
 
 STDAPI

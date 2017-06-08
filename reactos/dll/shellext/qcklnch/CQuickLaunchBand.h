@@ -9,8 +9,11 @@
 
 extern const GUID CLSID_QuickLaunchBand;
 
+//Component category registration
 HRESULT RegisterComCat();
+HRESULT UnregisterComCat();
 
+//COM class for quick launch
 class CQuickLaunchBand :
     public CComCoClass<CQuickLaunchBand, &CLSID_QuickLaunchBand>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -21,13 +24,16 @@ class CQuickLaunchBand :
     public IWinEventHandler,
     public IOleCommandTarget
 {
+    CComPtr<IUnknown> m_Site;   
+    HINSTANCE m_hInstance; 
     HWND m_hWnd;
+    HWND m_hWndStartButton;
     DWORD m_BandID;
 
 public:
 
     CQuickLaunchBand();
-    virtual ~CQuickLaunchBand();
+    virtual ~CQuickLaunchBand();   
 
 //IObjectWithSite
 

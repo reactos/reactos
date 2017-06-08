@@ -85,6 +85,7 @@ AddReg=Classes
 11,,olepro32.dll,1
 11,,propsys.dll,1
 11,,pstorec.dll,1
+11,,qcklnch.dll,1
 11,,qedit.dll,1
 11,,qmgr.dll,1
 11,,qmgrprxy.dll,1
