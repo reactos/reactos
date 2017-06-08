@@ -74,6 +74,7 @@ EnumerateInstallations(
     IN PVOID Parameter OPTIONAL)
 {
     PENUM_INSTALLS_DATA Data = (PENUM_INSTALLS_DATA)Parameter;
+    PNTOS_OPTIONS Options = (PNTOS_OPTIONS)&BootEntry->OsOptions;
 
     PNTOS_INSTALLATION NtOsInstall;
     UNICODE_STRING SystemRootPath;
@@ -88,10 +89,11 @@ EnumerateInstallations(
     /* We have a boot entry */
 
     /* Check for supported boot type "Windows2003" */
-    // TODO: What to do with "Windows" ; "WindowsNT40" ; "ReactOSSetup" ?
-    if ((BootEntry->Version == NULL) ||
-        ( (_wcsicmp(BootEntry->Version, L"Windows2003")     != 0) &&
-          (_wcsicmp(BootEntry->Version, L"\"Windows2003\"") != 0) ))
+    if (BootEntry->OsOptionsLength < sizeof(NTOS_OPTIONS) ||
+        RtlCompareMemory(&BootEntry->OsOptions /* Signature */,
+                         NTOS_OPTIONS_SIGNATURE,
+                         RTL_FIELD_SIZE(NTOS_OPTIONS, Signature)) !=
+                         RTL_FIELD_SIZE(NTOS_OPTIONS, Signature))
     {
         /* This is not a ReactOS entry */
         DPRINT1("    An installation '%S' of unsupported type '%S'\n",
@@ -100,7 +102,8 @@ EnumerateInstallations(
         return STATUS_SUCCESS;
     }
 
-    if (!BootEntry->OsLoadPath || !*BootEntry->OsLoadPath)
+    /* BootType is Windows2003, now check OsLoadPath */
+    if (!Options->OsLoadPath || !*Options->OsLoadPath)
     {
         /* Certainly not a ReactOS installation */
         DPRINT1("    A Win2k3 install '%S' without an ARC path?!\n", BootEntry->FriendlyName);
@@ -109,9 +112,9 @@ EnumerateInstallations(
     }
 
     DPRINT1("    Found a candidate Win2k3 install '%S' with ARC path '%S'\n",
-            BootEntry->FriendlyName, BootEntry->OsLoadPath);
+            BootEntry->FriendlyName, Options->OsLoadPath);
     // DPRINT1("    Found a Win2k3 install '%S' with ARC path '%S'\n",
-            // BootEntry->FriendlyName, BootEntry->OsLoadPath);
+            // BootEntry->FriendlyName, Options->OsLoadPath);
 
     // TODO: Normalize the ARC path.
 
@@ -119,7 +122,7 @@ EnumerateInstallations(
      * Check whether we already have an installation with this ARC path.
      * If this is the case, stop there.
      */
-    NtOsInstall = FindExistingNTOSInstall(Data->List, BootEntry->OsLoadPath, NULL);
+    NtOsInstall = FindExistingNTOSInstall(Data->List, Options->OsLoadPath, NULL);
     if (NtOsInstall)
     {
         DPRINT1("    An NTOS installation with name \"%S\" already exists in SystemRoot '%wZ'\n",
@@ -134,21 +137,21 @@ EnumerateInstallations(
      * resides, as well verifying whether it is indeed an NTOS installation.
      */
     RtlInitEmptyUnicodeString(&SystemRootPath, SystemRoot, sizeof(SystemRoot));
-    if (!ArcPathToNtPath(&SystemRootPath, BootEntry->OsLoadPath, Data->PartList))
+    if (!ArcPathToNtPath(&SystemRootPath, Options->OsLoadPath, Data->PartList))
     {
-        DPRINT1("ArcPathToNtPath(%S) failed, skip the installation.\n", BootEntry->OsLoadPath);
+        DPRINT1("ArcPathToNtPath(%S) failed, skip the installation.\n", Options->OsLoadPath);
         /* Continue the enumeration */
         return STATUS_SUCCESS;
     }
 
     DPRINT1("ArcPathToNtPath() succeeded: '%S' --> '%wZ'\n",
-            BootEntry->OsLoadPath, &SystemRootPath);
+            Options->OsLoadPath, &SystemRootPath);
 
     /*
      * Check whether we already have an installation with this NT path.
      * If this is the case, stop there.
      */
-    NtOsInstall = FindExistingNTOSInstall(Data->List, NULL /*BootEntry->OsLoadPath*/, &SystemRootPath);
+    NtOsInstall = FindExistingNTOSInstall(Data->List, NULL /*Options->OsLoadPath*/, &SystemRootPath);
     if (NtOsInstall)
     {
         DPRINT1("    An NTOS installation with name \"%S\" already exists in SystemRoot '%wZ'\n",
@@ -167,7 +170,7 @@ EnumerateInstallations(
     }
 
     DPRINT1("Found a valid NTOS installation in SystemRoot ARC path '%S', NT path '%wZ'\n",
-            BootEntry->OsLoadPath, &SystemRootPath);
+            Options->OsLoadPath, &SystemRootPath);
 
     /* From the NT path, compute the disk, partition and path components */
     if (NtPathToDiskPartComponents(SystemRootPath.Buffer, &DiskNumber, &PartitionNumber, &PathComponent))
@@ -200,7 +203,7 @@ EnumerateInstallations(
         StringCchPrintfW(InstallNameW, ARRAYSIZE(InstallNameW), L"%wZ  \"%s\"",
                          &SystemRootPath, BootEntry->FriendlyName);
     }
-    AddNTOSInstallation(Data->List, BootEntry->OsLoadPath,
+    AddNTOSInstallation(Data->List, Options->OsLoadPath,
                         &SystemRootPath, PathComponent,
                         DiskNumber, PartitionNumber, PartEntry,
                         InstallNameW);
