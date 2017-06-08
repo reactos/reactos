@@ -245,7 +245,7 @@ START:
                                                  50, // TimerValue
                                                  Port,
                                                  sizeof(Port),
-                                                 (ULONG)EHCI_RH_FinishReset);
+                                                 EHCI_RH_FinishReset);
 }
 
 MPSTATUS
@@ -278,7 +278,7 @@ EHCI_RH_SetFeaturePortReset(IN PVOID ehciExtension,
                                           50, // TimerValue
                                           &Port,
                                           sizeof(Port),
-                                          (ULONG_PTR)EHCI_RH_PortResetComplete);
+                                          EHCI_RH_PortResetComplete);
 
     return 0;
 }
@@ -443,7 +443,7 @@ EHCI_RH_ClearFeaturePortSuspend(IN PVOID ehciExtension,
                                           50, // TimerValue
                                           &Port,
                                           sizeof(Port),
-                                          (ULONG)EHCI_RH_PortResumeComplete);
+                                          EHCI_RH_PortResumeComplete);
 
     return 0;
 }
