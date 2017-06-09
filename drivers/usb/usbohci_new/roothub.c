@@ -44,13 +44,13 @@ OHCI_RH_GetRootHubData(IN PVOID ohciExtension,
     UCHAR PowerOnToPowerGoodTime;
     USHORT HubCharacteristics;
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
 
     DPRINT("OHCI_RH_GetRootHubData: OhciExtension - %p, rootHubData - %p\n",
            OhciExtension,
            rootHubData);
 
-    RootHubData = (PUSBPORT_ROOT_HUB_DATA)rootHubData;
+    RootHubData = rootHubData;
     DescriptorA.AsULONG = OHCI_ReadRhDescriptorA(OhciExtension);
 
     RootHubData->NumberOfPorts = DescriptorA.NumberDownstreamPorts;
@@ -94,14 +94,14 @@ OHCI_RH_GetPortStatus(IN PVOID ohciExtension,
     ULONG portStatus;
     ULONG ix = 0;
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
 
     DPRINT("OHCI_RH_GetPortStatus: OhciExtension - %p, Port - %x, PortStatus - %p\n",
            OhciExtension,
            Port,
            *PortStatus);
 
-    OperationalRegs = ((POHCI_EXTENSION)OhciExtension)->OperationalRegs;
+    OperationalRegs = OhciExtension->OperationalRegs;
 
     do
     {
@@ -162,7 +162,7 @@ OHCI_RH_GetHubStatus(IN PVOID ohciExtension,
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
 
     DPRINT("OHCI_RH_GetHubStatus: ohciExtension - %p, HubStatus - %x\n",
            ohciExtension,
@@ -185,7 +185,7 @@ OHCI_RH_SetFeaturePortReset(IN PVOID ohciExtension,
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
 
     DPRINT("OHCI_RH_SetFeaturePortReset: OhciExtension - %p, Port - %x\n",
            OhciExtension,
@@ -207,7 +207,7 @@ OHCI_RH_SetFeaturePortPower(IN PVOID ohciExtension,
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
 
     DPRINT("OHCI_RH_SetFeaturePortPower: OhciExtension - %p, Port - %x\n",
            OhciExtension,
@@ -229,7 +229,7 @@ OHCI_RH_SetFeaturePortEnable(IN PVOID ohciExtension,
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
 
     DPRINT("OHCI_RH_SetFeaturePortEnable: OhciExtension - %p, Port - %x\n",
            OhciExtension,
@@ -251,7 +251,7 @@ OHCI_RH_SetFeaturePortSuspend(IN PVOID ohciExtension,
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
 
     DPRINT("OHCI_RH_SetFeaturePortSuspend: OhciExtension - %p, Port - %x\n",
            OhciExtension,
@@ -273,7 +273,7 @@ OHCI_RH_ClearFeaturePortEnable(IN PVOID ohciExtension,
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
 
     DPRINT("OHCI_RH_ClearFeaturePortEnable: OhciExtension - %p, Port - %x\n",
            OhciExtension,
@@ -295,7 +295,7 @@ OHCI_RH_ClearFeaturePortPower(IN PVOID ohciExtension,
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
 
     DPRINT("OHCI_RH_ClearFeaturePortPower: OhciExtension - %p, Port - %x\n",
            OhciExtension,
@@ -317,7 +317,7 @@ OHCI_RH_ClearFeaturePortSuspend(IN PVOID ohciExtension,
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
 
     DPRINT("OHCI_RH_ClearFeaturePortSuspend: OhciExtension - %p, Port - %x\n",
            OhciExtension,
@@ -339,7 +339,7 @@ OHCI_RH_ClearFeaturePortEnableChange(IN PVOID ohciExtension,
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
 
     DPRINT("OHCI_RH_ClearFeaturePortEnableChange: ohciExtension - %p, Port - %x\n",
            ohciExtension,
@@ -361,7 +361,7 @@ OHCI_RH_ClearFeaturePortConnectChange(IN PVOID ohciExtension,
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
 
     DPRINT("OHCI_RH_ClearFeaturePortConnectChange: OhciExtension - %p, Port - %x\n",
            OhciExtension,
@@ -383,7 +383,7 @@ OHCI_RH_ClearFeaturePortResetChange(IN PVOID ohciExtension,
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
 
     DPRINT("OHCI_RH_ClearFeaturePortResetChange: OhciExtension - %p, Port - %x\n",
            OhciExtension,
@@ -404,7 +404,7 @@ OHCI_RH_ClearFeaturePortSuspendChange(IN PVOID ohciExtension,
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
 
     DPRINT("OHCI_RH_ClearFeaturePortSuspendChange: OhciExtension - %p, Port - %x\n",
            OhciExtension,
@@ -426,7 +426,7 @@ OHCI_RH_ClearFeaturePortOvercurrentChange(IN PVOID ohciExtension,
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
 
     DPRINT("OHCI_RH_ClearFeaturePortOvercurrentChange: OhciExtension - %p, Port - %x\n",
            OhciExtension,
@@ -452,7 +452,7 @@ VOID
 NTAPI
 OHCI_RH_DisableIrq(IN PVOID ohciExtension)
 {
-    POHCI_EXTENSION  OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    POHCI_EXTENSION  OhciExtension = ohciExtension;
     DPRINT("OHCI_RH_DisableIrq: OhciExtension - %p\n", OhciExtension);
 
     WRITE_REGISTER_ULONG(&OhciExtension->OperationalRegs->HcInterruptDisable.AsULONG,
@@ -463,7 +463,7 @@ VOID
 NTAPI
 OHCI_RH_EnableIrq(IN PVOID ohciExtension)
 {
-    POHCI_EXTENSION OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    POHCI_EXTENSION OhciExtension = ohciExtension;
     DPRINT("OHCI_RH_EnableIrq: OhciExtension - %p\n", OhciExtension);
 
     WRITE_REGISTER_ULONG(&OhciExtension->OperationalRegs->HcInterruptEnable.AsULONG,

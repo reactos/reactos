@@ -396,9 +396,9 @@ OHCI_OpenEndpoint(IN PVOID ohciExtension,
 
     DPRINT_OHCI("OHCI_OpenEndpoint: ... \n");
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
-    OhciEndpoint = (POHCI_ENDPOINT)ohciEndpoint;
-    EndpointProperties = (PUSBPORT_ENDPOINT_PROPERTIES)endpointParameters;
+    OhciExtension = ohciExtension;
+    OhciEndpoint = ohciEndpoint;
+    EndpointProperties = endpointParameters;
 
     RtlCopyMemory(&OhciEndpoint->EndpointProperties,
                   endpointParameters,
@@ -454,8 +454,8 @@ OHCI_ReopenEndpoint(IN PVOID ohciExtension,
 
     DPRINT_OHCI("OHCI_ReopenEndpoint: ... \n");
 
-    OhciEndpoint = (POHCI_ENDPOINT)ohciEndpoint;
-    EndpointProperties = (PUSBPORT_ENDPOINT_PROPERTIES)endpointParameters;
+    OhciEndpoint = ohciEndpoint;
+    EndpointProperties = endpointParameters;
 
     ED = OhciEndpoint->HcdED;
 
@@ -483,7 +483,7 @@ OHCI_QueryEndpointRequirements(IN PVOID ohciExtension,
 
     DPRINT_OHCI("OHCI_QueryEndpointRequirements: ... \n");
 
-    EndpointProperties = (PUSBPORT_ENDPOINT_PROPERTIES)endpointParameters;
+    EndpointProperties = endpointParameters;
     TransferType = EndpointProperties->TransferType;
 
     switch (TransferType)
@@ -571,7 +571,7 @@ OHCI_StartController(IN PVOID ohciExtension,
                 ohciExtension,
                 Resources);
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
 
     /* HC on-chip operational registers */
     OperationalRegs = (POHCI_OPERATIONAL_REGISTERS)Resources->ResourceBase;
@@ -784,7 +784,7 @@ OHCI_SuspendController(IN PVOID ohciExtension)
 
     DPRINT("OHCI_SuspendController: ... \n");
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
     OperationalRegs = OhciExtension->OperationalRegs;
 
     WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptDisable.AsULONG,
@@ -823,7 +823,7 @@ OHCI_ResumeController(IN PVOID ohciExtension)
 
     DPRINT("OHCI_ResumeController \n");
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
     OperationalRegs = OhciExtension->OperationalRegs;
 
     control.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcControl.AsULONG);
@@ -899,7 +899,7 @@ OHCI_InterruptService(IN PVOID ohciExtension)
     POHCI_HCCA HcHCCA;
     BOOLEAN Result = FALSE;
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
 
     DPRINT_OHCI("OHCI_InterruptService: OhciExtension - %p\n",
                 OhciExtension);
@@ -956,7 +956,7 @@ OHCI_InterruptDpc(IN PVOID ohciExtension,
     OHCI_REG_INTERRUPT_STATUS IntStatus;
     POHCI_HCCA HcHCCA;
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
     OperationalRegs = OhciExtension->OperationalRegs;
 
     DPRINT_OHCI("OHCI_InterruptDpc: OhciExtension - %p, IsDoEnableInterrupts - %p\n",
@@ -1491,11 +1491,11 @@ OHCI_SubmitTransfer(IN PVOID ohciExtension,
 
     DPRINT_OHCI("OHCI_SubmitTransfer: ... \n");
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
-    OhciEndpoint = (POHCI_ENDPOINT)ohciEndpoint;
-    TransferParameters = (PUSBPORT_TRANSFER_PARAMETERS)transferParameters;
-    OhciTransfer = (POHCI_TRANSFER)ohciTransfer;
-    SGList = (PUSBPORT_SCATTER_GATHER_LIST)sgList;
+    OhciExtension = ohciExtension;
+    OhciEndpoint = ohciEndpoint;
+    TransferParameters = transferParameters;
+    OhciTransfer = ohciTransfer;
+    SGList = sgList;
 
     RtlZeroMemory(OhciTransfer, sizeof(OHCI_TRANSFER));
 
@@ -1636,9 +1636,9 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
     BOOLEAN IsIsoEndpoint = FALSE;
     BOOLEAN IsProcessed = FALSE;
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
-    OhciEndpoint = (POHCI_ENDPOINT)ohciEndpoint;
-    OhciTransfer = (POHCI_TRANSFER)ohciTransfer;
+    OhciExtension = ohciExtension;
+    OhciEndpoint = ohciEndpoint;
+    OhciTransfer = ohciTransfer;
 
     DPRINT("OHCI_AbortTransfer: ohciEndpoint - %p, ohciTransfer - %p\n",
            OhciEndpoint,
@@ -1798,7 +1798,7 @@ OHCI_GetEndpointState(IN PVOID ohciExtension,
 
     DPRINT_OHCI("OHCI_GetEndpointState: ... \n");
 
-    OhciEndpoint = (POHCI_ENDPOINT)ohciEndpoint;
+    OhciEndpoint = ohciEndpoint;
     ED = OhciEndpoint->HcdED;
 
     if (ED->Flags & 0x10)
@@ -1865,8 +1865,8 @@ OHCI_SetEndpointState(IN PVOID ohciExtension,
     DPRINT_OHCI("OHCI_SetEndpointState: EndpointState - %x\n",
                 EndpointState);
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
-    OhciEndpoint = (POHCI_ENDPOINT)ohciEndpoint;
+    OhciExtension = ohciExtension;
+    OhciEndpoint = ohciEndpoint;
 
     ED = OhciEndpoint->HcdED;
 
@@ -1922,9 +1922,9 @@ OHCI_PollAsyncEndpoint(IN POHCI_EXTENSION OhciExtension,
         DbgBreakPoint();
     }
 
-    NextTD = (POHCI_HCD_TD)RegPacket.UsbPortGetMappedVirtualAddress((PVOID)NextTdPA,
-                                                                    OhciExtension,
-                                                                    OhciEndpoint);
+    NextTD = RegPacket.UsbPortGetMappedVirtualAddress((PVOID)NextTdPA,
+                                                      OhciExtension,
+                                                      OhciEndpoint);
 
     if (ED->HwED.HeadPointer & 1) //Halted FIXME
     {
@@ -2074,8 +2074,8 @@ OHCI_PollEndpoint(IN PVOID ohciExtension,
     POHCI_ENDPOINT OhciEndpoint;
     ULONG TransferType;
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
-    OhciEndpoint = (POHCI_ENDPOINT)ohciEndpoint;
+    OhciExtension = ohciExtension;
+    OhciEndpoint = ohciEndpoint;
 
     DPRINT_OHCI("OHCI_PollEndpoint: OhciExtension - %p, Endpoint - %p\n",
                 OhciExtension,
@@ -2111,7 +2111,7 @@ OHCI_CheckController(IN PVOID ohciExtension)
 
     //DPRINT_OHCI("OHCI_CheckController: ...\n");
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
     OperationalRegs = OhciExtension->OperationalRegs;
 
     if (!OHCI_HardwarePresent(OhciExtension, TRUE))
@@ -2168,7 +2168,7 @@ OHCI_Get32BitFrameNumber(IN PVOID ohciExtension)
     ULONG fm;
     ULONG hp;
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
     HcHCCA = (POHCI_HCCA)OhciExtension->HcResourcesVA;
 
     hp = OhciExtension->FrameHighPart;
@@ -2183,7 +2183,7 @@ VOID
 NTAPI
 OHCI_InterruptNextSOF(IN PVOID ohciExtension)
 {
-    POHCI_EXTENSION  OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    POHCI_EXTENSION  OhciExtension = ohciExtension;
     DPRINT_OHCI("OHCI_InterruptNextSOF: OhciExtension - %p\n",
                 OhciExtension);
 
@@ -2198,7 +2198,7 @@ OHCI_EnableInterrupts(IN PVOID ohciExtension)
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
  
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciExtension = ohciExtension;
     DPRINT_OHCI("OHCI_EnableInterrupts: OhciExtension - %p\n",
                 OhciExtension);
 
@@ -2213,7 +2213,7 @@ VOID
 NTAPI
 OHCI_DisableInterrupts(IN PVOID ohciExtension)
 {
-    POHCI_EXTENSION  OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    POHCI_EXTENSION  OhciExtension = ohciExtension;
     DPRINT_OHCI("OHCI_DisableInterrupts\n");
 
     /* HcInterruptDisable.MIE - disables interrupt generation */
@@ -2237,7 +2237,7 @@ OHCI_SetEndpointDataToggle(IN PVOID ohciExtension,
     POHCI_ENDPOINT OhciEndpoint;
     POHCI_HCD_ED ED;
 
-    OhciEndpoint = (POHCI_ENDPOINT)ohciEndpoint;
+    OhciEndpoint = ohciEndpoint;
 
     DPRINT_OHCI("OHCI_SetEndpointDataToggle: Endpoint - %p, DataToggle - %x\n",
                 OhciEndpoint,
@@ -2266,7 +2266,7 @@ OHCI_GetEndpointStatus(IN PVOID ohciExtension,
 
     DPRINT_OHCI("OHCI_GetEndpointStatus: ... \n");
 
-    OhciEndpoint = (POHCI_ENDPOINT)ohciEndpoint;
+    OhciEndpoint = ohciEndpoint;
 
     ED = OhciEndpoint->HcdED;
 
@@ -2289,8 +2289,8 @@ OHCI_SetEndpointStatus(IN PVOID ohciExtension,
     POHCI_ENDPOINT OhciEndpoint;
     POHCI_HCD_ED ED;
 
-    OhciExtension = (POHCI_EXTENSION)ohciExtension;
-    OhciEndpoint = (POHCI_ENDPOINT)ohciEndpoint;
+    OhciExtension = ohciExtension;
+    OhciEndpoint = ohciEndpoint;
 
     DPRINT_OHCI("OHCI_SetEndpointStatus: Endpoint - %p, Status - %p\n",
                 OhciEndpoint,
