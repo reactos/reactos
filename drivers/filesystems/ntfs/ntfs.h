@@ -534,7 +534,8 @@ NTSTATUS
 AddFileName(PFILE_RECORD_HEADER FileRecord,
             PNTFS_ATTR_RECORD AttributeAddress,
             PDEVICE_EXTENSION DeviceExt,
-            PFILE_OBJECT FileObject);
+            PFILE_OBJECT FileObject,
+            PULONGLONG ParentMftIndex);
 
 NTSTATUS
 AddStandardInformation(PFILE_RECORD_HEADER FileRecord,
@@ -674,6 +675,12 @@ NtfsDeviceControl(PNTFS_IRP_CONTEXT IrpContext);
 
 
 /* dirctl.c */
+
+NTSTATUS
+NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
+                           ULONGLONG DirectoryMftIndex,
+                           ULONGLONG FileMftIndex,
+                           PFILENAME_ATTRIBUTE FilenameAttribute);
 
 ULONGLONG
 NtfsGetFileSize(PDEVICE_EXTENSION DeviceExt,
@@ -816,7 +823,8 @@ NtfsFileSystemControl(PNTFS_IRP_CONTEXT IrpContext);
 /* mft.c */
 NTSTATUS
 AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
-               PDEVICE_EXTENSION DeviceExt);
+               PDEVICE_EXTENSION DeviceExt,
+               PULONGLONG DestinationIndex);
 
 PNTFS_ATTR_CONTEXT
 PrepareAttributeContext(PNTFS_ATTR_RECORD AttrRecord);
@@ -841,6 +849,12 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
 
 ULONGLONG
 AttributeDataLength(PNTFS_ATTR_RECORD AttrRecord);
+
+VOID
+InternalSetResidentAttributeLength(PNTFS_ATTR_CONTEXT AttrContext,
+                                   PFILE_RECORD_HEADER FileRecord,
+                                   ULONG AttrOffset,
+                                   ULONG DataSize);
 
 NTSTATUS
 SetAttributeDataLength(PFILE_OBJECT FileObject,

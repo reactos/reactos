@@ -112,6 +112,9 @@ AddData(PFILE_RECORD_HEADER FileRecord,
 * Pointer to the FILE_OBJECT which represents the new name.
 * This parameter is used to determine the filename and parent directory.
 *
+* @param ParentMftIndex
+* Pointer to a ULONGLONG which will receive the index of the parent directory.
+*
 * @return
 * STATUS_SUCCESS on success. STATUS_NOT_IMPLEMENTED if target address isn't at the end
 * of the given file record.
@@ -128,16 +131,18 @@ NTSTATUS
 AddFileName(PFILE_RECORD_HEADER FileRecord,
             PNTFS_ATTR_RECORD AttributeAddress,
             PDEVICE_EXTENSION DeviceExt,
-            PFILE_OBJECT FileObject)
+            PFILE_OBJECT FileObject,
+            PULONGLONG ParentMftIndex)
 {
     ULONG ResidentHeaderLength = FIELD_OFFSET(NTFS_ATTR_RECORD, Resident.Reserved) + sizeof(UCHAR);
     PFILENAME_ATTRIBUTE FileNameAttribute;
     LARGE_INTEGER SystemTime;
     ULONG FileRecordEnd = AttributeAddress->Length;
     ULONGLONG CurrentMFTIndex = NTFS_FILE_ROOT;
-    UNICODE_STRING Current, Remaining;
+    UNICODE_STRING Current, Remaining, FilenameNoPath;
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG FirstEntry = 0;
+    WCHAR Buffer[MAX_PATH];
 
     if (AttributeAddress->Type != AttributeEnd)
     {
@@ -162,20 +167,29 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
     // we need to extract the filename from the path
     DPRINT1("Pathname: %wZ\n", &FileObject->FileName);
 
+    RtlZeroMemory(&FilenameNoPath, sizeof(UNICODE_STRING));
+    FilenameNoPath.Buffer = Buffer;
+    FilenameNoPath.MaximumLength = MAX_PATH;
+
     FsRtlDissectName(FileObject->FileName, &Current, &Remaining);
 
     while (Current.Length != 0)
     {
         DPRINT1("Current: %wZ\n", &Current);
 
+        if(Remaining.Length != 0)
+            RtlCopyUnicodeString(&FilenameNoPath, &Remaining);
+
         Status = NtfsFindMftRecord(DeviceExt, CurrentMFTIndex, &Current, &FirstEntry, FALSE, &CurrentMFTIndex);
         if (!NT_SUCCESS(Status))
+            break;
+
+        if (Remaining.Length == 0 )
         {
+            if(Current.Length != 0)
+                RtlCopyUnicodeString(&FilenameNoPath, &Current);
             break;
         }
-
-        if (Remaining.Length == 0)
-            break;
 
         FsRtlDissectName(Current, &Current, &Remaining);
     }
@@ -184,6 +198,9 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
 
     // set reference to parent directory
     FileNameAttribute->DirectoryFileReferenceNumber = CurrentMFTIndex;
+    *ParentMftIndex = CurrentMFTIndex;
+
+    DPRINT1("SequenceNumber: 0x%02x\n", FileRecord->SequenceNumber);
 
     // The highest 2 bytes should be the sequence number, unless the parent happens to be root
     if (CurrentMFTIndex == NTFS_FILE_ROOT)
@@ -191,19 +208,19 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
     else
         FileNameAttribute->DirectoryFileReferenceNumber |= (ULONGLONG)FileRecord->SequenceNumber << 48;
 
-    DPRINT1("FileNameAttribute->DirectoryFileReferenceNumber: 0x%I64x\n", FileNameAttribute->DirectoryFileReferenceNumber);
+    DPRINT1("FileNameAttribute->DirectoryFileReferenceNumber: 0x%016I64x\n", FileNameAttribute->DirectoryFileReferenceNumber);
 
-    FileNameAttribute->NameLength = Current.Length / 2;
+    FileNameAttribute->NameLength = FilenameNoPath.Length / 2;
     // TODO: Get proper nametype, add DOS links as needed
     FileNameAttribute->NameType = NTFS_FILE_NAME_WIN32_AND_DOS;
-    RtlCopyMemory(FileNameAttribute->Name, Current.Buffer, Current.Length);
+    RtlCopyMemory(FileNameAttribute->Name, FilenameNoPath.Buffer, FilenameNoPath.Length);
     FileRecord->LinkCount++;
 
     AttributeAddress->Length = ResidentHeaderLength +
-        FIELD_OFFSET(FILENAME_ATTRIBUTE, Name) + Current.Length;
+        FIELD_OFFSET(FILENAME_ATTRIBUTE, Name) + FilenameNoPath.Length;
     AttributeAddress->Length = ALIGN_UP_BY(AttributeAddress->Length, 8);
 
-    AttributeAddress->Resident.ValueLength = FIELD_OFFSET(FILENAME_ATTRIBUTE, Name) + Current.Length;
+    AttributeAddress->Resident.ValueLength = FIELD_OFFSET(FILENAME_ATTRIBUTE, Name) + FilenameNoPath.Length;
     AttributeAddress->Resident.ValueOffset = ResidentHeaderLength;
     AttributeAddress->Resident.Flags = 1; // indexed
 
@@ -1054,6 +1071,7 @@ NtfsDumpFileNameAttribute(PNTFS_ATTR_RECORD Attribute)
     DbgPrint(" (%x) '%.*S' ", FileNameAttr->NameType, FileNameAttr->NameLength, FileNameAttr->Name);
     DbgPrint(" '%x' \n", FileNameAttr->FileAttributes);
     DbgPrint(" AllocatedSize: %I64u\nDataSize: %I64u\n", FileNameAttr->AllocatedSize, FileNameAttr->DataSize);
+    DbgPrint(" File reference: 0x%016I64x\n", FileNameAttr->DirectoryFileReferenceNumber);
 }
 
 
@@ -1110,23 +1128,73 @@ VOID
 NtfsDumpIndexRootAttribute(PNTFS_ATTR_RECORD Attribute)
 {
     PINDEX_ROOT_ATTRIBUTE IndexRootAttr;
+    ULONG currentOffset;
+    ULONG currentNode;
 
     IndexRootAttr = (PINDEX_ROOT_ATTRIBUTE)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
 
     if (IndexRootAttr->AttributeType == AttributeFileName)
         ASSERT(IndexRootAttr->CollationRule == COLLATION_FILE_NAME);
 
-    DbgPrint("  $INDEX_ROOT (%uB, %u) ", IndexRootAttr->SizeOfEntry, IndexRootAttr->ClustersPerIndexRecord);
+    DbgPrint("  $INDEX_ROOT (%u bytes per index record, %u clusters) ", IndexRootAttr->SizeOfEntry, IndexRootAttr->ClustersPerIndexRecord);
 
     if (IndexRootAttr->Header.Flags == INDEX_ROOT_SMALL)
     {
-        DbgPrint(" (small) ");
+        DbgPrint(" (small)\n");
     }
     else
     {
         ASSERT(IndexRootAttr->Header.Flags == INDEX_ROOT_LARGE);
-        DbgPrint(" (large) ");
+        DbgPrint(" (large)\n");
     }
+
+    DbgPrint("   Offset to first index: 0x%lx\n   Total size of index entries: 0x%lx\n   Allocated size of node: 0x%lx\n",
+             IndexRootAttr->Header.FirstEntryOffset,
+             IndexRootAttr->Header.TotalSizeOfEntries,
+             IndexRootAttr->Header.AllocatedSize);
+    currentOffset = IndexRootAttr->Header.FirstEntryOffset;
+    currentNode = 0;
+    // print details of every node in the index
+    while (currentOffset < IndexRootAttr->Header.TotalSizeOfEntries)
+    {
+        PINDEX_ENTRY_ATTRIBUTE currentIndexExtry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)IndexRootAttr + 0x10 + currentOffset);
+        DbgPrint("   Index Node Entry %u", currentNode++);
+        if (currentIndexExtry->Flags & NTFS_INDEX_ENTRY_NODE)
+            DbgPrint(" (Branch)");
+        else
+            DbgPrint(" (Leaf)");
+        if((currentIndexExtry->Flags & NTFS_INDEX_ENTRY_END))
+        {
+            DbgPrint(" (Dummy Key)");
+        }
+        DbgPrint("\n    File Reference: 0x%016I64x\n", currentIndexExtry->Data.Directory.IndexedFile);
+        DbgPrint("    Index Entry Length: 0x%x\n", currentIndexExtry->Length);
+        DbgPrint("    Index Key Length: 0x%x\n", currentIndexExtry->KeyLength);
+
+        // if this isn't the final (dummy) node, print info about the key (Filename attribute)
+        if (!(currentIndexExtry->Flags & NTFS_INDEX_ENTRY_END))
+        {
+            UNICODE_STRING Name;
+            DbgPrint("     Parent File Reference: 0x%016I64x\n", currentIndexExtry->FileName.DirectoryFileReferenceNumber);
+            DbgPrint("     $FILENAME indexed: ");
+            Name.Length = currentIndexExtry->FileName.NameLength * sizeof(WCHAR);
+            Name.MaximumLength = Name.Length;
+            Name.Buffer = currentIndexExtry->FileName.Name;
+            DbgPrint("'%wZ'\n", &Name);
+        }
+
+        // if this node has a sub-node beneath it
+        if (currentIndexExtry->Flags & NTFS_INDEX_ENTRY_NODE)
+        {
+            // Print the VCN of the sub-node
+            PULONGLONG SubNodeVCN = (PULONGLONG)((ULONG_PTR)currentIndexExtry + currentIndexExtry->Length - 8);
+            DbgPrint("    VCN of sub-node: 0x%llx\n", *SubNodeVCN);
+        }
+        
+        currentOffset += currentIndexExtry->Length;
+        ASSERT(currentIndexExtry->Length);
+    }
+
 }
 
 
