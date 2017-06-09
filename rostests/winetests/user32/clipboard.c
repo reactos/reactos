@@ -2004,11 +2004,17 @@ static void test_handles_process( const char *str )
     trace( "palette %p\n", h );
     h = GetClipboardData( CF_METAFILEPICT );
     ok( is_fixed( h ), "expected fixed mem %p\n", h );
+#ifdef __REACTOS__
+    if (h != NULL)
+#endif
     ok( GetObjectType( ((METAFILEPICT *)h)->hMF ) == OBJ_METAFILE,
         "wrong object %p\n", ((METAFILEPICT *)h)->hMF );
     trace( "metafile %p\n", h );
     h = GetClipboardData( CF_DSPMETAFILEPICT );
     ok( is_fixed( h ), "expected fixed mem %p\n", h );
+#ifdef __REACTOS__
+    if (h != NULL)
+#endif
     ok( GetObjectType( ((METAFILEPICT *)h)->hMF ) == OBJ_METAFILE,
         "wrong object %p\n", ((METAFILEPICT *)h)->hMF );
     trace( "metafile2 %p\n", h );
