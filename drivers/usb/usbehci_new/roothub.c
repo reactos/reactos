@@ -14,13 +14,13 @@ EHCI_RH_GetRootHubData(IN PVOID ehciExtension,
     PEHCI_EXTENSION EhciExtension;
     PUSBPORT_ROOT_HUB_DATA RootHubData;
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
 
     DPRINT_RH("EHCI_RH_GetRootHubData: EhciExtension - %p, rootHubData - %p\n",
               EhciExtension,
               rootHubData);
 
-    RootHubData = (PUSBPORT_ROOT_HUB_DATA)rootHubData;
+    RootHubData = rootHubData;
 
     RootHubData->NumberOfPorts = EhciExtension->NumberOfPorts;
 
@@ -68,7 +68,7 @@ EHCI_RH_GetPortStatus(IN PVOID ehciExtension,
     USB20_PORT_STATUS status;
     ULONG PortMaskBits;
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
 
     PortStatusReg = (EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
     PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
@@ -167,7 +167,7 @@ EHCI_RH_FinishReset(IN PVOID ehciExtension,
 
     DPRINT("EHCI_RH_FinishReset: *Port - %x\n", *Port);
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
 
     PortStatusReg = (EhciExtension->OperationalRegs + EHCI_PORTSC) + (*Port - 1);
     PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
@@ -210,7 +210,7 @@ EHCI_RH_PortResetComplete(IN PVOID ehciExtension,
 
     DPRINT("EHCI_RH_PortResetComplete: *Port - %x\n", *Port);
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
     PortStatusReg = (EhciExtension->OperationalRegs + EHCI_PORTSC) + (*Port - 1);
 
 START:
@@ -259,7 +259,7 @@ EHCI_RH_SetFeaturePortReset(IN PVOID ehciExtension,
 
     DPRINT("EHCI_RH_SetFeaturePortReset: Port - %x\n", Port);
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
     PortStatusReg = (EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
 
     EhciExtension->ResetPortBits |= 1 << (Port - 1);
@@ -294,7 +294,7 @@ EHCI_RH_SetFeaturePortPower(IN PVOID ehciExtension,
 
     DPRINT_RH("EHCI_RH_SetFeaturePortPower: Port - %x\n", Port);
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
     PortStatusReg = (EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
 
     PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
@@ -329,7 +329,7 @@ EHCI_RH_SetFeaturePortSuspend(IN PVOID ehciExtension,
 
     DPRINT("EHCI_RH_SetFeaturePortSuspend: Port - %x\n", Port);
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
     PortStatusReg = (EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
 
     PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
@@ -356,7 +356,7 @@ EHCI_RH_ClearFeaturePortEnable(IN PVOID ehciExtension,
 
     DPRINT("EHCI_RH_ClearFeaturePortEnable: Port - %x\n", Port);
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
     PortStatusReg = (EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
 
     PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
@@ -382,7 +382,7 @@ EHCI_RH_ClearFeaturePortPower(IN PVOID ehciExtension,
 
     DPRINT("EHCI_RH_ClearFeaturePortPower: Port - %x\n", Port);
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
     PortStatusReg = (EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
 
     PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
@@ -394,7 +394,7 @@ EHCI_RH_ClearFeaturePortPower(IN PVOID ehciExtension,
 
 VOID
 NTAPI
-EHCI_RH_PortResumeComplete(IN PULONG ehciExtension,
+EHCI_RH_PortResumeComplete(IN PVOID ehciExtension,
                            IN PUSHORT Port)
 {
     PEHCI_EXTENSION EhciExtension;
@@ -403,7 +403,7 @@ EHCI_RH_PortResumeComplete(IN PULONG ehciExtension,
 
     DPRINT("EHCI_RH_PortResumeComplete: *Port - %x\n", *Port);
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
     PortStatusReg = (EhciExtension->OperationalRegs + EHCI_PORTSC) + (*Port - 1);
 
     PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
@@ -431,7 +431,7 @@ EHCI_RH_ClearFeaturePortSuspend(IN PVOID ehciExtension,
 
     DPRINT("EHCI_RH_ClearFeaturePortSuspend: Port - %x\n", Port);
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
     PortStatusReg = (EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
     EhciExtension->ResetPortBits |= 1 << (Port - 1);
 
@@ -459,7 +459,7 @@ EHCI_RH_ClearFeaturePortEnableChange(IN PVOID ehciExtension,
 
     DPRINT("EHCI_RH_ClearFeaturePortEnableChange: Port - %p\n", Port);
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
 
     PortStatusReg = (EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
 
@@ -485,7 +485,7 @@ EHCI_RH_ClearFeaturePortConnectChange(IN PVOID ehciExtension,
 
     DPRINT_RH("EHCI_RH_ClearFeaturePortConnectChange: Port - %x\n", Port);
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
     PortStatusReg = (EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
 
     PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
@@ -513,7 +513,7 @@ EHCI_RH_ClearFeaturePortResetChange(IN PVOID ehciExtension,
 
     DPRINT("EHCI_RH_ClearFeaturePortConnectChange: Port - %x\n", Port);
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
     EhciExtension->FinishResetPortBits &= ~(1 << (Port - 1));
     return 0;
 }
@@ -527,7 +527,7 @@ EHCI_RH_ClearFeaturePortSuspendChange(IN PVOID ehciExtension,
 
     DPRINT("EHCI_RH_ClearFeaturePortSuspendChange: Port - %x\n", Port);
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
     EhciExtension->SuspendPortBits &= ~(1 << (Port - 1));
     return 0;
 }
@@ -543,7 +543,7 @@ EHCI_RH_ClearFeaturePortOvercurrentChange(IN PVOID ehciExtension,
 
     DPRINT_RH("EHCI_RH_ClearFeaturePortOvercurrentChange: Port - %x\n", Port);
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
 
     PortStatusReg = (EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
 
@@ -568,7 +568,7 @@ EHCI_RH_DisableIrq(IN PVOID ehciExtension)
 
     DPRINT_RH("EHCI_RH_DisableIrq: ... \n");
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
 
     IntrStsReg = EhciExtension->OperationalRegs + EHCI_USBINTR;
     IntrSts.AsULONG = READ_REGISTER_ULONG(IntrStsReg);
@@ -592,7 +592,7 @@ EHCI_RH_EnableIrq(IN PVOID ehciExtension)
 
     DPRINT_RH("EHCI_RH_EnableIrq: ... \n");
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
 
     IntrStsReg = EhciExtension->OperationalRegs + EHCI_USBINTR;
     IntrSts.AsULONG = READ_REGISTER_ULONG(IntrStsReg);

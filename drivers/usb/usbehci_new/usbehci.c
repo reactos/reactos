@@ -281,9 +281,9 @@ EHCI_OpenEndpoint(IN PVOID ehciExtension,
 
     DPRINT_EHCI("EHCI_OpenEndpoint: ... \n");
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
-    EhciEndpoint = (PEHCI_ENDPOINT)ehciEndpoint;
-    EndpointProperties = (PUSBPORT_ENDPOINT_PROPERTIES)endpointParameters;
+    EhciExtension = ehciExtension;
+    EhciEndpoint = ehciEndpoint;
+    EndpointProperties = endpointParameters;
 
     RtlCopyMemory(&EhciEndpoint->EndpointProperties,
                   endpointParameters,
@@ -349,8 +349,8 @@ EHCI_ReopenEndpoint(IN PVOID ehciExtension,
     PEHCI_HCD_QH QH;
     ULONG Result;
 
-    EhciEndpoint = (PEHCI_ENDPOINT)ehciEndpoint;
-    EndpointProperties = (PUSBPORT_ENDPOINT_PROPERTIES)endpointParameters;
+    EhciEndpoint = ehciEndpoint;
+    EndpointProperties = endpointParameters;
 
     TransferType = EndpointProperties->TransferType;
 
@@ -410,7 +410,7 @@ EHCI_QueryEndpointRequirements(IN PVOID ehciExtension,
 
     DPRINT_EHCI("EHCI_QueryEndpointRequirements: ... \n");
 
-    EndpointProperties = (PUSBPORT_ENDPOINT_PROPERTIES)endpointParameters;
+    EndpointProperties = endpointParameters;
     TransferType = EndpointProperties->TransferType;
 
     switch (TransferType)
@@ -855,7 +855,7 @@ EHCI_StartController(IN PVOID ehciExtension,
         return MP_STATUS_ERROR;
     }
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
 
     BaseIoAdress = (PULONG)Resources->ResourceBase;
     EhciExtension->BaseIoAdress = BaseIoAdress;
@@ -964,7 +964,7 @@ EHCI_SuspendController(IN PVOID ehciExtension)
 
     DPRINT("EHCI_SuspendController: ... \n");
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
     OperationalRegs = EhciExtension->OperationalRegs;
 
     EhciExtension->BakupPeriodiclistbase = READ_REGISTER_ULONG(OperationalRegs +
@@ -1043,7 +1043,7 @@ EHCI_ResumeController(IN PVOID ehciExtension)
 
     DPRINT("EHCI_ResumeController: ... \n");
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
     OperationalRegs = EhciExtension->OperationalRegs;
 
     RoutingControl = EhciExtension->PortRoutingControl;
@@ -1125,7 +1125,7 @@ EHCI_InterruptService(IN PVOID ehciExtension)
     ULONG FrameIndex;
     ULONG Command;
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
     OperationalRegs = EhciExtension->OperationalRegs;
 
     DPRINT_EHCI("EHCI_InterruptService: ... \n");
@@ -1186,7 +1186,7 @@ EHCI_InterruptDpc(IN PVOID ehciExtension,
     PULONG OperationalRegs;
     EHCI_INTERRUPT_ENABLE iStatus;
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
     OperationalRegs = EhciExtension->OperationalRegs;
 
     DPRINT_EHCI("EHCI_InterruptDpc: ... \n");
@@ -2157,11 +2157,11 @@ EHCI_SubmitTransfer(IN PVOID ehciExtension,
     PUSBPORT_SCATTER_GATHER_LIST SgList;
     MPSTATUS MPStatus;
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
-    EhciEndpoint = (PEHCI_ENDPOINT)ehciEndpoint;
-    TransferParameters = (PUSBPORT_TRANSFER_PARAMETERS)transferParameters;
-    EhciTransfer = (PEHCI_TRANSFER)ehciTransfer;
-    SgList = (PUSBPORT_SCATTER_GATHER_LIST)sgList;
+    EhciExtension = ehciExtension;
+    EhciEndpoint = ehciEndpoint;
+    TransferParameters = transferParameters;
+    EhciTransfer = ehciTransfer;
+    SgList = sgList;
 
     DPRINT_EHCI("EHCI_SubmitTransfer: EhciEndpoint - %p, EhciTransfer - %p\n",
                 EhciEndpoint,
@@ -2390,9 +2390,9 @@ EHCI_AbortTransfer(IN PVOID ehciExtension,
     PEHCI_TRANSFER EhciTransfer;
     ULONG TransferType;
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
-    EhciEndpoint = (PEHCI_ENDPOINT)ehciEndpoint;
-    EhciTransfer = (PEHCI_TRANSFER)ehciTransfer;
+    EhciExtension = ehciExtension;
+    EhciEndpoint = ehciEndpoint;
+    EhciTransfer = ehciTransfer;
 
     DPRINT_EHCI("EHCI_AbortTransfer: EhciTransfer - %p, CompletedLength - %x\n",
                 EhciTransfer,
@@ -2586,7 +2586,7 @@ EHCI_SetEndpointState(IN PVOID ehciExtension,
 
     DPRINT_EHCI("EHCI_SetEndpointState: ... \n");
 
-    EhciEndpoint = (PEHCI_ENDPOINT)ehciEndpoint;
+    EhciEndpoint = ehciEndpoint;
     TransferType = EhciEndpoint->EndpointProperties.TransferType;
 
     if (TransferType == USBPORT_TRANSFER_TYPE_CONTROL ||
@@ -2617,7 +2617,7 @@ EHCI_InterruptNextSOF(IN PVOID ehciExtension)
 
     DPRINT_EHCI("EHCI_InterruptNextSOF: ... \n");
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
     RegPacket.UsbPortInvalidateController(EhciExtension, 3);
 }
 
@@ -2771,9 +2771,9 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
     CurrentTDPhys = QH->sqh.HwQH.CurrentTD & ~0x1F;
     ASSERT(CurrentTDPhys != 0);
 
-    CurrentTD = (PEHCI_HCD_TD)RegPacket.UsbPortGetMappedVirtualAddress((PVOID)CurrentTDPhys,
-                                                                       EhciExtension,
-                                                                       EhciEndpoint);
+    CurrentTD = RegPacket.UsbPortGetMappedVirtualAddress((PVOID)CurrentTDPhys,
+                                                         EhciExtension,
+                                                         EhciEndpoint);
 
     if (CurrentTD == EhciEndpoint->DummyTdVA)
     {
@@ -2922,9 +2922,9 @@ EHCI_PollHaltedAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
         IsSheduled = 0;
     }
 
-    CurrentTD = (PEHCI_HCD_TD)RegPacket.UsbPortGetMappedVirtualAddress((PVOID)CurrentTdPA,
-                                                                       EhciExtension,
-                                                                       EhciEndpoint);
+    CurrentTD = RegPacket.UsbPortGetMappedVirtualAddress((PVOID)CurrentTdPA,
+                                                         EhciExtension,
+                                                         EhciEndpoint);
 
     DPRINT("EHCI_PollHaltedAsyncEndpoint: CurrentTD - %p\n", CurrentTD);
 
@@ -3077,8 +3077,8 @@ EHCI_PollEndpoint(IN PVOID ehciExtension,
     PEHCI_ENDPOINT EhciEndpoint;
     ULONG TransferType;
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
-    EhciEndpoint = (PEHCI_ENDPOINT)ehciEndpoint;
+    EhciExtension = ehciExtension;
+    EhciEndpoint = ehciEndpoint;
 
     //DPRINT_EHCI("EHCI_PollEndpoint: EhciEndpoint - %p\n", EhciEndpoint);
 
@@ -3098,7 +3098,7 @@ VOID
 NTAPI
 EHCI_CheckController(IN PVOID ehciExtension)
 {
-    PEHCI_EXTENSION EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    PEHCI_EXTENSION EhciExtension = ehciExtension;
 
     //DPRINT_EHCI("EHCI_CheckController: ... \n");
 
@@ -3119,7 +3119,7 @@ EHCI_Get32BitFrameNumber(IN PVOID ehciExtension)
 
     //DPRINT_EHCI("EHCI_Get32BitFrameNumber: EhciExtension - %p\n", EhciExtension);
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
 
     FrameIdx = EhciExtension->FrameIndex;
     FrameIndex = READ_REGISTER_ULONG(EhciExtension->OperationalRegs + EHCI_FRINDEX);
@@ -3134,7 +3134,7 @@ VOID
 NTAPI
 EHCI_EnableInterrupts(IN PVOID ehciExtension)
 {
-    PEHCI_EXTENSION EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    PEHCI_EXTENSION EhciExtension = ehciExtension;
 
     DPRINT("EHCI_EnableInterrupts: EhciExtension->InterruptMask - %x\n",
            EhciExtension->InterruptMask.AsULONG);
@@ -3147,7 +3147,7 @@ VOID
 NTAPI
 EHCI_DisableInterrupts(IN PVOID ehciExtension)
 {
-    PEHCI_EXTENSION EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    PEHCI_EXTENSION EhciExtension = ehciExtension;
 
     DPRINT("EHCI_DisableInterrupts: UNIMPLEMENTED. FIXME\n");
 
@@ -3166,7 +3166,7 @@ EHCI_PollController(IN PVOID ehciExtension)
 
     DPRINT_EHCI("EHCI_PollController: ... \n");
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
     OperationalRegs = EhciExtension->OperationalRegs;
 
     if (!(EhciExtension->Flags & EHCI_FLAGS_CONTROLLER_SUSPEND))
@@ -3198,7 +3198,7 @@ EHCI_SetEndpointDataToggle(IN PVOID ehciExtension,
     PEHCI_ENDPOINT EhciEndpoint;
     ULONG TransferType;
 
-    EhciEndpoint = (PEHCI_ENDPOINT)ehciEndpoint;
+    EhciEndpoint = ehciEndpoint;
 
     DPRINT_EHCI("EHCI_SetEndpointDataToggle: EhciEndpoint - %p, DataToggle - %x\n",
                 EhciEndpoint,
@@ -3222,7 +3222,7 @@ EHCI_GetEndpointStatus(IN PVOID ehciExtension,
     ULONG TransferType;
     ULONG EndpointStatus = USBPORT_ENDPOINT_RUN;
 
-    EhciEndpoint = (PEHCI_ENDPOINT)ehciEndpoint;
+    EhciEndpoint = ehciEndpoint;
 
     DPRINT_EHCI("EHCI_GetEndpointStatus: EhciEndpoint - %p\n", EhciEndpoint);
 
@@ -3251,7 +3251,7 @@ EHCI_SetEndpointStatus(IN PVOID ehciExtension,
     ULONG TransferType;
     PEHCI_HCD_QH QH;
 
-    EhciEndpoint = (PEHCI_ENDPOINT)ehciEndpoint;
+    EhciEndpoint = ehciEndpoint;
 
     DPRINT("EHCI_SetEndpointStatus: EhciEndpoint - %p, EndpointStatus - %x\n",
                 EhciEndpoint,
@@ -3346,7 +3346,7 @@ EHCI_FlushInterrupts(IN PVOID ehciExtension)
 
     DPRINT("EHCI_FlushInterrupts: ... \n");
 
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension = ehciExtension;
     OperationalRegs = EhciExtension->OperationalRegs;
 
     Status.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS);
