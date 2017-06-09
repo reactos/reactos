@@ -34,6 +34,256 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/**
+* @name NtfsAddFilenameToDirectory
+* @implemented
+*
+* Adds a $FILE_NAME attribute to a given directory index.
+*
+* @param DeviceExt
+* Points to the target disk's DEVICE_EXTENSION.
+*
+* @param DirectoryMftIndex
+* Mft index of the parent directory which will receive the file.
+*
+* @param FileReferenceNumber
+* File reference of the file to be added to the directory. This is a combination of the 
+* Mft index and sequence number.
+*
+* @param FilenameAttribute
+* Pointer to the FILENAME_ATTRIBUTE of the file being added to the directory.
+*
+* @return
+* STATUS_SUCCESS on success.
+* STATUS_INSUFFICIENT_RESOURCES if an allocation fails.
+* STATUS_NOT_IMPLEMENTED if target address isn't at the end of the given file record.
+*
+* @remarks
+* WIP - Can only support an empty directory.
+* One FILENAME_ATTRIBUTE is added to the directory's index for each link to that file. So, each
+* file which contains one FILENAME_ATTRIBUTE for a long name and another for the 8.3 name, will
+* get both attributes added to its parent directory.
+*/
+NTSTATUS
+NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
+                           ULONGLONG DirectoryMftIndex,
+                           ULONGLONG FileReferenceNumber,
+                           PFILENAME_ATTRIBUTE FilenameAttribute)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PFILE_RECORD_HEADER ParentFileRecord;
+    PNTFS_ATTR_CONTEXT DirectoryContext;
+    PINDEX_ROOT_ATTRIBUTE I30IndexRoot;
+    ULONG IndexRootOffset;
+    ULONGLONG I30IndexRootLength;
+    PINDEX_ENTRY_ATTRIBUTE IndexNodeEntry;
+    ULONG LengthWritten;
+    PNTFS_ATTR_RECORD DestinationAttribute;
+    PINDEX_ROOT_ATTRIBUTE NewIndexRoot;
+    ULONG AttributeLength;
+    PNTFS_ATTR_RECORD NextAttribute;
+
+    // Allocate memory for the parent directory
+    ParentFileRecord = ExAllocatePoolWithTag(NonPagedPool,
+                                             DeviceExt->NtfsInfo.BytesPerFileRecord,
+                                             TAG_NTFS);
+    if (!ParentFileRecord)
+    {
+        DPRINT1("ERROR: Couldn't allocate memory for file record!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    // Open the parent directory
+    Status = ReadFileRecord(DeviceExt, DirectoryMftIndex, ParentFileRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        DPRINT1("ERROR: Couldn't read parent directory with index %I64u\n",
+                DirectoryMftIndex);
+        return Status;
+    }
+
+    DPRINT1("Dumping old parent file record:\n");
+    NtfsDumpFileRecord(DeviceExt, ParentFileRecord);
+
+    // Find the index root attribute for the directory
+    Status = FindAttribute(DeviceExt,
+                           ParentFileRecord,
+                           AttributeIndexRoot,
+                           L"$I30",
+                           4,
+                           &DirectoryContext,
+                           &IndexRootOffset);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Couldn't find $I30 $INDEX_ROOT attribute for parent directory with MFT #: %I64u!\n",
+                DirectoryMftIndex);
+        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        return Status;
+    }
+
+    I30IndexRootLength = AttributeDataLength(&DirectoryContext->Record);
+
+    // Allocate memory for the index root data
+    I30IndexRoot = (PINDEX_ROOT_ATTRIBUTE)ExAllocatePoolWithTag(NonPagedPool, I30IndexRootLength, TAG_NTFS);
+    if (!I30IndexRoot)
+    {
+        DPRINT1("ERROR: Couldn't allocate memory for index root attribute!\n");
+        ReleaseAttributeContext(DirectoryContext);
+        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+    }
+
+    // Read the Index Root
+    Status = ReadAttribute(DeviceExt, DirectoryContext, 0, (PCHAR)I30IndexRoot, I30IndexRootLength);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Couln't read index root attribute for Mft index #%I64u\n", DirectoryMftIndex);
+        ReleaseAttributeContext(DirectoryContext);
+        ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
+        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        return Status;
+    }
+
+    // Make sure it's empty (temporarily)
+    IndexNodeEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)I30IndexRoot + I30IndexRoot->Header.FirstEntryOffset + 0x10);
+    if (IndexNodeEntry->Data.Directory.IndexedFile != 0 || IndexNodeEntry->Flags != 2)
+    {
+        DPRINT1("FIXME: File-creation is only supported in empty directories right now! Be patient! :)\n");
+        ReleaseAttributeContext(DirectoryContext);
+        ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
+        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+    
+    // Now we need to setup a new index root attribute to replace the old one
+    NewIndexRoot = ExAllocatePoolWithTag(NonPagedPool, DeviceExt->NtfsInfo.BytesPerIndexRecord, TAG_NTFS);
+    if (!NewIndexRoot)
+    {
+        DPRINT1("ERROR: Unable to allocate memory for new index root attribute!\n");
+        ReleaseAttributeContext(DirectoryContext);
+        ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
+        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    
+    // Setup the new index record
+    RtlZeroMemory(NewIndexRoot, DeviceExt->NtfsInfo.BytesPerIndexRecord);   // shouldn't be necessary but aids in debugging
+
+    NewIndexRoot->AttributeType = AttributeFileName;
+    NewIndexRoot->CollationRule = COLLATION_FILE_NAME;
+    NewIndexRoot->SizeOfEntry = DeviceExt->NtfsInfo.BytesPerIndexRecord;
+    // If Bytes per index record is less than cluster size, clusters per index record becomes sectors per index
+    if(NewIndexRoot->SizeOfEntry < DeviceExt->NtfsInfo.BytesPerCluster)
+        NewIndexRoot->ClustersPerIndexRecord = NewIndexRoot->SizeOfEntry / DeviceExt->NtfsInfo.BytesPerSector;
+    else    
+        NewIndexRoot->ClustersPerIndexRecord = NewIndexRoot->SizeOfEntry / DeviceExt->NtfsInfo.BytesPerCluster;
+
+    // Setup the Index node header
+    NewIndexRoot->Header.FirstEntryOffset = 0x10;
+    NewIndexRoot->Header.Flags = INDEX_ROOT_SMALL;
+    // still need to calculate sizes
+
+    // The first index node entry will be for the filename we're adding
+    IndexNodeEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)NewIndexRoot + NewIndexRoot->Header.FirstEntryOffset + 0x10);
+    IndexNodeEntry->Data.Directory.IndexedFile = FileReferenceNumber;
+    IndexNodeEntry->Flags = INDEX_ROOT_SMALL;
+    IndexNodeEntry->KeyLength = FIELD_OFFSET(FILENAME_ATTRIBUTE, Name) + (2 * FilenameAttribute->NameLength);
+    IndexNodeEntry->Length = ALIGN_UP_BY(IndexNodeEntry->KeyLength, 8) + FIELD_OFFSET(INDEX_ENTRY_ATTRIBUTE, FileName);
+
+    // Now we can calculate the Node length (temp logic)
+    NewIndexRoot->Header.TotalSizeOfEntries = NewIndexRoot->Header.FirstEntryOffset + IndexNodeEntry->Length + 0x10;
+    NewIndexRoot->Header.AllocatedSize = NewIndexRoot->Header.TotalSizeOfEntries;
+
+    DPRINT1("New Index Node Entry Stream Length: %u\nNew Inde Node Entry Length: %u\n",
+            IndexNodeEntry->KeyLength,
+            IndexNodeEntry->Length);
+
+    // copy over the attribute proper
+    RtlCopyMemory(&IndexNodeEntry->FileName, FilenameAttribute, IndexNodeEntry->KeyLength);
+
+    // Now setup the dummy key
+    IndexNodeEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)IndexNodeEntry + IndexNodeEntry->Length);
+
+    IndexNodeEntry->Data.Directory.IndexedFile = 0;
+    IndexNodeEntry->Length = 0x10;
+    IndexNodeEntry->KeyLength = 0;
+    IndexNodeEntry->Flags = NTFS_INDEX_ENTRY_END;
+
+    // This is when we'd normally setup the length (already done above)
+
+    // Write back the new index root attribute to the parent directory file record
+
+    // First, we need to make sure the attribute is large enough.
+    // We can't set the size as we normally would, because if we extend past the file record, 
+    // we must create an index allocation and index bitmap (TODO). Also TODO: support file records with
+    // $ATTRIBUTE_LIST's.
+    AttributeLength = NewIndexRoot->Header.AllocatedSize + FIELD_OFFSET(INDEX_ROOT_ATTRIBUTE, Header);
+    DestinationAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)ParentFileRecord + IndexRootOffset);
+
+    NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)DestinationAttribute + DestinationAttribute->Length);
+    if (NextAttribute->Type != AttributeEnd)
+    {
+        DPRINT1("FIXME: For now, only resizing index root at the end of a file record is supported!\n");
+        ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
+        ReleaseAttributeContext(DirectoryContext);
+        ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
+        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+    
+    // Update the length of the attribute in the file record of the parent directory
+    InternalSetResidentAttributeLength(DirectoryContext,
+                                       ParentFileRecord,
+                                       IndexRootOffset,
+                                       AttributeLength);
+
+    Status = UpdateFileRecord(DeviceExt, DirectoryMftIndex, ParentFileRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Failed to update file record of directory with index: %llx\n", DirectoryMftIndex);
+        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
+        ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
+        return Status;
+    }
+
+    // Update the parent directory with the new index root
+    Status = WriteAttribute(DeviceExt,
+                            DirectoryContext,
+                            0,
+                            (PUCHAR)NewIndexRoot,
+                            AttributeLength,
+                            &LengthWritten);
+    if (!NT_SUCCESS(Status) )
+    {
+        DPRINT1("ERROR: Unable to write new index root attribute to parent directory!\n");
+        ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
+        ReleaseAttributeContext(DirectoryContext);
+        ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
+        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        return Status;
+    }
+    
+    // re-read the parent file record, so we can dump it
+    Status = ReadFileRecord(DeviceExt, DirectoryMftIndex, ParentFileRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Couldn't read parent directory after messing with it!\n");
+    }
+    else
+    {
+        DPRINT1("Dumping new parent file record:\n");
+        NtfsDumpFileRecord(DeviceExt, ParentFileRecord);
+    }
+
+    // Cleanup
+    ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
+    ReleaseAttributeContext(DirectoryContext);
+    ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
+    ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+
+    return Status;
+}
 
 ULONGLONG
 NtfsGetFileSize(PDEVICE_EXTENSION DeviceExt,

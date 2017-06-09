@@ -1361,6 +1361,9 @@ FixupUpdateSequenceArray(PDEVICE_EXTENSION Vcb,
 * @param DeviceExt
 * Pointer to the DEVICE_EXTENSION of the target drive.
 *
+* @param DestinationIndex
+* Pointer to a ULONGLONG which will receive the MFT index where the file record was stored.
+*
 * @return
 * STATUS_SUCCESS on success.
 * STATUS_OBJECT_NAME_NOT_FOUND if we can't find the MFT's $Bitmap or if we weren't able 
@@ -1371,7 +1374,8 @@ FixupUpdateSequenceArray(PDEVICE_EXTENSION Vcb,
 */
 NTSTATUS
 AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
-               PDEVICE_EXTENSION DeviceExt)
+               PDEVICE_EXTENSION DeviceExt,
+               PULONGLONG DestinationIndex)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     ULONGLONG MftIndex;
@@ -1453,6 +1457,8 @@ AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
         ReleaseAttributeContext(BitmapContext);
         return Status;
     }
+
+    *DestinationIndex = MftIndex;
 
     ExFreePoolWithTag(BitmapData, TAG_NTFS);
     ReleaseAttributeContext(BitmapContext);

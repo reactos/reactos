@@ -523,7 +523,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
            
         DoneOverwriting:
             if (fileRecord)
-                ExFreePool(fileRecord);
+                ExFreePoolWithTag(fileRecord, TAG_NTFS);
             if (dataContext)
                 ReleaseAttributeContext(dataContext);
 
@@ -562,13 +562,14 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
 
             // Create the file record on disk
             Status = NtfsCreateFileRecord(DeviceExt, FileObject);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("ERROR: Couldn't create file record!\n");
+                return Status;
+            }
 
-            // Update the parent directory index
-            // Still TODO
-
-            // Call NtfsOpenFile()
-
-            return STATUS_CANNOT_MAKE;
+            // Now we should be able to open the file
+            return NtfsCreateFile(DeviceObject, Irp);
         }
     }
 
@@ -624,7 +625,8 @@ NtfsCreate(PNTFS_IRP_CONTEXT IrpContext)
 * @name NtfsCreateFileRecord()
 * @implemented
 *
-* Creates a file record and saves it to the MFT.
+* Creates a file record and saves it to the MFT. Adds the filename attribute of the
+* created file to the parent directory's index.
 *
 * @param DeviceExt
 * Points to the target disk's DEVICE_EXTENSION
@@ -643,6 +645,9 @@ NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_RECORD_HEADER FileRecord;
     PNTFS_ATTR_RECORD NextAttribute;
+    PFILENAME_ATTRIBUTE FilenameAttribute;
+    ULONGLONG ParentMftIndex;
+    ULONGLONG FileMftIndex;
 
     // allocate memory for file record
     FileRecord = ExAllocatePoolWithTag(NonPagedPool,
@@ -686,7 +691,10 @@ NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
     NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)NextAttribute + (ULONG_PTR)NextAttribute->Length);
 
     // Add the $FILE_NAME attribute
-    AddFileName(FileRecord, NextAttribute, DeviceExt, FileObject);
+    AddFileName(FileRecord, NextAttribute, DeviceExt, FileObject, &ParentMftIndex);
+
+    // save a pointer to the filename attribute
+    FilenameAttribute = (PFILENAME_ATTRIBUTE)((ULONG_PTR)NextAttribute + NextAttribute->Resident.ValueOffset);
 
     // advance NextAttribute pointer to the next attribute
     NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)NextAttribute + (ULONG_PTR)NextAttribute->Length);
@@ -698,7 +706,23 @@ NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
     NtfsDumpFileRecord(DeviceExt, FileRecord);
 
     // Now that we've built the file record in memory, we need to store it in the MFT.
-    Status = AddNewMftEntry(FileRecord, DeviceExt);
+    Status = AddNewMftEntry(FileRecord, DeviceExt, &FileMftIndex);
+    if (NT_SUCCESS(Status))
+    {
+        // The highest 2 bytes should be the sequence number, unless the parent happens to be root
+        if (FileMftIndex == NTFS_FILE_ROOT)
+            FileMftIndex = FileMftIndex + ((ULONGLONG)NTFS_FILE_ROOT << 48);
+        else
+            FileMftIndex = FileMftIndex + ((ULONGLONG)FileRecord->SequenceNumber << 48);
+
+        DPRINT1("New File Reference: 0x%016I64x\n", FileMftIndex);
+
+        // Add the filename attribute to the filename-index of the parent directory
+        Status = NtfsAddFilenameToDirectory(DeviceExt,
+                                            ParentMftIndex,
+                                            FileMftIndex,
+                                            FilenameAttribute);
+    }
 
     ExFreePoolWithTag(FileRecord, TAG_NTFS);
 
