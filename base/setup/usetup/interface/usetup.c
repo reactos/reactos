@@ -4685,19 +4685,20 @@ PnpEventThread(IN LPVOID lpParameter);
 /*
  * The start routine and page management
  */
-VOID
+NTSTATUS
 RunUSetup(VOID)
 {
+    NTSTATUS Status;
     INPUT_RECORD Ir;
     PAGE_NUMBER Page;
-    LARGE_INTEGER Time;
-    NTSTATUS Status;
     BOOLEAN Old;
 
-    /* Tell the Cm this is a setup boot, and it has to behave accordingly */
-    NtInitializeRegistry(CM_BOOT_FLAG_SETUP);
+    InfSetHeap(ProcessHeap);
 
-    NtQuerySystemTime(&Time);
+    /* Tell the Cm this is a setup boot, and it has to behave accordingly */
+    Status = NtInitializeRegistry(CM_BOOT_FLAG_SETUP);
+    if (!NT_SUCCESS(Status))
+        DPRINT1("NtInitializeRegistry() failed (Status 0x%08lx)\n", Status);
 
     /* Create the PnP thread in suspended state */
     Status = RtlCreateUserThread(NtCurrentProcess(),
@@ -4719,9 +4720,8 @@ RunUSetup(VOID)
         PrintString(MUIGetString(STRING_CONSOLEFAIL2));
         PrintString(MUIGetString(STRING_CONSOLEFAIL3));
 
-        /* Raise a hard error (crash the system/BSOD) */
-        NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED,
-                         0,0,0,0,0);
+        /* We failed to initialize the video, just quit the installer */
+        return STATUS_APP_INIT_FAILURE;
     }
 
     /* Initialize global unicode strings */
@@ -4898,15 +4898,12 @@ RunUSetup(VOID)
 
     FreeConsole();
 
-    /* Avoid bugcheck */
-    Time.QuadPart += 50000000;
-    NtDelayExecution(FALSE, &Time);
-
     /* Reboot */
     RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, FALSE, &Old);
     NtShutdownSystem(ShutdownReboot);
     RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, Old, FALSE, &Old);
-    NtTerminateProcess(NtCurrentProcess(), 0);
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -4915,12 +4912,40 @@ RunUSetup(VOID)
 VOID NTAPI
 NtProcessStartup(PPEB Peb)
 {
+    NTSTATUS Status;
+    LARGE_INTEGER Time;
+
     RtlNormalizeProcessParams(Peb->ProcessParameters);
 
     ProcessHeap = Peb->ProcessHeap;
-    InfSetHeap(ProcessHeap);
-    RunUSetup();
+
+    NtQuerySystemTime(&Time);
+
+    Status = RunUSetup();
+
+    if (NT_SUCCESS(Status))
+    {
+        /*
+         * Avoid a bugcheck if RunUSetup() finishes too quickly by implementing
+         * a protective waiting.
+         * This wait is needed because, since we are started as SMSS.EXE,
+         * the NT kernel explicitly waits 5 seconds for the initial process
+         * SMSS.EXE to initialize (as a protective measure), and otherwise
+         * bugchecks with the code SESSION5_INITIALIZATION_FAILED.
+         */
+        Time.QuadPart += 50000000;
+        NtDelayExecution(FALSE, &Time);
+    }
+    else
+    {
+        /* The installer failed to start: raise a hard error (crash the system/BSOD) */
+        Status = NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED,
+                                  0, 0, NULL, 0, NULL);
+    }
+
+    NtTerminateProcess(NtCurrentProcess(), Status);
 }
+
 #endif /* __REACTOS__ */
 
 /* EOF */
