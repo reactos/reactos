@@ -1532,21 +1532,14 @@ public:
 
     VOID HandleTaskItemRightClick(IN OUT PTASK_ITEM TaskItem)
     {
+        POINT pt;
+        GetCursorPos(&pt);
 
-        HMENU hmenu = ::GetSystemMenu(TaskItem->hWnd, FALSE);
+        SetForegroundWindow(TaskItem->hWnd);
 
-        if (hmenu)
-        {
-            POINT pt;
-            int cmd;
-            GetCursorPos(&pt);
-            cmd = TrackPopupMenu(hmenu, TPM_LEFTBUTTON | TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, m_TaskBar.m_hWnd, NULL);
-            if (cmd)
-            {
-                SetForegroundWindow(TaskItem->hWnd);    // reactivate window after the context menu has closed
-                ::PostMessage(TaskItem->hWnd, WM_SYSCOMMAND, cmd, 0);
-            }
-        }
+        ActivateTask(TaskItem->hWnd);
+
+        ::SendMessageW(TaskItem->hWnd, WM_POPUPSYSTEMMENU, 0, MAKELPARAM(pt.x, pt.y));
     }
 
     VOID HandleTaskGroupRightClick(IN OUT PTASK_GROUP TaskGroup)
