@@ -709,7 +709,7 @@ NtUserGetClipboardFormatName(UINT fmt, LPWSTR lpszFormatName, INT cchMaxCount)
     UserEnterShared();
 
     /* If the format is built-in we fail */
-    if (fmt < 0xc000)
+    if (fmt < 0xc000 || fmt > 0xffff)
     {
         /* Registetrated formats are >= 0xc000 */
         goto cleanup;
