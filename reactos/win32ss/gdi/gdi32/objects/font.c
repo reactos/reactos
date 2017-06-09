@@ -385,7 +385,7 @@ GetCharacterPlacementA(
     DWORD ret;
     UINT font_cp;
 
-    if ( !lpString || uCount <= 0 || (nMaxExtent < 0 && nMaxExtent != -1 ) )
+    if ( !lpString || uCount <= 0 || !lpResults || (nMaxExtent < 0 && nMaxExtent != -1 ) )
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
