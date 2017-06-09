@@ -1387,34 +1387,29 @@ public:
         switch ((INT) wParam)
         {
         case HSHELL_APPCOMMAND:
-            HandleAppCommand(wParam, lParam);
-            Ret = TRUE;
+            Ret = HandleAppCommand(wParam, lParam);
             break;
 
         case HSHELL_WINDOWCREATED:
-            Ret = AddTask((HWND) lParam);
+            AddTask((HWND) lParam);
             break;
 
         case HSHELL_WINDOWDESTROYED:
             /* The window still exists! Delay destroying it a bit */
             DeleteTask((HWND) lParam);
-            Ret = TRUE;
             break;
 
         case HSHELL_RUDEAPPACTIVATED:
         case HSHELL_WINDOWACTIVATED:
             ActivateTask((HWND) lParam);
-            Ret = TRUE;
             break;
 
         case HSHELL_FLASH:
             FlashTask((HWND) lParam);
-            Ret = TRUE;
             break;
 
         case HSHELL_REDRAW:
             RedrawTask((HWND) lParam);
-            Ret = TRUE;
             break;
 
         case HSHELL_TASKMAN:
