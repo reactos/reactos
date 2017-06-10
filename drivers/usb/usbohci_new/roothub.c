@@ -9,13 +9,13 @@ OHCI_ReadRhDescriptorA(IN POHCI_EXTENSION OhciExtension)
 {
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
     ULONG DescriptorA;
-    ULONG ix = 0;
+    ULONG ix;
 
     OperationalRegs = OhciExtension->OperationalRegs;
 
     DPRINT("OHCI_ReadRhDescriptorA: OhciExtension - %p\n", OhciExtension);
 
-    do
+    for (ix = 0; ix < 10; ix++)
     {
         DescriptorA = READ_REGISTER_ULONG(&OperationalRegs->HcRhDescriptorA.AsULONG);
 
@@ -25,10 +25,7 @@ OHCI_ReadRhDescriptorA(IN POHCI_EXTENSION OhciExtension)
         DPRINT1("OHCI_ReadRhDescriptorA: ix - %p\n", ix);
 
         KeStallExecutionProcessor(5);
-
-        ++ix;
     }
-    while (ix < 10);
 
     return DescriptorA;
 }
@@ -92,7 +89,7 @@ OHCI_RH_GetPortStatus(IN PVOID ohciExtension,
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
     ULONG portStatus;
-    ULONG ix = 0;
+    ULONG ix;
 
     OhciExtension = ohciExtension;
 
@@ -103,7 +100,7 @@ OHCI_RH_GetPortStatus(IN PVOID ohciExtension,
 
     OperationalRegs = OhciExtension->OperationalRegs;
 
-    do
+    for (ix = 0; ix < 10; ix++)
     {
         portStatus = READ_REGISTER_ULONG(&OperationalRegs->HcRhPortStatus[Port-1].AsULONG);
 
@@ -114,10 +111,7 @@ OHCI_RH_GetPortStatus(IN PVOID ohciExtension,
             break;
 
         KeStallExecutionProcessor(5);
-
-        ++ix;
     }
-    while ( ix < 10 );
 
     PortStatus->AsULONG = portStatus;
 

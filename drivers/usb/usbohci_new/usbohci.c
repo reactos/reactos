@@ -172,6 +172,7 @@ OHCI_OpenControlEndpoint(IN POHCI_EXTENSION OhciExtension,
     POHCI_HCD_TD TdPA;
     POHCI_HCD_ED ED;
     ULONG TdCount;
+    ULONG ix;
 
     DPRINT_OHCI("OHCI_OpenControlEndpoint: ... \n");
 
@@ -188,11 +189,12 @@ OHCI_OpenControlEndpoint(IN POHCI_EXTENSION OhciExtension,
     if (TdCount > 0)
     {
         TdVA = OhciEndpoint->FirstTD;
+
         TdPA = (POHCI_HCD_TD)
                ((ULONG_PTR)EndpointProperties->BufferPA +
                sizeof(OHCI_HCD_ED));
 
-        do
+        for (ix = 0; ix < TdCount; ix++)
         {
             DPRINT_OHCI("OHCI_OpenControlEndpoint: InitTD. TdVA - %p, TdPA - %p\n",
                         TdVA,
@@ -206,9 +208,7 @@ OHCI_OpenControlEndpoint(IN POHCI_EXTENSION OhciExtension,
 
             ++TdVA;
             ++TdPA;
-            --TdCount;
         }
-        while (TdCount > 0);
     }
 
     OhciEndpoint->HcdED = OHCI_InitializeED(OhciEndpoint,
@@ -233,6 +233,7 @@ OHCI_OpenBulkEndpoint(IN POHCI_EXTENSION OhciExtension,
     POHCI_HCD_TD TdVA;
     POHCI_HCD_TD TdPA;
     ULONG TdCount;
+    ULONG ix;
 
     DPRINT_OHCI("OHCI_OpenBulkEndpoint: ... \n");
 
@@ -253,7 +254,7 @@ OHCI_OpenBulkEndpoint(IN POHCI_EXTENSION OhciExtension,
         TdPA = (POHCI_HCD_TD)((ULONG_PTR)EndpointProperties->BufferPA +
                               sizeof(OHCI_HCD_ED));
 
-        do
+        for (ix = 0; ix < TdCount; ix++)
         {
             DPRINT_OHCI("OHCI_OpenBulkEndpoint: InitTD. TdVA - %p, TdPA - %p\n",
                         TdVA,
@@ -267,9 +268,7 @@ OHCI_OpenBulkEndpoint(IN POHCI_EXTENSION OhciExtension,
 
             ++TdVA;
             ++TdPA;
-            --TdCount;
        }
-       while (TdCount > 0);
     }
 
 
@@ -297,6 +296,7 @@ OHCI_OpenInterruptEndpoint(IN POHCI_EXTENSION OhciExtension,
     POHCI_HCD_TD TdVA;
     POHCI_HCD_TD TdPA;
     ULONG TdCount;
+    ULONG ix;
 
     DPRINT_OHCI("OHCI_OpenInterruptEndpoint: ... \n");
 
@@ -339,10 +339,11 @@ OHCI_OpenInterruptEndpoint(IN POHCI_EXTENSION OhciExtension,
     if (TdCount > 0)
     {
         TdVA = OhciEndpoint->FirstTD;
+
         TdPA = (POHCI_HCD_TD)((ULONG_PTR)EndpointProperties->BufferPA +
                               sizeof(OHCI_HCD_ED));
 
-        do
+        for (ix = 0; ix < TdCount; ix++)
         {
             DPRINT_OHCI("OHCI_OpenInterruptEndpoint: InitTD. TdVA - %p, TdPA - %p\n",
                         TdVA,
@@ -356,10 +357,7 @@ OHCI_OpenInterruptEndpoint(IN POHCI_EXTENSION OhciExtension,
 
             ++TdVA;
             ++TdPA;
-            --TdCount;
        }
-       while (TdCount > 0);
-
     }
 
     OhciEndpoint->HcdED = OHCI_InitializeED(OhciEndpoint,
@@ -1018,7 +1016,7 @@ OHCI_MapTransferToTD(IN POHCI_EXTENSION OhciExtension,
                      IN PUSBPORT_SCATTER_GATHER_LIST SGList)
 {
     PUSBPORT_SCATTER_GATHER_ELEMENT SgElement;
-    ULONG SgIdx = 0;
+    ULONG SgIdx;
     ULONG SgRemain;
     ULONG LengthThisTd;
     ULONG_PTR BufferEnd;
@@ -1028,23 +1026,17 @@ OHCI_MapTransferToTD(IN POHCI_EXTENSION OhciExtension,
 
     DPRINT_OHCI("OHCI_MapTransferToTD: TransferedLen - %x\n", TransferedLen);
 
-    if (SGList->SgElementCount > 0)
+    SgElement = &SGList->SgElement[0];
+
+    for (SgIdx = 0; SgIdx < SGList->SgElementCount; SgIdx++)
     {
-        SgElement = &SGList->SgElement[0];
-
-        do
+        if (TransferedLen >= SgElement->SgOffset &&
+            TransferedLen < SgElement->SgOffset + SgElement->SgTransferLength)
         {
-            if (TransferedLen >= SgElement->SgOffset &&
-                TransferedLen < SgElement->SgOffset + SgElement->SgTransferLength)
-            {
-                break;
-            }
-
-            ++SgIdx;
-
-            SgElement += 1;
+            break;
         }
-        while (SgIdx < SGList->SgElementCount);
+
+        SgElement += 1;
     }
 
     DPRINT_OHCI("OHCI_MapTransferToTD: SgIdx - %x, SgCount - %x\n",
@@ -1124,11 +1116,8 @@ OHCI_AllocateTD(IN POHCI_EXTENSION OhciExtension,
 
     TD = OhciEndpoint->FirstTD;
 
-    ix = 0;
-
-    while (TD->Flags & OHCI_HCD_TD_FLAG_ALLOCATED)
+    for (ix = 0; TD->Flags & OHCI_HCD_TD_FLAG_ALLOCATED; ix++)
     {
-        ++ix;
         TD += 1;
 
         if (ix >= MaxTDs)
@@ -1150,6 +1139,7 @@ OHCI_RemainTDs(IN POHCI_EXTENSION OhciExtension,
     POHCI_HCD_TD TD;
     ULONG MaxTDs;
     ULONG Result;
+    ULONG ix;
 
     DPRINT_OHCI("OHCI_RemainTDs: ... \n");
 
@@ -1164,7 +1154,7 @@ OHCI_RemainTDs(IN POHCI_EXTENSION OhciExtension,
 
     Result = 0;
 
-    do
+    for (ix = 0; ix < MaxTDs; ix++)
     {
         if (!(TD->Flags & OHCI_HCD_TD_FLAG_ALLOCATED))
         {
@@ -1172,9 +1162,7 @@ OHCI_RemainTDs(IN POHCI_EXTENSION OhciExtension,
         }
 
         TD += 1;
-        --MaxTDs;
     }
-    while (MaxTDs > 0);
 
     return Result;
 }
@@ -1670,9 +1658,8 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
         if (OhciEndpoint->MaxTransferDescriptors != 0)
         {
             TD = OhciEndpoint->FirstTD;
-            ix = 0;
 
-            do
+            for (ix = 0; ix < OhciEndpoint->MaxTransferDescriptors; ix++)
             {
                 if (TD->OhciTransfer == OhciTransfer)
                 {
@@ -1687,9 +1674,7 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
                 }
 
                 TD += 1;
-                ++ix;
             }
-            while (ix < OhciEndpoint->MaxTransferDescriptors);
         }
 
         *CompletedLength = OhciTransfer->TransferLen;
