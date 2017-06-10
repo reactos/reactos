@@ -14,7 +14,7 @@ EHCI_AllocTd(IN PEHCI_EXTENSION EhciExtension,
              IN PEHCI_ENDPOINT EhciEndpoint)
 {
     PEHCI_HCD_TD TD;
-    ULONG ix = 0;
+    ULONG ix;
 
     DPRINT_EHCI("EHCI_AllocTd: ... \n");
 
@@ -26,9 +26,8 @@ EHCI_AllocTd(IN PEHCI_EXTENSION EhciExtension,
 
     TD = EhciEndpoint->FirstTD;
 
-    while (TD->TdFlags & EHCI_HCD_TD_FLAG_ALLOCATED)
+    for (ix = 1; TD->TdFlags & EHCI_HCD_TD_FLAG_ALLOCATED; ++ix)
     {
-        ++ix;
         TD += 1;
 
         if (ix >= EhciEndpoint->MaxTDs)
@@ -164,33 +163,25 @@ EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
     EhciEndpoint->MaxTDs = TdCount;
     EhciEndpoint->RemainTDs = TdCount;
 
-    if (TdCount)
+    TdVA = EhciEndpoint->FirstTD;
+    TdPA = (PEHCI_HCD_TD)(QhPA + 1);
+
+    for (ix = 0; ix < TdCount; ix++)
     {
-        TdVA = EhciEndpoint->FirstTD;
-        TdPA = (PEHCI_HCD_TD)(QhPA + 1);
+        DPRINT_EHCI("EHCI_OpenBulkOrControlEndpoint: TdVA - %p, TdPA - %p\n",
+                    TdVA,
+                    TdPA);
 
-        ix = 0;
+        RtlZeroMemory(TdVA, sizeof(EHCI_HCD_TD));
 
-        do
-        {
-            DPRINT_EHCI("EHCI_OpenBulkOrControlEndpoint: TdVA - %p, TdPA - %p\n",
-                        TdVA,
-                        TdPA);
+        ASSERT(((ULONG_PTR)TdPA & 0x1F) == 0); // link flags
 
-            RtlZeroMemory(TdVA, sizeof(EHCI_HCD_TD));
+        TdVA->PhysicalAddress = TdPA;
+        TdVA->EhciEndpoint = EhciEndpoint;
+        TdVA->EhciTransfer = NULL;
 
-            ASSERT(((ULONG_PTR)TdPA & 0x1F) == 0); // link flags
-
-            TdVA->PhysicalAddress = TdPA;
-            TdVA->EhciEndpoint = EhciEndpoint;
-            TdVA->EhciTransfer = NULL;
-
-            TdPA += 1;
-            TdVA += 1;
-
-            ix++;
-        }
-        while (ix < TdCount);
+        TdPA += 1;
+        TdVA += 1;
     }
 
     EhciEndpoint->QH = EHCI_InitializeQH(EhciExtension,
@@ -534,7 +525,7 @@ EHCI_AddDummyQHs(IN PEHCI_EXTENSION EhciExtension)
     PEHCI_HCD_QH DummyQhPA;
     EHCI_LINK_POINTER PrevPA;
     EHCI_QH_EP_PARAMS EndpointParams;
-    ULONG ix = 0;
+    ULONG ix;
 
     DPRINT_EHCI("EHCI_AddDummyQHs: ... \n");
 
@@ -543,7 +534,7 @@ EHCI_AddDummyQHs(IN PEHCI_EXTENSION EhciExtension)
     DummyQhVA = (PEHCI_HCD_QH)EhciExtension->DummyQHListVA;
     DummyQhPA = (PEHCI_HCD_QH)EhciExtension->DummyQHListPA;
 
-    while (TRUE)
+    for (ix = 0; ix < 1024; ix++)
     {
         ASSERT(EHCI_GetDummyQhForFrame(EhciExtension, ix) == DummyQhVA);
 
@@ -584,12 +575,6 @@ EHCI_AddDummyQHs(IN PEHCI_EXTENSION EhciExtension)
         *FrameHeader = (PEHCI_STATIC_QH)PrevPA.AsULONG;
 
         FrameHeader += 1;
-        ++ix;
-
-        if (ix >= 1024)
-        {
-            break;
-        }
     }
 }
 
@@ -1003,9 +988,7 @@ EHCI_SuspendController(IN PVOID ehciExtension)
 
     WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBINTR, 0);
 
-    ix = 0;
-
-    do
+    for (ix = 0; ix < 10; ix++)
     {
         Status.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS);
 
@@ -1015,10 +998,7 @@ EHCI_SuspendController(IN PVOID ehciExtension)
         }
 
         RegPacket.UsbPortWait(EhciExtension, 1);
-
-        ++ix;
     }
-    while (ix < 10);
 
     if (!Status.HCHalted)
     {
@@ -1243,24 +1223,17 @@ EHCI_MapAsyncTransferToTd(IN PEHCI_EXTENSION EhciExtension,
 
     TransferParameters = EhciTransfer->TransferParameters;
 
-    SgIdx = 0;
+    SgElement = &SgList->SgElement[0];
 
-    if (SgList->SgElementCount)
+    for (SgIdx = 0; SgIdx < SgList->SgElementCount; SgIdx++)
     {
-        SgElement = &SgList->SgElement[0];
-
-        do
+        if (TransferedLen >= SgElement->SgOffset &&
+            TransferedLen < SgElement->SgOffset + SgElement->SgTransferLength)
         {
-            if (TransferedLen >= SgElement->SgOffset &&
-                TransferedLen < SgElement->SgOffset + SgElement->SgTransferLength)
-            {
-                break;
-            }
-
-            ++SgIdx;
-            SgElement += 1;
+            break;
         }
-        while (SgIdx < SgList->SgElementCount);
+
+        SgElement += 1;
     }
 
     SgRemain = SgList->SgElementCount - SgIdx;
@@ -1627,25 +1600,18 @@ EHCI_LinkTransferToQueue(PEHCI_EXTENSION EhciExtension,
 
         Transfer = LinkTD->EhciTransfer;
 
-        ix = 0;
+        TD = EhciEndpoint->FirstTD;
 
-        if (EhciEndpoint->MaxTDs)
+        for (ix = 0; ix < EhciEndpoint->MaxTDs; ix++)
         {
-            TD = EhciEndpoint->FirstTD;
-
-            do
+            if (TD->EhciTransfer == Transfer)
             {
-                if (TD->EhciTransfer == Transfer)
-                {
-                    TD->HwTD.AlternateNextTD = (ULONG_PTR)NextTD->PhysicalAddress;
-                    TD->AltNextHcdTD = NextTD;
+                TD->HwTD.AlternateNextTD = (ULONG_PTR)NextTD->PhysicalAddress;
+                TD->AltNextHcdTD = NextTD;
 
-                }
-
-                ++ix;
-                TD += 1;
             }
-            while (ix < EhciEndpoint->MaxTDs);
+
+            TD += 1;
         }
 
         LinkTD->HwTD.NextTD = (ULONG_PTR)NextTD->PhysicalAddress;
@@ -2063,68 +2029,65 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
 
     if (TransferParameters->TransferBufferLength)
     {
-        do
-        {
-            TD = EHCI_AllocTd(EhciExtension, EhciEndpoint);
-            if (!TD)
-            {
-                RegPacket.UsbPortBugCheck(EhciExtension);
-                return MP_STATUS_FAILURE;
-            }
-
-            ++EhciTransfer->PendingTDs;
-
-            TD->TdFlags |= EHCI_HCD_TD_FLAG_PROCESSED;
-            TD->EhciTransfer = EhciTransfer;
-
-            TD->HwTD.Buffer[0] = 0;
-            TD->HwTD.Buffer[1] = 0;
-            TD->HwTD.Buffer[2] = 0;
-            TD->HwTD.Buffer[3] = 0;
-            TD->HwTD.Buffer[4] = 0;
-
-            TD->HwTD.NextTD = TERMINATE_POINTER;
-            TD->HwTD.AlternateNextTD = TERMINATE_POINTER;
-            TD->HwTD.Token.ErrorCounter = 3;
-            TD->NextHcdTD = NULL;
-
-            if (EhciTransfer->PendingTDs == 1)
-            {
-                FirstTD = TD;
-            }
-            else if (PrevTD)
-            {
-                PrevTD->HwTD.NextTD = (ULONG_PTR)TD->PhysicalAddress;
-                PrevTD->NextHcdTD = TD;
-            }
-
-            if (TransferParameters->TransferFlags & USBD_TRANSFER_DIRECTION_IN)
-            {
-                TD->HwTD.Token.PIDCode = 1;
-            }
-            else
-            {
-                TD->HwTD.Token.PIDCode = 0;
-            }
-
-            TD->HwTD.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
-            TD->HwTD.Token.DataToggle = 1;
-
-            TransferedLen = EHCI_MapAsyncTransferToTd(EhciExtension,
-                                                      EhciEndpoint->EndpointProperties.MaxPacketSize,
-                                                      TransferedLen,
-                                                      NULL,
-                                                      EhciTransfer,
-                                                      TD,
-                                                      SgList);
-
-            PrevTD = TD;
-        }
-        while (TransferedLen < TransferParameters->TransferBufferLength);
-    }
-    else
-    {
         DbgBreakPoint();
+    }
+
+    while (TransferedLen < TransferParameters->TransferBufferLength)
+    {
+        TD = EHCI_AllocTd(EhciExtension, EhciEndpoint);
+        if (!TD)
+        {
+            RegPacket.UsbPortBugCheck(EhciExtension);
+            return MP_STATUS_FAILURE;
+        }
+
+        ++EhciTransfer->PendingTDs;
+
+        TD->TdFlags |= EHCI_HCD_TD_FLAG_PROCESSED;
+        TD->EhciTransfer = EhciTransfer;
+
+        TD->HwTD.Buffer[0] = 0;
+        TD->HwTD.Buffer[1] = 0;
+        TD->HwTD.Buffer[2] = 0;
+        TD->HwTD.Buffer[3] = 0;
+        TD->HwTD.Buffer[4] = 0;
+
+        TD->HwTD.NextTD = TERMINATE_POINTER;
+        TD->HwTD.AlternateNextTD = TERMINATE_POINTER;
+        TD->HwTD.Token.ErrorCounter = 3;
+        TD->NextHcdTD = NULL;
+
+        if (EhciTransfer->PendingTDs == 1)
+        {
+            FirstTD = TD;
+        }
+        else if (PrevTD)
+        {
+            PrevTD->HwTD.NextTD = (ULONG_PTR)TD->PhysicalAddress;
+            PrevTD->NextHcdTD = TD;
+        }
+
+        if (TransferParameters->TransferFlags & USBD_TRANSFER_DIRECTION_IN)
+        {
+            TD->HwTD.Token.PIDCode = 1;
+        }
+        else
+        {
+            TD->HwTD.Token.PIDCode = 0;
+        }
+
+        TD->HwTD.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
+        TD->HwTD.Token.DataToggle = 1;
+
+        TransferedLen = EHCI_MapAsyncTransferToTd(EhciExtension,
+                                                  EhciEndpoint->EndpointProperties.MaxPacketSize,
+                                                  TransferedLen,
+                                                  NULL,
+                                                  EhciTransfer,
+                                                  TD,
+                                                  SgList);
+
+        PrevTD = TD;
     }
 
     TD->HwTD.Token.InterruptOnComplete = 1;
@@ -2255,33 +2218,25 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
     {
         TransferLength = 0;
 
-        if (TD != EhciEndpoint->HcdTailP)
+        while (TD != EhciEndpoint->HcdTailP &&
+               TD->EhciTransfer == EhciTransfer )
         {
-            do
-            {
-                if (TD->EhciTransfer != EhciTransfer)
-                {
-                    break;
-                }
+            TransferLength += TD->LengthThisTD - TD->HwTD.Token.TransferBytes;
 
-                TransferLength += TD->LengthThisTD - TD->HwTD.Token.TransferBytes;
+            TD = TD->NextHcdTD;
 
-                TD = TD->NextHcdTD;
+            TD->TdFlags = 0;
+            TD->HwTD.NextTD = 0;
+            TD->HwTD.AlternateNextTD = 0;
 
-                TD->TdFlags = 0;
-                TD->HwTD.NextTD = 0;
-                TD->HwTD.AlternateNextTD = 0;
+            ++EhciEndpoint->RemainTDs;
 
-                ++EhciEndpoint->RemainTDs;
+            TD->EhciTransfer = NULL;
+        }
 
-                TD->EhciTransfer = NULL;
-            }
-            while (TD != EhciEndpoint->HcdTailP);
-
-            if (TransferLength)
-            {
-                EhciTransfer->TransferLen += TransferLength;
-            }
+        if (TransferLength)
+        {
+            EhciTransfer->TransferLen += TransferLength;
         }
 
         QH->sqh.HwQH.CurrentTD = (ULONG)EhciEndpoint->DummyTdPA;
@@ -2944,26 +2899,22 @@ EHCI_PollHaltedAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
     TD = EhciEndpoint->HcdHeadP;
 
-    if (TD != CurrentTD)
+    while (TD != CurrentTD)
     {
-        do
+        DPRINT("EHCI_PollHaltedAsyncEndpoint: TD - %p\n", TD);
+
+        ASSERT((TD->TdFlags & EHCI_HCD_TD_FLAG_DUMMY) == 0);
+
+        if (TD->HwTD.Token.Status & EHCI_TOKEN_STATUS_ACTIVE)
         {
-            DPRINT("EHCI_PollHaltedAsyncEndpoint: TD - %p\n", TD);
-
-            ASSERT((TD->TdFlags & EHCI_HCD_TD_FLAG_DUMMY) == 0);
-
-            if (TD->HwTD.Token.Status & EHCI_TOKEN_STATUS_ACTIVE)
-            {
-                TD->TdFlags |= EHCI_HCD_TD_FLAG_ACTIVE;
-            }
-
-            TD->TdFlags |= EHCI_HCD_TD_FLAG_DONE;
-
-            InsertTailList(&EhciEndpoint->ListTDs, &TD->DoneLink);
-
-            TD = TD->NextHcdTD;
+            TD->TdFlags |= EHCI_HCD_TD_FLAG_ACTIVE;
         }
-        while (TD != CurrentTD);
+
+        TD->TdFlags |= EHCI_HCD_TD_FLAG_DONE;
+
+        InsertTailList(&EhciEndpoint->ListTDs, &TD->DoneLink);
+
+        TD = TD->NextHcdTD;
     }
 
     TD = CurrentTD;

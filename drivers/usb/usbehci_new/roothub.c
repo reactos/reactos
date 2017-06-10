@@ -101,7 +101,7 @@ EHCI_RH_GetPortStatus(IN PVOID ehciExtension,
     status.UsbPortStatus.Usb20PortStatus.OverCurrent = PortSC.OverCurrentActive;
     status.UsbPortStatus.Usb20PortStatus.Reset = PortSC.PortReset;
     status.UsbPortStatus.Usb20PortStatus.PortPower = PortSC.PortPower;
-    status.UsbPortStatus.Usb20PortStatus.Reserved2 = (PortSC.PortOwner == 1) ? 4 : 0;
+    status.UsbPortStatus.Usb20PortStatus.Reserved1 = (PortSC.PortOwner == 1) ? 4 : 0;
     status.UsbPortStatusChange.PortEnableDisableChange = PortSC.PortEnableDisableChange;
     status.UsbPortStatusChange.OverCurrentIndicatorChange = PortSC.OverCurrentChange;
 
