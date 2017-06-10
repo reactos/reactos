@@ -37,6 +37,8 @@ static WCHAR ServiceName[] = L"Schedule";
 static SERVICE_STATUS_HANDLE ServiceStatusHandle;
 static SERVICE_STATUS ServiceStatus;
 
+static BOOL bStopService = FALSE;
+
 /* FUNCTIONS *****************************************************************/
 
 static VOID
@@ -44,7 +46,14 @@ UpdateServiceStatus(DWORD dwState)
 {
     ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
     ServiceStatus.dwCurrentState = dwState;
-    ServiceStatus.dwControlsAccepted = 0;
+
+    if (dwState == SERVICE_PAUSED || dwState == SERVICE_RUNNING)
+        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP |
+                                           SERVICE_ACCEPT_SHUTDOWN |
+                                           SERVICE_ACCEPT_PAUSE_CONTINUE;
+    else
+        ServiceStatus.dwControlsAccepted = 0;
+
     ServiceStatus.dwWin32ExitCode = 0;
     ServiceStatus.dwServiceSpecificExitCode = 0;
     ServiceStatus.dwCheckPoint = 0;
@@ -73,11 +82,12 @@ ServiceControlHandler(DWORD dwControl,
     switch (dwControl)
     {
         case SERVICE_CONTROL_STOP:
-            TRACE("  SERVICE_CONTROL_STOP received\n");
+        case SERVICE_CONTROL_SHUTDOWN:
+            TRACE("  SERVICE_CONTROL_STOP/SERVICE_CONTROL_SHUTDOWN received\n");
             UpdateServiceStatus(SERVICE_STOP_PENDING);
             /* Stop listening to incoming RPC messages */
             RpcMgmtStopServerListening(NULL);
-            UpdateServiceStatus(SERVICE_STOPPED);
+            bStopService = TRUE;
             return ERROR_SUCCESS;
 
         case SERVICE_CONTROL_PAUSE:
@@ -96,14 +106,7 @@ ServiceControlHandler(DWORD dwControl,
                              &ServiceStatus);
             return ERROR_SUCCESS;
 
-        case SERVICE_CONTROL_SHUTDOWN:
-            TRACE("  SERVICE_CONTROL_SHUTDOWN received\n");
-            UpdateServiceStatus(SERVICE_STOP_PENDING);
-            RpcMgmtStopServerListening(NULL);
-            UpdateServiceStatus(SERVICE_STOPPED);
-            return ERROR_SUCCESS;
-
-        default :
+        default:
             TRACE("  Control %lu received\n", dwControl);
             return ERROR_CALL_NOT_IMPLEMENTED;
     }
@@ -112,7 +115,7 @@ ServiceControlHandler(DWORD dwControl,
 
 static
 DWORD
-ServiceInit(VOID)
+ServiceInit(PHANDLE phEvent)
 {
     HANDLE hThread;
     DWORD dwError;
@@ -143,11 +146,19 @@ ServiceInit(VOID)
                            NULL);
     if (!hThread)
     {
-        ERR("Can't create PortThread\n");
+        ERR("Could not create the RPC thread\n");
         return GetLastError();
     }
 
     CloseHandle(hThread);
+
+    /* Create the scheduler event */
+    *phEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (*phEvent == NULL)
+    {
+        ERR("Could not create the scheduler event\n");
+        return GetLastError();
+    }
 
     return ERROR_SUCCESS;
 }
@@ -156,6 +167,7 @@ ServiceInit(VOID)
 VOID WINAPI
 SchedServiceMain(DWORD argc, LPTSTR *argv)
 {
+    HANDLE hEvent = NULL;
     DWORD dwError;
 
     UNREFERENCED_PARAMETER(argc);
@@ -174,7 +186,7 @@ SchedServiceMain(DWORD argc, LPTSTR *argv)
 
     UpdateServiceStatus(SERVICE_START_PENDING);
 
-    dwError = ServiceInit();
+    dwError = ServiceInit(&hEvent);
     if (dwError != ERROR_SUCCESS)
     {
         ERR("Service stopped (dwError: %lu\n", dwError);
@@ -183,6 +195,23 @@ SchedServiceMain(DWORD argc, LPTSTR *argv)
     }
 
     UpdateServiceStatus(SERVICE_RUNNING);
+
+    for (;;)
+    {
+        /* Leave the loop, if the service has to be stopped */
+        if (bStopService)
+            break;
+
+        /* Wait for the next timeout */
+        WaitForSingleObject(hEvent, 5000);
+        TRACE("Service running!\n");
+    }
+
+    /* Close the scheduler event handle */
+    CloseHandle(hEvent);
+
+    /* Stop the service */
+    UpdateServiceStatus(SERVICE_STOPPED);
 }
 
 
