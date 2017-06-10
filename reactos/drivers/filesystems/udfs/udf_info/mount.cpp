@@ -2044,9 +2044,7 @@ UDFLoadPartDesc(
         if(Vcb->Partitions[i].PartitionNum == (p->partitionNumber)) {
             Found = TRUE;
             Vcb->Partitions[i].PartitionRoot = p->partitionStartingLocation + Vcb->FirstLBA;
-            Vcb->Partitions[i].PartitionLen =
-                min(p->partitionLength,
-                    Vcb->LastPossibleLBA - Vcb->Partitions[i].PartitionRoot); /* sectors */
+            Vcb->Partitions[i].PartitionLen = p->partitionLength;
             Vcb->Partitions[i].UspaceBitmap = 0xFFFFFFFF;
             Vcb->Partitions[i].FspaceBitmap = 0xFFFFFFFF;
             Vcb->Partitions[i].AccessType = p->accessType;
