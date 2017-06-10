@@ -87,7 +87,7 @@ MPSTATUS
 NTAPI
 OHCI_RH_GetPortStatus(IN PVOID ohciExtension,
                       IN USHORT Port,
-                      IN PULONG PortStatus)
+                      IN PUSBHUB_PORT_STATUS PortStatus)
 {
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
@@ -99,7 +99,7 @@ OHCI_RH_GetPortStatus(IN PVOID ohciExtension,
     DPRINT("OHCI_RH_GetPortStatus: OhciExtension - %p, Port - %x, PortStatus - %p\n",
            OhciExtension,
            Port,
-           *PortStatus);
+           PortStatus->AsULONG);
 
     OperationalRegs = OhciExtension->OperationalRegs;
 
@@ -119,12 +119,12 @@ OHCI_RH_GetPortStatus(IN PVOID ohciExtension,
     }
     while ( ix < 10 );
 
-    *PortStatus = portStatus;
+    PortStatus->AsULONG = portStatus;
 
     DPRINT("OHCI_RH_GetPortStatus: OhciExtension - %p, Port - %x, PortStatus - %p\n",
            OhciExtension,
            Port,
-           *PortStatus);
+           PortStatus->AsULONG);
 
     if (0)//Port == 1)
     {
@@ -151,13 +151,13 @@ OHCI_RH_GetPortStatus(IN PVOID ohciExtension,
         DPRINT("HcRhStatus         - %p\n", READ_REGISTER_ULONG(&OperationalRegs->HcRhStatus.AsULONG));
     }
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
 NTAPI
 OHCI_RH_GetHubStatus(IN PVOID ohciExtension,
-                     IN PULONG HubStatus)
+                     IN PUSB_HUB_STATUS HubStatus)
 {
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
@@ -170,11 +170,11 @@ OHCI_RH_GetHubStatus(IN PVOID ohciExtension,
 
     OperationalRegs = OhciExtension->OperationalRegs;
 
-    *HubStatus &= ~0x10001;
-    *HubStatus ^= (READ_REGISTER_ULONG(&OperationalRegs->HcRhStatus.AsULONG) ^
-                  *HubStatus) & 0x20002;
+    HubStatus->AsUshort16 &= ~0x10001;
+    HubStatus->AsUshort16 ^= (READ_REGISTER_ULONG(&OperationalRegs->HcRhStatus.AsULONG) ^
+                  HubStatus->AsUshort16) & 0x20002;
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS

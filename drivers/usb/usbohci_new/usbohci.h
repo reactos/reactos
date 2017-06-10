@@ -121,7 +121,6 @@ typedef struct _OHCI_EXTENSION {
 } OHCI_EXTENSION, *POHCI_EXTENSION;
 
 /* roothub.c */
-
 VOID
 NTAPI
 OHCI_RH_GetRootHubData(
@@ -139,13 +138,13 @@ NTAPI
 OHCI_RH_GetPortStatus(
   IN PVOID ohciExtension,
   IN USHORT Port,
-  IN PULONG PortStatus);
+  IN PUSBHUB_PORT_STATUS PortStatus);
 
 MPSTATUS
 NTAPI
 OHCI_RH_GetHubStatus(
   IN PVOID ohciExtension,
-  IN PULONG HubStatus);
+  IN PUSB_HUB_STATUS HubStatus);
 
 MPSTATUS
 NTAPI
