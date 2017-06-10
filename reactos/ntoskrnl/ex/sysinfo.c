@@ -2372,6 +2372,27 @@ QSI_DEF(SystemNumaAvailableMemory)
     return STATUS_SUCCESS;
 }
 
+/* Class 64 - Extended handle information  */
+QSI_DEF(SystemExtendedHandleInformation)
+{
+    PSYSTEM_HANDLE_INFORMATION_EX HandleInformation = (PSYSTEM_HANDLE_INFORMATION_EX)Buffer;
+
+    DPRINT1("NtQuerySystemInformation - SystemExtendedHandleInformation not implemented\n");
+
+    /* Set initial required buffer size */
+    *ReqSize = FIELD_OFFSET(SYSTEM_HANDLE_INFORMATION_EX, Handle);
+
+    /* Validate input size */
+    if (Size < *ReqSize)
+    {
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    /* FIXME */
+    HandleInformation->Count = 0;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 
 /* Query/Set Calls Table */
 typedef
@@ -2455,7 +2476,11 @@ CallQS [] =
     SI_QX(SystemExtendedProcessInformation),
     SI_QX(SystemRecommendedSharedDataAlignment),
     SI_XX(SystemComPlusPackage),
-    SI_QX(SystemNumaAvailableMemory)
+    SI_QX(SystemNumaAvailableMemory),
+    SI_XX(SystemProcessorPowerInformation), /* FIXME: not implemented */
+    SI_XX(SystemEmulationBasicInformation), /* FIXME: not implemented */
+    SI_XX(SystemEmulationProcessorInformation), /* FIXME: not implemented */
+    SI_QX(SystemExtendedHandleInformation),
 };
 
 C_ASSERT(SystemBasicInformation == 0);
