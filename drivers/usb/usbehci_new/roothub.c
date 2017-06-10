@@ -60,12 +60,12 @@ MPSTATUS
 NTAPI
 EHCI_RH_GetPortStatus(IN PVOID ehciExtension,
                       IN USHORT Port,
-                      IN PULONG PortStatus)
+                      IN PUSBHUB_PORT_STATUS PortStatus)
 {
     PEHCI_EXTENSION EhciExtension;
     PULONG PortStatusReg;
     EHCI_PORT_STATUS_CONTROL PortSC;
-    USB20_PORT_STATUS status;
+    USBHUB_PORT_STATUS status;
     ULONG PortMaskBits;
 
     EhciExtension = ehciExtension;
@@ -80,7 +80,7 @@ EHCI_RH_GetPortStatus(IN PVOID ehciExtension,
                   PortSC.AsULONG);
     }
 
-    *PortStatus = 0;
+    PortStatus->AsULONG = 0;
 
     if (PortSC.LineStatus == 1 && // K-state  Low-speed device
         PortSC.PortOwner != 1 && // Companion HC not owns and not controls this port
@@ -95,24 +95,24 @@ EHCI_RH_GetPortStatus(IN PVOID ehciExtension,
 
     status.AsULONG = 0;
 
-    status.ConnectStatus = PortSC.CurrentConnectStatus;
-    status.EnableStatus = PortSC.PortEnabledDisabled;
-    status.OverCurrent = PortSC.OverCurrentActive;
-    status.ResetStatus = PortSC.PortReset;
-    status.PowerStatus = PortSC.PortPower;
-    status.SuspendStatus = PortSC.Suspend;
-    // PortSC.PortOwner ??
-    status.EnableStatusChange = PortSC.PortEnableDisableChange;
-    status.OverCurrentChange = PortSC.OverCurrentChange;
+    status.UsbPortStatus.Usb20PortStatus.CurrentConnectStatus = PortSC.CurrentConnectStatus;
+    status.UsbPortStatus.Usb20PortStatus.PortEnabledDisabled = PortSC.PortEnabledDisabled;
+    status.UsbPortStatus.Usb20PortStatus.Suspend = PortSC.Suspend;
+    status.UsbPortStatus.Usb20PortStatus.OverCurrent = PortSC.OverCurrentActive;
+    status.UsbPortStatus.Usb20PortStatus.Reset = PortSC.PortReset;
+    status.UsbPortStatus.Usb20PortStatus.PortPower = PortSC.PortPower;
+    status.UsbPortStatus.Usb20PortStatus.Reserved1 = (PortSC.PortOwner == 1) ? 4 : 0;
+    status.UsbPortStatusChange.PortEnableDisableChange = PortSC.PortEnableDisableChange;
+    status.UsbPortStatusChange.OverCurrentIndicatorChange = PortSC.OverCurrentChange;
 
     PortMaskBits = 1 << (Port - 1);
 
-    if (status.ConnectStatus)
+    if (status.UsbPortStatus.Usb20PortStatus.CurrentConnectStatus)
     {
-        status.LsDeviceAttached = 0;
+        status.UsbPortStatus.Usb20PortStatus.LowSpeedDeviceAttached = 0;
     }
 
-    status.HsDeviceAttached = 1;
+    status.UsbPortStatus.Usb20PortStatus.HighSpeedDeviceAttached = 1;
 
     if (PortSC.ConnectStatusChange)
     {
@@ -121,39 +121,39 @@ EHCI_RH_GetPortStatus(IN PVOID ehciExtension,
 
     if (EhciExtension->FinishResetPortBits & PortMaskBits)
     {
-        status.ResetStatusChange = 1;
+        status.UsbPortStatusChange.ResetChange = 1;
     }
 
     if (EhciExtension->ConnectPortBits & PortMaskBits)
     {
-        status.ConnectStatusChange = 1;
+        status.UsbPortStatusChange.ConnectStatusChange = 1;
     }
 
     if (EhciExtension->SuspendPortBits & PortMaskBits)
     {
-        status.SuspendStatusChange = 1;
+        status.UsbPortStatusChange.SuspendChange = 1;
     }
 
-    *PortStatus = status.AsULONG;
+    *PortStatus = status;
 
-    if (status.ConnectStatus)
+    if (status.UsbPortStatus.Usb20PortStatus.CurrentConnectStatus)
     {
         DPRINT_RH("EHCI_RH_GetPortStatus: Port - %x, status.AsULONG - %p\n",
                   Port,
                   status.AsULONG);
     }
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
 NTAPI
 EHCI_RH_GetHubStatus(IN PVOID ehciExtension,
-                     IN PULONG HubStatus)
+                     IN PUSB_HUB_STATUS HubStatus)
 {
     DPRINT_RH("EHCI_RH_GetHubStatus: ... \n");
-    *HubStatus = 0;
-    return 0;
+    HubStatus->AsUshort16 = 0;
+    return MP_STATUS_SUCCESS;
 }
 
 VOID
