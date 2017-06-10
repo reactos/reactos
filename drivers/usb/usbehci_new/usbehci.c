@@ -277,7 +277,7 @@ EHCI_OpenEndpoint(IN PVOID ehciExtension,
     PEHCI_ENDPOINT EhciEndpoint;
     PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
     ULONG TransferType;
-    ULONG Result;
+    MPSTATUS MPStatus;
 
     DPRINT_EHCI("EHCI_OpenEndpoint: ... \n");
 
@@ -296,45 +296,45 @@ EHCI_OpenEndpoint(IN PVOID ehciExtension,
         case USBPORT_TRANSFER_TYPE_ISOCHRONOUS:
             if (EndpointProperties->DeviceSpeed == UsbHighSpeed)
             {
-                Result = EHCI_OpenHsIsoEndpoint(EhciExtension,
-                                                EndpointProperties,
-                                                EhciEndpoint);
+                MPStatus = EHCI_OpenHsIsoEndpoint(EhciExtension,
+                                                  EndpointProperties,
+                                                  EhciEndpoint);
             }
             else
             {
-                Result = EHCI_OpenIsoEndpoint(EhciExtension,
-                                              EndpointProperties,
-                                              EhciEndpoint);
+                MPStatus = EHCI_OpenIsoEndpoint(EhciExtension,
+                                                EndpointProperties,
+                                                EhciEndpoint);
             }
 
             break;
 
         case USBPORT_TRANSFER_TYPE_CONTROL:
-            Result = EHCI_OpenBulkOrControlEndpoint(EhciExtension,
-                                                    EndpointProperties,
-                                                    EhciEndpoint,
-                                                    TRUE);
+            MPStatus = EHCI_OpenBulkOrControlEndpoint(EhciExtension,
+                                                      EndpointProperties,
+                                                      EhciEndpoint,
+                                                      TRUE);
             break;
 
         case USBPORT_TRANSFER_TYPE_BULK:
-            Result = EHCI_OpenBulkOrControlEndpoint(EhciExtension,
-                                                    EndpointProperties,
-                                                    EhciEndpoint,
-                                                    FALSE);
+            MPStatus = EHCI_OpenBulkOrControlEndpoint(EhciExtension,
+                                                      EndpointProperties,
+                                                      EhciEndpoint,
+                                                      FALSE);
             break;
 
         case USBPORT_TRANSFER_TYPE_INTERRUPT:
-            Result = EHCI_OpenInterruptEndpoint(EhciExtension,
-                                                EndpointProperties,
-                                                EhciEndpoint);
+            MPStatus = EHCI_OpenInterruptEndpoint(EhciExtension,
+                                                  EndpointProperties,
+                                                  EhciEndpoint);
             break;
 
         default:
-            Result = 6;
+            MPStatus = MP_STATUS_NOT_SUPPORTED;
             break;
     }
 
-    return Result;
+    return MPStatus;
 }
 
 MPSTATUS
@@ -347,7 +347,7 @@ EHCI_ReopenEndpoint(IN PVOID ehciExtension,
     PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
     ULONG TransferType;
     PEHCI_HCD_QH QH;
-    ULONG Result;
+    MPSTATUS MPStatus;
 
     EhciEndpoint = ehciEndpoint;
     EndpointProperties = endpointParameters;
@@ -364,12 +364,12 @@ EHCI_ReopenEndpoint(IN PVOID ehciExtension,
             if (EndpointProperties->DeviceSpeed == UsbHighSpeed)
             {
                 DPRINT1("EHCI_ReopenEndpoint: HS Iso. UNIMPLEMENTED. FIXME\n");
-                Result = 6;
+                MPStatus = MP_STATUS_NOT_SUPPORTED;
             }
             else
             {
                 DPRINT1("EHCI_ReopenEndpoint: Iso. UNIMPLEMENTED. FIXME\n");
-                Result = 6;
+                MPStatus = MP_STATUS_NOT_SUPPORTED;
             }
 
             break;
@@ -392,11 +392,11 @@ EHCI_ReopenEndpoint(IN PVOID ehciExtension,
 
         default:
             DPRINT1("EHCI_ReopenEndpoint: Unknown TransferType\n");
-            Result = 0;
+            MPStatus = MP_STATUS_SUCCESS;
             break;
     }
 
-    return Result;
+    return MPStatus;
 }
 
 VOID
@@ -784,7 +784,7 @@ EHCI_InitializeHardware(IN PEHCI_EXTENSION EhciExtension)
             if (Command.Reset == 1)
             {
                 DPRINT1("EHCI_InitializeHardware: Reset failed!\n");
-                return 7;
+                return MP_STATUS_HW_ERROR;
             }
 
             break;
@@ -1055,7 +1055,7 @@ EHCI_ResumeController(IN PVOID ehciExtension)
         WRITE_REGISTER_ULONG(OperationalRegs + EHCI_CONFIGFLAG,
                              RoutingControl | 1);
 
-        return 7;
+        return MP_STATUS_HW_ERROR;
     }
 
     WRITE_REGISTER_ULONG(OperationalRegs + EHCI_CTRLDSSEGMENT,
@@ -2201,7 +2201,7 @@ EHCI_SubmitTransfer(IN PVOID ehciExtension,
 
         default:
             DbgBreakPoint();
-            MPStatus = 2;//?or?
+            MPStatus = MP_STATUS_NOT_SUPPORTED;
             break;
     }
 

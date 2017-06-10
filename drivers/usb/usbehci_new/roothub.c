@@ -53,7 +53,7 @@ EHCI_RH_GetStatus(IN PVOID ehciExtension,
 {
     DPRINT_RH("EHCI_RH_GetStatus: ... \n");
     *Status = 1;
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -90,7 +90,7 @@ EHCI_RH_GetPortStatus(IN PVOID ehciExtension,
         DPRINT("EHCI_RH_GetPortStatus: LowSpeed device detected\n");
         PortSC.PortOwner = 1; // release ownership
         WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
-        return 0;
+        return MP_STATUS_SUCCESS;
     }
 
     status.AsULONG = 0;
@@ -101,7 +101,7 @@ EHCI_RH_GetPortStatus(IN PVOID ehciExtension,
     status.UsbPortStatus.Usb20PortStatus.OverCurrent = PortSC.OverCurrentActive;
     status.UsbPortStatus.Usb20PortStatus.Reset = PortSC.PortReset;
     status.UsbPortStatus.Usb20PortStatus.PortPower = PortSC.PortPower;
-    status.UsbPortStatus.Usb20PortStatus.Reserved1 = (PortSC.PortOwner == 1) ? 4 : 0;
+    status.UsbPortStatus.Usb20PortStatus.Reserved2 = (PortSC.PortOwner == 1) ? 4 : 0;
     status.UsbPortStatusChange.PortEnableDisableChange = PortSC.PortEnableDisableChange;
     status.UsbPortStatusChange.OverCurrentIndicatorChange = PortSC.OverCurrentChange;
 
@@ -280,7 +280,7 @@ EHCI_RH_SetFeaturePortReset(IN PVOID ehciExtension,
                                           sizeof(Port),
                                           EHCI_RH_PortResetComplete);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -306,7 +306,7 @@ EHCI_RH_SetFeaturePortPower(IN PVOID ehciExtension,
 
     WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -315,7 +315,7 @@ EHCI_RH_SetFeaturePortEnable(IN PVOID ehciExtension,
                              IN USHORT Port)
 {
     DPRINT_RH("EHCI_RH_SetFeaturePortEnable: Not supported\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -342,7 +342,7 @@ EHCI_RH_SetFeaturePortSuspend(IN PVOID ehciExtension,
     WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
     KeStallExecutionProcessor(125);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -368,7 +368,7 @@ EHCI_RH_ClearFeaturePortEnable(IN PVOID ehciExtension,
 
     WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -389,7 +389,7 @@ EHCI_RH_ClearFeaturePortPower(IN PVOID ehciExtension,
     PortSC.PortPower = 0;
     WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 VOID
@@ -445,7 +445,7 @@ EHCI_RH_ClearFeaturePortSuspend(IN PVOID ehciExtension,
                                           sizeof(Port),
                                           EHCI_RH_PortResumeComplete);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -471,7 +471,7 @@ EHCI_RH_ClearFeaturePortEnableChange(IN PVOID ehciExtension,
 
     WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -501,7 +501,7 @@ EHCI_RH_ClearFeaturePortConnectChange(IN PVOID ehciExtension,
 
     EhciExtension->ConnectPortBits &= ~(1 << (Port - 1));
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -515,7 +515,7 @@ EHCI_RH_ClearFeaturePortResetChange(IN PVOID ehciExtension,
 
     EhciExtension = ehciExtension;
     EhciExtension->FinishResetPortBits &= ~(1 << (Port - 1));
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -529,7 +529,7 @@ EHCI_RH_ClearFeaturePortSuspendChange(IN PVOID ehciExtension,
 
     EhciExtension = ehciExtension;
     EhciExtension->SuspendPortBits &= ~(1 << (Port - 1));
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -555,7 +555,7 @@ EHCI_RH_ClearFeaturePortOvercurrentChange(IN PVOID ehciExtension,
 
     WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 VOID
