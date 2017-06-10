@@ -4824,7 +4824,7 @@ RxpQueryInfoMiniRdr(
     Fcb = (PFCB)RxContext->pFcb;
 
     /* Set the RX_CONTEXT */
-    RxContext->Info.FsInformationClass = FileInfoClass;
+    RxContext->Info.FileInformationClass = FileInfoClass;
     RxContext->Info.Buffer = Buffer;
 
     /* Pass down */
