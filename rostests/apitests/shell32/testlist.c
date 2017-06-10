@@ -1,7 +1,6 @@
 #define __ROS_LONG64__
 
 #define STANDALONE
-#include "R:\hook\base_hk.h"
 #include <wine/test.h>
 
 extern void func_AddCommas(void);
