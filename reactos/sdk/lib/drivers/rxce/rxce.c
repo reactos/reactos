@@ -2931,7 +2931,7 @@ RxFinishFcbInitialization(
     {
         /* If our FCB newly points to a file, initiliaz everything related */
         if (FileType == RDBSS_NTC_STORAGE_TYPE_FILE &&
-            !OldType != RDBSS_NTC_STORAGE_TYPE_FILE)
+            OldType != RDBSS_NTC_STORAGE_TYPE_FILE)
         {
             RxInitializeLowIoPerFcbInfo(&((PFCB)Fcb)->Specific.Fcb.LowIoPerFcbInfo);
             FsRtlInitializeFileLock(&((PFCB)Fcb)->Specific.Fcb.FileLock, &RxLockOperationCompletion,
@@ -3417,7 +3417,7 @@ RxInitializeLowIoContext(
     PAGED_CODE();
 
     RxContext = CONTAINING_RECORD(LowIoContext, RX_CONTEXT, LowIoContext);
-    ASSERT(LowIoContext = &RxContext->LowIoContext);
+    ASSERT(LowIoContext == &RxContext->LowIoContext);
 
     Stack = RxContext->CurrentIrpSp;
 
