@@ -39,15 +39,6 @@
 #include "apphelp_apitest.h"
 
 
-
-typedef WORD TAG;
-typedef DWORD TAGID;
-typedef DWORD TAGREF;
-typedef UINT64 QWORD;
-typedef VOID* PDB;
-typedef VOID* HSDB;
-typedef INT PATH_TYPE;
-
 #define DOS_PATH 0
 #define HID_DATABASE_FULLPATH 2
 
@@ -139,54 +130,6 @@ typedef INT PATH_TYPE;
 #define TAG_DATABASE_ID (0x7 | TAG_TYPE_BINARY)
 
 
-#define SDB_MAX_SDBS_VISTA 16
-#define SDB_MAX_EXES_VISTA 16
-#define SDB_MAX_LAYERS_VISTA 8
-
-#define SDBQUERYRESULT_EXPECTED_SIZE_VISTA    456
-
-typedef struct tagSDBQUERYRESULT
-{
-    TAGREF atrExes[SDB_MAX_EXES_VISTA];
-    DWORD  adwExeFlags[SDB_MAX_EXES_VISTA];
-    TAGREF atrLayers[SDB_MAX_LAYERS_VISTA];
-    DWORD  dwLayerFlags;
-    TAGREF trApphelp;
-    DWORD  dwExeCount;
-    DWORD  dwLayerCount;
-    GUID   guidID;
-    DWORD  dwFlags;
-    DWORD  dwCustomSDBMap;
-    GUID   rgGuidDB[SDB_MAX_SDBS_VISTA];
-} SDBQUERYRESULT, *PSDBQUERYRESULT;
-
-
-#define SDBQUERYRESULT_EXPECTED_SIZE_2k3    344
-
-#define SDB_MAX_EXES_2k3    4
-#define SDB_MAX_LAYERS_2k3  8
-
-typedef struct tagSDBQUERYRESULT_2k3
-{
-    TAGREF atrExes[SDB_MAX_EXES_2k3];
-    TAGREF atrLayers[SDB_MAX_LAYERS_2k3];
-    DWORD  dwLayerFlags;
-    TAGREF trApphelp;       // probably?
-    DWORD  dwExeCount;
-    DWORD  dwLayerCount;
-    GUID   guidID;          // probably?
-    DWORD  dwFlags;         // probably?
-    DWORD  dwCustomSDBMap;
-    GUID   rgGuidDB[SDB_MAX_SDBS_VISTA];
-} SDBQUERYRESULT_2k3, *PSDBQUERYRESULT_2k3;
-
-
-
-
-
-C_ASSERT(sizeof(SDBQUERYRESULT) == SDBQUERYRESULT_EXPECTED_SIZE_VISTA);
-C_ASSERT(sizeof(SDBQUERYRESULT_2k3) == SDBQUERYRESULT_EXPECTED_SIZE_2k3);
-
 
 static HMODULE hdll;
 static LPCWSTR (WINAPI *pSdbTagToString)(TAG);
@@ -222,7 +165,7 @@ static BOOL (WINAPI *pSdbGetDatabaseID)(PDB, GUID*);
 static BOOL (WINAPI *pSdbGUIDToString)(CONST GUID *, PCWSTR, SIZE_T);
 static HSDB (WINAPI *pSdbInitDatabase)(DWORD, LPCWSTR);
 static void (WINAPI *pSdbReleaseDatabase)(HSDB);
-static BOOL (WINAPI *pSdbGetMatchingExe)(HSDB hsdb, LPCWSTR path, LPCWSTR module_name, LPCWSTR env, DWORD flags, PSDBQUERYRESULT result);
+static BOOL (WINAPI *pSdbGetMatchingExe)(HSDB hsdb, LPCWSTR path, LPCWSTR module_name, LPCWSTR env, DWORD flags, PSDBQUERYRESULT_VISTA result);
 static BOOL (WINAPI *pSdbTagRefToTagID)(HSDB hSDB, TAGREF trWhich, PDB *ppdb, TAGID *ptiWhich);
 static BOOL (WINAPI *pSdbTagIDToTagRef)(HSDB hSDB, PDB pdb, TAGID tiWhich, TAGREF *ptrWhich);
 static TAGREF (WINAPI *pSdbGetLayerTagRef)(HSDB hsdb, LPCWSTR layerName);
@@ -1162,7 +1105,7 @@ static void test_mode_generic(const char* workdir, HSDB hsdb, int cur)
     {
         /* First we try without the file at all. */
         DeleteFileA(testfile);
-        ret = pSdbGetMatchingExe(hsdb, exenameW, NULL, NULL, 0, (SDBQUERYRESULT*)&query);
+        ret = pSdbGetMatchingExe(hsdb, exenameW, NULL, NULL, 0, (SDBQUERYRESULT_VISTA*)&query);
         ok(ret == 0, "SdbGetMatchingExe should have failed for %d.\n", cur);
         /* Now re-try with the correct file */
         test_create_file(testfile, "aaaa", 4);
@@ -1185,7 +1128,7 @@ static void test_mode_generic(const char* workdir, HSDB hsdb, int cur)
         SetEnvironmentVariableA("__COMPAT_LAYER", test_exedata[cur].env_var);
     }
 
-    ret = pSdbGetMatchingExe(hsdb, exenameW, NULL, NULL, 0, (SDBQUERYRESULT*)&query);
+    ret = pSdbGetMatchingExe(hsdb, exenameW, NULL, NULL, 0, (SDBQUERYRESULT_VISTA*)&query);
     ok(ret, "SdbGetMatchingExe should not fail for %d.\n", cur);
 
     exe_count = (test_exedata[cur].env_var == NULL) ? 1 : 0;
@@ -1295,7 +1238,7 @@ static void test_mode_generic(const char* workdir, HSDB hsdb, int cur)
 
     if (RtlDosPathNameToNtPathName_U(exenameW, &exenameNT, NULL, NULL))
     {
-        ret = pSdbGetMatchingExe(hsdb, exenameNT.Buffer, NULL, NULL, 0, (SDBQUERYRESULT*)&query);
+        ret = pSdbGetMatchingExe(hsdb, exenameNT.Buffer, NULL, NULL, 0, (SDBQUERYRESULT_VISTA*)&query);
         ok(ret, "SdbGetMatchingExe should not fail for %d.\n", cur);
 
         RtlFreeUnicodeString(&exenameNT);
@@ -1594,7 +1537,7 @@ static int validate_SDBQUERYRESULT_size()
     memset(buffer, 0xab, sizeof(buffer));
 
     GetModuleFileNameW(NULL, path, MAX_PATH);
-    pSdbGetMatchingExe(NULL, path, NULL, NULL, 0, (SDBQUERYRESULT*)buffer);
+    pSdbGetMatchingExe(NULL, path, NULL, NULL, 0, (SDBQUERYRESULT_VISTA*)buffer);
     if (buffer[0] == 0xab)
     {
         trace("SdbGetMatchingExe didnt do anything, cannot determine SDBQUERYRESULT size\n");
@@ -1687,7 +1630,7 @@ START_TEST(db)
         test_MatchApplications<SDBQUERYRESULT_2k3>();
         break;
     case 2:
-        test_MatchApplications<SDBQUERYRESULT>();
+        test_MatchApplications<SDBQUERYRESULT_VISTA>();
         break;
     default:
         skip("Skipping tests with SDBQUERYRESULT due to a wrong size reported\n");

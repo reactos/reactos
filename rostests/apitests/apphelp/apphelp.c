@@ -41,11 +41,6 @@
 #include "apphelp_apitest.h"
 
 
-typedef WORD TAG;
-typedef DWORD TAGID;
-typedef DWORD TAGREF;
-typedef UINT64 QWORD;
-
 #define TAG_TYPE_MASK 0xF000
 
 #define TAG_TYPE_NULL 0x1000

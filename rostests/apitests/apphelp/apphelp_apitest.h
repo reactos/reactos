@@ -32,6 +32,70 @@ static DWORD g_WinVersion;
 #define WINVER_WIN8    0x0602
 #define WINVER_WIN10   0x0a00
 
+
+typedef WORD TAG;
+typedef DWORD TAGID;
+typedef DWORD TAGREF;
+typedef UINT64 QWORD;
+typedef VOID* PDB;
+typedef VOID* HSDB;
+typedef INT PATH_TYPE;
+
+
+
+#define SDB_MAX_SDBS 16
+#define SDB_MAX_EXES_VISTA 16
+#define SDB_MAX_LAYERS 8
+#define SHIMREG_DISABLE_LAYER (0x00000020)
+
+#define SDBQUERYRESULT_EXPECTED_SIZE_VISTA    456
+
+
+
+typedef struct tagSDBQUERYRESULT_VISTA
+{
+    TAGREF atrExes[SDB_MAX_EXES_VISTA];
+    DWORD  adwExeFlags[SDB_MAX_EXES_VISTA];
+    TAGREF atrLayers[SDB_MAX_LAYERS];
+    DWORD  dwLayerFlags;
+    TAGREF trApphelp;
+    DWORD  dwExeCount;
+    DWORD  dwLayerCount;
+    GUID   guidID;
+    DWORD  dwFlags;
+    DWORD  dwCustomSDBMap;
+    GUID   rgGuidDB[SDB_MAX_SDBS];
+} SDBQUERYRESULT_VISTA, *PSDBQUERYRESULT_VISTA;
+
+
+#define SDBQUERYRESULT_EXPECTED_SIZE_2k3    344
+
+#define SDB_MAX_EXES_2k3    4
+
+typedef struct tagSDBQUERYRESULT_2k3
+{
+    TAGREF atrExes[SDB_MAX_EXES_2k3];
+    TAGREF atrLayers[SDB_MAX_LAYERS];
+    DWORD  dwLayerFlags;
+    TAGREF trApphelp;       // probably?
+    DWORD  dwExeCount;
+    DWORD  dwLayerCount;
+    GUID   guidID;          // probably?
+    DWORD  dwFlags;         // probably?
+    DWORD  dwCustomSDBMap;
+    GUID   rgGuidDB[SDB_MAX_SDBS];
+} SDBQUERYRESULT_2k3, *PSDBQUERYRESULT_2k3;
+
+
+
+
+
+C_ASSERT(sizeof(SDBQUERYRESULT_VISTA) == SDBQUERYRESULT_EXPECTED_SIZE_VISTA);
+C_ASSERT(sizeof(SDBQUERYRESULT_2k3) == SDBQUERYRESULT_EXPECTED_SIZE_2k3);
+
+
+
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
