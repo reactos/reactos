@@ -392,7 +392,7 @@ OHCI_OpenEndpoint(IN PVOID ohciExtension,
     POHCI_ENDPOINT OhciEndpoint;
     PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
     ULONG TransferType;
-    ULONG Result;
+    MPSTATUS MPStatus;
 
     DPRINT_OHCI("OHCI_OpenEndpoint: ... \n");
 
@@ -411,35 +411,35 @@ OHCI_OpenEndpoint(IN PVOID ohciExtension,
     switch (TransferType)
     {
         case USBPORT_TRANSFER_TYPE_ISOCHRONOUS:
-            Result = OHCI_OpenIsoEndpoint(OhciExtension,
-                                          EndpointProperties,
-                                          OhciEndpoint);
+            MPStatus = OHCI_OpenIsoEndpoint(OhciExtension,
+                                            EndpointProperties,
+                                            OhciEndpoint);
             break;
 
         case USBPORT_TRANSFER_TYPE_CONTROL:
-            Result = OHCI_OpenControlEndpoint(OhciExtension,
-                                              EndpointProperties,
-                                              OhciEndpoint);
-            break;
-
-        case USBPORT_TRANSFER_TYPE_BULK:
-            Result = OHCI_OpenBulkEndpoint(OhciExtension,
-                                           EndpointProperties,
-                                           OhciEndpoint);
-            break;
-
-        case USBPORT_TRANSFER_TYPE_INTERRUPT:
-            Result = OHCI_OpenInterruptEndpoint(OhciExtension,
+            MPStatus = OHCI_OpenControlEndpoint(OhciExtension,
                                                 EndpointProperties,
                                                 OhciEndpoint);
             break;
 
+        case USBPORT_TRANSFER_TYPE_BULK:
+            MPStatus = OHCI_OpenBulkEndpoint(OhciExtension,
+                                             EndpointProperties,
+                                             OhciEndpoint);
+            break;
+
+        case USBPORT_TRANSFER_TYPE_INTERRUPT:
+            MPStatus = OHCI_OpenInterruptEndpoint(OhciExtension,
+                                                  EndpointProperties,
+                                                  OhciEndpoint);
+            break;
+
         default:
-            Result = 6;
+            MPStatus = MP_STATUS_NOT_SUPPORTED;
             break;
     }
 
-    return Result;
+    return MPStatus;
 }
 
 MPSTATUS
@@ -565,7 +565,7 @@ OHCI_StartController(IN PVOID ohciExtension,
     LARGE_INTEGER CurrentTime;
     ULONG ix;
     ULONG jx;
-    MPSTATUS MPStatus = 0;
+    MPSTATUS MPStatus = MP_STATUS_SUCCESS;
 
     DPRINT_OHCI("OHCI_StartController: ohciExtension - %p, Resources - %p\n",
                 ohciExtension,
@@ -579,7 +579,7 @@ OHCI_StartController(IN PVOID ohciExtension,
 
     MPStatus = OHCI_TakeControlHC(OhciExtension);
 
-    if (MPStatus != 0)
+    if (MPStatus != MP_STATUS_SUCCESS)
     {
         DPRINT1("OHCI_StartController: OHCI_TakeControlHC return MPStatus - %x\n",
                 MPStatus);
@@ -710,18 +710,18 @@ OHCI_StartController(IN PVOID ohciExtension,
 
         if (SystemTime.QuadPart >= CurrentTime.QuadPart)
         {
-            MPStatus = 7;
+            MPStatus = MP_STATUS_HW_ERROR;
             break;
         }
 
         if (FrameInterval.AsULONG == OhciExtension->FrameInterval.AsULONG)
         {
-            MPStatus = 0;
+            MPStatus = MP_STATUS_SUCCESS;
             break;
         }
     }
 
-    if (MPStatus != 0)
+    if (MPStatus != MP_STATUS_SUCCESS)
     {
         DPRINT_OHCI("OHCI_StartController: frame interval not set\n");
         return MPStatus;
@@ -830,7 +830,7 @@ OHCI_ResumeController(IN PVOID ohciExtension)
 
     if (control.HostControllerFunctionalState != OHCI_HC_STATE_SUSPEND)
     {
-        return 7;
+        return MP_STATUS_HW_ERROR;
     }
 
     HcHCCA = (POHCI_HCCA)OhciExtension->HcResourcesVA;

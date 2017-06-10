@@ -80,7 +80,7 @@ OHCI_RH_GetStatus(IN PVOID ohciExtension,
 {
     DPRINT("OHCI_RH_GetStatus: \n");
     *Status = 1;
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -196,7 +196,7 @@ OHCI_RH_SetFeaturePortReset(IN PVOID ohciExtension,
     WRITE_REGISTER_ULONG(&OperationalRegs->HcRhPortStatus[Port-1].AsULONG,
                          0x10);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -218,7 +218,7 @@ OHCI_RH_SetFeaturePortPower(IN PVOID ohciExtension,
     WRITE_REGISTER_ULONG(&OperationalRegs->HcRhPortStatus[Port-1].AsULONG,
                          0x100);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -240,7 +240,7 @@ OHCI_RH_SetFeaturePortEnable(IN PVOID ohciExtension,
     WRITE_REGISTER_ULONG(&OperationalRegs->HcRhPortStatus[Port-1].AsULONG,
                          2);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -262,7 +262,7 @@ OHCI_RH_SetFeaturePortSuspend(IN PVOID ohciExtension,
     WRITE_REGISTER_ULONG(&OperationalRegs->HcRhPortStatus[Port-1].AsULONG,
                          4);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -284,7 +284,7 @@ OHCI_RH_ClearFeaturePortEnable(IN PVOID ohciExtension,
     WRITE_REGISTER_ULONG(&OperationalRegs->HcRhPortStatus[Port-1].AsULONG,
                          1);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -306,7 +306,7 @@ OHCI_RH_ClearFeaturePortPower(IN PVOID ohciExtension,
     WRITE_REGISTER_ULONG(&OperationalRegs->HcRhPortStatus[Port-1].AsULONG,
                          0x200);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -328,7 +328,7 @@ OHCI_RH_ClearFeaturePortSuspend(IN PVOID ohciExtension,
     WRITE_REGISTER_ULONG(&OperationalRegs->HcRhPortStatus[Port-1].AsULONG,
                          8);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -350,7 +350,7 @@ OHCI_RH_ClearFeaturePortEnableChange(IN PVOID ohciExtension,
     WRITE_REGISTER_ULONG(&OperationalRegs->HcRhPortStatus[Port-1].AsULONG,
                          0x20000);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -372,7 +372,7 @@ OHCI_RH_ClearFeaturePortConnectChange(IN PVOID ohciExtension,
     WRITE_REGISTER_ULONG(&OperationalRegs->HcRhPortStatus[Port-1].AsULONG,
                          0x10000);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -393,7 +393,7 @@ OHCI_RH_ClearFeaturePortResetChange(IN PVOID ohciExtension,
 
     WRITE_REGISTER_ULONG(&OperationalRegs->HcRhPortStatus[Port-1].AsULONG,
                          0x100000);
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -415,7 +415,7 @@ OHCI_RH_ClearFeaturePortSuspendChange(IN PVOID ohciExtension,
     WRITE_REGISTER_ULONG(&OperationalRegs->HcRhPortStatus[Port-1].AsULONG,
                          0x40000);
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -445,7 +445,7 @@ OHCI_RH_ClearFeaturePortOvercurrentChange(IN PVOID ohciExtension,
                              0x20000);
     }
 
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 VOID
