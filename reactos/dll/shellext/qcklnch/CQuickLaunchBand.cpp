@@ -26,6 +26,7 @@ HRESULT RegisterComCat()
     }
     return hr;
 }
+
 HRESULT UnregisterComCat()
 {
     ICatRegister *pcr;
@@ -39,6 +40,20 @@ HRESULT UnregisterComCat()
     return hr;
 }
 
+//Subclassing Button
+
+    LRESULT CALLBACK MyWndProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+    {
+    	switch (uMsg)
+	    {
+		    case WM_COMMAND:
+		    {
+		    	MessageBox(0, L"Button Clicked!!", L"Testing", MB_OK | MB_ICONINFORMATION);
+		    }		    
+	    } 
+	    return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+    }
+
 //CQuickLaunchBand
 
     CQuickLaunchBand::CQuickLaunchBand() :
@@ -51,17 +66,18 @@ HRESULT UnregisterComCat()
     CQuickLaunchBand::~CQuickLaunchBand() { }
 
 /*****************************************************************************/
+
 //IObjectWithSite
     HRESULT STDMETHODCALLTYPE CQuickLaunchBand::SetSite(IUnknown *pUnkSite)
     {
     	MessageBox(0, L"CQuickLaunchBand::SetSite called!", L"Testing", MB_OK | MB_ICONINFORMATION);
 
         HRESULT hRet;
-        HWND hwndSite;
+        HWND hwndParent;
 
         TRACE("CQuickLaunchBand::SetSite(0x%p)\n", pUnkSite);
 
-        hRet = IUnknown_GetWindow(pUnkSite, &hwndSite);
+        hRet = IUnknown_GetWindow(pUnkSite, &hwndParent);
         if (FAILED(hRet))
         {
             TRACE("Querying site window failed: 0x%x\n", hRet);
@@ -69,8 +85,10 @@ HRESULT UnregisterComCat()
         }
         m_Site = pUnkSite;        
         
-        m_hWnd = CreateWindowEx(0, L"BUTTON", L"Quick Launch >>", WS_CHILD, CW_USEDEFAULT, CW_USEDEFAULT, 50, 50, hwndSite, 0, m_hInstance, 0);
-                
+        m_hWnd = CreateWindowEx(0, L"BUTTON", L">>", WS_CHILD, CW_USEDEFAULT, CW_USEDEFAULT, 50, 50, hwndParent, 0, m_hInstance, 0);
+        
+        SetWindowSubclass(hwndParent, MyWndProc, 0, 0); //when button is clicked, parent receives WM_COMMAND, and thus subclassed to show a test message box
+
         return S_OK;
     }
 
@@ -119,7 +137,7 @@ HRESULT UnregisterComCat()
         IN BOOL bShow)
     {
     	//MessageBox(0, L"ShowDW called!", L"Test Caption", MB_OK | MB_ICONINFORMATION);
-        /* We don't do anything... */
+        
         if (m_hWnd)
 	    {
 	        ShowWindow(m_hWnd, bShow ? SW_SHOW : SW_HIDE);
@@ -132,7 +150,7 @@ HRESULT UnregisterComCat()
         IN DWORD dwReserved)
     {
     	//MessageBox(0, L"CloseDW called!", L"Test Caption", MB_OK | MB_ICONINFORMATION);
-        /* We don't do anything... */
+        
     	if (m_hWnd)
 	    {
 	        ShowWindow(m_hWnd, SW_HIDE);
@@ -154,31 +172,25 @@ HRESULT UnregisterComCat()
         return E_NOTIMPL;
     }
 
-    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::GetBandInfo(
+    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::GetBandInfo(  //Need a check
         IN DWORD dwBandID,
         IN DWORD dwViewMode,
         IN OUT DESKBANDINFO *pdbi)
     {
     	//MessageBox(0, L"GetBandInfo called!", L"Test Caption", MB_OK | MB_ICONINFORMATION);
-        TRACE("CTaskBand::GetBandInfo(0x%x,0x%x,0x%p) hWnd=0x%p\n", dwBandID, dwViewMode, pdbi, m_hWnd);
-  
-		if (m_hWnd != NULL)
-        {
-            /* The task band never has a title */
-            pdbi->dwMask &= ~DBIM_TITLE;
+        
+    	TRACE("CTaskBand::GetBandInfo(0x%x,0x%x,0x%p) hWnd=0x%p\n", dwBandID, dwViewMode, pdbi, m_hWnd);
+  		HRESULT hr = E_INVALIDARG;
 
-            /* NOTE: We don't return DBIMF_UNDELETEABLE here, the band site will
-                     handle us differently and add this flag for us. The reason for
-                     this is future changes that might allow it to be deletable.
-                     We want the band site to be in charge of this decision rather
-                     the band itself! */
-            /* FIXME: What about DBIMF_NOGRIPPER and DBIMF_ALWAYSGRIPPER */
+		if (m_hWnd && pdbi)
+        {   
+        	m_BandID = dwBandID;
             pdbi->dwModeFlags = DBIMF_VARIABLEHEIGHT;
 
             if (dwViewMode & DBIF_VIEWMODE_VERTICAL)
             {
                 pdbi->ptIntegral.y = 1;
-                pdbi->ptMinSize.y = 1;
+                pdbi->ptMinSize.y = 20;
                 /* FIXME: Get the button metrics from the task bar object!!! */
                 pdbi->ptMinSize.x = (3 * GetSystemMetrics(SM_CXEDGE) / 2) + /* FIXME: Might be wrong if only one column! */
                     GetSystemMetrics(SM_CXSIZE) + (2 * GetSystemMetrics(SM_CXEDGE)); /* FIXME: Min button size, query!!! */
@@ -192,26 +204,44 @@ HRESULT UnregisterComCat()
                 pdbi->ptIntegral.y = pdbi->ptMinSize.y + (3 * GetSystemMetrics(SM_CYEDGE) / 2); /* FIXME: Query metrics */
                 /* We're not going to allow task bands where not even the minimum button size fits into the band */
                 pdbi->ptMinSize.x = pdbi->ptIntegral.y;
-            }
+            }           
 
-            /* Ignored: pdbi->ptMaxSize.x */
-            pdbi->ptMaxSize.y = -1;
+	        if (pdbi->dwMask & DBIM_MAXSIZE)
+	        {
+	            pdbi->ptMaxSize.y = -1;
+	        }
 
-            /* FIXME: We should query the height from the task bar object!!! */
-            pdbi->ptActual.y = GetSystemMetrics(SM_CYSIZE) + (2 * GetSystemMetrics(SM_CYEDGE));
+	        if (pdbi->dwMask & DBIM_ACTUAL)
+	        {
+	            pdbi->ptActual.x = 35;
+	            pdbi->ptActual.y = 30;
+	        }	        
 
-            /* Save the band ID for future use in case we need to check whether a given band
-               is the task band */
-            m_BandID = dwBandID;
+	        if (pdbi->dwMask & DBIM_TITLE)
+	        {
+	            // Don't show title by removing this flag.
+	            pdbi->dwMask &= ~DBIM_TITLE;
+	        }
+
+	        if (pdbi->dwMask & DBIM_MODEFLAGS)
+	        {
+	            pdbi->dwModeFlags = DBIMF_NORMAL | DBIMF_VARIABLEHEIGHT;
+	        }
+
+	        if (pdbi->dwMask & DBIM_BKCOLOR)
+	        {
+	            // Use the default background color by removing this flag.
+	            pdbi->dwMask &= ~DBIM_BKCOLOR;
+	        }          
 
             TRACE("H: %d, Min: %d,%d, Integral.y: %d Actual: %d,%d\n", (dwViewMode & DBIF_VIEWMODE_VERTICAL) == 0,
                 pdbi->ptMinSize.x, pdbi->ptMinSize.y, pdbi->ptIntegral.y,
                 pdbi->ptActual.x, pdbi->ptActual.y);
 
-            return S_OK;
+            hr = S_OK;
         }
 
-        return E_FAIL;
+	    return hr;
     }    
 
  /*****************************************************************************/
@@ -289,9 +319,8 @@ HRESULT UnregisterComCat()
     HRESULT STDMETHODCALLTYPE CQuickLaunchBand::GetSizeMax(
         OUT ULARGE_INTEGER *pcbSize)
     {
-        TRACE("CQuickLaunchBand::GetSizeMax called\n");
-        /* We don't need any space for the task band */
-        //pcbSize->QuadPart = 0;
+        TRACE("CQuickLaunchBand::GetSizeMax called\n");        
+        pcbSize->QuadPart = 0;
 
         //MessageBox(0, L"GetSizeMax called!", L"Test Caption", MB_OK | MB_ICONINFORMATION);
         return S_OK;
