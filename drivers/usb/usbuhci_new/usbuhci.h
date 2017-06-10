@@ -55,7 +55,6 @@ typedef struct _UHCI_EXTENSION {
 extern USBPORT_REGISTRATION_PACKET RegPacket;
 
 /* roothub.c */
-
 VOID
 NTAPI
 UhciRHGetRootHubData(
@@ -73,13 +72,13 @@ NTAPI
 UhciRHGetPortStatus(
   IN PVOID uhciExtension,
   IN USHORT Port,
-  IN PULONG PortStatus);
+  IN PUSBHUB_PORT_STATUS PortStatus);
 
 MPSTATUS
 NTAPI
 UhciRHGetHubStatus(
   IN PVOID uhciExtension,
-  IN PULONG HubStatus);
+  IN PUSB_HUB_STATUS HubStatus);
 
 MPSTATUS
 NTAPI
