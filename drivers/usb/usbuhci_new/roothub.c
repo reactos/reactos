@@ -17,7 +17,7 @@ UhciRHGetStatus(IN PVOID uhciExtension,
                 IN PUSHORT Status)
 {
     DPRINT("UhciRHGetStatus: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -45,7 +45,7 @@ UhciRHSetFeaturePortReset(IN PVOID uhciExtension,
                           IN USHORT Port)
 {
     DPRINT("UhciRHSetFeaturePortReset: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -54,7 +54,7 @@ UhciRHSetFeaturePortPower(IN PVOID uhciExtension,
                           IN USHORT Port)
 {
     DPRINT("UhciRHSetFeaturePortPower: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -63,7 +63,7 @@ UhciRHSetFeaturePortEnable(IN PVOID uhciExtension,
                            IN USHORT Port)
 {
     DPRINT("UhciRHSetFeaturePortEnable: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -72,7 +72,7 @@ UhciRHSetFeaturePortSuspend(IN PVOID uhciExtension,
                             IN USHORT Port)
 {
     DPRINT("UhciRHSetFeaturePortSuspend: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -81,7 +81,7 @@ UhciRHClearFeaturePortEnable(IN PVOID uhciExtension,
                              IN USHORT Port)
 {
     DPRINT("UhciRHClearFeaturePortEnable: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -90,7 +90,7 @@ UhciRHClearFeaturePortPower(IN PVOID uhciExtension,
                             IN USHORT Port)
 {
     DPRINT("UhciRHClearFeaturePortPower: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -99,7 +99,7 @@ UhciRHClearFeaturePortSuspend(IN PVOID uhciExtension,
                               IN USHORT Port)
 {
     DPRINT("UhciRHClearFeaturePortSuspend: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -108,7 +108,7 @@ UhciRHClearFeaturePortEnableChange(IN PVOID uhciExtension,
                                    IN USHORT Port)
 {
     DPRINT("UhciRHClearFeaturePortEnableChange: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -117,7 +117,7 @@ UhciRHClearFeaturePortConnectChange(IN PVOID uhciExtension,
                                     IN USHORT Port)
 {
     DPRINT("UhciRHClearFeaturePortConnectChange: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -126,7 +126,7 @@ UhciRHClearFeaturePortResetChange(IN PVOID uhciExtension,
                                   IN USHORT Port)
 {
     DPRINT("UhciRHClearFeaturePortResetChange: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -135,7 +135,7 @@ UhciRHClearFeaturePortSuspendChange(IN PVOID uhciExtension,
                                     IN USHORT Port)
 {
     DPRINT("UhciRHClearFeaturePortSuspendChange: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 MPSTATUS
@@ -144,7 +144,7 @@ UhciRHClearFeaturePortOvercurrentChange(IN PVOID uhciExtension,
                                         IN USHORT Port)
 {
     DPRINT("UhciRHClearFeaturePortOvercurrentChange: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 VOID

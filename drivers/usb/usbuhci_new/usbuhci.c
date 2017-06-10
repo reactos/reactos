@@ -82,7 +82,7 @@ NTAPI
 UhciInterruptService(IN PVOID uhciExtension)
 {
     DPRINT("UhciInterruptService: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return TRUE;
 }
 
 VOID
@@ -283,7 +283,7 @@ NTAPI
 UhciUnload(IN PVOID uhciExtension)
 {
     DPRINT("UhciUnload: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    return MP_STATUS_SUCCESS;
 }
 
 NTSTATUS
