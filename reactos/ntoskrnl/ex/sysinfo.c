@@ -2390,7 +2390,7 @@ QSI_DEF(SystemExtendedHandleInformation)
 
     /* FIXME */
     HandleInformation->Count = 0;
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 
