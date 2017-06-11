@@ -1755,7 +1755,7 @@ InstallFatBootcodeToPartition(
     CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"freeldr.sys");
 
     DPRINT("Copy: %S ==> %S\n", SrcPath, DstPath);
-    Status = SetupCopyFile(SrcPath, DstPath);
+    Status = SetupCopyFile(SrcPath, DstPath, FALSE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SetupCopyFile() failed (Status %lx)\n", Status);
@@ -2066,7 +2066,7 @@ InstallExt2BootcodeToPartition(
     CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"freeldr.sys");
 
     DPRINT("Copy: %S ==> %S\n", SrcPath, DstPath);
-    Status = SetupCopyFile(SrcPath, DstPath);
+    Status = SetupCopyFile(SrcPath, DstPath, FALSE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SetupCopyFile() failed (Status %lx)\n", Status);
@@ -2231,7 +2231,7 @@ InstallFatBootcodeToFloppy(
     CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, FloppyDevice.Buffer, L"freeldr.sys");
 
     DPRINT("Copy: %S ==> %S\n", SrcPath, DstPath);
-    Status = SetupCopyFile(SrcPath, DstPath);
+    Status = SetupCopyFile(SrcPath, DstPath, FALSE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SetupCopyFile() failed (Status %lx)\n", Status);

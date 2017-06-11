@@ -428,7 +428,7 @@ SetupCommitFileQueueW(
         else
         {
             /* Copy the file */
-            Status = SetupCopyFile(FileSrcPath, FileDstPath);
+            Status = SetupCopyFile(FileSrcPath, FileDstPath, FALSE);
         }
 
         if (!NT_SUCCESS(Status))
