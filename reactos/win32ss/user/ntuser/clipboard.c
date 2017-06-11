@@ -180,7 +180,7 @@ IntSynthesizeDib(
                                                       NULL,
                                                       &hMem,
                                                       TYPE_CLIPDATA,
-                                                      cjDataSize);
+                                                      sizeof(CLIPBOARDDATA) + cjDataSize);
     if (!pClipboardData)
     {
         goto cleanup;
