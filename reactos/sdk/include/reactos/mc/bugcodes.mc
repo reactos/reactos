@@ -1684,6 +1684,22 @@ Language=English
 An attempt was made to execute to non-executable memory.
 .
 
+MessageId=0xFD
+Severity=Success
+Facility=System
+SymbolicName=DIRTY_NOWRITE_PAGES_CONGESTION
+Language=English
+DIRTY_NOWRITE_PAGES_CONGESTION
+.
+
+MessageId=0xFE
+Severity=Success
+Facility=System
+SymbolicName=BUGCODE_USB_DRIVER
+Language=English
+A fatal error occurred in the USB driver stack.
+.
+
 MessageId=0x139
 Severity=Success
 Facility=System
