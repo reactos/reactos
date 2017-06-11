@@ -36,9 +36,9 @@ IntGetWinStaForCbAccess(VOID)
     return pWinStaObj;
 }
 
-/* If format exists, returns a non zero value (pointing to formated object) */
+/* If format exists, returns a non-null value (pointing to formated object) */
 static PCLIP FASTCALL
-IntIsFormatAvailable(PWINSTATION_OBJECT pWinStaObj, UINT fmt)
+IntGetFormatElement(PWINSTATION_OBJECT pWinStaObj, UINT fmt)
 {
     DWORD i;
 
@@ -49,6 +49,12 @@ IntIsFormatAvailable(PWINSTATION_OBJECT pWinStaObj, UINT fmt)
     }
 
     return NULL;
+}
+
+static BOOL FASTCALL
+IntIsFormatAvailable(PWINSTATION_OBJECT pWinStaObj, UINT fmt)
+{
+    return IntGetFormatElement(pWinStaObj, fmt) != NULL;
 }
 
 static VOID FASTCALL
@@ -76,7 +82,7 @@ IntAddFormatedData(PWINSTATION_OBJECT pWinStaObj, UINT fmt, HANDLE hData, BOOLEA
 
     /* Use existing entry with specified format */
     if (!bEnd)
-        pElement = IntIsFormatAvailable(pWinStaObj, fmt);
+        pElement = IntGetFormatElement(pWinStaObj, fmt);
 
     /* Put new entry at the end if nothing was found */
     if (!pElement)
@@ -226,7 +232,7 @@ IntSynthesizeBitmap(PWINSTATION_OBJECT pWinStaObj, PCLIP pBmEl)
 
     TRACE("IntSynthesizeBitmap(%p, %p)\n", pWinStaObj, pBmEl);
 
-    pDibEl = IntIsFormatAvailable(pWinStaObj, CF_DIB);
+    pDibEl = IntGetFormatElement(pWinStaObj, CF_DIB);
     ASSERT(pDibEl && !IS_DATA_SYNTHESIZED(pDibEl));
     if (!pDibEl->fGlobalHandle)
         return;
@@ -278,17 +284,17 @@ cleanup:
 static VOID NTAPI
 IntAddSynthesizedFormats(PWINSTATION_OBJECT pWinStaObj)
 {
-    PCLIP pTextEl, pUniTextEl, pOemTextEl, pLocaleEl, pBmEl, pDibEl;
+    BOOL bHaveText, bHaveUniText, bHaveOemText, bHaveLocale, bHaveBm, bHaveDib;
 
-    pTextEl = IntIsFormatAvailable(pWinStaObj, CF_TEXT);
-    pOemTextEl = IntIsFormatAvailable(pWinStaObj, CF_OEMTEXT);
-    pUniTextEl = IntIsFormatAvailable(pWinStaObj, CF_UNICODETEXT);
-    pLocaleEl = IntIsFormatAvailable(pWinStaObj, CF_LOCALE);
-    pBmEl = IntIsFormatAvailable(pWinStaObj, CF_BITMAP);
-    pDibEl = IntIsFormatAvailable(pWinStaObj, CF_DIB);
+    bHaveText = IntIsFormatAvailable(pWinStaObj, CF_TEXT);
+    bHaveOemText = IntIsFormatAvailable(pWinStaObj, CF_OEMTEXT);
+    bHaveUniText = IntIsFormatAvailable(pWinStaObj, CF_UNICODETEXT);
+    bHaveLocale = IntIsFormatAvailable(pWinStaObj, CF_LOCALE);
+    bHaveBm = IntIsFormatAvailable(pWinStaObj, CF_BITMAP);
+    bHaveDib = IntIsFormatAvailable(pWinStaObj, CF_DIB);
 
     /* Add CF_LOCALE format if we have CF_TEXT */
-    if (!pLocaleEl && pTextEl)
+    if (!bHaveLocale && bHaveText)
     {
         PCLIPBOARDDATA pMemObj;
         HANDLE hMem;
@@ -307,25 +313,25 @@ IntAddSynthesizedFormats(PWINSTATION_OBJECT pWinStaObj)
     }
 
     /* Add CF_TEXT. Note: it is synthesized in user32.dll */
-    if (!pTextEl && (pUniTextEl || pOemTextEl))
+    if (!bHaveText && (bHaveUniText || bHaveOemText))
         IntAddFormatedData(pWinStaObj, CF_TEXT, DATA_SYNTH_USER, FALSE, TRUE);
 
     /* Add CF_OEMTEXT. Note: it is synthesized in user32.dll */
-    if (!pOemTextEl && (pUniTextEl || pTextEl))
+    if (!bHaveOemText && (bHaveUniText || bHaveText))
         IntAddFormatedData(pWinStaObj, CF_OEMTEXT, DATA_SYNTH_USER, FALSE, TRUE);
 
     /* Add CF_UNICODETEXT. Note: it is synthesized in user32.dll */
-    if (!pUniTextEl && (pTextEl || pOemTextEl))
+    if (!bHaveUniText && (bHaveText || bHaveOemText))
         IntAddFormatedData(pWinStaObj, CF_UNICODETEXT, DATA_SYNTH_USER, FALSE, TRUE);
 
     /* Add CF_BITMAP. Note: it is synthesized on demand */
-    if (!pBmEl && pDibEl)
+    if (!bHaveBm && bHaveDib)
         IntAddFormatedData(pWinStaObj, CF_BITMAP, DATA_SYNTH_KRNL, FALSE, TRUE);
 
     /* Note: We need to render the DIB or DIBV5 format as soon as possible
        because pallette information may change */
-    if (!pDibEl && pBmEl)
-        IntSynthesizeDib(pWinStaObj, pBmEl->hData);
+    if (!bHaveDib && bHaveBm)
+        IntSynthesizeDib(pWinStaObj, IntGetFormatElement(pWinStaObj, CF_BITMAP)->hData);
 }
 
 VOID NTAPI
@@ -441,7 +447,7 @@ UserEnumClipboardFormats(UINT fmt)
     else
     {
         /* Return next format */
-        pElement = IntIsFormatAvailable(pWinStaObj, fmt);
+        pElement = IntGetFormatElement(pWinStaObj, fmt);
         ++pElement;
         if (pElement < &pWinStaObj->pClipBase[pWinStaObj->cNumClipFormats])
             Ret = pElement->fmt;
@@ -885,7 +891,7 @@ NtUserGetClipboardData(UINT fmt, PGETCLIPBDATA pgcd)
         goto cleanup;
     }
 
-    pElement = IntIsFormatAvailable(pWinStaObj, fmt);
+    pElement = IntGetFormatElement(pWinStaObj, fmt);
     if (pElement && IS_DATA_DELAYED(pElement) && pWinStaObj->spwndClipOwner)
     {
         /* Send WM_RENDERFORMAT message */
@@ -894,7 +900,7 @@ NtUserGetClipboardData(UINT fmt, PGETCLIPBDATA pgcd)
         pWinStaObj->fInDelayedRendering = FALSE;
 
         /* Data should be in clipboard now */
-        pElement = IntIsFormatAvailable(pWinStaObj, fmt);
+        pElement = IntGetFormatElement(pWinStaObj, fmt);
     }
 
     if (!pElement || IS_DATA_DELAYED(pElement))
@@ -909,11 +915,11 @@ NtUserGetClipboardData(UINT fmt, PGETCLIPBDATA pgcd)
             case CF_UNICODETEXT:
             case CF_TEXT:
             case CF_OEMTEXT:
-                pElement = IntIsFormatAvailable(pWinStaObj, CF_UNICODETEXT);
+                pElement = IntGetFormatElement(pWinStaObj, CF_UNICODETEXT);
                 if (IS_DATA_SYNTHESIZED(pElement))
-                    pElement = IntIsFormatAvailable(pWinStaObj, CF_TEXT);
+                    pElement = IntGetFormatElement(pWinStaObj, CF_TEXT);
                 if (IS_DATA_SYNTHESIZED(pElement))
-                    pElement = IntIsFormatAvailable(pWinStaObj, CF_OEMTEXT);
+                    pElement = IntGetFormatElement(pWinStaObj, CF_OEMTEXT);
                 break;
             case CF_BITMAP:
                 IntSynthesizeBitmap(pWinStaObj, pElement);
@@ -934,7 +940,7 @@ NtUserGetClipboardData(UINT fmt, PGETCLIPBDATA pgcd)
         {
             PCLIP pLocaleEl;
 
-            pLocaleEl = IntIsFormatAvailable(pWinStaObj, CF_LOCALE);
+            pLocaleEl = IntGetFormatElement(pWinStaObj, CF_LOCALE);
             if (pLocaleEl && !IS_DATA_DELAYED(pLocaleEl))
                 pgcd->hLocale = pLocaleEl->hData;
         }
@@ -942,7 +948,7 @@ NtUserGetClipboardData(UINT fmt, PGETCLIPBDATA pgcd)
         {
             PCLIP pPaletteEl;
 
-            pPaletteEl = IntIsFormatAvailable(pWinStaObj, CF_PALETTE);
+            pPaletteEl = IntGetFormatElement(pWinStaObj, CF_PALETTE);
             if (pPaletteEl && !IS_DATA_DELAYED(pPaletteEl))
                 pgcd->hPalette = pPaletteEl->hData;
         }
