@@ -1426,8 +1426,8 @@ CHubController::HandleClassDevice(
             // generate setup packet
             //
             CtrlSetup.bmRequestType.B = 0;
-            CtrlSetup.bmRequestType._BM.Recipient = BMREQUEST_TO_DEVICE;
-            CtrlSetup.bmRequestType._BM.Type = BMREQUEST_CLASS;
+            CtrlSetup.bmRequestType.Recipient = BMREQUEST_TO_DEVICE;
+            CtrlSetup.bmRequestType.Type = BMREQUEST_CLASS;
             CtrlSetup.bRequest = Urb->UrbControlVendorClassRequest.Request;
             CtrlSetup.wValue.W = Urb->UrbControlVendorClassRequest.Value;
             CtrlSetup.wIndex.W = Urb->UrbControlVendorClassRequest.Index;
@@ -1438,7 +1438,7 @@ CHubController::HandleClassDevice(
                 //
                 // data direction is device to host
                 //
-                CtrlSetup.bmRequestType._BM.Dir = BMREQUEST_DEVICE_TO_HOST;
+                CtrlSetup.bmRequestType.Dir = BMREQUEST_DEVICE_TO_HOST;
             }
 
             //
@@ -1889,8 +1889,8 @@ CHubController::HandleVendorDevice(
     // initialize setup packet
     //
     CtrlSetup.bmRequestType.B = 0;
-    CtrlSetup.bmRequestType._BM.Recipient = BMREQUEST_TO_DEVICE;
-    CtrlSetup.bmRequestType._BM.Type = BMREQUEST_VENDOR;
+    CtrlSetup.bmRequestType.Recipient = BMREQUEST_TO_DEVICE;
+    CtrlSetup.bmRequestType.Type = BMREQUEST_VENDOR;
     CtrlSetup.bRequest = Urb->UrbControlVendorClassRequest.Request;
     CtrlSetup.wValue.W = Urb->UrbControlVendorClassRequest.Value;
     CtrlSetup.wIndex.W = Urb->UrbControlVendorClassRequest.Index;
@@ -1901,7 +1901,7 @@ CHubController::HandleVendorDevice(
         //
         // data direction is device to host
         //
-        CtrlSetup.bmRequestType._BM.Dir = BMREQUEST_DEVICE_TO_HOST;
+        CtrlSetup.bmRequestType.Dir = BMREQUEST_DEVICE_TO_HOST;
     }
 
     //

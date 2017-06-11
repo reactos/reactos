@@ -55,12 +55,16 @@ typedef enum _USB_DEVICE_SPEED {
 
 
 typedef union _BM_REQUEST_TYPE {
+#ifdef __cplusplus
+  struct {
+#else
   struct _BM {
+#endif
     UCHAR Recipient:2;
     UCHAR Reserved:3;
     UCHAR Type:2;
     UCHAR Dir:1;
-  } _BM;
+  };
   UCHAR B;
 } BM_REQUEST_TYPE, *PBM_REQUEST_TYPE;
 
