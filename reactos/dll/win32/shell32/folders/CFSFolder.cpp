@@ -634,7 +634,7 @@ void SHELL_FS_ProcessDisplayFilename(LPWSTR szPath, DWORD dwFlags)
 HRESULT WINAPI CFSFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl,
         DWORD dwFlags, LPSTRRET strRet)
 {
-    if (!pidl || !strRet)
+    if (!strRet)
         return E_INVALIDARG;
 
     /* If it is a complex pidl, let the child handle it */
@@ -642,7 +642,7 @@ HRESULT WINAPI CFSFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl,
     {
         return SHELL32_GetDisplayNameOfChild(this, pidl, dwFlags, strRet);
     }
-    else if (!pidl->mkid.cb) /* empty pidl */
+    else if (pidl && !pidl->mkid.cb) /* empty pidl */
     {
         /* If it is an empty pidl return only the path of the folder */
         if ((GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING) && 
