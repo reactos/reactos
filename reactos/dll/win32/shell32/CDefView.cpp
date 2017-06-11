@@ -325,6 +325,7 @@ class CDefView :
         // Windows returns E_NOINTERFACE for IOleWindow
         // COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
         COM_INTERFACE_ENTRY_IID(IID_IShellView, IShellView)
+        COM_INTERFACE_ENTRY_IID(IID_CDefView, IShellView)
         COM_INTERFACE_ENTRY_IID(IID_IShellView2, IShellView2)
         COM_INTERFACE_ENTRY_IID(IID_IFolderView, IFolderView)
         COM_INTERFACE_ENTRY_IID(IID_IShellFolderView, IShellFolderView)
