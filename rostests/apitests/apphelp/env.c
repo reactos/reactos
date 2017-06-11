@@ -1111,7 +1111,7 @@ static void Test_ApphelpCheckRunApp(WCHAR szApphelp[256])
         ok_hex(Reason, CHECKREASON(ExpectedReason, (1 << n)));
         if (AppCompatData && AppCompatDataSize == sizeof(SDBQUERYRESULT_VISTA))
         {
-            if (ExpectedReason != 0x400 && g_ModuleVersion < WINVER_WIN10)
+            if (ExpectedReason != 0x400 && g_ModuleVersion < WINVER_WIN7)
                 expect_layeronly(AppCompatData, "256Color", expect_flags);
             else
                 ok(!memcmp(AppCompatData, &empty_result, sizeof(empty_result)), "Expected result to be empty\n");
@@ -1234,10 +1234,10 @@ START_TEST(env)
     DWORD ShimDataType;
     NTSTATUS ExceptionStatus = STATUS_SUCCESS;
 
-    SetEnvironmentVariable("SHIM_DEBUG_LEVEL", "127");
-    SetEnvironmentVariable("SHIMENG_DEBUG_LEVEL", "127");
+    //SetEnvironmentVariable("SHIM_DEBUG_LEVEL", "127");
+    //SetEnvironmentVariable("SHIMENG_DEBUG_LEVEL", "127");
 
-    //silence_debug_output();
+    silence_debug_output();
 
     hdll = LoadLibraryA("apphelp.dll");
 
@@ -1299,6 +1299,7 @@ START_TEST(env)
         return;
     }
 
+    /* New version of Win10.. */
     if (g_WinVersion == WINVER_WIN10 && ShimDataType == 3)
         g_ShimDataSize = 4096;
 
