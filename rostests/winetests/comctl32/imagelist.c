@@ -2046,9 +2046,9 @@ static void check_color_table(const char *name, HDC hdc, HIMAGELIST himl, UINT i
         ok((bmi->bmiColors[i].rgbRed == expect[i].rgbRed &&
             bmi->bmiColors[i].rgbGreen == expect[i].rgbGreen &&
             bmi->bmiColors[i].rgbBlue == expect[i].rgbBlue) ||
-           broken(bmi->bmiColors[i].rgbRed == broken_expect[i].rgbRed &&
+           (broken_expect && broken(bmi->bmiColors[i].rgbRed == broken_expect[i].rgbRed &&
                   bmi->bmiColors[i].rgbGreen == broken_expect[i].rgbGreen &&
-                  bmi->bmiColors[i].rgbBlue == broken_expect[i].rgbBlue),
+                  bmi->bmiColors[i].rgbBlue == broken_expect[i].rgbBlue)),
            "%d: %s: got color[%d] %02x %02x %02x expect %02x %02x %02x\n", depth, name, i,
            bmi->bmiColors[i].rgbRed, bmi->bmiColors[i].rgbGreen, bmi->bmiColors[i].rgbBlue,
            expect[i].rgbRed, expect[i].rgbGreen, expect[i].rgbBlue);
