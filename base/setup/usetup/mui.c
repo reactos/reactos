@@ -309,7 +309,7 @@ AddHotkeySettings(
                           &ObjectAttributes,
                           0,
                           NULL,
-                          0,
+                          REG_OPTION_NON_VOLATILE,
                           &Disposition);
 
     if(!NT_SUCCESS(Status))
@@ -401,7 +401,7 @@ AddKbLayoutsToRegistry(
                           &ObjectAttributes,
                           0,
                           NULL,
-                          0,
+                          REG_OPTION_NON_VOLATILE,
                           &Disposition);
 
     if(NT_SUCCESS(Status))
@@ -433,7 +433,7 @@ AddKbLayoutsToRegistry(
                          &ObjectAttributes,
                          0,
                          NULL,
-                         0,
+                         REG_OPTION_NON_VOLATILE,
                          &Disposition);
 
     if (!NT_SUCCESS(Status))
@@ -454,7 +454,7 @@ AddKbLayoutsToRegistry(
                           &ObjectAttributes,
                           0,
                           NULL,
-                          0,
+                          REG_OPTION_NON_VOLATILE,
                           &Disposition);
 
     if(!NT_SUCCESS(Status))
