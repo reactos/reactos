@@ -44,11 +44,17 @@ ImportRegistryFile(
     BOOLEAN Delete);
 
 NTSTATUS
+VerifyRegistryHives(
+    IN PUNICODE_STRING InstallPath,
+    OUT PBOOLEAN ShouldUpdateRegistry);
+
+NTSTATUS
 RegInitializeRegistry(
     IN PUNICODE_STRING InstallPath);
 
 VOID
-RegCleanupRegistry(VOID);
+RegCleanupRegistry(
+    IN PUNICODE_STRING InstallPath);
 
 VOID
 SetDefaultPagefile(

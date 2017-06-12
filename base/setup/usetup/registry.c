@@ -61,6 +61,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
+#define REGISTRY_SETUP_MACHINE  L"\\Registry\\Machine\\SYSTEM\\USetup_Machine\\"
+#define REGISTRY_SETUP_USER     L"\\Registry\\Machine\\SYSTEM\\USetup_User\\"
+
 typedef struct _ROOT_KEY
 {
     PCWSTR Name;
@@ -70,11 +73,10 @@ typedef struct _ROOT_KEY
 
 ROOT_KEY RootKeys[] =
 {
-    // L"\\Registry\\Machine\\SYSTEM\\USetup_Machine\\SOFTWARE\\Classes\\"
-    { L"HKCR", L"\\Registry\\Machine\\USetup_SOFTWARE\\Classes\\", NULL },    /* "\\Registry\\Machine\\SOFTWARE\\Classes\\" */  // HKEY_CLASSES_ROOT
-    { L"HKCU", L"\\Registry\\User\\USetup_DEFAULT\\"             , NULL },    /* "\\Registry\\User\\.DEFAULT\\" */              // HKEY_CURRENT_USER
-    { L"HKLM", L"\\Registry\\Machine\\SYSTEM\\USetup_Machine\\"  , NULL },    /* "\\Registry\\Machine\\"        */              // HKEY_LOCAL_MACHINE
-    { L"HKU" , L"\\Registry\\Machine\\SYSTEM\\USetup_User\\"     , NULL },    /* "\\Registry\\User\\"           */              // HKEY_USERS
+    { L"HKCR", REGISTRY_SETUP_MACHINE L"SOFTWARE\\Classes\\", NULL },   /* "\\Registry\\Machine\\SOFTWARE\\Classes\\" */ // HKEY_CLASSES_ROOT
+    { L"HKCU", REGISTRY_SETUP_USER    L".DEFAULT\\"         , NULL },   /* "\\Registry\\User\\.DEFAULT\\" */             // HKEY_CURRENT_USER
+    { L"HKLM", REGISTRY_SETUP_MACHINE                       , NULL },   /* "\\Registry\\Machine\\"        */             // HKEY_LOCAL_MACHINE
+    { L"HKU" , REGISTRY_SETUP_USER                          , NULL },   /* "\\Registry\\User\\"           */             // HKEY_USERS
 #if 0
     { L"HKR", NULL, NULL },
 #endif
@@ -403,10 +405,17 @@ do_reg_operation(HANDLE KeyHandle,
   return TRUE;
 }
 
+/*
+ * This function is similar to the one in dlls/win32/advapi32/reg/reg.c
+ * TODO: I should review both of them very carefully, because they may need
+ * some adjustments in their NtCreateKey calls, especially for CreateOptions
+ * stuff etc...
+ */
 NTSTATUS
 CreateNestedKey(PHANDLE KeyHandle,
                 ACCESS_MASK DesiredAccess,
-                POBJECT_ATTRIBUTES ObjectAttributes)
+                POBJECT_ATTRIBUTES ObjectAttributes,
+                ULONG CreateOptions)
 {
     OBJECT_ATTRIBUTES LocalObjectAttributes;
     UNICODE_STRING LocalKeyName;
@@ -421,11 +430,16 @@ CreateNestedKey(PHANDLE KeyHandle,
                          ObjectAttributes,
                          0,
                          NULL,
-                         0,
+                         CreateOptions,
                          &Disposition);
     DPRINT("NtCreateKey(%wZ) called (Status %lx)\n", ObjectAttributes->ObjectName, Status);
     if (Status != STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        if (!NT_SUCCESS(Status))
+            DPRINT1("CreateNestedKey: NtCreateKey(%wZ) failed (Status %lx)\n", ObjectAttributes->ObjectName, Status);
+
         return Status;
+    }
 
     /* Copy object attributes */
     RtlCopyMemory(&LocalObjectAttributes,
@@ -439,28 +453,30 @@ CreateNestedKey(PHANDLE KeyHandle,
     /* Remove the last part of the key name and try to create the key again. */
     while (Status == STATUS_OBJECT_NAME_NOT_FOUND)
     {
-        Ptr = wcsrchr (LocalKeyName.Buffer, '\\');
+        Ptr = wcsrchr(LocalKeyName.Buffer, '\\');
         if (Ptr == NULL || Ptr == LocalKeyName.Buffer)
         {
             Status = STATUS_UNSUCCESSFUL;
             break;
         }
         *Ptr = (WCHAR)0;
-        LocalKeyName.Length = wcslen (LocalKeyName.Buffer) * sizeof(WCHAR);
+        LocalKeyName.Length = wcslen(LocalKeyName.Buffer) * sizeof(WCHAR);
 
         Status = NtCreateKey(&LocalKeyHandle,
-                             KEY_ALL_ACCESS,
+                             KEY_CREATE_SUB_KEY,
                              &LocalObjectAttributes,
                              0,
                              NULL,
-                             0,
+                             REG_OPTION_NON_VOLATILE,
                              &Disposition);
         DPRINT("NtCreateKey(%wZ) called (Status %lx)\n", &LocalKeyName, Status);
+        if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_NOT_FOUND)
+            DPRINT1("CreateNestedKey: NtCreateKey(%wZ) failed (Status %lx)\n", LocalObjectAttributes.ObjectName, Status);
     }
 
     if (!NT_SUCCESS(Status))
     {
-        RtlFreeUnicodeString (&LocalKeyName);
+        RtlFreeUnicodeString(&LocalKeyName);
         return Status;
     }
 
@@ -476,18 +492,21 @@ CreateNestedKey(PHANDLE KeyHandle,
         NtClose(LocalKeyHandle);
 
         LocalKeyName.Buffer[LocalKeyName.Length / sizeof(WCHAR)] = L'\\';
-        LocalKeyName.Length = wcslen (LocalKeyName.Buffer) * sizeof(WCHAR);
+        LocalKeyName.Length = wcslen(LocalKeyName.Buffer) * sizeof(WCHAR);
 
         Status = NtCreateKey(&LocalKeyHandle,
                              KEY_ALL_ACCESS,
                              &LocalObjectAttributes,
                              0,
                              NULL,
-                             0,
+                             CreateOptions,
                              &Disposition);
         DPRINT("NtCreateKey(%wZ) called (Status %lx)\n", &LocalKeyName, Status);
         if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("CreateNestedKey: NtCreateKey(%wZ) failed (Status %lx)\n", LocalObjectAttributes.ObjectName, Status);
             break;
+        }
     }
 
     RtlFreeUnicodeString(&LocalKeyName);
@@ -562,7 +581,8 @@ registry_callback(HINF hInf, PCWSTR Section, BOOLEAN Delete)
         {
             Status = CreateNestedKey(&KeyHandle,
                                      KEY_ALL_ACCESS,
-                                     &ObjectAttributes);
+                                     &ObjectAttributes,
+                                     REG_OPTION_NON_VOLATILE);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("CreateNestedKey(%wZ) failed (Status %lx)\n", &Name, Status);
@@ -651,29 +671,86 @@ ImportRegistryFile(
 /*
  * Should be called under privileges
  */
-// static
-NTSTATUS
+static NTSTATUS
 CreateRegistryFile(
     IN PUNICODE_STRING InstallPath,
     IN PCWSTR RegistryKey,
-    IN HANDLE ProtoKeyHandle)
+    IN BOOLEAN IsHiveNew,
+    IN HANDLE ProtoKeyHandle
+/*
+    IN PUCHAR Descriptor,
+    IN ULONG DescriptorLength
+*/
+    )
 {
+    /* '.old' is for old valid hives, while '.brk' is for old broken hives */
+    static PCWSTR Extensions[] = {L"old", L"brk"};
+
     NTSTATUS Status;
     HANDLE FileHandle;
     UNICODE_STRING FileName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
+    PCWSTR Extension;
     WCHAR PathBuffer[MAX_PATH];
+    WCHAR PathBuffer2[MAX_PATH];
 
-    /* Create the file */
     CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 3,
                  InstallPath->Buffer, L"System32\\config", RegistryKey);
+
+    Extension = Extensions[IsHiveNew ? 0 : 1];
+
+    //
+    // FIXME: The best, actually, would be to rename (move) the existing
+    // System32\config\RegistryKey file to System32\config\RegistryKey.old,
+    // and if it already existed some System32\config\RegistryKey.old, we should
+    // first rename this one into System32\config\RegistryKey_N.old before
+    // performing the original rename.
+    //
+
+    /* Check whether the registry hive file already existed, and if so, rename it */
+    if (DoesFileExist(NULL, PathBuffer))
+    {
+        // UINT i;
+
+        DPRINT1("Registry hive '%S' already exists, rename it\n", PathBuffer);
+
+        // i = 1;
+        /* Try first by just appending the '.old' extension */
+        StringCchPrintfW(PathBuffer2, ARRAYSIZE(PathBuffer2), L"%s.%s", PathBuffer, Extension);
+#if 0
+        while (DoesFileExist(NULL, PathBuffer2))
+        {
+            /* An old file already exists, increments its index, but not too much */
+            if (i <= 0xFFFF)
+            {
+                /* Append '_N.old' extension */
+                StringCchPrintfW(PathBuffer2, ARRAYSIZE(PathBuffer2), L"%s_%lu.%s", PathBuffer, i, Extension);
+                ++i;
+            }
+            else
+            {
+                /*
+                 * Too many old files exist, we will rename the file
+                 * using the name of the oldest one.
+                 */
+                StringCchPrintfW(PathBuffer2, ARRAYSIZE(PathBuffer2), L"%s.%s", PathBuffer, Extension);
+                break;
+            }
+        }
+#endif
+
+        /* Now rename the file (force the move) */
+        Status = SetupMoveFile(PathBuffer, PathBuffer2, MOVEFILE_REPLACE_EXISTING);
+    }
+
+    /* Create the file */
     RtlInitUnicodeString(&FileName, PathBuffer);
     InitializeObjectAttributes(&ObjectAttributes,
                                &FileName,
                                OBJ_CASE_INSENSITIVE,
-                               NULL, // Could have been installpath, etc...
-                               NULL);
+                               NULL,  // Could have been installpath, etc...
+                               NULL); // Descriptor
 
     Status = NtCreateFile(&FileHandle,
                           FILE_GENERIC_WRITE,
@@ -775,18 +852,19 @@ CmpLinkKeyToHive(
 /*
  * Should be called under privileges
  */
-// static
-NTSTATUS
+static NTSTATUS
 ConnectRegistry(
     IN HKEY RootKey OPTIONAL,
+    IN PCWSTR RegMountPoint,
     // IN HANDLE RootDirectory OPTIONAL,
     IN PUNICODE_STRING InstallPath,
-    IN PCWSTR RegistryKey,
-    // IN PUCHAR Descriptor,
-    // IN ULONG DescriptorLength,
-    IN PCWSTR RegMountPoint)
+    IN PCWSTR RegistryKey
+/*
+    IN PUCHAR Descriptor,
+    IN ULONG DescriptorLength
+*/
+    )
 {
-    NTSTATUS Status;
     UNICODE_STRING KeyName, FileName;
     OBJECT_ATTRIBUTES KeyObjectAttributes;
     OBJECT_ATTRIBUTES FileObjectAttributes;
@@ -797,7 +875,7 @@ ConnectRegistry(
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
                                RootKey,
-                               NULL);
+                               NULL);   // Descriptor
 
     CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 3,
                  InstallPath->Buffer, L"System32\\config", RegistryKey);
@@ -808,25 +886,190 @@ ConnectRegistry(
                                NULL, // RootDirectory,
                                NULL);
 
-#if 0
-    IN PCMHIVE HiveToConnect;
-    /*
-     * Add security to the root key.
-     * NOTE: One can implement this using the lpSecurityAttributes
-     * parameter of RegCreateKeyExW.
-     */
-    Status = CmiCreateSecurityKey(&HiveToConnect->Hive,
-                                  HiveToConnect->Hive.BaseBlock->RootCell,
-                                  Descriptor, DescriptorLength);
-    if (!NT_SUCCESS(Status))
-        DPRINT1("Failed to add security for root key '%S'\n", Path);
-#endif
-
     /* Mount the registry hive in the registry namespace */
-    Status = NtLoadKey(&KeyObjectAttributes, &FileObjectAttributes);
+    return NtLoadKey(&KeyObjectAttributes, &FileObjectAttributes);
+}
+
+
+static NTSTATUS
+VerifyRegistryHive(
+    // IN HKEY RootKey OPTIONAL,
+    // // IN HANDLE RootDirectory OPTIONAL,
+    IN PUNICODE_STRING InstallPath,
+    IN PCWSTR RegistryKey /* ,
+    IN PCWSTR RegMountPoint */)
+{
+    NTSTATUS Status;
+    UNICODE_STRING KeyName;
+    OBJECT_ATTRIBUTES KeyObjectAttributes;
+
+    /* Try to mount the specified registry hive */
+    Status = ConnectRegistry(NULL,
+                             L"\\Registry\\Machine\\USetup_VerifyHive",
+                             InstallPath,
+                             RegistryKey
+                             /* NULL, 0 */);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ConnectRegistry(%S) failed, Status 0x%08lx\n", RegistryKey, Status);
+    }
+
+    DPRINT1("VerifyRegistryHive: ConnectRegistry(%S) returns Status 0x%08lx\n", RegistryKey, Status);
+
+    //
+    // TODO: Check the Status error codes: STATUS_SUCCESS, STATUS_REGISTRY_RECOVERED,
+    // STATUS_REGISTRY_HIVE_RECOVERED, STATUS_REGISTRY_CORRUPT, STATUS_REGISTRY_IO_FAILED,
+    // STATUS_NOT_REGISTRY_FILE, STATUS_CANNOT_LOAD_REGISTRY_FILE ;
+    //(STATUS_HIVE_UNLOADED) ; STATUS_SYSTEM_HIVE_TOO_LARGE
+    //
+
+    if (Status == STATUS_REGISTRY_HIVE_RECOVERED) // NT_SUCCESS is still FALSE in this case!
+        DPRINT1("VerifyRegistryHive: Registry hive %S was recovered but some data may be lost (Status 0x%08lx)\n", RegistryKey, Status);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("VerifyRegistryHive: Registry hive %S is corrupted (Status 0x%08lx)\n", RegistryKey, Status);
+        return Status;
+    }
+
+    if (Status == STATUS_REGISTRY_RECOVERED)
+        DPRINT1("VerifyRegistryHive: Registry hive %S succeeded recovered (Status 0x%08lx)\n", RegistryKey, Status);
+
+    /* Unmount the hive */
+    InitializeObjectAttributes(&KeyObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\USetup_VerifyHive");
+    Status = NtUnloadKey(&KeyObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtUnloadKey(%S, %wZ) failed, Status 0x%08lx\n", RegistryKey, &KeyName, Status);
+    }
 
     return Status;
 }
+
+
+typedef enum _HIVE_UPDATE_STATE
+{
+    Create, // Create a new hive file and save possibly existing old one with a .old extension.
+    Repair, // Re-create a new hive file and save possibly existing old one with a .brk extension.
+    Update  // Hive update, do not need to be recreated.
+} HIVE_UPDATE_STATE;
+
+typedef struct _HIVE_LIST_ENTRY
+{
+    PCWSTR HiveName;            // HiveFileName;
+    PCWSTR HiveRegistryPath;    // HiveRegMountPoint;
+    HANDLE PredefKeyHandle;
+    PCWSTR RegSymLink;
+    HIVE_UPDATE_STATE State;
+    // PUCHAR SecurityDescriptor;
+    // ULONG  SecurityDescriptorLength;
+} HIVE_LIST_ENTRY, *PHIVE_LIST_ENTRY;
+
+#define NUMBER_OF_STANDARD_REGISTRY_HIVES   3
+
+HIVE_LIST_ENTRY RegistryHives[/*NUMBER_OF_STANDARD_REGISTRY_HIVES*/] =
+{
+    { L"SYSTEM"  , L"\\Registry\\Machine\\USetup_SYSTEM"  , HKEY_LOCAL_MACHINE, L"SYSTEM"  , Create /* , SystemSecurity  , sizeof(SystemSecurity)   */ },
+    { L"SOFTWARE", L"\\Registry\\Machine\\USetup_SOFTWARE", HKEY_LOCAL_MACHINE, L"SOFTWARE", Create /* , SoftwareSecurity, sizeof(SoftwareSecurity) */ },
+    { L"DEFAULT" , L"\\Registry\\User\\USetup_DEFAULT"    , HKEY_USERS        , L".DEFAULT", Create /* , SystemSecurity  , sizeof(SystemSecurity)   */ },
+
+//  { L"BCD"     , L"\\Registry\\Machine\\USetup_BCD", HKEY_LOCAL_MACHINE, L"BCD00000000", Create /* , BcdSecurity     , sizeof(BcdSecurity)      */ },
+};
+C_ASSERT(_countof(RegistryHives) == NUMBER_OF_STANDARD_REGISTRY_HIVES);
+
+#define NUMBER_OF_SECURITY_REGISTRY_HIVES   2
+
+/** These hives are created by LSASS during 2nd stage setup */
+HIVE_LIST_ENTRY SecurityRegistryHives[/*NUMBER_OF_SECURITY_REGISTRY_HIVES*/] =
+{
+    { L"SAM"     , L"\\Registry\\Machine\\USetup_SAM"     , HKEY_LOCAL_MACHINE, L"SAM"     , Create /* , SystemSecurity  , sizeof(SystemSecurity)   */ },
+    { L"SECURITY", L"\\Registry\\Machine\\USetup_SECURITY", HKEY_LOCAL_MACHINE, L"SECURITY", Create /* , NULL            , 0                        */ },
+};
+C_ASSERT(_countof(SecurityRegistryHives) == NUMBER_OF_SECURITY_REGISTRY_HIVES);
+
+
+NTSTATUS
+VerifyRegistryHives(
+    IN PUNICODE_STRING InstallPath,
+    OUT PBOOLEAN ShouldUpdateRegistry)
+{
+    NTSTATUS Status;
+    BOOLEAN PrivilegeSet[2] = {FALSE, FALSE};
+    UINT i;
+
+    /* Suppose first the registry hives do not have to be updated/recreated */
+    *ShouldUpdateRegistry = FALSE;
+
+    /* Acquire restore privilege */
+    Status = RtlAdjustPrivilege(SE_RESTORE_PRIVILEGE, TRUE, FALSE, &PrivilegeSet[0]);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlAdjustPrivilege(SE_RESTORE_PRIVILEGE) failed (Status 0x%08lx)\n", Status);
+        /* Exit prematurely here.... */
+        return Status;
+    }
+
+    /* Acquire backup privilege */
+    Status = RtlAdjustPrivilege(SE_BACKUP_PRIVILEGE, TRUE, FALSE, &PrivilegeSet[1]);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlAdjustPrivilege(SE_BACKUP_PRIVILEGE) failed (Status 0x%08lx)\n", Status);
+        RtlAdjustPrivilege(SE_RESTORE_PRIVILEGE, PrivilegeSet[0], FALSE, &PrivilegeSet[0]);
+        /* Exit prematurely here.... */
+        return Status;
+    }
+
+    for (i = 0; i < ARRAYSIZE(RegistryHives); ++i)
+    {
+        Status = VerifyRegistryHive(InstallPath, RegistryHives[i].HiveName);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Registry hive '%S' needs repair!\n", RegistryHives[i].HiveName);
+            RegistryHives[i].State = Repair;
+            *ShouldUpdateRegistry = TRUE;
+        }
+        else
+        {
+            RegistryHives[i].State = Update;
+        }
+    }
+
+    /** These hives are created by LSASS during 2nd stage setup */
+    for (i = 0; i < ARRAYSIZE(SecurityRegistryHives); ++i)
+    {
+        Status = VerifyRegistryHive(InstallPath, SecurityRegistryHives[i].HiveName);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Registry hive '%S' needs repair!\n", SecurityRegistryHives[i].HiveName);
+            SecurityRegistryHives[i].State = Repair;
+            /*
+             * Note that it's not the role of the 1st-stage installer to fix
+             * the security hives. This should be done at 2nd-stage installation
+             * by LSASS.
+             */
+        }
+        else
+        {
+            SecurityRegistryHives[i].State = Update;
+        }
+    }
+
+    /* Reset the status (we succeeded in checking all the hives) */
+    Status = STATUS_SUCCESS;
+
+    /* Remove restore and backup privileges */
+    RtlAdjustPrivilege(SE_BACKUP_PRIVILEGE, PrivilegeSet[1], FALSE, &PrivilegeSet[1]);
+    RtlAdjustPrivilege(SE_RESTORE_PRIVILEGE, PrivilegeSet[0], FALSE, &PrivilegeSet[0]);
+
+    return Status;
+}
+
 
 NTSTATUS
 RegInitializeRegistry(
@@ -839,25 +1082,6 @@ RegInitializeRegistry(
     BOOLEAN PrivilegeSet[2] = {FALSE, FALSE};
     ULONG Disposition;
     UINT i;
-    PCWSTR RegistryKeys[] =
-    {
-        L"SYSTEM",
-        L"SOFTWARE",
-        L"DEFAULT", // L".DEFAULT",
-        // L"SAM",
-        // L"SECURITY",
-        // L"BCD00000000",
-    };
-
-#if 0
-    /* Initialize the current session registry */
-    Status = NtInitializeRegistry(CM_BOOT_FLAG_SETUP);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtInitializeRegistry() failed (Status %lx)\n", Status);
-        return Status;
-    }
-#endif
 
     /* Acquire restore privilege */
     Status = RtlAdjustPrivilege(SE_RESTORE_PRIVILEGE, TRUE, FALSE, &PrivilegeSet[0]);
@@ -887,8 +1111,7 @@ RegInitializeRegistry(
      * See https://github.com/libyal/winreg-kb/blob/master/documentation/Registry%20files.asciidoc
      * for more information.
      */
-    RtlInitUnicodeString(&KeyName,
-                         L"\\Registry\\Machine\\SYSTEM\\$$$PROTO.HIV");
+    RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\SYSTEM\\$$$PROTO.HIV");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
@@ -908,14 +1131,18 @@ RegInitializeRegistry(
     }
     NtFlushKey(KeyHandle);
 
-    for (i = 0; i < ARRAYSIZE(RegistryKeys); ++i)
+    for (i = 0; i < ARRAYSIZE(RegistryHives); ++i)
     {
+        if (RegistryHives[i].State != Create && RegistryHives[i].State != Repair)
+            continue;
+
         Status = CreateRegistryFile(InstallPath,
-                                    RegistryKeys[i],
+                                    RegistryHives[i].HiveName,
+                                    RegistryHives[i].State != Repair, // RegistryHives[i].State == Create,
                                     KeyHandle);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("CreateRegistryFile(%S) failed, Status 0x%08lx\n", RegistryKeys[i], Status);
+            DPRINT1("CreateRegistryFile(%S) failed, Status 0x%08lx\n", RegistryHives[i].HiveName, Status);
             /* Exit prematurely here.... */
             /* That is now done, clean everything up! */
             NtDeleteKey(KeyHandle);
@@ -930,7 +1157,7 @@ RegInitializeRegistry(
 
 
     /*
-     * Prepare the installation roots. Since we cannot create real registry keys
+     * Prepare the registry root keys. Since we cannot create real registry keys
      * inside the master keys (\Registry, \Registry\Machine or \Registry\User),
      * we need to perform some SymLink tricks instead.
      */
@@ -948,7 +1175,7 @@ RegInitializeRegistry(
                          &ObjectAttributes,
                          0,
                          NULL,
-                         REG_OPTION_VOLATILE,
+                         REG_OPTION_NON_VOLATILE, // REG_OPTION_VOLATILE, // FIXME!
                          &Disposition);
     if (!NT_SUCCESS(Status))
     {
@@ -970,7 +1197,7 @@ RegInitializeRegistry(
                          &ObjectAttributes,
                          0,
                          NULL,
-                         REG_OPTION_VOLATILE,
+                         REG_OPTION_NON_VOLATILE, // REG_OPTION_VOLATILE, // FIXME!
                          &Disposition);
     if (!NT_SUCCESS(Status))
     {
@@ -980,72 +1207,61 @@ RegInitializeRegistry(
     RootKeys[GetPredefKeyIndex(HKEY_USERS)].Handle = KeyHandle;
 
 
-
     /*
      * Now properly mount the offline hive files
      */
-
-    /* Create SYSTEM key */
-    Status =
-    ConnectRegistry(NULL,
-                    InstallPath,
-                    RegistryKeys[0],
-                    // SystemSecurity, sizeof(SystemSecurity),
-                    L"\\Registry\\Machine\\USetup_SYSTEM");
-    if (!NT_SUCCESS(Status))
+    for (i = 0; i < ARRAYSIZE(RegistryHives); ++i)
     {
-        DPRINT1("ConnectRegistry(SYSTEM) failed, Status 0x%08lx\n", Status);
+        // if (RegistryHives[i].State != Create && RegistryHives[i].State != Repair)
+            // continue;
+
+        if (RegistryHives[i].State == Create || RegistryHives[i].State == Repair)
+        {
+            Status = ConnectRegistry(NULL,
+                                     RegistryHives[i].HiveRegistryPath,
+                                     InstallPath,
+                                     RegistryHives[i].HiveName
+                                     /* SystemSecurity, sizeof(SystemSecurity) */);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("ConnectRegistry(%S) failed, Status 0x%08lx\n", RegistryHives[i].HiveName, Status);
+            }
+
+            /* Create the registry symlink to this key */
+            if (!CmpLinkKeyToHive(RootKeys[GetPredefKeyIndex(RegistryHives[i].PredefKeyHandle)].Handle,
+                                  RegistryHives[i].RegSymLink,
+                                  RegistryHives[i].HiveRegistryPath))
+            {
+                DPRINT1("CmpLinkKeyToHive(%S) failed!\n", RegistryHives[i].HiveName);
+            }
+        }
+        else
+        {
+            /* Create *DUMMY* volatile hives just to make the update procedure work */
+
+            RtlInitUnicodeString(&KeyName, RegistryHives[i].RegSymLink);
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &KeyName,
+                                       OBJ_CASE_INSENSITIVE,
+                                       RootKeys[GetPredefKeyIndex(RegistryHives[i].PredefKeyHandle)].Handle,
+                                       NULL);
+            KeyHandle = NULL;
+            Status = NtCreateKey(&KeyHandle,
+                                 KEY_ALL_ACCESS,
+                                 &ObjectAttributes,
+                                 0,
+                                 NULL,
+                                 REG_OPTION_NON_VOLATILE, // REG_OPTION_VOLATILE, // FIXME!
+                                 &Disposition);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("NtCreateKey(%wZ) failed (Status 0x%08lx)\n", &KeyName, Status);
+                // return Status;
+            }
+            NtClose(KeyHandle);
+        }
     }
 
-    /* Create the 'HKLM\SYSTEM' symlink to this key */
-    if (!CmpLinkKeyToHive(RootKeys[GetPredefKeyIndex(HKEY_LOCAL_MACHINE)].Handle,
-                          L"SYSTEM",
-                          L"\\Registry\\Machine\\USetup_SYSTEM"))
-    {
-        DPRINT1("CmpLinkKeyToHive(SYSTEM) failed!\n");
-    }
-
-
-    /* Create SOFTWARE key */
-    Status =
-    ConnectRegistry(NULL,
-                    InstallPath,
-                    RegistryKeys[1],
-                    // SoftwareSecurity, sizeof(SoftwareSecurity),
-                    L"\\Registry\\Machine\\USetup_SOFTWARE");
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("ConnectRegistry(SOFTWARE) failed, Status 0x%08lx\n", Status);
-    }
-
-    /* Create the 'HKLM\Software' symlink to this key */
-    if (!CmpLinkKeyToHive(RootKeys[GetPredefKeyIndex(HKEY_LOCAL_MACHINE)].Handle,
-                          L"Software",
-                          L"\\Registry\\Machine\\USetup_SOFTWARE"))
-    {
-        DPRINT1("CmpLinkKeyToHive(SOFTWARE) failed!\n");
-    }
-
-
-    /* Create DEFAULT key */
-    Status =
-    ConnectRegistry(NULL,
-                    InstallPath,
-                    RegistryKeys[2],
-                    // SystemSecurity, sizeof(SystemSecurity),
-                    L"\\Registry\\User\\USetup_DEFAULT");
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("ConnectRegistry(DEFAULT) failed, Status 0x%08lx\n", Status);
-    }
-
-    /* Create the 'HKU\.DEFAULT' symlink to this key */
-    if (!CmpLinkKeyToHive(RootKeys[GetPredefKeyIndex(HKEY_USERS)].Handle,
-                          L".DEFAULT",
-                          L"\\Registry\\User\\USetup_DEFAULT"))
-    {
-        DPRINT1("CmpLinkKeyToHive(DEFAULT) failed!\n");
-    }
 
     /* HKCU is a handle to 'HKU\.DEFAULT' */
 #if 0
@@ -1091,12 +1307,13 @@ RegInitializeRegistry(
                                NULL);
 #endif
     KeyHandle = NULL;
+    /* We use NtCreateKey instead of NtOpenKey because Software\Classes doesn't exist originally */
     Status = NtCreateKey(&KeyHandle,
                          KEY_ALL_ACCESS,
                          &ObjectAttributes,
                          0,
                          NULL,
-                         0,
+                         REG_OPTION_NON_VOLATILE,
                          &Disposition);
     if (!NT_SUCCESS(Status))
     {
@@ -1111,31 +1328,11 @@ RegInitializeRegistry(
     RootKeys[GetPredefKeyIndex(HKEY_CLASSES_ROOT)].Handle = KeyHandle;
 
 
-#if 0
-    /* Create SAM key */
-    ConnectRegistry(NULL,
-                    &SamHive,
-                    // SystemSecurity, sizeof(SystemSecurity),
-                    L"\\Registry\\Machine\\USetup_SAM");
-
-    /* Create SECURITY key */
-    ConnectRegistry(NULL,
-                    &SecurityHive,
-                    // NULL, 0,
-                    L"\\Registry\\Machine\\USetup_SECURITY");
-
-    /* Create BCD key */
-    ConnectRegistry(NULL,
-                    &BcdHive,
-                    // BcdSecurity, sizeof(BcdSecurity),
-                    L"\\Registry\\Machine\\USetup_BCD00000000");
-#endif
-
     Status = STATUS_SUCCESS;
 
 
     /* Create the 'HKLM\SYSTEM\ControlSet001' key */
-    // L"\\Registry\\Machine\\SYSTEM\\USetup_Machine\\SYSTEM\\ControlSet001"
+    // REGISTRY_SETUP_MACHINE L"SYSTEM\\ControlSet001"
     RtlInitUnicodeString(&KeyName, L"SYSTEM\\ControlSet001");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
@@ -1165,10 +1362,13 @@ RegInitializeRegistry(
     /* Create the 'HKLM\SYSTEM\CurrentControlSet' symlink */
     if (!CmpLinkKeyToHive(RootKeys[GetPredefKeyIndex(HKEY_LOCAL_MACHINE)].Handle,
                           L"SYSTEM\\CurrentControlSet",
-                          L"\\Registry\\Machine\\SYSTEM\\USetup_Machine\\SYSTEM\\ControlSet001"))
+                          REGISTRY_SETUP_MACHINE L"SYSTEM\\ControlSet001"))
     {
         DPRINT1("CmpLinkKeyToHive(CurrentControlSet) failed!\n");
     }
+
+
+    Status = STATUS_SUCCESS;
 
 
 Quit:
@@ -1180,18 +1380,22 @@ Quit:
 }
 
 VOID
-RegCleanupRegistry(VOID)
+RegCleanupRegistry(
+    IN PUNICODE_STRING InstallPath)
 {
     NTSTATUS Status;
     UNICODE_STRING KeyName;
     OBJECT_ATTRIBUTES KeyObjectAttributes;
     BOOLEAN PrivilegeSet[2] = {FALSE, FALSE};
-    UCHAR i;
+    UINT i;
+    WCHAR SrcPath[MAX_PATH];
+    WCHAR DstPath[MAX_PATH];
 
     for (i = 0; i < ARRAYSIZE(RootKeys); ++i)
     {
         if (RootKeys[i].Handle)
         {
+            NtFlushKey(RootKeys[i].Handle);
             NtClose(RootKeys[i].Handle);
             RootKeys[i].Handle = NULL;
         }
@@ -1222,25 +1426,38 @@ RegCleanupRegistry(VOID)
                                NULL,
                                NULL);
 
-    RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\USetup_SYSTEM");
-    Status = NtUnloadKey(&KeyObjectAttributes);
+    for (i = 0; i < ARRAYSIZE(RegistryHives); ++i)
+    {
+        if (RegistryHives[i].State != Create && RegistryHives[i].State != Repair)
+            continue;
 
-    RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\USetup_SOFTWARE");
-    Status = NtUnloadKey(&KeyObjectAttributes);
+        RtlInitUnicodeString(&KeyName, RegistryHives[i].HiveRegistryPath);
+        Status = NtUnloadKey(&KeyObjectAttributes);
+        DPRINT1("Unmounting '%S' %s\n", RegistryHives[i].HiveRegistryPath, NT_SUCCESS(Status) ? "succeeded" : "failed");
+    }
 
-    RtlInitUnicodeString(&KeyName, L"\\Registry\\User\\USetup_DEFAULT");
-    Status = NtUnloadKey(&KeyObjectAttributes);
+    //
+    // RegBackupRegistry()
+    //
+    /* Now backup the hives into .sav files */
+    for (i = 0; i < ARRAYSIZE(RegistryHives); ++i)
+    {
+        if (RegistryHives[i].State != Create && RegistryHives[i].State != Repair)
+            continue;
 
-#if 0
-    RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\USetup_SAM");
-    Status = NtUnloadKey(&KeyObjectAttributes);
+        CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 3,
+                     InstallPath->Buffer, L"System32\\config", RegistryHives[i].HiveName);
+        StringCchCopyW(DstPath, ARRAYSIZE(DstPath), SrcPath);
+        StringCchCatW(DstPath, ARRAYSIZE(DstPath), L".sav");
 
-    RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\USetup_SECURITY");
-    Status = NtUnloadKey(&KeyObjectAttributes);
-
-    RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\USetup_BCD00000000");
-    Status = NtUnloadKey(&KeyObjectAttributes);
-#endif
+        DPRINT1("Copy hive: %S ==> %S\n", SrcPath, DstPath);
+        Status = SetupCopyFile(SrcPath, DstPath, FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("SetupCopyFile() failed (Status %lx)\n", Status);
+            // return Status;
+        }
+    }
 
     /* Remove restore and backup privileges */
     RtlAdjustPrivilege(SE_BACKUP_PRIVILEGE, PrivilegeSet[1], FALSE, &PrivilegeSet[1]);
