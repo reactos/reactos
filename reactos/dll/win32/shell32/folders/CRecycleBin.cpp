@@ -757,15 +757,15 @@ HRESULT WINAPI CRecycleBin::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, LPS
             // FIXME: We should in fact use a UNICODE version of _ILGetFileType
             szTypeName[0] = L'\0';
             wcscpy(buffer, PathFindExtensionW(pFileDetails->szName));
-            if (!( HCR_MapTypeToValueW(buffer, buffer, ARRAYSIZE(buffer), TRUE) &&
-                    HCR_MapTypeToValueW(buffer, szTypeName, ARRAYSIZE(szTypeName), FALSE )))
+            if (!( HCR_MapTypeToValueW(buffer, buffer, _countof(buffer), TRUE) &&
+                    HCR_MapTypeToValueW(buffer, szTypeName, _countof(szTypeName), FALSE )))
             {
                 /* load localized file string */
                 szTypeName[0] = '\0';
-                if(LoadStringW(shell32_hInstance, IDS_ANY_FILE, szTypeName, ARRAYSIZE(szTypeName)))
+                if(LoadStringW(shell32_hInstance, IDS_ANY_FILE, szTypeName, _countof(szTypeName)))
                 {
                     szTypeName[63] = '\0';
-                    StringCchPrintfW(buffer, ARRAYSIZE(buffer), szTypeName, PathFindExtensionW(pFileDetails->szName));
+                    StringCchPrintfW(buffer, _countof(buffer), szTypeName, PathFindExtensionW(pFileDetails->szName));
                 }
             }
             return SHSetStrRet(&pDetails->str, szTypeName);
