@@ -766,7 +766,7 @@ DceFreeWindowDCE(PWND Window)
 }
 
 void FASTCALL
-DceFreeClassDCE(HDC hDC)
+DceFreeClassDCE(PDCE pdceClass)
 {
    PDCE pDCE;
    PLIST_ENTRY ListEntry;
@@ -776,7 +776,7 @@ DceFreeClassDCE(HDC hDC)
    {
        pDCE = CONTAINING_RECORD(ListEntry, DCE, List);
        ListEntry = ListEntry->Flink;
-       if (pDCE->hDC == hDC)
+       if (pDCE == pdceClass)
        {
           DceFreeDCE(pDCE, TRUE); // Might have gone cheap!
        }
