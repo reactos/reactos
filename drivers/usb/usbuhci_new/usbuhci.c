@@ -145,6 +145,57 @@ UhciTakeControlHC(IN PUHCI_EXTENSION UhciExtension,
 
 MPSTATUS
 NTAPI
+UhciInitializeHardware(IN PUHCI_EXTENSION UhciExtension)
+{
+    PUSHORT BaseRegister;
+    UHCI_USB_COMMAND Command;
+    UHCI_USB_STATUS StatusMask;
+
+    DPRINT("UhciInitializeHardware: VIA HW FIXME\n");
+
+    BaseRegister = UhciExtension->BaseRegister;
+
+    /* Save SOF Timing Value */
+    UhciExtension->SOF_Modify = READ_PORT_UCHAR((PUCHAR)(BaseRegister +
+                                                UHCI_SOFMOD));
+
+    RegPacket.UsbPortWait(UhciExtension, 20);
+
+    Command.AsUSHORT = READ_PORT_USHORT(BaseRegister + UHCI_USBCMD);
+
+    /* Global Reset */
+    Command.AsUSHORT = 0;
+    Command.GlobalReset = 1;
+    WRITE_PORT_USHORT(BaseRegister + UHCI_USBCMD, Command.AsUSHORT);
+
+    RegPacket.UsbPortWait(UhciExtension, 20);
+
+    Command.AsUSHORT = 0;
+    WRITE_PORT_USHORT(BaseRegister + UHCI_USBCMD, Command.AsUSHORT);
+
+    /* Set MaxPacket for full speed bandwidth reclamation */
+    Command.AsUSHORT = 0;
+    Command.MaxPacket = 1; // 64 bytes
+    WRITE_PORT_USHORT(BaseRegister + UHCI_USBCMD, Command.AsUSHORT);
+
+    /* Restore SOF Timing Value */
+    WRITE_PORT_UCHAR((PUCHAR)(BaseRegister + UHCI_SOFMOD),
+                     UhciExtension->SOF_Modify);
+
+    StatusMask = UhciExtension->StatusMask;
+
+    StatusMask.Interrupt = 1;
+    StatusMask.ErrorInterrupt = 1;
+    StatusMask.ResumeDetect = 1;
+    StatusMask.HostSystemError = 1;
+
+    UhciExtension->StatusMask = StatusMask;
+
+    return MP_STATUS_SUCCESS;
+}
+
+MPSTATUS
+NTAPI
 UhciStartController(IN PVOID uhciExtension,
                     IN PUSBPORT_RESOURCES Resources)
 {
@@ -333,7 +384,8 @@ UhciEnableInterrupts(IN PVOID uhciExtension)
                                            PCI_LEGSUP,
                                            sizeof(USHORT));
 
-    DPRINT("UhciEnableInterrupts: FIXME StatusMask\n");
+    WRITE_PORT_USHORT(BaseRegister + UHCI_USBSTS,
+                      UhciExtension->StatusMask.AsUSHORT);
 }
 
 VOID

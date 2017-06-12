@@ -49,6 +49,10 @@ typedef struct _UHCI_EXTENSION {
   ULONG HcFlavor;
   PUHCI_HC_RESOURCES HcResourcesVA;
   PUHCI_HC_RESOURCES HcResourcesPA;
+  UHCI_USB_STATUS StatusMask;
+  USHORT Padded1;
+  UCHAR SOF_Modify;
+  UCHAR Padded2[3];
 } UHCI_EXTENSION, *PUHCI_EXTENSION;
 
 extern USBPORT_REGISTRATION_PACKET RegPacket;
