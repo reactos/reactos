@@ -634,27 +634,25 @@ END
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
-    IDS_SHV_COLUMN1 "Súbor"
-    IDS_SHV_COLUMN2 "Veľkosť"
-    IDS_SHV_COLUMN3 "Typ"
-    IDS_SHV_COLUMN4 "Modifikovaný"
-    IDS_SHV_COLUMN5 "Atribúty"
-    IDS_SHV_COLUMN6 "Veľkosť"
-    IDS_SHV_COLUMN7 "Veľkosť k dispozícii"
-    IDS_SHV_COLUMN8 "Názov" //Name
-    IDS_SHV_COLUMN9 "Poznámky" //Comments
-    IDS_SHV_COLUMN10 "Vlastník"
-    IDS_SHV_COLUMN11 "Skupina"
-    IDS_SHV_COLUMN12 "Filename"
-    IDS_SHV_COLUMN13 "Kategória"
+    IDS_SHV_COLUMN_NAME "Názov" //Name
+    IDS_SHV_COLUMN_SIZE "Veľkosť"
+    IDS_SHV_COLUMN_TYPE "Typ"
+    IDS_SHV_COLUMN_MODIFIED "Modifikovaný"
+    IDS_SHV_COLUMN_ATTRIBUTES "Atribúty"
+    IDS_SHV_COLUMN_DISK_CAPACITY "Veľkosť"
+    IDS_SHV_COLUMN_DISK_AVAILABLE "Veľkosť k dispozícii"
+    IDS_SHV_COLUMN_OWNER "Vlastník"
+    IDS_SHV_COLUMN_GROUP "Skupina"
+    IDS_SHV_COLUMN_FILENAME "Filename"
+    IDS_SHV_COLUMN_CATEGORY "Kategória"
     IDS_SHV_COLUMN_DELFROM "Pôvod" //Pôvodné umiestnenie
     IDS_SHV_COLUMN_DELDATE "Odstránený" //Dátum zmazania
     IDS_SHV_COLUMN_FONTTYPE "Fonttype"
     IDS_SHV_COLUMN_WORKGROUP "Workgroup"
-    IDS_SHV_NETWORKLOCATION "Network Location"
+    IDS_SHV_COLUMN_NETLOCATION "Network Location"
     IDS_SHV_COLUMN_DOCUMENTS "Dokumenty"
     IDS_SHV_COLUMN_STATUS "Stav"
-    IDS_SHV_COLUMN_COMMENTS "Comments"
+    IDS_SHV_COLUMN_COMMENTS "Poznámky" //Comments
     IDS_SHV_COLUMN_LOCATION "Location"
     IDS_SHV_COLUMN_MODEL "Model"
 

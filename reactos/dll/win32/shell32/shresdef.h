@@ -51,19 +51,27 @@
 /* Strings */
 
 /* Column titles for the shellview */
-#define IDS_SHV_COLUMN1        7
-#define IDS_SHV_COLUMN2        8
-#define IDS_SHV_COLUMN3        9
-#define IDS_SHV_COLUMN4        10
-#define IDS_SHV_COLUMN5        11
-#define IDS_SHV_COLUMN6        12
-#define IDS_SHV_COLUMN7        13
-#define IDS_SHV_COLUMN8        14
-#define IDS_SHV_COLUMN9        15
-#define IDS_SHV_COLUMN10       16
-#define IDS_SHV_COLUMN11       17
+#define IDS_SHV_COLUMN_NAME        7
+#define IDS_SHV_COLUMN_SIZE        8
+#define IDS_SHV_COLUMN_TYPE        9
+#define IDS_SHV_COLUMN_MODIFIED        10
+#define IDS_SHV_COLUMN_ATTRIBUTES        11
+#define IDS_SHV_COLUMN_DISK_CAPACITY        12
+#define IDS_SHV_COLUMN_DISK_AVAILABLE        13
+#define IDS_SHV_COLUMN_OWNER       16
+#define IDS_SHV_COLUMN_GROUP       17
 #define IDS_SHV_COLUMN_DELFROM 18
 #define IDS_SHV_COLUMN_DELDATE 19
+#define IDS_SHV_COLUMN_FONTTYPE  311
+#define IDS_SHV_COLUMN_FILENAME         312
+#define IDS_SHV_COLUMN_CATEGORY         313
+#define IDS_SHV_COLUMN_WORKGROUP 314
+#define IDS_SHV_COLUMN_NETLOCATION  315
+#define IDS_SHV_COLUMN_DOCUMENTS 319
+#define IDS_SHV_COLUMN_STATUS    320
+#define IDS_SHV_COLUMN_COMMENTS  321
+#define IDS_SHV_COLUMN_LOCATION  322
+#define IDS_SHV_COLUMN_MODEL     323
 
 #define IDS_DESKTOP 20
 
@@ -190,19 +198,9 @@
 #define IDS_FILE_FOLDER          308
 #define IDS_CREATELINK           309
 #define IDS_INSTALLNEWFONT       310
-#define IDS_SHV_COLUMN_FONTTYPE  311
-#define IDS_SHV_COLUMN12         312
-#define IDS_SHV_COLUMN13         313
-#define IDS_SHV_COLUMN_WORKGROUP 314
-#define IDS_SHV_NETWORKLOCATION  315
 #define IDS_COPY                 316
 #define IDS_DELETE               317
 #define IDS_PROPERTIES           318
-#define IDS_SHV_COLUMN_DOCUMENTS 319
-#define IDS_SHV_COLUMN_STATUS    320
-#define IDS_SHV_COLUMN_COMMENTS  321
-#define IDS_SHV_COLUMN_LOCATION  322
-#define IDS_SHV_COLUMN_MODEL     323
 #define IDS_CUT                  324
 #define IDS_RESTORE              325
 #define IDS_DEFAULT_CLUSTER_SIZE 326
