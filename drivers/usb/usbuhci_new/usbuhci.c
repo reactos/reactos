@@ -196,6 +196,17 @@ UhciInitializeHardware(IN PUHCI_EXTENSION UhciExtension)
 
 MPSTATUS
 NTAPI
+UhciInitializeSchedule(IN PUHCI_EXTENSION UhciExtension,
+                       IN PUHCI_HC_RESOURCES HcResourcesVA,
+                       IN PUHCI_HC_RESOURCES HcResourcesPA)
+{
+    DPRINT("UhciInitializeSchedule: UNIMPLEMENTED. FIXME\n");
+//ASSERT(FALSE);
+    return MP_STATUS_SUCCESS;
+}
+
+MPSTATUS
+NTAPI
 UhciStartController(IN PVOID uhciExtension,
                     IN PUSBPORT_RESOURCES Resources)
 {
@@ -218,7 +229,7 @@ UhciStartController(IN PVOID uhciExtension,
     {
         MpStatus = UhciInitializeHardware(UhciExtension);
 
-        if (!MpStatus)
+        if (MpStatus == MP_STATUS_SUCCESS)
         {
             UhciExtension->HcResourcesVA = Resources->StartVA;
             UhciExtension->HcResourcesPA = Resources->StartPA;
@@ -232,7 +243,7 @@ UhciStartController(IN PVOID uhciExtension,
     WRITE_PORT_ULONG((PULONG)(BaseRegister + UHCI_FRBASEADD),
                      (ULONG)UhciExtension->HcResourcesPA->FrameList);
 
-ASSERT(FALSE);
+//ASSERT(FALSE);
     DPRINT("UhciStartController: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
 }
