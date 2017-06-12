@@ -637,7 +637,7 @@ HRESULT WINAPI CRegFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *
 
 HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
 {
-    if (!psd || iColumn >= 2)
+    if (!psd)
         return E_INVALIDARG;
 
     GUID const *clsid = _ILGetGUIDPointer (pidl);
@@ -648,20 +648,31 @@ HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
         return E_INVALIDARG;
     }
 
+    if (iColumn >= 3)
+    {
+        /* Return an empty string when we area asked for a column we don't support. 
+           Only  the regfolder is supposed to do this as it supports less columns compared to other folder
+           and its contents are supposed to be presented alongside items that support more columns. */
+        return SHSetStrRet(&psd->str, "");
+    }
+
     switch(iColumn)
     {
         case 0:        /* name */
             return GetDisplayNameOf(pidl, SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
-        case 1:        /* comment */
+        case 1:        /* comments */
             HKEY hKey;
-            if (HCR_RegOpenClassIDKey(*clsid, &hKey))
-            {
-                psd->str.cStr[0] = 0x00;
-                psd->str.uType = STRRET_CSTR;
-                RegLoadMUIStringA(hKey, "InfoTip", psd->str.cStr, MAX_PATH, NULL, 0, NULL);
-                RegCloseKey(hKey);
-                return S_OK;
-            }
+            if (!HCR_RegOpenClassIDKey(*clsid, &hKey))
+                return SHSetStrRet(&psd->str, "");
+
+            psd->str.cStr[0] = 0x00;
+            psd->str.uType = STRRET_CSTR;
+            RegLoadMUIStringA(hKey, "InfoTip", psd->str.cStr, MAX_PATH, NULL, 0, NULL);
+            RegCloseKey(hKey);
+            return S_OK;
+        case 2:        /* type */
+            //return SHSetStrRet(&psd->str, resource_id); /* FIXME: translate */
+            return SHSetStrRet(&psd->str, "System Folder");
     }
     return E_FAIL;
 }
