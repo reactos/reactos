@@ -4,7 +4,6 @@
 #include <ntddk.h>
 #include <windef.h>
 #include <stdio.h>
-#include <wdm.h>
 #include <hubbusif.h>
 #include <usbbusif.h>
 #include <usbdlib.h>
@@ -111,8 +110,8 @@ typedef struct _OHCI_EXTENSION {
   OHCI_REG_FRAME_INTERVAL FrameInterval;
   ULONG FrameHighPart;
   ULONG HcdFmNumber;
-  ULONG HcResourcesVA;
-  ULONG HcResourcesPA;
+  ULONG_PTR HcResourcesVA;
+  ULONG_PTR HcResourcesPA;
   PVOID ScheduleStartVA;
   PVOID ScheduleStartPA;
   OHCI_STATIC_ED IntStaticED[63];
