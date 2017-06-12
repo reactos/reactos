@@ -41,15 +41,14 @@ typedef struct _UHCI_TRANSFER {
 } UHCI_TRANSFER, *PUHCI_TRANSFER;
 
 typedef struct _UHCI_HC_RESOURCES {
-  UCHAR Padded[0x2000];
-} UHCI_HC_RESOURCES, *PUHCI_HC_RESOURCES;
-
-typedef struct _UHCI_HC_RESOURCES {
   PUHCI_HCD_QH FrameList[UHCI_FRAME_LIST_MAX_ENTRIES]; // The 4-Kbyte Frame List Table is aligned on a 4-Kbyte boundary
 } UHCI_HC_RESOURCES, *PUHCI_HC_RESOURCES;
 
 typedef struct _UHCI_EXTENSION {
-  ULONG Reserved;
+  PUSHORT BaseRegister;
+  ULONG HcFlavor;
+  PUHCI_HC_RESOURCES HcResourcesVA;
+  PUHCI_HC_RESOURCES HcResourcesPA;
 } UHCI_EXTENSION, *PUHCI_EXTENSION;
 
 extern USBPORT_REGISTRATION_PACKET RegPacket;

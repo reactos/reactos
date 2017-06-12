@@ -3,9 +3,7 @@
 //#define NDEBUG
 #include <debug.h>
 
-
 USBPORT_REGISTRATION_PACKET RegPacket;
-
 
 MPSTATUS
 NTAPI
@@ -50,6 +48,40 @@ NTAPI
 UhciStartController(IN PVOID uhciExtension,
                     IN PUSBPORT_RESOURCES Resources)
 {
+    PUHCI_EXTENSION UhciExtension;
+    PUSHORT BaseRegister;
+    MPSTATUS MpStatus;
+
+    UhciExtension = uhciExtension;
+
+    DPRINT("UhciStartController: uhciExtension - %p\n", uhciExtension);
+
+    UhciExtension->BaseRegister = Resources->ResourceBase;
+    BaseRegister = UhciExtension->BaseRegister;
+
+    UhciExtension->HcFlavor = Resources->HcFlavor;
+
+    MpStatus = UhciTakeControlHC(UhciExtension, Resources);
+
+    if (MpStatus == MP_STATUS_SUCCESS)
+    {
+        MpStatus = UhciInitializeHardware(UhciExtension);
+
+        if (!MpStatus)
+        {
+            UhciExtension->HcResourcesVA = Resources->StartVA;
+            UhciExtension->HcResourcesPA = Resources->StartPA;
+
+            MpStatus = UhciInitializeSchedule(UhciExtension,
+                                              UhciExtension->HcResourcesVA,
+                                              UhciExtension->HcResourcesPA);
+        }
+    }
+
+    WRITE_PORT_ULONG((PULONG)(BaseRegister + UHCI_FRBASEADD),
+                     (ULONG)UhciExtension->HcResourcesPA->FrameList);
+
+ASSERT(FALSE);
     DPRINT("UhciStartController: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
 }
