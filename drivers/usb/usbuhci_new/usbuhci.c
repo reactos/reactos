@@ -318,7 +318,28 @@ VOID
 NTAPI
 UhciDisableInterrupts(IN PVOID uhciExtension)
 {
-    DPRINT("UhciDisableInterrupts: UNIMPLEMENTED. FIXME\n");
+    PUHCI_EXTENSION UhciExtension = uhciExtension;
+    ULONG HcFlavor;
+    UHCI_PCI_LEGSUP LegacySupport;
+
+    WRITE_PORT_USHORT(UhciExtension->BaseRegister + UHCI_USBSTS, 0);
+
+    HcFlavor = UhciExtension->HcFlavor;
+    DPRINT("UhciDisableInterrupts: FIXME HcFlavor - %lx\n", HcFlavor);
+
+    RegPacket.UsbPortReadWriteConfigSpace(UhciExtension,
+                                           TRUE,
+                                           &LegacySupport.AsUSHORT,
+                                           PCI_LEGSUP,
+                                           sizeof(USHORT));
+
+    LegacySupport.UsbPIRQ = 0;
+
+    RegPacket.UsbPortReadWriteConfigSpace(UhciExtension,
+                                           FALSE,
+                                           &LegacySupport.AsUSHORT,
+                                           PCI_LEGSUP,
+                                           sizeof(USHORT));
 }
 
 VOID

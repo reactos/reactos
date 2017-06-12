@@ -161,4 +161,10 @@ NTAPI
 UhciRHEnableIrq(
   IN PVOID uhciExtension);
 
+/* usbuhci.c */
+VOID
+NTAPI
+UhciDisableInterrupts(
+  IN PVOID uhciExtension);
+
 #endif /* USBUHCI_H__ */
