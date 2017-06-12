@@ -551,6 +551,7 @@ CheckUnattendedSetup(VOID)
     wcscpy(UnattendInstallationDirectory, Value);
 
     IsUnattendedSetup = TRUE;
+    DPRINT("Running unattended setup\n");
 
     /* Search for 'MBRInstallType' in the 'Unattend' section */
     if (SetupFindFirstLineW(UnattendInf, L"Unattend", L"MBRInstallType", &Context))
@@ -589,8 +590,6 @@ CheckUnattendedSetup(VOID)
     }
 
     SetupCloseInfFile(UnattendInf);
-
-    DPRINT("Running unattended setup\n");
 }
 
 
@@ -1503,7 +1502,7 @@ IsDiskSizeValid(PPARTENTRY PartEntry)
 
     if (size < RequiredPartitionDiskSpace)
     {
-        /* partition is too small so ask for another partition */
+        /* Partition is too small so ask for another one */
         DPRINT1("Partition is too small (size: %I64u MB), required disk space is %lu MB\n", size, RequiredPartitionDiskSpace);
         return FALSE;
     }
@@ -3291,6 +3290,22 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     DiskEntry = PartitionList->CurrentDisk;
     PartEntry = PartitionList->CurrentPartition;
 
+#if 0
+    if (RepairUpdateFlag)
+    {
+        if (!IsValidPath(CurrentInstallation->PathComponent)) // SystemNtPath
+        {
+            /* FIXME: Log the error? */
+            return QUIT_PAGE;
+        }
+
+        BuildInstallPaths(CurrentInstallation->PathComponent, // SystemNtPath
+                          DiskEntry,
+                          PartEntry);
+
+        return PREPARE_COPY_PAGE;
+    }
+#endif
     if (IsUnattendedSetup)
     {
         if (!IsValidPath(UnattendInstallationDirectory))
@@ -4057,20 +4072,34 @@ FileCopyPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 RegistryPage(PINPUT_RECORD Ir)
 {
+    NTSTATUS Status;
     INFCONTEXT InfContext;
     PWSTR Action;
     PWSTR File;
     PWSTR Section;
     BOOLEAN Delete;
-    NTSTATUS Status;
 
     MUIDisplayPage(REGISTRY_PAGE);
 
     if (RepairUpdateFlag)
     {
-        // FIXME!
-        DPRINT1("FIXME: Updating / repairing the registry is NOT implemented yet!\n");
-        return SUCCESS_PAGE;
+        BOOLEAN ShouldUpdateRegistry = FALSE;
+
+        DPRINT1("TODO: Updating / repairing the registry is not completely implemented yet!\n");
+
+        /* Verify the registry hives and check whether we need to update or repair any of them */
+        Status = VerifyRegistryHives(&DestinationPath, &ShouldUpdateRegistry);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("VerifyRegistryHives failed, Status 0x%08lx\n", Status);
+            ShouldUpdateRegistry = FALSE;
+        }
+        if (!ShouldUpdateRegistry)
+        {
+            DPRINT1("No need to update the registry\n");
+            // return SUCCESS_PAGE;
+            goto Quit;
+        }
     }
 
     /* Initialize the registry and setup the default installation hives */
@@ -4087,7 +4116,7 @@ RegistryPage(PINPUT_RECORD Ir)
         else
         /*************************************/
         {
-            /* Something else (correct) failed */
+            /* Something else failed */
             MUIDisplayError(ERROR_CREATE_HIVE, Ir, POPUP_WAIT_ENTER);
         }
         return QUIT_PAGE;
@@ -4099,9 +4128,8 @@ RegistryPage(PINPUT_RECORD Ir)
     if (!SetupFindFirstLineW(SetupInf, L"HiveInfs.Install", NULL, &InfContext))
     {
         DPRINT1("SetupFindFirstLine() failed\n");
-        RegCleanupRegistry();
         MUIDisplayError(ERROR_FIND_REGISTRY, Ir, POPUP_WAIT_ENTER);
-        return QUIT_PAGE;
+        goto Cleanup;
     }
 
     do
@@ -4116,27 +4144,19 @@ RegistryPage(PINPUT_RECORD Ir)
             break; // Hackfix
 
         if (!_wcsicmp(Action, L"AddReg"))
-        {
             Delete = FALSE;
-        }
         else if (!_wcsicmp(Action, L"DelReg"))
-        {
             Delete = TRUE;
-        }
         else
-        {
             continue;
-        }
 
         CONSOLE_SetStatusText(MUIGetString(STRING_IMPORTFILE), File);
 
         if (!ImportRegistryFile(File, Section, LanguageId, Delete))
         {
             DPRINT1("Importing %S failed\n", File);
-
-            RegCleanupRegistry();
             MUIDisplayError(ERROR_IMPORT_HIVE, Ir, POPUP_WAIT_ENTER);
-            return QUIT_PAGE;
+            goto Cleanup;
         }
     } while (SetupFindNextLine(&InfContext, &InfContext));
 
@@ -4144,35 +4164,31 @@ RegistryPage(PINPUT_RECORD Ir)
     CONSOLE_SetStatusText(MUIGetString(STRING_DISPLAYETTINGSUPDATE));
     if (!ProcessDisplayRegistry(SetupInf, DisplayList))
     {
-        RegCleanupRegistry();
         MUIDisplayError(ERROR_UPDATE_DISPLAY_SETTINGS, Ir, POPUP_WAIT_ENTER);
-        return QUIT_PAGE;
+        goto Cleanup;
     }
 
     /* Set the locale */
     CONSOLE_SetStatusText(MUIGetString(STRING_LOCALESETTINGSUPDATE));
     if (!ProcessLocaleRegistry(LanguageList))
     {
-        RegCleanupRegistry();
         MUIDisplayError(ERROR_UPDATE_LOCALESETTINGS, Ir, POPUP_WAIT_ENTER);
-        return QUIT_PAGE;
+        goto Cleanup;
     }
 
     /* Add keyboard layouts */
     CONSOLE_SetStatusText(MUIGetString(STRING_ADDKBLAYOUTS));
     if (!AddKeyboardLayouts())
     {
-        RegCleanupRegistry();
         MUIDisplayError(ERROR_ADDING_KBLAYOUTS, Ir, POPUP_WAIT_ENTER);
-        return QUIT_PAGE;
+        goto Cleanup;
     }
 
     /* Set GeoID */
     if (!SetGeoID(MUIGetGeoID()))
     {
-        RegCleanupRegistry();
         MUIDisplayError(ERROR_UPDATE_GEOID, Ir, POPUP_WAIT_ENTER);
-        return QUIT_PAGE;
+        goto Cleanup;
     }
 
     if (!IsUnattendedSetup)
@@ -4181,9 +4197,8 @@ RegistryPage(PINPUT_RECORD Ir)
         CONSOLE_SetStatusText(MUIGetString(STRING_KEYBOARDSETTINGSUPDATE));
         if (!ProcessKeyboardLayoutRegistry(LayoutList))
         {
-            RegCleanupRegistry();
             MUIDisplayError(ERROR_UPDATE_KBSETTINGS, Ir, POPUP_WAIT_ENTER);
-            return QUIT_PAGE;
+            goto Cleanup;
         }
     }
 
@@ -4191,26 +4206,34 @@ RegistryPage(PINPUT_RECORD Ir)
     CONSOLE_SetStatusText(MUIGetString(STRING_CODEPAGEINFOUPDATE));
     if (!AddCodePage())
     {
-        RegCleanupRegistry();
         MUIDisplayError(ERROR_ADDING_CODEPAGE, Ir, POPUP_WAIT_ENTER);
-        return QUIT_PAGE;
+        goto Cleanup;
     }
 
     /* Set the default pagefile entry */
     SetDefaultPagefile(DestinationDriveLetter);
 
     /* Update the mounted devices list */
+    // FIXME: This should technically be done by mountmgr (if AutoMount is enabled)!
     SetMountedDeviceValues(PartitionList);
 
+Cleanup:
     //
     // TODO: Unload all the registry stuff, perform cleanup,
-    // and copy the created hive files into .sav ones.
+    // and copy the created hive files into .sav files.
     //
-    RegCleanupRegistry();
+    RegCleanupRegistry(&DestinationPath);
 
-    CONSOLE_SetStatusText(MUIGetString(STRING_DONE));
-
-    return BOOT_LOADER_PAGE;
+Quit:
+    if (NT_SUCCESS(Status))
+    {
+        CONSOLE_SetStatusText(MUIGetString(STRING_DONE));
+        return BOOT_LOADER_PAGE;
+    }
+    else
+    {
+        return QUIT_PAGE;
+    }
 }
 
 
