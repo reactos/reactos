@@ -311,7 +311,29 @@ VOID
 NTAPI
 UhciEnableInterrupts(IN PVOID uhciExtension)
 {
-    DPRINT("UhciEnableInterrupts: UNIMPLEMENTED. FIXME\n");
+    PUHCI_EXTENSION UhciExtension = uhciExtension;
+    PUSHORT BaseRegister;
+    UHCI_PCI_LEGSUP LegacySupport;
+
+    DPRINT("UhciEnableInterrupts: ...\n");
+
+    BaseRegister = UhciExtension->BaseRegister;
+
+    RegPacket.UsbPortReadWriteConfigSpace(UhciExtension,
+                                           TRUE,
+                                           &LegacySupport.AsUSHORT,
+                                           PCI_LEGSUP,
+                                           sizeof(USHORT));
+
+    LegacySupport.UsbPIRQ = 1;
+
+    RegPacket.UsbPortReadWriteConfigSpace(UhciExtension,
+                                           FALSE,
+                                           &LegacySupport.AsUSHORT,
+                                           PCI_LEGSUP,
+                                           sizeof(USHORT));
+
+    DPRINT("UhciEnableInterrupts: FIXME StatusMask\n");
 }
 
 VOID
