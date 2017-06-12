@@ -45,6 +45,106 @@ UhciCloseEndpoint(IN PVOID uhciExtension,
 
 MPSTATUS
 NTAPI
+UhciTakeControlHC(IN PUHCI_EXTENSION UhciExtension,
+                  IN PUSBPORT_RESOURCES Resources)
+{
+    LARGE_INTEGER FirstTime;
+    LARGE_INTEGER CurrentTime;
+    ULONG ResourcesTypes;
+    PUSHORT BaseRegister;
+    PUSHORT StatusRegister;
+    UHCI_PCI_LEGSUP LegacySupport;
+    UHCI_USB_COMMAND Command;
+    UHCI_USB_STATUS HcStatus;
+    MPSTATUS MpStatus = MP_STATUS_SUCCESS;
+
+    DPRINT("UhciTakeControlHC: Resources->ResourcesTypes - %x\n",
+           Resources->ResourcesTypes);
+
+    ResourcesTypes = Resources->ResourcesTypes;
+
+    if ((ResourcesTypes & (USBPORT_RESOURCES_PORT | USBPORT_RESOURCES_INTERRUPT)) !=
+                          (USBPORT_RESOURCES_PORT | USBPORT_RESOURCES_INTERRUPT))
+    {
+        MpStatus = MP_STATUS_ERROR;
+    }
+
+    BaseRegister = UhciExtension->BaseRegister;
+    StatusRegister = BaseRegister + UHCI_USBSTS;
+
+    RegPacket.UsbPortReadWriteConfigSpace(UhciExtension,
+                                           TRUE,
+                                           &LegacySupport.AsUSHORT,
+                                           PCI_LEGSUP,
+                                           sizeof(USHORT));
+
+    UhciDisableInterrupts(UhciExtension);
+
+    Command.AsUSHORT = READ_PORT_USHORT(BaseRegister + UHCI_USBCMD);
+
+    Command.Run = 0;
+    Command.GlobalReset = 0;
+    Command.ConfigureFlag = 0;
+
+    WRITE_PORT_USHORT(UhciExtension->BaseRegister + UHCI_USBCMD,
+                      Command.AsUSHORT);
+
+    KeQuerySystemTime(&FirstTime);
+    FirstTime.QuadPart += 100 * 10000; // 100 ms.
+
+    HcStatus.AsUSHORT = READ_PORT_USHORT(StatusRegister);
+
+    while (HcStatus.HcHalted == 0)
+    {
+        HcStatus.AsUSHORT = READ_PORT_USHORT(StatusRegister);
+
+        KeQuerySystemTime(&CurrentTime);
+
+        if (CurrentTime.QuadPart < FirstTime.QuadPart)
+        {
+            break;
+        }
+    }
+
+    HcStatus.Interrupt = 1;
+    HcStatus.ErrorInterrupt = 1;
+    HcStatus.ResumeDetect = 1;
+    HcStatus.HostSystemError = 1;
+    HcStatus.HcProcessError = 1;
+    HcStatus.HcHalted = 1;
+
+    WRITE_PORT_USHORT(StatusRegister, HcStatus.AsUSHORT);
+
+    if (LegacySupport.Smi60Read == 1 ||
+        LegacySupport.Smi60Write == 1 || 
+        LegacySupport.Smi64Read == 1 ||
+        LegacySupport.Smi64Write == 1 ||
+        LegacySupport.SmiIrq == 1 ||
+        LegacySupport.A20Gate == 1 ||
+        LegacySupport.SmiEndPassThrough == 1)
+    {
+        Resources->LegacySupport = 1;
+
+        RegPacket.UsbPortReadWriteConfigSpace(UhciExtension,
+                                               TRUE,
+                                               &LegacySupport.AsUSHORT,
+                                               PCI_LEGSUP,
+                                               sizeof(USHORT));
+
+        LegacySupport.AsUSHORT = 0;
+
+        RegPacket.UsbPortReadWriteConfigSpace(UhciExtension,
+                                               FALSE,
+                                               &LegacySupport.AsUSHORT,
+                                               PCI_LEGSUP,
+                                               sizeof(USHORT));
+    }
+
+    return MpStatus;
+}
+
+MPSTATUS
+NTAPI
 UhciStartController(IN PVOID uhciExtension,
                     IN PUSBPORT_RESOURCES Resources)
 {
