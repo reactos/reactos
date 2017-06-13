@@ -448,9 +448,14 @@ UserEnumClipboardFormats(UINT fmt)
     {
         /* Return next format */
         pElement = IntGetFormatElement(pWinStaObj, fmt);
-        ++pElement;
-        if (pElement < &pWinStaObj->pClipBase[pWinStaObj->cNumClipFormats])
-            Ret = pElement->fmt;
+        if (pElement != NULL)
+        {
+            ++pElement;
+            if (pElement < &pWinStaObj->pClipBase[pWinStaObj->cNumClipFormats])
+            {
+                Ret = pElement->fmt;
+            }
+        }
     }
 
 cleanup:
