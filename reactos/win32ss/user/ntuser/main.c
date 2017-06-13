@@ -708,6 +708,8 @@ ExitThreadCallback(PETHREAD Thread)
     ptiCurrent->TIF_flags |= TIF_DONTATTACHQUEUE;
     ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
 
+    UserCloseClipboard();
+
     /* Decrement thread count and check if its 0 */
     ppiCurrent->cThreads--;
 
