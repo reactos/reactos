@@ -599,7 +599,7 @@ SubstituteFontRecurse(LOGFONTW* pLogFont)
         if (!Found)
             break;
 
-        RtlStringCbCopyW(pLogFont->lfFaceName, LF_FACESIZE, OutputNameW.Buffer);
+        RtlStringCchCopyW(pLogFont->lfFaceName, LF_FACESIZE, OutputNameW.Buffer);
 
         if (CharSetMap[FONTSUBST_FROM] == DEFAULT_CHARSET ||
             CharSetMap[FONTSUBST_FROM] == pLogFont->lfCharSet)
