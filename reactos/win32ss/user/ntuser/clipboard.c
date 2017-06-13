@@ -993,7 +993,8 @@ UserSetClipboardData(UINT fmt, HANDLE hData, PSETCLIPBDATA scd)
      * - in case of delayed rendering, the clipboard must be already opened
      *   by another application, but we need to be the clipboard owner.
      */
-    if ((!pWinStaObj->fInDelayedRendering && !IntIsClipboardOpenByMe(pWinStaObj)) ||
+    if (!fmt ||
+        (!pWinStaObj->fInDelayedRendering && !IntIsClipboardOpenByMe(pWinStaObj)) ||
         (pWinStaObj->fInDelayedRendering && !(pWinStaObj->ptiClipLock &&
          pWinStaObj->spwndClipOwner->head.pti == PsGetCurrentThreadWin32Thread())))
     {
