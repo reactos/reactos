@@ -34,6 +34,7 @@ HKCR,"rtffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\wordpad.exe
 HKCR,"rtffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\wordpad.exe,-103"
 HKCR,"rtffile\shell\open","",0x00000000,"Open"
 HKCR,"rtffile\shell\open\command","",0x00020000,"%SystemRoot%\system32\wordpad.exe %1"
+HKCR,"rtffile\shell\print\command","",0x00020000,"%SystemRoot%\system32\wordpad.exe /p ""%1"""
 
 ; Virtual Device Drivers
 HKCR,".386","",0x00000000,"vxdfile"
