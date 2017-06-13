@@ -37,6 +37,7 @@ UINT
 WINAPI
 EnumClipboardFormats(UINT format)
 {
+    SetLastError(NO_ERROR);
     return NtUserxEnumClipboardFormats(format);
 }
 
