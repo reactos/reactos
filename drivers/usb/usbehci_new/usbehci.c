@@ -2508,7 +2508,7 @@ EHCI_SetAsyncEndpointState(IN PEHCI_EXTENSION EhciExtension,
 
             break;
 
-        case USBPORT_ENDPOINT_CLOSED:
+        case USBPORT_ENDPOINT_REMOVE:
             QH->sqh.QhFlags |= EHCI_QH_FLAG_CLOSED;
 
             if (TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
