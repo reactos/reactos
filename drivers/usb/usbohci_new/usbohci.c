@@ -1788,7 +1788,7 @@ OHCI_GetEndpointState(IN PVOID ohciExtension,
 
     if (ED->Flags & 0x10)
     {
-        return USBPORT_ENDPOINT_CLOSED;
+        return USBPORT_ENDPOINT_REMOVE;
     }
 
     if (ED->HwED.EndpointControl.sKip)
@@ -1866,7 +1866,7 @@ OHCI_SetEndpointState(IN PVOID ohciExtension,
             OHCI_EnableList(OhciExtension, OhciEndpoint);
             break;
 
-        case USBPORT_ENDPOINT_CLOSED:
+        case USBPORT_ENDPOINT_REMOVE:
             ED->HwED.EndpointControl.sKip = 1;
             ED->Flags |= 0x10;
             OHCI_RemoveEndpointFromSchedule(OhciEndpoint);
