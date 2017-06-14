@@ -11,6 +11,7 @@
 #include "netapi32.h"
 
 #include <rpc.h>
+#include <lmbrowsr.h>
 #include "browser_c.h"
 
 
@@ -75,16 +76,46 @@ BROWSER_IDENTIFY_HANDLE_unbind(BROWSER_IDENTIFY_HANDLE pszSystemName,
 
 NET_API_STATUS
 WINAPI
+I_BrowserQueryEmulatedDomains(
+    _In_opt_ LPWSTR ServerName,
+    _Out_ PBROWSER_EMULATED_DOMAIN *EmulatedDomains,
+    _Out_ LPDWORD EntriesRead)
+{
+    FIXME("I_BrowserQueryEmulatedDomains(%s %p %p)\n",
+          debugstr_w(ServerName), EmulatedDomains, EntriesRead);
+
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
+I_BrowserSetNetlogonState(
+    _In_ LPWSTR ServerName,
+    _In_ LPWSTR DomainName,
+    _In_ LPWSTR EmulatedServerName,
+    _In_ DWORD Role)
+{
+    FIXME("I_BrowserSetNetlogonState(%s %s %s %lu)\n",
+          debugstr_w(ServerName), debugstr_w(ServerName),
+          debugstr_w(EmulatedServerName), Role);
+
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
 NetServerEnum(
-    LMCSTR servername,
-    DWORD level,
-    LPBYTE *bufptr,
-    DWORD prefmaxlen,
-    LPDWORD entriesread,
-    LPDWORD totalentries,
-    DWORD servertype,
-    LMCSTR domain,
-    LPDWORD resume_handle)
+    _In_opt_ LMCSTR servername,
+    _In_ DWORD level,
+    _Out_ LPBYTE *bufptr,
+    _In_ DWORD prefmaxlen,
+    _Out_ LPDWORD entriesread,
+    _Out_ LPDWORD totalentries,
+    _In_ DWORD servertype,
+    _In_opt_ LMCSTR domain,
+    _Inout_opt_ LPDWORD resume_handle)
 {
     FIXME("NetServerEnum(%s %lu %p %lu %p %p %lu %s %p)\n",
           debugstr_w(servername), level, bufptr, prefmaxlen, entriesread,
@@ -97,15 +128,15 @@ NetServerEnum(
 NET_API_STATUS
 WINAPI
 NetServerEnumEx(
-    LMCSTR ServerName,
-    DWORD Level,
-    LPBYTE *Bufptr,
-    DWORD PrefMaxlen,
-    LPDWORD EntriesRead,
-    LPDWORD totalentries,
-    DWORD servertype,
-    LMCSTR domain,
-    LMCSTR FirstNameToReturn)
+    _In_opt_ LMCSTR ServerName,
+    _In_ DWORD Level,
+    _Out_ LPBYTE *Bufptr,
+    _In_ DWORD PrefMaxlen,
+    _Out_ LPDWORD EntriesRead,
+    _Out_ LPDWORD totalentries,
+    _In_ DWORD servertype,
+    _In_opt_ LMCSTR domain,
+    _In_opt_ LMCSTR FirstNameToReturn)
 {
     FIXME("NetServerEnumEx(%s %lu %p %lu %p %p %lu %s %s)\n",
            debugstr_w(ServerName), Level, Bufptr, PrefMaxlen, EntriesRead, totalentries,
