@@ -151,7 +151,7 @@
 @ stdcall NetGetDCName(wstr wstr ptr)
 @ stub NetGetDisplayInformationIndex
 @ stdcall NetGetJoinInformation(wstr ptr ptr)
-@ stub NetGetJoinableOUs
+@ stdcall NetGetJoinableOUs(wstr wstr wstr wstr ptr ptr)
 @ stdcall NetGroupAdd(wstr long ptr ptr)
 @ stdcall NetGroupAddUser(wstr wstr wstr)
 @ stdcall NetGroupDel(wstr wstr)
@@ -250,7 +250,7 @@
 @ stdcall NetUserModalsSet(wstr long ptr ptr)
 @ stdcall NetUserSetGroups(wstr wstr long ptr long)
 @ stdcall NetUserSetInfo(wstr wstr long ptr ptr)
-@ stub NetValidateName
+@ stdcall NetValidateName(wstr wstr wstr wstr long)
 @ stub NetValidatePasswordPolicy
 @ stub NetValidatePasswordPolicyFree
 @ stdcall NetWkstaGetInfo(wstr long ptr)

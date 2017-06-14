@@ -213,6 +213,48 @@ NetGetJoinInformation(
 
 NET_API_STATUS
 WINAPI
+NetGetJoinableOUs(
+    _In_ LPCWSTR lpServer,
+    _In_ LPCWSTR lpDomain,
+    _In_ LPCWSTR lpAccount,
+    _In_ LPCWSTR lpPassword,
+    _Out_ DWORD *OUCount,
+    _Out_ LPWSTR **OUs)
+{
+    PJOINPR_ENCRYPTED_USER_PASSWORD EncryptedPassword;
+    handle_t BindingHandle;
+    NET_API_STATUS status;
+
+    TRACE("NetGetJoinableOUs(%s %s %s %s %p %p)\n",
+          debugstr_w(lpServer), debugstr_w(lpDomain), debugstr_w(lpAccount),
+          debugstr_w(lpPassword), OUCount, OUs);
+
+    /* FIXME */
+    BindingHandle = NULL;
+    EncryptedPassword = NULL;
+
+    RpcTryExcept
+    {
+        status = NetrGetJoinableOUs2(BindingHandle,
+                                     (PWSTR)lpServer,
+                                     (PWSTR)lpDomain,
+                                     (PWSTR)lpAccount,
+                                     EncryptedPassword,
+                                     OUCount,
+                                     OUs);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
 NetJoinDomain(
     _In_ LPCWSTR lpServer,
     _In_ LPCWSTR lpDomain,
@@ -541,6 +583,46 @@ NetUseEnum(
                     break;
             }
         }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetValidateName(
+    _In_ LPCWSTR lpServer,
+    _In_ LPCWSTR lpName,
+    _In_ LPCWSTR lpAccount,
+    _In_ LPCWSTR lpPassword,
+    _In_ NETSETUP_NAME_TYPE NameType)
+{
+    PJOINPR_ENCRYPTED_USER_PASSWORD EncryptedPassword;
+    handle_t BindingHandle;
+    NET_API_STATUS status;
+
+    TRACE("NetValidateName(%s %s %s %s %u)\n",
+          debugstr_w(lpServer), debugstr_w(lpName), debugstr_w(lpAccount),
+          debugstr_w(lpPassword), NameType);
+
+    /* FIXME */
+    BindingHandle = NULL;
+    EncryptedPassword = NULL;
+
+    RpcTryExcept
+    {
+        status = NetrValidateName2(BindingHandle,
+                                   (PWSTR)lpServer,
+                                   (PWSTR)lpName,
+                                   (PWSTR)lpAccount,
+                                   EncryptedPassword,
+                                   NameType);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
