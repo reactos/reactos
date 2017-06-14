@@ -159,8 +159,8 @@ static void test_moniker_isequal(void)
     ok(SUCCEEDED(res), "Cannot create enum moniker (res = %x)\n", res);
     if (SUCCEEDED(res))
     {
-        if (SUCCEEDED(IEnumMoniker_Next(enum_moniker0, 1, &moniker0, NULL)) &&
-            SUCCEEDED(IEnumMoniker_Next(enum_moniker0, 1, &moniker1, NULL)))
+        if (IEnumMoniker_Next(enum_moniker0, 1, &moniker0, NULL) == S_OK &&
+            IEnumMoniker_Next(enum_moniker0, 1, &moniker1, NULL) == S_OK)
         {
             res = IMoniker_IsEqual(moniker0, moniker1);
             ok(res == S_FALSE, "IMoniker_IsEqual should fail (res = %x)\n", res);
@@ -182,8 +182,8 @@ static void test_moniker_isequal(void)
     ok(SUCCEEDED(res), "Cannot create enum moniker (res = %x)\n", res);
     if (SUCCEEDED(res))
     {
-        if (SUCCEEDED(IEnumMoniker_Next(enum_moniker0, 1, &moniker0, NULL)) &&
-            SUCCEEDED(IEnumMoniker_Next(enum_moniker1, 1, &moniker1, NULL)))
+        if (IEnumMoniker_Next(enum_moniker0, 1, &moniker0, NULL) == S_OK &&
+            IEnumMoniker_Next(enum_moniker1, 1, &moniker1, NULL) == S_OK)
         {
             res = IMoniker_IsEqual(moniker0, moniker1);
             ok(res == S_FALSE, "IMoniker_IsEqual should failed (res = %x)\n", res);
@@ -206,8 +206,8 @@ static void test_moniker_isequal(void)
     ok(SUCCEEDED(res), "Cannot create enum moniker (res = %x)\n", res);
     if (SUCCEEDED(res))
     {
-         if (SUCCEEDED(IEnumMoniker_Next(enum_moniker0, 1, &moniker0, NULL)) &&
-             SUCCEEDED(IEnumMoniker_Next(enum_moniker1, 1, &moniker1, NULL)))
+        if (IEnumMoniker_Next(enum_moniker0, 1, &moniker0, NULL) == S_OK &&
+            IEnumMoniker_Next(enum_moniker1, 1, &moniker1, NULL) == S_OK)
         {
             res = IMoniker_IsEqual(moniker0, moniker1);
             ok(res == S_OK, "IMoniker_IsEqual failed (res = %x)\n", res);
