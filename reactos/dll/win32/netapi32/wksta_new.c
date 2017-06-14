@@ -138,9 +138,49 @@ WKSSVC_IMPERSONATE_HANDLE_unbind(WKSSVC_IMPERSONATE_HANDLE pszSystemName,
 }
 
 
+NET_API_STATUS
+WINAPI
+NetAddAlternateComputerName(
+    _In_opt_ LPCWSTR Server,
+    _In_ LPCWSTR AlternateName,
+    _In_opt_ LPCWSTR DomainAccount,
+    _In_opt_ LPCWSTR DomainAccountPassword,
+    _In_ ULONG Reserved)
+{
+    PJOINPR_ENCRYPTED_USER_PASSWORD EncryptedPassword;
+    handle_t BindingHandle;
+    NET_API_STATUS status;
+
+    TRACE("NetAddAlternateComputerName(%s %s %s %s 0x%lx)\n",
+          debugstr_w(Server), debugstr_w(AlternateName), debugstr_w(DomainAccount),
+          debugstr_w(DomainAccountPassword), Reserved);
+
+    /* FIXME */
+    BindingHandle = NULL;
+    EncryptedPassword = NULL;
+
+    RpcTryExcept
+    {
+        status = NetrAddAlternateComputerName(BindingHandle,
+                                              (PWSTR)Server,
+                                              (PWSTR)AlternateName,
+                                              (PWSTR)DomainAccount,
+                                              EncryptedPassword,
+                                              Reserved);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
 #if 0
 NET_API_STATUS
-NET_API_FUNCTION
+WINAPI
 NetGetJoinInformation(
     LPCWSTR Server,
     LPWSTR *Name,
@@ -169,6 +209,206 @@ NetGetJoinInformation(
     return status;
 }
 #endif
+
+
+NET_API_STATUS
+WINAPI
+NetJoinDomain(
+    _In_ LPCWSTR lpServer,
+    _In_ LPCWSTR lpDomain,
+    _In_ LPCWSTR lpAccountOU,
+    _In_ LPCWSTR lpAccount,
+    _In_ LPCWSTR lpPassword,
+    _In_ DWORD fJoinOptions)
+{
+    PJOINPR_ENCRYPTED_USER_PASSWORD EncryptedPassword;
+    handle_t BindingHandle;
+    NET_API_STATUS status;
+
+    TRACE("NetJoinDomain(%s %s %s %s 0x%lx)\n",
+          debugstr_w(lpServer), debugstr_w(lpDomain), debugstr_w(lpAccountOU),
+          debugstr_w(lpAccount), debugstr_w(lpPassword), fJoinOptions);
+
+    /* FIXME */
+    BindingHandle = NULL;
+    EncryptedPassword = NULL;
+
+    RpcTryExcept
+    {
+        status = NetrJoinDomain2(BindingHandle,
+                                 (PWSTR)lpServer,
+                                 (PWSTR)lpDomain,
+                                 (PWSTR)lpAccountOU,
+                                 (PWSTR)lpAccount,
+                                 EncryptedPassword,
+                                 fJoinOptions);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetRemoveAlternateComputerName(
+    _In_opt_ LPCWSTR Server,
+    _In_ LPCWSTR AlternateName,
+    _In_opt_ LPCWSTR DomainAccount,
+    _In_opt_ LPCWSTR DomainAccountPassword,
+    _In_ ULONG Reserved)
+{
+    PJOINPR_ENCRYPTED_USER_PASSWORD EncryptedPassword;
+    handle_t BindingHandle;
+    NET_API_STATUS status;
+
+    TRACE("NetRemoveAlternateComputerName(%s %s %s %s 0x%lx)\n",
+          debugstr_w(Server), debugstr_w(AlternateName), debugstr_w(DomainAccount),
+          debugstr_w(DomainAccountPassword), Reserved);
+
+    /* FIXME */
+    BindingHandle = NULL;
+    EncryptedPassword = NULL;
+
+    RpcTryExcept
+    {
+        status = NetrRemoveAlternateComputerName(BindingHandle,
+                                                 (PWSTR)Server,
+                                                 (PWSTR)AlternateName,
+                                                 (PWSTR)DomainAccount,
+                                                 EncryptedPassword,
+                                                 Reserved);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetRenameMachineInDomain(
+    _In_ LPCWSTR lpServer,
+    _In_ LPCWSTR lpNewMachineName,
+    _In_ LPCWSTR lpAccount,
+    _In_ LPCWSTR lpPassword,
+    _In_ DWORD fRenameOptions)
+{
+    PJOINPR_ENCRYPTED_USER_PASSWORD EncryptedPassword;
+    handle_t BindingHandle;
+    NET_API_STATUS status;
+
+    TRACE("NetRenameMachineInDomain(%s %s %s %s 0x%lx)\n",
+          debugstr_w(lpServer), debugstr_w(lpNewMachineName), debugstr_w(lpAccount),
+          debugstr_w(lpPassword), fRenameOptions);
+
+    /* FIXME */
+    BindingHandle = NULL;
+    EncryptedPassword = NULL;
+
+    RpcTryExcept
+    {
+        status = NetrRenameMachineInDomain2(BindingHandle,
+                                            (PWSTR)lpServer,
+                                            (PWSTR)lpNewMachineName,
+                                            (PWSTR)lpAccount,
+                                            EncryptedPassword,
+                                            fRenameOptions);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetSetPrimaryComputerName(
+    _In_opt_ LPCWSTR Server,
+    _In_ LPCWSTR PrimaryName,
+    _In_opt_ LPCWSTR DomainAccount,
+    _In_opt_ LPCWSTR DomainAccountPassword,
+    _In_ ULONG Reserved)
+{
+    PJOINPR_ENCRYPTED_USER_PASSWORD EncryptedPassword;
+    handle_t BindingHandle;
+    NET_API_STATUS status;
+
+    TRACE("NetSetPrimaryComputerName(%s %s %s %s %lu)\n",
+          debugstr_w(Server), debugstr_w(PrimaryName), debugstr_w(DomainAccount),
+          debugstr_w(DomainAccountPassword), Reserved);
+
+    /* FIXME */
+    BindingHandle = NULL;
+    EncryptedPassword = NULL;
+
+    RpcTryExcept
+    {
+        status = NetrSetPrimaryComputerName(BindingHandle,
+                                            (PWSTR)Server,
+                                            (PWSTR)PrimaryName,
+                                            (PWSTR)DomainAccount,
+                                            EncryptedPassword,
+                                            Reserved);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetUnjoinDomain(
+    _In_ LPCWSTR lpServer,
+    _In_ LPCWSTR lpAccount,
+    _In_ LPCWSTR lpPassword,
+    _In_ DWORD fUnjoinOptions)
+{
+    PJOINPR_ENCRYPTED_USER_PASSWORD EncryptedPassword;
+    handle_t BindingHandle;
+    NET_API_STATUS status;
+
+    TRACE("NetUnjoinDomain(%s %s %s %s 0x%lx)\n",
+          debugstr_w(lpServer), debugstr_w(lpAccount),
+          debugstr_w(lpPassword), fUnjoinOptions);
+
+    /* FIXME */
+    BindingHandle = NULL;
+    EncryptedPassword = NULL;
+
+    RpcTryExcept
+    {
+        status = NetrUnjoinDomain2(BindingHandle,
+                                   (PWSTR)lpServer,
+                                   (PWSTR)lpAccount,
+                                   EncryptedPassword,
+                                   fUnjoinOptions);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
 
 
 NET_API_STATUS

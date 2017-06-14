@@ -99,7 +99,7 @@
 @ stub I_NetlogonComputeClientDigest
 @ stub I_NetlogonComputeServerDigest
 @ stub I_NetlogonGetTrustRid
-@ stub NetAddAlternateComputerName
+@ stdcall NetAddAlternateComputerName(wstr wstr wstr wstr long)
 @ stdcall NetAlertRaise(wstr ptr long)
 @ stdcall NetAlertRaiseEx(wstr ptr long wstr)
 @ stdcall NetApiBufferAllocate(long ptr)
@@ -161,7 +161,7 @@
 @ stdcall NetGroupGetUsers(wstr wstr long ptr long ptr ptr ptr)
 @ stdcall NetGroupSetInfo(wstr wstr long ptr ptr)
 @ stdcall NetGroupSetUsers(wstr wstr long ptr long)
-@ stub NetJoinDomain
+@ stdcall NetJoinDomain(wstr wstr wstr wstr wstr long)
 @ stdcall NetLocalGroupAdd(wstr long ptr ptr)
 @ stdcall NetLocalGroupAddMember(wstr wstr ptr)
 @ stdcall NetLocalGroupAddMembers(wstr wstr long ptr long)
@@ -184,8 +184,8 @@
 @ stub NetRegisterDomainNameChangeNotification
 @ stub NetRemoteComputerSupports
 @ stdcall NetRemoteTOD(wstr ptr)
-@ stub NetRemoveAlternateComputerName
-@ stub NetRenameMachineInDomain
+@ stdcall NetRemoveAlternateComputerName(wstr wstr wstr wstr long)
+@ stdcall NetRenameMachineInDomain(wstr wstr wstr wstr long)
 @ stub NetReplExportDirAdd
 @ stub NetReplExportDirDel
 @ stub NetReplExportDirEnum
@@ -223,7 +223,7 @@
 @ stdcall NetSessionDel(wstr wstr wstr)
 @ stdcall NetSessionEnum(wstr wstr wstr long ptr long ptr ptr ptr)
 @ stdcall NetSessionGetInfo(wstr wstr wstr long ptr)
-@ stub NetSetPrimaryComputerName
+@ stdcall NetSetPrimaryComputerName(wstr wstr wstr wstr long)
 @ stdcall NetShareAdd(wstr long ptr ptr)
 @ stdcall NetShareCheck(wstr wstr ptr)
 @ stdcall NetShareDel(wstr wstr long)
@@ -233,7 +233,7 @@
 @ stdcall NetShareGetInfo(wstr wstr long ptr)
 @ stdcall NetShareSetInfo(wstr wstr long ptr ptr)
 @ stdcall NetStatisticsGet(wstr wstr long long ptr)
-@ stub NetUnjoinDomain
+@ stdcall NetUnjoinDomain(wstr wstr wstr long)
 @ stub NetUnregisterDomainNameChangeNotification
 @ stdcall NetUseAdd(wstr long ptr ptr)
 @ stdcall NetUseDel(wstr wstr long)
