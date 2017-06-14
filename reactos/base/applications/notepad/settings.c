@@ -170,18 +170,31 @@ void NOTEPAD_LoadSettingsFromRegistry(void)
     else
     {
         /* If no settings are found in the registry, then use default values */
-        Globals.lfFont.lfCharSet = 163;
-        Globals.lfFont.lfClipPrecision = 2;
+        Globals.bShowStatusBar = FALSE;
+        Globals.bWrapLongLines = FALSE;
+        SetRect(&Globals.lMargins, 750, 1000, 750, 1000);
+
+        /* FIXME: Globals.fSaveWindowPositions = FALSE; */
+        /* FIXME: Globals.fMLE_is_broken = FALSE; */
+
+        LoadString(Globals.hInstance, STRING_PAGESETUP_HEADERVALUE, Globals.szHeader,
+                   ARRAY_SIZE(Globals.szHeader));
+        LoadString(Globals.hInstance, STRING_PAGESETUP_FOOTERVALUE, Globals.szFooter,
+                   ARRAY_SIZE(Globals.szFooter));
+
+        ZeroMemory(&Globals.lfFont, sizeof(Globals.lfFont));
+        Globals.lfFont.lfCharSet = ANSI_CHARSET;
+        Globals.lfFont.lfClipPrecision = CLIP_STROKE_PRECIS;
         Globals.lfFont.lfEscapement = 0;
         _tcscpy(Globals.lfFont.lfFaceName, _T("Lucida Console"));
-        Globals.lfFont.lfItalic = 0;
+        Globals.lfFont.lfItalic = FALSE;
         Globals.lfFont.lfOrientation = 0;
-        Globals.lfFont.lfOutPrecision = 3;
-        Globals.lfFont.lfPitchAndFamily = 34;
-        Globals.lfFont.lfQuality = 1;
-        Globals.lfFont.lfStrikeOut = 0;
-        Globals.lfFont.lfUnderline = 0;
-        Globals.lfFont.lfWeight = 400;
+        Globals.lfFont.lfOutPrecision = OUT_STRING_PRECIS;
+        Globals.lfFont.lfPitchAndFamily = FIXED_PITCH | FF_MODERN;
+        Globals.lfFont.lfQuality = PROOF_QUALITY;
+        Globals.lfFont.lfStrikeOut = FALSE;
+        Globals.lfFont.lfUnderline = FALSE;
+        Globals.lfFont.lfWeight = FW_NORMAL;
         Globals.lfFont.lfHeight = HeightFromPointSize(100);
     }
 
