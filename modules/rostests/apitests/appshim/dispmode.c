@@ -2,7 +2,7 @@
  * PROJECT:     appshim_apitest
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Tests for display mode shims
- * COPYRIGHT:   Copyright 2016 Mark Jansen (mark.jansen@reactos.org)
+ * COPYRIGHT:   Copyright 2016-2018 Mark Jansen (mark.jansen@reactos.org)
  */
 
 #include <ntstatus.h>
@@ -17,17 +17,15 @@
 #include <strsafe.h>
 #include "wine/test.h"
 #include "apitest_iathook.h"
+#include "appshim_apitest.h"
 
 static DWORD g_Version;
 #define WINVER_ANY     0
 
-
-/* apphelp.dll */
-static BOOL(WINAPI* pSdbGetAppPatchDir)(PVOID, LPWSTR, DWORD);
-
 /* aclayers.dll / acgenral.dll */
-static PVOID(WINAPI* pGetHookAPIs)(LPCSTR, LPCWSTR, PDWORD);
+static tGETHOOKAPIS pGetHookAPIs;
 static BOOL(WINAPI* pNotifyShims)(DWORD fdwReason, PVOID ptr);
+
 
 DWORD get_module_version(HMODULE mod)
 {
@@ -122,14 +120,6 @@ void WINAPI mSetThemeAppProperties(DWORD dwFlags)
     g_LastThemeFlags = dwFlags;
 }
 
-
-static const WCHAR* shim_dll(const WCHAR* name)
-{
-    static WCHAR buf[MAX_PATH];
-    pSdbGetAppPatchDir(NULL, buf, MAX_PATH);
-    StringCchCatW(buf, _countof(buf), name);
-    return buf;
-}
 
 static void pre_8bit(void)
 {
@@ -379,18 +369,18 @@ static struct test_info
 } tests[] =
 {
     /* Success */
-    { "Force8BitColor", L"\\aclayers.dll", WINVER_ANY, 1, hook_disp, unhook_disp, pre_8bit, post_8bit, post_8bit_no },
-    { "Force8BitColor", L"\\aclayers.dll", _WIN32_WINNT_VISTA, 100, hook_disp, unhook_disp,pre_8bit, post_8bit, post_8bit_no },
-    { "Force640x480", L"\\aclayers.dll", WINVER_ANY, 1, hook_disp, unhook_disp, pre_640, post_640, post_640_no },
-    { "Force640x480", L"\\aclayers.dll", _WIN32_WINNT_VISTA, 100, hook_disp, unhook_disp, pre_640, post_640, post_640_no },
-    { "DisableThemes", L"\\acgenral.dll", WINVER_ANY, 1, hook_theme, unhook_theme, pre_theme, post_theme, post_theme_no },
-    { "DisableThemes", L"\\acgenral.dll", _WIN32_WINNT_VISTA, 100, hook_theme, unhook_theme, pre_theme, post_theme, post_theme_no },
+    { "Force8BitColor", L"aclayers.dll", WINVER_ANY, 1, hook_disp, unhook_disp, pre_8bit, post_8bit, post_8bit_no },
+    { "Force8BitColor", L"aclayers.dll", _WIN32_WINNT_VISTA, 100, hook_disp, unhook_disp,pre_8bit, post_8bit, post_8bit_no },
+    { "Force640x480", L"aclayers.dll", WINVER_ANY, 1, hook_disp, unhook_disp, pre_640, post_640, post_640_no },
+    { "Force640x480", L"aclayers.dll", _WIN32_WINNT_VISTA, 100, hook_disp, unhook_disp, pre_640, post_640, post_640_no },
+    { "DisableThemes", L"acgenral.dll", WINVER_ANY, 1, hook_theme, unhook_theme, pre_theme, post_theme, post_theme_no },
+    { "DisableThemes", L"acgenral.dll", _WIN32_WINNT_VISTA, 100, hook_theme, unhook_theme, pre_theme, post_theme, post_theme_no },
 
     /* No need to change anything */
-    { "Force8BitColor", L"\\aclayers.dll", WINVER_ANY, 1, hook_disp, unhook_disp, pre_8bit_2, post_8bit_2, post_8bit_2_no },
-    { "Force8BitColor", L"\\aclayers.dll", _WIN32_WINNT_VISTA, 100, hook_disp, unhook_disp, pre_8bit_2, post_8bit_2, post_8bit_2_no },
-    { "Force640x480", L"\\aclayers.dll", WINVER_ANY, 1, hook_disp, unhook_disp, pre_640_2, post_640_2, post_640_2_no },
-    { "Force640x480", L"\\aclayers.dll", _WIN32_WINNT_VISTA, 100, hook_disp, unhook_disp, pre_640_2, post_640_2, post_640_2_no },
+    { "Force8BitColor", L"aclayers.dll", WINVER_ANY, 1, hook_disp, unhook_disp, pre_8bit_2, post_8bit_2, post_8bit_2_no },
+    { "Force8BitColor", L"aclayers.dll", _WIN32_WINNT_VISTA, 100, hook_disp, unhook_disp, pre_8bit_2, post_8bit_2, post_8bit_2_no },
+    { "Force640x480", L"aclayers.dll", WINVER_ANY, 1, hook_disp, unhook_disp, pre_640_2, post_640_2, post_640_2_no },
+    { "Force640x480", L"aclayers.dll", _WIN32_WINNT_VISTA, 100, hook_disp, unhook_disp, pre_640_2, post_640_2, post_640_2_no },
 };
 
 
@@ -398,16 +388,15 @@ static void run_test(size_t n, BOOL unload)
 {
     BOOL ret;
     HMODULE dll;
-    const WCHAR* buf = shim_dll(tests[n].dll);
 
-    dll = LoadLibraryW(shim_dll(tests[n].dll));
-    pGetHookAPIs = (void*)GetProcAddress(dll, "GetHookAPIs");
+    if (!LoadShimDLL(tests[n].dll, &dll, &pGetHookAPIs))
+        pGetHookAPIs = NULL;
     pNotifyShims = (void*)GetProcAddress(dll, "NotifyShims");
 
     if (!pGetHookAPIs || !pNotifyShims)
     {
-        skip("aclayers.dll not loaded, or does not export GetHookAPIs or pNotifyShims (%s, %p, %p)\n",
-            tests[n].name, pGetHookAPIs, pNotifyShims);
+        skip("%s not loaded, or does not export GetHookAPIs or pNotifyShims (%s, %p, %p)\n",
+             wine_dbgstr_w(tests[n].dll), tests[n].name, pGetHookAPIs, pNotifyShims);
         return;
     }
 
@@ -435,8 +424,8 @@ static void run_test(size_t n, BOOL unload)
     FreeLibrary(dll);
     if (unload)
     {
-        dll = GetModuleHandleW(buf);
-        ok(dll == NULL, "Unable to unload %s\n", wine_dbgstr_w(buf));
+        dll = GetModuleHandleW(tests[n].dll);
+        ok(dll == NULL, "Unable to unload %s\n", wine_dbgstr_w(tests[n].dll));
     }
 }
 
@@ -448,21 +437,14 @@ START_TEST(dispmode)
     int argc;
     char **argv;
 
-    pSdbGetAppPatchDir = (void*)GetProcAddress(dll, "SdbGetAppPatchDir");
-    if (!pSdbGetAppPatchDir)
-    {
-        skip("apphelp.dll not loaded, or does not export SdbGetAppPatchDir\n");
-        return;
-    }
-
     argc = winetest_get_mainargs(&argv);
     if (argc < 3)
     {
         WCHAR path[MAX_PATH];
         GetModuleFileNameW(NULL, path, _countof(path));
-        dll = GetModuleHandleW(shim_dll(L"\\aclayers.dll"));
+        dll = GetModuleHandleW(L"aclayers.dll");
         if (!dll)
-            dll = GetModuleHandleW(shim_dll(L"\\acgenral.dll"));
+            dll = GetModuleHandleW(L"acgenral.dll");
         if (dll != NULL)
             trace("Loaded under a shim, running each test in it's own process\n");
 
