@@ -139,7 +139,7 @@
 @ stub NetDfsSetInfo
 @ stub NetDfsSetSecurity
 @ stub NetDfsSetStdContainerSecurity
-@ stub NetEnumerateComputerNames
+@ stdcall NetEnumerateComputerNames(wstr long long ptr ptr)
 @ stdcall NetEnumerateTrustedDomains(wstr ptr)
 @ stdcall NetErrorLogClear(wstr wstr ptr)
 @ stdcall NetErrorLogRead(wstr wstr ptr long ptr long long ptr long ptr ptr)

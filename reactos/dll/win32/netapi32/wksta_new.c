@@ -178,6 +178,44 @@ NetAddAlternateComputerName(
 }
 
 
+NET_API_STATUS
+WINAPI
+NetEnumerateComputerNames(
+    _In_opt_ LPCWSTR Server,
+    _In_ NET_COMPUTER_NAME_TYPE NameType,
+    _In_ ULONG Reserved,
+    _Out_ PDWORD EntryCount,
+    _Out_ LPWSTR **ComputerNames)
+{
+    PNET_COMPUTER_NAME_ARRAY ComputerNameArray = NULL;
+    NET_API_STATUS status;
+
+    TRACE("NetEnumerateComputerNames(%s %lu %lu %p %p)\n",
+          debugstr_w(Server), NameType, Reserved, EntryCount, ComputerNames);
+
+    RpcTryExcept
+    {
+        status = NetrEnumerateComputerNames((PWSTR)Server,
+                                            NameType,
+                                            Reserved,
+                                            &ComputerNameArray);
+        if (status == NERR_Success)
+        {
+            *EntryCount = ComputerNameArray->EntryCount;
+            /* FIXME */
+            // *ComputerNames =
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
 #if 0
 NET_API_STATUS
 WINAPI
