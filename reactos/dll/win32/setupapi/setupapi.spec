@@ -368,7 +368,7 @@
 @ stdcall SetupDiRegisterCoDeviceInstallers(ptr ptr)
 @ stdcall SetupDiRegisterDeviceInfo(ptr ptr long ptr ptr ptr)
 @ stdcall SetupDiRemoveDevice(ptr ptr)
-@ stub SetupDiRemoveDeviceInterface
+@ stdcall SetupDiRemoveDeviceInterface(ptr ptr)
 @ stub SetupDiRestartDevices
 @ stdcall SetupDiSelectBestCompatDrv(ptr ptr)
 @ stdcall SetupDiSelectDevice(ptr ptr)
