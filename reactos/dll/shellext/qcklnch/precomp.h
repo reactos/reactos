@@ -18,6 +18,7 @@
 #include <ddeml.h>
 #include <shlguid_undoc.h>
 #include <shlwapi.h>
+#include <shlguid.h>
 #include <shlobj.h>
 #include <shlobj_undoc.h>
 #include <shlwapi_undoc.h>

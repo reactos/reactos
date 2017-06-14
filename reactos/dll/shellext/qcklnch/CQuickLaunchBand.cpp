@@ -14,44 +14,42 @@ WINE_DEFAULT_DEBUG_CHANNEL(qcklnch);
 static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 0x79, 0x57, 0x5b, 0xaa, 0x60, 0xb7, 0x2f } };
 
 //Componenet Category Registration
-HRESULT RegisterComCat()
-{
-    ICatRegister *pcr;
-    HRESULT hr = CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL, CLSCTX_INPROC_SERVER, IID_ICatRegister, (void**)&pcr);
-    if (SUCCEEDED(hr))
+    HRESULT RegisterComCat()
     {
-        CATID catid = CATID_DeskBand;
-        hr = pcr->RegisterClassImplCategories(CLSID_QuickLaunchBand, 1, &catid);
-        pcr->Release();
+        CComPtr<ICatRegister> pcr;
+        HRESULT hr = CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL, CLSCTX_INPROC_SERVER, IID_ICatRegister, (void**)&pcr);
+        if (SUCCEEDED(hr))
+        {
+            CATID catid = CATID_DeskBand;
+            hr = pcr->RegisterClassImplCategories(CLSID_QuickLaunchBand, 1, &catid);            
+        }
+        return hr;
     }
-    return hr;
-}
 
-HRESULT UnregisterComCat()
-{
-    ICatRegister *pcr;
-    HRESULT hr = CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL, CLSCTX_INPROC_SERVER, IID_ICatRegister, (void**)&pcr);
-    if (SUCCEEDED(hr))
+    HRESULT UnregisterComCat()
     {
-        CATID catid = CATID_DeskBand;
-        hr = pcr->UnRegisterClassImplCategories(CLSID_QuickLaunchBand, 1, &catid);
-        pcr->Release();
+        CComPtr<ICatRegister> pcr;
+        HRESULT hr = CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL, CLSCTX_INPROC_SERVER, IID_ICatRegister, (void**)&pcr);
+        if (SUCCEEDED(hr))
+        {
+            CATID catid = CATID_DeskBand;
+            hr = pcr->UnRegisterClassImplCategories(CLSID_QuickLaunchBand, 1, &catid);            
+        }
+        return hr;
     }
-    return hr;
-}
 
 //Subclassing Button
 
     LRESULT CALLBACK MyWndProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
     {
-    	switch (uMsg)
-	    {
-		    case WM_COMMAND:
-		    {
-		    	MessageBox(0, L"Button Clicked!!", L"Testing", MB_OK | MB_ICONINFORMATION);
-		    }		    
-	    } 
-	    return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+        switch (uMsg)
+        {
+            case WM_COMMAND:
+            {
+                MessageBox(0, L"Button Clicked!!", L"Testing", MB_OK | MB_ICONINFORMATION);
+            }            
+        } 
+        return DefSubclassProc(hWnd, uMsg, wParam, lParam);
     }
 
 //CQuickLaunchBand
@@ -60,17 +58,42 @@ HRESULT UnregisterComCat()
         m_hWnd(NULL),
         m_BandID(0)
     {
-
+        
     }
 
     CQuickLaunchBand::~CQuickLaunchBand() { }
 
 /*****************************************************************************/
+//ATL Construct
+
+    HRESULT CQuickLaunchBand::FinalConstruct()
+    {        
+        HRESULT hr = CoCreateInstance(CLSID_ISFBand, NULL, CLSCTX_INPROC_SERVER, IID_IUnknown, (void**) &m_punkISFB);
+        if (SUCCEEDED(hr))
+        {            
+            CComPtr<IShellFolderBand> pISFB;
+            hr = m_punkISFB->QueryInterface(IID_IShellFolderBand, (void**) &pISFB);
+            if (SUCCEEDED(hr))
+            {
+                MessageBox(0, L"CISFBand Init success!!", L"Testing", MB_OK | MB_ICONINFORMATION);
+                CComPtr<IShellFolder> pISF;
+                hr = SHGetDesktopFolder(&pISF);
+                if (SUCCEEDED(hr))
+                {
+                    pISFB->InitializeSFB(pISF, 0);
+                    MessageBox(0, L"CISFBand Init success!!", L"Testing", MB_OK | MB_ICONINFORMATION);
+                }                               
+            }            
+        }
+
+        MessageBox(0, L"CISFBand Init success!!", L"Testing", MB_OK | MB_ICONINFORMATION);
+        return hr;
+    }
 
 //IObjectWithSite
     HRESULT STDMETHODCALLTYPE CQuickLaunchBand::SetSite(IUnknown *pUnkSite)
     {
-    	MessageBox(0, L"CQuickLaunchBand::SetSite called!", L"Testing", MB_OK | MB_ICONINFORMATION);
+        MessageBox(0, L"CQuickLaunchBand::SetSite called!", L"Testing", MB_OK | MB_ICONINFORMATION);
 
         HRESULT hRet;
         HWND hwndParent;
@@ -84,9 +107,7 @@ HRESULT UnregisterComCat()
             return hRet;
         }
         m_Site = pUnkSite;        
-        
         m_hWnd = CreateWindowEx(0, L"BUTTON", L">>", WS_CHILD, CW_USEDEFAULT, CW_USEDEFAULT, 50, 50, hwndParent, 0, m_hInstance, 0);
-        
         SetWindowSubclass(hwndParent, MyWndProc, 0, 0); //when button is clicked, parent receives WM_COMMAND, and thus subclassed to show a test message box
 
         return S_OK;
@@ -96,7 +117,7 @@ HRESULT UnregisterComCat()
         IN REFIID riid,
         OUT VOID **ppvSite)
     {
-    	//MessageBox(0, L"GetSite called!", L"Test Caption", MB_OK | MB_ICONINFORMATION);
+        //MessageBox(0, L"GetSite called!", L"Test Caption", MB_OK | MB_ICONINFORMATION);
         TRACE("CQuickLaunchBand::GetSite(0x%p,0x%p)\n", riid, ppvSite);
 
         if (m_Site != NULL)
@@ -113,7 +134,7 @@ HRESULT UnregisterComCat()
 //IDeskBand
     HRESULT STDMETHODCALLTYPE CQuickLaunchBand::GetWindow(OUT HWND *phwnd)
     {
-    	//MessageBox(0, L"GetWindow called!", L"Test Caption", MB_OK | MB_ICONINFORMATION);
+        //MessageBox(0, L"GetWindow called!", L"Test Caption", MB_OK | MB_ICONINFORMATION);
 
         if (!m_hWnd)
             return E_FAIL;
@@ -133,31 +154,31 @@ HRESULT UnregisterComCat()
         return E_NOTIMPL;
     }
 
-	HRESULT STDMETHODCALLTYPE CQuickLaunchBand::ShowDW(
+    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::ShowDW(
         IN BOOL bShow)
     {
-    	//MessageBox(0, L"ShowDW called!", L"Test Caption", MB_OK | MB_ICONINFORMATION);
+        //MessageBox(0, L"ShowDW called!", L"Test Caption", MB_OK | MB_ICONINFORMATION);
         
         if (m_hWnd)
-	    {
-	        ShowWindow(m_hWnd, bShow ? SW_SHOW : SW_HIDE);
-	    }
-	    
+        {
+            ShowWindow(m_hWnd, bShow ? SW_SHOW : SW_HIDE);
+        }
+        
         return S_OK;
     }
 
     HRESULT STDMETHODCALLTYPE CQuickLaunchBand::CloseDW(
         IN DWORD dwReserved)
     {
-    	//MessageBox(0, L"CloseDW called!", L"Test Caption", MB_OK | MB_ICONINFORMATION);
+        //MessageBox(0, L"CloseDW called!", L"Test Caption", MB_OK | MB_ICONINFORMATION);
         
-    	if (m_hWnd)
-	    {
-	        ShowWindow(m_hWnd, SW_HIDE);
-	        DestroyWindow(m_hWnd);
-	        m_hWnd = NULL;
-	    }
-	    
+        if (m_hWnd)
+        {
+            ShowWindow(m_hWnd, SW_HIDE);
+            DestroyWindow(m_hWnd);
+            m_hWnd = NULL;
+        }
+        
         return S_OK;
     }
 
@@ -177,14 +198,14 @@ HRESULT UnregisterComCat()
         IN DWORD dwViewMode,
         IN OUT DESKBANDINFO *pdbi)
     {
-    	//MessageBox(0, L"GetBandInfo called!", L"Test Caption", MB_OK | MB_ICONINFORMATION);
+        //MessageBox(0, L"GetBandInfo called!", L"Test Caption", MB_OK | MB_ICONINFORMATION);
         
-    	TRACE("CTaskBand::GetBandInfo(0x%x,0x%x,0x%p) hWnd=0x%p\n", dwBandID, dwViewMode, pdbi, m_hWnd);
-  		HRESULT hr = E_INVALIDARG;
+        TRACE("CTaskBand::GetBandInfo(0x%x,0x%x,0x%p) hWnd=0x%p\n", dwBandID, dwViewMode, pdbi, m_hWnd);
+          HRESULT hr = E_INVALIDARG;
 
-		if (m_hWnd && pdbi)
+        if (m_hWnd && pdbi)
         {   
-        	m_BandID = dwBandID;
+            m_BandID = dwBandID;
             pdbi->dwModeFlags = DBIMF_VARIABLEHEIGHT;
 
             if (dwViewMode & DBIF_VIEWMODE_VERTICAL)
@@ -206,33 +227,33 @@ HRESULT UnregisterComCat()
                 pdbi->ptMinSize.x = pdbi->ptIntegral.y;
             }           
 
-	        if (pdbi->dwMask & DBIM_MAXSIZE)
-	        {
-	            pdbi->ptMaxSize.y = -1;
-	        }
+            if (pdbi->dwMask & DBIM_MAXSIZE)
+            {
+                pdbi->ptMaxSize.y = -1;
+            }
 
-	        if (pdbi->dwMask & DBIM_ACTUAL)
-	        {
-	            pdbi->ptActual.x = 35;
-	            pdbi->ptActual.y = 30;
-	        }	        
+            if (pdbi->dwMask & DBIM_ACTUAL)
+            {
+                pdbi->ptActual.x = 35;
+                pdbi->ptActual.y = 30;
+            }            
 
-	        if (pdbi->dwMask & DBIM_TITLE)
-	        {
-	            // Don't show title by removing this flag.
-	            pdbi->dwMask &= ~DBIM_TITLE;
-	        }
+            if (pdbi->dwMask & DBIM_TITLE)
+            {
+                // Don't show title by removing this flag.
+                pdbi->dwMask &= ~DBIM_TITLE;
+            }
 
-	        if (pdbi->dwMask & DBIM_MODEFLAGS)
-	        {
-	            pdbi->dwModeFlags = DBIMF_NORMAL | DBIMF_VARIABLEHEIGHT;
-	        }
+            if (pdbi->dwMask & DBIM_MODEFLAGS)
+            {
+                pdbi->dwModeFlags = DBIMF_NORMAL | DBIMF_VARIABLEHEIGHT;
+            }
 
-	        if (pdbi->dwMask & DBIM_BKCOLOR)
-	        {
-	            // Use the default background color by removing this flag.
-	            pdbi->dwMask &= ~DBIM_BKCOLOR;
-	        }          
+            if (pdbi->dwMask & DBIM_BKCOLOR)
+            {
+                // Use the default background color by removing this flag.
+                pdbi->dwMask &= ~DBIM_BKCOLOR;
+            }          
 
             TRACE("H: %d, Min: %d,%d, Integral.y: %d Actual: %d,%d\n", (dwViewMode & DBIF_VIEWMODE_VERTICAL) == 0,
                 pdbi->ptMinSize.x, pdbi->ptMinSize.y, pdbi->ptIntegral.y,
@@ -241,7 +262,7 @@ HRESULT UnregisterComCat()
             hr = S_OK;
         }
 
-	    return hr;
+        return hr;
     }    
 
  /*****************************************************************************/
@@ -280,7 +301,7 @@ HRESULT UnregisterComCat()
     HRESULT STDMETHODCALLTYPE CQuickLaunchBand::GetClassID(
         OUT CLSID *pClassID)
     {
-    	//MessageBox(0, L"GetClassID called!", L"Test Caption", MB_OK | MB_ICONINFORMATION);
+        //MessageBox(0, L"GetClassID called!", L"Test Caption", MB_OK | MB_ICONINFORMATION);
         TRACE("CQuickLaunchBand::GetClassID(0x%p)\n", pClassID);
         /* We're going to return the (internal!) CLSID of the quick launch band */
         *pClassID = CLSID_QuickLaunchBand;
@@ -345,7 +366,7 @@ HRESULT UnregisterComCat()
     HRESULT STDMETHODCALLTYPE CQuickLaunchBand::ContainsWindow(
         IN HWND hWnd)
     {
-    	//MessageBox(0, L"ContainsWindow called!", L"Test Caption", MB_OK | MB_ICONINFORMATION);
+        //MessageBox(0, L"ContainsWindow called!", L"Test Caption", MB_OK | MB_ICONINFORMATION);
 
         if (hWnd == m_hWnd ||
             IsChild(m_hWnd, hWnd))
@@ -358,7 +379,7 @@ HRESULT UnregisterComCat()
     }
 
     HRESULT STDMETHODCALLTYPE CQuickLaunchBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
-    {    	
+    {        
         //MessageBox(0, L"OnWinEvent called!", L"Test Caption", MB_OK | MB_ICONINFORMATION);
          UNIMPLEMENTED;
         return E_NOTIMPL;
@@ -366,7 +387,7 @@ HRESULT UnregisterComCat()
 
     HRESULT STDMETHODCALLTYPE CQuickLaunchBand::IsWindowOwner(HWND hWnd)
     {
-    	//MessageBox(0, L"IsWindowOwner called!", L"Test Caption", MB_OK | MB_ICONINFORMATION);
+        //MessageBox(0, L"IsWindowOwner called!", L"Test Caption", MB_OK | MB_ICONINFORMATION);
         return (hWnd == m_hWnd) ? S_OK : S_FALSE;
     }
     
