@@ -1,0 +1,108 @@
+/*
+ * Computer Browser service interface definition
+ */
+
+#include <ms-dtyp.idl>
+
+typedef [handle] wchar_t *BROWSER_IDENTIFY_HANDLE;
+
+typedef struct _SERVER_INFO_100
+{
+    DWORD sv100_platform_id;
+    LPWSTR sv100_name;
+} SERVER_INFO_100, *PSERVER_INFO_100, *LPSERVER_INFO_100;
+
+typedef struct _SERVER_INFO_100_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPSERVER_INFO_100 Buffer;
+} SERVER_INFO_100_CONTAINER, *PSERVER_INFO_100_CONTAINER, *LPSERVER_INFO_100_CONTAINER;
+
+typedef struct _SERVER_ENUM_STRUCT
+{
+    DWORD Level;
+    [switch_is(Level)] union _SERVER_ENUM_UNION
+    {
+        [case(100)] LPSERVER_INFO_100_CONTAINER Level100;
+        [default] ;
+    } ServerInfo;
+} SERVER_ENUM_STRUCT, *PSERVER_ENUM_STRUCT, *LPSERVER_ENUM_STRUCT;
+
+
+[
+    uuid(6BFFD098-A112-3610-9833-012892020162),
+    version(0.0),
+    pointer_default(unique),
+#ifdef __midl
+    ms_union,
+#endif
+    endpoint("ncacn_np:[\\pipe\\browser]")
+#ifndef __midl
+    ,implicit_handle(handle_t hBinding)
+#endif
+]
+interface browser
+{
+    /* Function 0 (BrowserrServerEnum) */
+    NET_API_STATUS
+    __stdcall
+    BrowserOpnum0NotUsedOnWire(void);
+
+    /* Function 1 (BrowserrDebugCall) */
+    NET_API_STATUS
+    __stdcall
+    BrowserOpnum1NotUsedOnWire(void);
+
+    /* Function 2 (BrowserrQueryOtherDomains) */
+    NET_API_STATUS
+    __stdcall
+    I_BrowserrQueryOtherDomains(
+         [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName,
+         [in, out] LPSERVER_ENUM_STRUCT InfoStruct,
+         [out] LPDWORD TotalEntries);
+
+    /* Function 3 (BrowserrResetNetlogonState) */
+    NET_API_STATUS
+    __stdcall
+    BrowserOpnum3NotUsedOnWire(void);
+
+    /* Function 4 (BrowserrDebugTrace) */
+    NET_API_STATUS
+    __stdcall
+    BrowserOpnum4NotUsedOnWire(void);
+
+    /* Function 5 (BrowserrQueryStatistics) */
+    NET_API_STATUS
+    __stdcall
+    BrowserOpnum5NotUsedOnWire(void);
+
+    /* Function 6 (BrowserrResetStatistics) */
+    NET_API_STATUS
+    __stdcall
+    BrowserOpnum6NotUsedOnWire(void);
+
+    /* Function 7 (NetrBrowserStatisticsClear) */
+    NET_API_STATUS
+    __stdcall
+    BrowserOpnum7NotUsedOnWire(void);
+
+    /* Function 8 (NetrBrowserStatisticsGet) */
+    NET_API_STATUS
+    __stdcall
+    BrowserOpnum8NotUsedOnWire(void);
+
+    /* Function 9 (BrowserrSetNetlogonState) */
+    NET_API_STATUS
+    __stdcall
+    BrowserOpnum9NotUsedOnWire(void);
+
+    /* Function 10 (BrowserrQueryEmulatedDomains) */
+    NET_API_STATUS
+    __stdcall
+    BrowserOpnum10NotUsedOnWire(void);
+
+    /* Function 11 (BrowserrServerEnumEx) */
+    NET_API_STATUS
+    __stdcall
+    BrowserOpnum11NotUsedOnWire(void);
+}
