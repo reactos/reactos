@@ -14,6 +14,7 @@ add_rpc_files(client
 list(APPEND SOURCE
     access.c
     apibuf.c
+    browser.c
     browsr.c
     ds.c
     dssetup.c
