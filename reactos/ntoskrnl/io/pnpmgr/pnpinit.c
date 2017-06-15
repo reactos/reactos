@@ -361,18 +361,21 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
         IopRemoveDevice(DeviceNode);
         goto Exit;
     }
-    Status = IopInitializeDevice(DeviceNode, DriverObject);
-    if (NT_SUCCESS(Status))
-    {
-        Status = IopAttachFilterDrivers(DeviceNode, SubKey, FALSE);
-        if (!NT_SUCCESS(Status))
-        {
-            IopRemoveDevice(DeviceNode);
-            goto Exit;
-        }
 
-        Status = IopStartDevice(DeviceNode);
+    Status = IopInitializeDevice(DeviceNode, DriverObject);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Exit;
     }
+
+    Status = IopAttachFilterDrivers(DeviceNode, SubKey, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        IopRemoveDevice(DeviceNode);
+        goto Exit;
+    }
+
+    Status = IopStartDevice(DeviceNode);
 
 Exit:
     /* Close key and return status */
