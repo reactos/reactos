@@ -3,7 +3,7 @@
  * PROJECT:         NetAPI DLL
  * FILE:            dll/win32/netapi32/obsolete.c
  * PURPOSE:         Obsolete functions
- * PROGRAMMERS:     Eric Kohl <eric.kohl@reactos.org>
+ * PROGRAMMERS:     Eric Kohl (eric.kohl@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -14,6 +14,7 @@
 #include <lmconfig.h>
 #include <lmerrlog.h>
 #include <lmmsg.h>
+#include <lmrepl.h>
 #include <lmsvc.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
@@ -225,6 +226,182 @@ NetMessageNameGetInfo(
     _In_ LPCWSTR msgname,
     _In_ DWORD level,
     _Out_ LPBYTE *bufptr)
+{
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetReplExportDirAdd(
+    _In_opt_ LPCWSTR servername,
+    _In_ DWORD level,
+    _In_ const LPBYTE buf,
+    _Out_opt_ LPDWORD parm_err)
+{
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetReplExportDirDel(
+    _In_opt_ LPCWSTR servername,
+    _In_ LPCWSTR dirname)
+{
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetReplExportDirEnum(
+    _In_opt_ LPCWSTR servername,
+    _In_ DWORD level,
+    _Out_ LPBYTE *bufptr,
+    _In_ DWORD prefmaxlen,
+    _Out_ LPDWORD entriesread,
+    _Out_ LPDWORD totalentries,
+    _Inout_opt_ LPDWORD resumehandle)
+{
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetReplExportDirGetInfo(
+    _In_opt_ LPCWSTR servername,
+    _In_ LPCWSTR dirname,
+    _In_ DWORD level,
+    _Out_ LPBYTE *bufptr)
+{
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetReplExportDirLock(
+    _In_opt_ LPCWSTR servername,
+    _In_ LPCWSTR dirname)
+{
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetReplExportDirSetInfo(
+    _In_opt_ LPCWSTR servername,
+    _In_ LPCWSTR dirname,
+    _In_ DWORD level,
+    _In_ const LPBYTE buf,
+    _Out_opt_ LPDWORD parm_err)
+{
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetReplExportDirUnlock(
+    _In_opt_ LPCWSTR servername,
+    _In_ LPCWSTR dirname,
+    _In_ DWORD unlockforce)
+{
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetReplGetInfo(
+    _In_opt_ LPCWSTR servername,
+    _In_ DWORD level,
+    _Out_ LPBYTE *bufptr)
+{
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetReplImportDirAdd(
+    _In_opt_ LPCWSTR servername,
+    _In_ DWORD level,
+    _In_ const LPBYTE buf,
+    _Out_opt_ LPDWORD parm_err)
+{
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetReplImportDirDel(
+    _In_opt_ LPCWSTR servername,
+    _In_ LPCWSTR dirname)
+{
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetReplImportDirEnum(
+    _In_opt_ LPCWSTR servername,
+    _In_ DWORD level,
+    _Out_ LPBYTE *bufptr,
+    _In_ DWORD prefmaxlen,
+    _Out_ LPDWORD entriesread,
+    _Out_ LPDWORD totalentries,
+    _Inout_opt_ LPDWORD resumehandle)
+{
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetReplImportDirGetInfo(
+    _In_opt_ LPCWSTR servername,
+    _In_ LPCWSTR dirname,
+    _In_ DWORD level,
+    _Out_ LPBYTE *bufptr)
+{
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetReplImportDirLock(
+    _In_opt_ LPCWSTR servername,
+    _In_ LPCWSTR dirname)
+{
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetReplImportDirUnlock(
+    _In_opt_ LPCWSTR servername,
+    _In_ LPCWSTR dirname,
+    _In_ DWORD unlockforce)
+{
+    return ERROR_NOT_SUPPORTED;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetReplSetInfo(
+    _In_opt_ LPCWSTR servername,
+    _In_ DWORD level,
+    _In_ const LPBYTE buf,
+    _Out_opt_ LPDWORD parm_err)
 {
     return ERROR_NOT_SUPPORTED;
 }

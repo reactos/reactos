@@ -186,21 +186,21 @@
 @ stdcall NetRemoteTOD(wstr ptr)
 @ stdcall NetRemoveAlternateComputerName(wstr wstr wstr wstr long)
 @ stdcall NetRenameMachineInDomain(wstr wstr wstr wstr long)
-@ stub NetReplExportDirAdd
-@ stub NetReplExportDirDel
-@ stub NetReplExportDirEnum
-@ stub NetReplExportDirGetInfo
-@ stub NetReplExportDirLock
-@ stub NetReplExportDirSetInfo
-@ stub NetReplExportDirUnlock
-@ stub NetReplGetInfo
-@ stub NetReplImportDirAdd
-@ stub NetReplImportDirDel
-@ stub NetReplImportDirEnum
-@ stub NetReplImportDirGetInfo
-@ stub NetReplImportDirLock
-@ stub NetReplImportDirUnlock
-@ stub NetReplSetInfo
+@ stdcall NetReplExportDirAdd(wstr long ptr ptr)
+@ stdcall NetReplExportDirDel(wstr wstr)
+@ stdcall NetReplExportDirEnum(wstr long ptr long ptr ptr ptr)
+@ stdcall NetReplExportDirGetInfo(wstr wstr long ptr)
+@ stdcall NetReplExportDirLock(wstr wstr)
+@ stdcall NetReplExportDirSetInfo(wstr wstr long ptr ptr)
+@ stdcall NetReplExportDirUnlock(wstr wstr long)
+@ stdcall NetReplGetInfo(wstr long ptr)
+@ stdcall NetReplImportDirAdd(wstr long ptr ptr)
+@ stdcall NetReplImportDirDel(wstr wstr)
+@ stdcall NetReplImportDirEnum(wstr long ptr long ptr ptr ptr)
+@ stdcall NetReplImportDirGetInfo(wstr wstr long ptr)
+@ stdcall NetReplImportDirLock(wstr wstr)
+@ stdcall NetReplImportDirUnlock(wstr wstr long)
+@ stdcall NetReplSetInfo(wstr long ptr ptr)
 @ stdcall NetScheduleJobAdd(wstr ptr ptr)
 @ stdcall NetScheduleJobDel(wstr long long)
 @ stdcall NetScheduleJobEnum(wstr ptr long ptr ptr ptr)
