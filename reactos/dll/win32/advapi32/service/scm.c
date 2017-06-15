@@ -654,10 +654,10 @@ CreateServiceA(SC_HANDLE hSCManager,
     if (lpPasswordW != NULL)
         HeapFree(GetProcessHeap(), 0, lpPasswordW);
 
+    SetLastError(dwError);
     if (dwError != ERROR_SUCCESS)
     {
         TRACE("RCreateServiceA() failed (Error %lu)\n", dwError);
-        SetLastError(dwError);
         return NULL;
     }
 
@@ -750,10 +750,10 @@ CreateServiceW(SC_HANDLE hSCManager,
     }
     RpcEndExcept;
 
+    SetLastError(dwError);
     if (dwError != ERROR_SUCCESS)
     {
         TRACE("RCreateServiceW() failed (Error %lu)\n", dwError);
-        SetLastError(dwError);
         return NULL;
     }
 
