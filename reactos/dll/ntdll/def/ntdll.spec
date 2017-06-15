@@ -736,8 +736,8 @@
 732 stdcall RtlIpv6StringToAddressExW(wstr ptr ptr ptr)
 733 stdcall RtlIpv6StringToAddressW(wstr ptr ptr)
 734 stdcall RtlIsActivationContextActive(ptr)
-# stdcall RtlIsCriticalSectionLocked
-# stdcall RtlIsCriticalSectionLockedByThread
+735 stdcall RtlIsCriticalSectionLocked(ptr)
+736 stdcall RtlIsCriticalSectionLockedByThread(ptr)
 737 stdcall RtlIsDosDeviceName_U(wstr)
 738 stdcall RtlIsGenericTableEmpty(ptr)
 739 stdcall RtlIsGenericTableEmptyAvl(ptr)
