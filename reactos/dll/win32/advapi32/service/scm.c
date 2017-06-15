@@ -133,6 +133,7 @@ ScmRpcStatusToWinError(RPC_STATUS Status)
 {
     switch (Status)
     {
+        case STATUS_ACCESS_VIOLATION:
         case RPC_S_INVALID_BINDING:
         case RPC_X_SS_IN_NULL_CONTEXT:
             return ERROR_INVALID_HANDLE;
@@ -2797,6 +2798,9 @@ UnlockServiceDatabase(SC_LOCK ScLock)
         dwError = ScmRpcStatusToWinError(RpcExceptionCode());
     }
     RpcEndExcept;
+
+    if (dwError == ERROR_INVALID_HANDLE)
+        dwError = ERROR_INVALID_SERVICE_LOCK;
 
     if (dwError != ERROR_SUCCESS)
     {
