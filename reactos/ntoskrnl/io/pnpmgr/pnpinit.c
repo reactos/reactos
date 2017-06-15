@@ -253,7 +253,8 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
                        IN PDRIVER_OBJECT DriverObject)
 {
     NTSTATUS Status;
-    HANDLE EnumRootKey, SubKey, ControlKey, ClassKey, PropertiesKey;
+    HANDLE EnumRootKey, SubKey;
+    HANDLE ControlKey, ClassKey = NULL, PropertiesKey;
     UNICODE_STRING ClassGuid, Properties;
     UNICODE_STRING EnumRoot = RTL_CONSTANT_STRING(ENUM_ROOT);
     UNICODE_STRING ControlClass =
@@ -308,7 +309,6 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
             /* No class key */
             DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
                     &ControlClass, Status);
-            ClassKey = NULL;
         }
         else
         {
@@ -323,7 +323,6 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
                 /* No class key */
                 DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
                         &ClassGuid, Status);
-                ClassKey = NULL;
             }
         }
 
@@ -336,7 +335,6 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
                                           ClassKey,
                                           &Properties,
                                           KEY_READ);
-            ZwClose(ClassKey);
             if (!NT_SUCCESS(Status))
             {
                 /* No properties */
@@ -355,7 +353,7 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
     }
 
     /* Do ReactOS-style setup */
-    Status = IopAttachFilterDrivers(DeviceNode, SubKey, TRUE);
+    Status = IopAttachFilterDrivers(DeviceNode, SubKey, ClassKey, TRUE);
     if (!NT_SUCCESS(Status))
     {
         IopRemoveDevice(DeviceNode);
@@ -368,7 +366,7 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
         goto Exit;
     }
 
-    Status = IopAttachFilterDrivers(DeviceNode, SubKey, FALSE);
+    Status = IopAttachFilterDrivers(DeviceNode, SubKey, ClassKey, FALSE);
     if (!NT_SUCCESS(Status))
     {
         IopRemoveDevice(DeviceNode);
@@ -378,8 +376,12 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
     Status = IopStartDevice(DeviceNode);
 
 Exit:
-    /* Close key and return status */
+    /* Close keys and return status */
     ZwClose(SubKey);
+    if (ClassKey != NULL)
+    {
+        ZwClose(ClassKey);
+    }
     return Status;
 }
 

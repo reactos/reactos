@@ -1115,6 +1115,7 @@ FASTCALL
 IopAttachFilterDrivers(
     IN PDEVICE_NODE DeviceNode,
     IN HANDLE EnumSubKey,
+    IN HANDLE ClassKey,
     IN BOOLEAN Lower
 );
 
