@@ -1114,6 +1114,7 @@ NTSTATUS
 FASTCALL
 IopAttachFilterDrivers(
     IN PDEVICE_NODE DeviceNode,
+    IN HANDLE EnumSubKey,
     IN BOOLEAN Lower
 );
 
