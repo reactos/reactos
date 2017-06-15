@@ -159,11 +159,12 @@ EHCI_RH_GetHubStatus(IN PVOID ehciExtension,
 VOID
 NTAPI
 EHCI_RH_FinishReset(IN PVOID ehciExtension,
-                    IN PUSHORT Port)
+                    IN PVOID Context)
 {
     PEHCI_EXTENSION EhciExtension;
     PULONG PortStatusReg;
     EHCI_PORT_STATUS_CONTROL PortSC;
+    PUSHORT Port = Context;
 
     DPRINT("EHCI_RH_FinishReset: *Port - %x\n", *Port);
 
@@ -198,15 +199,16 @@ EHCI_RH_FinishReset(IN PVOID ehciExtension,
     }
 }
 
-ULONG
+VOID
 NTAPI
 EHCI_RH_PortResetComplete(IN PVOID ehciExtension,
-                          IN PUSHORT Port)
+                          IN PVOID Context)
 {
     PEHCI_EXTENSION EhciExtension;
     PULONG PortStatusReg;
     EHCI_PORT_STATUS_CONTROL PortSC;
     ULONG ix;
+    PUSHORT Port = Context;
 
     DPRINT("EHCI_RH_PortResetComplete: *Port - %x\n", *Port);
 
@@ -241,11 +243,11 @@ START:
     }
     while (PortSC.PortReset && (PortSC.AsULONG != -1));
 
-    return RegPacket.UsbPortRequestAsyncCallback(EhciExtension,
-                                                 50, // TimerValue
-                                                 Port,
-                                                 sizeof(Port),
-                                                 EHCI_RH_FinishReset);
+    RegPacket.UsbPortRequestAsyncCallback(EhciExtension,
+                                          50, // TimerValue
+                                          Port,
+                                          sizeof(Port),
+                                          EHCI_RH_FinishReset);
 }
 
 MPSTATUS
@@ -395,11 +397,12 @@ EHCI_RH_ClearFeaturePortPower(IN PVOID ehciExtension,
 VOID
 NTAPI
 EHCI_RH_PortResumeComplete(IN PVOID ehciExtension,
-                           IN PUSHORT Port)
+                           IN PVOID Context)
 {
     PEHCI_EXTENSION EhciExtension;
     PULONG PortStatusReg;
     EHCI_PORT_STATUS_CONTROL PortSC;
+    PUSHORT Port = Context;
 
     DPRINT("EHCI_RH_PortResumeComplete: *Port - %x\n", *Port);
 
