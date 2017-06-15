@@ -640,41 +640,15 @@ NTSTATUS
 FASTCALL
 IopAttachFilterDrivers(
     PDEVICE_NODE DeviceNode,
+    HANDLE EnumSubKey,
     BOOLEAN Lower)
 {
     RTL_QUERY_REGISTRY_TABLE QueryTable[2] = { { NULL, 0, NULL, NULL, 0, NULL, 0 }, };
     UNICODE_STRING Class;
     WCHAR ClassBuffer[40];
-    UNICODE_STRING EnumRoot = RTL_CONSTANT_STRING(ENUM_ROOT);
     UNICODE_STRING ControlClass = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Class");
-    HANDLE EnumRootKey, SubKey;
     HANDLE ControlKey, ClassKey;
     NTSTATUS Status;
-
-    /* Open enumeration root key */
-    Status = IopOpenRegistryKeyEx(&EnumRootKey,
-                                  NULL,
-                                  &EnumRoot,
-                                  KEY_READ);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
-                &EnumRoot, Status);
-        return Status;
-    }
-
-    /* Open subkey */
-    Status = IopOpenRegistryKeyEx(&SubKey,
-                                  EnumRootKey,
-                                  &DeviceNode->InstancePath,
-                                  KEY_READ);
-    ZwClose(EnumRootKey);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
-                &DeviceNode->InstancePath, Status);
-        return Status;
-    }
 
     /*
      * First load the device filters
@@ -688,7 +662,7 @@ IopAttachFilterDrivers(
     QueryTable[0].DefaultType = REG_NONE;
 
     Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
-                                    (PWSTR)SubKey,
+                                    (PWSTR)EnumSubKey,
                                     QueryTable,
                                     DeviceNode,
                                     NULL);
@@ -696,7 +670,6 @@ IopAttachFilterDrivers(
     {
         DPRINT1("Failed to load device %s filters: %08X\n",
                 Lower ? "lower" : "upper", Status);
-        ZwClose(SubKey);
         return Status;
     }
 
@@ -712,13 +685,10 @@ IopAttachFilterDrivers(
     QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED | RTL_QUERY_REGISTRY_DIRECT;
 
     Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
-                                    (PWSTR)SubKey,
+                                    (PWSTR)EnumSubKey,
                                     QueryTable,
                                     DeviceNode,
                                     NULL);
-
-    /* Close subkey */
-    ZwClose(SubKey);
 
     /* If there is no class GUID, we're done */
     if (!NT_SUCCESS(Status))

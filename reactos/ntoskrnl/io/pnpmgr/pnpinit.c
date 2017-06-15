@@ -290,7 +290,6 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
     Status = IopGetRegistryValue(SubKey,
                                  REGSTR_VAL_CLASSGUID,
                                  &KeyValueInformation);
-    ZwClose(SubKey);
     if (NT_SUCCESS(Status))
     {
         /* Convert to unicode string */
@@ -356,26 +355,28 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
     }
 
     /* Do ReactOS-style setup */
-    Status = IopAttachFilterDrivers(DeviceNode, TRUE);
+    Status = IopAttachFilterDrivers(DeviceNode, SubKey, TRUE);
     if (!NT_SUCCESS(Status))
     {
         IopRemoveDevice(DeviceNode);
-        return Status;
+        goto Exit;
     }
     Status = IopInitializeDevice(DeviceNode, DriverObject);
     if (NT_SUCCESS(Status))
     {
-        Status = IopAttachFilterDrivers(DeviceNode, FALSE);
+        Status = IopAttachFilterDrivers(DeviceNode, SubKey, FALSE);
         if (!NT_SUCCESS(Status))
         {
             IopRemoveDevice(DeviceNode);
-            return Status;
+            goto Exit;
         }
 
         Status = IopStartDevice(DeviceNode);
     }
 
-    /* Return status */
+Exit:
+    /* Close key and return status */
+    ZwClose(SubKey);
     return Status;
 }
 
