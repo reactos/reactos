@@ -707,7 +707,7 @@ IopAttachFilterDrivers(
     {
         DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
                 &ControlClass, Status);
-        return Status;
+        return STATUS_SUCCESS;
     }
 
     /* Open subkey */
