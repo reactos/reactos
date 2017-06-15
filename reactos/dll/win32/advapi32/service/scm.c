@@ -1906,10 +1906,10 @@ OpenServiceA(SC_HANDLE hSCManager,
     }
     RpcEndExcept;
 
+    SetLastError(dwError);
     if (dwError != ERROR_SUCCESS)
     {
         TRACE("ROpenServiceA() failed (Error %lu)\n", dwError);
-        SetLastError(dwError);
         return NULL;
     }
 
@@ -1955,10 +1955,10 @@ OpenServiceW(SC_HANDLE hSCManager,
     }
     RpcEndExcept;
 
+    SetLastError(dwError);
     if (dwError != ERROR_SUCCESS)
     {
         TRACE("ROpenServiceW() failed (Error %lu)\n", dwError);
-        SetLastError(dwError);
         return NULL;
     }
 
