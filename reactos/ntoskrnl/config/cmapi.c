@@ -1967,7 +1967,7 @@ CmFlushKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
         }
 
         /* Release the flush lock */
-        CmpUnlockHiveFlusher((PCMHIVE)Hive);
+        CmpUnlockHiveFlusher(CmHive);
     }
 
     /* Return the status */
@@ -2130,7 +2130,7 @@ CmLoadKey(IN POBJECT_ATTRIBUTES TargetKey,
 static
 BOOLEAN
 NTAPI
-CmpUnlinkHiveFromMaster(IN PHHIVE Hive,
+CmpUnlinkHiveFromMaster(IN PCMHIVE CmHive,
                         IN HCELL_INDEX Cell)
 {
     PCELL_DATA CellData;
@@ -2140,13 +2140,13 @@ CmpUnlinkHiveFromMaster(IN PHHIVE Hive,
     DPRINT("CmpUnlinkHiveFromMaster()\n");
 
     /* Get the cell data */
-    CellData = HvGetCell(Hive, Cell);
+    CellData = HvGetCell(&CmHive->Hive, Cell);
     if (CellData == NULL)
         return FALSE;
 
     /* Get the link cell and release the current cell */
     LinkCell = CellData->u.KeyNode.Parent;
-    HvReleaseCell(Hive, Cell);
+    HvReleaseCell(&CmHive->Hive, Cell);
 
     /* Remove the link cell from the master hive */
     CmpLockHiveFlusherExclusive(CmiVolatileHive);
@@ -2160,13 +2160,9 @@ CmpUnlinkHiveFromMaster(IN PHHIVE Hive,
         return FALSE;
     }
 
-    /* Lock the hive list */
+    /* Remove the hive from the list */
     ExAcquirePushLockExclusive(&CmpHiveListHeadLock);
-
-    /* Remove this hive */
-    RemoveEntryList(&((PCMHIVE)Hive)->HiveList);
-
-    /* Release the lock */
+    RemoveEntryList(&CmHive->HiveList);
     ExReleasePushLock(&CmpHiveListHeadLock);
 
     return TRUE;
@@ -2206,7 +2202,7 @@ CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
     CmFlushKey(Kcb, TRUE);
 
     /* Unlink the hive from the master hive */
-    if (!CmpUnlinkHiveFromMaster(Hive, Cell))
+    if (!CmpUnlinkHiveFromMaster(CmHive, Cell))
     {
         DPRINT("CmpUnlinkHiveFromMaster() failed!\n");
 
@@ -2280,7 +2276,7 @@ CmCountOpenSubKeys(IN PCM_KEY_CONTROL_BLOCK RootKcb,
     /* The root key is the only referenced key. There are no refereced sub keys. */
     if (RootKcb->RefCount == 1)
     {
-        DPRINT("open sub keys: 0\n");
+        DPRINT("Open sub keys: 0\n");
         return 0;
     }
 
@@ -2312,8 +2308,7 @@ CmCountOpenSubKeys(IN PCM_KEY_CONTROL_BLOCK RootKcb,
                 /* Check whether the parent is the root key */
                 if (ParentKcb == RootKcb)
                 {
-                    DPRINT("Found a sub key \n");
-                    DPRINT("RefCount = %u\n", CachedKcb->RefCount);
+                    DPRINT("Found a sub key, RefCount = %u\n", CachedKcb->RefCount);
 
                     if (CachedKcb->RefCount > 0)
                     {
@@ -2340,8 +2335,7 @@ CmCountOpenSubKeys(IN PCM_KEY_CONTROL_BLOCK RootKcb,
         }
     }
 
-    DPRINT("open sub keys: %u\n", SubKeys);
-
+    DPRINT("Open sub keys: %u\n", SubKeys);
     return SubKeys;
 }
 
