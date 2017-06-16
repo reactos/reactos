@@ -1092,7 +1092,7 @@ LONG_PTR IntGetWindowLong( HWND hwnd, INT offset, UINT size, BOOL unicode )
         return 0;
     }
 
-    if (offset >= 0)
+    if (offset >= 0 && wndPtr->fnid != FNID_DESKTOP)
     {
         if (offset > (int)(wndPtr->cbwndExtra - size))
         {
