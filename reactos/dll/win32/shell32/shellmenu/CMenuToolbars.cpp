@@ -160,7 +160,10 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
         isHot = m_hotBar == this && (int) cdraw->nmcd.dwItemSpec == m_hotItem;
         isPopup = m_popupBar == this && (int) cdraw->nmcd.dwItemSpec == m_popupItem;
 
-        if ((m_initFlags & SMINIT_VERTICAL))
+        if (m_hotItem < 0 && isPopup)
+            isHot = TRUE;
+
+        if ((m_useFlatMenus && isHot) || (m_initFlags & SMINIT_VERTICAL))
         {
             COLORREF clrText;
             HBRUSH   bgBrush;
@@ -171,7 +174,7 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
             cdraw->nmcd.uItemState &= ~(CDIS_HOT | CDIS_CHECKED);
 
             // Decide on the colors
-            if (isHot || (m_hotItem < 0 && isPopup))
+            if (isHot)
             {
                 cdraw->nmcd.uItemState |= CDIS_HOT;
 
@@ -203,7 +206,7 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
             cdraw->nmcd.uItemState &= ~CDIS_HOT;
 
             // Decide on the colors
-            if (isHot || (m_hotItem < 0 && isPopup))
+            if (isHot)
             {
                 cdraw->nmcd.uItemState |= CDIS_HOT;
             }
