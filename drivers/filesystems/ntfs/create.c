@@ -649,6 +649,8 @@ NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
     ULONGLONG ParentMftIndex;
     ULONGLONG FileMftIndex;
 
+    DPRINT1("NtfsCreateFileRecord(%p, %p)\n", DeviceExt, FileObject);
+
     // allocate memory for file record
     FileRecord = ExAllocatePoolWithTag(NonPagedPool,
                                        DeviceExt->NtfsInfo.BytesPerFileRecord,
