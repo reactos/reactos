@@ -277,6 +277,42 @@ typedef struct _D3DPrimCaps
   DWORD dwStippleHeight;
 } D3DPRIMCAPS, *LPD3DPRIMCAPS;
 
+typedef struct _D3DDeviceDesc1 {
+  DWORD dwSize;
+  DWORD dwFlags;
+  D3DCOLORMODEL dcmColorModel;
+  DWORD dwDevCaps;
+  D3DTRANSFORMCAPS dtcTransformCaps;
+  BOOL bClipping;
+  D3DLIGHTINGCAPS dlcLightingCaps;
+  D3DPRIMCAPS dpcLineCaps;
+  D3DPRIMCAPS dpcTriCaps;
+  DWORD dwDeviceRenderBitDepth;
+  DWORD dwDeviceZBufferBitDepth;
+  DWORD dwMaxBufferSize;
+  DWORD dwMaxVertexCount;
+} D3DDEVICEDESC1, *LPD3DDEVICEDESC1;
+
+typedef struct _D3DDeviceDesc2 {
+  DWORD dwSize;
+  DWORD dwFlags;
+  D3DCOLORMODEL dcmColorModel;
+  DWORD dwDevCaps;
+  D3DTRANSFORMCAPS dtcTransformCaps;
+  BOOL bClipping;
+  D3DLIGHTINGCAPS dlcLightingCaps;
+  D3DPRIMCAPS dpcLineCaps;
+  D3DPRIMCAPS dpcTriCaps;
+  DWORD dwDeviceRenderBitDepth;
+  DWORD dwDeviceZBufferBitDepth;
+  DWORD dwMaxBufferSize;
+  DWORD dwMaxVertexCount;
+  DWORD dwMinTextureWidth, dwMinTextureHeight;
+  DWORD dwMaxTextureWidth, dwMaxTextureHeight;
+  DWORD dwMinStippleWidth, dwMaxStippleWidth;
+  DWORD dwMinStippleHeight, dwMaxStippleHeight;
+} D3DDEVICEDESC2, *LPD3DDEVICEDESC2;
+
 typedef struct _D3DDeviceDesc
 {
   DWORD dwSize;
@@ -364,6 +400,20 @@ typedef struct _D3DFINDDEVICESEARCH
   DWORD dwCaps;
   D3DPRIMCAPS dpcPrimCaps;
 } D3DFINDDEVICESEARCH, *LPD3DFINDDEVICESEARCH;
+
+typedef struct _D3DFINDDEVICERESULT1 {
+  DWORD dwSize;
+  GUID guid;
+  D3DDEVICEDESC1 ddHwDesc;
+  D3DDEVICEDESC1 ddSwDesc;
+} D3DFINDDEVICERESULT1, *LPD3DFINDDEVICERESULT1;
+
+typedef struct _D3DFINDDEVICERESULT2 {
+  DWORD dwSize;
+  GUID guid;
+  D3DDEVICEDESC2 ddHwDesc;
+  D3DDEVICEDESC2 ddSwDesc;
+} D3DFINDDEVICERESULT2, *LPD3DFINDDEVICERESULT2;
 
 typedef struct _D3DFINDDEVICERESULT
 {
