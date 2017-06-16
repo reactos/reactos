@@ -234,18 +234,18 @@ CmpDestroyHive(IN PCMHIVE CmHive)
     RemoveEntryList(&CmHive->HiveList);
     ExReleasePushLock(&CmpHiveListHeadLock);
 
+    /* Destroy the security descriptor cache */
+    CmpDestroySecurityCache(CmHive);
+
+    /* Destroy the view list */
+    CmpDestroyHiveViewList(CmHive);
+
     /* Delete the flusher lock */
     ExDeleteResourceLite(CmHive->FlusherLock);
     ExFreePoolWithTag(CmHive->FlusherLock, TAG_CMHIVE);
 
     /* Delete the view lock */
     ExFreePoolWithTag(CmHive->ViewLock, TAG_CMHIVE);
-
-    /* Destroy the security descriptor cache */
-    CmpDestroySecurityCache(CmHive);
-
-    /* Destroy the view list */
-    CmpDestroyHiveViewList(CmHive);
 
     /* Free the hive storage */
     HvFree(&CmHive->Hive);
