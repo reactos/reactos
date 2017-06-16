@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ddrawint.h>
+#include <d3dkmthk.h>
 #include <ddkernel.h>
 #include <reactos/drivers/directx/directxint.h>
 #include <reactos/drivers/directx/dxg.h>

@@ -920,6 +920,20 @@ __kernel_entry
 W32KAPI
 DWORD
 APIENTRY
+NtGdiDdDDICreateDCFromMemory(
+    _Inout_ D3DKMT_CREATEDCFROMMEMORY *desc);
+
+__kernel_entry
+W32KAPI
+DWORD
+APIENTRY
+NtGdiDdDDIDestroyDCFromMemory(
+    _In_ CONST D3DKMT_DESTROYDCFROMMEMORY *desc);
+
+__kernel_entry
+W32KAPI
+DWORD
+APIENTRY
 NtGdiDvpCanCreateVideoPort(
     _In_ HANDLE hDirectDraw,
     _Inout_ PDD_CANCREATEVPORTDATA puCanCreateVPortData);
