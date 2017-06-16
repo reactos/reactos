@@ -167,9 +167,7 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
     // we need to extract the filename from the path
     DPRINT1("Pathname: %wZ\n", &FileObject->FileName);
 
-    RtlZeroMemory(&FilenameNoPath, sizeof(UNICODE_STRING));
-    FilenameNoPath.Buffer = Buffer;
-    FilenameNoPath.MaximumLength = MAX_PATH;
+    RtlInitEmptyUnicodeString(&FilenameNoPath, Buffer, MAX_PATH);
 
     FsRtlDissectName(FileObject->FileName, &Current, &Remaining);
 
@@ -210,7 +208,7 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
 
     DPRINT1("FileNameAttribute->DirectoryFileReferenceNumber: 0x%016I64x\n", FileNameAttribute->DirectoryFileReferenceNumber);
 
-    FileNameAttribute->NameLength = FilenameNoPath.Length / 2;
+    FileNameAttribute->NameLength = FilenameNoPath.Length / sizeof(WCHAR);
     // TODO: Get proper nametype, add DOS links as needed
     FileNameAttribute->NameType = NTFS_FILE_NAME_WIN32_AND_DOS;
     RtlCopyMemory(FileNameAttribute->Name, FilenameNoPath.Buffer, FilenameNoPath.Length);
