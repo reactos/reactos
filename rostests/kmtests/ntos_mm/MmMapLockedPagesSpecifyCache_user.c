@@ -38,6 +38,39 @@
     }                                                           \
 }
 
+#define CHECK_ALLOC(MappedBuffer, BufferLength)                 \
+{                                                               \
+    NTSTATUS Status;                                            \
+    PVOID BaseAddress;                                          \
+    SIZE_T Size;                                                \
+    BaseAddress = MappedBuffer;                                 \
+    Size = BufferLength;                                        \
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),        \
+                                     &BaseAddress,              \
+                                     0,                         \
+                                     &Size,                     \
+                                     MEM_RESERVE,               \
+                                     PAGE_READWRITE);           \
+    ok_eq_hex(Status, STATUS_CONFLICTING_ADDRESSES);            \
+    BaseAddress = MappedBuffer;                                 \
+    Size = 0;                                                   \
+    Status = NtFreeVirtualMemory(NtCurrentProcess(),            \
+                                 &BaseAddress,                  \
+                                 &Size,                         \
+                                 MEM_DECOMMIT);                 \
+    ok_eq_hex(Status, STATUS_UNABLE_TO_DELETE_SECTION);         \
+    BaseAddress = MappedBuffer;                                 \
+    Size = 0;                                                   \
+    Status = NtFreeVirtualMemory(NtCurrentProcess(),            \
+                                 &BaseAddress,                  \
+                                 &Size,                         \
+                                 MEM_RELEASE);                  \
+    ok_eq_hex(Status, STATUS_UNABLE_TO_DELETE_SECTION);         \
+    Status = NtUnmapViewOfSection(NtCurrentProcess(),           \
+                                  MappedBuffer);                \
+    ok_eq_hex(Status, STATUS_NOT_MAPPED_VIEW);                  \
+}
+
 START_TEST(MmMapLockedPagesSpecifyCache)
 {
     QUERY_BUFFER QueryBuffer;
@@ -56,6 +89,7 @@ START_TEST(MmMapLockedPagesSpecifyCache)
     ok(KmtSendBufferToDriver(IOCTL_QUERY_BUFFER, &QueryBuffer, sizeof(QUERY_BUFFER), &Length) == ERROR_SUCCESS, "\n");
     ok_eq_int(QueryBuffer.Length, BufferLength);
     ok(QueryBuffer.Buffer != NULL, "Buffer is NULL\n");
+    CHECK_ALLOC(QueryBuffer.Buffer, BufferLength);
 
     Length = 0;
     FILL_READ_BUFFER(QueryBuffer, ReadBuffer);
@@ -66,6 +100,7 @@ START_TEST(MmMapLockedPagesSpecifyCache)
     ok(KmtSendBufferToDriver(IOCTL_QUERY_BUFFER, &QueryBuffer, sizeof(QUERY_BUFFER), &Length) == ERROR_SUCCESS, "\n");
     ok_eq_int(QueryBuffer.Length, BufferLength);
     ok(QueryBuffer.Buffer != NULL, "Buffer is NULL\n");
+    CHECK_ALLOC(QueryBuffer.Buffer, BufferLength);
 
     Length = 0;
     FILL_READ_BUFFER(QueryBuffer, ReadBuffer);
@@ -78,6 +113,7 @@ START_TEST(MmMapLockedPagesSpecifyCache)
     ok(KmtSendBufferToDriver(IOCTL_QUERY_BUFFER, &QueryBuffer, sizeof(QUERY_BUFFER), &Length) == ERROR_SUCCESS, "\n");
     ok_eq_int(QueryBuffer.Length, BufferLength);
     ok(QueryBuffer.Buffer != NULL, "Buffer is NULL\n");
+    CHECK_ALLOC(QueryBuffer.Buffer, BufferLength);
 
     Length = 0;
     FILL_READ_BUFFER(QueryBuffer, ReadBuffer);
@@ -88,6 +124,7 @@ START_TEST(MmMapLockedPagesSpecifyCache)
     ok(KmtSendBufferToDriver(IOCTL_QUERY_BUFFER, &QueryBuffer, sizeof(QUERY_BUFFER), &Length) == ERROR_SUCCESS, "\n");
     ok_eq_int(QueryBuffer.Length, BufferLength);
     ok(QueryBuffer.Buffer != NULL, "Buffer is NULL\n");
+    CHECK_ALLOC(QueryBuffer.Buffer, BufferLength);
 
     Length = 0;
     FILL_READ_BUFFER(QueryBuffer, ReadBuffer);
@@ -100,6 +137,7 @@ START_TEST(MmMapLockedPagesSpecifyCache)
     ok(KmtSendBufferToDriver(IOCTL_QUERY_BUFFER, &QueryBuffer, sizeof(QUERY_BUFFER), &Length) == ERROR_SUCCESS, "\n");
     ok_eq_int(QueryBuffer.Length, BufferLength);
     ok(QueryBuffer.Buffer != NULL, "Buffer is NULL\n");
+    CHECK_ALLOC(QueryBuffer.Buffer, BufferLength);
 
     Length = 0;
     FILL_READ_BUFFER(QueryBuffer, ReadBuffer);
@@ -110,6 +148,7 @@ START_TEST(MmMapLockedPagesSpecifyCache)
     ok(KmtSendBufferToDriver(IOCTL_QUERY_BUFFER, &QueryBuffer, sizeof(QUERY_BUFFER), &Length) == ERROR_SUCCESS, "\n");
     ok_eq_int(QueryBuffer.Length, BufferLength);
     ok(QueryBuffer.Buffer != NULL, "Buffer is NULL\n");
+    CHECK_ALLOC(QueryBuffer.Buffer, BufferLength);
 
     Length = 0;
     FILL_READ_BUFFER(QueryBuffer, ReadBuffer);
@@ -122,6 +161,7 @@ START_TEST(MmMapLockedPagesSpecifyCache)
     ok(KmtSendBufferToDriver(IOCTL_QUERY_BUFFER, &QueryBuffer, sizeof(QUERY_BUFFER), &Length) == ERROR_SUCCESS, "\n");
     ok_eq_int(QueryBuffer.Length, BufferLength);
     ok(QueryBuffer.Buffer != NULL, "Buffer is NULL\n");
+    CHECK_ALLOC(QueryBuffer.Buffer, BufferLength);
 
     Length = 0;
     FILL_READ_BUFFER(QueryBuffer, ReadBuffer);
@@ -132,6 +172,7 @@ START_TEST(MmMapLockedPagesSpecifyCache)
     ok(KmtSendBufferToDriver(IOCTL_QUERY_BUFFER, &QueryBuffer, sizeof(QUERY_BUFFER), &Length) == ERROR_SUCCESS, "\n");
     ok_eq_int(QueryBuffer.Length, BufferLength);
     ok(QueryBuffer.Buffer != NULL, "Buffer is NULL\n");
+    CHECK_ALLOC(QueryBuffer.Buffer, BufferLength);
 
     Length = 0;
     FILL_READ_BUFFER(QueryBuffer, ReadBuffer);
@@ -146,6 +187,7 @@ START_TEST(MmMapLockedPagesSpecifyCache)
     ok(KmtSendBufferToDriver(IOCTL_QUERY_BUFFER, &QueryBuffer, sizeof(QUERY_BUFFER), &Length) == ERROR_SUCCESS, "\n");
     ok_eq_int(QueryBuffer.Length, BufferLength);
     ok(QueryBuffer.Buffer != NULL, "Buffer is NULL\n");
+    CHECK_ALLOC(QueryBuffer.Buffer, BufferLength);
 
     Length = 0;
     FILL_READ_BUFFER(QueryBuffer, ReadBuffer);
@@ -158,6 +200,7 @@ START_TEST(MmMapLockedPagesSpecifyCache)
     ok(KmtSendBufferToDriver(IOCTL_QUERY_BUFFER, &QueryBuffer, sizeof(QUERY_BUFFER), &Length) == ERROR_SUCCESS, "\n");
     ok_eq_int(QueryBuffer.Length, BufferLength);
     ok(QueryBuffer.Buffer != NULL, "Buffer is NULL\n");
+    CHECK_ALLOC(QueryBuffer.Buffer, BufferLength);
 
     Length = 0;
     FILL_READ_BUFFER(QueryBuffer, ReadBuffer);
