@@ -295,7 +295,13 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
         return Status;
     }
 
-    Status = FindAttribute(DeviceExt, DeviceExt->MasterFileTable, AttributeData, L"", 0, &DeviceExt->MFTContext, NULL);
+    Status = FindAttribute(DeviceExt,
+                           DeviceExt->MasterFileTable,
+                           AttributeData,
+                           L"",
+                           0,
+                           &DeviceExt->MFTContext,
+                           &DeviceExt->MftDataOffset);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Can't find data attribute for Master File Table.\n");

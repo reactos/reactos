@@ -116,6 +116,7 @@ typedef struct
 
     NTFS_INFO NtfsInfo;
 
+    ULONG MftDataOffset;
     ULONG Flags;
     ULONG OpenHandleCount;
 
@@ -868,6 +869,20 @@ VOID
 SetFileRecordEnd(PFILE_RECORD_HEADER FileRecord,
                  PNTFS_ATTR_RECORD AttrEnd,
                  ULONG EndMarker);
+
+NTSTATUS
+SetNonResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
+                                  PNTFS_ATTR_CONTEXT AttrContext,
+                                  ULONG AttrOffset,
+                                  PFILE_RECORD_HEADER FileRecord,
+                                  PLARGE_INTEGER DataSize);
+
+NTSTATUS
+SetResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
+                               PNTFS_ATTR_CONTEXT AttrContext,
+                               ULONG AttrOffset,
+                               PFILE_RECORD_HEADER FileRecord,
+                               PLARGE_INTEGER DataSize);
 
 ULONGLONG
 AttributeAllocatedLength(PNTFS_ATTR_RECORD AttrRecord);
