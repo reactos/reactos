@@ -2198,6 +2198,27 @@ CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Mark this hive as being unloaded */
+    Hive->HiveFlags |= HIVE_IS_UNLOADING;
+
+    /* Search for any opened keys in this hive, and take an appropriate action */
+    if (Kcb->RefCount > 1)
+    {
+        if (Flags != REG_FORCE_UNLOAD)
+        {
+            if (CmCountOpenSubKeys(Kcb, FALSE) != 0)
+            {
+                /* There are open subkeys but we don't force hive unloading, fail */
+                Hive->HiveFlags &= ~HIVE_IS_UNLOADING;
+                return STATUS_CANNOT_DELETE;
+            }
+        }
+        else
+        {
+            DPRINT1("CmUnloadKey: Force unloading is UNIMPLEMENTED, expect dangling KCBs problems!\n");
+        }
+    }
+
     /* Flush the hive */
     CmFlushKey(Kcb, TRUE);
 
@@ -2206,9 +2227,8 @@ CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
     {
         DPRINT("CmpUnlinkHiveFromMaster() failed!\n");
 
-        /* Remove the unloading flag */
+        /* Remove the unloading flag and return failure */
         Hive->HiveFlags &= ~HIVE_IS_UNLOADING;
-
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -2243,15 +2263,15 @@ CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
     /* Destroy the view list */
     CmpDestroyHiveViewList(CmHive);
 
-    /* Free the hive storage */
-    HvFree(Hive);
-
     /* Delete the flusher lock */
     ExDeleteResourceLite(CmHive->FlusherLock);
     ExFreePoolWithTag(CmHive->FlusherLock, TAG_CMHIVE);
 
     /* Delete the view lock */
     ExFreePoolWithTag(CmHive->ViewLock, TAG_CMHIVE);
+
+    /* Free the hive storage */
+    HvFree(Hive);
 
     /* Free the hive */
     CmpFree(CmHive, TAG_CM);
