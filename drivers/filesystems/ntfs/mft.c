@@ -186,6 +186,161 @@ AttributeDataLength(PNTFS_ATTR_RECORD AttrRecord)
         return AttrRecord->Resident.ValueLength;
 }
 
+/**
+* @name IncreaseMftSize
+* @implemented
+*
+* Increases the size of the master file table on a volume, increasing the space available for file records.
+*
+* @param Vcb
+* Pointer to the VCB (DEVICE_EXTENSION) of the target volume.
+*
+* @return
+* STATUS_SUCCESS on success.
+* STATUS_INSUFFICIENT_RESOURCES if an allocation fails.
+* STATUS_INVALID_PARAMETER if there was an error reading the Mft's bitmap.
+*
+* @remarks
+* Increases the size of the Master File Table by 8 records. Bitmap entries for the new records are cleared,
+* and the bitmap is also enlarged if needed. Mimicking Windows' behavior when enlarging the mft is still TODO.
+* This function will wait for exlusive access to the volume fcb.
+*/
+NTSTATUS
+IncreaseMftSize(PDEVICE_EXTENSION Vcb)
+{
+    PNTFS_ATTR_CONTEXT BitmapContext;
+    LARGE_INTEGER BitmapSize;
+    LARGE_INTEGER DataSize;
+    LONGLONG BitmapSizeDifference;
+    ULONG DataSizeDifference = Vcb->NtfsInfo.BytesPerFileRecord * 8;
+    ULONG BitmapOffset;
+    PUCHAR BitmapBuffer;
+    ULONGLONG BitmapBytes;
+    ULONGLONG NewBitmapSize;
+    ULONG BytesRead;
+    ULONG LengthWritten;
+    NTSTATUS Status;
+
+    DPRINT1("IncreaseMftSize(%p)\n", Vcb);
+
+    // We need exclusive access to the mft while we change its size
+    if (!ExAcquireResourceExclusiveLite(&(Vcb->DirResource), TRUE))
+    {
+        return STATUS_CANT_WAIT;
+    }
+
+    // Find the bitmap attribute of master file table
+    Status = FindAttribute(Vcb, Vcb->MasterFileTable, AttributeBitmap, L"", 0, &BitmapContext, &BitmapOffset);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Couldn't find $BITMAP attribute of Mft!\n");
+        ExReleaseResourceLite(&(Vcb->DirResource));
+        return Status;
+    }
+
+    // Get size of Bitmap Attribute
+    BitmapSize.QuadPart = AttributeDataLength(&BitmapContext->Record);
+
+    // Calculate the new mft size
+    DataSize.QuadPart = AttributeDataLength(&(Vcb->MFTContext->Record)) + DataSizeDifference;
+
+    // Determine how many bytes will make up the bitmap
+    BitmapBytes = DataSize.QuadPart / Vcb->NtfsInfo.BytesPerFileRecord / 8;
+    
+    // Determine how much we need to adjust the bitmap size (it's possible we don't)
+    BitmapSizeDifference = BitmapBytes - BitmapSize.QuadPart;
+    NewBitmapSize = max(BitmapSize.QuadPart + BitmapSizeDifference, BitmapSize.QuadPart);
+
+    // Allocate memory for the bitmap
+    BitmapBuffer = ExAllocatePoolWithTag(NonPagedPool, NewBitmapSize, TAG_NTFS);
+    if (!BitmapBuffer)
+    {
+        DPRINT1("ERROR: Unable to allocate memory for bitmap attribute!\n");
+        ExReleaseResourceLite(&(Vcb->DirResource));
+        ReleaseAttributeContext(BitmapContext);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    // Zero the bytes we'll be adding
+    RtlZeroMemory((PUCHAR)((ULONG_PTR)BitmapBuffer), NewBitmapSize);
+
+    // Read the bitmap attribute
+    BytesRead = ReadAttribute(Vcb,
+                              BitmapContext,
+                              0,
+                              (PCHAR)BitmapBuffer,
+                              BitmapSize.LowPart);
+    if (BytesRead != BitmapSize.LowPart)
+    {
+        DPRINT1("ERROR: Bytes read != Bitmap size!\n");
+        ExReleaseResourceLite(&(Vcb->DirResource));
+        ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
+        ReleaseAttributeContext(BitmapContext);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    // Increase the mft size
+    Status = SetNonResidentAttributeDataLength(Vcb, Vcb->MFTContext, Vcb->MftDataOffset, Vcb->MasterFileTable, &DataSize);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Failed to set size of $MFT data attribute!\n");
+        ExReleaseResourceLite(&(Vcb->DirResource));
+        ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
+        ReleaseAttributeContext(BitmapContext);
+        return Status;
+    }
+
+    // If the bitmap grew
+    if (BitmapSizeDifference > 0)
+    {
+        // Set the new bitmap size
+        BitmapSize.QuadPart += BitmapSizeDifference;
+        if (BitmapContext->Record.IsNonResident)
+            Status = SetNonResidentAttributeDataLength(Vcb, BitmapContext, BitmapOffset, Vcb->MasterFileTable, &BitmapSize);
+        else
+            Status = SetResidentAttributeDataLength(Vcb, BitmapContext, BitmapOffset, Vcb->MasterFileTable, &BitmapSize);
+    
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ERROR: Failed to set size of bitmap attribute!\n");
+            ExReleaseResourceLite(&(Vcb->DirResource));
+            ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
+            ReleaseAttributeContext(BitmapContext);
+            return Status;
+        }
+    }
+
+    //NtfsDumpFileAttributes(Vcb, FileRecord);
+
+    // Update the file record with the new attribute sizes
+    Status = UpdateFileRecord(Vcb, Vcb->VolumeFcb->MFTIndex, Vcb->MasterFileTable);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Failed to update $MFT file record!\n");
+        ExReleaseResourceLite(&(Vcb->DirResource));
+        ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
+        ReleaseAttributeContext(BitmapContext);
+        return Status;
+    }
+
+    // Write out the new bitmap
+    Status = WriteAttribute(Vcb, BitmapContext, BitmapOffset, BitmapBuffer, BitmapSize.LowPart, &LengthWritten);
+    if (!NT_SUCCESS(Status))
+    {
+        ExReleaseResourceLite(&(Vcb->DirResource));
+        ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
+        ReleaseAttributeContext(BitmapContext);
+        DPRINT1("ERROR: Couldn't write to bitmap attribute of $MFT!\n");
+    }
+
+    // Cleanup
+    ExReleaseResourceLite(&(Vcb->DirResource));
+    ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
+    ReleaseAttributeContext(BitmapContext);
+
+    return STATUS_SUCCESS;
+}
+
 VOID
 InternalSetResidentAttributeLength(PNTFS_ATTR_CONTEXT AttrContext,
                                    PFILE_RECORD_HEADER FileRecord,
@@ -351,7 +506,7 @@ SetFileRecordEnd(PFILE_RECORD_HEADER FileRecord,
 * STATUS_INVALID_PARAMETER if we can't find the last cluster in the data run.
 *
 * @remarks
-* Called by SetAttributeDataLength(). Use SetAttributeDataLength() unless you have a good
+* Called by SetAttributeDataLength() and IncreaseMftSize(). Use SetAttributeDataLength() unless you have a good 
 * reason to use this. Doesn't update the file record on disk. Doesn't inform the cache controller of changes with
 * any associated files. Synchronization is the callers responsibility.
 */
@@ -485,7 +640,7 @@ SetNonResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
 * last attribute listed in the file record.
 *
 * @remarks
-* Called by SetAttributeDataLength(). Use SetAttributeDataLength() unless you have a good
+* Called by SetAttributeDataLength() and IncreaseMftSize(). Use SetAttributeDataLength() unless you have a good
 * reason to use this. Doesn't update the file record on disk. Doesn't inform the cache controller of changes with
 * any associated files. Synchronization is the callers responsibility.
 */
@@ -1488,7 +1643,6 @@ FixupUpdateSequenceArray(PDEVICE_EXTENSION Vcb,
 * STATUS_OBJECT_NAME_NOT_FOUND if we can't find the MFT's $Bitmap or if we weren't able 
 * to read the attribute.
 * STATUS_INSUFFICIENT_RESOURCES if we can't allocate enough memory for a copy of $Bitmap.
-* STATUS_NOT_IMPLEMENTED if we need to increase the size of the MFT.
 * 
 */
 NTSTATUS
@@ -1503,9 +1657,13 @@ AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
     ULONGLONG AttrBytesRead;
     PVOID BitmapData;
     ULONG LengthWritten;
+    PNTFS_ATTR_CONTEXT BitmapContext;
+    LARGE_INTEGER BitmapBits;
+    UCHAR SystemReservedBits;
+
+    DPRINT1("AddNewMftEntry(%p, %p, %p)\n", FileRecord, DeviceExt, DestinationIndex);
 
     // First, we have to read the mft's $Bitmap attribute
-    PNTFS_ATTR_CONTEXT BitmapContext;
     Status = FindAttribute(DeviceExt, DeviceExt->MasterFileTable, AttributeBitmap, L"", 0, &BitmapContext, NULL);
     if (!NT_SUCCESS(Status))
     {
@@ -1533,20 +1691,40 @@ AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
         return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
+    // we need to backup the bits for records 0x10 - 0x17 and leave them unassigned if they aren't assigned
+    RtlCopyMemory(&SystemReservedBits, (PVOID)((ULONG_PTR)BitmapData + 2), 1);
+    RtlFillMemory((PVOID)((ULONG_PTR)BitmapData + 2), 1, (UCHAR)0xFF);
+
+    // Calculate bit count
+    BitmapBits.QuadPart = AttributeDataLength(&(DeviceExt->MFTContext->Record)) /
+                          DeviceExt->NtfsInfo.BytesPerFileRecord;
+    if (BitmapBits.HighPart != 0)
+    {
+        DPRINT1("\tFIXME: bitmap sizes beyond 32bits are not yet supported!\n");
+        BitmapBits.LowPart = 0xFFFFFFFF;
+    }
+
     // convert buffer into bitmap
-    RtlInitializeBitMap(&Bitmap, (PULONG)BitmapData, BitmapDataSize * 8);
+    RtlInitializeBitMap(&Bitmap, (PULONG)BitmapData, BitmapBits.LowPart);
 
     // set next available bit, preferrably after 23rd bit
     MftIndex = RtlFindClearBitsAndSet(&Bitmap, 1, 24);
     if ((LONG)MftIndex == -1)
     {
-        DPRINT1("ERROR: Couldn't find free space in MFT for file record!\n");
+        DPRINT1("Couldn't find free space in MFT for file record, increasing MFT size.\n");
 
         ExFreePoolWithTag(BitmapData, TAG_NTFS);
         ReleaseAttributeContext(BitmapContext);
 
-        // TODO: increase mft size
-        return STATUS_NOT_IMPLEMENTED;
+        // Couldn't find a free record in the MFT, add some blank records and try again
+        Status = IncreaseMftSize(DeviceExt);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ERROR: Couldn't find space in MFT for file or increase MFT size!\n");
+            return Status;
+        }
+
+        return AddNewMftEntry(FileRecord, DeviceExt, DestinationIndex);
     }
 
     DPRINT1("Creating file record at MFT index: %I64u\n", MftIndex);
@@ -1555,6 +1733,9 @@ AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
     FileRecord->MFTRecordNumber = MftIndex;
 
     // [BitmapData should have been updated via RtlFindClearBitsAndSet()]
+
+    // Restore the system reserved bits
+    RtlCopyMemory((PVOID)((ULONG_PTR)BitmapData + 2), &SystemReservedBits, 1);
 
     // write the bitmap back to the MFT's $Bitmap attribute
     Status = WriteAttribute(DeviceExt, BitmapContext, 0, BitmapData, BitmapDataSize, &LengthWritten);
@@ -1723,7 +1904,7 @@ BrowseIndexEntries(PDEVICE_EXTENSION Vcb,
     while (IndexEntry < LastEntry &&
            !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
     {
-        if ((IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK) > 0x10 &&
+        if ((IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK) >= 0x10 &&
             *CurrentEntry >= *StartEntry &&
             IndexEntry->FileName.NameType != NTFS_FILE_NAME_DOS &&
             CompareFileName(FileName, IndexEntry, DirSearch))
