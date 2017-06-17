@@ -652,12 +652,95 @@ SettingsPageCallbackProc(HWND hwnd, UINT uMsg, LPPROPSHEETPAGE ppsp)
     return Ret;
 }
 
+static VOID
+ApplyDisplaySettings(HWND hwndDlg, PDATA pData)
+{
+    TCHAR Message[1024], Title[256];
+    DEVMODE devmode;
+    LONG rc;
+
+    RtlZeroMemory(&devmode, sizeof(devmode));
+    devmode.dmSize = (WORD)sizeof(devmode);
+    devmode.dmPelsWidth = pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth;
+    devmode.dmPelsHeight = pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight;
+    devmode.dmBitsPerPel = pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel;
+    devmode.dmDisplayFrequency = pData->CurrentDisplayDevice->CurrentSettings->dmDisplayFrequency;
+    devmode.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL | DM_DISPLAYFREQUENCY;
+
+    rc = ChangeDisplaySettingsEx(pData->CurrentDisplayDevice->DeviceName,
+                                 &devmode,
+                                 NULL,
+                                 CDS_UPDATEREGISTRY,
+                                 NULL);
+    switch (rc)
+    {
+        case DISP_CHANGE_SUCCESSFUL:
+            break;
+
+        case DISP_CHANGE_RESTART:
+            LoadString(hApplet, IDS_DISPLAY_SETTINGS, Title, sizeof(Title) / sizeof(TCHAR));
+            LoadString(hApplet, IDS_APPLY_NEEDS_RESTART, Message, sizeof(Message) / sizeof (TCHAR));
+            MessageBox(hwndDlg, Message, Title, MB_OK | MB_ICONINFORMATION);
+            return;
+
+        case DISP_CHANGE_FAILED:
+        default:
+            LoadString(hApplet, IDS_DISPLAY_SETTINGS, Title, sizeof(Title) / sizeof(TCHAR));
+            LoadString(hApplet, IDS_APPLY_FAILED, Message, sizeof(Message) / sizeof (TCHAR));
+            MessageBox(hwndDlg, Message, Title, MB_OK | MB_ICONSTOP);
+            return;
+    }
+
+    LoadString(hApplet, IDS_DISPLAY_SETTINGS, Title, sizeof(Title) / sizeof(TCHAR));
+
+    if (MessageBox(hwndDlg, _T("Do you want to keep these display settings?"), Title, MB_YESNO | MB_ICONQUESTION) == IDYES)
+    {
+        pData->CurrentDisplayDevice->InitialSettings.dmPelsWidth = pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth;
+        pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight = pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight;
+        pData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel = pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel;
+    }
+    else
+    {
+        devmode.dmPelsWidth = pData->CurrentDisplayDevice->InitialSettings.dmPelsWidth;
+        devmode.dmPelsHeight = pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight;
+        devmode.dmBitsPerPel = pData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel;
+        devmode.dmDisplayFrequency = pData->CurrentDisplayDevice->InitialSettings.dmDisplayFrequency;
+
+        rc = ChangeDisplaySettingsEx(pData->CurrentDisplayDevice->DeviceName,
+                                     &devmode,
+                                     NULL,
+                                     CDS_UPDATEREGISTRY,
+                                     NULL);
+        switch (rc)
+        {
+            case DISP_CHANGE_SUCCESSFUL:
+                pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth = pData->CurrentDisplayDevice->InitialSettings.dmPelsWidth;
+                pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight = pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight;
+                pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel = pData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel;
+                UpdateDisplay(hwndDlg, pData, TRUE);
+                break;
+
+            case DISP_CHANGE_RESTART:
+                LoadString(hApplet, IDS_DISPLAY_SETTINGS, Title, sizeof(Title) / sizeof(TCHAR));
+                LoadString(hApplet, IDS_APPLY_NEEDS_RESTART, Message, sizeof(Message) / sizeof (TCHAR));
+                MessageBox(hwndDlg, Message, Title, MB_OK | MB_ICONINFORMATION);
+                return;
+
+            case DISP_CHANGE_FAILED:
+            default:
+                LoadString(hApplet, IDS_DISPLAY_SETTINGS, Title, sizeof(Title) / sizeof(TCHAR));
+                LoadString(hApplet, IDS_APPLY_FAILED, Message, sizeof(Message) / sizeof (TCHAR));
+                MessageBox(hwndDlg, Message, Title, MB_OK | MB_ICONSTOP);
+                return;
+        }
+    }
+}
+
 /* Property page dialog callback */
 INT_PTR CALLBACK
 SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lParam)
 {
     PDATA pData;
-    TCHAR Message[1024], Title[256];
 
     pData = (PDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
@@ -720,42 +803,8 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
                  || pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight != pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight
                  || pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel != pData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel)
                 {
-                    /* FIXME: Need to test changes */
                     /* Apply new settings */
-                    LONG rc;
-                    DEVMODE devmode;
-                    RtlZeroMemory(&devmode, sizeof(devmode));
-                    devmode.dmSize = (WORD)sizeof(devmode);
-                    devmode.dmPelsWidth = pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth;
-                    devmode.dmPelsHeight = pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight;
-                    devmode.dmBitsPerPel = pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel;
-                    devmode.dmDisplayFrequency = pData->CurrentDisplayDevice->CurrentSettings->dmDisplayFrequency;
-                    devmode.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL | DM_DISPLAYFREQUENCY;
-                    rc = ChangeDisplaySettingsEx(
-                        pData->CurrentDisplayDevice->DeviceName,
-                        &devmode,
-                        NULL,
-                        CDS_UPDATEREGISTRY,
-                        NULL);
-                    switch (rc)
-                    {
-                        case DISP_CHANGE_SUCCESSFUL:
-                            pData->CurrentDisplayDevice->InitialSettings.dmPelsWidth = pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth;
-                            pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight = pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight;
-                            pData->CurrentDisplayDevice->InitialSettings.dmBitsPerPel = pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel;
-                            break;
-                        case DISP_CHANGE_RESTART:
-                            LoadString(hApplet, IDS_DISPLAY_SETTINGS, Title, sizeof(Title) / sizeof(TCHAR));
-                            LoadString(hApplet, IDS_APPLY_NEEDS_RESTART, Message, sizeof(Message) / sizeof (TCHAR));
-                            MessageBox(hwndDlg, Message, Title, MB_OK | MB_ICONINFORMATION);
-                            break;
-                        case DISP_CHANGE_FAILED:
-                        default:
-                            LoadString(hApplet, IDS_DISPLAY_SETTINGS, Title, sizeof(Title) / sizeof(TCHAR));
-                            LoadString(hApplet, IDS_APPLY_FAILED, Message, sizeof(Message) / sizeof (TCHAR));
-                            MessageBox(hwndDlg, Message, Title, MB_OK | MB_ICONSTOP);
-                            break;
-                    }
+                    ApplyDisplaySettings(hwndDlg, pData);
                 }
             }
             break;
