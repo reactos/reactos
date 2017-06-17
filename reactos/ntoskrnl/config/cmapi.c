@@ -1637,69 +1637,88 @@ CmQueryKey(_In_ PCM_KEY_CONTROL_BLOCK Kcb,
         goto Quickie;
     }
 
-    /* Check what class we got */
-    switch (KeyInformationClass)
+    /* Data can be user-mode, use SEH */
+    _SEH2_TRY
     {
-        /* Typical information */
-        case KeyFullInformation:
-        case KeyBasicInformation:
-        case KeyNodeInformation:
-
-            /* Get the hive and parent */
-            Hive = Kcb->KeyHive;
-            Parent = (PCM_KEY_NODE)HvGetCell(Hive, Kcb->KeyCell);
-            ASSERT(Parent);
-
-            /* Track cell references */
-            if (!HvTrackCellRef(&CellReferences, Hive, Kcb->KeyCell))
+        /* Check what class we got */
+        switch (KeyInformationClass)
+        {
+            /* Typical information */
+            case KeyFullInformation:
+            case KeyBasicInformation:
+            case KeyNodeInformation:
             {
-                /* Not enough memory to track references */
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-            }
-            else
-            {
-                /* Call the internal API */
-                Status = CmpQueryKeyData(Hive,
-                                         Parent,
-                                         KeyInformationClass,
-                                         KeyInformation,
-                                         Length,
-                                         ResultLength);
-            }
-            break;
+                /* Get the hive and parent */
+                Hive = Kcb->KeyHive;
+                Parent = (PCM_KEY_NODE)HvGetCell(Hive, Kcb->KeyCell);
+                ASSERT(Parent);
 
-        case KeyCachedInformation:
-            /* Call the internal API */
-            Status = CmpQueryKeyDataFromCache(Kcb,
-                                              KeyInformation,
-                                              Length,
-                                              ResultLength);
-            break;
-
-        case KeyFlagsInformation:
-            /* Call the internal API */
-            Status = CmpQueryFlagsInformation(Kcb,
-                                              KeyInformation,
-                                              Length,
-                                              ResultLength);
-            break;
-
-        case KeyNameInformation:
-            /* Call the internal API */
-            Status = CmpQueryNameInformation(Kcb,
+                /* Track cell references */
+                if (!HvTrackCellRef(&CellReferences, Hive, Kcb->KeyCell))
+                {
+                    /* Not enough memory to track references */
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                }
+                else
+                {
+                    /* Call the internal API */
+                    Status = CmpQueryKeyData(Hive,
+                                             Parent,
+                                             KeyInformationClass,
                                              KeyInformation,
                                              Length,
                                              ResultLength);
-            break;
+                }
+                break;
+            }
 
-        /* Illegal classes */
-        default:
+            case KeyCachedInformation:
+            {
+                /* Call the internal API */
+                Status = CmpQueryKeyDataFromCache(Kcb,
+                                                  KeyInformation,
+                                                  Length,
+                                                  ResultLength);
+                break;
+            }
 
-            /* Print message and fail */
-            DPRINT1("Unsupported class: %d!\n", KeyInformationClass);
-            Status = STATUS_INVALID_INFO_CLASS;
-            break;
+            case KeyFlagsInformation:
+            {
+                /* Call the internal API */
+                Status = CmpQueryFlagsInformation(Kcb,
+                                                  KeyInformation,
+                                                  Length,
+                                                  ResultLength);
+                break;
+            }
+
+            case KeyNameInformation:
+            {
+                /* Call the internal API */
+                Status = CmpQueryNameInformation(Kcb,
+                                                 KeyInformation,
+                                                 Length,
+                                                 ResultLength);
+                break;
+            }
+
+            /* Illegal classes */
+            default:
+            {
+                /* Print message and fail */
+                DPRINT1("Unsupported class: %d!\n", KeyInformationClass);
+                Status = STATUS_INVALID_INFO_CLASS;
+                break;
+            }
+        }
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Fail with exception code */
+        Status = _SEH2_GetExceptionCode();
+        _SEH2_YIELD(goto Quickie);
+    }
+    _SEH2_END;
 
 Quickie:
     /* Release references */
@@ -2013,9 +2032,6 @@ CmLoadKey(IN POBJECT_ATTRIBUTES TargetKey,
     }
 
     /* Open the target key */
-#if 0
-    Status = ZwOpenKey(&KeyHandle, KEY_READ, TargetKey);
-#else
     RtlZeroMemory(&ParseContext, sizeof(ParseContext));
     ParseContext.CreateOperation = FALSE;
     Status = ObOpenObjectByName(TargetKey,
@@ -2025,7 +2041,6 @@ CmLoadKey(IN POBJECT_ATTRIBUTES TargetKey,
                                 KEY_READ,
                                 &ParseContext,
                                 &KeyHandle);
-#endif
     if (!NT_SUCCESS(Status)) KeyHandle = NULL;
 
     /* Open the hive */
@@ -2112,7 +2127,7 @@ CmLoadKey(IN POBJECT_ATTRIBUTES TargetKey,
     }
 
     /* Is this first profile load? */
-    if (!(CmpProfileLoaded) && !(CmpWasSetupBoot))
+    if (!CmpProfileLoaded && !CmpWasSetupBoot)
     {
         /* User is now logged on, set quotas */
         CmpProfileLoaded = TRUE;
