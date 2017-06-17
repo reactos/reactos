@@ -1,5 +1,5 @@
-  FreeType 2.7.1
-  ==============
+  FreeType 2.8
+  ============
 
   Homepage: http://www.freetype.org
 
@@ -24,9 +24,9 @@
 
   and download one of the following files.
 
-    freetype-doc-2.7.1.tar.bz2
-    freetype-doc-2.7.1.tar.gz
-    ftdoc271.zip
+    freetype-doc-2.8.tar.bz2
+    freetype-doc-2.8.tar.gz
+    ftdoc28.zip
 
   To view the documentation online, go to
 
@@ -71,7 +71,7 @@
 
 ----------------------------------------------------------------------
 
-Copyright 2006-2016 by
+Copyright 2006-2017 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

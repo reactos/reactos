@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType font driver for Windows FNT/FON files                       */
 /*                                                                         */
-/*  Copyright 1996-2016 by                                                 */
+/*  Copyright 1996-2017 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*  Copyright 2003 Huw D M Davies for Codeweavers                          */
 /*  Copyright 2007 Dmitry Timoshkov for Codeweavers                        */
@@ -561,7 +561,7 @@
                   error = fnt_font_load( face->font, stream );
                   if ( error )
                   {
-                    FT_TRACE2(( "font #%lu load error %d\n",
+                    FT_TRACE2(( "font #%lu load error 0x%x\n",
                                 dir_entry2.name, error ));
                     goto Fail;
                   }

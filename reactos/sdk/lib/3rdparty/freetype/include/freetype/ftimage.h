@@ -5,7 +5,7 @@
 /*    FreeType glyph image formats and default raster interface            */
 /*    (specification).                                                     */
 /*                                                                         */
-/*  Copyright 1996-2016 by                                                 */
+/*  Copyright 1996-2017 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -619,7 +619,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    {                                                                  */
   /*      x' = (x << shift) - delta                                        */
-  /*      y' = (x << shift) - delta                                        */
+  /*      y' = (y << shift) - delta                                        */
   /*    }                                                                  */
   /*                                                                       */
   /*    Set the values of `shift' and `delta' to~0 to get the original     */

@@ -8,7 +8,7 @@
 /*  This file is for Mac OS X only; see builds/mac/ftoldmac.c for          */
 /*  classic platforms built by MPW.                                        */
 /*                                                                         */
-/*  Copyright 1996-2016 by                                                 */
+/*  Copyright 1996-2017 by                                                 */
 /*  Just van Rossum, David Turner, Robert Wilhelm, and Werner Lemberg.     */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -71,6 +71,9 @@
 #include FT_INTERNAL_STREAM_H
 #include "ftbase.h"
 
+
+#ifdef FT_MACINTOSH
+
   /* This is for Mac OS X.  Without redefinition, OS_INLINE */
   /* expands to `static inline' which doesn't survive the   */
   /* -ansi compilation flag of GCC.                         */
@@ -117,8 +120,6 @@
 #define PREFER_LWFN  1
 #endif
 
-
-#ifdef FT_MACINTOSH
 
   /* This function is deprecated because FSSpec is deprecated in Mac OS X  */
   FT_EXPORT_DEF( FT_Error )
@@ -1076,7 +1077,12 @@
 #endif
   }
 
-#endif /* FT_MACINTOSH */
+#else /* !FT_MACINTOSH */
+
+  /* ANSI C doesn't like empty source files */
+  typedef int  _ft_mac_dummy;
+
+#endif /* !FT_MACINTOSH */
 
 
 /* END */

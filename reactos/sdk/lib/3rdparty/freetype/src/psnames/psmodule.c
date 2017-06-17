@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PSNames module implementation (body).                                */
 /*                                                                         */
-/*  Copyright 1996-2016 by                                                 */
+/*  Copyright 1996-2017 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -23,6 +23,7 @@
 
 #include "psmodule.h"
 
+#include "pstables.h"
 #define  DEFINE_PS_TABLES
 #include "pstables.h"
 

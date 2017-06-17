@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright 2002-2016 by
+# Copyright 2002-2017 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -15,7 +15,7 @@
 
 rm -f config.mk builds/unix/unix-def.mk builds/unix/unix-cc.mk
 
-# respect GNUMAKE environment variable for backwards compatibility
+# respect GNUMAKE environment variable for backward compatibility
 if test "x$GNUMAKE" = x; then
   if test "x$MAKE" = x; then
     if test "x`make -v 2>/dev/null | egrep 'GNU|makepp'`" = x; then

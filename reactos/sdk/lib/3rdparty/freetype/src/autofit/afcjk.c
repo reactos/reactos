@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for CJK writing system (body).          */
 /*                                                                         */
-/*  Copyright 2006-2016 by                                                 */
+/*  Copyright 2006-2017 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -29,13 +29,13 @@
 #include "afglobal.h"
 #include "afpic.h"
 #include "aflatin.h"
+#include "afcjk.h"
 
 
 #ifdef AF_CONFIG_OPTION_CJK
 
 #undef AF_CONFIG_OPTION_CJK_BLUE_HANI_VERT
 
-#include "afcjk.h"
 #include "aferrors.h"
 
 
@@ -578,7 +578,7 @@
                                FT_Face        face )
   {
     FT_Bool   started = 0, same_width = 1;
-    FT_Fixed  advance, old_advance = 0;
+    FT_Fixed  advance = 0, old_advance = 0;
 
     void*  shaper_buf;
 
@@ -1413,9 +1413,9 @@
       other_flags |= AF_LATIN_HINTS_VERT_SNAP;
 
     /*
-     *  We adjust stems to full pixels only if we don't use the `light' mode.
+     *  We adjust stems to full pixels unless in `light' or `lcd' mode.
      */
-    if ( mode != FT_RENDER_MODE_LIGHT )
+    if ( mode != FT_RENDER_MODE_LIGHT && mode != FT_RENDER_MODE_LCD )
       other_flags |= AF_LATIN_HINTS_STEM_ADJUST;
 
     if ( mode == FT_RENDER_MODE_MONO )

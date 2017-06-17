@@ -5,7 +5,7 @@
 /*    Basic SFNT/TrueType type definitions and interface (specification    */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 1996-2016 by                                                 */
+/*  Copyright 1996-2017 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -243,7 +243,7 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_NameEntryRec                                                    */
+  /*    TT_NameRec                                                         */
   /*                                                                       */
   /* <Description>                                                         */
   /*    A structure modeling TrueType name records.  Name records are used */
@@ -267,7 +267,7 @@ FT_BEGIN_HEADER
   /*    string       :: A pointer to the string's bytes.  Note that these  */
   /*                    are usually UTF-16 encoded characters.             */
   /*                                                                       */
-  typedef struct  TT_NameEntryRec_
+  typedef struct  TT_NameRec_
   {
     FT_UShort  platformID;
     FT_UShort  encodingID;
@@ -279,9 +279,39 @@ FT_BEGIN_HEADER
     /* this last field is not defined in the spec */
     /* but used by the FreeType engine            */
 
-    FT_Byte*   string;
+    FT_Byte*  string;
 
-  } TT_NameEntryRec, *TT_NameEntry;
+  } TT_NameRec, *TT_Name;
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Struct>                                                              */
+  /*    TT_LangTagRec                                                      */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    A structure modeling language tag records in SFNT `name' tables,   */
+  /*    introduced in OpenType version 1.6.                                */
+  /*                                                                       */
+  /* <Fields>                                                              */
+  /*    stringLength :: The length of the string in bytes.                 */
+  /*                                                                       */
+  /*    stringOffset :: The offset to the string in the `name' table.      */
+  /*                                                                       */
+  /*    string       :: A pointer to the string's bytes.  Note that these  */
+  /*                    are UTF-16BE encoded characters.                   */
+  /*                                                                       */
+  typedef struct TT_LangTagRec_
+  {
+    FT_UShort  stringLength;
+    FT_ULong   stringOffset;
+
+    /* this last field is not defined in the spec */
+    /* but used by the FreeType engine            */
+
+    FT_Byte*  string;
+
+  } TT_LangTagRec, *TT_LangTag;
 
 
   /*************************************************************************/
@@ -293,24 +323,30 @@ FT_BEGIN_HEADER
   /*    A structure modeling the TrueType name table.                      */
   /*                                                                       */
   /* <Fields>                                                              */
-  /*    format         :: The format of the name table.                    */
+  /*    format            :: The format of the name table.                 */
   /*                                                                       */
-  /*    numNameRecords :: The number of names in table.                    */
+  /*    numNameRecords    :: The number of names in table.                 */
   /*                                                                       */
-  /*    storageOffset  :: The offset of the name table in the `name'       */
-  /*                      TrueType table.                                  */
+  /*    storageOffset     :: The offset of the name table in the `name'    */
+  /*                         TrueType table.                               */
   /*                                                                       */
-  /*    names          :: An array of name records.                        */
+  /*    names             :: An array of name records.                     */
   /*                                                                       */
-  /*    stream         :: the file's input stream.                         */
+  /*    numLangTagRecords :: The number of language tags in table.         */
+  /*                                                                       */
+  /*    langTags          :: An array of language tag records.             */
+  /*                                                                       */
+  /*    stream            :: The file's input stream.                      */
   /*                                                                       */
   typedef struct  TT_NameTableRec_
   {
-    FT_UShort         format;
-    FT_UInt           numNameRecords;
-    FT_UInt           storageOffset;
-    TT_NameEntryRec*  names;
-    FT_Stream         stream;
+    FT_UShort       format;
+    FT_UInt         numNameRecords;
+    FT_UInt         storageOffset;
+    TT_NameRec*     names;
+    FT_UInt         numLangTagRecords;
+    TT_LangTagRec*  langTags;
+    FT_Stream       stream;
 
   } TT_NameTableRec, *TT_NameTable;
 
@@ -1084,49 +1120,8 @@ FT_BEGIN_HEADER
 #define TT_FACE_FLAG_VAR_BSB       ( 1 << 6 )
 #define TT_FACE_FLAG_VAR_VORG      ( 1 << 7 )
 
-  /* MVAR gasp data */
-#define TT_FACE_FLAG_VAR_GASP_0  ( 1 << 20 )
-#define TT_FACE_FLAG_VAR_GASP_1  ( 1 << 21 )
-#define TT_FACE_FLAG_VAR_GASP_2  ( 1 << 22 )
-#define TT_FACE_FLAG_VAR_GASP_3  ( 1 << 23 )
-#define TT_FACE_FLAG_VAR_GASP_4  ( 1 << 24 )
-#define TT_FACE_FLAG_VAR_GASP_5  ( 1 << 25 )
-#define TT_FACE_FLAG_VAR_GASP_6  ( 1 << 26 )
-#define TT_FACE_FLAG_VAR_GASP_7  ( 1 << 27 )
-#define TT_FACE_FLAG_VAR_GASP_8  ( 1 << 28 )
-#define TT_FACE_FLAG_VAR_GASP_9  ( 1 << 29 )
-
-  /* The following flag macros are for the field `mvar_support'. */
-
-  /* remaining MVAR data */
-#define TT_FACE_FLAG_VAR_CPHT  ( 1 <<  0 )
-#define TT_FACE_FLAG_VAR_HASC  ( 1 <<  1 )
-#define TT_FACE_FLAG_VAR_HCLA  ( 1 <<  2 )
-#define TT_FACE_FLAG_VAR_HCLD  ( 1 <<  3 )
-#define TT_FACE_FLAG_VAR_HCOF  ( 1 <<  4 )
-#define TT_FACE_FLAG_VAR_HCRN  ( 1 <<  5 )
-#define TT_FACE_FLAG_VAR_HCRS  ( 1 <<  6 )
-#define TT_FACE_FLAG_VAR_HDSC  ( 1 <<  7 )
-#define TT_FACE_FLAG_VAR_HLGP  ( 1 <<  8 )
-#define TT_FACE_FLAG_VAR_SBXO  ( 1 <<  9 )
-#define TT_FACE_FLAG_VAR_SBXS  ( 1 << 10 )
-#define TT_FACE_FLAG_VAR_SBYO  ( 1 << 11 )
-#define TT_FACE_FLAG_VAR_SBYS  ( 1 << 12 )
-#define TT_FACE_FLAG_VAR_SPXO  ( 1 << 13 )
-#define TT_FACE_FLAG_VAR_SPXS  ( 1 << 14 )
-#define TT_FACE_FLAG_VAR_SPYO  ( 1 << 15 )
-#define TT_FACE_FLAG_VAR_SPYS  ( 1 << 16 )
-#define TT_FACE_FLAG_VAR_STRO  ( 1 << 17 )
-#define TT_FACE_FLAG_VAR_STRS  ( 1 << 18 )
-#define TT_FACE_FLAG_VAR_UNDO  ( 1 << 19 )
-#define TT_FACE_FLAG_VAR_UNDS  ( 1 << 20 )
-#define TT_FACE_FLAG_VAR_VASC  ( 1 << 21 )
-#define TT_FACE_FLAG_VAR_VCOF  ( 1 << 22 )
-#define TT_FACE_FLAG_VAR_VCRN  ( 1 << 23 )
-#define TT_FACE_FLAG_VAR_VCRS  ( 1 << 24 )
-#define TT_FACE_FLAG_VAR_VDSC  ( 1 << 25 )
-#define TT_FACE_FLAG_VAR_VLGP  ( 1 << 26 )
-#define TT_FACE_FLAG_VAR_XHGT  ( 1 << 27 )
+  /* MVAR */
+#define TT_FACE_FLAG_VAR_MVAR  ( 1 << 8 )
 
 
   /*************************************************************************/
@@ -1295,6 +1290,8 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    glyf_offset          :: The file offset of the `glyf' table.       */
   /*                                                                       */
+  /*    is_cff2              :: Set if the font format is CFF2.            */
+  /*                                                                       */
   /*    doblend              :: A boolean which is set if the font should  */
   /*                            be blended (this is for GX var).           */
   /*                                                                       */
@@ -1312,8 +1309,14 @@ FT_BEGIN_HEADER
   /*                            For example, TT_FACE_FLAG_VAR_FVAR is only */
   /*                            set if we have at least one design axis.   */
   /*                                                                       */
-  /*    mvar_support         :: Flags that indicate which metrics          */
-  /*                            variations are supported.                  */
+  /*    var_postscript_prefix ::                                           */
+  /*                            The PostScript name prefix needed for      */
+  /*                            constructing a variation font instance's   */
+  /*                            PS name .                                  */
+  /*                                                                       */
+  /*    var_postscript_prefix_len ::                                       */
+  /*                            The length of the `var_postscript_prefix'  */
+  /*                            string.                                    */
   /*                                                                       */
   /*    horz_metrics_size    :: The size of the `hmtx' table.              */
   /*                                                                       */
@@ -1344,7 +1347,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    sbit_table_size      :: The size of `sbit_table'.                  */
   /*                                                                       */
-  /*    sbit_table_type      :: The sbit table type (CBLC, SBIX, etc.).    */
+  /*    sbit_table_type      :: The sbit table type (CBLC, sbix, etc.).    */
   /*                                                                       */
   /*    sbit_num_strikes     :: The number of sbit strikes exposed by      */
   /*                            FreeType's API, omitting invalid strikes.  */
@@ -1380,7 +1383,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    sph_compatibility_mode ::                                          */
   /*                            This flag is set if we are in ClearType    */
-  /*                            backwards compatibility mode (used by the  */
+  /*                            backward compatibility mode (used by the   */
   /*                            v38 implementation of the bytecode         */
   /*                            interpreter).                              */
   /*                                                                       */
@@ -1465,7 +1468,7 @@ FT_BEGIN_HEADER
 
     /***********************************************************************/
     /*                                                                     */
-    /* TrueType-specific fields (ignored by the OTF-Type2 driver)          */
+    /* TrueType-specific fields (ignored by the CFF driver)                */
     /*                                                                     */
     /***********************************************************************/
 
@@ -1500,7 +1503,7 @@ FT_BEGIN_HEADER
     FT_ULong              glyf_len;
     FT_ULong              glyf_offset;    /* since 2.7.1 */
 
-    FT_Bool               isCFF2;         /* since 2.7.1 */
+    FT_Bool               is_cff2;        /* since 2.7.1 */
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
     FT_Bool               doblend;
@@ -1508,7 +1511,10 @@ FT_BEGIN_HEADER
 
     FT_Bool               is_default_instance;   /* since 2.7.1 */
     FT_UInt32             variation_support;     /* since 2.7.1 */
-    FT_UInt32             mvar_support;          /* since 2.7.1 */
+
+    const char*           var_postscript_prefix;     /* since 2.7.2 */
+    FT_UInt               var_postscript_prefix_len; /* since 2.7.2 */
+
 #endif
 
     /* since version 2.2 */
