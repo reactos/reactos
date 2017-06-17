@@ -1,21 +1,15 @@
 /*
  * PROJECT:     ReactOS shell extensions
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/shellext/qcklnch/CQuickLaunchBand.h
+ * FILE:        dll/shellext/qcklnch/CISFBand.h
  * PURPOSE:     Quick Launch Toolbar (Taskbar Shell Extension)
  * PROGRAMMERS: Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
  */
 #pragma once
 
-extern const GUID CLSID_QuickLaunchBand;
-
-//Component category registration
-HRESULT RegisterComCat();
-HRESULT UnregisterComCat();
-
-//COM class for quick launch
-class CQuickLaunchBand :
-    public CComCoClass<CQuickLaunchBand, &CLSID_QuickLaunchBand>,
+//COM class for cisfband
+class CISFBand :
+    public CComCoClass<CISFBand>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IObjectWithSite,
     public IDeskBand,
@@ -34,12 +28,8 @@ class CQuickLaunchBand :
 
 public:
 
-    CQuickLaunchBand();
-    virtual ~CQuickLaunchBand();
-
-//ATL construct
-
-    HRESULT FinalConstruct();
+    CISFBand();
+    virtual ~CISFBand();
 
 //IObjectWithSite
 
@@ -161,12 +151,11 @@ public:
     );
 
 //*****************************************************************************************************
-
-    DECLARE_REGISTRY_RESOURCEID(1001)
-    DECLARE_NOT_AGGREGATABLE(CQuickLaunchBand)
+    
+    DECLARE_NOT_AGGREGATABLE(CISFBand)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 
-    BEGIN_COM_MAP(CQuickLaunchBand)
+    BEGIN_COM_MAP(CISFBand)
         COM_INTERFACE_ENTRY2_IID(IID_IOleWindow, IOleWindow, IDeskBand)
         COM_INTERFACE_ENTRY_IID(IID_IDeskBand, IDeskBand)
         COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)

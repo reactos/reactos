@@ -16,8 +16,9 @@ spec2def(qcklnch.dll qcklnch.spec)
 
 add_library(qcklnch SHARED    
     qcklnch.cpp
-    qcklnch.rc
-    CQuickLaunchBand.cpp    
+    qcklnch.rc    
+    CQuickLaunchBand.cpp
+    CISFBand.cpp    
     ${CMAKE_CURRENT_BINARY_DIR}/qcklnch.def)
 
 set_module_type(qcklnch win32dll UNICODE)

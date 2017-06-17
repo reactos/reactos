@@ -38,30 +38,11 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
         return hr;
     }
 
-//Subclassing Button
-
-    LRESULT CALLBACK MyWndProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
-    {
-        switch (uMsg)
-        {
-            case WM_COMMAND:
-            {
-                MessageBox(0, L"Button Clicked!!", L"Testing", MB_OK | MB_ICONINFORMATION);
-            }            
-        } 
-        return DefSubclassProc(hWnd, uMsg, wParam, lParam);
-    }
-
 //CQuickLaunchBand
 
-    CQuickLaunchBand::CQuickLaunchBand() :
-        m_hWnd(NULL),
-        m_BandID(0)
-    {
-        
-    }
+    CQuickLaunchBand::CQuickLaunchBand() : m_hWnd(NULL), m_BandID(0) {}
 
-    CQuickLaunchBand::~CQuickLaunchBand() { }
+    CQuickLaunchBand::~CQuickLaunchBand() {}
 
 /*****************************************************************************/
 //ATL Construct
@@ -89,12 +70,12 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
 
                     //LPITEMIDLIST pidl;
                     //hr = SHGetSpecialFolderLocation(NULL, CSIDL_DESKTOP, &pidl);
-                    if (SUCCEEDED(hr))
-                    {
+                    //if (SUCCEEDED(hr))
+                    //{
                         //MessageBox(0, L"pidl success!", L"Testing", MB_OK | MB_ICONINFORMATION);
 
                         pISFB->InitializeSFB(pISF, 0);
-                    }
+                    //}
                 }                                               
             }            
         }
