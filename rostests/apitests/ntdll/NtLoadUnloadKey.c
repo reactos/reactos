@@ -22,7 +22,9 @@
 #define REG_CREATED_NEW_KEY     1
 #define REG_OPENED_EXISTING_KEY 2
 
-/* Vista+ */
+#define REG_FORCE_UNLOAD        1
+
+/* Vista+ ntstatus.h */
 #define STATUS_HIVE_UNLOADED    ((NTSTATUS)0xC0000425)
 
 #if 1
@@ -526,7 +528,7 @@ START_TEST(NtLoadUnloadKey)
     ok_ntstatus(Status, STATUS_SUCCESS);
 
     /* Force-unmount the hive, with the handle key still opened */
-    Status = DisconnectRegistry(NULL, RegistryHives[0].RegMountPoint, 1 /* REG_FORCE_UNLOAD */);
+    Status = DisconnectRegistry(NULL, RegistryHives[0].RegMountPoint, REG_FORCE_UNLOAD);
     DPRINT1("Force-unmounting '%S' %s\n", RegistryHives[0].RegMountPoint, NT_SUCCESS(Status) ? "succeeded" : "failed");
     ok_hex(Status, STATUS_SUCCESS);
 
@@ -600,7 +602,7 @@ START_TEST(NtLoadUnloadKey)
     ok_ntstatus(Status, STATUS_SUCCESS);
 
     /* Force-unmount the hive (it is already unmounted), this should fail */
-    Status = DisconnectRegistry(NULL, RegistryHives[0].RegMountPoint, 1 /* REG_FORCE_UNLOAD */);
+    Status = DisconnectRegistry(NULL, RegistryHives[0].RegMountPoint, REG_FORCE_UNLOAD);
     DPRINT1("Force-unmounting '%S' %s\n", RegistryHives[0].RegMountPoint, NT_SUCCESS(Status) ? "succeeded" : "failed");
     ok_hex(Status, STATUS_INVALID_PARAMETER);
 
