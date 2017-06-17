@@ -13,6 +13,7 @@ extern void func_NtCreateKey(void);
 extern void func_NtCreateThread(void);
 extern void func_NtDeleteKey(void);
 extern void func_NtFreeVirtualMemory(void);
+extern void func_NtLoadUnloadKey(void);
 extern void func_NtMapViewOfSection(void);
 extern void func_NtMutant(void);
 extern void func_NtOpenProcessToken(void);
@@ -68,6 +69,7 @@ const struct test winetest_testlist[] =
     { "NtCreateThread",                 func_NtCreateThread },
     { "NtDeleteKey",                    func_NtDeleteKey },
     { "NtFreeVirtualMemory",            func_NtFreeVirtualMemory },
+    { "NtLoadUnloadKey",                func_NtLoadUnloadKey },
     { "NtMapViewOfSection",             func_NtMapViewOfSection },
     { "NtMutant",                       func_NtMutant },
     { "NtOpenProcessToken",             func_NtOpenProcessToken },
