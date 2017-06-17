@@ -113,6 +113,11 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
             return S_OK;
         }
         return S_FALSE;
+    case WM_WININICHANGE:
+        if (wParam == SPI_SETFLATMENU)
+        {
+            SystemParametersInfo(SPI_GETFLATMENU, 0, &m_useFlatMenus, 0);
+        }
     }
 
     return S_FALSE;

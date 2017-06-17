@@ -720,6 +720,13 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
         BOOL bFlatMenus;
         SystemParametersInfo(SPI_GETFLATMENU, 0, &bFlatMenus, 0);
         AdjustForTheme(bFlatMenus);
+
+        if (m_staticToolbar)
+            m_staticToolbar->OnWinEvent(hWnd, uMsg, wParam, lParam, theResult);
+
+        if (m_SFToolbar)
+            m_SFToolbar->OnWinEvent(hWnd, uMsg, wParam, lParam, theResult);
+
         return S_OK;
     }
 
