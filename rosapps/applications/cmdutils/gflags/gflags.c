@@ -312,8 +312,11 @@ static VOID DisplayStatus(VOID)
 
 static VOID Usage(VOID)
 {
-    // FIXME
-    wprintf(L"Usage\n");
+    wprintf(L"Usage: gflags /p [image.exe] [/enable|/disable [/full]]\n"
+            L"\timage.exe:\tImage you want to deal with\n"
+            L"\t/enable:\tenable page heap for the image\n"
+            L"\t/disable:\tdisable page heap for the image\n"
+            L"\t/full:\t\tactivate full debug page heap\n");
 }
 
 static BOOL ParseCmdline(int argc, LPWSTR argv[])
