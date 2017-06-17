@@ -305,9 +305,8 @@ VOID
 NTAPI
 CmpRemoveKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
 {
-    /* Make sure that the registry and KCB are utterly locked */
-    ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
-           (CmpTestRegistryLockExclusive() == TRUE));
+    /* Make sure we have the exclusive lock */
+    CMP_ASSERT_KCB_LOCK(Kcb);
 
     /* Remove the key hash */
     CmpRemoveKeyHash(&Kcb->KeyHash);
@@ -434,9 +433,8 @@ CmpCleanUpKcbValueCache(IN PCM_KEY_CONTROL_BLOCK Kcb)
     PULONG_PTR CachedList;
     ULONG i;
 
-    /* Sanity check */
-    ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
-           (CmpTestRegistryLockExclusive() == TRUE));
+    /* Make sure we have the exclusive lock */
+    CMP_ASSERT_KCB_LOCK(Kcb);
 
     /* Check if the value list is cached */
     if (CMP_IS_CELL_CACHED(Kcb->ValueCache.ValueList))
@@ -482,8 +480,7 @@ CmpCleanUpKcbCacheWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
     PAGED_CODE();
 
     /* Sanity checks */
-    ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
-           (CmpTestRegistryLockExclusive() == TRUE));
+    CMP_ASSERT_KCB_LOCK(Kcb);
     ASSERT(Kcb->RefCount == 0);
 
     /* Cleanup the value cache */
@@ -521,9 +518,8 @@ CmpCleanUpSubKeyInfo(IN PCM_KEY_CONTROL_BLOCK Kcb)
 {
     PCM_KEY_NODE KeyNode;
 
-    /* Sanity check */
-    ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
-           (CmpTestRegistryLockExclusive() == TRUE));
+    /* Make sure we have the exclusive lock */
+    CMP_ASSERT_KCB_LOCK(Kcb);
 
     /* Check if there's any cached subkey */
     if (Kcb->ExtFlags & (CM_KCB_NO_SUBKEY | CM_KCB_SUBKEY_ONE | CM_KCB_SUBKEY_HINT))
@@ -619,9 +615,8 @@ CmpDereferenceKeyControlBlockWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
     /* Check if this is the last reference */
     if ((InterlockedDecrement((PLONG)&Kcb->RefCount) & 0xFFFF) == 0)
     {
-        /* Sanity check */
-        ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
-               (CmpTestRegistryLockExclusive() == TRUE));
+        /* Make sure we have the exclusive lock */
+        CMP_ASSERT_KCB_LOCK(Kcb);
 
         /* Check if we should do a direct delete */
         if (((CmpHoldLazyFlush) &&
@@ -1086,10 +1081,9 @@ EnlistKeyBodyWithKCB(IN PCM_KEY_BODY KeyBody,
     }
 
     /* Make sure we have the exclusive lock */
-    ASSERT((CmpIsKcbLockedExclusive(KeyBody->KeyControlBlock) == TRUE) ||
-           (CmpTestRegistryLockExclusive() == TRUE));
+    CMP_ASSERT_KCB_LOCK(KeyBody->KeyControlBlock);
 
-    /* do the insert */
+    /* Do the insert */
     InsertTailList(&KeyBody->KeyControlBlock->KeyBodyListHead,
                    &KeyBody->KeyBodyList);
 
@@ -1132,8 +1126,7 @@ DelistKeyBodyFromKCB(IN PCM_KEY_BODY KeyBody,
 
     /* Lock the KCB */
     if (!LockHeld) CmpAcquireKcbLockExclusive(KeyBody->KeyControlBlock);
-    ASSERT((CmpIsKcbLockedExclusive(KeyBody->KeyControlBlock) == TRUE) ||
-           (CmpTestRegistryLockExclusive() == TRUE));
+    CMP_ASSERT_KCB_LOCK(KeyBody->KeyControlBlock);
 
     /* Remove the entry */
     RemoveEntryList(&KeyBody->KeyBodyList);
