@@ -376,15 +376,16 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
     /* Check if anything failed until now */
     if (!NT_SUCCESS(Status))
     {
+        DPRINT1("ZwCreateFile(%wZ) failed, Status 0x%08lx.\n", ObjectAttributes.ObjectName, Status);
+
         /* Close handles and free buffers */
         if (NameBuffer) ExFreePoolWithTag(NameBuffer, TAG_CM);
         ObDereferenceObject(Event);
         ZwClose(EventHandle);
-        DPRINT1("ZwCreateFile failed : %lx.\n", Status);
         *Primary = NULL;
         return Status;
     }
-                          
+
     if (MarkAsSystemHive)
     {
         /* We opened it, mark it as a system hive */
