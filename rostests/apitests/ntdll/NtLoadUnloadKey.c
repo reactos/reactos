@@ -24,9 +24,6 @@
 
 #define REG_FORCE_UNLOAD        1
 
-/* Vista+ ntstatus.h */
-#define STATUS_HIVE_UNLOADED    ((NTSTATUS)0xC0000425)
-
 #if 1
 
     #define NDEBUG
