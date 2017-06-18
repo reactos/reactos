@@ -7,6 +7,9 @@
 */
 
 #include "mpg123lib_intern.h"
+#ifdef OPT_GENERIC_DITHER
+#define FORCE_ACCURATE
+#endif
 #include "sample.h"
 #include "debug.h"
 

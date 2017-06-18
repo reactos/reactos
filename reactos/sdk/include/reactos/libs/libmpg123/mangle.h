@@ -13,6 +13,13 @@
 #include "config.h"
 #include "intsym.h"
 
+#if (defined OPT_I486)  || (defined OPT_I586) || (defined OPT_I586_DITHER) \
+ || (defined OPT_MMX)   || (defined OPT_SSE)  || (defined OPT_3DNOW) || (defined OPT_3DNOWEXT) \
+ || (defined OPT_3DNOW_VINTAGE) || (defined OPT_3DNOWEXT_VINTAGE) \
+ || (defined OPT_SSE_VINTAGE)
+#define OPT_X86
+#endif
+
 #ifdef CCALIGN
 #define MOVUAPS movaps
 #else
@@ -49,7 +56,15 @@
 #define ALIGN32 .align 32
 #define ALIGN64 .align 64
 #else
+#ifdef ASMALIGN_ARMASM
+#define ALIGN4  ALIGN 4
+#define ALIGN8  ALIGN 8
+#define ALIGN16 ALIGN 16
+#define ALIGN32 ALIGN 32
+#define ALIGN64 ALIGN 64
+#else
 #error "Dunno how assembler alignment works. Please specify."
+#endif
 #endif
 #endif
 
@@ -61,7 +76,7 @@
 #if defined(__USER_LABEL_PREFIX__)
 #define ASM_NAME(a) MANGLE_MACROCAT(__USER_LABEL_PREFIX__,a)
 #define ASM_VALUE(a) MANGLE_MACROCAT($,ASM_NAME(a))
-#elif defined(__CYGWIN__) || defined(_WIN32) && !defined (_WIN64) || defined(__OS2__) || \
+#elif defined(__CYGWIN__) || defined(_WIN32) && !defined (_WIN64) && !defined (_M_ARM) || defined(__OS2__) || \
    (defined(__OpenBSD__) && !defined(__ELF__)) || defined(__APPLE__)
 #define ASM_NAME(a) MANGLE_MACROCAT(_,a)
 #define ASM_VALUE(a) MANGLE_MACROCAT($_,a)
@@ -69,6 +84,62 @@
 #define ASM_NAME(a) a
 #define ASM_VALUE(a) MANGLE_MACROCAT($,a)
 #endif
+
+/* Enable position-independent code for certain platforms. */
+
+#if defined(OPT_X86)
+
+#define _EBX_ %ebx
+
+#if defined(PIC) && defined(__ELF__)
+
+/* ELF binaries (Unix/Linux) */
+#define LOCAL_VAR(a) a ## @GOTOFF(_EBX_)
+#define GLOBAL_VAR(a) ASM_NAME(a) ## @GOTOFF(_EBX_)
+#define GLOBAL_VAR_PTR(a) ASM_NAME(a) ## @GOT(_EBX_)
+#define FUNC(a) ASM_NAME(a)
+#define EXTERNAL_FUNC(a) ASM_NAME(a) ## @PLT
+#undef ASM_VALUE
+#define ASM_VALUE(a) MANGLE_MACROCAT($,a) ##@GOTOFF
+#define GET_GOT \
+	call 1f; \
+1: \
+	pop _EBX_; \
+2: \
+	addl $_GLOBAL_OFFSET_TABLE_ + (2b-1b), _EBX_
+#define PREPARE_GOT pushl _EBX_
+#define RESTORE_GOT popl _EBX_
+
+#elif defined(PIC) && defined(__APPLE__)
+
+/* Mach-O binaries (OSX/iOS) */
+#define LOCAL_VAR(a) a ## - Lpic_base(_EBX_)
+#define GLOBAL_VAR(a) #error This ABI cannot access non-local symbols directly.
+#define GLOBAL_VAR_PTR(a) L_ ## a ## - Lpic_base(_EBX_)
+#define FUNC(a) L_ ## a
+#define EXTERNAL_FUNC(a) L_ ## a
+#define GET_GOT \
+	call Lpic_base; \
+Lpic_base: \
+	pop _EBX_
+#define PREPARE_GOT pushl _EBX_
+#define RESTORE_GOT popl _EBX_
+
+#else
+
+/* Dummies for everyone else. */
+#define LOCAL_VAR(a) a
+#define GLOBAL_VAR ASM_NAME
+#define GLOBAL_VAR_PTR(a) #error Cannot use indirect addressing in non-PIC object.
+#define FUNC ASM_NAME
+#define EXTERNAL_FUNC ASM_NAME
+#define GET_GOT
+#define PREPARE_GOT
+#define RESTORE_GOT
+
+#endif /* PIC variants */
+
+#endif /* OPT_X86 */
 
 #if defined(__CYGWIN__) || defined(__MINGW32__) || defined(__APPLE__)
 #define COMM(a,b,c) .comm a,b
@@ -80,6 +151,13 @@
 #define BSS .data
 #else
 #define BSS .bss
+#endif
+
+/* armasm for WIN32 UWP */
+#ifdef _M_ARM
+#define GLOBAL_SYMBOL EXPORT
+#else
+#define GLOBAL_SYMBOL .globl
 #endif
 
 /* Mark non-executable stack.
@@ -94,7 +172,7 @@
 #define NONEXEC_STACK
 #endif
 
-#if defined(__x86_64__) && (defined(_WIN64) || defined (__CYGWIN__))
+#if (defined(__x86_64__) || defined(_M_X64)) && (defined(_WIN64) || defined (__CYGWIN__))
 #define IS_MSABI 1 /* Not using SYSV */
 #endif
 

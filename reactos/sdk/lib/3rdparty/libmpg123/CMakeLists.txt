@@ -15,6 +15,7 @@ include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/libmpg
 
 list(APPEND SOURCE
     compat/compat.c
+    compat/compat_str.c
     dct64.c
     dct64_i386.c
     equalizer.c

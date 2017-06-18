@@ -384,7 +384,7 @@ icy2utf8(const char *src, int force)
 
 	/* Some funny streams from Apple/iTunes give ICY info in UTF-8 already.
 	   So, be prepared and don't try to re-encode such. Unless forced. */
-	if(!force && is_utf8(src)) return (strdup(src));
+	if(!force && is_utf8(src)) return (compat_strdup(src));
 
 	srclen = strlen(src) + 1;
 	/* allocate conservatively */
