@@ -121,7 +121,7 @@ TestMessageHandler(
 
             TestCleanEverything();
 
-            ok(ExGetPreviousMode() == UserMode, "Not comming from umode!\n");
+            ok(ExGetPreviousMode() == UserMode, "Not coming from umode!\n");
             if (!skip(Buffer && InLength >= sizeof(QUERY_BUFFER) && *OutLength >= sizeof(QUERY_BUFFER), "Cannot read/write from/to buffer!\n"))
             {
                 PQUERY_BUFFER QueryBuffer;
@@ -178,15 +178,26 @@ TestMessageHandler(
                             SehStatus = STATUS_SUCCESS;
                             _SEH2_TRY
                             {
-                                CurrentUser = MmMapLockedPagesSpecifyCache(CurrentMdl, UserMode, CacheType, NULL, FALSE, NormalPagePriority);
+                                CurrentUser = MmMapLockedPagesSpecifyCache(CurrentMdl, UserMode, CacheType, QueryBuffer->Buffer, FALSE, NormalPagePriority);
                             }
                             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                             {
                                 SehStatus = _SEH2_GetExceptionCode();
                             }
                             _SEH2_END;
-                            ok_eq_hex(SehStatus, STATUS_SUCCESS);
-                            ok(CurrentUser != NULL, "MmMapLockedPagesSpecifyCache failed!\n");
+                            if (QueryBuffer->Status != -1)
+                            {
+                                ok_eq_hex(SehStatus, QueryBuffer->Status);
+                                if (NT_SUCCESS(QueryBuffer->Status))
+                                {
+                                    ok(CurrentUser != NULL, "MmMapLockedPagesSpecifyCache failed!\n");
+                                }
+                                else
+                                {
+                                    ok(CurrentUser == NULL, "MmMapLockedPagesSpecifyCache succeeded!\n");
+                                }
+                            }
+                            QueryBuffer->Status = SehStatus;
                         }
                         else
                         {
@@ -208,7 +219,7 @@ TestMessageHandler(
             ok_eq_size(*OutLength, 0);
             ok(CurrentMdl != NULL, "MDL is not in use!\n");
 
-            if (!skip(Buffer && InLength >= sizeof(QUERY_BUFFER), "Cannot read from buffer!\n"))
+            if (!skip(Buffer && InLength >= sizeof(READ_BUFFER), "Cannot read from buffer!\n"))
             {
                 PREAD_BUFFER ReadBuffer;
 
@@ -235,6 +246,11 @@ TestMessageHandler(
                 TestCleanEverything();
             }
 
+            break;
+        }
+        case IOCTL_CLEAN:
+        {
+            TestCleanEverything();
             break;
         }
         default:

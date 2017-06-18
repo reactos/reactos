@@ -6,8 +6,12 @@
  */
 
 #include <kmt_test.h>
+#include <ndk/exfuncs.h>
 
 #include "MmMapLockedPagesSpecifyCache.h"
+
+#define ALIGN_DOWN_BY(size, align) \
+        ((ULONG_PTR)(size) & ~((ULONG_PTR)(align) - 1))
 
 #define SET_BUFFER_LENGTH(Var, Length)         \
 {                                              \
@@ -20,6 +24,7 @@
     QueryBuffer.Length = BufferLength;                         \
     QueryBuffer.Buffer = NULL;                                 \
     QueryBuffer.Cached = UseCache;                             \
+    QueryBuffer.Status = STATUS_SUCCESS;                       \
 }
 
 #define FILL_READ_BUFFER(QueryBuffer, ReadBuffer)               \
@@ -78,6 +83,9 @@ START_TEST(MmMapLockedPagesSpecifyCache)
     DWORD Length;
     USHORT i;
     USHORT BufferLength;
+    SYSTEM_BASIC_INFORMATION BasicInfo;
+    NTSTATUS Status;
+    ULONG_PTR HighestAddress;
 
     KmtLoadDriver(L"MmMapLockedPagesSpecifyCache", FALSE);
     KmtOpenDriver();
@@ -180,9 +188,7 @@ START_TEST(MmMapLockedPagesSpecifyCache)
 
     // more than 2 pages
     SET_BUFFER_LENGTH(BufferLength, 2 * 4096 + 2048);
-    QueryBuffer.Length = BufferLength;
-    QueryBuffer.Buffer = NULL;
-    QueryBuffer.Cached = FALSE;
+    FILL_QUERY_BUFFER(QueryBuffer, BufferLength, FALSE);
     Length = sizeof(QUERY_BUFFER);
     ok(KmtSendBufferToDriver(IOCTL_QUERY_BUFFER, &QueryBuffer, sizeof(QUERY_BUFFER), &Length) == ERROR_SUCCESS, "\n");
     ok_eq_int(QueryBuffer.Length, BufferLength);
@@ -193,9 +199,7 @@ START_TEST(MmMapLockedPagesSpecifyCache)
     FILL_READ_BUFFER(QueryBuffer, ReadBuffer);
     ok(KmtSendBufferToDriver(IOCTL_READ_BUFFER, &ReadBuffer, sizeof(READ_BUFFER), &Length) == ERROR_SUCCESS, "\n");
 
-    QueryBuffer.Length = BufferLength;
-    QueryBuffer.Buffer = NULL;
-    QueryBuffer.Cached = TRUE;
+    FILL_QUERY_BUFFER(QueryBuffer, BufferLength, TRUE);
     Length = sizeof(QUERY_BUFFER);
     ok(KmtSendBufferToDriver(IOCTL_QUERY_BUFFER, &QueryBuffer, sizeof(QUERY_BUFFER), &Length) == ERROR_SUCCESS, "\n");
     ok_eq_int(QueryBuffer.Length, BufferLength);
@@ -205,6 +209,71 @@ START_TEST(MmMapLockedPagesSpecifyCache)
     Length = 0;
     FILL_READ_BUFFER(QueryBuffer, ReadBuffer);
     ok(KmtSendBufferToDriver(IOCTL_READ_BUFFER, &ReadBuffer, sizeof(READ_BUFFER), &Length) == ERROR_SUCCESS, "\n");
+
+    // ask for a specific address (we know that ReadBuffer.Buffer is free)
+    SET_BUFFER_LENGTH(BufferLength, 4096);
+    FILL_QUERY_BUFFER(QueryBuffer, BufferLength, FALSE);
+    QueryBuffer.Buffer = ReadBuffer.Buffer;
+    Length = sizeof(QUERY_BUFFER);
+    ok(KmtSendBufferToDriver(IOCTL_QUERY_BUFFER, &QueryBuffer, sizeof(QUERY_BUFFER), &Length) == ERROR_SUCCESS, "\n");
+    ok_eq_int(QueryBuffer.Length, BufferLength);
+    ok(QueryBuffer.Buffer == ReadBuffer.Buffer, "Buffer is NULL\n");
+    CHECK_ALLOC(QueryBuffer.Buffer, BufferLength);
+
+    Length = 0;
+    FILL_READ_BUFFER(QueryBuffer, ReadBuffer);
+    ok(KmtSendBufferToDriver(IOCTL_READ_BUFFER, &ReadBuffer, sizeof(READ_BUFFER), &Length) == ERROR_SUCCESS, "\n");
+
+    // ask for an unaligned address
+    SET_BUFFER_LENGTH(BufferLength, 4096);
+    FILL_QUERY_BUFFER(QueryBuffer, BufferLength, FALSE);
+    QueryBuffer.Buffer = (PVOID)((ULONG_PTR)ReadBuffer.Buffer + 2048);
+    QueryBuffer.Status = STATUS_INVALID_ADDRESS;
+    Length = sizeof(QUERY_BUFFER);
+    ok(KmtSendBufferToDriver(IOCTL_QUERY_BUFFER, &QueryBuffer, sizeof(QUERY_BUFFER), &Length) == ERROR_SUCCESS, "\n");
+    ok_eq_int(QueryBuffer.Length, BufferLength);
+    ok(QueryBuffer.Buffer == NULL, "Buffer is %p\n", QueryBuffer.Buffer);
+
+    Length = 0;
+    ok(KmtSendBufferToDriver(IOCTL_CLEAN, NULL, 0, &Length) == ERROR_SUCCESS, "\n");
+
+    // get system info for MmHighestUserAddress
+    Status = NtQuerySystemInformation(SystemBasicInformation,
+                                      &BasicInfo,
+                                      sizeof(BasicInfo),
+                                      NULL);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    trace("MaximumUserModeAddress: %lx\n", BasicInfo.MaximumUserModeAddress);
+    HighestAddress = ALIGN_DOWN_BY(BasicInfo.MaximumUserModeAddress, PAGE_SIZE);
+
+    // near MmHighestUserAddress
+    SET_BUFFER_LENGTH(BufferLength, 4096);
+    FILL_QUERY_BUFFER(QueryBuffer, BufferLength, FALSE);
+    QueryBuffer.Buffer = (PVOID)(HighestAddress - 15 * PAGE_SIZE); // 7ffe0000
+    QueryBuffer.Status = STATUS_INVALID_ADDRESS;
+    trace("QueryBuffer.Buffer %p\n", QueryBuffer.Buffer);
+    Length = sizeof(QUERY_BUFFER);
+    ok(KmtSendBufferToDriver(IOCTL_QUERY_BUFFER, &QueryBuffer, sizeof(QUERY_BUFFER), &Length) == ERROR_SUCCESS, "\n");
+    ok_eq_int(QueryBuffer.Length, BufferLength);
+    ok(QueryBuffer.Buffer == NULL, "Buffer is %p\n", QueryBuffer.Buffer);
+
+    Length = 0;
+    ok(KmtSendBufferToDriver(IOCTL_CLEAN, NULL, 0, &Length) == ERROR_SUCCESS, "\n");
+
+    // far enough away from MmHighestUserAddress
+    SET_BUFFER_LENGTH(BufferLength, 4096);
+    FILL_QUERY_BUFFER(QueryBuffer, BufferLength, FALSE);
+    QueryBuffer.Buffer = (PVOID)(HighestAddress - 16 * PAGE_SIZE); // 7ffdf000
+    QueryBuffer.Status = -1;
+    trace("QueryBuffer.Buffer %p\n", QueryBuffer.Buffer);
+    Length = sizeof(QUERY_BUFFER);
+    ok(KmtSendBufferToDriver(IOCTL_QUERY_BUFFER, &QueryBuffer, sizeof(QUERY_BUFFER), &Length) == ERROR_SUCCESS, "\n");
+    ok_eq_int(QueryBuffer.Length, BufferLength);
+    ok(QueryBuffer.Status == STATUS_SUCCESS ||
+       QueryBuffer.Status == STATUS_CONFLICTING_ADDRESSES, "Status = %lx\n", QueryBuffer.Status);
+
+    Length = 0;
+    ok(KmtSendBufferToDriver(IOCTL_CLEAN, NULL, 0, &Length) == ERROR_SUCCESS, "\n");
 
     KmtCloseDriver();
     KmtUnloadDriver();
