@@ -1215,7 +1215,7 @@ static inline int ecp_mod_koblitz( mbedtls_mpi *N, mbedtls_mpi_uint *Rp, size_t 
     int ret;
     size_t i;
     mbedtls_mpi M, R;
-    mbedtls_mpi_uint Mp[P_KOBLITZ_MAX + P_KOBLITZ_R];
+    mbedtls_mpi_uint Mp[P_KOBLITZ_MAX + P_KOBLITZ_R + 1];
 
     if( N->n < p_limbs )
         return( 0 );
@@ -1237,7 +1237,7 @@ static inline int ecp_mod_koblitz( mbedtls_mpi *N, mbedtls_mpi_uint *Rp, size_t 
     memcpy( Mp, N->p + p_limbs - adjust, M.n * sizeof( mbedtls_mpi_uint ) );
     if( shift != 0 )
         MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &M, shift ) );
-    M.n += R.n - adjust; /* Make room for multiplication by R */
+    M.n += R.n; /* Make room for multiplication by R */
 
     /* N = A0 */
     if( mask != 0 )
@@ -1259,7 +1259,7 @@ static inline int ecp_mod_koblitz( mbedtls_mpi *N, mbedtls_mpi_uint *Rp, size_t 
     memcpy( Mp, N->p + p_limbs - adjust, M.n * sizeof( mbedtls_mpi_uint ) );
     if( shift != 0 )
         MBEDTLS_MPI_CHK( mbedtls_mpi_shift_r( &M, shift ) );
-    M.n += R.n - adjust; /* Make room for multiplication by R */
+    M.n += R.n; /* Make room for multiplication by R */
 
     /* N = A0 */
     if( mask != 0 )

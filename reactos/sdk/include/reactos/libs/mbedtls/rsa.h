@@ -208,7 +208,7 @@ int mbedtls_rsa_check_pub_priv( const mbedtls_rsa_context *pub, const mbedtls_rs
  * \return         0 if successful, or an MBEDTLS_ERR_RSA_XXX error code
  *
  * \note           This function does NOT take care of message
- *                 padding. Also, be sure to set input[0] = 0 or assure that
+ *                 padding. Also, be sure to set input[0] = 0 or ensure that
  *                 input is smaller than N.
  *
  * \note           The input and output buffers must be large

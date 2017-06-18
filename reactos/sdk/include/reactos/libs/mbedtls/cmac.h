@@ -60,9 +60,13 @@ struct mbedtls_cmac_context_t
 /**
  * \brief               Set the CMAC key and prepare to authenticate the input
  *                      data.
- *                      Should be called with an initialised cipher context.
+ *                      Should be called with an initialized cipher context.
  *
- * \param ctx           Cipher context
+ * \param ctx           Cipher context. This should be a cipher context,
+ *                      initialized to be one of the following types:
+ *                      MBEDTLS_CIPHER_AES_128_ECB, MBEDTLS_CIPHER_AES_192_ECB,
+ *                      MBEDTLS_CIPHER_AES_256_ECB or
+ *                      MBEDTLS_CIPHER_DES_EDE3_ECB.
  * \param key           CMAC key
  * \param keybits       length of the CMAC key in bits
  *                      (must be acceptable by the cipher)
@@ -117,7 +121,7 @@ int mbedtls_cipher_cmac_finish( mbedtls_cipher_context_t *ctx,
 int mbedtls_cipher_cmac_reset( mbedtls_cipher_context_t *ctx );
 
 /**
- * \brief               Output = Generic_CMAC( hmac key, input buffer )
+ * \brief               Output = Generic_CMAC( cmac key, input buffer )
  *
  * \param cipher_info   message digest info
  * \param key           CMAC key

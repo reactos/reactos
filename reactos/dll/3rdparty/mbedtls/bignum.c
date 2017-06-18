@@ -536,7 +536,12 @@ int mbedtls_mpi_write_string( const mbedtls_mpi *X, int radix,
     n = mbedtls_mpi_bitlen( X );
     if( radix >=  4 ) n >>= 1;
     if( radix >= 16 ) n >>= 1;
-    n += 3;
+    /*
+     * Round up the buffer length to an even value to ensure that there is
+     * enough room for hexadecimal values that can be represented in an odd
+     * number of digits.
+     */
+    n += 3 + ( ( n + 1 ) & 1 );
 
     if( buflen < n )
     {

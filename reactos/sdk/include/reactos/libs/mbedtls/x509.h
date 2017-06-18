@@ -159,7 +159,7 @@
 #define MBEDTLS_X509_EXT_INIHIBIT_ANYPOLICY          (1 << 13)
 #define MBEDTLS_X509_EXT_FRESHEST_CRL                (1 << 14)
 
-#define MBEDTLS_X509_EXT_NS_CERT_TYPE                (1 << 16)   /* Parsed (and then ?) */
+#define MBEDTLS_X509_EXT_NS_CERT_TYPE                (1 << 16)
 
 /*
  * Storage format identifiers
