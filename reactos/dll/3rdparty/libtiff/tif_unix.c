@@ -1,4 +1,4 @@
-/* $Id: tif_unix.c,v 1.27 2015-08-19 02:31:04 bfriesen Exp $ */
+/* $Id: tif_unix.c,v 1.28 2017-01-11 19:02:49 erouault Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -314,6 +314,14 @@ _TIFFmalloc(tmsize_t s)
                 return ((void *) NULL);
 
 	return (malloc((size_t) s));
+}
+
+void* _TIFFcalloc(tmsize_t nmemb, tmsize_t siz)
+{
+    if( nmemb == 0 || siz == 0 )
+        return ((void *) NULL);
+
+    return calloc((size_t) nmemb, (size_t)siz);
 }
 
 void

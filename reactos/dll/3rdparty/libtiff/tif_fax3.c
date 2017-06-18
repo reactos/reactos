@@ -1,4 +1,4 @@
-/* $Id: tif_fax3.c,v 1.78 2016-09-04 21:32:56 erouault Exp $ */
+/* $Id: tif_fax3.c,v 1.80 2017-04-27 19:50:01 erouault Exp $ */
 
 /*
  * Copyright (c) 1990-1997 Sam Leffler
@@ -330,34 +330,64 @@ Fax3Decode2D(TIFF* tif, uint8* buf, tmsize_t occ, uint16 s)
 #if SIZEOF_UNSIGNED_LONG == 8
 # define FILL(n, cp)							    \
     switch (n) {							    \
-    case 15:(cp)[14] = 0xff; case 14:(cp)[13] = 0xff; case 13: (cp)[12] = 0xff;\
-    case 12:(cp)[11] = 0xff; case 11:(cp)[10] = 0xff; case 10: (cp)[9] = 0xff;\
-    case  9: (cp)[8] = 0xff; case  8: (cp)[7] = 0xff; case  7: (cp)[6] = 0xff;\
-    case  6: (cp)[5] = 0xff; case  5: (cp)[4] = 0xff; case  4: (cp)[3] = 0xff;\
-    case  3: (cp)[2] = 0xff; case  2: (cp)[1] = 0xff;			      \
-    case  1: (cp)[0] = 0xff; (cp) += (n); case 0:  ;			      \
+    case 15:(cp)[14] = 0xff; /*-fallthrough*/ \
+    case 14:(cp)[13] = 0xff; /*-fallthrough*/ \
+    case 13:(cp)[12] = 0xff; /*-fallthrough*/ \
+    case 12:(cp)[11] = 0xff; /*-fallthrough*/ \
+    case 11:(cp)[10] = 0xff; /*-fallthrough*/ \
+    case 10: (cp)[9] = 0xff; /*-fallthrough*/ \
+    case  9: (cp)[8] = 0xff; /*-fallthrough*/ \
+    case  8: (cp)[7] = 0xff; /*-fallthrough*/ \
+    case  7: (cp)[6] = 0xff; /*-fallthrough*/ \
+    case  6: (cp)[5] = 0xff; /*-fallthrough*/ \
+    case  5: (cp)[4] = 0xff; /*-fallthrough*/ \
+    case  4: (cp)[3] = 0xff; /*-fallthrough*/ \
+    case  3: (cp)[2] = 0xff; /*-fallthrough*/ \
+    case  2: (cp)[1] = 0xff; /*-fallthrough*/ \
+    case  1: (cp)[0] = 0xff; (cp) += (n); /*-fallthrough*/ \
+    case 0:  ;			      \
     }
 # define ZERO(n, cp)							\
     switch (n) {							\
-    case 15:(cp)[14] = 0; case 14:(cp)[13] = 0; case 13: (cp)[12] = 0;	\
-    case 12:(cp)[11] = 0; case 11:(cp)[10] = 0; case 10: (cp)[9] = 0;	\
-    case  9: (cp)[8] = 0; case  8: (cp)[7] = 0; case  7: (cp)[6] = 0;	\
-    case  6: (cp)[5] = 0; case  5: (cp)[4] = 0; case  4: (cp)[3] = 0;	\
-    case  3: (cp)[2] = 0; case  2: (cp)[1] = 0;				\
-    case  1: (cp)[0] = 0; (cp) += (n); case 0:  ;			\
+    case 15:(cp)[14] = 0; /*-fallthrough*/ \
+    case 14:(cp)[13] = 0; /*-fallthrough*/ \
+    case 13:(cp)[12] = 0; /*-fallthrough*/ \
+    case 12:(cp)[11] = 0; /*-fallthrough*/ \
+    case 11:(cp)[10] = 0; /*-fallthrough*/ \
+    case 10: (cp)[9] = 0; /*-fallthrough*/ \
+    case  9: (cp)[8] = 0; /*-fallthrough*/ \
+    case  8: (cp)[7] = 0; /*-fallthrough*/ \
+    case  7: (cp)[6] = 0; /*-fallthrough*/ \
+    case  6: (cp)[5] = 0; /*-fallthrough*/ \
+    case  5: (cp)[4] = 0; /*-fallthrough*/ \
+    case  4: (cp)[3] = 0; /*-fallthrough*/ \
+    case  3: (cp)[2] = 0; /*-fallthrough*/ \
+    case  2: (cp)[1] = 0; /*-fallthrough*/ \
+    case  1: (cp)[0] = 0; (cp) += (n); /*-fallthrough*/ \
+    case 0:  ;			\
     }
 #else
 # define FILL(n, cp)							    \
     switch (n) {							    \
-    case 7: (cp)[6] = 0xff; case 6: (cp)[5] = 0xff; case 5: (cp)[4] = 0xff; \
-    case 4: (cp)[3] = 0xff; case 3: (cp)[2] = 0xff; case 2: (cp)[1] = 0xff; \
-    case 1: (cp)[0] = 0xff; (cp) += (n); case 0:  ;			    \
+    case 7: (cp)[6] = 0xff; /*-fallthrough*/ \
+    case 6: (cp)[5] = 0xff; /*-fallthrough*/ \
+    case 5: (cp)[4] = 0xff; /*-fallthrough*/ \
+    case 4: (cp)[3] = 0xff; /*-fallthrough*/ \
+    case 3: (cp)[2] = 0xff; /*-fallthrough*/ \
+    case 2: (cp)[1] = 0xff; /*-fallthrough*/ \
+    case 1: (cp)[0] = 0xff; (cp) += (n);  /*-fallthrough*/ \
+    case 0:  ;			    \
     }
 # define ZERO(n, cp)							\
     switch (n) {							\
-    case 7: (cp)[6] = 0; case 6: (cp)[5] = 0; case 5: (cp)[4] = 0;	\
-    case 4: (cp)[3] = 0; case 3: (cp)[2] = 0; case 2: (cp)[1] = 0;	\
-    case 1: (cp)[0] = 0; (cp) += (n); case 0:  ;			\
+    case 7: (cp)[6] = 0; /*-fallthrough*/ \
+    case 6: (cp)[5] = 0; /*-fallthrough*/ \
+    case 5: (cp)[4] = 0; /*-fallthrough*/ \
+    case 4: (cp)[3] = 0; /*-fallthrough*/ \
+    case 3: (cp)[2] = 0; /*-fallthrough*/ \
+    case 2: (cp)[1] = 0; /*-fallthrough*/ \
+    case 1: (cp)[0] = 0; (cp) += (n); /*-fallthrough*/ \
+    case 0:  ;			\
     }
 #endif
 
@@ -1100,7 +1130,7 @@ Fax3PostEncode(TIFF* tif)
 static void
 Fax3Close(TIFF* tif)
 {
-	if ((Fax3State(tif)->mode & FAXMODE_NORTC) == 0) {
+	if ((Fax3State(tif)->mode & FAXMODE_NORTC) == 0 && tif->tif_rawcp) {
 		Fax3CodecState* sp = EncoderState(tif);
 		unsigned int code = EOL;
 		unsigned int length = 12;
@@ -1322,6 +1352,7 @@ InitCCITTFax3(TIFF* tif)
 		    "No space for state block");
 		return (0);
 	}
+	_TIFFmemset(tif->tif_data, 0, sizeof (Fax3CodecState));
 
 	sp = Fax3State(tif);
         sp->rw_mode = tif->tif_mode;

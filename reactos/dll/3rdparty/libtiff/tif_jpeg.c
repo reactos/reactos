@@ -1,4 +1,4 @@
-/* $Id: tif_jpeg.c,v 1.123 2016-01-23 21:20:34 erouault Exp $ */
+/* $Id: tif_jpeg.c,v 1.127 2017-01-31 13:02:27 erouault Exp $ */
 
 /*
  * Copyright (c) 1994-1997 Sam Leffler
@@ -698,9 +698,11 @@ static int
 JPEGFixupTags(TIFF* tif)
 {
 #ifdef CHECK_JPEG_YCBCR_SUBSAMPLING
+        JPEGState* sp = JState(tif);
 	if ((tif->tif_dir.td_photometric==PHOTOMETRIC_YCBCR)&&
 	    (tif->tif_dir.td_planarconfig==PLANARCONFIG_CONTIG)&&
-	    (tif->tif_dir.td_samplesperpixel==3))
+	    (tif->tif_dir.td_samplesperpixel==3) &&
+            !sp->ycbcrsampling_fetched)
 		JPEGFixupTagsSubsampling(tif);
 #endif
         
@@ -1627,6 +1629,20 @@ JPEGSetupEncode(TIFF* tif)
 	case PHOTOMETRIC_YCBCR:
 		sp->h_sampling = td->td_ycbcrsubsampling[0];
 		sp->v_sampling = td->td_ycbcrsubsampling[1];
+                if( sp->h_sampling == 0 || sp->v_sampling == 0 )
+                {
+                    TIFFErrorExt(tif->tif_clientdata, module,
+                            "Invalig horizontal/vertical sampling value");
+                    return (0);
+                }
+                if( td->td_bitspersample > 16 )
+                {
+                    TIFFErrorExt(tif->tif_clientdata, module,
+                                 "BitsPerSample %d not allowed for JPEG",
+                                 td->td_bitspersample);
+                    return (0);
+                }
+
 		/*
 		 * A ReferenceBlackWhite field *must* be present since the
 		 * default value is inappropriate for YCbCr.  Fill in the
@@ -2292,6 +2308,15 @@ static int JPEGInitializeLibJPEG( TIFF * tif, int decompress )
     } else {
         if (!TIFFjpeg_create_compress(sp))
             return (0);
+#ifndef TIFF_JPEG_MAX_MEMORY_TO_USE
+#define TIFF_JPEG_MAX_MEMORY_TO_USE (10 * 1024 * 1024)
+#endif
+        /* Increase the max memory usable. This helps when creating files */
+        /* with "big" tile, without using libjpeg temporary files. */
+        /* For example a 512x512 tile with 3 bands */
+        /* requires 1.5 MB which is above libjpeg 1MB default */
+        if( sp->cinfo.c.mem->max_memory_to_use < TIFF_JPEG_MAX_MEMORY_TO_USE )
+            sp->cinfo.c.mem->max_memory_to_use = TIFF_JPEG_MAX_MEMORY_TO_USE;
     }
 
     sp->cinfo_initialized = TRUE;

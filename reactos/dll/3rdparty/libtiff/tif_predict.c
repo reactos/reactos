@@ -1,4 +1,4 @@
-/* $Id: tif_predict.c,v 1.40 2016-11-04 09:19:13 erouault Exp $ */
+/* $Id: tif_predict.c,v 1.43 2017-05-10 15:21:16 erouault Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -118,6 +118,9 @@ PredictorSetupDecode(TIFF* tif)
 	TIFFPredictorState* sp = PredictorState(tif);
 	TIFFDirectory* td = &tif->tif_dir;
 
+	/* Note: when PredictorSetup() fails, the effets of setupdecode() */
+	/* will not be "cancelled" so setupdecode() might be robust to */
+	/* be called several times. */
 	if (!(*sp->setupdecode)(tif) || !PredictorSetup(tif))
 		return 0;
 
@@ -260,11 +263,12 @@ PredictorSetupEncode(TIFF* tif)
 
 #define REPEAT4(n, op)		\
     switch (n) {		\
-    default: { tmsize_t i; for (i = n-4; i > 0; i--) { op; } } \
-    case 4:  op;		\
-    case 3:  op;		\
-    case 2:  op;		\
-    case 1:  op;		\
+    default: { \
+        tmsize_t i; for (i = n-4; i > 0; i--) { op; } }  /*-fallthrough*/  \
+    case 4:  op; /*-fallthrough*/ \
+    case 3:  op; /*-fallthrough*/ \
+    case 2:  op; /*-fallthrough*/ \
+    case 1:  op; /*-fallthrough*/ \
     case 0:  ;			\
     }
 
@@ -798,7 +802,7 @@ PredictorPrintDir(TIFF* tif, FILE* fd, long flags)
 			case 2: fprintf(fd, "horizontal differencing "); break;
 			case 3: fprintf(fd, "floating point predictor "); break;
 		}
-		fprintf(fd, "%u (0x%x)\n", sp->predictor, sp->predictor);
+		fprintf(fd, "%d (0x%x)\n", sp->predictor, sp->predictor);
 	}
 	if (sp->printdir)
 		(*sp->printdir)(tif, fd, flags);

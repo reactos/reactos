@@ -1,4 +1,4 @@
-/* $Id: tiffio.h,v 1.92 2016-01-23 21:20:34 erouault Exp $ */
+/* $Id: tiffio.h,v 1.94 2017-01-11 19:02:49 erouault Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -295,6 +295,7 @@ extern TIFFCodec* TIFFGetConfiguredCODECs(void);
  */
 
 extern void* _TIFFmalloc(tmsize_t s);
+extern void* _TIFFcalloc(tmsize_t nmemb, tmsize_t siz);
 extern void* _TIFFrealloc(void* p, tmsize_t s);
 extern void _TIFFmemset(void* p, int v, tmsize_t c);
 extern void _TIFFmemcpy(void* d, const void* s, tmsize_t c);
@@ -432,6 +433,8 @@ extern int TIFFReadRGBAImageOriented(TIFF*, uint32, uint32, uint32*, int, int);
 
 extern int TIFFReadRGBAStrip(TIFF*, uint32, uint32 * );
 extern int TIFFReadRGBATile(TIFF*, uint32, uint32, uint32 * );
+extern int TIFFReadRGBAStripExt(TIFF*, uint32, uint32 *, int stop_on_error );
+extern int TIFFReadRGBATileExt(TIFF*, uint32, uint32, uint32 *, int stop_on_error );
 extern int TIFFRGBAImageOK(TIFF*, char [1024]);
 extern int TIFFRGBAImageBegin(TIFFRGBAImage*, TIFF*, int, char [1024]);
 extern int TIFFRGBAImageGet(TIFFRGBAImage*, uint32*, uint32, uint32);
