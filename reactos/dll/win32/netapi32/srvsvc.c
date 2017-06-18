@@ -72,6 +72,80 @@ SRVSVC_HANDLE_unbind(SRVSVC_HANDLE pszSystemName,
 
 NET_API_STATUS
 WINAPI
+NetConnectionEnum(
+    _In_ LMSTR servername,
+    _In_ LMSTR qualifier,
+    _In_ DWORD level,
+    _Out_ LPBYTE *bufptr,
+    _In_ DWORD prefmaxlen,
+    _Out_ LPDWORD entriesread,
+    _Out_ LPDWORD totalentries,
+    _Inout_ LPDWORD resume_handle)
+{
+    CONNECT_ENUM_STRUCT EnumStruct;
+    CONNECT_INFO_0_CONTAINER Level0Container = {0, NULL};
+    CONNECT_INFO_1_CONTAINER Level1Container = {0, NULL};
+    NET_API_STATUS status = 0;
+
+    TRACE("NetConnectionEnum(%s %s %s %lu %p %lu %p %p %p)\n",
+          debugstr_w(servername), debugstr_w(qualifier), level, bufptr,
+          prefmaxlen, entriesread, totalentries, resume_handle);
+
+    if (level > 1)
+        return ERROR_INVALID_LEVEL;
+
+    EnumStruct.Level = level;
+    switch (level)
+    {
+        case 0:
+            EnumStruct.ConnectInfo.Level0 = &Level0Container;
+            break;
+
+        case 1:
+            EnumStruct.ConnectInfo.Level1 = &Level1Container;
+            break;
+    }
+
+    RpcTryExcept
+    {
+        status = NetrConnectionEnum(servername,
+                                    qualifier,
+                                    &EnumStruct,
+                                    prefmaxlen,
+                                    totalentries,
+                                    resume_handle);
+
+        switch (level)
+        {
+            case 0:
+                if (EnumStruct.ConnectInfo.Level0->Buffer != NULL)
+                {
+                    *bufptr = (LPBYTE)EnumStruct.ConnectInfo.Level0->Buffer;
+                    *entriesread = EnumStruct.ConnectInfo.Level0->EntriesRead;
+                }
+                break;
+
+            case 1:
+                if (EnumStruct.ConnectInfo.Level1->Buffer != NULL)
+                {
+                    *bufptr = (LPBYTE)EnumStruct.ConnectInfo.Level1->Buffer;
+                    *entriesread = EnumStruct.ConnectInfo.Level1->EntriesRead;
+                }
+                break;
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
 NetFileClose(
     _In_ LMSTR servername,
     _In_ DWORD fileid)

@@ -113,7 +113,7 @@
 @ stdcall NetConfigGet(wstr wstr wstr ptr)
 @ stdcall NetConfigGetAll(wstr wstr ptr)
 @ stdcall NetConfigSet(wstr wstr wstr long long ptr long)
-@ stub NetConnectionEnum
+@ stdcall NetConnectionEnum(wstr wstr long ptr long ptr ptr ptr)
 @ stub NetDfsAdd
 @ stub NetDfsAddFtRoot
 @ stub NetDfsAddStdRoot
