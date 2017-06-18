@@ -83,8 +83,20 @@
 /* Define to 1 if you have the <CUlib.h> header file. */
 /* #undef HAVE_CULIB_H */
 
+/* Define to 1 if you have the <dirent.h> header file. */
+#define HAVE_DIRENT_H 1
+
+/* Define to 1 if you have the `dlclose' function. */
+/* #undef HAVE_DLCLOSE */
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 /* #undef HAVE_DLFCN_H */
+
+/* Define to 1 if you have the `dlopen' function. */
+/* #undef HAVE_DLOPEN */
+
+/* Define to 1 if you have the `dlsym' function. */
+/* #undef HAVE_DLSYM */
 
 /* Define if getaddrinfo accepts the AI_ADDRCONFIG flag */
 /* #undef HAVE_GAI_ADDRCONFIG */
@@ -118,9 +130,6 @@
 
 /* Define to 1 if you have the <locale.h> header file. */
 #define HAVE_LOCALE_H 1
-
-/* Define if libltdl is available */
-/* #undef HAVE_LTDL */
 
 /* Define to 1 if you have the <machine/soundcard.h> header file. */
 /* #undef HAVE_MACHINE_SOUNDCARD_H */
@@ -191,9 +200,6 @@
 /* Define to 1 if you have the <stdlib.h> header file. */
 #define HAVE_STDLIB_H 1
 
-/* Define to 1 if you have the `strdup' function. */
-#define HAVE_STRDUP 1
-
 /* Define to 1 if you have the `strerror' function. */
 #define HAVE_STRERROR 1
 
@@ -220,6 +226,9 @@
 
 /* Define to 1 if you have the <sys/resource.h> header file. */
 /* #undef HAVE_SYS_RESOURCE_H */
+
+/* Define to 1 if you have the <sys/select.h> header file. */
+/* #undef HAVE_SYS_SELECT_H */
 
 /* Define to 1 if you have the <sys/signal.h> header file. */
 /* #undef HAVE_SYS_SIGNAL_H */
@@ -267,11 +276,17 @@
    functions. */
 #define LFS_ALIAS_BITS 32
 
+/* Define to the extension used for runtime loadable modules, say, ".so". */
+/* #undef LT_MODULE_EXT */
+
 /* Define to the sub-directory where libtool stores uninstalled libraries. */
 #define LT_OBJDIR ".libs/"
 
-/* The suffix for module files. */
-#define MODULE_FILE_SUFFIX ".la"
+/* Define to the shared library suffix, say, ".dylib". */
+/* #undef LT_SHARED_EXT */
+
+/* Define to the shared archive member specification, say "(shr.o)". */
+/* #undef LT_SHARED_LIB_MEMBER */
 
 /* Define if network support is enabled. */
 #define NETWORK 1
@@ -341,7 +356,7 @@
 #define PACKAGE_NAME "mpg123"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "mpg123 1.23.0"
+#define PACKAGE_STRING "mpg123 1.25.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "mpg123"
@@ -350,7 +365,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.23.0"
+#define PACKAGE_VERSION "1.25.0"
 
 /* Define if portaudio v18 API is wanted. */
 /* #undef PORTAUDIO18 */
@@ -383,7 +398,7 @@
 /* #undef USE_YASM_FOR_AVX */
 
 /* Version number of package */
-#define VERSION "1.23.0"
+#define VERSION "1.25.0"
 
 /* Define to use Win32 named pipes */
 #define WANT_WIN32_FIFO 1

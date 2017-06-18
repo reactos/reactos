@@ -1,5 +1,5 @@
 /*
-	libmpg123: MPEG Audio Decoder library (version 1.23.0)
+	libmpg123: MPEG Audio Decoder library (version 1.25.0)
 
 	copyright 1995-2015 by the mpg123 project
 	free software under the terms of the LGPL 2.1
@@ -17,8 +17,9 @@
  * This should be incremented at least each time a new symbol is added
  * to the header.
  */
-#define MPG123_API_VERSION 42
+#define MPG123_API_VERSION 44
 
+#ifndef MPG123_EXPORT
 /** Defines needed for MS Visual Studio(tm) DLL builds.
  * Every public function must be prefixed with MPG123_EXPORT. When building 
  * the DLL ensure to define BUILD_MPG123_DLL. This makes the function accessible
@@ -38,14 +39,26 @@
 #define MPG123_EXPORT
 #endif
 #endif
+#endif
+
+#ifndef __REACTOS__
+/* This is for Visual Studio, so this header works as distributed in the binary downloads */
+#if defined(_MSC_VER) && !defined(MPG123_DEF_SSIZE_T)
+#define MPG123_DEF_SSIZE_T
+#include <stddef.h>
+typedef ptrdiff_t ssize_t;
+#endif
+#endif /* __REACTOS__ */
 
 #ifndef MPG123_NO_CONFIGURE /* Enable use of this file without configure. */
 #include <stdlib.h>
 #include <sys/types.h>
 
+#ifdef __REACTOS__
 #ifndef ssize_t
 typedef long ssize_t;
 #endif
+#endif /* __REACTOS__ */
 
 /* Simplified large file handling.
 	I used to have a check here that prevents building for a library with conflicting large file setup
@@ -196,6 +209,13 @@ enum mpg123_param_flags
 	,MPG123_IGNORE_INFOFRAME = 0x4000 /**< 100 0000 0000 0000 Do not parse the LAME/Xing info frame, treat it as normal MPEG data. */
 	,MPG123_AUTO_RESAMPLE = 0x8000 /**< 1000 0000 0000 0000 Allow automatic internal resampling of any kind (default on if supported). Especially when going lowlevel with replacing output buffer, you might want to unset this flag. Setting MPG123_DOWNSAMPLE or MPG123_FORCE_RATE will override this. */
 	,MPG123_PICTURE = 0x10000 /**< 17th bit: Enable storage of pictures from tags (ID3v2 APIC). */
+	,MPG123_NO_PEEK_END    = 0x20000 /**< 18th bit: Do not seek to the end of
+	 *  the stream in order to probe
+	 *  the stream length and search for the id3v1 field. This also means
+	 *  the file size is unknown unless set using mpg123_set_filesize() and
+	 *  the stream is assumed as non-seekable unless overridden.
+	 */
+	,MPG123_FORCE_SEEKABLE = 0x40000 /**< 19th bit: Force the stream to be seekable. */
 };
 
 /** choices for MPG123_RVA */
@@ -395,7 +415,7 @@ MPG123_EXPORT int mpg123_decoder(mpg123_handle *mh, const char* decoder_name);
  *  The active decoder engine can vary depening on output constraints,
  *  mostly non-resampling, integer output is accelerated via 3DNow & Co. but for
  *  other modes a fallback engine kicks in.
- *  Note that this can return a decoder that is ony active in the hidden and not
+ *  Note that this can return a decoder that is only active in the hidden and not
  *  available as decoder choice from the outside.
  *  \param mh handle
  *  \return The decoder name or NULL on error.
@@ -411,7 +431,7 @@ MPG123_EXPORT const char* mpg123_current_decoder(mpg123_handle *mh);
  *
  * Before you dive in, please be warned that you might get confused by this. This seems to happen a lot, therefore I am trying to explain in advance.
  *
- * The mpg123 library decides what output format to use when encountering the first frame in a stream, or actually any frame that is still valid but differs from the frames before in the prompted output format. At such a deciding point, an internal table of allowed encodings, sampling rates and channel setups is consulted. According to this table, an output format is chosen and the decoding engine set up accordingly (including ptimized routines for different output formats). This might seem unusual but it just follows from the non-existence of "MPEG audio files" with defined overall properties. There are streams, streams are concatenations of (semi) independent frames. We store streams on disk and call them "MPEG audio files", but that does not change their nature as the decoder is concerned (the LAME/Xing header for gapless decoding makes things interesting again).
+ * The mpg123 library decides what output format to use when encountering the first frame in a stream, or actually any frame that is still valid but differs from the frames before in the prompted output format. At such a deciding point, an internal table of allowed encodings, sampling rates and channel setups is consulted. According to this table, an output format is chosen and the decoding engine set up accordingly (including optimized routines for different output formats). This might seem unusual but it just follows from the non-existence of "MPEG audio files" with defined overall properties. There are streams, streams are concatenations of (semi) independent frames. We store streams on disk and call them "MPEG audio files", but that does not change their nature as the decoder is concerned (the LAME/Xing header for gapless decoding makes things interesting again).
  *
  * To get to the point: What you do with mpg123_format() and friends is to fill the internal table of allowed formats before it is used. That includes removing support for some formats or adding your forced sample rate (see MPG123_FORCE_RATE) that will be used with the crude internal resampler. Also keep in mind that the sample encoding is just a question of choice -- the MPEG frames do only indicate their native sampling rate and channel count. If you want to decode to integer or float samples, 8 or 16 bit ... that is your decision. In a "clean" world, libmpg123 would always decode to 32 bit float and let you handle any sample conversion. But there are optimized routines that work faster by directly decoding to the desired encoding / accuracy. We prefer efficiency over conceptual tidyness.
  *
@@ -481,6 +501,10 @@ MPG123_EXPORT int mpg123_format_support( mpg123_handle *mh
 ,	long rate, int encoding );
 
 /** Get the current output format written to the addresses given.
+ *  If the stream is freshly loaded, this will try to parse enough
+ *  of it to give you the format to come. This clears the flag that
+ *  would otherwise make the first decoding call return
+ *  MPG123_NEW_FORMAT.
  *  \param mh handle
  *  \param rate sampling rate return address
  *  \param channels channel count return address
@@ -489,6 +513,20 @@ MPG123_EXPORT int mpg123_format_support( mpg123_handle *mh
  */
 MPG123_EXPORT int mpg123_getformat( mpg123_handle *mh
 ,	long *rate, int *channels, int *encoding );
+
+/** Get the current output format written to the addresses given.
+ *  This differs from plain mpg123_getformat() in that you can choose
+ *  _not_ to clear the flag that would trigger the next decoding call
+ *  to return MPG123_NEW_FORMAT in case of a new format arriving.
+ *  \param mh handle
+ *  \param rate sampling rate return address
+ *  \param channels channel count return address
+ *  \param encoding encoding return address
+ *  \param clear_flag if true, clear internal format flag
+ *  \return MPG123_OK on success
+ */
+MPG123_EXPORT int mpg123_getformat2( mpg123_handle *mh
+,	long *rate, int *channels, int *encoding, int clear_flag );
 
 /*@}*/
 
@@ -1101,7 +1139,7 @@ MPG123_EXPORT enum mpg123_text_encoding mpg123_enc_from_id3(unsigned char id3_en
  *  Also, you might want to take a bit of care with preparing the data; for example, strip leading zeroes (I have seen that).
  *  \param sb  target string
  *  \param enc mpg123 text encoding value
- *  \param source source buffer with plain unsigned bytes (you might need to cast from char *)
+ *  \param source source buffer with plain unsigned bytes (you might need to cast from signed char)
  *  \param source_size number of bytes in the source buffer
  *  \return 0 on error, 1 on success (on error, mpg123_free_string is called on sb)
  */
@@ -1391,7 +1429,7 @@ MPG123_EXPORT int mpg123_replace_reader( mpg123_handle *mh
  *  Note: As it would be troublesome to mess with this while having a file open,
  *  this mpg123_close() is implied here.
  *  \param mh handle
- *  \param r_read callback for reading (behaviour like POSIXread)
+ *  \param r_read callback for reading (behaviour like POSIX read)
  *  \param r_lseek callback for seeking (like POSIX lseek)
  *  \param cleanup A callback to clean up an I/O handle on mpg123_close,
  *         can be NULL for none (you take care of cleaning your handles).
@@ -1407,7 +1445,5 @@ MPG123_EXPORT int mpg123_replace_reader_handle( mpg123_handle *mh
 #ifdef __cplusplus
 }
 #endif
-
-#undef MPG123_EXPORT
 
 #endif
