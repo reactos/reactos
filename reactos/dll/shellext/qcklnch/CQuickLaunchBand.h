@@ -23,16 +23,10 @@ class CQuickLaunchBand :
     public IPersistStream,
     public IWinEventHandler,
     public IOleCommandTarget
-{
-    CComPtr<IUnknown> m_Site; 
-    CComPtr<IUnknown> m_punkISFB;
+{    
+    CComPtr<IUnknown> m_punkISFB;   
 
-    HINSTANCE m_hInstance; 
-    HWND m_hWnd;
-    HWND m_hWndStartButton;
-    DWORD m_BandID;    
-
-public:
+    public:
 
     CQuickLaunchBand();
     virtual ~CQuickLaunchBand();

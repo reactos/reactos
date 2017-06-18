@@ -18,10 +18,8 @@ class CISFBand :
     public IWinEventHandler,
     public IOleCommandTarget
 {
-    CComPtr<IUnknown> m_Site; 
-    CComPtr<IUnknown> m_punkISFB;
-
-    HINSTANCE m_hInstance; 
+    HINSTANCE m_hInstance;
+    CComPtr<IUnknown> m_Site;    
     HWND m_hWnd;
     HWND m_hWndStartButton;
     DWORD m_BandID;    
@@ -165,3 +163,7 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
     END_COM_MAP()    
 };
+
+//C Constructor
+extern "C"
+HRESULT WINAPI CIFSBand_CreateInstance(REFIID riid, void** ppv);
