@@ -339,6 +339,9 @@ clnt_dg_call(cl, proc, xargs, argsp, xresults, resultsp, utimeout)
 	ssize_t recvlen = 0;
 	int rpc_lock_value;
 	u_int32_t xid, inval, outval;
+#ifdef __REACTOS__
+	fd_set infd;
+#endif
 
 	outlen = 0;
 #ifndef _WIN32
@@ -445,9 +448,6 @@ get_reply:
 #error Not supported!
 #endif
                 /* ReactOS: use select instead of poll */
-                fd_set infd;
-                struct timeval timeout;
-
                 FD_ZERO(&infd);
                 FD_SET(cu->cu_fd, &infd);
 
