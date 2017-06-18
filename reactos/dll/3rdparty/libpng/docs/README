@@ -1,4 +1,4 @@
-README for libpng version 1.6.28 - January 5, 2017 (shared library 16.0)
+README for libpng version 1.6.29 - March 16, 2017 (shared library 16.0)
 See the note about version numbers near the top of png.h
 
 See INSTALL for instructions on how to install libpng.
@@ -179,14 +179,16 @@ Files in this distribution:
       pngwtran.c    =>  Write data transformations
       pngwutil.c    =>  Write utility functions
       arm           =>  Contains optimized code for the ARM platform
+      powerpc       =>  Contains optimized code for the PowerPC platform
       contrib       =>  Contributions
        arm-neon         =>  Optimized code for ARM-NEON platform
+       powerpc-vsx      =>  Optimized code for POWERPC-VSX platform
        examples         =>  Example programs
        gregbook         =>  source code for PNG reading and writing, from
                             Greg Roelofs' "PNG: The Definitive Guide",
                             O'Reilly, 1999
-       intel            =>  Optimized code for INTEL-SSE2 platform
        libtests         =>  Test programs
+       mips-msa         =>  Optimized code for MIPS-MSA platform
        pngminim         =>  Minimal decoder, encoder, and progressive decoder
                             programs demonstrating use of pngusr.dfa
        pngminus         =>  Simple pnm2png and png2pnm programs
@@ -194,6 +196,8 @@ Files in this distribution:
        testpngs
        tools            =>  Various tools
        visupng          =>  Contains a MSVC workspace for VisualPng
+      intel             =>  Optimized code for INTEL-SSE2 platform
+      mips              =>  Optimized code for MIPS platform
       projects      =>  Contains project files and workspaces for
                         building a DLL
        owatcom          =>  Contains a WATCOM project for building libpng

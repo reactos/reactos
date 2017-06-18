@@ -25,5 +25,6 @@ Use greater precision when changing to linear gamma for compositing against
 Investigate pre-incremented loop counters and other loop constructions.
 Add interpolated method of handling interlacing.
 Extend pngvalid.c to validate more of the libpng transformations.
+Refactor preprocessor conditionals to compile entire statements
 
 */
