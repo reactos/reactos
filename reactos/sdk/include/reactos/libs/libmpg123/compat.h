@@ -97,9 +97,11 @@
 
 typedef unsigned char byte;
 
+#ifndef __REACTOS__
 #ifdef _MSC_VER
 typedef long ssize_t;
 #endif
+#endif /* __REACTOS__ */
 
 /* A safe realloc also for very old systems where realloc(NULL, size) returns NULL. */
 void *safe_realloc(void *ptr, size_t size);
