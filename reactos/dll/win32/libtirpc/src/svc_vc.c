@@ -560,10 +560,14 @@ fatal_err:
  * Any error is fatal and the connection is closed.
  */
 static int
+#ifdef __REACTOS__
+write_vc(xprtp, ptr, len)
+#else
 write_vc(xprtp, buf, len)
+#endif
 	void *xprtp;
 #ifdef __REACTOS__
-    void *buf;
+    void *ptr;
 #else
 	char *buf;
 #endif
@@ -573,6 +577,9 @@ write_vc(xprtp, buf, len)
 	int i, cnt;
 	struct cf_conn *cd;
 	struct timeval tv0, tv1;
+#ifdef __REACTOS__
+    char *buf = ptr;
+#endif
 
 	xprt = (SVCXPRT *)xprtp;
 	assert(xprt != NULL);
