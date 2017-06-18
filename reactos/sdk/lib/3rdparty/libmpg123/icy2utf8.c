@@ -26,6 +26,8 @@
  * Convert from ICY encoding (windows-1252 codepage) to UTF-8
  */
 
+#include "config.h"
+#include "intsym.h"
 /* Includes string and stdlib headers... */
 #include "compat.h"
 

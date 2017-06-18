@@ -59,9 +59,9 @@ int synth_1to1_s32_x86_64(real *bandPtr,int channel, mpg123_handle *fr, int fina
 	real *b0, **buf;
 	int bo1;
 	int clip;
-
+#ifndef NO_EQUALIZER
 	if(fr->have_eq_settings) do_equalizer(bandPtr,channel,fr->equalizer);
-
+#endif
 	if(!channel)
 	{
 		fr->bo--;
@@ -102,13 +102,13 @@ int synth_1to1_s32_stereo_x86_64(real *bandPtr_l, real *bandPtr_r, mpg123_handle
 	real *b0l, *b0r, **bufl, **bufr;
 	int bo1;
 	int clip;
-
+#ifndef NO_EQUALIZER
 	if(fr->have_eq_settings)
 	{
 		do_equalizer(bandPtr_l,0,fr->equalizer);
 		do_equalizer(bandPtr_r,1,fr->equalizer);
 	}
-
+#endif
 	fr->bo--;
 	fr->bo &= 0xf;
 	bufl = fr->real_buffs[0];
@@ -154,9 +154,9 @@ int synth_1to1_s32_avx(real *bandPtr,int channel, mpg123_handle *fr, int final)
 	real *b0, **buf;
 	int bo1;
 	int clip;
-
+#ifndef NO_EQUALIZER
 	if(fr->have_eq_settings) do_equalizer(bandPtr,channel,fr->equalizer);
-
+#endif
 	if(!channel)
 	{
 		fr->bo--;
@@ -197,13 +197,13 @@ int synth_1to1_s32_stereo_avx(real *bandPtr_l, real *bandPtr_r, mpg123_handle *f
 	real *b0l, *b0r, **bufl, **bufr;
 	int bo1;
 	int clip;
-
+#ifndef NO_EQUALIZER
 	if(fr->have_eq_settings)
 	{
 		do_equalizer(bandPtr_l,0,fr->equalizer);
 		do_equalizer(bandPtr_r,1,fr->equalizer);
 	}
-
+#endif
 	fr->bo--;
 	fr->bo &= 0xf;
 	bufl = fr->real_buffs[0];
@@ -247,9 +247,9 @@ int synth_1to1_s32_sse(real *bandPtr,int channel, mpg123_handle *fr, int final)
 	real *b0, **buf;
 	int bo1;
 	int clip;
-
+#ifndef NO_EQUALIZER
 	if(fr->have_eq_settings) do_equalizer(bandPtr,channel,fr->equalizer);
-
+#endif
 	if(!channel)
 	{
 		fr->bo--;
@@ -290,13 +290,13 @@ int synth_1to1_s32_stereo_sse(real *bandPtr_l, real *bandPtr_r, mpg123_handle *f
 	real *b0l, *b0r, **bufl, **bufr;
 	int bo1;
 	int clip;
-
+#ifndef NO_EQUALIZER
 	if(fr->have_eq_settings)
 	{
 		do_equalizer(bandPtr_l,0,fr->equalizer);
 		do_equalizer(bandPtr_r,1,fr->equalizer);
 	}
-
+#endif
 	fr->bo--;
 	fr->bo &= 0xf;
 	bufl = fr->real_buffs[0];
@@ -340,9 +340,9 @@ int synth_1to1_s32_neon(real *bandPtr,int channel, mpg123_handle *fr, int final)
 	real *b0, **buf;
 	int bo1;
 	int clip;
-
+#ifndef NO_EQUALIZER
 	if(fr->have_eq_settings) do_equalizer(bandPtr,channel,fr->equalizer);
-
+#endif
 	if(!channel)
 	{
 		fr->bo--;
@@ -382,13 +382,13 @@ int synth_1to1_s32_stereo_neon(real *bandPtr_l, real *bandPtr_r, mpg123_handle *
 	real *b0l, *b0r, **bufl, **bufr;
 	int bo1;
 	int clip;
-
+#ifndef NO_EQUALIZER
 	if(fr->have_eq_settings)
 	{
 		do_equalizer(bandPtr_l,0,fr->equalizer);
 		do_equalizer(bandPtr_r,1,fr->equalizer);
 	}
-
+#endif
 	fr->bo--;
 	fr->bo &= 0xf;
 	bufl = fr->real_buffs[0];
@@ -432,9 +432,9 @@ int synth_1to1_s32_neon64(real *bandPtr,int channel, mpg123_handle *fr, int fina
 	real *b0, **buf;
 	int bo1;
 	int clip;
-
+#ifndef NO_EQUALIZER
 	if(fr->have_eq_settings) do_equalizer(bandPtr,channel,fr->equalizer);
-
+#endif
 	if(!channel)
 	{
 		fr->bo--;
@@ -467,20 +467,20 @@ int synth_1to1_s32_neon64(real *bandPtr,int channel, mpg123_handle *fr, int fina
 	return clip;
 }
 
-int synth_1to1_s32_stereo_neon64(real *bandPtr_l, real *bandPtr_r, mpg123_handle *fr)
+int synth_1to1_s32st_neon64(real *bandPtr_l, real *bandPtr_r, mpg123_handle *fr)
 {
 	int32_t *samples = (int32_t *) (fr->buffer.data+fr->buffer.fill);
 
 	real *b0l, *b0r, **bufl, **bufr;
 	int bo1;
 	int clip;
-
+#ifndef NO_EQUALIZER
 	if(fr->have_eq_settings)
 	{
 		do_equalizer(bandPtr_l,0,fr->equalizer);
 		do_equalizer(bandPtr_r,1,fr->equalizer);
 	}
-
+#endif
 	fr->bo--;
 	fr->bo &= 0xf;
 	bufl = fr->real_buffs[0];

@@ -8,6 +8,15 @@
 /* Define to use proper rounding. */
 /* #undef ACCURATE_ROUNDING */
 
+/* Define if building universal (internal helper macro) */
+/* #undef AC_APPLE_UNIVERSAL_BUILD */
+
+/* Define if .balign is present. */
+#define ASMALIGN_BALIGN 1
+
+/* Define if .align just takes byte count. */
+/* #undef ASMALIGN_BYTE */
+
 /* Define if .align takes 3 for alignment of 2^3=8 bytes instead of 8. */
 /* #undef ASMALIGN_EXP */
 
@@ -258,9 +267,11 @@
    functions. */
 #define LFS_ALIAS_BITS 32
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
 #define LT_OBJDIR ".libs/"
+
+/* The suffix for module files. */
+#define MODULE_FILE_SUFFIX ".la"
 
 /* Define if network support is enabled. */
 #define NETWORK 1
@@ -276,6 +287,9 @@
 
 /* Define to disable downsampled decoding. */
 /* #undef NO_DOWNSAMPLE */
+
+/* Define to disable equalizer. */
+/* #undef NO_EQUALIZER */
 
 /* Define to disable error messages in combination with a return value (the
    return is left intact). */
@@ -321,13 +335,13 @@
 #define PACKAGE "mpg123"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "mpg123-devel@lists.sourceforge.net"
+#define PACKAGE_BUGREPORT "maintainer@mpg123.org"
 
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "mpg123"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "mpg123 1.22.1"
+#define PACKAGE_STRING "mpg123 1.23.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "mpg123"
@@ -336,7 +350,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.22.1"
+#define PACKAGE_VERSION "1.23.0"
 
 /* Define if portaudio v18 API is wanted. */
 /* #undef PORTAUDIO18 */
@@ -369,7 +383,7 @@
 /* #undef USE_YASM_FOR_AVX */
 
 /* Version number of package */
-#define VERSION "1.22.1"
+#define VERSION "1.23.0"
 
 /* Define to use Win32 named pipes */
 #define WANT_WIN32_FIFO 1
@@ -380,11 +394,34 @@
 /* Define to use Unicode for Windows */
 #define WANT_WIN32_UNICODE 1
 
+/* WinXP and above for ipv6 */
+/* #undef WINVER */
+
+/* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
+   significant byte first (like Motorola and SPARC, unlike Intel). */
+#if defined AC_APPLE_UNIVERSAL_BUILD
+# if defined __BIG_ENDIAN__
+#  define WORDS_BIGENDIAN 1
+# endif
+#else
+# ifndef WORDS_BIGENDIAN
+/* #  undef WORDS_BIGENDIAN */
+# endif
+#endif
+
+/* Enable large inode numbers on Mac OS X 10.5.  */
+#ifndef _DARWIN_USE_64_BIT_INODE
+# define _DARWIN_USE_64_BIT_INODE 1
+#endif
+
 /* Number of bits in a file offset, on hosts where this is settable. */
 /* #undef _FILE_OFFSET_BITS */
 
 /* Define for large files, on AIX-style hosts. */
 /* #undef _LARGE_FILES */
+
+/* WinXP and above for ipv6 */
+/* #undef _WIN32_WINNT */
 
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */
@@ -401,6 +438,12 @@
 /* Define to `int' if <sys/types.h> does not define. */
 /* #undef int32_t */
 
+/* Define to `long long' if <sys/types.h> does not define. */
+/* #undef int64_t */
+
+/* Define to the native offset type (long or actually off_t). */
+#define lfs_alias_t long
+
 /* Define to `long int' if <sys/types.h> does not define. */
 /* #undef off_t */
 
@@ -408,7 +451,7 @@
 /* #undef size_t */
 
 /* Define to `long' if <sys/types.h> does not define. */
-#define ssize_t long
+/* #undef ssize_t */
 
 /* Define to `unsigned short' if <sys/types.h> does not define. */
 /* #undef uint16_t */

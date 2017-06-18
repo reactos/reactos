@@ -15,7 +15,13 @@
 #define MPG123_COMPAT_H
 
 #include "config.h"
-#include "intsym.h"
+
+/* Needed for strdup(), in strict mode ... */
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 500
+#endif
+
+#include <errno.h>
 
 #ifdef HAVE_STDLIB_H
 /* realloc, size_t */
@@ -63,6 +69,9 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 
 #ifdef OS2
 #include <float.h>
@@ -87,6 +96,10 @@
 #endif
 
 typedef unsigned char byte;
+
+#ifdef _MSC_VER
+typedef long ssize_t;
+#endif
 
 /* A safe realloc also for very old systems where realloc(NULL, size) returns NULL. */
 void *safe_realloc(void *ptr, size_t size);
@@ -133,6 +146,7 @@ typedef long ssize_p;
  * @return file descriptor (>=0) or error code.
  */
 int compat_open(const char *filename, int flags);
+FILE* compat_fopen(const char *filename, const char *mode);
 
 /**
  * Closing a file handle can be platform specific.
@@ -141,6 +155,7 @@ int compat_open(const char *filename, int flags);
  * @return 0 if the file was successfully closed. A return value of -1 indicates an error.
  */
 int compat_close(int infd);
+int compat_fclose(FILE* stream);
 
 /* Those do make sense in a separate file, but I chose to include them in compat.c because that's the one source whose object is shared between mpg123 and libmpg123 -- and both need the functionality internally. */
 
@@ -173,6 +188,12 @@ int win32_wide_utf8(const wchar_t * const wptr, char **mbptr, size_t * buflen);
 int win32_utf8_wide(const char *const mbptr, wchar_t **wptr, size_t *buflen);
 #endif
 
+/* Blocking write/read of data with signal resilience.
+   Both continue after being interrupted by signals and always return the
+   amount of processed data (shortage indicating actual problem or EOF). */
+size_t unintr_write(int fd, void const *buffer, size_t bytes);
+size_t unintr_read (int fd, void *buffer, size_t bytes);
+
 /* That one comes from Tellie on OS/2, needed in resolver. */
 #ifdef __KLIBC__
 typedef int socklen_t;
@@ -185,5 +206,9 @@ typedef int socklen_t;
 #endif
 
 #include "true.h"
+
+#if (!defined(WIN32) || defined (__CYGWIN__)) && defined(HAVE_SIGNAL_H)
+void (*catchsignal(int signum, void(*handler)()))();
+#endif
 
 #endif

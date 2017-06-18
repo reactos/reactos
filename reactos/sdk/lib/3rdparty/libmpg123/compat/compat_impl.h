@@ -56,6 +56,7 @@ char *strdup(const char *src)
 }
 #endif
 
+/* Always add a default permission mask in case of flags|O_CREAT. */
 int compat_open(const char *filename, int flags)
 {
 	int ret;
@@ -63,27 +64,65 @@ int compat_open(const char *filename, int flags)
 	wchar_t *frag = NULL;
 
 	ret = win32_utf8_wide(filename, &frag, NULL);
-	if ((frag == NULL) || (ret == 0)) goto fallback; /* Fallback to plain open when ucs-2 conversion fails */
+	/* Fallback to plain open when ucs-2 conversion fails */
+	if((frag == NULL) || (ret == 0))
+		goto open_fallback;
 
-	ret = _wopen(frag, flags); /*Try _wopen */
-	if (ret != -1 ) goto open_ok; /* msdn says -1 means failure */
+	/*Try _wopen */
+	ret = _wopen(frag, flags|_O_BINARY, _S_IREAD | _S_IWRITE);
+	if(ret != -1 )
+		goto open_ok; /* msdn says -1 means failure */
 
-fallback:
+open_fallback:
 #endif
 
-#if (defined(WIN32) && !defined (__CYGWIN__)) /* MSDN says POSIX function is deprecated beginning in Visual C++ 2005 */
-	ret = _open(filename, flags); /* Try plain old _open(), if it fails, do nothing */
+#if (defined(WIN32) && !defined (__CYGWIN__))
+	/* MSDN says POSIX function is deprecated beginning in Visual C++ 2005 */
+	/* Try plain old _open(), if it fails, do nothing */
+	ret = _open(filename, flags|_O_BINARY, _S_IREAD | _S_IWRITE);
 #else
-	/* On UNIX, we always add a default permission mask in case flags|O_CREAT. */
 	ret = open(filename, flags, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
 #endif
 
 #if defined (WANT_WIN32_UNICODE)
 open_ok:
-	free ((void *)frag); /* Freeing a NULL should be OK */
+	/* A cast to void*? Does Windows need that?! */
+	free((void *)frag);
 #endif
 
 	return ret;
+}
+
+/* Moved over from wav.c, logic with fallbacks added from the
+   example of compat_open(). */
+FILE* compat_fopen(const char *filename, const char *mode)
+{
+	FILE* stream = NULL;
+#ifdef WANT_WIN32_UNICODE
+	int cnt = 0;
+	wchar_t *wname = NULL;
+	wchar_t *wmode = NULL;
+
+	cnt = win32_utf8_wide(filename, &wname, NULL);
+	if( (wname == NULL) || (cnt == 0))
+		goto fopen_fallback;
+	cnt = win32_utf8_wide(mode, &wmode, NULL);
+	if( (wmode == NULL) || (cnt == 0))
+		goto fopen_fallback;
+
+	stream = _wfopen(wname, wmode);
+	if(stream) goto fopen_ok;
+
+fopen_fallback:
+#endif
+	stream = fopen(filename, mode);
+#ifdef WANT_WIN32_UNICODE
+
+fopen_ok:
+	free(wmode);
+	free(wname);
+#endif
+	return stream;
 }
 
 int compat_close(int infd)
@@ -93,6 +132,11 @@ int compat_close(int infd)
 #else
 	return close(infd);
 #endif
+}
+
+int compat_fclose(FILE *stream)
+{
+	return fclose(stream);
 }
 
 /* Windows Unicode stuff */
@@ -135,4 +179,58 @@ int win32_utf8_wide(const char *const mbptr, wchar_t **wptr, size_t *buflen)
   if (buflen != NULL) *buflen = len * sizeof (wchar_t); /* Give length of allocated memory if needed. */
   return ret; /* Number of characters written */
 }
+#endif
+
+
+/* This shall survive signals and any return value less than given byte count
+   is an error */
+size_t unintr_write(int fd, void const *buffer, size_t bytes)
+{
+	size_t written = 0;
+	while(bytes)
+	{
+		ssize_t part = write(fd, (char*)buffer+written, bytes);
+		if(part < 0 && errno != EINTR)
+			break;
+		bytes   -= part;
+		written += part;
+	}
+	return written;
+}
+
+/* Same for reading the data. */
+size_t unintr_read(int fd, void *buffer, size_t bytes)
+{
+	size_t got = 0;
+	while(bytes)
+	{
+		ssize_t part = read(fd, (char*)buffer+got, bytes);
+		if(part < 0 && errno != EINTR)
+			break;
+		bytes -= part;
+		got   += part;
+	}
+	return got;
+}
+
+#ifndef NO_CATCHSIGNAL
+#if (!defined(WIN32) || defined (__CYGWIN__)) && defined(HAVE_SIGNAL_H)
+void (*catchsignal(int signum, void(*handler)()))()
+{
+	struct sigaction new_sa;
+	struct sigaction old_sa;
+
+#ifdef DONT_CATCH_SIGNALS
+	fprintf (stderr, "Not catching any signals.\n");
+	return ((void (*)()) -1);
+#endif
+
+	new_sa.sa_handler = handler;
+	sigemptyset(&new_sa.sa_mask);
+	new_sa.sa_flags = 0;
+	if(sigaction(signum, &new_sa, &old_sa) == -1)
+		return ((void (*)()) -1);
+	return (old_sa.sa_handler);
+}
+#endif
 #endif

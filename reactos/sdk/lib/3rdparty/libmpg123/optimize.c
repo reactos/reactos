@@ -750,7 +750,7 @@ int frame_cpu_opt(mpg123_handle *fr, const char* cpu)
 #		endif
 #		ifndef NO_REAL
 		fr->synths.plain[r_1to1][f_real] = synth_1to1_real_avx;
-		fr->synths.stereo[r_1to1][f_real] = synth_1to1_real_stereo_avx;
+		fr->synths.stereo[r_1to1][f_real] = synth_1to1_fltst_avx;
 #		endif
 #		ifndef NO_32BIT
 		fr->synths.plain[r_1to1][f_32] = synth_1to1_s32_avx;
@@ -797,7 +797,7 @@ int frame_cpu_opt(mpg123_handle *fr, const char* cpu)
 #		endif
 #		ifndef NO_REAL
 		fr->synths.plain[r_1to1][f_real] = synth_1to1_real_altivec;
-		fr->synths.stereo[r_1to1][f_real] = synth_1to1_real_stereo_altivec;
+		fr->synths.stereo[r_1to1][f_real] = synth_1to1_fltst_altivec;
 #		endif
 #		ifndef NO_32BIT
 		fr->synths.plain[r_1to1][f_32] = synth_1to1_s32_altivec;
@@ -861,11 +861,11 @@ int frame_cpu_opt(mpg123_handle *fr, const char* cpu)
 #		endif
 #		ifndef NO_REAL
 		fr->synths.plain[r_1to1][f_real] = synth_1to1_real_neon64;
-		fr->synths.stereo[r_1to1][f_real] = synth_1to1_real_stereo_neon64;
+		fr->synths.stereo[r_1to1][f_real] = synth_1to1_fltst_neon64;
 #		endif
 #		ifndef NO_32BIT
 		fr->synths.plain[r_1to1][f_32] = synth_1to1_s32_neon64;
-		fr->synths.stereo[r_1to1][f_32] = synth_1to1_s32_stereo_neon64;
+		fr->synths.stereo[r_1to1][f_32] = synth_1to1_s32st_neon64;
 #		endif
 		done = 1;
 	}

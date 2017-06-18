@@ -467,6 +467,23 @@ int attribute_align_arg mpg123_position(mpg123_handle *mh, long frame_offset, lo
 	return MPG123_OK;
 }
 
+#undef mpg123_framelength
+/* off_t mpg123_framelength(mpg123_handle *mh); */
+long attribute_align_arg mpg123_framelength(mpg123_handle *mh)
+{
+	long val;
+	off_t largeval;
+
+	largeval = MPG123_LARGENAME(mpg123_framelength)(mh);
+	val = largeval;
+	if(val != largeval)
+	{
+		mh->err = MPG123_LFS_OVERFLOW;
+		return MPG123_ERR;
+	}
+	return val;
+}
+
 #undef mpg123_length
 /* off_t mpg123_length(mpg123_handle *mh); */
 long attribute_align_arg mpg123_length(mpg123_handle *mh)

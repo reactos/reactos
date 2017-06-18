@@ -1,14 +1,20 @@
-#ifndef MPG123_INTMAP_H
-#define MPG123_INTMAP_H
-/* Mapping of internal mpg123 symbols to something that is less likely to conflict in case of static linking. */
+#ifndef MPG123_INTSYM_H
+#define MPG123_INTSYM_H
+/* Mapping of internal mpg123 symbols to something that is less likely to
+   conflict in case of static linking. */
+#include "config.h"
 #define COS9 INT123_COS9
 #define tfcos36 INT123_tfcos36
 #define pnts INT123_pnts
 #define safe_realloc INT123_safe_realloc
 #define compat_open INT123_compat_open
+#define compat_fopen INT123_compat_fopen
 #define compat_close INT123_compat_close
+#define compat_fclose INT123_compat_fclose
 #define win32_wide_utf8 INT123_win32_wide_utf8
 #define win32_utf8_wide INT123_win32_utf8_wide
+#define unintr_write INT123_unintr_write
+#define unintr_read INT123_unintr_read
 #define ntom_set_ntom INT123_ntom_set_ntom
 #define synth_1to1 INT123_synth_1to1
 #define synth_1to1_dither INT123_synth_1to1_dither
@@ -29,6 +35,8 @@
 #define synth_1to1_arm INT123_synth_1to1_arm
 #define synth_1to1_neon INT123_synth_1to1_neon
 #define synth_1to1_stereo_neon INT123_synth_1to1_stereo_neon
+#define synth_1to1_neon64 INT123_synth_1to1_neon64
+#define synth_1to1_stereo_neon64 INT123_synth_1to1_stereo_neon64
 #define absynth_1to1_i486 INT123_absynth_1to1_i486
 #define synth_1to1_mono INT123_synth_1to1_mono
 #define synth_1to1_m2s INT123_synth_1to1_m2s
@@ -70,11 +78,13 @@
 #define synth_1to1_real_x86_64 INT123_synth_1to1_real_x86_64
 #define synth_1to1_real_stereo_x86_64 INT123_synth_1to1_real_stereo_x86_64
 #define synth_1to1_real_avx INT123_synth_1to1_real_avx
-#define synth_1to1_real_stereo_avx INT123_synth_1to1_real_stereo_avx
+#define synth_1to1_fltst_avx INT123_synth_1to1_fltst_avx
 #define synth_1to1_real_altivec INT123_synth_1to1_real_altivec
-#define synth_1to1_real_stereo_altivec INT123_synth_1to1_real_stereo_altivec
+#define synth_1to1_fltst_altivec INT123_synth_1to1_fltst_altivec
 #define synth_1to1_real_neon INT123_synth_1to1_real_neon
 #define synth_1to1_real_stereo_neon INT123_synth_1to1_real_stereo_neon
+#define synth_1to1_real_neon64 INT123_synth_1to1_real_neon64
+#define synth_1to1_fltst_neon64 INT123_synth_1to1_fltst_neon64
 #define synth_1to1_real_mono INT123_synth_1to1_real_mono
 #define synth_1to1_real_m2s INT123_synth_1to1_real_m2s
 #define synth_2to1_real INT123_synth_2to1_real
@@ -100,6 +110,8 @@
 #define synth_1to1_s32_stereo_altivec INT123_synth_1to1_s32_stereo_altivec
 #define synth_1to1_s32_neon INT123_synth_1to1_s32_neon
 #define synth_1to1_s32_stereo_neon INT123_synth_1to1_s32_stereo_neon
+#define synth_1to1_s32_neon64 INT123_synth_1to1_s32_neon64
+#define synth_1to1_s32st_neon64 INT123_synth_1to1_s32st_neon64
 #define synth_1to1_s32_mono INT123_synth_1to1_s32_mono
 #define synth_1to1_s32_m2s INT123_synth_1to1_s32_m2s
 #define synth_2to1_s32 INT123_synth_2to1_s32
@@ -120,8 +132,8 @@
 #define dct36 INT123_dct36
 #define dct36_3dnow INT123_dct36_3dnow
 #define dct36_3dnowext INT123_dct36_3dnowext
-#define dct36_sse INT123_dct36_sse
 #define dct36_x86_64 INT123_dct36_x86_64
+#define dct36_sse INT123_dct36_sse
 #define dct36_avx INT123_dct36_avx
 #define dct36_neon INT123_dct36_neon
 #define dct36_neon64 INT123_dct36_neon64
@@ -198,8 +210,11 @@
 #define double_to_long_rounded INT123_double_to_long_rounded
 #define scale_rounded INT123_scale_rounded
 #define decode_update INT123_decode_update
+#define decoder_synth_bytes INT123_decoder_synth_bytes
 #define samples_to_bytes INT123_samples_to_bytes
 #define bytes_to_samples INT123_bytes_to_samples
+#define outblock_bytes INT123_outblock_bytes
+#define postprocess_buffer INT123_postprocess_buffer
 #define frame_cpu_opt INT123_frame_cpu_opt
 #define set_synth_functions INT123_set_synth_functions
 #define dectype INT123_dectype
@@ -216,6 +231,10 @@
 #define compute_bpf INT123_compute_bpf
 #define time_to_frame INT123_time_to_frame
 #define get_songlen INT123_get_songlen
+#define bc_prepare INT123_bc_prepare
+#define bc_cleanup INT123_bc_cleanup
+#define bc_poolsize INT123_bc_poolsize
+#define bc_fill INT123_bc_fill
 #define open_stream INT123_open_stream
 #define open_stream_handle INT123_open_stream_handle
 #define open_feed INT123_open_feed
@@ -223,20 +242,21 @@
 #define feed_forget INT123_feed_forget
 #define feed_set_pos INT123_feed_set_pos
 #define open_bad INT123_open_bad
+#define check_neon INT123_check_neon
 #define dct64_3dnow INT123_dct64_3dnow
 #define dct64_3dnowext INT123_dct64_3dnowext
+#define dct64_avx INT123_dct64_avx
+#define dct64_real_avx INT123_dct64_real_avx
 #define dct64_mmx INT123_dct64_mmx
 #define dct64_MMX INT123_dct64_MMX
+#define dct64_neon INT123_dct64_neon
+#define dct64_neon64 INT123_dct64_neon64
+#define dct64_real_neon64 INT123_dct64_real_neon64
+#define dct64_real_neon INT123_dct64_real_neon
 #define dct64_sse INT123_dct64_sse
 #define dct64_real_sse INT123_dct64_real_sse
 #define dct64_x86_64 INT123_dct64_x86_64
 #define dct64_real_x86_64 INT123_dct64_real_x86_64
-#define dct64_avx INT123_dct64_avx
-#define dct64_real_avx INT123_dct64_real_avx
-#define dct64_neon INT123_dct64_neon
-#define dct64_real_neon INT123_dct64_real_neon
-#define dct64_neon64 INT123_dct64_neon64
-#define dct64_real_neon64 INT123_dct64_real_neon64
 #define do_equalizer_3dnow INT123_do_equalizer_3dnow
 #define synth_1to1_3dnow_asm INT123_synth_1to1_3dnow_asm
 #define synth_1to1_arm_asm INT123_synth_1to1_arm_asm
@@ -244,9 +264,29 @@
 #define synth_1to1_i586_asm INT123_synth_1to1_i586_asm
 #define synth_1to1_i586_asm_dither INT123_synth_1to1_i586_asm_dither
 #define synth_1to1_MMX INT123_synth_1to1_MMX
+#define synth_1to1_neon_asm INT123_synth_1to1_neon_asm
+#define synth_1to1_neon64_asm INT123_synth_1to1_neon64_asm
+#define synth_1to1_neon64_accurate_asm INT123_synth_1to1_neon64_accurate_asm
+#define synth_1to1_real_neon64_asm INT123_synth_1to1_real_neon64_asm
+#define synth_1to1_s32_neon64_asm INT123_synth_1to1_s32_neon64_asm
+#define synth_1to1_neon_accurate_asm INT123_synth_1to1_neon_accurate_asm
+#define synth_1to1_real_neon_asm INT123_synth_1to1_real_neon_asm
+#define synth_1to1_s32_neon_asm INT123_synth_1to1_s32_neon_asm
 #define synth_1to1_sse_accurate_asm INT123_synth_1to1_sse_accurate_asm
 #define synth_1to1_real_sse_asm INT123_synth_1to1_real_sse_asm
 #define synth_1to1_s32_sse_asm INT123_synth_1to1_s32_sse_asm
+#define synth_1to1_s_avx_asm INT123_synth_1to1_s_avx_asm
+#define synth_1to1_s_avx_accurate_asm INT123_synth_1to1_s_avx_accurate_asm
+#define synth_1to1_real_s_avx_asm INT123_synth_1to1_real_s_avx_asm
+#define synth_1to1_s32_s_avx_asm INT123_synth_1to1_s32_s_avx_asm
+#define synth_1to1_s_neon_asm INT123_synth_1to1_s_neon_asm
+#define synth_1to1_s_neon64_asm INT123_synth_1to1_s_neon64_asm
+#define synth_1to1_s_neon64_accurate_asm INT123_synth_1to1_s_neon64_accurate_asm
+#define synth_1to1_real_s_neon64_asm INT123_synth_1to1_real_s_neon64_asm
+#define synth_1to1_s32_s_neon64_asm INT123_synth_1to1_s32_s_neon64_asm
+#define synth_1to1_s_neon_accurate_asm INT123_synth_1to1_s_neon_accurate_asm
+#define synth_1to1_real_s_neon_asm INT123_synth_1to1_real_s_neon_asm
+#define synth_1to1_s32_s_neon_asm INT123_synth_1to1_s32_s_neon_asm
 #define synth_1to1_s_sse_accurate_asm INT123_synth_1to1_s_sse_accurate_asm
 #define synth_1to1_real_s_sse_asm INT123_synth_1to1_real_s_sse_asm
 #define synth_1to1_s32_s_sse_asm INT123_synth_1to1_s32_s_sse_asm
@@ -258,27 +298,12 @@
 #define synth_1to1_x86_64_accurate_asm INT123_synth_1to1_x86_64_accurate_asm
 #define synth_1to1_real_x86_64_asm INT123_synth_1to1_real_x86_64_asm
 #define synth_1to1_s32_x86_64_asm INT123_synth_1to1_s32_x86_64_asm
-#define synth_1to1_s_avx_asm INT123_synth_1to1_s_avx_asm
-#define synth_1to1_s_avx_accurate_asm INT123_synth_1to1_s_avx_accurate_asm
-#define synth_1to1_real_s_avx_asm INT123_synth_1to1_real_s_avx_asm
-#define synth_1to1_s32_s_avx_asm INT123_synth_1to1_s32_s_avx_asm
-#define synth_1to1_neon_asm INT123_synth_1to1_neon_asm
-#define synth_1to1_neon_accurate_asm INT123_synth_1to1_neon_accurate_asm
-#define synth_1to1_real_neon_asm INT123_synth_1to1_real_neon_asm
-#define synth_1to1_s32_neon_asm INT123_synth_1to1_s32_neon_asm
-#define synth_1to1_s_neon_asm INT123_synth_1to1_s_neon_asm
-#define synth_1to1_s_neon_accurate_asm INT123_synth_1to1_s_neon_accurate_asm
-#define synth_1to1_real_s_neon_asm INT123_synth_1to1_real_s_neon_asm
-#define synth_1to1_s32_s_neon_asm INT123_synth_1to1_s32_s_neon_asm
-#define synth_1to1_neon64_asm INT123_synth_1to1_neon64_asm
-#define synth_1to1_neon64_accurate_asm INT123_synth_1to1_neon64_accurate_asm
-#define synth_1to1_real_neon64_asm INT123_synth_1to1_real_neon64_asm
-#define synth_1to1_s32_neon64_asm INT123_synth_1to1_s32_neon64_asm
-#define synth_1to1_s_neon64_asm INT123_synth_1to1_s_neon64_asm
-#define synth_1to1_s_neon64_accurate_asm INT123_synth_1to1_s_neon64_accurate_asm
-#define synth_1to1_real_s_neon64_asm INT123_synth_1to1_real_s_neon64_asm
-#define synth_1to1_s32_s_neon64_asm INT123_synth_1to1_s32_s_neon64_asm
 #define costab_mmxsse INT123_costab_mmxsse
 #define make_decode_tables_mmx_asm INT123_make_decode_tables_mmx_asm
-#define check_neon INT123_check_neon
+#ifndef HAVE_STRDUP
+#define strdup INT123_strdup
+#endif
+#ifndef HAVE_STRERROR
+#define strerror INT123_strerror
+#endif
 #endif

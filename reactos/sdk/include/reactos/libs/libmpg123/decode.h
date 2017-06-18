@@ -131,13 +131,13 @@ int synth_1to1_real_stereo_sse (real*, real*, mpg123_handle*);
 int synth_1to1_real_x86_64     (real*, int, mpg123_handle*, int);
 int synth_1to1_real_stereo_x86_64(real*, real*, mpg123_handle*);
 int synth_1to1_real_avx        (real*, int, mpg123_handle*, int);
-int synth_1to1_real_stereo_avx (real*, real*, mpg123_handle*);
+int synth_1to1_fltst_avx (real*, real*, mpg123_handle*);
 int synth_1to1_real_altivec    (real*, int, mpg123_handle*, int);
-int synth_1to1_real_stereo_altivec(real*, real*, mpg123_handle*);
+int synth_1to1_fltst_altivec(real*, real*, mpg123_handle*);
 int synth_1to1_real_neon       (real*, int, mpg123_handle*, int);
 int synth_1to1_real_stereo_neon(real*, real*, mpg123_handle*);
 int synth_1to1_real_neon64     (real*, int, mpg123_handle*, int);
-int synth_1to1_real_stereo_neon64(real*, real*, mpg123_handle*);
+int synth_1to1_fltst_neon64(real*, real*, mpg123_handle*);
 int synth_1to1_real_mono       (real*, mpg123_handle*);
 int synth_1to1_real_m2s(real*, mpg123_handle*);
 #ifndef NO_DOWNSAMPLE
@@ -172,7 +172,7 @@ int synth_1to1_s32_stereo_altivec(real*, real*, mpg123_handle*);
 int synth_1to1_s32_neon       (real*, int, mpg123_handle*, int);
 int synth_1to1_s32_stereo_neon(real*, real*, mpg123_handle*);
 int synth_1to1_s32_neon64     (real*, int, mpg123_handle*, int);
-int synth_1to1_s32_stereo_neon64(real*, real*, mpg123_handle*);
+int synth_1to1_s32st_neon64(real*, real*, mpg123_handle*);
 int synth_1to1_s32_mono       (real*, mpg123_handle*);
 int synth_1to1_s32_m2s(real*, mpg123_handle*);
 #ifndef NO_DOWNSAMPLE

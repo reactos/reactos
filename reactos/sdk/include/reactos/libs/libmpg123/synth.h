@@ -36,9 +36,9 @@ int SYNTH_NAME(real *bandPtr, int channel, mpg123_handle *fr, int final)
 	real *b0, **buf; /* (*buf)[0x110]; */
 	int clip = 0; 
 	int bo1;
-
+#ifndef NO_EQUALIZER
 	if(fr->have_eq_settings) do_equalizer(bandPtr,channel,fr->equalizer);
-
+#endif
 	if(!channel)
 	{
 		fr->bo--;

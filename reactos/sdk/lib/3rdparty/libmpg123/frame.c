@@ -168,10 +168,10 @@ int attribute_align_arg mpg123_reset_eq(mpg123_handle *mh)
 {
 	int i;
 	if(mh == NULL) return MPG123_BAD_HANDLE;
-
+#ifndef NO_EQUALIZER
 	mh->have_eq_settings = 0;
 	for(i=0; i < 32; ++i) mh->equalizer[0][i] = mh->equalizer[1][i] = DOUBLE_TO_REAL(1.0);
-
+#endif
 	return MPG123_OK;
 }
 
@@ -838,6 +838,8 @@ void frame_gapless_realinit(mpg123_handle *fr)
 void frame_gapless_update(mpg123_handle *fr, off_t total_samples)
 {
 	off_t gapless_samples = fr->gapless_frames*fr->spf;
+	if(fr->gapless_frames < 1) return;
+
 	debug2("gapless update with new sample count %"OFF_P" as opposed to known %"OFF_P, total_samples, gapless_samples);
 	if(NOQUIET && total_samples != gapless_samples)
 	fprintf(stderr, "\nWarning: Real sample count %"OFF_P" differs from given gapless sample count %"OFF_P". Frankenstein stream?\n"
