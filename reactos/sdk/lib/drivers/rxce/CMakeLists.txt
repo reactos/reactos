@@ -6,5 +6,5 @@ list(APPEND SOURCE
     rxce.c)
 
 add_library(rxce ${SOURCE})
-target_link_libraries(rxce ntoskrnl memcmp)
+target_link_libraries(rxce memcmp)
 add_dependencies(rxce bugcodes xdk)
