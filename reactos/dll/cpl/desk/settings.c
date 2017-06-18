@@ -19,6 +19,12 @@ typedef struct _DATA
     int cySource[NUM_SPECTRUM_BITMAPS];
 } DATA, *PDATA;
 
+typedef struct _TIMEOUTDATA
+{
+    TCHAR szRawBuffer[256];
+    TCHAR szCookedBuffer[256];
+    INT nTimeout;
+} TIMEOUTDATA, *PTIMEOUTDATA;
 
 static VOID
 UpdateDisplay(IN HWND hwndDlg, PDATA pData, IN BOOL bUpdateThumb)
@@ -652,6 +658,69 @@ SettingsPageCallbackProc(HWND hwnd, UINT uMsg, LPPROPSHEETPAGE ppsp)
     return Ret;
 }
 
+static INT_PTR CALLBACK
+ConfirmDlgProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lParam)
+{
+    PTIMEOUTDATA pData;
+
+    pData = (PTIMEOUTDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+    switch(uMsg)
+    {
+        case WM_INITDIALOG:
+            /* Allocate the local dialog data */
+            pData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TIMEOUTDATA));
+            if (pData == NULL)
+                return FALSE;
+
+            /* Link the dialog data to the dialog */
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pData);
+
+            /* Timeout in seconds */
+            pData->nTimeout = 15;
+
+            /* Load the raw timeout string */
+            LoadString(hApplet, IDS_TIMEOUTTEXT, pData->szRawBuffer, ARRAYSIZE(pData->szRawBuffer));
+
+            /* Cook the timeout string and show it */
+            _stprintf(pData->szCookedBuffer, pData->szRawBuffer, pData->nTimeout);
+            SetDlgItemText(hwndDlg, IDC_TIMEOUTTEXT, pData->szCookedBuffer);
+
+            /* Start the timer (ticks every second)*/
+            SetTimer(hwndDlg, 1, 1000, NULL);
+            break;
+
+        case WM_TIMER:
+            /* Update the timepout value */
+            pData->nTimeout--;
+
+            /* Update the timeout text */
+            _stprintf(pData->szCookedBuffer, pData->szRawBuffer, pData->nTimeout);
+            SetDlgItemText(hwndDlg, IDC_TIMEOUTTEXT, pData->szCookedBuffer);
+
+            /* Kill the timer and return a 'No', if we ran out of time */
+            if (pData->nTimeout == 0)
+            {
+                KillTimer(hwndDlg, 1);
+                EndDialog(hwndDlg, IDNO);
+            }
+            break;
+
+        case WM_COMMAND:
+            /* Kill the timer and return the clicked button id */
+            KillTimer(hwndDlg, 1);
+            EndDialog(hwndDlg, LOWORD(wParam));
+            break;
+
+        case WM_DESTROY:
+            /* Free the local dialog data */
+            HeapFree(GetProcessHeap(), 0, pData);
+            break;
+    }
+
+    return FALSE;
+}
+
 static VOID
 ApplyDisplaySettings(HWND hwndDlg, PDATA pData)
 {
@@ -691,9 +760,7 @@ ApplyDisplaySettings(HWND hwndDlg, PDATA pData)
             return;
     }
 
-    LoadString(hApplet, IDS_DISPLAY_SETTINGS, Title, sizeof(Title) / sizeof(TCHAR));
-
-    if (MessageBox(hwndDlg, _T("Do you want to keep these display settings?"), Title, MB_YESNO | MB_ICONQUESTION) == IDYES)
+    if (DialogBox(hApplet, MAKEINTRESOURCE(IDD_CONFIRMSETTINGS), hwndDlg, ConfirmDlgProc) == IDYES)
     {
         pData->CurrentDisplayDevice->InitialSettings.dmPelsWidth = pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth;
         pData->CurrentDisplayDevice->InitialSettings.dmPelsHeight = pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight;
