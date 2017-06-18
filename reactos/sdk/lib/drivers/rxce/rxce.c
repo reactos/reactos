@@ -4686,7 +4686,7 @@ RxpWorkerThreadDispatcher(
 
     /* Reference ourselves */
     CurrentThread = PsGetCurrentThread();
-    Status = ObReferenceObjectByPointer(CurrentThread, THREAD_ALL_ACCESS, PsThreadType, KernelMode);
+    Status = ObReferenceObjectByPointer(CurrentThread, THREAD_ALL_ACCESS, *PsThreadType, KernelMode);
     ASSERT(NT_SUCCESS(Status));
 
     /* Infinite loop for worker */
@@ -4926,7 +4926,7 @@ RxSpinUpRequestsDispatcher(
     NTSTATUS Status;
     PRX_DISPATCHER RxDispatcher;
 
-    Status = ObReferenceObjectByPointer(PsGetCurrentThread(), THREAD_ALL_ACCESS, PsThreadType, KernelMode);
+    Status = ObReferenceObjectByPointer(PsGetCurrentThread(), THREAD_ALL_ACCESS, *PsThreadType, KernelMode);
     if (!NT_SUCCESS(Status))
     {
         PsTerminateSystemThread(STATUS_SUCCESS);

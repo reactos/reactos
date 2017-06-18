@@ -1,4 +1,4 @@
-add_definitions(-DUNICODE -D_UNICODE -D__NTOSKRNL__ -D_NTOSKRNL_ -DRDBSS_TRACKER)
+add_definitions(-DUNICODE -D_UNICODE -DRDBSS_TRACKER)
 
 include_directories(${REACTOS_SOURCE_DIR}/drivers/filesystems/mup)
 
@@ -7,4 +7,4 @@ list(APPEND SOURCE
 
 add_library(rxce ${SOURCE})
 target_link_libraries(rxce ntoskrnl memcmp)
-add_dependencies(rxce bugcodes xdk ntoskrnl)
+add_dependencies(rxce bugcodes xdk)
