@@ -248,7 +248,9 @@ __rpc_get_time_offset(td, srv, thost, uaddr, netid)
 	char			ut[64], ipuaddr[64];
 	endpoint		teps[32];
 	nis_server		tsrv;
+#ifndef __REACTOS__
 	void			(*oldsig)() = NULL; /* old alarm handler */
+#endif
 	struct sockaddr_in	sin;
 	SOCKET			s = RPC_ANYSOCK;
 	socklen_t len;

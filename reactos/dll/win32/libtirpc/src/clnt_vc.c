@@ -1025,17 +1025,24 @@ read_vc(ctp, buf, len)
 }
 
 static int
+#ifndef __REACTOS__
 write_vc(ctp, buf, len)
+#else
+write_vc(ctp, ptr, len)
+#endif
 	void *ctp;
 #ifndef __REACTOS__
 	char *buf;
 #else
-    void *buf;
+    void *ptr;
 #endif
 	int len;
 {
 	struct ct_data *ct = (struct ct_data *)ctp;
 	int i = 0, cnt;
+#ifdef __REACTOS__
+    char *buf = ptr;
+#endif
 
 	for (cnt = len; cnt > 0; cnt -= i, buf += i) {
 	    if ((i = send(ct->ct_fd, buf, (size_t)cnt, 0)) == SOCKET_ERROR) {

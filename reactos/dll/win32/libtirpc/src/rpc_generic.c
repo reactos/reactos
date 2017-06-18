@@ -488,7 +488,9 @@ __rpc_fd2sockinfo(SOCKET fd, struct __rpc_sockinfo *sip)
 	WSAPROTOCOL_INFO proto_info;
 	int proto_info_size = sizeof(proto_info);
 	if (getsockopt(fd, SOL_SOCKET, SO_PROTOCOL_INFO, (char *)&proto_info, &proto_info_size) == SOCKET_ERROR) {
+#ifndef __REACTOS__
 		int err = WSAGetLastError();
+#endif
 		return 0;
 	}
 	len = proto_info.iMaxSockAddr;
@@ -503,7 +505,9 @@ __rpc_fd2sockinfo(SOCKET fd, struct __rpc_sockinfo *sip)
 
 	len = sizeof type;
 	if (getsockopt(fd, SOL_SOCKET, SO_TYPE, (char *)&type, &len) == SOCKET_ERROR) {
+#ifndef __REACTOS__
 		int err = WSAGetLastError();
+#endif
 		return 0;
 	}
 
