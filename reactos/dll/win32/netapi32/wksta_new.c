@@ -188,6 +188,8 @@ NetEnumerateComputerNames(
     _Out_ LPWSTR **ComputerNames)
 {
     PNET_COMPUTER_NAME_ARRAY ComputerNameArray = NULL;
+    ULONG BufferSize, i;
+    PWSTR *NameBuffer = NULL, Ptr;
     NET_API_STATUS status;
 
     TRACE("NetEnumerateComputerNames(%s %lu %lu %p %p)\n",
@@ -202,8 +204,30 @@ NetEnumerateComputerNames(
         if (status == NERR_Success)
         {
             *EntryCount = ComputerNameArray->EntryCount;
-            /* FIXME */
-            // *ComputerNames =
+
+            BufferSize = 0;
+            for (i = 0; i < ComputerNameArray->EntryCount; i++)
+            {
+                BufferSize += ComputerNameArray->ComputerNames[i].Length + sizeof(WCHAR) + sizeof(PWSTR);
+            }
+
+            status = NetApiBufferAllocate(BufferSize, (PVOID*)&NameBuffer);
+            if (status == NERR_Success)
+            {
+                ZeroMemory(NameBuffer, BufferSize);
+
+                Ptr = (PWSTR)((ULONG_PTR)NameBuffer + ComputerNameArray->EntryCount * sizeof(PWSTR));
+                for (i = 0; i < ComputerNameArray->EntryCount; i++)
+                {
+                    NameBuffer[i] = Ptr;
+                    CopyMemory(Ptr,
+                               ComputerNameArray->ComputerNames[i].Buffer,
+                               ComputerNameArray->ComputerNames[i].Length);
+                    Ptr = (PWSTR)((ULONG_PTR)Ptr + ComputerNameArray->ComputerNames[i].Length + sizeof(WCHAR));
+                }
+
+                *ComputerNames = NameBuffer;
+            }
         }
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
