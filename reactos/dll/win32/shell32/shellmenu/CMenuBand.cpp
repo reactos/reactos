@@ -240,10 +240,18 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::SetSite(IUnknown *pUnkSite)
 
     CComPtr<IOleWindow> pTopLevelWindow;
     hr = IUnknown_QueryService(m_site, SID_STopLevelBrowser, IID_PPV_ARG(IOleWindow, &pTopLevelWindow));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    if (SUCCEEDED(hr))
+    {
+        hr = pTopLevelWindow->GetWindow(&m_topLevelWindow);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+    }
+    else
+    {
+        m_topLevelWindow = hwndParent;
+    }
 
-    return pTopLevelWindow->GetWindow(&m_topLevelWindow);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE  CMenuBand::GetSite(REFIID riid, PVOID *ppvSite)
