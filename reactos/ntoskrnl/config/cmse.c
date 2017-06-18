@@ -249,6 +249,15 @@ CmpSetSecurityDescriptor(IN PCM_KEY_CONTROL_BLOCK Kcb,
 }
 
 NTSTATUS
+CmpAssignSecurityDescriptor(IN PCM_KEY_CONTROL_BLOCK Kcb,
+                            IN PSECURITY_DESCRIPTOR SecurityDescriptor)
+{
+    DPRINT("CmpAssignSecurityDescriptor(%p %p)\n",
+           Kcb, SecurityDescriptor);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
 NTAPI
 CmpSecurityMethod(IN PVOID ObjectBody,
                   IN SECURITY_OPERATION_CODE OperationCode,
@@ -267,7 +276,7 @@ CmpSecurityMethod(IN PVOID ObjectBody,
 
     Kcb = ((PCM_KEY_BODY)ObjectBody)->KeyControlBlock;
 
-    /* Acquire hive lock */
+    /* Acquire the hive lock */
     CmpLockRegistry();
 
     /* Acquire the KCB lock */
@@ -283,10 +292,10 @@ CmpSecurityMethod(IN PVOID ObjectBody,
     /* Don't touch deleted keys */
     if (Kcb->Delete)
     {
-        /* Unlock the KCB */
+        /* Release the KCB lock */
         CmpReleaseKcbLock(Kcb);
 
-        /* Unlock the HIVE */
+        /* Release the hive lock */
         CmpUnlockRegistry();
         return STATUS_KEY_DELETED;
     }
@@ -318,17 +327,18 @@ CmpSecurityMethod(IN PVOID ObjectBody,
 
         case AssignSecurityDescriptor:
             DPRINT("Assign security descriptor\n");
-            /* HACK */
+            Status = CmpAssignSecurityDescriptor(Kcb,
+                                                 SecurityDescriptor);
             break;
 
         default:
             KeBugCheckEx(SECURITY_SYSTEM, 0, STATUS_INVALID_PARAMETER, 0, 0);
     }
 
-    /* Unlock the KCB */
+    /* Release the KCB lock */
     CmpReleaseKcbLock(Kcb);
 
-    /* Unlock the hive */
+    /* Release the hive lock */
     CmpUnlockRegistry();
 
     return Status;
