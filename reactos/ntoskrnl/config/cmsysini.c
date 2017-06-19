@@ -40,26 +40,27 @@ extern BOOLEAN CmFirstTime;
 BOOLEAN
 NTAPI
 CmpLinkKeyToHive(
-    _In_z_ PWSTR LinkKeyName,
-    _In_z_ PWSTR TargetKeyName)
+    _In_z_ PCWSTR LinkKeyName,
+    _In_z_ PCWSTR TargetKeyName)
 {
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING LinkKeyName_U;
-    HANDLE TargetKeyHandle;
-    ULONG Disposition;
     NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName;
+    HANDLE LinkKeyHandle;
+    ULONG Disposition;
+
     PAGED_CODE();
 
     /* Initialize the object attributes */
-    RtlInitUnicodeString(&LinkKeyName_U, LinkKeyName);
+    RtlInitUnicodeString(&KeyName, LinkKeyName);
     InitializeObjectAttributes(&ObjectAttributes,
-                               &LinkKeyName_U,
+                               &KeyName,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
 
     /* Create the link key */
-    Status = ZwCreateKey(&TargetKeyHandle,
+    Status = ZwCreateKey(&LinkKeyHandle,
                          KEY_CREATE_LINK,
                          &ObjectAttributes,
                          0,
@@ -68,7 +69,7 @@ CmpLinkKeyToHive(
                          &Disposition);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CM: CmpLinkKeyToHive: couldn't create %S Status = 0x%lx\n",
+        DPRINT1("CM: CmpLinkKeyToHive: couldn't create %S, Status = 0x%lx\n",
                 LinkKeyName, Status);
         return FALSE;
     }
@@ -77,25 +78,26 @@ CmpLinkKeyToHive(
     if (Disposition != REG_CREATED_NEW_KEY)
     {
         DPRINT1("CM: CmpLinkKeyToHive: %S already exists!\n", LinkKeyName);
-        ZwClose(TargetKeyHandle);
+        ZwClose(LinkKeyHandle);
         return FALSE;
     }
 
     /* Set the target key name as link target */
-    Status = ZwSetValueKey(TargetKeyHandle,
+    RtlInitUnicodeString(&KeyName, TargetKeyName);
+    Status = ZwSetValueKey(LinkKeyHandle,
                            &CmSymbolicLinkValueName,
                            0,
                            REG_LINK,
-                           TargetKeyName,
-                           (ULONG)wcslen(TargetKeyName) * sizeof(WCHAR));
+                           KeyName.Buffer,
+                           KeyName.Length);
 
     /* Close the link key handle */
-    ObCloseHandle(TargetKeyHandle, KernelMode);
+    ObCloseHandle(LinkKeyHandle, KernelMode);
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CM: CmpLinkKeyToHive: couldn't create symbolic link for %S\n",
-                TargetKeyName);
+        DPRINT1("CM: CmpLinkKeyToHive: couldn't create symbolic link for %S, Status = 0x%lx\n",
+                TargetKeyName, Status);
         return FALSE;
     }
 
@@ -263,7 +265,7 @@ CmpQueryKeyName(IN PVOID ObjectBody,
                       BytesToCopy);
 
         /* Null terminate it */
-        ObjectNameInfo->Name.Buffer[BytesToCopy / sizeof(WCHAR)] = 0;
+        ObjectNameInfo->Name.Buffer[BytesToCopy / sizeof(WCHAR)] = UNICODE_NULL;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1640,7 +1642,7 @@ CmInitSystem1(VOID)
     /* Create the default security descriptor */
     SecurityDescriptor = CmpHiveRootSecurityDescriptor();
 
-    /* Create '\Registry\Machine' key. */
+    /* Create '\Registry\Machine' key */
     RtlInitUnicodeString(&KeyName, L"\\REGISTRY\\MACHINE");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
@@ -1663,7 +1665,7 @@ CmInitSystem1(VOID)
     /* Close the handle */
     NtClose(KeyHandle);
 
-    /* Create '\Registry\User' key. */
+    /* Create '\Registry\User' key */
     RtlInitUnicodeString(&KeyName, L"\\REGISTRY\\USER");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
@@ -1696,7 +1698,7 @@ CmInitSystem1(VOID)
         KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 7, 0, 0);
     }
 
-    /* Create the 'CurrentControlSet' link. */
+    /* Create the 'CurrentControlSet' link */
     Status = CmpCreateControlSet(KeLoaderBlock);
     if (!NT_SUCCESS(Status))
     {
