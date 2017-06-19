@@ -356,7 +356,7 @@ ObpDeleteNameCheck(IN PVOID Object)
 NTSTATUS
 NTAPI
 ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
-                    IN PUNICODE_STRING ObjectName,
+                    IN OUT PUNICODE_STRING ObjectName,
                     IN ULONG Attributes,
                     IN POBJECT_TYPE ObjectType,
                     IN KPROCESSOR_MODE AccessMode,
