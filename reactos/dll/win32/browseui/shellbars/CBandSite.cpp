@@ -831,7 +831,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::SaveToStreamBS(IUnknown *, IStream *)
 }
 
 extern "C"
-HRESULT WINAPI CBandSite_CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, void **ppv)
+HRESULT WINAPI RSHELL_CBandSite_CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, void **ppv)
 {
     return CBandSite::_CreatorClass::CreateInstance(pUnkOuter, riid, ppv);
 }

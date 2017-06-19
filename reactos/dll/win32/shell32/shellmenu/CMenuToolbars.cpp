@@ -1467,7 +1467,7 @@ HRESULT CMenuSFToolbar::InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData
     if (!pidl)
         return E_FAIL;
 
-    hr = CMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &shellMenu));
+    hr = CMenuBand_CreateInstance(IID_PPV_ARG(IShellMenu, &shellMenu));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 

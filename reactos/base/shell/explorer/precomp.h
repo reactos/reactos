@@ -112,7 +112,7 @@ GetExplorerRegValueSet(IN HKEY hKey,
  */
 
 VOID InitRSHELL(VOID);
-HRESULT WINAPI _CStartMenu_Constructor(REFIID riid, void **ppv);
+HRESULT WINAPI _CStartMenu_CreateInstance(REFIID riid, void **ppv);
 HANDLE WINAPI _SHCreateDesktop(IShellDesktopTray *ShellDesk);
 BOOL WINAPI _SHDesktopMessageLoop(HANDLE hDesktop);
 DWORD WINAPI _WinList_Init(void);

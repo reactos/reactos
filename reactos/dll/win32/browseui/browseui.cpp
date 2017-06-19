@@ -75,8 +75,8 @@ HRESULT CInternetToolbar_CreateInstance(REFIID riid, void **ppv)
 #endif
 }
 
-typedef HRESULT(WINAPI * PMENUBAND_CONSTRUCTOR)(REFIID riid, void **ppv);
-typedef HRESULT(WINAPI * PMERGEDFOLDER_CONSTRUCTOR)(REFIID riid, void **ppv);
+typedef HRESULT(WINAPI * PMENUBAND_CREATEINSTANCE)(REFIID riid, void **ppv);
+typedef HRESULT(WINAPI * PMERGEDFOLDER_CREATEINSTANCE)(REFIID riid, void **ppv);
 
 HRESULT CMergedFolder_CreateInstance(REFIID riid, void **ppv)
 {
@@ -87,12 +87,12 @@ HRESULT CMergedFolder_CreateInstance(REFIID riid, void **ppv)
 
     if (hRShell)
     {
-        PMERGEDFOLDER_CONSTRUCTOR pCMergedFolder_Constructor = (PMERGEDFOLDER_CONSTRUCTOR)
-             GetProcAddress(hRShell, "CMergedFolder_Constructor");
+        PMERGEDFOLDER_CREATEINSTANCE pCMergedFolder_CreateInstance = (PMERGEDFOLDER_CREATEINSTANCE)
+             GetProcAddress(hRShell, "CMergedFolder_CreateInstance");
 
-        if (pCMergedFolder_Constructor)
+        if (pCMergedFolder_CreateInstance)
         {
-            return pCMergedFolder_Constructor(riid, ppv);
+            return pCMergedFolder_CreateInstance(riid, ppv);
         }
     }
 #endif
@@ -109,7 +109,7 @@ HRESULT CMenuBand_CreateInstance(REFIID iid, LPVOID *ppv)
 
     if (hRShell)
     {
-        PMENUBAND_CONSTRUCTOR func = (PMENUBAND_CONSTRUCTOR) GetProcAddress(hRShell, "CMenuBand_Constructor");
+        PMENUBAND_CREATEINSTANCE func = (PMENUBAND_CREATEINSTANCE) GetProcAddress(hRShell, "CMenuBand_CreateInstance");
         if (func)
         {
             return func(iid , ppv);

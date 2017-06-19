@@ -86,16 +86,6 @@ HRESULT GetDisplayName(LPCITEMIDLIST pidlDirectory,TCHAR *szDisplayName,UINT cch
     return hr;
 }
 
-extern "C"
-HRESULT WINAPI CExplorerBand_Constructor(REFIID riid, LPVOID *ppv)
-{
-#ifdef __REACTOS__
-    return ShellObjectCreator<CExplorerBand>(riid, ppv);
-#else
-    return S_OK;
-#endif
-}
-
 /*
  This is a Windows hack, because shell event messages in Windows gives an 
  ill-formed PIDL stripped from useful data that parses incorrectly with SHGetFileInfo.

@@ -383,12 +383,6 @@ HRESULT STDMETHODCALLTYPE CEnumMergedFolder::Clone(
 //-----------------------------------------------------------------------------
 // CMergedFolder
 
-extern "C"
-HRESULT WINAPI CMergedFolder_Constructor(REFIID riid, LPVOID *ppv)
-{
-    return ShellObjectCreator<CMergedFolder>(riid, ppv);
-}
-
 CMergedFolder::CMergedFolder() :
     m_UserLocal(NULL),
     m_AllUsers(NULL),
@@ -546,7 +540,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::BindToObject(
         return hr;
 
     CComPtr<IAugmentedShellFolder> pasf;
-    hr = CMergedFolder_Constructor(IID_PPV_ARG(IAugmentedShellFolder, &pasf));
+    hr = CMergedFolder_CreateInstance(IID_PPV_ARG(IAugmentedShellFolder, &pasf));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -813,4 +807,10 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::QueryNameSpace2(ULONG, QUERYNAMESPACEIN
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
+}
+
+extern "C"
+HRESULT WINAPI RSHELL_CMergedFolder_CreateInstance(REFIID riid, LPVOID *ppv)
+{
+    return ShellObjectCreator<CMergedFolder>(riid, ppv);
 }

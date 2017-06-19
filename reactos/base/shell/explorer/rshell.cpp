@@ -22,18 +22,18 @@
 
 static HINSTANCE ghRShell = NULL;
 
-typedef HRESULT(WINAPI * PSTARTMENU_CONSTRUCTOR)(REFIID riid, void **ppv);
+typedef HRESULT(WINAPI * PSTARTMENU_CREATEINSTANCE)(REFIID riid, void **ppv);
 
 VOID InitRSHELL(VOID)
 {
     ghRShell = LoadLibraryW(L"rshell.dll");
 }
 
-HRESULT WINAPI _CStartMenu_Constructor(REFIID riid, void **ppv)
+HRESULT WINAPI _CStartMenu_CreateInstance(REFIID riid, void **ppv)
 {
     if (ghRShell)
     {
-        PSTARTMENU_CONSTRUCTOR func = (PSTARTMENU_CONSTRUCTOR)GetProcAddress(ghRShell, "CStartMenu_Constructor");
+        PSTARTMENU_CREATEINSTANCE func = (PSTARTMENU_CREATEINSTANCE)GetProcAddress(ghRShell, "CStartMenu_CreateInstance");
         if (func)
         {
             return func(riid, ppv);

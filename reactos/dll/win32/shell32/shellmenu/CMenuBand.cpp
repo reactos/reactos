@@ -32,12 +32,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(CMenuBand);
 
 #define UNIMPLEMENTED TRACE("%s is UNIMPLEMENTED!\n", __FUNCTION__)
 
-extern "C"
-HRESULT WINAPI CMenuBand_Constructor(REFIID riid, LPVOID *ppv)
-{
-    return ShellObjectCreator<CMenuBand>(riid, ppv);
-}
-
 CMenuBand::CMenuBand() :
     m_staticToolbar(NULL),
     m_SFToolbar(NULL),
@@ -1056,25 +1050,11 @@ HRESULT CMenuBand::_OnPopupSubMenu(IShellMenu * childShellMenu, POINTL * pAt, RE
     CComPtr<IDeskBar> pDeskBar;
 
     // Create the necessary objects
-#if USE_SYSTEM_MENUSITE
-    hr = CoCreateInstance(CLSID_MenuBandSite,
-        NULL,
-        CLSCTX_INPROC_SERVER,
-        IID_PPV_ARG(IBandSite, &pBandSite));
-#else
-    hr = CMenuSite_Constructor(IID_PPV_ARG(IBandSite, &pBandSite));
-#endif
+    hr = CMenuSite_CreateInstance(IID_PPV_ARG(IBandSite, &pBandSite));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-#if USE_SYSTEM_MENUDESKBAR
-    hr = CoCreateInstance(CLSID_MenuDeskBar,
-        NULL,
-        CLSCTX_INPROC_SERVER,
-        IID_PPV_ARG(IDeskBar, &pDeskBar));
-#else
-    hr = CMenuDeskBar_Constructor(IID_PPV_ARG(IDeskBar, &pDeskBar));
-#endif
+    hr = CMenuDeskBar_CreateInstance(IID_PPV_ARG(IDeskBar, &pDeskBar));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -1318,4 +1298,10 @@ HRESULT STDMETHODCALLTYPE CMenuBand::QueryStatus(const GUID *pguidCmdGroup, ULON
 {
     UNIMPLEMENTED;
     return S_OK;
+}
+
+extern "C"
+HRESULT WINAPI RSHELL_CMenuBand_CreateInstance(REFIID riid, LPVOID *ppv)
+{
+    return ShellObjectCreator<CMenuBand>(riid, ppv);
 }

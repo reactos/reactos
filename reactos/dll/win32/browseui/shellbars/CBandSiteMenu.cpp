@@ -223,7 +223,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam
 }
 
 extern "C"
-HRESULT WINAPI CBandSiteMenu_CreateInstance(REFIID riid, void **ppv)
+HRESULT WINAPI RSHELL_CBandSiteMenu_CreateInstance(REFIID riid, void **ppv)
 {
     return ShellObjectCreator<CBandSiteMenu>(riid, ppv);
 }

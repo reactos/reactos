@@ -45,12 +45,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuDeskBar);
 
-extern "C"
-HRESULT WINAPI CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv)
-{
-    return ShellObjectCreator<CMenuDeskBar>(riid, ppv);
-}
-
 CMenuDeskBar::CMenuDeskBar() :
     m_Client(NULL),
     m_ClientWindow(NULL),
@@ -851,4 +845,10 @@ HRESULT CMenuDeskBar::_AdjustForTheme(BOOL bFlatStyle)
     DWORD mask = WS_BORDER|WS_CLIPCHILDREN|WS_DLGFRAME;
     SHSetWindowBits(m_hWnd, GWL_STYLE, mask, style);
     return S_OK;
+}
+
+extern "C"
+HRESULT WINAPI RSHELL_CMenuDeskBar_CreateInstance(REFIID riid, LPVOID *ppv)
+{
+    return ShellObjectCreator<CMenuDeskBar>(riid, ppv);
 }
