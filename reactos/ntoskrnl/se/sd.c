@@ -208,7 +208,7 @@ SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
 
 NTSTATUS
 NTAPI
-SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
                                    IN KPROCESSOR_MODE AccessMode,
                                    IN POOL_TYPE PoolType,
                                    IN BOOLEAN CaptureIfKernel,

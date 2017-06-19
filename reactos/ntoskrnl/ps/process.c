@@ -1290,7 +1290,7 @@ PsSetProcessWin32Process(
         if (Process->Win32Process == OldWin32Process)
         {
             /* Yes, so reset the win32 process to NULL */
-            Process->Win32Process = 0;
+            Process->Win32Process = NULL;
         }
         else
         {

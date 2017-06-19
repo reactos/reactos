@@ -352,7 +352,7 @@ ObpFreeObjectNameBuffer(IN PUNICODE_STRING Name)
     if (Name->MaximumLength != OBP_NAME_LOOKASIDE_MAX_SIZE)
     {
         /* Free it from the pool */
-        ExFreePool(Buffer);
+        ExFreePoolWithTag(Buffer, OB_NAME_TAG);
     }
     else
     {
@@ -556,7 +556,7 @@ ObpCaptureObjectCreateInformation(IN POBJECT_ATTRIBUTES ObjectAttributes,
         /* Clear the string */
         RtlInitEmptyUnicodeString(ObjectName, NULL, 0);
 
-        /* He can't have specified a Root Directory */
+        /* It cannot have specified a Root Directory */
         if (ObjectCreateInfo->RootDirectory)
         {
             Status = STATUS_OBJECT_NAME_INVALID;
@@ -1247,7 +1247,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
 
     ASSERT(LocalObjectType->Index != 0);
 
-    if (LocalObjectType->Index < 32)
+    if (LocalObjectType->Index < RTL_NUMBER_OF(ObpObjectTypes))
     {
         /* It fits, insert it */
         ObpObjectTypes[LocalObjectType->Index - 1] = LocalObjectType;
