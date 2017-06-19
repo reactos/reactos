@@ -134,9 +134,9 @@ CmpAddToHiveFileList(IN PCMHIVE Hive)
     HANDLE KeyHandle;
     UNICODE_STRING HivePath;
     PWCHAR FilePath;
-    CHAR Buffer[sizeof(OBJECT_NAME_INFORMATION) + 512 * sizeof(WCHAR)];
+    UCHAR Buffer[sizeof(OBJECT_NAME_INFORMATION) + MAX_PATH * sizeof(WCHAR)];
     ULONG Length = sizeof(Buffer);
-    POBJECT_NAME_INFORMATION LocalNameInfo = (POBJECT_NAME_INFORMATION)&Buffer;
+    POBJECT_NAME_INFORMATION FileNameInfo = (POBJECT_NAME_INFORMATION)&Buffer;
     HivePath.Buffer = NULL;
 
     /* Create or open the hive list key */
@@ -155,7 +155,7 @@ CmpAddToHiveFileList(IN PCMHIVE Hive)
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        DPRINT1("CmpAddToHiveFileList: Creation or opening of the hive list failed, status = %08lx\n", Status);
+        DPRINT1("CmpAddToHiveFileList: Creation or opening of the hive list failed, status = 0x%08lx\n", Status);
         return Status;
     }
 
@@ -174,21 +174,21 @@ CmpAddToHiveFileList(IN PCMHIVE Hive)
         /* Try to get the value */
         Status = ZwQueryObject(Hive->FileHandles[HFILE_TYPE_PRIMARY],
                                ObjectNameInformation,
-                               LocalNameInfo,
+                               FileNameInfo,
                                Length,
                                &Length);
         if (NT_SUCCESS(Status))
         {
             /* Null-terminate and add the length of the terminator */
             Length -= sizeof(OBJECT_NAME_INFORMATION);
-            FilePath = LocalNameInfo->Name.Buffer;
+            FilePath = FileNameInfo->Name.Buffer;
             FilePath[Length / sizeof(WCHAR)] = UNICODE_NULL;
             Length += sizeof(UNICODE_NULL);
         }
         else
         {
             /* Fail */
-            DPRINT1("CmpAddToHiveFileList: Hive file name query failed, status = %08lx\n", Status);
+            DPRINT1("CmpAddToHiveFileList: Hive file name query failed, status = 0x%08lx\n", Status);
             goto Quickie;
         }
     }
@@ -209,7 +209,7 @@ CmpAddToHiveFileList(IN PCMHIVE Hive)
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        DPRINT1("CmpAddToHiveFileList: Setting of entry in the hive list failed, status = %08lx\n", Status);
+        DPRINT1("CmpAddToHiveFileList: Setting of entry in the hive list failed, status = 0x%08lx\n", Status);
     }
 
 Quickie:
@@ -240,7 +240,7 @@ CmpRemoveFromHiveFileList(IN PCMHIVE Hive)
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        DPRINT1("CmpRemoveFromHiveFileList: Opening of the hive list failed, status = %08lx\n", Status);
+        DPRINT1("CmpRemoveFromHiveFileList: Opening of the hive list failed, status = 0x%08lx\n", Status);
         return;
     }
 
