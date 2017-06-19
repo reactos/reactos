@@ -384,7 +384,7 @@ CmpInitHiveFromFile(IN PCUNICODE_STRING HiveName,
                       HiveName->Buffer,
                       HiveName->Length);
         NewHive->FileFullPath.Length = HiveName->Length;
-        NewHive->FileFullPath.MaximumLength = HiveName->MaximumLength;
+        NewHive->FileFullPath.MaximumLength = HiveName->Length;
     }
 
     /* Return success */
@@ -529,12 +529,10 @@ CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     OBJECT_ATTRIBUTES ObjectAttributes;
     CHAR ValueInfoBuffer[128];
     PKEY_VALUE_FULL_INFORMATION ValueInfo;
-    CHAR Buffer[128];
     WCHAR UnicodeBuffer[128];
     HANDLE SelectHandle, KeyHandle, ConfigHandle = NULL, ProfileHandle = NULL;
     HANDLE ParentHandle = NULL;
     ULONG ControlSet, HwProfile;
-    ANSI_STRING TempString;
     NTSTATUS Status;
     ULONG ResultLength, Disposition;
     PLOADER_PARAMETER_EXTENSION LoaderExtension;
@@ -622,16 +620,11 @@ UseSet:
     /* Sanity check */
     ASSERT(Disposition == REG_CREATED_NEW_KEY);
 
-    /* Initialize the symbolic link name */
-    sprintf(Buffer,
-            "\\Registry\\Machine\\System\\ControlSet%03ld",
-            ControlSet);
-    RtlInitAnsiString(&TempString, Buffer);
-
-    /* Create a Unicode string out of it */
-    KeyName.MaximumLength = sizeof(UnicodeBuffer);
-    KeyName.Buffer = UnicodeBuffer;
-    Status = RtlAnsiStringToUnicodeString(&KeyName, &TempString, FALSE);
+    /* Initialize the target link name */
+    swprintf(UnicodeBuffer,
+             L"\\Registry\\Machine\\System\\ControlSet%03ld",
+             ControlSet);
+    RtlInitUnicodeString(&KeyName, UnicodeBuffer);
 
     /* Set the value */
     Status = NtSetValueKey(KeyHandle,
@@ -655,7 +648,7 @@ UseSet:
     if (!NT_SUCCESS(Status))
     {
         /* Cleanup and exit */
-        ConfigHandle = 0;
+        ConfigHandle = NULL;
         goto Cleanup;
     }
 
@@ -698,21 +691,13 @@ UseSet:
     if (!NT_SUCCESS(Status))
     {
         /* Exit and clean up */
-        ParentHandle = 0;
+        ParentHandle = NULL;
         goto Cleanup;
     }
 
     /* Build the profile name */
-    sprintf(Buffer, "%04ld", HwProfile);
-    RtlInitAnsiString(&TempString, Buffer);
-
-    /* Convert it to Unicode */
-    KeyName.MaximumLength = sizeof(UnicodeBuffer);
-    KeyName.Buffer = UnicodeBuffer;
-    Status = RtlAnsiStringToUnicodeString(&KeyName,
-                                          &TempString,
-                                          FALSE);
-    ASSERT(Status == STATUS_SUCCESS);
+    swprintf(UnicodeBuffer, L"%04ld", HwProfile);
+    RtlInitUnicodeString(&KeyName, UnicodeBuffer);
 
     /* Open the associated key */
     InitializeObjectAttributes(&ObjectAttributes,
@@ -759,19 +744,11 @@ UseSet:
         ASSERT(Disposition == REG_CREATED_NEW_KEY);
 
         /* Create the profile name */
-        sprintf(Buffer,
-                "\\Registry\\Machine\\System\\CurrentControlSet\\"
-                "Hardware Profiles\\%04ld",
+        swprintf(UnicodeBuffer,
+                L"\\Registry\\Machine\\System\\CurrentControlSet\\"
+                L"Hardware Profiles\\%04ld",
                 HwProfile);
-        RtlInitAnsiString(&TempString, Buffer);
-
-        /* Convert it to Unicode */
-        KeyName.MaximumLength = sizeof(UnicodeBuffer);
-        KeyName.Buffer = UnicodeBuffer;
-        Status = RtlAnsiStringToUnicodeString(&KeyName,
-                                              &TempString,
-                                              FALSE);
-        ASSERT(STATUS_SUCCESS == Status);
+        RtlInitUnicodeString(&KeyName, UnicodeBuffer);
 
         /* Set it */
         Status = NtSetValueKey(KeyHandle,
