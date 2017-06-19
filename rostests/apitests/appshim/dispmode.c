@@ -436,6 +436,7 @@ static void run_test(size_t n, BOOL unload)
         if (ret)
         {
             test_one(tests[n].name, tests[n].reason, tests[n].pre, tests[n].post, tests[n].second);
+            tests[n].unhook(dll);
         }
         else
         {
