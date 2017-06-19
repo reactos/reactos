@@ -13,12 +13,12 @@ list(APPEND SOURCE
     nfs41_ops.c
     nfs41_compound.c
     nfs41_xdr.c
-	nfs41_server.c
+    nfs41_server.c
     nfs41_client.c
     nfs41_superblock.c
     nfs41_session.c
     lookup.c
-	mount.c
+    mount.c
     open.c
     readwrite.c
     lock.c
@@ -26,18 +26,18 @@ list(APPEND SOURCE
     getattr.c
     setattr.c
     upcall.c
-	nfs41_rpc.c
+    nfs41_rpc.c
     util.c
     pnfs_layout.c
     pnfs_device.c
     pnfs_debug.c
     pnfs_io.c
-	name_cache.c
+    name_cache.c
     namespace.c
     volume.c
     callback_server.c
     callback_xdr.c
-	service.c
+    service.c
     symlink.c
     idmap.c
     delegation.c
@@ -50,7 +50,7 @@ add_executable(nfsd ${SOURCE} nfsd.rc)
 if(MSVC)
 else()
     # FIXME: Tons of warnings.
-    replace_compile_flags("-Werror" " ")
+    add_target_compile_flags(nfsd "-w")
 endif()
 
 set_module_type(nfsd win32cui)
