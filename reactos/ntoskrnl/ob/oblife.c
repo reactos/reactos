@@ -405,7 +405,8 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
         }
 
         /* Make sure there really is a string */
-        if ((StringLength = LocalName.Length))
+        StringLength = LocalName.Length;
+        if (StringLength)
         {
             /* Check that the size is a valid WCHAR multiple */
             if ((StringLength & (sizeof(WCHAR) - 1)) ||
