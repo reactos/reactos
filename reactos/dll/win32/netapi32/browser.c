@@ -81,10 +81,57 @@ I_BrowserQueryEmulatedDomains(
     _Out_ PBROWSER_EMULATED_DOMAIN *EmulatedDomains,
     _Out_ LPDWORD EntriesRead)
 {
-    FIXME("I_BrowserQueryEmulatedDomains(%s %p %p)\n",
+    BROWSER_EMULATED_DOMAIN_CONTAINER Container = {0, NULL};
+    NET_API_STATUS status;
+
+    TRACE("I_BrowserQueryEmulatedDomains(%s %p %p)\n",
           debugstr_w(ServerName), EmulatedDomains, EntriesRead);
 
-    return ERROR_NOT_SUPPORTED;
+    *EmulatedDomains = NULL;
+    *EntriesRead = 0;
+
+    RpcTryExcept
+    {
+        status = I_BrowserrQueryEmulatedDomains(ServerName,
+                                                &Container);
+
+        if (status == NERR_Success)
+        {
+            *EmulatedDomains = (PBROWSER_EMULATED_DOMAIN)Container.Buffer;
+            *EntriesRead = Container.EntriesRead;
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
+I_BrowserResetStatistics(
+    _In_opt_ LPCWSTR ServerName)
+{
+    NET_API_STATUS status;
+
+    TRACE("I_BrowserResetStatistics(%s)\n",
+          debugstr_w(ServerName));
+
+    RpcTryExcept
+    {
+        status = I_BrowserrResetStatistics((PWSTR)ServerName);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
 }
 
 
@@ -96,11 +143,26 @@ I_BrowserSetNetlogonState(
     _In_ LPWSTR EmulatedServerName,
     _In_ DWORD Role)
 {
-    FIXME("I_BrowserSetNetlogonState(%s %s %s %lu)\n",
+    NET_API_STATUS status;
+
+    TRACE("I_BrowserSetNetlogonState(%s %s %s %lu)\n",
           debugstr_w(ServerName), debugstr_w(ServerName),
           debugstr_w(EmulatedServerName), Role);
 
-    return ERROR_NOT_SUPPORTED;
+    RpcTryExcept
+    {
+        status = I_BrowserrSetNetlogonState(ServerName,
+                                            DomainName,
+                                            EmulatedServerName,
+                                            Role);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
 }
 
 

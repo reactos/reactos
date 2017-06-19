@@ -44,7 +44,7 @@
 @ stub I_BrowserQueryOtherDomains
 @ stub I_BrowserQueryStatistics
 @ stub I_BrowserResetNetlogonState
-@ stub I_BrowserResetStatistics
+@ stdcall I_BrowserResetStatistics(wstr)
 @ stub I_BrowserServerEnum
 @ stdcall I_BrowserSetNetlogonState(wstr wstr wstr long)
 @ stub I_NetAccountDeltas

@@ -6,6 +6,21 @@
 
 typedef [handle] wchar_t *BROWSER_IDENTIFY_HANDLE;
 
+cpp_quote("#ifndef _LMBROWSR_")
+typedef struct _BROWSER_EMULATED_DOMAIN
+{
+    LPWSTR DomainName;
+    LPWSTR EmulatedServerName;
+    DWORD Role;
+} BROWSER_EMULATED_DOMAIN, *PBROWSER_EMULATED_DOMAIN;
+cpp_quote("#endif")
+
+typedef struct _BROWSER_EMULATED_DOMAIN_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] PBROWSER_EMULATED_DOMAIN Buffer;
+} BROWSER_EMULATED_DOMAIN_CONTAINER, *PBROWSER_EMULATED_DOMAIN_CONTAINER;
+
 typedef struct _SERVER_INFO_100
 {
     DWORD sv100_platform_id;
@@ -76,10 +91,11 @@ interface browser
     __stdcall
     BrowserOpnum5NotUsedOnWire(void);
 
-    /* Function 6 (BrowserrResetStatistics) */
+    /* Function 6 */
     NET_API_STATUS
     __stdcall
-    BrowserOpnum6NotUsedOnWire(void);
+    I_BrowserrResetStatistics(
+         [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName);
 
     /* Function 7 (NetrBrowserStatisticsClear) */
     NET_API_STATUS
@@ -91,15 +107,21 @@ interface browser
     __stdcall
     BrowserOpnum8NotUsedOnWire(void);
 
-    /* Function 9 (BrowserrSetNetlogonState) */
+    /* Function 9 */
     NET_API_STATUS
     __stdcall
-    BrowserOpnum9NotUsedOnWire(void);
+    I_BrowserrSetNetlogonState(
+        [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName,
+        [in, string] LPWSTR DomainName,
+        [in, string, unique] LPWSTR EmulatedComputerName,
+        [in] DWORD Role);
 
-    /* Function 10 (BrowserrQueryEmulatedDomains) */
+    /* Function 10 */
     NET_API_STATUS
     __stdcall
-    BrowserOpnum10NotUsedOnWire(void);
+    I_BrowserrQueryEmulatedDomains(
+        [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName,
+        [in, out] PBROWSER_EMULATED_DOMAIN_CONTAINER EmulatedDomains);
 
     /* Function 11 (BrowserrServerEnumEx) */
     NET_API_STATUS
