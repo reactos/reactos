@@ -621,9 +621,9 @@ UseSet:
     ASSERT(Disposition == REG_CREATED_NEW_KEY);
 
     /* Initialize the target link name */
-    swprintf(UnicodeBuffer,
-             L"\\Registry\\Machine\\System\\ControlSet%03ld",
-             ControlSet);
+    RtlStringCbPrintfW(UnicodeBuffer, sizeof(UnicodeBuffer),
+                       L"\\Registry\\Machine\\System\\ControlSet%03ld",
+                       ControlSet);
     RtlInitUnicodeString(&KeyName, UnicodeBuffer);
 
     /* Set the value */
@@ -696,7 +696,8 @@ UseSet:
     }
 
     /* Build the profile name */
-    swprintf(UnicodeBuffer, L"%04ld", HwProfile);
+    RtlStringCbPrintfW(UnicodeBuffer, sizeof(UnicodeBuffer),
+                       L"%04ld", HwProfile);
     RtlInitUnicodeString(&KeyName, UnicodeBuffer);
 
     /* Open the associated key */
@@ -744,10 +745,10 @@ UseSet:
         ASSERT(Disposition == REG_CREATED_NEW_KEY);
 
         /* Create the profile name */
-        swprintf(UnicodeBuffer,
-                L"\\Registry\\Machine\\System\\CurrentControlSet\\"
-                L"Hardware Profiles\\%04ld",
-                HwProfile);
+        RtlStringCbPrintfW(UnicodeBuffer, sizeof(UnicodeBuffer),
+                           L"\\Registry\\Machine\\System\\CurrentControlSet\\"
+                           L"Hardware Profiles\\%04ld",
+                           HwProfile);
         RtlInitUnicodeString(&KeyName, UnicodeBuffer);
 
         /* Set it */
@@ -2147,8 +2148,8 @@ CmpSetVersionData(VOID)
     HANDLE MicrosoftKeyHandle = NULL;
     HANDLE WindowsNtKeyHandle = NULL;
     HANDLE CurrentVersionKeyHandle = NULL;
-    WCHAR Buffer[128]; // Buffer large enough to contain a full ULONG in decimal representation,
-                       // and the full 'CurrentType' string.
+    WCHAR Buffer[128]; // Buffer large enough to contain a full ULONG in decimal
+                       // representation, and the full 'CurrentType' string.
 
     /*
      * Open the 'HKLM\Software\Microsoft\Windows NT\CurrentVersion' key
@@ -2267,20 +2268,20 @@ CmpSetVersionData(VOID)
 
     /* Set the 'CurrentType' value */
     RtlInitUnicodeString(&ValueName, L"CurrentType");
-
-    swprintf(Buffer, L"%s %s",
+    RtlStringCbPrintfW(Buffer, sizeof(Buffer),
+                       L"%s %s",
 #ifdef CONFIG_SMP
-             L"Multiprocessor"
+                       L"Multiprocessor"
 #else
-             L"Uniprocessor"
+                       L"Uniprocessor"
 #endif
-             ,
+                       ,
 #if (DBG == 1)
-             L"Checked"
+                       L"Checked"
 #else
-             L"Free"
+                       L"Free"
 #endif
-             );
+                       );
     RtlInitUnicodeString(&ValueData, Buffer);
     NtSetValueKey(CurrentVersionKeyHandle,
                   &ValueName,
