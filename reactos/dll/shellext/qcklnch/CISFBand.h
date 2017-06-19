@@ -19,7 +19,8 @@ class CISFBand :
     public IOleCommandTarget
 {
     HINSTANCE m_hInstance;
-    CComPtr<IUnknown> m_Site;    
+    CComPtr<IUnknown> m_Site;
+    CComPtr<IShellFolder> m_pISF;
     HWND m_hWnd;
     HWND m_hWndStartButton;
     DWORD m_BandID;    

@@ -7,8 +7,72 @@
  */
 
 #include "precomp.h"
+#include <mshtmcid.h>
+
+#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
+#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 
 WINE_DEFAULT_DEBUG_CHANNEL(qcklnch);
+
+//Toolbar
+
+HWND CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
+{
+    //This ought to be global.. (currently testing)
+    //HIMAGELIST g_hImageList = NULL;
+
+    // Declare and initialize local constants.
+    const int ImageListID = 0;
+    const int numButtons = 3;
+    const int bitmapSize = 16;
+
+    const DWORD buttonStyles = BTNS_AUTOSIZE;
+
+    // Create the toolbar.
+    HWND hWndToolbar = CreateWindowEx(0, TOOLBARCLASSNAME, NULL,
+        WS_CHILD | TBSTYLE_WRAPABLE | TBSTYLE_FLAT | CCS_NORESIZE, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
+        hWndParent, NULL, hInst, NULL);
+
+    if (hWndToolbar == NULL)
+        return NULL;
+
+    // Create the image list.
+   /* g_hImageList = ImageList_Create(bitmapSize, bitmapSize,   // Dimensions of individual bitmaps.
+        ILC_COLOR16 | ILC_MASK,   // Ensures transparent background.
+        numButtons, 0);
+
+    // Set the image list.
+    SendMessage(hWndToolbar, TB_SETIMAGELIST,
+        (WPARAM)ImageListID,
+        (LPARAM)g_hImageList);
+
+    // Load the button images.
+    SendMessage(hWndToolbar, TB_LOADIMAGES,
+        (WPARAM)IDB_STD_SMALL_COLOR,
+        (LPARAM)HINST_COMMCTRL);*/
+
+    // Initialize button info.
+    // IDM_NEW, IDM_OPEN, and IDM_SAVE are application-defined command constants.
+
+    TBBUTTON tbButtons[numButtons] =
+    {
+        { MAKELONG(STD_FILENEW,  ImageListID), IDM_NEW,  TBSTATE_ENABLED, buttonStyles,{ 0 }, 0, (INT_PTR)L"New" },
+        { MAKELONG(STD_FILEOPEN, ImageListID), IDM_OPEN, TBSTATE_ENABLED, buttonStyles,{ 0 }, 0, (INT_PTR)L"Open" },
+        { MAKELONG(STD_FILESAVE, ImageListID), IDM_SAVE, 0,               buttonStyles,{ 0 }, 0, (INT_PTR)L"Save" }
+    };
+
+    // Add buttons.
+    SendMessage(hWndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
+    SendMessage(hWndToolbar, TB_ADDBUTTONS, (WPARAM)numButtons, (LPARAM)&tbButtons);
+
+    //SendMessage(hWndToolbar, TB_INSERTBUTTON, /*(WPARAM)numButtons*/ 0, (LPARAM)&tbButtons[0]);
+
+    // Resize the toolbar, and then show it.
+    SendMessage(hWndToolbar, TB_AUTOSIZE, 0, 0);
+    ShowWindow(hWndToolbar, TRUE);
+
+    return hWndToolbar;
+}
 
 //Subclassing Button
 
@@ -48,10 +112,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(qcklnch);
             TRACE("Querying site window failed: 0x%x\n", hRet);
             return hRet;
         }
-        m_Site = pUnkSite;        
-        m_hWnd = CreateWindowEx(0, L"BUTTON", L">>", WS_CHILD, CW_USEDEFAULT, CW_USEDEFAULT, 50, 50, hwndParent, 0, m_hInstance, 0);
-        SetWindowSubclass(hwndParent, MyWndProc, 0, 0); //when button is clicked, parent receives WM_COMMAND, and thus subclassed to show a test message box
+        m_Site = pUnkSite; 
+
+        //m_hWnd = CreateWindowEx(0, L"BUTTON", L">>", WS_CHILD, CW_USEDEFAULT, CW_USEDEFAULT, 50, 50, hwndParent, 0, m_hInstance, 0);
+        //SetWindowSubclass(hwndParent, MyWndProc, 0, 0); //when button is clicked, parent receives WM_COMMAND, and thus subclassed to show a test message box
         
+        m_hWnd = CreateSimpleToolbar(hwndParent, m_hInstance);
+
         return S_OK;
     }
 
@@ -144,71 +211,61 @@ WINE_DEFAULT_DEBUG_CHANNEL(qcklnch);
         IN OUT DESKBANDINFO *pdbi)
     {
         //MessageBox(0, L"GetBandInfo called!", L"Test Caption", MB_OK | MB_ICONINFORMATION);
-        
+
         TRACE("CTaskBand::GetBandInfo(0x%x,0x%x,0x%p) hWnd=0x%p\n", dwBandID, dwViewMode, pdbi, m_hWnd);
-
-        HRESULT hr = E_INVALIDARG;
-
+                
         if (m_hWnd && pdbi)
         {
             m_BandID = dwBandID;
-            pdbi->dwModeFlags = DBIMF_VARIABLEHEIGHT;
+            
+            RECT actualRect;
+            POINTL actualSize;
+            POINTL idealSize;
+            POINTL maxSize;
+            POINTL itemSize;            
 
-            if (dwViewMode & DBIF_VIEWMODE_VERTICAL)
-            {
-                pdbi->ptIntegral.y = 1;
-                pdbi->ptMinSize.y = 20;
-                /* FIXME: Get the button metrics from the task bar object!!! */
-                pdbi->ptMinSize.x = (3 * GetSystemMetrics(SM_CXEDGE) / 2) + /* FIXME: Might be wrong if only one column! */
-                    GetSystemMetrics(SM_CXSIZE) + (2 * GetSystemMetrics(SM_CXEDGE)); /* FIXME: Min button size, query!!! */
-            }
-            else
-            {
-                /* When the band is horizontal its minimum height is the height of the start button */
-                RECT rcButton;
-                GetWindowRect(m_hWndStartButton, &rcButton);
-                pdbi->ptMinSize.y = rcButton.bottom - rcButton.top;
-                pdbi->ptIntegral.y = pdbi->ptMinSize.y + (3 * GetSystemMetrics(SM_CYEDGE) / 2); /* FIXME: Query metrics */
-                                                                                                /* We're not going to allow task bands where not even the minimum button size fits into the band */
-                pdbi->ptMinSize.x = pdbi->ptIntegral.y;
-            }
+            ::GetWindowRect(m_hWnd, &actualRect);
+            actualSize.x = actualRect.right - actualRect.left;
+            actualSize.y = actualRect.bottom - actualRect.top;
 
+            // Obtain the ideal size, to be used as min and max 
+            SendMessageW(m_hWnd, TB_AUTOSIZE, 0, 0);
+            SendMessageW(m_hWnd, TB_GETMAXSIZE, 0, reinterpret_cast<LPARAM>(&maxSize));                
+
+            idealSize = maxSize;
+            SendMessageW(m_hWnd, TB_GETIDEALSIZE, FALSE, reinterpret_cast<LPARAM>(&idealSize));           
+
+            // Obtain the button size, to be used as the integral size 
+            DWORD size = SendMessageW(m_hWnd, TB_GETBUTTONSIZE, 0, 0);
+            itemSize.x = GET_X_LPARAM(size);
+            itemSize.y = GET_Y_LPARAM(size);
+
+            if (pdbi->dwMask & DBIM_MINSIZE)
+            {
+                pdbi->ptMinSize = idealSize;
+            }
             if (pdbi->dwMask & DBIM_MAXSIZE)
             {
-                pdbi->ptMaxSize.y = -1;
+                pdbi->ptMaxSize = maxSize;
             }
-
+            if (pdbi->dwMask & DBIM_INTEGRAL)
+            {
+                pdbi->ptIntegral = itemSize;
+            }
             if (pdbi->dwMask & DBIM_ACTUAL)
             {
-                pdbi->ptActual.x = 35;
-                pdbi->ptActual.y = 30;
+                pdbi->ptActual = actualSize;
             }
-
             if (pdbi->dwMask & DBIM_TITLE)
-            {
-                // Don't show title by removing this flag.
-                pdbi->dwMask &= ~DBIM_TITLE;
-            }
-
+                wcscpy(pdbi->wszTitle, L"");                
             if (pdbi->dwMask & DBIM_MODEFLAGS)
             {
                 pdbi->dwModeFlags = DBIMF_NORMAL | DBIMF_VARIABLEHEIGHT;
             }
-
             if (pdbi->dwMask & DBIM_BKCOLOR)
-            {
-                // Use the default background color by removing this flag.
-                pdbi->dwMask &= ~DBIM_BKCOLOR;
-            }
-
-            TRACE("H: %d, Min: %d,%d, Integral.y: %d Actual: %d,%d\n", (dwViewMode & DBIF_VIEWMODE_VERTICAL) == 0,
-                pdbi->ptMinSize.x, pdbi->ptMinSize.y, pdbi->ptIntegral.y,
-                pdbi->ptActual.x, pdbi->ptActual.y);
-
-            hr = S_OK;
+                pdbi->crBkgnd = 0;            
         }
-
-        return hr;
+        return S_OK;
     }    
 
  /*****************************************************************************/
