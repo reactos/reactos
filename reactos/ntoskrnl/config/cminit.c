@@ -309,7 +309,7 @@ CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
         /* Build the full name */
         FullName.Buffer = NameBuffer;
         FullName.MaximumLength = Length;
-        RtlAppendUnicodeStringToString(&FullName, BaseName);
+        RtlCopyUnicodeString(&FullName, BaseName);
     }
     else
     {

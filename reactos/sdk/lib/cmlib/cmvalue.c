@@ -180,7 +180,7 @@ CmpValueToData(IN PHHIVE Hive,
     if (!CmpGetValueData(Hive,
                          Value,
                          Length,
-                         (PVOID)&Buffer,
+                         (PVOID*)&Buffer,
                          &BufferAllocated,
                          &CellToRelease))
     {
