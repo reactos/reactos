@@ -51,7 +51,7 @@
 @ stdcall SdbFreeFileAttributes(ptr)
 @ stub SdbFreeFileInfo
 @ stub SdbFreeFlagInfo
-@ stub SdbGetAppCompatDataSize
+@ stdcall SdbGetAppCompatDataSize(ptr)
 @ stdcall SdbGetAppPatchDir(ptr wstr long)
 @ stdcall SdbGetBinaryTagData(ptr long)
 @ stdcall SdbGetDatabaseID(ptr ptr)
@@ -103,7 +103,8 @@
 @ stdcall SdbOpenDatabase(wstr long)
 @ stub SdbOpenDbFromGuid
 @ stub SdbOpenLocalDatabase
-@ stub SdbPackAppCompatData
+@ stdcall SdbPackAppCompatData(ptr ptr ptr ptr)
+@ stdcall SdbUnpackAppCompatData(ptr wstr ptr ptr)
 @ stub SdbQueryApphelpInformation
 @ stub SdbQueryBlockUpgrade
 @ stub SdbQueryContext
