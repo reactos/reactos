@@ -1,3 +1,5 @@
+spec2def(libtirpc.dll libtirpc/libtirpc.spec ADD_IMPORTLIB)
+
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 add_definitions(-DUNICODE -D_WIN32 -DPORTMAP -Dstrdup=_strdup)
@@ -89,7 +91,7 @@ add_library(libtirpc SHARED
     ${SOURCE}
 #    libtirpc/libtirpc.rc
     libtirpc/libtirpc_ros.rc
-    libtirpc/libtirpc.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/libtirpc.def)
 
 if(MSVC)
 else()
