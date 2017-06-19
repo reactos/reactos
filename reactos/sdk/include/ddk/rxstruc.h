@@ -130,7 +130,7 @@ typedef struct _RDBSS_DEVICE_OBJECT {
     RDBSS_SCAVENGER RdbssScavengerInDeviceObject;
 } RDBSS_DEVICE_OBJECT, *PRDBSS_DEVICE_OBJECT;
 
-extern INLINE
+FORCEINLINE
 VOID
 NTAPI
 RxUnregisterMinirdr(

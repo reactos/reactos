@@ -549,7 +549,7 @@ RxFinalizeSrvOpen(
     _In_ BOOLEAN RecursiveFinalize,
     _In_ BOOLEAN ForceFinalize);
 
-extern INLINE
+FORCEINLINE
 PUNICODE_STRING
 GET_ALREADY_PREFIXED_NAME(
     PMRX_SRV_OPEN SrvOpen,
