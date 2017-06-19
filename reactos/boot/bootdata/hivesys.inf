@@ -850,7 +850,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E974-E325-11CE-BFC1-08002BE1
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E974-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"NetService"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Protocol"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"NetTrans"
-HKLM,"SYSTEM\CurrentControlSet\Control\NetworkProvider\Order","ProviderOrder",0x00000000,""
+HKLM,"SYSTEM\CurrentControlSet\Control\NetworkProvider\Order","ProviderOrder",0x00000000,"nfs41_driver"
 
 ; NLS Files
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","37",0x00000000,"c_037.nls"
@@ -2091,6 +2091,24 @@ HKLM,"SYSTEM\CurrentControlSet\Services\ffs","Group",0x00000000,"Boot File Syste
 HKLM,"SYSTEM\CurrentControlSet\Services\ffs","ImagePath",0x00020000,"system32\drivers\ffs.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\ffs","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\ffs","Type",0x00010001,0x00000002
+
+; NFS Filesystem driver
+HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","Group",0x00000000,"Network"
+HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","ImagePath",0x00020000,"system32\drivers\nfs41_driver.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","Type",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver\NetworkProvider","DeviceName",0x00000000,\Device\nfs41_driver
+HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver\NetworkProvider","Name",0x00000000,"NFS41 Network"
+HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver\NetworkProvider","ProviderPath",0x00000000,System32\nfs41_np.dll
+
+; NFS daemon
+HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","DisplayName",0x00000000,"NFSv4.1 Client"
+HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","ImagePath",0x00020000,"%SystemRoot%\system32\nfsd.exe --noldap"
+HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","ObjectName",0x00000000,"LocalSystem"
+HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","Type",0x00010001,0x00000010
 
 ; Filesystem Filter Manager driver
 HKLM,"SYSTEM\CurrentControlSet\Services\fltmgr","ErrorControl",0x00010001,0x00000003
