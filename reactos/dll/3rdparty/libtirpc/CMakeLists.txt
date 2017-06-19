@@ -2,7 +2,7 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 add_definitions(-DUNICODE -D_WIN32 -DPORTMAP -Dstrdup=_strdup)
 
-include_directories(${REACTOS_SOURCE_DIR}/dll/win32/libtirpc/tirpc)
+include_directories(${REACTOS_SOURCE_DIR}/dll/3rdparty/libtirpc/tirpc)
 
 list(APPEND SOURCE
     src/asprintf.c
