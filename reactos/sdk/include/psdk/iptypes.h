@@ -26,6 +26,7 @@
 #define MAX_ADAPTER_DESCRIPTION_LENGTH  128
 #define MAX_ADAPTER_NAME_LENGTH         256
 #define MAX_ADAPTER_ADDRESS_LENGTH      8
+#define DEFAULT_MINIMUM_ENTITIES        32
 #define MAX_HOSTNAME_LEN                128
 #define MAX_DOMAIN_NAME_LEN             128
 #define MAX_SCOPE_ID_LEN                256
@@ -235,7 +236,21 @@ typedef struct _IP_ADAPTER_ADDRESSES_LH {
     PWCHAR                          FriendlyName;
     BYTE                            PhysicalAddress[MAX_ADAPTER_ADDRESS_LENGTH];
     DWORD                           PhysicalAddressLength;
-    DWORD                           Flags;
+    union {
+        DWORD                       Flags;
+        struct {
+            DWORD                   DdnsEnabled : 1;
+            DWORD                   RegisterAdapterSuffix : 1;
+            DWORD                   Dhcpv4Enabled : 1;
+            DWORD                   ReceiveOnly : 1;
+            DWORD                   NoMulticast : 1;
+            DWORD                   Ipv6OtherStatefulConfig : 1;
+            DWORD                   NetbiosOverTcpipEnabled : 1;
+            DWORD                   Ipv4Enabled : 1;
+            DWORD                   Ipv6Enabled : 1;
+            DWORD                   Ipv6ManagedAddressConfigurationSupported : 1;
+        } DUMMYSTRUCTNAME1;
+    } DUMMYUNIONNAME1;
     DWORD                           Mtu;
     DWORD                           IfType;
     IF_OPER_STATUS                  OperStatus;
