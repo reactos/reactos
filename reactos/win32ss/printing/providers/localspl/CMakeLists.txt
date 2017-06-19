@@ -9,6 +9,7 @@ list(APPEND SOURCE
     monitors.c
     ports.c
     precomp.h
+    printerdata.c
     printers.c
     printingthread.c
     printprocessors.c
@@ -22,6 +23,6 @@ add_library(localspl SHARED
 
 set_module_type(localspl win32dll UNICODE)
 target_link_libraries(localspl skiplist16 wine)
-add_importlibs(localspl advapi32 rpcrt4 spoolss msvcrt kernel32 ntdll)
+add_importlibs(localspl advapi32 netapi32 rpcrt4 secur32 spoolss msvcrt kernel32 ntdll)
 add_pch(localspl precomp.h SOURCE)
 add_cd_file(TARGET localspl DESTINATION reactos/system32 FOR all)

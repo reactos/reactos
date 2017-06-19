@@ -22,6 +22,8 @@
 #include <winreg.h>
 #include <winspool.h>
 #include <winsplp.h>
+#include <dsrole.h>
+#include <secext.h>
 #include <ndk/rtlfuncs.h>
 
 #define SKIPLIST_LEVELS 16
@@ -195,6 +197,7 @@ struct _LOCAL_HANDLE
     enum {
         HandleType_Port,                        /** pSpecificHandle is a PLOCAL_PORT_HANDLE. */
         HandleType_Printer,                     /** pSpecificHandle is a PLOCAL_PRINTER_HANDLE. */
+        HandleType_PrintServer,                 /** pSpecificHandle is NULL (no additional information needed for a handle to the Print Server) */
         HandleType_Xcv                          /** pSpecificHandle is a PLOCAL_XCV_HANDLE. */
     }
     HandleType;
@@ -256,8 +259,14 @@ BOOL WriteJobShadowFile(PWSTR pwszFilePath, const PLOCAL_JOB pJob);
 // main.c
 extern const WCHAR wszCurrentEnvironment[];
 extern const DWORD cbCurrentEnvironment;
+extern const DWORD dwSpoolerMajorVersion;
+extern const DWORD dwSpoolerMinorVersion;
 extern const WCHAR wszDefaultDocumentName[];
+extern HKEY hPrintKey;
+extern HKEY hPrintersKey;
 extern PWSTR wszPrintProviderInfo[3];
+extern WCHAR wszJobDirectory[MAX_PATH];
+extern DWORD cchJobDirectory;
 extern WCHAR wszSpoolDirectory[MAX_PATH];
 extern DWORD cchSpoolDirectory;
 
@@ -271,6 +280,12 @@ BOOL WINAPI LocalEnumMonitors(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD c
 PLOCAL_PORT FindPort(PCWSTR pwszName);
 BOOL InitializePortList();
 BOOL WINAPI LocalEnumPorts(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned);
+
+// printerdata.c
+DWORD WINAPI LocalGetPrinterData(HANDLE hPrinter, PWSTR pValueName, PDWORD pType, PBYTE pData, DWORD nSize, PDWORD pcbNeeded);
+DWORD WINAPI LocalGetPrinterDataEx(HANDLE hPrinter, PCWSTR pKeyName, PCWSTR pValueName, PDWORD pType, PBYTE pData, DWORD nSize, PDWORD pcbNeeded);
+DWORD WINAPI LocalSetPrinterData(HANDLE hPrinter, PWSTR pValueName, DWORD Type, PBYTE pData, DWORD cbData);
+DWORD WINAPI LocalSetPrinterDataEx(HANDLE hPrinter, LPCWSTR pKeyName, LPCWSTR pValueName, DWORD Type, LPBYTE pData, DWORD cbData);
 
 // printers.c
 extern SKIPLIST PrinterList;

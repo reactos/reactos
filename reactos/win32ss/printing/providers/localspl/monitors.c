@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Local Spooler
  * LICENSE:     GNU LGPL v2.1 or any later version as published by the Free Software Foundation
  * PURPOSE:     Functions related to Print Monitors
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -103,7 +103,7 @@ InitializePrintMonitorList()
         if (!pPrintMonitor)
         {
             dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-            ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+            ERR("DllAllocSplMem failed!\n");
             goto Cleanup;
         }
 
@@ -112,7 +112,7 @@ InitializePrintMonitorList()
         if (!pPrintMonitor->pwszName)
         {
             dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-            ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+            ERR("DllAllocSplMem failed!\n");
             goto Cleanup;
         }
 
@@ -177,7 +177,7 @@ InitializePrintMonitorList()
                 if (!pwszRegistryPath)
                 {
                     dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-                    ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+                    ERR("DllAllocSplMem failed!\n");
                     goto Cleanup;
                 }
 

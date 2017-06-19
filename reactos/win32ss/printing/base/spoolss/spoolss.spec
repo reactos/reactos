@@ -80,8 +80,8 @@
 @ stub GetJobAttributes
 @ stdcall GetJobW(long long long ptr long ptr)
 @ stub GetNetworkId
-@ stub GetPrinterDataExW
-@ stub GetPrinterDataW
+@ stdcall GetPrinterDataExW(long wstr wstr ptr ptr long ptr)
+@ stdcall GetPrinterDataW(long wstr ptr ptr long ptr)
 @ stub GetPrinterDriverDirectoryW
 @ stub GetPrinterDriverExW
 @ stdcall GetPrinterDriverW(long wstr long ptr long ptr)
@@ -139,8 +139,8 @@
 @ stub SetFormW
 @ stdcall SetJobW(long long long ptr long)
 @ stub SetPortW
-@ stub SetPrinterDataExW
-@ stub SetPrinterDataW
+@ stdcall SetPrinterDataExW(long wstr wstr long ptr long)
+@ stdcall SetPrinterDataW(long wstr long ptr long)
 @ stub SetPrinterW
 @ stub SplCloseSpoolFileHandle
 @ stub SplCommitSpoolData

@@ -106,14 +106,11 @@ _PrinterListCompareRoutine(PVOID FirstStruct, PVOID SecondStruct)
 BOOL
 InitializePrinterList()
 {
-    const WCHAR wszPrintersKey[] = L"SYSTEM\\CurrentControlSet\\Control\\Print\\Printers";
-
     DWORD cbData;
     DWORD cchPrinterName;
     DWORD dwErrorCode;
     DWORD dwSubKeys;
     DWORD i;
-    HKEY hKey = NULL;
     HKEY hSubKey = NULL;
     PLOCAL_PORT pPort;
     PLOCAL_PRINTER pPrinter = NULL;
@@ -125,16 +122,8 @@ InitializePrinterList()
     // Initialize an empty list for our printers.
     InitializeSkiplist(&PrinterList, DllAllocSplMem, _PrinterListCompareRoutine, (PSKIPLIST_FREE_ROUTINE)DllFreeSplMem);
 
-    // Open our printers registry key. Each subkey is a local printer there.
-    dwErrorCode = (DWORD)RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszPrintersKey, 0, KEY_READ, &hKey);
-    if (dwErrorCode != ERROR_SUCCESS)
-    {
-        ERR("RegOpenKeyExW failed with status %lu!\n", dwErrorCode);
-        goto Cleanup;
-    }
-
-    // Get the number of subkeys.
-    dwErrorCode = (DWORD)RegQueryInfoKeyW(hKey, NULL, NULL, NULL, &dwSubKeys, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    // Get the number of subkeys of the printers registry key. Each subkey is a local printer there.
+    dwErrorCode = (DWORD)RegQueryInfoKeyW(hPrintersKey, NULL, NULL, NULL, &dwSubKeys, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
     if (dwErrorCode != ERROR_SUCCESS)
     {
         ERR("RegQueryInfoKeyW failed with status %lu!\n", dwErrorCode);
@@ -180,7 +169,7 @@ InitializePrinterList()
 
         // Get the name of this printer.
         cchPrinterName = _countof(wszPrinterName);
-        dwErrorCode = (DWORD)RegEnumKeyExW(hKey, i, wszPrinterName, &cchPrinterName, NULL, NULL, NULL, NULL);
+        dwErrorCode = (DWORD)RegEnumKeyExW(hPrintersKey, i, wszPrinterName, &cchPrinterName, NULL, NULL, NULL, NULL);
         if (dwErrorCode == ERROR_MORE_DATA)
         {
             // This printer name exceeds the maximum length and is invalid.
@@ -193,7 +182,7 @@ InitializePrinterList()
         }
 
         // Open this Printer's registry key.
-        dwErrorCode = (DWORD)RegOpenKeyExW(hKey, wszPrinterName, 0, KEY_READ, &hSubKey);
+        dwErrorCode = (DWORD)RegOpenKeyExW(hPrintersKey, wszPrinterName, 0, KEY_READ, &hSubKey);
         if (dwErrorCode != ERROR_SUCCESS)
         {
             ERR("RegOpenKeyExW failed for Printer \"%S\" with status %lu!\n", wszPrinterName, dwErrorCode);
@@ -231,7 +220,7 @@ InitializePrinterList()
         if (!pPrinter)
         {
             dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-            ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+            ERR("DllAllocSplMem failed!\n");
             goto Cleanup;
         }
 
@@ -280,7 +269,7 @@ InitializePrinterList()
         if (!pPrinter->pDefaultDevMode)
         {
             dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-            ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+            ERR("DllAllocSplMem failed!\n");
             goto Cleanup;
         }
 
@@ -350,10 +339,6 @@ Cleanup:
 
     if (pwszPrintProcessor)
         DllFreeSplStr(pwszPrintProcessor);
-
-    // Outside the loop
-    if (hKey)
-        RegCloseKey(hKey);
 
     SetLastError(dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
@@ -885,8 +870,8 @@ LocalEnumPrinters(DWORD Flags, LPWSTR Name, DWORD Level, LPBYTE pPrinterEnum, DW
     WCHAR wszComputerName[2 + MAX_COMPUTERNAME_LENGTH + 1 + 1] = { 0 };
     PLOCAL_PRINTER pPrinter;
 
-    ASSERT(pcbNeeded);
-    ASSERT(pcReturned);
+    // Do no sanity checks or assertions for pcbNeeded and pcReturned here.
+    // This is verified and required by localspl_apitest!
 
     // Begin counting.
     *pcbNeeded = 0;
@@ -984,6 +969,13 @@ LocalGetPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDW
     PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
     PLOCAL_PRINTER_HANDLE pPrinterHandle;
 
+    // Sanity checks.
+    if (!pHandle)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
     // Check if this is a printer handle.
     if (pHandle->HandleType != HandleType_Printer)
     {
@@ -1020,40 +1012,357 @@ Cleanup:
     return (dwErrorCode == ERROR_SUCCESS);
 }
 
-BOOL WINAPI
-LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDefault)
+static DWORD
+_LocalOpenPortHandle(PWSTR pwszPortName, PHANDLE phPrinter)
 {
     BOOL bReturnValue;
-    DWORD cchComputerName;
-    DWORD cchFirstParameter;
     DWORD dwErrorCode;
-    DWORD dwJobID;
-    HANDLE hExternalHandle;
-    PWSTR p = lpPrinterName;
-    PWSTR pwszFirstParameter = NULL;
-    PWSTR pwszSecondParameter = NULL;
-    PLOCAL_JOB pJob;
+    HANDLE hPort;
     PLOCAL_HANDLE pHandle = NULL;
     PLOCAL_PORT pPort;
     PLOCAL_PORT_HANDLE pPortHandle = NULL;
     PLOCAL_PRINT_MONITOR pPrintMonitor;
-    PLOCAL_PRINTER pPrinter;
-    PLOCAL_PRINTER_HANDLE pPrinterHandle = NULL;
-    PLOCAL_XCV_HANDLE pXcvHandle = NULL;
-    WCHAR wszComputerName[MAX_COMPUTERNAME_LENGTH + 1];
-    WCHAR wszFullPath[MAX_PATH];
 
-    // TODO: lpPrinterName == NULL is supported and means access to the local printer server.
-    // Not sure yet if that is passed down to localspl.dll or processed in advance.
-
-    // Sanity checks
-    if (!lpPrinterName || !phPrinter)
+    // Look for this port in our Print Monitor Port list.
+    pPort = FindPort(pwszPortName);
+    if (!pPort)
     {
-        dwErrorCode = ERROR_INVALID_PARAMETER;
-        goto Cleanup;
+        // The supplied port is unknown to all our Print Monitors.
+        dwErrorCode = ERROR_INVALID_NAME;
+        goto Failure;
     }
 
+    pPrintMonitor = pPort->pPrintMonitor;
+
+    // Call the monitor's OpenPort function.
+    if (pPrintMonitor->bIsLevel2)
+        bReturnValue = ((PMONITOR2)pPrintMonitor->pMonitor)->pfnOpenPort(pPrintMonitor->hMonitor, pwszPortName, &hPort);
+    else
+        bReturnValue = ((LPMONITOREX)pPrintMonitor->pMonitor)->Monitor.pfnOpenPort(pwszPortName, &hPort);
+
+    if (!bReturnValue)
+    {
+        // The OpenPort function failed. Return its last error.
+        dwErrorCode = GetLastError();
+        goto Failure;
+    }
+
+    // Create a new generic handle.
+    pHandle = DllAllocSplMem(sizeof(LOCAL_HANDLE));
+    if (!pHandle)
+    {
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+        ERR("DllAllocSplMem failed!\n");
+        goto Failure;
+    }
+
+    // Create a new LOCAL_PORT_HANDLE.
+    pPortHandle = DllAllocSplMem(sizeof(LOCAL_PORT_HANDLE));
+    if (!pPortHandle)
+    {
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+        ERR("DllAllocSplMem failed!\n");
+        goto Failure;
+    }
+
+    pPortHandle->hPort = hPort;
+    pPortHandle->pPort = pPort;
+
+    // Make the generic handle a Port handle.
+    pHandle->HandleType = HandleType_Port;
+    pHandle->pSpecificHandle = pPortHandle;
+
+    // Return it.
+    *phPrinter = (HANDLE)pHandle;
+    return ERROR_SUCCESS;
+
+Failure:
+    if (pHandle)
+        DllFreeSplMem(pHandle);
+
+    if (pPortHandle)
+        DllFreeSplMem(pPortHandle);
+
+    return dwErrorCode;
+}
+
+static DWORD
+_LocalOpenPrinterHandle(PWSTR pwszPrinterName, PWSTR pwszJobParameter, PHANDLE phPrinter, PPRINTER_DEFAULTSW pDefault)
+{
+    DWORD dwErrorCode;
+    DWORD dwJobID;
+    PLOCAL_HANDLE pHandle = NULL;
+    PLOCAL_JOB pJob;
+    PLOCAL_PRINTER pPrinter;
+    PLOCAL_PRINTER_HANDLE pPrinterHandle = NULL;
+    WCHAR wszFullPath[MAX_PATH];
+
+    // Retrieve the printer from the list.
+    pPrinter = LookupElementSkiplist(&PrinterList, &pwszPrinterName, NULL);
+    if (!pPrinter)
+    {
+        // The printer does not exist.
+        dwErrorCode = ERROR_INVALID_NAME;
+        goto Failure;
+    }
+
+    // Create a new LOCAL_PRINTER_HANDLE.
+    pPrinterHandle = DllAllocSplMem(sizeof(LOCAL_PRINTER_HANDLE));
+    if (!pPrinterHandle)
+    {
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+        ERR("DllAllocSplMem failed!\n");
+        goto Failure;
+    }
+
+    pPrinterHandle->hSPLFile = INVALID_HANDLE_VALUE;
+    pPrinterHandle->pPrinter = pPrinter;
+
+    // Check if a datatype was given.
+    if (pDefault && pDefault->pDatatype)
+    {
+        // Use the datatype if it's valid.
+        if (!FindDatatype(pPrinter->pPrintProcessor, pDefault->pDatatype))
+        {
+            dwErrorCode = ERROR_INVALID_DATATYPE;
+            goto Failure;
+        }
+
+        pPrinterHandle->pwszDatatype = AllocSplStr(pDefault->pDatatype);
+    }
+    else
+    {
+        // Use the default datatype.
+        pPrinterHandle->pwszDatatype = AllocSplStr(pPrinter->pwszDefaultDatatype);
+    }
+
+    // Check if a DevMode was given, otherwise use the default.
+    if (pDefault && pDefault->pDevMode)
+        pPrinterHandle->pDevMode = DuplicateDevMode(pDefault->pDevMode);
+    else
+        pPrinterHandle->pDevMode = DuplicateDevMode(pPrinter->pDefaultDevMode);
+
+    // Check if the caller wants a handle to an existing Print Job.
+    if (pwszJobParameter)
+    {
+        // The "Job " string has to follow now.
+        if (wcsncmp(pwszJobParameter, L"Job ", 4) != 0)
+        {
+            dwErrorCode = ERROR_INVALID_NAME;
+            goto Failure;
+        }
+
+        // Skip the "Job " string. 
+        pwszJobParameter += 4;
+
+        // Skip even more whitespace.
+        while (*pwszJobParameter == ' ')
+            ++pwszJobParameter;
+
+        // Finally extract the desired Job ID.
+        dwJobID = wcstoul(pwszJobParameter, NULL, 10);
+        if (!IS_VALID_JOB_ID(dwJobID))
+        {
+            // The user supplied an invalid Job ID.
+            dwErrorCode = ERROR_INVALID_NAME;
+            goto Failure;
+        }
+
+        // Look for this job in the Global Job List.
+        pJob = LookupElementSkiplist(&GlobalJobList, &dwJobID, NULL);
+        if (!pJob || pJob->pPrinter != pPrinter)
+        {
+            // The user supplied a non-existing Job ID or the Job ID does not belong to the supplied printer name.
+            dwErrorCode = ERROR_INVALID_PRINTER_NAME;
+            goto Failure;
+        }
+
+        // Try to open its SPL file.
+        GetJobFilePath(L"SPL", dwJobID, wszFullPath);
+        pPrinterHandle->hSPLFile = CreateFileW(wszFullPath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+        if (pPrinterHandle->hSPLFile == INVALID_HANDLE_VALUE)
+        {
+            dwErrorCode = GetLastError();
+            ERR("CreateFileW failed with error %lu for \"%S\"!", dwErrorCode, wszFullPath);
+            goto Failure;
+        }
+
+        // Associate the job to our Printer Handle, but don't set bStartedDoc.
+        // This prevents the caller from doing further StartDocPrinter, WritePrinter, etc. calls on it.
+        pPrinterHandle->pJob = pJob;
+    }
+
+    // Make the generic handle a Port handle.
+    pHandle->HandleType = HandleType_Printer;
+    pHandle->pSpecificHandle = pPrinterHandle;
+
+    // Return it.
+    *phPrinter = (HANDLE)pHandle;
+    return ERROR_SUCCESS;
+
+Failure:
+    if (pHandle)
+        DllFreeSplMem(pHandle);
+
+    if (pPrinterHandle)
+    {
+        if (pPrinterHandle->pwszDatatype)
+            DllFreeSplStr(pPrinterHandle->pwszDatatype);
+
+        if (pPrinterHandle->pDevMode)
+            DllFreeSplMem(pPrinterHandle->pDevMode);
+
+        DllFreeSplMem(pPrinterHandle);
+    }
+
+    return dwErrorCode;
+}
+
+static DWORD
+_LocalOpenPrintServerHandle(PHANDLE phPrinter)
+{
+    PLOCAL_HANDLE pHandle;
+
+    // Create a new generic handle.
+    pHandle = DllAllocSplMem(sizeof(LOCAL_HANDLE));
+    if (!pHandle)
+    {
+        ERR("DllAllocSplMem failed!\n");
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    // Make the generic handle a Print Server handle.
+    pHandle->HandleType = HandleType_PrintServer;
+    pHandle->pSpecificHandle = NULL;
+
+    // Return it.
+    *phPrinter = (HANDLE)pHandle;
+    return ERROR_SUCCESS;
+}
+
+static DWORD
+_LocalOpenXcvHandle(PWSTR pwszParameter, PHANDLE phPrinter)
+{
+    BOOL bReturnValue;
+    DWORD dwErrorCode;
+    HANDLE hXcv;
+    PLOCAL_HANDLE pHandle = NULL;
+    PLOCAL_PORT pPort;
+    PLOCAL_PRINT_MONITOR pPrintMonitor;
+    PLOCAL_XCV_HANDLE pXcvHandle = NULL;
+
+    // Skip the "Xcv" string.
+    pwszParameter += 3;
+
+    // Is XcvMonitor or XcvPort requested?
+    if (wcsncmp(pwszParameter, L"Monitor ", 8) == 0)
+    {
+        // Skip the "Monitor " string.
+        pwszParameter += 8;
+
+        // Look for this monitor in our Print Monitor list.
+        pPrintMonitor = FindPrintMonitor(pwszParameter);
+        if (!pPrintMonitor)
+        {
+            // The caller supplied a non-existing Monitor name.
+            dwErrorCode = ERROR_INVALID_NAME;
+            goto Failure;
+        }
+    }
+    else if (wcsncmp(pwszParameter, L"Port ", 5) == 0)
+    {
+        // Skip the "Port " string.
+        pwszParameter += 5;
+
+        // Look for this port in our Print Monitor Port list.
+        pPort = FindPort(pwszParameter);
+        if (!pPort)
+        {
+            // The supplied port is unknown to all our Print Monitors.
+            dwErrorCode = ERROR_INVALID_NAME;
+            goto Failure;
+        }
+
+        pPrintMonitor = pPort->pPrintMonitor;
+    }
+    else
+    {
+        dwErrorCode = ERROR_INVALID_NAME;
+        goto Failure;
+    }
+
+    // Call the monitor's XcvOpenPort function.
+    if (pPrintMonitor->bIsLevel2)
+        bReturnValue = ((PMONITOR2)pPrintMonitor->pMonitor)->pfnXcvOpenPort(pPrintMonitor->hMonitor, pwszParameter, SERVER_EXECUTE, &hXcv);
+    else
+        bReturnValue = ((LPMONITOREX)pPrintMonitor->pMonitor)->Monitor.pfnXcvOpenPort(pwszParameter, SERVER_EXECUTE, &hXcv);
+
+    if (!bReturnValue)
+    {
+        // The XcvOpenPort function failed. Return its last error.
+        dwErrorCode = GetLastError();
+        goto Failure;
+    }
+
+    // Create a new generic handle.
+    pHandle = DllAllocSplMem(sizeof(LOCAL_HANDLE));
+    if (!pHandle)
+    {
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+        ERR("DllAllocSplMem failed!\n");
+        goto Failure;
+    }
+
+    // Create a new LOCAL_XCV_HANDLE.
+    pXcvHandle = DllAllocSplMem(sizeof(LOCAL_XCV_HANDLE));
+    if (!pXcvHandle)
+    {
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+        ERR("DllAllocSplMem failed!\n");
+        goto Failure;
+    }
+
+    pXcvHandle->hXcv = hXcv;
+    pXcvHandle->pPrintMonitor = pPrintMonitor;
+
+    // Make the generic handle a Xcv handle.
+    pHandle->HandleType = HandleType_Xcv;
+    pHandle->pSpecificHandle = pXcvHandle;
+
+    // Return it.
+    *phPrinter = (HANDLE)pHandle;
+    return ERROR_SUCCESS;
+
+Failure:
+    if (pHandle)
+        DllFreeSplMem(pHandle);
+
+    if (pXcvHandle)
+        DllFreeSplMem(pXcvHandle);
+
+    return dwErrorCode;
+}
+
+BOOL WINAPI
+LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDefault)
+{
+    DWORD cchComputerName;
+    DWORD cchFirstParameter;
+    DWORD dwErrorCode;
+    PWSTR p = lpPrinterName;
+    PWSTR pwszFirstParameter = NULL;
+    PWSTR pwszSecondParameter;
+    WCHAR wszComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+
+    ASSERT(phPrinter);
     *phPrinter = NULL;
+
+    if (!lpPrinterName)
+    {
+        // The caller wants a Print Server handle and provided a NULL string.
+        dwErrorCode = _LocalOpenPrintServerHandle(phPrinter);
+        goto Cleanup;
+    }
 
     // Skip any server name in the first parameter.
     // Does lpPrinterName begin with two backslashes to indicate a server name?
@@ -1062,14 +1371,10 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
         // Skip these two backslashes.
         lpPrinterName += 2;
 
-        // Look for the closing backslash.
-        p = wcschr(lpPrinterName, L'\\');
-        if (!p)
-        {
-            // We didn't get a proper server name.
-            dwErrorCode = ERROR_INVALID_PRINTER_NAME;
-            goto Cleanup;
-        }
+        // Look for the terminating null character or closing backslash.
+        p = lpPrinterName;
+        while (*p != L'\0' && *p != L'\\')
+            p++;
 
         // Get the local computer name for comparison.
         cchComputerName = _countof(wszComputerName);
@@ -1085,7 +1390,16 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
         // This print provider only supports local printers, so both strings have to match.
         if (p - lpPrinterName != cchComputerName || _wcsnicmp(lpPrinterName, wszComputerName, cchComputerName) != 0)
         {
-            dwErrorCode = ERROR_INVALID_PRINTER_NAME;
+            dwErrorCode = ERROR_INVALID_NAME;
+            goto Cleanup;
+        }
+
+        // If lpPrinterName is only "\\COMPUTERNAME" with nothing more, the caller wants a handle to the local Print Server.
+        if (!*p)
+        {
+            // The caller wants a Print Server handle and provided a string like:
+            //    "\\COMPUTERNAME"
+            dwErrorCode = _LocalOpenPrintServerHandle(phPrinter);
             goto Cleanup;
         }
 
@@ -1103,7 +1417,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
     // We must have at least one parameter.
     if (!cchFirstParameter && !pwszSecondParameter)
     {
-        dwErrorCode = ERROR_INVALID_PRINTER_NAME;
+        dwErrorCode = ERROR_INVALID_NAME;
         goto Cleanup;
     }
 
@@ -1127,61 +1441,13 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
             ++pwszSecondParameter;
     }
 
-    // Create a new handle.
-    pHandle = DllAllocSplMem(sizeof(LOCAL_HANDLE));
-    if (!pHandle)
-    {
-        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
-        goto Cleanup;
-    }
-
     // Now we can finally check the type of handle actually requested.
     if (pwszFirstParameter && pwszSecondParameter && wcsncmp(pwszSecondParameter, L"Port", 4) == 0)
     {
         // The caller wants a port handle and provided a string like:
         //    "LPT1:, Port"
         //    "\\COMPUTERNAME\LPT1:, Port"
-        
-        // Look for this port in our Print Monitor Port list.
-        pPort = FindPort(pwszFirstParameter);
-        if (!pPort)
-        {
-            // The supplied port is unknown to all our Print Monitors.
-            dwErrorCode = ERROR_INVALID_PRINTER_NAME;
-            goto Cleanup;
-        }
-
-        pPrintMonitor = pPort->pPrintMonitor;
-
-        // Call the monitor's OpenPort function.
-        if (pPrintMonitor->bIsLevel2)
-            bReturnValue = ((PMONITOR2)pPrintMonitor->pMonitor)->pfnOpenPort(pPrintMonitor->hMonitor, pwszFirstParameter, &hExternalHandle);
-        else
-            bReturnValue = ((LPMONITOREX)pPrintMonitor->pMonitor)->Monitor.pfnOpenPort(pwszFirstParameter, &hExternalHandle);
-
-        if (!bReturnValue)
-        {
-            // The OpenPort function failed. Return its last error.
-            dwErrorCode = GetLastError();
-            goto Cleanup;
-        }
-
-        // Create a new LOCAL_PORT_HANDLE.
-        pPortHandle = DllAllocSplMem(sizeof(LOCAL_PORT_HANDLE));
-        if (!pPortHandle)
-        {
-            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-            ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
-            goto Cleanup;
-        }
-
-        pPortHandle->hPort = hExternalHandle;
-        pPortHandle->pPort = pPort;
-
-        // Return the Port handle through our general handle.
-        pHandle->HandleType = HandleType_Port;
-        pHandle->pSpecificHandle = pPortHandle;
+        dwErrorCode = _LocalOpenPortHandle(pwszFirstParameter, phPrinter);
     }
     else if (!pwszFirstParameter && pwszSecondParameter && wcsncmp(pwszSecondParameter, L"Xcv", 3) == 0)
     {
@@ -1190,75 +1456,7 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
         //    "\\COMPUTERNAME\, XcvMonitor Local Port"
         //    ", XcvPort LPT1:"
         //    "\\COMPUTERNAME\, XcvPort LPT1:"
-
-        // Skip the "Xcv" string.
-        pwszSecondParameter += 3;
-
-        // Is XcvMonitor or XcvPort requested?
-        if (wcsncmp(pwszSecondParameter, L"Monitor ", 8) == 0)
-        {
-            // Skip the "Monitor " string.
-            pwszSecondParameter += 8;
-
-            // Look for this monitor in our Print Monitor list.
-            pPrintMonitor = FindPrintMonitor(pwszSecondParameter);
-            if (!pPrintMonitor)
-            {
-                // The caller supplied a non-existing Monitor name.
-                dwErrorCode = ERROR_INVALID_PRINTER_NAME;
-                goto Cleanup;
-            }
-        }
-        else if (wcsncmp(pwszSecondParameter, L"Port ", 5) == 0)
-        {
-            // Skip the "Port " string.
-            pwszSecondParameter += 5;
-
-            // Look for this port in our Print Monitor Port list.
-            pPort = FindPort(pwszFirstParameter);
-            if (!pPort)
-            {
-                // The supplied port is unknown to all our Print Monitors.
-                dwErrorCode = ERROR_INVALID_PRINTER_NAME;
-                goto Cleanup;
-            }
-
-            pPrintMonitor = pPort->pPrintMonitor;
-        }
-        else
-        {
-            dwErrorCode = ERROR_INVALID_PRINTER_NAME;
-            goto Cleanup;
-        }
-
-        // Call the monitor's XcvOpenPort function.
-        if (pPrintMonitor->bIsLevel2)
-            bReturnValue = ((PMONITOR2)pPrintMonitor->pMonitor)->pfnXcvOpenPort(pPrintMonitor->hMonitor, pwszSecondParameter, SERVER_EXECUTE, &hExternalHandle);
-        else
-            bReturnValue = ((LPMONITOREX)pPrintMonitor->pMonitor)->Monitor.pfnXcvOpenPort(pwszSecondParameter, SERVER_EXECUTE, &hExternalHandle);
-
-        if (!bReturnValue)
-        {
-            // The XcvOpenPort function failed. Return its last error.
-            dwErrorCode = GetLastError();
-            goto Cleanup;
-        }
-
-        // Create a new LOCAL_XCV_HANDLE.
-        pXcvHandle = DllAllocSplMem(sizeof(LOCAL_XCV_HANDLE));
-        if (!pXcvHandle)
-        {
-            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-            ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
-            goto Cleanup;
-        }
-
-        pXcvHandle->hXcv = hExternalHandle;
-        pXcvHandle->pPrintMonitor = pPrintMonitor;
-
-        // Return the Xcv handle through our general handle.
-        pHandle->HandleType = HandleType_Xcv;
-        pHandle->pSpecificHandle = pXcvHandle;
+        dwErrorCode = _LocalOpenXcvHandle(pwszSecondParameter, phPrinter);
     }
     else
     {
@@ -1267,130 +1465,10 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
         //    "\\COMPUTERNAME\HP DeskJet"
         //    "HP DeskJet, Job 5"
         //    "\\COMPUTERNAME\HP DeskJet, Job 5"
-
-        // Retrieve the printer from the list.
-        pPrinter = LookupElementSkiplist(&PrinterList, &pwszFirstParameter, NULL);
-        if (!pPrinter)
-        {
-            // The printer does not exist.
-            dwErrorCode = ERROR_INVALID_PRINTER_NAME;
-            goto Cleanup;
-        }
-
-        // Create a new LOCAL_PRINTER_HANDLE.
-        pPrinterHandle = DllAllocSplMem(sizeof(LOCAL_PRINTER_HANDLE));
-        if (!pPrinterHandle)
-        {
-            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-            ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
-            goto Cleanup;
-        }
-
-        pPrinterHandle->hSPLFile = INVALID_HANDLE_VALUE;
-        pPrinterHandle->pPrinter = pPrinter;
-
-        // Check if a datatype was given.
-        if (pDefault && pDefault->pDatatype)
-        {
-            // Use the datatype if it's valid.
-            if (!FindDatatype(pPrinter->pPrintProcessor, pDefault->pDatatype))
-            {
-                dwErrorCode = ERROR_INVALID_DATATYPE;
-                goto Cleanup;
-            }
-
-            pPrinterHandle->pwszDatatype = AllocSplStr(pDefault->pDatatype);
-        }
-        else
-        {
-            // Use the default datatype.
-            pPrinterHandle->pwszDatatype = AllocSplStr(pPrinter->pwszDefaultDatatype);
-        }
-
-        // Check if a DevMode was given, otherwise use the default.
-        if (pDefault && pDefault->pDevMode)
-            pPrinterHandle->pDevMode = DuplicateDevMode(pDefault->pDevMode);
-        else
-            pPrinterHandle->pDevMode = DuplicateDevMode(pPrinter->pDefaultDevMode);
-
-        // Check if the caller wants a handle to an existing Print Job.
-        if (pwszSecondParameter)
-        {
-            // The "Job " string has to follow now.
-            if (wcsncmp(pwszSecondParameter, L"Job ", 4) != 0)
-            {
-                dwErrorCode = ERROR_INVALID_PRINTER_NAME;
-                goto Cleanup;
-            }
-
-            // Skip the "Job " string. 
-            pwszSecondParameter += 4;
-
-            // Skip even more whitespace.
-            while (*pwszSecondParameter == ' ')
-                ++pwszSecondParameter;
-
-            // Finally extract the desired Job ID.
-            dwJobID = wcstoul(pwszSecondParameter, NULL, 10);
-            if (!IS_VALID_JOB_ID(dwJobID))
-            {
-                // The user supplied an invalid Job ID.
-                dwErrorCode = ERROR_INVALID_PRINTER_NAME;
-                goto Cleanup;
-            }
-
-            // Look for this job in the Global Job List.
-            pJob = LookupElementSkiplist(&GlobalJobList, &dwJobID, NULL);
-            if (!pJob || pJob->pPrinter != pPrinter)
-            {
-                // The user supplied a non-existing Job ID or the Job ID does not belong to the supplied printer name.
-                dwErrorCode = ERROR_INVALID_PRINTER_NAME;
-                goto Cleanup;
-            }
-
-            // Try to open its SPL file.
-            GetJobFilePath(L"SPL", dwJobID, wszFullPath);
-            pPrinterHandle->hSPLFile = CreateFileW(wszFullPath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
-            if (pPrinterHandle->hSPLFile == INVALID_HANDLE_VALUE)
-            {
-                dwErrorCode = GetLastError();
-                ERR("CreateFileW failed with error %lu for \"%S\"!", dwErrorCode, wszFullPath);
-                goto Cleanup;
-            }
-
-            // Associate the job to our Printer Handle, but don't set bStartedDoc.
-            // This prevents the caller from doing further StartDocPrinter, WritePrinter, etc. calls on it.
-            pPrinterHandle->pJob = pJob;
-        }
-
-        // Return the Printer handle through our general handle.
-        pHandle->HandleType = HandleType_Printer;
-        pHandle->pSpecificHandle = pPrinterHandle;
+        dwErrorCode = _LocalOpenPrinterHandle(pwszFirstParameter, pwszSecondParameter, phPrinter, pDefault);
     }
-
-    // We were successful! Return the handle.
-    *phPrinter = (HANDLE)pHandle;
-    dwErrorCode = ERROR_SUCCESS;
-
-    // Don't let the cleanup routines free this.
-    pHandle = NULL;
-    pPrinterHandle = NULL;
 
 Cleanup:
-    if (pHandle)
-        DllFreeSplMem(pHandle);
-
-    if (pPrinterHandle)
-    {
-        if (pPrinterHandle->pwszDatatype)
-            DllFreeSplStr(pPrinterHandle->pwszDatatype);
-
-        if (pPrinterHandle->pDevMode)
-            DllFreeSplMem(pPrinterHandle->pDevMode);
-
-        DllFreeSplMem(pPrinterHandle);
-    }
-
     if (pwszFirstParameter)
         DllFreeSplMem(pwszFirstParameter);
 
@@ -1778,13 +1856,42 @@ Cleanup:
     return (dwErrorCode == ERROR_SUCCESS);
 }
 
+static void
+_LocalClosePortHandle(PLOCAL_PORT_HANDLE pPortHandle)
+{
+    // Call the monitor's ClosePort function.
+    if (pPortHandle->pPort->pPrintMonitor->bIsLevel2)
+        ((PMONITOR2)pPortHandle->pPort->pPrintMonitor->pMonitor)->pfnClosePort(pPortHandle->hPort);
+    else
+        ((LPMONITOREX)pPortHandle->pPort->pPrintMonitor->pMonitor)->Monitor.pfnClosePort(pPortHandle->hPort);
+}
+
+static void
+_LocalClosePrinterHandle(PLOCAL_PRINTER_HANDLE pPrinterHandle)
+{
+    // Terminate any started job.
+    if (pPrinterHandle->pJob)
+        FreeJob(pPrinterHandle->pJob);
+
+    // Free memory for the fields.
+    DllFreeSplMem(pPrinterHandle->pDevMode);
+    DllFreeSplStr(pPrinterHandle->pwszDatatype);
+}
+
+static void
+_LocalCloseXcvHandle(PLOCAL_XCV_HANDLE pXcvHandle)
+{
+    // Call the monitor's XcvClosePort function.
+    if (pXcvHandle->pPrintMonitor->bIsLevel2)
+        ((PMONITOR2)pXcvHandle->pPrintMonitor->pMonitor)->pfnXcvClosePort(pXcvHandle->hXcv);
+    else
+        ((LPMONITOREX)pXcvHandle->pPrintMonitor->pMonitor)->Monitor.pfnXcvClosePort(pXcvHandle->hXcv);
+}
+
 BOOL WINAPI
 LocalClosePrinter(HANDLE hPrinter)
 {
     PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
-    PLOCAL_PORT_HANDLE pPortHandle;
-    PLOCAL_PRINTER_HANDLE pPrinterHandle;
-    PLOCAL_XCV_HANDLE pXcvHandle;
 
     if (!pHandle)
     {
@@ -1794,39 +1901,25 @@ LocalClosePrinter(HANDLE hPrinter)
 
     if (pHandle->HandleType == HandleType_Port)
     {
-        pPortHandle = (PLOCAL_PORT_HANDLE)pHandle->pSpecificHandle;
-
-        // Call the monitor's ClosePort function.
-        if (pPortHandle->pPort->pPrintMonitor->bIsLevel2)
-            ((PMONITOR2)pPortHandle->pPort->pPrintMonitor->pMonitor)->pfnClosePort(pPortHandle->hPort);
-        else
-            ((LPMONITOREX)pPortHandle->pPort->pPrintMonitor->pMonitor)->Monitor.pfnClosePort(pPortHandle->hPort);
+        _LocalClosePortHandle(pHandle->pSpecificHandle);
     }
     else if (pHandle->HandleType == HandleType_Printer)
     {
-        pPrinterHandle = (PLOCAL_PRINTER_HANDLE)pHandle->pSpecificHandle;
-
-        // Terminate any started job.
-        if (pPrinterHandle->pJob)
-            FreeJob(pPrinterHandle->pJob);
-
-        // Free memory for the fields.
-        DllFreeSplMem(pPrinterHandle->pDevMode);
-        DllFreeSplStr(pPrinterHandle->pwszDatatype);
+        _LocalClosePrinterHandle(pHandle->pSpecificHandle);
+    }
+    else if (pHandle->HandleType == HandleType_PrintServer)
+    {
+        // Nothing to do.
     }
     else if (pHandle->HandleType == HandleType_Xcv)
     {
-        pXcvHandle = (PLOCAL_XCV_HANDLE)pHandle->pSpecificHandle;
-
-        // Call the monitor's XcvClosePort function.
-        if (pXcvHandle->pPrintMonitor->bIsLevel2)
-            ((PMONITOR2)pXcvHandle->pPrintMonitor->pMonitor)->pfnXcvClosePort(pXcvHandle->hXcv);
-        else
-            ((LPMONITOREX)pXcvHandle->pPrintMonitor->pMonitor)->Monitor.pfnXcvClosePort(pXcvHandle->hXcv);
+        _LocalCloseXcvHandle(pHandle->pSpecificHandle);
     }
 
-    // Free memory for the handle and the specific handle.
-    DllFreeSplMem(pHandle->pSpecificHandle);
+    // Free memory for the handle and the specific handle (if any).
+    if (pHandle->pSpecificHandle)
+        DllFreeSplMem(pHandle->pSpecificHandle);
+
     DllFreeSplMem(pHandle);
 
     return TRUE;

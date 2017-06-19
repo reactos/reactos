@@ -4,6 +4,7 @@ list(APPEND SOURCE
     EnumPrinters.c
     EnumPrintProcessorDatatypes.c
     GetDefaultPrinter.c
+    GetPrinterData.c
     GetPrintProcessorDirectory.c
     IsValidDevmode.c
     OpenPrinter.c

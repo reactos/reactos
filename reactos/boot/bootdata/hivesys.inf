@@ -1277,9 +1277,12 @@ HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Ali",0x00030003,\
 
 
 ; Printing
+HKLM,"SYSTEM\CurrentControlSet\Control\Print","BeepEnabled",0x00010001,0
 HKLM,"SYSTEM\CurrentControlSet\Control\Print","MajorVersion",0x00010001,2
 HKLM,"SYSTEM\CurrentControlSet\Control\Print","MinorVersion",0x00010001,0
+HKLM,"SYSTEM\CurrentControlSet\Control\Print","PortThreadPriority",0x00010001,0
 HKLM,"SYSTEM\CurrentControlSet\Control\Print","PriorityClass",0x00010001,0
+HKLM,"SYSTEM\CurrentControlSet\Control\Print","SchedulerThreadPriority",0x00010001,0
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Print\Environments",,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Control\Print\Environments\Windows NT x86","Directory",,"W32X86"
@@ -1288,22 +1291,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Print\Environments\Windows NT x86\Print P
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Print\Monitors",,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Control\Print\Monitors\Local Port","Driver",,"localmon.dll"
-
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers",,0x00000012
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Attributes",0x00010001,0
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Datatype",,"RAW"
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Description",,""
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Default DevMode",1,\
-00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
-00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,dc,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
-00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
-00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
-00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Location",,"At Home"
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Port",,"LPT1:"
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Print Processor",,"winprint"
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Printer Driver",,"Dummy Printer Driver"
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Status",0x00010001,0
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Print\Providers",,0x00000010
 
@@ -2131,7 +2118,7 @@ HKLM,"SYSTEM\Setup","SystemPartition",0x00000000,"\Device\Harddisk0\Partition1"
 HKLM,"SYSTEM\Setup","SystemSetupInProgress",0x00010001,0x00000001
 
 ; Debug channels
-;HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","DEBUGCHANNEL",0x00020000,"+ole,+rpc"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","DEBUGCHANNEL",0x00020000,"+localspl"
 
 ; Winsrv configuration
 HKLM,"SYSTEM\CurrentControlSet\Control\PriorityControl",,0x00000012

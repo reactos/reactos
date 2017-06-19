@@ -69,7 +69,7 @@ AllocSplStr(PCWSTR pwszInput)
     pwszOutput = HeapAlloc(hProcessHeap, 0, cbInput);
     if (!pwszOutput)
     {
-        ERR("HeapAlloc failed with error %lu!\n", GetLastError());
+        ERR("HeapAlloc failed!\n");
         return NULL;
     }
 
@@ -159,7 +159,7 @@ ReallocSplMem(PVOID pOldMem, DWORD cbOld, DWORD cbNew)
     pNewMem = DllAllocSplMem(cbNew);
     if (!pNewMem)
     {
-        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+        ERR("DllAllocSplMem failed!\n");
         return NULL;
     }
 

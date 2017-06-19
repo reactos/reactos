@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Spooler API
  * LICENSE:     GNU LGPL v2.1 or any later version as published by the Free Software Foundation
  * PURPOSE:     Functions related to Print Processors
- * COPYRIGHT:   Copyright 2015-2016 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -129,7 +129,8 @@ GetPrintProcessorDirectoryA(PSTR pName, PSTR pEnvironment, DWORD Level, PBYTE pP
         pwszName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
         if (!pwszName)
         {
-            ERR("HeapAlloc failed for pwszName with last error %lu!\n", GetLastError());
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            ERR("HeapAlloc failed!\n");
             goto Cleanup;
         }
 
@@ -144,7 +145,8 @@ GetPrintProcessorDirectoryA(PSTR pName, PSTR pEnvironment, DWORD Level, PBYTE pP
         pwszEnvironment = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
         if (!pwszEnvironment)
         {
-            ERR("HeapAlloc failed for pwszEnvironment with last error %lu!\n", GetLastError());
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            ERR("HeapAlloc failed!\n");
             goto Cleanup;
         }
 
@@ -159,7 +161,8 @@ GetPrintProcessorDirectoryA(PSTR pName, PSTR pEnvironment, DWORD Level, PBYTE pP
         pwszPrintProcessorInfo = HeapAlloc(hProcessHeap, 0, cbBuf);
         if (!pwszPrintProcessorInfo)
         {
-            ERR("HeapAlloc failed for pwszPrintProcessorInfo with last error %lu!\n", GetLastError());
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            ERR("HeapAlloc failed!\n");
             goto Cleanup;
         }
     }

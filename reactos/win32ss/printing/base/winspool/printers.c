@@ -152,7 +152,7 @@ _StartDocPrinterSpooled(PSPOOLER_HANDLE pHandle, PDOC_INFO_1W pDocInfo1, PADDJOB
     if (!pJobInfo1)
     {
         dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-        ERR("HeapAlloc failed with error %lu!\n", GetLastError());
+        ERR("HeapAlloc failed!\n");
         goto Cleanup;
     }
 
@@ -254,7 +254,6 @@ ClosePrinter(HANDLE hPrinter)
 Cleanup:
     SetLastError(dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
-
 }
 
 DWORD WINAPI
@@ -438,8 +437,8 @@ GetDefaultPrinterA(LPSTR pszBuffer, LPDWORD pcchBuffer)
         pwszBuffer = HeapAlloc(hProcessHeap, 0, *pcchBuffer * sizeof(WCHAR));
         if (!pwszBuffer)
         {
-            dwErrorCode = GetLastError();
-            ERR("HeapAlloc failed with error %lu!\n", dwErrorCode);
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            ERR("HeapAlloc failed!\n");
             goto Cleanup;
         }
     }
@@ -499,8 +498,8 @@ GetDefaultPrinterW(LPWSTR pszBuffer, LPDWORD pcchBuffer)
     pwszDevice = HeapAlloc(hProcessHeap, 0, cbNeeded);
     if (!pwszDevice)
     {
-        dwErrorCode = GetLastError();
-        ERR("HeapAlloc failed with error %lu!\n", dwErrorCode);
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+        ERR("HeapAlloc failed!\n");
         goto Cleanup;
     }
 
@@ -621,7 +620,8 @@ OpenPrinterA(LPSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSA pDefaul
         pwszPrinterName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
         if (!pwszPrinterName)
         {
-            ERR("HeapAlloc failed for pwszPrinterName with last error %lu!\n", GetLastError());
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            ERR("HeapAlloc failed!\n");
             goto Cleanup;
         }
 
@@ -640,7 +640,8 @@ OpenPrinterA(LPSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSA pDefaul
             wDefault.pDatatype = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
             if (!wDefault.pDatatype)
             {
-                ERR("HeapAlloc failed for wDefault.pDatatype with last error %lu!\n", GetLastError());
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                ERR("HeapAlloc failed!\n");
                 goto Cleanup;
             }
 
@@ -676,6 +677,13 @@ OpenPrinterW(LPWSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSW pDefau
     WINSPOOL_DEVMODE_CONTAINER DevModeContainer = { 0 };
     ACCESS_MASK AccessRequired = 0;
 
+    // Sanity check
+    if (!phPrinter)
+    {
+        dwErrorCode = ERROR_INVALID_PARAMETER;
+        goto Cleanup;
+    }
+
     // Prepare the additional parameters in the format required by _RpcOpenPrinter
     if (pDefault)
     {
@@ -704,7 +712,7 @@ OpenPrinterW(LPWSTR pPrinterName, LPHANDLE phPrinter, LPPRINTER_DEFAULTSW pDefau
         if (!pHandle)
         {
             dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-            ERR("HeapAlloc failed with error %lu!\n", GetLastError());
+            ERR("HeapAlloc failed!\n");
             goto Cleanup;
         }
 
@@ -772,7 +780,8 @@ SetDefaultPrinterA(LPCSTR pszPrinter)
         pwszPrinter = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
         if (!pwszPrinter)
         {
-            ERR("HeapAlloc failed for pwszPrinter with last error %lu!\n", GetLastError());
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            ERR("HeapAlloc failed!\n");
             goto Cleanup;
         }
 
@@ -854,8 +863,8 @@ SetDefaultPrinterW(LPCWSTR pszPrinter)
     pwszDeviceValueData = HeapAlloc(hProcessHeap, 0, cbDeviceValueData);
     if (!pwszDeviceValueData)
     {
-        dwErrorCode = GetLastError();
-        ERR("HeapAlloc failed with error %lu\n", dwErrorCode);
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+        ERR("HeapAlloc failed!\n");
         goto Cleanup;
     }
 
@@ -936,7 +945,8 @@ StartDocPrinterA(HANDLE hPrinter, DWORD Level, PBYTE pDocInfo)
         wDocInfo1.pDatatype = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
         if (!wDocInfo1.pDatatype)
         {
-            ERR("HeapAlloc failed for wDocInfo1.pDatatype with last error %lu!\n", GetLastError());
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            ERR("HeapAlloc failed!\n");
             goto Cleanup;
         }
 
@@ -951,7 +961,8 @@ StartDocPrinterA(HANDLE hPrinter, DWORD Level, PBYTE pDocInfo)
         wDocInfo1.pDocName = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
         if (!wDocInfo1.pDocName)
         {
-            ERR("HeapAlloc failed for wDocInfo1.pDocName with last error %lu!\n", GetLastError());
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            ERR("HeapAlloc failed!\n");
             goto Cleanup;
         }
 
@@ -966,7 +977,8 @@ StartDocPrinterA(HANDLE hPrinter, DWORD Level, PBYTE pDocInfo)
         wDocInfo1.pOutputFile = HeapAlloc(hProcessHeap, 0, (cch + 1) * sizeof(WCHAR));
         if (!wDocInfo1.pOutputFile)
         {
-            ERR("HeapAlloc failed for wDocInfo1.pOutputFile with last error %lu!\n", GetLastError());
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            ERR("HeapAlloc failed!\n");
             goto Cleanup;
         }
 
@@ -1040,7 +1052,7 @@ StartDocPrinterW(HANDLE hPrinter, DWORD Level, PBYTE pDocInfo)
         if (!pAddJobInfo1)
         {
             dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-            ERR("HeapAlloc failed with error %lu!\n", GetLastError());
+            ERR("HeapAlloc failed!\n");
             goto Cleanup;
         }
 

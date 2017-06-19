@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Local Spooler
  * LICENSE:     GNU LGPL v2.1 or any later version as published by the Free Software Foundation
  * PURPOSE:     Functions related to Print Processors
- * COPYRIGHT:   Copyright 2015-2016 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -48,7 +48,8 @@ _OpenEnvironment(PCWSTR pEnvironment, PHKEY hKey)
     pwszEnvironmentKey = DllAllocSplMem((cchEnvironmentsKey + cchEnvironment + 1) * sizeof(WCHAR));
     if (!pwszEnvironmentKey)
     {
-        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+        ERR("DllAllocSplMem failed!\n");
         goto Cleanup;
     }
 
@@ -205,7 +206,7 @@ InitializePrintProcessorList()
         if (!pPrintProcessor)
         {
             dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-            ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+            ERR("DllAllocSplMem failed!\n");
             goto Cleanup;
         }
 
@@ -214,7 +215,7 @@ InitializePrintProcessorList()
         if (!pPrintProcessor->pwszName)
         {
             dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-            ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+            ERR("DllAllocSplMem failed!\n");
             goto Cleanup;
         }
 
@@ -311,7 +312,7 @@ InitializePrintProcessorList()
         if (!pPrintProcessor->pDatatypesInfo1)
         {
             dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-            ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+            ERR("DllAllocSplMem failed!\n");
             goto Cleanup;
         }
 
@@ -514,7 +515,7 @@ LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE 
     if (!pwszTemp)
     {
         dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+        ERR("DllAllocSplMem failed!\n");
         goto Cleanup;
     }
 
