@@ -246,6 +246,7 @@ static void Test_References(void)
     NTSTATUS status;
     OBJECT_BASIC_INFORMATION objectInfo = { 0 };
     HDESK hdesk;
+    HDESK hdesk1;
     BOOL ret;
     ULONG baseRefs;
 
@@ -339,6 +340,23 @@ static void Test_References(void)
     ok(ret == TRUE, "ret = %d\n", ret);
     hwinsta = open_winsta(winstaName, &error);
     ok(hwinsta == NULL && error == ERROR_FILE_NOT_FOUND, "Got %p, %lu\n", hwinsta, error);
+
+    /* Test references by SetThreadDesktop */
+    hdesk1 = GetThreadDesktop(GetCurrentThreadId());
+    ok (hdesk1 != hdesk, "Expected the new desktop not to be the thread desktop\n");
+
+    check_ref(hdesk, 1, 8);
+    baseRefs = objectInfo.PointerCount;
+    ok(baseRefs == 8, "Desktop initially has %lu references, expected 8\n", baseRefs);
+    check_ref(hdesk, 1, baseRefs);
+
+    SetThreadDesktop(hdesk);
+    check_ref(hdesk, 1, baseRefs + 1);
+    ok (GetThreadDesktop(GetCurrentThreadId()) == hdesk, "Expected GetThreadDesktop to return hdesk\n");
+
+    SetThreadDesktop(hdesk1);
+    check_ref(hdesk, 1, baseRefs);
+    ok (GetThreadDesktop(GetCurrentThreadId()) == hdesk1, "Expected GetThreadDesktop to return hdesk1\n");
 }
 
 START_TEST(desktop)
