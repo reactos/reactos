@@ -451,15 +451,15 @@ HvWriteHive(
 BOOLEAN
 CMAPI
 HvTrackCellRef(
-    PHV_TRACK_CELL_REF CellRef,
-    PHHIVE Hive,
-    HCELL_INDEX Cell
+    IN OUT PHV_TRACK_CELL_REF CellRef,
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Cell
 );
 
 VOID
 CMAPI
 HvReleaseFreeCellRefArray(
-    PHV_TRACK_CELL_REF CellRef
+    IN OUT PHV_TRACK_CELL_REF CellRef
 );
 
 /*
