@@ -127,13 +127,13 @@ _InitializeLocalSpooler(void)
     const DWORD cchPrintersPath = _countof(wszPrintersPath) - 1;
     const WCHAR wszSpoolPath[] = L"\\spool";
     const DWORD cchSpoolPath = _countof(wszSpoolPath) - 1;
-    const WCHAR wszSymbolicLinkValue[] = L"REGISTRY\\MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Print\\Printers";
+    const WCHAR wszSymbolicLinkValue[] = L"\\REGISTRY\\MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Print\\Printers";
     const DWORD cbSymbolicLinkValue = sizeof(wszSymbolicLinkValue) - sizeof(WCHAR);
 
     BOOL bReturnValue = FALSE;
     DWORD cbData;
     DWORD dwErrorCode;
-    HKEY hKey;
+    HKEY hKey = NULL;
 
     // On startup, always create a volatile symbolic link in the registry if it doesn't exist yet.
     //   "SYSTEM\CurrentControlSet\Control\Print\Printers" -> "SOFTWARE\Microsoft\Windows NT\CurrentVersion\Print\Printers"
