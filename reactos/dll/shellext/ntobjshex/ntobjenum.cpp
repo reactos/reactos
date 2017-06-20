@@ -437,7 +437,10 @@ public:
             otype = REG_ENTRY_VALUE_WITH_CONTENT;
         }
 
-        RegPidlEntry* entry = (RegPidlEntry*) CoTaskMemAlloc(entryBufferLength + 2);
+        // allocate space for the terminator
+        entryBufferLength += 2;
+
+        RegPidlEntry* entry = (RegPidlEntry*) CoTaskMemAlloc(entryBufferLength);
         if (!entry)
             return E_OUTOFMEMORY;
 
