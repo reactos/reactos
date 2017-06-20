@@ -722,13 +722,13 @@ CmpAllocate(
     IN SIZE_T Size,
     IN BOOLEAN Paged,
     IN ULONG Tag
-    );
+);
 
 VOID
 NTAPI
 CmpFree(
     IN PVOID Ptr,
     IN ULONG Quota
-    );
+);
 
 #endif /* _CMLIB_H_ */

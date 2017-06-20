@@ -569,7 +569,9 @@ HvTrackCellRef(
     if (CellRef->Count == CellRef->Max)
     {
         /* Allocate a new reference table */
-        NewCellArray = ExAllocatePoolWithTag(PagedPool, (CellRef->Max + CELL_REF_INCREMENT) * sizeof(HV_HIVE_CELL_PAIR), TAG_CM);
+        NewCellArray = CmpAllocate((CellRef->Max + CELL_REF_INCREMENT) * sizeof(HV_HIVE_CELL_PAIR),
+                                   TRUE,
+                                   TAG_CM);
         if (!NewCellArray)
         {
             DPRINT1("HvTrackCellRef: Cannot reallocate the reference table.\n");
@@ -585,7 +587,7 @@ HvTrackCellRef(
             RtlCopyMemory(NewCellArray,
                           CellRef->CellArray,
                           CellRef->Max * sizeof(HV_HIVE_CELL_PAIR));
-            ExFreePoolWithTag(CellRef->CellArray, TAG_CM);
+            CmpFree(CellRef->CellArray, 0); // TAG_CM
         }
         CellRef->CellArray = NewCellArray;
         CellRef->Max += CELL_REF_INCREMENT;
@@ -643,7 +645,7 @@ HvReleaseFreeCellRefArray(
         }
 
         /* We can reuse the dynamic array */
-        ExFreePoolWithTag(CellRef->CellArray, TAG_CM);
+        CmpFree(CellRef->CellArray, 0); // TAG_CM
         CellRef->CellArray = NULL;
         CellRef->Count = CellRef->Max = 0;
     }
