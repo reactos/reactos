@@ -651,51 +651,56 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDisplayNameOf(
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    if ((GET_SHGDN_RELATION(uFlags) == SHGDN_NORMAL) &&
-        (GET_SHGDN_FOR(uFlags) & SHGDN_FORPARSING))
+    if (GET_SHGDN_FOR(uFlags) & SHGDN_FOREDITING)
     {
-        WCHAR path[MAX_PATH] = { 0 };
-
-        hr = GetFullName(m_shellPidl, uFlags, path, _countof(path));
+        hr = MakeStrRetFromString(info->entryName, info->entryNameLength, lpName);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
+    }
 
-        PathAppendW(path, info->entryName);
+    WCHAR path[MAX_PATH] = { 0 };
 
-        hr = MakeStrRetFromString(path, lpName);
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
-
-        LPCITEMIDLIST pidlFirst = ILCloneFirst(pidl);
-        LPCITEMIDLIST pidlNext = ILGetNext(pidl);
-
-        if (pidlNext && pidlNext->mkid.cb > 0)
+    if (GET_SHGDN_FOR(uFlags) & SHGDN_FORPARSING)
+    {
+        if (GET_SHGDN_RELATION(uFlags) != SHGDN_INFOLDER)
         {
-            CComPtr<IShellFolder> psfChild;
-            hr = BindToObject(pidlFirst, NULL, IID_PPV_ARG(IShellFolder, &psfChild));
+            hr = GetFullName(m_shellPidl, uFlags, path, _countof(path));
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
-
-            WCHAR temp[MAX_PATH];
-            STRRET childName;
-
-            hr = psfChild->GetDisplayNameOf(pidlNext, uFlags | SHGDN_INFOLDER, &childName);
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-
-            hr = StrRetToBufW(&childName, pidlNext, temp, _countof(temp));
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-
-            PathAppendW(path, temp);
         }
+    }
 
-        ILFree((LPITEMIDLIST) pidlFirst);
-    }
-    else
+    PathAppendW(path, info->entryName);
+
+    LPCITEMIDLIST pidlNext = ILGetNext(pidl);
+    if (pidlNext && pidlNext->mkid.cb > 0)
     {
-        MakeStrRetFromString(info->entryName, info->entryNameLength, lpName);
+        LPITEMIDLIST pidlFirst = ILCloneFirst(pidl);
+
+        CComPtr<IShellFolder> psfChild;
+        hr = BindToObject(pidlFirst, NULL, IID_PPV_ARG(IShellFolder, &psfChild));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        WCHAR temp[MAX_PATH];
+        STRRET childName;
+
+        hr = psfChild->GetDisplayNameOf(pidlNext, uFlags | SHGDN_INFOLDER, &childName);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        hr = StrRetToBufW(&childName, pidlNext, temp, _countof(temp));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        PathAppendW(path, temp);
+
+        ILFree(pidlFirst);
     }
+
+    hr = MakeStrRetFromString(path, lpName);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     return S_OK;
 }
