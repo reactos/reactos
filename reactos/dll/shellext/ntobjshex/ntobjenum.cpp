@@ -172,7 +172,10 @@ HRESULT GetNTObjectSymbolicLinkTarget(LPCWSTR path, LPCWSTR entryName, PUNICODE_
     StringCbCopyExW(buffer, sizeof(buffer), path, &pend, NULL, 0);
 
     if (pend[-1] != '\\')
+    {
         *pend++ = '\\';
+        *pend = 0;
+    }
 
     StringCbCatW(buffer, sizeof(buffer), entryName);
 
@@ -180,11 +183,11 @@ HRESULT GetNTObjectSymbolicLinkTarget(LPCWSTR path, LPCWSTR entryName, PUNICODE_
 
     LinkTarget->Length = 0;
 
-    DWORD err = NtOpenObject(SYMBOLICLINK_OBJECT, &handle, 0, buffer);
+    DWORD err = NtOpenObject(SYMBOLICLINK_OBJECT, &handle, SYMBOLIC_LINK_QUERY, buffer);
     if (!NT_SUCCESS(err))
         return HRESULT_FROM_NT(err);
 
-    err = NT_SUCCESS(NtQuerySymbolicLinkObject(handle, LinkTarget, NULL));
+    err = NtQuerySymbolicLinkObject(handle, LinkTarget, NULL);
     if (!NT_SUCCESS(err))
         return HRESULT_FROM_NT(err);
 
@@ -429,7 +432,7 @@ public:
 
         DWORD entryBufferLength = FIELD_OFFSET(RegPidlEntry, entryName) + sizeof(WCHAR) + cchName * sizeof(WCHAR);
 
-        BOOL copyData = dataSize < 32;
+        BOOL copyData = dataSize < 256;
         if (copyData)
         {
             entryBufferLength += dataSize + sizeof(WCHAR);

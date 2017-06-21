@@ -338,6 +338,9 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::ParseDisplayName(
     if (FAILED(hr))
         return hr;
 
+    PWSTR end = StrChrW(lpszDisplayName, '\\');
+    int length = end ? end - lpszDisplayName : wcslen(lpszDisplayName);
+
     while (TRUE)
     {
         hr = it->Next(1, ppidl, NULL);
@@ -346,29 +349,45 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::ParseDisplayName(
             return hr;
 
         if (hr != S_OK)
-            break;
+            return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 
         hr = CNtObjectPidlHelper::GetInfoFromPidl(*ppidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
-        if (StrCmpW(info->entryName, lpszDisplayName) == 0)
+        if (StrCmpNW(info->entryName, lpszDisplayName, length) == 0)
             break;
     }
 
-    if (hr != S_OK)
+    // if has remaining path to parse (and the path didn't just terminate in a backslash)
+    if (end && wcslen(end) > 1)
     {
-        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-    }
+        CComPtr<IShellFolder> psfChild;
+        hr = BindToObject(*ppidl, pbcReserved, IID_PPV_ARG(IShellFolder, &psfChild));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
 
-    if (pchEaten || pdwAttributes)
-    {
+        LPITEMIDLIST child;
+        hr = psfChild->ParseDisplayName(hwndOwner, pbcReserved, end + 1, pchEaten, &child, pdwAttributes);
+        if (FAILED(hr))
+            return hr;
+
+        LPITEMIDLIST old = *ppidl;
+        *ppidl = ILCombine(old, child);
+        ILFree(old);
+
+        // Count the path separator
         if (pchEaten)
-            *pchEaten = wcslen(info->entryName);
-
+            (*pchEaten) += 1;
+    }
+    else
+    {
         if (pdwAttributes)
             *pdwAttributes = CNtObjectPidlHelper::ConvertAttributes(info, pdwAttributes);
     }
+
+    if (pchEaten)
+        *pchEaten += wcslen(info->entryName);
 
     return S_OK;
 }
@@ -398,7 +417,6 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::BindToObject(
         WCHAR path[MAX_PATH];
 
         StringCbCopyW(path, _countof(path), m_NtPath);
-
         PathAppendW(path, info->entryName);
 
         LPITEMIDLIST first = ILCloneFirst(pidl);
@@ -440,9 +458,17 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::BindToObject(
                 if (FAILED_UNEXPECTEDLY(hr))
                     return hr;
 
-                hr = psfDesktop->ParseDisplayName(NULL, NULL, path, NULL, &first, NULL);
+                LPITEMIDLIST pidl;
+
+                hr = psfDesktop->ParseDisplayName(NULL, NULL, path, NULL, &pidl, NULL);
                 if (FAILED_UNEXPECTEDLY(hr))
                     return hr;
+
+                CComPtr<IShellFolder> psfChild;
+                hr =  psfDesktop->BindToObject(pidl, NULL, riid, ppvOut);
+                ILFree(pidl);
+
+                return hr;
             }
             else
             {
@@ -533,9 +559,9 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::CreateViewObject(
 
     SFV_CREATE sfv;
     sfv.cbSize = sizeof(sfv);
-    sfv.pshf = this;
+    sfv.pshf = static_cast<IShellFolder*>(this);
     sfv.psvOuter = NULL;
-    sfv.psfvcb = this;
+    sfv.psfvcb = static_cast<IShellFolderViewCB*>(this);
 
     return SHCreateShellFolderView(&sfv, (IShellView**) ppvOut);
 }
