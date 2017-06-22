@@ -305,6 +305,40 @@ public:
             *strContents = strValue;
             return S_OK;
         }
+        case REG_MULTI_SZ:
+        {
+            PCWSTR separator = L" "; // To match regedit
+            int sepChars = wcslen(separator);
+            int strings = 0;
+            int stringChars = 0;
+
+            PCWSTR strData = (PCWSTR)td;
+            while (*strData)
+            {
+                int l = wcslen(strData);
+                stringChars += l;
+                strData += l + 1; // Skips null-terminator
+                strings++;
+            }
+
+            int cch = stringChars + (strings - 1) * sepChars + 1;
+
+            PWSTR strValue = (PWSTR)CoTaskMemAlloc(cch * sizeof(WCHAR));
+
+            strValue[0] = 0;
+
+            strData = (PCWSTR)td;
+            while (*strData)
+            {
+                StrCatW(strValue, strData);
+                strData += wcslen(strData) + 1;
+                if (*strData)
+                    StrCatW(strValue, separator);
+            }
+
+            *strContents = strValue;
+            return S_OK;
+        }
         case REG_DWORD:
         {
             DWORD bufferLength = 64 * sizeof(WCHAR);
@@ -318,24 +352,39 @@ public:
         {
             DWORD bufferLength = 64 * sizeof(WCHAR);
             PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
-            StringCbPrintfW(strValue, bufferLength, L"0x%016llx (%d)",
+            StringCbPrintfW(strValue, bufferLength, L"0x%016llx (%lld)",
                 *(LARGE_INTEGER*) td, ((LARGE_INTEGER*) td)->QuadPart);
+            *strContents = strValue;
+            return S_OK;
+        }
+        case REG_BINARY:
+        {
+            DWORD bufferLength = (contentsLength * 3 + 1) * sizeof(WCHAR);
+            PWSTR strValue = (PWSTR)CoTaskMemAlloc(bufferLength);
+            PWSTR strTemp = strValue;
+            PBYTE data = (PBYTE)td;
+            for (int i = 0; i < contentsLength; i++)
+            {
+                StringCbPrintfW(strTemp, bufferLength, L"%02x ", data[i]);
+                strTemp += 3;
+                bufferLength -= 3;
+            }
             *strContents = strValue;
             return S_OK;
         }
         default:
         {
-            PCWSTR strTodo = L"<TODO: Convert value for display>";
-            DWORD bufferLength = (wcslen(strTodo) + 1) * sizeof(WCHAR);
+            PCWSTR strFormat = L"<Unimplemented value type %d>";
+            DWORD bufferLength = (wcslen(strFormat) + 15) * sizeof(WCHAR);
             PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
-            StringCbCopyW(strValue, bufferLength, strTodo);
+            StringCbPrintfW(strValue, bufferLength, strFormat, contentType);
             *strContents = strValue;
             return S_OK;
         }
         }
     }
 
-    static HRESULT FormatContentsForDisplay(const RegPidlEntry * info, LPCWSTR ntPath, PCWSTR * strContents)
+    static HRESULT FormatContentsForDisplay(const RegPidlEntry * info, HKEY rootKey, LPCWSTR ntPath, PCWSTR * strContents)
     {
         PVOID td = (((PBYTE) info) + FIELD_OFFSET(RegPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
 
@@ -350,7 +399,7 @@ public:
         {
             PVOID valueData;
             DWORD valueLength;
-            HRESULT hr = ReadRegistryValue(NULL, ntPath, info->entryName, &valueData, &valueLength);
+            HRESULT hr = ReadRegistryValue(rootKey, ntPath, info->entryName, &valueData, &valueLength);
             if (FAILED_UNEXPECTEDLY(hr))
             {
                 PCWSTR strEmpty = L"(Error reading value)";
@@ -908,7 +957,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsEx(
             {
                 PCWSTR strValueContents;
 
-                hr = CRegistryPidlHelper::FormatContentsForDisplay(info, m_NtPath, &strValueContents);
+                hr = CRegistryPidlHelper::FormatContentsForDisplay(info, m_hRoot, m_NtPath, &strValueContents);
                 if (FAILED_UNEXPECTEDLY(hr))
                     return hr;
 
@@ -984,7 +1033,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsOf(
 
             PCWSTR strValueContents;
 
-            hr = CRegistryPidlHelper::FormatContentsForDisplay(info, m_NtPath, &strValueContents);
+            hr = CRegistryPidlHelper::FormatContentsForDisplay(info, m_hRoot, m_NtPath, &strValueContents);
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
 

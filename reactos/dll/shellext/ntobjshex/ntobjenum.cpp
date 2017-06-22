@@ -432,7 +432,7 @@ public:
 
         DWORD entryBufferLength = FIELD_OFFSET(RegPidlEntry, entryName) + sizeof(WCHAR) + cchName * sizeof(WCHAR);
 
-        BOOL copyData = dataSize < 256;
+        BOOL copyData = dataSize <= 32;
         if (copyData)
         {
             entryBufferLength += dataSize + sizeof(WCHAR);
