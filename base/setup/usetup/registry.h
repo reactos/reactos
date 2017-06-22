@@ -46,7 +46,7 @@ ImportRegistryFile(
 NTSTATUS
 VerifyRegistryHives(
     IN PUNICODE_STRING InstallPath,
-    OUT PBOOLEAN ShouldUpdateRegistry);
+    OUT PBOOLEAN ShouldRepairRegistry);
 
 NTSTATUS
 RegInitializeRegistry(
