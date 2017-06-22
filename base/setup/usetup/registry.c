@@ -749,7 +749,7 @@ CreateRegistryFile(
     InitializeObjectAttributes(&ObjectAttributes,
                                &FileName,
                                OBJ_CASE_INSENSITIVE,
-                               NULL,  // Could have been installpath, etc...
+                               NULL,  // Could have been InstallPath, etc...
                                NULL); // Descriptor
 
     Status = NtCreateFile(&FileHandle,
@@ -901,7 +901,7 @@ VerifyRegistryHive(
 {
     NTSTATUS Status;
     UNICODE_STRING KeyName;
-    OBJECT_ATTRIBUTES KeyObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes;
 
     /* Try to mount the specified registry hive */
     Status = ConnectRegistry(NULL,
@@ -936,14 +936,14 @@ VerifyRegistryHive(
         DPRINT1("VerifyRegistryHive: Registry hive %S succeeded recovered (Status 0x%08lx)\n", RegistryKey, Status);
 
     /* Unmount the hive */
-    InitializeObjectAttributes(&KeyObjectAttributes,
+    InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
 
     RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\USetup_VerifyHive");
-    Status = NtUnloadKey(&KeyObjectAttributes);
+    Status = NtUnloadKey(&ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtUnloadKey(%S, %wZ) failed, Status 0x%08lx\n", RegistryKey, &KeyName, Status);
@@ -997,14 +997,14 @@ C_ASSERT(_countof(SecurityRegistryHives) == NUMBER_OF_SECURITY_REGISTRY_HIVES);
 NTSTATUS
 VerifyRegistryHives(
     IN PUNICODE_STRING InstallPath,
-    OUT PBOOLEAN ShouldUpdateRegistry)
+    OUT PBOOLEAN ShouldRepairRegistry)
 {
     NTSTATUS Status;
     BOOLEAN PrivilegeSet[2] = {FALSE, FALSE};
     UINT i;
 
-    /* Suppose first the registry hives do not have to be updated/recreated */
-    *ShouldUpdateRegistry = FALSE;
+    /* Suppose first the registry hives do not have to be fully recreated */
+    *ShouldRepairRegistry = FALSE;
 
     /* Acquire restore privilege */
     Status = RtlAdjustPrivilege(SE_RESTORE_PRIVILEGE, TRUE, FALSE, &PrivilegeSet[0]);
@@ -1032,7 +1032,7 @@ VerifyRegistryHives(
         {
             DPRINT1("Registry hive '%S' needs repair!\n", RegistryHives[i].HiveName);
             RegistryHives[i].State = Repair;
-            *ShouldUpdateRegistry = TRUE;
+            *ShouldRepairRegistry = TRUE;
         }
         else
         {
@@ -1144,14 +1144,14 @@ RegInitializeRegistry(
         {
             DPRINT1("CreateRegistryFile(%S) failed, Status 0x%08lx\n", RegistryHives[i].HiveName, Status);
             /* Exit prematurely here.... */
-            /* That is now done, clean everything up! */
+            /* That is now done, remove the proto-hive */
             NtDeleteKey(KeyHandle);
             NtClose(KeyHandle);
             goto Quit;
         }
     }
 
-    /* That is now done, clean everything up! */
+    /* That is now done, remove the proto-hive */
     NtDeleteKey(KeyHandle);
     NtClose(KeyHandle);
 
@@ -1237,7 +1237,7 @@ RegInitializeRegistry(
         }
         else
         {
-            /* Create *DUMMY* volatile hives just to make the update procedure work */
+            /* Create *DUMMY* volatile hives just to make the update procedure working */
 
             RtlInitUnicodeString(&KeyName, RegistryHives[i].RegSymLink);
             InitializeObjectAttributes(&ObjectAttributes,
@@ -1384,22 +1384,13 @@ RegCleanupRegistry(
     IN PUNICODE_STRING InstallPath)
 {
     NTSTATUS Status;
+    HANDLE KeyHandle;
     UNICODE_STRING KeyName;
-    OBJECT_ATTRIBUTES KeyObjectAttributes;
+    OBJECT_ATTRIBUTES ObjectAttributes;
     BOOLEAN PrivilegeSet[2] = {FALSE, FALSE};
     UINT i;
     WCHAR SrcPath[MAX_PATH];
     WCHAR DstPath[MAX_PATH];
-
-    for (i = 0; i < ARRAYSIZE(RootKeys); ++i)
-    {
-        if (RootKeys[i].Handle)
-        {
-            NtFlushKey(RootKeys[i].Handle);
-            NtClose(RootKeys[i].Handle);
-            RootKeys[i].Handle = NULL;
-        }
-    }
 
     /* Acquire restore privilege */
     Status = RtlAdjustPrivilege(SE_RESTORE_PRIVILEGE, TRUE, FALSE, &PrivilegeSet[0]);
@@ -1420,20 +1411,68 @@ RegCleanupRegistry(
         return;
     }
 
-    InitializeObjectAttributes(&KeyObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
+    /*
+     * Note that we don't need to explicitly remove the symlinks we have created
+     * since they are created volatile, inside registry keys that will be however
+     * removed explictly in the following.
+     */
 
     for (i = 0; i < ARRAYSIZE(RegistryHives); ++i)
     {
         if (RegistryHives[i].State != Create && RegistryHives[i].State != Repair)
-            continue;
+        {
+            RtlInitUnicodeString(&KeyName, RegistryHives[i].RegSymLink);
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &KeyName,
+                                       OBJ_CASE_INSENSITIVE,
+                                       RootKeys[GetPredefKeyIndex(RegistryHives[i].PredefKeyHandle)].Handle,
+                                       NULL);
+            KeyHandle = NULL;
+            Status = NtOpenKey(&KeyHandle,
+                               DELETE,
+                               &ObjectAttributes);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("NtOpenKey(%wZ) failed, Status 0x%08lx\n", &KeyName, Status);
+                // return;
+            }
 
-        RtlInitUnicodeString(&KeyName, RegistryHives[i].HiveRegistryPath);
-        Status = NtUnloadKey(&KeyObjectAttributes);
-        DPRINT1("Unmounting '%S' %s\n", RegistryHives[i].HiveRegistryPath, NT_SUCCESS(Status) ? "succeeded" : "failed");
+            NtDeleteKey(KeyHandle);
+            NtClose(KeyHandle);
+        }
+        else
+        {
+            RtlInitUnicodeString(&KeyName, RegistryHives[i].HiveRegistryPath);
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &KeyName,
+                                       OBJ_CASE_INSENSITIVE,
+                                       NULL,
+                                       NULL);
+            // Status = NtUnloadKey(&ObjectAttributes);
+            Status = NtUnloadKey2(&ObjectAttributes, 1 /* REG_FORCE_UNLOAD */);
+            DPRINT1("Unmounting '%S' %s\n", RegistryHives[i].HiveRegistryPath, NT_SUCCESS(Status) ? "succeeded" : "failed");
+
+            /* Switch the hive state to 'Update' */
+            RegistryHives[i].State = Update;
+        }
+    }
+
+    /*
+     * FIXME: Once force-unloading keys is correctly fixed, I'll fix
+     * this code that closes some of the registry keys that were opened
+     * inside the hives we've just unmounted above...
+     */
+
+    /* Remove the registry root keys */
+    for (i = 0; i < ARRAYSIZE(RootKeys); ++i)
+    {
+        if (RootKeys[i].Handle)
+        {
+            /**/NtFlushKey(RootKeys[i].Handle);/**/ // FIXME: Why does it hang? Answer: because we have some problems in CMAPI!
+            NtDeleteKey(RootKeys[i].Handle);
+            NtClose(RootKeys[i].Handle);
+            RootKeys[i].Handle = NULL;
+        }
     }
 
     //
@@ -1463,6 +1502,7 @@ RegCleanupRegistry(
     RtlAdjustPrivilege(SE_BACKUP_PRIVILEGE, PrivilegeSet[1], FALSE, &PrivilegeSet[1]);
     RtlAdjustPrivilege(SE_RESTORE_PRIVILEGE, PrivilegeSet[0], FALSE, &PrivilegeSet[0]);
 }
+
 
 VOID
 SetDefaultPagefile(

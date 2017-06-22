@@ -4055,32 +4055,32 @@ RegistryPage(PINPUT_RECORD Ir)
     PWSTR Action;
     PWSTR File;
     PWSTR Section;
+    BOOLEAN Success;
+    BOOLEAN ShouldRepairRegistry = FALSE;
     BOOLEAN Delete;
 
     MUIDisplayPage(REGISTRY_PAGE);
 
     if (RepairUpdateFlag)
     {
-        BOOLEAN ShouldUpdateRegistry = FALSE;
-
         DPRINT1("TODO: Updating / repairing the registry is not completely implemented yet!\n");
 
         /* Verify the registry hives and check whether we need to update or repair any of them */
-        Status = VerifyRegistryHives(&DestinationPath, &ShouldUpdateRegistry);
+        Status = VerifyRegistryHives(&DestinationPath, &ShouldRepairRegistry);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("VerifyRegistryHives failed, Status 0x%08lx\n", Status);
-            ShouldUpdateRegistry = FALSE;
+            ShouldRepairRegistry = FALSE;
         }
-        if (!ShouldUpdateRegistry)
-        {
-            DPRINT1("No need to update the registry\n");
-            // return SUCCESS_PAGE;
-            goto Quit;
-        }
+        if (!ShouldRepairRegistry)
+            DPRINT1("No need to repair the registry\n");
     }
 
-    /* Initialize the registry and setup the default installation hives */
+DoUpdate:
+    /* Update the registry */
+    CONSOLE_SetStatusText(MUIGetString(STRING_REGHIVEUPDATE));
+
+    /* Initialize the registry and setup the registry hives */
     Status = RegInitializeRegistry(&DestinationPath);
     if (!NT_SUCCESS(Status))
     {
@@ -4100,14 +4100,41 @@ RegistryPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
-    /* Update registry */
-    CONSOLE_SetStatusText(MUIGetString(STRING_REGHIVEUPDATE));
-
-    if (!SetupFindFirstLineW(SetupInf, L"HiveInfs.Install", NULL, &InfContext))
+    if (!RepairUpdateFlag || ShouldRepairRegistry)
     {
-        DPRINT1("SetupFindFirstLine() failed\n");
-        MUIDisplayError(ERROR_FIND_REGISTRY, Ir, POPUP_WAIT_ENTER);
-        goto Cleanup;
+        /*
+         * We fully setup the hives, in case we are doing a fresh installation
+         * (RepairUpdateFlag == FALSE), or in case we are doing an update
+         * (RepairUpdateFlag == TRUE) BUT we have some registry hives to
+         * "repair" (aka. recreate: ShouldRepairRegistry == TRUE).
+         */
+
+        Success = SetupFindFirstLineW(SetupInf, L"HiveInfs.Fresh", NULL, &InfContext);       // Windows-compatible
+        if (!Success)
+            Success = SetupFindFirstLineW(SetupInf, L"HiveInfs.Install", NULL, &InfContext); // ReactOS-specific
+
+        if (!Success)
+        {
+            DPRINT1("SetupFindFirstLine() failed\n");
+            MUIDisplayError(ERROR_FIND_REGISTRY, Ir, POPUP_WAIT_ENTER);
+            goto Cleanup;
+        }
+    }
+    else // if (RepairUpdateFlag && !ShouldRepairRegistry)
+    {
+        /*
+         * In case we are doing an update (RepairUpdateFlag == TRUE) and
+         * NO registry hives need a repair (ShouldRepairRegistry == FALSE),
+         * we only update the hives.
+         */
+
+        Success = SetupFindFirstLineW(SetupInf, L"HiveInfs.Update", NULL, &InfContext);
+        if (!Success)
+        {
+            /* Nothing to do for update! */
+            DPRINT1("No update needed for the registry!\n");
+            goto Cleanup;
+        }
     }
 
     do
@@ -4126,7 +4153,10 @@ RegistryPage(PINPUT_RECORD Ir)
         else if (!_wcsicmp(Action, L"DelReg"))
             Delete = TRUE;
         else
+        {
+            DPRINT1("Unrecognized registry INF action '%S'\n", Action);
             continue;
+        }
 
         CONSOLE_SetStatusText(MUIGetString(STRING_IMPORTFILE), File);
 
@@ -4138,62 +4168,67 @@ RegistryPage(PINPUT_RECORD Ir)
         }
     } while (SetupFindNextLine(&InfContext, &InfContext));
 
-    /* Update display registry settings */
-    CONSOLE_SetStatusText(MUIGetString(STRING_DISPLAYETTINGSUPDATE));
-    if (!ProcessDisplayRegistry(SetupInf, DisplayList))
+    if (!RepairUpdateFlag || ShouldRepairRegistry)
     {
-        MUIDisplayError(ERROR_UPDATE_DISPLAY_SETTINGS, Ir, POPUP_WAIT_ENTER);
-        goto Cleanup;
-    }
+        /* See the explanation for this test above */
 
-    /* Set the locale */
-    CONSOLE_SetStatusText(MUIGetString(STRING_LOCALESETTINGSUPDATE));
-    if (!ProcessLocaleRegistry(LanguageList))
-    {
-        MUIDisplayError(ERROR_UPDATE_LOCALESETTINGS, Ir, POPUP_WAIT_ENTER);
-        goto Cleanup;
-    }
-
-    /* Add keyboard layouts */
-    CONSOLE_SetStatusText(MUIGetString(STRING_ADDKBLAYOUTS));
-    if (!AddKeyboardLayouts())
-    {
-        MUIDisplayError(ERROR_ADDING_KBLAYOUTS, Ir, POPUP_WAIT_ENTER);
-        goto Cleanup;
-    }
-
-    /* Set GeoID */
-    if (!SetGeoID(MUIGetGeoID()))
-    {
-        MUIDisplayError(ERROR_UPDATE_GEOID, Ir, POPUP_WAIT_ENTER);
-        goto Cleanup;
-    }
-
-    if (!IsUnattendedSetup)
-    {
-        /* Update keyboard layout settings */
-        CONSOLE_SetStatusText(MUIGetString(STRING_KEYBOARDSETTINGSUPDATE));
-        if (!ProcessKeyboardLayoutRegistry(LayoutList))
+        /* Update display registry settings */
+        CONSOLE_SetStatusText(MUIGetString(STRING_DISPLAYETTINGSUPDATE));
+        if (!ProcessDisplayRegistry(SetupInf, DisplayList))
         {
-            MUIDisplayError(ERROR_UPDATE_KBSETTINGS, Ir, POPUP_WAIT_ENTER);
+            MUIDisplayError(ERROR_UPDATE_DISPLAY_SETTINGS, Ir, POPUP_WAIT_ENTER);
             goto Cleanup;
         }
+
+        /* Set the locale */
+        CONSOLE_SetStatusText(MUIGetString(STRING_LOCALESETTINGSUPDATE));
+        if (!ProcessLocaleRegistry(LanguageList))
+        {
+            MUIDisplayError(ERROR_UPDATE_LOCALESETTINGS, Ir, POPUP_WAIT_ENTER);
+            goto Cleanup;
+        }
+
+        /* Add keyboard layouts */
+        CONSOLE_SetStatusText(MUIGetString(STRING_ADDKBLAYOUTS));
+        if (!AddKeyboardLayouts())
+        {
+            MUIDisplayError(ERROR_ADDING_KBLAYOUTS, Ir, POPUP_WAIT_ENTER);
+            goto Cleanup;
+        }
+
+        /* Set GeoID */
+        if (!SetGeoID(MUIGetGeoID()))
+        {
+            MUIDisplayError(ERROR_UPDATE_GEOID, Ir, POPUP_WAIT_ENTER);
+            goto Cleanup;
+        }
+
+        if (!IsUnattendedSetup)
+        {
+            /* Update keyboard layout settings */
+            CONSOLE_SetStatusText(MUIGetString(STRING_KEYBOARDSETTINGSUPDATE));
+            if (!ProcessKeyboardLayoutRegistry(LayoutList))
+            {
+                MUIDisplayError(ERROR_UPDATE_KBSETTINGS, Ir, POPUP_WAIT_ENTER);
+                goto Cleanup;
+            }
+        }
+
+        /* Add codepage information to registry */
+        CONSOLE_SetStatusText(MUIGetString(STRING_CODEPAGEINFOUPDATE));
+        if (!AddCodePage())
+        {
+            MUIDisplayError(ERROR_ADDING_CODEPAGE, Ir, POPUP_WAIT_ENTER);
+            goto Cleanup;
+        }
+
+        /* Set the default pagefile entry */
+        SetDefaultPagefile(DestinationDriveLetter);
+
+        /* Update the mounted devices list */
+        // FIXME: This should technically be done by mountmgr (if AutoMount is enabled)!
+        SetMountedDeviceValues(PartitionList);
     }
-
-    /* Add codepage information to registry */
-    CONSOLE_SetStatusText(MUIGetString(STRING_CODEPAGEINFOUPDATE));
-    if (!AddCodePage())
-    {
-        MUIDisplayError(ERROR_ADDING_CODEPAGE, Ir, POPUP_WAIT_ENTER);
-        goto Cleanup;
-    }
-
-    /* Set the default pagefile entry */
-    SetDefaultPagefile(DestinationDriveLetter);
-
-    /* Update the mounted devices list */
-    // FIXME: This should technically be done by mountmgr (if AutoMount is enabled)!
-    SetMountedDeviceValues(PartitionList);
 
 Cleanup:
     //
@@ -4202,7 +4237,18 @@ Cleanup:
     //
     RegCleanupRegistry(&DestinationPath);
 
-Quit:
+    /*
+     * Check whether we were in update/repair mode but we were actually
+     * repairing the registry hives. If so, we have finished repairing them,
+     * and we now reset the flag and run the proper registry update.
+     * Otherwise we have finished the registry update!
+     */
+    if (RepairUpdateFlag && ShouldRepairRegistry)
+    {
+        ShouldRepairRegistry = FALSE;
+        goto DoUpdate;
+    }
+
     if (NT_SUCCESS(Status))
     {
         CONSOLE_SetStatusText(MUIGetString(STRING_DONE));
