@@ -42,9 +42,11 @@
 /* GLOBALS ******************************************************************/
 
 HANDLE ProcessHeap;
+
 static UNICODE_STRING SourceRootPath;
 static UNICODE_STRING SourceRootDir;
 /* static */ UNICODE_STRING SourcePath;
+
 BOOLEAN IsUnattendedSetup = FALSE;
 LONG UnattendDestinationDiskNumber;
 LONG UnattendDestinationPartitionNumber;
@@ -56,12 +58,12 @@ PWCHAR SelectedLanguageId;
 WCHAR LocaleID[9];
 WCHAR DefaultLanguage[20];
 WCHAR DefaultKBLayout[20];
-BOOLEAN RepairUpdateFlag = FALSE;
-HANDLE hPnpThread = INVALID_HANDLE_VALUE;
+static BOOLEAN RepairUpdateFlag = FALSE;
+static HANDLE hPnpThread = INVALID_HANDLE_VALUE;
 
-PPARTLIST PartitionList = NULL;
-PPARTENTRY TempPartition = NULL;
-FORMATMACHINESTATE FormatState = Start;
+static PPARTLIST PartitionList = NULL;
+static PPARTENTRY TempPartition = NULL;
+static FORMATMACHINESTATE FormatState = Start;
 
 
 /* LOCALS *******************************************************************/
