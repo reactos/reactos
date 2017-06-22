@@ -227,7 +227,7 @@ public:
         DWORD entryBufferLength = FIELD_OFFSET(RegPidlEntry, entryName) + sizeof(WCHAR) + cchName * sizeof(WCHAR);
 
         // allocate space for the terminator
-        entryBufferLength += 2;
+        entryBufferLength += FIELD_OFFSET(SHITEMID, abID);
 
         RegPidlEntry* entry = (RegPidlEntry*) CoTaskMemAlloc(entryBufferLength);
         if (!entry)
@@ -377,7 +377,7 @@ public:
         }
 
         // allocate space for the terminator
-        entryBufferLength += 2;
+        entryBufferLength += FIELD_OFFSET(SHITEMID, abID);
 
         RegPidlEntry* entry = (RegPidlEntry*) CoTaskMemAlloc(entryBufferLength);
         if (!entry)
@@ -432,7 +432,8 @@ public:
 
         DWORD entryBufferLength = FIELD_OFFSET(RegPidlEntry, entryName) + sizeof(WCHAR) + cchName * sizeof(WCHAR);
 
-        BOOL copyData = dataSize <= 32;
+#define MAX_EMBEDDED_DATA 32
+        BOOL copyData = dataSize <= MAX_EMBEDDED_DATA;
         if (copyData)
         {
             entryBufferLength += dataSize + sizeof(WCHAR);
@@ -441,7 +442,7 @@ public:
         }
 
         // allocate space for the terminator
-        entryBufferLength += 2;
+        entryBufferLength += FIELD_OFFSET(SHITEMID, abID);
 
         RegPidlEntry* entry = (RegPidlEntry*) CoTaskMemAlloc(entryBufferLength);
         if (!entry)
@@ -636,7 +637,7 @@ public:
         }
 
         // allocate space for the terminator
-        entryBufferLength += 2;
+        entryBufferLength += FIELD_OFFSET(SHITEMID, abID);
 
         NtPidlEntry* entry = (NtPidlEntry*) CoTaskMemAlloc(entryBufferLength);
         if (!entry)

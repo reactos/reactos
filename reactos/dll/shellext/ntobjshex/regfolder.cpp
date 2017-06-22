@@ -308,16 +308,16 @@ public:
         case REG_MULTI_SZ:
         {
             PCWSTR separator = L" "; // To match regedit
-            int sepChars = wcslen(separator);
+            size_t sepChars = wcslen(separator);
             int strings = 0;
             int stringChars = 0;
 
             PCWSTR strData = (PCWSTR)td;
             while (*strData)
             {
-                int l = wcslen(strData);
-                stringChars += l;
-                strData += l + 1; // Skips null-terminator
+                size_t len = wcslen(strData);
+                stringChars += len;
+                strData += len + 1; // Skips null-terminator
                 strings++;
             }
 
@@ -363,7 +363,7 @@ public:
             PWSTR strValue = (PWSTR)CoTaskMemAlloc(bufferLength);
             PWSTR strTemp = strValue;
             PBYTE data = (PBYTE)td;
-            for (int i = 0; i < contentsLength; i++)
+            for (DWORD i = 0; i < contentsLength; i++)
             {
                 StringCbPrintfW(strTemp, bufferLength, L"%02x ", data[i]);
                 strTemp += 3;
