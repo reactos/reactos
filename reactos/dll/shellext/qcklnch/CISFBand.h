@@ -23,8 +23,7 @@ class CISFBand :
     CComPtr<IUnknown> m_Site;
     CComPtr<IShellFolder> m_pISF;
     PCIDLIST_ABSOLUTE m_pidl;
-    HWND m_hWnd;
-    HWND m_hWndStartButton;
+    HWND m_hWnd;    
     DWORD m_BandID;    
 
 public:

@@ -38,6 +38,29 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
         return hr;
     }
 
+//Pidl Browser
+    LPITEMIDLIST PidlBrowse(HWND hwnd, int nCSIDL)
+    {
+        LPITEMIDLIST pidlRoot = NULL;
+        LPITEMIDLIST pidlSelected = NULL;        
+        WCHAR path[MAX_PATH];
+
+        if (nCSIDL)
+        {
+            SHGetSpecialFolderLocation(hwnd, nCSIDL, &pidlRoot);
+        }        
+
+        BROWSEINFO bi = { hwnd, pidlRoot, path, L"Choose a folder", 0, NULL, 0, 0 };
+        pidlSelected = SHBrowseForFolder(&bi);
+
+        if (pidlRoot)
+        {
+            CoTaskMemFree(pidlRoot);
+        }
+
+        return pidlSelected;
+    }
+
 //CQuickLaunchBand
 
     CQuickLaunchBand::CQuickLaunchBand() {}
@@ -51,33 +74,27 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
     {
         //MessageBox(0, L"CQuickLaunchBand::FinalConstruct Begin!", L"Testing", MB_OK | MB_ICONINFORMATION);
 
-        HRESULT hr = CIFSBand_CreateInstance(IID_IUnknown, (void**) &m_punkISFB);
+        HRESULT hr = CISFBand_CreateInstance(IID_IUnknown, (void**) &m_punkISFB);
         if (SUCCEEDED(hr))
         {
-            MessageBox(0, L"CreateInstance success!", L"Testing", MB_OK | MB_ICONINFORMATION);
-           /*
+            //MessageBox(0, L"CreateInstance success!", L"Testing", MB_OK | MB_ICONINFORMATION);
+           
             CComPtr<IShellFolderBand> pISFB;
             hr = m_punkISFB->QueryInterface(IID_IShellFolderBand, (void**) &pISFB);
             if (SUCCEEDED(hr))
             {
-               // MessageBox(0, L"IID_ISFBand query success!", L"Testing", MB_OK | MB_ICONINFORMATION);
+                //MessageBox(0, L"IID_ISFBand query success!", L"Testing", MB_OK | MB_ICONINFORMATION);
 
                 CComPtr<IShellFolder> pISF;
                 hr = SHGetDesktopFolder(&pISF);
                 if (SUCCEEDED(hr))
-                {
+                { 
                     //MessageBox(0, L"pisf success!", L"Testing", MB_OK | MB_ICONINFORMATION);
-
-                    //LPITEMIDLIST pidl;
-                    //hr = SHGetSpecialFolderLocation(NULL, CSIDL_DESKTOP, &pidl);
-                    //if (SUCCEEDED(hr))
-                    //{
-                        //MessageBox(0, L"pidl success!", L"Testing", MB_OK | MB_ICONINFORMATION);
-
-                        pISFB->InitializeSFB(pISF, 0);
-                    //}
+                    LPITEMIDLIST pidl = PidlBrowse(m_hWndBro, CSIDL_DESKTOP); 
+                    if (pidl == NULL) return E_FAIL;
+                    pISFB->InitializeSFB(pISF, pidl);                    
                 }                                               
-            }  */          
+            }            
         }
         
        // MessageBox(0, L"CQuickLaunchBand::FinalConstruct End!", L"Testing", MB_OK | MB_ICONINFORMATION);

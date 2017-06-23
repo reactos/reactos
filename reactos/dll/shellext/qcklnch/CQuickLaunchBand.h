@@ -23,7 +23,8 @@ class CQuickLaunchBand :
     public IPersistStream,
     public IWinEventHandler,
     public IOleCommandTarget
-{    
+{
+    HWND m_hWndBro;
     CComPtr<IUnknown> m_punkISFB;   
 
     public:
