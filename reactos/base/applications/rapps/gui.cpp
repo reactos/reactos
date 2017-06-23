@@ -1,4 +1,4 @@
-/* PROJECT:     ReactOS CE Applications Manager
+﻿/* PROJECT:     ReactOS CE Applications Manager
  * LICENSE:     GPL - See COPYING in the top level directory
  * AUTHORS:     David Quintana <gigaherz@gmail.com>
  */
@@ -1126,71 +1126,72 @@ private:
     static BOOL CALLBACK s_EnumAvailableAppProc(PAPPLICATION_INFO Info)
     {
         INT Index;
+        HICON hIcon = NULL;
+        bool failed = false;
+        WCHAR szIconPath[MAX_PATH] = L"";
+        HIMAGELIST hImageListView = NULL;
+        hImageListView = ListView_GetImageList(hListView, LVSIL_SMALL);
 
         if (!SearchPatternMatch(Info->szName, szSearchPattern) &&
             !SearchPatternMatch(Info->szDesc, szSearchPattern))
         {
             return TRUE;
         }
+        //TODO: Define another field for icon name in the DB
+        failed = !GetStorageDirectory(szIconPath, _countof(szIconPath)) 
+          || FAILED(StringCbPrintfW(szIconPath, sizeof(szIconPath), L"%ls\\rapps\\icons\\%ls.ico", szIconPath, Info->szName));
+        if (!failed) {
+          //Load icon from file
+          hIcon = (HICON)LoadImage(NULL,
+            szIconPath,
+            IMAGE_ICON,
+            LISTVIEW_ICON_SIZE,
+            LISTVIEW_ICON_SIZE,
+            LR_LOADFROMFILE);
+        }
+        if (GetLastError() != ERROR_SUCCESS) {
+          //Load default icon
+          hIcon = (HICON)LoadIcon(hInst, MAKEINTRESOURCE(IDI_MAIN));
+        }
+        Index = ImageList_AddIcon(hImageListView, hIcon);
+        DestroyIcon(hIcon);
 
-        Index = ListViewAddItem(Info->Category, 0, Info->szName, (LPARAM) Info);
+        Index = ListViewAddItem(Info->Category, Index, Info->szName, (LPARAM) Info);
+        hImageListView = ListView_SetImageList(hListView, hImageListView, LVSIL_SMALL);
 
         ListView_SetItemText(hListView, Index, 1, Info->szVersion);
         ListView_SetItemText(hListView, Index, 2, Info->szDesc);
-
         return TRUE;
     }
+
 
     VOID UpdateApplicationsList(INT EnumType)
     {
         WCHAR szBuffer1[MAX_STR_LEN], szBuffer2[MAX_STR_LEN];
-        HICON hIcon;
-        HIMAGELIST hImageListView;
+        HIMAGELIST hImageListView = NULL;
 
         m_ListView->SendMessage(WM_SETREDRAW, FALSE, 0);
 
-        if (EnumType == -1) EnumType = SelectedEnumType;
+        if (EnumType < 0) EnumType = SelectedEnumType;
 
         if (IS_INSTALLED_ENUM(SelectedEnumType))
             FreeInstalledAppList();
 
         (VOID) ListView_DeleteAllItems(hListView);
-
-        /* Create image list */
+        //Create new ImageList
         hImageListView = ImageList_Create(LISTVIEW_ICON_SIZE,
-            LISTVIEW_ICON_SIZE,
-            GetSystemColorDepth() | ILC_MASK,
-            0, 1);
-
-        hIcon = (HICON) LoadImage(hInst,
-            MAKEINTRESOURCE(IDI_MAIN),
-            IMAGE_ICON,
-            LISTVIEW_ICON_SIZE,
-            LISTVIEW_ICON_SIZE,
-            LR_CREATEDIBSECTION);
-
-        ImageList_AddIcon(hImageListView, hIcon);
-        DestroyIcon(hIcon);
-        /*
-        if (IS_INSTALLED_ENUM(EnumType))
-        {
-            / Enum installed applications and updates 
-            EnumInstalledApplications(EnumType, TRUE, s_EnumInstalledAppProc);
-            EnumInstalledApplications(EnumType, FALSE, s_EnumInstalledAppProc);
-        }
-
-        else */if (IS_AVAILABLE_ENUM(EnumType))
-        {
-            /* Enum available applications */
-            EnumAvailableApplications(EnumType, s_EnumAvailableAppProc);
-        }
-
-        /* Set image list for ListView */
+          LISTVIEW_ICON_SIZE,
+          GetSystemColorDepth() | ILC_MASK,
+          0, 1000);
         hImageListView = ListView_SetImageList(hListView, hImageListView, LVSIL_SMALL);
 
-        /* Destroy old image list */
         if (hImageListView)
-            ImageList_Destroy(hImageListView);
+          ImageList_Destroy(hImageListView);
+
+        if (IS_AVAILABLE_ENUM(EnumType)) {
+          /* Enum available applications */
+          EnumAvailableApplications(EnumType, s_EnumAvailableAppProc);
+        }
 
         SelectedEnumType = EnumType;
 
@@ -1212,7 +1213,7 @@ private:
 public:
     static ATL::CWndClassInfo& GetWndClassInfo()
     {
-        DWORD csStyle = CS_VREDRAW |CS_HREDRAW;
+        DWORD csStyle = CS_VREDRAW | CS_HREDRAW;
         static ATL::CWndClassInfo wc =
         {
             { sizeof(WNDCLASSEX), csStyle, StartWindowProc,
