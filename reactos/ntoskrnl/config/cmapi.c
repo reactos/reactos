@@ -993,7 +993,7 @@ CmDeleteValueKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
             goto Quickie;
         }
 
-        /* Ssanity checks */
+        /* Sanity checks */
         ASSERT(HvIsCellDirty(Hive, Parent->ValueList.List));
         ASSERT(HvIsCellDirty(Hive, ChildCell));
 
@@ -2376,7 +2376,6 @@ CmCountOpenSubKeys(IN PCM_KEY_CONTROL_BLOCK RootKcb,
 
 static
 NTSTATUS
-NTAPI
 CmpDeepCopyKeyInternal(IN PHHIVE SourceHive,
                        IN HCELL_INDEX SrcKeyCell,
                        IN PHHIVE DestinationHive,
@@ -2387,8 +2386,11 @@ CmpDeepCopyKeyInternal(IN PHHIVE SourceHive,
     NTSTATUS Status;
     PCM_KEY_NODE SrcNode;
     PCM_KEY_NODE DestNode = NULL;
-    HCELL_INDEX NewKeyCell, SubKey, NewSubKey;
+    HCELL_INDEX NewKeyCell = HCELL_NIL;
+    HCELL_INDEX NewClassCell = HCELL_NIL, NewSecCell = HCELL_NIL;
+    HCELL_INDEX SubKey, NewSubKey;
     ULONG Index, SubKeyCount;
+
     PAGED_CODE();
 
     DPRINT("CmpDeepCopyKeyInternal(0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X)\n",
@@ -2401,6 +2403,7 @@ CmpDeepCopyKeyInternal(IN PHHIVE SourceHive,
 
     /* Get the source cell node */
     SrcNode = HvGetCell(SourceHive, SrcKeyCell);
+    ASSERT(SrcNode);
 
     /* Sanity check */
     ASSERT(SrcNode->Signature == CM_KEY_NODE_SIGNATURE);
@@ -2419,12 +2422,55 @@ CmpDeepCopyKeyInternal(IN PHHIVE SourceHive,
 
     /* Get the destination cell node */
     DestNode = HvGetCell(DestinationHive, NewKeyCell);
+    ASSERT(DestNode);
 
-    /* Set the parent */
+    /* Set the parent and copy the flags */
     DestNode->Parent = Parent;
+    DestNode->Flags  = (SrcNode->Flags & KEY_COMP_NAME); // Keep only the single permanent flag
+    if (Parent == HCELL_NIL)
+    {
+        /* This is the new root node */
+        DestNode->Flags |= KEY_HIVE_ENTRY | KEY_NO_DELETE;
+    }
 
-    // TODO: These should also be copied!
-    DestNode->Security = DestNode->Class = HCELL_NIL;
+    /* Copy the class cell */
+    if (SrcNode->ClassLength > 0)
+    {
+        NewClassCell = CmpCopyCell(SourceHive,
+                                   SrcNode->Class,
+                                   DestinationHive,
+                                   StorageType);
+        if (NewClassCell == HCELL_NIL)
+        {
+            /* Not enough storage space */
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Cleanup;
+        }
+
+        DestNode->Class = NewClassCell;
+        DestNode->ClassLength = SrcNode->ClassLength;
+    }
+    else
+    {
+        DestNode->Class = HCELL_NIL;
+        DestNode->ClassLength = 0;
+    }
+
+    /* Copy the security cell (FIXME: HACKish poor-man version) */
+    if (SrcNode->Security != HCELL_NIL)
+    {
+        NewSecCell = CmpCopyCell(SourceHive,
+                                 SrcNode->Security,
+                                 DestinationHive,
+                                 StorageType);
+        if (NewSecCell == HCELL_NIL)
+        {
+            /* Not enough storage space */
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Cleanup;
+        }
+    }
+    DestNode->Security = NewSecCell;
 
     /* Copy the value list */
     Status = CmpCopyKeyValueList(SourceHive,
@@ -2432,7 +2478,8 @@ CmpDeepCopyKeyInternal(IN PHHIVE SourceHive,
                                  DestinationHive,
                                  &DestNode->ValueList,
                                  StorageType);
-    if (!NT_SUCCESS(Status)) goto Cleanup;
+    if (!NT_SUCCESS(Status))
+        goto Cleanup;
 
     /* Clear the invalid subkey index */
     DestNode->SubKeyCounts[Stable] = DestNode->SubKeyCounts[Volatile] = 0;
@@ -2449,34 +2496,57 @@ CmpDeepCopyKeyInternal(IN PHHIVE SourceHive,
         ASSERT(SubKey != HCELL_NIL);
 
         /* Call the function recursively for the subkey */
+        //
+        // FIXME: Danger!! Kernel stack exhaustion!!
+        //
         Status = CmpDeepCopyKeyInternal(SourceHive,
                                         SubKey,
                                         DestinationHive,
                                         NewKeyCell,
                                         StorageType,
                                         &NewSubKey);
-        if (!NT_SUCCESS(Status)) goto Cleanup;
+        if (!NT_SUCCESS(Status))
+            goto Cleanup;
 
         /* Add the copy of the subkey to the new key */
         if (!CmpAddSubKey(DestinationHive,
                           NewKeyCell,
                           NewSubKey))
         {
+            /* Cleanup allocated cell */
+            HvFreeCell(DestinationHive, NewSubKey);
+
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto Cleanup;
         }
     }
 
-    /* Set the cell index if requested and return success */
-    if (DestKeyCell) *DestKeyCell = NewKeyCell;
+    /* Set success */
     Status = STATUS_SUCCESS;
 
 Cleanup:
 
     /* Release the cells */
-    if (SrcNode) HvReleaseCell(SourceHive, SrcKeyCell);
     if (DestNode) HvReleaseCell(DestinationHive, NewKeyCell);
+    if (SrcNode) HvReleaseCell(SourceHive, SrcKeyCell);
 
+    /* Cleanup allocated cells in case of failure */
+    if (!NT_SUCCESS(Status))
+    {
+        if (NewSecCell != HCELL_NIL)
+            HvFreeCell(DestinationHive, NewSecCell);
+
+        if (NewClassCell != HCELL_NIL)
+            HvFreeCell(DestinationHive, NewClassCell);
+
+        if (NewKeyCell != HCELL_NIL)
+            HvFreeCell(DestinationHive, NewKeyCell);
+
+        NewKeyCell = HCELL_NIL;
+    }
+
+    /* Set the cell index if requested and return status */
+    if (DestKeyCell) *DestKeyCell = NewKeyCell;
     return Status;
 }
 
