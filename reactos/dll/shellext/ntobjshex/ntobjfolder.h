@@ -9,94 +9,74 @@
 
 extern const GUID CLSID_NtObjectFolder;
 
+class CNtObjectFolderExtractIcon :
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IExtractIconW
+{
+    PCWSTR m_NtPath;
+    PCIDLIST_ABSOLUTE m_pcidlFolder;
+    PCITEMID_CHILD    m_pcidlChild;
+
+public:
+    CNtObjectFolderExtractIcon();
+
+    virtual ~CNtObjectFolderExtractIcon();
+
+    HRESULT Initialize(LPCWSTR ntPath, PCIDLIST_ABSOLUTE parent, UINT cidl, PCUITEMID_CHILD_ARRAY apidl);
+
+    virtual HRESULT STDMETHODCALLTYPE GetIconLocation(
+        UINT uFlags,
+        LPWSTR szIconFile,
+        UINT cchMax,
+        INT *piIndex,
+        UINT *pwFlags);
+
+    virtual HRESULT STDMETHODCALLTYPE Extract(
+        LPCWSTR pszFile,
+        UINT nIconIndex,
+        HICON *phiconLarge,
+        HICON *phiconSmall,
+        UINT nIconSize);
+
+    DECLARE_NOT_AGGREGATABLE(CNtObjectFolderExtractIcon)
+    DECLARE_PROTECT_FINAL_CONSTRUCT()
+
+    BEGIN_COM_MAP(CNtObjectFolderExtractIcon)
+        COM_INTERFACE_ENTRY_IID(IID_IExtractIconW, IExtractIconW)
+    END_COM_MAP()
+
+};
+
 class CNtObjectFolder :
     public CComCoClass<CNtObjectFolder, &CLSID_NtObjectFolder>,
-    public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IShellFolder2,
-    public IPersistFolder2,
-    public IShellFolderViewCB
+    public CCommonFolder<CNtObjectFolder, NtPidlEntry, CNtObjectFolderExtractIcon>
 {
-    WCHAR m_NtPath[MAX_PATH];
-
-    LPITEMIDLIST m_shellPidl;
-
 public:
 
     CNtObjectFolder();
     virtual ~CNtObjectFolder();
 
     // IShellFolder
-    virtual HRESULT STDMETHODCALLTYPE ParseDisplayName(
-        HWND hwndOwner,
-        LPBC pbcReserved,
-        LPOLESTR lpszDisplayName,
-        ULONG *pchEaten,
-        LPITEMIDLIST *ppidl,
-        ULONG *pdwAttributes);
 
     virtual HRESULT STDMETHODCALLTYPE EnumObjects(
         HWND hwndOwner,
         SHCONTF grfFlags,
         IEnumIDList **ppenumIDList);
 
-    virtual HRESULT STDMETHODCALLTYPE BindToObject(
-        LPCITEMIDLIST pidl,
+    virtual HRESULT STDMETHODCALLTYPE InternalBindToObject(
+        PWSTR path,
+        const NtPidlEntry * info,
+        LPITEMIDLIST first,
+        LPCITEMIDLIST rest,
+        LPITEMIDLIST fullPidl,
         LPBC pbcReserved,
-        REFIID riid,
-        void **ppvOut);
-
-    virtual HRESULT STDMETHODCALLTYPE BindToStorage(
-        LPCITEMIDLIST pidl,
+        IShellFolder** ppsfChild);
+    virtual HRESULT STDMETHODCALLTYPE RedirectToSymLink(
+        const NtPidlEntry * info,
+        LPITEMIDLIST first,
+        LPCITEMIDLIST rest,
         LPBC pbcReserved,
-        REFIID riid,
-        void **ppvObj);
-
-    virtual HRESULT STDMETHODCALLTYPE CompareIDs(
-        LPARAM lParam,
-        LPCITEMIDLIST pidl1,
-        LPCITEMIDLIST pidl2);
-
-    virtual HRESULT STDMETHODCALLTYPE CreateViewObject(
-        HWND hwndOwner,
-        REFIID riid,
-        void **ppvOut);
-
-    virtual HRESULT STDMETHODCALLTYPE GetAttributesOf(
-        UINT cidl,
-        PCUITEMID_CHILD_ARRAY apidl,
-        SFGAOF *rgfInOut);
-
-    virtual HRESULT STDMETHODCALLTYPE GetUIObjectOf(
-        HWND hwndOwner,
-        UINT cidl,
-        PCUITEMID_CHILD_ARRAY apidl,
-        REFIID riid,
-        UINT *prgfInOut,
-        void **ppvOut);
-
-    virtual HRESULT STDMETHODCALLTYPE GetDisplayNameOf(
-        LPCITEMIDLIST pidl,
-        SHGDNF uFlags,
-        STRRET *lpName);
-
-    virtual HRESULT STDMETHODCALLTYPE SetNameOf(
-        HWND hwnd,
-        LPCITEMIDLIST pidl,
-        LPCOLESTR lpszName,
-        SHGDNF uFlags,
-        LPITEMIDLIST *ppidlOut);
-
-    // IShellFolder2
-    virtual HRESULT STDMETHODCALLTYPE GetDefaultSearchGUID(
-        GUID *lpguid);
-
-    virtual HRESULT STDMETHODCALLTYPE EnumSearches(
-        IEnumExtraSearch **ppenum);
-
-    virtual HRESULT STDMETHODCALLTYPE GetDefaultColumn(
-        DWORD dwReserved,
-        ULONG *pSort,
-        ULONG *pDisplay);
+        IShellFolder ** ppsfChild);
 
     virtual HRESULT STDMETHODCALLTYPE GetDefaultColumnState(
         UINT iColumn,
@@ -116,34 +96,22 @@ public:
         UINT iColumn,
         SHCOLUMNID *pscid);
 
-    // IPersist
-    virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *lpClassId);
-
     // IPersistFolder
     virtual HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidl);
-
-    // IPersistFolder2
-    virtual HRESULT STDMETHODCALLTYPE GetCurFolder(LPITEMIDLIST * pidl);
-
-    // IShellFolderViewCB
-    virtual HRESULT STDMETHODCALLTYPE MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     // Internal
     HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidl, PCWSTR ntPath);
 
-    static HRESULT CALLBACK DefCtxMenuCallback(IShellFolder *, HWND, IDataObject *, UINT, WPARAM, LPARAM);
+protected:
+    virtual HRESULT STDMETHODCALLTYPE CompareIDs(LPARAM lParam, const NtPidlEntry * first, const NtPidlEntry * second);
+    virtual ULONG STDMETHODCALLTYPE ConvertAttributes(const NtPidlEntry * entry, PULONG inMask);
+    virtual BOOL STDMETHODCALLTYPE IsFolder(LPCITEMIDLIST pcidl);
+    virtual BOOL STDMETHODCALLTYPE IsFolder(const NtPidlEntry * info);
+    virtual BOOL STDMETHODCALLTYPE IsSymLink(const NtPidlEntry * info);
 
-    DECLARE_REGISTRY_RESOURCEID(IDR_NTOBJECTFOLDER)
-    DECLARE_NOT_AGGREGATABLE(CNtObjectFolder)
-    DECLARE_PROTECT_FINAL_CONSTRUCT()
+    virtual HRESULT GetInfoFromPidl(LPCITEMIDLIST pcidl, const NtPidlEntry ** pentry);
 
-    BEGIN_COM_MAP(CNtObjectFolder)
-        COM_INTERFACE_ENTRY_IID(IID_IShellFolder, IShellFolder)
-        COM_INTERFACE_ENTRY_IID(IID_IShellFolder2, IShellFolder2)
-        COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
-        COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
-        COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
-        COM_INTERFACE_ENTRY_IID(IID_IShellFolderViewCB, IShellFolderViewCB)
-    END_COM_MAP()
+    HRESULT FormatValueData(DWORD contentType, PVOID td, DWORD contentsLength, PCWSTR * strContents);
 
+    HRESULT FormatContentsForDisplay(const NtPidlEntry * info, HKEY rootKey, LPCWSTR ntPath, PCWSTR * strContents);
 };
