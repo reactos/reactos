@@ -57,6 +57,8 @@ DEFINE_GUID(CLSID_NtObjectFolder,
 #define GET_SHGDN_FOR(dwFlags)         ((DWORD)dwFlags & (DWORD)0x0000FF00)
 #define GET_SHGDN_RELATION(dwFlags)    ((DWORD)dwFlags & (DWORD)0x000000FF)
 
+WINE_DEFAULT_DEBUG_CHANNEL(ntobjshex);
+
 #include <rtlfuncs.h>
 #include <ntquery.h>
 #include "util.h"

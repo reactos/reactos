@@ -19,8 +19,6 @@
 #include "precomp.h"
 #include <strsafe.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(ntobjshex);
-
 static struct RootKeyEntry {
     HKEY key;
     PCWSTR keyName;

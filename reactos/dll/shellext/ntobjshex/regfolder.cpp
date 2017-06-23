@@ -8,8 +8,6 @@
 
 #include "precomp.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(ntobjshex);
-
 // {1C6D6E08-2332-4A7B-A94D-6432DB2B5AE6}
 const GUID CLSID_RegistryFolder = { 0x1c6d6e08, 0x2332, 0x4a7b, { 0xa9, 0x4d, 0x64, 0x32, 0xdb, 0x2b, 0x5a, 0xe6 } };
 
@@ -376,8 +374,8 @@ HRESULT CRegistryFolder::CompareIDs(LPARAM lParam, const RegPidlEntry * first, c
 {
     HRESULT hr;
 
-    LPARAM sortMode = lParam & 0xFFFF0000;
-    LPARAM column = lParam & 0x0000FFFF;
+    DWORD sortMode = lParam & 0xFFFF0000;
+    DWORD column = lParam & 0x0000FFFF;
 
     if (sortMode == SHCIDS_ALLFIELDS)
     {

@@ -8,8 +8,6 @@
 
 #include "precomp.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(ntobjshex);
-
 // {845B0FB2-66E0-416B-8F91-314E23F7C12D}
 const GUID CLSID_NtObjectFolder = { 0x845b0fb2, 0x66e0, 0x416b, { 0x8f, 0x91, 0x31, 0x4e, 0x23, 0xf7, 0xc1, 0x2d } };
 
@@ -25,8 +23,8 @@ enum NtObjectColumns
 };
 
 CNtObjectFolderExtractIcon::CNtObjectFolderExtractIcon() :
-    m_pcidlChild(NULL),
-    m_NtPath(NULL)
+    m_NtPath(NULL),
+    m_pcidlChild(NULL)
 {
 
 }
@@ -439,8 +437,8 @@ HRESULT CNtObjectFolder::CompareIDs(LPARAM lParam, const NtPidlEntry * first, co
 {
     HRESULT hr;
 
-    LPARAM sortMode = lParam & 0xFFFF0000;
-    LPARAM column = lParam & 0x0000FFFF;
+    DWORD sortMode = lParam & 0xFFFF0000;
+    DWORD column = lParam & 0x0000FFFF;
 
     if (sortMode == SHCIDS_ALLFIELDS)
     {
