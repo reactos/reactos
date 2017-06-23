@@ -195,10 +195,16 @@ AttributeDataLength(PNTFS_ATTR_RECORD AttrRecord)
 * @param Vcb
 * Pointer to the VCB (DEVICE_EXTENSION) of the target volume.
 *
+*
+* @param CanWait
+* Boolean indicating if the function is allowed to wait for exclusive access to the master file table.
+* This will only be relevant if the MFT doesn't have any free file records and needs to be enlarged.
+*
 * @return
 * STATUS_SUCCESS on success.
 * STATUS_INSUFFICIENT_RESOURCES if an allocation fails.
 * STATUS_INVALID_PARAMETER if there was an error reading the Mft's bitmap.
+* STATUS_CANT_WAIT if CanWait was FALSE and the function could not get immediate, exclusive access to the MFT.
 *
 * @remarks
 * Increases the size of the Master File Table by 8 records. Bitmap entries for the new records are cleared,
@@ -206,7 +212,7 @@ AttributeDataLength(PNTFS_ATTR_RECORD AttrRecord)
 * This function will wait for exlusive access to the volume fcb.
 */
 NTSTATUS
-IncreaseMftSize(PDEVICE_EXTENSION Vcb)
+IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
 {
     PNTFS_ATTR_CONTEXT BitmapContext;
     LARGE_INTEGER BitmapSize;
@@ -221,10 +227,10 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb)
     ULONG LengthWritten;
     NTSTATUS Status;
 
-    DPRINT1("IncreaseMftSize(%p)\n", Vcb);
+    DPRINT1("IncreaseMftSize(%p, %s)\n", Vcb, CanWait ? "TRUE" : "FALSE");
 
     // We need exclusive access to the mft while we change its size
-    if (!ExAcquireResourceExclusiveLite(&(Vcb->DirResource), TRUE))
+    if (!ExAcquireResourceExclusiveLite(&(Vcb->DirResource), CanWait))
     {
         return STATUS_CANT_WAIT;
     }
@@ -1638,17 +1644,22 @@ FixupUpdateSequenceArray(PDEVICE_EXTENSION Vcb,
 * @param DestinationIndex
 * Pointer to a ULONGLONG which will receive the MFT index where the file record was stored.
 *
+* @param CanWait
+* Boolean indicating if the function is allowed to wait for exclusive access to the master file table.
+* This will only be relevant if the MFT doesn't have any free file records and needs to be enlarged.
+*
 * @return
 * STATUS_SUCCESS on success.
 * STATUS_OBJECT_NAME_NOT_FOUND if we can't find the MFT's $Bitmap or if we weren't able 
 * to read the attribute.
 * STATUS_INSUFFICIENT_RESOURCES if we can't allocate enough memory for a copy of $Bitmap.
-* 
+* STATUS_CANT_WAIT if CanWait was FALSE and the function could not get immediate, exclusive access to the MFT.
 */
 NTSTATUS
 AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
                PDEVICE_EXTENSION DeviceExt,
-               PULONGLONG DestinationIndex)
+               PULONGLONG DestinationIndex,
+               BOOLEAN CanWait)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     ULONGLONG MftIndex;
@@ -1661,7 +1672,7 @@ AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
     LARGE_INTEGER BitmapBits;
     UCHAR SystemReservedBits;
 
-    DPRINT1("AddNewMftEntry(%p, %p, %p)\n", FileRecord, DeviceExt, DestinationIndex);
+    DPRINT1("AddNewMftEntry(%p, %p, %p, %s)\n", FileRecord, DeviceExt, DestinationIndex, CanWait ? "TRUE" : "FALSE");
 
     // First, we have to read the mft's $Bitmap attribute
     Status = FindAttribute(DeviceExt, DeviceExt->MasterFileTable, AttributeBitmap, L"", 0, &BitmapContext, NULL);
@@ -1717,14 +1728,14 @@ AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
         ReleaseAttributeContext(BitmapContext);
 
         // Couldn't find a free record in the MFT, add some blank records and try again
-        Status = IncreaseMftSize(DeviceExt);
+        Status = IncreaseMftSize(DeviceExt, CanWait);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("ERROR: Couldn't find space in MFT for file or increase MFT size!\n");
             return Status;
         }
 
-        return AddNewMftEntry(FileRecord, DeviceExt, DestinationIndex);
+        return AddNewMftEntry(FileRecord, DeviceExt, DestinationIndex, CanWait);
     }
 
     DPRINT1("Creating file record at MFT index: %I64u\n", MftIndex);

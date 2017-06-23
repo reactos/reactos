@@ -667,7 +667,8 @@ NtfsCreate(PNTFS_IRP_CONTEXT IrpContext);
 
 NTSTATUS
 NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
-                     PFILE_OBJECT FileObject);
+                     PFILE_OBJECT FileObject,
+                     BOOLEAN CanWait);
 
 /* devctl.c */
 
@@ -825,7 +826,8 @@ NtfsFileSystemControl(PNTFS_IRP_CONTEXT IrpContext);
 NTSTATUS
 AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
                PDEVICE_EXTENSION DeviceExt,
-               PULONGLONG DestinationIndex);
+               PULONGLONG DestinationIndex,
+               BOOLEAN CanWait);
 
 PNTFS_ATTR_CONTEXT
 PrepareAttributeContext(PNTFS_ATTR_RECORD AttrRecord);
