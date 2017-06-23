@@ -16,11 +16,13 @@ class CISFBand :
     public IDeskBar,
     public IPersistStream,
     public IWinEventHandler,
-    public IOleCommandTarget
+    public IOleCommandTarget,
+    public IShellFolderBand
 {
     HINSTANCE m_hInstance;
     CComPtr<IUnknown> m_Site;
     CComPtr<IShellFolder> m_pISF;
+    PCIDLIST_ABSOLUTE m_pidl;
     HWND m_hWnd;
     HWND m_hWndStartButton;
     DWORD m_BandID;    
@@ -29,6 +31,9 @@ public:
 
     CISFBand();
     virtual ~CISFBand();
+
+//Personal Methods
+    HWND CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst);
 
 //IObjectWithSite
 
@@ -149,6 +154,20 @@ public:
       /*[in, out]*/       OLECMDTEXT *pCmdText
     );
 
+//IShellFolderBand
+    virtual HRESULT STDMETHODCALLTYPE GetBandInfoSFB( 
+        PBANDINFOSFB pbi
+    );
+
+    virtual HRESULT STDMETHODCALLTYPE InitializeSFB(
+        IShellFolder      *psf,
+        PCIDLIST_ABSOLUTE pidl
+    );
+
+    virtual HRESULT STDMETHODCALLTYPE SetBandInfoSFB(
+        PBANDINFOSFB pbi
+    );
+
 //*****************************************************************************************************
     
     DECLARE_NOT_AGGREGATABLE(CISFBand)
@@ -162,9 +181,10 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IPersistStream, IPersistStream)
         COM_INTERFACE_ENTRY_IID(IID_IWinEventHandler, IWinEventHandler)
         COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
+        COM_INTERFACE_ENTRY_IID(IID_IShellFolderBand, IShellFolderBand)
     END_COM_MAP()    
 };
 
 //C Constructor
 extern "C"
-HRESULT WINAPI CIFSBand_CreateInstance(REFIID riid, void** ppv);
+HRESULT WINAPI CISFBand_CreateInstance(REFIID riid, void** ppv);

@@ -14,85 +14,105 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(qcklnch);
 
-//Toolbar
+//Misc Methods:
+//Subclassing Button
 
-HWND CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
+LRESULT CALLBACK MyWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+{
+    switch (uMsg)
+    {
+    case WM_COMMAND:
+    {
+        MessageBox(0, L"Button Clicked!!", L"Testing", MB_OK | MB_ICONINFORMATION);
+    }
+    }
+    return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+}
+
+//*****************************************************************************************
+//CISFBand
+
+CISFBand::CISFBand() : m_hWnd(NULL), m_BandID(0) {}
+
+CISFBand::~CISFBand() {}
+
+//ToolbarTest
+
+HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
 {
     //This ought to be global.. (currently testing)
     //HIMAGELIST g_hImageList = NULL;
 
-    // Declare and initialize local constants.
+    // Declare and initialize local constants.    
     const int ImageListID = 0;
-    const int numButtons = 3;
     const int bitmapSize = 16;
 
     const DWORD buttonStyles = BTNS_AUTOSIZE;
 
     // Create the toolbar.
     HWND hWndToolbar = CreateWindowEx(0, TOOLBARCLASSNAME, NULL,
-        WS_CHILD | TBSTYLE_WRAPABLE | TBSTYLE_FLAT | CCS_NORESIZE, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
+        WS_CHILD | TBSTYLE_WRAPABLE | TBSTYLE_LIST | CCS_NORESIZE, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
         hWndParent, NULL, hInst, NULL);
-
     if (hWndToolbar == NULL)
         return NULL;
 
     // Create the image list.
-   /* g_hImageList = ImageList_Create(bitmapSize, bitmapSize,   // Dimensions of individual bitmaps.
-        ILC_COLOR16 | ILC_MASK,   // Ensures transparent background.
-        numButtons, 0);
+    /* g_hImageList = ImageList_Create(bitmapSize, bitmapSize,   // Dimensions of individual bitmaps.
+    ILC_COLOR16 | ILC_MASK,   // Ensures transparent background.
+    numButtons, 0);
 
     // Set the image list.
     SendMessage(hWndToolbar, TB_SETIMAGELIST,
-        (WPARAM)ImageListID,
-        (LPARAM)g_hImageList);
+    (WPARAM)ImageListID,
+    (LPARAM)g_hImageList);
 
     // Load the button images.
     SendMessage(hWndToolbar, TB_LOADIMAGES,
-        (WPARAM)IDB_STD_SMALL_COLOR,
-        (LPARAM)HINST_COMMCTRL);*/
+    (WPARAM)IDB_STD_SMALL_COLOR,
+    (LPARAM)HINST_COMMCTRL);*/
 
     // Initialize button info.
-    // IDM_NEW, IDM_OPEN, and IDM_SAVE are application-defined command constants.
-
-    TBBUTTON tbButtons[numButtons] =
-    {
-        { MAKELONG(STD_FILENEW,  ImageListID), IDM_NEW,  TBSTATE_ENABLED, buttonStyles,{ 0 }, 0, (INT_PTR)L"New" },
-        { MAKELONG(STD_FILEOPEN, ImageListID), IDM_OPEN, TBSTATE_ENABLED, buttonStyles,{ 0 }, 0, (INT_PTR)L"Open" },
-        { MAKELONG(STD_FILESAVE, ImageListID), IDM_SAVE, 0,               buttonStyles,{ 0 }, 0, (INT_PTR)L"Save" }
-    };
-
+    // IDM_NEW, IDM_OPEN, and IDM_SAVE are application-defined command constants.    
+    /*{
+    { MAKELONG(STD_FILENEW,  ImageListID), IDM_NEW,  TBSTATE_ENABLED, buttonStyles,{ 0 }, 0, (INT_PTR)L"New" },
+    { MAKELONG(STD_FILEOPEN, ImageListID), IDM_OPEN, TBSTATE_ENABLED, buttonStyles,{ 0 }, 0, (INT_PTR)L"Open" },
+    { MAKELONG(STD_FILESAVE, ImageListID), IDM_SAVE, 0,               buttonStyles,{ 0 }, 0, (INT_PTR)L"Save" }
+    };*/
     // Add buttons.
-    SendMessage(hWndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
-    SendMessage(hWndToolbar, TB_ADDBUTTONS, (WPARAM)numButtons, (LPARAM)&tbButtons);
+    /*SendMessage(hWndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
+    SendMessage(hWndToolbar, TB_ADDBUTTONS, (WPARAM)nb, (LPARAM)&tbButtons);*/
 
-    //SendMessage(hWndToolbar, TB_INSERTBUTTON, /*(WPARAM)numButtons*/ 0, (LPARAM)&tbButtons[0]);
+    //Enumerate objects
+    CComPtr<IEnumIDList> pedl;
+    HRESULT hr = m_pISF->EnumObjects(0, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS, &pedl);
+    LPITEMIDLIST pidl = NULL;
+    STRRET stret;
+    //LPWSTR pstr = NULL;
+
+    if (SUCCEEDED(hr))
+    {
+        for (int i=0; pedl->Next(MAX_PATH, &pidl, 0) != S_FALSE; i++)
+        {
+            WCHAR sz[MAX_PATH];
+            m_pISF->GetDisplayNameOf(pidl, SHGDN_NORMAL, &stret);
+            //StrRetToStr(&stret, pidl, &pstr);
+            StrRetToBuf(&stret, pidl, sz, sizeof(sz));
+            //MessageBox(0, sz, L"Namespace Object Found!", MB_OK | MB_ICONINFORMATION);
+
+            TBBUTTON tb = { MAKELONG(I_IMAGENONE,  ImageListID), i, TBSTATE_ENABLED, buttonStyles,{ 0 }, 0, (INT_PTR)sz };
+            SendMessage(hWndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
+            SendMessage(hWndToolbar, TB_INSERTBUTTONW, 0, (LPARAM)&tb);            
+        }        
+    }
 
     // Resize the toolbar, and then show it.
     SendMessage(hWndToolbar, TB_AUTOSIZE, 0, 0);
     ShowWindow(hWndToolbar, TRUE);
 
+    CoTaskMemFree((void*)pidl);
+    //CoTaskMemFree((void*)pstr);
     return hWndToolbar;
 }
-
-//Subclassing Button
-
-    LRESULT CALLBACK MyWndProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
-    {
-        switch (uMsg)
-        {
-            case WM_COMMAND:
-            {
-                MessageBox(0, L"Button Clicked!!", L"Testing", MB_OK | MB_ICONINFORMATION);
-            }            
-        } 
-        return DefSubclassProc(hWnd, uMsg, wParam, lParam);
-    }
-
-//CISFBand
-
-    CISFBand::CISFBand() : m_hWnd(NULL), m_BandID(0) {}
-
-    CISFBand::~CISFBand() {}
 
 /*****************************************************************************/
 
@@ -118,6 +138,7 @@ HWND CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
         //SetWindowSubclass(hwndParent, MyWndProc, 0, 0); //when button is clicked, parent receives WM_COMMAND, and thus subclassed to show a test message box
         
         m_hWnd = CreateSimpleToolbar(hwndParent, m_hInstance);
+        SetWindowSubclass(hwndParent, MyWndProc, 0, 0);
 
         return S_OK;
     }
@@ -257,7 +278,7 @@ HWND CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
                 pdbi->ptActual = actualSize;
             }
             if (pdbi->dwMask & DBIM_TITLE)
-                wcscpy(pdbi->wszTitle, L"");                
+                wcscpy(pdbi->wszTitle, L"Quick Launch");                
             if (pdbi->dwMask & DBIM_MODEFLAGS)
             {
                 pdbi->dwModeFlags = DBIMF_NORMAL | DBIMF_VARIABLEHEIGHT;
@@ -427,11 +448,38 @@ HWND CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
         UNIMPLEMENTED;
 
         return E_NOTIMPL;
-    }  
+    }
+
+//IShellFolderBand
+    HRESULT STDMETHODCALLTYPE CISFBand::GetBandInfoSFB(PBANDINFOSFB pbi)
+    {
+        return E_NOTIMPL;
+    }
+
+    HRESULT STDMETHODCALLTYPE CISFBand::InitializeSFB(IShellFolder *psf, PCIDLIST_ABSOLUTE pidl)
+    {
+        if (pidl != NULL)
+        {
+            psf->BindToObject(pidl, 0, IID_IShellFolder, (void**)&m_pISF);
+            m_pidl = pidl;
+        }
+        else
+        {
+            m_pISF = psf;
+            m_pidl = pidl;
+        }
+       
+        return S_OK;
+    }
+
+    HRESULT STDMETHODCALLTYPE CISFBand::SetBandInfoSFB( PBANDINFOSFB pbi)
+    {
+        return E_NOTIMPL;
+    }
 
 //C Constructor
     extern "C"
-    HRESULT WINAPI CIFSBand_CreateInstance(REFIID riid, void** ppv)
+    HRESULT WINAPI CISFBand_CreateInstance(REFIID riid, void** ppv)
     {
         return ShellObjectCreator<CISFBand>(riid, ppv);
     }
