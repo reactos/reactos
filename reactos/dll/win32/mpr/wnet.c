@@ -1479,15 +1479,13 @@ static DWORD _enumerateConnectedW(PWNetEnumerator enumerator, DWORD* user_count,
                     ++curr;
                 }
 
-                if (*user_count != -1)
-                    count = *user_count - total_count;
-                else
-                    count = *user_count;
                 size = left;
             }
 
-            if (ret != WN_SUCCESS || total_count == 0)
-                break;
+            if (*user_count != -1)
+                count = *user_count - total_count;
+            else
+                count = *user_count;
         }
     }
 
