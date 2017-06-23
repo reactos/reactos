@@ -63,6 +63,7 @@ public:
         SHCONTF grfFlags,
         IEnumIDList **ppenumIDList);
 
+protected:
     virtual HRESULT STDMETHODCALLTYPE InternalBindToObject(
         PWSTR path,
         const RegPidlEntry * info,
@@ -72,6 +73,7 @@ public:
         LPBC pbcReserved,
         IShellFolder** ppsfChild);
 
+public:
     virtual HRESULT STDMETHODCALLTYPE GetDefaultColumnState(
         UINT iColumn,
         SHCOLSTATEF *pcsFlags);
@@ -99,7 +101,6 @@ public:
 protected:
     virtual HRESULT STDMETHODCALLTYPE CompareIDs(LPARAM lParam, const RegPidlEntry * first, const RegPidlEntry * second);
     virtual ULONG STDMETHODCALLTYPE ConvertAttributes(const RegPidlEntry * entry, PULONG inMask);
-    virtual BOOL STDMETHODCALLTYPE IsFolder(LPCITEMIDLIST pcidl);
     virtual BOOL STDMETHODCALLTYPE IsFolder(const RegPidlEntry * info);
 
     virtual HRESULT GetInfoFromPidl(LPCITEMIDLIST pcidl, const RegPidlEntry ** pentry);

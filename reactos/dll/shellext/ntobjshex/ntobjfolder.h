@@ -63,6 +63,7 @@ public:
         SHCONTF grfFlags,
         IEnumIDList **ppenumIDList);
 
+protected:
     virtual HRESULT STDMETHODCALLTYPE InternalBindToObject(
         PWSTR path,
         const NtPidlEntry * info,
@@ -71,13 +72,12 @@ public:
         LPITEMIDLIST fullPidl,
         LPBC pbcReserved,
         IShellFolder** ppsfChild);
-    virtual HRESULT STDMETHODCALLTYPE RedirectToSymLink(
-        const NtPidlEntry * info,
-        LPITEMIDLIST first,
-        LPCITEMIDLIST rest,
-        LPBC pbcReserved,
-        IShellFolder ** ppsfChild);
 
+    virtual HRESULT STDMETHODCALLTYPE ResolveSymLink(
+        const NtPidlEntry * info,
+        LPITEMIDLIST * fullPidl);
+
+public:
     virtual HRESULT STDMETHODCALLTYPE GetDefaultColumnState(
         UINT iColumn,
         SHCOLSTATEF *pcsFlags);
@@ -105,7 +105,6 @@ public:
 protected:
     virtual HRESULT STDMETHODCALLTYPE CompareIDs(LPARAM lParam, const NtPidlEntry * first, const NtPidlEntry * second);
     virtual ULONG STDMETHODCALLTYPE ConvertAttributes(const NtPidlEntry * entry, PULONG inMask);
-    virtual BOOL STDMETHODCALLTYPE IsFolder(LPCITEMIDLIST pcidl);
     virtual BOOL STDMETHODCALLTYPE IsFolder(const NtPidlEntry * info);
     virtual BOOL STDMETHODCALLTYPE IsSymLink(const NtPidlEntry * info);
 

@@ -419,15 +419,6 @@ ULONG CRegistryFolder::ConvertAttributes(const RegPidlEntry * entry, PULONG inMa
     return flags & mask;
 }
 
-BOOL CRegistryFolder::IsFolder(LPCITEMIDLIST pcidl)
-{
-    RegPidlEntry * entry = (RegPidlEntry*) &(pcidl->mkid);
-    if ((entry->cb < sizeof(RegPidlEntry)) || (entry->magic != REGISTRY_PIDL_MAGIC))
-        return FALSE;
-
-    return IsFolder(entry);
-}
-
 BOOL CRegistryFolder::IsFolder(const RegPidlEntry * info)
 {
     return (info->entryType == REG_ENTRY_KEY) ||(info->entryType == REG_ENTRY_ROOT);

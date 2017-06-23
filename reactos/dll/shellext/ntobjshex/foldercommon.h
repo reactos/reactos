@@ -187,11 +187,6 @@ public:
 
             LPITEMIDLIST fullPidl = ILCombine(m_shellPidl, first);
 
-            if (IsSymLink(info))
-            {
-                return RedirectToSymLink(info, first, rest, pbcReserved, (IShellFolder**)ppvOut);
-            }
-
             CComPtr<IShellFolder> psfChild;
             hr = InternalBindToObject(path, info, first, rest, fullPidl, pbcReserved, &psfChild);
 
@@ -225,16 +220,14 @@ protected:
         LPBC pbcReserved,
         IShellFolder** ppsfChild) PURE;
 
-public:
-    virtual HRESULT STDMETHODCALLTYPE RedirectToSymLink(
+    virtual HRESULT STDMETHODCALLTYPE ResolveSymLink(
         const TItemId * info,
-        LPITEMIDLIST first,
-        LPCITEMIDLIST rest,
-        LPBC pbcReserved,
-        IShellFolder ** ppsfChild)
+        LPITEMIDLIST * fullPidl)
     {
         return E_NOTIMPL;
     }
+
+public:
 
     virtual HRESULT STDMETHODCALLTYPE BindToStorage(
         LPCITEMIDLIST pidl,
@@ -422,7 +415,40 @@ public:
 
             HKEY keys[1];
 
+            LPITEMIDLIST parent = m_shellPidl;
+
+            CComPtr<IShellFolder> psfParent = this;
+
+            LPCITEMIDLIST child;
+
             int nkeys = _countof(keys);
+            if (cidl == 1 && IsSymLink(apidl[0]))
+            {
+                const TItemId * info;
+                HRESULT hr = GetInfoFromPidl(apidl[0], &info);
+                if (FAILED(hr))
+                    return hr;
+
+                LPITEMIDLIST target;
+                hr = ResolveSymLink(info, &target);
+                if (FAILED(hr))
+                    return hr;
+
+                CComPtr<IShellFolder> psfTarget;
+                hr = ::SHBindToParent(target, IID_PPV_ARG(IShellFolder, &psfTarget), &child);
+                if (FAILED(hr))
+                {
+                    ILFree(target);
+                    return hr;
+                }
+
+                parent = ILClone(target);
+                ILRemoveLastID(parent);
+                psfParent = psfTarget;
+
+                apidl = &child;
+            }
+            
             if (cidl == 1 && IsFolder(apidl[0]))
             {
                 res = RegOpenKey(HKEY_CLASSES_ROOT, L"Folder", keys + 0);
@@ -434,7 +460,7 @@ public:
                 nkeys = 0;
             }
 
-            HRESULT hr = CDefFolderMenu_Create2(m_shellPidl, hwndOwner, cidl, apidl, this, DefCtxMenuCallback, nkeys, keys, &pcm);
+            HRESULT hr = CDefFolderMenu_Create2(parent, hwndOwner, cidl, apidl, psfParent, DefCtxMenuCallback, nkeys, keys, &pcm);
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
 
@@ -635,9 +661,29 @@ protected:
         const TItemId * entry,
         PULONG inMask) PURE;
 
-    virtual BOOL STDMETHODCALLTYPE IsFolder(LPCITEMIDLIST pcidl) PURE;
+    virtual BOOL STDMETHODCALLTYPE IsFolder(LPCITEMIDLIST pcidl)
+    {
+        const TItemId * info;
+
+        HRESULT hr = GetInfoFromPidl(pcidl, &info);
+        if (FAILED(hr))
+            return hr;
+
+        return IsFolder(info);
+    }
 
     virtual BOOL STDMETHODCALLTYPE IsFolder(const TItemId * info) PURE;
+
+    virtual BOOL STDMETHODCALLTYPE IsSymLink(LPCITEMIDLIST pcidl)
+    {
+        const TItemId * info;
+
+        HRESULT hr = GetInfoFromPidl(pcidl, &info);
+        if (FAILED(hr))
+            return hr;
+
+        return IsSymLink(info);
+    }
 
     virtual BOOL STDMETHODCALLTYPE IsSymLink(const TItemId * info)
     {

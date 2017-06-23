@@ -125,72 +125,56 @@ BOOL STDMETHODCALLTYPE CNtObjectFolder::IsSymLink(const NtPidlEntry * info)
     return info->objectType == SYMBOLICLINK_OBJECT;
 }
 
-HRESULT STDMETHODCALLTYPE CNtObjectFolder::RedirectToSymLink(
+HRESULT STDMETHODCALLTYPE CNtObjectFolder::ResolveSymLink(
     const NtPidlEntry * info,
-    LPITEMIDLIST first,
-    LPCITEMIDLIST rest,
-    LPBC pbcReserved,
-    IShellFolder ** ppsfChild)
+    LPITEMIDLIST * fullPidl)
 {
-    HRESULT hr;
-
     WCHAR wbLink[MAX_PATH] = { 0 };
     UNICODE_STRING link;
     RtlInitEmptyUnicodeString(&link, wbLink, sizeof(wbLink));
 
-    hr = GetNTObjectSymbolicLinkTarget(m_NtPath, info->entryName, &link);
+    *fullPidl = NULL;
+
+    HRESULT hr = GetNTObjectSymbolicLinkTarget(m_NtPath, info->entryName, &link);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     WCHAR path[MAX_PATH];
 
-    if (link.Length > 0)
+    if (link.Length == 0)
+        return E_UNEXPECTED;
+
+    if (link.Buffer[1] == L':' && isalphaW(link.Buffer[0]))
     {
-        if (link.Buffer[1] == L':' && isalphaW(link.Buffer[0]))
-        {
-            StringCbCopyNW(path, _countof(path), link.Buffer, link.Length);
-
-            CComPtr<IShellFolder> psfDesktop;
-            hr = SHGetDesktopFolder(&psfDesktop);
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-
-            hr = psfDesktop->ParseDisplayName(NULL, NULL, path, NULL, &first, NULL);
-            if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
-
-            hr = psfDesktop->BindToObject(rest, pbcReserved, IID_PPV_ARG(IShellFolder, ppsfChild));
-            if (FAILED(hr))
-                return hr;
-
-            return S_FALSE;;
-        }
-
-        StringCbCopyW(path, _countof(path), L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{845B0FB2-66E0-416B-8F91-314E23F7C12D}");
-        PathAppend(path, link.Buffer);
+        StringCbCopyNW(path, _countof(path), link.Buffer, link.Length);
 
         CComPtr<IShellFolder> psfDesktop;
         hr = SHGetDesktopFolder(&psfDesktop);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
-        LPITEMIDLIST pidl;
-
-        hr = psfDesktop->ParseDisplayName(NULL, NULL, path, NULL, &pidl, NULL);
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
-
-        CComPtr<IShellFolder> psfChild;
-        hr = psfDesktop->BindToObject(pidl, pbcReserved, IID_PPV_ARG(IShellFolder, ppsfChild));
-        ILFree(pidl);
-
-        if (FAILED(hr))
-            return hr;
-
-        return S_FALSE;;
+        return psfDesktop->ParseDisplayName(NULL, NULL, path, NULL, fullPidl, NULL);
     }
 
-    return E_UNEXPECTED;
+    StringCbCopyW(path, _countof(path), L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{845B0FB2-66E0-416B-8F91-314E23F7C12D}");
+    PathAppend(path, link.Buffer);
+
+    CComPtr<IShellFolder> psfDesktop;
+    hr = SHGetDesktopFolder(&psfDesktop);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    LPITEMIDLIST pidl;
+
+    hr = psfDesktop->ParseDisplayName(NULL, NULL, path, NULL, &pidl, NULL);
+    if (FAILED(hr))
+        return hr;
+    
+    *fullPidl = pidl;
+
+    DumpIdList(pidl);
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CNtObjectFolder::InternalBindToObject(
@@ -485,15 +469,6 @@ ULONG CNtObjectFolder::ConvertAttributes(const NtPidlEntry * entry, PULONG inMas
         flags |= SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_BROWSABLE;
 
     return flags & mask;
-}
-
-BOOL CNtObjectFolder::IsFolder(LPCITEMIDLIST pcidl)
-{
-    NtPidlEntry * info = (NtPidlEntry*) &(pcidl->mkid);
-    if ((info->cb < sizeof(NtPidlEntry)) || (info->magic != NT_OBJECT_PIDL_MAGIC))
-        return FALSE;
-
-    return IsFolder(info);
 }
 
 BOOL CNtObjectFolder::IsFolder(const NtPidlEntry * info)
