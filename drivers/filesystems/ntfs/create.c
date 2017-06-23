@@ -323,7 +323,7 @@ NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
 static
 NTSTATUS
 NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
-               PIRP Irp)
+               PNTFS_IRP_CONTEXT IrpContext)
 {
     PDEVICE_EXTENSION DeviceExt;
     PIO_STACK_LOCATION Stack;
@@ -334,8 +334,9 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
 //    PWSTR FileName;
     NTSTATUS Status;
     UNICODE_STRING FullPath;
+    PIRP Irp = IrpContext->Irp;
 
-    DPRINT1("NtfsCreateFile(%p, %p) called\n", DeviceObject, Irp);
+    DPRINT1("NtfsCreateFile(%p, %p) called\n", DeviceObject, IrpContext);
 
     DeviceExt = DeviceObject->DeviceExtension;
     ASSERT(DeviceExt);
@@ -561,7 +562,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
             }
 
             // Create the file record on disk
-            Status = NtfsCreateFileRecord(DeviceExt, FileObject);
+            Status = NtfsCreateFileRecord(DeviceExt, FileObject, BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT));
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("ERROR: Couldn't create file record!\n");
@@ -569,7 +570,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
             }
 
             // Now we should be able to open the file
-            return NtfsCreateFile(DeviceObject, Irp);
+            return NtfsCreateFile(DeviceObject, IrpContext);
         }
     }
 
@@ -615,7 +616,7 @@ NtfsCreate(PNTFS_IRP_CONTEXT IrpContext)
     ExAcquireResourceExclusiveLite(&DeviceExt->DirResource,
                                    TRUE);
     Status = NtfsCreateFile(DeviceObject,
-                            IrpContext->Irp);
+                            IrpContext);
     ExReleaseResourceLite(&DeviceExt->DirResource);
 
     return Status;
@@ -634,13 +635,20 @@ NtfsCreate(PNTFS_IRP_CONTEXT IrpContext)
 * @param FileObject
 * Pointer to a FILE_OBJECT describing the file to be created
 *
+* @param CanWait
+* Boolean indicating if the function is allowed to wait for exclusive access to the master file table.
+* This will only be relevant if the MFT doesn't have any free file records and needs to be enlarged.
+* 
 * @return
 * STATUS_SUCCESS on success. 
 * STATUS_INSUFFICIENT_RESOURCES if unable to allocate memory for the file record.
+* STATUS_CANT_WAIT if CanWait was FALSE and the function needed to resize the MFT but 
+* couldn't get immediate, exclusive access to it.
 */
 NTSTATUS
 NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
-                     PFILE_OBJECT FileObject)
+                     PFILE_OBJECT FileObject,
+                     BOOLEAN CanWait)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_RECORD_HEADER FileRecord;
@@ -649,7 +657,7 @@ NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
     ULONGLONG ParentMftIndex;
     ULONGLONG FileMftIndex;
 
-    DPRINT1("NtfsCreateFileRecord(%p, %p)\n", DeviceExt, FileObject);
+    DPRINT1("NtfsCreateFileRecord(%p, %p, %s)\n", DeviceExt, FileObject, CanWait ? "TRUE" : "FALSE");
 
     // allocate memory for file record
     FileRecord = ExAllocatePoolWithTag(NonPagedPool,
@@ -708,7 +716,7 @@ NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
     NtfsDumpFileRecord(DeviceExt, FileRecord);
 
     // Now that we've built the file record in memory, we need to store it in the MFT.
-    Status = AddNewMftEntry(FileRecord, DeviceExt, &FileMftIndex);
+    Status = AddNewMftEntry(FileRecord, DeviceExt, &FileMftIndex, CanWait);
     if (NT_SUCCESS(Status))
     {
         // The highest 2 bytes should be the sequence number, unless the parent happens to be root
