@@ -259,6 +259,69 @@ I_BrowserSetNetlogonState(
 
 NET_API_STATUS
 WINAPI
+NetBrowserStatisticsGet(
+    _In_ LPWSTR ServerName,
+    _In_ DWORD Level,
+    _Out_ LPBYTE *Buffer)
+{
+    BROWSER_STATISTICS_STRUCT StatisticsStruct;
+    BROWSER_STATISTICS_100_CONTAINER Level100Container = {0, NULL};
+    BROWSER_STATISTICS_101_CONTAINER Level101Container = {0, NULL};
+    NET_API_STATUS status;
+
+    TRACE("NetBrowserStatisticsGet(%s %lu %p)\n",
+          debugstr_w(ServerName), Level, Buffer);
+
+    if (Level != 100 && Level != 101)
+        return ERROR_INVALID_LEVEL;
+
+    StatisticsStruct.Level = Level;
+    switch (Level)
+    {
+        case 100:
+            StatisticsStruct.Statistics.Level100 = &Level100Container;
+            break;
+
+        case 101:
+            StatisticsStruct.Statistics.Level101 = &Level101Container;
+            break;
+    }
+
+    RpcTryExcept
+    {
+        status = NetrBrowserStatisticsGet(ServerName,
+                                          Level,
+                                          &StatisticsStruct);
+
+        switch (Level)
+        {
+            case 100:
+                if (StatisticsStruct.Statistics.Level100->Buffer != NULL)
+                {
+                    *Buffer = (LPBYTE)StatisticsStruct.Statistics.Level100->Buffer;
+                }
+                break;
+
+            case 101:
+                if (StatisticsStruct.Statistics.Level101->Buffer != NULL)
+                {
+                    *Buffer = (LPBYTE)StatisticsStruct.Statistics.Level101->Buffer;
+                }
+                break;
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
 NetServerEnum(
     _In_opt_ LMCSTR servername,
     _In_ DWORD level,
@@ -270,11 +333,22 @@ NetServerEnum(
     _In_opt_ LMCSTR domain,
     _Inout_opt_ LPDWORD resume_handle)
 {
-    FIXME("NetServerEnum(%s %lu %p %lu %p %p %lu %s %p)\n",
+    TRACE("NetServerEnum(%s %lu %p %lu %p %p %lu %s %p)\n",
           debugstr_w(servername), level, bufptr, prefmaxlen, entriesread,
           totalentries, servertype, debugstr_w(domain), resume_handle);
 
-    return ERROR_NO_BROWSER_SERVERS_FOUND;
+    if (resume_handle != NULL)
+        *resume_handle = 0;
+
+    return NetServerEnumEx(servername,
+                           level,
+                           bufptr,
+                           prefmaxlen,
+                           entriesread,
+                           totalentries,
+                           servertype,
+                           domain,
+                           NULL);
 }
 
 

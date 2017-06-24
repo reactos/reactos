@@ -122,7 +122,7 @@ typedef struct _BROWSER_STATISTICS_STRUCT
         [case(101)] PBROWSER_STATISTICS_101_CONTAINER Level101;
         [default] ;
     } Statistics;
-}BROWSER_STATISTICS_STRUCT, *PBROWSER_STATISTICS_STRUCT, *LPBROWSER_STATISTICS_STRUCT;
+} BROWSER_STATISTICS_STRUCT, *PBROWSER_STATISTICS_STRUCT, *LPBROWSER_STATISTICS_STRUCT;
 
 [
     uuid(6BFFD098-A112-3610-9833-012892020162),
@@ -188,7 +188,7 @@ interface browser
     /* Function 8 */
     NET_API_STATUS
     __stdcall
-    I_BrowserrStatisticsGet(
+    NetrBrowserStatisticsGet(
         [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName,
         [in] DWORD Level,
         [in, out] LPBROWSER_STATISTICS_STRUCT StatisticsStruct);

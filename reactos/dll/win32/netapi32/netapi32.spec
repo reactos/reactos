@@ -109,7 +109,7 @@
 @ stdcall NetAuditClear(wstr wstr wstr)
 @ stdcall NetAuditRead(wstr wstr ptr long ptr long long ptr long ptr ptr)
 @ stdcall NetAuditWrite(long ptr long wstr ptr)
-@ stub NetBrowserStatisticsGet
+@ stdcall NetBrowserStatisticsGet(wstr long ptr)
 @ stdcall NetConfigGet(wstr wstr wstr ptr)
 @ stdcall NetConfigGetAll(wstr wstr ptr)
 @ stdcall NetConfigSet(wstr wstr wstr long long ptr long)
