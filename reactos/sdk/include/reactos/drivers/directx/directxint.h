@@ -24,8 +24,8 @@ typedef struct _EDD_DIRECTDRAW_LOCAL
 /* 0x2C */    FLONG fl;
 /* 0x30 */    struct _EDD_DIRECTDRAW_LOCAL *peDirectDrawLocal_prev;  // verified to match Windows XP,
                                                                      // points to the old DDLocal when new handle is created.
-/* 0x34 */    ULONG unk_034;
-/* 0x38 */    ULONG unk_038;
+/* 0x34 */    FLATPTR fpProcess2;                                    // surface memory address returned by graphic driver
+/* 0x38 */    ULONG isMemoryMapped;                                  // surface memory mapped?
 /* 0x3C */    HANDLE UniqueProcess;
 /* 0x40 */    PEPROCESS Process;
 /* 0x44 */    VOID *unk_044;

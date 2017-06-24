@@ -345,15 +345,6 @@ DxDdGetScanLine(
 
 DWORD
 NTAPI
-DxDdLock(
-    PVOID p1)
-{
-    TRACE();
-    return 0;
-}
-
-DWORD
-NTAPI
 DxDdLockD3D(
     PVOID p1,
     PVOID p2)
@@ -459,15 +450,6 @@ NTAPI
 DxDdUnattachSurface(
     PVOID p1,
     PVOID p2)
-{
-    TRACE();
-    return 0;
-}
-
-DWORD
-NTAPI
-DxDdUnlock(
-    PVOID p1)
 {
     TRACE();
     return 0;

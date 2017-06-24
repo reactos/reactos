@@ -202,6 +202,8 @@ BOOL NTAPI DxDdQueryDirectDrawObject(HANDLE DdHandle, DD_HALINFO* pDdHalInfo, DW
 DWORD NTAPI DxDdReenableDirectDrawObject(HANDLE DdHandle, PVOID p2);
 DWORD NTAPI DxDdCanCreateSurface(HANDLE DdHandle, PDD_CANCREATESURFACEDATA SurfaceData);
 DWORD NTAPI DxDdCanCreateD3DBuffer(HANDLE DdHandle, PDD_CANCREATESURFACEDATA SurfaceData);
+DWORD NTAPI DxDdLock(HANDLE hSurface, PDD_LOCKDATA puLockData, HDC hdcClip);
+DWORD NTAPI DxDdUnlock(HANDLE hSurface, PDD_UNLOCKDATA puUnlockData);
 
 
 /* Internal functions */
