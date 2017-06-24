@@ -111,28 +111,3 @@ typedef BOOL (APIENTRY *PGD_ENGUNLOCKDIRECTDRAWSURFACE)(PDD_SURFACE_LOCAL);
 /* Gammaramp internal prototype */
 BOOL FASTCALL IntGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp);
 BOOL FASTCALL IntSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL);
-
-/* Debug function oly for win32k dx */
-void dump_edd_directdraw_global(EDD_DIRECTDRAW_GLOBAL *pEddgbl);
-void dump_edd_directdraw_local(PEDD_DIRECTDRAW_LOCAL pEddlcl);
-void dump_halinfo(DD_HALINFO *pHalInfo);
-
-#define checkflag(dwflag,dwvalue,text) \
-        if (dwflag & dwvalue) \
-        { \
-            if (count!=0) \
-            { \
-                DPRINT1("| "); \
-            } \
-            dwflag = (ULONG)dwflag - (ULONG)dwvalue; \
-            DPRINT1("%s ",text); \
-            count++; \
-        }
-
-#define endcheckflag(dwflag,text) \
-    if (count==0) \
-        DPRINT1("0x%08lx\n", (ULONG) dwflag);\
-    else \
-        DPRINT1("\n");\
-    if (flag != 0) \
-        DPRINT1("undoc value in %s flags value %08lx\n",text, (ULONG) dwflag);
