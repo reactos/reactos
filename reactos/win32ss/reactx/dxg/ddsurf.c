@@ -6,6 +6,8 @@
  * PROGRAMER:        Sebastian Gasiorek (sebastian.gasiorek@reactos.org)
  */
 
+#include <dxg_int.h>
+
 /*++
 * @name DxDdLock
 * @implemented
