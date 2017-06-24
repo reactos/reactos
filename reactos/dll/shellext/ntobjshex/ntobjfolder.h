@@ -52,6 +52,7 @@ class CNtObjectFolder :
     public CCommonFolder<CNtObjectFolder, NtPidlEntry, CNtObjectFolderExtractIcon>
 {
 public:
+    DECLARE_REGISTRY_RESOURCEID(IDR_NTOBJECTFOLDER)
 
     CNtObjectFolder();
     virtual ~CNtObjectFolder();

@@ -53,6 +53,7 @@ class CRegistryFolder :
     HKEY m_hRoot;
 
 public:
+    DECLARE_REGISTRY_RESOURCEID(IDR_REGISTRYFOLDER)
 
     CRegistryFolder();
     virtual ~CRegistryFolder();
