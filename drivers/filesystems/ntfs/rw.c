@@ -283,6 +283,10 @@ NtfsRead(PNTFS_IRP_CONTEXT IrpContext)
 * @param IrpFlags
 * TODO: flags are presently ignored in code.
 *
+* @param CaseSensitive
+* Boolean indicating if the function should operate in case-sensitive mode. This will be TRUE
+* if an application opened the file with the FILE_FLAG_POSIX_SEMANTICS flag.
+*
 * @param LengthWritten
 * Pointer to a ULONG. This ULONG will be set to the number of bytes successfully written.
 *
@@ -303,6 +307,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
                        ULONG Length,
                        ULONG WriteOffset,
                        ULONG IrpFlags,
+                       BOOLEAN CaseSensitive,
                        PULONG LengthWritten)
 {
     NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
@@ -312,7 +317,15 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
     ULONG AttributeOffset;
     ULONGLONG StreamSize;
 
-    DPRINT("NtfsWriteFile(%p, %p, %p, %u, %u, %x, %p)\n", DeviceExt, FileObject, Buffer, Length, WriteOffset, IrpFlags, LengthWritten);
+    DPRINT("NtfsWriteFile(%p, %p, %p, %u, %u, %x, %s, %p)\n",
+           DeviceExt,
+           FileObject,
+           Buffer,
+           Length,
+           WriteOffset,
+           IrpFlags,
+           (CaseSensitive ? "TRUE" : "FALSE"),
+           LengthWritten);
 
     *LengthWritten = 0;
 
@@ -444,7 +457,13 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
             filename.Length = fileNameAttribute->NameLength * sizeof(WCHAR);
             filename.MaximumLength = filename.Length;
 
-            Status = UpdateFileNameRecord(Fcb->Vcb, ParentMFTId, &filename, FALSE, DataSize.QuadPart, AllocationSize);
+            Status = UpdateFileNameRecord(Fcb->Vcb,
+                                          ParentMFTId,
+                                          &filename,
+                                          FALSE,
+                                          DataSize.QuadPart,
+                                          AllocationSize,
+                                          CaseSensitive);
 
         }
         else
@@ -667,6 +686,7 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
                            Length,
                            ByteOffset.LowPart,
                            Irp->Flags,
+                           (IrpContext->Stack->Flags & SL_CASE_SENSITIVE),
                            &ReturnedWriteLength);
 
     IrpContext->Irp->IoStatus.Status = Status;

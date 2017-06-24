@@ -415,6 +415,10 @@ NtfsQueryInformation(PNTFS_IRP_CONTEXT IrpContext)
 * @param IrpFlags
 * ULONG describing the flags of the original IRP request (Irp->Flags).
 *
+* @param CaseSensitive
+* Boolean indicating if the function should operate in case-sensitive mode. This will be TRUE
+* if an application opened the file with the FILE_FLAG_POSIX_SEMANTICS flag.
+*
 * @param NewFileSize
 * Pointer to a LARGE_INTEGER which indicates the new end of file (file size).
 *
@@ -436,6 +440,7 @@ NtfsSetEndOfFile(PNTFS_FCB Fcb,
                  PFILE_OBJECT FileObject,
                  PDEVICE_EXTENSION DeviceExt,
                  ULONG IrpFlags,
+                 BOOLEAN CaseSensitive,
                  PLARGE_INTEGER NewFileSize)
 {
     LARGE_INTEGER CurrentFileSize;
@@ -545,7 +550,13 @@ NtfsSetEndOfFile(PNTFS_FCB Fcb,
 
     AllocationSize = ROUND_UP(NewFileSize->QuadPart, Fcb->Vcb->NtfsInfo.BytesPerCluster);
 
-    Status = UpdateFileNameRecord(Fcb->Vcb, ParentMFTId, &filename, FALSE, NewFileSize->QuadPart, AllocationSize);
+    Status = UpdateFileNameRecord(Fcb->Vcb,
+                                  ParentMFTId,
+                                  &filename,
+                                  FALSE,
+                                  NewFileSize->QuadPart,
+                                  AllocationSize,
+                                  CaseSensitive);
 
     ReleaseAttributeContext(DataContext);
     ExFreePoolWithTag(FileRecord, TAG_NTFS);
@@ -620,7 +631,12 @@ NtfsSetInformation(PNTFS_IRP_CONTEXT IrpContext)
             DPRINT1("FIXME: Using hacky method of setting FileAllocationInformation.\n");
         case FileEndOfFileInformation:
             EndOfFileInfo = (PFILE_END_OF_FILE_INFORMATION)SystemBuffer;
-            Status = NtfsSetEndOfFile(Fcb, FileObject, DeviceExt, Irp->Flags, &EndOfFileInfo->EndOfFile);
+            Status = NtfsSetEndOfFile(Fcb,
+                                      FileObject,
+                                      DeviceExt,
+                                      Irp->Flags,
+                                      (Stack->Flags & SL_CASE_SENSITIVE),
+                                      &EndOfFileInfo->EndOfFile);
             break;
             
         // TODO: all other information classes

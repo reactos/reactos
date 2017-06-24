@@ -115,6 +115,10 @@ AddData(PFILE_RECORD_HEADER FileRecord,
 * @param ParentMftIndex
 * Pointer to a ULONGLONG which will receive the index of the parent directory.
 *
+* @param CaseSensitive
+* Boolean indicating if the function should operate in case-sensitive mode. This will be TRUE
+* if an application opened the file with the FILE_FLAG_POSIX_SEMANTICS flag.
+*
 * @return
 * STATUS_SUCCESS on success. STATUS_NOT_IMPLEMENTED if target address isn't at the end
 * of the given file record.
@@ -132,7 +136,8 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
             PNTFS_ATTR_RECORD AttributeAddress,
             PDEVICE_EXTENSION DeviceExt,
             PFILE_OBJECT FileObject,
-            PULONGLONG ParentMftIndex)
+            PULONGLONG ParentMftIndex,
+            BOOLEAN CaseSensitive)
 {
     ULONG ResidentHeaderLength = FIELD_OFFSET(NTFS_ATTR_RECORD, Resident.Reserved) + sizeof(UCHAR);
     PFILENAME_ATTRIBUTE FileNameAttribute;
@@ -178,7 +183,13 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
         if(Remaining.Length != 0)
             RtlCopyUnicodeString(&FilenameNoPath, &Remaining);
 
-        Status = NtfsFindMftRecord(DeviceExt, CurrentMFTIndex, &Current, &FirstEntry, FALSE, &CurrentMFTIndex);
+        Status = NtfsFindMftRecord(DeviceExt,
+                                   CurrentMFTIndex,
+                                   &Current,
+                                   &FirstEntry,
+                                   FALSE,
+                                   &CurrentMFTIndex,
+                                   CaseSensitive);
         if (!NT_SUCCESS(Status))
             break;
 
