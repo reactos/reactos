@@ -41,9 +41,9 @@
 @ stub I_BrowserDebugCall
 @ stub I_BrowserDebugTrace
 @ stdcall I_BrowserQueryEmulatedDomains(wstr ptr ptr)
-@ stub I_BrowserQueryOtherDomains
-@ stub I_BrowserQueryStatistics
-@ stub I_BrowserResetNetlogonState
+@ stdcall I_BrowserQueryOtherDomains(wstr ptr ptr ptr)
+@ stdcall I_BrowserQueryStatistics(wstr ptr)
+@ stdcall I_BrowserResetNetlogonState(wstr)
 @ stdcall I_BrowserResetStatistics(wstr)
 @ stub I_BrowserServerEnum
 @ stdcall I_BrowserSetNetlogonState(wstr wstr wstr long)

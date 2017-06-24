@@ -1,5 +1,5 @@
-#ifndef _LMBROWSR_
-#define _LMBROWSR_
+#ifndef _LMBROWSR_H
+#define _LMBROWSR_H
 #if __GNUC__ >=3
 #pragma GCC system_header
 #endif
