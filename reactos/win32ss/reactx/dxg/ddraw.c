@@ -223,7 +223,7 @@ intDdCreateDirectDrawLocal(HDEV hDev)
 
     /* initialize DIRECTDRAW_LOCAL */
     peDdL->peDirectDrawLocal_prev = peDdGl->peDirectDrawLocalList;
-    peDdL->UniqueProcess = PsGetCurrentThreadProcessId();
+    peDdL->hCreatorProcess = PsGetCurrentThreadProcessId();
     peDdL->Process = PsGetCurrentProcess();
 
     // link DirectDrawGlobal and DirectDrawLocal
@@ -233,7 +233,7 @@ intDdCreateDirectDrawLocal(HDEV hDev)
 
     gpEngFuncs.DxEngReferenceHdev(hDev);
 
-    InterlockedExchangeAdd((LONG*)&peDdL->pobj.cExclusiveLock, 0xFFFFFFFF);
+    InterlockedDecrement((VOID*)&peDdL->pobj.cExclusiveLock);
 
     return peDdL->pobj.hHmgr;
 }
@@ -331,7 +331,7 @@ DxDdGetDriverInfo(HANDLE DdHandle, PDD_GETDRIVERINFODATA drvInfoData)
         }
         if (InlineIsEqualGUID(&drvInfoData->guidInfo, &GUID_VideoPortCaps))
         {
-            pInfo = (VOID*)peDdGl->unk_000c[0];
+            pInfo = (VOID*)peDdGl->lpDDVideoPortCaps;
             dwInfoSize = 72 * peDdGl->ddHalInfo.ddCaps.dwMaxVideoPorts;
         }
         if (InlineIsEqualGUID(&drvInfoData->guidInfo, &GUID_D3DCallbacks3))
@@ -462,13 +462,13 @@ DxDdQueryDirectDrawObject(
             *(DWORD*)((ULONG)pCallBackFlags + 8) = peDdGl->ddPaletteCallbacks.dwFlags;
         }
 
-        if ( pd3dNtHalCallbacks )
+        if (pd3dNtHalCallbacks)
             memcpy(pd3dNtHalCallbacks, &peDdGl->d3dNtHalCallbacks, sizeof(peDdGl->d3dNtHalCallbacks));
 
-        if ( pd3dNtGlobalDriverData )
+        if (pd3dNtGlobalDriverData)
             memcpy(pd3dNtGlobalDriverData, &peDdGl->d3dNtGlobalDriverData, sizeof(peDdGl->d3dNtGlobalDriverData));
 
-        if ( pd3dBufCallbacks )
+        if (pd3dBufCallbacks)
             memcpy(pd3dBufCallbacks, &peDdGl->d3dBufCallbacks, sizeof(peDdGl->d3dBufCallbacks));
 
         if (pTextureFormats)
@@ -577,6 +577,98 @@ DxDdReenableDirectDrawObject(
     gpEngFuncs.DxEngUnlockHdev(peDdGl->hDev);
     gpEngFuncs.DxEngUnlockShareSem();
 
+    InterlockedDecrement((VOID*)&peDdL->pobj.cExclusiveLock);
+
+    return RetVal;
+}
+
+PEDD_SURFACE
+NTAPI
+intDdCreateNewSurfaceObject(PEDD_DIRECTDRAW_LOCAL peDdL, HANDLE hDirectDrawLocal, PDD_SURFACE_GLOBAL pDdSurfGlob, PDD_SURFACE_LOCAL pDdSurfLoc, PDD_SURFACE_MORE pDdSurfMore)
+{
+    PEDD_SURFACE pSurface = NULL;
+
+    // first check if we can assign it from current ddHandle
+    if (hDirectDrawLocal)
+    {
+        pSurface = (PEDD_SURFACE)DdHmgLock(hDirectDrawLocal, ObjType_DDSURFACE_TYPE, FALSE);
+        // check if surface is locked and belongs to correct DirectDrawLocal
+        if ((pSurface)&&((pSurface->peDirectDrawLocal != peDdL)||(!pSurface->hSecure)))
+        {
+            InterlockedDecrement((VOID*)&peDdL->pobj.cExclusiveLock);
+            return NULL;
+        }
+    }
+
+    // if surface not found from ddHandle or ddHandle not provided
+    if (!pSurface)
+    {
+        // create new surface object
+        pSurface = (PEDD_SURFACE)DdHmgAlloc(sizeof(EDD_SURFACE), ObjType_DDSURFACE_TYPE, TRUE);
+        if (pSurface)
+        {
+            pSurface->ddsSurfaceLocal.lpGbl = &pSurface->ddsSurfaceGlobal;
+            pSurface->ddsSurfaceLocal.lpSurfMore = &pSurface->ddsSurfaceMore;
+            pSurface->ddsSurfaceInt.lpLcl = &pSurface->ddsSurfaceLocal;
+            pSurface->peDirectDrawLocal = peDdL;
+            pSurface->peDirectDrawGlobalNext = peDdL->peDirectDrawGlobal2;
+            pSurface->ldev = gpEngFuncs.DxEngGetHdevData(pSurface->peDirectDrawGlobalNext->hDev, DxEGShDevData_ldev);
+            pSurface->gdev = gpEngFuncs.DxEngGetHdevData(pSurface->peDirectDrawGlobalNext->hDev, DxEGShDevData_GDev);
+            pSurface->hSecure = (VOID*)1;
+        }
+    }
+
+    if (pSurface)
+    {
+        pSurface->ddsSurfaceGlobal.fpVidMem = pDdSurfGlob->fpVidMem;
+        pSurface->ddsSurfaceGlobal.lPitch = pDdSurfGlob->lPitch;
+        pSurface->ddsSurfaceGlobal.wWidth = pDdSurfGlob->wWidth;
+        pSurface->ddsSurfaceGlobal.wHeight = pDdSurfGlob->wHeight;
+        pSurface->wWidth = pDdSurfGlob->wWidth;
+        pSurface->wHeight = pDdSurfGlob->wHeight;
+        memcpy(&pSurface->ddsSurfaceGlobal.ddpfSurface, &pDdSurfGlob->ddpfSurface, sizeof(pSurface->ddsSurfaceGlobal.ddpfSurface));
+        pSurface->ddsSurfaceLocal.ddsCaps.dwCaps = pDdSurfLoc->ddsCaps.dwCaps;
+        pSurface->ddsSurfaceMore.ddsCapsEx.dwCaps2 = pDdSurfMore->ddsCapsEx.dwCaps2;
+        pSurface->ddsSurfaceMore.ddsCapsEx.dwCaps3 = pDdSurfMore->ddsCapsEx.dwCaps3;
+        pSurface->ddsSurfaceMore.ddsCapsEx.dwCaps4 = pDdSurfMore->ddsCapsEx.dwCaps4;
+        pSurface->ddsSurfaceMore.dwSurfaceHandle = pDdSurfMore->dwSurfaceHandle;
+        pSurface->hSecure = (VOID*)1;
+
+        peDdL->peSurface_DdList = pSurface;
+        peDdL->hSurface = (ULONG)pSurface->pobj.hHmgr;
+    }
+
+    return pSurface;
+}
+
+HANDLE
+NTAPI
+DxDdCreateSurfaceObject(HANDLE hDirectDrawLocal,
+                        HANDLE hSurface,
+                        PDD_SURFACE_LOCAL puSurfaceLocal,
+                        PDD_SURFACE_MORE puSurfaceMore,
+                        PDD_SURFACE_GLOBAL puSurfaceGlobal,
+                        BOOL bComplete)
+{
+    HANDLE RetVal = FALSE;
+    PEDD_DIRECTDRAW_LOCAL peDdL = NULL;
+    PEDD_SURFACE pDdSurface = NULL;
+
+    peDdL = (PEDD_DIRECTDRAW_LOCAL)DdHmgLock(hDirectDrawLocal, ObjType_DDLOCAL_TYPE, FALSE);
+
+    if (!peDdL)
+        return RetVal;
+
+    pDdSurface = intDdCreateNewSurfaceObject(peDdL, hSurface, puSurfaceGlobal, puSurfaceLocal, puSurfaceMore);
+    if (!pDdSurface)
+    {
+        InterlockedDecrement((VOID*)&peDdL->pobj.cExclusiveLock);
+        return RetVal;
+    }
+
+    RetVal = pDdSurface->pobj.hHmgr;
+
+    InterlockedDecrement((VOID*)&pDdSurface->pobj.cExclusiveLock);
     InterlockedDecrement((VOID*)&peDdL->pobj.cExclusiveLock);
 
     return RetVal;
