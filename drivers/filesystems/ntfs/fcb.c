@@ -506,6 +506,7 @@ static NTSTATUS
 NtfsDirFindFile(PNTFS_VCB Vcb,
                 PNTFS_FCB DirectoryFcb,
                 PWSTR FileToFind,
+                BOOLEAN CaseSensitive,
                 PNTFS_FCB *FoundFCB)
 {
     NTSTATUS Status;
@@ -517,7 +518,12 @@ NtfsDirFindFile(PNTFS_VCB Vcb,
     PNTFS_ATTR_CONTEXT DataContext;
     USHORT Length = 0;
 
-    DPRINT1("NtfsDirFindFile(%p, %p, %S, %p)\n", Vcb, DirectoryFcb, FileToFind, FoundFCB);
+    DPRINT1("NtfsDirFindFile(%p, %p, %S, %s, %p)\n",
+            Vcb,
+            DirectoryFcb,
+            FileToFind,
+            CaseSensitive ? "TRUE" : "FALSE",
+            FoundFCB);
 
     *FoundFCB = NULL;
     RtlInitUnicodeString(&File, FileToFind);
@@ -551,7 +557,7 @@ NtfsDirFindFile(PNTFS_VCB Vcb,
         DPRINT1("Will now look for file '%wZ' with stream '%S'\n", &File, Colon);
     }
 
-    Status = NtfsLookupFileAt(Vcb, &File, &FileRecord, &MFTIndex, CurrentDir);
+    Status = NtfsLookupFileAt(Vcb, &File, &FileRecord, &MFTIndex, CurrentDir, CaseSensitive);
     if (!NT_SUCCESS(Status))
     {
         return Status;
@@ -587,7 +593,8 @@ NTSTATUS
 NtfsGetFCBForFile(PNTFS_VCB Vcb,
                   PNTFS_FCB *pParentFCB,
                   PNTFS_FCB *pFCB,
-                  const PWSTR pFileName)
+                  const PWSTR pFileName,
+                  BOOLEAN CaseSensitive)
 {
     NTSTATUS Status;
     WCHAR pathName [MAX_PATH];
@@ -596,11 +603,12 @@ NtfsGetFCBForFile(PNTFS_VCB Vcb,
     PNTFS_FCB FCB;
     PNTFS_FCB parentFCB;
 
-    DPRINT("NtfsGetFCBForFile(%p, %p, %p, '%S')\n",
+    DPRINT("NtfsGetFCBForFile(%p, %p, %p, '%S', %s)\n",
            Vcb,
            pParentFCB,
            pFCB,
-           pFileName);
+           pFileName,
+           CaseSensitive ? "TRUE" : "FALSE");
 
     /* Dummy code */
 //  FCB = NtfsOpenRootFCB(Vcb);
@@ -677,7 +685,7 @@ NtfsGetFCBForFile(PNTFS_VCB Vcb,
                            NtfsGetNextPathElement(currentElement) - currentElement);
             DPRINT("  elementName:%S\n", elementName);
 
-            Status = NtfsDirFindFile(Vcb, parentFCB, elementName, &FCB);
+            Status = NtfsDirFindFile(Vcb, parentFCB, elementName, CaseSensitive, &FCB);
             if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
             {
                 *pParentFCB = parentFCB;

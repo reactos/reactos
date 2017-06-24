@@ -246,6 +246,7 @@ NTSTATUS
 NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
              PFILE_OBJECT FileObject,
              PWSTR FileName,
+             BOOLEAN CaseSensitive,
              PNTFS_FCB * FoundFCB)
 {
     PNTFS_FCB ParentFcb;
@@ -253,7 +254,12 @@ NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
     NTSTATUS Status;
     PWSTR AbsFileName = NULL;
 
-    DPRINT1("NtfsOpenFile(%p, %p, %S, %p)\n", DeviceExt, FileObject, FileName, FoundFCB);
+    DPRINT1("NtfsOpenFile(%p, %p, %S, %s, %p)\n",
+            DeviceExt,
+            FileObject,
+            FileName,
+            CaseSensitive ? "TRUE" : "FALSE",
+            FoundFCB);
 
     *FoundFCB = NULL;
 
@@ -285,7 +291,8 @@ NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
         Status = NtfsGetFCBForFile(DeviceExt,
                                    &ParentFcb,
                                    &Fcb,
-                                   FileName);
+                                   FileName,
+                                   CaseSensitive);
         if (ParentFcb != NULL)
         {
             NtfsReleaseFCB(DeviceExt,
@@ -412,6 +419,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
         Status = NtfsOpenFile(DeviceExt,
                               FileObject,
                               ((RequestedOptions & FILE_OPEN_BY_FILE_ID) ? FullPath.Buffer : FileObject->FileName.Buffer),
+                              (Stack->Flags & SL_CASE_SENSITIVE),
                               &Fcb);
 
         if (RequestedOptions & FILE_OPEN_BY_FILE_ID)

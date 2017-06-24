@@ -1359,7 +1359,8 @@ UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
                      PUNICODE_STRING FileName,
                      BOOLEAN DirSearch,
                      ULONGLONG NewDataSize,
-                     ULONGLONG NewAllocationSize)
+                     ULONGLONG NewAllocationSize,
+                     BOOLEAN CaseSensitive)
 {
     PFILE_RECORD_HEADER MftRecord;
     PNTFS_ATTR_CONTEXT IndexRootCtx;
@@ -1369,7 +1370,14 @@ UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
     NTSTATUS Status;
     ULONG CurrentEntry = 0;
 
-    DPRINT("UpdateFileNameRecord(%p, %I64d, %wZ, %u, %I64u, %I64u)\n", Vcb, ParentMFTIndex, FileName, DirSearch, NewDataSize, NewAllocationSize);
+    DPRINT("UpdateFileNameRecord(%p, %I64d, %wZ, %u, %I64u, %I64u, %s)\n",
+           Vcb,
+           ParentMFTIndex,
+           FileName,
+           DirSearch,
+           NewDataSize,
+           NewAllocationSize,
+           CaseSensitive ? "TRUE" : "FALSE");
 
     MftRecord = ExAllocatePoolWithTag(NonPagedPool,
                                       Vcb->NtfsInfo.BytesPerFileRecord,
@@ -1421,7 +1429,8 @@ UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
                                           &CurrentEntry,
                                           DirSearch,
                                           NewDataSize,
-                                          NewAllocationSize);
+                                          NewAllocationSize,
+                                          CaseSensitive);
 
     ReleaseAttributeContext(IndexRootCtx);
     ExFreePoolWithTag(IndexRecord, TAG_NTFS);
@@ -1447,7 +1456,8 @@ UpdateIndexEntryFileNameSize(PDEVICE_EXTENSION Vcb,
                              PULONG CurrentEntry,
                              BOOLEAN DirSearch,
                              ULONGLONG NewDataSize,
-                             ULONGLONG NewAllocatedSize)
+                             ULONGLONG NewAllocatedSize,
+                             BOOLEAN CaseSensitive)
 {
     NTSTATUS Status;
     ULONG RecordOffset;
@@ -1466,7 +1476,7 @@ UpdateIndexEntryFileNameSize(PDEVICE_EXTENSION Vcb,
         if ((IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK) > 0x10 &&
             *CurrentEntry >= *StartEntry &&
             IndexEntry->FileName.NameType != NTFS_FILE_NAME_DOS &&
-            CompareFileName(FileName, IndexEntry, DirSearch))
+            CompareFileName(FileName, IndexEntry, DirSearch, CaseSensitive))
         {
             *StartEntry = *CurrentEntry;
             IndexEntry->FileName.DataSize = NewDataSize;
@@ -1517,7 +1527,19 @@ UpdateIndexEntryFileNameSize(PDEVICE_EXTENSION Vcb,
         LastEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)&IndexBuffer->Header + IndexBuffer->Header.TotalSizeOfEntries);
         ASSERT(LastEntry <= (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)IndexBuffer + IndexBlockSize));
 
-        Status = UpdateIndexEntryFileNameSize(NULL, NULL, NULL, 0, FirstEntry, LastEntry, FileName, StartEntry, CurrentEntry, DirSearch, NewDataSize, NewAllocatedSize);
+        Status = UpdateIndexEntryFileNameSize(NULL,
+                                              NULL,
+                                              NULL,
+                                              0,
+                                              FirstEntry,
+                                              LastEntry,
+                                              FileName,
+                                              StartEntry,
+                                              CurrentEntry,
+                                              DirSearch,
+                                              NewDataSize,
+                                              NewAllocatedSize,
+                                              CaseSensitive);
         if (Status == STATUS_PENDING)
         {
             // write the index record back to disk
@@ -1827,7 +1849,8 @@ ReadLCN(PDEVICE_EXTENSION Vcb,
 BOOLEAN
 CompareFileName(PUNICODE_STRING FileName,
                 PINDEX_ENTRY_ATTRIBUTE IndexEntry,
-                BOOLEAN DirSearch)
+                BOOLEAN DirSearch,
+                BOOLEAN CaseSensitive)
 {
     BOOLEAN Ret, Alloc = FALSE;
     UNICODE_STRING EntryName;
@@ -1839,7 +1862,7 @@ CompareFileName(PUNICODE_STRING FileName,
     if (DirSearch)
     {
         UNICODE_STRING IntFileName;
-        if (IndexEntry->FileName.NameType != NTFS_FILE_NAME_POSIX)
+        if (!CaseSensitive)
         {
             NT_VERIFY(NT_SUCCESS(RtlUpcaseUnicodeString(&IntFileName, FileName, TRUE)));
             Alloc = TRUE;
@@ -1849,7 +1872,7 @@ CompareFileName(PUNICODE_STRING FileName,
             IntFileName = *FileName;
         }
 
-        Ret = FsRtlIsNameInExpression(&IntFileName, &EntryName, (IndexEntry->FileName.NameType != NTFS_FILE_NAME_POSIX), NULL);
+        Ret = FsRtlIsNameInExpression(&IntFileName, &EntryName, !CaseSensitive, NULL);
 
         if (Alloc)
         {
@@ -1860,7 +1883,7 @@ CompareFileName(PUNICODE_STRING FileName,
     }
     else
     {
-        return (RtlCompareUnicodeString(FileName, &EntryName, (IndexEntry->FileName.NameType != NTFS_FILE_NAME_POSIX)) == 0);
+        return (RtlCompareUnicodeString(FileName, &EntryName, !CaseSensitive) == 0);
     }
 }
 
@@ -1900,6 +1923,7 @@ BrowseIndexEntries(PDEVICE_EXTENSION Vcb,
                    PULONG StartEntry,
                    PULONG CurrentEntry,
                    BOOLEAN DirSearch,
+                   BOOLEAN CaseSensitive,
                    ULONGLONG *OutMFTIndex)
 {
     NTSTATUS Status;
@@ -1909,7 +1933,19 @@ BrowseIndexEntries(PDEVICE_EXTENSION Vcb,
     ULONGLONG IndexAllocationSize;
     PINDEX_BUFFER IndexBuffer;
 
-    DPRINT("BrowseIndexEntries(%p, %p, %p, %u, %p, %p, %wZ, %u, %u, %u, %p)\n", Vcb, MftRecord, IndexRecord, IndexBlockSize, FirstEntry, LastEntry, FileName, *StartEntry, *CurrentEntry, DirSearch, OutMFTIndex);
+    DPRINT("BrowseIndexEntries(%p, %p, %p, %u, %p, %p, %wZ, %u, %u, %s, %s, %p)\n",
+           Vcb,
+           MftRecord,
+           IndexRecord,
+           IndexBlockSize,
+           FirstEntry,
+           LastEntry,
+           FileName,
+           *StartEntry,
+           *CurrentEntry,
+           DirSearch ? "TRUE" : "FALSE",
+           CaseSensitive ? "TRUE" : "FALSE",
+           OutMFTIndex);
 
     IndexEntry = FirstEntry;
     while (IndexEntry < LastEntry &&
@@ -1918,7 +1954,7 @@ BrowseIndexEntries(PDEVICE_EXTENSION Vcb,
         if ((IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK) >= 0x10 &&
             *CurrentEntry >= *StartEntry &&
             IndexEntry->FileName.NameType != NTFS_FILE_NAME_DOS &&
-            CompareFileName(FileName, IndexEntry, DirSearch))
+            CompareFileName(FileName, IndexEntry, DirSearch, CaseSensitive))
         {
             *StartEntry = *CurrentEntry;
             *OutMFTIndex = (IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK);
@@ -1967,7 +2003,18 @@ BrowseIndexEntries(PDEVICE_EXTENSION Vcb,
         LastEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)&IndexBuffer->Header + IndexBuffer->Header.TotalSizeOfEntries);
         ASSERT(LastEntry <= (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)IndexBuffer + IndexBlockSize));
 
-        Status = BrowseIndexEntries(NULL, NULL, NULL, 0, FirstEntry, LastEntry, FileName, StartEntry, CurrentEntry, DirSearch, OutMFTIndex);
+        Status = BrowseIndexEntries(NULL,
+                                    NULL,
+                                    NULL,
+                                    0,
+                                    FirstEntry,
+                                    LastEntry,
+                                    FileName,
+                                    StartEntry,
+                                    CurrentEntry,
+                                    DirSearch,
+                                    CaseSensitive,
+                                    OutMFTIndex);
         if (NT_SUCCESS(Status))
         {
             break;
@@ -1984,7 +2031,8 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
                   PUNICODE_STRING FileName,
                   PULONG FirstEntry,
                   BOOLEAN DirSearch,
-                  ULONGLONG *OutMFTIndex)
+                  ULONGLONG *OutMFTIndex,
+                  BOOLEAN CaseSensitive)
 {
     PFILE_RECORD_HEADER MftRecord;
     PNTFS_ATTR_CONTEXT IndexRootCtx;
@@ -2036,7 +2084,18 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
 
     DPRINT("IndexRecordSize: %x IndexBlockSize: %x\n", Vcb->NtfsInfo.BytesPerIndexRecord, IndexRoot->SizeOfEntry);
 
-    Status = BrowseIndexEntries(Vcb, MftRecord, IndexRecord, IndexRoot->SizeOfEntry, IndexEntry, IndexEntryEnd, FileName, FirstEntry, &CurrentEntry, DirSearch, OutMFTIndex);
+    Status = BrowseIndexEntries(Vcb,
+                                MftRecord,
+                                IndexRecord,
+                                IndexRoot->SizeOfEntry,
+                                IndexEntry,
+                                IndexEntryEnd,
+                                FileName,
+                                FirstEntry,
+                                &CurrentEntry,
+                                DirSearch,
+                                CaseSensitive,
+                                OutMFTIndex);
 
     ExFreePoolWithTag(IndexRecord, TAG_NTFS);
     ExFreePoolWithTag(MftRecord, TAG_NTFS);
@@ -2049,7 +2108,8 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
                  PUNICODE_STRING PathName,
                  PFILE_RECORD_HEADER *FileRecord,
                  PULONGLONG MFTIndex,
-                 ULONGLONG CurrentMFTIndex)
+                 ULONGLONG CurrentMFTIndex,
+                 BOOLEAN CaseSensitive)
 {
     UNICODE_STRING Current, Remaining;
     NTSTATUS Status;
@@ -2063,7 +2123,7 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
     {
         DPRINT("Current: %wZ\n", &Current);
 
-        Status = NtfsFindMftRecord(Vcb, CurrentMFTIndex, &Current, &FirstEntry, FALSE, &CurrentMFTIndex);
+        Status = NtfsFindMftRecord(Vcb, CurrentMFTIndex, &Current, &FirstEntry, FALSE, &CurrentMFTIndex, CaseSensitive);
         if (!NT_SUCCESS(Status))
         {
             return Status;
@@ -2099,9 +2159,10 @@ NTSTATUS
 NtfsLookupFile(PDEVICE_EXTENSION Vcb,
                PUNICODE_STRING PathName,
                PFILE_RECORD_HEADER *FileRecord,
-               PULONGLONG MFTIndex)
+               PULONGLONG MFTIndex,
+               BOOLEAN CaseSensitive)
 {
-    return NtfsLookupFileAt(Vcb, PathName, FileRecord, MFTIndex, NTFS_FILE_ROOT);
+    return NtfsLookupFileAt(Vcb, PathName, FileRecord, MFTIndex, NTFS_FILE_ROOT, CaseSensitive);
 }
 
 /**
@@ -2150,13 +2211,21 @@ NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
                PULONG FirstEntry,
                PFILE_RECORD_HEADER *FileRecord,
                PULONGLONG MFTIndex,
-               ULONGLONG CurrentMFTIndex)
+               ULONGLONG CurrentMFTIndex,
+               BOOLEAN CaseSensitive)
 {
     NTSTATUS Status;
 
-    DPRINT("NtfsFindFileAt(%p, %wZ, %u, %p, %p, %I64x)\n", Vcb, SearchPattern, *FirstEntry, FileRecord, MFTIndex, CurrentMFTIndex);
+    DPRINT("NtfsFindFileAt(%p, %wZ, %u, %p, %p, %I64x, %s)\n",
+           Vcb,
+           SearchPattern,
+           *FirstEntry,
+           FileRecord,
+           MFTIndex,
+           CurrentMFTIndex,
+           (CaseSensitive ? "TRUE" : "FALSE"));
 
-    Status = NtfsFindMftRecord(Vcb, CurrentMFTIndex, SearchPattern, FirstEntry, TRUE, &CurrentMFTIndex);
+    Status = NtfsFindMftRecord(Vcb, CurrentMFTIndex, SearchPattern, FirstEntry, TRUE, &CurrentMFTIndex, CaseSensitive);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtfsFindFileAt: NtfsFindMftRecord() failed with status 0x%08lx\n", Status);

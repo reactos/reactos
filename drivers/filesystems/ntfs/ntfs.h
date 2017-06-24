@@ -781,7 +781,8 @@ NTSTATUS
 NtfsGetFCBForFile(PNTFS_VCB Vcb,
                   PNTFS_FCB *pParentFCB,
                   PNTFS_FCB *pFCB,
-                  const PWSTR pFileName);
+                  const PWSTR pFileName,
+                  BOOLEAN CaseSensitive);
 
 NTSTATUS
 NtfsReadFCBAttribute(PNTFS_VCB Vcb,
@@ -811,6 +812,7 @@ NtfsSetEndOfFile(PNTFS_FCB Fcb,
                  PFILE_OBJECT FileObject,
                  PDEVICE_EXTENSION DeviceExt,
                  ULONG IrpFlags,
+                 BOOLEAN CaseSensitive,
                  PLARGE_INTEGER NewFileSize);
 
 NTSTATUS
@@ -892,7 +894,8 @@ AttributeAllocatedLength(PNTFS_ATTR_RECORD AttrRecord);
 BOOLEAN
 CompareFileName(PUNICODE_STRING FileName,
                 PINDEX_ENTRY_ATTRIBUTE IndexEntry,
-                BOOLEAN DirSearch);
+                BOOLEAN DirSearch,
+                BOOLEAN CaseSensitive);
 
 NTSTATUS
 ReadFileRecord(PDEVICE_EXTENSION Vcb,
@@ -911,7 +914,8 @@ UpdateIndexEntryFileNameSize(PDEVICE_EXTENSION Vcb,
                              PULONG CurrentEntry,
                              BOOLEAN DirSearch,
                              ULONGLONG NewDataSize,
-                             ULONGLONG NewAllocatedSize);
+                             ULONGLONG NewAllocatedSize,
+                             BOOLEAN CaseSensitive);
 
 NTSTATUS
 UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
@@ -919,7 +923,8 @@ UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
                      PUNICODE_STRING FileName,
                      BOOLEAN DirSearch,
                      ULONGLONG NewDataSize,
-                     ULONGLONG NewAllocationSize);
+                     ULONGLONG NewAllocationSize,
+                     BOOLEAN CaseSensitive);
 
 NTSTATUS
 UpdateFileRecord(PDEVICE_EXTENSION Vcb,
@@ -973,7 +978,8 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
                  PUNICODE_STRING PathName,
                  PFILE_RECORD_HEADER *FileRecord,
                  PULONGLONG MFTIndex,
-                 ULONGLONG CurrentMFTIndex);
+                 ULONGLONG CurrentMFTIndex,
+                 BOOLEAN CaseSensitive);
 
 VOID
 NtfsDumpFileRecord(PDEVICE_EXTENSION Vcb,
@@ -985,7 +991,8 @@ NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
                PULONG FirstEntry,
                PFILE_RECORD_HEADER *FileRecord,
                PULONGLONG MFTIndex,
-               ULONGLONG CurrentMFTIndex);
+               ULONGLONG CurrentMFTIndex,
+               BOOLEAN CaseSensitive);
 
 NTSTATUS
 NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
@@ -993,7 +1000,8 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
                   PUNICODE_STRING FileName,
                   PULONG FirstEntry,
                   BOOLEAN DirSearch,
-                  ULONGLONG *OutMFTIndex);
+                  ULONGLONG *OutMFTIndex,
+                  BOOLEAN CaseSensitive);
 
 /* misc.c */
 

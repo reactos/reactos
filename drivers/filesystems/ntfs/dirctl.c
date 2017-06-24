@@ -627,7 +627,8 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
                                 &Ccb->Entry,
                                 &FileRecord,
                                 &MFTRecord,
-                                Fcb->MFTIndex);
+                                Fcb->MFTIndex,
+                                (Stack->Flags & SL_CASE_SENSITIVE));
 
         if (NT_SUCCESS(Status))
         {
