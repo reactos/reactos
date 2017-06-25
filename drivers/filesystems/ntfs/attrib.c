@@ -220,9 +220,15 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
     DPRINT1("FileNameAttribute->DirectoryFileReferenceNumber: 0x%016I64x\n", FileNameAttribute->DirectoryFileReferenceNumber);
 
     FileNameAttribute->NameLength = FilenameNoPath.Length / sizeof(WCHAR);
-    // TODO: Get proper nametype, add DOS links as needed
-    FileNameAttribute->NameType = NTFS_FILE_NAME_WIN32_AND_DOS;
     RtlCopyMemory(FileNameAttribute->Name, FilenameNoPath.Buffer, FilenameNoPath.Length);
+
+    // For now, we're emulating the way Windows behaves when 8.3 name generation is disabled
+    // TODO: add DOS Filename as needed
+    if (RtlIsNameLegalDOS8Dot3(&FilenameNoPath, NULL, NULL))
+        FileNameAttribute->NameType = NTFS_FILE_NAME_WIN32_AND_DOS;
+    else
+        FileNameAttribute->NameType = NTFS_FILE_NAME_POSIX;
+    
     FileRecord->LinkCount++;
 
     AttributeAddress->Length = ResidentHeaderLength +
