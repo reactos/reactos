@@ -82,6 +82,15 @@ typedef struct _RX_DISPATCHER_
 
 NTSTATUS
 NTAPI
+RxPostToWorkerThread(
+    _In_ PRDBSS_DEVICE_OBJECT pMRxDeviceObject,
+    _In_ WORK_QUEUE_TYPE WorkQueueType,
+    _In_ PRX_WORK_QUEUE_ITEM pWorkQueueItem,
+    _In_ PRX_WORKERTHREAD_ROUTINE Routine,
+    _In_ PVOID pContext);
+
+NTSTATUS
+NTAPI
 RxDispatchToWorkerThread(
     _In_ PRDBSS_DEVICE_OBJECT pMRxDeviceObject,
     _In_ WORK_QUEUE_TYPE WorkQueueType,

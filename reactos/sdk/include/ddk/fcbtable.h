@@ -32,6 +32,10 @@ RxInitializeFcbTable(
     _Inout_ PRX_FCB_TABLE FcbTable,
     _In_ BOOLEAN CaseInsensitiveMatch);
 
+VOID
+RxFinalizeFcbTable(
+    _Inout_ PRX_FCB_TABLE FcbTable);
+
 PFCB
 RxFcbTableLookupFcb(
     _In_ PRX_FCB_TABLE FcbTable,

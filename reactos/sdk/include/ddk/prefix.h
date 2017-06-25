@@ -31,6 +31,11 @@ RxPrefixTableInsertName(
     _In_ PRX_CONNECTION_ID ConnectionId);
 
 VOID
+RxRemovePrefixTableEntry(
+    _Inout_ PRX_PREFIX_TABLE ThisTable,
+    _Inout_ PRX_PREFIX_ENTRY Entry);
+
+VOID
 RxInitializePrefixTable(
     _Inout_ PRX_PREFIX_TABLE ThisTable,
     _In_opt_ ULONG TableSize,

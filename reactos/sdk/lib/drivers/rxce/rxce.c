@@ -58,11 +58,22 @@ NTSTATUS
 RxInsertWorkQueueItem(
     PRDBSS_DEVICE_OBJECT pMRxDeviceObject,
     WORK_QUEUE_TYPE WorkQueueType,
-    PRX_WORK_DISPATCH_ITEM DispatchItem);
+    PRX_WORK_QUEUE_ITEM WorkQueueItem);
 
 PVOID
 RxNewMapUserBuffer(
     PRX_CONTEXT RxContext);
+
+VOID
+NTAPI
+RxpDestroySrvCall(
+    IN PVOID Context);
+
+VOID
+RxpDispatchChangeBufferingStateRequests(
+    PSRV_CALL SrvCall,
+    PSRV_OPEN SrvOpen,
+    PLIST_ENTRY DiscardedRequests);
 
 VOID
 NTAPI
@@ -730,11 +741,71 @@ RxCompleteRequest_Real(
     }
 }
 
+/*
+ * @implemented
+ */
 VOID
 RxCompleteSrvOpenKeyAssociation(
     IN OUT PSRV_OPEN SrvOpen)
 {
-    UNIMPLEMENTED;
+    PSRV_CALL SrvCall;
+
+    SrvCall = (PSRV_CALL)((PFCB)SrvOpen->pFcb)->VNetRoot->pNetRoot->pSrvCall;
+    /* Only handle requests if opening was a success */
+    if (SrvOpen->Condition == Condition_Good)
+    {
+        KIRQL OldIrql;
+        BOOLEAN ProcessChange;
+        LIST_ENTRY DiscardedRequests;
+
+        /* Initialize our discarded requests list */
+        InitializeListHead(&DiscardedRequests);
+
+        RxAcquireBufferingManagerMutex(&SrvCall->BufferingManager);
+
+        /* Transfer our requests in the SRV_CALL */
+        RxTransferList(&SrvCall->BufferingManager.SrvOpenLists[0], &SrvOpen->SrvOpenKeyList);
+
+        /* Was increased in RxInitiateSrvOpenKeyAssociation(), opening is done */
+        InterlockedDecrement(&SrvCall->BufferingManager.NumberOfOutstandingOpens);
+
+        /* Dispatch requests and get the discarded ones */
+        RxpDispatchChangeBufferingStateRequests(SrvCall, SrvOpen, &DiscardedRequests);
+
+        RxReleaseBufferingManagerMutex(&SrvCall->BufferingManager);
+
+        /* Is there still anything to process? */
+        KeAcquireSpinLock(&SrvCall->BufferingManager.SpinLock, &OldIrql);
+        if (IsListEmpty(&SrvCall->BufferingManager.HandlerList))
+        {
+            ProcessChange = FALSE;
+        }
+        else
+        {
+            ProcessChange = (SrvCall->BufferingManager.HandlerInactive == FALSE);
+            if (ProcessChange)
+            {
+                SrvCall->BufferingManager.HandlerInactive = TRUE;
+            }
+        }
+        KeReleaseSpinLock(&SrvCall->BufferingManager.SpinLock, OldIrql);
+
+        /* Yes? Go ahead! */
+        if (ProcessChange)
+        {
+            RxReferenceSrvCall(SrvCall);
+            RxPostToWorkerThread(RxFileSystemDeviceObject, HyperCriticalWorkQueue,
+                                 &SrvCall->BufferingManager.HandlerWorkItem,
+                                 RxProcessChangeBufferingStateRequests, SrvCall);
+        }
+
+        /* And discard left requests */
+        RxpDiscardChangeBufferingStateRequests(&DiscardedRequests);
+    }
+    else
+    {
+        InterlockedDecrement(&SrvCall->BufferingManager.NumberOfOutstandingOpens);
+    }
 }
 
 /*
@@ -1795,7 +1866,7 @@ RxDereference(
 
     RxReleaseScavengerMutex();
 
-    /* TODO: Really deallocate stuff - we're leaking as hell! */
+    /* Now, deallocate the memory */
     switch (NodeType)
     {
         case RDBSS_NTC_SRVCALL:
@@ -1811,20 +1882,53 @@ RxDereference(
         }
 
         case RDBSS_NTC_NETROOT:
-            UNIMPLEMENTED;
+        {
+            PNET_ROOT NetRoot;
+
+            NetRoot = (PNET_ROOT)Instance;
+
+            ASSERT(NetRoot->pSrvCall->RxDeviceObject != NULL);
+            ASSERT(RxIsPrefixTableLockAcquired(NetRoot->pSrvCall->RxDeviceObject->pRxNetNameTable));
+            RxFinalizeNetRoot(NetRoot, TRUE, TRUE);
             break;
+        }
 
         case RDBSS_NTC_V_NETROOT:
-            UNIMPLEMENTED;
+        {
+            PV_NET_ROOT VNetRoot;
+
+            VNetRoot = (PV_NET_ROOT)Instance;
+
+            ASSERT(VNetRoot->pNetRoot->pSrvCall->RxDeviceObject != NULL);
+            ASSERT(RxIsPrefixTableLockAcquired(VNetRoot->pNetRoot->pSrvCall->RxDeviceObject->pRxNetNameTable));
+            RxFinalizeVNetRoot(VNetRoot, TRUE, TRUE);
             break;
+        }
 
         case RDBSS_NTC_SRVOPEN:
-            UNIMPLEMENTED;
+        {
+            PSRV_OPEN SrvOpen;
+
+            SrvOpen = (PSRV_OPEN)Instance;
+
+            ASSERT(RxIsFcbAcquired(SrvOpen->Fcb));
+            if (SrvOpen->OpenCount == 0)
+            {
+                RxFinalizeSrvOpen(SrvOpen, FALSE, FALSE);
+            }
             break;
+        }
 
         case RDBSS_NTC_FOBX:
-            UNIMPLEMENTED;
+        {
+            PFOBX Fobx;
+
+            Fobx = (PFOBX)Instance;
+
+            ASSERT(RxIsFcbAcquired(Fobx->SrvOpen->Fcb));
+            RxFinalizeNetFobx(Fobx, TRUE, FALSE);
             break;
+        }
     }
 }
 
@@ -1938,7 +2042,7 @@ RxDispatchToWorkerThread(
     DispatchItem->WorkQueueItem.Parameter = DispatchItem;
 
     /* Insert item */
-    Status = RxInsertWorkQueueItem(pMRxDeviceObject, WorkQueueType, DispatchItem);
+    Status = RxInsertWorkQueueItem(pMRxDeviceObject, WorkQueueType, &DispatchItem->WorkQueueItem);
     if (!NT_SUCCESS(Status))
     {
         RxFreePoolWithTag(DispatchItem, RX_WORKQ_POOLTAG);
@@ -2148,6 +2252,27 @@ RxFcbTableRemoveFcb(
 /*
  * @implemented
  */
+VOID
+RxFinalizeFcbTable(
+    IN OUT PRX_FCB_TABLE FcbTable)
+{
+    USHORT Bucket;
+
+    PAGED_CODE();
+
+    /* Just delete the lock */
+    ExDeleteResourceLite(&FcbTable->TableLock);
+
+    /* And make sure (checked) that the table is really empty... */
+    for (Bucket = 0; Bucket < FcbTable->NumberOfBuckets; ++Bucket)
+    {
+        ASSERT(IsListEmpty(&FcbTable->HashBuckets[Bucket]));
+    }
+}
+
+/*
+ * @implemented
+ */
 BOOLEAN
 RxFinalizeNetFcb(
     OUT PFCB ThisFcb,
@@ -2277,25 +2402,294 @@ RxFinalizeNetFcb(
     return TRUE;
 }
 
+/*
+ * @implemented
+ */
+BOOLEAN
+RxFinalizeNetFobx(
+    _Out_ PFOBX ThisFobx,
+    _In_ BOOLEAN RecursiveFinalize,
+    _In_ BOOLEAN ForceFinalize)
+{
+    PFCB Fcb;
+    PSRV_OPEN SrvOpen;
+
+    PAGED_CODE();
+
+    ASSERT(NodeType(ThisFobx) == RDBSS_NTC_FOBX);
+
+    /* Only finalize if forced or if there's no ref left */
+    if (ThisFobx->NodeReferenceCount != 0 &&
+        !ForceFinalize)
+    {
+        return FALSE;
+    }
+
+    DPRINT("Finalize Fobx: %p (with %d ref), forced: %d\n", ThisFobx, ThisFobx->NodeReferenceCount, ForceFinalize);
+
+    SrvOpen = ThisFobx->SrvOpen;
+    Fcb = SrvOpen->Fcb;
+    /* If it wasn't finalized yet, do it */
+    if (!ThisFobx->UpperFinalizationDone)
+    {
+        ASSERT(NodeType(SrvOpen->Fcb) != RDBSS_NTC_OPENTARGETDIR_FCB);
+        ASSERT(RxIsFcbAcquiredExclusive(SrvOpen->Fcb));
+
+        /* Remove it from the SRV_OPEN */
+        RemoveEntryList(&ThisFobx->FobxQLinks);
+
+        /* If we were used to browse a directory, free the query buffer */
+        if (BooleanFlagOn(ThisFobx->Flags, FOBX_FLAG_FREE_UNICODE))
+        {
+            RxFreePoolWithTag(ThisFobx->UnicodeQueryTemplate.Buffer, RX_DIRCTL_POOLTAG);
+        }
+
+        /* Notify the mini-rdr */
+        if (Fcb->MRxDispatch != NULL && Fcb->MRxDispatch->MRxDeallocateForFobx != NULL)
+        {
+            Fcb->MRxDispatch->MRxDeallocateForFobx((PMRX_FOBX)ThisFobx);
+        }
+
+        /* If the SRV_OPEN wasn't closed yet, do it */
+        if (!BooleanFlagOn(ThisFobx->Flags, FOBX_FLAG_SRVOPEN_CLOSED))
+        {
+            NTSTATUS Status;
+
+            Status = RxCloseAssociatedSrvOpen(ThisFobx, FALSE);
+            DPRINT("Closing SRV_OPEN %p for %p: %x\n", SrvOpen, ThisFobx, Status);
+        }
+
+        /* Finalization done */
+        ThisFobx->UpperFinalizationDone = TRUE;
+    }
+
+    /* If we're still referenced, don't go any further! */
+    if (ThisFobx->NodeReferenceCount != 0)
+    {
+        return FALSE;
+    }
+
+    /* At that point, everything should be closed */
+    ASSERT(IsListEmpty(&ThisFobx->ClosePendingList));
+
+    /* Was the FOBX allocated with another object?
+     * If so, mark the buffer free in said object
+     */
+    if (ThisFobx == Fcb->InternalFobx)
+    {
+        ClearFlag(Fcb->FcbState, FCB_STATE_FOBX_USED);
+    }
+    else if (ThisFobx == SrvOpen->InternalFobx)
+    {
+        ClearFlag(SrvOpen->Flags, SRVOPEN_FLAG_FOBX_USED);
+    }
+
+    ThisFobx->pSrvOpen = NULL;
+
+    /* A FOBX less */
+    InterlockedDecrement((volatile long *)&SrvOpen->pVNetRoot->NumberOfFobxs);
+
+    RxDereferenceSrvOpen(SrvOpen, LHS_ExclusiveLockHeld);
+
+    /* If it wasn't allocated with another object, free the FOBX */
+    if (!BooleanFlagOn(ThisFobx->Flags, FOBX_FLAG_ENCLOSED_ALLOCATED))
+    {
+        RxFreeFcbObject(ThisFobx);
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
 BOOLEAN
 RxFinalizeNetRoot(
     OUT PNET_ROOT ThisNetRoot,
     IN BOOLEAN RecursiveFinalize,
-    IN BOOLEAN ForceFinalize
-    )
+    IN BOOLEAN ForceFinalize)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PSRV_CALL SrvCall;
+    PRX_FCB_TABLE FcbTable;
+    PRX_PREFIX_TABLE PrefixTable;
+
+    PAGED_CODE();
+
+    ASSERT(NodeType(ThisNetRoot) == RDBSS_NTC_NETROOT);
+
+    PrefixTable = ThisNetRoot->pSrvCall->RxDeviceObject->pRxNetNameTable;
+    ASSERT(RxIsPrefixTableLockAcquired(PrefixTable));
+
+    /* If sme finalization is already ongoing, leave */
+    if (BooleanFlagOn(ThisNetRoot->Flags, NETROOT_FLAG_FINALIZATION_IN_PROGRESS))
+    {
+        return FALSE;
+    }
+
+    /* Mark we're finalizing */
+    SetFlag(ThisNetRoot->Flags, NETROOT_FLAG_FINALIZATION_IN_PROGRESS);
+
+    FcbTable = &ThisNetRoot->FcbTable;
+    /* Did caller asked us to finalize any associated FCB? */
+    if (RecursiveFinalize)
+    {
+        USHORT Bucket;
+
+        /* Browse all the FCBs in our FCB table */
+        RxAcquireFcbTableLockExclusive(FcbTable, TRUE);
+        for (Bucket = 0; Bucket < FcbTable->NumberOfBuckets; ++Bucket)
+        {
+            PLIST_ENTRY HashBucket, ListEntry;
+
+            HashBucket = &FcbTable->HashBuckets[Bucket];
+            ListEntry = HashBucket->Flink;
+            while (ListEntry != HashBucket)
+            {    
+                PFCB Fcb;
+
+                Fcb = CONTAINING_RECORD(ListEntry, FCB, FcbTableEntry.HashLinks);
+                ASSERT(NodeTypeIsFcb(Fcb));
+
+                ListEntry = ListEntry->Flink;
+
+                /* If the FCB isn't orphaned, then, it's time to purge it */
+                if (!BooleanFlagOn(Fcb->FcbState, FCB_STATE_ORPHANED))
+                {
+                    NTSTATUS Status;
+
+                    Status = RxAcquireExclusiveFcb(NULL, Fcb);
+                    ASSERT(Status == STATUS_SUCCESS);
+                    RxPurgeFcb(Fcb);
+                }
+            }
+        }
+        RxReleaseFcbTableLock(FcbTable);
+    }
+
+    /* Only finalize if forced or if there's a single ref left */
+    if (ThisNetRoot->NodeReferenceCount != 1 && !ForceFinalize)
+    {
+        return FALSE;
+    }
+
+    DPRINT("Finalizing NetRoot %p for %wZ\n", ThisNetRoot, &ThisNetRoot->PrefixEntry.Prefix);
+
+    /* If we're still referenced, don't go any further! */
+    if (ThisNetRoot->NodeReferenceCount != 1)
+    {
+        return FALSE;
+    }
+
+    /* Finalize the FCB table (and make sure it's empty!) */
+    RxFinalizeFcbTable(FcbTable);
+
+    /* If name wasn't remove already, do it now */
+    if (!BooleanFlagOn(ThisNetRoot->Flags, NETROOT_FLAG_NAME_ALREADY_REMOVED))
+    {
+        RxRemovePrefixTableEntry(PrefixTable, &ThisNetRoot->PrefixEntry);
+    }
+
+    /* Delete the object */
+    SrvCall = (PSRV_CALL)ThisNetRoot->pSrvCall;
+    RxFreeObject(ThisNetRoot);
+
+    /* And dereference the associated SRV_CALL */
+    if (SrvCall != NULL)
+    {
+        RxDereferenceSrvCall(SrvCall, LHS_ExclusiveLockHeld);
+    }
+
+    return TRUE;
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN
 RxFinalizeSrvCall(
     OUT PSRV_CALL ThisSrvCall,
     IN BOOLEAN RecursiveFinalize,
     IN BOOLEAN ForceFinalize)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PRX_PREFIX_TABLE PrefixTable;
+
+    PAGED_CODE();
+
+    ASSERT(NodeType(ThisSrvCall) == RDBSS_NTC_SRVCALL);
+
+    PrefixTable = ThisSrvCall->RxDeviceObject->pRxNetNameTable;
+    ASSERT(RxIsPrefixTableLockAcquired(PrefixTable));
+
+    /* Only finalize if forced or if there's a single ref left */
+    if (ThisSrvCall->NodeReferenceCount != 1 &&
+        !ForceFinalize)
+    {
+        return FALSE;
+    }
+
+    DPRINT("Finalizing SrvCall %p for %wZ\n", ThisSrvCall, &ThisSrvCall->PrefixEntry.Prefix);
+
+    /* If it wasn't finalized yet, do it */
+    if (!ThisSrvCall->UpperFinalizationDone)
+    {
+        BOOLEAN WillFree;
+
+        /* Remove ourselves from prefix table */
+        RxRemovePrefixTableEntry(PrefixTable, &ThisSrvCall->PrefixEntry);
+
+        /* Remember our third arg, in case we get queued for later execution */
+        if (ForceFinalize)
+        {
+            SetFlag(ThisSrvCall->Flags, SRVCALL_FLAG_FORCE_FINALIZED);
+        }
+
+        /* And done */
+        ThisSrvCall->UpperFinalizationDone = TRUE;
+
+        /* Would defered execution free the object? */
+        WillFree = (ThisSrvCall->NodeReferenceCount == 1);
+
+        /* If we have a device object */
+        if (ThisSrvCall->RxDeviceObject != NULL)
+        {
+            NTSTATUS Status;
+
+            /* If we're not executing in the RDBSS thread, queue for execution within the thread */
+            if (RxGetRDBSSProcess() != IoGetCurrentProcess())
+            {
+                /* Extra ref, as usual */
+                InterlockedIncrement((volatile long *)&ThisSrvCall->NodeReferenceCount);
+                /* And dispatch */
+                RxDispatchToWorkerThread(ThisSrvCall->RxDeviceObject, DelayedWorkQueue, RxpDestroySrvCall, ThisSrvCall);
+
+                /* Return to the caller, in advance, whether we're freeing the object or not */
+                return WillFree;
+            }
+
+            /* If in the right thread already, call the mini-rdr */
+            MINIRDR_CALL_THROUGH(Status, ThisSrvCall->RxDeviceObject->Dispatch,
+                                 MRxFinalizeSrvCall, ((PMRX_SRV_CALL)ThisSrvCall, ForceFinalize));
+            (void)Status;
+        }
+    }
+
+    /* If we're still referenced, don't go any further! */
+    if (ThisSrvCall->NodeReferenceCount != 1)
+    {
+        return FALSE;
+    }
+
+    /* Don't leak */
+    if (ThisSrvCall->pDomainName != NULL)
+    {
+        RxFreePool(ThisSrvCall->pDomainName);
+    }
+
+    /* And free! */
+    RxTearDownBufferingManager(ThisSrvCall);
+    RxFreeObject(ThisSrvCall);
+
+    return TRUE;
 }
 
 BOOLEAN
@@ -2306,6 +2700,83 @@ RxFinalizeSrvOpen(
 {
     UNIMPLEMENTED;
     return FALSE;
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+RxFinalizeVNetRoot(
+    OUT PV_NET_ROOT ThisVNetRoot,
+    IN BOOLEAN RecursiveFinalize,
+    IN BOOLEAN ForceFinalize)
+{
+    PNET_ROOT NetRoot;
+    PRX_PREFIX_TABLE PrefixTable;
+
+    PAGED_CODE();
+
+    ASSERT(NodeType(ThisVNetRoot) == RDBSS_NTC_V_NETROOT);
+
+    PrefixTable = ThisVNetRoot->pNetRoot->pSrvCall->RxDeviceObject->pRxNetNameTable;
+    ASSERT(RxIsPrefixTableLockAcquired(PrefixTable));
+
+    /* Only finalize if forced or if there's a single ref left */
+    if (ThisVNetRoot->NodeReferenceCount != 1 &&
+        !ForceFinalize)
+    {
+        return FALSE;
+    }
+
+    DPRINT("Finalizing VNetRoot %p for %wZ\n", ThisVNetRoot, &ThisVNetRoot->PrefixEntry.Prefix);
+
+    NetRoot = (PNET_ROOT)ThisVNetRoot->pNetRoot;
+    /* If it wasn't finalized yet, do it */
+    if (!ThisVNetRoot->UpperFinalizationDone)
+    {
+        ASSERT(NodeType(NetRoot) == RDBSS_NTC_NETROOT);
+
+        /* Reference the NetRoot so that it doesn't disappear */
+        RxReferenceNetRoot(NetRoot);
+        RxOrphanSrvOpens(ThisVNetRoot);
+        /* Remove us from the available VNetRoot for NetRoot */
+        RxRemoveVirtualNetRootFromNetRoot(NetRoot, ThisVNetRoot);
+        /* Remove extra ref */
+        RxDereferenceNetRoot(NetRoot, LHS_ExclusiveLockHeld);
+
+        /* Remove ourselves from prefix table */
+        RxRemovePrefixTableEntry(PrefixTable, &ThisVNetRoot->PrefixEntry);
+
+        /* Finalization done */
+        ThisVNetRoot->UpperFinalizationDone = TRUE;
+    }
+
+    /* If we're still referenced, don't go any further! */
+    if (ThisVNetRoot->NodeReferenceCount != 1)
+    {
+        return FALSE;
+    }
+
+    /* If there's an associated device, notify mini-rdr */
+    if (NetRoot->pSrvCall->RxDeviceObject != NULL)
+    {
+        NTSTATUS Status;
+
+        MINIRDR_CALL_THROUGH(Status, NetRoot->pSrvCall->RxDeviceObject->Dispatch,
+                             MRxFinalizeVNetRoot, ((PMRX_V_NET_ROOT)ThisVNetRoot, FALSE));
+        (void)Status;
+    }
+
+    /* Free parameters */
+    RxUninitializeVNetRootParameters(ThisVNetRoot->pUserName, ThisVNetRoot->pUserDomainName,
+                                     ThisVNetRoot->pPassword, &ThisVNetRoot->Flags);
+    /* Dereference our NetRoot, we won't reference it anymore */
+    RxDereferenceNetRoot(NetRoot, LHS_ExclusiveLockHeld);
+
+    /* And free the object! */
+    RxFreePoolWithTag(ThisVNetRoot, RX_V_NETROOT_POOLTAG);
+
+    return TRUE;
 }
 
 NTSTATUS
@@ -3109,6 +3580,31 @@ RxFinishSrvCallConstructionDispatcher(
     }
 }
 
+/*
+ * @implemented
+ */
+NTSTATUS
+RxFlushFcbInSystemCache(
+    IN PFCB Fcb,
+    IN BOOLEAN SynchronizeWithLazyWriter)
+{
+    IO_STATUS_BLOCK IoStatus;
+
+    PAGED_CODE();
+
+    /* Deal with Cc */
+    CcFlushCache(&Fcb->NonPaged->SectionObjectPointers, NULL, 0, &IoStatus);
+    /* If we're asked to sync with LW, do it in case of success */
+    if (SynchronizeWithLazyWriter && NT_SUCCESS(IoStatus.Status))
+    {
+        RxAcquirePagingIoResource((PRX_CONTEXT)NULL, Fcb);
+        RxReleasePagingIoResource((PRX_CONTEXT)NULL, Fcb);
+    }
+
+    DPRINT("Flushing for FCB %p returns %lx\n", Fcb, IoStatus.Status);
+    return IoStatus.Status;
+}
+
 VOID
 RxFreeFcbObject(
     PVOID Object)
@@ -3116,11 +3612,46 @@ RxFreeFcbObject(
     UNIMPLEMENTED;
 }
 
+/*
+ * @implemented
+ */
 VOID
 RxFreeObject(
     PVOID pObject)
 {
-    UNIMPLEMENTED;
+    PAGED_CODE();
+
+    /* First, perform a few sanity checks if we're dealing with a SRV_CALL or a NET_ROOT */
+    if (NodeType(pObject) == RDBSS_NTC_SRVCALL)
+    {
+        PSRV_CALL SrvCall;
+        PRDBSS_DEVICE_OBJECT DeviceObject;
+
+        SrvCall = (PSRV_CALL)pObject;
+        DeviceObject = SrvCall->RxDeviceObject;
+        if (DeviceObject != NULL)
+        {
+            if (!BooleanFlagOn(DeviceObject->Dispatch->MRxFlags, RDBSS_MANAGE_SRV_CALL_EXTENSION))
+            {
+                ASSERT(SrvCall->Context == NULL);
+            }
+
+            ASSERT(SrvCall->Context2 == NULL);
+
+            SrvCall->RxDeviceObject = NULL;
+        }
+    }
+    else if (NodeType(pObject) == RDBSS_NTC_NETROOT)
+    {
+        PNET_ROOT NetRoot;
+
+        NetRoot = (PNET_ROOT)pObject;
+        NetRoot->pSrvCall = NULL;
+        NetRoot->NodeTypeCode = NodeType(pObject) | 0xF000;
+    }
+
+    /* And just free the object */
+    RxFreePool(pObject);
 }
 
 /*
@@ -3749,12 +4280,24 @@ RxInitializeWorkQueueDispatcher(
     return Status;
 }
 
+/*
+ * @implemented
+ */
 VOID
-RxInitiateSrvOpenKeyAssociation (
-   IN OUT PSRV_OPEN SrvOpen
-   )
+RxInitiateSrvOpenKeyAssociation(
+   IN OUT PSRV_OPEN SrvOpen)
 {
-    UNIMPLEMENTED;
+    PRX_BUFFERING_MANAGER BufferingManager;
+
+    PAGED_CODE();
+
+    SrvOpen->Key = NULL;
+
+    /* Just keep track of the opening request */
+    BufferingManager = &((PSRV_CALL)((PFCB)SrvOpen->pFcb)->VNetRoot->pNetRoot->pSrvCall)->BufferingManager;
+    InterlockedIncrement(&BufferingManager->NumberOfOutstandingOpens);
+
+    InitializeListHead(&SrvOpen->SrvOpenKeyList);
 }
 
 /*
@@ -3764,7 +4307,7 @@ NTSTATUS
 RxInsertWorkQueueItem(
     PRDBSS_DEVICE_OBJECT pMRxDeviceObject,
     WORK_QUEUE_TYPE WorkQueueType,
-    PRX_WORK_DISPATCH_ITEM DispatchItem)
+    PRX_WORK_QUEUE_ITEM WorkQueueItem)
 {
     KIRQL OldIrql;
     NTSTATUS Status;
@@ -3789,7 +4332,7 @@ RxInsertWorkQueueItem(
     else
     {
         SpinUpThreads = FALSE;
-        DispatchItem->WorkQueueItem.pDeviceObject = pMRxDeviceObject;
+        WorkQueueItem->pDeviceObject = pMRxDeviceObject;
         InterlockedIncrement(&pMRxDeviceObject->DispatcherContext.NumberOfWorkerThreads);
         WorkQueue->CumulativeQueueLength += WorkQueue->NumberOfWorkItemsToBeDispatched;
         InterlockedIncrement(&WorkQueue->NumberOfWorkItemsToBeDispatched);
@@ -3814,7 +4357,7 @@ RxInsertWorkQueueItem(
     }
 
     /* All fine, insert the item */
-    KeInsertQueue(&WorkQueue->Queue, &DispatchItem->WorkQueueItem.List);
+    KeInsertQueue(&WorkQueue->Queue, &WorkQueueItem->List);
 
     /* And start a new worker thread if needed */
     if (SpinUpThreads)
@@ -3833,7 +4376,7 @@ RxIsThisACscAgentOpen(
 
     CscAgent = FALSE;
 
-    /* Client Side Caching is DFS stuff - we don't support it */ 
+    /* Client Side Caching is DFS stuff - we don't support it */
     if (RxContext->Create.EaLength != 0)
     {
         UNIMPLEMENTED;
@@ -4279,6 +4822,13 @@ RxOrphanThisFcb(
     UNIMPLEMENTED;
 }
 
+VOID
+RxOrphanSrvOpens(
+    IN PV_NET_ROOT ThisVNetRoot)
+{
+    UNIMPLEMENTED;
+}
+
 /*
  * @implemented
  */
@@ -4418,6 +4968,86 @@ RxpDereferenceNetFcb(
     PRINT_REF_COUNT(NETFCB, NewCount);
 
     return NewCount;
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+RxpDestroySrvCall(
+    IN PVOID Context)
+{
+    NTSTATUS Status;
+    PSRV_CALL SrvCall;
+    BOOLEAN ForceFinalize;
+    PRX_PREFIX_TABLE PrefixTable;
+
+    SrvCall = (PSRV_CALL)Context;
+    /* At this step, RxFinalizeSrvCall already cleaned some fields */
+    ASSERT(SrvCall->UpperFinalizationDone);
+
+    PrefixTable = SrvCall->RxDeviceObject->pRxNetNameTable;
+    /* Were we called with ForceFinalize? */
+    ForceFinalize = BooleanFlagOn(SrvCall->Flags, SRVCALL_FLAG_FORCE_FINALIZED);
+
+    /* Notify mini-rdr */
+    MINIRDR_CALL_THROUGH(Status, SrvCall->RxDeviceObject->Dispatch,
+                         MRxFinalizeSrvCall, ((PMRX_SRV_CALL)SrvCall,
+                         ForceFinalize));
+    (void)Status;
+
+    /* Dereference our extra reference (set before queueing) */
+    RxAcquirePrefixTableLockExclusive(PrefixTable, TRUE);
+    InterlockedDecrement((volatile long *)&SrvCall->NodeReferenceCount);
+    /* And finalize for real, with the right context */
+    RxFinalizeSrvCall(SrvCall, FALSE, ForceFinalize);
+    RxReleasePrefixTableLock(PrefixTable);
+}
+
+VOID
+RxpDiscardChangeBufferingStateRequests(
+    _Inout_ PLIST_ENTRY DiscardedRequests)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+RxpDispatchChangeBufferingStateRequests(
+    PSRV_CALL SrvCall,
+    PSRV_OPEN SrvOpen,
+    PLIST_ENTRY DiscardedRequests)
+{
+    UNIMPLEMENTED;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RxPostToWorkerThread(
+    _In_ PRDBSS_DEVICE_OBJECT pMRxDeviceObject,
+    _In_ WORK_QUEUE_TYPE WorkQueueType,
+    _In_ PRX_WORK_QUEUE_ITEM pWorkQueueItem,
+    _In_ PRX_WORKERTHREAD_ROUTINE Routine,
+    _In_ PVOID pContext)
+{
+    /* Initialize work queue item */
+    pWorkQueueItem->List.Flink = NULL;
+    pWorkQueueItem->WorkerRoutine = Routine;
+    pWorkQueueItem->Parameter = pContext;
+
+    /* And insert it in the work queue */
+    return RxInsertWorkQueueItem(pMRxDeviceObject, WorkQueueType, pWorkQueueItem);
+}
+
+VOID
+RxpProcessChangeBufferingStateRequests(
+    PSRV_CALL SrvCall,
+    BOOLEAN UpdateHandlerState)
+{
+    UNIMPLEMENTED;
 }
 
 /*
@@ -4597,6 +5227,19 @@ RxPrepareContextForReuse(
     RxContext->ReferenceCount = 0;
 }
 
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+RxProcessChangeBufferingStateRequests(
+    _In_ PVOID SrvCall)
+{
+    /* Call internal routine */
+    RxUndoScavengerFinalizationMarking(SrvCall);
+    RxpProcessChangeBufferingStateRequests(SrvCall, TRUE);
+}
+
 VOID
 RxProcessFcbChangeBufferingStateRequest(
     PFCB Fcb)
@@ -4655,6 +5298,35 @@ RxpUndoScavengerFinalizationMarking(
     UNIMPLEMENTED;
 }
 
+/*
+ * @implemented
+ */
+VOID
+RxPurgeFcb(
+    IN  PFCB Fcb)
+{
+    PAGED_CODE();
+
+    ASSERT(RxIsFcbAcquiredExclusive(Fcb));
+
+    /* Reference our FCB so that it doesn't disappear */
+    RxReferenceNetFcb(Fcb);
+    /* Purge Cc if required */
+    if (Fcb->OpenCount != 0)
+    {
+        RxPurgeFcbInSystemCache(Fcb, NULL, 0, TRUE, TRUE);
+    }
+
+    /* If it wasn't freed, release the lock */
+    if (!RxDereferenceAndFinalizeNetFcb(Fcb, NULL, FALSE, FALSE))
+    {
+        RxReleaseFcb(NULL, Fcb);
+    }
+}
+
+/*
+ * @implemented
+ */
 NTSTATUS
 RxPurgeFcbInSystemCache(
     IN PFCB Fcb,
@@ -4663,8 +5335,46 @@ RxPurgeFcbInSystemCache(
     IN BOOLEAN UninitializeCacheMaps,
     IN BOOLEAN FlushFile)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    BOOLEAN Purged;
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+    ASSERT(RxIsFcbAcquiredExclusive(Fcb));
+
+    /* Try to flush first, if asked */
+    if (FlushFile)
+    {
+        /* If flushing failed, just make some noise */
+        Status = RxFlushFcbInSystemCache(Fcb, TRUE);
+        if (!NT_SUCCESS(Status))
+        {
+            PVOID CallersAddress, CallersCaller;
+
+            RtlGetCallersAddress(&CallersAddress, &CallersCaller);
+            DPRINT1("Flush failed with status %lx for FCB %p\n", Status, Fcb);
+            DPRINT1("Caller was %p %p\n", CallersAddress, CallersCaller);
+        }
+    }
+
+    /* Deal with Cc for purge */
+    Purged = CcPurgeCacheSection(&Fcb->NonPaged->SectionObjectPointers, FileOffset,
+                                 Length, UninitializeCacheMaps);
+    /* If purge failed, force section closing */
+    if (!Purged)
+    {
+        MmFlushImageSection(&Fcb->NonPaged->SectionObjectPointers, MmFlushForWrite);
+
+        RxReleaseFcb(NULL, Fcb);
+        Purged = MmForceSectionClosed(&Fcb->NonPaged->SectionObjectPointers, TRUE);
+        RxAcquireExclusiveFcb(NULL, Fcb);
+    }
+
+    /* Return appropriate status */
+    Status = (Purged ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
+    DPRINT("Purge for FCB %p returns %lx\n", Fcb, Status);
+
+    return Status;
 }
 
 /*
@@ -4877,6 +5587,95 @@ RxReference(
     RxReleaseScavengerMutex();
 }
 
+/*
+ * @implemented
+ */
+VOID
+RxRemovePrefixTableEntry(
+    IN OUT PRX_PREFIX_TABLE ThisTable,
+    IN OUT PRX_PREFIX_ENTRY Entry)
+{
+    PAGED_CODE();
+
+    ASSERT(NodeType(Entry) == RDBSS_NTC_PREFIX_ENTRY);
+    ASSERT(RxIsPrefixTableLockExclusive(ThisTable));
+
+    /* Check whether we're asked to remove null entry */
+    if (Entry->Prefix.Length == 0)
+    {
+        ThisTable->TableEntryForNull = NULL;
+    }
+    else
+    {
+        RemoveEntryList(&Entry->HashLinks);
+    }
+
+    Entry->ContainingRecord = NULL;
+
+    /* Also remove it from global list */
+    RemoveEntryList(&Entry->MemberQLinks);
+
+    ++ThisTable->Version;
+}
+
+/*
+ * @implemented
+ */
+VOID
+RxRemoveVirtualNetRootFromNetRoot(
+    PNET_ROOT NetRoot,
+    PV_NET_ROOT VNetRoot)
+{
+    PRX_PREFIX_TABLE PrefixTable;
+
+    PAGED_CODE();
+
+    PrefixTable = NetRoot->pSrvCall->RxDeviceObject->pRxNetNameTable;
+    ASSERT(RxIsPrefixTableLockAcquired(PrefixTable));
+
+    /* Remove the VNetRoot from the list in the NetRoot */
+    --NetRoot->NumberOfVirtualNetRoots;
+    RemoveEntryList(&VNetRoot->NetRootListEntry);
+
+    /* Fix the NetRoot if we were the default VNetRoot */
+    if (NetRoot->DefaultVNetRoot == VNetRoot)
+    {
+        /* Put the first one available */
+        if (!IsListEmpty(&NetRoot->VirtualNetRoots))
+        {
+            NetRoot->DefaultVNetRoot = CONTAINING_RECORD(NetRoot->VirtualNetRoots.Flink, V_NET_ROOT, NetRootListEntry);
+        }
+        /* Otherwise, none */
+        else
+        {
+            NetRoot->DefaultVNetRoot = NULL;
+        }
+    }
+
+    /* If there are still other VNetRoot available, we're done */
+    if (!IsListEmpty(&NetRoot->VirtualNetRoots))
+    {
+        return;
+    }
+
+    /* Otherwise, initiate NetRoot finalization */
+    if (!BooleanFlagOn(NetRoot->Flags, NETROOT_FLAG_NAME_ALREADY_REMOVED))
+    {
+        RxRemovePrefixTableEntry(PrefixTable, &NetRoot->PrefixEntry);
+        SetFlag(NetRoot->Flags, NETROOT_FLAG_NAME_ALREADY_REMOVED);
+    }
+
+    /* Notify mini-rdr */
+    if (NetRoot->pSrvCall != NULL && NetRoot->pSrvCall->RxDeviceObject != NULL)
+    {
+        NTSTATUS Status;
+
+        MINIRDR_CALL_THROUGH(Status, NetRoot->pSrvCall->RxDeviceObject->Dispatch,
+                             MRxFinalizeNetRoot, ((PMRX_NET_ROOT)NetRoot, FALSE));
+        (void)Status;
+    }
+}
+
 VOID
 NTAPI
 RxResumeBlockedOperations_Serially(
@@ -4899,12 +5698,73 @@ RxResumeBlockedOperations_Serially(
     RxReleaseSerializationMutex();
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN
 RxScavengeRelatedFobxs(
     PFCB Fcb)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PFOBX Fobx;
+    LIST_ENTRY LocalList;
+    PLIST_ENTRY NextEntry;
+    PRDBSS_SCAVENGER Scavenger;
+
+    PAGED_CODE();
+
+    /* First of all, check whether there are FOBX to scavenge */
+    Scavenger = Fcb->RxDeviceObject->pRdbssScavenger;
+    RxAcquireScavengerMutex();
+    if (Scavenger->FobxsToBeFinalized <= 0)
+    {
+        RxReleaseScavengerMutex();
+        return FALSE;
+    }
+
+    /* Initialize our local list which will hold all the FOBX to scavenge so
+     * that we don't acquire the scavenger mutex too long
+     */
+    InitializeListHead(&LocalList);
+
+    /* Technically, that condition should all be true... */
+    if (!IsListEmpty(&Scavenger->FobxFinalizationList))
+    {
+        PLIST_ENTRY NextEntry, LastEntry;
+
+        /* Browse all the FCBs to find the matching ones */
+        NextEntry = Scavenger->FobxFinalizationList.Flink;
+        LastEntry = &Scavenger->FobxFinalizationList;
+        while (NextEntry != LastEntry)
+        {
+            Fobx = CONTAINING_RECORD(NextEntry, FOBX, ScavengerFinalizationList);
+            NextEntry = NextEntry->Flink;
+            /* Matching our FCB? Let's finalize it */
+            if (Fobx->pSrvOpen != NULL && Fobx->pSrvOpen->pFcb == RX_GET_MRX_FCB(Fcb))
+            {
+                RxpUndoScavengerFinalizationMarking(Fobx);
+                ASSERT(NodeType(Fobx) == RDBSS_NTC_FOBX);
+                InsertTailList(&LocalList, &Fobx->ScavengerFinalizationList);
+            }
+        }
+    }
+
+    RxReleaseScavengerMutex();
+
+    /* Nothing to scavenge? Quit */
+    if (IsListEmpty(&LocalList))
+    {
+        return FALSE;
+    }
+
+    /* Now, finalize all the extracted FOBX */
+    while (!IsListEmpty(&LocalList))
+    {
+        NextEntry = RemoveHeadList(&LocalList);
+        Fobx = CONTAINING_RECORD(NextEntry, FOBX, ScavengerFinalizationList);
+        RxFinalizeNetFobx(Fobx, TRUE, TRUE);
+    }
+
+    return TRUE;
 }
 
 BOOLEAN
@@ -4965,7 +5825,7 @@ RxSpinUpRequestsDispatcher(
 
             InterlockedDecrement(&WorkQueue->WorkQueueItemForSpinUpWorkerThreadInUse);
 
-            DPRINT1("WORKQ:SR %lx %lx\n", WorkItem->WorkerRoutine, WorkItem->Parameter);
+            DPRINT("Workqueue: calling %p(%p)\n", WorkItem->WorkerRoutine, WorkItem->Parameter);
             WorkItem->WorkerRoutine(WorkItem->Parameter);
         }
     } while (RxDispatcher->State == RxDispatcherActive);
@@ -5129,6 +5989,9 @@ RxTableComputePathHashValue(
     return Hash;
 }
 
+/*
+ * @implemented
+ */
 PVOID
 RxTableLookupName(
     IN PRX_PREFIX_TABLE ThisTable,
@@ -5191,10 +6054,34 @@ RxTableLookupName(
         ASSERT(Entry->ContainingRecord != NULL);
         Container = Entry->ContainingRecord;
 
-        /* Need to handle NetRoot specific case... */
+        /* If we have a NET_ROOT, let's return a V_NET_ROOT */
         if ((NodeType(Entry->ContainingRecord) & ~RX_SCAVENGER_MASK) == RDBSS_NTC_NETROOT)
         {
-            UNIMPLEMENTED;
+            PNET_ROOT NetRoot;
+
+            NetRoot = (PNET_ROOT)Entry->ContainingRecord;
+            /* If there's a default one, perfect, that's a match */
+            if (NetRoot->DefaultVNetRoot != NULL)
+            {
+                Container = NetRoot->DefaultVNetRoot;
+            }
+            /* If none (that shouldn't happen!), try to find one */
+            else
+            {
+                /* Use the first one in the list */
+                if (!IsListEmpty(&NetRoot->VirtualNetRoots))
+                {
+                    Container = CONTAINING_RECORD(NetRoot->VirtualNetRoots.Flink, V_NET_ROOT, NetRootListEntry);
+                }
+                /* Really, really, shouldn't happen */
+                else
+                {
+                    ASSERT(FALSE);
+                    Entry = NULL;
+                    Container = NULL;
+                }
+            }
+
             break;
         }
         else if ((NodeType(Entry->ContainingRecord) & ~RX_SCAVENGER_MASK) == RDBSS_NTC_V_NETROOT)
@@ -5337,6 +6224,19 @@ RxTableLookupName_ExactLengthMatch(
 /*
  * @implemented
  */
+NTSTATUS
+RxTearDownBufferingManager(
+   PSRV_CALL SrvCall)
+{
+    PAGED_CODE();
+
+    /* Nothing to do */
+    return STATUS_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
 VOID
 RxTrackerUpdateHistory(
     _Inout_opt_ PRX_CONTEXT RxContext,
@@ -5424,6 +6324,19 @@ RxTrackPagingIoResource(
     _In_ PCSTR File)
 {
     UNIMPLEMENTED;
+}
+
+/*
+ * @implemented
+ */
+VOID
+RxUndoScavengerFinalizationMarking(
+    PVOID Instance)
+{
+    /* Just call internal routine with mutex held */
+    RxAcquireScavengerMutex();
+    RxpUndoScavengerFinalizationMarking(Instance);
+    RxReleaseScavengerMutex();
 }
 
 /*

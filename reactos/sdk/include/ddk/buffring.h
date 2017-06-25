@@ -22,6 +22,29 @@ typedef struct _RX_BUFFERING_MANAGER_
     LIST_ENTRY SrvOpenLists[1];
 } RX_BUFFERING_MANAGER, *PRX_BUFFERING_MANAGER;
 
+#if (_WIN32_WINNT >= 0x0600)
+#define RxAcquireBufferingManagerMutex(BufMan) ExAcquireFastMutex(&(BufMan)->Mutex)
+#else
+#define RxAcquireBufferingManagerMutex(BufMan)          \
+    {                                                   \
+        if (!ExTryToAcquireFastMutex(&(BufMan)->Mutex)) \
+        {                                               \
+            ExAcquireFastMutex(&(BufMan)->Mutex);       \
+        }                                               \
+    } 
+#endif
+#define RxReleaseBufferingManagerMutex(BufMan) ExReleaseFastMutex(&(BufMan)->Mutex)
+
+VOID
+RxpProcessChangeBufferingStateRequests(
+    PSRV_CALL SrvCall,
+    BOOLEAN UpdateHandlerState);
+
+VOID
+NTAPI
+RxProcessChangeBufferingStateRequests(
+    _In_ PVOID SrvCall);
+
 VOID
 RxProcessFcbChangeBufferingStateRequest(
     _In_ PFCB Fcb);
@@ -37,6 +60,15 @@ RxInitiateSrvOpenKeyAssociation(
 NTSTATUS
 RxInitializeBufferingManager(
    _In_ PSRV_CALL SrvCall);
+
+NTSTATUS
+RxTearDownBufferingManager(
+   _In_ PSRV_CALL SrvCall);
+
+NTSTATUS
+RxFlushFcbInSystemCache(
+    _In_ PFCB Fcb,
+    _In_ BOOLEAN SynchronizeWithLazyWriter);
 
 NTSTATUS
 RxPurgeFcbInSystemCache(

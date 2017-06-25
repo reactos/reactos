@@ -27,6 +27,9 @@ typedef struct _SRV_CALL
     RX_BUFFERING_MANAGER BufferingManager;
 } SRV_CALL, *PSRV_CALL;
 
+#define NETROOT_FLAG_FINALIZATION_IN_PROGRESS 0x00040000
+#define NETROOT_FLAG_NAME_ALREADY_REMOVED 0x00080000
+
 typedef struct _NET_ROOT
 {
     union
@@ -270,6 +273,7 @@ typedef struct _SRV_OPEN
 #define FOBX_FLAG_MATCH_ALL 0x10000
 #define FOBX_FLAG_FREE_UNICODE 0x20000
 #define FOBX_FLAG_DELETE_ON_CLOSE 0x800000
+#define FOBX_FLAG_SRVOPEN_CLOSED 0x1000000
 #define FOBX_FLAG_UNC_NAME 0x2000000
 #define FOBX_FLAG_ENCLOSED_ALLOCATED 0x4000000
 
@@ -463,6 +467,12 @@ RxCreateVNetRoot(
     _In_ PUNICODE_STRING FilePath,
     _In_ PRX_CONNECTION_ID RxConnectionId);
 
+BOOLEAN
+RxFinalizeVNetRoot(
+    _Out_ PV_NET_ROOT ThisVNetRoot,
+    _In_ BOOLEAN RecursiveFinalize,
+    _In_ BOOLEAN ForceFinalize);
+
 #define RxWaitForStableVNetRoot(V, R) RxWaitForStableCondition(&(V)->Condition, &(V)->TransitionWaitList, (R), NULL)
 #define RxTransitionVNetRoot(V, C) RxUpdateCondition((C), &(V)->Condition, &(V)->TransitionWaitList)
 
@@ -577,6 +587,12 @@ NTAPI
 RxCreateNetFobx(
     _Out_ PRX_CONTEXT RxContext,
     _In_ PMRX_SRV_OPEN MrxSrvOpen);
+
+BOOLEAN
+RxFinalizeNetFobx(
+    _Out_ PFOBX ThisFobx,
+    _In_ BOOLEAN RecursiveFinalize,
+    _In_ BOOLEAN ForceFinalize);
 
 #ifdef __REACTOS__
 #define FILL_IN_FCB(Fcb, a, nl, ct, lat, lwt, lct, as, fs, vdl) \

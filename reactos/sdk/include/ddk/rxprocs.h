@@ -528,6 +528,14 @@ ULONG
 RxGetNetworkProviderPriority(
     _In_ PUNICODE_STRING DeviceName);
 
+VOID
+RxpDiscardChangeBufferingStateRequests(
+    _Inout_ PLIST_ENTRY DiscardedRequests);
+
+VOID
+RxUndoScavengerFinalizationMarking(
+    PVOID Instance);
+
 ULONG
 RxTableComputePathHashValue(
     _In_ PUNICODE_STRING Name);
@@ -563,6 +571,11 @@ RxAddVirtualNetRootToNetRoot(
     _In_ PNET_ROOT NetRoot,
     _In_ PV_NET_ROOT VNetRoot);
 
+VOID
+RxRemoveVirtualNetRootFromNetRoot(
+    _In_ PNET_ROOT NetRoot,
+    _In_ PV_NET_ROOT VNetRoot);
+
 PVOID
 RxAllocateFcbObject(
     _In_ PRDBSS_DEVICE_OBJECT RxDeviceObject,
@@ -574,6 +587,10 @@ RxAllocateFcbObject(
 VOID
 RxFreeFcbObject(
     _In_ PVOID Object);
+
+VOID
+RxPurgeFcb(
+    _In_ PFCB Fcb);
 
 BOOLEAN
 RxFinalizeNetFcb(
@@ -640,6 +657,10 @@ RxTableLookupName(
     _In_ PUNICODE_STRING Name,
     _Out_ PUNICODE_STRING RemainingName,
     _In_opt_ PRX_CONNECTION_ID RxConnectionId);
+
+VOID
+RxOrphanSrvOpens(
+    _In_ PV_NET_ROOT ThisVNetRoot);
 
 VOID
 RxOrphanThisFcb(
