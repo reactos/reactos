@@ -77,6 +77,32 @@ BROWSER_IDENTIFY_HANDLE_unbind(BROWSER_IDENTIFY_HANDLE pszSystemName,
 
 NET_API_STATUS
 WINAPI
+I_BrowserDebugTrace(
+    _In_opt_ LPWSTR ServerName,
+    _In_ PCHAR Buffer)
+{
+    NET_API_STATUS status;
+
+    TRACE("I_BrowserDebugTrace(%s %s)\n",
+          debugstr_w(ServerName), Buffer);
+
+    RpcTryExcept
+    {
+        status = I_BrowserrDebugTrace(ServerName,
+                                      Buffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
 I_BrowserQueryEmulatedDomains(
     _In_opt_ LPWSTR ServerName,
     _Out_ PBROWSER_EMULATED_DOMAIN *EmulatedDomains,
@@ -135,6 +161,61 @@ I_BrowserQueryOtherDomains(
         status = I_BrowserrQueryOtherDomains((PWSTR)ServerName,
                                              &EnumStruct,
                                              TotalEntries);
+
+        if (status == NERR_Success || status == ERROR_MORE_DATA)
+        {
+            *BufPtr = (LPBYTE)EnumStruct.ServerInfo.Level100->Buffer;
+            *EntriesRead = EnumStruct.ServerInfo.Level100->EntriesRead;
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
+I_BrowserServerEnum(
+    _In_opt_ LPCWSTR ServerName,
+    _In_opt_ LPCWSTR Transport,
+    _In_opt_ LPCWSTR ClientName,
+    _In_ DWORD Level,
+    _Out_ LPBYTE *BufPtr,
+    _In_ DWORD PrefMaxLen,
+    _Out_ LPDWORD EntriesRead,
+    _Out_ LPDWORD TotalEntries,
+    _In_ DWORD ServerType,
+    _In_opt_ LPCWSTR Domain,
+    _Inout_opt_ LPDWORD ResumeHandle)
+{
+    SERVER_INFO_100_CONTAINER Level100Container = {0, NULL};
+    SERVER_ENUM_STRUCT EnumStruct;
+    NET_API_STATUS status;
+
+    TRACE("I_BrowserServerEnum(%s %s %s %lu %p %lu %p %p %lu %s %p)\n",
+          debugstr_w(ServerName), debugstr_w(Transport), debugstr_w(ClientName),
+          Level, BufPtr, PrefMaxLen, EntriesRead, TotalEntries, ServerType,
+          debugstr_w(Domain), ResumeHandle);
+
+    EnumStruct.Level = 100;
+    EnumStruct.ServerInfo.Level100 = &Level100Container;
+
+    RpcTryExcept
+    {
+        status = I_BrowserrServerEnum((PWSTR)ServerName,
+                                      (PWSTR)Transport,
+                                      (PWSTR)ClientName,
+                                      &EnumStruct,
+                                      PrefMaxLen,
+                                      TotalEntries,
+                                      ServerType,
+                                      (PWSTR)Domain,
+                                      ResumeHandle);
 
         if (status == NERR_Success || status == ERROR_MORE_DATA)
         {

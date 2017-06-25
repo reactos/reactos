@@ -138,10 +138,19 @@ typedef struct _BROWSER_STATISTICS_STRUCT
 ]
 interface browser
 {
-    /* Function 0 (BrowserrServerEnum) */
+    /* Function 0 */
     NET_API_STATUS
     __stdcall
-    BrowserOpnum0NotUsedOnWire(void);
+    I_BrowserrServerEnum(
+        [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName,
+        [in, string, unique] LPWSTR Transport,
+        [in, string, unique] LPWSTR ClientName,
+        [in, out] LPSERVER_ENUM_STRUCT EnumStruct,
+        [in] DWORD PreferedMaximumLength,
+        [out] LPDWORD TotalEntries,
+        [in] DWORD ServerType,
+        [in, string, unique] LPWSTR Domain,
+        [in, out, unique] LPDWORD ResumeHandle);
 
     /* Function 1 (BrowserrDebugCall) */
     NET_API_STATUS
@@ -153,7 +162,7 @@ interface browser
     __stdcall
     I_BrowserrQueryOtherDomains(
          [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName,
-         [in, out] LPSERVER_ENUM_STRUCT InfoStruct,
+         [in, out] LPSERVER_ENUM_STRUCT EnumStruct,
          [out] LPDWORD TotalEntries);
 
     /* Function 3 */
@@ -162,10 +171,12 @@ interface browser
     I_BrowserrResetNetlogonState(
         [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName);
 
-    /* Function 4 (BrowserrDebugTrace) */
+    /* Function 4 */
     NET_API_STATUS
     __stdcall
-    BrowserOpnum4NotUsedOnWire(void);
+    I_BrowserrDebugTrace(
+        [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName,
+        [in, string] LPSTR String);
 
     /* Function 5 */
     NET_API_STATUS

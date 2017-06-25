@@ -39,13 +39,13 @@
 @ stub DsValidateSubnetNameA
 @ stub DsValidateSubnetNameW
 @ stub I_BrowserDebugCall
-@ stub I_BrowserDebugTrace
+@ stdcall I_BrowserDebugTrace(wstr str)
 @ stdcall I_BrowserQueryEmulatedDomains(wstr ptr ptr)
 @ stdcall I_BrowserQueryOtherDomains(wstr ptr ptr ptr)
 @ stdcall I_BrowserQueryStatistics(wstr ptr)
 @ stdcall I_BrowserResetNetlogonState(wstr)
 @ stdcall I_BrowserResetStatistics(wstr)
-@ stub I_BrowserServerEnum
+@ stdcall I_BrowserServerEnum(wstr wstr wstr long ptr long ptr ptr long wstr ptr)
 @ stdcall I_BrowserSetNetlogonState(wstr wstr wstr long)
 @ stub I_NetAccountDeltas
 @ stub I_NetAccountSync
