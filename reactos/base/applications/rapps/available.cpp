@@ -9,37 +9,52 @@
 
 #include "rapps.h"
 
-#define ADD_TEXT(a, b, c, d) \
-    if (b[0] != '\0') \
-    { \
-        LoadStringW(hInst, a, szText, _countof(szText)); \
-        InsertRichEditText(szText, c); \
-        InsertRichEditText(b, d); \
-    } \
 
-#define ADD_TEXT_NEWL(a, b) \
-  LoadStringW(hInst, a, szText, _countof(szText)); \
-  InsertRichEditText(L"\n", 0); \
-  InsertRichEditText(szText, b); \
-  InsertRichEditText(L"\n", 0);
+template<typename T, size_t N, size_t N2>
+inline void _AddText(T (&szText)[N], UINT a, T (&b)[N2], DWORD c, DWORD d) {
+  if (b[0] != '\0') 
+  {
+      LoadStringW(hInst, a, szText, N); 
+      InsertRichEditText(szText, c); 
+      InsertRichEditText(b, d); 
+  }
+}
 
-#define GET_STRING1(a, b)  \
-    if (!ParserGetString(a, b, _countof(b), FindFileData.cFileName)) \
-        continue;
+template<typename T, size_t N>
+inline void _AddTextNewl(T (&szText)[N], UINT a, DWORD b) {
+    LoadStringW(hInst, a, szText, N);
+    InsertRichEditText(L"\n", 0);
+    InsertRichEditText(szText, b);
+    InsertRichEditText(L"\n", 0);
+}
 
-#define GET_STRING2(a, b)  \
-    if (!ParserGetString(a, b, _countof(b), FindFileData.cFileName)) \
-        b[0] = '\0';
+template<typename T, size_t N, size_t N2>
+inline BOOL _GetString(LPCWSTR a, T(&b)[N], T (&cFileName)[N2]) {
+  return ParserGetString(a, b, N, cFileName);
+}
+
+template<typename T, size_t N, size_t N2>
+inline void _GetStringNullFailure(LPCWSTR a, T(&b)[N], T (&cFileName)[N2]) {
+  if (!_GetString(a, b, cFileName)) {
+    b[0] = '\0';
+  }
+}
 
 //App is "installed" if the RegName is in the registry
-#define APP_INSTALL_CHECK_K(Info, key) \
- (*Info->szRegName && (IsInstalledApplicationEx(Info->szRegName, FALSE, key) \
-                        || IsInstalledApplicationEx(Info->szRegName, TRUE, key)))
+inline bool _AppInstallCheckKey(PAPPLICATION_INFO Info, REGSAM key) {
+  return *Info->szRegName 
+    && (IsInstalledApplicationEx(Info->szRegName, TRUE, key) 
+    || IsInstalledApplicationEx(Info->szRegName, FALSE, key));
+}
+
 
 //Check both registry keys in 64bit system
 //TODO: check system type beforehand to avoid double checks?
-#define APP_INSTALL_CHECK(Info) \
-  (APP_INSTALL_CHECK_K(Info, KEY_WOW64_32KEY) || APP_INSTALL_CHECK_K(Info, KEY_WOW64_64KEY))
+inline bool _AppInstallCheck(PAPPLICATION_INFO Info) {
+  return  _AppInstallCheckKey(Info, KEY_WOW64_32KEY) 
+    || _AppInstallCheckKey(Info, KEY_WOW64_64KEY);
+}
+
 
 LIST_ENTRY CachedEntriesHead = { &CachedEntriesHead, &CachedEntriesHead };
 PLIST_ENTRY pCachedEntry = &CachedEntriesHead;
@@ -53,20 +68,20 @@ ShowAvailableAppInfo(INT Index)
     if (!Info) return FALSE;
 
     NewRichEditText(Info->szName, CFE_BOLD);
-    if (APP_INSTALL_CHECK(Info))
+    if (_AppInstallCheck(Info))
     {
-      ADD_TEXT_NEWL(IDS_STATUS_INSTALLED, CFE_ITALIC);
+      _AddTextNewl(szText, IDS_STATUS_INSTALLED, CFE_ITALIC);
     } else 
     {
-      ADD_TEXT_NEWL(IDS_STATUS_NOTINSTALLED, CFE_ITALIC);
+      _AddTextNewl(szText, IDS_STATUS_NOTINSTALLED, CFE_ITALIC);
     }
 
-    ADD_TEXT(IDS_AINFO_VERSION,     Info->szVersion, CFE_BOLD, 0);
-    ADD_TEXT(IDS_AINFO_LICENSE,     Info->szLicense, CFE_BOLD, 0);
-    ADD_TEXT(IDS_AINFO_SIZE,        Info->szSize,    CFE_BOLD, 0);
-    ADD_TEXT(IDS_AINFO_URLSITE,     Info->szUrlSite, CFE_BOLD, CFE_LINK);
-    ADD_TEXT(IDS_AINFO_DESCRIPTION, Info->szDesc,    CFE_BOLD, 0);
-    ADD_TEXT(IDS_AINFO_URLDOWNLOAD, Info->szUrlDownload, CFE_BOLD, CFE_LINK);
+    _AddText(szText, IDS_AINFO_VERSION,     Info->szVersion, CFE_BOLD, 0);
+    _AddText(szText, IDS_AINFO_LICENSE,     Info->szLicense, CFE_BOLD, 0);
+    _AddText(szText, IDS_AINFO_SIZE,        Info->szSize,    CFE_BOLD, 0);
+    _AddText(szText, IDS_AINFO_URLSITE,     Info->szUrlSite, CFE_BOLD, CFE_LINK);
+    _AddText(szText, IDS_AINFO_DESCRIPTION, Info->szDesc,    CFE_BOLD, 0);
+    _AddText(szText, IDS_AINFO_URLDOWNLOAD, Info->szUrlDownload, CFE_BOLD, CFE_LINK);
 
     return TRUE;
 }
@@ -272,17 +287,20 @@ skip_if_cached:
 
         if (Info->szUrlDownload[0] == 0)
         {
-            GET_STRING1(L"Name",        Info->szName);
-            GET_STRING1(L"URLDownload", Info->szUrlDownload);
+          if (!_GetString(L"Name", Info->szName, FindFileData.cFileName)
+            || !_GetString(L"URLDownload", Info->szUrlDownload, FindFileData.cFileName))
+          {
+            continue;
+          }
 
-            GET_STRING2(L"RegName",     Info->szRegName);
-            GET_STRING2(L"Version",     Info->szVersion);
-            GET_STRING2(L"License",     Info->szLicense);
-            GET_STRING2(L"Description", Info->szDesc);
-            GET_STRING2(L"Size",        Info->szSize);
-            GET_STRING2(L"URLSite",     Info->szUrlSite);
-            GET_STRING2(L"CDPath",      Info->szCDPath);
-            GET_STRING2(L"SHA1",        Info->szSHA1);
+          _GetStringNullFailure(L"RegName",     Info->szRegName, FindFileData.cFileName);
+          _GetStringNullFailure(L"Version",     Info->szVersion, FindFileData.cFileName);
+          _GetStringNullFailure(L"License",     Info->szLicense, FindFileData.cFileName);
+          _GetStringNullFailure(L"Description", Info->szDesc, FindFileData.cFileName);
+          _GetStringNullFailure(L"Size",        Info->szSize, FindFileData.cFileName);
+          _GetStringNullFailure(L"URLSite",     Info->szUrlSite, FindFileData.cFileName);
+          _GetStringNullFailure(L"CDPath",      Info->szCDPath, FindFileData.cFileName);
+          _GetStringNullFailure(L"SHA1",        Info->szSHA1, FindFileData.cFileName);
         }
 
         if (!lpEnumProc(Info))

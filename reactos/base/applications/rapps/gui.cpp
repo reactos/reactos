@@ -1182,7 +1182,7 @@ private:
         hImageListView = ImageList_Create(LISTVIEW_ICON_SIZE,
           LISTVIEW_ICON_SIZE,
           GetSystemColorDepth() | ILC_MASK,
-          0, 1000);
+          0, 1);
         hImageListView = ListView_SetImageList(hListView, hImageListView, LVSIL_SMALL);
 
         if (hImageListView)
