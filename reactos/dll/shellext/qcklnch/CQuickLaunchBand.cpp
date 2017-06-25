@@ -72,32 +72,23 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
 
     HRESULT CQuickLaunchBand::FinalConstruct()
     {
-        //MessageBox(0, L"CQuickLaunchBand::FinalConstruct Begin!", L"Testing", MB_OK | MB_ICONINFORMATION);
-
         HRESULT hr = CISFBand_CreateInstance(IID_IUnknown, (void**) &m_punkISFB);
         if (SUCCEEDED(hr))
-        {
-            //MessageBox(0, L"CreateInstance success!", L"Testing", MB_OK | MB_ICONINFORMATION);
-           
+        {           
             CComPtr<IShellFolderBand> pISFB;
             hr = m_punkISFB->QueryInterface(IID_IShellFolderBand, (void**) &pISFB);
             if (SUCCEEDED(hr))
             {
-                //MessageBox(0, L"IID_ISFBand query success!", L"Testing", MB_OK | MB_ICONINFORMATION);
-
                 CComPtr<IShellFolder> pISF;
                 hr = SHGetDesktopFolder(&pISF);
                 if (SUCCEEDED(hr))
-                { 
-                    //MessageBox(0, L"pisf success!", L"Testing", MB_OK | MB_ICONINFORMATION);
+                {                    
                     LPITEMIDLIST pidl = PidlBrowse(m_hWndBro, CSIDL_DESKTOP); 
                     if (pidl == NULL) return E_FAIL;
                     pISFB->InitializeSFB(pISF, pidl);                    
                 }                                               
             }            
-        }
-        
-       // MessageBox(0, L"CQuickLaunchBand::FinalConstruct End!", L"Testing", MB_OK | MB_ICONINFORMATION);
+        }       
         return hr;
     }
 

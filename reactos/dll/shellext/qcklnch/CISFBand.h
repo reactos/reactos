@@ -9,8 +9,9 @@
 
 //COM class for cisfband
 class CISFBand :
+    public CWindowImpl<CISFBand>,
     public CComCoClass<CISFBand>,
-    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,    
     public IObjectWithSite,
     public IDeskBand,
     public IDeskBar,
@@ -21,9 +22,9 @@ class CISFBand :
 {
     HINSTANCE m_hInstance;
     CComPtr<IUnknown> m_Site;
-    CComPtr<IShellFolder> m_pISF;
+    CComPtr<IShellFolder> m_pISF;     
     PCIDLIST_ABSOLUTE m_pidl;
-    HWND m_hWnd;    
+    HWND m_hWndTb;    
     DWORD m_BandID;    
 
 public:
@@ -33,7 +34,8 @@ public:
 
 //Personal Methods
     HWND CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst);
-
+    LRESULT OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    
 //IObjectWithSite
 
     virtual HRESULT STDMETHODCALLTYPE GetSite(
@@ -166,9 +168,12 @@ public:
     virtual HRESULT STDMETHODCALLTYPE SetBandInfoSFB(
         PBANDINFOSFB pbi
     );
-
-//*****************************************************************************************************
     
+//*****************************************************************************************************
+    BEGIN_MSG_MAP(CStartButton)
+        MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
+    END_MSG_MAP()
+
     DECLARE_NOT_AGGREGATABLE(CISFBand)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 
