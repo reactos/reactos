@@ -72,7 +72,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_RECORD_HEADER ParentFileRecord;
-    PNTFS_ATTR_CONTEXT DirectoryContext;
+    PNTFS_ATTR_CONTEXT IndexRootContext;
     PINDEX_ROOT_ATTRIBUTE I30IndexRoot;
     ULONG IndexRootOffset;
     ULONGLONG I30IndexRootLength;
@@ -112,7 +112,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
                            AttributeIndexRoot,
                            L"$I30",
                            4,
-                           &DirectoryContext,
+                           &IndexRootContext,
                            &IndexRootOffset);
     if (!NT_SUCCESS(Status))
     {
@@ -122,23 +122,23 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
         return Status;
     }
 
-    I30IndexRootLength = AttributeDataLength(&DirectoryContext->Record);
+    I30IndexRootLength = AttributeDataLength(&IndexRootContext->Record);
 
     // Allocate memory for the index root data
     I30IndexRoot = (PINDEX_ROOT_ATTRIBUTE)ExAllocatePoolWithTag(NonPagedPool, I30IndexRootLength, TAG_NTFS);
     if (!I30IndexRoot)
     {
         DPRINT1("ERROR: Couldn't allocate memory for index root attribute!\n");
-        ReleaseAttributeContext(DirectoryContext);
+        ReleaseAttributeContext(IndexRootContext);
         ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
     }
 
     // Read the Index Root
-    Status = ReadAttribute(DeviceExt, DirectoryContext, 0, (PCHAR)I30IndexRoot, I30IndexRootLength);
+    Status = ReadAttribute(DeviceExt, IndexRootContext, 0, (PCHAR)I30IndexRoot, I30IndexRootLength);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR: Couln't read index root attribute for Mft index #%I64u\n", DirectoryMftIndex);
-        ReleaseAttributeContext(DirectoryContext);
+        ReleaseAttributeContext(IndexRootContext);
         ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
         ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
         return Status;
@@ -149,7 +149,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     if (IndexNodeEntry->Data.Directory.IndexedFile != 0 || IndexNodeEntry->Flags != 2)
     {
         DPRINT1("FIXME: File-creation is only supported in empty directories right now! Be patient! :)\n");
-        ReleaseAttributeContext(DirectoryContext);
+        ReleaseAttributeContext(IndexRootContext);
         ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
         ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
         return STATUS_NOT_IMPLEMENTED;
@@ -160,7 +160,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     if (!NewIndexRoot)
     {
         DPRINT1("ERROR: Unable to allocate memory for new index root attribute!\n");
-        ReleaseAttributeContext(DirectoryContext);
+        ReleaseAttributeContext(IndexRootContext);
         ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
         ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -225,14 +225,14 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     {
         DPRINT1("FIXME: For now, only resizing index root at the end of a file record is supported!\n");
         ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
-        ReleaseAttributeContext(DirectoryContext);
+        ReleaseAttributeContext(IndexRootContext);
         ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
         ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
         return STATUS_NOT_IMPLEMENTED;
     }
     
     // Update the length of the attribute in the file record of the parent directory
-    InternalSetResidentAttributeLength(DirectoryContext,
+    InternalSetResidentAttributeLength(IndexRootContext,
                                        ParentFileRecord,
                                        IndexRootOffset,
                                        AttributeLength);
@@ -249,7 +249,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
 
     // Update the parent directory with the new index root
     Status = WriteAttribute(DeviceExt,
-                            DirectoryContext,
+                            IndexRootContext,
                             0,
                             (PUCHAR)NewIndexRoot,
                             AttributeLength,
@@ -258,7 +258,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     {
         DPRINT1("ERROR: Unable to write new index root attribute to parent directory!\n");
         ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
-        ReleaseAttributeContext(DirectoryContext);
+        ReleaseAttributeContext(IndexRootContext);
         ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
         ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
         return Status;
@@ -278,7 +278,7 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
 
     // Cleanup
     ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
-    ReleaseAttributeContext(DirectoryContext);
+    ReleaseAttributeContext(IndexRootContext);
     ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
     ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
 
