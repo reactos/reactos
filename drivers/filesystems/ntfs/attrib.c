@@ -112,12 +112,12 @@ AddData(PFILE_RECORD_HEADER FileRecord,
 * Pointer to the FILE_OBJECT which represents the new name.
 * This parameter is used to determine the filename and parent directory.
 *
-* @param ParentMftIndex
-* Pointer to a ULONGLONG which will receive the index of the parent directory.
-*
 * @param CaseSensitive
 * Boolean indicating if the function should operate in case-sensitive mode. This will be TRUE
 * if an application opened the file with the FILE_FLAG_POSIX_SEMANTICS flag.
+*
+* @param ParentMftIndex
+* Pointer to a ULONGLONG which will receive the index of the parent directory.
 *
 * @return
 * STATUS_SUCCESS on success. STATUS_NOT_IMPLEMENTED if target address isn't at the end
@@ -136,8 +136,8 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
             PNTFS_ATTR_RECORD AttributeAddress,
             PDEVICE_EXTENSION DeviceExt,
             PFILE_OBJECT FileObject,
-            PULONGLONG ParentMftIndex,
-            BOOLEAN CaseSensitive)
+            BOOLEAN CaseSensitive,
+            PULONGLONG ParentMftIndex)
 {
     ULONG ResidentHeaderLength = FIELD_OFFSET(NTFS_ATTR_RECORD, Resident.Reserved) + sizeof(UCHAR);
     PFILENAME_ATTRIBUTE FileNameAttribute;

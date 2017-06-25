@@ -570,7 +570,10 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
             }
 
             // Create the file record on disk
-            Status = NtfsCreateFileRecord(DeviceExt, FileObject, BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT));
+            Status = NtfsCreateFileRecord(DeviceExt,
+                                          FileObject,
+                                          (Stack->Flags & SL_CASE_SENSITIVE),
+                                          BooleanFlagOn(IrpContext->Flags,IRPCONTEXT_CANWAIT));
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("ERROR: Couldn't create file record!\n");
@@ -656,6 +659,7 @@ NtfsCreate(PNTFS_IRP_CONTEXT IrpContext)
 NTSTATUS
 NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
                      PFILE_OBJECT FileObject,
+                     BOOLEAN CaseSensitive,
                      BOOLEAN CanWait)
 {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -665,7 +669,11 @@ NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
     ULONGLONG ParentMftIndex;
     ULONGLONG FileMftIndex;
 
-    DPRINT1("NtfsCreateFileRecord(%p, %p, %s)\n", DeviceExt, FileObject, CanWait ? "TRUE" : "FALSE");
+    DPRINT1("NtfsCreateFileRecord(%p, %p, %s, %s)\n",
+            DeviceExt,
+            FileObject,
+            CaseSensitive ? "TRUE" : "FALSE",
+            CanWait ? "TRUE" : "FALSE");
 
     // allocate memory for file record
     FileRecord = ExAllocatePoolWithTag(NonPagedPool,
@@ -709,7 +717,7 @@ NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
     NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)NextAttribute + (ULONG_PTR)NextAttribute->Length);
 
     // Add the $FILE_NAME attribute
-    AddFileName(FileRecord, NextAttribute, DeviceExt, FileObject, &ParentMftIndex);
+    AddFileName(FileRecord, NextAttribute, DeviceExt, FileObject, CaseSensitive, &ParentMftIndex);
 
     // save a pointer to the filename attribute
     FilenameAttribute = (PFILENAME_ATTRIBUTE)((ULONG_PTR)NextAttribute + NextAttribute->Resident.ValueOffset);
