@@ -536,6 +536,7 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
             PNTFS_ATTR_RECORD AttributeAddress,
             PDEVICE_EXTENSION DeviceExt,
             PFILE_OBJECT FileObject,
+            BOOLEAN CaseSensitive,
             PULONGLONG ParentMftIndex);
 
 NTSTATUS
@@ -668,6 +669,7 @@ NtfsCreate(PNTFS_IRP_CONTEXT IrpContext);
 NTSTATUS
 NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
                      PFILE_OBJECT FileObject,
+                     BOOLEAN CaseSensitive,
                      BOOLEAN CanWait);
 
 /* devctl.c */
@@ -970,16 +972,17 @@ EnumerAttribute(PFILE_RECORD_HEADER file,
 NTSTATUS
 NtfsLookupFile(PDEVICE_EXTENSION Vcb,
                PUNICODE_STRING PathName,
+               BOOLEAN CaseSensitive,
                PFILE_RECORD_HEADER *FileRecord,
                PULONGLONG MFTIndex);
 
 NTSTATUS
 NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
                  PUNICODE_STRING PathName,
+                 BOOLEAN CaseSensitive,
                  PFILE_RECORD_HEADER *FileRecord,
                  PULONGLONG MFTIndex,
-                 ULONGLONG CurrentMFTIndex,
-                 BOOLEAN CaseSensitive);
+                 ULONGLONG CurrentMFTIndex);
 
 VOID
 NtfsDumpFileRecord(PDEVICE_EXTENSION Vcb,

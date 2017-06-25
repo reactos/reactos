@@ -2106,16 +2106,22 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
 NTSTATUS
 NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
                  PUNICODE_STRING PathName,
+                 BOOLEAN CaseSensitive,
                  PFILE_RECORD_HEADER *FileRecord,
                  PULONGLONG MFTIndex,
-                 ULONGLONG CurrentMFTIndex,
-                 BOOLEAN CaseSensitive)
+                 ULONGLONG CurrentMFTIndex)
 {
     UNICODE_STRING Current, Remaining;
     NTSTATUS Status;
     ULONG FirstEntry = 0;
 
-    DPRINT("NtfsLookupFileAt(%p, %wZ, %p, %I64x)\n", Vcb, PathName, FileRecord, CurrentMFTIndex);
+    DPRINT("NtfsLookupFileAt(%p, %wZ, %s, %p, %p, %I64x)\n",
+           Vcb,
+           PathName,
+           CaseSensitive ? "TRUE" : "FALSE",
+           FileRecord,
+           MFTIndex,
+           CurrentMFTIndex);
 
     FsRtlDissectName(*PathName, &Current, &Remaining);
 
@@ -2158,11 +2164,11 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
 NTSTATUS
 NtfsLookupFile(PDEVICE_EXTENSION Vcb,
                PUNICODE_STRING PathName,
+               BOOLEAN CaseSensitive,
                PFILE_RECORD_HEADER *FileRecord,
-               PULONGLONG MFTIndex,
-               BOOLEAN CaseSensitive)
+               PULONGLONG MFTIndex)
 {
-    return NtfsLookupFileAt(Vcb, PathName, FileRecord, MFTIndex, NTFS_FILE_ROOT, CaseSensitive);
+    return NtfsLookupFileAt(Vcb, PathName, CaseSensitive, FileRecord, MFTIndex, NTFS_FILE_ROOT);
 }
 
 /**
