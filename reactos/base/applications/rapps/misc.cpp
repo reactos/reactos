@@ -497,3 +497,27 @@ UINT ParserGetInt(LPCWSTR lpKeyName, LPCWSTR lpFileName)
 
     return Result;
 }
+
+
+BOOL
+ParseVersion(LPWSTR szVersion, INT* version)
+{
+    return TRUE;
+}
+
+
+//Finds subkey in key by name or path and returns it
+BOOL
+FindRegistryKeyByName(_In_ HKEY hKeyBase, _In_ REGSAM keyWow, _In_ LPCWSTR lpcKey, _Out_opt_ PHKEY hKeyResult)
+{
+    HKEY hSubKey;
+    if (RegOpenKeyExW(hKeyBase, lpcKey, 0, keyWow | KEY_READ, &hSubKey) == ERROR_SUCCESS)
+    {
+        hKeyResult = &hSubKey;
+        return TRUE;
+    }
+    hKeyResult = NULL;
+    RegCloseKey(hSubKey);
+    return FALSE;
+}
+

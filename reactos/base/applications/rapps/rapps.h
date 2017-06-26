@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef _RAPPS_H
 #define _RAPPS_H
 
@@ -71,6 +73,7 @@
 #define IS_INSTALLED_ENUM(a) (a >= ENUM_INSTALLED_MIN && a <= ENUM_INSTALLED_MAX)
 #define IS_AVAILABLE_ENUM(a) (a >= ENUM_AVAILABLE_MIN && a <= ENUM_AVAILABLE_MAX)
 
+
 /* aboutdlg.c */
 VOID ShowAboutDialog(VOID);
 
@@ -142,8 +145,10 @@ BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumP
 BOOL GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR lpString);
 BOOL ShowInstalledAppInfo(INT Index);
 BOOL UninstallApplication(INT Index, BOOL bModify);
-BOOL IsInstalledApplicationEx(LPWSTR lpRegName, BOOL IsUserKey, REGSAM keyWow);
+BOOL IsInstalledApplication(LPCWSTR lpRegName, BOOL IsUserKey, REGSAM keyWow);
 VOID RemoveAppFromRegistry(INT Index);
+
+BOOL InstalledVersion(LPWSTR szVersionResult, UINT iVersionResultSize, LPCWSTR lpRegName, BOOL IsUserKey, REGSAM keyWow);
 
 /* winmain.c */
 extern HWND hMainWnd;
@@ -175,6 +180,8 @@ BOOL WriteLogMessage(WORD wType, DWORD dwEventID, LPWSTR lpMsg);
 
 UINT ParserGetString(LPCWSTR lpKeyName, LPWSTR lpReturnedString, UINT nSize, LPCWSTR lpFileName);
 UINT ParserGetInt(LPCWSTR lpKeyName, LPCWSTR lpFileName);
+
+BOOL FindRegistryKeyByName(_In_ HKEY hKeyBase, _In_ REGSAM keyWow, _In_ LPCWSTR lpcKey, _Out_opt_ PHKEY hKeyResult);
 
 /* settingsdlg.c */
 VOID CreateSettingsDlg(HWND hwnd);

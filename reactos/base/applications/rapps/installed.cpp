@@ -28,50 +28,59 @@ GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR lpString)
     return FALSE;
 }
 
+
+
 BOOL
-IsInstalledApplicationEx(LPWSTR lpRegName, BOOL IsUserKey, REGSAM keyWow)
+IsInstalledApplication(LPCWSTR lpRegName, BOOL IsUserKey, REGSAM keyWow)
 {
-    DWORD dwSize = MAX_PATH, dwType;
-    WCHAR szName[MAX_PATH];
-    WCHAR szDisplayName[MAX_PATH];
+    HKEY hKey = NULL;
+    BOOL IsInstalled = FALSE;
+
+    if ((RegOpenKeyExW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
+                    L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall", 0, keyWow | KEY_ENUMERATE_SUB_KEYS,
+                    &hKey) == ERROR_SUCCESS) \
+        && FindRegistryKeyByName(hKey, keyWow, lpRegName, NULL))
+    {
+        IsInstalled = TRUE;
+    }
+    RegCloseKey(hKey);
+    return IsInstalled;
+}
+
+BOOL
+InstalledVersion(LPWSTR szVersionResult, UINT iVersionResultSize, LPCWSTR lpRegName, BOOL IsUserKey, REGSAM keyWow)
+{
+    DWORD dwSize = MAX_PATH;
+    DWORD dwType = REG_SZ;
+    WCHAR szVersion[MAX_PATH];
     HKEY hKey, hSubKey;
-    INT ItemIndex = 0;
+    BOOL HasVersion = FALSE;
+    iVersionResultSize = 0;
 
     if (RegOpenKeyExW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
-                    L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall", 0, keyWow | KEY_ENUMERATE_SUB_KEYS,
-                    &hKey) != ERROR_SUCCESS)
+        L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall", 0, keyWow | KEY_ENUMERATE_SUB_KEYS,
+        &hKey) == ERROR_SUCCESS)
     {
-        return FALSE;
-    }
-
-    while (RegEnumKeyExW(hKey, ItemIndex, szName, &dwSize, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
-    {
-        if (RegOpenKeyExW(hKey, szName, 0, keyWow | KEY_READ, &hSubKey) == ERROR_SUCCESS)
+        if (FindRegistryKeyByName(hKey, keyWow, lpRegName, &hSubKey))
         {
-
-            dwType = REG_SZ;
-            dwSize = sizeof(szDisplayName);
+            dwSize = sizeof(szVersion);
             if (RegQueryValueExW(hSubKey,
-                                 L"DisplayName",
-                                 NULL,
-                                 &dwType,
-                                 (LPBYTE)szDisplayName,
-                                 &dwSize) == ERROR_SUCCESS)
+                L"DisplayVersion",
+                NULL,
+                &dwType,
+                (LPBYTE) szVersion,
+                &dwSize) == ERROR_SUCCESS)
             {
-                if (wcscmp(szDisplayName, lpRegName) == 0)
-                {
-                    RegCloseKey(hSubKey);
-                    RegCloseKey(hKey);
-                    return TRUE;
-                } 
+                szVersionResult = szVersion;
+                iVersionResultSize = dwSize;
+                HasVersion = TRUE;
             }
         }
         RegCloseKey(hSubKey);
-        dwSize = MAX_PATH;
-        ItemIndex++;
     }
+
     RegCloseKey(hKey);
-    return FALSE;
+    return HasVersion;
 }
 
 

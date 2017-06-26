@@ -40,11 +40,14 @@ inline void _GetStringNullFailure(LPCWSTR a, T(&b)[N], T (&cFileName)[N2]) {
   }
 }
 
-//App is "installed" if the RegName is in the registry
-inline bool _AppInstallCheckKey(PAPPLICATION_INFO Info, REGSAM key) {
-  return *Info->szRegName 
-    && (IsInstalledApplicationEx(Info->szRegName, TRUE, key) 
-    || IsInstalledApplicationEx(Info->szRegName, FALSE, key));
+//App is "installed" if the RegName or Name is in the registry
+inline bool _AppInstallCheckKey(PAPPLICATION_INFO Info, REGSAM key)
+{
+    return (*Info->szRegName
+        && (IsInstalledApplication(Info->szRegName, TRUE, key)
+        || IsInstalledApplication(Info->szRegName, FALSE, key)))
+        || (*Info->szName && (IsInstalledApplication(Info->szName, TRUE, key)
+            || IsInstalledApplication(Info->szName, FALSE, key)));
 }
 
 
