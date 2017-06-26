@@ -20,7 +20,7 @@ START_TEST(DsRoleGetPrimaryDomainInformation)
     // Get information about the domain membership of this computer.
     dwErrorCode = DsRoleGetPrimaryDomainInformation(NULL, DsRolePrimaryDomainInfoBasic, (PBYTE*)&pInfo);
     ok(dwErrorCode == ERROR_SUCCESS, "DsRoleGetPrimaryDomainInformation returns %lu!\n", dwErrorCode);
-    ok(pInfo->MachineRole >= DsRole_RoleStandaloneWorkstation && pInfo->MachineRole <= DsRole_RolePrimaryDomainController, "pInfo->MachineRole is %lu!\n", pInfo->MachineRole);
+    ok(pInfo->MachineRole >= DsRole_RoleStandaloneWorkstation && pInfo->MachineRole <= DsRole_RolePrimaryDomainController, "pInfo->MachineRole is %u!\n", pInfo->MachineRole);
 
     if (pInfo)
         DsRoleFreeMemory(pInfo);
