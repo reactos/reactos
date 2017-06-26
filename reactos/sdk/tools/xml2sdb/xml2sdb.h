@@ -2,6 +2,7 @@
 
 #include <string>
 #include <list>
+#include <vector>
 #include <map>
 
 #include <typedefs.h>
