@@ -1003,8 +1003,8 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
                   PUNICODE_STRING FileName,
                   PULONG FirstEntry,
                   BOOLEAN DirSearch,
-                  ULONGLONG *OutMFTIndex,
-                  BOOLEAN CaseSensitive);
+                  BOOLEAN CaseSensitive,
+                  ULONGLONG *OutMFTIndex);
 
 /* misc.c */
 

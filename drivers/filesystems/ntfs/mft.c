@@ -119,7 +119,7 @@ FindAttribute(PDEVICE_EXTENSION Vcb,
     FIND_ATTR_CONTXT Context;
     PNTFS_ATTR_RECORD Attribute;
 
-    DPRINT("FindAttribute(%p, %p, 0x%x, %S, %u, %p)\n", Vcb, MftRecord, Type, Name, NameLength, AttrCtx);
+    DPRINT("FindAttribute(%p, %p, 0x%x, %S, %lu, %p, %p)\n", Vcb, MftRecord, Type, Name, NameLength, AttrCtx, Offset);
 
     Found = FALSE;
     Status = FindFirstAttribute(&Context, Vcb, MftRecord, FALSE, &Attribute);
@@ -395,6 +395,14 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
                        PLARGE_INTEGER DataSize)
 {
     NTSTATUS Status = STATUS_SUCCESS;
+
+    DPRINT1("SetAttributeDataLenth(%p, %p, %p, %lu, %p, %I64u)\n",
+            FileObject,
+            Fcb,
+            AttrContext,
+            AttrOffset,
+            FileRecord,
+            DataSize->QuadPart);
 
     // are we truncating the file?
     if (DataSize->QuadPart < AttributeDataLength(&AttrContext->Record))
@@ -1336,7 +1344,7 @@ ReadFileRecord(PDEVICE_EXTENSION Vcb,
     BytesRead = ReadAttribute(Vcb, Vcb->MFTContext, index * Vcb->NtfsInfo.BytesPerFileRecord, (PCHAR)file, Vcb->NtfsInfo.BytesPerFileRecord);
     if (BytesRead != Vcb->NtfsInfo.BytesPerFileRecord)
     {
-        DPRINT1("ReadFileRecord failed: %I64u read, %u expected\n", BytesRead, Vcb->NtfsInfo.BytesPerFileRecord);
+        DPRINT1("ReadFileRecord failed: %I64u read, %lu expected\n", BytesRead, Vcb->NtfsInfo.BytesPerFileRecord);
         return STATUS_PARTIAL_COPY;
     }
 
@@ -1370,11 +1378,11 @@ UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
     NTSTATUS Status;
     ULONG CurrentEntry = 0;
 
-    DPRINT("UpdateFileNameRecord(%p, %I64d, %wZ, %u, %I64u, %I64u, %s)\n",
+    DPRINT("UpdateFileNameRecord(%p, %I64d, %wZ, %s, %I64u, %I64u, %s)\n",
            Vcb,
            ParentMFTIndex,
            FileName,
-           DirSearch,
+           DirSearch ? "TRUE" : "FALSE",
            NewDataSize,
            NewAllocationSize,
            CaseSensitive ? "TRUE" : "FALSE");
@@ -1466,7 +1474,20 @@ UpdateIndexEntryFileNameSize(PDEVICE_EXTENSION Vcb,
     ULONGLONG IndexAllocationSize;
     PINDEX_BUFFER IndexBuffer;
 
-    DPRINT("UpdateIndexEntrySize(%p, %p, %p, %u, %p, %p, %wZ, %u, %u, %u, %I64u, %I64u)\n", Vcb, MftRecord, IndexRecord, IndexBlockSize, FirstEntry, LastEntry, FileName, *StartEntry, *CurrentEntry, DirSearch, NewDataSize, NewAllocatedSize);
+    DPRINT("UpdateIndexEntrySize(%p, %p, %p, %lu, %p, %p, %wZ, %lu, %lu, %s, %I64u, %I64u, %s)\n",
+           Vcb,
+           MftRecord,
+           IndexRecord,
+           IndexBlockSize,
+           FirstEntry,
+           LastEntry,
+           FileName,
+           *StartEntry,
+           *CurrentEntry,
+           DirSearch ? "TRUE" : "FALSE",
+           NewDataSize,
+           NewAllocatedSize,
+           CaseSensitive ? "TRUE" : "FALSE");
 
     // find the index entry responsible for the file we're trying to update
     IndexEntry = FirstEntry;
@@ -1933,7 +1954,7 @@ BrowseIndexEntries(PDEVICE_EXTENSION Vcb,
     ULONGLONG IndexAllocationSize;
     PINDEX_BUFFER IndexBuffer;
 
-    DPRINT("BrowseIndexEntries(%p, %p, %p, %u, %p, %p, %wZ, %u, %u, %s, %s, %p)\n",
+    DPRINT("BrowseIndexEntries(%p, %p, %p, %lu, %p, %p, %wZ, %lu, %lu, %s, %s, %p)\n",
            Vcb,
            MftRecord,
            IndexRecord,
@@ -1981,7 +2002,7 @@ BrowseIndexEntries(PDEVICE_EXTENSION Vcb,
     Status = FindAttribute(Vcb, MftRecord, AttributeIndexAllocation, L"$I30", 4, &IndexAllocationCtx, NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Corrupted filesystem!\n");
+        DPRINT1("Corrupted filesystem!\n");
         return Status;
     }
 
@@ -2031,8 +2052,8 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
                   PUNICODE_STRING FileName,
                   PULONG FirstEntry,
                   BOOLEAN DirSearch,
-                  ULONGLONG *OutMFTIndex,
-                  BOOLEAN CaseSensitive)
+                  BOOLEAN CaseSensitive,
+                  ULONGLONG *OutMFTIndex)
 {
     PFILE_RECORD_HEADER MftRecord;
     PNTFS_ATTR_CONTEXT IndexRootCtx;
@@ -2042,7 +2063,14 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
     NTSTATUS Status;
     ULONG CurrentEntry = 0;
 
-    DPRINT("NtfsFindMftRecord(%p, %I64d, %wZ, %u, %u, %p)\n", Vcb, MFTIndex, FileName, *FirstEntry, DirSearch, OutMFTIndex);
+    DPRINT("NtfsFindMftRecord(%p, %I64d, %wZ, %lu, %s, %s, %p)\n",
+           Vcb,
+           MFTIndex,
+           FileName,
+           *FirstEntry,
+           DirSearch ? "TRUE" : "FALSE",
+           CaseSensitive ? "TRUE" : "FALSE",
+           OutMFTIndex);
 
     MftRecord = ExAllocatePoolWithTag(NonPagedPool,
                                       Vcb->NtfsInfo.BytesPerFileRecord,
@@ -2129,7 +2157,7 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
     {
         DPRINT("Current: %wZ\n", &Current);
 
-        Status = NtfsFindMftRecord(Vcb, CurrentMFTIndex, &Current, &FirstEntry, FALSE, &CurrentMFTIndex, CaseSensitive);
+        Status = NtfsFindMftRecord(Vcb, CurrentMFTIndex, &Current, &FirstEntry, FALSE, CaseSensitive, &CurrentMFTIndex);
         if (!NT_SUCCESS(Status))
         {
             return Status;
@@ -2222,7 +2250,7 @@ NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
 {
     NTSTATUS Status;
 
-    DPRINT("NtfsFindFileAt(%p, %wZ, %u, %p, %p, %I64x, %s)\n",
+    DPRINT("NtfsFindFileAt(%p, %wZ, %lu, %p, %p, %I64x, %s)\n",
            Vcb,
            SearchPattern,
            *FirstEntry,
@@ -2231,7 +2259,7 @@ NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
            CurrentMFTIndex,
            (CaseSensitive ? "TRUE" : "FALSE"));
 
-    Status = NtfsFindMftRecord(Vcb, CurrentMFTIndex, SearchPattern, FirstEntry, TRUE, &CurrentMFTIndex, CaseSensitive);
+    Status = NtfsFindMftRecord(Vcb, CurrentMFTIndex, SearchPattern, FirstEntry, TRUE, CaseSensitive, &CurrentMFTIndex);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtfsFindFileAt: NtfsFindMftRecord() failed with status 0x%08lx\n", Status);
