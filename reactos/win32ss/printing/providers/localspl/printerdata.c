@@ -25,7 +25,7 @@ _MakePrinterSubKey(PLOCAL_PRINTER_HANDLE pPrinterHandle, PCWSTR pKeyName, PWSTR*
     PWSTR p;
 
     // Sanity check
-    if (!pKeyName)
+    if (!pKeyName || !*pKeyName)
         return ERROR_INVALID_PARAMETER;
 
     // Allocate a buffer for the subkey "PrinterName\KeyName".
@@ -204,7 +204,7 @@ _LocalGetPrintServerHandleData(PCWSTR pValueName, PDWORD pType, PBYTE pData, DWO
         dwErrorCode = DsRoleGetPrimaryDomainInformation(NULL, DsRolePrimaryDomainInfoBasic, (PBYTE*)&pInfo);
         if (dwErrorCode != ERROR_SUCCESS)
         {
-            ERR("DsRoleGetPrimaryDomainInformation failed with error %lu!\n", GetLastError());
+            ERR("DsRoleGetPrimaryDomainInformation failed with error %lu!\n", dwErrorCode);
             return dwErrorCode;
         }
 
@@ -216,9 +216,9 @@ _LocalGetPrintServerHandleData(PCWSTR pValueName, PDWORD pType, PBYTE pData, DWO
     else if (wcsicmp(pValueName, SPLREG_DS_PRESENT_FOR_USER) == 0)
     {
         DWORD cch;
-        PWSTR pwszUserSam;
         PWSTR p;
         WCHAR wszComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+        WCHAR wszUserSam[UNLEN + 1];
 
         // We want to store a REG_DWORD value.
         *pType = REG_DWORD;
@@ -230,47 +230,30 @@ _LocalGetPrintServerHandleData(PCWSTR pValueName, PDWORD pType, PBYTE pData, DWO
         cch = MAX_COMPUTERNAME_LENGTH + 1;
         if (!GetComputerNameW(wszComputerName, &cch))
         {
-            ERR("GetComputerNameW failed with error %lu!\n", GetLastError());
-            return GetLastError();
+            dwErrorCode = GetLastError();
+            ERR("GetComputerNameW failed with error %lu!\n", dwErrorCode);
+            return dwErrorCode;
         }
 
         // Get the User Name in the SAM format.
         // This could either be:
         //     COMPUTERNAME\User
         //     DOMAINNAME\User
-        cch = 0;
-        GetUserNameExW(NameSamCompatible, NULL, &cch);
-        dwErrorCode = GetLastError();
-        if (dwErrorCode != ERROR_MORE_DATA)
-        {
-            ERR("GetUserNameExW failed with error %lu!\n", dwErrorCode);
-            return dwErrorCode;
-        }
-
-        pwszUserSam = DllAllocSplMem(cch * sizeof(WCHAR));
-        if (!pwszUserSam)
-        {
-            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-            ERR("DllAllocSplMem failed!\n");
-            return dwErrorCode;
-        }
-
-        if (!GetUserNameExW(NameSamCompatible, pwszUserSam, &cch))
+        cch = UNLEN + 1;
+        if (!GetUserNameExW(NameSamCompatible, wszUserSam, &cch))
         {
             dwErrorCode = GetLastError();
             ERR("GetUserNameExW failed with error %lu!\n", dwErrorCode);
-            DllFreeSplMem(pwszUserSam);
             return dwErrorCode;
         }
 
         // Terminate the SAM-formatted User Name at the backslash.
-        p = wcschr(pwszUserSam, L'\\');
+        p = wcschr(wszUserSam, L'\\');
         *p = 0;
 
         // Compare it with the Computer Name.
         // If they differ, this User is part of a domain.
-        *((PDWORD)pData) = (wcscmp(pwszUserSam, wszComputerName) != 0);
-        DllFreeSplMem(pwszUserSam);
+        *((PDWORD)pData) = (wcscmp(wszUserSam, wszComputerName) != 0);
         return ERROR_SUCCESS;
     }
     else if (wcsicmp(pValueName, SPLREG_REMOTE_FAX) == 0)
@@ -328,6 +311,7 @@ _LocalGetPrintServerHandleData(PCWSTR pValueName, PDWORD pType, PBYTE pData, DWO
 DWORD WINAPI
 LocalGetPrinterDataEx(HANDLE hPrinter, PCWSTR pKeyName, PCWSTR pValueName, PDWORD pType, PBYTE pData, DWORD nSize, PDWORD pcbNeeded)
 {
+    BYTE Temp;
     DWORD dwErrorCode;
     DWORD dwTemp;
     PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
@@ -337,6 +321,12 @@ LocalGetPrinterDataEx(HANDLE hPrinter, PCWSTR pKeyName, PCWSTR pValueName, PDWOR
     // Ensure here that it is always set to simplify the code later.
     if (!pType)
         pType = &dwTemp;
+
+    // pData is later fed to RegQueryValueExW in many cases. When calling it with zero buffer size, RegQueryValueExW returns a
+    // different error code based on whether pData is NULL or something else.
+    // Ensure here that ERROR_MORE_DATA is always returned.
+    if (!pData)
+        pData = &Temp;
 
     if (!pHandle)
     {

@@ -444,6 +444,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Print\Printers\Dummy Printer 
 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Print\Printers\Dummy Printer On LPT1","Location",,"At Home"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Print\Printers\Dummy Printer On LPT1","Name",,"Dummy Printer On LPT1"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Print\Printers\Dummy Printer On LPT1","Port",,"LPT1:"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Print\Printers\Dummy Printer On LPT1","Print Processor",,"winprint"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Print\Printers\Dummy Printer On LPT1","Printer Driver",,"Dummy Printer Driver"

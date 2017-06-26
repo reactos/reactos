@@ -1106,6 +1106,15 @@ _LocalOpenPrinterHandle(PWSTR pwszPrinterName, PWSTR pwszJobParameter, PHANDLE p
         goto Failure;
     }
 
+    // Create a new generic handle.
+    pHandle = DllAllocSplMem(sizeof(LOCAL_HANDLE));
+    if (!pHandle)
+    {
+        dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+        ERR("DllAllocSplMem failed!\n");
+        goto Failure;
+    }
+
     // Create a new LOCAL_PRINTER_HANDLE.
     pPrinterHandle = DllAllocSplMem(sizeof(LOCAL_PRINTER_HANDLE));
     if (!pPrinterHandle)
@@ -1192,7 +1201,7 @@ _LocalOpenPrinterHandle(PWSTR pwszPrinterName, PWSTR pwszJobParameter, PHANDLE p
         pPrinterHandle->pJob = pJob;
     }
 
-    // Make the generic handle a Port handle.
+    // Make the generic handle a Printer handle.
     pHandle->HandleType = HandleType_Printer;
     pHandle->pSpecificHandle = pPrinterHandle;
 

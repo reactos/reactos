@@ -28,7 +28,6 @@ typedef struct _SPLREG_VALUE
 SPLREG_VALUE, *PSPLREG_VALUE;
 
 SPLREG_VALUE SplRegValues[] = {
-#if 0
     { "DefaultSpoolDirectory", L"DefaultSpoolDirectory", REG_SZ, 0xFFFFFFFF, TRUE },
     { "PortThreadPriorityDefault", L"PortThreadPriorityDefault", REG_NONE, 4, FALSE },
     { "PortThreadPriority", L"PortThreadPriority", REG_DWORD, 4, TRUE },
@@ -50,6 +49,7 @@ SPLREG_VALUE SplRegValues[] = {
     { "Architecture", L"Architecture", REG_NONE, 0xFFFFFFFF, FALSE },
     { "OSVersion", L"OSVersion", REG_NONE, sizeof(OSVERSIONINFOA), FALSE },
     { "OSVersionEx", L"OSVersionEx", REG_NONE, sizeof(OSVERSIONINFOEXA), FALSE },
+#if 0
     { "DsPresent", L"DsPresent", REG_DWORD, 4, FALSE },
     { "DsPresentForUser", L"DsPresentForUser", REG_DWORD, 4, FALSE },
 #endif

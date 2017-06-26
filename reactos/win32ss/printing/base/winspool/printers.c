@@ -235,7 +235,7 @@ ClosePrinter(HANDLE hPrinter)
     // Do the RPC call.
     RpcTryExcept
     {
-        dwErrorCode = _RpcClosePrinter(pHandle->hPrinter);
+        dwErrorCode = _RpcClosePrinter(&pHandle->hPrinter);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
