@@ -186,14 +186,19 @@ static bool run_one(std::string& input, std::string& output)
 
 static std::string get_strarg(int argc, char* argv[], int& i)
 {
-    if (argv[i][2] == 0)
-    {
-        ++i;
-        if (i >= argc || !argv[i])
-            return std::string();
-        return argv[i];
-    }
-    return std::string(argv[i] + 2);
+    if (argv[i][2] != 0)
+        return std::string(argv[i] + 2);
+
+    ++i;
+    if (i >= argc || !argv[i])
+        return std::string();
+    return argv[i];
+}
+
+static void update_loglevel(int argc, char* argv[], int& i)
+{
+    std::string value = get_strarg(argc, argv, i);
+    g_ShimDebugLevel = strtoul(value.c_str(), NULL, 10);
 }
 
 // -i R:\src\apphelp\reactos\media\sdb\sysmain.xml -oR:\build\apphelp\devenv_msvc\media\sdb\ros2.sdb
@@ -204,25 +209,28 @@ int main(int argc, char * argv[])
 
     for (int i = 1; i < argc; ++i)
     {
-        if (argv[i][0] == '/' || argv[i][0] == '-')
+        if (argv[i][0] != '/' && argv[i][0] != '-')
+            continue;
+
+        switch(argv[i][1])
         {
-            switch(argv[i][1])
-            {
-            case 'i':
-                input = get_strarg(argc, argv, i);
-                break;
-            case 'o':
-                output = get_strarg(argc, argv, i);
-                break;
-            }
-            if (!input.empty() && !output.empty())
-            {
-                if (!run_one(input, output))
-                {
-                    printf("Failed converting '%s' to '%s'\n", input.c_str(), output.c_str());
-                    return 1;
-                }
-            }
+        case 'i':
+            input = get_strarg(argc, argv, i);
+            break;
+        case 'o':
+            output = get_strarg(argc, argv, i);
+            break;
+        case 'l':
+            update_loglevel(argc, argv, i);
+            break;
+        }
+        if (input.empty() || output.empty())
+            continue;
+
+        if (!run_one(input, output))
+        {
+            printf("Failed converting '%s' to '%s'\n", input.c_str(), output.c_str());
+            return 1;
         }
     }
     return 0;
