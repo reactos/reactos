@@ -14,12 +14,14 @@
 #define XHCI_DCBAAP           12
 #define XHCI_CONFIG           14
 
+typedef unsigned long long ULONGULONG ;
+
 typedef union _XHCI_HC_STRUCTURAL_PARAMS_1 {
   struct {
-    ULONG NumberOfDeviceSlots     : 8;
-    ULONG NumberOfInterrupters    : 11;
+    ULONG NumberOfDeviceSlots     : 8; // MAXSLOTS
+    ULONG NumberOfInterrupters    : 11; // MAXINTRS
     ULONG Rsvd                    : 5;
-    ULONG NumberOfPorts           : 8;
+    ULONG NumberOfPorts           : 8; //MAXPORTS
   };
   ULONG AsULONG;
 } XHCI_HC_STRUCTURAL_PARAMS_1;
@@ -149,10 +151,10 @@ typedef union _XHCI_DEVICE_NOTIFICATION_CONTROL {
 
 typedef union _XHCI_CONFIGURE { 
   struct {
-    ULONG MaxDeviceSlot      : 8;
-    ULONG U3E                : 1;
-    ULONG CIE                : 1;
-    ULONG Rsvd               : 21;
+    ULONG MaxDeviceSlotsEnabled        : 8;
+    ULONG U3EntryEnable                : 1;
+    ULONG ConfigurationInfoEnable      : 1;
+    ULONG Rsvd                         : 21;
   };
   ULONG AsULONG;
 } XHCI_CONFIGURE;
@@ -187,25 +189,25 @@ typedef union _XHCI_PORT_STATUS_CONTROL {
   ULONG AsULONG;
 } XHCI_PORT_STATUS_CONTROL;
 
-typedef union _XHCI_COMMAND_RING_CONTROL { //typedef ulongulong for better readability
+typedef union _XHCI_COMMAND_RING_CONTROL { 
   struct {
-    unsigned long long RCS                       : 1;
-    unsigned long long CS                        : 1;
-    unsigned long long CA                        : 1;
-    unsigned long long CRR                       : 1;
-    unsigned long long Rsvd                      : 2;
-    unsigned long long CommandRingPointerLo      : 26;
-    unsigned long long CommandRingPointerHi      : 32;
+    ULONGULONG RingCycleState           : 1;
+    ULONGULONG CommandStop              : 1;
+    ULONGULONG CommandAbort             : 1;
+    ULONGULONG CommandRingRunning       : 1;
+    ULONGULONG RsvdP                    : 2;
+    ULONGULONG CommandRingPointerLo     : 26;
+    ULONGULONG CommandRingPointerHi     : 32;
   };
-  unsigned long long AsULONGULONG;
+  ULONGULONG AsULONGULONG;
 } XHCI_COMMAND_RING_CONTROL;
 
-typedef union _XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY { 
+typedef union _XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY_POINTER { 
   struct {
-    unsigned long long Rsvd                      : 6;
-    unsigned long long DCBAALo                   : 26;
-    unsigned long long DCBAAHi                   : 32;
+    ULONGULONG RsvdZ                       : 6;
+    ULONGULONG DCBAAPointerLo              : 26;
+    ULONGULONG DCBAAPointerHi              : 32;
   };
-  unsigned long long AsULONGULONG;
-} XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY;
+  ULONGULONG AsULONGULONG;
+} XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY_POINTER;
 
