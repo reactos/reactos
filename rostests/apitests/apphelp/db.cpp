@@ -1332,6 +1332,147 @@ static void test_MatchApplications(void)
     ok(ret, "RemoveDirectoryW error: %d\n", GetLastError());
 }
 
+static BOOL write_raw_file(const WCHAR* FileName, const void* Data, DWORD Size)
+{
+    BOOL Success;
+    DWORD dwWritten;
+    HANDLE Handle = CreateFileW(FileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    if (Handle == INVALID_HANDLE_VALUE)
+    {
+        skip("Failed to create temp file %ls, error %u\n", FileName, GetLastError());
+        return FALSE;
+    }
+    Success = WriteFile(Handle, Data, Size, &dwWritten, NULL);
+    ok(Success == TRUE, "WriteFile failed with %u\n", GetLastError());
+    ok(dwWritten == Size, "WriteFile wrote %u bytes instead of %u\n", dwWritten, Size);
+    CloseHandle(Handle);
+    return Success && (dwWritten == Size);
+}
+
+static bool extract_resource(const WCHAR* Filename, LPCWSTR ResourceName)
+{
+    HMODULE hMod = GetModuleHandleW(NULL);
+    HRSRC hRsrc = FindResourceW(hMod, ResourceName, MAKEINTRESOURCEW(RT_RCDATA));
+    ok(!!hRsrc, "Unable to find %s\n", wine_dbgstr_w(ResourceName));
+    if (!hRsrc)
+        return false;
+
+    HGLOBAL hGlobal = LoadResource(hMod, hRsrc);
+    DWORD Size = SizeofResource(hMod, hRsrc);
+    LPVOID pData = LockResource(hGlobal);
+
+    ok(Size && !!pData, "Unable to load %s\n", wine_dbgstr_w(ResourceName));
+    if (!Size || !pData)
+        return false;
+
+    BOOL Written = write_raw_file(Filename, pData, Size);
+    UnlockResource(pData);
+    return Written;
+}
+
+template<typename SDBQUERYRESULT_T>
+static BOOL test_match_ex(const WCHAR* workdir, HSDB hsdb, int cur)
+{
+    WCHAR exename[MAX_PATH];
+    WCHAR* Vendor;
+    SDBQUERYRESULT_T query;
+    TAGID tagid, exetag;
+    BOOL ret, Succeed;
+    PDB pdb;
+
+    memset(&query, 0xab, sizeof(query));
+
+    swprintf(exename, L"%s\\test_match%d.exe", workdir, cur);
+
+    ret = pSdbTagRefToTagID(hsdb, 0, &pdb, &tagid);
+    ok(pdb != NULL && pdb != (PDB)0x12345678, "Expected pdb to be set to a valid pdb, was: %p\n", pdb);
+
+    tagid = pSdbFindFirstTag(pdb, TAGID_ROOT, TAG_DATABASE);
+    ok(tagid != TAGID_NULL, "Expected to get a valid TAG_DATABASE\n");
+
+    exetag = pSdbFindFirstNamedTag(pdb, tagid, TAG_EXE, TAG_NAME, exename + wcslen(workdir) + 1);
+
+    if (!exetag)
+    {
+        /* Test done */
+        return FALSE;
+    }
+
+    tagid = pSdbFindFirstTag(pdb, exetag, TAG_VENDOR);
+    Vendor = pSdbGetStringTagPtr(pdb, tagid);
+    Succeed = tagid != TAGID_NULL && Vendor && !wcsicmp(Vendor, L"Succeed");
+
+    test_create_exe(exename, 0);
+
+    ret = pSdbGetMatchingExe(hsdb, exename, NULL, NULL, 0, (SDBQUERYRESULT_VISTA*)&query);
+    DWORD exe_count = Succeed ? 1 : 0;
+
+    if (Succeed)
+        ok(ret, "SdbGetMatchingExe should not fail for %d.\n", cur);
+    else
+        ok(!ret, "SdbGetMatchingExe should not succeed for %d.\n", cur);
+
+    ok(query.dwExeCount == exe_count, "Expected dwExeCount to be %d, was %d for %d\n", exe_count, query.dwExeCount, cur);
+    DeleteFileW(exename);
+    /* Try the next file */
+    return TRUE;
+}
+
+
+template<typename SDBQUERYRESULT_T>
+static void test_MatchApplicationsEx(void)
+{
+    WCHAR workdir[MAX_PATH], dbpath[MAX_PATH];
+    BOOL ret;
+    HSDB hsdb;
+
+    ret = GetTempPathW(_countof(workdir), workdir);
+    ok(ret, "GetTempPathW error: %d\n", GetLastError());
+    lstrcatW(workdir, L"apphelp_test");
+
+    ret = CreateDirectoryW(workdir, NULL);
+    ok(ret, "CreateDirectoryW error: %d\n", GetLastError());
+
+    /* SdbInitDatabase needs an nt-path */
+    swprintf(dbpath, L"\\??\\%s\\test.sdb", workdir);
+
+    if (extract_resource(dbpath + 4, MAKEINTRESOURCEW(101)))
+    {
+        hsdb = pSdbInitDatabase(HID_DATABASE_FULLPATH, dbpath);
+
+        ok(hsdb != NULL, "Expected a valid database handle\n");
+
+        if (!hsdb)
+        {
+            skip("SdbInitDatabase not implemented?\n");
+        }
+        else
+        {
+            size_t n;
+            /* now that our enviroment is setup, let's go ahead and run the actual tests.. */
+            for (n = 0;; ++n)
+            {
+                if (!test_match_ex<SDBQUERYRESULT_T>(workdir, hsdb, n))
+                    break;
+            }
+            pSdbReleaseDatabase(hsdb);
+        }
+    }
+    else
+    {
+        ok(0, "Unable to extract database\n");
+    }
+
+    DeleteFileW(dbpath + 4);
+
+    ret = RemoveDirectoryW(workdir);
+    ok(ret, "RemoveDirectoryW error: %d\n", GetLastError());
+}
+
+
+
+
 static void test_TagRef(void)
 {
     WCHAR tmpdir[MAX_PATH], dbpath[MAX_PATH];
@@ -1660,9 +1801,11 @@ START_TEST(db)
     {
     case 1:
         test_MatchApplications<SDBQUERYRESULT_2k3>();
+        test_MatchApplicationsEx<SDBQUERYRESULT_2k3>();
         break;
     case 2:
         test_MatchApplications<SDBQUERYRESULT_VISTA>();
+        test_MatchApplicationsEx<SDBQUERYRESULT_VISTA>();
         break;
     default:
         skip("Skipping tests with SDBQUERYRESULT due to a wrong size reported\n");
