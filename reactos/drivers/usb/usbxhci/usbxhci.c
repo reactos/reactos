@@ -46,10 +46,59 @@ XHCI_CloseEndpoint(IN PVOID xhciExtension,
 
 MPSTATUS
 NTAPI
-XHCI_InitializeSchedule(IN PXHCI_EXTENSION XhciExtension,
+XHCI_InitializeResources(IN PXHCI_EXTENSION XhciExtension,
                         IN PVOID resourcesStartVA,
                         IN PVOID resourcesStartPA)
 {
+    PXHCI_HC_RESOURCES HcResourcesVA;
+    PHYSICAL_ADDRESS HcResourcesPA;
+    
+    XHCI_COMMAND_RING_CONTROL CommandRingControlRegister;
+    
+    XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY_POINTER DCBAAPointer;
+    PULONG OperationalRegs;
+    unsigned long X, Y;
+    
+    DPRINT_XHCI("XHCI_InitializeResources: BaseVA - %p, BasePA - %p\n",
+                resourcesStartVA,
+                resourcesStartPA);
+                
+    HcResourcesVA = (PXHCI_HC_RESOURCES)resourcesStartVA;
+    HcResourcesPA.QuadPart = (ULONG_PTR)resourcesStartPA;
+
+    DCBAAPointer.AsULONGULONG =  HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, DCBAA);
+    
+    OperationalRegs = XhciExtension->OperationalRegs;
+    //DCBAAPointer.RsvdZ =0;
+    WRITE_REGISTER_ULONG(OperationalRegs + XHCI_DCBAAP, DCBAAPointer.DCBAAPointerLo | DCBAAPointer.RsvdZ );
+    WRITE_REGISTER_ULONG(OperationalRegs + XHCI_DCBAAP + 1, DCBAAPointer.DCBAAPointerHi);
+    
+    X = READ_REGISTER_ULONG(OperationalRegs + XHCI_DCBAAP) ;
+    Y = READ_REGISTER_ULONG(OperationalRegs + XHCI_DCBAAP + 1) ;   
+    DCBAAPointer.AsULONGULONG = Y|X ;
+    ASSERT(DCBAAPointer.RsvdZ == 0);
+    
+    // command ring intialisation.
+    
+    HcResourcesVA->CommandRing.Segment[0].Link[0].AsULONG = 0;
+    HcResourcesVA->CommandRing.Segment[0].Link[1].AsULONG = 0;
+    HcResourcesVA->CommandRing.Segment[0].Link[2].AsULONG = 0;
+    HcResourcesVA->CommandRing.Segment[0].Link[3].AsULONG = 0;
+    
+    HcResourcesVA->CommandRing.CREnquePointer=  &HcResourcesVA->CommandRing.Segment[0];
+    HcResourcesVA->CommandRing.CRDequePointer= HcResourcesVA->CommandRing.CREnquePointer;
+    
+    CommandRingControlRegister.AsULONGULONG = HcResourcesPA.QuadPart + FIELD_OFFSET(XHCI_HC_RESOURCES, CommandRing.Segment);
+    ASSERT(CommandRingControlRegister.RingCycleState == 0);
+    ASSERT(CommandRingControlRegister.CommandStop == 0);
+    ASSERT(CommandRingControlRegister.CommandAbort == 0);
+    ASSERT(CommandRingControlRegister.CommandRingRunning == 0);
+    ASSERT(CommandRingControlRegister.RsvdP == 0);
+    
+    WRITE_REGISTER_ULONG(OperationalRegs + XHCI_CRCR, CommandRingControlRegister.AsULONGULONG);
+    WRITE_REGISTER_ULONG(OperationalRegs + XHCI_CRCR + 1, CommandRingControlRegister.CommandRingPointerHi);
+    
+    DbgBreakPoint();
     return MP_STATUS_SUCCESS;
 }
 
@@ -64,8 +113,9 @@ XHCI_InitializeHardware(IN PXHCI_EXTENSION XhciExtension)
     LARGE_INTEGER CurrentTime = {{0, 0}};
     LARGE_INTEGER LastTime = {{0, 0}};
     XHCI_HC_STRUCTURAL_PARAMS_1 StructuralParams_1;
-
-    DPRINT1("EHCI_InitializeHardware: ... \n");
+    XHCI_CONFIGURE Config;
+    
+    DPRINT1("XHCI_InitializeHardware: ... \n");
 
     OperationalRegs = XhciExtension->OperationalRegs;
     BaseIoAdress = XhciExtension->BaseIoAdress;
@@ -79,6 +129,7 @@ XHCI_InitializeHardware(IN PXHCI_EXTENSION XhciExtension)
 
     Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + XHCI_USBCMD);
     Command.HCReset = 1;
+    WRITE_REGISTER_ULONG(OperationalRegs + XHCI_USBCMD, Command.AsULONG);
     while(TRUE)
     {
         KeQuerySystemTime(&LastTime);
@@ -94,19 +145,27 @@ XHCI_InitializeHardware(IN PXHCI_EXTENSION XhciExtension)
         {
             if (Command.HCReset == 1)
             {
-                DPRINT1("EHCI_InitializeHardware: Software Reset failed!\n");
+                DPRINT1("XHCI_InitializeHardware: Software Reset failed!\n");
                 return 7;
             }
 
             break;
         }
     }
-    DPRINT("EHCI_InitializeHardware: Reset - OK\n");
+    DPRINT("XHCI_InitializeHardware: Reset - OK\n");
     
     StructuralParams_1.AsULONG = READ_REGISTER_ULONG(BaseIoAdress + XHCI_HCSP1); // HCSPARAMS1 register
 
     XhciExtension->NumberOfPorts = StructuralParams_1.NumberOfPorts;
-    //EhciExtension->PortPowerControl = StructuralParams.PortPowerControl;
+    
+    Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + XHCI_USBCMD);
+    Config.AsULONG = READ_REGISTER_ULONG(OperationalRegs + XHCI_CONFIG);
+    ASSERT(Command.RunStop==0); //required before setting max device slots enabled.
+    Config.MaxDeviceSlotsEnabled = 1; // max possible value is number of slots HCSPARAMS1
+    WRITE_REGISTER_ULONG(OperationalRegs + XHCI_CONFIG, Config.AsULONG);
+    // Device Context base aaddress array to be defined
+    // Commnad ring deque pointer to be defined in CRCR
+    
     DbgBreakPoint();
     return MP_STATUS_SUCCESS;
 }
@@ -162,7 +221,7 @@ XHCI_StartController(IN PVOID xhciExtension,
         return MPStatus;
     }
 
-    MPStatus = XHCI_InitializeSchedule(XhciExtension,
+    MPStatus = XHCI_InitializeResources(XhciExtension,
                                        Resources->StartVA,
                                        Resources->StartPA);
 

@@ -13,6 +13,156 @@
 
 extern USBPORT_REGISTRATION_PACKET RegPacket;
 
+
+//Data structures
+typedef struct  _XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY {
+   PHYSICAL_ADDRESS ContextBaseAddr [256];
+} XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY, *PXHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY;
+//----------------------------------------LINK TRB--------------------------------------------------------------------
+typedef union _XHCI_LINK_TRB{
+    struct {
+        ULONG RsvdZ1                     : 4;
+        ULONG RingSegmentPointerLo       : 28;
+    };
+    struct {
+        ULONG RingSegmentPointerHi       : 32;
+    };
+    struct {
+        ULONG RsvdZ2                     : 22;
+        ULONG InterrupterTarget          : 10;
+    };
+    struct {
+        ULONG CycleBit                  : 1;
+        ULONG ToggleCycle               : 1;
+        ULONG RsvdZ3                    : 2;
+        ULONG ChainBit                  : 1;
+        ULONG InterruptOnCompletion     : 1;
+        ULONG RsvdZ4                    : 4;
+        ULONG TRBType                   : 6;
+        ULONG RsvdZ5                    : 16;
+    };
+    ULONG AsULONG;
+} XHCI_LINK_TRB;
+//----------------------------------------Command TRBs----------------------------------------------------------------
+typedef union _XHCI_COMMAND_NO_OP_TRB {
+    struct {
+        ULONG RsvdZ1                     : 5;
+    };
+    struct {
+        ULONG RsvdZ2                     : 5;
+    };
+    struct {
+        ULONG RsvdZ3                     : 5;
+    };
+    struct {
+        ULONG CycleBit                  : 1;
+        ULONG RsvdZ4                    : 4;
+        ULONG TRBType                   : 6;
+        ULONG RsvdZ5                    : 14;
+    };
+    ULONG AsULONG;
+} XHCI_COMMAND_NO_OP_TRB;
+
+typedef union _XHCI_COMMAND_TRB {
+    XHCI_COMMAND_NO_OP_TRB NoOperation[4];
+    XHCI_LINK_TRB Link[4];
+}XHCI_COMMAND_TRB, *PXHCI_COMMAND_TRB;
+
+typedef struct _XHCI_COMMAND_RING {
+    XHCI_COMMAND_TRB Segment[4];
+    PXHCI_COMMAND_TRB CREnquePointer;
+    PXHCI_COMMAND_TRB CRDequePointer;
+} XHCI_COMMAND_RING;
+//----------------------------------------CONTROL TRANSFER DATA STRUCTUERS--------------------------------------------
+
+typedef union _XHCI_CONTROL_SETUP_TRB {
+    struct {
+        ULONG bmRequestType             : 8;
+        ULONG bRequest                  : 8;
+        ULONG wValue                    : 16;
+    };
+    struct {
+        ULONG wIndex                    : 16;
+        ULONG wLength                   : 16;
+    };
+    struct {
+        ULONG TRBTransferLength         : 17;
+        ULONG RsvdZ                     : 5;
+        ULONG InterrupterTarget         : 10;
+    };
+    struct {
+        ULONG CycleBit                  : 1;
+        ULONG RsvdZ1                    : 4;
+        ULONG InterruptOnCompletion     : 1;
+        ULONG ImmediateData             : 1;
+        ULONG RsvdZ2                    : 3;
+        ULONG TRBType                   : 6;
+        ULONG TransferType              : 2;
+        ULONG RsvdZ3                    : 14;
+    };
+    ULONG AsULONG;
+} XHCI_CONTROL_SETUP_TRB;
+
+typedef union _XHCI_CONTROL_DATA_TRB {
+    struct {
+        ULONG DataBufferPointerLo       : 32;
+    };
+    struct {
+        ULONG DataBufferPointerHi       : 32;
+    };
+    struct {
+        ULONG TRBTransferLength         : 17;
+        ULONG TDSize                    : 5;
+        ULONG InterrupterTarget         : 10;
+    };
+    struct {
+        ULONG CycleBit                  : 1;
+        ULONG EvaluateNextTRB           : 1;
+        ULONG InterruptOnShortPacket    : 1;
+        ULONG NoSnoop                   : 1;
+        ULONG ChainBit                  : 1;
+        ULONG InterruptOnCompletion     : 1;
+        ULONG ImmediateData             : 1;
+        ULONG RsvdZ1                    : 2;
+        ULONG TRBType                   : 6;
+        ULONG Direction                 : 1;
+        ULONG RsvdZ2                    : 15;
+    };
+    ULONG AsULONG;
+} XHCI_CONTROL_DATA_TRB;
+
+typedef union _XHCI_CONTROL_STATUS_TRB {
+    struct {
+        ULONG RsvdZ1                    : 32;
+    };
+    struct {
+        ULONG RsvdZ2                    : 32;
+    };
+    struct {
+        ULONG RsvdZ                     : 22;
+        ULONG InterrupterTarget         : 10;
+    };
+    struct {
+        ULONG CycleBit                  : 1;
+        ULONG EvaluateNextTRB           : 1;
+        ULONG ChainBit                  : 2;
+        ULONG InterruptOnCompletion     : 1;
+        ULONG RsvdZ3                    : 4;
+        ULONG TRBType                   : 6;
+        ULONG Direction                 : 1;
+        ULONG RsvdZ4                    : 15;
+    };
+    ULONG AsULONG;
+} XHCI_CONTROL_STATUS_TRB;
+
+typedef union _XHCI_CONTROL_TRB {
+    XHCI_CONTROL_SETUP_TRB  SetupTRB[4];
+    XHCI_CONTROL_DATA_TRB   DataTRB[4];
+    XHCI_CONTROL_STATUS_TRB StatusTRB[4];
+} XHCI_CONTROL_TRB, *PXHCI_CONTROL_TRB;  
+
+
+//------------------------------------main structs-----------------------
 typedef struct _XHCI_EXTENSION {
   ULONG Reserved;
   ULONG Flags;
@@ -28,7 +178,8 @@ typedef struct _XHCI_EXTENSION {
 } XHCI_EXTENSION, *PXHCI_EXTENSION;
 
 typedef struct _XHCI_HC_RESOURCES {
-  ULONG Reserved;
+  XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY DCBAA;
+  XHCI_COMMAND_RING CommandRing;
 } XHCI_HC_RESOURCES, *PXHCI_HC_RESOURCES;
 
 typedef struct _XHCI_ENDPOINT {
@@ -39,7 +190,6 @@ typedef struct _XHCI_TRANSFER {
   ULONG Reserved;
 } XHCI_TRANSFER, *PXHCI_TRANSFER;
 
-  
 //roothub functions
 VOID
 NTAPI
