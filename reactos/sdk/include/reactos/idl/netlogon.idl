@@ -4,11 +4,9 @@
 
 #include <ms-dtyp.idl>
 
-cpp_quote("#if 0")
-typedef ULONG NTSTATUS;
-cpp_quote("#endif")
-
 cpp_quote("#ifndef _NTSECAPI_H")
+typedef ULONG NTSTATUS;
+
 typedef struct _STRING
 {
     USHORT Length;
