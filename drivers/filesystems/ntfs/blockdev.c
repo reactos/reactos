@@ -52,7 +52,7 @@ NtfsReadDisk(IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN AllocatedBuffer = FALSE;
     PUCHAR ReadBuffer = Buffer;
 
-    DPRINT("NtfsReadDisk(%p, %I64x, %u, %u, %p, %d)\n", DeviceObject, StartingOffset, Length, SectorSize, Buffer, Override);
+    DPRINT("NtfsReadDisk(%p, %I64x, %lu, %lu, %p, %d)\n", DeviceObject, StartingOffset, Length, SectorSize, Buffer, Override);
 
     KeInitializeEvent(&Event,
                       NotificationEvent,
@@ -176,7 +176,7 @@ NtfsWriteDisk(IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN AllocatedBuffer = FALSE;
     PUCHAR TempBuffer = NULL;
 
-    DPRINT("NtfsWriteDisk(%p, %I64x, %u, %u, %p)\n", DeviceObject, StartingOffset, Length, SectorSize, Buffer);
+    DPRINT("NtfsWriteDisk(%p, %I64x, %lu, %lu, %p)\n", DeviceObject, StartingOffset, Length, SectorSize, Buffer);
 
     if (Length == 0)
         return STATUS_SUCCESS;

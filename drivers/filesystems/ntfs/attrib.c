@@ -188,8 +188,8 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
                                    &Current,
                                    &FirstEntry,
                                    FALSE,
-                                   &CurrentMFTIndex,
-                                   CaseSensitive);
+                                   CaseSensitive,
+                                   &CurrentMFTIndex);
         if (!NT_SUCCESS(Status))
             break;
 
@@ -1173,7 +1173,7 @@ NtfsDumpIndexRootAttribute(PNTFS_ATTR_RECORD Attribute)
     while (currentOffset < IndexRootAttr->Header.TotalSizeOfEntries)
     {
         PINDEX_ENTRY_ATTRIBUTE currentIndexExtry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)IndexRootAttr + 0x10 + currentOffset);
-        DbgPrint("   Index Node Entry %u", currentNode++);
+        DbgPrint("   Index Node Entry %lu", currentNode++);
         if (currentIndexExtry->Flags & NTFS_INDEX_ENTRY_NODE)
             DbgPrint(" (Branch)");
         else
