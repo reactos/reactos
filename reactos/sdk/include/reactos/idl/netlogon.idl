@@ -978,10 +978,11 @@ cpp_quote("#endif")
 [
     uuid(12345678-1234-ABCD-EF00-01234567CFFB),
     version(1.0),
+    pointer_default(unique),
 #ifdef __midl
     ms_union,
 #endif
-    pointer_default(unique)
+    endpoint("ncacn_np:[\\pipe\\netlogon]")
 #ifndef __midl
     ,implicit_handle(handle_t hBinding)
 #endif

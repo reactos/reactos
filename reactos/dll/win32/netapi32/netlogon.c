@@ -9,10 +9,67 @@
 /* INCLUDES ******************************************************************/
 
 #include "netapi32.h"
+#include <rpc.h>
+#include "netlogon_c.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
 
 /* FUNCTIONS *****************************************************************/
+
+handle_t __RPC_USER
+LOGONSRV_HANDLE_bind(LOGONSRV_HANDLE pszSystemName)
+{
+    handle_t hBinding = NULL;
+    LPWSTR pszStringBinding;
+    RPC_STATUS status;
+
+    TRACE("LOGONSRV_HANDLE_bind() called\n");
+
+    status = RpcStringBindingComposeW(NULL,
+                                      L"ncacn_np",
+                                      pszSystemName,
+                                      L"\\pipe\\netlogon",
+                                      NULL,
+                                      &pszStringBinding);
+    if (status)
+    {
+        TRACE("RpcStringBindingCompose returned 0x%x\n", status);
+        return NULL;
+    }
+
+    /* Set the binding handle that will be used to bind to the server. */
+    status = RpcBindingFromStringBindingW(pszStringBinding,
+                                          &hBinding);
+    if (status)
+    {
+        TRACE("RpcBindingFromStringBinding returned 0x%x\n", status);
+    }
+
+    status = RpcStringFreeW(&pszStringBinding);
+    if (status)
+    {
+//        TRACE("RpcStringFree returned 0x%x\n", status);
+    }
+
+    return hBinding;
+}
+
+
+void __RPC_USER
+LOGONSRV_HANDLE_unbind(LOGONSRV_HANDLE pszSystemName,
+                       handle_t hBinding)
+{
+    RPC_STATUS status;
+
+    TRACE("LOGONSRV_HANDLE_unbind() called\n");
+
+    status = RpcBindingFree(&hBinding);
+    if (status)
+    {
+        TRACE("RpcBindingFree returned 0x%x\n", status);
+    }
+}
+
 
 NTSTATUS
 WINAPI
@@ -30,14 +87,30 @@ NetEnumerateTrustedDomains(
 NET_API_STATUS
 WINAPI
 NetGetAnyDCName(
-    _In_ LPCWSTR servername,
-    _In_ LPCWSTR domainname,
-    _Out_ LPBYTE *bufptr)
+    _In_opt_ LPCWSTR ServerName,
+    _In_opt_ LPCWSTR DomainName,
+    _Out_ LPBYTE *BufPtr)
 {
-    FIXME("NetGetAnyDCName(%s, %s, %p)\n",
-          debugstr_w(servername), debugstr_w(domainname), bufptr);
+    NET_API_STATUS status;
 
-    return ERROR_NO_LOGON_SERVERS;
+    TRACE("NetGetAnyDCName(%s, %s, %p)\n",
+          debugstr_w(ServerName), debugstr_w(DomainName), BufPtr);
+
+    *BufPtr = NULL;
+
+    RpcTryExcept
+    {
+        status = NetrGetAnyDCName((PWSTR)ServerName,
+                                  (PWSTR)DomainName,
+                                  (PWSTR*)BufPtr);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
 }
 
 

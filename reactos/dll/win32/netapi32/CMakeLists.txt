@@ -9,6 +9,7 @@ add_rpc_files(client
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/atsvc.idl
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/browser.idl
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/dssetup.idl
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/netlogon.idl
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/srvsvc.idl
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl/wkssvc.idl)
 
@@ -37,6 +38,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/atsvc_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/browser_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/dssetup_c.c
+    ${CMAKE_CURRENT_BINARY_DIR}/netlogon_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/srvsvc_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/wkssvc_c.c)
 
