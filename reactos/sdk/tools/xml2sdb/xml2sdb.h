@@ -141,6 +141,18 @@ struct Database
         return FindShimTagid(sdbstring(name.begin(), name.end()));
     }
 
+
+    void InsertPatchTagid(const sdbstring& name, TAGID tagid);
+    inline void InsertPatchTagid(const std::string& name, TAGID tagid)
+    {
+        InsertPatchTagid(sdbstring(name.begin(), name.end()), tagid);
+    }
+    TAGID FindPatchTagid(const sdbstring& name);
+    inline TAGID FindPatchTagid(const std::string& name)
+    {
+        return FindPatchTagid(sdbstring(name.begin(), name.end()));
+    }
+
     std::string Name;
     GUID ID;
 
