@@ -7,11 +7,11 @@ extern "C" {
 
 
 /* data.c */
-void test_create_db_imp(const char* name, int win10);
+void test_create_db_imp(const WCHAR* name, int win10);
 DWORD test_get_db_size();
-void test_create_exe_imp(const char* name, int skip_rsrc_exports);
-void test_create_file_imp(const char* name, const char* contents, size_t len);
-void test_create_ne_imp(const char* name, int skip_names);
+void test_create_exe_imp(const WCHAR* name, int skip_rsrc_exports);
+void test_create_file_imp(const WCHAR* name, const char* contents, size_t len);
+void test_create_ne_imp(const WCHAR* name, int skip_names);
 DWORD get_host_winver(void);
 DWORD get_module_version(HMODULE mod);
 void silence_debug_output(void);        // Silence output if the environment variable is not set.

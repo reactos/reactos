@@ -474,14 +474,14 @@ static export_section_t export_dir =
 };
 
 
-void test_create_exe_imp(const char* name, int skip_rsrc_exports)
+void test_create_exe_imp(const WCHAR* name, int skip_rsrc_exports)
 {
     HANDLE file;
     char *buf, *cur;
     DWORD size = 0x800;
     buf = malloc(size);
 
-    file = CreateFileA(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    file = CreateFileW(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     winetest_ok(file != INVALID_HANDLE_VALUE, "can't create file\n");
     if(file == INVALID_HANDLE_VALUE)
         return;
@@ -522,7 +522,7 @@ void test_create_exe_imp(const char* name, int skip_rsrc_exports)
 
 
 /* Almost everything in this filetype is ignored, only e_lfanew, ne_restab and ne_nrestab are relevant */
-void test_create_ne_imp(const char* name, int skip_names)
+void test_create_ne_imp(const WCHAR* name, int skip_names)
 {
     HANDLE file;
     DWORD size;
@@ -535,7 +535,7 @@ void test_create_ne_imp(const char* name, int skip_names)
         20,'M','O','D',' ','D','E','S','C','R','I','P','T','I','O','N',' ','H','E','R','E',0,0,0
     };
 
-    file = CreateFileA(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    file = CreateFileW(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     winetest_ok(file != INVALID_HANDLE_VALUE, "can't create file\n");
     if(file == INVALID_HANDLE_VALUE)
         return;
@@ -554,9 +554,9 @@ void test_create_ne_imp(const char* name, int skip_names)
     CloseHandle(file);
 }
 
-void test_create_file_imp(const char* name, const char* contents, size_t len)
+void test_create_file_imp(const WCHAR* name, const char* contents, size_t len)
 {
-    HANDLE file = CreateFileA(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE file = CreateFileW(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     winetest_ok(file != INVALID_HANDLE_VALUE, "can't create file\n");
     if (file != INVALID_HANDLE_VALUE)
     {
@@ -777,10 +777,10 @@ DWORD test_get_db_size()
     return sizeof(rawData);
 }
 
-void test_create_db_imp(const char* name, int win10)
+void test_create_db_imp(const WCHAR* name, int win10)
 {
-    HANDLE file = CreateFileA(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    winetest_ok(file != INVALID_HANDLE_VALUE, "can't create file '%s'\n", name);
+    HANDLE file = CreateFileW(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    winetest_ok(file != INVALID_HANDLE_VALUE, "can't create file '%s'\n", wine_dbgstr_w(name));
     if (file != INVALID_HANDLE_VALUE)
     {
         DWORD size;

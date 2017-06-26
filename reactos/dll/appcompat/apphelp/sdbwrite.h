@@ -32,7 +32,7 @@ BOOL WINAPI SdbWriteDWORDTag(PDB db, TAG tag, DWORD data);
 BOOL WINAPI SdbWriteQWORDTag(PDB db, TAG tag, QWORD data);
 BOOL WINAPI SdbWriteStringTag(PDB db, TAG tag, LPCWSTR string);
 BOOL WINAPI SdbWriteStringRefTag(PDB db, TAG tag, TAGID tagid);
-BOOL WINAPI SdbWriteBinaryTag(PDB db, TAG tag, BYTE* data, DWORD size);
+BOOL WINAPI SdbWriteBinaryTag(PDB db, TAG tag, const BYTE* data, DWORD size);
 BOOL WINAPI SdbWriteBinaryTagFromFile(PDB db, TAG tag, LPCWSTR path);
 TAGID WINAPI SdbBeginWriteListTag(PDB db, TAG tag);
 BOOL WINAPI SdbEndWriteListTag(PDB db, TAGID tagid);
