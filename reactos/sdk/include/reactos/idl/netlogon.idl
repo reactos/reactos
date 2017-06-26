@@ -6,7 +6,9 @@
 
 cpp_quote("#if 0")
 typedef ULONG NTSTATUS;
+cpp_quote("#endif")
 
+cpp_quote("#ifndef _NTSECAPI_H")
 typedef struct _STRING
 {
     USHORT Length;
