@@ -9,20 +9,19 @@
 
 #include "rapps.h"
 
-
-template<typename T, size_t N, size_t N2>
-inline void _AddText(T (&szText)[N], UINT a, T (&b)[N2], DWORD c, DWORD d) {
+inline void _AddText(UINT a, LPCWSTR b, DWORD c, DWORD d) {
   if (b[0] != '\0') 
   {
-      LoadStringW(hInst, a, szText, N); 
+      WCHAR szText[MAX_STR_LEN];
+      LoadStringW(hInst, a, szText, _countof(szText));
       InsertRichEditText(szText, c); 
       InsertRichEditText(b, d); 
   }
 }
 
-template<typename T, size_t N>
-inline void _AddTextNewl(T (&szText)[N], UINT a, DWORD b) {
-    LoadStringW(hInst, a, szText, N);
+inline void _AddTextNewl(UINT a, DWORD b) {
+    WCHAR szText[MAX_STR_LEN];
+    LoadStringW(hInst, a, szText, _countof(szText));
     InsertRichEditText(L"\n", 0);
     InsertRichEditText(szText, b);
     InsertRichEditText(L"\n", 0);
@@ -41,7 +40,7 @@ inline void _GetStringNullFailure(LPCWSTR a, T(&b)[N], T (&cFileName)[N2]) {
 }
 
 //App is "installed" if the RegName or Name is in the registry
-inline bool _AppInstallCheckKey(PAPPLICATION_INFO Info, REGSAM key)
+inline BOOL _AppInstallCheckWithKey(PAPPLICATION_INFO Info, REGSAM key)
 {
     return (*Info->szRegName
         && (IsInstalledApplication(Info->szRegName, TRUE, key)
@@ -53,11 +52,27 @@ inline bool _AppInstallCheckKey(PAPPLICATION_INFO Info, REGSAM key)
 
 //Check both registry keys in 64bit system
 //TODO: check system type beforehand to avoid double checks?
-inline bool _AppInstallCheck(PAPPLICATION_INFO Info) {
-  return  _AppInstallCheckKey(Info, KEY_WOW64_32KEY) 
-    || _AppInstallCheckKey(Info, KEY_WOW64_64KEY);
+inline BOOL _AppInstallCheck(PAPPLICATION_INFO Info) {
+  return  _AppInstallCheckWithKey(Info, KEY_WOW64_32KEY) 
+    || _AppInstallCheckWithKey(Info, KEY_WOW64_64KEY);
 }
 
+//App is "installed" if the RegName or Name is in the registry
+inline BOOL _GetInstalledVersionWithKey(PAPPLICATION_INFO Info, LPWSTR szVersion, UINT iVersionSize, REGSAM key)
+{
+    return (*Info->szRegName
+        && (InstalledVersion(szVersion, iVersionSize, Info->szRegName, TRUE, key)
+        || InstalledVersion(szVersion, iVersionSize, Info->szRegName, FALSE, key)))
+        || (*Info->szName && (InstalledVersion(szVersion, iVersionSize, Info->szName, TRUE, key)
+            || InstalledVersion(szVersion, iVersionSize, Info->szName, FALSE, key)));
+}
+
+//App is "installed" if the RegName or Name is in the registry
+inline BOOL _GetInstalledVersion(PAPPLICATION_INFO Info, LPWSTR szVersion, UINT iVersionSize)
+{
+    return  _GetInstalledVersionWithKey(Info, szVersion, iVersionSize, KEY_WOW64_32KEY)
+        || _GetInstalledVersionWithKey(Info, szVersion, iVersionSize, KEY_WOW64_64KEY);
+}
 
 LIST_ENTRY CachedEntriesHead = { &CachedEntriesHead, &CachedEntriesHead };
 PLIST_ENTRY pCachedEntry = &CachedEntriesHead;
@@ -66,25 +81,30 @@ BOOL
 ShowAvailableAppInfo(INT Index)
 {
     PAPPLICATION_INFO Info = (PAPPLICATION_INFO) ListViewGetlParam(Index);
-    WCHAR szText[MAX_STR_LEN];
+    BOOL bIsInstalled = _AppInstallCheck(Info);
+    WCHAR szVersion[MAX_PATH];
 
     if (!Info) return FALSE;
 
     NewRichEditText(Info->szName, CFE_BOLD);
-    if (_AppInstallCheck(Info))
+    if (bIsInstalled)
     {
-      _AddTextNewl(szText, IDS_STATUS_INSTALLED, CFE_ITALIC);
+      _AddTextNewl(IDS_STATUS_INSTALLED, CFE_ITALIC);
+      if (_GetInstalledVersion(Info, szVersion, _countof(szVersion)))
+      {
+          _AddText(IDS_AINFO_VERSION, szVersion, CFE_BOLD, 0);
+      }
     } else 
     {
-      _AddTextNewl(szText, IDS_STATUS_NOTINSTALLED, CFE_ITALIC);
+      _AddTextNewl(IDS_STATUS_NOTINSTALLED, CFE_ITALIC);
     }
 
-    _AddText(szText, IDS_AINFO_VERSION,     Info->szVersion, CFE_BOLD, 0);
-    _AddText(szText, IDS_AINFO_LICENSE,     Info->szLicense, CFE_BOLD, 0);
-    _AddText(szText, IDS_AINFO_SIZE,        Info->szSize,    CFE_BOLD, 0);
-    _AddText(szText, IDS_AINFO_URLSITE,     Info->szUrlSite, CFE_BOLD, CFE_LINK);
-    _AddText(szText, IDS_AINFO_DESCRIPTION, Info->szDesc,    CFE_BOLD, 0);
-    _AddText(szText, IDS_AINFO_URLDOWNLOAD, Info->szUrlDownload, CFE_BOLD, CFE_LINK);
+    _AddText(IDS_AINFO_AVAILABLEVERSION, Info->szVersion, CFE_BOLD, 0);
+    _AddText(IDS_AINFO_LICENSE, Info->szLicense, CFE_BOLD, 0);
+    _AddText(IDS_AINFO_SIZE, Info->szSize, CFE_BOLD, 0);
+    _AddText(IDS_AINFO_URLSITE, Info->szUrlSite, CFE_BOLD, CFE_LINK);
+    _AddText(IDS_AINFO_DESCRIPTION, Info->szDesc, CFE_BOLD, 0);
+    _AddText(IDS_AINFO_URLDOWNLOAD, Info->szUrlDownload, CFE_BOLD, CFE_LINK);
 
     return TRUE;
 }

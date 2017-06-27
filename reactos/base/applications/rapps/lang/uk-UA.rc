@@ -160,6 +160,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_AINFO_VERSION "\nВерсія: "
+    IDS_AINFO_AVAILABLEVERSION "\nДоступна версія: "
     IDS_AINFO_DESCRIPTION "\nОпис: "
     IDS_AINFO_SIZE "\nРозмір: "
     IDS_AINFO_URLSITE "\nДомашня сторінка: "

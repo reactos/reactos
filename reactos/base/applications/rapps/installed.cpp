@@ -35,11 +35,12 @@ IsInstalledApplication(LPCWSTR lpRegName, BOOL IsUserKey, REGSAM keyWow)
 {
     HKEY hKey = NULL;
     BOOL IsInstalled = FALSE;
+    WCHAR szPath[MAX_PATH] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
+    StringCbPrintfW(szPath, _countof(szPath), L"%ls\\%ls", szPath, lpRegName);
 
-    if ((RegOpenKeyExW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
-                    L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall", 0, keyWow | KEY_ENUMERATE_SUB_KEYS,
-                    &hKey) == ERROR_SUCCESS) \
-        && FindRegistryKeyByName(hKey, keyWow, lpRegName, NULL))
+    if (RegOpenKeyExW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
+        szPath, 0, keyWow | KEY_READ,
+                    &hKey) == ERROR_SUCCESS)
     {
         IsInstalled = TRUE;
     }
@@ -52,35 +53,31 @@ InstalledVersion(LPWSTR szVersionResult, UINT iVersionResultSize, LPCWSTR lpRegN
 {
     DWORD dwSize = MAX_PATH;
     DWORD dwType = REG_SZ;
-    WCHAR szVersion[MAX_PATH];
-    HKEY hKey, hSubKey;
-    BOOL HasVersion = FALSE;
+    WCHAR szVersion[MAX_PATH] = L"";
+    HKEY hKey;
+    BOOL bHasVersion = FALSE;
     iVersionResultSize = 0;
+    WCHAR szPath[MAX_PATH] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
+    StringCbPrintfW(szPath, _countof(szPath), L"%ls\\%ls", szPath, lpRegName);
 
     if (RegOpenKeyExW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
-        L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall", 0, keyWow | KEY_ENUMERATE_SUB_KEYS,
+        szPath, 0, keyWow | KEY_READ,
         &hKey) == ERROR_SUCCESS)
     {
-        if (FindRegistryKeyByName(hKey, keyWow, lpRegName, &hSubKey))
+        dwSize = MAX_PATH;
+        if (RegQueryValueExW(hKey,
+            L"DisplayVersion",
+            NULL,
+            &dwType,
+            (LPBYTE) szVersion,
+            &dwSize) == ERROR_SUCCESS)
         {
-            dwSize = sizeof(szVersion);
-            if (RegQueryValueExW(hSubKey,
-                L"DisplayVersion",
-                NULL,
-                &dwType,
-                (LPBYTE) szVersion,
-                &dwSize) == ERROR_SUCCESS)
-            {
-                szVersionResult = szVersion;
-                iVersionResultSize = dwSize;
-                HasVersion = TRUE;
-            }
+            StringCbCopyW(szVersionResult, dwSize, szVersion);
+            bHasVersion = TRUE;
         }
-        RegCloseKey(hSubKey);
     }
-
     RegCloseKey(hKey);
-    return HasVersion;
+    return bHasVersion;
 }
 
 

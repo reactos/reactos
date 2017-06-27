@@ -8,6 +8,8 @@
  */
 
 #include "rapps.h"
+#include <atlsimpcoll.h>
+#include <atlstr.h> 
 
 /* SESSION Operation */
 #define EXTRACT_FILLFILELIST  0x00000001
@@ -495,29 +497,70 @@ UINT ParserGetInt(LPCWSTR lpKeyName, LPCWSTR lpFileName)
     RtlInitUnicodeString(&BufferW, Buffer);
     RtlUnicodeStringToInteger(&BufferW, 0, &Result);
 
-    return Result;
+    return (UINT)Result;
 }
 
-
+//Parses version string that can be formatted as 1.2.3.4-5
+//Returns int buffer and it's size
 BOOL
-ParseVersion(LPWSTR szVersion, INT* version)
+ParseVersion(_In_z_ LPCWSTR szVersion, _Outptr_ INT* parrVersion, _Out_opt_ UINT iVersionSize)
 {
+    ATL::CSimpleArray<int> arrVersionResult;
+    ATL::CStringW szVersionSingleInt = L"";
+    ATL::CStringW sDelimiters = L".-";
+    BOOL bHasParsed = TRUE;
+    INT iVersionCharCount = 0;
+    //INT iVersionSingleCharCount = 0;
+    INT iIntResult;
+    iVersionSize = 0;
+    while(szVersion[iVersionCharCount] != L'\0')
+    {
+        for (;!sDelimiters.Find(szVersion[iVersionCharCount]); ++iVersionCharCount)
+        {
+            szVersionSingleInt += szVersion[iVersionCharCount];
+        }
+        szVersionSingleInt += L'\0';
+        iIntResult = StrToIntW(szVersionSingleInt.GetBuffer());
+        if (iIntResult)
+        {
+            arrVersionResult.Add(iIntResult);
+            iVersionSize++;
+        }
+        else
+        {
+            bHasParsed = FALSE;
+        }
+        ++iVersionCharCount;
+    }
+    parrVersion = arrVersionResult.GetData();
+    return bHasParsed;
+}
+
+//Compares versions 
+//In:   Zero terminated strings of versions
+//Out:  TRUE if first is bigger than second, FALSE if else
+BOOL
+CompareVersionsBigger(_In_z_ LPCWSTR sczVersion1, _In_z_ LPCWSTR sczVersion2, _Out_ BOOL bResult)
+{
+    UINT iVersionSize1 = 0;
+    UINT iVersionSize2 = 0;
+    INT *parrVersion1 = NULL, *parrVersion2 = NULL;
+    bResult = FALSE;
+
+    if (!ParseVersion(sczVersion1, parrVersion1, iVersionSize1)
+        || !ParseVersion(sczVersion2, parrVersion2, iVersionSize2))
+    {
+        return FALSE;
+    }
+
+    for (INT i = 0; i < iVersionSize1 && i < iVersionSize2; ++i)
+    {
+        if (parrVersion1[i] > parrVersion2[i])
+        {
+            bResult = TRUE;
+            return TRUE;
+        }
+    }
+
     return TRUE;
 }
-
-
-//Finds subkey in key by name or path and returns it
-BOOL
-FindRegistryKeyByName(_In_ HKEY hKeyBase, _In_ REGSAM keyWow, _In_ LPCWSTR lpcKey, _Out_opt_ PHKEY hKeyResult)
-{
-    HKEY hSubKey;
-    if (RegOpenKeyExW(hKeyBase, lpcKey, 0, keyWow | KEY_READ, &hSubKey) == ERROR_SUCCESS)
-    {
-        hKeyResult = &hSubKey;
-        return TRUE;
-    }
-    hKeyResult = NULL;
-    RegCloseKey(hSubKey);
-    return FALSE;
-}
-

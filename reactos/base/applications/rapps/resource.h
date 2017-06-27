@@ -119,31 +119,33 @@
 #define IDS_APP_DESCRIPTION      252
 
 /* Apps info */
-#define IDS_INFO_VERSION         280
-#define IDS_INFO_DESCRIPTION     281
-#define IDS_INFO_PUBLISHER       282
-#define IDS_INFO_HELPLINK        283
-#define IDS_INFO_HELPPHONE       284
-#define IDS_INFO_README          285
-#define IDS_INFO_REGOWNER        286
-#define IDS_INFO_PRODUCTID       287
-#define IDS_INFO_CONTACT         288
-#define IDS_INFO_UPDATEINFO      289
-#define IDS_INFO_INFOABOUT       290
-#define IDS_INFO_COMMENTS        291
-#define IDS_INFO_INSTLOCATION    292
-#define IDS_INFO_INSTALLSRC      293
-#define IDS_INFO_UNINSTALLSTR    294
-#define IDS_INFO_MODIFYPATH      295
-#define IDS_INFO_INSTALLDATE     296
+#define IDS_INFO_VERSION          280
+#define IDS_INFO_DESCRIPTION      281
+#define IDS_INFO_PUBLISHER        282
+#define IDS_INFO_HELPLINK         283
+#define IDS_INFO_HELPPHONE        284
+#define IDS_INFO_README           285
+#define IDS_INFO_REGOWNER         286
+#define IDS_INFO_PRODUCTID        287
+#define IDS_INFO_CONTACT          288
+#define IDS_INFO_UPDATEINFO       289
+#define IDS_INFO_INFOABOUT        290
+#define IDS_INFO_COMMENTS         291
+#define IDS_INFO_INSTLOCATION     292
+#define IDS_INFO_INSTALLSRC       293
+#define IDS_INFO_UNINSTALLSTR     294
+#define IDS_INFO_MODIFYPATH       295
+#define IDS_INFO_INSTALLDATE      296
 
 /* Info for available apps */
-#define IDS_AINFO_VERSION        350
-#define IDS_AINFO_DESCRIPTION    351
-#define IDS_AINFO_SIZE           352
-#define IDS_AINFO_URLSITE        353
-#define IDS_AINFO_LICENSE        354
-#define IDS_AINFO_URLDOWNLOAD    355
+#define IDS_AINFO_VERSION            350
+#define IDS_AINFO_DESCRIPTION        351
+#define IDS_AINFO_SIZE               352
+#define IDS_AINFO_URLSITE            353
+#define IDS_AINFO_LICENSE            354
+#define IDS_AINFO_URLDOWNLOAD        355
+#define IDS_AINFO_AVAILABLEVERSION   356
+
 
 /* Names of categories */
 #define IDS_CAT_AUDIO            700

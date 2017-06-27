@@ -181,7 +181,9 @@ BOOL WriteLogMessage(WORD wType, DWORD dwEventID, LPWSTR lpMsg);
 UINT ParserGetString(LPCWSTR lpKeyName, LPWSTR lpReturnedString, UINT nSize, LPCWSTR lpFileName);
 UINT ParserGetInt(LPCWSTR lpKeyName, LPCWSTR lpFileName);
 
+BOOL ParseVersion(_In_z_ LPCWSTR szVersion, _Outptr_ INT* parrVersion, _Out_opt_ UINT iVersionSize);
 BOOL FindRegistryKeyByName(_In_ HKEY hKeyBase, _In_ REGSAM keyWow, _In_ LPCWSTR lpcKey, _Out_opt_ PHKEY hKeyResult);
+BOOL CompareVersionsBigger(_In_z_ LPCWSTR sczVersion1, _In_z_ LPCWSTR sczVersion2, _Out_ BOOL bResult = FALSE);
 
 /* settingsdlg.c */
 VOID CreateSettingsDlg(HWND hwnd);
