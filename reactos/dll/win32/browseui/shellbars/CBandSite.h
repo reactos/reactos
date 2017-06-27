@@ -120,6 +120,7 @@ private:
     HRESULT UpdateAllBands();
     HRESULT UpdateBand(DWORD dwBandID);
     struct BandObject *GetBandFromHwnd(HWND hwnd);
+    HRESULT OnContextMenu(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plrResult);
 
     BEGIN_COM_MAP(CBandSiteBase)
         COM_INTERFACE_ENTRY_IID(IID_IBandSite, IBandSite)
