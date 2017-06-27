@@ -576,14 +576,14 @@ USHORT
 NTAPI
 CmpCopyName(
     IN PHHIVE Hive,
-    IN PWCHAR Destination,
+    OUT PWCHAR Destination,
     IN PUNICODE_STRING Source
 );
 
 VOID
 NTAPI
 CmpCopyCompressedName(
-    IN PWCHAR Destination,
+    OUT PWCHAR Destination,
     IN ULONG DestinationLength,
     IN PWCHAR Source,
     IN ULONG SourceLength
