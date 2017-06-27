@@ -59,6 +59,7 @@ static const addon_info_t addons_info[] = {
 static const addon_info_t *addon;
 
 static HWND install_dialog = NULL;
+static IBinding *download_binding;
 
 static WCHAR GeckoUrl[] = L"https://svn.reactos.org/amine/wine_gecko-2.40-x86.msi";
 
@@ -259,6 +260,9 @@ static HRESULT WINAPI InstallCallback_OnStartBinding(IBindStatusCallback *iface,
         DWORD dwReserved, IBinding *pib)
 {
     set_status(IDS_DOWNLOADING);
+    IBinding_AddRef(pib);
+    download_binding = pib;
+
     return S_OK;
 }
 
@@ -290,8 +294,16 @@ static HRESULT WINAPI InstallCallback_OnProgress(IBindStatusCallback *iface, ULO
 static HRESULT WINAPI InstallCallback_OnStopBinding(IBindStatusCallback *iface,
         HRESULT hresult, LPCWSTR szError)
 {
+    if(download_binding) {
+        IBinding_Release(download_binding);
+        download_binding = NULL;
+    }
+
     if(FAILED(hresult)) {
-        ERR("Binding failed %08x\n", hresult);
+        if(hresult == E_ABORT)
+            TRACE("Binding aborted\n");
+        else
+            ERR("Binding failed %08x\n", hresult);
         return S_OK;
     }
 
@@ -350,16 +362,15 @@ static DWORD WINAPI download_proc(PVOID arg)
     hres = URLDownloadToFileW(NULL, GeckoUrl, tmp_file, 0, &InstallCallback);
     if(FAILED(hres)) {
         ERR("URLDownloadToFile failed: %08x\n", hres);
-        return 0;
-    }
+    } else {
+        if(sha_check(tmp_file)) {
+            install_file(tmp_file);
+        }else {
+            WCHAR message[256];
 
-    if(sha_check(tmp_file)) {
-        install_file(tmp_file);
-    }else {
-        WCHAR message[256];
-
-        if(LoadStringW(hApplet, IDS_INVALID_SHA, message, sizeof(message)/sizeof(WCHAR))) {
-            MessageBoxW(NULL, message, NULL, MB_ICONERROR);
+            if(LoadStringW(hApplet, IDS_INVALID_SHA, message, sizeof(message)/sizeof(WCHAR))) {
+                MessageBoxW(NULL, message, NULL, MB_ICONERROR);
+            }
         }
     }
 
@@ -382,13 +393,17 @@ static INT_PTR CALLBACK installer_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
     case WM_COMMAND:
         switch(wParam) {
         case IDCANCEL:
-            EndDialog(hwnd, 0);
+            if(download_binding) {
+                IBinding_Abort(download_binding);
+            }
+            else {
+                EndDialog(hwnd, 0);
+            }
             return FALSE;
 
         case ID_DWL_INSTALL:
             ShowWindow(GetDlgItem(hwnd, ID_DWL_PROGRESS), SW_SHOW);
             EnableWindow(GetDlgItem(hwnd, ID_DWL_INSTALL), 0);
-            EnableWindow(GetDlgItem(hwnd, IDCANCEL), 0); /* FIXME */
             CloseHandle( CreateThread(NULL, 0, download_proc, NULL, 0, NULL));
             return FALSE;
         }
