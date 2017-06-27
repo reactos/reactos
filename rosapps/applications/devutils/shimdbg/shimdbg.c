@@ -66,7 +66,7 @@ void CallApphelpWithImage(char* filename, int MapIt,
 int IsOpt(char* argv, const char* check)
 {
     if( argv && (argv[0] == '-' || argv[0] == '/') ) {
-        return !stricmp(argv + 1, check);
+        return !_strnicmp(argv + 1, check, strlen(check));
     }
     return 0;
 }
@@ -86,6 +86,129 @@ int HandleImageArg(int argc, char* argv[], int* pn, char MapItChar,
     return 1;
 }
 
+typedef WORD TAG;
+typedef UINT64 QWORD;
+
+#define TAG_TYPE_MASK 0xF000
+#define TAG_TYPE_DWORD 0x4000
+#define TAG_TYPE_QWORD 0x5000
+#define TAG_TYPE_STRINGREF 0x6000
+
+#define ATTRIBUTE_AVAILABLE 0x1
+#define ATTRIBUTE_FAILED 0x2
+
+typedef struct tagATTRINFO
+{
+    TAG   type;
+    DWORD flags;  /* ATTRIBUTE_AVAILABLE, ATTRIBUTE_FAILED */
+    union
+    {
+        QWORD qwattr;
+        DWORD dwattr;
+        WCHAR *lpattr;
+    };
+} ATTRINFO, *PATTRINFO;
+
+static PVOID hdll;
+static LPCWSTR (WINAPI *pSdbTagToString)(TAG);
+static BOOL (WINAPI *pSdbGetFileAttributes)(LPCWSTR, PATTRINFO *, LPDWORD);
+static BOOL (WINAPI *pSdbFreeFileAttributes)(PATTRINFO);
+
+static BOOL InitApphelp()
+{
+    if (!hdll)
+    {
+        static UNICODE_STRING DllName = RTL_CONSTANT_STRING(L"apphelp.dll");
+        static ANSI_STRING SdbTagToString = RTL_CONSTANT_STRING("SdbTagToString");
+        static ANSI_STRING SdbGetFileAttributes = RTL_CONSTANT_STRING("SdbGetFileAttributes");
+        static ANSI_STRING SdbFreeFileAttributes = RTL_CONSTANT_STRING("SdbFreeFileAttributes");
+        if (!NT_SUCCESS(LdrLoadDll(NULL, NULL, &DllName, &hdll)))
+        {
+            printf("Unable to load apphelp.dll\n");
+            return FALSE;
+        }
+        if (!NT_SUCCESS(LdrGetProcedureAddress(hdll, &SdbTagToString, 0, (PVOID)&pSdbTagToString)) ||
+            !NT_SUCCESS(LdrGetProcedureAddress(hdll, &SdbGetFileAttributes, 0, (PVOID)&pSdbGetFileAttributes)) ||
+            !NT_SUCCESS(LdrGetProcedureAddress(hdll, &SdbFreeFileAttributes, 0, (PVOID)&pSdbFreeFileAttributes)))
+        {
+            LdrUnloadDll(hdll);
+            hdll = NULL;
+            printf("Unable to resolve functions\n");
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
+
+
+int HandleDumpAttributes(int argc, char* argv[], int* pn, const char* opt)
+{
+    UNICODE_STRING FileName;
+    PATTRINFO attr;
+    DWORD num_attr, n;
+    int argn = *pn;
+    const char* arg;
+
+    if (!InitApphelp())
+        return 1;
+
+    if (strlen(argv[argn]) > (strlen(opt)+1))
+    {
+        arg = argv[argn] + strlen(opt);
+    }
+    else if (argn+1 >= argc)
+    {
+        printf("Error: no image name specified\n");
+        return 1;
+    }
+    else
+    {
+        arg = argv[argn+1];
+        (*pn) += 1;
+    }
+
+    RtlCreateUnicodeStringFromAsciiz(&FileName, arg);
+
+    if (pSdbGetFileAttributes(FileName.Buffer, &attr, &num_attr))
+    {
+        printf("Dumping attributes for %s\n", arg);
+        for (n = 0; n < num_attr; ++n)
+        {
+            TAG tagType;
+            LPCWSTR tagName;
+            if (attr[n].flags != ATTRIBUTE_AVAILABLE)
+                continue;
+
+            tagName = pSdbTagToString(attr[n].type);
+
+            tagType = attr[n].type & TAG_TYPE_MASK;
+            switch (tagType)
+            {
+            case TAG_TYPE_DWORD:
+                printf("<%ls>0x%lx</%ls><!-- %ld -->\n", tagName, attr[n].dwattr, tagName, attr[n].dwattr);
+                break;
+            case TAG_TYPE_STRINGREF:
+                printf("<%ls>0x%ls</%ls>\n", tagName, attr[n].lpattr, tagName);
+                break;
+            case TAG_TYPE_QWORD:
+                printf("<%ls>0x%I64x</%ls><!-- %I64d -->\n", tagName, attr[n].qwattr, tagName, attr[n].qwattr);
+                break;
+            default:
+                printf("<!-- Unknown tag type: 0x%x (from 0x%x)\n", tagType, attr[n].type);
+                break;
+            }
+        }
+        printf("Done\n");
+    }
+    else
+    {
+        printf("Unable to get attributes from %s\n", arg);
+    }
+
+
+    RtlFreeUnicodeString(&FileName);
+    return 0;
+}
 
 UNICODE_STRING AppCompatCacheKey = RTL_CONSTANT_STRING(L"\\Registry\\MACHINE\\System\\CurrentControlSet\\Control\\Session Manager\\AppCompatCache");
 OBJECT_ATTRIBUTES AppCompatKeyAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(&AppCompatCacheKey, OBJ_CASE_INSENSITIVE);
@@ -222,6 +345,10 @@ int main(int argc, char* argv[])
             unhandled |= HandleImageArg(argc, argv, &n, 'r',
                         ApphelpCacheServiceRemove, "ApphelpCacheServiceRemove");
         }
+        else if (IsOpt(arg, "a"))
+        {
+            unhandled |= HandleDumpAttributes(argc, argv, &n, "a");
+        }
         else if (IsOpt(arg, "k"))
         {
             keepopen = 1;
@@ -246,6 +373,7 @@ int main(int argc, char* argv[])
         printf("           -U: Update (insert) <image> in the shim cache without mapping it\n");
         printf("           -r: Remove <image> from the shim cache\n");
         printf("           -R: Remove <image> from the shim cache without mapping it\n");
+        printf("           -a: Dump file attributes as used in the appcompat database\n");
         printf("           -k: Keep the console open\n");
     }
     if (keepopen)
