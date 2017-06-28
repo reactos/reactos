@@ -395,6 +395,28 @@ typedef struct
     FILENAME_ATTRIBUTE    FileName;
 } INDEX_ENTRY_ATTRIBUTE, *PINDEX_ENTRY_ATTRIBUTE;
 
+// Keys are arranged in nodes as an ordered, linked list
+typedef struct _B_TREE_KEY
+{
+    struct _B_TREE_KEY *NextKey;
+    // PB_TREE_FILENAME_NODE LesserChild; // we aren't worried about multi-level trees yet
+    PINDEX_ENTRY_ATTRIBUTE IndexEntry;   // must be last member for FIELD_OFFSET
+}B_TREE_KEY, *PB_TREE_KEY;
+
+// Every Node is just an ordered list of keys.
+// Sub-nodes can be found attached to a key (if they exist).
+// A key's sub-node precedes that key in the ordered list.
+typedef struct
+{
+    int KeyCount;
+    PB_TREE_KEY FirstKey;
+} B_TREE_FILENAME_NODE, *PB_TREE_FILENAME_NODE;
+
+typedef struct
+{
+    PB_TREE_FILENAME_NODE RootNode;
+} B_TREE, *PB_TREE;
+
 typedef struct
 {
     ULONGLONG Unknown1;
@@ -559,6 +581,8 @@ DecodeRun(PUCHAR DataRun,
           LONGLONG *DataRunOffset,
           ULONGLONG *DataRunLength);
 
+ULONG GetFileNameAttributeLength(PFILENAME_ATTRIBUTE FileNameAttribute);
+
 VOID
 NtfsDumpDataRuns(PVOID StartOfRun,
                  ULONGLONG CurrentLCN);
@@ -645,6 +669,38 @@ NtfsDeviceIoControl(IN PDEVICE_OBJECT DeviceObject,
                     IN BOOLEAN Override);
 
 
+/* btree.c */
+
+LONG
+CompareTreeKeys(PB_TREE_KEY Key1,
+                PB_TREE_KEY Key2,
+                BOOLEAN CaseSensitive);
+
+NTSTATUS
+CreateBTreeFromIndex(/*PDEVICE_EXTENSION Vcb,*/
+                     PNTFS_ATTR_CONTEXT IndexRootContext,
+                     PINDEX_ROOT_ATTRIBUTE IndexRoot,
+                     PB_TREE *NewTree);
+
+NTSTATUS
+CreateIndexRootFromBTree(PDEVICE_EXTENSION DeviceExt,
+                         PB_TREE Tree,
+                         ULONG MaxIndexSize,
+                         PINDEX_ROOT_ATTRIBUTE *IndexRoot,
+                         ULONG *Length);
+
+VOID
+DestroyBTree(PB_TREE Tree);
+
+VOID
+DumpBTree(PB_TREE Tree);
+
+NTSTATUS
+NtfsInsertKey(ULONGLONG FileReference,
+              PFILENAME_ATTRIBUTE FileNameAttribute,
+              PB_TREE_FILENAME_NODE Node,
+              BOOLEAN CaseSensitive);
+
 /* close.c */
 
 NTSTATUS
@@ -683,8 +739,9 @@ NtfsDeviceControl(PNTFS_IRP_CONTEXT IrpContext);
 NTSTATUS
 NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
                            ULONGLONG DirectoryMftIndex,
-                           ULONGLONG FileMftIndex,
-                           PFILENAME_ATTRIBUTE FilenameAttribute);
+                           ULONGLONG FileReferenceNumber,
+                           PFILENAME_ATTRIBUTE FilenameAttribute,
+                           BOOLEAN CaseSensitive);
 
 ULONGLONG
 NtfsGetFileSize(PDEVICE_EXTENSION DeviceExt,
