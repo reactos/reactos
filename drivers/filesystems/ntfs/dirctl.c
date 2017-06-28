@@ -53,13 +53,17 @@
 * @param FilenameAttribute
 * Pointer to the FILENAME_ATTRIBUTE of the file being added to the directory.
 *
+* @param CaseSensitive
+* Boolean indicating if the function should operate in case-sensitive mode. This will be TRUE
+* if an application created the file with the FILE_FLAG_POSIX_SEMANTICS flag.
+*
 * @return
 * STATUS_SUCCESS on success.
 * STATUS_INSUFFICIENT_RESOURCES if an allocation fails.
 * STATUS_NOT_IMPLEMENTED if target address isn't at the end of the given file record.
 *
 * @remarks
-* WIP - Can only support an empty directory.
+* WIP - Can only support a few files in a directory.
 * One FILENAME_ATTRIBUTE is added to the directory's index for each link to that file. So, each
 * file which contains one FILENAME_ATTRIBUTE for a long name and another for the 8.3 name, will
 * get both attributes added to its parent directory.
@@ -68,7 +72,8 @@ NTSTATUS
 NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
                            ULONGLONG DirectoryMftIndex,
                            ULONGLONG FileReferenceNumber,
-                           PFILENAME_ATTRIBUTE FilenameAttribute)
+                           PFILENAME_ATTRIBUTE FilenameAttribute,
+                           BOOLEAN CaseSensitive)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_RECORD_HEADER ParentFileRecord;
@@ -76,12 +81,14 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
     PINDEX_ROOT_ATTRIBUTE I30IndexRoot;
     ULONG IndexRootOffset;
     ULONGLONG I30IndexRootLength;
-    PINDEX_ENTRY_ATTRIBUTE IndexNodeEntry;
     ULONG LengthWritten;
     PNTFS_ATTR_RECORD DestinationAttribute;
     PINDEX_ROOT_ATTRIBUTE NewIndexRoot;
     ULONG AttributeLength;
     PNTFS_ATTR_RECORD NextAttribute;
+    PB_TREE NewTree;
+    ULONG BtreeIndexLength;
+    ULONG MaxIndexSize;
 
     // Allocate memory for the parent directory
     ParentFileRecord = ExAllocatePoolWithTag(NonPagedPool,
@@ -122,9 +129,15 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
         return Status;
     }
 
-    I30IndexRootLength = AttributeDataLength(&IndexRootContext->Record);
+    // Find the maximum index size given what the file record can hold
+    MaxIndexSize = DeviceExt->NtfsInfo.BytesPerFileRecord
+                   - IndexRootOffset
+                   - IndexRootContext->Record.Resident.ValueOffset
+                   - FIELD_OFFSET(INDEX_ROOT_ATTRIBUTE, Header)
+                   - (sizeof(ULONG) * 2);
 
     // Allocate memory for the index root data
+    I30IndexRootLength = AttributeDataLength(&IndexRootContext->Record);
     I30IndexRoot = (PINDEX_ROOT_ATTRIBUTE)ExAllocatePoolWithTag(NonPagedPool, I30IndexRootLength, TAG_NTFS);
     if (!I30IndexRoot)
     {
@@ -144,82 +157,59 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
         return Status;
     }
 
-    // Make sure it's empty (temporarily)
-    IndexNodeEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)I30IndexRoot + I30IndexRoot->Header.FirstEntryOffset + 0x10);
-    if (IndexNodeEntry->Data.Directory.IndexedFile != 0 || IndexNodeEntry->Flags != 2)
+    // Convert the index to a B*Tree
+    Status = CreateBTreeFromIndex(IndexRootContext, I30IndexRoot, &NewTree);
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("FIXME: File-creation is only supported in empty directories right now! Be patient! :)\n");
+        DPRINT1("ERROR: Failed to create B-Tree from Index!\n");
         ReleaseAttributeContext(IndexRootContext);
         ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
         ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
-        return STATUS_NOT_IMPLEMENTED;
+        return Status;
     }
-    
-    // Now we need to setup a new index root attribute to replace the old one
-    NewIndexRoot = ExAllocatePoolWithTag(NonPagedPool, DeviceExt->NtfsInfo.BytesPerIndexRecord, TAG_NTFS);
-    if (!NewIndexRoot)
+
+    DumpBTree(NewTree);
+
+    // Insert the key for the file we're adding
+    Status = NtfsInsertKey(FileReferenceNumber, FilenameAttribute, NewTree->RootNode, CaseSensitive);
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ERROR: Unable to allocate memory for new index root attribute!\n");
+        DPRINT1("ERROR: Failed to insert key into B-Tree!\n");
+        DestroyBTree(NewTree);
         ReleaseAttributeContext(IndexRootContext);
         ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
         ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        return Status;
     }
+
+    DumpBTree(NewTree);
     
-    // Setup the new index record
-    RtlZeroMemory(NewIndexRoot, DeviceExt->NtfsInfo.BytesPerIndexRecord);   // shouldn't be necessary but aids in debugging
+    // Convert B*Tree back to Index Root
+    Status = CreateIndexRootFromBTree(DeviceExt, NewTree, MaxIndexSize, &NewIndexRoot, &BtreeIndexLength);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Failed to create Index root from B-Tree!\n");
+        DestroyBTree(NewTree);
+        ReleaseAttributeContext(IndexRootContext);
+        ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
+        ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        return Status;
+    }
 
-    NewIndexRoot->AttributeType = AttributeFileName;
-    NewIndexRoot->CollationRule = COLLATION_FILE_NAME;
-    NewIndexRoot->SizeOfEntry = DeviceExt->NtfsInfo.BytesPerIndexRecord;
-    // If Bytes per index record is less than cluster size, clusters per index record becomes sectors per index
-    if(NewIndexRoot->SizeOfEntry < DeviceExt->NtfsInfo.BytesPerCluster)
-        NewIndexRoot->ClustersPerIndexRecord = NewIndexRoot->SizeOfEntry / DeviceExt->NtfsInfo.BytesPerSector;
-    else    
-        NewIndexRoot->ClustersPerIndexRecord = NewIndexRoot->SizeOfEntry / DeviceExt->NtfsInfo.BytesPerCluster;
-
-    // Setup the Index node header
-    NewIndexRoot->Header.FirstEntryOffset = 0x10;
-    NewIndexRoot->Header.Flags = INDEX_ROOT_SMALL;
-    // still need to calculate sizes
-
-    // The first index node entry will be for the filename we're adding
-    IndexNodeEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)NewIndexRoot + NewIndexRoot->Header.FirstEntryOffset + 0x10);
-    IndexNodeEntry->Data.Directory.IndexedFile = FileReferenceNumber;
-    IndexNodeEntry->Flags = INDEX_ROOT_SMALL;
-    IndexNodeEntry->KeyLength = FIELD_OFFSET(FILENAME_ATTRIBUTE, Name) + (2 * FilenameAttribute->NameLength);
-    IndexNodeEntry->Length = ALIGN_UP_BY(IndexNodeEntry->KeyLength, 8) + FIELD_OFFSET(INDEX_ENTRY_ATTRIBUTE, FileName);
-
-    // Now we can calculate the Node length (temp logic)
-    NewIndexRoot->Header.TotalSizeOfEntries = NewIndexRoot->Header.FirstEntryOffset + IndexNodeEntry->Length + 0x10;
-    NewIndexRoot->Header.AllocatedSize = NewIndexRoot->Header.TotalSizeOfEntries;
-
-    DPRINT1("New Index Node Entry Stream Length: %u\nNew Inde Node Entry Length: %u\n",
-            IndexNodeEntry->KeyLength,
-            IndexNodeEntry->Length);
-
-    // copy over the attribute proper
-    RtlCopyMemory(&IndexNodeEntry->FileName, FilenameAttribute, IndexNodeEntry->KeyLength);
-
-    // Now setup the dummy key
-    IndexNodeEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)IndexNodeEntry + IndexNodeEntry->Length);
-
-    IndexNodeEntry->Data.Directory.IndexedFile = 0;
-    IndexNodeEntry->Length = 0x10;
-    IndexNodeEntry->KeyLength = 0;
-    IndexNodeEntry->Flags = NTFS_INDEX_ENTRY_END;
-
-    // This is when we'd normally setup the length (already done above)
+    // We're done with the B-Tree now
+    DestroyBTree(NewTree);
 
     // Write back the new index root attribute to the parent directory file record
 
-    // First, we need to make sure the attribute is large enough.
+    // First, we need to resize the attribute.
+    // CreateIndexRootFromBTree() should have verified that the index root fits within MaxIndexSize.
     // We can't set the size as we normally would, because if we extend past the file record, 
     // we must create an index allocation and index bitmap (TODO). Also TODO: support file records with
     // $ATTRIBUTE_LIST's.
     AttributeLength = NewIndexRoot->Header.AllocatedSize + FIELD_OFFSET(INDEX_ROOT_ATTRIBUTE, Header);
     DestinationAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)ParentFileRecord + IndexRootOffset);
 
+    // Find the attribute (or attribute-end marker) after the index root
     NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)DestinationAttribute + DestinationAttribute->Length);
     if (NextAttribute->Type != AttributeEnd)
     {
@@ -230,12 +220,14 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
         ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
         return STATUS_NOT_IMPLEMENTED;
     }
-    
+
     // Update the length of the attribute in the file record of the parent directory
     InternalSetResidentAttributeLength(IndexRootContext,
                                        ParentFileRecord,
                                        IndexRootOffset,
                                        AttributeLength);
+
+    NT_ASSERT(ParentFileRecord->BytesInUse <= DeviceExt->NtfsInfo.BytesPerFileRecord);
 
     Status = UpdateFileRecord(DeviceExt, DirectoryMftIndex, ParentFileRecord);
     if (!NT_SUCCESS(Status))
@@ -243,11 +235,12 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
         DPRINT1("ERROR: Failed to update file record of directory with index: %llx\n", DirectoryMftIndex);
         ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
         ExFreePoolWithTag(NewIndexRoot, TAG_NTFS);
+        ReleaseAttributeContext(IndexRootContext);
         ExFreePoolWithTag(I30IndexRoot, TAG_NTFS);
         return Status;
     }
 
-    // Update the parent directory with the new index root
+    // Write the new index root to disk
     Status = WriteAttribute(DeviceExt,
                             IndexRootContext,
                             0,

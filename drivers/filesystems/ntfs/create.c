@@ -747,7 +747,8 @@ NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
         Status = NtfsAddFilenameToDirectory(DeviceExt,
                                             ParentMftIndex,
                                             FileMftIndex,
-                                            FilenameAttribute);
+                                            FilenameAttribute,
+                                            CaseSensitive);
     }
 
     ExFreePoolWithTag(FileRecord, TAG_NTFS);

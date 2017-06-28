@@ -1566,6 +1566,12 @@ GetStandardInformationFromRecord(PDEVICE_EXTENSION Vcb,
     return NULL;
 }
 
+ULONG GetFileNameAttributeLength(PFILENAME_ATTRIBUTE FileNameAttribute)
+{
+    ULONG Length = FIELD_OFFSET(FILENAME_ATTRIBUTE, Name) + (FileNameAttribute->NameLength * sizeof(WCHAR));
+    return Length;
+}
+
 PFILENAME_ATTRIBUTE
 GetBestFileNameFromRecord(PDEVICE_EXTENSION Vcb,
                           PFILE_RECORD_HEADER FileRecord)
