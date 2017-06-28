@@ -190,7 +190,7 @@ CmpValueToData(IN PHHIVE Hive,
         return NULL;
     }
 
-    /* This should never happen!*/
+    /* This should never happen! */
     if (BufferAllocated)
     {
         /* Free the buffer and bugcheck */
@@ -379,6 +379,7 @@ CmpCopyCell(IN PHHIVE SourceHive,
     PCELL_DATA DestinationData = NULL;
     HCELL_INDEX DestinationCell = HCELL_NIL;
     LONG DataSize;
+
     PAGED_CODE();
 
     /* Get the data and the size of the source cell */
@@ -401,11 +402,115 @@ CmpCopyCell(IN PHHIVE SourceHive,
 Cleanup:
 
     /* Release the cells */
-    if (SourceData) HvReleaseCell(SourceHive, SourceCell);
     if (DestinationData) HvReleaseCell(DestinationHive, DestinationCell);
+    if (SourceData) HvReleaseCell(SourceHive, SourceCell);
 
     /* Return the destination cell index */
     return DestinationCell;
+}
+
+HCELL_INDEX
+NTAPI
+CmpCopyValue(IN PHHIVE SourceHive,
+             IN HCELL_INDEX SourceValueCell,
+             IN PHHIVE DestinationHive,
+             IN HSTORAGE_TYPE StorageType)
+{
+    PCM_KEY_VALUE Value, NewValue;
+    HCELL_INDEX NewValueCell, NewDataCell;
+    PCELL_DATA CellData;
+    ULONG SmallData;
+    ULONG DataSize;
+    BOOLEAN IsSmall;
+
+    PAGED_CODE();
+
+    /* Get the actual source data */
+    Value = (PCM_KEY_VALUE)HvGetCell(SourceHive, SourceValueCell);
+    if (!Value) ASSERT(FALSE);
+
+    /* Copy the value cell body */
+    NewValueCell = CmpCopyCell(SourceHive,
+                               SourceValueCell,
+                               DestinationHive,
+                               StorageType);
+    if (NewValueCell == HCELL_NIL)
+    {
+        /* Not enough storage space */
+        goto Quit;
+    }
+
+    /* Copy the value data */
+    IsSmall = CmpIsKeyValueSmall(&DataSize, Value->DataLength);
+    if (DataSize == 0)
+    {
+        /* Nothing to copy */
+
+        NewValue = (PCM_KEY_VALUE)HvGetCell(DestinationHive, NewValueCell);
+        ASSERT(NewValue);
+        NewValue->DataLength = 0;
+        NewValue->Data = HCELL_NIL;
+        HvReleaseCell(DestinationHive, NewValueCell);
+
+        goto Quit;
+    }
+
+    if (DataSize <= CM_KEY_VALUE_SMALL)
+    {
+        if (IsSmall)
+        {
+            /* Small value, copy directly */
+            SmallData = Value->Data;
+        }
+        else
+        {
+            /* The value is small, but was stored in a regular cell. Get the data from it. */
+            CellData = HvGetCell(SourceHive, Value->Data);
+            ASSERT(CellData);
+            SmallData = *(PULONG)CellData;
+            HvReleaseCell(SourceHive, Value->Data);
+        }
+
+        /* This is a small key, set the data directly inside */
+        NewValue = (PCM_KEY_VALUE)HvGetCell(DestinationHive, NewValueCell);
+        ASSERT(NewValue);
+        NewValue->DataLength = DataSize + CM_KEY_VALUE_SPECIAL_SIZE;
+        NewValue->Data = SmallData;
+        HvReleaseCell(DestinationHive, NewValueCell);
+    }
+    else
+    {
+        /* Big keys are currently unsupported */
+        ASSERT_VALUE_BIG(SourceHive, DataSize);
+        // Should use CmpGetValueData and CmpSetValueDataNew for big values!
+
+        /* Regular value */
+
+        /* Copy the data cell */
+        NewDataCell = CmpCopyCell(SourceHive,
+                                  Value->Data,
+                                  DestinationHive,
+                                  StorageType);
+        if (NewDataCell == HCELL_NIL)
+        {
+            /* Not enough storage space */
+            HvFreeCell(DestinationHive, NewValueCell);
+            NewValueCell = HCELL_NIL;
+            goto Quit;
+        }
+
+        NewValue = (PCM_KEY_VALUE)HvGetCell(DestinationHive, NewValueCell);
+        ASSERT(NewValue);
+        NewValue->DataLength = DataSize;
+        NewValue->Data = NewDataCell;
+        HvReleaseCell(DestinationHive, NewValueCell);
+    }
+
+Quit:
+    HvReleaseCell(SourceHive, SourceValueCell);
+
+    /* Return the copied value body cell index */
+    return NewValueCell;
 }
 
 NTSTATUS
@@ -417,51 +522,82 @@ CmpCopyKeyValueList(IN PHHIVE SourceHive,
                     IN HSTORAGE_TYPE StorageType)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    HCELL_INDEX CellIndex = HCELL_NIL;
+    PCELL_DATA SrcListData = NULL, DestListData = NULL;
+    HCELL_INDEX NewValue;
     ULONG Index;
-    PCELL_DATA SrcListData = NULL;
-    PCELL_DATA DestListData = NULL;
 
     PAGED_CODE();
 
-    /* Set the count */
-    DestValueList->Count = SrcValueList->Count;
+    /* Reset the destination value list */
+    DestValueList->Count = 0;
+    DestValueList->List = HCELL_NIL;
 
     /* Check if the list is empty */
-    if (!DestValueList->Count)
-    {
-        DestValueList->List = HCELL_NIL;
+    if (!SrcValueList->Count)
         return STATUS_SUCCESS;
-    }
 
-    /* Create a simple copy of the list */
-    CellIndex = CmpCopyCell(SourceHive,
-                            SrcValueList->List,
-                            DestinationHive,
-                            StorageType);
-    if (CellIndex == HCELL_NIL) return STATUS_INSUFFICIENT_RESOURCES;
-
-    /* Get the source and the destination value list */
+    /* Get the source value list */
     SrcListData = HvGetCell(SourceHive, SrcValueList->List);
-    DestListData = HvGetCell(DestinationHive, CellIndex);
+    ASSERT(SrcListData);
 
     /* Copy the actual values */
     for (Index = 0; Index < SrcValueList->Count; Index++)
     {
-        DestListData->u.KeyList[Index] = CmpCopyCell(SourceHive,
-                                                     SrcListData->u.KeyList[Index],
-                                                     DestinationHive,
-                                                     StorageType);
-        if (DestListData->u.KeyList[Index] == HCELL_NIL)
+        NewValue = CmpCopyValue(SourceHive,
+                                SrcListData->u.KeyList[Index],
+                                DestinationHive,
+                                StorageType);
+        if (NewValue == HCELL_NIL)
         {
+            /* Not enough storage space, stop there and cleanup afterwards */
             Status = STATUS_INSUFFICIENT_RESOURCES;
+            break;
+        }
+
+        /* Add this value cell to the child list */
+        Status = CmpAddValueToList(DestinationHive,
+                                   NewValue,
+                                   Index,
+                                   StorageType,
+                                   DestValueList);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Not enough storage space, stop there */
+
+            /* Cleanup the newly-created value here, the other ones will be cleaned up afterwards */
+            if (!CmpFreeValue(DestinationHive, NewValue))
+                HvFreeCell(DestinationHive, NewValue);
             break;
         }
     }
 
+    /* Revert-cleanup if failure */
+    if (!NT_SUCCESS(Status) && (DestValueList->List != HCELL_NIL))
+    {
+        /* Do not use CmpRemoveValueFromList but directly delete the data */
+
+        /* Get the destination value list */
+        DestListData = HvGetCell(DestinationHive, DestValueList->List);
+        ASSERT(DestListData);
+
+        /* Delete each copied value */
+        while (Index--)
+        {
+            NewValue = DestListData->u.KeyList[Index];
+            if (!CmpFreeValue(DestinationHive, NewValue))
+                HvFreeCell(DestinationHive, NewValue);
+        }
+
+        /* Release and free the list */
+        HvReleaseCell(DestinationHive, DestValueList->List);
+        HvFreeCell(DestinationHive, DestValueList->List);
+
+        DestValueList->Count = 0;
+        DestValueList->List = HCELL_NIL;
+    }
+
     /* Release the cells */
-    if (SrcListData) HvReleaseCell(SourceHive, SrcValueList->List);
-    if (DestListData) HvReleaseCell(DestinationHive, CellIndex);
+    HvReleaseCell(SourceHive, SrcValueList->List);
 
     return Status;
 }
