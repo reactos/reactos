@@ -419,7 +419,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
         Status = NtfsOpenFile(DeviceExt,
                               FileObject,
                               ((RequestedOptions & FILE_OPEN_BY_FILE_ID) ? FullPath.Buffer : FileObject->FileName.Buffer),
-                              (Stack->Flags & SL_CASE_SENSITIVE),
+                              BooleanFlagOn(Stack->Flags, SL_CASE_SENSITIVE),
                               &Fcb);
 
         if (RequestedOptions & FILE_OPEN_BY_FILE_ID)
