@@ -635,7 +635,7 @@ NtfsSetInformation(PNTFS_IRP_CONTEXT IrpContext)
                                       FileObject,
                                       DeviceExt,
                                       Irp->Flags,
-                                      (Stack->Flags & SL_CASE_SENSITIVE),
+                                      BooleanFlagOn(Stack->Flags, SL_CASE_SENSITIVE),
                                       &EndOfFileInfo->EndOfFile);
             break;
             

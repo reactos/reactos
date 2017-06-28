@@ -621,7 +621,7 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
                                 &FileRecord,
                                 &MFTRecord,
                                 Fcb->MFTIndex,
-                                (Stack->Flags & SL_CASE_SENSITIVE));
+                                BooleanFlagOn(Stack->Flags, SL_CASE_SENSITIVE));
 
         if (NT_SUCCESS(Status))
         {

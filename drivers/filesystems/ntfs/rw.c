@@ -686,7 +686,7 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext)
                            Length,
                            ByteOffset.LowPart,
                            Irp->Flags,
-                           (IrpContext->Stack->Flags & SL_CASE_SENSITIVE),
+                           BooleanFlagOn(IrpContext->Stack->Flags, SL_CASE_SENSITIVE),
                            &ReturnedWriteLength);
 
     IrpContext->Irp->IoStatus.Status = Status;
