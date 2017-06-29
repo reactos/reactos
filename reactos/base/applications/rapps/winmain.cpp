@@ -54,9 +54,16 @@ FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
     pSettingsInfo->bSaveWndPos = TRUE;
     pSettingsInfo->bUpdateAtStart = FALSE;
     pSettingsInfo->bLogEnabled = TRUE;
-    StringCbCopyW(pSettingsInfo->szDownloadDir,
-                  sizeof(pSettingsInfo->szDownloadDir),
-                  L"C:\\Downloads");
+    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, pSettingsInfo->szDownloadDir)))
+    {
+        StringCbCatW(pSettingsInfo->szDownloadDir, _countof(pSettingsInfo->szDownloadDir), L"\\RAPPS Downloads");
+    } 
+    else
+    {
+        ExpandEnvironmentStringsW(L"%SystemDrive%\\RAPPS Downloads", 
+            pSettingsInfo->szDownloadDir, _countof(pSettingsInfo->szDownloadDir));
+    }
+
     pSettingsInfo->bDelInstaller = FALSE;
 
     pSettingsInfo->Maximized = FALSE;
