@@ -39,7 +39,7 @@
 
 #define SPLIT_WIDTH 4
 #define MAX_STR_LEN 256
-
+#define MAX_VERSION 10
 #define LISTVIEW_ICON_SIZE 24
 #define TREEVIEW_ICON_SIZE 24
 
@@ -73,14 +73,24 @@
 #define IS_INSTALLED_ENUM(a) (a >= ENUM_INSTALLED_MIN && a <= ENUM_INSTALLED_MAX)
 #define IS_AVAILABLE_ENUM(a) (a >= ENUM_AVAILABLE_MIN && a <= ENUM_AVAILABLE_MAX)
 
+typedef enum
+{
+    None,
+    OpenSource,
+    Freeware,
+    Trial,
+    Max = Trial,
+    Min = None
+} LICENSE_TYPE, *PLICENSE_TYPE;
 
-/* aboutdlg.c */
+/* aboutdlg.cpp */
 VOID ShowAboutDialog(VOID);
 
-/* available.c */
+/* available.cpp */
 typedef struct
 {
     INT Category;
+    LICENSE_TYPE LicenseType;
     WCHAR szName[MAX_PATH];
     WCHAR szRegName[MAX_PATH];
     WCHAR szVersion[MAX_PATH];
@@ -90,6 +100,7 @@ typedef struct
     WCHAR szUrlSite[MAX_PATH];
     WCHAR szUrlDownload[MAX_PATH];
     WCHAR szCDPath[MAX_PATH];
+    WCHAR szLanguages[MAX_PATH];
 
     /* caching mechanism related entries */
     WCHAR cFileName[MAX_PATH];
@@ -129,17 +140,26 @@ typedef struct
 
 } SETTINGS_INFO, *PSETTINGS_INFO;
 
-/* available.c */
+typedef struct
+{
+    INT arrVersion[MAX_VERSION];
+    UINT VersionSize;
+    WCHAR cVersionSuffix = (WCHAR) NULL;
+    WCHAR szVersion[MAX_PATH];
+} VERSION_INFO, *PVERSION_INFO;
+
+/* available.cpp */
 typedef BOOL (CALLBACK *AVAILENUMPROC)(PAPPLICATION_INFO Info);
 BOOL EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc);
 BOOL ShowAvailableAppInfo(INT Index);
 BOOL UpdateAppsDB(VOID);
 VOID FreeCachedAvailableEntries(VOID);
 
-/* installdlg.c */
+
+/* installdlg.cpp */
 BOOL InstallApplication(INT Index);
 
-/* installed.c */
+/* installed.cpp */
 typedef BOOL (CALLBACK *APPENUMPROC)(INT ItemIndex, LPWSTR lpName, PINSTALLED_INFO Info);
 BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc);
 BOOL GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR lpString);
@@ -150,7 +170,7 @@ VOID RemoveAppFromRegistry(INT Index);
 
 BOOL InstalledVersion(LPWSTR szVersionResult, UINT iVersionResultSize, LPCWSTR lpRegName, BOOL IsUserKey, REGSAM keyWow);
 
-/* winmain.c */
+/* winmain.cpp */
 extern HWND hMainWnd;
 extern HINSTANCE hInst;
 extern INT SelectedEnumType;
@@ -158,11 +178,11 @@ extern SETTINGS_INFO SettingsInfo;
 VOID SaveSettings(HWND hwnd);
 VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo);
 
-/* loaddlg.c */
+/* loaddlg.cpp */
 BOOL DownloadApplication(INT Index);
 VOID DownloadApplicationsDB(LPCWSTR lpUrl);
 
-/* misc.c */
+/* misc.cpp */
 INT GetSystemColorDepth(VOID);
 int GetWindowWidth(HWND hwnd);
 int GetWindowHeight(HWND hwnd);
@@ -181,11 +201,11 @@ BOOL WriteLogMessage(WORD wType, DWORD dwEventID, LPWSTR lpMsg);
 UINT ParserGetString(LPCWSTR lpKeyName, LPWSTR lpReturnedString, UINT nSize, LPCWSTR lpFileName);
 UINT ParserGetInt(LPCWSTR lpKeyName, LPCWSTR lpFileName);
 
-BOOL ParseVersion(_In_z_ LPCWSTR szVersion, _Outptr_ INT* parrVersion, _Out_opt_ UINT iVersionSize);
-BOOL FindRegistryKeyByName(_In_ HKEY hKeyBase, _In_ REGSAM keyWow, _In_ LPCWSTR lpcKey, _Out_opt_ PHKEY hKeyResult);
-BOOL CompareVersionsBigger(_In_z_ LPCWSTR sczVersion1, _In_z_ LPCWSTR sczVersion2, _Out_ BOOL bResult = FALSE);
+BOOL ParseVersion(_In_z_ LPCWSTR szVersion, _Outptr_ PVERSION_INFO parrVersion);
+BOOL CompareVersionsStrings(_In_z_ LPCWSTR sczVersionLeft, _In_z_ LPCWSTR sczVersionRight);
+BOOL CompareVersions(_In_ PVERSION_INFO LeftVersion, _In_ PVERSION_INFO RightVersion);
 
-/* settingsdlg.c */
+/* settingsdlg.cpp */
 VOID CreateSettingsDlg(HWND hwnd);
 
 /* gui.cpp */

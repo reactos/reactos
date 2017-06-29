@@ -87,27 +87,59 @@ BOOL
 ShowAvailableAppInfo(INT Index)
 {
     PAPPLICATION_INFO Info = (PAPPLICATION_INFO) ListViewGetlParam(Index);
-    BOOL bIsInstalled = _AppInstallCheck(Info);
-    WCHAR szVersion[MAX_PATH];
+    WCHAR szVersion[MAX_PATH] = L"\0";
+    WCHAR szLicense[MAX_PATH] = L"\0";
+    BOOL bIsInstalled = _AppInstallCheck(Info), 
+        bHasVersion = _GetInstalledVersion(Info, szVersion, _countof(szVersion));
 
     if (!Info) return FALSE;
 
     NewRichEditText(Info->szName, CFE_BOLD);
+    //installed status
     if (bIsInstalled)
     {
-        _AddTextNewl(IDS_STATUS_INSTALLED, CFE_ITALIC);
-        if (_GetInstalledVersion(Info, szVersion, _countof(szVersion)))
+        if (bHasVersion)
         {
+            if (CompareVersionsStrings(Info->szVersion, szVersion))
+                _AddTextNewl(IDS_STATUS_UPDATE_AVAILABLE, CFE_ITALIC);
+            else
+                _AddTextNewl(IDS_STATUS_INSTALLED, CFE_ITALIC);
+
             _AddText(IDS_AINFO_VERSION, szVersion, CFE_BOLD, 0);
-        }
+        } 
+        else
+            _AddTextNewl(IDS_STATUS_INSTALLED, CFE_ITALIC);
+
+    }
+    else
+        _AddTextNewl(IDS_STATUS_NOTINSTALLED, CFE_ITALIC);
+
+
+    _AddText(IDS_AINFO_AVAILABLEVERSION, Info->szVersion, CFE_BOLD, 0);
+    //license
+    switch (Info->LicenseType)
+    {
+        case LICENSE_TYPE::OpenSource:
+            LoadStringW(hInst, IDS_LICENSE_OPENSOURCE, szLicense, _countof(szLicense));
+            break;
+        case LICENSE_TYPE::Freeware:
+            LoadStringW(hInst, IDS_LICENSE_FREEWARE, szLicense, _countof(szLicense));
+            break;
+        case LICENSE_TYPE::Trial:
+            LoadStringW(hInst, IDS_LICENSE_TRIAL, szLicense, _countof(szLicense));
+            break;
+        default:
+            break;
+    }
+    if (szLicense[0] != '\0')
+    {
+        StringCbPrintfW(szLicense, _countof(szLicense), L"%ls (%ls)", szLicense, Info->szLicense);
+        _AddText(IDS_AINFO_LICENSE, szLicense, CFE_BOLD, 0);
     }
     else
     {
-        _AddTextNewl(IDS_STATUS_NOTINSTALLED, CFE_ITALIC);
+        _AddText(IDS_AINFO_LICENSE, Info->szLicense, CFE_BOLD, 0);
     }
-
-    _AddText(IDS_AINFO_AVAILABLEVERSION, Info->szVersion, CFE_BOLD, 0);
-    _AddText(IDS_AINFO_LICENSE, Info->szLicense, CFE_BOLD, 0);
     _AddText(IDS_AINFO_SIZE, Info->szSize, CFE_BOLD, 0);
     _AddText(IDS_AINFO_URLSITE, Info->szUrlSite, CFE_BOLD, CFE_LINK);
     _AddText(IDS_AINFO_DESCRIPTION, Info->szDesc, CFE_BOLD, 0);
@@ -297,6 +329,11 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
             break;
 
         Info->Category = ParserGetInt(L"Category", FindFileData.cFileName);
+        INT IntBuffer = ParserGetInt(L"LicenseType", FindFileData.cFileName);
+        if (IntBuffer < LICENSE_TYPE::Max)
+        {
+            Info->LicenseType = (LICENSE_TYPE) IntBuffer;
+        }
 
         /* copy the cache-related fields for the next time */
         RtlCopyMemory(&Info->cFileName, &FindFileData.cFileName, MAX_PATH);
@@ -331,6 +368,7 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
             _GetStringNullFailure(L"Size", Info->szSize, FindFileData.cFileName);
             _GetStringNullFailure(L"URLSite", Info->szUrlSite, FindFileData.cFileName);
             _GetStringNullFailure(L"CDPath", Info->szCDPath, FindFileData.cFileName);
+            _GetStringNullFailure(L"Language", Info->szRegName, FindFileData.cFileName);
             _GetStringNullFailure(L"SHA1", Info->szSHA1, FindFileData.cFileName);
         }
 

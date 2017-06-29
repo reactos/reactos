@@ -20,6 +20,8 @@ WCHAR szCachedINISectionLocale[MAX_PATH] = L"Section.";
 WCHAR szCachedINISectionLocaleNeutral[MAX_PATH] = {0};
 BYTE bCachedSectionStatus = FALSE;
 
+#define STR_VERSION_CURRENT L"CURRENT"
+
 typedef struct
 {
     int erfOper;
@@ -500,39 +502,58 @@ UINT ParserGetInt(LPCWSTR lpKeyName, LPCWSTR lpFileName)
     return (UINT)Result;
 }
 
-//Parses version string that can be formatted as 1.2.3.4-5
+template<typename XCHAR>
+inline BOOL IsCharNumeric(XCHAR ch)
+{
+    return IsCharAlphaNumeric(ch) && !IsCharAlpha(ch);
+}
+
+
+//Parses version string that can be formatted as 1.2.3-4b (or CURRENT)
 //Returns int buffer and it's size
 BOOL
-ParseVersion(_In_z_ LPCWSTR szVersion, _Outptr_ INT* parrVersion, _Out_opt_ UINT iVersionSize)
+ParseVersion(_In_z_ LPCWSTR szVersion, _Outptr_ PVERSION_INFO Version)
 {
-    ATL::CSimpleArray<int> arrVersionResult;
     ATL::CStringW szVersionSingleInt = L"";
-    ATL::CStringW sDelimiters = L".-";
     BOOL bHasParsed = TRUE;
-    INT iVersionCharCount = 0;
-    //INT iVersionSingleCharCount = 0;
-    INT iIntResult;
-    iVersionSize = 0;
-    while(szVersion[iVersionCharCount] != L'\0')
+    INT VersionCharCount = 0;
+    INT VersionLength = lstrlenW(szVersion);
+    StringCbCopyW(Version->szVersion, VersionLength * sizeof(szVersion), szVersion);
+    //CURRENT
+    if (!StrCmpW(szVersion, STR_VERSION_CURRENT))
     {
-        for (;!sDelimiters.Find(szVersion[iVersionCharCount]); ++iVersionCharCount)
+        Version->VersionSize = NULL;
+        return bHasParsed;
+    }
+
+    Version->VersionSize = 0;
+    //int expected every iteration, quit the loop if its not a number
+    while (Version->VersionSize < MAX_VERSION 
+        && IsCharNumeric(szVersion[VersionCharCount]) 
+        && VersionCharCount < VersionLength)
+    {
+        for (; IsCharNumeric(szVersion[VersionCharCount]) && VersionCharCount < VersionLength; ++VersionCharCount)
         {
-            szVersionSingleInt += szVersion[iVersionCharCount];
+            szVersionSingleInt += szVersion[VersionCharCount];
         }
-        szVersionSingleInt += L'\0';
-        iIntResult = StrToIntW(szVersionSingleInt.GetBuffer());
-        if (iIntResult)
-        {
-            arrVersionResult.Add(iIntResult);
-            iVersionSize++;
-        }
-        else
+        if (szVersionSingleInt.IsEmpty())
         {
             bHasParsed = FALSE;
+            continue;
         }
-        ++iVersionCharCount;
+        INT IntResult = StrToIntW(szVersionSingleInt.GetBuffer());
+        Version->arrVersion[Version->VersionSize] = IntResult;
+        ++Version->VersionSize;
+        szVersionSingleInt.Empty();
+        ++VersionCharCount;
     }
-    parrVersion = arrVersionResult.GetData();
+
+    if (IsCharAlphaW(szVersion[VersionCharCount]))
+    {
+        Version->cVersionSuffix = szVersion[VersionCharCount];
+    }
+    else
+        Version->cVersionSuffix = NULL;
     return bHasParsed;
 }
 
@@ -540,27 +561,54 @@ ParseVersion(_In_z_ LPCWSTR szVersion, _Outptr_ INT* parrVersion, _Out_opt_ UINT
 //In:   Zero terminated strings of versions
 //Out:  TRUE if first is bigger than second, FALSE if else
 BOOL
-CompareVersionsBigger(_In_z_ LPCWSTR sczVersion1, _In_z_ LPCWSTR sczVersion2, _Out_ BOOL bResult)
+CompareVersionsStrings(_In_z_ LPCWSTR sczVersionLeft, _In_z_ LPCWSTR sczVersionRight)
 {
-    UINT iVersionSize1 = 0;
-    UINT iVersionSize2 = 0;
-    INT *parrVersion1 = NULL, *parrVersion2 = NULL;
-    bResult = FALSE;
+    VERSION_INFO LeftVersion, RightVersion;
 
-    if (!ParseVersion(sczVersion1, parrVersion1, iVersionSize1)
-        || !ParseVersion(sczVersion2, parrVersion2, iVersionSize2))
+    if (!ParseVersion(sczVersionLeft, &LeftVersion)
+        || !ParseVersion(sczVersionRight, &RightVersion))
     {
         return FALSE;
     }
 
-    for (INT i = 0; i < iVersionSize1 && i < iVersionSize2; ++i)
+    return CompareVersions(&LeftVersion, &RightVersion);  
+}
+
+BOOL
+CompareVersions(_In_ PVERSION_INFO LeftVersion, _In_ PVERSION_INFO RightVersion)
+{
+    //CURRENT 
+    if (!LeftVersion->VersionSize || !RightVersion->VersionSize)
     {
-        if (parrVersion1[i] > parrVersion2[i])
+        return FALSE;
+    }
+    //1.2.3 > 1.2
+    INT SizeDiff = LeftVersion->VersionSize - RightVersion->VersionSize;
+    if (SizeDiff > 0)
+    {
+        return TRUE;
+    }
+    if (SizeDiff < 0)
+    {
+        return FALSE;
+    }
+    //2.0.0 > 1.9.9
+    for (INT i = 0; i < LeftVersion->VersionSize && i < RightVersion->VersionSize && i < MAX_VERSION; ++i)
+    {
+        if (LeftVersion->arrVersion[i] > RightVersion->arrVersion[i])
         {
-            bResult = TRUE;
             return TRUE;
         }
+        if (LeftVersion->arrVersion[i] < RightVersion->arrVersion[i])
+        {
+            return FALSE;
+        }
+    }
+    //1.2.3b > 1.2.3
+    if (LeftVersion->cVersionSuffix > RightVersion->cVersionSuffix)
+    {
+        return TRUE;
     }
 
-    return TRUE;
+    return FALSE;
 }

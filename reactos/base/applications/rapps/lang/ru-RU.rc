@@ -217,3 +217,10 @@ BEGIN
     IDS_STATUS_DOWNLOADING "Загружается…"
     IDS_STATUS_INSTALLING "Установка…"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_LICENSE_OPENSOURCE "Свободное ПО"
+    IDS_LICENSE_FREEWARE "Бесплатное ПО"
+    IDS_LICENSE_TRIAL "Пробная версия"
+END

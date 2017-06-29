@@ -215,3 +215,20 @@ BEGIN
     IDS_INTERRUPTED_DOWNLOAD "The download was interrupted. Check connection to Internet."
     IDS_UNABLE_TO_WRITE "Unable to write to disk. Disk may be at capacity."
 END
+
+STRINGTABLE
+BEGIN
+    IDS_STATUS_INSTALLED "Встановлено"
+    IDS_STATUS_NOTINSTALLED "Не встановлено"
+    IDS_STATUS_DOWNLOADED "Завантажено"
+    IDS_STATUS_UPDATE_AVAILABLE "Є оновлення"
+    IDS_STATUS_DOWNLOADING "Завантажується…"
+    IDS_STATUS_INSTALLING "Встановлюється…"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LICENSE_OPENSOURCE "Вільне ПЗ"
+    IDS_LICENSE_FREEWARE "Безкоштовне ПЗ"
+    IDS_LICENSE_TRIAL "Пробна версія"
+END
