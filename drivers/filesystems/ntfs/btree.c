@@ -54,20 +54,17 @@
 * > 0 if key1 is greater than key2
 *
 * @remarks
-* Any other key is always less than the final (dummy) key in a node.
+* Any other key is always less than the final (dummy) key in a node. Key1 must not be the dummy node.
 */
 LONG
 CompareTreeKeys(PB_TREE_KEY Key1, PB_TREE_KEY Key2, BOOLEAN CaseSensitive)
 {
     UNICODE_STRING Key1Name, Key2Name;
+    LONG Comparison;
 
     // If Key2 is the "dummy key", key 1 will always come first
     if (Key2->NextKey == NULL)
         return -1;
-
-    // If Key1 is the "dummy key", key 2 will always come first
-    if (Key1->NextKey == NULL)
-        return 1;
 
     Key1Name.Buffer = Key1->IndexEntry->FileName.Name;
     Key1Name.Length = Key1Name.MaximumLength
@@ -77,7 +74,38 @@ CompareTreeKeys(PB_TREE_KEY Key1, PB_TREE_KEY Key2, BOOLEAN CaseSensitive)
     Key2Name.Length = Key2Name.MaximumLength
         = Key2->IndexEntry->FileName.NameLength * sizeof(WCHAR);
 
-    return RtlCompareUnicodeString(&Key1Name, &Key2Name, !CaseSensitive);
+    // Are the two keys the same length?
+    if(Key1Name.Length == Key2Name.Length)
+        return RtlCompareUnicodeString(&Key1Name, &Key2Name, !CaseSensitive);
+
+    // Is Key1 shorter?
+    if (Key1Name.Length < Key2Name.Length)
+    {
+        // Truncate KeyName2 to be the same length as KeyName1
+        Key2Name.Length = Key1Name.Length;
+        
+        // Compare the names of the same length
+        Comparison = RtlCompareUnicodeString(&Key1Name, &Key2Name, !CaseSensitive);
+
+        // If the truncated files are the same length, the shorter one comes first
+        if (Comparison == 0)
+            return -1;
+    }
+    else
+    {
+        // Key2 is shorter
+        // Truncate KeyName1 to be the same length as KeyName2
+        Key1Name.Length = Key2Name.Length;
+
+        // Compare the names of the same length
+        Comparison = RtlCompareUnicodeString(&Key1Name, &Key2Name, !CaseSensitive);
+
+        // If the truncated files are the same length, the shorter one comes first
+        if (Comparison == 0)
+            return 1;
+    }
+
+    return Comparison;
 }
 
 /**
@@ -241,6 +269,8 @@ CreateIndexRootFromBTree(PDEVICE_EXTENSION DeviceExt,
                          PINDEX_ROOT_ATTRIBUTE *IndexRoot,
                          ULONG *Length)
 {
+    int i;
+    PB_TREE_KEY CurrentKey;
     PINDEX_ENTRY_ATTRIBUTE CurrentNodeEntry;
     PINDEX_ROOT_ATTRIBUTE NewIndexRoot = ExAllocatePoolWithTag(NonPagedPool,
                                                                DeviceExt->NtfsInfo.BytesPerFileRecord,
@@ -274,11 +304,11 @@ CreateIndexRootFromBTree(PDEVICE_EXTENSION DeviceExt,
     NewIndexRoot->Header.TotalSizeOfEntries = NewIndexRoot->Header.FirstEntryOffset;
 
     // Setup each Node Entry
-    PB_TREE_KEY CurrentKey = Tree->RootNode->FirstKey;
+    CurrentKey = Tree->RootNode->FirstKey;
     CurrentNodeEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)NewIndexRoot 
                                                 + FIELD_OFFSET(INDEX_ROOT_ATTRIBUTE, Header)
                                                 + NewIndexRoot->Header.FirstEntryOffset);
-    for (int i = 0; i < Tree->RootNode->KeyCount; i++)
+    for (i = 0; i < Tree->RootNode->KeyCount; i++)
     {
         // Would adding the current entry to the index increase the index size beyond the limit we've set?
         ULONG IndexSize = FIELD_OFFSET(INDEX_ROOT_ATTRIBUTE, Header)
@@ -335,7 +365,8 @@ DestroyBTreeNode(PB_TREE_FILENAME_NODE Node)
 {
     PB_TREE_KEY NextKey;
     PB_TREE_KEY CurrentKey = Node->FirstKey;
-    for (int i = 0; i < Node->KeyCount; i++)
+    int i;
+    for (i = 0; i < Node->KeyCount; i++)
     {
         NT_ASSERT(CurrentKey);
         NextKey = CurrentKey->NextKey;
@@ -370,7 +401,8 @@ DestroyBTree(PB_TREE Tree)
 VOID
 DumpBTreeKey(PB_TREE_KEY Key, int Number, int Depth)
 {
-    for (int i = 0; i < Depth; i++)
+    int i;
+    for (i = 0; i < Depth; i++)
         DbgPrint(" ");
     DbgPrint(" Key #%d", Number);
 
@@ -386,14 +418,17 @@ DumpBTreeKey(PB_TREE_KEY Key, int Number, int Depth)
         DbgPrint(" (Dummy Key)\n");
 }
 
+VOID
 DumpBTreeNode(PB_TREE_FILENAME_NODE Node, int Number, int Depth)
 {
-    for (int i = 0; i < Depth; i++)
+    PB_TREE_KEY CurrentKey;
+    int i;
+    for (i = 0; i < Depth; i++)
         DbgPrint(" ");
     DbgPrint("Node #%d, Depth %d\n", Number, Depth);
 
-    PB_TREE_KEY CurrentKey = Node->FirstKey;
-    for (int i = 0; i < Node->KeyCount; i++)
+    CurrentKey = Node->FirstKey;
+    for (i = 0; i < Node->KeyCount; i++)
     {
         DumpBTreeKey(CurrentKey, i, Depth);
         CurrentKey = CurrentKey->NextKey;
@@ -451,6 +486,8 @@ NtfsInsertKey(ULONGLONG FileReference,
     ULONG AttributeSize = GetFileNameAttributeLength(FileNameAttribute);
     ULONG EntrySize = ALIGN_UP_BY(AttributeSize + FIELD_OFFSET(INDEX_ENTRY_ATTRIBUTE, FileName), 8);
     PINDEX_ENTRY_ATTRIBUTE NewEntry;
+    PB_TREE_KEY NewKey, CurrentKey, PreviousKey;
+    int i;
 
     DPRINT1("NtfsInsertKey(0x%02I64, %p, %p, %s)\n",
             FileReference,
@@ -476,14 +513,14 @@ NtfsInsertKey(ULONGLONG FileReference,
     RtlCopyMemory(&NewEntry->FileName, FileNameAttribute, AttributeSize);
 
     // Setup the New Key
-    PB_TREE_KEY NewKey = ExAllocatePoolWithTag(NonPagedPool, sizeof(B_TREE_KEY), TAG_NTFS);
+    NewKey = ExAllocatePoolWithTag(NonPagedPool, sizeof(B_TREE_KEY), TAG_NTFS);
     NewKey->IndexEntry = NewEntry;
     NewKey->NextKey = NULL;
 
     // Find where to insert the key
-    PB_TREE_KEY CurrentKey = Node->FirstKey;
-    PB_TREE_KEY PreviousKey = NULL;
-    for (int i = 0; i < Node->KeyCount; i++)
+    CurrentKey = Node->FirstKey;
+    PreviousKey = NULL;
+    for (i = 0; i < Node->KeyCount; i++)
     {
         // Should the New Key go before the current key?
         LONG Comparison = CompareTreeKeys(NewKey, CurrentKey, CaseSensitive);
