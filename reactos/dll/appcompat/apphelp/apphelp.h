@@ -90,6 +90,7 @@ PWSTR SdbpStrDup(LPCWSTR string);
 HSDB WINAPI SdbInitDatabase(DWORD, LPCWSTR);
 void WINAPI SdbReleaseDatabase(HSDB);
 BOOL WINAPI SdbGUIDToString(CONST GUID *Guid, PWSTR GuidString, SIZE_T Length);
+LPCWSTR WINAPI SdbTagToString(TAG tag);
 
 PDB WINAPI SdbOpenDatabase(LPCWSTR path, PATH_TYPE type);
 void WINAPI SdbCloseDatabase(PDB);
@@ -105,8 +106,12 @@ TAGID WINAPI SdbFindFirstTag(PDB db, TAGID parent, TAG tag);
 TAGID WINAPI SdbFindNextTag(PDB db, TAGID parent, TAGID prev_child);
 BOOL WINAPI SdbGetDatabaseID(PDB db, GUID* Guid);
 DWORD WINAPI SdbReadDWORDTag(PDB db, TAGID tagid, DWORD ret);
+QWORD WINAPI SdbReadQWORDTag(PDB db, TAGID tagid, QWORD ret);
+TAGID WINAPI SdbGetFirstChild(PDB db, TAGID parent);
+TAGID WINAPI SdbGetNextChild(PDB db, TAGID parent, TAGID prev_child);
 
 /* sdbfileattr.c*/
+BOOL WINAPI SdbGetFileAttributes(LPCWSTR path, PATTRINFO *attr_info_ret, LPDWORD attr_count);
 BOOL WINAPI SdbFreeFileAttributes(PATTRINFO attr_info);
 
 /* layer.c */

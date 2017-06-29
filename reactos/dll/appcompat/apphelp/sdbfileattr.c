@@ -86,7 +86,7 @@ static WCHAR* WINAPI SdbpGetStringAttr(LPWSTR translation, LPCWSTR attr, PVOID f
     return NULL;
 }
 
-static void WINAPI SdbpSetStringAttrFromAnsiString(PATTRINFO attr, TAG tag, PBYTE string, BYTE len)
+static void WINAPI SdbpSetStringAttrFromAnsiString(PATTRINFO attr, TAG tag, PBYTE string, size_t len)
 {
     WCHAR* dest;
     if (!string)
