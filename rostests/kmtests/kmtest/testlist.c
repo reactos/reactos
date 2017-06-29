@@ -9,6 +9,7 @@
 
 KMT_TESTFUNC Test_CcCopyRead;
 KMT_TESTFUNC Test_Example;
+KMT_TESTFUNC Test_FileAttributes;
 KMT_TESTFUNC Test_FindFile;
 KMT_TESTFUNC Test_HidPDescription;
 KMT_TESTFUNC Test_IoCreateFile;
@@ -34,6 +35,7 @@ const KMT_TEST TestList[] =
 {
     { "CcCopyRead",                   Test_CcCopyRead },
     { "-Example",                     Test_Example },
+    { "FileAttributes",               Test_FileAttributes },
     { "FindFile",                     Test_FindFile },
     { "HidPDescription",              Test_HidPDescription },
     { "IoCreateFile",                 Test_IoCreateFile },

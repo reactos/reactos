@@ -213,7 +213,7 @@ KmtCloseDriver(VOID)
 /**
  * @name KmtSendToDriver
  *
- * Unload special-purpose driver (stop the service)
+ * Send an I/O control message with no arguments to the driver opened with KmtOpenDriver
  *
  * @param ControlCode
  *
@@ -236,7 +236,7 @@ KmtSendToDriver(
 /**
  * @name KmtSendStringToDriver
  *
- * Unload special-purpose driver (stop the service)
+ * Send an I/O control message with a string argument to the driver opened with KmtOpenDriver
  *
  * @param ControlCode
  * @param String
@@ -259,9 +259,9 @@ KmtSendStringToDriver(
 }
 
 /**
- * @name KmtSendStringToDriver
+ * @name KmtSendWStringToDriver
  *
- * Unload special-purpose driver (stop the service)
+ * Send an I/O control message with a wide string argument to the driver opened with KmtOpenDriver
  *
  * @param ControlCode
  * @param String
@@ -284,7 +284,34 @@ KmtSendWStringToDriver(
 }
 
 /**
+ * @name KmtSendUlongToDriver
+ *
+ * Send an I/O control message with an integer argument to the driver opened with KmtOpenDriver
+ *
+ * @param ControlCode
+ * @param Value
+ *
+ * @return Win32 error code as returned by DeviceIoControl
+ */
+DWORD
+KmtSendUlongToDriver(
+    IN DWORD ControlCode,
+    IN DWORD Value)
+{
+    DWORD BytesRead;
+
+    assert(ControlCode < 0x400);
+
+    if (!DeviceIoControl(TestDeviceHandle, KMT_MAKE_CODE(ControlCode), &Value, sizeof(Value), NULL, 0, &BytesRead, NULL))
+        return GetLastError();
+
+    return ERROR_SUCCESS;
+}
+
+/**
  * @name KmtSendBufferToDriver
+ *
+ * Send an I/O control message with the specified arguments to the driver opened with KmtOpenDriver
  *
  * @param ControlCode
  * @param Buffer

@@ -125,6 +125,7 @@ list(APPEND KMTEST_SOURCE
 
     example/Example_user.c
     hidparse/HidP_user.c
+    kernel32/FileAttributes_user.c
     kernel32/FindFile_user.c
     ntos_cc/CcCopyRead_user.c
     ntos_io/IoCreateFile_user.c

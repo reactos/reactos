@@ -148,6 +148,7 @@ VOID KmtCloseDriver(VOID);
 DWORD KmtSendToDriver(IN DWORD ControlCode);
 DWORD KmtSendStringToDriver(IN DWORD ControlCode, IN PCSTR String);
 DWORD KmtSendWStringToDriver(IN DWORD ControlCode, IN PCWSTR String);
+DWORD KmtSendUlongToDriver(IN DWORD ControlCode, IN DWORD Value);
 DWORD KmtSendBufferToDriver(IN DWORD ControlCode, IN OUT PVOID Buffer OPTIONAL, IN DWORD InLength, IN OUT PDWORD OutLength);
 #else /* if !defined KMT_KERNEL_MODE && !defined KMT_USER_MODE */
 #error either KMT_KERNEL_MODE or KMT_USER_MODE must be defined

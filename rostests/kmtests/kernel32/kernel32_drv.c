@@ -14,9 +14,13 @@
 
 static KMT_MESSAGE_HANDLER TestMessageHandler;
 static KMT_IRP_HANDLER TestDirectoryControl;
+static KMT_IRP_HANDLER TestQueryInformation;
+static KMT_IRP_HANDLER TestSetInformation;
 
 static UNICODE_STRING ExpectedExpression = RTL_CONSTANT_STRING(L"<not set>");
 static WCHAR ExpressionBuffer[MAX_PATH];
+static ULONG ExpectedSetAttributes = -1;
+static ULONG ReturnQueryAttributes = -1;
 
 NTSTATUS
 TestEntry(
@@ -35,6 +39,8 @@ TestEntry(
     *Flags = TESTENTRY_NO_EXCLUSIVE_DEVICE;
 
     KmtRegisterIrpHandler(IRP_MJ_DIRECTORY_CONTROL, NULL, TestDirectoryControl);
+    KmtRegisterIrpHandler(IRP_MJ_QUERY_INFORMATION, NULL, TestQueryInformation);
+    KmtRegisterIrpHandler(IRP_MJ_SET_INFORMATION, NULL, TestSetInformation);
     KmtRegisterMessageHandler(0, NULL, TestMessageHandler);
 
     return Status;
@@ -79,6 +85,26 @@ TestMessageHandler(
 
             break;
         }
+        case IOCTL_RETURN_QUERY_ATTRIBUTES:
+        {
+            DPRINT("IOCTL_RETURN_QUERY_ATTRIBUTES, InLength = %lu\n", InLength);
+            if (InLength != sizeof(ULONG))
+                return STATUS_INVALID_PARAMETER;
+
+            ReturnQueryAttributes = *(PULONG)Buffer;
+            DPRINT("IOCTL_RETURN_QUERY_ATTRIBUTES: %lu\n", ReturnQueryAttributes);
+            break;
+        }
+        case IOCTL_EXPECT_SET_ATTRIBUTES:
+        {
+            DPRINT("IOCTL_EXPECT_SET_ATTRIBUTES, InLength = %lu\n", InLength);
+            if (InLength != sizeof(ULONG))
+                return STATUS_INVALID_PARAMETER;
+
+            ExpectedSetAttributes = *(PULONG)Buffer;
+            DPRINT("IOCTL_EXPECT_SET_ATTRIBUTES: %lu\n", ExpectedSetAttributes);
+            break;
+        }
         default:
             return STATUS_NOT_SUPPORTED;
     }
@@ -112,6 +138,82 @@ TestDirectoryControl(
             RtlZeroMemory(Irp->UserBuffer, IoStackLocation->Parameters.QueryDirectory.Length);
             Status = STATUS_SUCCESS;
         }
+    }
+
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = 0;
+
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return Status;
+}
+
+static
+NTSTATUS
+TestQueryInformation(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation)
+{
+    NTSTATUS Status = STATUS_NOT_SUPPORTED;
+    PFILE_BASIC_INFORMATION BasicInfo;
+
+    PAGED_CODE();
+
+    DPRINT("IRP %x/%x\n", IoStackLocation->MajorFunction, IoStackLocation->MinorFunction);
+    ASSERT(IoStackLocation->MajorFunction == IRP_MJ_QUERY_INFORMATION);
+
+    Irp->IoStatus.Information = 0;
+
+    ok_eq_ulong(IoStackLocation->Parameters.QueryFile.FileInformationClass, FileBasicInformation);
+    if (IoStackLocation->Parameters.QueryFile.FileInformationClass == FileBasicInformation)
+    {
+        ok(ReturnQueryAttributes != (ULONG)-1, "Unexpected QUERY_INFORMATION call\n");
+        BasicInfo = Irp->AssociatedIrp.SystemBuffer;
+        BasicInfo->CreationTime.QuadPart = 126011664000000000;
+        BasicInfo->LastAccessTime.QuadPart = 130899112800000000;
+        BasicInfo->LastWriteTime.QuadPart = 130899112800000000;
+        BasicInfo->ChangeTime.QuadPart = 130899112800000000;
+        BasicInfo->FileAttributes = ReturnQueryAttributes;
+        ReturnQueryAttributes = -1;
+        Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = sizeof(*BasicInfo);
+    }
+
+    Irp->IoStatus.Status = Status;
+
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return Status;
+}
+
+static
+NTSTATUS
+TestSetInformation(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation)
+{
+    NTSTATUS Status = STATUS_NOT_SUPPORTED;
+    PFILE_BASIC_INFORMATION BasicInfo;
+
+    PAGED_CODE();
+
+    DPRINT("IRP %x/%x\n", IoStackLocation->MajorFunction, IoStackLocation->MinorFunction);
+    ASSERT(IoStackLocation->MajorFunction == IRP_MJ_SET_INFORMATION);
+
+    ok_eq_ulong(IoStackLocation->Parameters.SetFile.FileInformationClass, FileBasicInformation);
+    if (IoStackLocation->Parameters.SetFile.FileInformationClass == FileBasicInformation)
+    {
+        ok(ExpectedSetAttributes != (ULONG)-1, "Unexpected SET_INFORMATION call\n");
+        BasicInfo = Irp->AssociatedIrp.SystemBuffer;
+        ok_eq_longlong(BasicInfo->CreationTime.QuadPart, 0LL);
+        ok_eq_longlong(BasicInfo->LastAccessTime.QuadPart, 0LL);
+        ok_eq_longlong(BasicInfo->LastWriteTime.QuadPart, 0LL);
+        ok_eq_longlong(BasicInfo->ChangeTime.QuadPart, 0LL);
+        ok_eq_ulong(BasicInfo->FileAttributes, ExpectedSetAttributes);
+        ExpectedSetAttributes = -1;
+        Status = STATUS_SUCCESS;
     }
 
     Irp->IoStatus.Status = Status;
