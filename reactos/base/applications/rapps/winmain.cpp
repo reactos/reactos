@@ -56,12 +56,12 @@ FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
     pSettingsInfo->bLogEnabled = TRUE;
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, pSettingsInfo->szDownloadDir)))
     {
-        StringCbCatW(pSettingsInfo->szDownloadDir, sizeof(pSettingsInfo->szDownloadDir), L"\\RAPPS Downloads");
+        StringCchCatW(pSettingsInfo->szDownloadDir, _countof(pSettingsInfo->szDownloadDir), L"\\RAPPS Downloads");
     } 
     else
     {
         ExpandEnvironmentStringsW(L"%SystemDrive%\\RAPPS Downloads", 
-            pSettingsInfo->szDownloadDir, sizeof(pSettingsInfo->szDownloadDir));
+            pSettingsInfo->szDownloadDir, _countof(pSettingsInfo->szDownloadDir));
     }
 
     pSettingsInfo->bDelInstaller = FALSE;
