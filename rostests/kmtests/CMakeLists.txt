@@ -155,12 +155,12 @@ add_custom_target(kmtest_drivers)
 add_dependencies(kmtest_drivers
     kmtest_drv
     example_drv
-    findfile_drv
     hidp_drv
     iocreatefile_drv
     iodeviceobject_drv
     iohelper_drv
     ioreadwrite_drv
+    kernel32_drv
     mmmaplockedpagesspecifycache_drv
     ntcreatesection_drv
     poirp_drv

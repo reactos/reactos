@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS kernel-mode tests
- * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Test driver for FindFirstFile's wildcard substitution
+ * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
+ * PURPOSE:         Test driver for kernel32 filesystem tests
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
@@ -10,10 +10,10 @@
 #define NDEBUG
 #include <debug.h>
 
-#include "FindFile.h"
+#include "kernel32_test.h"
 
 static KMT_MESSAGE_HANDLER TestMessageHandler;
-static KMT_IRP_HANDLER TestIrpHandler;
+static KMT_IRP_HANDLER TestDirectoryControl;
 
 static UNICODE_STRING ExpectedExpression = RTL_CONSTANT_STRING(L"<not set>");
 static WCHAR ExpressionBuffer[MAX_PATH];
@@ -31,10 +31,10 @@ TestEntry(
 
     UNREFERENCED_PARAMETER(RegistryPath);
 
-    *DeviceName = L"FindFile";
+    *DeviceName = L"kernel32";
     *Flags = TESTENTRY_NO_EXCLUSIVE_DEVICE;
 
-    KmtRegisterIrpHandler(IRP_MJ_DIRECTORY_CONTROL, NULL, TestIrpHandler);
+    KmtRegisterIrpHandler(IRP_MJ_DIRECTORY_CONTROL, NULL, TestDirectoryControl);
     KmtRegisterMessageHandler(0, NULL, TestMessageHandler);
 
     return Status;
@@ -62,10 +62,10 @@ TestMessageHandler(
 
     switch (ControlCode)
     {
-        case IOCTL_EXPECT:
+        case IOCTL_EXPECT_EXPRESSION:
         {
             C_ASSERT(sizeof(ExpressionBuffer) <= UNICODE_STRING_MAX_BYTES);
-            DPRINT("IOCTL_EXPECT, InLength = %lu\n", InLength);
+            DPRINT("IOCTL_EXPECT_EXPRESSION, InLength = %lu\n", InLength);
             if (InLength > sizeof(ExpressionBuffer))
                 return STATUS_BUFFER_OVERFLOW;
 
@@ -75,7 +75,7 @@ TestMessageHandler(
             RtlInitEmptyUnicodeString(&ExpectedExpression, ExpressionBuffer, sizeof(ExpressionBuffer));
             RtlCopyMemory(ExpressionBuffer, Buffer, InLength);
             ExpectedExpression.Length = (USHORT)InLength;
-            DPRINT("IOCTL_EXPECT: %wZ\n", &ExpectedExpression);
+            DPRINT("IOCTL_EXPECT_EXPRESSION: %wZ\n", &ExpectedExpression);
 
             break;
         }
@@ -88,7 +88,7 @@ TestMessageHandler(
 
 static
 NTSTATUS
-TestIrpHandler(
+TestDirectoryControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
     IN PIO_STACK_LOCATION IoStackLocation)
