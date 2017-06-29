@@ -196,6 +196,27 @@ typedef union _USB_HUB_STATUS {
 
 C_ASSERT(sizeof(USB_HUB_STATUS) == sizeof(USHORT));
 
+typedef union _USB_HUB_CHANGE {
+  USHORT AsUshort16;
+  struct {
+    USHORT LocalPowerChange:1;
+    USHORT OverCurrentChange:1;
+    USHORT Reserved:14;
+  };
+} USB_HUB_CHANGE, *PUSB_HUB_CHANGE;
+
+C_ASSERT(sizeof(USB_HUB_CHANGE) == sizeof(USHORT));
+
+typedef union _USB_HUB_STATUS_AND_CHANGE {
+  ULONG AsUlong32;
+  struct {
+    USB_HUB_STATUS HubStatus;
+    USB_HUB_CHANGE HubChange;
+  };
+} USB_HUB_STATUS_AND_CHANGE, *PUSB_HUB_STATUS_AND_CHANGE;
+
+C_ASSERT(sizeof(USB_HUB_STATUS_AND_CHANGE) == sizeof(ULONG));
+
 #define USB_DEVICE_CLASS_RESERVED             0x00
 #define USB_DEVICE_CLASS_AUDIO                0x01
 #define USB_DEVICE_CLASS_COMMUNICATIONS       0x02
