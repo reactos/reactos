@@ -22,7 +22,8 @@ class CQuickLaunchBand :
     public IDeskBar,
     public IPersistStream,
     public IWinEventHandler,
-    public IOleCommandTarget
+    public IOleCommandTarget,
+    public IContextMenu
 {
     HWND m_hWndBro;
     CComPtr<IUnknown> m_punkISFB;   
@@ -155,9 +156,30 @@ class CQuickLaunchBand :
       /*[in, out]*/       OLECMDTEXT *pCmdText
     );
 
+//IContextMenu
+    virtual HRESULT STDMETHODCALLTYPE GetCommandString(
+        UINT_PTR idCmd,
+        UINT uFlags,
+        UINT *pwReserved,
+        LPSTR pszName,
+        UINT cchMax
+    );
+
+    virtual HRESULT STDMETHODCALLTYPE InvokeCommand(
+        LPCMINVOKECOMMANDINFO pici
+    );
+
+    virtual HRESULT STDMETHODCALLTYPE QueryContextMenu(
+        HMENU hmenu,
+        UINT indexMenu,
+        UINT idCmdFirst,
+        UINT idCmdLast,
+        UINT uFlags
+    );
+
 //*****************************************************************************************************
 
-    DECLARE_REGISTRY_RESOURCEID(1001)
+    DECLARE_REGISTRY_RESOURCEID(IDR_QCKLNCH)
     DECLARE_NOT_AGGREGATABLE(CQuickLaunchBand)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 
@@ -169,5 +191,6 @@ class CQuickLaunchBand :
         COM_INTERFACE_ENTRY_IID(IID_IPersistStream, IPersistStream)
         COM_INTERFACE_ENTRY_IID(IID_IWinEventHandler, IWinEventHandler)
         COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
+        COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
     END_COM_MAP()    
 };

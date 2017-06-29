@@ -73,22 +73,20 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
     HRESULT CQuickLaunchBand::FinalConstruct()
     {
         HRESULT hr = CISFBand_CreateInstance(IID_IUnknown, (void**) &m_punkISFB);
-        if (SUCCEEDED(hr))
-        {           
-            CComPtr<IShellFolderBand> pISFB;
-            hr = m_punkISFB->QueryInterface(IID_IShellFolderBand, (void**) &pISFB);
-            if (SUCCEEDED(hr))
-            {
-                CComPtr<IShellFolder> pISF;
-                hr = SHGetDesktopFolder(&pISF);
-                if (SUCCEEDED(hr))
-                {                    
-                    LPITEMIDLIST pidl = PidlBrowse(m_hWndBro, CSIDL_DESKTOP); 
-                    if (pidl == NULL) return E_FAIL;
-                    pISFB->InitializeSFB(pISF, pidl);                    
-                }                                               
-            }            
-        }       
+        if (FAILED_UNEXPECTEDLY(hr)) return hr;
+
+        CComPtr<IShellFolderBand> pISFB;
+        hr = m_punkISFB->QueryInterface(IID_IShellFolderBand, (void**) &pISFB);
+        if (FAILED_UNEXPECTEDLY(hr)) return hr;
+
+        CComPtr<IShellFolder> pISF;
+        hr = SHGetDesktopFolder(&pISF);
+        if (FAILED_UNEXPECTEDLY(hr)) return hr;
+
+        LPITEMIDLIST pidl = PidlBrowse(m_hWndBro, CSIDL_DESKTOP); 
+        if (pidl == NULL) return E_FAIL;
+
+        pISFB->InitializeSFB(pISF, pidl);    
         return hr;
     }
 
@@ -359,3 +357,34 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
         return pOCT->Exec(pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
     }  
 
+/*****************************************************************************/
+// *** IContextMenu ***
+    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::GetCommandString(UINT_PTR idCmd, UINT uFlags, UINT *pwReserved, LPSTR pszName, UINT cchMax)
+    {
+        //Internal CISFBand Calls
+        CComPtr<IContextMenu> pICM;
+        HRESULT hr = m_punkISFB->QueryInterface(IID_IContextMenu, (void**)&pICM);
+        if (FAILED(hr)) return hr;
+
+        return pICM->GetCommandString(idCmd, uFlags, pwReserved, pszName, cchMax);
+    }
+
+    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::InvokeCommand(LPCMINVOKECOMMANDINFO pici)
+    {
+        //Internal CISFBand Calls
+        CComPtr<IContextMenu> pICM;
+        HRESULT hr = m_punkISFB->QueryInterface(IID_IContextMenu, (void**)&pICM);
+        if (FAILED(hr)) return hr;
+
+        return pICM->InvokeCommand(pici);
+    }
+
+    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
+    {
+        //Internal CISFBand Calls
+        CComPtr<IContextMenu> pICM;
+        HRESULT hr = m_punkISFB->QueryInterface(IID_IContextMenu, (void**)&pICM);
+        if (FAILED(hr)) return hr;
+
+        return pICM->QueryContextMenu(hmenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
+    }

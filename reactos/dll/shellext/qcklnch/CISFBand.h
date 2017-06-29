@@ -18,14 +18,22 @@ class CISFBand :
     public IPersistStream,
     public IWinEventHandler,
     public IOleCommandTarget,
-    public IShellFolderBand
+    public IShellFolderBand,
+    public IContextMenu
 {
-    HINSTANCE m_hInstance;
+    //band
+    DWORD m_BandID;
     CComPtr<IUnknown> m_Site;
+
+    //Toolbar
+    HWND m_hWndTb;
+    HINSTANCE m_hInstance;
     CComPtr<IShellFolder> m_pISF;     
-    PCIDLIST_ABSOLUTE m_pidl;
-    HWND m_hWndTb;    
-    DWORD m_BandID;    
+    PCIDLIST_ABSOLUTE m_pidl;    
+
+    //Menu
+    HMENU m_qMenu;
+    UINT m_idCmdFirst;
 
 public:
 
@@ -35,6 +43,7 @@ public:
 //Personal Methods
     HWND CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst);
     LRESULT OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnRButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     
 //IObjectWithSite
 
@@ -168,10 +177,32 @@ public:
     virtual HRESULT STDMETHODCALLTYPE SetBandInfoSFB(
         PBANDINFOSFB pbi
     );
+
+//IContextMenu
+    virtual HRESULT STDMETHODCALLTYPE GetCommandString(
+        UINT_PTR idCmd,
+        UINT uFlags,
+        UINT *pwReserved,
+        LPSTR pszName,
+        UINT cchMax
+    );
+
+    virtual HRESULT STDMETHODCALLTYPE InvokeCommand(
+        LPCMINVOKECOMMANDINFO pici
+    );
+
+    virtual HRESULT STDMETHODCALLTYPE QueryContextMenu(
+        HMENU hmenu,
+        UINT indexMenu,
+        UINT idCmdFirst,
+        UINT idCmdLast,
+        UINT uFlags
+    );
     
 //*****************************************************************************************************
-    BEGIN_MSG_MAP(CStartButton)
+    BEGIN_MSG_MAP(CISFBand)
         MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
+        MESSAGE_HANDLER(WM_RBUTTONUP, OnRButtonUp)
     END_MSG_MAP()
 
     DECLARE_NOT_AGGREGATABLE(CISFBand)
@@ -186,6 +217,7 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IWinEventHandler, IWinEventHandler)
         COM_INTERFACE_ENTRY_IID(IID_IOleCommandTarget, IOleCommandTarget)
         COM_INTERFACE_ENTRY_IID(IID_IShellFolderBand, IShellFolderBand)
+        COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
     END_COM_MAP()    
 };
 
