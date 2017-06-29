@@ -21,25 +21,6 @@ typedef struct _NS_ROUTINE {
     DWORD        dwPriority;
 } NS_ROUTINE, *PNS_ROUTINE, * FAR LPNS_ROUTINE;
 
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-AcceptEx(SOCKET ListenSocket,
-         SOCKET AcceptSocket,
-         PVOID OutputBuffer,
-         DWORD ReceiveDataLength,
-         DWORD LocalAddressLength,
-         DWORD RemoteAddressLength,
-         LPDWORD BytesReceived,
-         LPOVERLAPPED Overlapped)
-{
-  OutputDebugStringW(L"w32sock AcceptEx stub called\n");
-
-  return FALSE;
-}
-
 
 /*
  * @unimplemented
@@ -68,24 +49,6 @@ EnumProtocolsW(LPINT ProtocolCount,
   OutputDebugStringW(L"w32sock EnumProtocolsW stub called\n");
 
   return SOCKET_ERROR;
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-WINAPI
-GetAcceptExSockaddrs(PVOID OutputBuffer,
-                     DWORD ReceiveDataLength,
-                     DWORD LocalAddressLength,
-                     DWORD RemoteAddressLength,
-                     LPSOCKADDR* LocalSockaddr,
-                     LPINT LocalSockaddrLength,
-                     LPSOCKADDR* RemoteSockaddr,
-                     LPINT RemoteSockaddrLength)
-{
-  OutputDebugStringW(L"w32sock GetAcceptExSockaddrs stub called\n");
 }
 
 

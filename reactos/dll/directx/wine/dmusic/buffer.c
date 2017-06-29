@@ -98,8 +98,8 @@ static HRESULT WINAPI IDirectMusicBufferImpl_TotalTime(LPDIRECTMUSICBUFFER iface
 static HRESULT WINAPI IDirectMusicBufferImpl_PackStructured(LPDIRECTMUSICBUFFER iface, REFERENCE_TIME ref_time, DWORD channel_group, DWORD channel_message)
 {
     IDirectMusicBufferImpl *This = impl_from_IDirectMusicBuffer(iface);
-    DWORD new_write_pos = This->write_pos + sizeof(DMUS_EVENTHEADER) + sizeof(DWORD);
-    DMUS_EVENTHEADER header;
+    DWORD new_write_pos = This->write_pos + DMUS_EVENT_SIZE(sizeof(channel_message));
+    DMUS_EVENTHEADER *header;
 
     TRACE("(%p)->(0x%s, %u, 0x%x)\n", iface, wine_dbgstr_longlong(ref_time), channel_group, channel_message);
 
@@ -117,39 +117,40 @@ static HRESULT WINAPI IDirectMusicBufferImpl_PackStructured(LPDIRECTMUSICBUFFER 
     if (!This->write_pos)
         This->start_time = ref_time;
 
-    header.cbEvent = 3; /* Midi message takes 4 bytes space but only 3 are relevant */
-    header.dwChannelGroup = channel_group;
-    header.rtDelta = ref_time - This->start_time;
-    header.dwFlags = DMUS_EVENT_STRUCTURED;
+    header = (DMUS_EVENTHEADER*)&This->data[This->write_pos];
+    header->cbEvent = 3; /* Midi message takes 4 bytes space but only 3 are relevant */
+    header->dwChannelGroup = channel_group;
+    header->rtDelta = ref_time - This->start_time;
+    header->dwFlags = DMUS_EVENT_STRUCTURED;
 
-    memcpy(This->data + This->write_pos, &header, sizeof(header));
-    *(DWORD*)(This->data + This->write_pos + sizeof(header)) = channel_message;
+    *(DWORD*)&header[1] = channel_message;
     This->write_pos = new_write_pos;
 
     return S_OK;
 }
 
-static HRESULT WINAPI IDirectMusicBufferImpl_PackUnstructured(LPDIRECTMUSICBUFFER iface, REFERENCE_TIME rt, DWORD dwChannelGroup, DWORD cb, LPBYTE lpb)
+static HRESULT WINAPI IDirectMusicBufferImpl_PackUnstructured(IDirectMusicBuffer *iface,
+        REFERENCE_TIME ref_time, DWORD channel_group, DWORD len, BYTE *data)
 {
     IDirectMusicBufferImpl *This = impl_from_IDirectMusicBuffer(iface);
-    DWORD new_write_pos = This->write_pos + sizeof(DMUS_EVENTHEADER) + cb;
-    DMUS_EVENTHEADER header;
+    DWORD new_write_pos = This->write_pos + DMUS_EVENT_SIZE(len);
+    DMUS_EVENTHEADER *header;
 
-    FIXME("(%p, 0x%s, %d, %d, %p): stub\n", This, wine_dbgstr_longlong(rt), dwChannelGroup, cb, lpb);
+    TRACE("(%p, 0x%s, %d, %d, %p)\n", This, wine_dbgstr_longlong(ref_time), channel_group, len, data);
 
     if (new_write_pos > This->size)
         return DMUS_E_BUFFER_FULL;
 
     if (!This->write_pos)
-        This->start_time = rt;
+        This->start_time = ref_time;
 
-    header.cbEvent = cb;
-    header.dwChannelGroup = dwChannelGroup;
-    header.rtDelta = rt - This->start_time;
-    header.dwFlags = 0;
+    header = (DMUS_EVENTHEADER*)&This->data[This->write_pos];
+    header->cbEvent = len;
+    header->dwChannelGroup = channel_group;
+    header->rtDelta = ref_time - This->start_time;
+    header->dwFlags = 0;
 
-    memcpy(This->data + This->write_pos, &header, sizeof(header));
-    memcpy(This->data + This->write_pos + sizeof(header), lpb, cb);
+    memcpy(&header[1], data, len);
     This->write_pos = new_write_pos;
 
     return S_OK;

@@ -2,7 +2,7 @@
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS xml to sdb converter
  * FILE:        sdk/tools/xml2sdb/xml2sdb.cpp
- * PURPOSE:     Main conversion functions from xml -> db
+ * PURPOSE:     Conversion functions from xml -> db
  * PROGRAMMERS: Mark Jansen
  *
  */
@@ -16,6 +16,7 @@
 using tinyxml2::XMLText;
 
 static const GUID GUID_NULL = { 0 };
+static const char szCompilerVersion[] = "1.5.0.0";
 
 #if !defined(C_ASSERT)
 #define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]
@@ -44,7 +45,7 @@ VOID NTAPI RtlSecondsSince1970ToTime(IN ULONG SecondsSince1970,
 // Convert utf8 to utf16:
 // http://stackoverflow.com/a/7154226/4928207
 
-bool IsEmptyGuid(GUID& g)
+bool IsEmptyGuid(const GUID& g)
 {
     return !memcmp(&g, &GUID_NULL, sizeof(GUID));
 }
@@ -89,6 +90,32 @@ std::string ReadStringNode(XMLHandle dbNode, const char* nodeName)
     return ToString(dbNode.FirstChildElement(nodeName));
 }
 
+DWORD ReadDWordNode(XMLHandle dbNode, const char* nodeName)
+{
+    std::string value = ReadStringNode(dbNode, nodeName);
+    int base = 10;
+    if (value.size() > 2 && value[0] == '0' && value[1] == 'x')
+    {
+        base = 16;
+        value = value.substr(2);
+    }
+    return static_cast<DWORD>(strtoul(value.c_str(), NULL, base));
+}
+
+unsigned char char2byte(char hexChar, bool* success = NULL)
+{
+    if (hexChar >= '0' && hexChar <= '9')
+        return hexChar - '0';
+    if (hexChar >= 'A' && hexChar <= 'F')
+        return hexChar - 'A' + 10;
+    if (hexChar >= 'a' && hexChar <= 'f')
+        return hexChar - 'a' + 10;
+
+    if (success)
+        *success = false;
+    return 0;
+}
+
 // adapted from wine's ntdll\rtlstr.c rev 1.45
 static bool StringToGuid(const std::string& str, GUID& guid)
 {
@@ -124,27 +151,11 @@ static bool StringToGuid(const std::string& str, GUID& guid)
         {
             CHAR ch = *lpszGUID, ch2 = lpszGUID[1];
             unsigned char byte;
+            bool converted = true;
 
-            /* Read two hex digits as a byte value */
-            if (ch >= '0' && ch <= '9')
-                ch = ch - '0';
-            else if (ch >= 'a' && ch <= 'f')
-                ch = ch - 'a' + 10;
-            else if (ch >= 'A' && ch <= 'F')
-                ch = ch - 'A' + 10;
-            else
+            byte = char2byte(ch, &converted) << 4 | char2byte(ch2, &converted);
+            if (!converted)
                 return false;
-
-            if (ch2 >= '0' && ch2 <= '9')
-                ch2 = ch2 - '0';
-            else if (ch2 >= 'a' && ch2 <= 'f')
-                ch2 = ch2 - 'a' + 10;
-            else if (ch2 >= 'A' && ch2 <= 'F')
-                ch2 = ch2 - 'A' + 10;
-            else
-                return false;
-
-            byte = ch << 4 | ch2;
 
             switch (i)
             {
@@ -194,13 +205,30 @@ static bool StringToGuid(const std::string& str, GUID& guid)
     return false;
 }
 
-bool ReadBinaryNode(XMLHandle dbNode, const char* nodeName, GUID& guid)
+bool ReadGuidNode(XMLHandle dbNode, const char* nodeName, GUID& guid)
 {
     std::string value = ReadStringNode(dbNode, nodeName);
     if (!StringToGuid(value, guid))
     {
         memset(&guid, 0, sizeof(GUID));
         return false;
+    }
+    return true;
+}
+
+bool ReadBinaryNode(XMLHandle dbNode, const char* nodeName, std::vector<BYTE>& data)
+{
+    std::string value = ReadStringNode(dbNode, nodeName);
+    value.erase(std::remove_if(value.begin(), value.end(), ::isspace), value.end());
+
+    size_t length = value.size() / 2;
+    if (length * 2 != value.size())
+        return false;
+
+    data.resize(length);
+    for (size_t n = 0; n < length; ++n)
+    {
+        data[n] = (BYTE)(char2byte(value[n * 2]) << 4 | char2byte(value[(n * 2) + 1]));
     }
     return true;
 }
@@ -234,7 +262,7 @@ bool InExclude::fromXml(XMLHandle dbNode)
 bool InExclude::toSdb(PDB pdb, Database& db)
 {
     TAGID tagid = db.BeginWriteListTag(pdb, TAG_INEXCLUD);
-    db.WriteString(pdb, TAG_MODULE, Module);
+    db.WriteString(pdb, TAG_MODULE, Module, true);
     if (Include)
         SdbWriteNULLTag(pdb, TAG_INCLUDE);
     return !!db.EndWriteListTag(pdb, tagid);
@@ -282,9 +310,8 @@ bool ShimRef::fromXml(XMLHandle dbNode)
 bool ShimRef::toSdb(PDB pdb, Database& db)
 {
     TAGID tagid = db.BeginWriteListTag(pdb, TAG_SHIM_REF);
-    db.WriteString(pdb, TAG_NAME, Name);
-    if (!CommandLine.empty())
-        db.WriteString(pdb, TAG_COMMAND_LINE, CommandLine);
+    db.WriteString(pdb, TAG_NAME, Name, true);
+    db.WriteString(pdb, TAG_COMMAND_LINE, CommandLine);
 
     if (!ShimTagid)
         ShimTagid = db.FindShimTagid(Name);
@@ -301,7 +328,7 @@ bool Shim::fromXml(XMLHandle dbNode)
 {
     Name = ReadStringNode(dbNode, "NAME");
     DllFile = ReadStringNode(dbNode, "DLLFILE");
-    ReadBinaryNode(dbNode, "FIX_ID", FixID);
+    ReadGuidNode(dbNode, "FIX_ID", FixID);
     // GENERAL ?
     // DESCRIPTION_RC_ID
     ReadGeneric(dbNode, InExcludes, "INEXCLUDE");
@@ -337,7 +364,7 @@ bool Layer::fromXml(XMLHandle dbNode)
 bool Layer::toSdb(PDB pdb, Database& db)
 {
     Tagid = db.BeginWriteListTag(pdb, TAG_LAYER);
-    db.WriteString(pdb, TAG_NAME, Name);
+    db.WriteString(pdb, TAG_NAME, Name, true);
     if (!WriteGeneric(pdb, ShimRefs, db))
         return false;
     return !!db.EndWriteListTag(pdb, Tagid);
@@ -351,9 +378,13 @@ bool Layer::toSdb(PDB pdb, Database& db)
 bool MatchingFile::fromXml(XMLHandle dbNode)
 {
     Name = ReadStringNode(dbNode, "NAME");
+    Size = ReadDWordNode(dbNode, "SIZE");
+    Checksum = ReadDWordNode(dbNode, "CHECKSUM");
     CompanyName = ReadStringNode(dbNode, "COMPANY_NAME");
+    InternalName = ReadStringNode(dbNode, "INTERNAL_NAME");
     ProductName = ReadStringNode(dbNode, "PRODUCT_NAME");
     ProductVersion = ReadStringNode(dbNode, "PRODUCT_VERSION");
+    FileVersion = ReadStringNode(dbNode, "FILE_VERSION");
     BinFileVersion = ReadStringNode(dbNode, "BIN_FILE_VERSION");
     LinkDate = ReadStringNode(dbNode, "LINK_DATE");
     VerLanguage = ReadStringNode(dbNode, "VER_LANGUAGE");
@@ -367,7 +398,28 @@ bool MatchingFile::fromXml(XMLHandle dbNode)
 bool MatchingFile::toSdb(PDB pdb, Database& db)
 {
     TAGID tagid = db.BeginWriteListTag(pdb, TAG_MATCHING_FILE);
-    SHIM_ERR("Unimplemented\n");
+
+    db.WriteString(pdb, TAG_NAME, Name, true);
+    db.WriteDWord(pdb, TAG_SIZE, Size);
+    db.WriteDWord(pdb, TAG_CHECKSUM, Checksum);
+    db.WriteString(pdb, TAG_COMPANY_NAME, CompanyName);
+    db.WriteString(pdb, TAG_INTERNAL_NAME, InternalName);
+    db.WriteString(pdb, TAG_PRODUCT_NAME, ProductName);
+    db.WriteString(pdb, TAG_PRODUCT_VERSION, ProductVersion);
+    db.WriteString(pdb, TAG_FILE_VERSION, FileVersion);
+    if (!BinFileVersion.empty())
+        SHIM_ERR("TAG_BIN_FILE_VERSION Unimplemented\n"); //db.WriteQWord(pdb, TAG_BIN_FILE_VERSION, BinFileVersion);
+    if (!LinkDate.empty())
+        SHIM_ERR("TAG_LINK_DATE Unimplemented\n"); //db.WriteDWord(pdb, TAG_LINK_DATE, LinkDate);
+    if (!VerLanguage.empty())
+        SHIM_ERR("TAG_VER_LANGUAGE Unimplemented\n"); //db.WriteDWord(pdb, TAG_VER_LANGUAGE, VerLanguage);
+    db.WriteString(pdb, TAG_FILE_DESCRIPTION, FileDescription);
+    db.WriteString(pdb, TAG_ORIGINAL_FILENAME, OriginalFilename);
+    if (!UptoBinFileVersion.empty())
+        SHIM_ERR("TAG_UPTO_BIN_FILE_VERSION Unimplemented\n"); //db.WriteQWord(pdb, TAG_UPTO_BIN_FILE_VERSION, UptoBinFileVersion);
+    if (!LinkerVersion.empty())
+        SHIM_ERR("TAG_LINKER_VERSION Unimplemented\n"); //db.WriteDWord(pdb, TAG_LINKER_VERSION, LinkerVersion);
+
 
     return !!db.EndWriteListTag(pdb, tagid);
 }
@@ -380,8 +432,11 @@ bool MatchingFile::toSdb(PDB pdb, Database& db)
 bool Exe::fromXml(XMLHandle dbNode)
 {
     Name = ReadStringNode(dbNode, "NAME");
+    ReadGuidNode(dbNode, "EXE_ID", ExeID);
     AppName = ReadStringNode(dbNode, "APP_NAME");
     Vendor = ReadStringNode(dbNode, "VENDOR");
+
+    ReadGeneric(dbNode, MatchingFiles, "MATCHING_FILE");
 
     ReadGeneric(dbNode, ShimRefs, "SHIM_REF");
 
@@ -391,7 +446,20 @@ bool Exe::fromXml(XMLHandle dbNode)
 bool Exe::toSdb(PDB pdb, Database& db)
 {
     Tagid = db.BeginWriteListTag(pdb, TAG_EXE);
-    SHIM_ERR("Unimplemented\n");
+
+    db.WriteString(pdb, TAG_NAME, Name, true);
+    if (IsEmptyGuid(ExeID))
+        RandomGuid(ExeID);
+    db.WriteBinary(pdb, TAG_EXE_ID, ExeID);
+
+
+    db.WriteString(pdb, TAG_APP_NAME, AppName);
+    db.WriteString(pdb, TAG_VENDOR, Vendor);
+
+    if (!WriteGeneric(pdb, MatchingFiles, db))
+        return false;
+    if (!WriteGeneric(pdb, ShimRefs, db))
+        return false;
 
     return !!db.EndWriteListTag(pdb, Tagid);
 }
@@ -401,19 +469,33 @@ bool Exe::toSdb(PDB pdb, Database& db)
  *   Database
  */
 
-void Database::WriteBinary(PDB pdb, TAG tag, const GUID& guid)
+void Database::WriteBinary(PDB pdb, TAG tag, const GUID& guid, bool always)
 {
-    SdbWriteBinaryTag(pdb, tag, (BYTE*)&guid, sizeof(GUID));
+    if (always || !IsEmptyGuid(guid))
+        SdbWriteBinaryTag(pdb, tag, (BYTE*)&guid, sizeof(GUID));
 }
 
-void Database::WriteString(PDB pdb, TAG tag, const sdbstring& str)
+void Database::WriteBinary(PDB pdb, TAG tag, const std::vector<BYTE>& data, bool always)
 {
-    SdbWriteStringTag(pdb, tag, (LPCWSTR)str.c_str());
+    if (always || !data.empty())
+    SdbWriteBinaryTag(pdb, tag, data.data(), data.size());
 }
 
-void Database::WriteString(PDB pdb, TAG tag, const std::string& str)
+void Database::WriteString(PDB pdb, TAG tag, const sdbstring& str, bool always)
 {
-    WriteString(pdb, tag, sdbstring(str.begin(), str.end()));
+    if (always || !str.empty())
+        SdbWriteStringTag(pdb, tag, (LPCWSTR)str.c_str());
+}
+
+void Database::WriteString(PDB pdb, TAG tag, const std::string& str, bool always)
+{
+    WriteString(pdb, tag, sdbstring(str.begin(), str.end()), always);
+}
+
+void Database::WriteDWord(PDB pdb, TAG tag, DWORD value, bool always)
+{
+    if (always || value)
+        SdbWriteDWORDTag(pdb, tag, value);
 }
 
 TAGID Database::BeginWriteListTag(PDB db, TAG tag)
@@ -429,7 +511,7 @@ BOOL Database::EndWriteListTag(PDB db, TAGID tagid)
 bool Database::fromXml(XMLHandle dbNode)
 {
     Name = ReadStringNode(dbNode, "NAME");
-    ReadBinaryNode(dbNode, "DATABASE_ID", ID);
+    ReadGuidNode(dbNode, "DATABASE_ID", ID);
 
     XMLHandle libChild = dbNode.FirstChildElement("LIBRARY").FirstChild();
     while (libChild.ToNode())
@@ -439,7 +521,7 @@ bool Database::fromXml(XMLHandle dbNode)
         {
             Shim shim;
             if (shim.fromXml(libChild))
-                Library.push_back(shim);
+                Library.Shims.push_back(shim);
         }
         else if (NodeName == "FLAG")
         {
@@ -468,12 +550,17 @@ bool Database::toSdb(LPCWSTR path)
     LARGE_INTEGER li = { 0 };
     RtlSecondsSince1970ToTime(time(0), &li);
     SdbWriteQWORDTag(pdb, TAG_TIME, li.QuadPart);
-    WriteString(pdb, TAG_COMPILER_VERSION, "1.0.0.0");
+    WriteString(pdb, TAG_COMPILER_VERSION, szCompilerVersion);
     SdbWriteDWORDTag(pdb, TAG_OS_PLATFORM, 1);
-    WriteString(pdb, TAG_NAME, Name);
+    WriteString(pdb, TAG_NAME, Name, true);
+    if (IsEmptyGuid(ID))
+    {
+        SHIM_WARN("DB has empty ID!\n");
+        RandomGuid(ID);
+    }
     WriteBinary(pdb, TAG_DATABASE_ID, ID);
     TAGID tidLibrary = BeginWriteListTag(pdb, TAG_LIBRARY);
-    if (!WriteGeneric(pdb, Library, *this))
+    if (!WriteGeneric(pdb, Library.Shims, *this))
         return false;
     EndWriteListTag(pdb, tidLibrary);
     if (!WriteGeneric(pdb, Layers, *this))
@@ -486,39 +573,49 @@ bool Database::toSdb(LPCWSTR path)
     return true;
 }
 
-
-void Database::InsertShimTagid(const sdbstring& name, TAGID tagid)
+static void InsertTagid(const sdbstring& name, TAGID tagid, std::map<sdbstring, TAGID>& lookup, const char* type)
 {
     sdbstring nameLower = name;
     std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
-    if (KnownShims.find(nameLower) != KnownShims.end())
+    if (lookup.find(nameLower) != lookup.end())
     {
         std::string nameA(name.begin(), name.end());
-        SHIM_WARN("Shim '%s' redefined\n", nameA.c_str());
+        SHIM_WARN("%s '%s' redefined\n", type, nameA.c_str());
         return;
     }
-    KnownShims[nameLower] = tagid;
+    lookup[nameLower] = tagid;
 }
 
-void Database::InsertShimTagid(const std::string& name, TAGID tagid)
-{
-    InsertShimTagid(sdbstring(name.begin(), name.end()), tagid);
-}
-
-TAGID Database::FindShimTagid(const sdbstring& name)
+static TAGID FindTagid(const sdbstring& name, const std::map<sdbstring, TAGID>& lookup)
 {
     sdbstring nameLower = name;
     std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
-    std::map<sdbstring, TAGID>::iterator it = KnownShims.find(nameLower);
-    if (it == KnownShims.end())
+    std::map<sdbstring, TAGID>::const_iterator it = lookup.find(nameLower);
+    if (it == lookup.end())
         return 0;
     return it->second;
 }
 
-TAGID Database::FindShimTagid(const std::string& name)
+void Database::InsertShimTagid(const sdbstring& name, TAGID tagid)
 {
-    return FindShimTagid(sdbstring(name.begin(), name.end()));
+    InsertTagid(name, tagid, KnownShims, "Shim");
 }
+
+TAGID Database::FindShimTagid(const sdbstring& name)
+{
+    return FindTagid(name, KnownShims);
+}
+
+void Database::InsertPatchTagid(const sdbstring& name, TAGID tagid)
+{
+    InsertTagid(name, tagid, KnownPatches, "Patch");
+}
+
+TAGID Database::FindPatchTagid(const sdbstring& name)
+{
+    return FindTagid(name, KnownPatches);
+}
+
 
 
 bool xml_2_db(const char* xml, const WCHAR* sdb)

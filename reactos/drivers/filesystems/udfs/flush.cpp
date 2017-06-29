@@ -47,7 +47,7 @@ UDFFlush(
     PtrUDFIrpContext    PtrIrpContext = NULL;
     BOOLEAN             AreWeTopLevel = FALSE;
 
-    KdPrint(("UDFFlush: \n"));
+    UDFPrint(("UDFFlush: \n"));
 
     FsRtlEnterFileSystem();
     ASSERT(DeviceObject);
@@ -124,7 +124,7 @@ UDFCommonFlush(
     BOOLEAN             PostRequest = FALSE;
     BOOLEAN             CanWait = TRUE;
 
-    KdPrint(("UDFCommonFlush: \n"));
+    UDFPrint(("UDFCommonFlush: \n"));
 
     _SEH2_TRY {
 
@@ -296,7 +296,7 @@ UDFFlushAFile(
 //    BOOLEAN PurgeCache = FALSE;
     ULONG ret_val = 0;
 
-    KdPrint(("UDFFlushAFile: \n"));
+    UDFPrint(("UDFFlushAFile: \n"));
     if(!Fcb)
         return 0;
 
@@ -419,7 +419,7 @@ UDFFlushADirectory(
     IN ULONG               FlushFlags
     )
 {
-    KdPrint(("UDFFlushADirectory: \n"));
+    UDFPrint(("UDFFlushADirectory: \n"));
 //    PDIR_INDEX_HDR hDI;
     PDIR_INDEX_ITEM DI;
 //    BOOLEAN Referenced = FALSE;
@@ -514,7 +514,7 @@ UDFFlushLogicalVolume(
 #ifndef UDF_READ_ONLY_BUILD
     IO_STATUS_BLOCK IoStatus;
 
-    KdPrint(("UDFFlushLogicalVolume: \n"));
+    UDFPrint(("UDFFlushLogicalVolume: \n"));
 
     _SEH2_TRY {
         if(Vcb->VCBFlags & (UDF_VCB_FLAGS_RAW_DISK/* |
@@ -534,10 +534,10 @@ UDFFlushLogicalVolume(
 //            return;
         // flush internal cache
         if(FlushFlags & UDF_FLUSH_FLAGS_LITE) {
-            KdPrint(("  Lite flush, keep Modified=%d.\n", Vcb->Modified));
+            UDFPrint(("  Lite flush, keep Modified=%d.\n", Vcb->Modified));
         } else {
             if(Vcb->VerifyOnWrite) {
-                KdPrint(("UDF: Flushing cache for verify\n"));
+                UDFPrint(("UDF: Flushing cache for verify\n"));
                 //WCacheFlushAll__(&(Vcb->FastCache), Vcb);
                 WCacheFlushBlocks__(&(Vcb->FastCache), Vcb, 0, Vcb->LastLBA);
                 UDFVFlush(Vcb);
@@ -583,7 +583,7 @@ UDFFlushCompletion(
 {
 //    NTSTATUS        RC = STATUS_SUCCESS;
 
-    KdPrint(("UDFFlushCompletion: \n"));
+    UDFPrint(("UDFFlushCompletion: \n"));
 
     if (Irp->PendingReturned) {
         IoMarkIrpPending(Irp);

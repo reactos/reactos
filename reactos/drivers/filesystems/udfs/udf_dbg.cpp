@@ -22,7 +22,7 @@ UDFDebugAcquireResourceSharedLite(
 ) {
     ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
 #ifdef TRACK_RESOURCES
-    KdPrint(("Res:Sha:Try:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
+    UDFPrint(("Res:Sha:Try:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
         BugCheckId,Line,PsGetCurrentThread()));
 #endif
 
@@ -45,14 +45,14 @@ UDFDebugAcquireResourceSharedLite(
 
     if(Success) {
 #ifdef TRACK_RESOURCES
-        KdPrint(("Res:Sha:Ok:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
+        UDFPrint(("Res:Sha:Ok:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
             BugCheckId,Line,PsGetCurrentThread()));
 #endif
         AcqCounter++;
         return Success;
     }
 #ifdef TRACK_RESOURCES
-    KdPrint(("Res:Sha:Fail:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
+    UDFPrint(("Res:Sha:Fail:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
         BugCheckId,Line,PsGetCurrentThread()));
 #endif
     return FALSE;
@@ -67,7 +67,7 @@ UDFDebugAcquireSharedStarveExclusive(
 ) {
     ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
 #ifdef TRACK_RESOURCES
-    KdPrint(("Res:Sha*:Try:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
+    UDFPrint(("Res:Sha*:Try:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
         BugCheckId,Line,PsGetCurrentThread()));
 #endif
 
@@ -90,14 +90,14 @@ UDFDebugAcquireSharedStarveExclusive(
 
     if(Success) {
 #ifdef TRACK_RESOURCES
-        KdPrint(("Res:Sha*:Ok:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
+        UDFPrint(("Res:Sha*:Ok:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
             BugCheckId,Line,PsGetCurrentThread()));
 #endif
         AcqCounter++;
         return Success;
     }
 #ifdef TRACK_RESOURCES
-    KdPrint(("Res:Sha*:Fail:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
+    UDFPrint(("Res:Sha*:Fail:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
         BugCheckId,Line,PsGetCurrentThread()));
 #endif
     return FALSE;
@@ -112,7 +112,7 @@ UDFDebugAcquireResourceExclusiveLite(
 ) {
     ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
 #ifdef TRACK_RESOURCES
-    KdPrint(("Res:Exc:Try:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
+    UDFPrint(("Res:Exc:Try:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
         BugCheckId,Line,PsGetCurrentThread()));
 #endif
 
@@ -138,14 +138,14 @@ UDFDebugAcquireResourceExclusiveLite(
     
     if(Success) {
 #ifdef TRACK_RESOURCES
-        KdPrint(("Res:Exc:OK:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
+        UDFPrint(("Res:Exc:OK:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
             BugCheckId,Line,PsGetCurrentThread()));
 #endif
         AcqCounter++;
         return Success;
     }
 #ifdef TRACK_RESOURCES
-    KdPrint(("Res:Exc:Fail:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
+    UDFPrint(("Res:Exc:Fail:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
         BugCheckId,Line,PsGetCurrentThread()));
 #endif
 //    BrutePoint();
@@ -163,12 +163,12 @@ UDFDebugReleaseResourceForThreadLite(
 {
     ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
 #ifdef TRACK_RESOURCES
-    KdPrint(("Res:Free:Try:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
+    UDFPrint(("Res:Free:Try:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
         BugCheckId,Line,PsGetCurrentThread()));
 #endif
     ExReleaseResourceForThreadLite(Resource, ResourceThreadId);
 #ifdef TRACK_RESOURCES
-    KdPrint(("Res:Free:Ok:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
+    UDFPrint(("Res:Free:Ok:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
         BugCheckId,Line,ResourceThreadId));
 #endif
     AcqCounter--;
@@ -184,7 +184,7 @@ UDFDebugDeleteResource(
 {
     ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
 #ifdef TRACK_RESOURCES
-    KdPrint(("Res:Del:Try:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
+    UDFPrint(("Res:Del:Try:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
         BugCheckId,Line,ResourceThreadId));
 #endif
     _SEH2_TRY {
@@ -196,7 +196,7 @@ UDFDebugDeleteResource(
         BrutePoint();
     } _SEH2_END;
 #ifdef TRACK_RESOURCES
-    KdPrint(("Res:Del:Ok:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
+    UDFPrint(("Res:Del:Ok:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
         BugCheckId,Line,ResourceThreadId));
 #endif
     ResCounter--;
@@ -213,14 +213,14 @@ UDFDebugInitializeResourceLite(
     ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
     NTSTATUS RC;
 #ifdef TRACK_RESOURCES
-    KdPrint(("Res:Ini:Try:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
+    UDFPrint(("Res:Ini:Try:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
         BugCheckId,Line,ResourceThreadId));
 #endif
     ASSERT(!(*((PULONG)Resource)));
     ASSERT(!(*(((PULONG)Resource)+1)));
     RC = ExInitializeResourceLite(Resource);
 #ifdef TRACK_RESOURCES
-    KdPrint(("Res:Ini:Ok:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
+    UDFPrint(("Res:Ini:Ok:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
         BugCheckId,Line,ResourceThreadId));
 #endif
     if(NT_SUCCESS(RC)) {
@@ -239,12 +239,12 @@ UDFDebugConvertExclusiveToSharedLite(
 {
     ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
 #ifdef TRACK_RESOURCES
-    KdPrint(("Res:2Sha:Try:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
+    UDFPrint(("Res:2Sha:Try:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
         BugCheckId,Line,ResourceThreadId));
 #endif
     ExConvertExclusiveToSharedLite(Resource);
 #ifdef TRACK_RESOURCES
-    KdPrint(("Res:2Sha:Ok:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
+    UDFPrint(("Res:2Sha:Ok:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
         BugCheckId,Line,ResourceThreadId));
 #endif
 }
@@ -258,7 +258,7 @@ UDFDebugAcquireSharedWaitForExclusive(
 ) {
     ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
 #ifdef TRACK_RESOURCES
-    KdPrint(("Res:Sha*:Try:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
+    UDFPrint(("Res:Sha*:Try:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
         BugCheckId,Line,PsGetCurrentThread()));
 #endif
 
@@ -282,13 +282,13 @@ UDFDebugAcquireSharedWaitForExclusive(
 
     if(Success) {
 #ifdef TRACK_RESOURCES
-        KdPrint(("Res:Sha*:OK:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
+        UDFPrint(("Res:Sha*:OK:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
             BugCheckId,Line,PsGetCurrentThread()));
 #endif
         return Success;
     }
 #ifdef TRACK_RESOURCES
-    KdPrint(("Res:Sha*:Fail:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
+    UDFPrint(("Res:Sha*:Fail:Resource:%x:BugCheckId:%x:Line:%d:ThId:%x\n",Resource,
         BugCheckId,Line,PsGetCurrentThread()));
 #endif
 //    BrutePoint();
@@ -306,7 +306,7 @@ UDFDebugInterlockedIncrement(
 #ifdef TRACK_REF_COUNTERS
     LONG a;
     a = InterlockedIncrement(addr);
-    KdPrint(("ThId:%x:Ilck:Inc:FileId:%x:Line:%d:Ref:%x:Val:%x:%x\n",
+    UDFPrint(("ThId:%x:Ilck:Inc:FileId:%x:Line:%d:Ref:%x:Val:%x:%x\n",
         PsGetCurrentThread(),BugCheckId,Line,addr,a-1,a));
     return a;
 #else
@@ -323,7 +323,7 @@ UDFDebugInterlockedDecrement(
 #ifdef TRACK_REF_COUNTERS
     LONG a;
     a = InterlockedDecrement(addr);
-    KdPrint(("ThId:%x:Ilck:Dec:FileId:%x:Line:%d:Ref:%x:Val:%x:%x\n",
+    UDFPrint(("ThId:%x:Ilck:Dec:FileId:%x:Line:%d:Ref:%x:Val:%x:%x\n",
         PsGetCurrentThread(),BugCheckId,Line,addr,a+1,a));
     return a;
 #else
@@ -341,7 +341,7 @@ UDFDebugInterlockedExchangeAdd(
 #ifdef TRACK_REF_COUNTERS
     LONG a;
     a = InterlockedExchangeAdd(addr,i);
-    KdPrint(("ThId:%x:Ilck:Add:FileId:%x:Line:%d:Ref:%x:Val:%x:%x\n",
+    UDFPrint(("ThId:%x:Ilck:Add:FileId:%x:Line:%d:Ref:%x:Val:%x:%x\n",
         PsGetCurrentThread(),BugCheckId,Line,addr,a,a+i));
     return a;
 #else
@@ -378,7 +378,7 @@ DebugAllocatePool(
 #endif //TRACK_SYS_ALLOC_CALLERS
 ) {
     ULONG i;
-//    KdPrint(("SysAllocated: %x\n",AllocCount));
+//    UDFPrint(("SysAllocated: %x\n",AllocCount));
     if(!MemDescInited) {
         RtlZeroMemory(&MemDesc, sizeof(MemDesc));
         MemDescInited = 1;
@@ -407,7 +407,7 @@ DebugAllocatePool(
         }
     }
     if(cur_max == MAX_MEM_DEBUG_DESCRIPTORS) {
-        KdPrint(("Debug memory descriptor list full\n"));
+        UDFPrint(("Debug memory descriptor list full\n"));
         return ExAllocatePoolWithTag(Type, (size) , 'Fnwd');
     }
 
@@ -456,11 +456,11 @@ VOID DebugFreePool(PVOID addr) {
         }
     }
     if (i==cur_max && cur_max != MAX_MEM_DEBUG_DESCRIPTORS) {
-        KdPrint(("Buug! - Deallocating nonallocated block\n"));
+        UDFPrint(("Buug! - Deallocating nonallocated block\n"));
         return;
     }
 not_bug:
-//    KdPrint(("SysAllocated: %x\n",AllocCount));
+//    UDFPrint(("SysAllocated: %x\n",AllocCount));
     ExFreePool(addr);
 }
 
@@ -470,7 +470,7 @@ UDFWaitForSingleObject(
     IN PLARGE_INTEGER Timeout OPTIONAL
     )
 {
-    KdPrint(("UDFWaitForSingleObject\n"));
+    UDFPrint(("UDFWaitForSingleObject\n"));
     LARGE_INTEGER LocalTimeout;
     LARGE_INTEGER delay;
     delay.QuadPart = -(WAIT_FOR_XXX_EMU_DELAY);
@@ -478,11 +478,11 @@ UDFWaitForSingleObject(
     if(Timeout && (Timeout->QuadPart)) LocalTimeout = *Timeout;
     else LocalTimeout.QuadPart = 0x7FFFFFFFFFFFFFFFLL;
 
-    KdPrint(("SignalState %x\n", *Object));
+    UDFPrint(("SignalState %x\n", *Object));
     if(!Object) return STATUS_INVALID_PARAMETER;
     if((*Object)) return STATUS_SUCCESS;
     while(LocalTimeout.QuadPart>0 && !(*Object) ) {
-        KdPrint(("SignalState %x\n", *Object));
+        UDFPrint(("SignalState %x\n", *Object));
         // Stall for a while.
         KeDelayExecutionThread(KernelMode, FALSE, &delay);
         LocalTimeout.QuadPart -= WAIT_FOR_XXX_EMU_DELAY;
@@ -518,7 +518,7 @@ DbgWaitForSingleObject_(
         RC = KeWaitForSingleObject(Object, Executive, KernelMode, FALSE, to);
         if(RC == STATUS_SUCCESS)
             break;
-        KdPrint(("No response ?\n"));
+        UDFPrint(("No response ?\n"));
         if(c<2)
             BrutePoint();
     }

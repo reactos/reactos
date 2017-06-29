@@ -103,8 +103,8 @@ DriverEntry(
     HKEY            hUdfRootKey;
     LARGE_INTEGER   delay;
 
-//    KdPrint(("UDF: Entered " VER_STR_PRODUCT_NAME " UDF DriverEntry \n"));
-//    KdPrint((KD_PREFIX "Build " VER_STR_PRODUCT "\n"));
+//    UDFPrint(("UDF: Entered " VER_STR_PRODUCT_NAME " UDF DriverEntry \n"));
+//    UDFPrint((KD_PREFIX "Build " VER_STR_PRODUCT "\n"));
 
     _SEH2_TRY {
         _SEH2_TRY {
@@ -113,11 +113,11 @@ DriverEntry(
             CrNtInit(DriverObject, RegistryPath);
 
             //PsGetVersion(&MajorVersion, &MinorVersion, &BuildNumber, NULL);
-            KdPrint(("UDF: OS Version Major: %x, Minor: %x, Build number: %d\n",
+            UDFPrint(("UDF: OS Version Major: %x, Minor: %x, Build number: %d\n",
                                 MajorVersion, MinorVersion, BuildNumber));
 */
 #ifdef __REACTOS__
-            KdPrint(("UDF Init: OS should be ReactOS\n"));
+            UDFPrint(("UDF Init: OS should be ReactOS\n"));
 #endif
 
             // initialize the global data structure
@@ -145,7 +145,7 @@ DriverEntry(
             // initialize the mounted logical volume list head
             InitializeListHead(&(UDFGlobalData.VCBQueue));
 
-            KdPrint(("UDF: Init memory manager\n"));
+            UDFPrint(("UDF: Init memory manager\n"));
             // Initialize internal memory management
             if(!MyAllocInit()) {
                 try_return(RC = STATUS_INSUFFICIENT_RESOURCES);
@@ -173,13 +173,13 @@ DriverEntry(
             RtlInitUnicodeString(&UDFGlobalData.UnicodeStrSDir, L":");
             RtlInitUnicodeString(&UDFGlobalData.AclName, UDF_SN_NT_ACL);
 
-            KdPrint(("UDF: Init delayed close queues\n"));
+            UDFPrint(("UDF: Init delayed close queues\n"));
 #ifdef UDF_DELAYED_CLOSE
             InitializeListHead( &UDFGlobalData.DelayedCloseQueue );
             InitializeListHead( &UDFGlobalData.DirDelayedCloseQueue );
 
             ExInitializeWorkItem( &UDFGlobalData.CloseItem,
-                                  (PWORKER_THREAD_ROUTINE) UDFDelayedClose,
+                                  UDFDelayedClose,
                                   NULL );
 
             UDFGlobalData.DelayedCloseCount = 0;
@@ -193,11 +193,11 @@ DriverEntry(
 
             UDFGlobalData.DefaultZoneSizeInNumStructs=10;
 
-            KdPrint(("UDF: Init zones\n"));
+            UDFPrint(("UDF: Init zones\n"));
             if (!NT_SUCCESS(RC = UDFInitializeZones()))
                 try_return(RC);
 
-            KdPrint(("UDF: Init pointers\n"));
+            UDFPrint(("UDF: Init pointers\n"));
             // initialize the IRP major function table, and the fast I/O table
             UDFInitializeFunctionPointers(DriverObject);
 
@@ -212,7 +212,7 @@ DriverEntry(
 
             RtlInitUnicodeString(&DriverDeviceName, UDF_FS_NAME);
 
-            KdPrint(("UDF: Create Driver dev obj\n"));
+            UDFPrint(("UDF: Create Driver dev obj\n"));
             if (!NT_SUCCESS(RC = IoCreateDevice(
                     DriverObject,       // our driver object
                     sizeof(UDFFS_DEV_EXTENSION),  // don't need an extension for this object
@@ -239,7 +239,7 @@ DriverEntry(
             RtlInitUnicodeString(&unicodeDeviceName, UDF_DOS_FS_NAME);
             IoCreateSymbolicLink(&unicodeDeviceName, &DriverDeviceName);
 
-            KdPrint(("UDF: Create CD dev obj\n"));
+            UDFPrint(("UDF: Create CD dev obj\n"));
             if (!NT_SUCCESS(RC = UDFCreateFsDeviceObject(UDF_FS_NAME_CD,
                                     DriverObject,
                                     FILE_DEVICE_CD_ROM_FILE_SYSTEM,
@@ -248,7 +248,7 @@ DriverEntry(
                 try_return(RC);
             }
 #ifdef UDF_HDD_SUPPORT
-            KdPrint(("UDF: Create HDD dev obj\n"));
+            UDFPrint(("UDF: Create HDD dev obj\n"));
             if (!NT_SUCCESS(RC = UDFCreateFsDeviceObject(UDF_FS_NAME_HDD,
                                     DriverObject,
                                     FILE_DEVICE_DISK_FILE_SYSTEM,
@@ -300,19 +300,19 @@ DriverEntry(
 */
 
             if (UDFGlobalData.UDFDeviceObject_CD) {
-                KdPrint(("UDFCreateFsDeviceObject: IoRegisterFileSystem() for CD\n"));
+                UDFPrint(("UDFCreateFsDeviceObject: IoRegisterFileSystem() for CD\n"));
                 IoRegisterFileSystem(UDFGlobalData.UDFDeviceObject_CD);
             }
 #ifdef UDF_HDD_SUPPORT
             if (UDFGlobalData.UDFDeviceObject_HDD) {
-                KdPrint(("UDFCreateFsDeviceObject: IoRegisterFileSystem() for HDD\n"));
+                UDFPrint(("UDFCreateFsDeviceObject: IoRegisterFileSystem() for HDD\n"));
                 IoRegisterFileSystem(UDFGlobalData.UDFDeviceObject_HDD);
             }
 #endif // UDF_HDD_SUPPORT
             FsRegistered = TRUE;
 
-            KdPrint(("UDF: IoRegisterFsRegistrationChange()\n"));
-            IoRegisterFsRegistrationChange( DriverObject, (PDRIVER_FS_NOTIFICATION)UDFFsNotification );
+            UDFPrint(("UDF: IoRegisterFsRegistrationChange()\n"));
+            IoRegisterFsRegistrationChange( DriverObject, UDFFsNotification );
 
 //            delay.QuadPart = -10000000;
 //            KeDelayExecutionThread(KernelMode, FALSE, &delay);        //10 microseconds
@@ -323,12 +323,12 @@ DriverEntry(
 #if 0
             if(!WinVer_IsNT) {
                 /*ExInitializeWorkItem(&RemountWorkQueueItem, UDFRemountAll, NULL);
-                KdPrint(("UDFDriverEntry: create remount thread\n"));
+                UDFPrint(("UDFDriverEntry: create remount thread\n"));
                 ExQueueWorkItem(&RemountWorkQueueItem, DelayedWorkQueue);*/
 
                 for(CdRomNumber = 0;true;CdRomNumber++) {
                     sprintf(deviceNameBuffer, "\\Device\\CdRom%d", CdRomNumber);
-                    KdPrint(( "UDF: DriverEntry : dismount %s\n", deviceNameBuffer));
+                    UDFPrint(( "UDF: DriverEntry : dismount %s\n", deviceNameBuffer));
                     RtlInitString(&deviceName, deviceNameBuffer);
                     RC = RtlAnsiStringToUnicodeString(&unicodeCdRomDeviceName, &deviceName, TRUE);
 
@@ -358,7 +358,7 @@ DriverEntry(
 
         } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
             // we encountered an exception somewhere, eat it up
-            KdPrint(("UDF: exception\n"));
+            UDFPrint(("UDF: exception\n"));
             RC = _SEH2_GetExceptionCode();
         } _SEH2_END;
 
@@ -368,7 +368,7 @@ DriverEntry(
     } _SEH2_FINALLY {
         // start unwinding if we were unsuccessful
         if (!NT_SUCCESS(RC)) {
-            KdPrint(("UDF: failed with status %x\n", RC));
+            UDFPrint(("UDF: failed with status %x\n", RC));
             // Now, delete any device objects, etc. we may have created
 /*            if (UDFGlobalData.UDFDeviceObject) {
                 IoDeleteDevice(UDFGlobalData.UDFDeviceObject);
@@ -598,7 +598,7 @@ UDFCreateFsDeviceObject(
     RtlInitUnicodeString(&DriverDeviceName, FsDeviceName);
     *DeviceObject = NULL;
 
-    KdPrint(("UDFCreateFsDeviceObject: create dev\n"));
+    UDFPrint(("UDFCreateFsDeviceObject: create dev\n"));
 
     if (!NT_SUCCESS(RC = IoCreateDevice(
             DriverObject,                   // our driver object
@@ -624,7 +624,7 @@ UDFCreateFsDeviceObject(
     // register the driver with the I/O Manager, pretend as if this is
     //  a physical disk based FSD (or in order words, this FSD manages
     //  logical volumes residing on physical disk drives)
-/*    KdPrint(("UDFCreateFsDeviceObject: IoRegisterFileSystem()\n"));
+/*    UDFPrint(("UDFCreateFsDeviceObject: IoRegisterFileSystem()\n"));
     IoRegisterFileSystem(*DeviceObject);*/
     return(RC);
 } // end UDFCreateFsDeviceObject()
@@ -653,7 +653,7 @@ UDFDismountDevice(
                                      NULL,
                                      NULL );
 
-        KdPrint(("\n*** UDFDismountDevice: Create\n"));
+        UDFPrint(("\n*** UDFDismountDevice: Create\n"));
         RC = ZwCreateFile( &NtFileHandle,
                            GENERIC_READ,
                            &ObjectAttributes,
@@ -669,7 +669,7 @@ UDFDismountDevice(
 
         if (!NT_SUCCESS(RC)) try_return(RC);
                   
-        KdPrint(("\n*** UDFDismountDevice: QueryVolInfo\n"));
+        UDFPrint(("\n*** UDFDismountDevice: QueryVolInfo\n"));
         RC = ZwQueryVolumeInformationFile( NtFileHandle,
                                            &IoStatus,
                                            Buffer,
@@ -689,7 +689,7 @@ UDFDismountDevice(
             UDF_CHECK_FS_NAME((PVOID)UDF_FS_TITLE_DVDpRW) ||
             UDF_CHECK_FS_NAME((PVOID)UDF_FS_TITLE_DVDRAM) )) try_return(STATUS_SUCCESS);
         
-        KdPrint(("\n*** UDFDismountDevice: LockVolume\n"));
+        UDFPrint(("\n*** UDFDismountDevice: LockVolume\n"));
         RC = ZwFsControlFile(NtFileHandle,
                              NULL,
                              NULL,
@@ -703,7 +703,7 @@ UDFDismountDevice(
 
         if (!NT_SUCCESS(RC)) try_return(RC);
 
-        KdPrint(("\n*** UDFDismountDevice: DismountVolume\n"));
+        UDFPrint(("\n*** UDFDismountDevice: DismountVolume\n"));
         RC = ZwFsControlFile(NtFileHandle,
                              NULL,
                              NULL,
@@ -717,7 +717,7 @@ UDFDismountDevice(
 
         if (!NT_SUCCESS(RC)) try_return(RC);
 
-        KdPrint(("\n*** UDFDismountDevice: NotifyMediaChange\n"));
+        UDFPrint(("\n*** UDFDismountDevice: NotifyMediaChange\n"));
         RC = ZwDeviceIoControlFile(NtFileHandle,
                                    NULL,
                                    NULL,
@@ -732,7 +732,7 @@ UDFDismountDevice(
         if (!NT_SUCCESS(RC)) try_return(RC);
         
         
-        KdPrint(("\n*** UDFDismountDevice: UnlockVolume\n"));
+        UDFPrint(("\n*** UDFDismountDevice: UnlockVolume\n"));
         RC = ZwFsControlFile(NtFileHandle,
                              NULL,
                              NULL,
@@ -744,12 +744,12 @@ UDFDismountDevice(
                              NULL,
                              NULL);
 
-        KdPrint(("\n*** UDFDismountDevice: Close\n"));
+        UDFPrint(("\n*** UDFDismountDevice: Close\n"));
         ZwClose( NtFileHandle );
         
         NtFileHandle = (HANDLE)-1;
 
-        KdPrint(("\n*** UDFDismountDevice: Create 2\n"));
+        UDFPrint(("\n*** UDFDismountDevice: Create 2\n"));
         RC = ZwCreateFile( &NtFileHandle,
                            GENERIC_READ,
                            &ObjectAttributes,
@@ -769,7 +769,7 @@ try_exit: NOTHING;
         if (NtFileHandle != (HANDLE)-1) ZwClose( NtFileHandle );
     } _SEH2_END;
 
-    KdPrint(("\n*** UDFDismountDevice: RC=%x\n",RC));
+    UDFPrint(("\n*** UDFDismountDevice: RC=%x\n",RC));
     return RC;
 }
 
@@ -825,7 +825,7 @@ Return Value:
         && UDFGlobalData.UDFDeviceObject_HDD != DeviceObject
 #endif // UDF_HDD_SUPPORT
     ) {
-        KdPrint(("\n*** UDFFSNotification \n\n"));
+        UDFPrint(("\n*** UDFFSNotification \n\n"));
 
         // Acquire GlobalDataResource
         UDFAcquireResourceExclusive(&(UDFGlobalData.GlobalDataResource), TRUE);
@@ -845,7 +845,7 @@ Return Value:
             FsNotification_ThreadId = (HANDLE)(-1);
 
         } else {
-            KdPrint(("\n*** recursive UDFFSNotification call,\n can't become top-level UDF FSD \n\n"));
+            UDFPrint(("\n*** recursive UDFFSNotification call,\n can't become top-level UDF FSD \n\n"));
         }
 
         // Release the global resource.
@@ -872,7 +872,7 @@ UDFRemountAll(
     
 /*    for(CdRomNumber = 0;true;CdRomNumber++) {
         sprintf(deviceNameBuffer, "\\Device\\CdRom%d", CdRomNumber);
-        KdPrint(( "UDF: UDFRemountAll : dismount %s\n", deviceNameBuffer));
+        UDFPrint(( "UDF: UDFRemountAll : dismount %s\n", deviceNameBuffer));
         RtlInitString(&deviceName, deviceNameBuffer);
         RC = RtlAnsiStringToUnicodeString(&unicodeCdRomDeviceName, &deviceName, TRUE);
 

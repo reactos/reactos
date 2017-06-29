@@ -517,6 +517,9 @@ StgStreamImpl* StgStreamImpl_Construct(
 /******************************************************************************
  * Endian conversion macros
  */
+#undef htole32
+#undef htole16
+
 #ifdef WORDS_BIGENDIAN
 
 #define htole32(x) RtlUlongByteSwap(x)

@@ -116,13 +116,13 @@ UDFPhReadSynchronous(
 #if !defined(LIBUDF) && !defined(LIBUDFFMT)
 
     NTSTATUS    RC;
-//    KdPrint(("UDFPhRead: Length: %x Lba: %lx\n",Length>>0xb,Offset>>0xb));
+//    UDFPrint(("UDFPhRead: Length: %x Lba: %lx\n",Length>>0xb,Offset>>0xb));
     LONG HiOffs = (ULONG)(Offset >> 32);
 
     RC = SetFilePointer(DeviceObject->h,(ULONG)Offset,&HiOffs,FILE_BEGIN);
     if(RC == INVALID_SET_FILE_POINTER) {
         if(GetLastError() != NO_ERROR) {
-            KdPrint(("UDFPhReadSynchronous: error %x\n", GetLastError()));
+            UDFPrint(("UDFPhReadSynchronous: error %x\n", GetLastError()));
             return STATUS_END_OF_FILE;
         }
     }
@@ -167,7 +167,7 @@ UDFPhWriteSynchronous(
     RC = SetFilePointer(DeviceObject->h,(ULONG)Offset,&HiOffs,FILE_BEGIN);
     if(RC == INVALID_SET_FILE_POINTER) {
         if(GetLastError() != NO_ERROR) {
-            KdPrint(("UDFPhWriteSynchronous: error %x\n", GetLastError()));
+            UDFPrint(("UDFPhWriteSynchronous: error %x\n", GetLastError()));
             return STATUS_END_OF_FILE;
         }
     }
@@ -180,7 +180,7 @@ UDFPhWriteSynchronous(
     if(!RC ||
         !(*WrittenBytes)) {
         RC = GetLastError();
-        KdPrint(("UDFPhWriteSynchronous: EOF, error %x\n", RC));
+        UDFPrint(("UDFPhWriteSynchronous: EOF, error %x\n", RC));
         RC = STATUS_END_OF_FILE;
     } else {
         RC = STATUS_SUCCESS;
@@ -426,7 +426,7 @@ my_retrieve_vol_type(
 #ifndef CDRW_W32
     if(wcslen(fn) == 2 && fn[1] == ':') {
         ULONG DevType = GetDriveTypeW(fn);
-        KdPrint(("  DevType %x\n", DevType));
+        UDFPrint(("  DevType %x\n", DevType));
         switch(DevType) {
         case DRIVE_CDROM:
             Vcb->PhDeviceType = FILE_DEVICE_CD_ROM;
@@ -500,18 +500,18 @@ my_open(
 
 #ifndef NT_NATIVE_MODE
     swprintf(deviceNameBuffer, L"%ws\\", fn);
-    KdPrint(("my_open: %S\n", fn));
+    UDFPrint(("my_open: %S\n", fn));
     i = sizeof(FSNameBuffer)/sizeof(FSNameBuffer[0]);
     if(GetVolumeInformationW(deviceNameBuffer, NULL, 0, 
         &returned, &returned, &returned, FSNameBuffer, i)) {
-        KdPrint(("my_open: FS: %S\n", FSNameBuffer));
+        UDFPrint(("my_open: FS: %S\n", FSNameBuffer));
         if(!wcscmp(FSNameBuffer, L"Unknown")) {
             retry++;
         }
     } else {
-        KdPrint(("my_open: FS: ???\n"));
+        UDFPrint(("my_open: FS: ???\n"));
     }
-    KdPrint(("my_open: retry %d times\n", retry));
+    UDFPrint(("my_open: retry %d times\n", retry));
 
 #endif //NT_NATIVE_MODE
 
@@ -532,7 +532,7 @@ my_open(
                            OPEN_EXISTING,
                            FILE_ATTRIBUTE_NORMAL | FILE_FLAG_NO_BUFFERING,  NULL);
             if(h != ((HANDLE)-1)) {
-                KdPrint(("  opened i=%x\n", i));
+                UDFPrint(("  opened i=%x\n", i));
             }
         }
     }
@@ -558,7 +558,7 @@ my_open(
                                      NULL,
                                      0);
             if(!NT_SUCCESS(RC)) {
-                KdPrint(("  opened i2=%x\n", i));
+                UDFPrint(("  opened i2=%x\n", i));
                 h = ((HANDLE)-1);
             }
         }
@@ -580,22 +580,22 @@ my_open(
             if(retry < MAX_INVALIDATE_VOLUME_RETRY) {
                 retry++;
                 if(!Privilege(SE_TCB_NAME, TRUE)) {
-                    KdPrint(("SE_TCB privilege not held\n"));
+                    UDFPrint(("SE_TCB privilege not held\n"));
                 } else
                 if(DeviceIoControl(h,FSCTL_INVALIDATE_VOLUMES,&h,sizeof(h),NULL,0,&returned,NULL) ) {
-                    KdPrint(("  FSCTL_INVALIDATE_VOLUMES ok, status %x\n", GetLastError()));
+                    UDFPrint(("  FSCTL_INVALIDATE_VOLUMES ok, status %x\n", GetLastError()));
                     CloseHandle(h);
                     continue;
                 } else {
 //#ifndef CDRW_W32
-                    KdPrint(("  FSCTL_INVALIDATE_VOLUMES failed, error %x\n", GetLastError()));
+                    UDFPrint(("  FSCTL_INVALIDATE_VOLUMES failed, error %x\n", GetLastError()));
                     RC = GetLastError();
                     if(DeviceIoControl(h,IOCTL_UDF_INVALIDATE_VOLUMES,&h,sizeof(h),NULL,0,&returned,NULL) ) {
-                        KdPrint(("  IOCTL_UDF_INVALIDATE_VOLUMES ok, status %x\n", GetLastError()));
+                        UDFPrint(("  IOCTL_UDF_INVALIDATE_VOLUMES ok, status %x\n", GetLastError()));
                         CloseHandle(h);
                         continue;
                     }
-                    KdPrint(("  IOCTL_UDF_INVALIDATE_VOLUMES, error %x\n", GetLastError()));
+                    UDFPrint(("  IOCTL_UDF_INVALIDATE_VOLUMES, error %x\n", GetLastError()));
 //#endif //CDRW_W32
                 }
                 UserPrint(("can't lock volume, retry\n"));
@@ -614,11 +614,11 @@ my_open(
         }
 //#ifndef CDRW_W32
         if(!DeviceIoControl(h,FSCTL_ALLOW_EXTENDED_DASD_IO,NULL,0,NULL,0,&returned,NULL)) {
-            KdPrint(("Warning: can't allow extended DASD i/o\n"));
+            UDFPrint(("Warning: can't allow extended DASD i/o\n"));
         }
 //#endif //CDRW_W32
 
-        KdPrint(("  opened, h=%x\n", h));
+        UDFPrint(("  opened, h=%x\n", h));
         return h;
     }
     RC = GetLastError();
@@ -647,7 +647,7 @@ my_open(
 #endif //NT_NATIVE_MODE
     if(h != ((HANDLE)-1)) {
 
-        KdPrint(("  opened R/O, h=%x\n", h));
+        UDFPrint(("  opened R/O, h=%x\n", h));
 #ifndef CDRW_W32
         my_retrieve_vol_type(Vcb, fn);
 #else
@@ -660,7 +660,7 @@ my_open(
             if(retry < MAX_INVALIDATE_VOLUME_RETRY) {
                 retry++;
                 if(!Privilege(SE_TCB_NAME, TRUE)) {
-                    KdPrint(("SE_TCB privilege not held\n"));
+                    UDFPrint(("SE_TCB privilege not held\n"));
                 } else
                 if(DeviceIoControl(h,FSCTL_INVALIDATE_VOLUMES,&h,sizeof(h),NULL,0,&returned,NULL) ) {
                     CloseHandle(h);
@@ -744,7 +744,7 @@ try_as_file:
         return NULL;
 #endif //CDRW_W32
     }
-    KdPrint(("  opened as file, h=%x\n", h));
+    UDFPrint(("  opened as file, h=%x\n", h));
     break;
 
     } while(TRUE);

@@ -261,7 +261,7 @@ IntDestroyClass(IN OUT PCLS Class)
 
         if (Class->pdce)
         {
-           DceFreeClassDCE(((PDCE)Class->pdce)->hDC);
+           DceFreeClassDCE(Class->pdce);
            Class->pdce = NULL;
         }
 

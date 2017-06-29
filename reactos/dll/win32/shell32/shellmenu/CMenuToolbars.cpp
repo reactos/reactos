@@ -113,6 +113,11 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
             return S_OK;
         }
         return S_FALSE;
+    case WM_WININICHANGE:
+        if (wParam == SPI_SETFLATMENU)
+        {
+            SystemParametersInfo(SPI_GETFLATMENU, 0, &m_useFlatMenus, 0);
+        }
     }
 
     return S_FALSE;
@@ -160,7 +165,10 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
         isHot = m_hotBar == this && (int) cdraw->nmcd.dwItemSpec == m_hotItem;
         isPopup = m_popupBar == this && (int) cdraw->nmcd.dwItemSpec == m_popupItem;
 
-        if ((m_initFlags & SMINIT_VERTICAL))
+        if (m_hotItem < 0 && isPopup)
+            isHot = TRUE;
+
+        if ((m_useFlatMenus && isHot) || (m_initFlags & SMINIT_VERTICAL))
         {
             COLORREF clrText;
             HBRUSH   bgBrush;
@@ -171,7 +179,7 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
             cdraw->nmcd.uItemState &= ~(CDIS_HOT | CDIS_CHECKED);
 
             // Decide on the colors
-            if (isHot || (m_hotItem < 0 && isPopup))
+            if (isHot)
             {
                 cdraw->nmcd.uItemState |= CDIS_HOT;
 
@@ -203,7 +211,7 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
             cdraw->nmcd.uItemState &= ~CDIS_HOT;
 
             // Decide on the colors
-            if (isHot || (m_hotItem < 0 && isPopup))
+            if (isHot)
             {
                 cdraw->nmcd.uItemState |= CDIS_HOT;
             }
@@ -1459,7 +1467,7 @@ HRESULT CMenuSFToolbar::InternalPopupItem(INT iItem, INT index, DWORD_PTR dwData
     if (!pidl)
         return E_FAIL;
 
-    hr = CMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &shellMenu));
+    hr = CMenuBand_CreateInstance(IID_PPV_ARG(IShellMenu, &shellMenu));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 

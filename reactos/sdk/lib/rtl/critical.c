@@ -786,4 +786,19 @@ RtlCheckForOrphanedCriticalSections(HANDLE ThreadHandle)
     UNIMPLEMENTED;
 }
 
+ULONG
+NTAPI
+RtlIsCriticalSectionLocked(PRTL_CRITICAL_SECTION CriticalSection)
+{
+    return CriticalSection->RecursionCount != 0;
+}
+
+ULONG
+NTAPI
+RtlIsCriticalSectionLockedByThread(PRTL_CRITICAL_SECTION CriticalSection)
+{
+    return CriticalSection->OwningThread == NtCurrentTeb()->ClientId.UniqueThread &&
+           CriticalSection->RecursionCount != 0;
+}
+
 /* EOF */

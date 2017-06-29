@@ -1,4 +1,4 @@
-Libpng 1.6.28 - January 5, 2017
+Libpng 1.6.29 - March 16, 2017
 
 This is a public release of libpng, intended for use in production codes.
 
@@ -7,28 +7,37 @@ Files available for download:
 Source files with LF line endings (for Unix/Linux) and with a
 "configure" script
 
-   libpng-1.6.28.tar.xz (LZMA-compressed, recommended)
-   libpng-1.6.28.tar.gz
+   libpng-1.6.29.tar.xz (LZMA-compressed, recommended)
+   libpng-1.6.29.tar.gz
 
 Source files with CRLF line endings (for Windows), without the
 "configure" script
 
-   lpng1628.7z  (LZMA-compressed, recommended)
-   lpng1628.zip
+   lpng1629.7z  (LZMA-compressed, recommended)
+   lpng1629.zip
 
 Other information:
 
-   libpng-1.6.28-README.txt
-   libpng-1.6.28-LICENSE.txt
-   libpng-1.6.28-*.asc (armored detached GPG signatures)
+   libpng-1.6.29-README.txt
+   libpng-1.6.29-LICENSE.txt
+   libpng-1.6.29-*.asc (armored detached GPG signatures)
 
-Changes since the last public release (1.6.27):
-  Fixed arm/aarch64 detection in CMakeLists.txt (Gianfranco Costamagna).
-  Added option to Cmake build allowing a custom location of zlib to be
-    specified in a scenario where libpng is being built as a subproject
-    alongside zlib by another project (Sam Serrels).
-  Changed png_ptr->options from a png_byte to png_uint_32, to accomodate
-    up to 16 options.
+Changes since the last public release (1.6.28):
+
+  Readded "include(GNUInstallDirs)" to CMakeLists.txt (Gianfranco Costamagna).
+  Moved SSE2 optimization code into the main libpng source directory.
+    Configure libpng with "configure --enable-intel-sse" or compile
+    libpng with "-DPNG_INTEL_SSE" in CPPFLAGS to enable it.
+  Simplified conditional compilation in pngvalid.c, for AIX (Michael Felt).
+  Avoid conditional directives that break statements in pngrutil.c (Romero
+    Malaquias)
+  The contrib/examples/pngtopng.c recovery code was in the wrong "if"
+    branches; the comments were correct.
+  Added code for PowerPC VSX optimisation (Vadim Barkov).
+  Avoid potential overflow of shift operations in png_do_expand() (Aaron Boxer).
+  Change test ZLIB_VERNUM >= 0x1281 to ZLIB_VERNUM >= 0x1290 in pngrutil.c
+    because Solaris 11 distributes zlib-1.2.8.f that is older than 1.2.8.1.
+  Suppress clang warnings about implicit sign changes in png.c
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit

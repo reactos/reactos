@@ -202,6 +202,11 @@ BOOL NTAPI DxDdQueryDirectDrawObject(HANDLE DdHandle, DD_HALINFO* pDdHalInfo, DW
 DWORD NTAPI DxDdReenableDirectDrawObject(HANDLE DdHandle, PVOID p2);
 DWORD NTAPI DxDdCanCreateSurface(HANDLE DdHandle, PDD_CANCREATESURFACEDATA SurfaceData);
 DWORD NTAPI DxDdCanCreateD3DBuffer(HANDLE DdHandle, PDD_CANCREATESURFACEDATA SurfaceData);
+DWORD NTAPI DxDdCreateD3DBuffer(HANDLE hDirectDrawLocal, PEDD_SURFACE pDdSurfList, DDSURFACEDESC2 *a3, DD_SURFACE_GLOBAL *pDdSurfGlob, DD_SURFACE_LOCAL *pDdSurfLoc,
+                                DD_SURFACE_MORE *pDdSurfMore, DD_CREATESURFACEDATA *pDdCreateSurfaceData, PVOID Address);
+DWORD NTAPI DxDdLock(HANDLE hSurface, PDD_LOCKDATA puLockData, HDC hdcClip);
+DWORD NTAPI DxDdUnlock(HANDLE hSurface, PDD_UNLOCKDATA puUnlockData);
+HANDLE NTAPI DxDdCreateSurfaceObject(HANDLE hDirectDrawLocal, HANDLE hSurface, PDD_SURFACE_LOCAL puSurfaceLocal, PDD_SURFACE_MORE puSurfaceMore, PDD_SURFACE_GLOBAL puSurfaceGlobal, BOOL bComplete);
 
 
 /* Internal functions */
@@ -210,6 +215,7 @@ BOOL FASTCALL DdHmgCreate(VOID);
 BOOL FASTCALL DdHmgDestroy(VOID);
 PVOID FASTCALL DdHmgLock(HANDLE DdHandle, UCHAR ObjectType, BOOLEAN LockOwned);
 HANDLE FASTCALL DdHmgAlloc(ULONG objSize, CHAR objType, BOOLEAN objLock);
-
+PEDD_SURFACE NTAPI intDdCreateNewSurfaceObject(PEDD_DIRECTDRAW_LOCAL peDdL, HANDLE hDirectDrawLocal, 
+                                               PDD_SURFACE_GLOBAL pDdSurfGlob, PDD_SURFACE_LOCAL pDdSurfLoc, PDD_SURFACE_MORE pDdSurfMore);
 
 #endif /* _DXG_PCH_ */

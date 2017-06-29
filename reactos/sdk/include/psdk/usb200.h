@@ -55,12 +55,16 @@ typedef enum _USB_DEVICE_SPEED {
 
 
 typedef union _BM_REQUEST_TYPE {
+#ifdef __cplusplus
+  struct {
+#else
   struct _BM {
+#endif
     UCHAR Recipient:2;
     UCHAR Reserved:3;
     UCHAR Type:2;
     UCHAR Dir:1;
-  } _BM;
+  };
   UCHAR B;
 } BM_REQUEST_TYPE, *PBM_REQUEST_TYPE;
 
@@ -122,5 +126,117 @@ typedef struct _USB_INTERFACE_ASSOCIATION_DESCRIPTOR {
   UCHAR bFunctionProtocol;
   UCHAR iFunction;
 } USB_INTERFACE_ASSOCIATION_DESCRIPTOR, *PUSB_INTERFACE_ASSOCIATION_DESCRIPTOR;
+
+typedef union _USB_20_PORT_CHANGE {
+  USHORT AsUshort16;
+  struct {
+    USHORT ConnectStatusChange:1;
+    USHORT PortEnableDisableChange:1;
+    USHORT SuspendChange:1;
+    USHORT OverCurrentIndicatorChange:1;
+    USHORT ResetChange:1;
+    USHORT Reserved2:11;
+  };
+} USB_20_PORT_CHANGE, *PUSB_20_PORT_CHANGE;
+
+C_ASSERT(sizeof(USB_20_PORT_CHANGE) == sizeof(USHORT));
+
+typedef union _USB_20_PORT_STATUS {
+  USHORT AsUshort16;
+  struct {
+    USHORT CurrentConnectStatus:1;
+    USHORT PortEnabledDisabled:1;
+    USHORT Suspend:1;
+    USHORT OverCurrent:1;
+    USHORT Reset:1;
+    USHORT L1:1;
+    USHORT Reserved0:2;
+    USHORT PortPower:1;
+    USHORT LowSpeedDeviceAttached:1;
+    USHORT HighSpeedDeviceAttached:1;
+    USHORT PortTestMode:1;
+    USHORT PortIndicatorControl:1;
+    USHORT Reserved1:3;
+  };
+} USB_20_PORT_STATUS, *PUSB_20_PORT_STATUS;
+
+C_ASSERT(sizeof(USB_20_PORT_STATUS) == sizeof(USHORT));
+
+typedef union _USB_30_PORT_STATUS {
+  USHORT AsUshort16;
+  struct {
+    USHORT CurrentConnectStatus:1;
+    USHORT PortEnabledDisabled:1;
+    USHORT Reserved0:1;
+    USHORT OverCurrent:1;
+    USHORT Reset:1;
+    USHORT PortLinkState:4;
+    USHORT PortPower:1;
+    USHORT NegotiatedDeviceSpeed:3;
+    USHORT Reserved1:3;
+  };
+} USB_30_PORT_STATUS, *PUSB_30_PORT_STATUS;
+
+C_ASSERT(sizeof(USB_30_PORT_STATUS) == sizeof(USHORT));
+
+typedef union _USB_PORT_STATUS {
+  USHORT AsUshort16;
+  USB_20_PORT_STATUS Usb20PortStatus;
+  USB_30_PORT_STATUS Usb30PortStatus;
+} USB_PORT_STATUS, *PUSB_PORT_STATUS;
+
+typedef union _USB_HUB_STATUS {
+  USHORT AsUshort16;
+  struct {
+    USHORT LocalPowerLost:1;
+    USHORT OverCurrent:1;
+    USHORT Reserved:14;
+  };
+} USB_HUB_STATUS, *PUSB_HUB_STATUS;
+
+C_ASSERT(sizeof(USB_HUB_STATUS) == sizeof(USHORT));
+
+typedef union _USB_HUB_CHANGE {
+  USHORT AsUshort16;
+  struct {
+    USHORT LocalPowerChange:1;
+    USHORT OverCurrentChange:1;
+    USHORT Reserved:14;
+  };
+} USB_HUB_CHANGE, *PUSB_HUB_CHANGE;
+
+C_ASSERT(sizeof(USB_HUB_CHANGE) == sizeof(USHORT));
+
+typedef union _USB_HUB_STATUS_AND_CHANGE {
+  ULONG AsUlong32;
+  struct {
+    USB_HUB_STATUS HubStatus;
+    USB_HUB_CHANGE HubChange;
+  };
+} USB_HUB_STATUS_AND_CHANGE, *PUSB_HUB_STATUS_AND_CHANGE;
+
+C_ASSERT(sizeof(USB_HUB_STATUS_AND_CHANGE) == sizeof(ULONG));
+
+#define USB_DEVICE_CLASS_RESERVED             0x00
+#define USB_DEVICE_CLASS_AUDIO                0x01
+#define USB_DEVICE_CLASS_COMMUNICATIONS       0x02
+#define USB_DEVICE_CLASS_HUMAN_INTERFACE      0x03
+#define USB_DEVICE_CLASS_MONITOR              0x04
+#define USB_DEVICE_CLASS_PHYSICAL_INTERFACE   0x05
+#define USB_DEVICE_CLASS_POWER                0x06
+#define USB_DEVICE_CLASS_IMAGE                0x06
+#define USB_DEVICE_CLASS_PRINTER              0x07
+#define USB_DEVICE_CLASS_STORAGE              0x08
+#define USB_DEVICE_CLASS_HUB                  0x09
+#define USB_DEVICE_CLASS_CDC_DATA             0x0A
+#define USB_DEVICE_CLASS_SMART_CARD           0x0B
+#define USB_DEVICE_CLASS_CONTENT_SECURITY     0x0D
+#define USB_DEVICE_CLASS_VIDEO                0x0E
+#define USB_DEVICE_CLASS_PERSONAL_HEALTHCARE  0x0F
+#define USB_DEVICE_CLASS_DIAGNOSTIC_DEVICE    0xDC
+#define USB_DEVICE_CLASS_WIRELESS_CONTROLLER  0xE0
+#define USB_DEVICE_CLASS_MISCELLANEOUS        0xEF
+#define USB_DEVICE_CLASS_APPLICATION_SPECIFIC 0xFE
+#define USB_DEVICE_CLASS_VENDOR_SPECIFIC      0xFF
 
 #include <poppack.h>

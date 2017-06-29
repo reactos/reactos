@@ -92,7 +92,7 @@ UDFQueryVolInfo(
     PtrUDFIrpContext    PtrIrpContext = NULL;
     BOOLEAN             AreWeTopLevel = FALSE;
 
-    KdPrint(("UDFQueryVolInfo: \n"));
+    UDFPrint(("UDFQueryVolInfo: \n"));
 
     FsRtlEnterFileSystem();
     ASSERT(DeviceObject);
@@ -164,7 +164,7 @@ UDFCommonQueryVolInfo(
 
     _SEH2_TRY {
 
-        KdPrint(("UDFCommonQueryVolInfo: \n"));
+        UDFPrint(("UDFCommonQueryVolInfo: \n"));
 
         ASSERT(PtrIrpContext);
         ASSERT(Irp);
@@ -306,11 +306,11 @@ UDFQueryFsVolumeInfo(
 
     PAGED_CODE();
 
-    KdPrint(("  UDFQueryFsVolumeInfo: \n"));
+    UDFPrint(("  UDFQueryFsVolumeInfo: \n"));
     //  Fill in the data from the Vcb.
     Buffer->VolumeCreationTime.QuadPart = Vcb->VolCreationTime;
     Buffer->VolumeSerialNumber = Vcb->PhSerialNumber;
-    KdPrint(("  SN %x\n", Vcb->PhSerialNumber));
+    UDFPrint(("  SN %x\n", Vcb->PhSerialNumber));
 
     Buffer->SupportsObjects = FALSE;
 
@@ -355,7 +355,7 @@ UDFQueryFsSizeInfo(
 {
     PAGED_CODE();
 
-    KdPrint(("  UDFQueryFsSizeInfo: \n"));
+    UDFPrint(("  UDFQueryFsSizeInfo: \n"));
     //  Fill in the output buffer.
     if(Vcb->BitmapModified) {
         Vcb->TotalAllocUnits =
@@ -377,7 +377,7 @@ UDFQueryFsSizeInfo(
     if(!Buffer->BytesPerSector)
         Buffer->BytesPerSector = 2048;
 
-    KdPrint(("  Space: Total %I64x, Free %I64x\n",
+    UDFPrint(("  Space: Total %I64x, Free %I64x\n",
         Buffer->TotalAllocationUnits.QuadPart,
         Buffer->AvailableAllocationUnits.QuadPart));
 
@@ -407,7 +407,7 @@ UDFQueryFsFullSizeInfo(
 {
     PAGED_CODE();
 
-    KdPrint(("  UDFQueryFsFullSizeInfo: \n"));
+    UDFPrint(("  UDFQueryFsFullSizeInfo: \n"));
     //  Fill in the output buffer.
     if(Vcb->BitmapModified) {
         Vcb->TotalAllocUnits =
@@ -430,7 +430,7 @@ UDFQueryFsFullSizeInfo(
     if(!Buffer->BytesPerSector)
         Buffer->BytesPerSector = 2048;
 
-    KdPrint(("  Space: Total %I64x, Free %I64x\n",
+    UDFPrint(("  Space: Total %I64x, Free %I64x\n",
         Buffer->TotalAllocationUnits.QuadPart,
         Buffer->ActualAvailableAllocationUnits.QuadPart));
 
@@ -460,12 +460,19 @@ UDFQueryFsDeviceInfo(
 {
     PAGED_CODE();
 
-    KdPrint(("  UDFQueryFsDeviceInfo: \n"));
+    UDFPrint(("  UDFQueryFsDeviceInfo: \n"));
     //  Update the output buffer.
-    ASSERT(! (Vcb->TargetDeviceObject->Characteristics & (FILE_READ_ONLY_DEVICE | FILE_WRITE_ONCE_MEDIA)));
-    Buffer->Characteristics = Vcb->TargetDeviceObject->Characteristics & ~(FILE_READ_ONLY_DEVICE | FILE_WRITE_ONCE_MEDIA);
+    if (Vcb->TargetDeviceObject->DeviceType != FILE_DEVICE_CD_ROM && Vcb->TargetDeviceObject->DeviceType != FILE_DEVICE_DVD)
+    {
+        ASSERT(! (Vcb->TargetDeviceObject->Characteristics & (FILE_READ_ONLY_DEVICE | FILE_WRITE_ONCE_MEDIA)));
+        Buffer->Characteristics = Vcb->TargetDeviceObject->Characteristics & ~(FILE_READ_ONLY_DEVICE | FILE_WRITE_ONCE_MEDIA);
+    }
+    else
+    {
+        Buffer->Characteristics = Vcb->TargetDeviceObject->Characteristics;
+    }
     Buffer->DeviceType = Vcb->TargetDeviceObject->DeviceType;
-    KdPrint(("    Characteristics %x, DeviceType %x\n", Buffer->Characteristics, Buffer->DeviceType));
+    UDFPrint(("    Characteristics %x, DeviceType %x\n", Buffer->Characteristics, Buffer->DeviceType));
     //  Adjust the length variable
     *Length -= sizeof( FILE_FS_DEVICE_INFORMATION );
     return STATUS_SUCCESS;
@@ -497,7 +504,7 @@ UDFQueryFsAttributeInfo(
     ULONG FsTypeTitleLen;
 
     PAGED_CODE();
-    KdPrint(("  UDFQueryFsAttributeInfo: \n"));
+    UDFPrint(("  UDFQueryFsAttributeInfo: \n"));
     //  Fill out the fixed portion of the buffer.
     Buffer->FileSystemAttributes = FILE_CASE_SENSITIVE_SEARCH |
                                    FILE_CASE_PRESERVED_NAMES |
@@ -613,7 +620,7 @@ UDFSetVolInfo(
     PtrUDFIrpContext    PtrIrpContext = NULL;
     BOOLEAN             AreWeTopLevel = FALSE;
 
-    KdPrint(("UDFSetVolInfo: \n"));
+    UDFPrint(("UDFSetVolInfo: \n"));
 
     FsRtlEnterFileSystem();
     ASSERT(DeviceObject);
@@ -671,7 +678,7 @@ UDFCommonSetVolInfo(
 
     _SEH2_TRY {
 
-        KdPrint(("UDFCommonSetVolInfo: \n"));
+        UDFPrint(("UDFCommonSetVolInfo: \n"));
         ASSERT(PtrIrpContext);
         ASSERT(Irp);
     
@@ -685,7 +692,7 @@ UDFCommonSetVolInfo(
         ASSERT(Ccb);
 
         if(Ccb && Ccb->Fcb && (Ccb->Fcb->NodeIdentifier.NodeType != UDF_NODE_TYPE_VCB)) {
-            KdPrint(("    Can't change Label on Non-volume object\n"));
+            UDFPrint(("    Can't change Label on Non-volume object\n"));
             try_return(RC = STATUS_ACCESS_DENIED);
         }
 
@@ -695,7 +702,7 @@ UDFCommonSetVolInfo(
         //  Reference our input parameters to make things easier
 
         if(Vcb->VCBFlags & UDF_VCB_FLAGS_RAW_DISK) {
-            KdPrint(("    Can't change Label on blank volume ;)\n"));
+            UDFPrint(("    Can't change Label on blank volume ;)\n"));
             try_return(RC = STATUS_ACCESS_DENIED);
         }
 
@@ -788,10 +795,10 @@ UDFSetLabelInfo (
 {
     PAGED_CODE();
 
-    KdPrint(("  UDFSetLabelInfo: \n"));
+    UDFPrint(("  UDFSetLabelInfo: \n"));
     if(Buffer->VolumeLabelLength > UDF_VOL_LABEL_LEN*sizeof(WCHAR)) {
         // Too long Volume Label... NT doesn't like it
-        KdPrint(("  UDFSetLabelInfo: STATUS_INVALID_VOLUME_LABEL\n"));
+        UDFPrint(("  UDFSetLabelInfo: STATUS_INVALID_VOLUME_LABEL\n"));
         return STATUS_INVALID_VOLUME_LABEL;
     }
 
@@ -805,7 +812,7 @@ UDFSetLabelInfo (
     Vcb->VolIdent.Buffer[Buffer->VolumeLabelLength/sizeof(WCHAR)] = 0;
     UDFSetModified(Vcb);
 
-    KdPrint(("  UDFSetLabelInfo: OK\n"));
+    UDFPrint(("  UDFSetLabelInfo: OK\n"));
     return STATUS_SUCCESS;
 } // end UDFSetLabelInfo ()
 

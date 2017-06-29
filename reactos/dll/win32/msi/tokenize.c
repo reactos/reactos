@@ -180,6 +180,21 @@ static const char isIdChar[] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  /* Fx */
 };
 
+/*
+** WCHAR safe version of isdigit()
+*/
+static inline int isDigit(WCHAR c)
+{
+    return c >= '0' && c <= '9';
+}
+
+/*
+** WCHAR safe version of isspace(), except '\r'
+*/
+static inline int isSpace(WCHAR c)
+{
+    return c == ' ' || c == '\t' || c == '\n' || c == '\f';
+}
 
 /*
 ** Return the length of the token that begins at z[0].  Return
@@ -192,7 +207,7 @@ int sqliteGetToken(const WCHAR *z, int *tokenType, int *skip){
   *skip = 0;
   switch( *z ){
     case ' ': case '\t': case '\n': case '\f':
-      for(i=1; isspace(z[i]) && z[i] != '\r'; i++){}
+      for(i=1; isSpace(z[i]); i++){}
       *tokenType = TK_SPACE;
       return i;
     case '-':
@@ -258,7 +273,7 @@ int sqliteGetToken(const WCHAR *z, int *tokenType, int *skip){
       return i;
     }
     case '.':
-      if( !isdigit(z[1]) ){
+      if( !isDigit(z[1]) ){
         *tokenType = TK_DOT;
         return 1;
       }
@@ -266,7 +281,7 @@ int sqliteGetToken(const WCHAR *z, int *tokenType, int *skip){
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
       *tokenType = TK_INTEGER;
-      for(i=1; isdigit(z[i]); i++){}
+      for(i=1; isDigit(z[i]); i++){}
       return i;
     case '[':
       for(i=1; z[i] && z[i-1]!=']'; i++){}

@@ -160,26 +160,26 @@ UDFCommonWrite(
 
         switch((ULONG)TopIrp) {
         case FSRTL_FSP_TOP_LEVEL_IRP:
-            KdPrint(("  FSRTL_FSP_TOP_LEVEL_IRP\n"));
+            UDFPrint(("  FSRTL_FSP_TOP_LEVEL_IRP\n"));
             break;
         case FSRTL_CACHE_TOP_LEVEL_IRP:
-            KdPrint(("  FSRTL_CACHE_TOP_LEVEL_IRP\n"));
+            UDFPrint(("  FSRTL_CACHE_TOP_LEVEL_IRP\n"));
             break;
         case FSRTL_MOD_WRITE_TOP_LEVEL_IRP:
-            KdPrint(("  FSRTL_MOD_WRITE_TOP_LEVEL_IRP\n"));
+            UDFPrint(("  FSRTL_MOD_WRITE_TOP_LEVEL_IRP\n"));
             break;
         case FSRTL_FAST_IO_TOP_LEVEL_IRP:
-            KdPrint(("  FSRTL_FAST_IO_TOP_LEVEL_IRP\n"));
+            UDFPrint(("  FSRTL_FAST_IO_TOP_LEVEL_IRP\n"));
             BrutePoint();
             break;
         case NULL:
-            KdPrint(("  NULL TOP_LEVEL_IRP\n"));
+            UDFPrint(("  NULL TOP_LEVEL_IRP\n"));
             break;
         default:
             if(TopIrp == Irp) {
-                KdPrint(("  TOP_LEVEL_IRP\n"));
+                UDFPrint(("  TOP_LEVEL_IRP\n"));
             } else {
-                KdPrint(("  RECURSIVE_IRP, TOP = %x\n", TopIrp));
+                UDFPrint(("  RECURSIVE_IRP, TOP = %x\n", TopIrp));
             }
             break;
         }
@@ -239,7 +239,7 @@ UDFCommonWrite(
         PagingIo = (Irp->Flags & IRP_PAGING_IO) ? TRUE : FALSE;
         NonBufferedIo = (Irp->Flags & IRP_NOCACHE) ? TRUE : FALSE;
         SynchronousIo = (FileObject->Flags & FO_SYNCHRONOUS_IO) ? TRUE : FALSE;
-        KdPrint(("    Flags: %s; %s; %s; %s; Irp(W): %8.8x\n",
+        UDFPrint(("    Flags: %s; %s; %s; %s; Irp(W): %8.8x\n",
                       CanWait ? "Wt" : "nw", PagingIo ? "Pg" : "np",
                       NonBufferedIo ? "NBuf" : "buff", SynchronousIo ? "Snc" : "Asc",
                       Irp->Flags));
@@ -303,7 +303,7 @@ UDFCommonWrite(
 
             if(PtrIrpContext->IrpContextFlags & UDF_IRP_CONTEXT_FLUSH2_REQUIRED) {
 
-                KdPrint(("  UDF_IRP_CONTEXT_FLUSH2_REQUIRED\n"));
+                UDFPrint(("  UDF_IRP_CONTEXT_FLUSH2_REQUIRED\n"));
                 PtrIrpContext->IrpContextFlags &= ~UDF_IRP_CONTEXT_FLUSH2_REQUIRED;
 
                 if(!(Vcb->VCBFlags & UDF_VCB_FLAGS_RAW_DISK)) {
@@ -341,7 +341,7 @@ UDFCommonWrite(
                 try_return(RC = STATUS_INVALID_USER_BUFFER);
             // Indicate, that volume contents can change after this operation
             // This flag will force VerifyVolume in future
-            KdPrint(("  set UnsafeIoctl\n"));
+            UDFPrint(("  set UnsafeIoctl\n"));
             Vcb->VCBFlags |= UDF_VCB_FLAGS_UNSAFE_IOCTL;
             // Make sure, that volume will never be quick-remounted
             // It is very important for ChkUdf utility.
@@ -387,7 +387,7 @@ UDFCommonWrite(
                 // Cache Manager and/or the VMM does not want us to perform
                 // the write at this time. Post the request.
                 PtrIrpContext->IrpContextFlags |= UDF_IRP_CONTEXT_DEFERRED_WRITE;
-                KdPrint(("UDFCommonWrite: Defer write\n"));
+                UDFPrint(("UDFCommonWrite: Defer write\n"));
                 MmPrint(("    CcDeferWrite()\n"));
                 CcDeferWrite(FileObject, UDFDeferredWriteCallBack, PtrIrpContext, Irp, WriteLength, IsThisADeferredWrite);
                 try_return(RC = STATUS_PENDING);
@@ -685,7 +685,7 @@ UDFCommonWrite(
                     NtReqFcb->CommonFCBHeader.AllocationSize.LowPart &= ~(PAGE_SIZE-1);
                 }
 
-                KdPrint(("UDFCommonWrite: Set size %x (alloc size %x)\n", ByteOffset.LowPart + TruncatedLength, NtReqFcb->CommonFCBHeader.AllocationSize.LowPart));
+                UDFPrint(("UDFCommonWrite: Set size %x (alloc size %x)\n", ByteOffset.LowPart + TruncatedLength, NtReqFcb->CommonFCBHeader.AllocationSize.LowPart));
                 if (CcIsFileCached(FileObject)) {
                     if(ExtendFS) {
                         MmPrint(("    CcSetFileSizes()\n"));
@@ -743,7 +743,7 @@ UDFCommonWrite(
             if (!FileObject->PrivateCacheMap) {
                 // This is the first cached I/O operation. You must ensure
                 // that the FCB Common FCB Header contains valid sizes at this time
-                KdPrint(("UDFCommonWrite: Init system cache\n"));
+                UDFPrint(("UDFCommonWrite: Init system cache\n"));
                 MmPrint(("    CcInitializeCacheMap()\n"));
                 CcInitializeCacheMap(FileObject, (PCC_FILE_SIZES)(&(NtReqFcb->CommonFCBHeader.AllocationSize)),
                     FALSE,      // We will not utilize pin access for this file
@@ -847,11 +847,11 @@ UDFCommonWrite(
 
 #if 1
             if((ULONG)TopIrp == FSRTL_MOD_WRITE_TOP_LEVEL_IRP) {
-                KdPrint(("FSRTL_MOD_WRITE_TOP_LEVEL_IRP => CanWait\n"));
+                UDFPrint(("FSRTL_MOD_WRITE_TOP_LEVEL_IRP => CanWait\n"));
                 CanWait = TRUE;
             } else
             if((ULONG)TopIrp == FSRTL_CACHE_TOP_LEVEL_IRP) {
-                KdPrint(("FSRTL_CACHE_TOP_LEVEL_IRP => CanWait\n"));
+                UDFPrint(("FSRTL_CACHE_TOP_LEVEL_IRP => CanWait\n"));
                 CanWait = TRUE;
             }
 
@@ -861,7 +861,7 @@ UDFCommonWrite(
             } else
             {}
 /*            if((TopIrp != Irp)) {
-                KdPrint(("(TopIrp != Irp) => CanWait\n"));
+                UDFPrint(("(TopIrp != Irp) => CanWait\n"));
                 CanWait = TRUE;
             } else*/
 #endif
@@ -872,13 +872,13 @@ UDFCommonWrite(
             }
             // Successful check will cause WCache lock
             if(!CanWait && UDFIsFileCached__(Vcb, Fcb->FileInfo, ByteOffset.QuadPart, TruncatedLength, TRUE)) {
-                KdPrint(("UDFCommonWrite: Cached => CanWait\n"));
+                UDFPrint(("UDFCommonWrite: Cached => CanWait\n"));
                 CacheLocked = TRUE;
                 CanWait = TRUE;
             }
             // Send the request to lower level drivers
             if(!CanWait) {
-                KdPrint(("UDFCommonWrite: Post physical write %x bytes at %x\n", TruncatedLength, ByteOffset.LowPart));
+                UDFPrint(("UDFCommonWrite: Post physical write %x bytes at %x\n", TruncatedLength, ByteOffset.LowPart));
 
                 try_return(RC = STATUS_PENDING);
             }
@@ -1022,7 +1022,7 @@ try_exit:   NOTHING;
         } // can we complete the IRP ?
     } _SEH2_END; // end of "__finally" processing
 
-    KdPrint(("\n"));
+    UDFPrint(("\n"));
     return(RC);
 } // end UDFCommonWrite()
 
@@ -1050,7 +1050,7 @@ UDFDeferredWriteCallBack(
     IN PVOID Context2           // Should be Irp
     )          
 {
-    KdPrint(("UDFDeferredWriteCallBack\n"));
+    UDFPrint(("UDFDeferredWriteCallBack\n"));
     // We should typically simply post the request to our internal
     // queue of posted requests (just as we would if the original write
     // could not be completed because the caller could not block).

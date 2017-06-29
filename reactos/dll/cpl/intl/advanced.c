@@ -61,18 +61,19 @@ GetSupportedCP(
             {
                 pCodePage->NextItem = PCPage;
                 PCPage = pCodePage;
+
+                wsprintf(szSection, L"CODEPAGE_REMOVE_%d", uiCodePage);
+
+                if ((uiCodePage == GetACP()) ||
+                    (uiCodePage == GetOEMCP()) ||
+                    (!SetupFindFirstLineW(hInf, szSection, L"AddReg", &Context2)))
+                {
+                    pCodePage->Flags |= CODEPAGE_NOT_REMOVEABLE;
+                }
             }
             else
             {
                 HeapFree(GetProcessHeap(), 0, pCodePage);
-            }
-
-            wsprintf(szSection, L"CODEPAGE_REMOVE_%d", uiCodePage);
-            if ((uiCodePage == GetACP()) ||
-                (uiCodePage == GetOEMCP()) ||
-                (!SetupFindFirstLineW(hInf, szSection, L"AddReg", &Context2)))
-            {
-                pCodePage->Flags |= CODEPAGE_NOT_REMOVEABLE;
             }
         }
 

@@ -32,6 +32,11 @@ ULONG CDECL wined3d_palette_incref(struct wined3d_palette *palette)
     return refcount;
 }
 
+static void wined3d_palette_destroy_object(void *object)
+{
+    HeapFree(GetProcessHeap(), 0, object);
+}
+
 ULONG CDECL wined3d_palette_decref(struct wined3d_palette *palette)
 {
     ULONG refcount = InterlockedDecrement(&palette->ref);
@@ -39,7 +44,7 @@ ULONG CDECL wined3d_palette_decref(struct wined3d_palette *palette)
     TRACE("%p decreasing refcount to %u.\n", palette, refcount);
 
     if (!refcount)
-        HeapFree(GetProcessHeap(), 0, palette);
+        wined3d_cs_destroy_object(palette->device->cs, wined3d_palette_destroy_object, palette);
 
     return refcount;
 }

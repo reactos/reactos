@@ -45,9 +45,9 @@ void set_ldids(HINF hInf, LPCWSTR pszInstallSection, LPCWSTR pszWorkingDir) DECL
 
 HRESULT launch_exe(LPCWSTR cmd, LPCWSTR dir, HANDLE *phEXE) DECLSPEC_HIDDEN;
 
-static inline void *heap_alloc(size_t len)
+static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
 {
-    return HeapAlloc(GetProcessHeap(), 0, len);
+    return HeapAlloc(GetProcessHeap(), 0, size);
 }
 
 static inline BOOL heap_free(void *mem)

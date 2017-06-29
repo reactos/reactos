@@ -124,7 +124,7 @@ UDFPostStackOverflowRead(
     PKEVENT Event;
     PERESOURCE Resource;
 
-    KdPrint(("Getting too close to stack limit pass request to Fsp\n"));
+    UDFPrint(("Getting too close to stack limit pass request to Fsp\n"));
 
     //  Allocate an event and get shared on the resource we will
     //  be later using the common read.
@@ -190,7 +190,7 @@ UDFStackOverflowRead(
     PtrUDFIrpContext PtrIrpContext = (PtrUDFIrpContext)Context;
     NTSTATUS RC;
 
-    KdPrint(("UDFStackOverflowRead: \n"));
+    UDFPrint(("UDFStackOverflowRead: \n"));
     //  Make it now look like we can wait for I/O to complete
     PtrIrpContext->IrpContextFlags |= UDF_IRP_CONTEXT_CAN_BLOCK;
 
@@ -264,27 +264,27 @@ UDFCommonRead(
         TopIrp = IoGetTopLevelIrp();
         switch((ULONG)TopIrp) {
         case FSRTL_FSP_TOP_LEVEL_IRP:
-            KdPrint(("  FSRTL_FSP_TOP_LEVEL_IRP\n"));
+            UDFPrint(("  FSRTL_FSP_TOP_LEVEL_IRP\n"));
             break;
         case FSRTL_CACHE_TOP_LEVEL_IRP:
-            KdPrint(("  FSRTL_CACHE_TOP_LEVEL_IRP\n"));
+            UDFPrint(("  FSRTL_CACHE_TOP_LEVEL_IRP\n"));
             break;
         case FSRTL_MOD_WRITE_TOP_LEVEL_IRP:
-            KdPrint(("  FSRTL_MOD_WRITE_TOP_LEVEL_IRP\n"));
+            UDFPrint(("  FSRTL_MOD_WRITE_TOP_LEVEL_IRP\n"));
 //            BrutePoint()
             break;
         case FSRTL_FAST_IO_TOP_LEVEL_IRP:
-            KdPrint(("  FSRTL_FAST_IO_TOP_LEVEL_IRP\n"));
+            UDFPrint(("  FSRTL_FAST_IO_TOP_LEVEL_IRP\n"));
 //            BrutePoint()
             break;
         case NULL:
-            KdPrint(("  NULL TOP_LEVEL_IRP\n"));
+            UDFPrint(("  NULL TOP_LEVEL_IRP\n"));
             break;
         default:
             if(TopIrp == Irp) {
-                KdPrint(("  TOP_LEVEL_IRP\n"));
+                UDFPrint(("  TOP_LEVEL_IRP\n"));
             } else {
-                KdPrint(("  RECURSIVE_IRP, TOP = %x\n", TopIrp));
+                UDFPrint(("  RECURSIVE_IRP, TOP = %x\n", TopIrp));
             }
             break;
         }
@@ -345,7 +345,7 @@ UDFCommonRead(
         PagingIo = (Irp->Flags & IRP_PAGING_IO) ? TRUE : FALSE;
         NonBufferedIo = (Irp->Flags & IRP_NOCACHE) ? TRUE : FALSE;
         SynchronousIo = (FileObject->Flags & FO_SYNCHRONOUS_IO) ? TRUE : FALSE;
-        KdPrint(("    Flags: %s %s %s %s\n",
+        UDFPrint(("    Flags: %s %s %s %s\n",
                       CanWait ? "W" : "w", PagingIo ? "Pg" : "pg",
                       NonBufferedIo ? "NBuf" : "buff", SynchronousIo ? "Snc" : "Asc"));
 
@@ -368,7 +368,7 @@ UDFCommonRead(
             // a 0 byte read can be immediately succeeded
             try_return(RC);
         }
-        KdPrint(("    ByteOffset = %I64x, ReadLength = %x\n", ByteOffset.QuadPart, ReadLength));
+        UDFPrint(("    ByteOffset = %I64x, ReadLength = %x\n", ByteOffset.QuadPart, ReadLength));
 
         // Is this a read of the volume itself ?
         if (Fcb->NodeIdentifier.NodeType == UDF_NODE_TYPE_VCB) {
@@ -382,7 +382,7 @@ UDFCommonRead(
 
             if(PtrIrpContext->IrpContextFlags & UDF_IRP_CONTEXT_FLUSH2_REQUIRED) {
 
-                KdPrint(("  UDF_IRP_CONTEXT_FLUSH2_REQUIRED\n"));
+                UDFPrint(("  UDF_IRP_CONTEXT_FLUSH2_REQUIRED\n"));
                 PtrIrpContext->IrpContextFlags &= ~UDF_IRP_CONTEXT_FLUSH2_REQUIRED;
 
                 if(!(Vcb->VCBFlags & UDF_VCB_FLAGS_RAW_DISK)) {
@@ -396,7 +396,7 @@ UDFCommonRead(
 
             if(PtrIrpContext->IrpContextFlags & UDF_IRP_CONTEXT_FLUSH_REQUIRED) {
 
-                KdPrint(("  UDF_IRP_CONTEXT_FLUSH_REQUIRED\n"));
+                UDFPrint(("  UDF_IRP_CONTEXT_FLUSH_REQUIRED\n"));
                 PtrIrpContext->IrpContextFlags &= ~UDF_IRP_CONTEXT_FLUSH_REQUIRED;
 
                 // Acquire the volume resource exclusive
@@ -515,7 +515,7 @@ UDFCommonRead(
             TruncatedLength = (ULONG)(NtReqFcb->CommonFCBHeader.FileSize.QuadPart - ByteOffset.QuadPart);
             // we can't get ZERO here
         }
-        KdPrint(("    TruncatedLength = %x\n", TruncatedLength));
+        UDFPrint(("    TruncatedLength = %x\n", TruncatedLength));
 
         // There are certain complications that arise when the same file stream
         // has been opened for cached and non-cached access. The FSD is then
@@ -685,11 +685,11 @@ UDFCommonRead(
 
 #if 1
             if((ULONG)TopIrp == FSRTL_MOD_WRITE_TOP_LEVEL_IRP) {
-                KdPrint(("FSRTL_MOD_WRITE_TOP_LEVEL_IRP => CanWait\n"));
+                UDFPrint(("FSRTL_MOD_WRITE_TOP_LEVEL_IRP => CanWait\n"));
                 CanWait = TRUE;
             } else
             if((ULONG)TopIrp == FSRTL_CACHE_TOP_LEVEL_IRP) {
-                KdPrint(("FSRTL_CACHE_TOP_LEVEL_IRP => CanWait\n"));
+                UDFPrint(("FSRTL_CACHE_TOP_LEVEL_IRP => CanWait\n"));
                 CanWait = TRUE;
             }
 
@@ -699,7 +699,7 @@ UDFCommonRead(
             } else
             {}
 /*            if((TopIrp != Irp)) {
-                KdPrint(("(TopIrp != Irp) => CanWait\n"));
+                UDFPrint(("(TopIrp != Irp) => CanWait\n"));
                 CanWait = TRUE;
             } else*/
 #endif
@@ -831,7 +831,7 @@ try_exit:   NOTHING;
             if(!_SEH2_AbnormalTermination()) {
                 Irp->IoStatus.Status = RC;
                 Irp->IoStatus.Information = NumberBytesRead;
-                KdPrint(("    NumberBytesRead = %x\n", NumberBytesRead));
+                UDFPrint(("    NumberBytesRead = %x\n", NumberBytesRead));
                 // Free up the Irp Context
                 UDFReleaseIrpContext(PtrIrpContext);
                 // complete the IRP
@@ -875,7 +875,7 @@ UDFGetCallersBuffer(
 {
     VOID            *ReturnedBuffer = NULL;
 
-    KdPrint(("UDFGetCallersBuffer: \n"));
+    UDFPrint(("UDFGetCallersBuffer: \n"));
 
     // If an MDL is supplied, use it.
     if(Irp->MdlAddress) {
@@ -943,7 +943,7 @@ UDFLockCallersBuffer(
     NTSTATUS            RC = STATUS_SUCCESS;
     PMDL                PtrMdl = NULL;
 
-    KdPrint(("UDFLockCallersBuffer: \n"));
+    UDFPrint(("UDFLockCallersBuffer: \n"));
 
     ASSERT(Irp);
     
@@ -1039,7 +1039,7 @@ UDFUnlockCallersBuffer(
 {
     NTSTATUS            RC = STATUS_SUCCESS;
 
-    KdPrint(("UDFUnlockCallersBuffer: \n"));
+    UDFPrint(("UDFUnlockCallersBuffer: \n"));
 
     ASSERT(Irp);
 
@@ -1047,7 +1047,7 @@ UDFUnlockCallersBuffer(
         // Is a nonPaged buffer already present in the IRP
         if (PtrIrpContext->IrpContextFlags & UDF_IRP_CONTEXT_BUFFER_LOCKED) {
 
-            KdPrint(("  UDF_IRP_CONTEXT_BUFFER_LOCKED MDL=%x, Irp MDL=%x\n", PtrIrpContext->PtrMdl, Irp->MdlAddress));
+            UDFPrint(("  UDF_IRP_CONTEXT_BUFFER_LOCKED MDL=%x, Irp MDL=%x\n", PtrIrpContext->PtrMdl, Irp->MdlAddress));
             if(PtrIrpContext->TransitionBuffer) {
                 MmPrint(("    UDFUnlockCallersBuffer: free TransitionBuffer\n"));
                 DbgFreePool(PtrIrpContext->TransitionBuffer);
@@ -1083,7 +1083,7 @@ UDFUnlockCallersBuffer(
         if(Irp->MdlAddress) {
 //            MmPrint(("    Irp->Mdl, MmUnmapLockedPages()\n"));
 //            MmUnmapLockedPages(SystemBuffer, Irp->MdlAddress);
-            KdPrint(("  UDF_IRP_CONTEXT_BUFFER_LOCKED MDL=%x, Irp MDL=%x\n", PtrIrpContext->PtrMdl, Irp->MdlAddress));
+            UDFPrint(("  UDF_IRP_CONTEXT_BUFFER_LOCKED MDL=%x, Irp MDL=%x\n", PtrIrpContext->PtrMdl, Irp->MdlAddress));
             UDFTouch(Irp->MdlAddress);
             KeFlushIoBuffers( Irp->MdlAddress,
                               ((IoGetCurrentIrpStackLocation(Irp))->MajorFunction) == IRP_MJ_READ,
@@ -1123,7 +1123,7 @@ BOOLEAN                     ReadCompletion)
     NTSTATUS                RC = STATUS_SUCCESS;
     PFILE_OBJECT            FileObject = NULL;
 
-    KdPrint(("UDFMdlComplete: \n"));
+    UDFPrint(("UDFMdlComplete: \n"));
 
     FileObject = IrpSp->FileObject;
     ASSERT(FileObject);

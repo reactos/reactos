@@ -17,6 +17,16 @@
 #include "config.h"
 #include "intsym.h"
 
+/* For --nagging compilation with -std=c89, we need
+   to disable the inline keyword. */
+#ifdef PLAIN_C89
+#ifndef inline
+#define inline
+#endif
+#endif
+
+#include <errno.h>
+
 #ifdef HAVE_STDLIB_H
 /* realloc, size_t */
 #include <stdlib.h>
@@ -63,6 +73,9 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 
 #ifdef OS2
 #include <float.h>
@@ -88,15 +101,23 @@
 
 typedef unsigned char byte;
 
+#ifndef __REACTOS__
+#if defined(_MSC_VER) && !defined(MPG123_DEF_SSIZE_T)
+#define MPG123_DEF_SSIZE_T
+#include <stddef.h>
+typedef ptrdiff_t ssize_t;
+#endif
+#endif /* __REACTOS__ */
+
 /* A safe realloc also for very old systems where realloc(NULL, size) returns NULL. */
 void *safe_realloc(void *ptr, size_t size);
 #ifndef HAVE_STRERROR
 const char *strerror(int errnum);
 #endif
 
-#ifndef HAVE_STRDUP
-char *strdup(const char *s);
-#endif
+/* Roll our own strdup() that does not depend on libc feature test macros
+   and returns NULL on NULL input instead of crashing. */
+char* compat_strdup(const char *s);
 
 /* If we have the size checks enabled, try to derive some sane printfs.
    Simple start: Use max integer type and format if long is not big enough.
@@ -125,6 +146,10 @@ typedef intmax_t ssize_p;
 typedef long ssize_p;
 #endif
 
+/* Get an environment variable, possibly converted to UTF-8 from wide string.
+   The return value is a copy that you shall free. */
+char *compat_getenv(const char* name);
+
 /**
  * Opening a file handle can be different.
  * This function here is defined to take a path in native encoding (ISO8859 / UTF-8 / ...), or, when MS Windows Unicode support is enabled, an UTF-8 string that will be converted back to native UCS-2 (wide character) before calling the system's open function.
@@ -133,6 +158,11 @@ typedef long ssize_p;
  * @return file descriptor (>=0) or error code.
  */
 int compat_open(const char *filename, int flags);
+FILE* compat_fopen(const char *filename, const char *mode);
+/**
+ * Also fdopen to avoid having to define POSIX macros in various source files.
+ */
+FILE* compat_fdopen(int fd, const char *mode);
 
 /**
  * Closing a file handle can be platform specific.
@@ -141,6 +171,7 @@ int compat_open(const char *filename, int flags);
  * @return 0 if the file was successfully closed. A return value of -1 indicates an error.
  */
 int compat_close(int infd);
+int compat_fclose(FILE* stream);
 
 /* Those do make sense in a separate file, but I chose to include them in compat.c because that's the one source whose object is shared between mpg123 and libmpg123 -- and both need the functionality internally. */
 
@@ -173,6 +204,73 @@ int win32_wide_utf8(const wchar_t * const wptr, char **mbptr, size_t * buflen);
 int win32_utf8_wide(const char *const mbptr, wchar_t **wptr, size_t *buflen);
 #endif
 
+/*
+	A little bit of path abstraction: We always work with plain char strings
+	that usually represent POSIX-ish UTF-8 paths (something like c:/some/file
+	might appear). For Windows, those are converted to wide strings with \
+	instead of / and possible fun is had with prefixes to get around the old
+	path length limit. Outside of the compat library, that stuff should not
+	matter, although something like //?/UNC/server/some/file could be thrown
+	around as UTF-8 string, to be converted to a wide \\?\UNC\server\some\file
+	just before handing it to Windows API.
+
+	There is a lot of unnecessary memory allocation and string copying because
+	of this, but this filesystem stuff is not really relevant to mpg123
+	performance, so the goal is to keep the code outside the compatibility layer
+	simple.
+*/
+
+/*
+	Concatenate a prefix and a path, one of them alowed to be NULL.
+	If the path is already absolute, the prefix is ignored. Relative
+	parts (like /..) are resolved if this is sensible for the platform
+	(meaning: for Windows), else they are preserved (on POSIX, actual
+	file system access would be needed because of symlinks).
+*/
+char* compat_catpath(const char *prefix, const char* path);
+
+/* Return 1 if the given path indicates an existing directory,
+   0 otherwise. */
+int compat_isdir(const char *path);
+
+/*
+	Directory traversal. This talks ASCII/UTF-8 paths externally, converts
+	to/from wchar_t internally if the platform wants that. Returning NULL
+	means failure to open/end of listing.
+	There is no promise about sorting entries.
+*/
+struct compat_dir;
+/* Returns NULL if either directory failed to open or listing is empty.
+   Listing can still be empty even if non-NULL, so always rely on the
+   nextfile/nextdir functions. */
+struct compat_dir* compat_diropen(char *path);
+void               compat_dirclose(struct compat_dir*);
+/* Get the next entry that is a file (or symlink to one).
+   The returned string is a copy that needs to be freed after use. */
+char* compat_nextfile(struct compat_dir*);
+/* Get the next entry that is a directory (or symlink to one).
+   The returned string is a copy that needs to be freed after use. */
+char* compat_nextdir (struct compat_dir*);
+
+#ifdef USE_MODULES
+/*
+	For keeping the path mess local, a system-specific dlopen() variant
+	is contained in here, too. This is very thin wrapping, even sparing
+	definition of a handle type, just using void pointers.
+	Use of absolute paths is a good idea if you want to be sure which
+	file is openend, as default search paths vary.
+*/
+void *compat_dlopen (const char *path);
+void *compat_dlsym  (void *handle, const char* name);
+void  compat_dlclose(void *handle);
+#endif
+
+/* Blocking write/read of data with signal resilience.
+   Both continue after being interrupted by signals and always return the
+   amount of processed data (shortage indicating actual problem or EOF). */
+size_t unintr_write(int fd, void const *buffer, size_t bytes);
+size_t unintr_read (int fd, void *buffer, size_t bytes);
+
 /* That one comes from Tellie on OS/2, needed in resolver. */
 #ifdef __KLIBC__
 typedef int socklen_t;
@@ -185,5 +283,9 @@ typedef int socklen_t;
 #endif
 
 #include "true.h"
+
+#if (!defined(WIN32) || defined (__CYGWIN__)) && defined(HAVE_SIGNAL_H)
+void (*catchsignal(int signum, void(*handler)()))();
+#endif
 
 #endif

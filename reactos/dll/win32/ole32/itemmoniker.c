@@ -933,39 +933,16 @@ HRESULT WINAPI CreateItemMoniker(LPCOLESTR lpszDelim, LPCOLESTR  lpszItem, IMoni
     hr = ItemMonikerImpl_Construct(newItemMoniker,lpszDelim,lpszItem);
 
     if (FAILED(hr)){
-
         HeapFree(GetProcessHeap(),0,newItemMoniker);
-    return hr;
+        return hr;
     }
 
     return ItemMonikerImpl_QueryInterface(&newItemMoniker->IMoniker_iface,&IID_IMoniker,
                                           (void**)ppmk);
 }
 
-static HRESULT WINAPI ItemMonikerCF_QueryInterface(IClassFactory *iface, REFIID riid, void **ppv)
-{
-    *ppv = NULL;
-    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IClassFactory))
-    {
-        *ppv = iface;
-        IClassFactory_AddRef(iface);
-        return S_OK;
-    }
-    return E_NOINTERFACE;
-}
-
-static ULONG WINAPI ItemMonikerCF_AddRef(LPCLASSFACTORY iface)
-{
-    return 2; /* non-heap based object */
-}
-
-static ULONG WINAPI ItemMonikerCF_Release(LPCLASSFACTORY iface)
-{
-    return 1; /* non-heap based object */
-}
-
-static HRESULT WINAPI ItemMonikerCF_CreateInstance(LPCLASSFACTORY iface,
-    LPUNKNOWN pUnk, REFIID riid, LPVOID *ppv)
+HRESULT WINAPI ItemMoniker_CreateInstance(IClassFactory *iface,
+    IUnknown *pUnk, REFIID riid, void **ppv)
 {
     ItemMonikerImpl* newItemMoniker;
     HRESULT  hr;
@@ -990,25 +967,4 @@ static HRESULT WINAPI ItemMonikerCF_CreateInstance(LPCLASSFACTORY iface,
         HeapFree(GetProcessHeap(),0,newItemMoniker);
 
     return hr;
-}
-
-static HRESULT WINAPI ItemMonikerCF_LockServer(LPCLASSFACTORY iface, BOOL fLock)
-{
-    FIXME("(%d), stub!\n",fLock);
-    return S_OK;
-}
-
-static const IClassFactoryVtbl ItemMonikerCFVtbl =
-{
-    ItemMonikerCF_QueryInterface,
-    ItemMonikerCF_AddRef,
-    ItemMonikerCF_Release,
-    ItemMonikerCF_CreateInstance,
-    ItemMonikerCF_LockServer
-};
-static const IClassFactoryVtbl *ItemMonikerCF = &ItemMonikerCFVtbl;
-
-HRESULT ItemMonikerCF_Create(REFIID riid, LPVOID *ppv)
-{
-    return IClassFactory_QueryInterface((IClassFactory *)&ItemMonikerCF, riid, ppv);
 }

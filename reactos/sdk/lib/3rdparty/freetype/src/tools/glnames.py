@@ -6,7 +6,7 @@
 #
 
 
-# Copyright 1996-2016 by
+# Copyright 1996-2017 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -5318,7 +5318,7 @@ def main():
   write( "/*                                                                         */\n" )
   write( "/*    PostScript glyph names.                                              */\n" )
   write( "/*                                                                         */\n" )
-  write( "/*  Copyright 2005-2016 by                                                 */\n" )
+  write( "/*  Copyright 2005-2017 by                                                 */\n" )
   write( "/*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */\n" )
   write( "/*                                                                         */\n" )
   write( "/*  This file is part of the FreeType project, and may only be used,       */\n" )
@@ -5378,6 +5378,7 @@ def main():
   # write the lookup routine now
   #
   write( """\
+#ifdef  DEFINE_PS_TABLES
   /*
    *  This function searches the compressed table efficiently.
    */
@@ -5472,6 +5473,7 @@ def main():
   NotFound:
     return 0;
   }
+#endif /* DEFINE_PS_TABLES */
 
 #endif /* FT_CONFIG_OPTION_ADOBE_GLYPH_LIST */
 

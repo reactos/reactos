@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for controlling the auto-hinter (specification only).   */
 /*                                                                         */
-/*  Copyright 2012-2016 by                                                 */
+/*  Copyright 2012-2017 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -448,7 +448,7 @@ FT_BEGIN_HEADER
    *   no-stem-darkening[autofit]
    *
    * @description:
-   *   *Experimental* *only,* *requires* *linear* *alpha* *blending* *and*
+   *   *Experimental* *only*, *requires* *linear* *alpha* *blending* *and*
    *   *gamma* *correction*
    *
    *   Stem darkening emboldens glyphs at smaller sizes to make them more
@@ -477,9 +477,31 @@ FT_BEGIN_HEADER
    *   of emboldening versus the CFF driver.
    *
    *   This property can be set via the `FREETYPE_PROPERTIES' environment
-   *   variable similar to the CFF driver.
+   *   variable similar to the CFF driver.  It can also be set per face
+   *   using @FT_Face_Properties with @FT_PARAM_TAG_STEM_DARKENING.
    *
    */
+
+
+  /**************************************************************************
+   *
+   * @constant:
+   *   FT_PARAM_TAG_STEM_DARKENING
+   *
+   * @description:
+   *   An @FT_Parameter tag to be used with @FT_Face_Properties.  The
+   *   corresponding Boolean argument specifies whether to apply stem
+   *   darkening, overriding the global default values or the values set up
+   *   with @FT_Property_Set (see @no-stem-darkening[autofit] and
+   *   @no-stem-darkening[cff]).
+   *
+   *   This is a passive setting that only takes effect if the font driver
+   *   or autohinter honors it, which the CFF driver always does, but the
+   *   autohinter only in `light' hinting mode (as of version 2.7.0).
+   *
+   */
+#define FT_PARAM_TAG_STEM_DARKENING \
+          FT_MAKE_TAG( 'd', 'a', 'r', 'k' )
 
 
   /**************************************************************************

@@ -2378,7 +2378,6 @@ IntSetThreadDesktop(IN HDESK hDesktop,
                     IN BOOL FreeOnFailure)
 {
     PDESKTOP pdesk = NULL, pdeskOld;
-    HDESK hdeskOld;
     PTHREADINFO pti;
     NTSTATUS Status;
     PCLIENTTHREADINFO pctiOld, pctiNew = NULL;
@@ -2467,7 +2466,6 @@ IntSetThreadDesktop(IN HDESK hDesktop,
     }
 
     pdeskOld = pti->rpdesk;
-    hdeskOld = pti->hdesk;
     if (pti->pcti != &pti->cti)
         pctiOld = pti->pcti;
     else
@@ -2515,7 +2513,6 @@ IntSetThreadDesktop(IN HDESK hDesktop,
         if (pctiOld) DesktopHeapFree(pdeskOld, pctiOld);
         IntUnmapDesktopView(pdeskOld);
         ObDereferenceObject(pdeskOld);
-        ZwClose(hdeskOld);
     }
 
     if (pdesk)

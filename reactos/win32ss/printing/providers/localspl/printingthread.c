@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Local Spooler
  * LICENSE:     GNU LGPL v2.1 or any later version as published by the Free Software Foundation
  * PURPOSE:     Implementation of the Thread that actually performs the printing process
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -32,7 +32,7 @@ PrintingThreadProc(PLOCAL_JOB pJob)
     if (!pwszPrinterPort)
     {
         dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+        ERR("DllAllocSplMem failed!\n");
         goto Cleanup;
     }
 
@@ -71,7 +71,7 @@ PrintingThreadProc(PLOCAL_JOB pJob)
     if (!pwszPrinterAndJob)
     {
         dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+        ERR("DllAllocSplMem failed!\n");
         goto Cleanup;
     }
 
@@ -100,7 +100,7 @@ PrintingThreadProc(PLOCAL_JOB pJob)
     if (!pwszSPLFile)
     {
         dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+        ERR("DllAllocSplMem failed!\n");
         goto Cleanup;
     }
 

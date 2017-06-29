@@ -53,7 +53,7 @@ UDFShutdown(
     PtrUDFIrpContext PtrIrpContext = NULL;
     BOOLEAN          AreWeTopLevel = FALSE;
 
-    KdPrint(("UDFShutDown\n"));
+    UDFPrint(("UDFShutDown\n"));
 //    BrutePoint();
 
     FsRtlEnterFileSystem();
@@ -124,7 +124,7 @@ UDFCommonShutdown(
     PPREVENT_MEDIA_REMOVAL_USER_IN Buf = NULL;
     LARGE_INTEGER delay;
 
-    KdPrint(("UDFCommonShutdown\n"));
+    UDFPrint(("UDFCommonShutdown\n"));
 
     _SEH2_TRY {
         // First, get a pointer to the current I/O stack location
@@ -168,7 +168,7 @@ UDFCommonShutdown(
 
 #ifdef UDF_DELAYED_CLOSE
                 UDFAcquireResourceExclusive(&(Vcb->VCBResource), TRUE);
-                KdPrint(("    UDFCommonShutdown:     set UDF_VCB_FLAGS_NO_DELAYED_CLOSE\n"));
+                UDFPrint(("    UDFCommonShutdown:     set UDF_VCB_FLAGS_NO_DELAYED_CLOSE\n"));
                 Vcb->VCBFlags |= UDF_VCB_FLAGS_NO_DELAYED_CLOSE;
                 UDFReleaseResource(&(Vcb->VCBResource));
 #endif //UDF_DELAYED_CLOSE
@@ -178,7 +178,7 @@ UDFCommonShutdown(
                 // release GlobalDataResource and re-acquire it later.
                 UDFReleaseResource( &(UDFGlobalData.GlobalDataResource) );
                 if(Vcb->RootDirFCB && Vcb->RootDirFCB->FileInfo) {
-                    KdPrint(("    UDFCommonShutdown:     UDFCloseAllSystemDelayedInDir\n"));
+                    UDFPrint(("    UDFCommonShutdown:     UDFCloseAllSystemDelayedInDir\n"));
                     RC = UDFCloseAllSystemDelayedInDir(Vcb, Vcb->RootDirFCB->FileInfo);
                     ASSERT(OS_SUCCESS(RC));
                 }

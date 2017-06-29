@@ -1850,3 +1850,24 @@ LRESULT CInternetToolbar::OnLUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     return 0;
 }
 
+LRESULT CInternetToolbar::OnWinIniChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    HRESULT hr;
+    HWND hwndMenu;
+
+    hr = IUnknown_GetWindow(fMenuBar, &hwndMenu);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return 0;
+
+    CComPtr<IWinEventHandler> menuWinEventHandler;
+    hr = fMenuBar->QueryInterface(IID_PPV_ARG(IWinEventHandler, &menuWinEventHandler));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return 0;
+
+    LRESULT lres;
+    hr = menuWinEventHandler->OnWinEvent(hwndMenu, uMsg, wParam, lParam, &lres);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return 0;
+
+    return lres;
+}

@@ -2455,7 +2455,6 @@
 #define ssl_set_arc4_support mbedtls_ssl_conf_arc4_support
 #define ssl_set_authmode mbedtls_ssl_conf_authmode
 #define ssl_set_bio mbedtls_ssl_set_bio
-#define ssl_set_bio mbedtls_ssl_set_bio_timeout
 #define ssl_set_ca_chain mbedtls_ssl_conf_ca_chain
 #define ssl_set_cbc_record_splitting mbedtls_ssl_conf_cbc_record_splitting
 #define ssl_set_ciphersuites mbedtls_ssl_conf_ciphersuites

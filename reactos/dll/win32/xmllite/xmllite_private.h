@@ -40,14 +40,15 @@
 WINE_DEFAULT_DEBUG_CHANNEL(xmllite);
 
 /* memory allocation functions */
-static inline void *heap_alloc(size_t len)
+
+static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
 {
-    return HeapAlloc(GetProcessHeap(), 0, len);
+    return HeapAlloc(GetProcessHeap(), 0, size);
 }
 
-static inline void *heap_realloc(void *mem, size_t len)
+static inline void* __WINE_ALLOC_SIZE(2) heap_realloc(void *mem, size_t size)
 {
-    return HeapReAlloc(GetProcessHeap(), 0, mem, len);
+    return HeapReAlloc(GetProcessHeap(), 0, mem, size);
 }
 
 static inline BOOL heap_free(void *mem)
@@ -81,6 +82,7 @@ static inline void m_free(IMalloc *imalloc, void *mem)
 
 typedef enum
 {
+    XmlEncoding_USASCII,
     XmlEncoding_UTF16,
     XmlEncoding_UTF8,
     XmlEncoding_Unknown

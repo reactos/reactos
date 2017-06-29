@@ -31,7 +31,7 @@
 
 #define UDF_DUMP_DIRTREE
 #ifdef UDF_DUMP_DIRTREE
-#define DirPrint(x)  KdPrint(x)
+#define DirPrint(x)  UDFPrint(x)
 #else
 #define DirPrint(x)  {;}
 #endif
@@ -490,7 +490,7 @@ UDFFindNextFI(
         if(FileId->fileCharacteristics & (~0x1f))
             continue;
         if(prevOffset + ((FileId->lengthFileIdent + FileId->lengthOfImpUse + sizeof(FILE_IDENT_DESC) + 3) & (~((uint32)3))) <= Length) {
-            KdPrint(("UDFFindNextFI OK: %x\n", prevOffset));
+            UDFPrint(("UDFFindNextFI OK: %x\n", prevOffset));
             return prevOffset;
         }
     }
@@ -527,7 +527,7 @@ UDFIndexDirectory(
 
     ExtInfo = &(FileInfo->Dloc->DataLoc);
     FileInfo->Dloc->DirIndex = NULL;
-    KdPrint(("UDF: scaning directory\n"));
+    UDFPrint(("UDF: scaning directory\n"));
     // allocate buffer for the whole directory
     ASSERT((uint32)(ExtInfo->Length));
     if(!ExtInfo->Length)
@@ -578,7 +578,7 @@ UDFIndexDirectory(
         Count++;
         if(Offset+sizeof(FILE_IDENT_DESC) > ExtInfo->Length) {
             if(Offset != ExtInfo->Length) {
-                KdPrint(("  Trash at the end of Dir\n"));
+                UDFPrint(("  Trash at the end of Dir\n"));
             }
 //            BrutePoint();
             break;
@@ -587,7 +587,7 @@ UDFIndexDirectory(
     DirPrint(("  final Offset %x\n", Offset));
     if(Offset > ExtInfo->Length) {
         BrutePoint();
-        KdPrint(("  Unexpected end of Dir\n"));
+        UDFPrint(("  Unexpected end of Dir\n"));
         DbgFreePool(buff);
         return STATUS_FILE_CORRUPT_ERROR;
     }
@@ -612,6 +612,7 @@ UDFIndexDirectory(
     if(DirNdx->FileEntryLoc.logicalBlockNum == (ULONG)-1) {
         DirPrint(("  err: FileEntryLoc=-1\n"));
         DbgFreePool(buff);
+        UDFDirIndexFree(hDirNdx);
         return STATUS_FILE_CORRUPT_ERROR;
     }
     DirNdx->FileCharacteristics = (FileInfo->FileIdent) ?
@@ -631,7 +632,7 @@ UDFIndexDirectory(
     while((Offset<ExtInfo->Length) && FileId->descTag.tagIdent) {
         // add new entry to index list
         if(FileId->descTag.tagIdent != TID_FILE_IDENT_DESC) {
-            KdPrint(("  Invalid tagIdent %x (expected %x) offst %x\n", FileId->descTag.tagIdent, TID_FILE_IDENT_DESC, Offset));
+            UDFPrint(("  Invalid tagIdent %x (expected %x) offst %x\n", FileId->descTag.tagIdent, TID_FILE_IDENT_DESC, Offset));
             DirPrint(("    FileId: filen %x, iulen %x, charact %x\n",
                 FileId->lengthFileIdent, FileId->lengthOfImpUse, FileId->fileCharacteristics));
             DirPrint(("    loc: @%x\n", UDFExtentOffsetToLba(Vcb, ExtInfo->Mapping, Offset, NULL, NULL, NULL, NULL)));
@@ -686,7 +687,7 @@ UDFIndexDirectory(
             DirNdx->FI_Flags |= UDF_FI_FLAG_FI_INTERNAL;
         }
 #if 0
-        KdPrint(("%ws\n", DirNdx->FName.Buffer));
+        UDFPrint(("%ws\n", DirNdx->FName.Buffer));
 #endif
         DirPrint(("%ws\n", DirNdx->FName.Buffer));
         // remember FileEntry location...
@@ -715,7 +716,7 @@ UDFIndexDirectory(
         Count++;
         if(Offset+sizeof(FILE_IDENT_DESC) > ExtInfo->Length) {
             if(Offset != ExtInfo->Length) {
-                KdPrint(("  Trash at the end of Dir (2)\n"));
+                UDFPrint(("  Trash at the end of Dir (2)\n"));
             }
 //            BrutePoint();
             break;
@@ -725,7 +726,7 @@ UDFIndexDirectory(
     DbgFreePool(buff);
     if(Count < 2) {
         UDFDirIndexFree(hDirNdx);
-        KdPrint(("  Directory too short\n"));
+        UDFPrint(("  Directory too short\n"));
         return STATUS_FILE_CORRUPT_ERROR;
     }
     // store index

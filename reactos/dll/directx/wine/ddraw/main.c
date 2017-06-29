@@ -194,6 +194,40 @@ void *ddraw_get_object(struct ddraw_handle_table *t, DWORD handle, enum ddraw_ha
     return entry->object;
 }
 
+HRESULT WINAPI GetSurfaceFromDC(HDC dc, IDirectDrawSurface4 **surface, HDC *device_dc)
+{
+    struct ddraw *ddraw;
+
+    TRACE("dc %p, surface %p, device_dc %p.\n", dc, surface, device_dc);
+
+    if (!surface)
+        return E_INVALIDARG;
+
+    if (!device_dc)
+    {
+        *surface = NULL;
+
+        return E_INVALIDARG;
+    }
+
+    wined3d_mutex_lock();
+    LIST_FOR_EACH_ENTRY(ddraw, &global_ddraw_list, struct ddraw, ddraw_list_entry)
+    {
+        if (FAILED(IDirectDraw4_GetSurfaceFromDC(&ddraw->IDirectDraw4_iface, dc, surface)))
+            continue;
+
+        *device_dc = NULL; /* FIXME */
+        wined3d_mutex_unlock();
+        return DD_OK;
+    }
+    wined3d_mutex_unlock();
+
+    *surface = NULL;
+    *device_dc = NULL;
+
+    return DDERR_NOTFOUND;
+}
+
 /***********************************************************************
  *
  * Helper function for DirectDrawCreate and friends
@@ -742,66 +776,14 @@ HRESULT WINAPI DllCanUnloadNow(void)
 }
 
 
-/***********************************************************************
- *		DllRegisterServer (DDRAW.@)
- */
 HRESULT WINAPI DllRegisterServer(void)
 {
     return __wine_register_resources( instance );
 }
 
-/***********************************************************************
- *		DllUnregisterServer (DDRAW.@)
- */
 HRESULT WINAPI DllUnregisterServer(void)
 {
     return __wine_unregister_resources( instance );
-}
-
-/*******************************************************************************
- * DestroyCallback
- *
- * Callback function for the EnumSurfaces call in DllMain.
- * Dumps some surface info and releases the surface
- *
- * Params:
- *  surf: The enumerated surface
- *  desc: it's description
- *  context: Pointer to the ddraw impl
- *
- * Returns:
- *  DDENUMRET_OK;
- *******************************************************************************/
-static HRESULT WINAPI
-DestroyCallback(IDirectDrawSurface7 *surf,
-                DDSURFACEDESC2 *desc,
-                void *context)
-{
-    struct ddraw_surface *Impl = impl_from_IDirectDrawSurface7(surf);
-    ULONG ref7, ref4, ref3, ref2, ref1, gamma_count, iface_count;
-
-    ref7 = IDirectDrawSurface7_Release(surf);  /* For the EnumSurfaces */
-    ref4 = Impl->ref4;
-    ref3 = Impl->ref3;
-    ref2 = Impl->ref2;
-    ref1 = Impl->ref1;
-    gamma_count = Impl->gamma_count;
-
-    WARN("Surface %p has an reference counts of 7: %u 4: %u 3: %u 2: %u 1: %u gamma: %u\n",
-            Impl, ref7, ref4, ref3, ref2, ref1, gamma_count);
-
-    /* Skip surfaces which are attached somewhere or which are
-     * part of a complex compound. They will get released when destroying
-     * the root
-     */
-    if( (!Impl->is_complex_root) || (Impl->first_attached != Impl) )
-        return DDENUMRET_OK;
-
-    /* Destroy the surface */
-    iface_count = ddraw_surface_release_iface(Impl);
-    while (iface_count) iface_count = ddraw_surface_release_iface(Impl);
-
-    return DDENUMRET_OK;
 }
 
 /***********************************************************************
@@ -891,66 +873,26 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, void *reserved)
     }
 
     case DLL_PROCESS_DETACH:
-        if(!list_empty(&global_ddraw_list))
+        if (WARN_ON(ddraw))
         {
-            struct list *entry, *entry2;
-            WARN("There are still existing DirectDraw interfaces. Wine bug or buggy application?\n");
+            struct ddraw *ddraw;
 
-            /* We remove elements from this loop */
-            LIST_FOR_EACH_SAFE(entry, entry2, &global_ddraw_list)
+            LIST_FOR_EACH_ENTRY(ddraw, &global_ddraw_list, struct ddraw, ddraw_list_entry)
             {
-                struct ddraw *ddraw = LIST_ENTRY(entry, struct ddraw, ddraw_list_entry);
-                HRESULT hr;
-                DDSURFACEDESC2 desc;
-                int i;
+                struct ddraw_surface *surface;
 
-                WARN("DDraw %p has a refcount of %d\n", ddraw, ddraw->ref7 + ddraw->ref4 + ddraw->ref3 + ddraw->ref2 + ddraw->ref1);
+                WARN("DirectDraw object %p has reference counts {%u, %u, %u, %u, %u}.\n",
+                        ddraw, ddraw->ref7, ddraw->ref4, ddraw->ref3, ddraw->ref2, ddraw->ref1);
 
-                /* Add references to each interface to avoid freeing them unexpectedly */
-                IDirectDraw_AddRef(&ddraw->IDirectDraw_iface);
-                IDirectDraw2_AddRef(&ddraw->IDirectDraw2_iface);
-                IDirectDraw4_AddRef(&ddraw->IDirectDraw4_iface);
-                IDirectDraw7_AddRef(&ddraw->IDirectDraw7_iface);
+                if (ddraw->d3ddevice)
+                    WARN("DirectDraw object %p has Direct3D device %p attached.\n", ddraw, ddraw->d3ddevice);
 
-                /* Does a D3D device exist? Destroy it
-                    * TODO: Destroy all Vertex buffers, Lights, Materials
-                    * and execute buffers too
-                    */
-                if(ddraw->d3ddevice)
+                LIST_FOR_EACH_ENTRY(surface, &ddraw->surface_list, struct ddraw_surface, surface_list_entry)
                 {
-                    WARN("DDraw %p has d3ddevice %p attached\n", ddraw, ddraw->d3ddevice);
-                    while(IDirect3DDevice7_Release(&ddraw->d3ddevice->IDirect3DDevice7_iface));
+                    WARN("Surface %p has reference counts {%u, %u, %u, %u, %u, %u}.\n",
+                            surface, surface->ref7, surface->ref4, surface->ref3,
+                            surface->ref2, surface->ref1, surface->gamma_count);
                 }
-
-                /* Destroy the swapchain after any 3D device. The 3D device
-                 * cleanup code needs a swapchain. Specifically, it tries to
-                 * set the current render target to the front buffer. */
-                if (ddraw->wined3d_swapchain)
-                    ddraw_destroy_swapchain(ddraw);
-
-                /* Try to release the objects
-                    * Do an EnumSurfaces to find any hanging surfaces
-                    */
-                memset(&desc, 0, sizeof(desc));
-                desc.dwSize = sizeof(desc);
-                for(i = 0; i <= 1; i++)
-                {
-                    hr = IDirectDraw7_EnumSurfaces(&ddraw->IDirectDraw7_iface,
-                            DDENUMSURFACES_DOESEXIST | DDENUMSURFACES_ALL, &desc, ddraw, DestroyCallback);
-                    if(hr != D3D_OK)
-                        ERR("(%p) EnumSurfaces failed, prepare for trouble\n", ddraw);
-                }
-
-                if (!list_empty(&ddraw->surface_list))
-                    ERR("DDraw %p still has surfaces attached.\n", ddraw);
-
-                /* Release all hanging references to destroy the objects. This
-                    * restores the screen mode too
-                    */
-                while(IDirectDraw_Release(&ddraw->IDirectDraw_iface));
-                while(IDirectDraw2_Release(&ddraw->IDirectDraw2_iface));
-                while(IDirectDraw4_Release(&ddraw->IDirectDraw4_iface));
-                while(IDirectDraw7_Release(&ddraw->IDirectDraw7_iface));
             }
         }
 

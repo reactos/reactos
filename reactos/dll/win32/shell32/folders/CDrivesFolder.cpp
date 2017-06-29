@@ -35,6 +35,24 @@ CDrivesFolderEnum is only responsible for returning the physical items.
 3. The parsing name returned for my computer is incorrect. It should be "My Computer"
 */
 
+static int iDriveIconIds[7] = { IDI_SHELL_DRIVE,       /* DRIVE_UNKNOWN */
+                                IDI_SHELL_CDROM,       /* DRIVE_NO_ROOT_DIR*/
+                                IDI_SHELL_3_14_FLOPPY, /* DRIVE_REMOVABLE*/
+                                IDI_SHELL_DRIVE,       /* DRIVE_FIXED*/
+                                IDI_SHELL_NETDRIVE,    /* DRIVE_REMOTE*/
+                                IDI_SHELL_CDROM,       /* DRIVE_CDROM*/
+                                IDI_SHELL_RAMDISK      /* DRIVE_RAMDISK*/
+                                };
+
+static int iDriveTypeIds[7] = { IDS_DRIVE_FIXED,       /* DRIVE_UNKNOWN */
+                                IDS_DRIVE_FIXED,       /* DRIVE_NO_ROOT_DIR*/
+                                IDS_DRIVE_FLOPPY,      /* DRIVE_REMOVABLE*/
+                                IDS_DRIVE_FIXED,       /* DRIVE_FIXED*/
+                                IDS_DRIVE_NETWORK,     /* DRIVE_REMOTE*/
+                                IDS_DRIVE_CDROM,       /* DRIVE_CDROM*/
+                                IDS_DRIVE_FIXED        /* DRIVE_RAMDISK*/
+                                };
+
 /***********************************************************************
 *   IShellFolder implementation
 */
@@ -125,41 +143,21 @@ HRESULT CDrivesExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl
         return hr;
 
     CHAR* pszDrive = _ILGetDataPointer(pidl)->u.drive.szDriveName;
+    UINT DriveType = GetDriveTypeA(pszDrive);
+    if (DriveType > DRIVE_RAMDISK)
+        DriveType = DRIVE_FIXED;
+
     WCHAR wTemp[MAX_PATH];
-    int icon_idx = -1;
-
-    if (pszDrive)
+    int icon_idx;
+    if ((DriveType == DRIVE_FIXED || DriveType == DRIVE_UNKNOWN) &&
+        (HCR_GetIconW(L"Drive", wTemp, NULL, MAX_PATH, &icon_idx)))
     {
-        switch(GetDriveTypeA(pszDrive))
-        {
-            case DRIVE_REMOVABLE:
-                icon_idx = IDI_SHELL_3_14_FLOPPY;
-                break;
-            case DRIVE_CDROM:
-                icon_idx = IDI_SHELL_CDROM;
-                break;
-            case DRIVE_REMOTE:
-                icon_idx = IDI_SHELL_NETDRIVE;
-                break;
-            case DRIVE_RAMDISK:
-                icon_idx = IDI_SHELL_RAMDISK;
-                break;
-            case DRIVE_NO_ROOT_DIR:
-                icon_idx = IDI_SHELL_CDROM;
-                break;
-        }
-    }
-
-    if (icon_idx != -1)
-    {
-        initIcon->SetNormalIcon(swShell32Name, -icon_idx);
+        initIcon->SetNormalIcon(wTemp, icon_idx);
     }
     else
     {
-        if (HCR_GetIconW(L"Drive", wTemp, NULL, MAX_PATH, &icon_idx))
-            initIcon->SetNormalIcon(wTemp, icon_idx);
-        else
-            initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_DRIVE);
+        icon_idx = iDriveIconIds[DriveType];
+        initIcon->SetNormalIcon(swShell32Name, -icon_idx);
     }
 
     return initIcon->QueryInterface(riid, ppvOut);
@@ -184,13 +182,14 @@ class CDrivesFolderEnum :
 */
 
 static const shvheader MyComputerSFHeader[] = {
-    {IDS_SHV_COLUMN1, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
-    {IDS_SHV_COLUMN3, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10},
-    {IDS_SHV_COLUMN6, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
-    {IDS_SHV_COLUMN7, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
+    {IDS_SHV_COLUMN_NAME, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
+    {IDS_SHV_COLUMN_COMMENTS, SHCOLSTATE_TYPE_STR, LVCFMT_LEFT, 10},
+    {IDS_SHV_COLUMN_TYPE, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10},
+    {IDS_SHV_COLUMN_DISK_CAPACITY, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
+    {IDS_SHV_COLUMN_DISK_AVAILABLE, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
 };
 
-#define MYCOMPUTERSHELLVIEWCOLUMNS 4
+#define MYCOMPUTERSHELLVIEWCOLUMNS 5
 
 static const DWORD dwComputerAttributes =
     SFGAO_CANRENAME | SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_DROPTARGET |
@@ -462,13 +461,16 @@ HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1
             hres = MAKE_COMPARE_HRESULT(result);
             break;
         }
-        case 1:        /* Type */
+        case 1:        /* comments */
+            hres = MAKE_COMPARE_HRESULT(0);
+            break;
+        case 2:        /* Type */
         {
             /* We want to return immediately because SHELL32_CompareDetails also compares children. */
             return SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
         }
-        case 2:       /* Size */
-        case 3:       /* Size Available */
+        case 3:       /* Size */
+        case 4:       /* Size Available */
         {
             ULARGE_INTEGER Drive1Available, Drive1Total, Drive2Available, Drive2Total;
 
@@ -483,7 +485,7 @@ HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1
                 Drive2Available.QuadPart = Drive2Total.QuadPart = 0;
 
             LARGE_INTEGER Diff;
-            if (lParam == 2) /* Size */
+            if (lParam == 3) /* Size */
                 Diff.QuadPart = Drive1Total.QuadPart - Drive2Total.QuadPart;
             else /* Size available */
                 Diff.QuadPart = Drive1Available.QuadPart - Drive2Available.QuadPart;
@@ -827,43 +829,44 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, S
         psd->cxChar = MyComputerSFHeader[iColumn].cxChar;
         return SHSetStrRet(&psd->str, MyComputerSFHeader[iColumn].colnameid);
     }
-    else if (_ILIsSpecialFolder(pidl))
+    else if (!_ILIsDrive(pidl))
     {
         return m_regFolder->GetDetailsOf(pidl, iColumn, psd);
     }
     else
     {
-        char szPath[MAX_PATH];
-        ULARGE_INTEGER ulBytes;
+        ULARGE_INTEGER ulTotalBytes, ulFreeBytes;
+        CHAR* pszDrive = _ILGetDataPointer(pidl)->u.drive.szDriveName;
+        UINT DriveType = GetDriveTypeA(pszDrive);
+        if (DriveType > DRIVE_RAMDISK)
+            DriveType = DRIVE_FIXED;
 
-        psd->str.cStr[0] = 0x00;
-        psd->str.uType = STRRET_CSTR;
         switch (iColumn)
         {
             case 0:        /* name */
                 hr = GetDisplayNameOf(pidl, SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
                 break;
-            case 1:        /* type */
-                _ILGetFileType(pidl, psd->str.cStr, MAX_PATH);
+            case 1:                /* FIXME: comments */
+                hr = SHSetStrRet(&psd->str, "");
                 break;
-            case 2:        /* total size */
-                _ILSimpleGetText (pidl, szPath, MAX_PATH);
-                if (GetVolumeInformationA(szPath, NULL, 0, NULL, NULL, NULL, NULL, 0))
-                {
-                    GetDiskFreeSpaceExA(szPath, NULL, &ulBytes, NULL);
-                    StrFormatByteSize64A(ulBytes.QuadPart, psd->str.cStr, MAX_PATH);
-                }
+            case 2:        /* type */
+                hr = SHSetStrRet(&psd->str, iDriveTypeIds[DriveType]);
                 break;
-            case 3:        /* free size */
-                _ILSimpleGetText (pidl, szPath, MAX_PATH);
-                if (GetVolumeInformationA(szPath, NULL, 0, NULL, NULL, NULL, NULL, 0))
+            case 3:        /* total size */
+            case 4:        /* free size */
+                psd->str.cStr[0] = 0x00;
+                psd->str.uType = STRRET_CSTR;
+                if (GetVolumeInformationA(pszDrive, NULL, 0, NULL, NULL, NULL, NULL, 0))
                 {
-                    GetDiskFreeSpaceExA(szPath, &ulBytes, NULL, NULL);
-                    StrFormatByteSize64A(ulBytes.QuadPart, psd->str.cStr, MAX_PATH);
+                    GetDiskFreeSpaceExA(pszDrive, &ulFreeBytes, &ulTotalBytes, NULL);
+                    if (iColumn == 2)
+                        StrFormatByteSize64A(ulTotalBytes.QuadPart, psd->str.cStr, MAX_PATH);
+                    else
+                        StrFormatByteSize64A(ulFreeBytes.QuadPart, psd->str.cStr, MAX_PATH);
                 }
+                hr = S_OK;
                 break;
         }
-        hr = S_OK;
     }
 
     return hr;

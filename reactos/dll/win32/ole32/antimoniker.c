@@ -616,30 +616,8 @@ HRESULT WINAPI CreateAntiMoniker(IMoniker **ppmk)
             (void**)ppmk);
 }
 
-static HRESULT WINAPI AntiMonikerCF_QueryInterface(IClassFactory *iface, REFIID riid, void **ppv)
-{
-    *ppv = NULL;
-    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IClassFactory))
-    {
-        *ppv = iface;
-        IClassFactory_AddRef(iface);
-        return S_OK;
-    }
-    return E_NOINTERFACE;
-}
-
-static ULONG WINAPI AntiMonikerCF_AddRef(LPCLASSFACTORY iface)
-{
-    return 2; /* non-heap based object */
-}
-
-static ULONG WINAPI AntiMonikerCF_Release(LPCLASSFACTORY iface)
-{
-    return 1; /* non-heap based object */
-}
-
-static HRESULT WINAPI AntiMonikerCF_CreateInstance(LPCLASSFACTORY iface,
-    LPUNKNOWN pUnk, REFIID riid, LPVOID *ppv)
+HRESULT WINAPI AntiMoniker_CreateInstance(IClassFactory *iface,
+    IUnknown *pUnk, REFIID riid, void **ppv)
 {
     IMoniker *pMoniker;
     HRESULT  hr;
@@ -661,25 +639,4 @@ static HRESULT WINAPI AntiMonikerCF_CreateInstance(LPCLASSFACTORY iface,
         IMoniker_Release(pMoniker);
 
     return hr;
-}
-
-static HRESULT WINAPI AntiMonikerCF_LockServer(LPCLASSFACTORY iface, BOOL fLock)
-{
-    FIXME("(%d), stub!\n",fLock);
-    return S_OK;
-}
-
-static const IClassFactoryVtbl AntiMonikerCFVtbl =
-{
-    AntiMonikerCF_QueryInterface,
-    AntiMonikerCF_AddRef,
-    AntiMonikerCF_Release,
-    AntiMonikerCF_CreateInstance,
-    AntiMonikerCF_LockServer
-};
-static const IClassFactoryVtbl *AntiMonikerCF = &AntiMonikerCFVtbl;
-
-HRESULT AntiMonikerCF_Create(REFIID riid, LPVOID *ppv)
-{
-    return IClassFactory_QueryInterface((IClassFactory *)&AntiMonikerCF, riid, ppv);
 }

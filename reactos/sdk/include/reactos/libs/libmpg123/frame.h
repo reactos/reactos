@@ -121,9 +121,10 @@ struct mpg123_handle_struct
 	float *decwin_mmx;
 	float *decwins;
 #endif
+#ifndef NO_EQUALIZER
 	int have_eq_settings;
 	real equalizer[2][32];
-
+#endif
 	/* for halfspeed mode */
 	unsigned char ssave[34];
 	int halfphase;

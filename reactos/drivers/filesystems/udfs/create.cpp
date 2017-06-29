@@ -205,7 +205,7 @@ UDFCommonCreate(
     PACCESS_STATE               AccessState;
 
     PVCB                        Vcb = NULL;
-    BOOLEAN                     AcquiredVcb = FALSE;
+    _SEH2_VOLATILE BOOLEAN      AcquiredVcb = FALSE;
     BOOLEAN                     OpenExisting = FALSE;
     PERESOURCE                  Res1 = NULL;
     PERESOURCE                  Res2 = NULL;
@@ -584,7 +584,7 @@ UDFCommonCreate(
             }
 #endif //UDF_READ_ONLY_BUILD
 
-            KdPrint(("  ShareAccess %x, DesiredAccess %x\n", ShareAccess, DesiredAccess));
+            UDFPrint(("  ShareAccess %x, DesiredAccess %x\n", ShareAccess, DesiredAccess));
 /*
             if(!(ShareAccess & (FILE_SHARE_WRITE | FILE_SHARE_DELETE)) &&
                !(DesiredAccess & (FILE_GENERIC_WRITE & ~SYNCHRONIZE)) &&
@@ -592,12 +592,12 @@ UDFCommonCreate(
 */
             if(!(DesiredAccess & ((GENERIC_WRITE | FILE_GENERIC_WRITE) & ~(SYNCHRONIZE | READ_CONTROL))) &&
                 (ShareAccess & FILE_SHARE_READ) ) {
-                KdPrint(("  R/O volume open\n"));
+                UDFPrint(("  R/O volume open\n"));
             } else {
 
-                KdPrint(("  R/W volume open\n"));
+                UDFPrint(("  R/W volume open\n"));
                 if(Vcb->VCBFlags & UDF_VCB_FLAGS_MEDIA_READ_ONLY) {
-                    KdPrint(("  media-ro\n"));
+                    UDFPrint(("  media-ro\n"));
                     try_return(RC = STATUS_MEDIA_WRITE_PROTECTED);
                 }
             }
@@ -613,7 +613,7 @@ UDFCommonCreate(
                     // As soon as OpenVolume flushes the volume
                     // we should complete all pending requests (Close)
 
-                    KdPrint(("  set UDF_IRP_CONTEXT_FLUSH2_REQUIRED\n"));
+                    UDFPrint(("  set UDF_IRP_CONTEXT_FLUSH2_REQUIRED\n"));
                     PtrIrpContext->IrpContextFlags |= UDF_IRP_CONTEXT_FLUSH2_REQUIRED;
 
 /*
@@ -642,12 +642,12 @@ UDFCommonCreate(
                 if ((Vcb->VCBHandleCount) &&
                     !(ShareAccess & FILE_SHARE_READ)) {
                     // Sharing violation
-                    KdPrint(("  !FILE_SHARE_READ + open handles (%d)\n", Vcb->VCBHandleCount));
+                    UDFPrint(("  !FILE_SHARE_READ + open handles (%d)\n", Vcb->VCBHandleCount));
                     try_return(RC = STATUS_SHARING_VIOLATION);
                 }
                 if(PtrIrpContext->IrpContextFlags & UDF_IRP_CONTEXT_FLUSH2_REQUIRED) {
 
-                    KdPrint(("  perform flush\n"));
+                    UDFPrint(("  perform flush\n"));
                     PtrIrpContext->IrpContextFlags &= ~UDF_IRP_CONTEXT_FLUSH2_REQUIRED;
                     
                     UDFInterlockedIncrement((PLONG)&(Vcb->VCBOpenCount));
@@ -669,7 +669,7 @@ UDFCommonCreate(
 
                     if((ShareAccess & FILE_SHARE_READ) &&
                        ((Vcb->VCBOpenCount - UDF_RESIDUAL_REFERENCE) != (Vcb->VCBOpenCountRO))) {
-                        KdPrint(("  FILE_SHARE_READ + R/W handles: %d(%d) -> STATUS_SHARING_VIOLATION ?\n",
+                        UDFPrint(("  FILE_SHARE_READ + R/W handles: %d(%d) -> STATUS_SHARING_VIOLATION ?\n",
                             Vcb->VCBOpenCount - UDF_RESIDUAL_REFERENCE,
                             Vcb->VCBOpenCountRO));
                         /* we shall not check it here, let System do it in IoCheckShareAccess() */
@@ -678,13 +678,13 @@ UDFCommonCreate(
                 }
                 // Lock the volume
                 if(!(ShareAccess & FILE_SHARE_READ)) {
-                    KdPrint(("  set Lock\n"));
+                    UDFPrint(("  set Lock\n"));
                     Vcb->VCBFlags |= UDF_VCB_FLAGS_VOLUME_LOCKED;
                     Vcb->VolumeLockFileObject = PtrNewFileObject;
                     UndoLock = TRUE;
                 } else 
                 if(DesiredAccess & ((GENERIC_WRITE | FILE_GENERIC_WRITE) & ~(SYNCHRONIZE | READ_CONTROL))) {
-                    KdPrint(("  set UDF_IRP_CONTEXT_FLUSH_REQUIRED\n"));
+                    UDFPrint(("  set UDF_IRP_CONTEXT_FLUSH_REQUIRED\n"));
                     PtrIrpContext->IrpContextFlags |= UDF_IRP_CONTEXT_FLUSH_REQUIRED;
                 }
             }
@@ -765,7 +765,7 @@ op_vol_accs_dnd:
             PUNICODE_STRING TmpPath;
             LONGLONG Id;
 
-            KdPrint(("    open by File ID\n"));
+            UDFPrint(("    open by File ID\n"));
             if(Vcb->VCBFlags & UDF_VCB_FLAGS_RAW_DISK) {
                 ReturnedInformation = 0;
                 AdPrint(("    Can't open by FileID on blank volume ;)\n"));
@@ -809,7 +809,7 @@ op_vol_accs_dnd:
             //  This implies a "relative" open i.e. relative to the directory
             //  represented by the related file object ...
 
-            KdPrint(("    PtrRelatedFileObject %x, FCB %x\n", PtrRelatedFileObject, PtrRelatedFCB));
+            UDFPrint(("    PtrRelatedFileObject %x, FCB %x\n", PtrRelatedFileObject, PtrRelatedFCB));
             //  Note: The only purpose FSD implementations ever have for
             //  the related file object is to determine whether this
             //  is a relative open or not. At all other times (including
@@ -880,7 +880,7 @@ op_vol_accs_dnd:
         // ****************
             // The suplied path-name must be an absolute path-name i.e.
             //  starting at the root of the file system tree
-            KdPrint(("    Absolute open\n"));
+            UDFPrint(("    Absolute open\n"));
             ASSERT(TargetObjectName.Buffer);
             if (!TargetObjectName.Length || TargetObjectName.Buffer[0] != L'\\') {
                 AdPrint(("    Wrong target name (1)\n"));
@@ -2325,7 +2325,7 @@ UDFFirstOpenFile(
                     (PtrUDFNTRequiredFCB)MyAllocatePool__(NonPagedPool, UDFQuadAlign(sizeof(UDFNTRequiredFCB))) ) )
             return STATUS_INSUFFICIENT_RESOURCES;
 
-        KdPrint(("UDFAllocateNtReqFCB: %x\n", (*PtrNewFcb)->NTRequiredFCB));
+        UDFPrint(("UDFAllocateNtReqFCB: %x\n", (*PtrNewFcb)->NTRequiredFCB));
         RtlZeroMemory((*PtrNewFcb)->NTRequiredFCB, UDFQuadAlign(sizeof(UDFNTRequiredFCB)));
         (*PtrNewFcb)->FileInfo->Dloc->CommonFcb = (*PtrNewFcb)->NTRequiredFCB;
         Linked = FALSE;

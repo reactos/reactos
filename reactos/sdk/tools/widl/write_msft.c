@@ -802,6 +802,7 @@ static int encode_type(
     if (!alignment) alignment = &scratch;
     if (!decoded_size) decoded_size = &scratch;
 
+    *decoded_size = 0;
 
     switch (vt) {
     case VT_I1:
@@ -888,6 +889,8 @@ static int encode_type(
 
     case VT_VARIANT:
         *encoded_type = default_type;
+        *width = 8 + 2 * pointer_size;
+        *alignment = 8;
         break;
 
     case VT_LPSTR:

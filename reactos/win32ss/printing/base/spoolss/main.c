@@ -43,7 +43,7 @@ _AddPrintProviderToList(PCWSTR pwszFileName)
     if (!pPrintProvider)
     {
         dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+        ERR("DllAllocSplMem failed!\n");
         goto Cleanup;
     }
 
@@ -117,7 +117,7 @@ _InitializePrintProviderList()
     if (!pwszPrintProviderName)
     {
         dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+        ERR("DllAllocSplMem failed!\n");
         goto Cleanup;
     }
 

@@ -147,6 +147,13 @@ MMixerOpen(
     OUT PHANDLE MixerHandle);
 
 MIXER_STATUS
+MMixerClose(
+    IN PMIXER_CONTEXT MixerContext,
+    IN ULONG MixerId,
+    IN PVOID MixerEventContext,
+    IN PMIXER_EVENT MixerEventRoutine);
+
+MIXER_STATUS
 MMixerGetLineInfo(
     IN PMIXER_CONTEXT MixerContext,
     IN HANDLE MixerHandle,

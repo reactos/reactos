@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Spooler Router
  * LICENSE:     GNU LGPL v2.1 or any later version as published by the Free Software Foundation
  * PURPOSE:     Functions related to Print Monitors
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -43,6 +43,8 @@ EnumMonitorsW(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD pcb
             continue;
 
         // Call the EnumMonitors function of this Print Provider.
+        cbNeeded = 0;
+        dwReturned = 0;
         bReturnValue = pPrintProvider->PrintProvider.fpEnumMonitors(pName, Level, pCallBuffer, cbCallBuffer, &cbNeeded, &dwReturned);
 
         // Add the returned counts to the total values.

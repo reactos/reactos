@@ -135,7 +135,8 @@ void mbedtls_net_init( mbedtls_net_context *ctx )
 /*
  * Initiate a TCP connection with host:port and the given protocol
  */
-int mbedtls_net_connect( mbedtls_net_context *ctx, const char *host, const char *port, int proto )
+int mbedtls_net_connect( mbedtls_net_context *ctx, const char *host,
+                         const char *port, int proto )
 {
     int ret;
     struct addrinfo hints, *addr_list, *cur;
@@ -240,7 +241,7 @@ int mbedtls_net_bind( mbedtls_net_context *ctx, const char *bind_ip, const char 
             }
         }
 
-        /* I we ever get there, it's a success */
+        /* Bind was successful */
         ret = 0;
         break;
     }
@@ -324,7 +325,7 @@ int mbedtls_net_accept( mbedtls_net_context *bind_ctx,
     {
         /* TCP: actual accept() */
         ret = client_ctx->fd = (int) accept( bind_ctx->fd,
-                                         (struct sockaddr *) &client_addr, &n );
+                                             (struct sockaddr *) &client_addr, &n );
     }
     else
     {

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PNG Bitmap glyph support.                                            */
 /*                                                                         */
-/*  Copyright 2013-2016 by                                                 */
+/*  Copyright 2013-2017 by                                                 */
 /*  Google, Inc.                                                           */
 /*  Written by Stuart Gill and Behdad Esfahbod.                            */
 /*                                                                         */
@@ -24,9 +24,10 @@
 #include FT_CONFIG_STANDARD_LIBRARY_H
 
 
-#ifdef FT_CONFIG_OPTION_USE_PNG
+#if defined( TT_CONFIG_OPTION_EMBEDDED_BITMAPS ) && \
+    defined( FT_CONFIG_OPTION_USE_PNG )
 
-  /* We always include <stjmp.h>, so make libpng shut up! */
+  /* We always include <setjmp.h>, so make libpng shut up! */
 #define PNG_SKIP_SETJMP_CHECK 1
 #include <png.h>
 #include "pngshim.h"
@@ -377,7 +378,12 @@
     return error;
   }
 
-#endif /* FT_CONFIG_OPTION_USE_PNG */
+#else /* !(TT_CONFIG_OPTION_EMBEDDED_BITMAPS && FT_CONFIG_OPTION_USE_PNG) */
+
+  /* ANSI C doesn't like empty source files */
+  typedef int  _pngshim_dummy;
+
+#endif /* !(TT_CONFIG_OPTION_EMBEDDED_BITMAPS && FT_CONFIG_OPTION_USE_PNG) */
 
 
 /* END */

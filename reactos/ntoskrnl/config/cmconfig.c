@@ -226,23 +226,25 @@ CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
             {
                 /* EISA */
                 case EisaAdapter:
-
+                {
                     /* Fixup information */
                     Interface = Eisa;
                     Bus = CmpTypeCount[EisaAdapter]++;
                     break;
+                }
 
                 /* Turbo-channel */
                 case TcAdapter:
-
+                {
                     /* Fixup information */
                     Interface = TurboChannel;
                     Bus = CmpTypeCount[TurboChannel]++;
                     break;
+                }
 
                 /* ISA, PCI, etc busses */
                 case MultiFunctionAdapter:
-
+                {
                     /* Check if we have an  identifier */
                     if (Component->Identifier)
                     {
@@ -263,20 +265,24 @@ CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
                         Bus = CmpMultifunctionTypes[i].Count++;
                     }
                     break;
+                }
 
                 /* SCSI Bus */
                 case ScsiAdapter:
-
+                {
                     /* Fix up */
                     Interface = Internal;
                     Bus = CmpTypeCount[ScsiAdapter]++;
                     break;
+                }
 
                 /* Unknown */
                 default:
+                {
                     Interface = -1;
                     Bus = CmpUnknownBusCount++;
                     break;
+                }
             }
         }
 
@@ -344,7 +350,8 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                          NULL,
                          0,
                          &Disposition);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
     NtClose(KeyHandle);
 
     /* Nobody should've created this key yet! */
@@ -367,7 +374,8 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                           NULL,
                           0,
                           &Disposition);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Nobody should've created this key yet! */
     ASSERT(Disposition == REG_CREATED_NEW_KEY);
@@ -376,7 +384,11 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     CmpConfigurationData = ExAllocatePoolWithTag(PagedPool,
                                                  CmpConfigurationAreaSize,
                                                  TAG_CM);
-    if (!CmpConfigurationData) return STATUS_INSUFFICIENT_RESOURCES;
+    if (!CmpConfigurationData)
+    {
+        NtClose(KeyHandle);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* Check if we got anything from NTLDR */
     if (LoaderBlock->ConfigurationRoot)
@@ -393,7 +405,7 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         Status = STATUS_SUCCESS;
     }
 
-    /* Close our handle, free the buffer and return status */
+    /* Free the buffer, close our handle and return status */
     ExFreePoolWithTag(CmpConfigurationData, TAG_CM);
     NtClose(KeyHandle);
     return Status;

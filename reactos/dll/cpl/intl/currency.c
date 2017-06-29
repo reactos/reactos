@@ -279,7 +279,7 @@ GetCurrencySetting(
     GetSelectedComboBoxText(hwndDlg,
                             IDC_CURRENCYSYMBOL,
                             szCurrSymbol,
-                            MAX_SAMPLES_STR_SIZE);
+                            MAX_CURRSYMBOL);
 
     if (szCurrSymbol[0] == L'\0')
     {
@@ -302,7 +302,7 @@ GetCurrencySetting(
     GetSelectedComboBoxText(hwndDlg,
                             IDC_CURRENCYDECSEP,
                             szCurrDecimalSep,
-                            MAX_SAMPLES_STR_SIZE);
+                            MAX_CURRDECIMALSEP);
 
     if (szCurrDecimalSep[0] == L'\0')
     {
@@ -320,7 +320,7 @@ GetCurrencySetting(
     GetSelectedComboBoxText(hwndDlg,
                             IDC_CURRENCYGRPSEP,
                             szCurrThousandSep,
-                            MAX_SAMPLES_STR_SIZE);
+                            MAX_CURRTHOUSANDSEP);
 
     if (szCurrThousandSep[0] == L'\0')
     {

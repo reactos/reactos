@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType and CFF data/program tables loader (body).                  */
 /*                                                                         */
-/*  Copyright 1996-2016 by                                                 */
+/*  Copyright 1996-2017 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -1113,7 +1113,7 @@
 
 
   /* convert 2.14 to Fixed */
-  #define FT_fdot14ToFixed( x )  ( ( (FT_Fixed)( (FT_Int16)(x) ) ) << 2 )
+  #define FT_fdot14ToFixed( x )  ( (FT_Fixed)( (FT_ULong)(x) << 2 ) )
 
 
   static FT_Error
@@ -1307,6 +1307,10 @@
     size = 5 * numBlends;           /* add 5 bytes per entry    */
     if ( subFont->blend_used + size > subFont->blend_alloc )
     {
+      FT_Byte*  blend_stack_old = subFont->blend_stack;
+      FT_Byte*  blend_top_old   = subFont->blend_top;
+
+
       /* increase or allocate `blend_stack' and reset `blend_top'; */
       /* prepare to append `numBlends' values to the buffer        */
       if ( FT_REALLOC( subFont->blend_stack,
@@ -1316,6 +1320,22 @@
 
       subFont->blend_top    = subFont->blend_stack + subFont->blend_used;
       subFont->blend_alloc += size;
+
+      /* iterate over the parser stack and adjust pointers */
+      /* if the reallocated buffer has a different address */
+      if ( blend_stack_old                         &&
+           subFont->blend_stack != blend_stack_old )
+      {
+        FT_PtrDist  offset = subFont->blend_stack - blend_stack_old;
+        FT_Byte**   p;
+
+
+        for ( p = parser->stack; p < parser->top; p++ )
+        {
+          if ( *p >= blend_stack_old && *p < blend_top_old )
+            *p += offset;
+        }
+      }
     }
     subFont->blend_used += size;
 
@@ -1329,24 +1349,25 @@
 
 
       /* convert inputs to 16.16 fixed point */
-      sum = cff_parse_num( parser, &parser->stack[i + base] ) << 16;
+      sum = cff_parse_num( parser, &parser->stack[i + base] ) * 65536;
 
       for ( j = 1; j < blend->lenBV; j++ )
         sum += FT_MulFix( *weight++,
                           cff_parse_num( parser,
-                                         &parser->stack[delta++] ) << 16 );
+                                         &parser->stack[delta++] ) * 65536 );
 
       /* point parser stack to new value on blend_stack */
       parser->stack[i + base] = subFont->blend_top;
 
-      /* Push blended result as Type 2 5-byte fixed point number (except   */
-      /* that host byte order is used).  This will not conflict with       */
-      /* actual DICTs because 255 is a reserved opcode in both CFF and     */
-      /* CFF2 DICTs.  See `cff_parse_num' for decode of this, which rounds */
-      /* to an integer.                                                    */
-      *subFont->blend_top++             = 255;
-      *((FT_UInt32*)subFont->blend_top) = (FT_UInt32)sum; /* write 4 bytes */
-      subFont->blend_top               += 4;
+      /* Push blended result as Type 2 5-byte fixed point number.  This */
+      /* will not conflict with actual DICTs because 255 is a reserved  */
+      /* opcode in both CFF and CFF2 DICTs.  See `cff_parse_num' for    */
+      /* decode of this, which rounds to an integer.                    */
+      *subFont->blend_top++ = 255;
+      *subFont->blend_top++ = ( (FT_UInt32)sum & 0xFF000000U ) >> 24;
+      *subFont->blend_top++ = ( (FT_UInt32)sum & 0x00FF0000U ) >> 16;
+      *subFont->blend_top++ = ( (FT_UInt32)sum & 0x0000FF00U ) >>  8;
+      *subFont->blend_top++ =   (FT_UInt32)sum & 0x000000FFU;
     }
 
     /* leave only numBlends results on parser stack */
@@ -1442,10 +1463,15 @@
 
       /* Note: `lenNDV' could be zero.                              */
       /*       In that case, build default blend vector (1,0,0...). */
-      /*       In the normal case, initialize each component to 1   */
-      /*       before inner loop.                                   */
-      if ( lenNDV != 0 )
-        blend->BV[master] = FT_FIXED_ONE; /* default */
+      if ( !lenNDV )
+      {
+        blend->BV[master] = 0;
+        continue;
+      }
+
+      /* In the normal case, initialize each component to 1 */
+      /* before inner loop.                                 */
+      blend->BV[master] = FT_FIXED_ONE; /* default */
 
       /* inner loop steps through axes in this region */
       for ( j = 0; j < lenNDV; j++ )
@@ -1508,12 +1534,12 @@
                        lenNDV * sizeof ( *NDV ) ) )
         goto Exit;
 
-      blend->lenNDV = lenNDV;
       FT_MEM_COPY( blend->lastNDV,
                    NDV,
                    lenNDV * sizeof ( *NDV ) );
     }
 
+    blend->lenNDV  = lenNDV;
     blend->builtBV = TRUE;
 
   Exit:
@@ -1551,12 +1577,17 @@
   cff_get_var_blend( CFF_Face     face,
                      FT_UInt     *num_coords,
                      FT_Fixed*   *coords,
+                     FT_Fixed*   *normalizedcoords,
                      FT_MM_Var*  *mm_var )
   {
     FT_Service_MultiMasters  mm = (FT_Service_MultiMasters)face->mm;
 
 
-    return mm->get_var_blend( FT_FACE( face ), num_coords, coords, mm_var );
+    return mm->get_var_blend( FT_FACE( face ),
+                              num_coords,
+                              coords,
+                              normalizedcoords,
+                              mm_var );
   }
 
 
@@ -1864,7 +1895,8 @@
     subfont->lenNDV = lenNDV;
     subfont->NDV    = NDV;
 
-    stackSize = font->cff2 ? font->top_font.font_dict.maxstack
+    /* add 1 for the operator */
+    stackSize = font->cff2 ? font->top_font.font_dict.maxstack + 1
                            : CFF_MAX_STACK_DEPTH + 1;
 
     if ( cff_parser_init( &parser,
@@ -1892,6 +1924,13 @@
     /* ensure that `num_blue_values' is even */
     priv->num_blue_values &= ~1;
 
+    /* sanitize `initialRandomSeed' to be a positive value, if necessary;  */
+    /* this is not mandated by the specification but by our implementation */
+    if ( priv->initial_random_seed < 0 )
+      priv->initial_random_seed = -priv->initial_random_seed;
+    else if ( priv->initial_random_seed == 0 )
+      priv->initial_random_seed = 987654321;
+
   Exit:
     /* clean up */
     cff_blend_clear( subfont ); /* clear blend stack */
@@ -1900,6 +1939,18 @@
   Exit2:
     /* no clean up (parser not initialized) */
     return error;
+  }
+
+
+  FT_LOCAL_DEF( FT_UInt32 )
+  cff_random( FT_UInt32  r )
+  {
+    /* a 32bit version of the `xorshift' algorithm */
+    r ^= r << 13;
+    r ^= r >> 17;
+    r ^= r << 5;
+
+    return r;
   }
 
 
@@ -1916,7 +1967,8 @@
                     FT_Stream    stream,
                     FT_ULong     base_offset,
                     FT_UInt      code,
-                    CFF_Font     font )
+                    CFF_Font     font,
+                    CFF_Face     face )
   {
     FT_Error         error;
     CFF_ParserRec    parser;
@@ -2013,6 +2065,55 @@
     if ( error )
       goto Exit;
 
+    if ( !cff2 )
+    {
+      /*
+       * Initialize the random number generator.
+       *
+       * . If we have a face-specific seed, use it.
+       *   If non-zero, update it to a positive value.
+       *
+       * . Otherwise, use the seed from the CFF driver.
+       *   If non-zero, update it to a positive value.
+       *
+       * . If the random value is zero, use the seed given by the subfont's
+       *   `initialRandomSeed' value.
+       *
+       */
+      if ( face->root.internal->random_seed == -1 )
+      {
+        CFF_Driver  driver = (CFF_Driver)FT_FACE_DRIVER( face );
+
+
+        subfont->random = (FT_UInt32)driver->random_seed;
+        if ( driver->random_seed )
+        {
+          do
+          {
+            driver->random_seed =
+              (FT_Int32)cff_random( (FT_UInt32)driver->random_seed );
+
+          } while ( driver->random_seed < 0 );
+        }
+      }
+      else
+      {
+        subfont->random = (FT_UInt32)face->root.internal->random_seed;
+        if ( face->root.internal->random_seed )
+        {
+          do
+          {
+            face->root.internal->random_seed =
+              (FT_Int32)cff_random( (FT_UInt32)face->root.internal->random_seed );
+
+          } while ( face->root.internal->random_seed < 0 );
+        }
+      }
+
+      if ( !subfont->random )
+        subfont->random = (FT_UInt32)priv->initial_random_seed;
+    }
+
     /* read the local subrs, if any */
     if ( priv->local_subrs_offset )
     {
@@ -2058,6 +2159,7 @@
                  FT_Stream  stream,
                  FT_Int     face_index,
                  CFF_Font   font,
+                 CFF_Face   face,
                  FT_Bool    pure_cff,
                  FT_Bool    cff2 )
   {
@@ -2178,6 +2280,18 @@
         goto Exit;
       }
 
+      /* if we have an empty font name,      */
+      /* it must be the only font in the CFF */
+      if ( font->name_index.count > 1                          &&
+           font->name_index.data_size < font->name_index.count )
+      {
+        /* for pure CFFs, we still haven't checked enough bytes */
+        /* to be sure that it is a CFF at all                   */
+        error = pure_cff ? FT_THROW( Unknown_File_Format )
+                         : FT_THROW( Invalid_File_Format );
+        goto Exit;
+      }
+
       if ( FT_SET_ERROR( cff_index_init( &font->font_dict_index,
                                          stream, 0, cff2 ) )                 ||
            FT_SET_ERROR( cff_index_init( &string_index,
@@ -2189,6 +2303,15 @@
                                                  &font->string_pool,
                                                  &font->string_pool_size ) ) )
         goto Exit;
+
+      /* there must be a Top DICT index entry for each name index entry */
+      if ( font->name_index.count > font->font_dict_index.count )
+      {
+        FT_ERROR(( "cff_font_load:"
+                   " not enough entries in Top DICT index\n" ));
+        error = FT_THROW( Invalid_File_Format );
+        goto Exit;
+      }
     }
 
     font->num_strings = string_index.count;
@@ -2236,7 +2359,8 @@
                               stream,
                               base_offset,
                               cff2 ? CFF2_CODE_TOPDICT : CFF_CODE_TOPDICT,
-                              font );
+                              font,
+                              face );
     if ( error )
       goto Exit;
 
@@ -2303,7 +2427,8 @@
                                   base_offset,
                                   cff2 ? CFF2_CODE_FONTDICT
                                        : CFF_CODE_TOPDICT,
-                                  font );
+                                  font,
+                                  face );
         if ( error )
           goto Fail_CID;
       }

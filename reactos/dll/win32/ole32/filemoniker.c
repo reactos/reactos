@@ -1525,31 +1525,7 @@ HRESULT FileMoniker_CreateFromDisplayName(LPBC pbc, LPCOLESTR szDisplayName,
 }
 
 
-static HRESULT WINAPI FileMonikerCF_QueryInterface(LPCLASSFACTORY iface,
-                                                  REFIID riid, LPVOID *ppv)
-{
-    *ppv = NULL;
-    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IClassFactory))
-    {
-        *ppv = iface;
-        IClassFactory_AddRef(iface);
-        return S_OK;
-    }
-    return E_NOINTERFACE;
-}
-
-static ULONG WINAPI FileMonikerCF_AddRef(LPCLASSFACTORY iface)
-{
-    return 2; /* non-heap based object */
-}
-
-static ULONG WINAPI FileMonikerCF_Release(LPCLASSFACTORY iface)
-{
-    return 1; /* non-heap based object */
-}
-
-static HRESULT WINAPI FileMonikerCF_CreateInstance(LPCLASSFACTORY iface,
-    LPUNKNOWN pUnk, REFIID riid, LPVOID *ppv)
+HRESULT WINAPI FileMoniker_CreateInstance(IClassFactory *iface, IUnknown *pUnk, REFIID riid, void **ppv)
 {
     FileMonikerImpl* newFileMoniker;
     HRESULT  hr;
@@ -1574,25 +1550,4 @@ static HRESULT WINAPI FileMonikerCF_CreateInstance(LPCLASSFACTORY iface,
         HeapFree(GetProcessHeap(),0,newFileMoniker);
 
     return hr;
-}
-
-static HRESULT WINAPI FileMonikerCF_LockServer(LPCLASSFACTORY iface, BOOL fLock)
-{
-    FIXME("(%d), stub!\n",fLock);
-    return S_OK;
-}
-
-static const IClassFactoryVtbl FileMonikerCFVtbl =
-{
-    FileMonikerCF_QueryInterface,
-    FileMonikerCF_AddRef,
-    FileMonikerCF_Release,
-    FileMonikerCF_CreateInstance,
-    FileMonikerCF_LockServer
-};
-static const IClassFactoryVtbl *FileMonikerCF = &FileMonikerCFVtbl;
-
-HRESULT FileMonikerCF_Create(REFIID riid, LPVOID *ppv)
-{
-    return IClassFactory_QueryInterface((IClassFactory *)&FileMonikerCF, riid, ppv);
 }

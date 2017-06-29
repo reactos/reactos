@@ -60,7 +60,8 @@ static void UIINSERTOBJECTDLG_AddControl(InsertObjectDlgInfo* pdlgInfo);
 typedef HRESULT (*DLLREGISTER)          (void);
 
 extern HINSTANCE OLEDLG_hInstance;
-static const char OleUIInsertObjectInfoStr[] = "OleUIInsertObjectInfoStr";
+static const WCHAR OleUIInsertObjectInfoStr[] = {'O','l','e','U','I','I','n','s','e','r','t','O','b','j','e','c','t',
+    'I','n','f','o','S','t','r',0};
 
 /***********************************************************************
  *           OleUIInsertObjectA (OLEDLG.3)
@@ -112,7 +113,7 @@ UINT WINAPI OleUIInsertObjectA(LPOLEUIINSERTOBJECTA lpOleUIInsertObject)
  */
 INT_PTR CALLBACK UIInsertObjectDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  InsertObjectDlgInfo* pdlgInfo = GetPropA(hwnd,OleUIInsertObjectInfoStr);
+  InsertObjectDlgInfo* pdlgInfo = GetPropW(hwnd, OleUIInsertObjectInfoStr);
 
   switch(uMsg)
   {
@@ -122,7 +123,7 @@ INT_PTR CALLBACK UIInsertObjectDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 
         pdlgInfo->hwndSelf = hwnd;
 
-        SetPropA(hwnd, OleUIInsertObjectInfoStr, pdlgInfo);
+        SetPropW(hwnd, OleUIInsertObjectInfoStr, pdlgInfo);
 
         UIINSERTOBJECTDLG_InitDialog(pdlgInfo);
 
@@ -135,7 +136,7 @@ INT_PTR CALLBACK UIInsertObjectDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
     case WM_DESTROY:
       if (pdlgInfo)
           UIINSERTOBJECTDLG_FreeObjectTypes(pdlgInfo);
-      RemovePropA(hwnd, OleUIInsertObjectInfoStr);
+      RemovePropW(hwnd, OleUIInsertObjectInfoStr);
       return FALSE;
 
     default :
@@ -151,9 +152,9 @@ INT_PTR CALLBACK UIInsertObjectDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
  */
 static LRESULT UIINSOBJDLG_OnWMCommand(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
+  InsertObjectDlgInfo* pdlgInfo = GetPropW(hwnd, OleUIInsertObjectInfoStr);
   WORD wNotifyCode = HIWORD(wParam);
   WORD wID = LOWORD(wParam);
-  InsertObjectDlgInfo* pdlgInfo = GetPropA(hwnd,OleUIInsertObjectInfoStr);
 
   switch(wID)
   {

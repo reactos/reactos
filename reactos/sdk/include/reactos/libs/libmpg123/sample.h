@@ -32,6 +32,7 @@ static inline int16_t idiv_signed_rounded(int32_t x, int shift)
 /* From now on for single precision float... double precision is a possible option once we added some bits. But, it would be rather insane. */
 #ifndef REAL_TO_SHORT
 
+#if (defined FORCE_ACCURATE) || (defined ACCURATE_ROUNDING)
 /* Define the accurate rounding function. */
 # if (defined REAL_IS_FLOAT) && (defined IEEE_FLOAT)
 /* This function is only available for IEEE754 single-precision values
@@ -51,6 +52,7 @@ static inline int16_t ftoi16(float x)
 /* The "proper" rounding, plain C, a bit slow. */
 #  define REAL_TO_SHORT_ACCURATE(x)      (short)((x)>0.0?(x)+0.5:(x)-0.5)
 # endif
+#endif
 
 /* Now define the normal rounding. */
 # ifdef ACCURATE_ROUNDING

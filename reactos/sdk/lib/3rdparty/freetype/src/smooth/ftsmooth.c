@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Anti-aliasing renderer interface (body).                             */
 /*                                                                         */
-/*  Copyright 2000-2016 by                                                 */
+/*  Copyright 2000-2017 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -122,6 +122,60 @@
     FT_Bool  have_outline_shifted = FALSE;
     FT_Bool  have_buffer          = FALSE;
 
+#ifdef FT_CONFIG_OPTION_SUBPIXEL_RENDERING
+
+    FT_Int                   lcd_extra          = 0;
+    FT_LcdFiveTapFilter      lcd_weights        = { 0 };
+    FT_Bool                  have_custom_weight = FALSE;
+    FT_Bitmap_LcdFilterFunc  lcd_filter_func    = NULL;
+
+
+    if ( slot->face )
+    {
+      FT_Char  i;
+
+
+      for ( i = 0; i < FT_LCD_FILTER_FIVE_TAPS; i++ )
+        if ( slot->face->internal->lcd_weights[i] != 0 )
+        {
+          have_custom_weight = TRUE;
+          break;
+        }
+    }
+
+    /*
+     * The LCD filter can be set library-wide and per-face.  Face overrides
+     * library.  If the face filter weights are all zero (the default), it
+     * means that the library default should be used.
+     */
+    if ( have_custom_weight )
+    {
+      /*
+       * A per-font filter is set.  It always uses the default 5-tap
+       * in-place FIR filter that needs 2 extra pixels.
+       */
+      ft_memcpy( lcd_weights,
+                 slot->face->internal->lcd_weights,
+                 FT_LCD_FILTER_FIVE_TAPS );
+      lcd_filter_func = ft_lcd_filter_fir;
+      lcd_extra       = 2;
+    }
+    else
+    {
+      /*
+       * The face's lcd_weights is {0, 0, 0, 0, 0}, meaning `use library
+       * default'.  If the library is set to use no LCD filtering
+       * (lcd_filter_func == NULL), `lcd_filter_func' here is also set to
+       * NULL and the tests further below pass over the filtering process.
+       */
+      ft_memcpy( lcd_weights,
+                 slot->library->lcd_weights,
+                 FT_LCD_FILTER_FIVE_TAPS );
+      lcd_filter_func = slot->library->lcd_filter_func;
+      lcd_extra       = slot->library->lcd_extra;
+    }
+
+#endif /*FT_CONFIG_OPTION_SUBPIXEL_RENDERING */
 
     /* check glyph image format */
     if ( slot->format != render->glyph_format )
@@ -177,28 +231,23 @@
       height *= 3;
 
 #ifdef FT_CONFIG_OPTION_SUBPIXEL_RENDERING
-
-    if ( slot->library->lcd_filter_func )
+    if ( lcd_filter_func )
     {
-      FT_Int  extra = slot->library->lcd_extra;
-
-
       if ( hmul )
       {
-        x_shift += 64 * ( extra >> 1 );
-        x_left  -= extra >> 1;
-        width   += 3 * extra;
+        x_shift += 64 * ( lcd_extra >> 1 );
+        x_left  -= lcd_extra >> 1;
+        width   += 3 * lcd_extra;
         pitch    = FT_PAD_CEIL( width, 4 );
       }
 
       if ( vmul )
       {
-        y_shift += 64 * ( extra >> 1 );
-        y_top   += extra >> 1;
-        height  += 3 * extra;
+        y_shift += 64 * ( lcd_extra >> 1 );
+        y_top   += lcd_extra >> 1;
+        height  += 3 * lcd_extra;
       }
     }
-
 #endif
 
     /*
@@ -299,8 +348,8 @@
     if ( error )
       goto Exit;
 
-    if ( slot->library->lcd_filter_func )
-      slot->library->lcd_filter_func( bitmap, mode, slot->library );
+    if ( lcd_filter_func )
+      lcd_filter_func( bitmap, mode, lcd_weights );
 
 #else /* !FT_CONFIG_OPTION_SUBPIXEL_RENDERING */
 

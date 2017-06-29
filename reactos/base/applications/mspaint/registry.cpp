@@ -42,7 +42,7 @@ void RegistrySettings::SetWallpaper(LPCTSTR szFileName, RegistrySettings::Wallpa
     {
         desktop.SetStringValue(_T("Wallpaper"), szFileName);
 
-        desktop.SetStringValue(_T("WallpaperStyle"), (style == RegistrySettings::STRETCHED) ? _T("2") : _T("1"));
+        desktop.SetStringValue(_T("WallpaperStyle"), (style == RegistrySettings::STRETCHED) ? _T("2") : _T("0"));
         desktop.SetStringValue(_T("TileWallpaper"), (style == RegistrySettings::TILED) ? _T("1") : _T("0"));
     }
 

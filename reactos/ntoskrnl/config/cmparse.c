@@ -112,7 +112,7 @@ CmpGetSymbolicLink(IN PHHIVE Hive,
     if (!CmpGetValueData(Hive,
                          LinkValue,
                          &ValueLength,
-                         (PVOID)&LinkName,
+                         (PVOID*)&LinkName,
                          &LinkNameAllocated,
                          &CellToRelease))
     {

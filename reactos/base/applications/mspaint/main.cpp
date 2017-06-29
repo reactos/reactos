@@ -84,6 +84,66 @@ CSizeboxWindow sizeboxCenterBottom;
 CSizeboxWindow sizeboxRightBottom;
 CTextEditWindow textEditWindow;
 
+// get file name extension from filter string
+static BOOL
+FileExtFromFilter(LPTSTR pExt, LPCTSTR pTitle, OPENFILENAME *pOFN)
+{
+    LPTSTR pchExt = pExt;
+    *pchExt = 0;
+
+    DWORD nIndex = 1;
+    for (LPCTSTR pch = pOFN->lpstrFilter; *pch; ++nIndex)
+    {
+        pch += lstrlen(pch) + 1;
+        if (pOFN->nFilterIndex == nIndex)
+        {
+            for (++pch; *pch && *pch != _T(';'); ++pch)
+            {
+                *pchExt++ = *pch;
+            }
+            *pchExt = 0;
+            CharLower(pExt);
+            return TRUE;
+        }
+        pch += lstrlen(pch) + 1;
+    }
+    return FALSE;
+}
+
+// Hook procedure for OPENFILENAME to change the file name extension
+static UINT APIENTRY
+OFNHookProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    HWND hParent;
+    OFNOTIFY *pon;
+    switch (uMsg)
+    {
+    case WM_NOTIFY:
+        pon = (OFNOTIFY *)lParam;
+        if (pon->hdr.code == CDN_TYPECHANGE)
+        {
+            hParent = GetParent(hwnd);
+            TCHAR Path[MAX_PATH];
+            SendMessage(hParent, CDM_GETFILEPATH, SIZEOF(Path), (LPARAM)Path);
+            LPTSTR pchTitle = _tcsrchr(Path, _T('\\'));
+            if (pchTitle == NULL)
+                pchTitle = _tcsrchr(Path, _T('/'));
+
+            LPTSTR pch = _tcsrchr((pchTitle ? pchTitle : Path), _T('.'));
+            if (pch && pchTitle)
+            {
+                pchTitle++;
+                *pch = 0;
+                FileExtFromFilter(pch, pchTitle, pon->lpOFN);
+                SendMessage(hParent, CDM_SETCONTROLTEXT, 0x047c, (LPARAM)pchTitle);
+                lstrcpyn(pon->lpOFN->lpstrFile, Path, SIZEOF(pon->lpOFN->lpstrFile));
+            }
+        }
+        break;
+    }
+    return 0;
+}
+
 /* entry point */
 
 int WINAPI
@@ -272,7 +332,8 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     sfn.nMaxFile       = SIZEOF(sfnFilename);
     sfn.lpstrFileTitle = sfnFiletitle;
     sfn.nMaxFileTitle  = SIZEOF(sfnFiletitle);
-    sfn.Flags          = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
+    sfn.Flags          = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY | OFN_EXPLORER | OFN_ENABLEHOOK;
+    sfn.lpfnHook       = OFNHookProc;
 
     /* creating the size boxes */
     RECT sizeboxPos = {0, 0, 0 + 3, 0 + 3};

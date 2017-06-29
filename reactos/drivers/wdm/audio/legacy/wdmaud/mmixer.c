@@ -472,6 +472,32 @@ WdmAudControlOpenMixer(
 }
 
 NTSTATUS
+WdmAudControlCloseMixer(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN  PWDMAUD_CLIENT ClientInfo,
+    IN  ULONG Index)
+{
+    /* Remove event associated to this client */
+    if (MMixerClose(&MixerContext, DeviceInfo->DeviceIndex, ClientInfo, EventCallback))
+    {
+        DPRINT1("Failed to close mixer\n");
+        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, sizeof(WDMAUD_DEVICE_INFO));
+    }
+
+    /* Dereference event */
+    if (ClientInfo->hPins[Index].NotifyEvent)
+    {
+        ObDereferenceObject(ClientInfo->hPins[Index].NotifyEvent);
+        ClientInfo->hPins[Index].NotifyEvent = NULL;
+    }
+
+    /* FIXME: do we need to free ClientInfo->hPins ? */
+    return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
+}
+
+NTSTATUS
 NTAPI
 WdmAudGetControlDetails(
     IN  PDEVICE_OBJECT DeviceObject,

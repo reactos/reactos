@@ -18,6 +18,8 @@
 
 #include <wine/debug.h>
 
+#define JOB_NAME_LENGTH 9
+
 NTSYSAPI
 ULONG
 NTAPI
@@ -30,7 +32,7 @@ typedef struct _JOB
 
     LIST_ENTRY StartEntry;
     ULARGE_INTEGER StartTime;
-    WCHAR Name[9];
+    WCHAR Name[JOB_NAME_LENGTH];
 
     DWORD JobId;
     DWORD_PTR JobTime;

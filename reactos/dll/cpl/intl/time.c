@@ -162,9 +162,9 @@ GetTimeSetting(
     PGLOBALDATA pGlobalData)
 {
     WCHAR szTimeFormat[MAX_TIMEFORMAT];
-    WCHAR szTimeSep[MAX_TIMEFORMAT];
-    WCHAR szTimeAM[MAX_TIMEFORMAT];
-    WCHAR szTimePM[MAX_TIMEFORMAT];
+    WCHAR szTimeSep[MAX_TIMESEPARATOR];
+    WCHAR szTimeAM[MAX_TIMEAMSYMBOL];
+    WCHAR szTimePM[MAX_TIMEPMSYMBOL];
 
     /* Time format */
     GetSelectedComboBoxText(hwndDlg,

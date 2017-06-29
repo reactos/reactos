@@ -599,7 +599,7 @@ SubstituteFontRecurse(LOGFONTW* pLogFont)
         if (!Found)
             break;
 
-        RtlStringCbCopyW(pLogFont->lfFaceName, LF_FACESIZE, OutputNameW.Buffer);
+        RtlStringCchCopyW(pLogFont->lfFaceName, LF_FACESIZE, OutputNameW.Buffer);
 
         if (CharSetMap[FONTSUBST_FROM] == DEFAULT_CHARSET ||
             CharSetMap[FONTSUBST_FROM] == pLogFont->lfCharSet)
@@ -814,7 +814,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
 
         IntUnLockFreeType;
 
-        if (FT_IS_SFNT(Face))
+        if (!Error && FT_IS_SFNT(Face))
             pLoadFont->IsTrueType = TRUE;
 
         if (Error || SharedFace == NULL)
@@ -2503,114 +2503,48 @@ GetFontFamilyInfoForList(LPLOGFONTW LogFont,
     return TRUE;
 }
 
-typedef struct FontFamilyInfoCallbackContext
-{
-    LPLOGFONTW LogFont;
-    PFONTFAMILYINFO Info;
-    DWORD Count;
-    DWORD Size;
-} FONT_FAMILY_INFO_CALLBACK_CONTEXT, *PFONT_FAMILY_INFO_CALLBACK_CONTEXT;
-
-_Function_class_(RTL_QUERY_REGISTRY_ROUTINE)
-static NTSTATUS APIENTRY
-FontFamilyInfoQueryRegistryCallback(IN PWSTR ValueName, IN ULONG ValueType,
-                                    IN PVOID ValueData, IN ULONG ValueLength,
-                                    IN PVOID Context, IN PVOID EntryContext)
-{
-    PFONT_FAMILY_INFO_CALLBACK_CONTEXT InfoContext;
-    UNICODE_STRING RegistryName, RegistryValue;
-    int Existing;
-    PFONTGDI FontGDI;
-
-    if (REG_SZ != ValueType)
-    {
-        return STATUS_SUCCESS;
-    }
-    InfoContext = (PFONT_FAMILY_INFO_CALLBACK_CONTEXT) Context;
-    RtlInitUnicodeString(&RegistryName, ValueName);
-
-    /* Do we need to include this font family? */
-    if (FontFamilyInclude(InfoContext->LogFont, &RegistryName, InfoContext->Info,
-                          min(InfoContext->Count, InfoContext->Size)))
-    {
-        RtlInitUnicodeString(&RegistryValue, (PCWSTR) ValueData);
-        Existing = FindFaceNameInInfo(&RegistryValue, InfoContext->Info,
-                                      min(InfoContext->Count, InfoContext->Size));
-        if (0 <= Existing)
-        {
-            /* We already have the information about the "real" font. Just copy it */
-            if (InfoContext->Count < InfoContext->Size)
-            {
-                InfoContext->Info[InfoContext->Count] = InfoContext->Info[Existing];
-                RtlStringCbCopyNW(InfoContext->Info[InfoContext->Count].EnumLogFontEx.elfLogFont.lfFaceName,
-                                  sizeof(InfoContext->Info[InfoContext->Count].EnumLogFontEx.elfLogFont.lfFaceName),
-                                  RegistryName.Buffer,
-                                  RegistryName.Length);
-            }
-            InfoContext->Count++;
-            return STATUS_SUCCESS;
-        }
-
-        /* Try to find information about the "real" font */
-        FontGDI = FindFaceNameInLists(&RegistryValue);
-        if (NULL == FontGDI)
-        {
-            /* "Real" font not found, discard this registry entry */
-            return STATUS_SUCCESS;
-        }
-
-        /* Return info about the "real" font but with the name of the alias */
-        if (InfoContext->Count < InfoContext->Size)
-        {
-            FontFamilyFillInfo(InfoContext->Info + InfoContext->Count,
-                               RegistryName.Buffer, NULL, FontGDI);
-        }
-        InfoContext->Count++;
-        return STATUS_SUCCESS;
-    }
-
-    return STATUS_SUCCESS;
-}
-
 static BOOLEAN FASTCALL
 GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
                                 PFONTFAMILYINFO Info,
-                                DWORD *Count,
-                                DWORD Size)
+                                DWORD *pCount,
+                                DWORD MaxCount)
 {
-    RTL_QUERY_REGISTRY_TABLE QueryTable[2] = {{0}};
-    FONT_FAMILY_INFO_CALLBACK_CONTEXT Context;
-    NTSTATUS Status;
+    PLIST_ENTRY pEntry, pHead = &FontSubstListHead;
+    PFONTSUBST_ENTRY pCurrentEntry;
+    PUNICODE_STRING pFromW;
+    FONTGDI *FontGDI;
+    LOGFONTW lf = *LogFont;
+    UNICODE_STRING NameW;
 
-    /* Enumerate font families found in HKLM\Software\Microsoft\Windows NT\CurrentVersion\FontSubstitutes
-       The real work is done in the registry callback function */
-    Context.LogFont = LogFont;
-    Context.Info = Info;
-    Context.Count = *Count;
-    Context.Size = Size;
-
-    QueryTable[0].QueryRoutine = FontFamilyInfoQueryRegistryCallback;
-    QueryTable[0].Flags = 0;
-    QueryTable[0].Name = NULL;
-    QueryTable[0].EntryContext = NULL;
-    QueryTable[0].DefaultType = REG_NONE;
-    QueryTable[0].DefaultData = NULL;
-    QueryTable[0].DefaultLength = 0;
-
-    QueryTable[1].QueryRoutine = NULL;
-    QueryTable[1].Name = NULL;
-
-    Status = RtlQueryRegistryValues(RTL_REGISTRY_WINDOWS_NT,
-                                    L"FontSubstitutes",
-                                    QueryTable,
-                                    &Context,
-                                    NULL);
-    if (NT_SUCCESS(Status))
+    for (pEntry = pHead->Flink; pEntry != pHead; pEntry = pEntry->Flink)
     {
-        *Count = Context.Count;
+        pCurrentEntry = CONTAINING_RECORD(pEntry, FONTSUBST_ENTRY, ListEntry);
+
+        pFromW = &pCurrentEntry->FontNames[FONTSUBST_FROM];
+        if (LogFont->lfFaceName[0] != UNICODE_NULL)
+        {
+            if (!FontFamilyInclude(LogFont, pFromW, Info, min(*pCount, MaxCount)))
+                continue;   /* mismatch */
+        }
+
+        RtlStringCchCopyW(lf.lfFaceName, LF_FACESIZE, pFromW->Buffer);
+        SubstituteFontRecurse(&lf);
+
+        RtlInitUnicodeString(&NameW, lf.lfFaceName);
+        FontGDI = FindFaceNameInLists(&NameW);
+        if (FontGDI == NULL)
+        {
+            continue;   /* no real font */
+        }
+
+        if (*pCount < MaxCount)
+        {
+            FontFamilyFillInfo(&Info[*pCount], pFromW->Buffer, NULL, FontGDI);
+        }
+        (*pCount)++;
     }
 
-    return NT_SUCCESS(Status) || STATUS_OBJECT_NAME_NOT_FOUND == Status;
+    return TRUE;
 }
 
 BOOL

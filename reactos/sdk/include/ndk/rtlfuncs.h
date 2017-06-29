@@ -3026,6 +3026,20 @@ RtlInitializeCriticalSectionAndSpinCount(
 );
 
 NTSYSAPI
+ULONG
+NTAPI
+RtlIsCriticalSectionLocked(
+    _In_ PRTL_CRITICAL_SECTION CriticalSection
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlIsCriticalSectionLockedByThread(
+    _In_ PRTL_CRITICAL_SECTION CriticalSection
+);
+
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlLeaveCriticalSection(

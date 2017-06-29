@@ -46,5 +46,25 @@ extern HINSTANCE g_hInstance;
 DEFINE_GUID(CLSID_NtObjectFolder,
     0x845b0fb2, 0x66e0, 0x416b, 0x8f, 0x91, 0x31, 0x4e, 0x23, 0xf7, 0xc1, 0x2d);
 
+#define DFM_MERGECONTEXTMENU 1 // uFlags LPQCMINFO
+#define DFM_INVOKECOMMAND 2 // idCmd pszArgs
+#define DFM_INVOKECOMMANDEX 12 // idCmd PDFMICS
+#define DFM_GETDEFSTATICID 14 // idCmd * 0
+
+#define SHCIDS_ALLFIELDS 0x80000000L
+#define SHCIDS_CANONICALONLY 0x10000000L
+
+#define GET_SHGDN_FOR(dwFlags)         ((DWORD)dwFlags & (DWORD)0x0000FF00)
+#define GET_SHGDN_RELATION(dwFlags)    ((DWORD)dwFlags & (DWORD)0x000000FF)
+
+WINE_DEFAULT_DEBUG_CHANNEL(ntobjshex);
+
+#include <rtlfuncs.h>
+#include <ntquery.h>
+#include "util.h"
+
+#include "ntobjenum.h"
+
+#include "foldercommon.h"
 #include "ntobjfolder.h"
 #include "regfolder.h"

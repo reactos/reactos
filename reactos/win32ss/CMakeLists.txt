@@ -96,6 +96,7 @@ list(APPEND SOURCE
     reactx/ntddraw/dd.c
     reactx/ntddraw/ddsurf.c
     reactx/ntddraw/d3d.c
+    reactx/ntddraw/d3dkmt.c
     reactx/ntddraw/dvp.c
     reactx/ntddraw/mocomp.c
     reactx/ntddraw/eng.c

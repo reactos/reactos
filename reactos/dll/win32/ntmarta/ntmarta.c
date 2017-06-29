@@ -444,6 +444,51 @@ AccpGetTrusteeName(IN PTRUSTEE_W Trustee)
 }
 
 static DWORD
+AccpLookupCurrentUser(OUT PSID *ppSid)
+{
+    DWORD Ret;
+    CHAR Buffer[sizeof(TOKEN_USER) + sizeof(SID) + sizeof(DWORD)*SID_MAX_SUB_AUTHORITIES];
+    DWORD Length;
+    HANDLE Token;
+    PSID pSid;
+
+    *ppSid = NULL;
+    if (!OpenThreadToken(GetCurrentThread(), TOKEN_READ, TRUE, &Token))
+    {
+        Ret = GetLastError();
+        if (Ret != ERROR_NO_TOKEN)
+        {
+            return Ret;
+        }
+
+        if (!OpenProcessToken(GetCurrentProcess(), TOKEN_READ, &Token))
+        {
+            return GetLastError();
+        }
+    }
+
+    Length = sizeof(Buffer);
+    if (!GetTokenInformation(Token, TokenUser, Buffer, Length, &Length))
+    {
+        Ret = GetLastError();
+        CloseHandle(Token);
+        return Ret;
+    }
+    CloseHandle(Token);
+
+    pSid = ((PTOKEN_USER)Buffer)->User.Sid;
+    Length = GetLengthSid(pSid);
+    *ppSid = LocalAlloc(LMEM_FIXED, Length);
+    if (!*ppSid)
+    {
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
+    CopyMemory(*ppSid, pSid, Length);
+
+    return ERROR_SUCCESS;
+}
+
+static DWORD
 AccpLookupSidByName(IN LSA_HANDLE PolicyHandle,
                     IN LPWSTR Name,
                     OUT PSID *pSid)
@@ -509,6 +554,7 @@ AccpGetTrusteeSid(IN PTRUSTEE_W Trustee,
                   OUT BOOL *Allocated)
 {
     DWORD Ret = ERROR_SUCCESS;
+    LPWSTR TrusteeName;
 
     *ppSid = NULL;
     *Allocated = FALSE;
@@ -535,6 +581,18 @@ AccpGetTrusteeSid(IN PTRUSTEE_W Trustee,
             /* fall through */
 
         case TRUSTEE_IS_NAME:
+            TrusteeName = AccpGetTrusteeName(Trustee);
+            if (!wcscmp(TrusteeName, L"CURRENT_USER"))
+            {
+                Ret = AccpLookupCurrentUser(ppSid);
+                if (Ret == ERROR_SUCCESS)
+                {
+                    ASSERT(*ppSid != NULL);
+                    *Allocated = TRUE;
+                }
+                break;
+            }
+
             if (*pPolicyHandle == NULL)
             {
                 Ret = AccpOpenLSAPolicyHandle(NULL, /* FIXME - always local? */
@@ -547,7 +605,7 @@ AccpGetTrusteeSid(IN PTRUSTEE_W Trustee,
             }
 
             Ret = AccpLookupSidByName(*pPolicyHandle,
-                                      AccpGetTrusteeName(Trustee),
+                                      TrusteeName,
                                       ppSid);
             if (Ret == ERROR_SUCCESS)
             {

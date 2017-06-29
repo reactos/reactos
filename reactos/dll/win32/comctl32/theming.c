@@ -26,8 +26,16 @@ WINE_DEFAULT_DEBUG_CHANNEL(theming);
 typedef LRESULT (CALLBACK* THEMING_SUBCLASSPROC)(HWND, UINT, WPARAM, LPARAM,
     ULONG_PTR);
 
+#ifndef __REACTOS__ /* r73871 */
+extern LRESULT CALLBACK THEMING_ButtonSubclassProc (HWND, UINT, WPARAM, LPARAM,
+                                                    ULONG_PTR) DECLSPEC_HIDDEN;
+#endif
 extern LRESULT CALLBACK THEMING_ComboSubclassProc (HWND, UINT, WPARAM, LPARAM,
                                                    ULONG_PTR) DECLSPEC_HIDDEN;
+#ifndef __REACTOS__ /* r73803 */
+extern LRESULT CALLBACK THEMING_DialogSubclassProc (HWND, UINT, WPARAM, LPARAM,
+                                                    ULONG_PTR) DECLSPEC_HIDDEN;
+#endif
 extern LRESULT CALLBACK THEMING_EditSubclassProc (HWND, UINT, WPARAM, LPARAM,
                                                   ULONG_PTR) DECLSPEC_HIDDEN;
 extern LRESULT CALLBACK THEMING_ListBoxSubclassProc (HWND, UINT, WPARAM, LPARAM,
@@ -44,6 +52,10 @@ static const struct ThemingSubclass
     THEMING_SUBCLASSPROC subclassProc;
 } subclasses[] = {
     /* Note: list must be sorted by class name */
+#ifndef __REACTOS__ /* r73803 & r73871 */
+    {dialogClass,          THEMING_DialogSubclassProc},
+    {WC_BUTTONW,           THEMING_ButtonSubclassProc},
+#endif
     {WC_COMBOBOXW,         THEMING_ComboSubclassProc},
     {comboLboxClass,       THEMING_ListBoxSubclassProc},
     {WC_EDITW,             THEMING_EditSubclassProc},
@@ -83,13 +95,23 @@ MAKE_SUBCLASS_PROC(1)
 MAKE_SUBCLASS_PROC(2)
 MAKE_SUBCLASS_PROC(3)
 MAKE_SUBCLASS_PROC(4)
+#ifndef __REACTOS__ /* r73803 & r73871 */
+MAKE_SUBCLASS_PROC(5)
+MAKE_SUBCLASS_PROC(6)
+#endif
 
 static const WNDPROC subclassProcs[NUM_SUBCLASSES] = {
     subclass_proc0,
     subclass_proc1,
     subclass_proc2,
     subclass_proc3,
+#ifdef __REACTOS__ /* r73871 */
     subclass_proc4
+#else
+    subclass_proc4,
+    subclass_proc5,
+    subclass_proc6
+#endif
 };
 
 /***********************************************************************
@@ -98,15 +120,23 @@ static const WNDPROC subclassProcs[NUM_SUBCLASSES] = {
  * Register classes for standard controls that will shadow the system
  * classes.
  */
-void THEMING_Initialize (HANDLE hActCtx5, HANDLE hActCtx6)
+#ifdef __REACTOS__ /* r73803 */
+void THEMING_Initialize(HANDLE hActCtx5, HANDLE hActCtx6)
+#else
+void THEMING_Initialize (void)
+#endif
 {
     unsigned int i;
     static const WCHAR subclassPropName[] = 
         { 'C','C','3','2','T','h','e','m','i','n','g','S','u','b','C','l',0 };
     static const WCHAR refDataPropName[] = 
         { 'C','C','3','2','T','h','e','m','i','n','g','D','a','t','a',0 };
+#ifdef __REACTOS__ /* r73803 */
     ULONG_PTR ulCookie;
     BOOL ret, bActivated;
+#else
+    if (!IsThemeActive()) return;
+#endif
 
     atSubclassProp = GlobalAddAtomW (subclassPropName);
     atRefDataProp = GlobalAddAtomW (refDataPropName);
@@ -117,12 +147,16 @@ void THEMING_Initialize (HANDLE hActCtx5, HANDLE hActCtx6)
 
         class.cbSize = sizeof(class);
 
+#ifdef __REACTOS__ /* r73803 */
         bActivated = ActivateActCtx(hActCtx5, &ulCookie);
         ret = GetClassInfoExW (NULL, subclasses[i].className, &class);
         if (bActivated)
             DeactivateActCtx(0, ulCookie);
 
         if (!ret)
+#else
+        if (!GetClassInfoExW (NULL, subclasses[i].className, &class))
+#endif
         {
             ERR("Could not retrieve information for class %s\n",
                 debugstr_w (subclasses[i].className));
@@ -130,9 +164,11 @@ void THEMING_Initialize (HANDLE hActCtx5, HANDLE hActCtx6)
         }
         originalProcs[i] = class.lpfnWndProc;
         class.lpfnWndProc = subclassProcs[i];
+#ifdef __REACTOS__ /* r73803 */
         class.style |= CS_GLOBALCLASS;
         class.hInstance = COMCTL32_hModule;
-
+#endif
+        
         if (!class.lpfnWndProc)
         {
             ERR("Missing proc for class %s\n", 
@@ -140,11 +176,16 @@ void THEMING_Initialize (HANDLE hActCtx5, HANDLE hActCtx6)
             continue;
         }
 
+#ifdef __REACTOS__ /* r73803 */
         bActivated = ActivateActCtx(hActCtx6, &ulCookie);
-
+#endif
         if (!RegisterClassExW (&class))
         {
+#ifdef __REACTOS__ /* r73803 */
             WARN("Could not re-register class %s: %x\n",
+#else
+            ERR("Could not re-register class %s: %x\n",
+#endif
                 debugstr_w (subclasses[i].className), GetLastError ());
         }
         else
@@ -153,8 +194,10 @@ void THEMING_Initialize (HANDLE hActCtx5, HANDLE hActCtx6)
                 debugstr_w (subclasses[i].className));
         }
 
+#ifdef __REACTOS__ /* r73803 */
         if (bActivated)
             DeactivateActCtx(0, ulCookie);
+#endif
     }
 }
 

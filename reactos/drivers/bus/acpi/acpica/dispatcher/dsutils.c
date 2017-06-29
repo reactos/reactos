@@ -683,12 +683,6 @@ AcpiDsCreateOperand (
         if ((OpInfo->Flags & AML_HAS_RETVAL) ||
             (Arg->Common.Flags & ACPI_PARSEOP_IN_STACK))
         {
-            ACPI_DEBUG_PRINT ((ACPI_DB_DISPATCH,
-                "Argument previously created, already stacked\n"));
-
-            AcpiDbDisplayArgumentObject (
-                WalkState->Operands [WalkState->NumOperands - 1], WalkState);
-
             /*
              * Use value that was already previously returned
              * by the evaluation of this argument

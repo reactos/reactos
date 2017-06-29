@@ -459,7 +459,7 @@ enum module_type module_get_type_by_name(const WCHAR* name)
     {
         int i = len;
 
-        while (i && isdigit(name[i - 1])) i--;
+        while (i && name[i - 1] >= '0' && name[i - 1] <= '9') i--;
 
         if (i && name[i - 1] == '.')
             len = i - 1;

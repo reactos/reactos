@@ -165,7 +165,7 @@ static void WINAPI d3d9_vertexbuffer_PreLoad(IDirect3DVertexBuffer9 *iface)
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    wined3d_buffer_preload(buffer->wined3d_buffer);
+    wined3d_resource_preload(wined3d_buffer_get_resource(buffer->wined3d_buffer));
     wined3d_mutex_unlock();
 }
 
@@ -180,14 +180,20 @@ static HRESULT WINAPI d3d9_vertexbuffer_Lock(IDirect3DVertexBuffer9 *iface, UINT
         void **data, DWORD flags)
 {
     struct d3d9_vertexbuffer *buffer = impl_from_IDirect3DVertexBuffer9(iface);
+    struct wined3d_map_desc wined3d_map_desc;
+    struct wined3d_box wined3d_box = {0};
     HRESULT hr;
 
     TRACE("iface %p, offset %u, size %u, data %p, flags %#x.\n",
             iface, offset, size, data, flags);
 
+    wined3d_box.left = offset;
+    wined3d_box.right = offset + size;
     wined3d_mutex_lock();
-    hr = wined3d_buffer_map(buffer->wined3d_buffer, offset, size, (BYTE **)data, flags);
+    hr = wined3d_resource_map(wined3d_buffer_get_resource(buffer->wined3d_buffer),
+            0, &wined3d_map_desc, &wined3d_box, flags);
     wined3d_mutex_unlock();
+    *data = wined3d_map_desc.data;
 
     return hr;
 }
@@ -199,7 +205,7 @@ static HRESULT WINAPI d3d9_vertexbuffer_Unlock(IDirect3DVertexBuffer9 *iface)
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    wined3d_buffer_unmap(buffer->wined3d_buffer);
+    wined3d_resource_unmap(wined3d_buffer_get_resource(buffer->wined3d_buffer), 0);
     wined3d_mutex_unlock();
 
     return D3D_OK;
@@ -441,7 +447,7 @@ static void WINAPI d3d9_indexbuffer_PreLoad(IDirect3DIndexBuffer9 *iface)
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    wined3d_buffer_preload(buffer->wined3d_buffer);
+    wined3d_resource_preload(wined3d_buffer_get_resource(buffer->wined3d_buffer));
     wined3d_mutex_unlock();
 }
 
@@ -456,14 +462,20 @@ static HRESULT WINAPI d3d9_indexbuffer_Lock(IDirect3DIndexBuffer9 *iface,
         UINT offset, UINT size, void **data, DWORD flags)
 {
     struct d3d9_indexbuffer *buffer = impl_from_IDirect3DIndexBuffer9(iface);
+    struct wined3d_map_desc wined3d_map_desc;
+    struct wined3d_box wined3d_box = {0};
     HRESULT hr;
 
     TRACE("iface %p, offset %u, size %u, data %p, flags %#x.\n",
             iface, offset, size, data, flags);
 
+    wined3d_box.left = offset;
+    wined3d_box.right = offset + size;
     wined3d_mutex_lock();
-    hr = wined3d_buffer_map(buffer->wined3d_buffer, offset, size, (BYTE **)data, flags);
+    hr = wined3d_resource_map(wined3d_buffer_get_resource(buffer->wined3d_buffer),
+            0, &wined3d_map_desc, &wined3d_box, flags);
     wined3d_mutex_unlock();
+    *data = wined3d_map_desc.data;
 
     return hr;
 }
@@ -475,7 +487,7 @@ static HRESULT WINAPI d3d9_indexbuffer_Unlock(IDirect3DIndexBuffer9 *iface)
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    wined3d_buffer_unmap(buffer->wined3d_buffer);
+    wined3d_resource_unmap(wined3d_buffer_get_resource(buffer->wined3d_buffer), 0);
     wined3d_mutex_unlock();
 
     return D3D_OK;

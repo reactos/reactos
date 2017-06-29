@@ -59,6 +59,14 @@
 #define IDI_TT_WARN_SM                   25
 #define IDI_TT_ERROR_SM                  28
 
+/* Taskdialog strings */
+#define IDS_BUTTON_YES    3000
+#define IDS_BUTTON_NO     3001
+#define IDS_BUTTON_RETRY  3002
+#define IDS_BUTTON_OK     3003
+#define IDS_BUTTON_CANCEL 3004
+#define IDS_BUTTON_CLOSE  3005
+
 // This is really ComCtl32 v5.82, the last one not supporting SxS
 #undef  COMCTL32_VERSION // Undefines what the PSDK gave to us
 #define COMCTL32_VERSION        5

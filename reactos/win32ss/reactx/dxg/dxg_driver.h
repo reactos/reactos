@@ -131,40 +131,10 @@ DxDdColorControl(
 
 DWORD
 NTAPI
-DxDdCreateD3DBuffer(
-    PVOID p1,
-    PVOID p2,
-    PVOID p3,
-    PVOID p4,
-    PVOID p5,
-    PVOID p6,
-    PVOID p7,
-    PVOID p8)
-{
-    TRACE();
-    return 0;
-}
-
-DWORD
-NTAPI
 DxDdCreateMoComp(
     PVOID p1,
     PVOID p2)
 {
-    return 0;
-}
-
-DWORD
-NTAPI
-DxDdCreateSurfaceObject(
-    PVOID p1,
-    PVOID p2,
-    PVOID p3,
-    PVOID p4,
-    PVOID p5,
-    PVOID p6)
-{
-    TRACE();
     return 0;
 }
 
@@ -345,15 +315,6 @@ DxDdGetScanLine(
 
 DWORD
 NTAPI
-DxDdLock(
-    PVOID p1)
-{
-    TRACE();
-    return 0;
-}
-
-DWORD
-NTAPI
 DxDdLockD3D(
     PVOID p1,
     PVOID p2)
@@ -459,15 +420,6 @@ NTAPI
 DxDdUnattachSurface(
     PVOID p1,
     PVOID p2)
-{
-    TRACE();
-    return 0;
-}
-
-DWORD
-NTAPI
-DxDdUnlock(
-    PVOID p1)
 {
     TRACE();
     return 0;

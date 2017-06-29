@@ -1,11 +1,13 @@
 /*
 	index: frame index data structure and functions
 
-	copyright 2007-8 by the mpg123 project - free software under the terms of the LGPL 2.1
+	copyright 2007-2015 by the mpg123 project
+	-= free software under the terms of the LGPL 2.1 =-
 	see COPYING and AUTHORS files in distribution or http://mpg123.org
 	initially written by Thomas Orgis
 */
 
+#include "intsym.h"
 #include "index.h"
 #include "debug.h"
 

@@ -212,6 +212,7 @@ AcpiDsDumpMethodStack (
                 Op->Common.Next = NULL;
 
 #ifdef ACPI_DISASSEMBLER
+                AcpiOsPrintf ("Failed at ");
                 AcpiDmDisassemble (NextWalkState, Op, ACPI_UINT32_MAX);
 #endif
                 Op->Common.Next = Next;

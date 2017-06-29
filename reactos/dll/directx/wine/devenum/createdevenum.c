@@ -109,6 +109,7 @@ static BOOL IsSpecialCategory(const CLSID *clsid)
         IsEqualGUID(clsid, &CLSID_AudioInputDeviceCategory) ||
         IsEqualGUID(clsid, &CLSID_VideoInputDeviceCategory) ||
         IsEqualGUID(clsid, &CLSID_VideoCompressorCategory) ||
+        IsEqualGUID(clsid, &CLSID_AudioCompressorCategory) ||
         IsEqualGUID(clsid, &CLSID_MidiRendererCategory);
 }
 
@@ -633,6 +634,72 @@ static void register_vfw_codecs(void)
     RegCloseKey(basekey);
 }
 
+static BOOL WINAPI acm_driver_callback(HACMDRIVERID hadid, DWORD_PTR user, DWORD support)
+{
+    static const WCHAR CLSIDW[] = {'C','L','S','I','D',0};
+    static const WCHAR AcmIdW[] = {'A','c','m','I','d',0};
+    static const WCHAR FriendlyNameW[] = {'F','r','i','e','n','d','l','y','N','a','m','e',0};
+    static const WCHAR fmtW[] = {'%','u','%','s',0};
+
+    WCHAR acmwrapper_clsid_str[CHARS_IN_GUID], buffer[MAX_PATH];
+    HKEY key, basekey = (HKEY) user;
+    ACMFORMATTAGDETAILSW format;
+    ACMDRIVERDETAILSW driver;
+    HACMDRIVER had;
+    DWORD i, res;
+
+    StringFromGUID2(&CLSID_ACMWrapper, acmwrapper_clsid_str, sizeof(acmwrapper_clsid_str)/sizeof(WCHAR));
+
+    driver.cbStruct = sizeof(driver);
+    if (acmDriverDetailsW(hadid, &driver, 0) != MMSYSERR_NOERROR)
+        return TRUE;
+
+    if (acmDriverOpen(&had, hadid, 0) != MMSYSERR_NOERROR)
+        return TRUE;
+
+    for (i = 0; i < driver.cFormatTags; i++)
+    {
+        memset(&format, 0, sizeof(format));
+        format.cbStruct = sizeof(format);
+        format.dwFormatTagIndex = i;
+
+        if (acmFormatTagDetailsW(had, &format, ACM_FORMATTAGDETAILSF_INDEX) != MMSYSERR_NOERROR)
+            continue;
+
+        snprintfW(buffer, sizeof(buffer)/sizeof(WCHAR), fmtW, format.dwFormatTag, format.szFormatTag);
+
+        res = RegCreateKeyW(basekey, buffer, &key);
+        if (res != ERROR_SUCCESS) continue;
+
+        RegSetValueExW(key, CLSIDW, 0, REG_SZ, (BYTE*)acmwrapper_clsid_str, sizeof(acmwrapper_clsid_str));
+        RegSetValueExW(key, AcmIdW, 0, REG_DWORD, (BYTE*)&format.dwFormatTag, sizeof(DWORD));
+        RegSetValueExW(key, FriendlyNameW, 0, REG_SZ, (BYTE*)format.szFormatTag, (strlenW(format.szFormatTag)+1)*sizeof(WCHAR));
+        /* FIXME: Set FilterData values */
+
+        RegCloseKey(key);
+    }
+
+    acmDriverClose(had, 0);
+
+    return TRUE;
+}
+
+static void register_acm_codecs(void)
+{
+    HKEY basekey;
+
+    basekey = open_special_category_key(&CLSID_AudioCompressorCategory, TRUE);
+    if (!basekey)
+    {
+        ERR("Could not create key\n");
+        return;
+    }
+
+    acmDriverEnum(acm_driver_callback, (DWORD_PTR)basekey, 0);
+
+    RegCloseKey(basekey);
+}
+
 static HANDLE DEVENUM_populate_handle;
 static const WCHAR DEVENUM_populate_handle_nameW[] =
     {'_','_','W','I','N','E','_',
@@ -684,6 +751,8 @@ static HRESULT DEVENUM_CreateSpecialCategories(void)
     if (SUCCEEDED(DEVENUM_GetCategoryKey(&CLSID_MidiRendererCategory, &basekey, path, MAX_PATH)))
         RegDeleteTreeW(basekey, path);
     if (SUCCEEDED(DEVENUM_GetCategoryKey(&CLSID_VideoCompressorCategory, &basekey, path, MAX_PATH)))
+        RegDeleteTreeW(basekey, path);
+    if (SUCCEEDED(DEVENUM_GetCategoryKey(&CLSID_AudioCompressorCategory, &basekey, path, MAX_PATH)))
         RegDeleteTreeW(basekey, path);
 
     rf2.dwVersion = 2;
@@ -966,6 +1035,7 @@ static HRESULT DEVENUM_CreateSpecialCategories(void)
         IFilterMapper2_Release(pMapper);
 
     register_vfw_codecs();
+    register_acm_codecs();
 
     SetEvent(DEVENUM_populate_handle);
     return res;

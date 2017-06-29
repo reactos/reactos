@@ -946,7 +946,7 @@ NTSTATUS
 VfatGetBasicInformation(
     PFILE_OBJECT FileObject,
     PVFATFCB FCB,
-    PDEVICE_OBJECT DeviceObject,
+    PDEVICE_EXTENSION DeviceExt,
     PFILE_BASIC_INFORMATION BasicInfo,
     PULONG BufferLength);
 

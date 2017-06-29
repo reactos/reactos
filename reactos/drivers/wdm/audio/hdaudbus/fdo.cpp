@@ -662,7 +662,7 @@ HDA_FDOQueryBusRelations(
     if (!DeviceRelations)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    DeviceCount = 0;
+    DeviceRelations->Count = 0;
     for (CodecIndex = 0; CodecIndex < HDA_MAX_CODECS; CodecIndex++)
     {
         if (DeviceExtension->Codecs[CodecIndex] == NULL)

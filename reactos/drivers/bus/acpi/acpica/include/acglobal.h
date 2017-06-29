@@ -319,6 +319,7 @@ ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_ForceAmlDisassembly, FALSE);
 ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_DmOpt_Verbose, TRUE);
 ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_DmEmitExternalOpcodes, FALSE);
 ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_DoDisassemblerOptimizations, TRUE);
+ACPI_INIT_GLOBAL (ACPI_PARSE_OBJECT_LIST,   *AcpiGbl_TempListHead, NULL);
 
 ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DmOpt_Disasm);
 ACPI_GLOBAL (BOOLEAN,                   AcpiGbl_DmOpt_Listing);
@@ -371,6 +372,8 @@ ACPI_GLOBAL (const char,                *AcpiGbl_PldPanelList[]);
 ACPI_GLOBAL (const char,                *AcpiGbl_PldVerticalPositionList[]);
 ACPI_GLOBAL (const char,                *AcpiGbl_PldHorizontalPositionList[]);
 ACPI_GLOBAL (const char,                *AcpiGbl_PldShapeList[]);
+
+ACPI_INIT_GLOBAL (BOOLEAN,              AcpiGbl_DisasmFlag, FALSE);
 
 #endif
 

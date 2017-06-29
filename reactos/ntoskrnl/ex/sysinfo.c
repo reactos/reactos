@@ -2372,6 +2372,136 @@ QSI_DEF(SystemNumaAvailableMemory)
     return STATUS_SUCCESS;
 }
 
+/* Class 64 - Extended handle information  */
+QSI_DEF(SystemExtendedHandleInformation)
+{
+    PSYSTEM_HANDLE_INFORMATION_EX HandleInformation;
+    PLIST_ENTRY NextTableEntry;
+    PHANDLE_TABLE HandleTable;
+    PHANDLE_TABLE_ENTRY HandleTableEntry;
+    EXHANDLE Handle;
+    ULONG Index = 0;
+    NTSTATUS Status;
+    PMDL Mdl;
+    PAGED_CODE();
+
+    DPRINT("NtQuerySystemInformation - SystemExtendedHandleInformation\n");
+
+    /* Set initial required buffer size */
+    *ReqSize = FIELD_OFFSET(SYSTEM_HANDLE_INFORMATION_EX, Handle);
+
+    /* Check user's buffer size */
+    if (Size < *ReqSize)
+    {
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    /* We need to lock down the memory */
+    Status = ExLockUserBuffer(Buffer,
+                              Size,
+                              ExGetPreviousMode(),
+                              IoWriteAccess,
+                              (PVOID*)&HandleInformation,
+                              &Mdl);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to lock the user buffer: 0x%lx\n", Status);
+        return Status;
+    }
+
+    /* Reset of count of handles */
+    HandleInformation->Count = 0;
+
+    /* Enter a critical region */
+    KeEnterCriticalRegion();
+
+    /* Acquire the handle table lock */
+    ExAcquirePushLockShared(&HandleTableListLock);
+
+    /* Enumerate all system handles */
+    for (NextTableEntry = HandleTableListHead.Flink;
+         NextTableEntry != &HandleTableListHead;
+         NextTableEntry = NextTableEntry->Flink)
+    {
+        /* Get current handle table */
+        HandleTable = CONTAINING_RECORD(NextTableEntry, HANDLE_TABLE, HandleTableList);
+
+        /* Set the initial value and loop the entries */
+        Handle.Value = 0;
+        while ((HandleTableEntry = ExpLookupHandleTableEntry(HandleTable, Handle)))
+        {
+            /* Validate the entry */
+            if ((HandleTableEntry->Object) &&
+                (HandleTableEntry->NextFreeTableEntry != -2))
+            {
+                /* Increase of count of handles */
+                ++HandleInformation->Count;
+
+                /* Lock the entry */
+                if (ExpLockHandleTableEntry(HandleTable, HandleTableEntry))
+                {
+                    /* Increase required buffer size */
+                    *ReqSize += sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX);
+
+                    /* Check user's buffer size */
+                    if (*ReqSize > Size)
+                    {
+                        Status = STATUS_INFO_LENGTH_MISMATCH;
+                    }
+                    else
+                    {
+                        POBJECT_HEADER ObjectHeader = ObpGetHandleObject(HandleTableEntry);
+
+                        /* Filling handle information */
+                        HandleInformation->Handle[Index].UniqueProcessId =
+                            (USHORT)(ULONG_PTR) HandleTable->UniqueProcessId;
+
+                        HandleInformation->Handle[Index].CreatorBackTraceIndex = 0;
+
+#if 0 /* FIXME!!! Type field currupted */
+                        HandleInformation->Handles[Index].ObjectTypeIndex =
+                            (UCHAR) ObjectHeader->Type->Index;
+#else
+                        HandleInformation->Handle[Index].ObjectTypeIndex = 0;
+#endif
+
+                        HandleInformation->Handle[Index].HandleAttributes =
+                            HandleTableEntry->ObAttributes & OBJ_HANDLE_ATTRIBUTES;
+
+                        HandleInformation->Handle[Index].HandleValue =
+                            (USHORT)(ULONG_PTR) Handle.GenericHandleOverlay;
+
+                        HandleInformation->Handle[Index].Object = &ObjectHeader->Body;
+
+                        HandleInformation->Handle[Index].GrantedAccess =
+                            HandleTableEntry->GrantedAccess;
+
+                        HandleInformation->Handle[Index].Reserved = 0;
+
+                        ++Index;
+                    }
+
+                    /* Unlock it */
+                    ExUnlockHandleTableEntry(HandleTable, HandleTableEntry);
+                }
+            }
+
+            /* Go to the next entry */
+            Handle.Value += sizeof(HANDLE);
+        }
+    }
+
+    /* Release the lock */
+    ExReleasePushLockShared(&HandleTableListLock);
+
+    /* Leave the critical region */
+    KeLeaveCriticalRegion();
+
+    /* Release the locked user buffer */
+    ExUnlockUserBuffer(Mdl);
+
+    return Status;
+}
 
 /* Query/Set Calls Table */
 typedef
@@ -2455,7 +2585,11 @@ CallQS [] =
     SI_QX(SystemExtendedProcessInformation),
     SI_QX(SystemRecommendedSharedDataAlignment),
     SI_XX(SystemComPlusPackage),
-    SI_QX(SystemNumaAvailableMemory)
+    SI_QX(SystemNumaAvailableMemory),
+    SI_XX(SystemProcessorPowerInformation), /* FIXME: not implemented */
+    SI_XX(SystemEmulationBasicInformation), /* FIXME: not implemented */
+    SI_XX(SystemEmulationProcessorInformation), /* FIXME: not implemented */
+    SI_QX(SystemExtendedHandleInformation),
 };
 
 C_ASSERT(SystemBasicInformation == 0);

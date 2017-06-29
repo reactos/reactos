@@ -759,7 +759,7 @@ GreGetDIBitsInternal(
 
     if (Bits || bpp)
     {
-        if ((height == 0 || planes < 0 || width == 0) || (compr && compr != BI_BITFIELDS && compr != BI_RGB))
+        if ((height == 0 || width == 0) || (compr && compr != BI_BITFIELDS && compr != BI_RGB))
         {
             ScanLines = 0;
             goto done;

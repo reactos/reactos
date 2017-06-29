@@ -262,9 +262,9 @@ int synth_1to1_altivec(real *bandPtr,int channel,mpg123_handle *fr, int final)
 	real *b0, **buf;
 	int clip; 
 	int bo1;
-	
+#ifndef NO_EQUALIZER
 	if(fr->have_eq_settings) do_equalizer(bandPtr,channel,fr->equalizer);
-	
+#endif
 	if(!channel)
 	{
 		fr->bo--;
@@ -393,13 +393,13 @@ int synth_1to1_stereo_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handle *f
 	real *b0l, *b0r, **bufl, **bufr;
 	int clip; 
 	int bo1;
-	
+#ifndef NO_EQUALIZER
 	if(fr->have_eq_settings)
 	{
 		do_equalizer(bandPtr_l,0,fr->equalizer);
 		do_equalizer(bandPtr_r,1,fr->equalizer);
 	}
-	
+#endif
 	fr->bo--;
 	fr->bo &= 0xf;
 	bufl = fr->real_buffs[0];
@@ -543,9 +543,9 @@ int synth_1to1_real_altivec(real *bandPtr,int channel,mpg123_handle *fr, int fin
 	
 	real *b0, **buf;
 	int bo1;
-	
+#ifndef NO_EQUALIZER
 	if(fr->have_eq_settings) do_equalizer(bandPtr,channel,fr->equalizer);
-	
+#endif
 	if(!channel)
 	{
 		fr->bo--;
@@ -653,19 +653,19 @@ int synth_1to1_real_altivec(real *bandPtr,int channel,mpg123_handle *fr, int fin
 	return 0;
 }
 
-int synth_1to1_real_stereo_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handle *fr)
+int synth_1to1_fltst_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handle *fr)
 {
 	real *samples = (real *) (fr->buffer.data+fr->buffer.fill);
 	
 	real *b0l, *b0r, **bufl, **bufr;
 	int bo1;
-	
+#ifndef NO_EQUALIZER
 	if(fr->have_eq_settings)
 	{
 		do_equalizer(bandPtr_l,0,fr->equalizer);
 		do_equalizer(bandPtr_r,1,fr->equalizer);
 	}
-	
+#endif
 	fr->bo--;
 	fr->bo &= 0xf;
 	bufl = fr->real_buffs[0];
@@ -772,9 +772,9 @@ int synth_1to1_s32_altivec(real *bandPtr,int channel,mpg123_handle *fr, int fina
 	real *b0, **buf;
 	int clip;
 	int bo1;
-	
+#ifndef NO_EQUALIZER
 	if(fr->have_eq_settings) do_equalizer(bandPtr,channel,fr->equalizer);
-	
+#endif
 	if(!channel)
 	{
 		fr->bo--;
@@ -914,13 +914,13 @@ int synth_1to1_s32_stereo_altivec(real *bandPtr_l, real *bandPtr_r, mpg123_handl
 	real *b0l, *b0r, **bufl, **bufr;
 	int clip;
 	int bo1;
-	
+#ifndef NO_EQUALIZER
 	if(fr->have_eq_settings)
 	{
 		do_equalizer(bandPtr_l,0,fr->equalizer);
 		do_equalizer(bandPtr_r,1,fr->equalizer);
 	}
-	
+#endif
 	fr->bo--;
 	fr->bo &= 0xf;
 	bufl = fr->real_buffs[0];

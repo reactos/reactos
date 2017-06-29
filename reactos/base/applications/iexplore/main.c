@@ -47,18 +47,19 @@ static BOOL check_native_ie(void)
     LPWSTR file_desc;
     UINT bytes;
     void* buf;
-    BOOL ret;
+    BOOL ret = TRUE;
+    LPWORD translation;
 
     static const WCHAR browseui_dllW[] = {'b','r','o','w','s','e','u','i','.','d','l','l',0};
     static const WCHAR wineW[] = {'W','i','n','e',0};
-    static const WCHAR file_desc_strW[] =
+    static const WCHAR translationW[] =
+        {'\\','V','a','r','F','i','l','e','I','n','f','o',
+         '\\','T','r','a','n','s','l','a','t','i','o','n',0};
+    static const WCHAR file_desc_fmtW[] =
         {'\\','S','t','r','i','n','g','F','i','l','e','I','n','f','o',
-#ifndef __REACTOS__
-         '\\','0','4','0','9','0','4','e','4',
-#else
-         '\\','0','4','0','9','0','4','b','0',
-#endif
+         '\\','%','0','4','x','%','0','4','x',
          '\\','F','i','l','e','D','e','s','c','r','i','p','t','i','o','n',0};
+    WCHAR file_desc_strW[48];
 
     size = GetFileVersionInfoSizeW(browseui_dllW, &handle);
     if(!size)
@@ -66,8 +67,11 @@ static BOOL check_native_ie(void)
 
     buf = HeapAlloc(GetProcessHeap(), 0, size);
     GetFileVersionInfoW(browseui_dllW, 0, size,buf);
-
-    ret = !VerQueryValueW(buf, file_desc_strW, (void**)&file_desc, &bytes) || !strstrW(file_desc, wineW);
+    if (VerQueryValueW(buf, translationW, (void **)&translation, &bytes))
+    {
+        wsprintfW(file_desc_strW, file_desc_fmtW, translation[0], translation[1]);
+        ret = !VerQueryValueW(buf, file_desc_strW, (void**)&file_desc, &bytes) || !strstrW(file_desc, wineW);
+    }
 
     HeapFree(GetProcessHeap(), 0, buf);
     return ret;

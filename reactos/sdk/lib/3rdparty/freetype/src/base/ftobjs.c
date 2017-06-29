@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType private base classes (body).                            */
 /*                                                                         */
-/*  Copyright 1996-2016 by                                                 */
+/*  Copyright 1996-2017 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -36,6 +36,9 @@
 #include FT_SERVICE_TT_CMAP_H
 #include FT_SERVICE_KERNING_H
 #include FT_SERVICE_TRUETYPE_ENGINE_H
+
+#include FT_AUTOHINTER_H
+#include FT_CFF_DRIVER_H
 
 #ifdef FT_CONFIG_OPTION_MAC_FONTS
 #include "ftbase.h"
@@ -462,7 +465,8 @@
 
 
   Exit:
-    FT_TRACE4(( "FT_New_GlyphSlot: Return %d\n", error ));
+    FT_TRACE4(( "FT_New_GlyphSlot: Return 0x%x\n", error ));
+
     return error;
   }
 
@@ -698,7 +702,7 @@
         /* check the size of the `fpgm' and `prep' tables, too --    */
         /* the assumption is that there don't exist real TTFs where  */
         /* both `fpgm' and `prep' tables are missing                 */
-        if ( ( mode == FT_RENDER_MODE_LIGHT                   &&
+        if ( ( mode == FT_RENDER_MODE_LIGHT       &&
                !FT_DRIVER_HINTS_LIGHTLY( driver ) )             ||
              ( FT_IS_SFNT( face )                             &&
                ttface->num_locations                          &&
@@ -1184,6 +1188,8 @@
             (FT_Incremental_Interface)params[i].data;
     }
 #endif
+
+    face->internal->random_seed = -1;
 
     if ( clazz->init_face )
       error = clazz->init_face( *astream,
@@ -2031,13 +2037,15 @@
       {
         FT_TRACE3(( "Skip rule %d: darwin vfs resource fork"
                     " is already checked and"
-                    " no font is found\n", i ));
+                    " no font is found\n",
+                    i ));
         continue;
       }
 
       if ( errors[i] )
       {
-        FT_TRACE3(( "Error[%d] has occurred in rule %d\n", errors[i], i ));
+        FT_TRACE3(( "Error 0x%x has occurred in rule %d\n",
+                    errors[i], i ));
         continue;
       }
 
@@ -2396,7 +2404,7 @@
         if ( bsize->height < 0 || bsize->x_ppem < 0 || bsize->y_ppem < 0 )
         {
           FT_TRACE0(( "FT_Open_Face:"
-                      " Invalid bitmap dimensions for stroke %d,"
+                      " Invalid bitmap dimensions for strike %d,"
                       " now disabled\n", i ));
           bsize->width  = 0;
           bsize->height = 0;
@@ -2421,6 +2429,12 @@
       internal->transform_delta.y = 0;
 
       internal->refcount = 1;
+
+      internal->no_stem_darkening = -1;
+
+#ifdef FT_CONFIG_OPTION_SUBPIXEL_RENDERING
+      ft_memset( internal->lcd_weights, 0, FT_LCD_FILTER_FIVE_TAPS );
+#endif
     }
 
     if ( aface )
@@ -2440,15 +2454,17 @@
 #ifdef FT_DEBUG_LEVEL_TRACE
     if ( !error && face_index < 0 )
     {
-      FT_TRACE3(( "FT_Open_Face: The font has %ld faces\n"
-                  "              and %ld named instances for face %ld\n",
+      FT_TRACE3(( "FT_Open_Face: The font has %ld face%s\n"
+                  "              and %ld named instance%s for face %ld\n",
                   face->num_faces,
+                  face->num_faces == 1 ? "" : "s",
                   face->style_flags >> 16,
+                  ( face->style_flags >> 16 ) == 1 ? "" : "s",
                   -face_index - 1 ));
     }
 #endif
 
-    FT_TRACE4(( "FT_Open_Face: Return %d\n", error ));
+    FT_TRACE4(( "FT_Open_Face: Return 0x%x\n", error ));
 
     return error;
   }
@@ -2589,6 +2605,8 @@
     FT_Size          size = NULL;
     FT_ListNode      node = NULL;
 
+    FT_Size_Internal  internal = NULL;
+
 
     if ( !face )
       return FT_THROW( Invalid_Face_Handle );
@@ -2611,8 +2629,10 @@
 
     size->face = face;
 
-    /* for now, do not use any internal fields in size objects */
-    size->internal = NULL;
+    if ( FT_NEW( internal ) )
+      goto Exit;
+
+    size->internal = internal;
 
     if ( clazz->init_size )
       error = clazz->init_size( size );
@@ -3039,6 +3059,10 @@
     if ( !req || req->width < 0 || req->height < 0 ||
          req->type >= FT_SIZE_REQUEST_TYPE_MAX )
       return FT_THROW( Invalid_Argument );
+
+    /* signal the auto-hinter to recompute its size metrics */
+    /* (if requested)                                       */
+    face->size->internal->autohint_metrics.x_scale = 0;
 
     clazz = face->driver->clazz;
 
@@ -3586,6 +3610,90 @@
 
   /* documentation is in freetype.h */
 
+  FT_EXPORT_DEF( FT_Error )
+  FT_Face_Properties( FT_Face        face,
+                      FT_UInt        num_properties,
+                      FT_Parameter*  properties )
+  {
+    FT_Error  error = FT_Err_Ok;
+
+
+    if ( num_properties > 0 && !properties )
+    {
+      error = FT_THROW( Invalid_Argument );
+      goto Exit;
+    }
+
+    for ( ; num_properties > 0; num_properties-- )
+    {
+      if ( properties->tag == FT_PARAM_TAG_STEM_DARKENING )
+      {
+        if ( properties->data )
+        {
+          if ( *( (FT_Bool*)properties->data ) == TRUE )
+            face->internal->no_stem_darkening = FALSE;
+          else
+            face->internal->no_stem_darkening = TRUE;
+        }
+        else
+        {
+          /* use module default */
+          face->internal->no_stem_darkening = -1;
+        }
+      }
+      else if ( properties->tag == FT_PARAM_TAG_LCD_FILTER_WEIGHTS )
+      {
+#ifdef FT_CONFIG_OPTION_SUBPIXEL_RENDERING
+        if ( properties->data )
+          ft_memcpy( face->internal->lcd_weights,
+                     properties->data,
+                     FT_LCD_FILTER_FIVE_TAPS );
+        else
+        {
+          /* Value NULL indicates `no custom weights, use library        */
+          /* defaults', signaled by filling the weight field with zeros. */
+          ft_memset( face->internal->lcd_weights,
+                     0,
+                     FT_LCD_FILTER_FIVE_TAPS );
+        }
+#else
+        error = FT_THROW( Unimplemented_Feature );
+        goto Exit;
+#endif
+      }
+      else if ( properties->tag == FT_PARAM_TAG_RANDOM_SEED )
+      {
+        if ( properties->data )
+        {
+          face->internal->random_seed = *( (FT_Int32*)properties->data );
+          if ( face->internal->random_seed < 0 )
+            face->internal->random_seed = 0;
+        }
+        else
+        {
+          /* use module default */
+          face->internal->random_seed = -1;
+        }
+      }
+      else
+      {
+        error = FT_THROW( Invalid_Argument );
+        goto Exit;
+      }
+
+      if ( error )
+        break;
+
+      properties++;
+    }
+
+  Exit:
+    return error;
+  }
+
+
+  /* documentation is in freetype.h */
+
   FT_EXPORT_DEF( FT_UInt )
   FT_Face_GetCharVariantIndex( FT_Face   face,
                                FT_ULong  charcode,
@@ -3609,12 +3717,14 @@
 
         if ( charcode > 0xFFFFFFFFUL )
         {
-          FT_TRACE1(( "FT_Get_Char_Index: too large charcode" ));
+          FT_TRACE1(( "FT_Face_GetCharVariantIndex:"
+                      " too large charcode" ));
           FT_TRACE1(( " 0x%x is truncated\n", charcode ));
         }
         if ( variantSelector > 0xFFFFFFFFUL )
         {
-          FT_TRACE1(( "FT_Get_Char_Index: too large variantSelector" ));
+          FT_TRACE1(( "FT_Face_GetCharVariantIndex:"
+                      " too large variantSelector" ));
           FT_TRACE1(( " 0x%x is truncated\n", variantSelector ));
         }
 
@@ -3650,12 +3760,14 @@
 
         if ( charcode > 0xFFFFFFFFUL )
         {
-          FT_TRACE1(( "FT_Get_Char_Index: too large charcode" ));
+          FT_TRACE1(( "FT_Face_GetCharVariantIsDefault:"
+                      " too large charcode" ));
           FT_TRACE1(( " 0x%x is truncated\n", charcode ));
         }
         if ( variantSelector > 0xFFFFFFFFUL )
         {
-          FT_TRACE1(( "FT_Get_Char_Index: too large variantSelector" ));
+          FT_TRACE1(( "FT_Face_GetCharVariantIsDefault:"
+                      " too large variantSelector" ));
           FT_TRACE1(( " 0x%x is truncated\n", variantSelector ));
         }
 
@@ -3718,7 +3830,7 @@
 
         if ( charcode > 0xFFFFFFFFUL )
         {
-          FT_TRACE1(( "FT_Get_Char_Index: too large charcode" ));
+          FT_TRACE1(( "FT_Face_GetVariantsOfChar: too large charcode" ));
           FT_TRACE1(( " 0x%x is truncated\n", charcode ));
         }
 

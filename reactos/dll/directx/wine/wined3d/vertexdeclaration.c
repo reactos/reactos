@@ -48,14 +48,14 @@ ULONG CDECL wined3d_vertex_declaration_incref(struct wined3d_vertex_declaration 
     return refcount;
 }
 
-#if defined(STAGING_CSMT)
-void wined3d_vertex_declaration_destroy(struct wined3d_vertex_declaration *declaration)
+static void wined3d_vertex_declaration_destroy_object(void *object)
 {
+    struct wined3d_vertex_declaration *declaration = object;
+
     HeapFree(GetProcessHeap(), 0, declaration->elements);
     HeapFree(GetProcessHeap(), 0, declaration);
 }
 
-#endif /* STAGING_CSMT */
 ULONG CDECL wined3d_vertex_declaration_decref(struct wined3d_vertex_declaration *declaration)
 {
     ULONG refcount = InterlockedDecrement(&declaration->ref);
@@ -64,15 +64,9 @@ ULONG CDECL wined3d_vertex_declaration_decref(struct wined3d_vertex_declaration 
 
     if (!refcount)
     {
-#if defined(STAGING_CSMT)
-        const struct wined3d_device *device = declaration->device;
         declaration->parent_ops->wined3d_object_destroyed(declaration->parent);
-        wined3d_cs_emit_vertex_declaration_destroy(device->cs, declaration);
-#else  /* STAGING_CSMT */
-        HeapFree(GetProcessHeap(), 0, declaration->elements);
-        declaration->parent_ops->wined3d_object_destroyed(declaration->parent);
-        HeapFree(GetProcessHeap(), 0, declaration);
-#endif /* STAGING_CSMT */
+        wined3d_cs_destroy_object(declaration->device->cs,
+                wined3d_vertex_declaration_destroy_object, declaration);
     }
 
     return refcount;
@@ -192,8 +186,7 @@ static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declara
     declaration->parent = parent;
     declaration->parent_ops = parent_ops;
     declaration->device = device;
-    declaration->elements = HeapAlloc(GetProcessHeap(), 0, sizeof(*declaration->elements) * element_count);
-    if (!declaration->elements)
+    if (!(declaration->elements = wined3d_calloc(element_count, sizeof(*declaration->elements))))
     {
         ERR("Failed to allocate elements memory.\n");
         return E_OUTOFMEMORY;
@@ -206,7 +199,7 @@ static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declara
     {
         struct wined3d_vertex_declaration_element *e = &declaration->elements[i];
 
-        e->format = wined3d_get_format(gl_info, elements[i].format);
+        e->format = wined3d_get_format(gl_info, elements[i].format, 0);
         e->ffp_valid = declaration_element_valid_ffp(&elements[i]);
         e->input_slot = elements[i].input_slot;
         e->offset = elements[i].offset;
@@ -319,8 +312,8 @@ static void append_decl_element(struct wined3d_fvf_convert_state *state,
     elements[idx].usage = usage;
     elements[idx].usage_idx = usage_idx;
 
-    format = wined3d_get_format(state->gl_info, format_id);
-    state->offset += format->component_count * format->component_size;
+    format = wined3d_get_format(state->gl_info, format_id, 0);
+    state->offset += format->attribute_size;
     ++state->idx;
 }
 
@@ -351,8 +344,8 @@ static unsigned int convert_fvf_to_declaration(const struct wined3d_gl_info *gl_
            has_psize + has_diffuse + has_specular + num_textures;
 
     state.gl_info = gl_info;
-    state.elements = HeapAlloc(GetProcessHeap(), 0, size * sizeof(*state.elements));
-    if (!state.elements) return ~0U;
+    if (!(state.elements = wined3d_calloc(size, sizeof(*state.elements))))
+        return ~0u;
     state.offset = 0;
     state.idx = 0;
 

@@ -1028,7 +1028,7 @@ typedef struct acpi_parse_obj_common
 typedef struct acpi_parse_obj_named
 {
     ACPI_PARSE_COMMON
-    UINT8                           *Path;
+    char                            *Path;
     UINT8                           *Data;          /* AML body or bytelist data */
     UINT32                          Length;         /* AML length */
     UINT32                          Name;           /* 4-byte name or zero if no name */
@@ -1336,8 +1336,13 @@ typedef struct acpi_port_info
 #define ACPI_RESOURCE_NAME_ADDRESS64            0x8A
 #define ACPI_RESOURCE_NAME_EXTENDED_ADDRESS64   0x8B
 #define ACPI_RESOURCE_NAME_GPIO                 0x8C
+#define ACPI_RESOURCE_NAME_PIN_FUNCTION         0x8D
 #define ACPI_RESOURCE_NAME_SERIAL_BUS           0x8E
-#define ACPI_RESOURCE_NAME_LARGE_MAX            0x8E
+#define ACPI_RESOURCE_NAME_PIN_CONFIG           0x8F
+#define ACPI_RESOURCE_NAME_PIN_GROUP            0x90
+#define ACPI_RESOURCE_NAME_PIN_GROUP_FUNCTION   0x91
+#define ACPI_RESOURCE_NAME_PIN_GROUP_CONFIG     0x92
+#define ACPI_RESOURCE_NAME_LARGE_MAX            0x92
 
 
 /*****************************************************************************
@@ -1374,6 +1379,7 @@ typedef struct acpi_external_list
 #define ACPI_EXT_INTERNAL_PATH_ALLOCATED    0x04    /* Deallocate internal path on completion */
 #define ACPI_EXT_EXTERNAL_EMITTED           0x08    /* External() statement has been emitted */
 #define ACPI_EXT_ORIGIN_FROM_OPCODE         0x10    /* External came from a External() opcode */
+#define ACPI_EXT_CONFLICTING_DECLARATION    0x20    /* External has a conflicting declaration within AML */
 
 
 typedef struct acpi_external_file
@@ -1383,6 +1389,13 @@ typedef struct acpi_external_file
 
 } ACPI_EXTERNAL_FILE;
 
+
+typedef struct acpi_parse_object_list
+{
+    ACPI_PARSE_OBJECT               *Op;
+    struct acpi_parse_object_list   *Next;
+
+} ACPI_PARSE_OBJECT_LIST;
 
 /*****************************************************************************
  *

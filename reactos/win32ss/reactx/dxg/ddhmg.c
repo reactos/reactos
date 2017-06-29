@@ -158,7 +158,7 @@ DdHmgLock(HANDLE DdHandle, UCHAR ObjectType, BOOLEAN LockOwned)
 
     if ( Index < gcMaxDdHmgr )
     {
-        pEntry = (PDD_ENTRY)((PLONG)gpentDdHmgr + (sizeof(DD_ENTRY) * Index));
+        pEntry = (PDD_ENTRY)((PBYTE)gpentDdHmgr + (sizeof(DD_ENTRY) * Index));
 
         if ( VerifyObjectOwner(pEntry) )
         {
@@ -276,7 +276,7 @@ DdGetFreeHandle(UCHAR objType)
     if (ghFreeDdHmgr)
     {
        index = ghFreeDdHmgr;
-       pEntry = (PDD_ENTRY)((PLONG)gpentDdHmgr + (sizeof(DD_ENTRY) * index));
+       pEntry = (PDD_ENTRY)((PBYTE)gpentDdHmgr + (sizeof(DD_ENTRY) * index));
 
        // put next free index to our global variable
        ghFreeDdHmgr = pEntry->NextFree;             
@@ -303,7 +303,7 @@ DdGetFreeHandle(UCHAR objType)
         gpentDdHmgr = mAllocMem;
     }
 
-    pEntry = (PDD_ENTRY)((PLONG)gpentDdHmgr + (sizeof(DD_ENTRY) * gcMaxDdHmgr));
+    pEntry = (PDD_ENTRY)((PBYTE)gpentDdHmgr + (sizeof(DD_ENTRY) * gcMaxDdHmgr));
 
     // build handle 
     pEntry->FullUnique = objType | 8;
@@ -357,7 +357,7 @@ DdHmgAlloc(ULONG objSize, CHAR objType, BOOLEAN objLock)
     {
         Index = DDHMG_HTOI(DdHandle);
 
-        pEntry = (PDD_ENTRY)((PLONG)gpentDdHmgr + (sizeof(DD_ENTRY) * Index));
+        pEntry = (PDD_ENTRY)((PBYTE)gpentDdHmgr + (sizeof(DD_ENTRY) * Index));
 
         pEntry->pobj = pObject;
         pEntry->Objt = objType;
@@ -408,7 +408,7 @@ DdHmgFree(HANDLE DdHandle)
 
     EngAcquireSemaphore(ghsemHmgr);
 
-    pEntry = (PDD_ENTRY)((PLONG)gpentDdHmgr + (sizeof(DD_ENTRY) * Index));
+    pEntry = (PDD_ENTRY)((PBYTE)gpentDdHmgr + (sizeof(DD_ENTRY) * Index));
 
     // check if we have object that should be freed
     if (pEntry->pobj)

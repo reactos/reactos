@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Local Spooler
  * LICENSE:     GNU LGPL v2.1 or any later version as published by the Free Software Foundation
  * PURPOSE:     Functions for managing print jobs
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -135,26 +135,20 @@ _PrinterJobListCompareRoutine(PVOID FirstStruct, PVOID SecondStruct)
 DWORD
 GetJobFilePath(PCWSTR pwszExtension, DWORD dwJobID, PWSTR pwszOutput)
 {
-    const WCHAR wszPrintersPath[] = L"\\PRINTERS\\";
-    const DWORD cchPrintersPath = _countof(wszPrintersPath) - 1;
-    const DWORD cchSpoolerFile = sizeof("?????.") - 1;
-    const DWORD cchExtension = sizeof("SPL") - 1;                   // pwszExtension may be L"SPL" or L"SHD", same length for both!
-
     if (pwszOutput)
     {
-        CopyMemory(pwszOutput, wszSpoolDirectory, cchSpoolDirectory * sizeof(WCHAR));
-        CopyMemory(&pwszOutput[cchSpoolDirectory], wszPrintersPath, cchPrintersPath * sizeof(WCHAR));
-        swprintf(&pwszOutput[cchSpoolDirectory + cchPrintersPath], L"%05lu.", dwJobID);
-        CopyMemory(&pwszOutput[cchSpoolDirectory + cchPrintersPath + cchSpoolerFile], pwszExtension, (cchExtension + 1) * sizeof(WCHAR));
+        CopyMemory(pwszOutput, wszJobDirectory, cchJobDirectory * sizeof(WCHAR));
+        swprintf(&pwszOutput[cchJobDirectory], L"\\%05lu.%s", dwJobID, pwszExtension);
     }
 
-    return (cchSpoolDirectory + cchPrintersPath + cchSpoolerFile + cchExtension + 1) * sizeof(WCHAR);
+    // pwszExtension may be L"SPL" or L"SHD", same length for both!
+    return (cchJobDirectory + sizeof("\\?????.SPL")) * sizeof(WCHAR);
 }
 
 BOOL
 InitializeGlobalJobList()
 {
-    const WCHAR wszPath[] = L"\\PRINTERS\\?????.SHD";
+    const WCHAR wszPath[] = L"\\?????.SHD";
     const DWORD cchPath = _countof(wszPath) - 1;
 
     DWORD dwErrorCode;
@@ -173,8 +167,8 @@ InitializeGlobalJobList()
     InitializeSkiplist(&GlobalJobList, DllAllocSplMem, _GlobalJobListCompareRoutine, (PSKIPLIST_FREE_ROUTINE)DllFreeSplMem);
 
     // Construct the full path search pattern.
-    CopyMemory(wszFullPath, wszSpoolDirectory, cchSpoolDirectory * sizeof(WCHAR));
-    CopyMemory(&wszFullPath[cchSpoolDirectory], wszPath, (cchPath + 1) * sizeof(WCHAR));
+    CopyMemory(wszFullPath, wszJobDirectory, cchJobDirectory * sizeof(WCHAR));
+    CopyMemory(&wszFullPath[cchJobDirectory], wszPath, (cchPath + 1) * sizeof(WCHAR));
 
     // Use the search pattern to look for unfinished jobs serialized in shadow files (.SHD)
     hFind = FindFirstFileW(wszFullPath, &FindData);
@@ -262,7 +256,7 @@ CreateJob(PLOCAL_PRINTER_HANDLE pPrinterHandle)
     if (!pJob)
     {
         dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-        ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+        ERR("DllAllocSplMem failed!\n");
         goto Cleanup;
     }
 
@@ -1209,7 +1203,7 @@ ReadJobShadowFile(PCWSTR pwszFilePath)
     pShadowFile = DllAllocSplMem(cbFileSize);
     if (!pShadowFile)
     {
-        ERR("DllAllocSplMem failed with error %lu for file \"%S\"!\n", GetLastError(), pwszFilePath);
+        ERR("DllAllocSplMem failed for file \"%S\"!\n", pwszFilePath);
         goto Cleanup;
     }
 
@@ -1249,7 +1243,7 @@ ReadJobShadowFile(PCWSTR pwszFilePath)
     pJob = DllAllocSplMem(sizeof(LOCAL_JOB));
     if (!pJob)
     {
-        ERR("DllAllocSplMem failed with error %lu for file \"%S\"!\n", GetLastError(), pwszFilePath);
+        ERR("DllAllocSplMem failed for file \"%S\"!\n", pwszFilePath);
         goto Cleanup;
     }
 
@@ -1341,7 +1335,7 @@ WriteJobShadowFile(PWSTR pwszFilePath, const PLOCAL_JOB pJob)
     pShadowFile = DllAllocSplMem(cbFileSize);
     if (!pShadowFile)
     {
-        ERR("DllAllocSplMem failed with error %lu for file \"%S\"!\n", GetLastError(), pwszFilePath);
+        ERR("DllAllocSplMem failed for file \"%S\"!\n", pwszFilePath);
         goto Cleanup;
     }
 

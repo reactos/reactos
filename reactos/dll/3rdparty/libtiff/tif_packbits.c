@@ -1,4 +1,4 @@
-/* $Id: tif_packbits.c,v 1.24 2016-09-04 21:32:56 erouault Exp $ */
+/* $Id: tif_packbits.c,v 1.26 2017-05-14 02:26:07 erouault Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -100,7 +100,7 @@ PackBitsEncode(TIFF* tif, uint8* buf, tmsize_t cc, uint16 s)
 				slop = (long)(op - lastliteral);
 				tif->tif_rawcc += (tmsize_t)(lastliteral - tif->tif_rawcp);
 				if (!TIFFFlushData1(tif))
-					return (-1);
+					return (0);
 				op = tif->tif_rawcp;
 				while (slop-- > 0)
 					*op++ = *lastliteral++;
@@ -108,7 +108,7 @@ PackBitsEncode(TIFF* tif, uint8* buf, tmsize_t cc, uint16 s)
 			} else {
 				tif->tif_rawcc += (tmsize_t)(op - tif->tif_rawcp);
 				if (!TIFFFlushData1(tif))
-					return (-1);
+					return (0);
 				op = tif->tif_rawcp;
 			}
 		}
@@ -244,6 +244,12 @@ PackBitsDecode(TIFF* tif, uint8* op, tmsize_t occ, uint16 s)
 				    "Discarding %lu bytes to avoid buffer overrun",
 				    (unsigned long) ((tmsize_t)n - occ));
 				n = (long)occ;
+			}
+			if( cc == 0 )
+			{
+				TIFFWarningExt(tif->tif_clientdata, module,
+					       "Terminating PackBitsDecode due to lack of data.");
+				break;
 			}
 			occ -= n;
 			b = *bp++;

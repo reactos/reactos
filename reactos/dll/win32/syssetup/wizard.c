@@ -2211,6 +2211,70 @@ ProcessUnattendInf(
     }
     while (SetupFindNextLine(&InfContext, &InfContext));
 
+    if (SetupFindFirstLineW(pSetupData->hUnattendedInf,
+                            L"Display",
+                            NULL,
+                            &InfContext))
+    {
+        DEVMODEW dm = { { 0 } };
+        dm.dmSize = sizeof(dm);
+        if (EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &dm))
+        {
+            do
+            {
+                int iValue;
+                if (!SetupGetStringFieldW(&InfContext,
+                                          0,
+                                          szName,
+                                          sizeof(szName) / sizeof(WCHAR),
+                                          &LineLength))
+                {
+                    DPRINT1("Error: SetupGetStringField failed with %d\n", GetLastError());
+                    return;
+                }
+
+                if (!SetupGetStringFieldW(&InfContext,
+                                          1,
+                                          szValue,
+                                          sizeof(szValue) / sizeof(WCHAR),
+                                          &LineLength))
+                {
+                    DPRINT1("Error: SetupGetStringField failed with %d\n", GetLastError());
+                    return;
+                }
+                iValue = _wtoi(szValue);
+                DPRINT1("Name %S Value %i\n", szName, iValue);
+
+                if (!iValue)
+                    continue;
+
+                if (!wcscmp(szName, L"BitsPerPel"))
+                {
+                    dm.dmFields |= DM_BITSPERPEL;
+                    dm.dmBitsPerPel = iValue;
+                }
+                else if (!wcscmp(szName, L"XResolution"))
+                {
+                    dm.dmFields |= DM_PELSWIDTH;
+                    dm.dmPelsWidth = iValue;
+                }
+                else if (!wcscmp(szName, L"YResolution"))
+                {
+                    dm.dmFields |= DM_PELSHEIGHT;
+                    dm.dmPelsHeight = iValue;
+                }
+                else if (!wcscmp(szName, L"VRefresh"))
+                {
+                    dm.dmFields |= DM_DISPLAYFREQUENCY;
+                    dm.dmDisplayFrequency = iValue;
+                }
+            }
+            while (SetupFindNextLine(&InfContext, &InfContext));
+
+            ChangeDisplaySettingsW(&dm, CDS_UPDATEREGISTRY);
+        }
+    }
+
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                       L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce",
                       0,

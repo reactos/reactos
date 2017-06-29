@@ -60,6 +60,10 @@
 #define IDM_TASKBAR_TOOLBARS_QUICKLAUNCH      4
 #define IDM_TASKBAR_TOOLBARS_NEW              1
 
+#define IDM_BAND_MENU                       269
+#define IDM_BAND_TITLE                   0xA200
+#define IDM_BAND_CLOSE                   0xA201
+
 /* Random id for band close button, feel free to change it */
 #define IDM_BASEBAR_CLOSE                0xA200
 

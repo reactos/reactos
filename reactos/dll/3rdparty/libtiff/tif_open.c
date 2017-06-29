@@ -1,4 +1,4 @@
-/* $Id: tif_open.c,v 1.47 2016-01-23 21:20:34 erouault Exp $ */
+/* $Id: tif_open.c,v 1.48 2016-11-20 22:29:47 erouault Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -280,10 +280,10 @@ TIFFClientOpen(
 		 * Setup header and write.
 		 */
 		#ifdef WORDS_BIGENDIAN
-		tif->tif_header.common.tiff_magic = tif->tif_flags & TIFF_SWAB
+		tif->tif_header.common.tiff_magic = (tif->tif_flags & TIFF_SWAB)
 		    ? TIFF_LITTLEENDIAN : TIFF_BIGENDIAN;
 		#else
-		tif->tif_header.common.tiff_magic = tif->tif_flags & TIFF_SWAB
+		tif->tif_header.common.tiff_magic = (tif->tif_flags & TIFF_SWAB)
 		    ? TIFF_BIGENDIAN : TIFF_LITTLEENDIAN;
 		#endif
 		if (!(tif->tif_flags&TIFF_BIGTIFF))

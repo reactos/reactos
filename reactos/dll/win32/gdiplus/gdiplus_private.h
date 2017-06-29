@@ -56,22 +56,19 @@ WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 #define GIF_DISPOSE_RESTORE_TO_BKGND 2
 #define GIF_DISPOSE_RESTORE_TO_PREV 3
 
-static void *heap_alloc(size_t len) __WINE_ALLOC_SIZE(1);
-static inline void *heap_alloc(size_t len)
+static inline void* __WINE_ALLOC_SIZE(1) heap_alloc(size_t size)
 {
-    return HeapAlloc(GetProcessHeap(), 0, len);
+    return HeapAlloc(GetProcessHeap(), 0, size);
 }
 
-static void *heap_alloc_zero(size_t len) __WINE_ALLOC_SIZE(1);
-static inline void *heap_alloc_zero(size_t len)
+static inline void* __WINE_ALLOC_SIZE(1) heap_alloc_zero(size_t size)
 {
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
+    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
 }
 
-static void *heap_realloc(void *mem, size_t len) __WINE_ALLOC_SIZE(2);
-static inline void *heap_realloc(void *mem, size_t len)
+static inline void* __WINE_ALLOC_SIZE(2) heap_realloc(void *mem, size_t size)
 {
-    return HeapReAlloc(GetProcessHeap(), 0, mem, len);
+    return HeapReAlloc(GetProcessHeap(), 0, mem, size);
 }
 
 static inline BOOL heap_free(void *mem)
@@ -452,6 +449,8 @@ struct GpFont{
     Unit unit;
 };
 
+extern const struct GpStringFormat default_drawstring_format DECLSPEC_HIDDEN;
+
 struct GpStringFormat{
     INT attr;
     LANGID lang;
@@ -459,7 +458,7 @@ struct GpStringFormat{
     StringAlignment align;
     StringTrimming trimming;
     HotkeyPrefix hkprefix;
-    StringAlignment vertalign;
+    StringAlignment line_align;
     StringDigitSubstitute digitsub;
     INT tabcount;
     REAL firsttab;
@@ -468,6 +467,9 @@ struct GpStringFormat{
     INT range_count;
     BOOL generic_typographic;
 };
+
+extern void init_generic_string_formats(void) DECLSPEC_HIDDEN;
+extern void free_generic_string_formats(void) DECLSPEC_HIDDEN;
 
 struct GpFontCollection{
     GpFontFamily **FontFamilies;

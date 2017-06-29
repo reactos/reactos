@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Local Spooler
  * LICENSE:     GNU LGPL v2.1 or any later version as published by the Free Software Foundation
  * PURPOSE:     Functions related to Ports of the Print Monitors
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -79,7 +79,7 @@ InitializePortList()
         if (!pPortInfo1)
         {
             dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-            ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+            ERR("DllAllocSplMem failed!\n");
             goto Cleanup;
         }
 
@@ -108,7 +108,7 @@ InitializePortList()
             if (!pPort)
             {
                 dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
-                ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
+                ERR("DllAllocSplMem failed!\n");
                 goto Cleanup;
             }
 
@@ -165,6 +165,9 @@ LocalEnumPorts(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNe
         pPrintMonitor = CONTAINING_RECORD(pEntry, LOCAL_PRINT_MONITOR, Entry);
 
         // Call the EnumPorts function of this Print Monitor.
+        cbNeeded = 0;
+        dwReturned = 0;
+
         if (pPrintMonitor->bIsLevel2)
             bReturnValue = ((PMONITOR2)pPrintMonitor->pMonitor)->pfnEnumPorts(pPrintMonitor->hMonitor, pName, Level, pCallBuffer, cbCallBuffer, &cbNeeded, &dwReturned);
         else

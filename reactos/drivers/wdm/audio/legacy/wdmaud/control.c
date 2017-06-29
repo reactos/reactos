@@ -166,11 +166,8 @@ WdmAudIoctlClose(
         }
         else if (ClientInfo->hPins[Index].Handle == DeviceInfo->hDevice && ClientInfo->hPins[Index].Type == MIXER_DEVICE_TYPE)
         {
-            if (ClientInfo->hPins[Index].NotifyEvent)
-            {
-                ObDereferenceObject(ClientInfo->hPins[Index].NotifyEvent);
-                ClientInfo->hPins[Index].NotifyEvent = NULL;
-            }
+            DPRINT1("Closing mixer %p\n", DeviceInfo->hDevice);
+            return WdmAudControlCloseMixer(DeviceObject, Irp, DeviceInfo, ClientInfo, Index);
         }
     }
 

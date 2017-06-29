@@ -80,14 +80,15 @@ CFSFolder::~CFSFolder()
 
 
 static const shvheader GenericSFHeader[] = {
-    {IDS_SHV_COLUMN1, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
-    {IDS_SHV_COLUMN2, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
-    {IDS_SHV_COLUMN3, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10},
-    {IDS_SHV_COLUMN4, SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 12},
-    {IDS_SHV_COLUMN5, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10}
+    {IDS_SHV_COLUMN_NAME, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
+    {IDS_SHV_COLUMN_COMMENTS, SHCOLSTATE_TYPE_STR, LVCFMT_LEFT, 0},
+    {IDS_SHV_COLUMN_TYPE, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10},
+    {IDS_SHV_COLUMN_SIZE, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 10},
+    {IDS_SHV_COLUMN_MODIFIED, SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 12},
+    {IDS_SHV_COLUMN_ATTRIBUTES, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 10}
 };
 
-#define GENERICSHELLVIEWCOLUMNS 5
+#define GENERICSHELLVIEWCOLUMNS 6
 
 /**************************************************************************
  *  SHELL32_CreatePidlFromBindCtx  [internal]
@@ -328,20 +329,23 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
         case 0: /* Name */
             result = wcsicmp(pDataW1->wszName, pDataW2->wszName);
             break;
+        case 1: /* Comments */
+            result = 0;
+            break;
         case 2: /* Type */
             pExtension1 = PathFindExtensionW(pDataW1->wszName);
             pExtension2 = PathFindExtensionW(pDataW2->wszName);
             result = wcsicmp(pExtension1, pExtension2); 
             break;
-        case 1: /* Size */
+        case 3: /* Size */
             result = pData1->u.file.dwFileSize - pData2->u.file.dwFileSize;
             break;
-        case 3: /* Modified */
+        case 4: /* Modified */
             result = pData1->u.file.uFileDate - pData2->u.file.uFileDate;
             if (result == 0)
                 result = pData1->u.file.uFileTime - pData2->u.file.uFileTime;
             break;
-        case 4: /* Attributes */
+        case 5: /* Attributes */
             return SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
     }
 
@@ -634,7 +638,7 @@ void SHELL_FS_ProcessDisplayFilename(LPWSTR szPath, DWORD dwFlags)
 HRESULT WINAPI CFSFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl,
         DWORD dwFlags, LPSTRRET strRet)
 {
-    if (!pidl || !strRet)
+    if (!strRet)
         return E_INVALIDARG;
 
     /* If it is a complex pidl, let the child handle it */
@@ -642,7 +646,7 @@ HRESULT WINAPI CFSFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl,
     {
         return SHELL32_GetDisplayNameOfChild(this, pidl, dwFlags, strRet);
     }
-    else if (!pidl->mkid.cb) /* empty pidl */
+    else if (pidl && !pidl->mkid.cb) /* empty pidl */
     {
         /* If it is an empty pidl return only the path of the folder */
         if ((GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING) && 
@@ -825,19 +829,21 @@ HRESULT WINAPI CFSFolder::GetDetailsOf(PCUITEMID_CHILD pidl,
         switch (iColumn)
         {
             case 0:                /* name */
-                hr = GetDisplayNameOf (pidl,
-                    SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
+                hr = GetDisplayNameOf (pidl, SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
                 break;
-            case 1:                /* size */
-                _ILGetFileSize(pidl, psd->str.cStr, MAX_PATH);
+            case 1:                /* FIXME: comments */
+                psd->str.cStr[0] = 0;
                 break;
             case 2:                /* type */
                 _ILGetFileType(pidl, psd->str.cStr, MAX_PATH);
                 break;
-            case 3:                /* date */
+            case 3:                /* size */
+                _ILGetFileSize(pidl, psd->str.cStr, MAX_PATH);
+                break;
+            case 4:                /* date */
                 _ILGetFileDate(pidl, psd->str.cStr, MAX_PATH);
                 break;
-            case 4:                /* attributes */
+            case 5:                /* attributes */
                 _ILGetFileAttributes(pidl, psd->str.cStr, MAX_PATH);
                 break;
         }

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PostScript Type 1 decoding routines (body).                          */
 /*                                                                         */
-/*  Copyright 2000-2016 by                                                 */
+/*  Copyright 2000-2017 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -666,9 +666,9 @@
 
 #ifdef FT_DEBUG_LEVEL_TRACE
         if ( large_int )
-          FT_TRACE4(( " %ld", value ));
+          FT_TRACE4(( " %d", value ));
         else
-          FT_TRACE4(( " %ld", value / 65536 ));
+          FT_TRACE4(( " %d", value / 65536 ));
 #endif
 
         *top++       = value;
@@ -780,10 +780,19 @@
             /* point without adding any point to the outline    */
             idx = decoder->num_flex_vectors++;
             if ( idx > 0 && idx < 7 )
+            {
+              /* in malformed fonts it is possible to have other */
+              /* opcodes in the middle of a flex (which don't    */
+              /* increase `num_flex_vectors'); we thus have to   */
+              /* check whether we can add a point                */
+              if ( FT_SET_ERROR( t1_builder_check_points( builder, 1 ) ) )
+                goto Syntax_Error;
+
               t1_builder_add_point( builder,
                                     x,
                                     y,
                                     (FT_Byte)( idx == 3 || idx == 6 ) );
+            }
           }
           break;
 

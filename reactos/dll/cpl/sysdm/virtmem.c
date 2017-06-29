@@ -406,7 +406,7 @@ OnSet(PVIRTMEM pVirtMem)
         DriveIndex = SendDlgItemMessage(pVirtMem->hSelf,
                                         IDC_PAGEFILELIST,
                                         LB_GETITEMDATA,
-                                        0,
+                                        (WPARAM)Index,
                                         0);
 
         /* Check if custom settings are checked */

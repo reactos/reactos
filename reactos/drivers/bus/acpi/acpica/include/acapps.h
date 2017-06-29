@@ -186,7 +186,7 @@ AcpiDmFinishNamespaceLoad (
     ACPI_OWNER_ID           OwnerId);
 
 void
-AcpiDmConvertResourceIndexes (
+AcpiDmConvertParseObjects (
     ACPI_PARSE_OBJECT       *ParseTreeRoot,
     ACPI_NAMESPACE_NODE     *NamespaceRoot);
 

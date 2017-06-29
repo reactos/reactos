@@ -56,11 +56,11 @@ extern "C"
 {
 extern HINSTANCE shell32_hInstance;
 
-HRESULT WINAPI CStartMenu_Constructor(REFIID riid, void **ppv);
-HRESULT WINAPI CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv);
-HRESULT WINAPI CMenuSite_Constructor(REFIID riid, LPVOID *ppv);
-HRESULT WINAPI CMenuBand_Constructor(REFIID riid, LPVOID *ppv);
-HRESULT WINAPI CMergedFolder_Constructor(REFIID riid, LPVOID *ppv);
+HRESULT WINAPI RSHELL_CStartMenu_CreateInstance(REFIID riid, void **ppv);
+HRESULT WINAPI RSHELL_CMenuDeskBar_CreateInstance(REFIID riid, LPVOID *ppv);
+HRESULT WINAPI RSHELL_CMenuSite_CreateInstance(REFIID riid, LPVOID *ppv);
+HRESULT WINAPI RSHELL_CMenuBand_CreateInstance(REFIID riid, LPVOID *ppv);
+HRESULT WINAPI RSHELL_CMergedFolder_CreateInstance(REFIID riid, LPVOID *ppv);
 }
 
 DWORD WINAPI WinList_Init(void)
@@ -226,19 +226,19 @@ public:
         *ppvObject = NULL;
 
         if (IsEqualCLSID(m_Clsid, CLSID_StartMenu))
-            return CStartMenu_Constructor(riid, ppvObject);
+            return RSHELL_CStartMenu_CreateInstance(riid, ppvObject);
             
         if (IsEqualCLSID(m_Clsid, CLSID_MenuDeskBar))
-            return CMenuDeskBar_Constructor(riid, ppvObject);
+            return RSHELL_CMenuDeskBar_CreateInstance(riid, ppvObject);
 
         if (IsEqualCLSID(m_Clsid, CLSID_MenuBand))
-            return CMenuBand_Constructor(riid, ppvObject);
+            return RSHELL_CMenuBand_CreateInstance(riid, ppvObject);
 
         if (IsEqualCLSID(m_Clsid, CLSID_MenuBandSite))
-            return CMenuSite_Constructor(riid, ppvObject);
+            return RSHELL_CMenuSite_CreateInstance(riid, ppvObject);
 
         if (IsEqualCLSID(m_Clsid, CLSID_MergedFolder))
-            return CMergedFolder_Constructor(riid, ppvObject);
+            return RSHELL_CMergedFolder_CreateInstance(riid, ppvObject);
 
         return E_NOINTERFACE;
     }

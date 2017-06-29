@@ -8,17 +8,21 @@
 #include "precomp.h"
 
 static void
-_MarshallDownDatatypesInfo(PDATATYPES_INFO_1W pDatatypesInfo1)
+_MarshallDownDatatypesInfo(PDATATYPES_INFO_1W* ppDatatypesInfo1)
 {
     // Replace absolute pointer addresses in the output by relative offsets.
+    PDATATYPES_INFO_1W pDatatypesInfo1 = *ppDatatypesInfo1;
     pDatatypesInfo1->pName = (PWSTR)((ULONG_PTR)pDatatypesInfo1->pName - (ULONG_PTR)pDatatypesInfo1);
+    *ppDatatypesInfo1 += sizeof(DATATYPES_INFO_1W);
 }
 
 static void
-_MarshallDownPrintProcessorInfo(PPRINTPROCESSOR_INFO_1W pPrintProcessorInfo1)
+_MarshallDownPrintProcessorInfo(PPRINTPROCESSOR_INFO_1W* ppPrintProcessorInfo1)
 {
     // Replace absolute pointer addresses in the output by relative offsets.
+    PPRINTPROCESSOR_INFO_1W pPrintProcessorInfo1 = *ppPrintProcessorInfo1;
     pPrintProcessorInfo1->pName = (PWSTR)((ULONG_PTR)pPrintProcessorInfo1->pName - (ULONG_PTR)pPrintProcessorInfo1);
+    *ppPrintProcessorInfo1 += sizeof(PRINTPROCESSOR_INFO_1W);
 }
 
 DWORD
@@ -39,8 +43,7 @@ DWORD
 _RpcEnumPrintProcessorDatatypes(WINSPOOL_HANDLE pName, WCHAR* pPrintProcessorName, DWORD Level, BYTE* pDatatypes, DWORD cbBuf, DWORD* pcbNeeded, DWORD* pcReturned)
 {
     DWORD dwErrorCode;
-    DWORD i;
-    PBYTE p = pDatatypes;
+    PBYTE pDatatypesAligned;
 
     dwErrorCode = RpcImpersonateClient(NULL);
     if (dwErrorCode != ERROR_SUCCESS)
@@ -49,20 +52,25 @@ _RpcEnumPrintProcessorDatatypes(WINSPOOL_HANDLE pName, WCHAR* pPrintProcessorNam
         return dwErrorCode;
     }
 
-    EnumPrintProcessorDatatypesW(pName, pPrintProcessorName, Level, pDatatypes, cbBuf, pcbNeeded, pcReturned);
-    dwErrorCode = GetLastError();
+    pDatatypesAligned = AlignRpcPtr(pDatatypes, &cbBuf);
 
-    if (dwErrorCode == ERROR_SUCCESS)
+    if (EnumPrintProcessorDatatypesW(pName, pPrintProcessorName, Level, pDatatypesAligned, cbBuf, pcbNeeded, pcReturned))
     {
         // Replace absolute pointer addresses in the output by relative offsets.
+        DWORD i;
+        PDATATYPES_INFO_1W p = (PDATATYPES_INFO_1W)pDatatypesAligned;
+
         for (i = 0; i < *pcReturned; i++)
-        {
-            _MarshallDownDatatypesInfo((PDATATYPES_INFO_1W)p);
-            p += sizeof(DATATYPES_INFO_1W);
-        }
+            _MarshallDownDatatypesInfo(&p);
+    }
+    else
+    {
+        dwErrorCode = GetLastError();
     }
 
     RpcRevertToSelf();
+    UndoAlignRpcPtr(pDatatypes, pDatatypesAligned, cbBuf, pcbNeeded);
+
     return dwErrorCode;
 }
 
@@ -70,8 +78,6 @@ DWORD
 _RpcEnumPrintProcessors(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, DWORD Level, BYTE* pPrintProcessorInfo, DWORD cbBuf, DWORD* pcbNeeded, DWORD* pcReturned)
 {
     DWORD dwErrorCode;
-    DWORD i;
-    PBYTE p = pPrintProcessorInfo;
 
     dwErrorCode = RpcImpersonateClient(NULL);
     if (dwErrorCode != ERROR_SUCCESS)
@@ -86,11 +92,11 @@ _RpcEnumPrintProcessors(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, DWORD Level,
     if (dwErrorCode == ERROR_SUCCESS)
     {
         // Replace absolute pointer addresses in the output by relative offsets.
+        DWORD i;
+        PPRINTPROCESSOR_INFO_1W p = (PPRINTPROCESSOR_INFO_1W)pPrintProcessorInfo;
+
         for (i = 0; i < *pcReturned; i++)
-        {
-            _MarshallDownPrintProcessorInfo((PPRINTPROCESSOR_INFO_1W)p);
-            p += sizeof(PRINTPROCESSOR_INFO_1W);
-        }
+            _MarshallDownPrintProcessorInfo(&p);
     }
 
     RpcRevertToSelf();

@@ -690,3 +690,8 @@ NtUserMonitorFromRect                   2
 NtUserMonitorFromWindow                 2
 NtUserSetScrollBarInfo                  3
 #
+
+# Vista+ Syscall add on for Wine DX
+NtGdiDdDDICreateDCFromMemory            1
+NtGdiDdDDIDestroyDCFromMemory           1
+#

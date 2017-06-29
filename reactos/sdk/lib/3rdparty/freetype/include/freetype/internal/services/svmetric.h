@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType services for metrics variations (specification).        */
 /*                                                                         */
-/*  Copyright 2016 by                                                      */
+/*  Copyright 2016-2017 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -74,10 +74,8 @@ FT_BEGIN_HEADER
 
   /* MVAR */
 
-  typedef FT_Error
-  (*FT_Metrics_Adjust_Func)( FT_Face   face,
-                             FT_ULong  tag,
-                             FT_Int   *avalue );
+  typedef void
+  (*FT_Metrics_Adjust_Func)( FT_Face  face );
 
 
   FT_DEFINE_SERVICE( MetricsVariations )
@@ -140,7 +138,7 @@ FT_BEGIN_HEADER
     clazz->bsb_adjust      = bsb_adjust_;                             \
     clazz->vorg_adjust     = vorg_adjust_;                            \
     clazz->metrics_adjust  = metrics_adjust_;                         \
-  };
+  }
 
 #endif /* FT_CONFIG_OPTION_PIC */
 

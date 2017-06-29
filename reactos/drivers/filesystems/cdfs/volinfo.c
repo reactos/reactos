@@ -49,7 +49,7 @@ CdfsGetFsVolumeInformation(
 
     DPRINT("Required length %lu\n", (sizeof(FILE_FS_VOLUME_INFORMATION) + DeviceObject->Vpb->VolumeLabelLength));
     DPRINT("LabelLength %hu\n", DeviceObject->Vpb->VolumeLabelLength);
-    DPRINT("Label %*.S\n", DeviceObject->Vpb->VolumeLabelLength / sizeof(WCHAR), DeviceObject->Vpb->VolumeLabel);
+    DPRINT("Label %.*S\n", DeviceObject->Vpb->VolumeLabelLength / sizeof(WCHAR), DeviceObject->Vpb->VolumeLabel);
 
     if (*BufferLength < sizeof(FILE_FS_VOLUME_INFORMATION))
         return STATUS_INFO_LENGTH_MISMATCH;

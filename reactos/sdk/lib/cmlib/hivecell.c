@@ -519,54 +519,134 @@ HvFreeCell(
         HvMarkCellDirty(RegistryHive, CellIndex, FALSE);
 }
 
+
+#define CELL_REF_INCREMENT  10
+
 BOOLEAN
 CMAPI
-HvTrackCellRef(PHV_TRACK_CELL_REF CellRef,
-               PHHIVE Hive,
-               HCELL_INDEX Cell)
+HvTrackCellRef(
+    IN OUT PHV_TRACK_CELL_REF CellRef,
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Cell)
 {
+    PHV_HIVE_CELL_PAIR NewCellArray;
+
+    PAGED_CODE();
+
     /* Sanity checks */
     ASSERT(CellRef);
-    ASSERT(Hive );
+    ASSERT(Hive);
     ASSERT(Cell != HCELL_NIL);
 
-    /* Less than 4? */
+    /* NOTE: The hive cell is already referenced! */
+
+    /* Less than 4? Use the static array */
     if (CellRef->StaticCount < STATIC_CELL_PAIR_COUNT)
     {
-        /* Add reference */
+        /* Add the reference */
         CellRef->StaticArray[CellRef->StaticCount].Hive = Hive;
         CellRef->StaticArray[CellRef->StaticCount].Cell = Cell;
         CellRef->StaticCount++;
         return TRUE;
     }
 
-    /* FIXME: TODO */
-    ASSERTMSG("ERROR: Too many references\n", FALSE);
-    return FALSE;
+    DPRINT("HvTrackCellRef: Static array full, use dynamic array.\n");
+
+    /* Sanity checks */
+    if (CellRef->Max == 0)
+    {
+        /* The dynamic array must not have been allocated already */
+        ASSERT(CellRef->CellArray == NULL);
+        ASSERT(CellRef->Count == 0);
+    }
+    else
+    {
+        /* The dynamic array must be allocated */
+        ASSERT(CellRef->CellArray);
+    }
+    ASSERT(CellRef->Count <= CellRef->Max);
+
+    if (CellRef->Count == CellRef->Max)
+    {
+        /* Allocate a new reference table */
+        NewCellArray = CmpAllocate((CellRef->Max + CELL_REF_INCREMENT) * sizeof(HV_HIVE_CELL_PAIR),
+                                   TRUE,
+                                   TAG_CM);
+        if (!NewCellArray)
+        {
+            DPRINT1("HvTrackCellRef: Cannot reallocate the reference table.\n");
+            /* We failed, dereference the hive cell */
+            HvReleaseCell(Hive, Cell);
+            return FALSE;
+        }
+
+        /* Free the old reference table and use the new one */
+        if (CellRef->CellArray)
+        {
+            /* Copy the handles from the old table to the new one */
+            RtlCopyMemory(NewCellArray,
+                          CellRef->CellArray,
+                          CellRef->Max * sizeof(HV_HIVE_CELL_PAIR));
+            CmpFree(CellRef->CellArray, 0); // TAG_CM
+        }
+        CellRef->CellArray = NewCellArray;
+        CellRef->Max += CELL_REF_INCREMENT;
+    }
+
+    // ASSERT(CellRef->Count < CellRef->Max);
+
+    /* Add the reference */
+    CellRef->CellArray[CellRef->Count].Hive = Hive;
+    CellRef->CellArray[CellRef->Count].Cell = Cell;
+    CellRef->Count++;
+    return TRUE;
 }
 
 VOID
 CMAPI
-HvReleaseFreeCellRefArray(PHV_TRACK_CELL_REF CellRef)
+HvReleaseFreeCellRefArray(
+    IN OUT PHV_TRACK_CELL_REF CellRef)
 {
     ULONG i;
+
+    PAGED_CODE();
+
     ASSERT(CellRef);
 
-    /* Any references? */
+    /* Any references in the static array? */
     if (CellRef->StaticCount > 0)
     {
         /* Sanity check */
         ASSERT(CellRef->StaticCount <= STATIC_CELL_PAIR_COUNT);
 
-        /* Loop them */
-        for (i = 0; i < CellRef->StaticCount;i++)
+        /* Loop over them and release them */
+        for (i = 0; i < CellRef->StaticCount; i++)
         {
-            /* Release them */
             HvReleaseCell(CellRef->StaticArray[i].Hive,
                           CellRef->StaticArray[i].Cell);
         }
 
-        /* Free again */
+        /* We can reuse the static array */
         CellRef->StaticCount = 0;
+    }
+
+    /* Any references in the dynamic array? */
+    if (CellRef->Count > 0)
+    {
+        /* Sanity checks */
+        ASSERT(CellRef->Count <= CellRef->Max);
+        ASSERT(CellRef->CellArray);
+
+        /* Loop over them and release them */
+        for (i = 0; i < CellRef->Count; i++)
+        {
+            HvReleaseCell(CellRef->CellArray[i].Hive,
+                          CellRef->CellArray[i].Cell);
+        }
+
+        /* We can reuse the dynamic array */
+        CmpFree(CellRef->CellArray, 0); // TAG_CM
+        CellRef->CellArray = NULL;
+        CellRef->Count = CellRef->Max = 0;
     }
 }

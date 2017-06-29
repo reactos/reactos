@@ -597,10 +597,7 @@ AcpiRsConvertResourceToAml (
 
             /* Set vendor offset only if there is vendor data */
 
-            if (Resource->Data.Gpio.VendorLength)
-            {
-                ACPI_SET16 (Target, AmlLength);
-            }
+            ACPI_SET16 (Target, AmlLength);
 
             AcpiRsSetResourceLength (AmlLength, Aml);
             break;

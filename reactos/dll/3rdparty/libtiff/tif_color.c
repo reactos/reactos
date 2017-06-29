@@ -1,4 +1,4 @@
-/* $Id: tif_color.c,v 1.22 2016-09-04 21:32:56 erouault Exp $ */
+/* $Id: tif_color.c,v 1.23 2017-05-13 18:17:34 erouault Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -199,6 +199,23 @@ TIFFYCbCrtoRGB(TIFFYCbCrToRGB *ycbcr, uint32 Y, int32 Cb, int32 Cr,
 	*b = CLAMP(i, 0, 255);
 }
 
+/* Clamp function for sanitization purposes. Normally clamping should not */
+/* occur for well behaved chroma and refBlackWhite coefficients */
+static float CLAMPw(float v, float vmin, float vmax)
+{
+    if( v < vmin )
+    {
+        /* printf("%f clamped to %f\n", v, vmin); */
+        return vmin;
+    }
+    if( v > vmax )
+    {
+        /* printf("%f clamped to %f\n", v, vmax); */
+        return vmax;
+    }
+    return v;
+}
+
 /*
  * Initialize the YCbCr->RGB conversion tables.  The conversion
  * is done according to the 6.0 spec:
@@ -238,10 +255,10 @@ TIFFYCbCrToRGBInit(TIFFYCbCrToRGB* ycbcr, float *luma, float *refBlackWhite)
     ycbcr->Cb_g_tab = ycbcr->Cr_g_tab + 256;
     ycbcr->Y_tab = ycbcr->Cb_g_tab + 256;
 
-    { float f1 = 2-2*LumaRed;		int32 D1 = FIX(f1);
-      float f2 = LumaRed*f1/LumaGreen;	int32 D2 = -FIX(f2);
-      float f3 = 2-2*LumaBlue;		int32 D3 = FIX(f3);
-      float f4 = LumaBlue*f3/LumaGreen;	int32 D4 = -FIX(f4);
+    { float f1 = 2-2*LumaRed;		int32 D1 = FIX(CLAMP(f1,0.0F,2.0F));
+      float f2 = LumaRed*f1/LumaGreen;	int32 D2 = -FIX(CLAMP(f2,0.0F,2.0F));
+      float f3 = 2-2*LumaBlue;		int32 D3 = FIX(CLAMP(f3,0.0F,2.0F));
+      float f4 = LumaBlue*f3/LumaGreen;	int32 D4 = -FIX(CLAMP(f4,0.0F,2.0F));
       int x;
 
 #undef LumaBlue
@@ -256,17 +273,20 @@ TIFFYCbCrToRGBInit(TIFFYCbCrToRGB* ycbcr, float *luma, float *refBlackWhite)
        * constructing tables indexed by the raw pixel data.
        */
       for (i = 0, x = -128; i < 256; i++, x++) {
-	    int32 Cr = (int32)Code2V(x, refBlackWhite[4] - 128.0F,
-			    refBlackWhite[5] - 128.0F, 127);
-	    int32 Cb = (int32)Code2V(x, refBlackWhite[2] - 128.0F,
-			    refBlackWhite[3] - 128.0F, 127);
+	    int32 Cr = (int32)CLAMPw(Code2V(x, refBlackWhite[4] - 128.0F,
+			    refBlackWhite[5] - 128.0F, 127),
+                            -128.0F * 64, 128.0F * 64);
+	    int32 Cb = (int32)CLAMPw(Code2V(x, refBlackWhite[2] - 128.0F,
+			    refBlackWhite[3] - 128.0F, 127),
+                            -128.0F * 64, 128.0F * 64);
 
 	    ycbcr->Cr_r_tab[i] = (int32)((D1*Cr + ONE_HALF)>>SHIFT);
 	    ycbcr->Cb_b_tab[i] = (int32)((D3*Cb + ONE_HALF)>>SHIFT);
 	    ycbcr->Cr_g_tab[i] = D2*Cr;
 	    ycbcr->Cb_g_tab[i] = D4*Cb + ONE_HALF;
 	    ycbcr->Y_tab[i] =
-		    (int32)Code2V(x + 128, refBlackWhite[0], refBlackWhite[1], 255);
+		    (int32)CLAMPw(Code2V(x + 128, refBlackWhite[0], refBlackWhite[1], 255),
+                                  -128.0F * 64, 128.0F * 64);
       }
     }
 

@@ -221,6 +221,7 @@ static BOOL DP_DestroyDirectPlay2( LPVOID lpDP )
 
   NS_DeleteSessionCache( This->dp2->lpNameServerData );
 
+  HeapFree( GetProcessHeap(), 0, This->dp2->dplspData.lpCB);
   HeapFree( GetProcessHeap(), 0, This->dp2->lpSessionDesc );
 
   IDirectPlaySP_Release( This->dp2->spData.lpISP );
@@ -2866,8 +2867,14 @@ static HRESULT WINAPI IDirectPlay4Impl_GetPlayerCaps( IDirectPlay4 *iface, DPID 
 
     TRACE( "(%p)->(0x%08x,%p,0x%08x)\n", This, player, caps, flags);
 
+    if ( !caps )
+        return DPERR_INVALIDPARAMS;
+
     if ( This->dp2->connectionInitialized == NO_PROVIDER )
         return DPERR_UNINITIALIZED;
+
+    if( caps->dwSize != sizeof(DPCAPS) )
+        return DPERR_INVALIDPARAMS;
 
     /* Query the service provider */
     data.idPlayer = player;
@@ -4336,8 +4343,10 @@ static HRESULT WINAPI IDirectPlay4AImpl_EnumConnections( IDirectPlay4A *iface,
       if( !lpEnumCallback( &serviceProviderGUID, lpAddressBuffer, dwAddressBufferSize,
                            &dpName, dwFlags, lpContext ) )
       {
+         HeapFree( GetProcessHeap(), 0, lpAddressBuffer );
          return DP_OK;
       }
+      HeapFree( GetProcessHeap(), 0, lpAddressBuffer );
     }
   }
 

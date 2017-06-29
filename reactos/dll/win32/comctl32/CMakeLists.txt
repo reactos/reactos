@@ -37,6 +37,7 @@ list(APPEND SOURCE
     string.c
     syslink.c
     tab.c
+    taskdialog.c
     theme_button.c
     theme_combo.c
     theme_dialog.c

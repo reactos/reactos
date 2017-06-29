@@ -24,6 +24,7 @@
 #include <ddrawint.h>
 #include <d3dtypes.h>
 #include <d3dcaps.h>
+#include <d3dkmthk.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,4 +1,4 @@
-/* $Id: tif_zip.c,v 1.36 2016-11-12 16:48:28 erouault Exp $ */
+/* $Id: tif_zip.c,v 1.37 2017-05-10 15:21:16 erouault Exp $ */
 
 /*
  * Copyright (c) 1995-1997 Sam Leffler
@@ -108,7 +108,11 @@ ZIPSetupDecode(TIFF* tif)
 	    sp->state = 0;
 	}
 
-	if (inflateInit(&sp->stream) != Z_OK) {
+	/* This function can possibly be called several times by */
+	/* PredictorSetupDecode() if this function succeeds but */
+	/* PredictorSetup() fails */
+	if ((sp->state & ZSTATE_INIT_DECODE) == 0 &&
+	    inflateInit(&sp->stream) != Z_OK) {
 		TIFFErrorExt(tif->tif_clientdata, module, "%s", SAFE_MSG(sp));
 		return (0);
 	} else {

@@ -21,9 +21,6 @@
 #include "precomp.h"
 #include <commoncontrols.h>
 
-#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
-#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
-
 /* Set DUMP_TASKS to 1 to enable a dump of the tasks and task groups every
    5 seconds */
 #define DUMP_TASKS  0
@@ -1390,37 +1387,29 @@ public:
         switch ((INT) wParam)
         {
         case HSHELL_APPCOMMAND:
-            HandleAppCommand(wParam, lParam);
-            Ret = TRUE;
+            Ret = HandleAppCommand(wParam, lParam);
             break;
 
         case HSHELL_WINDOWCREATED:
-            Ret = AddTask((HWND) lParam);
+            AddTask((HWND) lParam);
             break;
 
         case HSHELL_WINDOWDESTROYED:
             /* The window still exists! Delay destroying it a bit */
             DeleteTask((HWND) lParam);
-            Ret = TRUE;
             break;
 
         case HSHELL_RUDEAPPACTIVATED:
         case HSHELL_WINDOWACTIVATED:
-            if (lParam)
-            {
-                ActivateTask((HWND) lParam);
-                Ret = TRUE;
-            }
+            ActivateTask((HWND) lParam);
             break;
 
         case HSHELL_FLASH:
             FlashTask((HWND) lParam);
-            Ret = TRUE;
             break;
 
         case HSHELL_REDRAW:
             RedrawTask((HWND) lParam);
-            Ret = TRUE;
             break;
 
         case HSHELL_TASKMAN:
@@ -1543,21 +1532,14 @@ public:
 
     VOID HandleTaskItemRightClick(IN OUT PTASK_ITEM TaskItem)
     {
+        POINT pt;
+        GetCursorPos(&pt);
 
-        HMENU hmenu = ::GetSystemMenu(TaskItem->hWnd, FALSE);
+        SetForegroundWindow(TaskItem->hWnd);
 
-        if (hmenu)
-        {
-            POINT pt;
-            int cmd;
-            GetCursorPos(&pt);
-            cmd = TrackPopupMenu(hmenu, TPM_LEFTBUTTON | TPM_RIGHTBUTTON | TPM_RETURNCMD, pt.x, pt.y, 0, m_TaskBar.m_hWnd, NULL);
-            if (cmd)
-            {
-                SetForegroundWindow(TaskItem->hWnd);    // reactivate window after the context menu has closed
-                ::PostMessage(TaskItem->hWnd, WM_SYSCOMMAND, cmd, 0);
-            }
-        }
+        ActivateTask(TaskItem->hWnd);
+
+        ::SendMessageW(TaskItem->hWnd, WM_POPUPSYSTEMMENU, 0, MAKELPARAM(pt.x, pt.y));
     }
 
     VOID HandleTaskGroupRightClick(IN OUT PTASK_GROUP TaskGroup)
@@ -1800,6 +1782,11 @@ public:
         return FALSE;
     }
 
+    LRESULT OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        return MA_NOACTIVATE;
+    }
+
     LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
 #if DUMP_TASKS != 0
@@ -1847,6 +1834,8 @@ public:
         MESSAGE_HANDLER(WM_SETFONT, OnSetFont)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChanged)
         MESSAGE_HANDLER(m_ShellHookMsg, HandleShellHookMsg)
+        MESSAGE_HANDLER(WM_MOUSEACTIVATE, OnMouseActivate)
+        MESSAGE_HANDLER(WM_KLUDGEMINRECT, OnKludgeItemRect)
     END_MSG_MAP()
 
     HWND _Init(IN HWND hWndParent, IN OUT ITrayWindow *tray)

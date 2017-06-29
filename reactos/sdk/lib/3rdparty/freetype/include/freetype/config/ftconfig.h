@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    ANSI-specific configuration file (specification only).               */
 /*                                                                         */
-/*  Copyright 1996-2016 by                                                 */
+/*  Copyright 1996-2017 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -330,6 +330,15 @@ FT_BEGIN_HEADER
 #ifdef FT_LONG64
   typedef FT_INT64   FT_Int64;
   typedef FT_UINT64  FT_UInt64;
+#endif
+
+
+#ifdef _WIN64
+  /* only 64bit Windows uses the LLP64 data model, i.e., */
+  /* 32bit integers, 64bit pointers                      */
+#define FT_UINT_TO_POINTER( x ) (void*)(unsigned __int64)(x)
+#else
+#define FT_UINT_TO_POINTER( x ) (void*)(unsigned long)(x)
 #endif
 
 

@@ -196,6 +196,12 @@ int attribute_align_arg ALIAS_NAME(mpg123_position)( mpg123_handle *mh, lfs_alia
 	return NATIVE_NAME(mpg123_position)(mh, frame_offset, buffered_bytes, current_frame, frames_left, current_seconds, seconds_left);
 }
 
+lfs_alias_t NATIVE_NAME(mpg123_framelength)(mpg123_handle *mh);
+lfs_alias_t attribute_align_arg ALIAS_NAME(mpg123_framelength)(mpg123_handle *mh)
+{
+	return NATIVE_NAME(mpg123_framelength)(mh);
+}
+
 lfs_alias_t NATIVE_NAME(mpg123_length)(mpg123_handle *mh);
 lfs_alias_t attribute_align_arg ALIAS_NAME(mpg123_length)(mpg123_handle *mh)
 {

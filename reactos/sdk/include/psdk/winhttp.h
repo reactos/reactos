@@ -38,8 +38,11 @@ typedef HINTERNET *LPHINTERNET;
 typedef WORD INTERNET_PORT;
 typedef INTERNET_PORT *LPINTERNET_PORT;
 
+/* Yes, these values contradict wininet.h */
 #define INTERNET_SCHEME_HTTP            1
 #define INTERNET_SCHEME_HTTPS           2
+#define INTERNET_SCHEME_FTP             3
+#define INTERNET_SCHEME_SOCKS           4
 typedef int INTERNET_SCHEME, *LPINTERNET_SCHEME;
 
 #define ICU_ESCAPE  0x80000000

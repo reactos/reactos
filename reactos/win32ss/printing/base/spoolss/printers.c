@@ -93,6 +93,8 @@ EnumPrintersW(DWORD Flags, PWSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cb
         pPrintProvider = CONTAINING_RECORD(pEntry, SPOOLSS_PRINT_PROVIDER, Entry);
 
         // Call the EnumPrinters function of this Print Provider.
+        cbNeeded = 0;
+        dwReturned = 0;
         pPrintProvider->PrintProvider.fpEnumPrinters(Flags, Name, Level, pCallBuffer, cbCallBuffer, &cbNeeded, &dwReturned);
 
         // Add the returned counts to the total values.
@@ -159,13 +161,6 @@ OpenPrinterW(PWSTR pPrinterName, PHANDLE phPrinter, PPRINTER_DEFAULTSW pDefault)
     PSPOOLSS_PRINTER_HANDLE pHandle;
     PSPOOLSS_PRINT_PROVIDER pPrintProvider;
 
-    // Sanity checks.
-    if (!pPrinterName || !phPrinter)
-    {
-        dwErrorCode = ERROR_INVALID_PARAMETER;
-        goto Cleanup;
-    }
-
     // Loop through all Print Providers to find one able to open this Printer.
     for (pEntry = PrintProviderList.Flink; pEntry != &PrintProviderList; pEntry = pEntry->Flink)
     {
@@ -179,8 +174,8 @@ OpenPrinterW(PWSTR pPrinterName, PHANDLE phPrinter, PPRINTER_DEFAULTSW pDefault)
             pHandle = DllAllocSplMem(sizeof(SPOOLSS_PRINTER_HANDLE));
             if (!pHandle)
             {
-                ERR("DllAllocSplMem failed with error %lu!\n", GetLastError());
                 dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+                ERR("DllAllocSplMem failed!\n");
                 goto Cleanup;
             }
 
@@ -199,11 +194,11 @@ OpenPrinterW(PWSTR pPrinterName, PHANDLE phPrinter, PPRINTER_DEFAULTSW pDefault)
         }
     }
 
+Cleanup:
     // ERROR_INVALID_NAME by the Print Provider is translated to ERROR_INVALID_PRINTER_NAME here, but not in other APIs as far as I know.
     if (dwErrorCode == ERROR_INVALID_NAME)
         dwErrorCode = ERROR_INVALID_PRINTER_NAME;
 
-Cleanup:
     SetLastError(dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
 }

@@ -520,9 +520,9 @@ GetDateSetting(
     HWND hwndDlg,
     PGLOBALDATA pGlobalData)
 {
-    WCHAR szLongDateFormat[MAX_SAMPLES_STR_SIZE];
-    WCHAR szShortDateFormat[MAX_SAMPLES_STR_SIZE];
-    WCHAR szDateSeparator[MAX_SAMPLES_STR_SIZE];
+    WCHAR szLongDateFormat[MAX_LONGDATEFORMAT];
+    WCHAR szShortDateFormat[MAX_SHORTDATEFORMAT];
+    WCHAR szDateSeparator[MAX_DATESEPARATOR];
 
     if (!SetLongDateFormat(hwndDlg, szLongDateFormat) ||
         !SetShortDateFormat(hwndDlg, szShortDateFormat) ||

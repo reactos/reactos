@@ -98,7 +98,7 @@ AcpiNsPrintNodePathname (
             AcpiOsPrintf ("%s ", Message);
         }
 
-        AcpiOsPrintf ("[%s] (Node %p)", (char *) Buffer.Pointer, Node);
+        AcpiOsPrintf ("%s", (char *) Buffer.Pointer);
         ACPI_FREE (Buffer.Pointer);
     }
 }

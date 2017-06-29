@@ -48,7 +48,17 @@
  * Use compiler specific <stdarg.h> is a good practice for even when
  * -nostdinc is specified (i.e., ACPI_USE_STANDARD_HEADERS undefined.
  */
+#ifndef va_arg
+#ifdef ACPI_USE_BUILTIN_STDARG
+typedef __builtin_va_list       va_list;
+#define va_start(v, l)          __builtin_va_start(v, l)
+#define va_end(v)               __builtin_va_end(v)
+#define va_arg(v, l)            __builtin_va_arg(v, l)
+#define va_copy(d, s)           __builtin_va_copy(d, s)
+#else
 #include <stdarg.h>
+#endif
+#endif
 
 #define ACPI_INLINE             __inline__
 
@@ -126,20 +136,17 @@ do {                                                        \
 } while(0)
 
 
-/*
- * Note: This is also taken from our old adaptation.
- *       See acmsvc.h for where it came originally.
- */
-#define ACPI_DIV_64_BY_32(n_hi, n_lo, d32, q32, r32) \
-{                           \
-    q32 = n_hi / d32;       \
-    r32 = n_lo / d32;       \
+#define ACPI_DIV_64_BY_32(n_hi, n_lo, d32, q32, r32)                \
+{                                                                   \
+    asm("divl %4;"                                                  \
+        :"=a"(q32),"=d"(r32):"a"(n_lo),"d"(n_hi),"rm"(d32):"cc");   \
 }
 
-#define ACPI_SHIFT_RIGHT_64(n_hi, n_lo) \
-{                           \
-    n_hi >>= 1;    \
-    n_lo >>= 1;    \
+#define ACPI_SHIFT_RIGHT_64(n_hi, n_lo)                     \
+{                                                           \
+    asm("shrl $1, %0;"                                      \
+        "rcrl $1, %1;"                                      \
+        :"=rm"(n_hi),"=rm"(n_lo):"0"(n_hi),"1"(n_lo):"cc"); \
 }
 
 #endif /* __REACTOS__ */

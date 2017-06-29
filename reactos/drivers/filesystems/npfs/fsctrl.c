@@ -547,7 +547,7 @@ NpTransceive(IN PDEVICE_OBJECT DeviceObject,
     }
 
     Status = NpWriteDataQueue(WriteQueue,
-                              1,
+                              FILE_PIPE_MESSAGE_MODE,
                               InBuffer,
                               InLength,
                               Ccb->Fcb->NamedPipeType,

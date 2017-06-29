@@ -487,8 +487,10 @@ static HRESULT WINAPI MimeHtmlProtocol_Start(IInternetProtocol *iface, const WCH
     binding->url[url.mhtml_len] = 0;
 
     hres = CreateURLMoniker(NULL, binding->url, &mon);
-    if(FAILED(hres))
+    if(FAILED(hres)) {
+        heap_free(binding);
         return hres;
+    }
 
     binding->IBindStatusCallback_iface.lpVtbl = &BindStatusCallbackVtbl;
     binding->ref = 1;

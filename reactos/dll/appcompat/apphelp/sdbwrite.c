@@ -270,7 +270,7 @@ BOOL WINAPI SdbWriteStringRefTag(PDB db, TAG tag, TAGID tagid)
  *
  * @return  TRUE if it succeeds, FALSE if it fails.
  */
-BOOL WINAPI SdbWriteBinaryTag(PDB db, TAG tag, BYTE* data, DWORD size)
+BOOL WINAPI SdbWriteBinaryTag(PDB db, TAG tag, const BYTE* data, DWORD size)
 {
     if (!SdbpCheckTagType(tag, TAG_TYPE_BINARY))
         return FALSE;

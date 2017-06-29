@@ -502,7 +502,7 @@
 501 stdcall RtlConvertSharedToExclusive(ptr)
 502 stdcall RtlConvertSidToUnicodeString(ptr ptr long)
 503 stdcall RtlConvertToAutoInheritSecurityObject(ptr ptr ptr ptr long ptr)
-# stdcall RtlConvertUiListToApiList
+504 stdcall RtlConvertUiListToApiList(ptr ptr long)
 505 stdcall -arch=win32 -ret64 RtlConvertUlongToLargeInteger(long)
 506 stdcall RtlCopyLuid(ptr ptr)
 507 stdcall RtlCopyLuidAndAttributesArray(long ptr ptr)
@@ -736,8 +736,8 @@
 732 stdcall RtlIpv6StringToAddressExW(wstr ptr ptr ptr)
 733 stdcall RtlIpv6StringToAddressW(wstr ptr ptr)
 734 stdcall RtlIsActivationContextActive(ptr)
-# stdcall RtlIsCriticalSectionLocked
-# stdcall RtlIsCriticalSectionLockedByThread
+735 stdcall RtlIsCriticalSectionLocked(ptr)
+736 stdcall RtlIsCriticalSectionLockedByThread(ptr)
 737 stdcall RtlIsDosDeviceName_U(wstr)
 738 stdcall RtlIsGenericTableEmpty(ptr)
 739 stdcall RtlIsGenericTableEmptyAvl(ptr)

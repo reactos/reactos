@@ -192,6 +192,9 @@ CFSDropTarget::CFSDropTarget():
 
 HRESULT WINAPI CFSDropTarget::Initialize(LPWSTR PathTarget)
 {
+    if (!PathTarget)
+        return E_UNEXPECTED;
+
     cfShellIDList = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
     if (!cfShellIDList)
         return E_FAIL;
@@ -199,6 +202,7 @@ HRESULT WINAPI CFSDropTarget::Initialize(LPWSTR PathTarget)
     sPathTarget = (WCHAR *)SHAlloc((wcslen(PathTarget) + 1) * sizeof(WCHAR));
     if (!sPathTarget)
         return E_OUTOFMEMORY;
+
     wcscpy(sPathTarget, PathTarget);
 
     return S_OK;

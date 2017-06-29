@@ -2699,6 +2699,21 @@ static HRESULT WINAPI file_put_Attributes(IFile *iface, FileAttribute pfa)
     return SetFileAttributesW(This->path, pfa) ? S_OK : create_error(GetLastError());
 }
 
+static HRESULT get_date_from_filetime(const FILETIME *ft, DATE *date)
+{
+    FILETIME ftlocal;
+    SYSTEMTIME st;
+
+    if (!date)
+        return E_POINTER;
+
+    FileTimeToLocalFileTime(ft, &ftlocal);
+    FileTimeToSystemTime(&ftlocal, &st);
+    SystemTimeToVariantTime(&st, date);
+
+    return S_OK;
+}
+
 static HRESULT WINAPI file_get_DateCreated(IFile *iface, DATE *pdate)
 {
     struct file *This = impl_from_IFile(iface);
@@ -2706,11 +2721,17 @@ static HRESULT WINAPI file_get_DateCreated(IFile *iface, DATE *pdate)
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI file_get_DateLastModified(IFile *iface, DATE *pdate)
+static HRESULT WINAPI file_get_DateLastModified(IFile *iface, DATE *date)
 {
     struct file *This = impl_from_IFile(iface);
-    FIXME("(%p)->(%p)\n", This, pdate);
-    return E_NOTIMPL;
+    WIN32_FILE_ATTRIBUTE_DATA attrs;
+
+    TRACE("(%p)->(%p)\n", This, date);
+
+    if (GetFileAttributesExW(This->path, GetFileExInfoStandard, &attrs))
+        return get_date_from_filetime(&attrs.ftLastWriteTime, date);
+
+    return E_FAIL;
 }
 
 static HRESULT WINAPI file_get_DateLastAccessed(IFile *iface, DATE *pdate)

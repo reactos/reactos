@@ -143,6 +143,12 @@ VOID CBandSiteBase::BuildRebarBandInfo(struct BandObject *Band, REBARBANDINFOW *
             prbi->fStyle |= RBBS_GRIPPERALWAYS;
     }
 
+    if (Band->bHiddenTitle)
+    {
+        prbi->fMask |= RBBIM_STYLE;
+        prbi->fStyle |= RBBS_HIDETITLE;
+    }
+
     if ((Band->dbi.dwMask & (DBIM_BKCOLOR | DBIM_MODEFLAGS)) == (DBIM_BKCOLOR | DBIM_MODEFLAGS) &&
         (Band->dbi.dwModeFlags & DBIMF_BKCOLOR))
     {
@@ -219,6 +225,119 @@ HRESULT CBandSiteBase::UpdateBand(DWORD dwBandID)
         return E_FAIL;
 
     return UpdateSingleBand(Band);
+}
+
+HRESULT CBandSiteBase::_IsBandDeletable(DWORD dwBandID)
+{
+    CComPtr<IBandSite> pbs;
+
+    /* Use QueryInterface so that we get the outer object in case we have one */
+    HRESULT hr = this->QueryInterface(IID_PPV_ARG(IBandSite, &pbs));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    DWORD dwState;
+    hr = pbs->QueryBand(dwBandID, NULL, &dwState, NULL, NULL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return ((dwState & BSSF_UNDELETEABLE) != 0) ? S_FALSE : S_OK;
+}
+
+HRESULT CBandSiteBase::OnContextMenu(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plrResult)
+{
+    /* Find the index fo the band that was clicked */
+    int x = GET_X_LPARAM(lParam);
+    int y = GET_Y_LPARAM(lParam);
+
+    RBHITTESTINFO htInfo = {{x, y}};
+    ScreenToClient(fRebarWindow, &htInfo.pt);
+    int iBand = SendMessageW(fRebarWindow, RB_HITTEST, 0, (LPARAM)&htInfo);
+    if (iBand < 0)
+    {
+        /* FIXME: what to do here? */
+        return S_OK;
+    }
+
+    /* Now get the id of the band that was clicked */
+    REBARBANDINFOW bandInfo = {sizeof(bandInfo), RBBIM_ID};
+    SendMessageW(fRebarWindow, RB_GETBANDINFOW, htInfo.iBand, (LPARAM)&bandInfo);
+
+    /* Finally get the band */
+    DWORD dwBandID = bandInfo.wID;
+    struct BandObject *Band = GetBandByID(dwBandID);
+    if (Band == NULL)
+        return E_FAIL;
+
+    HMENU hMenu = CreatePopupMenu();
+    if (hMenu == NULL)
+        return E_OUTOFMEMORY;
+
+    /* Try to load the menu of the band */
+    UINT idBandLast = 0;
+    CComPtr<IContextMenu> pcm;
+    HRESULT hr = Band->DeskBand->QueryInterface(IID_PPV_ARG(IContextMenu, &pcm));
+    if (SUCCEEDED(hr))
+    {
+        hr = pcm->QueryContextMenu(hMenu, 0, 0, UINT_MAX, CMF_NORMAL);
+        if (SUCCEEDED(hr))
+        {
+            idBandLast = HRESULT_CODE(hr);
+        }
+    }
+
+    /* Load the static part of the menu */
+    HMENU hMenuStatic = LoadMenuW(GetModuleHandleW(L"browseui.dll"), MAKEINTRESOURCEW(IDM_BAND_MENU));
+
+    if (hMenuStatic)
+    {
+        Shell_MergeMenus(hMenu, hMenuStatic, UINT_MAX, 0, UINT_MAX, MM_DONTREMOVESEPS | MM_SUBMENUSHAVEIDS);
+
+        ::DestroyMenu(hMenuStatic);
+
+        hr = _IsBandDeletable(dwBandID);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        /* Remove the close item if it is not deletable */
+        if (hr == S_FALSE || (Band->dbi.dwModeFlags & DBIMF_UNDELETEABLE) != 0)
+            DeleteMenu(hMenu, IDM_BAND_CLOSE, MF_BYCOMMAND);
+
+        if ((Band->dbi.dwMask & DBIM_TITLE) == 0)
+            DeleteMenu(hMenu, IDM_BAND_TITLE, MF_BYCOMMAND);
+        else
+            CheckMenuItem(hMenu, IDM_BAND_TITLE, Band->bHiddenTitle ? MF_UNCHECKED : MF_CHECKED);
+    }
+
+    /* TODO: Query the menu of our site */
+
+    UINT uCommand = ::TrackPopupMenuEx(hMenu, TPM_RETURNCMD, x, y, fRebarWindow, NULL);
+    if (uCommand < idBandLast)
+    {
+        CMINVOKECOMMANDINFO cmi = { sizeof(cmi), 0, fRebarWindow, MAKEINTRESOURCEA(uCommand)};
+        hr = pcm->InvokeCommand(&cmi);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+    }
+    else
+    {
+        if (uCommand == IDM_BAND_TITLE)
+        {
+            Band->bHiddenTitle = !Band->bHiddenTitle;
+
+            hr = UpdateBand(dwBandID);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+        }
+        else if(uCommand == IDM_BAND_CLOSE)
+        {
+            hr = RemoveBand(dwBandID);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+        }
+    }
+
+    return S_OK;
 }
 
 struct CBandSiteBase::BandObject *CBandSiteBase::GetBandFromHwnd(HWND hwnd)
@@ -567,6 +686,15 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
     if (fRebarWindow == NULL)
         return E_FAIL;
 
+    if (uMsg == WM_CONTEXTMENU)
+    {
+        HRESULT hr = OnContextMenu(hWnd, uMsg, wParam, lParam, plrResult);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+        
+        return S_OK;
+    }
+        
     if (hWnd == fRebarWindow)
     {
         /* FIXME: Just send the message? */
@@ -831,7 +959,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::SaveToStreamBS(IUnknown *, IStream *)
 }
 
 extern "C"
-HRESULT WINAPI CBandSite_CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, void **ppv)
+HRESULT WINAPI RSHELL_CBandSite_CreateInstance(LPUNKNOWN pUnkOuter, REFIID riid, void **ppv)
 {
     return CBandSite::_CreatorClass::CreateInstance(pUnkOuter, riid, ppv);
 }

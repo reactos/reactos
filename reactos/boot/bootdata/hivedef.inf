@@ -61,13 +61,13 @@ HKCU,"Control Panel\Desktop","PaintDesktopVersion",0x00010001,0x0
 HKCU,"Control Panel\Desktop","HungAppTimeout",2,"5000"
 HKCU,"Control Panel\Desktop","ScreenSaveActive",2,"0"
 HKCU,"Control Panel\Desktop","ScreenSaverIsSecure",2,"1"
-HKCU,"Control Panel\Desktop","ScreenSaveTimeOut",0,"600"
+HKCU,"Control Panel\Desktop","ScreenSaveTimeOut",2,"600"
 HKCU,"Control Panel\Desktop","WaitToKillAppTimeout",2,"20000"
 HKCU,"Control Panel\Desktop","Pattern",2,"(None)"
-HKCU,"Control Panel\Desktop","Wallpaper",0x00000000,""
+HKCU,"Control Panel\Desktop","Wallpaper",0x00000002,""
 HKCU,"Control Panel\Desktop","TileWallpaper",2,"0"
 HKCU,"Control Panel\Desktop","WallpaperStyle",2,"2"
-HKCU,"Control Panel\Desktop","FontSmoothing",0,"1"
+HKCU,"Control Panel\Desktop","FontSmoothing",2,"1"
 HKCU,"Control Panel\Desktop","FontSmoothingOrientation",0x00010003,0x00000001
 HKCU,"Control Panel\Desktop","FontSmoothingType",0x00010003,0x00000001
 HKCU,"Control Panel\Desktop","ForegroundFlashCount",0x00010003,0x00000003
@@ -95,27 +95,27 @@ HKCU,"Control Panel\Desktop\WindowMetrics","BorderWidth",2,"1"
 HKCU,"Control Panel\Desktop\WindowMetrics","Shell Icon Size",2,"32"
 HKCU,"Control Panel\Desktop\WindowMetrics","IconSpacing",2,"75"
 HKCU,"Control Panel\Desktop\WindowMetrics","IconVerticalspacing",2,"75"
-HKCU, "Control Panel\Desktop\WindowMetrics","CaptionFont",0x00000001,f5,ff,ff,ff,00,00,00,\
+HKCU, "Control Panel\Desktop\WindowMetrics","CaptionFont",0x00000003,f5,ff,ff,ff,00,00,00,\
 00,00,00,00,00,00,00,00,00,bc,02,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,\
 00,61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
-HKCU, "Control Panel\Desktop\WindowMetrics","IconFont",0x00000001,f5,ff,ff,ff,00,00,00,00,\
+HKCU, "Control Panel\Desktop\WindowMetrics","IconFont",0x00000003,f5,ff,ff,ff,00,00,00,00,\
 00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,\
 61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
-HKCU, "Control Panel\Desktop\WindowMetrics","MenuFont",0x00000001,f5,ff,ff,ff,00,00,00,00,\
+HKCU, "Control Panel\Desktop\WindowMetrics","MenuFont",0x00000003,f5,ff,ff,ff,00,00,00,00,\
 00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,00,\
 61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
-HKCU, "Control Panel\Desktop\WindowMetrics","MessageFont",0x00000001,f5,ff,ff,ff,00,00,00,\
+HKCU, "Control Panel\Desktop\WindowMetrics","MessageFont",0x00000003,f5,ff,ff,ff,00,00,00,\
 00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,\
 00,61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
-HKCU, "Control Panel\Desktop\WindowMetrics","SmCaptionFont",0x00000001,f5,ff,ff,ff,00,00,\
+HKCU, "Control Panel\Desktop\WindowMetrics","SmCaptionFont",0x00000003,f5,ff,ff,ff,00,00,\
 00,00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,\
 6d,00,61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
-HKCU, "Control Panel\Desktop\WindowMetrics","StatusFont",0x00000001,f5,ff,ff,ff,00,00,00,\
+HKCU, "Control Panel\Desktop\WindowMetrics","StatusFont",0x00000003,f5,ff,ff,ff,00,00,00,\
 00,00,00,00,00,00,00,00,00,90,01,00,00,00,00,00,01,00,00,00,00,54,00,61,00,68,00,6f,00,6d,\
 00,61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
@@ -1792,8 +1792,8 @@ HKCU,"SOFTWARE\Microsoft",,0x00000012
 
 ; ReactOS Calculator
 HKCU,"SOFTWARE\Microsoft\Calc",,0x00000012
-HKCU,"SOFTWARE\Microsoft\Calc","layout",0x00010001,0x00000001
-HKCU,"SOFTWARE\Microsoft\Calc","UseSep",0x00010001,0x00000001
+HKCU,"SOFTWARE\Microsoft\Calc","layout",0x00010003,0x00000001
+HKCU,"SOFTWARE\Microsoft\Calc","UseSep",0x00010003,0x00000001
 
 ; DirectX version report as DirectX 9.0
 HKCU,"SOFTWARE\Microsoft\DirectX","Debug",0x00010001,0x00000000
@@ -1817,9 +1817,9 @@ HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons",,0x00
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\ClassicStartMenu","{208D2C60-3AEA-1069-A2D7-08002B30309D}",0x00010001,0x00000000
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\CLSID\{20D04FE0-3AEA-1069-A2D8-08002B30309D}",,0x00000012
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","ListviewShadow",0x00010001,0x00000001
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","HideFileExt",0x00010001,0x00000000
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","StartMenuLogoff",0x00010001,0x00000001
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","ListviewShadow",0x00010003,0x00000001
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","HideFileExt",0x00010003,0x00000000
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","StartMenuLogoff",0x00010003,0x00000001
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","Hidden",0x00010003,1
 
 ; default shell
@@ -1832,7 +1832,7 @@ HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",,0x00000012
 
 ; Keyboard layout switcher
-;HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Run","kbswitch.exe",0x00020000,"%SystemRoot%\system32\kbswitch.exe"
+;HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Run","kbswitch.exe",0x00020002,"%SystemRoot%\system32\kbswitch.exe"
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Run","kbswitch.exe",2,"kbswitch.exe"
 
 HKCU,"SOFTWARE\Microsoft\Windows NT",,0x00000012

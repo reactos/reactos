@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    High-level SFNT driver interface (body).                             */
 /*                                                                         */
-/*  Copyright 1996-2016 by                                                 */
+/*  Copyright 1996-2017 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -20,6 +20,7 @@
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_SFNT_H
 #include FT_INTERNAL_OBJECTS_H
+#include FT_TRUETYPE_IDS_H
 
 #include "sfdriver.h"
 #include "ttload.h"
@@ -49,6 +50,11 @@
 #include FT_SERVICE_POSTSCRIPT_NAME_H
 #include FT_SERVICE_SFNT_H
 #include FT_SERVICE_TT_CMAP_H
+
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+#include FT_MULTIPLE_MASTERS_H
+#include FT_SERVICE_MULTIPLE_MASTERS_H
+#endif
 
 
   /*************************************************************************/
@@ -220,113 +226,838 @@
    *
    */
 
-  static const char*
-  sfnt_get_ps_name( TT_Face  face )
+  /* an array representing allowed ASCII characters in a PS string */
+  static const unsigned char sfnt_ps_map[16] =
   {
-    FT_Int       n, found_win, found_apple;
-    const char*  result = NULL;
+                /*             4        0        C        8 */
+    0x00, 0x00, /* 0x00: 0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0 */
+    0x00, 0x00, /* 0x10: 0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0 */
+    0xDE, 0x7C, /* 0x20: 1 1 0 1  1 1 1 0  0 1 1 1  1 1 0 0 */
+    0xFF, 0xAF, /* 0x30: 1 1 1 1  1 1 1 1  1 0 1 0  1 1 1 1 */
+    0xFF, 0xFF, /* 0x40: 1 1 1 1  1 1 1 1  1 1 1 1  1 1 1 1 */
+    0xFF, 0xD7, /* 0x50: 1 1 1 1  1 1 1 1  1 1 0 1  0 1 1 1 */
+    0xFF, 0xFF, /* 0x60: 1 1 1 1  1 1 1 1  1 1 1 1  1 1 1 1 */
+    0xFF, 0x57  /* 0x70: 1 1 1 1  1 1 1 1  0 1 0 1  0 1 1 1 */
+  };
 
 
-    /* shouldn't happen, but just in case to avoid memory leaks */
-    if ( face->postscript_name )
-      return face->postscript_name;
+  static int
+  sfnt_is_postscript( int  c )
+  {
+    unsigned int  cc;
 
-    /* scan the name table to see whether we have a Postscript name here, */
-    /* either in Macintosh or Windows platform encodings                  */
-    found_win   = -1;
-    found_apple = -1;
+
+    if ( c < 0 || c >= 0x80 )
+      return 0;
+
+    cc = (unsigned int)c;
+
+    return sfnt_ps_map[cc >> 3] & ( 1 << ( cc & 0x07 ) );
+  }
+
+
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+
+  /* Only ASCII letters and digits are taken for a variation font */
+  /* instance's PostScript name.                                  */
+  /*                                                              */
+  /* `ft_isalnum' is a macro, but we need a function here, thus   */
+  /* this definition.                                             */
+  static int
+  sfnt_is_alphanumeric( int  c )
+  {
+    return ft_isalnum( c );
+  }
+
+
+  /* the implementation of MurmurHash3 is taken and adapted from          */
+  /* https://github.com/aappleby/smhasher/blob/master/src/MurmurHash3.cpp */
+
+#define ROTL32( x, r )  ( x << r ) | ( x >> ( 32 - r ) )
+
+
+  static FT_UInt32
+  fmix32( FT_UInt32  h )
+  {
+    h ^= h >> 16;
+    h *= 0x85ebca6b;
+    h ^= h >> 13;
+    h *= 0xc2b2ae35;
+    h ^= h >> 16;
+
+    return h;
+  }
+
+
+  static void
+  murmur_hash_3_128( const void*         key,
+                     const unsigned int  len,
+                     FT_UInt32           seed,
+                     void*               out )
+  {
+    const FT_Byte*  data    = (const FT_Byte*)key;
+    const int       nblocks = (int)len / 16;
+
+    FT_UInt32  h1 = seed;
+    FT_UInt32  h2 = seed;
+    FT_UInt32  h3 = seed;
+    FT_UInt32  h4 = seed;
+
+    const FT_UInt32  c1 = 0x239b961b;
+    const FT_UInt32  c2 = 0xab0e9789;
+    const FT_UInt32  c3 = 0x38b34ae5;
+    const FT_UInt32  c4 = 0xa1e38b93;
+
+    const FT_UInt32*  blocks = (const FT_UInt32*)( data + nblocks * 16 );
+
+    int  i;
+
+
+    for( i = -nblocks; i; i++ )
+    {
+      FT_UInt32  k1 = blocks[i * 4 + 0];
+      FT_UInt32  k2 = blocks[i * 4 + 1];
+      FT_UInt32  k3 = blocks[i * 4 + 2];
+      FT_UInt32  k4 = blocks[i * 4 + 3];
+
+
+      k1 *= c1;
+      k1  = ROTL32( k1, 15 );
+      k1 *= c2;
+      h1 ^= k1;
+
+      h1  = ROTL32( h1, 19 );
+      h1 += h2;
+      h1  = h1 * 5 + 0x561ccd1b;
+
+      k2 *= c2;
+      k2  = ROTL32( k2, 16 );
+      k2 *= c3;
+      h2 ^= k2;
+
+      h2  = ROTL32( h2, 17 );
+      h2 += h3;
+      h2  = h2 * 5 + 0x0bcaa747;
+
+      k3 *= c3;
+      k3  = ROTL32( k3, 17 );
+      k3 *= c4;
+      h3 ^= k3;
+
+      h3  = ROTL32( h3, 15 );
+      h3 += h4;
+      h3  = h3 * 5 + 0x96cd1c35;
+
+      k4 *= c4;
+      k4  = ROTL32( k4, 18 );
+      k4 *= c1;
+      h4 ^= k4;
+
+      h4  = ROTL32( h4, 13 );
+      h4 += h1;
+      h4  = h4 * 5 + 0x32ac3b17;
+    }
+
+    {
+      const FT_Byte*  tail = (const FT_Byte*)( data + nblocks * 16 );
+
+      FT_UInt32  k1 = 0;
+      FT_UInt32  k2 = 0;
+      FT_UInt32  k3 = 0;
+      FT_UInt32  k4 = 0;
+
+
+      switch ( len & 15 )
+      {
+      case 15:
+        k4 ^= (FT_UInt32)tail[14] << 16;
+      case 14:
+        k4 ^= (FT_UInt32)tail[13] << 8;
+      case 13:
+        k4 ^= (FT_UInt32)tail[12];
+        k4 *= c4;
+        k4  = ROTL32( k4, 18 );
+        k4 *= c1;
+        h4 ^= k4;
+
+      case 12:
+        k3 ^= (FT_UInt32)tail[11] << 24;
+      case 11:
+        k3 ^= (FT_UInt32)tail[10] << 16;
+      case 10:
+        k3 ^= (FT_UInt32)tail[9] << 8;
+      case 9:
+        k3 ^= (FT_UInt32)tail[8];
+        k3 *= c3;
+        k3  = ROTL32( k3, 17 );
+        k3 *= c4;
+        h3 ^= k3;
+
+      case 8:
+        k2 ^= (FT_UInt32)tail[7] << 24;
+      case 7:
+        k2 ^= (FT_UInt32)tail[6] << 16;
+      case 6:
+        k2 ^= (FT_UInt32)tail[5] << 8;
+      case 5:
+        k2 ^= (FT_UInt32)tail[4];
+        k2 *= c2;
+        k2  = ROTL32( k2, 16 );
+        k2 *= c3;
+        h2 ^= k2;
+
+      case 4:
+        k1 ^= (FT_UInt32)tail[3] << 24;
+      case 3:
+        k1 ^= (FT_UInt32)tail[2] << 16;
+      case 2:
+        k1 ^= (FT_UInt32)tail[1] << 8;
+      case 1:
+        k1 ^= (FT_UInt32)tail[0];
+        k1 *= c1;
+        k1  = ROTL32( k1, 15 );
+        k1 *= c2;
+        h1 ^= k1;
+      }
+    }
+
+    h1 ^= len;
+    h2 ^= len;
+    h3 ^= len;
+    h4 ^= len;
+
+    h1 += h2;
+    h1 += h3;
+    h1 += h4;
+
+    h2 += h1;
+    h3 += h1;
+    h4 += h1;
+
+    h1 = fmix32( h1 );
+    h2 = fmix32( h2 );
+    h3 = fmix32( h3 );
+    h4 = fmix32( h4 );
+
+    h1 += h2;
+    h1 += h3;
+    h1 += h4;
+
+    h2 += h1;
+    h3 += h1;
+    h4 += h1;
+
+    ((FT_UInt32*)out)[0] = h1;
+    ((FT_UInt32*)out)[1] = h2;
+    ((FT_UInt32*)out)[2] = h3;
+    ((FT_UInt32*)out)[3] = h4;
+  }
+
+
+#endif /* TT_CONFIG_OPTION_GX_VAR_SUPPORT */
+
+
+  typedef int (*char_type_func)( int  c );
+
+
+  /* handling of PID/EID 3/0 and 3/1 is the same */
+#define IS_WIN( n )  ( (n)->platformID == 3                             && \
+                       ( (n)->encodingID == 1 || (n)->encodingID == 0 ) && \
+                       (n)->languageID == 0x409                         )
+
+#define IS_APPLE( n )  ( (n)->platformID == 1 && \
+                         (n)->encodingID == 0 && \
+                         (n)->languageID == 0 )
+
+  static char*
+  get_win_string( FT_Memory       memory,
+                  FT_Stream       stream,
+                  TT_Name         entry,
+                  char_type_func  char_type,
+                  FT_Bool         report_invalid_characters )
+  {
+    FT_Error  error = FT_Err_Ok;
+
+    char*       result = NULL;
+    FT_String*  r;
+    FT_Char*    p;
+    FT_UInt     len;
+
+    FT_UNUSED( error );
+
+
+    if ( FT_ALLOC( result, entry->stringLength / 2 + 1 ) )
+      return NULL;
+
+    if ( FT_STREAM_SEEK( entry->stringOffset ) ||
+         FT_FRAME_ENTER( entry->stringLength ) )
+    {
+      FT_FREE( result );
+      entry->stringLength = 0;
+      entry->stringOffset = 0;
+      FT_FREE( entry->string );
+
+      return NULL;
+    }
+
+    r = (FT_String*)result;
+    p = (FT_Char*)stream->cursor;
+
+    for ( len = entry->stringLength / 2; len > 0; len--, p += 2 )
+    {
+      if ( p[0] == 0 )
+      {
+        if ( char_type( p[1] ) )
+          *r++ = p[1];
+        else
+        {
+          if ( report_invalid_characters )
+          {
+            FT_TRACE0(( "get_win_string:"
+                        " Character `%c' (0x%X) invalid in PS name string\n",
+                        p[1], p[1] ));
+            /* it's not the job of FreeType to correct PS names... */
+            *r++ = p[1];
+          }
+        }
+      }
+    }
+    *r = '\0';
+
+    FT_FRAME_EXIT();
+
+    return result;
+  }
+
+
+  static char*
+  get_apple_string( FT_Memory       memory,
+                    FT_Stream       stream,
+                    TT_Name         entry,
+                    char_type_func  char_type,
+                    FT_Bool         report_invalid_characters )
+  {
+    FT_Error  error = FT_Err_Ok;
+
+    char*       result = NULL;
+    FT_String*  r;
+    FT_Char*    p;
+    FT_UInt     len;
+
+    FT_UNUSED( error );
+
+
+    if ( FT_ALLOC( result, entry->stringLength + 1 ) )
+      return NULL;
+
+    if ( FT_STREAM_SEEK( entry->stringOffset ) ||
+         FT_FRAME_ENTER( entry->stringLength ) )
+    {
+      FT_FREE( result );
+      entry->stringOffset = 0;
+      entry->stringLength = 0;
+      FT_FREE( entry->string );
+
+      return NULL;
+    }
+
+    r = (FT_String*)result;
+    p = (FT_Char*)stream->cursor;
+
+    for ( len = entry->stringLength; len > 0; len--, p++ )
+    {
+      if ( char_type( *p ) )
+        *r++ = *p;
+      else
+      {
+        if ( report_invalid_characters )
+        {
+          FT_TRACE0(( "get_apple_string:"
+                      " Character `%c' (0x%X) invalid in PS name string\n",
+                      *p, *p ));
+          /* it's not the job of FreeType to correct PS names... */
+          *r++ = *p;
+        }
+      }
+    }
+    *r = '\0';
+
+    FT_FRAME_EXIT();
+
+    return result;
+  }
+
+
+  static FT_Bool
+  sfnt_get_name_id( TT_Face    face,
+                    FT_UShort  id,
+                    FT_Int    *win,
+                    FT_Int    *apple )
+  {
+    FT_Int  n;
+
+
+    *win   = -1;
+    *apple = -1;
 
     for ( n = 0; n < face->num_names; n++ )
     {
-      TT_NameEntryRec*  name = face->name_table.names + n;
+      TT_Name  name = face->name_table.names + n;
 
 
-      if ( name->nameID == 6 && name->stringLength > 0 )
+      if ( name->nameID == id && name->stringLength > 0 )
       {
-        if ( name->platformID == 3     &&
-             name->encodingID == 1     &&
-             name->languageID == 0x409 )
-          found_win = n;
+        if ( IS_WIN( name ) )
+          *win = n;
 
-        if ( name->platformID == 1 &&
-             name->encodingID == 0 &&
-             name->languageID == 0 )
-          found_apple = n;
+        if ( IS_APPLE( name ) )
+          *apple = n;
       }
     }
 
-    if ( found_win != -1 )
+    return ( *win >= 0 ) || ( *apple >= 0 );
+  }
+
+
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+
+  /*
+      The maximum length of an axis value descriptor.
+
+      We need 65536 different values for the decimal fraction; this fits
+      nicely into five decimal places.  Consequently, it consists of
+
+        . the minus sign if the number is negative,
+        . up to five characters for the digits before the decimal point,
+        . the decimal point if there is a fractional part, and
+        . up to five characters for the digits after the decimal point.
+
+      We also need one byte for the leading `_' character and up to four
+      bytes for the axis tag.
+   */
+#define MAX_VALUE_DESCRIPTOR_LEN  ( 1 + 5 + 1 + 5 + 1 + 4 )
+
+
+  /* the maximum length of PostScript font names */
+#define MAX_PS_NAME_LEN  127
+
+
+  /*
+   *  Find the shortest decimal representation of a 16.16 fixed point
+   *  number.  The function fills `buf' with the result, returning a pointer
+   *  to the position after the representation's last byte.
+   */
+
+  static char*
+  fixed2float( FT_Int  fixed,
+               char*   buf )
+  {
+    char*  p;
+    char*  q;
+    char   tmp[5];
+
+    FT_Int  int_part;
+    FT_Int  frac_part;
+
+    FT_Int  i;
+
+
+    p = buf;
+
+    if ( fixed == 0 )
     {
-      FT_Memory         memory = face->root.memory;
-      TT_NameEntryRec*  name   = face->name_table.names + found_win;
-      FT_UInt           len    = name->stringLength / 2;
-      FT_Error          error  = FT_Err_Ok;
-
-      FT_UNUSED( error );
-
-
-      if ( !FT_ALLOC( result, name->stringLength + 1 ) )
-      {
-        FT_Stream   stream = face->name_table.stream;
-        FT_String*  r      = (FT_String*)result;
-        FT_Char*    p;
-
-
-        if ( FT_STREAM_SEEK( name->stringOffset ) ||
-             FT_FRAME_ENTER( name->stringLength ) )
-        {
-          FT_FREE( result );
-          name->stringLength = 0;
-          name->stringOffset = 0;
-          FT_FREE( name->string );
-
-          goto Exit;
-        }
-
-        p = (FT_Char*)stream->cursor;
-
-        for ( ; len > 0; len--, p += 2 )
-        {
-          if ( p[0] == 0 && p[1] >= 32 )
-            *r++ = p[1];
-        }
-        *r = '\0';
-
-        FT_FRAME_EXIT();
-      }
-      goto Exit;
+      *p++ = '0';
+      return p;
     }
 
-    if ( found_apple != -1 )
+    if ( fixed < 0 )
     {
-      FT_Memory         memory = face->root.memory;
-      TT_NameEntryRec*  name   = face->name_table.names + found_apple;
-      FT_UInt           len    = name->stringLength;
-      FT_Error          error  = FT_Err_Ok;
+      *p++ = '-';
+      fixed = -fixed;
+    }
 
-      FT_UNUSED( error );
+    int_part  = ( fixed >> 16 ) & 0xFFFF;
+    frac_part = fixed & 0xFFFF;
+
+    /* get digits of integer part (in reverse order) */
+    q = tmp;
+    while ( int_part > 0 )
+    {
+      *q++      = '0' + int_part % 10;
+      int_part /= 10;
+    }
+
+    /* copy digits in correct order to buffer */
+    while ( q > tmp )
+      *p++ = *--q;
+
+    if ( !frac_part )
+      return p;
+
+    /* save position of point */
+    q    = p;
+    *p++ = '.';
+
+    /* apply rounding */
+    frac_part = frac_part * 10 + 5;
+
+    /* get digits of fractional part */
+    for ( i = 0; i < 5; i++ )
+    {
+      *p++ = '0' + (char)( frac_part / 0x10000L );
+
+      frac_part %= 0x10000L;
+      if ( !frac_part )
+        break;
+
+      frac_part *= 10;
+    }
+
+    /*
+        If the remainder stored in `frac_part' (after the last FOR loop) is
+        smaller than 34480*10, the resulting decimal value minus 0.00001 is
+        an equivalent representation of `fixed'.
+
+        The above FOR loop always finds the larger of the two values; I
+        verified this by iterating over all possible fixed point numbers.
+
+        If the remainder is 17232*10, both values are equally good, and we
+        take the next even number (following IEEE 754's `round to nearest,
+        ties to even' rounding rule).
+
+        If the remainder is smaller than 17232*10, the lower of the two
+        numbers is nearer to the exact result (values 17232 and 34480 were
+        also found by testing all possible fixed point values).
+
+        We use this to find a shorter decimal representation.  If not ending
+        with digit zero, we take the representation with less error.
+     */
+    p--;
+    if ( p - q == 5 )  /* five digits? */
+    {
+      /* take the representation that has zero as the last digit */
+      if ( frac_part < 34480 * 10 &&
+           *p == '1'              )
+        *p = '0';
+
+      /* otherwise use the one with less error */
+      else if ( frac_part == 17232 * 10 &&
+                *p & 1                  )
+        *p -= 1;
+
+      else if ( frac_part < 17232 * 10 &&
+                *p != '0'              )
+        *p -= 1;
+    }
+
+    /* remove trailing zeros */
+    while ( *p == '0' )
+      *p-- = '\0';
+
+    return p + 1;
+  }
 
 
-      if ( !FT_ALLOC( result, len + 1 ) )
+  static const char  hexdigits[16] =
+  {
+    '0', '1', '2', '3', '4', '5', '6', '7',
+    '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
+  };
+
+
+  static const char*
+  sfnt_get_var_ps_name( TT_Face  face )
+  {
+    FT_Error   error;
+    FT_Memory  memory = face->root.memory;
+
+    FT_Service_MultiMasters  mm = (FT_Service_MultiMasters)face->mm;
+
+    FT_UInt     num_coords;
+    FT_Fixed*   coords;
+    FT_MM_Var*  mm_var;
+
+    FT_Int   found, win, apple;
+    FT_UInt  i, j;
+
+    char*  result = NULL;
+    char*  p;
+
+
+    if ( !face->var_postscript_prefix )
+    {
+      FT_UInt  len;
+
+
+      /* check whether we have a Variations PostScript Name Prefix */
+      found = sfnt_get_name_id( face,
+                                TT_NAME_ID_VARIATIONS_PREFIX,
+                                &win,
+                                &apple );
+      if ( !found )
       {
-        FT_Stream  stream = face->name_table.stream;
+        /* otherwise use the typographic family name */
+        found = sfnt_get_name_id( face,
+                                  TT_NAME_ID_TYPOGRAPHIC_FAMILY,
+                                  &win,
+                                  &apple );
+      }
+
+      if ( !found )
+      {
+        /* as a last resort we try the family name; note that this is */
+        /* not in the Adobe TechNote, but GX fonts (which predate the */
+        /* TechNote) benefit from this behaviour                      */
+        found = sfnt_get_name_id( face,
+                                  TT_NAME_ID_FONT_FAMILY,
+                                  &win,
+                                  &apple );
+      }
+
+      if ( !found )
+      {
+        FT_TRACE0(( "sfnt_get_var_ps_name:"
+                    " Can't construct PS name prefix for font instances\n" ));
+        return NULL;
+      }
+
+      /* prefer Windows entries over Apple */
+      if ( win != -1 )
+        result = get_win_string( face->root.memory,
+                                 face->name_table.stream,
+                                 face->name_table.names + win,
+                                 sfnt_is_alphanumeric,
+                                 0 );
+      else
+        result = get_apple_string( face->root.memory,
+                                   face->name_table.stream,
+                                   face->name_table.names + apple,
+                                   sfnt_is_alphanumeric,
+                                   0 );
+
+      len = ft_strlen( result );
+
+      /* sanitize if necessary; we reserve space for 36 bytes (a 128bit  */
+      /* checksum as a hex number, preceded by `-' and followed by three */
+      /* ASCII dots, to be used if the constructed PS name would be too  */
+      /* long); this is also sufficient for a single instance            */
+      if ( len > MAX_PS_NAME_LEN - ( 1 + 32 + 3 ) )
+      {
+        len         = MAX_PS_NAME_LEN - ( 1 + 32 + 3 );
+        result[len] = '\0';
+
+        FT_TRACE0(( "sfnt_get_var_ps_name:"
+                    " Shortening variation PS name prefix\n"
+                    "                     "
+                    " to %d characters\n", len ));
+      }
+
+      face->var_postscript_prefix     = result;
+      face->var_postscript_prefix_len = len;
+    }
+
+    mm->get_var_blend( FT_FACE( face ),
+                       &num_coords,
+                       &coords,
+                       NULL,
+                       &mm_var );
+
+    if ( FT_IS_NAMED_INSTANCE( FT_FACE( face ) ) )
+    {
+      SFNT_Service  sfnt = (SFNT_Service)face->sfnt;
+
+      FT_Long  instance = ( ( face->root.face_index & 0x7FFF0000L ) >> 16 ) - 1;
+      FT_UInt  psid     = mm_var->namedstyle[instance].psid;
+
+      char*  ps_name = NULL;
 
 
-        if ( FT_STREAM_SEEK( name->stringOffset ) ||
-             FT_STREAM_READ( result, len )        )
+      /* try first to load the name string with index `postScriptNameID' */
+      if ( psid == 6                      ||
+           ( psid > 255 && psid < 32768 ) )
+        (void)sfnt->get_name( face, (FT_UShort)psid, &ps_name );
+
+      if ( ps_name )
+      {
+        result = ps_name;
+        p      = result + ft_strlen( result ) + 1;
+
+        goto check_length;
+      }
+      else
+      {
+        /* otherwise construct a name using `subfamilyNameID' */
+        FT_UInt  strid = mm_var->namedstyle[instance].strid;
+
+        char*  subfamily_name;
+        char*  s;
+
+
+        (void)sfnt->get_name( face, (FT_UShort)strid, &subfamily_name );
+
+        if ( !subfamily_name )
         {
-          name->stringOffset = 0;
-          name->stringLength = 0;
-          FT_FREE( name->string );
-          FT_FREE( result );
-          goto Exit;
+          FT_TRACE1(( "sfnt_get_var_ps_name:"
+                      " can't construct named instance PS name;\n"
+                      "                     "
+                      " trying to construct normal instance PS name\n" ));
+          goto construct_instance_name;
         }
-        ((char*)result)[len] = '\0';
+
+        /* after the prefix we have character `-' followed by the   */
+        /* subfamily name (using only characters a-z, A-Z, and 0-9) */
+        if ( FT_ALLOC( result, face->var_postscript_prefix_len +
+                               1 + ft_strlen( subfamily_name ) + 1 ) )
+          return NULL;
+
+        ft_strcpy( result, face->var_postscript_prefix );
+
+        p = result + face->var_postscript_prefix_len;
+        *p++ = '-';
+
+        s = subfamily_name;
+        while ( *s )
+        {
+          if ( ft_isalnum( *s ) )
+            *p++ = *s;
+          s++;
+        }
+        *p++ = '\0';
+
+        FT_FREE( subfamily_name );
+      }
+    }
+    else
+    {
+      FT_Var_Axis*  axis;
+
+
+    construct_instance_name:
+      axis = mm_var->axis;
+
+      if ( FT_ALLOC( result,
+                     face->var_postscript_prefix_len +
+                       num_coords * MAX_VALUE_DESCRIPTOR_LEN + 1 ) )
+        return NULL;
+
+      p = result;
+
+      ft_strcpy( p, face->var_postscript_prefix );
+      p += face->var_postscript_prefix_len;
+
+      for ( i = 0; i < num_coords; i++, coords++, axis++ )
+      {
+        char  t;
+
+
+        /* omit axis value descriptor if it is identical */
+        /* to the default axis value                     */
+        if ( *coords == axis->def )
+          continue;
+
+        *p++ = '_';
+        p    = fixed2float( *coords, p );
+
+        t = (char)( axis->tag >> 24 );
+        if ( t != ' ' && ft_isalnum( t ) )
+          *p++ = t;
+        t = (char)( axis->tag >> 16 );
+        if ( t != ' ' && ft_isalnum( t ) )
+          *p++ = t;
+        t = (char)( axis->tag >> 8 );
+        if ( t != ' ' && ft_isalnum( t ) )
+          *p++ = t;
+        t = (char)axis->tag;
+        if ( t != ' ' && ft_isalnum( t ) )
+          *p++ = t;
       }
     }
 
-  Exit:
+  check_length:
+    if ( p - result > MAX_PS_NAME_LEN )
+    {
+      /* the PS name is too long; replace the part after the prefix with */
+      /* a checksum; we use MurmurHash 3 with a hash length of 128 bit   */
+
+      FT_UInt32  seed = 123456789;
+
+      FT_UInt32   hash[4];
+      FT_UInt32*  h;
+
+
+      murmur_hash_3_128( result, p - result, seed, hash );
+
+      p = result + face->var_postscript_prefix_len;
+      *p++ = '-';
+
+      /* we convert the hash value to hex digits from back to front */
+      p += 32 + 3;
+      h  = hash + 3;
+
+      *p-- = '\0';
+      *p-- = '.';
+      *p-- = '.';
+      *p-- = '.';
+
+      for ( i = 0; i < 4; i++, h-- )
+      {
+        FT_UInt32  v = *h;
+
+
+        for ( j = 0; j < 8; j++ )
+        {
+          *p--   = hexdigits[v & 0xF];
+          v    >>= 4;
+        }
+      }
+    }
+
+    return result;
+  }
+
+#endif /* TT_CONFIG_OPTION_GX_VAR_SUPPORT */
+
+
+  static const char*
+  sfnt_get_ps_name( TT_Face  face )
+  {
+    FT_Int       found, win, apple;
+    const char*  result = NULL;
+
+
+    if ( face->postscript_name )
+      return face->postscript_name;
+
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+    if ( face->blend )
+    {
+      face->postscript_name = sfnt_get_var_ps_name( face );
+      return face->postscript_name;
+    }
+#endif
+
+    /* scan the name table to see whether we have a Postscript name here, */
+    /* either in Macintosh or Windows platform encodings                  */
+    found = sfnt_get_name_id( face, TT_NAME_ID_PS_NAME, &win, &apple );
+    if ( !found )
+      return NULL;
+
+    /* prefer Windows entries over Apple */
+    if ( win != -1 )
+      result = get_win_string( face->root.memory,
+                               face->name_table.stream,
+                               face->name_table.names + win,
+                               sfnt_is_postscript,
+                               1 );
+    else
+      result = get_apple_string( face->root.memory,
+                                 face->name_table.stream,
+                                 face->name_table.names + apple,
+                                 sfnt_is_postscript,
+                                 1 );
+
     face->postscript_name = result;
+
     return result;
   }
 
@@ -528,7 +1259,8 @@
 
     tt_face_get_metrics,    /* TT_Get_Metrics_Func     get_metrics     */
 
-    tt_face_get_name        /* TT_Get_Name_Func        get_name        */
+    tt_face_get_name,       /* TT_Get_Name_Func        get_name        */
+    sfnt_get_name_id        /* TT_Get_Name_ID_Func     get_name_id     */
   )
 
 

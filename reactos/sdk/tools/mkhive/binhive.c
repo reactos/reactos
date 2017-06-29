@@ -33,26 +33,26 @@
 BOOL
 ExportBinaryHive(
     IN PCSTR FileName,
-    IN PCMHIVE Hive)
+    IN PCMHIVE CmHive)
 {
     FILE *File;
     BOOL ret;
 
-    printf ("  Creating binary hive: %s\n", FileName);
+    printf("  Creating binary hive: %s\n", FileName);
 
     /* Create new hive file */
-    File = fopen (FileName, "w+b");
+    File = fopen(FileName, "wb");
     if (File == NULL)
     {
         printf("    Error creating/opening file\n");
         return FALSE;
     }
 
-    fseek (File, 0, SEEK_SET);
+    fseek(File, 0, SEEK_SET);
 
-    Hive->FileHandles[HFILE_TYPE_PRIMARY] = (HANDLE)File;
-    ret = HvWriteHive(&Hive->Hive);
-    fclose (File);
+    CmHive->FileHandles[HFILE_TYPE_PRIMARY] = (HANDLE)File;
+    ret = HvWriteHive(&CmHive->Hive);
+    fclose(File);
     return ret;
 }
 

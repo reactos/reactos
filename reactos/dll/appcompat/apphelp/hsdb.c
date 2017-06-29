@@ -30,6 +30,19 @@
 #define GPLK_USER                   1
 #define GPLK_MACHINE                2
 
+typedef struct _ShimData
+{
+    WCHAR szModule[MAX_PATH];
+    DWORD dwSize;
+    DWORD dwMagic;
+    SDBQUERYRESULT Query;
+    WCHAR szLayer[MAX_LAYER_LENGTH];
+    DWORD unknown;  // 0x14c
+} ShimData;
+
+#define SHIMDATA_MAGIC  0xAC0DEDAB
+
+
 static BOOL WINAPI SdbpFileExists(LPCWSTR path)
 {
     DWORD attr = GetFileAttributesW(path);
@@ -553,4 +566,80 @@ BOOL WINAPI SdbTagIDToTagRef(HSDB hsdb, PDB pdb, TAGID tiWhich, TAGREF* ptrWhich
 }
 
 
+
+BOOL WINAPI SdbPackAppCompatData(HSDB hsdb, PSDBQUERYRESULT pQueryResult, PVOID* ppData, DWORD *pdwSize)
+{
+    ShimData* pData;
+    HRESULT hr;
+    DWORD n;
+
+    if (!pQueryResult || !ppData || !pdwSize)
+    {
+        SHIM_WARN("Invalid params: %p, %p, %p\n", pQueryResult, ppData, pdwSize);
+        return FALSE;
+    }
+
+    pData = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ShimData));
+    if (!pData)
+    {
+        SHIM_WARN("Unable to allocate %d bytes\n", sizeof(ShimData));
+        return FALSE;
+    }
+
+    GetWindowsDirectoryW(pData->szModule, _countof(pData->szModule));
+    hr = StringCchCatW(pData->szModule, _countof(pData->szModule), L"\\system32\\apphelp.dll");
+    if (!SUCCEEDED(hr))
+    {
+        SHIM_ERR("Unable to append module name (0x%x)\n", hr);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pData);
+        return FALSE;
+    }
+
+    pData->dwSize = sizeof(*pData);
+    pData->dwMagic = SHIMDATA_MAGIC;
+    pData->Query = *pQueryResult;
+    pData->unknown = 0;
+    pData->szLayer[0] = UNICODE_NULL;   /* TODO */
+
+    SHIM_INFO("\ndwFlags    0x%x\ndwMagic    0x%x\ntrExe      0x%x\ntrLayer    0x%x",
+              pData->Query.dwFlags, pData->dwMagic, pData->Query.atrExes[0], pData->Query.atrLayers[0]);
+
+    /* Database List */
+    /* 0x0 {GUID} NAME */
+
+    for (n = 0; n < pQueryResult->dwLayerCount; ++n)
+    {
+        SHIM_INFO("Layer 0x%x\n", pQueryResult->atrLayers[n]);
+    }
+
+    *ppData = pData;
+    *pdwSize = pData->dwSize;
+
+    return TRUE;
+}
+
+BOOL WINAPI SdbUnpackAppCompatData(HSDB hsdb, LPCWSTR pszImageName, PVOID pData, PSDBQUERYRESULT pQueryResult)
+{
+    ShimData* pShimData = pData;
+
+    if (!pShimData || pShimData->dwMagic != SHIMDATA_MAGIC || pShimData->dwSize < sizeof(ShimData))
+        return FALSE;
+
+    if (!pQueryResult)
+        return FALSE;
+
+    /* szLayer? */
+
+    *pQueryResult = pShimData->Query;
+    return TRUE;
+}
+
+DWORD WINAPI SdbGetAppCompatDataSize(ShimData* pData)
+{
+    if (!pData || pData->dwMagic != SHIMDATA_MAGIC)
+        return 0;
+
+
+    return pData->dwSize;
+}
 

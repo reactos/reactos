@@ -26,10 +26,6 @@
  * Defines and global variables
  */
 
-static BOOL MSSTYLES_GetNextInteger(LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LPCWSTR *lpValEnd, int *value);
-static BOOL MSSTYLES_GetNextToken(LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LPCWSTR *lpValEnd, LPWSTR lpBuff, DWORD buffSize);
-static HRESULT MSSTYLES_GetFont (LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LPCWSTR *lpValEnd, LOGFONTW* logfont);
-
 extern int alphaBlendMode;
 
 #define MSSTYLES_VERSION 0x0003
@@ -967,9 +963,9 @@ static BOOL MSSTYLES_GetNextToken(LPCWSTR lpStringStart, LPCWSTR lpStringEnd, LP
         return FALSE;
     }
     start = cur;
-    while(cur < lpStringEnd && *cur != ',') cur++;
+    while(cur < lpStringEnd && *cur != '\n'&& *cur != ',') cur++;
     end = cur;
-    while(isspace(*end)) end--;
+    while(isspace(*(end-1))) end--;
 
     lstrcpynW(lpBuff, start, min(buffSize, end-start+1));
 

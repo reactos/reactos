@@ -62,7 +62,7 @@ static const WCHAR szTrayWndClass[] = L"Shell_TrayWnd";
 const GUID IID_IShellDesktopTray = { 0x213e2df9, 0x9a14, 0x4328, { 0x99, 0xb1, 0x69, 0x61, 0xf9, 0x14, 0x3c, 0xe9 } };
 
 class CStartButton
-    : public CWindow
+    : public CWindowImpl<CStartButton>
 {
     HIMAGELIST m_ImageList;
     SIZE       m_Size;
@@ -125,6 +125,7 @@ public:
 
     VOID Initialize()
     {
+        SubclassWindow(m_hWnd);
         SetWindowTheme(m_hWnd, L"Start", NULL);
 
         m_ImageList = ImageList_LoadImageW(hExplorerInstance,
@@ -167,6 +168,20 @@ public:
 
         return m_hWnd;
     }
+
+    LRESULT OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        if (uMsg == WM_KEYUP && wParam != VK_SPACE)
+            return 0;
+
+        GetParent().PostMessage(TWM_OPENSTARTMENU);
+        return 0;
+    }
+
+    BEGIN_MSG_MAP(CStartButton)
+        MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
+    END_MSG_MAP()
+
 };
 
 class CTrayWindow :
@@ -850,22 +865,31 @@ GetPrimaryRect:
 
     VOID AdjustSizerRect(RECT *rc, DWORD pos)
     {
+        int iSizerPart[4] = {TBP_SIZINGBARLEFT, TBP_SIZINGBARTOP, TBP_SIZINGBARRIGHT, TBP_SIZINGBARBOTTOM};
+        SIZE size;
+
+        if (pos > ABE_BOTTOM)
+            pos = ABE_BOTTOM;
+
+        HRESULT hr = GetThemePartSize(m_Theme, NULL, iSizerPart[pos], 0, NULL, TS_TRUE, &size);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return;
+
         switch (pos)
         {
             case ABE_TOP:
-                rc->bottom -= GetSystemMetrics(SM_CXSIZEFRAME);
+                rc->bottom -= size.cy;
                 break;
             case ABE_BOTTOM:
-                rc->top += GetSystemMetrics(SM_CXSIZEFRAME);
+                rc->top += size.cy;
                 break;
             case ABE_LEFT:
-                rc->right -= GetSystemMetrics(SM_CYSIZEFRAME);
+                rc->right -= size.cx;
                 break;
             case ABE_RIGHT:
-                rc->left += GetSystemMetrics(SM_CYSIZEFRAME);
+                rc->left += size.cx;
                 break;
         }
-
     }
 
     VOID MakeTrayRectWithSize(IN DWORD Position,
@@ -1876,41 +1900,31 @@ ChangePos:
     LRESULT EraseBackgroundWithTheme(HDC hdc)
     {
         RECT rect;
-        int partId;
-        HRESULT res;
+        int iSBkgndPart[4] = {TBP_BACKGROUNDLEFT, TBP_BACKGROUNDTOP, TBP_BACKGROUNDRIGHT, TBP_BACKGROUNDBOTTOM};
 
-        GetClientRect(&rect);
+        ASSERT(m_Position <= ABE_BOTTOM);
 
         if (m_Theme)
         {
             GetClientRect(&rect);
-            switch (m_Position)
-            {
-            case ABE_LEFT:
-                partId = TBP_BACKGROUNDLEFT;
-                break;
-            case ABE_TOP:
-                partId = TBP_BACKGROUNDTOP;
-                break;
-            case ABE_RIGHT:
-                partId = TBP_BACKGROUNDRIGHT;
-                break;
-            case ABE_BOTTOM:
-            default:
-                partId = TBP_BACKGROUNDBOTTOM;
-                break;
-            }
-            res = DrawThemeBackground(m_Theme, hdc, partId, 0, &rect, 0);
+            DrawThemeBackground(m_Theme, hdc, iSBkgndPart[m_Position], 0, &rect, 0);
         }
 
-        return res;
+        return 0;
     }
 
     int DrawSizerWithTheme(IN HRGN hRgn)
     {
         HDC hdc;
         RECT rect;
-        int backgroundPart;
+        int iSizerPart[4] = {TBP_SIZINGBARLEFT, TBP_SIZINGBARTOP, TBP_SIZINGBARRIGHT, TBP_SIZINGBARBOTTOM};
+        SIZE size;
+
+        ASSERT(m_Position <= ABE_BOTTOM);
+
+        HRESULT hr = GetThemePartSize(m_Theme, NULL, iSizerPart[m_Position], 0, NULL, TS_TRUE, &size);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return 0;
 
         GetWindowRect(&rect);
         OffsetRect(&rect, -rect.left, -rect.top);
@@ -1920,28 +1934,21 @@ ChangePos:
         switch (m_Position)
         {
         case ABE_LEFT:
-            backgroundPart = TBP_SIZINGBARLEFT;
-            rect.left = rect.right - GetSystemMetrics(SM_CXSIZEFRAME);
+            rect.left = rect.right - size.cx;
             break;
         case ABE_TOP:
-            backgroundPart = TBP_SIZINGBARTOP;
-            rect.top = rect.bottom - GetSystemMetrics(SM_CYSIZEFRAME);
+            rect.top = rect.bottom - size.cy;
             break;
         case ABE_RIGHT:
-            backgroundPart = TBP_SIZINGBARRIGHT;
-            rect.right = rect.left + GetSystemMetrics(SM_CXSIZEFRAME);
+            rect.right = rect.left + size.cx;
             break;
         case ABE_BOTTOM:
         default:
-            backgroundPart = TBP_SIZINGBARBOTTOM;
-            rect.bottom = rect.top + GetSystemMetrics(SM_CYSIZEFRAME);
+            rect.bottom = rect.top + size.cy;
             break;
         }
-        if (IsThemeBackgroundPartiallyTransparent(m_Theme, backgroundPart, 0))
-        {
-            DrawThemeParentBackground(m_hWnd, hdc, &rect);
-        }
-        DrawThemeBackground(m_Theme, hdc, backgroundPart, 0, &rect, 0);
+
+        DrawThemeBackground(m_Theme, hdc, iSizerPart[m_Position], 0, &rect, 0);
 
         ReleaseDC(hdc);
         return 0;
@@ -2454,6 +2461,63 @@ ChangePos:
         return TRUE;
     }
 
+    LRESULT OnNcLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        /* This handler implements the trick that makes  the start button to 
+           get pressed when the user clicked left or below the button */
+
+        POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
+        WINDOWINFO wi = {sizeof(WINDOWINFO)};
+        RECT rcStartBtn;
+
+        bHandled = FALSE;
+
+        m_StartButton.GetWindowRect(&rcStartBtn);
+        GetWindowInfo(m_hWnd, &wi);
+
+        switch (m_Position)
+        {
+            case ABE_TOP:
+            case ABE_LEFT:
+            {
+                if (pt.x > rcStartBtn.right || pt.y > rcStartBtn.bottom)
+                    return 0;
+                break;
+            }
+            case ABE_RIGHT:
+            {
+                if (pt.x < rcStartBtn.left || pt.y > rcStartBtn.bottom)
+                    return 0;
+
+                if (rcStartBtn.right + (int)wi.cxWindowBorders * 2 + 1 < wi.rcWindow.right &&
+                    pt.x > rcStartBtn.right)
+                {
+                    return 0;
+                }
+                break;
+            }
+            case ABE_BOTTOM:
+            {
+                if (pt.x > rcStartBtn.right || pt.y < rcStartBtn.top)
+                {
+                    return 0;
+                }
+
+                if (rcStartBtn.bottom + (int)wi.cyWindowBorders * 2 + 1 < wi.rcWindow.bottom &&
+                    pt.y > rcStartBtn.bottom)
+                {
+                    return 0;
+                }
+
+                break;
+            }
+        }
+
+        bHandled = TRUE;
+        PopupStartMenu();
+        return 0;
+    }
+
     LRESULT OnNcRButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         /* We want the user to be able to get a context menu even on the nonclient
@@ -2647,7 +2711,6 @@ HandleTrayContextMenu:
 
         if ((HWND) lParam == m_StartButton.m_hWnd)
         {
-            PopupStartMenu();
             return FALSE;
         }
 
@@ -2806,6 +2869,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_WINDOWPOSCHANGING, OnWindowPosChange)
         MESSAGE_HANDLER(WM_ENTERSIZEMOVE, OnEnterSizeMove)
         MESSAGE_HANDLER(WM_EXITSIZEMOVE, OnExitSizeMove)
+        MESSAGE_HANDLER(WM_NCLBUTTONDOWN, OnNcLButtonDown)
         MESSAGE_HANDLER(WM_SYSCHAR, OnSysChar)
         MESSAGE_HANDLER(WM_NCRBUTTONUP, OnNcRButtonUp)
         MESSAGE_HANDLER(WM_NCLBUTTONDBLCLK, OnNcLButtonDblClick)

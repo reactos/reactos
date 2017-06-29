@@ -217,6 +217,17 @@ typedef SECURITY_STATUS (SEC_ENTRY *QUERY_CREDENTIALS_ATTRIBUTES_FN_W)
  (PCredHandle, ULONG, PVOID);
 #define QUERY_CREDENTIALS_ATTRIBUTES_FN WINELIB_NAME_AW(QUERY_CREDENTIALS_ATTRIBUTES_FN_)
 
+typedef struct _SEC_CHANNEL_BINDINGS {
+    ULONG dwInitiatorAddrType;
+    ULONG cbInitiatorLength;
+    ULONG dwInitiatorOffset;
+    ULONG dwAcceptorAddrType;
+    ULONG cbAcceptorLength;
+    ULONG dwAcceptorOffset;
+    ULONG cbApplicationDataLength;
+    ULONG dwApplicationDataOffset;
+} SEC_CHANNEL_BINDINGS, *PSEC_CHANNEL_BINDINGS;
+
 /* values for QueryCredentialsAttributes ulAttribute */
 #define SECPKG_CRED_ATTR_NAMES 1
 
@@ -514,6 +525,20 @@ typedef SECURITY_STATUS (SEC_ENTRY *QUERY_CONTEXT_ATTRIBUTES_FN_W)(PCtxtHandle,
 #define SECPKG_ATTR_ACCESS_TOKEN       18
 #define SECPKG_ATTR_TARGET             19
 #define SECPKG_ATTR_AUTHENTICATION_ID  20
+#define SECPKG_ATTR_LOGOFF_TIME        21
+#define SECPKG_ATTR_NEGO_KEYS          22
+#define SECPKG_ATTR_PROMPTING_NEEDED   24
+#define SECPKG_ATTR_UNIQUE_BINDINGS    25
+#define SECPKG_ATTR_ENDPOINT_BINDINGS  26
+#define SECPKG_ATTR_CLIENT_SPECIFIED_TARGET  27
+#define SECPKG_ATTR_LAST_CLIENT_TOKEN_STATUS 30
+#define SECPKG_ATTR_NEGO_PKG_INFO      31
+#define SECPKG_ATTR_NEGO_STATUS        32
+#define SECPKG_ATTR_CONTEXT_DELETED    33
+
+#define SECPKG_ATTR_SUBJECT_SECURITY_ATTRIBUTES 128
+#define SECPKG_ATTR_NEGO_INFO_FLAG_NO_KERBEROS 0x1
+#define SECPKG_ATTR_NEGO_INFO_FLAG_NO_NTLM     0x2
 
 /* types for QueryContextAttributes/SetContextAttributes */
 
@@ -717,6 +742,12 @@ typedef struct _SecPkgContext_Target
     ULONG  TargetLength;
     char          *Target;
 } SecPkgContext_Target, *PSecPkgContext_Target;
+
+typedef struct _SecPkgContext_Bindings
+{
+    ULONG BindingsLength;
+    SEC_CHANNEL_BINDINGS *Bindings;
+} SecPkgContext_Bindings, *PSecPkgContext_Bindings;
 
 _Check_return_
 SECURITY_STATUS

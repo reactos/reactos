@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CFF token stream parser (specification)                              */
 /*                                                                         */
-/*  Copyright 1996-2016 by                                                 */
+/*  Copyright 1996-2017 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -31,8 +31,16 @@ FT_BEGIN_HEADER
   /* CFF uses constant parser stack size; */
   /* CFF2 can increase from default 193   */
 #define CFF_MAX_STACK_DEPTH  96
+
+  /*
+   *  There are plans to remove the `maxstack' operator in a forthcoming
+   *  revision of the CFF2 specification, increasing the (then static) stack
+   *  size to 513.  By making the default stack size equal to the maximum
+   *  stack size, the operator is essentially disabled, which has the
+   *  desired effect in FreeType.
+   */
 #define CFF2_MAX_STACK      513
-#define CFF2_DEFAULT_STACK  193
+#define CFF2_DEFAULT_STACK  513
 
 #define CFF_CODE_TOPDICT    0x1000
 #define CFF_CODE_PRIVATE    0x2000

@@ -87,8 +87,8 @@
 @ stdcall CoRegisterMallocSpy (ptr)
 @ stdcall CoRegisterMessageFilter(ptr ptr)
 @ stdcall CoRegisterPSClsid(ptr ptr)
-@ stub CoRegisterSurrogate
-@ stub CoRegisterSurrogateEx
+@ stdcall CoRegisterSurrogate(ptr)
+@ stdcall CoRegisterSurrogateEx(ptr ptr)
 @ stdcall CoReleaseMarshalData(ptr)
 @ stdcall CoReleaseServerProcess()
 @ stdcall CoResumeClassObjects()

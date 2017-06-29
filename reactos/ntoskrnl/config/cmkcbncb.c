@@ -26,10 +26,10 @@ INIT_FUNCTION
 CmpInitializeCache(VOID)
 {
     ULONG Length, i;
-    
+
     /* Calculate length for the table */
     Length = CmpHashTableSize * sizeof(CM_KEY_HASH_TABLE_ENTRY);
-    
+
     /* Allocate it */
     CmpCacheTable = CmpAllocate(Length, TRUE, TAG_CM);
     if (!CmpCacheTable)
@@ -37,20 +37,20 @@ CmpInitializeCache(VOID)
         /* Take the system down */
         KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 3, 1, 0, 0);
     }
-    
+
     /* Zero out the table */
     RtlZeroMemory(CmpCacheTable, Length);
-    
+
     /* Initialize the locks */
     for (i = 0;i < CmpHashTableSize; i++)
     {
         /* Setup the pushlock */
         ExInitializePushLock(&CmpCacheTable[i].Lock);
     }
-    
+
     /* Calculate length for the name cache */
     Length = CmpHashTableSize * sizeof(CM_NAME_HASH_TABLE_ENTRY);
-    
+
     /* Now allocate the name cache table */
     CmpNameCacheTable = CmpAllocate(Length, TRUE, TAG_CM);
     if (!CmpNameCacheTable)
@@ -58,7 +58,7 @@ CmpInitializeCache(VOID)
         /* Take the system down */
         KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 3, 3, 0, 0);
     }
-    
+
     /* Zero out the table */
     RtlZeroMemory(CmpNameCacheTable, Length);
 
@@ -68,7 +68,7 @@ CmpInitializeCache(VOID)
         /* Setup the pushlock */
         ExInitializePushLock(&CmpNameCacheTable[i].Lock);
     }
-    
+
     /* Setup the delayed close table */
     CmpInitializeDelayedCloseTable();
 }
@@ -305,9 +305,8 @@ VOID
 NTAPI
 CmpRemoveKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
 {
-    /* Make sure that the registry and KCB are utterly locked */
-    ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
-           (CmpTestRegistryLockExclusive() == TRUE));
+    /* Make sure we have the exclusive lock */
+    CMP_ASSERT_KCB_LOCK(Kcb);
 
     /* Remove the key hash */
     CmpRemoveKeyHash(&Kcb->KeyHash);
@@ -374,13 +373,13 @@ CmpReferenceKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
 
                 /* Increase the reference count while we release the lock */
                 InterlockedIncrement((PLONG)&Kcb->RefCount);
-               
+
                 /* Go from shared to exclusive */
                 CmpConvertKcbSharedToExclusive(Kcb);
 
                 /* Decrement the reference count; the lock is now held again */
                 InterlockedDecrement((PLONG)&Kcb->RefCount);
-               
+
                 /* Check if we still control the index */
                 if (Kcb->DelayedCloseIndex == 1)
                 {
@@ -434,9 +433,8 @@ CmpCleanUpKcbValueCache(IN PCM_KEY_CONTROL_BLOCK Kcb)
     PULONG_PTR CachedList;
     ULONG i;
 
-    /* Sanity check */
-    ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
-           (CmpTestRegistryLockExclusive() == TRUE));
+    /* Make sure we have the exclusive lock */
+    CMP_ASSERT_KCB_LOCK(Kcb);
 
     /* Check if the value list is cached */
     if (CMP_IS_CELL_CACHED(Kcb->ValueCache.ValueList))
@@ -482,8 +480,7 @@ CmpCleanUpKcbCacheWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
     PAGED_CODE();
 
     /* Sanity checks */
-    ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
-           (CmpTestRegistryLockExclusive() == TRUE));
+    CMP_ASSERT_KCB_LOCK(Kcb);
     ASSERT(Kcb->RefCount == 0);
 
     /* Cleanup the value cache */
@@ -521,9 +518,8 @@ CmpCleanUpSubKeyInfo(IN PCM_KEY_CONTROL_BLOCK Kcb)
 {
     PCM_KEY_NODE KeyNode;
 
-    /* Sanity check */
-    ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
-           (CmpTestRegistryLockExclusive() == TRUE));
+    /* Make sure we have the exclusive lock */
+    CMP_ASSERT_KCB_LOCK(Kcb);
 
     /* Check if there's any cached subkey */
     if (Kcb->ExtFlags & (CM_KCB_NO_SUBKEY | CM_KCB_SUBKEY_ONE | CM_KCB_SUBKEY_HINT))
@@ -619,9 +615,8 @@ CmpDereferenceKeyControlBlockWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
     /* Check if this is the last reference */
     if ((InterlockedDecrement((PLONG)&Kcb->RefCount) & 0xFFFF) == 0)
     {
-        /* Sanity check */
-        ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
-               (CmpTestRegistryLockExclusive() == TRUE));
+        /* Make sure we have the exclusive lock */
+        CMP_ASSERT_KCB_LOCK(Kcb);
 
         /* Check if we should do a direct delete */
         if (((CmpHoldLazyFlush) &&
@@ -1052,7 +1047,7 @@ EnlistKeyBodyWithKCB(IN PCM_KEY_BODY KeyBody,
 
     /* Sanity check */
     ASSERT(KeyBody->KeyControlBlock != NULL);
-    
+
     /* Initialize the list entry */
     InitializeListHead(&KeyBody->KeyBodyList);
 
@@ -1069,7 +1064,7 @@ EnlistKeyBodyWithKCB(IN PCM_KEY_BODY KeyBody,
             return;
         }
     }
-    
+
     /* Array full, check if we need to unlock the KCB */
     if (Flags & CMP_ENLIST_KCB_LOCKED_SHARED)
     {
@@ -1086,10 +1081,9 @@ EnlistKeyBodyWithKCB(IN PCM_KEY_BODY KeyBody,
     }
 
     /* Make sure we have the exclusive lock */
-    ASSERT((CmpIsKcbLockedExclusive(KeyBody->KeyControlBlock) == TRUE) ||
-           (CmpTestRegistryLockExclusive() == TRUE));
+    CMP_ASSERT_KCB_LOCK(KeyBody->KeyControlBlock);
 
-    /* do the insert */
+    /* Do the insert */
     InsertTailList(&KeyBody->KeyControlBlock->KeyBodyListHead,
                    &KeyBody->KeyBodyList);
 
@@ -1129,12 +1123,11 @@ DelistKeyBodyFromKCB(IN PCM_KEY_BODY KeyBody,
     /* Sanity checks */
     ASSERT(IsListEmpty(&KeyBody->KeyControlBlock->KeyBodyListHead) == FALSE);
     ASSERT(IsListEmpty(&KeyBody->KeyBodyList) == FALSE);
-    
+
     /* Lock the KCB */
     if (!LockHeld) CmpAcquireKcbLockExclusive(KeyBody->KeyControlBlock);
-    ASSERT((CmpIsKcbLockedExclusive(KeyBody->KeyControlBlock) == TRUE) ||
-           (CmpTestRegistryLockExclusive() == TRUE));
-    
+    CMP_ASSERT_KCB_LOCK(KeyBody->KeyControlBlock);
+
     /* Remove the entry */
     RemoveEntryList(&KeyBody->KeyBodyList);
 
@@ -1177,14 +1170,14 @@ CmpFlushNotifiesOnKeyBodyList(IN PCM_KEY_CONTROL_BLOCK Kcb,
                         ASSERT(KeyBody->NotifyBlock == NULL);
                         continue;
                     }
-                    
+
                     /* Lock isn't held, so we need to take a reference */
                     if (ObReferenceObjectSafe(KeyBody))
                     {
                         /* Now we can flush */
                         CmpFlushNotify(KeyBody, LockHeld);
                         ASSERT(KeyBody->NotifyBlock == NULL);
-                        
+
                         /* Release the reference we took */
                         ObDereferenceObjectDeferDelete(KeyBody);
                         continue;
@@ -1195,7 +1188,7 @@ CmpFlushNotifiesOnKeyBodyList(IN PCM_KEY_CONTROL_BLOCK Kcb,
                 NextEntry = NextEntry->Flink;
             }
         }
-        
+
         /* List has been parsed, exit */
         break;
     }

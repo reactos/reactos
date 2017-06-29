@@ -187,3 +187,12 @@ ULONG WINAPI HttpAddUrl( HANDLE handle, PCWSTR url, PVOID reserved )
     FIXME( "(%p, %s, %p): stub!\n", handle, debugstr_w(url), reserved );
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
+
+/***********************************************************************
+ *        HttpCreateServerSession     (HTTPAPI.@)
+ */
+ULONG WINAPI HttpCreateServerSession( HTTPAPI_VERSION version, HTTP_SERVER_SESSION_ID *id, ULONG reserved )
+{
+    FIXME( "({%d,%d}, %p, %d): stub!\n", version.HttpApiMajorVersion, version.HttpApiMinorVersion, id, reserved );
+    return ERROR_ACCESS_DENIED;
+}

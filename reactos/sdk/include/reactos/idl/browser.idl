@@ -1,0 +1,227 @@
+/*
+ * Computer Browser service interface definition
+ */
+
+#include <ms-dtyp.idl>
+
+typedef [handle] wchar_t *BROWSER_IDENTIFY_HANDLE;
+
+cpp_quote("#ifndef _LMBROWSR_H")
+typedef struct _BROWSER_EMULATED_DOMAIN
+{
+    LPWSTR DomainName;
+    LPWSTR EmulatedServerName;
+    DWORD Role;
+} BROWSER_EMULATED_DOMAIN, *PBROWSER_EMULATED_DOMAIN;
+cpp_quote("#endif")
+
+typedef struct _BROWSER_EMULATED_DOMAIN_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] PBROWSER_EMULATED_DOMAIN Buffer;
+} BROWSER_EMULATED_DOMAIN_CONTAINER, *PBROWSER_EMULATED_DOMAIN_CONTAINER;
+
+cpp_quote("#ifndef _LMSERVER_H")
+typedef struct _SERVER_INFO_100
+{
+    DWORD sv100_platform_id;
+    LPWSTR sv100_name;
+} SERVER_INFO_100, *PSERVER_INFO_100, *LPSERVER_INFO_100;
+cpp_quote("#endif")
+
+typedef struct _SERVER_INFO_100_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPSERVER_INFO_100 Buffer;
+} SERVER_INFO_100_CONTAINER, *PSERVER_INFO_100_CONTAINER, *LPSERVER_INFO_100_CONTAINER;
+
+typedef struct _SERVER_ENUM_STRUCT
+{
+    DWORD Level;
+    [switch_is(Level)] union _SERVER_ENUM_UNION
+    {
+        [case(100)] LPSERVER_INFO_100_CONTAINER Level100;
+        [default] ;
+    } ServerInfo;
+} SERVER_ENUM_STRUCT, *PSERVER_ENUM_STRUCT, *LPSERVER_ENUM_STRUCT;
+
+cpp_quote("#ifndef _LMBROWSR_H")
+typedef struct _BROWSER_STATISTICS
+{
+    LARGE_INTEGER StatisticsStartTime;
+    LARGE_INTEGER NumberOfServerAnnouncements;
+    LARGE_INTEGER NumberOfDomainAnnouncements;
+    ULONG NumberOfElectionPackets;
+    ULONG NumberOfMailslotWrites;
+    ULONG NumberOfGetBrowserServerListRequests;
+    ULONG NumberOfServerEnumerations;
+    ULONG NumberOfDomainEnumerations;
+    ULONG NumberOfOtherEnumerations;
+    ULONG NumberOfMissedServerAnnouncements;
+    ULONG NumberOfMissedMailslotDatagrams;
+    ULONG NumberOfMissedGetBrowserServerListRequests;
+    ULONG NumberOfFailedServerAnnounceAllocations;
+    ULONG NumberOfFailedMailslotAllocations;
+    ULONG NumberOfFailedMailslotReceives;
+    ULONG NumberOfFailedMailslotWrites;
+    ULONG NumberOfFailedMailslotOpens;
+    ULONG NumberOfDuplicateMasterAnnouncements;
+    LARGE_INTEGER NumberOfIllegalDatagrams;
+} BROWSER_STATISTICS,*PBROWSER_STATISTICS,*LPBROWSER_STATISTICS;
+
+typedef struct _BROWSER_STATISTICS_100
+{
+    LARGE_INTEGER StartTime;
+    LARGE_INTEGER NumberOfServerAnnouncements;
+    LARGE_INTEGER NumberOfDomainAnnouncements;
+    ULONG NumberOfElectionPackets;
+    ULONG NumberOfMailslotWrites;
+    ULONG NumberOfGetBrowserServerListRequests;
+    LARGE_INTEGER NumberOfIllegalDatagrams;
+} BROWSER_STATISTICS_100,*PBROWSER_STATISTICS_100;
+
+typedef struct _BROWSER_STATISTICS_101
+{
+    LARGE_INTEGER StartTime;
+    LARGE_INTEGER NumberOfServerAnnouncements;
+    LARGE_INTEGER NumberOfDomainAnnouncements;
+    ULONG NumberOfElectionPackets;
+    ULONG NumberOfMailslotWrites;
+    ULONG NumberOfGetBrowserServerListRequests;
+    LARGE_INTEGER NumberOfIllegalDatagrams;
+    ULONG NumberOfMissedServerAnnouncements;
+    ULONG NumberOfMissedMailslotDatagrams;
+    ULONG NumberOfMissedGetBrowserServerListRequests;
+    ULONG NumberOfFailedServerAnnounceAllocations;
+    ULONG NumberOfFailedMailslotAllocations;
+    ULONG NumberOfFailedMailslotReceives;
+    ULONG NumberOfFailedMailslotWrites;
+    ULONG NumberOfFailedMailslotOpens;
+    ULONG NumberOfDuplicateMasterAnnouncements;
+} BROWSER_STATISTICS_101,*PBROWSER_STATISTICS_101;
+cpp_quote("#endif")
+
+typedef struct _BROWSER_STATISTICS_100_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] PBROWSER_STATISTICS_100 Buffer;
+} BROWSER_STATISTICS_100_CONTAINER, *PBROWSER_STATISTICS_100_CONTAINER;
+
+typedef struct  _BROWSER_STATISTICS_101_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] PBROWSER_STATISTICS_101 Buffer;
+} BROWSER_STATISTICS_101_CONTAINER, *PBROWSER_STATISTICS_101_CONTAINER;
+
+typedef struct _BROWSER_STATISTICS_STRUCT
+{
+    DWORD Level;
+    [switch_is(Level)] union _BROWSER_STATISTICS_UNION
+    {
+        [case(100)] PBROWSER_STATISTICS_100_CONTAINER Level100;
+        [case(101)] PBROWSER_STATISTICS_101_CONTAINER Level101;
+        [default] ;
+    } Statistics;
+} BROWSER_STATISTICS_STRUCT, *PBROWSER_STATISTICS_STRUCT, *LPBROWSER_STATISTICS_STRUCT;
+
+[
+    uuid(6BFFD098-A112-3610-9833-012892020162),
+    version(0.0),
+    pointer_default(unique),
+#ifdef __midl
+    ms_union,
+#endif
+    endpoint("ncacn_np:[\\pipe\\browser]")
+#ifndef __midl
+    ,implicit_handle(handle_t hBinding)
+#endif
+]
+interface browser
+{
+    /* Function 0 */
+    NET_API_STATUS
+    __stdcall
+    I_BrowserrServerEnum(
+        [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName,
+        [in, string, unique] LPWSTR Transport,
+        [in, string, unique] LPWSTR ClientName,
+        [in, out] LPSERVER_ENUM_STRUCT EnumStruct,
+        [in] DWORD PreferedMaximumLength,
+        [out] LPDWORD TotalEntries,
+        [in] DWORD ServerType,
+        [in, string, unique] LPWSTR Domain,
+        [in, out, unique] LPDWORD ResumeHandle);
+
+    /* Function 1 (BrowserrDebugCall) */
+    NET_API_STATUS
+    __stdcall
+    BrowserOpnum1NotUsedOnWire(void);
+
+    /* Function 2 */
+    NET_API_STATUS
+    __stdcall
+    I_BrowserrQueryOtherDomains(
+         [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName,
+         [in, out] LPSERVER_ENUM_STRUCT EnumStruct,
+         [out] LPDWORD TotalEntries);
+
+    /* Function 3 */
+    NET_API_STATUS
+    __stdcall
+    I_BrowserrResetNetlogonState(
+        [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName);
+
+    /* Function 4 */
+    NET_API_STATUS
+    __stdcall
+    I_BrowserrDebugTrace(
+        [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName,
+        [in, string] LPSTR String);
+
+    /* Function 5 */
+    NET_API_STATUS
+    __stdcall
+    I_BrowserrQueryStatistics(
+        [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName,
+        [out] LPBROWSER_STATISTICS *Statistics);
+
+    /* Function 6 */
+    NET_API_STATUS
+    __stdcall
+    I_BrowserrResetStatistics(
+         [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName);
+
+    /* Function 7 (NetrBrowserStatisticsClear) */
+    NET_API_STATUS
+    __stdcall
+    BrowserOpnum7NotUsedOnWire(void);
+
+    /* Function 8 */
+    NET_API_STATUS
+    __stdcall
+    NetrBrowserStatisticsGet(
+        [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName,
+        [in] DWORD Level,
+        [in, out] LPBROWSER_STATISTICS_STRUCT StatisticsStruct);
+
+    /* Function 9 */
+    NET_API_STATUS
+    __stdcall
+    I_BrowserrSetNetlogonState(
+        [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName,
+        [in, string] LPWSTR DomainName,
+        [in, string, unique] LPWSTR EmulatedComputerName,
+        [in] DWORD Role);
+
+    /* Function 10 */
+    NET_API_STATUS
+    __stdcall
+    I_BrowserrQueryEmulatedDomains(
+        [in, string, unique] BROWSER_IDENTIFY_HANDLE ServerName,
+        [in, out] PBROWSER_EMULATED_DOMAIN_CONTAINER EmulatedDomains);
+
+    /* Function 11 (BrowserrServerEnumEx) */
+    NET_API_STATUS
+    __stdcall
+    BrowserOpnum11NotUsedOnWire(void);
+}

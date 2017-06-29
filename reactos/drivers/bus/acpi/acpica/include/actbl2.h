@@ -89,6 +89,7 @@
 #define ACPI_SIG_WDAT           "WDAT"      /* Watchdog Action Table */
 #define ACPI_SIG_WDDT           "WDDT"      /* Watchdog Timer Description Table */
 #define ACPI_SIG_WDRT           "WDRT"      /* Watchdog Resource Table */
+#define ACPI_SIG_WSMT           "WSMT"      /* Windows SMM Security Migrations Table */
 #define ACPI_SIG_XXXX           "XXXX"      /* Intermediate AML header for ASL/ASL+ converter */
 
 #ifdef ACPI_UNDEFINED_TABLES
@@ -1413,7 +1414,8 @@ enum AcpiSpmiInterfaceTypes
  *        Version 2
  *
  * Conforms to "TCG ACPI Specification, Family 1.2 and 2.0",
- * December 19, 2014
+ * Version 1.2, Revision 8
+ * February 27, 2017
  *
  * NOTE: There are two versions of the table with the same signature --
  * the client version and the server version. The common PlatformClass
@@ -1484,7 +1486,8 @@ typedef struct acpi_table_tcpa_server
  *        Version 4
  *
  * Conforms to "TCG ACPI Specification, Family 1.2 and 2.0",
- * December 19, 2014
+ * Version 1.2, Revision 8
+ * February 27, 2017
  *
  ******************************************************************************/
 
@@ -1507,6 +1510,42 @@ typedef struct acpi_table_tpm2
 #define ACPI_TPM2_MEMORY_MAPPED                     6
 #define ACPI_TPM2_COMMAND_BUFFER                    7
 #define ACPI_TPM2_COMMAND_BUFFER_WITH_START_METHOD  8
+#define ACPI_TPM2_COMMAND_BUFFER_WITH_ARM_SMC       11  /* V1.2 Rev 8 */
+
+
+/* Trailer appears after any StartMethod subtables */
+
+typedef struct acpi_tpm2_trailer
+{
+    UINT32                  MinimumLogLength;   /* Minimum length for the event log area */
+    UINT64                  LogAddress;         /* Address of the event log area */
+
+} ACPI_TPM2_TRAILER;
+
+
+/*
+ * Subtables (StartMethod-specific)
+ */
+
+/* 11: Start Method for ARM SMC (V1.2 Rev 8) */
+
+typedef struct acpi_tpm2_arm_smc
+{
+    UINT32                  GlobalInterrupt;
+    UINT8                   InterruptFlags;
+    UINT8                   OperationFlags;
+    UINT16                  Reserved;
+    UINT32                  FunctionId;
+
+} ACPI_TPM2_ARM_SMC;
+
+/* Values for InterruptFlags above */
+
+#define ACPI_TPM2_INTERRUPT_SUPPORT     (1)
+
+/* Values for OperationFlags above */
+
+#define ACPI_TPM2_IDLE_SUPPORT          (1)
 
 
 /*******************************************************************************
@@ -1724,6 +1763,30 @@ typedef struct acpi_table_wdrt
     UINT8                   Units;
 
 } ACPI_TABLE_WDRT;
+
+
+/*******************************************************************************
+ *
+ * WSMT - Windows SMM Security Migrations Table
+ *        Version 1
+ *
+ * Conforms to "Windows SMM Security Migrations Table",
+ * Version 1.0, April 18, 2016
+ *
+ ******************************************************************************/
+
+typedef struct acpi_table_wsmt
+{
+    ACPI_TABLE_HEADER       Header;             /* Common ACPI table header */
+    UINT32                  ProtectionFlags;
+
+} ACPI_TABLE_WSMT;
+
+/* Flags for ProtectionFlags field above */
+
+#define ACPI_WSMT_FIXED_COMM_BUFFERS                (1)
+#define ACPI_WSMT_COMM_BUFFER_NESTED_PTR_PROTECTION (2)
+#define ACPI_WSMT_SYSTEM_RESOURCE_PROTECTION        (4)
 
 
 /* Reset to default packing */

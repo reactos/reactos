@@ -103,41 +103,25 @@ HRESULT copy_pixels(UINT bpp, const BYTE *srcbuffer,
     }
 }
 
-static BOOL is_1bpp_format(const WICPixelFormatGUID *format)
-{
-    return IsEqualGUID(format, &GUID_WICPixelFormatBlackWhite) ||
-           IsEqualGUID(format, &GUID_WICPixelFormat1bppIndexed);
-}
-
 HRESULT configure_write_source(IWICBitmapFrameEncode *iface,
     IWICBitmapSource *source, const WICRect *prc,
     const WICPixelFormatGUID *format,
     INT width, INT height, double xres, double yres)
 {
-    HRESULT hr=S_OK;
-    WICPixelFormatGUID src_format, dst_format;
+    HRESULT hr = S_OK;
 
     if (width == 0 || height == 0)
         return WINCODEC_ERR_WRONGSTATE;
 
-    hr = IWICBitmapSource_GetPixelFormat(source, &src_format);
-    if (FAILED(hr)) return hr;
-
     if (!format)
     {
-        dst_format = src_format;
+        WICPixelFormatGUID src_format;
 
-        hr = IWICBitmapFrameEncode_SetPixelFormat(iface, &dst_format);
+        hr = IWICBitmapSource_GetPixelFormat(source, &src_format);
         if (FAILED(hr)) return hr;
 
-        format = &dst_format;
-    }
-
-    if (!IsEqualGUID(&src_format, format) && !(is_1bpp_format(&src_format) && is_1bpp_format(format)))
-    {
-        /* FIXME: should use WICConvertBitmapSource to convert */
-        FIXME("format %s unsupported\n", debugstr_guid(&src_format));
-        return E_NOTIMPL;
+        hr = IWICBitmapFrameEncode_SetPixelFormat(iface, &src_format);
+        if (FAILED(hr)) return hr;
     }
 
     if (xres == 0.0 || yres == 0.0)
@@ -156,6 +140,7 @@ HRESULT write_source(IWICBitmapFrameEncode *iface,
     const WICPixelFormatGUID *format, UINT bpp,
     INT width, INT height)
 {
+    IWICBitmapSource *converted_source;
     HRESULT hr=S_OK;
     WICRect rc;
     UINT stride;
@@ -176,12 +161,23 @@ HRESULT write_source(IWICBitmapFrameEncode *iface,
     if (prc->Width != width || prc->Height <= 0)
         return E_INVALIDARG;
 
+    hr = WICConvertBitmapSource(format, source, &converted_source);
+    if (FAILED(hr))
+    {
+        ERR("Failed to convert source, target format %s, %#x\n", debugstr_guid(format), hr);
+        return hr;
+    }
+
     stride = (bpp * width + 7)/8;
 
     pixeldata = HeapAlloc(GetProcessHeap(), 0, stride * prc->Height);
-    if (!pixeldata) return E_OUTOFMEMORY;
+    if (!pixeldata)
+    {
+        IWICBitmapSource_Release(converted_source);
+        return E_OUTOFMEMORY;
+    }
 
-    hr = IWICBitmapSource_CopyPixels(source, prc, stride,
+    hr = IWICBitmapSource_CopyPixels(converted_source, prc, stride,
         stride*prc->Height, pixeldata);
 
     if (SUCCEEDED(hr))
@@ -191,6 +187,7 @@ HRESULT write_source(IWICBitmapFrameEncode *iface,
     }
 
     HeapFree(GetProcessHeap(), 0, pixeldata);
+    IWICBitmapSource_Release(converted_source);
 
     return hr;
 }
