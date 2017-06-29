@@ -137,7 +137,7 @@ USBPORT_RootHubClassCommand(IN PDEVICE_OBJECT FdoDevice,
                 {
                     return RHStatus;
                 }
-  
+
                 KeAcquireSpinLock(&FdoExtension->MiniportSpinLock, &OldIrql);
 
                 MPStatus = Packet->RH_GetPortStatus(FdoExtension->MiniPortExt,
@@ -170,7 +170,7 @@ USBPORT_RootHubClassCommand(IN PDEVICE_OBJECT FdoDevice,
                     RHStatus = RH_STATUS_SUCCESS;
                     return RHStatus;
                 }
-            
+
                 if (Feature == FEATURE_C_HUB_OVER_CURRENT)
                 {
                     MPStatus = Packet->RH_ClearFeaturePortOvercurrentChange(FdoExtension->MiniPortExt,
@@ -178,7 +178,7 @@ USBPORT_RootHubClassCommand(IN PDEVICE_OBJECT FdoDevice,
                     RHStatus = USBPORT_MPStatusToRHStatus(MPStatus);
                     return RHStatus;
                 }
-            
+
                 DbgBreakPoint();
                 return RHStatus;
             }
@@ -436,7 +436,7 @@ USBPORT_RootHubStandardCommand(IN PDEVICE_OBJECT FdoDevice,
                 !(SetupPacket->bmRequestType.Dir == BMREQUEST_DEVICE_TO_HOST))
             {
                 if (SetupPacket->wValue.W == 0 ||
-                    SetupPacket->wValue.W == 
+                    SetupPacket->wValue.W ==
                         PdoExtension->RootHubDescriptors->ConfigDescriptor.bConfigurationValue)
                 {
                   PdoExtension->ConfigurationValue = SetupPacket->wValue.LowByte;
@@ -535,7 +535,7 @@ USBPORT_RootHubSCE(IN PUSBPORT_TRANSFER Transfer)
     PUSBPORT_REGISTRATION_PACKET Packet;
     ULONG TransferLength;
     USBHUB_PORT_STATUS PortStatus;
-    USB_HUB_STATUS HubStatus;
+    USB_HUB_STATUS_AND_CHANGE HubStatus;
     PVOID Buffer;
     PULONG AddressBitMap;
     ULONG Port;
@@ -556,7 +556,7 @@ USBPORT_RootHubSCE(IN PUSBPORT_TRANSFER Transfer)
     NumberOfPorts = HubDescriptor->bNumberOfPorts;
 
     PortStatus.AsULONG = 0;
-    HubStatus.AsUshort16 = 0;
+    HubStatus.AsUlong32 = 0;
 
     Urb = Transfer->Urb;
     TransferLength = Transfer->TransferParameters.TransferBufferLength;
@@ -603,7 +603,7 @@ USBPORT_RootHubSCE(IN PUSBPORT_TRANSFER Transfer)
                                      Port,
                                      &PortStatus))
         {
-            /* Miniport returned an error */ 
+            /* Miniport returned an error */
             DPRINT1("USBPORT_RootHubSCE: RH_GetPortStatus failed\n");
             return RH_STATUS_UNSUCCESSFUL;
         }
@@ -623,8 +623,8 @@ USBPORT_RootHubSCE(IN PUSBPORT_TRANSFER Transfer)
     /* Request the hub status from miniport */
     if (!Packet->RH_GetHubStatus(FdoExtension->MiniPortExt, &HubStatus))
     {
-        if (HubStatus.AsUshort16 & (HUB_STATUS_CHANGE_LOCAL_POWER |
-                                    HUB_STATUS_CHANGE_OVERCURRENT))
+        if (HubStatus.HubChange.LocalPowerChange == 1 ||
+            HubStatus.HubChange.OverCurrentChange == 1)
         {
             /* At the hub status there is a change */
             AddressBitMap[0] |= 1;
@@ -647,7 +647,7 @@ USBPORT_RootHubSCE(IN PUSBPORT_TRANSFER Transfer)
         return RHStatus;
     }
 
-    /* Miniport returned an error */ 
+    /* Miniport returned an error */
     DPRINT1("USBPORT_RootHubSCE: RH_GetHubStatus failed\n");
     return RH_STATUS_UNSUCCESSFUL;
 }
@@ -904,7 +904,7 @@ USBPORT_InvalidateRootHub(PVOID Context)
 
     FdoDevice = FdoExtension->CommonExtension.SelfDevice;
 
-    if (FdoExtension->Flags & USBPORT_FLAG_HC_SUSPEND && 
+    if (FdoExtension->Flags & USBPORT_FLAG_HC_SUSPEND &&
          FdoExtension->Flags & USBPORT_FLAG_HC_WAKE_SUPPORT &&
          FdoExtension->MiniPortFlags & USBPORT_MPFLAG_SUSPENDED &&
          FdoExtension->TimerFlags & USBPORT_TMFLAG_WAKE)
@@ -912,7 +912,7 @@ USBPORT_InvalidateRootHub(PVOID Context)
         USBPORT_HcQueueWakeDpc(FdoDevice);
         return 0;
     }
-    
+
     FdoExtension->MiniPortInterface->Packet.RH_DisableIrq(FdoExtension->MiniPortExt);
 
     PdoDevice = FdoExtension->RootHubPdo;
