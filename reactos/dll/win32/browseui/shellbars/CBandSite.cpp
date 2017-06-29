@@ -143,6 +143,12 @@ VOID CBandSiteBase::BuildRebarBandInfo(struct BandObject *Band, REBARBANDINFOW *
             prbi->fStyle |= RBBS_GRIPPERALWAYS;
     }
 
+    if (Band->bHiddenTitle)
+    {
+        prbi->fMask |= RBBIM_STYLE;
+        prbi->fStyle |= RBBS_HIDETITLE;
+    }
+
     if ((Band->dbi.dwMask & (DBIM_BKCOLOR | DBIM_MODEFLAGS)) == (DBIM_BKCOLOR | DBIM_MODEFLAGS) &&
         (Band->dbi.dwModeFlags & DBIMF_BKCOLOR))
     {
@@ -221,6 +227,23 @@ HRESULT CBandSiteBase::UpdateBand(DWORD dwBandID)
     return UpdateSingleBand(Band);
 }
 
+HRESULT CBandSiteBase::_IsBandDeletable(DWORD dwBandID)
+{
+    CComPtr<IBandSite> pbs;
+
+    /* Use QueryInterface so that we get the outer object in case we have one */
+    HRESULT hr = this->QueryInterface(IID_PPV_ARG(IBandSite, &pbs));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    DWORD dwState;
+    hr = pbs->QueryBand(dwBandID, NULL, &dwState, NULL, NULL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return ((dwState & BSSF_UNDELETEABLE) != 0) ? S_FALSE : S_OK;
+}
+
 HRESULT CBandSiteBase::OnContextMenu(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plrResult)
 {
     /* Find the index fo the band that was clicked */
@@ -265,11 +288,26 @@ HRESULT CBandSiteBase::OnContextMenu(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 
     /* Load the static part of the menu */
     HMENU hMenuStatic = LoadMenuW(GetModuleHandleW(L"browseui.dll"), MAKEINTRESOURCEW(IDM_BAND_MENU));
+
     if (hMenuStatic)
+    {
         Shell_MergeMenus(hMenu, hMenuStatic, UINT_MAX, 0, UINT_MAX, MM_DONTREMOVESEPS | MM_SUBMENUSHAVEIDS);
 
-    EnableMenuItem(hMenu, IDM_BAND_TITLE, MF_GRAYED);
-    /* TODO: Show IDM_BAND_TITLE as checked if the band title is shown */
+        ::DestroyMenu(hMenuStatic);
+
+        hr = _IsBandDeletable(dwBandID);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        /* Remove the close item if it is not deletable */
+        if (hr == S_FALSE || (Band->dbi.dwModeFlags & DBIMF_UNDELETEABLE) != 0)
+            DeleteMenu(hMenu, IDM_BAND_CLOSE, MF_BYCOMMAND);
+
+        if ((Band->dbi.dwMask & DBIM_TITLE) == 0)
+            DeleteMenu(hMenu, IDM_BAND_TITLE, MF_BYCOMMAND);
+        else
+            CheckMenuItem(hMenu, IDM_BAND_TITLE, Band->bHiddenTitle ? MF_UNCHECKED : MF_CHECKED);
+    }
 
     /* TODO: Query the menu of our site */
 
@@ -285,7 +323,11 @@ HRESULT CBandSiteBase::OnContextMenu(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
     {
         if (uCommand == IDM_BAND_TITLE)
         {
-            /* TODO: Implement showing or hiding the title */
+            Band->bHiddenTitle = !Band->bHiddenTitle;
+
+            hr = UpdateBand(dwBandID);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
         }
         else if(uCommand == IDM_BAND_CLOSE)
         {
