@@ -453,6 +453,12 @@ public:
         return *this;
     }
 
+    CStringT& operator+=(_In_ XCHAR ch)
+    {
+        CThisSimpleString::operator+=(ch);
+        return *this;
+    }
+
     BOOL LoadString(_In_ UINT nID)
     {
         return LoadString(_AtlBaseModule.GetResourceInstance(), nID);
