@@ -787,7 +787,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E974-E325-11CE-BFC1-08002BE1
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E974-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"NetService"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Protocol"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"NetTrans"
-HKLM,"SYSTEM\CurrentControlSet\Control\NetworkProvider\Order","ProviderOrder",0x00000000,""
+HKLM,"SYSTEM\CurrentControlSet\Control\NetworkProvider\Order","ProviderOrder",0x00000000,"nfs41_driver"
 
 ; NLS Files
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","37",0x00000000,"c_037.nls"
@@ -1214,9 +1214,12 @@ HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Ali",0x00030003,\
 
 
 ; Printing
+HKLM,"SYSTEM\CurrentControlSet\Control\Print","BeepEnabled",0x00010001,0
 HKLM,"SYSTEM\CurrentControlSet\Control\Print","MajorVersion",0x00010001,2
 HKLM,"SYSTEM\CurrentControlSet\Control\Print","MinorVersion",0x00010001,0
+HKLM,"SYSTEM\CurrentControlSet\Control\Print","PortThreadPriority",0x00010001,0
 HKLM,"SYSTEM\CurrentControlSet\Control\Print","PriorityClass",0x00010001,0
+HKLM,"SYSTEM\CurrentControlSet\Control\Print","SchedulerThreadPriority",0x00010001,0
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Print\Environments",,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Control\Print\Environments\Windows NT x86","Directory",,"W32X86"
@@ -1225,22 +1228,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Print\Environments\Windows NT x86\Print P
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Print\Monitors",,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Control\Print\Monitors\Local Port","Driver",,"localmon.dll"
-
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers",,0x00000012
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Attributes",0x00010001,0
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Datatype",,"RAW"
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Description",,""
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Default DevMode",1,\
-00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
-00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,dc,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
-00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
-00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
-00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Location",,"At Home"
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Port",,"LPT1:"
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Print Processor",,"winprint"
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Printer Driver",,"Dummy Printer Driver"
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Status",0x00010001,0
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Print\Providers",,0x00000010
 
@@ -1352,21 +1339,21 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager","ObjectDirectories",0x00
  "\RPC Control"
 
 ; DOS devices
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","AUX",0x00000000,"\DosDevices\COM1"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","MAILSLOT",0x00000000,"\Device\MailSlot"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","NUL",0x00000000,"\Device\Null"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","PIPE",0x00000000,"\Device\NamedPipe"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","PRN",0x00000000,"\DosDevices\LPT1"
-;HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","UNC",0x00000000,"\Device\Mup"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","AUX",0x00000002,"\DosDevices\COM1"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","MAILSLOT",0x00000002,"\Device\MailSlot"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","NUL",0x00000002,"\Device\Null"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","PIPE",0x00000002,"\Device\NamedPipe"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","PRN",0x00000002,"\DosDevices\LPT1"
+;HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","UNC",0x00000002,"\Device\Mup"
 
 ; System environment settings
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","ComSpec",0x00020000,"%SystemRoot%\system32\cmd.exe"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","Path",0x00020000,"%SystemRoot%\bin;%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","PATHEXT",0x00000000,".COM;.EXE;.BAT;.CMD"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","PROMPT",0x00000000,"$P$G$I"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","TEMP",0x00020000,"%SystemRoot%\TEMP"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","TMP",0x00020000,"%SystemRoot%\TEMP"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","windir",0x00020000,"%SystemRoot%"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","ComSpec",0x00020002,"%SystemRoot%\system32\cmd.exe"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","Path",0x00020002,"%SystemRoot%\bin;%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","PATHEXT",0x00000002,".COM;.EXE;.BAT;.CMD"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","PROMPT",0x00000002,"$P$G$I"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","TEMP",0x00020002,"%SystemRoot%\TEMP"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","TMP",0x00020002,"%SystemRoot%\TEMP"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","windir",0x00020002,"%SystemRoot%"
 
 
 ; Known DLLs
@@ -1397,7 +1384,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","wldap32",0x00
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management",,0x00000012
 
 ; SubSystems
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\SubSystems","Debug",0x00020000,""
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\SubSystems","Debug",0x00020002,""
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\SubSystems","Kmode",0x00020000,"%SystemRoot%\system32\win32k.sys"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\SubSystems","Optional",0x00010000,"Posix"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\SubSystems","Posix",0x00020000,"%SystemRoot%\system32\psxss.exe"
@@ -1412,7 +1399,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\AppCompatCache","AppCompa
   fe,0f,dc,ba,00,00,00,00
 
 ; WOW Support
-HKLM,"SYSTEM\CurrentControlSet\Control\Wow","",0x00000000,""
+HKLM,"SYSTEM\CurrentControlSet\Control\WOW",,0x00000012
 
 ; PNP Root device
 HKLM,"SYSTEM\CurrentControlSet\Enum\HTREE\ROOT\0","",0x00000000,""
@@ -2029,6 +2016,24 @@ HKLM,"SYSTEM\CurrentControlSet\Services\ffs","ImagePath",0x00020000,"system32\dr
 HKLM,"SYSTEM\CurrentControlSet\Services\ffs","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\ffs","Type",0x00010001,0x00000002
 
+; NFS Filesystem driver
+HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","Group",0x00000000,"Network"
+HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","ImagePath",0x00020000,"system32\drivers\nfs41_driver.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver","Type",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver\NetworkProvider","DeviceName",0x00000000,\Device\nfs41_driver
+HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver\NetworkProvider","Name",0x00000000,"NFS41 Network"
+HKLM,"SYSTEM\CurrentControlSet\Services\nfs41_driver\NetworkProvider","ProviderPath",0x00000000,System32\nfs41_np.dll
+
+; NFS daemon
+HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","DisplayName",0x00000000,"NFSv4.1 Client"
+HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","ImagePath",0x00020000,"%SystemRoot%\system32\nfsd.exe --noldap"
+HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","ObjectName",0x00000000,"LocalSystem"
+HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\pnfs","Type",0x00010001,0x00000010
+
 ; Filesystem Filter Manager driver
 HKLM,"SYSTEM\CurrentControlSet\Services\fltmgr","ErrorControl",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\fltmgr","Group",0x00000000,"FSFilter Infrastructure"
@@ -2037,10 +2042,10 @@ HKLM,"SYSTEM\CurrentControlSet\Services\fltmgr","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\fltmgr","Type",0x00010001,0x00000002
 
 ; ControlSet selection settings
-HKLM,"SYSTEM\Select","Current",0x00010001,0x00000001
-HKLM,"SYSTEM\Select","Default",0x00010001,0x00000001
-HKLM,"SYSTEM\Select","Failed",0x00010001,0x00000000
-HKLM,"SYSTEM\Select","LastKnownGood",0x00010001,0x00000000
+HKLM,"SYSTEM\Select","Current",0x00010003,0x00000001
+HKLM,"SYSTEM\Select","Default",0x00010003,0x00000001
+HKLM,"SYSTEM\Select","Failed",0x00010003,0x00000000
+HKLM,"SYSTEM\Select","LastKnownGood",0x00010003,0x00000001
 
 ; System setup settings
 HKLM,"SYSTEM\Setup","CmdLine",0x00000000,"setup -newsetup"
