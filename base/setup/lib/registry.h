@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2002 ReactOS Team
+ *  Copyright (C) 2003 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,43 +18,44 @@
  */
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS text-mode setup
- * FILE:            base/setup/usetup/inffile.h
- * PURPOSE:         .inf files support functions
- * PROGRAMMERS:     Hervé Poussineau
+ * PROJECT:         ReactOS Setup Library
+ * FILE:            base/setup/lib/registry.h
+ * PURPOSE:         Registry creation functions
+ * PROGRAMMERS:     ...
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 #pragma once
 
-#ifdef __REACTOS__
+HANDLE
+GetRootKeyByPredefKey(
+    IN HANDLE KeyHandle,
+    OUT PCWSTR* RootKeyMountPoint OPTIONAL);
 
-// HACK around the fact INFLIB unconditionally defines MAX_INF_STRING_LENGTH.
-#undef MAX_INF_STRING_LENGTH
+HANDLE
+GetRootKeyByName(
+    IN PCWSTR RootKeyName,
+    OUT PCWSTR* RootKeyMountPoint OPTIONAL);
 
-/* Functions from the INFLIB library */
-// #include <infcommon.h>
-#include <infros.h>
-
-#undef MAX_INF_STRING_LENGTH
-#define MAX_INF_STRING_LENGTH   1024
-
-extern VOID InfSetHeap(PVOID Heap);
-
-#endif /* __REACTOS__ */
-
-#include <../lib/infsupp.h>
-
-
-/* HELPER FUNCTIONS **********************************************************/
-
-HINF WINAPI
-INF_OpenBufferedFileA(
-    IN PSTR FileBuffer,
-    IN ULONG FileSize,
-    IN PCSTR InfClass,
-    IN DWORD InfStyle,
+BOOLEAN
+ImportRegistryFile(
+    IN PCWSTR SourcePath,
+    IN PCWSTR FileName,
+    IN PCWSTR Section,
     IN LCID LocaleId,
-    OUT PUINT ErrorLine);
+    IN BOOLEAN Delete);
+
+NTSTATUS
+VerifyRegistryHives(
+    IN PUNICODE_STRING InstallPath,
+    OUT PBOOLEAN ShouldRepairRegistry);
+
+NTSTATUS
+RegInitializeRegistry(
+    IN PUNICODE_STRING InstallPath);
+
+VOID
+RegCleanupRegistry(
+    IN PUNICODE_STRING InstallPath);
 
 /* EOF */

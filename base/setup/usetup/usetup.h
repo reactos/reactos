@@ -61,7 +61,6 @@
 #include "consup.h"
 #include "inffile.h"
 #include "progress.h"
-#include "infros.h"
 #include "filequeue.h"
 #include "registry.h"
 #include "fslist.h"

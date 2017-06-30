@@ -26,37 +26,6 @@
 
 #pragma once
 
-HANDLE
-GetRootKeyByPredefKey(
-    IN HANDLE KeyHandle,
-    OUT PCWSTR* RootKeyMountPoint OPTIONAL);
-
-HANDLE
-GetRootKeyByName(
-    IN PCWSTR RootKeyName,
-    OUT PCWSTR* RootKeyMountPoint OPTIONAL);
-
-BOOLEAN
-ImportRegistryFile(
-    PCWSTR SourcePath,
-    PWSTR Filename,
-    PWSTR Section,
-    LCID LocaleId,
-    BOOLEAN Delete);
-
-NTSTATUS
-VerifyRegistryHives(
-    IN PUNICODE_STRING InstallPath,
-    OUT PBOOLEAN ShouldRepairRegistry);
-
-NTSTATUS
-RegInitializeRegistry(
-    IN PUNICODE_STRING InstallPath);
-
-VOID
-RegCleanupRegistry(
-    IN PUNICODE_STRING InstallPath);
-
 VOID
 SetDefaultPagefile(
     WCHAR Drive);
