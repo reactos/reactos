@@ -35,5 +35,7 @@ extern HANDLE ProcessHeap;
 #include "partlist.h"
 #include "arcname.h"
 #include "osdetect.h"
+#include "regutil.h"
+#include "registry.h"
 
 /* EOF */

@@ -18,16 +18,44 @@
  */
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS text-mode setup
- * FILE:            base/setup/usetup/registry.h
+ * PROJECT:         ReactOS Setup Library
+ * FILE:            base/setup/lib/registry.h
  * PURPOSE:         Registry creation functions
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMERS:     Eric Kohl
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 #pragma once
 
+HANDLE
+GetRootKeyByPredefKey(
+    IN HANDLE KeyHandle,
+    OUT PCWSTR* RootKeyMountPoint OPTIONAL);
+
+HANDLE
+GetRootKeyByName(
+    IN PCWSTR RootKeyName,
+    OUT PCWSTR* RootKeyMountPoint OPTIONAL);
+
+BOOLEAN
+ImportRegistryFile(
+    IN PCWSTR SourcePath,
+    IN PCWSTR FileName,
+    IN PCWSTR Section,
+    IN LCID LocaleId,
+    IN BOOLEAN Delete);
+
+NTSTATUS
+VerifyRegistryHives(
+    IN PUNICODE_STRING InstallPath,
+    OUT PBOOLEAN ShouldRepairRegistry);
+
+NTSTATUS
+RegInitializeRegistry(
+    IN PUNICODE_STRING InstallPath);
+
 VOID
-SetDefaultPagefile(
-    WCHAR Drive);
+RegCleanupRegistry(
+    IN PUNICODE_STRING InstallPath);
 
 /* EOF */

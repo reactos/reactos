@@ -9,6 +9,8 @@ list(APPEND SOURCE
     ntverrsrc.c
     osdetect.c
     partlist.c
+    registry.c
+    regutil.c
     precomp.h)
 
 add_library(setuplib ${SOURCE})
