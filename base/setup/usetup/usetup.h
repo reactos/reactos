@@ -65,7 +65,6 @@
 #include "infros.h"
 #include "filequeue.h"
 #endif
-#include "registry.h"
 #include "fslist.h"
 #include "partlist.h"
 #include "cabinet.h"

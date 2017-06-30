@@ -180,7 +180,6 @@ cleanup:
    return ret;
 }
 
-
 static
 BOOLEAN
 GetComputerIdentifier(
@@ -375,7 +374,6 @@ CreateComputerTypeList(
     return List;
 }
 
-
 static
 BOOLEAN
 GetDisplayIdentifier(
@@ -542,7 +540,6 @@ GetDisplayIdentifier(
     return FALSE;
 }
 
-
 PGENERIC_LIST
 CreateDisplayDriverList(
     HINF InfFile)
@@ -670,7 +667,6 @@ ProcessComputerFiles(
 
     return TRUE;
 }
-
 
 BOOLEAN
 ProcessDisplayRegistry(
@@ -829,7 +825,6 @@ ProcessDisplayRegistry(
 
     return TRUE;
 }
-
 
 BOOLEAN
 ProcessLocaleRegistry(
@@ -992,13 +987,11 @@ CreateKeyboardDriverList(
     return List;
 }
 
-
 ULONG
 GetDefaultLanguageIndex(VOID)
 {
     return DefaultLanguageIndex;
 }
-
 
 PGENERIC_LIST
 CreateLanguageList(
@@ -1077,7 +1070,6 @@ CreateLanguageList(
 
     return List;
 }
-
 
 PGENERIC_LIST
 CreateKeyboardLayoutList(
@@ -1215,7 +1207,6 @@ ProcessKeyboardLayoutRegistry(
     return TRUE;
 }
 
-
 #if 0
 BOOLEAN
 ProcessKeyboardLayoutFiles(
@@ -1224,7 +1215,6 @@ ProcessKeyboardLayoutFiles(
     return TRUE;
 }
 #endif
-
 
 BOOLEAN
 SetGeoID(
@@ -1265,6 +1255,42 @@ SetGeoID(
         return FALSE;
     }
 
+    return TRUE;
+}
+
+
+BOOLEAN
+SetDefaultPagefile(
+    WCHAR Drive)
+{
+    NTSTATUS Status;
+    HANDLE KeyHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management");
+    UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"PagingFiles");
+    WCHAR ValueBuffer[] = L"?:\\pagefile.sys 0 0\0";
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               GetRootKeyByPredefKey(HKEY_LOCAL_MACHINE, NULL),
+                               NULL);
+    Status = NtOpenKey(&KeyHandle,
+                       KEY_ALL_ACCESS,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    ValueBuffer[0] = Drive;
+
+    NtSetValueKey(KeyHandle,
+                  &ValueName,
+                  0,
+                  REG_MULTI_SZ,
+                  (PVOID)&ValueBuffer,
+                  sizeof(ValueBuffer));
+
+    NtClose(KeyHandle);
     return TRUE;
 }
 

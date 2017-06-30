@@ -29,7 +29,6 @@ list(APPEND SOURCE
     mui.c
     partlist.c
     progress.c
-    registry.c
     settings.c
     usetup.h)
 

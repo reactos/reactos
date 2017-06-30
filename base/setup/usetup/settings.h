@@ -21,7 +21,8 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/settings.h
  * PURPOSE:         Device settings support functions
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMERS:     Eric Kohl
+ *                  Colin Finck
  */
 
 #pragma once
@@ -77,5 +78,9 @@ ProcessKeyboardLayoutFiles(
 BOOLEAN
 SetGeoID(
     PWCHAR Id);
+
+BOOLEAN
+SetDefaultPagefile(
+    WCHAR Drive);
 
 /* EOF */
