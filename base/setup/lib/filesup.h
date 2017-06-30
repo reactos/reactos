@@ -3,18 +3,36 @@
  * PROJECT:         ReactOS Setup Library
  * FILE:            base/setup/lib/filesup.h
  * PURPOSE:         File support functions
- * PROGRAMMER:      Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ * PROGRAMMERS:     Eric Kohl
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 #pragma once
 
-#if 0
+NTSTATUS
+SetupDeleteFile(
+    IN PCWSTR FileName,
+    IN BOOLEAN ForceDelete); // ForceDelete can be used to delete read-only files
 
-BOOLEAN
-IsValidPath(
-    IN PWCHAR InstallDir,
-    IN ULONG Length);
+NTSTATUS
+SetupCopyFile(
+    IN PCWSTR SourceFileName,
+    IN PCWSTR DestinationFileName,
+    IN BOOLEAN FailIfExists);
+
+#ifndef _WINBASE_
+
+#define MOVEFILE_REPLACE_EXISTING   1
+#define MOVEFILE_COPY_ALLOWED       2
+#define MOVEFILE_WRITE_THROUGH      8
+
 #endif
+
+NTSTATUS
+SetupMoveFile(
+    IN PCWSTR ExistingFileName,
+    IN PCWSTR NewFileName,
+    IN ULONG Flags);
 
 HRESULT
 ConcatPathsV(

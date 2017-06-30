@@ -16,27 +16,6 @@
 #define NDEBUG
 #include <debug.h>
 
-
-// HACK!! These functions should actually be moved in the setup lib!
-// For the moment, see usetup/filesup.c (or .h)
-#if 1
-
-NTSTATUS
-SetupCopyFile(
-    IN PCWSTR SourceFileName,
-    IN PCWSTR DestinationFileName,
-    IN BOOLEAN FailIfExists);
-
-#define MOVEFILE_REPLACE_EXISTING   1
-
-NTSTATUS
-SetupMoveFile(
-    IN PCWSTR ExistingFileName,
-    IN PCWSTR NewFileName,
-    IN ULONG Flags);
-
-#endif
-
 /* FUNCTIONS ****************************************************************/
 
 /*
