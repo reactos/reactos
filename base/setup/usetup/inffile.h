@@ -34,10 +34,39 @@
 
 #include <infcommon.h>
 
+extern VOID InfSetHeap(PVOID Heap);
+extern VOID InfCloseFile(HINF InfHandle);
+extern BOOLEAN InfFindNextLine(PINFCONTEXT ContextIn,
+                               PINFCONTEXT ContextOut);
+extern BOOLEAN InfGetBinaryField(PINFCONTEXT Context,
+                                 ULONG FieldIndex,
+                                 PUCHAR ReturnBuffer,
+                                 ULONG ReturnBufferSize,
+                                 PULONG RequiredSize);
+extern BOOLEAN InfGetMultiSzField(PINFCONTEXT Context,
+                                  ULONG FieldIndex,
+                                  PWSTR ReturnBuffer,
+                                  ULONG ReturnBufferSize,
+                                  PULONG RequiredSize);
+extern BOOLEAN InfGetStringField(PINFCONTEXT Context,
+                                 ULONG FieldIndex,
+                                 PWSTR ReturnBuffer,
+                                 ULONG ReturnBufferSize,
+                                 PULONG RequiredSize);
+
+#define SetupCloseInfFile InfCloseFile
+#define SetupFindNextLine InfFindNextLine
+#define SetupGetBinaryField InfGetBinaryField
+#define SetupGetMultiSzFieldW InfGetMultiSzField
+#define SetupGetStringFieldW InfGetStringField
+
+
 #define SetupFindFirstLineW InfpFindFirstLineW
 #define SetupGetFieldCount InfGetFieldCount
 #define SetupGetIntField InfGetIntField
-#define SetupOpenInfFileW InfpOpenInfFileW
+
+// SetupOpenInfFileW with support for a user-provided LCID
+#define SetupOpenInfFileExW InfpOpenInfFileW
 
 #define INF_STYLE_WIN4 0x00000002
 

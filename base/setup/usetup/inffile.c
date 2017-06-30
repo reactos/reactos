@@ -81,6 +81,7 @@ InfpOpenInfFileW(
 
     return hInf;
 }
+
 #endif /* __REACTOS__ */
 
 

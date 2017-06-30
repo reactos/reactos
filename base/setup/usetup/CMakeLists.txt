@@ -20,7 +20,6 @@ list(APPEND SOURCE
     cabinet.c
     chkdsk.c
     cmdcons.c
-    drivesup.c
     filesup.c
     filequeue.c
     format.c
