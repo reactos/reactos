@@ -17,7 +17,6 @@ list(APPEND SOURCE
     console.c
     consup.c
     devinst.c
-    drivesup.c
     filesup.c
     filequeue.c
     format.c

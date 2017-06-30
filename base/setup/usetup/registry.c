@@ -618,6 +618,7 @@ registry_callback(HINF hInf, PCWSTR Section, BOOLEAN Delete)
 
 BOOLEAN
 ImportRegistryFile(
+    PCWSTR SourcePath,
     PWSTR Filename,
     PWSTR Section,
     LCID LocaleId,
@@ -629,13 +630,13 @@ ImportRegistryFile(
 
     /* Load inf file from install media. */
     CombinePaths(FileNameBuffer, ARRAYSIZE(FileNameBuffer), 2,
-                 SourcePath.Buffer, Filename);
+                 SourcePath, Filename);
 
-    hInf = SetupOpenInfFileW(FileNameBuffer,
-                             NULL,
-                             INF_STYLE_WIN4,
-                             LocaleId,
-                             &ErrorLine);
+    hInf = SetupOpenInfFileExW(FileNameBuffer,
+                               NULL,
+                               INF_STYLE_WIN4,
+                               LocaleId,
+                               &ErrorLine);
     if (hInf == INVALID_HANDLE_VALUE)
     {
         DPRINT1("SetupOpenInfFile() failed\n");

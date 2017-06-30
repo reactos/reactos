@@ -72,35 +72,8 @@
 #include "mui.h"
 
 extern HANDLE ProcessHeap;
-extern UNICODE_STRING SourcePath;
 extern BOOLEAN IsUnattendedSetup;
 extern PWCHAR SelectedLanguageId;
-
-extern VOID InfSetHeap(PVOID Heap);
-extern VOID InfCloseFile(HINF InfHandle);
-extern BOOLEAN InfFindNextLine(PINFCONTEXT ContextIn,
-                               PINFCONTEXT ContextOut);
-extern BOOLEAN InfGetBinaryField(PINFCONTEXT Context,
-                                 ULONG FieldIndex,
-                                 PUCHAR ReturnBuffer,
-                                 ULONG ReturnBufferSize,
-                                 PULONG RequiredSize);
-extern BOOLEAN InfGetMultiSzField(PINFCONTEXT Context,
-                                  ULONG FieldIndex,
-                                  PWSTR ReturnBuffer,
-                                  ULONG ReturnBufferSize,
-                                  PULONG RequiredSize);
-extern BOOLEAN InfGetStringField(PINFCONTEXT Context,
-                                 ULONG FieldIndex,
-                                 PWSTR ReturnBuffer,
-                                 ULONG ReturnBufferSize,
-                                 PULONG RequiredSize);
-
-#define SetupCloseInfFile InfCloseFile
-#define SetupFindNextLine InfFindNextLine
-#define SetupGetBinaryField InfGetBinaryField
-#define SetupGetMultiSzFieldW InfGetMultiSzField
-#define SetupGetStringFieldW InfGetStringField
 
 typedef enum _PAGE_NUMBER
 {

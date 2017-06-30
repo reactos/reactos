@@ -32,7 +32,6 @@
 #include "chkdsk.h"
 #include "cmdcons.h"
 #include "format.h"
-#include "drivesup.h"
 #include "settings.h"
 
 #define NDEBUG
@@ -48,7 +47,7 @@ HANDLE ProcessHeap;
 
 static UNICODE_STRING SourceRootPath;
 static UNICODE_STRING SourceRootDir;
-/* static */ UNICODE_STRING SourcePath;
+static UNICODE_STRING SourcePath;
 
 BOOLEAN IsUnattendedSetup = FALSE;
 LONG UnattendDestinationDiskNumber;
@@ -73,6 +72,10 @@ static FORMATMACHINESTATE FormatState = Start;
 
 static PFILE_SYSTEM_LIST FileSystemList = NULL;
 
+/*
+ * NOTE: Technically only used for the COPYCONTEXT InstallPath member
+ * for the filequeue functionality.
+ */
 static UNICODE_STRING InstallPath;
 
 /*
@@ -90,7 +93,7 @@ static UNICODE_STRING InstallPath;
  */
 static UNICODE_STRING SystemRootPath;
 
-/* Path to the install directory inside the ReactOS boot partition */
+/* Path to the installation directory inside the ReactOS boot partition */
 static UNICODE_STRING DestinationPath;
 static UNICODE_STRING DestinationArcPath;
 static UNICODE_STRING DestinationRootPath;
@@ -445,15 +448,15 @@ CheckUnattendedSetup(VOID)
     }
 
     /* Load 'unattend.inf' from install media. */
-    UnattendInf = SetupOpenInfFileW(UnattendInfPath,
-                                    NULL,
-                                    INF_STYLE_WIN4,
-                                    LanguageId,
-                                    &ErrorLine);
+    UnattendInf = SetupOpenInfFileExW(UnattendInfPath,
+                                      NULL,
+                                      INF_STYLE_WIN4,
+                                      LanguageId,
+                                      &ErrorLine);
 
     if (UnattendInf == INVALID_HANDLE_VALUE)
     {
-        DPRINT("SetupOpenInfFileW() failed\n");
+        DPRINT("SetupOpenInfFileExW() failed\n");
         return;
     }
 
@@ -774,6 +777,65 @@ LanguagePage(PINPUT_RECORD Ir)
 }
 
 
+static NTSTATUS
+GetSourcePaths(
+    OUT PUNICODE_STRING SourcePath,
+    OUT PUNICODE_STRING SourceRootPath,
+    OUT PUNICODE_STRING SourceRootDir)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING LinkName = RTL_CONSTANT_STRING(L"\\SystemRoot");
+    UNICODE_STRING SourceName;
+    WCHAR SourceBuffer[MAX_PATH] = L"";
+    HANDLE Handle;
+    ULONG Length;
+    PWCHAR Ptr;
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &LinkName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenSymbolicLinkObject(&Handle,
+                                      SYMBOLIC_LINK_ALL_ACCESS,
+                                      &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    RtlInitEmptyUnicodeString(&SourceName, SourceBuffer, sizeof(SourceBuffer));
+
+    Status = NtQuerySymbolicLinkObject(Handle,
+                                       &SourceName,
+                                       &Length);
+    NtClose(Handle);
+
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    RtlCreateUnicodeString(SourcePath,
+                           SourceName.Buffer);
+
+    /* Strip trailing directory */
+    Ptr = wcsrchr(SourceName.Buffer, OBJ_NAME_PATH_SEPARATOR);
+    if (Ptr)
+    {
+        RtlCreateUnicodeString(SourceRootDir, Ptr);
+        *Ptr = UNICODE_NULL;
+    }
+    else
+    {
+        RtlCreateUnicodeString(SourceRootDir, L"");
+    }
+
+    RtlCreateUnicodeString(SourceRootPath,
+                           SourceName.Buffer);
+
+    return STATUS_SUCCESS;
+}
+
+
 /*
  * Start page
  *
@@ -826,11 +888,11 @@ SetupStartPage(PINPUT_RECORD Ir)
 
     /* Load txtsetup.sif from install media. */
     CombinePaths(FileNameBuffer, ARRAYSIZE(FileNameBuffer), 2, SourcePath.Buffer, L"txtsetup.sif");
-    SetupInf = SetupOpenInfFileW(FileNameBuffer,
-                                 NULL,
-                                 INF_STYLE_WIN4,
-                                 LanguageId,
-                                 &ErrorLine);
+    SetupInf = SetupOpenInfFileExW(FileNameBuffer,
+                                   NULL,
+                                   INF_STYLE_WIN4,
+                                   LanguageId,
+                                   &ErrorLine);
 
     if (SetupInf == INVALID_HANDLE_VALUE)
     {
@@ -3376,6 +3438,7 @@ BuildInstallPaths(PWSTR InstallDir,
 {
     WCHAR PathBuffer[MAX_PATH];
 
+/** Equivalent of 'NTOS_INSTALLATION::PathComponent' **/
     /* Create 'InstallPath' string */
     RtlFreeUnicodeString(&InstallPath);
     RtlCreateUnicodeString(&InstallPath, InstallDir);
@@ -3389,12 +3452,14 @@ BuildInstallPaths(PWSTR InstallDir,
     RtlCreateUnicodeString(&DestinationRootPath, PathBuffer);
     DPRINT("DestinationRootPath: %wZ\n", &DestinationRootPath);
 
+/** Equivalent of 'NTOS_INSTALLATION::SystemNtPath' **/
     /* Create 'DestinationPath' string */
     RtlFreeUnicodeString(&DestinationPath);
     CombinePaths(PathBuffer, ARRAYSIZE(PathBuffer), 2,
                  DestinationRootPath.Buffer, InstallDir);
     RtlCreateUnicodeString(&DestinationPath, PathBuffer);
 
+/** Equivalent of 'NTOS_INSTALLATION::SystemArcPath' **/
     /* Create 'DestinationArcPath' */
     RtlFreeUnicodeString(&DestinationArcPath);
     StringCchPrintfW(PathBuffer, ARRAYSIZE(PathBuffer),
@@ -3428,7 +3493,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     WCHAR c;
     ULONG Length, Pos;
 
-    /* We do not need the filesystem list any more */
+    /* We do not need the filesystem list anymore */
     if (FileSystemList != NULL)
     {
         DestroyFileSystemList(FileSystemList);
@@ -3446,43 +3511,36 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     DiskEntry = PartitionList->CurrentDisk;
     PartEntry = PartitionList->CurrentPartition;
 
-    if (RepairUpdateFlag)
-    {
-        if (!IsValidPath(CurrentInstallation->PathComponent)) // SystemNtPath
-        {
-            /* FIXME: Log the error? */
-            return QUIT_PAGE;
-        }
-
-        BuildInstallPaths(CurrentInstallation->PathComponent, // SystemNtPath
-                          DiskEntry,
-                          PartEntry);
-
-        return PREPARE_COPY_PAGE;
-    }
     if (IsUnattendedSetup)
-    {
-        if (!IsValidPath(UnattendInstallationDirectory))
-        {
-            /* FIXME: Log the error? */
-            return QUIT_PAGE;
-        }
+        wcscpy(InstallDir, UnattendInstallationDirectory);
+    else if (RepairUpdateFlag)
+        wcscpy(InstallDir, CurrentInstallation->PathComponent); // SystemNtPath
+    else
+        wcscpy(InstallDir, L"\\ReactOS");
 
-        BuildInstallPaths(UnattendInstallationDirectory,
+    /*
+     * Check the validity of the predefined 'InstallDir'. If we are either
+     * in unattended setup or in update/repair mode, and the installation path
+     * is valid, just perform the installation. Otherwise (either in the case
+     * of an invalid path, or we are in regular setup), display the UI and allow
+     * the user to specify a new installation path.
+     */
+    if ((RepairUpdateFlag || IsUnattendedSetup) && IsValidPath(InstallDir))
+    {
+        BuildInstallPaths(InstallDir,
                           DiskEntry,
                           PartEntry);
 
         return PREPARE_COPY_PAGE;
     }
-
-    wcscpy(InstallDir, L"\\ReactOS");
 
     Length = wcslen(InstallDir);
     Pos = Length;
+
+    MUIDisplayPage(INSTALL_DIRECTORY_PAGE);
     CONSOLE_SetInputTextXY(8, 11, 51, InstallDir);
     CONSOLE_SetCursorXY(8 + Pos, 11);
     CONSOLE_SetCursorType(TRUE, TRUE);
-    MUIDisplayPage(INSTALL_DIRECTORY_PAGE);
 
     while (TRUE)
     {
@@ -4336,7 +4394,7 @@ DoUpdate:
 
         CONSOLE_SetStatusText(MUIGetString(STRING_IMPORTFILE), File);
 
-        if (!ImportRegistryFile(File, Section, LanguageId, Delete))
+        if (!ImportRegistryFile(SourcePath.Buffer, File, Section, LanguageId, Delete))
         {
             DPRINT1("Importing %S failed\n", File);
             MUIDisplayError(ERROR_IMPORT_HIVE, Ir, POPUP_WAIT_ENTER);

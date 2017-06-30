@@ -38,6 +38,7 @@ GetRootKeyByName(
 
 BOOLEAN
 ImportRegistryFile(
+    PCWSTR SourcePath,
     PWSTR Filename,
     PWSTR Section,
     LCID LocaleId,
