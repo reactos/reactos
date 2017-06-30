@@ -62,7 +62,6 @@
 #include "inffile.h"
 #include "progress.h"
 #include "filequeue.h"
-#include "registry.h"
 #include "fslist.h"
 #include "partlist.h"
 #include "cabinet.h"
