@@ -157,7 +157,9 @@ SetupQueueCopy(
         SourceRootPath == NULL ||
         SourceFilename == NULL ||
         TargetDirectory == NULL)
+    {
         return FALSE;
+    }
 
     QueueHeader = (PFILEQUEUEHEADER)QueueHandle;
 
@@ -185,7 +187,7 @@ SetupQueueCopy(
         }
 
         wcsncpy(Entry->SourceCabinet, SourceCabinet, Length);
-        Entry->SourceCabinet[Length] = (WCHAR)0;
+        Entry->SourceCabinet[Length] = UNICODE_NULL;
     }
     else
     {
@@ -209,7 +211,7 @@ SetupQueueCopy(
     }
 
     wcsncpy(Entry->SourceRootPath, SourceRootPath, Length);
-    Entry->SourceRootPath[Length] = (WCHAR)0;
+    Entry->SourceRootPath[Length] = UNICODE_NULL;
 
     /* Copy source path */
     if (SourcePath != NULL)
@@ -233,7 +235,7 @@ SetupQueueCopy(
         }
 
         wcsncpy(Entry->SourcePath, SourcePath, Length);
-        Entry->SourcePath[Length] = (WCHAR)0;
+        Entry->SourcePath[Length] = UNICODE_NULL;
     }
 
     /* Copy source file name */
@@ -255,7 +257,7 @@ SetupQueueCopy(
     }
 
     wcsncpy(Entry->SourceFilename, SourceFilename, Length);
-    Entry->SourceFilename[Length] = (WCHAR)0;
+    Entry->SourceFilename[Length] = UNICODE_NULL;
 
     /* Copy target directory */
     Length = wcslen(TargetDirectory);
@@ -279,7 +281,7 @@ SetupQueueCopy(
     }
 
     wcsncpy(Entry->TargetDirectory, TargetDirectory, Length);
-    Entry->TargetDirectory[Length] = (WCHAR)0;
+    Entry->TargetDirectory[Length] = UNICODE_NULL;
 
     /* Copy optional target filename */
     if (TargetFilename != NULL)
@@ -304,7 +306,7 @@ SetupQueueCopy(
         }
 
         wcsncpy(Entry->TargetFilename, TargetFilename, Length);
-        Entry->TargetFilename[Length] = (WCHAR)0;
+        Entry->TargetFilename[Length] = UNICODE_NULL;
     }
 
     /* Append queue entry */
