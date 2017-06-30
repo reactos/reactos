@@ -597,7 +597,7 @@ IntRectangle(PDC dc,
     psurf = dc->dclevel.pSurface;
     if (!psurf)
     {
-        ret = FALSE;
+        ret = TRUE;
         goto cleanup;
     }
 
@@ -1085,7 +1085,7 @@ NtGdiExtFloodFill(
 
     if (!dc->dclevel.pSurface)
     {
-        Ret = FALSE;
+        Ret = TRUE;
         goto cleanup;
     }
 

@@ -5147,6 +5147,13 @@ GreExtTextOutW(
         goto good;
     }
 
+    if (!dc->dclevel.pSurface)
+    {
+        /* Memory DC with no surface selected */
+        DC_UnlockDc(dc);
+        return TRUE;
+    }
+
     if (lprc && (fuOptions & (ETO_OPAQUE | ETO_CLIPPED)))
     {
         IntLPtoDP(dc, (POINT *)lprc, 2);
@@ -5171,11 +5178,6 @@ GreExtTextOutW(
     MaskRect.top = 0;
     BrushOrigin.x = 0;
     BrushOrigin.y = 0;
-
-    if (!dc->dclevel.pSurface)
-    {
-        goto fail;
-    }
 
     if ((fuOptions & ETO_OPAQUE) && lprc)
     {
