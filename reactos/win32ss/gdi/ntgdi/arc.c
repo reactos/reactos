@@ -318,12 +318,6 @@ NtGdiAngleArc(
     EngSetLastError(ERROR_INVALID_HANDLE);
     return FALSE;
   }
-  if (pDC->dctype == DC_TYPE_INFO)
-  {
-    DC_UnlockDc(pDC);
-    /* Yes, Windows really returns TRUE in this case */
-    return TRUE;
-  }
 
   status = KeSaveFloatingPointState(&FloatSave);
   if (!NT_SUCCESS(status))
@@ -372,12 +366,6 @@ NtGdiArcInternal(
   {
     EngSetLastError(ERROR_INVALID_HANDLE);
     return FALSE;
-  }
-  if (dc->dctype == DC_TYPE_INFO)
-  {
-    DC_UnlockDc(dc);
-    /* Yes, Windows really returns TRUE in this case */
-    return TRUE;
   }
   if (arctype > GdiTypePie)
   {

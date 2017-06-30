@@ -220,12 +220,6 @@ NtGdiEllipse(
        EngSetLastError(ERROR_INVALID_HANDLE);
        return FALSE;
     }
-    if (dc->dctype == DC_TYPE_INFO)
-    {
-       DC_UnlockDc(dc);
-       /* Yes, Windows really returns TRUE in this case */
-       return TRUE;
-    }
 
     if (PATH_IsPathOpen(dc->dclevel))
     {
@@ -493,14 +487,6 @@ NtGdiPolyPolyDraw( IN HDC hDC,
         return FALSE;
     }
 
-    if (dc->dctype == DC_TYPE_INFO)
-    {
-        DC_UnlockDc(dc);
-        ExFreePoolWithTag(pTemp, TAG_SHAPE);
-        /* Yes, Windows really returns TRUE in this case */
-        return TRUE;
-    }
-
     DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);
 
     if (dc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
@@ -698,12 +684,6 @@ NtGdiRectangle(HDC  hDC,
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    if (dc->dctype == DC_TYPE_INFO)
-    {
-        DC_UnlockDc(dc);
-        /* Yes, Windows really returns TRUE in this case */
-        return TRUE;
-    }
 
     /* Do we rotate or shear? */
     if (!(dc->pdcattr->mxWorldToDevice.flAccel & XFORM_SCALE))
@@ -877,12 +857,6 @@ NtGdiRoundRect(
         DPRINT1("NtGdiRoundRect() - hDC is invalid\n");
         EngSetLastError(ERROR_INVALID_HANDLE);
     }
-    else if (dc->dctype == DC_TYPE_INFO)
-    {
-        DC_UnlockDc(dc);
-        /* Yes, Windows really returns TRUE in this case */
-        ret = TRUE;
-    }
     else
     {
         ret = IntRoundRect ( dc, LeftRect, TopRect, RightRect, BottomRect, Width, Height );
@@ -945,13 +919,6 @@ GreGradientFill(
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
-    }
-
-    if(pdc->dctype == DC_TYPE_INFO)
-    {
-        DC_UnlockDc(pdc);
-        /* Yes, Windows really returns TRUE in this case */
-        return TRUE;
     }
 
     if (!pdc->dclevel.pSurface)
@@ -1114,12 +1081,6 @@ NtGdiExtFloodFill(
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
-    }
-    if (dc->dctype == DC_TYPE_INFO)
-    {
-        DC_UnlockDc(dc);
-        /* Yes, Windows really returns TRUE in this case */
-        return TRUE;
     }
 
     if (!dc->dclevel.pSurface)

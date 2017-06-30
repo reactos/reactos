@@ -440,12 +440,6 @@ NtGdiLineTo(HDC  hDC,
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    if (dc->dctype == DC_TYPE_INFO)
-    {
-        DC_UnlockDc(dc);
-        /* Yes, Windows really returns TRUE in this case */
-        return TRUE;
-    }
 
     rcLockRect.left = dc->pdcattr->ptlCurrent.x;
     rcLockRect.top = dc->pdcattr->ptlCurrent.y;
