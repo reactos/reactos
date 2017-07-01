@@ -127,20 +127,6 @@ typedef struct _USB_INTERFACE_ASSOCIATION_DESCRIPTOR {
   UCHAR iFunction;
 } USB_INTERFACE_ASSOCIATION_DESCRIPTOR, *PUSB_INTERFACE_ASSOCIATION_DESCRIPTOR;
 
-typedef union _USB_20_PORT_CHANGE {
-  USHORT AsUshort16;
-  struct {
-    USHORT ConnectStatusChange:1;
-    USHORT PortEnableDisableChange:1;
-    USHORT SuspendChange:1;
-    USHORT OverCurrentIndicatorChange:1;
-    USHORT ResetChange:1;
-    USHORT Reserved2:11;
-  };
-} USB_20_PORT_CHANGE, *PUSB_20_PORT_CHANGE;
-
-C_ASSERT(sizeof(USB_20_PORT_CHANGE) == sizeof(USHORT));
-
 typedef union _USB_20_PORT_STATUS {
   USHORT AsUshort16;
   struct {
@@ -162,6 +148,29 @@ typedef union _USB_20_PORT_STATUS {
 
 C_ASSERT(sizeof(USB_20_PORT_STATUS) == sizeof(USHORT));
 
+#define USB_PORT_STATUS_CONNECT       0x0001
+#define USB_PORT_STATUS_ENABLE        0x0002
+#define USB_PORT_STATUS_SUSPEND       0x0004
+#define USB_PORT_STATUS_OVER_CURRENT  0x0008
+#define USB_PORT_STATUS_RESET         0x0010
+#define USB_PORT_STATUS_POWER         0x0100
+#define USB_PORT_STATUS_LOW_SPEED     0x0200
+#define USB_PORT_STATUS_HIGH_SPEED    0x0400
+
+typedef union _USB_20_PORT_CHANGE {
+  USHORT AsUshort16;
+  struct {
+    USHORT ConnectStatusChange:1;
+    USHORT PortEnableDisableChange:1;
+    USHORT SuspendChange:1;
+    USHORT OverCurrentIndicatorChange:1;
+    USHORT ResetChange:1;
+    USHORT Reserved2:11;
+  };
+} USB_20_PORT_CHANGE, *PUSB_20_PORT_CHANGE;
+
+C_ASSERT(sizeof(USB_20_PORT_CHANGE) == sizeof(USHORT));
+
 typedef union _USB_30_PORT_STATUS {
   USHORT AsUshort16;
   struct {
@@ -179,11 +188,61 @@ typedef union _USB_30_PORT_STATUS {
 
 C_ASSERT(sizeof(USB_30_PORT_STATUS) == sizeof(USHORT));
 
+#define PORT_LINK_STATE_U0               0
+#define PORT_LINK_STATE_U1               1
+#define PORT_LINK_STATE_U2               2
+#define PORT_LINK_STATE_U3               3
+#define PORT_LINK_STATE_DISABLED         4
+#define PORT_LINK_STATE_RX_DETECT        5
+#define PORT_LINK_STATE_INACTIVE         6
+#define PORT_LINK_STATE_POLLING          7
+#define PORT_LINK_STATE_RECOVERY         8
+#define PORT_LINK_STATE_HOT_RESET        9
+#define PORT_LINK_STATE_COMPLIANCE_MODE  10
+#define PORT_LINK_STATE_LOOPBACK         11
+#define PORT_LINK_STATE_TEST_MODE        11 // xHCI-specific, replacing LOOPBACK
+
+typedef union _USB_30_PORT_CHANGE {
+  USHORT AsUshort16;
+  struct {
+    USHORT ConnectStatusChange :1;
+    USHORT Reserved2 :2;
+    USHORT OverCurrentIndicatorChange :1;
+    USHORT ResetChange :1;
+    USHORT BHResetChange :1;
+    USHORT PortLinkStateChange :1;
+    USHORT PortConfigErrorChange :1;
+    USHORT Reserved3 :8;
+  };
+} USB_30_PORT_CHANGE, *PUSB_30_PORT_CHANGE;
+
+C_ASSERT(sizeof(USB_30_PORT_CHANGE) == sizeof(USHORT));
+
 typedef union _USB_PORT_STATUS {
   USHORT AsUshort16;
   USB_20_PORT_STATUS Usb20PortStatus;
   USB_30_PORT_STATUS Usb30PortStatus;
 } USB_PORT_STATUS, *PUSB_PORT_STATUS;
+
+C_ASSERT(sizeof(USB_PORT_STATUS) == sizeof(USHORT));
+
+typedef union _USB_PORT_CHANGE {
+  USHORT AsUshort16;
+  USB_20_PORT_CHANGE Usb20PortChange;
+  USB_30_PORT_CHANGE Usb30PortChange;
+} USB_PORT_CHANGE, *PUSB_PORT_CHANGE;
+
+C_ASSERT(sizeof(USB_PORT_CHANGE) == sizeof(USHORT));
+
+typedef union _USB_PORT_STATUS_AND_CHANGE {
+  ULONG AsUlong32;
+  struct {
+    USB_PORT_STATUS PortStatus;
+    USB_PORT_CHANGE PortChange;
+  };
+} USB_PORT_STATUS_AND_CHANGE, *PUSB_PORT_STATUS_AND_CHANGE;
+
+C_ASSERT(sizeof(USB_PORT_STATUS_AND_CHANGE) == sizeof(ULONG));
 
 typedef union _USB_HUB_STATUS {
   USHORT AsUshort16;
@@ -217,6 +276,9 @@ typedef union _USB_HUB_STATUS_AND_CHANGE {
 
 C_ASSERT(sizeof(USB_HUB_STATUS_AND_CHANGE) == sizeof(ULONG));
 
+#define USB_20_HUB_DESCRIPTOR_TYPE  0x29
+#define USB_30_HUB_DESCRIPTOR_TYPE  0x2A
+
 #define USB_DEVICE_CLASS_RESERVED             0x00
 #define USB_DEVICE_CLASS_AUDIO                0x01
 #define USB_DEVICE_CLASS_COMMUNICATIONS       0x02
@@ -233,6 +295,8 @@ C_ASSERT(sizeof(USB_HUB_STATUS_AND_CHANGE) == sizeof(ULONG));
 #define USB_DEVICE_CLASS_CONTENT_SECURITY     0x0D
 #define USB_DEVICE_CLASS_VIDEO                0x0E
 #define USB_DEVICE_CLASS_PERSONAL_HEALTHCARE  0x0F
+#define USB_DEVICE_CLASS_AUDIO_VIDEO          0x10
+#define USB_DEVICE_CLASS_BILLBOARD            0x11
 #define USB_DEVICE_CLASS_DIAGNOSTIC_DEVICE    0xDC
 #define USB_DEVICE_CLASS_WIRELESS_CONTROLLER  0xE0
 #define USB_DEVICE_CLASS_MISCELLANEOUS        0xEF
