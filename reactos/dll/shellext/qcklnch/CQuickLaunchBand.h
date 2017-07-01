@@ -9,11 +9,11 @@
 
 extern const GUID CLSID_QuickLaunchBand;
 
-//Component category registration
+// Component category registration
 HRESULT RegisterComCat();
 HRESULT UnregisterComCat();
 
-//COM class for quick launch
+// COM class for quick launch
 class CQuickLaunchBand :
     public CComCoClass<CQuickLaunchBand, &CLSID_QuickLaunchBand>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -33,89 +33,89 @@ class CQuickLaunchBand :
     CQuickLaunchBand();
     virtual ~CQuickLaunchBand();
 
-//ATL construct
+// ATL construct
 
     HRESULT FinalConstruct();
 
-//IObjectWithSite
+// IObjectWithSite
 
-    virtual HRESULT STDMETHODCALLTYPE GetSite(
-      /*[in]*/  REFIID riid,
-      /*[out]*/ void   **ppvSite
+    virtual STDMETHODIMP GetSite(
+        IN  REFIID riid,
+        OUT void   **ppvSite
     );
 
-    virtual HRESULT STDMETHODCALLTYPE SetSite(
-      /*[in]*/ IUnknown *pUnkSite
+    virtual STDMETHODIMP SetSite(
+        IN IUnknown *pUnkSite
     );
  
-//IDeskBand
+// IDeskBand
 
-    virtual HRESULT STDMETHODCALLTYPE GetWindow(
+    virtual STDMETHODIMP GetWindow(
         OUT HWND *phwnd
     );    
 
-    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(
+    virtual STDMETHODIMP ContextSensitiveHelp(
         IN BOOL fEnterMode
     );    
 
-    virtual HRESULT STDMETHODCALLTYPE ShowDW(
+    virtual STDMETHODIMP ShowDW(
         IN BOOL bShow
     );    
 
-    virtual HRESULT STDMETHODCALLTYPE CloseDW(
+    virtual STDMETHODIMP CloseDW(
         IN DWORD dwReserved
     );    
 
-    virtual HRESULT STDMETHODCALLTYPE ResizeBorderDW(
+    virtual STDMETHODIMP ResizeBorderDW(
         LPCRECT prcBorder,
         IUnknown *punkToolbarSite,
         BOOL fReserved
     );    
 
-    virtual HRESULT STDMETHODCALLTYPE GetBandInfo(
+    virtual STDMETHODIMP GetBandInfo(
         IN DWORD dwBandID,
         IN DWORD dwViewMode,
         IN OUT DESKBANDINFO *pdbi
     );    
 
-//IDeskBar
+// IDeskBar
 
-    virtual HRESULT STDMETHODCALLTYPE GetClient(
-      /*[out]*/ IUnknown **ppunkClient
+    virtual STDMETHODIMP GetClient(
+        OUT IUnknown **ppunkClient
     );
 
-    virtual HRESULT STDMETHODCALLTYPE OnPosRectChangeDB(
-      /*[in]*/ LPRECT prc
+    virtual STDMETHODIMP OnPosRectChangeDB(
+        IN LPRECT prc
     );
 
-    virtual HRESULT STDMETHODCALLTYPE SetClient(
-      /*[in, optional]*/ IUnknown *punkClient
+    virtual STDMETHODIMP SetClient(
+        IN OPTIONAL IUnknown *punkClient
     );
 
-//IPersistStream
+// IPersistStream
 
-    virtual HRESULT STDMETHODCALLTYPE GetClassID(
-      /*[out]*/ OUT CLSID *pClassID
+    virtual STDMETHODIMP GetClassID(
+        OUT CLSID *pClassID
     );
 
-    virtual HRESULT STDMETHODCALLTYPE GetSizeMax(
-      /*[out]*/ ULARGE_INTEGER *pcbSize
+    virtual STDMETHODIMP GetSizeMax(
+        OUT ULARGE_INTEGER *pcbSize
     );
 
-    virtual HRESULT STDMETHODCALLTYPE IsDirty();
+    virtual STDMETHODIMP IsDirty();
 
-    virtual HRESULT STDMETHODCALLTYPE Load(
-      /*[in]*/ IStream *pStm
+    virtual STDMETHODIMP Load(
+        IN IStream *pStm
     );
 
-    virtual HRESULT STDMETHODCALLTYPE Save(
-      /*[in]*/ IStream *pStm,
-      /*[in]*/ BOOL    fClearDirty
+    virtual STDMETHODIMP Save(
+        IN IStream *pStm,
+        IN BOOL    fClearDirty
     );
 
-//IWinEventHandler
+// IWinEventHandler
 
-    virtual HRESULT STDMETHODCALLTYPE ProcessMessage(
+    virtual STDMETHODIMP ProcessMessage(
         IN HWND hWnd,
         IN UINT uMsg,
         IN WPARAM wParam,
@@ -123,11 +123,11 @@ class CQuickLaunchBand :
         OUT LRESULT *plrResult
     );
 
-    virtual HRESULT STDMETHODCALLTYPE ContainsWindow(
+    virtual STDMETHODIMP ContainsWindow(
         IN HWND hWnd
     );
 
-    virtual HRESULT STDMETHODCALLTYPE OnWinEvent(
+    virtual STDMETHODIMP OnWinEvent(
         HWND hWnd, 
         UINT uMsg, 
         WPARAM wParam, 
@@ -135,29 +135,29 @@ class CQuickLaunchBand :
         LRESULT *theResult
     );
 
-    virtual HRESULT STDMETHODCALLTYPE IsWindowOwner(
+    virtual STDMETHODIMP IsWindowOwner(
         HWND hWnd
     );
 
-//IOleCommandTarget
+// IOleCommandTarget
 
-    virtual HRESULT STDMETHODCALLTYPE Exec(
-      /*[in]*/      const GUID    *pguidCmdGroup,
-      /*[in]*/            DWORD   nCmdID,
-      /*[in]*/            DWORD   nCmdexecopt,
-      /*[in]*/            VARIANT *pvaIn,
-      /*[in, out]*/       VARIANT *pvaOut
+    virtual STDMETHODIMP Exec(
+        IN const GUID *pguidCmdGroup,
+        IN DWORD nCmdID,
+        IN DWORD nCmdexecopt,
+        IN VARIANT *pvaIn,
+        IN OUT VARIANT *pvaOut
     );
 
-    virtual HRESULT STDMETHODCALLTYPE QueryStatus(
-      /*[in]*/      const GUID       *pguidCmdGroup,
-      /*[in]*/            ULONG      cCmds,
-      /*[in, out]*/       OLECMD     prgCmds[],
-      /*[in, out]*/       OLECMDTEXT *pCmdText
+    virtual STDMETHODIMP QueryStatus(
+        IN const GUID *pguidCmdGroup,
+        IN ULONG cCmds,
+        IN OUT OLECMD prgCmds[],
+        IN OUT OLECMDTEXT *pCmdText
     );
 
-//IContextMenu
-    virtual HRESULT STDMETHODCALLTYPE GetCommandString(
+// IContextMenu
+    virtual STDMETHODIMP GetCommandString(
         UINT_PTR idCmd,
         UINT uFlags,
         UINT *pwReserved,
@@ -165,11 +165,11 @@ class CQuickLaunchBand :
         UINT cchMax
     );
 
-    virtual HRESULT STDMETHODCALLTYPE InvokeCommand(
+    virtual STDMETHODIMP InvokeCommand(
         LPCMINVOKECOMMANDINFO pici
     );
 
-    virtual HRESULT STDMETHODCALLTYPE QueryContextMenu(
+    virtual STDMETHODIMP QueryContextMenu(
         HMENU hmenu,
         UINT indexMenu,
         UINT idCmdFirst,

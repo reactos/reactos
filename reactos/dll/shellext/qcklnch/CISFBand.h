@@ -7,7 +7,7 @@
  */
 #pragma once
 
-//COM class for cisfband
+// COM class for cisfband
 class CISFBand :
     public CWindowImpl<CISFBand>,
     public CComCoClass<CISFBand>,
@@ -21,17 +21,17 @@ class CISFBand :
     public IShellFolderBand,
     public IContextMenu
 {
-    //band
+    // band
     DWORD m_BandID;
     CComPtr<IUnknown> m_Site;
 
-    //Toolbar
+    // Toolbar
     HWND m_hWndTb;
     HINSTANCE m_hInstance;
     CComPtr<IShellFolder> m_pISF;     
     PCIDLIST_ABSOLUTE m_pidl;    
 
-    //Menu      
+    // Menu      
     BOOL m_textFlag;
     BOOL m_iconFlag;
     
@@ -40,90 +40,90 @@ public:
     CISFBand();
     virtual ~CISFBand();
 
-//Personal Methods
+// Personal Methods
     HWND CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst);
     LRESULT OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnRButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     
-//IObjectWithSite
+// IObjectWithSite
 
-    virtual HRESULT STDMETHODCALLTYPE GetSite(
-      /*[in]*/  REFIID riid,
-      /*[out]*/ void   **ppvSite
+    virtual STDMETHODIMP GetSite(
+        IN  REFIID riid,
+        OUT void   **ppvSite
     );
 
-    virtual HRESULT STDMETHODCALLTYPE SetSite(
-      /*[in]*/ IUnknown *pUnkSite
+    virtual STDMETHODIMP SetSite(
+        IN IUnknown *pUnkSite
     );
  
-//IDeskBand
+// IDeskBand
 
-    virtual HRESULT STDMETHODCALLTYPE GetWindow(
+    virtual STDMETHODIMP GetWindow(
         OUT HWND *phwnd
     );    
 
-    virtual HRESULT STDMETHODCALLTYPE ContextSensitiveHelp(
+    virtual STDMETHODIMP ContextSensitiveHelp(
         IN BOOL fEnterMode
     );    
 
-    virtual HRESULT STDMETHODCALLTYPE ShowDW(
+    virtual STDMETHODIMP ShowDW(
         IN BOOL bShow
     );    
 
-    virtual HRESULT STDMETHODCALLTYPE CloseDW(
+    virtual STDMETHODIMP CloseDW(
         IN DWORD dwReserved
     );    
 
-    virtual HRESULT STDMETHODCALLTYPE ResizeBorderDW(
+    virtual STDMETHODIMP ResizeBorderDW(
         LPCRECT prcBorder,
         IUnknown *punkToolbarSite,
         BOOL fReserved
     );    
 
-    virtual HRESULT STDMETHODCALLTYPE GetBandInfo(
+    virtual STDMETHODIMP GetBandInfo(
         IN DWORD dwBandID,
         IN DWORD dwViewMode,
         IN OUT DESKBANDINFO *pdbi
     );    
 
-//IDeskBar
+// IDeskBar
 
-    virtual HRESULT STDMETHODCALLTYPE GetClient(
-      /*[out]*/ IUnknown **ppunkClient
+    virtual STDMETHODIMP GetClient(
+        OUT IUnknown **ppunkClient
     );
 
-    virtual HRESULT STDMETHODCALLTYPE OnPosRectChangeDB(
-      /*[in]*/ LPRECT prc
+    virtual STDMETHODIMP OnPosRectChangeDB(
+        IN LPRECT prc
     );
 
-    virtual HRESULT STDMETHODCALLTYPE SetClient(
-      /*[in, optional]*/ IUnknown *punkClient
+    virtual STDMETHODIMP SetClient(
+        IN OPTIONAL IUnknown *punkClient
     );
 
-//IPersistStream
+// IPersistStream
 
-    virtual HRESULT STDMETHODCALLTYPE GetClassID(
-      /*[out]*/ OUT CLSID *pClassID
+    virtual STDMETHODIMP GetClassID(
+        OUT CLSID *pClassID
     );
 
-    virtual HRESULT STDMETHODCALLTYPE GetSizeMax(
-      /*[out]*/ ULARGE_INTEGER *pcbSize
+    virtual STDMETHODIMP GetSizeMax(
+        OUT ULARGE_INTEGER *pcbSize
     );
 
-    virtual HRESULT STDMETHODCALLTYPE IsDirty();
+    virtual STDMETHODIMP IsDirty();
 
-    virtual HRESULT STDMETHODCALLTYPE Load(
-      /*[in]*/ IStream *pStm
+    virtual STDMETHODIMP Load(
+        IN IStream *pStm
     );
 
-    virtual HRESULT STDMETHODCALLTYPE Save(
-      /*[in]*/ IStream *pStm,
-      /*[in]*/ BOOL    fClearDirty
+    virtual STDMETHODIMP Save(
+        IN IStream *pStm,
+        IN BOOL    fClearDirty
     );
 
-//IWinEventHandler
+// IWinEventHandler
 
-    virtual HRESULT STDMETHODCALLTYPE ProcessMessage(
+    virtual STDMETHODIMP ProcessMessage(
         IN HWND hWnd,
         IN UINT uMsg,
         IN WPARAM wParam,
@@ -131,11 +131,11 @@ public:
         OUT LRESULT *plrResult
     );
 
-    virtual HRESULT STDMETHODCALLTYPE ContainsWindow(
+    virtual STDMETHODIMP ContainsWindow(
         IN HWND hWnd
     );
 
-    virtual HRESULT STDMETHODCALLTYPE OnWinEvent(
+    virtual STDMETHODIMP OnWinEvent(
         HWND hWnd, 
         UINT uMsg, 
         WPARAM wParam, 
@@ -143,43 +143,43 @@ public:
         LRESULT *theResult
     );
 
-    virtual HRESULT STDMETHODCALLTYPE IsWindowOwner(
+    virtual STDMETHODIMP IsWindowOwner(
         HWND hWnd
     );
 
-//IOleCommandTarget
+// IOleCommandTarget
 
-    virtual HRESULT STDMETHODCALLTYPE Exec(
-      /*[in]*/      const GUID    *pguidCmdGroup,
-      /*[in]*/            DWORD   nCmdID,
-      /*[in]*/            DWORD   nCmdexecopt,
-      /*[in]*/            VARIANT *pvaIn,
-      /*[in, out]*/       VARIANT *pvaOut
+    virtual STDMETHODIMP Exec(
+        IN const GUID *pguidCmdGroup,
+        IN DWORD nCmdID,
+        IN DWORD nCmdexecopt,
+        IN VARIANT *pvaIn,
+        IN OUT VARIANT *pvaOut
     );
 
-    virtual HRESULT STDMETHODCALLTYPE QueryStatus(
-      /*[in]*/      const GUID       *pguidCmdGroup,
-      /*[in]*/            ULONG      cCmds,
-      /*[in, out]*/       OLECMD     prgCmds[],
-      /*[in, out]*/       OLECMDTEXT *pCmdText
+    virtual STDMETHODIMP QueryStatus(
+        IN const GUID *pguidCmdGroup,
+        IN ULONG cCmds,
+        IN OUT OLECMD prgCmds[],
+        IN OUT OLECMDTEXT *pCmdText
     );
 
-//IShellFolderBand
-    virtual HRESULT STDMETHODCALLTYPE GetBandInfoSFB( 
+// IShellFolderBand
+    virtual STDMETHODIMP GetBandInfoSFB( 
         PBANDINFOSFB pbi
     );
 
-    virtual HRESULT STDMETHODCALLTYPE InitializeSFB(
+    virtual STDMETHODIMP InitializeSFB(
         IShellFolder      *psf,
         PCIDLIST_ABSOLUTE pidl
     );
 
-    virtual HRESULT STDMETHODCALLTYPE SetBandInfoSFB(
+    virtual STDMETHODIMP SetBandInfoSFB(
         PBANDINFOSFB pbi
     );
 
-//IContextMenu
-    virtual HRESULT STDMETHODCALLTYPE GetCommandString(
+// IContextMenu
+    virtual STDMETHODIMP GetCommandString(
         UINT_PTR idCmd,
         UINT uFlags,
         UINT *pwReserved,
@@ -187,11 +187,11 @@ public:
         UINT cchMax
     );
 
-    virtual HRESULT STDMETHODCALLTYPE InvokeCommand(
+    virtual STDMETHODIMP InvokeCommand(
         LPCMINVOKECOMMANDINFO pici
     );
 
-    virtual HRESULT STDMETHODCALLTYPE QueryContextMenu(
+    virtual STDMETHODIMP QueryContextMenu(
         HMENU hmenu,
         UINT indexMenu,
         UINT idCmdFirst,
@@ -221,6 +221,6 @@ public:
     END_COM_MAP()    
 };
 
-//C Constructor
+// C Constructor
 extern "C"
 HRESULT WINAPI CISFBand_CreateInstance(REFIID riid, void** ppv);

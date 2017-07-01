@@ -14,11 +14,13 @@ include_directories(
 
 spec2def(qcklnch.dll qcklnch.spec)
 
-add_library(qcklnch SHARED    
-    qcklnch.cpp
-    qcklnch.rc    
+add_library(qcklnch SHARED   
+    qcklnch.rc
+    qcklnch.cpp    
     CQuickLaunchBand.cpp
-    CISFBand.cpp    
+    CISFBand.cpp
+    CQuickLaunchBand.h
+    CISFBand.h    
     ${CMAKE_CURRENT_BINARY_DIR}/qcklnch.def)
 
 set_module_type(qcklnch win32dll UNICODE)

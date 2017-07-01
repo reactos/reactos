@@ -19,11 +19,6 @@ END_OBJECT_MAP()
 HINSTANCE  g_hInstance;
 CComModule g_Module;
 
-void *operator new (size_t, void *buf)
-{
-    return buf;
-}
-
 STDAPI_(BOOL)
 DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 {
@@ -46,22 +41,20 @@ STDAPI
 DllRegisterServer(void)
 {
     HRESULT hr = g_Module.DllRegisterServer(FALSE);
-
     if (FAILED(hr)) 
         return hr;
-    else
-        return RegisterComCat();
+    
+    return RegisterComCat();
 }
 
 STDAPI
 DllUnregisterServer(void)
 {
     HRESULT hr = UnregisterComCat();
-
     if (FAILED(hr))
         return hr;
-    else
-        return g_Module.DllUnregisterServer(FALSE);
+    
+    return g_Module.DllUnregisterServer(FALSE);
 }
 
 STDAPI

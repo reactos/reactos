@@ -33,7 +33,7 @@ CISFBand::~CISFBand()
 }
 
 // *** CWindowImpl ***
-//Subclassing 
+// Subclassing 
 
 LRESULT CISFBand::OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
@@ -100,7 +100,7 @@ LRESULT CISFBand::OnRButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
     return 0;
 }
 
-//ToolbarTest
+// ToolbarTest
 HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
 {
     // Declare and initialize local constants.     
@@ -120,7 +120,7 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
         return NULL;
     SendMessage(hWndToolbar, TB_SETIMAGELIST, 0, (LPARAM)piml);    
 
-    //Enumerate objects
+    // Enumerate objects
     CComPtr<IEnumIDList> pedl;    
     LPITEMIDLIST pidl = NULL;
     STRRET stret;  
@@ -150,7 +150,7 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
 /*****************************************************************************/
 
 // *** IObjectWithSite *** 
-    HRESULT STDMETHODCALLTYPE CISFBand::SetSite(IUnknown *pUnkSite)
+    STDMETHODIMP CISFBand::SetSite(IUnknown *pUnkSite)
     {
         HRESULT hr;
         HWND hwndParent;
@@ -173,7 +173,7 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
         return S_OK;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::GetSite(IN REFIID riid, OUT VOID **ppvSite)
+    STDMETHODIMP CISFBand::GetSite(IN REFIID riid, OUT VOID **ppvSite)
     {        
         TRACE("CISFBand::GetSite(0x%p,0x%p)\n", riid, ppvSite);
 
@@ -190,7 +190,7 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
 
 /*****************************************************************************/
 // *** IDeskBand *** 
-    HRESULT STDMETHODCALLTYPE CISFBand::GetWindow(OUT HWND *phwnd)
+    STDMETHODIMP CISFBand::GetWindow(OUT HWND *phwnd)
     {
         if (!m_hWndTb)
             return E_FAIL;
@@ -201,13 +201,13 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
         return S_OK;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::ContextSensitiveHelp(IN BOOL fEnterMode)
+    STDMETHODIMP CISFBand::ContextSensitiveHelp(IN BOOL fEnterMode)
     {
         /* FIXME: Implement */        
         return E_NOTIMPL;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::ShowDW(IN BOOL bShow)
+    STDMETHODIMP CISFBand::ShowDW(IN BOOL bShow)
     {        
         if (m_hWndTb)
         {
@@ -217,7 +217,7 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
         return S_OK;       
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::CloseDW(IN DWORD dwReserved)
+    STDMETHODIMP CISFBand::CloseDW(IN DWORD dwReserved)
     {        
         if (m_hWndTb)
         {
@@ -229,14 +229,14 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
         return S_OK;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::ResizeBorderDW(LPCRECT prcBorder, IUnknown *punkToolbarSite, BOOL fReserved) 
+    STDMETHODIMP CISFBand::ResizeBorderDW(LPCRECT prcBorder, IUnknown *punkToolbarSite, BOOL fReserved) 
     {
         /* No need to implement this method */
 
         return E_NOTIMPL;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::GetBandInfo(IN DWORD dwBandID, IN DWORD dwViewMode, IN OUT DESKBANDINFO *pdbi)
+    STDMETHODIMP CISFBand::GetBandInfo(IN DWORD dwBandID, IN DWORD dwViewMode, IN OUT DESKBANDINFO *pdbi)
     {        
         TRACE("CTaskBand::GetBandInfo(0x%x,0x%x,0x%p) hWnd=0x%p\n", dwBandID, dwViewMode, pdbi, m_hWndTb);
                 
@@ -298,21 +298,21 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
 
  /*****************************************************************************/
  // *** IDeskBar ***    
-    HRESULT STDMETHODCALLTYPE CISFBand::SetClient(IN IUnknown *punkClient)
+    STDMETHODIMP CISFBand::SetClient(IN IUnknown *punkClient)
     {
         TRACE("IDeskBar::SetClient(0x%p)\n", punkClient);
 
         return E_NOTIMPL;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::GetClient(OUT IUnknown **ppunkClient)
+    STDMETHODIMP CISFBand::GetClient(OUT IUnknown **ppunkClient)
     {
         TRACE("IDeskBar::GetClient(0x%p)\n", ppunkClient);
 
         return E_NOTIMPL;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::OnPosRectChangeDB(IN RECT *prc)
+    STDMETHODIMP CISFBand::OnPosRectChangeDB(IN RECT *prc)
     {
         TRACE("IDeskBar::OnPosRectChangeDB(0x%p=(%d,%d,%d,%d))\n", prc, prc->left, prc->top, prc->right, prc->bottom);      
 
@@ -321,7 +321,7 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
 
 /*****************************************************************************/
 // *** IPersistStream *** 
-    HRESULT STDMETHODCALLTYPE CISFBand::GetClassID(OUT CLSID *pClassID)
+    STDMETHODIMP CISFBand::GetClassID(OUT CLSID *pClassID)
     {        
         TRACE("CISFBand::GetClassID(0x%p)\n", pClassID);
         /* We're going to return the (internal!) CLSID of the quick launch band */
@@ -330,14 +330,14 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
         return S_OK;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::IsDirty()
+    STDMETHODIMP CISFBand::IsDirty()
     {
         /* The object hasn't changed since the last save! */
 
         return S_FALSE;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::Load(IN IStream *pStm)
+    STDMETHODIMP CISFBand::Load(IN IStream *pStm)
     {
         TRACE("CISFBand::Load called\n");
         /* Nothing to do */
@@ -345,14 +345,14 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
         return S_OK;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::Save(IN IStream *pStm, IN BOOL fClearDirty)
+    STDMETHODIMP CISFBand::Save(IN IStream *pStm, IN BOOL fClearDirty)
     {
         /* Nothing to do */
 
         return S_OK;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::GetSizeMax(OUT ULARGE_INTEGER *pcbSize)
+    STDMETHODIMP CISFBand::GetSizeMax(OUT ULARGE_INTEGER *pcbSize)
     {
         TRACE("CISFBand::GetSizeMax called\n");         
 
@@ -361,14 +361,14 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
 
 /*****************************************************************************/
 // *** IWinEventHandler *** 
-    HRESULT STDMETHODCALLTYPE CISFBand::ProcessMessage(IN HWND hWnd, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lParam, OUT LRESULT *plrResult)
+    STDMETHODIMP CISFBand::ProcessMessage(IN HWND hWnd, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lParam, OUT LRESULT *plrResult)
     {
         TRACE("CISFBand: IWinEventHandler::ProcessMessage(0x%p, 0x%x, 0x%p, 0x%p, 0x%p)\n", hWnd, uMsg, wParam, lParam, plrResult);
         
         return E_NOTIMPL;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::ContainsWindow(IN HWND hWnd)
+    STDMETHODIMP CISFBand::ContainsWindow(IN HWND hWnd)
     {        
         if (hWnd == m_hWndTb || ::IsChild(m_hWndTb, hWnd))
         {
@@ -379,28 +379,28 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
         return S_FALSE;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
+    STDMETHODIMP CISFBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
     {          
          UNIMPLEMENTED;
                  
          return E_NOTIMPL;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::IsWindowOwner(HWND hWnd)
+    STDMETHODIMP CISFBand::IsWindowOwner(HWND hWnd)
     {        
         return (hWnd == m_hWndTb) ? S_OK : S_FALSE;        
     }  
 
 /*****************************************************************************/
 // *** IOleCommandTarget methods ***
-    HRESULT STDMETHODCALLTYPE CISFBand::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText)
+    STDMETHODIMP CISFBand::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText)
     {        
         UNIMPLEMENTED;
 
         return E_NOTIMPL;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
+    STDMETHODIMP CISFBand::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
     {       
         if (IsEqualIID(*pguidCmdGroup, IID_IBandSite))
         {
@@ -419,12 +419,12 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
 
 /*****************************************************************************/
 // *** IShellFolderBand ***
-    HRESULT STDMETHODCALLTYPE CISFBand::GetBandInfoSFB(PBANDINFOSFB pbi)
+    STDMETHODIMP CISFBand::GetBandInfoSFB(PBANDINFOSFB pbi)
     {
         return E_NOTIMPL;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::InitializeSFB(IShellFolder *psf, PCIDLIST_ABSOLUTE pidl)
+    STDMETHODIMP CISFBand::InitializeSFB(IShellFolder *psf, PCIDLIST_ABSOLUTE pidl)
     {
         LPITEMIDLIST pidlRoot;
         SHGetSpecialFolderLocation(0, CSIDL_DESKTOP, &pidlRoot);
@@ -443,14 +443,14 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
         return S_OK;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::SetBandInfoSFB( PBANDINFOSFB pbi)
+    STDMETHODIMP CISFBand::SetBandInfoSFB( PBANDINFOSFB pbi)
     {
         return E_NOTIMPL;
     }
 
 /*****************************************************************************/
 // *** IContextMenu ***
-    HRESULT STDMETHODCALLTYPE CISFBand::GetCommandString(UINT_PTR idCmd, UINT uFlags, UINT *pwReserved, LPSTR pszName, UINT cchMax)
+    STDMETHODIMP CISFBand::GetCommandString(UINT_PTR idCmd, UINT uFlags, UINT *pwReserved, LPSTR pszName, UINT cchMax)
     {        
         /*HRESULT hr = E_INVALIDARG;
 
@@ -481,7 +481,7 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
         return S_OK;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::InvokeCommand(LPCMINVOKECOMMANDINFO pici)
+    STDMETHODIMP CISFBand::InvokeCommand(LPCMINVOKECOMMANDINFO pici)
     { 
         if (!HIWORD(pici->lpVerb))
         {
@@ -537,9 +537,9 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
         return S_OK;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
+    STDMETHODIMP CISFBand::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
     {        
-        HMENU qMenu = LoadMenu(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCE(IDR_POPUPMENU));
+        HMENU qMenu = LoadMenu(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCE(IDM_POPUPMENU));
         UINT idMax = Shell_MergeMenus(hmenu, GetSubMenu(qMenu, 0), indexMenu, idCmdFirst, idCmdLast, MM_SUBMENUSHAVEIDS);
         
         if(m_textFlag) 
@@ -562,7 +562,7 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
     }
 
 /*****************************************************************************/
-//C Constructor
+// C Constructor
     extern "C"
     HRESULT WINAPI CISFBand_CreateInstance(REFIID riid, void** ppv)
     {
