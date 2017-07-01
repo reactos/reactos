@@ -44,7 +44,7 @@ OHCI_RH_GetRootHubData(IN PVOID ohciExtension,
     PUSBPORT_ROOT_HUB_DATA RootHubData;
     OHCI_REG_RH_DESCRIPTORA DescriptorA;
     UCHAR PowerOnToPowerGoodTime;
-    USHORT HubCharacteristics;
+    USBPORT_HUB_11_CHARACTERISTICS HubCharacteristics;
 
     OhciExtension = ohciExtension;
 
@@ -53,7 +53,7 @@ OHCI_RH_GetRootHubData(IN PVOID ohciExtension,
            rootHubData);
 
     RootHubData = rootHubData;
-    DescriptorA.AsULONG = OHCI_ReadRhDescriptorA(OhciExtension);
+    DescriptorA = OHCI_ReadRhDescriptorA(OhciExtension);
 
     RootHubData->NumberOfPorts = DescriptorA.NumberDownstreamPorts;
 
@@ -65,14 +65,29 @@ OHCI_RH_GetRootHubData(IN PVOID ohciExtension,
     }
     RootHubData->PowerOnToPowerGood = PowerOnToPowerGoodTime;
 
-    HubCharacteristics = (DescriptorA.AsULONG >> 8) & 0xFFFC;
-    RootHubData->HubCharacteristics = HubCharacteristics;
+    HubCharacteristics.AsUSHORT = 0;
 
     if (DescriptorA.PowerSwitchingMode)
     {
-        RootHubData->HubCharacteristics = (HubCharacteristics & 0xFFFD) | 1;
+        /* Individual port power switching */
+        HubCharacteristics.PowerControlMode = 1;
     }
+    else
+    {
+        /* Ganged power switching */
+        HubCharacteristics.PowerControlMode = 0;
+}
 
+    HubCharacteristics.NoPowerSwitching = 0;
+
+    /* always 0 (OHCI RH is not a compound device) */
+    ASSERT(DescriptorA.DeviceType == 0);
+    HubCharacteristics.PartOfCompoundDevice = DescriptorA.DeviceType;
+
+    HubCharacteristics.OverCurrentProtectionMode = DescriptorA.OverCurrentProtectionMode;
+    HubCharacteristics.NoOverCurrentProtection = DescriptorA.NoOverCurrentProtection;
+
+    RootHubData->HubCharacteristics.Usb11HubCharacteristics = HubCharacteristics;
     RootHubData->HubControlCurrent = 0;
 }
 
@@ -90,7 +105,7 @@ MPSTATUS
 NTAPI
 OHCI_RH_GetPortStatus(IN PVOID ohciExtension,
                       IN USHORT Port,
-                      IN PUSBHUB_PORT_STATUS PortStatus)
+                      IN PUSB_PORT_STATUS_AND_CHANGE PortStatus)
 {
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
@@ -102,7 +117,7 @@ OHCI_RH_GetPortStatus(IN PVOID ohciExtension,
     DPRINT("OHCI_RH_GetPortStatus: OhciExtension - %p, Port - %x, PortStatus - %p\n",
            OhciExtension,
            Port,
-           PortStatus->AsULONG);
+           PortStatus->AsUlong32);
 
     OperationalRegs = OhciExtension->OperationalRegs;
 
@@ -119,7 +134,7 @@ OHCI_RH_GetPortStatus(IN PVOID ohciExtension,
         KeStallExecutionProcessor(5);
     }
 
-    PortStatus->AsULONG = portStatus;
+    PortStatus->AsUlong32 = portStatus;
 
     return MP_STATUS_SUCCESS;
 }
@@ -127,22 +142,26 @@ OHCI_RH_GetPortStatus(IN PVOID ohciExtension,
 MPSTATUS
 NTAPI
 OHCI_RH_GetHubStatus(IN PVOID ohciExtension,
-                     IN PUSB_HUB_STATUS HubStatus)
+                     IN PUSB_HUB_STATUS_AND_CHANGE HubStatus)
 {
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    OHCI_REG_RH_STATUS HcRhStatus;
 
     OhciExtension = ohciExtension;
 
-    DPRINT("OHCI_RH_GetHubStatus: ohciExtension - %p, HubStatus - %x\n",
+    DPRINT("OHCI_RH_GetHubStatus: ohciExtension - %p, HubStatus - %lX\n",
            ohciExtension,
-           HubStatus);
+           HubStatus->AsUlong32);
 
     OperationalRegs = OhciExtension->OperationalRegs;
+    HcRhStatus.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcRhStatus.AsULONG);
 
-    HubStatus->AsUshort16 &= ~0x10001;
-    HubStatus->AsUshort16 ^= (READ_REGISTER_ULONG(&OperationalRegs->HcRhStatus.AsULONG) ^
-                  HubStatus->AsUshort16) & 0x20002;
+    HubStatus->HubStatus.LocalPowerLost = HcRhStatus.LocalPowerStatus;
+    HubStatus->HubChange.LocalPowerChange = HcRhStatus.LocalPowerStatusChange;
+
+    HubStatus->HubStatus.OverCurrent = HcRhStatus.OverCurrentIndicator;
+    HubStatus->HubChange.OverCurrentChange = HcRhStatus.OverCurrentIndicatorChangeR;
 
     return MP_STATUS_SUCCESS;
 }
