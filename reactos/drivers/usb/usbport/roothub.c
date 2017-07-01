@@ -853,9 +853,27 @@ USBPORT_RootHubCreateDevice(IN PDEVICE_OBJECT FdoDevice,
         RH_HubDescriptor = &PdoExtension->RootHubDescriptors->Descriptor;
 
         RH_HubDescriptor->bDescriptorLength = sizeof(USB_HUB_DESCRIPTOR) + 2 * NumMaskByte;
-        RH_HubDescriptor->bDescriptorType = 0x29; // USB_20_HUB_DESCRIPTOR_TYPE - need add in .h file
+
+        if (Packet->MiniPortVersion == USB_MINIPORT_VERSION_OHCI ||
+            Packet->MiniPortVersion == USB_MINIPORT_VERSION_UHCI ||
+            Packet->MiniPortVersion == USB_MINIPORT_VERSION_EHCI)
+        {
+            RH_HubDescriptor->bDescriptorType = 0x29; // #define USB_20_HUB_DESCRIPTOR_TYPE  0x29 - need add in .h file
+        }
+        else if (Packet->MiniPortVersion == USB_MINIPORT_VERSION_XHCI)
+        {
+            RH_HubDescriptor->bDescriptorType = 0x2A; // #define USB_30_HUB_DESCRIPTOR_TYPE  0x2A - need add in .h file
+        }
+        else
+        {
+            DPRINT1("USBPORT_RootHubCreateDevice: Unknown MiniPortVersion - %x\n",
+                    Packet->MiniPortVersion);
+
+            DbgBreakPoint();
+        }
+
         RH_HubDescriptor->bNumberOfPorts = RootHubData.NumberOfPorts;
-        RH_HubDescriptor->wHubCharacteristics = RootHubData.HubCharacteristics;
+        RH_HubDescriptor->wHubCharacteristics = RootHubData.HubCharacteristics.AsUSHORT;
         RH_HubDescriptor->bPowerOnToPowerGood = RootHubData.PowerOnToPowerGood;
         RH_HubDescriptor->bHubControlCurrent = RootHubData.HubControlCurrent;
 

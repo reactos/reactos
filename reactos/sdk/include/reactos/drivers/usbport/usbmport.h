@@ -453,6 +453,7 @@ typedef VOID
 #define USB_MINIPORT_VERSION_OHCI 0x01
 #define USB_MINIPORT_VERSION_UHCI 0x02
 #define USB_MINIPORT_VERSION_EHCI 0x03
+#define USB_MINIPORT_VERSION_XHCI 0x04
 
 #define USB_MINIPORT_FLAGS_INTERRUPT    0x0001
 #define USB_MINIPORT_FLAGS_PORT_IO      0x0002
@@ -625,9 +626,53 @@ typedef struct _USBPORT_TRANSFER_PARAMETERS {
 
 C_ASSERT(sizeof(USBPORT_TRANSFER_PARAMETERS) == 28);
 
+/* For USB1.1 or USB3 Hub Descriptors */
+typedef union _USBPORT_HUB_11_CHARACTERISTICS {
+  struct {
+    USHORT PowerControlMode :1;
+    USHORT NoPowerSwitching :1; // Reserved. Used only on 1.0 compliant hubs that implement no power switching.
+    USHORT PartOfCompoundDevice :1;
+    USHORT OverCurrentProtectionMode :1;
+    USHORT NoOverCurrentProtection :1;
+    USHORT Reserved1 :11;
+  };
+  USHORT AsUSHORT;
+} USBPORT_HUB_11_CHARACTERISTICS;
+
+C_ASSERT(sizeof(USBPORT_HUB_11_CHARACTERISTICS) == sizeof(USHORT));
+
+/* For USB2.0 Hub Descriptors */
+typedef union _USBPORT_HUB_20_CHARACTERISTICS {
+  struct {
+    USHORT PowerControlMode :1;
+    USHORT NoPowerSwitching :1; // Reserved. Used only on 1.0 compliant hubs that implement no power switching.
+    USHORT PartOfCompoundDevice :1;
+    USHORT OverCurrentProtectionMode :1;
+    USHORT NoOverCurrentProtection :1;
+    USHORT TtThinkTime :2;
+    USHORT PortIndicatorsSupported :1;
+    USHORT Reserved1 :8;
+  };
+  USHORT AsUSHORT;
+} USBPORT_HUB_20_CHARACTERISTICS;
+
+C_ASSERT(sizeof(USBPORT_HUB_20_CHARACTERISTICS) == sizeof(USHORT));
+
+typedef USBPORT_HUB_11_CHARACTERISTICS USBPORT_HUB_30_CHARACTERISTICS;
+
+typedef union _USBPORT_HUB_CHARACTERISTICS {
+  USHORT AsUSHORT;
+  USBPORT_HUB_11_CHARACTERISTICS Usb11HubCharacteristics;
+  USBPORT_HUB_20_CHARACTERISTICS Usb20HubCharacteristics;
+  USBPORT_HUB_30_CHARACTERISTICS Usb30HubCharacteristics;
+} USBPORT_HUB_CHARACTERISTICS;
+
+C_ASSERT(sizeof(USBPORT_HUB_CHARACTERISTICS) == sizeof(USHORT));
+
 typedef struct _USBPORT_ROOT_HUB_DATA {
   ULONG NumberOfPorts;
-  ULONG HubCharacteristics;
+  USBPORT_HUB_CHARACTERISTICS HubCharacteristics;
+  USHORT Padded1;
   ULONG PowerOnToPowerGood;
   ULONG HubControlCurrent;
 } USBPORT_ROOT_HUB_DATA, *PUSBPORT_ROOT_HUB_DATA;
