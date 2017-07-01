@@ -1686,6 +1686,9 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","swapdisk",0x0000000
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","TransmissionRetryTimeout",0x00000000,"90"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","USERProcessHandleQuota",0x00010001,0x2710
 
+; App Compat -- Disable on ReactOS
+HKLM,"SOFTWARE\Policies\Microsoft\Windows\AppCompat","DisableEngine",0x00010003, 0x00000001
+
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]

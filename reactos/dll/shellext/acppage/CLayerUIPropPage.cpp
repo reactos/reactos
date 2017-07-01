@@ -561,11 +561,43 @@ INT_PTR CALLBACK CLayerUIPropPage::EditModesProc(HWND hWnd, UINT uMsg, WPARAM wP
     return FALSE;
 }
 
+static BOOL DisableShellext()
+{
+    HKEY hkey;
+    LSTATUS ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Policies\\Microsoft\\Windows\\AppCompat", 0, KEY_QUERY_VALUE, &hkey);
+    BOOL Disable = FALSE;
+    if (ret == ERROR_SUCCESS)
+    {
+        DWORD dwValue = 0;
+        DWORD type, size = sizeof(dwValue);
+        ret = RegQueryValueExW(hkey, L"DisableEngine", NULL, &type, (PBYTE)&dwValue, &size);
+        if (ret == ERROR_SUCCESS && type == REG_DWORD)
+        {
+            Disable = !!dwValue;
+        }
+        if (!Disable)
+        {
+            size = sizeof(dwValue);
+            ret = RegQueryValueExW(hkey, L"DisablePropPage", NULL, &type, (PBYTE)&dwValue, &size);
+            if (ret == ERROR_SUCCESS && type == REG_DWORD)
+            {
+                Disable = !!dwValue;
+            }
+        }
+
+        RegCloseKey(hkey);
+    }
+    return Disable;
+}
 
 STDMETHODIMP CLayerUIPropPage::Initialize(LPCITEMIDLIST pidlFolder, LPDATAOBJECT pDataObj, HKEY hkeyProgID)
 {
     FORMATETC etc = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
     STGMEDIUM stg;
+
+    if (DisableShellext())
+        return E_ACCESSDENIED;
+
     HRESULT hr = pDataObj->GetData(&etc, &stg);
     if (FAILED(hr))
     {
