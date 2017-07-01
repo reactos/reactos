@@ -31,10 +31,10 @@ class CISFBand :
     CComPtr<IShellFolder> m_pISF;     
     PCIDLIST_ABSOLUTE m_pidl;    
 
-    //Menu
-    HMENU m_qMenu;
-    UINT m_idCmdFirst;
-
+    //Menu      
+    BOOL m_textFlag;
+    BOOL m_iconFlag;
+    
 public:
 
     CISFBand();

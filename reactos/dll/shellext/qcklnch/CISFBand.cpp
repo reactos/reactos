@@ -18,9 +18,19 @@ WINE_DEFAULT_DEBUG_CHANNEL(qcklnch);
 //*****************************************************************************************
 // *** CISFBand *** 
 
-CISFBand::CISFBand() : m_hWndTb(NULL), m_BandID(0), m_pidl(NULL) {}
+CISFBand::CISFBand() :
+    m_BandID(0),
+    m_hWndTb(NULL),
+    m_hInstance(NULL),
+    m_pidl(NULL),
+    m_textFlag(true),
+    m_iconFlag(true)
+{
+}
 
-CISFBand::~CISFBand() {}
+CISFBand::~CISFBand() 
+{
+}
 
 // *** CWindowImpl ***
 //Subclassing 
@@ -36,7 +46,8 @@ LRESULT CISFBand::OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 
     int index = SendMessage(m_hWndTb, TB_HITTEST, 0, (LPARAM)&pt);
     bool chk = SendMessage(m_hWndTb, TB_GETBUTTON, abs(index), (LPARAM)&tb);    
-    if(chk) SHInvokeDefaultCommand(m_hWndTb, m_pISF, (LPITEMIDLIST)tb.dwData);    
+    if(chk) 
+        SHInvokeDefaultCommand(m_hWndTb, m_pISF, (LPITEMIDLIST)tb.dwData);    
 
     return 0;
 }
@@ -100,12 +111,13 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
         WS_CHILD | TBSTYLE_FLAT | TBSTYLE_LIST | CCS_NORESIZE | CCS_NODIVIDER, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
         hWndParent, NULL, hInst, NULL);
     if (hWndToolbar == NULL)
-        return NULL; 
+        return NULL;    
 
     // Set the image list.
     HIMAGELIST* piml;
     HRESULT hr = SHGetImageList(SHIL_SMALL, IID_IImageList, (void**)&piml); 
-    if (FAILED_UNEXPECTEDLY(hr)) return NULL;
+    if (FAILED_UNEXPECTEDLY(hr)) 
+        return NULL;
     SendMessage(hWndToolbar, TB_SETIMAGELIST, 0, (LPARAM)piml);    
 
     //Enumerate objects
@@ -114,7 +126,8 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
     STRRET stret;  
     ULONG count = 0;
     hr = m_pISF->EnumObjects(0, SHCONTF_FOLDERS, &pedl);
-    if (FAILED_UNEXPECTEDLY(hr)) return NULL;
+    if (FAILED_UNEXPECTEDLY(hr)) 
+        return NULL;
 
     for (int i=0; pedl->Next(1, &pidl, 0) != S_FALSE; i++, count++)
     {
@@ -154,14 +167,13 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
         
         m_hWndTb = CreateSimpleToolbar(hwndParent, m_hInstance);        
         hr = SubclassWindow(m_hWndTb);
-        if (FAILED_UNEXPECTEDLY(hr)) return hr;
+        if (FAILED_UNEXPECTEDLY(hr)) 
+            return hr;
 
         return S_OK;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::GetSite(
-        IN REFIID riid,
-        OUT VOID **ppvSite)
+    HRESULT STDMETHODCALLTYPE CISFBand::GetSite(IN REFIID riid, OUT VOID **ppvSite)
     {        
         TRACE("CISFBand::GetSite(0x%p,0x%p)\n", riid, ppvSite);
 
@@ -189,15 +201,13 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
         return S_OK;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::ContextSensitiveHelp(
-        IN BOOL fEnterMode)
+    HRESULT STDMETHODCALLTYPE CISFBand::ContextSensitiveHelp(IN BOOL fEnterMode)
     {
         /* FIXME: Implement */        
         return E_NOTIMPL;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::ShowDW(
-        IN BOOL bShow)
+    HRESULT STDMETHODCALLTYPE CISFBand::ShowDW(IN BOOL bShow)
     {        
         if (m_hWndTb)
         {
@@ -207,8 +217,7 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
         return S_OK;       
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::CloseDW(
-        IN DWORD dwReserved)
+    HRESULT STDMETHODCALLTYPE CISFBand::CloseDW(IN DWORD dwReserved)
     {        
         if (m_hWndTb)
         {
@@ -220,20 +229,14 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
         return S_OK;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::ResizeBorderDW(
-        LPCRECT prcBorder,
-        IUnknown *punkToolbarSite,
-        BOOL fReserved) 
+    HRESULT STDMETHODCALLTYPE CISFBand::ResizeBorderDW(LPCRECT prcBorder, IUnknown *punkToolbarSite, BOOL fReserved) 
     {
         /* No need to implement this method */
 
         return E_NOTIMPL;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::GetBandInfo(  //Need a check
-        IN DWORD dwBandID,
-        IN DWORD dwViewMode,
-        IN OUT DESKBANDINFO *pdbi)
+    HRESULT STDMETHODCALLTYPE CISFBand::GetBandInfo(IN DWORD dwBandID, IN DWORD dwViewMode, IN OUT DESKBANDINFO *pdbi)
     {        
         TRACE("CTaskBand::GetBandInfo(0x%x,0x%x,0x%p) hWnd=0x%p\n", dwBandID, dwViewMode, pdbi, m_hWndTb);
                 
@@ -295,24 +298,21 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
 
  /*****************************************************************************/
  // *** IDeskBar ***    
-    HRESULT STDMETHODCALLTYPE CISFBand::SetClient(
-        IN IUnknown *punkClient)
+    HRESULT STDMETHODCALLTYPE CISFBand::SetClient(IN IUnknown *punkClient)
     {
         TRACE("IDeskBar::SetClient(0x%p)\n", punkClient);
 
         return E_NOTIMPL;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::GetClient(
-        OUT IUnknown **ppunkClient)
+    HRESULT STDMETHODCALLTYPE CISFBand::GetClient(OUT IUnknown **ppunkClient)
     {
         TRACE("IDeskBar::GetClient(0x%p)\n", ppunkClient);
 
         return E_NOTIMPL;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::OnPosRectChangeDB(
-        IN RECT *prc)
+    HRESULT STDMETHODCALLTYPE CISFBand::OnPosRectChangeDB(IN RECT *prc)
     {
         TRACE("IDeskBar::OnPosRectChangeDB(0x%p=(%d,%d,%d,%d))\n", prc, prc->left, prc->top, prc->right, prc->bottom);      
 
@@ -321,8 +321,7 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
 
 /*****************************************************************************/
 // *** IPersistStream *** 
-    HRESULT STDMETHODCALLTYPE CISFBand::GetClassID(
-        OUT CLSID *pClassID)
+    HRESULT STDMETHODCALLTYPE CISFBand::GetClassID(OUT CLSID *pClassID)
     {        
         TRACE("CISFBand::GetClassID(0x%p)\n", pClassID);
         /* We're going to return the (internal!) CLSID of the quick launch band */
@@ -338,8 +337,7 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
         return S_FALSE;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::Load(
-        IN IStream *pStm)
+    HRESULT STDMETHODCALLTYPE CISFBand::Load(IN IStream *pStm)
     {
         TRACE("CISFBand::Load called\n");
         /* Nothing to do */
@@ -347,17 +345,14 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
         return S_OK;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::Save(
-        IN IStream *pStm,
-        IN BOOL fClearDirty)
+    HRESULT STDMETHODCALLTYPE CISFBand::Save(IN IStream *pStm, IN BOOL fClearDirty)
     {
         /* Nothing to do */
 
         return S_OK;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::GetSizeMax(
-        OUT ULARGE_INTEGER *pcbSize)
+    HRESULT STDMETHODCALLTYPE CISFBand::GetSizeMax(OUT ULARGE_INTEGER *pcbSize)
     {
         TRACE("CISFBand::GetSizeMax called\n");         
 
@@ -366,23 +361,16 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
 
 /*****************************************************************************/
 // *** IWinEventHandler *** 
-    HRESULT STDMETHODCALLTYPE CISFBand::ProcessMessage(
-        IN HWND hWnd,
-        IN UINT uMsg,
-        IN WPARAM wParam,
-        IN LPARAM lParam,
-        OUT LRESULT *plrResult)
+    HRESULT STDMETHODCALLTYPE CISFBand::ProcessMessage(IN HWND hWnd, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lParam, OUT LRESULT *plrResult)
     {
         TRACE("CISFBand: IWinEventHandler::ProcessMessage(0x%p, 0x%x, 0x%p, 0x%p, 0x%p)\n", hWnd, uMsg, wParam, lParam, plrResult);
         
         return E_NOTIMPL;
     }
 
-    HRESULT STDMETHODCALLTYPE CISFBand::ContainsWindow(
-        IN HWND hWnd)
+    HRESULT STDMETHODCALLTYPE CISFBand::ContainsWindow(IN HWND hWnd)
     {        
-        if (hWnd == m_hWndTb ||
-            ::IsChild(m_hWndTb, hWnd))
+        if (hWnd == m_hWndTb || ::IsChild(m_hWndTb, hWnd))
         {
             TRACE("CISFBand::ContainsWindow(0x%p) returns S_OK\n", hWnd);
             return S_OK;
@@ -494,67 +482,55 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
     }
 
     HRESULT STDMETHODCALLTYPE CISFBand::InvokeCommand(LPCMINVOKECOMMANDINFO pici)
-    {       
-       /* BOOL fEx = FALSE;
-        BOOL fUnicode = FALSE;        
-
-        if (pici->cbSize == sizeof(CMINVOKECOMMANDINFOEX))
-        {
-            fEx = TRUE;
-            if ((pici->fMask & CMIC_MASK_UNICODE))
-            {
-                fUnicode = TRUE;
-            }
-        }
-
-        if (!fUnicode && HIWORD(pici->lpVerb))
-        {
-            if (StrCmpIA(pici->lpVerb, m_pszVerb))
-            {
-                return E_FAIL;
-            }
-        }
-
-        else if (fUnicode && HIWORD(((CMINVOKECOMMANDINFOEX *)pici)->lpVerbW))
-        {
-            if (StrCmpIW(((CMINVOKECOMMANDINFOEX *)pici)->lpVerbW, m_pwszVerb))
-            {
-                return E_FAIL;
-            }
-        }
-
-        else if (LOWORD(pici->lpVerb) != IDM_DISPLAY)
-        {
-            return E_FAIL;
-        }
-
-        else
-        {
-            ::MessageBox(pici->hwnd,
-                L"The File Name",
-                L"File Name",
-                MB_OK | MB_ICONINFORMATION);
-        }*/
-
+    { 
         if (!HIWORD(pici->lpVerb))
         {
-            switch (LOWORD(pici->lpVerb) /*- m_idCmdFirst*/)
+            switch (LOWORD(pici->lpVerb))
             {
                 case IDM_LARGE_ICONS:
-                {
-                    ::MessageBox(0, L"IDM_LARGE_ICONS", L"Test", MB_OK | MB_ICONINFORMATION);
+                {                    
+                    m_iconFlag = false;
+
+                    HIMAGELIST* piml = (HIMAGELIST*) SendMessage(m_hWndTb, TB_GETIMAGELIST, 0, 0);
+                    HRESULT hr = SHGetImageList(SHIL_LARGE, IID_IImageList, (void**)&piml);
+                    if (FAILED_UNEXPECTEDLY(hr)) return hr;
+                    SendMessage(m_hWndTb, TB_SETIMAGELIST, 0, (LPARAM)piml);
+                    hr = IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
+                    if (FAILED_UNEXPECTEDLY(hr)) return hr;
                     break;
                 }
                 case IDM_SMALL_ICONS:
-                {
-                    ::MessageBox(0, L"IDM_SMALL_ICONS", L"Test", MB_OK | MB_ICONINFORMATION);
+                {                    
+                    m_iconFlag = true;
+
+                    HIMAGELIST* piml = (HIMAGELIST*)SendMessage(m_hWndTb, TB_GETIMAGELIST, 0, 0);
+                    HRESULT hr = SHGetImageList(SHIL_SMALL, IID_IImageList, (void**)&piml);
+                    if (FAILED_UNEXPECTEDLY(hr)) return hr;
+                    SendMessage(m_hWndTb, TB_SETIMAGELIST, 0, (LPARAM)piml);
+                    hr = IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
+                    if (FAILED_UNEXPECTEDLY(hr)) return hr;
                     break;
                 }
                 case IDM_SHOW_TEXT:
-                {
-                    ::MessageBox(0, L"IDM_SHOW_TEXT", L"Test", MB_OK | MB_ICONINFORMATION);
+                {                    
+                    if (m_textFlag)
+                    {                        
+                        m_textFlag = false;
+                        SendMessage(m_hWndTb, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);    
+                        HRESULT hr = IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
+                        if (FAILED_UNEXPECTEDLY(hr)) return hr;
+                    }
+                    else
+                    {                        
+                        m_textFlag = true; 
+                        SendMessage(m_hWndTb, TB_SETEXTENDEDSTYLE, 0, 0);
+                        HRESULT hr = IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
+                        if (FAILED_UNEXPECTEDLY(hr)) return hr;
+                    }
                     break;
                 }
+                default:
+                    return E_FAIL;
             }
         }
 
@@ -562,11 +538,25 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
     }
 
     HRESULT STDMETHODCALLTYPE CISFBand::QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
-    {
-        m_idCmdFirst = idCmdFirst;
-        m_qMenu = LoadMenu(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCE(IDR_POPUPMENU));
-        m_qMenu = GetSubMenu(m_qMenu, 0);
-        UINT idMax = Shell_MergeMenus(hmenu, m_qMenu, indexMenu, idCmdFirst, idCmdLast, MM_SUBMENUSHAVEIDS);
+    {        
+        HMENU qMenu = LoadMenu(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCE(IDR_POPUPMENU));
+        UINT idMax = Shell_MergeMenus(hmenu, GetSubMenu(qMenu, 0), indexMenu, idCmdFirst, idCmdLast, MM_SUBMENUSHAVEIDS);
+        
+        if(m_textFlag) 
+            CheckMenuItem(hmenu, IDM_SHOW_TEXT, MF_CHECKED);
+        else 
+            CheckMenuItem(hmenu, IDM_SHOW_TEXT, MF_UNCHECKED);
+
+        if (m_iconFlag)
+        {
+            CheckMenuItem(hmenu, IDM_SMALL_ICONS, MF_CHECKED);
+            CheckMenuItem(hmenu, IDM_LARGE_ICONS, MF_UNCHECKED);
+        }
+        else
+        {
+            CheckMenuItem(hmenu, IDM_LARGE_ICONS, MF_CHECKED);
+            CheckMenuItem(hmenu, IDM_SMALL_ICONS, MF_UNCHECKED);
+        }
 
         return MAKE_HRESULT(SEVERITY_SUCCESS, 0, USHORT(idMax - idCmdFirst +1));         
     }

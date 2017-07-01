@@ -103,9 +103,7 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
         return pIOWS->SetSite(pUnkSite);
     }
 
-    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::GetSite(
-        IN REFIID riid,
-        OUT VOID **ppvSite)
+    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::GetSite(IN REFIID riid, OUT VOID **ppvSite)
     {        
         TRACE("CQuickLaunchBand::GetSite(0x%p,0x%p)\n", riid, ppvSite);
 
@@ -129,8 +127,7 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
         return pIDB->GetWindow(phwnd);
     }
 
-    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::ContextSensitiveHelp(
-        IN BOOL fEnterMode)
+    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::ContextSensitiveHelp(IN BOOL fEnterMode)
     {
         //Internal CISFBand Calls
         CComPtr<IDeskBand> pIDB;
@@ -140,8 +137,7 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
         return pIDB->ContextSensitiveHelp(fEnterMode);
     }
 
-    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::ShowDW(
-        IN BOOL bShow)
+    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::ShowDW(IN BOOL bShow)
     {        
         //Internal CISFBand Calls
         CComPtr<IDeskBand> pIDB;
@@ -151,8 +147,7 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
         return pIDB->ShowDW(bShow);       
     }
 
-    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::CloseDW(
-        IN DWORD dwReserved)
+    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::CloseDW(IN DWORD dwReserved)
     {        
         //Internal CISFBand Calls
         CComPtr<IDeskBand> pIDB;
@@ -162,10 +157,7 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
         return pIDB->CloseDW(dwReserved);
     }
 
-    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::ResizeBorderDW(
-        LPCRECT prcBorder,
-        IUnknown *punkToolbarSite,
-        BOOL fReserved) 
+    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::ResizeBorderDW(LPCRECT prcBorder, IUnknown *punkToolbarSite, BOOL fReserved) 
     {        
         //Internal CISFBand Calls
         CComPtr<IDeskBand> pIDB;
@@ -175,10 +167,7 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
         return pIDB->ResizeBorderDW(prcBorder, punkToolbarSite, fReserved);
     }
 
-    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::GetBandInfo(  //Need a check
-        IN DWORD dwBandID,
-        IN DWORD dwViewMode,
-        IN OUT DESKBANDINFO *pdbi)
+    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::GetBandInfo(IN DWORD dwBandID, IN DWORD dwViewMode, IN OUT DESKBANDINFO *pdbi)
     {        
         TRACE("CQuickLaunchBand::GetBandInfo(0x%x,0x%x,0x%p)\n", dwBandID, dwViewMode, pdbi);
 
@@ -192,8 +181,7 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
 
  /*****************************************************************************/
  //IDeskBar   
-    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::SetClient(
-        IN IUnknown *punkClient)
+    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::SetClient(IN IUnknown *punkClient)
     {
         TRACE("IDeskBar::SetClient(0x%p)\n", punkClient);
 
@@ -205,8 +193,7 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
         return pIDB->SetClient(punkClient);
     }
 
-    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::GetClient(
-        OUT IUnknown **ppunkClient)
+    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::GetClient(OUT IUnknown **ppunkClient)
     {
         TRACE("IDeskBar::GetClient(0x%p)\n", ppunkClient);
 
@@ -218,8 +205,7 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
         return pIDB->GetClient(ppunkClient);
     }
 
-    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::OnPosRectChangeDB(
-        IN RECT *prc)
+    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::OnPosRectChangeDB(IN RECT *prc)
     {
         TRACE("IDeskBar::OnPosRectChangeDB(0x%p=(%d,%d,%d,%d))\n", prc, prc->left, prc->top, prc->right, prc->bottom);      
 
@@ -233,8 +219,7 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
 
 /*****************************************************************************/
 //IPersistStream
-    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::GetClassID(
-        OUT CLSID *pClassID)
+    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::GetClassID(OUT CLSID *pClassID)
     {        
         TRACE("CQuickLaunchBand::GetClassID(0x%p)\n", pClassID);
         
@@ -256,8 +241,7 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
         return pIPS->IsDirty();
     }
 
-    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::Load(
-        IN IStream *pStm)
+    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::Load(IN IStream *pStm)
     {
         TRACE("CQuickLaunchBand::Load called\n");
         
@@ -269,9 +253,7 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
         return pIPS->Load(pStm);
     }
 
-    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::Save(
-        IN IStream *pStm,
-        IN BOOL fClearDirty)
+    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::Save(IN IStream *pStm, IN BOOL fClearDirty)
     {       
         //Internal CISFBand Calls
         CComPtr<IPersistStream> pIPS;
@@ -281,8 +263,7 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
         return pIPS->Save(pStm, fClearDirty);
     }
 
-    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::GetSizeMax(
-        OUT ULARGE_INTEGER *pcbSize)
+    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::GetSizeMax(OUT ULARGE_INTEGER *pcbSize)
     {
         TRACE("CQuickLaunchBand::GetSizeMax called\n");        
        
@@ -297,20 +278,14 @@ static const GUID CLSID_QuickLaunchBand = { 0x260cb95d, 0x4544, 0x44f6, { 0xa0, 
 
 /*****************************************************************************/
 //IWinEventHandler
-    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::ProcessMessage(
-        IN HWND hWnd,
-        IN UINT uMsg,
-        IN WPARAM wParam,
-        IN LPARAM lParam,
-        OUT LRESULT *plrResult)
+    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::ProcessMessage(IN HWND hWnd, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lParam, OUT LRESULT *plrResult)
     {
         TRACE("CQuickLaunchBand: IWinEventHandler::ProcessMessage(0x%p, 0x%x, 0x%p, 0x%p, 0x%p)\n", hWnd, uMsg, wParam, lParam, plrResult);
                 
         return E_NOTIMPL;
     }
 
-    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::ContainsWindow(
-        IN HWND hWnd)
+    HRESULT STDMETHODCALLTYPE CQuickLaunchBand::ContainsWindow(IN HWND hWnd)
     {
         return E_NOTIMPL;
     }
