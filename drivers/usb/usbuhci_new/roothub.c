@@ -24,7 +24,7 @@ MPSTATUS
 NTAPI
 UhciRHGetPortStatus(IN PVOID uhciExtension,
                     IN USHORT Port,
-                    IN PUSBHUB_PORT_STATUS PortStatus)
+                    IN PUSB_PORT_STATUS_AND_CHANGE PortStatus)
 {
     DPRINT("UhciRHGetPortStatus: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
@@ -33,7 +33,7 @@ UhciRHGetPortStatus(IN PVOID uhciExtension,
 MPSTATUS
 NTAPI
 UhciRHGetHubStatus(IN PVOID uhciExtension,
-                   IN PUSB_HUB_STATUS HubStatus)
+                   IN PUSB_HUB_STATUS_AND_CHANGE HubStatus)
 {
     DPRINT("UhciRHGetHubStatus: UNIMPLEMENTED. FIXME\n");
     return MP_STATUS_SUCCESS;
