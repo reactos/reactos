@@ -421,7 +421,7 @@ USBHI_GetExtendedHubInformation(IN PVOID BusContext,
     ULONG NumPorts;
     ULONG ix;
     PUSB_EXTHUB_INFORMATION_0 HubInfoBuffer;
-    USBHUB_PORT_STATUS PortStatus;
+    USB_PORT_STATUS_AND_CHANGE PortStatus;
     ULONG PortAttrX;
 
     DPRINT("USBHI_GetExtendedHubInformation: ... \n");
@@ -433,7 +433,7 @@ USBHI_GetExtendedHubInformation(IN PVOID BusContext,
     Packet = &FdoExtension->MiniPortInterface->Packet;
 
     HubInfoBuffer = HubInformationBuffer;
-    PortStatus.AsULONG = 0;
+    PortStatus.AsUlong32 = 0;
 
     if (HubPhysicalDeviceObject != PdoDevice)
     {
@@ -472,7 +472,7 @@ USBHI_GetExtendedHubInformation(IN PVOID BusContext,
                                      ix,
                                      &PortStatus);
 
-            if (PortStatus.UsbPortStatus.Usb20PortStatus.AsUshort16 & 0x8000)
+            if (PortStatus.PortStatus.Usb20PortStatus.AsUshort16 & 0x8000)
             {
                 HubInfoBuffer->Port[ix].PortAttributes |= USB_PORTATTR_OWNED_BY_CC;
             }

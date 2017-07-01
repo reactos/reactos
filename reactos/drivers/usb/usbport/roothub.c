@@ -534,7 +534,7 @@ USBPORT_RootHubSCE(IN PUSBPORT_TRANSFER Transfer)
     PUSBPORT_RHDEVICE_EXTENSION PdoExtension;
     PUSBPORT_REGISTRATION_PACKET Packet;
     ULONG TransferLength;
-    USBHUB_PORT_STATUS PortStatus;
+    USB_PORT_STATUS_AND_CHANGE PortStatus;
     USB_HUB_STATUS_AND_CHANGE HubStatus;
     PVOID Buffer;
     PULONG AddressBitMap;
@@ -555,7 +555,7 @@ USBPORT_RootHubSCE(IN PUSBPORT_TRANSFER Transfer)
     HubDescriptor = &PdoExtension->RootHubDescriptors->Descriptor;
     NumberOfPorts = HubDescriptor->bNumberOfPorts;
 
-    PortStatus.AsULONG = 0;
+    PortStatus.AsUlong32 = 0;
     HubStatus.AsUlong32 = 0;
 
     Urb = Transfer->Urb;
@@ -608,11 +608,11 @@ USBPORT_RootHubSCE(IN PUSBPORT_TRANSFER Transfer)
             return RH_STATUS_UNSUCCESSFUL;
         }
 
-        if (PortStatus.UsbPortStatusChange.ConnectStatusChange ||
-            PortStatus.UsbPortStatusChange.PortEnableDisableChange ||
-            PortStatus.UsbPortStatusChange.SuspendChange ||
-            PortStatus.UsbPortStatusChange.OverCurrentIndicatorChange ||
-            PortStatus.UsbPortStatusChange.ResetChange)
+        if (PortStatus.PortChange.Usb20PortChange.ConnectStatusChange ||
+            PortStatus.PortChange.Usb20PortChange.PortEnableDisableChange ||
+            PortStatus.PortChange.Usb20PortChange.SuspendChange ||
+            PortStatus.PortChange.Usb20PortChange.OverCurrentIndicatorChange ||
+            PortStatus.PortChange.Usb20PortChange.ResetChange)
         {
             /* At the port status there is a change */
             AddressBitMap[Port >> 5] |= 1 << (Port & 0x1F);
@@ -858,11 +858,11 @@ USBPORT_RootHubCreateDevice(IN PDEVICE_OBJECT FdoDevice,
             Packet->MiniPortVersion == USB_MINIPORT_VERSION_UHCI ||
             Packet->MiniPortVersion == USB_MINIPORT_VERSION_EHCI)
         {
-            RH_HubDescriptor->bDescriptorType = 0x29; // #define USB_20_HUB_DESCRIPTOR_TYPE  0x29 - need add in .h file
+            RH_HubDescriptor->bDescriptorType = USB_20_HUB_DESCRIPTOR_TYPE;
         }
         else if (Packet->MiniPortVersion == USB_MINIPORT_VERSION_XHCI)
         {
-            RH_HubDescriptor->bDescriptorType = 0x2A; // #define USB_30_HUB_DESCRIPTOR_TYPE  0x2A - need add in .h file
+            RH_HubDescriptor->bDescriptorType = USB_30_HUB_DESCRIPTOR_TYPE;
         }
         else
         {
@@ -923,9 +923,9 @@ USBPORT_InvalidateRootHub(PVOID Context)
     FdoDevice = FdoExtension->CommonExtension.SelfDevice;
 
     if (FdoExtension->Flags & USBPORT_FLAG_HC_SUSPEND &&
-         FdoExtension->Flags & USBPORT_FLAG_HC_WAKE_SUPPORT &&
-         FdoExtension->MiniPortFlags & USBPORT_MPFLAG_SUSPENDED &&
-         FdoExtension->TimerFlags & USBPORT_TMFLAG_WAKE)
+        FdoExtension->Flags & USBPORT_FLAG_HC_WAKE_SUPPORT &&
+        FdoExtension->MiniPortFlags & USBPORT_MPFLAG_SUSPENDED &&
+        FdoExtension->TimerFlags & USBPORT_TMFLAG_WAKE)
     {
         USBPORT_HcQueueWakeDpc(FdoDevice);
         return 0;

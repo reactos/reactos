@@ -1131,7 +1131,7 @@ EnumStart:
 
         DPRINT_ENUM("USBH_FdoQueryBusRelations: Port - %x, ConnectStatus - %x\n",
                     Port,
-                    PortData->PortStatus.UsbPortStatus.Usb20PortStatus.CurrentConnectStatus);
+                    PortData->PortStatus.PortStatus.Usb20PortStatus.CurrentConnectStatus);
 
         if (HubExtension->HubFlags & USBHUB_FDO_FLAG_DEVICE_FAILED)
         {
@@ -1141,7 +1141,7 @@ EnumStart:
         Status = USBH_SyncGetPortStatus(HubExtension,
                                         Port,
                                         &PortData->PortStatus,
-                                        sizeof(USBHUB_PORT_STATUS));
+                                        sizeof(USB_PORT_STATUS_AND_CHANGE));
 
         if (!NT_SUCCESS(Status))
         {
@@ -1158,7 +1158,7 @@ EnumStart:
 
             if (PdoExtension->PortPdoFlags & USBHUB_PDO_FLAG_OVERCURRENT_PORT)
             {
-                PortData->PortStatus.UsbPortStatus.Usb20PortStatus.CurrentConnectStatus = 1;
+                PortData->PortStatus.PortStatus.Usb20PortStatus.CurrentConnectStatus = 1;
             }
         }
 
@@ -1168,7 +1168,7 @@ EnumStart:
             DbgBreakPoint();
         }
 
-        if (!PortData->PortStatus.UsbPortStatus.Usb20PortStatus.CurrentConnectStatus)
+        if (!PortData->PortStatus.PortStatus.Usb20PortStatus.CurrentConnectStatus)
         {
             if (PdoDevice)
             {
@@ -1233,9 +1233,9 @@ EnumStart:
             NtStatus = USBH_SyncGetPortStatus(HubExtension,
                                               Port,
                                               &PortData->PortStatus,
-                                              sizeof(USBHUB_PORT_STATUS));
+                                              sizeof(USB_PORT_STATUS_AND_CHANGE));
 
-            UsbPortStatus = PortData->PortStatus.UsbPortStatus;
+            UsbPortStatus = PortData->PortStatus.PortStatus;
 
             if (NT_SUCCESS(NtStatus))
             {
@@ -1472,7 +1472,7 @@ USBH_FdoRemoveDevice(IN PUSBHUB_FDO_EXTENSION HubExtension,
 
             if (PortDevice)
             {
-                PortData->PortStatus.AsULONG = 0;
+                PortData->PortStatus.AsUlong32 = 0;
                 PortData->DeviceObject = NULL;
 
                 PortExtension = PortDevice->DeviceExtension;
@@ -2064,7 +2064,7 @@ USBH_RestoreDevice(IN PUSBHUB_PORT_PDO_EXTENSION PortExtension,
     Status = USBH_SyncGetPortStatus(HubExtension,
                                     PortExtension->PortNumber,
                                     &PortData->PortStatus,
-                                    sizeof(USBHUB_PORT_STATUS));
+                                    sizeof(USB_PORT_STATUS_AND_CHANGE));
 
     if (NT_SUCCESS(Status))
     {

@@ -66,19 +66,7 @@ typedef ULONG RHSTATUS; // Roothub status
 #define RH_STATUS_NO_CHANGES    1
 #define RH_STATUS_UNSUCCESSFUL  2
 
-typedef USB_20_PORT_CHANGE USB_PORT_STATUS_CHANGE;
-
-typedef union _USBHUB_PORT_STATUS {
-struct {
-    USB_PORT_STATUS UsbPortStatus;
-    USB_PORT_STATUS_CHANGE UsbPortStatusChange;
-  };
-  ULONG AsULONG;
-} USBHUB_PORT_STATUS, *PUSBHUB_PORT_STATUS;
-
 /* Additional USB Class Codes from USB.org */
-#define USBC_DEVICE_CLASS_AUDIO_VIDEO           0x10
-#define USBC_DEVICE_CLASS_BILLBOARD             0x11
 #define USBC_DEVICE_CLASS_TYPE_C_BRIDGE         0x12
 
 /* Miniport functions */
@@ -222,7 +210,7 @@ typedef MPSTATUS
 (NTAPI *PHCI_RH_GET_PORT_STATUS)(
   PVOID,
   USHORT,
-  PUSBHUB_PORT_STATUS);
+  PUSB_PORT_STATUS_AND_CHANGE);
 
 typedef MPSTATUS
 (NTAPI *PHCI_RH_GET_HUB_STATUS)(

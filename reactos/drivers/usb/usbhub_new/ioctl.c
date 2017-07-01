@@ -250,7 +250,7 @@ USBH_PdoIoctlGetPortStatus(IN PUSBHUB_PORT_PDO_EXTENSION PortExtension,
     Status = USBH_SyncGetPortStatus(HubExtension,
                                     PortExtension->PortNumber,
                                     &PortData->PortStatus,
-                                    sizeof(USBHUB_PORT_STATUS));
+                                    sizeof(USB_PORT_STATUS_AND_CHANGE));
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     PortStatus = IoStack->Parameters.Others.Argument1;
@@ -259,12 +259,12 @@ USBH_PdoIoctlGetPortStatus(IN PUSBHUB_PORT_PDO_EXTENSION PortExtension,
 
     if (PortExtension->Common.SelfDevice == PortData->DeviceObject)
     {
-        if (PortData->PortStatus.UsbPortStatus.Usb20PortStatus.PortEnabledDisabled)
+        if (PortData->PortStatus.PortStatus.Usb20PortStatus.PortEnabledDisabled)
         {
             *PortStatus |= USBD_PORT_ENABLED;
         }
 
-        if (PortData->PortStatus.UsbPortStatus.Usb20PortStatus.CurrentConnectStatus)
+        if (PortData->PortStatus.PortStatus.Usb20PortStatus.CurrentConnectStatus)
         {
             *PortStatus |= USBD_PORT_CONNECTED;
         }

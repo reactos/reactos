@@ -108,7 +108,7 @@
 extern PWSTR GenericUSBDeviceString;
 
 typedef struct _USBHUB_PORT_DATA {
-  USBHUB_PORT_STATUS PortStatus;
+  USB_PORT_STATUS_AND_CHANGE PortStatus;
   PDEVICE_OBJECT DeviceObject;
   USB_CONNECTION_STATUS ConnectionStatus;
   ULONG PortAttributes;
@@ -189,7 +189,7 @@ typedef struct _USBHUB_FDO_EXTENSION {
   KSEMAPHORE HubSemaphore;
   PUSBHUB_IO_WORK_ITEM WorkItemToQueue;
   USB_IDLE_CALLBACK_INFO IdleCallbackInfo;
-  USBHUB_PORT_STATUS PortStatus;
+  USB_PORT_STATUS_AND_CHANGE PortStatus;
   PIRP PowerIrp;
 } USBHUB_FDO_EXTENSION, *PUSBHUB_FDO_EXTENSION;
 
@@ -480,7 +480,7 @@ NTAPI
 USBH_SyncGetPortStatus(
   IN PUSBHUB_FDO_EXTENSION HubExtension,
   IN USHORT Port,
-  IN PUSBHUB_PORT_STATUS PortStatus,
+  IN PUSB_PORT_STATUS_AND_CHANGE PortStatus,
   IN ULONG Length);
 
 NTSTATUS
