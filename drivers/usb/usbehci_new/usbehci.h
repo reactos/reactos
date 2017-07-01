@@ -169,13 +169,13 @@ NTAPI
 EHCI_RH_GetPortStatus(
   IN PVOID ohciExtension,
   IN USHORT Port,
-  IN PUSBHUB_PORT_STATUS PortStatus);
+  IN PUSB_PORT_STATUS_AND_CHANGE PortStatus);
 
 MPSTATUS
 NTAPI
 EHCI_RH_GetHubStatus(
   IN PVOID ohciExtension,
-  IN PUSB_HUB_STATUS HubStatus);
+  IN PUSB_HUB_STATUS_AND_CHANGE HubStatus);
 
 MPSTATUS
 NTAPI
