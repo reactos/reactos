@@ -569,6 +569,7 @@ DxDdReenableDirectDrawObject(
         // reset acceleration and suspend flags
         peDdGl->fl &= 0xFFFFFFFD;
         peDdGl->bSuspended = 0;
+        peDdGl->dhpdev = (PVOID)gpEngFuncs.DxEngGetHdevData(peDdGl->hDev, DxEGShDevData_dhpdev);
 
         RetVal = TRUE;
         // FIXME AGP Stuff
