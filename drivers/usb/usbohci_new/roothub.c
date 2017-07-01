@@ -24,13 +24,13 @@ OHCI_ReadRhDescriptorA(IN POHCI_EXTENSION OhciExtension)
             DescriptorA.NumberDownstreamPorts <= OHCI_MAX_PORT_COUNT) // Reserved bits
         {
             break;
-    }
+        }
 
         DPRINT1("OHCI_ReadRhDescriptorA: DescriptorA - %lX, ix - %d\n",
                 DescriptorA.AsULONG, ix);
 
         KeStallExecutionProcessor(5);
-}
+    }
 
     return DescriptorA;
 }
@@ -76,7 +76,7 @@ OHCI_RH_GetRootHubData(IN PVOID ohciExtension,
     {
         /* Ganged power switching */
         HubCharacteristics.PowerControlMode = 0;
-}
+    }
 
     HubCharacteristics.NoPowerSwitching = 0;
 
@@ -114,7 +114,7 @@ OHCI_RH_GetPortStatus(IN PVOID ohciExtension,
 
     OhciExtension = ohciExtension;
 
-    DPRINT("OHCI_RH_GetPortStatus: OhciExtension - %p, Port - %x, PortStatus - %p\n",
+    DPRINT("OHCI_RH_GetPortStatus: OhciExtension - %p, Port - %x, PortStatus - %lX\n",
            OhciExtension,
            Port,
            PortStatus->AsUlong32);

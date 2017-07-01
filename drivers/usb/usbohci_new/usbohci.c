@@ -678,7 +678,7 @@ OHCI_StartController(IN PVOID ohciExtension,
 
     OhciExtension->FrameInterval = FrameInterval;
 
-    DPRINT_OHCI("OHCI_StartController: FrameInterval - %p\n",
+    DPRINT_OHCI("OHCI_StartController: FrameInterval - %lX\n",
                 FrameInterval.AsULONG);
 
     /* reset */
@@ -864,13 +864,13 @@ OHCI_HardwarePresent(IN POHCI_EXTENSION OhciExtension,
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
     BOOLEAN Result = FALSE;
 
-    //DPRINT_OHCI("OHCI_HardwarePresent: IsInvalidateController - %x\n",
-    //            IsInvalidateController);
-
     OperationalRegs = OhciExtension->OperationalRegs;
 
     if (READ_REGISTER_ULONG(&OperationalRegs->HcCommandStatus.AsULONG) == -1)
     {
+        DPRINT1("OHCI_HardwarePresent: IsInvalidateController - %x\n",
+                IsInvalidateController);
+
         if (IsInvalidateController)
         {
             RegPacket.UsbPortInvalidateController(OhciExtension, 2);
@@ -928,7 +928,7 @@ OHCI_InterruptService(IN PVOID ohciExtension)
         {
             HcHCCA = (POHCI_HCCA)OhciExtension->HcResourcesVA;
 
-            DPRINT("OHCI_InterruptService: FrameNumberOverflow. HcHCCA->FrameNumber - %p\n",
+            DPRINT("OHCI_InterruptService: FrameNumberOverflow. HcHCCA->FrameNumber - %lX\n",
                         HcHCCA->FrameNumber);
 
             OhciExtension->FrameHighPart += 0x10000 -
@@ -957,7 +957,7 @@ OHCI_InterruptDpc(IN PVOID ohciExtension,
     OhciExtension = ohciExtension;
     OperationalRegs = OhciExtension->OperationalRegs;
 
-    DPRINT_OHCI("OHCI_InterruptDpc: OhciExtension - %p, IsDoEnableInterrupts - %p\n",
+    DPRINT_OHCI("OHCI_InterruptDpc: OhciExtension - %p, IsDoEnableInterrupts - %x\n",
                 OhciExtension,
                 IsDoEnableInterrupts);
 
@@ -1900,7 +1900,7 @@ OHCI_PollAsyncEndpoint(IN POHCI_EXTENSION OhciExtension,
     if (!NextTdPA)
     {
         DPRINT("OHCI_PollAsyncEndpoint: ED                       - %p\n", ED);
-        DPRINT("OHCI_PollAsyncEndpoint: ED->HwED.EndpointControl - %p\n", ED->HwED.EndpointControl.AsULONG);
+        DPRINT("OHCI_PollAsyncEndpoint: ED->HwED.EndpointControl - %lX\n", ED->HwED.EndpointControl.AsULONG);
         DPRINT("OHCI_PollAsyncEndpoint: ED->HwED.TailPointer     - %p\n", ED->HwED.TailPointer);
         DPRINT("OHCI_PollAsyncEndpoint: ED->HwED.HeadPointer     - %p\n", ED->HwED.HeadPointer);
         DPRINT("OHCI_PollAsyncEndpoint: ED->HwED.NextED          - %p\n", ED->HwED.NextED);
@@ -1914,7 +1914,7 @@ OHCI_PollAsyncEndpoint(IN POHCI_EXTENSION OhciExtension,
     if (ED->HwED.HeadPointer & 1) //Halted FIXME
     {
         DPRINT("OHCI_PollAsyncEndpoint: ED                       - %p\n", ED);
-        DPRINT("OHCI_PollAsyncEndpoint: ED->HwED.EndpointControl - %p\n", ED->HwED.EndpointControl.AsULONG);
+        DPRINT("OHCI_PollAsyncEndpoint: ED->HwED.EndpointControl - %lX\n", ED->HwED.EndpointControl.AsULONG);
         DPRINT("OHCI_PollAsyncEndpoint: ED->HwED.TailPointer     - %p\n", ED->HwED.TailPointer);
         DPRINT("OHCI_PollAsyncEndpoint: ED->HwED.HeadPointer     - %p\n", ED->HwED.HeadPointer);
         DPRINT("OHCI_PollAsyncEndpoint: ED->HwED.NextED          - %p\n", ED->HwED.NextED);
@@ -1931,7 +1931,7 @@ OHCI_PollAsyncEndpoint(IN POHCI_EXTENSION OhciExtension,
             if (!TD)
             {
                 DPRINT("OHCI_PollAsyncEndpoint: ED                       - %p\n", ED);
-                DPRINT("OHCI_PollAsyncEndpoint: ED->HwED.EndpointControl - %p\n", ED->HwED.EndpointControl.AsULONG);
+                DPRINT("OHCI_PollAsyncEndpoint: ED->HwED.EndpointControl - %lX\n", ED->HwED.EndpointControl.AsULONG);
                 DPRINT("OHCI_PollAsyncEndpoint: ED->HwED.TailPointer     - %p\n", ED->HwED.TailPointer);
                 DPRINT("OHCI_PollAsyncEndpoint: ED->HwED.HeadPointer     - %p\n", ED->HwED.HeadPointer);
                 DPRINT("OHCI_PollAsyncEndpoint: ED->HwED.NextED          - %p\n", ED->HwED.NextED);
@@ -2159,7 +2159,7 @@ OHCI_Get32BitFrameNumber(IN PVOID ohciExtension)
     hp = OhciExtension->FrameHighPart;
     fm = HcHCCA->FrameNumber;
 
-    DPRINT_OHCI("OHCI_Get32BitFrameNumber: hp - %x, fm - %p\n", hp, fm);
+    DPRINT_OHCI("OHCI_Get32BitFrameNumber: hp - %lX, fm - %lX\n", hp, fm);
 
     return ((fm & 0x7FFF) | hp) + ((fm ^ hp) & 0x8000);
 }
@@ -2277,7 +2277,7 @@ OHCI_SetEndpointStatus(IN PVOID ohciExtension,
     OhciExtension = ohciExtension;
     OhciEndpoint = ohciEndpoint;
 
-    DPRINT_OHCI("OHCI_SetEndpointStatus: Endpoint - %p, Status - %p\n",
+    DPRINT_OHCI("OHCI_SetEndpointStatus: Endpoint - %p, EndpointStatus - %lX\n",
                 OhciEndpoint,
                 EndpointStatus);
 
