@@ -271,25 +271,25 @@ typedef union _OHCI_REG_RH_PORT_STATUS {
 
 typedef struct _OHCI_OPERATIONAL_REGISTERS {
   ULONG HcRevision;
-  OHCI_REG_CONTROL HcControl; // +4
-  OHCI_REG_COMMAND_STATUS HcCommandStatus; // +8
-  OHCI_REG_INTERRUPT_STATUS HcInterruptStatus; // +12 0x0C
-  OHCI_REG_INTERRUPT_ENABLE_DISABLE HcInterruptEnable; // +16 0x10
-  OHCI_REG_INTERRUPT_ENABLE_DISABLE HcInterruptDisable; // +20 0x14
-  ULONG HcHCCA; // +24 0x18
-  ULONG HcPeriodCurrentED; // +28 0x1C
-  ULONG HcControlHeadED; // +32 0x20
-  ULONG HcControlCurrentED; // +36 0x24
-  ULONG HcBulkHeadED; // +40 0x28
-  ULONG HcBulkCurrentED; // +44 0x2C
-  ULONG HcDoneHead; // +48 0x30
-  OHCI_REG_FRAME_INTERVAL HcFmInterval; // +52 0x34
-  ULONG HcFmRemaining; // +56 0x38
-  ULONG HcFmNumber; // +60 0x3C
-  ULONG HcPeriodicStart; // +64 0x40
-  ULONG HcLSThreshold; // +68 0x44
-  OHCI_REG_RH_DESCRIPTORA HcRhDescriptorA; // +72 0x48
-  ULONG HcRhDescriptorB; // +76 0x4C
-  OHCI_REG_RH_STATUS HcRhStatus; // +80 0x50
-  OHCI_REG_RH_PORT_STATUS HcRhPortStatus[OHCI_MAX_PORT_COUNT]; // +84 0x54 ... 144 0x90
+  OHCI_REG_CONTROL HcControl;
+  OHCI_REG_COMMAND_STATUS HcCommandStatus;
+  OHCI_REG_INTERRUPT_STATUS HcInterruptStatus;
+  OHCI_REG_INTERRUPT_ENABLE_DISABLE HcInterruptEnable;
+  OHCI_REG_INTERRUPT_ENABLE_DISABLE HcInterruptDisable;
+  ULONG HcHCCA;
+  ULONG HcPeriodCurrentED;
+  ULONG HcControlHeadED;
+  ULONG HcControlCurrentED;
+  ULONG HcBulkHeadED;
+  ULONG HcBulkCurrentED;
+  ULONG HcDoneHead;
+  OHCI_REG_FRAME_INTERVAL HcFmInterval;
+  ULONG HcFmRemaining;
+  ULONG HcFmNumber;
+  ULONG HcPeriodicStart;
+  ULONG HcLSThreshold;
+  OHCI_REG_RH_DESCRIPTORA HcRhDescriptorA;
+  ULONG HcRhDescriptorB;
+  OHCI_REG_RH_STATUS HcRhStatus;
+  OHCI_REG_RH_PORT_STATUS HcRhPortStatus[OHCI_MAX_PORT_COUNT];
 } OHCI_OPERATIONAL_REGISTERS, *POHCI_OPERATIONAL_REGISTERS;
