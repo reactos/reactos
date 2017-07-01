@@ -57,10 +57,11 @@ OHCI_RH_GetRootHubData(IN PVOID ohciExtension,
 
     RootHubData->NumberOfPorts = DescriptorA.NumberDownstreamPorts;
 
+    /* Waiting time (in 2 ms intervals) */
     PowerOnToPowerGoodTime = DescriptorA.PowerOnToPowerGoodTime;
-    if (PowerOnToPowerGoodTime <= 25)
+    if (PowerOnToPowerGoodTime <= OHCI_MINIMAL_POTPGT)
     {
-        PowerOnToPowerGoodTime = 25;
+        PowerOnToPowerGoodTime = OHCI_MINIMAL_POTPGT;
     }
     RootHubData->PowerOnToPowerGood = PowerOnToPowerGoodTime;
 

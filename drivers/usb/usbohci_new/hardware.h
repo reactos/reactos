@@ -2,6 +2,7 @@
 #define OHCI_MAX_PORT_COUNT        15
 #define ED_EOF                     -1
 #define MAXIMUM_OVERHEAD           210
+#define OHCI_MINIMAL_POTPGT        25 // == 50 ms., PowerOnToPowerGoodTime (HcRhDescriptorA Register)
 
 /* Controller states */
 #define OHCI_HC_STATE_RESET       0
