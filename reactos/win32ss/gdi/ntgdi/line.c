@@ -303,7 +303,7 @@ IntGdiPolyline(DC      *dc,
 
     if (!dc->dclevel.pSurface)
     {
-        return FALSE;
+        return TRUE;
     }
 
     DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);
