@@ -83,7 +83,9 @@ typedef struct tagSDBQUERYRESULT {
     GUID   rgGuidDB[SDB_MAX_SDBS];
 } SDBQUERYRESULT, *PSDBQUERYRESULT;
 
+#ifndef APPHELP_NOSDBPAPI
 #include "sdbpapi.h"
+#endif
 
 /* sdbapi.c */
 PWSTR SdbpStrDup(LPCWSTR string);
@@ -122,7 +124,8 @@ BOOL WINAPI SetPermLayerState(PCWSTR wszPath, PCWSTR wszLayer, DWORD dwFlags, BO
 /* hsdb.c */
 BOOL WINAPI SdbGetMatchingExe(HSDB hsdb, LPCWSTR path, LPCWSTR module_name, LPCWSTR env, DWORD flags, PSDBQUERYRESULT result);
 BOOL WINAPI SdbTagIDToTagRef(HSDB hsdb, PDB pdb, TAGID tiWhich, TAGREF* ptrWhich);
-
+BOOL WINAPI SdbTagRefToTagID(HSDB hsdb, TAGREF trWhich, PDB* ppdb, TAGID* ptiWhich);
+BOOL WINAPI SdbUnpackAppCompatData(HSDB hsdb, LPCWSTR pszImageName, PVOID pData, PSDBQUERYRESULT pQueryResult);
 
 #define ATTRIBUTE_AVAILABLE 0x1
 #define ATTRIBUTE_FAILED 0x2
