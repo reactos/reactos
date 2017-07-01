@@ -19,7 +19,7 @@
 @ stub DsGetDcSiteCoverageA
 @ stub DsGetDcSiteCoverageW
 @ stub DsGetForestTrustInformationW
-@ stub DsGetSiteNameA
+@ stdcall DsGetSiteNameA(str str)
 @ stdcall DsGetSiteNameW(wstr wstr)
 @ stub DsMergeForestTrustInformationW
 @ stub DsRoleAbortDownlevelServerUpgrade

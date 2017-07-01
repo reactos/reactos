@@ -17,7 +17,6 @@ list(APPEND SOURCE
     access.c
     apibuf.c
     browser.c
-    ds.c
     dssetup.c
     group.c
     local_group.c

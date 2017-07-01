@@ -10,6 +10,8 @@
 
 #include "netapi32.h"
 #include <rpc.h>
+#include <dsrole.h>
+#include <dsgetdc.h>
 #include "netlogon_c.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
@@ -71,16 +73,147 @@ LOGONSRV_HANDLE_unbind(LOGONSRV_HANDLE pszSystemName,
 }
 
 
+DWORD
+WINAPI
+DsEnumerateDomainTrustsA(
+    _In_opt_ LPSTR ServerName,
+    _In_ ULONG Flags,
+    _Out_ PDS_DOMAIN_TRUSTSA *Domains,
+    _Out_ PULONG DomainCount)
+{
+    FIXME("DsEnumerateDomainTrustsA(%s, %x, %p, %p)\n",
+          debugstr_a(ServerName), Flags, Domains, DomainCount);
+
+    return ERROR_NO_LOGON_SERVERS;
+}
+
+
+DWORD
+WINAPI
+DsEnumerateDomainTrustsW(
+    _In_opt_ LPWSTR ServerName,
+    _In_ ULONG Flags,
+    _Out_ PDS_DOMAIN_TRUSTSW *Domains,
+    _Out_ PULONG DomainCount)
+{
+    FIXME("DsEnumerateDomainTrustsW(%s, %x, %p, %p)\n",
+          debugstr_w(ServerName), Flags, Domains, DomainCount);
+
+    return ERROR_NO_LOGON_SERVERS;
+}
+
+
+VOID
+WINAPI
+DsRoleFreeMemory(
+    _In_ PVOID Buffer)
+{
+    TRACE("DsRoleFreeMemory(%p)\n", Buffer);
+    HeapFree(GetProcessHeap(), 0, Buffer);
+}
+
+
+DWORD
+WINAPI
+DsGetDcNameA(
+    _In_ LPCSTR ComputerName,
+    _In_ LPCSTR DomainName,
+    _In_ GUID *DomainGuid,
+    _In_ LPCSTR SiteName,
+    _In_ ULONG Flags,
+    _Out_ PDOMAIN_CONTROLLER_INFOA *DomainControllerInfo)
+{
+    FIXME("DsGetDcNameA(%s, %s, %s, %s, %08x, %p): stub\n",
+          debugstr_a(ComputerName), debugstr_a(DomainName), debugstr_guid(DomainGuid),
+          debugstr_a(SiteName), Flags, DomainControllerInfo);
+
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+DWORD
+WINAPI
+DsGetDcNameW(
+    _In_ LPCWSTR ComputerName,
+    _In_ LPCWSTR DomainName,
+    _In_ GUID *DomainGuid,
+    _In_ LPCWSTR SiteName,
+    _In_ ULONG Flags,
+    _Out_ PDOMAIN_CONTROLLER_INFOW *DomainControllerInfo)
+{
+    FIXME("DsGetDcNameW(%s, %s, %s, %s, %08x, %p)\n",
+          debugstr_w(ComputerName), debugstr_w(DomainName), debugstr_guid(DomainGuid),
+          debugstr_w(SiteName), Flags, DomainControllerInfo);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+DWORD
+WINAPI
+DsGetSiteNameA(
+    _In_ LPCSTR ComputerName,
+    _Out_ LPSTR *SiteName)
+{
+    FIXME("DsGetSiteNameA(%s, %p)\n",
+          debugstr_a(ComputerName), SiteName);
+
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+DWORD
+WINAPI
+DsGetSiteNameW(
+    _In_ LPCWSTR ComputerName,
+    _Out_ LPWSTR *SiteName)
+{
+    NET_API_STATUS status;
+
+    TRACE("DsGetSiteNameW(%s, %p)\n",
+          debugstr_w(ComputerName), SiteName);
+
+    RpcTryExcept
+    {
+        status = DsrGetSiteName((PWSTR)ComputerName,
+                                SiteName);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
 NTSTATUS
 WINAPI
 NetEnumerateTrustedDomains(
     _In_ LPWSTR ServerName,
     _Out_ LPWSTR *DomainNames)
 {
-    FIXME("NetEnumerateTrustedDomains(%s, %p)\n",
+    DOMAIN_NAME_BUFFER DomainNameBuffer = {0, NULL};
+    NTSTATUS Status = 0;
+
+    TRACE("NetEnumerateTrustedDomains(%s, %p)\n",
           debugstr_w(ServerName), DomainNames);
 
-    return STATUS_NOT_IMPLEMENTED;
+    RpcTryExcept
+    {
+        Status = NetrEnumerateTrustedDomains(ServerName,
+                                             &DomainNameBuffer);
+        if (NT_SUCCESS(Status))
+        {
+            *DomainNames = (LPWSTR)DomainNameBuffer.DomainNames;
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    } RpcEndExcept;
+
+    return Status;
 }
 
 

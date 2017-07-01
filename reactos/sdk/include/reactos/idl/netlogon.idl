@@ -811,6 +811,7 @@ typedef struct _NL_SITE_NAME_ARRAY
     [size_is(EntryCount)] PRPC_UNICODE_STRING SiteNames;
 } NL_SITE_NAME_ARRAY, *PNL_SITE_NAME_ARRAY;
 
+cpp_quote("#ifndef _DSGETDC_H")
 typedef struct _DS_DOMAIN_TRUSTSW
 {
     [string] wchar_t *NetbiosDomainName;
@@ -822,6 +823,7 @@ typedef struct _DS_DOMAIN_TRUSTSW
     PRPC_SID DomainSid;
     GUID DomainGuid;
 } DS_DOMAIN_TRUSTSW, *PDS_DOMAIN_TRUSTSW;
+cpp_quote("#endif")
 
 typedef struct _NETLOGON_TRUSTED_DOMAIN_ARRAY
 {
@@ -905,6 +907,7 @@ typedef struct _UAS_INFO_0
     ULONG SerialNumber;
 } UAS_INFO_0, *PUAS_INFO_0;
 
+cpp_quote("#ifndef _DSGETDC_H")
 typedef struct _DOMAIN_CONTROLLER_INFOW
 {
     [string, unique] wchar_t *DomainControllerName;
@@ -917,6 +920,7 @@ typedef struct _DOMAIN_CONTROLLER_INFOW
     [string, unique] wchar_t *DcSiteName;
     [string, unique] wchar_t *ClientSiteName;
 } DOMAIN_CONTROLLER_INFOW, *PDOMAIN_CONTROLLER_INFOW;
+cpp_quote("#endif")
 
 typedef struct _NL_TRUST_PASSWORD
 {
@@ -1430,7 +1434,7 @@ interface logon
     /* Function 41 */
     NET_API_STATUS
     __stdcall
-    DsrDeregisterDnsHostRecords (
+    DsrDeregisterDnsHostRecords(
         [in, unique, string] LOGONSRV_HANDLE ServerName,
         [in, unique, string] wchar_t *DnsDomainName,
         [in, unique] GUID *DomainGuid,
