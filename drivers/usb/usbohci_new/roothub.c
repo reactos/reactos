@@ -3,12 +3,12 @@
 #define NDEBUG
 #include <debug.h>
 
-ULONG
+OHCI_REG_RH_DESCRIPTORA
 NTAPI 
 OHCI_ReadRhDescriptorA(IN POHCI_EXTENSION OhciExtension)
 {
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
-    ULONG DescriptorA;
+    OHCI_REG_RH_DESCRIPTORA DescriptorA;
     ULONG ix;
 
     OperationalRegs = OhciExtension->OperationalRegs;
@@ -17,15 +17,20 @@ OHCI_ReadRhDescriptorA(IN POHCI_EXTENSION OhciExtension)
 
     for (ix = 0; ix < 10; ix++)
     {
-        DescriptorA = READ_REGISTER_ULONG(&OperationalRegs->HcRhDescriptorA.AsULONG);
+        DescriptorA.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcRhDescriptorA.AsULONG);
 
-        if (DescriptorA && !(DescriptorA & 0xFFE0F0)) // Reserved bits
+        if (DescriptorA.AsULONG != 0 &&
+            DescriptorA.Reserved == 0 &&
+            DescriptorA.NumberDownstreamPorts <= OHCI_MAX_PORT_COUNT) // Reserved bits
+        {
             break;
+    }
 
-        DPRINT1("OHCI_ReadRhDescriptorA: ix - %p\n", ix);
+        DPRINT1("OHCI_ReadRhDescriptorA: DescriptorA - %lX, ix - %d\n",
+                DescriptorA.AsULONG, ix);
 
         KeStallExecutionProcessor(5);
-    }
+}
 
     return DescriptorA;
 }
