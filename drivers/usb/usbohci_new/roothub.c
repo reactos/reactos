@@ -478,6 +478,8 @@ OHCI_RH_ClearFeaturePortOvercurrentChange(IN PVOID ohciExtension,
 {
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    PULONG PortStatusReg;
+    OHCI_REG_RH_PORT_STATUS PortStatus;
 
     OhciExtension = ohciExtension;
 
@@ -486,17 +488,20 @@ OHCI_RH_ClearFeaturePortOvercurrentChange(IN PVOID ohciExtension,
            Port);
 
     OperationalRegs = OhciExtension->OperationalRegs;
+    PortStatusReg = (PULONG)&OperationalRegs->HcRhPortStatus[Port-1];
 
     if (Port)
     {
-        WRITE_REGISTER_ULONG(&OperationalRegs->HcRhPortStatus[Port-1].AsULONG,
-                             0x80000);
+        PortStatus.AsULONG = 0;
+        PortStatus.PortOverCurrentIndicatorChange = 1;
     }
     else
     {
-        WRITE_REGISTER_ULONG(&OperationalRegs->HcRhStatus.AsULONG,
-                             0x20000);
+        PortStatus.AsULONG = 0;
+        PortStatus.PortEnableStatusChange = 1;
     }
+
+    WRITE_REGISTER_ULONG(PortStatusReg, PortStatus.AsULONG);
 
     return MP_STATUS_SUCCESS;
 }
