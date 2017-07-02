@@ -63,6 +63,36 @@ typedef struct _DS_DOMAIN_TRUSTSW
 } DS_DOMAIN_TRUSTSW, *PDS_DOMAIN_TRUSTSW;
 
 DWORD WINAPI
+DsAddressToSiteNamesA(
+	LPCSTR ComputerName,
+	DWORD EntryCount,
+	PSOCKET_ADDRESS SocketAddresses,
+	LPSTR **SiteNames);
+
+DWORD WINAPI
+DsAddressToSiteNamesW(
+	LPCWSTR ComputerName,
+	DWORD EntryCount,
+	PSOCKET_ADDRESS SocketAddresses,
+	LPWSTR **SiteNames);
+
+DWORD WINAPI
+DsAddressToSiteNamesExA(
+	LPCSTR ComputerName,
+	DWORD EntryCount,
+	PSOCKET_ADDRESS SocketAddresses,
+	LPSTR **SiteNames,
+	LPSTR **SubnetNames);
+
+DWORD WINAPI
+DsAddressToSiteNamesExW(
+	LPCWSTR ComputerName,
+	DWORD EntryCount,
+	PSOCKET_ADDRESS SocketAddresses,
+	LPWSTR **SiteNames,
+	LPWSTR **SubnetNames);
+
+DWORD WINAPI
 DsEnumerateDomainTrustsA(
 	LPSTR ServerName,
 	ULONG Flags,
@@ -97,11 +127,15 @@ DsGetDcNameW(
 #ifdef UNICODE
 typedef DOMAIN_CONTROLLER_INFOW DOMAIN_CONTROLLER_INFO, *PDOMAIN_CONTROLLER_INFO;
 typedef DS_DOMAIN_TRUSTSW DS_DOMAIN_TRUSTS, *PDS_DOMAIN_TRUSTS;
+#define DsAddressToSiteNames DsAddressToSiteNamesW
+#define DsAddressToSiteNamesEx DsAddressToSiteNamesExW
 #define DsEnumerateDomainTrusts DsEnumerateDomainTrustsW
 #define DsGetDcName DsGetDcNameW
 #else
 typedef DOMAIN_CONTROLLER_INFOA DOMAIN_CONTROLLER_INFO, *PDOMAIN_CONTROLLER_INFO;
 typedef DS_DOMAIN_TRUSTSA DS_DOMAIN_TRUSTS, *PDS_DOMAIN_TRUSTS;
+#define DsAddressToSiteNames DsAddressToSiteNamesA
+#define DsAddressToSiteNamesEx DsAddressToSiteNamesExA
 #define DsEnumerateDomainTrusts DsEnumerateDomainTrustsA
 #define DsGetDcName DsGetDcNameA
 #endif

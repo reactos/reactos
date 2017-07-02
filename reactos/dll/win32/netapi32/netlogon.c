@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include "netapi32.h"
+#include <winsock2.h>
 #include <rpc.h>
 #include <dsrole.h>
 #include <dsgetdc.h>
@@ -70,6 +71,92 @@ LOGONSRV_HANDLE_unbind(LOGONSRV_HANDLE pszSystemName,
     {
         TRACE("RpcBindingFree returned 0x%x\n", status);
     }
+}
+
+
+DWORD
+WINAPI
+DsAddressToSiteNamesA(
+    _In_opt_ LPCSTR ComputerName,
+    _In_ DWORD EntryCount,
+    _In_ PSOCKET_ADDRESS SocketAddresses,
+    _Out_ LPSTR **SiteNames)
+{
+    FIXME("DsAddressToSiteNamesA(%s, %lu, %p, %p)\n",
+          debugstr_a(ComputerName), EntryCount, SocketAddresses, SiteNames);
+    return ERROR_NO_LOGON_SERVERS;
+}
+
+
+DWORD
+WINAPI
+DsAddressToSiteNamesW(
+    _In_opt_ LPCWSTR ComputerName,
+    _In_ DWORD EntryCount,
+    _In_ PSOCKET_ADDRESS SocketAddresses,
+    _Out_ LPWSTR **SiteNames)
+{
+    PNL_SITE_NAME_ARRAY SiteNameArray = NULL;
+    PWSTR *SiteNamesBuffer = NULL, Ptr;
+    ULONG BufferSize, i;
+    NET_API_STATUS status;
+
+    TRACE("DsAddressToSiteNamesW(%s, %lu, %p, %p)\n",
+          debugstr_w(ComputerName), EntryCount, SocketAddresses, SiteNames);
+
+    if (EntryCount == 0)
+        return ERROR_INVALID_PARAMETER;
+
+    *SiteNames = NULL;
+
+    RpcTryExcept
+    {
+        status = DsrAddressToSiteNamesW((PWSTR)ComputerName,
+                                        EntryCount,
+                                        (PNL_SOCKET_ADDRESS)SocketAddresses,
+                                        &SiteNameArray);
+        if (status == NERR_Success)
+        {
+            if (SiteNameArray->EntryCount == 0)
+            {
+                status = ERROR_INVALID_PARAMETER;
+            }
+            else
+            {
+                BufferSize = SiteNameArray->EntryCount * sizeof(PWSTR);
+                for (i = 0; i < SiteNameArray->EntryCount; i++)
+                    BufferSize += SiteNameArray->SiteNames[i].Length + sizeof(WCHAR);
+
+                status = NetApiBufferAllocate(BufferSize, (PVOID*)&SiteNamesBuffer);
+                if (status == NERR_Success)
+                {
+                    ZeroMemory(SiteNamesBuffer, BufferSize);
+
+                    Ptr = (PWSTR)((ULONG_PTR)SiteNamesBuffer + SiteNameArray->EntryCount * sizeof(PWSTR));
+                    for (i = 0; i < SiteNameArray->EntryCount; i++)
+                    {
+                        SiteNamesBuffer[i] = Ptr;
+                        CopyMemory(Ptr,
+                                   SiteNameArray->SiteNames[i].Buffer,
+                                   SiteNameArray->SiteNames[i].Length);
+
+                        Ptr = (PWSTR)((ULONG_PTR)Ptr + SiteNameArray->SiteNames[i].Length + sizeof(WCHAR));
+                    }
+
+                    *SiteNames = SiteNamesBuffer;
+                }
+            }
+
+            MIDL_user_free(SiteNameArray);
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
 }
 
 
