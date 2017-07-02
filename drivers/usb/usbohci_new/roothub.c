@@ -9,15 +9,17 @@ OHCI_ReadRhDescriptorA(IN POHCI_EXTENSION OhciExtension)
 {
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
     OHCI_REG_RH_DESCRIPTORA DescriptorA;
+    PULONG DescriptorAReg;
     ULONG ix;
 
     OperationalRegs = OhciExtension->OperationalRegs;
+    DescriptorAReg = (PULONG)&OperationalRegs->HcRhDescriptorA;
 
     DPRINT("OHCI_ReadRhDescriptorA: OhciExtension - %p\n", OhciExtension);
 
     for (ix = 0; ix < 10; ix++)
     {
-        DescriptorA.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcRhDescriptorA.AsULONG);
+        DescriptorA.AsULONG = READ_REGISTER_ULONG(DescriptorAReg);
 
         if (DescriptorA.AsULONG != 0 &&
             DescriptorA.Reserved == 0 &&
