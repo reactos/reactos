@@ -16,8 +16,8 @@
 @ stub DsGetDcNextW
 @ stub DsGetDcOpenA
 @ stub DsGetDcOpenW
-@ stub DsGetDcSiteCoverageA
-@ stub DsGetDcSiteCoverageW
+@ stdcall DsGetDcSiteCoverageA(str ptr str)
+@ stdcall DsGetDcSiteCoverageW(wstr ptr wstr)
 @ stub DsGetForestTrustInformationW
 @ stdcall DsGetSiteNameA(str str)
 @ stdcall DsGetSiteNameW(wstr wstr)

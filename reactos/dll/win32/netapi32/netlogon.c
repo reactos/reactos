@@ -84,7 +84,7 @@ DsAddressToSiteNamesA(
 {
     FIXME("DsAddressToSiteNamesA(%s, %lu, %p, %p)\n",
           debugstr_a(ComputerName), EntryCount, SocketAddresses, SiteNames);
-    return ERROR_NO_LOGON_SERVERS;
+    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
@@ -190,16 +190,6 @@ DsEnumerateDomainTrustsW(
 }
 
 
-VOID
-WINAPI
-DsRoleFreeMemory(
-    _In_ PVOID Buffer)
-{
-    TRACE("DsRoleFreeMemory(%p)\n", Buffer);
-    HeapFree(GetProcessHeap(), 0, Buffer);
-}
-
-
 DWORD
 WINAPI
 DsGetDcNameA(
@@ -237,13 +227,93 @@ DsGetDcNameW(
 
 DWORD
 WINAPI
+DsGetDcSiteCoverageA(
+    _In_opt_ LPCSTR ServerName,
+    _Out_ PULONG EntryCount,
+    _Out_ LPSTR **SiteNames)
+{
+    FIXME("DsGetDcSiteCoverageA(%s, %p, %p)\n",
+          debugstr_a(ServerName), EntryCount, SiteNames);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+DWORD
+WINAPI
+DsGetDcSiteCoverageW(
+    _In_opt_ LPCWSTR ServerName,
+    _Out_ PULONG EntryCount,
+    _Out_ LPWSTR **SiteNames)
+{
+    PNL_SITE_NAME_ARRAY SiteNameArray = NULL;
+    PWSTR *SiteNamesBuffer = NULL, Ptr;
+    ULONG BufferSize, i;
+    NET_API_STATUS status;
+
+    TRACE("DsGetDcSiteCoverageA(%s, %p, %p)\n",
+          debugstr_w(ServerName), EntryCount, SiteNames);
+
+    *EntryCount = 0;
+    *SiteNames = NULL;
+
+    RpcTryExcept
+    {
+        status = DsrGetDcSiteCoverageW((PWSTR)ServerName,
+                                       &SiteNameArray);
+        if (status == NERR_Success)
+        {
+            if (SiteNameArray->EntryCount == 0)
+            {
+                status = ERROR_INVALID_PARAMETER;
+            }
+            else
+            {
+                BufferSize = SiteNameArray->EntryCount * sizeof(PWSTR);
+                for (i = 0; i < SiteNameArray->EntryCount; i++)
+                    BufferSize += SiteNameArray->SiteNames[i].Length + sizeof(WCHAR);
+
+                status = NetApiBufferAllocate(BufferSize, (PVOID*)&SiteNamesBuffer);
+                if (status == NERR_Success)
+                {
+                    ZeroMemory(SiteNamesBuffer, BufferSize);
+
+                    Ptr = (PWSTR)((ULONG_PTR)SiteNamesBuffer + SiteNameArray->EntryCount * sizeof(PWSTR));
+                    for (i = 0; i < SiteNameArray->EntryCount; i++)
+                    {
+                        SiteNamesBuffer[i] = Ptr;
+                        CopyMemory(Ptr,
+                                   SiteNameArray->SiteNames[i].Buffer,
+                                   SiteNameArray->SiteNames[i].Length);
+
+                        Ptr = (PWSTR)((ULONG_PTR)Ptr + SiteNameArray->SiteNames[i].Length + sizeof(WCHAR));
+                    }
+
+                    *EntryCount = SiteNameArray->EntryCount;
+                    *SiteNames = SiteNamesBuffer;
+                }
+            }
+
+            MIDL_user_free(SiteNameArray);
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+DWORD
+WINAPI
 DsGetSiteNameA(
     _In_ LPCSTR ComputerName,
     _Out_ LPSTR *SiteName)
 {
     FIXME("DsGetSiteNameA(%s, %p)\n",
           debugstr_a(ComputerName), SiteName);
-
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -271,6 +341,16 @@ DsGetSiteNameW(
     RpcEndExcept;
 
     return status;
+}
+
+
+VOID
+WINAPI
+DsRoleFreeMemory(
+    _In_ PVOID Buffer)
+{
+    TRACE("DsRoleFreeMemory(%p)\n", Buffer);
+    HeapFree(GetProcessHeap(), 0, Buffer);
 }
 
 

@@ -124,6 +124,20 @@ DsGetDcNameW(
 	ULONG Flags,
 	PDOMAIN_CONTROLLER_INFOW* DomainControllerInfo);
 
+DWORD
+WINAPI
+DsGetDcSiteCoverageA(
+	LPCSTR ServerName,
+	PULONG EntryCount,
+	LPSTR **SiteNames);
+
+DWORD
+WINAPI
+DsGetDcSiteCoverageW(
+	LPCWSTR ServerName,
+	PULONG EntryCount,
+	LPWSTR **SiteNames);
+
 #ifdef UNICODE
 typedef DOMAIN_CONTROLLER_INFOW DOMAIN_CONTROLLER_INFO, *PDOMAIN_CONTROLLER_INFO;
 typedef DS_DOMAIN_TRUSTSW DS_DOMAIN_TRUSTS, *PDS_DOMAIN_TRUSTS;
@@ -131,6 +145,7 @@ typedef DS_DOMAIN_TRUSTSW DS_DOMAIN_TRUSTS, *PDS_DOMAIN_TRUSTS;
 #define DsAddressToSiteNamesEx DsAddressToSiteNamesExW
 #define DsEnumerateDomainTrusts DsEnumerateDomainTrustsW
 #define DsGetDcName DsGetDcNameW
+#define DsGetDcSiteCoverage DsGetDcSiteCoverageW
 #else
 typedef DOMAIN_CONTROLLER_INFOA DOMAIN_CONTROLLER_INFO, *PDOMAIN_CONTROLLER_INFO;
 typedef DS_DOMAIN_TRUSTSA DS_DOMAIN_TRUSTS, *PDS_DOMAIN_TRUSTS;
@@ -138,6 +153,7 @@ typedef DS_DOMAIN_TRUSTSA DS_DOMAIN_TRUSTS, *PDS_DOMAIN_TRUSTS;
 #define DsAddressToSiteNamesEx DsAddressToSiteNamesExA
 #define DsEnumerateDomainTrusts DsEnumerateDomainTrustsA
 #define DsGetDcName DsGetDcNameA
+#define DsGetDcSiteCoverage DsGetDcSiteCoverageA
 #endif
 
 #ifdef __cplusplus
