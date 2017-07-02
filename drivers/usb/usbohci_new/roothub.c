@@ -181,6 +181,8 @@ OHCI_RH_SetFeaturePortReset(IN PVOID ohciExtension,
 {
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    PULONG PortStatusReg;
+    OHCI_REG_RH_PORT_STATUS PortStatus;
 
     OhciExtension = ohciExtension;
 
@@ -189,9 +191,12 @@ OHCI_RH_SetFeaturePortReset(IN PVOID ohciExtension,
            Port);
 
     OperationalRegs = OhciExtension->OperationalRegs;
+    PortStatusReg = (PULONG)&OperationalRegs->HcRhPortStatus[Port-1];
 
-    WRITE_REGISTER_ULONG(&OperationalRegs->HcRhPortStatus[Port-1].AsULONG,
-                         0x10);
+    PortStatus.AsULONG = 0;
+    PortStatus.SetPortReset = 1;
+
+    WRITE_REGISTER_ULONG(PortStatusReg, PortStatus.AsULONG);
 
     return MP_STATUS_SUCCESS;
 }
