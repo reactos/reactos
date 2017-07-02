@@ -531,8 +531,17 @@ NTAPI
 OHCI_RH_EnableIrq(IN PVOID ohciExtension)
 {
     POHCI_EXTENSION OhciExtension = ohciExtension;
+    POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    PULONG InterruptEnableReg;
+    OHCI_REG_INTERRUPT_ENABLE_DISABLE InterruptEnable;
+
     DPRINT("OHCI_RH_EnableIrq: OhciExtension - %p\n", OhciExtension);
 
-    WRITE_REGISTER_ULONG(&OhciExtension->OperationalRegs->HcInterruptEnable.AsULONG,
-                         0x40);
+    OperationalRegs = OhciExtension->OperationalRegs;
+    InterruptEnableReg = (PULONG)&OperationalRegs->HcInterruptEnable;
+
+    InterruptEnable.AsULONG = 0;
+    InterruptEnable.RootHubStatusChange = 1;
+
+    WRITE_REGISTER_ULONG((PULONG)InterruptEnableReg, InterruptEnable.AsULONG);
 }
