@@ -156,6 +156,7 @@ OHCI_RH_GetHubStatus(IN PVOID ohciExtension,
 {
     POHCI_EXTENSION OhciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    PULONG RhStatusReg;
     OHCI_REG_RH_STATUS HcRhStatus;
 
     OhciExtension = ohciExtension;
@@ -165,7 +166,9 @@ OHCI_RH_GetHubStatus(IN PVOID ohciExtension,
            HubStatus->AsUlong32);
 
     OperationalRegs = OhciExtension->OperationalRegs;
-    HcRhStatus.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcRhStatus.AsULONG);
+    RhStatusReg = (PULONG)&OperationalRegs->HcRhStatus;
+
+    HcRhStatus.AsULONG = READ_REGISTER_ULONG(RhStatusReg);
 
     HubStatus->HubStatus.LocalPowerLost = HcRhStatus.LocalPowerStatus;
     HubStatus->HubChange.LocalPowerChange = HcRhStatus.LocalPowerStatusChange;
