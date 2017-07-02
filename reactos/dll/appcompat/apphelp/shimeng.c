@@ -330,8 +330,7 @@ static DWORD SeiGetDWORD(PDB pdb, TAGID tag, TAG type)
 }
 
 
-
-VOID SeiAddShim(TAGREF trShimRef, PARRAY pShimRef)
+static VOID SeiAddShim(TAGREF trShimRef, PARRAY pShimRef)
 {
     TAGREF* Data;
     if (!ARRAY_EnsureSize(pShimRef, sizeof(TAGREF), 10))
@@ -342,8 +341,26 @@ VOID SeiAddShim(TAGREF trShimRef, PARRAY pShimRef)
     pShimRef->Size++;
 }
 
-VOID SeiBuildShimRefArray(HSDB hsdb, SDBQUERYRESULT* pQuery, PARRAY pShimRef)
+static VOID SeiSetLayerEnvVar(LPCWSTR wszLayer)
 {
+    NTSTATUS Status;
+    UNICODE_STRING VarName = RTL_CONSTANT_STRING(L"__COMPAT_LAYER");
+    UNICODE_STRING Value;
+
+    RtlInitUnicodeString(&Value, wszLayer);
+
+    Status = RtlSetEnvironmentVariable(NULL, &VarName, &Value);
+    if (NT_SUCCESS(Status))
+        SHIMENG_INFO("Set env var %wZ=%wZ\n", &VarName, &Value);
+    else
+        SHIMENG_FAIL("Failed to set %wZ: 0x%x\n", &VarName, Status);
+}
+
+#define MAX_LAYER_LENGTH            256
+
+static VOID SeiBuildShimRefArray(HSDB hsdb, SDBQUERYRESULT* pQuery, PARRAY pShimRef)
+{
+    WCHAR wszLayerEnvVar[MAX_LAYER_LENGTH] = { 0 };
     DWORD n;
 
     for (n = 0; n < pQuery->dwExeCount; ++n)
@@ -382,7 +399,17 @@ VOID SeiBuildShimRefArray(HSDB hsdb, SDBQUERYRESULT* pQuery, PARRAY pShimRef)
             LPCWSTR LayerName = SeiGetStringPtr(pdb, tag, TAG_NAME);
             TAGID ShimRef = SdbFindFirstTag(pdb, tag, TAG_SHIM_REF);
             if (LayerName)
+            {
+                HRESULT hr;
                 SeiDbgPrint(SEI_MSG, NULL, "ShimInfo(Layer(%S))\n", LayerName);
+                if (wszLayerEnvVar[0])
+                    StringCchCatW(wszLayerEnvVar, _countof(wszLayerEnvVar), L" ");
+                hr = StringCchCatW(wszLayerEnvVar, _countof(wszLayerEnvVar), LayerName);
+                if (!SUCCEEDED(hr))
+                {
+                    SHIMENG_FAIL("Unable to append %S\n", LayerName);
+                }
+            }
 
             while (ShimRef != TAGID_NULL)
             {
@@ -396,6 +423,8 @@ VOID SeiBuildShimRefArray(HSDB hsdb, SDBQUERYRESULT* pQuery, PARRAY pShimRef)
             /* Handle FLAG_REF */
         }
     }
+    if (wszLayerEnvVar[0])
+        SeiSetLayerEnvVar(wszLayerEnvVar);
 }
 
 
