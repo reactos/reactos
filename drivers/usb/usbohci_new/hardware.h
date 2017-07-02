@@ -234,31 +234,36 @@ typedef union _OHCI_REG_RH_STATUS {
 typedef union _OHCI_REG_RH_PORT_STATUS {
   struct {
     union  { // 0 byte
-      // read
-      UCHAR  CurrentConnectStatus     : 1;
-      UCHAR  PortEnableStatus         : 1;
-      UCHAR  PortSuspendStatus        : 1;
-      UCHAR  PortOverCurrentIndicator : 1;
-      UCHAR  PortResetStatus          : 1;
-      UCHAR  Reserved1r               : 3;
-      // write
-      UCHAR  ClearPortEnable    : 1;
-      UCHAR  SetPortEnable      : 1;
-      UCHAR  SetPortSuspend     : 1;
-      UCHAR  ClearSuspendStatus : 1;
-      UCHAR  SetPortReset       : 1;
-      UCHAR  Reserved1w         : 3;
+      struct { // read
+        UCHAR  CurrentConnectStatus     : 1;
+        UCHAR  PortEnableStatus         : 1;
+        UCHAR  PortSuspendStatus        : 1;
+        UCHAR  PortOverCurrentIndicator : 1;
+        UCHAR  PortResetStatus          : 1;
+        UCHAR  Reserved1r               : 3;
+      };
+      struct { // write
+        UCHAR  ClearPortEnable    : 1;
+        UCHAR  SetPortEnable      : 1;
+        UCHAR  SetPortSuspend     : 1;
+        UCHAR  ClearSuspendStatus : 1;
+        UCHAR  SetPortReset       : 1;
+        UCHAR  Reserved1w         : 3;
+      };
     };
     union  { // 1 byte
-      // read
-      UCHAR  PortPowerStatus        : 1;
-      UCHAR  LowSpeedDeviceAttached : 1;
-      UCHAR  Reserved2r             : 6;
-      // write
-      UCHAR  SetPortPower           : 1;
-      UCHAR  ClearPortPower         : 1;
-      UCHAR  Reserved2w             : 6;
+      struct { // read
+        UCHAR  PortPowerStatus        : 1;
+        UCHAR  LowSpeedDeviceAttached : 1;
+        UCHAR  Reserved2r             : 6;
+      };
+      struct { // write
+        UCHAR  SetPortPower           : 1;
+        UCHAR  ClearPortPower         : 1;
+        UCHAR  Reserved2w             : 6;
+      };
     };
+    // 2,3 byte
     USHORT ConnectStatusChange            : 1;
     USHORT PortEnableStatusChange         : 1;
     USHORT PortSuspendStatusChange        : 1;
@@ -268,6 +273,8 @@ typedef union _OHCI_REG_RH_PORT_STATUS {
   };
   ULONG  AsULONG;
 } OHCI_REG_RH_PORT_STATUS, *POHCI_REG_RH_PORT_STATUS;
+
+C_ASSERT(sizeof(OHCI_REG_RH_PORT_STATUS) == sizeof(ULONG));
 
 typedef struct _OHCI_OPERATIONAL_REGISTERS {
   ULONG HcRevision;
