@@ -469,6 +469,10 @@ VOID
 RxUpdateShareAccessPerSrvOpens(
     _In_ PSRV_OPEN SrvOpen);
 
+VOID
+RxRemoveShareAccessPerSrvOpens(
+    _Inout_ PSRV_OPEN SrvOpen);
+
 #if DBG
 NTSTATUS
 RxCheckShareAccess(
@@ -529,8 +533,31 @@ RxGetNetworkProviderPriority(
     _In_ PUNICODE_STRING DeviceName);
 
 VOID
+RxPrepareRequestForReuse(
+    PCHANGE_BUFFERING_STATE_REQUEST Request);
+
+VOID
 RxpDiscardChangeBufferingStateRequests(
     _Inout_ PLIST_ENTRY DiscardedRequests);
+
+VOID
+RxGatherRequestsForSrvOpen(
+    _Inout_ PSRV_CALL SrvCall,
+    _In_ PSRV_OPEN SrvOpen,
+    _Inout_ PLIST_ENTRY RequestsListHead);
+
+NTSTATUS
+RxpLookupSrvOpenForRequestLite(
+    _In_ PSRV_CALL SrvCall,
+    _Inout_ PCHANGE_BUFFERING_STATE_REQUEST Request);
+
+VOID
+RxProcessChangeBufferingStateRequestsForSrvOpen(
+    PSRV_OPEN SrvOpen);
+
+NTSTATUS
+RxPurgeFobxFromCache(
+    PFOBX FobxToBePurged);
 
 VOID
 RxUndoScavengerFinalizationMarking(

@@ -30,6 +30,7 @@
 #include <pseh/pseh2.h>
 #include <limits.h>
 #include <dfs.h>
+#include <copysup.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -356,6 +357,11 @@ RxpQueryInfoMiniRdr(
     PRX_CONTEXT RxContext,
     FILE_INFORMATION_CLASS FileInfoClass,
     PVOID Buffer);
+
+VOID
+RxPurgeNetFcb(
+    PFCB Fcb,
+    PRX_CONTEXT LocalContext);
 
 NTSTATUS
 RxQueryAlternateNameInfo(
@@ -780,6 +786,13 @@ RxAllocateCanonicalNameBuffer(
 }
 
 VOID
+RxCancelNotifyChangeDirectoryRequestsForFobx(
+   PFOBX Fobx)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
 NTAPI
 RxCancelRoutine(
     PDEVICE_OBJECT DeviceObject,
@@ -971,17 +984,6 @@ RxCanonicalizeNameAndObtainNetRoot(
     return Status;
 }
 
-NTSTATUS
-NTAPI
-RxChangeBufferingState(
-    PSRV_OPEN SrvOpen,
-    PVOID Context,
-    BOOLEAN ComputeNewState)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
 VOID
 NTAPI
 RxCheckFcbStructuresForAlignment(
@@ -1058,13 +1060,202 @@ RxCheckShareAccessPerSrvOpens(
     return STATUS_SUCCESS;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 RxCloseAssociatedSrvOpen(
     IN PFOBX Fobx,
     IN PRX_CONTEXT RxContext OPTIONAL)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PFCB Fcb;
+    NTSTATUS Status;
+    PSRV_OPEN SrvOpen;
+    BOOLEAN CloseSrvOpen;
+    PRX_CONTEXT LocalContext;
+
+    PAGED_CODE();
+
+    /* Assume SRV_OPEN is already closed */
+    CloseSrvOpen = FALSE;
+    /* If we have a FOBX, we'll have to close it */
+    if (Fobx != NULL)
+    {
+        /* If the FOBX isn't closed yet */
+        if (!BooleanFlagOn(Fobx->Flags, FOBX_FLAG_SRVOPEN_CLOSED))
+        {
+            SrvOpen = Fobx->SrvOpen;
+            Fcb = (PFCB)SrvOpen->pFcb;
+            /* Check whether we've to close SRV_OPEN first */
+            if (!BooleanFlagOn(SrvOpen->Flags, SRVOPEN_FLAG_CLOSED))
+            {
+                CloseSrvOpen = TRUE;
+            }
+            else
+            {
+                ASSERT(RxIsFcbAcquiredExclusive(Fcb));
+
+                /* Not much to do */
+                SetFlag(Fobx->Flags, FOBX_FLAG_SRVOPEN_CLOSED);
+
+                if (SrvOpen->OpenCount > 0)
+                {
+                    --SrvOpen->OpenCount;
+                }
+            }
+        }
+
+        /* No need to close SRV_OPEN, so close FOBX */
+        if (!CloseSrvOpen)
+        {
+            RxMarkFobxOnClose(Fobx);
+
+            return STATUS_SUCCESS;
+        }
+    }
+    else
+    {
+        /* No FOBX? No RX_CONTEXT, ok, job done! */
+        if (RxContext == NULL)
+        {
+            return STATUS_SUCCESS;
+        }
+
+        /* Get the FCB from RX_CONTEXT */
+        Fcb = (PFCB)RxContext->pFcb;
+        SrvOpen == NULL;
+    }
+
+    /* If we don't have RX_CONTEXT, allocte one, we'll need it */
+    if (RxContext == NULL)
+    {
+        ASSERT(Fobx != NULL);
+
+        LocalContext = RxCreateRxContext(NULL, Fcb->RxDeviceObject, RX_CONTEXT_FLAG_MUST_SUCCEED_NONBLOCKING | RX_CONTEXT_FLAG_WAIT);
+        if (LocalContext == NULL)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        LocalContext->MajorFunction = 2;
+        LocalContext->pFcb = RX_GET_MRX_FCB(Fcb);
+        LocalContext->pFobx = (PMRX_FOBX)Fobx;
+        LocalContext->pRelevantSrvOpen = (PMRX_SRV_OPEN)Fobx->SrvOpen;
+    }
+    else
+    {
+        LocalContext = RxContext;
+    }
+
+    ASSERT(RxIsFcbAcquiredExclusive(Fcb));
+
+    /* Now, close the FOBX */
+    if (Fobx != NULL)
+    {
+        RxMarkFobxOnClose(Fobx);
+    }
+    else
+    {
+        InterlockedDecrement((volatile long *)&Fcb->OpenCount);
+    }
+
+    /* If not a "standard" file, SRV_OPEN can be null */
+    if (SrvOpen == NULL)
+    {
+        ASSERT((NodeType(Fcb) == RDBSS_NTC_OPENTARGETDIR_FCB) || (NodeType(Fcb) == RDBSS_NTC_IPC_SHARE) || (NodeType(Fcb) == RDBSS_NTC_MAILSLOT));
+        RxDereferenceNetFcb(Fcb);
+
+        if (LocalContext != RxContext)
+        {
+            RxDereferenceAndDeleteRxContext(LocalContext);
+        }
+
+        return STATUS_SUCCESS;
+    }
+
+    /* If SRV_OPEN isn't in a good condition, nothing to close */
+    if (SrvOpen->Condition != Condition_Good)
+    {
+        if (LocalContext != RxContext)
+        {
+            RxDereferenceAndDeleteRxContext(LocalContext);
+        }
+
+        return STATUS_SUCCESS;
+    }
+
+    /* Decrease open count */
+    if (SrvOpen->OpenCount > 0)
+    {
+        --SrvOpen->OpenCount;
+    }
+
+    /* If we're the only one left, is there a FOBX handled by Scavenger? */
+    if (SrvOpen->OpenCount == 1)
+    {
+        if (!IsListEmpty(&SrvOpen->FobxList))
+        {
+            if (!IsListEmpty(&CONTAINING_RECORD(SrvOpen->FobxList.Flink, FOBX, FobxQLinks)->ScavengerFinalizationList))
+            {
+                SetFlag(SrvOpen->Flags, SRVOPEN_FLAG_CLOSE_DELAYED);
+            }
+        }
+    }
+
+    /* Nothing left, purge FCB */
+    if (SrvOpen->OpenCount == 0 && RxContext == NULL)
+    {
+        RxPurgeNetFcb(Fcb, LocalContext);
+    }
+
+    /* Already closed? Job done! */
+    SrvOpen = Fobx->SrvOpen;
+    if (SrvOpen == NULL ||
+        (SrvOpen->OpenCount != 0 && !BooleanFlagOn(SrvOpen->Flags, SRVOPEN_FLAG_BUFFERING_STATE_CHANGE_PENDING)) ||
+        BooleanFlagOn(SrvOpen->Flags, SRVOPEN_FLAG_CLOSED))
+    {
+        SetFlag(Fobx->Flags, FOBX_FLAG_SRVOPEN_CLOSED);
+        if (LocalContext != RxContext)
+        {
+            RxDereferenceAndDeleteRxContext(LocalContext);
+        }
+
+        return STATUS_SUCCESS;        
+    }
+
+    ASSERT(RxIsFcbAcquiredExclusive(Fcb));
+
+    /* Inform mini-rdr about closing */
+    MINIRDR_CALL(Status, LocalContext, Fcb->MRxDispatch, MRxCloseSrvOpen, (LocalContext));
+    DPRINT("MRxCloseSrvOpen returned: %lx, called with RX_CONTEXT %p for FOBX %p (FCB %p, SRV_OPEN %p)\n ",
+           Status, RxContext, Fobx, Fcb, SrvOpen);
+
+    /* And mark as such */
+    SetFlag(SrvOpen->Flags, SRVOPEN_FLAG_CLOSED);
+    SrvOpen->Key = (PVOID)-1;
+
+    /* If we were delayed, we're not! */
+    if (BooleanFlagOn(SrvOpen->Flags, SRVOPEN_FLAG_CLOSE_DELAYED))
+    {
+        InterlockedDecrement(&((PSRV_CALL)Fcb->pNetRoot->pSrvCall)->NumberOfCloseDelayedFiles);
+    }
+
+    /* Clear access */
+    RxRemoveShareAccessPerSrvOpens(SrvOpen);
+    RxPurgeChangeBufferingStateRequestsForSrvOpen(SrvOpen);
+
+    /* Dereference */
+    RxDereferenceSrvOpen(SrvOpen, LHS_ExclusiveLockHeld);
+
+    /* Mark the FOBX closed as well */
+    SetFlag(Fobx->Flags, FOBX_FLAG_SRVOPEN_CLOSED);
+
+    if (LocalContext != RxContext)
+    {
+        RxDereferenceAndDeleteRxContext(LocalContext);
+    }
+
+    return Status;
 }
 
 /*
@@ -1258,9 +1449,12 @@ RxCommonCleanup(
 #define BugCheckFileId RDBSS_BUG_CHECK_CLEANUP
     PFCB Fcb;
     PFOBX Fobx;
+    ULONG OpenCount;
     NTSTATUS Status;
-    BOOLEAN NeedPurge;
+    PNET_ROOT NetRoot;
     PFILE_OBJECT FileObject;
+    PLARGE_INTEGER TruncateSize;
+    BOOLEAN NeedPurge, FcbTableAcquired, OneLeft, IsFile, FcbAcquired;
 
     PAGED_CODE();
 
@@ -1300,6 +1494,8 @@ RxCommonCleanup(
         return Status;
     }
 
+    FcbAcquired = TRUE;
+
     Fobx->AssociatedFileObject = NULL;
 
     /* In case SRV_OPEN used is part of FCB */
@@ -1326,8 +1522,186 @@ RxCommonCleanup(
         return STATUS_SUCCESS;
     }
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    /* Report the fact that file could be set as delete on close */
+    if (BooleanFlagOn(Fobx->Flags, FOBX_FLAG_DELETE_ON_CLOSE))
+    {
+        SetFlag(Fcb->FcbState, FCB_STATE_DELETE_ON_CLOSE);
+    }
+
+    /* Cancel any pending notification */
+    RxCancelNotifyChangeDirectoryRequestsForFobx(Fobx);
+
+    /* Backup open count before we start playing with it */
+    OpenCount = Fcb->ShareAccess.OpenCount;
+
+    NetRoot = (PNET_ROOT)Fcb->pNetRoot;
+    FcbTableAcquired = FALSE;
+    OneLeft = FALSE;
+
+    _SEH2_TRY
+    {
+        /* Unclean count and delete on close? Verify whether we're the one */
+        if (Fcb->UncleanCount == 1 && BooleanFlagOn(Fcb->FcbState, FCB_STATE_DELETE_ON_CLOSE))
+        {
+            if (RxAcquireFcbTableLockExclusive(&NetRoot->FcbTable, FALSE))
+            {
+                FcbTableAcquired = TRUE;
+            }
+            else
+            {
+                RxReleaseFcb(Context, Fcb);
+
+                RxAcquireFcbTableLockExclusive(&NetRoot->FcbTable, TRUE);
+
+                Status = RxAcquireExclusiveFcb(Context, Fcb);
+                if (Status != STATUS_SUCCESS)
+                {
+                    RxReleaseFcbTableLock(&NetRoot->FcbTable);
+                    return Status;
+                }
+
+                FcbTableAcquired = TRUE;
+            }
+
+            if (Fcb->UncleanCount == 1)
+            {
+                OneLeft = TRUE;
+            }
+            else
+            {
+                RxReleaseFcbTableLock(&NetRoot->FcbTable);
+                FcbTableAcquired = FALSE;
+            }
+        }
+
+        IsFile = FALSE;
+        TruncateSize = NULL;
+        /* Handle cleanup for pipes and printers */
+        if (NetRoot->Type == NET_ROOT_PIPE || NetRoot->Type == NET_ROOT_PRINT)
+        {
+            UNIMPLEMENTED;
+        }
+        /* Handle cleanup for files */
+        else if (NetRoot->Type == NET_ROOT_DISK || NetRoot->Type == NET_ROOT_WILD)
+        {
+            if (NodeType(Fcb) == RDBSS_NTC_STORAGE_TYPE_FILE)
+            {
+                UNIMPLEMENTED;
+                IsFile = TRUE;
+            }
+        }
+
+        /* We have to still be there! */
+        ASSERT(Fcb->UncleanCount != 0);
+        InterlockedDecrement((volatile long *)&Fcb->UncleanCount);
+
+        if (BooleanFlagOn(FileObject->Flags, FO_NO_INTERMEDIATE_BUFFERING))
+        {
+            --Fcb->UncachedUncleanCount;
+        }
+
+        /* Inform mini-rdr about ongoing cleanup */
+        MINIRDR_CALL(Status, Context, Fcb->MRxDispatch, MRxCleanupFobx, (Context));
+
+        ASSERT(Fobx->SrvOpen->UncleanFobxCount != 0);
+        --Fobx->SrvOpen->UncleanFobxCount;
+
+        /* Flush cache */
+        if (DisableFlushOnCleanup)
+        {
+            /* Only if we're the last standing */
+            if (Fcb->NonPaged->SectionObjectPointers.DataSectionObject != NULL &&
+                Fcb->UncleanCount == Fcb->UncachedUncleanCount)
+            {
+                DPRINT1("Flushing %p due to last cached handle cleanup\n", Context);
+                RxFlushFcbInSystemCache(Fcb, TRUE);
+            }
+        }
+        else
+        {
+            /* Always */
+            if (Fcb->NonPaged->SectionObjectPointers.DataSectionObject != NULL)
+            {
+                DPRINT1("Flushing %p on cleanup\n", Context);
+                RxFlushFcbInSystemCache(Fcb, TRUE);
+            }
+        }
+
+        /* If only remaining uncached & unclean, then flush and purge */
+        if (!BooleanFlagOn(FileObject->Flags, FO_NO_INTERMEDIATE_BUFFERING))
+        {
+            if (Fcb->UncachedUncleanCount != 0)
+            {
+                if (Fcb->UncachedUncleanCount == Fcb->UncleanCount &&
+                    Fcb->NonPaged->SectionObjectPointers.DataSectionObject != NULL)
+                {
+                    DPRINT1("Flushing FCB in system cache for %p\n", Context);
+                    RxPurgeFcbInSystemCache(Fcb, NULL, 0, FALSE, TRUE);
+                }
+            }
+        }
+
+        /* If purge required, flush */
+        if (!OneLeft && NeedPurge)
+        {
+            DPRINT1("Flushing FCB in system cache for %p\n", Context);
+            RxFlushFcbInSystemCache(Fcb, TRUE);
+        }
+
+        /* If it was a file, drop cache */
+        if (IsFile)
+        {
+            DPRINT1("Uninit cache map for file\n");
+            RxUninitializeCacheMap(Context, FileObject, TruncateSize);
+        }
+
+        /* If that's the one left, or if it needs purge, flush */
+        if (OneLeft || NeedPurge)
+        {
+            RxPurgeFcbInSystemCache(Fcb, NULL, 0, FALSE, !OneLeft);
+            /* Also remove from FCB table */
+            if (OneLeft)
+            {
+                RxRemoveNameNetFcb(Fcb);
+                RxReleaseFcbTableLock(&NetRoot->FcbTable);
+                FcbTableAcquired = FALSE;
+            }
+        }
+
+        /* Remove any share access */
+        if (OpenCount != 0 && NetRoot->Type == NET_ROOT_DISK)
+        {
+            RxRemoveShareAccess(FileObject, &Fcb->ShareAccess, "Cleanup the share access", "ClnUpShr");
+        }
+
+        /* In case there's caching, on a file, update file metadata */
+        if (NodeType(Fcb) == RDBSS_NTC_STORAGE_TYPE_FILE && BooleanFlagOn(Fobx->Flags, 0x20000000) &&
+            BooleanFlagOn(Fcb->FcbState, FCB_STATE_WRITECACHING_ENABLED) && !BooleanFlagOn(Fobx->pSrvOpen->Flags, SRVOPEN_FLAG_DONTUSE_WRITE_CACHING))
+        {
+            UNIMPLEMENTED;
+        }
+
+        /* We're clean! */
+        SetFlag(FileObject->Flags, FO_CLEANUP_COMPLETE);
+
+        FcbAcquired = FALSE;
+        RxReleaseFcb(Context, Fcb);
+    }
+    _SEH2_FINALLY
+    {
+        if (FcbAcquired)
+        {
+            RxReleaseFcb(Context, Fcb);
+        }
+
+        if (FcbTableAcquired)
+        {
+            RxReleaseFcbTableLock(&NetRoot->FcbTable);
+        }
+    }
+    _SEH2_END;
+
+    return Status;
 #undef BugCheckFileId
 }
 
@@ -3234,6 +3608,96 @@ RxFastIoCheckIfPossible(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
+    PFCB Fcb;
+    PSRV_OPEN SrvOpen;
+
+    PAGED_CODE();
+
+    /* Get the FCB to validate it */
+    Fcb = FileObject->FsContext;
+    if (NodeType(Fcb) != RDBSS_NTC_STORAGE_TYPE_FILE)
+    {
+        DPRINT1("Not a file, FastIO not possible!\n");
+        return FALSE;
+    }
+
+    if (FileObject->DeletePending)
+    {
+        DPRINT1("File delete pending\n");
+        return FALSE;
+    }
+
+    /* If there's a pending write operation, deny fast operation */
+    if (Fcb->NonPaged->OutstandingAsyncWrites != 0)
+    {
+        DPRINT1("Write operations to be completed\n");
+        return FALSE;
+    }
+
+    /* Deny read on orphaned node */
+    SrvOpen = (PSRV_OPEN)((PFOBX)FileObject->FsContext2)->pSrvOpen;
+    if (BooleanFlagOn(SrvOpen->Flags, SRVOPEN_FLAG_ORPHANED))
+    {
+        DPRINT1("SRV_OPEN orphaned\n");
+        return FALSE;
+    }
+
+    if (BooleanFlagOn(Fcb->FcbState, FCB_STATE_ORPHANED))
+    {
+        DPRINT1("FCB orphaned\n");
+        return FALSE;
+    }
+
+    /* If there's a buffering state change pending, deny fast operation (it might change
+     * cache status)
+     */
+    if (BooleanFlagOn(SrvOpen->Flags, SRVOPEN_FLAG_BUFFERING_STATE_CHANGE_PENDING))
+    {
+        DPRINT1("Buffering change pending\n");
+        return FALSE;
+    }
+
+    /* File got renamed/deleted, deny operation */
+    if (BooleanFlagOn(SrvOpen->Flags, SRVOPEN_FLAG_FILE_DELETED) ||
+        BooleanFlagOn(SrvOpen->Flags, SRVOPEN_FLAG_FILE_RENAMED))
+    {
+        DPRINT1("File renamed/deleted\n");
+        return FALSE;
+    }
+
+    /* Process pending change buffering state operations */
+    FsRtlEnterFileSystem();
+    RxProcessChangeBufferingStateRequestsForSrvOpen(SrvOpen);
+    FsRtlExitFileSystem();
+
+    /* If operation to come is a read operation */
+    if (CheckForReadOperation)
+    {
+        LARGE_INTEGER LargeLength;
+
+        /* Check that read cache is enabled */
+        if (!BooleanFlagOn(Fcb->FcbState, FCB_STATE_READCACHING_ENABLED))
+        {
+            DPRINT1("Read caching disabled\n");
+            return FALSE;
+        }
+
+        /* Check whether there's a lock conflict */
+        LargeLength.QuadPart = Length;
+        if (!FsRtlFastCheckLockForRead(&Fcb->Specific.Fcb.FileLock,
+                                       FileOffset,
+                                       &LargeLength,
+                                       LockKey,
+                                       FileObject,
+                                       PsGetCurrentProcess()))
+        {
+            DPRINT1("FsRtlFastCheckLockForRead failed\n");
+            return FALSE;
+        }
+
+        return TRUE;
+    }
+
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -3263,6 +3727,9 @@ RxFastIoDeviceControl(
     }
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN
 NTAPI
 RxFastIoRead(
@@ -3275,8 +3742,32 @@ RxFastIoRead(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    BOOLEAN Ret;
+    RX_TOPLEVELIRP_CONTEXT TopLevelContext;
+
+    PAGED_CODE();
+
+    DPRINT("RxFastIoRead: %p (%p, %p)\n", FileObject, FileObject->FsContext,
+                                          FileObject->FsContext2);
+    DPRINT("Reading %ld at %I64x\n", Length, FileOffset->QuadPart);
+
+    /* Prepare a TLI context */
+    ASSERT(RxIsThisTheTopLevelIrp(NULL));
+    RxInitializeTopLevelIrpContext(&TopLevelContext, (PIRP)FSRTL_FAST_IO_TOP_LEVEL_IRP,
+                                   (PRDBSS_DEVICE_OBJECT)DeviceObject);
+
+    Ret = FsRtlCopyRead2(FileObject, FileOffset, Length, Wait, LockKey, Buffer,
+                         IoStatus, DeviceObject, &TopLevelContext);
+    if (Ret)
+    {
+        DPRINT("Read OK\n");
+    }
+    else
+    {
+        DPRINT1("Read failed!\n");
+    }
+
+    return Ret;
 }
 
 BOOLEAN
@@ -4399,15 +4890,6 @@ RxInitializeRegistrationStructures(
     return STATUS_SUCCESS;
 }
 
-NTSTATUS
-NTAPI
-RxInitializeRxTimer(
-    VOID)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
 /*
  * @implemented
  */
@@ -5022,6 +5504,28 @@ RxpUnregisterMinirdr(
     UNIMPLEMENTED;
 }
 
+/*
+ * @implemented
+ */
+VOID
+RxPurgeNetFcb(
+    PFCB Fcb,
+    PRX_CONTEXT LocalContext)
+{
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+    /* First, flush */
+    MmFlushImageSection(&Fcb->NonPaged->SectionObjectPointers, MmFlushForWrite);
+
+    /* And force close */
+    RxReleaseFcb(NULL, Fcb);
+    MmForceSectionClosed(&Fcb->NonPaged->SectionObjectPointers, TRUE);
+    Status = RxAcquireExclusiveFcb(NULL, Fcb);
+    ASSERT(Status == STATUS_SUCCESS);
+}
+
 NTSTATUS
 RxQueryAlternateNameInfo(
     PRX_CONTEXT RxContext,
@@ -5610,6 +6114,9 @@ RxRemoveOverflowEntry(
     return Context;
 }
 
+/*
+ * @implemented
+ */
 VOID
 RxRemoveShareAccess(
     _Inout_ PFILE_OBJECT FileObject,
@@ -5617,7 +6124,58 @@ RxRemoveShareAccess(
     _In_ PSZ where,
     _In_ PSZ wherelogtag)
 {
-    UNIMPLEMENTED;
+    PAGED_CODE();
+
+    RxDumpCurrentAccess(where, "before", wherelogtag, ShareAccess);
+    IoRemoveShareAccess(FileObject, ShareAccess);
+    RxDumpCurrentAccess(where, "after", wherelogtag, ShareAccess);
+}
+
+/*
+ * @implemented
+ */
+VOID
+RxRemoveShareAccessPerSrvOpens(
+    IN OUT PSRV_OPEN SrvOpen)
+{
+    ACCESS_MASK DesiredAccess;
+    BOOLEAN ReadAccess;
+    BOOLEAN WriteAccess;
+    BOOLEAN DeleteAccess;
+
+    PAGED_CODE();
+
+    /* Get access that were granted to SRV_OPEN */
+    DesiredAccess = SrvOpen->DesiredAccess;
+    ReadAccess = (DesiredAccess & (FILE_READ_DATA | FILE_EXECUTE)) != 0;
+    WriteAccess = (DesiredAccess & (FILE_WRITE_DATA | FILE_APPEND_DATA)) != 0;
+    DeleteAccess = (DesiredAccess & DELETE) != 0;
+
+    /* If any, drop them */
+    if ((ReadAccess) || (WriteAccess) || (DeleteAccess))
+    {
+        BOOLEAN SharedRead;
+        BOOLEAN SharedWrite;
+        BOOLEAN SharedDelete;
+        ULONG DesiredShareAccess;
+        PSHARE_ACCESS ShareAccess;
+
+        ShareAccess = &((PFCB)SrvOpen->pFcb)->ShareAccessPerSrvOpens;
+        DesiredShareAccess = SrvOpen->ShareAccess;
+
+        ShareAccess->Readers -= ReadAccess;
+        ShareAccess->Writers -= WriteAccess;
+        ShareAccess->Deleters -= DeleteAccess;
+
+        ShareAccess->OpenCount--;
+
+        SharedRead = (DesiredShareAccess & FILE_SHARE_READ) != 0;
+        SharedWrite = (DesiredShareAccess & FILE_SHARE_WRITE) != 0;
+        SharedDelete = (DesiredShareAccess & FILE_SHARE_DELETE) != 0;
+        ShareAccess->SharedRead -= SharedRead;
+        ShareAccess->SharedWrite -= SharedWrite;
+        ShareAccess->SharedDelete -= SharedDelete;
+    }
 }
 
 NTSTATUS

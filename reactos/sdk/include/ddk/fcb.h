@@ -211,10 +211,14 @@ typedef struct _FCB
 #define FCB_STATE_FILE_IS_BUF_COMPRESSED 0x00004000
 #define FCB_STATE_FILE_IS_DISK_COMPRESSED 0x00008000
 #define FCB_STATE_FILE_IS_SHADOWED 0x00010000
+#define FCB_STATE_BUFFERSTATE_CHANGING 0x00002000
 #define FCB_STATE_SPECIAL_PATH 0x00020000
 #define FCB_STATE_TIME_AND_SIZE_ALREADY_SET 0x00040000
+#define FCB_STATE_FILETIMECACHEING_ENABLED 0x00080000
 #define FCB_STATE_FILESIZECACHEING_ENABLED 0x00100000
+#define FCB_STATE_LOCK_BUFFERING_ENABLED 0x00200000
 #define FCB_STATE_COLLAPSING_ENABLED 0x00400000
+#define FCB_STATE_OPENSHARING_ENABLED 0x00800000
 #define FCB_STATE_READBUFFERING_ENABLED 0x01000000
 #define FCB_STATE_READCACHING_ENABLED 0x02000000
 #define FCB_STATE_WRITEBUFFERING_ENABLED 0x04000000
@@ -223,6 +227,17 @@ typedef struct _FCB
 #define FCB_STATE_ADDEDBACKSLASH 0x20000000
 #define FCB_STATE_FOBX_USED 0x40000000
 #define FCB_STATE_SRVOPEN_USED 0x80000000
+
+#define FCB_STATE_BUFFERING_STATE_MASK     \
+    ((FCB_STATE_WRITECACHING_ENABLED       \
+      | FCB_STATE_WRITEBUFFERING_ENABLED   \
+      | FCB_STATE_READCACHING_ENABLED      \
+      | FCB_STATE_READBUFFERING_ENABLED    \
+      | FCB_STATE_OPENSHARING_ENABLED      \
+      | FCB_STATE_COLLAPSING_ENABLED       \
+      | FCB_STATE_LOCK_BUFFERING_ENABLED   \
+      | FCB_STATE_FILESIZECACHEING_ENABLED \
+      | FCB_STATE_FILETIMECACHEING_ENABLED))
 
 typedef struct _FCB_INIT_PACKET
 {
@@ -276,6 +291,7 @@ typedef struct _SRV_OPEN
 #define FOBX_FLAG_SRVOPEN_CLOSED 0x1000000
 #define FOBX_FLAG_UNC_NAME 0x2000000
 #define FOBX_FLAG_ENCLOSED_ALLOCATED 0x4000000
+#define FOBX_FLAG_MARKED_AS_DORMANT 0x8000000
 
 typedef struct _FOBX
 {
@@ -354,53 +370,57 @@ RxpTrackDereference(
         DbgPrint("%ld\n", Count);                             \
     }
 
-#define RxReferenceSrvCall(SrvCall)                                         \
-   RxpTrackReference(RDBSS_REF_TRACK_SRVCALL, __FILE__, __LINE__, SrvCall); \
-   RxReference(SrvCall)
+#define RxReferenceSrvCall(SrvCall)                                          \
+    RxpTrackReference(RDBSS_REF_TRACK_SRVCALL, __FILE__, __LINE__, SrvCall); \
+    RxReference(SrvCall)
 
-#define RxDereferenceSrvCall(SrvCall, LockHoldingState)                       \
-   RxpTrackDereference(RDBSS_REF_TRACK_SRVCALL, __FILE__, __LINE__, SrvCall); \
-   RxDereference(SrvCall, LockHoldingState)
+#define RxDereferenceSrvCall(SrvCall, LockHoldingState)                        \
+    RxpTrackDereference(RDBSS_REF_TRACK_SRVCALL, __FILE__, __LINE__, SrvCall); \
+    RxDereference(SrvCall, LockHoldingState)
 
-#define RxReferenceNetRoot(NetRoot)                                         \
-   RxpTrackReference(RDBSS_REF_TRACK_NETROOT, __FILE__, __LINE__, NetRoot); \
-   RxReference(NetRoot)
+#define RxReferenceNetRoot(NetRoot)                                          \
+    RxpTrackReference(RDBSS_REF_TRACK_NETROOT, __FILE__, __LINE__, NetRoot); \
+    RxReference(NetRoot)
 
-#define RxDereferenceNetRoot(NetRoot, LockHoldingState)                       \
-   RxpTrackDereference(RDBSS_REF_TRACK_NETROOT, __FILE__, __LINE__, NetRoot); \
-   RxDereference(NetRoot, LockHoldingState)
+#define RxDereferenceNetRoot(NetRoot, LockHoldingState)                        \
+    RxpTrackDereference(RDBSS_REF_TRACK_NETROOT, __FILE__, __LINE__, NetRoot); \
+    RxDereference(NetRoot, LockHoldingState)
 
-#define RxReferenceVNetRoot(VNetRoot)                                         \
-   RxpTrackReference(RDBSS_REF_TRACK_VNETROOT, __FILE__, __LINE__, VNetRoot); \
-   RxReference(VNetRoot)
+#define RxReferenceVNetRoot(VNetRoot)                                          \
+    RxpTrackReference(RDBSS_REF_TRACK_VNETROOT, __FILE__, __LINE__, VNetRoot); \
+    RxReference(VNetRoot)
 
-#define RxDereferenceVNetRoot(VNetRoot, LockHoldingState)                       \
-   RxpTrackDereference(RDBSS_REF_TRACK_VNETROOT, __FILE__, __LINE__, VNetRoot); \
-   RxDereference(VNetRoot, LockHoldingState)
+#define RxDereferenceVNetRoot(VNetRoot, LockHoldingState)                        \
+    RxpTrackDereference(RDBSS_REF_TRACK_VNETROOT, __FILE__, __LINE__, VNetRoot); \
+    RxDereference(VNetRoot, LockHoldingState)
 
-#define RxDereferenceNetFobx(Fobx, LockHoldingState)                       \
-   RxpTrackDereference(RDBSS_REF_TRACK_NETFOBX, __FILE__, __LINE__, Fobx); \
-   RxDereference(Fobx, LockHoldingState)
+#define RxReferenceNetFobx(Fobx)                                          \
+    RxpTrackReference(RDBSS_REF_TRACK_NETFOBX, __FILE__, __LINE__, Fobx); \
+    RxReference(Fobx)
 
-#define RxReferenceSrvOpen(SrvOpen)                                         \
-   RxpTrackReference(RDBSS_REF_TRACK_SRVOPEN, __FILE__, __LINE__, SrvOpen); \
-   RxReference(SrvOpen)
+#define RxDereferenceNetFobx(Fobx, LockHoldingState)                        \
+    RxpTrackDereference(RDBSS_REF_TRACK_NETFOBX, __FILE__, __LINE__, Fobx); \
+    RxDereference(Fobx, LockHoldingState)
 
-#define RxDereferenceSrvOpen(SrvOpen, LockHoldingState)                       \
-   RxpTrackDereference(RDBSS_REF_TRACK_SRVOPEN, __FILE__, __LINE__, SrvOpen); \
-   RxDereference(SrvOpen, LockHoldingState)
+#define RxReferenceSrvOpen(SrvOpen)                                          \
+    RxpTrackReference(RDBSS_REF_TRACK_SRVOPEN, __FILE__, __LINE__, SrvOpen); \
+    RxReference(SrvOpen)
 
-#define RxReferenceNetFcb(Fcb)                                         \
-  (RxpTrackReference(RDBSS_REF_TRACK_NETFCB, __FILE__, __LINE__, Fcb), \
-   RxpReferenceNetFcb(Fcb))
+#define RxDereferenceSrvOpen(SrvOpen, LockHoldingState)                        \
+    RxpTrackDereference(RDBSS_REF_TRACK_SRVOPEN, __FILE__, __LINE__, SrvOpen); \
+    RxDereference(SrvOpen, LockHoldingState)
 
-#define RxDereferenceNetFcb(Fcb)                                                \
-   ((LONG)RxpTrackDereference(RDBSS_REF_TRACK_NETFCB, __FILE__, __LINE__, Fcb), \
-    RxpDereferenceNetFcb(Fcb))
+#define RxReferenceNetFcb(Fcb)                                           \
+    (RxpTrackReference(RDBSS_REF_TRACK_NETFCB, __FILE__, __LINE__, Fcb), \
+     RxpReferenceNetFcb(Fcb))
 
-#define RxDereferenceAndFinalizeNetFcb(Fcb, RxContext, RecursiveFinalize, ForceFinalize) \
-   (RxpTrackDereference(RDBSS_REF_TRACK_NETFCB, __FILE__, __LINE__, Fcb),                \
-    RxpDereferenceAndFinalizeNetFcb(Fcb, RxContext, RecursiveFinalize, ForceFinalize))
+#define RxDereferenceNetFcb(Fcb)                                                 \
+    ((LONG)RxpTrackDereference(RDBSS_REF_TRACK_NETFCB, __FILE__, __LINE__, Fcb), \
+     RxpDereferenceNetFcb(Fcb))
+
+#define RxDereferenceAndFinalizeNetFcb(Fcb, RxContext, RecursiveFinalize, ForceFinalize)  \
+    (RxpTrackDereference(RDBSS_REF_TRACK_NETFCB, __FILE__, __LINE__, Fcb),                \
+     RxpDereferenceAndFinalizeNetFcb(Fcb, RxContext, RecursiveFinalize, ForceFinalize))
 
 PSRV_CALL
 RxCreateSrvCall(
@@ -533,6 +553,10 @@ RxFinishFcbInitialization(
 #define RxWaitForStableSrvOpen(S, R) RxWaitForStableCondition(&(S)->Condition, &(S)->TransitionWaitList, (R), NULL)
 #define RxTransitionSrvOpen(S, C) RxUpdateCondition((C), &(S)->Condition, &(S)->TransitionWaitList)
 
+VOID
+RxRemoveNameNetFcb(
+    _Out_ PFCB ThisFcb);
+
 LONG
 RxpReferenceNetFcb(
    _In_ PFCB Fcb);
@@ -616,6 +640,16 @@ RxFinalizeNetFobx(
 #define TRACKER_RELEASE_NON_EXCL_FCB_FOR_THRD_BUFF_PENDING 0x72727430
 #define TRACKER_RELEASE_EXCL_FCB_FOR_THRD_BUFF_PENDING 0x72727431
 #define TRACKER_FCB_FREE 0x72724372
+
+#define FCB_STATE_BUFFERING_STATE_WITH_NO_SHARES \
+    (( FCB_STATE_WRITECACHING_ENABLED            \
+    | FCB_STATE_WRITEBUFFERING_ENABLED           \
+    | FCB_STATE_READCACHING_ENABLED              \
+    | FCB_STATE_READBUFFERING_ENABLED            \
+    | FCB_STATE_LOCK_BUFFERING_ENABLED           \
+    | FCB_STATE_FILESIZECACHEING_ENABLED         \
+    | FCB_STATE_FILETIMECACHEING_ENABLED))
+
 #endif
 
 #endif

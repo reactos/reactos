@@ -77,6 +77,19 @@ RxpDispatchChangeBufferingStateRequests(
 
 VOID
 NTAPI
+RxScavengerTimerRoutine(
+    PVOID Context);
+
+VOID
+NTAPI
+RxTimerDispatch(
+    _In_ struct _KDPC *Dpc,
+    _In_opt_ PVOID DeferredContext,
+    _In_opt_ PVOID SystemArgument1,
+    _In_opt_ PVOID SystemArgument2);
+
+VOID
+NTAPI
 RxWorkItemDispatcher(
     PVOID Context);
 
@@ -116,6 +129,13 @@ RX_WORK_QUEUE_DISPATCHER RxDispatcherWorkQueues;
 FAST_MUTEX RxLowIoPagingIoSyncMutex;
 BOOLEAN RxContinueFromAssert = TRUE;
 ULONG RxExplodePoolTags = 1;
+LARGE_INTEGER RxTimerInterval;
+RX_SPIN_LOCK RxTimerLock;
+LIST_ENTRY RxTimerQueueHead;
+LIST_ENTRY RxRecurrentWorkItemsList;
+KDPC RxTimerDpc;
+KTIMER RxTimer;
+ULONG RxTimerTickCount;
 #if DBG
 BOOLEAN DumpDispatchRoutine = TRUE;
 #else
@@ -568,6 +588,149 @@ RxBootstrapWorkerThreadDispatcher(
 
     RxWorkQueue = WorkQueue;
     RxpWorkerThreadDispatcher(RxWorkQueue, NULL);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RxChangeBufferingState(
+    PSRV_OPEN SrvOpen,
+    PVOID Context,
+    BOOLEAN ComputeNewState)
+{
+    PFCB Fcb;
+    NTSTATUS Status, MiniStatus;
+    ULONG NewBufferingState, OldBufferingState;
+
+    PAGED_CODE();
+
+    DPRINT("RxChangeBufferingState(%p, %p, %d)\n", SrvOpen, Context, ComputeNewState);
+
+    Fcb = (PFCB)SrvOpen->pFcb;
+    ASSERT(NodeTypeIsFcb(Fcb));
+    /* First of all, mark that buffering state is changing */
+    SetFlag(Fcb->FcbState, FCB_STATE_BUFFERSTATE_CHANGING);
+
+    /* Assume success */
+    Status = STATUS_SUCCESS;
+    _SEH2_TRY
+    {
+        /* If we're asked to compute a new state, ask the mini-rdr for it */
+        if (ComputeNewState)
+        {
+            MINIRDR_CALL_THROUGH(MiniStatus, Fcb->MRxDispatch, MRxComputeNewBufferingState,
+                                 ((PMRX_SRV_OPEN)SrvOpen, Context, &NewBufferingState));
+            if (MiniStatus != STATUS_SUCCESS)
+            {
+                NewBufferingState = 0;
+            }
+        }
+        else
+        {
+            /* If not, use SRV_OPEN state */
+            NewBufferingState = SrvOpen->BufferingFlags;
+        }
+
+        /* If no shared access, and if we're not asked to compute a new state, use maximum flags set */
+        if ((Fcb->ShareAccess.SharedRead + Fcb->ShareAccess.SharedWrite + Fcb->ShareAccess.SharedDelete) == 0 && !ComputeNewState)
+        {
+            SetFlag(NewBufferingState, FCB_STATE_BUFFERING_STATE_WITH_NO_SHARES);
+        }
+
+        /* If there's a lock operation to complete, clear that flag */
+        if (Fcb->OutstandingLockOperationsCount != 0)
+        {
+            ClearFlag(NewBufferingState, FCB_STATE_LOCK_BUFFERING_ENABLED);
+        }
+
+        /* Get the old state */
+        OldBufferingState = Fcb->FcbState & FCB_STATE_BUFFERING_STATE_MASK;
+        DPRINT("ChangeBufferingState %x -> %x (%x)\n", OldBufferingState, NewBufferingState, SrvOpen->BufferingFlags);
+
+        /* If we're dropping write cache, then flush the FCB */
+        if (BooleanFlagOn(OldBufferingState, FCB_STATE_WRITECACHING_ENABLED) &&
+            !BooleanFlagOn(NewBufferingState, FCB_STATE_WRITECACHING_ENABLED))
+        {
+            DPRINT("Flushing\n");
+
+            Status = RxFlushFcbInSystemCache(Fcb, TRUE);
+        }
+
+        /* If we're dropping read cache, then purge */
+        if (Fcb->UncleanCount == 0 ||
+            (BooleanFlagOn(OldBufferingState, FCB_STATE_READCACHING_ENABLED) &&
+             !BooleanFlagOn(NewBufferingState, FCB_STATE_READCACHING_ENABLED)) ||
+            BooleanFlagOn(NewBufferingState, FCB_STATE_DELETE_ON_CLOSE))
+        {
+            DPRINT("Purging\n");
+
+            if (!NT_SUCCESS(Status))
+            {
+                 DPRINT("Previous flush failed with status: %lx\n", Status);
+            }
+
+            CcPurgeCacheSection(&Fcb->NonPaged->SectionObjectPointers, NULL, 0, TRUE);
+        }
+
+        /* If there's already a change pending in SRV_OPEN */
+        if (ComputeNewState && BooleanFlagOn(SrvOpen->Flags, SRVOPEN_FLAG_BUFFERING_STATE_CHANGE_PENDING))
+        {
+            /* If there's a FOBX at least */
+            if (!IsListEmpty(&SrvOpen->FobxList))
+            {
+                PRX_CONTEXT RxContext;
+
+                /* Create a fake context to pass to the mini-rdr */
+                RxContext = RxCreateRxContext(NULL, Fcb->RxDeviceObject, RX_CONTEXT_FLAG_MUST_SUCCEED_NONBLOCKING | RX_CONTEXT_FLAG_WAIT);
+                if (RxContext != NULL)
+                {
+                    PFOBX Fobx;
+
+                    RxContext->pFcb = RX_GET_MRX_FCB(Fcb);
+
+                    /* Give the first FOBX */
+                    Fobx = CONTAINING_RECORD(SrvOpen->FobxList.Flink, FOBX, FobxQLinks);
+                    RxContext->pFobx = (PMRX_FOBX)Fobx;
+                    RxContext->pRelevantSrvOpen = Fobx->pSrvOpen;
+
+                    /* If there was a delayed close, perform it */
+                    if (BooleanFlagOn(SrvOpen->Flags, SRVOPEN_FLAG_CLOSE_DELAYED))
+                    {
+                        DPRINT("Oplock break close for %p\n", SrvOpen);
+
+                        RxCloseAssociatedSrvOpen(Fobx, RxContext);
+                    }
+                    /* Otherwise, inform the mini-rdr about completion */
+                    else
+                    {
+                        MINIRDR_CALL_THROUGH(MiniStatus, Fcb->MRxDispatch, MRxCompleteBufferingStateChangeRequest,
+                                             (RxContext, (PMRX_SRV_OPEN)SrvOpen, Context));
+                        (void)MiniStatus;
+                    }
+
+                    RxDereferenceAndDeleteRxContext(RxContext);
+                }
+            }
+        }
+
+        /* Set the new state */
+        Fcb->FcbState ^= (NewBufferingState ^ Fcb->FcbState) & FCB_STATE_BUFFERING_STATE_MASK;
+    }
+    _SEH2_FINALLY
+    {
+        /* Job done, clear the flag */
+        ClearFlag(Fcb->FcbState, FCB_STATE_BUFFERSTATE_CHANGING);
+
+        if (!BooleanFlagOn(NewBufferingState, FCB_STATE_FILETIMECACHEING_ENABLED))
+        {
+            ClearFlag(Fcb->FcbState, FCB_STATE_TIME_AND_SIZE_ALREADY_SET);
+        }
+    }
+    _SEH2_END;
+
+    return Status;
 }
 
 NTSTATUS
@@ -1798,6 +1961,9 @@ RxCreateVNetRoot(
     return VNetRoot;
 }
 
+/*
+ * @implemented
+ */
 VOID
 RxDereference(
     IN OUT PVOID Instance,
@@ -1859,9 +2025,21 @@ RxDereference(
     /* We have to be locked exclusively */
     if (LockHoldingState != LHS_ExclusiveLockHeld)
     {
-        UNIMPLEMENTED;
+        if ((NodeType == RDBSS_NTC_FOBX && RefCount == 0) ||
+             (NodeType >= RDBSS_NTC_SRVCALL && NodeType <= RDBSS_NTC_V_NETROOT))
+        {
+            RxpMarkInstanceForScavengedFinalization(Instance);
+        }
+
         RxReleaseScavengerMutex();
         return;
+    }
+    else
+    {
+        if (BooleanFlagOn(NodeType, RX_SCAVENGER_MASK))
+        {
+            RxpUndoScavengerFinalizationMarking(Instance);
+        }
     }
 
     RxReleaseScavengerMutex();
@@ -2012,6 +2190,14 @@ RxDereferenceAndDeleteRxContext_Real(
             ExFreeToNPagedLookasideList(&RxContextLookasideList, RxContext);
         }
     }
+}
+
+VOID
+NTAPI
+RxDispatchChangeBufferingStateRequests(
+    PVOID Context)
+{
+    UNIMPLEMENTED;
 }
 
 /*
@@ -2328,7 +2514,7 @@ RxFinalizeNetFcb(
 
     ASSERT(ForceFinalize || ((ThisFcb->OpenCount == 0) && (ThisFcb->UncleanCount == 0)));
 
-    DPRINT("Finalizing FCB open: %d (%d)", ThisFcb->OpenCount, ForceFinalize);
+    DPRINT("Finalizing FCB open: %d (%d)\n", ThisFcb->OpenCount, ForceFinalize);
 
     /* If finalization was not already initiated, go ahead */
     if (!ThisFcb->UpperFinalizationDone)
@@ -2391,7 +2577,7 @@ RxFinalizeNetFcb(
     ExDeleteResourceLite(ThisFcb->Header.PagingIoResource);
 
     InterlockedDecrement((volatile long *)&ThisFcb->pNetRoot->NumberOfFcbs);
-    RxDereferenceNetRoot(ThisFcb->pNetRoot, LHS_LockNotHeld);
+    RxDereferenceVNetRoot(ThisFcb->VNetRoot, LHS_LockNotHeld);
 
     ASSERT(IsListEmpty(&ThisFcb->FcbTableEntry.HashLinks));
     ASSERT(!ThisFcb->fMiniInited);
@@ -2692,14 +2878,116 @@ RxFinalizeSrvCall(
     return TRUE;
 }
 
+/*
+ * @implemented
+ */
 BOOLEAN
 RxFinalizeSrvOpen(
     OUT PSRV_OPEN ThisSrvOpen,
     IN BOOLEAN RecursiveFinalize,
     IN BOOLEAN ForceFinalize)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PFCB Fcb;
+
+    PAGED_CODE();
+
+    /* We have to have a SRV_OPEN */
+    ASSERT(NodeType(ThisSrvOpen) == RDBSS_NTC_SRVOPEN);
+
+    /* If that's a recursive finalization, finalize any related FOBX */
+    if (RecursiveFinalize)
+    {
+        PLIST_ENTRY ListEntry;
+
+        for (ListEntry = ThisSrvOpen->FobxList.Flink;
+             ListEntry != &ThisSrvOpen->FobxList;
+             ListEntry = ListEntry->Flink)
+        {
+            PFOBX Fobx;
+
+            Fobx = CONTAINING_RECORD(ListEntry, FOBX, FobxQLinks);
+            RxFinalizeNetFobx(Fobx, TRUE, ForceFinalize);
+        }
+    }
+
+    /* If we have still references, don't finalize unless forced */
+    if (ThisSrvOpen->NodeReferenceCount != 0 &&
+        !ForceFinalize)
+    {
+        return FALSE;
+    }
+
+    DPRINT("Finalize SRV_OPEN: %p (with %d ref), forced: %d\n", ThisSrvOpen, ThisSrvOpen->NodeReferenceCount, ForceFinalize);
+
+    /* Only finalize if closed, or if it wasn't already done and SRV_OPEN is in a bad shape */
+    Fcb = (PFCB)ThisSrvOpen->pFcb;
+    if ((!ThisSrvOpen->UpperFinalizationDone && ThisSrvOpen->Condition != Condition_Good) ||
+        BooleanFlagOn(ThisSrvOpen->Flags, SRVOPEN_FLAG_CLOSED))
+    {
+        PV_NET_ROOT VNetRoot;
+
+        /* Associated FCB can't be fake one */
+        ASSERT(NodeType(Fcb) != RDBSS_NTC_OPENTARGETDIR_FCB);
+        ASSERT(RxIsFcbAcquiredExclusive (Fcb));
+
+        /* Purge any pending operation */
+        RxPurgeChangeBufferingStateRequestsForSrvOpen(ThisSrvOpen);
+
+        /* If the FCB wasn't orphaned, inform the mini-rdr about close */
+        if (!BooleanFlagOn(Fcb->FcbState, FCB_STATE_ORPHANED))
+        {
+            NTSTATUS Status;
+
+            MINIRDR_CALL_THROUGH(Status, Fcb->MRxDispatch, MRxForceClosed, ((PMRX_SRV_OPEN)ThisSrvOpen));
+            (void)Status;
+        }
+
+        /* Remove ourselves from the FCB */
+        RemoveEntryList(&ThisSrvOpen->SrvOpenQLinks);
+        InitializeListHead(&ThisSrvOpen->SrvOpenQLinks);
+        ++Fcb->SrvOpenListVersion;
+
+        /* If we have a V_NET_ROOT, dereference it */
+        VNetRoot = (PV_NET_ROOT)ThisSrvOpen->pVNetRoot;
+        if (VNetRoot != NULL)
+        {
+            InterlockedDecrement((volatile long *)&VNetRoot->pNetRoot->NumberOfSrvOpens);
+            RxDereferenceVNetRoot(VNetRoot, LHS_LockNotHeld);
+            ThisSrvOpen->pVNetRoot = NULL;
+        }
+
+        /* Finalization done */
+        ThisSrvOpen->UpperFinalizationDone = TRUE;
+    }
+
+    /* Don't free memory if still referenced */
+    if (ThisSrvOpen->NodeReferenceCount != 0)
+    {
+        return FALSE;
+    }
+
+    /* No key association left */
+    ASSERT(IsListEmpty(&ThisSrvOpen->SrvOpenKeyList));
+
+    /* If we're still in some FCB, remove us */
+    if (!IsListEmpty(&ThisSrvOpen->SrvOpenQLinks))
+    {
+        RemoveEntryList(&ThisSrvOpen->SrvOpenQLinks);
+    }
+
+    /* If enclosed allocation, mark the memory zone free and dereference FCB */
+    if (BooleanFlagOn(ThisSrvOpen->Flags, SRVOPEN_FLAG_ENCLOSED_ALLOCATED))
+    {
+        ClearFlag(Fcb->FcbState, FCB_STATE_SRVOPEN_USED);
+        RxDereferenceNetFcb(Fcb);
+    }
+    /* Otherwise, free the memory */
+    else
+    {
+        RxFreeFcbObject(ThisSrvOpen);
+    }
+
+    return TRUE;
 }
 
 /*
@@ -3605,11 +3893,47 @@ RxFlushFcbInSystemCache(
     return IoStatus.Status;
 }
 
+/*
+ * @implemented
+ */
 VOID
 RxFreeFcbObject(
     PVOID Object)
 {
-    UNIMPLEMENTED;
+    PAGED_CODE();
+
+    /* If that's a FOBX/SRV_OPEN, nothing to do, just free it */
+    if (NodeType(Object) == RDBSS_NTC_FOBX || NodeType(Object) == RDBSS_NTC_SRVOPEN)
+    {
+        RxFreePoolWithTag(Object, RX_FCB_POOLTAG);
+    }
+    /* If that's a FCB... */
+    else if (NodeTypeIsFcb(Object))
+    {
+        PFCB Fcb;
+        PRDBSS_DEVICE_OBJECT DeviceObject;
+
+        Fcb = (PFCB)Object;
+        DeviceObject = Fcb->RxDeviceObject;
+
+        /* Delete per stream contexts */
+        FsRtlTeardownPerStreamContexts(&Fcb->Header);
+
+        SetFlag(Fcb->Header.Flags, FSRTL_FLAG_ACQUIRE_MAIN_RSRC_SH);
+
+        /* If there was a non-paged FCB allocated, free it */
+        if (!BooleanFlagOn(Fcb->FcbState, FCB_STATE_PAGING_FILE))
+        {
+            RxFreePoolWithTag(Fcb->NonPaged, RX_NONPAGEDFCB_POOLTAG);
+        }
+
+        /* Free the FCB */
+        RxFreePool(Fcb);
+
+        /* Update statistics */
+        InterlockedDecrement(&RxNumberOfActiveFcbs);
+        InterlockedDecrement((volatile long *)&DeviceObject->NumberOfActiveFcbs);
+    }
 }
 
 /*
@@ -3652,6 +3976,128 @@ RxFreeObject(
 
     /* And just free the object */
     RxFreePool(pObject);
+}
+
+/*
+ * @implemented
+ */
+VOID
+RxGatherRequestsForSrvOpen(
+    IN OUT PSRV_CALL SrvCall,
+    IN PSRV_OPEN SrvOpen,
+    IN OUT PLIST_ENTRY RequestsListHead)
+{
+    KIRQL OldIrql;
+    LIST_ENTRY Discarded, *Entry;
+    PCHANGE_BUFFERING_STATE_REQUEST Request;
+
+    /* Dispatch any pending operation first */
+    RxpDispatchChangeBufferingStateRequests(SrvCall, SrvOpen, &Discarded);
+
+    /* Then, get any entry related to our key and SRV_OPEN */
+    KeAcquireSpinLock(&SrvCall->BufferingManager.SpinLock, &OldIrql);
+    Entry = SrvCall->BufferingManager.HandlerList.Flink;
+    while (Entry != &SrvCall->BufferingManager.HandlerList)
+    {
+        Request = CONTAINING_RECORD(Entry, CHANGE_BUFFERING_STATE_REQUEST, ListEntry);
+        Entry = Entry->Flink;
+        if (Request->SrvOpenKey == SrvOpen->Key && Request->SrvOpen == SrvOpen)
+        {
+            RemoveEntryList(&Request->ListEntry);
+            InsertTailList(RequestsListHead, &Request->ListEntry);
+        }
+    }
+    KeReleaseSpinLock(&SrvCall->BufferingManager.SpinLock, OldIrql);
+
+    /* Perform the same search in the last change list */
+    Entry = SrvCall->BufferingManager.LastChanceHandlerList.Flink;
+    while (Entry != &SrvCall->BufferingManager.LastChanceHandlerList)
+    {
+        Request = CONTAINING_RECORD(Entry, CHANGE_BUFFERING_STATE_REQUEST, ListEntry);
+        Entry = Entry->Flink;
+        if (Request->SrvOpenKey == SrvOpen->Key && Request->SrvOpen == SrvOpen)
+        {
+            RemoveEntryList(&Request->ListEntry);
+            InsertTailList(RequestsListHead, &Request->ListEntry);
+        }
+    }
+
+    /* Discard the discarded requests */
+    RxpDiscardChangeBufferingStateRequests(&Discarded);
+}
+
+/*
+ * @implemented
+ */
+PRDBSS_DEVICE_OBJECT
+RxGetDeviceObjectOfInstance(
+    PVOID Instance)
+{
+    NODE_TYPE_CODE NodeType;
+    PRDBSS_DEVICE_OBJECT DeviceObject;
+
+    PAGED_CODE();
+
+    /* We only handle a few object types */
+    NodeType = NodeType(Instance);
+    ASSERT((NodeType == RDBSS_NTC_SRVCALL) || (NodeType == RDBSS_NTC_NETROOT) ||
+           (NodeType == RDBSS_NTC_V_NETROOT) || (NodeType == RDBSS_NTC_SRVOPEN) || (NodeType == RDBSS_NTC_FOBX));
+
+    /* Get the device object depending on the object */
+    switch (NodeType)
+    {
+        case RDBSS_NTC_FOBX:
+        {
+            PFOBX Fobx;
+
+            Fobx = (PFOBX)Instance;
+            DeviceObject = Fobx->RxDeviceObject;
+            break;
+        }
+
+        case RDBSS_NTC_SRVCALL:
+        {
+            PSRV_CALL SrvCall;
+
+            SrvCall = (PSRV_CALL)Instance;
+            DeviceObject = SrvCall->RxDeviceObject;
+            break;
+        }
+
+        case RDBSS_NTC_NETROOT:
+        {
+            PNET_ROOT NetRoot;
+
+            NetRoot = (PNET_ROOT)Instance;
+            DeviceObject = NetRoot->pSrvCall->RxDeviceObject;
+            break;
+        }
+
+        case RDBSS_NTC_V_NETROOT:
+        {
+            PV_NET_ROOT VNetRoot;
+
+            VNetRoot = (PV_NET_ROOT)Instance;
+            DeviceObject = VNetRoot->pNetRoot->pSrvCall->RxDeviceObject;
+            break;
+        }
+
+        case RDBSS_NTC_SRVOPEN:
+        {
+            PSRV_OPEN SrvOpen;
+
+            SrvOpen = (PSRV_OPEN)Instance;
+            DeviceObject = ((PFCB)SrvOpen->pFcb)->RxDeviceObject;
+            break;
+        }
+
+        default:
+            DeviceObject = NULL;
+            break;
+    }
+
+    /* Job done */
+    return DeviceObject;
 }
 
 /*
@@ -4105,6 +4551,28 @@ RxInitializeSrvCallParameters(
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RxInitializeRxTimer(
+    VOID)
+{
+    PAGED_CODE();
+
+    RxTimerInterval.HighPart = -1;
+    RxTimerInterval.LowPart = -550000;
+    KeInitializeSpinLock(&RxTimerLock);
+    InitializeListHead(&RxTimerQueueHead);
+    InitializeListHead(&RxRecurrentWorkItemsList);
+    KeInitializeDpc(&RxTimerDpc, RxTimerDispatch, NULL);
+    KeInitializeTimer(&RxTimer);
+    RxTimerTickCount = 0;
+
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS
 RxInitializeVNetRootParameters(
    PRX_CONTEXT RxContext,
@@ -4454,6 +4922,9 @@ RxLockUserBuffer(
     _SEH2_END;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 RxLowIoCompletionTail(
     IN PRX_CONTEXT RxContext)
@@ -4484,10 +4955,15 @@ RxLowIoCompletionTail(
     Operation = RxContext->LowIoContext.Operation;
     if (Operation == LOWIO_OP_READ || Operation == LOWIO_OP_WRITE)
     {
+        /* Remove ourselves from the list and resume operations */
         if (BooleanFlagOn(RxContext->LowIoContext.ParamsFor.ReadWrite.Flags, LOWIO_READWRITEFLAG_PAGING_IO))
         {
-            UNIMPLEMENTED;
-            Status = STATUS_NOT_IMPLEMENTED;
+            ExAcquireFastMutexUnsafe(&RxLowIoPagingIoSyncMutex);
+            RemoveEntryList(&RxContext->RxContextSerializationQLinks);
+            RxContext->RxContextSerializationQLinks.Flink = NULL;
+            RxContext->RxContextSerializationQLinks.Blink = NULL;
+            ExReleaseFastMutexUnsafe(&RxLowIoPagingIoSyncMutex);
+            RxResumeBlockedOperations_ALL(RxContext);
         }
     }
     else
@@ -4762,19 +5238,148 @@ RxMapSystemBuffer(
     return Irp->AssociatedIrp.SystemBuffer;
 }
 
+/*
+ * @implemented
+ */
 VOID
 RxMarkFobxOnCleanup(
     PFOBX pFobx,
     PBOOLEAN NeedPurge)
 {
-    UNIMPLEMENTED;
+    PFCB Fcb;
+    PFOBX ScavengerFobx;
+    LARGE_INTEGER TickCount;
+    PRDBSS_SCAVENGER Scavenger;
+
+    PAGED_CODE();
+
+    /* No FOBX, nothing to mark */
+    if (pFobx == NULL)
+    {
+        return;
+    }
+
+    /* Query time for close */
+    KeQueryTickCount(&TickCount);
+
+    Fcb = (PFCB)pFobx->pSrvOpen->pFcb;
+    ASSERT(NodeTypeIsFcb(Fcb));
+
+    Scavenger = Fcb->RxDeviceObject->pRdbssScavenger;
+    RxAcquireScavengerMutex();
+
+    ScavengerFobx = NULL;
+    /* If that's not a file, or even not a disk resource, just mark as dormant */
+    if (NodeType(Fcb) != RDBSS_NTC_STORAGE_TYPE_FILE || Fcb->VNetRoot->pNetRoot->DeviceType != FILE_DEVICE_DISK)
+    {
+        SetFlag(pFobx->Flags, FOBX_FLAG_MARKED_AS_DORMANT);
+        InitializeListHead(&pFobx->ClosePendingList);
+        ++Scavenger->NumberOfDormantFiles;
+    }
+    else
+    {
+        ASSERT(Scavenger->NumberOfDormantFiles >= 0);
+        /* If we're about to reach the maximum dormant of FOBX */
+        if (Scavenger->NumberOfDormantFiles >= Scavenger->MaximumNumberOfDormantFiles)
+        {
+            /* This should never be wrong... */
+            if (!IsListEmpty(&Scavenger->ClosePendingFobxsList))
+            {
+                /* Then, take the first from the list (oldest) and save it for later purge */
+                ScavengerFobx = CONTAINING_RECORD(Scavenger->ClosePendingFobxsList.Flink, FOBX, ClosePendingList);
+                if (ScavengerFobx->pSrvOpen != NULL && ScavengerFobx->pSrvOpen->pFcb == RX_GET_MRX_FCB(Fcb))
+                {
+                    *NeedPurge = TRUE;
+                    ScavengerFobx = NULL;
+                }
+                else
+                {
+                    RxReferenceNetFobx(ScavengerFobx);
+                }
+            }
+        }
+
+        /* Mark ourselves as dormant */
+        SetFlag(pFobx->Flags, FOBX_FLAG_MARKED_AS_DORMANT);
+        pFobx->CloseTime.QuadPart = TickCount.QuadPart;
+
+        /* And insert us in the list of dormant files */
+        InsertTailList(&Scavenger->ClosePendingFobxsList, &pFobx->ClosePendingList);
+        /* If scavenger was inactive, start it */
+        if (Scavenger->NumberOfDormantFiles++ == 0 && Scavenger->State == RDBSS_SCAVENGER_INACTIVE)
+        {
+            Scavenger->State = RDBSS_SCAVENGER_DORMANT;
+            RxPostOneShotTimerRequest(RxFileSystemDeviceObject, &Scavenger->WorkItem, RxScavengerTimerRoutine,
+                                      Fcb->RxDeviceObject, Scavenger->TimeLimit);
+        }
+    }
+
+    RxReleaseScavengerMutex();
+
+    /* If we had reached max */
+    if (ScavengerFobx != NULL)
+    {
+        NTSTATUS Status;
+
+        /* Purge the oldest FOBX */
+        Status = RxPurgeFobxFromCache(ScavengerFobx);
+        if (Status != STATUS_SUCCESS)
+        {
+            *NeedPurge = TRUE;
+        }
+    }
 }
 
+/*
+ * @implemented
+ */
 VOID
 RxMarkFobxOnClose(
     PFOBX Fobx)
 {
-    UNIMPLEMENTED;
+    PFCB Fcb;
+    PRDBSS_SCAVENGER Scavenger;
+
+    PAGED_CODE();
+
+    /* No FOBX, nothing to mark */
+    if (Fobx == NULL)
+    {
+        return;
+    }
+
+    Fcb = (PFCB)Fobx->pSrvOpen->pFcb;
+    ASSERT(NodeTypeIsFcb(Fcb));
+
+    Scavenger = Fcb->RxDeviceObject->pRdbssScavenger;
+
+    RxAcquireScavengerMutex();
+    /* Only mark it if it was already marked as dormant */
+    if (BooleanFlagOn(Fobx->Flags, FOBX_FLAG_MARKED_AS_DORMANT))
+    {
+        /* If FCB wasn't already decrement, do it now */
+        if (!Fobx->fOpenCountDecremented)
+        {
+            Fcb = (PFCB)Fobx->pSrvOpen->pFcb;
+            ASSERT(NodeTypeIsFcb(Fcb));
+            InterlockedDecrement((volatile long *)&Fcb->OpenCount);
+
+            Fobx->fOpenCountDecremented = TRUE;
+        }
+
+        /* We're no longer dormant */
+        InterlockedDecrement(&Scavenger->NumberOfDormantFiles);
+        ClearFlag(Fobx->Flags, FOBX_FLAG_MARKED_AS_DORMANT);
+    }
+
+    /* If we were inserted in the scavenger, drop ourselves out */
+    if (!IsListEmpty(&Fobx->ClosePendingList))
+    {
+        RemoveEntryList(&Fobx->ClosePendingList);
+        InitializeListHead(&Fobx->ClosePendingList);
+    }
+
+    RxReleaseScavengerMutex();
 }
 
 /*
@@ -4929,7 +5534,7 @@ RxpDereferenceAndFinalizeNetFcb(
     }
 
     /* If locking was OK (or not needed!), attempt finalization */
-    if (NT_SUCCESS(Status))
+    if (Status == STATUS_SUCCESS)
     {
         Freed = RxFinalizeNetFcb(ThisFcb, RecursiveFinalize, ForceFinalize, References);
     }
@@ -5005,20 +5610,338 @@ RxpDestroySrvCall(
     RxReleasePrefixTableLock(PrefixTable);
 }
 
+/*
+ * @implemented
+ */
 VOID
 RxpDiscardChangeBufferingStateRequests(
     _Inout_ PLIST_ENTRY DiscardedRequests)
 {
-    UNIMPLEMENTED;
+    PLIST_ENTRY Entry;
+
+    PAGED_CODE();
+
+    /* No requests to discard */
+    if (IsListEmpty(DiscardedRequests))
+    {
+        return;
+    }
+
+    /* Free all the discarded requests */
+    Entry = DiscardedRequests->Flink;
+    while (Entry != DiscardedRequests)
+    {
+        PCHANGE_BUFFERING_STATE_REQUEST Request;
+
+        Request = CONTAINING_RECORD(Entry, CHANGE_BUFFERING_STATE_REQUEST, ListEntry);
+        Entry = Entry->Flink;
+
+        DPRINT("Req %p for %p (%p) discarded\n", Request, Request->SrvOpenKey, Request->SrvOpen);
+
+        RxPrepareRequestForReuse(Request);
+        RxFreePool(Request);
+    }
 }
 
+/*
+ * @implemented
+ */
 VOID
 RxpDispatchChangeBufferingStateRequests(
     PSRV_CALL SrvCall,
     PSRV_OPEN SrvOpen,
     PLIST_ENTRY DiscardedRequests)
 {
-    UNIMPLEMENTED;
+    KIRQL OldIrql;
+    NTSTATUS Status;
+    BOOLEAN StartDispatcher;
+    LIST_ENTRY AcceptedReqs;
+    LIST_ENTRY DispatcherList;
+    PRX_BUFFERING_MANAGER BufferingManager;
+
+    /* Initialize our lists */
+    InitializeListHead(&AcceptedReqs);
+    InitializeListHead(DiscardedRequests);
+
+    /* Transfer the requests to dispatch locally */
+    BufferingManager = &SrvCall->BufferingManager;
+    KeAcquireSpinLock(&BufferingManager->SpinLock, &OldIrql);
+    RxTransferList(&DispatcherList, &BufferingManager->DispatcherList);
+    KeReleaseSpinLock(&BufferingManager->SpinLock, OldIrql);
+
+    /* If there were requests */
+    if (!IsListEmpty(&DispatcherList))
+    {
+        PLIST_ENTRY Entry;
+
+        /* For each of the entries... */
+        Entry = DispatcherList.Flink;
+        while (Entry != &DispatcherList)
+        {
+            PCHANGE_BUFFERING_STATE_REQUEST Request;
+
+            Request = CONTAINING_RECORD(Entry, CHANGE_BUFFERING_STATE_REQUEST, ListEntry);
+            Entry = Entry->Flink;
+
+            /* If we have been provided a SRV_OPEN, see whether it matches */
+            if (SrvOpen != NULL)
+            {
+                /* Match, the request is accepted */
+                if (Request->SrvOpenKey == SrvOpen->Key)
+                {
+                    Request->SrvOpen = SrvOpen;
+                    RxReferenceSrvOpen(SrvOpen);
+
+                    RemoveEntryList(&Request->ListEntry);
+                    InsertTailList(&AcceptedReqs, &Request->ListEntry);
+
+                    /* Move to the next entry */
+                    continue;
+                }
+                else
+                {
+                    Status = STATUS_PENDING;
+                }
+            }
+            else
+            {
+                /* No SRV_OPEN provided, try to find one */
+                Status = RxpLookupSrvOpenForRequestLite(SrvCall, Request);
+            }
+
+            /* We found a matching SRV_OPEN, accept the request */
+            if (Status == STATUS_SUCCESS)
+            {
+                RemoveEntryList(&Request->ListEntry);
+                InsertTailList(&AcceptedReqs, &Request->ListEntry);
+            }
+            /* Another run might help handling it, don't discard it */
+            else if (Status == STATUS_PENDING)
+            {
+                continue;
+            }
+            /* Otherwise, discard the request */
+            else
+            {
+                ASSERT(Status == STATUS_NOT_FOUND);
+
+                RemoveEntryList(&Request->ListEntry);
+                InsertTailList(DiscardedRequests, &Request->ListEntry);
+            }
+        }
+    }
+
+    KeAcquireSpinLock(&BufferingManager->SpinLock, &OldIrql);
+    /* Nothing to dispatch, no need to start dispatcher */
+    if (IsListEmpty(&DispatcherList))
+    {
+        StartDispatcher = FALSE;
+    }
+    else
+    {
+        /* Transfer back the list of the not treated entries to the buffering manager */
+        RxTransferList(&BufferingManager->DispatcherList, &DispatcherList);
+        StartDispatcher = (BufferingManager->DispatcherActive == FALSE);
+        /* If the dispatcher isn't active, start it */
+        if (StartDispatcher)
+        {
+            BufferingManager->DispatcherActive = TRUE;
+        }
+    }
+
+    /* If there were accepted requests, move them to the buffering manager */
+    if (!IsListEmpty(&AcceptedReqs))
+    {
+        RxTransferList(&BufferingManager->HandlerList, &AcceptedReqs);
+    }
+    KeReleaseSpinLock(&BufferingManager->SpinLock, OldIrql);
+
+    /* If we're to start the dispatcher, do it */
+    if (StartDispatcher)
+    {
+        RxReferenceSrvCall(SrvCall);
+        DPRINT("Starting dispatcher\n");
+        RxPostToWorkerThread(RxFileSystemDeviceObject, HyperCriticalWorkQueue,
+                             &BufferingManager->DispatcherWorkItem,
+                             RxDispatchChangeBufferingStateRequests, SrvCall);
+    }
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+RxpLookupSrvOpenForRequestLite(
+    IN PSRV_CALL SrvCall,
+    IN OUT PCHANGE_BUFFERING_STATE_REQUEST Request)
+{
+    NTSTATUS Status;
+    PLIST_ENTRY Entry;
+    PSRV_OPEN SrvOpen;
+
+    PAGED_CODE();
+
+    Status = STATUS_SUCCESS;
+    /* Browse all our associated SRV_OPENs to find the one! */
+    for (Entry = SrvCall->BufferingManager.SrvOpenLists[0].Flink;
+         Entry != &SrvCall->BufferingManager.SrvOpenLists[0];
+         Entry = Entry->Flink)
+    {
+        /* Same key, not orphaned, this is ours */
+        SrvOpen = CONTAINING_RECORD(Entry, SRV_OPEN, SrvOpenKeyList);
+        if (SrvOpen->Key == Request->SrvOpenKey)
+        {
+            if (!BooleanFlagOn(SrvOpen->pFcb->FcbState, FCB_STATE_ORPHANED))
+            {
+                RxReferenceSrvOpen(SrvOpen);
+                break;
+            }
+        }
+    }
+
+    /* We didn't manage to find a SRV_OPEN */
+    if (Entry == &SrvCall->BufferingManager.SrvOpenLists[0])
+    {
+        SrvOpen = NULL;
+
+        /* The coming open might help, mark as pending for later retry */
+        if (SrvCall->BufferingManager.NumberOfOutstandingOpens != 0)
+        {
+            Status = STATUS_PENDING;
+        }
+        /* Else, it's a complete failure */
+        else
+        {
+            Status = STATUS_NOT_FOUND;
+        }
+    }
+
+    /* Return the (not) found SRV_OPEN */
+    Request->SrvOpen = SrvOpen;
+
+    return Status;
+}
+
+/*
+ * @implemented
+ */
+VOID
+RxpMarkInstanceForScavengedFinalization(
+   PVOID Instance)
+{
+    NODE_TYPE_CODE NodeType;
+    PNODE_TYPE_AND_SIZE Node;
+    PRDBSS_SCAVENGER Scavenger;
+    PRDBSS_DEVICE_OBJECT DeviceObject;
+    PLIST_ENTRY ScavengerHead, InstEntry;
+
+    PAGED_CODE();
+
+    /* If still referenced, don't mark it (broken caller) */
+    Node = (PNODE_TYPE_AND_SIZE)Instance;
+    if (Node->NodeReferenceCount > 1)
+    {
+        return;
+    }
+
+    DeviceObject = RxGetDeviceObjectOfInstance(Instance);
+    Scavenger = DeviceObject->pRdbssScavenger;
+
+    /* Mark the node */
+    NodeType = NodeType(Instance);
+    SetFlag(NodeType(Node), RX_SCAVENGER_MASK);
+    DPRINT("Node %p has now the scavenger mark!\n", Instance);
+
+    /* Increase the count in the scavenger, and queue it */
+    ScavengerHead = NULL;
+    switch (NodeType)
+    {
+        case RDBSS_NTC_FOBX:
+            ++Scavenger->FobxsToBeFinalized;
+            ScavengerHead = &Scavenger->FobxFinalizationList;
+            InstEntry = &((PFOBX)Instance)->ScavengerFinalizationList;
+            break;
+
+        case RDBSS_NTC_SRVCALL:
+            ++Scavenger->SrvCallsToBeFinalized;
+            ScavengerHead = &Scavenger->SrvCallFinalizationList;
+            InstEntry = &((PSRV_CALL)Instance)->ScavengerFinalizationList;
+            break;
+
+        case RDBSS_NTC_NETROOT:
+            ++Scavenger->NetRootsToBeFinalized;
+            ScavengerHead = &Scavenger->NetRootFinalizationList;
+            InstEntry = &((PNET_ROOT)Instance)->ScavengerFinalizationList;
+            break;
+
+        case RDBSS_NTC_V_NETROOT:
+            ++Scavenger->VNetRootsToBeFinalized;
+            ScavengerHead = &Scavenger->VNetRootFinalizationList;
+            InstEntry = &((PV_NET_ROOT)Instance)->ScavengerFinalizationList;
+            break;
+
+        case RDBSS_NTC_SRVOPEN:
+            ++Scavenger->SrvOpensToBeFinalized;
+            ScavengerHead = &Scavenger->SrvOpenFinalizationList;
+            InstEntry = &((PSRV_OPEN)Instance)->ScavengerFinalizationList;
+            break;
+    }
+
+    /* Extra ref for scavenger */
+    InterlockedIncrement((volatile long *)&Node->NodeReferenceCount);
+
+    /* If matching type */
+    if (ScavengerHead != NULL)
+    {
+        /* Insert in the scavenger list */
+        InsertTailList(ScavengerHead, InstEntry);
+
+        /* And if it wasn't started, start it */
+        if (Scavenger->State == RDBSS_SCAVENGER_INACTIVE)
+        {
+            Scavenger->State = RDBSS_SCAVENGER_DORMANT;
+            RxPostOneShotTimerRequest(RxFileSystemDeviceObject, &Scavenger->WorkItem,
+                                      RxScavengerTimerRoutine, DeviceObject, Scavenger->TimeLimit);
+        }
+    }
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RxPostOneShotTimerRequest(
+    IN PRDBSS_DEVICE_OBJECT pDeviceObject,
+    IN PRX_WORK_ITEM pWorkItem,
+    IN PRX_WORKERTHREAD_ROUTINE Routine,
+    IN PVOID pContext,
+    IN LARGE_INTEGER TimeInterval)
+{
+    KIRQL OldIrql;
+
+    ASSERT(pWorkItem != NULL);
+
+    /* Prepare the work item */
+    ExInitializeWorkItem(&pWorkItem->WorkQueueItem, Routine, pContext);
+    pWorkItem->WorkQueueItem.pDeviceObject = pDeviceObject;
+
+    /* Last tick can be computed with the number of times it was caller (timertickcount)
+     * and the interval between calls
+     */
+    KeAcquireSpinLock(&RxTimerLock, &OldIrql);
+    pWorkItem->LastTick = (TimeInterval.QuadPart / 550000) + RxTimerTickCount + 1;
+    /* Insert in work queue */
+    InsertTailList(&RxTimerQueueHead, &pWorkItem->WorkQueueItem.List);
+    KeReleaseSpinLock(&RxTimerLock, OldIrql);
+
+    /* If there are queued events, queue an execution */
+    if (IsListEmpty(&RxTimerQueueHead))
+    {
+        KeSetTimer(&RxTimer, RxTimerInterval, &RxTimerDpc);
+    }
+
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -5231,6 +6154,41 @@ RxPrepareContextForReuse(
  * @implemented
  */
 VOID
+RxPrepareRequestForReuse(
+    PCHANGE_BUFFERING_STATE_REQUEST Request)
+{
+    PSRV_OPEN SrvOpen;
+
+    PAGED_CODE();
+
+    SrvOpen = Request->SrvOpen;
+
+    /* If the request was already prepared for service */
+    if (BooleanFlagOn(Request->Flags, RX_REQUEST_PREPARED_FOR_HANDLING))
+    {
+        /* We have to dereference the associated SRV_OPEN depending on the lock */
+        if (RxIsFcbAcquiredExclusive(SrvOpen->pFcb))
+        {
+            RxDereferenceSrvOpen(SrvOpen, LHS_ExclusiveLockHeld);
+        }
+        else
+        {
+            RxDereferenceSrvOpen(SrvOpen, LHS_LockNotHeld);
+        }
+    }
+    /* Otherwise, just dereference */
+    else if (SrvOpen != NULL)
+    {
+        RxDereferenceSrvOpen(SrvOpen, LHS_LockNotHeld);
+    }
+
+    Request->SrvOpen = NULL;
+}
+
+/*
+ * @implemented
+ */
+VOID
 NTAPI
 RxProcessChangeBufferingStateRequests(
     _In_ PVOID SrvCall)
@@ -5238,6 +6196,37 @@ RxProcessChangeBufferingStateRequests(
     /* Call internal routine */
     RxUndoScavengerFinalizationMarking(SrvCall);
     RxpProcessChangeBufferingStateRequests(SrvCall, TRUE);
+}
+
+/*
+ * @implemented
+ */
+VOID
+RxProcessChangeBufferingStateRequestsForSrvOpen(
+    PSRV_OPEN SrvOpen)
+{
+    LONG NumberOfBufferingChangeRequests, OldBufferingToken;
+
+    /* Get the current number of change requests */
+    NumberOfBufferingChangeRequests = ((PSRV_CALL)SrvOpen->pVNetRoot->pNetRoot->pSrvCall)->BufferingManager.CumulativeNumberOfBufferingChangeRequests;
+    /* Get our old token */
+    OldBufferingToken = InterlockedCompareExchange(&SrvOpen->BufferingToken,
+                                                   NumberOfBufferingChangeRequests, NumberOfBufferingChangeRequests);
+    /* Do we have stuff to process? */
+    if (OldBufferingToken != SrvOpen->BufferingToken)
+    {
+        PFCB Fcb;
+        NTSTATUS Status;
+
+        /* Acquire the FCB and start processing */
+        Fcb = (PFCB)SrvOpen->pFcb;
+        Status = RxAcquireExclusiveFcb(NULL, Fcb);
+        if (Status == STATUS_SUCCESS)
+        {
+            RxProcessFcbChangeBufferingStateRequest(Fcb);
+            RxReleaseFcb(NULL, Fcb);
+        }
+    }
 }
 
 VOID
@@ -5280,22 +6269,111 @@ RxpTrackReference(
     UNIMPLEMENTED;
 }
 
+/*
+ * @implemented
+ */
 VOID
 RxpUndoScavengerFinalizationMarking(
    PVOID Instance)
 {
+    PLIST_ENTRY ListEntry;
     PNODE_TYPE_AND_SIZE Node;
+    PRDBSS_SCAVENGER Scavenger;
 
     PAGED_CODE();
 
     Node = (PNODE_TYPE_AND_SIZE)Instance;
     /* There's no marking - nothing to do */
-    if (!BooleanFlagOn(Node->NodeTypeCode, RX_SCAVENGER_MASK))
+    if (!BooleanFlagOn(NodeType(Node), RX_SCAVENGER_MASK))
     {
         return;
     }
 
-    UNIMPLEMENTED;
+    /* First of all, remove the mark */
+    ClearFlag(NodeType(Node), RX_SCAVENGER_MASK);
+    DPRINT("Node %p no longer has the scavenger mark\n");
+
+    /* And now, remove from the scavenger */
+    Scavenger = RxGetDeviceObjectOfInstance(Instance)->pRdbssScavenger;
+    switch (NodeType(Node))
+    {
+        case RDBSS_NTC_FOBX:
+            --Scavenger->FobxsToBeFinalized;
+            ListEntry = &((PFOBX)Instance)->ScavengerFinalizationList;
+            break;
+
+        case RDBSS_NTC_SRVCALL:
+            --Scavenger->SrvCallsToBeFinalized;
+            ListEntry = &((PSRV_CALL)Instance)->ScavengerFinalizationList;
+            break;
+
+        case RDBSS_NTC_NETROOT:
+            --Scavenger->NetRootsToBeFinalized;
+            ListEntry = &((PNET_ROOT)Instance)->ScavengerFinalizationList;
+            break;
+
+        case RDBSS_NTC_V_NETROOT:
+            --Scavenger->VNetRootsToBeFinalized;
+            ListEntry = &((PV_NET_ROOT)Instance)->ScavengerFinalizationList;
+            break;
+
+        case RDBSS_NTC_SRVOPEN:
+            --Scavenger->SrvOpensToBeFinalized;
+            ListEntry = &((PSRV_OPEN)Instance)->ScavengerFinalizationList;
+            break;
+    }
+
+    /* Also, remove the extra ref from the scavenger */
+    RemoveEntryList(ListEntry);
+    InterlockedDecrement((volatile long *)&Node->NodeReferenceCount);
+}
+
+/*
+ * @implemented
+ */
+VOID
+RxPurgeChangeBufferingStateRequestsForSrvOpen(
+    PSRV_OPEN SrvOpen)
+{
+    PSRV_CALL SrvCall;
+    LIST_ENTRY Discarded;
+
+    PAGED_CODE();
+
+    ASSERT(RxIsFcbAcquiredExclusive(SrvOpen->Fcb));
+
+    /* Initialize our discarded list */
+    InitializeListHead(&Discarded);
+
+    SrvCall = (PSRV_CALL)SrvOpen->Fcb->VNetRoot->pNetRoot->pSrvCall;
+    RxAcquireBufferingManagerMutex(&SrvCall->BufferingManager);
+
+    /* Set the flag, and get the requests */
+    InitializeListHead(&SrvOpen->SrvOpenKeyList);
+    SetFlag(SrvOpen->Flags, SRVOPEN_FLAG_BUFFERING_STATE_CHANGE_REQUESTS_PURGED);
+    RxGatherRequestsForSrvOpen(SrvCall, SrvOpen, &Discarded);
+
+    RxReleaseBufferingManagerMutex(&SrvCall->BufferingManager);
+
+    /* If there were discarded requests */
+    if (!IsListEmpty(&Discarded))
+    {
+        /* And a pending buffering state change */
+        if (BooleanFlagOn(SrvOpen->Flags, SRVOPEN_FLAG_BUFFERING_STATE_CHANGE_PENDING))
+        {
+            /* Clear the flag, and set the associated event - job done */
+            RxAcquireSerializationMutex();
+            ClearFlag(SrvOpen->Fcb->FcbState, FCB_STATE_BUFFERING_STATE_CHANGE_PENDING);
+            if (SrvOpen->Fcb->pBufferingStateChangeCompletedEvent != NULL)
+            {
+                KeSetEvent(SrvOpen->Fcb->pBufferingStateChangeCompletedEvent, IO_NETWORK_INCREMENT, FALSE);
+            }
+            RxReleaseSerializationMutex();
+        }
+
+        /* Drop the discarded requests */
+        RxpDiscardChangeBufferingStateRequests(&Discarded);
+    }
 }
 
 /*
@@ -5373,6 +6451,52 @@ RxPurgeFcbInSystemCache(
     /* Return appropriate status */
     Status = (Purged ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
     DPRINT("Purge for FCB %p returns %lx\n", Fcb, Status);
+
+    return Status;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+RxPurgeFobxFromCache(
+    PFOBX FobxToBePurged)
+{
+    NTSTATUS Status;
+    PFCB FcbToBePurged;
+
+    PAGED_CODE();
+
+    FcbToBePurged = (PFCB)FobxToBePurged->pSrvOpen->pFcb;
+    ASSERT(FcbToBePurged != NULL);
+
+    /* If we cannot have our FCB exclusively, give up */
+    Status = RxAcquireExclusiveFcb(NULL, FcbToBePurged);
+    if (Status != STATUS_SUCCESS)
+    {
+        RxDereferenceNetFobx(FobxToBePurged, LHS_LockNotHeld);
+        return Status;
+    }
+
+    /* Don't let the FCB disappear */
+    RxReferenceNetFcb(FcbToBePurged);
+
+    /* If the SRV_OPEN was already closed, or if there are unclean FOBX, give up */
+    if (BooleanFlagOn(FobxToBePurged->Flags, FOBX_FLAG_SRVOPEN_CLOSED) || FobxToBePurged->pSrvOpen->UncleanFobxCount != 0)
+    {
+        DPRINT("FCB purge skipped\n");
+    }
+    else
+    {
+        Status = RxPurgeFcbInSystemCache(FcbToBePurged, NULL, 0, FALSE, TRUE);
+    }
+
+    RxDereferenceNetFobx(FobxToBePurged, LHS_ExclusiveLockHeld);
+    /* Drop our extra reference */
+    if (!RxDereferenceAndFinalizeNetFcb(FcbToBePurged, NULL, FALSE, FALSE))
+    {
+        RxReleaseFcb(NULL, FcbToBePurged);
+    }
 
     return Status;
 }
@@ -5591,6 +6715,30 @@ RxReference(
  * @implemented
  */
 VOID
+RxRemoveNameNetFcb(
+    OUT PFCB ThisFcb)
+{
+    PNET_ROOT NetRoot;
+
+    PAGED_CODE();
+
+    ASSERT(NodeTypeIsFcb(ThisFcb));
+
+    /* Just remove the entry from the FCB_TABLE */
+    NetRoot = (PNET_ROOT)ThisFcb->VNetRoot->pNetRoot;
+    ASSERT(RxIsFcbTableLockExclusive(&NetRoot->FcbTable));
+    ASSERT(RxIsFcbAcquiredExclusive(ThisFcb));
+
+    RxFcbTableRemoveFcb(&NetRoot->FcbTable, ThisFcb);
+    DPRINT("FCB (%p) %wZ removed\n", ThisFcb, &ThisFcb->FcbTableEntry.Path);
+    /* Mark, so that we don't try to do it twice */
+    SetFlag(ThisFcb->FcbState, FCB_STATE_NAME_ALREADY_REMOVED);
+}
+
+/*
+ * @implemented
+ */
+VOID
 RxRemovePrefixTableEntry(
     IN OUT PRX_PREFIX_TABLE ThisTable,
     IN OUT PRX_PREFIX_ENTRY Entry)
@@ -5673,6 +6821,23 @@ RxRemoveVirtualNetRootFromNetRoot(
         MINIRDR_CALL_THROUGH(Status, NetRoot->pSrvCall->RxDeviceObject->Dispatch,
                              MRxFinalizeNetRoot, ((PMRX_NET_ROOT)NetRoot, FALSE));
         (void)Status;
+    }
+}
+
+VOID
+RxResumeBlockedOperations_ALL(
+    IN OUT PRX_CONTEXT RxContext)
+{
+    LIST_ENTRY BlockedOps;
+
+    PAGED_CODE();
+
+    /* Get the blocked operations */
+    RxTransferListWithMutex(&BlockedOps, &RxContext->BlockedOperations, RxContext->BlockedOpsMutex);
+
+    if (!IsListEmpty(&BlockedOps))
+    {
+        UNIMPLEMENTED;
     }
 }
 
@@ -5765,6 +6930,80 @@ RxScavengeRelatedFobxs(
     }
 
     return TRUE;
+}
+
+VOID
+RxScavengerFinalizeEntries(
+    PRDBSS_DEVICE_OBJECT DeviceObject)
+{
+    UNIMPLEMENTED;
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+RxScavengerTimerRoutine(
+    PVOID Context)
+{
+    BOOLEAN Requeue;
+    PRDBSS_DEVICE_OBJECT DeviceObject;
+    PRDBSS_SCAVENGER Scavenger;
+
+    PAGED_CODE();
+
+    DeviceObject = Context;
+    Scavenger = DeviceObject->pRdbssScavenger;
+
+    Requeue = FALSE;
+    RxAcquireScavengerMutex();
+    /* If the scavenger was dormant, wake it up! */
+    if (Scavenger->State == RDBSS_SCAVENGER_DORMANT)
+    {
+        /* Done */
+        Scavenger->State = RDBSS_SCAVENGER_ACTIVE;
+        KeResetEvent(&Scavenger->ScavengeEvent);
+
+        /* Scavenger the entries */
+        RxReleaseScavengerMutex();
+        RxScavengerFinalizeEntries(DeviceObject);
+        RxAcquireScavengerMutex();
+
+        /* If we're still active (race) */
+        if (Scavenger->State == RDBSS_SCAVENGER_ACTIVE)
+        {
+            /* If there are new entries to scavenge, stay dormant and requeue a run */
+            if (Scavenger->NumberOfDormantFiles + Scavenger->SrvCallsToBeFinalized +
+                Scavenger->NetRootsToBeFinalized + Scavenger->VNetRootsToBeFinalized +
+                Scavenger->FcbsToBeFinalized + Scavenger->SrvOpensToBeFinalized +
+                Scavenger->FobxsToBeFinalized != 0)
+            {
+                Requeue = TRUE;
+                Scavenger->State = RDBSS_SCAVENGER_DORMANT;
+            }
+            /* Otherwise, we're inactive again */
+            else
+            {
+                Scavenger->State == RDBSS_SCAVENGER_INACTIVE;
+            }
+        }
+
+        RxReleaseScavengerMutex();
+
+        /* Requeue an execution */
+        if (Requeue)
+        {
+            RxPostOneShotTimerRequest(RxFileSystemDeviceObject, &Scavenger->WorkItem,
+                                      RxScavengerTimerRoutine, DeviceObject, Scavenger->TimeLimit);
+        }
+    }
+    else
+    {
+        RxReleaseScavengerMutex();
+    }
+
+    KeSetEvent(&Scavenger->ScavengeEvent, IO_NO_INCREMENT, FALSE);
 }
 
 BOOLEAN
@@ -6238,6 +7477,78 @@ RxTearDownBufferingManager(
  * @implemented
  */
 VOID
+NTAPI
+RxTimerDispatch(
+    _In_ struct _KDPC *Dpc,
+    _In_opt_ PVOID DeferredContext,
+    _In_opt_ PVOID SystemArgument1,
+    _In_opt_ PVOID SystemArgument2)
+{
+    BOOLEAN Set;
+    LIST_ENTRY LocalList;
+    PLIST_ENTRY ListEntry;
+    PRX_WORK_ITEM WorkItem;
+
+    InitializeListHead(&LocalList);
+
+    KeAcquireSpinLockAtDpcLevel(&RxTimerLock);
+    ++RxTimerTickCount;
+
+    /* Find any entry matching */
+    if (!IsListEmpty(&RxTimerQueueHead))
+    {
+        ListEntry = RxTimerQueueHead.Flink;
+        do
+        {
+            WorkItem = CONTAINING_RECORD(ListEntry, RX_WORK_ITEM, WorkQueueItem.List);
+            if (WorkItem->LastTick == RxTimerTickCount)
+            {
+                ListEntry = ListEntry->Flink;
+
+                RemoveEntryList(&WorkItem->WorkQueueItem.List);
+                InsertTailList(&LocalList, &WorkItem->WorkQueueItem.List);
+            }
+            else
+            {
+                ListEntry = ListEntry->Flink;
+            }
+        } while (ListEntry != &RxTimerQueueHead);
+    }
+    /* Do we have to requeue a later execution? */
+    Set = !IsListEmpty(&RxTimerQueueHead);
+
+    KeReleaseSpinLockFromDpcLevel(&RxTimerLock);
+
+    /* Requeue if list wasn't empty */
+    if (Set)
+    {
+        KeSetTimer(&RxTimer, RxTimerInterval, &RxTimerDpc);
+    }
+
+    /* If we had matching entries */
+    if (!IsListEmpty(&LocalList))
+    {
+        /* Post them, one after another */
+        ListEntry = LocalList.Flink;
+        do
+        {
+            WorkItem = CONTAINING_RECORD(ListEntry, RX_WORK_ITEM, WorkQueueItem.List);
+            ListEntry = ListEntry->Flink;
+
+            WorkItem->WorkQueueItem.List.Flink = NULL;
+            WorkItem->WorkQueueItem.List.Blink = NULL;
+            RxPostToWorkerThread(WorkItem->WorkQueueItem.pDeviceObject, CriticalWorkQueue,
+                                 &WorkItem->WorkQueueItem, WorkItem->WorkQueueItem.WorkerRoutine,
+                                 WorkItem->WorkQueueItem.Parameter);
+        }
+        while (ListEntry != &LocalList);
+    }
+}
+
+/*
+ * @implemented
+ */
+VOID
 RxTrackerUpdateHistory(
     _Inout_opt_ PRX_CONTEXT RxContext,
     _Inout_ PMRX_FCB MrxFcb,
@@ -6676,24 +7987,26 @@ __RxAcquireFcb(
         UNIMPLEMENTED;
     }
 
-    /* Nor missing contexts... */
+    /* If we don't have a context, assume we can wait! */
     if (RxContext == NULL)
     {
-        UNIMPLEMENTED;
+        CanWait = TRUE;
     }
-
-    /* That said: we have a real context! */
-    ContextIsPresent = TRUE;
-
-    /* If we've been cancelled in between, give up */
-    Status = BooleanFlagOn(RxContext->Flags, RX_CONTEXT_FLAG_CANCELLED) ? STATUS_CANCELLED : STATUS_SUCCESS;
-    if (!NT_SUCCESS(Status))
+    else
     {
-        return Status;
-    }
+        /* That said: we have a real context! */
+        ContextIsPresent = TRUE;
 
-    /* Can we wait? */
-    CanWait = BooleanFlagOn(RxContext->Flags, RX_CONTEXT_FLAG_WAIT);
+        /* If we've been cancelled in between, give up */
+        Status = BooleanFlagOn(RxContext->Flags, RX_CONTEXT_FLAG_CANCELLED) ? STATUS_CANCELLED : STATUS_SUCCESS;
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+
+        /* Can we wait? */
+        CanWait = BooleanFlagOn(RxContext->Flags, RX_CONTEXT_FLAG_WAIT);
+    }
 
     while (TRUE)
     {

@@ -117,6 +117,10 @@ RxScavengeRelatedFobxs(
     _In_ PFCB Fcb);
 
 VOID
+RxpMarkInstanceForScavengedFinalization(
+   PVOID Instance);
+
+VOID
 RxpUndoScavengerFinalizationMarking(
    _In_ PVOID Instance);
 
