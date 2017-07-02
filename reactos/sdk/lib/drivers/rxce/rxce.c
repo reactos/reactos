@@ -2899,13 +2899,13 @@ RxFinalizeSrvOpen(
     {
         PLIST_ENTRY ListEntry;
 
-        for (ListEntry = ThisSrvOpen->FobxList.Flink;
-             ListEntry != &ThisSrvOpen->FobxList;
-             ListEntry = ListEntry->Flink)
+        ListEntry = ThisSrvOpen->FobxList.Flink;
+        while (ListEntry != &ThisSrvOpen->FobxList)
         {
             PFOBX Fobx;
 
             Fobx = CONTAINING_RECORD(ListEntry, FOBX, FobxQLinks);
+            ListEntry = ListEntry->Flink;
             RxFinalizeNetFobx(Fobx, TRUE, ForceFinalize);
         }
     }
@@ -3662,14 +3662,14 @@ RxFinishFcbInitialization(
     IN RX_FILE_TYPE FileType,
     IN PFCB_INIT_PACKET InitPacket OPTIONAL)
 {
-    NODE_TYPE_CODE OldType;
+    RX_FILE_TYPE OldType;
 
     PAGED_CODE();
 
     DPRINT("RxFinishFcbInitialization(%p, %x, %p)\n", Fcb, FileType, InitPacket);
 
-    OldType = Fcb->Header.NodeTypeCode;
-    Fcb->Header.NodeTypeCode = FileType;
+    OldType = NodeType(Fcb);
+    NodeType(Fcb) = FileType;
     /* If mini-rdr already did the job for mailslot attributes, 0 the rest */
     if (BooleanFlagOn(Fcb->FcbState, FCB_STATE_TIME_AND_SIZE_ALREADY_SET) && FileType == RDBSS_NTC_MAILSLOT)
     {
@@ -3688,19 +3688,23 @@ RxFinishFcbInitialization(
     if (FileType != RDBSS_NTC_STORAGE_TYPE_UNKNOWN &&
         FileType != RDBSS_NTC_STORAGE_TYPE_DIRECTORY)
     {
-        /* If our FCB newly points to a file, initiliaz everything related */
-        if (FileType == RDBSS_NTC_STORAGE_TYPE_FILE &&
-            OldType != RDBSS_NTC_STORAGE_TYPE_FILE)
+        /* If our FCB newly points to a file, initiliaze everything related */
+        if (FileType == RDBSS_NTC_STORAGE_TYPE_FILE)
+            
         {
-            RxInitializeLowIoPerFcbInfo(&((PFCB)Fcb)->Specific.Fcb.LowIoPerFcbInfo);
-            FsRtlInitializeFileLock(&((PFCB)Fcb)->Specific.Fcb.FileLock, &RxLockOperationCompletion,
-                                    &RxUnlockOperation);
+            if (OldType != RDBSS_NTC_STORAGE_TYPE_FILE)
+            {
+                RxInitializeLowIoPerFcbInfo(&((PFCB)Fcb)->Specific.Fcb.LowIoPerFcbInfo);
+                FsRtlInitializeFileLock(&((PFCB)Fcb)->Specific.Fcb.FileLock, RxLockOperationCompletion,
+                                        RxUnlockOperation);
 
-            ((PFCB)Fcb)->BufferedLocks.List = NULL;
-            ((PFCB)Fcb)->BufferedLocks.PendingLockOps = 0;
+                ((PFCB)Fcb)->BufferedLocks.List = NULL;
+                ((PFCB)Fcb)->BufferedLocks.PendingLockOps = 0;
 
-            Fcb->Header.IsFastIoPossible = FastIoIsQuestionable;
+                Fcb->Header.IsFastIoPossible = FastIoIsQuestionable;
+            }
         }
+        /* If not a file, validate type */
         else
         {
             ASSERT(FileType >= RDBSS_NTC_SPOOLFILE && FileType <= RDBSS_NTC_MAILSLOT);
@@ -4561,8 +4565,7 @@ RxInitializeRxTimer(
 {
     PAGED_CODE();
 
-    RxTimerInterval.HighPart = -1;
-    RxTimerInterval.LowPart = -550000;
+    RxTimerInterval.QuadPart = -550000;
     KeInitializeSpinLock(&RxTimerLock);
     InitializeListHead(&RxTimerQueueHead);
     InitializeListHead(&RxRecurrentWorkItemsList);
@@ -6205,15 +6208,17 @@ VOID
 RxProcessChangeBufferingStateRequestsForSrvOpen(
     PSRV_OPEN SrvOpen)
 {
-    LONG NumberOfBufferingChangeRequests, OldBufferingToken;
+    LONG NumberOfBufferingChangeRequests, LockedOldBufferingToken, OldBufferingToken;
 
     /* Get the current number of change requests */
     NumberOfBufferingChangeRequests = ((PSRV_CALL)SrvOpen->pVNetRoot->pNetRoot->pSrvCall)->BufferingManager.CumulativeNumberOfBufferingChangeRequests;
     /* Get our old token */
-    OldBufferingToken = InterlockedCompareExchange(&SrvOpen->BufferingToken,
-                                                   NumberOfBufferingChangeRequests, NumberOfBufferingChangeRequests);
-    /* Do we have stuff to process? */
-    if (OldBufferingToken != SrvOpen->BufferingToken)
+    OldBufferingToken = SrvOpen->BufferingToken;
+    LockedOldBufferingToken = InterlockedCompareExchange(&SrvOpen->BufferingToken,
+                                                         NumberOfBufferingChangeRequests,
+                                                         NumberOfBufferingChangeRequests);
+    /* If buffering state changed in between, process changes */
+    if (OldBufferingToken != LockedOldBufferingToken)
     {
         PFCB Fcb;
         NTSTATUS Status;
