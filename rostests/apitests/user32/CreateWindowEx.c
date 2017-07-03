@@ -70,6 +70,7 @@ static void Test_Params(void)
 
 HWND g_TestWindow = NULL;
 HWND g_ChildWindow = NULL;
+HWND g_hwndMDIClient = NULL;
 
 static int get_iwnd(HWND hWnd)
 {
@@ -649,9 +650,489 @@ static void Test_Messages_Child(void)
 }
 
 
+
+static LRESULT CALLBACK MSGTestProcMDI(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    LRESULT lRet;
+    int iwnd = get_iwnd(hWnd);
+
+    if(message > WM_USER || !iwnd || IsDWmMsg(message) || IseKeyMsg(message))
+        return DefWindowProc(hWnd, message, wParam, lParam);
+
+    switch(message)
+    {
+    case WM_IME_SETCONTEXT:
+    case WM_IME_NOTIFY:
+    case WM_GETICON:
+    case WM_GETTEXT:
+        return DefWindowProc(hWnd, message, wParam, lParam);
+        break;
+    case WM_NCCREATE:
+    {
+        LPCREATESTRUCT create = (LPCREATESTRUCT)lParam;
+        RECORD_MESSAGE(iwnd, message, SENT, 0, 0);
+        ok_hex_(create->style, g_NcExpectStyle);
+        ok_hex_(create->dwExStyle, g_NcExpectExStyle);
+    }
+    break;
+    case WM_CREATE:
+    {
+        CLIENTCREATESTRUCT ccs = { 0 };
+        LPCREATESTRUCT create = (LPCREATESTRUCT)lParam;
+        RECORD_MESSAGE(iwnd, message, SENT, 0, 0);
+        ok_hex_(create->style, g_ExpectStyle);
+        ok_hex_(create->dwExStyle, g_ExpectExStyle);
+
+        g_hwndMDIClient = CreateWindow("MDICLIENT", (LPCTSTR) NULL,
+                                     WS_CHILD | WS_CLIPCHILDREN | WS_VSCROLL | WS_HSCROLL,
+                                     0, 0, 0, 0, hWnd, (HMENU) 0xCAC, NULL, (LPSTR) &ccs);
+
+        ShowWindow(g_hwndMDIClient, SW_SHOW);
+
+    }
+    break;
+    case WM_NCCALCSIZE:
+    case WM_STYLECHANGING:
+    case WM_STYLECHANGED:
+    case WM_SIZE:
+        RECORD_MESSAGE(iwnd, message, SENT, wParam, 0);
+        break;
+    case WM_WINDOWPOSCHANGING:
+    case WM_WINDOWPOSCHANGED:
+        ok(wParam == 0,"expected wParam=0\n");
+        RECORD_MESSAGE(iwnd, message, SENT, ((WINDOWPOS*)lParam)->flags, 0);
+        break;
+    default:
+        RECORD_MESSAGE(iwnd, message, SENT, 0, 0);
+        break;
+    }
+    lRet = DefWindowProc(hWnd, message, wParam, lParam);
+    RECORD_MESSAGE(iwnd, message, SENT_RET, 0, 0);
+    return lRet;
+}
+
+MSG_ENTRY create_chain_MDI[] =
+{
+    { 1, WM_GETMINMAXINFO, SENT },
+    { 1, WM_GETMINMAXINFO, SENT_RET },
+    { 1, WM_NCCREATE, SENT },
+    { 1, WM_NCCREATE, SENT_RET },
+    { 1, WM_NCCALCSIZE, SENT },
+    { 1, WM_NCCALCSIZE, SENT_RET },
+    { 1, WM_CREATE, SENT },
+    { 1, WM_PARENTNOTIFY, SENT },
+    { 1, WM_PARENTNOTIFY, SENT_RET },
+    { 1, WM_CREATE, SENT_RET },
+    { 0, 0 }
+};
+
+static void Test_Messages_MDI(void)
+{
+    HWND hWnd;
+
+    RegisterSimpleClass(MSGTestProcMDI, L"Test_Message_Window_MDI_XX");
+
+    g_ExpectStyle = g_NcExpectStyle = 0;
+    g_ExpectExStyle = g_NcExpectExStyle = WS_EX_CLIENTEDGE;
+    g_FaultLine = __LINE__ + 1;
+    hWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"Test_Message_Window_MDI_XX", L"", 0, 10, 20,
+                           200, 210, NULL, NULL, 0, NULL);
+
+    ok(hWnd == g_TestWindow, "We are testing with %p instead of %p\n", g_TestWindow, hWnd);
+    COMPARE_CACHE(create_chain_MDI);
+    DestroyWindow(hWnd);
+    g_TestWindow = g_hwndMDIClient = g_ChildWindow = NULL;
+    EMPTY_CACHE();
+
+    g_ExpectStyle = g_NcExpectStyle = WS_OVERLAPPEDWINDOW;
+    g_ExpectExStyle = g_NcExpectExStyle = WS_EX_OVERLAPPEDWINDOW;
+    g_FaultLine = __LINE__ + 1;
+    hWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"Test_Message_Window_MDI_XX", L"", WS_OVERLAPPEDWINDOW, 10, 20,
+                           200, 210, NULL, NULL, 0, NULL);
+
+    ok(hWnd == g_TestWindow, "We are testing with %p instead of %p\n", g_TestWindow, hWnd);
+    COMPARE_CACHE(create_chain_MDI);
+    DestroyWindow(hWnd);
+    g_TestWindow = g_hwndMDIClient = g_ChildWindow = NULL;
+    EMPTY_CACHE();
+
+    UnregisterClassW(L"Test_Message_Window_MDI_XX", NULL);
+}
+
+
+static LRESULT CALLBACK MSGTestProcMDI2(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    LRESULT lRet;
+    int iwnd = get_iwnd(hWnd);
+
+    if(message > WM_USER || !iwnd || IsDWmMsg(message) || IseKeyMsg(message))
+        return DefWindowProc(hWnd, message, wParam, lParam);
+
+    switch(message)
+    {
+    case WM_IME_SETCONTEXT:
+    case WM_IME_NOTIFY:
+    case WM_GETICON:
+    case WM_GETTEXT:
+        return DefWindowProc(hWnd, message, wParam, lParam);
+        break;
+    case WM_NCCREATE:
+    {
+        LPCREATESTRUCT create = (LPCREATESTRUCT)lParam;
+        RECORD_MESSAGE(iwnd, message, SENT, 0, 0);
+        ok_hex_(create->style, g_NcExpectStyle);
+        ok_hex_(create->dwExStyle, g_NcExpectExStyle);
+    }
+    break;
+    case WM_CREATE:
+    {
+        MDICREATESTRUCT mcs = {0};
+        CLIENTCREATESTRUCT ccs = { 0 };
+        LPCREATESTRUCT create = (LPCREATESTRUCT)lParam;
+        HWND hchild;
+        RECORD_MESSAGE(iwnd, message, SENT, 0, 0);
+        ok_hex_(create->style, g_ExpectStyle);
+        ok_hex_(create->dwExStyle, g_ExpectExStyle);
+
+
+        g_hwndMDIClient = CreateWindow("MDICLIENT", (LPCTSTR) NULL,
+                                       WS_CHILD | WS_CLIPCHILDREN | WS_VSCROLL | WS_HSCROLL,
+                                       0, 0, 0, 0, hWnd, (HMENU) 0xCAC, NULL, (LPSTR) &ccs);
+
+        ShowWindow(g_hwndMDIClient, SW_SHOW);
+
+
+        mcs.szClass = "Test_Message_MDI_Window_Child2";
+        mcs.x = mcs.cx = CW_USEDEFAULT;
+        mcs.y = mcs.cy = CW_USEDEFAULT;
+        mcs.style = WS_MAXIMIZE;
+
+        hchild = (HWND) SendMessage (g_hwndMDIClient, WM_MDICREATE, 0,
+            (LONG)(LPMDICREATESTRUCT) &mcs);
+        ok(hchild == g_ChildWindow, "We are testing with %p instead of %p\n", g_ChildWindow, hchild);
+
+    }
+    break;
+    case WM_NCCALCSIZE:
+    case WM_STYLECHANGING:
+    case WM_STYLECHANGED:
+    case WM_SIZE:
+        RECORD_MESSAGE(iwnd, message, SENT, wParam, 0);
+        break;
+    case WM_WINDOWPOSCHANGING:
+    case WM_WINDOWPOSCHANGED:
+        ok(wParam == 0,"expected wParam=0\n");
+        RECORD_MESSAGE(iwnd, message, SENT, ((WINDOWPOS*)lParam)->flags, 0);
+        break;
+    default:
+        RECORD_MESSAGE(iwnd, message, SENT, 0, 0);
+        break;
+    }
+    lRet = DefWindowProc(hWnd, message, wParam, lParam);
+    RECORD_MESSAGE(iwnd, message, SENT_RET, 0, 0);
+    return lRet;
+}
+
+static LRESULT CALLBACK MSGChildProcMDI2(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    LRESULT lRet;
+    int iwnd = get_iwnd(hWnd);
+
+    if(message > WM_USER || !iwnd || IsDWmMsg(message) || IseKeyMsg(message))
+        return DefMDIChildProc(hWnd, message, wParam, lParam);
+
+    switch(message)
+    {
+    case WM_IME_SETCONTEXT:
+    case WM_IME_NOTIFY:
+    case WM_GETICON:
+    case WM_GETTEXT:
+        return DefMDIChildProc(hWnd, message, wParam, lParam);
+        break;
+    case WM_NCCREATE:
+    {
+        LPCREATESTRUCT create = (LPCREATESTRUCT)lParam;
+        RECORD_MESSAGE(iwnd, message, SENT, 0, 0);
+        ok_hex_(create->style, g_ChildNcExpectStyle);
+        ok_hex_(create->dwExStyle, g_ChildNcExpectExStyle);
+    }
+    break;
+    case WM_CREATE:
+    {
+        LPCREATESTRUCT create = (LPCREATESTRUCT)lParam;
+        RECORD_MESSAGE(iwnd, message, SENT, 0, 0);
+        ok_hex_(create->style, g_ChildExpectStyle);
+        ok_hex_(create->dwExStyle, g_ChildExpectExStyle);
+    }
+    break;
+    case WM_NCCALCSIZE:
+    case WM_STYLECHANGING:
+    case WM_STYLECHANGED:
+    case WM_SIZE:
+        RECORD_MESSAGE(iwnd, message, SENT, wParam, 0);
+        break;
+    case WM_WINDOWPOSCHANGING:
+    case WM_WINDOWPOSCHANGED:
+        ok(wParam == 0,"expected wParam=0\n");
+        RECORD_MESSAGE(iwnd, message, SENT, ((WINDOWPOS*)lParam)->flags, 0);
+        break;
+    default:
+        RECORD_MESSAGE(iwnd, message, SENT, 0, 0);
+        break;
+    }
+    lRet = DefMDIChildProc(hWnd, message, wParam, lParam);
+    RECORD_MESSAGE(iwnd, message, SENT_RET, 0, 0);
+    return lRet;
+}
+
+
+MSG_ENTRY child_create_chain_MDI[] =
+{
+    { 1, WM_GETMINMAXINFO, SENT },
+    { 1, WM_GETMINMAXINFO, SENT_RET },
+    { 1, WM_NCCREATE, SENT },
+    { 1, WM_NCCREATE, SENT_RET },
+    { 1, WM_NCCALCSIZE, SENT },
+    { 1, WM_NCCALCSIZE, SENT_RET },
+    { 1, WM_CREATE, SENT },
+        { 1, WM_PARENTNOTIFY, SENT },
+        { 1, WM_PARENTNOTIFY, SENT_RET },
+        { 2, WM_GETMINMAXINFO, SENT },
+        { 2, WM_GETMINMAXINFO, SENT_RET },
+        { 2, WM_NCCREATE, SENT },
+        { 2, WM_NCCREATE, SENT_RET },
+        { 2, WM_NCCALCSIZE, SENT },
+        { 2, WM_NCCALCSIZE, SENT_RET },
+        { 2, WM_CREATE, SENT },
+        { 2, WM_CREATE, SENT_RET },
+        { 2, WM_SIZE, SENT },
+        { 2, WM_SIZE, SENT_RET },
+        { 2, WM_MOVE, SENT },
+        { 2, WM_MOVE, SENT_RET },
+        { 2, WM_GETMINMAXINFO, SENT },
+        { 2, WM_GETMINMAXINFO, SENT_RET },
+        { 2, WM_WINDOWPOSCHANGING, SENT, SWP_FRAMECHANGED | SWP_NOACTIVATE | 0x8000 },
+        { 2, WM_GETMINMAXINFO, SENT },
+        { 2, WM_GETMINMAXINFO, SENT_RET },
+        { 2, WM_WINDOWPOSCHANGING, SENT_RET },
+        { 2, WM_NCCALCSIZE, SENT, 1 },
+        { 2, WM_NCCALCSIZE, SENT_RET },
+        { 2, WM_WINDOWPOSCHANGED, SENT, SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOREDRAW | 0x8800 },
+            { 2, WM_MOVE, SENT },
+            { 2, WM_MOVE, SENT_RET },
+            { 2, WM_SIZE, SENT, SIZE_MAXIMIZED },
+                { 1, WM_WINDOWPOSCHANGING, SENT, SWP_NOSIZE | SWP_NOZORDER | SWP_NOMOVE | SWP_FRAMECHANGED | SWP_NOACTIVATE },
+                { 1, WM_WINDOWPOSCHANGING, SENT_RET },
+                { 1, WM_NCCALCSIZE, SENT, TRUE },
+                { 1, WM_NCCALCSIZE, SENT_RET },
+                { 1, WM_WINDOWPOSCHANGED, SENT, SWP_NOSIZE | SWP_NOZORDER | SWP_NOMOVE | SWP_NOREDRAW | SWP_FRAMECHANGED | SWP_NOACTIVATE | 0x1800 },
+                { 1, WM_WINDOWPOSCHANGED, SENT_RET },
+            { 2, WM_SIZE, SENT_RET },
+        { 2, WM_WINDOWPOSCHANGED, SENT_RET },
+        { 2, WM_NCCALCSIZE, SENT, TRUE },
+        { 2, WM_NCCALCSIZE, SENT_RET },
+        { 2, WM_SHOWWINDOW, SENT },
+        { 2, WM_SHOWWINDOW, SENT_RET },
+        { 2, WM_WINDOWPOSCHANGING, SENT, SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE },
+        { 2, WM_WINDOWPOSCHANGING, SENT_RET },
+        { 2, WM_CHILDACTIVATE, SENT },
+        { 2, WM_WINDOWPOSCHANGING, SENT, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE },
+        { 2, WM_WINDOWPOSCHANGING, SENT_RET },
+        { 2, WM_MDIACTIVATE, SENT },
+        { 2, WM_MDIACTIVATE, SENT_RET },
+        { 2, WM_CHILDACTIVATE, SENT_RET },
+        { 1, WM_WINDOWPOSCHANGING, SENT, SWP_NOSIZE | SWP_NOZORDER | SWP_NOMOVE | SWP_NOACTIVATE | SWP_FRAMECHANGED },
+        { 1, WM_WINDOWPOSCHANGING, SENT_RET },
+        { 1, WM_NCCALCSIZE, SENT, TRUE },
+        { 1, WM_NCCALCSIZE, SENT_RET },
+        { 1, WM_WINDOWPOSCHANGED, SENT, SWP_NOSIZE | SWP_NOZORDER | SWP_NOMOVE | SWP_NOREDRAW | SWP_FRAMECHANGED | SWP_NOACTIVATE | 0x1800 },
+        { 1, WM_WINDOWPOSCHANGED, SENT_RET },
+    { 1, WM_CREATE, SENT_RET },
+    { 0, 0 },
+};
+
+MSG_ENTRY child_create_chain_MDI_below8[] =
+{
+    { 1, WM_GETMINMAXINFO, SENT },
+    { 1, WM_GETMINMAXINFO, SENT_RET },
+    { 1, WM_NCCREATE, SENT },
+    { 1, WM_NCCREATE, SENT_RET },
+    { 1, WM_NCCALCSIZE, SENT },
+    { 1, WM_NCCALCSIZE, SENT_RET },
+    { 1, WM_CREATE, SENT },
+        { 1, WM_PARENTNOTIFY, SENT },
+        { 1, WM_PARENTNOTIFY, SENT_RET },
+        { 2, WM_GETMINMAXINFO, SENT },
+        { 2, WM_GETMINMAXINFO, SENT_RET },
+        { 2, WM_NCCREATE, SENT },
+        { 2, WM_NCCREATE, SENT_RET },
+        { 2, WM_NCCALCSIZE, SENT },
+        { 2, WM_NCCALCSIZE, SENT_RET },
+        { 2, WM_CREATE, SENT },
+        { 2, WM_CREATE, SENT_RET },
+        { 2, WM_SIZE, SENT },
+        { 2, WM_SIZE, SENT_RET },
+        { 2, WM_MOVE, SENT },
+        { 2, WM_MOVE, SENT_RET },
+        { 2, WM_GETMINMAXINFO, SENT },
+        { 2, WM_GETMINMAXINFO, SENT_RET },
+        { 2, WM_WINDOWPOSCHANGING, SENT, SWP_FRAMECHANGED | SWP_NOACTIVATE | 0x8000 },
+        { 2, WM_GETMINMAXINFO, SENT },
+        { 2, WM_GETMINMAXINFO, SENT_RET },
+        { 2, WM_WINDOWPOSCHANGING, SENT_RET },
+        { 2, WM_NCCALCSIZE, SENT, 1 },
+        { 2, WM_NCCALCSIZE, SENT_RET },
+        { 2, WM_WINDOWPOSCHANGED, SENT, SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOREDRAW | 0x8800 },
+            { 2, WM_MOVE, SENT },
+            { 2, WM_MOVE, SENT_RET },
+            { 2, WM_SIZE, SENT, SIZE_MAXIMIZED },
+                { 1, WM_WINDOWPOSCHANGING, SENT, SWP_NOSIZE | SWP_NOZORDER | SWP_NOMOVE | SWP_FRAMECHANGED | SWP_NOACTIVATE },
+                { 1, WM_WINDOWPOSCHANGING, SENT_RET },
+                { 1, WM_NCCALCSIZE, SENT, TRUE },
+                { 1, WM_NCCALCSIZE, SENT_RET },
+                { 1, WM_WINDOWPOSCHANGED, SENT, SWP_NOSIZE | SWP_NOZORDER | SWP_NOMOVE | SWP_NOREDRAW | SWP_FRAMECHANGED | SWP_NOACTIVATE | 0x1800 },
+                { 1, WM_WINDOWPOSCHANGED, SENT_RET },
+            { 2, WM_SIZE, SENT_RET },
+        { 2, WM_WINDOWPOSCHANGED, SENT_RET },
+        //{ 2, WM_NCCALCSIZE, SENT, TRUE },
+        //{ 2, WM_NCCALCSIZE, SENT_RET },
+        { 2, WM_SHOWWINDOW, SENT },
+        { 2, WM_SHOWWINDOW, SENT_RET },
+        { 2, WM_WINDOWPOSCHANGING, SENT, SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE },
+        { 2, WM_WINDOWPOSCHANGING, SENT_RET },
+        { 2, WM_CHILDACTIVATE, SENT },
+        { 2, WM_WINDOWPOSCHANGING, SENT, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE },
+        { 2, WM_WINDOWPOSCHANGING, SENT_RET },
+        { 2, WM_MDIACTIVATE, SENT },
+        { 2, WM_MDIACTIVATE, SENT_RET },
+        { 2, WM_CHILDACTIVATE, SENT_RET },
+        { 1, WM_WINDOWPOSCHANGING, SENT, SWP_NOSIZE | SWP_NOZORDER | SWP_NOMOVE | SWP_NOACTIVATE | SWP_FRAMECHANGED },
+        { 1, WM_WINDOWPOSCHANGING, SENT_RET },
+        { 1, WM_NCCALCSIZE, SENT, TRUE },
+        { 1, WM_NCCALCSIZE, SENT_RET },
+        { 1, WM_WINDOWPOSCHANGED, SENT, SWP_NOSIZE | SWP_NOZORDER | SWP_NOMOVE | SWP_NOREDRAW | SWP_FRAMECHANGED | SWP_NOACTIVATE | 0x1800 },
+        { 1, WM_WINDOWPOSCHANGED, SENT_RET },
+    { 1, WM_CREATE, SENT_RET },
+    { 0, 0 },
+};
+
+MSG_ENTRY child_create_chain_MDI_below8_nonsrv[] =
+{
+    { 1, WM_GETMINMAXINFO, SENT },
+    { 1, WM_GETMINMAXINFO, SENT_RET },
+    { 1, WM_NCCREATE, SENT },
+    { 1, WM_NCCREATE, SENT_RET },
+    { 1, WM_NCCALCSIZE, SENT },
+    { 1, WM_NCCALCSIZE, SENT_RET },
+    { 1, WM_CREATE, SENT },
+        { 1, WM_PARENTNOTIFY, SENT },
+        { 1, WM_PARENTNOTIFY, SENT_RET },
+        { 2, WM_GETMINMAXINFO, SENT },
+        { 2, WM_GETMINMAXINFO, SENT_RET },
+        { 2, WM_NCCREATE, SENT },
+        { 2, WM_NCCREATE, SENT_RET },
+        { 2, WM_NCCALCSIZE, SENT },
+        { 2, WM_NCCALCSIZE, SENT_RET },
+        { 2, WM_CREATE, SENT },
+        { 2, WM_CREATE, SENT_RET },
+        { 2, WM_SIZE, SENT },
+        { 2, WM_SIZE, SENT_RET },
+        { 2, WM_MOVE, SENT },
+        { 2, WM_MOVE, SENT_RET },
+        { 2, WM_GETMINMAXINFO, SENT },
+        { 2, WM_GETMINMAXINFO, SENT_RET },
+        { 2, WM_WINDOWPOSCHANGING, SENT, SWP_FRAMECHANGED | SWP_NOACTIVATE | 0x8000 },
+        { 2, WM_GETMINMAXINFO, SENT },
+        { 2, WM_GETMINMAXINFO, SENT_RET },
+        { 2, WM_WINDOWPOSCHANGING, SENT_RET },
+        { 2, WM_NCCALCSIZE, SENT, 1 },
+        { 2, WM_NCCALCSIZE, SENT_RET },
+        { 2, WM_WINDOWPOSCHANGED, SENT, SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOREDRAW | 0x8800 },
+            { 2, WM_MOVE, SENT },
+            { 2, WM_MOVE, SENT_RET },
+            { 2, WM_SIZE, SENT, SIZE_MAXIMIZED },
+                { 1, WM_WINDOWPOSCHANGING, SENT, SWP_NOSIZE | SWP_NOZORDER | SWP_NOMOVE | SWP_FRAMECHANGED | SWP_NOACTIVATE },
+                { 1, WM_WINDOWPOSCHANGING, SENT_RET },
+                { 1, WM_NCCALCSIZE, SENT, TRUE },
+                { 1, WM_NCCALCSIZE, SENT_RET },
+                { 1, WM_WINDOWPOSCHANGED, SENT, SWP_NOSIZE | SWP_NOZORDER | SWP_NOMOVE | SWP_NOREDRAW | SWP_FRAMECHANGED | SWP_NOACTIVATE | 0x1800 },
+                { 1, WM_WINDOWPOSCHANGED, SENT_RET },
+                // +
+                { 1, WM_NCCALCSIZE, SENT, TRUE },
+                { 1, WM_NCCALCSIZE, SENT_RET },
+                // -
+            { 2, WM_SIZE, SENT_RET },
+        { 2, WM_WINDOWPOSCHANGED, SENT_RET },
+        { 2, WM_NCCALCSIZE, SENT, TRUE },
+        { 2, WM_NCCALCSIZE, SENT_RET },
+        { 2, WM_SHOWWINDOW, SENT },
+        { 2, WM_SHOWWINDOW, SENT_RET },
+        { 2, WM_WINDOWPOSCHANGING, SENT, SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE },
+        { 2, WM_WINDOWPOSCHANGING, SENT_RET },
+        { 2, WM_CHILDACTIVATE, SENT },
+        { 2, WM_WINDOWPOSCHANGING, SENT, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE },
+        { 2, WM_WINDOWPOSCHANGING, SENT_RET },
+        { 2, WM_MDIACTIVATE, SENT },
+        { 2, WM_MDIACTIVATE, SENT_RET },
+        { 2, WM_CHILDACTIVATE, SENT_RET },
+        { 1, WM_WINDOWPOSCHANGING, SENT, SWP_NOSIZE | SWP_NOZORDER | SWP_NOMOVE | SWP_NOACTIVATE | SWP_FRAMECHANGED },
+        { 1, WM_WINDOWPOSCHANGING, SENT_RET },
+        { 1, WM_NCCALCSIZE, SENT, TRUE },
+        { 1, WM_NCCALCSIZE, SENT_RET },
+        { 1, WM_WINDOWPOSCHANGED, SENT, SWP_NOSIZE | SWP_NOZORDER | SWP_NOMOVE | SWP_NOREDRAW | SWP_FRAMECHANGED | SWP_NOACTIVATE | 0x1800 },
+        { 1, WM_WINDOWPOSCHANGED, SENT_RET },
+    { 1, WM_CREATE, SENT_RET },
+    { 0, 0 },
+};
+
+static void Test_Messages_MDI_Child(void)
+{
+    HWND hWnd;
+
+    BOOL Below8 = !IsWindows8OrGreater();
+    BOOL Below8NonServer = !IsWindows8OrGreater() && !IsWindowsServer();
+
+    RegisterSimpleClass(MSGTestProcMDI2, L"Test_Message_MDI_Window_X2");
+    RegisterSimpleClass(MSGChildProcMDI2, L"Test_Message_MDI_Window_Child2");
+
+    g_ExpectStyle = g_NcExpectStyle = 0;
+    g_ExpectExStyle = g_NcExpectExStyle = WS_EX_CLIENTEDGE;
+    g_ChildExpectStyle = g_ChildNcExpectStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_MAXIMIZE | WS_OVERLAPPEDWINDOW;
+    g_ChildExpectExStyle = g_ChildNcExpectExStyle = WS_EX_WINDOWEDGE | WS_EX_MDICHILD;
+    g_FaultLine = __LINE__ + 1;
+    hWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"Test_Message_MDI_Window_X2", L"", 0, 10, 20,
+                           200, 210, NULL, NULL, 0, NULL);
+
+    ok(hWnd == g_TestWindow, "We are testing with %p instead of %p\n", g_TestWindow, hWnd);
+    COMPARE_CACHE(Below8NonServer ? (child_create_chain_MDI_below8_nonsrv) : (Below8 ? child_create_chain_MDI_below8 : child_create_chain_MDI));
+    DestroyWindow(hWnd);
+    g_TestWindow = g_ChildWindow = NULL;
+    EMPTY_CACHE();
+
+    g_ExpectStyle = g_NcExpectStyle = WS_OVERLAPPEDWINDOW;
+    g_ExpectExStyle = g_NcExpectExStyle = WS_EX_OVERLAPPEDWINDOW;
+    g_ChildExpectStyle = g_ChildNcExpectStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_MAXIMIZE | WS_OVERLAPPEDWINDOW;
+    g_ChildExpectExStyle = g_ChildNcExpectExStyle = WS_EX_WINDOWEDGE | WS_EX_MDICHILD;
+    g_FaultLine = __LINE__ + 1;
+    hWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"Test_Message_MDI_Window_X2", L"", WS_OVERLAPPEDWINDOW, 10, 20,
+                           200, 210, NULL, NULL, 0, NULL);
+
+    ok(hWnd == g_TestWindow, "We are testing with %p instead of %p\n", g_TestWindow, hWnd);
+    COMPARE_CACHE(Below8NonServer ? (child_create_chain_MDI_below8_nonsrv) : (Below8 ? child_create_chain_MDI_below8 : child_create_chain_MDI));
+    DestroyWindow(hWnd);
+    g_TestWindow = g_ChildWindow = NULL;
+    EMPTY_CACHE();
+
+    UnregisterClassW(L"Test_Message_Window_X2", NULL);
+    UnregisterClassW(L"Test_Message_MDI_Window_Child2", NULL);
+}
+
+
 START_TEST(CreateWindowEx)
 {
     Test_Params();
     Test_Messages();
     Test_Messages_Child();
+    Test_Messages_MDI();
+    Test_Messages_MDI_Child();
 }
