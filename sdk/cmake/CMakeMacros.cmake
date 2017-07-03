@@ -396,14 +396,12 @@ function(create_iso_lists)
         DESTINATION reactos
         NO_CAB FOR bootcd regtest)
 
-if(FALSE) ## Disabled until we want a RAMDISK ISO
     # Add the LiveImage into the BootCD
     add_cd_file(
         TARGET livecd
         FILE ${CMAKE_CURRENT_BINARY_DIR}/liveimg.iso
         DESTINATION root
         NO_CAB FOR bootcd)
-endif()
 
     # Write the LiveImage file list
     get_property(_filelist GLOBAL PROPERTY LIVECD_FILE_LIST)
