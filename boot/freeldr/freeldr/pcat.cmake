@@ -250,9 +250,7 @@ else()
     add_custom_target(freeldr ALL DEPENDS freeldr_pe)
 endif()
 
-# Rename freeldr on livecd to setupldr.sys because isoboot.bin looks for setupldr.sys
 add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINATION loader NO_CAB FOR bootcd regtest)
-add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINATION loader NO_CAB NOT_IN_HYBRIDCD FOR livecd hybridcd NAME_ON_CD setupldr.sys)
 
 if(NOT ARCH STREQUAL "arm")
     concatenate_files(
