@@ -3035,7 +3035,7 @@ Quit:
     /* Free the NT to Win32 path prefix mapping list */
     FreeNtToWin32PathMappingList(&SetupData.MappingList);
 
-#if 0 // NOTE: Disabled for testing purposes only!
+#if 1
     EnablePrivilege(SE_SHUTDOWN_NAME, TRUE);
     ExitWindowsEx(EWX_REBOOT, 0);
     EnablePrivilege(SE_SHUTDOWN_NAME, FALSE);
