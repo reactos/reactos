@@ -15,8 +15,7 @@ Signature = "$Windows NT$"
 _1 = %cdname%,%cdtagfile%,,""
 
 [SourceDisksNames.x86]
-;1 = %cdname%,%cdtagfilei%,,\i386
-1 = %cdname%,%cdtagfilei%,,\reactos
+1 = %cdname%,%cdtagfilei%,,\i386
 
 [SourceDisksNames.amd64]
 ;1 = %cdname%,%cdtagfilea%,,\amd64
@@ -214,7 +213,8 @@ Cabinet=reactos.cab
 
 [SetupData]
 DefaultPath = \ReactOS
-SetupDebugOptions = "/DEBUG /KDSERIAL /DEBUGPORT=COM1 /FIRSTCHANCE"
+;SetupDebugOptions = "/DEBUG /KDSERIAL /DEBUGPORT=COM1 /FIRSTCHANCE"
+SetupDebugOptions = "/DEBUG /DEBUGPORT=VBOX /FIRSTCHANCE"
 ;SetupDebugOptions = "/DEBUG /SOS /DEBUGPORT=SCREEN"
 OsLoadOptions = "/FASTDETECT /NOGUIBOOT /NODEBUG"
 
