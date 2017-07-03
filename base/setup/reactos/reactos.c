@@ -2816,6 +2816,10 @@ _tWinMain(HINSTANCE hInst,
     PROPSHEETPAGE psp = {0};
     UINT nPages = 0;
 
+#if DBG // TEMP until Setup is ready!
+    if (IsDebuggerPresent()) __debugbreak();
+#endif
+
     ProcessHeap = GetProcessHeap();
 
     SetupData.hInstance = hInst;
@@ -2999,7 +3003,7 @@ Quit:
     /* Free the NT to Win32 path prefix mapping list */
     FreeNtToWin32PathMappingList(&SetupData.MappingList);
 
-#if 0 // NOTE: Disabled for testing purposes only!
+#if 1
     EnablePrivilege(SE_SHUTDOWN_NAME, TRUE);
     ExitWindowsEx(EWX_REBOOT, 0);
     EnablePrivilege(SE_SHUTDOWN_NAME, FALSE);

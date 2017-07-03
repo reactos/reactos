@@ -807,6 +807,7 @@ StartDlgProc(
                         pState->NextPage = DONE;
                         pState->Run = INSTALLER;
                         EndDialog(hwndDlg, LOWORD(wParam));
+                        // TODO: Just hide the dialog, and show it again in case the child process (setup) dies?
                         break;
 
                     case IDOK:
