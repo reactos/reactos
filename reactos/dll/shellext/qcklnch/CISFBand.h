@@ -25,9 +25,7 @@ class CISFBand :
     DWORD m_BandID;
     CComPtr<IUnknown> m_Site;
 
-    // Toolbar
-    HWND m_hWndTb;
-    HINSTANCE m_hInstance;
+    // Toolbar        
     CComPtr<IShellFolder> m_pISF;     
     PCIDLIST_ABSOLUTE m_pidl;    
 
@@ -41,7 +39,7 @@ public:
     virtual ~CISFBand();
 
 // Personal Methods
-    HWND CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst);
+    HRESULT CreateSimpleToolbar(HWND hWndParent);
     LRESULT OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnRButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     

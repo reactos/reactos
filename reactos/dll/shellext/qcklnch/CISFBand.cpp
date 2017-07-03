@@ -19,9 +19,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(qcklnch);
 // *** CISFBand *** 
 
 CISFBand::CISFBand() :
-    m_BandID(0),
-    m_hWndTb(NULL),
-    m_hInstance(NULL),
+    m_BandID(0),        
     m_pidl(NULL),
     m_textFlag(true),
     m_iconFlag(true)
@@ -44,10 +42,10 @@ LRESULT CISFBand::OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
     pt.y = GET_Y_LPARAM(pos);
     ScreenToClient(&pt);
 
-    int index = SendMessage(m_hWndTb, TB_HITTEST, 0, (LPARAM)&pt);
-    bool chk = SendMessage(m_hWndTb, TB_GETBUTTON, abs(index), (LPARAM)&tb);    
+    int index = SendMessage(m_hWnd, TB_HITTEST, 0, (LPARAM)&pt);
+    bool chk = SendMessage(m_hWnd, TB_GETBUTTON, abs(index), (LPARAM)&tb);    
     if(chk) 
-        SHInvokeDefaultCommand(m_hWndTb, m_pISF, (LPITEMIDLIST)tb.dwData);    
+        SHInvokeDefaultCommand(m_hWnd, m_pISF, (LPITEMIDLIST)tb.dwData);    
 
     return 0;
 }
@@ -64,16 +62,20 @@ LRESULT CISFBand::OnRButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
     pt.y = GET_Y_LPARAM(pos);
     ScreenToClient(&pt);    
 
-    int index = SendMessage(m_hWndTb, TB_HITTEST, 0, (LPARAM)&pt);
-    bool chk = SendMessage(m_hWndTb, TB_GETBUTTON, abs(index), (LPARAM)&tb);
-    LPITEMIDLIST pidl = (LPITEMIDLIST)tb.dwData;
+    int index = SendMessage(m_hWnd, TB_HITTEST, 0, (LPARAM)&pt);
+    bool chk = SendMessage(m_hWnd, TB_GETBUTTON, abs(index), (LPARAM)&tb);
+    CComHeapPtr<ITEMIDLIST> pidl((LPITEMIDLIST)tb.dwData);
 
     if (chk)
     {
         ClientToScreen(&pt);
-        hr = m_pISF->GetUIObjectOf(m_hWndTb, 1, &pidl, IID_IContextMenu, NULL, (void**)&picm);
-        hr = picm->QueryContextMenu(fmenu, 0, 1, 0x7FFF, CMF_DEFAULTONLY);        
-        int id = TrackPopupMenuEx(fmenu, TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RETURNCMD, pt.x, pt.y, m_hWndTb, 0);
+        hr = m_pISF->GetUIObjectOf(m_hWnd, 1, &pidl, IID_NULL_PPV_ARG(IContextMenu, &picm));
+        if (FAILED_UNEXPECTEDLY(hr)) return hr;
+
+        hr = picm->QueryContextMenu(fmenu, 0, 1, 0x7FFF, CMF_DEFAULTONLY);
+        if (FAILED_UNEXPECTEDLY(hr)) return hr;
+
+        int id = TrackPopupMenuEx(fmenu, TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RETURNCMD, pt.x, pt.y, m_hWnd, 0);
         if (id > 0)
         {
             CMINVOKECOMMANDINFOEX info = { 0 };
@@ -87,7 +89,7 @@ LRESULT CISFBand::OnRButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
             {
                 info.fMask |= CMIC_MASK_SHIFT_DOWN;
             }
-            info.hwnd = m_hWndTb;
+            info.hwnd = m_hWnd;
             info.lpVerb = MAKEINTRESOURCEA(id - 1);
             info.lpVerbW = MAKEINTRESOURCEW(id - 0x7FFF);
             info.nShow = SW_SHOWNORMAL;
@@ -101,50 +103,60 @@ LRESULT CISFBand::OnRButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 }
 
 // ToolbarTest
-HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
+HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 {
     // Declare and initialize local constants.     
     const DWORD buttonStyles = BTNS_AUTOSIZE;
 
     // Create the toolbar.
-    HWND hWndToolbar = CreateWindowEx(0, TOOLBARCLASSNAME, NULL,
+    m_hWnd = CreateWindowEx(0, TOOLBARCLASSNAME, NULL,
         WS_CHILD | TBSTYLE_FLAT | TBSTYLE_LIST | CCS_NORESIZE | CCS_NODIVIDER, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
-        hWndParent, NULL, hInst, NULL);
-    if (hWndToolbar == NULL)
-        return NULL;    
+        hWndParent, NULL, 0, NULL);
+    if (m_hWnd == NULL)
+        return E_FAIL;    
 
     // Set the image list.
     HIMAGELIST* piml;
     HRESULT hr = SHGetImageList(SHIL_SMALL, IID_IImageList, (void**)&piml); 
-    if (FAILED_UNEXPECTEDLY(hr)) 
-        return NULL;
-    SendMessage(hWndToolbar, TB_SETIMAGELIST, 0, (LPARAM)piml);    
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        DestroyWindow();
+        return hr;
+    }        
+    SendMessage(m_hWnd, TB_SETIMAGELIST, 0, (LPARAM)piml);
 
     // Enumerate objects
-    CComPtr<IEnumIDList> pedl;    
-    LPITEMIDLIST pidl = NULL;
+    CComPtr<IEnumIDList> pEndl;    
+    CComHeapPtr<ITEMIDLIST> pidl;
     STRRET stret;  
     ULONG count = 0;
-    hr = m_pISF->EnumObjects(0, SHCONTF_FOLDERS, &pedl);
+    hr = m_pISF->EnumObjects(0, SHCONTF_FOLDERS, &pEndl);
     if (FAILED_UNEXPECTEDLY(hr)) 
-        return NULL;
+    {
+        DestroyWindow();
+        return hr;
+    }
 
-    for (int i=0; pedl->Next(1, &pidl, 0) != S_FALSE; i++, count++)
+    for (int i=0; pEndl->Next(1, &pidl, NULL) != S_FALSE; i++, count++)
     {
          WCHAR sz[MAX_PATH];
          int index = SHMapPIDLToSystemImageListIndex(m_pISF, pidl, NULL);            
-         m_pISF->GetDisplayNameOf(pidl, SHGDN_NORMAL, &stret);            
-         StrRetToBuf(&stret, pidl, sz, sizeof(sz));            
+         hr = m_pISF->GetDisplayNameOf(pidl, SHGDN_NORMAL, &stret); 
+         if (FAILED_UNEXPECTEDLY(hr))
+         {
+             strcpyW(sz, L"<Unknown-Name>");
+         }
+         else 
+             StrRetToBuf(&stret, pidl, sz, _countof(sz));            
 
-         TBBUTTON tb = { MAKELONG(index, 0), i, TBSTATE_ENABLED, buttonStyles,{ 0 }, (DWORD_PTR)pidl, (INT_PTR)sz };            
-         SendMessage(hWndToolbar, TB_INSERTBUTTONW, 0, (LPARAM)&tb);            
+         TBBUTTON tb = { MAKELONG(index, 0), i, TBSTATE_ENABLED, buttonStyles,{ 0 }, (DWORD_PTR)*&pidl, (INT_PTR)sz };            
+         SendMessage(m_hWnd, TB_INSERTBUTTONW, 0, (LPARAM)&tb);
     } 
 
     // Resize the toolbar, and then show it.
-    SendMessage(hWndToolbar, TB_AUTOSIZE, 0, 0);    
+    SendMessage(m_hWnd, TB_AUTOSIZE, 0, 0);
 
-    CoTaskMemFree((void*)pidl);    
-    return hWndToolbar;
+    return hr;
 }
 
 /*****************************************************************************/
@@ -165,8 +177,11 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
         }
         m_Site = pUnkSite; 
         
-        m_hWndTb = CreateSimpleToolbar(hwndParent, m_hInstance);        
-        hr = SubclassWindow(m_hWndTb);
+        hr = CreateSimpleToolbar(hwndParent);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        hr = SubclassWindow(m_hWnd);
         if (FAILED_UNEXPECTEDLY(hr)) 
             return hr;
 
@@ -192,11 +207,11 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
 // *** IDeskBand *** 
     STDMETHODIMP CISFBand::GetWindow(OUT HWND *phwnd)
     {
-        if (!m_hWndTb)
+        if (!m_hWnd)
             return E_FAIL;
         if (!phwnd)
-            return E_INVALIDARG;
-        *phwnd = m_hWndTb;       
+            return E_POINTER;
+        *phwnd = m_hWnd;       
 
         return S_OK;
     }
@@ -209,24 +224,26 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
 
     STDMETHODIMP CISFBand::ShowDW(IN BOOL bShow)
     {        
-        if (m_hWndTb)
+        if (m_hWnd)
         {
-            ::ShowWindow(m_hWndTb, bShow ? SW_SHOW : SW_HIDE);
+            ShowWindow(bShow ? SW_SHOW : SW_HIDE);
+            return S_OK;
         }
         
-        return S_OK;       
+        return E_FAIL;       
     }
 
     STDMETHODIMP CISFBand::CloseDW(IN DWORD dwReserved)
     {        
-        if (m_hWndTb)
+        if (m_hWnd)
         {
-            ::ShowWindow(m_hWndTb, SW_HIDE);
-            ::DestroyWindow(m_hWndTb);
-            m_hWndTb = NULL;
+            ShowWindow(SW_HIDE);
+            DestroyWindow();
+            m_hWnd = NULL;
+            return S_OK;
         }
 
-        return S_OK;
+        return E_FAIL;
     }
 
     STDMETHODIMP CISFBand::ResizeBorderDW(LPCRECT prcBorder, IUnknown *punkToolbarSite, BOOL fReserved) 
@@ -238,9 +255,9 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
 
     STDMETHODIMP CISFBand::GetBandInfo(IN DWORD dwBandID, IN DWORD dwViewMode, IN OUT DESKBANDINFO *pdbi)
     {        
-        TRACE("CTaskBand::GetBandInfo(0x%x,0x%x,0x%p) hWnd=0x%p\n", dwBandID, dwViewMode, pdbi, m_hWndTb);
+        TRACE("CTaskBand::GetBandInfo(0x%x,0x%x,0x%p) hWnd=0x%p\n", dwBandID, dwViewMode, pdbi, m_hWnd);
                 
-        if (m_hWndTb && pdbi)
+        if (m_hWnd && pdbi)
         {
             m_BandID = dwBandID;
             
@@ -250,19 +267,19 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
             POINTL maxSize;
             POINTL itemSize;            
 
-            ::GetWindowRect(m_hWndTb, &actualRect);
+            GetWindowRect(&actualRect);
             actualSize.x = actualRect.right - actualRect.left;
             actualSize.y = actualRect.bottom - actualRect.top;
 
             // Obtain the ideal size, to be used as min and max 
-            SendMessageW(m_hWndTb, TB_AUTOSIZE, 0, 0);
-            SendMessageW(m_hWndTb, TB_GETMAXSIZE, 0, reinterpret_cast<LPARAM>(&maxSize));                
+            SendMessageW(m_hWnd, TB_AUTOSIZE, 0, 0);
+            SendMessageW(m_hWnd, TB_GETMAXSIZE, 0, reinterpret_cast<LPARAM>(&maxSize));                
 
             idealSize = maxSize;
-            SendMessageW(m_hWndTb, TB_GETIDEALSIZE, FALSE, reinterpret_cast<LPARAM>(&idealSize));           
+            SendMessageW(m_hWnd, TB_GETIDEALSIZE, FALSE, reinterpret_cast<LPARAM>(&idealSize));           
 
             // Obtain the button size, to be used as the integral size 
-            DWORD size = SendMessageW(m_hWndTb, TB_GETBUTTONSIZE, 0, 0);
+            DWORD size = SendMessageW(m_hWnd, TB_GETBUTTONSIZE, 0, 0);
             itemSize.x = GET_X_LPARAM(size);
             itemSize.y = GET_Y_LPARAM(size);
 
@@ -291,9 +308,11 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
             }
             if (pdbi->dwMask & DBIM_BKCOLOR)
                 pdbi->dwMask &= ~DBIM_BKCOLOR;
-        
+
+            return S_OK;        
         }
-        return S_OK;
+
+        return E_FAIL;
     }    
 
  /*****************************************************************************/
@@ -370,7 +389,7 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
 
     STDMETHODIMP CISFBand::ContainsWindow(IN HWND hWnd)
     {        
-        if (hWnd == m_hWndTb || ::IsChild(m_hWndTb, hWnd))
+        if (hWnd == m_hWnd || IsChild(hWnd))
         {
             TRACE("CISFBand::ContainsWindow(0x%p) returns S_OK\n", hWnd);
             return S_OK;
@@ -388,7 +407,7 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
 
     STDMETHODIMP CISFBand::IsWindowOwner(HWND hWnd)
     {        
-        return (hWnd == m_hWndTb) ? S_OK : S_FALSE;        
+        return (hWnd == m_hWnd) ? S_OK : S_FALSE;        
     }  
 
 /*****************************************************************************/
@@ -426,18 +445,18 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
 
     STDMETHODIMP CISFBand::InitializeSFB(IShellFolder *psf, PCIDLIST_ABSOLUTE pidl)
     {
-        LPITEMIDLIST pidlRoot;
+        CComHeapPtr<ITEMIDLIST> pidlRoot;
         SHGetSpecialFolderLocation(0, CSIDL_DESKTOP, &pidlRoot);
 
         if (pidl == NULL || !psf->CompareIDs(0x80000000L, pidl, pidlRoot))
         {
             m_pISF = psf;
-            m_pidl = pidl;
+            m_pidl = ILClone(pidl);
         }
         else 
         {
-            psf->BindToObject(pidl, 0, IID_IShellFolder, (void**)&m_pISF);
-            m_pidl = pidl;
+            psf->BindToObject(pidl, 0, IID_PPV_ARG(IShellFolder, &m_pISF));
+            m_pidl = ILClone(pidl);
         }
                
         return S_OK;
@@ -491,10 +510,10 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
                 {                    
                     m_iconFlag = false;
 
-                    HIMAGELIST* piml = (HIMAGELIST*) SendMessage(m_hWndTb, TB_GETIMAGELIST, 0, 0);
+                    HIMAGELIST* piml = (HIMAGELIST*) SendMessage(m_hWnd, TB_GETIMAGELIST, 0, 0);
                     HRESULT hr = SHGetImageList(SHIL_LARGE, IID_IImageList, (void**)&piml);
                     if (FAILED_UNEXPECTEDLY(hr)) return hr;
-                    SendMessage(m_hWndTb, TB_SETIMAGELIST, 0, (LPARAM)piml);
+                    SendMessage(m_hWnd, TB_SETIMAGELIST, 0, (LPARAM)piml);
                     hr = IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
                     if (FAILED_UNEXPECTEDLY(hr)) return hr;
                     break;
@@ -503,10 +522,10 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
                 {                    
                     m_iconFlag = true;
 
-                    HIMAGELIST* piml = (HIMAGELIST*)SendMessage(m_hWndTb, TB_GETIMAGELIST, 0, 0);
+                    HIMAGELIST* piml = (HIMAGELIST*)SendMessage(m_hWnd, TB_GETIMAGELIST, 0, 0);
                     HRESULT hr = SHGetImageList(SHIL_SMALL, IID_IImageList, (void**)&piml);
                     if (FAILED_UNEXPECTEDLY(hr)) return hr;
-                    SendMessage(m_hWndTb, TB_SETIMAGELIST, 0, (LPARAM)piml);
+                    SendMessage(m_hWnd, TB_SETIMAGELIST, 0, (LPARAM)piml);
                     hr = IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
                     if (FAILED_UNEXPECTEDLY(hr)) return hr;
                     break;
@@ -516,14 +535,14 @@ HWND CISFBand::CreateSimpleToolbar(HWND hWndParent, HINSTANCE hInst)
                     if (m_textFlag)
                     {                        
                         m_textFlag = false;
-                        SendMessage(m_hWndTb, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);    
+                        SendMessage(m_hWnd, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);    
                         HRESULT hr = IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
                         if (FAILED_UNEXPECTEDLY(hr)) return hr;
                     }
                     else
                     {                        
                         m_textFlag = true; 
-                        SendMessage(m_hWndTb, TB_SETEXTENDEDSTYLE, 0, 0);
+                        SendMessage(m_hWnd, TB_SETEXTENDEDSTYLE, 0, 0);
                         HRESULT hr = IUnknown_Exec(m_Site, IID_IDeskBand, DBID_BANDINFOCHANGED, 0, NULL, NULL);
                         if (FAILED_UNEXPECTEDLY(hr)) return hr;
                     }
