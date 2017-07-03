@@ -70,7 +70,7 @@ jobs:
     - name: Build
       run: echo 'cmake --build ${{github.workspace}}/build -- -k0' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
     - name: Generate ISOs
-      run: echo 'cmake --build ${{github.workspace}}/build --target bootcd --target livecd' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
+      run: echo 'cmake --build ${{github.workspace}}/build --target bootcd' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
     - name: Print ccache statistics
       run: ccache -s
     - name: Upload ISOs
@@ -79,7 +79,6 @@ jobs:
         name: reactos-${{matrix.compiler}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         path: |
           build/bootcd.iso
-          build/livecd.iso
 
   build-msvc:
     strategy:
@@ -127,14 +126,13 @@ jobs:
     - name: Build
       run: cmake --build build -- -k0
     - name: Generate ISOs
-      run: cmake --build build --target bootcd --target livecd
+      run: cmake --build build --target bootcd
     - name: Upload ISOs
       uses: actions/upload-artifact@v4
       with:
         name: reactos-msvc${{matrix.toolset}}-${{matrix.arch}}-${{matrix.config}}-${{matrix.dllver}}-${{github.sha}}
         path: |
           build/bootcd.iso
-          build/livecd.iso
     - name: Upload debug symbols
       if: ${{ matrix.config == 'Debug' }}
       uses: actions/upload-artifact@v4
@@ -267,14 +265,13 @@ jobs:
     - name: Build
       run: cmake --build build -- -k0
     - name: Generate ISOs
-      run: cmake --build build --target bootcd --target livecd
+      run: cmake --build build --target bootcd
     - name: Upload ISOs
       uses: actions/upload-artifact@v4
       with:
         name: reactos-clang-cl-${{matrix.arch}}-${{matrix.config}}-${{github.sha}}
         path: |
           build/bootcd.iso
-          build/livecd.iso
     - name: Upload debug symbols
       if: ${{ matrix.config == 'Debug' }}
       uses: actions/upload-artifact@v4
@@ -306,4 +303,4 @@ jobs:
         cd build
         cmake -G "Visual Studio 17 2022" -A Win32 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=i386 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{github.workspace}}\src
     - name: Build
-      run: cmake --build ${{github.workspace}}\build --target bootcd --target livecd
+      run: cmake --build ${{github.workspace}}\build --target bootcd
