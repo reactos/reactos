@@ -2225,17 +2225,15 @@ NTAPI
 OHCI_GetEndpointStatus(IN PVOID ohciExtension,
                        IN PVOID ohciEndpoint)
 {
-    POHCI_ENDPOINT OhciEndpoint;
+    POHCI_ENDPOINT OhciEndpoint = ohciEndpoint;
     POHCI_HCD_ED ED;
     ULONG EndpointStatus = USBPORT_ENDPOINT_RUN;
 
     DPRINT_OHCI("OHCI_GetEndpointStatus: ... \n");
 
-    OhciEndpoint = ohciEndpoint;
-
     ED = OhciEndpoint->HcdED;
 
-    if ((ED->HwED.HeadPointer & 1) && // Halted
+    if ((ED->HwED.HeadPointer & OHCI_ED_HEAD_POINTER_HALT) &&
         !(ED->Flags & OHCI_HCD_ED_FLAG_RESET_ON_HALT)) 
     {
         EndpointStatus = USBPORT_ENDPOINT_HALT;
