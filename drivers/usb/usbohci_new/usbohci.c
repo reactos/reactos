@@ -14,12 +14,14 @@ OHCI_EnableList(IN POHCI_EXTENSION OhciExtension,
                 IN POHCI_ENDPOINT OhciEndpoint)
 {
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    PULONG CommandStatusReg;
     ULONG TransferType;
     OHCI_REG_COMMAND_STATUS CommandStatus;
 
     DPRINT_OHCI("OHCI_EnableList: ... \n");
 
     OperationalRegs = OhciExtension->OperationalRegs;
+    CommandStatusReg = (PULONG)&OperationalRegs->HcCommandStatus;
 
     CommandStatus.AsULONG = 0;
 
@@ -44,8 +46,7 @@ OHCI_EnableList(IN POHCI_EXTENSION OhciExtension,
         CommandStatus.ControlListFilled = 1;
     }
 
-    WRITE_REGISTER_ULONG(&OperationalRegs->HcCommandStatus.AsULONG,
-                         CommandStatus.AsULONG);
+    WRITE_REGISTER_ULONG(CommandStatusReg, CommandStatus.AsULONG);
 }
 
 VOID
