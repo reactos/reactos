@@ -2248,12 +2248,9 @@ OHCI_SetEndpointStatus(IN PVOID ohciExtension,
                        IN PVOID ohciEndpoint,
                        IN ULONG EndpointStatus)
 {
-    POHCI_EXTENSION OhciExtension;
-    POHCI_ENDPOINT OhciEndpoint;
+    POHCI_EXTENSION OhciExtension = ohciExtension;
+    POHCI_ENDPOINT OhciEndpoint = ohciEndpoint;
     POHCI_HCD_ED ED;
-
-    OhciExtension = ohciExtension;
-    OhciEndpoint = ohciEndpoint;
 
     DPRINT_OHCI("OHCI_SetEndpointStatus: Endpoint - %p, EndpointStatus - %lX\n",
                 OhciEndpoint,
@@ -2270,7 +2267,7 @@ OHCI_SetEndpointStatus(IN PVOID ohciExtension,
     {
         /* EndpointStatus == USBPORT_ENDPOINT_RUN */
         ED = OhciEndpoint->HcdED;
-        ED->HwED.HeadPointer &= ~1; // ~Halted
+        ED->HwED.HeadPointer &= ~OHCI_ED_HEAD_POINTER_HALT;
 
         OHCI_EnableList(OhciExtension, OhciEndpoint);
     }
