@@ -1774,13 +1774,20 @@ OHCI_RemoveEndpointFromSchedule(IN POHCI_ENDPOINT OhciEndpoint)
 
     if (&HeadED->Link == ED->HcdEDLink.Blink)
     {
-        if (ED->Flags & 0x20)
+        if (HeadED->Type == OHCI_STATIC_ED_TYPE_CONTROLL ||
+            HeadED->Type == OHCI_STATIC_ED_TYPE_BULK)
         {
-            WRITE_REGISTER_ULONG((PULONG)HeadED->pNextED, ED->HwED.NextED);
+            WRITE_REGISTER_ULONG(HeadED->pNextED, ED->HwED.NextED);
+        }
+        else if (HeadED->Type == OHCI_STATIC_ED_TYPE_INTERRUPT)
+        {
+            *HeadED->pNextED = ED->HwED.NextED;
         }
         else
         {
-            *HeadED->pNextED = ED->HwED.NextED;
+            DPRINT1("OHCI_RemoveEndpointFromSchedule: Unknown HeadED->Type - %x\n",
+                    HeadED->Type);
+            DbgBreakPoint();
         }
     }
     else
