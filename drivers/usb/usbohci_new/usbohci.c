@@ -214,11 +214,7 @@ OHCI_OpenControlEndpoint(IN POHCI_EXTENSION OhciExtension,
                          IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
                          IN POHCI_ENDPOINT OhciEndpoint)
 {
-    POHCI_HCD_TD TdVA;
-    POHCI_HCD_TD TdPA;
     POHCI_HCD_ED ED;
-    ULONG TdCount;
-    ULONG ix;
 
     DPRINT_OHCI("OHCI_OpenControlEndpoint: ... \n");
 
@@ -227,42 +223,15 @@ OHCI_OpenControlEndpoint(IN POHCI_EXTENSION OhciExtension,
     OhciEndpoint->FirstTD = (POHCI_HCD_TD)((ULONG_PTR)ED + sizeof(OHCI_HCD_ED));
     OhciEndpoint->HeadED = &OhciExtension->ControlStaticED;
 
-    TdCount = (EndpointProperties->BufferLength - sizeof(OHCI_HCD_ED)) / 
-              sizeof(OHCI_HCD_TD);
-
-    OhciEndpoint->MaxTransferDescriptors = TdCount;
-
-    if (TdCount > 0)
-    {
-        TdVA = OhciEndpoint->FirstTD;
-
-        TdPA = (POHCI_HCD_TD)
-               ((ULONG_PTR)EndpointProperties->BufferPA +
-               sizeof(OHCI_HCD_ED));
-
-        for (ix = 0; ix < TdCount; ix++)
-        {
-            DPRINT_OHCI("OHCI_OpenControlEndpoint: InitTD. TdVA - %p, TdPA - %p\n",
-                        TdVA,
-                        TdPA);
-
-            RtlZeroMemory(TdVA, sizeof(OHCI_HCD_TD));
-
-            TdVA->PhysicalAddress = (ULONG_PTR)TdPA;
-            TdVA->Flags = 0;
-            TdVA->OhciTransfer = NULL;
-
-            ++TdVA;
-            ++TdPA;
-        }
-    }
+    OHCI_InitializeTDs(OhciEndpoint, EndpointProperties);
 
     OhciEndpoint->HcdED = OHCI_InitializeED(OhciEndpoint,
                                             ED,
                                             OhciEndpoint->FirstTD,
                                             EndpointProperties->BufferPA);
 
-    OhciEndpoint->HcdED->Flags = OHCI_HCD_ED_FLAG_RESET_ON_HALT | 1;
+    OhciEndpoint->HcdED->Flags = OHCI_HCD_ED_FLAG_CONTROLL |
+                                 OHCI_HCD_ED_FLAG_RESET_ON_HALT;
 
     OHCI_InsertEndpointInSchedule(OhciEndpoint);
 
