@@ -62,6 +62,8 @@ CompareTreeKeys(PB_TREE_KEY Key1, PB_TREE_KEY Key2, BOOLEAN CaseSensitive)
     UNICODE_STRING Key1Name, Key2Name;
     LONG Comparison;
 
+    ASSERT(!(Key1->IndexEntry->Flags & NTFS_INDEX_ENTRY_END));
+
     // If Key2 is the "dummy key", key 1 will always come first
     if (Key2->NextKey == NULL)
         return -1;
@@ -322,11 +324,10 @@ CreateIndexRootFromBTree(PDEVICE_EXTENSION DeviceExt,
             return STATUS_NOT_IMPLEMENTED;
         }
 
+        ASSERT(CurrentKey->IndexEntry->Length != 0);
+
         // Copy the index entry
-        if (CurrentKey->IndexEntry->Length > 0)
-            RtlCopyMemory(CurrentNodeEntry, CurrentKey->IndexEntry, CurrentKey->IndexEntry->Length);
-        else
-            DPRINT1("DRIVER ERROR: CurrentKey->IndexEntry->Length <= 0 !\n");
+        RtlCopyMemory(CurrentNodeEntry, CurrentKey->IndexEntry, CurrentKey->IndexEntry->Length);
 
         DPRINT1("Index Node Entry Stream Length: %u\nIndex Node Entry Length: %u\n",
                 CurrentNodeEntry->KeyLength,
@@ -409,7 +410,7 @@ DumpBTreeKey(PB_TREE_KEY Key, int Number, int Depth)
     if (!(Key->IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
     {
         UNICODE_STRING FileName;
-        FileName.Length = Key->IndexEntry->FileName.NameLength * 2;
+        FileName.Length = Key->IndexEntry->FileName.NameLength * sizeof(WCHAR);
         FileName.MaximumLength = FileName.Length;
         FileName.Buffer = Key->IndexEntry->FileName.Name;
         DbgPrint(" '%wZ'\n", &FileName);
@@ -514,6 +515,12 @@ NtfsInsertKey(ULONGLONG FileReference,
 
     // Setup the New Key
     NewKey = ExAllocatePoolWithTag(NonPagedPool, sizeof(B_TREE_KEY), TAG_NTFS);
+    if (!NewKey)
+    {
+        DPRINT1("ERROR: Failed to allocate memory for new key!\n");
+        ExFreePoolWithTag(NewEntry, TAG_NTFS);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
     NewKey->IndexEntry = NewEntry;
     NewKey->NextKey = NULL;
 
