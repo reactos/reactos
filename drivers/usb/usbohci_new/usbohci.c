@@ -1810,15 +1810,12 @@ OHCI_SetEndpointState(IN PVOID ohciExtension,
                       IN PVOID ohciEndpoint,
                       IN ULONG EndpointState)
 {
-    POHCI_EXTENSION OhciExtension;
-    POHCI_ENDPOINT OhciEndpoint;
+    POHCI_EXTENSION OhciExtension = ohciExtension;
+    POHCI_ENDPOINT OhciEndpoint = ohciEndpoint;
     POHCI_HCD_ED ED;
 
     DPRINT_OHCI("OHCI_SetEndpointState: EndpointState - %x\n",
                 EndpointState);
-
-    OhciExtension = ohciExtension;
-    OhciEndpoint = ohciEndpoint;
 
     ED = OhciEndpoint->HcdED;
 
@@ -1835,7 +1832,7 @@ OHCI_SetEndpointState(IN PVOID ohciExtension,
 
         case USBPORT_ENDPOINT_REMOVE:
             ED->HwED.EndpointControl.sKip = 1;
-            ED->Flags |= 0x10;
+            ED->Flags |= OHCI_HCD_ED_FLAG_NOT_ACCESSED;
             OHCI_RemoveEndpointFromSchedule(OhciEndpoint);
             break;
 
