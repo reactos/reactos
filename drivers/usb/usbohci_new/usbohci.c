@@ -2108,13 +2108,12 @@ ULONG
 NTAPI
 OHCI_Get32BitFrameNumber(IN PVOID ohciExtension)
 {
-    POHCI_EXTENSION OhciExtension;
+    POHCI_EXTENSION OhciExtension = ohciExtension;
     POHCI_HCCA HcHCCA;
     ULONG fm;
     ULONG hp;
 
-    OhciExtension = ohciExtension;
-    HcHCCA = (POHCI_HCCA)OhciExtension->HcResourcesVA;
+    HcHCCA = &OhciExtension->HcResourcesVA->HcHCCA;
 
     hp = OhciExtension->FrameHighPart;
     fm = HcHCCA->FrameNumber;
