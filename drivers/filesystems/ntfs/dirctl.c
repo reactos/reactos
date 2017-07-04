@@ -138,12 +138,13 @@ NtfsAddFilenameToDirectory(PDEVICE_EXTENSION DeviceExt,
 
     // Allocate memory for the index root data
     I30IndexRootLength = AttributeDataLength(&IndexRootContext->Record);
-    I30IndexRoot = (PINDEX_ROOT_ATTRIBUTE)ExAllocatePoolWithTag(NonPagedPool, I30IndexRootLength, TAG_NTFS);
+    I30IndexRoot = ExAllocatePoolWithTag(NonPagedPool, I30IndexRootLength, TAG_NTFS);
     if (!I30IndexRoot)
     {
         DPRINT1("ERROR: Couldn't allocate memory for index root attribute!\n");
         ReleaseAttributeContext(IndexRootContext);
         ExFreePoolWithTag(ParentFileRecord, TAG_NTFS);
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     // Read the Index Root

@@ -304,7 +304,7 @@ NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
             DPRINT("Could not make a new FCB, status: %x\n", Status);
 
             if (AbsFileName)
-                ExFreePool(AbsFileName);
+                ExFreePoolWithTag(AbsFileName, TAG_NTFS);
 
             return Status;
         }
@@ -572,7 +572,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
             // Create the file record on disk
             Status = NtfsCreateFileRecord(DeviceExt,
                                           FileObject,
-                                          (Stack->Flags & SL_CASE_SENSITIVE),
+                                          BooleanFlagOn(Stack->Flags, SL_CASE_SENSITIVE),
                                           BooleanFlagOn(IrpContext->Flags,IRPCONTEXT_CANWAIT));
             if (!NT_SUCCESS(Status))
             {

@@ -35,8 +35,8 @@
 /* FUNCTIONS ****************************************************************/
 
 static
-PWCHAR
-NtfsGetNextPathElement(PWCHAR FileName)
+PCWSTR
+NtfsGetNextPathElement(PCWSTR FileName)
 {
     if (*FileName == L'\0')
     {
@@ -55,7 +55,7 @@ NtfsGetNextPathElement(PWCHAR FileName)
 static
 VOID
 NtfsWSubString(PWCHAR pTarget,
-               const PWCHAR pSource,
+               PCWSTR pSource,
                size_t pLength)
 {
     wcsncpy(pTarget, pSource, pLength);
@@ -593,13 +593,13 @@ NTSTATUS
 NtfsGetFCBForFile(PNTFS_VCB Vcb,
                   PNTFS_FCB *pParentFCB,
                   PNTFS_FCB *pFCB,
-                  const PWSTR pFileName,
+                  PCWSTR pFileName,
                   BOOLEAN CaseSensitive)
 {
     NTSTATUS Status;
     WCHAR pathName [MAX_PATH];
     WCHAR elementName [MAX_PATH];
-    PWCHAR currentElement;
+    PCWSTR currentElement;
     PNTFS_FCB FCB;
     PNTFS_FCB parentFCB;
 
