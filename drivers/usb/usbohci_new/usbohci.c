@@ -2357,10 +2357,9 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     RegPacket.MiniPortVersion = USB_MINIPORT_VERSION_OHCI;
 
     RegPacket.MiniPortFlags = USB_MINIPORT_FLAGS_INTERRUPT |
-                              USB_MINIPORT_FLAGS_MEMORY_IO |
-                              8;
+                              USB_MINIPORT_FLAGS_MEMORY_IO;
 
-    RegPacket.MiniPortBusBandwidth = 12000;
+    RegPacket.MiniPortBusBandwidth = TOTAL_USB11_BUS_BANDWIDTH;
 
     RegPacket.MiniPortExtensionSize = sizeof(OHCI_EXTENSION);
     RegPacket.MiniPortEndpointSize = sizeof(OHCI_ENDPOINT);
@@ -2418,7 +2417,9 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
     DriverObject->DriverUnload = OHCI_Unload;
 
-    Status = USBPORT_RegisterUSBPortDriver(DriverObject, 100, &RegPacket);
+    Status = USBPORT_RegisterUSBPortDriver(DriverObject,
+                                           USB10_MINIPORT_INTERFACE_VERSION,
+                                           &RegPacket);
 
     DPRINT_OHCI("DriverEntry: USBPORT_RegisterUSBPortDriver return Status - %x\n",
                 Status);
