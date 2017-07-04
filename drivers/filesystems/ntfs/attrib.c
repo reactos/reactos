@@ -146,7 +146,7 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
     ULONGLONG CurrentMFTIndex = NTFS_FILE_ROOT;
     UNICODE_STRING Current, Remaining, FilenameNoPath;
     NTSTATUS Status = STATUS_SUCCESS;
-    ULONG FirstEntry = 0;
+    ULONG FirstEntry;
     WCHAR Buffer[MAX_PATH];
 
     if (AttributeAddress->Type != AttributeEnd)
@@ -183,6 +183,7 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
         if(Remaining.Length != 0)
             RtlCopyUnicodeString(&FilenameNoPath, &Remaining);
 
+        FirstEntry = 0;
         Status = NtfsFindMftRecord(DeviceExt,
                                    CurrentMFTIndex,
                                    &Current,
@@ -200,7 +201,7 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
             break;
         }
 
-        FsRtlDissectName(Current, &Current, &Remaining);
+        FsRtlDissectName(Remaining, &Current, &Remaining);
     }
 
     DPRINT1("MFT Index of parent: %I64u\n", CurrentMFTIndex);
