@@ -1497,12 +1497,12 @@ OHCI_ProcessDoneTD(IN POHCI_EXTENSION OhciExtension,
     OhciTransfer = TD->OhciTransfer;
     OhciEndpoint = OhciTransfer->OhciEndpoint;
 
-    --OhciTransfer->PendingTDs;
+    OhciTransfer->PendingTDs--;
 
     Buffer = (ULONG_PTR)TD->HwTD.gTD.CurrentBuffer;
     BufferEnd = (ULONG_PTR)TD->HwTD.gTD.BufferEnd;
 
-    if (TD->Flags & 0x10)
+    if (TD->Flags & OHCI_HCD_TD_FLAG_NOT_ACCESSED)
     {
         TD->HwTD.gTD.Control.ConditionCode = 0;
     }
@@ -1512,8 +1512,15 @@ OHCI_ProcessDoneTD(IN POHCI_EXTENSION OhciExtension,
         {
             if (TD->TransferLen)
             {
-                Length = (((Buffer ^ BufferEnd) & 0xFFFFF000) != 0 ? 0x1000 : 0) +
-                         (BufferEnd & 0xFFF) + 1 - (Buffer & 0xFFF);
+                Length = (BufferEnd & (PAGE_SIZE - 1)) -
+                         (Buffer & (PAGE_SIZE - 1));
+
+                Length++;
+
+                if ((Buffer ^ BufferEnd) & ~(PAGE_SIZE - 1))
+                {
+                    Length += PAGE_SIZE;
+                }
 
                 TD->TransferLen -= Length;
             }
