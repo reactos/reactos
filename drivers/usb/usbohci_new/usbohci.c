@@ -276,10 +276,6 @@ OHCI_OpenInterruptEndpoint(IN POHCI_EXTENSION OhciExtension,
     ULONG PeriodIdx = 0;
     POHCI_HCD_ED ED;
     ULONG ScheduleOffset;
-    POHCI_HCD_TD TdVA;
-    POHCI_HCD_TD TdPA;
-    ULONG TdCount;
-    ULONG ix;
 
     DPRINT_OHCI("OHCI_OpenInterruptEndpoint: ... \n");
 
@@ -287,20 +283,20 @@ OHCI_OpenInterruptEndpoint(IN POHCI_EXTENSION OhciExtension,
 
     OhciEndpoint->FirstTD = (POHCI_HCD_TD)((ULONG_PTR)ED + sizeof(OHCI_HCD_ED));
 
-    Index[0] = (1 << 0) - 1;
-    Index[1] = (1 << 1) - 1;
-    Index[2] = (1 << 2) - 1;
-    Index[3] = (1 << 3) - 1;
-    Index[4] = (1 << 4) - 1;
-    Index[5] = (1 << 5) - 1;
-    Index[6] = (1 << 5) - 1;
-    Index[7] = (1 << 5) - 1;
+    Index[0] = ENDPOINT_INTERRUPT_1ms - 1;
+    Index[1] = ENDPOINT_INTERRUPT_2ms - 1;
+    Index[2] = ENDPOINT_INTERRUPT_4ms - 1;
+    Index[3] = ENDPOINT_INTERRUPT_8ms - 1;
+    Index[4] = ENDPOINT_INTERRUPT_16ms - 1;
+    Index[5] = ENDPOINT_INTERRUPT_32ms - 1;
+    Index[6] = ENDPOINT_INTERRUPT_32ms - 1;
+    Index[7] = ENDPOINT_INTERRUPT_32ms - 1;
 
     Period = EndpointProperties->Period;
 
     while (!(Period & 1))
     {
-        ++PeriodIdx;
+        PeriodIdx++;
         Period >>= 1;
     }
 
@@ -314,34 +310,7 @@ OHCI_OpenInterruptEndpoint(IN POHCI_EXTENSION OhciExtension,
 
     //OhciEndpoint->HeadED->UsbBandwidth += EndpointProperties->UsbBandwidth;
 
-    TdCount = (EndpointProperties->BufferLength - sizeof(OHCI_HCD_ED)) /
-               sizeof(OHCI_HCD_TD);
-
-    OhciEndpoint->MaxTransferDescriptors = TdCount;
-
-    if (TdCount > 0)
-    {
-        TdVA = OhciEndpoint->FirstTD;
-
-        TdPA = (POHCI_HCD_TD)((ULONG_PTR)EndpointProperties->BufferPA +
-                              sizeof(OHCI_HCD_ED));
-
-        for (ix = 0; ix < TdCount; ix++)
-        {
-            DPRINT_OHCI("OHCI_OpenInterruptEndpoint: InitTD. TdVA - %p, TdPA - %p\n",
-                        TdVA,
-                        TdPA);
-
-            RtlZeroMemory(TdVA, sizeof(OHCI_HCD_TD));
-
-            TdVA->PhysicalAddress = (ULONG_PTR)TdPA;
-            TdVA->Flags = 0;
-            TdVA->OhciTransfer = NULL;
-
-            ++TdVA;
-            ++TdPA;
-       }
-    }
+    OHCI_InitializeTDs(OhciEndpoint, EndpointProperties);
 
     OhciEndpoint->HcdED = OHCI_InitializeED(OhciEndpoint,
                                             ED,
