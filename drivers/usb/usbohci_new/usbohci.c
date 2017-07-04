@@ -1571,9 +1571,9 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
                    IN PVOID ohciTransfer,
                    IN OUT PULONG CompletedLength)
 {
-    POHCI_EXTENSION OhciExtension;
-    POHCI_ENDPOINT OhciEndpoint;
-    POHCI_TRANSFER OhciTransfer;
+    POHCI_EXTENSION OhciExtension = ohciExtension;
+    POHCI_ENDPOINT OhciEndpoint = ohciEndpoint;
+    POHCI_TRANSFER OhciTransfer = ohciTransfer;
     POHCI_HCD_ED ED;
     ULONG_PTR NextTdPA;
     POHCI_HCD_TD NextTD;
@@ -1584,10 +1584,6 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
     ULONG ix;
     BOOLEAN IsIsoEndpoint = FALSE;
     BOOLEAN IsProcessed = FALSE;
-
-    OhciExtension = ohciExtension;
-    OhciEndpoint = ohciEndpoint;
-    OhciTransfer = ohciTransfer;
 
     DPRINT("OHCI_AbortTransfer: ohciEndpoint - %p, ohciTransfer - %p\n",
            OhciEndpoint,
@@ -1601,7 +1597,7 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
 
     ED = OhciEndpoint->HcdED;
 
-    NextTdPA = ED->HwED.HeadPointer & 0xFFFFFFF0; // physical pointer to the next TD
+    NextTdPA = ED->HwED.HeadPointer & OHCI_ED_HEAD_POINTER_MASK; // physical pointer to the next TD
 
     NextTD = RegPacket.UsbPortGetMappedVirtualAddress((PVOID)NextTdPA,
                                                        OhciExtension,
@@ -1612,7 +1608,7 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
         LastTD = OhciTransfer->NextTD;
 
         ED->HwED.HeadPointer = LastTD->PhysicalAddress |
-                               (ED->HwED.HeadPointer & 2);
+                               (ED->HwED.HeadPointer & OHCI_ED_HEAD_POINTER_CARRY);
 
         OhciEndpoint->HcdHeadP = LastTD;
 
@@ -1645,86 +1641,90 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
 
     TD = OhciEndpoint->HcdHeadP;
 
-    if (TD != NextTD)
+    if (TD == NextTD)
     {
-        do
+        goto Exit;
+    }
+
+    do
+    {
+        if (TD->OhciTransfer == ohciTransfer)
         {
-            if (TD->OhciTransfer == ohciTransfer)
+            PrevTD = TD;
+            TD = TD->NextHcdTD;
+
+            if (PrevTD == OhciEndpoint->HcdHeadP)
             {
-                PrevTD = TD;
-                TD = TD->NextHcdTD;
+                OhciEndpoint->HcdHeadP = TD;
+            }
 
-                if (PrevTD == OhciEndpoint->HcdHeadP)
-                {
-                    OhciEndpoint->HcdHeadP = TD;
-                }
-
-                if (IsIsoEndpoint)
-                {
-                    OHCI_ProcessDoneIsoTD(OhciExtension, PrevTD, FALSE);
-                }
-                else
-                {
-                    OHCI_ProcessDoneTD(OhciExtension, PrevTD, FALSE);
-                }
-
-                IsProcessed = TRUE;
+            if (IsIsoEndpoint)
+            {
+                OHCI_ProcessDoneIsoTD(OhciExtension, PrevTD, FALSE);
             }
             else
             {
-                TD = TD->NextHcdTD;
+                OHCI_ProcessDoneTD(OhciExtension, PrevTD, FALSE);
             }
+
+            IsProcessed = TRUE;
         }
-        while (TD != NextTD);
-
-        if (!IsProcessed)
+        else
         {
-            TD = OhciEndpoint->HcdHeadP;
-
-            LastTD = TD;
-            td = NULL;
-
-            while (TD != OhciEndpoint->HcdTailP)
-            {
-                if (TD->OhciTransfer == OhciTransfer)
-                {
-                    td = TD;
-                    break;
-                }
-
-                LastTD = TD;
-
-                TD = TD->NextHcdTD;
-            }
-
-            TD = td;
-
-            do
-            {
-                if (TD == OhciEndpoint->HcdTailP)
-                {
-                    break;
-                }
-
-                PrevTD = TD;
-                TD = TD->NextHcdTD;
-
-                if (IsIsoEndpoint)
-                {
-                    OHCI_ProcessDoneIsoTD(OhciExtension, PrevTD, FALSE);
-                }
-                else
-                {
-                    OHCI_ProcessDoneTD(OhciExtension, PrevTD, FALSE);
-                }
-            }
-            while (TD->OhciTransfer == OhciTransfer);
-
-            LastTD->OhciTransfer->NextTD = TD;
-            LastTD->NextHcdTD = TD;
-            LastTD->HwTD.gTD.NextTD = (PULONG)TD->PhysicalAddress;
+            TD = TD->NextHcdTD;
         }
     }
+    while (TD != NextTD);
+
+    if (!IsProcessed)
+    {
+        TD = OhciEndpoint->HcdHeadP;
+
+        LastTD = TD;
+        td = NULL;
+
+        while (TD != OhciEndpoint->HcdTailP)
+        {
+            if (TD->OhciTransfer == OhciTransfer)
+            {
+                td = TD;
+                break;
+            }
+
+            LastTD = TD;
+
+            TD = TD->NextHcdTD;
+        }
+
+        TD = td;
+
+        do
+        {
+            if (TD == OhciEndpoint->HcdTailP)
+            {
+                break;
+            }
+
+            PrevTD = TD;
+            TD = TD->NextHcdTD;
+
+            if (IsIsoEndpoint)
+            {
+                OHCI_ProcessDoneIsoTD(OhciExtension, PrevTD, FALSE);
+            }
+            else
+            {
+                OHCI_ProcessDoneTD(OhciExtension, PrevTD, FALSE);
+            }
+        }
+        while (TD->OhciTransfer == OhciTransfer);
+
+        LastTD->OhciTransfer->NextTD = TD;
+        LastTD->NextHcdTD = TD;
+        LastTD->HwTD.gTD.NextTD = (ULONG_PTR *)TD->PhysicalAddress;
+    }
+
+Exit:
 
     *CompletedLength = OhciTransfer->TransferLen;
 
