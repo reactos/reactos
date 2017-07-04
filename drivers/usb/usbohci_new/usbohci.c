@@ -245,10 +245,6 @@ OHCI_OpenBulkEndpoint(IN POHCI_EXTENSION OhciExtension,
                       IN POHCI_ENDPOINT OhciEndpoint)
 {
     POHCI_HCD_ED ED;
-    POHCI_HCD_TD TdVA;
-    POHCI_HCD_TD TdPA;
-    ULONG TdCount;
-    ULONG ix;
 
     DPRINT_OHCI("OHCI_OpenBulkEndpoint: ... \n");
 
@@ -257,35 +253,7 @@ OHCI_OpenBulkEndpoint(IN POHCI_EXTENSION OhciExtension,
     OhciEndpoint->FirstTD = (POHCI_HCD_TD)((ULONG_PTR)ED + sizeof(OHCI_HCD_ED));
     OhciEndpoint->HeadED = &OhciExtension->BulkStaticED;
 
-    TdCount = (EndpointProperties->BufferLength - sizeof(OHCI_HCD_ED)) /
-               sizeof(OHCI_HCD_TD);
-
-    OhciEndpoint->MaxTransferDescriptors = TdCount;
-
-    if (TdCount > 0)
-    {
-        TdVA = OhciEndpoint->FirstTD;
-
-        TdPA = (POHCI_HCD_TD)((ULONG_PTR)EndpointProperties->BufferPA +
-                              sizeof(OHCI_HCD_ED));
-
-        for (ix = 0; ix < TdCount; ix++)
-        {
-            DPRINT_OHCI("OHCI_OpenBulkEndpoint: InitTD. TdVA - %p, TdPA - %p\n",
-                        TdVA,
-                        TdPA);
-
-            RtlZeroMemory(TdVA, sizeof(OHCI_HCD_TD));
-
-            TdVA->PhysicalAddress = (ULONG_PTR)TdPA;
-            TdVA->Flags = 0;
-            TdVA->OhciTransfer = NULL;
-
-            ++TdVA;
-            ++TdPA;
-       }
-    }
-
+    OHCI_InitializeTDs(OhciEndpoint, EndpointProperties);
 
     OhciEndpoint->HcdED = OHCI_InitializeED(OhciEndpoint,
                                             ED,
