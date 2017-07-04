@@ -736,29 +736,32 @@ VOID
 NTAPI
 OHCI_SuspendController(IN PVOID ohciExtension)
 {
-    POHCI_EXTENSION OhciExtension;
+    POHCI_EXTENSION OhciExtension = ohciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    PULONG ControlReg;
+    PULONG InterruptEnableReg;
     OHCI_REG_CONTROL Control;
     OHCI_REG_INTERRUPT_ENABLE_DISABLE InterruptReg;
 
     DPRINT("OHCI_SuspendController: ... \n");
 
-    OhciExtension = ohciExtension;
     OperationalRegs = OhciExtension->OperationalRegs;
+    ControlReg = (PULONG)&OperationalRegs->HcControl;
+    InterruptEnableReg = (PULONG)&OperationalRegs->HcInterruptEnable;
 
+    /* Disable all interrupt generations */
     WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptDisable.AsULONG,
                          0xFFFFFFFF);
 
+    /* Clear all bits in HcInterruptStatus register */
     WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptStatus.AsULONG,
                          0xFFFFFFFF);
 
-    Control.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcControl.AsULONG);
-
+    Control.AsULONG = READ_REGISTER_ULONG(ControlReg);
     Control.HostControllerFunctionalState = OHCI_HC_STATE_SUSPEND;
     Control.RemoteWakeupEnable =  1;
 
-    WRITE_REGISTER_ULONG(&OperationalRegs->HcControl.AsULONG,
-                         Control.AsULONG);
+    WRITE_REGISTER_ULONG(ControlReg, Control.AsULONG);
 
     InterruptReg.AsULONG = 0;
     InterruptReg.ResumeDetected = 1;
@@ -766,8 +769,7 @@ OHCI_SuspendController(IN PVOID ohciExtension)
     InterruptReg.RootHubStatusChange = 1;
     InterruptReg.MasterInterruptEnable = 1;
 
-    WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptEnable.AsULONG,
-                         InterruptReg.AsULONG);
+    WRITE_REGISTER_ULONG(InterruptEnableReg, InterruptReg.AsULONG);
 }
 
 MPSTATUS
