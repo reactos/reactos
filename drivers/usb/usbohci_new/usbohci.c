@@ -1000,7 +1000,7 @@ OHCI_MapTransferToTD(IN POHCI_EXTENSION OhciExtension,
     ULONG_PTR BufferEnd;
     ULONG Offset;
     ULONG TransferLength;
-    ULONG Buffer;
+    ULONG_PTR Buffer;
 
     DPRINT_OHCI("OHCI_MapTransferToTD: TransferedLen - %x\n", TransferedLen);
 
@@ -1022,11 +1022,6 @@ OHCI_MapTransferToTD(IN POHCI_EXTENSION OhciExtension,
                 SGList->SgElementCount);
 
     ASSERT(SgIdx < SGList->SgElementCount);
-
-    if (SGList->Flags & 1)
-    {
-        ASSERT(FALSE);
-    }
 
     Offset = TransferedLen - SGList->SgElement[SgIdx].SgOffset;
     Buffer = SGList->SgElement[SgIdx].SgPhysicalAddress.LowPart + Offset;
