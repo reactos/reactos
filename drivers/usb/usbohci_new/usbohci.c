@@ -338,17 +338,13 @@ OHCI_OpenEndpoint(IN PVOID ohciExtension,
                   IN PVOID endpointParameters,
                   IN PVOID ohciEndpoint)
 {
-    POHCI_EXTENSION OhciExtension;
-    POHCI_ENDPOINT OhciEndpoint;
-    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
+    POHCI_EXTENSION OhciExtension = ohciExtension;
+    POHCI_ENDPOINT OhciEndpoint = ohciEndpoint;
+    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties = endpointParameters;
     ULONG TransferType;
     MPSTATUS MPStatus;
 
     DPRINT_OHCI("OHCI_OpenEndpoint: ... \n");
-
-    OhciExtension = ohciExtension;
-    OhciEndpoint = ohciEndpoint;
-    EndpointProperties = endpointParameters;
 
     RtlCopyMemory(&OhciEndpoint->EndpointProperties,
                   endpointParameters,
