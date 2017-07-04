@@ -776,45 +776,42 @@ MPSTATUS
 NTAPI
 OHCI_ResumeController(IN PVOID ohciExtension)
 {
-    POHCI_EXTENSION OhciExtension;
+    POHCI_EXTENSION OhciExtension = ohciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    PULONG ControlReg;
+    PULONG InterruptEnableReg;
     POHCI_HCCA HcHCCA;
     OHCI_REG_CONTROL control;
     OHCI_REG_INTERRUPT_ENABLE_DISABLE InterruptReg;
 
     DPRINT("OHCI_ResumeController \n");
 
-    OhciExtension = ohciExtension;
     OperationalRegs = OhciExtension->OperationalRegs;
+    ControlReg = (PULONG)&OperationalRegs->HcControl;
+    InterruptEnableReg = (PULONG)&OperationalRegs->HcInterruptEnable;
 
-    control.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcControl.AsULONG);
+    control.AsULONG = READ_REGISTER_ULONG(ControlReg);
 
     if (control.HostControllerFunctionalState != OHCI_HC_STATE_SUSPEND)
     {
         return MP_STATUS_HW_ERROR;
     }
 
-    HcHCCA = (POHCI_HCCA)OhciExtension->HcResourcesVA;
+    HcHCCA = &OhciExtension->HcResourcesVA->HcHCCA;
     HcHCCA->Pad1 = 0;
 
     control.HostControllerFunctionalState = OHCI_HC_STATE_OPERATIONAL;
-
-    WRITE_REGISTER_ULONG(&OperationalRegs->HcControl.AsULONG,
-                         control.AsULONG);
+    WRITE_REGISTER_ULONG(ControlReg, control.AsULONG);
 
     InterruptReg.AsULONG = 0;
-
     InterruptReg.SchedulingOverrun = 1;
     InterruptReg.WritebackDoneHead = 1;
     InterruptReg.UnrecoverableError = 1;
     InterruptReg.FrameNumberOverflow = 1;
     InterruptReg.OwnershipChange = 1;
 
-    WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptEnable.AsULONG,
-                         InterruptReg.AsULONG);
-
-    WRITE_REGISTER_ULONG(&OperationalRegs->HcControl.AsULONG,
-                         control.AsULONG);
+    WRITE_REGISTER_ULONG(InterruptEnableReg, InterruptReg.AsULONG);
+    WRITE_REGISTER_ULONG(ControlReg, control.AsULONG);
 
     return MP_STATUS_SUCCESS;
 }
