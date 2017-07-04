@@ -70,15 +70,22 @@ OHCI_InsertEndpointInSchedule(IN POHCI_ENDPOINT OhciEndpoint)
     {
         InsertHeadList(HeadLink, &ED->HcdEDLink);
 
-        if (HeadED->Type & 0x20) // ControlTransfer or BulkTransfer
+        if (HeadED->Type == OHCI_STATIC_ED_TYPE_CONTROLL ||
+            HeadED->Type == OHCI_STATIC_ED_TYPE_BULK)
         {
             ED->HwED.NextED = READ_REGISTER_ULONG(HeadED->pNextED);
             WRITE_REGISTER_ULONG(HeadED->pNextED, ED->PhysicalAddress);
         }
-        else
+        else if (HeadED->Type == OHCI_STATIC_ED_TYPE_INTERRUPT)
         {
             ED->HwED.NextED = *HeadED->pNextED;
             *HeadED->pNextED = ED->PhysicalAddress;
+        }
+        else
+        {
+            DPRINT1("OHCI_InsertEndpointInSchedule: Unknown HeadED->Type - %x\n",
+                    HeadED->Type);
+            DbgBreakPoint();
         }
     }
     else
