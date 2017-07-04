@@ -2127,12 +2127,22 @@ VOID
 NTAPI
 OHCI_InterruptNextSOF(IN PVOID ohciExtension)
 {
-    POHCI_EXTENSION  OhciExtension = ohciExtension;
+    POHCI_EXTENSION OhciExtension = ohciExtension;
+    POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    PULONG InterruptEnableReg;
+    OHCI_REG_INTERRUPT_ENABLE_DISABLE IntEnable;
+
     DPRINT_OHCI("OHCI_InterruptNextSOF: OhciExtension - %p\n",
                 OhciExtension);
 
-    WRITE_REGISTER_ULONG(&OhciExtension->OperationalRegs->HcInterruptEnable.AsULONG,
-                         4);
+    OperationalRegs = OhciExtension->OperationalRegs;
+    InterruptEnableReg = (PULONG)&OperationalRegs->HcInterruptEnable;
+
+    /* Enable interrupt generation due to Start of Frame */
+    IntEnable.AsULONG = 0;
+    IntEnable.StartofFrame = 1;
+
+    WRITE_REGISTER_ULONG(InterruptEnableReg, IntEnable.AsULONG);
 }
 
 VOID
