@@ -2019,12 +2019,9 @@ NTAPI
 OHCI_PollEndpoint(IN PVOID ohciExtension,
                   IN PVOID ohciEndpoint)
 {
-    POHCI_EXTENSION OhciExtension;
-    POHCI_ENDPOINT OhciEndpoint;
+    POHCI_EXTENSION OhciExtension = ohciExtension;
+    POHCI_ENDPOINT OhciEndpoint = ohciEndpoint;
     ULONG TransferType;
-
-    OhciExtension = ohciExtension;
-    OhciEndpoint = ohciEndpoint;
 
     DPRINT_OHCI("OHCI_PollEndpoint: OhciExtension - %p, Endpoint - %p\n",
                 OhciExtension,
@@ -2035,15 +2032,14 @@ OHCI_PollEndpoint(IN PVOID ohciExtension,
     if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
     {
         OHCI_PollIsoEndpoint(OhciExtension, OhciEndpoint);
+        return;
     }
-    else
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_CONTROL ||
+        TransferType == USBPORT_TRANSFER_TYPE_BULK ||
+        TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
     {
-        if (TransferType == USBPORT_TRANSFER_TYPE_CONTROL ||
-            TransferType == USBPORT_TRANSFER_TYPE_BULK ||
-            TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
-        {
-            OHCI_PollAsyncEndpoint(OhciExtension, OhciEndpoint);
-        }
+        OHCI_PollAsyncEndpoint(OhciExtension, OhciEndpoint);
     }
 }
 
