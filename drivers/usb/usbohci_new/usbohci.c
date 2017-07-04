@@ -916,20 +916,26 @@ NTAPI
 OHCI_InterruptDpc(IN PVOID ohciExtension,
                   IN BOOLEAN IsDoEnableInterrupts)
 {
-    POHCI_EXTENSION OhciExtension;
+    POHCI_EXTENSION OhciExtension = ohciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    PULONG InterruptDisableReg;
+    PULONG InterruptEnableReg;
+    PULONG InterruptStatusReg;
     OHCI_REG_INTERRUPT_STATUS IntStatus;
+    OHCI_REG_INTERRUPT_ENABLE_DISABLE InterruptBits;
     POHCI_HCCA HcHCCA;
 
-    OhciExtension = ohciExtension;
     OperationalRegs = OhciExtension->OperationalRegs;
+
+    InterruptEnableReg = (PULONG)&OperationalRegs->HcInterruptEnable;
+    InterruptDisableReg = (PULONG)&OperationalRegs->HcInterruptDisable;
+    InterruptStatusReg = (PULONG)&OperationalRegs->HcInterruptStatus;
 
     DPRINT_OHCI("OHCI_InterruptDpc: OhciExtension - %p, IsDoEnableInterrupts - %x\n",
                 OhciExtension,
                 IsDoEnableInterrupts);
 
-    IntStatus.AsULONG = 
-        READ_REGISTER_ULONG(&OperationalRegs->HcInterruptStatus.AsULONG);
+    IntStatus.AsULONG = READ_REGISTER_ULONG(InterruptStatusReg);
 
     if (IntStatus.RootHubStatusChange)
     {
@@ -941,16 +947,19 @@ OHCI_InterruptDpc(IN PVOID ohciExtension,
     {
         DPRINT_OHCI("OHCI_InterruptDpc: WritebackDoneHead\n");
 
-        HcHCCA = (POHCI_HCCA)OhciExtension->HcResourcesVA;
+        HcHCCA = &OhciExtension->HcResourcesVA->HcHCCA;
         HcHCCA->DoneHead = 0;
 
-        RegPacket.UsbPortInvalidateEndpoint(OhciExtension, 0);
+        RegPacket.UsbPortInvalidateEndpoint(OhciExtension, NULL);
     }
 
     if (IntStatus.StartofFrame)
     {
-        WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptDisable.AsULONG,
-                             4);
+        /* Disable interrupt generation due to Start of Frame */
+        InterruptBits.AsULONG = 0;
+        InterruptBits.StartofFrame = 1;
+
+        WRITE_REGISTER_ULONG(InterruptDisableReg, InterruptBits.AsULONG);
     }
 
     if (IntStatus.ResumeDetected)
@@ -963,13 +972,15 @@ OHCI_InterruptDpc(IN PVOID ohciExtension,
         ASSERT(FALSE);
     }
 
-    WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptStatus.AsULONG,
-                         IntStatus.AsULONG);
+    WRITE_REGISTER_ULONG(InterruptStatusReg, IntStatus.AsULONG);
 
     if (IsDoEnableInterrupts)
     {
-        WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptEnable.AsULONG,
-                             0x80000000);
+        /*  Enable interrupt generation */
+        InterruptBits.AsULONG = 0;
+        InterruptBits.MasterInterruptEnable = 1;
+
+        WRITE_REGISTER_ULONG(InterruptEnableReg, InterruptBits.AsULONG);
     }
 }
 
