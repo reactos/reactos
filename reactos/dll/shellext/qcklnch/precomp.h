@@ -27,6 +27,7 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlwin.h>
+#include <atlstr.h>
 #include <undocshell.h>
 #include <shellutils.h>
 

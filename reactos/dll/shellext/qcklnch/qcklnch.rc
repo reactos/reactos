@@ -7,18 +7,9 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 IDR_QCKLNCH REGISTRY "rgs/qcklnch.rgs"
 
-IDM_POPUPMENU MENUEX DISCARDABLE
-BEGIN
-    POPUP ""
-    BEGIN      
-        POPUP "&View", IDM_VIEW_MENU
-        BEGIN
-            MENUITEM "&Large Icons", IDM_LARGE_ICONS
-            MENUITEM "&Small Icons", IDM_SMALL_ICONS
-        END
-        MENUITEM "&Show Text", IDM_SHOW_TEXT
-    END    
-END
-
 #include <reactos/manifest_dll.rc>
+
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
 

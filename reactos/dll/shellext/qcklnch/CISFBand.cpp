@@ -15,6 +15,13 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(qcklnch);
 
+// ***Extras***
+
+BOOL WINAPI _ILIsDesktop(LPCITEMIDLIST pidl)
+{
+    return (pidl == NULL || pidl->mkid.cb == 0);
+}
+
 //*****************************************************************************************
 // *** CISFBand *** 
 
@@ -64,16 +71,18 @@ LRESULT CISFBand::OnRButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 
     int index = SendMessage(m_hWnd, TB_HITTEST, 0, (LPARAM)&pt);
     bool chk = SendMessage(m_hWnd, TB_GETBUTTON, abs(index), (LPARAM)&tb);
-    CComHeapPtr<ITEMIDLIST> pidl((LPITEMIDLIST)tb.dwData);
+    LPITEMIDLIST pidl = (LPITEMIDLIST)tb.dwData;
 
     if (chk)
     {
         ClientToScreen(&pt);
         hr = m_pISF->GetUIObjectOf(m_hWnd, 1, &pidl, IID_NULL_PPV_ARG(IContextMenu, &picm));
-        if (FAILED_UNEXPECTEDLY(hr)) return hr;
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
 
         hr = picm->QueryContextMenu(fmenu, 0, 1, 0x7FFF, CMF_DEFAULTONLY);
-        if (FAILED_UNEXPECTEDLY(hr)) return hr;
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
 
         int id = TrackPopupMenuEx(fmenu, TPM_LEFTALIGN | TPM_BOTTOMALIGN | TPM_RETURNCMD, pt.x, pt.y, m_hWnd, 0);
         if (id > 0)
@@ -111,9 +120,9 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
     // Create the toolbar.
     m_hWnd = CreateWindowEx(0, TOOLBARCLASSNAME, NULL,
         WS_CHILD | TBSTYLE_FLAT | TBSTYLE_LIST | CCS_NORESIZE | CCS_NODIVIDER, CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
-        hWndParent, NULL, 0, NULL);
+        hWndParent, NULL, 0, NULL);    
     if (m_hWnd == NULL)
-        return E_FAIL;    
+        return E_FAIL;      
 
     // Set the image list.
     HIMAGELIST* piml;
@@ -127,7 +136,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 
     // Enumerate objects
     CComPtr<IEnumIDList> pEndl;    
-    CComHeapPtr<ITEMIDLIST> pidl;
+    LPITEMIDLIST pidl;
     STRRET stret;  
     ULONG count = 0;
     hr = m_pISF->EnumObjects(0, SHCONTF_FOLDERS, &pEndl);
@@ -149,8 +158,9 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
          else 
              StrRetToBuf(&stret, pidl, sz, _countof(sz));            
 
-         TBBUTTON tb = { MAKELONG(index, 0), i, TBSTATE_ENABLED, buttonStyles,{ 0 }, (DWORD_PTR)*&pidl, (INT_PTR)sz };            
+         TBBUTTON tb = { MAKELONG(index, 0), i, TBSTATE_ENABLED, buttonStyles,{ 0 }, (DWORD_PTR)pidl, (INT_PTR)sz };
          SendMessage(m_hWnd, TB_INSERTBUTTONW, 0, (LPARAM)&tb);
+         //CoTaskMemFree(pidl);         
     } 
 
     // Resize the toolbar, and then show it.
@@ -315,29 +325,6 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
         return E_FAIL;
     }    
 
- /*****************************************************************************/
- // *** IDeskBar ***    
-    STDMETHODIMP CISFBand::SetClient(IN IUnknown *punkClient)
-    {
-        TRACE("IDeskBar::SetClient(0x%p)\n", punkClient);
-
-        return E_NOTIMPL;
-    }
-
-    STDMETHODIMP CISFBand::GetClient(OUT IUnknown **ppunkClient)
-    {
-        TRACE("IDeskBar::GetClient(0x%p)\n", ppunkClient);
-
-        return E_NOTIMPL;
-    }
-
-    STDMETHODIMP CISFBand::OnPosRectChangeDB(IN RECT *prc)
-    {
-        TRACE("IDeskBar::OnPosRectChangeDB(0x%p=(%d,%d,%d,%d))\n", prc, prc->left, prc->top, prc->right, prc->bottom);      
-
-        return S_OK;
-    }
-
 /*****************************************************************************/
 // *** IPersistStream *** 
     STDMETHODIMP CISFBand::GetClassID(OUT CLSID *pClassID)
@@ -400,9 +387,19 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 
     STDMETHODIMP CISFBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
     {          
-         UNIMPLEMENTED;
-                 
-         return E_NOTIMPL;
+       /* switch (uMsg)
+        {
+            case WM_COMMAND:
+            {
+                MessageBox(L"Button Clicked", L"Test", MB_OKCANCEL | MB_ICONINFORMATION);
+
+                break;
+            }
+        }
+        return DefSubclassProc(hWnd, uMsg, wParam, lParam);*/
+
+        UNIMPLEMENTED;
+        return E_NOTIMPL;
     }
 
     STDMETHODIMP CISFBand::IsWindowOwner(HWND hWnd)
@@ -445,10 +442,7 @@ HRESULT CISFBand::CreateSimpleToolbar(HWND hWndParent)
 
     STDMETHODIMP CISFBand::InitializeSFB(IShellFolder *psf, PCIDLIST_ABSOLUTE pidl)
     {
-        CComHeapPtr<ITEMIDLIST> pidlRoot;
-        SHGetSpecialFolderLocation(0, CSIDL_DESKTOP, &pidlRoot);
-
-        if (pidl == NULL || !psf->CompareIDs(0x80000000L, pidl, pidlRoot))
+        if (_ILIsDesktop(pidl))
         {
             m_pISF = psf;
             m_pidl = ILClone(pidl);

@@ -18,8 +18,7 @@ class CQuickLaunchBand :
     public CComCoClass<CQuickLaunchBand, &CLSID_QuickLaunchBand>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IObjectWithSite,
-    public IDeskBand,
-    public IDeskBar,
+    public IDeskBand,    
     public IPersistStream,
     public IWinEventHandler,
     public IOleCommandTarget,
@@ -76,21 +75,7 @@ class CQuickLaunchBand :
         IN DWORD dwBandID,
         IN DWORD dwViewMode,
         IN OUT DESKBANDINFO *pdbi
-    );    
-
-// IDeskBar
-
-    virtual STDMETHODIMP GetClient(
-        OUT IUnknown **ppunkClient
-    );
-
-    virtual STDMETHODIMP OnPosRectChangeDB(
-        IN LPRECT prc
-    );
-
-    virtual STDMETHODIMP SetClient(
-        IN OPTIONAL IUnknown *punkClient
-    );
+    );   
 
 // IPersistStream
 
@@ -185,6 +170,7 @@ class CQuickLaunchBand :
 
     BEGIN_COM_MAP(CQuickLaunchBand)
         COM_INTERFACE_ENTRY2_IID(IID_IOleWindow, IOleWindow, IDeskBand)
+        COM_INTERFACE_ENTRY2_IID(IID_IDockingWindow, IDockingWindow, IDeskBand)
         COM_INTERFACE_ENTRY_IID(IID_IDeskBand, IDeskBand)
         COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
