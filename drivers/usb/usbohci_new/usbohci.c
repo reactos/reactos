@@ -2201,10 +2201,8 @@ OHCI_SetEndpointDataToggle(IN PVOID ohciExtension,
                            IN PVOID ohciEndpoint,
                            IN ULONG DataToggle)
 {
-    POHCI_ENDPOINT OhciEndpoint;
+    POHCI_ENDPOINT OhciEndpoint = ohciEndpoint;
     POHCI_HCD_ED ED;
-
-    OhciEndpoint = ohciEndpoint;
 
     DPRINT_OHCI("OHCI_SetEndpointDataToggle: Endpoint - %p, DataToggle - %x\n",
                 OhciEndpoint,
@@ -2214,11 +2212,11 @@ OHCI_SetEndpointDataToggle(IN PVOID ohciExtension,
 
     if (DataToggle)
     {
-        ED->HwED.HeadPointer |= 2; // toggleCarry
+        ED->HwED.HeadPointer |= OHCI_ED_HEAD_POINTER_CARRY;
     }
     else
     {
-        ED->HwED.HeadPointer &= ~2;
+        ED->HwED.HeadPointer &= ~OHCI_ED_HEAD_POINTER_CARRY;
     }
 }
 
