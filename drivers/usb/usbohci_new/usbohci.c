@@ -1430,20 +1430,14 @@ OHCI_SubmitTransfer(IN PVOID ohciExtension,
                     IN PVOID ohciTransfer,
                     IN PVOID sgList)
 {
-    POHCI_EXTENSION OhciExtension;
-    POHCI_ENDPOINT OhciEndpoint;
-    PUSBPORT_TRANSFER_PARAMETERS TransferParameters;
-    POHCI_TRANSFER OhciTransfer;
-    PUSBPORT_SCATTER_GATHER_LIST SGList;
+    POHCI_EXTENSION OhciExtension = ohciExtension;
+    POHCI_ENDPOINT OhciEndpoint = ohciEndpoint;
+    PUSBPORT_TRANSFER_PARAMETERS TransferParameters = transferParameters;
+    POHCI_TRANSFER OhciTransfer = ohciTransfer;
+    PUSBPORT_SCATTER_GATHER_LIST SGList = sgList;
     ULONG TransferType;
 
     DPRINT_OHCI("OHCI_SubmitTransfer: ... \n");
-
-    OhciExtension = ohciExtension;
-    OhciEndpoint = ohciEndpoint;
-    TransferParameters = transferParameters;
-    OhciTransfer = ohciTransfer;
-    SGList = sgList;
 
     RtlZeroMemory(OhciTransfer, sizeof(OHCI_TRANSFER));
 
