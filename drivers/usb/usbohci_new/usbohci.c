@@ -1392,7 +1392,7 @@ OHCI_BulkOrInterruptTransfer(IN POHCI_EXTENSION OhciExtension,
         PrevTD = TD;
 
         TD = OHCI_AllocateTD(OhciExtension, OhciEndpoint);
-        ++OhciTransfer->PendingTDs;
+        OhciTransfer->PendingTDs++;
 
         PrevTD->HwTD.gTD.NextTD = (PULONG)TD->PhysicalAddress;
         PrevTD->NextHcdTD = TD;
@@ -1402,7 +1402,7 @@ OHCI_BulkOrInterruptTransfer(IN POHCI_EXTENSION OhciExtension,
     if (TransferParameters->TransferFlags & USBD_SHORT_TRANSFER_OK)
     {
         PrevTD->HwTD.gTD.Control.BufferRounding = TRUE;
-        OhciTransfer->Flags |= 1;
+        OhciTransfer->Flags |= OHCI_TRANSFER_FLAGS_SHORT_TRANSFER_OK;
     }
 
     PrevTD->HwTD.gTD.Control.DelayInterrupt = OHCI_TD_INTERRUPT_IMMEDIATE;
