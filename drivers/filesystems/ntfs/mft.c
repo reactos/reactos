@@ -1418,7 +1418,15 @@ UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    ReadAttribute(Vcb, IndexRootCtx, 0, IndexRecord, Vcb->NtfsInfo.BytesPerIndexRecord);
+    Status = ReadAttribute(Vcb, IndexRootCtx, 0, IndexRecord, AttributeDataLength(&IndexRootCtx->Record));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ERROR: Failed to read Index Root!\n");
+        ExFreePoolWithTag(IndexRecord, TAG_NTFS);
+        ReleaseAttributeContext(IndexRootCtx);
+        ExFreePoolWithTag(MftRecord, TAG_NTFS);
+    }
+
     IndexRoot = (PINDEX_ROOT_ATTRIBUTE)IndexRecord;
     IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((PCHAR)&IndexRoot->Header + IndexRoot->Header.FirstEntryOffset);
     // Index root is always resident. 
@@ -1439,6 +1447,18 @@ UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
                                           NewDataSize,
                                           NewAllocationSize,
                                           CaseSensitive);
+
+    if (Status == STATUS_PENDING)
+    {
+        // we need to write the index root attribute back to disk
+        ULONG LengthWritten;
+        Status = WriteAttribute(Vcb, IndexRootCtx, 0, IndexRecord, AttributeDataLength(&IndexRootCtx->Record), &LengthWritten);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ERROR: Couldn't update Index Root!\n");
+        }
+
+    }
 
     ReleaseAttributeContext(IndexRootCtx);
     ExFreePoolWithTag(IndexRecord, TAG_NTFS);
