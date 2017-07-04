@@ -2115,6 +2115,8 @@ OHCI_Get32BitFrameNumber(IN PVOID ohciExtension)
 
     HcHCCA = &OhciExtension->HcResourcesVA->HcHCCA;
 
+    /* 5.4 FrameInterval Counter: Get32BitFrameNumber() */
+
     hp = OhciExtension->FrameHighPart;
     fm = HcHCCA->FrameNumber;
 
