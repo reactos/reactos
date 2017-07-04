@@ -394,14 +394,11 @@ OHCI_ReopenEndpoint(IN PVOID ohciExtension,
                     IN PVOID endpointParameters,
                     IN PVOID ohciEndpoint)
 {
-    POHCI_ENDPOINT OhciEndpoint;
-    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
+    POHCI_ENDPOINT OhciEndpoint = ohciEndpoint;
+    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties = endpointParameters;
     POHCI_HCD_ED ED;
 
     DPRINT_OHCI("OHCI_ReopenEndpoint: ... \n");
-
-    OhciEndpoint = ohciEndpoint;
-    EndpointProperties = endpointParameters;
 
     ED = OhciEndpoint->HcdED;
 
