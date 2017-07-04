@@ -1,8 +1,9 @@
-#define OHCI_NUMBER_OF_INTERRUPTS  32
-#define OHCI_MAX_PORT_COUNT        15
-#define ED_EOF                     -1
-#define MAXIMUM_OVERHEAD           210
-#define OHCI_MINIMAL_POTPGT        25 // == 50 ms., PowerOnToPowerGoodTime (HcRhDescriptorA Register)
+#define OHCI_NUMBER_OF_INTERRUPTS    32
+#define OHCI_MAX_PORT_COUNT          15
+#define ED_EOF                       -1
+#define OHCI_MAXIMUM_OVERHEAD        210 // 5.4  FrameInterval Counter, in bit-times
+#define OHCI_DEFAULT_FRAME_INTERVAL  11999 // 6.3.1  Frame Timing
+#define OHCI_MINIMAL_POTPGT          25 // == 50 ms., PowerOnToPowerGoodTime (HcRhDescriptorA Register)
 
 /* Controller states */
 #define OHCI_HC_STATE_RESET       0
@@ -29,6 +30,10 @@
 #define OHCI_TD_DIRECTION_PID_OUT      1
 #define OHCI_TD_DIRECTION_PID_IN       2
 #define OHCI_TD_DIRECTION_PID_RESERVED 3
+
+#define OHCI_TD_DATA_TOGGLE_FROM_ED  0
+#define OHCI_TD_DATA_TOGGLE_DATA0    2
+#define OHCI_TD_DATA_TOGGLE_DATA1    3
 
 #define OHCI_TD_CONDITION_NO_ERROR          0x00
 #define OHCI_TD_CONDITION_CRC_ERROR         0x01
@@ -60,7 +65,7 @@ typedef union _OHCI_TRANSFER_CONTROL {
 typedef struct _OHCI_TRANSFER_DESCRIPTOR { // must be aligned to a 16-byte boundary
   OHCI_TRANSFER_CONTROL Control;
   PVOID CurrentBuffer; // physical address of the next memory location
-  PULONG NextTD; // pointer to the next TD on the list of TDs
+  ULONG_PTR * NextTD; // pointer to the next TD on the list of TDs
   PVOID BufferEnd; // physical address of the last byte
 } OHCI_TRANSFER_DESCRIPTOR, *POHCI_TRANSFER_DESCRIPTOR;
 
@@ -81,7 +86,7 @@ typedef union _OHCI_ISO_TRANSFER_CONTROL {
 typedef struct _OHCI_ISO_TRANSFER_DESCRIPTOR { // must be aligned to a 32-byte boundary
   OHCI_ISO_TRANSFER_CONTROL Control;
   PVOID BufferPage0; // physical page number of the 1 byte of the data buffer
-  PULONG NextTD; // pointer to the next Isochronous TD on the queue of Isochronous TDs
+  ULONG_PTR * NextTD; // pointer to the next Isochronous TD on the queue of Isochronous TDs
   PVOID BufferEnd; // physical address of the last byte in the buffer
   USHORT Offset[8]; // for determine size and start addr. iso packet | PacketStatusWord - completion code
 } OHCI_ISO_TRANSFER_DESCRIPTOR, *POHCI_ISO_TRANSFER_DESCRIPTOR;
@@ -101,6 +106,12 @@ typedef union _OHCI_ENDPOINT_CONTROL {
   };
   ULONG  AsULONG;
 } OHCI_ENDPOINT_CONTROL, *POHCI_ENDPOINT_CONTROL;
+
+/* Bit flags for HeadPointer member of the EP descriptor */
+#define OHCI_ED_HEAD_POINTER_HALT        0x00000001 // hardware stopped bit
+#define OHCI_ED_HEAD_POINTER_CARRY       0x00000002 // hardware toggle carry bit
+#define	OHCI_ED_HEAD_POINTER_MASK        0XFFFFFFF0 // mask physical pointer
+#define	OHCI_ED_HEAD_POINTER_FLAGS_MASK  0X0000000F // mask bit flags
 
 typedef struct _OHCI_ENDPOINT_DESCRIPTOR { // must be aligned to a 16-byte boundary
   OHCI_ENDPOINT_CONTROL EndpointControl;
