@@ -29,6 +29,7 @@
 /* INCLUDES *****************************************************************/
 
 #include "ntfs.h"
+#include <ntintsafe.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -147,7 +148,6 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
     UNICODE_STRING Current, Remaining, FilenameNoPath;
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG FirstEntry;
-    WCHAR Buffer[MAX_PATH];
 
     if (AttributeAddress->Type != AttributeEnd)
     {
@@ -172,7 +172,8 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
     // we need to extract the filename from the path
     DPRINT1("Pathname: %wZ\n", &FileObject->FileName);
 
-    RtlInitEmptyUnicodeString(&FilenameNoPath, Buffer, MAX_PATH);
+    FilenameNoPath.Buffer = FileObject->FileName.Buffer;
+    FilenameNoPath.MaximumLength = FilenameNoPath.Length = FileObject->FileName.Length;
 
     FsRtlDissectName(FileObject->FileName, &Current, &Remaining);
 
@@ -180,8 +181,11 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
     {
         DPRINT1("Current: %wZ\n", &Current);
 
-        if(Remaining.Length != 0)
-            RtlCopyUnicodeString(&FilenameNoPath, &Remaining);
+        if (Remaining.Length != 0)
+        {
+            FilenameNoPath.Buffer = Remaining.Buffer;
+            FilenameNoPath.Length = FilenameNoPath.MaximumLength = Remaining.Length;
+        }
 
         FirstEntry = 0;
         Status = NtfsFindMftRecord(DeviceExt,
@@ -196,8 +200,11 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
 
         if (Remaining.Length == 0 )
         {
-            if(Current.Length != 0)
-                RtlCopyUnicodeString(&FilenameNoPath, &Current);
+            if (Current.Length != 0)
+            {
+                FilenameNoPath.Buffer = Current.Buffer;
+                FilenameNoPath.Length = FilenameNoPath.MaximumLength = Current.Length;
+            }
             break;
         }
 
@@ -317,9 +324,13 @@ AddRun(PNTFS_VCB Vcb,
         {
             ExRaiseStatus(STATUS_UNSUCCESSFUL);
         }
-    } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-        _SEH2_YIELD(_SEH2_GetExceptionCode());
-    } _SEH2_END;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) 
+    {
+        DPRINT1("Failed to add LargeMcb Entry!\n");
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
 
     RunBuffer = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
     if (!RunBuffer)
@@ -756,7 +767,7 @@ FreeClusters(PNTFS_VCB Vcb,
     }
 
     BitmapDataSize = AttributeDataLength(&DataContext->Record);
-    BitmapDataSize = min(BitmapDataSize, 0xffffffff);
+    BitmapDataSize = min(BitmapDataSize, ULONG_MAX);
     ASSERT((BitmapDataSize * 8) >= Vcb->NtfsInfo.ClusterCount);
     BitmapData = ExAllocatePoolWithTag(NonPagedPool, ROUND_UP(BitmapDataSize, Vcb->NtfsInfo.BytesPerSector), TAG_NTFS);
     if (BitmapData == NULL)
@@ -1144,8 +1155,8 @@ VOID
 NtfsDumpIndexRootAttribute(PNTFS_ATTR_RECORD Attribute)
 {
     PINDEX_ROOT_ATTRIBUTE IndexRootAttr;
-    ULONG currentOffset;
-    ULONG currentNode;
+    ULONG CurrentOffset;
+    ULONG CurrentNode;
 
     IndexRootAttr = (PINDEX_ROOT_ATTRIBUTE)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
 
@@ -1168,18 +1179,18 @@ NtfsDumpIndexRootAttribute(PNTFS_ATTR_RECORD Attribute)
              IndexRootAttr->Header.FirstEntryOffset,
              IndexRootAttr->Header.TotalSizeOfEntries,
              IndexRootAttr->Header.AllocatedSize);
-    currentOffset = IndexRootAttr->Header.FirstEntryOffset;
-    currentNode = 0;
+    CurrentOffset = IndexRootAttr->Header.FirstEntryOffset;
+    CurrentNode = 0;
     // print details of every node in the index
-    while (currentOffset < IndexRootAttr->Header.TotalSizeOfEntries)
+    while (CurrentOffset < IndexRootAttr->Header.TotalSizeOfEntries)
     {
-        PINDEX_ENTRY_ATTRIBUTE currentIndexExtry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)IndexRootAttr + 0x10 + currentOffset);
-        DbgPrint("   Index Node Entry %lu", currentNode++);
-        if (currentIndexExtry->Flags & NTFS_INDEX_ENTRY_NODE)
+        PINDEX_ENTRY_ATTRIBUTE currentIndexExtry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)IndexRootAttr + 0x10 + CurrentOffset);
+        DbgPrint("   Index Node Entry %lu", CurrentNode++);
+        if (BooleanFlagOn(currentIndexExtry->Flags, NTFS_INDEX_ENTRY_NODE))
             DbgPrint(" (Branch)");
         else
             DbgPrint(" (Leaf)");
-        if((currentIndexExtry->Flags & NTFS_INDEX_ENTRY_END))
+        if (BooleanFlagOn(currentIndexExtry->Flags, NTFS_INDEX_ENTRY_END))
         {
             DbgPrint(" (Dummy Key)");
         }
@@ -1203,11 +1214,11 @@ NtfsDumpIndexRootAttribute(PNTFS_ATTR_RECORD Attribute)
         if (currentIndexExtry->Flags & NTFS_INDEX_ENTRY_NODE)
         {
             // Print the VCN of the sub-node
-            PULONGLONG SubNodeVCN = (PULONGLONG)((ULONG_PTR)currentIndexExtry + currentIndexExtry->Length - 8);
+            PULONGLONG SubNodeVCN = (PULONGLONG)((ULONG_PTR)currentIndexExtry + currentIndexExtry->Length - sizeof(ULONGLONG));
             DbgPrint("    VCN of sub-node: 0x%llx\n", *SubNodeVCN);
         }
         
-        currentOffset += currentIndexExtry->Length;
+        CurrentOffset += currentIndexExtry->Length;
         ASSERT(currentIndexExtry->Length);
     }
 
@@ -1567,6 +1578,19 @@ GetStandardInformationFromRecord(PDEVICE_EXTENSION Vcb,
     return NULL;
 }
 
+/**
+* @name GetFileNameAttributeLength
+* @implemented
+*
+* Returns the size of a given FILENAME_ATTRIBUTE, in bytes.
+*
+* @param FileNameAttribute
+* Pointer to a FILENAME_ATTRIBUTE to determine the size of.
+*
+* @remarks
+* The length of a FILENAME_ATTRIBUTE is variable and is dependent on the length of the file name stored at the end.
+* This function operates on the FILENAME_ATTRIBUTE proper, so don't try to pass it a PNTFS_ATTR_RECORD.
+*/
 ULONG GetFileNameAttributeLength(PFILENAME_ATTRIBUTE FileNameAttribute)
 {
     ULONG Length = FIELD_OFFSET(FILENAME_ATTRIBUTE, Name) + (FileNameAttribute->NameLength * sizeof(WCHAR));
