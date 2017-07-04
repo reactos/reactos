@@ -123,10 +123,11 @@ OHCI_InitializeED(IN POHCI_ENDPOINT OhciEndpoint,
 
     EndpointProperties = &OhciEndpoint->EndpointProperties;
 
-    ED->HwED.EndpointControl.FunctionAddress = EndpointProperties->DeviceAddress;
-    ED->HwED.EndpointControl.EndpointNumber = EndpointProperties->EndpointAddress;
-
     EndpointControl = ED->HwED.EndpointControl;
+
+    EndpointControl.FunctionAddress = EndpointProperties->DeviceAddress;
+    EndpointControl.EndpointNumber = EndpointProperties->EndpointAddress;
+    EndpointControl.MaximumPacketSize = EndpointProperties->TotalMaxPacketSize;
 
     if (EndpointProperties->TransferType == USBPORT_TRANSFER_TYPE_CONTROL)
     {
@@ -141,23 +142,21 @@ OHCI_InitializeED(IN POHCI_ENDPOINT OhciEndpoint,
         EndpointControl.Direction = OHCI_ED_DATA_FLOW_DIRECTION_IN;
     }
 
-    ED->HwED.EndpointControl = EndpointControl;
-
     if (EndpointProperties->DeviceSpeed == UsbLowSpeed)
     {
-        ED->HwED.EndpointControl.Speed = OHCI_ENDPOINT_LOW_SPEED;
+        EndpointControl.Speed = OHCI_ENDPOINT_LOW_SPEED;
     }
 
     if (EndpointProperties->TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
     {
-        ED->HwED.EndpointControl.Format = OHCI_ENDPOINT_ISOCHRONOUS_FORMAT;
+        EndpointControl.Format = OHCI_ENDPOINT_ISOCHRONOUS_FORMAT;
     }
     else
     {
-        ED->HwED.EndpointControl.sKip = 1;
+        EndpointControl.sKip = 1;
     }
 
-    ED->HwED.EndpointControl.MaximumPacketSize = EndpointProperties->TotalMaxPacketSize;
+    ED->HwED.EndpointControl = EndpointControl;
 
     ED->HwED.TailPointer = (ULONG_PTR)FirstTD->PhysicalAddress;
     ED->HwED.HeadPointer = (ULONG_PTR)FirstTD->PhysicalAddress;
