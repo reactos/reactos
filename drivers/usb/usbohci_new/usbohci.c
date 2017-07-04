@@ -2149,18 +2149,22 @@ VOID
 NTAPI
 OHCI_EnableInterrupts(IN PVOID ohciExtension)
 {
-    POHCI_EXTENSION OhciExtension;
+    POHCI_EXTENSION OhciExtension = ohciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
- 
-    OhciExtension = ohciExtension;
+    PULONG InterruptEnableReg;
+    OHCI_REG_INTERRUPT_ENABLE_DISABLE IntEnable;
+
     DPRINT_OHCI("OHCI_EnableInterrupts: OhciExtension - %p\n",
                 OhciExtension);
 
     OperationalRegs = OhciExtension->OperationalRegs;
+    InterruptEnableReg = (PULONG)&OperationalRegs->HcInterruptEnable;
 
-    /* HcInterruptEnable.MIE - Master Interrupt Enable */
-    WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptEnable.AsULONG,
-                         0x80000000);
+    /*  Enable interrupt generation */
+    IntEnable.AsULONG = 0;
+    IntEnable.MasterInterruptEnable = 1;
+
+    WRITE_REGISTER_ULONG(InterruptEnableReg, IntEnable.AsULONG);
 }
 
 VOID
