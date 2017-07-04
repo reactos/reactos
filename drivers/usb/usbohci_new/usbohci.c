@@ -822,28 +822,26 @@ OHCI_HardwarePresent(IN POHCI_EXTENSION OhciExtension,
                      IN BOOLEAN IsInvalidateController)
 {
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
-    BOOLEAN Result = FALSE;
+    PULONG CommandStatusReg;
 
     OperationalRegs = OhciExtension->OperationalRegs;
+    CommandStatusReg = (PULONG)&OperationalRegs->HcCommandStatus;
 
-    if (READ_REGISTER_ULONG(&OperationalRegs->HcCommandStatus.AsULONG) == -1)
+    if (READ_REGISTER_ULONG(CommandStatusReg) != -1)
     {
-        DPRINT1("OHCI_HardwarePresent: IsInvalidateController - %x\n",
-                IsInvalidateController);
-
-        if (IsInvalidateController)
-        {
-            RegPacket.UsbPortInvalidateController(OhciExtension, 2);
-        }
-
-        Result = FALSE;
-    }
-    else
-    {
-        Result = TRUE;
+        return TRUE;
     }
 
-    return Result;
+    DPRINT1("OHCI_HardwarePresent: IsInvalidateController - %x\n",
+            IsInvalidateController);
+
+    if (IsInvalidateController)
+    {
+        RegPacket.UsbPortInvalidateController(OhciExtension,
+                                              USBPORT_INVALIDATE_CONTROLLER_SURPRISE_REMOVE);
+    }
+
+    return FALSE;
 }
 
 BOOLEAN
