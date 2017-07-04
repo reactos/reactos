@@ -421,42 +421,41 @@ OHCI_QueryEndpointRequirements(IN PVOID ohciExtension,
                                IN PVOID endpointParameters,
                                IN PULONG EndpointRequirements)
 {
-    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
+    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties = endpointParameters;
     ULONG TransferType;
 
     DPRINT_OHCI("OHCI_QueryEndpointRequirements: ... \n");
 
-    EndpointProperties = endpointParameters;
     TransferType = EndpointProperties->TransferType;
 
     switch (TransferType)
     {
         case USBPORT_TRANSFER_TYPE_ISOCHRONOUS:
             DPRINT_OHCI("OHCI_QueryEndpointRequirements: IsoTransfer\n");
-            *((PULONG)EndpointRequirements + 1) = 0x10000;
-            *EndpointRequirements = sizeof(OHCI_HCD_ED) +
-                                    0x40 * sizeof(OHCI_HCD_TD);
+            EndpointRequirements[1] = OHCI_MAX_ISO_TRANSFER_SIZE;
+            EndpointRequirements[0] = sizeof(OHCI_HCD_ED) +
+                                      OHCI_MAX_ISO_TD_COUNT * sizeof(OHCI_HCD_TD);
             break;
 
         case USBPORT_TRANSFER_TYPE_CONTROL:
             DPRINT_OHCI("OHCI_QueryEndpointRequirements: ControlTransfer\n");
-            *((PULONG)EndpointRequirements + 1) = 0x10000;
-            *EndpointRequirements = sizeof(OHCI_HCD_ED) +
-                                    0x26 * sizeof(OHCI_HCD_TD);
+            EndpointRequirements[1] = OHCI_MAX_CONTROL_TRANSFER_SIZE;
+            EndpointRequirements[0] = sizeof(OHCI_HCD_ED) +
+                                      OHCI_MAX_CONTROL_TD_COUNT * sizeof(OHCI_HCD_TD);
             break;
 
         case USBPORT_TRANSFER_TYPE_BULK:
             DPRINT_OHCI("OHCI_QueryEndpointRequirements: BulkTransfer\n");
-            *((PULONG)EndpointRequirements + 1) = 0x40000;
-            *EndpointRequirements = sizeof(OHCI_HCD_ED) +
-                                    0x44 * sizeof(OHCI_HCD_TD);
+            EndpointRequirements[1] = OHCI_MAX_BULK_TRANSFER_SIZE;
+            EndpointRequirements[0] = sizeof(OHCI_HCD_ED) +
+                                      OHCI_MAX_BULK_TD_COUNT * sizeof(OHCI_HCD_TD);
             break;
 
         case USBPORT_TRANSFER_TYPE_INTERRUPT:
             DPRINT_OHCI("OHCI_QueryEndpointRequirements: InterruptTransfer\n");
-            *((PULONG)EndpointRequirements + 1) = 0x1000;
-            *EndpointRequirements = sizeof(OHCI_HCD_ED) +
-                                    4 * sizeof(OHCI_HCD_TD);
+            EndpointRequirements[1] = OHCI_MAX_INTERRUPT_TRANSFER_SIZE;
+            EndpointRequirements[0] = sizeof(OHCI_HCD_ED) +
+                                      OHCI_MAX_INTERRUPT_TD_COUNT * sizeof(OHCI_HCD_TD);
             break;
 
         default:
