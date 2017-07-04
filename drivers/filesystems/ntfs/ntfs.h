@@ -840,7 +840,7 @@ NTSTATUS
 NtfsGetFCBForFile(PNTFS_VCB Vcb,
                   PNTFS_FCB *pParentFCB,
                   PNTFS_FCB *pFCB,
-                  const PWSTR pFileName,
+                  PCWSTR pFileName,
                   BOOLEAN CaseSensitive);
 
 NTSTATUS
