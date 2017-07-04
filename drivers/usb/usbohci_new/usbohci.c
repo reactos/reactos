@@ -1098,7 +1098,7 @@ OHCI_RemainTDs(IN POHCI_EXTENSION OhciExtension,
 {
     POHCI_HCD_TD TD;
     ULONG MaxTDs;
-    ULONG Result;
+    ULONG RemainTDs;
     ULONG ix;
 
     DPRINT_OHCI("OHCI_RemainTDs: ... \n");
@@ -1112,19 +1112,19 @@ OHCI_RemainTDs(IN POHCI_EXTENSION OhciExtension,
 
     TD = (POHCI_HCD_TD)OhciEndpoint->FirstTD;
 
-    Result = 0;
+    RemainTDs = 0;
 
     for (ix = 0; ix < MaxTDs; ix++)
     {
         if (!(TD->Flags & OHCI_HCD_TD_FLAG_ALLOCATED))
         {
-            ++Result;
+            RemainTDs++;
         }
 
         TD += 1;
     }
 
-    return Result;
+    return RemainTDs;
 }
 
 MPSTATUS
