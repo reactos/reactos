@@ -1075,28 +1075,15 @@ OHCI_AllocateTD(IN POHCI_EXTENSION OhciExtension,
                 IN POHCI_ENDPOINT OhciEndpoint)
 {
     POHCI_HCD_TD TD;
-    ULONG MaxTDs;
     ULONG ix;
 
     DPRINT_OHCI("OHCI_AllocateTD: ... \n");
-
-    MaxTDs = OhciEndpoint->MaxTransferDescriptors;
-
-    if (MaxTDs == 0)
-    {
-        return (POHCI_HCD_TD)-1;
-    }
 
     TD = OhciEndpoint->FirstTD;
 
     for (ix = 0; TD->Flags & OHCI_HCD_TD_FLAG_ALLOCATED; ix++)
     {
         TD += 1;
-
-        if (ix >= MaxTDs)
-        {
-            return (POHCI_HCD_TD)-1;
-        }
     }
 
     TD->Flags |= OHCI_HCD_TD_FLAG_ALLOCATED;
