@@ -169,6 +169,45 @@ OHCI_InitializeED(IN POHCI_ENDPOINT OhciEndpoint,
     return ED;
 }
 
+VOID
+NTAPI
+OHCI_InitializeTDs(IN POHCI_ENDPOINT OhciEndpoint,
+                   IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties)
+{
+    POHCI_HCD_TD TdVA;
+    POHCI_HCD_TD TdPA;
+    ULONG TdCount;
+    ULONG ix;
+
+    TdCount = (EndpointProperties->BufferLength - sizeof(OHCI_HCD_ED)) / 
+              sizeof(OHCI_HCD_TD);
+
+    OhciEndpoint->MaxTransferDescriptors = TdCount;
+
+    DPRINT_OHCI("OHCI_InitializeTDs: TdCount - %x\n", TdCount);
+
+    ASSERT(TdCount > 0);
+
+    TdVA = OhciEndpoint->FirstTD;
+
+    TdPA = (POHCI_HCD_TD)
+           ((ULONG_PTR)EndpointProperties->BufferPA + sizeof(OHCI_HCD_ED));
+
+    for (ix = 0; ix < TdCount; ix++)
+    {
+        DPRINT_OHCI("OHCI_InitializeTDs: TdVA - %p, TdPA - %p\n", TdVA, TdPA);
+
+        RtlZeroMemory(TdVA, sizeof(OHCI_HCD_TD));
+
+        TdVA->PhysicalAddress = (ULONG_PTR)TdPA;
+        TdVA->Flags = 0;
+        TdVA->OhciTransfer = NULL;
+
+        TdVA++;
+        TdPA++;
+    }
+}
+
 MPSTATUS
 NTAPI
 OHCI_OpenControlEndpoint(IN POHCI_EXTENSION OhciExtension,
