@@ -2047,8 +2047,9 @@ VOID
 NTAPI
 OHCI_CheckController(IN PVOID ohciExtension)
 {
-    POHCI_EXTENSION OhciExtension;
+    POHCI_EXTENSION OhciExtension = ohciExtension;
     POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    PULONG HcControlReg;
     OHCI_REG_CONTROL HcControl;
     ULONG FmNumber;
     USHORT FmDiff;
@@ -2056,7 +2057,6 @@ OHCI_CheckController(IN PVOID ohciExtension)
 
     //DPRINT_OHCI("OHCI_CheckController: ...\n");
 
-    OhciExtension = ohciExtension;
     OperationalRegs = OhciExtension->OperationalRegs;
 
     if (!OHCI_HardwarePresent(OhciExtension, TRUE))
@@ -2064,7 +2064,8 @@ OHCI_CheckController(IN PVOID ohciExtension)
         return;
     }
 
-    HcControl.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcControl.AsULONG);
+    HcControlReg = (PULONG)&OperationalRegs->HcControl;
+    HcControl.AsULONG = READ_REGISTER_ULONG(HcControlReg);
 
     if (HcControl.HostControllerFunctionalState != OHCI_HC_STATE_OPERATIONAL)
     {
@@ -2079,28 +2080,27 @@ OHCI_CheckController(IN PVOID ohciExtension)
         return;
     }
 
-    HcHCCA = (POHCI_HCCA)OhciExtension->HcResourcesVA;
+    HcHCCA = &OhciExtension->HcResourcesVA->HcHCCA;
     OhciExtension->HcdFmNumber = FmNumber;
 
-
-    if (HcHCCA->Pad1)
-    {
-        DPRINT1("OHCI_CheckController: HcHCCA->Pad1 - %x\n",
-                HcHCCA->Pad1);
-
-        if (HcHCCA->Pad1 == 0xBAD1)
-        {
-            HcHCCA->Pad1 = 0xBAD2;
-        }
-        else if (HcHCCA->Pad1 == 0xBAD2)
-        {
-            HcHCCA->Pad1 = 0xBAD3;
-            RegPacket.UsbPortInvalidateController(OhciExtension, 1);
-        }
-    }
-    else
+    if (HcHCCA->Pad1 == 0)
     {
         HcHCCA->Pad1 = 0xBAD1;
+        return;
+    }
+
+    DPRINT1("OHCI_CheckController: HcHCCA->Pad1 - %x\n", HcHCCA->Pad1);
+
+    if (HcHCCA->Pad1 == 0xBAD1)
+    {
+        HcHCCA->Pad1 = 0xBAD2;
+    }
+    else if (HcHCCA->Pad1 == 0xBAD2)
+    {
+        HcHCCA->Pad1 = 0xBAD3;
+
+        RegPacket.UsbPortInvalidateController(OhciExtension,
+                                              USBPORT_INVALIDATE_CONTROLLER_RESET);
     }
 }
 
