@@ -1739,15 +1739,14 @@ NTAPI
 OHCI_GetEndpointState(IN PVOID ohciExtension,
                       IN PVOID ohciEndpoint)
 {
-    POHCI_ENDPOINT OhciEndpoint;
+    POHCI_ENDPOINT OhciEndpoint = ohciEndpoint;
     POHCI_HCD_ED ED;
 
     DPRINT_OHCI("OHCI_GetEndpointState: ... \n");
 
-    OhciEndpoint = ohciEndpoint;
     ED = OhciEndpoint->HcdED;
 
-    if (ED->Flags & 0x10)
+    if (ED->Flags & OHCI_HCD_TD_FLAG_NOT_ACCESSED)
     {
         return USBPORT_ENDPOINT_REMOVE;
     }
