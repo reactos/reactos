@@ -1176,7 +1176,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
     FirstTD->HwTD.gTD.Control.AsULONG = 0;
     FirstTD->HwTD.gTD.Control.DelayInterrupt = OHCI_TD_INTERRUPT_NONE;
     FirstTD->HwTD.gTD.Control.ConditionCode = OHCI_TD_CONDITION_NOT_ACCESSED;
-    FirstTD->HwTD.gTD.Control.DataToggle = 2;
+    FirstTD->HwTD.gTD.Control.DataToggle = OHCI_TD_DATA_TOGGLE_DATA0;
 
     FirstTdPA = (POHCI_HCD_TD)FirstTD->PhysicalAddress;
     SetupPacket = (ULONG_PTR)&FirstTdPA->HwTD.SetupPacket;
@@ -1187,7 +1187,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
                                           1);
 
     TD = OHCI_AllocateTD(OhciExtension, OhciEndpoint);
-    ++OhciTransfer->PendingTDs;
+    OhciTransfer->PendingTDs++;
 
     TD->HwTD.gTD.Control.DelayInterrupt = OHCI_TD_INTERRUPT_NONE;
     TD->HwTD.gTD.CurrentBuffer = NULL;
@@ -1211,7 +1211,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
 
     if (TransferParameters->TransferBufferLength > 0)
     {
-        DataToggle = 3;
+        DataToggle = OHCI_TD_DATA_TOGGLE_DATA1;
         TransferedLen = 0;
 
         do
@@ -1229,7 +1229,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
             TD->HwTD.gTD.Control.DataToggle = DataToggle;
             TD->HwTD.gTD.Control.ConditionCode = OHCI_TD_CONDITION_NOT_ACCESSED;
 
-            DataToggle = 0;
+            DataToggle = OHCI_TD_DATA_TOGGLE_FROM_ED;
 
             MaxPacketSize = OhciEndpoint->EndpointProperties.TotalMaxPacketSize;
 
@@ -1243,7 +1243,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
             LastTd = TD;
 
             TD = OHCI_AllocateTD(OhciExtension, OhciEndpoint);
-            ++OhciTransfer->PendingTDs;
+            OhciTransfer->PendingTDs++;
 
             TD->HwTD.gTD.Control.DelayInterrupt = OHCI_TD_INTERRUPT_NONE;
             TD->HwTD.gTD.CurrentBuffer = NULL;
@@ -1269,12 +1269,12 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
     if (TransferParameters->TransferFlags & USBD_SHORT_TRANSFER_OK)
     {
         LastTd->HwTD.gTD.Control.DelayInterrupt |= 4;
-        OhciTransfer->Flags |= OHCI_HCD_TD_FLAG_ALLOCATED;
+        OhciTransfer->Flags |= OHCI_TRANSFER_FLAGS_SHORT_TRANSFER_OK;
     }
 
     TD->HwTD.gTD.Control.AsULONG = 0;
     TD->HwTD.gTD.Control.ConditionCode = OHCI_TD_CONDITION_NOT_ACCESSED;
-    TD->HwTD.gTD.Control.DataToggle = 3;
+    TD->HwTD.gTD.Control.DataToggle = OHCI_TD_DATA_TOGGLE_DATA1;
     TD->HwTD.gTD.CurrentBuffer = NULL;
     TD->HwTD.gTD.BufferEnd = NULL;
 
@@ -1293,7 +1293,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
     }
 
     NextTD = OHCI_AllocateTD(OhciExtension, OhciEndpoint);
-    ++OhciTransfer->PendingTDs;
+    OhciTransfer->PendingTDs++;
 
     TD->HwTD.gTD.NextTD = (PULONG)(NextTD->PhysicalAddress);
     TD->NextHcdTD = NextTD;
