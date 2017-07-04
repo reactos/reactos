@@ -9,6 +9,17 @@
 USBPORT_REGISTRATION_PACKET RegPacket;
 
 VOID
+NTAPI 
+OHCI_DumpHcdED(POHCI_HCD_ED ED)
+{
+    DPRINT("OHCI_DumpHcdED: ED                       - %p\n", ED);
+    DPRINT("OHCI_DumpHcdED: ED->HwED.EndpointControl - %lX\n", ED->HwED.EndpointControl.AsULONG);
+    DPRINT("OHCI_DumpHcdED: ED->HwED.TailPointer     - %p\n", ED->HwED.TailPointer);
+    DPRINT("OHCI_DumpHcdED: ED->HwED.HeadPointer     - %p\n", ED->HwED.HeadPointer);
+    DPRINT("OHCI_DumpHcdED: ED->HwED.NextED          - %p\n", ED->HwED.NextED);
+}
+
+VOID
 NTAPI
 OHCI_EnableList(IN POHCI_EXTENSION OhciExtension,
                 IN POHCI_ENDPOINT OhciEndpoint)
