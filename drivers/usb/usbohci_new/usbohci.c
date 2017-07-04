@@ -2172,11 +2172,20 @@ NTAPI
 OHCI_DisableInterrupts(IN PVOID ohciExtension)
 {
     POHCI_EXTENSION  OhciExtension = ohciExtension;
+    POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    PULONG InterruptDisableReg;
+    OHCI_REG_INTERRUPT_ENABLE_DISABLE IntDisable;
+
     DPRINT_OHCI("OHCI_DisableInterrupts\n");
 
-    /* HcInterruptDisable.MIE - disables interrupt generation */
-    WRITE_REGISTER_ULONG(&OhciExtension->OperationalRegs->HcInterruptDisable.AsULONG,
-                         0x80000000);
+    OperationalRegs = OhciExtension->OperationalRegs;
+    InterruptDisableReg = (PULONG)&OperationalRegs->HcInterruptDisable;
+
+    /*  Disable interrupt generation */
+    IntDisable.AsULONG = 0;
+    IntDisable.MasterInterruptEnable = 1;
+
+    WRITE_REGISTER_ULONG(InterruptDisableReg, IntDisable.AsULONG);
 }
 
 VOID
