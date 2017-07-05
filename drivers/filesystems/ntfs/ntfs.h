@@ -293,6 +293,10 @@ typedef struct
     };
 } NTFS_ATTR_RECORD, *PNTFS_ATTR_RECORD;
 
+// The beginning and length of an attribute record are always aligned to an 8-byte boundary,
+// relative to the beginning of the file record.
+#define ATTR_RECORD_ALIGNMENT 8
+
 typedef struct
 {
     ULONGLONG CreationTime;
@@ -408,7 +412,7 @@ typedef struct _B_TREE_KEY
 // A key's sub-node precedes that key in the ordered list.
 typedef struct
 {
-    int KeyCount;
+    ULONG KeyCount;
     PB_TREE_KEY FirstKey;
 } B_TREE_FILENAME_NODE, *PB_TREE_FILENAME_NODE;
 

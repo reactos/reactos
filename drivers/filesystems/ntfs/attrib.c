@@ -77,7 +77,7 @@ AddData(PFILE_RECORD_HEADER FileRecord,
 
     AttributeAddress->Type = AttributeData;
     AttributeAddress->Length = ResidentHeaderLength;
-    AttributeAddress->Length = ALIGN_UP_BY(AttributeAddress->Length, 8);
+    AttributeAddress->Length = ALIGN_UP_BY(AttributeAddress->Length, ATTR_RECORD_ALIGNMENT);
     AttributeAddress->Resident.ValueLength = 0;
     AttributeAddress->Resident.ValueOffset = ResidentHeaderLength;
 
@@ -241,7 +241,7 @@ AddFileName(PFILE_RECORD_HEADER FileRecord,
 
     AttributeAddress->Length = ResidentHeaderLength +
         FIELD_OFFSET(FILENAME_ATTRIBUTE, Name) + FilenameNoPath.Length;
-    AttributeAddress->Length = ALIGN_UP_BY(AttributeAddress->Length, 8);
+    AttributeAddress->Length = ALIGN_UP_BY(AttributeAddress->Length, ATTR_RECORD_ALIGNMENT);
 
     AttributeAddress->Resident.ValueLength = FIELD_OFFSET(FILENAME_ATTRIBUTE, Name) + FilenameNoPath.Length;
     AttributeAddress->Resident.ValueOffset = ResidentHeaderLength;
@@ -363,7 +363,7 @@ AddRun(PNTFS_VCB Vcb,
 
         // calculate position of end markers
         NextAttributeOffset = AttrOffset + AttrContext->Record.NonResident.MappingPairsOffset + RunBufferSize;
-        NextAttributeOffset = ALIGN_UP_BY(NextAttributeOffset, 8);
+        NextAttributeOffset = ALIGN_UP_BY(NextAttributeOffset, ATTR_RECORD_ALIGNMENT);
 
         // Update the length
         DestinationAttribute->Length = NextAttributeOffset - AttrOffset;
@@ -437,7 +437,7 @@ AddStandardInformation(PFILE_RECORD_HEADER FileRecord,
 
     AttributeAddress->Type = AttributeStandardInformation;
     AttributeAddress->Length = sizeof(STANDARD_INFORMATION) + ResidentHeaderLength;
-    AttributeAddress->Length = ALIGN_UP_BY(AttributeAddress->Length, 8);
+    AttributeAddress->Length = ALIGN_UP_BY(AttributeAddress->Length, ATTR_RECORD_ALIGNMENT);
     AttributeAddress->Resident.ValueLength = sizeof(STANDARD_INFORMATION);
     AttributeAddress->Resident.ValueOffset = ResidentHeaderLength;
     AttributeAddress->Instance = FileRecord->NextAttributeNumber++;
@@ -847,7 +847,8 @@ FreeClusters(PNTFS_VCB Vcb,
     if (NextAttribute->Type == AttributeEnd)
     {
         // update attribute length
-        AttrContext->Record.Length = ALIGN_UP_BY(AttrContext->Record.NonResident.MappingPairsOffset + RunBufferSize, 8);
+        AttrContext->Record.Length = ALIGN_UP_BY(AttrContext->Record.NonResident.MappingPairsOffset + RunBufferSize,
+                                                 ATTR_RECORD_ALIGNMENT);
         DestinationAttribute->Length = AttrContext->Record.Length;
 
         // write end markers
@@ -1459,7 +1460,6 @@ UCHAR
 GetPackedByteCount(LONGLONG NumberToPack,
                    BOOLEAN IsSigned)
 {
-    int bytes = 0;
     if (!IsSigned)
     {
         if (NumberToPack >= 0x0100000000000000)
@@ -1496,7 +1496,6 @@ GetPackedByteCount(LONGLONG NumberToPack,
             return 3;
         if (NumberToPack >= 0x0000000000000080)
             return 2;
-        return 1;
     }
     else
     {
@@ -1515,9 +1514,8 @@ GetPackedByteCount(LONGLONG NumberToPack,
             return 3;
         if (NumberToPack <= 0xffffffffffffff80)
             return 2;
-        return 1;
     }
-    return bytes;
+    return 1;
 }
 
 NTSTATUS

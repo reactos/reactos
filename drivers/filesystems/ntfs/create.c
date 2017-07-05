@@ -699,7 +699,7 @@ NtfsCreateFileRecord(PDEVICE_EXTENSION DeviceExt,
     // setup other file record fields
     FileRecord->SequenceNumber = 1;
     FileRecord->AttributeOffset = FileRecord->Ntfs.UsaOffset + (2 * FileRecord->Ntfs.UsaCount);
-    FileRecord->AttributeOffset = ALIGN_UP_BY(FileRecord->AttributeOffset, 8);
+    FileRecord->AttributeOffset = ALIGN_UP_BY(FileRecord->AttributeOffset, ATTR_RECORD_ALIGNMENT);
     FileRecord->Flags = FRH_IN_USE;
     FileRecord->BytesInUse = FileRecord->AttributeOffset + sizeof(ULONG) * 2;
    
