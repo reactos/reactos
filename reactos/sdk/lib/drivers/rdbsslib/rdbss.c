@@ -792,6 +792,15 @@ RxCancelNotifyChangeDirectoryRequestsForFobx(
     UNIMPLEMENTED;
 }
 
+NTSTATUS
+RxCancelNotifyChangeDirectoryRequestsForVNetRoot(
+   PV_NET_ROOT VNetRoot,
+   BOOLEAN ForceFilesClosed)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 VOID
 NTAPI
 RxCancelRoutine(
@@ -2066,7 +2075,7 @@ RxCommonDevFCBClose(
     /* Our FOBX if set, has to be a VNetRoot */
     if (NetRoot != NULL)
     {
-        RxAcquirePrefixTableLockShared(Context->RxDeviceObject->pRxNetNameTable, TRUE);
+        RxAcquirePrefixTableLockExclusive(Context->RxDeviceObject->pRxNetNameTable, TRUE);
         if (NetRoot->NodeTypeCode == RDBSS_NTC_V_NETROOT)
         {
             --NetRoot->NumberOfOpens;
@@ -3784,17 +3793,6 @@ RxFastIoWrite(
 {
     UNIMPLEMENTED;
     return FALSE;
-}
-
-NTSTATUS
-NTAPI
-RxFinalizeConnection(
-    IN OUT PNET_ROOT NetRoot,
-    IN OUT PV_NET_ROOT VNetRoot OPTIONAL,
-    IN LOGICAL ForceFilesClosed)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS

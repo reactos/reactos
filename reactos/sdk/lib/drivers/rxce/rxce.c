@@ -2438,6 +2438,182 @@ RxFcbTableRemoveFcb(
 /*
  * @implemented
  */
+NTSTATUS
+NTAPI
+RxFinalizeConnection(
+    IN OUT PNET_ROOT NetRoot,
+    IN OUT PV_NET_ROOT VNetRoot OPTIONAL,
+    IN LOGICAL ForceFilesClosed)
+{
+    NTSTATUS Status;
+    PRX_PREFIX_TABLE PrefixTable;
+    ULONG UncleanAny, UncleanDir;
+    LONG FilesOpen, AdditionalRef;
+    BOOLEAN PrefixLocked, FcbTableLocked, ForceClose;
+
+    PAGED_CODE();
+
+    ASSERT(NodeType(NetRoot) == RDBSS_NTC_NETROOT);
+
+    /* Get a BOOLEAN out of LOGICAL
+     * -1 is like FALSE but also drops extra V_NET_ROOT reference in case of failure
+     */
+    ForceClose = (ForceFilesClosed == TRUE ? TRUE : FALSE);
+
+    /* First, delete any notification change */
+    Status = RxCancelNotifyChangeDirectoryRequestsForVNetRoot(VNetRoot, ForceClose);
+    /* If it failed, continue if forced */
+    if (Status != STATUS_SUCCESS && !ForceFilesClosed)
+    {
+        return Status;
+    }
+    /* Reset status, in case notification deletion failed */
+    Status = STATUS_SUCCESS;
+
+    PrefixTable = NetRoot->pSrvCall->RxDeviceObject->pRxNetNameTable;
+
+    PrefixLocked = FALSE;
+    FcbTableLocked = FALSE;
+    FilesOpen = 0;
+    AdditionalRef = 0;
+    UncleanAny = 0;
+    UncleanDir = 0;
+    _SEH2_TRY
+    {
+        RxAcquirePrefixTableLockExclusive(PrefixTable, TRUE);
+        PrefixLocked = TRUE;
+
+        RxReferenceNetRoot(NetRoot);
+
+        RxAcquireFcbTableLockExclusive(&NetRoot->FcbTable, TRUE);
+        FcbTableLocked = TRUE;
+
+        /* If our V_NET_ROOT wasn't finalized yet, proceed! */
+        if (!VNetRoot->ConnectionFinalizationDone)
+        {
+            USHORT Bucket;
+            PRX_FCB_TABLE FcbTable;
+
+            DPRINT("Finalizing connection %p: %wZ\n", NetRoot, &NetRoot->PrefixEntry.Prefix);
+
+            /* We'll browse all its associated FCB to check whether they're open/orphaned */
+            FcbTable = &NetRoot->FcbTable;
+            for (Bucket = 0; Bucket < FcbTable->NumberOfBuckets; ++Bucket)
+            {
+                PLIST_ENTRY BucketList, Entry;
+
+                BucketList = &FcbTable->HashBuckets[Bucket];
+                Entry = BucketList->Flink;
+                while (Entry != BucketList)
+                {
+                    PFCB Fcb;
+
+                    Fcb = CONTAINING_RECORD(Entry, FCB, FcbTableEntry.HashLinks);
+                    Entry = Entry->Flink;
+
+                    /* FCB for this connection, go ahead */
+                    if (Fcb->VNetRoot == VNetRoot)
+                    {
+                        /* It's still open, and no force? Fail and keep track */
+                        if (Fcb->UncleanCount > 0 && !ForceClose)
+                        {
+                            Status = STATUS_CONNECTION_IN_USE;
+                            if (NodeType(Fcb) == RDBSS_NTC_STORAGE_TYPE_DIRECTORY)
+                            {
+                                ++UncleanDir;
+                            }
+                            else
+                            {
+                                ++UncleanAny;
+                            }
+                        }
+                        else
+                        {
+                            /* Else, force purge */
+                            ASSERT(NodeTypeIsFcb(Fcb));
+
+                            Status = RxAcquireExclusiveFcb(NULL, Fcb);
+                            ASSERT(Status == STATUS_SUCCESS);
+
+                            ClearFlag(Fcb->FcbState, FCB_STATE_COLLAPSING_ENABLED);
+
+                            RxScavengeRelatedFobxs(Fcb);
+                            RxPurgeFcb(Fcb);
+
+                            /* We don't need to release FCB lock, FCB finalize will take care of it */
+                        }
+                    }
+                }
+            }
+
+            /* No files left, our V_NET_ROOT is finalized */
+            if (VNetRoot->NumberOfFobxs == 0)
+            {
+                VNetRoot->ConnectionFinalizationDone = TRUE;
+            }
+        }
+
+        /* Keep Number of open files and track of the extra reference */
+        FilesOpen = VNetRoot->NumberOfFobxs;
+        AdditionalRef = VNetRoot->AdditionalReferenceForDeleteFsctlTaken;
+        /* If force close, caller doesn't want to keep connection alive
+         * and wants it totally close, so drop the V_NET_ROOT too
+         */
+        if (ForceClose)
+        {
+            RxFinalizeVNetRoot(VNetRoot, FALSE, TRUE);
+        }
+    }
+    _SEH2_FINALLY
+    {
+        /* Release what was acquired */
+        if (FcbTableLocked)
+        {
+            RxReleaseFcbTableLock(&NetRoot->FcbTable);
+        }
+
+        /* If close is forced, only fix status if there are open files */
+        if (ForceClose)
+        {
+            if (Status != STATUS_SUCCESS && UncleanAny != 0)
+            {
+                Status = STATUS_FILES_OPEN;
+            }
+        }
+        /* Else, fix status and fail closing if there are open files */
+        else
+        {
+            if ((Status != STATUS_SUCCESS && UncleanAny != 0) || FilesOpen > 0)
+            {
+                Status = STATUS_FILES_OPEN;
+            }
+        }
+
+        DPRINT("UncleanAny: %ld, UncleanDir: %ld, FilesOpen: %ld\n", UncleanAny, UncleanDir, FilesOpen);
+
+        /* If we're are asked to remove the extra ref, or if closing was a success, do it;
+         * only if it was still referenced!
+         */
+        if ((ForceFilesClosed == 0xFF || Status == STATUS_SUCCESS) && AdditionalRef != 0)
+        {
+            VNetRoot->AdditionalReferenceForDeleteFsctlTaken = 0;
+            RxDereferenceVNetRoot(VNetRoot, LHS_ExclusiveLockHeld);
+        }
+
+        if (PrefixLocked)
+        {
+            RxDereferenceNetRoot(NetRoot, LHS_ExclusiveLockHeld);
+            RxReleasePrefixTableLock(PrefixTable);
+        }
+    }
+    _SEH2_END;
+
+    return Status;
+}
+
+/*
+ * @implemented
+ */
 VOID
 RxFinalizeFcbTable(
     IN OUT PRX_FCB_TABLE FcbTable)
@@ -5433,6 +5609,67 @@ RxOrphanThisFcb(
 VOID
 RxOrphanSrvOpens(
     IN PV_NET_ROOT ThisVNetRoot)
+{
+    PFCB Fcb;
+    USHORT Bucket;
+    PNET_ROOT NetRoot;
+    PRX_FCB_TABLE FcbTable;
+    PRX_PREFIX_TABLE PrefixTable;
+
+    PAGED_CODE();
+
+    /* Mailslot won't have any SRV_OPEN (to orphan) */
+    NetRoot = (PNET_ROOT)ThisVNetRoot->pNetRoot;
+    if (NetRoot->Type == NET_ROOT_MAILSLOT)
+    {
+        return;
+    }
+
+    PrefixTable = NetRoot->pSrvCall->RxDeviceObject->pRxNetNameTable;
+    ASSERT(RxIsPrefixTableLockExclusive(PrefixTable));
+
+    FcbTable = &NetRoot->FcbTable;
+    RxAcquireFcbTableLockExclusive(FcbTable, TRUE);
+
+    _SEH2_TRY
+    {
+        /* Now, we'll browse all the FCBs attached, and orphan related SRV_OPENs */
+        for (Bucket = 0; Bucket < FcbTable->NumberOfBuckets; ++Bucket)
+        {
+            PLIST_ENTRY BucketList, Entry;
+
+            BucketList = &FcbTable->HashBuckets[Bucket];
+            Entry = BucketList->Flink;
+            while (Entry != BucketList)
+            {
+                Fcb = CONTAINING_RECORD(Entry, FCB, FcbTableEntry.HashLinks);
+                Entry = Entry->Flink;
+
+                ASSERT(NodeTypeIsFcb(Fcb));
+                RxOrphanSrvOpensForThisFcb(Fcb, ThisVNetRoot, FALSE);
+            }
+        }
+
+        /* Of course, don't forget about NULL-entry */
+        if (FcbTable->TableEntryForNull != NULL)
+        {
+            Fcb = CONTAINING_RECORD(FcbTable->TableEntryForNull, FCB, FcbTableEntry.HashLinks);
+            ASSERT(NodeTypeIsFcb(Fcb));
+            RxOrphanSrvOpensForThisFcb(Fcb, ThisVNetRoot, FALSE);
+        }
+    }
+    _SEH2_FINALLY
+    {
+        RxReleaseFcbTableLock(FcbTable);
+    }
+    _SEH2_END;
+}
+
+VOID
+RxOrphanSrvOpensForThisFcb(
+    IN PFCB Fcb,
+    IN PV_NET_ROOT ThisVNetRoot,
+    IN BOOLEAN OrphanAll)
 {
     UNIMPLEMENTED;
 }

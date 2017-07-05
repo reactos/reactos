@@ -435,6 +435,11 @@ RxRemoveFirstContextFromSerializationQueue(
         ExReleaseFastMutex(Mutex);                          \
     }
 
+NTSTATUS
+RxCancelNotifyChangeDirectoryRequestsForVNetRoot(
+   PV_NET_ROOT VNetRoot,
+   BOOLEAN ForceFilesClosed);
+
 VOID
 RxCancelNotifyChangeDirectoryRequestsForFobx(
    PFOBX Fobx

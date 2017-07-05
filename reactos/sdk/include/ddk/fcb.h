@@ -619,18 +619,18 @@ RxFinalizeNetFobx(
     _In_ BOOLEAN ForceFinalize);
 
 #ifdef __REACTOS__
-#define FILL_IN_FCB(Fcb, a, nl, ct, lat, lwt, lct, as, fs, vdl) \
-    (Fcb)->Attributes = a;                                      \
-    (Fcb)->NumberOfLinks = nl;                                  \
-    (Fcb)->CreationTime.QuadPart = ct;                          \
-    (Fcb)->LastAccessTime.QuadPart = lat;                       \
-    (Fcb)->LastWriteTime.QuadPart = lwt;                        \
-    (Fcb)->LastChangeTime.QuadPart = lct;                       \
-    (Fcb)->ActualAllocationLength = as;                         \
-    (Fcb)->Header.AllocationSize.QuadPart = as;                 \
-    (Fcb)->Header.FileSize.QuadPart = fs;                       \
-    (Fcb)->Header.ValidDataLength.QuadPart = vdl;               \
-    (Fcb)->FcbState |= FCB_STATE_TIME_AND_SIZE_ALREADY_SET
+#define FILL_IN_FCB(Fcb, a, nl, ct, lat, lwt, lct, as, fs, vdl)  \
+    (Fcb)->Attributes = a;                                       \
+    (Fcb)->NumberOfLinks = nl;                                   \
+    (Fcb)->CreationTime.QuadPart = ct;                           \
+    (Fcb)->LastAccessTime.QuadPart = lat;                        \
+    (Fcb)->LastWriteTime.QuadPart = lwt;                         \
+    (Fcb)->LastChangeTime.QuadPart = lct;                        \
+    (Fcb)->ActualAllocationLength = as;                          \
+    (Fcb)->Header.AllocationSize.QuadPart = as;                  \
+    (Fcb)->Header.FileSize.QuadPart = fs;                        \
+    (Fcb)->Header.ValidDataLength.QuadPart = vdl;                \
+    SetFlag((Fcb)->FcbState, FCB_STATE_TIME_AND_SIZE_ALREADY_SET)
 
 #define TRACKER_ACQUIRE_FCB 0x61616161
 #define TRACKER_RELEASE_FCB_NO_BUFF_PENDING 0x72727272

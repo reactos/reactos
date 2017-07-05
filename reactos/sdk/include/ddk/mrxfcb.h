@@ -31,6 +31,7 @@ typedef struct _MRX_SRV_CALL_
 #define NET_ROOT_PIPE ((UCHAR)1)
 #define NET_ROOT_PRINT ((UCHAR)3)
 #define NET_ROOT_WILD ((UCHAR)4)
+#define NET_ROOT_MAILSLOT ((UCHAR)5)
 
 typedef UCHAR NET_ROOT_TYPE, *PNET_ROOT_TYPE;
 

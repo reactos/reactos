@@ -693,6 +693,12 @@ VOID
 RxOrphanThisFcb(
     _In_ PFCB Fcb);
 
+VOID
+RxOrphanSrvOpensForThisFcb(
+    _In_ PFCB Fcb,
+    _In_ PV_NET_ROOT ThisVNetRoot,
+    _In_ BOOLEAN OrphanAll);
+
 #define RxEqualConnectionId(C1, C2) RtlEqualMemory(C1, C2, sizeof(RX_CONNECTION_ID))
 
 NTSTATUS
