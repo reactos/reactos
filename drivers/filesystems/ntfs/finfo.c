@@ -449,9 +449,9 @@ NtfsSetEndOfFile(PNTFS_FCB Fcb,
     ULONG AttributeOffset;
     NTSTATUS Status = STATUS_SUCCESS;
     ULONGLONG AllocationSize;
-    PFILENAME_ATTRIBUTE fileNameAttribute;
+    PFILENAME_ATTRIBUTE FileNameAttribute;
     ULONGLONG ParentMFTId;
-    UNICODE_STRING filename;
+    UNICODE_STRING FileName;
 
 
     // Allocate non-paged memory for the file record
@@ -485,6 +485,7 @@ NtfsSetEndOfFile(PNTFS_FCB Fcb,
                                   NewFileSize))
         {
             DPRINT1("Couldn't decrease file size!\n");
+            ExFreePoolWithTag(FileRecord, TAG_NTFS);
             return STATUS_USER_MAPPED_FILE;
         }
     }
@@ -535,24 +536,26 @@ NtfsSetEndOfFile(PNTFS_FCB Fcb,
 
     // now we need to update this file's size in every directory index entry that references it
     // TODO: expand to work with every filename / hardlink stored in the file record.
-    fileNameAttribute = GetBestFileNameFromRecord(Fcb->Vcb, FileRecord);
-    if (fileNameAttribute == NULL)
+    FileNameAttribute = GetBestFileNameFromRecord(Fcb->Vcb, FileRecord);
+    if (FileNameAttribute == NULL)
     {
         DPRINT1("Unable to find FileName attribute associated with file!\n");
+        ReleaseAttributeContext(DataContext);
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
         return STATUS_INVALID_PARAMETER;
     }
 
-    ParentMFTId = fileNameAttribute->DirectoryFileReferenceNumber & NTFS_MFT_MASK;
+    ParentMFTId = FileNameAttribute->DirectoryFileReferenceNumber & NTFS_MFT_MASK;
 
-    filename.Buffer = fileNameAttribute->Name;
-    filename.Length = fileNameAttribute->NameLength * sizeof(WCHAR);
-    filename.MaximumLength = filename.Length;
+    FileName.Buffer = FileNameAttribute->Name;
+    FileName.Length = FileNameAttribute->NameLength * sizeof(WCHAR);
+    FileName.MaximumLength = FileName.Length;
 
     AllocationSize = ROUND_UP(NewFileSize->QuadPart, Fcb->Vcb->NtfsInfo.BytesPerCluster);
 
     Status = UpdateFileNameRecord(Fcb->Vcb,
                                   ParentMFTId,
-                                  &filename,
+                                  &FileName,
                                   FALSE,
                                   NewFileSize->QuadPart,
                                   AllocationSize,
