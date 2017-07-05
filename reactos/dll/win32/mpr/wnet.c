@@ -2669,10 +2669,18 @@ DWORD WINAPI WNetGetUserW( LPCWSTR lpName, LPWSTR lpUserID, LPDWORD lpBufferSize
  */
 DWORD WINAPI WNetConnectionDialog( HWND hwnd, DWORD dwType )
 {
-    FIXME( "(%p, %08X): stub\n", hwnd, dwType );
+    CONNECTDLGSTRUCTW conn_dlg;
+    NETRESOURCEW net_res;
 
-    SetLastError(WN_NO_NETWORK);
-    return WN_NO_NETWORK;
+    ZeroMemory(&conn_dlg, sizeof(conn_dlg));
+    ZeroMemory(&net_res, sizeof(net_res));
+
+    conn_dlg.cbStructure = sizeof(conn_dlg);
+    conn_dlg.lpConnRes = &net_res;
+    conn_dlg.hwndOwner = hwnd;
+    net_res.dwType = dwType;
+
+    return WNetConnectionDialog1W(&conn_dlg);
 }
 
 /*********************************************************************
