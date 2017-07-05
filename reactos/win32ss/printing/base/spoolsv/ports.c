@@ -2,23 +2,40 @@
  * PROJECT:     ReactOS Print Spooler Service
  * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
  * PURPOSE:     Functions related to Ports
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
 
 static void
-_MarshallDownPortInfo(PBYTE pPortInfo, DWORD Level)
+_MarshallDownPortInfo(PBYTE* ppPortInfo, DWORD Level)
 {
-    PPORT_INFO_2W pPortInfo2 = (PPORT_INFO_2W)pPortInfo;         // PORT_INFO_1W is a subset of PORT_INFO_2W
-
     // Replace absolute pointer addresses in the output by relative offsets.
-    pPortInfo2->pPortName = (PWSTR)((ULONG_PTR)pPortInfo2->pPortName - (ULONG_PTR)pPortInfo2);
-
-    if (Level == 2)
+    if (Level == 1)
     {
+        PPORT_INFO_1W pPortInfo1 = (PPORT_INFO_1W)(*ppPortInfo);
+
+        pPortInfo1->pName = (PWSTR)((ULONG_PTR)pPortInfo1->pName - (ULONG_PTR)pPortInfo1);
+
+        *ppPortInfo += sizeof(PORT_INFO_1W);
+    }
+    else if (Level == 2)
+    {
+        PPORT_INFO_2W pPortInfo2 = (PPORT_INFO_2W)(*ppPortInfo);
+
+        pPortInfo2->pPortName = (PWSTR)((ULONG_PTR)pPortInfo2->pPortName - (ULONG_PTR)pPortInfo2);
         pPortInfo2->pDescription = (PWSTR)((ULONG_PTR)pPortInfo2->pDescription - (ULONG_PTR)pPortInfo2);
         pPortInfo2->pMonitorName = (PWSTR)((ULONG_PTR)pPortInfo2->pMonitorName - (ULONG_PTR)pPortInfo2);
+
+        *ppPortInfo += sizeof(PORT_INFO_2W);
+    }
+    else if (Level == 3)
+    {
+        PPORT_INFO_3W pPortInfo3 = (PPORT_INFO_3W)(*ppPortInfo);
+
+        pPortInfo3->pszStatus = (PWSTR)((ULONG_PTR)pPortInfo3->pszStatus - (ULONG_PTR)pPortInfo3);
+
+        *ppPortInfo += sizeof(PORT_INFO_3W);
     }
 }
 
@@ -54,8 +71,7 @@ DWORD
 _RpcEnumPorts(WINSPOOL_HANDLE pName, DWORD Level, BYTE* pPort, DWORD cbBuf, DWORD* pcbNeeded, DWORD* pcReturned)
 {
     DWORD dwErrorCode;
-    DWORD i;
-    PBYTE p = pPort;
+    PBYTE pPortAligned;
 
     dwErrorCode = RpcImpersonateClient(NULL);
     if (dwErrorCode != ERROR_SUCCESS)
@@ -64,24 +80,25 @@ _RpcEnumPorts(WINSPOOL_HANDLE pName, DWORD Level, BYTE* pPort, DWORD cbBuf, DWOR
         return dwErrorCode;
     }
 
-    EnumPortsW(pName, Level, pPort, cbBuf, pcbNeeded, pcReturned);
-    dwErrorCode = GetLastError();
+    pPortAligned = AlignRpcPtr(pPort, &cbBuf);
 
-    if (dwErrorCode == ERROR_SUCCESS)
+    if (EnumPortsW(pName, Level, pPortAligned, cbBuf, pcbNeeded, pcReturned))
     {
         // Replace absolute pointer addresses in the output by relative offsets.
-        for (i = 0; i < *pcReturned; i++)
-        {
-            _MarshallDownPortInfo(p, Level);
+        DWORD i;
+        PBYTE p = pPortAligned;
 
-            if (Level == 1)
-                p += sizeof(PORT_INFO_1W);
-            else if (Level == 2)
-                p += sizeof(PORT_INFO_2W);
-        }
+        for (i = 0; i < *pcReturned; i++)
+            _MarshallDownPortInfo(&p, Level);
+    }
+    else
+    {
+        dwErrorCode = GetLastError();
     }
 
     RpcRevertToSelf();
+    UndoAlignRpcPtr(pPort, pPortAligned, cbBuf, pcbNeeded);
+
     return dwErrorCode;
 }
 

@@ -273,12 +273,12 @@ extern DWORD cchSpoolDirectory;
 // monitors.c
 extern LIST_ENTRY PrintMonitorList;
 PLOCAL_PRINT_MONITOR FindPrintMonitor(PCWSTR pwszName);
-BOOL InitializePrintMonitorList();
+BOOL InitializePrintMonitorList(void);
 BOOL WINAPI LocalEnumMonitors(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned);
 
 // ports.c
 PLOCAL_PORT FindPort(PCWSTR pwszName);
-BOOL InitializePortList();
+BOOL InitializePortList(void);
 BOOL WINAPI LocalEnumPorts(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned);
 
 // printerdata.c
@@ -289,7 +289,7 @@ DWORD WINAPI LocalSetPrinterDataEx(HANDLE hPrinter, LPCWSTR pKeyName, LPCWSTR pV
 
 // printers.c
 extern SKIPLIST PrinterList;
-BOOL InitializePrinterList();
+BOOL InitializePrinterList(void);
 BOOL WINAPI LocalEnumPrinters(DWORD Flags, LPWSTR Name, DWORD Level, LPBYTE pPrinterEnum, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned);
 BOOL WINAPI LocalGetPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD pcbNeeded);
 BOOL WINAPI LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDefault);
@@ -307,7 +307,7 @@ DWORD WINAPI PrintingThreadProc(PLOCAL_JOB pJob);
 // printprocessors.c
 BOOL FindDatatype(const PLOCAL_PRINT_PROCESSOR pPrintProcessor, PCWSTR pwszDatatype);
 PLOCAL_PRINT_PROCESSOR FindPrintProcessor(PCWSTR pwszName);
-BOOL InitializePrintProcessorList();
+BOOL InitializePrintProcessorList(void);
 BOOL WINAPI LocalEnumPrintProcessorDatatypes(LPWSTR pName, LPWSTR pPrintProcessorName, DWORD Level, LPBYTE pDatatypes, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned);
 BOOL WINAPI LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE pPrintProcessorInfo, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned);
 BOOL WINAPI LocalGetPrintProcessorDirectory(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE pPrintProcessorInfo, DWORD cbBuf, LPDWORD pcbNeeded);

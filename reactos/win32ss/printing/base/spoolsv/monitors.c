@@ -2,23 +2,28 @@
  * PROJECT:     ReactOS Print Spooler Service
  * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
  * PURPOSE:     Functions related to Print Monitors
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
 
 static void
-_MarshallDownMonitorInfo(PBYTE pMonitorInfo, DWORD Level)
+_MarshallDownMonitorInfo(PBYTE* ppMonitorInfo, DWORD Level)
 {
-    PMONITOR_INFO_2W pMonitorInfo2 = (PMONITOR_INFO_2W)pMonitorInfo;        // MONITOR_INFO_1W is a subset of MONITOR_INFO_2W
+    PMONITOR_INFO_2W pMonitorInfo2 = (PMONITOR_INFO_2W)(*ppMonitorInfo);        // MONITOR_INFO_1W is a subset of MONITOR_INFO_2W
 
     // Replace absolute pointer addresses in the output by relative offsets.
     pMonitorInfo2->pName = (PWSTR)((ULONG_PTR)pMonitorInfo2->pName - (ULONG_PTR)pMonitorInfo2);
 
-    if (Level == 2)
+    if (Level == 1)
+    {
+        *ppMonitorInfo += sizeof(MONITOR_INFO_1W);
+    }
+    else
     {
         pMonitorInfo2->pDLLName = (PWSTR)((ULONG_PTR)pMonitorInfo2->pDLLName - (ULONG_PTR)pMonitorInfo2);
         pMonitorInfo2->pEnvironment = (PWSTR)((ULONG_PTR)pMonitorInfo2->pEnvironment - (ULONG_PTR)pMonitorInfo2);
+        *ppMonitorInfo += sizeof(MONITOR_INFO_2W);
     }
 }
 
@@ -40,8 +45,7 @@ DWORD
 _RpcEnumMonitors(WINSPOOL_HANDLE pName, DWORD Level, BYTE* pMonitor, DWORD cbBuf, DWORD* pcbNeeded, DWORD* pcReturned)
 {
     DWORD dwErrorCode;
-    DWORD i;
-    PBYTE p = pMonitor;
+    PBYTE pMonitorAligned;
 
     dwErrorCode = RpcImpersonateClient(NULL);
     if (dwErrorCode != ERROR_SUCCESS)
@@ -50,23 +54,24 @@ _RpcEnumMonitors(WINSPOOL_HANDLE pName, DWORD Level, BYTE* pMonitor, DWORD cbBuf
         return dwErrorCode;
     }
 
-    EnumMonitorsW(pName, Level, pMonitor, cbBuf, pcbNeeded, pcReturned);
-    dwErrorCode = GetLastError();
+    pMonitorAligned = AlignRpcPtr(pMonitor, &cbBuf);
 
-    if (dwErrorCode == ERROR_SUCCESS)
+    if(EnumMonitorsW(pName, Level, pMonitorAligned, cbBuf, pcbNeeded, pcReturned))
     {
         // Replace absolute pointer addresses in the output by relative offsets.
-        for (i = 0; i < *pcReturned; i++)
-        {
-            _MarshallDownMonitorInfo(p, Level);
+        DWORD i;
+        PBYTE p = pMonitorAligned;
 
-            if (Level == 1)
-                p += sizeof(MONITOR_INFO_1W);
-            else if (Level == 2)
-                p += sizeof(MONITOR_INFO_2W);
-        }
+        for (i = 0; i < *pcReturned; i++)
+            _MarshallDownMonitorInfo(&p, Level);
+    }
+    else
+    {
+        dwErrorCode = GetLastError();
     }
 
     RpcRevertToSelf();
+    UndoAlignRpcPtr(pMonitor, pMonitorAligned, cbBuf, pcbNeeded);
+
     return dwErrorCode;
 }

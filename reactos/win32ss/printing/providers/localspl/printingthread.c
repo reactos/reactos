@@ -25,6 +25,8 @@ PrintingThreadProc(PLOCAL_JOB pJob)
     PWSTR pwszPrinterPort = NULL;
     PWSTR pwszSPLFile = NULL;
 
+    TRACE("PrintingThreadProc(%p)\n", pJob);
+
     // Prepare the pPrinterName parameter.
     // This is the string for LocalOpenPrinter to open a port (e.g. "LPT1:, Port").
     cchPortName = wcslen(pJob->pPrinter->pPort->pwszName);

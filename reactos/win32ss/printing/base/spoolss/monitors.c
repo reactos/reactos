@@ -10,7 +10,7 @@
 BOOL WINAPI
 EnumMonitorsW(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
-    BOOL bReturnValue;
+    BOOL bReturnValue = TRUE;
     DWORD cbCallBuffer;
     DWORD cbNeeded;
     DWORD dwReturned;
@@ -19,9 +19,9 @@ EnumMonitorsW(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD pcb
     PLIST_ENTRY pEntry;
 
     // Sanity checks.
-    if ((cbBuf && !pMonitors) || !pcbNeeded || !pcReturned)
+    if (cbBuf && !pMonitors)
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
+        SetLastError(ERROR_INVALID_USER_BUFFER);
         return FALSE;
     }
 

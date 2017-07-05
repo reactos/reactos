@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Print Spooler Service
  * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
  * PURPOSE:     Functions related to Print Processors
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -78,6 +78,7 @@ DWORD
 _RpcEnumPrintProcessors(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, DWORD Level, BYTE* pPrintProcessorInfo, DWORD cbBuf, DWORD* pcbNeeded, DWORD* pcReturned)
 {
     DWORD dwErrorCode;
+    PBYTE pPrintProcessorInfoAligned;
 
     dwErrorCode = RpcImpersonateClient(NULL);
     if (dwErrorCode != ERROR_SUCCESS)
@@ -86,20 +87,25 @@ _RpcEnumPrintProcessors(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, DWORD Level,
         return dwErrorCode;
     }
 
-    EnumPrintProcessorsW(pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded, pcReturned);
-    dwErrorCode = GetLastError();
+    pPrintProcessorInfoAligned = AlignRpcPtr(pPrintProcessorInfo, &cbBuf);
 
-    if (dwErrorCode == ERROR_SUCCESS)
+    if (EnumPrintProcessorsW(pName, pEnvironment, Level, pPrintProcessorInfoAligned, cbBuf, pcbNeeded, pcReturned))
     {
         // Replace absolute pointer addresses in the output by relative offsets.
         DWORD i;
-        PPRINTPROCESSOR_INFO_1W p = (PPRINTPROCESSOR_INFO_1W)pPrintProcessorInfo;
+        PPRINTPROCESSOR_INFO_1W p = (PPRINTPROCESSOR_INFO_1W)pPrintProcessorInfoAligned;
 
         for (i = 0; i < *pcReturned; i++)
             _MarshallDownPrintProcessorInfo(&p);
     }
+    else
+    {
+        dwErrorCode = GetLastError();
+    }
 
     RpcRevertToSelf();
+    UndoAlignRpcPtr(pPrintProcessorInfo, pPrintProcessorInfoAligned, cbBuf, pcbNeeded);
+
     return dwErrorCode;
 }
 
@@ -115,8 +121,8 @@ _RpcGetPrintProcessorDirectory(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, DWORD
         return dwErrorCode;
     }
 
-    GetPrintProcessorDirectoryW(pName, pEnvironment, Level, pPrintProcessorDirectory, cbBuf, pcbNeeded);
-    dwErrorCode = GetLastError();
+    if (!GetPrintProcessorDirectoryW(pName, pEnvironment, Level, pPrintProcessorDirectory, cbBuf, pcbNeeded))
+        dwErrorCode = GetLastError();
 
     RpcRevertToSelf();
     return dwErrorCode;

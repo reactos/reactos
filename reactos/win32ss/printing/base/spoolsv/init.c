@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Print Spooler Service
  * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
  * PURPOSE:     Various initialization functions
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2017 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -21,8 +21,8 @@ _RpcSpoolerInit()
         return dwErrorCode;
     }
 
-    SpoolerInit();
-    dwErrorCode = GetLastError();
+    if (!SpoolerInit())
+        dwErrorCode = GetLastError();
 
     RpcRevertToSelf();
     return dwErrorCode;

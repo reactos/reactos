@@ -10,6 +10,8 @@
 DWORD WINAPI
 LocalGetPrinterData(HANDLE hPrinter, PWSTR pValueName, PDWORD pType, PBYTE pData, DWORD nSize, PDWORD pcbNeeded)
 {
+    TRACE("LocalGetPrinterData(%p, %S, %p, %p, %lu, %p)\n", hPrinter, pValueName, pType, pData, nSize, pcbNeeded);
+
     // The ReactOS Printing Stack forwards all GetPrinterData calls to GetPrinterDataEx as soon as possible.
     // This function may only be called if localspl.dll is used together with Windows Printing Stack components.
     WARN("This function should never be called!\n");
@@ -316,6 +318,8 @@ LocalGetPrinterDataEx(HANDLE hPrinter, PCWSTR pKeyName, PCWSTR pValueName, PDWOR
     DWORD dwTemp;
     PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
 
+    TRACE("LocalGetPrinterDataEx(%p, %S, %S, %p, %p, %lu, %p)\n", hPrinter, pKeyName, pValueName, pType, pData, nSize, pcbNeeded);
+
     // Even if GetPrinterDataExW in winspool ensures that the RPC function is never called without a valid pointer for pType,
     // it's officially optional. Windows' fpGetPrinterDataEx also works with NULL for pType!
     // Ensure here that it is always set to simplify the code later.
@@ -356,6 +360,8 @@ LocalGetPrinterDataEx(HANDLE hPrinter, PCWSTR pKeyName, PCWSTR pValueName, PDWOR
 DWORD WINAPI
 LocalSetPrinterData(HANDLE hPrinter, PWSTR pValueName, DWORD Type, PBYTE pData, DWORD cbData)
 {
+    TRACE("LocalSetPrinterData(%p, %S, %lu, %p, %lu)\n", hPrinter, pValueName, Type, pData, cbData);
+
     // The ReactOS Printing Stack forwards all SetPrinterData calls to SetPrinterDataEx as soon as possible.
     // This function may only be called if localspl.dll is used together with Windows Printing Stack components.
     WARN("This function should never be called!\n");
@@ -445,6 +451,8 @@ LocalSetPrinterDataEx(HANDLE hPrinter, PCWSTR pKeyName, PCWSTR pValueName, DWORD
 {
     DWORD dwErrorCode;
     PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
+
+    TRACE("LocalSetPrinterDataEx(%p, %S, %S, %lu, %p, %lu)\n", hPrinter, pKeyName, pValueName, Type, pData, cbData);
 
     if (!pHandle)
     {

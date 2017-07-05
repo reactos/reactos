@@ -119,6 +119,8 @@ InitializePrinterList()
     PWSTR pwszPrintProcessor = NULL;
     WCHAR wszPrinterName[MAX_PRINTER_NAME + 1];
 
+    TRACE("InitializePrinterList()\n");
+
     // Initialize an empty list for our printers.
     InitializeSkiplist(&PrinterList, DllAllocSplMem, _PrinterListCompareRoutine, (PSKIPLIST_FREE_ROUTINE)DllFreeSplMem);
 
@@ -864,11 +866,12 @@ LocalEnumPrinters(DWORD Flags, LPWSTR Name, DWORD Level, LPBYTE pPrinterEnum, DW
 {
     DWORD cchComputerName = 0;
     DWORD dwErrorCode;
-    DWORD i;
     PBYTE pPrinterInfoEnd;
     PSKIPLIST_NODE pNode;
     WCHAR wszComputerName[2 + MAX_COMPUTERNAME_LENGTH + 1 + 1] = { 0 };
     PLOCAL_PRINTER pPrinter;
+
+    TRACE("LocalEnumPrinters(%lu, %S, %lu, %p, %lu, %p, %p)\n", Flags, Name, Level, pPrinterEnum, cbBuf, pcbNeeded, pcReturned);
 
     // Do no sanity checks or assertions for pcbNeeded and pcReturned here.
     // This is verified and required by localspl_apitest!
@@ -916,7 +919,6 @@ LocalEnumPrinters(DWORD Flags, LPWSTR Name, DWORD Level, LPBYTE pPrinterEnum, DW
         goto Cleanup;
 
     // Count the required buffer size and the number of printers.
-    i = 0;
     for (pNode = PrinterList.Head.Next[0]; pNode; pNode = pNode->Next[0])
     {
         pPrinter = (PLOCAL_PRINTER)pNode->Element;
@@ -929,7 +931,6 @@ LocalEnumPrinters(DWORD Flags, LPWSTR Name, DWORD Level, LPBYTE pPrinterEnum, DW
         }
 
         pfnGetPrinterLevels[Level](pPrinter, NULL, NULL, pcbNeeded, cchComputerName, wszComputerName);
-        i++;
     }
 
     // Check if the supplied buffer is large enough.
@@ -951,9 +952,9 @@ LocalEnumPrinters(DWORD Flags, LPWSTR Name, DWORD Level, LPBYTE pPrinterEnum, DW
             continue;
 
         pfnGetPrinterLevels[Level](pPrinter, &pPrinterEnum, &pPrinterInfoEnd, NULL, cchComputerName, wszComputerName);
+        (*pcReturned)++;
     }
 
-    *pcReturned = i;
     dwErrorCode = ERROR_SUCCESS;
 
 Cleanup:
@@ -968,6 +969,8 @@ LocalGetPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDW
     PBYTE pPrinterEnd;
     PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
     PLOCAL_PRINTER_HANDLE pPrinterHandle;
+
+    TRACE("LocalGetPrinter(%p, %lu, %p, %lu, %p)\n", hPrinter, Level, pPrinter, cbBuf, pcbNeeded);
 
     // Sanity checks.
     if (!pHandle)
@@ -993,6 +996,7 @@ LocalGetPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDW
     }
 
     // Count the required buffer size.
+    *pcbNeeded = 0;
     pfnGetPrinterLevels[Level](pPrinterHandle->pPrinter, NULL, NULL, pcbNeeded, 0, NULL);
 
     // Check if the supplied buffer is large enough.
@@ -1363,6 +1367,8 @@ LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDef
     PWSTR pwszSecondParameter;
     WCHAR wszComputerName[MAX_COMPUTERNAME_LENGTH + 1];
 
+    TRACE("LocalOpenPrinter(%S, %p, %p)\n", lpPrinterName, phPrinter, pDefault);
+
     ASSERT(phPrinter);
     *phPrinter = NULL;
 
@@ -1494,6 +1500,8 @@ LocalReadPrinter(HANDLE hPrinter, PVOID pBuf, DWORD cbBuf, PDWORD pNoBytesRead)
     PLOCAL_PORT_HANDLE pPortHandle;
     PLOCAL_PRINTER_HANDLE pPrinterHandle;
 
+    TRACE("LocalReadPrinter(%p, %p, %lu, %p)\n", hPrinter, pBuf, cbBuf, pNoBytesRead);
+
     // Sanity checks.
     if (!pHandle)
     {
@@ -1567,6 +1575,8 @@ LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, PBYTE pDocInfo)
     PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
     PLOCAL_PORT_HANDLE pPortHandle;
     PLOCAL_PRINTER_HANDLE pPrinterHandle;
+
+    TRACE("LocalStartDocPrinter(%p, %lu, %p)\n", hPrinter, Level, pDocInfo);
 
     // Sanity checks.
     if (!pHandle)
@@ -1678,6 +1688,8 @@ LocalStartPagePrinter(HANDLE hPrinter)
     PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
     PLOCAL_PRINTER_HANDLE pPrinterHandle;
 
+    TRACE("LocalStartPagePrinter(%p)\n", hPrinter);
+
     // Sanity checks.
     if (!pHandle || pHandle->HandleType != HandleType_Printer)
     {
@@ -1711,6 +1723,8 @@ LocalWritePrinter(HANDLE hPrinter, PVOID pBuf, DWORD cbBuf, PDWORD pcWritten)
     PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
     PLOCAL_PORT_HANDLE pPortHandle;
     PLOCAL_PRINTER_HANDLE pPrinterHandle;
+
+    TRACE("LocalWritePrinter(%p, %p, %lu, %p)\n", hPrinter, pBuf, cbBuf, pcWritten);
 
     // Sanity checks.
     if (!pHandle)
@@ -1783,6 +1797,8 @@ LocalEndPagePrinter(HANDLE hPrinter)
     DWORD dwErrorCode;
     PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
 
+    TRACE("LocalEndPagePrinter(%p)\n", hPrinter);
+
     // Sanity checks.
     if (!pHandle || pHandle->HandleType != HandleType_Printer)
     {
@@ -1806,6 +1822,8 @@ LocalEndDocPrinter(HANDLE hPrinter)
     PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
     PLOCAL_PORT_HANDLE pPortHandle;
     PLOCAL_PRINTER_HANDLE pPrinterHandle;
+
+    TRACE("LocalEndDocPrinter(%p)\n", hPrinter);
 
     // Sanity checks.
     if (!pHandle)
@@ -1901,6 +1919,8 @@ BOOL WINAPI
 LocalClosePrinter(HANDLE hPrinter)
 {
     PLOCAL_HANDLE pHandle = (PLOCAL_HANDLE)hPrinter;
+
+    TRACE("LocalClosePrinter(%p)\n", hPrinter);
 
     if (!pHandle)
     {

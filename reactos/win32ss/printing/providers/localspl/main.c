@@ -245,6 +245,8 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 BOOL WINAPI
 InitializePrintProvidor(LPPRINTPROVIDOR pPrintProvidor, DWORD cbPrintProvidor, LPWSTR pFullRegistryPath)
 {
+    TRACE("InitializePrintProvidor(%p, %lu, %S)\n", pPrintProvidor, cbPrintProvidor, pFullRegistryPath);
+
     CopyMemory(pPrintProvidor, &_PrintProviderFunctions, min(cbPrintProvidor, sizeof(PRINTPROVIDOR)));
 
     SetLastError(ERROR_SUCCESS);

@@ -67,7 +67,7 @@ EnumPrintersW(DWORD Flags, PWSTR Name, DWORD Level, PBYTE pPrinterEnum, DWORD cb
 {
     DWORD cbCallBuffer;
     DWORD cbNeeded;
-    DWORD dwErrorCode = 0xFFFFFFFF;
+    DWORD dwErrorCode = MAXDWORD;
     DWORD dwReturned;
     PBYTE pCallBuffer;
     PSPOOLSS_PRINT_PROVIDER pPrintProvider;

@@ -17,6 +17,8 @@ FindPort(PCWSTR pwszName)
     PLIST_ENTRY pEntry;
     PLOCAL_PORT pPort;
 
+    TRACE("FindPort(%S)\n", pwszName);
+
     if (!pwszName)
         return NULL;
 
@@ -32,7 +34,7 @@ FindPort(PCWSTR pwszName)
 }
 
 BOOL
-InitializePortList()
+InitializePortList(void)
 {
     BOOL bReturnValue;
     DWORD cbNeeded;
@@ -45,6 +47,8 @@ InitializePortList()
     PLIST_ENTRY pEntry;
     PPORT_INFO_1W p;
     PPORT_INFO_1W pPortInfo1 = NULL;
+
+    TRACE("InitializePortList()\n");
 
     // Initialize an empty list for our Ports.
     InitializeListHead(&_PortList);
@@ -136,7 +140,7 @@ Cleanup:
 BOOL WINAPI
 LocalEnumPorts(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
-    BOOL bReturnValue;
+    BOOL bReturnValue = TRUE;
     DWORD cbCallBuffer;
     DWORD cbNeeded;
     DWORD dwReturned;
@@ -144,12 +148,7 @@ LocalEnumPorts(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNe
     PLOCAL_PRINT_MONITOR pPrintMonitor;
     PLIST_ENTRY pEntry;
 
-    // Sanity checks.
-    if ((cbBuf && !pPorts) || !pcbNeeded || !pcReturned)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
+    TRACE("LocalEnumPorts(%S, %lu, %p, %lu, %p, %p)\n", pName, Level, pPorts, cbBuf, pcbNeeded, pcReturned);
 
     // Begin counting.
     *pcbNeeded = 0;

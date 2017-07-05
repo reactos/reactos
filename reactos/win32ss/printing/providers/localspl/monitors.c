@@ -10,12 +10,27 @@
 // Global Variables
 LIST_ENTRY PrintMonitorList;
 
+// Local Constants
+static DWORD dwMonitorInfo1Offsets[] = {
+    FIELD_OFFSET(MONITOR_INFO_1W, pName),
+    MAXDWORD
+};
+
+static DWORD dwMonitorInfo2Offsets[] = {
+    FIELD_OFFSET(MONITOR_INFO_2W, pName),
+    FIELD_OFFSET(MONITOR_INFO_2W, pEnvironment),
+    FIELD_OFFSET(MONITOR_INFO_2W, pDLLName),
+    MAXDWORD
+};
+
 
 PLOCAL_PRINT_MONITOR
 FindPrintMonitor(PCWSTR pwszName)
 {
     PLIST_ENTRY pEntry;
     PLOCAL_PRINT_MONITOR pPrintMonitor;
+
+    TRACE("FindPrintMonitor(%S)\n", pwszName);
 
     if (!pwszName)
         return NULL;
@@ -32,7 +47,7 @@ FindPrintMonitor(PCWSTR pwszName)
 }
 
 BOOL
-InitializePrintMonitorList()
+InitializePrintMonitorList(void)
 {
     const WCHAR wszMonitorsPath[] = L"SYSTEM\\CurrentControlSet\\Control\\Print\\Monitors";
     const DWORD cchMonitorsPath = _countof(wszMonitorsPath) - 1;
@@ -50,6 +65,8 @@ InitializePrintMonitorList()
     PInitializePrintMonitor2 pfnInitializePrintMonitor2;
     PLOCAL_PRINT_MONITOR pPrintMonitor = NULL;
     PWSTR pwszRegistryPath = NULL;
+
+    TRACE("InitializePrintMonitorList()\n");
 
     // Initialize an empty list for our Print Monitors.
     InitializeListHead(&PrintMonitorList);
@@ -236,28 +253,74 @@ Cleanup:
     return (dwErrorCode == ERROR_SUCCESS);
 }
 
-BOOL WINAPI
-LocalEnumMonitors(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
+static void
+_LocalGetMonitorLevel1(PLOCAL_PRINT_MONITOR pPrintMonitor, PMONITOR_INFO_1W* ppMonitorInfo, PBYTE* ppMonitorInfoEnd, PDWORD pcbNeeded)
+{
+    DWORD cbMonitorName;
+    PWSTR pwszStrings[1];
+
+    // Calculate the string lengths.
+    if (!ppMonitorInfo)
+    {
+        cbMonitorName = (wcslen(pPrintMonitor->pwszName) + 1) * sizeof(WCHAR);
+
+        *pcbNeeded += sizeof(MONITOR_INFO_1W) + cbMonitorName;
+        return;
+    }
+
+    // Set the pName field.
+    pwszStrings[0] = pPrintMonitor->pwszName;
+
+    // Copy the structure and advance to the next one in the output buffer.
+    *ppMonitorInfoEnd = PackStrings(pwszStrings, (PBYTE)(*ppMonitorInfo), dwMonitorInfo1Offsets, *ppMonitorInfoEnd);
+    (*ppMonitorInfo)++;
+}
+
+static void
+_LocalGetMonitorLevel2(PLOCAL_PRINT_MONITOR pPrintMonitor, PMONITOR_INFO_2W* ppMonitorInfo, PBYTE* ppMonitorInfoEnd, PDWORD pcbNeeded)
 {
     DWORD cbFileName;
     DWORD cbMonitorName;
+    PWSTR pwszStrings[3];
+
+    // Calculate the string lengths.
+    if (!ppMonitorInfo)
+    {
+        cbMonitorName = (wcslen(pPrintMonitor->pwszName) + 1) * sizeof(WCHAR);
+        cbFileName = (wcslen(pPrintMonitor->pwszFileName) + 1) * sizeof(WCHAR);
+
+        *pcbNeeded += sizeof(MONITOR_INFO_2W) + cbMonitorName + cbCurrentEnvironment + cbFileName;
+        return;
+    }
+
+    // Set the pName field.
+    pwszStrings[0] = pPrintMonitor->pwszName;
+
+    // Set the pEnvironment field.
+    pwszStrings[1] = (PWSTR)wszCurrentEnvironment;
+
+    // Set the pDLLName field.
+    pwszStrings[2] = pPrintMonitor->pwszFileName;
+
+    // Copy the structure and advance to the next one in the output buffer.
+    *ppMonitorInfoEnd = PackStrings(pwszStrings, (PBYTE)(*ppMonitorInfo), dwMonitorInfo2Offsets, *ppMonitorInfoEnd);
+    (*ppMonitorInfo)++;
+}
+
+BOOL WINAPI
+LocalEnumMonitors(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
+{
     DWORD dwErrorCode;
-    PBYTE pStart;
-    PBYTE pEnd;
+    PBYTE pMonitorInfoEnd;
     PLIST_ENTRY pEntry;
     PLOCAL_PRINT_MONITOR pPrintMonitor;
-    MONITOR_INFO_2W MonitorInfo2;               // MONITOR_INFO_1W is a subset of MONITOR_INFO_2W, so we can handle both in one function here.
+
+    TRACE("LocalEnumMonitors(%S, %lu, %p, %lu, %p, %p)\n", pName, Level, pMonitors, cbBuf, pcbNeeded, pcReturned);
 
     // Sanity checks.
     if (Level > 2)
     {
         dwErrorCode = ERROR_INVALID_LEVEL;
-        goto Cleanup;
-    }
-
-    if ((cbBuf && !pMonitors) || !pcbNeeded || !pcReturned)
-    {
-        dwErrorCode = ERROR_INVALID_PARAMETER;
         goto Cleanup;
     }
 
@@ -270,13 +333,10 @@ LocalEnumMonitors(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD
     {
         pPrintMonitor = CONTAINING_RECORD(pEntry, LOCAL_PRINT_MONITOR, Entry);
 
-        cbMonitorName = (wcslen(pPrintMonitor->pwszName) + 1) * sizeof(WCHAR);
-        cbFileName = (wcslen(pPrintMonitor->pwszFileName) + 1) * sizeof(WCHAR);
-
         if (Level == 1)
-            *pcbNeeded += sizeof(MONITOR_INFO_1W) + cbMonitorName;
-        else
-            *pcbNeeded += sizeof(MONITOR_INFO_2W) + cbMonitorName + cbCurrentEnvironment + cbFileName;
+            _LocalGetMonitorLevel1(pPrintMonitor, NULL, NULL, pcbNeeded);
+        else if (Level == 2)
+            _LocalGetMonitorLevel2(pPrintMonitor, NULL, NULL, pcbNeeded);
     }
 
     // Check if the supplied buffer is large enough.
@@ -286,43 +346,17 @@ LocalEnumMonitors(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD
         goto Cleanup;
     }
 
-    // Put the strings at the end of the buffer.
-    pStart = pMonitors;
-    pEnd = &pMonitors[cbBuf];
+    // Copy over the Monitor information.
+    pMonitorInfoEnd = &pMonitors[*pcbNeeded];
 
     for (pEntry = PrintMonitorList.Flink; pEntry != &PrintMonitorList; pEntry = pEntry->Flink)
     {
         pPrintMonitor = CONTAINING_RECORD(pEntry, LOCAL_PRINT_MONITOR, Entry);
 
-        // Copy the monitor name.
-        cbMonitorName = (wcslen(pPrintMonitor->pwszName) + 1) * sizeof(WCHAR);
-        pEnd -= cbMonitorName;
-        MonitorInfo2.pName = (PWSTR)pEnd;
-        CopyMemory(pEnd, pPrintMonitor->pwszName, cbMonitorName);
-
         if (Level == 1)
-        {
-            // Finally copy the structure.
-            CopyMemory(pStart, &MonitorInfo2, sizeof(MONITOR_INFO_1W));
-            pStart += sizeof(MONITOR_INFO_1W);
-        }
-        else
-        {
-            // Copy the environment.
-            pEnd -= cbCurrentEnvironment;
-            MonitorInfo2.pEnvironment = (PWSTR)pEnd;
-            CopyMemory(pEnd, wszCurrentEnvironment, cbCurrentEnvironment);
-
-            // Copy the file name.
-            cbFileName = (wcslen(pPrintMonitor->pwszFileName) + 1) * sizeof(WCHAR);
-            pEnd -= cbFileName;
-            MonitorInfo2.pDLLName = (PWSTR)pEnd;
-            CopyMemory(pEnd, pPrintMonitor->pwszFileName, cbFileName);
-
-            // Finally copy the structure.
-            CopyMemory(pStart, &MonitorInfo2, sizeof(MONITOR_INFO_2W));
-            pStart += sizeof(MONITOR_INFO_2W);
-        }
+            _LocalGetMonitorLevel1(pPrintMonitor, (PMONITOR_INFO_1W*)&pMonitors, &pMonitorInfoEnd, NULL);
+        else if (Level == 2)
+            _LocalGetMonitorLevel2(pPrintMonitor, (PMONITOR_INFO_2W*)&pMonitors, &pMonitorInfoEnd, NULL);
 
         (*pcReturned)++;
     }

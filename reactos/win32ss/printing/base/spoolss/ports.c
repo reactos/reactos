@@ -10,7 +10,7 @@
 BOOL WINAPI
 EnumPortsW(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
-    BOOL bReturnValue;
+    BOOL bReturnValue = TRUE;
     DWORD cbCallBuffer;
     DWORD cbNeeded;
     DWORD dwReturned;
@@ -19,9 +19,9 @@ EnumPortsW(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded
     PLIST_ENTRY pEntry;
 
     // Sanity checks.
-    if ((cbBuf && !pPorts) || !pcbNeeded || !pcReturned)
+    if (cbBuf && !pPorts)
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
+        SetLastError(ERROR_INVALID_USER_BUFFER);
         return FALSE;
     }
 
