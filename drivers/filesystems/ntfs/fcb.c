@@ -617,7 +617,7 @@ NtfsGetFCBForFile(PNTFS_VCB Vcb,
 
 #if 1
     /* Trivial case, open of the root directory on volume */
-    if (pFileName [0] == L'\0' || wcscmp(pFileName, L"\\") == 0)
+    if (pFileName[0] == L'\0' || wcscmp(pFileName, L"\\") == 0)
     {
         DPRINT("returning root FCB\n");
 

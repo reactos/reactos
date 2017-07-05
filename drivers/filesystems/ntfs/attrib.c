@@ -316,7 +316,8 @@ AddRun(PNTFS_VCB Vcb,
         NextVBN = AttrContext->Record.NonResident.HighestVCN + 1;
 
     // Add newly-assigned clusters to mcb
-    _SEH2_TRY{
+    _SEH2_TRY
+    {
         if (!FsRtlAddLargeMcbEntry(&AttrContext->DataRunsMCB,
                                    NextVBN,
                                    NextAssignedCluster,
@@ -796,7 +797,7 @@ FreeClusters(PNTFS_VCB Vcb,
             break;
         }
 
-        if( LargeLbn != -1)
+        if (LargeLbn != -1)
         {
             // deallocate this cluster
             RtlClearBits(&Bitmap, LargeLbn, 1);
