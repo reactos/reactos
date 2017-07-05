@@ -3153,15 +3153,49 @@ HRESULT CDefView::_MergeToolbar()
 
     return S_OK;
 }
-/**********************************************************
- *    IShellView_Constructor
- */
-HRESULT WINAPI IShellView_Constructor(IShellFolder *pFolder, IShellView **newView)
-{
-    return ShellObjectCreatorInit<CDefView>(pFolder, IID_PPV_ARG(IShellView, newView));
-}
 
-HRESULT WINAPI CDefView_Constructor(IShellFolder *pFolder, REFIID riid, LPVOID * ppvOut)
+HRESULT CDefView_CreateInstance(IShellFolder *pFolder, REFIID riid, LPVOID * ppvOut)
 {
     return ShellObjectCreatorInit<CDefView>(pFolder, riid, ppvOut);
+}
+
+HRESULT WINAPI SHCreateShellFolderViewEx(
+    LPCSFV psvcbi,    /* [in] shelltemplate struct */
+    IShellView **ppsv) /* [out] IShellView pointer */
+{
+    CComPtr<IShellView> psv;
+    HRESULT hRes;
+
+    TRACE("sf=%p pidl=%p cb=%p mode=0x%08x parm=%p\n",
+      psvcbi->pshf, psvcbi->pidl, psvcbi->pfnCallback,
+      psvcbi->fvm, psvcbi->psvOuter);
+
+    *ppsv = NULL;
+    hRes = CDefView_CreateInstance(psvcbi->pshf, IID_PPV_ARG(IShellView, &psv));
+    if (FAILED_UNEXPECTEDLY(hRes))
+        return hRes;
+
+    *ppsv = psv.Detach();
+    return hRes;
+}
+
+HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv,
+                        IShellView **ppsv)
+{
+    CComPtr<IShellView> psv;
+    HRESULT hRes;
+
+    *ppsv = NULL;
+    if (!pcsfv || pcsfv->cbSize != sizeof(*pcsfv))
+        return E_INVALIDARG;
+
+    TRACE("sf=%p outer=%p callback=%p\n",
+      pcsfv->pshf, pcsfv->psvOuter, pcsfv->psfvcb);
+
+    hRes = CDefView_CreateInstance(pcsfv->pshf, IID_PPV_ARG(IShellView, &psv));
+    if (FAILED(hRes))
+        return hRes;
+
+    *ppsv = psv.Detach();
+    return hRes;
 }

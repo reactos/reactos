@@ -1046,6 +1046,8 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
  * NOTES
  *  see IShellFolder::CreateViewObject
  */
+ #ifndef __REACTOS__
+
 HRESULT WINAPI SHCreateShellFolderViewEx(
 	LPCSFV psvcbi,    /* [in] shelltemplate struct */
 	IShellView **ppv) /* [out] IShellView pointer */
@@ -1068,6 +1070,8 @@ HRESULT WINAPI SHCreateShellFolderViewEx(
 
 	return hRes;
 }
+#endif
+
 /*************************************************************************
  *  SHWinHelp					[SHELL32.127]
  *
@@ -2108,6 +2112,8 @@ HRESULT WINAPI SHGetImageList(int iImageList, REFIID riid, void **ppv)
     return ret;
 }
 
+#ifndef __REACTOS__
+
 /*************************************************************************
  * SHCreateShellFolderView			[SHELL32.256]
  *
@@ -2142,3 +2148,4 @@ HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv,
 
 	return hRes;
 }
+#endif

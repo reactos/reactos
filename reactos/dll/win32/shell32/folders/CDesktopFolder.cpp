@@ -514,7 +514,6 @@ HRESULT WINAPI CDesktopFolder::CreateViewObject(
     REFIID riid,
     LPVOID *ppvOut)
 {
-    CComPtr<IShellView> pShellView;
     HRESULT hr = E_INVALIDARG;
 
     TRACE ("(%p)->(hwnd=%p,%s,%p)\n",
@@ -549,9 +548,8 @@ HRESULT WINAPI CDesktopFolder::CreateViewObject(
     }
     else if (IsEqualIID (riid, IID_IShellView))
     {
-        hr = IShellView_Constructor((IShellFolder *)this, &pShellView);
-        if (pShellView)
-            hr = pShellView->QueryInterface(riid, ppvOut);
+        SFV_CREATE sfvparams = {sizeof(SFV_CREATE), this};
+        hr = SHCreateShellFolderView(&sfvparams, (IShellView**)ppvOut);
     }
     TRACE ("-- (%p)->(interface=%p)\n", this, ppvOut);
     return hr;
