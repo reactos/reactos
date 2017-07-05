@@ -835,7 +835,42 @@ NTAPI
 OHCI_StopController(IN PVOID ohciExtension,
                     IN BOOLEAN IsDoDisableInterrupts)
 {
-    DPRINT1("OHCI_StopController: UNIMPLEMENTED. FIXME\n");
+    POHCI_EXTENSION OhciExtension = ohciExtension;
+    POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    PULONG ControlReg;
+    PULONG InterruptDisableReg;
+    PULONG InterruptStatusReg;
+    OHCI_REG_CONTROL Control;
+    OHCI_REG_INTERRUPT_ENABLE_DISABLE IntDisable;
+    OHCI_REG_INTERRUPT_STATUS IntStatus;
+
+    DPRINT("OHCI_StopController: ... \n");
+
+    OperationalRegs = OhciExtension->OperationalRegs;
+
+    ControlReg = (PULONG)&OperationalRegs->HcControl;
+    InterruptDisableReg = (PULONG)&OperationalRegs->HcInterruptDisable;
+    InterruptStatusReg = (PULONG)&OperationalRegs->HcInterruptStatus;
+
+    /* Setup HcControl register */
+    Control.AsULONG = READ_REGISTER_ULONG(ControlReg);
+
+    Control.PeriodicListEnable = FALSE;
+    Control.IsochronousEnable = FALSE;
+    Control.ControlListEnable = FALSE;
+    Control.BulkListEnable = FALSE;
+    Control.HostControllerFunctionalState = OHCI_HC_STATE_SUSPEND;
+    Control.RemoteWakeupEnable = FALSE;
+
+    WRITE_REGISTER_ULONG(ControlReg, Control.AsULONG);
+
+    /* Disable interrupt generations */
+    IntDisable.AsULONG = 0xFFFFFFFF;
+    WRITE_REGISTER_ULONG(InterruptDisableReg, IntDisable.AsULONG);
+
+    /* Clear all bits in HcInterruptStatus register */
+    IntStatus.AsULONG = 0xFFFFFFFF;
+    WRITE_REGISTER_ULONG(InterruptStatusReg, IntStatus.AsULONG);
 }
 
 VOID
