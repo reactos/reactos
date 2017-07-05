@@ -491,10 +491,105 @@ OHCI_CloseEndpoint(IN PVOID ohciExtension,
 
 MPSTATUS
 NTAPI
-OHCI_TakeControlHC(IN POHCI_EXTENSION OhciExtension)
+OHCI_TakeControlHC(IN POHCI_EXTENSION OhciExtension,
+                   IN PUSBPORT_RESOURCES Resources)
 {
-    DPRINT1("OHCI_TakeControlHC: UNIMPLEMENTED. FIXME\n");
-    return MP_STATUS_SUCCESS;
+    POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    PULONG ControlReg;
+    PULONG InterruptEnableReg;
+    PULONG InterruptDisableReg;
+    PULONG CommandStatusReg;
+    PULONG InterruptStatusReg;
+    OHCI_REG_CONTROL Control;
+    OHCI_REG_INTERRUPT_ENABLE_DISABLE IntEnable;
+    OHCI_REG_INTERRUPT_ENABLE_DISABLE IntDisable;
+    OHCI_REG_COMMAND_STATUS CommandStatus;
+    OHCI_REG_INTERRUPT_STATUS IntStatus;
+    LARGE_INTEGER EndTime;
+    LARGE_INTEGER SystemTime;
+
+    DPRINT("OHCI_TakeControlHC: ...\n");
+
+    OperationalRegs = OhciExtension->OperationalRegs;
+
+    ControlReg = (PULONG)&OperationalRegs->HcControl;
+    InterruptEnableReg = (PULONG)&OperationalRegs->HcInterruptEnable;
+    InterruptDisableReg = (PULONG)&OperationalRegs->HcInterruptDisable;
+    CommandStatusReg = (PULONG)&OperationalRegs->HcCommandStatus;
+    InterruptStatusReg = (PULONG)&OperationalRegs->HcInterruptStatus;
+
+    /* 5.1.1.3 Take Control of Host Controller */
+    Control.AsULONG = READ_REGISTER_ULONG(ControlReg);
+
+    if (Control.InterruptRouting == 0)
+    {
+        return MP_STATUS_SUCCESS;
+    }
+
+    DPRINT1("OHCI_TakeControlHC: detected Legacy BIOS\n");
+
+    IntEnable.AsULONG = READ_REGISTER_ULONG(InterruptEnableReg);
+
+    DPRINT("OHCI_TakeControlHC: Control - %lX, IntEnable - %lX\n",
+           Control.AsULONG,
+           IntEnable.AsULONG);
+
+    if (Control.HostControllerFunctionalState == OHCI_HC_STATE_RESET &&
+        IntEnable.AsULONG == 0)
+    {
+        Control.AsULONG = 0;
+        WRITE_REGISTER_ULONG(ControlReg, Control.AsULONG);
+        return MP_STATUS_SUCCESS;
+    }
+
+    /* Enable interrupt generations */
+    IntEnable.AsULONG = 0;
+    IntEnable.MasterInterruptEnable = 1;
+
+    WRITE_REGISTER_ULONG(InterruptEnableReg, IntEnable.AsULONG);
+
+    /* Request a change of control of the HC */
+    CommandStatus.AsULONG = 0;
+    CommandStatus.OwnershipChangeRequest = 1;
+
+    WRITE_REGISTER_ULONG(CommandStatusReg, CommandStatus.AsULONG);
+
+    /* Disable interrupt generation due to Root Hub Status Change */
+    IntDisable.AsULONG = 0;
+    IntDisable.RootHubStatusChange = 1;
+
+    WRITE_REGISTER_ULONG(InterruptDisableReg, IntDisable.AsULONG);
+
+    /* Monitoring the InterruptRouting bit
+       to determine when the ownership change has taken effect. */
+
+    KeQuerySystemTime(&EndTime);
+    EndTime.QuadPart += 500 * 10000; // 0.5 sec;
+
+    do
+    {
+        Control.AsULONG = READ_REGISTER_ULONG(ControlReg);
+
+        if (Control.InterruptRouting == 0)
+        {
+            /* Clear all bits in register */
+            IntStatus.AsULONG = 0xFFFFFFFF;
+            WRITE_REGISTER_ULONG(InterruptStatusReg, IntStatus.AsULONG);
+
+            /* Disable interrupt generations */
+            IntDisable.AsULONG = 0;
+            IntDisable.MasterInterruptEnable = 1;
+
+            WRITE_REGISTER_ULONG(InterruptDisableReg, IntDisable.AsULONG);
+
+            return MP_STATUS_SUCCESS;
+        }
+
+        KeQuerySystemTime(&SystemTime);
+    }
+    while (SystemTime.QuadPart < EndTime.QuadPart);
+
+    return MP_STATUS_HW_ERROR;
 }
 
 MPSTATUS
