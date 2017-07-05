@@ -11,16 +11,16 @@ BEGIN
     IDS_DEFAULTTOPICTITLE "ReactOS"
     IDS_DEFAULTTOPICDESC "Vitajte v operačnom systéme ReactOS.\n\nKliknite na tlačidlo v ľavom stĺpci."
 
-    IDS_CHECKTEXT "Zobraziť toto okno aj nabudúce"
-    IDS_CLOSETEXT "Koniec"
+    IDS_CHECKTEXT "&Zobraziť toto okno aj nabudúce"
+    IDS_CLOSETEXT "&Koniec"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "Inštalovať ReactOS"
-    IDS_TOPICBUTTON1 "Prezerať toto CD"
-    IDS_TOPICBUTTON2 "Koniec"
+    IDS_TOPICBUTTON0 "&Inštalovať ReactOS"
+    IDS_TOPICBUTTON1 "&Prezerať toto CD"
+    IDS_TOPICBUTTON2 "&Koniec"
 END
 
 /* Topic titles */

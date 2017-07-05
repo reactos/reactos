@@ -9,16 +9,16 @@ BEGIN
     IDS_DEFAULTTOPICTITLE "ReactOS"
     IDS_DEFAULTTOPICDESC "Velkommen til ReactOS Operativsystem.\n\nTrykk et emne til venstre."
 
-    IDS_CHECKTEXT "Vis denne dialoget igjen"
-    IDS_CLOSETEXT "Avslutt"
+    IDS_CHECKTEXT "&Vis denne dialoget igjen"
+    IDS_CLOSETEXT "&Avslutt"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "Innstaller ReactOS"
-    IDS_TOPICBUTTON1 "Utforsk denne CD"
-    IDS_TOPICBUTTON2 "Avslutt"
+    IDS_TOPICBUTTON0 "&Innstaller ReactOS"
+    IDS_TOPICBUTTON1 "&Utforsk denne CD"
+    IDS_TOPICBUTTON2 "&Avslutt"
 END
 
 /* Topic titles */

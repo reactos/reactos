@@ -11,16 +11,16 @@ BEGIN
     IDS_DEFAULTTOPICTITLE "ReactOS"
     IDS_DEFAULTTOPICDESC "Üdvözlünk a ReactOS Operációs Rendszerben.\n\n"
 
-    IDS_CHECKTEXT "Show this dialog again"
-    IDS_CLOSETEXT "Kilépés"
+    IDS_CHECKTEXT "&Show this dialog again"
+    IDS_CLOSETEXT "&Kilépés"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "ReactOS telepítése"
-    IDS_TOPICBUTTON1 "A CD böngészése"
-    IDS_TOPICBUTTON2 "Kilépés"
+    IDS_TOPICBUTTON0 "&ReactOS telepítése"
+    IDS_TOPICBUTTON1 "&A CD böngészése"
+    IDS_TOPICBUTTON2 "&Kilépés"
 END
 
 /* Topic titles */

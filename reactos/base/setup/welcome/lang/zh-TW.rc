@@ -11,16 +11,16 @@ BEGIN
     IDS_DEFAULTTOPICTITLE "ReactOS"
     IDS_DEFAULTTOPICDESC "歡迎使用 ReactOS 作業系統。\n\n 請點選左邊的主題。"
 
-    IDS_CHECKTEXT "Show this dialog again"
-    IDS_CLOSETEXT "Exit"
+    IDS_CHECKTEXT "&Show this dialog again"
+    IDS_CLOSETEXT "退出(&Q)"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "安裝 ReactOS"
-    IDS_TOPICBUTTON1 "瀏覽 CD"
-    IDS_TOPICBUTTON2 "退出 "
+    IDS_TOPICBUTTON0 "安裝 &ReactOS"
+    IDS_TOPICBUTTON1 "瀏覽 &CD"
+    IDS_TOPICBUTTON2 "退出(&Q)"
 END
 
 /* Topic titles */

@@ -9,16 +9,16 @@ BEGIN
     IDS_DEFAULTTOPICTITLE "ReactOS"
     IDS_DEFAULTTOPICDESC "Καλώς ήλθατε στο ReactOS Λειτουργικό Σύστημα.\n\nΕπιλέξτε ένα θέμα από το μενού στα αριστερά."
 
-    IDS_CHECKTEXT "Show this dialog again"
-    IDS_CLOSETEXT "Exit"
+    IDS_CHECKTEXT "&Show this dialog again"
+    IDS_CLOSETEXT "&Έξοδος"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "Εγκατάσταση του ReactOS"
-    IDS_TOPICBUTTON1 "Εξερεύνηση αυτού του CD"
-    IDS_TOPICBUTTON2 "Έξοδος"
+    IDS_TOPICBUTTON0 "Εγκατάσταση του &ReactOS"
+    IDS_TOPICBUTTON1 "Εξερεύνηση αυτού του &CD"
+    IDS_TOPICBUTTON2 "&Έξοδος"
 END
 
 /* Topic titles */

@@ -9,16 +9,16 @@ BEGIN
     IDS_DEFAULTTOPICTITLE "ReactOS"
     IDS_DEFAULTTOPICDESC "Welkom bij het ReactOS Operation System.\n\nKlik links op een onderwerp."
 
-    IDS_CHECKTEXT "Ga terug naar dit scherm"
-    IDS_CLOSETEXT "Afsluiten"
+    IDS_CHECKTEXT "&Ga terug naar dit scherm"
+    IDS_CLOSETEXT "&Afsluiten"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "Installeer ReactOS"
-    IDS_TOPICBUTTON1 "Deze CD Verkennen"
-    IDS_TOPICBUTTON2 "Afsluiten"
+    IDS_TOPICBUTTON0 "&Installeer ReactOS"
+    IDS_TOPICBUTTON1 "&Deze CD Verkennen"
+    IDS_TOPICBUTTON2 "&Afsluiten"
 END
 
 /* Topic titles */

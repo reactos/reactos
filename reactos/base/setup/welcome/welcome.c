@@ -52,24 +52,15 @@
 
 /* GLOBALS ******************************************************************/
 
-TCHAR szFrameClass[] = TEXT("WelcomeWindowClass");
+TCHAR szWindowClass[] = TEXT("WelcomeWindowClass");
 TCHAR szAppTitle[80];
 
 HINSTANCE hInstance;
 
 HWND hWndMain = NULL;
-HWND hWndDefaultTopic = NULL;
 
-HDC hdcMem = NULL;
-
-ULONG ulInnerWidth = TITLE_WIDTH;
-ULONG ulInnerHeight = (TITLE_WIDTH * 3) / 4;
-ULONG ulTitleHeight = TITLE_HEIGHT + 3;
-
-HBITMAP hTitleBitmap = NULL;
-HBITMAP hDefaultTopicBitmap = NULL;
-HWND hWndCloseButton = NULL;
 HWND hWndCheckButton = NULL;
+HWND hWndCloseButton = NULL;
 
 BOOL bDisplayCheckBox = FALSE; // FIXME: We should also repaint the OS version correctly!
 BOOL bDisplayExitBtn  = TRUE;
@@ -92,11 +83,19 @@ typedef struct _TOPIC
 DWORD dwNumberTopics = 0;
 PTOPIC* pTopics = NULL;
 
+WNDPROC fnOldBtn;
+
 TCHAR szDefaultTitle[TOPIC_TITLE_LENGTH];
 TCHAR szDefaultDesc[TOPIC_DESC_LENGTH];
 
+#define TOPIC_BTN_ID_BASE   100
+
 INT nTopic = -1;        // Active (focused) topic
 INT nDefaultTopic = -1; // Default selected topic
+
+HDC hdcMem = NULL;
+HBITMAP hTitleBitmap = NULL;
+HBITMAP hDefaultTopicBitmap = NULL;
 
 HFONT hFontTopicButton;
 HFONT hFontTopicTitle;
@@ -105,13 +104,10 @@ HFONT hFontCheckButton;
 
 HBRUSH hbrLightBlue;
 HBRUSH hbrDarkBlue;
-HBRUSH hbrRightPanel;
 
 RECT rcTitlePanel;
 RECT rcLeftPanel;
 RECT rcRightPanel;
-
-WNDPROC fnOldBtn;
 
 
 INT_PTR CALLBACK
@@ -122,35 +118,35 @@ MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 INT GetLocaleName(IN LCID Locale, OUT LPTSTR lpLCData, IN SIZE_T cchData)
 {
-    INT ret, ret2;
+    INT cchRet, cchRet2;
 
     /* Try to retrieve the locale language name (LOCALE_SNAME is supported on Vista+) */
-    ret = GetLocaleInfo(Locale, LOCALE_SNAME, lpLCData, cchData);
-    if (ret || (GetLastError() != ERROR_INVALID_FLAGS))
-        return ret;
+    cchRet = GetLocaleInfo(Locale, LOCALE_SNAME, lpLCData, cchData);
+    if (cchRet || (GetLastError() != ERROR_INVALID_FLAGS))
+        return cchRet;
 
     /*
      * We failed because LOCALE_SNAME was unrecognized, so try to manually build
      * a language name in the form xx-YY (WARNING: this method has its limitations).
      */
-    ret = GetLocaleInfo(Locale, LOCALE_SISO639LANGNAME, lpLCData, cchData);
-    if (ret <= 1)
-        return ret;
+    cchRet = GetLocaleInfo(Locale, LOCALE_SISO639LANGNAME, lpLCData, cchData);
+    if (cchRet <= 1)
+        return cchRet;
 
-    lpLCData += (ret - 1);
-    cchData -= (ret - 1);
+    lpLCData += (cchRet - 1);
+    cchData -= (cchRet - 1);
     if (cchData <= 1)
-        return ret;
+        return cchRet;
 
     /* Try to get the second part; we add the '-' separator only if we succeed */
-    ret2 = GetLocaleInfo(Locale, LOCALE_SISO3166CTRYNAME, lpLCData + 1, cchData - 1);
-    if (ret2 <= 1)
-        return ret;
-    ret += ret2; // 'ret' already counts '-'.
+    cchRet2 = GetLocaleInfo(Locale, LOCALE_SISO3166CTRYNAME, lpLCData + 1, cchData - 1);
+    if (cchRet2 <= 1)
+        return cchRet;
+    cchRet += cchRet2; // 'cchRet' already counts '-'.
 
     *lpLCData = _T('-');
 
-    return ret;
+    return cchRet;
 }
 
 VOID TranslateEscapes(IN OUT LPTSTR lpString)
@@ -175,6 +171,7 @@ VOID TranslateEscapes(IN OUT LPTSTR lpString)
                 // lpString = pEscape + 1; // Loop will stop at the next iteration.
                 break;
 
+            /* New-line and carriage return */
             case _T('n'): case _T('r'):
             // case _T('\\'): // others?
             // So far we only need to deal with the newlines.
@@ -185,6 +182,15 @@ VOID TranslateEscapes(IN OUT LPTSTR lpString)
                     *pEscape = _T('\r');
 
                 memmove(lpString, lpString + 1, (_tcslen(lpString + 1) + 1) * sizeof(TCHAR));
+                break;
+            }
+
+            /* \xhhhh hexadecimal character specification */
+            case _T('x'):
+            {
+                LPTSTR lpStringNew;
+                *pEscape = (WCHAR)_tcstoul(lpString + 1, &lpStringNew, 16);
+                memmove(lpString, lpStringNew, (_tcslen(lpStringNew) + 1) * sizeof(TCHAR));
                 break;
             }
 
@@ -477,8 +483,10 @@ _tWinMain(HINSTANCE hInst,
           LPTSTR lpszCmdLine,
           int nCmdShow)
 {
+    HANDLE hMutex = NULL;
     WNDCLASSEX wndclass;
     MSG msg;
+    HWND hWndFocus;
     INT xPos, yPos;
     INT xWidth, yHeight;
     RECT rcWindow;
@@ -486,7 +494,11 @@ _tWinMain(HINSTANCE hInst,
     HMENU hSystemMenu;
     DWORD dwStyle = WS_OVERLAPPED | WS_CLIPCHILDREN | WS_CLIPSIBLINGS |
                     WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
+
     BITMAP BitmapInfo;
+    ULONG ulInnerWidth  = TITLE_WIDTH;
+    ULONG ulInnerHeight = (TITLE_WIDTH * 3) / 4;
+    ULONG ulTitleHeight = TITLE_HEIGHT + 3;
 
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpszCmdLine);
@@ -503,6 +515,22 @@ _tWinMain(HINSTANCE hInst,
 
     hInstance = hInst;
 
+    /* Ensure only one instance is running */
+    hMutex = CreateMutexW(NULL, FALSE, szWindowClass);
+    if (hMutex && (GetLastError() == ERROR_ALREADY_EXISTS))
+    {
+        /* If already started, find its window */
+        hWndMain = FindWindowW(szWindowClass, NULL);
+
+        /* Activate window */
+        ShowWindow(hWndMain, SW_SHOWNORMAL);
+        SetForegroundWindow(hWndMain);
+
+        /* Close the mutex handle and quit */
+        CloseHandle(hMutex);
+        return 0;
+    }
+
     /* Load icons */
     hMainIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MAIN));
 
@@ -518,12 +546,13 @@ _tWinMain(HINSTANCE hInst,
     wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
     wndclass.hbrBackground = NULL;
     wndclass.lpszMenuName = NULL;
-    wndclass.lpszClassName = szFrameClass;
+    wndclass.lpszClassName = szWindowClass;
 
     RegisterClassEx(&wndclass);
 
+    /* Load the banner bitmap, and compute the window dimensions */
     hTitleBitmap = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TITLEBITMAP));
-    if (hTitleBitmap != NULL)
+    if (hTitleBitmap)
     {
         GetObject(hTitleBitmap, sizeof(BITMAP), &BitmapInfo);
         ulInnerWidth = BitmapInfo.bmWidth;
@@ -539,9 +568,10 @@ _tWinMain(HINSTANCE hInst,
     rcWindow.right = ulInnerWidth - 1;
 
     AdjustWindowRect(&rcWindow, dwStyle, FALSE);
-    xWidth = rcWindow.right - rcWindow.left;
+    xWidth  = rcWindow.right - rcWindow.left;
     yHeight = rcWindow.bottom - rcWindow.top;
 
+    /* Compute the window position */
     xPos = (GetSystemMetrics(SM_CXSCREEN) - xWidth) / 2;
     yPos = (GetSystemMetrics(SM_CYSCREEN) - yHeight) / 2;
 
@@ -564,7 +594,7 @@ _tWinMain(HINSTANCE hInst,
     LoadConfiguration();
 
     /* Create main window */
-    hWndMain = CreateWindow(szFrameClass,
+    hWndMain = CreateWindow(szWindowClass,
                             szAppTitle,
                             dwStyle,
                             xPos,
@@ -588,13 +618,34 @@ _tWinMain(HINSTANCE hInst,
 
     while (GetMessage(&msg, NULL, 0, 0) != FALSE)
     {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        /* Check for ENTER key presses */
+        if (msg.message == WM_KEYDOWN && msg.wParam == VK_RETURN)
+        {
+            /*
+             * The user pressed the ENTER key. Retrieve the handle to the
+             * child window that has the keyboard focus, and send it a
+             * WM_COMMAND message.
+             */
+            hWndFocus = GetFocus();
+            if (hWndFocus)
+            {
+                SendMessage(hWndMain, WM_COMMAND,
+                            (WPARAM)GetDlgCtrlID(hWndFocus), (LPARAM)hWndFocus);
+            }
+        }
+        /* Allow using keyboard navigation */
+        else if (!IsDialogMessage(hWndMain, &msg))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
 
     /* Cleanup */
     FreeResources();
 
+    /* Close the mutex handle and quit */
+    CloseHandle(hMutex);
     return msg.wParam;
 }
 
@@ -602,15 +653,53 @@ _tWinMain(HINSTANCE hInst,
 INT_PTR CALLBACK
 ButtonSubclassWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    static WPARAM wParamOld = 0;
+    static LPARAM lParamOld = 0;
+
     LONG i;
 
     if (uMsg == WM_MOUSEMOVE)
     {
-        i = GetWindowLongPtr(hWnd, GWL_ID);
+        /* Ignore mouse-move messages on the same point */
+        if ((wParam == wParamOld) && (lParam == lParamOld))
+            return 0;
+
+        /* Retrieve the topic index of this button */
+        i = GetWindowLongPtr(hWnd, GWLP_ID) - TOPIC_BTN_ID_BASE;
+
+        /*
+         * Change the focus to this button if the current topic index differs
+         * (we will receive WM_SETFOCUS afterwards).
+         */
+        if (nTopic != i)
+            SetFocus(hWnd);
+
+        wParamOld = wParam;
+        lParamOld = lParam;
+    }
+    else if (uMsg == WM_SETFOCUS)
+    {
+        /* Retrieve the topic index of this button */
+        i = GetWindowLongPtr(hWnd, GWLP_ID) - TOPIC_BTN_ID_BASE;
+
+        /* Change the current topic index and repaint the description panel */
         if (nTopic != i)
         {
             nTopic = i;
-            SetFocus(hWnd);
+            InvalidateRect(hWndMain, &rcRightPanel, TRUE);
+        }
+    }
+    else if (uMsg == WM_KILLFOCUS)
+    {
+        /*
+         * We lost focus, either because the user changed button focus,
+         * or because the main window to which we belong went inactivated.
+         * If we are in the latter case, we ignore the focus change.
+         * If we are in the former case, we reset to the default topic.
+         */
+        if (GetParent(hWnd) == GetForegroundWindow())
+        {
+            nTopic = -1;
             InvalidateRect(hWndMain, &rcRightPanel, TRUE);
         }
     }
@@ -663,13 +752,6 @@ RunAction(INT nTopic)
 }
 
 
-static VOID
-SubclassButton(HWND hWnd)
-{
-    fnOldBtn = (WNDPROC)SetWindowLongPtr(hWnd, GWL_WNDPROC, (DWORD_PTR)ButtonSubclassWndProc);
-}
-
-
 static DWORD
 GetButtonHeight(HDC hDC,
                 HFONT hFont,
@@ -706,8 +788,7 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
     UNREFERENCED_PARAMETER(lParam);
 
     hbrLightBlue = CreateSolidBrush(LIGHT_BLUE);
-    hbrDarkBlue = CreateSolidBrush(DARK_BLUE);
-    hbrRightPanel = CreateSolidBrush(RGB(255, 255, 255));
+    hbrDarkBlue  = CreateSolidBrush(DARK_BLUE);
 
     /* Topic title font */
     hFontTopicTitle = CreateFont(-18, 0, 0, 0, FW_NORMAL,
@@ -717,7 +798,7 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
                                  CLIP_DEFAULT_PRECIS,
                                  DEFAULT_QUALITY,
                                  FF_DONTCARE,
-                                 TEXT("Arial"));
+                                 TEXT("Tahoma"));
 
     /* Topic description font */
     hFontTopicDescription = CreateFont(-11, 0, 0, 0, FW_THIN,
@@ -727,7 +808,7 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
                                        CLIP_DEFAULT_PRECIS,
                                        DEFAULT_QUALITY,
                                        FF_DONTCARE,
-                                       TEXT("Arial"));
+                                       TEXT("Tahoma"));
 
     /* Topic button font */
     hFontTopicButton = CreateFont(-11, 0, 0, 0, FW_BOLD,
@@ -737,10 +818,10 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
                                   CLIP_DEFAULT_PRECIS,
                                   DEFAULT_QUALITY,
                                   FF_DONTCARE,
-                                  TEXT("Arial"));
+                                  TEXT("Tahoma"));
 
     /* Load title bitmap */
-    if (hTitleBitmap != NULL)
+    if (hTitleBitmap)
         hTitleBitmap = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TITLEBITMAP));
 
     /* Load topic bitmaps */
@@ -756,7 +837,7 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
     hdcMem = CreateCompatibleDC(ScreenDC);
     ReleaseDC(hWnd, ScreenDC);
 
-    /* Load and create buttons */
+    /* Load and create the menu buttons */
     dwTop = rcLeftPanel.top;
     for (i = 0; i < dwNumberTopics; i++)
     {
@@ -775,13 +856,12 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
                                                   rcLeftPanel.right - rcLeftPanel.left,
                                                   dwHeight,
                                                   hWnd,
-                                                  (HMENU)IntToPtr(i),
+                                                  (HMENU)IntToPtr(TOPIC_BTN_ID_BASE + i), // Similar to SetWindowLongPtr(GWLP_ID)
                                                   hInstance,
                                                   NULL);
-            hWndDefaultTopic = pTopics[i]->hWndButton;
             nDefaultTopic = i;
-            SubclassButton(pTopics[i]->hWndButton);
             SendMessage(pTopics[i]->hWndButton, WM_SETFONT, (WPARAM)hFontTopicButton, MAKELPARAM(TRUE, 0));
+            fnOldBtn = (WNDPROC)SetWindowLongPtr(pTopics[i]->hWndButton, GWLP_WNDPROC, (DWORD_PTR)ButtonSubclassWndProc);
         }
         else
         {
@@ -791,34 +871,7 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
         dwTop += dwHeight;
     }
 
-    /* Create "Exit" button */
-    if (bDisplayExitBtn)
-    {
-        nLength = LoadString(hInstance, IDS_CLOSETEXT, szText, ARRAYSIZE(szText));
-        if (nLength > 0)
-        {
-            hWndCloseButton = CreateWindow(TEXT("BUTTON"),
-                                           szText,
-                                           WS_VISIBLE | WS_CHILD | BS_FLAT,
-                                           rcRightPanel.right - 10 - 57,
-                                           rcRightPanel.bottom - 10 - 21,
-                                           57,
-                                           21,
-                                           hWnd,
-                                           (HMENU)IDC_CLOSEBUTTON,
-                                           hInstance,
-                                           NULL);
-            hWndDefaultTopic = NULL;
-            nDefaultTopic = -1;
-            SendMessage(hWndCloseButton, WM_SETFONT, (WPARAM)hFontTopicButton, MAKELPARAM(TRUE, 0));
-        }
-        else
-        {
-            hWndCloseButton = NULL;
-        }
-    }
-
-    /* Create checkbox */
+    /* Create the checkbox */
     if (bDisplayCheckBox)
     {
         nLength = LoadString(hInstance, IDS_CHECKTEXT, szText, ARRAYSIZE(szText));
@@ -835,7 +888,7 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
             hWndCheckButton = CreateWindow(TEXT("BUTTON"),
                                            szText,
-                                           WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX /**/| BS_FLAT/**/,
+                                           WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX | BS_MULTILINE /**/| BS_FLAT/**/,
                                            rcLeftPanel.left + 8,
                                            rcLeftPanel.bottom - 8 - 13,
                                            rcLeftPanel.right - rcLeftPanel.left - 16,
@@ -853,6 +906,32 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
         }
     }
 
+    /* Create the "Exit" button */
+    if (bDisplayExitBtn)
+    {
+        nLength = LoadString(hInstance, IDS_CLOSETEXT, szText, ARRAYSIZE(szText));
+        if (nLength > 0)
+        {
+            hWndCloseButton = CreateWindow(TEXT("BUTTON"),
+                                           szText,
+                                           WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | BS_FLAT,
+                                           rcRightPanel.right - 10 - 57,
+                                           rcRightPanel.bottom - 10 - 21,
+                                           57,
+                                           21,
+                                           hWnd,
+                                           (HMENU)IDC_CLOSEBUTTON,
+                                           hInstance,
+                                           NULL);
+            nDefaultTopic = -1;
+            SendMessage(hWndCloseButton, WM_SETFONT, (WPARAM)hFontTopicButton, MAKELPARAM(TRUE, 0));
+        }
+        else
+        {
+            hWndCloseButton = NULL;
+        }
+    }
+
     return 0;
 }
 
@@ -866,9 +945,9 @@ OnCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
     {
         DestroyWindow(hWnd);
     }
-    else if ((LOWORD(wParam) < dwNumberTopics))
+    else if ((LOWORD(wParam) - TOPIC_BTN_ID_BASE < dwNumberTopics))
     {
-        if (RunAction(LOWORD(wParam)) == FALSE)
+        if (RunAction(LOWORD(wParam) - TOPIC_BTN_ID_BASE) == FALSE)
             DestroyWindow(hWnd); // Corresponds to a <exit> action.
     }
 
@@ -900,7 +979,6 @@ PaintBanner(HDC hdc, LPRECT rcPanel)
            rcPanel->right - rcPanel->left,
            3,
            PATCOPY);
-
     SelectObject(hdc, hOldBrush);
 }
 
@@ -939,7 +1017,7 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
     SelectObject(hdc, hOldBrush);
 
     /* Right panel */
-    hOldBrush = (HBRUSH)SelectObject(hdc, WHITE_BRUSH);
+    hOldBrush = (HBRUSH)SelectObject(hdc, GetStockObject(WHITE_BRUSH));
     PatBlt(hdc,
            rcRightPanel.left,
            rcRightPanel.top,
@@ -957,7 +1035,7 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
     DeleteObject(hPen);
 
     /* Draw topic bitmap */
-    if ((nTopic == -1) && (hDefaultTopicBitmap != NULL))
+    if ((nTopic == -1) && (hDefaultTopicBitmap))
     {
         GetObject(hDefaultTopicBitmap, sizeof(BITMAP), &bmpInfo);
         hOldBitmap = (HBITMAP)SelectObject(hdcMem, hDefaultTopicBitmap);
@@ -971,7 +1049,7 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
                0,
                SRCCOPY);
     }
-    else if ((nTopic != -1) && (pTopics[nTopic]->hBitmap != NULL))
+    else if ((nTopic != -1) && (pTopics[nTopic]->hBitmap))
     {
         GetObject(pTopics[nTopic]->hBitmap, sizeof(BITMAP), &bmpInfo);
         hOldBitmap = (HBITMAP)SelectObject(hdcMem, pTopics[nTopic]->hBitmap);
@@ -1032,7 +1110,7 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
     rcDescription.bottom = rcRightPanel.bottom - 20;
 
     SelectObject(hdc, hFontTopicDescription);
-    SetTextColor(hdc, RGB(0, 0, 0));
+    SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
     DrawText(hdc, lpDesc, -1, &rcDescription, DT_TOP | DT_WORDBREAK);
 
     SetBkMode(hdc, OPAQUE);
@@ -1059,60 +1137,88 @@ OnDrawItem(HWND hWnd, WPARAM wParam, LPARAM lParam)
     UNREFERENCED_PARAMETER(hWnd);
     UNREFERENCED_PARAMETER(wParam);
 
+#if 0
+    /* Neither the checkbox button nor the close button implement owner-drawing */
+    if (lpDis->hwndItem == hWndCheckButton)
+        return 0;
     if (lpDis->hwndItem == hWndCloseButton)
     {
         DrawFrameControl(lpDis->hDC,
                          &lpDis->rcItem,
                          DFC_BUTTON,
                          DFCS_BUTTONPUSH | DFCS_FLAT);
+        return TRUE;
     }
+#endif
+
+    if (lpDis->CtlID == (ULONG)(TOPIC_BTN_ID_BASE + nTopic))
+        hOldBrush = (HBRUSH)SelectObject(lpDis->hDC, GetStockObject(WHITE_BRUSH));
     else
-    {
-        if (lpDis->CtlID == (ULONG)nTopic)
-            hOldBrush = (HBRUSH)SelectObject(lpDis->hDC, hbrRightPanel);
-        else
-            hOldBrush = (HBRUSH)SelectObject(lpDis->hDC, hbrLightBlue);
+        hOldBrush = (HBRUSH)SelectObject(lpDis->hDC, hbrLightBlue);
 
-        PatBlt(lpDis->hDC,
-               lpDis->rcItem.left,
-               lpDis->rcItem.top,
-               lpDis->rcItem.right,
-               lpDis->rcItem.bottom,
-               PATCOPY);
-        SelectObject(lpDis->hDC, hOldBrush);
+    PatBlt(lpDis->hDC,
+           lpDis->rcItem.left,
+           lpDis->rcItem.top,
+           lpDis->rcItem.right,
+           lpDis->rcItem.bottom,
+           PATCOPY);
+    SelectObject(lpDis->hDC, hOldBrush);
 
-        hPen = CreatePen(PS_SOLID, 0, DARK_BLUE);
-        hOldPen = (HPEN)SelectObject(lpDis->hDC, hPen);
-        MoveToEx(lpDis->hDC, lpDis->rcItem.left, lpDis->rcItem.bottom - 1, NULL);
-        LineTo(lpDis->hDC, lpDis->rcItem.right, lpDis->rcItem.bottom - 1);
-        SelectObject(lpDis->hDC, hOldPen);
-        DeleteObject(hPen);
+    hPen = CreatePen(PS_SOLID, 0, DARK_BLUE);
+    hOldPen = (HPEN)SelectObject(lpDis->hDC, hPen);
+    MoveToEx(lpDis->hDC, lpDis->rcItem.left, lpDis->rcItem.bottom - 1, NULL);
+    LineTo(lpDis->hDC, lpDis->rcItem.right, lpDis->rcItem.bottom - 1);
+    SelectObject(lpDis->hDC, hOldPen);
+    DeleteObject(hPen);
 
-        InflateRect(&lpDis->rcItem, -10, -4);
-        OffsetRect(&lpDis->rcItem, 0, 1);
-        GetWindowText(lpDis->hwndItem, szText, ARRAYSIZE(szText));
-        SetTextColor(lpDis->hDC, RGB(0, 0, 0));
-        iBkMode = SetBkMode(lpDis->hDC, TRANSPARENT);
-        DrawText(lpDis->hDC, szText, -1, &lpDis->rcItem, DT_TOP | DT_LEFT | DT_WORDBREAK);
-        SetBkMode(lpDis->hDC, iBkMode);
-    }
+    InflateRect(&lpDis->rcItem, -10, -4);
+    OffsetRect(&lpDis->rcItem, 0, 1);
+    GetWindowText(lpDis->hwndItem, szText, ARRAYSIZE(szText));
+    SetTextColor(lpDis->hDC, GetSysColor(COLOR_WINDOWTEXT));
+    iBkMode = SetBkMode(lpDis->hDC, TRANSPARENT);
+    DrawText(lpDis->hDC, szText, -1, &lpDis->rcItem, DT_TOP | DT_LEFT | DT_WORDBREAK);
+    SetBkMode(lpDis->hDC, iBkMode);
 
-    return 0;
+    return TRUE;
 }
 
 
 static LRESULT
 OnMouseMove(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-    UNREFERENCED_PARAMETER(wParam);
-    UNREFERENCED_PARAMETER(lParam);
+    static WPARAM wParamOld = 0;
+    static LPARAM lParamOld = 0;
 
+    /* Ignore mouse-move messages on the same point */
+    if ((wParam == wParamOld) && (lParam == lParamOld))
+        return 0;
+
+    /*
+     * If the user moves the mouse over the main window, outside of the
+     * topic buttons, reset the current topic to the default one and
+     * change the focus to some other default button (to keep keyboard
+     * navigation possible).
+     */
     if (nTopic != -1)
     {
+        INT nOldTopic = nTopic;
         nTopic = -1;
-        SetFocus(hWnd);
+        /* Also repaint the buttons, otherwise nothing repaints... */
+        InvalidateRect(pTopics[nOldTopic]->hWndButton, NULL, TRUE);
+
+        /* Set the focus to some other default button */
+        if (hWndCheckButton)
+            SetFocus(hWndCheckButton);
+        else if (hWndCloseButton)
+            SetFocus(hWndCloseButton);
+        // SetFocus(hWnd);
+
+        /* Repaint the description panel */
         InvalidateRect(hWndMain, &rcRightPanel, TRUE);
     }
+
+    wParamOld = wParam;
+    lParamOld = lParam;
 
     return 0;
 }
@@ -1125,7 +1231,7 @@ OnCtlColorStatic(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
     if ((HWND)lParam == hWndCheckButton)
     {
-        SetBkColor((HDC)wParam, LIGHT_BLUE);
+        SetBkMode((HDC)wParam, TRANSPARENT);
         return (LRESULT)hbrLightBlue;
     }
 
@@ -1137,11 +1243,24 @@ static LRESULT
 OnActivate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(hWnd);
-    UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(lParam);
 
-    nTopic = -1;
-    InvalidateRect(hWndMain, &rcRightPanel, TRUE);
+    if (wParam != WA_INACTIVE)
+    {
+        /*
+         * The main window is re-activated, set the focus back to
+         * either the current topic or a default button.
+         */
+        if (nTopic != -1)
+            SetFocus(pTopics[nTopic]->hWndButton);
+        else if (hWndCheckButton)
+            SetFocus(hWndCheckButton);
+        else if (hWndCloseButton)
+            SetFocus(hWndCloseButton);
+
+        // InvalidateRect(hWndMain, &rcRightPanel, TRUE);
+    }
+
     return 0;
 }
 
@@ -1157,14 +1276,14 @@ OnDestroy(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
     for (i = 0; i < dwNumberTopics; i++)
     {
-        if (pTopics[i]->hWndButton != NULL)
+        if (pTopics[i]->hWndButton)
             DestroyWindow(pTopics[i]->hWndButton);
     }
 
-    if (hWndCloseButton != NULL)
+    if (hWndCloseButton)
         DestroyWindow(hWndCloseButton);
 
-    if (hWndCheckButton != NULL)
+    if (hWndCheckButton)
         DestroyWindow(hWndCheckButton);
 
     DeleteDC(hdcMem);
@@ -1174,7 +1293,7 @@ OnDestroy(HWND hWnd, WPARAM wParam, LPARAM lParam)
     DeleteObject(hTitleBitmap);
     for (i = 0; i < dwNumberTopics; i++)
     {
-        if (pTopics[i]->hBitmap != NULL)
+        if (pTopics[i]->hBitmap)
             DeleteObject(pTopics[i]->hBitmap);
     }
 
@@ -1182,12 +1301,11 @@ OnDestroy(HWND hWnd, WPARAM wParam, LPARAM lParam)
     DeleteObject(hFontTopicDescription);
     DeleteObject(hFontTopicButton);
 
-    if (hFontCheckButton != NULL)
+    if (hFontCheckButton)
         DeleteObject(hFontCheckButton);
 
     DeleteObject(hbrLightBlue);
     DeleteObject(hbrDarkBlue);
-    DeleteObject(hbrRightPanel);
 
     return 0;
 }

@@ -11,16 +11,16 @@ BEGIN
     IDS_DEFAULTTOPICTITLE "ReactOS"
     IDS_DEFAULTTOPICDESC "Selamat datang ke ReactOS Operating System.\n\nKlik tajuk di sebelah kiri."
 
-    IDS_CHECKTEXT "Show this dialog again"
-    IDS_CLOSETEXT "Exit"
+    IDS_CHECKTEXT "&Show this dialog again"
+    IDS_CLOSETEXT "&Keluar"
 END
 
 /* Topic buttons */
 STRINGTABLE
 BEGIN
-    IDS_TOPICBUTTON0 "Pasang ReactOS"
-    IDS_TOPICBUTTON1 "Layari CD ini"
-    IDS_TOPICBUTTON2 "Keluar"
+    IDS_TOPICBUTTON0 "&Pasang ReactOS"
+    IDS_TOPICBUTTON1 "&Layari CD ini"
+    IDS_TOPICBUTTON2 "&Keluar"
 END
 
 /* Topic titles */
