@@ -373,7 +373,7 @@ InternalSetResidentAttributeLength(PNTFS_ATTR_CONTEXT AttrContext,
     // Ensure NextAttributeOffset is aligned to an 8-byte boundary
     if (NextAttributeOffset % 8 != 0)
     {
-        USHORT Padding = 8 - (NextAttributeOffset % 8);
+        USHORT Padding = ATTR_RECORD_ALIGNMENT - (NextAttributeOffset % ATTR_RECORD_ALIGNMENT);
         NextAttributeOffset += Padding;
         AttrContext->Record.Length += Padding;
         Destination->Length += Padding;
@@ -731,7 +731,7 @@ SetResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
                 // update the end of the file record
                 // calculate position of end markers (1 byte for empty data run)
                 EndAttributeOffset = AttrOffset + AttrContext->Record.NonResident.MappingPairsOffset + 1;
-                EndAttributeOffset = ALIGN_UP_BY(EndAttributeOffset, 8);
+                EndAttributeOffset = ALIGN_UP_BY(EndAttributeOffset, ATTR_RECORD_ALIGNMENT);
 
                 // Update the length
                 Destination->Length = EndAttributeOffset - AttrOffset;

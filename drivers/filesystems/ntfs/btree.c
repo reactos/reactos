@@ -271,7 +271,7 @@ CreateIndexRootFromBTree(PDEVICE_EXTENSION DeviceExt,
                          PINDEX_ROOT_ATTRIBUTE *IndexRoot,
                          ULONG *Length)
 {
-    int i;
+    ULONG i;
     PB_TREE_KEY CurrentKey;
     PINDEX_ENTRY_ATTRIBUTE CurrentNodeEntry;
     PINDEX_ROOT_ATTRIBUTE NewIndexRoot = ExAllocatePoolWithTag(NonPagedPool,
@@ -366,7 +366,7 @@ DestroyBTreeNode(PB_TREE_FILENAME_NODE Node)
 {
     PB_TREE_KEY NextKey;
     PB_TREE_KEY CurrentKey = Node->FirstKey;
-    int i;
+    ULONG i;
     for (i = 0; i < Node->KeyCount; i++)
     {
         NT_ASSERT(CurrentKey);
@@ -400,9 +400,9 @@ DestroyBTree(PB_TREE Tree)
 }
 
 VOID
-DumpBTreeKey(PB_TREE_KEY Key, int Number, int Depth)
+DumpBTreeKey(PB_TREE_KEY Key, ULONG Number, ULONG Depth)
 {
-    int i;
+    ULONG i;
     for (i = 0; i < Depth; i++)
         DbgPrint(" ");
     DbgPrint(" Key #%d", Number);
@@ -420,10 +420,10 @@ DumpBTreeKey(PB_TREE_KEY Key, int Number, int Depth)
 }
 
 VOID
-DumpBTreeNode(PB_TREE_FILENAME_NODE Node, int Number, int Depth)
+DumpBTreeNode(PB_TREE_FILENAME_NODE Node, ULONG Number, ULONG Depth)
 {
     PB_TREE_KEY CurrentKey;
-    int i;
+    ULONG i;
     for (i = 0; i < Depth; i++)
         DbgPrint(" ");
     DbgPrint("Node #%d, Depth %d\n", Number, Depth);
@@ -488,7 +488,7 @@ NtfsInsertKey(ULONGLONG FileReference,
     ULONG EntrySize = ALIGN_UP_BY(AttributeSize + FIELD_OFFSET(INDEX_ENTRY_ATTRIBUTE, FileName), 8);
     PINDEX_ENTRY_ATTRIBUTE NewEntry;
     PB_TREE_KEY NewKey, CurrentKey, PreviousKey;
-    int i;
+    ULONG i;
 
     DPRINT1("NtfsInsertKey(0x%02I64, %p, %p, %s)\n",
             FileReference,
