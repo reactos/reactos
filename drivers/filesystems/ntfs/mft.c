@@ -133,7 +133,7 @@ FindAttribute(PDEVICE_EXTENSION Vcb,
 
                 AttrName = (PWCHAR)((PCHAR)Attribute + Attribute->NameOffset);
                 DPRINT("%.*S, %.*S\n", Attribute->NameLength, AttrName, NameLength, Name);
-                if (RtlCompareMemory(AttrName, Name, NameLength << 1) == (NameLength << 1))
+                if (RtlCompareMemory(AttrName, Name, NameLength * sizeof(WCHAR)) == (NameLength  * sizeof(WCHAR)))
                 {
                     Found = TRUE;
                 }
@@ -268,7 +268,7 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
     }
 
     // Zero the bytes we'll be adding
-    RtlZeroMemory((PUCHAR)((ULONG_PTR)BitmapBuffer), NewBitmapSize);
+    RtlZeroMemory(BitmapBuffer, NewBitmapSize);
 
     // Read the bitmap attribute
     BytesRead = ReadAttribute(Vcb,
@@ -337,6 +337,7 @@ IncreaseMftSize(PDEVICE_EXTENSION Vcb, BOOLEAN CanWait)
         ExFreePoolWithTag(BitmapBuffer, TAG_NTFS);
         ReleaseAttributeContext(BitmapContext);
         DPRINT1("ERROR: Couldn't write to bitmap attribute of $MFT!\n");
+        return Status;
     }
 
     // Cleanup
@@ -357,6 +358,8 @@ InternalSetResidentAttributeLength(PNTFS_ATTR_CONTEXT AttrContext,
     ULONG NextAttributeOffset;
 
     DPRINT("InternalSetResidentAttributeLength( %p, %p, %lu, %lu )\n", AttrContext, FileRecord, AttrOffset, DataSize);
+
+    ASSERT(!AttrContext->Record.IsNonResident);
 
     // update ValueLength Field
     AttrContext->Record.Resident.ValueLength =
@@ -537,11 +540,7 @@ SetNonResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
     PNTFS_ATTR_RECORD DestinationAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + AttrOffset);
     ULONG ExistingClusters = AttrContext->Record.NonResident.AllocatedSize / BytesPerCluster;
 
-    if (!AttrContext->Record.IsNonResident)
-    {
-        DPRINT1("ERROR: SetNonResidentAttributeDataLength() called for resident attribute!\n");
-        return STATUS_INVALID_PARAMETER;
-    }
+    ASSERT(AttrContext->Record.IsNonResident);
 
     // do we need to increase the allocation size?
     if (AttrContext->Record.NonResident.AllocatedSize < AllocationSize)
@@ -671,11 +670,7 @@ SetResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
     ULONG NextAttributeOffset = AttrOffset + AttrContext->Record.Length;
     PNTFS_ATTR_RECORD NextAttribute = (PNTFS_ATTR_RECORD)((PCHAR)FileRecord + NextAttributeOffset);
 
-    if (AttrContext->Record.IsNonResident)
-    {
-        DPRINT1("ERROR: SetResidentAttributeDataLength() called for non-resident attribute!\n");
-        return STATUS_INVALID_PARAMETER;
-    }
+    ASSERT(!AttrContext->Record.IsNonResident);
 
     //NtfsDumpFileAttributes(Vcb, FileRecord);
 
@@ -733,9 +728,6 @@ SetResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
                 // update the mapping pairs offset, which will be 0x40 + length in bytes of the name
                 AttrContext->Record.NonResident.MappingPairsOffset = Destination->NonResident.MappingPairsOffset = 0x40 + (Destination->NameLength * 2);
 
-                // mark the attribute as non-resident
-                AttrContext->Record.IsNonResident = Destination->IsNonResident = 1;
-
                 // update the end of the file record
                 // calculate position of end markers (1 byte for empty data run)
                 EndAttributeOffset = AttrOffset + AttrContext->Record.NonResident.MappingPairsOffset + 1;
@@ -750,7 +742,22 @@ SetResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
                                  (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + EndAttributeOffset),
                                  FILE_RECORD_END);
 
-                // update file record on disk
+                // Initialize the MCB, potentially catch an exception
+                _SEH2_TRY
+                {
+                    FsRtlInitializeLargeMcb(&AttrContext->DataRunsMCB, NonPagedPool);
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) 
+                {
+                    DPRINT1("Unable to create LargeMcb!\n");
+                    ExFreePoolWithTag(AttribData, TAG_NTFS);
+                    _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                } _SEH2_END;
+
+                // Mark the attribute as non-resident (we wait until after we know the LargeMcb was initialized)
+                AttrContext->Record.IsNonResident = Destination->IsNonResident = 1;
+
+                // Update file record on disk
                 Status = UpdateFileRecord(Vcb, AttrContext->FileMFTIndex, FileRecord);
                 if (!NT_SUCCESS(Status))
                 {
@@ -759,13 +766,6 @@ SetResidentAttributeDataLength(PDEVICE_EXTENSION Vcb,
                         ExFreePoolWithTag(AttribData, TAG_NTFS);
                     return Status;
                 }
-
-                // Initialize the MCB, potentially catch an exception
-                _SEH2_TRY{
-                    FsRtlInitializeLargeMcb(&AttrContext->DataRunsMCB, NonPagedPool);
-                } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-                    _SEH2_YIELD(return _SEH2_GetExceptionCode());
-                } _SEH2_END;
 
                 // Now we can treat the attribute as non-resident and enlarge it normally
                 Status = SetNonResidentAttributeDataLength(Vcb, AttrContext, AttrOffset, FileRecord, DataSize);
@@ -1729,7 +1729,7 @@ AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
     RTL_BITMAP Bitmap;
     ULONGLONG BitmapDataSize;
     ULONGLONG AttrBytesRead;
-    PVOID BitmapData;
+    PUCHAR BitmapData;
     ULONG LengthWritten;
     PNTFS_ATTR_CONTEXT BitmapContext;
     LARGE_INTEGER BitmapBits;
@@ -1765,17 +1765,20 @@ AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
         return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
-    // we need to backup the bits for records 0x10 - 0x17 and leave them unassigned if they aren't assigned
-    RtlCopyMemory(&SystemReservedBits, (PVOID)((ULONG_PTR)BitmapData + 2), 1);
-    RtlFillMemory((PVOID)((ULONG_PTR)BitmapData + 2), 1, (UCHAR)0xFF);
+    // We need to backup the bits for records 0x10 - 0x17 (3rd byte of bitmap) and mark these records
+    // as in-use so we don't assign files to those indices. They're reserved for the system (e.g. ChkDsk).
+    SystemReservedBits = BitmapData[2];
+    BitmapData[2] = 0xff;
 
     // Calculate bit count
     BitmapBits.QuadPart = AttributeDataLength(&(DeviceExt->MFTContext->Record)) /
                           DeviceExt->NtfsInfo.BytesPerFileRecord;
     if (BitmapBits.HighPart != 0)
     {
-        DPRINT1("\tFIXME: bitmap sizes beyond 32bits are not yet supported!\n");
-        BitmapBits.LowPart = 0xFFFFFFFF;
+        DPRINT1("\tFIXME: bitmap sizes beyond 32bits are not yet supported! (Your NTFS volume is too large)\n");
+        ExFreePoolWithTag(BitmapData, TAG_NTFS);
+        ReleaseAttributeContext(BitmapContext);
+        return STATUS_NOT_IMPLEMENTED;
     }
 
     // convert buffer into bitmap
@@ -1809,7 +1812,7 @@ AddNewMftEntry(PFILE_RECORD_HEADER FileRecord,
     // [BitmapData should have been updated via RtlFindClearBitsAndSet()]
 
     // Restore the system reserved bits
-    RtlCopyMemory((PVOID)((ULONG_PTR)BitmapData + 2), &SystemReservedBits, 1);
+    BitmapData[2] = SystemReservedBits;
 
     // write the bitmap back to the MFT's $Bitmap attribute
     Status = WriteAttribute(DeviceExt, BitmapContext, 0, BitmapData, BitmapDataSize, &LengthWritten);
@@ -1845,9 +1848,9 @@ AddFixupArray(PDEVICE_EXTENSION Vcb,
               PNTFS_RECORD_HEADER Record)
 {
     USHORT *pShortToFixUp;
-    unsigned int ArrayEntryCount = Record->UsaCount - 1;
-    unsigned int Offset = Vcb->NtfsInfo.BytesPerSector - 2;
-    int i;
+    ULONG ArrayEntryCount = Record->UsaCount - 1;
+    ULONG Offset = Vcb->NtfsInfo.BytesPerSector - 2;
+    ULONG i;
 
     PFIXUP_ARRAY fixupArray = (PFIXUP_ARRAY)((UCHAR*)Record + Record->UsaOffset);
 
