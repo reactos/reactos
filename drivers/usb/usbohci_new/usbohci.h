@@ -244,4 +244,9 @@ NTAPI
 OHCI_RH_EnableIrq(
   IN PVOID ohciExtension);
 
+OHCI_REG_RH_DESCRIPTORA
+NTAPI 
+OHCI_ReadRhDescriptorA(
+  IN POHCI_EXTENSION OhciExtension);
+
 #endif /* USBOHCI_H__ */

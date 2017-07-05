@@ -615,7 +615,7 @@ OHCI_StartController(IN PVOID ohciExtension,
     ULONG_PTR IntEdPA;
     POHCI_HCCA OhciHCCA;
     LARGE_INTEGER SystemTime;
-    LARGE_INTEGER CurrentTime;
+    LARGE_INTEGER EndTime;
     ULONG ix;
     ULONG jx;
     MPSTATUS MPStatus = MP_STATUS_SUCCESS;
@@ -635,7 +635,8 @@ OHCI_StartController(IN PVOID ohciExtension,
     RhStatusReg = (PULONG)&OperationalRegs->HcRhStatus;
 
     /* 5.1.1 Initialization */
-    MPStatus = OHCI_TakeControlHC(OhciExtension);
+
+    MPStatus = OHCI_TakeControlHC(OhciExtension, Resources);
 
     if (MPStatus != MP_STATUS_SUCCESS)
     {
@@ -652,7 +653,7 @@ OHCI_StartController(IN PVOID ohciExtension,
                 OhciExtension->HcResourcesVA,
                 OhciExtension->HcResourcesPA);
 
-    /* 5.2.7.2  Interrupt */
+    /* 5.2.7.2 Interrupt */
 
     /* Build structure of interrupt static EDs */
     for (ix = 0; ix < INTERRUPT_ENDPOINTs; ix++) 
@@ -725,7 +726,7 @@ OHCI_StartController(IN PVOID ohciExtension,
     OhciExtension->BulkStaticED.Type = OHCI_STATIC_ED_TYPE_BULK;
     OhciExtension->BulkStaticED.pNextED = &OperationalRegs->HcBulkHeadED;
 
-    /* 6.3.1  Frame Timing */
+    /* 6.3.1 Frame Timing */
     FrameInterval.AsULONG = READ_REGISTER_ULONG(FmIntervalReg);
 
     MaxFrameIntervalAdjusting = OHCI_DEFAULT_FRAME_INTERVAL / 10; // 10%
@@ -748,7 +749,7 @@ OHCI_StartController(IN PVOID ohciExtension,
     DPRINT_OHCI("OHCI_StartController: FrameInterval - %lX\n",
                 FrameInterval.AsULONG);
 
-    /* Reset */
+    /* Reset HostController */
     CommandStatus.AsULONG = 0;
     CommandStatus.HostControllerReset = 1;
 
@@ -761,8 +762,8 @@ OHCI_StartController(IN PVOID ohciExtension,
 
     WRITE_REGISTER_ULONG(ControlReg, Control.AsULONG);
 
-    KeQuerySystemTime(&CurrentTime);
-    CurrentTime.QuadPart += 500 * 10000; // 0.5 sec
+    KeQuerySystemTime(&EndTime);
+    EndTime.QuadPart += 500 * 10000; // 0.5 sec
 
     while (TRUE)
     {
@@ -771,7 +772,7 @@ OHCI_StartController(IN PVOID ohciExtension,
 
         KeQuerySystemTime(&SystemTime);
 
-        if (SystemTime.QuadPart >= CurrentTime.QuadPart)
+        if (SystemTime.QuadPart >= EndTime.QuadPart)
         {
             MPStatus = MP_STATUS_HW_ERROR;
             break;
@@ -898,12 +899,14 @@ OHCI_SuspendController(IN PVOID ohciExtension)
     WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptStatus.AsULONG,
                          0xFFFFFFFF);
 
+    /* Setup HcControl register */
     Control.AsULONG = READ_REGISTER_ULONG(ControlReg);
     Control.HostControllerFunctionalState = OHCI_HC_STATE_SUSPEND;
     Control.RemoteWakeupEnable =  1;
 
     WRITE_REGISTER_ULONG(ControlReg, Control.AsULONG);
 
+    /* Setup HcInterruptEnable register */
     InterruptReg.AsULONG = 0;
     InterruptReg.ResumeDetected = 1;
     InterruptReg.UnrecoverableError = 1;
@@ -941,9 +944,11 @@ OHCI_ResumeController(IN PVOID ohciExtension)
     HcHCCA = &OhciExtension->HcResourcesVA->HcHCCA;
     HcHCCA->Pad1 = 0;
 
+    /* Setup HcControl register */
     control.HostControllerFunctionalState = OHCI_HC_STATE_OPERATIONAL;
     WRITE_REGISTER_ULONG(ControlReg, control.AsULONG);
 
+    /* Setup HcInterruptEnable register */
     InterruptReg.AsULONG = 0;
     InterruptReg.SchedulingOverrun = 1;
     InterruptReg.WritebackDoneHead = 1;
@@ -1034,13 +1039,19 @@ OHCI_InterruptService(IN PVOID ohciExtension)
 
     if (IntStatus.FrameNumberOverflow)
     {
+        ULONG fm;
+        ULONG hp;
+
         HcHCCA = &OhciExtension->HcResourcesVA->HcHCCA;
 
         DPRINT("OHCI_InterruptService: FrameNumberOverflow. HcHCCA->FrameNumber - %lX\n",
                     HcHCCA->FrameNumber);
 
-        OhciExtension->FrameHighPart += 0x10000 -
-            ((HcHCCA->FrameNumber ^ OhciExtension->FrameHighPart) & 0x8000);
+        hp = OhciExtension->FrameHighPart;
+        fm = HcHCCA->FrameNumber;
+
+        /* Increment value of FrameHighPart */
+        OhciExtension->FrameHighPart += 1 * (1 << 16) - ((hp ^ fm) & 0x8000);
     }
 
     /* Disable interrupt generation */
@@ -1645,7 +1656,7 @@ OHCI_ProcessDoneTD(IN POHCI_EXTENSION OhciExtension,
 
     if (TD->Flags & OHCI_HCD_TD_FLAG_NOT_ACCESSED)
     {
-        TD->HwTD.gTD.Control.ConditionCode = 0;
+        TD->HwTD.gTD.Control.ConditionCode = OHCI_TD_CONDITION_NO_ERROR;
     }
     else
     {
@@ -1721,7 +1732,7 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
     POHCI_HCD_TD TD;
     POHCI_HCD_TD PrevTD;
     POHCI_HCD_TD LastTD;
-    POHCI_HCD_TD td = 0;
+    POHCI_HCD_TD td = NULL;
     ULONG ix;
     BOOLEAN IsIsoEndpoint = FALSE;
     BOOLEAN IsProcessed = FALSE;
@@ -2062,7 +2073,7 @@ OHCI_PollAsyncEndpoint(IN POHCI_EXTENSION OhciExtension,
                     if (OhciTransfer->Flags & OHCI_TRANSFER_FLAGS_SHORT_TRANSFER_OK)
                     {
                         IsResetOnHalt = 1;
-                        TD->HwTD.gTD.Control.ConditionCode = 0;
+                        TD->HwTD.gTD.Control.ConditionCode = OHCI_TD_CONDITION_NO_ERROR;
 
                         if (TD->Flags & OHCI_HCD_TD_FLAG_CONTROLL)
                         {
@@ -2409,7 +2420,106 @@ VOID
 NTAPI
 OHCI_ResetController(IN PVOID ohciExtension)
 {
-    DPRINT1("OHCI_ResetController: UNIMPLEMENTED. FIXME\n");
+    POHCI_EXTENSION OhciExtension = ohciExtension;
+    POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    ULONG FrameNumber;
+    PULONG ControlReg;
+    PULONG CommandStatusReg;
+    PULONG InterruptEnableReg;
+    PULONG FmIntervalReg;
+    PULONG RhStatusReg;
+    PULONG PortStatusReg;
+    OHCI_REG_CONTROL ControlBak;
+    OHCI_REG_CONTROL Control;
+    OHCI_REG_COMMAND_STATUS CommandStatus;
+    OHCI_REG_INTERRUPT_ENABLE_DISABLE IntEnable;
+    ULONG_PTR HCCA;
+    ULONG_PTR ControlHeadED;
+    ULONG_PTR BulkHeadED;
+    OHCI_REG_FRAME_INTERVAL FrameInterval;
+    ULONG_PTR PeriodicStart;
+    ULONG_PTR LSThreshold;
+    OHCI_REG_RH_STATUS RhStatus;
+    OHCI_REG_RH_DESCRIPTORA RhDescriptorA;
+    OHCI_REG_RH_PORT_STATUS PortStatus;
+    ULONG NumPorts;
+    ULONG ix;
+
+    DPRINT("OHCI_ResetController: ... \n");
+
+    OperationalRegs = OhciExtension->OperationalRegs;
+
+    ControlReg = (PULONG)&OperationalRegs->HcControl;
+    CommandStatusReg = (PULONG)&OperationalRegs->HcCommandStatus;
+    InterruptEnableReg = (PULONG)&OperationalRegs->HcInterruptEnable;
+    FmIntervalReg = (PULONG)&OperationalRegs->HcFmInterval;
+    RhStatusReg = (PULONG)&OperationalRegs->HcRhStatus;
+
+    /* Backup FrameNumber from HcHCCA */
+    FrameNumber = OhciExtension->HcResourcesVA->HcHCCA.FrameNumber;
+
+    /* Backup registers */
+    ControlBak.AsULONG = READ_REGISTER_ULONG(ControlReg);
+    HCCA = READ_REGISTER_ULONG(&OperationalRegs->HcHCCA);
+    ControlHeadED = READ_REGISTER_ULONG(&OperationalRegs->HcControlHeadED);
+    BulkHeadED = READ_REGISTER_ULONG(&OperationalRegs->HcBulkHeadED);
+    FrameInterval.AsULONG = READ_REGISTER_ULONG(FmIntervalReg);
+    PeriodicStart = READ_REGISTER_ULONG(&OperationalRegs->HcPeriodicStart);
+    LSThreshold = READ_REGISTER_ULONG(&OperationalRegs->HcLSThreshold);
+
+    /* Reset HostController */
+    CommandStatus.AsULONG = 0;
+    CommandStatus.HostControllerReset = 1;
+    WRITE_REGISTER_ULONG(CommandStatusReg, CommandStatus.AsULONG);
+
+    KeStallExecutionProcessor(10);
+
+    /* Restore registers */
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcHCCA, HCCA);
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcControlHeadED, ControlHeadED);
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcBulkHeadED, BulkHeadED);
+
+    /* Set OPERATIONAL state for HC */
+    Control.AsULONG = 0;
+    Control.HostControllerFunctionalState = OHCI_HC_STATE_OPERATIONAL;
+    WRITE_REGISTER_ULONG(ControlReg, Control.AsULONG);
+
+    /* Set Toggle bit for FmInterval register */
+    FrameInterval.FrameIntervalToggle = 1;
+    WRITE_REGISTER_ULONG(FmIntervalReg, FrameInterval.AsULONG);
+
+    /* Restore registers */
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcFmNumber, FrameNumber);
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcPeriodicStart, PeriodicStart);
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcLSThreshold, LSThreshold);
+
+    /* Setup RhStatus register */
+    RhStatus.AsULONG = 0;
+    RhStatus.SetRemoteWakeupEnable = 1;
+    RhStatus.SetGlobalPower = 1;
+    WRITE_REGISTER_ULONG(RhStatusReg, RhStatus.AsULONG);
+
+    /* Setup RH PortStatus registers */
+    RhDescriptorA = OHCI_ReadRhDescriptorA(OhciExtension);
+    NumPorts = RhDescriptorA.NumberDownstreamPorts;
+
+    PortStatus.AsULONG = 0;
+    PortStatus.SetPortPower = 1;
+
+    for (ix = 0; ix < NumPorts; ix++)
+    {
+        PortStatusReg = (PULONG)&OperationalRegs->HcRhPortStatus[ix];
+        WRITE_REGISTER_ULONG(PortStatusReg, PortStatus.AsULONG);
+    }
+
+    /* Restore HcControl register */
+    ControlBak.HostControllerFunctionalState = OHCI_HC_STATE_OPERATIONAL;
+    WRITE_REGISTER_ULONG(ControlReg, ControlBak.AsULONG);
+
+    /* Setup HcInterruptEnable register */
+    IntEnable.AsULONG = 0xFFFFFFFF;
+    IntEnable.Reserved1 = 0;
+    WRITE_REGISTER_ULONG(InterruptEnableReg, IntEnable.AsULONG);
 }
 
 MPSTATUS
