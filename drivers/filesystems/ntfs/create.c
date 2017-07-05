@@ -299,7 +299,7 @@ NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
                            ParentFcb);
         }
 
-        if (!NT_SUCCESS (Status))
+        if (!NT_SUCCESS(Status))
         {
             DPRINT("Could not make a new FCB, status: %x\n", Status);
 
@@ -347,7 +347,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
 
     DeviceExt = DeviceObject->DeviceExtension;
     ASSERT(DeviceExt);
-    Stack = IoGetCurrentIrpStackLocation (Irp);
+    Stack = IoGetCurrentIrpStackLocation(Irp);
     ASSERT(Stack);
 
     RequestedDisposition = ((Stack->Parameters.Create.Options >> 24) & 0xff);

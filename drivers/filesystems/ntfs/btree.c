@@ -77,7 +77,7 @@ CompareTreeKeys(PB_TREE_KEY Key1, PB_TREE_KEY Key2, BOOLEAN CaseSensitive)
         = Key2->IndexEntry->FileName.NameLength * sizeof(WCHAR);
 
     // Are the two keys the same length?
-    if(Key1Name.Length == Key2Name.Length)
+    if (Key1Name.Length == Key2Name.Length)
         return RtlCompareUnicodeString(&Key1Name, &Key2Name, !CaseSensitive);
 
     // Is Key1 shorter?
@@ -416,7 +416,9 @@ DumpBTreeKey(PB_TREE_KEY Key, ULONG Number, ULONG Depth)
         DbgPrint(" '%wZ'\n", &FileName);
     }
     else
+    {
         DbgPrint(" (Dummy Key)\n");
+    }
 }
 
 VOID

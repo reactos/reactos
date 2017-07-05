@@ -448,7 +448,7 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
 
     if (NT_SUCCESS(Status))
     {
-        if(AttrContext->Record.IsNonResident)
+        if (AttrContext->Record.IsNonResident)
             Fcb->RFCB.AllocationSize.QuadPart = AttrContext->Record.NonResident.AllocatedSize;
         else
             Fcb->RFCB.AllocationSize = *DataSize;
@@ -1319,7 +1319,7 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
     } // end while (Length > 0) [more data to write]
 
     // TEMPTEMP
-    if(Context->Record.IsNonResident)
+    if (Context->Record.IsNonResident)
         ExFreePoolWithTag(TempBuffer, TAG_NTFS);
 
     Context->CacheRun = DataRun;
