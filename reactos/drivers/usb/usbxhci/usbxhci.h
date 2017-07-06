@@ -4,7 +4,6 @@
 #include <ntddk.h>
 #include <windef.h>
 #include <stdio.h>
-#include <wdm.h>
 #include <hubbusif.h>
 #include <usbbusif.h>
 #include <usbdlib.h>
@@ -161,13 +160,40 @@ typedef union _XHCI_CONTROL_TRB {
     XHCI_CONTROL_STATUS_TRB StatusTRB[4];
 } XHCI_CONTROL_TRB, *PXHCI_CONTROL_TRB;  
 
+//----------------event strucs-------------------
+typedef struct _XHCI_EVENT_TRB {
+    ULONG Word0;
+    ULONG Word1;
+    ULONG Word2;
+    ULONG Word3;
+}XHCI_EVENT_TRB, *PXHCI_EVENT_TRB;
 
+typedef struct _XHCI_EVENT_RING_SEGMENT_TABLE{
+    ULONGLONG RingSegmentBaseAddr;
+    ULONGLONG RingSegmentSize : 16;
+    ULONGLONG RsvdZ           :  48;
+    
+} XHCI_EVENT_RING_SEGMENT_TABLE;
 //------------------------------------main structs-----------------------
+
+typedef union _XHCI_TRB {
+    XHCI_COMMAND_TRB    CommandTRB;
+    XHCI_LINK_TRB       LinkTRB;
+    XHCI_CONTROL_TRB    ControlTRB;
+    XHCI_EVENT_TRB      EventTRB;
+} XHCI_TRB, *PXHCI_TRB;
+
+typedef struct _XHCI_RING {
+    XHCI_TRB ring[16];
+    //PXHCI_TRB dequeue_pointer;
+}XHCI_RING , *PXHCI_RING;
+
 typedef struct _XHCI_EXTENSION {
   ULONG Reserved;
   ULONG Flags;
   PULONG BaseIoAdress;
   PULONG OperationalRegs;
+  PULONG RunTimeRegisterBase;
   UCHAR FrameLengthAdjustment;
   BOOLEAN IsStarted;
   USHORT HcSystemErrors;
@@ -180,6 +206,8 @@ typedef struct _XHCI_EXTENSION {
 typedef struct _XHCI_HC_RESOURCES {
   XHCI_DEVICE_CONTEXT_BASE_ADD_ARRAY DCBAA;
   XHCI_COMMAND_RING CommandRing;
+  XHCI_RING         EventRing;
+  XHCI_EVENT_RING_SEGMENT_TABLE EventRingSegTable;
 } XHCI_HC_RESOURCES, *PXHCI_HC_RESOURCES;
 
 typedef struct _XHCI_ENDPOINT {
